@@ -15,11 +15,11 @@ namespace ClassicalSharp {
 		public const float invElementSize = 1 / 16f;
 		public Bitmap AtlasBitmap;
 		public int elementSize;
-		IGraphicsApi graphics;
+		IGraphicsApi gfx;
 		IDrawer2D drawer;
 		
-		public TerrainAtlas2D( IGraphicsApi graphics, IDrawer2D drawer ) {
-			this.graphics = graphics;
+		public TerrainAtlas2D( IGraphicsApi gfx, IDrawer2D drawer ) {
+			this.gfx = gfx;
 			this.drawer = drawer;
 		}
 		
@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 			{
 				int x = index % ElementsPerRow, y = index / ElementsPerRow;
 				FastBitmap.MovePortion( x * size, y * size, 0, 0, atlas, dst, size );
-				return graphics.CreateTexture( dst, true );
+				return gfx.CreateTexture( dst, true );
 			}
 		}
 		

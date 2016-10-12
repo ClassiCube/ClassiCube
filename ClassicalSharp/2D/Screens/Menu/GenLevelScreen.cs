@@ -19,13 +19,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			api.Texturing = true;
+			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
 			for( int i = 0; i < inputs.Length; i++ )
 				inputs[i].Render( delta );
 			for( int i = 0; i < labels.Length; i++ )
 				labels[i].Render( delta );
-			api.Texturing = false;
+			gfx.Texturing = false;
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {

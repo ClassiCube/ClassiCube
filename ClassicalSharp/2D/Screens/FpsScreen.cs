@@ -30,14 +30,14 @@ namespace ClassicalSharp.Gui.Screens {
 			UpdateFPS( delta );
 			if( game.HideGui || !game.ShowFPS ) return;
 			
-			api.Texturing = true;
+			gfx.Texturing = true;
 			fpsText.Render( delta );
 			if( !game.ClassicMode && game.Gui.activeScreen == null ) {
 				UpdateHackState( false );
 				DrawPosition();
 				hackStates.Render( delta );
 			}
-			api.Texturing = false;
+			gfx.Texturing = false;
 		}
 		
 		double accumulator;
@@ -120,7 +120,7 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			posFont.Dispose();
 			fpsText.Dispose();
-			api.DeleteTexture( ref posTex );
+			gfx.DeleteTexture( ref posTex );
 			hackStates.Dispose();
 			game.Events.ChatFontChanged -= ChatFontChanged;
 		}
@@ -144,8 +144,8 @@ namespace ClassicalSharp.Gui.Screens {
 			AddInt( pos.Z, ref index, false );
 			AddChar( 14, ref index );
 			
-			api.BindTexture( posTex.ID );
-			api.UpdateDynamicIndexedVb( DrawMode.Triangles,
+			gfx.BindTexture( posTex.ID );
+			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles,
 			                           game.ModelCache.vb, game.ModelCache.vertices, index );
 		}
 		

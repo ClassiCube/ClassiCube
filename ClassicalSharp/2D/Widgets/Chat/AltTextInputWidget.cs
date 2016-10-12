@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Render( double delta ) {
-			texture.Render( api );
+			texture.Render( gfx );
 		}
 		
 		public override void Init() {
@@ -113,7 +113,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 
 		public override void Dispose() {
-			api.DeleteTexture( ref texture );
+			gfx.DeleteTexture( ref texture );
 		}
 	}
 }

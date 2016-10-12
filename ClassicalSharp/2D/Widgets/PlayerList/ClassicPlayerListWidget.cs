@@ -28,12 +28,12 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Render( double delta ) {
-			api.Texturing = false;
+			gfx.Texturing = false;
 			int offset = overview.Height + 10;
 			int height = Math.Max( 300, Height + overview.Height );
-			api.Draw2DQuad( X, Y - offset, Width, height, topCol, bottomCol );
+			gfx.Draw2DQuad( X, Y - offset, Width, height, topCol, bottomCol );
 			
-			api.Texturing = true;
+			gfx.Texturing = true;
 			overview.MoveTo( game.Width / 2 - overview.Width / 2,
 			                Y - offset + boundsSize / 2 );
 			overview.Render( delta );
@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				Texture tex = textures[i];
 				int texY = tex.Y;
 				tex.Y1 -= 10;
-				if( tex.IsValid ) tex.Render( api );
+				if( tex.IsValid ) tex.Render( gfx );
 				tex.Y1 = texY;
 			}
 		}

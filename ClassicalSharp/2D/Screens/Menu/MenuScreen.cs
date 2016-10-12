@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected FastColour backCol = new FastColour( 60, 60, 60, 160 );
 		
 		protected void RenderMenuBounds() {
-			api.Draw2DQuad( 0, 0, game.Width, game.Height, backCol );
+			gfx.Draw2DQuad( 0, 0, game.Width, game.Height, backCol );
 		}
 		
 		protected void RenderMenuWidgets( double delta ) {

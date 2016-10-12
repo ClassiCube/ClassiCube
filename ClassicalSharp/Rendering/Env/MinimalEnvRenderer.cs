@@ -10,8 +10,8 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Init(Game game) {
 			base.Init(game);
-			graphics.Fog = false;
-			graphics.ClearColour(map.Env.SkyCol);
+			gfx.Fog = false;
+			gfx.ClearColour(map.Env.SkyCol);
 		}
 		
 		public override void Render(double deltaTime) {
@@ -19,7 +19,7 @@ namespace ClassicalSharp.Renderers {
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
 			byte block = BlockOn(out fogDensity, out fogCol);
-			graphics.ClearColour(fogCol);
+			gfx.ClearColour(fogCol);
 			
 			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often
 			if (fogDensity != 0) {

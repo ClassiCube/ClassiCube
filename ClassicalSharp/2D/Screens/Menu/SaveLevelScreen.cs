@@ -19,14 +19,14 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			api.Texturing = true;
+			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
 			inputWidget.Render( delta );
 			if( descWidget != null ) descWidget.Render( delta );
-			api.Texturing = false;
+			gfx.Texturing = false;
 			
 			float cX = game.Width / 2, cY = game.Height / 2;
-			api.Draw2DQuad( cX - 250, cY + 90, 500, 2, grey );
+			gfx.Draw2DQuad( cX - 250, cY + 90, 500, 2, grey );
 			if( textPath == null ) return;
 			SaveMap( textPath );
 			textPath = null;

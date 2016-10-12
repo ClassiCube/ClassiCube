@@ -38,14 +38,14 @@ namespace ClassicalSharp {
 		public int X1 { get { return X; } set { X = (short)value; } }
 		public int Y1 { get { return Y; } set { Y = (short)value; } }
 		
-		public void Render( IGraphicsApi graphics ) {
-			graphics.BindTexture( ID );
-			graphics.Draw2DTexture( ref this, FastColour.White );
+		public void Render( IGraphicsApi gfx ) {
+			gfx.BindTexture( ID );
+			gfx.Draw2DTexture( ref this, FastColour.White );
 		}
 		
-		public void Render( IGraphicsApi graphics, FastColour colour ) {
-			graphics.BindTexture( ID );
-			graphics.Draw2DTexture( ref this, colour );
+		public void Render( IGraphicsApi gfx, FastColour colour ) {
+			gfx.BindTexture( ID );
+			gfx.Draw2DTexture( ref this, colour );
 		}
 		
 		public override string ToString() {

@@ -9,13 +9,13 @@ namespace ClassicalSharp.Selections {
 	public class SelectionManager : IGameComponent {
 		
 		protected Game game;
-		public IGraphicsApi Graphics;
+		IGraphicsApi gfx;
 		VertexP3fC4b[] vertices, lineVertices;
 		int vb, lineVb;
 		
 		public void Init( Game game ) {
 			this.game = game;
-			Graphics = game.Graphics;
+			gfx = game.Graphics;
 		}
 
 		public void Ready( Game game ) { }			
@@ -60,29 +60,29 @@ namespace ClassicalSharp.Selections {
 				box.Render( delta, vertices, lineVertices, ref index, ref lineIndex );
 			}
 			
-			Graphics.SetBatchFormat( VertexFormat.P3fC4b );
-			Graphics.UpdateDynamicVb( DrawMode.Lines, lineVb, lineVertices, selections.Count * LineVerticesCount );
+			gfx.SetBatchFormat( VertexFormat.P3fC4b );
+			gfx.UpdateDynamicVb( DrawMode.Lines, lineVb, lineVertices, selections.Count * LineVerticesCount );
 			
-			Graphics.DepthWrite = false;
-			Graphics.AlphaBlending = true;
-			Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices,
+			gfx.DepthWrite = false;
+			gfx.AlphaBlending = true;
+			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices,
 			                                selections.Count * VerticesCount );
-			Graphics.DepthWrite = true;
-			Graphics.AlphaBlending = false;
+			gfx.DepthWrite = true;
+			gfx.AlphaBlending = false;
 		}
 		
 		public void Dispose() {			
 			if( lineVb <= 0 ) return;
-			Graphics.DeleteDynamicVb( ref vb );
-			Graphics.DeleteDynamicVb( ref lineVb );
+			gfx.DeleteDynamicVb( ref vb );
+			gfx.DeleteDynamicVb( ref lineVb );
 		}
 		
 		const int VerticesCount = 6 * 4, LineVerticesCount = 12 * 2;
 		void InitData() {
 			vertices = new VertexP3fC4b[256 * VerticesCount];
 			lineVertices = new VertexP3fC4b[256 * LineVerticesCount];
-			vb = Graphics.CreateDynamicVb( VertexFormat.P3fC4b, vertices.Length );
-			lineVb = Graphics.CreateDynamicVb( VertexFormat.P3fC4b, lineVertices.Length );
+			vb = gfx.CreateDynamicVb( VertexFormat.P3fC4b, vertices.Length );
+			lineVb = gfx.CreateDynamicVb( VertexFormat.P3fC4b, lineVertices.Length );
 		}
 	}
 }

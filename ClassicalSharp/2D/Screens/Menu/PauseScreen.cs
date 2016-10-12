@@ -12,9 +12,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			api.Texturing = true;
+			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
-			api.Texturing = false;
+			gfx.Texturing = false;
 		}
 		
 		public override void Init() {

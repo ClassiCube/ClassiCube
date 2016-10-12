@@ -51,7 +51,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public void PushUpAndReplaceLast( string text ) {
 			int y = Y;
-			api.DeleteTexture( ref Textures[0] );
+			gfx.DeleteTexture( ref Textures[0] );
 			for( int i = 0; i < Textures.Length - 1; i++ ) {
 				Textures[i] = Textures[i + 1];
 				lines[i] = lines[i + 1];
@@ -112,13 +112,13 @@ namespace ClassicalSharp.Gui.Widgets {
 			for( int i = 0; i < Textures.Length; i++ ) {
 				Texture texture = Textures[i];
 				if( texture.IsValid )
-					texture.Render( api );
+					texture.Render( gfx );
 			}
 		}
 		
 		public override void Dispose() {
 			for( int i = 0; i < Textures.Length; i++ )
-				api.DeleteTexture( ref Textures[i] );
+				gfx.DeleteTexture( ref Textures[i] );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

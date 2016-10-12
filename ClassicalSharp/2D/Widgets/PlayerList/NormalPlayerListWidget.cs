@@ -87,7 +87,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if( pInfo.Id != e.Id ) continue;
 				
 				Texture tex = textures[i];
-				api.DeleteTexture( ref tex );
+				gfx.DeleteTexture( ref tex );
 				AddPlayerInfo( new PlayerInfo( game.TabList.Entries[e.Id] ), i );
 				SortPlayerInfo();
 				return;

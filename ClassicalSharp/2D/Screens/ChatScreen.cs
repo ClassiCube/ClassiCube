@@ -166,7 +166,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				DateTime received = game.Chat.Log[metadata[i]].Received;
 				if( (now - received).TotalSeconds <= 10 )
-					texture.Render( api );
+					texture.Render( gfx );
 			}
 		}
 		
@@ -178,7 +178,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				y -= texture.Height;
 				texture.Y1 = y;
-				texture.Render( api );
+				texture.Render( gfx );
 			}
 		}
 		
@@ -193,7 +193,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			int boxHeight = height + clientStatus.GetUsedHeight();
 			if( boxHeight > 0 )
-				api.Draw2DQuad( x, y, width, boxHeight + 10, backColour );
+				gfx.Draw2DQuad( x, y, width, boxHeight + 10, backColour );
 		}
 		
 		int inputOldHeight = -1;

@@ -12,16 +12,16 @@ namespace ClassicalSharp.Renderers {
 		
 		Game game;
 		World map;
-		IGraphicsApi graphics;
+		IGraphicsApi gfx;
 		BlockInfo info;
 		public int RainTexId, SnowTexId;
 		
 		public void Init( Game game ) {
 			this.game = game;
 			map = game.World;
-			graphics = game.Graphics;
+			gfx = game.Graphics;
 			info = game.BlockInfo;
-			weatherVb = graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
+			weatherVb = gfx.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 			game.Events.TextureChanged += TextureChanged;
 		}
 		
@@ -38,7 +38,7 @@ namespace ClassicalSharp.Renderers {
 			if( weather == Weather.Sunny ) return;
 			if( heightmap == null ) InitHeightmap();
 			
-			graphics.BindTexture( weather == Weather.Rainy ? RainTexId : SnowTexId );
+			gfx.BindTexture( weather == Weather.Rainy ? RainTexId : SnowTexId );
 			Vector3 camPos = game.CurrentCameraPos;
 			Vector3I pos = Vector3I.Floor( camPos );
 			bool moved = pos != lastPos;
@@ -97,16 +97,16 @@ namespace ClassicalSharp.Renderers {
 				rainAcc = 0;
 			if( index == 0 ) return;
 			
-			graphics.AlphaTest = false;
-			graphics.DepthWrite = false;
-			graphics.AlphaArgBlend = true;
+			gfx.AlphaTest = false;
+			gfx.DepthWrite = false;
+			gfx.AlphaArgBlend = true;
 			
-			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index );
+			gfx.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index );
 			
-			graphics.AlphaArgBlend = false;
-			graphics.AlphaTest = true;
-			graphics.DepthWrite = true;
+			gfx.AlphaArgBlend = false;
+			gfx.AlphaTest = true;
+			gfx.DepthWrite = true;
 		}
 		
 		float AlphaAt( float x ) {
@@ -141,7 +141,7 @@ namespace ClassicalSharp.Renderers {
 		public void Dispose() {
 			game.Graphics.DeleteTexture( ref RainTexId );
 			game.Graphics.DeleteTexture( ref SnowTexId );
-			graphics.DeleteDynamicVb( ref weatherVb );
+			gfx.DeleteDynamicVb( ref weatherVb );
 			game.Events.TextureChanged -= TextureChanged;
 		}
 		

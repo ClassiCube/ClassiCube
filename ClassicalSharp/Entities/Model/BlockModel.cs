@@ -108,13 +108,13 @@ namespace ClassicalSharp.Model {
 			DrawParts( sprite );			
 			if( index == 0 ) return;
 			
-			IGraphicsApi api = game.Graphics;
-			api.BindTexture( lastTexId );
+			IGraphicsApi gfx = game.Graphics;
+			gfx.BindTexture( lastTexId );
 			TransformVertices();
 			
-			if( sprite ) api.FaceCulling = true;
+			if( sprite ) gfx.FaceCulling = true;
 			UpdateVB();
-			if( sprite ) api.FaceCulling = false;
+			if( sprite ) gfx.FaceCulling = false;
 		}
 		
 		void FlushIfNotSame( int texIndex ) {

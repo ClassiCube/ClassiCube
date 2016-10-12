@@ -26,16 +26,16 @@ namespace ClassicalSharp.Gui.Screens {
 		readonly FastColour progressCol = new FastColour( 128, 255, 128 );
 		
 		public override void Render( double delta ) {
-			api.Texturing = true;
+			gfx.Texturing = true;
 			DrawBackground();
 			titleWidget.Render( delta );
 			messageWidget.Render( delta );
-			api.Texturing = false;
+			gfx.Texturing = false;
 			
 			int progX = game.Width / 2 - progWidth / 2;
 			int progY = game.Height / 2 - progHeight / 2;
-			api.Draw2DQuad( progX, progY, progWidth, progHeight, backCol );
-			api.Draw2DQuad( progX, progY, progWidth * progress, progHeight, progressCol );
+			gfx.Draw2DQuad( progX, progY, progWidth, progHeight, backCol );
+			gfx.Draw2DQuad( progX, progY, progWidth * progress, progHeight, progressCol );
 		}
 		
 		void DrawBackground() {
@@ -65,17 +65,17 @@ namespace ClassicalSharp.Gui.Screens {
 			if( index == 0 ) return;
 			if( !bound ) {
 				bound = true;
-				api.BindTexture( game.TerrainAtlas1D.TexIds[atlasIndex] );
+				gfx.BindTexture( game.TerrainAtlas1D.TexIds[atlasIndex] );
 			}
 					
 			ModelCache cache = game.ModelCache;
-			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			api.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index );
+			gfx.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles, cache.vb, cache.vertices, index );
 			index = 0;
 		}
 		
 		public override void Init() {
-			api.Fog = false;
+			gfx.Fog = false;
 			SetTitle( serverName );
 			SetMessage( serverMotd );
 			game.WorldEvents.MapLoading += MapLoading;

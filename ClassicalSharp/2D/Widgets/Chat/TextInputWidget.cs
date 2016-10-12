@@ -44,7 +44,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		FastColour caretCol;
 		static FastColour backColour = new FastColour( 0, 0, 0, 127 );
 		public override void Render( double delta ) {
-			api.Texturing = false;
+			gfx.Texturing = false;
 			int y = Y, x = X;
 			
 			for( int i = 0; i < sizes.Length; i++ ) {
@@ -55,13 +55,13 @@ namespace ClassicalSharp.Gui.Widgets {
 				if( game.PureClassic )
 					drawWidth = Math.Max( drawWidth, game.Width - X * 4 );
 				
-				api.Draw2DQuad( x, y, drawWidth + 10, defaultHeight, backColour );
+				gfx.Draw2DQuad( x, y, drawWidth + 10, defaultHeight, backColour );
 				y += sizes[i].Height;				
 			}
-			api.Texturing = true;
+			gfx.Texturing = true;
 			                 
-			inputTex.Render( api );
-			caretTex.Render( api, caretCol );
+			inputTex.Render( gfx );
+			caretTex.Render( gfx, caretCol );
 			if( altText.Active )
 				altText.Render( delta );
 		}
@@ -188,13 +188,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 
 		public override void Dispose() {
-			api.DeleteTexture( ref inputTex );
+			gfx.DeleteTexture( ref inputTex );
 		}
 		
 		public void DisposeFully() {
 			Dispose();
-			api.DeleteTexture( ref caretTex );
-			api.DeleteTexture( ref prefixTex );
+			gfx.DeleteTexture( ref caretTex );
+			gfx.DeleteTexture( ref prefixTex );
 			altText.Dispose();
 		}
 

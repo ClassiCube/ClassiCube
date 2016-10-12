@@ -119,12 +119,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Render( double delta ) {
-			api.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
-			api.Texturing = true;
+			gfx.Draw2DQuad( 0, 0, game.Width, game.Height, new FastColour( 60, 60, 60, 160 ) );
+			gfx.Texturing = true;
 			title.Render( delta );
 			for( int i = 0; i < buttons.Length; i++ )
 				buttons[i].Render( delta );
-			api.Texturing = false;
+			gfx.Texturing = false;
 		}
 	}
 }

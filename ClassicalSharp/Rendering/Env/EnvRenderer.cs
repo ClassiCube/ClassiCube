@@ -11,12 +11,12 @@ namespace ClassicalSharp.Renderers {
 		
 		protected World map;
 		protected Game game;
-		protected IGraphicsApi graphics;
+		protected IGraphicsApi gfx;
 		
 		public virtual void Init( Game game ) {
 			this.game = game;
 			map = game.World;
-			graphics = game.Graphics;
+			gfx = game.Graphics;
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 		}
 		

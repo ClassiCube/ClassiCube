@@ -42,24 +42,24 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		/// <summary> Renders the models of all player entities contained in this list. </summary>
-		public void RenderModels( IGraphicsApi api, double delta, float t ) {
-			api.Texturing = true;
-			api.AlphaTest = true;
+		public void RenderModels( IGraphicsApi gfx, double delta, float t ) {
+			gfx.Texturing = true;
+			gfx.AlphaTest = true;
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] == null ) continue;
 				Players[i].RenderModel( delta, t );
 			}
-			api.Texturing = false;
-			api.AlphaTest = false;
+			gfx.Texturing = false;
+			gfx.AlphaTest = false;
 		}
 		
 		/// <summary> Renders the names of all player entities contained in this list.<br/>
 		/// If ShowHoveredNames is false, this method only renders names of entities that are
 		/// not currently being looked at by the user. </summary>
-		public void RenderNames( IGraphicsApi api, double delta ) {
+		public void RenderNames( IGraphicsApi gfx, double delta ) {
 			if( NamesMode == NameMode.NoNames ) return;
-			api.Texturing = true;
-			api.AlphaTest = true;
+			gfx.Texturing = true;
+			gfx.AlphaTest = true;
 			LocalPlayer localP = game.LocalPlayer;
 			Vector3 eyePos = localP.EyePosition;
 			closestId = 255;
@@ -67,8 +67,8 @@ namespace ClassicalSharp.Entities {
 			if( NamesMode != NameMode.All )
 				closestId = GetClosetPlayer( game.LocalPlayer );
 			if( NamesMode == NameMode.HoveredOnly || !game.LocalPlayer.Hacks.CanSeeAllNames ) {
-				api.Texturing = false;
-				api.AlphaTest = false;
+				gfx.Texturing = false;
+				gfx.AlphaTest = false;
 				return;
 			}
 			
@@ -77,24 +77,24 @@ namespace ClassicalSharp.Entities {
 				if( i != closestId || i == 255 )
 					Players[i].RenderName();
 			}
-			api.Texturing = false;
-			api.AlphaTest = false;
+			gfx.Texturing = false;
+			gfx.AlphaTest = false;
 		}
 		
-		public void RenderHoveredNames( IGraphicsApi api, double delta ) {
+		public void RenderHoveredNames( IGraphicsApi gfx, double delta ) {
 			if( NamesMode == NameMode.NoNames || NamesMode == NameMode.All )
 				return;
-			api.Texturing = true;
-			api.AlphaTest = true;
-			api.DepthTest = false;
+			gfx.Texturing = true;
+			gfx.AlphaTest = true;
+			gfx.DepthTest = false;
 			
 			for( int i = 0; i < Players.Length; i++ ) {
 				if( Players[i] != null && i == closestId && i != 255 )
 					Players[i].RenderName();
 			}
-			api.Texturing = false;
-			api.AlphaTest = false;
-			api.DepthTest = true;
+			gfx.Texturing = false;
+			gfx.AlphaTest = false;
+			gfx.DepthTest = true;
 		}
 		
 		void TextureChanged( object sender, TextureEventArgs e ) {
@@ -156,22 +156,22 @@ namespace ClassicalSharp.Entities {
 		public void DrawShadows() {
 			if( ShadowMode == EntityShadow.None ) return;
 			ShadowComponent.boundShadowTex = false;
-			IGraphicsApi api = game.Graphics;
+			IGraphicsApi gfx = game.Graphics;
 			
-			api.AlphaArgBlend = true;
-			api.DepthWrite = false;
-			api.AlphaBlending = true;
-			api.Texturing = true;
+			gfx.AlphaArgBlend = true;
+			gfx.DepthWrite = false;
+			gfx.AlphaBlending = true;
+			gfx.Texturing = true;
 			
-			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			gfx.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			Players[255].shadow.Draw();
 			if( ShadowMode == EntityShadow.CircleAll )
 				DrawOtherShadows();
 			
-			api.AlphaArgBlend = false;
-			api.DepthWrite = true;
-			api.AlphaBlending = false;
-			api.Texturing = false;
+			gfx.AlphaArgBlend = false;
+			gfx.DepthWrite = true;
+			gfx.AlphaBlending = false;
+			gfx.Texturing = false;
 		}
 		
 		void DrawOtherShadows() {

@@ -15,10 +15,10 @@ namespace ClassicalSharp.TexturePack {
 		internal int elementsPerBitmap;
 		public float invElementSize;
 		public int[] TexIds;
-		IGraphicsApi graphics;
+		IGraphicsApi gfx;
 		
-		public TerrainAtlas1D( IGraphicsApi graphics ) {
-			this.graphics = graphics;
+		public TerrainAtlas1D( IGraphicsApi gfx ) {
+			this.gfx = gfx;
 		}
 		
 		public TextureRec GetTexRec( int texId, int uCount, out int index ) {
@@ -40,7 +40,7 @@ namespace ClassicalSharp.TexturePack {
 		}
 		
 		public void UpdateState( TerrainAtlas2D atlas2D ) {
-			int maxVerticalSize = Math.Min( 4096, graphics.MaxTextureDimensions );
+			int maxVerticalSize = Math.Min( 4096, gfx.MaxTextureDimensions );
 			int elementsPerFullAtlas = maxVerticalSize / atlas2D.elementSize;
 			int totalElements = TerrainAtlas2D.RowsCount * TerrainAtlas2D.ElementsPerRow;
 			
@@ -74,12 +74,12 @@ namespace ClassicalSharp.TexturePack {
 					                       0, index1D * elemSize, atlas, dst, elemSize );
 					index++;
 				}
-				TexIds[i] = graphics.CreateTexture( dst, true );
+				TexIds[i] = gfx.CreateTexture( dst, true );
 			}
 		}
 		
 		public int CalcMaxUsedRow( TerrainAtlas2D atlas2D, BlockInfo info ) {
-			int maxVerSize = Math.Min( 4096, graphics.MaxTextureDimensions );
+			int maxVerSize = Math.Min( 4096, gfx.MaxTextureDimensions );
 			int verElements = maxVerSize / atlas2D.elementSize;
 			int totalElements = GetMaxUsedRow( info.textures ) * TerrainAtlas2D.ElementsPerRow;
 			return Utils.CeilDiv( totalElements, verElements );
@@ -96,7 +96,7 @@ namespace ClassicalSharp.TexturePack {
 			if( TexIds == null ) return;
 			
 			for( int i = 0; i < TexIds.Length; i++ ) {
-				graphics.DeleteTexture( ref TexIds[i] );
+				gfx.DeleteTexture( ref TexIds[i] );
 			}
 		}
 	}

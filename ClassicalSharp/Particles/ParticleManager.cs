@@ -44,19 +44,21 @@ namespace ClassicalSharp.Particles {
 		VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[0];
 		public void Render( double delta, float t ) {
 			if( terrainCount == 0 && rainCount == 0 ) return;
-			IGraphicsApi graphics = game.Graphics;
-			graphics.Texturing = true;
-			graphics.AlphaTest = true;
-			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			if( game.Graphics.LostContext ) return;
 			
-			RenderTerrainParticles( graphics, terrainParticles, terrainCount, delta, t );
-			RenderRainParticles( graphics, rainParticles, rainCount, delta, t );
+			IGraphicsApi gfx = game.Graphics;
+			gfx.Texturing = true;
+			gfx.AlphaTest = true;
+			gfx.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			
-			graphics.AlphaTest = false;
-			graphics.Texturing = false;
+			RenderTerrainParticles( gfx, terrainParticles, terrainCount, delta, t );
+			RenderRainParticles( gfx, rainParticles, rainCount, delta, t );
+			
+			gfx.AlphaTest = false;
+			gfx.Texturing = false;
 		}
 		
-		void RenderTerrainParticles( IGraphicsApi graphics, Particle[] particles, int elems, double delta, float t ) {
+		void RenderTerrainParticles( IGraphicsApi gfx, Particle[] particles, int elems, double delta, float t ) {
 			int count = elems * 4;
 			if( count > vertices.Length )
 				vertices = new VertexP3fT2fC4b[count];
@@ -69,14 +71,14 @@ namespace ClassicalSharp.Particles {
 			int drawCount = Math.Min( count, maxParticles * 4 );
 			if( drawCount == 0 ) return;
 			
-			graphics.SetDynamicVbData( vb, vertices, drawCount );
+			gfx.SetDynamicVbData( vb, vertices, drawCount );
 			int offset = 0;
 			for( int i = 0; i < terrain1DCount.Length; i++ ) {
 				int partCount = terrain1DCount[i];
 				if( partCount == 0 ) continue;
 				
-				graphics.BindTexture( game.TerrainAtlas1D.TexIds[i] );
-				graphics.DrawIndexedVb( DrawMode.Triangles, partCount * 6 / 4, offset * 6 / 4 );
+				gfx.BindTexture( game.TerrainAtlas1D.TexIds[i] );
+				gfx.DrawIndexedVb( DrawMode.Triangles, partCount * 6 / 4, offset * 6 / 4 );
 				offset += partCount;
 			}
 		}
@@ -94,7 +96,7 @@ namespace ClassicalSharp.Particles {
 				terrain1DIndices[i] = terrain1DIndices[i - 1] + terrain1DCount[i - 1];			
 		}
 		
-		void RenderRainParticles( IGraphicsApi graphics, Particle[] particles, int elems, double delta, float t ) {
+		void RenderRainParticles( IGraphicsApi gfx, Particle[] particles, int elems, double delta, float t ) {
 			int count = elems * 4;
 			if( count > vertices.Length )
 				vertices = new VertexP3fT2fC4b[count];
@@ -105,8 +107,8 @@ namespace ClassicalSharp.Particles {
 			
 			int drawCount = Math.Min( count, maxParticles * 4 );
 			if( drawCount == 0 ) return;
-			graphics.BindTexture( ParticlesTexId );
-			graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, drawCount );
+			gfx.BindTexture( ParticlesTexId );
+			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, drawCount );
 		}
 		
 		public void Tick( ScheduledTask task ) {

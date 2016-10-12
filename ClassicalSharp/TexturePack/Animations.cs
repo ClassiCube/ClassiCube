@@ -15,7 +15,7 @@ namespace ClassicalSharp.TexturePack {
 	public class Animations : IGameComponent {
 		
 		Game game;
-		IGraphicsApi api;
+		IGraphicsApi gfx;
 		Bitmap animBmp;
 		FastBitmap animsBuffer;
 		List<AnimationData> animations = new List<AnimationData>();
@@ -23,7 +23,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		public void Init( Game game ) {
 			this.game = game;
-			api = game.Graphics;
+			gfx = game.Graphics;
 			game.Events.TexturePackChanged += TexturePackChanged;
 			game.Events.TextureChanged += TextureChanged;
 		}
@@ -155,7 +155,7 @@ namespace ClassicalSharp.TexturePack {
 				FastBitmap.MovePortion( data.FrameX + data.State * size, 
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size );
 			}
-			api.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart );
+			gfx.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart );
 		}
 		
 		bool IsDefaultZip() {
