@@ -20,10 +20,13 @@ namespace ClassicalSharp.Particles {
 		
 		public void Init( Game game ) {
 			this.game = game;
-			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, maxParticles * 4 );
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 			game.UserEvents.BlockChanged += BreakBlockEffect;
 			game.Events.TextureChanged += TextureChanged;
+			
+			ContextRecreated();
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
 		public void Ready( Game game ) { }
@@ -67,7 +70,7 @@ namespace ClassicalSharp.Particles {
 			for( int i = 0; i < elems; i++ ) {
 				int index = particles[i].Get1DBatch( game );
 				particles[i].Render( game, delta, t, vertices, ref terrain1DIndices[index] );
-			}			
+			}
 			int drawCount = Math.Min( count, maxParticles * 4 );
 			if( drawCount == 0 ) return;
 			
@@ -93,7 +96,7 @@ namespace ClassicalSharp.Particles {
 				terrain1DCount[index] += 4;
 			}
 			for( int i = 1; i < terrain1DCount.Length; i++ )
-				terrain1DIndices[i] = terrain1DIndices[i - 1] + terrain1DCount[i - 1];			
+				terrain1DIndices[i] = terrain1DIndices[i - 1] + terrain1DCount[i - 1];
 		}
 		
 		void RenderRainParticles( IGraphicsApi gfx, Particle[] particles, int elems, double delta, float t ) {
@@ -127,11 +130,14 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		public void Dispose() {
-			game.Graphics.DeleteDynamicVb( ref vb );
 			game.Graphics.DeleteTexture( ref ParticlesTexId );
 			game.UserEvents.BlockChanged -= BreakBlockEffect;
-			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;			
+			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
 			game.Events.TextureChanged -= TextureChanged;
+			
+			ContextLost();
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		void RemoveAt<T>( int index, T[] particles, ref int count ) where T : Particle {
@@ -142,6 +148,12 @@ namespace ClassicalSharp.Particles {
 			
 			particles[count - 1] = removed;
 			count--;
+		}
+		
+		void ContextLost() { game.Graphics.DeleteVb( ref vb ); }
+		
+		void ContextRecreated() {
+			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, maxParticles * 4 );
 		}
 	}
 }

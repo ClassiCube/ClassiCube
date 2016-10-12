@@ -129,8 +129,7 @@ namespace ClassicalSharp.Renderers {
 
 		void ResetSidesAndEdges( object sender, EventArgs e ) {
 			CalculateRects( (int)game.ViewDistance );
-			ResetSides();
-			ResetEdges();
+			ContextRecreated();
 		}
 		
 		void ResetSides() {
@@ -145,12 +144,12 @@ namespace ClassicalSharp.Renderers {
 			RebuildEdges( map.Env.EdgeHeight, legacy ? 128 : 65536 );
 		}
 		
-		void ContextLost(object sender, EventArgs e) {
+		void ContextLost() {
 			game.Graphics.DeleteVb( ref sidesVb );
 			game.Graphics.DeleteVb( ref edgesVb );
 		}
 		
-		void ContextRecreated(object sender, EventArgs e) {
+		void ContextRecreated() {
 			ResetSides();
 			ResetEdges();
 		}

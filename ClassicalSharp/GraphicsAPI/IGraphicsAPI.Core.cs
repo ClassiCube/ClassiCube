@@ -4,7 +4,7 @@ using System;
 namespace ClassicalSharp.GraphicsAPI {
 	
 	/// <summary> Abstracts a 3D graphics rendering API. </summary>
-	public abstract partial class IGraphicsApi {	
+	public abstract partial class IGraphicsApi {
 		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb( VertexFormat.P3fC4b, 4 );
@@ -12,13 +12,29 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public virtual void Dispose() {
-			DeleteDynamicVb( ref quadVb );
-			DeleteDynamicVb( ref texVb );
+			DeleteVb( ref quadVb );
+			DeleteVb( ref texVb );
 		}
+		
+		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
+		public void UpdateDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int vCount ) where T : struct {
+			SetDynamicVbData( vb, vertices, vCount );
+			DrawVb( mode, 0, vCount );
+		}
+		
+		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
+		public void UpdateDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount ) where T : struct {
+			SetDynamicVbData( vb, vertices, vCount );
+			DrawIndexedVb( mode, vCount * 6 / 4, 0 );
+		}
+		
+		
 		
 		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];
 		internal int quadVb;
-		public virtual void Draw2DQuad( float x, float y, float width, float height, 
+		public virtual void Draw2DQuad( float x, float y, float width, float height,
 		                               FastColour col ) {
 			int c = col.Pack();
 			quadVerts[0] = new VertexP3fC4b( x, y, 0, c );
@@ -29,7 +45,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4 );
 		}
 		
-		public virtual void Draw2DQuad( float x, float y, float width, float height, 
+		public virtual void Draw2DQuad( float x, float y, float width, float height,
 		                               FastColour topCol, FastColour bottomCol ) {
 			int c = topCol.Pack();
 			quadVerts[0] = new VertexP3fC4b( x, y, 0, c );

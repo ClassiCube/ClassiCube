@@ -13,8 +13,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void UseLegacyMode( bool legacy ) {
 			this.legacy = legacy;
-			ResetSky();
-			ResetClouds();
+			ContextRecreated();
 		}
 		
 		public override void Render( double deltaTime ) {
@@ -83,8 +82,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetAllEnv( object sender, EventArgs e ) {
 			UpdateFog();
-			ResetSky();
-			ResetClouds();
+			ContextRecreated();
 		}
 		
 		public override void Dispose() {
@@ -149,12 +147,12 @@ namespace ClassicalSharp.Renderers {
 			RebuildSky( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
-		void ContextLost(object sender, EventArgs e) {
+		void ContextLost() {
 			game.Graphics.DeleteVb( ref skyVb );
 			game.Graphics.DeleteVb( ref cloudsVb );
 		}
 		
-		void ContextRecreated(object sender, EventArgs e) {
+		void ContextRecreated() {
 			ResetClouds();
 			ResetSky();
 		}

@@ -26,17 +26,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		public bool LostContext;
 
 		/// <summary> Event raised when a context is destroyed after having been previously lost. </summary>
-		public event EventHandler ContextLost;
+		public event Action ContextLost;
 		
 		/// <summary> Event raised when a context is recreated after having been previously lost. </summary>
-		public event EventHandler ContextRecreated;
+		public event Action ContextRecreated;
 
 		protected void RaiseContextLost() {
-			if( ContextLost != null ) ContextLost( null, null );
+			if( ContextLost != null ) ContextLost();
 		}
 		
 		protected void RaiseContextRecreated() {
-			if( ContextRecreated != null ) ContextRecreated( null, null );
+			if( ContextRecreated != null ) ContextRecreated();
 		}
 		
 		/// <summary> Delegate that is invoked when the current context is lost,
@@ -171,9 +171,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Sets the currently active index buffer to the given id. </summary>
 		public abstract void BindIb( int ib );
 		
-		/// <summary> Frees all native resources held for the dynamic vertex buffer associated with the given id. </summary>
-		public abstract void DeleteDynamicVb( ref int vb );
-		
 		/// <summary> Frees all native resources held for the vertex buffer associated with the given id. </summary>
 		public abstract void DeleteVb( ref int vb );
 		
@@ -183,14 +180,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Informs the graphics API that the format of the vertex data used in subsequent
 		/// draw calls will be in the given format. </summary>
 		public abstract void SetBatchFormat( VertexFormat format );
-		
-		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
-		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public abstract void UpdateDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int vCount ) where T : struct;
-		
-		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
-		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public abstract void UpdateDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount ) where T : struct;
 		
 		/// <summary> Binds and updates the data of the current dynamic vertex buffer's data.<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>

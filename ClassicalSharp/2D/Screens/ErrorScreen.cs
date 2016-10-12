@@ -121,7 +121,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Server.Connect( game.IPAddress, game.Port );
 		}
 		
-		void ContextRecreated( object sender, EventArgs e ) {
+		void ContextRecreated() {
 			clearTime = DateTime.UtcNow.AddSeconds( 0.5 );
 		}
 	}

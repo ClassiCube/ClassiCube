@@ -9,29 +9,31 @@ using OpenTK;
 namespace ClassicalSharp.Renderers {
 
 	public class WeatherRenderer : IGameComponent {
-		
 		Game game;
 		World map;
 		IGraphicsApi gfx;
 		BlockInfo info;
+		
 		public int RainTexId, SnowTexId;
+		int vb;
+		public short[] heightmap;
+		
+		const int extent = 4;
+		VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * (extent * 2 + 1) * (extent * 2 + 1)];
+		double rainAcc;
+		Vector3I lastPos = new Vector3I( Int32.MinValue );
 		
 		public void Init( Game game ) {
 			this.game = game;
 			map = game.World;
 			gfx = game.Graphics;
 			info = game.BlockInfo;
-			weatherVb = gfx.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 			game.Events.TextureChanged += TextureChanged;
+			
+			ContextRecreated();
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 		}
-		
-		int weatherVb;
-		public short[] heightmap;
-		float vOffset;
-		const int extent = 4;
-		VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * (extent * 2 + 1) * (extent * 2 + 1)];
-		double rainAcc;
-		Vector3I lastPos = new Vector3I( Int32.MinValue );
 		
 		public void Render( double deltaTime ) {
 			Weather weather = map.Env.Weather;
@@ -46,7 +48,7 @@ namespace ClassicalSharp.Renderers {
 			WorldEnv env = game.World.Env;
 			
 			float speed = (weather == Weather.Rainy ? 1.0f : 0.2f) * env.WeatherSpeed;
-			vOffset = (float)game.accumulator * speed;
+			float vOffset = (float)game.accumulator * speed;
 			rainAcc += deltaTime;
 			bool particles = weather == Weather.Rainy;
 
@@ -58,7 +60,7 @@ namespace ClassicalSharp.Renderers {
 				for( int dz = -extent; dz <= extent; dz++ )
 			{
 				int x = pos.X + dx, z = pos.Z + dz;
-				float y = GetRainHeight( x, z );
+				float y = RainHeight( x, z );
 				float height = Math.Max( game.World.Height, pos.Y + 64 ) - y;
 				if( height <= 0 ) continue;
 				
@@ -68,7 +70,6 @@ namespace ClassicalSharp.Renderers {
 				float alpha = AlphaAt( dx * dx + dz * dz );
 				Utils.Clamp( ref alpha, 0, 0xFF );
 				col.A = (byte)alpha;
-				
 				
 				// NOTE: Making vertex is inlined since this is called millions of times.
 				v.Colour = col.Pack();
@@ -83,7 +84,7 @@ namespace ClassicalSharp.Renderers {
 				// (x + 1, y + height, z + 1) (1, v2)
 				v.Y = y; v.V = v1; 							  vertices[index++] = v;
 				// (x + 1, y, z + 1)          (1, v1)
-								
+				
 				v.Z = z;									  vertices[index++] = v;
 				// (x + 1, y, z)              (1, v1)
 				v.Y = y + height; v.V = v2; 				  vertices[index++] = v;
@@ -102,7 +103,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.AlphaArgBlend = true;
 			
 			gfx.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles, weatherVb, vertices, index );
+			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index );
 			
 			gfx.AlphaArgBlend = false;
 			gfx.AlphaTest = true;
@@ -141,8 +142,11 @@ namespace ClassicalSharp.Renderers {
 		public void Dispose() {
 			game.Graphics.DeleteTexture( ref RainTexId );
 			game.Graphics.DeleteTexture( ref SnowTexId );
-			gfx.DeleteDynamicVb( ref weatherVb );
 			game.Events.TextureChanged -= TextureChanged;
+			
+			ContextLost();
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		void InitHeightmap() {
@@ -152,7 +156,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		float GetRainHeight( int x, int z ) {
+		float RainHeight( int x, int z ) {
 			if( x < 0 || z < 0 || x >= width || z >= length ) return map.Env.EdgeHeight;
 			int index = (x * length) + z;
 			int height = heightmap[index];
@@ -165,7 +169,7 @@ namespace ClassicalSharp.Renderers {
 			int mapIndex = ( maxY * length + z ) * width + x;
 			for( int y = maxY; y >= 0; y-- ) {
 				byte block = map.blocks[mapIndex];
-				if( BlocksRain( block ) ) {
+				if( !(info.IsAir[block] || info.IsSprite[block]) ) {
 					heightmap[index] = (short)y;
 					return y;
 				}
@@ -175,13 +179,9 @@ namespace ClassicalSharp.Renderers {
 			return -1;
 		}
 		
-		bool BlocksRain( byte block ) {
-			return !(info.IsAir[block] || info.IsSprite[block]);
-		}
-		
 		internal void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			bool didBlock = BlocksRain( oldBlock );
-			bool nowBlocks = BlocksRain( newBlock );
+			bool didBlock = !(info.IsAir[oldBlock] || info.IsSprite[oldBlock]);
+			bool nowBlocks = !(info.IsAir[newBlock] || info.IsSprite[newBlock]);
 			if( didBlock == nowBlocks ) return;
 			
 			int index = (x * length) + z;
@@ -200,6 +200,12 @@ namespace ClassicalSharp.Renderers {
 					CalcHeightAt( x, y, z, index );
 				}
 			}
+		}
+		
+		void ContextLost() { game.Graphics.DeleteVb( ref vb ); }
+		
+		void ContextRecreated() {
+			vb = gfx.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 		}
 	}
 }
