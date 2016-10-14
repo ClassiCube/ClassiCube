@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if( chat.HandlesAllInput && !game.PureClassic )
 				chat.RenderBackground();
 			
-			api.Texturing = true;
+			gfx.Texturing = true;
 			if( !showMinimal ) hotbar.Render( delta );
 			chat.Render( delta );
 			
@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if( playerList == null && !showMinimal )
 				DrawCrosshairs();
-			api.Texturing = false;
+			gfx.Texturing = false;
 		}
 		
 		const int chExtent = 16, chWeight = 2;
@@ -54,15 +54,15 @@ namespace ClassicalSharp.Gui.Screens {
 				int extent = (int)(chExtent * game.Scale( game.Height / 480f ) );
 				Texture chTex = new Texture( game.Gui.IconsTex, cenX - extent,
 				                            cenY - extent, extent * 2, extent * 2, chRec );
-				chTex.Render( api );
+				chTex.Render( gfx );
 				return;
 			}
 			
-			api.Texturing = false;
+			gfx.Texturing = false;
 			int curCol = 150 + (int)(50 * Math.Abs( Math.Sin( game.accumulator ) ));
 			FastColour col = new FastColour( curCol, curCol, curCol );
-			api.Draw2DQuad( cenX - chExtent, cenY - chWeight, chExtent * 2, chWeight * 2, col );
-			api.Draw2DQuad( cenX - chWeight, cenY - chExtent, chWeight * 2, chExtent * 2, col );
+			gfx.Draw2DQuad( cenX - chExtent, cenY - chWeight, chExtent * 2, chWeight * 2, col );
+			gfx.Draw2DQuad( cenX - chWeight, cenY - chExtent, chWeight * 2, chExtent * 2, col );
 		}
 		
 		public override void Dispose() {

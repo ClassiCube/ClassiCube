@@ -241,11 +241,8 @@ namespace ClassicalSharp.Renderers {
 		
 		static int NextMultipleOf16( int value ) { return (value + 0x0F) & ~0x0F; }
 		
-		void ContextLost(object sender, EventArgs e) {
-			ClearChunkCache();
-		}
-		
-		void ContextRecreated(object sender, EventArgs e) { Refresh(); }
+		void ContextLost() { ClearChunkCache(); }	
+		void ContextRecreated() { Refresh(); }
 		
 		
 		public void RedrawBlock( int x, int y, int z, byte block, int oldHeight, int newHeight ) {

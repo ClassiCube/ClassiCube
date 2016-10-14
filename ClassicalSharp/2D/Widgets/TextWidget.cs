@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public virtual void SetText( string text ) {
-			api.DeleteTexture( ref texture );
+			gfx.DeleteTexture( ref texture );
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
 				Width = 0; Height = defaultHeight;
@@ -60,11 +60,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Render( double delta ) {
 			if( texture.IsValid )
-				texture.Render( api, Colour );
+				texture.Render( gfx, Colour );
 		}
 		
 		public override void Dispose() {
-			api.DeleteTexture( ref texture );
+			gfx.DeleteTexture( ref texture );
 		}
 		
 		public override void MoveTo( int newX, int newY ) {

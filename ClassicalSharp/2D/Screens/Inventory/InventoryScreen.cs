@@ -14,8 +14,8 @@ namespace ClassicalSharp.Gui.Screens {
 		byte[] blocksTable;
 		Texture blockInfoTexture;
 		const int maxRows = 8;
-		int blocksPerRow { 
-			get { return game.ClassicMode && !game.ClassicHacks ? 9 : 10; } 
+		int blocksPerRow {
+			get { return game.ClassicMode && !game.ClassicHacks ? 9 : 10; }
 		}
 		
 		int selIndex, rows;
@@ -41,7 +41,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * 10 * (4 * 4)];
 		int vb;
 		public override void Render( double delta ) {
-			api.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, topCol, bottomCol );
+			gfx.Draw2DQuad( TableX, TableY, TableWidth, TableHeight, topCol, bottomCol );
 			if( rows > maxRows )
 				DrawScrollbar();
 			
@@ -49,11 +49,11 @@ namespace ClassicalSharp.Gui.Screens {
 				int x, y;
 				GetCoords( selIndex, out x, out y );
 				float off = blockSize * 0.1f;
-				api.Draw2DQuad( x - off, y - off, blockSize + off * 2, 
+				gfx.Draw2DQuad( x - off, y - off, blockSize + off * 2,
 				               blockSize + off * 2, topSelCol, bottomSelCol );
 			}
-			api.Texturing = true;
-			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			gfx.Texturing = true;
+			gfx.SetBatchFormat( VertexFormat.P3fT2fC4b );
 			
 			drawer.BeginBatch( game, vertices, vb );
 			for( int i = 0; i < blocksTable.Length; i++ ) {
@@ -75,8 +75,8 @@ namespace ClassicalSharp.Gui.Screens {
 			drawer.EndBatch();
 			
 			if( blockInfoTexture.IsValid )
-				blockInfoTexture.Render( api );
-			api.Texturing = false;
+				blockInfoTexture.Render( gfx );
+			gfx.Texturing = false;
 		}
 		
 		bool GetCoords( int i, out int x, out int y ) {
@@ -101,10 +101,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			font.Dispose();
-			api.DeleteTexture( ref blockInfoTexture );
-			api.DeleteDynamicVb( ref vb );
+			gfx.DeleteTexture( ref blockInfoTexture );
 			game.Events.BlockPermissionsChanged -= BlockPermissionsChanged;
 			game.Keyboard.KeyRepeat = false;
+			
+			ContextLost();
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		public override void OnResize( int width, int height ) {
@@ -122,7 +125,10 @@ namespace ClassicalSharp.Gui.Screens {
 			blockSize = (int)(50 * Math.Sqrt(game.GuiInventoryScale));
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiInventoryScale));
 			game.Events.BlockPermissionsChanged += BlockPermissionsChanged;
-			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
+			
+			ContextRecreated();
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 			
 			RecreateBlockTable();
 			SetBlockTo( game.Inventory.HeldBlock );
@@ -174,7 +180,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if( selIndex == lastCreatedIndex ) return;
 			lastCreatedIndex = selIndex;
 			
-			api.DeleteTexture( ref blockInfoTexture );
+			gfx.DeleteTexture( ref blockInfoTexture );
 			if( selIndex == -1 ) return;
 			
 			byte block = blocksTable[selIndex];
@@ -223,6 +229,12 @@ namespace ClassicalSharp.Gui.Screens {
 		bool IsHackBlock( byte block ) {
 			return block == Block.DoubleSlab || block == Block.Bedrock ||
 				block == Block.Grass || game.BlockInfo.IsLiquid( block );
+		}
+		
+		void ContextLost() { game.Graphics.DeleteVb( ref vb ); }
+		
+		void ContextRecreated() {
+			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 		}
 	}
 }

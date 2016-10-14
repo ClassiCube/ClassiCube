@@ -103,11 +103,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		readonly FastColour top = new FastColour( 64, 32, 32 ), bottom = new FastColour( 80, 16, 16 );
 		void Redraw( double delta ) {
-			api.Draw2DQuad( 0, 0, game.Width, game.Height, top, bottom );
-			api.Texturing = true;
+			gfx.Draw2DQuad( 0, 0, game.Width, game.Height, top, bottom );
+			gfx.Texturing = true;
 			for( int i = 0; i < widgets.Length; i++ )
 				widgets[i].Render( delta );
-			api.Texturing = false;
+			gfx.Texturing = false;
 		}
 		
 		void ReconnectClick( Game g, Widget w, MouseButton mouseBtn ) {
@@ -121,7 +121,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Server.Connect( game.IPAddress, game.Port );
 		}
 		
-		void ContextRecreated( object sender, EventArgs e ) {
+		void ContextRecreated() {
 			clearTime = DateTime.UtcNow.AddSeconds( 0.5 );
 		}
 	}

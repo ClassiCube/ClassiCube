@@ -359,7 +359,7 @@ namespace ClassicalSharp.Network {
 		/// <summary> Full URL this item was downloaded from. </summary>
 		public string Url;
 		
-		/// <summary> Exception that occurred if this request failed, can be null. </summary>
+		/// <summary> HTTP status code returned by the server for this request. </summary>
 		public HttpStatusCode ResponseCode;
 		
 		/// <summary> Unique identifier assigned by the server to this item. </summary>

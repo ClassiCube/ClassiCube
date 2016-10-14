@@ -91,8 +91,8 @@ namespace ClassicalSharp.Entities {
 			if( nameTex.ID == 0 ) MakeNameTexture();
 			if( nameTex.ID == -1 ) return;
 			
-			IGraphicsApi api = game.Graphics;
-			api.BindTexture( nameTex.ID );
+			IGraphicsApi gfx = game.Graphics;
+			gfx.BindTexture( nameTex.ID );
 			Vector3 pos = Position; pos.Y += Model.NameYOffset * ModelScale;
 			float scale = Math.Min( 1, Model.NameScale * ModelScale ) / 70f;
 			
@@ -100,13 +100,13 @@ namespace ClassicalSharp.Entities {
 			int col = FastColour.WhitePacked;
 			Vector2 size = new Vector2( nameTex.Width * scale, nameTex.Height * scale );
 			Utils.CalcBillboardPoints( size, pos, ref game.View, out p111, out p121, out p212, out p222 );
-			api.texVerts[0] = new VertexP3fT2fC4b( ref p111, nameTex.U1, nameTex.V2, col );
-			api.texVerts[1] = new VertexP3fT2fC4b( ref p121, nameTex.U1, nameTex.V1, col );
-			api.texVerts[2] = new VertexP3fT2fC4b( ref p222, nameTex.U2, nameTex.V1, col );
-			api.texVerts[3] = new VertexP3fT2fC4b( ref p212, nameTex.U2, nameTex.V2, col );
+			gfx.texVerts[0] = new VertexP3fT2fC4b( ref p111, nameTex.U1, nameTex.V2, col );
+			gfx.texVerts[1] = new VertexP3fT2fC4b( ref p121, nameTex.U1, nameTex.V1, col );
+			gfx.texVerts[2] = new VertexP3fT2fC4b( ref p222, nameTex.U2, nameTex.V1, col );
+			gfx.texVerts[3] = new VertexP3fT2fC4b( ref p212, nameTex.U2, nameTex.V2, col );
 			
-			api.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			api.UpdateDynamicIndexedVb( DrawMode.Triangles, api.texVb, api.texVerts, 4 );
+			gfx.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles, gfx.texVb, gfx.texVerts, 4 );
 		}
 		
 		protected void CheckSkin() {

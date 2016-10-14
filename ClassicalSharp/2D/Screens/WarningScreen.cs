@@ -73,11 +73,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			api.Texturing = true;
+			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
 			for( int i = 0; i < labels.Length; i++ )
 				labels[i].Render( delta );
-			api.Texturing = false;
+			gfx.Texturing = false;
 			
 			if( renderFrame != null )
 				renderFrame( this );

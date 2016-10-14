@@ -24,13 +24,10 @@ namespace ClassicalSharp.Renderers {
 			game.WorldEvents.OnNewMap += OnNewMap;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
-			MakeVb();
+			ContextRecreated();
 		}
 		
-		public void Reset( Game game ) {
-			game.Graphics.DeleteTexture( ref tex );
-		}
-
+		public void Reset( Game game ) { game.Graphics.DeleteTexture( ref tex ); }
 		public void Ready( Game game ) { }
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
@@ -86,11 +83,8 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.DepthWrite = true;
 		}
 		
-		void ContextLost(object sender, EventArgs e) {
-			game.Graphics.DeleteVb( ref vb );
-		}
-		
-		void ContextRecreated(object sender, EventArgs e) { MakeVb(); }
+		void ContextLost() { game.Graphics.DeleteVb( ref vb ); }	
+		void ContextRecreated() { MakeVb(); }
 		
 		
 		unsafe void MakeVb() {

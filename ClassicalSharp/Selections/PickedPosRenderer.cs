@@ -6,23 +6,28 @@ using OpenTK;
 namespace ClassicalSharp.Renderers {
 	
 	public sealed class PickedPosRenderer : IGameComponent {
-		
-		IGraphicsApi api;
 		Game game;
 		int vb;
 		
 		public void Init( Game game ) {
-			api = game.Graphics;
-			vb = api.CreateDynamicVb( VertexFormat.P3fC4b, verticesCount );
 			this.game = game;
 			col = new FastColour( 0, 0, 0, 102 ).Pack();
+			
+			ContextRecreated();
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
+		}
+		
+		public void Dispose() { 
+			ContextLost();
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;			
 		}
 
 		public void Ready( Game game ) { }
 		public void Reset( Game game ) { }
 		public void OnNewMap( Game game ) { }
-		public void OnNewMapLoaded( Game game ) { }
-		public void Dispose() { api.DeleteDynamicVb( ref vb ); }
+		public void OnNewMapLoaded( Game game ) { }		
 		
 		int col;
 		int index;
@@ -33,6 +38,7 @@ namespace ClassicalSharp.Renderers {
 			index = 0;
 			Vector3 camPos = game.CurrentCameraPos;
 			float dist = (camPos - selected.Min).LengthSquared;
+			IGraphicsApi gfx = game.Graphics;
 			
 			float offset = 0.01f;
 			if( dist < 4 * 4 ) offset = 0.00625f;
@@ -60,12 +66,15 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Render( double delta ) {
-			api.AlphaBlending = true;
-			api.DepthWrite = false;			
-			api.SetBatchFormat( VertexFormat.P3fC4b );
-			api.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index );
-			api.DepthWrite = true;
-			api.AlphaBlending = false;	
+			if( game.Graphics.LostContext ) return;
+			IGraphicsApi gfx = game.Graphics;
+			
+			gfx.AlphaBlending = true;
+			gfx.DepthWrite = false;
+			gfx.SetBatchFormat( VertexFormat.P3fC4b );
+			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index );
+			gfx.DepthWrite = true;
+			gfx.AlphaBlending = false;
 		}
 		
 		void DrawLines( Vector3 p1, Vector3 p2, float size ) {
@@ -120,6 +129,12 @@ namespace ClassicalSharp.Renderers {
 			vertices[index++] = new VertexP3fC4b( x1, y, z2, col );
 			vertices[index++] = new VertexP3fC4b( x2, y, z2, col );
 			vertices[index++] = new VertexP3fC4b( x2, y, z1, col );
+		}
+		
+		void ContextLost() { game.Graphics.DeleteVb( ref vb ); }
+		
+		void ContextRecreated() {
+			vb = game.Graphics.CreateDynamicVb( VertexFormat.P3fC4b, verticesCount );
 		}
 	}
 }

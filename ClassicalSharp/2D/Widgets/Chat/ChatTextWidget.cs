@@ -26,7 +26,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void SetText( string text ) {
-			api.DeleteTexture( ref texture );
+			gfx.DeleteTexture( ref texture );
 			if( String.IsNullOrEmpty( text ) ) {
 				texture = new Texture();
 				Width = 0; Height = defaultHeight;

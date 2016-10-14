@@ -226,31 +226,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		int batchStride;
-		public override void UpdateDynamicVb<T>( DrawMode mode, int id, T[] vertices, int count ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
-			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
-			
-			setupBatchFunc();
-			GL.DrawArrays( modeMappings[(int)mode], 0, count );
-		}
-		
-		public override void UpdateDynamicIndexedVb<T>( DrawMode mode, int id, T[] vertices, int vCount ) {
-			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
-			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( vCount * batchStride ), vertices );
-			
-			setupBatchFunc();
-			GL.DrawElements( modeMappings[(int)mode], vCount * 6 / 4, indexType, zero );
-		}
-		
 		public override void SetDynamicVbData<T>( int id, T[] vertices, int count ) {
 			GL.BindBuffer( BufferTarget.ArrayBuffer, id );
-			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, new IntPtr( count * batchStride ), vertices );
-		}
-		
-		public override void DeleteDynamicVb( ref int vb ) {
-			if( vb <= 0 ) return;
-			int id = vb; GL.DeleteBuffers( 1, &id );
-			vb = -1;
+			GL.BufferSubData( BufferTarget.ArrayBuffer, IntPtr.Zero, 
+			                 new IntPtr( count * batchStride ), vertices );
 		}
 		
 		public override void DeleteVb( ref int vb ) {

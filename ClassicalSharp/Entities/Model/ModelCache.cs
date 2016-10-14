@@ -9,10 +9,10 @@ namespace ClassicalSharp.Model {
 	public class ModelCache : IDisposable {
 		
 		Game game;
-		IGraphicsApi api;
+		IGraphicsApi gfx;
 		public ModelCache( Game window ) {
 			this.game = window;
-			api = game.Graphics;
+			gfx = game.Graphics;
 		}
 		
 		#if FALSE
@@ -26,9 +26,12 @@ namespace ClassicalSharp.Model {
 
 		public void InitCache() {
 			vertices = new VertexP3fT2fC4b[24 * 12];
-			vb = api.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 			RegisterDefaultModels();
 			game.Events.TextureChanged += TextureChanged;
+			
+			ContextRecreated();
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
 		public void Register( string modelName, string texName, IModel instance ) {
@@ -82,10 +85,13 @@ namespace ClassicalSharp.Model {
 			
 			for( int i = 0; i < Textures.Count; i++ ) {
 				CachedTexture tex = Textures[i];
-				api.DeleteTexture( ref tex.TexID );
+				gfx.DeleteTexture( ref tex.TexID );
 				Textures[i] = tex;
 			}
-			api.DeleteDynamicVb( ref vb );
+			
+			ContextLost();
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		void InitModel( ref CachedModel m ) {
@@ -123,6 +129,12 @@ namespace ClassicalSharp.Model {
 				game.UpdateTexture( ref tex.TexID, e.Name, e.Data, e.Name == "char.png" );
 				Textures[i] = tex; break;
 			}
+		}
+		
+		void ContextLost() { game.Graphics.DeleteVb( ref vb ); }
+		
+		void ContextRecreated() {
+			vb = gfx.CreateDynamicVb( VertexFormat.P3fT2fC4b, vertices.Length );
 		}
 	}
 	

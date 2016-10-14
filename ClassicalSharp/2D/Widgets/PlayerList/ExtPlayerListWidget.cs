@@ -78,7 +78,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				PlayerInfo pInfo = info[i];
 				if( !pInfo.IsGroup && pInfo.NameId == e.Id ) {
 					Texture tex = textures[i];
-					api.DeleteTexture( ref tex );
+					gfx.DeleteTexture( ref tex );
 					AddPlayerInfo( game.TabList.Entries[e.Id], i );
 					SortPlayerInfo();
 					return;
@@ -156,7 +156,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void DeleteGroup( ref int i ) {
-			api.DeleteTexture( ref textures[i] );
+			gfx.DeleteTexture( ref textures[i] );
 			RemoveItemAt( info, i );
 			RemoveItemAt( textures, i );
 			

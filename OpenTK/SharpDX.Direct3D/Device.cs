@@ -80,14 +80,6 @@ namespace SharpDX.Direct3D9
 			return new Texture( pOut );
 		}
 		
-		// Really the same as CreateVertexBuffer - but we need a separate return type so we make a new method.
-		public DynamicDataBuffer CreateDynamicVertexBuffer(int length, VertexFormat vertexFormat) {
-			IntPtr pOut = IntPtr.Zero;
-			int res = Interop.Calli(comPointer, length, (int)Usage.Dynamic, (int)vertexFormat, (int)Pool.Default, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[26]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-			return new DynamicDataBuffer( pOut );
-		}
-		
 		public DataBuffer CreateVertexBuffer(int length, Usage usage, VertexFormat vertexFormat, Pool pool) {
 			IntPtr pOut = IntPtr.Zero;
 			int res = Interop.Calli(comPointer, length, (int)usage, (int)vertexFormat, (int)pool, (IntPtr)(void*)&pOut, IntPtr.Zero,(*(IntPtr**)comPointer)[26]);

@@ -13,8 +13,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void UseLegacyMode( bool legacy ) {
 			this.legacy = legacy;
-			ResetSky();
-			ResetClouds();
+			ContextRecreated();
 		}
 		
 		public override void Render( double deltaTime ) {
@@ -29,18 +28,18 @@ namespace ClassicalSharp.Renderers {
 			float normalY = map.Height + 8;
 			float skyY = Math.Max( pos.Y + 8, normalY );
 			
-			graphics.SetBatchFormat( VertexFormat.P3fC4b );
-			graphics.BindVb( skyVb );
+			gfx.SetBatchFormat( VertexFormat.P3fC4b );
+			gfx.BindVb( skyVb );
 			if( skyY == normalY ) {
-				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
+				gfx.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
 			} else {
 				Matrix4 m = Matrix4.Identity;
 				m.Row3.Y = skyY - normalY; // Y translation matrix
 				
-				graphics.PushMatrix();
-				graphics.MultiplyMatrix( ref m );
-				graphics.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
-				graphics.PopMatrix();
+				gfx.PushMatrix();
+				gfx.MultiplyMatrix( ref m );
+				gfx.DrawIndexedVb( DrawMode.Triangles, skyVertices * 6 / 4, 0 );
+				gfx.PopMatrix();
 			}
 			RenderClouds( deltaTime );
 		}
@@ -60,8 +59,8 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Init( Game game ) {
 			base.Init( game );
-			graphics.SetFogStart( 0 );
-			graphics.Fog = true;
+			gfx.SetFogStart( 0 );
+			gfx.Fog = true;
 			ResetAllEnv( null, null );
 			
 			game.Events.ViewDistanceChanged += ResetAllEnv;
@@ -71,20 +70,19 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void OnNewMap( Game game ) {
-			graphics.Fog = false;
-			graphics.DeleteVb( ref skyVb );
-			graphics.DeleteVb( ref cloudsVb );
+			gfx.Fog = false;
+			gfx.DeleteVb( ref skyVb );
+			gfx.DeleteVb( ref cloudsVb );
 		}
 		
 		public override void OnNewMapLoaded( Game game ) {
-			graphics.Fog = true;
+			gfx.Fog = true;
 			ResetAllEnv( null, null );
 		}
 		
 		void ResetAllEnv( object sender, EventArgs e ) {
 			UpdateFog();
-			ResetSky();
-			ResetClouds();
+			ContextRecreated();
 		}
 		
 		public override void Dispose() {
@@ -93,31 +91,31 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 			
-			graphics.DeleteVb( ref skyVb );
-			graphics.DeleteVb( ref cloudsVb );
+			gfx.DeleteVb( ref skyVb );
+			gfx.DeleteVb( ref cloudsVb );
 		}
 		
 		void RenderClouds( double delta ) {
 			if( game.World.Env.CloudHeight < -2000 ) return;
 			double time = game.accumulator;
 			float offset = (float)( time / 2048f * 0.6f * map.Env.CloudsSpeed );
-			graphics.SetMatrixMode( MatrixType.Texture );
+			gfx.SetMatrixMode( MatrixType.Texture );
 			Matrix4 matrix = Matrix4.Identity; matrix.Row3.X = offset; // translate X axis
-			graphics.LoadMatrix( ref matrix );
-			graphics.SetMatrixMode( MatrixType.Modelview );
+			gfx.LoadMatrix( ref matrix );
+			gfx.SetMatrixMode( MatrixType.Modelview );
 			
-			graphics.AlphaTest = true;
-			graphics.Texturing = true;
-			graphics.BindTexture( game.CloudsTex );
-			graphics.SetBatchFormat( VertexFormat.P3fT2fC4b );
-			graphics.BindVb( cloudsVb );
-			graphics.DrawIndexedVb_TrisT2fC4b( cloudVertices * 6 / 4, 0 );
-			graphics.AlphaTest = false;
-			graphics.Texturing = false;
+			gfx.AlphaTest = true;
+			gfx.Texturing = true;
+			gfx.BindTexture( game.CloudsTex );
+			gfx.SetBatchFormat( VertexFormat.P3fT2fC4b );
+			gfx.BindVb( cloudsVb );
+			gfx.DrawIndexedVb_TrisT2fC4b( cloudVertices * 6 / 4, 0 );
+			gfx.AlphaTest = false;
+			gfx.Texturing = false;
 			
-			graphics.SetMatrixMode( MatrixType.Texture );
-			graphics.LoadIdentityMatrix();
-			graphics.SetMatrixMode( MatrixType.Modelview );
+			gfx.SetMatrixMode( MatrixType.Texture );
+			gfx.LoadIdentityMatrix();
+			gfx.SetMatrixMode( MatrixType.Modelview );
 		}
 		
 		void UpdateFog() {
@@ -127,34 +125,34 @@ namespace ClassicalSharp.Renderers {
 			byte block = BlockOn( out fogDensity, out fogCol );
 			
 			if( fogDensity != 0 ) {
-				graphics.SetFogMode( Fog.Exp );
-				graphics.SetFogDensity( fogDensity );
+				gfx.SetFogMode( Fog.Exp );
+				gfx.SetFogDensity( fogDensity );
 			} else {
-				graphics.SetFogMode( Fog.Linear );
-				graphics.SetFogEnd( game.ViewDistance );
+				gfx.SetFogMode( Fog.Linear );
+				gfx.SetFogEnd( game.ViewDistance );
 			}
-			graphics.ClearColour( fogCol );
-			graphics.SetFogColour( fogCol );
+			gfx.ClearColour( fogCol );
+			gfx.SetFogColour( fogCol );
 		}
 		
 		void ResetClouds() {
 			if( map.IsNotLoaded || game.Graphics.LostContext ) return;
-			graphics.DeleteVb( ref cloudsVb );
+			gfx.DeleteVb( ref cloudsVb );
 			RebuildClouds( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
 		void ResetSky() {
 			if( map.IsNotLoaded || game.Graphics.LostContext ) return;
-			graphics.DeleteVb( ref skyVb );
+			gfx.DeleteVb( ref skyVb );
 			RebuildSky( (int)game.ViewDistance, legacy ? 128 : 65536 );
 		}
 		
-		void ContextLost(object sender, EventArgs e) {
+		void ContextLost() {
 			game.Graphics.DeleteVb( ref skyVb );
 			game.Graphics.DeleteVb( ref cloudsVb );
 		}
 		
-		void ContextRecreated(object sender, EventArgs e) {
+		void ContextRecreated() {
 			ResetClouds();
 			ResetSky();
 		}
@@ -168,7 +166,7 @@ namespace ClassicalSharp.Renderers {
 			
 			VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[cloudVertices];
 			DrawCloudsY( x1, z1, x2, z2, map.Env.CloudHeight, axisSize, map.Env.CloudsCol.Pack(), vertices );
-			cloudsVb = graphics.CreateVb( vertices, VertexFormat.P3fT2fC4b, cloudVertices );
+			cloudsVb = gfx.CreateVb( vertices, VertexFormat.P3fT2fC4b, cloudVertices );
 		}
 		
 		void RebuildSky( int extent, int axisSize ) {
@@ -181,7 +179,7 @@ namespace ClassicalSharp.Renderers {
 			int height = Math.Max( map.Height + 2 + 6, map.Env.CloudHeight + 6);
 			
 			DrawSkyY( x1, z1, x2, z2, height, axisSize, map.Env.SkyCol.Pack(), vertices );
-			skyVb = graphics.CreateVb( vertices, VertexFormat.P3fC4b, skyVertices );
+			skyVb = gfx.CreateVb( vertices, VertexFormat.P3fC4b, skyVertices );
 		}
 		
 		void DrawSkyY( int x1, int z1, int x2, int z2, int y, int axisSize, int col, VertexP3fC4b[] vertices ) {

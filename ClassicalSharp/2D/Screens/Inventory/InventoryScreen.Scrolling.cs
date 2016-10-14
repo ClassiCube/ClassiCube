@@ -12,10 +12,10 @@ namespace ClassicalSharp.Gui.Screens {
 		float ScrollbarScale { get { return TableHeight / (float)rows; } }
 		
 		void DrawScrollbar() {
-			api.Draw2DQuad( TableX - scrollbarWidth, TableY, scrollbarWidth, TableHeight, scrollCol );
+			gfx.Draw2DQuad( TableX - scrollbarWidth, TableY, scrollbarWidth, TableHeight, scrollCol );
 			int y, height;
 			GetScrollbarCoords( out y, out height );
-			api.Draw2DQuad( TableX - scrollbarWidth, TableY + y, scrollbarWidth, height, scrollUsedCol );
+			gfx.Draw2DQuad( TableX - scrollbarWidth, TableY + y, scrollbarWidth, height, scrollUsedCol );
 		}
 		
 		void GetScrollbarCoords( out int y, out int height ) {

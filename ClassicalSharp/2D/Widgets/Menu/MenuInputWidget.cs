@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		double accumulator;
 		public override void Render( double delta ) {
-			chatInputTexture.Render( api );
+			chatInputTexture.Render( gfx );
 			//if( (accumulator % 1) < 0.5 && Active ) {
 			//	chatCaretTexture.Y1 = chatInputTexture.Y1 + yOffset;
 			//	chatCaretTexture.Render( graphicsApi );
@@ -107,8 +107,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		public string GetText() { return chatInputText.ToString(); }
 
 		public override void Dispose() {
-			api.DeleteTexture( ref chatCaretTexture );
-			api.DeleteTexture( ref chatInputTexture );
+			gfx.DeleteTexture( ref chatCaretTexture );
+			gfx.DeleteTexture( ref chatInputTexture );
 		}
 
 		public override void MoveTo( int newX, int newY ) {
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					chatInputText.DeleteAt( chatInputText.Length - 1 );
 					return true;
 				}
-				api.DeleteTexture( ref chatInputTexture );
+				gfx.DeleteTexture( ref chatInputTexture );
 				SetText( chatInputText.ToString() );
 			}
 			return true;
@@ -144,7 +144,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override bool HandlesKeyDown( Key key ) {
 			if( key == Key.BackSpace && !chatInputText.Empty ) {
 				chatInputText.DeleteAt( chatInputText.Length - 1 );
-				api.DeleteTexture( ref chatInputTexture );
+				gfx.DeleteTexture( ref chatInputTexture );
 				SetText( chatInputText.ToString() );
 			}
 			return key < Key.F1 || key > Key.F35;

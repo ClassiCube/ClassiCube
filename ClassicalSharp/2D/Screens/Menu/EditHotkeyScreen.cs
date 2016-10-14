@@ -23,13 +23,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
-			api.Texturing = true;
+			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
-			api.Texturing = false;
+			gfx.Texturing = false;
 			
 			float cX = game.Width / 2, cY = game.Height / 2;
-			api.Draw2DQuad( cX - 250, cY - 65, 500, 2, grey );
-			api.Draw2DQuad( cX - 250, cY + 45, 500, 2, grey );
+			gfx.Draw2DQuad( cX - 250, cY - 65, 500, 2, grey );
+			gfx.Draw2DQuad( cX - 250, cY + 45, 500, 2, grey );
 		}
 		
 		public override bool HandlesMouseMove( int mouseX, int mouseY ) {

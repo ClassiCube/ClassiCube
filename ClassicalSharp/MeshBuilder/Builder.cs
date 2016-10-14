@@ -18,14 +18,14 @@ namespace ClassicalSharp {
 		protected World map;
 		protected WorldEnv env;
 		protected Game game;
-		protected IGraphicsApi graphics;
+		protected IGraphicsApi gfx;
 		protected const int chunkSize = 16, extChunkSize = 18;
 		protected const int chunkSize2 = 16 * 16, extChunkSize2 = 18 * 18;
 		protected const int chunkSize3 = 16 * 16 * 16, extChunkSize3 = 18 * 18 * 18;
 		
 		public void Init( Game game ) {
 			this.game = game;
-			graphics = game.Graphics;
+			gfx = game.Graphics;
 			info = game.BlockInfo;
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
@@ -132,7 +132,7 @@ namespace ClassicalSharp {
 			
 			ChunkPartInfo info;
 			int vertCount = (part.iCount / 6 * 4) + 2;
-			info.VbId = graphics.CreateVb( part.vertices, VertexFormat.P3fT2fC4b, vertCount );
+			info.VbId = gfx.CreateVb( part.vertices, VertexFormat.P3fT2fC4b, vertCount );
 			info.IndicesCount = part.iCount;
 			info.LeftCount = (ushort)part.vCount.left; info.RightCount = (ushort)part.vCount.right;
 			info.FrontCount = (ushort)part.vCount.front; info.BackCount = (ushort)part.vCount.back;
