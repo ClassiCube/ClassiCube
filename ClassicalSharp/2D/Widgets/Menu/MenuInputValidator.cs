@@ -95,12 +95,12 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override bool IsValidString( string s ) {
 			float value;
 			if( s.Length == 1 && IsValidChar( s[0] ) ) return true;
-			return Single.TryParse( s, out value );
+			return Utils.TryParseDecimal( s, out value );
 		}
 		
 		public override bool IsValidValue( string s ) {
 			float value;
-			if( !Single.TryParse( s, out value ) ) return false;
+			if( !Utils.TryParseDecimal( s, out value ) ) return false;
 			return min <= value && value <= max;
 		}
 	}
