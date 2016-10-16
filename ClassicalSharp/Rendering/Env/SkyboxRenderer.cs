@@ -34,14 +34,14 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Dispose() {
 			game.Graphics.DeleteTexture( ref tex );
-			game.Graphics.DeleteVb( ref vb );
+			ContextLost();
 			
 			game.Events.TextureChanged -= TextureChanged;
 			game.Events.TexturePackChanged -= TexturePackChanged;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.WorldEvents.OnNewMap -= OnNewMap;
 			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			game.Graphics.ContextRecreated -= ContextRecreated;			
 		}
 
 		void OnNewMap( object sender, EventArgs e ) { MakeVb(); }

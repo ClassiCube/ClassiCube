@@ -78,16 +78,15 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Dispose() {
+			ContextLost();
+			gfx.DeleteTexture( ref edgeTexId );
+			gfx.DeleteTexture( ref sideTexId );
+			
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.Events.ViewDistanceChanged -= ResetSidesAndEdges;
 			game.Events.TerrainAtlasChanged -= ResetTextures;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
-			
-			gfx.DeleteTexture( ref edgeTexId );
-			gfx.DeleteTexture( ref sideTexId );
-			gfx.DeleteVb( ref sidesVb );
-			gfx.DeleteVb( ref edgesVb );
 		}
 
 		public void Ready( Game game ) { }

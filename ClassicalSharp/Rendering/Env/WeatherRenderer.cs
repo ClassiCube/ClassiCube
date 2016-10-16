@@ -142,9 +142,9 @@ namespace ClassicalSharp.Renderers {
 		public void Dispose() {
 			game.Graphics.DeleteTexture( ref RainTexId );
 			game.Graphics.DeleteTexture( ref SnowTexId );
-			game.Events.TextureChanged -= TextureChanged;
-			
 			ContextLost();
+			
+			game.Events.TextureChanged -= TextureChanged;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}

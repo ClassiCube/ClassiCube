@@ -87,12 +87,11 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void Dispose() {
 			base.Dispose();
+			ContextLost();
+			
 			game.Events.ViewDistanceChanged -= ResetAllEnv;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
-			
-			gfx.DeleteVb( ref skyVb );
-			gfx.DeleteVb( ref cloudsVb );
 		}
 		
 		void RenderClouds( double delta ) {
