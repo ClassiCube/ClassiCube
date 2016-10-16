@@ -92,10 +92,10 @@ namespace ClassicalSharp {
 			}
 			Graphics.LostContextFunction = Server.Tick;
 			
-			firstPersonCam = new FirstPersonCamera( this );
-			thirdPersonCam = new ThirdPersonCamera( this, false );
-			forwardThirdPersonCam = new ThirdPersonCamera( this, true );
-			Camera = firstPersonCam;
+			Cameras.Add( new FirstPersonCamera( this ) );
+			Cameras.Add( new ThirdPersonCamera( this, false ) );
+			Cameras.Add( new ThirdPersonCamera( this, true ) );
+			Camera = Cameras[0];
 			UpdateProjection();
 			
 			Gui = AddComponent( new GuiInterface( this ) );

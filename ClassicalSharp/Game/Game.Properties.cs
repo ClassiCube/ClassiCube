@@ -68,10 +68,10 @@ namespace ClassicalSharp {
 		/// (or for whole server if supported). </summary>
 		public TabList TabList;
 		
-		/// <summary> Current camera the player is using to view the world with. </summary>
-		/// <remarks> e.g. first person, thid person, forward third person, etc. </remarks>
+		/// <summary> Current camera the player is using to view the world. </summary>
 		public Camera Camera;
-		Camera firstPersonCam, thirdPersonCam, forwardThirdPersonCam;
+		/// <summary> List of all cameras the user can use to view the world. </summary>
+		public List<Camera> Cameras = new List<Camera>();
 		
 		/// <summary> Contains the metadata about each currently defined block. </summary>
 		/// <remarks> e.g. blocks light, height, texture IDs, etc. </remarks>

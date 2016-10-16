@@ -263,14 +263,15 @@ namespace ClassicalSharp {
 		}
 		
 		public void CycleCamera() {
-			if( ClassicMode ) return;
+			if( ClassicMode ) return;			
 			PerspectiveCamera oldCam = (PerspectiveCamera)Camera;
-			if( Camera == firstPersonCam ) Camera = thirdPersonCam;
-			else if( Camera == thirdPersonCam ) Camera = forwardThirdPersonCam;
-			else Camera = firstPersonCam;
-
+			
+			int i = Cameras.IndexOf( Camera );
+			i = (i + 1) % Cameras.Count;
+			Camera = Cameras[i];
 			if( !LocalPlayer.Hacks.CanUseThirdPersonCamera || !LocalPlayer.Hacks.Enabled )
-				Camera = firstPersonCam;
+				Camera = Cameras[0];
+			
 			PerspectiveCamera newCam = (PerspectiveCamera)Camera;
 			newCam.delta = oldCam.delta;
 			newCam.previous = oldCam.previous;
