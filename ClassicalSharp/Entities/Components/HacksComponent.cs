@@ -101,7 +101,7 @@ namespace ClassicalSharp.Entities {
 			
 			string num = joined.Substring( start, end - start );
 			float value = 0;
-			if( !Single.TryParse( num, out value ) || value <= 0 ) return;
+			if( !Utils.TryParseDecimal( num, out value ) || value <= 0 ) return;
 			MaxSpeedMultiplier = value;
 		}
 		

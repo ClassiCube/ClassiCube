@@ -241,7 +241,7 @@ namespace ClassicalSharp.Renderers {
 		
 		static int NextMultipleOf16( int value ) { return (value + 0x0F) & ~0x0F; }
 		
-		void ContextLost() { ClearChunkCache(); }	
+		void ContextLost() { ClearChunkCache(); }
 		void ContextRecreated() { Refresh(); }
 		
 		
@@ -323,8 +323,6 @@ namespace ClassicalSharp.Renderers {
 		const double targetTime = (1.0 / 30) + 0.01;
 		public void UpdateChunks( double delta ) {
 			int chunkUpdates = 0;
-			int viewDist = Utils.AdjViewDist( game.ViewDistance < 16 ? 16 : game.ViewDistance );
-			int adjViewDistSqr = (viewDist + 24) * (viewDist + 24);
 			chunksTarget += delta < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
 			Utils.Clamp( ref chunksTarget, 4, 12 );
 			
@@ -332,8 +330,8 @@ namespace ClassicalSharp.Renderers {
 			Vector3 cameraPos = game.CurrentCameraPos;
 			bool samePos = cameraPos == lastCamPos && p.HeadYawDegrees == lastYaw
 				&& p.PitchDegrees == lastPitch;
-			renderer.renderCount = samePos ? UpdateChunksStill( delta, ref chunkUpdates, adjViewDistSqr ) :
-				UpdateChunksAndVisibility( delta, ref chunkUpdates, adjViewDistSqr );
+			renderer.renderCount = samePos ? UpdateChunksStill( delta, ref chunkUpdates ) :
+				UpdateChunksAndVisibility( delta, ref chunkUpdates );
 			
 			lastCamPos = cameraPos;
 			lastYaw = p.HeadYawDegrees; lastPitch = p.PitchDegrees;
@@ -343,49 +341,53 @@ namespace ClassicalSharp.Renderers {
 		Vector3 lastCamPos;
 		float lastYaw, lastPitch;
 		
-		int UpdateChunksAndVisibility( double deltaTime, ref int chunkUpdats, int adjViewDistSqr ) {
+		int UpdateChunksAndVisibility( double deltaTime, ref int chunkUpdates ) {
 			ChunkInfo[] chunks = renderer.chunks, render = renderer.renderChunks;
 			int j = 0;
+			int viewDistSqr = AdjustViewDist( game.ViewDistance );
+			int userDistSqr = AdjustViewDist( game.UserViewDistance );
+			
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
 				int distSqr = distances[i];
 				bool noData = info.NormalParts == null && info.TranslucentParts == null;
 				
-				bool inRange = distSqr <= adjViewDistSqr;
-				if( !noData && distSqr >= adjViewDistSqr + 32 * 16 ) {
+				if( !noData && distSqr >= userDistSqr + 32 * 16 ) {
 					DeleteChunk( info, true ); continue;
 				}
 				
-				if( noData && inRange && chunkUpdats < chunksTarget ) {
-					BuildChunk( info, ref chunkUpdats );
+				if( noData && distSqr <= viewDistSqr && chunkUpdates < chunksTarget ) {
+					BuildChunk( info, ref chunkUpdates );
 				}
-				info.Visible = inRange &&
+				info.Visible = distSqr <= viewDistSqr &&
 					game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 				if( info.Visible && !info.Empty ) { render[j] = info; j++; }
 			}
 			return j;
 		}
 		
-		int UpdateChunksStill( double deltaTime, ref int chunkUpdates, int adjViewDistSqr ) {
+		int UpdateChunksStill( double deltaTime, ref int chunkUpdates ) {
 			ChunkInfo[] chunks = renderer.chunks, render = renderer.renderChunks;
 			int j = 0;
+			int viewDistSqr = AdjustViewDist( game.ViewDistance );
+			int userDistSqr = AdjustViewDist( game.UserViewDistance );
+			
 			for( int i = 0; i < chunks.Length; i++ ) {
 				ChunkInfo info = chunks[i];
 				if( info.Empty ) continue;
 				int distSqr = distances[i];
 				bool noData = info.NormalParts == null && info.TranslucentParts == null;
 				
-				bool inRange = distSqr <= adjViewDistSqr;
-				if( !noData && distSqr >= adjViewDistSqr + 32 * 16 ) {
+				if( !noData && distSqr >= userDistSqr + 32 * 16 ) {
 					DeleteChunk( info, true ); continue;
 				}
 				
 				if( noData ) {
-					if( inRange && chunkUpdates < chunksTarget ) {
+					if( distSqr <= userDistSqr && chunkUpdates < chunksTarget ) {
 						BuildChunk( info, ref chunkUpdates );
 						// only need to update the visibility of chunks in range.
-						info.Visible = inRange &&
+						info.Visible = distSqr <= viewDistSqr &&
 							game.Culling.SphereInFrustum( info.CentreX, info.CentreY, info.CentreZ, 14 ); // 14 ~ sqrt(3 * 8^2)
 						if( info.Visible && !info.Empty ) { render[j] = info; j++; }
 					}
@@ -394,6 +396,12 @@ namespace ClassicalSharp.Renderers {
 				}
 			}
 			return j;
+		}
+		
+		
+		static int AdjustViewDist( float dist ) {
+			int viewDist = Utils.AdjViewDist( Math.Max( 16, dist ) );
+			return (viewDist + 24) * (viewDist + 24);
 		}
 		
 		void BuildChunk( ChunkInfo info, ref int chunkUpdates ) {

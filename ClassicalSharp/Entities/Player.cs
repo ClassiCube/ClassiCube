@@ -44,7 +44,7 @@ namespace ClassicalSharp.Entities {
 		void ParseScale( string scale ) {
 			if( scale == null ) return;
 			float value;
-			if( !float.TryParse( scale, out value ) || float.IsNaN( value ) )
+			if( !Utils.TryParseDecimal( scale, out value ) )
 				return;
 			
 			Utils.Clamp( ref value, 0.25f, Model.MaxScale );

@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
+using System.Globalization;
 using ClassicalSharp.Model;
 using OpenTK;
 using OpenTK.Input;
@@ -186,6 +187,19 @@ namespace ClassicalSharp {
 				}
 			}
 			return value;
+		}
+		
+		// Not all languages use . as their decimal point separator
+		public static bool TryParseDecimal( string s, out float result ) {
+			result = 0;
+			float temp;
+			const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite 
+				| NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
+			
+			if( !Single.TryParse( s, style, NumberFormatInfo.InvariantInfo, out temp ) ) return false;
+			if( Single.IsInfinity( temp ) || Single.IsNaN( temp ) ) return false;
+			result = temp;
+			return true;
 		}
 	}
 }

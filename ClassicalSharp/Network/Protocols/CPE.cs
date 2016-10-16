@@ -103,7 +103,7 @@ namespace ClassicalSharp.Network.Protocols {
 			Utils.LogDebug( "CPE Hotkey added: " + key + "," + keyMods + " : " + action );
 			if( action == "" ) {
 				game.InputHandler.Hotkeys.RemoveHotkey( key, keyMods );
-			} else if( action[action.Length - 1] == '\n' ) {
+			} else if( action[action.Length - 1] == '◙' ) { // graphical form of \n
 				action = action.Substring( 0, action.Length - 1 );
 				game.InputHandler.Hotkeys.AddHotkey( key, keyMods, action, false );
 			} else { // more input needed by user
