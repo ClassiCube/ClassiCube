@@ -7,7 +7,6 @@ using ClassicalSharp.Singleplayer;
 namespace ClassicalSharp.Gui.Screens {
 	public sealed class NostalgiaScreen : MenuOptionsScreen {
 		
-		TextWidget infoWidget;
 		public NostalgiaScreen( Game game ) : base( game ) {
 		}
 		

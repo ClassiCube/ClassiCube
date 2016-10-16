@@ -192,7 +192,7 @@ namespace ClassicalSharp {
 		// Not all languages use . as their decimal point separator
 		public static bool TryParseDecimal( string s, out float result ) {
 			result = 0;
-			float temp;			
+			float temp;
 			const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite 
 				| NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 			

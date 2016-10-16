@@ -89,15 +89,16 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
-		public void SetViewDistance( float distance, bool save ) {
+		public void SetViewDistance( float distance, bool userDist ) {
+			if( userDist ) {
+				UserViewDistance = distance;
+				Options.Set( OptionsKey.ViewDist, distance );
+			}
+			
 			distance = Math.Min( distance, MaxViewDistance );
 			if( distance == ViewDistance ) return;
 			ViewDistance = distance;
 			
-			if( save ) {
-				UserViewDistance = distance;
-				Options.Set( OptionsKey.ViewDist, distance );
-			}
 			Events.RaiseViewDistanceChanged();
 			UpdateProjection();
 		}
