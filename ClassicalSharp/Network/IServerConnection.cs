@@ -83,11 +83,15 @@ namespace ClassicalSharp {
 				if( url.StartsWith( "https://" ) ) address = url.Substring( 8 );
 				if( url.StartsWith( "http://" ) ) address = url.Substring( 7 );
 				
-				game.Gui.ShowWarning( new WarningScreen(
-					game, "CL_" + url, true, true, "Do you want to download the server's texture pack?",
-					DownloadTexturePack, null, WarningScreenTick,
+				WarningScreen warning = new WarningScreen( game, true, true );
+				warning.Metadata = "CL_ " + url;
+				warning.SetHandlers( DownloadTexturePack, null, WarningScreenTick );
+				
+				warning.SetTextData(
+					"Do you want to download the server's texture pack?",
 					"Texture pack url:", address,
-					"Download size: Determining..." ) );
+					"Download size: Determining..." );
+				game.Gui.ShowWarning( warning );
 			} else {
 				DownloadTexturePack( url );
 			}

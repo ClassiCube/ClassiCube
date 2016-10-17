@@ -405,12 +405,15 @@ namespace ClassicalSharp.Gui.Screens {
 			string url = Utils.StripColours( text );
 			
 			if( Utils.IsUrlPrefix( url, 0 ) ) {
-				game.Gui.ShowWarning( new WarningScreen(
-					game, url, false, false, "Are you sure you want to go to this url?",
-					OpenUrl, AppendUrl, null, url,
-					"Be careful - urls from strangers may link to websites that",
-					" may have viruses, or things you may not want to open/see."
-				) );
+				WarningScreen warning = new WarningScreen( game, false, false );
+				warning.Metadata = url;
+				warning.SetHandlers( OpenUrl, AppendUrl, null );
+				
+				warning.SetTextData(
+					"Are you sure you want to go to this url?",
+					url, "Be careful - urls from strangers may link to websites that",
+					" may have viruses, or things you may not want to open/see." );
+				game.Gui.ShowWarning( warning );
 			} else if( game.ClickableChat ) {
 				for( int i = 0; i < text.Length; i++ ) {
 					if( !IsValidInputChar( text[i] ) ) {

@@ -7,17 +7,22 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public sealed class WarningScreen : MenuScreen {
 		
-		public WarningScreen( Game game, object metadata, bool showAlways, bool confirmNo, string title,
-		                     Action<WarningScreen> yesClick, Action<WarningScreen> noClick,
-		                     Action<WarningScreen> renderFrame, params string[] body ) : base( game ) {
-			this.Metadata = metadata;
+		public WarningScreen( Game game, bool showAlways, bool confirmNo ) : base( game ) {
+			this.confirmNo = confirmNo;
+			this.showAlways = showAlways;
+		}
+		
+		public void SetHandlers(Action<WarningScreen> yesClick, 
+		                        Action<WarningScreen> noClick,
+		                        Action<WarningScreen> renderFrame) {
 			this.yesClick = yesClick;
 			this.noClick = noClick;
 			this.renderFrame = renderFrame;
+		}
+		
+		public void SetTextData( string title, params string[] body ) {
 			this.title = title;
 			this.body = body;
-			this.confirmNo = confirmNo;
-			this.showAlways = showAlways;
 		}
 		
 		string title, lastTitle;
