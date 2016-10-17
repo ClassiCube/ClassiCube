@@ -159,10 +159,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Creates a static index buffer that has its data set at creation,
 		/// but the index buffer's data cannot be updated after creation. </summary>
-		public abstract int CreateIb( ushort[] indices, int indicesCount );
-		
-		/// <summary> Creates a static index buffer that has its data set at creation,
-		/// but the index buffer's data cannot be updated after creation. </summary>
 		public abstract int CreateIb( IntPtr indices, int indicesCount );
 		
 		/// <summary> Sets the currently active vertex buffer to the given id. </summary>

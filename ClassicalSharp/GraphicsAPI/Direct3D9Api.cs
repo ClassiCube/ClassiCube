@@ -249,13 +249,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
 		}
 		
-		public unsafe override int CreateIb( ushort[] indices, int indicesCount ) {
-			int size = indicesCount * sizeof( ushort );
-			DataBuffer buffer = device.CreateIndexBuffer( size, Usage.None, Format.Index16, Pool.Managed );
-			buffer.SetData( indices, size, LockFlags.None );
-			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
-		}
-		
 		public override int CreateIb( IntPtr indices, int indicesCount ) {
 			int size = indicesCount * sizeof( ushort );
 			DataBuffer buffer = device.CreateIndexBuffer( size, Usage.None, Format.Index16, Pool.Managed );

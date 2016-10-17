@@ -94,8 +94,13 @@ namespace SharpDX.Direct3D9
 			return new DataBuffer( pOut );
 		}
 		
-		public void GetRenderTargetData(Surface renderTarget, Surface destSurface) {
-			int res = Interop.Calli(comPointer, renderTarget.comPointer, destSurface.comPointer,(*(IntPtr**)comPointer)[32]);
+		public void UpdateTexture(Texture srcTex, Texture dstTex) {
+			int res = Interop.Calli(comPointer, srcTex.comPointer, dstTex.comPointer,(*(IntPtr**)comPointer)[31]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
+		}
+		
+		public void GetRenderTargetData(Surface renderTarget, Surface dstSurface) {
+			int res = Interop.Calli(comPointer, renderTarget.comPointer, dstSurface.comPointer,(*(IntPtr**)comPointer)[32]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 		

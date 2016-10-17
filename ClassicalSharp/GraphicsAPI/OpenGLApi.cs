@@ -204,13 +204,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public override int CreateIb( ushort[] indices, int indicesCount ) {
-			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
-			int sizeInBytes = indicesCount * sizeof( ushort );
-			GL.BufferData( BufferTarget.ElementArrayBuffer, new IntPtr( sizeInBytes ), indices, BufferUsage.StaticDraw );
-			return id;
-		}
-		
 		public override int CreateIb( IntPtr indices, int indicesCount ) {
 			int id = GenAndBind( BufferTarget.ElementArrayBuffer );
 			int sizeInBytes = indicesCount * sizeof( ushort );
