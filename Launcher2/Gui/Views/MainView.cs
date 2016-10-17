@@ -41,9 +41,9 @@ namespace Launcher.Gui.Views {
 		internal string updateText = "&eChecking..";
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
-			MakeInput( Get( 0 ), 280, false, 16, "&7Username.." )
+			MakeInput( Get( 0 ), 280, false, 16, "&gUsername.." )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -120 );
-			MakeInput( Get( 1 ), 280, true, 64, "&7Password.." )
+			MakeInput( Get( 1 ), 280, true, 64, "&gPassword.." )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -75 );
 			
 			loginIndex = widgetIndex;

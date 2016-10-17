@@ -35,9 +35,9 @@ namespace Launcher.Gui.Views {
 		
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
-			MakeInput( Get( 0 ), 475, false, 32, "&7Search servers.." )
+			MakeInput( Get( 0 ), 475, false, 32, "&gSearch servers.." )
 				.SetLocation( Anchor.LeftOrTop, Anchor.LeftOrTop, 10, 10 );
-			MakeInput( Get( 1 ), 475, false, 32, "&7classicube.net/server/play/..." )
+			MakeInput( Get( 1 ), 475, false, 32, "&gclassicube.net/server/play/..." )
 				.SetLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10 );
 			
 			Makers.Button( this, "Back", 110, 30, titleFont )

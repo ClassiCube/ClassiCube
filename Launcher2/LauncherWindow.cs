@@ -84,14 +84,17 @@ namespace Launcher {
 			//Minimised = Window.WindowState == WindowState.Minimized;
 			
 			PlatformID platform = Environment.OSVersion.Platform;
-			if( platform == PlatformID.Win32Windows )
+			if( platform == PlatformID.Win32Windows ) {
 				platformDrawer = new WinOldPlatformDrawer();
-			else if( Configuration.RunningOnWindows )
+			} else if( Configuration.RunningOnWindows ) {
 				platformDrawer = new WinPlatformDrawer();
-			else if( Configuration.RunningOnX11 )
+			} else if( Configuration.RunningOnX11 ) {
 				platformDrawer = new X11PlatformDrawer();
-			else if( Configuration.RunningOnMacOS )
+			} else if( Configuration.RunningOnMacOS ) {
 				platformDrawer = new OSXPlatformDrawer();
+			}
+			
+			Drawer.Colours['g'] = new FastColour( 125, 125, 125 );
 		}
 		
 		void LoadFont() {

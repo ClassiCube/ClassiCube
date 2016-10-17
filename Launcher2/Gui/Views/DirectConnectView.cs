@@ -29,11 +29,11 @@ namespace Launcher.Gui.Views {
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			
-			MakeInput( Get( 0 ), 330, false, 32, "&7Username.." )
+			MakeInput( Get( 0 ), 330, false, 32, "&gUsername.." )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -120 );
-			MakeInput( Get( 1 ), 330, false, 64, "&7IP address:Port number.." )
+			MakeInput( Get( 1 ), 330, false, 64, "&gIP address:Port number.." )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -75 );
-			MakeInput( Get( 2 ), 330, false, 32, "&7Mppass.." )
+			MakeInput( Get( 2 ), 330, false, 32, "&gMppass.." )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -30 );
 			
 			connectIndex = widgetIndex;
