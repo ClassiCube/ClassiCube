@@ -88,10 +88,14 @@ namespace ClassicalSharp.Model {
 			game.Graphics.BindTexture( GetTexture( p.TextureId ) );
 			game.Graphics.AlphaTest = false;
 			
-			SkinType skinType = p.SkinType;
-			bool _64x64 = skinType != SkinType.Type64x32;
+			bool _64x64 = p.SkinType != SkinType.Type64x32;
 			uScale = p.uScale / 64f;
 			vScale = p.vScale / (_64x64 ? 64 : 32);
+			RenderParts( p );
+		}
+		
+		protected virtual void RenderParts( Player p ) {
+			SkinType skinType = p.SkinType;
 			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim :
 				(skinType == SkinType.Type64x64 ? Set64 : Set);
 			
@@ -108,7 +112,7 @@ namespace ClassicalSharp.Model {
 			
 			game.Graphics.AlphaTest = true;
 			index = 0;
-			if( _64x64 ) {
+			if( skinType != SkinType.Type64x32 ) {
 				DrawPart( model.TorsoLayer );
 				DrawRotate( p.anim.legXRot, 0, 0, model.LeftLegLayer );
 				DrawRotate( -p.anim.legXRot, 0, 0, model.RightLegLayer );
