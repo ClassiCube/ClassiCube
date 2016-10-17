@@ -295,18 +295,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void OnResize( int width, int height ) {
-			announcement.OnResize( width, height );
-			announcement.YOffset = -height / 4;
-			announcement.MoveTo( announcement.X, announcement.YOffset - announcement.Height / 2 );
-			textInput.YOffset = 5;
-			bottomRight.YOffset = hud.BottomOffset * 3 / 2;
-			
-			int inputY = game.Height - textInput.Height - textInput.YOffset;
-			textInput.MoveTo( textInput.X, inputY );
-			status.OnResize( width, height );
-			bottomRight.OnResize( width, height );
-			UpdateChatYOffset( true );
-			UpdateAltTextY();
+			bool active = altText != null && altText.Active;
+			Recreate();
+			altText.SetActive( active );
 		}
 
 		void ResetChat() {
