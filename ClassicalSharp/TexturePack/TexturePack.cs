@@ -10,10 +10,10 @@ using Android.Graphics;
 #endif
 using PathIO = System.IO.Path; // Android.Graphics.Path clash otherwise
 
-namespace ClassicalSharp.TexturePack {
+namespace ClassicalSharp.Textures {
 	
 	/// <summary> Extracts resources from a .zip texture pack. </summary>
-	public sealed class TexturePackExtractor {
+	public sealed class TexturePack {
 		
 		public const string Dir = "texpacks";
 		Game game;
@@ -45,8 +45,8 @@ namespace ClassicalSharp.TexturePack {
 		}
 		
 		
-		internal static void ExtractTerrainPng( Game game, DownloadedItem item ) {
-			if( item.Data != null ) {
+		internal static void ExtractTerrainPng( Game game, string url, DownloadedItem item ) {
+			if( item != null && item.Data != null ) {
 				Bitmap bmp = (Bitmap)item.Data;
 				game.World.TextureUrl = item.Url;
 				game.Events.RaiseTexturePackChanged();
@@ -61,14 +61,14 @@ namespace ClassicalSharp.TexturePack {
 				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
 				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
 			} else {
-				FileStream data = TextureCache.GetStream( item.Url );
+				FileStream data = TextureCache.GetStream( url );
 				if( data == null ) { // e.g. 404 errors
 					ExtractDefault( game );
-				} else if( item.Url != game.World.TextureUrl ) {
+				} else if( url != game.World.TextureUrl ) {
 					Bitmap bmp = GetBitmap( data );
 					if( bmp == null ) { data.Dispose(); return; }
 					
-					game.World.TextureUrl = item.Url;
+					game.World.TextureUrl = url;
 					game.Events.RaiseTexturePackChanged();
 					if( game.ChangeTerrainAtlas( bmp, data ) ) return;	
 					
@@ -80,11 +80,11 @@ namespace ClassicalSharp.TexturePack {
 			}
 		}
 		
-		internal static void ExtractTexturePack( Game game, DownloadedItem item ) {
-			if( item.Data != null ) {
+		internal static void ExtractTexturePack( Game game, string url, DownloadedItem item ) {
+			if( item != null && item.Data != null ) {
 				game.World.TextureUrl = item.Url;
 				byte[] data = (byte[])item.Data;
-				TexturePackExtractor extractor = new TexturePackExtractor();
+				TexturePack extractor = new TexturePack();
 				using( Stream ms = new MemoryStream( data ) ) {
 					extractor.Extract( ms, game );
 				}
@@ -93,12 +93,12 @@ namespace ClassicalSharp.TexturePack {
 				TextureCache.AddETag( item.Url, item.ETag, game.ETags );
 				TextureCache.AdddLastModified( item.Url, item.LastModified, game.LastModified );
 			} else {
-				FileStream data = TextureCache.GetStream( item.Url );
+				FileStream data = TextureCache.GetStream( url );
 				if( data == null ) { // e.g. 404 errors
 					ExtractDefault( game );
-				} else if( item.Url != game.World.TextureUrl ) {
-					game.World.TextureUrl = item.Url;
-					TexturePackExtractor extractor = new TexturePackExtractor();
+				} else if( url != game.World.TextureUrl ) {
+					game.World.TextureUrl = url;
+					TexturePack extractor = new TexturePack();
 					extractor.Extract( data, game );
 				}
 			}
@@ -106,7 +106,7 @@ namespace ClassicalSharp.TexturePack {
 		
 		
 		internal static void ExtractDefault( Game game ) {
-			TexturePackExtractor extractor = new TexturePackExtractor();
+			TexturePack extractor = new TexturePack();
 			extractor.Extract( game.DefaultTexturePack, game );
 			game.World.TextureUrl = null;
 		}

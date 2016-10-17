@@ -17,7 +17,7 @@ using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using OpenTK;
 using OpenTK.Input;
 #if ANDROID
@@ -258,7 +258,7 @@ namespace ClassicalSharp {
 			Drawer2D.InitColours();
 			BlockInfo.Reset( this );
 			
-			TexturePackExtractor.ExtractDefault( this );
+			TexturePack.ExtractDefault( this );
 			Gui.SetNewScreen( new ErrorScreen( this, title, reason ) );
 			GC.Collect();
 		}

@@ -253,7 +253,6 @@
     <Compile Include="Network\Utils\FixedBufferStream.cs" />
     <Compile Include="Network\Utils\GZipHeaderReader.cs" />
     <Compile Include="Commands\CommandList.cs" />
-    <Compile Include="Commands\CommandReader.cs" />
     <Compile Include="Network\Utils\NetWriter.cs" />
     <Compile Include="Math\PickedPos.cs" />
     <Compile Include="Math\Picking.cs" />
@@ -295,7 +294,7 @@
     <Compile Include="TexturePack\TextureCache.cs" />
     <Compile Include="TexturePack\TerrainAtlas1D.cs" />
     <Compile Include="TexturePack\TerrainAtlas2D.cs" />
-    <Compile Include="TexturePack\TexturePackExtractor.cs" />
+    <Compile Include="TexturePack\TexturePack.cs" />
     <Compile Include="TexturePack\ZipReader.cs" />
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\ErrorHandler.cs" />

@@ -4,7 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 
-namespace ClassicalSharp.TexturePack {
+namespace ClassicalSharp.Textures {
 
 	public struct ZipEntry {
 		public int CompressedDataSize, UncompressedDataSize;

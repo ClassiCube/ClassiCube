@@ -6,7 +6,7 @@ using ClassicalSharp.GraphicsAPI;
 using Android.Graphics;
 #endif
 
-namespace ClassicalSharp.TexturePack {
+namespace ClassicalSharp.Textures {
 	
 	/// <summary> Represents a 2D packed texture atlas that has been converted into an array of 1D atlases. </summary>
 	public sealed class TerrainAtlas1D : IDisposable {

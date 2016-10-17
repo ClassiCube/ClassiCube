@@ -2,9 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using ClassicalSharp.TexturePack;
-using OpenTK;
-using OpenTK.Input;
+using ClassicalSharp.Textures;
 
 namespace ClassicalSharp {
 	
@@ -149,7 +147,7 @@ namespace ClassicalSharp {
 			if( Program.AppDirectory == null )
 				Program.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
 			string defZip = Path.Combine( Program.AppDirectory, "default.zip" );
-			string texDir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
+			string texDir = Path.Combine( Program.AppDirectory, TexturePack.Dir );
 			if( File.Exists( defZip ) || !Directory.Exists( texDir ) )
 				Program.CleanupMainDirectory();
 			

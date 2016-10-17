@@ -4,7 +4,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Physics;
 using ClassicalSharp.Renderers;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using OpenTK;
 
 namespace ClassicalSharp.Model {

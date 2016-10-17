@@ -3,7 +3,7 @@ using System;
 using System.Drawing;
 using System.IO;
 using ClassicalSharp;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using Launcher.Drawing;
 
 namespace Launcher {

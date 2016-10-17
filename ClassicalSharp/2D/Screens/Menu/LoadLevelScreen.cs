@@ -4,7 +4,7 @@ using System.IO;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Map;
 using ClassicalSharp.Gui.Widgets;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
@@ -61,7 +61,7 @@ namespace ClassicalSharp.Gui.Screens {
 					int width, height, length;
 					game.World.Reset();
 					if( game.World.TextureUrl != null ) {
-						TexturePackExtractor.ExtractDefault( game );
+						TexturePack.ExtractDefault( game );
 						game.World.TextureUrl = null;
 					}
 					game.BlockInfo.Reset( game );

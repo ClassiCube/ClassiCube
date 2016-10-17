@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 using ClassicalSharp.GraphicsAPI;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using OpenTK;
 
 namespace ClassicalSharp {

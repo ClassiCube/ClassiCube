@@ -6,7 +6,7 @@ using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ClassicalSharp;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using Launcher.Web;
 
 namespace Launcher.Updater {

@@ -11,7 +11,7 @@ namespace ClassicalSharp.Commands {
 			if( game.Server.IsSinglePlayer && Utils.CaselessStarts( input, "/" ) )
 				return true;
 			
-			return Utils.CaselessStarts( input, prefix + " " ) 
+			return Utils.CaselessStarts( input, prefix + " " )
 				|| Utils.CaselessEquals( input, prefix );
 		}
 		
@@ -22,7 +22,6 @@ namespace ClassicalSharp.Commands {
 			Register( new CommandsCommand() );
 			Register( new GpuInfoCommand() );
 			Register( new HelpCommand() );
-			Register( new InfoCommand() );
 			Register( new RenderTypeCommand() );
 			
 			if( !game.Server.IsSinglePlayer ) return;
@@ -63,23 +62,25 @@ namespace ClassicalSharp.Commands {
 			return match;
 		}
 		
+		static char[] splitChar = { ' ' };
 		public void Execute( string text ) {
-			if( Utils.CaselessStarts( text, prefix ) ) {
-				text = text.Substring( prefix.Length ).TrimStart( ' ' );
-				text = "/" + text;
-			}			
+			if( Utils.CaselessStarts( text, prefix ) ) { // /client command args
+				text = text.Substring( prefix.Length ).TrimStart( splitChar );
+			} else { // /command args
+				text = text.Substring( 1 );
+			}
 			
-			CommandReader reader = new CommandReader( text );
-			string cmdName = reader.Next();
-			if( cmdName == null ) {
+			if( text.Length == 1 ) { // only / or /client
 				game.Chat.Add( "&eList of client commands:" );
 				PrintDefinedCommands( game );
 				game.Chat.Add( "&eTo see a particular command's help, type /client help [cmd name]" );
 				return;
-			}			
-						
-			Command cmd = GetMatch( cmdName );
-			if( cmd != null ) cmd.Execute( reader );
+			}
+			
+			string[] args = text.Split( splitChar );
+			Command cmd = GetMatch( args[0] );
+			if( cmd == null ) return;
+			cmd.Execute( args );
 		}
 		
 		public void PrintDefinedCommands( Game game ) {

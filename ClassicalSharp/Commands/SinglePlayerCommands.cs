@@ -19,12 +19,11 @@ namespace ClassicalSharp.Commands {
 			};
 		}
 		
-		public override void Execute( CommandReader reader ) {
-			string name = reader.Next();
-			if( String.IsNullOrEmpty( name ) ) {
+		public override void Execute( string[] args ) {
+			if( args.Length == 1 ) {
 				game.Chat.Add( "&e/client model: &cYou didn't specify a model name." );
 			} else {
-				game.LocalPlayer.SetModel( Utils.ToLower( name ) );
+				game.LocalPlayer.SetModel( Utils.ToLower( args[1] ) );
 			}
 		}
 	}
@@ -45,33 +44,31 @@ namespace ClassicalSharp.Commands {
 		Vector3I mark1, mark2;
 		bool persist = false;
 		
-		public override void Execute( CommandReader reader ) {
+		public override void Execute( string[] args ) {
 			game.UserEvents.BlockChanged -= BlockChanged;
 			block = 0xFF;
 			mark1 = new Vector3I( int.MaxValue );
 			mark2 = new Vector3I( int.MaxValue );
 			persist = false;
 			
-			if( !ParseBlock( reader ) ) return;
-			string arg = reader.Next();
-			if( arg != null && Utils.CaselessEquals( arg, "yes" ) )
+			if( !ParseBlock( args ) ) return;
+			if( args.Length > 2 && Utils.CaselessEquals( args[2], "yes" ) )
 				persist = true;
 			
 			game.Chat.Add( "&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3 );
 			game.UserEvents.BlockChanged += BlockChanged;
 		}
 		
-		bool ParseBlock( CommandReader reader ) {
-			string id = reader.Next();
-			if( id == null ) return true;
-			if( Utils.CaselessEquals( id, "yes" ) ) { persist = true; return true; }
+		bool ParseBlock( string[] args ) {
+			if( args.Length == 1 ) return true;
+			if( Utils.CaselessEquals( args[1], "yes" ) ) { persist = true; return true; }
 			
 			byte blockID = 0;
-			if( !byte.TryParse( id, out blockID ) ) {
-				game.Chat.Add( "&eCuboid: &c\"" + id + "\" is not a valid block id." ); return false;
+			if( !byte.TryParse( args[1], out blockID ) ) {
+				game.Chat.Add( "&eCuboid: &c\"" + args[1] + "\" is not a valid block id." ); return false;
 			}
 			if( blockID >= Block.CpeCount && game.BlockInfo.Name[blockID] == "Invalid" ) {
-				game.Chat.Add( "&eCuboid: &cThere is no block with id \"" + id + "\"." ); return false;
+				game.Chat.Add( "&eCuboid: &cThere is no block with id \"" + args[1] + "\"." ); return false;
 			}
 			block = blockID;
 			return true;

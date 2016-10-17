@@ -13,7 +13,7 @@ using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 #if ANDROID
 using Android.Graphics;
 #endif
@@ -134,7 +134,7 @@ namespace ClassicalSharp {
 		
 		void ExtractInitialTexturePack() {
 			defTexturePack = Options.Get( OptionsKey.DefaultTexturePack ) ?? "default.zip";
-			TexturePackExtractor extractor = new TexturePackExtractor();
+			TexturePack extractor = new TexturePack();
 			extractor.Extract( "default.zip", this );
 			// in case the user's default texture pack doesn't have all required textures
 			if( DefaultTexturePack != "default.zip" )

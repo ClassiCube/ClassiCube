@@ -4,7 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 
 namespace Launcher.Patcher {
 	

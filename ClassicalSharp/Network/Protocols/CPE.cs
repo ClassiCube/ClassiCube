@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Hotkeys;
 using ClassicalSharp.Map;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Network.Protocols {
@@ -312,7 +312,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if( !game.AllowServerTextures ) return;
 			
 			if( url == "" ) {
-				TexturePackExtractor.ExtractDefault( game );
+				TexturePack.ExtractDefault( game );
 			} else if( Utils.IsUrlPrefix( url, 0 ) ) {
 				net.RetrieveTexturePack( url );
 			}

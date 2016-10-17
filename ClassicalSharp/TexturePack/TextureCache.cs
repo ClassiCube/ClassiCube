@@ -8,7 +8,7 @@ using Android.Graphics;
 #endif
 using PathIO = System.IO.Path; // Android.Graphics.Path clash otherwise
 
-namespace ClassicalSharp.TexturePack {
+namespace ClassicalSharp.Textures {
 	
 	/// <summary> Caches terrain atlases and texture packs to avoid making redundant downloads. </summary>
 	public static class TextureCache {

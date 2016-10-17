@@ -8,7 +8,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using ClassicalSharp.Network.Protocols;
 
 namespace ClassicalSharp.Network {

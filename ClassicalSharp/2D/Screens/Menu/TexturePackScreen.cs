@@ -2,7 +2,7 @@
 using System;
 using System.IO;
 using ClassicalSharp.Gui.Widgets;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
@@ -10,7 +10,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public TexturePackScreen( Game game ) : base( game ) {
 			titleText = "Select a texture pack zip";
-			string dir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
+			string dir = Path.Combine( Program.AppDirectory, TexturePack.Dir );
 			entries = Directory.GetFiles( dir, "*.zip" );
 			
 			for( int i = 0; i < entries.Length; i++ )
@@ -21,15 +21,13 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
 			if( mouseBtn != MouseButton.Left ) return;
 			string file = ((ButtonWidget)widget).Text;
-			string dir = Path.Combine( Program.AppDirectory, TexturePackExtractor.Dir );
+			string dir = Path.Combine( Program.AppDirectory, TexturePack.Dir );
 			string path = Path.Combine( dir, file );
 			if( !File.Exists( path ) ) return;
 			
 			int index = currentIndex;
 			game.DefaultTexturePack = file;
-			game.World.TextureUrl = null;
-			TexturePackExtractor extractor = new TexturePackExtractor();
-			extractor.Extract( path, game );
+			TexturePack.ExtractDefault( game );
 			Recreate();
 			SetCurrentIndex( index );
 		}

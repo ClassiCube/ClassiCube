@@ -9,7 +9,7 @@ using ClassicalSharp.GraphicsAPI;
 using Android.Graphics;
 #endif
 
-namespace ClassicalSharp.TexturePack {
+namespace ClassicalSharp.Textures {
 
 	/// <summary> Contains and describes the various animations applied to the terrain atlas. </summary>
 	public class Animations : IGameComponent {

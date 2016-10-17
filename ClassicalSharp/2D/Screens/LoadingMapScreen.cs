@@ -5,7 +5,7 @@ using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Model;
-using ClassicalSharp.TexturePack;
+using ClassicalSharp.Textures;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {

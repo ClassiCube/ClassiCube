@@ -3,11 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ClassicalSharp.TexturePack {
+namespace ClassicalSharp.Textures {
 	
 	public sealed class EntryList {
 		
-		public List<string> Entries = new List<string>();			
+		public List<string> Entries = new List<string>();
 		const string folder = "texturecache";
 		string file;
 		
