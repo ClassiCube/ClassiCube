@@ -187,7 +187,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		int GetShape( BlockInfo info, byte id ) {
-			return info.IsSprite[id] ? 0 : (byte)(info.MaxBB[id].Y * 16);
+			return info.IsSprite[id] ? 0 : (int)(info.MaxBB[id].Y * 16);
 		}
 		
 		int GetDraw( BlockInfo info, byte id) {

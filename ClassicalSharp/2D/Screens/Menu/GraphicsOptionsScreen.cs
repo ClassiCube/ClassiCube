@@ -68,23 +68,23 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescriptions() {
 			descriptions = new string[widgets.Length][];
-			descriptions[0] = new[] {
+			descriptions[0] = new string[] {
 				"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.",
 				"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.",
 				"&eNoLimit: &fRenders as many frames as possible each second.",
 				"&cUsing NoLimit mode is discouraged for general usage.",
 			};
-			descriptions[2] = new[] {
+			descriptions[2] = new string[] {
 				"&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.",
 			};
-			descriptions[3] = new[] {
+			descriptions[3] = new string[] {
 				"&eNoNames: &fNo player names are drawn.",
 				"&eHoveredOnly: &fName of the targeted player is drawn see-through.",
 				"&eAll: &fAll player names are drawn normally.",
 				"&eAllAndHovered: &fName of the targeted player is drawn see-through.",
 				"&f      All other player names are drawn normally.",
 			};			
-			descriptions[4] = new[] {
+			descriptions[4] = new string[] {
 				"&eNone: &fNo entity shadows are drawn.",
 				"&eSnapToBlock: &fA square shadow is shown on block you are directly above.",
 				"&eCircle: &fA circular shadow is shown across the blocks you are above.",

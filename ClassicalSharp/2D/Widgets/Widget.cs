@@ -13,10 +13,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		/// <summary> Whether this widget is currently being moused over. </summary>
-		public virtual bool Active { get; set; }
+		public bool Active;
 		
 		/// <summary> Whether this widget is prevented from being interacted with. </summary>
-		public virtual bool Disabled { get; set; }
+		public bool Disabled;
 		
 		/// <summary> Invoked when this widget is clicked on. Can be null. </summary>
 		public ClickHandler OnClick;
