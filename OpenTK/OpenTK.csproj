@@ -148,7 +148,7 @@
       <Name>InteropPatcher</Name>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <!-- This actually rewrites the calli and fixed code.-->
   <Target Name="AfterBuild">
     <Exec Command="$(OutputPath)InteropPatcher.exe $(OutDir)OpenTK.dll" />

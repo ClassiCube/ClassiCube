@@ -28,7 +28,7 @@ namespace InteropPatcher {
 	public static class Patcher {
 		
 		static void ReplaceFixedStatement(MethodDefinition method, ILProcessor ilProcessor, Instruction fixedtoPatch) {
-			var paramT = ((GenericInstanceMethod)fixedtoPatch.Operand).GenericArguments[0];
+			TypeReference paramT = ((GenericInstanceMethod)fixedtoPatch.Operand).GenericArguments[0];
 			// Preparing locals
 			// local(0) T*
 			method.Body.Variables.Add(new VariableDefinition("pin", new PinnedType(new ByReferenceType(paramT))));
@@ -64,7 +64,7 @@ namespace InteropPatcher {
 
 		static void PatchMethod(MethodDefinition method) {
 			if( !method.HasBody ) return;
-			var ilProcessor = method.Body.GetILProcessor();
+			ILProcessor ilProcessor = method.Body.GetILProcessor();
 
 			var instructions = method.Body.Instructions;
 			for (int i = 0; i < instructions.Count; i++)
@@ -72,18 +72,19 @@ namespace InteropPatcher {
 				Instruction instruction = instructions[i];
 				if (instruction.OpCode == OpCodes.Call && instruction.Operand is MethodReference)
 				{
-					var desc = (MethodReference)instruction.Operand;
+					MethodReference desc = (MethodReference)instruction.Operand;
 					if( desc.DeclaringType.Name != "Interop" ) continue;
 					
 					if( desc.Name.StartsWith( "Calli" ) ) {
-						var callSite = new CallSite(desc.ReturnType) { CallingConvention = MethodCallingConvention.StdCall };
+						CallSite callSite = new CallSite(desc.ReturnType);
+						callSite.CallingConvention = MethodCallingConvention.StdCall;
 						// Last parameter is the function ptr, so we don't add it as a parameter for calli
 						// as it is already an implicit parameter for calli
 						for (int j = 0; j < desc.Parameters.Count - 1; j++) {
 							callSite.Parameters.Add(desc.Parameters[j]);
 						}
 
-						var callIInstruction = ilProcessor.Create(OpCodes.Calli, callSite);
+						Instruction callIInstruction = ilProcessor.Create(OpCodes.Calli, callSite);
 						ilProcessor.Replace(instruction, callIInstruction);
 					} else if( desc.Name.StartsWith( "Fixed" ) ) {
 						ReplaceFixedStatement(method, ilProcessor, instruction);
@@ -97,9 +98,9 @@ namespace InteropPatcher {
 			
 			if( NeedsToBePatched( type ) ) {
 				Console.WriteLine( "Patching type: " + type );
-				foreach( var method in type.Methods )
+				foreach( MethodDefinition method in type.Methods )
 					PatchMethod( method );
-				foreach( var nestedType in type.NestedTypes )
+				foreach( TypeDefinition nestedType in type.NestedTypes )
 					PatchType( nestedType );
 			}
 		}
@@ -114,21 +115,21 @@ namespace InteropPatcher {
 
 		public static void PatchFile( string file ) {
 			// Copy PDB from input assembly to output assembly if any
-			var readerParameters = new ReaderParameters();
-			readerParameters.AssemblyResolver = new DefaultAssemblyResolver();
-			var writerParameters = new WriterParameters();
+			ReaderParameters rParams = new ReaderParameters();
+			rParams.AssemblyResolver = new DefaultAssemblyResolver();
+			WriterParameters wParams = new WriterParameters();
 			string pdbName = Path.ChangeExtension( file, "pdb" );
 			
 			if( File.Exists( pdbName ) ) {
-				readerParameters.SymbolReaderProvider = new PdbReaderProvider();
-				readerParameters.ReadSymbols = true;
-				writerParameters.WriteSymbols = true;
+				rParams.SymbolReaderProvider = new PdbReaderProvider();
+				rParams.ReadSymbols = true;
+				wParams.WriteSymbols = true;
 			}
-			AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(file, readerParameters);
+			AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(file, rParams);
 			TypeDefinition interopTypeDefinition = null;
 
 			Console.WriteLine( "SharpDX interop patch for: " + file );
-			foreach( var type in assembly.MainModule.Types ) {
+			foreach( TypeDefinition type in assembly.MainModule.Types ) {
 				if( type.Name == "Interop" ) {
 					interopTypeDefinition = type;
 					break;
@@ -139,12 +140,12 @@ namespace InteropPatcher {
 				return;
 			}
 			
-			foreach( var type in assembly.MainModule.Types ) {
+			foreach( TypeDefinition type in assembly.MainModule.Types ) {
 				PatchType( type );
 			}
 
 			assembly.MainModule.Types.Remove( interopTypeDefinition );
-			assembly.Write( file, writerParameters );
+			assembly.Write( file, wParams );
 			Console.WriteLine( "Done patching." );
 		}
 	}

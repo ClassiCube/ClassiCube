@@ -8,11 +8,11 @@ namespace ClassicalSharp.Commands {
 		
 		/// <summary> Full command name, note that the user does not 
 		/// have to fully type this into chat. </summary>
-		public string Name { get; set; }
+		public string Name;
 		
 		/// <summary> Provides help about the purpose and syntax of this 
 		/// command. Can use colour codes. </summary>
-		public string[] Help { get; set; }
+		public string[] Help;
 		
 		protected internal Game game;
 		

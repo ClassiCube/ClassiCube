@@ -12,25 +12,18 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public GenLevelScreen( Game game ) : base( game ) {
 		}
-		
-		TextWidget[] labels;
-		MenuInputWidget[] inputs;
+
 		MenuInputWidget selectedWidget;
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
 			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
-			for( int i = 0; i < inputs.Length; i++ )
-				inputs[i].Render( delta );
-			for( int i = 0; i < labels.Length; i++ )
-				labels[i].Render( delta );
 			gfx.Texturing = false;
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			return HandleMouseClick( widgets, mouseX, mouseY, button ) ||
-				HandleMouseClick( inputs, mouseX, mouseY, button );
+			return HandleMouseClick( widgets, mouseX, mouseY, button );
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
@@ -58,19 +51,17 @@ namespace ClassicalSharp.Gui.Screens {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
-			inputs = new [] {
+			widgets = new Widget[] {
 				MakeInput( -80, false, game.World.Width.ToString() ),
 				MakeInput( -40, false, game.World.Height.ToString() ),
 				MakeInput( 0, false, game.World.Length.ToString() ),
-				MakeInput( 40, true, "" )
-			};
-			labels = new [] {
+				MakeInput( 40, true, "" ),
+					
 				MakeLabel( -150, -80, "Width:" ), MakeLabel( -150, -40, "Height:" ),
 				MakeLabel( -150, 0, "Length:" ), MakeLabel( -140, 40, "Seed:" ),
 				ChatTextWidget.Create( game, 0, -130, "Generate new level",
 				                      Anchor.Centre, Anchor.Centre, regularFont ),
-			};
-			widgets = new [] {
+				
 				ButtonWidget.Create( game, -120, 100, 201, 40, "Flatgrass", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenFlatgrassClick ),
 				ButtonWidget.Create( game, 120, 100, 201, 40, "Vanilla", Anchor.Centre,
@@ -99,20 +90,8 @@ namespace ClassicalSharp.Gui.Screens {
 			return widget;
 		}
 		
-		public override void OnResize( int width, int height ) {
-			for( int i = 0; i < inputs.Length; i++ )
-				inputs[i].OnResize( width, height );
-			for( int i = 0; i < labels.Length; i++ )
-				labels[i].OnResize( width, height );
-			base.OnResize( width, height );
-		}
-		
 		public override void Dispose() {
 			game.Keyboard.KeyRepeat = false;
-			for( int i = 0; i < inputs.Length; i++ )
-				inputs[i].Dispose();
-			for( int i = 0; i < labels.Length; i++ )
-				labels[i].Dispose();
 			base.Dispose();
 		}
 		
@@ -151,17 +130,19 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		int GetInt( int index ) {
-			string text = inputs[index].GetText();
-			if( !inputs[index].Validator.IsValidValue( text ) )
+			MenuInputWidget input = (MenuInputWidget)widgets[index];
+			string text = input.GetText();
+			if( !input.Validator.IsValidValue( text ) )
 				return 0;
 			return text == "" ? 0 : Int32.Parse( text );
 		}
 		
 		int GetSeedInt( int index ) {
-			string text = inputs[index].GetText();
+			MenuInputWidget input = (MenuInputWidget)widgets[index];
+			string text = input.GetText();
 			if( text == "" ) return new Random().Next();
 			
-			if( !inputs[index].Validator.IsValidValue( text ) )
+			if( !input.Validator.IsValidValue( text ) )
 				return 0;
 			return text == "" ? 0 : Int32.Parse( text );
 		}

@@ -108,24 +108,24 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescriptions() {
 			descriptions = new string[widgets.Length][];
-			descriptions[2] = new [] {
+			descriptions[2] = new string[] {
 				"&eIf camera clipping is set to true, then the third person",
 				"&ecameras will limit their zoom distance if they hit a solid block.",
 			};
-			descriptions[3] = new [] {
+			descriptions[3] = new string[] {
 				"&eSets how many blocks high you can jump up.",
 				"&eNote: You jump much higher when holding down the speed key binding.",
 			};
-			descriptions[6] = new [] {
+			descriptions[6] = new string[] {
 				"&eIf modifiable liquids is set to true, then water/lava can",
 				"&ebe placed and deleted the same way as any other block.",
 			};
-			descriptions[7] = new [] {
+			descriptions[7] = new string[] {
 				"&eWhen this is active, placing blocks that intersect your own position",
 				"&ecause the block to be placed, and you to be moved out of the way.",
 				"&fThis is mainly useful for quick pillaring/towering.",
 			};
-			descriptions[8] = new [] {
+			descriptions[8] = new string[] {
 				"&eIf noclip sliding isn't used, you will immediately stop when",
 				"&eyou are in noclip mode and no movement keys are held down.",
 			};

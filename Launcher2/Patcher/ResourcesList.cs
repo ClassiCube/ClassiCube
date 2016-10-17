@@ -27,17 +27,17 @@ namespace Launcher.Patcher {
 			{ "animations.png", mMask }, { "gui.png", gMask },
 		};
 		
-		public static string[] DigSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bglass1",
+		public static string[] DigSounds = new string[] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bglass1",
 			"Bglass2", "Bglass3", "Agrass1", "Agrass2", "Agrass3", "Agrass4", "Agravel1", "Agravel2",
 			"Agravel3", "Agravel4", "Asand1", "Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3",
 			"Asnow4", "Astone1", "Astone2", "Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
 		
-		public static string[] StepSounds = new [] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bgrass1",
+		public static string[] StepSounds = new string[] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bgrass1",
 			"Bgrass2", "Bgrass3", "Bgrass4", "Agravel1", "Agravel2", "Agravel3", "Agravel4", "Asand1",
 			"Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3", "Asnow4", "Astone1", "Astone2",
 			"Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
 		
-		public static string[] MusicFiles = new [] { "calm1", "calm2", "calm3", "hal1", "hal2", "hal3", "hal4" };
+		public static string[] MusicFiles = new string[] { "calm1", "calm2", "calm3", "hal1", "hal2", "hal3", "hal4" };
 		
 		public static string GetFile( string path ) {
 			// Ignore directories: convert x/name to name and x\name to name.

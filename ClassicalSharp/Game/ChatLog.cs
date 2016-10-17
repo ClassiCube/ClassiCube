@@ -41,7 +41,7 @@ namespace ClassicalSharp {
 			game.Server.SendChat( text, partial );
 		}
 		
-		static char[] trimChars = new [] { ' ', '\0' };
+		static char[] trimChars = new char[] { ' ', '\0' };
 		StringBuffer logBuffer = new StringBuffer( 128 );
 		public void Add( string text ) {
 			Log.Add( text );

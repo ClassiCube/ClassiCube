@@ -70,7 +70,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDefaultValues() {
 			defaultIndex = widgets.Length - 3;			
-			defaultValues = new [] {
+			defaultValues = new string[] {
 				WorldEnv.DefaultCloudsColour.ToRGBHexString(),
 				WorldEnv.DefaultSkyColour.ToRGBHexString(),
 				WorldEnv.DefaultFogColour.ToRGBHexString(),

@@ -12,7 +12,7 @@ namespace ClassicalSharp.Commands {
 		
 		public CommandsCommand() {
 			Name = "Commands";
-			Help = new [] {
+			Help = new string[] {
 				"&a/client commands",
 				"&ePrints a list of all usable commands"
 			};
@@ -28,7 +28,7 @@ namespace ClassicalSharp.Commands {
 		
 		public HelpCommand() {
 			Name = "Help";
-			Help = new [] {
+			Help = new string[] {
 				"&a/client help [command name]",
 				"&eDisplays the help for the given command.",
 			};
@@ -54,7 +54,7 @@ namespace ClassicalSharp.Commands {
 		
 		public GpuInfoCommand() {
 			Name = "GpuInfo";
-			Help = new [] {
+			Help = new string[] {
 				"&a/client gpuinfo",
 				"&eDisplays information about your GPU.",
 			};
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Commands {
 		
 		public RenderTypeCommand() {
 			Name = "RenderType";
-			Help = new [] {
+			Help = new string[] {
 				"&a/client rendertype [normal/legacy/legacyfast]",
 				"&bnormal: &eDefault renderer, with all environmental effects enabled.",
 				"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",

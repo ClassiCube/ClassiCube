@@ -12,7 +12,7 @@ namespace ClassicalSharp.Commands {
 		
 		public ModelCommand() {
 			Name = "Model";
-			Help = new [] {
+			Help = new string[] {
 				"&a/client model [name]",
 				"&bnames: &echibi, chicken, creeper, human, pig, sheep",
 				"&e       skeleton, spider, zombie, <numerical block id>",
@@ -32,7 +32,7 @@ namespace ClassicalSharp.Commands {
 		
 		public CuboidCommand() {
 			Name = "Cuboid";
-			Help = new [] {
+			Help = new string[] {
 				"&a/client cuboid [block] [persist]",
 				"&eFills the 3D rectangle between two points with [block].",
 				"&eIf no block is given, uses your currently held block.",
