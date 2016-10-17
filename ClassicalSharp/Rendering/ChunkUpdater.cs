@@ -324,14 +324,14 @@ namespace ClassicalSharp.Renderers {
 		public void UpdateChunks( double delta ) {
 			int chunkUpdates = 0;
 			chunksTarget += delta < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
-			Utils.Clamp( ref chunksTarget, 4, 12 );
+			Utils.Clamp( ref chunksTarget, 4, 16 );
 			
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 cameraPos = game.CurrentCameraPos;
 			bool samePos = cameraPos == lastCamPos && p.HeadYawDegrees == lastYaw
 				&& p.PitchDegrees == lastPitch;
-			renderer.renderCount = samePos ? UpdateChunksStill( delta, ref chunkUpdates ) :
-				UpdateChunksAndVisibility( delta, ref chunkUpdates );
+			renderer.renderCount = samePos ? UpdateChunksStill( ref chunkUpdates ) :
+				UpdateChunksAndVisibility( ref chunkUpdates );
 			
 			lastCamPos = cameraPos;
 			lastYaw = p.HeadYawDegrees; lastPitch = p.PitchDegrees;
@@ -341,7 +341,7 @@ namespace ClassicalSharp.Renderers {
 		Vector3 lastCamPos;
 		float lastYaw, lastPitch;
 		
-		int UpdateChunksAndVisibility( double deltaTime, ref int chunkUpdates ) {
+		int UpdateChunksAndVisibility( ref int chunkUpdates ) {
 			ChunkInfo[] chunks = renderer.chunks, render = renderer.renderChunks;
 			int j = 0;
 			int viewDistSqr = AdjustViewDist( game.ViewDistance );
@@ -367,7 +367,7 @@ namespace ClassicalSharp.Renderers {
 			return j;
 		}
 		
-		int UpdateChunksStill( double deltaTime, ref int chunkUpdates ) {
+		int UpdateChunksStill( ref int chunkUpdates ) {
 			ChunkInfo[] chunks = renderer.chunks, render = renderer.renderChunks;
 			int j = 0;
 			int viewDistSqr = AdjustViewDist( game.ViewDistance );

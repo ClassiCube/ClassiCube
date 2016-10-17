@@ -32,16 +32,6 @@ namespace ClassicalSharp.Commands {
 			return arg;
 		}
 		
-		bool MoveNext() {
-			if( curOffset >= rawInput.Length ) return false;
-			int next = rawInput.IndexOf( ' ', curOffset );
-			if( next == -1 ) {
-				next = rawInput.Length;
-			}
-			curOffset = next + 1;
-			return true;
-		}
-		
 		public CommandReader( string input ) {
 			rawInput = input.TrimEnd( ' ' );
 			curOffset = 1; // skip start / for the ocmmand

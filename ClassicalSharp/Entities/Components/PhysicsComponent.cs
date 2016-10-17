@@ -164,15 +164,15 @@ namespace ClassicalSharp.Entities {
 				if( hacks.FlyingUp || jumping ) entity.Velocity.Y += yVel;
 				if( hacks.FlyingDown ) entity.Velocity.Y -= yVel;
 			}
-			Move( xMoving, zMoving, factor, drag, gravity, yMul );
+			Move( drag, gravity, yMul );
 		}
 		
 		void MoveNormal( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
 			AdjHeadingVelocity( zMoving, xMoving, factor );
-			Move( xMoving, zMoving, factor, drag, gravity, yMul );
+			Move( drag, gravity, yMul );
 		}
 		
-		void Move( float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul ) {
+		void Move( Vector3 drag, float gravity, float yMul ) {
 			entity.Velocity.Y *= yMul;
 			if( !hacks.Noclip )
 				collisions.MoveAndWallSlide();

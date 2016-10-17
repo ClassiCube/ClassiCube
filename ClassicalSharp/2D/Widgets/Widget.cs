@@ -40,10 +40,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		public Anchor VerticalAnchor;
 		
 		/// <summary> Horizontal offset from the reference point in pixels. </summary>
-		public int XOffset = 0;
+		public int XOffset;
 		
 		/// <summary> Vertical offset from the reference point in pixels. </summary>
-		public int YOffset = 0;
+		public int YOffset;
 		
 		/// <summary> Width and height of widget in pixels. </summary>
 		public Size Size { get { return new Size( Width, Height ); } }
