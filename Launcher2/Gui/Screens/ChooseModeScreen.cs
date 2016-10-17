@@ -52,7 +52,7 @@ namespace Launcher.Gui.Screens {
 			Options.Set( "nostalgia-classicoptions", classic );
 			Options.Save();
 			
-			game.SetScreen( new SettingsScreen( game ) );
+			game.SetScreen( new MainScreen( game ) );
 		}
 
 		public override void Dispose() {

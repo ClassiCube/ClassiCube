@@ -105,27 +105,27 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				if( caretPos >= buffer.Length ) caretPos = -1;
 				if( caretPos == -1 &&  buffer.Length > 0 ) {
-				    buffer.value[buffer.Length] = ' ';
+					buffer.value[buffer.Length] = ' ';
 				} else if( caretPos >= 0 && buffer.value[caretPos] != ' ' ) {
 					buffer.InsertAt( caretPos, ' ' );
 				}
 				Recreate();
 			} else if( !buffer.Empty && caretPos != 0 ) {
-				if( !BackspaceColourCode())
-					DeleteChar();
+				int index = caretPos == -1 ? buffer.Length - 1 : caretPos;
+				if( CheckColour( index - 1 ) ) {
+					DeleteChar(); // backspace XYZ%e to XYZ
+				} else if( CheckColour( index - 2 ) ) {
+					DeleteChar(); DeleteChar(); // backspace XYZ%eH to XYZ
+				}
+				DeleteChar();
 				Recreate();
 			}
 		}
-		
-		bool BackspaceColourCode() {
-			// If text is XYZ%eH, backspaces to XYZ.
-			int index = caretPos == -1 ? buffer.Length - 1 : caretPos;
-			if( index <= 1 ) return false;
-			
-			if( buffer.value[index - 1] != '%' || !game.Drawer2D.ValidColour( buffer.value[index] ) )
-				return false;
-			DeleteChar(); DeleteChar();
-			return true;
+
+		bool CheckColour( int index ) {
+			if( index < 0 ) return false;
+			char code = buffer.value[index], col = buffer.value[index + 1];
+			return (code == '%' || code == '&') && game.Drawer2D.ValidColour( col );
 		}
 		
 		void DeleteChar() {
