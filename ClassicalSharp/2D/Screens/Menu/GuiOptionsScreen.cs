@@ -113,7 +113,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescriptions() {
 			descriptions = new string[widgets.Length][];
-			descriptions[8] = new[] {
+			descriptions[8] = new string[] {
 				"&eWhether a system font is used instead of default.png for drawing text",
 				"&fThe default system font used is Arial.",
 			};

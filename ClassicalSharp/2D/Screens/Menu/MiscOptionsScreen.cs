@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescriptions() {
 			descriptions = new string[widgets.Length][];
-			descriptions[0] = new[] {
+			descriptions[0] = new string[] {
 				"&eSets how far away you can place/delete blocks",
 				"&fThe default click distance is 5 blocks.",
 			};

@@ -34,9 +34,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			else if( key == Key.Delete ) DeleteKey();
 			else if( key == Key.Home ) HomeKey();
 			else if( key == Key.End ) EndKey();
-			else if( game.Server.SupportsFullCP437 &&
-			        key == game.InputHandler.Keys[KeyBind.ExtInput] )
-				altText.SetActive( !altText.Active );
 			else if( clipboardDown && !OtherKey( key ) ) return false;
 			
 			return true;
@@ -288,20 +285,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( altText.Active && altText.Bounds.Contains( mouseX, mouseY ) ) {
-				altText.HandlesMouseClick( mouseX, mouseY, button );
-				UpdateAltTextY();
-			} else if( button == MouseButton.Left ) {
+			if( button == MouseButton.Left )
 				SetCaretToCursor( mouseX, mouseY );
-			}
 			return true;
-		}
-		
-		void UpdateAltTextY() {
-			int blockSize = (int)(23 * 2 * game.GuiHotbarScale);
-			int height = Math.Max( Height + YOffset, blockSize ) + YOffset;
-			altText.texture.Y1 = game.Height - (height + altText.texture.Height);
-			altText.Y = altText.texture.Y1;
 		}
 		
 		unsafe void SetCaretToCursor( int mouseX, int mouseY ) {

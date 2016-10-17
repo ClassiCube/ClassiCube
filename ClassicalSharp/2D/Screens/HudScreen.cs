@@ -21,6 +21,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public void OnNewMap( Game game ) { }
 		public void OnNewMapLoaded( Game game ) { }
 		
+		internal int BottomOffset { get { return hotbar.Height; } }
+		
 		public override void Render( double delta ) {
 			if( game.HideGui ) return;
 			
@@ -85,7 +87,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize( int width, int height ) {
 			PlayerListWidget widget = playerList;
-			game.Gui.RefreshHud();
+			chat.OnResize( width, height );
+			hotbar.OnResize( width, height );
 			if( widget != null )
 				CreatePlayerListWidget();
 		}
@@ -93,10 +96,10 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			int size = game.Drawer2D.UseBitmappedChat ? 16 : 11;
 			playerFont = new Font( game.FontName, size );
-			chat = new ChatScreen( game );
-			chat.Init();
 			hotbar = new BlockHotbarWidget( game );
 			hotbar.Init();
+			chat = new ChatScreen( game, this );
+			chat.Init();
 			game.WorldEvents.OnNewMap += OnNewMap;
 		}
 

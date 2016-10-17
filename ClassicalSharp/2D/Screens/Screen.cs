@@ -11,9 +11,10 @@ namespace ClassicalSharp.Gui.Screens {
 		public Screen( Game game ) : base( game ) {
 		}
 		
+		bool handlesAll;
 		/// <summary> Whether this screen handles all mouse and keyboard input. </summary>
 		/// <remarks> This prevents the client from interacting with the world. </remarks>
-		public virtual bool HandlesAllInput { get; protected set; }
+		public virtual bool HandlesAllInput { get { return handlesAll; } protected set { handlesAll = value; } }
 		
 		/// <summary> Whether this screen completely and opaquely covers the game world behind it. </summary>
 		public virtual bool BlocksWorld { get { return false; } }

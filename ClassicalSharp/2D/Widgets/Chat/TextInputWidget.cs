@@ -9,7 +9,6 @@ namespace ClassicalSharp.Gui.Widgets {
 	public sealed partial class TextInputWidget : Widget {
 		
 		const int lines = 3;
-		internal AltTextInputWidget altText;
 		public TextInputWidget( Game game, Font font ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
@@ -27,12 +26,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			defaultHeight = Height = defSize.Height;
 			
 			this.font = font;
-			altText = new AltTextInputWidget( game, font, this );
-			altText.Init();
-		}
-		
-		public int UsedHeight {
-			get { return altText.Height == 0 ? Height + 20 : (game.Height - altText.Y + 5); } 
 		}
 		
 		Texture inputTex, caretTex, prefixTex;
@@ -62,8 +55,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			                 
 			inputTex.Render( gfx );
 			caretTex.Render( gfx, caretCol );
-			if( altText.Active )
-				altText.Render( delta );
 		}
 
 		string[] parts = new string[lines];
@@ -104,7 +95,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			DrawString();
-			UpdateAltTextY();
 			CalculateCaretData();
 		}
 		
@@ -195,7 +185,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			Dispose();
 			gfx.DeleteTexture( ref caretTex );
 			gfx.DeleteTexture( ref prefixTex );
-			altText.Dispose();
 		}
 
 		public override void MoveTo( int newX, int newY ) {
@@ -203,7 +192,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			X = newX; Y = newY;
 			caretTex.Y1 += dy;
 			inputTex.Y1 += dy;
-			UpdateAltTextY();
 		}
 		
 		public void SendTextInBufferAndReset() {
@@ -214,7 +202,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			Dispose();
 			Height = defaultHeight;
 			originalText = null;
-			altText.SetActive( false );
+			
 			game.Chat.Add( null, MessageType.ClientStatus4 );
 			game.Chat.Add( null, MessageType.ClientStatus5 );
 			game.Chat.Add( null, MessageType.ClientStatus6 );
