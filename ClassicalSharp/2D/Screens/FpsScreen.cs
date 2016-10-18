@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public void OnNewMapLoaded( Game game ) { }
 		
 		TextWidget fpsText, hackStates;
-		Texture posTex;
+		TextAtlas posAtlas;
 		public override void Render( double delta ) {
 			UpdateFPS( delta );
 			if( game.HideGui || !game.ShowFPS ) return;
@@ -106,11 +106,13 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			string msg = text.Length > 0 ? text.ToString() : "FPS: no data yet";
 			fpsText.SetText( msg );
-			MakePosTextWidget();
+			posAtlas = new TextAtlas( game );
+			posAtlas.Pack( "0123456789-, ()", posFont, "Feet pos: " );
+			posAtlas.tex.Y = (short)(fpsText.Height + 2);
 			
 			hackStates = new ChatTextWidget( game, posFont );
 			hackStates.XOffset = 2;
-			hackStates.YOffset = fpsText.Height + posTex.Height + 2;
+			hackStates.YOffset = fpsText.Height + posAtlas.tex.Height + 2;
 			hackStates.ReducePadding = true;
 			hackStates.Init();
 			UpdateHackState( true );
@@ -120,31 +122,35 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			posFont.Dispose();
 			fpsText.Dispose();
-			gfx.DeleteTexture( ref posTex );
+			
+			posAtlas.Dispose();
 			hackStates.Dispose();
 			game.Events.ChatFontChanged -= ChatFontChanged;
 		}
 		
 		void ChatFontChanged( object sender, EventArgs e ) { Recreate(); }
 		
-		public override void OnResize( int width, int height ) {
-		}
+		public override void OnResize( int width, int height ) { }
 		
 		void DrawPosition() {
 			int index = 0;
-			Texture tex = posTex;
-			tex.X1 = 2; tex.Width = (short)baseWidth;
+			Texture tex = posAtlas.tex;
+			tex.X1 = 2; tex.Width = (short)posAtlas.offset;
 			IGraphicsApi.Make2DQuad( ref tex, FastColour.White, game.ModelCache.vertices, ref index );
 			
 			Vector3I pos = Vector3I.Floor( game.LocalPlayer.Position );
-			curX = baseWidth + 2;
-			AddChar( 13, ref index );
-			AddInt( pos.X, ref index, true );
-			AddInt( pos.Y, ref index, true );
-			AddInt( pos.Z, ref index, false );
-			AddChar( 14, ref index );
+			posAtlas.curX = posAtlas.offset + 2;
+			VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
 			
-			gfx.BindTexture( posTex.ID );
+			posAtlas.Add( 13, vertices, ref index );
+			posAtlas.AddInt( pos.X, vertices, ref index );
+			posAtlas.Add( 11, vertices, ref index );
+			posAtlas.AddInt( pos.Y, vertices, ref index );
+			posAtlas.Add( 11, vertices, ref index );
+			posAtlas.AddInt( pos.Z, vertices, ref index );
+			posAtlas.Add( 14, vertices, ref index );
+			
+			gfx.BindTexture( posAtlas.tex.ID );
 			gfx.UpdateDynamicIndexedVb( DrawMode.Triangles,
 			                           game.ModelCache.vb, game.ModelCache.vertices, index );
 		}
@@ -170,83 +176,6 @@ namespace ClassicalSharp.Gui.Screens {
 				if( noclip ) text.Append( ref index, "Noclip ON   " );
 				hackStates.SetText( text.ToString() );
 			}
-		}
-
-		const string possibleChars = "0123456789-, ()";
-		int[] widths = new int[possibleChars.Length];
-		int baseWidth, curX;
-		float texWidth;
-		void MakePosTextWidget() {
-			DrawTextArgs args = new DrawTextArgs( "", posFont, true );
-			for( int i = 0; i < possibleChars.Length; i++ ) {
-				args.Text = new String( possibleChars[i], 1 );
-				widths[i] = game.Drawer2D.MeasureChatSize( ref args ).Width;
-			}
-			
-			using( IDrawer2D drawer = game.Drawer2D ) {
-				args.Text = "Feet pos: ";
-				Size size = game.Drawer2D.MeasureChatSize( ref args );
-				baseWidth = size.Width;
-				size.Width += 16 * possibleChars.Length;
-				
-				using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( size ) ) {
-					drawer.SetBitmap( bmp );
-					drawer.DrawChatText( ref args, 0, 0 );
-					
-					for( int i = 0; i < possibleChars.Length; i++ ) {
-						args.Text = new String( possibleChars[i], 1 );
-						drawer.DrawChatText( ref args, baseWidth + 16 * i, 0 );
-					}
-					
-					int y = fpsText.Height + 2;
-					posTex = drawer.Make2DTexture( bmp, size, 0, y );
-					game.Drawer2D.ReducePadding( ref posTex,
-					                            Utils.Floor( font.Size ) );
-					
-					posTex.U2 = (float)baseWidth / bmp.Width;
-					posTex.Width = (short)baseWidth;
-					texWidth = bmp.Width;
-				}
-			}
-		}
-		
-		void AddChar( int charIndex, ref int index ) {
-			int width = widths[charIndex];
-			Texture tex = posTex;
-			tex.X1 = curX; tex.Width = (short)width;
-			tex.U1 = (baseWidth + charIndex * 16) / texWidth;
-			tex.U2 = tex.U1 + width / texWidth;
-			curX += width;
-			IGraphicsApi.Make2DQuad( ref tex, FastColour.White, game.ModelCache.vertices, ref index );
-		}
-		
-		void AddInt( int value, ref int index, bool more ) {
-			if( value < 0 )
-				AddChar( 10, ref index );
-			
-			int count = 0;
-			value = Reverse( Math.Abs( value ), out count );
-			for( int i = 0; i < count; i++ ) {
-				AddChar( value % 10, ref index ); value /= 10;
-			}
-			
-			if( more )
-				AddChar( 11, ref index );
-		}
-		
-		static int Reverse( int value, out int count ) {
-			int orig = value, reversed = 0;
-			count = 1; value /= 10;
-			while( value > 0 ) {
-				count++; value /= 10;
-			}
-			
-			for( int i = 0; i < count; i++ ) {
-				reversed *= 10;
-				reversed += orig % 10;
-				orig /= 10;
-			}
-			return reversed;
 		}
 	}
 }

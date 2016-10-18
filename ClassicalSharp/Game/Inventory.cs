@@ -8,8 +8,6 @@ namespace ClassicalSharp {
 		
 		public void Init( Game game ) {
 			this.game = game;
-			Hotbar = new byte[] { Block.Stone, Block.Cobblestone, Block.Brick, Block.Dirt, Block.Wood,
-				Block.Log, Block.Leaves, Block.Grass, Block.Slab };
 			MakeMap();
 		}
 
@@ -20,9 +18,13 @@ namespace ClassicalSharp {
 		public void Dispose() { }
 		
 		int hotbarIndex = 0;
-		public bool CanChangeHeldBlock = true;
-		public byte[] Hotbar;
 		Game game;
+		public bool CanChangeHeldBlock = true;
+		
+		public byte[] Hotbar = new byte[] { Block.Stone, 
+			Block.Cobblestone, Block.Brick, Block.Dirt, Block.Wood,
+			Block.Log, Block.Leaves, Block.Grass, Block.Slab };
+		public byte[] Count = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
 		
 		public InventoryPermissions CanPlace = new InventoryPermissions();
 		public InventoryPermissions CanDelete = new InventoryPermissions();

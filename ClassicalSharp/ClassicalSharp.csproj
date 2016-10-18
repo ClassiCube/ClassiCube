@@ -120,6 +120,7 @@
     <Compile Include="2D\Texture.cs" />
     <Compile Include="2D\Utils\FastBitmap.cs" />
     <Compile Include="2D\Utils\FastColour.cs" />
+    <Compile Include="2D\Utils\TextAtlas.cs" />
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
     <Compile Include="2D\Widgets\Chat\AltTextInputWidget.Types.cs" />
     <Compile Include="2D\Widgets\Chat\ChatTextWidget.cs" />
