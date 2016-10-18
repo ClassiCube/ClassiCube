@@ -70,7 +70,6 @@ namespace ClassicalSharp {
 		ClientStatus4 = 259, // clipboard invalid characters
 		ClientStatus5 = 260, // tab list matching names
 		ClientStatus6 = 261, // no LongerMessages warning
-		ClientClock = 262,
 	}
 	
 	public enum BlockFace { XMax, XMin, YMax, YMin, ZMax, ZMin, }

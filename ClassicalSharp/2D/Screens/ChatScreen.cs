@@ -87,7 +87,6 @@ namespace ClassicalSharp.Gui.Screens {
 			status.SetText( 2, chat.Status1.Text );
 			status.SetText( 3, chat.Status2.Text );
 			status.SetText( 4, chat.Status3.Text );
-			if( game.ShowClock ) status.SetText( 0, chat.ClientClock.Text );
 			
 			bottomRight.SetText( 2, chat.BottomRight1.Text );
 			bottomRight.SetText( 1, chat.BottomRight2.Text );
@@ -130,14 +129,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		int lastDownloadStatus = int.MinValue;
 		StringBuffer lastDownload = new StringBuffer( 48 );
-		void CheckOtherStatuses() {
-			bool clockValid = status.Textures[0].IsValid;
-			if( game.ShowClock ) {
-				if( !clockValid ) status.SetText( 0, game.Chat.ClientClock.Text );
-			} else if( clockValid ) {
-				status.SetText( 0, null );
-			}
-			
+		void CheckOtherStatuses() {			
 			Request item = game.AsyncDownloader.CurrentItem;
 			if( item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack") ) {
 				if( status.Textures[1].IsValid ) status.SetText( 1, null );
@@ -259,8 +251,6 @@ namespace ClassicalSharp.Gui.Screens {
 			} else if( type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus6 ) {
 				clientStatus.SetText( (int)(type - MessageType.ClientStatus1), e.Text );
 				UpdateChatYOffset( true );
-			} else if( type == MessageType.ClientClock && game.ShowClock ) {
-				status.SetText( 0, e.Text );
 			}
 		}
 

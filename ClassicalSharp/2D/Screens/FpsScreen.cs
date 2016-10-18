@@ -62,33 +62,11 @@ namespace ClassicalSharp.Gui.Screens {
 					.AppendNum( ref index, game.Vertices ).Append( ref index, " vertices" );
 			}
 			
-			CheckClock();
 			string textString = text.ToString();
 			fpsText.SetText( textString );
 			accumulator = 0;
 			frames = 0;
 			game.ChunkUpdates = 0;
-		}
-		
-		void CheckClock() {
-			int minutes = totalSeconds / 60;
-			if( !game.ShowClock || minutes == oldMinutes ) return;
-			
-			oldMinutes = minutes;
-			TimeSpan span = TimeSpan.FromMinutes( minutes );
-			string format = null;
-			
-			if( span.TotalDays > 1 ) {
-				format = "&eBeen playing for {2} day" + Q( span.Days ) + ", {1} hour" +
-					Q( span.Hours ) + ", {0} min" + Q( span.Minutes );
-			} else if( span.TotalHours >= 1 ) {
-				format = "&eBeen playing for {1} hour" + Q( span.Hours ) + ", {0} min" +
-					Q( span.Minutes );
-			} else {
-				format = "&eBeen playing for {0} min" + Q( span.Minutes );
-			}
-			string spanText = String.Format( format, span.Minutes, span.Hours, span.Days );
-			game.Chat.Add( spanText, MessageType.ClientClock );
 		}
 		
 		string Q( int value ) { return value == 1 ? "" : "s"; }

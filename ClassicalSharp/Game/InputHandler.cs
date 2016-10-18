@@ -239,8 +239,6 @@ namespace ClassicalSharp {
 				game.Gui.SetNewScreen( new PauseScreen( game ) );
 			} else if( key == Keys[KeyBind.Inventory] ) {
 				game.Gui.SetNewScreen( new InventoryScreen( game ) );
-			} else if( key == Key.F9 ) {
-				game.ShowClock = !game.ShowClock;
 			} else {
 				return false;
 			}
