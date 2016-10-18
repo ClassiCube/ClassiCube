@@ -70,7 +70,7 @@ namespace ClassicalSharp.Commands {
 				text = text.Substring( 1 );
 			}
 			
-			if( text.Length == 1 ) { // only / or /client
+			if( text.Length == 0 ) { // only / or /client
 				game.Chat.Add( "&eList of client commands:" );
 				PrintDefinedCommands( game );
 				game.Chat.Add( "&eTo see a particular command's help, type /client help [cmd name]" );
