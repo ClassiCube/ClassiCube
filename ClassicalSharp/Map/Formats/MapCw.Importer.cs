@@ -151,8 +151,10 @@ namespace ClassicalSharp.Map {
 			info.DigSounds[id] = CPEProtocolBlockDefs.breakSnds[soundId];
 			info.StepSounds[id] = CPEProtocolBlockDefs.stepSnds[soundId];
 			info.FullBright[id] = (byte)compound["FullBright"].Value != 0;
-			info.IsSprite[id] = (byte)compound["Shape"].Value == 0;
+			
 			byte blockDraw = (byte)compound["BlockDraw"].Value;
+			if( (byte)compound["Shape"].Value == 0 )
+				blockDraw = (byte)BlockDraw.Sprite;
 			info.SetBlockDraw( id, (BlockDraw)blockDraw );
 			
 			data = (byte[])compound["Fog"].Value;

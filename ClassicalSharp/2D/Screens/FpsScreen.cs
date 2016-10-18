@@ -42,7 +42,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		double accumulator;
 		int frames, totalSeconds;
-		int oldMinutes = -1;
 		
 		void UpdateFPS( double delta ) {
 			frames++;

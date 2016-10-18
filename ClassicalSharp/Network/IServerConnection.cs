@@ -84,7 +84,7 @@ namespace ClassicalSharp {
 				if( url.StartsWith( "http://" ) ) address = url.Substring( 7 );
 				
 				WarningScreen warning = new WarningScreen( game, true, true );
-				warning.Metadata = "CL_ " + url;
+				warning.Metadata = "CL_" + url;
 				warning.SetHandlers( DownloadTexturePack, null, WarningScreenTick );
 				
 				warning.SetTextData(
