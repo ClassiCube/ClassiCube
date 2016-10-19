@@ -69,10 +69,7 @@ namespace OpenTK.Platform.Windows {
 
 			AddKey(VirtualKeys.SCROLL, Key.ScrollLock);
 			AddKey(VirtualKeys.SNAPSHOT, Key.PrintScreen);
-			AddKey(VirtualKeys.CLEAR, Key.Clear);
 			AddKey(VirtualKeys.INSERT, Key.Insert);
-
-			AddKey(VirtualKeys.SLEEP, Key.Sleep);
 
 			// Keypad
 			for (int i = 0; i <= 9; i++) {

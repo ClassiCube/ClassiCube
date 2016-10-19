@@ -6,7 +6,7 @@ namespace ClassicalSharp {
 	
 	public enum KeyBind {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, Chat,
-		Inventory, ToggleFog, SendChat, PauseOrExit, PlayerList, 
+		Inventory, ToggleFog, SendChat, PauseOrExit, PlayerList,
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtInput, HideFps,
 		Screenshot, Fullscreen, ThirdPerson, HideGui, AxisLines,
 		ZoomScrolling, HalfSpeed, MouseLeft, MouseMiddle, MouseRight,
