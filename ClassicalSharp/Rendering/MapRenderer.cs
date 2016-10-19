@@ -50,7 +50,7 @@ namespace ClassicalSharp.Renderers {
 		internal bool[] pendingTranslucent, pendingNormal;
 		internal int[] totalUsed;
 		internal ChunkUpdater updater;
-		bool drawAllFaces = false, underWater = false;
+		bool inTranslucent = false;
 		
 		public MapRenderer( Game game ) {
 			this.game = game;
@@ -110,12 +110,12 @@ namespace ClassicalSharp.Renderers {
 			Vector3I coords = Vector3I.Floor( pos );
 			
 			byte block = game.World.SafeGetBlock( coords );
-			drawAllFaces = game.BlockInfo.IsTranslucent[block];
 			bool outside = !game.World.IsValidPos( Vector3I.Floor( pos ) );
-			underWater = drawAllFaces || (pos.Y < env.EdgeHeight && outside);
+			inTranslucent = game.BlockInfo.IsTranslucent[block] 
+				|| (pos.Y < env.EdgeHeight && outside);
 			
 			// If we are under water, render weather before to blend properly
-			if( !underWater || env.Weather == Weather.Sunny ) return;
+			if( !inTranslucent || env.Weather == Weather.Sunny ) return;
 			gfx.AlphaBlending = true;
 			game.WeatherRenderer.Render( deltaTime );
 			gfx.AlphaBlending = false;
@@ -152,7 +152,7 @@ namespace ClassicalSharp.Renderers {
 			
 			gfx.DepthWrite = true;
 			// If we weren't under water, render weather after to blend properly
-			if( !underWater && game.World.Env.Weather != Weather.Sunny ) {
+			if( !inTranslucent && game.World.Env.Weather != Weather.Sunny ) {
 				gfx.AlphaTest = true;
 				game.WeatherRenderer.Render( deltaTime );
 				gfx.AlphaTest = false;
@@ -271,12 +271,12 @@ namespace ClassicalSharp.Renderers {
 		
 		void DrawTranslucentPart( ChunkInfo info, ref ChunkPartInfo part, int m ) {
 			gfx.BindVb( part.VbId );
-			bool drawLeft = (drawAllFaces || info.DrawLeft) && part.LeftCount > 0;
-			bool drawRight = (drawAllFaces || info.DrawRight) && part.RightCount > 0;
-			bool drawBottom = (drawAllFaces || info.DrawBottom) && part.BottomCount > 0;
-			bool drawTop = (drawAllFaces || info.DrawTop) && part.TopCount > 0;
-			bool drawFront = (drawAllFaces || info.DrawFront) && part.FrontCount > 0;
-			bool drawBack = (drawAllFaces || info.DrawBack) && part.BackCount > 0;
+			bool drawLeft = (inTranslucent || info.DrawLeft) && part.LeftCount > 0;
+			bool drawRight = (inTranslucent || info.DrawRight) && part.RightCount > 0;
+			bool drawBottom = (inTranslucent || info.DrawBottom) && part.BottomCount > 0;
+			bool drawTop = (inTranslucent || info.DrawTop) && part.TopCount > 0;
+			bool drawFront = (inTranslucent || info.DrawFront) && part.FrontCount > 0;
+			bool drawBack = (inTranslucent || info.DrawBack) && part.BackCount > 0;
 			
 			if( drawLeft && drawRight ) {
 				gfx.DrawIndexedVb_TrisT2fC4b( part.LeftCount + part.RightCount, part.LeftIndex ); 
