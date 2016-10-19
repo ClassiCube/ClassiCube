@@ -52,7 +52,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
-			base.Init();
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
 			inputWidget = MenuInputWidget.Create(

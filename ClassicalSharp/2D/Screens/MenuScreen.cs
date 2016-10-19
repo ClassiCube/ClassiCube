@@ -24,16 +24,21 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		public override void Init() {
-			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-		} 
+		public override void Render( double delta ) {
+			RenderMenuBounds();
+			gfx.Texturing = true;
+			RenderMenuWidgets( delta );
+			gfx.Texturing = false;
+		}
 		
 		public override void Dispose() {
 			for( int i = 0; i < widgets.Length; i++ ) {
 				if( widgets[i] == null ) continue;
 				widgets[i].Dispose();
 			}
-			titleFont.Dispose();
+			
+			if( titleFont != null )
+				titleFont.Dispose();
 			if( regularFont != null )
 				regularFont.Dispose();
 		}

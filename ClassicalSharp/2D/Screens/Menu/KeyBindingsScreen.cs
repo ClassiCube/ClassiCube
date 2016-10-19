@@ -29,11 +29,12 @@ namespace ClassicalSharp.Gui.Screens {
 		protected Action<Game, Widget> leftPage, rightPage;
 		
 		public override void Init() {
-			base.Init();
-			if( keyNames == null )
-				keyNames = Enum.GetNames( typeof( Key ) );
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			keyFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Italic );
+			
+			if( keyNames == null )
+				keyNames = Enum.GetNames( typeof( Key ) );
 			statusWidget = ChatTextWidget.Create( game, 0, 130, "",
 			                                     Anchor.Centre, Anchor.Centre, regularFont );
 		}

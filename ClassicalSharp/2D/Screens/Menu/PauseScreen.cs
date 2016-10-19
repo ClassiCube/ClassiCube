@@ -10,20 +10,16 @@ namespace ClassicalSharp.Gui.Screens {
 		public PauseScreen( Game game ) : base( game ) {
 		}
 		
-		public override void Render( double delta ) {
-			RenderMenuBounds();
-			gfx.Texturing = true;
-			RenderMenuWidgets( delta );
-			gfx.Texturing = false;
-		}
-		
 		public override void Init() {
-			base.Init();
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
-			if( game.UseClassicOptions )
+			
+			if( game.UseClassicOptions ) {
 				MakeClassic();
-			else 
-				MakeNormal();			
+			} else {
+				MakeNormal();
+			}
+			
 			if( !game.Server.IsSinglePlayer ) {
 				widgets[1].Disabled = true;
 				widgets[2].Disabled = true;

@@ -15,13 +15,6 @@ namespace ClassicalSharp.Gui.Screens {
 
 		MenuInputWidget selectedWidget;
 		
-		public override void Render( double delta ) {
-			RenderMenuBounds();
-			gfx.Texturing = true;
-			RenderMenuWidgets( delta );
-			gfx.Texturing = false;
-		}
-		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			return HandleMouseClick( widgets, mouseX, mouseY, button );
 		}
@@ -47,7 +40,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
-			base.Init();
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
