@@ -24,25 +24,6 @@ namespace ClassicalSharp {
 		}
 		
 		Key[] keys, defaultKeys;
-		bool IsReservedKey( Key key ) {
-			return key == Key.Escape || key == Key.Slash || key == Key.BackSpace ||
-				(key >= Key.Insert && key <= Key.End) ||
-				(key >= Key.Number0 && key <= Key.Number9); // block hotbar
-		}
-		
-		public bool IsKeyOkay( Key oldKey, Key key, out string reason ) {
-			if( oldKey == Key.Escape || oldKey == Key.F12 ) {
-				reason = "This binding is locked";
-				return false;
-			}
-			
-			if( IsReservedKey( key ) ) {
-				reason = "New key is reserved";
-				return false;
-			}
-			reason = null;
-			return true;
-		}
 		
 		public KeyMap() {
 			// We can't use enum array initaliser because this causes problems when building with mono
@@ -70,7 +51,7 @@ namespace ClassicalSharp {
 			for( int i = 0; i < names.Length; i++ ) {
 				string key = "key-" + names[i];
 				Key mapping = Options.GetEnum( key, keys[i] );
-				if( !IsReservedKey( mapping ) )
+				if( mapping != Key.Escape )
 					keys[i] = mapping;
 			}
 		}

@@ -4,21 +4,12 @@ using System.Drawing;
 using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui.Screens {	
+namespace ClassicalSharp.Gui.Screens {
 	public abstract class KeyBindingsScreen : MenuScreen {
 		
 		public KeyBindingsScreen( Game game ) : base( game ) { }
 		
-		public override void Render( double delta ) {
-			RenderMenuBounds();
-			gfx.Texturing = true;
-			RenderMenuWidgets( delta );
-			statusWidget.Render( delta );
-			gfx.Texturing = false;
-		}
-		
 		Font keyFont;
-		TextWidget statusWidget;
 		static string[] keyNames;
 		protected string[] leftDesc, rightDesc;
 		protected KeyBind[] left, right;
@@ -35,8 +26,6 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if( keyNames == null )
 				keyNames = Enum.GetNames( typeof( Key ) );
-			statusWidget = ChatTextWidget.Create( game, 0, 130, "",
-			                                     Anchor.Centre, Anchor.Centre, regularFont );
 		}
 
 		protected void MakeWidgets( int y ) {
@@ -45,14 +34,14 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if( right == null ) {
 				for( int i = 0; i < left.Length; i++ )
-					Make( leftDesc[i], left[i], 0, ref y );
+					Make( i, 0, ref y );
 			} else {
 				for( int i = 0; i < left.Length; i++ )
-					Make( leftDesc[i], left[i], -btnWidth / 2 - 5, ref y );
+					Make( i, -btnWidth / 2 - 5, ref y );
 				
 				y = origin;
 				for( int i = 0; i < right.Length; i++ )
-					Make( rightDesc[i], right[i], btnWidth / 2 + 5, ref y );
+					Make( i + left.Length, btnWidth / 2 + 5, ref y );
 			}
 			MakePages( origin );
 		}
@@ -80,8 +69,8 @@ namespace ClassicalSharp.Gui.Screens {
 			if( rightPage == null ) widgets[index - 1].Disabled = true;
 		}
 		
-		void Make( string desc, KeyBind bind, int x, ref int y ) {
-			string text = desc + ": " + keyNames[(int)game.Mapping( bind )];
+		void Make( int i, int x, ref int y ) {
+			string text = ButtonText( i );
 			widgets[index++] = ButtonWidget.Create( game, x, y, btnWidth, btnHeight, text,
 			                                       Anchor.Centre, Anchor.Centre, keyFont, OnBindingClick );
 			y += btnDistance;
@@ -90,24 +79,32 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		ButtonWidget curWidget;
 		void OnBindingClick( Game game, Widget widget, MouseButton mouseBtn ) {
+			int index = 0;
 			if( mouseBtn == MouseButton.Right && (curWidget == null || curWidget == widget) ) {
 				curWidget = (ButtonWidget)widget;
-				int index = Array.IndexOf<Widget>( widgets, curWidget ) - 2;
+				index = Array.IndexOf<Widget>( widgets, curWidget ) - 2;
 				KeyBind mapping = Get( index, left, right );
 				HandlesKeyDown( game.InputHandler.Keys.GetDefault( mapping ) );
 			}
 			if( mouseBtn != MouseButton.Left ) return;
 			
-			if( curWidget == widget ) {
+			if( curWidget != null ) {
+				index = Array.IndexOf<Widget>( widgets, curWidget ) - 2;
+				curWidget.SetText( ButtonText( index ) );
 				curWidget = null;
-				statusWidget.SetText( "" );
-			} else {
-				curWidget = (ButtonWidget)widget;
-				int index = Array.IndexOf<Widget>( widgets, curWidget ) - 2;
-				string desc = Get( index, leftDesc, rightDesc );
-				string text = "&ePress new key binding for " + desc + ":";
-				statusWidget.SetText( text );
 			}
+			
+			index = Array.IndexOf<Widget>( widgets, widget ) - 2;
+			string text = ButtonText( index );
+			curWidget = (ButtonWidget)widget;
+			curWidget.SetText( "> " + text + " <" );
+		}
+		
+		string ButtonText( int i ) {
+			KeyBind mapping = Get( i, left, right );
+			Key key = game.InputHandler.Keys[mapping];
+			string desc = Get( i, leftDesc, rightDesc );
+			return desc + ": " + keyNames[(int)key];
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -116,40 +113,20 @@ namespace ClassicalSharp.Gui.Screens {
 			} else if( curWidget != null ) {
 				int index = Array.IndexOf<Widget>( widgets, curWidget ) - 2;
 				KeyBind mapping = Get( index, left, right );
-				KeyMap map = game.InputHandler.Keys;
-				Key oldKey = map[mapping];
-				string reason;
-				string desc = Get( index, leftDesc, rightDesc );
-				
-				if( !map.IsKeyOkay( oldKey, key, out reason ) ) {
-					const string format = "&eFailed to change \"{0}\". &c({1})";
-					statusWidget.SetText( String.Format( format, desc, reason ) );
-				} else {
-					const string format = "&e\"{0}\" changed from &7{1} &eto &7{2}&e.";					
-					statusWidget.SetText( String.Format( format, desc, oldKey, key ) );
-					
-					string text = desc + ": " + keyNames[(int)key];
-					curWidget.SetText( text );
-					map[mapping] = key;
-				}
+				game.InputHandler.Keys[mapping] = key;			
+				curWidget.SetText( ButtonText( index ) );
 				curWidget = null;
 			}
-			return key < Key.F1 || key > Key.F35;
+			return true;
 		}
 		
 		T Get<T>( int index, T[] a, T[] b ) {
 			return index < a.Length ? a[index] : b[index - a.Length];
 		}
 		
-		public override void OnResize( int width, int height ) {
-			base.OnResize( width, height );
-			statusWidget.OnResize( width, height );
-		}
-		
 		public override void Dispose() {
 			keyFont.Dispose();
 			base.Dispose();
-			statusWidget.Dispose();
 		}
 	}
 }
