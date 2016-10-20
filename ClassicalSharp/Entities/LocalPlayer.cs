@@ -14,6 +14,8 @@ namespace ClassicalSharp.Entities {
 
 		public float SpawnYaw, SpawnPitch;
 		
+		public short Health = 20;
+		
 		/// <summary> The distance (in blocks) that players are allowed to
 		/// reach to and interact/modify blocks in. </summary>
 		public float ReachDistance = 5f;
