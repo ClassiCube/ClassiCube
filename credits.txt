@@ -1,5 +1,3 @@
-* UnknownShadow200 - Doing 99.9% of the development work, also came up with the 
-  uninspired name of ClassicalSharp from "Classic" and "C#".
 * 123DMWM - many suggestions, and assistance in identifying bugs and their causes.
 * Goodlyay - many suggestions, and being a great second pairs of eyes for issues and 
   improvements with character modelling, animating, and view bobbing.
