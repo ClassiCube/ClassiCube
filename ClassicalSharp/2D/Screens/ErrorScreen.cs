@@ -77,7 +77,7 @@ namespace ClassicalSharp.Gui.Screens {
 			return HandleMouseMove( widgets, mouseX, mouseY );
 		}
 		
-		public override bool HandlesMouseScroll( int delta )  { return true; }
+		public override bool HandlesMouseScroll( int delta ) { return true; }
 		
 		public override bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) { return true; }
 		

@@ -22,11 +22,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Render( double delta ) {
-			RenderMenuBounds();
-			gfx.Texturing = true;
-			RenderMenuWidgets( delta );
-			gfx.Texturing = false;
-			
+			base.Render( delta );
 			float cX = game.Width / 2, cY = game.Height / 2;
 			gfx.Draw2DQuad( cX - 250, cY - 65, 500, 2, grey );
 			gfx.Draw2DQuad( cX - 250, cY + 45, 500, 2, grey );
@@ -66,8 +62,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			game.Keyboard.KeyRepeat = true;
-			base.Init();
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
+			
 			string flags = HotkeyListScreen.MakeFlagsString( curHotkey.Flags );
 			if( curHotkey.Text == null ) curHotkey.Text = "";
 			string staysOpen = curHotkey.StaysOpen ? "yes" : "no";

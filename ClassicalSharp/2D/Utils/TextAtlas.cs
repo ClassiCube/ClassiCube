@@ -56,7 +56,8 @@ namespace ClassicalSharp {
 			part.U2 = part.U1 + width / (float)totalWidth;
 			
 			curX += width;
-			IGraphicsApi.Make2DQuad( ref part, FastColour.White, vertices, ref index );
+			IGraphicsApi.Make2DQuad( ref part, FastColour.WhitePacked, 
+			                        vertices, ref index );
 		}
 		
 		public void AddInt( int value, VertexP3fT2fC4b[] vertices, ref int index ) {

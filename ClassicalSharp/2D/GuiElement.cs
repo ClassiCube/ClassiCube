@@ -32,9 +32,7 @@ namespace ClassicalSharp.Gui {
 		
 		/// <summary> Causes the gui element to recreate all of its sub-elements and/or textures. </summary>
 		/// <remarks> Typically used when bitmap font changes. </remarks>
-		public virtual void Recreate() { 
-			Dispose(); Init();
-		}
+		public void Recreate() { Dispose(); Init(); }
 		
 		/// <summary> Called when the game window is resized. </summary>
 		public abstract void OnResize( int width, int height );

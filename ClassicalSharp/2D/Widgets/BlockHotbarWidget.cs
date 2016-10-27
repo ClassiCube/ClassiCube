@@ -70,8 +70,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void MoveTo( int newX, int newY ) {
 			X = newX; Y = newY;
-			Dispose();
-			Init();
+			Recreate();
 		}
 		
 		void MakeBackgroundTexture() {

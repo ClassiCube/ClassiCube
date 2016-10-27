@@ -14,7 +14,6 @@ namespace ClassicalSharp.Gui.Screens {
 		protected MenuInputValidator[] validators;
 		protected string[][] descriptions;
 		protected TextGroupWidget extendedHelp;
-		Font extendedHelpFont;
 		
 		public override void Render( double delta ) {
 			RenderMenuBounds();
@@ -38,9 +37,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
-			base.Init();
+			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
-			extendedHelpFont = new Font( game.FontName, 16, FontStyle.Regular );
 			game.Keyboard.KeyRepeat = true;
 		}
 		
@@ -77,7 +75,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Dispose() {
 			DisposeWidgets();
 			game.Keyboard.KeyRepeat = false;
-			extendedHelpFont.Dispose();
 			DisposeExtendedHelp();
 			base.Dispose();
 		}
@@ -155,7 +152,7 @@ namespace ClassicalSharp.Gui.Screens {
 		int tableWidth, tableHeight;
 		protected int extHelpY = 100;
 		void MakeExtendedHelp( string[] desc ) {
-			extendedHelp = new TextGroupWidget( game, desc.Length, extendedHelpFont, null,
+			extendedHelp = new TextGroupWidget( game, desc.Length, regularFont, null,
 			                                   Anchor.Centre, Anchor.Centre );
 			extendedHelp.Init();
 			

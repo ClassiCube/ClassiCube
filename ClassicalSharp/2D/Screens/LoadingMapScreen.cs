@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui.Screens {
 			VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
 			int index = 0, atlasIndex = 0;
 			int drawnY = 0, height = game.Height;
-			FastColour col = new FastColour( 64, 64, 64 );
+			int col = new FastColour( 64, 64, 64 ).Pack();
 			
 			int texLoc = game.BlockInfo.GetTextureLoc( Block.Dirt, Side.Top );
 			TerrainAtlas1D atlas = game.TerrainAtlas1D;

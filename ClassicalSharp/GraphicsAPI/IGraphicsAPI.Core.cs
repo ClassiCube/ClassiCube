@@ -61,12 +61,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal int texVb;
 		public virtual void Draw2DTexture( ref Texture tex, FastColour col ) {
 			int index = 0;
-			Make2DQuad( ref tex, col, texVerts, ref index );
+			Make2DQuad( ref tex, col.Pack(), texVerts, ref index );
 			SetBatchFormat( VertexFormat.P3fT2fC4b );
 			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4 );
 		}
 		
-		public static void Make2DQuad( ref Texture tex, FastColour col,
+		public static void Make2DQuad( ref Texture tex, int col,
 		                              VertexP3fT2fC4b[] vertices, ref int index ) {
 			float x1 = tex.X, y1 = tex.Y, x2 = tex.X + tex.Width, y2 = tex.Y + tex.Height;
 			#if USE_DX
@@ -75,11 +75,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			x1 -= 0.5f; x2 -= 0.5f;
 			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
-			int c = col.Pack();
-			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, c );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, c );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, c );
-			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, c );
+			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, col );
+			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
+			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
+			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
 		}
 		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state

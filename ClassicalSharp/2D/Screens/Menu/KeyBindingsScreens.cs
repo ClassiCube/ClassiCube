@@ -125,7 +125,7 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Init();
 			left = new KeyBind[3];
 			left[0] = KeyBind.MouseLeft; left[1] = KeyBind.MouseMiddle; left[2] = KeyBind.MouseRight;
-			leftDesc = new string[] { "Left mouse", "Middle mouse", "Right mouse" };
+			leftDesc = new string[] { "Left", "Middle", "Right" };
 			
 			widgets = new Widget[left.Length + 5];
 			title = "Mouse key bindings";
