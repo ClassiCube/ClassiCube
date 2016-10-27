@@ -168,7 +168,7 @@ namespace ClassicalSharp {
 			int http = value.IndexOf( "http://", index );
 			int https = value.IndexOf( "https://", index );
 			return http == index || https == index;
-		}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+		}
 		
 		/// <summary> Conversion for code page 437 characters from index 0 to 31 to unicode. </summary>
 		public const string ControlCharReplacements = "\0☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼";
@@ -182,7 +182,7 @@ namespace ClassicalSharp {
 			fixed( char* ptr = value ) {
 				for( int i = 0; i < value.Length; i++ ) {
 					char c = ptr[i];
-					if( c < 'A' || c > 'Z' ) continue;			
+					if( c < 'A' || c > 'Z' ) continue;
 					c += ' '; ptr[i] = c;
 				}
 			}
@@ -193,13 +193,23 @@ namespace ClassicalSharp {
 		public static bool TryParseDecimal( string s, out float result ) {
 			result = 0;
 			float temp;
-			const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite 
+			const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
 				| NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 			
 			if( !Single.TryParse( s, style, NumberFormatInfo.InvariantInfo, out temp ) ) return false;
 			if( Single.IsInfinity( temp ) || Single.IsNaN( temp ) ) return false;
 			result = temp;
 			return true;
+		}
+		
+		
+		public static bool IsValidInputChar( char c, Game game ) {
+			if( c >= ' ' && c <= '~' ) return true; // ascii
+			
+			bool isCP437 = Utils.ControlCharReplacements.IndexOf( c ) >= 0 ||
+				Utils.ExtendedCharReplacements.IndexOf( c ) >= 0;
+			bool supportsCP437 = game.Server.SupportsFullCP437;
+			return supportsCP437 && isCP437;
 		}
 	}
 }

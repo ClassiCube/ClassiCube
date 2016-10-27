@@ -1,15 +1,16 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
+using OpenTK.Input;
 #if ANDROID
 using Android.Graphics;
 #endif
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed partial class TextInputWidget : Widget {
+	public sealed class InputWidget : Widget {
 		
-		const int lines = 3;
-		public TextInputWidget( Game game, Font font ) : base( game ) {
+		internal const int lines = 3;
+		public InputWidget( Game game, Font font ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.			
@@ -26,13 +27,16 @@ namespace ClassicalSharp.Gui.Widgets {
 			defaultHeight = Height = defSize.Height;
 			
 			this.font = font;
+			inputHandler = new InputWidgetHandler( game, this );
 		}
 		
-		Texture inputTex, caretTex, prefixTex;
-		int caretPos = -1, typingLogPos = 0;
-		int defaultCaretWidth, defaultWidth, defaultHeight;
+		InputWidgetHandler inputHandler;
+		internal Texture inputTex, caretTex, prefixTex;
+		internal int caretPos = -1, typingLogPos = 0;
+		internal int defaultCaretWidth, defaultWidth, defaultHeight;
 		internal WrappableStringBuffer buffer;
-		readonly Font font;
+		internal readonly Font font;
+		internal string originalText;
 
 		FastColour caretCol;
 		static FastColour backColour = new FastColour( 0, 0, 0, 127 );
@@ -57,15 +61,15 @@ namespace ClassicalSharp.Gui.Widgets {
 			caretTex.Render( gfx, caretCol );
 		}
 
-		string[] parts = new string[lines];
+		internal string[] parts = new string[lines];
 		int[] partLens = new int[lines];
 		Size[] sizes = new Size[lines];
 		int maxWidth = 0;
 		int indexX, indexY;
 		bool shownWarning;
 		
-		int LineLength { get { return game.Server.SupportsPartialMessages ? 64 : 62; } }
-		int TotalChars { get { return LineLength * lines; } }
+		internal int LineLength { get { return game.Server.SupportsPartialMessages ? 64 : 62; } }
+		internal int TotalChars { get { return LineLength * lines; } }
 		
 		public override void Init() {
 			X = 5;
@@ -98,7 +102,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			CalculateCaretData();
 		}
 		
-		void CalculateCaretData() {
+		internal void CalculateCaretData() {
 			if( caretPos >= buffer.Length ) caretPos = -1;
 			buffer.MakeCoords( caretPos, partLens, out indexX, out indexY );
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
@@ -284,6 +288,26 @@ namespace ClassicalSharp.Gui.Widgets {
 				if( caretPos >= buffer.Length ) caretPos = -1;
 			}
 			Recreate();
+		}
+		
+		
+		public override bool HandlesKeyPress( char key ) {
+			if( game.HideGui ) return true;
+			
+			if( Utils.IsValidInputChar( key, game ) ) {
+				AppendChar( key );
+				return true;
+			}
+			return false;
+		}
+		
+		public override bool HandlesKeyDown( Key key ) {
+			if( game.HideGui ) return key < Key.F1 || key > Key.F35;
+			return inputHandler.HandlesKeyDown( key );
+		}
+		
+		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+			return inputHandler.HandlesMouseClick( mouseX, mouseY, button );
 		}
 	}
 }

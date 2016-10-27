@@ -9,7 +9,7 @@ using Android.Graphics;
 namespace ClassicalSharp.Gui.Widgets {
 	public sealed partial class AltTextInputWidget : Widget {
 
-		public AltTextInputWidget( Game game, Font font, TextInputWidget parent ) : base( game ) {
+		public AltTextInputWidget( Game game, Font font, InputWidget parent ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.BottomOrRight;
 			this.font = font;
@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public Texture texture;
 		readonly Font font;
-		TextInputWidget parent;
+		InputWidget parent;
 		Size elementSize;
 		
 		public void SetActive( bool active ) {

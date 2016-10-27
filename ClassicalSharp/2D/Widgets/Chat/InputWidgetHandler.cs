@@ -6,21 +6,17 @@ using ClassicalSharp.Entities;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed partial class TextInputWidget : Widget {
+	public sealed class InputWidgetHandler {
 		
-		public override bool HandlesKeyPress( char key ) {
-			if( game.HideGui ) return true;
-			
-			if( IsValidInputChar( key ) ) {
-				AppendChar( key );
-				return true;
-			}
-			return false;
+		Game game;
+		InputWidget w;
+		
+		public InputWidgetHandler( Game game, InputWidget w ) {
+			this.game = game;
+			this.w = w;
 		}
 		
-		public override bool HandlesKeyDown( Key key ) {
-			if( game.HideGui )
-				return key < Key.F1 || key > Key.F35;
+		public bool HandlesKeyDown( Key key ) {
 			bool clipboardDown = OpenTK.Configuration.RunningOnMacOS ?
 				(game.IsKeyDown( Key.WinLeft ) || game.IsKeyDown( Key.WinRight ))
 				: (game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight ));
@@ -40,9 +36,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void TabKey() {
-			int pos = caretPos == -1 ? buffer.Length - 1 : caretPos;
+			int pos = w.caretPos == -1 ? w.buffer.Length - 1 : w.caretPos;
 			int start = pos;
-			char[] value = buffer.value;
+			char[] value = w.buffer.value;
 			
 			while( start >= 0 && IsNameChar( value[start] ) )
 				start--;
@@ -64,12 +60,12 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			if( matches.Count == 1 ) {
-				if( caretPos == -1 ) pos++;
+				if( w.caretPos == -1 ) pos++;
 				int len = pos - start;
 				for( int i = 0; i < len; i++ )
-					buffer.DeleteAt( start );
-				if( caretPos != -1 ) caretPos -= len;
-				AppendText( matches[0] );
+					w.buffer.DeleteAt( start );
+				if( w.caretPos != -1 ) w.caretPos -= len;
+				w.AppendText( matches[0] );
 			} else if( matches.Count > 1 ) {
 				StringBuffer sb = new StringBuffer( Utils.StringLength );
 				int index = 0;
@@ -94,149 +90,148 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void BackspaceKey( bool controlDown ) {
 			if( controlDown ) {
-				if( caretPos == -1 ) caretPos = buffer.Length - 1;
-				int len = buffer.GetBackLength( caretPos );
+				if( w.caretPos == -1 ) w.caretPos = w.buffer.Length - 1;
+				int len = w.buffer.GetBackLength( w.caretPos );
 				if( len == 0 ) return;
 				
-				caretPos -= len;
-				if( caretPos < 0 ) caretPos = 0;
+				w.caretPos -= len;
+				if( w.caretPos < 0 ) w.caretPos = 0;
 				for( int i = 0; i <= len; i++ )
-					buffer.DeleteAt( caretPos );
+					w.buffer.DeleteAt( w.caretPos );
 				
-				if( caretPos >= buffer.Length ) caretPos = -1;
-				if( caretPos == -1 &&  buffer.Length > 0 ) {
-					buffer.value[buffer.Length] = ' ';
-				} else if( caretPos >= 0 && buffer.value[caretPos] != ' ' ) {
-					buffer.InsertAt( caretPos, ' ' );
+				if( w.caretPos >= w.buffer.Length ) w.caretPos = -1;
+				if( w.caretPos == -1 &&  w.buffer.Length > 0 ) {
+					w.buffer.value[w.buffer.Length] = ' ';
+				} else if( w.caretPos >= 0 && w.buffer.value[w.caretPos] != ' ' ) {
+					w.buffer.InsertAt( w.caretPos, ' ' );
 				}
-				Recreate();
-			} else if( !buffer.Empty && caretPos != 0 ) {
-				int index = caretPos == -1 ? buffer.Length - 1 : caretPos;
+				w.Recreate();
+			} else if( !w.buffer.Empty && w.caretPos != 0 ) {
+				int index = w.caretPos == -1 ? w.buffer.Length - 1 : w.caretPos;
 				if( CheckColour( index - 1 ) ) {
 					DeleteChar(); // backspace XYZ%e to XYZ
 				} else if( CheckColour( index - 2 ) ) {
 					DeleteChar(); DeleteChar(); // backspace XYZ%eH to XYZ
 				}
 				DeleteChar();
-				Recreate();
+				w.Recreate();
 			}
 		}
 
 		bool CheckColour( int index ) {
 			if( index < 0 ) return false;
-			char code = buffer.value[index], col = buffer.value[index + 1];
+			char code = w.buffer.value[index], col = w.buffer.value[index + 1];
 			return (code == '%' || code == '&') && game.Drawer2D.ValidColour( col );
 		}
 		
 		void DeleteChar() {
-			if( caretPos == -1 ) {
-				buffer.DeleteAt( buffer.Length - 1 );
+			if( w.caretPos == -1 ) {
+				w.buffer.DeleteAt( w.buffer.Length - 1 );
 			} else {
-				caretPos--;
-				buffer.DeleteAt( caretPos );
+				w.caretPos--;
+				w.buffer.DeleteAt( w.caretPos );
 			}
 		}
 		
 		void DeleteKey() {
-			if( !buffer.Empty && caretPos != -1 ) {
-				buffer.DeleteAt( caretPos );
-				if( caretPos >= buffer.Length ) caretPos = -1;
-				Recreate();
+			if( !w.buffer.Empty && w.caretPos != -1 ) {
+				w.buffer.DeleteAt( w.caretPos );
+				if( w.caretPos >= w.buffer.Length ) w.caretPos = -1;
+				w.Recreate();
 			}
 		}
 		
 		void LeftKey( bool controlDown ) {
 			if( controlDown ) {
-				if( caretPos == -1 )
-					caretPos = buffer.Length - 1;
-				caretPos -= buffer.GetBackLength( caretPos );
-				CalculateCaretData();
+				if( w.caretPos == -1 )
+					w.caretPos = w.buffer.Length - 1;
+				w.caretPos -= w.buffer.GetBackLength( w.caretPos );
+				w.CalculateCaretData();
 				return;
 			}
 			
-			if( !buffer.Empty ) {
-				if( caretPos == -1 ) caretPos = buffer.Length;
-				caretPos--;
-				if( caretPos < 0 ) caretPos = 0;
-				CalculateCaretData();
+			if( !w.buffer.Empty ) {
+				if( w.caretPos == -1 ) w.caretPos = w.buffer.Length;
+				w.caretPos--;
+				if( w.caretPos < 0 ) w.caretPos = 0;
+				w.CalculateCaretData();
 			}
 		}
 		
 		void RightKey( bool controlDown ) {
 			if( controlDown ) {
-				caretPos += buffer.GetForwardLength( caretPos );
-				if( caretPos >= buffer.Length ) caretPos = -1;
-				CalculateCaretData();
+				w.caretPos += w.buffer.GetForwardLength( w.caretPos );
+				if( w.caretPos >= w.buffer.Length ) w.caretPos = -1;
+				w.CalculateCaretData();
 				return;
 			}
 			
-			if( !buffer.Empty && caretPos != -1 ) {
-				caretPos++;
-				if( caretPos >= buffer.Length ) caretPos = -1;
-				CalculateCaretData();
+			if( !w.buffer.Empty && w.caretPos != -1 ) {
+				w.caretPos++;
+				if( w.caretPos >= w.buffer.Length ) w.caretPos = -1;
+				w.CalculateCaretData();
 			}
 		}
-		
-		string originalText;
+
 		void UpKey( bool controlDown ) {
 			if( controlDown ) {
-				int pos = caretPos == -1 ? buffer.Length : caretPos;
-				if( pos < LineLength ) return;
+				int pos = w.caretPos == -1 ? w.buffer.Length : w.caretPos;
+				if( pos < w.LineLength ) return;
 				
-				caretPos = pos - LineLength;
-				CalculateCaretData();
+				w.caretPos = pos - w.LineLength;
+				w.CalculateCaretData();
 				return;
 			}
 			
-			if( typingLogPos == game.Chat.InputLog.Count )
-				originalText = buffer.ToString();
+			if( w.typingLogPos == game.Chat.InputLog.Count )
+				w.originalText = w.buffer.ToString();
 			if( game.Chat.InputLog.Count > 0 ) {
-				typingLogPos--;
-				if( typingLogPos < 0 ) typingLogPos = 0;
-				buffer.Clear();
-				buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
-				caretPos = -1;
-				Recreate();
+				w.typingLogPos--;
+				if( w.typingLogPos < 0 ) w.typingLogPos = 0;
+				w.buffer.Clear();
+				w.buffer.Append( 0, game.Chat.InputLog[w.typingLogPos] );
+				w.caretPos = -1;
+				w.Recreate();
 			}
 		}
 		
 		void DownKey( bool controlDown ) {
 			if( controlDown ) {
-				if( caretPos == -1 || caretPos >= (lines - 1) * LineLength ) return;
-				caretPos += LineLength;
-				CalculateCaretData();
+				if( w.caretPos == -1 || w.caretPos >= (w.parts.Length - 1) * w.LineLength ) return;
+				w.caretPos += w.LineLength;
+				w.CalculateCaretData();
 				return;
 			}
 			
 			if( game.Chat.InputLog.Count > 0 ) {
-				typingLogPos++;
-				buffer.Clear();
-				if( typingLogPos >= game.Chat.InputLog.Count ) {
-					typingLogPos = game.Chat.InputLog.Count;
-					if( originalText != null )
-						buffer.Append( 0, originalText );
+				w.typingLogPos++;
+				w.buffer.Clear();
+				if( w.typingLogPos >= game.Chat.InputLog.Count ) {
+					w.typingLogPos = game.Chat.InputLog.Count;
+					if( w.originalText != null )
+						w.buffer.Append( 0, w.originalText );
 				} else {
-					buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
+					w.buffer.Append( 0, game.Chat.InputLog[w.typingLogPos] );
 				}
-				caretPos = -1;
-				Recreate();
+				w.caretPos = -1;
+				w.Recreate();
 			}
 		}
 		
 		void HomeKey() {
-			if( buffer.Empty ) return;
-			caretPos = 0;
-			CalculateCaretData();
+			if( w.buffer.Empty ) return;
+			w.caretPos = 0;
+			w.CalculateCaretData();
 		}
 		
 		void EndKey() {
-			caretPos = -1;
-			CalculateCaretData();
+			w.caretPos = -1;
+			w.CalculateCaretData();
 		}
 		
 		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		bool OtherKey( Key key ) {
-			if( key == Key.V && buffer.Length < TotalChars ) {
+			if( key == Key.V && w.buffer.Length < w.TotalChars ) {
 				string text = null;
 				try {
 					text = game.window.ClipboardText.Trim( trimChars );
@@ -251,18 +246,18 @@ namespace ClassicalSharp.Gui.Widgets {
 				game.Chat.Add( null, MessageType.ClientStatus4 );
 				
 				for( int i = 0; i < text.Length; i++ ) {
-					if( IsValidInputChar( text[i] ) ) continue;
+					if( Utils.IsValidInputChar( text[i], game ) ) continue;
 					const string warning = "&eClipboard contained some characters that can't be sent.";
 					game.Chat.Add( warning, MessageType.ClientStatus4 );
 					text = RemoveInvalidChars( text );
 					break;
 				}
-				AppendText( text );
+				w.AppendText( text );
 				return true;
 			} else if( key == Key.C ) {
-				if( buffer.Empty ) return true;
+				if( w.buffer.Empty ) return true;
 				try {
-					game.window.ClipboardText = buffer.ToString();
+					game.window.ClipboardText = w.buffer.ToString();
 				} catch( Exception ex ) {
 					ErrorHandler.LogError( "Copy to clipboard", ex );
 					const string warning = "&cError while trying to copy to clipboard.";
@@ -278,28 +273,28 @@ namespace ClassicalSharp.Gui.Widgets {
 			int length = 0;
 			for( int i = 0; i < input.Length; i++ ) {
 				char c = input[i];
-				if( !IsValidInputChar( c ) ) continue;
+				if( !Utils.IsValidInputChar( c, game ) ) continue;
 				chars[length++] = c;
 			}
 			return new String( chars, 0, length );
 		}
 		
-		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
+		public bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			if( button == MouseButton.Left )
 				SetCaretToCursor( mouseX, mouseY );
 			return true;
 		}
 		
 		unsafe void SetCaretToCursor( int mouseX, int mouseY ) {
-			mouseX -= inputTex.X1; mouseY -= inputTex.Y1;
-			DrawTextArgs args = new DrawTextArgs( null, font, true );
+			mouseX -= w.inputTex.X1; mouseY -= w.inputTex.Y1;
+			DrawTextArgs args = new DrawTextArgs( null, w.font, true );
 			IDrawer2D drawer = game.Drawer2D;
-			int offset = 0, elemHeight = defaultHeight;
+			int offset = 0, elemHeight = w.defaultHeight;
 			string oneChar = new String( 'A', 1 );
 			
-			for( int y = 0; y < lines; y++ ) {
-				string line = parts[y];
-				int xOffset = y == 0 ? defaultWidth : 0;
+			for( int y = 0; y < w.parts.Length; y++ ) {
+				string line = w.parts[y];
+				int xOffset = y == 0 ? w.defaultWidth : 0;
 				if( line == null ) continue;
 				
 				for( int x = 0; x < line.Length; x++ ) {
@@ -311,15 +306,15 @@ namespace ClassicalSharp.Gui.Widgets {
 					
 					args.Text = oneChar;
 					int elemWidth = drawer.MeasureChatSize( ref args ).Width;
-					if( Contains( trimmedWidth, y * elemHeight, elemWidth, elemHeight, mouseX, mouseY ) ) {
-						caretPos = offset + x;
-						CalculateCaretData(); return;
+					if( GuiElement.Contains( trimmedWidth, y * elemHeight, elemWidth, elemHeight, mouseX, mouseY ) ) {
+						w.caretPos = offset + x;
+						w.CalculateCaretData(); return;
 					}
 				}
 				offset += line.Length;
 			}
-			caretPos = -1;
-			CalculateCaretData();
+			w.caretPos = -1;
+			w.CalculateCaretData();
 		}
 	}
 }

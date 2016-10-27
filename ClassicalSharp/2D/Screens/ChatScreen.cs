@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 		HudScreen hud;
 		int chatLines;
 		ChatTextWidget announcement;
-		TextInputWidget textInput;
+		InputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat, clientStatus;
 		bool suppressNextPress = true;
 		int chatIndex;
@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void ConstructWidgets() {
-			textInput = new TextInputWidget( game, chatFont );
+			textInput = new InputWidget( game, chatFont );
 			textInput.YOffset = 5;
 			altText = new AltTextInputWidget( game, chatFont, textInput );
 			altText.Init();
@@ -420,7 +420,7 @@ namespace ClassicalSharp.Gui.Screens {
 				game.Gui.ShowWarning( warning );
 			} else if( game.ClickableChat ) {
 				for( int i = 0; i < text.Length; i++ ) {
-					if( !IsValidInputChar( text[i] ) ) {
+					if( !Utils.IsValidInputChar( text[i], game ) ) {
 						game.Chat.Add( "&eChatline contained characters that can't be sent on this server." );
 						return true;
 					}
