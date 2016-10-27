@@ -16,14 +16,16 @@ namespace ClassicalSharp.Gui.Widgets {
 			this.w = w;
 		}
 		
-		public bool HandlesKeyDown( Key key ) {
-			bool clipboardDown = OpenTK.Configuration.RunningOnMacOS ?
+		public bool ControlDown() {
+			return OpenTK.Configuration.RunningOnMacOS ?
 				(game.IsKeyDown( Key.WinLeft ) || game.IsKeyDown( Key.WinRight ))
 				: (game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight ));
+		}
+		
+		public bool HandlesKeyDown( Key key ) {
+			bool clipboardDown = ControlDown();
 			
 			if( key == Key.Tab ) TabKey();
-			else if( key == Key.Down ) DownKey( clipboardDown );
-			else if( key == Key.Up ) UpKey( clipboardDown );
 			else if( key == Key.Left ) LeftKey( clipboardDown );
 			else if( key == Key.Right ) RightKey( clipboardDown );
 			else if( key == Key.BackSpace ) BackspaceKey( clipboardDown );
@@ -170,51 +172,6 @@ namespace ClassicalSharp.Gui.Widgets {
 				w.caretPos++;
 				if( w.caretPos >= w.buffer.Length ) w.caretPos = -1;
 				w.CalculateCaretData();
-			}
-		}
-
-		void UpKey( bool controlDown ) {
-			if( controlDown ) {
-				int pos = w.caretPos == -1 ? w.buffer.Length : w.caretPos;
-				if( pos < w.LineLength ) return;
-				
-				w.caretPos = pos - w.LineLength;
-				w.CalculateCaretData();
-				return;
-			}
-			
-			if( w.typingLogPos == game.Chat.InputLog.Count )
-				w.originalText = w.buffer.ToString();
-			if( game.Chat.InputLog.Count > 0 ) {
-				w.typingLogPos--;
-				if( w.typingLogPos < 0 ) w.typingLogPos = 0;
-				w.buffer.Clear();
-				w.buffer.Append( 0, game.Chat.InputLog[w.typingLogPos] );
-				w.caretPos = -1;
-				w.Recreate();
-			}
-		}
-		
-		void DownKey( bool controlDown ) {
-			if( controlDown ) {
-				if( w.caretPos == -1 || w.caretPos >= (w.parts.Length - 1) * w.LineLength ) return;
-				w.caretPos += w.LineLength;
-				w.CalculateCaretData();
-				return;
-			}
-			
-			if( game.Chat.InputLog.Count > 0 ) {
-				w.typingLogPos++;
-				w.buffer.Clear();
-				if( w.typingLogPos >= game.Chat.InputLog.Count ) {
-					w.typingLogPos = game.Chat.InputLog.Count;
-					if( w.originalText != null )
-						w.buffer.Append( 0, w.originalText );
-				} else {
-					w.buffer.Append( 0, game.Chat.InputLog[w.typingLogPos] );
-				}
-				w.caretPos = -1;
-				w.Recreate();
 			}
 		}
 		

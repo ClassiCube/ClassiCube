@@ -7,13 +7,12 @@ using Android.Graphics;
 #endif
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed class InputWidget : Widget {
+	public abstract class InputWidget : Widget {
 		
 		internal const int lines = 3;
 		public InputWidget( Game game, Font font ) : base( game ) {
 			HorizontalAnchor = Anchor.LeftOrTop;
-			VerticalAnchor = Anchor.BottomOrRight;
-			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.			
+			VerticalAnchor = Anchor.BottomOrRight;		
 			buffer = new WrappableStringBuffer( Utils.StringLength * lines );
 			
 			DrawTextArgs args = new DrawTextArgs( "_", font, true );
@@ -30,9 +29,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			inputHandler = new InputWidgetHandler( game, this );
 		}
 		
-		InputWidgetHandler inputHandler;
+		protected InputWidgetHandler inputHandler;
 		internal Texture inputTex, caretTex, prefixTex;
-		internal int caretPos = -1, typingLogPos = 0;
+		internal int caretPos = -1;
 		internal int defaultCaretWidth, defaultWidth, defaultHeight;
 		internal WrappableStringBuffer buffer;
 		internal readonly Font font;
@@ -198,9 +197,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			inputTex.Y1 += dy;
 		}
 		
-		public void SendTextInBufferAndReset() {
+		
+		public virtual void SendAndReset() {
 			SendInBuffer();
-			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			buffer.Clear();
 			caretPos = -1;
 			Dispose();
@@ -253,6 +252,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				text = "&" + lastCol + text;
 			game.Chat.Send( text, partial );
 		}
+		
 		
 		public void Clear() {
 			buffer.Clear();

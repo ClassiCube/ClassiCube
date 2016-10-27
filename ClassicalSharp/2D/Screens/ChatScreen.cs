@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void ConstructWidgets() {
-			textInput = new InputWidget( game, chatFont );
+			textInput = new ChatInputWidget( game, chatFont );
 			textInput.YOffset = 5;
 			altText = new AltTextInputWidget( game, chatFont, textInput );
 			altText.Init();
@@ -346,7 +346,7 @@ namespace ClassicalSharp.Gui.Screens {
 					
 					if( key == game.Mapping( KeyBind.PauseOrExit ) )
 						textInput.Clear();
-					textInput.SendTextInBufferAndReset();
+					textInput.SendAndReset();
 					altText.SetActive( false );
 					
 					chatIndex = game.Chat.Log.Count - chatLines;
