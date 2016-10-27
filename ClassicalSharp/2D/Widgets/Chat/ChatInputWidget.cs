@@ -13,9 +13,23 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		int typingLogPos;
 		string originalText;
+		bool shownWarning;
 
 		public ChatInputWidget( Game game, Font font ) : base( game, font ) {
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
+		}
+		
+		public override void Init() {
+			base.Init();
+			bool supports = game.Server.SupportsPartialMessages;
+			
+			if( buffer.Length > LineLength && !shownWarning && !supports ) {
+				game.Chat.Add( "&eNote: Each line will be sent as a separate packet.", MessageType.ClientStatus6 );
+				shownWarning = true;
+			} else if( buffer.Length <= LineLength && shownWarning ) {
+				game.Chat.Add( null, MessageType.ClientStatus6 );
+				shownWarning = false;
+			}
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
