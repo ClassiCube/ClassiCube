@@ -23,19 +23,15 @@ namespace ClassicalSharp.Gui.Widgets {
 			args = new DrawTextArgs( "> ", font, true );
 			Size defSize = game.Drawer2D.MeasureChatSize( ref args );
 			defaultWidth = Width = defSize.Width;
-			defaultHeight = Height = defSize.Height;
-			
+			defaultHeight = Height = defSize.Height;			
 			this.font = font;
-			inputHandler = new InputWidgetHandler( game, this );
 		}
 		
-		protected InputWidgetHandler inputHandler;
 		internal Texture inputTex, caretTex, prefixTex;
 		internal int caretPos = -1;
 		internal int defaultCaretWidth, defaultWidth, defaultHeight;
 		internal WrappableStringBuffer buffer;
-		internal readonly Font font;
-		internal string originalText;
+		protected readonly Font font;
 
 		FastColour caretCol;
 		static FastColour backColour = new FastColour( 0, 0, 0, 127 );
@@ -72,12 +68,12 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Init() {
 			X = 5;
-			buffer.WordWrap( game.Drawer2D, ref parts, ref partLens, 
-			                       LineLength, TotalChars );
+			buffer.WordWrap( game.Drawer2D, ref parts, ref partLens, LineLength, TotalChars );
 
 			for( int y = 0; y < sizes.Length; y++ )
 				sizes[y] = Size.Empty;
-			sizes[0].Width = defaultWidth; maxWidth = defaultWidth;
+			sizes[0].Width = defaultWidth; 
+			maxWidth = defaultWidth;
 				
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
 			for( int y = 0; y < lines; y++ ) {
@@ -97,11 +93,12 @@ namespace ClassicalSharp.Gui.Widgets {
 				shownWarning = false;
 			}
 			
-			DrawString();
-			CalculateCaretData();
+			RemakeTexture();
+			UpdateCaret();
 		}
 		
-		internal void CalculateCaretData() {
+		/// <summary> Calculates the location and size of the caret character </summary>
+		public void UpdateCaret() {
 			if( caretPos >= buffer.Length ) caretPos = -1;
 			buffer.MakeCoords( caretPos, partLens, out indexX, out indexY );
 			DrawTextArgs args = new DrawTextArgs( null, font, true );
@@ -124,10 +121,15 @@ namespace ClassicalSharp.Gui.Widgets {
 				caretTex.Width = (short)caretWidth;
 			}
 			caretTex.Y1 = sizes[0].Height * indexY + Y;
-			CalcCaretColour();
+			
+			// Update the colour of the caret
+			IDrawer2D drawer = game.Drawer2D;
+			char code = GetLastColour( indexX, indexY );
+			if( code != '\0' ) caretCol = drawer.Colours[code];
 		}
 		
-		void DrawString() {
+		/// <summary> Remakes the raw texture containg all the chat lines. </summary>
+		public void RemakeTexture() {
 			int totalHeight = 0;
 			for( int i = 0; i < lines; i++ )
 				totalHeight += sizes[i].Height;
@@ -161,14 +163,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			Width = size.Width;
 		}
 		
-		void CalcCaretColour() {
-			IDrawer2D drawer = game.Drawer2D;
-			char code = GetLastColour( indexX, indexY );
-			if( code != '\0' )
-				caretCol = drawer.Colours[code];
-		}
-		
-		char GetLastColour( int indexX, int indexY ) {
+		protected char GetLastColour( int indexX, int indexY ) {
 			int x = indexX;
 			IDrawer2D drawer = game.Drawer2D;
 			for( int y = indexY; y >= 0; y-- ) {
@@ -195,90 +190,47 @@ namespace ClassicalSharp.Gui.Widgets {
 			X = newX; Y = newY;
 			caretTex.Y1 += dy;
 			inputTex.Y1 += dy;
-		}
+		}		
 		
-		
-		public virtual void SendAndReset() {
-			SendInBuffer();
-			buffer.Clear();
-			caretPos = -1;
-			Dispose();
+		/// <summary> Invoked when the user presses enter. </summary>
+		public virtual void EnterInput() {
+			Clear();
 			Height = defaultHeight;
-			originalText = null;
-			
-			game.Chat.Add( null, MessageType.ClientStatus4 );
-			game.Chat.Add( null, MessageType.ClientStatus5 );
-			game.Chat.Add( null, MessageType.ClientStatus6 );
-		}
-		
-		void SendInBuffer() {
-			if( buffer.Empty ) return;
-			// Don't want trailing spaces in output message
-			string allText = new String( buffer.value, 0, buffer.TextLength );
-			game.Chat.InputLog.Add( allText );
-			
-			if( game.Server.SupportsPartialMessages )
-				SendWithPartial( allText );
-			else
-				SendNormal();
-		}
-		
-		void SendWithPartial( string allText ) {
-			// don't automatically word wrap the message.
-			while( allText.Length > Utils.StringLength ) {
-				game.Chat.Send( allText.Substring( 0, Utils.StringLength ), true );
-				allText = allText.Substring( Utils.StringLength );
-			}
-			game.Chat.Send( allText, false );
-		}
-		
-		void SendNormal() {
-			int packetsCount = 0;
-			for( int i = 0; i < parts.Length; i++ ) {
-				if( parts[i] == null ) break;
-				packetsCount++;
-			}
-			
-			// split up into both partial and final packet.
-			for( int i = 0; i < packetsCount - 1; i++ )
-				SendNormalText( i, true );
-			SendNormalText( packetsCount - 1, false );
-		}
-		
-		void SendNormalText( int i, bool partial ) {
-			string text = parts[i];
-			char lastCol = GetLastColour( 0, i );
-			if( !IDrawer2D.IsWhiteColour( lastCol ) )
-				text = "&" + lastCol + text;
-			game.Chat.Send( text, partial );
 		}
 		
 		
+		/// <summary> Clears all the characters from the text buffer </summary>
+		/// <remarks> Deletes the native texture. </remarks>
 		public void Clear() {
 			buffer.Clear();
-			for( int i = 0; i < parts.Length; i++ ) {
+			for( int i = 0; i < parts.Length; i++ )
 				parts[i] = null;
-			}
-		}
-		
-		public void AppendText( string text ) {
-			if( buffer.Length + text.Length > TotalChars ) {
-				text = text.Substring( 0, TotalChars - buffer.Length );
-			}
-			if( text == "" ) return;
 			
-			if( caretPos == -1 ) {
-				buffer.InsertAt( buffer.Length, text );
-			} else {
-				buffer.InsertAt( caretPos, text );
-				caretPos += text.Length;
-				if( caretPos >= buffer.Length ) caretPos = -1;
+			caretPos = -1;
+			Dispose();
+		}
+
+		/// <summary> Appends a sequence of characters to current text buffer. </summary>
+		/// <remarks> Potentially recreates the native texture. </remarks>
+		public void Append( string text ) {
+			int appended = 0;
+			foreach( char c in text ) {
+				if( AppendChar( c ) ) appended++;
 			}
+			
+			if( appended == 0 ) return;
 			Recreate();
 		}
 		
-		public void AppendChar( char c ) {
-			if( buffer.Length == TotalChars ) return;
+		/// <summary> Appends a single character to current text buffer. </summary>
+		/// <remarks> Potentially recreates the native texture. </remarks>
+		public void Append( char c ) {
+			if( !AppendChar( c ) ) return;
+			Recreate();
+		}
+		
+		bool AppendChar( char c ) {
+			if( buffer.Length == TotalChars ) return false;
 			
 			if( caretPos == -1 ) {
 				buffer.InsertAt( buffer.Length, c );
@@ -287,15 +239,21 @@ namespace ClassicalSharp.Gui.Widgets {
 				caretPos++;
 				if( caretPos >= buffer.Length ) caretPos = -1;
 			}
-			Recreate();
+			return true;
 		}
 		
+		
+		protected bool ControlDown() {
+			return OpenTK.Configuration.RunningOnMacOS ?
+				(game.IsKeyDown( Key.WinLeft ) || game.IsKeyDown( Key.WinRight ))
+				: (game.IsKeyDown( Key.ControlLeft ) || game.IsKeyDown( Key.ControlRight ));
+		}		
 		
 		public override bool HandlesKeyPress( char key ) {
 			if( game.HideGui ) return true;
 			
 			if( Utils.IsValidInputChar( key, game ) ) {
-				AppendChar( key );
+				Append( key );
 				return true;
 			}
 			return false;
@@ -303,11 +261,207 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override bool HandlesKeyDown( Key key ) {
 			if( game.HideGui ) return key < Key.F1 || key > Key.F35;
-			return inputHandler.HandlesKeyDown( key );
+			bool clipboardDown = ControlDown();
+			
+			if( key == Key.Left ) LeftKey( clipboardDown );
+			else if( key == Key.Right ) RightKey( clipboardDown );
+			else if( key == Key.BackSpace ) BackspaceKey( clipboardDown );
+			else if( key == Key.Delete ) DeleteKey();
+			else if( key == Key.Home ) HomeKey();
+			else if( key == Key.End ) EndKey();
+			else if( clipboardDown && !OtherKey( key ) ) return false;
+			
+			return true;
 		}
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			return inputHandler.HandlesMouseClick( mouseX, mouseY, button );
+			if( button == MouseButton.Left )
+				SetCaretToCursor( mouseX, mouseY );
+			return true;
 		}
+		
+		#region Input handling
+		
+		
+		void BackspaceKey( bool controlDown ) {
+			if( controlDown ) {
+				if( caretPos == -1 ) caretPos = buffer.Length - 1;
+				int len = buffer.GetBackLength( caretPos );
+				if( len == 0 ) return;
+				
+				caretPos -= len;
+				if( caretPos < 0 ) caretPos = 0;
+				for( int i = 0; i <= len; i++ )
+					buffer.DeleteAt( caretPos );
+				
+				if( caretPos >= buffer.Length ) caretPos = -1;
+				if( caretPos == -1 &&  buffer.Length > 0 ) {
+					buffer.value[buffer.Length] = ' ';
+				} else if( caretPos >= 0 && buffer.value[caretPos] != ' ' ) {
+					buffer.InsertAt( caretPos, ' ' );
+				}
+				Recreate();
+			} else if( !buffer.Empty && caretPos != 0 ) {
+				int index = caretPos == -1 ? buffer.Length - 1 : caretPos;
+				if( CheckColour( index - 1 ) ) {
+					DeleteChar(); // backspace XYZ%e to XYZ
+				} else if( CheckColour( index - 2 ) ) {
+					DeleteChar(); DeleteChar(); // backspace XYZ%eH to XYZ
+				}
+				DeleteChar();
+				Recreate();
+			}
+		}
+
+		bool CheckColour( int index ) {
+			if( index < 0 ) return false;
+			char code = buffer.value[index], col = buffer.value[index + 1];
+			return (code == '%' || code == '&') && game.Drawer2D.ValidColour( col );
+		}
+		
+		void DeleteChar() {
+			if( caretPos == -1 ) {
+				buffer.DeleteAt( buffer.Length - 1 );
+			} else {
+				caretPos--;
+				buffer.DeleteAt( caretPos );
+			}
+		}
+		
+		void DeleteKey() {
+			if( !buffer.Empty && caretPos != -1 ) {
+				buffer.DeleteAt( caretPos );
+				if( caretPos >= buffer.Length ) caretPos = -1;
+				Recreate();
+			}
+		}
+		
+		void LeftKey( bool controlDown ) {
+			if( controlDown ) {
+				if( caretPos == -1 )
+					caretPos = buffer.Length - 1;
+				caretPos -= buffer.GetBackLength( caretPos );
+				UpdateCaret();
+				return;
+			}
+			
+			if( !buffer.Empty ) {
+				if( caretPos == -1 ) caretPos = buffer.Length;
+				caretPos--;
+				if( caretPos < 0 ) caretPos = 0;
+				UpdateCaret();
+			}
+		}
+		
+		void RightKey( bool controlDown ) {
+			if( controlDown ) {
+				caretPos += buffer.GetForwardLength( caretPos );
+				if( caretPos >= buffer.Length ) caretPos = -1;
+				UpdateCaret();
+				return;
+			}
+			
+			if( !buffer.Empty && caretPos != -1 ) {
+				caretPos++;
+				if( caretPos >= buffer.Length ) caretPos = -1;
+				UpdateCaret();
+			}
+		}
+		
+		void HomeKey() {
+			if( buffer.Empty ) return;
+			caretPos = 0;
+			UpdateCaret();
+		}
+		
+		void EndKey() {
+			caretPos = -1;
+			UpdateCaret();
+		}
+		
+		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
+		bool OtherKey( Key key ) {
+			if( key == Key.V && buffer.Length < TotalChars ) {
+				string text = null;
+				try {
+					text = game.window.ClipboardText.Trim( trimChars );
+				} catch( Exception ex ) {
+					ErrorHandler.LogError( "Paste from clipboard", ex );
+					const string warning = "&cError while trying to paste from clipboard.";
+					game.Chat.Add( warning, MessageType.ClientStatus4 );
+					return true;
+				}
+
+				if( String.IsNullOrEmpty( text ) ) return true;
+				game.Chat.Add( null, MessageType.ClientStatus4 );
+				
+				for( int i = 0; i < text.Length; i++ ) {
+					if( Utils.IsValidInputChar( text[i], game ) ) continue;
+					const string warning = "&eClipboard contained some characters that can't be sent.";
+					game.Chat.Add( warning, MessageType.ClientStatus4 );
+					text = RemoveInvalidChars( text );
+					break;
+				}
+				Append( text );
+				return true;
+			} else if( key == Key.C ) {
+				if( buffer.Empty ) return true;
+				try {
+					game.window.ClipboardText = buffer.ToString();
+				} catch( Exception ex ) {
+					ErrorHandler.LogError( "Copy to clipboard", ex );
+					const string warning = "&cError while trying to copy to clipboard.";
+					game.Chat.Add( warning, MessageType.ClientStatus4 );
+				}
+				return true;
+			}
+			return false;
+		}
+		
+		string RemoveInvalidChars( string input ) {
+			char[] chars = new char[input.Length];
+			int length = 0;
+			for( int i = 0; i < input.Length; i++ ) {
+				char c = input[i];
+				if( !Utils.IsValidInputChar( c, game ) ) continue;
+				chars[length++] = c;
+			}
+			return new String( chars, 0, length );
+		}
+		
+		
+		unsafe void SetCaretToCursor( int mouseX, int mouseY ) {
+			mouseX -= inputTex.X1; mouseY -= inputTex.Y1;
+			DrawTextArgs args = new DrawTextArgs( null, font, true );
+			IDrawer2D drawer = game.Drawer2D;
+			int offset = 0, elemHeight = defaultHeight;
+			string oneChar = new String( 'A', 1 );
+			
+			for( int y = 0; y < parts.Length; y++ ) {
+				string line = parts[y];
+				int xOffset = y == 0 ? defaultWidth : 0;
+				if( line == null ) continue;
+				
+				for( int x = 0; x < line.Length; x++ ) {
+					args.Text = line.Substring( 0, x );
+					int trimmedWidth = drawer.MeasureChatSize( ref args ).Width + xOffset;
+					// avoid allocating an unnecessary string
+					fixed( char* ptr = oneChar )
+						ptr[0] = line[x];
+					
+					args.Text = oneChar;
+					int elemWidth = drawer.MeasureChatSize( ref args ).Width;
+					if( GuiElement.Contains( trimmedWidth, y * elemHeight, elemWidth, elemHeight, mouseX, mouseY ) ) {
+						caretPos = offset + x;
+						UpdateCaret(); return;
+					}
+				}
+				offset += line.Length;
+			}
+			caretPos = -1;
+			UpdateCaret();
+		}
+		
+		#endregion
 	}
 }

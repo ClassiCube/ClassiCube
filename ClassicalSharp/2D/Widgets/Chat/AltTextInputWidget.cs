@@ -104,10 +104,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			if( index * e.CharsPerItem < e.Contents.Length ) {
 				if( selectedIndex == 0 ) {
 					// TODO: need to insert characters that don't affect caret index, adjust caret colour
-					parent.AppendChar( e.Contents[index * e.CharsPerItem] );
-					parent.AppendChar( e.Contents[index * e.CharsPerItem + 1] );
+					parent.Append( e.Contents[index * e.CharsPerItem] );
+					parent.Append( e.Contents[index * e.CharsPerItem + 1] );
 				} else {
-					parent.AppendChar( e.Contents[index] );
+					parent.Append( e.Contents[index] );
 				}
 			}
 		}

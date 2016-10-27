@@ -330,7 +330,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public void AppendTextToInput( string text ) {
 			if( !HandlesAllInput ) return;
-			textInput.AppendText( text );
+			textInput.Append( text );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -346,7 +346,7 @@ namespace ClassicalSharp.Gui.Screens {
 					
 					if( key == game.Mapping( KeyBind.PauseOrExit ) )
 						textInput.Clear();
-					textInput.SendAndReset();
+					textInput.EnterInput();
 					altText.SetActive( false );
 					
 					chatIndex = game.Chat.Log.Count - chatLines;
@@ -425,7 +425,7 @@ namespace ClassicalSharp.Gui.Screens {
 						return true;
 					}
 				}
-				textInput.AppendText( text );
+				textInput.Append( text );
 			}
 			return true;
 		}
@@ -440,7 +440,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void AppendUrl( WarningScreen screen ) {
 			if( !game.ClickableChat ) return;
-			textInput.AppendText( (string)screen.Metadata );
+			textInput.Append( (string)screen.Metadata );
 		}
 		
 		void ScrollHistory() {

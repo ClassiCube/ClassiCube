@@ -130,7 +130,6 @@
     <Compile Include="2D\Widgets\Chat\TextGroupWidget.cs" />
     <Compile Include="2D\Widgets\Chat\TextGroupWidget.Formatter.cs" />
     <Compile Include="2D\Widgets\InputWidget.cs" />
-    <Compile Include="2D\Widgets\InputWidgetHandler.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputWidget.cs" />
     <Compile Include="2D\Widgets\ButtonWidget.cs" />
