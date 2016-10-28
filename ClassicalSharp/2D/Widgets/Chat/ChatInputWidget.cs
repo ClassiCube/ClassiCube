@@ -19,14 +19,22 @@ namespace ClassicalSharp.Gui.Widgets {
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 		}
 		
+		public override int MaxLines { get { return game.ClassicMode ? 1 : 3; } }		
+		public override int MaxCharsPerLine { 
+			get {
+				bool allChars = game.ClassicMode || game.Server.SupportsPartialMessages;
+				return allChars ? 64 : 62; 
+			}
+		}
+		
 		public override void Init() {
 			base.Init();
 			bool supports = game.Server.SupportsPartialMessages;
 			
-			if( buffer.Length > LineLength && !shownWarning && !supports ) {
+			if( buffer.Length > MaxCharsPerLine && !shownWarning && !supports ) {
 				game.Chat.Add( "&eNote: Each line will be sent as a separate packet.", MessageType.ClientStatus6 );
 				shownWarning = true;
-			} else if( buffer.Length <= LineLength && shownWarning ) {
+			} else if( buffer.Length <= MaxCharsPerLine && shownWarning ) {
 				game.Chat.Add( null, MessageType.ClientStatus6 );
 				shownWarning = false;
 			}
@@ -79,8 +87,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void SendNormal() {
 			int packetsCount = 0;
-			for( int i = 0; i < parts.Length; i++ ) {
-				if( parts[i] == null ) break;
+			for( int i = 0; i < lines.Length; i++ ) {
+				if( lines[i] == null ) break;
 				packetsCount++;
 			}
 			
@@ -91,7 +99,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void SendNormalText( int i, bool partial ) {
-			string text = parts[i];
+			string text = lines[i];
 			char lastCol = GetLastColour( 0, i );
 			if( !IDrawer2D.IsWhiteColour( lastCol ) )
 				text = "&" + lastCol + text;
@@ -103,10 +111,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void UpKey( bool controlDown ) {
 			if( controlDown ) {
-				int pos = caretPos == -1 ? buffer.Length : caretPos;
-				if( pos < LineLength ) return;
+				int pos = caret == -1 ? buffer.Length : caret;
+				if( pos < MaxCharsPerLine ) return;
 				
-				caretPos = pos - LineLength;
+				caret = pos - MaxCharsPerLine;
 				UpdateCaret();
 				return;
 			}
@@ -119,15 +127,15 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				buffer.Clear();
 				buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
-				caretPos = -1;
+				caret = -1;
 				Recreate();
 			}
 		}
 		
 		void DownKey( bool controlDown ) {
 			if( controlDown ) {
-				if( caretPos == -1 || caretPos >= (parts.Length - 1) * LineLength ) return;
-				caretPos += LineLength;
+				if( caret == -1 || caret >= (lines.Length - 1) * MaxCharsPerLine ) return;
+				caret += MaxCharsPerLine;
 				UpdateCaret();
 				return;
 			}
@@ -142,13 +150,13 @@ namespace ClassicalSharp.Gui.Widgets {
 				} else {
 					buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
 				}
-				caretPos = -1;
+				caret = -1;
 				Recreate();
 			}
 		}
 		
 		void TabKey() {
-			int pos = caretPos == -1 ? buffer.Length - 1 : caretPos;
+			int pos = caret == -1 ? buffer.Length - 1 : caret;
 			int start = pos;
 			char[] value = buffer.value;
 			
@@ -172,11 +180,11 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			if( matches.Count == 1 ) {
-				if( caretPos == -1 ) pos++;
+				if( caret == -1 ) pos++;
 				int len = pos - start;
 				for( int i = 0; i < len; i++ )
 					buffer.DeleteAt( start );
-				if( caretPos != -1 ) caretPos -= len;
+				if( caret != -1 ) caret -= len;
 				Append( matches[0] );
 			} else if( matches.Count > 1 ) {
 				StringBuffer sb = new StringBuffer( Utils.StringLength );

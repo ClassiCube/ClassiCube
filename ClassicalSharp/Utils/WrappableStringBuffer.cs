@@ -3,17 +3,16 @@ using System;
 
 namespace ClassicalSharp {
 	
-	public sealed class WrappableStringBuffer : StringBuffer {
+	public unsafe sealed class WrappableStringBuffer : StringBuffer {
 		
-		char[] wrap;
-		
+		char[] wrap;		
 		public WrappableStringBuffer( int capacity ) : base( capacity ) {
 			wrap = new char[capacity];
 		}
 		
-		public void WordWrap( IDrawer2D drawer, ref string[] lines, ref int[] lineLens, 
-		                     int lineSize, int totalChars ) {
+		public void WordWrap( IDrawer2D drawer, string[] lines, int maxPerLine ) {
 			int len = Length;
+			int* lineLens = stackalloc int[lines.Length];
 			for( int i = 0; i < lines.Length; i++ ) {
 				lines[i] = null;
 				lineLens[i] = 0;
@@ -23,31 +22,29 @@ namespace ClassicalSharp {
 			char[] realText = value;
 			MakeWrapCopy();
 			
-			int linesCount = 0;
-			for( int index = 0; index < totalChars; index += lineSize ) {
-				if( value[index] == '\0' )
-					break;
+			int usedLines = 0, totalChars = maxPerLine * lines.Length;
+			for( int index = 0; index < totalChars; index += maxPerLine ) {
+				if( value[index] == '\0' ) break;
 				
-				int lineEnd = index + (lineSize - 1), nextLine = lineEnd + 1;
-				linesCount++;
+				int lineEnd = index + (maxPerLine - 1), nextStart = lineEnd + 1;
+				usedLines++;
 				
 				// Do we need word wrapping?
 				bool needWrap = !IsWrapper( value[lineEnd] ) 
-					&& nextLine < totalChars && !IsWrapper( value[nextLine] );
-				int wrappedLen = needWrap ? WrapLine( index, lineSize ) : lineSize;
+					&& nextStart < totalChars && !IsWrapper( value[nextStart] );
+				int wrappedLen = needWrap ? WrapLine( index, maxPerLine ) : maxPerLine;
 				
 				// Calculate the maximum size of this line
-				int lineLen = lineSize;
+				int lineLen = maxPerLine;
 				for( int i = lineEnd; i >= index; i-- ) {
 					if( value[i] != '\0' ) break;
 					lineLen--;
 				}
-				lineLens[index / lineSize] = Math.Min( lineLen, wrappedLen );
+				lineLens[index / maxPerLine] = Math.Min( lineLen, wrappedLen );
 			}
 			
 			// Output the used lines
-			OutputLines( drawer, ref lines, lineLens,
-			            linesCount, lineSize, totalChars );
+			OutputLines( drawer, lines, lineLens, usedLines, maxPerLine );
 			value = realText;
 		}
 		
@@ -61,8 +58,8 @@ namespace ClassicalSharp {
 			value = wrap;
 		}
 		
-		void OutputLines( IDrawer2D drawer, ref string[] lines, int[] lineLens, 
-		                 int linesCount, int lineSize, int totalChars ) {
+		void OutputLines( IDrawer2D drawer, string[] lines, int* lineLens, int usedLines, int charsPerLine ) {
+			int totalChars = charsPerLine * lines.Length;
 			for( int i = 0; i < totalChars; i++ ) {
 				if( value[i] == '\0' ) value[i] = ' ';
 			}
@@ -72,8 +69,9 @@ namespace ClassicalSharp {
 					value[i] = '&';
 			}
 			
-			for( int i = 0; i < Math.Max( 1, linesCount ); i++ )
-				lines[i] = new String( value, i * lineSize, lineLens[i] );
+			usedLines = Math.Max( 1, usedLines );
+			for( int i = 0; i < usedLines; i++ )
+				lines[i] = new String( value, i * charsPerLine, lineLens[i] );
 		}
 		
 		int WrapLine( int index, int lineSize ) {
@@ -96,21 +94,25 @@ namespace ClassicalSharp {
 				|| c == '<' || c == '/' || c == '\\';
 		}
 		
-		public void MakeCoords( int index, int[] partLens, out int x, out int y ) {
+		/// <summary> Calculates where the given raw index is located in the wrapped lines. </summary>
+		public void GetCoords( int index, string[] lines, out int col, out int row ) {
 			if( index == -1 ) index = Int32.MaxValue;		
-			int total = 0; x = -1; y = 0;
+			int total = 0; col = -1; row = 0;
 			
-			for( int yy = 0; yy < partLens.Length; yy++ ) {
-				if( partLens[yy] == 0 ) break;
+			for( int y = 0; y < lines.Length; y++ ) {
+				int lineLength = LineLength( lines[y] );
+				if( lineLength == 0 ) break;
 				
-				y = yy;
-				if( index < total + partLens[yy] ) {
-					x = index - total; break;
+				row = y;
+				if( index < total + lineLength ) {
+					col = index - total; break;
 				}
-				total += partLens[yy];
+				total += lineLength;
 			}
-			if( x == -1 ) x = partLens[y];
+			if( col == -1 ) col = LineLength( lines[row] );
 		}
+		
+		static int LineLength( string line ) { return line == null ? 0 : line.Length; }
 		
 		public int GetBackLength( int index ) {
 			if( index <= 0 ) return 0;
