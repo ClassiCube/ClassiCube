@@ -41,7 +41,7 @@ namespace ClassicalSharp.Renderers {
 		public void RenderSides( double delta ) {
 			if( sidesVb == -1 ) return;
 			byte block = game.World.Env.SidesBlock;
-			if( game.BlockInfo.IsAir[block] ) return;
+			if( game.BlockInfo.Draw[block] == DrawType.Gas ) return;
 			
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Renderers {
 		public void RenderEdges( double delta ) {
 			if( edgesVb == -1 ) return;
 			byte block = game.World.Env.EdgeBlock;
-			if( game.BlockInfo.IsAir[block] ) return;
+			if( game.BlockInfo.Draw[block] == DrawType.Gas ) return;
 			
 			Vector3 camPos = game.CurrentCameraPos;
 			gfx.AlphaBlending = true;

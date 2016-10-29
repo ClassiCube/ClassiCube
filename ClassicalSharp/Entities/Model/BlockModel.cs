@@ -48,7 +48,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public void CalcState( byte block ) {
-			if( game.BlockInfo.IsAir[block] ) {
+			if( game.BlockInfo.Draw[block] == DrawType.Gas ) {
 				bright = false;
 				minBB = Vector3.Zero;
 				maxBB = Vector3.One;
@@ -58,7 +58,7 @@ namespace ClassicalSharp.Model {
 				minBB = game.BlockInfo.MinBB[block];
 				maxBB = game.BlockInfo.MaxBB[block];
 				height = maxBB.Y - minBB.Y;
-				if( game.BlockInfo.IsSprite[block] )
+				if( game.BlockInfo.Draw[block] == DrawType.Sprite )
 					height = 1;
 			}
 		}
@@ -100,11 +100,11 @@ namespace ClassicalSharp.Model {
 			
 			CalcState( block );
 			colPacked = col.Pack();
-			if( game.BlockInfo.IsAir[block] ) return;
+			if( game.BlockInfo.Draw[block] == DrawType.Gas ) return;
 			
 			lastTexId = -1;
 			atlas = game.TerrainAtlas1D;
-			bool sprite = game.BlockInfo.IsSprite[block];
+			bool sprite = game.BlockInfo.Draw[block] == DrawType.Sprite;
 			DrawParts( sprite );			
 			if( index == 0 ) return;
 			

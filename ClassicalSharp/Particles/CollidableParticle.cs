@@ -68,7 +68,8 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		bool CanPassThrough( Game game, byte block ) {
-			return game.BlockInfo.IsAir[block] || game.BlockInfo.IsSprite[block] 
+			byte draw = game.BlockInfo.Draw[block];
+			return draw == DrawType.Gas || draw == DrawType.Sprite
 				|| (throughLiquids && game.BlockInfo.IsLiquid( block ) );
 		}
 		

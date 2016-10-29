@@ -10,9 +10,13 @@ namespace ClassicalSharp {
 		Metal, Glass, Cloth, Sand, Snow,
 	}
 	
-	public enum BlockDraw : byte {
-		Opaque, Transparent, TransparentLeaves,
-		Translucent, Gas, Sprite,
+	public static class DrawType {
+		public const byte Opaque = 0;
+		public const byte Transparent = 1;
+		public const byte TransparentThick = 2; // e.g. leaves render all neighbours
+		public const byte Translucent = 3;
+		public const byte Gas = 4;
+		public const byte Sprite = 5;
 	}
 	
 	public enum CollideType : byte {
@@ -23,10 +27,6 @@ namespace ClassicalSharp {
 	
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
-		
-		/// <summary> Gets whether the given block id is transparent/fully see through. </summary>
-		/// <remarks> Alpha values are treated as either 'fully see through' or 'fully solid'. </remarks>
-		public bool[] IsTransparent = new bool[Block.Count];
 		
 		/// <summary> Gets whether the given block id is translucent/partially see through. </summary>
 		/// <remarks>Colour values are blended into both the transparent and opaque blocks behind them. </remarks>
@@ -62,9 +62,9 @@ namespace ClassicalSharp {
 		
 		public float[] SpeedMultiplier = new float[Block.Count];
 		
-		public bool[] CullWithNeighbours = new bool[Block.Count];
-		
 		public byte[] LightOffset = new byte[Block.Count];
+
+		public byte[] Draw = new byte[Block.Count];
 		
 		public uint[] DefinedCustomBlocks = new uint[Block.Count >> 5];
 		
@@ -80,14 +80,14 @@ namespace ClassicalSharp {
 		}
 		
 		public void Init() {
-			for( int i = 0; i < DefinedCustomBlocks.Length; i++ ) 
-				DefinedCustomBlocks[i] = 0;			
+			for( int i = 0; i < DefinedCustomBlocks.Length; i++ )
+				DefinedCustomBlocks[i] = 0;
 			for( int block = 0; block < Block.Count; block++ )
 				ResetBlockProps( (byte)block );
 			UpdateCulling();
 		}
 
-		public void SetDefaultBlockPerms( InventoryPermissions place, 
+		public void SetDefaultBlockPerms( InventoryPermissions place,
 		                                 InventoryPermissions delete ) {
 			for( int block = Block.Stone; block <= Block.MaxDefinedBlock; block++ ) {
 				place[block] = true;
@@ -106,20 +106,19 @@ namespace ClassicalSharp {
 			delete[Block.StillLava] = false;
 		}
 		
-		public void SetBlockDraw( byte id, BlockDraw draw ) {
-			IsTranslucent[id] = draw == BlockDraw.Translucent;
-			IsAir[id] = draw == BlockDraw.Gas;
-			IsSprite[id] = draw == BlockDraw.Sprite;
-			CullWithNeighbours[id] = draw != BlockDraw.TransparentLeaves;
+		public void SetBlockDraw( byte id, byte draw ) {
+			IsTranslucent[id] = draw == DrawType.Translucent;
+			IsAir[id] = draw == DrawType.Gas;
+			IsSprite[id] = draw == DrawType.Sprite;
+			Draw[id] = draw;
 			
-			IsTransparent[id] = draw != BlockDraw.Opaque && draw != BlockDraw.Translucent;
-			IsOpaque[id] = draw == BlockDraw.Opaque;
+			IsTransparent[id] = draw != DrawType.Opaque && draw != DrawType.Translucent;
+			IsOpaque[id] = draw == DrawType.Opaque;
 		}
 		
 		public void ResetBlockProps( byte id ) {
 			BlocksLight[id] = DefaultSet.BlocksLight( id );
 			FullBright[id] = DefaultSet.FullBright( id );
-			CullWithNeighbours[id] = id != Block.Leaves;
 			FogColour[id] = DefaultSet.FogColour( id );
 			FogDensity[id] = DefaultSet.FogDensity( id );
 			Collide[id] = DefaultSet.Collide( id );
@@ -129,7 +128,7 @@ namespace ClassicalSharp {
 			SpeedMultiplier[id] = 1;
 			Name[id] = DefaultName( id );
 			
-			if( IsSprite[id] ) {
+			if( Draw[id] == DrawType.Sprite ) {
 				MinBB[id] = new Vector3( 2.50f/16f, 0, 2.50f/16f );
 				MaxBB[id] = new Vector3( 13.5f/16f, 1, 13.5f/16f );
 			} else {

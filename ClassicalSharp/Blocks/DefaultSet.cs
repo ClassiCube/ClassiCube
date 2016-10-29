@@ -38,40 +38,40 @@ namespace ClassicalSharp.Blocks {
 		public static CollideType Collide( byte b ) {
 			if( b >= Block.Water && b <= Block.StillLava )
 				return CollideType.SwimThrough;
-			if( b == Block.Snow || b == Block.Air || Draw( b ) == BlockDraw.Sprite )
+			if( b == Block.Snow || b == Block.Air || Draw( b ) == DrawType.Sprite )
 				return CollideType.WalkThrough;
 			return CollideType.Solid;
 		}
 		
 		public static bool BlocksLight( byte b ) {
 			return !(b == Block.Glass || b == Block.Leaves 
-			         || b == Block.Air || Draw( b ) == BlockDraw.Sprite );
+			         || b == Block.Air || Draw( b ) == DrawType.Sprite );
 		}
 
 		public static SoundType StepSound( byte b ) {
 			if( b == Block.Glass ) return SoundType.Stone;
 			if( b == Block.Rope ) return SoundType.Cloth;			
-			if( Draw( b ) == BlockDraw.Sprite ) return SoundType.None;
+			if( Draw( b ) == DrawType.Sprite ) return SoundType.None;
 			return DigSound( b );
 		}
 		
 		
-		public static BlockDraw Draw( byte b ) {
-			if( b == Block.Air ) return BlockDraw.Gas;
-			if( b == Block.Leaves ) return BlockDraw.TransparentLeaves;
+		public static byte Draw( byte b ) {
+			if( b == Block.Air ) return DrawType.Gas;
+			if( b == Block.Leaves ) return DrawType.TransparentThick;
 
 			if( b == Block.Ice || b == Block.Water || b == Block.StillWater ) 
-				return BlockDraw.Translucent;
+				return DrawType.Translucent;
 			if( b == Block.Glass || b == Block.Leaves || b == Block.Snow )
-				return BlockDraw.Transparent;
+				return DrawType.Transparent;
 			if( b == Block.Slab || b == Block.CobblestoneSlab )
-				return BlockDraw.Transparent;
+				return DrawType.Transparent;
 			
 			if( b >= Block.Dandelion && b <= Block.RedMushroom )
-				return BlockDraw.Sprite;
+				return DrawType.Sprite;
 			if( b == Block.Sapling || b == Block.Rope || b == Block.Fire )
-				return BlockDraw.Sprite;
-			return BlockDraw.Opaque;
+				return DrawType.Sprite;
+			return DrawType.Opaque;
 		}		
 
 		public static SoundType DigSound( byte b ) {

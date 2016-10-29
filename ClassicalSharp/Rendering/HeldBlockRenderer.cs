@@ -85,7 +85,7 @@ namespace ClassicalSharp.Renderers {
 		   
 			held.Position = p.EyePosition + anim.pos;
 			held.Position += offset;
-			if( !info.IsSprite[type] ) {
+			if( info.Draw[type] != DrawType.Sprite ) {
 				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
 				held.Position.Y += 0.2f * (1 - height);
 			}

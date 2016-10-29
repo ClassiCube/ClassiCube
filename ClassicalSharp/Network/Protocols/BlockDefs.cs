@@ -26,7 +26,7 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			HandleDefineBlockCommonEnd( reader, shape, id );
 			// Update sprite BoundingBox if necessary
-			if( info.IsSprite[id] ) {
+			if( info.Draw[id] == DrawType.Sprite ) {
 				using( FastBitmap dst = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
 					info.RecalculateBB( id, dst );
 			}
@@ -71,7 +71,6 @@ namespace ClassicalSharp.Network.Protocols {
 			info.Name[id] = reader.ReadCp437String();
 			info.Collide[id] = (CollideType)reader.ReadUInt8();
 			if( info.Collide[id] != CollideType.Solid ) {
-				info.IsTransparent[id] = true;
 				info.IsOpaque[id] = false;
 			}
 			
@@ -101,8 +100,8 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
 			if( shape == 0 )
-				blockDraw = (byte)BlockDraw.Sprite;
-			info.SetBlockDraw( id, (BlockDraw)blockDraw );
+				blockDraw = DrawType.Sprite;
+			info.SetBlockDraw( id, blockDraw );
 			info.LightOffset[id] = info.CalcLightOffset( id );
 			
 			byte fogDensity = reader.ReadUInt8();

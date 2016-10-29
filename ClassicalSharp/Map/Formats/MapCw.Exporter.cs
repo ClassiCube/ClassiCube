@@ -187,15 +187,13 @@ namespace ClassicalSharp.Map {
 		}
 		
 		int GetShape( BlockInfo info, byte id ) {
-			return info.IsSprite[id] ? 0 : (int)(info.MaxBB[id].Y * 16);
+			return info.Draw[id] == DrawType.Sprite ? 0 : (int)(info.MaxBB[id].Y * 16);
 		}
 		
-		int GetDraw( BlockInfo info, byte id) {
-			if( info.IsTranslucent[id] ) return 3;
-			if( info.IsAir[id] ) return 4;
-			if( info.IsTransparent[id] ) 
-				return info.CullWithNeighbours[id] ? 1 : 2;
-			return 0;
+		int GetDraw( BlockInfo info, byte id ) {
+			if( info.Draw[id] == DrawType.Sprite ) 
+				return DrawType.Transparent;
+			return info.Draw[id];
 		}
 	}
 }

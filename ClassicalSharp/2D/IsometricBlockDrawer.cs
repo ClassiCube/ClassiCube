@@ -43,8 +43,11 @@ namespace ClassicalSharp {
 			minBB = info.MinBB[block];
 			maxBB = info.MaxBB[block];
 			fullBright = info.FullBright[block];
-			if( info.IsSprite[block] ) { minBB = Vector3.Zero; maxBB = Vector3.One; }
-			if( info.IsAir[block] ) return;
+			
+			if( info.Draw[block] == DrawType.Sprite ) {
+				minBB = Vector3.Zero; maxBB = Vector3.One; 
+			}
+			if( info.Draw[block] == DrawType.Gas ) return;
 			
 			// isometric coords size: cosY * -scale - sinY * scale
 			// we need to divide by (2 * cosY), as the calling function expects size to be in pixels.
@@ -54,7 +57,7 @@ namespace ClassicalSharp {
 			Utils.RotateX( ref pos.Y, ref pos.Z, cosX, -sinX );
 			Utils.RotateY( ref pos.X, ref pos.Z, cosY, -sinY );
 			
-			if( info.IsSprite[block] ) {
+			if( info.Draw[block] == DrawType.Sprite ) {
 				SpriteXQuad( block, true );
 				SpriteZQuad( block, true );				
 				

@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 			if( min.Z != 0 ) flags &= ~(1 << Side.Front);
 			if( max.Z != 1 ) flags &= ~(1 << Side.Back);
 			
-			if( (min.Y != 0 && max.Y == 1) && !IsAir[block] ) {
+			if( (min.Y != 0 && max.Y == 1) && Draw[block] != DrawType.air ) {
 				flags &= ~(1 << Side.Top);
 				flags &= ~(1 << Side.Bottom);
 			}
@@ -29,7 +29,8 @@ namespace ClassicalSharp {
 		
 		public void RecalculateSpriteBB( FastBitmap fastBmp ) {
 			for( int i = 0; i < Block.Count; i++ ) {
-				if( IsSprite[i] ) RecalculateBB( i, fastBmp );
+				if( Draw[i] != DrawType.Sprite ) continue;
+				RecalculateBB( i, fastBmp );
 			}
 		}
 		
