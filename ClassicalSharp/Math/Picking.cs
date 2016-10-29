@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 		
 		static bool CameraClip( Game game, PickedPos pos ) {
 			BlockInfo info = game.BlockInfo;
-			if( info.IsAir[t.Block] || info.Collide[t.Block] != CollideType.Solid )
+			if( info.Draw[t.Block] == DrawType.Gas || info.Collide[t.Block] != CollideType.Solid )
 				return false;
 			
 			float t0, t1;

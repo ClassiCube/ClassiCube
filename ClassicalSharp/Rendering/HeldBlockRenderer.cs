@@ -47,7 +47,7 @@ namespace ClassicalSharp.Renderers {
 			SetMatrix();
 			game.Graphics.SetMatrixMode( MatrixType.Projection );
 			game.Graphics.LoadMatrix( ref heldBlockProj );
-			bool translucent = game.BlockInfo.IsTranslucent[type];
+			bool translucent = game.BlockInfo.Draw[type] == DrawType.Translucent;
 			
 			game.Graphics.Texturing = true;
 			if( translucent ) game.Graphics.AlphaBlending = true;
@@ -79,13 +79,14 @@ namespace ClassicalSharp.Renderers {
 		void SetPos() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
 			BlockInfo info = game.BlockInfo;
-			Vector3 offset = info.IsSprite[type] ? sOffset : nOffset;
+			bool sprite = info.Draw[type] == DrawType.Sprite;
+			Vector3 offset = sprite ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
 			held.ModelScale = 0.4f;
 		   
 			held.Position = p.EyePosition + anim.pos;
 			held.Position += offset;
-			if( info.Draw[type] != DrawType.Sprite ) {
+			if( !sprite ) {
 				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
 				held.Position.Y += 0.2f * (1 - height);
 			}

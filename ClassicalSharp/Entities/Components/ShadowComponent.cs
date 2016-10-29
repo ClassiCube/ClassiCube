@@ -142,7 +142,9 @@ namespace ClassicalSharp.Entities {
 			while( posY >= 0 && index < 4 ) {
 				byte block = GetShadowBlock( blockX, posY, blockZ );
 				posY--;
-				if( info.IsAir[block] || info.IsSprite[block] || info.IsLiquid( block ) ) continue;
+				
+				byte draw = info.Draw[block];
+				if( draw == DrawType.Gas || draw == DrawType.Sprite || info.IsLiquid( block ) ) continue;
 				float blockY = posY + 1 + info.MaxBB[block].Y;
 				if( blockY >= Position.Y + 0.01f ) continue;
 				
@@ -165,9 +167,9 @@ namespace ClassicalSharp.Entities {
 		byte GetShadowBlock( int x, int y, int z ) {
 			if( x < 0 || z < 0 || x >= game.World.Width || z >= game.World.Length ) {
 				if( y == game.World.Env.EdgeHeight - 1 )
-					return game.BlockInfo.IsAir[game.World.Env.EdgeBlock] ? Block.Air : Block.Bedrock;
+					return game.BlockInfo.Draw[game.World.Env.EdgeBlock] == DrawType.Gas ? Block.Air : Block.Bedrock;
 				if( y == game.World.Env.SidesHeight - 1 )
-					return game.BlockInfo.IsAir[game.World.Env.SidesBlock] ? Block.Air : Block.Bedrock;
+					return game.BlockInfo.Draw[game.World.Env.SidesBlock] == DrawType.Gas ? Block.Air : Block.Bedrock;
 				return Block.Air;
 			}
 			return game.World.GetBlock( x, y, z );

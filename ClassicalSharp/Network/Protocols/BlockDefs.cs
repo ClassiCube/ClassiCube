@@ -70,9 +70,6 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			info.Name[id] = reader.ReadCp437String();
 			info.Collide[id] = (CollideType)reader.ReadUInt8();
-			if( info.Collide[id] != CollideType.Solid ) {
-				info.IsOpaque[id] = false;
-			}
 			
 			info.SpeedMultiplier[id] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
 			info.SetTex( reader.ReadUInt8(), Side.Top, id );

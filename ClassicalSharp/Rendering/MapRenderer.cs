@@ -111,7 +111,7 @@ namespace ClassicalSharp.Renderers {
 			
 			byte block = game.World.SafeGetBlock( coords );
 			bool outside = !game.World.IsValidPos( Vector3I.Floor( pos ) );
-			inTranslucent = game.BlockInfo.IsTranslucent[block] 
+			inTranslucent = game.BlockInfo.Draw[block] == DrawType.Translucent 
 				|| (pos.Y < env.EdgeHeight && outside);
 			
 			// If we are under water, render weather before to blend properly

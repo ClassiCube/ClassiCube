@@ -50,7 +50,8 @@ namespace ClassicalSharp.Renderers {
 			if( info.IsLiquid( selected.Block ) ) {
 				p1.X -= 0.1f/16; p2.X -= 0.1f/16;
 				p1.Z -= 0.1f/16; p2.Z -= 0.1f/16;
-			} else if( info.IsTranslucent[selected.Block] && info.Collide[selected.Block] != CollideType.Solid ) {
+			} else if( info.Draw[selected.Block] == DrawType.Translucent
+			          && info.Collide[selected.Block] != CollideType.Solid ) {
 				p1.X += 0.1f/16; p2.X += 0.1f/16;
 				p1.Z += 0.1f/16; p2.Z += 0.1f/16;
 			}

@@ -10,8 +10,6 @@ namespace ClassicalSharp {
 		public byte[] hidden = new byte[Block.Count * Block.Count];
 		
 		public byte[] CanStretch = new byte[Block.Count];
-		
-		public bool[] IsAir = new bool[Block.Count];
 
 		internal void UpdateCulling() {
 			for( int block = 1; block < Block.Count; block++ )
@@ -38,7 +36,8 @@ namespace ClassicalSharp {
 		
 		void CheckOpaque( int block ) {
 			if( MinBB[block] != Vector3.Zero || MaxBB[block] != Vector3.One ) {
-				IsOpaque[block] = false;
+				if( Draw[block] == DrawType.Opaque ) 
+					Draw[block] = DrawType.Translucent;
 			}
 		}
 		
@@ -84,8 +83,8 @@ namespace ClassicalSharp {
 			if( block == other ) return Draw[block] != DrawType.TransparentThick;
 			
 			// An opaque neighbour (asides from lava) culls the face.
-			if( IsOpaque[other] && !IsLiquid( other ) ) return true;
-			if( !IsTranslucent[block] || !IsTranslucent[other] ) return false;
+			if( Draw[other] == DrawType.Opaque && !IsLiquid( other ) ) return true;
+			if( Draw[block] != DrawType.Translucent || Draw[other] != DrawType.Translucent ) return false;
 			
 			// e.g. for water / ice, don't need to draw water.
 			CollideType bType = Collide[block], oType = Collide[other];

@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 		}		
 
 		void RenderTile( int index ) {
-			if( info.IsSprite[curBlock] ) {
+			if( info.Draw[curBlock] == DrawType.Sprite ) {
 				fullBright = info.FullBright[curBlock];
 				int count = counts[index + Side.Top];
 				if( count != 0 ) DrawSprite( count );
@@ -92,7 +92,7 @@ namespace ClassicalSharp {
 			   backCount == 0 && bottomCount == 0 && topCount == 0 ) return;
 			
 			fullBright = info.FullBright[curBlock];
-			isTranslucent = info.IsTranslucent[curBlock];
+			isTranslucent = info.Draw[curBlock] == DrawType.Translucent;
 			lightFlags = info.LightOffset[curBlock];
 			
 			Vector3 min = info.MinBB[curBlock], max = info.MaxBB[curBlock];
@@ -157,7 +157,7 @@ namespace ClassicalSharp {
 		
 		unsafe void AddVertices( byte block, int count, int face ) {
 			int i = atlas.Get1DIndex( info.GetTextureLoc( block, face ) );
-			DrawInfo part = info.IsTranslucent[block] ? translucentParts[i] : normalParts[i];
+			DrawInfo part = info.Draw[block] == DrawType.Translucent ? translucentParts[i] : normalParts[i];
 			part.iCount += 6;
 
 			DrawInfoFaceData counts = part.vCount;

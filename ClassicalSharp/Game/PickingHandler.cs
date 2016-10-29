@@ -46,7 +46,7 @@ namespace ClassicalSharp {
 				if( !game.World.IsValidPos( pos ) ) return;
 				byte old = game.World.GetBlock( pos );
 				
-				if( !info.IsAir[old] && (inv.CanPlace[old] || inv.CanDelete[old]) ) {
+				if( info.Draw[old] != DrawType.Gas && (inv.CanPlace[old] || inv.CanDelete[old]) ) {
 					for( int i = 0; i < inv.Hotbar.Length; i++ ) {
 						if( inv.Hotbar[i] == old ) {
 							inv.HeldBlockIndex = i; return;
@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 				if( !game.World.IsValidPos( pos ) ) return;
 				byte old = game.World.GetBlock( pos );
 				
-				if( !info.IsAir[old] && inv.CanDelete[old] ) {
+				if( info.Draw[old] != DrawType.Gas && inv.CanDelete[old] ) {
 					game.UpdateBlock( pos.X, pos.Y, pos.Z, 0 );
 					game.UserEvents.RaiseBlockChanged( pos, old, 0 );
 				}

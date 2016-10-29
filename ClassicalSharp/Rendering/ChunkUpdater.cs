@@ -272,7 +272,9 @@ namespace ClassicalSharp.Renderers {
 				ResetNeighbour( x, y, z + 1, block, cx, cy, cz + 1, minCy, maxCy );
 		}
 		
-		bool Needs( byte block, byte other ) { return !info.IsOpaque[block] || !info.IsAir[other]; }
+		bool Needs( byte block, byte other ) { 
+			return info.Draw[block] != DrawType.Opaque || info.Draw[other] != DrawType.Gas;
+		}
 		
 		void ResetNeighbour( int x, int y, int z, byte block,
 		                    int cx, int cy, int cz, int minCy, int maxCy ) {
@@ -297,7 +299,7 @@ namespace ClassicalSharp.Renderers {
 			// Update if any blocks in the chunk are affected by light change
 			for( ; y >= minY; y--) {
 				byte other = world.blocks[index];
-				bool affected = y == nY ? Needs( block, other ) : !info.IsAir[other];
+				bool affected = y == nY ? Needs( block, other ) : info.Draw[other] != DrawType.Gas;
 				if( affected ) { ResetChunk( cx, cy, cz ); return; }
 				index -= world.Width * world.Length;
 			}

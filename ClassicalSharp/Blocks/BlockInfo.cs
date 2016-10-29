@@ -28,19 +28,6 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		/// <summary> Gets whether the given block id is translucent/partially see through. </summary>
-		/// <remarks>Colour values are blended into both the transparent and opaque blocks behind them. </remarks>
-		public bool[] IsTranslucent = new bool[Block.Count];
-		
-		/// <summary> Gets whether the given block id is opaque/not partially see through. </summary>
-		public bool[] IsOpaque = new bool[Block.Count];
-		
-		// <summary> Gets whether the given block id is opaque/not partially see through on the y axis. </summary>
-		//public bool[] IsOpaqueY = new bool[Block.Count];
-		
-		/// <summary> Gets whether the given block id is a sprite. (e.g. flowers, saplings, fire) </summary>
-		public bool[] IsSprite = new bool[Block.Count];
-		
 		/// <summary> Gets whether the given block id is a liquid. (water and lava) </summary>
 		public bool IsLiquid( byte block ) { return block >= Block.Water && block <= Block.StillLava; }
 		
@@ -107,13 +94,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void SetBlockDraw( byte id, byte draw ) {
-			IsTranslucent[id] = draw == DrawType.Translucent;
-			IsAir[id] = draw == DrawType.Gas;
-			IsSprite[id] = draw == DrawType.Sprite;
+			if( draw == DrawType.Opaque && Collide[id] != CollideType.Solid )
+				draw = DrawType.Transparent;
 			Draw[id] = draw;
-			
-			IsTransparent[id] = draw != DrawType.Opaque && draw != DrawType.Translucent;
-			IsOpaque[id] = draw == DrawType.Opaque;
 		}
 		
 		public void ResetBlockProps( byte id ) {

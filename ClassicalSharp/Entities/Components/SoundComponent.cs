@@ -78,7 +78,8 @@ namespace ClassicalSharp.Entities {
 			CollideType collide = game.BlockInfo.Collide[b];
 			if( newType != SoundType.None && collide != CollideType.Solid )
 				sndType = newType;
-			if( !game.BlockInfo.IsAir[b] )
+			
+			if( game.BlockInfo.Draw[b] != DrawType.Gas )
 				anyNonAir = true;
 			return false;
 		}
@@ -86,7 +87,8 @@ namespace ClassicalSharp.Entities {
 		bool CheckSoundSolid( byte b ) {
 			SoundType newType = game.BlockInfo.StepSounds[b];
 			if( newType != SoundType.None ) sndType = newType;
-			if( !game.BlockInfo.IsAir[b] )
+			
+			if( game.BlockInfo.Draw[b] != DrawType.Gas )
 				anyNonAir = true;
 			return false;
 		}

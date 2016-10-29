@@ -185,8 +185,10 @@ namespace ClassicalSharp {
 			
 			// Need to render again over top of translucent block, as the selection outline
 			// is drawn without writing to the depth buffer
-			if( SelectedPos.Valid && !HideGui && BlockInfo.IsTranslucent[SelectedPos.Block] )
+			if( SelectedPos.Valid && !HideGui 
+			   && BlockInfo.Draw[SelectedPos.Block] == DrawType.Translucent ) {
 				Picking.Render( delta );
+			}
 			
 			Entities.DrawShadows();
 			SelectionManager.Render( delta );

@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 			if( min.Z != 0 ) flags &= ~(1 << Side.Front);
 			if( max.Z != 1 ) flags &= ~(1 << Side.Back);
 			
-			if( (min.Y != 0 && max.Y == 1) && Draw[block] != DrawType.air ) {
+			if( (min.Y != 0 && max.Y == 1) && Draw[block] != DrawType.Gas ) {
 				flags &= ~(1 << Side.Top);
 				flags &= ~(1 << Side.Bottom);
 			}

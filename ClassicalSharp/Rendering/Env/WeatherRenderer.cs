@@ -168,8 +168,8 @@ namespace ClassicalSharp.Renderers {
 		int CalcHeightAt( int x, int maxY, int z, int index ) {
 			int mapIndex = ( maxY * length + z ) * width + x;
 			for( int y = maxY; y >= 0; y-- ) {
-				byte block = map.blocks[mapIndex];
-				if( !(info.IsAir[block] || info.IsSprite[block]) ) {
+				byte draw = info.Draw[map.blocks[mapIndex]];
+				if( !(draw == DrawType.Gas || draw == DrawType.Sprite) ) {
 					heightmap[index] = (short)y;
 					return y;
 				}
@@ -180,9 +180,9 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		internal void UpdateHeight( int x, int y, int z, byte oldBlock, byte newBlock ) {
-			bool didBlock = !(info.IsAir[oldBlock] || info.IsSprite[oldBlock]);
-			bool nowBlocks = !(info.IsAir[newBlock] || info.IsSprite[newBlock]);
-			if( didBlock == nowBlocks ) return;
+			bool didBlock = !(info.Draw[oldBlock] == DrawType.Gas || info.Draw[oldBlock] == DrawType.Sprite);
+			bool nowBlock =  !(info.Draw[newBlock] == DrawType.Gas || info.Draw[newBlock] == DrawType.Sprite);
+			if( didBlock == nowBlock ) return;
 			
 			int index = (x * length) + z;
 			int height = heightmap[index];
@@ -192,7 +192,7 @@ namespace ClassicalSharp.Renderers {
 				// useless if there is another block higher than block.y that stops rain.
 				CalcHeightAt( x, maxY, z, index );
 			} else if( y >= height ) {
-				if( nowBlocks ) {
+				if( nowBlock ) {
 					heightmap[index] = (short)y;
 				} else {
 					// Part of the column is now visible to rain, we don't know how exactly how high it should be though.

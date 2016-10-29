@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 					int chunkIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (0 + 1);
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
 						curBlock = chunk[chunkIndex];
-						if( !info.IsAir[curBlock] ) {
+						if( info.Draw[curBlock] != DrawType.Gas ) {
 							int index = ((yy << 8) | (zz << 4) | xx) * Side.Sides;
 							X = x; Y = y; Z = z;
 							cIndex = chunkIndex;
@@ -93,12 +93,11 @@ namespace ClassicalSharp {
 							index++;
 							chunkIndex++;
 							if( x < 0 ) continue;
-							if( x >= width ) break;
-							
+							if( x >= width ) break;							
 							byte rawBlock = mapPtr[index];
 							
-							allAir = allAir && rawBlock == 0;
-							allSolid = allSolid && info.IsOpaque[rawBlock];
+							allAir = allAir && info.Draw[rawBlock] == DrawType.Gas;
+							allSolid = allSolid && info.Draw[rawBlock] == DrawType.Opaque;
 							chunk[chunkIndex] = rawBlock;
 						}
 					}
@@ -177,12 +176,12 @@ namespace ClassicalSharp {
 					for( int x = x1, xx = 0; x < xMax; x++, xx++ ) {
 						cIndex++;
 						byte b = chunk[cIndex];
-						if( info.IsAir[b] ) continue;
+						if( info.Draw[b] == DrawType.Gas ) continue;
 						int index = ((yy << 8) + (zz << 4) + xx) * Side.Sides;
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
-						if( info.IsSprite[b] ) {
+						if( info.Draw[b] == DrawType.Sprite ) {
 							index += Side.Top;
 							if( counts[index] != 0 ) {
 								X = x; Y = y; Z = z;
@@ -271,9 +270,12 @@ namespace ClassicalSharp {
 		protected static int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
 		
 		protected bool OccludedLiquid( int chunkIndex ) {
-			return info.IsOpaque[chunk[chunkIndex + 324]] && !info.IsAir[chunk[chunkIndex + 324 - 18]] &&
-				!info.IsAir[chunk[chunkIndex + 324 - 1]] && !info.IsAir[chunk[chunkIndex + 324 + 1]] &&
-				!info.IsAir[chunk[chunkIndex + 324 + 18]];
+			return 
+				info.Draw[chunk[chunkIndex + 324]] == DrawType.Opaque
+				&& info.Draw[chunk[chunkIndex + 324 - 18]] != DrawType.Gas
+				&& info.Draw[chunk[chunkIndex + 324 - 1]] != DrawType.Gas
+				&& info.Draw[chunk[chunkIndex + 324 + 1]] != DrawType.Gas
+				&& info.Draw[chunk[chunkIndex + 324 + 18]] != DrawType.Gas;
 		}
 		
 		protected bool IsLit( int x, int y, int z, int face, byte type ) {
