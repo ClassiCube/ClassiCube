@@ -15,7 +15,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[] {
 				// Column 1
-				MakeBool( -1, -100, "Classic arms anim", OptionsKey.SimpleArmsAnim,
+				MakeBool( -1, -100, "Classic arms anim", OptionsKey.SimpleArmsAnim, true,
 				         OnWidgetClick, g => !g.SimpleArmsAnim, (g, v) => g.SimpleArmsAnim = !v ),				
 				MakeBool( -1, -50, "Classic gui textures", OptionsKey.UseClassicGui,
 				         OnWidgetClick, g => g.UseClassicGui, (g, v) => g.UseClassicGui = v ),				

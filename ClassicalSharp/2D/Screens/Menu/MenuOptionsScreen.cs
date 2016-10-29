@@ -123,15 +123,22 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected ButtonWidget MakeBool( int dir, int y, string text, string optKey,
 		                                ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
+			return MakeBool( dir, y, text, optKey, false, onClick, getter, setter );
+		}
+
+		protected ButtonWidget MakeBool( int dir, int y, string text, string optKey, bool invert,
+		                                ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
 			string optName = text;
 			text = text + ": " + (getter( game ) ? "ON" : "OFF");
 			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, text, Anchor.Centre,
 			                                          Anchor.Centre, titleFont, onClick );
 			widget.Metadata = optName;
 			widget.GetValue = g => getter( g ) ? "yes" : "no";
+			string target = invert ? "no" : "yes";
+			
 			widget.SetValue = (g, v) => {
 				setter( g, v == "yes" );
-				Options.Set( optKey, v == "yes" );
+				Options.Set( optKey, v == target );
 				widget.SetText( (string)widget.Metadata + ": " + (v == "yes" ? "ON" : "OFF") );
 			};
 			return widget;
