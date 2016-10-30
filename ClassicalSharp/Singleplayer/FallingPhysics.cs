@@ -7,14 +7,16 @@ namespace ClassicalSharp.Singleplayer {
 
 	public class FallingPhysics {
 		Game game;
+		PhysicsBase physics;
 		World map;
 		BlockInfo info;
 		int width, length, height, oneY;
 		
-		public FallingPhysics( Game game, Physics physics ) {
+		public FallingPhysics( Game game, PhysicsBase physics ) {
 			this.game = game;
 			map = game.World;
 			info = game.BlockInfo;
+			this.physics = physics;
 			
 			physics.OnPlace[Block.Sand] = DoFalling;
 			physics.OnPlace[Block.Gravel] = DoFalling;
@@ -41,18 +43,19 @@ namespace ClassicalSharp.Singleplayer {
 					found = index;
 				else
 					break;
-			}			
+			}
 			if( found == -1 ) return;
-			
-			int x = start % width;
-			int y = start / oneY; // posIndex / (width * length)
-			int z = (start / width) % length;
-			game.UpdateBlock( x, y, z, 0 );
-			
-			x = found % width;
-			y = found / oneY; // posIndex / (width * length)
-			z = (found / width) % length;
+
+			int x = found % width;
+			int y = found / oneY; // posIndex / (width * length)
+			int z = (found / width) % length;
 			game.UpdateBlock( x, y, z, block );
+			
+			x = start % width;
+			y = start / oneY; // posIndex / (width * length)
+			z = (start / width) % length;
+			game.UpdateBlock( x, y, z, Block.Air );
+			physics.ActivateNeighbours( x, y, z, start );
 		}
 	}
 }

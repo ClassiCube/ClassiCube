@@ -8,7 +8,7 @@ namespace ClassicalSharp.Singleplayer {
 		Game game;
 		World map;
 		
-		public OtherPhysics( Game game, Physics physics ) {
+		public OtherPhysics( Game game, PhysicsBase physics ) {
 			this.game = game;
 			map = game.World;
 			physics.OnPlace[Block.Slab] = HandleSlab;

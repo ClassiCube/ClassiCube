@@ -6,7 +6,7 @@ using ClassicalSharp.Events;
 
 namespace ClassicalSharp.Singleplayer {
 
-	public class Physics {
+	public class PhysicsBase {
 		Game game;
 		World map;
 		Random rnd = new Random();
@@ -33,7 +33,7 @@ namespace ClassicalSharp.Singleplayer {
 		public Action<int, byte>[] OnPlace = new Action<int, byte>[256];
 		public Action<int, byte>[] OnDelete = new Action<int, byte>[256];
 		
-		public Physics( Game game ) {
+		public PhysicsBase( Game game ) {
 			this.game = game;
 			map = game.World;
 			info = game.BlockInfo;
@@ -91,16 +91,21 @@ namespace ClassicalSharp.Singleplayer {
 				Action<int, byte> place = OnPlace[block];
 				if( place != null ) place( index, block );
 			}
-			
-			if( p.X > 0 ) Activate( index - 1 );
-			if( p.X < map.Width - 1 ) Activate( index + 1 );
-			if( p.Z > 0 ) Activate( index - map.Width );
-			if( p.Z < map.Length - 1 ) Activate( index + map.Width );
-			if( p.Y > 0 ) Activate( index - oneY );
-			if( p.Y < map.Height - 1 ) Activate( index + oneY );
+			ActivateNeighbours( p.X, p.Y, p.Z, index );
 		}
 		
-		void Activate( int index ) {
+		/// <summary> Activates the direct neighbouring blocks of the given coordinates. </summary>
+		public void ActivateNeighbours( int x, int y, int z, int index ) {
+			if( x > 0 ) Activate( index - 1 );
+			if( x < map.Width - 1 ) Activate( index + 1 );
+			if( z > 0 ) Activate( index - map.Width );
+			if( z < map.Length - 1 ) Activate( index + map.Width );
+			if( y > 0 ) Activate( index - oneY );
+			if( y < map.Height - 1 ) Activate( index + oneY );
+		}
+		
+		/// <summary> Activates the block at the particular packed coordinates. </summary>
+		public void Activate( int index ) {
 			byte block = map.blocks[index];
 			Action<int, byte> activate = OnActivate[block];
 			if( activate != null ) activate( index, block );

@@ -8,11 +8,13 @@ namespace ClassicalSharp.Singleplayer {
 	public class TNTPhysics {
 		Game game;
 		World map;
+		PhysicsBase physics;
 		Random rnd = new Random();
 		
-		public TNTPhysics( Game game, Physics physics ) {
+		public TNTPhysics( Game game, PhysicsBase physics ) {
 			this.game = game;
 			map = game.World;
+			this.physics = physics;
 			physics.OnPlace[Block.TNT] = HandleTnt;
 		}
 		
@@ -32,7 +34,10 @@ namespace ClassicalSharp.Singleplayer {
 			if( rayDirs == null )
 				InitExplosionCache();
 			
-			game.UpdateBlock( x, y, z, 0 );
+			game.UpdateBlock( x, y, z, Block.Air );
+			int index = (y * map.Length + z) * map.Width + x;
+			physics.ActivateNeighbours( x, y, z, index );
+			
 			Vector3 basePos = new Vector3( x, y, z );
 			for( int i = 0; i < rayDirs.Length; i++ ) {
 				Vector3 dir = rayDirs[i] * stepLen;
@@ -41,13 +46,15 @@ namespace ClassicalSharp.Singleplayer {
 				while( intensity > 0 ) {
 					position += dir;
 					intensity -= stepLen * 0.75f;
-					Vector3I blockPos = Vector3I.Floor( position );
-					if( !map.IsValidPos( blockPos ) ) break;
+					Vector3I P = Vector3I.Floor( position );
+					if( !map.IsValidPos( P ) ) break;
 					
-					byte block = map.GetBlock( blockPos );
+					byte block = map.GetBlock( P );
 					intensity -= (hardness[block] / 5 + 0.3f) * stepLen;
 					if( intensity > 0 && block != 0 ) {
-						game.UpdateBlock( blockPos.X, blockPos.Y, blockPos.Z, 0 );
+						game.UpdateBlock( P.X, P.Y, P.Z, Block.Air );
+						index = (P.Y * map.Length + P.Z) * map.Width + P.X;
+						physics.ActivateNeighbours( P.X, P.Y, P.Z, index );
 					}
 				}
 			}
@@ -84,7 +91,7 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			// X planes
 			for( float y = -1 + 2f/15; y <= 1.001f - 2f/15; y += 2f/15) {
-				for( float z = -1 + 2f/15; z <= 1.001f- 2f/15; z += 2f/15) {
+				for( float z = -1 + 2f/15; z <= 1.001f - 2f/15; z += 2f/15) {
 					rayDirs[index++] = Normalise( -1, y, z );
 					rayDirs[index++] = Normalise( +1, y, z );
 				}

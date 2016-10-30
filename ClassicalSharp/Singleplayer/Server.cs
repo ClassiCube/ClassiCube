@@ -12,14 +12,14 @@ namespace ClassicalSharp.Singleplayer {
 
 	public sealed class SinglePlayerServer : IServerConnection {
 		
-		internal Physics physics;
+		internal PhysicsBase physics;
 		internal byte[] generatedMap;
 		IMapGenerator generator;
 		string lastState;
 		
 		public SinglePlayerServer( Game window ) {
 			game = window;
-			physics = new Physics( game );
+			physics = new PhysicsBase( game );
 			SupportsFullCP437 = !game.ClassicMode;
 			SupportsPartialMessages = true;
 		}
