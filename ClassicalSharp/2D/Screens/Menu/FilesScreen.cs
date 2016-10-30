@@ -23,8 +23,8 @@ namespace ClassicalSharp.Gui.Screens {
 			textFont = new Font( game.FontName, 16, FontStyle.Bold );
 			arrowFont = new Font( game.FontName, 18, FontStyle.Bold );
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			title = TextWidget.Create( game, 0, -155, titleText, 
-			                          Anchor.Centre, Anchor.Centre, titleFont );
+			title = TextWidget.Create( game, titleText, titleFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -155 );
 			
 			buttons = new ButtonWidget[] {
 				MakeText( 0, -100, Get( 0 ) ),
@@ -55,13 +55,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		ButtonWidget MakeText( int x, int y, string text ) {
-			return ButtonWidget.Create( game, x, y, 301, 40, text,
-			                           Anchor.Centre, Anchor.Centre, textFont, TextButtonClick );
+			return ButtonWidget.Create( game, 301, 40, text, textFont, TextButtonClick )
+				.SetLocation( Anchor.Centre, Anchor.Centre, x, y );
 		}
 		
 		ButtonWidget Make( int x, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 41, 40, text,
-			                           Anchor.Centre, Anchor.Centre, arrowFont, LeftOnly( onClick ) );
+			return ButtonWidget.Create( game, 41, 40, text, arrowFont, LeftOnly( onClick ) )
+				.SetLocation( Anchor.Centre, Anchor.Centre, x, y );
 		}
 		
 		protected abstract void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn );

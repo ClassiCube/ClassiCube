@@ -6,13 +6,17 @@ using System.Drawing;
 namespace ClassicalSharp.Gui.Widgets {
 	public sealed partial class TextGroupWidget : Widget {
 		
-		public TextGroupWidget( Game game, int elementsCount, Font font, 
-		                       Font underlineFont, Anchor horAnchor, Anchor verAnchor ) : base( game ) {
+		public TextGroupWidget( Game game, int elementsCount, Font font, Font underlineFont ) : base( game ) {
 			ElementsCount = elementsCount;
 			this.font = font;
 			this.underlineFont = underlineFont;
-			HorizontalAnchor = horAnchor;
-			VerticalAnchor = verAnchor;
+		}
+		
+		public TextGroupWidget SetLocation( Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset ) {
+			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
+			XOffset = xOffset; YOffset = yOffset;
+			CalculatePosition();
+			return this;
 		}
 		
 		public Texture[] Textures;
@@ -120,11 +124,12 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void CalculatePosition() {
-			int oldX = X, oldY = Y;
+			int oldY = Y;
 			base.CalculatePosition();
+			if( Textures == null ) return;
 			
 			for( int i = 0; i < Textures.Length; i++ ) {
-				Textures[i].X1 += X - oldX;
+				Textures[i].X1 = CalcPos( HorizontalAnchor, XOffset, Textures[i].Width, game.Width );
 				Textures[i].Y1 += Y - oldY;
 			}
 		}
@@ -141,7 +146,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		string GetUrl( int index, int mouseX ) {
 			Rectangle[] partBounds = linkData[index].bounds;
 			if( partBounds == null ) return null;
-			Texture tex = Textures[index];	
+			Texture tex = Textures[index];
 			mouseX -= tex.X1;
 			
 			for( int i = 1; i < partBounds.Length; i += 2 ) {

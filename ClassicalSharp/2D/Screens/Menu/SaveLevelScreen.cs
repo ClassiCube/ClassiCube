@@ -60,12 +60,12 @@ namespace ClassicalSharp.Gui.Screens {
 				regularFont, titleFont, new PathValidator() );
 			
 			widgets = new Widget[] {
-				ButtonWidget.Create( game, 0, 20, 301, 40, "Save", Anchor.Centre,
-				                    Anchor.Centre, titleFont, SaveClassic ),
-				ButtonWidget.Create( game, -150, 120, 201, 40, "Save schematic", Anchor.Centre,
-				                    Anchor.Centre, titleFont, SaveSchematic ),
-				TextWidget.Create( game, 110, 120, "&eCan be imported into MCEdit", Anchor.Centre,
-				                    Anchor.Centre, regularFont ),
+				ButtonWidget.Create( game, 301, 40, "Save", titleFont, SaveClassic )
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 20 ),
+				ButtonWidget.Create( game, 201, 40, "Save schematic", titleFont, SaveSchematic )
+					.SetLocation( Anchor.Centre, Anchor.Centre, -150, 120 ),
+				TextWidget.Create( game, "&eCan be imported into MCEdit", regularFont )
+					.SetLocation( Anchor.Centre, Anchor.Centre, 110, 120 ),
 				null,
 				MakeBack( false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
@@ -150,8 +150,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescWidget( string text ) {
 			DisposeDescWidget();
-			descWidget = TextWidget.Create( game, 0, 65, text,
-			                                   Anchor.Centre, Anchor.Centre, regularFont );
+			descWidget = TextWidget.Create( game, text, regularFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 65 );
 		}
 		
 		void DisposeDescWidget() {

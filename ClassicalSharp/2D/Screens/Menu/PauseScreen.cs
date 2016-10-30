@@ -32,9 +32,9 @@ namespace ClassicalSharp.Gui.Screens {
 				Make( -1, -50, "Options",
 				     (g, w) => g.Gui.SetNewScreen( new OptionsGroupScreen( g ) ) ),
 				Make( 1, -50, "Generate level",
-					     (g, w) => g.Gui.SetNewScreen( new GenLevelScreen( g ) ) ),	
+				     (g, w) => g.Gui.SetNewScreen( new GenLevelScreen( g ) ) ),
 				Make( 1, 0, "Load level",
-					     (g, w) => g.Gui.SetNewScreen( new LoadLevelScreen( g ) ) ),
+				     (g, w) => g.Gui.SetNewScreen( new LoadLevelScreen( g ) ) ),
 				Make( 1, 50, "Save level",
 				     (g, w) => g.Gui.SetNewScreen( new SaveLevelScreen( g ) ) ),
 				Make( -1, 0, "Select texture pack",
@@ -47,9 +47,8 @@ namespace ClassicalSharp.Gui.Screens {
 				#endif
 				
 				// Other
-				ButtonWidget.Create( game, 5, 5, 120, 40, "Quit game",
-				                    Anchor.BottomOrRight, Anchor.BottomOrRight, 
-				                    titleFont, LeftOnly( (g, w) => g.Exit() ) ),
+				ButtonWidget.Create( game, 120, 40, "Quit game", titleFont, LeftOnly( (g, w) => g.Exit() ) )
+					.SetLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, 5, 5 ),
 				MakeBack( true, titleFont, (g, w) => g.Gui.SetNewScreen( null ) ),
 			};
 		}
@@ -57,11 +56,11 @@ namespace ClassicalSharp.Gui.Screens {
 		void MakeClassic() {
 			widgets = new Widget[] {
 				MakeClassic( 0, -100, "Options",
-				            (g, w) => g.Gui.SetNewScreen( new ClassicOptionsScreen( g ) ) ),				
+				            (g, w) => g.Gui.SetNewScreen( new ClassicOptionsScreen( g ) ) ),
 				MakeClassic( 0, -50, "Generate level",
-				            (g, w) => g.Gui.SetNewScreen( new GenLevelScreen( g ) ) ),				
+				            (g, w) => g.Gui.SetNewScreen( new GenLevelScreen( g ) ) ),
 				MakeClassic( 0, 0, "Load level",
-				            (g, w) => g.Gui.SetNewScreen( new LoadLevelScreen( g ) ) ),				
+				            (g, w) => g.Gui.SetNewScreen( new LoadLevelScreen( g ) ) ),
 				MakeClassic( 0, 50, "Save level",
 				            (g, w) => g.Gui.SetNewScreen( new SaveLevelScreen( g ) ) ),
 
@@ -79,13 +78,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		ButtonWidget Make( int dir, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, dir * 160, y, 301, 40, text,
-			                           Anchor.Centre, Anchor.Centre, titleFont, LeftOnly( onClick ) );
+			return ButtonWidget.Create( game, 301, 40, text, titleFont, LeftOnly( onClick ) )
+				.SetLocation( Anchor.Centre, Anchor.Centre, dir * 160, y );
 		}
 		
 		ButtonWidget MakeClassic( int x, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, 401, 40, text,
-			                           Anchor.Centre, Anchor.Centre, titleFont, LeftOnly( onClick ) );
+			return ButtonWidget.Create( game, 401, 40, text, titleFont, LeftOnly( onClick ) )
+				.SetLocation( Anchor.Centre, Anchor.Centre, x, y );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {

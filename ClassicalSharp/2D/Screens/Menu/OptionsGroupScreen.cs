@@ -67,12 +67,13 @@ namespace ClassicalSharp.Gui.Screens {
 			if( button == null ) return;
 			
 			string text = descriptions[Array.IndexOf<Widget>(widgets, button)];
-			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
+			descWidget = TextWidget.Create( game, text, regularFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 100 );
 		}
 		
 		ButtonWidget Make( int dir, int y, string text, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, dir * 160, y, 301, 40, text,
-			                           Anchor.Centre, Anchor.Centre, titleFont, LeftOnly( onClick ) );
+			return ButtonWidget.Create( game, 301, 40, text, titleFont, LeftOnly( onClick ) )
+				.SetLocation( Anchor.Centre, Anchor.Centre, dir * 160, y );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {

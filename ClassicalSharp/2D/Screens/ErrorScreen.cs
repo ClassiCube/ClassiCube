@@ -37,10 +37,12 @@ namespace ClassicalSharp.Gui.Screens {
 			game.SkipClear = true;
 			string msg = canReconnect ? "Reconnect in " + delay : "Reconnect";
 			widgets = new Widget[] {
-				TextWidget.Create( game, 0, -30, title, Anchor.Centre, Anchor.Centre, titleFont ),
-				TextWidget.Create( game, 0, 10, message, Anchor.Centre, Anchor.Centre, messageFont ),
-				ButtonWidget.Create( game, 0, 80, 301, 40, msg,
-				                    Anchor.Centre, Anchor.Centre, titleFont, ReconnectClick ),
+				TextWidget.Create( game, title, titleFont )
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, -30 ),
+				TextWidget.Create( game, message, messageFont )
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 10 ),
+				ButtonWidget.Create( game, 301, 40, msg, titleFont, ReconnectClick )
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, 80 ),
 			};
 			widgets[2].Disabled = !canReconnect;
 			

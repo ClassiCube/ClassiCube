@@ -13,27 +13,24 @@ namespace ClassicalSharp.Gui.Widgets {
 			this.font = font;
 		}
 		
-		public static ButtonWidget Create( Game game, int x, int y, int width, int height, string text, Anchor horizontal,
-		                                  Anchor vertical, Font font, ClickHandler onClick ) {
+		public static ButtonWidget Create( Game game, int width, int height, string text, Font font, ClickHandler onClick ) {
 			ButtonWidget widget = new ButtonWidget( game, font );
 			widget.Init();
-			widget.HorizontalAnchor = horizontal;
-			widget.VerticalAnchor = vertical;
-			widget.XOffset = x; widget.YOffset = y;
-			widget.DesiredMaxWidth = width; widget.DesiredMaxHeight = height;
+			widget.NormalWidth = width; widget.NormalHeight = height;
 			widget.SetText( text );
 			widget.OnClick = onClick;
 			return widget;
 		}
 		
-		public void SetLocation( Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset ) {
+		public ButtonWidget SetLocation( Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset ) {
 			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
 			XOffset = xOffset; YOffset = yOffset;
 			CalculatePosition();
+			return this;
 		}
 		
 		Texture texture;
-		public int DesiredMaxWidth, DesiredMaxHeight;
+		public int NormalWidth, NormalHeight;
 		int defaultHeight;
 		internal Font font;
 		
@@ -59,8 +56,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			} else {
 				DrawTextArgs args = new DrawTextArgs( text, font, true );
 				texture = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
-				Width = Math.Max( texture.Width, DesiredMaxWidth );
-				Height = Math.Max( texture.Height, DesiredMaxHeight );
+				Width = Math.Max( texture.Width, NormalWidth );
+				Height = Math.Max( texture.Height, NormalHeight );
 				
 				CalculatePosition();
 				texture.X1 = X + (Width / 2 - texture.Width / 2);

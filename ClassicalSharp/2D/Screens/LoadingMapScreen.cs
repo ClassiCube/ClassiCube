@@ -84,13 +84,15 @@ namespace ClassicalSharp.Gui.Screens {
 		public void SetTitle( string title ) {
 			if( titleWidget != null )
 				titleWidget.Dispose();
-			titleWidget = TextWidget.Create( game, 0, -80, title, Anchor.Centre, Anchor.Centre, font );
+			titleWidget = TextWidget.Create( game, title, font )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -80 );
 		}
 		
 		public void SetMessage( string message ) {
 			if( messageWidget != null )
 				messageWidget.Dispose();
-			messageWidget = TextWidget.Create( game, 0, -30, message, Anchor.Centre, Anchor.Centre, font );
+			messageWidget = TextWidget.Create( game, message, font )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -30 );
 		}
 		
 		public void SetProgress( float progress ) {

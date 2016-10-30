@@ -48,8 +48,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Init() {
-			overview = TextWidget.Create( game, 0, 0, "Connected players:",
-			                                 Anchor.Centre, Anchor.LeftOrTop, font );			
+			overview = TextWidget.Create( game, "Connected players:", font )
+				.SetLocation( Anchor.Centre, Anchor.LeftOrTop, 0, 0 );
 			base.Init();
 		}
 		

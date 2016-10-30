@@ -56,28 +56,26 @@ namespace ClassicalSharp.Gui.Screens {
 			altText.Init();
 			UpdateAltTextY();
 			
-			status = new TextGroupWidget( game, 5, chatFont, chatUrlFont,
-			                             Anchor.BottomOrRight, Anchor.LeftOrTop );
+			status = new TextGroupWidget( game, 5, chatFont, chatUrlFont )
+				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, 0, 0 );
 			status.Init();
 			status.SetUsePlaceHolder( 0, false );
 			status.SetUsePlaceHolder( 1, false );
-			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUrlFont,
-			                                  Anchor.BottomOrRight, Anchor.BottomOrRight );
-			bottomRight.YOffset = hud.BottomOffset + 15;
+			
+			bottomRight = new TextGroupWidget( game, 3, chatFont, chatUrlFont )
+				.SetLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, 0, hud.BottomOffset + 15 );
 			bottomRight.Init();
-			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUrlFont,
-			                                 Anchor.LeftOrTop, Anchor.BottomOrRight );
-			normalChat.XOffset = 10;
-			normalChat.YOffset = hud.BottomOffset + 15;
+			
+			normalChat = new TextGroupWidget( game, chatLines, chatFont, chatUrlFont )
+				.SetLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15 );
 			normalChat.Init();
-			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont,
-			                                   chatUrlFont, Anchor.LeftOrTop, Anchor.BottomOrRight );
-			clientStatus.XOffset = 10;
-			clientStatus.YOffset = hud.BottomOffset + 15;
+			
+			clientStatus = new TextGroupWidget( game, game.Chat.ClientStatus.Length, chatFont, chatUrlFont )				
+				.SetLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15 );
 			clientStatus.Init();
-			announcement = TextWidget.Create( game, 0, 0, null,
-			                                     Anchor.Centre, Anchor.Centre, announcementFont );
-			announcement.YOffset = -game.Height / 4;
+			
+			announcement = TextWidget.Create( game ,null, announcementFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -game.Height / 4 );
 		}
 		
 		void SetInitialMessages() {
@@ -129,7 +127,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		int lastDownloadStatus = int.MinValue;
 		StringBuffer lastDownload = new StringBuffer( 48 );
-		void CheckOtherStatuses() {			
+		void CheckOtherStatuses() {
 			Request item = game.AsyncDownloader.CurrentItem;
 			if( item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack") ) {
 				if( status.Textures[1].IsValid ) status.SetText( 1, null );
@@ -449,7 +447,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		int InputUsedHeight {
-			get { return altText.Height == 0 ? textInput.Height + 20 : (game.Height - altText.Y + 5); } 
+			get { return altText.Height == 0 ? textInput.Height + 20 : (game.Height - altText.Y + 5); }
 		}
 		
 		void UpdateAltTextY() {

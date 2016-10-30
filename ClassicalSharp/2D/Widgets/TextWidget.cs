@@ -9,11 +9,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			this.font = font;
 		}
 		
-		public static TextWidget Create( Game game, int x, int y, string text, Anchor horizontal, Anchor vertical, Font font ) {
+		public static TextWidget Create( Game game, string text, Font font ) {
 			TextWidget w = new TextWidget( game, font );
 			w.Init();
-			w.HorizontalAnchor = horizontal; w.VerticalAnchor = vertical;
-			w.XOffset = x; w.YOffset = y;
 			w.SetText( text );
 			return w;
 		}

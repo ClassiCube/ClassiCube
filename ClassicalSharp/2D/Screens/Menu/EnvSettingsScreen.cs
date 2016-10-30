@@ -108,9 +108,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void InputOpened() {
-			widgets[defaultIndex] = ButtonWidget.Create(
-				game, 0, 150, 201, 40, "Default value", Anchor.Centre, 
-				Anchor.Centre, titleFont, DefaultButtonClick );
+			widgets[defaultIndex] = ButtonWidget.Create( game, 201, 40, "Default value", titleFont, DefaultButtonClick )				
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 150 );
 		}
 		
 		void DefaultButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {

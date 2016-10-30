@@ -1,6 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 #if ANDROID
 using Android.Graphics;
@@ -20,7 +19,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					DrawAdvanced( ref args, index, text );
 				game.Drawer2D.ReducePadding( ref tex, Utils.Floor( args.Font.Size ), 3 );
 				
-				tex.X1 = CalcPos( HorizontalAnchor, XOffset, Width, game.Width );
+				tex.X1 = CalcPos( HorizontalAnchor, XOffset, tex.Width, game.Width );
 				tex.Y1 = CalcY( index, tex.Height );
 				Textures[index] = tex;
 				lines[index] = text;

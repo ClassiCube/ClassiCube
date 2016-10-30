@@ -101,8 +101,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		ButtonWidget Make( int x, int y, string text, int width, int height,
 		                  Font font, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, x, y, width, height, text,
-			                           Anchor.Centre, Anchor.Centre, font, LeftOnly( onClick ) );
+			return ButtonWidget.Create( game, width, height, text, font, LeftOnly( onClick ) )				
+				.SetLocation( Anchor.Centre, Anchor.Centre, x, y );
 		}
 		
 		void LeaveOpenClick( Game game, Widget widget ) {

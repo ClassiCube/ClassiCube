@@ -102,17 +102,10 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected virtual void InputClosed() { }
 		
-		protected ButtonWidget MakeTitle( int dir, int y, string text, ClickHandler onClick ) {
-			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, text, Anchor.Centre,
-			                                          Anchor.Centre, titleFont, onClick );
-			return widget;
-		}
-		
 		protected ButtonWidget MakeOpt( int dir, int y, string text, ClickHandler onClick,
 		                               Func<Game, string> getter, Action<Game, string> setter ) {
-			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41,
-			                                          text + ": " + getter( game ),
-			                                          Anchor.Centre, Anchor.Centre, titleFont, onClick );
+			ButtonWidget widget = ButtonWidget.Create( game, 301, 41, text + ": " + getter( game ), titleFont, onClick )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 160 * dir, y );
 			widget.Metadata = text;
 			widget.GetValue = getter;
 			widget.SetValue = (g, v) => {
@@ -131,8 +124,8 @@ namespace ClassicalSharp.Gui.Screens {
 		                                ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter ) {
 			string optName = text;
 			text = text + ": " + (getter( game ) ? "ON" : "OFF");
-			ButtonWidget widget = ButtonWidget.Create( game, 160 * dir, y, 301, 41, text, Anchor.Centre,
-			                                          Anchor.Centre, titleFont, onClick );
+			ButtonWidget widget = ButtonWidget.Create( game, 301, 41, text, titleFont, onClick )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 160 * dir, y );
 			widget.Metadata = optName;
 			widget.GetValue = g => getter( g ) ? "yes" : "no";
 			string target = invert ? "no" : "yes";
@@ -161,8 +154,8 @@ namespace ClassicalSharp.Gui.Screens {
 		const int extHelpY = 100;
 		
 		void MakeExtendedHelp( string[] desc ) {
-			extendedHelp = new TextGroupWidget( game, desc.Length, regularFont, null,
-			                                   Anchor.Centre, Anchor.LeftOrTop );
+			extendedHelp = new TextGroupWidget( game, desc.Length, regularFont, null )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 0 );
 			extendedHelp.Init();
 			
 			for( int i = 0; i < desc.Length; i++ )
@@ -211,8 +204,9 @@ namespace ClassicalSharp.Gui.Screens {
 			inputWidget = MenuInputWidget.Create( game, 0, 110, 400, 30, button.GetValue( game ), Anchor.Centre,
 			                                     Anchor.Centre, regularFont, titleFont, validator );
 			widgets[widgets.Length - 2] = inputWidget;
-			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 240, 110, 40, 30, "OK",
-			                                                  Anchor.Centre, Anchor.Centre, titleFont, OnWidgetClick );
+			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 40, 30, "OK", titleFont, OnWidgetClick )		
+				.SetLocation( Anchor.Centre, Anchor.Centre, 240, 110 );
+			
 			InputOpened();
 			UpdateDescription( targetWidget );
 		}

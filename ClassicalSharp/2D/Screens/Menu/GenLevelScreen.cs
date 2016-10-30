@@ -51,13 +51,13 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeLabel( -150, -80, "Width:" ), MakeLabel( -150, -40, "Height:" ),
 				MakeLabel( -150, 0, "Length:" ), MakeLabel( -140, 40, "Seed:" ),
-				TextWidget.Create( game, 0, -130, "Generate new level",
-				                  Anchor.Centre, Anchor.Centre, regularFont ),
+				TextWidget.Create( game, "Generate new level", regularFont )
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, -130 ),
 				
-				ButtonWidget.Create( game, -120, 100, 201, 40, "Flatgrass", Anchor.Centre,
-				                    Anchor.Centre, titleFont, GenFlatgrassClick ),
-				ButtonWidget.Create( game, 120, 100, 201, 40, "Vanilla", Anchor.Centre,
-				                    Anchor.Centre, titleFont, GenNotchyClick ),
+				ButtonWidget.Create( game, 201, 40, "Flatgrass", titleFont, GenFlatgrassClick )
+					.SetLocation( Anchor.Centre, Anchor.Centre, -120, 100 ),
+				ButtonWidget.Create( game, 201, 40, "Vanilla",  titleFont, GenNotchyClick )
+					.SetLocation( Anchor.Centre, Anchor.Centre, 120, 100 ),
 				MakeBack( false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
 			};
@@ -74,8 +74,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		TextWidget MakeLabel( int x, int y, string text ) {
-			TextWidget widget = TextWidget.Create( game, x, y, text,
-			                                      Anchor.Centre, Anchor.Centre, regularFont );
+			TextWidget widget = TextWidget.Create( game, text, regularFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, x, y );
+			
 			widget.XOffset = -110 - widget.Width / 2;
 			widget.CalculatePosition();
 			widget.Colour = new FastColour( 224, 224, 224 );

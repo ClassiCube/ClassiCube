@@ -132,9 +132,8 @@ namespace ClassicalSharp.Gui.Screens {
 			leftPage = (g, w) => g.Gui.SetNewScreen( new HacksKeyBindingsScreen( g ) );
 			MakeWidgets( -50 );
 
-			widgets[index++] = TextWidget.Create(
-				game, 0, 80, "&eRight click to remove the key binding",
-				Anchor.Centre, Anchor.Centre, regularFont );
+			widgets[index++] = TextWidget.Create( game, "&eRight click to remove the key binding", regularFont )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 80 );
 		}
 	}
 }
