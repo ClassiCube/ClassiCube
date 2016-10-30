@@ -101,13 +101,18 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		protected virtual bool ShouldOffset( int i ) { return true; }
 		
-		public override void MoveTo( int newX, int newY ) {
-			int diffX = newX - X; int diffY = newY - Y;
+		public void RecalcYOffset() {
+			YOffset = -Math.Max( 0, game.Height / 4 - Height / 2 );
+		}
+		
+		public override void CalculatePosition() {
+			int oldX = X, oldY = Y;
+			base.CalculatePosition();
+			
 			for( int i = 0; i < namesCount; i++ ) {
-				textures[i].X1 += diffX;
-				textures[i].Y1 += diffY;
+				textures[i].X1 += X - oldX;
+				textures[i].Y1 += Y - oldY;
 			}
-			X = newX; Y = newY;
 		}
 		
 		protected abstract void CreateInitialPlayerInfo();
@@ -158,10 +163,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			OnSort();
 			UpdateTableDimensions();
-			MoveTo( X, game.Height / 4 );
+			RecalcYOffset();
+			CalculatePosition();
 		}
 		
-		protected virtual void OnSort() {
-		}
+		protected virtual void OnSort() { }
 	}
 }

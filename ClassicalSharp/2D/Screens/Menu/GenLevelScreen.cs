@@ -48,11 +48,11 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeInput( -40, false, game.World.Height.ToString() ),
 				MakeInput( 0, false, game.World.Length.ToString() ),
 				MakeInput( 40, true, "" ),
-					
+				
 				MakeLabel( -150, -80, "Width:" ), MakeLabel( -150, -40, "Height:" ),
 				MakeLabel( -150, 0, "Length:" ), MakeLabel( -140, 40, "Seed:" ),
-				ChatTextWidget.Create( game, 0, -130, "Generate new level",
-				                      Anchor.Centre, Anchor.Centre, regularFont ),
+				TextWidget.Create( game, 0, -130, "Generate new level",
+				                  Anchor.Centre, Anchor.Centre, regularFont ),
 				
 				ButtonWidget.Create( game, -120, 100, 201, 40, "Flatgrass", Anchor.Centre,
 				                    Anchor.Centre, titleFont, GenFlatgrassClick ),
@@ -74,10 +74,10 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		TextWidget MakeLabel( int x, int y, string text ) {
-			TextWidget widget = ChatTextWidget.Create( game, x, y, text,
-			                                          Anchor.Centre, Anchor.Centre, regularFont );
-			int start = game.Width / 2 - 110;
-			widget.MoveTo( start - widget.Width, widget.Y );
+			TextWidget widget = TextWidget.Create( game, x, y, text,
+			                                      Anchor.Centre, Anchor.Centre, regularFont );
+			widget.XOffset = -110 - widget.Width / 2;
+			widget.CalculatePosition();
 			widget.Colour = new FastColour( 224, 224, 224 );
 			return widget;
 		}

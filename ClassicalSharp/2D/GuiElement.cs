@@ -34,9 +34,6 @@ namespace ClassicalSharp.Gui {
 		/// <remarks> Typically used when bitmap font changes. </remarks>
 		public void Recreate() { Dispose(); Init(); }
 		
-		/// <summary> Called when the game window is resized. </summary>
-		public abstract void OnResize( int width, int height );
-		
 		public virtual bool HandlesKeyDown( Key key ) { return false; }
 		
 		public virtual bool HandlesKeyPress( char key ) { return false; }
@@ -51,10 +48,10 @@ namespace ClassicalSharp.Gui {
 		
 		public virtual bool HandlesMouseUp( int mouseX, int mouseY, MouseButton button ) { return false; }
 		
-		protected static int CalcOffset( int axisSize, int elemSize, int offset, Anchor mode ) {
-			if( mode == Anchor.LeftOrTop ) return offset;
-			if( mode == Anchor.BottomOrRight) return axisSize - elemSize - offset;
-			return (axisSize - elemSize) / 2 + offset;
+		protected static int CalcPos( Anchor anchor, int offset, int size, int axisLen ) {
+			if( anchor == Anchor.LeftOrTop ) return offset;
+			if( anchor == Anchor.BottomOrRight ) return axisLen - size - offset;
+			return (axisLen - size) / 2 + offset;
 		}
 		
 		public static bool Contains( int recX, int recY, int width, int height, int x, int y ) {

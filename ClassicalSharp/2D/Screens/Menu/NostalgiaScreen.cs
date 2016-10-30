@@ -32,7 +32,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBool( 1, 0, "Use server textures", OptionsKey.AllowServerTextures,
 				         OnWidgetClick, g => g.AllowServerTextures, (g, v) => g.AllowServerTextures = v ),
 
-				ChatTextWidget.Create( game, 0, 100,
+				TextWidget.Create( game, 0, 100,
 				                      "&eButtons on the right require a client restart",
 				                      Anchor.Centre, Anchor.Centre, regularFont ),				
 				MakeBack( false, titleFont,

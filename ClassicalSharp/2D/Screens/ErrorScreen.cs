@@ -37,8 +37,8 @@ namespace ClassicalSharp.Gui.Screens {
 			game.SkipClear = true;
 			string msg = canReconnect ? "Reconnect in " + delay : "Reconnect";
 			widgets = new Widget[] {
-				ChatTextWidget.Create( game, 0, -30, title, Anchor.Centre, Anchor.Centre, titleFont ),
-				ChatTextWidget.Create( game, 0, 10, message, Anchor.Centre, Anchor.Centre, messageFont ),
+				TextWidget.Create( game, 0, -30, title, Anchor.Centre, Anchor.Centre, titleFont ),
+				TextWidget.Create( game, 0, 10, message, Anchor.Centre, Anchor.Centre, messageFont ),
 				ButtonWidget.Create( game, 0, 80, 301, 40, msg,
 				                    Anchor.Centre, Anchor.Centre, titleFont, ReconnectClick ),
 			};
@@ -61,7 +61,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize( int width, int height ) {
 			for( int i = 0; i < widgets.Length; i++ )
-				widgets[i].OnResize( width, height );
+				widgets[i].CalculatePosition();
 			clearTime = DateTime.UtcNow.AddSeconds( 0.5 );
 		}
 		

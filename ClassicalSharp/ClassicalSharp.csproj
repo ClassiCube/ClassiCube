@@ -125,7 +125,6 @@
     <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
     <Compile Include="2D\Widgets\Chat\AltTextInputWidget.Types.cs" />
     <Compile Include="2D\Widgets\Chat\ChatInputWidget.cs" />
-    <Compile Include="2D\Widgets\Chat\ChatTextWidget.cs" />
     <Compile Include="2D\Widgets\Chat\AltTextInputWidget.cs" />
     <Compile Include="2D\Widgets\Chat\TextGroupWidget.cs" />
     <Compile Include="2D\Widgets\Chat\TextGroupWidget.Formatter.cs" />

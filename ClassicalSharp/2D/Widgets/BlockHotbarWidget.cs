@@ -68,8 +68,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Dispose() { }
 		
-		public override void MoveTo( int newX, int newY ) {
-			X = newX; Y = newY;
+		public override void CalculatePosition() {
+			base.CalculatePosition();
 			Recreate();
 		}
 		

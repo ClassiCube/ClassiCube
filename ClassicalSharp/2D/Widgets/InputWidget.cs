@@ -186,11 +186,14 @@ namespace ClassicalSharp.Gui.Widgets {
 			gfx.DeleteTexture( ref prefixTex );
 		}
 
-		public override void MoveTo( int newX, int newY ) {
-			int dx = newX - X, dy = newY - Y;
-			X = newX; Y = newY;
-			caretTex.Y1 += dy;
-			inputTex.Y1 += dy;
+		public override void CalculatePosition() {
+			int oldX = X, oldY = Y;
+			base.CalculatePosition();
+			
+			caretTex.X1 += X - oldX;
+			caretTex.Y1 += Y - oldY;
+			inputTex.X1 += X - oldX;
+			inputTex.Y1 += Y - oldY;
 		}
 		
 		/// <summary> Invoked when the user presses enter. </summary>

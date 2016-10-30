@@ -94,10 +94,9 @@ namespace ClassicalSharp.Gui.Widgets {
 					drawer.DrawChatText( ref args, hintX, yOffset );
 				chatInputTexture = drawer.Make2DTexture( bmp, size, 0, 0 );
 			}
-			Width = size.Width; Height = size.Height;
+			Width = size.Width; Height = size.Height;			
+			CalculatePosition();
 			
-			X = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
-			Y = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );
 			chatCaretTexture.X1 = chatInputTexture.X1 = X;
 			chatCaretTexture.X1 += textSize.Width;
 			chatCaretTexture.Y1 = chatInputTexture.Y1 = Y;
@@ -111,13 +110,14 @@ namespace ClassicalSharp.Gui.Widgets {
 			gfx.DeleteTexture( ref chatInputTexture );
 		}
 
-		public override void MoveTo( int newX, int newY ) {
-			int dx = newX - X, dy = newY - Y;
-			X = newX; Y = newY;
-			chatCaretTexture.X1 += dx;
-			chatCaretTexture.Y1 += dy;
-			chatInputTexture.X1 += dx;
-			chatInputTexture.Y1 += dy;
+		public override void CalculatePosition() {
+			int oldX = X, oldY = Y;
+			base.CalculatePosition();
+			
+			chatCaretTexture.X1 += X - oldX;
+			chatCaretTexture.Y1 += Y - oldY;
+			chatInputTexture.X1 += X - oldX;
+			chatInputTexture.Y1 += Y - oldY;
 		}
 		
 		static bool IsInvalidChar( char c ) {

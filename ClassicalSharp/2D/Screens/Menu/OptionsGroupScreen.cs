@@ -67,7 +67,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if( button == null ) return;
 			
 			string text = descriptions[Array.IndexOf<Widget>(widgets, button)];
-			descWidget = ChatTextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
+			descWidget = TextWidget.Create( game, 0, 100, text, Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		
 		ButtonWidget Make( int dir, int y, string text, Action<Game, Widget> onClick ) {
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize( int width, int height ) {
 			if( descWidget != null )
-				descWidget.OnResize( width, height );
+				descWidget.CalculatePosition();
 			base.OnResize( width, height );
 		}
 		

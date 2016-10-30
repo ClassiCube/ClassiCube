@@ -46,7 +46,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void OnResize( int width, int height ) {
 			for( int i = 0; i < widgets.Length; i++ ) {
 				if( widgets[i] == null ) continue;
-				widgets[i].OnResize( width, height );
+				widgets[i].CalculatePosition();
 			}
 		}
 		

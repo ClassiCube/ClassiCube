@@ -5,7 +5,7 @@ using System.Drawing;
 namespace ClassicalSharp.Gui.Widgets {
 	public sealed class ClassicPlayerListWidget : NormalPlayerListWidget {
 		
-		ChatTextWidget overview;
+		TextWidget overview;
 		static FastColour topCol = new FastColour( 0, 0, 0, 180 );
 		static FastColour bottomCol = new FastColour( 50, 50, 50, 205 );
 		public ClassicPlayerListWidget( Game game, Font font ) : base( game, font ) {
@@ -34,8 +34,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			gfx.Draw2DQuad( X, Y - offset, Width, height, topCol, bottomCol );
 			
 			gfx.Texturing = true;
-			overview.MoveTo( game.Width / 2 - overview.Width / 2,
-			                Y - offset + boundsSize / 2 );
+			overview.YOffset = Y - offset + 5;
+			overview.CalculatePosition();
 			overview.Render( delta );
 			
 			for( int i = 0; i < namesCount; i++ ) {
@@ -48,8 +48,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Init() {
-			overview = ChatTextWidget.Create( game, 0, 0, "Connected players:",
-			                                 Anchor.Centre, Anchor.Centre, font );			
+			overview = TextWidget.Create( game, 0, 0, "Connected players:",
+			                                 Anchor.Centre, Anchor.LeftOrTop, font );			
 			base.Init();
 		}
 		

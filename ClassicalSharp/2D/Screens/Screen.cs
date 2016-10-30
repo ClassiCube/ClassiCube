@@ -24,7 +24,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		/// <summary> Whether the normal in-game hud should be drawn over the top of this screen. </summary>
 		public virtual bool RenderHudAfter { get { return false; } }
-		
+
+		/// <summary> Called when the game window is resized. </summary>
+		public abstract void OnResize( int width, int height );		
 		
 		protected ClickHandler LeftOnly( Action<Game, Widget> action ) {
 			if( action == null ) return (g, w, btn) => {};

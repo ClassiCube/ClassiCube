@@ -20,7 +20,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		string serverName, serverMotd;
 		float progress;
-		ChatTextWidget titleWidget, messageWidget;
+		TextWidget titleWidget, messageWidget;
 		const int progWidth = 220, progHeight = 10;
 		readonly FastColour backCol = new FastColour( 128, 128, 128 );
 		readonly FastColour progressCol = new FastColour( 128, 255, 128 );
@@ -84,13 +84,13 @@ namespace ClassicalSharp.Gui.Screens {
 		public void SetTitle( string title ) {
 			if( titleWidget != null )
 				titleWidget.Dispose();
-			titleWidget = ChatTextWidget.Create( game, 0, -80, title, Anchor.Centre, Anchor.Centre, font );
+			titleWidget = TextWidget.Create( game, 0, -80, title, Anchor.Centre, Anchor.Centre, font );
 		}
 		
 		public void SetMessage( string message ) {
 			if( messageWidget != null )
 				messageWidget.Dispose();
-			messageWidget = ChatTextWidget.Create( game, 0, -30, message, Anchor.Centre, Anchor.Centre, font );
+			messageWidget = TextWidget.Create( game, 0, -30, message, Anchor.Centre, Anchor.Centre, font );
 		}
 		
 		public void SetProgress( float progress ) {
@@ -109,8 +109,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void OnResize( int width, int height ) {
-			messageWidget.OnResize( width, height );
-			titleWidget.OnResize( width, height );
+			messageWidget.CalculatePosition();
+			titleWidget.CalculatePosition();
 		}
 		
 		public override bool BlocksWorld { get { return true; } }

@@ -47,7 +47,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void MakeOthers() {
-			widgets[index++] = ChatTextWidget.Create( game, 0, -180, title,
+			widgets[index++] = TextWidget.Create( game, 0, -180, title,
 			                                         Anchor.Centre, Anchor.Centre, keyFont );
 			if( game.ClassicMode ) {
 				widgets[index++] = MakeBack( false, titleFont,

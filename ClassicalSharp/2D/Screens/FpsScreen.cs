@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 			posFont = new Font( game.FontName, 14, FontStyle.Italic );
 			game.Events.ChatFontChanged += ChatFontChanged;
 			
-			fpsText = new ChatTextWidget( game, font );
+			fpsText = new TextWidget( game, font );
 			fpsText.XOffset = 2;
 			fpsText.YOffset = 2;
 			fpsText.ReducePadding = true;
@@ -87,7 +87,7 @@ namespace ClassicalSharp.Gui.Screens {
 			posAtlas.Pack( "0123456789-, ()", posFont, "Feet pos: " );
 			posAtlas.tex.Y = (short)(fpsText.Height + 2);
 			
-			hackStates = new ChatTextWidget( game, posFont );
+			hackStates = new TextWidget( game, posFont );
 			hackStates.XOffset = 2;
 			hackStates.YOffset = fpsText.Height + posAtlas.tex.Height + 2;
 			hackStates.ReducePadding = true;

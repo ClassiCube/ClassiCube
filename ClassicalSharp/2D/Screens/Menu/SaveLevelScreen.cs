@@ -64,7 +64,7 @@ namespace ClassicalSharp.Gui.Screens {
 				                    Anchor.Centre, titleFont, SaveClassic ),
 				ButtonWidget.Create( game, -150, 120, 201, 40, "Save schematic", Anchor.Centre,
 				                    Anchor.Centre, titleFont, SaveSchematic ),
-				ChatTextWidget.Create( game, 110, 120, "&eCan be imported into MCEdit", Anchor.Centre,
+				TextWidget.Create( game, 110, 120, "&eCan be imported into MCEdit", Anchor.Centre,
 				                    Anchor.Centre, regularFont ),
 				null,
 				MakeBack( false, titleFont,
@@ -74,7 +74,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		
 		public override void OnResize( int width, int height ) {
-			inputWidget.OnResize( width, height );
+			inputWidget.CalculatePosition();
 			base.OnResize( width, height );
 		}
 		
@@ -150,7 +150,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescWidget( string text ) {
 			DisposeDescWidget();
-			descWidget = ChatTextWidget.Create( game, 0, 65, text,
+			descWidget = TextWidget.Create( game, 0, 65, text,
 			                                   Anchor.Centre, Anchor.Centre, regularFont );
 		}
 		

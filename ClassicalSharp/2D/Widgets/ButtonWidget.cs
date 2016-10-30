@@ -6,7 +6,7 @@ using OpenTK.Input;
 using Android.Graphics;
 #endif
 
-namespace ClassicalSharp.Gui.Widgets {	
+namespace ClassicalSharp.Gui.Widgets {
 	public sealed class ButtonWidget : Widget {
 		
 		public ButtonWidget( Game game, Font font ) : base( game ) {
@@ -24,6 +24,12 @@ namespace ClassicalSharp.Gui.Widgets {
 			widget.SetText( text );
 			widget.OnClick = onClick;
 			return widget;
+		}
+		
+		public void SetLocation( Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset ) {
+			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
+			XOffset = xOffset; YOffset = yOffset;
+			CalculatePosition();
 		}
 		
 		Texture texture;
@@ -56,8 +62,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				Width = Math.Max( texture.Width, DesiredMaxWidth );
 				Height = Math.Max( texture.Height, DesiredMaxHeight );
 				
-				X = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
-				Y = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );				
+				CalculatePosition();
 				texture.X1 = X + (Width / 2 - texture.Width / 2);
 				texture.Y1 = Y + (Height / 2 - texture.Height / 2);
 			}
@@ -84,10 +89,12 @@ namespace ClassicalSharp.Gui.Widgets {
 			gfx.DeleteTexture( ref texture );
 		}
 		
-		public override void MoveTo( int newX, int newY ) {
-			int deltaX = newX - X, deltaY = newY - Y;
-			texture.X1 += deltaX; texture.Y1 += deltaY;
-			X = newX; Y = newY;
+		public override void CalculatePosition() {
+			int oldX = X, oldY = Y;
+			base.CalculatePosition();
+			
+			texture.X1 += X - oldX;
+			texture.Y1 += Y - oldY;
 		}
 		
 		public Func<Game, string> GetValue;

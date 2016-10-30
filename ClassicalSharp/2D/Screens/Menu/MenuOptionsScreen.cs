@@ -69,7 +69,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void OnResize( int width, int height ) {
 			base.OnResize( width, height );
 			if( extendedHelp == null ) return;
-			extendedHelp.OnResize( width, height );
+			extendedHelp.YOffset = game.Height / 2 + extHelpY;
+			extendedHelp.CalculatePosition();
 		}
 		
 		public override void Dispose() {
@@ -157,10 +158,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		static FastColour tableCol = new FastColour( 20, 20, 20, 200 );
 		int tableWidth, tableHeight;
-		protected int extHelpY = 100;
+		const int extHelpY = 100;
+		
 		void MakeExtendedHelp( string[] desc ) {
 			extendedHelp = new TextGroupWidget( game, desc.Length, regularFont, null,
-			                                   Anchor.Centre, Anchor.Centre );
+			                                   Anchor.Centre, Anchor.LeftOrTop );
 			extendedHelp.Init();
 			
 			for( int i = 0; i < desc.Length; i++ )
@@ -170,7 +172,8 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			tableWidth = extendedHelp.Width;
 			tableHeight = extendedHelp.Height;
-			extendedHelp.MoveTo( extendedHelp.X, extHelpY + tableHeight / 2 );
+			extendedHelp.YOffset = game.Height / 2 + extHelpY;
+			extendedHelp.CalculatePosition();
 		}
 		
 		void DisposeExtendedHelp() {

@@ -18,7 +18,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		HudScreen hud;
 		int chatLines;
-		ChatTextWidget announcement;
+		TextWidget announcement;
 		InputWidget textInput;
 		TextGroupWidget status, bottomRight, normalChat, clientStatus;
 		bool suppressNextPress = true;
@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 			clientStatus.XOffset = 10;
 			clientStatus.YOffset = hud.BottomOffset + 15;
 			clientStatus.Init();
-			announcement = ChatTextWidget.Create( game, 0, 0, null,
+			announcement = TextWidget.Create( game, 0, 0, null,
 			                                     Anchor.Centre, Anchor.Centre, announcementFont );
 			announcement.YOffset = -game.Height / 4;
 		}
@@ -200,12 +200,10 @@ namespace ClassicalSharp.Gui.Screens {
 			int height = InputUsedHeight;
 			if( force || height != inputOldHeight ) {
 				clientStatus.YOffset = Math.Max( hud.BottomOffset + 15, height );
-				int y = game.Height - clientStatus.Height - clientStatus.YOffset;
-				clientStatus.MoveTo( clientStatus.X, y );
+				clientStatus.CalculatePosition();
 				
 				normalChat.YOffset = clientStatus.YOffset + clientStatus.GetUsedHeight();
-				y = game.Height - normalChat.Height - normalChat.YOffset;
-				normalChat.MoveTo( normalChat.X, y );
+				normalChat.CalculatePosition();
 				inputOldHeight = height;
 			}
 		}
@@ -414,9 +412,9 @@ namespace ClassicalSharp.Gui.Screens {
 				warning.SetHandlers( OpenUrl, AppendUrl, null );
 				
 				warning.SetTextData(
-					"Are you sure you want to go to this url?",
-					url, "Be careful - urls from strangers may link to websites that",
-					" may have viruses, or things you may not want to open/see." );
+					"&eAre you sure you want to open this link?",
+					url, "Be careful - links from strangers may be websites that",
+					" have viruses, or things you may not want to open/see." );
 				game.Gui.ShowWarning( warning );
 			} else if( game.ClickableChat ) {
 				for( int i = 0; i < text.Length; i++ ) {

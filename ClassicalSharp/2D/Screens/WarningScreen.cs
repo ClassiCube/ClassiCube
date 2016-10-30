@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui.Screens {
 			this.showAlways = showAlways;
 		}
 		
-		public void SetHandlers(Action<WarningScreen> yesClick, 
+		public void SetHandlers(Action<WarningScreen> yesClick,
 		                        Action<WarningScreen> noClick,
 		                        Action<WarningScreen> renderFrame) {
 			this.yesClick = yesClick;
@@ -60,10 +60,10 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			labels = new TextWidget[body.Length + 1];
 			labels[0] = TextWidget.Create( game, 0, -120, title,
-			                              Anchor.Centre, Anchor.Centre, titleFont );
+			                                  Anchor.Centre, Anchor.Centre, titleFont );
 			for( int i = 0; i < body.Length; i++ ) {
-				labels[i + 1] = ChatTextWidget.Create( game, 0, -70 + 20 * i, body[i],
-				                                  Anchor.Centre, Anchor.Centre, regularFont );
+				labels[i + 1] = TextWidget.Create( game, 0, -70 + 20 * i, body[i],
+				                                      Anchor.Centre, Anchor.Centre, regularFont );
 				labels[i + 1].Colour = new FastColour( 224, 224, 224 );
 			}
 		}
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void OnResize( int width, int height ) {
 			base.OnResize( width, height );
 			for( int i = 0; i < labels.Length; i++ )
-				labels[i].OnResize( width, height );
+				labels[i].CalculatePosition();
 		}
 		
 		public override void Dispose() {

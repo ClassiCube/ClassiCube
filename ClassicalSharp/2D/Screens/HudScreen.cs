@@ -86,11 +86,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void OnResize( int width, int height ) {
-			PlayerListWidget widget = playerList;
 			chat.OnResize( width, height );
-			hotbar.OnResize( width, height );
-			if( widget != null )
-				CreatePlayerListWidget();
+			hotbar.CalculatePosition();
+			
+			if( playerList != null ) {
+				playerList.RecalcYOffset();
+				playerList.CalculatePosition();
+			}
 		}
 		
 		public override void Init() {
@@ -137,8 +139,10 @@ namespace ClassicalSharp.Gui.Screens {
 			} else {
 				playerList = new NormalPlayerListWidget( game, playerFont );
 			}
+			
 			playerList.Init();
-			playerList.MoveTo( playerList.X, game.Height / 4 );
+			playerList.RecalcYOffset();
+			playerList.CalculatePosition();
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {

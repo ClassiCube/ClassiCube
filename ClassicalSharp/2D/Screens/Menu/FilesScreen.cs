@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui.Screens {
 			textFont = new Font( game.FontName, 16, FontStyle.Bold );
 			arrowFont = new Font( game.FontName, 18, FontStyle.Bold );
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
-			title = ChatTextWidget.Create( game, 0, -155, titleText, 
+			title = TextWidget.Create( game, 0, -155, titleText, 
 			                          Anchor.Centre, Anchor.Centre, titleFont );
 			
 			buttons = new ButtonWidget[] {
@@ -114,8 +114,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize( int width, int height ) {
 			for( int i = 0; i < buttons.Length; i++ )
-				buttons[i].OnResize( width, height );
-			title.OnResize( width, height );
+				buttons[i].CalculatePosition();
+			title.CalculatePosition();
 		}
 		
 		public override void Render( double delta ) {

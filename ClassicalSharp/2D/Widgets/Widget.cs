@@ -57,15 +57,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		/// <summary> Specifies the boundaries of the widget in pixels. </summary>
 		public Rectangle Bounds { get { return new Rectangle( X, Y, Width, Height ); } }
 		
-		/// <summary> Moves the widget to the specified pixel coordinates. </summary>
-		public virtual void MoveTo( int newX, int newY ) {
-			X = newX; Y = newY;
-		}
-		
-		public override void OnResize( int width, int height ) {
-			int x = CalcOffset( width, Width, XOffset, HorizontalAnchor );
-			int y = CalcOffset( height, Height, YOffset, VerticalAnchor );
-			MoveTo( x, y );
+		public virtual void CalculatePosition() {
+			X = CalcPos( HorizontalAnchor, XOffset, Width, game.Width );
+			Y = CalcPos( VerticalAnchor, YOffset, Height, game.Height );
 		}
 	}
 }

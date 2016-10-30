@@ -103,9 +103,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				Width = Math.Max( Width, Textures[i].Width );
 				Height += Textures[i].Height;
 			}
-			
-			X = CalcOffset( game.Width, Width, XOffset, HorizontalAnchor );
-			Y = CalcOffset( game.Height, Height, YOffset, VerticalAnchor );
+			CalculatePosition();
 		}
 		
 		public override void Render( double delta ) {
@@ -121,13 +119,14 @@ namespace ClassicalSharp.Gui.Widgets {
 				gfx.DeleteTexture( ref Textures[i] );
 		}
 		
-		public override void MoveTo( int newX, int newY ) {
-			int dx = newX - X, dy = newY - Y;
+		public override void CalculatePosition() {
+			int oldX = X, oldY = Y;
+			base.CalculatePosition();
+			
 			for( int i = 0; i < Textures.Length; i++ ) {
-				Textures[i].X1 += dx;
-				Textures[i].Y1 += dy;
+				Textures[i].X1 += X - oldX;
+				Textures[i].Y1 += Y - oldY;
 			}
-			X = newX; Y = newY;
 		}
 		
 		public string GetSelected( int mouseX, int mouseY ) {

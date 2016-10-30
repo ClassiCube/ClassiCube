@@ -13,7 +13,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			extHelpY = 100;
 			
 			widgets = new Widget[] {	
 				

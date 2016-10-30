@@ -46,8 +46,7 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Sets the reference points for when this widget is resized,
 		/// and the offsets from the reference points (anchors) in pixels. </summary>
 		/// <remarks> Updates the position of the widget. </remarks>
-		public void SetLocation( Anchor horAnchor, Anchor verAnchor, 
-		                        int xOffset, int yOffset ) {
+		public void SetLocation( Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset ) {
 			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
 			XOffset = xOffset; YOffset = yOffset;
 			CalculatePosition();
@@ -61,13 +60,9 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		static int CalcPos( Anchor anchor, int offset, int size, int axisLen ) {
-			if( anchor == Anchor.LeftOrTop )
-				return offset;
-			if( anchor == Anchor.Centre )
-				return offset + axisLen / 2 - size / 2;
-			if( anchor == Anchor.BottomOrRight )
-				return offset + axisLen - size;
-			return 0;
+			if( anchor == Anchor.LeftOrTop ) return offset;
+			if( anchor == Anchor.BottomOrRight ) return offset + axisLen - size;
+			return offset + axisLen / 2 - size / 2;
 		}
 	}
 }
