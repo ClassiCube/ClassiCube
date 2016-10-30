@@ -236,6 +236,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		bool AppendChar( char c ) {
 			int totalChars = MaxCharsPerLine * lines.Length;
 			if( buffer.Length == totalChars ) return false;
+			if( !AllowedChar( c ) ) return false;
 			
 			if( caret == -1 ) {
 				buffer.InsertAt( buffer.Length, c );
@@ -247,6 +248,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			return true;
 		}
 		
+		protected virtual bool AllowedChar( char c ) {
+			return Utils.IsValidInputChar( c, game );
+		}
+		
 		
 		protected bool ControlDown() {
 			return OpenTK.Configuration.RunningOnMacOS ?
@@ -255,13 +260,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
-			if( game.HideGui ) return true;
-			
-			if( Utils.IsValidInputChar( key, game ) ) {
-				Append( key );
-				return true;
-			}
-			return false;
+			if( !game.HideGui ) Append( key );
+			return true;
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -402,15 +402,6 @@ namespace ClassicalSharp.Gui.Widgets {
 				}
 
 				if( String.IsNullOrEmpty( text ) ) return true;
-				game.Chat.Add( null, MessageType.ClientStatus4 );
-				
-				for( int i = 0; i < text.Length; i++ ) {
-					if( Utils.IsValidInputChar( text[i], game ) ) continue;
-					const string warning = "&eClipboard contained some characters that can't be sent.";
-					game.Chat.Add( warning, MessageType.ClientStatus4 );
-					text = RemoveInvalidChars( text );
-					break;
-				}
 				Append( text );
 				return true;
 			} else if( key == Key.C ) {
@@ -425,17 +416,6 @@ namespace ClassicalSharp.Gui.Widgets {
 				return true;
 			}
 			return false;
-		}
-		
-		string RemoveInvalidChars( string input ) {
-			char[] chars = new char[input.Length];
-			int length = 0;
-			for( int i = 0; i < input.Length; i++ ) {
-				char c = input[i];
-				if( !Utils.IsValidInputChar( c, game ) ) continue;
-				chars[length++] = c;
-			}
-			return new String( chars, 0, length );
 		}
 		
 		

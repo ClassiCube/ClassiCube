@@ -415,12 +415,6 @@ namespace ClassicalSharp.Gui.Screens {
 					" have viruses, or things you may not want to open/see." );
 				game.Gui.ShowWarning( warning );
 			} else if( game.ClickableChat ) {
-				for( int i = 0; i < text.Length; i++ ) {
-					if( !Utils.IsValidInputChar( text[i], game ) ) {
-						game.Chat.Add( "&eChatline contained characters that can't be sent on this server." );
-						return true;
-					}
-				}
 				textInput.Append( text );
 			}
 			return true;

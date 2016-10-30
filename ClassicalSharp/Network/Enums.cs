@@ -66,7 +66,7 @@ namespace ClassicalSharp {
 		// client defined message ids
 		ClientStatus1 = 256,
 		ClientStatus2 = 257,
-		ClientStatus3 = 258,
+		ClientStatus3 = 258, // cuboid messages
 		ClientStatus4 = 259, // clipboard invalid characters
 		ClientStatus5 = 260, // tab list matching names
 		ClientStatus6 = 261, // no LongerMessages warning
