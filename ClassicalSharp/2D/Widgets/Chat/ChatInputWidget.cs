@@ -10,20 +10,24 @@ using Android.Graphics;
 
 namespace ClassicalSharp.Gui.Widgets {
 	public sealed class ChatInputWidget : InputWidget {
-		
-		int typingLogPos;
-		string originalText;
-		bool shownWarning;
 
 		public ChatInputWidget( Game game, Font font ) : base( game, font ) {
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
+			ShowCaret = true;
 		}
+
+		static FastColour backColour = new FastColour( 0, 0, 0, 127 );
+		int typingLogPos;
+		string originalText;
+		bool shownWarning;		
 		
-		public override int MaxLines { get { return game.ClassicMode ? 1 : 3; } }		
-		public override int MaxCharsPerLine { 
+		public override int MaxLines { get { return game.ClassicMode ? 1 : 3; } }
+		public override string Prefix { get { return "> "; } }
+		public override int Padding { get { return 5; } }
+		public override int MaxCharsPerLine {
 			get {
 				bool allChars = game.ClassicMode || game.Server.SupportsPartialMessages;
-				return allChars ? 64 : 62; 
+				return allChars ? 64 : 62;
 			}
 		}
 		
@@ -31,25 +35,36 @@ namespace ClassicalSharp.Gui.Widgets {
 			base.Init();
 			bool supports = game.Server.SupportsPartialMessages;
 			
-			if( buffer.Length > MaxCharsPerLine && !shownWarning && !supports ) {
+			if( Text.Length > MaxCharsPerLine && !shownWarning && !supports ) {
 				game.Chat.Add( "&eNote: Each line will be sent as a separate packet.", MessageType.ClientStatus6 );
 				shownWarning = true;
-			} else if( buffer.Length <= MaxCharsPerLine && shownWarning ) {
+			} else if( Text.Length <= MaxCharsPerLine && shownWarning ) {
 				game.Chat.Add( null, MessageType.ClientStatus6 );
 				shownWarning = false;
 			}
 		}
 		
-		public override bool HandlesKeyDown( Key key ) {
-			if( game.HideGui ) return key < Key.F1 || key > Key.F35;
-			bool controlDown = ControlDown();
+		public override void Render( double delta ) {
+			gfx.Texturing = false;
+			int y = Y, x = X;
 			
-			if( key == Key.Tab ) { TabKey(); return true; }
-			if( key == Key.Up ) { UpKey( controlDown ); return true; }
-			if( key == Key.Down ) { DownKey( controlDown ); return true; }
+			for( int i = 0; i < lineSizes.Length; i++ ) {
+				if( i > 0 && lineSizes[i].Height == 0 ) break;
+				bool caretAtEnd = (caretRow == i) && (caretCol == MaxCharsPerLine || caret == -1);
+				int drawWidth = lineSizes[i].Width + (caretAtEnd ? caretTex.Width : 0);
+				// Cover whole window width to match original classic behaviour
+				if( game.PureClassic )
+					drawWidth = Math.Max( drawWidth, game.Width - X * 4 );
+				
+				gfx.Draw2DQuad( x, y, drawWidth + Padding * 2, prefixHeight, backColour );
+				y += lineSizes[i].Height;
+			}
 			
-			return base.HandlesKeyDown( key );
+			gfx.Texturing = true;		
+			inputTex.Render( gfx );
+			RenderCaret( delta );
 		}
+
 		
 		public override void EnterInput() {
 			SendChat();
@@ -64,9 +79,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		
 		void SendChat() {
-			if( buffer.Empty ) return;
+			if( Text.Empty ) return;
 			// Don't want trailing spaces in output message
-			string allText = new String( buffer.value, 0, buffer.TextLength );
+			string allText = new String( Text.value, 0, Text.TextLength );
 			game.Chat.InputLog.Add( allText );
 			
 			if( game.Server.SupportsPartialMessages ) {
@@ -109,9 +124,20 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		#region Input handling
 		
+		public override bool HandlesKeyDown( Key key ) {
+			if( game.HideGui ) return key < Key.F1 || key > Key.F35;
+			bool controlDown = ControlDown();
+			
+			if( key == Key.Tab ) { TabKey(); return true; }
+			if( key == Key.Up ) { UpKey( controlDown ); return true; }
+			if( key == Key.Down ) { DownKey( controlDown ); return true; }
+			
+			return base.HandlesKeyDown( key );
+		}
+		
 		void UpKey( bool controlDown ) {
 			if( controlDown ) {
-				int pos = caret == -1 ? buffer.Length : caret;
+				int pos = caret == -1 ? Text.Length : caret;
 				if( pos < MaxCharsPerLine ) return;
 				
 				caret = pos - MaxCharsPerLine;
@@ -120,13 +146,13 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			if( typingLogPos == game.Chat.InputLog.Count )
-				originalText = buffer.ToString();
+				originalText = Text.ToString();
 			if( game.Chat.InputLog.Count > 0 ) {
 				typingLogPos--;
 				if( typingLogPos < 0 ) typingLogPos = 0;
 				
-				buffer.Clear();
-				buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
+				Text.Clear();
+				Text.Append( 0, game.Chat.InputLog[typingLogPos] );
 				caret = -1;
 				Recreate();
 			}
@@ -142,13 +168,13 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			if( game.Chat.InputLog.Count > 0 ) {
 				typingLogPos++;
-				buffer.Clear();
+				Text.Clear();
 				if( typingLogPos >= game.Chat.InputLog.Count ) {
 					typingLogPos = game.Chat.InputLog.Count;
 					if( originalText != null )
-						buffer.Append( 0, originalText );
+						Text.Append( 0, originalText );
 				} else {
-					buffer.Append( 0, game.Chat.InputLog[typingLogPos] );
+					Text.Append( 0, game.Chat.InputLog[typingLogPos] );
 				}
 				caret = -1;
 				Recreate();
@@ -156,9 +182,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void TabKey() {
-			int pos = caret == -1 ? buffer.Length - 1 : caret;
+			int pos = caret == -1 ? Text.Length - 1 : caret;
 			int start = pos;
-			char[] value = buffer.value;
+			char[] value = Text.value;
 			
 			while( start >= 0 && IsNameChar( value[start] ) )
 				start--;
@@ -183,7 +209,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if( caret == -1 ) pos++;
 				int len = pos - start;
 				for( int i = 0; i < len; i++ )
-					buffer.DeleteAt( start );
+					Text.DeleteAt( start );
 				if( caret != -1 ) caret -= len;
 				Append( matches[0] );
 			} else if( matches.Count > 1 ) {

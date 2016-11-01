@@ -76,10 +76,9 @@ namespace ClassicalSharp.Gui.Screens {
 				Make( 0, -100, "Modifiers:" + flags,
 				     301, 40, titleFont, ModifiersClick ),
 				
-				MenuInputWidget.Create(
-					game, 0, -35, 500, 30, curHotkey.Text,
-					Anchor.Centre, Anchor.Centre,
-					regularFont, titleFont, new StringValidator( Utils.StringLength ) ),			
+				MenuInputWidget.Create( game, 500, 30, curHotkey.Text,
+				                       regularFont, new StringValidator( Utils.StringLength ) )
+					.SetLocation( Anchor.Centre, Anchor.Centre, 0, -35 ),
 				Make( -100, 10, "Input stays open: " + staysOpen,
 				     301, 40, titleFont, LeaveOpenClick ),
 				
@@ -91,6 +90,9 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack( false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen( new PauseScreen( g ) ) ),
 			};
+			
+			((InputWidget)widgets[2]).ShowCaret = true;
+			widgets[2].OnClick = InputClick;
 		}
 		
 		public override void Dispose() {
@@ -101,8 +103,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		ButtonWidget Make( int x, int y, string text, int width, int height,
 		                  Font font, Action<Game, Widget> onClick ) {
-			return ButtonWidget.Create( game, width, height, text, font, LeftOnly( onClick ) )				
+			return ButtonWidget.Create( game, width, height, text, font, LeftOnly( onClick ) )
 				.SetLocation( Anchor.Centre, Anchor.Centre, x, y );
+		}
+		
+		void InputClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			if( btn != MouseButton.Left ) return;
+			widget.HandlesMouseClick( x, y, btn );
 		}
 		
 		void LeaveOpenClick( Game game, Widget widget ) {
@@ -122,9 +129,9 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if( curHotkey.BaseKey != Key.Unknown ) {
 				hotkeys.AddHotkey( curHotkey.BaseKey, curHotkey.Flags,
-				                  input.GetText(), curHotkey.StaysOpen );
+				                  input.Text.ToString(), curHotkey.StaysOpen );
 				hotkeys.UserAddedHotkey( curHotkey.BaseKey, curHotkey.Flags,
-				                        curHotkey.StaysOpen, input.GetText() );
+				                        curHotkey.StaysOpen, input.Text.ToString() );
 			}
 			game.Gui.SetNewScreen( new HotkeyListScreen( game ) );
 		}

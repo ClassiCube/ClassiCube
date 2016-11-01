@@ -64,7 +64,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation( Anchor.Centre, Anchor.Centre, x, y );
 		}
 		
-		protected abstract void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn );
+		protected abstract void TextButtonClick( Game game, Widget widget, MouseButton btn, int x, int y );
 		
 		protected void PageClick( bool forward ) {
 			SetCurrentIndex( currentIndex + (forward ? items : -items) );

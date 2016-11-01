@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 }
 
 namespace ClassicalSharp.Gui {
-	public delegate void ClickHandler( Game g, Widget w, MouseButton btn );
+	public delegate void ClickHandler( Game g, Widget w, MouseButton btn, int mouseX, int mouseY );
 	
 	public abstract class GuiElement : IDisposable {
 		

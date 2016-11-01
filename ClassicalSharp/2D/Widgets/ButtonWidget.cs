@@ -16,7 +16,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public static ButtonWidget Create( Game game, int width, int height, string text, Font font, ClickHandler onClick ) {
 			ButtonWidget widget = new ButtonWidget( game, font );
 			widget.Init();
-			widget.NormalWidth = width; widget.NormalHeight = height;
+			widget.MinWidth = width; widget.MinHeight = height;
 			widget.SetText( text );
 			widget.OnClick = onClick;
 			return widget;
@@ -30,7 +30,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		Texture texture;
-		public int NormalWidth, NormalHeight;
+		public int MinWidth, MinHeight;
 		int defaultHeight;
 		internal Font font;
 		
@@ -56,8 +56,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			} else {
 				DrawTextArgs args = new DrawTextArgs( text, font, true );
 				texture = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
-				Width = Math.Max( texture.Width, NormalWidth );
-				Height = Math.Max( texture.Height, NormalHeight );
+				Width = Math.Max( texture.Width, MinWidth );
+				Height = Math.Max( texture.Height, MinHeight );
 				
 				CalculatePosition();
 				texture.X1 = X + (Width / 2 - texture.Width / 2);

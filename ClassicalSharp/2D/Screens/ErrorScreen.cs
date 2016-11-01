@@ -119,8 +119,8 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.Texturing = false;
 		}
 		
-		void ReconnectClick( Game g, Widget w, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
+		void ReconnectClick( Game g, Widget w, MouseButton btn, int x, int y ) {
+			if( btn != MouseButton.Left ) return;
 			string connectString = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
 			for( int i = 0; i < game.Components.Count; i++ )
 				game.Components[i].Reset( game );

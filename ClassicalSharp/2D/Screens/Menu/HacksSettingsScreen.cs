@@ -156,11 +156,13 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 150 );
 		}
 		
-		void DefaultButtonClick( Game game, Widget widget, MouseButton btn ) {
+		void DefaultButtonClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
 			if( btn != MouseButton.Left ) return;
 			int index = Array.IndexOf<Widget>( widgets, targetWidget );
 			string defValue = defaultValues[index];
-			inputWidget.SetText( defValue );
+			
+			input.Clear();
+			input.Append( defValue );
 		}
 	}
 }

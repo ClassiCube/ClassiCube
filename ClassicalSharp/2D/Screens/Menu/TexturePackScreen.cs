@@ -18,8 +18,8 @@ namespace ClassicalSharp.Gui.Screens {
 			Array.Sort( entries );
 		}
 		
-		protected override void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
+		protected override void TextButtonClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			if( btn != MouseButton.Left ) return;
 			string file = ((ButtonWidget)widget).Text;
 			string dir = Path.Combine( Program.AppDirectory, TexturePack.Dir );
 			string path = Path.Combine( dir, file );

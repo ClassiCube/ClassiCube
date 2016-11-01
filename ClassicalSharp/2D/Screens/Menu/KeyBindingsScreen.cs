@@ -78,15 +78,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		
 		ButtonWidget curWidget;
-		void OnBindingClick( Game game, Widget widget, MouseButton mouseBtn ) {
+		void OnBindingClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
 			int index = 0;
-			if( mouseBtn == MouseButton.Right && (curWidget == null || curWidget == widget) ) {
+			if( btn == MouseButton.Right && (curWidget == null || curWidget == widget) ) {
 				curWidget = (ButtonWidget)widget;
 				index = Array.IndexOf<Widget>( widgets, curWidget ) - 2;
 				KeyBind mapping = Get( index, left, right );
 				HandlesKeyDown( game.InputHandler.Keys.GetDefault( mapping ) );
 			}
-			if( mouseBtn != MouseButton.Left ) return;
+			if( btn != MouseButton.Left ) return;
 			
 			if( curWidget != null ) {
 				index = Array.IndexOf<Widget>( widgets, curWidget ) - 2;

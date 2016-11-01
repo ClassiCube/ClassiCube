@@ -13,15 +13,15 @@ namespace ClassicalSharp.Gui.Screens {
 		public GenLevelScreen( Game game ) : base( game ) {
 		}
 
-		MenuInputWidget selectedWidget;
+		MenuInputWidget selected;
 		
 		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
 			return HandleMouseClick( widgets, mouseX, mouseY, button );
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
-			return selectedWidget == null ? true :
-				selectedWidget.HandlesKeyPress( key );
+			return selected == null ? true :
+				selected.HandlesKeyPress( key );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -29,13 +29,13 @@ namespace ClassicalSharp.Gui.Screens {
 				game.Gui.SetNewScreen( null );
 				return true;
 			}
-			return selectedWidget == null ? (key < Key.F1 || key > Key.F35) :
-				selectedWidget.HandlesKeyDown( key );
+			return selected == null ? (key < Key.F1 || key > Key.F35) :
+				selected.HandlesKeyDown( key );
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			return selectedWidget == null ? true :
-				selectedWidget.HandlesKeyUp( key );
+			return selected == null ? true :
+				selected.HandlesKeyUp( key );
 		}
 		
 		public override void Init() {
@@ -63,24 +63,25 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 		}
 		
-		MenuInputWidget MakeInput( int y, bool seed, string value ) {
+		InputWidget MakeInput( int y, bool seed, string value ) {
 			MenuInputValidator validator = seed ? new SeedValidator() : new IntegerValidator( 1, 8192 );
-			MenuInputWidget widget = MenuInputWidget.Create(
-				game, 0, y, 200, 30, value, Anchor.Centre, Anchor.Centre,
-				regularFont, titleFont, validator );
-			widget.Active = false;
-			widget.OnClick = InputClick;
-			return widget;
+			InputWidget input = MenuInputWidget.Create( game, 200, 30, value,
+			                                                regularFont, validator )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, y );
+			
+			input.Active = false;
+			input.OnClick = InputClick;
+			return input;
 		}
 		
 		TextWidget MakeLabel( int x, int y, string text ) {
-			TextWidget widget = TextWidget.Create( game, text, regularFont )
+			TextWidget label = TextWidget.Create( game, text, regularFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, x, y );
 			
-			widget.XOffset = -110 - widget.Width / 2;
-			widget.CalculatePosition();
-			widget.Colour = new FastColour( 224, 224, 224 );
-			return widget;
+			label.XOffset = -110 - label.Width / 2;
+			label.CalculatePosition();
+			label.Colour = new FastColour( 224, 224, 224 );
+			return label;
 		}
 		
 		public override void Dispose() {
@@ -88,22 +89,22 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		void InputClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
-			if( selectedWidget != null )
-				selectedWidget.Active = false;
+		void InputClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			if( btn != MouseButton.Left ) return;
+			if( selected != null ) selected.ShowCaret = false;
 			
-			selectedWidget = (MenuInputWidget)widget;
-			selectedWidget.Active = true;
+			selected = (MenuInputWidget)widget;
+			selected.HandlesMouseClick( x, y, btn );
+			selected.ShowCaret = true;
 		}
 		
-		void GenFlatgrassClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
+		void GenFlatgrassClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			if( btn != MouseButton.Left ) return;
 			GenerateMap( new FlatGrassGenerator() );
 		}
 		
-		void GenNotchyClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
+		void GenNotchyClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			if( btn != MouseButton.Left ) return;
 			GenerateMap( new NotchyGenerator() );
 		}
 		
@@ -124,7 +125,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		int GetInt( int index ) {
 			MenuInputWidget input = (MenuInputWidget)widgets[index];
-			string text = input.GetText();
+			string text = input.Text.ToString();
 			if( !input.Validator.IsValidValue( text ) )
 				return 0;
 			return text == "" ? 0 : Int32.Parse( text );
@@ -132,7 +133,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		int GetSeedInt( int index ) {
 			MenuInputWidget input = (MenuInputWidget)widgets[index];
-			string text = input.GetText();
+			string text = input.Text.ToString();
 			if( text == "" ) return new Random().Next();
 			
 			if( !input.Validator.IsValidValue( text ) )

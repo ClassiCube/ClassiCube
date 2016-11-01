@@ -146,7 +146,7 @@ namespace Launcher.Gui.Widgets {
 			return r;
 		}
 		
-		public void AdvanceCursorPos( bool forwards ) {
+		public void AdvanceCaretPos( bool forwards ) {
 			if( forwards && Chars.CaretPos == -1 ) return;
 			if( !forwards && Chars.CaretPos == 0 ) return;
 			if( Chars.CaretPos == -1 && !forwards ) // caret after text

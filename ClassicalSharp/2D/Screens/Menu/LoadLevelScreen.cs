@@ -36,8 +36,8 @@ namespace ClassicalSharp.Gui.Screens {
 			Array.Sort( entries );
 		}
 		
-		protected override void TextButtonClick( Game game, Widget widget, MouseButton mouseBtn ) {
-			if( mouseBtn != MouseButton.Left ) return;
+		protected override void TextButtonClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			if( btn != MouseButton.Left ) return;
 			string path = Path.Combine( Program.AppDirectory, "maps" );
 			path = Path.Combine( path, ((ButtonWidget)widget).Text );
 			if( File.Exists( path ) )

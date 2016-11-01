@@ -75,10 +75,10 @@ namespace Launcher.Gui.Screens {
 				if( curInput.Chars.Clear() )
 					RedrawLastInput();
 			} else if( e.Key == Key.Left ) {
-				curInput.AdvanceCursorPos( false );
+				curInput.AdvanceCaretPos( false );
 				RedrawLastInput();
 			} else if( e.Key == Key.Right ) {
-				curInput.AdvanceCursorPos( true );
+				curInput.AdvanceCaretPos( true );
 				RedrawLastInput();
 			}
 		}

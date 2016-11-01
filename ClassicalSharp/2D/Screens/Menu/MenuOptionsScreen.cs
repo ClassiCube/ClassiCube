@@ -10,7 +10,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public MenuOptionsScreen( Game game ) : base( game ) {
 		}
 		
-		protected MenuInputWidget inputWidget;
+		protected InputWidget input;
 		protected MenuInputValidator[] validators;
 		protected string[][] descriptions;
 		protected TextGroupWidget extendedHelp;
@@ -29,8 +29,8 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
-			if( inputWidget != null )
-				inputWidget.Render( delta );
+			if( input != null )
+				input.Render( delta );
 			
 			if( extendedHelp != null && extEndY <= extClipY )
 				extendedHelp.Render( delta );
@@ -44,8 +44,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesKeyPress( char key ) {
-			if( inputWidget == null ) return true;
-			return inputWidget.HandlesKeyPress( key );
+			if( input == null ) return true;
+			return input.HandlesKeyPress( key );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -53,18 +53,18 @@ namespace ClassicalSharp.Gui.Screens {
 				game.Gui.SetNewScreen( null );
 				return true;
 			} else if( (key == Key.Enter || key == Key.KeypadEnter)
-			          && inputWidget != null ) {
+			          && input != null ) {
 				ChangeSetting();
 				return true;
 			}
-			if( inputWidget == null )
+			if( input == null )
 				return key < Key.F1 || key > Key.F35;
-			return inputWidget.HandlesKeyDown( key );
+			return input.HandlesKeyDown( key );
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			if( inputWidget == null ) return true;
-			return inputWidget.HandlesKeyUp( key );
+			if( input == null ) return true;
+			return input.HandlesKeyUp( key );
 		}
 		
 		public override void OnResize( int width, int height ) {
@@ -142,7 +142,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void ShowExtendedHelp() {
-			bool canShow = inputWidget == null && selectedWidget != null && descriptions != null;
+			bool canShow = input == null && selectedWidget != null && descriptions != null;
 			if( !canShow ) return;
 			
 			int index = Array.IndexOf<Widget>( widgets, selectedWidget );
@@ -173,9 +173,9 @@ namespace ClassicalSharp.Gui.Screens {
 			extendedHelp = null;
 		}
 		
-		protected void OnWidgetClick( Game game, Widget widget, MouseButton mouseBtn ) {
+		protected void OnWidgetClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
 			ButtonWidget button = widget as ButtonWidget;
-			if( mouseBtn != MouseButton.Left ) return;
+			if( btn != MouseButton.Left ) return;
 			if( widget == widgets[widgets.Length - 1] ) {
 				ChangeSetting(); return;
 			}
@@ -195,13 +195,15 @@ namespace ClassicalSharp.Gui.Screens {
 				return;
 			}
 			
-			if( inputWidget != null )
-				inputWidget.Dispose();
+			if( input != null )
+				input.Dispose();
 			
 			targetWidget = selectedWidget;
-			inputWidget = MenuInputWidget.Create( game, 0, 110, 400, 30, button.GetValue( game ), Anchor.Centre,
-			                                     Anchor.Centre, regularFont, titleFont, validator );
-			widgets[widgets.Length - 2] = inputWidget;
+			input = MenuInputWidget.Create( game, 400, 30, 
+			                                     button.GetValue( game ), regularFont, validator )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 110 );
+			
+			widgets[widgets.Length - 2] = input;
 			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 40, 30, "OK", titleFont, OnWidgetClick )		
 				.SetLocation( Anchor.Centre, Anchor.Centre, 240, 110 );
 			
@@ -221,8 +223,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void ChangeSetting() {
-			string text = inputWidget.GetText();
-			if( inputWidget.Validator.IsValidValue( text ) )
+			string text = input.Text.ToString();
+			if( ((MenuInputWidget)input).Validator.IsValidValue( text ) )
 				targetWidget.SetValue( game, text );
 			
 			DisposeWidgets();
@@ -232,10 +234,10 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void DisposeWidgets() {
-			if( inputWidget != null )
-				inputWidget.Dispose();
+			if( input != null )
+				input.Dispose();
 			widgets[widgets.Length - 2] = null;
-			inputWidget = null;
+			input = null;
 			
 			int okayIndex = widgets.Length - 1;
 			if( widgets[okayIndex] != null )

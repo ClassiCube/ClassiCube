@@ -12,8 +12,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public SaveLevelScreen( Game game ) : base( game ) {
 		}
 		
-		MenuInputWidget inputWidget;
-		TextWidget descWidget;
+		InputWidget input;
+		TextWidget desc;
 		const int overwriteIndex = 2;
 		static FastColour grey = new FastColour( 150, 150, 150 );
 		
@@ -21,8 +21,8 @@ namespace ClassicalSharp.Gui.Screens {
 			RenderMenuBounds();
 			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
-			inputWidget.Render( delta );
-			if( descWidget != null ) descWidget.Render( delta );
+			input.Render( delta );
+			if( desc != null ) desc.Render( delta );
 			gfx.Texturing = false;
 			
 			float cX = game.Width / 2, cY = game.Height / 2;
@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesKeyPress( char key ) {
 			RemoveOverwrites();
-			return inputWidget.HandlesKeyPress( key );
+			return input.HandlesKeyPress( key );
 		}
 		
 		public override bool HandlesKeyDown( Key key ) {
@@ -43,11 +43,11 @@ namespace ClassicalSharp.Gui.Screens {
 				game.Gui.SetNewScreen( null );
 				return true;
 			}
-			return inputWidget.HandlesKeyDown( key );
+			return input.HandlesKeyDown( key );
 		}
 		
 		public override bool HandlesKeyUp( Key key ) {
-			return inputWidget.HandlesKeyUp( key );
+			return input.HandlesKeyUp( key );
 		}
 		
 		public override void Init() {
@@ -55,9 +55,10 @@ namespace ClassicalSharp.Gui.Screens {
 			titleFont = new Font( game.FontName, 16, FontStyle.Bold );
 			regularFont = new Font( game.FontName, 16, FontStyle.Regular );
 			
-			inputWidget = MenuInputWidget.Create(
-				game, 0, -30, 500, 30, "", Anchor.Centre, Anchor.Centre,
-				regularFont, titleFont, new PathValidator() );
+			input = MenuInputWidget.Create( game, 500, 30, "",
+			                                     regularFont, new PathValidator() )
+				.SetLocation( Anchor.Centre, Anchor.Centre, 0, -30 );
+			input.ShowCaret = true;
 			
 			widgets = new Widget[] {
 				ButtonWidget.Create( game, 301, 40, "Save", titleFont, SaveClassic )
@@ -74,29 +75,29 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		
 		public override void OnResize( int width, int height ) {
-			inputWidget.CalculatePosition();
+			input.CalculatePosition();
 			base.OnResize( width, height );
 		}
 		
 		public override void Dispose() {
 			game.Keyboard.KeyRepeat = false;
-			inputWidget.Dispose();
+			input.Dispose();
 			DisposeDescWidget();
 			base.Dispose();
 		}
 		
-		void SaveClassic( Game game, Widget widget, MouseButton mouseBtn ) {
-			DoSave( widget, mouseBtn, ".cw" );
+		void SaveClassic( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			DoSave( widget, btn, ".cw" );
 		}
 		
-		void SaveSchematic( Game game, Widget widget, MouseButton mouseBtn ) {
-			DoSave( widget, mouseBtn, ".schematic" );
+		void SaveSchematic( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			DoSave( widget, btn, ".schematic" );
 		}
 		
 		void DoSave( Widget widget, MouseButton mouseBtn, string ext ) {
 			if( mouseBtn != MouseButton.Left ) return;
 			
-			string text = inputWidget.GetText();
+			string text = input.Text.ToString();
 			if( text.Length == 0 ) {
 				MakeDescWidget( "&ePlease enter a filename" ); return;
 			}
@@ -150,14 +151,14 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescWidget( string text ) {
 			DisposeDescWidget();
-			descWidget = TextWidget.Create( game, text, regularFont )
+			desc = TextWidget.Create( game, text, regularFont )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 65 );
 		}
 		
 		void DisposeDescWidget() {
-			if( descWidget != null ) {
-				descWidget.Dispose();
-				descWidget = null;
+			if( desc != null ) {
+				desc.Dispose();
+				desc = null;
 			}
 		}
 	}
