@@ -103,7 +103,7 @@ namespace ClassicalSharp.Entities {
 				Hacks.FlyingUp = game.IsKeyDown( KeyBind.FlyUp );
 				Hacks.FlyingDown = game.IsKeyDown( KeyBind.FlyDown );
 				
-				if( Hacks.WOMStyleHacks && Hacks.Enabled ) {
+				if( Hacks.WOMStyleHacks && Hacks.Enabled && Hacks.CanNoclip ) {
 					if( Hacks.Noclip ) Velocity = Vector3.Zero;
 					Hacks.Noclip = game.IsKeyDown( KeyBind.NoClip );
 				}

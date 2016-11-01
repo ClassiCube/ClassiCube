@@ -79,7 +79,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				WorldEnv.DefaultSunlight.ToRGBHexString(),
 				WorldEnv.DefaultShadowlight.ToRGBHexString(),
-				Weather.Sunny.ToString(),
+				null,
 				(1).ToString(),
 				(game.World.Height / 2).ToString(),
 			};

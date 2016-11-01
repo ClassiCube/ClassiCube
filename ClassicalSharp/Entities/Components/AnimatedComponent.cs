@@ -59,7 +59,7 @@ namespace ClassicalSharp.Entities {
 			armZRot = -idleZRot;
 			
 			bobbingHor = (float)(Math.Cos( walkTime ) * swing * (2.5f/16f));
-			bobbingVer = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (2.5f/16f));
+			bobbingVer = (float)(Math.Abs( Math.Sin( walkTime ) ) * swing * (2.5f/16f));
 			bobbingModel = (float)(Math.Abs( Math.Cos( walkTime ) ) * swing * (4.0f/16f));
 			
 			DoTilt( ref bobStrength, !game.ViewBobbing || !entity.onGround );
