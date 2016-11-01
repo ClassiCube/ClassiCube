@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 		void CheckOpaque( int block ) {
 			if( MinBB[block] != Vector3.Zero || MaxBB[block] != Vector3.One ) {
 				if( Draw[block] == DrawType.Opaque ) 
-					Draw[block] = DrawType.Translucent;
+					Draw[block] = DrawType.Transparent;
 			}
 		}
 		
