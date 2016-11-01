@@ -125,7 +125,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				args.Text = lines[caretRow].Substring( 0, caretCol );
 				Size trimmedSize = drawer.MeasureChatSize( ref args );
 				if( caretRow == 0 ) trimmedSize.Width += prefixWidth;
-				
+
 				caretTex.X1 = X + Padding + trimmedSize.Width;
 				caretColour = FastColour.Scale( FastColour.White, 0.8f );
 				

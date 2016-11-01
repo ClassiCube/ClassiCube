@@ -99,6 +99,5 @@ namespace ClassicalSharp.Gui.Widgets {
 			DeleteChar();
 			return valid;
 		}
-		// TODO: add PaddingX and PaddingY to fix caret, and setcarettocursor
 	}
 }

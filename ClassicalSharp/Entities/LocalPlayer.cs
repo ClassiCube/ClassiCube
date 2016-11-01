@@ -183,7 +183,7 @@ namespace ClassicalSharp.Entities {
 			Hacks.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
 			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
 			Hacks.NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
-			Hacks.WOMStyleHacks = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
+			Hacks.WOMStyleHacks = !game.ClassicMode && Options.GetBool( OptionsKey.WOMStyleHacks, false );
 			Hacks.Enabled = !game.PureClassic && Options.GetBool( OptionsKey.HacksEnabled, true );
 			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool( OptionsKey.FullBlockStep, false );
 		}

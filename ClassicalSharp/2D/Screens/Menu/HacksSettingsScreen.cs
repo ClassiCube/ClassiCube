@@ -37,7 +37,7 @@ namespace ClassicalSharp.Gui.Screens {
 				        g => g.LocalPlayer.JumpHeight.ToString( "F3" ),
 				        (g, v) => g.LocalPlayer.physics.CalculateJumpVelocity( true, Single.Parse( v ) ) ),
 				
-				MakeBool( -1, 50, "WOM style hacks", OptionsKey.DoubleJump,
+				MakeBool( -1, 50, "WOM style hacks", OptionsKey.WOMStyleHacks,
 				         OnWidgetClick, g => g.LocalPlayer.Hacks.WOMStyleHacks,
 				         (g, v) => g.LocalPlayer.Hacks.WOMStyleHacks = v ),
 				
@@ -100,7 +100,7 @@ namespace ClassicalSharp.Gui.Screens {
 			defaultIndex = widgets.Length - 4;
 			defaultValues = new string[widgets.Length];
 			defaultValues[1] = "10";
-			defaultValues[3] = "1.233";
+			defaultValues[3] = (1.233f).ToString();
 			defaultValues[9] = "70";
 		}
 		
