@@ -55,7 +55,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Whether the player should slide after letting go of movement buttons in noclip.  </summary>
 		public bool NoclipSlide = true;		
 		/// <summary> Whether the player has allowed the usage of fast double jumping abilities. </summary>
-		public bool DoubleJump = false;
+		public bool WOMStyleHacks = false;
 		
 		/// <summary> Whether the player currently has noclip on. </summary>
 		public bool Noclip;

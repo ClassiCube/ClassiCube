@@ -33,9 +33,9 @@ namespace ClassicalSharp.Gui.Screens {
 				     g => g.LocalPlayer.JumpHeight.ToString( "F3" ),
 				     (g, v) => g.LocalPlayer.physics.CalculateJumpVelocity( true, Single.Parse( v ) ) ),
 				
-				MakeBool( -1, 50, "Double jump", OptionsKey.DoubleJump,
-				     OnWidgetClick, g => g.LocalPlayer.Hacks.DoubleJump,
-				     (g, v) => g.LocalPlayer.Hacks.DoubleJump = v ),
+				MakeBool( -1, 50, "WOM style hacks", OptionsKey.DoubleJump,
+				     OnWidgetClick, g => g.LocalPlayer.Hacks.WOMStyleHacks,
+				     (g, v) => g.LocalPlayer.Hacks.WOMStyleHacks = v ),
 				
 				// Column 2
 				MakeBool( 1, -150, "Full block stepping", OptionsKey.FullBlockStep,

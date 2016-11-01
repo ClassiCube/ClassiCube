@@ -102,6 +102,11 @@ namespace ClassicalSharp.Entities {
 				Hacks.HalfSpeeding = Hacks.Enabled && game.IsKeyDown( KeyBind.HalfSpeed );
 				Hacks.FlyingUp = game.IsKeyDown( KeyBind.FlyUp );
 				Hacks.FlyingDown = game.IsKeyDown( KeyBind.FlyDown );
+				
+				if( Hacks.WOMStyleHacks && Hacks.Enabled ) {
+					if( Hacks.Noclip ) Velocity = Vector3.Zero;
+					Hacks.Noclip = game.IsKeyDown( KeyBind.NoClip );
+				}
 			}
 		}
 		
@@ -146,7 +151,9 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Linearly interpolates position and rotation between the previous and next state. </summary>
 		public void SetInterpPosition( float t ) {
-			Position = Vector3.Lerp( lastPos, nextPos, t );
+			if( !Hacks.WOMStyleHacks || !Hacks.Noclip )
+				Position = Vector3.Lerp( lastPos, nextPos, t );
+			
 			HeadYawDegrees = Utils.LerpAngle( lastYaw, nextYaw, t );
 			YawDegrees = Utils.LerpAngle( oldYaw, newYaw, t );
 			PitchDegrees = Utils.LerpAngle( lastPitch, nextPitch, t );
@@ -176,7 +183,7 @@ namespace ClassicalSharp.Entities {
 			Hacks.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
 			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
 			Hacks.NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
-			Hacks.DoubleJump = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
+			Hacks.WOMStyleHacks = !game.ClassicMode && Options.GetBool( OptionsKey.DoubleJump, false );
 			Hacks.Enabled = !game.PureClassic && Options.GetBool( OptionsKey.HacksEnabled, true );
 			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool( OptionsKey.FullBlockStep, false );
 		}

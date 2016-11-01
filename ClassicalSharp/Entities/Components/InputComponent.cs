@@ -35,14 +35,14 @@ namespace ClassicalSharp.Entities {
 				DoRespawn();
 			} else if( key == keys[KeyBind.Fly] && Hacks.CanFly && Hacks.Enabled ) {
 				Hacks.Flying = !Hacks.Flying;
-			} else if( key == keys[KeyBind.NoClip] && Hacks.CanNoclip && Hacks.Enabled ) {
+			} else if( key == keys[KeyBind.NoClip] && Hacks.CanNoclip && Hacks.Enabled && !Hacks.WOMStyleHacks ) {
 				if( Hacks.Noclip ) entity.Velocity.Y = 0;
 				Hacks.Noclip = !Hacks.Noclip;
 			} else if( key == keys[KeyBind.Jump] && !entity.onGround && !(Hacks.Flying || Hacks.Noclip) ) {
-				if( !physics.firstJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
+				if( !physics.firstJump && Hacks.CanDoubleJump && Hacks.WOMStyleHacks ) {
 					physics.DoNormalJump();
 					physics.firstJump = true;
-				} else if( !physics.secondJump && Hacks.CanDoubleJump && Hacks.DoubleJump ) {
+				} else if( !physics.secondJump && Hacks.CanDoubleJump && Hacks.WOMStyleHacks ) {
 					physics.DoNormalJump();
 					physics.secondJump = true;
 				}
