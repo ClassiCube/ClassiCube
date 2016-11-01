@@ -21,6 +21,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int extEndY = extendedHelp == null ? 0 : extendedHelp.Y + extendedHelp.Height;
 			
 			if( extendedHelp != null && extEndY <= extClipY ) {
+				int tableWidth = extendedHelp.Width, tableHeight = extendedHelp.Height;
 				int x = game.Width / 2 - tableWidth / 2 - 5;
 				int y = game.Height / 2 + extHelpY - 5;
 				gfx.Draw2DQuad( x, y, tableWidth + 10, tableHeight + 10, tableCol );
@@ -69,6 +70,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void OnResize( int width, int height ) {
 			base.OnResize( width, height );
 			if( extendedHelp == null ) return;
+			
+			extendedHelp.XOffset = game.Width / 2 - extendedHelp.Width / 2;
 			extendedHelp.YOffset = game.Height / 2 + extHelpY;
 			extendedHelp.CalculatePosition();
 		}
@@ -150,21 +153,16 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		static FastColour tableCol = new FastColour( 20, 20, 20, 200 );
-		int tableWidth, tableHeight;
 		const int extHelpY = 100;
 		
 		void MakeExtendedHelp( string[] desc ) {
 			extendedHelp = new TextGroupWidget( game, desc.Length, regularFont, null )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 0 );
-			extendedHelp.Init();
-			
+				.SetLocation( Anchor.LeftOrTop, Anchor.LeftOrTop, 0, 0 );
+			extendedHelp.Init();			
 			for( int i = 0; i < desc.Length; i++ )
 				extendedHelp.SetText( i, desc[i] );
-			for( int i = 0; i < desc.Length; i++ )
-				extendedHelp.Textures[i].X1 = extendedHelp.X;
 			
-			tableWidth = extendedHelp.Width;
-			tableHeight = extendedHelp.Height;
+			extendedHelp.XOffset = game.Width / 2 - extendedHelp.Width / 2;
 			extendedHelp.YOffset = game.Height / 2 + extHelpY;
 			extendedHelp.CalculatePosition();
 		}

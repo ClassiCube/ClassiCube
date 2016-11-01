@@ -9,10 +9,11 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public class EnvSettingsScreen : MenuOptionsScreen {
 		
-		string[] defaultValues;
-		int defaultIndex;
 		public EnvSettingsScreen( Game game ) : base( game ) {
 		}
+
+		string[] defaultValues;
+		int defaultIndex;
 		
 		public override void Init() {
 			base.Init();
