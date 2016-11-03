@@ -57,8 +57,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		/// to the beginning of the input texture. </summary>
 		public abstract int Padding { get; }
 		
+		/// <summary> Whether a caret should be drawn at the position characters 
+		/// are inserted/deleted from the input text. </summary>
 		public bool ShowCaret;
-
+		
 		protected string[] lines; // raw text of each line
 		protected Size[] lineSizes; // size of each line in pixels
 		protected int caretCol, caretRow; // coordinates of caret

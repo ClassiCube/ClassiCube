@@ -29,8 +29,6 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			gfx.Texturing = true;
 			RenderMenuWidgets( delta );
-			if( input != null )
-				input.Render( delta );
 			
 			if( extendedHelp != null && extEndY <= extClipY )
 				extendedHelp.Render( delta );
@@ -158,7 +156,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void MakeExtendedHelp( string[] desc ) {
 			extendedHelp = new TextGroupWidget( game, desc.Length, regularFont, null )
 				.SetLocation( Anchor.LeftOrTop, Anchor.LeftOrTop, 0, 0 );
-			extendedHelp.Init();			
+			extendedHelp.Init();
 			for( int i = 0; i < desc.Length; i++ )
 				extendedHelp.SetText( i, desc[i] );
 			
@@ -195,21 +193,27 @@ namespace ClassicalSharp.Gui.Screens {
 				return;
 			}
 			
-			if( input != null )
-				input.Dispose();
-			
 			targetWidget = selectedWidget;
-			input = MenuInputWidget.Create( game, 400, 30, 
-			                                     button.GetValue( game ), regularFont, validator )
+			if( input != null ) input.Dispose();
+			
+			input = MenuInputWidget.Create( game, 400, 30,
+			                               button.GetValue( game ), regularFont, validator )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 110 );
+			input.ShowCaret = true;
+			input.OnClick = InputClick;
 			
 			widgets[widgets.Length - 2] = input;
-			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 40, 30, "OK", titleFont, OnWidgetClick )		
+			widgets[widgets.Length - 1] = ButtonWidget.Create( game, 40, 30, "OK", titleFont, OnWidgetClick )
 				.SetLocation( Anchor.Centre, Anchor.Centre, 240, 110 );
-			
+
 			InputOpened();
 			UpdateDescription( targetWidget );
 		}
+		
+		void InputClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
+			if( btn != MouseButton.Left ) return;
+			widget.HandlesMouseClick( x, y, btn );
+		}		
 		
 		void HandleEnumOption( ButtonWidget button, Type type ) {
 			string value = button.GetValue( game );
