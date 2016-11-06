@@ -23,16 +23,17 @@ namespace ClassicalSharp.Model {
 			                 .TexOrigin( 14, 0 )
 			                 .RotOrigin( 0, 9, -4 ) );
 			Torso = BuildRotatedBox( MakeRotatedBoxBounds( -3, 5, -4, 3, 11, 3 )
-			                       .TexOrigin( 0, 9 ) );
+			                        .TexOrigin( 0, 9 ) );
 			
-			LeftLeg = MakeLeg( -3, 0, -2, -1 );
-			RightLeg = MakeLeg( 0, 3, 1, 2 );
 			LeftWing = BuildBox( MakeBoxBounds( -4, 7, -3, -3, 11, 3 )
 			                    .TexOrigin( 24, 13 )
 			                    .RotOrigin( -3, 11, 0 ) );
 			RightWing = BuildBox( MakeBoxBounds( 3, 7, -3, 4, 11, 3 )
 			                     .TexOrigin( 24, 13 )
 			                     .RotOrigin( 3, 11, 0 ) );
+			
+			LeftLeg = MakeLeg( -3, 0, -2, -1 );
+			RightLeg = MakeLeg( 0, 3, 1, 2 );
 		}
 		
 		ModelPart MakeLeg( int x1, int x2, int legX1, int legX2 ) {
@@ -57,16 +58,20 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override void DrawModel( Player p ) {
-			game.Graphics.BindTexture( GetTexture( p.MobTextureId ) );		
+			game.Graphics.BindTexture( GetTexture( p.MobTextureId ) );
 			DrawHeadRotate( -p.PitchRadians, 0, 0, Head );
 			DrawHeadRotate( -p.PitchRadians, 0, 0, Head2 );
 			DrawHeadRotate( -p.PitchRadians, 0, 0, Head3 );
 
 			DrawPart( Torso );
-			DrawRotate( p.anim.legXRot, 0, 0, LeftLeg );
-			DrawRotate( -p.anim.legXRot, 0, 0, RightLeg );
 			DrawRotate( 0, 0, -Math.Abs( p.anim.armXRot ), LeftWing );
 			DrawRotate( 0, 0, Math.Abs( p.anim.armXRot ), RightWing );
+			
+			for( int i = 0; i < cols.Length; i++ ) {
+				cols[i] = FastColour.Scale( col, 0.7f ).Pack();
+			}
+			DrawRotate( p.anim.legXRot, 0, 0, LeftLeg );
+			DrawRotate( -p.anim.legXRot, 0, 0, RightLeg );
 			UpdateVB();
 		}
 		

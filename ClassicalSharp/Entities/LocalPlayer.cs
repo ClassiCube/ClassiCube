@@ -45,7 +45,7 @@ namespace ClassicalSharp.Entities {
 			sound = new SoundComponent( game, this );
 			
 			physics.hacks = Hacks; input.Hacks = Hacks;
-			physics.collisions = collisions; input.collisions = collisions;
+			physics.collisions = collisions;
 			input.physics = physics;
 		}
 		

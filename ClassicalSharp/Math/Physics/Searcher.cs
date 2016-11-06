@@ -55,7 +55,7 @@ namespace ClassicalSharp.Physics {
 				for( int z = min.Z; z <= max.Z; z++ )
 					for( int x = min.X; x <= max.X; x++ )
 			{
-				byte block = GetPhysicsBlockId( game.World, x, y, z );
+				byte block = game.World.GetPhysicsBlock( x, y, z );
 				if( info.Collide[block] != CollideType.Solid ) continue;
 				
 				blockBB.Min = info.MinBB[block];
@@ -76,15 +76,7 @@ namespace ClassicalSharp.Physics {
 				QuickSort( stateCache, 0, count - 1 );
 			return count;
 		}
-		
-		
-		public static byte GetPhysicsBlockId( World world, int x, int y, int z ) {
-			if( x < 0 || x >= world.Width || z < 0 ||
-			   z >= world.Length || y < 0 ) return Block.Bedrock;
-			
-			if( y >= world.Height ) return Block.Air;
-			return world.GetBlock( x, y, z );
-		}
+
 		
 		public static void CalcTime( ref Vector3 vel, ref AABB entityBB, ref AABB blockBB,
 		                            out float tx, out float ty, out float tz ) {

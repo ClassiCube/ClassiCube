@@ -95,7 +95,6 @@ namespace ClassicalSharp.Model {
 			cols[1] = FastColour.Scale( col, FastColour.ShadeYBottom ).Pack();
 			cols[2] = FastColour.Scale( col, FastColour.ShadeZ ).Pack(); cols[3] = cols[2];
 			cols[4] = FastColour.Scale( col, FastColour.ShadeX ).Pack(); cols[5] = cols[4];
-			otherCol = FastColour.Scale( col, 0.7f ).Pack();
 			
 			cosYaw = (float)Math.Cos( p.YawDegrees * Utils.Deg2Rad );
 			sinYaw = (float)Math.Sin( p.YawDegrees * Utils.Deg2Rad );
@@ -119,7 +118,6 @@ namespace ClassicalSharp.Model {
 		
 		protected FastColour col;
 		protected int[] cols = new int[6];
-		protected int otherCol;
 		protected internal ModelVertex[] vertices;
 		protected internal int index, texIndex;
 		
@@ -154,7 +152,7 @@ namespace ClassicalSharp.Model {
 				v.X *= scale; v.Y *= scale; v.Z *= scale;
 				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
-				vertex.Colour = part.Count == boxVertices ? cols[i >> 2] : otherCol;
+				vertex.Colour = cols[i >> 2];
 				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
 				int quadI = i & 3;
@@ -209,7 +207,7 @@ namespace ClassicalSharp.Model {
 				v.X *= scale; v.Y *= scale; v.Z *= scale;
 				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
-				vertex.Colour = part.Count == boxVertices ? cols[i >> 2] : otherCol;
+				vertex.Colour = cols[i >> 2];
 				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
 				int quadI = i & 3;

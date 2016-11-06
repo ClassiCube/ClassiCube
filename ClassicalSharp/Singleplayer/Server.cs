@@ -5,6 +5,7 @@ using System.Net;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Generator;
 using ClassicalSharp.Gui.Screens;
+using ClassicalSharp.Physics;
 using OpenTK;
 using OpenTK.Input;
 
@@ -114,12 +115,24 @@ namespace ClassicalSharp.Singleplayer {
 		
 
 		void ResetPlayerPosition() {
-			int x = game.World.Width / 2, z = game.World.Length / 2;
-			int y = game.World.GetLightHeight( x, z ) + 2;
+			Vector3 spawn = default(Vector3);
+			spawn.X = (game.World.Width / 2) + 0.5f;
+			spawn.Y = game.World.Height + Entity.Adjustment;
+			spawn.Z = (game.World.Length / 2) + 0.5f;
 			
-			LocationUpdate update = LocationUpdate.MakePosAndOri( x, y, z, 0, 0, false );
+			AABB bb = AABB.Make( spawn, game.LocalPlayer.Size );
+			spawn.Y = 0;		
+			for( int y = game.World.Height; y >= 0; y-- ) {
+				float highestY = Respawn.HighestFreeY( game, ref bb );
+				if( highestY != float.NegativeInfinity ) {
+					spawn.Y = highestY; break;
+				}
+				bb.Min.Y -= 1; bb.Max.Y -= 1;
+			}
+			
+			LocationUpdate update = LocationUpdate.MakePosAndOri( spawn, 0, 0, false );
 			game.LocalPlayer.SetLocation( update, false );
-			game.LocalPlayer.Spawn = new Vector3( x, y, z );
+			game.LocalPlayer.Spawn = spawn;
 			game.CurrentCameraPos = game.Camera.GetCameraPos( 0 );
 		}
 	}

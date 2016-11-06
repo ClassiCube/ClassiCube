@@ -43,7 +43,7 @@ namespace ClassicalSharp.Map {
 			
 			Uuid = Guid.NewGuid();
 			game.WorldEvents.RaiseOnNewMap();
-		}	
+		}
 		
 		/// <summary> Updates the underlying block array, heightmap, and dimensions of this map. </summary>
 		public void SetNewMap( byte[] blocks, int width, int height, int length ) {
@@ -153,10 +153,17 @@ namespace ClassicalSharp.Map {
 		public Vector3I GetCoords( int index ) {
 			if( index < 0 || index >= blocks.Length )
 				return new Vector3I( -1 );
+			
 			int x = index % Width;
 			int y = index / oneY; // index / (width * length)
 			int z = (index / Width) % Length;
 			return new Vector3I( x, y, z );
+		}
+		
+		public byte GetPhysicsBlock( int x, int y, int z ) {
+			if( x < 0 || x >= Width || z < 0 || z >= Length || y < 0 ) return Block.Bedrock;			
+			if( y >= Height ) return Block.Air;
+			return blocks[(y * Length + z) * Width + x];
 		}
 	}
 }
