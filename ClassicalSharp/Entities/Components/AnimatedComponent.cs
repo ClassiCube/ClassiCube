@@ -76,7 +76,6 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		static void DoTilt( ref float tilt, bool reduce ) {
-			if( reduce ) tilt *= 0.8f;
 			else tilt += 0.1f;
 			Utils.Clamp( ref tilt, 0, 1 );
 		}
