@@ -22,14 +22,14 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeOpt( -1, -50, "Hotbar scale", OnWidgetClick,
 				     g => g.HotbarScale.ToString( "F1" ),
-				     (g, v) => { g.HotbarScale = Single.Parse( v );
+				     (g, v) => { g.HotbarScale = Utils.ParseDecimal( v );
 				     	Options.Set( OptionsKey.HotbarScale, v );
 				     	g.Gui.RefreshHud();
 				     } ),
 				
 				MakeOpt( -1, 0, "Inventory scale", OnWidgetClick,
 				     g => g.InventoryScale.ToString( "F1" ),
-				     (g, v) => { g.InventoryScale = Single.Parse( v );
+				     (g, v) => { g.InventoryScale = Utils.ParseDecimal( v );
 				     	Options.Set( OptionsKey.InventoryScale, v );
 				     	g.Gui.RefreshHud();
 				     } ),
@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeOpt( 1, -100, "Chat scale", OnWidgetClick,
 				     g => g.ChatScale.ToString( "F1" ),
-				     (g, v) => { g.ChatScale = Single.Parse( v );
+				     (g, v) => { g.ChatScale = Utils.ParseDecimal( v );
 				     	Options.Set( OptionsKey.ChatScale, v );
 				     	g.Gui.RefreshHud();
 				     } ),

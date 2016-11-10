@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeOpt( -1, 0, "Clouds speed", OnWidgetClick,
 				     g => g.World.Env.CloudsSpeed.ToString( "F2" ),
-				     (g, v) => g.World.Env.SetCloudsSpeed( Single.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetCloudsSpeed( Utils.ParseDecimal( v ) ) ),
 				
 				MakeOpt( -1, 50, "Clouds height", OnWidgetClick,
 				     g => g.World.Env.CloudHeight.ToString(),
@@ -55,7 +55,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeOpt( 1, 0, "Rain/Snow speed", OnWidgetClick,
 				     g => g.World.Env.WeatherSpeed.ToString( "F2" ),
-				     (g, v) => g.World.Env.SetWeatherSpeed( Single.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetWeatherSpeed( Utils.ParseDecimal( v ) ) ),
 				
 				MakeOpt( 1, 50, "Water level", OnWidgetClick,
 				     g => g.World.Env.EdgeHeight.ToString(),

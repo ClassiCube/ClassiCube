@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 				!network.IsSinglePlayer ? null :
 					MakeOpt( -1, -100, "Click distance", OnWidgetClick,
 					     g => g.LocalPlayer.ReachDistance.ToString(),
-					     (g, v) => g.LocalPlayer.ReachDistance = Single.Parse( v ) ),
+					     (g, v) => g.LocalPlayer.ReachDistance = Utils.ParseDecimal( v ) ),
 				
 				MakeBool( -1, -50, "Music", OptionsKey.UseMusic,
 				     OnWidgetClick, g => g.UseMusic,

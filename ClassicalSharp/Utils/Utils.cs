@@ -138,9 +138,9 @@ namespace ClassicalSharp {
 		internal static byte FastByte( string s ) {
 			int sum = 0;
 			switch( s.Length ) {
-				case 1: sum = (s[0] - '0'); break;
-				case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
-				case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
+					case 1: sum = (s[0] - '0'); break;
+					case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
+					case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
 			}
 			return (byte)sum;
 		}
@@ -177,6 +177,15 @@ namespace ClassicalSharp {
 		public const string ExtendedCharReplacements = "⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»" +
 			"░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌" +
 			"█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0";
+
+		public static bool IsValidInputChar( char c, Game game ) {
+			if( c >= ' ' && c <= '~' ) return true; // ascii
+			
+			bool isCP437 = Utils.ControlCharReplacements.IndexOf( c ) >= 0 ||
+				Utils.ExtendedCharReplacements.IndexOf( c ) >= 0;
+			bool supportsCP437 = game.Server.SupportsFullCP437;
+			return supportsCP437 && isCP437;
+		}
 		
 		public unsafe static string ToLower( string value ) {
 			fixed( char* ptr = value ) {
@@ -191,25 +200,24 @@ namespace ClassicalSharp {
 		
 		// Not all languages use . as their decimal point separator
 		public static bool TryParseDecimal( string s, out float result ) {
-			result = 0;
+			if( s.IndexOf(',' ) >= 0 ) 
+				s = s.Replace( ',', '.' );
 			float temp;
-			const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
-				| NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 			
+			result = 0;			
 			if( !Single.TryParse( s, style, NumberFormatInfo.InvariantInfo, out temp ) ) return false;
 			if( Single.IsInfinity( temp ) || Single.IsNaN( temp ) ) return false;
 			result = temp;
 			return true;
 		}
 		
-		
-		public static bool IsValidInputChar( char c, Game game ) {
-			if( c >= ' ' && c <= '~' ) return true; // ascii
-			
-			bool isCP437 = Utils.ControlCharReplacements.IndexOf( c ) >= 0 ||
-				Utils.ExtendedCharReplacements.IndexOf( c ) >= 0;
-			bool supportsCP437 = game.Server.SupportsFullCP437;
-			return supportsCP437 && isCP437;
+		public static float ParseDecimal( string s ) {
+			if( s.IndexOf(',' ) >= 0 ) 
+				s = s.Replace( ',', '.' );
+			return Single.Parse( s, style, NumberFormatInfo.InvariantInfo );
 		}
+		
+		const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
+			| NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 	}
 }

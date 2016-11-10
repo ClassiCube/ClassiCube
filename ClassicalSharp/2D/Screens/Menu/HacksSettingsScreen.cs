@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeOpt( -1, -100, "Speed multiplier", OnWidgetClick,
 				        g => g.LocalPlayer.Hacks.SpeedMultiplier.ToString( "F2" ),
-				        (g, v) => { g.LocalPlayer.Hacks.SpeedMultiplier = Single.Parse( v );
+				        (g, v) => { g.LocalPlayer.Hacks.SpeedMultiplier = Utils.ParseDecimal( v );
 				        	Options.Set( OptionsKey.Speed, v ); } ),
 				
 				MakeBool( -1, -50, "Camera clipping", OptionsKey.CameraClipping,
@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeOpt( -1, 0, "Jump height", OnWidgetClick,
 				        g => g.LocalPlayer.JumpHeight.ToString( "F3" ),
-				        (g, v) => g.LocalPlayer.physics.CalculateJumpVelocity( true, Single.Parse( v ) ) ),
+				        (g, v) => g.LocalPlayer.physics.CalculateJumpVelocity( true, Utils.ParseDecimal( v ) ) ),
 				
 				MakeBool( -1, 50, "WOM style hacks", OptionsKey.WOMStyleHacks,
 				         OnWidgetClick, g => g.LocalPlayer.Hacks.WOMStyleHacks,
