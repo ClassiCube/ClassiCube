@@ -200,7 +200,7 @@ namespace ClassicalSharp {
 		
 		// Not all languages use . as their decimal point separator
 		public static bool TryParseDecimal( string s, out float result ) {
-			if( s.IndexOf(',' ) >= 0 ) 
+			if( s.IndexOf( ',' ) >= 0 ) 
 				s = s.Replace( ',', '.' );
 			float temp;
 			
@@ -212,7 +212,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static float ParseDecimal( string s ) {
-			if( s.IndexOf(',' ) >= 0 ) 
+			if( s.IndexOf( ',' ) >= 0 ) 
 				s = s.Replace( ',', '.' );
 			return Single.Parse( s, style, NumberFormatInfo.InvariantInfo );
 		}

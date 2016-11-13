@@ -275,7 +275,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			if( caret == -1 ) {
 				Text.DeleteAt( Text.Length - 1 );
-			} else {
+			} else if( caret > 0 ) {
 				caret--;
 				Text.DeleteAt( caret );
 			}
