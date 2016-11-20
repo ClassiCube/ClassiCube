@@ -4,10 +4,11 @@
 #if __MonoCS__
 using System;
 using System.IO;
+using ClassicalSharp;
 
 namespace Ionic.Zlib {
 	
-	internal class DeflateStream {
+	internal class DeflateStream : ReadOnlyStream {
 		
 		ZlibCodec z;
 		bool _leaveOpen;
@@ -21,7 +22,7 @@ namespace Ionic.Zlib {
 			z = new ZlibCodec();
 		}		
 
-		public void Dispose() {
+		public override void Close() {
 			z.EndInflate();
 			z = null;
 			
@@ -29,8 +30,10 @@ namespace Ionic.Zlib {
 				_stream.Dispose();
 			_stream = null;
 		}
+		
+		public override void Flush() { }
 
-		public int Read( byte[] buffer, int offset, int count ) {
+		public override int Read( byte[] buffer, int offset, int count ) {
 			// According to MS documentation, any implementation of the IO.Stream.Read function must:
 			// (a) throw an exception if offset & count reference an invalid part of the buffer,
 			//     or if count < 0, or if buffer is null

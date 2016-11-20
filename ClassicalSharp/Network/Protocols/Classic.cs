@@ -98,9 +98,9 @@ namespace ClassicalSharp.Network.Protocols {
 			// due to their async packet sending behaviour.
 			if( gzipStream == null ) HandleLevelInit();
 			int usedLength = reader.ReadInt16();
-			gzippedMap.Position = 0;
-			gzippedMap.Offset = reader.index;
-			gzippedMap.SetLength( usedLength );
+			gzippedMap.pos = 0;
+			gzippedMap.bufferPos = reader.index;
+			gzippedMap.len = usedLength;
 			
 			if( gzipHeader.done || gzipHeader.ReadHeader( gzippedMap ) ) {
 				if( mapSizeIndex < 4 ) {
