@@ -335,7 +335,7 @@ namespace ClassicalSharp {
 			flags |= ((y - offset) >= lightHeight ? 4 : 0);
 			
 			// Dynamic lighting
-			if( info.FullBright[block] )               flags |= 7;
+			if( info.FullBright[block] )               flags |= 5;
 			if( info.FullBright[chunk[cIndex + 324]] ) flags |= 4;
 			if( info.FullBright[chunk[cIndex - 324]] ) flags |= 1;
 			return flags;
