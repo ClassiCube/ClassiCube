@@ -133,7 +133,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widget.SetValue = (g, v) => {
 				setter( g, v == "yes" );
-				Options.Set( optKey, v == target );
+				Options.Set( optKey, v == "yes" );
 				widget.SetText( (string)widget.Metadata + ": " + (v == "yes" ? "ON" : "OFF") );
 			};
 			return widget;
