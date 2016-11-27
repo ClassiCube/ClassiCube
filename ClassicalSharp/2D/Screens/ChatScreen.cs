@@ -354,7 +354,7 @@ namespace ClassicalSharp.Gui.Screens {
 					chatIndex += chatLines;
 					ScrollHistory();
 				} else if (game.Server.SupportsFullCP437 &&
-				          key == game.InputHandler.Keys[KeyBind.ExtInput]) {
+				          key == game.Input.Keys[KeyBind.ExtInput]) {
 					altText.SetActive(!altText.Active);
 				} else {
 					input.HandlesKeyDown(key);

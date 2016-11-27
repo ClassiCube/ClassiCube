@@ -21,7 +21,7 @@ namespace ClassicalSharp.Entities {
 		
 		internal bool Handles(Key key) {
 			LocalPlayer p = (LocalPlayer)entity;
-			KeyMap keys = game.InputHandler.Keys;
+			KeyMap keys = game.Input.Keys;
 			
 			if (key == keys[KeyBind.Respawn] && Hacks.CanRespawn) {
 				DoRespawn();

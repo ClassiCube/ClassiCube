@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 		void CheckZoomFov() {
 			bool allowZoom = Gui.activeScreen == null && !Gui.hudScreen.HandlesAllInput;
 			if (allowZoom && IsKeyDown(KeyBind.ZoomScrolling))
-				InputHandler.SetFOV(ZoomFov, false);
+				Input.SetFOV(ZoomFov, false);
 		}
 		
 		void UpdateViewMatrix() {
@@ -197,7 +197,7 @@ namespace ClassicalSharp {
 			bool left = IsMousePressed(MouseButton.Left);
 			bool middle = IsMousePressed(MouseButton.Middle);
 			bool right = IsMousePressed(MouseButton.Right);
-			InputHandler.PickBlocks(true, left, middle, right);
+			Input.PickBlocks(true, left, middle, right);
 			if (!HideGui)
 				HeldBlockRenderer.Render(delta);
 		}
@@ -306,13 +306,13 @@ namespace ClassicalSharp {
 				Thread.Sleep((int)Math.Round(leftOver, MidpointRounding.AwayFromZero));
 		}
 		
-		public bool IsKeyDown(Key key) { return InputHandler.IsKeyDown(key); }
+		public bool IsKeyDown(Key key) { return Input.IsKeyDown(key); }
 		
-		public bool IsKeyDown(KeyBind binding) { return InputHandler.IsKeyDown(binding); }
+		public bool IsKeyDown(KeyBind binding) { return Input.IsKeyDown(binding); }
 		
-		public bool IsMousePressed(MouseButton button) { return InputHandler.IsMousePressed(button); }
+		public bool IsMousePressed(MouseButton button) { return Input.IsMousePressed(button); }
 		
-		public Key Mapping(KeyBind mapping) { return InputHandler.Keys[mapping]; }
+		public Key Mapping(KeyBind mapping) { return Input.Keys[mapping]; }
 		
 		public void Dispose() {
 			MapRenderer.Dispose();

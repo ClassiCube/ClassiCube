@@ -16,7 +16,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static FastColour grey = new FastColour(150, 150, 150);
 		
 		public EditHotkeyScreen(Game game, Hotkey original) : base(game) {
-			hotkeys = game.InputHandler.Hotkeys;
+			hotkeys = game.Input.Hotkeys;
 			origHotkey = original;
 			curHotkey = original;
 		}

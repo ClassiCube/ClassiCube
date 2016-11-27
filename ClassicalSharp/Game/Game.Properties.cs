@@ -111,7 +111,7 @@ namespace ClassicalSharp {
 		public EntityEvents EntityEvents = new EntityEvents();
 		public WorldEvents WorldEvents = new WorldEvents();
 		public UserEvents UserEvents = new UserEvents();
-		public InputHandler InputHandler;
+		public InputHandler Input;
 		public Chat Chat;
 		public HeldBlockRenderer HeldBlockRenderer;
 		public AudioPlayer AudioPlayer;

@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public HotkeyListScreen(Game game) : base(game) {
 			titleText = "Modify hotkeys";
-			HotkeyList hotkeys = game.InputHandler.Hotkeys;
+			HotkeyList hotkeys = game.Input.Hotkeys;
 			int count = hotkeys.Hotkeys.Count;
 			entries = new string[hotkeys.Hotkeys.Count + items];
 			
@@ -52,7 +52,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (value.Contains("Alt")) flags |= 4;
 			
 			Key hKey = (Key)Enum.Parse(typeof(Key), key);
-			HotkeyList hotkeys = game.InputHandler.Hotkeys;
+			HotkeyList hotkeys = game.Input.Hotkeys;
 			return hotkeys.Hotkeys.Find(h => h.BaseKey == hKey && h.Flags == flags);
 		}
 	}

@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override bool HandlesMouseScroll(int delta) {
 			bool bounds = Contains(TableX - scrollbarWidth, TableY, TableWidth + scrollbarWidth, 
 			                       TableHeight, game.Mouse.X, game.Mouse.Y);
-			bool hotbar = game.IsKeyDown(Key.AltLeft) || game.IsKeyDown(Key.AltRight);
+			bool hotbar = game.Input.AltDown || game.Input.ControlDown || game.Input.ShiftDown;
 			if (!bounds || hotbar) return false;
 			
 			int rowY = (selIndex / blocksPerRow) - scrollY;

@@ -58,12 +58,12 @@ namespace ClassicalSharp.Hotkeys {
 		
 		/// <summary> Determines whether a hotkey is active based on the given key,
 		/// and the currently active control, alt, and shift modifiers </summary>
-		public bool IsHotkey(Key key, KeyboardDevice keyboard,
+		public bool IsHotkey(Key key, InputHandler input,
 		                     out string text, out bool moreInput) {
 			byte flags = 0;
-			if (keyboard[Key.ControlLeft] || keyboard[Key.ControlRight]) flags |= 1;
-			if (keyboard[Key.ShiftLeft] || keyboard[Key.ShiftRight]) flags |= 2;
-			if (keyboard[Key.AltLeft] || keyboard[Key.AltRight]) flags |= 4;
+			if (input.ControlDown) flags |= 1;
+			if (input.ShiftDown) flags |= 2;
+			if (input.AltDown) flags |= 4;
 			
 			for (int i = 0; i < Hotkeys.Count; i++) {
 				Hotkey hKey = Hotkeys[i];

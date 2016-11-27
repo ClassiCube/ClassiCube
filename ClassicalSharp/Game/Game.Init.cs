@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 			ETags.Load();
 			LastModified.Load();
 			
-			InputHandler = new InputHandler(this);
+			Input = new InputHandler(this);
 			defaultIb = Graphics.MakeDefaultIb();
 			ParticleManager = AddComponent(new ParticleManager());
 			TabList = AddComponent(new TabList());

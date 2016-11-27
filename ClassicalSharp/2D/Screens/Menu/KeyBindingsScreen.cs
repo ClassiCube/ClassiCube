@@ -84,7 +84,7 @@ namespace ClassicalSharp.Gui.Screens {
 				curWidget = (ButtonWidget)widget;
 				index = Array.IndexOf<Widget>(widgets, curWidget) - 2;
 				KeyBind mapping = Get(index, left, right);
-				HandlesKeyDown(game.InputHandler.Keys.GetDefault(mapping));
+				HandlesKeyDown(game.Input.Keys.GetDefault(mapping));
 			}
 			if (btn != MouseButton.Left) return;
 			
@@ -102,7 +102,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		string ButtonText(int i) {
 			KeyBind mapping = Get(i, left, right);
-			Key key = game.InputHandler.Keys[mapping];
+			Key key = game.Input.Keys[mapping];
 			string desc = Get(i, leftDesc, rightDesc);
 			return desc + ": " + keyNames[(int)key];
 		}
@@ -113,7 +113,7 @@ namespace ClassicalSharp.Gui.Screens {
 			} else if (curWidget != null) {
 				int index = Array.IndexOf<Widget>(widgets, curWidget) - 2;
 				KeyBind mapping = Get(index, left, right);
-				game.InputHandler.Keys[mapping] = key;			
+				game.Input.Keys[mapping] = key;			
 				curWidget.SetText(ButtonText(index));
 				curWidget = null;
 			}

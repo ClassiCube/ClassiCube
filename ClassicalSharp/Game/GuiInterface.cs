@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 		public void SetNewScreen(Screen screen) { SetNewScreen(screen, true); }
 		
 		public void SetNewScreen(Screen screen, bool disposeOld) {
-			game.InputHandler.ScreenChanged(activeScreen, screen);
+			game.Input.ScreenChanged(activeScreen, screen);
 			if (activeScreen != null && disposeOld)
 				activeScreen.Dispose();
 			

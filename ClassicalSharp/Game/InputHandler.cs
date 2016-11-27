@@ -39,6 +39,10 @@ namespace ClassicalSharp {
 			game.Mouse.ButtonUp += MouseButtonUp;
 		}
 		
+		public bool AltDown { get { return IsKeyDown(Key.AltLeft) || IsKeyDown(Key.AltRight); } }
+		public bool ControlDown { get { return IsKeyDown(Key.ControlLeft) || IsKeyDown(Key.ControlRight); } }
+		public bool ShiftDown { get { return IsKeyDown(Key.ShiftLeft) || IsKeyDown(Key.ShiftRight); } }
+		
 		public KeyMap Keys;
 		public bool IsKeyDown(Key key) {
 			return game.Keyboard[key];
@@ -121,9 +125,8 @@ namespace ClassicalSharp {
 			if (game.Gui.ActiveScreen.HandlesMouseScroll(e.Delta)) return;
 			
 			Inventory inv = game.Inventory;
-			bool hotbar = IsKeyDown(Key.AltLeft) || IsKeyDown(Key.AltRight);
-			if ((!hotbar && game.Camera.DoZoom(e.DeltaPrecise)) || DoFovZoom(e.DeltaPrecise) 
-			   || !inv.CanChangeHeldBlock)
+			bool hotbar = AltDown || ControlDown || ShiftDown;
+			if ((!hotbar && game.Camera.DoZoom(e.DeltaPrecise)) || DoFovZoom(e.DeltaPrecise) || !inv.CanChangeHeldBlock)
 				return;
 			ScrollHotbar(e.DeltaPrecise);
 		}
@@ -187,7 +190,7 @@ namespace ClassicalSharp {
 		void HandleHotkey(Key key) {
 			string text;
 			bool more;
-			if (!Hotkeys.IsHotkey(key, game.Keyboard, out text, out more)) return;
+			if (!Hotkeys.IsHotkey(key, game.Input, out text, out more)) return;
 			
 			if (!more) {
 				game.Server.SendChat(text, false);
@@ -230,7 +233,7 @@ namespace ClassicalSharp {
 			} else if (key == Keys[KeyBind.ThirdPerson]) {
 				game.CycleCamera();
 			} else if (key == Keys[KeyBind.ToggleFog]) {
-				if (game.IsKeyDown(Key.ShiftLeft) || game.IsKeyDown(Key.ShiftRight)) {
+				if (game.Input.ShiftDown) {
 					CycleDistanceBackwards();
 				} else {
 					CycleDistanceForwards();
