@@ -134,7 +134,7 @@ namespace ClassicalSharp.Textures {
 				byte[] data = new byte[uncompressedSize];
 				int index = 0, read = 0;
 				
-				using(DeflateStream ds = new DeflateStream(reader.BaseStream, CompressionMode.Decompress, true)) {
+				using (DeflateStream ds = new DeflateStream(reader.BaseStream, CompressionMode.Decompress, true)) {
 					while (index < uncompressedSize) {
 						read = ds.Read(data, index, data.Length - index);
 						if (read == 0) break;

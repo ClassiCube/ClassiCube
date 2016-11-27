@@ -58,8 +58,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			Size size = new Size(Math.Max(bodySize.Width, titleWidth), bodySize.Height + titleHeight);
 			game.Graphics.DeleteTexture(ref texture);
 			
-			using(Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
-				using(IDrawer2D drawer = game.Drawer2D)
+			using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
+				using (IDrawer2D drawer = game.Drawer2D)
 			{
 				drawer.SetBitmap(bmp);
 				DrawTitles(drawer, font);

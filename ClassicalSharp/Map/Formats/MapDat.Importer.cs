@@ -29,7 +29,7 @@ namespace ClassicalSharp.Map {
 			GZipHeaderReader gsHeader = new GZipHeaderReader();
 			while (!gsHeader.ReadHeader(stream)) { }
 			
-			using(DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
+			using (DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
 				reader = new BinaryReader(gs);
 				ClassDescription obj = ReadData();
 				for (int i = 0; i < obj.Fields.Length; i++) {

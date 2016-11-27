@@ -36,7 +36,7 @@ namespace ClassicalSharp.Map {
 			r.ReadBytes(26); // layer index
 			int metaSize = r.ReadInt32();
 
-			using(DeflateStream ds = new DeflateStream(stream, CompressionMode.Decompress)) {
+			using (DeflateStream ds = new DeflateStream(stream, CompressionMode.Decompress)) {
 				r = new BinaryReader(ds);
 				for (int i = 0; i < metaSize; i++) {
 					string group = ReadString(r);

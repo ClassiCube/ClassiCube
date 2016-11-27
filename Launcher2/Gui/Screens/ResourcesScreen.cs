@@ -12,8 +12,8 @@ namespace Launcher.Gui.Screens {
 		ResourcesView view;
 		int lastProgress = int.MinValue;
 
-		public ResourcesScreen( LauncherWindow game ) : base( game ) {
-			view = new ResourcesView( game );
+		public ResourcesScreen(LauncherWindow game) : base(game) {
+			view = new ResourcesView(game);
 			widgets = view.widgets;
 		}
 
@@ -33,15 +33,15 @@ namespace Launcher.Gui.Screens {
 		
 		bool failed;
 		public override void Tick() {
-			if( fetcher == null || failed ) return;
+			if (fetcher == null || failed) return;
 			CheckCurrentProgress();
 			
-			if( !fetcher.Check( SetStatus ) )
+			if (!fetcher.Check(SetStatus))
 				failed = true;
 			
-			if( !fetcher.Done ) return;
-			if( ResourceList.Files.Count > 0 ) {
-				ResourcePatcher patcher = new ResourcePatcher( fetcher );
+			if (!fetcher.Done) return;
+			if (ResourceList.Files.Count > 0) {
+				ResourcePatcher patcher = new ResourcePatcher(fetcher);
 				patcher.Run();
 			}
 			
@@ -58,28 +58,28 @@ namespace Launcher.Gui.Screens {
 		
 		void CheckCurrentProgress() {
 			Request item = fetcher.downloader.CurrentItem;
-			if( item == null ) { lastProgress = int.MinValue; return; }
+			if (item == null) { lastProgress = int.MinValue; return; }
 			
 			int progress = fetcher.downloader.CurrentItemProgress;
-			if( progress == lastProgress ) return;
+			if (progress == lastProgress) return;
 			lastProgress = progress;
-			SetFetchStatus( progress );
+			SetFetchStatus(progress);
 		}
 		
-		void SetFetchStatus( int progress ) {
-			if( progress >= 0 && progress <= 100 ) {
-				view.DrawProgressBox( progress );
+		void SetFetchStatus(int progress) {
+			if (progress >= 0 && progress <= 100) {
+				view.DrawProgressBox(progress);
 				game.Dirty = true;
 			}
 		}
 		
-		void DownloadResources( int mouseX, int mouseY ) {
-			if( game.Downloader == null )
-				game.Downloader = new AsyncDownloader( "null" );
-			if( fetcher != null ) return;
+		void DownloadResources(int mouseX, int mouseY) {
+			if (game.Downloader == null)
+				game.Downloader = new AsyncDownloader("null");
+			if (fetcher != null) return;
 			
 			fetcher = game.fetcher;
-			fetcher.DownloadItems( game.Downloader, SetStatus );
+			fetcher.DownloadItems(game.Downloader, SetStatus);
 			selectedWidget = null;
 			
 			widgets[view.yesIndex].Visible = false;
@@ -91,16 +91,16 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void GotoNextMenu() {
-			if( File.Exists( "options.txt" ) ) {
-				game.SetScreen( new MainScreen( game ) );
+			if (File.Exists("options.txt")) {
+				game.SetScreen(new MainScreen(game));
 			} else {
-				game.SetScreen( new ChooseModeScreen( game, true ) );
+				game.SetScreen(new ChooseModeScreen(game, true));
 			}
 		}
 		
-		void SetStatus( string text ) {
+		void SetStatus(string text) {
 			view.downloadingItems = true;
-			view.RedrawStatus( text );
+			view.RedrawStatus(text);
 			game.Dirty = true;
 		}
 		

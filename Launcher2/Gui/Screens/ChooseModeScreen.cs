@@ -9,8 +9,8 @@ namespace Launcher.Gui.Screens {
 	public sealed class ChooseModeScreen : Screen {
 		
 		ChooseModeView view;
-		public ChooseModeScreen( LauncherWindow game, bool firstTime ) : base( game ) {
-			view = new ChooseModeView( game );
+		public ChooseModeScreen(LauncherWindow game, bool firstTime) : base(game) {
+			view = new ChooseModeView(game);
 			view.FirstTime = firstTime;
 			widgets = view.widgets;
 		}
@@ -19,13 +19,13 @@ namespace Launcher.Gui.Screens {
 			base.Init();
 			view.Init();
 			
-			widgets[view.nIndex].OnClick = (x, y) => ModeClick( false, false );
-			widgets[view.clIndex].OnClick = (x, y) => ModeClick( true, false );
-			widgets[view.clHaxIndex].OnClick = (x, y) => ModeClick( true, true );
+			widgets[view.nIndex].OnClick = (x, y) => ModeClick(false, false);
+			widgets[view.clIndex].OnClick = (x, y) => ModeClick(true, false);
+			widgets[view.clHaxIndex].OnClick = (x, y) => ModeClick(true, true);
 			
-			if( view.backIndex >= 0 ) {
+			if (view.backIndex >= 0) {
 				widgets[view.backIndex].OnClick = (x, y)
-					=> game.SetScreen( new SettingsScreen( game ) );
+					=> game.SetScreen(new SettingsScreen(game));
 			}
 			Resize();
 		}
@@ -37,22 +37,22 @@ namespace Launcher.Gui.Screens {
 			game.Dirty = true;
 		}
 		
-		void ModeClick( bool classic, bool classicHacks ) {
+		void ModeClick(bool classic, bool classicHacks) {
 			game.ClassicBackground = classic;
 			Options.Load();
-			Options.Set( "mode-classic", classic );
-			if( classic )
-				Options.Set( "nostalgia-hacks", classicHacks );
+			Options.Set("mode-classic", classic);
+			if (classic)
+				Options.Set("nostalgia-hacks", classicHacks);
 			
-			Options.Set( "nostalgia-classicbg", classic );
-			Options.Set( "nostalgia-customblocks", !classic );
-			Options.Set( "nostalgia-usecpe", !classic );
-			Options.Set( "nostalgia-servertextures", !classic );
-			Options.Set( "nostalgia-classictablist", classic );
-			Options.Set( "nostalgia-classicoptions", classic );
+			Options.Set("nostalgia-classicbg", classic);
+			Options.Set("nostalgia-customblocks", !classic);
+			Options.Set("nostalgia-usecpe", !classic);
+			Options.Set("nostalgia-servertextures", !classic);
+			Options.Set("nostalgia-classictablist", classic);
+			Options.Set("nostalgia-classicoptions", classic);
 			Options.Save();
 			
-			game.SetScreen( new MainScreen( game ) );
+			game.SetScreen(new MainScreen(game));
 		}
 
 		public override void Dispose() {

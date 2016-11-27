@@ -20,7 +20,7 @@ namespace ClassicalSharp.Textures {
 		public void Extract(string path, Game game) {
 			path = PathIO.Combine(Dir, path);
 			path = PathIO.Combine(Program.AppDirectory, path);
-			using(Stream fs = File.OpenRead(path))
+			using (Stream fs = File.OpenRead(path))
 				Extract(fs, game);
 		}
 		
@@ -85,7 +85,7 @@ namespace ClassicalSharp.Textures {
 				game.World.TextureUrl = item.Url;
 				byte[] data = (byte[])item.Data;
 				TexturePack extractor = new TexturePack();
-				using(Stream ms = new MemoryStream(data)) {
+				using (Stream ms = new MemoryStream(data)) {
 					extractor.Extract(ms, game);
 				}
 				

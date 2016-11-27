@@ -15,22 +15,22 @@ namespace Launcher {
 		public static bool ShowingErrorDialog = false;
 		
 		[STAThread]
-		static void Main( string[] args ) {
+		static void Main(string[] args) {
 			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
-			string clientPath = Path.Combine( AppDirectory, "ClassicalSharp.exe" );
-			if( !File.Exists( clientPath ) ) {
-				MessageBox.Show( "ClassicalSharp.exe needs to be in the same folder as the launcher.", "Missing file" );
+			string clientPath = Path.Combine(AppDirectory, "ClassicalSharp.exe");
+			if (!File.Exists(clientPath)) {
+				MessageBox.Show("ClassicalSharp.exe needs to be in the same folder as the launcher.", "Missing file");
 				return;
 			}
 			
-			string logPath = Path.Combine( AppDirectory, "launcher.log" );
+			string logPath = Path.Combine(AppDirectory, "launcher.log");
 			AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
-			ErrorHandler2.InstallHandler( logPath );
+			ErrorHandler2.InstallHandler(logPath);
 			LauncherWindow window = new LauncherWindow();
 			window.Run();
 		}
 
-		static void UnhandledExceptionHandler( object sender, UnhandledExceptionEventArgs e ) {
+		static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs e) {
 			ShowingErrorDialog = true;
 		}
 	}

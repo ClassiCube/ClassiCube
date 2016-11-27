@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 			Exception ex = (Exception)e.ExceptionObject;
 			bool wroteToCrashLog = true;
 			try {
-				using(StreamWriter w = new StreamWriter(logFile, true)) {
+				using (StreamWriter w = new StreamWriter(logFile, true)) {
 					w.WriteLine("=== crash occurred ===");
 					w.WriteLine("Time: " + DateTime.Now);
 					
@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 		/// <summary> Logs an error that occured at the specified location to the log file. </summary>
 		public static bool LogError(string location, string text) {
 			try {
-				using(StreamWriter writer = new StreamWriter(logFile, true)) {
+				using (StreamWriter writer = new StreamWriter(logFile, true)) {
 					writer.WriteLine("=== handled error ===");
 					writer.WriteLine("Occured when: " + location);
 					writer.WriteLine(text);

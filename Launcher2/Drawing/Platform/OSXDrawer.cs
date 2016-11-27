@@ -10,40 +10,40 @@ namespace Launcher.Drawing {
 		
 		IntPtr windowPort;
 		public override void Init() {
-			windowPort = OSX.API.GetWindowPort( info.WinHandle );
+			windowPort = OSX.API.GetWindowPort(info.WinHandle);
 		}
 		
 		public override void Resize() {
-			windowPort = OSX.API.GetWindowPort( info.WinHandle );
+			windowPort = OSX.API.GetWindowPort(info.WinHandle);
 		}
 		
-		public override void Redraw( Bitmap framebuffer, Rectangle r ) {			
-			using( FastBitmap bmp = new FastBitmap( framebuffer, true, true ) ) {
+		public override void Redraw(Bitmap framebuffer, Rectangle r) {			
+			using (FastBitmap bmp = new FastBitmap(framebuffer, true, true)) {
 				IntPtr scan0 = bmp.Scan0;
 				int size = bmp.Width * bmp.Height * 4;
 				
 				IntPtr colorSpace = OSX.API.CGColorSpaceCreateDeviceRGB();
-				IntPtr provider = OSX.API.CGDataProviderCreateWithData( IntPtr.Zero, scan0, size, IntPtr.Zero );
+				IntPtr provider = OSX.API.CGDataProviderCreateWithData(IntPtr.Zero, scan0, size, IntPtr.Zero);
 				const uint flags = 4 | (2 << 12);
-				IntPtr image = OSX.API.CGImageCreate( bmp.Width, bmp.Height, 8, 8 * 4, bmp.Stride,
-				                                     colorSpace, flags, provider, IntPtr.Zero, 0, 0 );
+				IntPtr image = OSX.API.CGImageCreate(bmp.Width, bmp.Height, 8, 8 * 4, bmp.Stride,
+				                                     colorSpace, flags, provider, IntPtr.Zero, 0, 0);
 				IntPtr context = IntPtr.Zero;
-				OSStatus err = OSX.API.QDBeginCGContext( windowPort, ref context );
-				OSX.API.CheckReturn( err );
+				OSStatus err = OSX.API.QDBeginCGContext(windowPort, ref context);
+				OSX.API.CheckReturn(err);
 				
 				// TODO: only redraw changed region
 				OSX.HIRect rect = new OSX.HIRect();
 				rect.Origin.X = 0; rect.Origin.Y = 0;
 				rect.Size.X = bmp.Width; rect.Size.Y = bmp.Height;
 				
-				OSX.API.CGContextDrawImage( context, rect, image );
-				OSX.API.CGContextSynchronize( context );
-				err = OSX.API.QDEndCGContext( windowPort, ref context );
-				OSX.API.CheckReturn( err );
+				OSX.API.CGContextDrawImage(context, rect, image);
+				OSX.API.CGContextSynchronize(context);
+				err = OSX.API.QDEndCGContext(windowPort, ref context);
+				OSX.API.CheckReturn(err);
 				
-				OSX.API.CGImageRelease( image );
-				OSX.API.CGDataProviderRelease( provider );
-				OSX.API.CGColorSpaceRelease( colorSpace );
+				OSX.API.CGImageRelease(image);
+				OSX.API.CGDataProviderRelease(provider);
+				OSX.API.CGColorSpaceRelease(colorSpace);
 			}
 		}
 	}

@@ -57,7 +57,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			try {
-				using(FileStream fs = File.OpenRead(path)) {
+				using (FileStream fs = File.OpenRead(path)) {
 					int width, height, length;
 					game.World.Reset();
 					if (game.World.TextureUrl != null) {

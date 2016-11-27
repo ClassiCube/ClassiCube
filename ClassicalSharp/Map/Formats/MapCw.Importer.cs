@@ -21,7 +21,7 @@ namespace ClassicalSharp.Map {
 			GZipHeaderReader gsHeader = new GZipHeaderReader();
 			while (!gsHeader.ReadHeader(stream)) { }
 			
-			using(DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
+			using (DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
 				reader = new BinaryReader(gs);
 				if (reader.ReadByte() != (byte)NbtTagType.Compound)
 					throw new InvalidDataException("Nbt file must start with Tag_Compound");

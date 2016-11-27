@@ -353,7 +353,7 @@ namespace ClassicalSharp {
 		public bool UpdateTexture(ref int texId, string file, byte[] data, bool setSkinType) {
 			MemoryStream stream = new MemoryStream(data);
 			int maxSize = Graphics.MaxTextureDimensions;
-			using(Bitmap bmp = Platform.ReadBmp(stream)) {
+			using (Bitmap bmp = Platform.ReadBmp(stream)) {
 				if (bmp.Width > maxSize || bmp.Height > maxSize) {
 					Chat.Add("&cUnable to use " + file + " from the texture pack.");
 					Chat.Add("&c Its size is (" + bmp.Width + "," + bmp.Height
@@ -369,7 +369,7 @@ namespace ClassicalSharp {
 				}
 				
 				if (!Platform.Is32Bpp(bmp)) {
-					using(Bitmap bmp32 = Drawer2D.ConvertTo32Bpp(bmp))
+					using (Bitmap bmp32 = Drawer2D.ConvertTo32Bpp(bmp))
 						texId = Graphics.CreateTexture(bmp32, true);
 				} else {
 					texId = Graphics.CreateTexture(bmp, true);

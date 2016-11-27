@@ -31,8 +31,8 @@ namespace ClassicalSharp.Textures {
 				return true;
 			
 			try {
-				using(Stream fs = File.OpenRead(path))
-					using(StreamReader reader = new StreamReader(fs, false))
+				using (Stream fs = File.OpenRead(path))
+					using (StreamReader reader = new StreamReader(fs, false))
 				{
 					string line;
 					while ((line = reader.ReadLine()) != null) {
@@ -54,8 +54,8 @@ namespace ClassicalSharp.Textures {
 				if (!Directory.Exists(path))
 				   Directory.CreateDirectory(path);
 				
-				using(Stream fs = File.Create(Path.Combine(path, file)))
-					using(StreamWriter writer = new StreamWriter(fs))
+				using (Stream fs = File.Create(Path.Combine(path, file)))
+					using (StreamWriter writer = new StreamWriter(fs))
 				{
 					for (int i = 0; i < Entries.Count; i++)
 						writer.WriteLine(Entries[i]);

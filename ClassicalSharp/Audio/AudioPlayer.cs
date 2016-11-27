@@ -69,7 +69,7 @@ namespace ClassicalSharp.Audio {
 				string path = Path.Combine(Program.AppDirectory, file);
 				Utils.LogDebug("playing music file: " + file);
 				
-				using(FileStream fs = File.OpenRead(path)) {
+				using (FileStream fs = File.OpenRead(path)) {
 					OggContainer container = new OggContainer(fs);
 					try {
 						musicOut.PlayStreaming(container);

@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void DrawRectBounds(FastColour colour, float lineWidth, int x, int y, int width, int height) {
-			using(Pen pen = new Pen(colour, lineWidth)) {
+			using (Pen pen = new Pen(colour, lineWidth)) {
 				pen.Alignment = PenAlignment.Inset;
 				g.DrawRectangle(pen, x, y, width, height);
 			}
@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 
 		public override Bitmap ConvertTo32Bpp(Bitmap src) {
 			Bitmap bmp = new Bitmap(src.Width, src.Height);
-			using(Graphics g = Graphics.FromImage(bmp)) {
+			using (Graphics g = Graphics.FromImage(bmp)) {
 				g.InterpolationMode = InterpolationMode.NearestNeighbor;
 				g.DrawImage(src, 0, 0, src.Width, src.Height);
 			}

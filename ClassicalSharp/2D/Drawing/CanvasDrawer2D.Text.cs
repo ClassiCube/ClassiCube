@@ -42,7 +42,7 @@ namespace ClassicalSharp {
 		
 		FastBitmap bitmapWrapper = new FastBitmap();
 		public override void DrawBitmappedText(ref DrawTextArgs args, int x, int y) {
-			using(bitmapWrapper) {
+			using (bitmapWrapper) {
 				bitmapWrapper.SetData(curBmp, true, false);
 				DrawBitmapTextImpl(bitmapWrapper, ref args, x, y);
 			}

@@ -8,7 +8,7 @@ namespace ClassicalSharp.Map {
 	public sealed class MapSchematicExporter : IMapFormatExporter {
 		
 		public void Save(Stream stream, Game game) {
-			using(GZipStream wrapper = new GZipStream(stream, CompressionMode.Compress)) {
+			using (GZipStream wrapper = new GZipStream(stream, CompressionMode.Compress)) {
 				BinaryWriter writer = new BinaryWriter(wrapper);
 				NbtFile nbt = new NbtFile(writer);
 				World map = game.World;

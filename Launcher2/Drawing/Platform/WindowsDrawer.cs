@@ -9,27 +9,27 @@ namespace Launcher.Drawing {
 		
 		const uint SRCCOPY = 0xCC0020;
 		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern int BitBlt( IntPtr dcDst, int dstX, int dstY, int width, int height,
-		                         IntPtr dcSrc, int srcX, int srcY, uint drawOp );
+		static extern int BitBlt(IntPtr dcDst, int dstX, int dstY, int width, int height,
+		                         IntPtr dcSrc, int srcX, int srcY, uint drawOp);
 		
 		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern IntPtr GetDC( IntPtr hwnd );
+		static extern IntPtr GetDC(IntPtr hwnd);
 		
 		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
 		static extern IntPtr CreateCompatibleDC(IntPtr dc);
 		
 		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern IntPtr SelectObject( IntPtr dc, IntPtr handle );
+		static extern IntPtr SelectObject(IntPtr dc, IntPtr handle);
 		
 		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern int DeleteObject( IntPtr handle );
+		static extern int DeleteObject(IntPtr handle);
 		
 		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern int ReleaseDC( IntPtr dc, IntPtr hwnd );
+		static extern int ReleaseDC(IntPtr dc, IntPtr hwnd);
 		
 		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern IntPtr CreateDIBSection( IntPtr hdc, [In] ref BITMAPINFO pbmi,
-		                                      uint pila, out IntPtr ppvBits, IntPtr hSection, uint dwOffset );
+		static extern IntPtr CreateDIBSection(IntPtr hdc, [In] ref BITMAPINFO pbmi,
+		                                      uint pila, out IntPtr ppvBits, IntPtr hSection, uint dwOffset);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct BITMAPINFO {
@@ -49,13 +49,13 @@ namespace Launcher.Drawing {
 		
 		IntPtr dc, srcDC, srcHB;
 		public override void Init() {
-			dc = GetDC( info.WinHandle );
-			srcDC = CreateCompatibleDC( dc );
+			dc = GetDC(info.WinHandle);
+			srcDC = CreateCompatibleDC(dc);
 		}
 		
-		public override Bitmap CreateFrameBuffer( int width, int height ) {
-			if( srcHB != IntPtr.Zero )
-				DeleteObject( srcHB );
+		public override Bitmap CreateFrameBuffer(int width, int height) {
+			if (srcHB != IntPtr.Zero)
+				DeleteObject(srcHB);
 			
 			BITMAPINFO bmp = new BITMAPINFO();
 			bmp.biSize = (int)Marshal.SizeOf(typeof(BITMAPINFO));
@@ -65,24 +65,24 @@ namespace Launcher.Drawing {
 			bmp.biPlanes = 1;
 
 			IntPtr pointer;
-			srcHB = CreateDIBSection( srcDC, ref bmp, 0, out pointer, IntPtr.Zero, 0 );
-			return new Bitmap( width, height, width * 4, 
-			                  System.Drawing.Imaging.PixelFormat.Format32bppArgb, pointer );
+			srcHB = CreateDIBSection(srcDC, ref bmp, 0, out pointer, IntPtr.Zero, 0);
+			return new Bitmap(width, height, width * 4, 
+			                  System.Drawing.Imaging.PixelFormat.Format32bppArgb, pointer);
 		}
 		
 		public override void Resize() {
-			if( dc != IntPtr.Zero ) {
-				ReleaseDC( info.WinHandle, dc );
-				DeleteObject( srcDC );
+			if (dc != IntPtr.Zero) {
+				ReleaseDC(info.WinHandle, dc);
+				DeleteObject(srcDC);
 			}
-			dc = GetDC( info.WinHandle );
-			srcDC = CreateCompatibleDC( dc );
+			dc = GetDC(info.WinHandle);
+			srcDC = CreateCompatibleDC(dc);
 		}
 		
-		public override void Redraw( Bitmap framebuffer, Rectangle r ) {
-			IntPtr oldSrc = SelectObject( srcDC, srcHB );
-			int success = BitBlt( dc, r.X, r.Y, r.Width, r.Height, srcDC, r.X, r.Y, SRCCOPY );
-			SelectObject( srcDC, oldSrc );
+		public override void Redraw(Bitmap framebuffer, Rectangle r) {
+			IntPtr oldSrc = SelectObject(srcDC, srcHB);
+			int success = BitBlt(dc, r.X, r.Y, r.Width, r.Height, srcDC, r.X, r.Y, SRCCOPY);
+			SelectObject(srcDC, oldSrc);
 		}
 	}
 	
@@ -90,17 +90,17 @@ namespace Launcher.Drawing {
 		
 		Graphics g;
 		public override void Init() {
-			g = Graphics.FromHwnd( info.WinHandle );
+			g = Graphics.FromHwnd(info.WinHandle);
 		}
 		
 		public override void Resize() {
-			if( g != null )
+			if (g != null)
 				g.Dispose();
-			g = Graphics.FromHwnd( info.WinHandle );
+			g = Graphics.FromHwnd(info.WinHandle);
 		}
 		
-		public override void Redraw( Bitmap framebuffer, Rectangle r ) {
-			g.DrawImage( framebuffer, r, r, GraphicsUnit.Pixel );
+		public override void Redraw(Bitmap framebuffer, Rectangle r) {
+			g.DrawImage(framebuffer, r, r, GraphicsUnit.Pixel);
 		}
 	}
 }

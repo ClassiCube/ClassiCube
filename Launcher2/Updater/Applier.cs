@@ -15,11 +15,11 @@ namespace Launcher.Updater {
 		
 		public static DateTime PatchTime;
 		
-		public static void FetchUpdate( string dir ) {
+		public static void FetchUpdate(string dir) {
 			WebRequest.DefaultWebProxy = null;
-			using( WebClient client = new WebClient() ) {
-				byte[] zipData = client.DownloadData( UpdateCheckTask.UpdatesUri + dir );
-				MakeUpdatesFolder( zipData );
+			using (WebClient client = new WebClient()) {
+				byte[] zipData = client.DownloadData(UpdateCheckTask.UpdatesUri + dir);
+				MakeUpdatesFolder(zipData);
 			}
 		}
 
@@ -29,54 +29,54 @@ namespace Launcher.Updater {
 			info.UseShellExecute = true;
 			info.WorkingDirectory = Program.AppDirectory;
 			
-			if( OpenTK.Configuration.RunningOnWindows ) {
-				string path = Path.Combine( Program.AppDirectory, "update.bat" );
-				File.WriteAllText( path, Scripts.BatchFile );
+			if (OpenTK.Configuration.RunningOnWindows) {
+				string path = Path.Combine(Program.AppDirectory, "update.bat");
+				File.WriteAllText(path, Scripts.BatchFile);
 				info.FileName = "cmd"; info.Arguments = "/C start cmd /C update.bat";
-				Process.Start( info );
+				Process.Start(info);
  			} else {
-				string path = Path.Combine( Program.AppDirectory, "update.sh" );
-				File.WriteAllText( path, Scripts.BashFile.Replace( "\r\n", "\n" ) );
+				string path = Path.Combine(Program.AppDirectory, "update.sh");
+				File.WriteAllText(path, Scripts.BashFile.Replace("\r\n", "\n"));
 				const int flags = 0x7;// read | write | executable
-				int code = chmod( path, (flags << 6) | (flags << 3) | 4 );
-				if( code != 0 )
-					throw new InvalidOperationException( "chmod returned : " + code );
+				int code = chmod(path, (flags << 6) | (flags << 3) | 4);
+				if (code != 0)
+					throw new InvalidOperationException("chmod returned : " + code);
 				
-				//if( OpenTK.Configuration.RunningOnMacOS )
-				//	info = new ProcessStartInfo( "open -a Terminal ",
+				//if (OpenTK.Configuration.RunningOnMacOS)
+				//	info = new ProcessStartInfo("open -a Terminal ",
 				//	                            '"' + path + '"');
 				//else
 				info.FileName = "xterm"; info.Arguments = '"' + path + '"';
-				Process.Start( info );
+				Process.Start(info);
 			}
 		}
 
-		[DllImport( "libc", SetLastError = true )]
-		internal static extern int chmod( string path, int mode );
+		[DllImport("libc", SetLastError = true)]
+		internal static extern int chmod(string path, int mode);
 		
-		static void MakeUpdatesFolder( byte[] zipData ) {
-			using( MemoryStream stream = new MemoryStream( zipData ) ) {
+		static void MakeUpdatesFolder(byte[] zipData) {
+			using (MemoryStream stream = new MemoryStream(zipData)) {
 				ZipReader reader = new ZipReader();
-				string path = Path.Combine( Program.AppDirectory, "CS_Update" );
-				Directory.CreateDirectory( path );
+				string path = Path.Combine(Program.AppDirectory, "CS_Update");
+				Directory.CreateDirectory(path);
 				
 				reader.ShouldProcessZipEntry = (f) => true;
 				reader.ProcessZipEntry = ProcessZipEntry;
-				reader.Extract( stream );
+				reader.Extract(stream);
 			}
 		}
 		
-		static void ProcessZipEntry( string filename, byte[] data, ZipEntry entry ) {
-			string path = Path.Combine( Program.AppDirectory, "CS_Update" );
-			path = Path.Combine( path, Path.GetFileName( filename ) );
-			File.WriteAllBytes( path, data );
+		static void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
+			string path = Path.Combine(Program.AppDirectory, "CS_Update");
+			path = Path.Combine(path, Path.GetFileName(filename));
+			File.WriteAllBytes(path, data);
 			
 			try {
-				File.SetLastWriteTimeUtc( path, PatchTime );
-			} catch( IOException ex ) {
-				ErrorHandler.LogError( "I/O exception when trying to set modified time for: " + filename, ex );
-			} catch( UnauthorizedAccessException ex ) {
-				ErrorHandler.LogError( "Permissions exception when trying to set modified time for: " + filename, ex );
+				File.SetLastWriteTimeUtc(path, PatchTime);
+			} catch(IOException ex) {
+				ErrorHandler.LogError("I/O exception when trying to set modified time for: " + filename, ex);
+			} catch(UnauthorizedAccessException ex) {
+				ErrorHandler.LogError("Permissions exception when trying to set modified time for: " + filename, ex);
 			}
 		}
 	}

@@ -19,13 +19,13 @@ namespace ClassicalSharp {
 			DrawTextArgs args = new DrawTextArgs("", font, true);
 			widths = new int[chars.Length];
 			
-			using(IDrawer2D drawer = game.Drawer2D) {
+			using (IDrawer2D drawer = game.Drawer2D) {
 				args.Text = prefix;
 				Size size = game.Drawer2D.MeasureChatSize(ref args);
 				offset = size.Width;
 				size.Width += 16 * chars.Length;
 				
-				using(Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size)) {
+				using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size)) {
 					drawer.SetBitmap(bmp);
 					drawer.DrawChatText(ref args, 0, 0);
 					

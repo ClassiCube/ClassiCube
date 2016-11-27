@@ -380,8 +380,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		// Based on http://www.opentk.com/doc/graphics/save-opengl-rendering-to-disk
 		public override void TakeScreenshot(string output, int width, int height) {
-			using(Bitmap bmp = new Bitmap(width, height, BmpPixelFormat.Format32bppRgb)) { // ignore alpha component
-				using(FastBitmap fastBmp = new FastBitmap(bmp, true, false))
+			using (Bitmap bmp = new Bitmap(width, height, BmpPixelFormat.Format32bppRgb)) { // ignore alpha component
+				using (FastBitmap fastBmp = new FastBitmap(bmp, true, false))
 					GL.ReadPixels(0, 0, width, height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0);
 				bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
 				bmp.Save(output, ImageFormat.Png);

@@ -32,16 +32,16 @@ namespace ClassicalSharp {
 			
 			AtlasBitmap = bmp;
 			elementSize = bmp.Width / ElementsPerRow;
-			using(FastBitmap fastBmp = new FastBitmap(bmp, true, true))
+			using (FastBitmap fastBmp = new FastBitmap(bmp, true, true))
 				info.RecalculateSpriteBB(fastBmp);
 		}
 		
 		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>
 		public int LoadTextureElement(int index) {
 			int size = elementSize;
-			using(FastBitmap atlas = new FastBitmap(AtlasBitmap, true, true))
-				using(Bitmap bmp = Platform.CreateBmp(size, size))
-					using(FastBitmap dst = new FastBitmap(bmp, true, false))
+			using (FastBitmap atlas = new FastBitmap(AtlasBitmap, true, true))
+				using (Bitmap bmp = Platform.CreateBmp(size, size))
+					using (FastBitmap dst = new FastBitmap(bmp, true, false))
 			{
 				int x = index % ElementsPerRow, y = index / ElementsPerRow;
 				FastBitmap.MovePortion(x * size, y * size, 0, 0, atlas, dst, size);

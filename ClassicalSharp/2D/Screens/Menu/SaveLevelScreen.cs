@@ -134,7 +134,7 @@ namespace ClassicalSharp.Gui.Screens {
 			try {
 				if (File.Exists(path))
 					File.Delete(path);
-				using(FileStream fs = new FileStream(path, FileMode.CreateNew, FileAccess.Write)) {
+				using (FileStream fs = new FileStream(path, FileMode.CreateNew, FileAccess.Write)) {
 					IMapFormatExporter exporter = null;
 					if (classic) exporter = new MapCwExporter();
 					else exporter = new MapSchematicExporter();

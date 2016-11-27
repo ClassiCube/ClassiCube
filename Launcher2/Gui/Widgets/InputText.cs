@@ -25,23 +25,23 @@ namespace Launcher.Gui.Widgets {
 		public int CaretPos = -1;
 		
 		InputWidget input;
-		public InputText( InputWidget input ) {
+		public InputText(InputWidget input) {
 			this.input = input;
 		}
 		
 		/// <summary> Appends a character to the end of the currently entered text. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
-		public bool Append( char c ) {
-			if( TextFilter != null && !TextFilter( c ) )
+		public bool Append(char c) {
+			if (TextFilter != null && !TextFilter(c))
 				return false;
-			if( c >= ' ' && c <= '~' && c != '&' && input.Text.Length < MaxChars ) {
-				if( CaretPos == -1 ) {
+			if (c >= ' ' && c <= '~' && c != '&' && input.Text.Length < MaxChars) {
+				if (CaretPos == -1) {
 					input.Text += c;
 				} else {
-					input.Text = input.Text.Insert( CaretPos, new String( c, 1 ) );
+					input.Text = input.Text.Insert(CaretPos, new String(c, 1));
 					CaretPos++;
 				}
-				if( TextChanged != null ) TextChanged( input );
+				if (TextChanged != null) TextChanged(input);
 				return true;
 			}
 			return false;
@@ -50,19 +50,19 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Removes the character preceding the caret in the currently entered text. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool Backspace() {
-			if( input.Text.Length == 0 ) return false;
+			if (input.Text.Length == 0) return false;
 			
-			if( CaretPos == -1 ) {
-				input.Text = input.Text.Substring( 0, input.Text.Length - 1 );
+			if (CaretPos == -1) {
+				input.Text = input.Text.Substring(0, input.Text.Length - 1);
 			} else {
-				if( CaretPos == 0 ) return false;
-				input.Text = input.Text.Remove( CaretPos - 1, 1 );
+				if (CaretPos == 0) return false;
+				input.Text = input.Text.Remove(CaretPos - 1, 1);
 				CaretPos--;
-				if( CaretPos == -1 ) CaretPos = 0;
+				if (CaretPos == -1) CaretPos = 0;
 			}
 			
-			if( TextChanged != null ) TextChanged( input );
-			if( CaretPos >= input.Text.Length )
+			if (TextChanged != null) TextChanged(input);
+			if (CaretPos >= input.Text.Length)
 				CaretPos = -1;
 			return true;
 		}
@@ -70,13 +70,13 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Removes the haracter at the caret in the currently entered text. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool Delete() {
-			if( input.Text.Length == 0 || CaretPos == -1 ) return false;
+			if (input.Text.Length == 0 || CaretPos == -1) return false;
 			
-			input.Text = input.Text.Remove( CaretPos, 1 );
-			if( CaretPos == -1 ) CaretPos = 0;
+			input.Text = input.Text.Remove(CaretPos, 1);
+			if (CaretPos == -1) CaretPos = 0;
 			
-			if( TextChanged != null ) TextChanged( input );
-			if( CaretPos >= input.Text.Length )
+			if (TextChanged != null) TextChanged(input);
+			if (CaretPos >= input.Text.Length)
 				CaretPos = -1;
 			return true;
 		}
@@ -84,38 +84,38 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Resets the currently entered text to an empty string </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool Clear() {
-			if( input.Text.Length == 0 ) return false;
+			if (input.Text.Length == 0) return false;
 			
 			input.Text = "";
-			if( TextChanged != null ) TextChanged( input);
+			if (TextChanged != null) TextChanged(input);
 			CaretPos = -1;
 			return true;
 		}
 		
 		/// <summary> Copies the contents of the currently entered text to the system clipboard. </summary>
 		public void CopyToClipboard() {
-			if( String.IsNullOrEmpty( input.Text ) ) return;
-			Clipboard.SetText( input.Text );
+			if (String.IsNullOrEmpty(input.Text)) return;
+			Clipboard.SetText(input.Text);
 		}
 		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		
 		/// <summary> Sets the currently entered text to the contents of the system clipboard. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
 		public bool CopyFromClipboard() {
-			string text = Clipboard.GetText().Trim( trimChars );
-			if( String.IsNullOrEmpty( text ) ) return false;
-			if( input.Text.Length >= MaxChars ) return false;
+			string text = Clipboard.GetText().Trim(trimChars);
+			if (String.IsNullOrEmpty(text)) return false;
+			if (input.Text.Length >= MaxChars) return false;
 			
-			if( ClipboardFilter != null )
-				text = ClipboardFilter( text );
+			if (ClipboardFilter != null)
+				text = ClipboardFilter(text);
 			
 			int len = input.Text.Length + text.Length;
-			if( len > MaxChars ) {
-				text = text.Substring( 0, len - MaxChars );
+			if (len > MaxChars) {
+				text = text.Substring(0, len - MaxChars);
 			}
 			
 			input.Text += text;
-			if( TextChanged != null ) TextChanged( input );
+			if (TextChanged != null) TextChanged(input);
 			return true;
 		}
 	}

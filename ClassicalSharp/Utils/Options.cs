@@ -153,8 +153,8 @@ namespace ClassicalSharp {
 			
 			try {
 				string path = Path.Combine(Program.AppDirectory, Filename);
-				using(Stream fs = File.OpenRead(path))
-					using(StreamReader reader = new StreamReader(fs, false))
+				using (Stream fs = File.OpenRead(path))
+					using (StreamReader reader = new StreamReader(fs, false))
 						LoadFrom(reader);
 				return true;
 			} catch(FileNotFoundException) {
@@ -194,8 +194,8 @@ namespace ClassicalSharp {
 		public static bool Save() {
 			try {
 				string path = Path.Combine(Program.AppDirectory, Filename);
-				using(Stream fs = File.Create(path))
-					using(StreamWriter writer = new StreamWriter(fs))
+				using (Stream fs = File.Create(path))
+					using (StreamWriter writer = new StreamWriter(fs))
 				{
 					SaveTo(writer);
 				}

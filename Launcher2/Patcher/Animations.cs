@@ -27,24 +27,24 @@ namespace Launcher.Patcher {
 # fire
 6 2 0 32 16 32 0";
 		
-		unsafe void PatchDefault( byte[] data, int y ) {
+		unsafe void PatchDefault(byte[] data, int y) {
 			// Sadly files in modern are 24 rgb, so we can't use fastbitmap here
-			using( Bitmap bmp = new Bitmap( new MemoryStream( data ) ) ) {
-				for( int tile = 0; tile < bmp.Height; tile += 16 ) {
-					CopyTile( tile, tile, y, bmp );
+			using (Bitmap bmp = new Bitmap(new MemoryStream(data))) {
+				for (int tile = 0; tile < bmp.Height; tile += 16) {
+					CopyTile(tile, tile, y, bmp);
 				}
 			}
 		}
 		
-		unsafe void PatchCycle( byte[] data, int y ) {
-			using( Bitmap bmp = new Bitmap( new MemoryStream( data ) ) ) {
+		unsafe void PatchCycle(byte[] data, int y) {
+			using (Bitmap bmp = new Bitmap(new MemoryStream(data))) {
 				int dst = 0;
-				for( int tile = 0; tile < bmp.Height; tile += 16, dst += 16 ) {
-					CopyTile( tile, dst, y, bmp );
+				for (int tile = 0; tile < bmp.Height; tile += 16, dst += 16) {
+					CopyTile(tile, dst, y, bmp);
 				}
 				// Cycle back to first frame.
-				for( int tile = bmp.Height - 32; tile >= 0; tile -= 16, dst += 16 ) {
-					CopyTile( tile, dst, y, bmp );
+				for (int tile = bmp.Height - 32; tile >= 0; tile -= 16, dst += 16) {
+					CopyTile(tile, dst, y, bmp);
 				}
 			}
 		}

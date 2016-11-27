@@ -166,8 +166,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			caretAccumulator = 0;
 			
 			int realHeight = 0;
-			using(Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
-				using(IDrawer2D drawer = game.Drawer2D)
+			using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
+				using (IDrawer2D drawer = game.Drawer2D)
 			{
 				drawer.SetBitmap(bmp);
 				DrawTextArgs args = new DrawTextArgs(null, font, true);

@@ -12,31 +12,31 @@ namespace Launcher.Gui.Screens {
 		const int tableX = 10, tableY = 50;
 		ServersView view;
 		
-		public ServersScreen( LauncherWindow game ) : base( game ) {
+		public ServersScreen(LauncherWindow game) : base(game) {
 			enterIndex = 3;
-			view = new ServersView( game );
+			view = new ServersView(game);
 			widgets = view.widgets;
 		}
 		
 		public override void Tick() {
 			base.Tick();
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			if( !game.Window.Mouse[MouseButton.Left] ) {
+			if (!game.Window.Mouse[MouseButton.Left]) {
 				table.DraggingColumn = -1;
 				table.DraggingScrollbar = false;
 				table.mouseOffset = 0;
 			}
 		}
 		
-		protected override void MouseMove( int x, int y, int xDelta, int yDelta ) {
-			base.MouseMove( x, y, xDelta, yDelta );
-			if( selectedWidget != null && selectedWidget == widgets[view.tableIndex] ) {
+		protected override void MouseMove(int x, int y, int xDelta, int yDelta) {
+			base.MouseMove(x, y, xDelta, yDelta);
+			if (selectedWidget != null && selectedWidget == widgets[view.tableIndex]) {
 				TableWidget table = (TableWidget)widgets[view.tableIndex];
-				table.MouseMove( x, y, xDelta, yDelta );
+				table.MouseMove(x, y, xDelta, yDelta);
 			}
 		}
 		
-		void MouseButtonUp( object sender, MouseButtonEventArgs e ) {
+		void MouseButtonUp(object sender, MouseButtonEventArgs e) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.DraggingColumn = -1;
 			table.DraggingScrollbar = false;
@@ -47,34 +47,34 @@ namespace Launcher.Gui.Screens {
 		
 		protected override void OnRemovedChar() { FilterList(); }
 		
-		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
+		protected override void KeyDown(object sender, KeyboardKeyEventArgs e) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			if( e.Key == Key.Enter ) {
-				string curServer = Get( view.hashIndex ) ?? "";
-				if( table.Count >= 1 && curServer == "" ) {
+			if (e.Key == Key.Enter) {
+				string curServer = Get(view.hashIndex) ?? "";
+				if (table.Count >= 1 && curServer == "") {
 					widgets[view.hashIndex].Text = table.usedEntries[0].Hash;
-					ConnectToServer( 0, 0 );
-				} else if( curServer != "" &&
-				          (selectedWidget == null || selectedWidget == widgets[view.tableIndex]) ) {
-					ConnectToServer( 0, 0 );
+					ConnectToServer(0, 0);
+				} else if (curServer != "" &&
+				          (selectedWidget == null || selectedWidget == widgets[view.tableIndex])) {
+					ConnectToServer(0, 0);
 				}
-			} else if( e.Key == Key.Up ) {
-				table.SetSelected( table.SelectedIndex - 1 );
+			} else if (e.Key == Key.Up) {
+				table.SetSelected(table.SelectedIndex - 1);
 				table.NeedRedraw();
-			} else if( e.Key == Key.Down ) {
-				table.SetSelected( table.SelectedIndex + 1 );
+			} else if (e.Key == Key.Down) {
+				table.SetSelected(table.SelectedIndex + 1);
 				table.NeedRedraw();
 			} else {
-				base.KeyDown( sender, e );
+				base.KeyDown(sender, e);
 			}
 		}
 		
 		protected override void RedrawLastInput() {
 			base.RedrawLastInput();
-			if( curInput != widgets[view.hashIndex] )
+			if (curInput != widgets[view.hashIndex])
 				return;
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			table.SetSelected( widgets[view.hashIndex].Text );
+			table.SetSelected(widgets[view.hashIndex].Text);
 			MarkPendingRedraw();
 		}
 
@@ -86,7 +86,7 @@ namespace Launcher.Gui.Screens {
 			
 			Resize();
 			selectedWidget = widgets[view.searchIndex];
-			InputClick( 0, 0 );
+			InputClick(0, 0);
 			lastClicked = curInput;
 		}
 		
@@ -100,7 +100,7 @@ namespace Launcher.Gui.Screens {
 			hashWidget.Chars.ClipboardFilter = HashFilter;
 			
 			widgets[view.backIndex].OnClick =
-				(x, y) => game.SetScreen( new MainScreen( game ) );
+				(x, y) => game.SetScreen(new MainScreen(game));
 			widgets[view.connectIndex].OnClick = ConnectToServer;
 			
 			TableWidget widget = (TableWidget)widgets[view.tableIndex];
@@ -110,43 +110,43 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void FilterList() {
-			if( curInput != widgets[view.searchIndex] )
+			if (curInput != widgets[view.searchIndex])
 				return;
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			table.FilterEntries( curInput.Text );
+			table.FilterEntries(curInput.Text);
 			MarkPendingRedraw();
 		}
 
-		void SelectedChanged( string hash ) {
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				Set( view.hashIndex, hash );
+		void SelectedChanged(string hash) {
+			using (drawer) {
+				drawer.SetBitmap(game.Framebuffer);
+				Set(view.hashIndex, hash);
 			}
 			game.Dirty = true;
 		}
 		
-		void ConnectToServer( int mouseX, int mouseY ) {
+		void ConnectToServer(int mouseX, int mouseY) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			game.ConnectToServer( table.servers, Get( view.hashIndex ) );
+			game.ConnectToServer(table.servers, Get(view.hashIndex));
 		}
 		
-		protected override void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
+		protected override void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.CurrentIndex -= e.Delta;
 			MarkPendingRedraw();
 		}
 		
-		string HashFilter( string input ) {
+		string HashFilter(string input) {
 			// Server url look like http://www.classicube.net/server/play/aaaaa/
 			
 			// Trim off the last / if it exists
-			if( input[input.Length - 1] == '/' )
-				input = input.Substring( 0, input.Length - 1 );
+			if (input[input.Length - 1] == '/')
+				input = input.Substring(0, input.Length - 1);
 			
 			// Trim the parts before the hash
-			int lastIndex = input.LastIndexOf( '/' );
-			if( lastIndex >= 0 )
-				input = input.Substring( lastIndex + 1 );
+			int lastIndex = input.LastIndexOf('/');
+			if (lastIndex >= 0)
+				input = input.Substring(lastIndex + 1);
 			return input;
 		}
 		
@@ -155,7 +155,7 @@ namespace Launcher.Gui.Screens {
 			view.Dispose();
 			
 			TableWidget table = widgets[view.tableIndex] as TableWidget;
-			if( table != null ) {
+			if (table != null) {
 				table.DraggingColumn = -1;
 				table.DraggingScrollbar = false;
 			}
@@ -163,7 +163,7 @@ namespace Launcher.Gui.Screens {
 		
 		bool pendingRedraw;
 		public override void OnDisplay() {
-			if( pendingRedraw ) {
+			if (pendingRedraw) {
 				view.RedrawTable();
 				game.Dirty = true;
 			}

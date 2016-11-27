@@ -51,8 +51,8 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		Sound ReadWave(string file) {
-			using(FileStream fs = File.OpenRead(file))
-				using(BinaryReader r = new BinaryReader(fs))
+			using (FileStream fs = File.OpenRead(file))
+				using (BinaryReader r = new BinaryReader(fs))
 			{
 				CheckFourCC(r, "RIFF");
 				r.ReadInt32(); // file size, but we don't care

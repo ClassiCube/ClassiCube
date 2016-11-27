@@ -14,73 +14,73 @@ namespace Launcher.Gui.Views {
 		Font tableFont;
 		const int tableX = 10, tableY = 50;
 		
-		public ServersView( LauncherWindow game ) : base( game ) {
+		public ServersView(LauncherWindow game) : base(game) {
 			widgets = new Widget[5];
 		}
 		
 		public override void Init() {
-			titleFont = new Font( game.FontName, 15, FontStyle.Bold );
-			textFont = new Font( game.FontName, 14, FontStyle.Regular );
-			inputHintFont = new Font( game.FontName, 12, FontStyle.Italic );
-			tableFont = new Font( game.FontName, 11, FontStyle.Regular );
+			titleFont = new Font(game.FontName, 15, FontStyle.Bold);
+			textFont = new Font(game.FontName, 14, FontStyle.Regular);
+			inputHintFont = new Font(game.FontName, 12, FontStyle.Italic);
+			tableFont = new Font(game.FontName, 11, FontStyle.Regular);
 			MakeWidgets();
 		}
 		
 		public override void DrawAll() {
 			DrawBackground();
 			TableWidget table = (TableWidget)widgets[tableIndex];
-			if( table != null ) table.ClampIndex();
+			if (table != null) table.ClampIndex();
 			base.DrawAll();
 		}
 		
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
-			MakeInput( Get( 0 ), 475, false, 32, "&gSearch servers.." )
-				.SetLocation( Anchor.LeftOrTop, Anchor.LeftOrTop, 10, 10 );
-			MakeInput( Get( 1 ), 475, false, 32, "&gclassicube.net/server/play/..." )
-				.SetLocation( Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10 );
+			MakeInput(Get(0), 475, false, 32, "&gSearch servers..")
+				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 10, 10);
+			MakeInput(Get(1), 475, false, 32, "&gclassicube.net/server/play/...")
+				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10);
 			
-			Makers.Button( this, "Back", 110, 30, titleFont )
-				.SetLocation( Anchor.BottomOrRight, Anchor.LeftOrTop, -20, 10 );
-			Makers.Button( this, "Connect", 110, 30, titleFont )
-				.SetLocation( Anchor.BottomOrRight, Anchor.BottomOrRight, -20, -10 );
+			Makers.Button(this, "Back", 110, 30, titleFont)
+				.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, -20, 10);
+			Makers.Button(this, "Connect", 110, 30, titleFont)
+				.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, -20, -10);
 			MakeTableWidget();
 		}
 		
-		string Get( int index ) {
+		string Get(int index) {
 			Widget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
 		}
 		
 		void DrawBackground() {
-			using( FastBitmap bmp = game.LockBits() ) {
-				game.ResetArea( 0, 0, game.Width, tableY, bmp );
-				DrawTableBackground( bmp );
+			using (FastBitmap bmp = game.LockBits()) {
+				game.ResetArea(0, 0, game.Width, tableY, bmp);
+				DrawTableBackground(bmp);
 			}
 		}
 		
-		void DrawTableBackground( FastBitmap dst ) {
-			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
-			Rectangle rec = new Rectangle( tableX, tableY, game.Width - tableX, tableHeight );
+		void DrawTableBackground(FastBitmap dst) {
+			int tableHeight = Math.Max(game.Height - tableY - 50, 1);
+			Rectangle rec = new Rectangle(tableX, tableY, game.Width - tableX, tableHeight);
 			
-			if( !game.ClassicBackground ) {
+			if (!game.ClassicBackground) {
 				FastColour col = TableView.backGridCol;
-				Drawer2DExt.Clear( dst, rec, col );
+				Drawer2DExt.Clear(dst, rec, col);
 			} else {
-				game.ResetArea( rec.X, rec.Y, rec.Width, rec.Height, dst );
+				game.ResetArea(rec.X, rec.Y, rec.Width, rec.Height, dst);
 			}
 		}
 		
 		void MakeTableWidget() {
-			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
+			int tableHeight = Math.Max(game.Height - tableY - 50, 1);
 			TableWidget widget;
-			if( widgets[tableIndex] != null ) {
+			if (widgets[tableIndex] != null) {
 				widget = (TableWidget)widgets[tableIndex];
 			} else {
-				widget = new TableWidget( game );
-				widget.SetEntries( game.Session.Servers );
-				widget.SetDrawData( drawer, tableFont, textFont,
-				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY );
+				widget = new TableWidget(game);
+				widget.SetEntries(game.Session.Servers);
+				widget.SetDrawData(drawer, tableFont, textFont,
+				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY);
 				widget.SortDefault();
 				widgets[widgetIndex] = widget;
 			}
@@ -95,16 +95,16 @@ namespace Launcher.Gui.Views {
 		}
 		
 		internal void RedrawTable() {
-			using( FastBitmap dst = game.LockBits() )
-				DrawTableBackground( dst );
+			using (FastBitmap dst = game.LockBits())
+				DrawTableBackground(dst);
 			TableWidget table = (TableWidget)widgets[tableIndex];
 			table.ClampIndex();
 			
-			int tableHeight = Math.Max( game.Height - tableY - 50, 1 );
+			int tableHeight = Math.Max(game.Height - tableY - 50, 1);
 			table.Height = tableHeight;
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				table.RedrawData( drawer );
+			using (drawer) {
+				drawer.SetBitmap(game.Framebuffer);
+				table.RedrawData(drawer);
 			}
 		}
 	}

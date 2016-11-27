@@ -58,7 +58,7 @@ namespace ClassicalSharp.Textures {
 			Utils.LogDebug("Loaded new atlas: {0} bmps, {1} per bmp", atlasesCount, elementsPerAtlas1D);
 			int index = 0;
 			
-			using(FastBitmap atlas = new FastBitmap(atlas2D.AtlasBitmap, true, true)) {
+			using (FastBitmap atlas = new FastBitmap(atlas2D.AtlasBitmap, true, true)) {
 				for (int i = 0; i < TexIds.Length; i++)
 					Make1DTexture(i, atlas, atlas2D, atlas1DHeight, ref index);
 			}
@@ -66,8 +66,8 @@ namespace ClassicalSharp.Textures {
 		
 		void Make1DTexture(int i, FastBitmap atlas, TerrainAtlas2D atlas2D, int atlas1DHeight, ref int index) {
 			int elemSize = atlas2D.elementSize;
-			using(Bitmap atlas1d = Platform.CreateBmp(atlas2D.elementSize, atlas1DHeight))
-				using(FastBitmap dst = new FastBitmap(atlas1d, true, false))
+			using (Bitmap atlas1d = Platform.CreateBmp(atlas2D.elementSize, atlas1DHeight))
+				using (FastBitmap dst = new FastBitmap(atlas1d, true, false))
 			{
 				for (int index1D = 0; index1D < elementsPerAtlas1D; index1D++) {
 					FastBitmap.MovePortion((index & 0x0F) * elemSize, (index >> 4) * elemSize,

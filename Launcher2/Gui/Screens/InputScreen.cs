@@ -10,7 +10,7 @@ namespace Launcher.Gui.Screens {
 	public abstract class InputScreen : Screen {
 		
 		protected int enterIndex = -1;
-		public InputScreen( LauncherWindow game ) : base( game ) { }
+		public InputScreen(LauncherWindow game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();
@@ -25,60 +25,60 @@ namespace Launcher.Gui.Screens {
 		public override void Tick() {
 			double elapsed = (DateTime.UtcNow - widgetOpenTime).TotalSeconds;
 			bool caretShow = (elapsed % 1) < 0.5;
-			if( caretShow == lastCaretFlash || curInput == null )
+			if (caretShow == lastCaretFlash || curInput == null)
 				return;
 			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				curInput.SetDrawData( drawer, curInput.Text );
-				curInput.Redraw( drawer );
+			using (drawer) {
+				drawer.SetBitmap(game.Framebuffer);
+				curInput.SetDrawData(drawer, curInput.Text);
+				curInput.Redraw(drawer);
 				
-				Rectangle r = curInput.MeasureCaret( drawer );
-				if( caretShow ) {
-					drawer.Clear( FastColour.Black, r.X, r.Y, r.Width, r.Height );
+				Rectangle r = curInput.MeasureCaret(drawer);
+				if (caretShow) {
+					drawer.Clear(FastColour.Black, r.X, r.Y, r.Width, r.Height);
 				}
 				
-				if( lastRec == r ) game.DirtyArea = r;
+				if (lastRec == r) game.DirtyArea = r;
 				lastRec = r;
 				game.Dirty = true;
 			}
 			lastCaretFlash = caretShow;
 		}
 		
-		protected override void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			if( e.Key == Key.Enter && enterIndex >= 0 ) {
+		protected override void KeyDown(object sender, KeyboardKeyEventArgs e) {
+			if (e.Key == Key.Enter && enterIndex >= 0) {
 				Widget widget = (selectedWidget != null && mouseMoved) ?
 					selectedWidget : widgets[enterIndex];
-				if( widget.OnClick != null )
-					widget.OnClick( 0, 0 );
-			} else if( e.Key == Key.Tab ) {
+				if (widget.OnClick != null)
+					widget.OnClick(0, 0);
+			} else if (e.Key == Key.Tab) {
 				HandleTab();
 			}
-			if( curInput == null ) {
-				if( e.Key == Key.Escape )
-					game.SetScreen( new MainScreen( game ) );
+			if (curInput == null) {
+				if (e.Key == Key.Escape)
+					game.SetScreen(new MainScreen(game));
 				return;
 			}
 			
-			if( e.Key == Key.BackSpace && curInput.Chars.Backspace() ) {
+			if (e.Key == Key.BackSpace && curInput.Chars.Backspace()) {
 				RedrawLastInput();
 				OnRemovedChar();
-			} else if( e.Key == Key.Delete && curInput.Chars.Delete() ) {
+			} else if (e.Key == Key.Delete && curInput.Chars.Delete()) {
 				RedrawLastInput();
 				OnRemovedChar();
-			} else if( e.Key == Key.C && ControlDown ) {
+			} else if (e.Key == Key.C && ControlDown) {
 				curInput.Chars.CopyToClipboard();
-			} else if( e.Key == Key.V && ControlDown ) {
-				if( curInput.Chars.CopyFromClipboard() )
+			} else if (e.Key == Key.V && ControlDown) {
+				if (curInput.Chars.CopyFromClipboard())
 					RedrawLastInput();
-			} else if( e.Key == Key.Escape ) {
-				if( curInput.Chars.Clear() )
+			} else if (e.Key == Key.Escape) {
+				if (curInput.Chars.Clear())
 					RedrawLastInput();
-			} else if( e.Key == Key.Left ) {
-				curInput.AdvanceCaretPos( false );
+			} else if (e.Key == Key.Left) {
+				curInput.AdvanceCaretPos(false);
 				RedrawLastInput();
-			} else if( e.Key == Key.Right ) {
-				curInput.AdvanceCaretPos( true );
+			} else if (e.Key == Key.Right) {
+				curInput.AdvanceCaretPos(true);
 				RedrawLastInput();
 			}
 		}
@@ -90,20 +90,20 @@ namespace Launcher.Gui.Screens {
 			}
 		}
 
-		protected void KeyPress( object sender, KeyPressEventArgs e ) {
-			if( curInput != null && curInput.Chars.Append( e.KeyChar ) ) {
+		protected void KeyPress(object sender, KeyPressEventArgs e) {
+			if (curInput != null && curInput.Chars.Append(e.KeyChar)) {
 				RedrawLastInput();
 				OnAddedChar();
 			}
 		}
 		
 		protected virtual void RedrawLastInput() {
-			if( curInput.RealWidth > curInput.ButtonWidth )
-				game.ResetArea( curInput.X, curInput.Y, curInput.RealWidth, curInput.Height );
+			if (curInput.RealWidth > curInput.ButtonWidth)
+				game.ResetArea(curInput.X, curInput.Y, curInput.RealWidth, curInput.Height);
 			
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				curInput.Redraw( drawer );
+			using (drawer) {
+				drawer.SetBitmap(game.Framebuffer);
+				curInput.Redraw(drawer);
 				game.Dirty = true;
 			}
 		}
@@ -112,51 +112,51 @@ namespace Launcher.Gui.Screens {
 		
 		protected virtual void OnRemovedChar() { }
 		
-		protected string Get( int index ) {
+		protected string Get(int index) {
 			Widget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
 		}
 		
-		protected void Set( int index, string text ) {
-			((InputWidget)widgets[index]).SetDrawData( drawer, text );
-			((InputWidget)widgets[index]).Redraw( drawer );
+		protected void Set(int index, string text) {
+			((InputWidget)widgets[index]).SetDrawData(drawer, text);
+			((InputWidget)widgets[index]).Redraw(drawer);
 		}
 		
-		protected virtual void MouseWheelChanged( object sender, MouseWheelEventArgs e ) {
+		protected virtual void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
 		}
 		
 		protected InputWidget curInput;
-		protected virtual void InputClick( int mouseX, int mouseY ) {
+		protected virtual void InputClick(int mouseX, int mouseY) {
 			InputWidget input = (InputWidget)selectedWidget;
-			using( drawer ) {
-				drawer.SetBitmap( game.Framebuffer );
-				if( curInput != null ) {
+			using (drawer) {
+				drawer.SetBitmap(game.Framebuffer);
+				if (curInput != null) {
 					curInput.Active = false;
-					curInput.Redraw( drawer );
+					curInput.Redraw(drawer);
 				}
 				
 				input.Active = true;
 				widgetOpenTime = DateTime.UtcNow;
 				lastCaretFlash = false;
-				input.SetCaretToCursor( mouseX, mouseY, drawer );
-				input.Redraw( drawer );
+				input.SetCaretToCursor(mouseX, mouseY, drawer);
+				input.Redraw(drawer);
 			}
 			curInput = input;
 			game.Dirty = true;
 		}
 		
-		protected override void WidgetUnclicked( Widget widget ) {
+		protected override void WidgetUnclicked(Widget widget) {
 			InputWidget input = widget as InputWidget;
-			if( input == null ) return;
+			if (input == null) return;
 			input.Active = false;
-			RedrawWidget( input );
+			RedrawWidget(input);
 			curInput = null;
 			game.Dirty = true;
 		}
 		
 		protected void SetupInputHandlers() {
-			for( int i = 0; i < widgets.Length; i++ ) {
-				if( !(widgets[i] is InputWidget) ) continue;
+			for (int i = 0; i < widgets.Length; i++) {
+				if (!(widgets[i] is InputWidget)) continue;
 				widgets[i].OnClick = InputClick;
 			}
 		}

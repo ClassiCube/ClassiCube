@@ -10,31 +10,31 @@ namespace Launcher.Gui.Widgets {
 		
 		public bool Value;
 		
-		public CheckboxWidget( LauncherWindow window, int width, int height ) : base( window ) {
+		public CheckboxWidget(LauncherWindow window, int width, int height) : base(window) {
 			Width = width; Height = height;
 		}
 
-		public override void Redraw( IDrawer2D drawer ) {
-			if( Window.Minimised || !Visible ) return;
-			Rectangle rect = new Rectangle( X, Y, Width, Height / 2 );
-			using( FastBitmap bmp = Window.LockBits() ) {				
-				Gradient.Vertical( bmp, rect, boxTop, boxBottom );
+		public override void Redraw(IDrawer2D drawer) {
+			if (Window.Minimised || !Visible) return;
+			Rectangle rect = new Rectangle(X, Y, Width, Height / 2);
+			using (FastBitmap bmp = Window.LockBits()) {				
+				Gradient.Vertical(bmp, rect, boxTop, boxBottom);
 				rect.Y += rect.Height;
-				Gradient.Vertical( bmp, rect, boxBottom, boxTop );
+				Gradient.Vertical(bmp, rect, boxBottom, boxTop);
 				
-				if( Value ) {
+				if (Value) {
 					const int size = 12;
 					int x = X + Width / 2 - size / 2;
 					int y = Y + Height / 2 - size / 2;
-					BitmapDrawer.DrawIndexed( indices, palette, size, x, y, bmp );
+					BitmapDrawer.DrawIndexed(indices, palette, size, x, y, bmp);
 				}
 			}
-			drawer.DrawRectBounds( FastColour.Black, 1, X, Y, Width - 1, Height - 1 );
+			drawer.DrawRectBounds(FastColour.Black, 1, X, Y, Width - 1, Height - 1);
 		}
 		
 		
-		static FastColour boxTop = new FastColour( 255, 255, 255 );
-		static FastColour boxBottom = new FastColour( 240, 240, 240 );
+		static FastColour boxTop = new FastColour(255, 255, 255);
+		static FastColour boxBottom = new FastColour(240, 240, 240);
 		
 		// Based off checkbox from original ClassiCube Launcher
 		static byte[] indices = new byte[] {
@@ -53,21 +53,21 @@ namespace Launcher.Gui.Widgets {
 		};
 
 		static FastColour[] palette = new FastColour[] {
-			new FastColour( 0, 0, 0, 0 ), new FastColour( 144, 144, 144 ),
-			new FastColour( 61, 61, 61 ), new FastColour( 94, 94, 94 ),
-			new FastColour( 197, 196, 197 ), new FastColour( 57, 57, 57 ),
-			new FastColour( 33, 33, 33 ), new FastColour( 177, 177, 177 ),
-			new FastColour( 189, 189, 189 ), new FastColour( 67, 67, 67 ),
-			new FastColour( 108, 108, 108 ), new FastColour( 171, 171, 171 ),
-			new FastColour( 220, 220, 220 ), new FastColour( 43, 43, 43 ),
-			new FastColour( 63, 63, 63 ), new FastColour( 100, 100, 100 ),
-			new FastColour( 192, 192, 192 ), new FastColour( 132, 132, 132 ),
-			new FastColour( 175, 175, 175 ), new FastColour( 217, 217, 217 ),
-			new FastColour( 42, 42, 42 ), new FastColour( 86, 86, 86 ),
-			new FastColour( 56, 56, 56 ), new FastColour( 76, 76, 76 ),
-			new FastColour( 139, 139, 139 ), new FastColour( 130, 130, 130 ),
-			new FastColour( 181, 181, 181 ), new FastColour( 62, 62, 62 ),
-			new FastColour( 75, 75, 75 ), new FastColour( 184, 184, 184 ),
+			new FastColour(0, 0, 0, 0), new FastColour(144, 144, 144),
+			new FastColour(61, 61, 61), new FastColour(94, 94, 94),
+			new FastColour(197, 196, 197), new FastColour(57, 57, 57),
+			new FastColour(33, 33, 33), new FastColour(177, 177, 177),
+			new FastColour(189, 189, 189), new FastColour(67, 67, 67),
+			new FastColour(108, 108, 108), new FastColour(171, 171, 171),
+			new FastColour(220, 220, 220), new FastColour(43, 43, 43),
+			new FastColour(63, 63, 63), new FastColour(100, 100, 100),
+			new FastColour(192, 192, 192), new FastColour(132, 132, 132),
+			new FastColour(175, 175, 175), new FastColour(217, 217, 217),
+			new FastColour(42, 42, 42), new FastColour(86, 86, 86),
+			new FastColour(56, 56, 56), new FastColour(76, 76, 76),
+			new FastColour(139, 139, 139), new FastColour(130, 130, 130),
+			new FastColour(181, 181, 181), new FastColour(62, 62, 62),
+			new FastColour(75, 75, 75), new FastColour(184, 184, 184),
 		};
 	}
 }

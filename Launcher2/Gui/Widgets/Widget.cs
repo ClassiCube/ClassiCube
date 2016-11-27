@@ -35,18 +35,18 @@ namespace Launcher.Gui.Widgets {
 		
 		public Action<int, int> OnClick;
 		
-		public Widget( LauncherWindow window ) {
+		public Widget(LauncherWindow window) {
 			Window = window;
 		}
 		
 		/// <summary> Redraws the contents of this widget. </summary>
-		public abstract void Redraw( IDrawer2D drawer );
+		public abstract void Redraw(IDrawer2D drawer);
 		
 
 		/// <summary> Sets the reference points for when this widget is resized,
 		/// and the offsets from the reference points (anchors) in pixels. </summary>
 		/// <remarks> Updates the position of the widget. </remarks>
-		public void SetLocation( Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset ) {
+		public void SetLocation(Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset) {
 			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
 			XOffset = xOffset; YOffset = yOffset;
 			CalculatePosition();
@@ -55,13 +55,13 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Calculates the position of this widget in the window,
 		/// based on its anchor points and offset from the anchor points. </summary>
 		public void CalculatePosition() {
-			X = CalcPos( HorizontalAnchor, XOffset, Width, Window.Width );
-			Y = CalcPos( VerticalAnchor, YOffset, Height, Window.Height );
+			X = CalcPos(HorizontalAnchor, XOffset, Width, Window.Width);
+			Y = CalcPos(VerticalAnchor, YOffset, Height, Window.Height);
 		}
 		
-		static int CalcPos( Anchor anchor, int offset, int size, int axisLen ) {
-			if( anchor == Anchor.LeftOrTop ) return offset;
-			if( anchor == Anchor.BottomOrRight ) return offset + axisLen - size;
+		static int CalcPos(Anchor anchor, int offset, int size, int axisLen) {
+			if (anchor == Anchor.LeftOrTop) return offset;
+			if (anchor == Anchor.BottomOrRight) return offset + axisLen - size;
 			return offset + axisLen / 2 - size / 2;
 		}
 	}

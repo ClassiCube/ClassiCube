@@ -9,8 +9,8 @@ namespace Launcher.Gui.Screens {
 	public sealed class SettingsScreen : Screen {
 		
 		SettingsView view;
-		public SettingsScreen( LauncherWindow game ) : base( game ) {
-			view = new SettingsView( game );
+		public SettingsScreen(LauncherWindow game) : base(game) {
+			view = new SettingsView(game);
 			widgets = view.widgets;
 		}
 
@@ -19,13 +19,13 @@ namespace Launcher.Gui.Screens {
 			view.Init();
 			
 			widgets[view.modeIndex].OnClick = (x, y) => 
-				game.SetScreen( new ChooseModeScreen( game, false ) );
+				game.SetScreen(new ChooseModeScreen(game, false));
 			widgets[view.updatesIndex].OnClick = (x, y) => 
-				game.SetScreen( new UpdatesScreen( game ) );
+				game.SetScreen(new UpdatesScreen(game));
 			widgets[view.coloursIndex].OnClick = (x, y) =>
-				game.SetScreen( new ColoursScreen( game ) );
+				game.SetScreen(new ColoursScreen(game));
 			widgets[view.backIndex].OnClick = (x, y) =>
-				game.SetScreen( new MainScreen( game ) );
+				game.SetScreen(new MainScreen(game));
 			Resize();
 		}
 		

@@ -33,8 +33,8 @@ namespace Launcher.Web {
 		/// <summary> Username used when performing GET or POST requests, can be left null. </summary>
 		public string Username;
 		
-		protected void Finish( bool success, WebException ex, string status ) {
-			if( !success ) 
+		protected void Finish(bool success, WebException ex, string status) {
+			if (!success) 
 				Username = null;
 			Working = false;
 			Done = true;
@@ -46,9 +46,9 @@ namespace Launcher.Web {
 		
 		protected CookieContainer cookies = new CookieContainer();
 		
-		protected HttpWebResponse MakeRequest( string uri, string referer, string data ) {
+		protected HttpWebResponse MakeRequest(string uri, string referer, string data) {
 			WebRequest.DefaultWebProxy = null;
-			HttpWebRequest request = (HttpWebRequest)WebRequest.Create( uri );
+			HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);
 			request.UserAgent = Program.AppName;
 			request.ReadWriteTimeout = 90 * 1000;
 			request.Timeout = 90 * 1000;
@@ -57,59 +57,59 @@ namespace Launcher.Web {
 			request.CookieContainer = cookies;
 			
 			request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-			if( data != null ) {
+			if (data != null) {
 				request.Method = "POST";
 				request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8;";
-				byte[] encodedData = Encoding.UTF8.GetBytes( data );
+				byte[] encodedData = Encoding.UTF8.GetBytes(data);
 				request.ContentLength = encodedData.Length;
-				using( Stream stream = request.GetRequestStream() ) {
-					stream.Write( encodedData, 0, encodedData.Length );
+				using (Stream stream = request.GetRequestStream()) {
+					stream.Write(encodedData, 0, encodedData.Length);
 				}
 			}
 			return (HttpWebResponse)request.GetResponse();
 		}
 		
-		protected IEnumerable<string> GetHtml( string uri, string referer ) {
-			HttpWebResponse response = MakeRequest( uri, referer, null );
-			return GetResponseLines( response );
+		protected IEnumerable<string> GetHtml(string uri, string referer) {
+			HttpWebResponse response = MakeRequest(uri, referer, null);
+			return GetResponseLines(response);
 		}
 
-		protected IEnumerable<string> PostHtml( string uri, string referer, string data ) {
-			HttpWebResponse response = MakeRequest( uri, referer, data );
-			return GetResponseLines( response );
+		protected IEnumerable<string> PostHtml(string uri, string referer, string data) {
+			HttpWebResponse response = MakeRequest(uri, referer, data);
+			return GetResponseLines(response);
 		}
 		
-		protected string GetHtmlAll( string uri, string referer ) {
-			HttpWebResponse response = MakeRequest( uri, referer, null );
-			return GetResponseAll( response );
+		protected string GetHtmlAll(string uri, string referer) {
+			HttpWebResponse response = MakeRequest(uri, referer, null);
+			return GetResponseAll(response);
 		}
 		
-		protected string PostHtmlAll( string uri, string referer, string data ) {
-			HttpWebResponse response = MakeRequest( uri, referer, data );
-			return GetResponseAll( response );
+		protected string PostHtmlAll(string uri, string referer, string data) {
+			HttpWebResponse response = MakeRequest(uri, referer, data);
+			return GetResponseAll(response);
 		}
 		
-		protected IEnumerable<string> GetResponseLines( HttpWebResponse response ) {
-			using( Stream stream = response.GetResponseStream() ) {
-				using( StreamReader reader = new StreamReader( stream ) ) {
+		protected IEnumerable<string> GetResponseLines(HttpWebResponse response) {
+			using (Stream stream = response.GetResponseStream()) {
+				using (StreamReader reader = new StreamReader(stream)) {
 					string line;
-					while( (line = reader.ReadLine()) != null ) {
+					while ((line = reader.ReadLine()) != null) {
 						yield return line;
 					}
 				}
 			}
 		}
 		
-		protected string GetResponseAll( HttpWebResponse response ) {
-			using( Stream stream = response.GetResponseStream() ) {
-				using( StreamReader reader = new StreamReader( stream ) ) {
+		protected string GetResponseAll(HttpWebResponse response) {
+			using (Stream stream = response.GetResponseStream()) {
+				using (StreamReader reader = new StreamReader(stream)) {
 					return reader.ReadToEnd();
 				}
 			}
 		}
 		
-		protected static void Log( string text ) {
-			Console.WriteLine( text );
+		protected static void Log(string text) {
+			Console.WriteLine(text);
 		}
 	}
 }

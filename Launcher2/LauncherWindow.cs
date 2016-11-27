@@ -78,51 +78,51 @@ namespace Launcher {
 			Window.WindowStateChanged += Resize;
 			Window.Keyboard.KeyDown += KeyDown;
 			LoadFont();
-			logoFont = new Font( FontName, 32, FontStyle.Regular );
+			logoFont = new Font(FontName, 32, FontStyle.Regular);
 			string path = Assembly.GetExecutingAssembly().Location;
-			Window.Icon = Icon.ExtractAssociatedIcon( path );
+			Window.Icon = Icon.ExtractAssociatedIcon(path);
 			//Minimised = Window.WindowState == WindowState.Minimized;
 			
 			PlatformID platform = Environment.OSVersion.Platform;
-			if( platform == PlatformID.Win32Windows ) {
+			if (platform == PlatformID.Win32Windows) {
 				platformDrawer = new WinOldPlatformDrawer();
-			} else if( Configuration.RunningOnWindows ) {
+			} else if (Configuration.RunningOnWindows) {
 				platformDrawer = new WinPlatformDrawer();
-			} else if( Configuration.RunningOnX11 ) {
+			} else if (Configuration.RunningOnX11) {
 				platformDrawer = new X11PlatformDrawer();
-			} else if( Configuration.RunningOnMacOS ) {
+			} else if (Configuration.RunningOnMacOS) {
 				platformDrawer = new OSXPlatformDrawer();
 			}
 			
-			Drawer.Colours['g'] = new FastColour( 125, 125, 125 );
+			Drawer.Colours['g'] = new FastColour(125, 125, 125);
 		}
 		
 		void LoadFont() {
 			Options.Load();
-			FontName = Options.Get( "gui-fontname" ) ?? "Arial";
+			FontName = Options.Get("gui-fontname") ?? "Arial";
 			try {
-				using( Font f = new Font( FontName, 16 ) ) { }
-			} catch( Exception ) {
+				using (Font f = new Font(FontName, 16)) { }
+			} catch(Exception) {
 				FontName = "Arial";
-				Options.Set( "gui-fontname", "Arial" );
+				Options.Set("gui-fontname", "Arial");
 			}
 		}
 
-		void FocusedChanged( object sender, EventArgs e ) {
-			if( Program.ShowingErrorDialog ) return;
+		void FocusedChanged(object sender, EventArgs e) {
+			if (Program.ShowingErrorDialog) return;
 			RedrawBackground();
 			Screen.Resize();
 		}
 
-		void Resize( object sender, EventArgs e ) {
+		void Resize(object sender, EventArgs e) {
 			platformDrawer.Resize();
 			RedrawBackground();
 			Screen.Resize();
 			fullRedraw = true;
 		}
 		
-		public void SetScreen( Screen screen ) {
-			if( this.Screen != null )
+		public void SetScreen(Screen screen) {
+			if (this.Screen != null)
 				this.Screen.Dispose();
 			
 			RedrawBackground();
@@ -130,79 +130,79 @@ namespace Launcher {
 			screen.Init();
 		}
 		
-		public bool ConnectToServer( List<ServerListEntry> publicServers, string hash ) {
-			if( String.IsNullOrEmpty( hash ) ) return false;
+		public bool ConnectToServer(List<ServerListEntry> publicServers, string hash) {
+			if (String.IsNullOrEmpty(hash)) return false;
 			
 			ClientStartData data = null;
-			foreach( ServerListEntry entry in publicServers ) {
-				if( entry.Hash == hash ) {
-					data = new ClientStartData( Session.Username, entry.Mppass,
-					                           entry.IPAddress, entry.Port );
-					Client.Start( data, true, ref ShouldExit );
+			foreach (ServerListEntry entry in publicServers) {
+				if (entry.Hash == hash) {
+					data = new ClientStartData(Session.Username, entry.Mppass,
+					                           entry.IPAddress, entry.Port);
+					Client.Start(data, true, ref ShouldExit);
 					return true;
 				}
 			}
 			
 			// Fallback to private server handling
 			try {
-				data = Session.GetConnectInfo( hash );
-			} catch( WebException ex ) {
-				ErrorHandler.LogError( "retrieving server information", ex );
+				data = Session.GetConnectInfo(hash);
+			} catch(WebException ex) {
+				ErrorHandler.LogError("retrieving server information", ex);
 				return false;
-			} catch( ArgumentOutOfRangeException ) {
+			} catch(ArgumentOutOfRangeException) {
 				return false;
 			}
-			Client.Start( data, true, ref ShouldExit );
+			Client.Start(data, true, ref ShouldExit);
 			return true;
 		}
 		
 		public void Run() {
-			Window = new NativeWindow( 640, 400, Program.AppName, 0,
-			                          GraphicsMode.Default, DisplayDevice.Default );
+			Window = new NativeWindow(640, 400, Program.AppName, 0,
+			                          GraphicsMode.Default, DisplayDevice.Default);
 			Window.Visible = true;
-			Drawer = new GdiPlusDrawer2D( null );
+			Drawer = new GdiPlusDrawer2D(null);
 			Init();
 			TryLoadTexturePack();
 			platformDrawer.info = Window.WindowInfo;
 			platformDrawer.Init();
 			
-			string audioPath = Path.Combine( Program.AppDirectory, "audio" );
-			BinUnpacker.Unpack( audioPath, "dig" );
-			BinUnpacker.Unpack( audioPath, "step" );
+			string audioPath = Path.Combine(Program.AppDirectory, "audio");
+			BinUnpacker.Unpack(audioPath, "dig");
+			BinUnpacker.Unpack(audioPath, "step");
 			
 			fetcher = new ResourceFetcher();
 			fetcher.CheckResourceExistence();
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
 			
-			if( !fetcher.AllResourcesExist ) {
-				SetScreen( new ResourcesScreen( this ) );
+			if (!fetcher.AllResourcesExist) {
+				SetScreen(new ResourcesScreen(this));
 			} else {
-				SetScreen( new MainScreen( this ) );
+				SetScreen(new MainScreen(this));
 			}
 			
-			while( true ) {
+			while (true) {
 				Window.ProcessEvents();
-				if( !Window.Exists ) break;
-				if( ShouldExit ) {
-					if( Screen != null )
+				if (!Window.Exists) break;
+				if (ShouldExit) {
+					if (Screen != null)
 						Screen.Dispose();
 					break;
 				}
 				
 				Screen.Tick();
-				if( Dirty ) Display();
-				Thread.Sleep( 10 );
+				if (Dirty) Display();
+				Thread.Sleep(10);
 			}
 			
-			if( Options.Load() ) {
+			if (Options.Load()) {
 				LauncherSkin.SaveToOptions();
 				Options.Save();
 			}
 			
-			if( ShouldUpdate )
+			if (ShouldUpdate)
 				Updater.Applier.ApplyUpdate();
-			if( Window.Exists )
+			if (Window.Exists)
 				Window.Close();
 		}
 		
@@ -210,18 +210,18 @@ namespace Launcher {
 			Screen.OnDisplay();
 			Dirty = false;
 			
-			Rectangle rec = new Rectangle( 0, 0, Framebuffer.Width, Framebuffer.Height );
-			if( !fullRedraw && DirtyArea.Width > 0 ) {
+			Rectangle rec = new Rectangle(0, 0, Framebuffer.Width, Framebuffer.Height);
+			if (!fullRedraw && DirtyArea.Width > 0) {
 				rec = DirtyArea;
 			}
-			platformDrawer.Redraw( Framebuffer, rec );
+			platformDrawer.Redraw(Framebuffer, rec);
 			DirtyArea = Rectangle.Empty;
 			fullRedraw = false;
 		}
 		
 		Key lastKey;
-		void KeyDown( object sender, KeyboardKeyEventArgs e ) {
-			if( IsShutdown( e.Key ) )
+		void KeyDown(object sender, KeyboardKeyEventArgs e) {
+			if (IsShutdown(e.Key))
 				ShouldExit = true;
 			lastKey = e.Key;
 		}
@@ -234,16 +234,16 @@ namespace Launcher {
 			logoFont.Dispose();
 		}
 		
-		bool IsShutdown( Key key ) {
-			if( key == Key.F4 && (lastKey == Key.AltLeft || lastKey == Key.AltRight) )
+		bool IsShutdown(Key key) {
+			if (key == Key.F4 && (lastKey == Key.AltLeft || lastKey == Key.AltRight))
 				return true;
 			// On OSX, Cmd+Q should also terminate the process.
-			if( !OpenTK.Configuration.RunningOnMacOS ) return false;
+			if (!OpenTK.Configuration.RunningOnMacOS) return false;
 			return key == Key.Q && (lastKey == Key.WinLeft || lastKey == Key.WinRight);
 		}
 		
 		public FastBitmap LockBits() {
-			return new FastBitmap( Framebuffer, true, false );
+			return new FastBitmap(Framebuffer, true, false);
 		}
 	}
 }

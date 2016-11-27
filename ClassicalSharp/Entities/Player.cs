@@ -65,14 +65,14 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		protected void MakeNameTexture() {
-			using(Font font = new Font(game.FontName, 24)) {
+			using (Font font = new Font(game.FontName, 24)) {
 				DrawTextArgs args = new DrawTextArgs(DisplayName, font, false);
 				Size size = game.Drawer2D.MeasureBitmappedSize(ref args);
 				if (size.Width == 0) { nameTex = new Texture(-1, 0, 0, 0, 0, 1, 1); return; }
 				size.Width += 3; size.Height += 3;
 				
-				using(IDrawer2D drawer = game.Drawer2D)
-					using(Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
+				using (IDrawer2D drawer = game.Drawer2D)
+					using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
 				{
 					drawer.SetBitmap(bmp);
 					args.Text = "&\xFF" + Utils.StripColours(args.Text);
@@ -152,7 +152,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		unsafe static void ClearHat(Bitmap bmp, SkinType skinType) {
-			using(FastBitmap fastBmp = new FastBitmap(bmp, true, false)) {
+			using (FastBitmap fastBmp = new FastBitmap(bmp, true, false)) {
 				int sizeX = (bmp.Width / 64) * 32;
 				int yScale = skinType == SkinType.Type64x32 ? 32 : 64;
 				int sizeY = (bmp.Height / yScale) * 16;
@@ -187,8 +187,8 @@ namespace ClassicalSharp.Entities {
 			if (width == bmp.Width && height == bmp.Height) return;
 			
 			Bitmap scaled = Platform.CreateBmp(width, height);
-			using(FastBitmap src = new FastBitmap(bmp, true, true))
-				using(FastBitmap dst = new FastBitmap(scaled, true, false))
+			using (FastBitmap src = new FastBitmap(bmp, true, true))
+				using (FastBitmap dst = new FastBitmap(scaled, true, false))
 			{
 				for (int y = 0; y < src.Height; y++)
 					FastBitmap.CopyRow(y, y, src, dst, src.Width);

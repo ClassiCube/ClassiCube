@@ -201,7 +201,7 @@ namespace ClassicalSharp.Network {
 			
 			try {
 				HttpWebRequest req = MakeRequest(request);
-				using(HttpWebResponse response = (HttpWebResponse)req.GetResponse()) {
+				using (HttpWebResponse response = (HttpWebResponse)req.GetResponse()) {
 					etag = response.Headers[HttpResponseHeader.ETag];
 					if (response.Headers[HttpResponseHeader.LastModified] != null)
 						lastModified = response.LastModified;					
@@ -299,7 +299,7 @@ namespace ClassicalSharp.Network {
 				new MemoryStream(length) : new MemoryStream();
 			CurrentItemProgress = length > 0 ? 0 : -1;
 			
-			using(Stream src = response.GetResponseStream()) {
+			using (Stream src = response.GetResponseStream()) {
 				int read = 0;
 				while ((read = src.Read(buffer, 0, buffer.Length)) > 0) {
 					dst.Write(buffer, 0, read);

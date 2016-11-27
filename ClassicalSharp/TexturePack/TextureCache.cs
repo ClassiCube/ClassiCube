@@ -72,7 +72,7 @@ namespace ClassicalSharp.Textures {
 				if (!Directory.Exists(basePath))
 					Directory.CreateDirectory(basePath);
 				
-				using(FileStream fs = File.Create(path))
+				using (FileStream fs = File.Create(path))
 					Platform.WriteBmp(bmp, fs);
 			} catch(IOException ex) {
 				ErrorHandler.LogError("Cache.AddToCache", ex);

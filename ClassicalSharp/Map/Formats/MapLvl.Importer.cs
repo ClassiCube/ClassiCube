@@ -19,7 +19,7 @@ namespace ClassicalSharp.Map {
 			GZipHeaderReader gsHeader = new GZipHeaderReader();
 			while (!gsHeader.ReadHeader(stream)) { }
 			
-			using(DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
+			using (DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
 				BinaryReader r = new BinaryReader(gs);
 				ushort header = r.ReadUInt16();
 

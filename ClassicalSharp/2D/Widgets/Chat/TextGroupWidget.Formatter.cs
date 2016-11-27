@@ -50,8 +50,8 @@ namespace ClassicalSharp.Gui.Widgets {
 				total.Width += partSizes[i].Width;
 			}
 			
-			using(IDrawer2D drawer = game.Drawer2D)
-				using(Bitmap bmp = IDrawer2D.CreatePow2Bitmap(total))
+			using (IDrawer2D drawer = game.Drawer2D)
+				using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(total))
 			{
 				drawer.SetBitmap(bmp);
 				int x = 0;

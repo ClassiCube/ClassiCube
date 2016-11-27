@@ -17,113 +17,113 @@ namespace Launcher.Gui.Widgets {
 		internal int mouseOffset;
 		
 		public void SortDefault() {
-			SortEntries( defComp, true );
+			SortEntries(defComp, true);
 		}
 		
-		void SelectHeader( int mouseX, int mouseY ) {
+		void SelectHeader(int mouseX, int mouseY) {
 			int x = X;		
-			for( int i = 0; i < ColumnWidths.Length; i++ ) {
+			for (int i = 0; i < ColumnWidths.Length; i++) {
 				x += ColumnWidths[i] + 10;
-				if( mouseX >= x - 8 && mouseX < x + 8 ) {
+				if (mouseX >= x - 8 && mouseX < x + 8) {
 					DraggingColumn = i;
 					lastIndex = -10; return;
 				}
 			}		
-			TrySortColumns( mouseX );
+			TrySortColumns(mouseX);
 		}
 		
-		void TrySortColumns( int mouseX ) {
+		void TrySortColumns(int mouseX) {
 			int x = X;
-			if( mouseX >= x && mouseX < x + ColumnWidths[0] - 10 ) {
-				SortEntries( nameComp, false ); return;
+			if (mouseX >= x && mouseX < x + ColumnWidths[0] - 10) {
+				SortEntries(nameComp, false); return;
 			}
 			x += ColumnWidths[0];
-			if( mouseX >= x && mouseX < x + ColumnWidths[1] ) {
-				SortEntries( playerComp, false ); return;
+			if (mouseX >= x && mouseX < x + ColumnWidths[1]) {
+				SortEntries(playerComp, false); return;
 			}
 			x += ColumnWidths[1];
-			if( mouseX >= x && mouseX < x + ColumnWidths[2] ) {
-				SortEntries( uptimeComp, false ); return;
+			if (mouseX >= x && mouseX < x + ColumnWidths[2]) {
+				SortEntries(uptimeComp, false); return;
 			}
 			x += ColumnWidths[2];
-			if( mouseX >= x ) {
-				SortEntries( softwareComp, false ); return;
+			if (mouseX >= x) {
+				SortEntries(softwareComp, false); return;
 			}
 		}
 		
-		void SortEntries( TableEntryComparer comparer, bool noRedraw ) {
+		void SortEntries(TableEntryComparer comparer, bool noRedraw) {
 			string selHash = SelectedIndex >= 0 ? usedEntries[SelectedIndex].Hash : "";
-			Array.Sort( usedEntries, 0, Count, comparer );
-			Array.Sort( entries, 0, entries.Length, comparer );
+			Array.Sort(usedEntries, 0, Count, comparer);
+			Array.Sort(entries, 0, entries.Length, comparer);
 			lastIndex = -10;
-			if( noRedraw ) return;
+			if (noRedraw) return;
 			
 			comparer.Invert = !comparer.Invert;
-			SetSelected( selHash );
+			SetSelected(selHash);
 			NeedRedraw();
 		}
 		
-		void GetSelectedServer( int mouseX, int mouseY ) {
-			for( int i = 0; i < Count; i++ ) {
+		void GetSelectedServer(int mouseX, int mouseY) {
+			for (int i = 0; i < Count; i++) {
 				TableEntry entry = usedEntries[i];
-				if( mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 2 ) continue;
+				if (mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 2) continue;
 				
-				if( lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds < 1 ) {
-					Window.ConnectToServer( servers, entry.Hash );
+				if (lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds < 1) {
+					Window.ConnectToServer(servers, entry.Hash);
 					lastPress = DateTime.MinValue;
 					return;
 				}
 				
-				SetSelected( i );
+				SetSelected(i);
 				NeedRedraw();
 				break;
 			}
 		}
 		
-		void HandleOnClick( int mouseX, int mouseY ) {			
-			if( mouseX >= Window.Width - 10 ) {
-				ScrollbarClick( mouseY );
+		void HandleOnClick(int mouseX, int mouseY) {			
+			if (mouseX >= Window.Width - 10) {
+				ScrollbarClick(mouseY);
 				DraggingScrollbar = true;
 				lastIndex = -10; return;
 			}
 			
-			if( mouseY >= view.headerStartY && mouseY < view.headerEndY ) {
-				SelectHeader( mouseX, mouseY );
+			if (mouseY >= view.headerStartY && mouseY < view.headerEndY) {
+				SelectHeader(mouseX, mouseY);
 			} else {
-				GetSelectedServer( mouseX, mouseY );
+				GetSelectedServer(mouseX, mouseY);
 			}
 			lastPress = DateTime.UtcNow;
 		}
 		
 		int lastIndex = -10;
 		DateTime lastPress;
-		public void MouseMove( int x, int y, int deltaX, int deltaY ) {
-			if( DraggingScrollbar ) {
+		public void MouseMove(int x, int y, int deltaX, int deltaY) {
+			if (DraggingScrollbar) {
 				y -= Y;
 				float scale = Height / (float)Count;
 				CurrentIndex = (int)((y - mouseOffset) / scale);
 				ClampIndex();
 				NeedRedraw();
-			} else if( DraggingColumn >= 0 ) {
-				if( x >= Window.Width - 20 ) return;
+			} else if (DraggingColumn >= 0) {
+				if (x >= Window.Width - 20) return;
 				int col = DraggingColumn;
 				ColumnWidths[col] += deltaX;
-				Utils.Clamp( ref ColumnWidths[col], 20, Window.Width - 20 );
+				Utils.Clamp(ref ColumnWidths[col], 20, Window.Width - 20);
 				DesiredColumnWidths[col] = ColumnWidths[col];
 				NeedRedraw();
 			}
 			
 		}
 		
-		void ScrollbarClick( int mouseY ) {
+		void ScrollbarClick(int mouseY) {
 			mouseY -= Y;
 			int y, height;
-			GetScrollbarCoords( out y, out height );
+			GetScrollbarCoords(out y, out height);
 			int delta = (view.maxIndex - CurrentIndex);
 			
-			if( mouseY < y ) {
+			if (mouseY < y) {
 				CurrentIndex -= delta;
-			} else if( mouseY >= y + height ) {
+			} else if (mouseY >= y + height) {
 				CurrentIndex += delta;
 			} else {
 				DraggingScrollbar = true;

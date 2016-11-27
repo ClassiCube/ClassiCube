@@ -39,13 +39,13 @@ namespace Launcher.Patcher {
 		
 		public static string[] MusicFiles = new string[] { "calm1", "calm2", "calm3", "hal1", "hal2", "hal3", "hal4" };
 		
-		public static string GetFile( string path ) {
+		public static string GetFile(string path) {
 			// Ignore directories: convert x/name to name and x\name to name.
 			string name = path.ToLower();
-			int i = name.LastIndexOf( '\\' );
-			if( i >= 0 ) name = name.Substring( i + 1, name.Length - 1 - i );
-			i = name.LastIndexOf( '/' );
-			if( i >= 0 ) name = name.Substring( i + 1, name.Length - 1 - i );
+			int i = name.LastIndexOf('\\');
+			if (i >= 0) name = name.Substring(i + 1, name.Length - 1 - i);
+			i = name.LastIndexOf('/');
+			if (i >= 0) name = name.Substring(i + 1, name.Length - 1 - i);
 			return name;
 		}
 	}

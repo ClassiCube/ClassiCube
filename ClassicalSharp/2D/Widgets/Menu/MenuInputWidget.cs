@@ -59,8 +59,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			Height = Math.Max(size.Height, MinHeight);
 			Size adjSize = size; adjSize.Width = Width;
 			
-			using(Bitmap bmp = IDrawer2D.CreatePow2Bitmap(adjSize))
-				using(IDrawer2D drawer = game.Drawer2D)
+			using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(adjSize))
+				using (IDrawer2D drawer = game.Drawer2D)
 			{
 				drawer.SetBitmap(bmp);
 				drawer.DrawChatText(ref args, Padding, 0);

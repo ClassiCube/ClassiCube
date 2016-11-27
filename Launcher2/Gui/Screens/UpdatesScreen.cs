@@ -13,8 +13,8 @@ namespace Launcher.Gui.Screens {
 	public sealed class UpdatesScreen : Screen {
 		
 		UpdatesView view;
-		public UpdatesScreen( LauncherWindow game ) : base( game ) {
-			view = new UpdatesView( game );
+		public UpdatesScreen(LauncherWindow game) : base(game) {
+			view = new UpdatesView(game);
 			widgets = view.widgets;
 		}
 
@@ -25,8 +25,8 @@ namespace Launcher.Gui.Screens {
 			SetWidgetHandlers();
 			Resize();
 			
-			if( game.checkTask != null && game.checkTask.Done && game.checkTask.Success )
-				SuccessfulUpdateCheck( game.checkTask );
+			if (game.checkTask != null && game.checkTask.Done && game.checkTask.Success)
+				SuccessfulUpdateCheck(game.checkTask);
 			
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
@@ -34,30 +34,30 @@ namespace Launcher.Gui.Screens {
 
 		Build dev, stable;
 		public override void Tick() {
-			if( checkTask != null && checkTask.Done ) {				
-				if( checkTask.Success ) SuccessfulUpdateCheck( checkTask );
-				else FailedUpdateCheck( checkTask );
+			if (checkTask != null && checkTask.Done) {				
+				if (checkTask.Success) SuccessfulUpdateCheck(checkTask);
+				else FailedUpdateCheck(checkTask);
 				checkTask = null;
 			}
 		}
 		
-		void SuccessfulUpdateCheck( UpdateCheckTask task ) {
-			if( task.LatestDev == null || task.LatestStable == null ) return;
+		void SuccessfulUpdateCheck(UpdateCheckTask task) {
+			if (task.LatestDev == null || task.LatestStable == null) return;
 			dev = task.LatestDev; view.LastDev = dev.TimeBuilt;
 			stable = task.LatestStable; view.LastStable = stable.TimeBuilt;
 			game.RedrawBackground();
 			Resize();
 		}
 		
-		void FailedUpdateCheck( UpdateCheckTask task ) {
+		void FailedUpdateCheck(UpdateCheckTask task) {
 			view.LastStable = DateTime.MaxValue;
 			view.LastDev = DateTime.MaxValue;
 			task.Exception = null;
 			
 			Widget w = widgets[view.devIndex - 1];
-			game.ResetArea( w.X, w.Y, w.Width, w.Height );
+			game.ResetArea(w.X, w.Y, w.Width, w.Height);
 			w = widgets[view.relIndex - 1];
-			game.ResetArea( w.X, w.Y, w.Width, w.Height );
+			game.ResetArea(w.X, w.Y, w.Width, w.Height);
 			game.RedrawBackground();
 			Resize();
 		}
@@ -68,40 +68,40 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void SetWidgetHandlers() {
-			widgets[view.relIndex].OnClick = (x, y) => UpdateBuild( true, true );
-			widgets[view.relIndex + 1].OnClick = (x, y) => UpdateBuild( true, false );
+			widgets[view.relIndex].OnClick = (x, y) => UpdateBuild(true, true);
+			widgets[view.relIndex + 1].OnClick = (x, y) => UpdateBuild(true, false);
 
-			widgets[view.devIndex].OnClick =  (x, y) => UpdateBuild( false, true );
-			widgets[view.devIndex + 1].OnClick = (x, y) => UpdateBuild( false, false );
+			widgets[view.devIndex].OnClick =  (x, y) => UpdateBuild(false, true);
+			widgets[view.devIndex + 1].OnClick = (x, y) => UpdateBuild(false, false);
 			
 			widgets[view.backIndex].OnClick =
-				(x, y) => game.SetScreen( new SettingsScreen( game ) );
+				(x, y) => game.SetScreen(new SettingsScreen(game));
 		}
 		
-		void UpdateBuild( bool release, bool dx ) {
+		void UpdateBuild(bool release, bool dx) {
 			DateTime last = release ? view.LastStable : view.LastDev;
 			Build build = release ? stable : dev;
-			if( last == DateTime.MinValue || build.DirectXSize < 50000
-			   || build.OpenGLSize < 50000 ) return;
+			if (last == DateTime.MinValue || build.DirectXSize < 50000
+			   || build.OpenGLSize < 50000) return;
 			
 			view.gameOpen = CheckClientInstances();
 			view.SetWarning();
 			Widget widget = widgets[view.statusIndex];
-			game.ResetArea( widget.X, widget.Y, widget.Width, widget.Height );
-			RedrawWidget( widgets[view.statusIndex] );
-			if( view.gameOpen ) return;
+			game.ResetArea(widget.X, widget.Y, widget.Width, widget.Height);
+			RedrawWidget(widgets[view.statusIndex]);
+			if (view.gameOpen) return;
 			
 			string path = dx ? build.DirectXPath : build.OpenGLPath;
-			Utils.LogDebug( "Updating to: " + path );
+			Utils.LogDebug("Updating to: " + path);
 			Applier.PatchTime = build.TimeBuilt;
-			Applier.FetchUpdate( path );
+			Applier.FetchUpdate(path);
 			game.ShouldExit = true;
 			game.ShouldUpdate = true;
 		}
 		
 		bool CheckClientInstances() {
 			Process[] processes = Process.GetProcesses();
-			for( int i = 0; i < processes.Length; i++ ) {
+			for (int i = 0; i < processes.Length; i++) {
 				string name = null;
 				try {
 					name = processes[i].ProcessName;
@@ -109,8 +109,8 @@ namespace Launcher.Gui.Screens {
 					continue;
 				}
 				
-				if( Utils.CaselessEquals( name, "ClassicalSharp" )
-				   || Utils.CaselessEquals( name, "ClassicalSharp.exe" ) )
+				if (Utils.CaselessEquals(name, "ClassicalSharp")
+				   || Utils.CaselessEquals(name, "ClassicalSharp.exe"))
 					return true;
 			}
 			return false;

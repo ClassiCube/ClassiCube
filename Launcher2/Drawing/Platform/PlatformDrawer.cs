@@ -14,8 +14,8 @@ namespace Launcher.Drawing {
 		public abstract void Init();
 		
 		/// <summary> Creates a framebuffer bitmap of the given dimensions. </summary>
-		public virtual Bitmap CreateFrameBuffer( int width, int height ) { 
-			return new Bitmap( width, height );
+		public virtual Bitmap CreateFrameBuffer(int width, int height) { 
+			return new Bitmap(width, height);
 		}
 		
 		/// <summary> Updates the variables when the native window changes dimensions. </summary>
@@ -24,6 +24,6 @@ namespace Launcher.Drawing {
 		/// <summary> Redraws a portion of the framebuffer to the window. </summary>
 		/// <remarks> r is only a hint, the entire framebuffer may still be
 		/// redrawn on some platforms. </remarks>
-		public abstract void Redraw( Bitmap framebuffer, Rectangle r );
+		public abstract void Redraw(Bitmap framebuffer, Rectangle r);
 	}
 }

@@ -15,7 +15,7 @@ namespace ClassicalSharp.Map {
 		World map;
 		
 		public void Save(Stream stream, Game game) {
-			using(GZipStream wrapper = new GZipStream(stream, CompressionMode.Compress)) {
+			using (GZipStream wrapper = new GZipStream(stream, CompressionMode.Compress)) {
 				writer = new BinaryWriter(wrapper);
 				nbt = new NbtFile(writer);
 				this.game = game;

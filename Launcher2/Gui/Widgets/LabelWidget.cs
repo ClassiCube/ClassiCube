@@ -11,27 +11,27 @@ namespace Launcher.Gui.Widgets {
 		public bool DarkenWhenInactive;
 		
 		Font font;
-		public LabelWidget( LauncherWindow window, Font font ) : base( window ) {
+		public LabelWidget(LauncherWindow window, Font font) : base(window) {
 			this.font = font;
 		}
 		
-		public void SetDrawData( IDrawer2D drawer, string text ) {
-			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			Size size = drawer.MeasureSize( ref args );
+		public void SetDrawData(IDrawer2D drawer, string text) {
+			DrawTextArgs args = new DrawTextArgs(text, font, true);
+			Size size = drawer.MeasureSize(ref args);
 			Width = size.Width; Height = size.Height;
 			
 			CalculatePosition();
 			Text = text;
 		}
 		
-		public override void Redraw( IDrawer2D drawer ) {
-			if( Window.Minimised || !Visible ) return;
+		public override void Redraw(IDrawer2D drawer) {
+			if (Window.Minimised || !Visible) return;
 			string text = Text;
-			if( DarkenWhenInactive && !Active )
+			if (DarkenWhenInactive && !Active)
 				text = "&7" + text;
 			
-			DrawTextArgs args = new DrawTextArgs( text, font, true );
-			drawer.DrawText( ref args, X, Y );
+			DrawTextArgs args = new DrawTextArgs(text, font, true);
+			drawer.DrawText(ref args, X, Y);
 		}
 	}
 }
