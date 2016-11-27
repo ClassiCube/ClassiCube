@@ -9,7 +9,7 @@ namespace ClassicalSharp.Network.Protocols {
 	/// <summary> Implements the WoM http environment protocol. </summary>
 	public sealed class WoMProtocol : IProtocol {
 		
-		public WoMProtocol( Game game ) : base( game ) { }
+		public WoMProtocol(Game game) : base(game) { }
 		
 		string womEnvIdentifier = "womenv_0";
 		int womCounter = 0;
@@ -17,69 +17,69 @@ namespace ClassicalSharp.Network.Protocols {
 
 		public override void Tick() {
 			DownloadedItem item;
-			game.AsyncDownloader.TryGetItem( womEnvIdentifier, out item );
-			if( item != null && item.Data != null ) {
-				ParseWomConfig( (string)item.Data );
+			game.AsyncDownloader.TryGetItem(womEnvIdentifier, out item);
+			if (item != null && item.Data != null) {
+				ParseWomConfig((string)item.Data);
 			}
 		}
 		
 		internal void CheckMotd() {
-			int index = net.ServerMotd.IndexOf( "cfg=" );
-			if( game.PureClassic || index == -1 ) return;
+			int index = net.ServerMotd.IndexOf("cfg=");
+			if (game.PureClassic || index == -1) return;
 			
-			string host = net.ServerMotd.Substring( index + 4 ); // "cfg=".Length
+			string host = net.ServerMotd.Substring(index + 4); // "cfg=".Length
 			string url = "http://" + host;
-			url = url.Replace( "$U", game.Username );
+			url = url.Replace("$U", game.Username);
 			
 			// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
 			// different world, the environment settings from the last world are not loaded in the
 			// new world if the async 'get request' didn't complete before the new world was loaded.
 			womCounter++;
 			womEnvIdentifier = "womenv_" + womCounter;
-			game.AsyncDownloader.DownloadPage( url, true, womEnvIdentifier );
+			game.AsyncDownloader.DownloadPage(url, true, womEnvIdentifier);
 			sendWomId = true;
 		}
 		
 		internal void CheckSendWomID() {
-			if( sendWomId && !sentWomId ) {
-				net.SendChat( "/womid WoMClient-2.0.7", false );
+			if (sendWomId && !sentWomId) {
+				net.SendChat("/womid WoMClient-2.0.7", false);
 				sentWomId = true;
 			}
 		}
 		
-		void ParseWomConfig( string page ) {
+		void ParseWomConfig(string page) {
 			string line;
 			int start = 0;
-			while( (line = ReadLine( ref start, page )) != null ) {
-				Utils.LogDebug( line );
+			while ((line = ReadLine(ref start, page)) != null) {
+				Utils.LogDebug(line);
 				int sepIndex = line.IndexOf('=');
-				if( sepIndex == -1 ) continue;
+				if (sepIndex == -1) continue;
 				string key = line.Substring(0, sepIndex).TrimEnd();
 				string value = line.Substring(sepIndex + 1).TrimStart();
 				
-				if( key == "environment.cloud" ) {
-					FastColour col = ParseWomColour( value, WorldEnv.DefaultCloudsColour );
-					game.World.Env.SetCloudsColour( col );
-				} else if( key == "environment.sky" ) {
-					FastColour col = ParseWomColour( value, WorldEnv.DefaultSkyColour );
-					game.World.Env.SetSkyColour( col );
-				} else if( key == "environment.fog" ) {
-					FastColour col = ParseWomColour( value, WorldEnv.DefaultFogColour );
-					game.World.Env.SetFogColour( col );
-				} else if( key == "environment.level" ) {
+				if (key == "environment.cloud") {
+					FastColour col = ParseWomColour(value, WorldEnv.DefaultCloudsColour);
+					game.World.Env.SetCloudsColour(col);
+				} else if (key == "environment.sky") {
+					FastColour col = ParseWomColour(value, WorldEnv.DefaultSkyColour);
+					game.World.Env.SetSkyColour(col);
+				} else if (key == "environment.fog") {
+					FastColour col = ParseWomColour(value, WorldEnv.DefaultFogColour);
+					game.World.Env.SetFogColour(col);
+				} else if (key == "environment.level") {
 					int waterLevel = 0;
-					if( Int32.TryParse( value, out waterLevel ) )
-						game.World.Env.SetEdgeLevel( waterLevel );
-				} else if( key == "user.detail" && !net.cpeData.useMessageTypes ) {
-					game.Chat.Add( value, MessageType.Status2 );
+					if (Int32.TryParse(value, out waterLevel))
+						game.World.Env.SetEdgeLevel(waterLevel);
+				} else if (key == "user.detail" && !net.cpeData.useMessageTypes) {
+					game.Chat.Add(value, MessageType.Status2);
 				}
 			}
 		}
 		
 		const int fullAlpha = 0xFF << 24;
-		static FastColour ParseWomColour( string value, FastColour defaultCol ) {
+		static FastColour ParseWomColour(string value, FastColour defaultCol) {
 			int argb;
-			return Int32.TryParse( value, out argb ) ? new FastColour( argb | fullAlpha ) : defaultCol;
+			return Int32.TryParse(value, out argb) ? new FastColour(argb | fullAlpha) : defaultCol;
 		}
 		
 		static string ReadLine(ref int start, string value) {

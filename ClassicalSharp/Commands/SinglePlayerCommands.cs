@@ -19,11 +19,11 @@ namespace ClassicalSharp.Commands {
 			};
 		}
 		
-		public override void Execute( string[] args ) {
-			if( args.Length == 1 ) {
-				game.Chat.Add( "&e/client model: &cYou didn't specify a model name." );
+		public override void Execute(string[] args) {
+			if (args.Length == 1) {
+				game.Chat.Add("&e/client model: &cYou didn't specify a model name.");
 			} else {
-				game.LocalPlayer.SetModel( Utils.ToLower( args[1] ) );
+				game.LocalPlayer.SetModel(Utils.ToLower(args[1]));
 			}
 		}
 	}
@@ -44,68 +44,68 @@ namespace ClassicalSharp.Commands {
 		Vector3I mark1, mark2;
 		bool persist = false;
 		
-		public override void Execute( string[] args ) {
+		public override void Execute(string[] args) {
 			game.UserEvents.BlockChanged -= BlockChanged;
 			block = 0xFF;
-			mark1 = new Vector3I( int.MaxValue );
-			mark2 = new Vector3I( int.MaxValue );
+			mark1 = new Vector3I(int.MaxValue);
+			mark2 = new Vector3I(int.MaxValue);
 			persist = false;
 			
-			if( !ParseBlock( args ) ) return;
-			if( args.Length > 2 && Utils.CaselessEquals( args[2], "yes" ) )
+			if (!ParseBlock(args)) return;
+			if (args.Length > 2 && Utils.CaselessEquals(args[2], "yes"))
 				persist = true;
 			
-			game.Chat.Add( "&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3 );
+			game.Chat.Add("&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3);
 			game.UserEvents.BlockChanged += BlockChanged;
 		}
 		
-		bool ParseBlock( string[] args ) {
-			if( args.Length == 1 ) return true;
-			if( Utils.CaselessEquals( args[1], "yes" ) ) { persist = true; return true; }
+		bool ParseBlock(string[] args) {
+			if (args.Length == 1) return true;
+			if (Utils.CaselessEquals(args[1], "yes")) { persist = true; return true; }
 			
 			byte blockID = 0;
-			if( !byte.TryParse( args[1], out blockID ) ) {
-				game.Chat.Add( "&eCuboid: &c\"" + args[1] + "\" is not a valid block id." ); return false;
+			if (!byte.TryParse(args[1], out blockID)) {
+				game.Chat.Add("&eCuboid: &c\"" + args[1] + "\" is not a valid block id."); return false;
 			}
-			if( blockID >= Block.CpeCount && game.BlockInfo.Name[blockID] == "Invalid" ) {
-				game.Chat.Add( "&eCuboid: &cThere is no block with id \"" + args[1] + "\"." ); return false;
+			if (blockID >= Block.CpeCount && game.BlockInfo.Name[blockID] == "Invalid") {
+				game.Chat.Add("&eCuboid: &cThere is no block with id \"" + args[1] + "\"."); return false;
 			}
 			block = blockID;
 			return true;
 		}
 
-		void BlockChanged( object sender, BlockChangedEventArgs e ) {
-			if( mark1.X == int.MaxValue ) {
+		void BlockChanged(object sender, BlockChangedEventArgs e) {
+			if (mark1.X == int.MaxValue) {
 				mark1 = e.Coords;
-				game.UpdateBlock( mark1.X, mark1.Y, mark1.Z, e.OldBlock );
-				game.Chat.Add( "&eCuboid: &fMark 1 placed at (" + e.Coords + "), place mark 2.",
-				              MessageType.ClientStatus3 );
+				game.UpdateBlock(mark1.X, mark1.Y, mark1.Z, e.OldBlock);
+				game.Chat.Add("&eCuboid: &fMark 1 placed at (" + e.Coords + "), place mark 2.",
+				              MessageType.ClientStatus3);
 			} else {
 				mark2 = e.Coords;				
 				DoCuboid();		
-				game.Chat.Add( null, MessageType.ClientStatus3 );
+				game.Chat.Add(null, MessageType.ClientStatus3);
 				
-				if( !persist ) {
+				if (!persist) {
 					game.UserEvents.BlockChanged -= BlockChanged;
 				} else {
-					mark1 = new Vector3I( int.MaxValue );
-					game.Chat.Add( "&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3 );
+					mark1 = new Vector3I(int.MaxValue);
+					game.Chat.Add("&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3);
 				}
 			}
 		}
 		
 		void DoCuboid() {
-			Vector3I min = Vector3I.Min( mark1, mark2 );
-			Vector3I max = Vector3I.Max( mark1, mark2 );
-			if( !game.World.IsValidPos( min ) || !game.World.IsValidPos( max ) ) return;
+			Vector3I min = Vector3I.Min(mark1, mark2);
+			Vector3I max = Vector3I.Max(mark1, mark2);
+			if (!game.World.IsValidPos(min) || !game.World.IsValidPos(max)) return;
 			byte id = block;
 			
-			if( id == 0xFF ) id = (byte)game.Inventory.HeldBlock;		
-			for( int y = min.Y; y <= max.Y; y++ )
-				for( int z = min.Z; z <= max.Z; z++ )
-					for( int x = min.X; x <= max.X; x++ ) 
+			if (id == 0xFF) id = (byte)game.Inventory.HeldBlock;		
+			for (int y = min.Y; y <= max.Y; y++)
+				for (int z = min.Z; z <= max.Z; z++)
+					for (int x = min.X; x <= max.X; x++) 
 			{
-				game.UpdateBlock( x, y, z, id );
+				game.UpdateBlock(x, y, z, id);
 			}
 		}
 	}	

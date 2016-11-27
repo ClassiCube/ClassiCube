@@ -21,7 +21,7 @@ namespace Ionic.Zlib {
 		public ZlibCodec() {
 			istate = new InflateManager();
 			const int windowBits = 15; // 32K LZ77 window (max value 15, min value 8)
-			istate.Initialize( this, windowBits );
+			istate.Initialize(this, windowBits);
 		}
 		
 		public int Inflate() {

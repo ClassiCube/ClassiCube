@@ -11,17 +11,17 @@ namespace ClassicalSharp {
 
 		public FontStyle Style;
 
-		public Font( string name, int size, FontStyle style ) {
+		public Font(string name, int size, FontStyle style) {
 			Size = size;
 			Style = style;
 		}
 
-		public Font( Font font, FontStyle style ) {
+		public Font(Font font, FontStyle style) {
 			Size = font.Size;
 			Style = style;
 		}
 
-		public Font( string name, int size ) {
+		public Font(string name, int size) {
 			Size = size;
 			Style = FontStyle.Regular;
 		}

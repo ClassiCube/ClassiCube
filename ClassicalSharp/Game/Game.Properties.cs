@@ -26,19 +26,19 @@ namespace ClassicalSharp {
 	public interface IGameComponent : IDisposable {
 		
 		/// <summary> Called when the game is being loaded. </summary>
-		void Init( Game game );
+		void Init(Game game);
 		
 		/// <summary> Called when the texture pack has been loaded and all components have been initalised. </summary>
-		void Ready( Game game );
+		void Ready(Game game);
 		
 		/// <summary> Called to reset the component's state when the user is reconnecting to a server. </summary>
-		void Reset( Game game );
+		void Reset(Game game);
 		
 		/// <summary> Called to update the component's state when the user begins loading a new map. </summary>
-		void OnNewMap( Game game );
+		void OnNewMap(Game game);
 		
 		/// <summary> Called to update the component's state when the user has finished loading a new map. </summary>
-		void OnNewMapLoaded( Game game );
+		void OnNewMapLoaded(Game game);
 	}
 	
 	/// <summary> Represents a task that runs on the main thread every certain interval. </summary>
@@ -187,31 +187,31 @@ namespace ClassicalSharp {
 		public Animations Animations;
 		internal int CloudsTex;
 		internal bool screenshotRequested;
-		internal EntryList AcceptedUrls = new EntryList( "acceptedurls.txt" ); 
-		internal EntryList DeniedUrls = new EntryList( "deniedurls.txt" );
-		internal EntryList ETags = new EntryList( "etags.txt" );
-		internal EntryList LastModified = new EntryList( "lastmodified.txt" );
+		internal EntryList AcceptedUrls = new EntryList("acceptedurls.txt"); 
+		internal EntryList DeniedUrls = new EntryList("deniedurls.txt");
+		internal EntryList ETags = new EntryList("etags.txt");
+		internal EntryList LastModified = new EntryList("lastmodified.txt");
 		
 		
 		/// <summary> Calculates the amount that the hotbar widget should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field HotbarScale). </remarks>
-		public float GuiHotbarScale { get { return Scale( MinWindowScale  * HotbarScale ); } }
+		public float GuiHotbarScale { get { return Scale(MinWindowScale  * HotbarScale); } }
 		
 		/// <summary> Calculates the amount that the block inventory menu should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field InventoryScale). </remarks>
-		public float GuiInventoryScale { get { return Scale( MinWindowScale  * InventoryScale ); } }
+		public float GuiInventoryScale { get { return Scale(MinWindowScale  * InventoryScale); } }
 		
 		/// <summary> Calculates the amount that 2D chat widgets should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field ChatScale). </remarks>
-		public float GuiChatScale { get { return Scale( (Height / 480f) * ChatScale ); } }
+		public float GuiChatScale { get { return Scale((Height / 480f) * ChatScale); } }
 		
-		float MinWindowScale { get { return Math.Min( Width / 640f, Height / 480f ); } }
+		float MinWindowScale { get { return Math.Min(Width / 640f, Height / 480f); } }
 		
-		public float Scale( float value ) { 
-			return (float)Math.Round( value * 10, MidpointRounding.AwayFromZero ) / 10; 
+		public float Scale(float value) { 
+			return (float)Math.Round(value * 10, MidpointRounding.AwayFromZero) / 10; 
 		}
 		
 		string defTexturePack = "default.zip";
@@ -220,13 +220,13 @@ namespace ClassicalSharp {
 		/// this method returns "default.zip". </remarks>
 		public string DefaultTexturePack {
 			get {
-				string path = Path.Combine( Program.AppDirectory, TexturePack.Dir );
-				path = Path.Combine( path, defTexturePack );
-				return File.Exists( path ) && !ClassicMode ? defTexturePack : "default.zip"; 
+				string path = Path.Combine(Program.AppDirectory, TexturePack.Dir);
+				path = Path.Combine(path, defTexturePack);
+				return File.Exists(path) && !ClassicMode ? defTexturePack : "default.zip"; 
 			}
 			set {
 				defTexturePack = value;
-				Options.Set( OptionsKey.DefaultTexturePack, value );
+				Options.Set(OptionsKey.DefaultTexturePack, value);
 			}
 		}
 		
@@ -240,8 +240,8 @@ namespace ClassicalSharp {
 		
 		public bool Exists { get { return window.Exists; } }
 		
-		public Point PointToScreen( Point coords ) {
-			return window.PointToScreen( coords );
+		public Point PointToScreen(Point coords) {
+			return window.PointToScreen(coords);
 		}
 		
 		public bool VSync {
@@ -256,10 +256,10 @@ namespace ClassicalSharp {
 			set {
 				// Defer mouse visibility changes.
 				realVisible = value;
-				if( Gui.overlays.Count > 0 ) return;
+				if (Gui.overlays.Count > 0) return;
 				   
 				// Only set the value when it has changes.
-				if( visible == value ) return;
+				if (visible == value) return;
 				window.CursorVisible = value;
 				visible = value;
 			}

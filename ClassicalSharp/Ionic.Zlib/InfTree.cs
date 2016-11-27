@@ -226,21 +226,21 @@ namespace Ionic.Zlib {
 		}
 		
 		internal void InflateTreeBits(int[] c, ref int bb, ref int tb, int[] hp, ZlibCodec z) {
-			ResetWorkArea( 19 );
+			ResetWorkArea(19);
 			hn = 0;
 			int result = BuildTree(c, 0, 19, 19, null, null, ref tb, ref bb, hp);
 			
 			if (result == RCode.DataError) {
-				throw new InvalidOperationException( "oversubscribed dynamic bit lengths tree" );
+				throw new InvalidOperationException("oversubscribed dynamic bit lengths tree");
 			} else if (result == RCode.BufferError || bb == 0) {
-				throw new InvalidOperationException( "incomplete dynamic bit lengths tree" );
+				throw new InvalidOperationException("incomplete dynamic bit lengths tree");
 			}
 		}
 		
 		internal void InflateTreesDynamic(int nl, int nd, int[] c, ref int bl, ref int bd, 
 		                                  ref int tl, ref int td, int[] hp) {
 			// build literal/length tree
-			ResetWorkArea( 288 );
+			ResetWorkArea(288);
 			hn = 0;
 			int result = BuildTree(c, 0, nl, 257, cplens, cplext, ref tl, ref bl, hp);
 			if (result != RCode.Okay || bl == 0) {
@@ -250,11 +250,11 @@ namespace Ionic.Zlib {
 				} else {
 					message = "incomplete literal/length tree";
 				}
-				throw new InvalidOperationException( "Unable to inflate dynamic tree: " + message );
+				throw new InvalidOperationException("Unable to inflate dynamic tree: " + message);
 			}
 			
 			// build distance tree
-			ResetWorkArea( 288 );
+			ResetWorkArea(288);
 			result = BuildTree(c, nl, nd, 0, cpdist, cpdext, ref td, ref bd, hp);
 			
 			if (result != RCode.Okay || (bd == 0 && nl > 257)) {
@@ -266,19 +266,19 @@ namespace Ionic.Zlib {
 				} else {
 					message = "empty distance tree with lengths";
 				}
-				throw new InvalidOperationException( "Unable to inflate dynamic tree: " + message );
+				throw new InvalidOperationException("Unable to inflate dynamic tree: " + message);
 			}
 		}
 		
-		internal static void InflateTreesFixed( out int bl, out int bd, out int[] tl, out int[] td ) {
+		internal static void InflateTreesFixed(out int bl, out int bd, out int[] tl, out int[] td) {
 			bl = 9;
 			bd = 5;
 			tl = fixed_tl;
 			td = fixed_td;
 		}
 		
-		void ResetWorkArea( int vsize ) {
-			if( v == null || v.Length < vsize ) {
+		void ResetWorkArea(int vsize) {
+			if (v == null || v.Length < vsize) {
 				v = new int[vsize];
 			}
 			Array.Clear(v, 0, vsize);
@@ -288,8 +288,8 @@ namespace Ionic.Zlib {
 			Array.Clear(x, 0, BMAX + 1);
 		}
 		
-		static int URShift( int value, int bits ) {
-			return (int)( (uint)value >> bits );
+		static int URShift(int value, int bits) {
+			return (int)((uint)value >> bits);
 		}
 	}
 }

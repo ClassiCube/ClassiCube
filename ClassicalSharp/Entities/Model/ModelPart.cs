@@ -11,7 +11,7 @@ namespace ClassicalSharp.Model {
 		public int Offset, Count;
 		public float RotX, RotY, RotZ;
 		
-		public ModelPart( int offset, int count, float rotX, float rotY, float rotZ ) {
+		public ModelPart(int offset, int count, float rotX, float rotY, float rotZ) {
 			Offset = offset; Count = count;
 			RotX = rotX; RotY = rotY; RotZ = rotZ;
 		}
@@ -21,7 +21,7 @@ namespace ClassicalSharp.Model {
 		public float X, Y, Z;
 		public ushort U, V;
 		
-		public ModelVertex( float x, float y, float z, int u, int v ) {
+		public ModelVertex(float x, float y, float z, int u, int v) {
 			X = x; Y = y; Z = z;
 			U = (ushort)u; V = (ushort)v;
 		}

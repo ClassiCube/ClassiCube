@@ -9,8 +9,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesAllInput { get { return true; } }
 		
-		public override bool HandlesMouseMove( int mouseX, int mouseY ) {
-			if( draggingMouse ) {
+		public override bool HandlesMouseMove(int mouseX, int mouseY) {
+			if (draggingMouse) {
 				mouseY -= TableY;
 				scrollY = (int)((mouseY - mouseOffset) / ScrollbarScale);
 				ClampScrollY();
@@ -18,13 +18,13 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			selIndex = -1;
-			if( Contains( startX, startY, blocksPerRow * blockSize,
-			             maxRows * blockSize, mouseX, mouseY ) ) {
-				for( int i = 0; i < blocksTable.Length; i++ ) {
+			if (Contains(startX, startY, blocksPerRow * blockSize,
+			             maxRows * blockSize, mouseX, mouseY)) {
+				for (int i = 0; i < blocksTable.Length; i++) {
 					int x, y;
-					GetCoords( i, out x, out y );
+					GetCoords(i, out x, out y);
 					
-					if( Contains( x, y, blockSize, blockSize, mouseX, mouseY ) ) {
+					if (Contains(x, y, blockSize, blockSize, mouseX, mouseY)) {
 						selIndex = i;
 						break;
 					}
@@ -34,52 +34,52 @@ namespace ClassicalSharp.Gui.Screens {
 			return true;
 		}
 		
-		public override bool HandlesMouseClick( int mouseX, int mouseY, MouseButton button ) {
-			if( draggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseClick( mouseX, mouseY, button ) )
+		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+			if (draggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseClick(mouseX, mouseY, button))
 				return true;
-			if( button == MouseButton.Left && mouseX >= TableX - scrollbarWidth && mouseX < TableX ) {
-				ScrollbarClick( mouseY );
-			} else if( button == MouseButton.Left ) {
-				if( selIndex != -1 ) {
+			if (button == MouseButton.Left && mouseX >= TableX - scrollbarWidth && mouseX < TableX) {
+				ScrollbarClick(mouseY);
+			} else if (button == MouseButton.Left) {
+				if (selIndex != -1) {
 					game.Inventory.HeldBlock = blocksTable[selIndex];
-				} else if( Contains( TableX, TableY, TableWidth, TableHeight, mouseX, mouseY ) ) {
+				} else if (Contains(TableX, TableY, TableWidth, TableHeight, mouseX, mouseY)) {
 					return true;
 				}
 				
-				bool hotbar = game.IsKeyDown( Key.AltLeft ) || game.IsKeyDown( Key.AltRight );
-				if( !hotbar )
-					game.Gui.SetNewScreen( null );
+				bool hotbar = game.IsKeyDown(Key.AltLeft) || game.IsKeyDown(Key.AltRight);
+				if (!hotbar)
+					game.Gui.SetNewScreen(null);
 			}
 			return true;
 		}
 		
-		public override bool HandlesKeyDown( Key key ) {
-			if( key == game.Mapping( KeyBind.PauseOrExit ) ||
-			   key == game.Mapping( KeyBind.Inventory ) ) {
-				game.Gui.SetNewScreen( null );
-			} else if( key == Key.Enter && selIndex != -1 ) {
+		public override bool HandlesKeyDown(Key key) {
+			if (key == game.Mapping(KeyBind.PauseOrExit) ||
+			   key == game.Mapping(KeyBind.Inventory)) {
+				game.Gui.SetNewScreen(null);
+			} else if (key == Key.Enter && selIndex != -1) {
 				game.Inventory.HeldBlock = blocksTable[selIndex];
-				game.Gui.SetNewScreen( null );
-			} else if( (key == Key.Left || key == Key.Keypad4) && selIndex != -1 ) {
-				ArrowKeyMove( -1 );
-			} else if( (key == Key.Right || key == Key.Keypad6) && selIndex != -1 ) {
-				ArrowKeyMove( 1 );
-			} else if( (key == Key.Up || key == Key.Keypad8) && selIndex != -1 ) {
-				ArrowKeyMove( -blocksPerRow );
-			} else if( (key == Key.Down || key == Key.Keypad2) && selIndex != -1 ) {
-				ArrowKeyMove( blocksPerRow );
-			} else if( key >= Key.Number1 && key <= Key.Number9 ) {
+				game.Gui.SetNewScreen(null);
+			} else if ((key == Key.Left || key == Key.Keypad4) && selIndex != -1) {
+				ArrowKeyMove(-1);
+			} else if ((key == Key.Right || key == Key.Keypad6) && selIndex != -1) {
+				ArrowKeyMove(1);
+			} else if ((key == Key.Up || key == Key.Keypad8) && selIndex != -1) {
+				ArrowKeyMove(-blocksPerRow);
+			} else if ((key == Key.Down || key == Key.Keypad2) && selIndex != -1) {
+				ArrowKeyMove(blocksPerRow);
+			} else if (key >= Key.Number1 && key <= Key.Number9) {
 				game.Inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
 			}
 			return true;
 		}
 		
-		void ArrowKeyMove( int delta ) {
+		void ArrowKeyMove(int delta) {
 			int startIndex = selIndex;
 			selIndex += delta;
-			if( selIndex < 0 )
+			if (selIndex < 0)
 				selIndex -= delta;
-			if( selIndex >= blocksTable.Length )
+			if (selIndex >= blocksTable.Length)
 				selIndex -= delta;
 			
 			int scrollDelta = (selIndex / blocksPerRow) - (startIndex / blocksPerRow);

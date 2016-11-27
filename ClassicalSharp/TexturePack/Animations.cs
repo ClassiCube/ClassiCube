@@ -21,146 +21,146 @@ namespace ClassicalSharp.Textures {
 		List<AnimationData> animations = new List<AnimationData>();
 		bool validated = false, useLavaAnim = false;
 		
-		public void Init( Game game ) {
+		public void Init(Game game) {
 			this.game = game;
 			gfx = game.Graphics;
 			game.Events.TexturePackChanged += TexturePackChanged;
 			game.Events.TextureChanged += TextureChanged;
 		}
 
-		public void Ready( Game game ) { }
-		public void Reset( Game game ) { }
-		public void OnNewMap( Game game ) { }
-		public void OnNewMapLoaded( Game game ) { }
+		public void Ready(Game game) { }
+		public void Reset(Game game) { }
+		public void OnNewMap(Game game) { }
+		public void OnNewMapLoaded(Game game) { }
 		
-		void TexturePackChanged( object sender, EventArgs e ) {
+		void TexturePackChanged(object sender, EventArgs e) {
 			Clear();
 			useLavaAnim = IsDefaultZip();
 		}
 		
-		void TextureChanged( object sender, TextureEventArgs e ) {
-			if( e.Name == "animations.png" || e.Name == "animation.png" ) {
-				MemoryStream stream = new MemoryStream( e.Data );
-				SetAtlas( Platform.ReadBmp( stream ) );
-			} else if( e.Name == "animations.txt" || e.Name == "animation.txt" ) {
-				MemoryStream stream = new MemoryStream( e.Data );
-				StreamReader reader = new StreamReader( stream );
-				ReadAnimationsDescription( reader );
-			} else if( e.Name == "uselavaanim" ) {
+		void TextureChanged(object sender, TextureEventArgs e) {
+			if (e.Name == "animations.png" || e.Name == "animation.png") {
+				MemoryStream stream = new MemoryStream(e.Data);
+				SetAtlas(Platform.ReadBmp(stream));
+			} else if (e.Name == "animations.txt" || e.Name == "animation.txt") {
+				MemoryStream stream = new MemoryStream(e.Data);
+				StreamReader reader = new StreamReader(stream);
+				ReadAnimationsDescription(reader);
+			} else if (e.Name == "uselavaanim") {
 				useLavaAnim = true;
 			}
 		}
 		
 		/// <summary> Sets the atlas bitmap that animation frames are contained within. </summary>
-		void SetAtlas( Bitmap bmp ) {
-			if( !Platform.Is32Bpp( bmp ) )
-				game.Drawer2D.ConvertTo32Bpp( ref bmp );
+		void SetAtlas(Bitmap bmp) {
+			if (!Platform.Is32Bpp(bmp))
+				game.Drawer2D.ConvertTo32Bpp(ref bmp);
 			this.animBmp = bmp;
-			animsBuffer = new FastBitmap( bmp, true, true );
+			animsBuffer = new FastBitmap(bmp, true, true);
 		}
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
-		public unsafe void Tick( ScheduledTask task ) {
-			if( useLavaAnim ) {
-				int size = Math.Min( game.TerrainAtlas.elementSize, 64 );
-				DrawAnimation( null, 30, size );
+		public unsafe void Tick(ScheduledTask task) {
+			if (useLavaAnim) {
+				int size = Math.Min(game.TerrainAtlas.elementSize, 64);
+				DrawAnimation(null, 30, size);
 			}
 			
-			if( animations.Count == 0 ) return;			
-			if( animsBuffer == null ) {
-				game.Chat.Add( "&cCurrent texture pack specifies it uses animations," );
-				game.Chat.Add( "&cbut is missing animations.png" );
+			if (animations.Count == 0) return;			
+			if (animsBuffer == null) {
+				game.Chat.Add("&cCurrent texture pack specifies it uses animations,");
+				game.Chat.Add("&cbut is missing animations.png");
 				animations.Clear();
 				return;
 			}
-			if( !validated ) ValidateAnimations();			
+			if (!validated) ValidateAnimations();			
 			
-			for( int i = 0; i < animations.Count; i++ )
-				ApplyAnimation( animations[i] );
+			for (int i = 0; i < animations.Count; i++)
+				ApplyAnimation(animations[i]);
 		}
 		
 		/// <summary> Reads a text file that contains a number of lines, with each line describing:<br/>
 		/// 1) the target tile in the terrain atlas  2) the start location of animation frames<br/>
 		/// 3) the size of each animation frame      4) the number of animation frames<br/>
 		/// 5) the delay between advancing animation frames. </summary>
-		public void ReadAnimationsDescription( StreamReader reader ) {
+		public void ReadAnimationsDescription(StreamReader reader) {
 			string line;
-			while( (line = reader.ReadLine()) != null ) {
-				if( line.Length == 0 || line[0] == '#' ) continue;
+			while ((line = reader.ReadLine()) != null) {
+				if (line.Length == 0 || line[0] == '#') continue;
 				
-				string[] parts = line.Split( ' ' );
-				if( parts.Length < 7 ) {
-					Utils.LogDebug( "Not enough arguments for animation: {0}", line ); continue;
+				string[] parts = line.Split(' ');
+				if (parts.Length < 7) {
+					Utils.LogDebug("Not enough arguments for animation: {0}", line); continue;
 				}
 				
 				byte tileX, tileY;
-				if( !Byte.TryParse( parts[0], out tileX ) || !Byte.TryParse( parts[1], out tileY )
-				   || tileX >= 16 || tileY >= 16 ) {
-					Utils.LogDebug( "Invalid animation tile coordinates: {0}", line ); continue;
+				if (!Byte.TryParse(parts[0], out tileX) || !Byte.TryParse(parts[1], out tileY)
+				   || tileX >= 16 || tileY >= 16) {
+					Utils.LogDebug("Invalid animation tile coordinates: {0}", line); continue;
 				}
 				
 				int frameX, frameY;
-				if( !Int32.TryParse( parts[2], out frameX ) || !Int32.TryParse( parts[3], out frameY )
-				   || frameX < 0 || frameY < 0 ) {
-					Utils.LogDebug( "Invalid animation coordinates: {0}", line ); continue;
+				if (!Int32.TryParse(parts[2], out frameX) || !Int32.TryParse(parts[3], out frameY)
+				   || frameX < 0 || frameY < 0) {
+					Utils.LogDebug("Invalid animation coordinates: {0}", line); continue;
 				}
 				
 				int frameSize, statesCount, tickDelay;
-				if( !Int32.TryParse( parts[4], out frameSize ) || !Int32.TryParse( parts[5], out statesCount ) ||
-				   !Int32.TryParse( parts[6], out tickDelay ) || frameSize < 0 || statesCount < 0 || tickDelay < 0 ) {
-					Utils.LogDebug( "Invalid animation: {0}", line ); continue;
+				if (!Int32.TryParse(parts[4], out frameSize) || !Int32.TryParse(parts[5], out statesCount) ||
+				   !Int32.TryParse(parts[6], out tickDelay) || frameSize < 0 || statesCount < 0 || tickDelay < 0) {
+					Utils.LogDebug("Invalid animation: {0}", line); continue;
 				}
 				
-				DefineAnimation( tileX, tileY, frameX, frameY, frameSize, statesCount, tickDelay );
+				DefineAnimation(tileX, tileY, frameX, frameY, frameSize, statesCount, tickDelay);
 			}
 		}
 		
 		/// <summary> Adds an animation described by the arguments to the list of animations
 		/// that are applied to the terrain atlas. </summary>
-		public void DefineAnimation( int tileX, int tileY, int frameX, int frameY, int frameSize,
-		                            int statesNum, int tickDelay ) {
+		public void DefineAnimation(int tileX, int tileY, int frameX, int frameY, int frameSize,
+		                            int statesNum, int tickDelay) {
 			AnimationData data = new AnimationData();
 			data.TileX = tileX; data.TileY = tileY;
 			data.FrameX = frameX; data.FrameY = frameY;
 			data.FrameSize = frameSize; data.StatesCount = statesNum;
 			
 			data.TickDelay = tickDelay;
-			animations.Add( data );
+			animations.Add(data);
 		}
 		
 		FastBitmap animPart = new FastBitmap();
 		LavaAnimation lavaAnim = new LavaAnimation();
-		unsafe void ApplyAnimation( AnimationData data ) {
+		unsafe void ApplyAnimation(AnimationData data) {
 			data.Tick--;
-			if( data.Tick >= 0 ) return;
+			if (data.Tick >= 0) return;
 			data.State++;
 			data.State %= data.StatesCount;
 			data.Tick = data.TickDelay;
 			
 			int texId = (data.TileY << 4) | data.TileX;
-			if( texId == 30 && useLavaAnim ) return;
-			DrawAnimation( data, texId, data.FrameSize );
+			if (texId == 30 && useLavaAnim) return;
+			DrawAnimation(data, texId, data.FrameSize);
 		}
 		
-		unsafe void DrawAnimation( AnimationData data, int texId, int size ) {
+		unsafe void DrawAnimation(AnimationData data, int texId, int size) {
 			TerrainAtlas1D atlas = game.TerrainAtlas1D;			
-			int index = atlas.Get1DIndex( texId );
-			int rowNum = atlas.Get1DRowId( texId );			
+			int index = atlas.Get1DIndex(texId);
+			int rowNum = atlas.Get1DRowId(texId);			
 			byte* temp = stackalloc byte[size * size * 4];
-			animPart.SetData( size, size, size * 4, (IntPtr)temp, false );
+			animPart.SetData(size, size, size * 4, (IntPtr)temp, false);
 			
-			if( data == null ) {
-				lavaAnim.Tick( (int*)temp, size );
+			if (data == null) {
+				lavaAnim.Tick((int*)temp, size);
 			} else {
-				FastBitmap.MovePortion( data.FrameX + data.State * size, 
-				                       data.FrameY, 0, 0, animsBuffer, animPart, size );
+				FastBitmap.MovePortion(data.FrameX + data.State * size, 
+				                       data.FrameY, 0, 0, animsBuffer, animPart, size);
 			}
-			gfx.UpdateTexturePart( atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart );
+			gfx.UpdateTexturePart(atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart);
 		}
 		
 		bool IsDefaultZip() {
-			if( game.World.TextureUrl != null ) return false;
-			string texPack = Options.Get( OptionsKey.DefaultTexturePack );
+			if (game.World.TextureUrl != null) return false;
+			string texPack = Options.Get(OptionsKey.DefaultTexturePack);
 			return texPack == null || texPack == "default.zip";
 		}
 		
@@ -169,7 +169,7 @@ namespace ClassicalSharp.Textures {
 		public void Clear() {
 			animations.Clear();
 			
-			if( animBmp == null ) return;
+			if (animBmp == null) return;
 			animsBuffer.Dispose(); animsBuffer = null;
 			animBmp.Dispose(); animBmp = null;
 			validated = false;
@@ -194,15 +194,15 @@ namespace ClassicalSharp.Textures {
 			"is at coordinates outside animations.png";
 		void ValidateAnimations() {
 			validated = true;
-			for( int i = animations.Count - 1; i >= 0; i-- ) {
+			for (int i = animations.Count - 1; i >= 0; i--) {
 				AnimationData a = animations[i];
 				int maxY = a.FrameY + a.FrameSize;
 				int maxX = a.FrameX + a.FrameSize * a.StatesCount;
-				if( maxX <= animsBuffer.Width && maxY <= animsBuffer.Height )
+				if (maxX <= animsBuffer.Width && maxY <= animsBuffer.Height)
 					continue;
 				
-				game.Chat.Add( String.Format( format, a.TileX, a.TileY ) );
-				animations.RemoveAt( i );
+				game.Chat.Add(String.Format(format, a.TileX, a.TileY));
+				animations.RemoveAt(i);
 			}
 		}
 	}

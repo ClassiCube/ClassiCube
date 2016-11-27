@@ -9,7 +9,7 @@ namespace ClassicalSharp.Network.Protocols {
 		protected NetReader reader;
 		protected NetWriter writer;
 		
-		public IProtocol( Game game ) {
+		public IProtocol(Game game) {
 			this.game = game;
 			net = (NetworkProcessor)game.Server;
 			reader = net.reader;

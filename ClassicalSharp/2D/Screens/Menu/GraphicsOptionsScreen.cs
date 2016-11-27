@@ -8,7 +8,7 @@ using ClassicalSharp.Singleplayer;
 namespace ClassicalSharp.Gui.Screens {
 	public class GraphicsOptionsScreen : MenuOptionsScreen {
 		
-		public GraphicsOptionsScreen( Game game ) : base( game ) {
+		public GraphicsOptionsScreen(Game game) : base(game) {
 		}
 		
 		public override void Init() {
@@ -16,40 +16,40 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[] {	
 				
-				MakeOpt( -1, -50, "FPS mode", OnWidgetClick,
+				MakeOpt(-1, -50, "FPS mode", OnWidgetClick,
 				     g => g.FpsLimit.ToString(),
-				     (g, v) => { object raw = Enum.Parse( typeof(FpsLimitMethod), v );
-				     	g.SetFpsLimitMethod( (FpsLimitMethod)raw );
-				     	Options.Set( OptionsKey.FpsLimit, v ); } ),
+				     (g, v) => { object raw = Enum.Parse(typeof(FpsLimitMethod), v);
+				     	g.SetFpsLimitMethod((FpsLimitMethod)raw);
+				     	Options.Set(OptionsKey.FpsLimit, v); }),
 
-				MakeOpt( -1, 0, "View distance", OnWidgetClick,
+				MakeOpt(-1, 0, "View distance", OnWidgetClick,
 				     g => g.ViewDistance.ToString(),
-				     (g, v) => g.SetViewDistance( Int32.Parse( v ), true ) ),
+				     (g, v) => g.SetViewDistance(Int32.Parse(v), true)),
 				
-				MakeBool( -1, 50, "Advanced lighting", OptionsKey.SmoothLighting,
-				     OnWidgetClick, g => g.SmoothLighting, SetSmoothLighting ),
+				MakeBool(-1, 50, "Advanced lighting", OptionsKey.SmoothLighting,
+				     OnWidgetClick, g => g.SmoothLighting, SetSmoothLighting),
 				
-				MakeOpt( 1, -50, "Names", OnWidgetClick,
+				MakeOpt(1, -50, "Names", OnWidgetClick,
 				     g => g.Entities.NamesMode.ToString(),
-				     (g, v) => { object raw = Enum.Parse( typeof(NameMode), v );
+				     (g, v) => { object raw = Enum.Parse(typeof(NameMode), v);
 				     	g.Entities.NamesMode = (NameMode)raw;
-				     	Options.Set( OptionsKey.NamesMode, v ); } ),
+				     	Options.Set(OptionsKey.NamesMode, v); }),
 				
-				MakeOpt( 1, 0, "Shadows", OnWidgetClick,
+				MakeOpt(1, 0, "Shadows", OnWidgetClick,
 				     g => g.Entities.ShadowMode.ToString(),
-				     (g, v) => { object raw = Enum.Parse( typeof(EntityShadow), v );
+				     (g, v) => { object raw = Enum.Parse(typeof(EntityShadow), v);
 				     	g.Entities.ShadowMode = (EntityShadow)raw;
-				     	Options.Set( OptionsKey.EntityShadow, v ); } ),
+				     	Options.Set(OptionsKey.EntityShadow, v); }),
 				
-				MakeBack( false, titleFont,
-				         (g, w) => g.Gui.SetNewScreen( new OptionsGroupScreen( g ) ) ),
+				MakeBack(false, titleFont,
+				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null,
 			};
 			MakeValidators();
 			MakeDescriptions();
 		}
 		
-		void SetSmoothLighting( Game g, bool v ) {
+		void SetSmoothLighting(Game g, bool v) {
 			g.SmoothLighting = v;
 			g.MapRenderer.updater.InitMeshBuilder();
 			g.MapRenderer.Refresh();
@@ -57,11 +57,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeValidators() {
 			validators = new MenuInputValidator[] {
-				new EnumValidator( typeof(FpsLimitMethod) ),
-				new IntegerValidator( 16, 4096 ),
+				new EnumValidator(typeof(FpsLimitMethod)),
+				new IntegerValidator(16, 4096),
 				new BooleanValidator(),
-				new EnumValidator( typeof(NameMode) ),
-				new EnumValidator( typeof(EntityShadow) ),
+				new EnumValidator(typeof(NameMode)),
+				new EnumValidator(typeof(EntityShadow)),
 			};
 		}
 		

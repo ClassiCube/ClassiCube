@@ -8,7 +8,7 @@ namespace ClassicalSharp.Gui.Screens {
 	/// <remarks> May cover the entire game window. </remarks>
 	public abstract class Screen : GuiElement {
 		
-		public Screen( Game game ) : base( game ) {
+		public Screen(Game game) : base(game) {
 		}
 		
 		bool handlesAll;
@@ -26,13 +26,13 @@ namespace ClassicalSharp.Gui.Screens {
 		public virtual bool RenderHudAfter { get { return false; } }
 
 		/// <summary> Called when the game window is resized. </summary>
-		public abstract void OnResize( int width, int height );		
+		public abstract void OnResize(int width, int height);		
 		
-		protected ClickHandler LeftOnly( Action<Game, Widget> action ) {
-			if( action == null ) return (g, w, btn, x, y) => {};
+		protected ClickHandler LeftOnly(Action<Game, Widget> action) {
+			if (action == null) return (g, w, btn, x, y) => {};
 			return (g, w, btn, x, y) => {
-				if( btn != MouseButton.Left ) return;
-				action( g, w );
+				if (btn != MouseButton.Left) return;
+				action(g, w);
 			};
 		}
 	}

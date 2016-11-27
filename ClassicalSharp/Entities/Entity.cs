@@ -9,7 +9,7 @@ namespace ClassicalSharp.Entities {
 	/// May also contain other fields and properties. </summary>
 	public abstract partial class Entity {
 		
-		public Entity( Game game ) {
+		public Entity(Game game) {
 			this.game = game;
 		}
 		
@@ -53,18 +53,18 @@ namespace ClassicalSharp.Entities {
 		
 		void UpdateModel() {
 			BlockModel model = Model as BlockModel;
-			if( model != null )
-				model.CalcState( Utils.FastByte( ModelName ) );
+			if (model != null)
+				model.CalcState(Utils.FastByte(ModelName));
 		}
 		
-		public abstract void Tick( double delta );
+		public abstract void Tick(double delta);
 		
-		public abstract void SetLocation( LocationUpdate update, bool interpolate );
+		public abstract void SetLocation(LocationUpdate update, bool interpolate);
 		
 		public abstract void Despawn();
 		
 		/// <summary> Renders the entity's model, interpolating between the previous and next state. </summary>
-		public abstract void RenderModel( double deltaTime, float t );
+		public abstract void RenderModel(double deltaTime, float t);
 		
 		/// <summary> Renders the entity's name over the top of its model. </summary>
 		/// <remarks> Assumes that RenderModel was previously called this frame. </remarks>
@@ -72,22 +72,22 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
-			get { return new Vector3( Position.X, 
-			                         Position.Y + Model.GetEyeY( this ) * ModelScale, Position.Z ); }
+			get { return new Vector3(Position.X, 
+			                         Position.Y + Model.GetEyeY(this) * ModelScale, Position.Z); }
 		}
 
 		/// <summary> Gets the block just underneath the player's feet position. </summary>
 		public byte BlockUnderFeet {
-			get { return GetBlock( new Vector3( Position.X, Position.Y - 0.01f, Position.Z ) ); }
+			get { return GetBlock(new Vector3(Position.X, Position.Y - 0.01f, Position.Z)); }
 		}
 		
 		/// <summary> Gets the block at player's eye position. </summary>
 		public byte BlockAtHead {
-			get { return GetBlock( EyePosition ); }
+			get { return GetBlock(EyePosition); }
 		}
 		
-		protected byte GetBlock( Vector3 coords ) {
-			return game.World.SafeGetBlock( Vector3I.Floor( coords ) );
+		protected byte GetBlock(Vector3 coords) {
+			return game.World.SafeGetBlock(Vector3I.Floor(coords));
 		}
 	}
 }

@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		public bool UseShadow;
 		public bool SkipPartsCheck;
 		
-		public DrawTextArgs( string text, Font font, bool useShadow ) {
+		public DrawTextArgs(string text, Font font, bool useShadow) {
 			Text = text;
 			Font = font;
 			UseShadow = useShadow;

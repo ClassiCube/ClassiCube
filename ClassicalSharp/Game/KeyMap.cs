@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 			set { keys[(int)key] = value; SaveKeyBindings(); }
 		}
 		
-		public Key GetDefault( KeyBind key ) {
+		public Key GetDefault(KeyBind key) {
 			return defaultKeys[(int)key];
 		}
 		
@@ -41,25 +41,25 @@ namespace ClassicalSharp {
 			keys[27] = Key.Unknown; keys[28] = Key.Unknown; keys[29] = Key.Unknown;
 			
 			defaultKeys = new Key[keys.Length];
-			for( int i = 0; i < defaultKeys.Length; i++ )
+			for (int i = 0; i < defaultKeys.Length; i++)
 				defaultKeys[i] = keys[i];
 			LoadKeyBindings();
 		}
 		
 		void LoadKeyBindings() {
-			string[] names = KeyBind.GetNames( typeof( KeyBind ) );
-			for( int i = 0; i < names.Length; i++ ) {
+			string[] names = KeyBind.GetNames(typeof(KeyBind));
+			for (int i = 0; i < names.Length; i++) {
 				string key = "key-" + names[i];
-				Key mapping = Options.GetEnum( key, keys[i] );
-				if( mapping != Key.Escape )
+				Key mapping = Options.GetEnum(key, keys[i]);
+				if (mapping != Key.Escape)
 					keys[i] = mapping;
 			}
 		}
 		
 		void SaveKeyBindings() {
-			string[] names = KeyBind.GetNames( typeof( KeyBind ) );
-			for( int i = 0; i < names.Length; i++ ) {
-				Options.Set( "key-" + names[i], keys[i] );
+			string[] names = KeyBind.GetNames(typeof(KeyBind));
+			for (int i = 0; i < names.Length; i++) {
+				Options.Set("key-" + names[i], keys[i]);
 			}
 		}
 	}

@@ -10,43 +10,43 @@ namespace ClassicalSharp.Network {
 		public int index = 0;
 		Socket socket;
 		
-		public NetWriter( Socket socket ) {
+		public NetWriter(Socket socket) {
 			this.socket = socket;
 		}
 		
-		public void WriteString( string value ) {
-			int count = Math.Min( value.Length, Utils.StringLength );
-			for( int i = 0; i < count; i++ ) {
+		public void WriteString(string value) {
+			int count = Math.Min(value.Length, Utils.StringLength);
+			for (int i = 0; i < count; i++) {
 				char c = value[i];
 				int cpIndex = 0;
-				if( c == '&' ) {
+				if (c == '&') {
 					buffer[index + i] = (byte)'%'; // escape colour codes
-				} else if( c >= ' ' && c <= '~' ) {
+				} else if (c >= ' ' && c <= '~') {
 					buffer[index + i] = (byte)c;
-				} else if( (cpIndex = Utils.ControlCharReplacements.IndexOf( c ) ) >= 0 ) {
+				} else if ((cpIndex = Utils.ControlCharReplacements.IndexOf(c)) >= 0) {
 					buffer[index + i] = (byte)cpIndex;
-				} else if( (cpIndex = Utils.ExtendedCharReplacements.IndexOf( c ) ) >= 0 ) {
+				} else if ((cpIndex = Utils.ExtendedCharReplacements.IndexOf(c)) >= 0) {
 					buffer[index + i] = (byte)(cpIndex + 127);
 				} else {
 					buffer[index + i] = (byte)'?';
 				}
 			}
 			
-			for( int i = value.Length; i < Utils.StringLength; i++ )
+			for (int i = value.Length; i < Utils.StringLength; i++)
 				buffer[index + i] = (byte)' ';
 			index += Utils.StringLength;
 		}
 		
-		public void WriteUInt8( byte value ) {
+		public void WriteUInt8(byte value) {
 			buffer[index++] = value;
 		}
 		
-		public void WriteInt16( short value ) {
+		public void WriteInt16(short value) {
 			buffer[index++] = (byte)(value >> 8);
-			buffer[index++] = (byte)(value );
+			buffer[index++] = (byte)(value);
 		}
 		
-		public void WriteInt32( int value ) {
+		public void WriteInt32(int value) {
 			buffer[index++] = (byte)(value >> 24);
 			buffer[index++] = (byte)(value >> 16);
 			buffer[index++] = (byte)(value >> 8);
@@ -55,8 +55,8 @@ namespace ClassicalSharp.Network {
 
 		public void Send() {
 			int offset = 0;
-			while( offset < index )
-				offset += socket.Send( buffer, offset, index - offset, SocketFlags.None );
+			while (offset < index)
+				offset += socket.Send(buffer, offset, index - offset, SocketFlags.None);
 			index = 0;
 		}
 	}

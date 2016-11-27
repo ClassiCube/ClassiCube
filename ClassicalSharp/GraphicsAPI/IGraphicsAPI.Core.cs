@@ -7,67 +7,67 @@ namespace ClassicalSharp.GraphicsAPI {
 	public abstract partial class IGraphicsApi {
 		
 		protected void InitDynamicBuffers() {
-			quadVb = CreateDynamicVb( VertexFormat.P3fC4b, 4 );
-			texVb = CreateDynamicVb( VertexFormat.P3fT2fC4b, 4 );
+			quadVb = CreateDynamicVb(VertexFormat.P3fC4b, 4);
+			texVb = CreateDynamicVb(VertexFormat.P3fT2fC4b, 4);
 		}
 		
 		public virtual void Dispose() {
-			DeleteVb( ref quadVb );
-			DeleteVb( ref texVb );
+			DeleteVb(ref quadVb);
+			DeleteVb(ref texVb);
 		}
 		
 		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public void UpdateDynamicVb<T>( DrawMode mode, int vb, T[] vertices, int vCount ) where T : struct {
-			SetDynamicVbData( vb, vertices, vCount );
-			DrawVb( mode, 0, vCount );
+		public void UpdateDynamicVb<T>(DrawMode mode, int vb, T[] vertices, int vCount) where T : struct {
+			SetDynamicVbData(vb, vertices, vCount);
+			DrawVb(mode, 0, vCount);
 		}
 		
 		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public void UpdateDynamicIndexedVb<T>( DrawMode mode, int vb, T[] vertices, int vCount ) where T : struct {
-			SetDynamicVbData( vb, vertices, vCount );
-			DrawIndexedVb( mode, vCount * 6 / 4, 0 );
+		public void UpdateDynamicIndexedVb<T>(DrawMode mode, int vb, T[] vertices, int vCount) where T : struct {
+			SetDynamicVbData(vb, vertices, vCount);
+			DrawIndexedVb(mode, vCount * 6 / 4, 0);
 		}
 		
 		
 		
 		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];
 		internal int quadVb;
-		public virtual void Draw2DQuad( float x, float y, float width, float height,
-		                               FastColour col ) {
+		public virtual void Draw2DQuad(float x, float y, float width, float height,
+		                               FastColour col) {
 			int c = col.Pack();
-			quadVerts[0] = new VertexP3fC4b( x, y, 0, c );
-			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, c );
-			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, c );
-			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, c );
-			SetBatchFormat( VertexFormat.P3fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4 );
+			quadVerts[0] = new VertexP3fC4b(x, y, 0, c);
+			quadVerts[1] = new VertexP3fC4b(x + width, y, 0, c);
+			quadVerts[2] = new VertexP3fC4b(x + width, y + height, 0, c);
+			quadVerts[3] = new VertexP3fC4b(x, y + height, 0, c);
+			SetBatchFormat(VertexFormat.P3fC4b);
+			UpdateDynamicIndexedVb(DrawMode.Triangles, quadVb, quadVerts, 4);
 		}
 		
-		public virtual void Draw2DQuad( float x, float y, float width, float height,
-		                               FastColour topCol, FastColour bottomCol ) {
+		public virtual void Draw2DQuad(float x, float y, float width, float height,
+		                               FastColour topCol, FastColour bottomCol) {
 			int c = topCol.Pack();
-			quadVerts[0] = new VertexP3fC4b( x, y, 0, c );
-			quadVerts[1] = new VertexP3fC4b( x + width, y, 0, c );
+			quadVerts[0] = new VertexP3fC4b(x, y, 0, c);
+			quadVerts[1] = new VertexP3fC4b(x + width, y, 0, c);
 			c = bottomCol.Pack();
-			quadVerts[2] = new VertexP3fC4b( x + width, y + height, 0, c );
-			quadVerts[3] = new VertexP3fC4b( x, y + height, 0, c );
-			SetBatchFormat( VertexFormat.P3fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, quadVb, quadVerts, 4 );
+			quadVerts[2] = new VertexP3fC4b(x + width, y + height, 0, c);
+			quadVerts[3] = new VertexP3fC4b(x, y + height, 0, c);
+			SetBatchFormat(VertexFormat.P3fC4b);
+			UpdateDynamicIndexedVb(DrawMode.Triangles, quadVb, quadVerts, 4);
 		}
 		
 		internal VertexP3fT2fC4b[] texVerts = new VertexP3fT2fC4b[4];
 		internal int texVb;
-		public virtual void Draw2DTexture( ref Texture tex, FastColour col ) {
+		public virtual void Draw2DTexture(ref Texture tex, FastColour col) {
 			int index = 0;
-			Make2DQuad( ref tex, col.Pack(), texVerts, ref index );
-			SetBatchFormat( VertexFormat.P3fT2fC4b );
-			UpdateDynamicIndexedVb( DrawMode.Triangles, texVb, texVerts, 4 );
+			Make2DQuad(ref tex, col.Pack(), texVerts, ref index);
+			SetBatchFormat(VertexFormat.P3fT2fC4b);
+			UpdateDynamicIndexedVb(DrawMode.Triangles, texVb, texVerts, 4);
 		}
 		
-		public static void Make2DQuad( ref Texture tex, int col,
-		                              VertexP3fT2fC4b[] vertices, ref int index ) {
+		public static void Make2DQuad(ref Texture tex, int col,
+		                              VertexP3fT2fC4b[] vertices, ref int index) {
 			float x1 = tex.X, y1 = tex.Y, x2 = tex.X + tex.Width, y2 = tex.Y + tex.Height;
 			#if USE_DX
 			// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
@@ -75,38 +75,38 @@ namespace ClassicalSharp.GraphicsAPI {
 			x1 -= 0.5f; x2 -= 0.5f;
 			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
-			vertices[index++] = new VertexP3fT2fC4b( x1, y1, 0, tex.U1, tex.V1, col );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y1, 0, tex.U2, tex.V1, col );
-			vertices[index++] = new VertexP3fT2fC4b( x2, y2, 0, tex.U2, tex.V2, col );
-			vertices[index++] = new VertexP3fT2fC4b( x1, y2, 0, tex.U1, tex.V2, col );
+			vertices[index++] = new VertexP3fT2fC4b(x1, y1, 0, tex.U1, tex.V1, col);
+			vertices[index++] = new VertexP3fT2fC4b(x2, y1, 0, tex.U2, tex.V1, col);
+			vertices[index++] = new VertexP3fT2fC4b(x2, y2, 0, tex.U2, tex.V2, col);
+			vertices[index++] = new VertexP3fT2fC4b(x1, y2, 0, tex.U1, tex.V2, col);
 		}
 		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
 		/// is suitable for rendering 2D quads and other 2D graphics to. </summary>
-		public void Mode2D( float width, float height, bool setFog ) {
-			SetMatrixMode( MatrixType.Projection );
+		public void Mode2D(float width, float height, bool setFog) {
+			SetMatrixMode(MatrixType.Projection);
 			PushMatrix();
-			LoadOrthoMatrix( width, height );
-			SetMatrixMode( MatrixType.Modelview );
+			LoadOrthoMatrix(width, height);
+			SetMatrixMode(MatrixType.Modelview);
 			PushMatrix();
 			LoadIdentityMatrix();
 			
 			DepthTest = false;
 			AlphaBlending = true;
-			if( setFog ) Fog = false;
+			if (setFog) Fog = false;
 		}
 		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
 		/// is suitable for rendering 3D vertices. </summary>
-		public void Mode3D( bool setFog ) {
-			SetMatrixMode( MatrixType.Projection );
+		public void Mode3D(bool setFog) {
+			SetMatrixMode(MatrixType.Projection);
 			PopMatrix(); // Get rid of orthographic 2D matrix.
-			SetMatrixMode( MatrixType.Modelview );
+			SetMatrixMode(MatrixType.Modelview);
 			PopMatrix();
 			
 			DepthTest = true;
 			AlphaBlending = false;
-			if( setFog ) Fog = true;
+			if (setFog) Fog = true;
 		}
 		
 		internal unsafe int MakeDefaultIb() {
@@ -115,7 +115,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			ushort* indices = stackalloc ushort[maxIndices];
 			IntPtr ptr = (IntPtr)indices;
 			
-			for( int i = 0; i < maxIndices; i += 6 ) {
+			for (int i = 0; i < maxIndices; i += 6) {
 				*indices = (ushort)(element + 0); indices++;
 				*indices = (ushort)(element + 1); indices++;
 				*indices = (ushort)(element + 2); indices++;
@@ -125,7 +125,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				*indices = (ushort)(element + 0); indices++;
 				element += 4;
 			}
-			return CreateIb( ptr, maxIndices );
+			return CreateIb(ptr, maxIndices);
 		}
 	}
 

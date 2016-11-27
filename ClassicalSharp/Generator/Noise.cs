@@ -9,25 +9,25 @@ namespace ClassicalSharp.Generator {
 	
 	public abstract class Noise {
 		
-		public abstract double Compute( double x, double y );
+		public abstract double Compute(double x, double y);
 	}
 	
 	public sealed class ImprovedNoise : Noise {
 		
-		public ImprovedNoise( JavaRandom rnd ) {
+		public ImprovedNoise(JavaRandom rnd) {
 			// shuffle randomly using fisher-yates		
-			for( int i = 0; i < 256; i++ )
+			for (int i = 0; i < 256; i++)
 				p[i] = (byte)i;
 			
-			for( int i = 0; i < 256; i++ ) {
-				int j = rnd.Next( i, 256 );
+			for (int i = 0; i < 256; i++) {
+				int j = rnd.Next(i, 256);
 				byte temp = p[i]; p[i] = p[j]; p[j] = temp;
 			}
-			for( int i = 0; i < 256; i++ )
+			for (int i = 0; i < 256; i++)
 				p[i + 256] = p[i];
 		}
 		
-		public override double Compute( double x, double y ) {
+		public override double Compute(double x, double y) {
 			int xFloor = x >= 0 ? (int)x : (int)x - 1;
 			int yFloor = y >= 0 ? (int)y : (int)y - 1;
 			int X = xFloor & 0xFF, Y = yFloor & 0xFF;
@@ -59,17 +59,17 @@ namespace ClassicalSharp.Generator {
 	public sealed class OctaveNoise : Noise {
 		
 		readonly ImprovedNoise[] baseNoise;
-		public OctaveNoise( int octaves, JavaRandom rnd ) {
+		public OctaveNoise(int octaves, JavaRandom rnd) {
 			baseNoise = new ImprovedNoise[octaves];
-			for( int i = 0; i < octaves; i++ )
-				baseNoise[i] = new ImprovedNoise( rnd );
+			for (int i = 0; i < octaves; i++)
+				baseNoise[i] = new ImprovedNoise(rnd);
 		}
 		
-		public override double Compute( double x, double y ) {
+		public override double Compute(double x, double y) {
 			double amplitude = 1, frequency = 1;
 			double sum = 0;
-			for( int i = 0; i < baseNoise.Length; i++ ) {
-				sum += baseNoise[i].Compute( x * frequency, y * frequency ) * amplitude;
+			for (int i = 0; i < baseNoise.Length; i++) {
+				sum += baseNoise[i].Compute(x * frequency, y * frequency) * amplitude;
 				amplitude *= 2;
 				frequency /= 2;
 			}
@@ -80,14 +80,14 @@ namespace ClassicalSharp.Generator {
 	public sealed class CombinedNoise : Noise {
 		
 		readonly Noise noise1, noise2;
-		public CombinedNoise( Noise noise1, Noise noise2 ) {
+		public CombinedNoise(Noise noise1, Noise noise2) {
 			this.noise1 = noise1;
 			this.noise2 = noise2;
 		}
 		
-		public override double Compute( double x, double y ) {
-			double offset = noise2.Compute( x, y );
-			return noise1.Compute( x + offset, y );
+		public override double Compute(double x, double y) {
+			double offset = noise2.Compute(x, y);
+			return noise1.Compute(x + offset, y);
 		}
 	}
 }

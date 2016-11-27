@@ -19,10 +19,10 @@ namespace ClassicalSharp {
 		
 		public override long Position { get { throw ex; } set { throw ex; } }
 		
-		public override long Seek( long offset, SeekOrigin origin ) { throw ex; }
+		public override long Seek(long offset, SeekOrigin origin) { throw ex; }
 		
-		public override void SetLength( long value ) { throw ex; }
+		public override void SetLength(long value) { throw ex; }
 		
-		public override void Write( byte[] buffer, int offset, int count ) { throw ex; }
+		public override void Write(byte[] buffer, int offset, int count) { throw ex; }
 	}
 }

@@ -9,21 +9,21 @@ using Android.Graphics;
 namespace ClassicalSharp.Gui.Widgets {
 	public sealed class MenuInputWidget : InputWidget {
 		
-		public MenuInputWidget( Game game, Font font ) : base( game, font ) { }
+		public MenuInputWidget(Game game, Font font) : base(game, font) { }
 		
-		public static MenuInputWidget Create( Game game, int width, int height, string text,
-		                                     Font font, MenuInputValidator validator ) {
-			MenuInputWidget input = new MenuInputWidget( game, font );
+		public static MenuInputWidget Create(Game game, int width, int height, string text,
+		                                     Font font, MenuInputValidator validator) {
+			MenuInputWidget input = new MenuInputWidget(game, font);
 			input.MinWidth = width;
 			input.MinHeight = height;
 			input.Validator = validator;
 			
 			input.Init();
-			input.Append( text );
+			input.Append(text);
 			return input;
 		}
 		
-		static FastColour backCol = new FastColour( 30, 30, 30, 200 );
+		static FastColour backCol = new FastColour(30, 30, 30, 200);
 		public int MinWidth, MinHeight;
 		public MenuInputValidator Validator;
 		
@@ -32,70 +32,70 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override int Padding { get { return 3; } }
 		public override int MaxCharsPerLine { get { return Utils.StringLength; } }
 		
-		public override void Render( double delta ) {
+		public override void Render(double delta) {
 			gfx.Texturing = false;
-			gfx.Draw2DQuad( X, Y, Width, Height, backCol );
+			gfx.Draw2DQuad(X, Y, Width, Height, backCol);
 			gfx.Texturing = true;
 			
-			inputTex.Render( gfx );
-			RenderCaret( delta );
+			inputTex.Render(gfx);
+			RenderCaret(delta);
 		}
 		
 		public override void RemakeTexture() {
-			DrawTextArgs args = new DrawTextArgs( lines[0], font, false );
-			Size size = game.Drawer2D.MeasureChatSize( ref args );
+			DrawTextArgs args = new DrawTextArgs(lines[0], font, false);
+			Size size = game.Drawer2D.MeasureChatSize(ref args);
 			caretAccumulator = 0;
 			
 			// Ensure we don't have 0 text height
-			if( size.Height == 0 ) {
+			if (size.Height == 0) {
 				args.Text = Validator.Range;
-				size.Height = game.Drawer2D.MeasureChatSize( ref args ).Height;
+				size.Height = game.Drawer2D.MeasureChatSize(ref args).Height;
 				args.Text = lines[0];
 			} else {
 				args.SkipPartsCheck = true;
 			}
 			
-			Width = Math.Max( size.Width, MinWidth );
-			Height = Math.Max( size.Height, MinHeight );
+			Width = Math.Max(size.Width, MinWidth);
+			Height = Math.Max(size.Height, MinHeight);
 			Size adjSize = size; adjSize.Width = Width;
 			
-			using( Bitmap bmp = IDrawer2D.CreatePow2Bitmap( adjSize ) )
-				using( IDrawer2D drawer = game.Drawer2D )
+			using(Bitmap bmp = IDrawer2D.CreatePow2Bitmap(adjSize))
+				using(IDrawer2D drawer = game.Drawer2D)
 			{
-				drawer.SetBitmap( bmp );
-				drawer.DrawChatText( ref args, Padding, 0 );
+				drawer.SetBitmap(bmp);
+				drawer.DrawChatText(ref args, Padding, 0);
 				
 				args.Text = Validator.Range;
 				args.SkipPartsCheck = false;
-				Size hintSize = drawer.MeasureChatSize( ref args );
+				Size hintSize = drawer.MeasureChatSize(ref args);
 				
 				args.SkipPartsCheck = true;
 				int hintX = adjSize.Width - hintSize.Width;
-				if( size.Width + 3 < hintX )
-					drawer.DrawChatText( ref args, hintX, 0 );
-				inputTex = drawer.Make2DTexture( bmp, adjSize, 0, 0 );
+				if (size.Width + 3 < hintX)
+					drawer.DrawChatText(ref args, hintX, 0);
+				inputTex = drawer.Make2DTexture(bmp, adjSize, 0, 0);
 			}
 
 			CalculatePosition();			
 			inputTex.X1 = X; inputTex.Y1 = Y;
-			if( size.Height < MinHeight )
+			if (size.Height < MinHeight)
 				inputTex.Y1 += MinHeight / 2 - size.Height / 2;
 		}
 		
-		static bool IsInvalidChar( char c ) {
+		static bool IsInvalidChar(char c) {
 			// Make sure we're in the printable text range from 0x20 to 0x7E
 			return c < ' ' || c == '&' || c > '~';
 			// TODO: Uncomment this for full unicode support for save level screen
 		}
 		
-		protected override bool AllowedChar( char c ) {
-			if( IsInvalidChar( c ) ) return false;
-			if( !Validator.IsValidChar( c ) ) return false;
-			if( Text.Length == MaxCharsPerLine ) return false;
+		protected override bool AllowedChar(char c) {
+			if (IsInvalidChar(c)) return false;
+			if (!Validator.IsValidChar(c)) return false;
+			if (Text.Length == MaxCharsPerLine) return false;
 			
 			// See if the new string is in valid format
-			AppendChar( c );
-			bool valid = Validator.IsValidString( Text.ToString() );
+			AppendChar(c);
+			bool valid = Validator.IsValidString(Text.ToString());
 			DeleteChar();
 			return valid;
 		}

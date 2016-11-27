@@ -14,10 +14,10 @@ namespace ClassicalSharp.Map {
 		const uint Identifier = 0x0FC2AF40;
 		const byte Revision = 13;
 
-		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
-			BinaryReader r = new BinaryReader( stream );
-			if( r.ReadInt32() != Identifier || r.ReadByte() != Revision )
-				throw new InvalidDataException( "Unexpected constant in .fcm file" );
+		public byte[] Load(Stream stream, Game game, out int width, out int height, out int length) {
+			BinaryReader r = new BinaryReader(stream);
+			if (r.ReadInt32() != Identifier || r.ReadByte() != Revision)
+				throw new InvalidDataException("Unexpected constant in .fcm file");
 
 			width = r.ReadInt16();
 			height = r.ReadInt16();
@@ -27,33 +27,33 @@ namespace ClassicalSharp.Map {
 			p.Spawn.X = r.ReadInt32() / 32f;
 			p.Spawn.Y = r.ReadInt32() / 32f;
 			p.Spawn.Z = r.ReadInt32() / 32f;
-			p.SpawnYaw = (float)Utils.PackedToDegrees( r.ReadByte() );
-			p.SpawnPitch = (float)Utils.PackedToDegrees( r.ReadByte() );
+			p.SpawnYaw = (float)Utils.PackedToDegrees(r.ReadByte());
+			p.SpawnPitch = (float)Utils.PackedToDegrees(r.ReadByte());
 
 			r.ReadUInt32(); // date modified
 			r.ReadUInt32(); // date created
-			game.World.Uuid = new Guid( r.ReadBytes( 16 ) );
-			r.ReadBytes( 26 ); // layer index
+			game.World.Uuid = new Guid(r.ReadBytes(16));
+			r.ReadBytes(26); // layer index
 			int metaSize = r.ReadInt32();
 
-			using( DeflateStream ds = new DeflateStream( stream, CompressionMode.Decompress ) ) {
-				r = new BinaryReader( ds );
-				for( int i = 0; i < metaSize; i++ ) {
-					string group = ReadString( r );
-					string key = ReadString( r );
-					string value = ReadString( r );
+			using(DeflateStream ds = new DeflateStream(stream, CompressionMode.Decompress)) {
+				r = new BinaryReader(ds);
+				for (int i = 0; i < metaSize; i++) {
+					string group = ReadString(r);
+					string key = ReadString(r);
+					string value = ReadString(r);
 				}
 				
 				byte[] blocks = new byte[width * height * length];
-				int read = ds.Read( blocks, 0, blocks.Length );
+				int read = ds.Read(blocks, 0, blocks.Length);
 				return blocks;
 			}
 		}
 		
-		static string ReadString( BinaryReader reader ) {
+		static string ReadString(BinaryReader reader) {
 			int length = reader.ReadUInt16();
-			byte[] data = reader.ReadBytes( length );
-			return Encoding.ASCII.GetString( data );
+			byte[] data = reader.ReadBytes(length);
+			return Encoding.ASCII.GetString(data);
 		}
 	}
 }

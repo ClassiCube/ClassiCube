@@ -12,31 +12,31 @@ namespace ClassicalSharp {
 
 	public static class Platform {
 		
-		public static Bitmap CreateBmp( int width, int height ) {
+		public static Bitmap CreateBmp(int width, int height) {
 			#if !ANDROID
-			return new Bitmap( width, height );
+			return new Bitmap(width, height);
 			#else
-			return Bitmap.CreateBitmap( width, height, Bitmap.Config.Argb8888 );
+			return Bitmap.CreateBitmap(width, height, Bitmap.Config.Argb8888);
 			#endif
 		}
 		
-		public static Bitmap ReadBmp( Stream src ) {
+		public static Bitmap ReadBmp(Stream src) {
 			#if !ANDROID
-			return new Bitmap( src );
+			return new Bitmap(src);
 			#else
-			return BitmapFactory.DecodeStream( src );
+			return BitmapFactory.DecodeStream(src);
 			#endif
 		}
 		
-		public static void WriteBmp( Bitmap bmp, Stream dst ) {
+		public static void WriteBmp(Bitmap bmp, Stream dst) {
 			#if !ANDROID
-			bmp.Save( dst, ImageFormat.Png );
+			bmp.Save(dst, ImageFormat.Png);
 			#else
-			bmp.Compress( Bitmap.CompressFormat.Png, 100, dst );
+			bmp.Compress(Bitmap.CompressFormat.Png, 100, dst);
 			#endif
 		}
 		
-		public static bool Is32Bpp( Bitmap bmp ) {
+		public static bool Is32Bpp(Bitmap bmp) {
 			#if !ANDROID
 			PixelFormat format = bmp.PixelFormat;
 			return format == PixelFormat.Format32bppRgb || format == PixelFormat.Format32bppArgb; 

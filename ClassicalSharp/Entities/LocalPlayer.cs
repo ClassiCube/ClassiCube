@@ -23,7 +23,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Returns the height that the client can currently jump up to.<br/>
 		/// Note that when speeding is enabled the client is able to jump much further. </summary>
 		public float JumpHeight {
-			get { return (float)PhysicsComponent.GetMaxHeight( physics.jumpVel ); }
+			get { return (float)PhysicsComponent.GetMaxHeight(physics.jumpVel); }
 		}
 		
 		internal float curWalkTime, curSwing;
@@ -33,24 +33,24 @@ namespace ClassicalSharp.Entities {
 		internal InputComponent input;
 		internal SoundComponent sound;
 		
-		public LocalPlayer( Game game ) : base( game ) {
+		public LocalPlayer(Game game) : base(game) {
 			DisplayName = game.Username;
 			SkinName = game.Username;
 			SkinIdentifier = "skin_255";
 			
-			collisions = new CollisionsComponent( game, this );
-			Hacks = new HacksComponent( game, this );
-			physics = new PhysicsComponent( game, this );
-			input = new InputComponent( game, this );
-			sound = new SoundComponent( game, this );
+			collisions = new CollisionsComponent(game, this);
+			Hacks = new HacksComponent(game, this);
+			physics = new PhysicsComponent(game, this);
+			input = new InputComponent(game, this);
+			sound = new SoundComponent(game, this);
 			
 			physics.hacks = Hacks; input.Hacks = Hacks;
 			physics.collisions = collisions;
 			input.physics = physics;
 		}
 		
-		public override void Tick( double delta ) {
-			if( game.World.IsNotLoaded ) return;
+		public override void Tick(double delta) {
+			if (game.World.IsNotLoaded) return;
 			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks
 				&& Hacks.CanSpeed ? 1 : 0.5f;
 			OldVelocity = Velocity;
@@ -60,52 +60,52 @@ namespace ClassicalSharp.Entities {
 			lastPitch = nextPitch;
 			bool wasOnGround = onGround;
 			
-			HandleInput( ref xMoving, ref zMoving );
-			physics.DoEntityPush( ref xMoving, ref zMoving );
-			physics.UpdateVelocityState( xMoving, zMoving );
-			physics.PhysicsTick( xMoving, zMoving );
+			HandleInput(ref xMoving, ref zMoving);
+			physics.DoEntityPush(ref xMoving, ref zMoving);
+			physics.UpdateVelocityState(xMoving, zMoving);
+			physics.PhysicsTick(xMoving, zMoving);
 			
 			nextPos = Position;
 			Position = lastPos;
-			anim.UpdateAnimState( lastPos, nextPos, delta );
+			anim.UpdateAnimState(lastPos, nextPos, delta);
 			
 			CheckSkin();
-			sound.Tick( wasOnGround );
+			sound.Tick(wasOnGround);
 			UpdateCurrentBodyYaw();
 		}
 
-		public override void RenderModel( double deltaTime, float t ) {
-			anim.GetCurrentAnimState( t );
-			curSwing = Utils.Lerp( anim.swingO, anim.swingN, t );
-			curWalkTime = Utils.Lerp( anim.walkTimeO, anim.walkTimeN, t );
+		public override void RenderModel(double deltaTime, float t) {
+			anim.GetCurrentAnimState(t);
+			curSwing = Utils.Lerp(anim.swingO, anim.swingN, t);
+			curWalkTime = Utils.Lerp(anim.walkTimeO, anim.walkTimeN, t);
 			
-			if( !game.Camera.IsThirdPerson ) return;
-			Model.Render( this );
+			if (!game.Camera.IsThirdPerson) return;
+			Model.Render(this);
 		}
 		
 		public override void RenderName() {
-			if( !game.Camera.IsThirdPerson ) return;
+			if (!game.Camera.IsThirdPerson) return;
 			DrawName();
 		}
 		
-		void HandleInput( ref float xMoving, ref float zMoving ) {
-			if( game.Gui.ActiveScreen.HandlesAllInput ) {
+		void HandleInput(ref float xMoving, ref float zMoving) {
+			if (game.Gui.ActiveScreen.HandlesAllInput) {
 				physics.jumping = Hacks.Speeding = Hacks.FlyingUp = Hacks.FlyingDown = false;
 			} else {
-				if( game.IsKeyDown( KeyBind.Forward ) ) xMoving -= 0.98f;
-				if( game.IsKeyDown( KeyBind.Back ) ) xMoving += 0.98f;
-				if( game.IsKeyDown( KeyBind.Left ) ) zMoving -= 0.98f;
-				if( game.IsKeyDown( KeyBind.Right ) ) zMoving += 0.98f;
+				if (game.IsKeyDown(KeyBind.Forward)) xMoving -= 0.98f;
+				if (game.IsKeyDown(KeyBind.Back)) xMoving += 0.98f;
+				if (game.IsKeyDown(KeyBind.Left)) zMoving -= 0.98f;
+				if (game.IsKeyDown(KeyBind.Right)) zMoving += 0.98f;
 
-				physics.jumping = game.IsKeyDown( KeyBind.Jump );
-				Hacks.Speeding = Hacks.Enabled && game.IsKeyDown( KeyBind.Speed );
-				Hacks.HalfSpeeding = Hacks.Enabled && game.IsKeyDown( KeyBind.HalfSpeed );
-				Hacks.FlyingUp = game.IsKeyDown( KeyBind.FlyUp );
-				Hacks.FlyingDown = game.IsKeyDown( KeyBind.FlyDown );
+				physics.jumping = game.IsKeyDown(KeyBind.Jump);
+				Hacks.Speeding = Hacks.Enabled && game.IsKeyDown(KeyBind.Speed);
+				Hacks.HalfSpeeding = Hacks.Enabled && game.IsKeyDown(KeyBind.HalfSpeed);
+				Hacks.FlyingUp = game.IsKeyDown(KeyBind.FlyUp);
+				Hacks.FlyingDown = game.IsKeyDown(KeyBind.FlyDown);
 				
-				if( Hacks.WOMStyleHacks && Hacks.Enabled && Hacks.CanNoclip ) {
-					if( Hacks.Noclip ) Velocity = Vector3.Zero;
-					Hacks.Noclip = game.IsKeyDown( KeyBind.NoClip );
+				if (Hacks.WOMStyleHacks && Hacks.Enabled && Hacks.CanNoclip) {
+					if (Hacks.Noclip) Velocity = Vector3.Zero;
+					Hacks.Noclip = game.IsKeyDown(KeyBind.NoClip);
 				}
 			}
 		}
@@ -113,7 +113,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
 		public void CheckHacksConsistency() {
 			Hacks.CheckHacksConsistency();
-			if( !Hacks.CanJumpHigher ) {
+			if (!Hacks.CanJumpHigher) {
 				physics.jumpVel = physics.serverJumpVel;
 			}
 		}
@@ -124,76 +124,76 @@ namespace ClassicalSharp.Entities {
 		int yawStateCount;
 		float[] yawStates = new float[15];
 		
-		public override void SetLocation( LocationUpdate update, bool interpolate ) {
-			if( update.IncludesPosition ) {
+		public override void SetLocation(LocationUpdate update, bool interpolate) {
+			if (update.IncludesPosition) {
 				nextPos = update.RelativePosition ? nextPos + update.Pos : update.Pos;
-				double blockOffset = nextPos.Y - Math.Floor( nextPos.Y );
-				if( blockOffset < Entity.Adjustment )
+				double blockOffset = nextPos.Y - Math.Floor(nextPos.Y);
+				if (blockOffset < Entity.Adjustment)
 					nextPos.Y += Entity.Adjustment;
-				if( !interpolate ) {
+				if (!interpolate) {
 					lastPos = Position = nextPos;
 				}
 			}
-			if( update.IncludesOrientation ) {
+			if (update.IncludesOrientation) {
 				nextYaw = update.Yaw;
 				nextPitch = update.Pitch;
-				if( !interpolate ) {
+				if (!interpolate) {
 					lastYaw = YawDegrees = nextYaw;
 					lastPitch = PitchDegrees = nextPitch;
 					HeadYawDegrees = YawDegrees;
 					yawStateCount = 0;
 				} else {
-					for( int i = 0; i < 3; i++ )
-						AddYaw( Utils.LerpAngle( lastYaw, nextYaw, (i + 1) / 3f ) );
+					for (int i = 0; i < 3; i++)
+						AddYaw(Utils.LerpAngle(lastYaw, nextYaw, (i + 1) / 3f));
 				}
 			}
 		}
 		
 		/// <summary> Linearly interpolates position and rotation between the previous and next state. </summary>
-		public void SetInterpPosition( float t ) {
-			if( !Hacks.WOMStyleHacks || !Hacks.Noclip )
-				Position = Vector3.Lerp( lastPos, nextPos, t );
+		public void SetInterpPosition(float t) {
+			if (!Hacks.WOMStyleHacks || !Hacks.Noclip)
+				Position = Vector3.Lerp(lastPos, nextPos, t);
 			
-			HeadYawDegrees = Utils.LerpAngle( lastYaw, nextYaw, t );
-			YawDegrees = Utils.LerpAngle( oldYaw, newYaw, t );
-			PitchDegrees = Utils.LerpAngle( lastPitch, nextPitch, t );
+			HeadYawDegrees = Utils.LerpAngle(lastYaw, nextYaw, t);
+			YawDegrees = Utils.LerpAngle(oldYaw, newYaw, t);
+			PitchDegrees = Utils.LerpAngle(lastPitch, nextPitch, t);
 		}
 		
-		void AddYaw( float state ) {
-			if( yawStateCount == yawStates.Length )
-				RemoveOldest( yawStates, ref yawStateCount );
+		void AddYaw(float state) {
+			if (yawStateCount == yawStates.Length)
+				RemoveOldest(yawStates, ref yawStateCount);
 			yawStates[yawStateCount++] = state;
 		}
 		
 		void UpdateCurrentBodyYaw() {
 			oldYaw = newYaw;
-			if( yawStateCount > 0 ) {
+			if (yawStateCount > 0) {
 				newYaw = yawStates[0];
-				RemoveOldest( yawStates, ref yawStateCount );
+				RemoveOldest(yawStates, ref yawStateCount);
 			}
 		}
 		
 		void RemoveOldest<T>(T[] array, ref int count) {
-			for( int i = 0; i < array.Length - 1; i++ )
+			for (int i = 0; i < array.Length - 1; i++)
 				array[i] = array[i + 1];
 			count--;
 		}
 		
-		public void Init( Game game ) {
-			Hacks.SpeedMultiplier = Options.GetFloat( OptionsKey.Speed, 0.1f, 50, 10 );
-			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool( OptionsKey.PushbackPlacing, false );
-			Hacks.NoclipSlide = Options.GetBool( OptionsKey.NoclipSlide, false );
-			Hacks.WOMStyleHacks = !game.ClassicMode && Options.GetBool( OptionsKey.WOMStyleHacks, false );
-			Hacks.Enabled = !game.PureClassic && Options.GetBool( OptionsKey.HacksEnabled, true );
-			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool( OptionsKey.FullBlockStep, false );
+		public void Init(Game game) {
+			Hacks.SpeedMultiplier = Options.GetFloat(OptionsKey.Speed, 0.1f, 50, 10);
+			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool(OptionsKey.PushbackPlacing, false);
+			Hacks.NoclipSlide = Options.GetBool(OptionsKey.NoclipSlide, false);
+			Hacks.WOMStyleHacks = !game.ClassicMode && Options.GetBool(OptionsKey.WOMStyleHacks, false);
+			Hacks.Enabled = !game.PureClassic && Options.GetBool(OptionsKey.HacksEnabled, true);
+			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool(OptionsKey.FullBlockStep, false);
 		}
 		
-		public void Ready( Game game ) { }
-		public void OnNewMapLoaded( Game game ) { }
+		public void Ready(Game game) { }
+		public void OnNewMapLoaded(Game game) { }
 		public void Dispose() { }
-		public void OnNewMap( Game game ) { }
+		public void OnNewMap(Game game) { }
 		
-		public void Reset( Game game ) {
+		public void Reset(Game game) {
 			ReachDistance = 5;
 			Velocity = Vector3.Zero;
 			physics.jumpVel = 0.42f;

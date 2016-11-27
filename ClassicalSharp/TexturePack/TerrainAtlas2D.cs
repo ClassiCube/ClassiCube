@@ -18,40 +18,40 @@ namespace ClassicalSharp {
 		IGraphicsApi gfx;
 		IDrawer2D drawer;
 		
-		public TerrainAtlas2D( IGraphicsApi gfx, IDrawer2D drawer ) {
+		public TerrainAtlas2D(IGraphicsApi gfx, IDrawer2D drawer) {
 			this.gfx = gfx;
 			this.drawer = drawer;
 		}
 		
 		/// <summary> Updates the underlying atlas bitmap, fields, and texture. </summary>
-		public void UpdateState( BlockInfo info, Bitmap bmp ) {
-			if( !Platform.Is32Bpp( bmp ) ) {
-				Utils.LogDebug( "Converting terrain atlas to 32bpp image" );
-				drawer.ConvertTo32Bpp( ref bmp );
+		public void UpdateState(BlockInfo info, Bitmap bmp) {
+			if (!Platform.Is32Bpp(bmp)) {
+				Utils.LogDebug("Converting terrain atlas to 32bpp image");
+				drawer.ConvertTo32Bpp(ref bmp);
 			}
 			
 			AtlasBitmap = bmp;
 			elementSize = bmp.Width / ElementsPerRow;
-			using( FastBitmap fastBmp = new FastBitmap( bmp, true, true ) )
-				info.RecalculateSpriteBB( fastBmp );
+			using(FastBitmap fastBmp = new FastBitmap(bmp, true, true))
+				info.RecalculateSpriteBB(fastBmp);
 		}
 		
 		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>
-		public int LoadTextureElement( int index ) {
+		public int LoadTextureElement(int index) {
 			int size = elementSize;
-			using( FastBitmap atlas = new FastBitmap( AtlasBitmap, true, true ) )
-				using( Bitmap bmp = Platform.CreateBmp( size, size ) )
-					using( FastBitmap dst = new FastBitmap( bmp, true, false ) )
+			using(FastBitmap atlas = new FastBitmap(AtlasBitmap, true, true))
+				using(Bitmap bmp = Platform.CreateBmp(size, size))
+					using(FastBitmap dst = new FastBitmap(bmp, true, false))
 			{
 				int x = index % ElementsPerRow, y = index / ElementsPerRow;
-				FastBitmap.MovePortion( x * size, y * size, 0, 0, atlas, dst, size );
-				return gfx.CreateTexture( dst, true );
+				FastBitmap.MovePortion(x * size, y * size, 0, 0, atlas, dst, size);
+				return gfx.CreateTexture(dst, true);
 			}
 		}
 		
 		/// <summary> Disposes of the underlying atlas bitmap and texture. </summary>
 		public void Dispose() {
-			if( AtlasBitmap != null )
+			if (AtlasBitmap != null)
 				AtlasBitmap.Dispose();
 		}
 	}

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Entities {
 		
 		Game game;
 		Entity entity;
-		public HacksComponent( Game game, Entity entity ) {
+		public HacksComponent(Game game, Entity entity) {
 			this.game = game;
 			this.entity = entity;
 		}
@@ -74,53 +74,53 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Parses hack flags specified in the motd and/or name of the server. </summary>
 		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
-		public void ParseHackFlags( string name, string motd ) {
+		public void ParseHackFlags(string name, string motd) {
 			string joined = name + motd;
-			SetAllHacks( true );
+			SetAllHacks(true);
 			MaxSpeedMultiplier = 1;
 			// By default (this is also the case with WoM), we can use hacks.
-			if( joined.Contains( "-hax" ) ) SetAllHacks( false );
+			if (joined.Contains("-hax")) SetAllHacks(false);
 			
-			ParseFlag( b => CanFly = b, joined, "fly" );
-			ParseFlag( b => CanNoclip = b, joined, "noclip" );
-			ParseFlag( b => CanSpeed = b, joined, "speed" );
-			ParseFlag( b => CanRespawn = b, joined, "respawn" );
+			ParseFlag(b => CanFly = b, joined, "fly");
+			ParseFlag(b => CanNoclip = b, joined, "noclip");
+			ParseFlag(b => CanSpeed = b, joined, "speed");
+			ParseFlag(b => CanRespawn = b, joined, "respawn");
 
-			if( UserType == 0x64 )
-				ParseFlag( b => SetAllHacks( b ), joined, "ophax" );
-			ParseHorizontalSpeed( joined );
+			if (UserType == 0x64)
+				ParseFlag(b => SetAllHacks(b), joined, "ophax");
+			ParseHorizontalSpeed(joined);
 		}
 		
-		void ParseHorizontalSpeed( string joined ) {
-			int start = joined.IndexOf( "horspeed=", StringComparison.OrdinalIgnoreCase );
-			if( start < 0 ) return;
+		void ParseHorizontalSpeed(string joined) {
+			int start = joined.IndexOf("horspeed=", StringComparison.OrdinalIgnoreCase);
+			if (start < 0) return;
 			start += 9;
 			
-			int end = joined.IndexOf(' ', start );
-			if( end < 0 ) end = joined.Length;
+			int end = joined.IndexOf(' ', start);
+			if (end < 0) end = joined.Length;
 			
-			string num = joined.Substring( start, end - start );
+			string num = joined.Substring(start, end - start);
 			float value = 0;
-			if( !Utils.TryParseDecimal( num, out value ) || value <= 0 ) return;
+			if (!Utils.TryParseDecimal(num, out value) || value <= 0) return;
 			MaxSpeedMultiplier = value;
 		}
 		
-		void SetAllHacks( bool allowed ) {
+		void SetAllHacks(bool allowed) {
 			CanAnyHacks = CanFly = CanNoclip = CanRespawn = CanSpeed =
 				CanPushbackBlocks = CanUseThirdPersonCamera = allowed;
 		}
 		
-		static void ParseFlag( Action<bool> action, string joined, string flag ) {
-			if( joined.Contains( "+" + flag ) ) {
-				action( true );
-			} else if( joined.Contains( "-" + flag ) ) {
-				action( false );
+		static void ParseFlag(Action<bool> action, string joined, string flag) {
+			if (joined.Contains("+" + flag)) {
+				action(true);
+			} else if (joined.Contains("-" + flag)) {
+				action(false);
 			}
 		}
 		
 		/// <summary> Sets the user type of this user. This is used to control permissions for grass,
 		/// bedrock, water and lava blocks on servers that don't support CPE block permissions. </summary>
-		public void SetUserType( byte value ) {
+		public void SetUserType(byte value) {
 			bool isOp = value >= 100 && value <= 127;
 			UserType = value;
 			Inventory inv = game.Inventory;
@@ -136,12 +136,12 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
 		public void CheckHacksConsistency() {
-			if( !CanFly || !Enabled ) { Flying = false; FlyingDown = false; FlyingUp = false; }
-			if( !CanNoclip || !Enabled ) Noclip = false;
-			if( !CanSpeed || !Enabled ) { Speeding = false; HalfSpeeding = false; }
+			if (!CanFly || !Enabled) { Flying = false; FlyingDown = false; FlyingUp = false; }
+			if (!CanNoclip || !Enabled) Noclip = false;
+			if (!CanSpeed || !Enabled) { Speeding = false; HalfSpeeding = false; }
 			CanDoubleJump = CanAnyHacks && Enabled && CanSpeed;
 			
-			if( !CanUseThirdPersonCamera || !Enabled )
+			if (!CanUseThirdPersonCamera || !Enabled)
 				game.CycleCamera();
 		}
 	}

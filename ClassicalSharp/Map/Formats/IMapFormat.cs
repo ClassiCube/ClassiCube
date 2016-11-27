@@ -9,7 +9,7 @@ namespace ClassicalSharp.Map {
 	public interface IMapFormatImporter {
 		
 		/// <summary> Replaces the current world from a stream that contains a world in this format. </summary>
-		byte[] Load( Stream stream, Game game, out int width, out int height, out int length );
+		byte[] Load(Stream stream, Game game, out int width, out int height, out int length);
 	}
 	
 	/// <summary> Exports the current world and metadata associated 
@@ -17,6 +17,6 @@ namespace ClassicalSharp.Map {
 	public interface IMapFormatExporter {
 		
 		/// <summary> Exports the current world to a file in this format. </summary>
-		void Save( Stream stream, Game game );
+		void Save(Stream stream, Game game);
 	}
 }

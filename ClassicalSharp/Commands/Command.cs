@@ -16,6 +16,6 @@ namespace ClassicalSharp.Commands {
 		
 		protected internal Game game;
 		
-		public abstract void Execute( string[] args );
+		public abstract void Execute(string[] args);
 	}
 }

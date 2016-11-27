@@ -7,7 +7,7 @@ namespace ClassicalSharp.Gui.Widgets {
 	/// <summary> Represents an individual 2D gui component. </summary>
 	public abstract class Widget : GuiElement {
 		
-		public Widget( Game game ) : base( game ) {
+		public Widget(Game game) : base(game) {
 			HorizontalAnchor = Anchor.LeftOrTop;
 			VerticalAnchor = Anchor.LeftOrTop;
 		}
@@ -46,20 +46,20 @@ namespace ClassicalSharp.Gui.Widgets {
 		public int YOffset;
 		
 		/// <summary> Width and height of widget in pixels. </summary>
-		public Size Size { get { return new Size( Width, Height ); } }
+		public Size Size { get { return new Size(Width, Height); } }
 		
 		/// <summary> Coordinate of top left corner of widget's bounds in pixels. </summary>
-		public Point TopLeft { get { return new Point( X, Y ); } }
+		public Point TopLeft { get { return new Point(X, Y); } }
 		
 		/// <summary> Coordinate of bottom right corner of widget's bounds in pixels. </summary>
-		public Point BottomRight { get { return new Point( X + Width, Y + Height ); } }
+		public Point BottomRight { get { return new Point(X + Width, Y + Height); } }
 		
 		/// <summary> Specifies the boundaries of the widget in pixels. </summary>
-		public Rectangle Bounds { get { return new Rectangle( X, Y, Width, Height ); } }
+		public Rectangle Bounds { get { return new Rectangle(X, Y, Width, Height); } }
 		
 		public virtual void CalculatePosition() {
-			X = CalcPos( HorizontalAnchor, XOffset, Width, game.Width );
-			Y = CalcPos( VerticalAnchor, YOffset, Height, game.Height );
+			X = CalcPos(HorizontalAnchor, XOffset, Width, game.Width);
+			Y = CalcPos(VerticalAnchor, YOffset, Height, game.Height);
 		}
 	}
 }

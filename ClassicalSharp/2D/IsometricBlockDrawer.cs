@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 		VertexP3fT2fC4b[] vertices;
 		int vb;
 		
-		public void BeginBatch( Game game, VertexP3fT2fC4b[] vertices, int vb ) {
+		public void BeginBatch(Game game, VertexP3fT2fC4b[] vertices, int vb) {
 			this.game = game;
 			lastIndex = -1;
 			index = 0;
@@ -30,61 +30,61 @@ namespace ClassicalSharp {
 		static int colNormal = FastColour.WhitePacked, colXSide, colZSide, colYBottom;
 		static float cosX, sinX, cosY, sinY;
 		static IsometricBlockDrawer() {
-			FastColour.GetShaded( FastColour.White, out colXSide, out colZSide, out colYBottom );
-			cosX = (float)Math.Cos( 26.565f * Utils.Deg2Rad );
-			sinX = (float)Math.Sin( 26.565f * Utils.Deg2Rad );
-			cosY = (float)Math.Cos( -45f * Utils.Deg2Rad );
-			sinY = (float)Math.Sin( -45f * Utils.Deg2Rad );
+			FastColour.GetShaded(FastColour.White, out colXSide, out colZSide, out colYBottom);
+			cosX = (float)Math.Cos(26.565f * Utils.Deg2Rad);
+			sinX = (float)Math.Sin(26.565f * Utils.Deg2Rad);
+			cosY = (float)Math.Cos(-45f * Utils.Deg2Rad);
+			sinY = (float)Math.Sin(-45f * Utils.Deg2Rad);
 		}
 		
-		public void DrawBatch( byte block, float size, float x, float y ) {
+		public void DrawBatch(byte block, float size, float x, float y) {
 			BlockInfo info = game.BlockInfo;
 			atlas = game.TerrainAtlas1D;
 			minBB = info.MinBB[block];
 			maxBB = info.MaxBB[block];
 			fullBright = info.FullBright[block];
 			
-			if( info.Draw[block] == DrawType.Sprite ) {
+			if (info.Draw[block] == DrawType.Sprite) {
 				minBB = Vector3.Zero; maxBB = Vector3.One; 
 			}
-			if( info.Draw[block] == DrawType.Gas ) return;
+			if (info.Draw[block] == DrawType.Gas) return;
 			
 			// isometric coords size: cosY * -scale - sinY * scale
 			// we need to divide by (2 * cosY), as the calling function expects size to be in pixels.
 			scale = size / (2 * cosY);
 			// screen to isometric coords (cos(-x) = cos(x), sin(-x) = -sin(x))
 			pos.X = x; pos.Y = y; pos.Z = 0;
-			Utils.RotateX( ref pos.Y, ref pos.Z, cosX, -sinX );
-			Utils.RotateY( ref pos.X, ref pos.Z, cosY, -sinY );
+			Utils.RotateX(ref pos.Y, ref pos.Z, cosX, -sinX);
+			Utils.RotateY(ref pos.X, ref pos.Z, cosY, -sinY);
 			
-			if( info.Draw[block] == DrawType.Sprite ) {
-				SpriteXQuad( block, true );
-				SpriteZQuad( block, true );				
+			if (info.Draw[block] == DrawType.Sprite) {
+				SpriteXQuad(block, true);
+				SpriteZQuad(block, true);				
 				
-				SpriteZQuad( block, false );
-				SpriteXQuad( block, false );				
+				SpriteZQuad(block, false);
+				SpriteXQuad(block, false);				
 			} else {
-				XQuad( block, maxBB.X, Side.Left );
-				ZQuad( block, minBB.Z, Side.Back );
-				YQuad( block, maxBB.Y, Side.Top );
+				XQuad(block, maxBB.X, Side.Left);
+				ZQuad(block, minBB.Z, Side.Back);
+				YQuad(block, maxBB.Y, Side.Top);
 			}
 		}
 		
 		public void EndBatch() {
-			if( index == 0 ) return;
-			if( texIndex != lastIndex )
-				game.Graphics.BindTexture( atlas.TexIds[texIndex] );
-			game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles,
-			                                     vb, vertices, index );
+			if (index == 0) return;
+			if (texIndex != lastIndex)
+				game.Graphics.BindTexture(atlas.TexIds[texIndex]);
+			game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles,
+			                                     vb, vertices, index);
 			index = 0;
 			lastIndex = -1;
 		}
 
 		static Vector3 pos = Vector3.Zero;
-		void YQuad( byte block, float y, int side ) {
-			int texLoc = game.BlockInfo.GetTextureLoc( block, side );
+		void YQuad(byte block, float y, int side) {
+			int texLoc = game.BlockInfo.GetTextureLoc(block, side);
 			texIndex = texLoc / atlas.elementsPerAtlas1D;
-			if( lastIndex != texIndex ) Flush();
+			if (lastIndex != texIndex) Flush();
 		
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
@@ -98,16 +98,16 @@ namespace ClassicalSharp {
 			y = scale * (1 - y * 2);			
 			float minX = scale * (1 - minBB.X * 2), maxX = scale * (1 - maxBB.X * 2);
 			float minZ = scale * (1 - minBB.Z * 2), maxZ = scale * (1 - maxBB.Z * 2);
-			v.X = minX; v.Y = y; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; Transform( ref v );
-			v.X = maxX; v.Y = y; v.Z = minZ; v.U = rec.U1; v.V = rec.V2; Transform( ref v );
-			v.X = maxX; v.Y = y; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; Transform( ref v );
-			v.X = minX; v.Y = y; v.Z = maxZ; v.U = rec.U2; v.V = rec.V1; Transform( ref v );
+			v.X = minX; v.Y = y; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
+			v.X = maxX; v.Y = y; v.Z = minZ; v.U = rec.U1; v.V = rec.V2; Transform(ref v);
+			v.X = maxX; v.Y = y; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; Transform(ref v);
+			v.X = minX; v.Y = y; v.Z = maxZ; v.U = rec.U2; v.V = rec.V1; Transform(ref v);
 		}
 
-		void ZQuad( byte block, float z, int side ) {
-			int texLoc = game.BlockInfo.GetTextureLoc( block, side );
+		void ZQuad(byte block, float z, int side) {
+			int texLoc = game.BlockInfo.GetTextureLoc(block, side);
 			texIndex = texLoc / atlas.elementsPerAtlas1D;
-			if( lastIndex != texIndex ) Flush();
+			if (lastIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = fullBright ? colNormal : colZSide;
@@ -121,16 +121,16 @@ namespace ClassicalSharp {
 			z = scale * (1 - z * 2);			
 			float minX = scale * (1 - minBB.X * 2), maxX = scale * (1 - maxBB.X * 2);
 			float minY = scale * (1 - minBB.Y * 2), maxY = scale * (1 - maxBB.Y * 2);			
-			v.X = minX; v.Y = maxY; v.Z = z; v.U = rec.U2; v.V = rec.V2; Transform( ref v );
-			v.X = minX; v.Y = minY; v.Z = z; v.U = rec.U2; v.V = rec.V1; Transform( ref v );
-			v.X = maxX; v.Y = minY; v.Z = z; v.U = rec.U1; v.V = rec.V1; Transform( ref v );
-			v.X = maxX; v.Y = maxY; v.Z = z; v.U = rec.U1; v.V = rec.V2; Transform( ref v );
+			v.X = minX; v.Y = maxY; v.Z = z; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
+			v.X = minX; v.Y = minY; v.Z = z; v.U = rec.U2; v.V = rec.V1; Transform(ref v);
+			v.X = maxX; v.Y = minY; v.Z = z; v.U = rec.U1; v.V = rec.V1; Transform(ref v);
+			v.X = maxX; v.Y = maxY; v.Z = z; v.U = rec.U1; v.V = rec.V2; Transform(ref v);
 		}
 
-		void XQuad( byte block, float x, int side ) {
-			int texLoc = game.BlockInfo.GetTextureLoc( block, side );
+		void XQuad(byte block, float x, int side) {
+			int texLoc = game.BlockInfo.GetTextureLoc(block, side);
 			texIndex = texLoc / atlas.elementsPerAtlas1D;
-			if( lastIndex != texIndex ) Flush();
+			if (lastIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = fullBright ? colNormal : colXSide;
@@ -144,16 +144,16 @@ namespace ClassicalSharp {
 			x = scale * (1 - x * 2);
 			float minY = scale * (1 - minBB.Y * 2), maxY = scale * (1 - maxBB.Y * 2);
 			float minZ = scale * (1 - minBB.Z * 2), maxZ = scale * (1 - maxBB.Z * 2);	
-			v.X = x; v.Y = maxY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; Transform( ref v );
-			v.X = x; v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V1; Transform( ref v );
-			v.X = x; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; Transform( ref v );
-			v.X = x; v.Y = maxY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V2; Transform( ref v );
+			v.X = x; v.Y = maxY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
+			v.X = x; v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V1; Transform(ref v);
+			v.X = x; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; Transform(ref v);
+			v.X = x; v.Y = maxY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V2; Transform(ref v);
 		}
 		
-		void SpriteZQuad( byte block, bool firstPart ) {
-			int texLoc = game.BlockInfo.GetTextureLoc( block, Side.Right );
-			TextureRec rec = atlas.GetTexRec( texLoc, 1, out texIndex );
-			if( lastIndex != texIndex ) Flush();
+		void SpriteZQuad(byte block, bool firstPart) {
+			int texLoc = game.BlockInfo.GetTextureLoc(block, Side.Right);
+			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
+			if (lastIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
@@ -163,16 +163,16 @@ namespace ClassicalSharp {
 			float minX = scale * (1 - x1 * 2), maxX = scale * (1 - x2 * 2);
 			float minY = scale * (1 - 0 * 2), maxY = scale * (1 - 1.1f * 2);			
 			
-			v.X = minX; v.Y = minY; v.Z = 0; v.U = rec.U2; v.V = rec.V2; Transform( ref v );
-			v.X = minX; v.Y = maxY; v.Z = 0; v.U = rec.U2; v.V = rec.V1; Transform( ref v );
-			v.X = maxX; v.Y = maxY; v.Z = 0; v.U = rec.U1; v.V = rec.V1; Transform( ref v );
-			v.X = maxX; v.Y = minY; v.Z = 0; v.U = rec.U1; v.V = rec.V2; Transform( ref v );
+			v.X = minX; v.Y = minY; v.Z = 0; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
+			v.X = minX; v.Y = maxY; v.Z = 0; v.U = rec.U2; v.V = rec.V1; Transform(ref v);
+			v.X = maxX; v.Y = maxY; v.Z = 0; v.U = rec.U1; v.V = rec.V1; Transform(ref v);
+			v.X = maxX; v.Y = minY; v.Z = 0; v.U = rec.U1; v.V = rec.V2; Transform(ref v);
 		}
 
-		void SpriteXQuad( byte block, bool firstPart ) {
-			int texLoc = game.BlockInfo.GetTextureLoc( block, Side.Right );
-			TextureRec rec = atlas.GetTexRec( texLoc, 1, out texIndex );
-			if( lastIndex != texIndex ) Flush();
+		void SpriteXQuad(byte block, bool firstPart) {
+			int texLoc = game.BlockInfo.GetTextureLoc(block, Side.Right);
+			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
+			if (lastIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
@@ -182,26 +182,26 @@ namespace ClassicalSharp {
 			float minY = scale * (1 - 0 * 2), maxY = scale * (1 - 1.1f * 2);
 			float minZ = scale * (1 - z1 * 2), maxZ = scale * (1 - z2 * 2);
 			
-			v.X = 0; v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; Transform( ref v );
-			v.X = 0; v.Y = maxY; v.Z = minZ; v.U = rec.U2; v.V = rec.V1; Transform( ref v );
-			v.X = 0; v.Y = maxY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; Transform( ref v );
-			v.X = 0; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V2; Transform( ref v );
+			v.X = 0; v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
+			v.X = 0; v.Y = maxY; v.Z = minZ; v.U = rec.U2; v.V = rec.V1; Transform(ref v);
+			v.X = 0; v.Y = maxY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; Transform(ref v);
+			v.X = 0; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V2; Transform(ref v);
 		}
 		
 		int lastIndex, texIndex;
 		void Flush() {
-			if( lastIndex != -1 ) {
-				game.Graphics.UpdateDynamicIndexedVb( DrawMode.Triangles, vb, vertices, index );
+			if (lastIndex != -1) {
+				game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
 				index = 0;
 			}
 			lastIndex = texIndex;
-			game.Graphics.BindTexture( atlas.TexIds[texIndex] );
+			game.Graphics.BindTexture(atlas.TexIds[texIndex]);
 		}
 		
-		void Transform( ref VertexP3fT2fC4b v ) {
+		void Transform(ref VertexP3fT2fC4b v) {
 			v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
-			//Vector3 p = new Vector3( v.X, v.Y, v.Z ) + pos;
-			//p = Utils.RotateY( p - pos, time ) + pos;
+			//Vector3 p = new Vector3(v.X, v.Y, v.Z) + pos;
+			//p = Utils.RotateY(p - pos, time) + pos;
 			//v coords = p
 			
 			// See comment in IGraphicsApi.Draw2DTexture()

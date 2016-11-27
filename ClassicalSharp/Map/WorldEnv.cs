@@ -11,16 +11,16 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Colour of the sky located behind/above clouds. </summary>
 		public FastColour SkyCol = DefaultSkyColour;
-		public static readonly FastColour DefaultSkyColour = new FastColour( 0x99, 0xCC, 0xFF );
+		public static readonly FastColour DefaultSkyColour = new FastColour(0x99, 0xCC, 0xFF);
 		
 		/// <summary> Colour applied to the fog/horizon looking out horizontally.
 		/// Note the true horizon colour is a blend of this and sky colour. </summary>
 		public FastColour FogCol = DefaultFogColour;
-		public static readonly FastColour DefaultFogColour = new FastColour( 0xFF, 0xFF, 0xFF );
+		public static readonly FastColour DefaultFogColour = new FastColour(0xFF, 0xFF, 0xFF);
 		
 		/// <summary> Colour applied to the clouds. </summary>
 		public FastColour CloudsCol = DefaultCloudsColour;
-		public static readonly FastColour DefaultCloudsColour =  new FastColour( 0xFF, 0xFF, 0xFF );
+		public static readonly FastColour DefaultCloudsColour =  new FastColour(0xFF, 0xFF, 0xFF);
 		
 		/// <summary> Height of the clouds in world space. </summary>
 		public int CloudHeight;
@@ -37,12 +37,12 @@ namespace ClassicalSharp.Map {
 		/// <summary> Colour applied to blocks located in direct sunlight. </summary>
 		public FastColour Sunlight;
 		public int Sun, SunXSide, SunZSide, SunYBottom;
-		public static readonly FastColour DefaultSunlight = new FastColour( 0xFF, 0xFF, 0xFF );
+		public static readonly FastColour DefaultSunlight = new FastColour(0xFF, 0xFF, 0xFF);
 		
 		/// <summary> Colour applied to blocks located in shadow / hidden from direct sunlight. </summary>
 		public FastColour Shadowlight;
 		public int Shadow, ShadowXSide, ShadowZSide, ShadowYBottom;
-		public static readonly FastColour DefaultShadowlight = new FastColour( 0x9B, 0x9B, 0x9B );
+		public static readonly FastColour DefaultShadowlight = new FastColour(0x9B, 0x9B, 0x9B);
 		
 		/// <summary> Current weather for this particular map. </summary>
 		public Weather Weather = Weather.Sunny;
@@ -61,7 +61,7 @@ namespace ClassicalSharp.Map {
 		public int SidesHeight { get { return EdgeHeight - 2; } }
 		
 		Game game;
-		public WorldEnv( Game game ) {
+		public WorldEnv(Game game) {
 			this.game = game;
 			ResetLight();
 		}
@@ -86,105 +86,105 @@ namespace ClassicalSharp.Map {
 		void ResetLight() {
 			Shadowlight = DefaultShadowlight;
 			Shadow = Shadowlight.Pack();		
-			FastColour.GetShaded( Shadowlight, out ShadowXSide,
-			                     out ShadowZSide, out ShadowYBottom );
+			FastColour.GetShaded(Shadowlight, out ShadowXSide,
+			                     out ShadowZSide, out ShadowYBottom);
 			
 			Sunlight = DefaultSunlight;
 			Sun = Sunlight.Pack();			
-			FastColour.GetShaded( Sunlight, out SunXSide,
-			                     out SunZSide, out SunYBottom );
+			FastColour.GetShaded(Sunlight, out SunXSide,
+			                     out SunZSide, out SunYBottom);
 		}
 		
 		/// <summary> Sets sides block to the given block, and raises
 		/// EnvVariableChanged event with variable 'SidesBlock'. </summary>
-		public void SetSidesBlock( byte block ) {
-			if( block == SidesBlock ) return;
-			if( block == Block.MaxDefinedBlock ) {
-				Utils.LogDebug( "Tried to set sides block to an invalid block: " + block );
+		public void SetSidesBlock(byte block) {
+			if (block == SidesBlock) return;
+			if (block == Block.MaxDefinedBlock) {
+				Utils.LogDebug("Tried to set sides block to an invalid block: " + block);
 				block = Block.Bedrock;
 			}
 			SidesBlock = block;
-			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.SidesBlock );
+			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.SidesBlock);
 		}
 		
 		/// <summary> Sets edge block to the given block, and raises
 		/// EnvVariableChanged event with variable 'EdgeBlock'. </summary>
-		public void SetEdgeBlock( byte block ) {
-			if( block == EdgeBlock ) return;
-			if( block == Block.MaxDefinedBlock ) {
-				Utils.LogDebug( "Tried to set edge block to an invalid block: " + block );
+		public void SetEdgeBlock(byte block) {
+			if (block == EdgeBlock) return;
+			if (block == Block.MaxDefinedBlock) {
+				Utils.LogDebug("Tried to set edge block to an invalid block: " + block);
 				block = Block.StillWater;
 			}
 			EdgeBlock = block;
-			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.EdgeBlock );
+			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.EdgeBlock);
 		}
 		
 		/// <summary> Sets clouds height in world space, and raises
 		/// EnvVariableChanged event with variable 'CloudsLevel'. </summary>
-		public void SetCloudsLevel( int level ) { Set( level, ref CloudHeight, EnvVar.CloudsLevel ); }
+		public void SetCloudsLevel(int level) { Set(level, ref CloudHeight, EnvVar.CloudsLevel); }
 		
 		/// <summary> Sets clouds speed, and raises EnvVariableChanged
 		/// event with variable 'CloudsSpeed'. </summary>
-		public void SetCloudsSpeed( float speed ) { Set( speed, ref CloudsSpeed, EnvVar.CloudsSpeed ); }
+		public void SetCloudsSpeed(float speed) { Set(speed, ref CloudsSpeed, EnvVar.CloudsSpeed); }
 		
 		/// <summary> Sets weather speed, and raises EnvVariableChanged
 		/// event with variable 'WeatherSpeed'. </summary>
-		public void SetWeatherSpeed( float speed ) { Set( speed, ref WeatherSpeed, EnvVar.WeatherSpeed ); }
+		public void SetWeatherSpeed(float speed) { Set(speed, ref WeatherSpeed, EnvVar.WeatherSpeed); }
 		
 		/// <summary> Sets weather fade rate, and raises EnvVariableChanged
 		/// event with variable 'WeatherFade'. </summary>
-		public void SetWeatherFade( float rate ) { Set( rate, ref WeatherFade, EnvVar.WeatherFade ); }
+		public void SetWeatherFade(float rate) { Set(rate, ref WeatherFade, EnvVar.WeatherFade); }
 		
 		/// <summary> Sets height of the map edges in world space, and raises
 		/// EnvVariableChanged event with variable 'EdgeLevel'. </summary>
-		public void SetEdgeLevel( int level ) { Set( level, ref EdgeHeight, EnvVar.EdgeLevel ); }
+		public void SetEdgeLevel(int level) { Set(level, ref EdgeHeight, EnvVar.EdgeLevel); }
 		
 		/// <summary> Sets tsky colour, and raises
 		/// EnvVariableChanged event with variable 'SkyColour'. </summary>
-		public void SetSkyColour( FastColour col ) { Set( col, ref SkyCol, EnvVar.SkyColour ); }
+		public void SetSkyColour(FastColour col) { Set(col, ref SkyCol, EnvVar.SkyColour); }
 		
 		/// <summary> Sets fog colour, and raises
 		/// EnvVariableChanged event with variable 'FogColour'. </summary>
-		public void SetFogColour( FastColour col ) { Set( col, ref FogCol, EnvVar.FogColour ); }
+		public void SetFogColour(FastColour col) { Set(col, ref FogCol, EnvVar.FogColour); }
 		
 		/// <summary> Sets clouds colour, and raises
 		/// EnvVariableChanged event with variable 'CloudsColour'. </summary>
-		public void SetCloudsColour( FastColour col ) { Set( col, ref CloudsCol, EnvVar.CloudsColour ); }
+		public void SetCloudsColour(FastColour col) { Set(col, ref CloudsCol, EnvVar.CloudsColour); }
 		
 		/// <summary> Sets sunlight colour, and raises
 		/// EnvVariableChanged event with variable 'SunlightColour'. </summary>
-		public void SetSunlight( FastColour col ) {
-			if( !Set( col, ref Sunlight, EnvVar.SunlightColour ) ) return;
+		public void SetSunlight(FastColour col) {
+			if (!Set(col, ref Sunlight, EnvVar.SunlightColour)) return;
 			
-			FastColour.GetShaded( Sunlight, out SunXSide,
-			                     out SunZSide, out SunYBottom );
+			FastColour.GetShaded(Sunlight, out SunXSide,
+			                     out SunZSide, out SunYBottom);
 			Sun = Sunlight.Pack();
-			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.SunlightColour );
+			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.SunlightColour);
 		}
 		
 		/// <summary> Sets current shadowlight colour, and raises
 		/// EnvVariableChanged event with variable 'ShadowlightColour'. </summary>
-		public void SetShadowlight( FastColour col ) {
-			if( !Set( col, ref Shadowlight, EnvVar.ShadowlightColour ) ) return;
+		public void SetShadowlight(FastColour col) {
+			if (!Set(col, ref Shadowlight, EnvVar.ShadowlightColour)) return;
 			
-			FastColour.GetShaded( Shadowlight, out ShadowXSide,
-			                     out ShadowZSide, out ShadowYBottom );			
+			FastColour.GetShaded(Shadowlight, out ShadowXSide,
+			                     out ShadowZSide, out ShadowYBottom);			
 			Shadow = Shadowlight.Pack();
-			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.ShadowlightColour );
+			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.ShadowlightColour);
 		}
 		
 		/// <summary> Sets weather, and raises
 		/// EnvVariableChanged event with variable 'Weather'. </summary>
-		public void SetWeather( Weather weather ) {
-			if( weather == Weather ) return;
+		public void SetWeather(Weather weather) {
+			if (weather == Weather) return;
 			Weather = weather;
-			game.WorldEvents.RaiseEnvVariableChanged( EnvVar.Weather );
+			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.Weather);
 		}
 		
-		bool Set<T>( T value, ref T target, EnvVar var ) where T : IEquatable<T> {
-			if( value.Equals( target ) ) return false;
+		bool Set<T>(T value, ref T target, EnvVar var) where T : IEquatable<T> {
+			if (value.Equals(target)) return false;
 			target = value;
-			game.WorldEvents.RaiseEnvVariableChanged( var );
+			game.WorldEvents.RaiseEnvVariableChanged(var);
 			return true;
 		}
 	}

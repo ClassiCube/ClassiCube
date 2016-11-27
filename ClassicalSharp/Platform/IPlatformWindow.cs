@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		
 		KeyboardDevice Keyboard { get; }
 		
-		Point PointToScreen( Point coords );
+		Point PointToScreen(Point coords);
 		
 		WindowState WindowState { get; set; }
 		

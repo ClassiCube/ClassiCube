@@ -5,14 +5,14 @@ namespace ClassicalSharp.Entities {
 	public sealed class TabList : IGameComponent {
 		public TabListEntry[] Entries = new TabListEntry[256];
 		
-		public void Init( Game game ) { }		
-		public void Ready( Game game ) { }
-		public void OnNewMapLoaded( Game game ) { }
+		public void Init(Game game) { }		
+		public void Ready(Game game) { }
+		public void OnNewMapLoaded(Game game) { }
 		public void Dispose() { }
-		public void OnNewMap( Game game ) { }
+		public void OnNewMap(Game game) { }
 		
-		public void Reset( Game game ) {
-			for( int i = 0; i < Entries.Length; i++ )
+		public void Reset(Game game) {
+			for (int i = 0; i < Entries.Length; i++)
 				Entries[i] = null;
 		}
 	}
@@ -38,8 +38,8 @@ namespace ClassicalSharp.Entities {
 		/// so a player's group rank is not a unique identifier. </remarks>
 		public byte GroupRank;
 		
-		public TabListEntry( byte id, string playerName, string listName,
-		                    string groupName, byte groupRank ) {
+		public TabListEntry(byte id, string playerName, string listName,
+		                    string groupName, byte groupRank) {
 			NameId = id;
 			PlayerName = playerName;
 			ListName = listName;

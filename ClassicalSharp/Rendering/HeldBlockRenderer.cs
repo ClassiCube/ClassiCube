@@ -18,62 +18,62 @@ namespace ClassicalSharp.Renderers {
 		FakePlayer held;
 		Matrix4 heldBlockProj;		
 		
-		public void Init( Game game ) {
+		public void Init(Game game) {
 			this.game = game;
-			block = new BlockModel( game );
+			block = new BlockModel(game);
 			block.NoShade = true;
-			held = new FakePlayer( game );
+			held = new FakePlayer(game);
 			game.Events.ProjectionChanged += ProjectionChanged;
 			
 			anim = new HeldBlockAnimation();
-			anim.Init( game, this );
+			anim.Init(game, this);
 		}
 
-		public void Ready( Game game ) { }
-		public void Reset( Game game ) { }
-		public void OnNewMap( Game game ) { }
-		public void OnNewMapLoaded( Game game ) { }
+		public void Ready(Game game) { }
+		public void Reset(Game game) { }
+		public void OnNewMap(Game game) { }
+		public void OnNewMapLoaded(Game game) { }
 		
-		public void Render( double delta ) {
-			if( game.Camera.IsThirdPerson || !game.ShowBlockInHand ) return;
+		public void Render(double delta) {
+			if (game.Camera.IsThirdPerson || !game.ShowBlockInHand) return;
 
 			Vector3 last = anim.pos;
 			anim.pos = Vector3.Zero;
 			type = game.Inventory.HeldBlock;
 			block.CosX = 1; block.SinX = 0;
 			block.SwitchOrder = false;			
-			if( anim.doAnim ) anim.Update( delta, last );
+			if (anim.doAnim) anim.Update(delta, last);
 			
 			SetMatrix();
-			game.Graphics.SetMatrixMode( MatrixType.Projection );
-			game.Graphics.LoadMatrix( ref heldBlockProj );
+			game.Graphics.SetMatrixMode(MatrixType.Projection);
+			game.Graphics.LoadMatrix(ref heldBlockProj);
 			bool translucent = game.BlockInfo.Draw[type] == DrawType.Translucent;
 			
 			game.Graphics.Texturing = true;
-			if( translucent ) game.Graphics.AlphaBlending = true;
+			if (translucent) game.Graphics.AlphaBlending = true;
 			else game.Graphics.AlphaTest = true;
 			game.Graphics.DepthTest = false;
 			
 			SetPos();
-			block.Render( held );
+			block.Render(held);
 			
-			game.Graphics.LoadMatrix( ref game.Projection );
-			game.Graphics.SetMatrixMode( MatrixType.Modelview );
-			game.Graphics.LoadMatrix( ref game.View );
+			game.Graphics.LoadMatrix(ref game.Projection);
+			game.Graphics.SetMatrixMode(MatrixType.Modelview);
+			game.Graphics.LoadMatrix(ref game.View);
 			
 			game.Graphics.Texturing = false;
-			if( translucent ) game.Graphics.AlphaBlending = false;
+			if (translucent) game.Graphics.AlphaBlending = false;
 			else game.Graphics.AlphaTest = false;
 			game.Graphics.DepthTest = true;
 		}
 		
-		static Vector3 nOffset = new Vector3( 0.56f, -0.72f, -0.72f );
-		static Vector3 sOffset = new Vector3( 0.46f, -0.52f, -0.72f );		
+		static Vector3 nOffset = new Vector3(0.56f, -0.72f, -0.72f);
+		static Vector3 sOffset = new Vector3(0.46f, -0.52f, -0.72f);		
 		void SetMatrix() {
 			Player p = game.LocalPlayer;
 			Vector3 eyePos = p.EyePosition;
-			Matrix4 m = Matrix4.LookAt( eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY ) * game.Camera.tiltM;
-			game.Graphics.LoadMatrix( ref m );
+			Matrix4 m = Matrix4.LookAt(eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY) * game.Camera.tiltM;
+			game.Graphics.LoadMatrix(ref m);
 		}
 	   
 		void SetPos() {
@@ -86,7 +86,7 @@ namespace ClassicalSharp.Renderers {
 		   
 			held.Position = p.EyePosition + anim.pos;
 			held.Position += offset;
-			if( !sprite ) {
+			if (!sprite) {
 				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
 				held.Position.Y += 0.2f * (1 - height);
 			}
@@ -101,11 +101,11 @@ namespace ClassicalSharp.Renderers {
 			held.Block = type;
 		}
 		
-		void ProjectionChanged( object sender, EventArgs e ) {
+		void ProjectionChanged(object sender, EventArgs e) {
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
-			heldBlockProj = Matrix4.CreatePerspectiveFieldOfView( 70 * Utils.Deg2Rad,
-																 aspectRatio, zNear, game.ViewDistance );
+			heldBlockProj = Matrix4.CreatePerspectiveFieldOfView(70 * Utils.Deg2Rad,
+																 aspectRatio, zNear, game.ViewDistance);
 		}
 		
 		public void Dispose() {
@@ -118,15 +118,15 @@ namespace ClassicalSharp.Renderers {
 	/// block model rendering code. </summary>
 	internal class FakePlayer : Player {
 		
-		public FakePlayer( Game game ) : base( game ) {
+		public FakePlayer(Game game) : base(game) {
 		}
 		public byte Block;
 		
-		public override void SetLocation( LocationUpdate update, bool interpolate ) { }
+		public override void SetLocation(LocationUpdate update, bool interpolate) { }
 		
-		public override void Tick( double delta ) { }
+		public override void Tick(double delta) { }
 
-		public override void RenderModel( double deltaTime, float t ) { }
+		public override void RenderModel(double deltaTime, float t) { }
 		
 		public override void RenderName() { }
 	}

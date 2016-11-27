@@ -12,14 +12,14 @@ namespace ClassicalSharp {
 	public sealed class DesktopWindow : GameWindow, IPlatformWindow {
 		
 		Game game;
-		public DesktopWindow( Game game, string username, bool nullContext, int width, int height ) :
-			base( width, height, GraphicsMode.Default, Program.AppName + " (" + username + ")", nullContext, 0, DisplayDevice.Default ) {
+		public DesktopWindow(Game game, string username, bool nullContext, int width, int height) :
+			base(width, height, GraphicsMode.Default, Program.AppName + " (" + username + ")", nullContext, 0, DisplayDevice.Default) {
 			this.game = game;
 		}
 		
-		protected override void OnLoad( EventArgs e ) {
+		protected override void OnLoad(EventArgs e) {
 			game.OnLoad();
-			base.OnLoad( e );
+			base.OnLoad(e);
 		}
 		
 		public override void Dispose() {
@@ -27,41 +27,41 @@ namespace ClassicalSharp {
 			base.Dispose();
 		}
 		
-		protected override void OnRenderFrame( FrameEventArgs e ) {
-			game.RenderFrame( e.Time );
-			base.OnRenderFrame( e );
+		protected override void OnRenderFrame(FrameEventArgs e) {
+			game.RenderFrame(e.Time);
+			base.OnRenderFrame(e);
 		}
 		
-		protected override void OnResize( object sender, EventArgs e ) {
+		protected override void OnResize(object sender, EventArgs e) {
 			game.OnResize();
-			base.OnResize( sender, e );
+			base.OnResize(sender, e);
 		}
 		
 		public void LoadIcon() {
-			string launcherPath = Path.Combine( Program.AppDirectory, "Launcher2.exe" );
-			if( File.Exists( launcherPath ) ) {
-				Icon = Icon.ExtractAssociatedIcon( launcherPath ); return;
+			string launcherPath = Path.Combine(Program.AppDirectory, "Launcher2.exe");
+			if (File.Exists(launcherPath)) {
+				Icon = Icon.ExtractAssociatedIcon(launcherPath); return;
 			}
 			
-			launcherPath = Path.Combine( Program.AppDirectory, "Launcher.exe" );
-			if( File.Exists( launcherPath ) ) {
-				Icon = Icon.ExtractAssociatedIcon( launcherPath );
+			launcherPath = Path.Combine(Program.AppDirectory, "Launcher.exe");
+			if (File.Exists(launcherPath)) {
+				Icon = Icon.ExtractAssociatedIcon(launcherPath);
 			}
 		}
 		
 		// TODO: retry when clipboard returns null.
 		public string ClipboardText {
 			get {
-				if ( OpenTK.Configuration.RunningOnMacOS )
+				if (OpenTK.Configuration.RunningOnMacOS)
 					return GetClipboardText();
 				else
 					return Clipboard.GetText();
 			}
 			set {
-				if ( OpenTK.Configuration.RunningOnMacOS )
-					SetClipboardText( value );
+				if (OpenTK.Configuration.RunningOnMacOS)
+					SetClipboardText(value);
 				else
-					Clipboard.SetText( value );
+					Clipboard.SetText(value);
 			}
 		}
 	}

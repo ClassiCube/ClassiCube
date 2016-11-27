@@ -7,7 +7,7 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public sealed class ClassicKeyBindingsScreen : KeyBindingsScreen {
 		
-		public ClassicKeyBindingsScreen( Game game ) : base( game ) { }
+		public ClassicKeyBindingsScreen(Game game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();
@@ -22,19 +22,19 @@ namespace ClassicalSharp.Gui.Screens {
 			rightDesc = new string[] { "Left", "Right", "Build", "Toggle fog", "Load loc" };
 			
 			widgets = new Widget[left.Length + right.Length + 4];
-			if( game.ClassicHacks ) {
+			if (game.ClassicHacks) {
 				title = "Normal controls";
-				rightPage = (g, w) => g.Gui.SetNewScreen( new ClassicHacksKeyBindingsScreen( g ) );
+				rightPage = (g, w) => g.Gui.SetNewScreen(new ClassicHacksKeyBindingsScreen(g));
 			} else {
 				btnWidth = 301; btnHeight = 40; btnDistance = 48;
 			}
-			MakeWidgets( -140 );
+			MakeWidgets(-140);
 		}
 	}
 	
 	public sealed class ClassicHacksKeyBindingsScreen : KeyBindingsScreen {
 		
-		public ClassicHacksKeyBindingsScreen( Game game ) : base( game ) { }
+		public ClassicHacksKeyBindingsScreen(Game game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();
@@ -46,15 +46,15 @@ namespace ClassicalSharp.Gui.Screens {
 			rightDesc = new string[] { "Fly", "Fly up", "Fly down"	};
 			
 			widgets = new Widget[left.Length + right.Length + 4];
-			leftPage = (g, w) => g.Gui.SetNewScreen( new ClassicKeyBindingsScreen( g ) );
+			leftPage = (g, w) => g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g));
 			title = "Hacks controls";
-			MakeWidgets( -95 );
+			MakeWidgets(-95);
 		}
 	}
 	
 	public sealed class NormalKeyBindingsScreen : KeyBindingsScreen {
 		
-		public NormalKeyBindingsScreen( Game game ) : base( game ) { }
+		public NormalKeyBindingsScreen(Game game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();
@@ -69,14 +69,14 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[left.Length + right.Length + 4];
 			title = "Normal controls";
-			rightPage = (g, w) => g.Gui.SetNewScreen( new HacksKeyBindingsScreen( g ) );
-			MakeWidgets( -140 );
+			rightPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
+			MakeWidgets(-140);
 		}
 	}
 	
 	public sealed class HacksKeyBindingsScreen : KeyBindingsScreen {
 		
-		public HacksKeyBindingsScreen( Game game ) : base( game ) { }
+		public HacksKeyBindingsScreen(Game game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();
@@ -90,15 +90,15 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[left.Length + right.Length + 4];
 			title = "Hacks controls";
-			leftPage = (g, w) => g.Gui.SetNewScreen( new NormalKeyBindingsScreen( g ) );
-			rightPage = (g, w) => g.Gui.SetNewScreen( new OtherKeyBindingsScreen( g ) );
-			MakeWidgets( -50 );
+			leftPage = (g, w) => g.Gui.SetNewScreen(new NormalKeyBindingsScreen(g));
+			rightPage = (g, w) => g.Gui.SetNewScreen(new OtherKeyBindingsScreen(g));
+			MakeWidgets(-50);
 		}
 	}
 	
 	public sealed class OtherKeyBindingsScreen : KeyBindingsScreen {
 		
-		public OtherKeyBindingsScreen( Game game ) : base( game ) { }
+		public OtherKeyBindingsScreen(Game game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();
@@ -111,15 +111,15 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[left.Length + right.Length + 4];
 			title = "Other controls";
-			leftPage = (g, w) => g.Gui.SetNewScreen( new HacksKeyBindingsScreen( g ) );
-			rightPage = (g, w) => g.Gui.SetNewScreen( new MouseKeyBindingsScreen( g ) );
-			MakeWidgets( -50 );
+			leftPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
+			rightPage = (g, w) => g.Gui.SetNewScreen(new MouseKeyBindingsScreen(g));
+			MakeWidgets(-50);
 		}
 	}
 	
 	public sealed class MouseKeyBindingsScreen : KeyBindingsScreen {
 		
-		public MouseKeyBindingsScreen( Game game ) : base( game ) { }
+		public MouseKeyBindingsScreen(Game game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();
@@ -129,11 +129,11 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[left.Length + 5];
 			title = "Mouse key bindings";
-			leftPage = (g, w) => g.Gui.SetNewScreen( new HacksKeyBindingsScreen( g ) );
-			MakeWidgets( -50 );
+			leftPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
+			MakeWidgets(-50);
 
-			widgets[index++] = TextWidget.Create( game, "&eRight click to remove the key binding", regularFont )
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 80 );
+			widgets[index++] = TextWidget.Create(game, "&eRight click to remove the key binding", regularFont)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 80);
 		}
 	}
 }

@@ -7,23 +7,23 @@ namespace ClassicalSharp.Renderers {
 	
 	public static class ChunkSorter {
 
-		public static void UpdateSortOrder( Game game, ChunkUpdater updater ) {
+		public static void UpdateSortOrder(Game game, ChunkUpdater updater) {
 			Vector3 cameraPos = game.CurrentCameraPos;
-			Vector3I newChunkPos = Vector3I.Floor( cameraPos );
+			Vector3I newChunkPos = Vector3I.Floor(cameraPos);
 			newChunkPos.X = (newChunkPos.X & ~0x0F) + 8;
 			newChunkPos.Y = (newChunkPos.Y & ~0x0F) + 8;
 			newChunkPos.Z = (newChunkPos.Z & ~0x0F) + 8;
-			if( newChunkPos == updater.chunkPos ) return;
+			if (newChunkPos == updater.chunkPos) return;
 			
 			ChunkInfo[] chunks = game.MapRenderer.chunks;
 			int[] distances = updater.distances;
 			Vector3I pPos = newChunkPos;
 			updater.chunkPos = pPos;
 			
-			for( int i = 0; i < chunks.Length; i++ ) {
+			for (int i = 0; i < chunks.Length; i++) {
 				ChunkInfo info = chunks[i];
-				distances[i] = Utils.DistanceSquared( info.CentreX, info.CentreY, info.CentreZ,
-				                                     pPos.X, pPos.Y, pPos.Z );
+				distances[i] = Utils.DistanceSquared(info.CentreX, info.CentreY, info.CentreZ,
+				                                     pPos.X, pPos.Y, pPos.Z);
 				
 				int dX1 = (info.CentreX - 8) - pPos.X, dX2 = (info.CentreX + 8) - pPos.X;
 				int dY1 = (info.CentreY - 8) - pPos.Y, dY2 = (info.CentreY + 8) - pPos.Y;
@@ -39,22 +39,22 @@ namespace ClassicalSharp.Renderers {
 			}
 
 			// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare
-			if( distances.Length > 1 )
-				QuickSort( distances, chunks, 0, chunks.Length - 1 );
+			if (distances.Length > 1)
+				QuickSort(distances, chunks, 0, chunks.Length - 1);
 			updater.ResetUsedFlags();
 			//SimpleOcclusionCulling();
 		}
 		
-		static void QuickSort( int[] keys, ChunkInfo[] values, int left, int right ) {
-			while( left < right ) {
+		static void QuickSort(int[] keys, ChunkInfo[] values, int left, int right) {
+			while (left < right) {
 				int i = left, j = right;
 				int pivot = keys[(i + j) / 2];
 				// partition the list
-				while( i <= j ) {
-					while( pivot > keys[i] ) i++;
-					while( pivot < keys[j] ) j--;
+				while (i <= j) {
+					while (pivot > keys[i]) i++;
+					while (pivot < keys[j]) j--;
 					
-					if( i <= j ) {
+					if (i <= j) {
 						int key = keys[i]; keys[i] = keys[j]; keys[j] = key;
 						ChunkInfo value = values[i]; values[i] = values[j]; values[j] = value;
 						i++; j--;
@@ -62,13 +62,13 @@ namespace ClassicalSharp.Renderers {
 				}
 				
 				// recurse into the smaller subset
-				if( j - left <= right - i ) {
-					if( left < j )
-						QuickSort( keys, values, left, j );
+				if (j - left <= right - i) {
+					if (left < j)
+						QuickSort(keys, values, left, j);
 					left = i;
 				} else {
-					if( i < right )
-						QuickSort( keys, values, i, right );
+					if (i < right)
+						QuickSort(keys, values, i, right);
 					right = j;
 				}
 			}

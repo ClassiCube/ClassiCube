@@ -9,7 +9,7 @@ namespace ClassicalSharp.Generator {
 		
 		public abstract string GeneratorName { get; }
 		
-		public abstract byte[] Generate( int width, int height, int length, int seed );
+		public abstract byte[] Generate(int width, int height, int length, int seed);
 		
 		public string CurrentState;
 		
@@ -19,15 +19,15 @@ namespace ClassicalSharp.Generator {
 		
 		public int Width, Height, Length;	
 		
-		public void GenerateAsync( Game game, int width, int height, int length, int seed ) {
+		public void GenerateAsync(Game game, int width, int height, int length, int seed) {
 			Width = width; Height = height; Length = length;
 			Thread thread = new Thread(
 				() => {
 					SinglePlayerServer server = (SinglePlayerServer)game.Server;
 					try {
-						server.generatedMap = Generate( width, height, length, seed );
-					} catch( Exception ex ) {
-						ErrorHandler.LogError( "IMapGenerator.RunAsync", ex );
+						server.generatedMap = Generate(width, height, length, seed);
+					} catch(Exception ex) {
+						ErrorHandler.LogError("IMapGenerator.RunAsync", ex);
 					}
 					Done = true;
 				}

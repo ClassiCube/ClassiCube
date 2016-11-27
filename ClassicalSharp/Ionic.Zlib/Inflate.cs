@@ -82,11 +82,11 @@ namespace Ionic.Zlib
 				switch (mode)
 				{
 					case InflateBlockMode.TYPE:
-						while( bitsNum < 3 ) {
+						while (bitsNum < 3) {
 							if (availIn != 0) {
 								r = RCode.Okay;
 							} else {
-								return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+								return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 
 							availIn--;
@@ -95,7 +95,7 @@ namespace Ionic.Zlib
 						}
 						
 						last = bits & 0x1;
-						switch( ( bits & 0x7 ) >> 1 ) {
+						switch((bits & 0x7) >> 1) {
 							case 0:  // stored
 								bits >>= 3; bitsNum -= 3;
 								t = bitsNum & 7; // go to byte boundary
@@ -118,23 +118,23 @@ namespace Ionic.Zlib
 								break;
 
 							case 3:  // illegal
-								throw new InvalidDataException( "invalid block type" );
+								throw new InvalidDataException("invalid block type");
 						} break;
 
 					case InflateBlockMode.LENS:
-						while( bitsNum < 32 ) {
-							if( availIn != 0 ) {
+						while (bitsNum < 32) {
+							if (availIn != 0) {
 								r = RCode.Okay;
 							} else {
-								return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+								return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
 							bits |= codec.InputBuffer[nextIn++] << bitsNum;
 							bitsNum += 8;
 						}
 
-						if ( ( ( ~bits >> 16 ) & 0xffff ) != ( bits & 0xffff ) ) {
-							throw new InvalidDataException( "invalid stored block lengths" );
+						if (((~bits >> 16) & 0xffff) != (bits & 0xffff)) {
+							throw new InvalidDataException("invalid stored block lengths");
 						}
 						left = bits & 0xffff;
 						bits = bitsNum = 0; // dump bits
@@ -142,27 +142,27 @@ namespace Ionic.Zlib
 						break;
 
 					case InflateBlockMode.STORED:
-						if( availIn == 0 ) {
-							return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+						if (availIn == 0) {
+							return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 						}
 
-						if( m == 0 ) {
-							if( q == end && readAt != 0 ) {
+						if (m == 0) {
+							if (q == end && readAt != 0) {
 								q = 0;
 								m = q < readAt ? readAt - q - 1 : end - q;
 							}
-							if( m == 0 ) {
+							if (m == 0) {
 								writeAt = q;
 								r = Flush(r);
 								q = writeAt;
 								m = q < readAt ? readAt - q - 1 : end - q;
 								
-								if( q == end && readAt != 0 ) {
+								if (q == end && readAt != 0) {
 									q = 0;
 									m = q < readAt ? readAt - q - 1 : end - q;
 								}
-								if( m == 0 ) {
-									return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+								if (m == 0) {
+									return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 								}
 							}
 						}
@@ -183,10 +183,10 @@ namespace Ionic.Zlib
 
 					case InflateBlockMode.TABLE:
 						while (bitsNum < 14) {
-							if( availIn != 0 ) {
+							if (availIn != 0) {
 								r = RCode.Okay;
 							} else {
-								return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+								return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 
 							availIn--;
@@ -196,7 +196,7 @@ namespace Ionic.Zlib
 
 						table = t = (bits & 0x3fff);
 						if ((t & 0x1f) > 29 || ((t >> 5) & 0x1f) > 29) {
-							throw new InvalidDataException( "too many length or distance symbols" );
+							throw new InvalidDataException("too many length or distance symbols");
 						}
 						
 						t = 258 + (t & 0x1f) + ((t >> 5) & 0x1f);
@@ -215,11 +215,11 @@ namespace Ionic.Zlib
 
 					case InflateBlockMode.BTREE:
 						while (index < 4 + (table >> 10)) {
-							while( bitsNum < 3 ) {
-								if( availIn != 0 ) {
+							while (bitsNum < 3) {
+								if (availIn != 0) {
 									r = RCode.Okay;
 								} else {
-									return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+									return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 								}
 
 								availIn--;
@@ -253,7 +253,7 @@ namespace Ionic.Zlib
 								if (availIn != 0) {
 									r = RCode.Okay;
 								} else {
-									return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+									return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 								}
 
 								availIn--;
@@ -264,7 +264,7 @@ namespace Ionic.Zlib
 							t = hufts[(tb + (bits & Constants.InflateMask[t])) * 3 + 1];
 							int c = hufts[(tb + (bits & Constants.InflateMask[t])) * 3 + 2];
 
-							if( c < 16 ) {
+							if (c < 16) {
 								bits >>= t; bitsNum -= t;
 								blens[index++] = c;
 							} else {
@@ -272,11 +272,11 @@ namespace Ionic.Zlib
 								int i = c == 18 ? 7 : c - 14;
 								int j = c == 18 ? 11 : 3;
 
-								while( bitsNum < ( t + i ) ) {
-									if( availIn != 0 ) {
+								while (bitsNum < (t + i)) {
+									if (availIn != 0) {
 										r = RCode.Okay;
 									} else {
-										return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+										return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 									}
 
 									availIn--;
@@ -290,7 +290,7 @@ namespace Ionic.Zlib
 
 								i = index;
 								if (i + j > 258 + (table & 0x1f) + ((table >> 5) & 0x1f) || (c == 16 && i < 1)) {
-									throw new InvalidDataException( "invalid bit length repeat" );
+									throw new InvalidDataException("invalid bit length repeat");
 								}
 
 								c = (c == 16) ? blens[i-1] : 0;
@@ -315,7 +315,7 @@ namespace Ionic.Zlib
 						goto case InflateBlockMode.CODES;
 
 					case InflateBlockMode.CODES:
-						UpdateState( bits, bitsNum, availIn, nextIn, q );
+						UpdateState(bits, bitsNum, availIn, nextIn, q);
 
 						r = codes.Process(this, r);
 						if (r != RCode.StreamEnd) return Flush(r);
@@ -341,21 +341,21 @@ namespace Ionic.Zlib
 						q = writeAt;
 						m = q < readAt ? readAt - q - 1 : end - q;
 						if (readAt != writeAt) {
-							return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+							return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 						}
 						mode = InflateBlockMode.DONE;
 						goto case InflateBlockMode.DONE;
 
 					case InflateBlockMode.DONE:
-						return RanOutOfInput( bits, bitsNum, availIn, nextIn, q, RCode.StreamEnd );
+						return RanOutOfInput(bits, bitsNum, availIn, nextIn, q, RCode.StreamEnd);
 
 					default:
-						throw new InvalidOperationException( "Invalid inflate block mode: " + mode );
+						throw new InvalidOperationException("Invalid inflate block mode: " + mode);
 				}
 			}
 		}
 		
-		internal int RanOutOfInput( int bits, int bitsNum, int availIn, int nextIn, int q, int r ) {
+		internal int RanOutOfInput(int bits, int bitsNum, int availIn, int nextIn, int q, int r) {
 			bitb = bits;
 			bitk = bitsNum;
 			codec.AvailableBytesIn = availIn;
@@ -364,7 +364,7 @@ namespace Ionic.Zlib
 			return Flush(r);
 		}
 		
-		internal void UpdateState( int bits, int bitsNum, int availIn, int nextIn, int q ) {
+		internal void UpdateState(int bits, int bitsNum, int availIn, int nextIn, int q) {
 			bitb = bits;
 			bitk = bitsNum;
 			codec.AvailableBytesIn = availIn;
@@ -379,8 +379,8 @@ namespace Ionic.Zlib
 		}
 
 		// copy as much as possible from the sliding window to the output area
-		internal int Flush( int r ) {
-			for( int pass = 0; pass < 2; pass++ ) {
+		internal int Flush(int r) {
+			for (int pass = 0; pass < 2; pass++) {
 				int nBytes = pass == 0 ?
 					// compute number of bytes to copy as far as end of window
 					((readAt <= writeAt ? writeAt : end) - readAt) :
@@ -500,7 +500,7 @@ namespace Ionic.Zlib
 						// waiting for "i:"=input, "o:"=output, "x:"=nothing
 					case START:  // x: set up for LEN
 						if (m >= 258 && availIn >= 10) {
-							blocks.UpdateState( bits, bitsNum, availIn, nextIn, q );
+							blocks.UpdateState(bits, bitsNum, availIn, nextIn, q);
 							r = InflateFast(lbits, dbits, ltree, ltree_index, dtree, dtree_index, blocks, z);
 
 							nextIn = z.NextIn;
@@ -528,7 +528,7 @@ namespace Ionic.Zlib
 							if (availIn != 0) {
 								r = RCode.Okay;
 							} else {
-								return blocks.RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+								return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
 							bits |= z.InputBuffer[nextIn++] << bitsNum;
@@ -566,7 +566,7 @@ namespace Ionic.Zlib
 							mode = WASH;
 							break;
 						}
-						throw new InvalidDataException( "invalid literal/length code" );
+						throw new InvalidDataException("invalid literal/length code");
 
 
 					case LENEXT:  // i: getting length extra (have base)
@@ -574,7 +574,7 @@ namespace Ionic.Zlib
 							if (availIn != 0) {
 								r = RCode.Okay;
 							} else {
-								return blocks.RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+								return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
 							bits |= z.InputBuffer[nextIn++] << bitsNum;
@@ -597,7 +597,7 @@ namespace Ionic.Zlib
 							if (availIn != 0) {
 								r = RCode.Okay;
 							} else {
-								return blocks.RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+								return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
 							bits |= z.InputBuffer[nextIn++] << bitsNum;
@@ -623,7 +623,7 @@ namespace Ionic.Zlib
 							tree_index = tindex / 3 + tree[tindex + 2];
 							break;
 						}
-						throw new InvalidDataException( "invalid distance code" );
+						throw new InvalidDataException("invalid distance code");
 
 
 					case DISTEXT:  // i: getting distance extra
@@ -631,7 +631,7 @@ namespace Ionic.Zlib
 							if (availIn != 0) {
 								r = RCode.Okay;
 							} else {
-								return blocks.RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+								return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 							}
 							availIn--;
 							bits |= z.InputBuffer[nextIn++] << bitsNum;
@@ -671,7 +671,7 @@ namespace Ionic.Zlib
 									}
 
 									if (m == 0) {
-										return blocks.RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+										return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 									}
 								}
 							}
@@ -705,7 +705,7 @@ namespace Ionic.Zlib
 									m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
 								}
 								if (m == 0) {
-									return blocks.RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+									return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 								}
 							}
 						}
@@ -731,17 +731,17 @@ namespace Ionic.Zlib
 						m = q < blocks.readAt ? blocks.readAt - q - 1 : blocks.end - q;
 
 						if (blocks.readAt != blocks.writeAt) {
-							return blocks.RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+							return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 						}
 						mode = END;
 						goto case END;
 
 					case END:
 						r = RCode.StreamEnd;
-						return blocks.RanOutOfInput( bits, bitsNum, availIn, nextIn, q, r );
+						return blocks.RanOutOfInput(bits, bitsNum, availIn, nextIn, q, r);
 
 					default:
-						throw new InvalidDataException( "Encountered error: " + mode );
+						throw new InvalidDataException("Encountered error: " + mode);
 				}
 			}
 		}
@@ -865,29 +865,29 @@ namespace Ionic.Zlib
 								}
 
 								// copy all or what's left
-								if( q - r > 0 && c > ( q - r ) ) {
+								if (q - r > 0 && c > (q - r)) {
 									do {
 										s.window[q++] = s.window[r++];
-									} while ( --c != 0 );
+									} while (--c != 0);
 								} else {
-									Array.Copy( s.window, r, s.window, q, c );
+									Array.Copy(s.window, r, s.window, q, c);
 									q += c; r += c;
 									c = 0;
 								}
 								break;
-							} else if ( ( e & 64 ) == 0 ) {
+							} else if ((e & 64) == 0) {
 								t += tp[tp_index_t_3 + 2];
 								t += (bits & Constants.InflateMask[e]);
 								tp_index_t_3 = (tp_index + t) * 3;
 								e = tp[tp_index_t_3];
 							} else {
-								throw new InvalidDataException( "invalid distance code" );
+								throw new InvalidDataException("invalid distance code");
 							}
 						} while (true);
 						break;
 					}
 
-					if ( ( e & 64 ) == 0 ) {
+					if ((e & 64) == 0) {
 						t += tp[tp_index_t_3 + 2];
 						t += (bits & Constants.InflateMask[e]);
 						tp_index_t_3 = (tp_index + t) * 3;
@@ -898,17 +898,17 @@ namespace Ionic.Zlib
 							m--;
 							break;
 						}
-					} else if ( ( e & 32 ) != 0 ) {
+					} else if ((e & 32) != 0) {
 						c = z.AvailableBytesIn - availIn;
 						c = (bitsNum >> 3) < c ? bitsNum >> 3 : c;
 						availIn += c;
 						nextIn -= c;
 						bitsNum -= (c << 3);
 
-						s.UpdateState( bits, bitsNum, availIn, nextIn, q );
+						s.UpdateState(bits, bitsNum, availIn, nextIn, q);
 						return RCode.StreamEnd;
 					} else {
-						throw new InvalidDataException( "invalid literal/length code" );
+						throw new InvalidDataException("invalid literal/length code");
 					}
 				} while (true);
 			} while (m >= 258 && availIn >= 10);
@@ -920,7 +920,7 @@ namespace Ionic.Zlib
 			nextIn -= c;
 			bitsNum -= (c << 3);
 
-			s.UpdateState( bits, bitsNum, availIn, nextIn, q );
+			s.UpdateState(bits, bitsNum, availIn, nextIn, q);
 			return RCode.Okay;
 		}
 	}
@@ -945,12 +945,12 @@ namespace Ionic.Zlib
 			blocks = null;
 		}
 
-		internal void Initialize( ZlibCodec codec, int w ) {
+		internal void Initialize(ZlibCodec codec, int w) {
 			_codec = codec;
 			blocks = null;
 			
 			wbits = w;
-			blocks = new InflateBlocks( codec, 1 << w );
+			blocks = new InflateBlocks(codec, 1 << w);
 			Reset();
 		}
 
@@ -959,10 +959,10 @@ namespace Ionic.Zlib
 				throw new InvalidOperationException("InputBuffer is null. ");
 
 			int r = RCode.BufferError;
-			if( !done ) {
+			if (!done) {
 				r = blocks.Process(r);
-				if( r == RCode.DataError ) {
-					throw new InvalidDataException( "Bad state" );
+				if (r == RCode.DataError) {
+					throw new InvalidDataException("Bad state");
 				}
 
 				if (r != RCode.StreamEnd)

@@ -9,7 +9,7 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public class EnvSettingsScreen : MenuOptionsScreen {
 		
-		public EnvSettingsScreen( Game game ) : base( game ) {
+		public EnvSettingsScreen(Game game) : base(game) {
 		}
 
 		string[] defaultValues;
@@ -20,49 +20,49 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[] {
 				// Column 1
-				MakeOpt( -1, -150, "Clouds col", OnWidgetClick,
+				MakeOpt(-1, -150, "Clouds col", OnWidgetClick,
 				     g => g.World.Env.CloudsCol.ToRGBHexString(),
-				     (g, v) => g.World.Env.SetCloudsColour( FastColour.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetCloudsColour(FastColour.Parse(v))),
 				
-				MakeOpt( -1, -100, "Sky col", OnWidgetClick,
+				MakeOpt(-1, -100, "Sky col", OnWidgetClick,
 				     g => g.World.Env.SkyCol.ToRGBHexString(),
-				     (g, v) => g.World.Env.SetSkyColour( FastColour.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetSkyColour(FastColour.Parse(v))),
 				
-				MakeOpt( -1, -50, "Fog col", OnWidgetClick,
+				MakeOpt(-1, -50, "Fog col", OnWidgetClick,
 				     g => g.World.Env.FogCol.ToRGBHexString(),
-				     (g, v) => g.World.Env.SetFogColour( FastColour.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetFogColour(FastColour.Parse(v))),
 				
-				MakeOpt( -1, 0, "Clouds speed", OnWidgetClick,
-				     g => g.World.Env.CloudsSpeed.ToString( "F2" ),
-				     (g, v) => g.World.Env.SetCloudsSpeed( Utils.ParseDecimal( v ) ) ),
+				MakeOpt(-1, 0, "Clouds speed", OnWidgetClick,
+				     g => g.World.Env.CloudsSpeed.ToString("F2"),
+				     (g, v) => g.World.Env.SetCloudsSpeed(Utils.ParseDecimal(v))),
 				
-				MakeOpt( -1, 50, "Clouds height", OnWidgetClick,
+				MakeOpt(-1, 50, "Clouds height", OnWidgetClick,
 				     g => g.World.Env.CloudHeight.ToString(),
-				     (g, v) => g.World.Env.SetCloudsLevel( Int32.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetCloudsLevel(Int32.Parse(v))),
 				
 				// Column 2
-				MakeOpt( 1, -150, "Sunlight col", OnWidgetClick,
+				MakeOpt(1, -150, "Sunlight col", OnWidgetClick,
 				     g => g.World.Env.Sunlight.ToRGBHexString(),
-				     (g, v) => g.World.Env.SetSunlight( FastColour.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetSunlight(FastColour.Parse(v))),
 				
-				MakeOpt( 1, -100, "Shadow col", OnWidgetClick,
+				MakeOpt(1, -100, "Shadow col", OnWidgetClick,
 				     g => g.World.Env.Shadowlight.ToRGBHexString(),
-				     (g, v) => g.World.Env.SetShadowlight( FastColour.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetShadowlight(FastColour.Parse(v))),
 				
-				MakeOpt( 1, -50, "Weather", OnWidgetClick,
+				MakeOpt(1, -50, "Weather", OnWidgetClick,
 				     g => g.World.Env.Weather.ToString(),
-				     (g, v) => g.World.Env.SetWeather( (Weather)Enum.Parse( typeof(Weather), v ) ) ),
+				     (g, v) => g.World.Env.SetWeather((Weather)Enum.Parse(typeof(Weather), v))),
 				
-				MakeOpt( 1, 0, "Rain/Snow speed", OnWidgetClick,
-				     g => g.World.Env.WeatherSpeed.ToString( "F2" ),
-				     (g, v) => g.World.Env.SetWeatherSpeed( Utils.ParseDecimal( v ) ) ),
+				MakeOpt(1, 0, "Rain/Snow speed", OnWidgetClick,
+				     g => g.World.Env.WeatherSpeed.ToString("F2"),
+				     (g, v) => g.World.Env.SetWeatherSpeed(Utils.ParseDecimal(v))),
 				
-				MakeOpt( 1, 50, "Water level", OnWidgetClick,
+				MakeOpt(1, 50, "Water level", OnWidgetClick,
 				     g => g.World.Env.EdgeHeight.ToString(),
-				     (g, v) => g.World.Env.SetEdgeLevel( Int32.Parse( v ) ) ),
+				     (g, v) => g.World.Env.SetEdgeLevel(Int32.Parse(v))),
 				
-				MakeBack( false, titleFont,
-				         (g, w) => g.Gui.SetNewScreen( new OptionsGroupScreen( g ) ) ),
+				MakeBack(false, titleFont,
+				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null, null,
 			};
 			MakeDefaultValues();
@@ -91,35 +91,35 @@ namespace ClassicalSharp.Gui.Screens {
 				new HexColourValidator(),
 				new HexColourValidator(),
 				new HexColourValidator(),
-				new RealValidator( 0, 1000 ),
-				new IntegerValidator( -10000, 10000 ),
+				new RealValidator(0, 1000),
+				new IntegerValidator(-10000, 10000),
 				
 				new HexColourValidator(),
 				new HexColourValidator(),
-				new EnumValidator( typeof(Weather) ),
-				new RealValidator( -100, 100 ),
-				new IntegerValidator( -2048, 2048 ),
+				new EnumValidator(typeof(Weather)),
+				new RealValidator(-100, 100),
+				new IntegerValidator(-2048, 2048),
 			};
 		}
 		
 		protected override void InputClosed() {
-			if( widgets[defaultIndex] != null )
+			if (widgets[defaultIndex] != null)
 				widgets[defaultIndex].Dispose();
 			widgets[defaultIndex] = null;
 		}
 		
 		protected override void InputOpened() {
-			widgets[defaultIndex] = ButtonWidget.Create( game, 201, 40, "Default value", titleFont, DefaultButtonClick )				
-				.SetLocation( Anchor.Centre, Anchor.Centre, 0, 150 );
+			widgets[defaultIndex] = ButtonWidget.Create(game, 201, 40, "Default value", titleFont, DefaultButtonClick)				
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 150);
 		}
 		
-		void DefaultButtonClick( Game game, Widget widget, MouseButton btn, int x, int y ) {
-			if( btn != MouseButton.Left ) return;
-			int index = Array.IndexOf<Widget>( widgets, targetWidget );
+		void DefaultButtonClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+			if (btn != MouseButton.Left) return;
+			int index = Array.IndexOf<Widget>(widgets, targetWidget);
 			string defValue = defaultValues[index];
 			
 			input.Clear();
-			input.Append( defValue );
+			input.Append(defValue);
 		}
 	}
 }

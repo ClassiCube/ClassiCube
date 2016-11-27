@@ -7,28 +7,28 @@ namespace ClassicalSharp.Network.Protocols {
 	/// <summary> Implements the packets for BlockDefinitions extension in CPE. </summary>
 	public sealed class CPEProtocolBlockDefs : IProtocol {
 		
-		public CPEProtocolBlockDefs( Game game ) : base( game ) { }
+		public CPEProtocolBlockDefs(Game game) : base(game) { }
 		
 		public override void Init() {
-			if( !game.UseCPE || !game.AllowCustomBlocks ) return;
-			net.Set( Opcode.CpeDefineBlock, HandleDefineBlock, 80 );
-			net.Set( Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2 );
-			net.Set( Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85 );
+			if (!game.UseCPE || !game.AllowCustomBlocks) return;
+			net.Set(Opcode.CpeDefineBlock, HandleDefineBlock, 80);
+			net.Set(Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2);
+			net.Set(Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85);
 		}
 		
 		internal void HandleDefineBlock() {
-			byte id = HandleDefineBlockCommonStart( reader, false );
+			byte id = HandleDefineBlockCommonStart(reader, false);
 			BlockInfo info = game.BlockInfo;
 			
 			byte shape = reader.ReadUInt8();
-			if( shape > 0 && shape <= 16 )
+			if (shape > 0 && shape <= 16)
 				info.MaxBB[id].Y = shape / 16f;
 			
-			HandleDefineBlockCommonEnd( reader, shape, id );
+			HandleDefineBlockCommonEnd(reader, shape, id);
 			// Update sprite BoundingBox if necessary
-			if( info.Draw[id] == DrawType.Sprite ) {
-				using( FastBitmap dst = new FastBitmap( game.TerrainAtlas.AtlasBitmap, true, true ) )
-					info.RecalculateBB( id, dst );
+			if (info.Draw[id] == DrawType.Sprite) {
+				using(FastBitmap dst = new FastBitmap(game.TerrainAtlas.AtlasBitmap, true, true))
+					info.RecalculateBB(id, dst);
 			}
 		}
 		
@@ -37,55 +37,55 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockInfo info = game.BlockInfo;
 			
 			info.DefinedCustomBlocks[id >> 5] &= ~(1u << (id & 0x1F));
-			info.ResetBlockProps( id );
-			info.UpdateCulling( id );
+			info.ResetBlockProps(id);
+			info.UpdateCulling(id);
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
 		void HandleDefineBlockExt() {
-			if( !game.AllowCustomBlocks ) {
-				net.SkipPacketData( Opcode.CpeDefineBlockExt ); return;
+			if (!game.AllowCustomBlocks) {
+				net.SkipPacketData(Opcode.CpeDefineBlockExt); return;
 			}
-			byte id = HandleDefineBlockCommonStart( reader, 
-			                                       net.cpeData.blockDefsExtVer >= 2 );
+			byte id = HandleDefineBlockCommonStart(reader, 
+			                                       net.cpeData.blockDefsExtVer >= 2);
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;
 			
-			min.X = reader.ReadUInt8() / 16f; Utils.Clamp( ref min.X, 0, 15/16f );
-			min.Y = reader.ReadUInt8() / 16f; Utils.Clamp( ref min.Y, 0, 15/16f );
-			min.Z = reader.ReadUInt8() / 16f; Utils.Clamp( ref min.Z, 0, 15/16f );
-			max.X = reader.ReadUInt8() / 16f; Utils.Clamp( ref max.X, 1/16f, 1 );
-			max.Y = reader.ReadUInt8() / 16f; Utils.Clamp( ref max.Y, 1/16f, 1 );
-			max.Z = reader.ReadUInt8() / 16f; Utils.Clamp( ref max.Z, 1/16f, 1 );
+			min.X = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.X, 0, 15/16f);
+			min.Y = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.Y, 0, 15/16f);
+			min.Z = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.Z, 0, 15/16f);
+			max.X = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.X, 1/16f, 1);
+			max.Y = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.Y, 1/16f, 1);
+			max.Z = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.Z, 1/16f, 1);
 			
 			info.MinBB[id] = min;
 			info.MaxBB[id] = max;
-			HandleDefineBlockCommonEnd( reader, 1, id );
+			HandleDefineBlockCommonEnd(reader, 1, id);
 		}
 		
-		byte HandleDefineBlockCommonStart( NetReader reader, bool uniqueSideTexs ) {
+		byte HandleDefineBlockCommonStart(NetReader reader, bool uniqueSideTexs) {
 			byte id = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
-			info.ResetBlockProps( id );
+			info.ResetBlockProps(id);
 			
 			info.Name[id] = reader.ReadCp437String();
 			info.Collide[id] = (CollideType)reader.ReadUInt8();
 			
-			info.SpeedMultiplier[id] = (float)Math.Pow( 2, (reader.ReadUInt8() - 128) / 64f );
-			info.SetTex( reader.ReadUInt8(), Side.Top, id );
-			if( uniqueSideTexs ) {
-				info.SetTex( reader.ReadUInt8(), Side.Left, id );
-				info.SetTex( reader.ReadUInt8(), Side.Right, id );
-				info.SetTex( reader.ReadUInt8(), Side.Front, id );
-				info.SetTex( reader.ReadUInt8(), Side.Back, id );
+			info.SpeedMultiplier[id] = (float)Math.Pow(2, (reader.ReadUInt8() - 128) / 64f);
+			info.SetTex(reader.ReadUInt8(), Side.Top, id);
+			if (uniqueSideTexs) {
+				info.SetTex(reader.ReadUInt8(), Side.Left, id);
+				info.SetTex(reader.ReadUInt8(), Side.Right, id);
+				info.SetTex(reader.ReadUInt8(), Side.Front, id);
+				info.SetTex(reader.ReadUInt8(), Side.Back, id);
 			} else {
-				info.SetSide( reader.ReadUInt8(), id );
+				info.SetSide(reader.ReadUInt8(), id);
 			}
-			info.SetTex( reader.ReadUInt8(), Side.Bottom, id );
+			info.SetTex(reader.ReadUInt8(), Side.Bottom, id);
 			
 			info.BlocksLight[id] = reader.ReadUInt8() == 0;
 			byte sound = reader.ReadUInt8();
-			if( sound < breakSnds.Length ) {
+			if (sound < breakSnds.Length) {
 				info.StepSounds[id] = stepSnds[sound];
 				info.DigSounds[id] = breakSnds[sound];
 			}
@@ -93,20 +93,20 @@ namespace ClassicalSharp.Network.Protocols {
 			return id;
 		}
 		
-		void HandleDefineBlockCommonEnd( NetReader reader, byte shape, byte id ) {
+		void HandleDefineBlockCommonEnd(NetReader reader, byte shape, byte id) {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
-			if( shape == 0 )
+			if (shape == 0)
 				blockDraw = DrawType.Sprite;
-			info.SetBlockDraw( id, blockDraw );
-			info.LightOffset[id] = info.CalcLightOffset( id );
+			info.SetBlockDraw(id, blockDraw);
+			info.LightOffset[id] = info.CalcLightOffset(id);
 			
 			byte fogDensity = reader.ReadUInt8();
 			info.FogDensity[id] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
 			info.FogColour[id] = new FastColour(
-				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8() );
+				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
 			
-			info.UpdateCulling( id );
+			info.UpdateCulling(id);
 			game.Events.RaiseBlockDefinitionChanged();
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
@@ -117,27 +117,27 @@ namespace ClassicalSharp.Network.Protocols {
 			byte id = reader.ReadUInt8();
 			CustomModel model = null;
 			
-			switch( reader.ReadUInt8() ) {
+			switch(reader.ReadUInt8()) {
 				case 0:
-					model = new CustomModel( game );
-					model.ReadSetupPacket( reader );
+					model = new CustomModel(game);
+					model.ReadSetupPacket(reader);
 					game.ModelCache.CustomModels[id] = model;
 					break;
 				case 1:
 					model = game.ModelCache.CustomModels[id];
-					if( model != null ) model.ReadMetadataPacket( reader );
+					if (model != null) model.ReadMetadataPacket(reader);
 					break;
 				case 2:
 					model = game.ModelCache.CustomModels[id];
-					if( model != null ) model.ReadDefinePartPacket( reader );
+					if (model != null) model.ReadDefinePartPacket(reader);
 					break;
 				case 3:
 					model = game.ModelCache.CustomModels[id];
-					if( model != null ) model.ReadRotationPacket( reader );
+					if (model != null) model.ReadRotationPacket(reader);
 					break;
 			}
 			int total = packetSizes[(byte)Opcode.CpeDefineModel];
-			reader.Skip( total - (reader.index - start) );
+			reader.Skip(total - (reader.index - start));
 		}
 		#endif
 		

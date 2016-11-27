@@ -12,7 +12,7 @@ namespace ClassicalSharp.Singleplayer {
 		BlockInfo info;
 		int width, length, height, oneY;
 		
-		public FallingPhysics( Game game, PhysicsBase physics ) {
+		public FallingPhysics(Game game, PhysicsBase physics) {
 			this.game = game;
 			map = game.World;
 			info = game.BlockInfo;
@@ -33,29 +33,29 @@ namespace ClassicalSharp.Singleplayer {
 			oneY = width * length;
 		}
 
-		void DoFalling( int index, byte block ) {
+		void DoFalling(int index, byte block) {
 			int found = -1, start = index;
 			// Find lowest air block
-			while( index >= oneY ) {
+			while (index >= oneY) {
 				index -= oneY;
 				byte other = map.blocks[index];
-				if( other == Block.Air || (other >= Block.Water && other <= Block.StillLava) )
+				if (other == Block.Air || (other >= Block.Water && other <= Block.StillLava))
 					found = index;
 				else
 					break;
 			}
-			if( found == -1 ) return;
+			if (found == -1) return;
 
 			int x = found % width;
 			int y = found / oneY; // posIndex / (width * length)
 			int z = (found / width) % length;
-			game.UpdateBlock( x, y, z, block );
+			game.UpdateBlock(x, y, z, block);
 			
 			x = start % width;
 			y = start / oneY; // posIndex / (width * length)
 			z = (start / width) % length;
-			game.UpdateBlock( x, y, z, Block.Air );
-			physics.ActivateNeighbours( x, y, z, start );
+			game.UpdateBlock(x, y, z, Block.Air);
+			physics.ActivateNeighbours(x, y, z, start);
 		}
 	}
 }

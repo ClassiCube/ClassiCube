@@ -10,26 +10,26 @@ namespace ClassicalSharp.Network {
 		public int index = 0, size = 0;
 		Socket socket;
 		
-		public NetReader( Socket socket ) {
+		public NetReader(Socket socket) {
 			this.socket = socket;
 		}
 		
 		public void ReadPendingData() {
-			if( socket.Available == 0 ) return;
+			if (socket.Available == 0) return;
 			// NOTE: Always using a read call that is a multiple of 4096
 			// (appears to?) improve read performance.
-			int recv = socket.Receive( buffer, size, 4096 * 4, SocketFlags.None );
+			int recv = socket.Receive(buffer, size, 4096 * 4, SocketFlags.None);
 			size += recv;
 		}
 		
-		public void Skip( int byteCount ) {
+		public void Skip(int byteCount) {
 			index += byteCount;
 		}
 		
 		public void RemoveProcessed() {
 			size -= index;
-			if( size > 0 ) // only copy left over bytes
-				Buffer.BlockCopy( buffer, index, buffer, 0, size );			
+			if (size > 0) // only copy left over bytes
+				Buffer.BlockCopy(buffer, index, buffer, 0, size);			
 			index = 0;
 			// We don't need to zero the old bytes, since they will be overwritten when ReadData() is called.
 		}
@@ -65,67 +65,67 @@ namespace ClassicalSharp.Network {
 			return value;
 		}
 		
-		public byte[] ReadBytes( int length ) {
+		public byte[] ReadBytes(int length) {
 			byte[] data = new byte[length];
-			Buffer.BlockCopy( buffer, index, data, 0, length );
+			Buffer.BlockCopy(buffer, index, data, 0, length);
 			index += length;
 			return data;
 		}
 
 		public string ReadCp437String() {
-			int length = GetString( false, Utils.StringLength );
-			return new String( characters, 0, length );
+			int length = GetString(false, Utils.StringLength);
+			return new String(characters, 0, length);
 		}
 		
 		public string ReadAsciiString() {
-			int length = GetString( true, Utils.StringLength );
-			return new String( characters, 0, length );
+			int length = GetString(true, Utils.StringLength);
+			return new String(characters, 0, length);
 		}
 		
-		public string ReadAsciiString( int maxLength ) {
-			int length = GetString( true, maxLength );
-			return new String( characters, 0, length );
+		public string ReadAsciiString(int maxLength) {
+			int length = GetString(true, maxLength);
+			return new String(characters, 0, length);
 		}
 		
-		internal string ReadChatString( ref byte messageType ) {
-			int length = GetString( false, Utils.StringLength );
+		internal string ReadChatString(ref byte messageType) {
+			int length = GetString(false, Utils.StringLength);
 			
 			int offset = 0;
-			if( length >= womDetail.Length && IsWomDetailString() ) {
+			if (length >= womDetail.Length && IsWomDetailString()) {
 				length -= womDetail.Length;
 				offset = womDetail.Length;
 				messageType = (byte)MessageType.Status3;
 			}
-			return new String( characters, offset, length );
+			return new String(characters, offset, length);
 		}
 		
 		static char[] characters = new char[Utils.StringLength];
 		const string womDetail = "^detail.user=";		
 		static bool IsWomDetailString() {
-			for( int i = 0; i < womDetail.Length; i++ ) {
-				if( characters[i] != womDetail[i] )
+			for (int i = 0; i < womDetail.Length; i++) {
+				if (characters[i] != womDetail[i])
 					return false;
 			}
 			return true;
 		}
 		
-		int GetString( bool ascii, int maxLength ) {
+		int GetString(bool ascii, int maxLength) {
 			int length = 0;
 			
-			for( int i = maxLength - 1; i >= 0; i-- ) {
+			for (int i = maxLength - 1; i >= 0; i--) {
 				byte code = buffer[index + i];
-				if( length == 0 && !( code == 0 || code == 0x20 ) )
+				if (length == 0 && !(code == 0 || code == 0x20))
 				   length = i + 1;
 				
-				if( ascii ) {
+				if (ascii) {
 					characters[i] = code >= 0x7F ? '?' : (char)code;
 					continue;
 				}
 				
 				// Treat code as an index in code page 437
-				if( code < 0x20 ) {
+				if (code < 0x20) {
 					characters[i] = Utils.ControlCharReplacements[code];
-				} else if( code < 0x7F ) {
+				} else if (code < 0x7F) {
 					characters[i] = (char)code;
 				} else {
 					characters[i] = Utils.ExtendedCharReplacements[code - 0x7F];

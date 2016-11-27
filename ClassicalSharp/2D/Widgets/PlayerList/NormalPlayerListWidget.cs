@@ -8,7 +8,7 @@ using ClassicalSharp.Events;
 namespace ClassicalSharp.Gui.Widgets {
 	public class NormalPlayerListWidget : PlayerListWidget {
 		
-		public NormalPlayerListWidget( Game game, Font font ) : base( game, font ) {
+		public NormalPlayerListWidget(Game game, Font font) : base(game, font) {
 			textures = new Texture[256];
 		}
 		
@@ -18,18 +18,18 @@ namespace ClassicalSharp.Gui.Widgets {
 			public string Name, ColouredName;
 			public byte Id;
 			
-			public PlayerInfo( TabListEntry p ) {
+			public PlayerInfo(TabListEntry p) {
 				ColouredName = p.PlayerName;
-				Name = Utils.StripColours( p.PlayerName );
+				Name = Utils.StripColours(p.PlayerName);
 				Id = p.NameId;
 			}
 		}
 		
-		public override string GetNameUnder( int mouseX, int mouseY ) {
-			for( int i = 0; i < namesCount; i++ ) {
+		public override string GetNameUnder(int mouseX, int mouseY) {
+			for (int i = 0; i < namesCount; i++) {
 				Texture texture = textures[i];
-				if( texture.IsValid && texture.Bounds.Contains( mouseX, mouseY ) )
-					return Utils.StripColours( info[i].Name );
+				if (texture.IsValid && texture.Bounds.Contains(mouseX, mouseY))
+					return Utils.StripColours(info[i].Name);
 			}
 			return null;
 		}
@@ -50,16 +50,16 @@ namespace ClassicalSharp.Gui.Widgets {
 
 		protected override void CreateInitialPlayerInfo() {
 			TabListEntry[] entries = game.TabList.Entries;
-			for( int i = 0; i < entries.Length; i++ ) {
+			for (int i = 0; i < entries.Length; i++) {
 				TabListEntry e = entries[i];
-				if( e != null )
-					AddPlayerInfo( new PlayerInfo( e ), -1 );
+				if (e != null)
+					AddPlayerInfo(new PlayerInfo(e), -1);
 			}
 		}
 		
-		void AddPlayerInfo( PlayerInfo pInfo, int index ) {
-			Texture tex = DrawName( pInfo );			
-			if( index < 0 ) {
+		void AddPlayerInfo(PlayerInfo pInfo, int index) {
+			Texture tex = DrawName(pInfo);			
+			if (index < 0) {
 				info[namesCount] = pInfo;
 				textures[namesCount] = tex;
 				namesCount++;
@@ -69,36 +69,36 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		protected virtual Texture DrawName( PlayerInfo pInfo ) {
-			DrawTextArgs args = new DrawTextArgs( pInfo.ColouredName, font, false );
-			Texture tex = game.Drawer2D.MakeChatTextTexture( ref args, 0, 0 );
-			game.Drawer2D.ReducePadding( ref tex, Utils.Floor( font.Size ), 3 );
+		protected virtual Texture DrawName(PlayerInfo pInfo) {
+			DrawTextArgs args = new DrawTextArgs(pInfo.ColouredName, font, false);
+			Texture tex = game.Drawer2D.MakeChatTextTexture(ref args, 0, 0);
+			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(font.Size), 3);
 			return tex;
 		}
 		
-		void TabEntryAdded( object sender, IdEventArgs e ) {
-			AddPlayerInfo( new PlayerInfo( game.TabList.Entries[e.Id] ), -1 );
+		void TabEntryAdded(object sender, IdEventArgs e) {
+			AddPlayerInfo(new PlayerInfo(game.TabList.Entries[e.Id]), -1);
 			SortPlayerInfo();
 		}
 		
-		void TabEntryChanged( object sender, IdEventArgs e ) {
-			for( int i = 0; i < namesCount; i++ ) {
+		void TabEntryChanged(object sender, IdEventArgs e) {
+			for (int i = 0; i < namesCount; i++) {
 				PlayerInfo pInfo = info[i];
-				if( pInfo.Id != e.Id ) continue;
+				if (pInfo.Id != e.Id) continue;
 				
 				Texture tex = textures[i];
-				gfx.DeleteTexture( ref tex );
-				AddPlayerInfo( new PlayerInfo( game.TabList.Entries[e.Id] ), i );
+				gfx.DeleteTexture(ref tex);
+				AddPlayerInfo(new PlayerInfo(game.TabList.Entries[e.Id]), i);
 				SortPlayerInfo();
 				return;
 			}
 		}
 		
-		void TabEntryRemoved( object sender, IdEventArgs e ) {
-			for( int i = 0; i < namesCount; i++ ) {
+		void TabEntryRemoved(object sender, IdEventArgs e) {
+			for (int i = 0; i < namesCount; i++) {
 				PlayerInfo pInfo = info[i];
-				if( pInfo.Id == e.Id ) {
-					RemoveInfoAt( info, i );
+				if (pInfo.Id == e.Id) {
+					RemoveInfoAt(info, i);
 					return;
 				}
 			}
@@ -107,13 +107,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		PlayerInfoComparer comparer = new PlayerInfoComparer();
 		class PlayerInfoComparer : IComparer<PlayerInfo> {
 			
-			public int Compare( PlayerInfo x, PlayerInfo y ) {
-				return x.Name.CompareTo( y.Name );
+			public int Compare(PlayerInfo x, PlayerInfo y) {
+				return x.Name.CompareTo(y.Name);
 			}
 		}
 		
 		protected override void SortInfoList() {
-			Array.Sort( info, textures, 0, namesCount, comparer );
+			Array.Sort(info, textures, 0, namesCount, comparer);
 		}
 	}
 }

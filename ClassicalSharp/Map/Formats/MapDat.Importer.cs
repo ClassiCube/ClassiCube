@@ -19,7 +19,7 @@ namespace ClassicalSharp.Map {
 		const byte TC_ENDBLOCKDATA = 0x78;
 		
 		BinaryReader reader;		
-		public byte[] Load( Stream stream, Game game, out int width, out int height, out int length ) {
+		public byte[] Load(Stream stream, Game game, out int width, out int height, out int length) {
 			byte[] map = null;
 			width = 0;
 			height = 0;
@@ -27,26 +27,26 @@ namespace ClassicalSharp.Map {
 			LocalPlayer p = game.LocalPlayer;
 			p.Spawn = Vector3.Zero;
 			GZipHeaderReader gsHeader = new GZipHeaderReader();
-			while( !gsHeader.ReadHeader( stream ) ) { }
+			while (!gsHeader.ReadHeader(stream)) { }
 			
-			using( DeflateStream gs = new DeflateStream( stream, CompressionMode.Decompress ) ) {
-				reader = new BinaryReader( gs );
+			using(DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
+				reader = new BinaryReader(gs);
 				ClassDescription obj = ReadData();
-				for( int i = 0; i < obj.Fields.Length; i++ ) {
+				for (int i = 0; i < obj.Fields.Length; i++) {
 					FieldDescription field = obj.Fields[i];
-					if( field.FieldName == "width" ) 
+					if (field.FieldName == "width") 
 						width = (int)field.Value;
-					else if( field.FieldName == "height" )
+					else if (field.FieldName == "height")
 						length = (int)field.Value;
-					else if( field.FieldName == "depth" )
+					else if (field.FieldName == "depth")
 						height = (int)field.Value;
-					else if( field.FieldName == "blocks" )
+					else if (field.FieldName == "blocks")
 						map = (byte[])field.Value;
-					else if( field.FieldName == "xSpawn" )
+					else if (field.FieldName == "xSpawn")
 						p.Spawn.X = (int)field.Value;
-					else if( field.FieldName == "ySpawn" )
+					else if (field.FieldName == "ySpawn")
 						p.Spawn.Y = (int)field.Value;
-					else if( field.FieldName == "zSpawn" )
+					else if (field.FieldName == "zSpawn")
 						p.Spawn.Z = (int)field.Value;
 				}
 			}
@@ -54,25 +54,25 @@ namespace ClassicalSharp.Map {
 		}
 		
 		ClassDescription ReadData() {
-			if( ReadInt32() != 0x271BB788 || reader.ReadByte() != 0x02 ) {
-				throw new InvalidDataException( "Unexpected constant in .lvl file" );
+			if (ReadInt32() != 0x271BB788 || reader.ReadByte() != 0x02) {
+				throw new InvalidDataException("Unexpected constant in .lvl file");
 			}
 			
 			// Java serialization constants
-			if( (ushort)ReadInt16() != 0xACED || ReadInt16() != 0x0005 ) {
-				throw new InvalidDataException( "Unexpected java serialisation constant(s)." );
+			if ((ushort)ReadInt16() != 0xACED || ReadInt16() != 0x0005) {
+				throw new InvalidDataException("Unexpected java serialisation constant(s).");
 			}
 			
 			byte typeCode = reader.ReadByte();
-			if( typeCode != TC_OBJECT ) ParseError( TC_OBJECT, typeCode );
+			if (typeCode != TC_OBJECT) ParseError(TC_OBJECT, typeCode);
 			ClassDescription desc = ReadClassDescription();
-			ReadClassData( desc.Fields );
+			ReadClassData(desc.Fields);
 			return desc;
 		}	
 		
-		void ReadClassData( FieldDescription[] fields ) {
-			for( int i = 0; i < fields.Length; i++ ) {
-				switch( fields[i].Type ) {
+		void ReadClassData(FieldDescription[] fields) {
+			for (int i = 0; i < fields.Length; i++) {
+				switch(fields[i].Type) {
 					case FieldType.Byte:
 						fields[i].Value = reader.ReadByte(); break;
 					case FieldType.Float:
@@ -84,78 +84,78 @@ namespace ClassicalSharp.Map {
 					case FieldType.Boolean:
 						fields[i].Value = reader.ReadByte() != 0; break;
 					case FieldType.Object:
-						if( fields[i].FieldName == "blockMap" ) {
+						if (fields[i].FieldName == "blockMap") {
 							byte typeCode = reader.ReadByte();
 							// Skip all blockMap data with awful hacks
-							if( typeCode == TC_OBJECT ) {
-								reader.ReadBytes( 315 );
+							if (typeCode == TC_OBJECT) {
+								reader.ReadBytes(315);
 								int count = ReadInt32();
 								
 								byte[] temp = new byte[17];
 								Stream stream = reader.BaseStream;
-								for( int j = 0; j < count; j++ ) {
-									stream.Read( temp, 0, temp.Length );
+								for (int j = 0; j < count; j++) {
+									stream.Read(temp, 0, temp.Length);
 								}
-								reader.ReadBytes( 152 );
+								reader.ReadBytes(152);
 							}
 						} break;
 					case FieldType.Array:
-						ReadArray( ref fields[i] ); break;
+						ReadArray(ref fields[i]); break;
 				}
 			}
 		}	
 		
-		void ReadArray( ref FieldDescription field ) {
+		void ReadArray(ref FieldDescription field) {
 			byte typeCode = reader.ReadByte();
-			if( typeCode == TC_NULL ) return;
-			if( typeCode != TC_ARRAY ) ParseError( TC_ARRAY, typeCode );
+			if (typeCode == TC_NULL) return;
+			if (typeCode != TC_ARRAY) ParseError(TC_ARRAY, typeCode);
 			
 			ClassDescription desc = ReadClassDescription();
-			field.Value = reader.ReadBytes( ReadInt32() );
+			field.Value = reader.ReadBytes(ReadInt32());
 		}
 		
 		ClassDescription ReadClassDescription() {
-			ClassDescription desc = default( ClassDescription );
+			ClassDescription desc = default(ClassDescription);
 			byte typeCode = reader.ReadByte();
-			if( typeCode == TC_NULL ) return desc;			
-			if( typeCode != TC_CLASSDESC ) ParseError( TC_CLASSDESC, typeCode );
+			if (typeCode == TC_NULL) return desc;			
+			if (typeCode != TC_CLASSDESC) ParseError(TC_CLASSDESC, typeCode);
 			
 			desc.ClassName = ReadString();
 			reader.ReadUInt64(); // serial version UID
 			reader.ReadByte(); // flags
 			FieldDescription[] fields = new FieldDescription[ReadInt16()];
-			for( int i = 0; i < fields.Length; i++ ) {
+			for (int i = 0; i < fields.Length; i++) {
 				fields[i] = ReadFieldDescription();
 			}
 			desc.Fields = fields;
 			
 			typeCode = reader.ReadByte();
-			if( typeCode != TC_ENDBLOCKDATA ) ParseError( TC_ENDBLOCKDATA, typeCode );
+			if (typeCode != TC_ENDBLOCKDATA) ParseError(TC_ENDBLOCKDATA, typeCode);
 			ReadClassDescription(); // super class description
 			return desc;
 		}
 		
 		FieldDescription ReadFieldDescription() {
-			FieldDescription desc = default( FieldDescription );
+			FieldDescription desc = default(FieldDescription);
 			byte fieldType = reader.ReadByte();
 			desc.Type = (FieldType)fieldType;
 			desc.FieldName = ReadString();
 			
-			if( desc.Type == FieldType.Array || desc.Type == FieldType.Object ) {
+			if (desc.Type == FieldType.Array || desc.Type == FieldType.Object) {
 				byte typeCode = reader.ReadByte();
-				if( typeCode == TC_STRING )
+				if (typeCode == TC_STRING)
 					desc.ClassName1 = ReadString();
-				else if( typeCode == TC_REFERENCE )
+				else if (typeCode == TC_REFERENCE)
 					reader.ReadInt32(); // handle
 				else
-					ParseError( TC_STRING, typeCode );
+					ParseError(TC_STRING, typeCode);
 			}
 			return desc;
 		}
 		
-		void ParseError( int expected, int typeCode ) {
+		void ParseError(int expected, int typeCode) {
 			throw new InvalidDataException(
-				String.Format( "Expected {0}, got {1}", expected.ToString( "X2" ), typeCode.ToString( "X2" ) ) );
+				String.Format("Expected {0}, got {1}", expected.ToString("X2"), typeCode.ToString("X2")));
 		}
 		
 		struct ClassDescription {
@@ -175,9 +175,9 @@ namespace ClassicalSharp.Map {
 			Boolean = 'Z', Array = '[', Object = 'L',
 		}
 		
-		long ReadInt64() { return IPAddress.HostToNetworkOrder( reader.ReadInt64() ); }
-		int ReadInt32() { return IPAddress.HostToNetworkOrder( reader.ReadInt32() ); }
-		short ReadInt16() { return IPAddress.HostToNetworkOrder( reader.ReadInt16() ); }
-		string ReadString() { return Encoding.ASCII.GetString( reader.ReadBytes( ReadInt16() ) ); }
+		long ReadInt64() { return IPAddress.HostToNetworkOrder(reader.ReadInt64()); }
+		int ReadInt32() { return IPAddress.HostToNetworkOrder(reader.ReadInt32()); }
+		short ReadInt16() { return IPAddress.HostToNetworkOrder(reader.ReadInt16()); }
+		string ReadString() { return Encoding.ASCII.GetString(reader.ReadBytes(ReadInt16())); }
 	}
 }

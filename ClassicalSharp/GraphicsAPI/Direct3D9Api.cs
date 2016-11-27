@@ -30,301 +30,301 @@ namespace ClassicalSharp.GraphicsAPI {
 		Format depthFormat, viewFormat;
 		CreateFlags createFlags = CreateFlags.HardwareVertexProcessing;
 
-		public Direct3D9Api( Game game ) {
+		public Direct3D9Api(Game game) {
 			MinZNear = 0.05f;
 			IntPtr windowHandle = ((WinWindowInfo)game.window.WindowInfo).WindowHandle;
 			d3d = new Direct3D();
 			int adapter = d3d.Adapters[0].Adapter;
 			InitFields();
-			FindCompatibleFormat( adapter );
+			FindCompatibleFormat(adapter);
 			
-			PresentParameters args = GetPresentArgs( 640, 480 );
+			PresentParameters args = GetPresentArgs(640, 480);
 			try {
-				device = d3d.CreateDevice( adapter, DeviceType.Hardware, windowHandle, createFlags, args );
-			} catch( SharpDXException ) {
+				device = d3d.CreateDevice(adapter, DeviceType.Hardware, windowHandle, createFlags, args);
+			} catch(SharpDXException) {
 				createFlags = CreateFlags.MixedVertexProcessing;
 				try {
-					device = d3d.CreateDevice( adapter, DeviceType.Hardware, windowHandle, createFlags, args );
-				} catch ( SharpDXException ) {
+					device = d3d.CreateDevice(adapter, DeviceType.Hardware, windowHandle, createFlags, args);
+				} catch (SharpDXException) {
 					createFlags = CreateFlags.SoftwareVertexProcessing;
-					device = d3d.CreateDevice( adapter, DeviceType.Hardware, windowHandle, createFlags, args );
+					device = d3d.CreateDevice(adapter, DeviceType.Hardware, windowHandle, createFlags, args);
 				}
 			}
 			
 			caps = device.Capabilities;
-			viewStack = new MatrixStack( 32, device, TransformState.View );
-			projStack = new MatrixStack( 4, device, TransformState.Projection );
-			texStack = new MatrixStack( 4, device, TransformState.Texture0 );
+			viewStack = new MatrixStack(32, device, TransformState.View);
+			projStack = new MatrixStack(4, device, TransformState.Projection);
+			texStack = new MatrixStack(4, device, TransformState.Texture0);
 			SetDefaultRenderStates();
 			InitDynamicBuffers();
 		}
 		
-		void FindCompatibleFormat( int adapter ) {
-			for( int i = 0; i < viewFormats.Length; i++ ) {
+		void FindCompatibleFormat(int adapter) {
+			for (int i = 0; i < viewFormats.Length; i++) {
 				viewFormat = viewFormats[i];
-				if( d3d.CheckDeviceType( adapter, DeviceType.Hardware, viewFormat, viewFormat, true ) ) break;
+				if (d3d.CheckDeviceType(adapter, DeviceType.Hardware, viewFormat, viewFormat, true)) break;
 				
-				if( i == viewFormats.Length - 1 )
-					throw new InvalidOperationException( "Unable to create a back buffer with sufficient precision." );
+				if (i == viewFormats.Length - 1)
+					throw new InvalidOperationException("Unable to create a back buffer with sufficient precision.");
 			}
 			
-			for( int i = 0; i < depthFormats.Length; i++ ) {
+			for (int i = 0; i < depthFormats.Length; i++) {
 				depthFormat = depthFormats[i];
-				if( d3d.CheckDepthStencilMatch( adapter, DeviceType.Hardware, viewFormat, viewFormat, depthFormat ) ) break;
+				if (d3d.CheckDepthStencilMatch(adapter, DeviceType.Hardware, viewFormat, viewFormat, depthFormat)) break;
 				
-				if( i == depthFormats.Length - 1 )
-					throw new InvalidOperationException( "Unable to create a depth buffer with sufficient precision." );
+				if (i == depthFormats.Length - 1)
+					throw new InvalidOperationException("Unable to create a depth buffer with sufficient precision.");
 			}
 		}
 		
 		bool alphaTest, alphaBlend;
 		public override bool AlphaTest {
-			set { if( value == alphaTest ) return;
-				alphaTest = value; device.SetRenderState( RenderState.AlphaTestEnable, value );
+			set { if (value == alphaTest) return;
+				alphaTest = value; device.SetRenderState(RenderState.AlphaTestEnable, value);
 			}
 		}
 
 		public override bool AlphaBlending {
-			set { if( value == alphaBlend ) return;
-				alphaBlend = value; device.SetRenderState( RenderState.AlphaBlendEnable, value );
+			set { if (value == alphaBlend) return;
+				alphaBlend = value; device.SetRenderState(RenderState.AlphaBlendEnable, value);
 			}
 		}
 
 		Compare[] compareFuncs;
 		Compare alphaTestFunc;
 		int alphaTestRef;
-		public override void AlphaTestFunc( CompareFunc func, float value ) {
+		public override void AlphaTestFunc(CompareFunc func, float value) {
 			alphaTestFunc = compareFuncs[(int)func];
-			device.SetRenderState( RenderState.AlphaFunc, (int)alphaTestFunc );
-			alphaTestRef = (int)( value * 255 );
-			device.SetRenderState( RenderState.AlphaRef, alphaTestRef );
+			device.SetRenderState(RenderState.AlphaFunc, (int)alphaTestFunc);
+			alphaTestRef = (int)(value * 255);
+			device.SetRenderState(RenderState.AlphaRef, alphaTestRef);
 		}
 
 		Blend[] blendFuncs;
 		Blend srcBlendFunc, dstBlendFunc;
-		public override void AlphaBlendFunc( BlendFunc srcFunc, BlendFunc dstFunc ) {
+		public override void AlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
 			srcBlendFunc = blendFuncs[(int)srcFunc];
 			dstBlendFunc = blendFuncs[(int)dstFunc];
-			device.SetRenderState( RenderState.SourceBlend, (int)srcBlendFunc );
-			device.SetRenderState( RenderState.DestinationBlend, (int)dstBlendFunc );
+			device.SetRenderState(RenderState.SourceBlend, (int)srcBlendFunc);
+			device.SetRenderState(RenderState.DestinationBlend, (int)dstBlendFunc);
 		}
 
 		bool fogEnable;
 		public override bool Fog {
-			set { if( value == fogEnable ) return;
-				fogEnable = value; device.SetRenderState( RenderState.FogEnable, value );
+			set { if (value == fogEnable) return;
+				fogEnable = value; device.SetRenderState(RenderState.FogEnable, value);
 			}
 		}
 
 		int fogCol;
-		public override void SetFogColour( FastColour col ) {
+		public override void SetFogColour(FastColour col) {
 			fogCol = col.ToArgb();
-			device.SetRenderState( RenderState.FogColor, fogCol );
+			device.SetRenderState(RenderState.FogColor, fogCol);
 		}
 
 		float fogDensity = -1, fogStart = -1, fogEnd = -1;
-		public override void SetFogDensity( float value ) {
-			if( value == fogDensity ) return;
+		public override void SetFogDensity(float value) {
+			if (value == fogDensity) return;
 			fogDensity = value;
-			device.SetRenderState( RenderState.FogDensity, value );
+			device.SetRenderState(RenderState.FogDensity, value);
 		}
 		
-		public override void SetFogStart( float value ) {
-			device.SetRenderState( RenderState.FogStart, value );
+		public override void SetFogStart(float value) {
+			device.SetRenderState(RenderState.FogStart, value);
 		}
 
-		public override void SetFogEnd( float value ) {
-			if( value == fogEnd ) return;
+		public override void SetFogEnd(float value) {
+			if (value == fogEnd) return;
 			fogEnd = value;
-			device.SetRenderState( RenderState.FogEnd, value );
+			device.SetRenderState(RenderState.FogEnd, value);
 		}
 
 		FogMode[] modes;
 		FogMode fogTableMode;
-		public override void SetFogMode( Fog fogMode ) {
+		public override void SetFogMode(Fog fogMode) {
 			FogMode newMode = modes[(int)fogMode];
-			if( newMode == fogTableMode ) return;
+			if (newMode == fogTableMode) return;
 			fogTableMode = newMode;
-			device.SetRenderState( RenderState.FogTableMode, (int)fogTableMode );
+			device.SetRenderState(RenderState.FogTableMode, (int)fogTableMode);
 		}
 		
 		public override bool FaceCulling {
 			set {
 				Cull mode = value ? Cull.Clockwise : Cull.None;
-				device.SetRenderState( RenderState.CullMode, (int)mode );
+				device.SetRenderState(RenderState.CullMode, (int)mode);
 			}
 		}
 
 		public override int MaxTextureDimensions {
-			get { return Math.Min( caps.MaxTextureHeight, caps.MaxTextureWidth ); }
+			get { return Math.Min(caps.MaxTextureHeight, caps.MaxTextureWidth); }
 		}
 		
 		public override bool Texturing {
-			set { if( !value ) device.SetTexture( 0, null ); }
+			set { if (!value) device.SetTexture(0, null); }
 		}
 
-		protected override int CreateTexture( int width, int height, IntPtr scan0, bool managedPool ) {
+		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool) {
 			Pool pool = managedPool ? Pool.Managed : Pool.Default;
-			D3D.Texture texture = device.CreateTexture( width, height, 0, Usage.None, Format.A8R8G8B8, pool );
-			texture.SetData( 0, LockFlags.None, scan0, width * height * 4 );
-			return GetOrExpand( ref textures, texture, texBufferSize );
+			D3D.Texture texture = device.CreateTexture(width, height, 0, Usage.None, Format.A8R8G8B8, pool);
+			texture.SetData(0, LockFlags.None, scan0, width * height * 4);
+			return GetOrExpand(ref textures, texture, texBufferSize);
 		}
 		
-		public override void UpdateTexturePart( int texId, int texX, int texY, FastBitmap part ) {
+		public override void UpdateTexturePart(int texId, int texX, int texY, FastBitmap part) {
 			D3D.Texture texture = textures[texId];
-			texture.SetPartData( 0, LockFlags.None, part.Scan0, texX, texY, part.Width, part.Height );
+			texture.SetPartData(0, LockFlags.None, part.Scan0, texX, texY, part.Width, part.Height);
 		}
 
-		public override void BindTexture( int texId ) {
-			device.SetTexture( 0, textures[texId] );
+		public override void BindTexture(int texId) {
+			device.SetTexture(0, textures[texId]);
 		}
 
-		public override void DeleteTexture( ref int texId ) {
-			Delete( textures, ref texId );
+		public override void DeleteTexture(ref int texId) {
+			Delete(textures, ref texId);
 		}
 
 		int lastClearCol;
 		public override void Clear() {
-			device.Clear( ClearFlags.Target | ClearFlags.ZBuffer, lastClearCol, 1f, 0 );
+			device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, lastClearCol, 1f, 0);
 		}
 
-		public override void ClearColour( FastColour col ) {
+		public override void ClearColour(FastColour col) {
 			lastClearCol = col.ToArgb();
 		}
 
 		public override bool ColourWrite {
-			set { device.SetRenderState( RenderState.ColorWriteEnable, value ? 0xF : 0x0 ); }
+			set { device.SetRenderState(RenderState.ColorWriteEnable, value ? 0xF : 0x0); }
 		}
 
 		Compare depthTestFunc;
-		public override void DepthTestFunc( CompareFunc func ) {
+		public override void DepthTestFunc(CompareFunc func) {
 			depthTestFunc = compareFuncs[(int)func];
-			device.SetRenderState( RenderState.ZFunc, (int)depthTestFunc );
+			device.SetRenderState(RenderState.ZFunc, (int)depthTestFunc);
 		}
 
 		bool depthTest, depthWrite;
 		public override bool DepthTest {
-			set { depthTest = value; device.SetRenderState( RenderState.ZEnable, value ); }
+			set { depthTest = value; device.SetRenderState(RenderState.ZEnable, value); }
 		}
 
 		public override bool DepthWrite {
-			set { depthWrite = value; device.SetRenderState( RenderState.ZWriteEnable, value ); }
+			set { depthWrite = value; device.SetRenderState(RenderState.ZWriteEnable, value); }
 		}
 		
 		public override bool AlphaArgBlend {
 			set {
 				TextureOp op = value ? TextureOp.Modulate : TextureOp.SelectArg1;
-				device.SetTextureStageState( 0, TextureStage.AlphaOperation, (int)op );
+				device.SetTextureStageState(0, TextureStage.AlphaOperation, (int)op);
 			}
 		}
 		
 		#region Vertex buffers
 		
-		public override int CreateDynamicVb( VertexFormat format, int maxVertices ) {
+		public override int CreateDynamicVb(VertexFormat format, int maxVertices) {
 			int size = maxVertices * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.Dynamic,
-			                                              formatMapping[(int)format], Pool.Default );
-			return GetOrExpand( ref vBuffers, buffer, iBufferSize );
+			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.Dynamic,
+			                                              formatMapping[(int)format], Pool.Default);
+			return GetOrExpand(ref vBuffers, buffer, iBufferSize);
 		}
 		
-		public override void SetDynamicVbData<T>( int vb, T[] vertices, int count ) {
+		public override void SetDynamicVbData<T>(int vb, T[] vertices, int count) {
 			int size = count * batchStride;
 			DataBuffer buffer = vBuffers[vb];
-			buffer.SetData( vertices, size, LockFlags.Discard );
-			device.SetStreamSource( 0, buffer, 0, batchStride );
+			buffer.SetData(vertices, size, LockFlags.Discard);
+			device.SetStreamSource(0, buffer, 0, batchStride);
 		}
 
 		D3D.VertexFormat[] formatMapping;
-		public override int CreateVb<T>( T[] vertices, VertexFormat format, int count ) {
+		public override int CreateVb<T>(T[] vertices, VertexFormat format, int count) {
 			int size = count * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Default );
-			buffer.SetData( vertices, size, LockFlags.None );
-			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
+			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.None, formatMapping[(int)format], Pool.Default);
+			buffer.SetData(vertices, size, LockFlags.None);
+			return GetOrExpand(ref vBuffers, buffer, vBufferSize);
 		}
 		
-		public override int CreateVb( IntPtr vertices, VertexFormat format, int count ) {
+		public override int CreateVb(IntPtr vertices, VertexFormat format, int count) {
 			int size = count * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer( size, Usage.None, formatMapping[(int)format], Pool.Default );
-			buffer.SetData( vertices, size, LockFlags.None );
-			return GetOrExpand( ref vBuffers, buffer, vBufferSize );
+			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.None, formatMapping[(int)format], Pool.Default);
+			buffer.SetData(vertices, size, LockFlags.None);
+			return GetOrExpand(ref vBuffers, buffer, vBufferSize);
 		}
 		
-		public override int CreateIb( IntPtr indices, int indicesCount ) {
-			int size = indicesCount * sizeof( ushort );
-			DataBuffer buffer = device.CreateIndexBuffer( size, Usage.None, Format.Index16, Pool.Managed );
-			buffer.SetData( indices, size, LockFlags.None );
-			return GetOrExpand( ref iBuffers, buffer, iBufferSize );
+		public override int CreateIb(IntPtr indices, int indicesCount) {
+			int size = indicesCount * sizeof(ushort);
+			DataBuffer buffer = device.CreateIndexBuffer(size, Usage.None, Format.Index16, Pool.Managed);
+			buffer.SetData(indices, size, LockFlags.None);
+			return GetOrExpand(ref iBuffers, buffer, iBufferSize);
 		}
 
-		public override void DeleteVb( ref int vb ) {
-			Delete( vBuffers, ref vb );
+		public override void DeleteVb(ref int vb) {
+			Delete(vBuffers, ref vb);
 		}
 		
-		public override void DeleteIb( ref int ib ) {
-			Delete( iBuffers, ref ib );
+		public override void DeleteIb(ref int ib) {
+			Delete(iBuffers, ref ib);
 		}
 
 		int batchStride;
-		public override void SetBatchFormat( VertexFormat format ) {
-			device.SetVertexFormat( formatMapping[(int)format] );
+		public override void SetBatchFormat(VertexFormat format) {
+			device.SetVertexFormat(formatMapping[(int)format]);
 			batchStride = strideSizes[(int)format];
 		}
 		
-		public override void BindVb( int vb ) {
-			device.SetStreamSource( 0, vBuffers[vb], 0, batchStride );
+		public override void BindVb(int vb) {
+			device.SetStreamSource(0, vBuffers[vb], 0, batchStride);
 		}
 		
-		public override void BindIb( int ib ) {
-			device.SetIndices( iBuffers[ib] );
+		public override void BindIb(int ib) {
+			device.SetIndices(iBuffers[ib]);
 		}
 
-		public override void DrawVb( DrawMode mode, int startVertex, int verticesCount ) {
-			device.DrawPrimitives( modeMappings[(int)mode], startVertex, NumPrimitives( verticesCount, mode ) );
+		public override void DrawVb(DrawMode mode, int startVertex, int verticesCount) {
+			device.DrawPrimitives(modeMappings[(int)mode], startVertex, NumPrimitives(verticesCount, mode));
 		}
 
-		public override void DrawIndexedVb( DrawMode mode, int indicesCount, int startIndex ) {
-			device.DrawIndexedPrimitives( modeMappings[(int)mode], 0, startIndex / 6 * 4,
-			                             indicesCount / 6 * 4, startIndex, NumPrimitives( indicesCount, mode ) );
+		public override void DrawIndexedVb(DrawMode mode, int indicesCount, int startIndex) {
+			device.DrawIndexedPrimitives(modeMappings[(int)mode], 0, startIndex / 6 * 4,
+			                             indicesCount / 6 * 4, startIndex, NumPrimitives(indicesCount, mode));
 		}
 		
-		internal override void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startIndex ) {
-			device.DrawIndexedPrimitives( PrimitiveType.TriangleList, 0, startIndex / 6 * 4,
-			                             indicesCount / 6 * 4, startIndex, indicesCount / 3 );
+		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startIndex) {
+			device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, startIndex / 6 * 4,
+			                             indicesCount / 6 * 4, startIndex, indicesCount / 3);
 		}
 		
-		internal override void DrawIndexedVb_TrisT2fC4b( int indicesCount, int startVertex, int startIndex ) {
-			device.DrawIndexedPrimitives( PrimitiveType.TriangleList, startVertex, 0,
-			                             indicesCount / 6 * 4, startIndex, indicesCount / 3 );
+		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startVertex, int startIndex) {
+			device.DrawIndexedPrimitives(PrimitiveType.TriangleList, startVertex, 0,
+			                             indicesCount / 6 * 4, startIndex, indicesCount / 3);
 		}
 		#endregion
 
 
 		#region Matrix manipulation
 
-		public override void SetMatrixMode( MatrixType mode ) {
-			if( mode == MatrixType.Modelview ) {
+		public override void SetMatrixMode(MatrixType mode) {
+			if (mode == MatrixType.Modelview) {
 				curStack = viewStack;
-			} else if( mode == MatrixType.Projection ) {
+			} else if (mode == MatrixType.Projection) {
 				curStack = projStack;
-			} else if( mode == MatrixType.Texture ) {
+			} else if (mode == MatrixType.Texture) {
 				curStack = texStack;
 			}
 		}
 
-		public unsafe override void LoadMatrix( ref Matrix4 matrix ) {
-			if( curStack == texStack ) {
+		public unsafe override void LoadMatrix(ref Matrix4 matrix) {
+			if (curStack == texStack) {
 				matrix.M31 = matrix.M41; // NOTE: this hack fixes the texture movements.
-				device.SetTextureStageState( 0, TextureStage.TextureTransformFlags, (int)TextureTransform.Count2 );
+				device.SetTextureStageState(0, TextureStage.TextureTransformFlags, (int)TextureTransform.Count2);
 			}
-			curStack.SetTop( ref matrix );
+			curStack.SetTop(ref matrix);
 		}
 
 		Matrix4 identity = Matrix4.Identity;
 		public override void LoadIdentityMatrix() {
-			if( curStack == texStack ) {
-				device.SetTextureStageState( 0, TextureStage.TextureTransformFlags, (int)TextureTransform.Disable );
+			if (curStack == texStack) {
+				device.SetTextureStageState(0, TextureStage.TextureTransformFlags, (int)TextureTransform.Disable);
 			}
-			curStack.SetTop( ref identity );
+			curStack.SetTop(ref identity);
 		}
 
 		public override void PushMatrix() {
@@ -335,8 +335,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			curStack.Pop();
 		}
 
-		public unsafe override void MultiplyMatrix( ref Matrix4 matrix ) {
-			curStack.MultiplyTop( ref matrix );
+		public unsafe override void MultiplyMatrix(ref Matrix4 matrix) {
+			curStack.MultiplyTop(ref matrix);
 		}
 
 		class MatrixStack
@@ -346,7 +346,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			Device device;
 			TransformState matrixType;
 
-			public MatrixStack( int capacity, Device device, TransformState matrixType ) {
+			public MatrixStack(int capacity, Device device, TransformState matrixType) {
 				stack = new Matrix4[capacity];
 				stack[0] = Matrix4.Identity;
 				this.device = device;
@@ -358,40 +358,40 @@ namespace ClassicalSharp.GraphicsAPI {
 				stackIndex++; // exact same, we don't need to update DirectX state.
 			}
 
-			public void SetTop( ref Matrix4 matrix ) {
+			public void SetTop(ref Matrix4 matrix) {
 				stack[stackIndex] = matrix;
-				device.SetTransform( matrixType, ref stack[stackIndex] );
+				device.SetTransform(matrixType, ref stack[stackIndex]);
 			}
 
-			public void MultiplyTop( ref Matrix4 matrix ) {
+			public void MultiplyTop(ref Matrix4 matrix) {
 				stack[stackIndex] = matrix * stack[stackIndex];
-				device.SetTransform( matrixType, ref stack[stackIndex] );
+				device.SetTransform(matrixType, ref stack[stackIndex]);
 			}
 
 			public void Pop() {
 				stackIndex--;
-				device.SetTransform( matrixType, ref stack[stackIndex] );
+				device.SetTransform(matrixType, ref stack[stackIndex]);
 			}
 		}
 
 		#endregion
 		
-		public override void BeginFrame( Game game ) {
+		public override void BeginFrame(Game game) {
 			device.BeginScene();
 		}
 		
-		public override void EndFrame( Game game ) {
+		public override void EndFrame(Game game) {
 			device.EndScene();
 			int code = device.Present();
-			if( code >= 0 ) return;
+			if (code >= 0) return;
 			
-			if( (uint)code != (uint)Direct3DError.DeviceLost )
-				throw new SharpDXException( code );
+			if ((uint)code != (uint)Direct3DError.DeviceLost)
+				throw new SharpDXException(code);
 			
 			// TODO: Make sure this actually works on all graphics cards.
-			Utils.LogDebug( "Lost Direct3D device." );
+			Utils.LogDebug("Lost Direct3D device.");
 			LoopUntilRetrieved();
-			RecreateDevice( game );
+			RecreateDevice(game);
 		}
 		
 		void LoopUntilRetrieved() {
@@ -399,36 +399,36 @@ namespace ClassicalSharp.GraphicsAPI {
 			task.Interval = 1.0 / 20;
 			task.Callback = LostContextFunction;
 			
-			while( true ) {
-				Thread.Sleep( 50 );
+			while (true) {
+				Thread.Sleep(50);
 				uint code = (uint)device.TestCooperativeLevel();
-				if( (uint)code == (uint)Direct3DError.DeviceNotReset ) {
-					Utils.LogDebug( "Retrieved Direct3D device again." ); return;
+				if ((uint)code == (uint)Direct3DError.DeviceNotReset) {
+					Utils.LogDebug("Retrieved Direct3D device again."); return;
 				}
-				task.Callback( task );
+				task.Callback(task);
 			}
 		}
 		
 		
 		bool vsync = false;
-		public override void SetVSync( Game game, bool value ) {
+		public override void SetVSync(Game game, bool value) {
 			vsync = value;
 			game.VSync = value;
-			RecreateDevice( game );
+			RecreateDevice(game);
 		}
 		
-		public override void OnWindowResize( Game game ) {
-			RecreateDevice( game );
+		public override void OnWindowResize(Game game) {
+			RecreateDevice(game);
 		}
 		
-		void RecreateDevice( Game game ) {
-			PresentParameters args = GetPresentArgs( game.Width, game.Height );
+		void RecreateDevice(Game game) {
+			PresentParameters args = GetPresentArgs(game.Width, game.Height);
 			LostContext = true;
 			RaiseContextLost();
-			DeleteVb( ref quadVb );
-			DeleteVb( ref texVb );
+			DeleteVb(ref quadVb);
+			DeleteVb(ref texVb);
 			
-			while( (uint)device.Reset( args ) == (uint)Direct3DError.DeviceLost )
+			while ((uint)device.Reset(args) == (uint)Direct3DError.DeviceLost)
 				LoopUntilRetrieved();
 			
 			SetDefaultRenderStates();
@@ -441,32 +441,32 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		void SetDefaultRenderStates() {
 			FaceCulling = false;
-			device.SetRenderState( RenderState.ColorVertex, false );
-			device.SetRenderState( RenderState.Lighting, false );
-			device.SetRenderState( RenderState.SpecularEnable, false );
-			device.SetRenderState( RenderState.LocalViewer, false );
-			device.SetRenderState( RenderState.DebugMonitorToken, false );
+			device.SetRenderState(RenderState.ColorVertex, false);
+			device.SetRenderState(RenderState.Lighting, false);
+			device.SetRenderState(RenderState.SpecularEnable, false);
+			device.SetRenderState(RenderState.LocalViewer, false);
+			device.SetRenderState(RenderState.DebugMonitorToken, false);
 		}
 		
 		void RestoreRenderStates() {
-			device.SetRenderState( RenderState.AlphaTestEnable, alphaTest );
-			device.SetRenderState( RenderState.AlphaBlendEnable, alphaBlend );
-			device.SetRenderState( RenderState.AlphaFunc, (int)alphaTestFunc );
-			device.SetRenderState( RenderState.AlphaRef, alphaTestRef );
-			device.SetRenderState( RenderState.SourceBlend, (int)srcBlendFunc );
-			device.SetRenderState( RenderState.DestinationBlend, (int)dstBlendFunc );
-			device.SetRenderState( RenderState.FogEnable, fogEnable );
-			device.SetRenderState( RenderState.FogColor, fogCol );
-			device.SetRenderState( RenderState.FogDensity, fogDensity );
-			device.SetRenderState( RenderState.FogStart, fogStart );
-			device.SetRenderState( RenderState.FogEnd, fogEnd );
-			device.SetRenderState( RenderState.FogTableMode, (int)fogTableMode );
-			device.SetRenderState( RenderState.ZFunc, (int)depthTestFunc );
-			device.SetRenderState( RenderState.ZEnable, depthTest );
-			device.SetRenderState( RenderState.ZWriteEnable, depthWrite );
+			device.SetRenderState(RenderState.AlphaTestEnable, alphaTest);
+			device.SetRenderState(RenderState.AlphaBlendEnable, alphaBlend);
+			device.SetRenderState(RenderState.AlphaFunc, (int)alphaTestFunc);
+			device.SetRenderState(RenderState.AlphaRef, alphaTestRef);
+			device.SetRenderState(RenderState.SourceBlend, (int)srcBlendFunc);
+			device.SetRenderState(RenderState.DestinationBlend, (int)dstBlendFunc);
+			device.SetRenderState(RenderState.FogEnable, fogEnable);
+			device.SetRenderState(RenderState.FogColor, fogCol);
+			device.SetRenderState(RenderState.FogDensity, fogDensity);
+			device.SetRenderState(RenderState.FogStart, fogStart);
+			device.SetRenderState(RenderState.FogEnd, fogEnd);
+			device.SetRenderState(RenderState.FogTableMode, (int)fogTableMode);
+			device.SetRenderState(RenderState.ZFunc, (int)depthTestFunc);
+			device.SetRenderState(RenderState.ZEnable, depthTest);
+			device.SetRenderState(RenderState.ZWriteEnable, depthWrite);
 		}
 		
-		PresentParameters GetPresentArgs( int width, int height ) {
+		PresentParameters GetPresentArgs(int width, int height) {
 			PresentParameters args = new PresentParameters();
 			args.AutoDepthStencilFormat = depthFormat;
 			args.BackBufferWidth = width;
@@ -480,43 +480,43 @@ namespace ClassicalSharp.GraphicsAPI {
 			return args;
 		}
 
-		static int GetOrExpand<T>( ref T[] array, T value, int expSize ) {
+		static int GetOrExpand<T>(ref T[] array, T value, int expSize) {
 			// Find first free slot
-			for( int i = 1; i < array.Length; i++ ) {
-				if( array[i] == null ) {
+			for (int i = 1; i < array.Length; i++) {
+				if (array[i] == null) {
 					array[i] = value;
 					return i;
 				}
 			}
 			// Otherwise resize and add more elements
 			int oldLength = array.Length;
-			Array.Resize( ref array, array.Length + expSize );
+			Array.Resize(ref array, array.Length + expSize);
 			array[oldLength] = value;
 			return oldLength;
 		}
 		
-		static void Delete<T>( T[] array, ref int id ) where T : class, IDisposable {
-			if( id <= 0 || id >= array.Length ) return;
+		static void Delete<T>(T[] array, ref int id) where T : class, IDisposable {
+			if (id <= 0 || id >= array.Length) return;
 			
 			T value = array[id];
-			if( value != null ) {
+			if (value != null) {
 				value.Dispose();
 			}
 			array[id] = null;
 			id = -1;
 		}
 		
-		static int NumPrimitives( int vertices, DrawMode mode ) {
+		static int NumPrimitives(int vertices, DrawMode mode) {
 			return mode == DrawMode.Triangles ? vertices / 3 : vertices / 2;
 		}
 		
-		protected unsafe override void LoadOrthoMatrix( float width, float height ) {
-			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter( 0, width, height, 0, -10000, 10000 );
+		protected unsafe override void LoadOrthoMatrix(float width, float height) {
+			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000);
 			const float zN = -10000, zF = 10000;
 			matrix.M33 = 1 / (zN - zF);
 			matrix.M43 = zN / (zN - zF);
 			matrix.M44 = 1;
-			curStack.SetTop( ref matrix );
+			curStack.SetTop(ref matrix);
 		}
 		
 		public override void Dispose() {
@@ -540,16 +540,16 @@ namespace ClassicalSharp.GraphicsAPI {
 			};
 		}
 
-		public override void TakeScreenshot( string output, int width, int height ) {
-			using( Surface backbuffer = device.GetBackBuffer( 0, 0, BackBufferType.Mono ),
-			      tempSurface = device.CreateOffscreenPlainSurface( width, height, Format.X8R8G8B8, Pool.SystemMemory ) ) {
+		public override void TakeScreenshot(string output, int width, int height) {
+			using(Surface backbuffer = device.GetBackBuffer(0, 0, BackBufferType.Mono),
+			      tempSurface = device.CreateOffscreenPlainSurface(width, height, Format.X8R8G8B8, Pool.SystemMemory)) {
 				// For DX 8 use IDirect3DDevice8::CreateImageSurface
-				device.GetRenderTargetData( backbuffer, tempSurface );
-				LockedRectangle rect = tempSurface.LockRectangle( LockFlags.ReadOnly | LockFlags.NoDirtyUpdate );
+				device.GetRenderTargetData(backbuffer, tempSurface);
+				LockedRectangle rect = tempSurface.LockRectangle(LockFlags.ReadOnly | LockFlags.NoDirtyUpdate);
 				
-				using( Bitmap bmp = new Bitmap( width, height, width * sizeof(int),
-				                               PixelFormat.Format32bppRgb, rect.DataPointer ) ) {
-					bmp.Save( output, ImageFormat.Png );
+				using(Bitmap bmp = new Bitmap(width, height, width * sizeof(int),
+				                               PixelFormat.Format32bppRgb, rect.DataPointer)) {
+					bmp.Save(output, ImageFormat.Png);
 				}
 				tempSurface.UnlockRectangle();
 			}

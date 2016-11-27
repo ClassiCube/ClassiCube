@@ -65,154 +65,154 @@ namespace ClassicalSharp {
 		public static List<string> OptionsChanged = new List<string>();
 		const string Filename = "options.txt";
 		
-		static bool TryGetValue( string key, out string value ) {
-			if( OptionsSet.TryGetValue( key, out value ) ) return true;
-			int index = key.IndexOf( '-' );
+		static bool TryGetValue(string key, out string value) {
+			if (OptionsSet.TryGetValue(key, out value)) return true;
+			int index = key.IndexOf('-');
 			
-			if( index == -1 ) return false;
-			return OptionsSet.TryGetValue( key.Substring( index + 1 ), out value );
+			if (index == -1) return false;
+			return OptionsSet.TryGetValue(key.Substring(index + 1), out value);
 		}
 		
-		public static string Get( string key ) {
+		public static string Get(string key) {
 			string value;
-			return TryGetValue( key, out value ) ? value : null;
+			return TryGetValue(key, out value) ? value : null;
 		}
 		
-		public static int GetInt( string key, int min, int max, int defValue ) {
+		public static int GetInt(string key, int min, int max, int defValue) {
 			string value;
 			int valueInt = 0;
-			if( !TryGetValue( key, out value ) || !Int32.TryParse( value, out valueInt ) )
+			if (!TryGetValue(key, out value) || !Int32.TryParse(value, out valueInt))
 				return defValue;
 
-			Utils.Clamp( ref valueInt, min, max );
+			Utils.Clamp(ref valueInt, min, max);
 			return valueInt;
 		}
 		
-		public static bool GetBool( string key, bool defValue ) {
+		public static bool GetBool(string key, bool defValue) {
 			string value;
 			bool valueBool = false;
-			if( !TryGetValue( key, out value ) || !Boolean.TryParse( value, out valueBool ) )
+			if (!TryGetValue(key, out value) || !Boolean.TryParse(value, out valueBool))
 				return defValue;
 			return valueBool;
 		}
 		
-		public static float GetFloat( string key, float min, float max, float defValue ) {
+		public static float GetFloat(string key, float min, float max, float defValue) {
 			string value;
 			float valueFloat = 0;
-			if( !TryGetValue( key, out value ) || !Single.TryParse( value, out valueFloat ) )
+			if (!TryGetValue(key, out value) || !Single.TryParse(value, out valueFloat))
 				return defValue;
-			Utils.Clamp( ref valueFloat, min, max );
+			Utils.Clamp(ref valueFloat, min, max);
 			return valueFloat;
 		}
 		
-		public static T GetEnum<T>( string key, T defValue ) {
-			string value = Get( key.ToLower() );
-			if( value == null ) {
-				Set( key, defValue );
+		public static T GetEnum<T>(string key, T defValue) {
+			string value = Get(key.ToLower());
+			if (value == null) {
+				Set(key, defValue);
 				return defValue;
 			}
 			
 			T mapping;
-			if( !Utils.TryParseEnum( value, defValue, out mapping ) )
-				Set( key, defValue );
+			if (!Utils.TryParseEnum(value, defValue, out mapping))
+				Set(key, defValue);
 			return mapping;
 		}
 		
-		public static void Set( string key, string value ) {
+		public static void Set(string key, string value) {
 			key = key.ToLower();
-			if( value != null ) {
+			if (value != null) {
 				OptionsSet[key] = value;
 			} else {
-				OptionsSet.Remove( key );
+				OptionsSet.Remove(key);
 			}
 			
-			if( !OptionsChanged.Contains( key ) )
-				OptionsChanged.Add( key );
+			if (!OptionsChanged.Contains(key))
+				OptionsChanged.Add(key);
 		}
 		
-		public static void Set<T>( string key, T value ) {
+		public static void Set<T>(string key, T value) {
 			key = key.ToLower();
-			if( value != null ) {
+			if (value != null) {
 				OptionsSet[key] = value.ToString();
 			} else {
-				OptionsSet.Remove( key );
+				OptionsSet.Remove(key);
 			}
 			
-			if( !OptionsChanged.Contains( key ) )
-				OptionsChanged.Add( key );
+			if (!OptionsChanged.Contains(key))
+				OptionsChanged.Add(key);
 		}
 		
 		public static bool Load() {
 			// Both of these are from when running from the launcher
-			if( Program.AppDirectory == null )
+			if (Program.AppDirectory == null)
 				Program.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
-			string defZip = Path.Combine( Program.AppDirectory, "default.zip" );
-			string texDir = Path.Combine( Program.AppDirectory, TexturePack.Dir );
-			if( File.Exists( defZip ) || !Directory.Exists( texDir ) )
+			string defZip = Path.Combine(Program.AppDirectory, "default.zip");
+			string texDir = Path.Combine(Program.AppDirectory, TexturePack.Dir);
+			if (File.Exists(defZip) || !Directory.Exists(texDir))
 				Program.CleanupMainDirectory();
 			
 			try {
-				string path = Path.Combine( Program.AppDirectory, Filename );
-				using( Stream fs = File.OpenRead( path ) )
-					using( StreamReader reader = new StreamReader( fs, false ) )
-						LoadFrom( reader );
+				string path = Path.Combine(Program.AppDirectory, Filename);
+				using(Stream fs = File.OpenRead(path))
+					using(StreamReader reader = new StreamReader(fs, false))
+						LoadFrom(reader);
 				return true;
-			} catch( FileNotFoundException ) {
+			} catch(FileNotFoundException) {
 				return true;
-			} catch( IOException ex ) {
-				ErrorHandler.LogError( "loading options", ex );
+			} catch(IOException ex) {
+				ErrorHandler.LogError("loading options", ex);
 				return false;
 			}
 		}
 		
-		static void LoadFrom( StreamReader reader ) {
+		static void LoadFrom(StreamReader reader) {
 			string line;
 			// remove all the unchanged options
 			List<string> toRemove = new List<string>();
-			foreach( KeyValuePair<string, string> kvp in OptionsSet ) {
-				if( !OptionsChanged.Contains( kvp.Key ) )
-					toRemove.Add( kvp.Key );
+			foreach (KeyValuePair<string, string> kvp in OptionsSet) {
+				if (!OptionsChanged.Contains(kvp.Key))
+					toRemove.Add(kvp.Key);
 			}
-			for( int i = 0; i < toRemove.Count; i++ )
-				OptionsSet.Remove( toRemove[i] );
+			for (int i = 0; i < toRemove.Count; i++)
+				OptionsSet.Remove(toRemove[i]);
 			
-			while( (line = reader.ReadLine()) != null ) {
-				if( line.Length == 0 || line[0] == '#' ) continue;
+			while ((line = reader.ReadLine()) != null) {
+				if (line.Length == 0 || line[0] == '#') continue;
 				
-				int sepIndex = line.IndexOf( '=' );
-				if( sepIndex <= 0 ) continue;
-				string key = Utils.ToLower( line.Substring( 0, sepIndex ) );
+				int sepIndex = line.IndexOf('=');
+				if (sepIndex <= 0) continue;
+				string key = Utils.ToLower(line.Substring(0, sepIndex));
 				
 				sepIndex++;
-				if( sepIndex == line.Length ) continue;
-				string value = line.Substring( sepIndex, line.Length - sepIndex );
-				if( !OptionsChanged.Contains( key ) )
+				if (sepIndex == line.Length) continue;
+				string value = line.Substring(sepIndex, line.Length - sepIndex);
+				if (!OptionsChanged.Contains(key))
 					OptionsSet[key] = value;
 			}
 		}
 		
 		public static bool Save() {
 			try {
-				string path = Path.Combine( Program.AppDirectory, Filename );
-				using( Stream fs = File.Create( path ) )
-					using( StreamWriter writer = new StreamWriter( fs ) )
+				string path = Path.Combine(Program.AppDirectory, Filename);
+				using(Stream fs = File.Create(path))
+					using(StreamWriter writer = new StreamWriter(fs))
 				{
-					SaveTo( writer );
+					SaveTo(writer);
 				}
 				
 				OptionsChanged.Clear();
 				return true;
-			} catch( IOException ex ) {
-				ErrorHandler.LogError( "saving options", ex );
+			} catch(IOException ex) {
+				ErrorHandler.LogError("saving options", ex);
 				return false;
 			}
 		}
 		
-		static void SaveTo( StreamWriter writer ) {
-			foreach( KeyValuePair<string, string> pair in OptionsSet ) {
-				writer.Write( pair.Key );
-				writer.Write( '=' );
-				writer.Write( pair.Value );
+		static void SaveTo(StreamWriter writer) {
+			foreach (KeyValuePair<string, string> pair in OptionsSet) {
+				writer.Write(pair.Key);
+				writer.Write('=');
+				writer.Write(pair.Value);
 				writer.WriteLine();
 			}
 		}

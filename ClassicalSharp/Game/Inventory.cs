@@ -6,15 +6,15 @@ namespace ClassicalSharp {
 	/// <summary> Contains the hotbar of blocks, as well as the permissions for placing and deleting all blocks. </summary>
 	public sealed class Inventory : IGameComponent {
 		
-		public void Init( Game game ) {
+		public void Init(Game game) {
 			this.game = game;
 			MakeMap();
 		}
 
-		public void Ready( Game game ) { }
-		public void Reset( Game game ) { }
-		public void OnNewMap( Game game ) { }
-		public void OnNewMapLoaded( Game game ) { }
+		public void Ready(Game game) { }
+		public void Reset(Game game) { }
+		public void OnNewMap(Game game) { }
+		public void OnNewMapLoaded(Game game) { }
 		public void Dispose() { }
 		
 		int hotbarIndex = 0;
@@ -34,8 +34,8 @@ namespace ClassicalSharp {
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }
 			set {
-				if( !CanChangeHeldBlock ) {
-					game.Chat.Add( "&e/client: &cThe server has forbidden you from changing your held block." );
+				if (!CanChangeHeldBlock) {
+					game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
 					return;
 				}
 				hotbarIndex = value;
@@ -48,12 +48,12 @@ namespace ClassicalSharp {
 		public byte HeldBlock {
 			get { return Hotbar[hotbarIndex]; }
 			set {
-				if( !CanChangeHeldBlock ) {
-					game.Chat.Add( "&e/client: &cThe server has forbidden you from changing your held block." );
+				if (!CanChangeHeldBlock) {
+					game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
 					return;
 				}
-				for( int i = 0; i < Hotbar.Length; i++ ) {
-					if( Hotbar[i] == value ) {
+				for (int i = 0; i < Hotbar.Length; i++) {
+					if (Hotbar[i] == value) {
 						byte held = Hotbar[hotbarIndex];
 						Hotbar[hotbarIndex] = Hotbar[i];
 						Hotbar[i] = held;
@@ -68,12 +68,12 @@ namespace ClassicalSharp {
 		}
 		
 		byte[] map = new byte[256];
-		public byte MapBlock( int i ) { return map[i]; }
+		public byte MapBlock(int i) { return map[i]; }
 		
 		void MakeMap() {
-			for( int i = 0; i < map.Length; i++ )
+			for (int i = 0; i < map.Length; i++)
 				map[i] = (byte)i;
-			if( !game.ClassicMode ) return;
+			if (!game.ClassicMode) return;
 			
 			// First row
 			map[Block.Dirt] = Block.Cobblestone;
@@ -87,18 +87,18 @@ namespace ClassicalSharp {
 			map[Block.CoalOre] = Block.MossyRocks;
 			// Second row
 			map[Block.Log] = Block.Sapling;
-			for( int i = 0; i < 4; i++ )
+			for (int i = 0; i < 4; i++)
 				map[Block.Leaves + i] = (byte)(Block.Dandelion + i);
 			map[Block.Orange] = Block.Sand;
 			map[Block.Yellow] = Block.Gravel;
 			map[Block.Lime] = Block.Sponge;
 			// Third and fourth row
-			for( int i = 0; i < 16; i++ )
+			for (int i = 0; i < 16; i++)
 				map[Block.Green + i] = (byte)(Block.Red + i);
 			map[Block.Gold] = Block.CoalOre;
 			map[Block.Iron] = Block.IronOre;
 			// Fifth row
-			if( !game.PureClassic ) map[Block.DoubleSlab] = Block.GoldOre;
+			if (!game.PureClassic) map[Block.DoubleSlab] = Block.GoldOre;
 			map[Block.Slab] = game.PureClassic ? Block.GoldOre : Block.DoubleSlab;
 			map[Block.Brick] = Block.Iron;
 			map[Block.TNT] = Block.Gold;
@@ -112,13 +112,13 @@ namespace ClassicalSharp {
 		public bool this[int index] {
 			get { return (values[index] & 1) != 0; }
 			set {
-				if( values[index] >= 0x80 ) return;
+				if (values[index] >= 0x80) return;
 				values[index] &= 0xFE; // reset perm bit
 				values[index] |= (byte)(value ? 1 : 0);
 			}
 		}
 		
-		public void SetNotOverridable( bool value, int index ) {
+		public void SetNotOverridable(bool value, int index) {
 			values[index] &= 0xFE; // reset perm bit
 			values[index] |= (byte)(value ? 0x81 : 0x80); // set 'don't override' bit
 		}
