@@ -19,32 +19,21 @@ namespace ClassicalSharp.Map {
 		/// <summary> Returns the y coordinate of the highest block that is fully not in sunlight. </summary>
 		/// <remarks> e.g. if cobblestone was at y = 5, this method would return 4. </remarks>
 		public abstract int GetLightHeight(int x, int z);
-						
-		/// <summary> Returns whether the given world coordinates are contained
-		/// within the dimensions of the map. </summary>
-		public abstract bool IsValidPos(int x, int y, int z);
 		
 		/// <summary> Updates the lighting for the block at that position, which may in turn affect other blocks. </summary>
-		public abstract void UpdateLight(int x, int y, int z, byte oldBlock, byte newBlock);
+		public abstract void UpdateLight(int x, int y, int z, byte oldBlock, byte newBlock);		
 		
+		/// <summary> Returns whether the given world coordinates are fully in sunlight. </summary>
+		public abstract bool IsLit(int x, int y, int z);
+
+		/// <summary> Returns whether the given world coordinates are fully in sunlight. </summary>
+		/// <remarks> Does not check whether the coordinates are inside the map. </remarks>
+		public abstract bool IsLitNoCheck(int x, int y, int z);
 		
-		/// <summary> Returns whether the given world coordinates are fully not in sunlight. </summary>
-		public bool IsLit(int x, int y, int z) {
-			if (!IsValidPos(x, y, z)) return true;
-			return y > GetLightHeight(x, z);
-		}
-		
-		/// <summary> Returns whether the given world coordinatse are fully not in sunlight. </summary>
-		public bool IsLit(Vector3I p) {
-			if (!IsValidPos(p.X, p.Y, p.Z)) return true;
-			return p.Y > GetLightHeight(p.X, p.Z);
-		}
-		
-		/// <summary> Returns whether the given world coordinatse are fully not in sunlight. </summary>
+		/// <summary> Returns whether the given world coordinates are fully in sunlight. </summary>
 		public bool IsLit(Vector3 p) {
 			int x = Utils.Floor(p.X), y = Utils.Floor(p.Y), z = Utils.Floor(p.Z);
-			if (!IsValidPos(x, y, z)) return true;
-			return y > GetLightHeight(x, z);
+			return IsLit(x, y, z);
 		}
 		
 		

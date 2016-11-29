@@ -69,7 +69,7 @@ namespace ClassicalSharp.Renderers {
 		public void Render(double deltaTime) {
 			if (chunks == null) return;
 			ChunkSorter.UpdateSortOrder(game, updater);
-			updater.UpdateChunks(deltaTime);			
+			updater.UpdateChunks(deltaTime);
 			RenderNormalChunks(deltaTime);
 		}
 		

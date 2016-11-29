@@ -79,7 +79,7 @@ namespace ClassicalSharp.Network.Protocols {
 		const int fullAlpha = 0xFF << 24;
 		static FastColour ParseWomColour(string value, FastColour defaultCol) {
 			int argb;
-			return Int32.TryParse(value, out argb) ? new FastColour(argb | fullAlpha) : defaultCol;
+			return Int32.TryParse(value, out argb) ? FastColour.Argb(argb | fullAlpha) : defaultCol;
 		}
 		
 		static string ReadLine(ref int start, string value) {

@@ -45,12 +45,17 @@ namespace ClassicalSharp.Map {
 			return lightH == short.MaxValue ? CalcHeightAt(x, height - 1, z, index) : lightH;
 		}
 
-		public override bool IsValidPos(int x, int y, int z) {
-			return x >= 0 && y >= 0 && z >= 0 &&
-				x < width && y < height && z < length;
+		public override bool IsLit(int x, int y, int z) {
+			if (x < 0 || y < 0 || z < 0 || 
+			    x >= width || y >= height || z >= length) return true;
+			return y > GetLightHeight(x, z);
+		}
+
+		public override bool IsLitNoCheck(int x, int y, int z) {
+			return y > GetLightHeight(x, z);
 		}
 		
-				
+		
 		public override void UpdateLight(int x, int y, int z, byte oldBlock, byte newBlock) {
 			bool didBlock = info.BlocksLight[oldBlock];
 			bool nowBlocks = info.BlocksLight[newBlock];
