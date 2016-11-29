@@ -14,8 +14,6 @@ namespace ClassicalSharp.Map {
 		BlockInfo info;
 		internal byte[] blocks;
 		public int Width, Height, Length;
-		internal short[] heightmap;
-		int maxY, oneY;
 		
 		/// <summary> Contains the environment metadata for this world. </summary>
 		public WorldEnv Env;
@@ -56,13 +54,7 @@ namespace ClassicalSharp.Map {
 				throw new InvalidOperationException("Blocks array length does not match volume of map.");
 			
 			if (Env.EdgeHeight == -1) Env.EdgeHeight = height / 2;
-			maxY = height - 1;
-			oneY = length * width;
 			if (Env.CloudHeight == -1) Env.CloudHeight = height + 2;
-			
-			heightmap = new short[width * length];
-			for (int i = 0; i < heightmap.Length; i++)
-				heightmap[i] = short.MaxValue;
 		}
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking,
@@ -71,7 +63,7 @@ namespace ClassicalSharp.Map {
 			int index = (y * Length + z) * Width + x;
 			byte oldBlock = blocks[index];
 			blocks[index] = blockId;
-			UpdateHeight(x, y, z, oldBlock, blockId);
+			game.Lighting.UpdateLight(x, y, z, oldBlock, blockId);
 			
 			WeatherRenderer weather = game.WeatherRenderer;
 			if (weather.heightmap != null && !IsNotLoaded)
@@ -122,40 +114,13 @@ namespace ClassicalSharp.Map {
 				p.X < Width && p.Y < Height && p.Z < Length;
 		}
 		
-		/// <summary> Returns whether the given world coordinates are fully not in sunlight. </summary>
-		public bool IsLit(int x, int y, int z) {
-			if (!IsValidPos(x, y, z)) return true;
-			return y > GetLightHeight(x, z);
-		}
-		
-		/// <summary> Returns whether the given world coordinatse are fully not in sunlight. </summary>
-		public bool IsLit(Vector3I p) {
-			if (!IsValidPos(p.X, p.Y, p.Z)) return true;
-			return p.Y > GetLightHeight(p.X, p.Z);
-		}
-		
-		/// <summary> Returns whether the given world coordinatse are fully not in sunlight. </summary>
-		public bool IsLit(Vector3 p) {
-			int x = Utils.Floor(p.X), y = Utils.Floor(p.Y), z = Utils.Floor(p.Z);
-			if (!IsValidPos(x, y, z)) return true;
-			return y > GetLightHeight(x, z);
-		}
-		
-		/// <summary> Returns the y coordinate of the highest block that is fully not in sunlight. </summary>
-		/// <remarks> e.g. if cobblestone was at y = 5, this method would return 4. </remarks>
-		public int GetLightHeight(int x, int z) {
-			int index = (z * Width) + x;
-			int height = heightmap[index];
-			return height == short.MaxValue ? CalcHeightAt(x, maxY, z, index) : height;
-		}
-		
 		/// <summary> Unpacks the given index into the map's block array into its original world coordinates. </summary>
 		public Vector3I GetCoords(int index) {
 			if (index < 0 || index >= blocks.Length)
 				return new Vector3I(-1);
 			
 			int x = index % Width;
-			int y = index / oneY; // index / (width * length)
+			int y = index / (Width * Length);
 			int z = (index / Width) % Length;
 			return new Vector3I(x, y, z);
 		}

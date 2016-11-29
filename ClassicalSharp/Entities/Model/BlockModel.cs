@@ -82,7 +82,7 @@ namespace ClassicalSharp.Model {
 			// a string every single time held block changes.
 			if (p is FakePlayer) {
 				Player realP = game.LocalPlayer;
-				col = game.World.IsLit(realP.EyePosition)
+				col = game.Lighting.IsLit(realP.EyePosition)
 					? game.World.Env.Sunlight : game.World.Env.Shadowlight;
 				
 				// Adjust pitch so angle when looking straight down is 0.

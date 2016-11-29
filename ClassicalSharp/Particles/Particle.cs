@@ -60,7 +60,7 @@ namespace ClassicalSharp.Particles {
 			Vector2 size = Big ? bigSize : (Tiny ? tinySize : smallSize);
 			
 			World map = game.World;
-			int col = map.IsLit(Position) ? map.Env.Sun : map.Env.Shadow;
+			int col = game.Lighting.IsLit(Position) ? map.Env.Sun : map.Env.Shadow;
 			DoRender(game, ref size, ref rec, col, vertices, ref index);
 		}
 	}
@@ -86,7 +86,7 @@ namespace ClassicalSharp.Particles {
 			World map = game.World;
 			bool fullBright = (flags & 0x100) != 0;
 			int col = fullBright ? FastColour.WhitePacked
-				: (map.IsLit(Position) ? map.Env.SunZSide : map.Env.ShadowZSide);
+				: (game.Lighting.IsLit(Position) ? map.Env.SunZSide : map.Env.ShadowZSide);
 			DoRender(game, ref terrainSize, ref rec, col, vertices, ref index);
 		}
 	}

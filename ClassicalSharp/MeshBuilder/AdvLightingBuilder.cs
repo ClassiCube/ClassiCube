@@ -323,7 +323,7 @@ namespace ClassicalSharp {
 			   || x >= width || y >= height || z >= length) return 7;
 			int flags = 0;
 			byte block = chunk[cIndex];
-			int lightHeight = map.heightmap[(z * width) + x];
+			int lightHeight = lighting.heightmap[(z * width) + x];
 
 			// Use fact Light(Y.Bottom) == Light((Y - 1).Top)
 			int offset = (lightFlags >> Side.Bottom) & 1;

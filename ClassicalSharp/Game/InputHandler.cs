@@ -168,6 +168,7 @@ namespace ClassicalSharp {
 			Key key = e.Key;
 			if (SimulateMouse(key, true)) return;
 			
+			
 			if (IsShutdown(key)) {
 				game.Exit();
 			} else if (key == Keys[KeyBind.Screenshot]) {

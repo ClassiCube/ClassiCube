@@ -277,9 +277,9 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateBlock(int x, int y, int z, byte block) {
-			int oldHeight = World.GetLightHeight(x, z) + 1;
+			int oldHeight = Lighting.GetLightHeight(x, z) + 1;
 			World.SetBlock(x, y, z, block);
-			int newHeight = World.GetLightHeight(x, z) + 1;
+			int newHeight = Lighting.GetLightHeight(x, z) + 1;
 			MapRenderer.RedrawBlock(x, y, z, block, oldHeight, newHeight);
 		}
 		

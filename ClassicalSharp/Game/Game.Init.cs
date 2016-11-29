@@ -59,6 +59,7 @@ namespace ClassicalSharp {
 			ModelCache = new ModelCache(this);
 			ModelCache.InitCache();
 			AsyncDownloader = AddComponent(new AsyncDownloader());
+			Lighting = AddComponent(new BasicLighting());
 			
 			#if ANDROID
 			Drawer2D = new CanvasDrawer2D(Graphics);

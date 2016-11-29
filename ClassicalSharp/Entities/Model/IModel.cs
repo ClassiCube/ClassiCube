@@ -87,7 +87,7 @@ namespace ClassicalSharp.Model {
 			pos = p.Position;
 			if (Bobbing) pos.Y += p.anim.bobbingModel;
 			World map = game.World;
-			col = game.World.IsLit(p.EyePosition) ? map.Env.Sunlight : map.Env.Shadowlight;
+			col = game.Lighting.IsLit(p.EyePosition) ? map.Env.Sunlight : map.Env.Shadowlight;
 			uScale = 1 / 64f; vScale = 1 / 32f;
 			scale = p.ModelScale;
 			

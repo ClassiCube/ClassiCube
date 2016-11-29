@@ -186,6 +186,9 @@
     <Compile Include="Map\Formats\MapSchematic.Exporter.cs" />
     <Compile Include="Map\Formats\MapLvl.Importer.cs" />
     <Compile Include="Map\Formats\NbtFile.cs" />
+    <Compile Include="Map\Lighting\IWorldLighting.cs" />
+    <Compile Include="Map\Lighting\BasicLighting.cs" />
+    <Compile Include="Map\Lighting\BasicLighting.Heightmap.cs" />
     <Compile Include="Map\WorldEnv.cs" />
     <Compile Include="Math\Physics\AABB.cs" />
     <Compile Include="Math\Physics\IntersectionUtils.cs" />
@@ -233,7 +236,6 @@
     <Compile Include="Map\Formats\MapDat.Importer.cs" />
     <Compile Include="Map\Formats\MapFcm3.Importer.cs" />
     <Compile Include="Map\World.cs" />
-    <Compile Include="Map\World.HeightmapCalc.cs" />
     <Compile Include="Entities\Model\BlockModel.cs" />
     <Compile Include="Entities\Model\ChickenModel.cs" />
     <Compile Include="Entities\Model\CreeperModel.cs" />
@@ -338,6 +340,7 @@
     <Folder Include="Entities\Components" />
     <Folder Include="Events" />
     <Folder Include="Generator" />
+    <Folder Include="Map\Lighting" />
     <Folder Include="Math\Physics" />
     <Folder Include="MeshBuilder" />
     <Folder Include="Network\Protocols" />

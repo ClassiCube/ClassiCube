@@ -16,6 +16,7 @@ namespace ClassicalSharp {
 		protected byte curBlock;
 		protected BlockInfo info;
 		protected World map;
+		protected IWorldLighting lighting;
 		protected WorldEnv env;
 		protected Game game;
 		protected IGraphicsApi gfx;
@@ -27,6 +28,7 @@ namespace ClassicalSharp {
 			this.game = game;
 			gfx = game.Graphics;
 			info = game.BlockInfo;
+			lighting = game.Lighting;
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
@@ -107,7 +109,7 @@ namespace ClassicalSharp {
 				   y1 + chunkSize >= height || z1 + chunkSize >= length) allSolid = false;
 				if (allAir || allSolid) return true;
 				
-				map.HeightmapHint(x1 - 1, z1 - 1, mapPtr);
+				lighting.LightHint(x1 - 1, z1 - 1, mapPtr);
 				return false;
 			}
 		}
@@ -282,17 +284,17 @@ namespace ClassicalSharp {
 			int offset = (info.LightOffset[type] >> face) & 1;
 			switch(face) {
 				case Side.Left:
-					return x < offset || y > map.heightmap[(z * width) + (x - offset)];
+					return x < offset || y > lighting.heightmap[(z * width) + (x - offset)];
 				case Side.Right:
-					return x > (maxX - offset) || y > map.heightmap[(z * width) + (x + offset)];
+					return x > (maxX - offset) || y > lighting.heightmap[(z * width) + (x + offset)];
 				case Side.Front:
-					return z < offset || y > map.heightmap[((z - offset) * width) + x];
+					return z < offset || y > lighting.heightmap[((z - offset) * width) + x];
 				case Side.Back:
-					return z > (maxZ - offset) || y > map.heightmap[((z + offset) * width) + x];
+					return z > (maxZ - offset) || y > lighting.heightmap[((z + offset) * width) + x];
 				case Side.Bottom:
-					return y <= 0 || (y - 1 - offset) >= (map.heightmap[(z * width) + x]);
+					return y <= 0 || (y - 1 - offset) >= (lighting.heightmap[(z * width) + x]);
 				case Side.Top:
-					return y >= maxY || (y - offset) >= (map.heightmap[(z * width) + x]);
+					return y >= maxY || (y - offset) >= (lighting.heightmap[(z * width) + x]);
 			}
 			return true;
 		}
