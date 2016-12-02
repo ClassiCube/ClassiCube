@@ -73,10 +73,10 @@ namespace ClassicalSharp.Audio {
 					OggContainer container = new OggContainer(fs);
 					try {
 						musicOut.PlayStreaming(container);
-					} catch(InvalidOperationException ex) {
+					} catch (InvalidOperationException ex) {
 						HandleMusicError(ex);
 						return;
-					} catch(Exception ex) {
+					} catch (Exception ex) {
 						ErrorHandler.LogError("AudioPlayer.DoMusicThread()", ex);
 						game.Chat.Add("&cError while trying to play music file " + Path.GetFileName(file));
 					}

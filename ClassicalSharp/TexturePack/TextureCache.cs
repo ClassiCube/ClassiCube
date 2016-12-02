@@ -26,7 +26,7 @@ namespace ClassicalSharp.Textures {
 			
 			try {
 				return File.OpenRead(path);
-			} catch(IOException ex) {
+			} catch (IOException ex) {
 				ErrorHandler.LogError("Cache.GetData", ex);
 				return null;
 			}
@@ -74,7 +74,7 @@ namespace ClassicalSharp.Textures {
 				
 				using (FileStream fs = File.Create(path))
 					Platform.WriteBmp(bmp, fs);
-			} catch(IOException ex) {
+			} catch (IOException ex) {
 				ErrorHandler.LogError("Cache.AddToCache", ex);
 			}
 		}
@@ -88,7 +88,7 @@ namespace ClassicalSharp.Textures {
 					Directory.CreateDirectory(basePath);
 				
 				File.WriteAllBytes(path, data);
-			} catch(IOException ex) {
+			} catch (IOException ex) {
 				ErrorHandler.LogError("Cache.AddToCache", ex);
 			}
 		}

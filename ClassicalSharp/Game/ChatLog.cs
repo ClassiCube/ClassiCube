@@ -141,7 +141,7 @@ namespace ClassicalSharp {
 				FileStream stream = null;
 				try {
 					stream = File.Open(path, FileMode.Append, FileAccess.Write, FileShare.Read);
-				} catch(IOException ex) {
+				} catch (IOException ex) {
 					int hresult = Marshal.GetHRForException(ex);
 					uint errorCode = (uint)hresult & 0xFFFF;
 					if (errorCode != 32) // ERROR_SHARING_VIOLATION

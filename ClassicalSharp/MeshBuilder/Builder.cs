@@ -282,7 +282,7 @@ namespace ClassicalSharp {
 		
 		protected bool IsLit(int x, int y, int z, int face, byte type) {
 			int offset = (info.LightOffset[type] >> face) & 1;
-			switch(face) {
+			switch (face) {
 				case Side.Left:
 					return x < offset || y > lighting.heightmap[(z * width) + (x - offset)];
 				case Side.Right:

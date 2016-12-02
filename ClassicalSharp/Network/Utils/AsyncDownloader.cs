@@ -207,7 +207,7 @@ namespace ClassicalSharp.Network {
 						lastModified = response.LastModified;					
 					value = DownloadContent(request, response);
 				}
-			} catch(Exception ex) {
+			} catch (Exception ex) {
 				if (!(ex is WebException || ex is ArgumentException || ex is UriFormatException || ex is IOException)) throw;
 
 				if (ex is WebException) {
@@ -271,7 +271,7 @@ namespace ClassicalSharp.Network {
 					int height = bmp.Height;
 				}
 				return value;
-			} catch(ArgumentException) {
+			} catch (ArgumentException) {
 				Utils.LogDebug("Failed to download from: " + url);
 				return null;
 			}

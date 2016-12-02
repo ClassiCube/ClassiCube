@@ -92,7 +92,7 @@ namespace ClassicalSharp.Map {
 			
 			tag.Name = readTagName ? ReadString() : null;
 			tag.TagId = (NbtTagType)typeId;			
-			switch((NbtTagType)typeId) {
+			switch ((NbtTagType)typeId) {
 				case NbtTagType.Int8:
 					tag.Value = reader.ReadByte(); break;
 				case NbtTagType.Int16:

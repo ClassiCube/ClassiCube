@@ -424,7 +424,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void OpenUrl(WarningScreen screen) {
 			try {
 				Process.Start((string)screen.Metadata);
-			} catch(Exception ex) {
+			} catch (Exception ex) {
 				ErrorHandler.LogError("ChatScreen.OpenUrl", ex);
 			}
 		}

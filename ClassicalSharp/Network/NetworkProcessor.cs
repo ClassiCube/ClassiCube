@@ -42,7 +42,7 @@ namespace ClassicalSharp.Network {
 			socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 			try {
 				socket.Connect(address, port);
-			} catch(SocketException ex) {
+			} catch (SocketException ex) {
 				ErrorHandler.LogError("connecting to server", ex);
 				game.Disconnect("&eUnable to reach " + address + ":" + port,
 				                "Unable to establish an underlying connection");
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Network {
 			
 			try {
 				reader.ReadPendingData();
-			} catch(SocketException ex) {
+			} catch (SocketException ex) {
 				ErrorHandler.LogError("reading packets", ex);
 				game.Disconnect("&eLost connection to the server", "I/O error when reading packets");
 				Dispose();
@@ -142,7 +142,7 @@ namespace ClassicalSharp.Network {
 			}
 			try {
 				writer.Send();
-			} catch(SocketException) {
+			} catch (SocketException) {
 				// NOTE: Not immediately disconnecting, as otherwise we sometimes miss out on kick messages
 				writer.index = 0;
 			}

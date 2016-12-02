@@ -157,9 +157,9 @@ namespace ClassicalSharp {
 					using (StreamReader reader = new StreamReader(fs, false))
 						LoadFrom(reader);
 				return true;
-			} catch(FileNotFoundException) {
+			} catch (FileNotFoundException) {
 				return true;
-			} catch(IOException ex) {
+			} catch (IOException ex) {
 				ErrorHandler.LogError("loading options", ex);
 				return false;
 			}
@@ -202,7 +202,7 @@ namespace ClassicalSharp {
 				
 				OptionsChanged.Clear();
 				return true;
-			} catch(IOException ex) {
+			} catch (IOException ex) {
 				ErrorHandler.LogError("saving options", ex);
 				return false;
 			}

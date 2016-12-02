@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 						w.WriteLine();
 					}
 				}
-			} catch(Exception) {
+			} catch (Exception) {
 				wroteToCrashLog = false;
 			}
 			
@@ -95,7 +95,7 @@ namespace ClassicalSharp {
 					writer.WriteLine(text);
 					writer.WriteLine();
 				}
-			} catch(Exception) {
+			} catch (Exception) {
 				return false;
 			}
 			return true;

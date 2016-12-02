@@ -192,7 +192,7 @@ namespace ClassicalSharp {
 			
 			try {
 				using (Font f = new Font(FontName, 16)) { }
-			} catch(Exception) {
+			} catch (Exception) {
 				FontName = "Arial";
 				Options.Set(OptionsKey.FontName, "Arial");
 			}

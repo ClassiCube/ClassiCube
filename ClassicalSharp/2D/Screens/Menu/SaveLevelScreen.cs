@@ -140,7 +140,7 @@ namespace ClassicalSharp.Gui.Screens {
 					else exporter = new MapSchematicExporter();
 					exporter.Save(fs, game);
 				}
-			} catch(Exception ex) {
+			} catch (Exception ex) {
 				ErrorHandler.LogError("saving map", ex);
 				MakeDescWidget("&cError while trying to save map");
 				return;

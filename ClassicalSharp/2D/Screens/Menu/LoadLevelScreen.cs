@@ -76,7 +76,7 @@ namespace ClassicalSharp.Gui.Screens {
 					LocationUpdate update = LocationUpdate.MakePosAndOri(p.Spawn, p.SpawnYaw, p.SpawnPitch, false);
 					p.SetLocation(update, false);
 				}
-			} catch(Exception ex) {
+			} catch (Exception ex) {
 				ErrorHandler.LogError("loading map", ex);
 				string file = Path.GetFileName(path);
 				game.Chat.Add("&e/client loadmap: Failed to load map \"" + file + "\"");

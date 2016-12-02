@@ -110,7 +110,7 @@ namespace ClassicalSharp {
 			T mapping;
 			try {
 				mapping = (T)Enum.Parse(typeof(T), value, true);
-			} catch(ArgumentException) {
+			} catch (ArgumentException) {
 				result = defValue;
 				return false;
 			}
@@ -137,7 +137,7 @@ namespace ClassicalSharp {
 		
 		internal static byte FastByte(string s) {
 			int sum = 0;
-			switch(s.Length) {
+			switch (s.Length) {
 					case 1: sum = (s[0] - '0'); break;
 					case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
 					case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;

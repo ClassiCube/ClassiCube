@@ -190,7 +190,7 @@ namespace ClassicalSharp {
 				int b = Utils.ParseHex(input[i + 4]) * 16 + Utils.ParseHex(input[i + 5]);
 				value = new FastColour(r, g, b);
 				return true;
-			} catch(FormatException) {
+			} catch (FormatException) {
 				return false;
 			}
 		}

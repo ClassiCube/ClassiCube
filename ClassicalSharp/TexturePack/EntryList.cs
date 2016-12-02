@@ -42,7 +42,7 @@ namespace ClassicalSharp.Textures {
 					}
 				}
 				return true;
-			} catch(IOException ex) {
+			} catch (IOException ex) {
 				ErrorHandler.LogError("loading " + file, ex);
 				return false;
 			}
@@ -61,7 +61,7 @@ namespace ClassicalSharp.Textures {
 						writer.WriteLine(Entries[i]);
 				}
 				return true;
-			} catch(IOException ex) {
+			} catch (IOException ex) {
 				ErrorHandler.LogError("saving " + file, ex);
 				return false;
 			}

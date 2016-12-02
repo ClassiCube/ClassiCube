@@ -117,7 +117,7 @@ namespace ClassicalSharp.Network.Protocols {
 			byte id = reader.ReadUInt8();
 			CustomModel model = null;
 			
-			switch(reader.ReadUInt8()) {
+			switch (reader.ReadUInt8()) {
 				case 0:
 					model = new CustomModel(game);
 					model.ReadSetupPacket(reader);

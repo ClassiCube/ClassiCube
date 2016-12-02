@@ -26,7 +26,7 @@ namespace ClassicalSharp.Generator {
 					SinglePlayerServer server = (SinglePlayerServer)game.Server;
 					try {
 						server.generatedMap = Generate(width, height, length, seed);
-					} catch(Exception ex) {
+					} catch (Exception ex) {
 						ErrorHandler.LogError("IMapGenerator.RunAsync", ex);
 					}
 					Done = true;

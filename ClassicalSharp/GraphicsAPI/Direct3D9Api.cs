@@ -41,7 +41,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			PresentParameters args = GetPresentArgs(640, 480);
 			try {
 				device = d3d.CreateDevice(adapter, DeviceType.Hardware, windowHandle, createFlags, args);
-			} catch(SharpDXException) {
+			} catch (SharpDXException) {
 				createFlags = CreateFlags.MixedVertexProcessing;
 				try {
 					device = d3d.CreateDevice(adapter, DeviceType.Hardware, windowHandle, createFlags, args);

@@ -79,7 +79,7 @@ namespace ClassicalSharp.Audio {
 				
 				try {
 					output.PlayRawAsync(chunk);
-				} catch(InvalidOperationException ex) {
+				} catch (InvalidOperationException ex) {
 					HandleSoundError(ex);
 				}
 				return;

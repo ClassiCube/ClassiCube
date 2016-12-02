@@ -72,7 +72,7 @@ namespace ClassicalSharp.Map {
 		
 		void ReadClassData(FieldDescription[] fields) {
 			for (int i = 0; i < fields.Length; i++) {
-				switch(fields[i].Type) {
+				switch (fields[i].Type) {
 					case FieldType.Byte:
 						fields[i].Value = reader.ReadByte(); break;
 					case FieldType.Float:

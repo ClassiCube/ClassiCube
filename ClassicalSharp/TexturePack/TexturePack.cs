@@ -114,10 +114,10 @@ namespace ClassicalSharp.Textures {
 		static Bitmap GetBitmap(FileStream fs) {
 			try {
 				return Platform.ReadBmp(fs);
-			} catch(ArgumentException ex) {
+			} catch (ArgumentException ex) {
 				ErrorHandler.LogError("Cache.GetBitmap", ex);
 				return null;
-			} catch(IOException ex) {
+			} catch (IOException ex) {
 				ErrorHandler.LogError("Cache.GetBitmap", ex);
 				return null;
 			}

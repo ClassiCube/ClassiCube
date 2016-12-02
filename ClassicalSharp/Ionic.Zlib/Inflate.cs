@@ -95,7 +95,7 @@ namespace Ionic.Zlib
 						}
 						
 						last = bits & 0x1;
-						switch((bits & 0x7) >> 1) {
+						switch ((bits & 0x7) >> 1) {
 							case 0:  // stored
 								bits >>= 3; bitsNum -= 3;
 								t = bitsNum & 7; // go to byte boundary

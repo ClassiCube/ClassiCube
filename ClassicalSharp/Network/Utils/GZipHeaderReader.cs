@@ -18,7 +18,7 @@ namespace ClassicalSharp.Network {
 		int partsRead;
 		
 		public bool ReadHeader(Stream s) {
-			switch(state) {
+			switch (state) {
 					
 				case State.Header1:
 					if (!ReadAndCheckHeaderByte(s, 0x1F))

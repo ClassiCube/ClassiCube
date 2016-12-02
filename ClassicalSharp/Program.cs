@@ -104,7 +104,7 @@ namespace ClassicalSharp {
 				try {
 					File.Copy(files[i], dst);
 					File.Delete(files[i]);
-				} catch(IOException ex) {
+				} catch (IOException ex) {
 					ErrorHandler.LogError("Program.CopyFiles()", ex);
 				}
 			}

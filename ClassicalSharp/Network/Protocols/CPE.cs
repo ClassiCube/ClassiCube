@@ -325,7 +325,7 @@ namespace ClassicalSharp.Network.Protocols {
 			WorldEnv env = game.World.Env;
 			Utils.Clamp(ref value, short.MinValue, short.MaxValue);
 			
-			switch(type) {
+			switch (type) {
 				case 0:
 					Utils.Clamp(ref value, byte.MinValue, byte.MaxValue);
 					env.SetSidesBlock((byte)value); break;
