@@ -360,6 +360,13 @@ namespace ClassicalSharp {
 					         + "), your GPU supports (" + maxSize + "," + maxSize + ") at most.");
 					return false;
 				}
+
+				if (!Utils.IsPowerOf2(bmp.Width) || !Utils.IsPowerOf2(bmp.Height)) {
+					Chat.Add("&cUnable to use " + file + " from the texture pack.");
+					Chat.Add("&c Its size is (" + bmp.Width + "," + bmp.Height
+					         + "), which is not power of two dimensions.");
+					return false;
+				}
 				
 				Graphics.DeleteTexture(ref texId);
 				if (setSkinType) {
