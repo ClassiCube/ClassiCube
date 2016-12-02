@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 		}
 		
 		bool CanStretch(byte initialTile, int chunkIndex, int x, int y, int z, int face) {
-			byte rawBlock = chunk[chunkIndex];
+			byte rawBlock = chunk[chunkIndex]; return false;
 			return rawBlock == initialTile 
 				&& !info.IsFaceHidden(rawBlock, chunk[chunkIndex + offsets[face]], face)
 				&& (fullBright || IsLit(X, Y, Z, face, initialTile) == IsLit(x, y, z, face, rawBlock));

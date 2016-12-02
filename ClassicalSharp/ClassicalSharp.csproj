@@ -189,6 +189,8 @@
     <Compile Include="Map\Lighting\IWorldLighting.cs" />
     <Compile Include="Map\Lighting\BasicLighting.cs" />
     <Compile Include="Map\Lighting\BasicLighting.Heightmap.cs" />
+    <Compile Include="Map\Lighting\VolumeLighting.cs" />
+    <Compile Include="Map\Lighting\VolumeLighting.Volume.cs" />
     <Compile Include="Map\WorldEnv.cs" />
     <Compile Include="Math\Physics\AABB.cs" />
     <Compile Include="Math\Physics\IntersectionUtils.cs" />
