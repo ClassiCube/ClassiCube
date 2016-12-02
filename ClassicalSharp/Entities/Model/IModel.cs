@@ -86,15 +86,16 @@ namespace ClassicalSharp.Model {
 			index = 0;
 			pos = p.Position;
 			if (Bobbing) pos.Y += p.anim.bobbingModel;
-			World map = game.World;
-			col = game.Lighting.IsLit(p.EyePosition) ? map.Env.Sunlight : map.Env.Shadowlight;
+			
+			Vector3I P = Vector3I.Floor(p.EyePosition);
+			col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
 			uScale = 1 / 64f; vScale = 1 / 32f;
 			scale = p.ModelScale;
 			
-			cols[0] = col.Pack();
-			cols[1] = FastColour.Scale(col, FastColour.ShadeYBottom).Pack();
-			cols[2] = FastColour.Scale(col, FastColour.ShadeZ).Pack(); cols[3] = cols[2];
-			cols[4] = FastColour.Scale(col, FastColour.ShadeX).Pack(); cols[5] = cols[4];
+			cols[0] = col;
+			cols[1] = FastColour.ScalePacked(col, FastColour.ShadeYBottom);
+			cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ); cols[3] = cols[2];
+			cols[4] = FastColour.ScalePacked(col, FastColour.ShadeX); cols[5] = cols[4];
 			
 			cosYaw = (float)Math.Cos(p.YawDegrees * Utils.Deg2Rad);
 			sinYaw = (float)Math.Sin(p.YawDegrees * Utils.Deg2Rad);
@@ -116,7 +117,7 @@ namespace ClassicalSharp.Model {
 		
 		public virtual void Dispose() { }
 		
-		protected FastColour col;
+		protected int col;
 		protected int[] cols = new int[6];
 		protected internal ModelVertex[] vertices;
 		protected internal int index, texIndex;

@@ -15,8 +15,8 @@ namespace ClassicalSharp.Map {
 		
 		public override void OnNewMap(Game game) {
 			SetSun(WorldEnv.DefaultSunlight);
-			SetShadow(WorldEnv.DefaultShadowlight);			
-			heightmap = null; 
+			SetShadow(WorldEnv.DefaultShadowlight);
+			heightmap = null;
 		}
 		
 		public override void OnNewMapLoaded(Game game) {
@@ -45,9 +45,9 @@ namespace ClassicalSharp.Map {
 
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.SunlightColour) {
-				SetSun(game.World.Env.Sunlight); 
+				SetSun(game.World.Env.Sunlight);
 			} else if (e.Var == EnvVar.ShadowlightColour) {
-				SetShadow(game.World.Env.Shadowlight); 
+				SetShadow(game.World.Env.Shadowlight);
 			}
 		}
 		
@@ -79,22 +79,38 @@ namespace ClassicalSharp.Map {
 			int lightH = heightmap[index];
 			return lightH == short.MaxValue ? CalcHeightAt(x, height - 1, z, index) : lightH;
 		}
-
+		
+		
+		// Outside colour is same as sunlight colour, so we reuse when possible
 		public override bool IsLit(int x, int y, int z) {
 			return y > GetLightHeight(x, z);
 		}
+
+		public override int LightCol(int x, int y, int z) {
+			return y > GetLightHeight(x, z) ? Outside : shadow;
+		}
+		
+		public override int LightCol_ZSide(int x, int y, int z) {
+			return y > GetLightHeight(x, z) ? OutsideZSide : shadowZSide;
+		}
 		
 
-		// Outside colour is same as sunlight colour, so we reuse when possible
+		internal override int LightCol_Sprite_Fast(int x, int y, int z) {
+			return y > heightmap[(z * width) + x] ? Outside : shadow;
+		}
+		
 		internal override int LightCol_YTop_Fast(int x, int y, int z) {
 			return y >= heightmap[(z * width) + x] ? Outside : shadow;
 		}
+		
 		internal override int LightCol_YBottom_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideYBottom : shadowYBottom;
 		}
+		
 		internal override int LightCol_XSide_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideXSide : shadowXSide;
 		}
+		
 		internal override int LightCol_ZSide_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideZSide : shadowZSide;
 		}

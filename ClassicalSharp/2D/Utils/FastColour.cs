@@ -43,6 +43,17 @@ namespace ClassicalSharp {
 			return value;
 		}
 		
+		/// <summary> Multiplies the RGB components of this instance by the
+		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
+		public static int ScalePacked(int value, float t) {
+			int a = (value >> 16) & 0xFF; a = (int)(a * t);
+			int b = (value >> 8 ) & 0xFF; b = (int)(b * t);
+			int c = value         & 0xFF; c = (int)(c * t);
+			
+			value &= ~0xFFFFFF;
+			return value | (a << 16) | (b << 8) | c;
+		}
+		
 		/// <summary> Linearly interpolates the RGB components of the two colours
 		/// by the specified t parameter, where 0 ≤ t ≤ 1 </summary>
 		public static FastColour Lerp(FastColour a, FastColour b, float t) {

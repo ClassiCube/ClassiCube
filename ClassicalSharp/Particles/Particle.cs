@@ -59,8 +59,9 @@ namespace ClassicalSharp.Particles {
 			Position = Vector3.Lerp(lastPos, nextPos, t);
 			Vector2 size = Big ? bigSize : (Tiny ? tinySize : smallSize);
 			
-			World map = game.World;
-			int col = game.Lighting.IsLit(Position) ? map.Env.Sun : map.Env.Shadow;
+			Vector3I P = Vector3I.Floor(Position);
+			int col = game.World.IsValidPos(P) ?
+				game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
 			DoRender(game, ref size, ref rec, col, vertices, ref index);
 		}
 	}
@@ -83,10 +84,12 @@ namespace ClassicalSharp.Particles {
 		                            VertexP3fT2fC4b[] vertices, ref int index) {
 			Position = Vector3.Lerp(lastPos, nextPos, t);
 			
-			World map = game.World;
-			bool fullBright = (flags & 0x100) != 0;
-			int col = fullBright ? FastColour.WhitePacked
-				: (game.Lighting.IsLit(Position) ? map.Env.SunZSide : map.Env.ShadowZSide);
+			int col = FastColour.WhitePacked;
+			if ((flags & 0x100) == 0) { // not full bright
+				Vector3I P = Vector3I.Floor(Position);
+				col = game.World.IsValidPos(P) ?
+					game.Lighting.LightCol_ZSide(P.X, P.Y, P.Z) : game.Lighting.OutsideZSide;
+			}
 			DoRender(game, ref terrainSize, ref rec, col, vertices, ref index);
 		}
 	}

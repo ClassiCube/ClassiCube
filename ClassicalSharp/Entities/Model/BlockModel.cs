@@ -76,14 +76,13 @@ namespace ClassicalSharp.Model {
 		}
 		
 		int lastTexId = -1;
-		int colPacked;
 		protected override void DrawModel(Player p) {
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
 			if (p is FakePlayer) {
 				Player realP = game.LocalPlayer;
-				col = game.Lighting.IsLit(realP.EyePosition)
-					? game.World.Env.Sunlight : game.World.Env.Shadowlight;
+				Vector3I P = Vector3I.Floor(realP.EyePosition);
+				col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
 				
 				// Adjust pitch so angle when looking straight down is 0.
 				float adjPitch = realP.PitchDegrees - 90;
@@ -92,14 +91,13 @@ namespace ClassicalSharp.Model {
 				// Adjust colour so held block is brighter when looking straght up
 				float t = Math.Abs(adjPitch - 180) / 180;
 				float colScale = Utils.Lerp(0.9f, 0.7f, t);
-				col = FastColour.Scale(col, colScale);
+				col = FastColour.ScalePacked(col, colScale);
 				block = ((FakePlayer)p).Block;
 			} else {
 				block = Utils.FastByte(p.ModelName);
 			}
 			
 			CalcState(block);
-			colPacked = col.Pack();
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			lastTexId = -1;
@@ -181,7 +179,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
 			FlushIfNotSame(texIndex);
-			int col = bright ? FastColour.WhitePacked : (NoShade ? colPacked : FastColour.Scale(this.col, shade).Pack());
+			int col = bright ? FastColour.WhitePacked : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
 			
 			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
@@ -198,7 +196,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
 			FlushIfNotSame(texIndex);
-			int col = bright ? FastColour.WhitePacked : (NoShade ? colPacked : FastColour.Scale(this.col, shade).Pack());
+			int col = bright ? FastColour.WhitePacked : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
 			
 			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
@@ -216,7 +214,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
 			FlushIfNotSame(texIndex);
-			int col = bright ? FastColour.WhitePacked : (NoShade ? colPacked : FastColour.Scale(this.col, shade).Pack());
+			int col = bright ? FastColour.WhitePacked : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
 			
 			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.Z; rec.U2 = maxBB.Z;
@@ -242,7 +240,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame(texIndex);
 			if (height != 1)
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = bright ? FastColour.WhitePacked : this.col.Pack();
+			int col = bright ? FastColour.WhitePacked : this.col;
 
 			float p1 = 0, p2 = 0;
 			if (firstPart) { // Need to break into two quads for when drawing a sprite model in hand.
@@ -270,7 +268,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame(texIndex);
 			if (height != 1)
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = bright ? FastColour.WhitePacked : this.col.Pack();
+			int col = bright ? FastColour.WhitePacked : this.col;
 			
 			float x1 = 0, x2 = 0, z1 = 0, z2 = 0;
 			if (firstPart) {
