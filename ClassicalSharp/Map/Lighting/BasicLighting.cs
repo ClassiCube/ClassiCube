@@ -1,18 +1,23 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using ClassicalSharp.Events;
 
 namespace ClassicalSharp.Map {
 	
 	/// <summary> Manages lighting through a simple heightmap, where each block is either in sun or shadow. </summary>
 	public sealed partial class BasicLighting : IWorldLighting {
 		
-		int width, height, length, oneY;
+		int oneY, shadow, shadowZSide, shadowXSide, shadowYBottom;
 		BlockInfo info;
 		Game game;
 		
-		public override void Dispose() { heightmap = null; }
 		public override void Reset(Game game) { heightmap = null; }
-		public override void OnNewMap(Game game) { heightmap = null; }
+		
+		public override void OnNewMap(Game game) {
+			SetSun(WorldEnv.DefaultSunlight);
+			SetShadow(WorldEnv.DefaultShadowlight);			
+			heightmap = null; 
+		}
 		
 		public override void OnNewMapLoaded(Game game) {
 			width = game.World.Width;
@@ -26,6 +31,36 @@ namespace ClassicalSharp.Map {
 			for (int i = 0; i < heightmap.Length; i++)
 				heightmap[i] = short.MaxValue;
 		}
+		
+		public override void Init(Game game) {
+			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
+			SetSun(WorldEnv.DefaultSunlight);
+			SetShadow(WorldEnv.DefaultShadowlight);
+		}
+		
+		public override void Dispose() {
+			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
+			heightmap = null;
+		}
+
+		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
+			if (e.Var == EnvVar.SunlightColour) {
+				SetSun(game.World.Env.Sunlight); 
+			} else if (e.Var == EnvVar.ShadowlightColour) {
+				SetShadow(game.World.Env.Shadowlight); 
+			}
+		}
+		
+		void SetSun(FastColour col) {
+			Outside = col.Pack();
+			FastColour.GetShaded(col, out OutsideXSide, out OutsideZSide, out OutsideYBottom);
+		}
+		
+		void SetShadow(FastColour col) {
+			shadow = col.Pack();
+			FastColour.GetShaded(col, out shadowXSide, out shadowZSide, out shadowYBottom);
+		}
+		
 		
 		public unsafe override void LightHint(int startX, int startZ, byte* mapPtr) {
 			int x1 = Math.Max(startX, 0), x2 = Math.Min(width, startX + 18);
@@ -46,13 +81,22 @@ namespace ClassicalSharp.Map {
 		}
 
 		public override bool IsLit(int x, int y, int z) {
-			if (x < 0 || y < 0 || z < 0 || 
-			    x >= width || y >= height || z >= length) return true;
 			return y > GetLightHeight(x, z);
 		}
+		
 
-		public override bool IsLitNoCheck(int x, int y, int z) {
-			return y > GetLightHeight(x, z);
+		// Outside colour is same as sunlight colour, so we reuse when possible
+		internal override int LightCol_YTop_Fast(int x, int y, int z) {
+			return y >= heightmap[(z * width) + x] ? Outside : shadow;
+		}
+		internal override int LightCol_YBottom_Fast(int x, int y, int z) {
+			return y > heightmap[(z * width) + x] ? OutsideYBottom : shadowYBottom;
+		}
+		internal override int LightCol_XSide_Fast(int x, int y, int z) {
+			return y > heightmap[(z * width) + x] ? OutsideXSide : shadowXSide;
+		}
+		internal override int LightCol_ZSide_Fast(int x, int y, int z) {
+			return y > heightmap[(z * width) + x] ? OutsideZSide : shadowZSide;
 		}
 		
 		
@@ -83,10 +127,11 @@ namespace ClassicalSharp.Map {
 				byte above = y == (height - 1) ? Block.Air : game.World.GetBlock(x, y + 1, z);
 				if (info.BlocksLight[above]) return;
 				
-				if (nowBlocks)
+				if (nowBlocks) {
 					heightmap[index] = (short)(y - newOffset);
-				else
+				} else {
 					CalcHeightAt(x, y - 1, z, index);
+				}
 			}
 		}
 	}

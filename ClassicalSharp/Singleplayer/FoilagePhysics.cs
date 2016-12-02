@@ -40,7 +40,7 @@ namespace ClassicalSharp.Singleplayer {
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			if (lighting.IsLitNoCheck(x, y, z))
+			if (lighting.IsLit(x, y, z))
 				game.UpdateBlock(x, y, z, Block.Grass);
 		}
 		
@@ -49,7 +49,7 @@ namespace ClassicalSharp.Singleplayer {
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			if (!lighting.IsLitNoCheck(x, y, z))
+			if (!lighting.IsLit(x, y, z))
 				game.UpdateBlock(x, y, z, Block.Dirt);
 		}
 		
@@ -58,7 +58,7 @@ namespace ClassicalSharp.Singleplayer {
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			if (!lighting.IsLitNoCheck(x, y, z)) {
+			if (!lighting.IsLit(x, y, z)) {
 				game.UpdateBlock(x, y, z, Block.Air);
 				physics.ActivateNeighbours(x, y, z, index);
 				return;
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Singleplayer {
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			if (lighting.IsLitNoCheck(x, y, z)) {
+			if (lighting.IsLit(x, y, z)) {
 				game.UpdateBlock(x, y, z, Block.Air);
 				physics.ActivateNeighbours(x, y, z, index);
 				return;

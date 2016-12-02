@@ -85,12 +85,12 @@ namespace ClassicalSharp.Map {
 		
 		void ResetLight() {
 			Shadowlight = DefaultShadowlight;
-			Shadow = Shadowlight.Pack();		
+			Shadow = Shadowlight.Pack();
 			FastColour.GetShaded(Shadowlight, out ShadowXSide,
 			                     out ShadowZSide, out ShadowYBottom);
 			
 			Sunlight = DefaultSunlight;
-			Sun = Sunlight.Pack();			
+			Sun = Sunlight.Pack();
 			FastColour.GetShaded(Sunlight, out SunXSide,
 			                     out SunZSide, out SunYBottom);
 		}
