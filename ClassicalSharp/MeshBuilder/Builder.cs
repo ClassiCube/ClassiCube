@@ -28,7 +28,6 @@ namespace ClassicalSharp {
 			this.game = game;
 			gfx = game.Graphics;
 			info = game.BlockInfo;
-			lighting = game.Lighting;
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
@@ -40,6 +39,7 @@ namespace ClassicalSharp {
 		protected bool useBitFlags;
 		
 		bool BuildChunk(int x1, int y1, int z1) {
+			lighting = game.Lighting;
 			PreStretchTiles(x1, y1, z1);
 			byte* chunkPtr = stackalloc byte[extChunkSize3]; chunk = chunkPtr;
 			byte* countsPtr = stackalloc byte[chunkSize3 * Side.Sides]; counts = countsPtr;

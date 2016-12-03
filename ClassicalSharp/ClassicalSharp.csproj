@@ -176,6 +176,7 @@
     <Compile Include="Game\Game.Properties.cs" />
     <Compile Include="Game\GuiInterface.cs" />
     <Compile Include="Game\PickingHandler.cs" />
+    <Compile Include="Game\Plugin.cs" />
     <Compile Include="Generator\FlatGrassGenerator.cs" />
     <Compile Include="Generator\IMapGenerator.cs" />
     <Compile Include="Generator\Noise.cs" />
