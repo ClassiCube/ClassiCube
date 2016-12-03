@@ -9,7 +9,7 @@ namespace ClassicalSharp.Physics {
 	public static class Intersection {
 		
 		/// <summary> Calculates the intersection points of a ray and a rotated bounding box.  </summary>
-		internal static bool RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity target, out float tMin, out float tMax) {
+		public static bool RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity target, out float tMin, out float tMax) {
 			// This is the rotated AABB of the model we want to test for intersection
 			//        *
 			//       / \     we then perform a counter       *---*   and we can then do

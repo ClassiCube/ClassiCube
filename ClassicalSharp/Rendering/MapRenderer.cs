@@ -56,6 +56,7 @@ namespace ClassicalSharp.Renderers {
 			this.game = game;
 			gfx = game.Graphics;
 			updater = new ChunkUpdater(game, this);
+			SetMeshBuilder(DefaultMeshBuilder());
 		}
 		
 		public void Dispose() { updater.Dispose(); }
@@ -76,6 +77,20 @@ namespace ClassicalSharp.Renderers {
 		public void RenderTranslucent(double deltaTime) {
 			if (chunks == null) return;
 			RenderTranslucentChunks(deltaTime);
+		}
+		
+		public void SetMeshBuilder(ChunkMeshBuilder newBuilder) {
+			if (updater.builder != null) updater.builder.Dispose();
+			
+			updater.builder = newBuilder;
+			updater.builder.Init(game);
+			updater.builder.OnNewMapLoaded();
+		}
+
+		public ChunkMeshBuilder DefaultMeshBuilder() {
+			if (game.SmoothLighting)
+				return new AdvLightingMeshBuilder();
+			return new NormalMeshBuilder();
 		}
 		
 		
@@ -111,7 +126,7 @@ namespace ClassicalSharp.Renderers {
 			
 			byte block = game.World.SafeGetBlock(coords);
 			bool outside = !game.World.IsValidPos(Vector3I.Floor(pos));
-			inTranslucent = game.BlockInfo.Draw[block] == DrawType.Translucent 
+			inTranslucent = game.BlockInfo.Draw[block] == DrawType.Translucent
 				|| (pos.Y < env.EdgeHeight && outside);
 			
 			// If we are under water, render weather before to blend properly
@@ -122,7 +137,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		// Render translucent(liquid) blocks. These 'blend' into other blocks.
-		void RenderTranslucentChunks(double deltaTime) {			
+		void RenderTranslucentChunks(double deltaTime) {
 			// First fill depth buffer
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
@@ -238,7 +253,7 @@ namespace ClassicalSharp.Renderers {
 				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount, part.LeftIndex);
 				game.Vertices += part.LeftCount;
 			} else if (drawRight) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.RightCount, part.RightIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.RightCount, part.RightIndex);
 				game.Vertices += part.RightCount;
 			}
 			
@@ -246,12 +261,12 @@ namespace ClassicalSharp.Renderers {
 				gfx.FaceCulling = true;
 				gfx.DrawIndexedVb_TrisT2fC4b(part.FrontCount + part.BackCount, part.FrontIndex);
 				gfx.FaceCulling = false;
-				 game.Vertices += part.FrontCount + part.BackCount;
+				game.Vertices += part.FrontCount + part.BackCount;
 			} else if (drawFront) {
 				gfx.DrawIndexedVb_TrisT2fC4b(part.FrontCount, part.FrontIndex);
 				game.Vertices += part.FrontCount;
 			} else if (drawBack) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.BackCount, part.BackIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.BackCount, part.BackIndex);
 				game.Vertices += part.BackCount;
 			}
 			
@@ -259,12 +274,12 @@ namespace ClassicalSharp.Renderers {
 				gfx.FaceCulling = true;
 				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, part.BottomIndex);
 				gfx.FaceCulling = false;
-				 game.Vertices += part.BottomCount + part.TopCount;
+				game.Vertices += part.BottomCount + part.TopCount;
 			} else if (drawBottom) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex);
 				game.Vertices += part.BottomCount;
 			} else if (drawTop) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
 				game.Vertices += part.TopCount;
 			}
 		}
@@ -279,7 +294,7 @@ namespace ClassicalSharp.Renderers {
 			bool drawBack = (inTranslucent || info.DrawBack) && part.BackCount > 0;
 			
 			if (drawLeft && drawRight) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, part.LeftIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, part.LeftIndex);
 				game.Vertices += m * (part.LeftCount + part.RightCount);
 			} else if (drawLeft) {
 				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount, part.LeftIndex);
@@ -304,10 +319,10 @@ namespace ClassicalSharp.Renderers {
 				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, part.BottomIndex);
 				game.Vertices += m * (part.BottomCount + part.TopCount);
 			} else if (drawBottom) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex);
 				game.Vertices += m * part.BottomCount;
 			} else if (drawTop) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
 				game.Vertices += m * part.TopCount;
 			}
 		}
@@ -327,10 +342,10 @@ namespace ClassicalSharp.Renderers {
 				gfx.FaceCulling = false;
 				game.Vertices += part.LeftCount + part.RightCount;
 			} else if (drawLeft) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount, part.LeftIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount, part.LeftIndex);
 				game.Vertices += part.LeftCount;
 			} else if (drawRight) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.RightCount, part.RightIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.RightCount, part.RightIndex);
 				game.Vertices += part.RightCount;
 			}
 			
@@ -340,10 +355,10 @@ namespace ClassicalSharp.Renderers {
 				gfx.FaceCulling = false;
 				game.Vertices += part.FrontCount + part.BackCount;
 			} else if (drawFront) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.FrontCount, part.FrontIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.FrontCount, part.FrontIndex);
 				game.Vertices += part.FrontCount;
 			} else if (drawBack) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.BackCount, part.BackIndex); 
+				gfx.DrawIndexedVb_TrisT2fC4b(part.BackCount, part.BackIndex);
 				game.Vertices += part.BackCount;
 			}
 			
@@ -362,7 +377,7 @@ namespace ClassicalSharp.Renderers {
 			} else if (drawBottom) {
 				int part1Count;
 				if (part.IndicesCount > maxIndices &&
-				   (part1Count = maxIndices - part.BottomIndex) < part.BottomCount) {
+				    (part1Count = maxIndices - part.BottomIndex) < part.BottomCount) {
 					gfx.DrawIndexedVb_TrisT2fC4b(part1Count, part.BottomIndex);
 					gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount - part1Count, maxVertex, 0);
 				} else {
@@ -372,7 +387,7 @@ namespace ClassicalSharp.Renderers {
 			} else if (drawTop) {
 				int part1Count;
 				if (part.IndicesCount > maxIndices &&
-				   (part1Count = maxIndices - part.TopIndex) < part.TopCount) {
+				    (part1Count = maxIndices - part.TopIndex) < part.TopCount) {
 					gfx.DrawIndexedVb_TrisT2fC4b(part1Count, part.TopIndex);
 					gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount - part1Count, maxVertex, 0);
 				} else {

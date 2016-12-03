@@ -12,7 +12,7 @@ namespace ClassicalSharp.Map {
 
 		Game game;
 		BlockInfo info;
-		internal byte[] blocks;
+		public byte[] blocks;
 		public int Width, Height, Length;
 		
 		/// <summary> Contains the environment metadata for this world. </summary>

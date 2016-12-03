@@ -131,16 +131,16 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Returns the number of vertices needed to subdivide a quad. </summary>
-		internal static int CountVertices(int axis1Len, int axis2Len, int axisSize) {
+		public static int CountVertices(int axis1Len, int axis2Len, int axisSize) {
 			return CeilDiv(axis1Len, axisSize) * CeilDiv(axis2Len, axisSize) * 4;
 		}
 		
-		internal static byte FastByte(string s) {
+		public static byte FastByte(string s) {
 			int sum = 0;
 			switch (s.Length) {
-					case 1: sum = (s[0] - '0'); break;
-					case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
-					case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
+				case 1: sum = (s[0] - '0'); break;
+				case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
+				case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
 			}
 			return (byte)sum;
 		}

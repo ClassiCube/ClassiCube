@@ -11,7 +11,7 @@ namespace ClassicalSharp.Model {
 		
 		public SpiderModel(Game window) : base(window) { }
 		
-		internal override void CreateParts() {
+		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 5];
 			Head = BuildBox(MakeBoxBounds(-4, 4, -11, 4, 12, -3)
 			                .TexOrigin(32, 4)

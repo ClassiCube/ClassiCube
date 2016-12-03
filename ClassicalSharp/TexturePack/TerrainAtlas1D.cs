@@ -11,8 +11,8 @@ namespace ClassicalSharp.Textures {
 	/// <summary> Represents a 2D packed texture atlas that has been converted into an array of 1D atlases. </summary>
 	public sealed class TerrainAtlas1D : IDisposable {
 		
-		internal int elementsPerAtlas1D;
-		internal int elementsPerBitmap;
+		public int elementsPerAtlas1D;
+		public int elementsPerBitmap;
 		public float invElementSize;
 		public int[] TexIds;
 		IGraphicsApi gfx;

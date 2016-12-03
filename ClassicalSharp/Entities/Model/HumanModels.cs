@@ -43,7 +43,7 @@ namespace ClassicalSharp.Model {
 		public HumanoidHeadModel(Game window) : base(window) { }
 		
 		public ModelPart Head, Hat;
-		internal override void CreateParts() {
+		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 2];
 			head = MakeBoxBounds(-4, 0, -4, 4, 8, 4).RotOrigin(0, 4, 0);
 			

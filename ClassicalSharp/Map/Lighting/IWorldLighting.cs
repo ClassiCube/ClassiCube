@@ -7,8 +7,8 @@ namespace ClassicalSharp.Map {
 	/// <summary> Manages lighting for each block in the world.  </summary>
 	public abstract class IWorldLighting : IGameComponent {
 
-		internal short[] heightmap;
-		internal int Outside, OutsideZSide, OutsideXSide, OutsideYBottom;
+		protected internal short[] heightmap;
+		public int Outside, OutsideZSide, OutsideXSide, OutsideYBottom;
 		protected int width, height, length;
 		
 		// Equivalent to
@@ -40,11 +40,11 @@ namespace ClassicalSharp.Map {
 		public abstract int LightCol_ZSide(int x, int y, int z);
 		
 
-		internal abstract int LightCol_Sprite_Fast(int x, int y, int z);		
-		internal abstract int LightCol_YTop_Fast(int x, int y, int z);
-		internal abstract int LightCol_YBottom_Fast(int x, int y, int z);
-		internal abstract int LightCol_XSide_Fast(int x, int y, int z);
-		internal abstract int LightCol_ZSide_Fast(int x, int y, int z);		
+		public abstract int LightCol_Sprite_Fast(int x, int y, int z);		
+		public abstract int LightCol_YTop_Fast(int x, int y, int z);
+		public abstract int LightCol_YBottom_Fast(int x, int y, int z);
+		public abstract int LightCol_XSide_Fast(int x, int y, int z);
+		public abstract int LightCol_ZSide_Fast(int x, int y, int z);		
 		
 		public virtual void Dispose() { }
 		public virtual void Reset(Game game) { }

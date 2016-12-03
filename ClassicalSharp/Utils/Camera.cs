@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 	
 	public abstract class Camera {
 		protected Game game;
-		internal Matrix4 tiltM;
+		protected internal Matrix4 tiltM;
 		internal float bobbingVer, bobbingHor;
 		
 		public abstract Matrix4 GetProjection();

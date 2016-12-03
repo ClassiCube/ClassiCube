@@ -34,6 +34,12 @@ namespace ClassicalSharp.Textures {
 			reader.Extract(stream);
 		}
 		
+		public static void ExtractDefault(Game game) {
+			TexturePack extractor = new TexturePack();
+			extractor.Extract(game.DefaultTexturePack, game);
+			game.World.TextureUrl = null;
+		}
+		
 		void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
 			// Ignore directories: convert x/name to name and x\name to name.
 			string name = Utils.ToLower(filename);
@@ -70,9 +76,9 @@ namespace ClassicalSharp.Textures {
 					
 					game.World.TextureUrl = url;
 					game.Events.RaiseTexturePackChanged();
-					if (game.ChangeTerrainAtlas(bmp, data)) return;	
+					if (game.ChangeTerrainAtlas(bmp, data)) return;
 					
-					bmp.Dispose(); 
+					bmp.Dispose();
 					data.Dispose();
 				} else {
 					data.Dispose();
@@ -102,13 +108,6 @@ namespace ClassicalSharp.Textures {
 					extractor.Extract(data, game);
 				}
 			}
-		}
-		
-		
-		internal static void ExtractDefault(Game game) {
-			TexturePack extractor = new TexturePack();
-			extractor.Extract(game.DefaultTexturePack, game);
-			game.World.TextureUrl = null;
 		}
 
 		static Bitmap GetBitmap(FileStream fs) {

@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 		}
 		
-		internal int width, length, height, sidesLevel, edgeLevel;
+		protected internal int width, length, height, sidesLevel, edgeLevel;
 		protected int maxX, maxY, maxZ;
 		protected int cIndex;
 		protected byte* chunk, counts;

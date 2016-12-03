@@ -338,7 +338,7 @@ namespace ClassicalSharp {
 			Options.Save();
 		}
 		
-		internal bool CanPick(byte block) {
+		public bool CanPick(byte block) {
 			if (BlockInfo.Draw[block] == DrawType.Gas) return false;
 			if (BlockInfo.Draw[block] == DrawType.Sprite) return true;
 			if (BlockInfo.Collide[block] != CollideType.SwimThrough) return true;

@@ -19,7 +19,7 @@ namespace ClassicalSharp.Model {
 
 		public IModel(Game game) { this.game = game; }
 		
-		internal abstract void CreateParts();
+		public abstract void CreateParts();
 		
 		/// <summary> Whether the entity should be slightly bobbed up and down when rendering. </summary>
 		/// <remarks> e.g. for players when their legs are at the peak of their swing,

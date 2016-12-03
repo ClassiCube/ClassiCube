@@ -14,7 +14,7 @@ namespace ClassicalSharp.Model {
 		
 		protected BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 		protected float offset = 0.5f;
-		internal override void CreateParts() {
+		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * (7 + 7 + 4)];
 			Set = new ModelSet();
 			MakeDescriptions();

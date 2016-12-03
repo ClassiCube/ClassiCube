@@ -8,14 +8,12 @@ namespace ClassicalSharp.Singleplayer {
 		Game game;
 		PhysicsBase physics;
 		World map;
-		IWorldLighting lighting;
 		Random rnd = new Random();
 		
 		public FoilagePhysics(Game game, PhysicsBase physics) {
 			this.game = game;
 			this.physics = physics;
 			map = game.World;
-			lighting = game.Lighting;
 			
 			physics.OnPlace[Block.Sapling] = HandleSapling;
 			physics.OnRandomTick[Block.Sapling] = HandleSapling;
@@ -40,7 +38,7 @@ namespace ClassicalSharp.Singleplayer {
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			if (lighting.IsLit(x, y, z))
+			if (game.Lighting.IsLit(x, y, z))
 				game.UpdateBlock(x, y, z, Block.Grass);
 		}
 		
@@ -49,7 +47,7 @@ namespace ClassicalSharp.Singleplayer {
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			if (!lighting.IsLit(x, y, z))
+			if (!game.Lighting.IsLit(x, y, z))
 				game.UpdateBlock(x, y, z, Block.Dirt);
 		}
 		
@@ -58,7 +56,7 @@ namespace ClassicalSharp.Singleplayer {
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			if (!lighting.IsLit(x, y, z)) {
+			if (!game.Lighting.IsLit(x, y, z)) {
 				game.UpdateBlock(x, y, z, Block.Air);
 				physics.ActivateNeighbours(x, y, z, index);
 				return;
@@ -77,7 +75,7 @@ namespace ClassicalSharp.Singleplayer {
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			if (lighting.IsLit(x, y, z)) {
+			if (game.Lighting.IsLit(x, y, z)) {
 				game.UpdateBlock(x, y, z, Block.Air);
 				physics.ActivateNeighbours(x, y, z, index);
 				return;

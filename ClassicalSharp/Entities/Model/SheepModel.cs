@@ -17,7 +17,7 @@ namespace ClassicalSharp.Model {
 			furIndex = game.ModelCache.GetTextureIndex("sheep_fur.png");
 		}
 		
-		internal override void CreateParts() {
+		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6 * (Fur ? 2 : 1)];
 			Head = BuildBox(MakeBoxBounds(-3, 16, -14, 3, 22, -6)
 			                .TexOrigin(0, 0)

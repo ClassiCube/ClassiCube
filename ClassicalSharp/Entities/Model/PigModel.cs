@@ -11,7 +11,7 @@ namespace ClassicalSharp.Model {
 		
 		public PigModel(Game window) : base(window) { }
 		
-		internal override void CreateParts() {
+		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head = BuildBox(MakeBoxBounds(-4, 8, -14, 4, 16, -6)
 			               .TexOrigin(0, 0)

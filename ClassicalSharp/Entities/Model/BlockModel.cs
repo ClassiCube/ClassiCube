@@ -24,7 +24,7 @@ namespace ClassicalSharp.Model {
 			cache = game.ModelCache;
 		}
 		
-		internal override void CreateParts() { }
+		public override void CreateParts() { }
 		
 		public override bool Bobbing { get { return false; } }
 		

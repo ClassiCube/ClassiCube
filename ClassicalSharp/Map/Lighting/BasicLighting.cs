@@ -39,7 +39,8 @@ namespace ClassicalSharp.Map {
 		}
 		
 		public override void Dispose() {
-			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
+			if (game != null)
+				game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			heightmap = null;
 		}
 
@@ -95,23 +96,23 @@ namespace ClassicalSharp.Map {
 		}
 		
 
-		internal override int LightCol_Sprite_Fast(int x, int y, int z) {
+		public override int LightCol_Sprite_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? Outside : shadow;
 		}
 		
-		internal override int LightCol_YTop_Fast(int x, int y, int z) {
+		public override int LightCol_YTop_Fast(int x, int y, int z) {
 			return y >= heightmap[(z * width) + x] ? Outside : shadow;
 		}
 		
-		internal override int LightCol_YBottom_Fast(int x, int y, int z) {
+		public override int LightCol_YBottom_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideYBottom : shadowYBottom;
 		}
 		
-		internal override int LightCol_XSide_Fast(int x, int y, int z) {
+		public override int LightCol_XSide_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideXSide : shadowXSide;
 		}
 		
-		internal override int LightCol_ZSide_Fast(int x, int y, int z) {
+		public override int LightCol_ZSide_Fast(int x, int y, int z) {
 			return y > heightmap[(z * width) + x] ? OutsideZSide : shadowZSide;
 		}
 		
