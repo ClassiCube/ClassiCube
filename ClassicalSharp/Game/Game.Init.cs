@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Net;
 using ClassicalSharp.Audio;
@@ -116,12 +117,21 @@ namespace ClassicalSharp {
 			AxisLinesRenderer = AddComponent(new AxisLinesRenderer());
 			SkyboxRenderer = AddComponent(new SkyboxRenderer());
 			
+			plugins = new PluginLoader(this);
+			List<string> nonLoaded = plugins.LoadAll();
+			
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].Init(this);
 			ExtractInitialTexturePack();
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].Ready(this);
 			InitScheduledTasks();
+			
+			if (nonLoaded != null) {
+				for (int i = 0; i < nonLoaded.Count; i++) {
+					plugins.MakeWarning(this, nonLoaded[i]);
+				}
+			}
 			
 			window.LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";

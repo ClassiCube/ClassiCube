@@ -85,7 +85,7 @@ namespace ClassicalSharp {
 				
 				WarningScreen warning = new WarningScreen(game, true, true);
 				warning.Metadata = "CL_" + url;
-				warning.SetHandlers(DownloadTexturePack, null, WarningScreenTick);
+				warning.SetHandlers(DownloadTexturePack, SkipTexturePack, WarningScreenTick);
 				
 				warning.SetTextData(
 					"Do you want to download the server's texture pack?",
@@ -97,8 +97,19 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void DownloadTexturePack(WarningScreen screen) {
-			DownloadTexturePack(((string)screen.Metadata).Substring(3));
+		void DownloadTexturePack(WarningScreen screen, bool always) {
+			string url = ((string)screen.Metadata).Substring(3);
+			DownloadTexturePack(url);
+			if (always && !game.AcceptedUrls.HasEntry(url)) {
+				game.AcceptedUrls.AddEntry(url);
+			}
+		}
+
+		void SkipTexturePack(WarningScreen screen, bool always) {
+			string url = ((string)screen.Metadata).Substring(3);
+			if (always && !game.DeniedUrls.HasEntry(url)) {
+				game.DeniedUrls.AddEntry(url);
+			}
 		}
 		
 		void DownloadTexturePack(string url) {

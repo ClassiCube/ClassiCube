@@ -12,8 +12,8 @@ namespace ClassicalSharp.Gui.Screens {
 			this.showAlways = showAlways;
 		}
 		
-		public void SetHandlers(Action<WarningScreen> yesClick,
-		                        Action<WarningScreen> noClick,
+		public void SetHandlers(Action<WarningScreen, bool> yesClick,
+		                        Action<WarningScreen, bool> noClick,
 		                        Action<WarningScreen> renderFrame) {
 			this.yesClick = yesClick;
 			this.noClick = noClick;
@@ -28,6 +28,7 @@ namespace ClassicalSharp.Gui.Screens {
 		string title, lastTitle;
 		string[] body, lastBody;
 		bool confirmNo, confirmMode, showAlways;
+		int alwaysIndex = 100;
 		
 		public override void Init() {
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
@@ -103,64 +104,49 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void InitStandardButtons() {
 			widgets = new ButtonWidget[showAlways ? 4 : 2];
+			alwaysIndex = 100;
+			
 			widgets[0] = ButtonWidget.Create(game, 160, 35, "Yes", titleFont, OnYesClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30);
 			widgets[1] = ButtonWidget.Create(game, 160, 35, "No", titleFont, OnNoClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
 			if (!showAlways) return;
 			
-			widgets[2] = ButtonWidget.Create(game, 160, 35, "Always yes", titleFont, OnYesAlwaysClick)
+			alwaysIndex = 2;
+			widgets[2] = ButtonWidget.Create(game, 160, 35, "Always yes", titleFont, OnYesClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 80);
-			widgets[3] = ButtonWidget.Create(game, 160, 35, "Always no", titleFont, OnNoAlwaysClick)
+			widgets[3] = ButtonWidget.Create(game, 160, 35, "Always no", titleFont, OnNoClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 80);
 		}
 		
-		Action<WarningScreen> yesClick, noClick, renderFrame;
+		Action<WarningScreen, bool> yesClick, noClick;
+		Action<WarningScreen> renderFrame;
 		void OnYesClick(Game g, Widget w, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;
-			if (yesClick != null)
-				yesClick(this);
+			bool always = Array.IndexOf<Widget>(widgets, w) >= alwaysIndex;
+			
+			if (yesClick != null) yesClick(this, always);
 			Dispose();
 			CloseScreen();
 		}
 		
 		void OnNoClick(Game g, Widget w, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;
+			bool always = Array.IndexOf<Widget>(widgets, w) >= alwaysIndex;
+			
 			if (confirmNo && !confirmMode) {
-				InitConfirmButtons(false); return;
+				InitConfirmButtons(always); return;
 			}
 			
-			if (noClick != null)
-				noClick(this);
+			if (noClick != null) noClick(this, always);
 			Dispose();
 			CloseScreen();
 		}
 		
-		void OnYesAlwaysClick(Game g, Widget w, MouseButton btn, int x, int y) {
-			if (btn != MouseButton.Left) return;
-			OnYesClick(g, w, btn, x, y);
-			string url = ((string)Metadata).Substring(3);
-			if (!game.AcceptedUrls.HasEntry(url))
-				game.AcceptedUrls.AddEntry(url);
-		}
-		
-		void OnNoAlwaysClick(Game g, Widget w, MouseButton btn, int x, int y) {
-			if (btn != MouseButton.Left) return;
-			if (confirmNo && !confirmMode) {
-				InitConfirmButtons(true); return;
-			}
-			
-			OnNoClick(g, w, btn, x, y);
-			string url = ((string)Metadata).Substring(3);
-			if (!game.DeniedUrls.HasEntry(url))
-				game.DeniedUrls.AddEntry(url);
-		}
-
-		
 		void InitConfirmButtons(bool always) {
-			ClickHandler noHandler = always ? (ClickHandler)OnNoAlwaysClick: (ClickHandler)OnNoClick;
+			alwaysIndex = always ? 0 : 100;
 			widgets = new ButtonWidget[] {
-				ButtonWidget.Create(game, 160, 35, "I'm sure", titleFont, noHandler)
+				ButtonWidget.Create(game, 160, 35, "I'm sure", titleFont, OnNoClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30),
 				ButtonWidget.Create(game, 160, 35, "Go back", titleFont, GoBackClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30),

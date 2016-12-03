@@ -1,7 +1,9 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using ClassicalSharp.Textures;
 using ClassicalSharp.Gui.Screens;
 
 namespace ClassicalSharp {
@@ -13,54 +15,108 @@ namespace ClassicalSharp {
 		string ClientVersion { get; }
 	}
 	
-	internal static class PluginLoader {
+	internal class PluginLoader {
 
-		internal static void Load(Game game) {
-			string dllPath = Path.Combine(Program.AppDirectory, "plugins");
-			if (!Directory.Exists(dllPath))
-				Directory.CreateDirectory(dllPath);
+		EntryList accepted, denied;
+		Game game;
+		
+		public PluginLoader(Game game) { this.game = game; }
+		
+		internal List<string> LoadAll() {
+			string dir = Path.Combine(Program.AppDirectory, "plugins");
+			if (!Directory.Exists(dir))
+				Directory.CreateDirectory(dir);
 			
-			string[] dlls = Directory.GetFiles(dllPath, "*.dll");
-			foreach (string dll in dlls) {
-			}
+			accepted = new EntryList("plugins", "accepted.txt");
+			denied = new EntryList("plugins", "denied.txt");
+			accepted.Load();
+			denied.Load();
+			
+			return LoadPlugins(dir);
 		}
 		
-		internal static void MakeWarning(Game game, string plugin) {
-			WarningScreen warning = new WarningScreen(game, false, false);
+		internal void MakeWarning(Game game, string plugin) {
+			WarningScreen warning = new WarningScreen(game, true, false);
 			warning.Metadata = plugin;
-			warning.SetHandlers(w => Load(game, w), w => {}, null);
+			warning.SetHandlers(Accept, Deny, null);
 			
 			warning.SetTextData(
-				"&eAre you sure you want to load " + plugin + " plugin?",
+				"&eAre you sure you want to load plugin " + plugin + " ?",
 				"Be careful - plugins from strangers may have viruses",
 				" or other malicious behaviour.");
 			game.Gui.ShowWarning(warning);
 		}
 		
-		static void Load(Game game, WarningScreen warning) {
+		
+		void Accept(WarningScreen warning, bool always) {
 			string plugin = (string)warning.Metadata;
-			string dllPath = Path.Combine(Program.AppDirectory, "plugins");
-			Load(game, Path.Combine(dllPath, plugin));
+			if (always && !accepted.HasEntry(plugin)) {
+				accepted.AddEntry(plugin);
+			}
+			
+			string dir = Path.Combine(Program.AppDirectory, "plugins");			
+			Load(Path.Combine(dir, plugin + ".dll"), true);			
+		}
+
+		void Deny(WarningScreen warning, bool always) {
+			string plugin = (string)warning.Metadata;
+			if (always && !denied.HasEntry(plugin)) {
+				denied.AddEntry(plugin);
+			}
 		}
 		
-		static void Load(Game game, string path) {
+		List<string> LoadPlugins(string dir) {
+			string[] dlls = Directory.GetFiles(dir, "*.dll");
+			List<string> nonLoaded = null;
+			
+			for (int i = 0; i < dlls.Length; i++) {
+				string plugin = Path.GetFileNameWithoutExtension(dlls[i]);
+				if (denied.HasEntry(plugin)) continue;
+				
+				if (accepted.HasEntry(plugin)) {
+					Load(dlls[i], false);
+				} else if (nonLoaded == null) {
+					nonLoaded = new List<string>();
+					nonLoaded.Add(plugin);
+				} else {
+					nonLoaded.Add(plugin);
+				}
+			}
+			return nonLoaded;
+		}
+		
+		void Load(string path, bool needsInit) {
 			try {
 				Assembly lib = Assembly.LoadFile(path);
 				Type[] types = lib.GetTypes();
 				
-				foreach (Type t in lib.GetTypes()) {
-					if (t.IsAbstract || t.IsInterface || !t.IsSubclassOf(typeof(Plugin))) continue;
-					object instance = Activator.CreateInstance(t);
+				for (int i = 0; i < types.Length; i++) {
+					if (!IsPlugin(types[i])) continue;
 					
-					if (instance == null)
-						throw new InvalidOperationException("Type " + t.Name + " returned null instance");
-					game.AddComponent((IGameComponent)instance);
+					IGameComponent plugin = (IGameComponent)Activator.CreateInstance(types[i]);
+					if (needsInit) {
+						plugin.Init(game);
+						plugin.Ready(game);
+					}
+					
+					if (plugin == null)
+						throw new InvalidOperationException("Type " + types[i].Name + " returned null instance");
+					game.AddComponent(plugin);
 				}
 			} catch (Exception ex) {
 				path = Path.GetFileNameWithoutExtension(path);
-				game.Chat.Add("&cError loading plugin " + path + ", see client.log for details");
-				ErrorHandler.LogError("PluginLoader.Load()", ex);
+				ErrorHandler.LogError("PluginLoader.Load() - " + path, ex);
 			}
+		}
+		
+		static bool IsPlugin(Type t) {
+			if (t.IsAbstract || t.IsInterface) return false;
+			
+			Type[] interfaces = t.GetInterfaces();
+			for (int i = 0; i < interfaces.Length; i++) {
+				if (interfaces[i] == typeof(Plugin)) return true;
+			}
+			return false;
 		}
 	}
 }

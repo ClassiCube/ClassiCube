@@ -421,7 +421,7 @@ namespace ClassicalSharp.Gui.Screens {
 			return true;
 		}
 		
-		void OpenUrl(WarningScreen screen) {
+		void OpenUrl(WarningScreen screen, bool always) {
 			try {
 				Process.Start((string)screen.Metadata);
 			} catch (Exception ex) {
@@ -429,7 +429,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		void AppendUrl(WarningScreen screen) {
+		void AppendUrl(WarningScreen screen, bool always) {
 			if (!game.ClickableChat) return;
 			input.Append((string)screen.Metadata);
 		}
