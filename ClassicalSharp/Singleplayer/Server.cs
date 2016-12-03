@@ -80,7 +80,7 @@ namespace ClassicalSharp.Singleplayer {
 			
 			string state = generator.CurrentState;
 			float progress = generator.CurrentProgress;
-			LoadingMapScreen screen = ((LoadingMapScreen)game.Gui.ActiveScreen);
+			LoadingMapScreen screen = ((LoadingMapScreen)game.Gui.UnderlyingScreen);
 			
 			screen.SetProgress(progress);
 			if (state == lastState) return;

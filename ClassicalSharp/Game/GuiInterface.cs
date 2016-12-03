@@ -24,9 +24,16 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Gets the screen that the user is currently interacting with. </summary>
+		/// <remarks> This means if an overlay is active, it will be over the top of other screens. </remarks>
 		public Screen ActiveScreen {
 			get { return overlays.Count > 0 ? overlays[0]
 					: activeScreen == null ? hudScreen : activeScreen; }
+		}
+
+		/// <summary> Gets the non-overlay screen that the user is currently interacting with. </summary>
+		/// <remarks> This means if an overlay is active, it will return the screen under it. </remarks>
+		public Screen UnderlyingScreen {
+			get { return activeScreen == null ? hudScreen : activeScreen; }
 		}
 		
 		public void OnNewMap(Game game) { }
