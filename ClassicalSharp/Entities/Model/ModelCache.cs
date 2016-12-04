@@ -20,9 +20,8 @@ namespace ClassicalSharp.Model {
 		#endif
 		public List<CachedModel> Models = new List<CachedModel>();
 		public List<CachedTexture> Textures = new List<CachedTexture>();
-		internal int vb;
-		internal VertexP3fT2fC4b[] vertices;
-
+		public int vb;
+		public VertexP3fT2fC4b[] vertices;
 
 		public void InitCache() {
 			vertices = new VertexP3fT2fC4b[24 * 12];

@@ -15,7 +15,7 @@ namespace ClassicalSharp.Entities {
 		
 		public string DisplayName, SkinName, SkinIdentifier;
 		public SkinType SkinType;
-		internal AnimatedComponent anim;
+		public AnimatedComponent anim;
 		internal ShadowComponent shadow;
 		internal float uScale = 1, vScale = 1;
 		
@@ -57,7 +57,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		protected Texture nameTex;
-		protected internal int TextureId = -1, MobTextureId = -1;
+		public int TextureId = -1, MobTextureId = -1;
 		
 		public override void Despawn() {
 			game.Graphics.DeleteTexture(ref TextureId);

@@ -37,6 +37,7 @@ namespace ClassicalSharp {
 		
 		public string ServerName;
 		public string ServerMotd;
+		public string AppName = Program.AppName;
 		
 		/// <summary> Whether the network processor is currently connected to a server. </summary>
 		public bool Disconnected;

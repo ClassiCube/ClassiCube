@@ -396,7 +396,7 @@ namespace ClassicalSharp.Network.Protocols {
 			int count = clientExts.Length;
 			if (!game.AllowCustomBlocks) count -= 2;
 			
-			SendExtInfo(Program.AppName, count);
+			SendExtInfo(net.AppName, count);
 			for (int i = 0; i < clientExts.Length; i++) {
 				string name = clientExts[i];
 				int ver = 1;
