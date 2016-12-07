@@ -57,7 +57,6 @@ namespace ClassicalSharp {
 			if (selectedFace == BlockFace.YMax || selectedFace == BlockFace.YMin) { face = "-UD"; }
 			else if (selectedFace == BlockFace.XMax || selectedFace == BlockFace.XMin) { face = "-WE"; }
 			else if (selectedFace == BlockFace.ZMax || selectedFace == BlockFace.ZMin) { face = "-NS"; }
-			game.Chat.Add("clickedFace: " + selectedFace + ".");
 			return Find(game, block, name + face);
 		}
 		
