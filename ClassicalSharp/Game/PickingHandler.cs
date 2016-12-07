@@ -64,10 +64,133 @@ namespace ClassicalSharp {
 					game.UserEvents.RaiseBlockChanged(pos, old, 0);
 				}
 			} else if (right) {
+				//[1:28:03 PM]  <UnknownShadow200+> well goodlyay you have game.SelectedPos.Intersect
+				//[1:28:17 PM]  <UnknownShadow200+> that's the exact floating point coordinates that the mouse clicked on the block
+				//[1:31:45 PM]  <UnknownShadow200+> e.g. the block clicked on might be (32, 34, 63)
+				//[1:31:55 PM]  <UnknownShadow200+> Intersect might be (33, 34.51049, 63.44751)
 				Vector3I pos = game.SelectedPos.TranslatedPos;
+				Vector3 posExact = game.SelectedPos.Intersect;
 				if (!game.World.IsValidPos(pos)) return;
 				byte old = game.World.GetBlock(pos);
 				byte block = (byte)inv.HeldBlock;
+				if (game.autoRotate) {
+					string[] blockNameSplit = info.Name[block].ToUpper().Split('-');
+					bool isDirectional = false;
+					bool isHeight = false;
+					bool isCorner = false;
+					
+					if (blockNameSplit.Length == 2) {
+						switch (blockNameSplit[1]) {
+							case "N": case "E": case "W": case "S":
+							isDirectional = true;
+							break;
+						}
+						switch (blockNameSplit[1]) {
+							case "U": case "D":
+							isHeight = true;
+							break;
+						}
+						switch (blockNameSplit[1]) {
+							//NW NE
+							//SW SE
+							case "NW": case "NE": case "SW": case "SE":
+							isCorner = true;
+							break;
+						}
+					}
+					if (isDirectional) {
+						Vector3 southEast = new Vector3 (1,0,1);
+						Vector3 southWest = new Vector3 (-1, 0, 1);
+						Vector3 posExactFlat = posExact; posExactFlat.Y = 0;
+						Vector3 southEastToPoint = posExactFlat - new Vector3 (pos.X, 0, pos.Z);
+						Vector3 southWestToPoint = posExactFlat - new Vector3 (pos.X +1, 0, pos.Z);
+						float dotSouthEast = Vector3.Dot(southEastToPoint, southWest);
+						float dotSouthWest= Vector3.Dot(southWestToPoint, southEast);
+						string direction;
+						if (dotSouthEast <= 0) { // NorthEast
+							if (dotSouthWest <= 0) { //NorthWest
+								//North
+								direction = "N";
+							} else { //SouthEast
+								//East
+								direction = "E";
+							}
+						} else { //SouthWest
+							if (dotSouthWest <= 0) { //NorthWest
+								//West
+								direction = "W";
+							} else { //SouthEast
+								//South	
+								direction = "S";
+							}
+						}
+						
+						if (direction != blockNameSplit[1]) {
+							string newBlockName = blockNameSplit[0] + "-" + direction;
+							byte newBlockID;
+							if (game.BlockInfo.dictBlockIDbyName.TryGetValue(newBlockName, out newBlockID)) {
+								block = newBlockID;
+								//game.Chat.Add("Substituted " + block + " for " + newBlockID + ".");
+							} else {
+								//game.Chat.Add("could not find " + newBlockName + ".");
+							}
+						}
+					}
+					if (isHeight) {
+						string height = "D";
+						float pickedHeight = posExact.Y - pos.Y;
+						//game.Chat.Add("pickedHeight: " + pickedHeight + ".");
+						
+						if (pickedHeight >= 0.5f) {
+							height = "U";
+						}
+						
+						if (height != blockNameSplit[1]) {
+							string newBlockName = blockNameSplit[0] + "-" + height;
+							byte newBlockID;
+							if (game.BlockInfo.dictBlockIDbyName.TryGetValue(newBlockName, out newBlockID)) {
+								block = newBlockID;
+								//game.Chat.Add("Substituted " + block + " for " + newBlockID + ".");
+							} else {
+								//game.Chat.Add("could not find " + newBlockName + ".");
+							}
+						}
+					}
+					
+					if (isCorner) {
+						string corner = "NW";
+						Vector3 pickedCorner = posExact - (Vector3)pos;
+						//game.Chat.Add("pickedHeight: " + pickedHeight + ".");
+						
+						//NW NE
+						//SW SE
+						if (pickedCorner.X < 0.5f && pickedCorner.Z < 0.5f) {
+							corner = "NW";
+						}
+						if (pickedCorner.X >= 0.5f && pickedCorner.Z < 0.5f) {
+							corner = "NE";
+						}
+						if (pickedCorner.X < 0.5f && pickedCorner.Z >= 0.5f) {
+							corner = "SW";
+						}
+						if (pickedCorner.X >= 0.5f && pickedCorner.Z >= 0.5f) {
+							corner = "SE";
+						}
+						
+						if (corner != blockNameSplit[1]) {
+							string newBlockName = blockNameSplit[0] + "-" + corner;
+							byte newBlockID;
+							if (game.BlockInfo.dictBlockIDbyName.TryGetValue(newBlockName, out newBlockID)) {
+								block = newBlockID;
+								//game.Chat.Add("Substituted " + block + " for " + newBlockID + ".");
+							} else {
+								//game.Chat.Add("could not find " + newBlockName + ".");
+							}
+						}
+					}
+					
+				}
+				
 				
 				if (!game.CanPick(old) && inv.CanPlace[block] && CheckIsFree(game.SelectedPos, block)) {
 					game.UpdateBlock(pos.X, pos.Y, pos.Z, block);

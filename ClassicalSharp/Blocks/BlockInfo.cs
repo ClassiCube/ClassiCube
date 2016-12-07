@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.Collections.Generic;
 using ClassicalSharp.Blocks;
 using OpenTK;
 
@@ -27,6 +28,8 @@ namespace ClassicalSharp {
 	
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
+		
+		public Dictionary<string, byte> dictBlockIDbyName = new Dictionary<string, byte>();
 		
 		/// <summary> Gets whether the given block id is a liquid. (water and lava) </summary>
 		public bool IsLiquid(byte block) { return block >= Block.Water && block <= Block.StillLava; }
