@@ -26,6 +26,9 @@ namespace ClassicalSharp {
 			} else if (Utils.CaselessEquals(sep, "n") || Utils.CaselessEquals(sep, "w") ||
 			           Utils.CaselessEquals(sep, "s") || Utils.CaselessEquals(sep, "e")) {
 				return RotateDirection(game, block, name, offset);
+			} else if (Utils.CaselessEquals(sep, "UD") || Utils.CaselessEquals(sep, "WE") ||
+			           Utils.CaselessEquals(sep, "NS")) {
+				return RotatePillar(game, block, name, offset);
 			}
 			return block;
 		}
@@ -46,6 +49,16 @@ namespace ClassicalSharp {
 		static byte RotateVertical(Game game, byte block, string name, Vector3 offset) {
 			string height = offset.Y >= 0.5f ? "-U" : "-D";
 			return Find(game, block, name + height);
+		}
+		
+		static byte RotatePillar(Game game, byte block, string name, Vector3 offset) {
+			BlockFace selectedFace = game.SelectedPos.BlockFace;
+			string face = "-UD";
+			if (selectedFace == BlockFace.YMax || selectedFace == BlockFace.YMin) { face = "-UD"; }
+			else if (selectedFace == BlockFace.XMax || selectedFace == BlockFace.XMin) { face = "-WE"; }
+			else if (selectedFace == BlockFace.ZMax || selectedFace == BlockFace.ZMin) { face = "-NS"; }
+			game.Chat.Add("clickedFace: " + selectedFace + ".");
+			return Find(game, block, name + face);
 		}
 		
 		static byte RotateDirection(Game game, byte block, string name, Vector3 offset) {
