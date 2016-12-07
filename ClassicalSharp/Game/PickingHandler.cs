@@ -127,9 +127,9 @@ namespace ClassicalSharp {
 						
 						if (direction != blockNameSplit[1]) {
 							string newBlockName = blockNameSplit[0] + "-" + direction;
-							byte newBlockID;
-							if (game.BlockInfo.dictBlockIDbyName.TryGetValue(newBlockName, out newBlockID)) {
-								block = newBlockID;
+							int newBlockID = game.BlockInfo.FindID(newBlockName);
+							if (newBlockID != -1) {
+								block = (byte)newBlockID;
 								//game.Chat.Add("Substituted " + block + " for " + newBlockID + ".");
 							} else {
 								//game.Chat.Add("could not find " + newBlockName + ".");
@@ -147,9 +147,9 @@ namespace ClassicalSharp {
 						
 						if (height != blockNameSplit[1]) {
 							string newBlockName = blockNameSplit[0] + "-" + height;
-							byte newBlockID;
-							if (game.BlockInfo.dictBlockIDbyName.TryGetValue(newBlockName, out newBlockID)) {
-								block = newBlockID;
+							int newBlockID = game.BlockInfo.FindID(newBlockName);
+							if (newBlockID != -1) {
+								block = (byte)newBlockID;
 								//game.Chat.Add("Substituted " + block + " for " + newBlockID + ".");
 							} else {
 								//game.Chat.Add("could not find " + newBlockName + ".");
@@ -179,9 +179,9 @@ namespace ClassicalSharp {
 						
 						if (corner != blockNameSplit[1]) {
 							string newBlockName = blockNameSplit[0] + "-" + corner;
-							byte newBlockID;
-							if (game.BlockInfo.dictBlockIDbyName.TryGetValue(newBlockName, out newBlockID)) {
-								block = newBlockID;
+							int newBlockID = game.BlockInfo.FindID(newBlockName);
+							if (newBlockID != -1) {
+								block = (byte)newBlockID;
 								//game.Chat.Add("Substituted " + block + " for " + newBlockID + ".");
 							} else {
 								//game.Chat.Add("could not find " + newBlockName + ".");

@@ -29,8 +29,6 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public partial class BlockInfo {
 		
-		public Dictionary<string, byte> dictBlockIDbyName = new Dictionary<string, byte>();
-		
 		/// <summary> Gets whether the given block id is a liquid. (water and lava) </summary>
 		public bool IsLiquid(byte block) { return block >= Block.Water && block <= Block.StillLava; }
 		
@@ -133,6 +131,13 @@ namespace ClassicalSharp {
 				SetTex(bottomTex[id], Side.Bottom, id);
 				SetSide(sideTex[id], id);
 			}
+		}
+		
+		public int FindID(string name) {
+			for (int i = 0; i < Block.Count; i++) {
+				if (Utils.CaselessEquals(Name[i], name)) return i;
+			}
+			return -1;
 		}
 		
 		static StringBuffer buffer = new StringBuffer(64);

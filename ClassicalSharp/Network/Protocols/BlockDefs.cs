@@ -39,8 +39,6 @@ namespace ClassicalSharp.Network.Protocols {
 			info.DefinedCustomBlocks[id >> 5] &= ~(1u << (id & 0x1F));
 			info.ResetBlockProps(id);
 			info.UpdateCulling(id);
-			//game.Chat.Add("removing block: " + id + ", name: " + info.Name[id] + ".");
-			game.BlockInfo.dictBlockIDbyName.Remove(info.Name[id].ToUpper());
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
@@ -109,9 +107,6 @@ namespace ClassicalSharp.Network.Protocols {
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
 			
 			info.UpdateCulling(id);
-			//game.Chat.Add("adding block: " + id + ", name: " + info.Name[id] + ".");
-			game.BlockInfo.dictBlockIDbyName.Remove(info.Name[id].ToUpper());
-			game.BlockInfo.dictBlockIDbyName.Add(info.Name[id].ToUpper(), id);
 			game.Events.RaiseBlockDefinitionChanged();
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 		}
