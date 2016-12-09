@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 		}
 		
 		static byte RotateDirection(Game game, byte block, string name, Vector3 offset) {
-			Vector3 southEast = new Vector3 (1,0,1);
+			Vector3 southEast = new Vector3 (1, 0, 1);
 			Vector3 southWest = new Vector3 (-1, 0, 1);
 			
 			Vector3I pos = game.SelectedPos.TranslatedPos;
