@@ -66,8 +66,11 @@ namespace ClassicalSharp {
 			} else if (right) {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
 				if (!game.World.IsValidPos(pos)) return;
+				
 				byte old = game.World.GetBlock(pos);
 				byte block = (byte)inv.HeldBlock;
+				if (game.autoRotate)
+					block = AutoRotate.RotateBlock(game, block);				
 				
 				if (!game.CanPick(old) && inv.CanPlace[block] && CheckIsFree(game.SelectedPos, block)) {
 					game.UpdateBlock(pos.X, pos.Y, pos.Z, block);

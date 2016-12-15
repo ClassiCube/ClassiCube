@@ -104,10 +104,10 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Init();
 			left = new KeyBind[3];
 			left[0] = KeyBind.ExtInput; left[1] = KeyBind.HideFps; left[2] = KeyBind.HideGui;
-			right = new KeyBind[3];
-			right[0] = KeyBind.Screenshot; right[1] = KeyBind.Fullscreen; right[2] = KeyBind.AxisLines;
+			right = new KeyBind[4];
+			right[0] = KeyBind.Screenshot; right[1] = KeyBind.Fullscreen; right[2] = KeyBind.AxisLines; right[3] = KeyBind.Autorotate;
 			leftDesc = new string[] { "Show ext input", "Hide FPS", "Hide gui" };
-			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines" };
+			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Toggle auto-rotate" };
 			
 			widgets = new Widget[left.Length + right.Length + 4];
 			title = "Other controls";

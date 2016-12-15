@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.Collections.Generic;
 using ClassicalSharp.Blocks;
 using OpenTK;
 
@@ -130,6 +131,13 @@ namespace ClassicalSharp {
 				SetTex(bottomTex[id], Side.Bottom, id);
 				SetSide(sideTex[id], id);
 			}
+		}
+		
+		public int FindID(string name) {
+			for (int i = 0; i < Block.Count; i++) {
+				if (Utils.CaselessEquals(Name[i], name)) return i;
+			}
+			return -1;
 		}
 		
 		static StringBuffer buffer = new StringBuffer(64);

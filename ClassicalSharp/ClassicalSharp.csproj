@@ -142,6 +142,7 @@
     <Compile Include="Audio\AudioPlayer.cs" />
     <Compile Include="Audio\AudioPlayer.Sounds.cs" />
     <Compile Include="Audio\Soundboard.cs" />
+    <Compile Include="Blocks\AutoRotate.cs" />
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockInfo.BoundsBox.cs" />
     <Compile Include="Blocks\BlockInfo.cs" />
