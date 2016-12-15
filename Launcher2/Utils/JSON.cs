@@ -115,39 +115,39 @@ namespace Launcher {
 			char c = json[index++]; // "
 			
 			while (true) {
-				if (index == json.Length)
-					break;
+				if (index == json.Length) break;
 
 				c = json[index++];
 				if (c == '"') {
 					return s.ToString();
 				} else if (c == '\\') {
-					if (index == json.Length)
-						break;
-					c = json[index++];
-					
-					if (c == 'u') {
-						int remainingLength = json.Length - index;
-						if (remainingLength >= 4) {
-							// parse the 32 bit hex into an integer codepoint
-							uint codePoint;
-							string str = json.Substring(index, 4);
-							if (!(success = UInt32.TryParse(str, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out codePoint)))
-								return "";
-							
-							s.Append(new String((char)codePoint, 1));					
-							index += 4; // skip 4 chars
-						} else {
-							break;
-						}
-					} else {
-						s.Append('?');
-					}
+					if (index == json.Length) break;
+					if (!ParseEscaped(json, ref index, s)) break;
 				} else {
 					s.Append(c);
 				}
 			}
 			success = false; return null;
+		}
+		
+		static bool ParseEscaped(string json, ref int index, StringBuilder s) {
+			char c = json[index++];
+			if (c == '\\') { s.Append('\\'); return true; }
+			if (c == '"') { s.Append('"'); return true; }
+			if (c != 'u') { s.Append('?'); return true; }
+			
+			int remaining = json.Length - index;
+			if (remaining < 4) return false;
+			
+			// parse the 32 bit hex into an integer codepoint
+			uint codePoint;
+			string str = json.Substring(index, 4);
+			if (!UInt32.TryParse(str, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out codePoint))
+				return false;
+			
+			s.Append((char)codePoint);
+			index += 4; // skip 4 chars
+			return true;
 		}
 
 		const StringComparison caseless = StringComparison.OrdinalIgnoreCase;
