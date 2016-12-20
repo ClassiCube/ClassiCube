@@ -111,7 +111,8 @@ namespace Launcher.Gui.Widgets {
 			
 			int len = input.Text.Length + text.Length;
 			if (len > MaxChars) {
-				text = text.Substring(0, len - MaxChars);
+				int excessCount = len - MaxChars;
+				text = text.Substring(0, text.Length - excessCount);
 			}
 			
 			input.Text += text;
