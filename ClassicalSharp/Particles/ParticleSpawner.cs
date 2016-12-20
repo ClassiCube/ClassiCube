@@ -56,9 +56,8 @@ namespace ClassicalSharp.Particles {
 				p.ResetState(worldPos + cell, velocity, life);
 				p.rec = rec;
 				
-				p.flags = (byte)texLoc;
-				if (game.BlockInfo.FullBright[block])
-					p.flags |= 0x100;
+				p.texLoc = (byte)texLoc;
+				p.block = block;
 			}
 		}
 		
