@@ -50,6 +50,15 @@ namespace ClassicalSharp {
 		}
 		
 		static byte RotatePillar(Game game, byte block, string name, Vector3 offset) {
+			if (game.BlockInfo.FindID(name + "-UD") == -1) {
+				float yaw = game.LocalPlayer.HeadYawDegrees;
+				if (yaw < 0) yaw += 360;
+                if (yaw < 45 || (yaw >= 135 && yaw < 225) || yaw > 315) {
+					return Find(game, block, name + "-WE");
+				} else {
+					return Find(game, block, name + "-NS");
+				}
+			}
 			BlockFace face = game.SelectedPos.BlockFace;
 			if (face == BlockFace.YMax || face == BlockFace.YMin)
 				return Find(game, block, name + "-UD");
