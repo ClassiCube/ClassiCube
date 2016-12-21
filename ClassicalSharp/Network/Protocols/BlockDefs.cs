@@ -105,9 +105,7 @@ namespace ClassicalSharp.Network.Protocols {
 			info.FogDensity[id] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
 			info.FogColour[id] = new FastColour(
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
-			
-			string name = info.Name[id];
-			info.Tinted[id] = fogDensity > 0 && name.Length > 0 && name[name.Length - 1] == '#';
+			info.Tinted[id] = info.FogColour[id] != FastColour.Black && info.Name[id].IndexOf('#') >= 0;
 			
 			info.UpdateCulling(id);
 			game.Events.RaiseBlockDefinitionChanged();
