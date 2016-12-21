@@ -182,6 +182,7 @@ namespace ClassicalSharp {
 			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
 			DrawInfo part = normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_Sprite_Fast(X, Y, Z);
+			if (info.Name[curBlock].EndsWith("#")) col = tintBlock(curBlock, col);
 			
 			// Draw Z axis
 			part.vertices[part.sIndex.left++] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col);
@@ -206,6 +207,14 @@ namespace ClassicalSharp {
 			part.vertices[part.sIndex.back++] = new VertexP3fT2fC4b(X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col);
 			part.vertices[part.sIndex.back++] = new VertexP3fT2fC4b(X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col);
 			part.vertices[part.sIndex.back++] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col);
+		}
+		
+		public int tintBlock(byte curBlock, int col) {
+			FastColour fogCol = info.FogColour[curBlock];
+			FastColour newCol = FastColour.Unpack(col);
+			newCol *= fogCol;
+			col = newCol.Pack();
+			return col;
 		}
 	}
 }

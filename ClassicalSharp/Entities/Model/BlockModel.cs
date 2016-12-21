@@ -97,6 +97,13 @@ namespace ClassicalSharp.Model {
 				block = Utils.FastByte(p.ModelName);
 			}
 			
+			if (game.BlockInfo.Name[block].EndsWith("#")) {
+                FastColour fogCol = game.BlockInfo.FogColour[block];
+                FastColour newCol = FastColour.Unpack(col);
+                newCol *= fogCol;
+                col = newCol.Pack();
+			}
+			
 			CalcState(block);
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			

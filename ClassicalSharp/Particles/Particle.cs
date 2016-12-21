@@ -89,6 +89,12 @@ namespace ClassicalSharp.Particles {
 				Vector3I P = Vector3I.Floor(Position);
 				col = game.World.IsValidPos(P) ?
 					game.Lighting.LightCol_ZSide(P.X, P.Y, P.Z) : game.Lighting.OutsideZSide;
+	            if (game.BlockInfo.Name[block].IndexOf('#') >= 0) {
+	                FastColour fogCol = game.BlockInfo.FogColour[block];
+	                FastColour newCol = FastColour.Unpack(col);
+	                newCol *= fogCol;
+	                col = newCol.Pack();
+				}
 			}
 			DoRender(game, ref terrainSize, ref rec, col, vertices, ref index);
 		}

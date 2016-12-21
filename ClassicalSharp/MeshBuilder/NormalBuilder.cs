@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked :
 				X >= offset ? lighting.LightCol_XSide_Fast(X - offset, Y, Z) : lighting.OutsideXSide;
-			
+			if (info.Name[curBlock].EndsWith("#")) col = tintBlock(curBlock, col);
 			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col);
 			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
 			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked :
 				X <= (maxX - offset) ? lighting.LightCol_XSide_Fast(X + offset, Y, Z) : lighting.OutsideXSide;
-			
+			if (info.Name[curBlock].EndsWith("#")) col = tintBlock(curBlock, col);
 			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col);
 			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col);
 			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col);
@@ -121,7 +121,7 @@ namespace ClassicalSharp {
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked :
 				Z >= offset ? lighting.LightCol_ZSide_Fast(X, Y, Z - offset) : lighting.OutsideZSide;
-			
+			if (info.Name[curBlock].EndsWith("#")) col = tintBlock(curBlock, col);
 			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col);
 			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
 			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
@@ -140,7 +140,7 @@ namespace ClassicalSharp {
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked :
 				Z <= (maxZ - offset) ? lighting.LightCol_ZSide_Fast(X, Y, Z + offset) : lighting.OutsideZSide;
-			
+			if (info.Name[curBlock].EndsWith("#")) col = tintBlock(curBlock, col);
 			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col);
 			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col);
 			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
@@ -158,7 +158,7 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YBottom_Fast(X, Y - offset, Z);
-			
+			if (info.Name[curBlock].EndsWith("#")) col = tintBlock(curBlock, col);
 			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col);
 			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
 			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col);
@@ -176,11 +176,12 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YTop_Fast(X, Y - offset, Z);
-
+			if (info.Name[curBlock].EndsWith("#")) col = tintBlock(curBlock, col);
 			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col);
 			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
 			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col);
 			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col);
 		}
+	
 	}
 }

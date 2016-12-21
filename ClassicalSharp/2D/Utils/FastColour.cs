@@ -148,6 +148,15 @@ namespace ClassicalSharp {
 			return !left.Equals(right);
 		}
 		
+		public static FastColour operator * (FastColour left, FastColour right) {
+			FastColour outColor;
+			outColor.R = (byte)((left.R * right.R) / 255);
+			outColor.G = (byte)((left.G * right.G) / 255);
+			outColor.B = (byte)((left.B * right.B) / 255);
+			outColor.A = left.A;
+			return outColor;
+		}
+		
 		public static implicit operator FastColour(Color col) {
 			return new FastColour(col);
 		}

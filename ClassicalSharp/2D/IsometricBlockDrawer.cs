@@ -89,6 +89,13 @@ namespace ClassicalSharp {
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
 			
+			if (game.BlockInfo.Name[block].EndsWith("#")) {
+                FastColour fogCol = game.BlockInfo.FogColour[block];
+                FastColour newCol = FastColour.Unpack(v.Colour);
+                newCol *= fogCol;
+                v.Colour = newCol.Pack();
+			}
+			
 			TextureRec rec;
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
@@ -112,6 +119,13 @@ namespace ClassicalSharp {
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = fullBright ? colNormal : colZSide;
 
+			if (game.BlockInfo.Name[block].EndsWith("#")) {
+                FastColour fogCol = game.BlockInfo.FogColour[block];
+                FastColour newCol = FastColour.Unpack(v.Colour);
+                newCol *= fogCol;
+                v.Colour = newCol.Pack();
+			}
+			
 			TextureRec rec;			
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
@@ -134,6 +148,13 @@ namespace ClassicalSharp {
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = fullBright ? colNormal : colXSide;
+			
+			if (game.BlockInfo.Name[block].EndsWith("#")) {
+                FastColour fogCol = game.BlockInfo.FogColour[block];
+                FastColour newCol = FastColour.Unpack(v.Colour);
+                newCol *= fogCol;
+                v.Colour = newCol.Pack();
+			}
 			
 			TextureRec rec;
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
@@ -158,6 +179,13 @@ namespace ClassicalSharp {
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
 			
+			if (game.BlockInfo.Name[block].EndsWith("#")) {
+                FastColour fogCol = game.BlockInfo.FogColour[block];
+                FastColour newCol = FastColour.Unpack(v.Colour);
+                newCol *= fogCol;
+                v.Colour = newCol.Pack();
+			}
+			
 			float x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			float minX = scale * (1 - x1 * 2), maxX = scale * (1 - x2 * 2);
@@ -176,6 +204,13 @@ namespace ClassicalSharp {
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
+			
+			if (game.BlockInfo.Name[block].EndsWith("#")) {
+                FastColour fogCol = game.BlockInfo.FogColour[block];
+                FastColour newCol = FastColour.Unpack(v.Colour);
+                newCol *= fogCol;
+                v.Colour = newCol.Pack();
+			}
 			
 			float z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
