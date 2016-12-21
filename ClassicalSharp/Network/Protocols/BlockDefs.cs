@@ -106,6 +106,9 @@ namespace ClassicalSharp.Network.Protocols {
 			info.FogColour[id] = new FastColour(
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
 			
+			string name = info.Name[id];
+			info.Tinted[id] = fogDensity > 0 && name.Length > 0 && name[name.Length - 1] == '#';
+			
 			info.UpdateCulling(id);
 			game.Events.RaiseBlockDefinitionChanged();
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));

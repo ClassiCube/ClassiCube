@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 			int max = chunkSize - xx;
 			
 			while (count < max && x < width && CanStretch(block, chunkIndex, x, y, z, Side.Top)
-			      && !OccludedLiquid(chunkIndex)) {
+			       && !OccludedLiquid(chunkIndex)) {
 				counts[countIndex] = 0;
 				count++;
 				x++;
@@ -76,7 +76,7 @@ namespace ClassicalSharp {
 		bool CanStretch(byte initialTile, int chunkIndex, int x, int y, int z, int face) {
 			byte rawBlock = chunk[chunkIndex];
 			bitFlags[chunkIndex] = ComputeLightFlags(x, y, z, chunkIndex);
-			return rawBlock == initialTile 
+			return rawBlock == initialTile
 				&& !info.IsFaceHidden(rawBlock, chunk[chunkIndex + offsets[face]], face)
 				&& (initBitFlags == bitFlags[chunkIndex]
 				    // Check that this face is either fully bright or fully in shadow
@@ -102,12 +102,13 @@ namespace ClassicalSharp {
 			int aY1_Z1 = ((F >> xM1_yP1_zP1) & 1) + ((F >> xM1_yCC_zP1) & 1) + ((F >> xM1_yP1_zCC) & 1) + ((F >> xM1_yCC_zCC) & 1);
 			int col0_0 = fullBright ? FastColour.WhitePacked : MakeXSide(aY0_Z0), col1_0 = fullBright ? FastColour.WhitePacked : MakeXSide(aY1_Z0);
 			int col1_1 = fullBright ? FastColour.WhitePacked : MakeXSide(aY1_Z1), col0_1 = fullBright ? FastColour.WhitePacked : MakeXSide(aY0_Z1);
-			if (info.Name[curBlock].EndsWith("#")) {
-				col0_0 = tintBlock(curBlock, col0_0);
-				col1_0 = tintBlock(curBlock, col1_0);
-				col1_1 = tintBlock(curBlock, col1_1);
-				col0_1 = tintBlock(curBlock, col0_1);
+			if (tinted) {
+				col0_0 = TintBlock(curBlock, col0_0);
+				col1_0 = TintBlock(curBlock, col1_0);
+				col1_1 = TintBlock(curBlock, col1_1);
+				col0_1 = TintBlock(curBlock, col0_1);
 			}
+			
 			if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
 				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
 				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
@@ -139,12 +140,13 @@ namespace ClassicalSharp {
 			int aY1_Z1 = ((F >> xP1_yP1_zP1) & 1) + ((F >> xP1_yCC_zP1) & 1) + ((F >> xP1_yP1_zCC) & 1) + ((F >> xP1_yCC_zCC) & 1);
 			int col0_0 = fullBright ? FastColour.WhitePacked : MakeXSide(aY0_Z0), col1_0 = fullBright ? FastColour.WhitePacked : MakeXSide(aY1_Z0);
 			int col1_1 = fullBright ? FastColour.WhitePacked : MakeXSide(aY1_Z1), col0_1 = fullBright ? FastColour.WhitePacked : MakeXSide(aY0_Z1);
-			if (info.Name[curBlock].EndsWith("#")) {
-				col0_0 = tintBlock(curBlock, col0_0);
-				col1_0 = tintBlock(curBlock, col1_0);
-				col1_1 = tintBlock(curBlock, col1_1);
-				col0_1 = tintBlock(curBlock, col0_1);
+			if (tinted) {
+				col0_0 = TintBlock(curBlock, col0_0);
+				col1_0 = TintBlock(curBlock, col1_0);
+				col1_1 = TintBlock(curBlock, col1_1);
+				col0_1 = TintBlock(curBlock, col0_1);
 			}
+			
 			if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
 				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
 				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
@@ -176,12 +178,13 @@ namespace ClassicalSharp {
 			int aX1_Y1 = ((F >> xP1_yP1_zM1) & 1) + ((F >> xP1_yCC_zM1) & 1) + ((F >> xCC_yP1_zM1) & 1) + ((F >> xCC_yCC_zM1) & 1);
 			int col0_0 = fullBright ? FastColour.WhitePacked : MakeZSide(aX0_Y0), col1_0 = fullBright ? FastColour.WhitePacked : MakeZSide(aX1_Y0);
 			int col1_1 = fullBright ? FastColour.WhitePacked : MakeZSide(aX1_Y1), col0_1 = fullBright ? FastColour.WhitePacked : MakeZSide(aX0_Y1);
-			if (info.Name[curBlock].EndsWith("#")) {
-				col0_0 = tintBlock(curBlock, col0_0);
-				col1_0 = tintBlock(curBlock, col1_0);
-				col1_1 = tintBlock(curBlock, col1_1);
-				col0_1 = tintBlock(curBlock, col0_1);
+			if (tinted) {
+				col0_0 = TintBlock(curBlock, col0_0);
+				col1_0 = TintBlock(curBlock, col1_0);
+				col1_1 = TintBlock(curBlock, col1_1);
+				col0_1 = TintBlock(curBlock, col0_1);
 			}
+			
 			if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
 				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
@@ -213,12 +216,13 @@ namespace ClassicalSharp {
 			int aX1_Y1 = ((F >> xP1_yP1_zP1) & 1) + ((F >> xP1_yCC_zP1) & 1) + ((F >> xCC_yP1_zP1) & 1) + ((F >> xCC_yCC_zP1) & 1);
 			int col1_1 = fullBright ? FastColour.WhitePacked : MakeZSide(aX1_Y1), col1_0 = fullBright ? FastColour.WhitePacked : MakeZSide(aX1_Y0);
 			int col0_0 = fullBright ? FastColour.WhitePacked : MakeZSide(aX0_Y0), col0_1 = fullBright ? FastColour.WhitePacked : MakeZSide(aX0_Y1);
-			if (info.Name[curBlock].EndsWith("#")) {
-				col0_0 = tintBlock(curBlock, col0_0);
-				col1_0 = tintBlock(curBlock, col1_0);
-				col1_1 = tintBlock(curBlock, col1_1);
-				col0_1 = tintBlock(curBlock, col0_1);
+			if (tinted) {
+				col0_0 = TintBlock(curBlock, col0_0);
+				col1_0 = TintBlock(curBlock, col1_0);
+				col1_1 = TintBlock(curBlock, col1_1);
+				col0_1 = TintBlock(curBlock, col0_1);
 			}
+			
 			if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
 				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
@@ -250,12 +254,13 @@ namespace ClassicalSharp {
 			int aX1_Z1 = ((F >> xP1_yM1_zP1) & 1) + ((F >> xP1_yM1_zCC) & 1) + ((F >> xCC_yM1_zP1) & 1) + ((F >> xCC_yM1_zCC) & 1);
 			int col0_1 = fullBright ? FastColour.WhitePacked : MakeYSide(aX0_Z1), col1_1 = fullBright ? FastColour.WhitePacked : MakeYSide(aX1_Z1);
 			int col1_0 = fullBright ? FastColour.WhitePacked : MakeYSide(aX1_Z0), col0_0 = fullBright ? FastColour.WhitePacked : MakeYSide(aX0_Z0);
-			if (info.Name[curBlock].EndsWith("#")) {
-				col0_0 = tintBlock(curBlock, col0_0);
-				col1_0 = tintBlock(curBlock, col1_0);
-				col1_1 = tintBlock(curBlock, col1_1);
-				col0_1 = tintBlock(curBlock, col0_1);
+			if (tinted) {
+				col0_0 = TintBlock(curBlock, col0_0);
+				col1_0 = TintBlock(curBlock, col1_0);
+				col1_1 = TintBlock(curBlock, col1_1);
+				col0_1 = TintBlock(curBlock, col0_1);
 			}
+			
 			if (aX0_Z1 + aX1_Z0 > aX0_Z0 + aX1_Z1) {
 				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
 				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
@@ -287,12 +292,13 @@ namespace ClassicalSharp {
 			int aX1_Z1 = ((F >> xP1_yP1_zP1) & 1) + ((F >> xP1_yP1_zCC) & 1) + ((F >> xCC_yP1_zP1) & 1) + ((F >> xCC_yP1_zCC) & 1);
 			int col0_0 = fullBright ? FastColour.WhitePacked : Make(aX0_Z0), col1_0 = fullBright ? FastColour.WhitePacked : Make(aX1_Z0);
 			int col1_1 = fullBright ? FastColour.WhitePacked : Make(aX1_Z1), col0_1 = fullBright ? FastColour.WhitePacked : Make(aX0_Z1);
-			if (info.Name[curBlock].EndsWith("#")) {
-				col0_0 = tintBlock(curBlock, col0_0);
-				col1_0 = tintBlock(curBlock, col1_0);
-				col1_1 = tintBlock(curBlock, col1_1);
-				col0_1 = tintBlock(curBlock, col0_1);
+			if (tinted) {
+				col0_0 = TintBlock(curBlock, col0_0);
+				col1_0 = TintBlock(curBlock, col1_0);
+				col1_1 = TintBlock(curBlock, col1_1);
+				col0_1 = TintBlock(curBlock, col0_1);
 			}
+			
 			if (aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0) {
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
@@ -350,7 +356,7 @@ namespace ClassicalSharp {
 		
 		int Lit(int x, int y, int z, int cIndex) {
 			if (x < 0 || y < 0 || z < 0
-			   || x >= width || y >= height || z >= length) return 7;
+			    || x >= width || y >= height || z >= length) return 7;
 			int flags = 0;
 			byte block = chunk[cIndex];
 			int lightHeight = lighting.heightmap[(z * width) + x];
@@ -374,28 +380,28 @@ namespace ClassicalSharp {
 		static int[] masks = {
 			// Left face
 			(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
-			(1 << xM1_yCC_zM1) | (1 << xM1_yCC_zCC) | (1 << xM1_yCC_zP1) |
-			(1 << xM1_yP1_zM1) | (1 << xM1_yP1_zCC) | (1 << xM1_yP1_zP1),
+				(1 << xM1_yCC_zM1) | (1 << xM1_yCC_zCC) | (1 << xM1_yCC_zP1) |
+				(1 << xM1_yP1_zM1) | (1 << xM1_yP1_zCC) | (1 << xM1_yP1_zP1),
 			// Right face
 			(1 << xP1_yM1_zM1) | (1 << xP1_yM1_zCC) | (1 << xP1_yM1_zP1) |
-			(1 << xP1_yP1_zM1) | (1 << xP1_yP1_zCC) | (1 << xP1_yP1_zP1) |
-			(1 << xP1_yCC_zM1) | (1 << xP1_yCC_zCC) | (1 << xP1_yCC_zP1),
+				(1 << xP1_yP1_zM1) | (1 << xP1_yP1_zCC) | (1 << xP1_yP1_zP1) |
+				(1 << xP1_yCC_zM1) | (1 << xP1_yCC_zCC) | (1 << xP1_yCC_zP1),
 			// Front face
 			(1 << xM1_yM1_zM1) | (1 << xCC_yM1_zM1) | (1 << xP1_yM1_zM1) |
-			(1 << xM1_yCC_zM1) | (1 << xCC_yCC_zM1) | (1 << xP1_yCC_zM1) |
-			(1 << xM1_yP1_zM1) | (1 << xCC_yP1_zM1) | (1 << xP1_yP1_zM1),
+				(1 << xM1_yCC_zM1) | (1 << xCC_yCC_zM1) | (1 << xP1_yCC_zM1) |
+				(1 << xM1_yP1_zM1) | (1 << xCC_yP1_zM1) | (1 << xP1_yP1_zM1),
 			// Back face
 			(1 << xM1_yM1_zP1) | (1 << xCC_yM1_zP1) | (1 << xP1_yM1_zP1) |
-			(1 << xM1_yCC_zP1) | (1 << xCC_yCC_zP1) | (1 << xP1_yCC_zP1) |
-			(1 << xM1_yP1_zP1) | (1 << xCC_yP1_zP1) | (1 << xP1_yP1_zP1),
+				(1 << xM1_yCC_zP1) | (1 << xCC_yCC_zP1) | (1 << xP1_yCC_zP1) |
+				(1 << xM1_yP1_zP1) | (1 << xCC_yP1_zP1) | (1 << xP1_yP1_zP1),
 			// Bottom face
 			(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
-			(1 << xCC_yM1_zM1) | (1 << xCC_yM1_zCC) | (1 << xCC_yM1_zP1) |
-			(1 << xP1_yM1_zM1) | (1 << xP1_yM1_zCC) | (1 << xP1_yM1_zP1),
+				(1 << xCC_yM1_zM1) | (1 << xCC_yM1_zCC) | (1 << xCC_yM1_zP1) |
+				(1 << xP1_yM1_zM1) | (1 << xP1_yM1_zCC) | (1 << xP1_yM1_zP1),
 			// Top face
 			(1 << xM1_yP1_zM1) | (1 << xM1_yP1_zCC) | (1 << xM1_yP1_zP1) |
-			(1 << xCC_yP1_zM1) | (1 << xCC_yP1_zCC) | (1 << xCC_yP1_zP1) |
-			(1 << xP1_yP1_zM1) | (1 << xP1_yP1_zCC) | (1 << xP1_yP1_zP1),
+				(1 << xCC_yP1_zM1) | (1 << xCC_yP1_zCC) | (1 << xCC_yP1_zP1) |
+				(1 << xP1_yP1_zM1) | (1 << xP1_yP1_zCC) | (1 << xP1_yP1_zP1),
 		};
 		
 		#endregion

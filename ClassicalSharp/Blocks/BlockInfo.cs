@@ -60,6 +60,8 @@ namespace ClassicalSharp {
 		
 		public SoundType[] StepSounds = new SoundType[Block.Count];
 		
+		public bool[] Tinted = new bool[Block.Count];
+		
 		public void Reset(Game game) {
 			Init();
 			// TODO: Make this part of TerrainAtlas2D maybe?
@@ -111,6 +113,7 @@ namespace ClassicalSharp {
 			SetBlockDraw(id, DefaultSet.Draw(id));
 			SpeedMultiplier[id] = 1;
 			Name[id] = DefaultName(id);
+			Tinted[id] = false;
 			
 			if (Draw[id] == DrawType.Sprite) {
 				MinBB[id] = new Vector3(2.50f/16f, 0, 2.50f/16f);

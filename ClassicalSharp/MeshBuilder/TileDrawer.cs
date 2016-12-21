@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		protected DrawInfo[] normalParts, translucentParts;
 		protected TerrainAtlas1D atlas;
 		protected int arraysCount = 0;
-		protected bool fullBright;
+		protected bool fullBright, tinted;
 		protected int lightFlags;
 
 		protected Vector3 minBB, maxBB;		
@@ -80,6 +80,7 @@ namespace ClassicalSharp {
 		void RenderTile(int index) {
 			if (info.Draw[curBlock] == DrawType.Sprite) {
 				fullBright = info.FullBright[curBlock];
+				tinted = info.Tinted[curBlock];
 				int count = counts[index + Side.Top];
 				if (count != 0) DrawSprite(count);
 				return;
@@ -94,6 +95,7 @@ namespace ClassicalSharp {
 			fullBright = info.FullBright[curBlock];
 			isTranslucent = info.Draw[curBlock] == DrawType.Translucent;
 			lightFlags = info.LightOffset[curBlock];
+			tinted = info.Tinted[curBlock];
 			
 			Vector3 min = info.MinBB[curBlock], max = info.MaxBB[curBlock];
 			x1 = X + min.X; y1 = Y + min.Y; z1 = Z + min.Z;
@@ -182,7 +184,7 @@ namespace ClassicalSharp {
 			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
 			DrawInfo part = normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_Sprite_Fast(X, Y, Z);
-			if (info.Name[curBlock].EndsWith("#")) col = tintBlock(curBlock, col);
+			if (tinted) col = TintBlock(curBlock, col);
 			
 			// Draw Z axis
 			part.vertices[part.sIndex.left++] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col);
@@ -209,12 +211,11 @@ namespace ClassicalSharp {
 			part.vertices[part.sIndex.back++] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col);
 		}
 		
-		public int tintBlock(byte curBlock, int col) {
+		protected int TintBlock(byte curBlock, int col) {
 			FastColour fogCol = info.FogColour[curBlock];
 			FastColour newCol = FastColour.Unpack(col);
 			newCol *= fogCol;
-			col = newCol.Pack();
-			return col;
+			return newCol.Pack();
 		}
 	}
 }

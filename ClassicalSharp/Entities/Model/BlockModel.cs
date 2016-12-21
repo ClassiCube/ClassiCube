@@ -97,7 +97,7 @@ namespace ClassicalSharp.Model {
 				block = Utils.FastByte(p.ModelName);
 			}
 			
-			if (game.BlockInfo.Name[block].EndsWith("#")) {
+			if (game.BlockInfo.Tinted[block]) {
                 FastColour fogCol = game.BlockInfo.FogColour[block];
                 FastColour newCol = FastColour.Unpack(col);
                 newCol *= fogCol;

@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 			fullBright = info.FullBright[block];
 			
 			if (info.Draw[block] == DrawType.Sprite) {
-				minBB = Vector3.Zero; maxBB = Vector3.One; 
+				minBB = Vector3.Zero; maxBB = Vector3.One;
 			}
 			if (info.Draw[block] == DrawType.Gas) return;
 			
@@ -59,10 +59,10 @@ namespace ClassicalSharp {
 			
 			if (info.Draw[block] == DrawType.Sprite) {
 				SpriteXQuad(block, true);
-				SpriteZQuad(block, true);				
+				SpriteZQuad(block, true);
 				
 				SpriteZQuad(block, false);
-				SpriteXQuad(block, false);				
+				SpriteXQuad(block, false);
 			} else {
 				XQuad(block, maxBB.X, Side.Left);
 				ZQuad(block, minBB.Z, Side.Back);
@@ -85,15 +85,15 @@ namespace ClassicalSharp {
 			int texLoc = game.BlockInfo.GetTextureLoc(block, side);
 			texIndex = texLoc / atlas.elementsPerAtlas1D;
 			if (lastIndex != texIndex) Flush();
-		
+			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
 			
-			if (game.BlockInfo.Name[block].EndsWith("#")) {
-                FastColour fogCol = game.BlockInfo.FogColour[block];
-                FastColour newCol = FastColour.Unpack(v.Colour);
-                newCol *= fogCol;
-                v.Colour = newCol.Pack();
+			if (game.BlockInfo.Tinted[block]) {
+				FastColour fogCol = game.BlockInfo.FogColour[block];
+				FastColour newCol = FastColour.Unpack(v.Colour);
+				newCol *= fogCol;
+				v.Colour = newCol.Pack();
 			}
 			
 			TextureRec rec;
@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 			rec.V1 = vOrigin + minBB.Z * atlas.invElementSize;
 			rec.V2 = vOrigin + maxBB.Z * atlas.invElementSize * (15.99f/16f);
 
-			y = scale * (1 - y * 2);			
+			y = scale * (1 - y * 2);
 			float minX = scale * (1 - minBB.X * 2), maxX = scale * (1 - maxBB.X * 2);
 			float minZ = scale * (1 - minBB.Z * 2), maxZ = scale * (1 - maxBB.Z * 2);
 			v.X = minX; v.Y = y; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
@@ -119,22 +119,22 @@ namespace ClassicalSharp {
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = fullBright ? colNormal : colZSide;
 
-			if (game.BlockInfo.Name[block].EndsWith("#")) {
-                FastColour fogCol = game.BlockInfo.FogColour[block];
-                FastColour newCol = FastColour.Unpack(v.Colour);
-                newCol *= fogCol;
-                v.Colour = newCol.Pack();
+			if (game.BlockInfo.Tinted[block]) {
+				FastColour fogCol = game.BlockInfo.FogColour[block];
+				FastColour newCol = FastColour.Unpack(v.Colour);
+				newCol *= fogCol;
+				v.Colour = newCol.Pack();
 			}
 			
-			TextureRec rec;			
+			TextureRec rec;
 			float vOrigin = (texLoc % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
 			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
 			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * (15.99f/16f);
 
-			z = scale * (1 - z * 2);			
+			z = scale * (1 - z * 2);
 			float minX = scale * (1 - minBB.X * 2), maxX = scale * (1 - maxBB.X * 2);
-			float minY = scale * (1 - minBB.Y * 2), maxY = scale * (1 - maxBB.Y * 2);			
+			float minY = scale * (1 - minBB.Y * 2), maxY = scale * (1 - maxBB.Y * 2);
 			v.X = minX; v.Y = maxY; v.Z = z; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
 			v.X = minX; v.Y = minY; v.Z = z; v.U = rec.U2; v.V = rec.V1; Transform(ref v);
 			v.X = maxX; v.Y = minY; v.Z = z; v.U = rec.U1; v.V = rec.V1; Transform(ref v);
@@ -149,11 +149,11 @@ namespace ClassicalSharp {
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = fullBright ? colNormal : colXSide;
 			
-			if (game.BlockInfo.Name[block].EndsWith("#")) {
-                FastColour fogCol = game.BlockInfo.FogColour[block];
-                FastColour newCol = FastColour.Unpack(v.Colour);
-                newCol *= fogCol;
-                v.Colour = newCol.Pack();
+			if (game.BlockInfo.Tinted[block]) {
+				FastColour fogCol = game.BlockInfo.FogColour[block];
+				FastColour newCol = FastColour.Unpack(v.Colour);
+				newCol *= fogCol;
+				v.Colour = newCol.Pack();
 			}
 			
 			TextureRec rec;
@@ -164,7 +164,7 @@ namespace ClassicalSharp {
 			
 			x = scale * (1 - x * 2);
 			float minY = scale * (1 - minBB.Y * 2), maxY = scale * (1 - maxBB.Y * 2);
-			float minZ = scale * (1 - minBB.Z * 2), maxZ = scale * (1 - maxBB.Z * 2);	
+			float minZ = scale * (1 - minBB.Z * 2), maxZ = scale * (1 - maxBB.Z * 2);
 			v.X = x; v.Y = maxY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
 			v.X = x; v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V1; Transform(ref v);
 			v.X = x; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; Transform(ref v);
@@ -179,17 +179,17 @@ namespace ClassicalSharp {
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
 			
-			if (game.BlockInfo.Name[block].EndsWith("#")) {
-                FastColour fogCol = game.BlockInfo.FogColour[block];
-                FastColour newCol = FastColour.Unpack(v.Colour);
-                newCol *= fogCol;
-                v.Colour = newCol.Pack();
+			if (game.BlockInfo.Tinted[block]) {
+				FastColour fogCol = game.BlockInfo.FogColour[block];
+				FastColour newCol = FastColour.Unpack(v.Colour);
+				newCol *= fogCol;
+				v.Colour = newCol.Pack();
 			}
 			
 			float x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
 			float minX = scale * (1 - x1 * 2), maxX = scale * (1 - x2 * 2);
-			float minY = scale * (1 - 0 * 2), maxY = scale * (1 - 1.1f * 2);			
+			float minY = scale * (1 - 0 * 2), maxY = scale * (1 - 1.1f * 2);
 			
 			v.X = minX; v.Y = minY; v.Z = 0; v.U = rec.U2; v.V = rec.V2; Transform(ref v);
 			v.X = minX; v.Y = maxY; v.Z = 0; v.U = rec.U2; v.V = rec.V1; Transform(ref v);
@@ -205,11 +205,11 @@ namespace ClassicalSharp {
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
 			
-			if (game.BlockInfo.Name[block].EndsWith("#")) {
-                FastColour fogCol = game.BlockInfo.FogColour[block];
-                FastColour newCol = FastColour.Unpack(v.Colour);
-                newCol *= fogCol;
-                v.Colour = newCol.Pack();
+			if (game.BlockInfo.Tinted[block]) {
+				FastColour fogCol = game.BlockInfo.FogColour[block];
+				FastColour newCol = FastColour.Unpack(v.Colour);
+				newCol *= fogCol;
+				v.Colour = newCol.Pack();
 			}
 			
 			float z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;
