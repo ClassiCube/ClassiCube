@@ -196,6 +196,12 @@ namespace ClassicalSharp {
 			float y1_x1z1 = y1, y1_x1z2 = y1, y1_x2z1 = y1, y1_x2z2 = y1;
 			if (info.Draw[curBlock] == DrawType.SlopeUpXMax) {
 				y1_x2z1 = y2; y1_x2z2 = y2;
+			} else if (info.Draw[curBlock] == DrawType.SlopeUpXMin) {
+				y1_x1z1 = y2; y1_x1z2 = y2;
+			} else if (info.Draw[curBlock] == DrawType.SlopeUpZMin) {
+				y1_x1z1 = y2; y1_x2z1 = y2;
+			} else if (info.Draw[curBlock] == DrawType.SlopeUpZMax) {
+				y1_x1z2 = y2; y1_x2z2 = y2;
 			}
 			
 			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1_x2z2, z2, u2, v2, col);
@@ -217,10 +223,21 @@ namespace ClassicalSharp {
 			int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YTop_Fast(X, Y - offset, Z);
 			if (tinted) col = TintBlock(curBlock, col);
 			
-			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col);
-			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
-			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col);
-			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col);
+			float y2_x1z1 = y2, y2_x1z2 = y2, y2_x2z1 = y2, y2_x2z2 = y2;
+			if (info.Draw[curBlock] == DrawType.SlopeDownXMax) {
+				y2_x2z1 = y1; y2_x2z2 = y1;
+			} else if (info.Draw[curBlock] == DrawType.SlopeDownXMin) {
+				y2_x1z1 = y1; y2_x1z2 = y1;
+			} else if (info.Draw[curBlock] == DrawType.SlopeDownZMin) {
+				y2_x1z1 = y1; y2_x2z1 = y1;
+			} else if (info.Draw[curBlock] == DrawType.SlopeDownZMax) {
+				y2_x1z2 = y1; y2_x2z2 = y1;
+			}
+			
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2_x2z1, z1, u2, v1, col);
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2_x1z1, z1, u1, v1, col);
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2_x1z2, z2, u1, v2, col);
+			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2_x2z2, z2, u2, v2, col);
 		}
 		
 	}
