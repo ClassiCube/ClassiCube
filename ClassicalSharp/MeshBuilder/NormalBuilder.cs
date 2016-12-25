@@ -86,6 +86,8 @@ namespace ClassicalSharp {
 				X >= offset ? lighting.LightCol_XSide_Fast(X - offset, Y, Z) : lighting.OutsideXSide;
 			if (tinted) col = TintBlock(curBlock, col);
 			
+			if (info.Draw[curBlock] == DrawType.SlopeDownXMin || info.Draw[curBlock] == DrawType.SlopeUpXMin) return;
+			
 			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col);
 			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
 			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
@@ -106,6 +108,8 @@ namespace ClassicalSharp {
 			int col = fullBright ? FastColour.WhitePacked :
 				X <= (maxX - offset) ? lighting.LightCol_XSide_Fast(X + offset, Y, Z) : lighting.OutsideXSide;
 			if (tinted) col = TintBlock(curBlock, col);
+			
+			if (info.Draw[curBlock] == DrawType.SlopeDownXMax || info.Draw[curBlock] == DrawType.SlopeUpXMax) return;
 			
 			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col);
 			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col);
@@ -128,6 +132,16 @@ namespace ClassicalSharp {
 				Z >= offset ? lighting.LightCol_ZSide_Fast(X, Y, Z - offset) : lighting.OutsideZSide;
 			if (tinted) col = TintBlock(curBlock, col);
 			
+			if (info.Draw[curBlock] == DrawType.SlopeDownZMin || info.Draw[curBlock] == DrawType.SlopeUpZMin) return;
+			
+			if (info.Draw[curBlock] == DrawType.SlopeUpXMax) {
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col);
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
+				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col);
+				return;
+			}
+			
 			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col);
 			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
 			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
@@ -149,6 +163,16 @@ namespace ClassicalSharp {
 				Z <= (maxZ - offset) ? lighting.LightCol_ZSide_Fast(X, Y, Z + offset) : lighting.OutsideZSide;
 			if (tinted) col = TintBlock(curBlock, col);
 			
+			if (info.Draw[curBlock] == DrawType.SlopeDownZMax || info.Draw[curBlock] == DrawType.SlopeUpZMax) return;
+			
+			if (info.Draw[curBlock] == DrawType.SlopeUpXMax) {
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col);
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col);
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
+				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col);
+				return;
+			}
+			
 			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col);
 			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col);
 			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
@@ -169,10 +193,15 @@ namespace ClassicalSharp {
 			int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YBottom_Fast(X, Y - offset, Z);
 			if (tinted) col = TintBlock(curBlock, col);
 			
-			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col);
-			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
-			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col);
-			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col);
+			float y1_x1z1 = y1, y1_x1z2 = y1, y1_x2z1 = y1, y1_x2z2 = y1;
+			if (info.Draw[curBlock] == DrawType.SlopeUpXMax) {
+				y1_x2z1 = y2; y1_x2z2 = y2;
+			}
+			
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1_x2z2, z2, u2, v2, col);
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1_x1z2, z2, u1, v2, col);
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1_x1z1, z1, u1, v1, col);
+			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1_x2z1, z1, u2, v1, col);
 		}
 
 		protected override void DrawTopFace(int count) {

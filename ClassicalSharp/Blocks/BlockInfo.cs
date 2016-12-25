@@ -18,6 +18,15 @@ namespace ClassicalSharp {
 		public const byte Translucent = 3;
 		public const byte Gas = 4;
 		public const byte Sprite = 5;
+		
+		public const byte SlopeUpXMin = 6;
+		public const byte SlopeUpXMax = 7;
+		public const byte SlopeUpZMin = 8;
+		public const byte SlopeUpZMax = 9;
+		public const byte SlopeDownXMin = 10;
+		public const byte SlopeDownXMax = 11;
+		public const byte SlopeDownZMin = 12;
+		public const byte SlopeDownZMax = 12;
 	}
 	
 	public enum CollideType : byte {
