@@ -37,9 +37,9 @@ namespace Launcher.Web {
 		void UpdateWorker() {
 			try {
 				CheckUpdates();
-			} catch(WebException ex) {
+			} catch (WebException ex) {
 				Finish(false, ex, null); return;
-			} catch(Exception ex) {
+			} catch (Exception ex) {
 				ErrorHandler2.LogError("UpdateCheckTask.CheckUpdates", ex);
 				Finish(false, null, "&cUpdate check failed"); return;
 			}

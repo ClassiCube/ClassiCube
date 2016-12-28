@@ -30,7 +30,7 @@ namespace Launcher {
 			byte[] data;
 			try {
 				data = Convert.FromBase64String(encoded);
-			} catch(FormatException) {
+			} catch (FormatException) {
 				return "";
 			}
 			

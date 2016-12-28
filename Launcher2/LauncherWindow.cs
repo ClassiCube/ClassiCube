@@ -102,7 +102,7 @@ namespace Launcher {
 			FontName = Options.Get("gui-fontname") ?? "Arial";
 			try {
 				using (Font f = new Font(FontName, 16)) { }
-			} catch(Exception) {
+			} catch (Exception) {
 				FontName = "Arial";
 				Options.Set("gui-fontname", "Arial");
 			}
@@ -146,10 +146,10 @@ namespace Launcher {
 			// Fallback to private server handling
 			try {
 				data = Session.GetConnectInfo(hash);
-			} catch(WebException ex) {
-				ErrorHandler.LogError("retrieving server information", ex);
+			} catch (WebException ex) {
+				ErrorHandler2.LogError("retrieving server information", ex);
 				return false;
-			} catch(ArgumentOutOfRangeException) {
+			} catch (ArgumentOutOfRangeException) {
 				return false;
 			}
 			Client.Start(data, true, ref ShouldExit);

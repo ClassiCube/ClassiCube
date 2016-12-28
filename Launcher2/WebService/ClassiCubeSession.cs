@@ -35,9 +35,9 @@ namespace Launcher.Web {
 			// Sign in to classicube.net
 			try {
 				Login(Username, (string)password);
-			} catch(WebException ex) {
+			} catch (WebException ex) {
 				Finish(false, ex, "sign in"); return;
-			} catch(InvalidOperationException ex) {
+			} catch (InvalidOperationException ex) {
 				Finish(false, null, "&c" + ex.Message); return;
 			}
 			
@@ -45,7 +45,7 @@ namespace Launcher.Web {
 			Status = "&eRetrieving public servers list..";
 			try {
 				Servers = GetPublicServers();
-			} catch(WebException ex) {
+			} catch (WebException ex) {
 				Servers = new List<ServerListEntry>();
 				Finish(false, ex, "retrieving servers list"); return;
 			}

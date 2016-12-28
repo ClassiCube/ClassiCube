@@ -64,7 +64,7 @@ namespace Launcher {
 						writer.WriteLine();
 					}
 				}
-			} catch(Exception) {
+			} catch (Exception) {
 				wroteToCrashLog = false;
 			}
 			
@@ -97,7 +97,7 @@ namespace Launcher {
 					writer.WriteLine(text);
 					writer.WriteLine();
 				}
-			} catch(Exception) {
+			} catch (Exception) {
 				return false;
 			}
 			return true;

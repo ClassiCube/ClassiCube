@@ -79,7 +79,7 @@ namespace Launcher.Gui.Screens {
 		}
 
 		void DisplayWebException(WebException ex, string action) {
-			ErrorHandler.LogError(action, ex);
+			ErrorHandler2.LogError(action, ex);
 			bool sslCertError = ex.Status == WebExceptionStatus.TrustFailure ||
 				(ex.Status == WebExceptionStatus.SendFailure && OpenTK.Configuration.RunningOnMono);
 			if (ex.Status == WebExceptionStatus.Timeout) {

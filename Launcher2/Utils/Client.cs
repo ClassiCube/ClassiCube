@@ -36,7 +36,7 @@ namespace Launcher {
 			CheckSettings(data, classicubeSkins, out shouldExit);
 			try {
 				StartProcess(path, args);
-			} catch(Win32Exception ex) {
+			} catch (Win32Exception ex) {
 				if ((uint)ex.ErrorCode != 0x80004005)
 					throw; // HRESULT when user clicks 'cancel' to 'are you sure you want to run ClassicalSharp.exe'
 				shouldExit = false;
@@ -51,7 +51,7 @@ namespace Launcher {
 				if (Configuration.RunningOnWindows) {
 					try {
 						Process.Start("mono", "\"" + path + "\" " + args);
-					} catch(Win32Exception ex) {
+					} catch (Win32Exception ex) {
 						if (!((uint)ex.ErrorCode == 0x80070002 || (uint)ex.ErrorCode == 0x80004005))
 							throw; // File not found HRESULT, HRESULT thrown when running on wine
 						Process.Start(path, args);
