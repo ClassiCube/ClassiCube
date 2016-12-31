@@ -254,12 +254,13 @@ namespace ClassicalSharp {
 		}
 		
 		public void Disconnect(string title, string reason) {
+			Events.RaiseDisconnected(title, reason);
+			
 			Gui.Reset(this);
 			World.Reset();
 			World.blocks = null;
 			Drawer2D.InitColours();
 			BlockInfo.Reset(this);
-			
 			TexturePack.ExtractDefault(this);
 			Gui.SetNewScreen(new ErrorScreen(this, title, reason));
 			GC.Collect();
