@@ -24,14 +24,19 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override int MaxLines { get { return game.ClassicMode ? 1 : 3; } }
 		public override string Prefix { get { return "> "; } }
 		public override int Padding { get { return 5; } }
-		public override int MaxCharsPerLine { get { return Utils.StringLength; } }
+		public override int MaxCharsPerLine {
+			get {
+				bool allChars = game.ClassicMode || game.Server.SupportsPartialMessages;
+				return allChars ? 64 : 62; // need 2 chars for colour in multilined chat, when server doesn't support partial messages
+			}
+		}
 		
 		public override void Init() {
 			base.Init();
 			bool supports = game.Server.SupportsPartialMessages;
 			
 			if (Text.Length > MaxCharsPerLine && !shownWarning && !supports) {
-				game.Chat.Add("&eNote: Each line will be sent as a separate packet.", MessageType.ClientStatus6);
+				game.Chat.Add("&eNote: On this server, each line will be sent separately.", MessageType.ClientStatus6);
 				shownWarning = true;
 			} else if (Text.Length <= MaxCharsPerLine && shownWarning) {
 				game.Chat.Add(null, MessageType.ClientStatus6);
@@ -55,7 +60,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				y += lineSizes[i].Height;
 			}
 			
-			gfx.Texturing = true;		
+			gfx.Texturing = true;
 			inputTex.Render(gfx);
 			RenderCaret(delta);
 		}
