@@ -345,7 +345,6 @@ namespace ClassicalSharp.Network.Protocols {
 					env.SetWeatherSpeed(value / 256f); break;
 				case 7:
 					Utils.Clamp(ref value, byte.MinValue, byte.MaxValue);
-					Console.WriteLine(value);
 					env.SetWeatherFade(value / 128f); break;
 			}
 		}

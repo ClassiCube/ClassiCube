@@ -19,17 +19,12 @@ namespace ClassicalSharp.Gui.Widgets {
 		static FastColour backColour = new FastColour(0, 0, 0, 127);
 		int typingLogPos;
 		string originalText;
-		bool shownWarning;		
+		bool shownWarning;
 		
 		public override int MaxLines { get { return game.ClassicMode ? 1 : 3; } }
 		public override string Prefix { get { return "> "; } }
 		public override int Padding { get { return 5; } }
-		public override int MaxCharsPerLine {
-			get {
-				bool allChars = game.ClassicMode || game.Server.SupportsPartialMessages;
-				return allChars ? 64 : 62;
-			}
-		}
+		public override int MaxCharsPerLine { get { return Utils.StringLength; } }
 		
 		public override void Init() {
 			base.Init();
