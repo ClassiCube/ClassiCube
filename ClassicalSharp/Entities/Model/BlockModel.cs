@@ -168,15 +168,15 @@ namespace ClassicalSharp.Model {
 			} else {
 				YQuad(0, Side.Bottom, FastColour.ShadeYBottom);
 				if (SwitchOrder) {
-					XQuad(maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX);
-					ZQuad(maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ);					
-					XQuad(minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX);
-					ZQuad(minBB.Z - 0.5f, Side.Front, true, FastColour.ShadeZ);
+					XQuad(maxBB.X - 0.5f, Side.Right, FastColour.ShadeX);
+					ZQuad(maxBB.Z - 0.5f, Side.Back,  FastColour.ShadeZ);					
+					XQuad(minBB.X - 0.5f, Side.Left,  FastColour.ShadeX);
+					ZQuad(minBB.Z - 0.5f, Side.Front, FastColour.ShadeZ);
 				} else {
-					ZQuad(minBB.Z - 0.5f, Side.Front, true, FastColour.ShadeZ);
-					XQuad(maxBB.X - 0.5f, Side.Right, true, FastColour.ShadeX);
-					ZQuad(maxBB.Z - 0.5f, Side.Back, false, FastColour.ShadeZ);
-					XQuad(minBB.X - 0.5f, Side.Left, false, FastColour.ShadeX);
+					ZQuad(minBB.Z - 0.5f, Side.Front, FastColour.ShadeZ);
+					XQuad(maxBB.X - 0.5f, Side.Right, FastColour.ShadeX);
+					ZQuad(maxBB.Z - 0.5f, Side.Back,  FastColour.ShadeZ);
+					XQuad(minBB.X - 0.5f, Side.Left,  FastColour.ShadeX);
 				}
 				YQuad(height, Side.Top, 1.0f);
 			}
@@ -199,17 +199,21 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexP3fT2fC4b(minBB.X - 0.5f, y, maxBB.Z - 0.5f, rec.U1, rec.V2, col);
 		}
 
-		void ZQuad(float z, int side, bool swapU, float shade) {
+		void ZQuad(float z, int side, float shade) {
 			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
 			FlushIfNotSame(texIndex);
 			int col = bright ? FastColour.WhitePacked : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
 			
+			if (side == Side.Back) {
+				rec.U1 = minBB.X; rec.U2 = maxBB.X * 15.99f/16f;
+			} else {
+				rec.U1 = (1 - minBB.X); rec.U2 = (1 - maxBB.X) * 15.99f/16f;
+			}
+			
 			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
-			rec.U1 = minBB.X; rec.U2 = maxBB.X;
 			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
 			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
-			if (swapU) rec.SwapU();
 			
 			cache.vertices[index++] = new VertexP3fT2fC4b(minBB.X - 0.5f, 0, z, rec.U1, rec.V1, col);
 			cache.vertices[index++] = new VertexP3fT2fC4b(minBB.X - 0.5f, height, z, rec.U1, rec.V2, col);
@@ -217,17 +221,21 @@ namespace ClassicalSharp.Model {
 			cache.vertices[index++] = new VertexP3fT2fC4b(maxBB.X - 0.5f, 0, z, rec.U2, rec.V1, col);
 		}
 
-		void XQuad(float x, int side, bool swapU, float shade) {
+		void XQuad(float x, int side, float shade) {
 			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
 			FlushIfNotSame(texIndex);
 			int col = bright ? FastColour.WhitePacked : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
 			
+			if (side == Side.Left) {
+				rec.U1 = minBB.Z; rec.U2 = maxBB.Z * 15.99f/16f;
+			} else {
+				rec.U1 = (1 - minBB.Z); rec.U2 = (1 - maxBB.Z) * 15.99f/16f;
+			}
+			
 			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
-			rec.U1 = minBB.Z; rec.U2 = maxBB.Z;
 			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
-			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
-			if (swapU) rec.SwapU();
+			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;			
 			
 			cache.vertices[index++] = new VertexP3fT2fC4b(x, 0, minBB.Z - 0.5f, rec.U1, rec.V1, col);
 			cache.vertices[index++] = new VertexP3fT2fC4b(x, height, minBB.Z - 0.5f, rec.U1, rec.V2, col);
