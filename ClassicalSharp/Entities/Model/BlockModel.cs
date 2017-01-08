@@ -75,8 +75,10 @@ namespace ClassicalSharp.Model {
 			return base.RenderDistance(p);
 		}
 		
-		int lastTexId = -1;
+		int lastTexId = -1, brightCol;
 		protected override void DrawModel(Player p) {
+			brightCol = FastColour.WhitePacked;
+			
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
 			if (p is FakePlayer) {
@@ -99,6 +101,8 @@ namespace ClassicalSharp.Model {
 			
 			if (game.BlockInfo.Tinted[block]) {
                 FastColour fogCol = game.BlockInfo.FogColour[block];
+                brightCol = fogCol.Pack();
+                
                 FastColour newCol = FastColour.Unpack(col);
                 newCol *= fogCol;
                 col = newCol.Pack();
@@ -186,7 +190,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
 			FlushIfNotSame(texIndex);
-			int col = bright ? FastColour.WhitePacked : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
+			int col = bright ? brightCol : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
 			
 			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
 			rec.U1 = minBB.X; rec.U2 = maxBB.X;
@@ -203,7 +207,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
 			FlushIfNotSame(texIndex);
-			int col = bright ? FastColour.WhitePacked : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
+			int col = bright ? brightCol : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
 			
 			if (side == Side.Back) {
 				rec.U1 = minBB.X; rec.U2 = maxBB.X * 15.99f/16f;
@@ -225,7 +229,7 @@ namespace ClassicalSharp.Model {
 			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
 			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
 			FlushIfNotSame(texIndex);
-			int col = bright ? FastColour.WhitePacked : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
+			int col = bright ? brightCol : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
 			
 			if (side == Side.Left) {
 				rec.U1 = minBB.Z; rec.U2 = maxBB.Z * 15.99f/16f;
@@ -255,7 +259,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame(texIndex);
 			if (height != 1)
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = bright ? FastColour.WhitePacked : this.col;
+			int col = bright ? brightCol : this.col;
 
 			float p1 = 0, p2 = 0;
 			if (firstPart) { // Need to break into two quads for when drawing a sprite model in hand.
@@ -283,7 +287,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame(texIndex);
 			if (height != 1)
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = bright ? FastColour.WhitePacked : this.col;
+			int col = bright ? brightCol : this.col;
 			
 			float x1 = 0, x2 = 0, z1 = 0, z2 = 0;
 			if (firstPart) {
