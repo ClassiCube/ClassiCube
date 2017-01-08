@@ -24,15 +24,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		/// <summary> Constant offset used to avoid floating point roundoff errors. </summary>
-		public const float Adjustment = 0.001f;
-		
-		public byte GetPhysicsBlockId(int x, int y, int z) {
-			if (x < 0 || x >= game.World.Width || z < 0 ||
-			   z >= game.World.Length || y < 0) return Block.Bedrock;
-			
-			if (y >= game.World.Height) return Block.Air;
-			return game.World.GetBlock(x, y, z);
-		}		
+		public const float Adjustment = 0.001f;	
 		
 		// TODO: test for corner cases, and refactor this.	
 		internal void MoveAndWallSlide() {
@@ -192,14 +184,14 @@ namespace ClassicalSharp.Entities {
 				for (int z = bbMin.Z; z <= bbMax.Z; z++)
 					for (int x = bbMin.X; x <= bbMax.X; x++)
 			{
-				byte block = GetPhysicsBlockId(x, y, z);
+				byte block = game.World.GetPhysicsBlock(x, y, z);
 				Vector3 min = new Vector3(x, y, z) + info.MinBB[block];
 				Vector3 max = new Vector3(x, y, z) + info.MaxBB[block];
 				
 				AABB blockBB = new AABB(min, max);
 				if (!blockBB.Intersects(adjFinalBB))
 					continue;
-				if (info.Collide[GetPhysicsBlockId(x, y, z)] == CollideType.Solid)
+				if (info.Collide[block] == CollideType.Solid)
 					return false;
 			}
 			return true;
