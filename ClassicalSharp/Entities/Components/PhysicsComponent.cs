@@ -85,6 +85,8 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void DoNormalJump() {
+			if (jumpVel == 0) return;
+			
 			entity.Velocity.Y = jumpVel;
 			if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += jumpVel;
 			if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += jumpVel / 2;
@@ -237,6 +239,8 @@ namespace ClassicalSharp.Entities {
 		/// the jump binding they will be able to jump up to the given height. </summary>
 		internal void CalculateJumpVelocity(bool userVel, float jumpHeight) {
 			jumpVel = 0;
+			if (jumpHeight == 0) return;
+			
 			if (jumpHeight >= 256) jumpVel = 10.0f;
 			if (jumpHeight >= 512) jumpVel = 16.5f;
 			if (jumpHeight >= 768) jumpVel = 22.5f;
