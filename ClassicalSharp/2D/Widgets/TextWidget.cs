@@ -45,7 +45,6 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public void SetText(string text) {
-			
 			gfx.DeleteTexture(ref texture);
 			if (String.IsNullOrEmpty(text)) {
 				texture = new Texture();

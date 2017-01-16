@@ -118,13 +118,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		string GetPart(string line, int start, int end) {
 			string part = line.Substring(start, end - start);
-			int colIndex = line.LastIndexOf('&', start, start);
+			int lastCol = line.LastIndexOf('&', start, start);
 			// We may split up a line into say %e<word><url>
 			// url and word both need to have %e at the start.
 			
-			if (colIndex >= 0 && colIndex < line.Length - 1) {
-				if (game.Drawer2D.ValidColour(line[colIndex + 1]))
-					part = "&" + line[colIndex + 1] + part;
+			if (lastCol >= 0 && lastCol < line.Length - 1) {
+				if (game.Drawer2D.ValidColour(line[lastCol + 1]))
+					part = "&" + line[lastCol + 1] + part;
 			}
 			return part;
 		}

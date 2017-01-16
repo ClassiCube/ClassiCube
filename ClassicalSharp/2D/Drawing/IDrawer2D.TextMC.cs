@@ -76,8 +76,8 @@ namespace ClassicalSharp {
 			
 			for (int i = 0; i < text.Length; i++) {
 				char c = text[i];
-				bool code = c == '&' && i < text.Length - 1;
-				if (code && ValidColour(text[i + 1])) {
+				bool isColCode = c == '&' && i < text.Length - 1;
+				if (isColCode && ValidColour(text[i + 1])) {
 					col = Colours[text[i + 1]];
 					if (shadowCol)
 						col = BlackTextShadows ? FastColour.Black : FastColour.Scale(col, 0.25f);
@@ -166,8 +166,8 @@ namespace ClassicalSharp {
 				
 				for (int i = 0; i < text.Length; i++) {
 					char c = text[i];
-					bool code = c == '&' && i < text.Length - 1;
-					if (code && ValidColour(text[i + 1])) {
+					bool isColCode = c == '&' && i < text.Length - 1;
+					if (isColCode && ValidColour(text[i + 1])) {
 						col = Colours[text[i + 1]].ToArgb();
 						i++; continue; // Skip over the colour code.
 					}
@@ -192,8 +192,8 @@ namespace ClassicalSharp {
 			
 			for (int i = 0; i < args.Text.Length; i++) {
 				char c = args.Text[i];
-				bool code = c == '&' && i < args.Text.Length - 1;
-				if (code && ValidColour(args.Text[i + 1])) {
+				bool isColCode = c == '&' && i < args.Text.Length - 1;
+				if (isColCode && ValidColour(args.Text[i + 1])) {
 					i++; continue; // Skip over the colour code.
 				}
 				
