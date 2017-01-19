@@ -1,4 +1,4 @@
-﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
+﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 // Source from http://mrl.nyu.edu/~perlin/noise/
 // Optimised form as we can always treat Z as being = 0.
 // Octave and combined noise based on:
