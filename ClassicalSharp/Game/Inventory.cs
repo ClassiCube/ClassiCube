@@ -21,16 +21,12 @@ namespace ClassicalSharp {
 		Game game;
 		public bool CanChangeHeldBlock = true;
 		
-		public byte[] Hotbar = new byte[] { Block.Stone, 
-			Block.Cobblestone, Block.Brick, Block.Dirt, Block.Wood,
-			Block.Log, Block.Leaves, Block.Grass, Block.Slab };
-		public byte[] Count = new byte[] { 1, 1, 1, 1, 1, 1, 1, 1, 1 };
-		
+		public byte[] Hotbar = new byte[9];
 		public InventoryPermissions CanPlace = new InventoryPermissions();
 		public InventoryPermissions CanDelete = new InventoryPermissions();
 		
 		/// <summary> Gets or sets the index of the held block.
-		/// Fails if the server has forbidden up from changing the held block. </summary>
+		/// Fails if the server has forbidden user from changing the held block. </summary>
 		public int HeldBlockIndex {
 			get { return hotbarIndex; }
 			set {
@@ -44,7 +40,7 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Gets or sets the block currently held by the player.
-		/// Fails if the server has forbidden up from changing the held block. </summary>
+		/// Fails if the server has forbidden user from changing the held block. </summary>
 		public byte HeldBlock {
 			get { return Hotbar[hotbarIndex]; }
 			set {

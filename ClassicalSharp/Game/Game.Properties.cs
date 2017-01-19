@@ -11,6 +11,7 @@ using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui;
 using ClassicalSharp.Map;
+using ClassicalSharp.Mode;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
@@ -51,6 +52,9 @@ namespace ClassicalSharp {
 		
 		/// <summary> Abstracts the underlying 3D graphics rendering API. </summary>
 		public IGraphicsApi Graphics;
+		
+		/// <summary> Handles game mode specific functionality. </summary>
+		public IGameMode Mode;
 		
 		/// <summary> Contains the block data and metadata/properties for the player's current world. </summary>
 		public World World;

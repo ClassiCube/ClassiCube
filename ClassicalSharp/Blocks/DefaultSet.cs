@@ -57,7 +57,7 @@ namespace ClassicalSharp.Blocks {
 		
 		
 		public static byte Draw(byte b) {
-			if (b == Block.Air) return DrawType.Gas;
+			if (b == Block.Air || b == Block.Invalid) return DrawType.Gas;
 			if (b == Block.Leaves) return DrawType.TransparentThick;
 
 			if (b == Block.Ice || b == Block.Water || b == Block.StillWater) 

@@ -64,17 +64,17 @@ namespace ClassicalSharp.Commands {
 			if (Utils.CaselessEquals(args[1], "yes")) { persist = true; return true; }
 			
 			int temp = -1;
-			byte blockID = 0;
+			byte block = 0;
 			if ((temp = game.BlockInfo.FindID(args[1])) != -1) {
-				blockID = (byte)temp;
-			} else if (!byte.TryParse(args[1], out blockID)) {
+				block = (byte)temp;
+			} else if (!byte.TryParse(args[1], out block)) {
 				game.Chat.Add("&eCuboid: &c\"" + args[1] + "\" is not a valid block name or id."); return false;
 			}
 			
-			if (blockID >= Block.CpeCount && game.BlockInfo.Name[blockID] == "Invalid") {
+			if (block >= Block.CpeCount && game.BlockInfo.Name[block] == "Invalid") {
 				game.Chat.Add("&eCuboid: &cThere is no block with id \"" + args[1] + "\"."); return false;
 			}
-			block = blockID;
+			block = block;
 			return true;
 		}
 
@@ -102,14 +102,15 @@ namespace ClassicalSharp.Commands {
 			Vector3I min = Vector3I.Min(mark1, mark2);
 			Vector3I max = Vector3I.Max(mark1, mark2);
 			if (!game.World.IsValidPos(min) || !game.World.IsValidPos(max)) return;
-			byte id = block;
 			
-			if (id == 0xFF) id = (byte)game.Inventory.HeldBlock;		
+			byte toPlace = block;			
+			if (toPlace == Block.Invalid) toPlace = game.Inventory.HeldBlock;
+			
 			for (int y = min.Y; y <= max.Y; y++)
 				for (int z = min.Z; z <= max.Z; z++)
 					for (int x = min.X; x <= max.X; x++) 
 			{
-				game.UpdateBlock(x, y, z, id);
+				game.UpdateBlock(x, y, z, toPlace);
 			}
 		}
 	}	

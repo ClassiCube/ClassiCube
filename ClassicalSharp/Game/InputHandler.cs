@@ -243,9 +243,7 @@ namespace ClassicalSharp {
 				}
 			} else if (key == Keys[KeyBind.PauseOrExit] && !game.World.IsNotLoaded) {
 				game.Gui.SetNewScreen(new PauseScreen(game));
-			} else if (key == Keys[KeyBind.Inventory]) {
-				game.Gui.SetNewScreen(new InventoryScreen(game));
-			} else {
+			} else if (!game.Mode.HandlesKeyDown(key)) {
 				return false;
 			}
 			return true;

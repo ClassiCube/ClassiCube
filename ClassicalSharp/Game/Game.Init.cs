@@ -9,6 +9,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Map;
+using ClassicalSharp.Mode;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
 using ClassicalSharp.Particles;
@@ -44,8 +45,14 @@ namespace ClassicalSharp {
 			ETags.Load();
 			LastModified.Load();
 			
+			if (Options.GetBool(OptionsKey.SurvivalMode, false)) {
+				Mode = AddComponent(new SurvivalGameMode());
+			} else {
+				Mode = AddComponent(new CreativeGameMode());
+			}
+			
 			Input = new InputHandler(this);
-			defaultIb = Graphics.MakeDefaultIb();
+			defaultIb = Graphics.MakeDefaultIb();				
 			ParticleManager = AddComponent(new ParticleManager());
 			TabList = AddComponent(new TabList());
 			LoadOptions();

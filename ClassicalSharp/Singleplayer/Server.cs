@@ -101,7 +101,6 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			
 			generator = null;
-			game.Chat.Add("&ePlaying single player", MessageType.Status1);
 			GC.Collect();
 		}
 		
