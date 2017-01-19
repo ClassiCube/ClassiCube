@@ -7,5 +7,8 @@ namespace ClassicalSharp.Mode {
 	public interface IGameMode : IGameComponent {
 		
 		bool HandlesKeyDown(Key key);
+		void PickLeft(byte old);
+		void PickMiddle(byte old);
+		void PickRight(byte old, byte block);
 	}
 }

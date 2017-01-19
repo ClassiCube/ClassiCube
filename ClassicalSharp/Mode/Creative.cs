@@ -17,6 +17,31 @@ namespace ClassicalSharp.Mode {
 			return false;
 		}
 		
+		public void PickLeft(byte old) {
+			Vector3I pos = game.SelectedPos.BlockPos;
+			game.UpdateBlock(pos.X, pos.Y, pos.Z, 0);
+			game.UserEvents.RaiseBlockChanged(pos, old, 0);
+		}
+		
+		public void PickMiddle(byte old) {
+			Inventory inv = game.Inventory;			
+			if (game.BlockInfo.Draw[old] != DrawType.Gas && (inv.CanPlace[old] || inv.CanDelete[old])) {
+				for (int i = 0; i < inv.Hotbar.Length; i++) {
+					if (inv.Hotbar[i] == old) {
+						inv.HeldBlockIndex = i; return;
+					}
+				}
+				inv.HeldBlock = old;
+			}
+		}
+		
+		public void PickRight(byte old, byte block) {
+			Vector3I pos = game.SelectedPos.TranslatedPos;
+			game.UpdateBlock(pos.X, pos.Y, pos.Z, block);
+			game.UserEvents.RaiseBlockChanged(pos, old, block);
+		}
+		
+		
 		public void OnNewMapLoaded(Game game) {
 			if (game.Server.IsSinglePlayer)
 				game.Chat.Add("&ePlaying single player", MessageType.Status1);
