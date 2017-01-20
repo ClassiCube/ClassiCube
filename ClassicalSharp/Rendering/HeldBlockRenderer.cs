@@ -44,22 +44,24 @@ namespace ClassicalSharp.Renderers {
 			block.SwitchOrder = false;			
 			if (anim.doAnim) anim.Update(delta, last);
 			
-			SetMatrix();
 			game.Graphics.SetMatrixMode(MatrixType.Projection);
 			game.Graphics.LoadMatrix(ref heldBlockProj);
-			bool translucent = game.BlockInfo.Draw[type] == DrawType.Translucent;
+			game.Graphics.SetMatrixMode(MatrixType.Modelview);
+			SetMatrix();
 			
+			bool translucent = game.BlockInfo.Draw[type] == DrawType.Translucent;			
 			game.Graphics.Texturing = true;
 			if (translucent) game.Graphics.AlphaBlending = true;
 			else game.Graphics.AlphaTest = true;
 			game.Graphics.DepthTest = false;
 			
-			SetPos();
+			SetPos();		
 			block.Render(held);
 			
-			game.Graphics.LoadMatrix(ref game.Projection);
-			game.Graphics.SetMatrixMode(MatrixType.Modelview);
 			game.Graphics.LoadMatrix(ref game.View);
+			game.Graphics.SetMatrixMode(MatrixType.Projection);
+			game.Graphics.LoadMatrix(ref game.Projection);
+			game.Graphics.SetMatrixMode(MatrixType.Modelview);			
 			
 			game.Graphics.Texturing = false;
 			if (translucent) game.Graphics.AlphaBlending = false;
