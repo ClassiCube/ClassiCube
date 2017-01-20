@@ -2,7 +2,7 @@
 using System;
 using OpenTK;
 
-namespace ClassicalSharp.Entities {
+namespace ClassicalSharp.Entities.Mobs {
 	
 	public sealed class HostileAI : AI {
 		

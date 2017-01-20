@@ -26,12 +26,13 @@ namespace ClassicalSharp.Entities {
 			get { return (float)PhysicsComponent.GetMaxHeight(physics.jumpVel); }
 		}
 		
-		internal float curWalkTime, curSwing;
+		internal float curSwing;
 		internal CollisionsComponent collisions;
 		public HacksComponent Hacks;
 		internal PhysicsComponent physics;
 		internal InputComponent input;
 		internal SoundComponent sound;
+		internal LocalInterpComponent interp;
 		
 		public LocalPlayer(Game game) : base(game) {
 			DisplayName = game.Username;
@@ -43,6 +44,7 @@ namespace ClassicalSharp.Entities {
 			physics = new PhysicsComponent(game, this);
 			input = new InputComponent(game, this);
 			sound = new SoundComponent(game, this);
+			interp = new LocalInterpComponent(game, this);
 			
 			physics.hacks = Hacks; input.Hacks = Hacks;
 			physics.collisions = collisions;
@@ -55,9 +57,7 @@ namespace ClassicalSharp.Entities {
 				&& Hacks.CanSpeed ? 1 : 0.5f;
 			OldVelocity = Velocity;
 			float xMoving = 0, zMoving = 0;
-			lastPos = Position = nextPos;
-			lastYaw = nextYaw;
-			lastPitch = nextPitch;
+			interp.AdvanceState();
 			bool wasOnGround = onGround;
 			
 			HandleInput(ref xMoving, ref zMoving);
@@ -65,20 +65,17 @@ namespace ClassicalSharp.Entities {
 			physics.UpdateVelocityState(xMoving, zMoving);
 			physics.PhysicsTick(xMoving, zMoving);
 			
-			nextPos = Position;
-			Position = lastPos;
-			anim.UpdateAnimState(lastPos, nextPos, delta);
+			interp.nextPos = Position; Position = interp.lastPos;
+			anim.UpdateAnimState(interp.lastPos, interp.nextPos, delta);
 			
 			CheckSkin();
 			sound.Tick(wasOnGround);
-			UpdateCurrentBodyYaw();
 		}
 
 		public override void RenderModel(double deltaTime, float t) {
 			anim.GetCurrentAnimState(t);
 			curSwing = Utils.Lerp(anim.swingO, anim.swingN, t);
-			curWalkTime = Utils.Lerp(anim.walkTimeO, anim.walkTimeN, t);
-			
+
 			if (!game.Camera.IsThirdPerson) return;
 			Model.Render(this);
 		}
@@ -118,65 +115,18 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
-		internal Vector3 lastPos, nextPos;
-		internal float lastYaw, nextYaw, lastPitch, nextPitch;
-		float newYaw, oldYaw;
-		int yawStateCount;
-		float[] yawStates = new float[15];
-		
 		public override void SetLocation(LocationUpdate update, bool interpolate) {
-			if (update.IncludesPosition) {
-				nextPos = update.RelativePosition ? nextPos + update.Pos : update.Pos;
-				double blockOffset = nextPos.Y - Math.Floor(nextPos.Y);
-				if (blockOffset < Entity.Adjustment)
-					nextPos.Y += Entity.Adjustment;
-				if (!interpolate) {
-					lastPos = Position = nextPos;
-				}
-			}
-			if (update.IncludesOrientation) {
-				nextYaw = update.Yaw;
-				nextPitch = update.Pitch;
-				if (!interpolate) {
-					lastYaw = YawDegrees = nextYaw;
-					lastPitch = PitchDegrees = nextPitch;
-					HeadYawDegrees = YawDegrees;
-					yawStateCount = 0;
-				} else {
-					for (int i = 0; i < 3; i++)
-						AddYaw(Utils.LerpAngle(lastYaw, nextYaw, (i + 1) / 3f));
-				}
-			}
+			interp.SetLocation(update, interpolate);
 		}
 		
 		/// <summary> Linearly interpolates position and rotation between the previous and next state. </summary>
 		public void SetInterpPosition(float t) {
 			if (!Hacks.WOMStyleHacks || !Hacks.Noclip)
-				Position = Vector3.Lerp(lastPos, nextPos, t);
+				Position = Vector3.Lerp(interp.lastPos, interp.nextPos, t);
 			
-			HeadYawDegrees = Utils.LerpAngle(lastYaw, nextYaw, t);
-			YawDegrees = Utils.LerpAngle(oldYaw, newYaw, t);
-			PitchDegrees = Utils.LerpAngle(lastPitch, nextPitch, t);
-		}
-		
-		void AddYaw(float state) {
-			if (yawStateCount == yawStates.Length)
-				RemoveOldest(yawStates, ref yawStateCount);
-			yawStates[yawStateCount++] = state;
-		}
-		
-		void UpdateCurrentBodyYaw() {
-			oldYaw = newYaw;
-			if (yawStateCount > 0) {
-				newYaw = yawStates[0];
-				RemoveOldest(yawStates, ref yawStateCount);
-			}
-		}
-		
-		void RemoveOldest<T>(T[] array, ref int count) {
-			for (int i = 0; i < array.Length - 1; i++)
-				array[i] = array[i + 1];
-			count--;
+			HeadYawDegrees = Utils.LerpAngle(interp.lastHeadYaw, interp.nextHeadYaw, t);
+			YawDegrees = Utils.LerpAngle(interp.lastYaw, interp.nextYaw, t);
+			PitchDegrees = Utils.LerpAngle(interp.lastPitch, interp.nextPitch, t);
 		}
 		
 		public void Init(Game game) {

@@ -22,7 +22,7 @@ namespace ClassicalSharp.Entities {
 		
 		Vector3 lastSoundPos;
 		public void Tick(bool wasOnGround) {
-			Vector3 soundPos = p.nextPos;
+			Vector3 soundPos = p.interp.nextPos;
 			GetSound();
 			if (!anyNonAir) soundPos = Utils.MaxPos();
 			
@@ -55,7 +55,7 @@ namespace ClassicalSharp.Entities {
 		bool anyNonAir = false;
 		SoundType sndType = SoundType.None;
 		void GetSound() {
-			Vector3 pos = p.nextPos;
+			Vector3 pos = p.interp.nextPos;
 			AABB bounds = p.Bounds;
 			sndType = SoundType.None;
 			anyNonAir = false;

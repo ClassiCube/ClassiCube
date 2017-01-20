@@ -6,10 +6,10 @@ using OpenTK;
 namespace ClassicalSharp.Entities {
 	
 	/// <summary> Entity component that performs interpolation of position and model head yaw over time. </summary>
-	public sealed class InterpolatedComponent {
+	public sealed class NetInterpComponent {
 		
 		Entity entity;
-		public InterpolatedComponent(Game game, Entity entity) {
+		public NetInterpComponent(Game game, Entity entity) {
 			this.entity = entity;
 		}
 		

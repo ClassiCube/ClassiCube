@@ -150,13 +150,14 @@
     <Compile Include="Blocks\BlockInfo.Atlas.cs" />
     <Compile Include="Blocks\DefaultSet.cs" />
     <Compile Include="Commands\SinglePlayerCommands.cs" />
-    <Compile Include="Entities\AI\AI.cs" />
-    <Compile Include="Entities\AI\FleeAI.cs" />
-    <Compile Include="Entities\AI\HostileAI.cs" />
+    <Compile Include="Entities\Components\LocalInterpComponent.cs" />
+    <Compile Include="Entities\Mobs\AI\AI.cs" />
+    <Compile Include="Entities\Mobs\AI\FleeAI.cs" />
+    <Compile Include="Entities\Mobs\AI\HostileAI.cs" />
     <Compile Include="Entities\Components\AnimatedComponent.cs" />
     <Compile Include="Entities\Components\HacksComponent.cs" />
     <Compile Include="Entities\Components\InputComponent.cs" />
-    <Compile Include="Entities\Components\InterpolatedComponent.cs" />
+    <Compile Include="Entities\Components\NetInterpComponent.cs" />
     <Compile Include="Entities\Components\CollisionsComponent.cs" />
     <Compile Include="Entities\Components\NewCollisionsComponent.cs" />
     <Compile Include="Entities\Components\PhysicsComponent.cs" />
@@ -167,6 +168,7 @@
     <Compile Include="Entities\EntityList.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />
     <Compile Include="Entities\LocationUpdate.cs" />
+    <Compile Include="Entities\Mobs\MobEntity.cs" />
     <Compile Include="Entities\NetPlayer.cs" />
     <Compile Include="Entities\TabList.cs" />
     <Compile Include="Events\EntityEvents.cs" />
@@ -341,8 +343,9 @@
     <Folder Include="2D\Widgets\Chat" />
     <Folder Include="2D\Widgets\PlayerList" />
     <Folder Include="Blocks" />
-    <Folder Include="Entities\AI" />
+    <Folder Include="Entities\Mobs\AI" />
     <Folder Include="Entities\Components" />
+    <Folder Include="Entities\Mobs" />
     <Folder Include="Events" />
     <Folder Include="Generator" />
     <Folder Include="Map\Lighting" />

@@ -1,5 +1,8 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Entities.Mobs;
+using OpenTK;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Mode {
@@ -40,7 +43,8 @@ namespace ClassicalSharp.Mode {
 		}
 		
 		public bool PickEntity(byte id) {
-			return false;
+			game.Chat.Add("PICKED ON: " + id + "," + game.Entities[id].ModelName);
+			return true;
 		}
 		
 		
@@ -92,6 +96,17 @@ namespace ClassicalSharp.Mode {
 		
 		public void OnNewMapLoaded(Game game) {
 			game.Chat.Add("&fScore: &e" + score, MessageType.Status1);
+			
+			string[] models = { "sheep", "pig", "skeleton", "zombie", "creeper" };
+			for (int i = 0; i < 254; i++) {
+				MobEntity fail = new MobEntity(game, models[rnd.Next(models.Length)]);
+				float x = rnd.Next(0, game.World.Width) + 0.5f;
+				float z = rnd.Next(0, game.World.Length) + 0.5f;
+				
+				Vector3 pos = Respawn.FindSpawnPosition(game, x, z, fail.Size);
+				fail.SetLocation(LocationUpdate.MakePos(pos, false), false);
+				game.Entities[i] = fail;
+			}
 		}
 		
 		public void Init(Game game) {

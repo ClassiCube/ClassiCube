@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using ClassicalSharp.Entities;
 using ClassicalSharp.Physics;
 using OpenTK;
 
@@ -30,6 +31,22 @@ namespace ClassicalSharp {
 				spawnY = Math.Max(spawnY, blockBB.Max.Y);
 			}
 			return spawnY;
+		}
+		
+		public static Vector3 FindSpawnPosition(Game game, float x, float z, Vector3 modelSize) {
+			Vector3 spawn = new Vector3(x, 0, z);
+			spawn.Y = game.World.Height + Entity.Adjustment;			
+			AABB bb = AABB.Make(spawn, modelSize);
+			spawn.Y = 0;
+			
+			for (int y = game.World.Height; y >= 0; y--) {
+				float highestY = HighestFreeY(game, ref bb);
+				if (highestY != float.NegativeInfinity) {
+					spawn.Y = highestY; break;
+				}
+				bb.Min.Y -= 1; bb.Max.Y -= 1;
+			}
+			return spawn;
 		}
 	}
 }
