@@ -16,6 +16,7 @@ namespace ClassicalSharp.Model {
 		protected const int boxVertices = 6 * quadVertices;
 		protected RotateOrder Rotate = RotateOrder.ZYX;
 		internal CachedModel data;
+		internal bool initalised;
 
 		public IModel(Game game) { this.game = game; }
 		
@@ -82,7 +83,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		/// <summary> Renders the model based on the given entity's position and orientation. </summary>
-		public void Render(Player p) {
+		public void Render(Entity p) {
 			index = 0;
 			pos = p.Position;
 			if (Bobbing) pos.Y += p.anim.bobbingModel;
@@ -106,7 +107,7 @@ namespace ClassicalSharp.Model {
 			DrawModel(p);
 		}
 		
-		protected abstract void DrawModel(Player p);
+		protected abstract void DrawModel(Entity p);
 		
 		protected void UpdateVB() {
 			ModelCache cache = game.ModelCache;

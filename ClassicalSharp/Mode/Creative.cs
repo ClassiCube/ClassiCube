@@ -41,6 +41,10 @@ namespace ClassicalSharp.Mode {
 			game.UserEvents.RaiseBlockChanged(pos, old, block);
 		}
 		
+		public bool PickEntity(byte id) {
+			return false;
+		}
+		
 		
 		public void OnNewMapLoaded(Game game) {
 			if (game.Server.IsSinglePlayer)

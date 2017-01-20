@@ -46,7 +46,7 @@ namespace ClassicalSharp.Model {
 			get { return new AABB(-5/16f, 0, -14/16f, 5/16f, 16/16f, 9/16f); }
 		}
 		
-		protected override void DrawModel(Player p) {
+		protected override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
 			DrawHeadRotate(-p.PitchRadians, 0, 0, Head);
 

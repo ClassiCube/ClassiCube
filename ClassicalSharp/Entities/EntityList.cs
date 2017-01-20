@@ -14,7 +14,9 @@ namespace ClassicalSharp.Entities {
 	public sealed class EntityList : IDisposable {
 		
 		public const int MaxCount = 256;
-		public Player[] Players = new Player[MaxCount];
+		public const byte SelfID = 255;
+		
+		public Entity[] Entities = new Entity[MaxCount];
 		public Game game;
 		public EntityShadow ShadowMode = EntityShadow.None;
 		byte closestId;
@@ -35,9 +37,9 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
 		public void Tick(ScheduledTask task) {			
-			for (int i = 0; i < Players.Length; i++) {
-				if (Players[i] == null) continue;
-				Players[i].Tick(task.Interval);
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] == null) continue;
+				Entities[i].Tick(task.Interval);
 			}
 		}
 		
@@ -45,9 +47,9 @@ namespace ClassicalSharp.Entities {
 		public void RenderModels(IGraphicsApi gfx, double delta, float t) {
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
-			for (int i = 0; i < Players.Length; i++) {
-				if (Players[i] == null) continue;
-				Players[i].RenderModel(delta, t);
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] == null) continue;
+				Entities[i].RenderModel(delta, t);
 			}
 			gfx.Texturing = false;
 			gfx.AlphaTest = false;
@@ -62,7 +64,7 @@ namespace ClassicalSharp.Entities {
 			gfx.AlphaTest = true;
 			LocalPlayer localP = game.LocalPlayer;
 			Vector3 eyePos = localP.EyePosition;
-			closestId = 255;
+			closestId = SelfID;
 			
 			if (NamesMode != NameMode.All)
 				closestId = GetClosetPlayer(game.LocalPlayer);
@@ -72,10 +74,10 @@ namespace ClassicalSharp.Entities {
 				return;
 			}
 			
-			for (int i = 0; i < Players.Length; i++) {
-				if (Players[i] == null) continue;
-				if (i != closestId || i == 255)
-					Players[i].RenderName();
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] == null) continue;
+				if (i != closestId || i == SelfID)
+					Entities[i].RenderName();
 			}
 			gfx.Texturing = false;
 			gfx.AlphaTest = false;
@@ -88,9 +90,9 @@ namespace ClassicalSharp.Entities {
 			gfx.AlphaTest = true;
 			gfx.DepthTest = false;
 			
-			for (int i = 0; i < Players.Length; i++) {
-				if (Players[i] != null && i == closestId && i != 255)
-					Players[i].RenderName();
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] != null && i == closestId && i != SelfID)
+					Entities[i].RenderName();
 			}
 			gfx.Texturing = false;
 			gfx.AlphaTest = false;
@@ -99,24 +101,25 @@ namespace ClassicalSharp.Entities {
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name != "char.png") return;
-			for (int i = 0; i < Players.Length; i++) {
-				if (Players[i] == null || Players[i].TextureId != -1) continue;
-				Players[i].SkinType = game.DefaultPlayerSkinType;				
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] == null || Entities[i].TextureId != -1) continue;
+				Entities[i].SkinType = game.DefaultPlayerSkinType;				
 			}
 		}
 		
 		void ChatFontChanged(object sender, EventArgs e) {
-			for (int i = 0; i < Players.Length; i++) {
-				if (Players[i] == null) continue;
-				Players[i].UpdateName();
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] == null) continue;
+				Player p = Entities[i] as Player;
+				if (p != null) p.UpdateName();
 			}
 		}
 		
 		/// <summary> Disposes of all player entities contained in this list. </summary>
 		public void Dispose() {
-			for (int i = 0; i < Players.Length; i++) {
-				if (Players[i] == null) continue;
-				Players[i].Despawn();
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] == null) continue;
+				Entities[i].Despawn();
 			}
 			game.Events.ChatFontChanged -= ChatFontChanged;
 			game.Events.TextureChanged -= TextureChanged;
@@ -128,10 +131,10 @@ namespace ClassicalSharp.Entities {
 			Vector3 eyePos = src.EyePosition;
 			Vector3 dir = Utils.GetDirVector(src.HeadYawRadians, src.PitchRadians);
 			float closestDist = float.PositiveInfinity;
-			byte targetId = 255;
+			byte targetId = SelfID;
 			
-			for (int i = 0; i < Players.Length - 1; i++) { // -1 because we don't want to pick against local player
-				Player p = Players[i];
+			for (int i = 0; i < Entities.Length - 1; i++) { // -1 because we don't want to pick against local player
+				Entity p = Entities[i];
 				if (p == null) continue;
 				
 				float t0, t1;
@@ -144,10 +147,10 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		/// <summary> Gets or sets the player entity for the specified id. </summary>
-		public Player this[int id] {
-			get { return Players[id]; }
+		public Entity this[int id] {
+			get { return Entities[id]; }
 			set {
-				Players[id] = value;
+				Entities[id] = value;
 				if (value != null)
 					value.ID = (byte)id;
 			}
@@ -164,7 +167,7 @@ namespace ClassicalSharp.Entities {
 			gfx.Texturing = true;
 			
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			Players[255].shadow.Draw();
+			((Player)Entities[SelfID]).shadow.Draw();
 			if (ShadowMode == EntityShadow.CircleAll)
 				DrawOtherShadows();
 			
@@ -175,9 +178,10 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void DrawOtherShadows() {
-			for (int i = 0; i < 255; i++) {
-				if (Players[i] == null) continue;
-				Players[i].shadow.Draw();
+			for (int i = 0; i < SelfID; i++) {
+				if (Entities[i] == null) continue;
+				Player p = Entities[i] as Player;
+				if (p != null) p.shadow.Draw();
 			}
 		}
 	}

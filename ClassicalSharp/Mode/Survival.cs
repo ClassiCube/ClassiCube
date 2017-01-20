@@ -39,6 +39,11 @@ namespace ClassicalSharp.Mode {
 			game.Events.RaiseHeldBlockChanged();
 		}
 		
+		public bool PickEntity(byte id) {
+			return false;
+		}
+		
+		
 		void HandleDelete(byte old) {
 			if (old == Block.Log) {
 				AddToHotbar(Block.Wood, rnd.Next(3, 6));
@@ -56,7 +61,7 @@ namespace ClassicalSharp.Mode {
 				if (rnd.Next(1, 16) == 1) { // TODO: is this chance accurate?
 					AddToHotbar(Block.Sapling, 1);
 				}
-			}else {
+			} else {
 				AddToHotbar(old, 1);
 			}
 		}

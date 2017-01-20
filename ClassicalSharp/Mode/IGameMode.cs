@@ -10,5 +10,6 @@ namespace ClassicalSharp.Mode {
 		void PickLeft(byte old);
 		void PickMiddle(byte old);
 		void PickRight(byte old, byte block);
+		bool PickEntity(byte id);
 	}
 }

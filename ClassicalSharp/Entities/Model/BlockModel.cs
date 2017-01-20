@@ -76,7 +76,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		int lastTexId = -1, brightCol;
-		protected override void DrawModel(Player p) {
+		protected override void DrawModel(Entity p) {
 			brightCol = FastColour.WhitePacked;
 			
 			// TODO: using 'is' is ugly, but means we can avoid creating

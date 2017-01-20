@@ -14,50 +14,14 @@ namespace ClassicalSharp.Entities {
 	public abstract partial class Player : Entity {
 		
 		public string DisplayName, SkinName, SkinIdentifier;
-		public SkinType SkinType;
-		public AnimatedComponent anim;
 		internal ShadowComponent shadow;
-		internal float uScale = 1, vScale = 1;
+		protected Texture nameTex;
 		
 		public Player(Game game) : base(game) {
-			this.game = game;
 			StepSize = 0.5f;
-			SkinType = game.DefaultPlayerSkinType;
-			anim = new AnimatedComponent(game, this);
 			shadow = new ShadowComponent(game, this);
 			SetModel("humanoid");
 		}
-		
-		DateTime lastModelChange = new DateTime(1, 1, 1);
-		public void SetModel(string model) {
-			ModelScale = 1;
-			int sep = model.IndexOf('|');
-			string scale = sep == -1 ? null : model.Substring(sep + 1);
-			ModelName = sep == -1 ? model : model.Substring(0, sep);
-			ParseScale(scale);
-			
-			if (Utils.CaselessEquals(model, "giant")) {
-				ModelName = "humanoid";
-				ModelScale *= 2;
-			}
-			
-			Model = game.ModelCache.Get(ModelName);
-			lastModelChange = DateTime.UtcNow;
-			MobTextureId = -1;		
-		}
-		
-		void ParseScale(string scale) {
-			if (scale == null) return;
-			float value;
-			if (!Utils.TryParseDecimal(scale, out value))
-				return;
-			
-			Utils.Clamp(ref value, 0.25f, Model.MaxScale);
-			ModelScale = value;
-		}
-		
-		protected Texture nameTex;
-		public int TextureId = -1, MobTextureId = -1;
 		
 		public override void Despawn() {
 			game.Graphics.DeleteTexture(ref TextureId);

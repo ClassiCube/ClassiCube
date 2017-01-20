@@ -9,14 +9,17 @@ namespace ClassicalSharp.Entities {
 	/// May also contain other fields and properties. </summary>
 	public abstract partial class Entity {
 		
-		public Entity(Game game) {
+		public Entity(Game game) { 
 			this.game = game;
+			SkinType = game.DefaultPlayerSkinType;
+			anim = new AnimatedComponent(game, this);
 		}
 		
 		public IModel Model;
 		public string ModelName;
 		public float ModelScale = 1;
 		public byte ID;
+		public int TextureId = -1, MobTextureId = -1;
 		
 		public Vector3 Position;
 		public Vector3 Velocity;
@@ -27,6 +30,12 @@ namespace ClassicalSharp.Entities {
 		protected internal bool onGround;
 		internal float StepSize;
 		internal int tickCount;
+		
+		public SkinType SkinType;
+		public AnimatedComponent anim;
+		internal float uScale = 1, vScale = 1;		
+		protected DateTime lastModelChange = new DateTime(1, 1, 1);
+		
 		
 		/// <summary> Rotation of the entity's head horizontally (i.e. looking north or east) </summary>
 		public float HeadYawRadians {
@@ -88,6 +97,33 @@ namespace ClassicalSharp.Entities {
 		
 		protected byte GetBlock(Vector3 coords) {
 			return game.World.SafeGetBlock(Vector3I.Floor(coords));
+		}
+		
+		
+		public void SetModel(string model) {
+			ModelScale = 1;
+			int sep = model.IndexOf('|');
+			string scale = sep == -1 ? null : model.Substring(sep + 1);
+			ModelName = sep == -1 ? model : model.Substring(0, sep);			
+			
+			if (Utils.CaselessEquals(model, "giant")) {
+				ModelName = "humanoid";
+				ModelScale *= 2;
+			}
+			
+			Model = game.ModelCache.Get(ModelName);
+			ParseScale(scale);
+			lastModelChange = DateTime.UtcNow;
+			MobTextureId = -1;		
+		}
+		
+		void ParseScale(string scale) {
+			if (scale == null) return;
+			float value;
+			if (!Utils.TryParseDecimal(scale, out value)) return;
+			
+			Utils.Clamp(ref value, 0.25f, Model.MaxScale);
+			ModelScale = value;
 		}
 	}
 }

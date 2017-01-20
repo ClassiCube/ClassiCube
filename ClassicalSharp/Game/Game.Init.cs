@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 			BlockInfo.SetDefaultBlockPerms(Inventory.CanPlace, Inventory.CanDelete);
 			World = new World(this);
 			LocalPlayer = AddComponent(new LocalPlayer(this));
-			Entities[255] = LocalPlayer;
+			Entities[EntityList.SelfID] = LocalPlayer;
 			Width = window.Width; Height = window.Height;
 			
 			MapRenderer = new MapRenderer(this);

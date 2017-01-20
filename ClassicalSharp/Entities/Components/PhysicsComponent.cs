@@ -271,7 +271,7 @@ namespace ClassicalSharp.Entities {
 			return;
 			// TODO: Fix
 			
-			for (int id = 0; id < 255; id++) {
+			for (int id = 0; id < EntityList.SelfID; id++) {
 				Entity other = game.Entities[id];
 				if (other == null) continue;
 				

@@ -63,7 +63,7 @@ namespace ClassicalSharp.Model {
 			get { return new AABB(-4/16f, 0, -4/16f, 4/16f, 8/16f, 4/16f); }
 		}
 
-		protected override void RenderParts(Player p) {
+		protected override void RenderParts(Entity p) {
 			DrawHeadRotate(-p.PitchRadians, 0, 0, Head);
 			UpdateVB();
 			

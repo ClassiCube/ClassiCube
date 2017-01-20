@@ -26,10 +26,10 @@ namespace ClassicalSharp {
 			Inventory inv = game.Inventory;
 			
 			if (game.Server.UsingPlayerClick && !game.Gui.ActiveScreen.HandlesAllInput) {
-				byte targetId = game.Entities.GetClosetPlayer(game.LocalPlayer);
-				input.ButtonStateChanged(MouseButton.Left, left, targetId);
-				input.ButtonStateChanged(MouseButton.Right, right, targetId);
-				input.ButtonStateChanged(MouseButton.Middle, middle, targetId);
+				byte id = game.Entities.GetClosetPlayer(game.LocalPlayer);
+				input.ButtonStateChanged(MouseButton.Left, left, id);
+				input.ButtonStateChanged(MouseButton.Right, right, id);
+				input.ButtonStateChanged(MouseButton.Middle, middle, id);
 			}
 			
 			int buttonsDown = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
@@ -37,7 +37,11 @@ namespace ClassicalSharp {
 			    inv.HeldBlock == Block.Air) return;
 			
 			// always play delete animations, even if we aren't picking a block.
-			if (left) game.HeldBlockRenderer.anim.SetClickAnim(true);
+			if (left) {
+				game.HeldBlockRenderer.anim.SetClickAnim(true);
+				byte id = game.Entities.GetClosetPlayer(game.LocalPlayer);
+				if (id != EntityList.SelfID && game.Mode.PickEntity(id)) return;
+			}
 			if (!game.SelectedPos.Valid) return;
 			
 			if (middle) {
@@ -139,11 +143,11 @@ namespace ClassicalSharp {
 			AABB blockBB = new AABB(pos + game.BlockInfo.MinBB[block],
 			                        pos + game.BlockInfo.MaxBB[block]);
 			
-			for (int id = 0; id < 255; id++) {
-				Player player = game.Entities[id];
-				if (player == null) continue;
+			for (int id = 0; id < EntityList.SelfID; id++) {
+				Entity entity = game.Entities[id];
+				if (entity == null) continue;
 				
-				AABB bounds = player.Bounds;
+				AABB bounds = entity.Bounds;
 				bounds.Min.Y += 1/32f; // when player is exactly standing on top of ground
 				if (bounds.Intersects(blockBB)) return true;
 			}

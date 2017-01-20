@@ -68,10 +68,7 @@ namespace ClassicalSharp.Model {
 			for (int i = 0; i < Models.Count; i++) {
 				CachedModel m = Models[i];
 				if (m.Name != modelName) continue;
-				if (m.Initalised) return m.Instance;
-				
-				InitModel(ref m);
-				Models[i] = m;
+				if (!m.Instance.initalised) InitModel(m);
 				return m.Instance;
 			}
 			return Models[0].Instance;
@@ -93,9 +90,9 @@ namespace ClassicalSharp.Model {
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
-		void InitModel(ref CachedModel m) {
+		void InitModel(CachedModel m) {
 			m.Instance.CreateParts();
-			m.Initalised = true;
+			m.Instance.initalised = true;
 		}
 		
 		void RegisterDefaultModels() {
@@ -103,14 +100,14 @@ namespace ClassicalSharp.Model {
 			                 "sheep_fur.png", "skeleton.png", "spider.png", "zombie.png");
 			
 			Register("humanoid", "char.png", new HumanoidModel(game));
-			CachedModel human = Models[0];
-			InitModel(ref human);
-			Models[0] = human;
+			InitModel(Models[0]);
+			SheepModel sheep = new SheepModel(game);
 			
 			Register("chicken", "chicken.png", new ChickenModel(game));
 			Register("creeper", "creeper.png", new CreeperModel(game));
 			Register("pig", "pig.png", new PigModel(game));
-			Register("sheep", "sheep.png", new SheepModel(game));
+			Register("sheep", "sheep.png", sheep);
+			Register("sheep_nofur", "sheep.png", sheep);
 			Register("skeleton", "skeleton.png", new SkeletonModel(game));
 			Register("spider", "spider.png", new SpiderModel(game));
 			Register("zombie", "zombie.png", new ZombieModel(game));
@@ -140,7 +137,6 @@ namespace ClassicalSharp.Model {
 	public struct CachedModel {
 		public string Name;
 		public IModel Instance;
-		public bool Initalised;
 	}
 	
 	public struct CachedTexture {
