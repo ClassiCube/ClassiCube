@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Entities.Mobs;
+using ClassicalSharp.Gui.Widgets;
 using OpenTK;
 using OpenTK.Input;
 
@@ -11,7 +12,7 @@ namespace ClassicalSharp.Mode {
 		
 		Game game;
 		int score = 0;
-		byte[] invCount = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 10 };
+		internal byte[] invCount = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 10 };
 		Random rnd = new Random();
 		
 		public bool HandlesKeyDown(Key key) { return false; }
@@ -46,6 +47,8 @@ namespace ClassicalSharp.Mode {
 			game.Chat.Add("PICKED ON: " + id + "," + game.Entities[id].ModelName);
 			return true;
 		}
+		
+		public Widget MakeHotbar() { return new SurvivalHotbarWidget(game); }
 		
 		
 		void HandleDelete(byte old) {

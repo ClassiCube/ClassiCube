@@ -20,6 +20,7 @@ namespace ClassicalSharp.Entities {
 		public float ModelScale = 1;
 		public byte ID;
 		public int TextureId = -1, MobTextureId = -1;
+		public short Health = 20;
 		
 		public Vector3 Position;
 		public Vector3 Velocity;

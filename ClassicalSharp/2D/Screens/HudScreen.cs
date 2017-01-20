@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public HudScreen(Game game) : base(game) { }
 		
 		ChatScreen chat;
-		internal BlockHotbarWidget hotbar;
+		internal Widget hotbar;
 		PlayerListWidget playerList;
 		Font playerFont;
 		
@@ -98,7 +98,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			int size = game.Drawer2D.UseBitmappedChat ? 16 : 11;
 			playerFont = new Font(game.FontName, size);
-			hotbar = new BlockHotbarWidget(game);
+			hotbar = game.Mode.MakeHotbar();
 			hotbar.Init();
 			chat = new ChatScreen(game, this);
 			chat.Init();

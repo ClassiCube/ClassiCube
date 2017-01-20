@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Gui.Screens;
+using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Mode {
@@ -41,9 +42,8 @@ namespace ClassicalSharp.Mode {
 			game.UserEvents.RaiseBlockChanged(pos, old, block);
 		}
 		
-		public bool PickEntity(byte id) {
-			return false;
-		}
+		public bool PickEntity(byte id) { return false; }
+		public Widget MakeHotbar() { return new HotbarWidget(game); }
 		
 		
 		public void OnNewMapLoaded(Game game) {

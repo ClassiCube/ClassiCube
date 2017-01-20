@@ -122,7 +122,7 @@
     <Compile Include="2D\Utils\FastBitmap.cs" />
     <Compile Include="2D\Utils\FastColour.cs" />
     <Compile Include="2D\Utils\TextAtlas.cs" />
-    <Compile Include="2D\Widgets\BlockHotbarWidget.cs" />
+    <Compile Include="2D\Widgets\HotbarWidget.cs" />
     <Compile Include="2D\Widgets\Chat\AltTextInputWidget.Types.cs" />
     <Compile Include="2D\Widgets\Chat\ChatInputWidget.cs" />
     <Compile Include="2D\Widgets\Chat\AltTextInputWidget.cs" />
@@ -136,7 +136,7 @@
     <Compile Include="2D\Widgets\PlayerList\ExtPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\PlayerList\NormalPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\PlayerList\PlayerListWidget.cs" />
-    <Compile Include="2D\Widgets\SurvivalHudWidget.cs" />
+    <Compile Include="2D\Widgets\SurvivalHotbarWidget.cs" />
     <Compile Include="2D\Widgets\TextWidget.cs" />
     <Compile Include="2D\Widgets\Widget.cs" />
     <Compile Include="Audio\AudioPlayer.cs" />
