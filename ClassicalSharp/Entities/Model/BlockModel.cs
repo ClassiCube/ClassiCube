@@ -144,9 +144,6 @@ namespace ClassicalSharp.Model {
 				VertexP3fT2fC4b v = cache.vertices[i];
 				float t = 0;
 				t = CosX * v.Y + SinX * v.Z; v.Z = -SinX * v.Y + CosX * v.Z; v.Y = t;        // Inlined RotX
-				t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
-				v.X *= scale; v.Y *= scale; v.Z *= scale;
-				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				cache.vertices[i] = v;
 			}
 		}

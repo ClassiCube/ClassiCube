@@ -51,7 +51,7 @@ namespace ClassicalSharp.Model {
 		public abstract AABB PickingBounds { get; }
 		
 		protected Vector3 pos;
-		protected float cosYaw, sinYaw, cosHead, sinHead;
+		protected float cosHead, sinHead;
 		protected float uScale, vScale, scale;
 		
 		/// <summary> Returns whether the model should be rendered based on the given entity's position. </summary>
@@ -98,13 +98,17 @@ namespace ClassicalSharp.Model {
 			cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ); cols[3] = cols[2];
 			cols[4] = FastColour.ScalePacked(col, FastColour.ShadeX); cols[5] = cols[4];
 			
-			cosYaw = (float)Math.Cos(p.YawDegrees * Utils.Deg2Rad);
-			sinYaw = (float)Math.Sin(p.YawDegrees * Utils.Deg2Rad);
-			cosHead = (float)Math.Cos(p.HeadYawDegrees * Utils.Deg2Rad);
-			sinHead = (float)Math.Sin(p.HeadYawDegrees * Utils.Deg2Rad);
+			float yawDelta = p.HeadYawDegrees - p.YawDegrees;
+			cosHead = (float)Math.Cos(yawDelta * Utils.Deg2Rad);
+			sinHead = (float)Math.Sin(yawDelta * Utils.Deg2Rad);
 
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
+			game.Graphics.PushMatrix();
+			Matrix4 m = Matrix4.RotateY(-p.YawRadians) * Matrix4.Scale(scale) * Matrix4.Translate(pos.X, pos.Y, pos.Z);
+			
+			game.Graphics.MultiplyMatrix(ref m);
 			DrawModel(p);
+			game.Graphics.PopMatrix();
 		}
 		
 		protected abstract void DrawModel(Entity p);
@@ -150,9 +154,6 @@ namespace ClassicalSharp.Model {
 			
 			for (int i = 0; i < part.Count; i++) {
 				ModelVertex v = vertices[part.Offset + i];
-				float t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t; // Inlined RotY
-				v.X *= scale; v.Y *= scale; v.Z *= scale;
-				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.Colour = cols[i >> 2];
 				
@@ -197,18 +198,10 @@ namespace ClassicalSharp.Model {
 				}
 				
 				// Rotate globally
-				if (!head) {
-					v.X += x; v.Y += y; v.Z += z;
-					t = cosYaw * v.X - sinYaw * v.Z; v.Z = sinYaw * v.X + cosYaw * v.Z; v.X = t;     // Inlined RotY
-				} else {
+				if (head) {
 					t = cosHead * v.X - sinHead * v.Z; v.Z = sinHead * v.X + cosHead * v.Z; v.X = t; // Inlined RotY
-					float tX = x, tZ = z;
-					t = cosYaw * tX - sinYaw * tZ; tZ = sinYaw * tX + cosYaw * tZ; tX = t;           // Inlined RotY
-					v.X += tX; v.Y += y; v.Z += tZ;
 				}
-				v.X *= scale; v.Y *= scale; v.Z *= scale;
-				v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
-				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
+				vertex.X = v.X + x; vertex.Y = v.Y + y; vertex.Z = v.Z + z;
 				vertex.Colour = cols[i >> 2];
 				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;

@@ -34,7 +34,9 @@ namespace ClassicalSharp.Entities {
 		public bool TouchesAny(AABB bounds, Predicate<byte> condition) {
 			Vector3I bbMin = Vector3I.Floor(bounds.Min);
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
+			
 			BlockInfo info = game.BlockInfo;
+			AABB blockBB = default(AABB);
 			
 			// Order loops so that we minimise cache misses
 			for (int y = bbMin.Y; y <= bbMax.Y; y++)
@@ -43,10 +45,9 @@ namespace ClassicalSharp.Entities {
 			{
 				if (!game.World.IsValidPos(x, y, z)) continue;
 				byte block = game.World.GetBlock(x, y, z);
-				Vector3 min = new Vector3(x, y, z) + info.MinBB[block];
-				Vector3 max = new Vector3(x, y, z) + info.MaxBB[block];
+				blockBB.Min = new Vector3(x, y, z) + info.MinBB[block];
+				blockBB.Max = new Vector3(x, y, z) + info.MaxBB[block];
 				
-				AABB blockBB = new AABB(min, max);
 				if (!blockBB.Intersects(bounds)) continue;
 				if (condition(block)) return true;
 			}
@@ -72,8 +73,10 @@ namespace ClassicalSharp.Entities {
 		bool TouchesAnyLiquid(AABB bounds, byte block1, byte block2) {
 			Vector3I bbMin = Vector3I.Floor(bounds.Min);
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
+			
 			int height = game.World.Height;
 			BlockInfo info = game.BlockInfo;
+			AABB blockBB = default(AABB);
 			
 			// Order loops so that we minimise cache misses
 			for (int y = bbMin.Y; y <= bbMax.Y; y++)
@@ -86,14 +89,13 @@ namespace ClassicalSharp.Entities {
 				byte above = (y + 1) >= height ? Block.Air : game.World.GetBlock(x, y + 1, z);
 				
 				// TODO: use recording to find right constants when I have more time
-				Vector3 min = new Vector3(x, y, z) + info.MinBB[block];
-				Vector3 max = new Vector3(x, y, z) + info.MaxBB[block];
+				blockBB.Min = new Vector3(x, y, z) + info.MinBB[block];
+				blockBB.Max = new Vector3(x, y, z) + info.MaxBB[block];
 				//if (game.BlockInfo.Collide[below] != CollideType.SwimThrough)
 				//	min.Y += 4/16f;
 				//if (game.BlockInfo.Collide[above] != CollideType.SwimThrough)
 				//	max.Y -= 4/16f;
 				
-				AABB blockBB = new AABB(min, max);
 				if (!blockBB.Intersects(bounds)) continue;
 				if (block == block1 || block == block2) return true;
 			}
