@@ -72,24 +72,6 @@ namespace ClassicalSharp.Physics {
 				P.X <= Max.X && P.Y <= Max.Y && P.Z <= Max.Z;
 		}
 		
-		/// <summary> Determines whether this bounding box intersects
-		/// the given bounding box on the X axis. </summary>
-		public bool XIntersects(AABB box) {
-			return Max.X >= box.Min.X && Min.X <= box.Max.X;
-		}
-		
-		/// <summary> Determines whether this bounding box intersects
-		/// the given bounding box on the Y axis. </summary>
-		public bool YIntersects(AABB box) {
-			return Max.Y >= box.Min.Y && Min.Y <= box.Max.Y;
-		}
-		
-		/// <summary> Determines whether this bounding box intersects
-		/// the given bounding box on the Z axis. </summary>
-		public bool ZIntersects(AABB box) {
-			return Max.Z >= box.Min.Z && Min.Z <= box.Max.Z;
-		}
-		
 		public override string ToString() {
 			return Min + " : " + Max;
 		}

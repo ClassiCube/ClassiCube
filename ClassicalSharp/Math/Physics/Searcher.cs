@@ -88,9 +88,9 @@ namespace ClassicalSharp.Physics {
 			ty = vel.Y == 0 ? float.PositiveInfinity : Math.Abs(dy / vel.Y);
 			tz = vel.Z == 0 ? float.PositiveInfinity : Math.Abs(dz / vel.Z);
 			
-			if (entityBB.XIntersects(blockBB)) tx = 0;
-			if (entityBB.YIntersects(blockBB)) ty = 0;
-			if (entityBB.ZIntersects(blockBB)) tz = 0;
+			if (entityBB.Max.X >= blockBB.Min.X && entityBB.Min.X <= blockBB.Max.X) tx = 0; // Inlined XIntersects
+			if (entityBB.Max.Y >= blockBB.Min.Y && entityBB.Min.Y <= blockBB.Max.Y) ty = 0; // Inlined YIntersects
+			if (entityBB.Max.Z >= blockBB.Min.Z && entityBB.Min.Z <= blockBB.Max.Z) tz = 0; // Inlined ZIntersects
 		}
 		
 		static void QuickSort(State[] keys, int left, int right) {

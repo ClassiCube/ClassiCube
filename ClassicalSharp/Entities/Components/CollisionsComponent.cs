@@ -60,7 +60,8 @@ namespace ClassicalSharp.Entities {
 				
 				Vector3 v = entity.Velocity;
 				v.X *= tx; v.Y *= ty; v.Z *= tz;
-				AABB finalBB = entityBB.Offset(v);
+				AABB finalBB = entityBB;
+				finalBB.Min += v; finalBB.Max += v; // Inlined ABBB.Offset
 				
 				// if we have hit the bottom of a block, we need to change the axis we test first.
 				if (!hitYMin) {
