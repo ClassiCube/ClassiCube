@@ -43,8 +43,6 @@ namespace ClassicalSharp.Model {
 			return new ModelPart(index - 2 * 4, 2 * 4, 0/16f, 5/16f, 1/16f);
 		}
 		
-		public override bool Bobbing { get { return true; } }
-		
 		public override float NameYOffset { get { return 1.0125f; } }
 		
 		public override float GetEyeY(Entity entity) { return 14/16f; }

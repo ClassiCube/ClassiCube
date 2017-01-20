@@ -22,11 +22,10 @@ namespace ClassicalSharp.Model {
 		
 		public BlockModel(Game game) : base(game) {
 			cache = game.ModelCache;
+			Bobbing = false;
 		}
 		
 		public override void CreateParts() { }
-		
-		public override bool Bobbing { get { return false; } }
 		
 		public override float NameYOffset { get { return height + 0.075f; } }
 		

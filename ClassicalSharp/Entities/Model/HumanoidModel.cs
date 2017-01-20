@@ -70,8 +70,6 @@ namespace ClassicalSharp.Model {
 			rArm = MakeBoxBounds(4, 12, -2, 8, 24, 2).RotOrigin(5, 22, 0);
 		}
 		
-		public override bool Bobbing { get { return true; } }
-		
 		public override float NameYOffset { get { return 32/16f + 0.5f/16f; } }
 		
 		public override float GetEyeY(Entity entity) { return 26/16f; }

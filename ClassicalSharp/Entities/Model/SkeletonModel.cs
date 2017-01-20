@@ -32,8 +32,6 @@ namespace ClassicalSharp.Model {
 			                    .RotOrigin(5, 23, 0));
 		}
 		
-		public override bool Bobbing { get { return true; } }
-		
 		public override float NameYOffset { get { return 2.075f; } }
 		
 		public override float GetEyeY(Entity entity) { return 26/16f; }

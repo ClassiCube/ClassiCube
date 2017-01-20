@@ -25,7 +25,7 @@ namespace ClassicalSharp.Model {
 		/// <summary> Whether the entity should be slightly bobbed up and down when rendering. </summary>
 		/// <remarks> e.g. for players when their legs are at the peak of their swing,
 		/// the whole model will be moved slightly down. </remarks>
-		public abstract bool Bobbing { get; }
+		public bool Bobbing = true;
 		
 		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
 		public abstract float NameYOffset { get; }
