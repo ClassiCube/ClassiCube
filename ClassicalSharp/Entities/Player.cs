@@ -80,8 +80,9 @@ namespace ClassicalSharp.Entities {
 		
 		protected void CheckSkin() {
 			DownloadedItem item;
-			game.AsyncDownloader.TryGetItem(SkinIdentifier, out item);
-			if (item == null || item.Data == null) return;
+			if (!game.AsyncDownloader.TryGetItem(SkinIdentifier, out item)) return;
+			
+			if (item == null || item.Data == null) { ResetSkin(); return; }
 			
 			Bitmap bmp = (Bitmap)item.Data;
 			game.Graphics.DeleteTexture(ref TextureId);
@@ -92,7 +93,11 @@ namespace ClassicalSharp.Entities {
 			
 			SkinType = Utils.GetSkinType(bmp);
 			if (SkinType == SkinType.Invalid) {
-				ResetSkin(bmp); return;
+				string format = "Skin {0} has unsupported dimensions({1}, {2}), reverting to default.";
+				Utils.LogDebug(format, SkinName, bmp.Width, bmp.Height);
+				bmp.Dispose();
+				
+				ResetSkin(); return;
 			}
 			
 			if (Model is HumanoidModel)
@@ -106,13 +111,10 @@ namespace ClassicalSharp.Entities {
 			bmp.Dispose();
 		}
 		
-		void ResetSkin(Bitmap bmp) {
-			string formatString = "Skin {0} has unsupported dimensions({1}, {2}), reverting to default.";
-			Utils.LogDebug(formatString, SkinName, bmp.Width, bmp.Height);
+		void ResetSkin() {			
 			MobTextureId = -1;
 			TextureId = -1;
-			SkinType = game.DefaultPlayerSkinType;
-			bmp.Dispose();
+			SkinType = game.DefaultPlayerSkinType;			
 		}
 		
 		unsafe static void ClearHat(Bitmap bmp, SkinType skinType) {

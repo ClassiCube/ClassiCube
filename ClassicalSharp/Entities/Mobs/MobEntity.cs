@@ -28,11 +28,6 @@ namespace ClassicalSharp.Entities.Mobs {
 		// TODO: this is just so the entities do something, remove later
 		static Random rand = new Random();
 		public override void Tick(double delta) {
-			/*interp.AdvanceState();
-			float inc = rand.Next(0, 10);
-			LocationUpdate update = LocationUpdate.MakeOri(interp.nextHeadYaw + inc, 0);
-			SetLocation(update, true);*/
-			
 			if (game.World.IsNotLoaded) return;
 			float xMoving = 0.98f, zMoving = 0.98f;
 			interp.AdvanceState();
