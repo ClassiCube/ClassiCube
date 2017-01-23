@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 			}
 			
 			// Thin pillar type blocks
-			BlockFace face = game.SelectedPos.BlockFace;
+			BlockFace face = game.SelectedPos.Face;
 			if (face == BlockFace.YMax || face == BlockFace.YMin)
 				return Find(game, block, name + "-UD");
 			if (face == BlockFace.XMax || face == BlockFace.XMin)

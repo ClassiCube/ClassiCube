@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 			Vector3 I = t.Origin + t.Dir * t0;
 			pos.SetAsValid(t.X, t.Y, t.Z, t.Min, t.Max, t.Block, I);
 			
-			switch (pos.BlockFace) {
+			switch (pos.Face) {
 				case BlockFace.XMin: pos.Intersect.X -= adjust; break;
 				case BlockFace.XMax: pos.Intersect.X += adjust; break;
 				case BlockFace.YMin: pos.Intersect.Y -= adjust; break;

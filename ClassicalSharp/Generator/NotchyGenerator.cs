@@ -294,7 +294,7 @@ namespace ClassicalSharp.Generator {
 		
 		void PlantTrees() {
 			int numPatches = width * length / 4000;
-			CurrentState = "Planting tress";
+			CurrentState = "Planting trees";
 			
 			for (int i = 0; i < numPatches; i++) {
 				CurrentProgress = (float)i / numPatches;

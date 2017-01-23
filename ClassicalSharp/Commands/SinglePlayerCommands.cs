@@ -74,7 +74,7 @@ namespace ClassicalSharp.Commands {
 			if (block >= Block.CpeCount && game.BlockInfo.Name[block] == "Invalid") {
 				game.Chat.Add("&eCuboid: &cThere is no block with id \"" + args[1] + "\"."); return false;
 			}
-			block = block;
+			this.block = block;
 			return true;
 		}
 

@@ -365,7 +365,7 @@ namespace ClassicalSharp.Network.Protocols {
 			writer.WriteInt16((short)pos.BlockPos.X);
 			writer.WriteInt16((short)pos.BlockPos.Y);
 			writer.WriteInt16((short)pos.BlockPos.Z);
-			writer.WriteUInt8((byte)pos.BlockFace);
+			writer.WriteUInt8((byte)pos.Face);
 			net.SendPacket();
 		}
 		

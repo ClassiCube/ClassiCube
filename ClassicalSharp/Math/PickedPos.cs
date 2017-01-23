@@ -20,13 +20,13 @@ namespace ClassicalSharp {
 		public Vector3I BlockPos;
 		
 		/// <summary> Integer world coordinates of the neighbouring block that is closest to the player. </summary>
-		public Vector3I TranslatedPos;
+		public Vector3I TranslatedPos { get { return BlockPos + offsets[(byte)Face]; } }
 		
 		/// <summary> Whether this instance actually has a selected block currently. </summary>
 		public bool Valid = true;
 		
 		/// <summary> Face of the picked block that is closet to the player. </summary>
-		public BlockFace BlockFace;
+		public BlockFace Face;
 		
 		/// <summary> Block ID of the picked block. </summary>
 		public byte Block;
@@ -42,33 +42,33 @@ namespace ClassicalSharp {
 			Block = block;
 			Intersect = intersect;
 			
-			Vector3I normal = Vector3I.Zero;
 			float dist = float.PositiveInfinity;
-			TestAxis(intersect.X - Min.X, ref dist, -Vector3I.UnitX, ref normal, BlockFace.XMin);
-			TestAxis(intersect.X - Max.X, ref dist, Vector3I.UnitX, ref normal, BlockFace.XMax);
-			TestAxis(intersect.Y - Min.Y, ref dist, -Vector3I.UnitY, ref normal, BlockFace.YMin);
-			TestAxis(intersect.Y - Max.Y, ref dist, Vector3I.UnitY, ref normal, BlockFace.YMax);
-			TestAxis(intersect.Z - Min.Z, ref dist, -Vector3I.UnitZ, ref normal, BlockFace.ZMin);
-			TestAxis(intersect.Z - Max.Z, ref dist, Vector3I.UnitZ, ref normal, BlockFace.ZMax);
-			TranslatedPos = BlockPos + normal;
+			TestAxis(intersect.X - Min.X, ref dist, BlockFace.XMin);
+			TestAxis(intersect.X - Max.X, ref dist, BlockFace.XMax);
+			TestAxis(intersect.Y - Min.Y, ref dist, BlockFace.YMin);
+			TestAxis(intersect.Y - Max.Y, ref dist, BlockFace.YMax);
+			TestAxis(intersect.Z - Min.Z, ref dist, BlockFace.ZMin);
+			TestAxis(intersect.Z - Max.Z, ref dist, BlockFace.ZMax);
 		}
 		
 		/// <summary> Mark this as not having a selected block. </summary>
 		public void SetAsInvalid() {
 			Valid = false;
-			BlockPos = TranslatedPos = Vector3I.MinusOne;
-			BlockFace = (BlockFace)255;
+			BlockPos = Vector3I.MinusOne;
+			Face = (BlockFace)6;
 			Block = 0;
 		}
 		
-		void TestAxis(float dAxis, ref float dist, Vector3I nAxis, 
-		              ref Vector3I normal, BlockFace fAxis) {
+		void TestAxis(float dAxis, ref float dist, BlockFace fAxis) {
 			dAxis = Math.Abs(dAxis);
-			if (dAxis >= dist) return;
-			
-			dist = dAxis;
-			normal = nAxis;
-			BlockFace = fAxis;
+			if (dAxis >= dist) return;			
+			dist = dAxis; Face = fAxis;
 		}
+		
+		static Vector3I[] offsets = new Vector3I[] {
+		    Vector3I.UnitX, -Vector3I.UnitX, Vector3I.UnitY, 
+		    -Vector3I.UnitY, Vector3I.UnitZ, -Vector3I.UnitZ,
+		    Vector3I.Zero,
+		};
 	}
 }
