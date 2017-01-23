@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.IO;
+using ClassicalSharp;
 
 namespace Launcher.Patcher {
 	
@@ -29,7 +30,7 @@ namespace Launcher.Patcher {
 		
 		unsafe void PatchDefault(byte[] data, int y) {
 			// Sadly files in modern are 24 rgb, so we can't use fastbitmap here
-			using (Bitmap bmp = new Bitmap(new MemoryStream(data))) {
+			using (Bitmap bmp = Platform.ReadBmp32Bpp(drawer, data)) {
 				for (int tile = 0; tile < bmp.Height; tile += 16) {
 					CopyTile(tile, tile, y, bmp);
 				}
@@ -37,7 +38,7 @@ namespace Launcher.Patcher {
 		}
 		
 		unsafe void PatchCycle(byte[] data, int y) {
-			using (Bitmap bmp = new Bitmap(new MemoryStream(data))) {
+			using (Bitmap bmp = Platform.ReadBmp32Bpp(drawer, data)) {
 				int dst = 0;
 				for (int tile = 0; tile < bmp.Height; tile += 16, dst += 16) {
 					CopyTile(tile, dst, y, bmp);

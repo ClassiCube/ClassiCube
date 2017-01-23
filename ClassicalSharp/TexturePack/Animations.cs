@@ -40,8 +40,8 @@ namespace ClassicalSharp.Textures {
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name == "animations.png" || e.Name == "animation.png") {
-				MemoryStream stream = new MemoryStream(e.Data);
-				SetAtlas(Platform.ReadBmp(stream));
+				animBmp = Platform.ReadBmp32Bpp(game.Drawer2D, e.Data);
+				animsBuffer = new FastBitmap(animBmp, true, true);
 			} else if (e.Name == "animations.txt" || e.Name == "animation.txt") {
 				MemoryStream stream = new MemoryStream(e.Data);
 				StreamReader reader = new StreamReader(stream);
@@ -49,14 +49,6 @@ namespace ClassicalSharp.Textures {
 			} else if (e.Name == "uselavaanim") {
 				useLavaAnim = true;
 			}
-		}
-		
-		/// <summary> Sets the atlas bitmap that animation frames are contained within. </summary>
-		void SetAtlas(Bitmap bmp) {
-			if (!Platform.Is32Bpp(bmp))
-				game.Drawer2D.ConvertTo32Bpp(ref bmp);
-			this.animBmp = bmp;
-			animsBuffer = new FastBitmap(bmp, true, true);
 		}
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>

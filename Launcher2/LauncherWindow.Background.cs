@@ -47,25 +47,17 @@ namespace Launcher {
 		}
 		
 		void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
-			MemoryStream stream = new MemoryStream(data);
-			
 			if (filename == "default.png") {
 				if (fontPng) return;
 				
-				Bitmap bmp = new Bitmap(stream);
-				if (!Platform.Is32Bpp(bmp))
-					Drawer.ConvertTo32Bpp(ref bmp);
-				
+				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer, data);
 				Drawer.SetFontBitmap(bmp);
 				useBitmappedFont = !Options.GetBool(OptionsKey.ArialChatFont, false);
 				fontPng = true;
 			} else if (filename == "terrain.png") {
 				if (terrainPng) return;
 				
-				Bitmap bmp = new Bitmap(stream);
-				if (!Platform.Is32Bpp(bmp))
-					Drawer.ConvertTo32Bpp(ref bmp);
-				
+				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer, data);
 				MakeClassicTextures(bmp);
 				bmp.Dispose();
 				terrainPng = true;
@@ -80,7 +72,7 @@ namespace Launcher {
 		void MakeClassicTextures(Bitmap bmp) {
 			int elemSize = bmp.Width / 16;
 			Size size = new Size(tileSize, tileSize);
-			terrainBmp = new Bitmap(tileSize * 2, tileSize);
+			terrainBmp = Platform.CreateBmp(tileSize * 2, tileSize);
 			terrainPixels = new FastBitmap(terrainBmp, true, false);
 			
 			// Precompute the scaled background

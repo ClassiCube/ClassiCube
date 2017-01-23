@@ -38,6 +38,13 @@ namespace ClassicalSharp {
 			Graphics.MakeApiInfo();
 			ErrorHandler.AdditionalInfo = Graphics.ApiInfo;
 			
+			#if ANDROID
+			Drawer2D = new CanvasDrawer2D(Graphics);
+			#else
+			Drawer2D = new GdiPlusDrawer2D(Graphics);
+			#endif
+			
+			
 			Options.Load();
 			Entities = new EntityList(this);
 			AcceptedUrls.Load();
@@ -66,14 +73,8 @@ namespace ClassicalSharp {
 			BlockInfo.Init();
 			ModelCache = new ModelCache(this);
 			ModelCache.InitCache();
-			AsyncDownloader = AddComponent(new AsyncDownloader());
+			AsyncDownloader = AddComponent(new AsyncDownloader(Drawer2D));
 			Lighting = AddComponent(new BasicLighting());
-			
-			#if ANDROID
-			Drawer2D = new CanvasDrawer2D(Graphics);
-			#else
-			Drawer2D = new GdiPlusDrawer2D(Graphics);
-			#endif
 			
 			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool(OptionsKey.ArialChatFont, false);
 			Drawer2D.BlackTextShadows = Options.GetBool(OptionsKey.BlackTextShadows, false);

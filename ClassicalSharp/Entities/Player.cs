@@ -86,8 +86,6 @@ namespace ClassicalSharp.Entities {
 			
 			Bitmap bmp = (Bitmap)item.Data;
 			game.Graphics.DeleteTexture(ref TextureId);
-			if (!Platform.Is32Bpp(bmp))
-				game.Drawer2D.ConvertTo32Bpp(ref bmp);
 			uScale = 1; vScale = 1;
 			EnsurePow2(ref bmp);
 			

@@ -11,14 +11,17 @@ namespace Launcher.Patcher {
 	
 	public partial class ResourcePatcher {
 
-		public ResourcePatcher(ResourceFetcher fetcher) {
+		public ResourcePatcher(ResourceFetcher fetcher, IDrawer2D drawer) {
 			jarClassic = fetcher.jarClassic;
 			jar162 = fetcher.jar162;
 			pngTerrainPatch = fetcher.pngTerrainPatch;
 			pngGuiPatch = fetcher.pngGuiPatch;
+			this.drawer = drawer;
 		}
 		ZipReader reader;
 		ZipWriter writer;
+		IDrawer2D drawer;
+		
 		Bitmap animBitmap;
 		List<string> existing = new List<string>();
 		
@@ -40,8 +43,8 @@ namespace Launcher.Patcher {
 				ExtractClassic();
 				ExtractModern();
 				if (pngGuiPatch != null) {
-					using (Bitmap guiBitmap = new Bitmap(new MemoryStream(pngGuiPatch)))
-						writer.WriteNewImage(guiBitmap, "gui.png");
+					using (Bitmap gui = Platform.ReadBmp32Bpp(drawer, pngGuiPatch))
+						writer.WriteNewImage(gui, "gui.png");
 				}
 				writer.WriteCentralDirectoryRecords();
 			}
@@ -100,10 +103,10 @@ namespace Launcher.Patcher {
 					writer.WriteZipEntry(entry, data);
 				return;
 			} else if (!existing.Contains("terrain.png")){
-				using (Bitmap dstBitmap = new Bitmap(new MemoryStream(data)),
-				      maskBitmap = new Bitmap(new MemoryStream(pngTerrainPatch))) {
-					PatchImage(dstBitmap, maskBitmap);
-					writer.WriteNewImage(dstBitmap, "terrain.png");
+				using (Bitmap dst = Platform.ReadBmp32Bpp(drawer, data),
+				      mask = Platform.ReadBmp32Bpp(drawer, pngTerrainPatch)) {
+					PatchImage(dst, mask);
+					writer.WriteNewImage(dst, "terrain.png");
 				}
 			}
 		}
@@ -117,7 +120,7 @@ namespace Launcher.Patcher {
 			
 			using (Stream src = new MemoryStream(jar162)) {
 				// Grab animations and snow
-				animBitmap = new Bitmap(1024, 64, PixelFormat.Format32bppArgb);
+				animBitmap = Platform.CreateBmp(1024, 64);
 				reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Modern;
 				reader.ProcessZipEntry = ProcessZipEntry_Modern;
 				reader.Extract(src);

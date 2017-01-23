@@ -22,15 +22,26 @@ namespace ClassicalSharp.Network {
 		readonly object downloadedLocker = new object();
 		Dictionary<string, DownloadedItem> downloaded = new Dictionary<string, DownloadedItem>();
 		string skinServer = null;
+		readonly IDrawer2D drawer;
 		
 		public Request CurrentItem;
 		public int CurrentItemProgress = -3;
+		public IDrawer2D Drawer;	
+		public AsyncDownloader(IDrawer2D drawer) { this.drawer = drawer; }
 		
-		public AsyncDownloader() { }
-		public AsyncDownloader(string skinServer) { Init(skinServer); }
+		
 		public void Init(Game game) { Init(game.skinServer); }
+		public void Ready(Game game) { }
+		public void Reset(Game game) {
+			lock (requestLocker)
+				requests.Clear();
+			handle.Set();
+		}
 		
-		void Init(string skinServer) {
+		public void OnNewMap(Game game) { }
+		public void OnNewMapLoaded(Game game) { }
+		
+		public void Init(string skinServer) {
 			this.skinServer = skinServer;
 			WebRequest.DefaultWebProxy = null;
 			
@@ -39,15 +50,7 @@ namespace ClassicalSharp.Network {
 			worker.IsBackground = true;
 			worker.Start();
 		}
-
-		public void Ready(Game game) { }
-		public void Reset(Game game) {
-			lock(requestLocker)
-				requests.Clear();
-			handle.Set();
-		}
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
+		
 		
 		/// <summary> Asynchronously downloads a skin. If 'skinName' points to the url then the skin is
 		/// downloaded from that url, otherwise it is downloaded from the url 'defaultSkinServer'/'skinName'.png </summary>
@@ -100,7 +103,7 @@ namespace ClassicalSharp.Network {
 		
 		void AddRequest(string url, bool priority, string identifier,
 		                RequestType type, DateTime lastModified, string etag) {
-			lock(requestLocker)  {
+			lock (requestLocker) {
 				Request request = new Request(url, identifier, type, lastModified, etag);
 				if (priority) {
 					requests.Insert(0, request);
@@ -116,7 +119,7 @@ namespace ClassicalSharp.Network {
 		/// Note that this will *block** the calling thread as the method waits until the asynchronous
 		/// thread has exited the for loop. </summary>
 		public void Dispose() {
-			lock(requestLocker)  {
+			lock (requestLocker)  {
 				requests.Insert(0, null);
 			}
 			
@@ -248,7 +251,7 @@ namespace ClassicalSharp.Network {
 		object DownloadContent(Request request, HttpWebResponse response) {
 			if (request.Type == RequestType.Bitmap) {
 				MemoryStream data = DownloadBytes(response);
-				return Platform.ReadBmp(data);
+				return Platform.ReadBmp32Bpp(drawer, data);
 			} else if (request.Type == RequestType.String) {
 				MemoryStream data = DownloadBytes(response);
 				byte[] rawBuffer = data.GetBuffer();

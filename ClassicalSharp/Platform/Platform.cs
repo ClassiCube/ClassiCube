@@ -11,7 +11,17 @@ using System.Drawing.Imaging;
 namespace ClassicalSharp {
 
 	public static class Platform {
+        
+		public static Bitmap ReadBmp32Bpp(IDrawer2D drawer, byte[] data) {
+			return ReadBmp32Bpp(drawer, new MemoryStream(data));
+		}
 		
+		public static Bitmap ReadBmp32Bpp(IDrawer2D drawer, Stream src) {
+			Bitmap bmp = ReadBmp(src);
+			if (!Is32Bpp(bmp)) drawer.ConvertTo32Bpp(ref bmp);
+			return bmp;
+		}
+			
 		public static Bitmap CreateBmp(int width, int height) {
 			#if !ANDROID
 			return new Bitmap(width, height);

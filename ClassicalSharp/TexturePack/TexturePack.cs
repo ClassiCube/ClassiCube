@@ -57,10 +57,6 @@ namespace ClassicalSharp.Textures {
 				game.World.TextureUrl = item.Url;
 				game.Events.RaiseTexturePackChanged();
 				
-				if (!Platform.Is32Bpp(bmp)) {
-					Utils.LogDebug("Converting terrain atlas to 32bpp image");
-					game.Drawer2D.ConvertTo32Bpp(ref bmp);
-				}
 				if (!game.ChangeTerrainAtlas(bmp, null)) { bmp.Dispose(); return; }
 				
 				TextureCache.Add(item.Url, bmp);
@@ -71,7 +67,7 @@ namespace ClassicalSharp.Textures {
 				if (data == null) { // e.g. 404 errors
 					ExtractDefault(game);
 				} else if (url != game.World.TextureUrl) {
-					Bitmap bmp = GetBitmap(data);
+					Bitmap bmp = GetBitmap(game.Drawer2D, data);
 					if (bmp == null) { data.Dispose(); return; }
 					
 					game.World.TextureUrl = url;
@@ -110,9 +106,9 @@ namespace ClassicalSharp.Textures {
 			}
 		}
 
-		static Bitmap GetBitmap(FileStream fs) {
+		static Bitmap GetBitmap(IDrawer2D drawer, Stream src) {
 			try {
-				return Platform.ReadBmp(fs);
+				return Platform.ReadBmp32Bpp(drawer, src);
 			} catch (ArgumentException ex) {
 				ErrorHandler.LogError("Cache.GetBitmap", ex);
 				return null;

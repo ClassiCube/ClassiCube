@@ -352,9 +352,8 @@ namespace ClassicalSharp {
 		/// <summary> Reads a bitmap from the stream (converting it to 32 bits per pixel if necessary),
 		/// and updates the native texture for it. </summary>
 		public bool UpdateTexture(ref int texId, string file, byte[] data, bool setSkinType) {
-			MemoryStream stream = new MemoryStream(data);
 			int maxSize = Graphics.MaxTextureDimensions;
-			using (Bitmap bmp = Platform.ReadBmp(stream)) {
+			using (Bitmap bmp = Platform.ReadBmp32Bpp(Drawer2D, data)) {
 				if (bmp.Width > maxSize || bmp.Height > maxSize) {
 					Chat.Add("&cUnable to use " + file + " from the texture pack.");
 					Chat.Add("&c Its size is (" + bmp.Width + "," + bmp.Height
@@ -376,12 +375,7 @@ namespace ClassicalSharp {
 						throw new NotSupportedException("char.png has invalid dimensions");
 				}
 				
-				if (!Platform.Is32Bpp(bmp)) {
-					using (Bitmap bmp32 = Drawer2D.ConvertTo32Bpp(bmp))
-						texId = Graphics.CreateTexture(bmp32, true);
-				} else {
-					texId = Graphics.CreateTexture(bmp, true);
-				}
+				texId = Graphics.CreateTexture(bmp, true);
 				return true;
 			}
 		}
@@ -428,18 +422,13 @@ namespace ClassicalSharp {
 		void TextureChangedCore(object sender, TextureEventArgs e) {
 			byte[] data = e.Data;
 			if (e.Name == "terrain.png") {
-				MemoryStream stream = new MemoryStream(data);
-				Bitmap atlas = Platform.ReadBmp(stream);
+				Bitmap atlas = Platform.ReadBmp32Bpp(Drawer2D, data);
 				if (ChangeTerrainAtlas(atlas, null)) return;
 				atlas.Dispose();
 			} else if (e.Name == "cloud.png" || e.Name == "clouds.png") {
 				UpdateTexture(ref CloudsTex, e.Name, data, false);
 			} else if (e.Name == "default.png") {
-				MemoryStream stream = new MemoryStream(data);
-				Bitmap bmp = Platform.ReadBmp(stream);
-				if (!Platform.Is32Bpp(bmp))
-					Drawer2D.ConvertTo32Bpp(ref bmp);
-				
+				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer2D, data);
 				Drawer2D.SetFontBitmap(bmp);
 				Events.RaiseChatFontChanged();
 			}
