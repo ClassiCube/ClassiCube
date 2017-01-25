@@ -98,13 +98,19 @@ namespace ClassicalSharp.Model {
 			cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ); cols[3] = cols[2];
 			cols[4] = FastColour.ScalePacked(col, FastColour.ShadeX); cols[5] = cols[4];
 			
-			float yawDelta = p.HeadYawDegrees - p.YawDegrees;
+			float yawDelta = p.HeadY - p.RotY;
 			cosHead = (float)Math.Cos(yawDelta * Utils.Deg2Rad);
 			sinHead = (float)Math.Sin(yawDelta * Utils.Deg2Rad);
 
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			game.Graphics.PushMatrix();
-			Matrix4 m = Matrix4.RotateY(-p.YawRadians) * Matrix4.Scale(scale) * Matrix4.Translate(pos.X, pos.Y, pos.Z);
+			
+			Matrix4 m = 
+				Matrix4.RotateZ(-p.RotZ * Utils.Deg2Rad) * 
+				Matrix4.RotateX(-p.RotX * Utils.Deg2Rad) * 
+				Matrix4.RotateY(-p.RotY * Utils.Deg2Rad) * 
+				Matrix4.Scale(scale) * 
+				Matrix4.Translate(pos.X, pos.Y, pos.Z);
 			
 			game.Graphics.MultiplyMatrix(ref m);
 			DrawModel(p);

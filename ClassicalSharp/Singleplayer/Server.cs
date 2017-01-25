@@ -60,7 +60,7 @@ namespace ClassicalSharp.Singleplayer {
 			game.Chat.Add(text, MessageType.Normal);
 		}
 		
-		public override void SendPosition(Vector3 pos, float yaw, float pitch) {
+		public override void SendPosition(Vector3 pos, float rotY, float headX) {
 		}
 		
 		public override void SendPlayerClick(MouseButton button, bool buttonDown, byte targetId, PickedPos pos) {

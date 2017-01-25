@@ -24,6 +24,12 @@ namespace ClassicalSharp.Commands {
 				game.Chat.Add("&e/client model: &cYou didn't specify a model name.");
 			} else {
 				game.LocalPlayer.SetModel(Utils.ToLower(args[1]));
+				if (args.Length >= 4) {
+					ClassicalSharp.Entities.LocationUpdate update = ClassicalSharp.Entities.LocationUpdate.Empty();
+					if (args[2] == "x") update.RotX = float.Parse(args[3]);
+					if (args[2] == "z") update.RotZ = float.Parse(args[3]);
+					game.LocalPlayer.SetLocation(update, true);
+				}
 			}
 		}
 	}

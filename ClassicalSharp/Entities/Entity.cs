@@ -25,7 +25,7 @@ namespace ClassicalSharp.Entities {
 		public Vector3 Position;
 		public Vector3 Velocity;
 		public Vector3 OldVelocity;
-		public float HeadYawDegrees, YawDegrees, PitchDegrees;
+		public float HeadX, HeadY, RotX, RotY, RotZ;
 		
 		protected Game game;
 		protected internal bool onGround;
@@ -38,22 +38,16 @@ namespace ClassicalSharp.Entities {
 		protected DateTime lastModelChange = new DateTime(1, 1, 1);
 		
 		
-		/// <summary> Rotation of the entity's head horizontally (i.e. looking north or east) </summary>
-		public float HeadYawRadians {
-			get { return HeadYawDegrees * Utils.Deg2Rad; }
-			set { HeadYawDegrees = value * Utils.Rad2Deg; }
+		/// <summary> Rotation of the entity's head horizontally. (i.e. looking north or east) </summary>
+		public float HeadYRadians {
+			get { return HeadY * Utils.Deg2Rad; }
+			set { HeadY = value * Utils.Rad2Deg; }
 		}
 		
-		/// <summary> Rotation of the entity's body horizontally (i.e. looking north or east) </summary>
-		public float YawRadians {
-			get { return YawDegrees * Utils.Deg2Rad; }
-			set { YawDegrees = value * Utils.Rad2Deg; }
-		}
-		
-		/// <summary> Rotation of the entity vertically. (i.e. looking up or down) </summary>
-		public float PitchRadians {
-			get { return PitchDegrees * Utils.Deg2Rad; }
-			set { PitchDegrees = value * Utils.Rad2Deg; }
+		/// <summary> Rotation of the entity's head vertically. (i.e. looking up or down) </summary>
+		public float HeadXRadians {
+			get { return HeadX * Utils.Deg2Rad; }
+			set { HeadX = value * Utils.Rad2Deg; }
 		}
 		
 		/// <summary> Returns the size of the model that is used for collision detection. </summary>

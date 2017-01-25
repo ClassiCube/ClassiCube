@@ -153,7 +153,7 @@ namespace ClassicalSharp.Entities {
 			if (dist < 1) dist = 1;
 
 			float multiply = factor / dist;
-			entity.Velocity += Utils.RotateY(x * multiply, 0, z * multiply, entity.HeadYawRadians);
+			entity.Velocity += Utils.RotateY(x * multiply, 0, z * multiply, entity.HeadYRadians);
 		}
 		
 		void MoveFlying(float xMoving, float zMoving, float factor, Vector3 drag, float gravity, float yMul) {

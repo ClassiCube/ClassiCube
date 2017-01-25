@@ -14,9 +14,10 @@ namespace ClassicalSharp.Entities {
 		}
 
 		internal Vector3 lastPos, nextPos;
-		internal float lastHeadYaw, nextHeadYaw, lastPitch, nextPitch, lastYaw, nextYaw;
-		int yawStateCount;
-		float[] yawStates = new float[15];
+		internal float lastHeadY, lastHeadX, lastRotX, lastRotY, lastRotZ;
+		internal float nextHeadY, nextHeadX, nextRotX, nextRotY, nextRotZ;
+		int rotYStateCount;
+		float[] rotYStates = new float[15];
 		
 		public void SetLocation(LocationUpdate update, bool interpolate) {
 			if (update.IncludesPosition) {
@@ -29,37 +30,53 @@ namespace ClassicalSharp.Entities {
 				}
 			}
 			
-			if (update.IncludesOrientation) {
-				nextHeadYaw = update.Yaw;
-				nextPitch = update.Pitch;
-				if (!interpolate) {
-					lastHeadYaw = entity.YawDegrees = nextHeadYaw;
-					lastPitch = entity.PitchDegrees = nextPitch;
-					entity.HeadYawDegrees = entity.YawDegrees;
-					yawStateCount = 0;
-				} else {
-					for (int i = 0; i < 3; i++)
-						AddYaw(Utils.LerpAngle(lastHeadYaw, nextHeadYaw, (i + 1) / 3f));
-				}
+			nextRotX =  Next(update.RotX,  nextRotX,  ref lastRotX,  interpolate);
+			nextRotZ =  Next(update.RotZ,  nextRotZ,  ref lastRotZ,  interpolate);
+			nextHeadX = Next(update.HeadX, nextHeadX, ref lastHeadX, interpolate);
+			
+			if (float.IsNaN(update.RotY)) return;
+			nextHeadY = update.RotY;
+			
+			if (!interpolate) {
+				lastHeadY = update.RotY; entity.HeadY = update.RotY; entity.RotY = update.RotY;
+				rotYStateCount = 0;
+			} else {
+				for (int i = 0; i < 3; i++)
+					AddRotY(Utils.LerpAngle(lastHeadY, nextHeadY, (i + 1) / 3f));
 			}
-		}
+		}	
 		
 		public void AdvanceState() {
 			lastPos = entity.Position = nextPos;
-			lastHeadYaw = nextHeadYaw;
-			lastYaw = nextYaw;
-			lastPitch = nextPitch;
+			lastHeadY = nextHeadY; lastHeadX = nextHeadX;
+			lastRotX = nextRotX; lastRotY = nextRotY; lastRotZ = nextRotZ;
 			
-			if (yawStateCount > 0) {
-				nextYaw = yawStates[0];
-				RemoveOldest(yawStates, ref yawStateCount);
+			if (rotYStateCount > 0) {
+				nextRotY = rotYStates[0];
+				RemoveOldest(rotYStates, ref rotYStateCount);
 			}
 		}
 		
-		void AddYaw(float state) {
-			if (yawStateCount == yawStates.Length)
-				RemoveOldest(yawStates, ref yawStateCount);
-			yawStates[yawStateCount++] = state;
+		public void LerpAngles(float t) {
+			entity.HeadX = Utils.LerpAngle(lastHeadX, nextHeadX, t);
+			entity.HeadY = Utils.LerpAngle(lastHeadY, nextHeadY, t);
+			entity.RotX =  Utils.LerpAngle(lastRotX,  nextRotX, t);
+			entity.RotY =  Utils.LerpAngle(lastRotY,  nextRotY, t);
+			entity.RotZ =  Utils.LerpAngle(lastRotZ,  nextRotZ, t);
+		}
+		
+		
+		static float Next(float next, float cur, ref float last, bool interpolate) {
+			if (float.IsNaN(next)) return cur;
+			
+			if (!interpolate) last = next;
+			return next;
+		}
+		
+		void AddRotY(float state) {
+			if (rotYStateCount == rotYStates.Length)
+				RemoveOldest(rotYStates, ref rotYStateCount);
+			rotYStates[rotYStateCount++] = state;
 		}
 		
 		void RemoveOldest<T>(T[] array, ref int count) {

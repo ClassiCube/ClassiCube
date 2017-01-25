@@ -58,8 +58,8 @@ namespace ClassicalSharp.Network {
 			if (id != 0xFF) return;
 			LocalPlayer p = game.LocalPlayer;
 			p.Spawn = p.Position;
-			p.SpawnYaw = p.HeadYawDegrees;
-			p.SpawnPitch = p.PitchDegrees;
+			p.SpawnYaw = p.HeadY;
+			p.SpawnPitch = p.HeadX;
 		}
 		
 		internal void RemoveEntity(byte id) {

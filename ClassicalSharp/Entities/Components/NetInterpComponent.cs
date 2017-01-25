@@ -15,33 +15,33 @@ namespace ClassicalSharp.Entities {
 		
 		// Last known position and orientation sent by the server.
 		internal Vector3 serverPos;
-		internal float serverYaw, serverPitch;
+		internal float serverRotY, serverHeadX;
 		
 		public void SetLocation(LocationUpdate update, bool interpolate) {
-			Vector3 lastPos = serverPos;
-			float lastYaw = serverYaw, lastPitch = serverPitch;
+			/*Vector3 lastPos = serverPos;
+			float lastRotY = serverRotY, lastHeadX = serverHeadX;
 			if (update.IncludesPosition) {
 				serverPos = update.RelativePosition ? serverPos + update.Pos : update.Pos;
 			}
 			if (update.IncludesOrientation) {
-				serverYaw = update.Yaw; serverPitch = update.Pitch;
+				serverRotY = update.RotY; serverHeadX = update.HeadX;
 			}
 			
 			if (!interpolate) {
 				stateCount = 0;
-				newState = oldState = new State(entity.tickCount, serverPos, serverYaw, serverPitch);
-				yawStateCount = 0;
-				newYaw = oldYaw = serverYaw;
+				newState = oldState = new State(entity.tickCount, serverPos, serverRotY, serverHeadX);
+				rotYStateCount = 0;
+				newYaw = oldYaw = serverRotY;
 			} else {
 				// Smoother interpolation by also adding midpoint.
 				Vector3 midPos = Vector3.Lerp(lastPos, serverPos, 0.5f);
-				float midYaw = Utils.LerpAngle(lastYaw, serverYaw, 0.5f);
-				float midPitch = Utils.LerpAngle(lastPitch, serverPitch, 0.5f);
+				float midYaw = Utils.LerpAngle(lastRotY, serverRotY, 0.5f);
+				float midPitch = Utils.LerpAngle(lastHeadX, serverHeadX, 0.5f);
 				AddState(new State(entity.tickCount, midPos, midYaw, midPitch));
-				AddState(new State(entity.tickCount, serverPos, serverYaw, serverPitch));
+				AddState(new State(entity.tickCount, serverPos, serverRotY, serverHeadX));
 				for (int i = 0; i < 3; i++)
-					AddYaw(Utils.LerpAngle(lastYaw, serverYaw, (i + 1) / 3f));
-			}
+					AddYaw(Utils.LerpAngle(lastRotY, serverRotY, (i + 1) / 3f));
+			}*/
 		}
 		
 		public struct State {
@@ -61,7 +61,7 @@ namespace ClassicalSharp.Entities {
 		float[] yawStates = new float[15];
 		public State newState, oldState;
 		public float newYaw, oldYaw;
-		int stateCount, yawStateCount;
+		int stateCount, rotYStateCount;
 		
 		void AddState(State state) {
 			if (stateCount == states.Length)
@@ -70,9 +70,9 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void AddYaw(float state) {
-			if (yawStateCount == yawStates.Length)
-				RemoveOldest(yawStates, ref yawStateCount);
-			yawStates[yawStateCount++] = state;
+			if (rotYStateCount == yawStates.Length)
+				RemoveOldest(yawStates, ref rotYStateCount);
+			yawStates[rotYStateCount++] = state;
 		}
 		
 		public void UpdateCurrentState() {
@@ -83,9 +83,9 @@ namespace ClassicalSharp.Entities {
 				newState = states[0];
 				RemoveOldest(states, ref stateCount);
 			}
-			if (yawStateCount > 0) {
+			if (rotYStateCount > 0) {
 				newYaw = yawStates[0];
-				RemoveOldest(yawStates, ref yawStateCount);
+				RemoveOldest(yawStates, ref rotYStateCount);
 			}
 		}
 		

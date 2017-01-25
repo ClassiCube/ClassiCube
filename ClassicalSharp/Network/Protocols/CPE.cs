@@ -348,6 +348,8 @@ namespace ClassicalSharp.Network.Protocols {
 					env.SetWeatherFade(value / 128f); break;
 			}
 		}
+		
+		
 		#endregion
 		
 		#region Write
@@ -358,8 +360,8 @@ namespace ClassicalSharp.Network.Protocols {
 			writer.WriteUInt8((byte)Opcode.CpePlayerClick);
 			writer.WriteUInt8((byte)button);
 			writer.WriteUInt8(buttonDown ? (byte)0 : (byte)1);
-			writer.WriteInt16((short)Utils.DegreesToPacked(p.HeadYawDegrees, 65536));
-			writer.WriteInt16((short)Utils.DegreesToPacked(p.PitchDegrees, 65536));
+			writer.WriteInt16((short)Utils.DegreesToPacked(p.HeadY, 65536));
+			writer.WriteInt16((short)Utils.DegreesToPacked(p.HeadX, 65536));
 			
 			writer.WriteUInt8(targetId);
 			writer.WriteInt16((short)pos.BlockPos.X);

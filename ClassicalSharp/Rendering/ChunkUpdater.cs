@@ -316,13 +316,13 @@ namespace ClassicalSharp.Renderers {
 			
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 cameraPos = game.CurrentCameraPos;
-			bool samePos = cameraPos == lastCamPos && p.HeadYawDegrees == lastYaw
-				&& p.PitchDegrees == lastPitch;
+			bool samePos = cameraPos == lastCamPos && p.HeadY == lastYaw
+				&& p.HeadX == lastPitch;
 			renderer.renderCount = samePos ? UpdateChunksStill(ref chunkUpdates) :
 				UpdateChunksAndVisibility(ref chunkUpdates);
 			
 			lastCamPos = cameraPos;
-			lastYaw = p.HeadYawDegrees; lastPitch = p.PitchDegrees;
+			lastYaw = p.HeadY; lastPitch = p.HeadX;
 			if (!samePos || chunkUpdates != 0)
 				ResetUsedFlags();
 		}

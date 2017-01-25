@@ -44,10 +44,7 @@ namespace ClassicalSharp.Entities.Mobs {
 		
 		public override void RenderModel(double deltaTime, float t) {
 			Position = Vector3.Lerp(interp.lastPos, interp.nextPos, t);
-			HeadYawDegrees = Utils.LerpAngle(interp.lastHeadYaw, interp.nextHeadYaw, t);
-			YawDegrees = Utils.LerpAngle(interp.lastYaw, interp.nextYaw, t);
-			PitchDegrees = Utils.LerpAngle(interp.lastPitch, interp.nextPitch, t);
-			
+			interp.LerpAngles(t);
 			anim.GetCurrentAnimState(t);
 			Model.Render(this);
 		}

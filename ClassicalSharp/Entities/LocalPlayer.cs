@@ -120,11 +120,8 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Linearly interpolates position and rotation between the previous and next state. </summary>
 		public void SetInterpPosition(float t) {
 			if (!Hacks.WOMStyleHacks || !Hacks.Noclip)
-				Position = Vector3.Lerp(interp.lastPos, interp.nextPos, t);
-			
-			HeadYawDegrees = Utils.LerpAngle(interp.lastHeadYaw, interp.nextHeadYaw, t);
-			YawDegrees = Utils.LerpAngle(interp.lastYaw, interp.nextYaw, t);
-			PitchDegrees = Utils.LerpAngle(interp.lastPitch, interp.nextPitch, t);
+				Position = Vector3.Lerp(interp.lastPos, interp.nextPos, t);			
+			interp.LerpAngles(t);
 		}
 		
 		public void Init(Game game) {

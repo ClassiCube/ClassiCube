@@ -97,7 +97,7 @@ namespace ClassicalSharp.Model {
 			ModelSet model = skinType == SkinType.Type64x64Slim ? SetSlim :
 				(skinType == SkinType.Type64x64 ? Set64 : Set);
 			
-			DrawHeadRotate(-p.PitchRadians, 0, 0, model.Head);
+			DrawHeadRotate(-p.HeadXRadians, 0, 0, model.Head);
 			DrawPart(model.Torso);
 			
 			DrawRotate(p.anim.legXRot, 0, 0, model.LeftLeg);
@@ -119,7 +119,7 @@ namespace ClassicalSharp.Model {
 				DrawRotate(p.anim.rightXRot, 0, p.anim.rightZRot, model.RightArmLayer);
 				Rotate = RotateOrder.ZYX;
 			}
-			DrawHeadRotate(-p.PitchRadians, 0, 0, model.Hat);
+			DrawHeadRotate(-p.HeadXRadians, 0, 0, model.Hat);
 			UpdateVB();
 		}
 		

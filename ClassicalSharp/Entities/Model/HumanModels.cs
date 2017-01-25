@@ -64,12 +64,12 @@ namespace ClassicalSharp.Model {
 		}
 
 		protected override void RenderParts(Entity p) {
-			DrawHeadRotate(-p.PitchRadians, 0, 0, Head);
+			DrawHeadRotate(-p.HeadXRadians, 0, 0, Head);
 			UpdateVB();
 			
 			game.Graphics.AlphaTest = true;
 			index = 0;
-			DrawHeadRotate(-p.PitchRadians, 0, 0, Hat);
+			DrawHeadRotate(-p.HeadXRadians, 0, 0, Hat);
 			UpdateVB();
 		}
 	}

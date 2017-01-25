@@ -29,8 +29,8 @@ namespace ClassicalSharp.Entities {
 				p.Spawn = entity.Position;
 				p.Spawn.X = Utils.Floor(p.Spawn.X) + 0.5f;
 				p.Spawn.Z = Utils.Floor(p.Spawn.Z) + 0.5f;
-				p.SpawnYaw = entity.YawDegrees;
-				p.SpawnPitch = entity.PitchDegrees;				
+				p.SpawnYaw = entity.RotY;
+				p.SpawnPitch = entity.HeadX;				
 				DoRespawn();
 			} else if (key == keys[KeyBind.Fly] && Hacks.CanFly && Hacks.Enabled) {
 				Hacks.Flying = !Hacks.Flying;

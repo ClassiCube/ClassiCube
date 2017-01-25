@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 		static byte RotateOther(Game game, byte block, string name, Vector3 offset) {
 			// Fence type blocks
 			if (game.BlockInfo.FindID(name + "-UD") == -1) {
-				float yaw = game.LocalPlayer.HeadYawDegrees;
+				float yaw = game.LocalPlayer.HeadY;
 				if (yaw < 0) yaw += 360;
 				
 				if (yaw < 45 || (yaw >= 135 && yaw < 225) || yaw > 315)

@@ -122,7 +122,7 @@ namespace ClassicalSharp.Network {
 			
 			reader.RemoveProcessed();
 			if (receivedFirstPosition) {
-				SendPosition(player.Position, player.HeadYawDegrees, player.PitchDegrees);
+				SendPosition(player.Position, player.HeadY, player.HeadX);
 			}
 			CheckAsyncResources();
 			wom.Tick();

@@ -61,8 +61,8 @@ namespace ClassicalSharp {
 		}
 		
 		public override void GetPickedBlock(PickedPos pos) {
-			Vector3 dir = Utils.GetDirVector(player.HeadYawRadians,
-			                                 AdjustPitch(player.PitchDegrees));
+			Vector3 dir = Utils.GetDirVector(player.HeadYRadians,
+			                                 AdjustPitch(player.HeadX));
 			Vector3 eyePos = player.EyePosition;
 			float reach = game.LocalPlayer.ReachDistance;
 			Picking.CalculatePickedBlock(game, eyePos, dir, reach, pos);
@@ -94,14 +94,14 @@ namespace ClassicalSharp {
 		static readonly float sensiFactor = 0.0002f / 3 * Utils.Rad2Deg;
 		private void UpdateMouseRotation() {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
-			float yaw = player.interp.nextHeadYaw + delta.X * sensitivity;
-			float yAdj = game.InvertMouse ? -delta.Y * sensitivity : delta.Y * sensitivity;
-			float pitch = player.interp.nextPitch + yAdj;
-			LocationUpdate update = LocationUpdate.MakeOri(yaw, pitch);
+			float rotY =  player.interp.nextHeadY + delta.X * sensitivity;
+			float yAdj =  game.InvertMouse ? -delta.Y * sensitivity : delta.Y * sensitivity;
+			float headX = player.interp.nextHeadX + yAdj;
+			LocationUpdate update = LocationUpdate.MakeOri(rotY, headX);
 			
 			// Need to make sure we don't cross the vertical axes, because that gets weird.
-			if (update.Pitch >= 90 && update.Pitch <= 270)
-				update.Pitch = player.interp.nextPitch < 180 ? 89.9f : 270.1f;
+			if (update.HeadX >= 90 && update.HeadX <= 270)
+				update.HeadX = player.interp.nextHeadX < 180 ? 89.9f : 270.1f;
 			game.LocalPlayer.SetLocation(update, true);
 		}
 		
@@ -126,8 +126,8 @@ namespace ClassicalSharp {
 		}
 		
 		protected Vector3 GetDirVector() {
-			return Utils.GetDirVector(player.HeadYawRadians,
-			                          AdjustPitch(player.PitchDegrees));
+			return Utils.GetDirVector(player.HeadYRadians,
+			                          AdjustPitch(player.HeadX));
 		}
 	}
 	
@@ -152,8 +152,8 @@ namespace ClassicalSharp {
 		
 		public override Vector2 GetCameraOrientation() {
 			if (!forward)
-				return new Vector2(player.HeadYawRadians, player.PitchRadians);
-			return new Vector2(player.HeadYawRadians + (float)Math.PI, -player.PitchRadians);			
+				return new Vector2(player.HeadYRadians, player.HeadXRadians);
+			return new Vector2(player.HeadYRadians + (float)Math.PI, -player.HeadXRadians);			
 		}
 		
 		public override Vector3 GetCameraPos(float t) {
@@ -179,7 +179,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override Vector2 GetCameraOrientation() {
-			return new Vector2(player.HeadYawRadians, player.PitchRadians);
+			return new Vector2(player.HeadYRadians, player.HeadXRadians);
 		}
 		
 		public override Vector3 GetCameraPos(float t) {
@@ -187,7 +187,7 @@ namespace ClassicalSharp {
 			Vector3 camPos = player.EyePosition;
 			camPos.Y += bobbingVer;
 			
-			double adjYaw = player.HeadYawRadians + Math.PI / 2;
+			double adjYaw = player.HeadYRadians + Math.PI / 2;
 			camPos.X += bobbingHor * (float)Math.Sin(adjYaw);
 			camPos.Z -= bobbingHor * (float)Math.Cos(adjYaw);
 			return camPos;

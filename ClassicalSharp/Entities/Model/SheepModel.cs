@@ -80,7 +80,7 @@ namespace ClassicalSharp.Model {
 		protected override void DrawModel(Entity p) {
 			IGraphicsApi gfx = game.Graphics;
 			gfx.BindTexture(GetTexture(p.MobTextureId));
-			DrawHeadRotate(-p.PitchRadians, 0, 0, Head);
+			DrawHeadRotate(-p.HeadXRadians, 0, 0, Head);
 			
 			DrawPart(Torso);
 			DrawRotate(p.anim.legXRot, 0, 0, LeftLegFront);
@@ -92,7 +92,7 @@ namespace ClassicalSharp.Model {
 			if (Utils.CaselessEquals(p.ModelName, "sheep_nofur")) return;
 			ModelCache cache = game.ModelCache;
 			gfx.BindTexture(cache.Textures[furIndex].TexID);
-			DrawHeadRotate(-p.PitchRadians, 0, 0, FurHead);
+			DrawHeadRotate(-p.HeadXRadians, 0, 0, FurHead);
 			
 			DrawPart(FurTorso);
 			DrawRotate(p.anim.legXRot, 0, 0, FurLeftLegFront);

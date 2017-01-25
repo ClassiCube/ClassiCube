@@ -112,9 +112,9 @@ namespace ClassicalSharp {
 			return new Vector3((float)x, (float)y, (float)z);
 		}
 		
-		public static void GetHeading(Vector3 dir, out double yawRad, out double pitchRad) {
-			pitchRad = Math.Asin(-dir.Y);
-			yawRad = Math.Atan2(dir.Z, dir.X);
+		public static void GetHeading(Vector3 dir, out double yaw, out double pitch) {
+			pitch = Math.Asin(-dir.Y);
+			yaw = Math.Atan2(dir.Z, dir.X);
 		}
 		
 		public static int Floor(float value) {

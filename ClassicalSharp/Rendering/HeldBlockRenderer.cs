@@ -97,9 +97,9 @@ namespace ClassicalSharp.Renderers {
 			held.Position.Y -= game.Camera.bobbingVer;
 			held.Position.Z -= game.Camera.bobbingHor;
 			   
-			held.HeadYawDegrees = -45 + anim.angleY;
-			held.YawDegrees = -45 + anim.angleY;
-			held.PitchDegrees = 0;
+			held.HeadY = -45 + anim.angleY;
+			held.RotY = -45 + anim.angleY;
+			held.HeadX = 0;
 			held.Block = type;
 		}
 		

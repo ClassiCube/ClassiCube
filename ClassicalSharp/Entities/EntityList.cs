@@ -129,7 +129,7 @@ namespace ClassicalSharp.Entities {
 		
 		public byte GetClosetPlayer(Player src) {
 			Vector3 eyePos = src.EyePosition;
-			Vector3 dir = Utils.GetDirVector(src.HeadYawRadians, src.PitchRadians);
+			Vector3 dir = Utils.GetDirVector(src.HeadYRadians, src.HeadXRadians);
 			float closestDist = float.PositiveInfinity;
 			byte targetId = SelfID;
 			

@@ -191,9 +191,9 @@ namespace ClassicalSharp.Network.Protocols {
 			float y = reader.ReadInt8() / 32f;
 			float z = reader.ReadInt8() / 32f;
 			
-			float yaw = (float)Utils.PackedToDegrees(reader.ReadUInt8());
-			float pitch = (float)Utils.PackedToDegrees(reader.ReadUInt8());
-			LocationUpdate update = LocationUpdate.MakePosAndOri(x, y, z, yaw, pitch, true);
+			float rotY =  (float)Utils.PackedToDegrees(reader.ReadUInt8());
+			float headX = (float)Utils.PackedToDegrees(reader.ReadUInt8());
+			LocationUpdate update = LocationUpdate.MakePosAndOri(x, y, z, rotY, headX, true);
 			net.UpdateLocation(id, update, true);
 		}
 		
@@ -209,10 +209,10 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleOrientationUpdate() {
 			byte id = reader.ReadUInt8();
-			float yaw = (float)Utils.PackedToDegrees(reader.ReadUInt8());
-			float pitch = (float)Utils.PackedToDegrees(reader.ReadUInt8());
+			float rotY =  (float)Utils.PackedToDegrees(reader.ReadUInt8());
+			float headX = (float)Utils.PackedToDegrees(reader.ReadUInt8());
 			
-			LocationUpdate update = LocationUpdate.MakeOri(yaw, pitch);
+			LocationUpdate update = LocationUpdate.MakeOri(rotY, headX);
 			net.UpdateLocation(id, update, true);
 		}
 		
@@ -247,15 +247,14 @@ namespace ClassicalSharp.Network.Protocols {
 		internal void ReadAbsoluteLocation(byte id, bool interpolate) {
 			float x = reader.ReadInt16() / 32f;
 			float y = (reader.ReadInt16() - 51) / 32f; // We have to do this.
-			if (id == EntityList.SelfID) y += 22/32f;
-			
+			if (id == EntityList.SelfID) y += 22/32f;			
 			float z = reader.ReadInt16() / 32f;
-			float yaw = (float)Utils.PackedToDegrees(reader.ReadUInt8());
-			float pitch = (float)Utils.PackedToDegrees(reader.ReadUInt8());
-			if (id == 0xFF) {
-				net.receivedFirstPosition = true;
-			}
-			LocationUpdate update = LocationUpdate.MakePosAndOri(x, y, z, yaw, pitch, false);
+			
+			float rotY =  (float)Utils.PackedToDegrees(reader.ReadUInt8());
+			float headX = (float)Utils.PackedToDegrees(reader.ReadUInt8());
+			
+			if (id == EntityList.SelfID) net.receivedFirstPosition = true;
+			LocationUpdate update = LocationUpdate.MakePosAndOri(x, y, z, rotY, headX, false);
 			net.UpdateLocation(id, update, interpolate);
 		}
 		#endregion
@@ -271,7 +270,7 @@ namespace ClassicalSharp.Network.Protocols {
 			net.SendPacket();
 		}
 		
-		internal void SendPosition(Vector3 pos, float yaw, float pitch) {
+		internal void SendPosition(Vector3 pos, float rotY, float headX) {
 			byte payload = net.cpeData.sendHeldBlock ? game.Inventory.HeldBlock : (byte)0xFF;
 			writer.WriteUInt8((byte)Opcode.EntityTeleport);
 			
@@ -279,8 +278,8 @@ namespace ClassicalSharp.Network.Protocols {
 			writer.WriteInt16((short)(pos.X * 32));
 			writer.WriteInt16((short)((int)(pos.Y * 32) + 51));
 			writer.WriteInt16((short)(pos.Z * 32));
-			writer.WriteUInt8((byte)Utils.DegreesToPacked(yaw));
-			writer.WriteUInt8((byte)Utils.DegreesToPacked(pitch));
+			writer.WriteUInt8((byte)Utils.DegreesToPacked(rotY));
+			writer.WriteUInt8((byte)Utils.DegreesToPacked(headX));
 			net.SendPacket();
 		}
 		

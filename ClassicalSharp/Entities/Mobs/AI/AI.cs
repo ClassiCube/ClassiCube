@@ -25,10 +25,12 @@ namespace ClassicalSharp.Entities.Mobs {
 		}
 		
 		protected static void MoveInDirection(Entity source, Vector3 dir) {
-			double yawRad, pitchRad;
-			Utils.GetHeading(dir, out yawRad, out pitchRad);
-			float yaw = (float)(yawRad * Utils.Rad2Deg), pitch = (float)(pitchRad * Utils.Rad2Deg);
-			LocationUpdate update = LocationUpdate.MakePosAndOri(dir, yaw, pitch, true);
+			double rotYRadians, headXRadians;
+			Utils.GetHeading(dir, out rotYRadians, out headXRadians);
+			
+			float rotY =  (float)(rotYRadians * Utils.Rad2Deg);
+			float headX = (float)(headXRadians * Utils.Rad2Deg);
+			LocationUpdate update = LocationUpdate.MakePosAndOri(dir, rotY, headX, true);
 			source.SetLocation(update, false);
 		}
 	}
