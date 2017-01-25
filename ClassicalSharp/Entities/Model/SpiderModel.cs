@@ -44,7 +44,7 @@ namespace ClassicalSharp.Model {
 		const float eighthPi = (float)(Math.PI / 8);
 		protected override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
-			DrawHeadRotate(-p.HeadXRadians, 0, 0, Head);
+			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);
 			
 			DrawPart(Link);
 			DrawPart(End);			
@@ -53,14 +53,14 @@ namespace ClassicalSharp.Model {
 			float rotY = (float)(Math.Sin(p.anim.walkTime * 2) * p.anim.swing * Math.PI / 32f);
 			Rotate = RotateOrder.XZY;
 			
-			DrawRotate(rotX, quarterPi + rotY,  eighthPi + rotZ, LeftLeg);
-			DrawRotate(-rotX, eighthPi + rotY, eighthPi + rotZ, LeftLeg);
-			DrawRotate(rotX, -eighthPi - rotY, eighthPi - rotZ, LeftLeg);
-			DrawRotate(-rotX, -quarterPi - rotY, eighthPi - rotZ, LeftLeg);
-			DrawRotate(rotX, -quarterPi + rotY, -eighthPi + rotZ, RightLeg);
-			DrawRotate(-rotX, -eighthPi + rotY, -eighthPi + rotZ, RightLeg);
-			DrawRotate(rotX, eighthPi - rotY, -eighthPi - rotZ, RightLeg);
-			DrawRotate(-rotX, quarterPi - rotY, -eighthPi - rotZ, RightLeg);
+			DrawRotate(rotX, quarterPi + rotY,  eighthPi + rotZ, LeftLeg, false);
+			DrawRotate(-rotX, eighthPi + rotY, eighthPi + rotZ, LeftLeg, false);
+			DrawRotate(rotX, -eighthPi - rotY, eighthPi - rotZ, LeftLeg, false);
+			DrawRotate(-rotX, -quarterPi - rotY, eighthPi - rotZ, LeftLeg, false);
+			DrawRotate(rotX, -quarterPi + rotY, -eighthPi + rotZ, RightLeg, false);
+			DrawRotate(-rotX, -eighthPi + rotY, -eighthPi + rotZ, RightLeg, false);
+			DrawRotate(rotX, eighthPi - rotY, -eighthPi - rotZ, RightLeg, false);
+			DrawRotate(-rotX, quarterPi - rotY, -eighthPi - rotZ, RightLeg, false);
 			Rotate = RotateOrder.ZYX;
 			UpdateVB();
 		}		

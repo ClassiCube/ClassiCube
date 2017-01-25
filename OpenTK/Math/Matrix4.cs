@@ -274,9 +274,9 @@ namespace OpenTK {
 
 		public static Matrix4 Scale(float x, float y, float z) {
 			Matrix4 result;
-			result.Row0 = Vector4.UnitX * x;
-			result.Row1 = Vector4.UnitY * y;
-			result.Row2 = Vector4.UnitZ * z;
+			result.Row0 = Vector4.UnitX; result.Row0.X *= x;
+			result.Row1 = Vector4.UnitY; result.Row1.Y *= y;
+			result.Row2 = Vector4.UnitZ; result.Row2.Z *= z;
 			result.Row3 = Vector4.UnitW;
 			return result;
 		}

@@ -104,8 +104,7 @@ namespace ClassicalSharp.Entities {
 		}
 
 		public override void AdvanceState() {
-			prev = next; prevRotY = nextRotY;
-			
+			prev = next;			
 			if (stateCount > 0) {
 				next = states[0];
 				RemoveOldest(states, ref stateCount);

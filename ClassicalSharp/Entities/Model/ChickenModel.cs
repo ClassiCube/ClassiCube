@@ -57,19 +57,19 @@ namespace ClassicalSharp.Model {
 		
 		protected override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
-			DrawHeadRotate(-p.HeadXRadians, 0, 0, Head);
-			DrawHeadRotate(-p.HeadXRadians, 0, 0, Head2);
-			DrawHeadRotate(-p.HeadXRadians, 0, 0, Head3);
+			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);
+			DrawRotate(-p.HeadXRadians, 0, 0, Head2, true);
+			DrawRotate(-p.HeadXRadians, 0, 0, Head3, true);
 
 			DrawPart(Torso);
-			DrawRotate(0, 0, -Math.Abs(p.anim.armXRot), LeftWing);
-			DrawRotate(0, 0, Math.Abs(p.anim.armXRot), RightWing);
+			DrawRotate(0, 0, -Math.Abs(p.anim.armXRot), LeftWing, false);
+			DrawRotate(0, 0, Math.Abs(p.anim.armXRot), RightWing, false);
 			
 			for (int i = 0; i < cols.Length; i++) {
 				cols[i] = FastColour.ScalePacked(col, 0.7f);
 			}
-			DrawRotate(p.anim.legXRot, 0, 0, LeftLeg);
-			DrawRotate(-p.anim.legXRot, 0, 0, RightLeg);
+			DrawRotate(p.anim.legXRot, 0, 0, LeftLeg, false);
+			DrawRotate(-p.anim.legXRot, 0, 0, RightLeg, false);
 			UpdateVB();
 		}
 		

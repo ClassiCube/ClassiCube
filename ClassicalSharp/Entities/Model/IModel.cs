@@ -171,15 +171,7 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		
-		protected void DrawRotate(float angleX, float angleY, float angleZ, ModelPart part) {
-			DrawRotated(angleX, angleY, angleZ, part, false);
-		}
-		
-		protected void DrawHeadRotate(float angleX, float angleY, float angleZ, ModelPart part) {
-			DrawRotated(angleX, angleY, angleZ, part, true);
-		}
-		
-		protected void DrawRotated(float angleX, float angleY, float angleZ, ModelPart part, bool head) {
+		protected void DrawRotate(float angleX, float angleY, float angleZ, ModelPart part, bool head) {
 			float cosX = (float)Math.Cos(-angleX), sinX = (float)Math.Sin(-angleX);
 			float cosY = (float)Math.Cos(-angleY), sinY = (float)Math.Sin(-angleY);
 			float cosZ = (float)Math.Cos(-angleZ), sinZ = (float)Math.Sin(-angleZ);
@@ -195,12 +187,12 @@ namespace ClassicalSharp.Model {
 				// Rotate locally
 				if (Rotate == RotateOrder.ZYX) {
 					t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t; // Inlined RotZ
-					t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;  // Inlined RotY
+					t = cosY * v.X - sinY * v.Z; v.Z  = sinY * v.X + cosY * v.Z; v.X = t; // Inlined RotY
 					t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t; // Inlined RotX
 				} else if (Rotate == RotateOrder.XZY) {
 					t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t; // Inlined RotX
 					t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t; // Inlined RotZ
-					t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;  // Inlined RotY
+					t = cosY * v.X - sinY * v.Z; v.Z =  sinY * v.X + cosY * v.Z; v.X = t; // Inlined RotY
 				}
 				
 				// Rotate globally
