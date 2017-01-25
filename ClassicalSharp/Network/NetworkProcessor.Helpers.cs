@@ -13,8 +13,8 @@ namespace ClassicalSharp.Network {
 			classic.SendChat(text, partial);
 		}
 		
-		public override void SendPosition(Vector3 pos, float yaw, float pitch) {
-			classic.SendPosition(pos, yaw, pitch);
+		public override void SendPosition(Vector3 pos, float rotY, float headX) {
+			classic.SendPosition(pos, rotY, headX);
 		}
 		
 		public override void SendPlayerClick(MouseButton button, bool buttonDown, byte targetId, PickedPos pos) {
@@ -58,8 +58,8 @@ namespace ClassicalSharp.Network {
 			if (id != 0xFF) return;
 			LocalPlayer p = game.LocalPlayer;
 			p.Spawn = p.Position;
-			p.SpawnYaw = p.HeadY;
-			p.SpawnPitch = p.HeadX;
+			p.SpawnRotY = p.HeadY;
+			p.SpawnHeadX = p.HeadX;
 		}
 		
 		internal void RemoveEntity(byte id) {

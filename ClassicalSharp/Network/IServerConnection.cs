@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 		public abstract void SendChat(string text, bool partial);
 		
 		/// <summary> Informs the server of the client's current position and orientation. </summary>
-		public abstract void SendPosition(Vector3 pos, float yaw, float pitch);
+		public abstract void SendPosition(Vector3 pos, float rotY, float headX);
 		
 		/// <summary> Informs the server that using the given mouse button,
 		/// the client clicked on a particular block or entity. </summary>

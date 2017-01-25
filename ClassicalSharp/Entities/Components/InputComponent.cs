@@ -29,8 +29,8 @@ namespace ClassicalSharp.Entities {
 				p.Spawn = entity.Position;
 				p.Spawn.X = Utils.Floor(p.Spawn.X) + 0.5f;
 				p.Spawn.Z = Utils.Floor(p.Spawn.Z) + 0.5f;
-				p.SpawnYaw = entity.RotY;
-				p.SpawnPitch = entity.HeadX;				
+				p.SpawnRotY = entity.RotY;
+				p.SpawnHeadX = entity.HeadX;
 				DoRespawn();
 			} else if (key == keys[KeyBind.Fly] && Hacks.CanFly && Hacks.Enabled) {
 				Hacks.Flying = !Hacks.Flying;
@@ -58,7 +58,7 @@ namespace ClassicalSharp.Entities {
 				FindHighestFree(ref spawn);
 			
 			spawn.Y += 2/16f;
-			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, p.SpawnYaw, p.SpawnPitch, false);
+			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, p.SpawnRotY, p.SpawnHeadX, false);
 			entity.SetLocation(update, false);
 			entity.Velocity = Vector3.Zero;
 			

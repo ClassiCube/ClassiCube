@@ -84,7 +84,7 @@ namespace ClassicalSharp {
 			// NOTE: We need to also test against nextPos here, because otherwise
 			// we can fall through the block as collision is performed against nextPos
 			AABB localBB = AABB.Make(p.Position, p.Size);
-			localBB.Min.Y = Math.Min(p.interp.nextPos.Y, localBB.Min.Y);
+			localBB.Min.Y = Math.Min(p.interp.next.Pos.Y, localBB.Min.Y);
 			
 			if (p.Hacks.Noclip || !localBB.Intersects(blockBB)) return true;
 			if (p.Hacks.CanPushbackBlocks && p.Hacks.PushbackPlacing && p.Hacks.Enabled)
@@ -94,7 +94,7 @@ namespace ClassicalSharp {
 			if (localBB.Intersects(blockBB)) return false;
 			
 			// Push player up if they are jumping and trying to place a block underneath them.
-			Vector3 next = game.LocalPlayer.interp.nextPos;
+			Vector3 next = game.LocalPlayer.interp.next.Pos;
 			next.Y = pos.Y + game.BlockInfo.MaxBB[block].Y + Entity.Adjustment;
 			LocationUpdate update = LocationUpdate.MakePos(next, false);
 			game.LocalPlayer.SetLocation(update, false);

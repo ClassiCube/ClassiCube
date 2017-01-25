@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 		/// <summary> Calculates the picked block based on the camera's current position. </summary>
 		public virtual void GetPickedBlock(PickedPos pos) { }
 		
-		protected float AdjustPitch(float value) {
+		protected float AdjustHeadX(float value) {
 			if (value >= 90.0f && value <= 90.1f) return 90.1f * Utils.Deg2Rad;
 			if (value >= 89.9f && value <= 90.0f) return 89.9f * Utils.Deg2Rad;
 			if (value >= 270.0f && value <= 270.1f) return 270.1f * Utils.Deg2Rad;
@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 		
 		public override void GetPickedBlock(PickedPos pos) {
 			Vector3 dir = Utils.GetDirVector(player.HeadYRadians,
-			                                 AdjustPitch(player.HeadX));
+			                                 AdjustHeadX(player.HeadX));
 			Vector3 eyePos = player.EyePosition;
 			float reach = game.LocalPlayer.ReachDistance;
 			Picking.CalculatePickedBlock(game, eyePos, dir, reach, pos);
@@ -94,14 +94,14 @@ namespace ClassicalSharp {
 		static readonly float sensiFactor = 0.0002f / 3 * Utils.Rad2Deg;
 		private void UpdateMouseRotation() {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
-			float rotY =  player.interp.nextHeadY + delta.X * sensitivity;
+			float rotY =  player.interp.next.HeadY + delta.X * sensitivity;
 			float yAdj =  game.InvertMouse ? -delta.Y * sensitivity : delta.Y * sensitivity;
-			float headX = player.interp.nextHeadX + yAdj;
+			float headX = player.interp.next.HeadX + yAdj;
 			LocationUpdate update = LocationUpdate.MakeOri(rotY, headX);
 			
 			// Need to make sure we don't cross the vertical axes, because that gets weird.
 			if (update.HeadX >= 90 && update.HeadX <= 270)
-				update.HeadX = player.interp.nextHeadX < 180 ? 89.9f : 270.1f;
+				update.HeadX = player.interp.next.HeadX < 180 ? 89.9f : 270.1f;
 			game.LocalPlayer.SetLocation(update, true);
 		}
 		
@@ -127,7 +127,7 @@ namespace ClassicalSharp {
 		
 		protected Vector3 GetDirVector() {
 			return Utils.GetDirVector(player.HeadYRadians,
-			                          AdjustPitch(player.HeadX));
+			                          AdjustHeadX(player.HeadX));
 		}
 	}
 	
@@ -187,9 +187,9 @@ namespace ClassicalSharp {
 			Vector3 camPos = player.EyePosition;
 			camPos.Y += bobbingVer;
 			
-			double adjYaw = player.HeadYRadians + Math.PI / 2;
-			camPos.X += bobbingHor * (float)Math.Sin(adjYaw);
-			camPos.Z -= bobbingHor * (float)Math.Cos(adjYaw);
+			double adjHeadY = player.HeadYRadians + Math.PI / 2;
+			camPos.X += bobbingHor * (float)Math.Sin(adjHeadY);
+			camPos.Z -= bobbingHor * (float)Math.Cos(adjHeadY);
 			return camPos;
 		}
 	}

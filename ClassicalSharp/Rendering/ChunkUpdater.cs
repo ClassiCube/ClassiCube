@@ -127,8 +127,8 @@ namespace ClassicalSharp.Renderers {
 		
 		void ViewDistanceChanged(object sender, EventArgs e) {
 			lastCamPos = Utils.MaxPos();
-			lastYaw = float.MaxValue;
-			lastPitch = float.MaxValue;
+			lastRotY = float.MaxValue;
+			lastHeadX = float.MaxValue;
 		}
 		
 		internal void ResetUsedFlags() {
@@ -168,8 +168,8 @@ namespace ClassicalSharp.Renderers {
 			CreateChunkCache();
 			builder.OnNewMapLoaded();
 			lastCamPos = Utils.MaxPos();
-			lastYaw = float.MaxValue;
-			lastPitch = float.MaxValue;
+			lastRotY = float.MaxValue;
+			lastHeadX = float.MaxValue;
 		}
 		
 		void CreateChunkCache() {
@@ -316,18 +316,18 @@ namespace ClassicalSharp.Renderers {
 			
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 cameraPos = game.CurrentCameraPos;
-			bool samePos = cameraPos == lastCamPos && p.HeadY == lastYaw
-				&& p.HeadX == lastPitch;
+			bool samePos = cameraPos == lastCamPos && p.HeadY == lastRotY
+				&& p.HeadX == lastHeadX;
 			renderer.renderCount = samePos ? UpdateChunksStill(ref chunkUpdates) :
 				UpdateChunksAndVisibility(ref chunkUpdates);
 			
 			lastCamPos = cameraPos;
-			lastYaw = p.HeadY; lastPitch = p.HeadX;
+			lastRotY = p.HeadY; lastHeadX = p.HeadX;
 			if (!samePos || chunkUpdates != 0)
 				ResetUsedFlags();
 		}
 		Vector3 lastCamPos;
-		float lastYaw, lastPitch;
+		float lastRotY, lastHeadX;
 		
 		int UpdateChunksAndVisibility(ref int chunkUpdates) {
 			ChunkInfo[] chunks = renderer.chunks, render = renderer.renderChunks;

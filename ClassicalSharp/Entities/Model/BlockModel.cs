@@ -86,11 +86,11 @@ namespace ClassicalSharp.Model {
 				col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
 				
 				// Adjust pitch so angle when looking straight down is 0.
-				float adjPitch = realP.HeadX - 90;
-				if (adjPitch < 0) adjPitch += 360;
+				float adjHeadX = realP.HeadX - 90;
+				if (adjHeadX < 0) adjHeadX += 360;
 				
 				// Adjust colour so held block is brighter when looking straght up
-				float t = Math.Abs(adjPitch - 180) / 180;
+				float t = Math.Abs(adjHeadX - 180) / 180;
 				float colScale = Utils.Lerp(0.9f, 0.7f, t);
 				col = FastColour.ScalePacked(col, colScale);
 				block = ((FakePlayer)p).Block;

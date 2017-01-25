@@ -73,7 +73,7 @@ namespace ClassicalSharp.Gui.Screens {
 						game.Server.RetrieveTexturePack(game.World.TextureUrl);
 					
 					LocalPlayer p = game.LocalPlayer;
-					LocationUpdate update = LocationUpdate.MakePosAndOri(p.Spawn, p.SpawnYaw, p.SpawnPitch, false);
+					LocationUpdate update = LocationUpdate.MakePosAndOri(p.Spawn, p.SpawnRotY, p.SpawnHeadX, false);
 					p.SetLocation(update, false);
 				}
 			} catch (Exception ex) {

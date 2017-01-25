@@ -34,8 +34,8 @@ namespace ClassicalSharp.Entities.Mobs {
 			bool wasOnGround = onGround;
 			physics.UpdateVelocityState(xMoving, zMoving);
 			physics.PhysicsTick(xMoving, zMoving);			
-			interp.nextPos = Position; Position = interp.lastPos;
-			anim.UpdateAnimState(interp.lastPos, interp.nextPos, delta);			
+			interp.next.Pos = Position; Position = interp.prev.Pos;
+			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);			
 		}
 		
 		public override void SetLocation(LocationUpdate update, bool interpolate) {
@@ -43,7 +43,7 @@ namespace ClassicalSharp.Entities.Mobs {
 		}
 		
 		public override void RenderModel(double deltaTime, float t) {
-			Position = Vector3.Lerp(interp.lastPos, interp.nextPos, t);
+			Position = Vector3.Lerp(interp.prev.Pos, interp.next.Pos, t);
 			interp.LerpAngles(t);
 			anim.GetCurrentAnimState(t);
 			Model.Render(this);

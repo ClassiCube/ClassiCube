@@ -27,8 +27,8 @@ namespace ClassicalSharp.Map {
 			p.Spawn.X = r.ReadInt32() / 32f;
 			p.Spawn.Y = r.ReadInt32() / 32f;
 			p.Spawn.Z = r.ReadInt32() / 32f;
-			p.SpawnYaw = (float)Utils.PackedToDegrees(r.ReadByte());
-			p.SpawnPitch = (float)Utils.PackedToDegrees(r.ReadByte());
+			p.SpawnRotY = (float)Utils.PackedToDegrees(r.ReadByte());
+			p.SpawnHeadX = (float)Utils.PackedToDegrees(r.ReadByte());
 
 			r.ReadUInt32(); // date modified
 			r.ReadUInt32(); // date created

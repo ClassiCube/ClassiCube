@@ -150,6 +150,7 @@
     <Compile Include="Blocks\BlockInfo.Atlas.cs" />
     <Compile Include="Blocks\DefaultSet.cs" />
     <Compile Include="Commands\SinglePlayerCommands.cs" />
+    <Compile Include="Entities\Components\IInterpComponent.cs" />
     <Compile Include="Entities\Components\LocalInterpComponent.cs" />
     <Compile Include="Entities\Mobs\AI\AI.cs" />
     <Compile Include="Entities\Mobs\AI\FleeAI.cs" />

@@ -31,8 +31,8 @@ namespace ClassicalSharp.Map {
 				p.Spawn.X = r.ReadUInt16();
 				p.Spawn.Z = r.ReadUInt16();
 				p.Spawn.Y = r.ReadUInt16();
-				p.SpawnYaw = (float)Utils.PackedToDegrees(r.ReadByte());
-				p.SpawnPitch = (float)Utils.PackedToDegrees(r.ReadByte());
+				p.SpawnRotY = (float)Utils.PackedToDegrees(r.ReadByte());
+				p.SpawnHeadX = (float)Utils.PackedToDegrees(r.ReadByte());
 				
 				if (header == Version)
 					r.ReadUInt16(); // pervisit and perbuild perms

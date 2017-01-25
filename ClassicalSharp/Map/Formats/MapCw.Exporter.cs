@@ -67,11 +67,11 @@ namespace ClassicalSharp.Map {
 			
 			nbt.Write(NbtTagType.Int8);
 			nbt.Write("H");
-			nbt.WriteUInt8((byte)Utils.DegreesToPacked(p.SpawnYaw));
+			nbt.WriteUInt8((byte)Utils.DegreesToPacked(p.SpawnRotY));
 			
 			nbt.Write(NbtTagType.Int8);
 			nbt.Write("P");
-			nbt.WriteUInt8((byte)Utils.DegreesToPacked(p.SpawnPitch));
+			nbt.WriteUInt8((byte)Utils.DegreesToPacked(p.SpawnHeadX));
 			
 			nbt.Write(NbtTagType.End);
 		}
