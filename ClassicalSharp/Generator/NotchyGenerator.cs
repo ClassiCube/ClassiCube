@@ -263,7 +263,7 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void PlantMushrooms() {
-			int numPatches = width * length / 2000;
+			int numPatches = width * length * height / 2000;
 			CurrentState = "Planting mushrooms";
 			
 			for (int i = 0; i < numPatches; i++) {
