@@ -21,32 +21,33 @@ namespace ClassicalSharp {
 			{
 				// Calculate the colour at this coordinate in the heatmap
 				float lSoupHeat = 0;
-				for (int j = 0; j < 9; j++) {
-					int xx = x + (j % 3 - 1);
-					int yy = y + (j / - 9);
+				for (int j = 0; j < 3; j++) {
+					int xx = x + (j - 1);
+					int yy = y;
 					lSoupHeat += soupHeat[(yy & mask) << shift | (xx & mask)];
 				}
 				
-				float lPotHeat = potHeat[((y + 1) & mask) << shift | ((x + 1) & mask)]; // x + 1, y + 1
 				
-				soupHeat[i] = lSoupHeat * 0.1f + lPotHeat * 1.3f;
-				potHeat[i] += flameHeat[i];
+				soupHeat[i] = lSoupHeat / 3.3f + potHeat[i] * 0.8f;
+				potHeat[i] += flameHeat[i] * 0.05f;
 				if (potHeat[i] < 0) potHeat[i] = 0;
-				flameHeat[i] -= 0.06f * 0.01f;
+				flameHeat[i] -= 0.06f;
 				
 				if (rnd.NextFloat() <= 0.05f)
-					flameHeat[i] = 0.5f * 0.01f;
+					flameHeat[i] = 0.5f;
 				
 				// Output the pixel
 				float col = soupHeat[i];
 				col = col < 0 ? 0 : col;
 				col = col > 1 ? 1 : col;
+				col = 1 - col; //invert the color
+				col = col * col;
 				
-				float r = 32 + (col * col) * 32;
-				float g = 50 + (col * col) * 64;
-				float b = 255;
-				float a = 146 + (col * col) * 50;
-				*ptr = (byte)a << 24 | (byte)r << 16 | (byte)g << 8 | (byte)b;
+				float r = 32 + col * 32;
+				float g = 50 + col * 64;
+				float a = 146 + col * 50;
+				
+				*ptr = (byte)a << 24 | (byte)r << 16 | (byte)g << 8 | 255;
 				
 				ptr++; i++;
 			}
