@@ -26,12 +26,12 @@ namespace ClassicalSharp {
 					int yy = y;
 					lSoupHeat += soupHeat[(yy & mask) << shift | (xx & mask)];
 				}
-				
+								
 				
 				soupHeat[i] = lSoupHeat / 3.3f + potHeat[i] * 0.8f;
 				potHeat[i] += flameHeat[i] * 0.05f;
 				if (potHeat[i] < 0) potHeat[i] = 0;
-				flameHeat[i] -= 0.06f;
+				flameHeat[i] -= 0.1f;
 				
 				if (rnd.NextFloat() <= 0.05f)
 					flameHeat[i] = 0.5f;
@@ -40,7 +40,7 @@ namespace ClassicalSharp {
 				float col = soupHeat[i];
 				col = col < 0 ? 0 : col;
 				col = col > 1 ? 1 : col;
-				col = 1 - col; //invert the color
+				//col = 1 - col; //invert the color
 				col = col * col;
 				
 				float r = 32 + col * 32;
