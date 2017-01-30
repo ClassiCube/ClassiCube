@@ -19,7 +19,7 @@ namespace ClassicalSharp.Textures {
 		Bitmap animBmp;
 		FastBitmap animsBuffer;
 		List<AnimationData> animations = new List<AnimationData>();
-		bool validated = false, useLavaAnim = false;
+		bool validated = false, useLavaAnim = false, useWaterAnim = false;
 		
 		public void Init(Game game) {
 			this.game = game;
@@ -36,6 +36,7 @@ namespace ClassicalSharp.Textures {
 		void TexturePackChanged(object sender, EventArgs e) {
 			Clear();
 			useLavaAnim = IsDefaultZip();
+			useWaterAnim = IsDefaultZip();
 		}
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
@@ -49,6 +50,9 @@ namespace ClassicalSharp.Textures {
 			} else if (e.Name == "uselavaanim") {
 				useLavaAnim = true;
 			}
+			else if (e.Name == "usewateranim") {
+				useWaterAnim = true;
+			}
 		}
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
@@ -56,6 +60,11 @@ namespace ClassicalSharp.Textures {
 			if (useLavaAnim) {
 				int size = Math.Min(game.TerrainAtlas.elementSize, 64);
 				DrawAnimation(null, 30, size);
+			}
+			
+			if (useWaterAnim) {
+				int size = Math.Min(game.TerrainAtlas.elementSize, 64);
+				DrawAnimation(null, 14, size);
 			}
 			
 			if (animations.Count == 0) return;			
@@ -122,6 +131,7 @@ namespace ClassicalSharp.Textures {
 		
 		FastBitmap animPart = new FastBitmap();
 		LavaAnimation lavaAnim = new LavaAnimation();
+		WaterAnimation waterAnim = new WaterAnimation();
 		unsafe void ApplyAnimation(AnimationData data) {
 			data.Tick--;
 			if (data.Tick >= 0) return;
@@ -131,6 +141,7 @@ namespace ClassicalSharp.Textures {
 			
 			int texId = (data.TileY << 4) | data.TileX;
 			if (texId == 30 && useLavaAnim) return;
+			if (texId == 14 && useWaterAnim) return;
 			DrawAnimation(data, texId, data.FrameSize);
 		}
 		
@@ -142,7 +153,11 @@ namespace ClassicalSharp.Textures {
 			animPart.SetData(size, size, size * 4, (IntPtr)temp, false);
 			
 			if (data == null) {
-				lavaAnim.Tick((int*)temp, size);
+				if (texId == 30) { 
+					lavaAnim.Tick((int*)temp, size);
+				} else if (texId == 14) {
+					waterAnim.Tick((int*)temp, size);
+				}
 			} else {
 				FastBitmap.MovePortion(data.FrameX + data.State * size, 
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size);
