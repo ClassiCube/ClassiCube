@@ -1,9 +1,7 @@
 // Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 // Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
 using System;
-using System.Security.Cryptography;
 using ClassicalSharp.Generator;
-using ClassicalSharp;
 
 namespace ClassicalSharp {
 	public unsafe class WaterAnimation	{
@@ -23,10 +21,8 @@ namespace ClassicalSharp {
 				float lSoupHeat = 0;
 				for (int j = 0; j < 3; j++) {
 					int xx = x + (j - 1);
-					int yy = y;
-					lSoupHeat += soupHeat[(yy & mask) << shift | (xx & mask)];
-				}
-								
+					lSoupHeat += soupHeat[y << shift | (xx & mask)];
+				}								
 				
 				soupHeat[i] = lSoupHeat / 3.3f + potHeat[i] * 0.8f;
 				potHeat[i] += flameHeat[i] * 0.05f;

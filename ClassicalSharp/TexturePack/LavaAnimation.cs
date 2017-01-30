@@ -2,9 +2,7 @@
 // Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
 // mirroed at https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-lava-animation-algorithm.
 using System;
-using System.Security.Cryptography;
 using ClassicalSharp.Generator;
-using ClassicalSharp;
 
 namespace ClassicalSharp {
 	public unsafe class LavaAnimation {
@@ -30,10 +28,11 @@ namespace ClassicalSharp {
 					lSoupHeat += soupHeat[(yy & mask) << shift | (xx & mask)];
 				}
 				
-				float lPotHeat = potHeat[i]                                 // x    , y
-					+ potHeat[y << shift | ((x + 1) & mask)] +              // x + 1, y
-					+ potHeat[((y + 1) & mask) << shift | x] +              // x    , y + 1
-					+ potHeat[((y + 1) & mask) << shift | ((x + 1) & mask)];// x + 1, y + 1
+				float lPotHeat = 
+					potHeat[i] +                                          // x    , y
+					potHeat[y << shift | ((x + 1) & mask)] +              // x + 1, y
+					potHeat[((y + 1) & mask) << shift | x] +              // x    , y + 1
+					potHeat[((y + 1) & mask) << shift | ((x + 1) & mask)];// x + 1, y + 1
 				
 				soupHeat[i] = lSoupHeat * 0.1f + lPotHeat * 0.2f;
 				potHeat[i] += flameHeat[i];

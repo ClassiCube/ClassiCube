@@ -36,7 +36,7 @@ namespace ClassicalSharp.Textures {
 		void TexturePackChanged(object sender, EventArgs e) {
 			Clear();
 			useLavaAnim = IsDefaultZip();
-			useWaterAnim = IsDefaultZip();
+			useWaterAnim = useLavaAnim;
 		}
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
@@ -49,8 +49,7 @@ namespace ClassicalSharp.Textures {
 				ReadAnimationsDescription(reader);
 			} else if (e.Name == "uselavaanim") {
 				useLavaAnim = true;
-			}
-			else if (e.Name == "usewateranim") {
+			} else if (e.Name == "usewateranim") {
 				useWaterAnim = true;
 			}
 		}
@@ -60,8 +59,7 @@ namespace ClassicalSharp.Textures {
 			if (useLavaAnim) {
 				int size = Math.Min(game.TerrainAtlas.elementSize, 64);
 				DrawAnimation(null, 30, size);
-			}
-			
+			}			
 			if (useWaterAnim) {
 				int size = Math.Min(game.TerrainAtlas.elementSize, 64);
 				DrawAnimation(null, 14, size);
@@ -153,7 +151,7 @@ namespace ClassicalSharp.Textures {
 			animPart.SetData(size, size, size * 4, (IntPtr)temp, false);
 			
 			if (data == null) {
-				if (texId == 30) { 
+				if (texId == 30) {
 					lavaAnim.Tick((int*)temp, size);
 				} else if (texId == 14) {
 					waterAnim.Tick((int*)temp, size);

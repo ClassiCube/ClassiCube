@@ -307,6 +307,7 @@
     <Compile Include="TexturePack\TerrainAtlas1D.cs" />
     <Compile Include="TexturePack\TerrainAtlas2D.cs" />
     <Compile Include="TexturePack\TexturePack.cs" />
+    <Compile Include="TexturePack\WaterAnimation.cs" />
     <Compile Include="TexturePack\ZipReader.cs" />
     <Compile Include="Utils\Camera.cs" />
     <Compile Include="Utils\ErrorHandler.cs" />
