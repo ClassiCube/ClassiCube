@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 // Based off the incredible work from https://dl.dropboxusercontent.com/u/12694594/lava.txt
+// mirroed at https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-lava-animation-algorithm.
 using System;
 using System.Security.Cryptography;
 using ClassicalSharp.Generator;
