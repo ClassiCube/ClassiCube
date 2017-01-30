@@ -40,7 +40,6 @@ namespace ClassicalSharp {
 				float col = soupHeat[i];
 				col = col < 0 ? 0 : col;
 				col = col > 1 ? 1 : col;
-				//col = 1 - col; //invert the color
 				col = col * col;
 				
 				float r = 32 + col * 32;
