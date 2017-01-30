@@ -157,7 +157,6 @@ namespace ClassicalSharp.Textures {
 					lavaAnim.Tick((int*)temp, size);
 				} else if (texId == 14) {
 					waterAnim.Tick((int*)temp, size);
-					waterAnim.Tick((int*)temp, size); //call the function twice for proper speed.
 				}
 			} else {
 				FastBitmap.MovePortion(data.FrameX + data.State * size, 
