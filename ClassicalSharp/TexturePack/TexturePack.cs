@@ -99,15 +99,16 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		internal static void ExtractCachedTexturePack(Game game, string url) {
-			FileStream data = TextureCache.GetStream(url);
-			if (data == null) { // e.g. 404 errors
-				if (game.World.TextureUrl != null) ExtractDefault(game);
-			} else if (url != game.World.TextureUrl) {
-				game.World.TextureUrl = url;
-				TexturePack extractor = new TexturePack();
-				extractor.Extract(data, game);
+			using (Stream data = TextureCache.GetStream(url)) {
+				if (data == null) { // e.g. 404 errors
+					if (game.World.TextureUrl != null) ExtractDefault(game);
+				} else if (url != game.World.TextureUrl) {
+					game.World.TextureUrl = url;
+					TexturePack extractor = new TexturePack();
+					extractor.Extract(data, game);
+				}
 			}
-		}		
+		}
 		
 
 		static Bitmap GetBitmap(IDrawer2D drawer, Stream src) {
