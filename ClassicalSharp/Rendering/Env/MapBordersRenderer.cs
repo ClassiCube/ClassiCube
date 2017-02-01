@@ -207,20 +207,12 @@ namespace ClassicalSharp.Renderers {
 
 		float HorOffset(byte block) {
 			BlockInfo info = game.BlockInfo;
-			if (info.IsLiquid(block)) return -0.1f/16;
-			
-			if (info.Draw[block] == DrawType.Translucent 
-			   && info.Collide[block] != CollideType.Solid) return 0.1f/16;
-			return 0;
+			return info.RenderMinBB[block].X - info.RenderMinBB[block].X;
 		}
 		
 		float YOffset(byte block) {
 			BlockInfo info = game.BlockInfo;
-			if (info.IsLiquid(block)) return -1.5f/16;
-			
-			if (info.Draw[block] == DrawType.Translucent 
-			   && info.Collide[block] != CollideType.Solid) return -0.1f/16;
-			return 0;
+			return info.RenderMinBB[block].Y - info.RenderMinBB[block].Y;
 		}
 		
 		void DrawX(int x, int z1, int z2, int y1, int y2, int axisSize,

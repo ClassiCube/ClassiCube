@@ -167,6 +167,7 @@ namespace ClassicalSharp.Map {
 			info.MinBB[id] = new Vector3(data[0] / 16f, data[1] / 16f, data[2] / 16f);
 			info.MaxBB[id] = new Vector3(data[3] / 16f, data[4] / 16f, data[5] / 16f);
 			
+			info.CalcRenderBounds(id);
 			info.UpdateCulling(id);
 			info.LightOffset[id] = info.CalcLightOffset(id);
 			game.Events.RaiseBlockDefinitionChanged();

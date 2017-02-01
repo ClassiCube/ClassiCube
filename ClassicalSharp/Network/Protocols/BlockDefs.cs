@@ -107,6 +107,7 @@ namespace ClassicalSharp.Network.Protocols {
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
 			info.Tinted[id] = info.FogColour[id] != FastColour.Black && info.Name[id].IndexOf('#') >= 0;
 			
+			info.CalcRenderBounds(id);
 			info.UpdateCulling(id);
 			game.Events.RaiseBlockDefinitionChanged();
 			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));

@@ -123,6 +123,8 @@ namespace ClassicalSharp {
 				MaxBB[id] = Vector3.One;
 				MaxBB[id].Y = DefaultSet.Height(id);
 			}
+			
+			CalcRenderBounds(id);
 			LightOffset[id] = CalcLightOffset(id);
 			
 			if (id >= Block.CpeCount) {
