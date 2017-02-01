@@ -207,12 +207,12 @@ namespace ClassicalSharp.Renderers {
 
 		float HorOffset(byte block) {
 			BlockInfo info = game.BlockInfo;
-			return info.RenderMinBB[block].X - info.RenderMinBB[block].X;
+			return info.RenderMinBB[block].X - info.MinBB[block].X;
 		}
 		
 		float YOffset(byte block) {
 			BlockInfo info = game.BlockInfo;
-			return info.RenderMinBB[block].Y - info.RenderMinBB[block].Y;
+			return info.RenderMinBB[block].Y - info.MinBB[block].Y;
 		}
 		
 		void DrawX(int x, int z1, int z2, int y1, int y2, int axisSize,
