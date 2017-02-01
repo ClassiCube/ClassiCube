@@ -47,11 +47,9 @@ namespace ClassicalSharp.Network {
 			} else {
 				game.LocalPlayer.DisplayName = displayName;
 				game.LocalPlayer.SkinName = skinName;
+				game.LocalPlayer.fetchedSkin = false;
 				game.LocalPlayer.UpdateName();
 			}
-			
-			string identifier = ((Player)game.Entities[id]).SkinIdentifier;
-			game.AsyncDownloader.DownloadSkin(identifier, skinName);
 			if (!readPosition) return;
 			
 			classic.ReadAbsoluteLocation(id, false);

@@ -23,6 +23,7 @@ namespace ClassicalSharp.Model {
 		public BlockModel(Game game) : base(game) {
 			cache = game.ModelCache;
 			Bobbing = false;
+			UsesSkin = false;
 		}
 		
 		public override void CreateParts() { }

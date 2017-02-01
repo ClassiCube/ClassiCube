@@ -27,6 +27,8 @@ namespace ClassicalSharp.Model {
 		/// the whole model will be moved slightly down. </remarks>
 		public bool Bobbing = true;
 		
+		public bool UsesSkin = true;
+		
 		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
 		public abstract float NameYOffset { get; }
 		

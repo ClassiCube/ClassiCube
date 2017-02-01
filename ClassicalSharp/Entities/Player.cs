@@ -16,6 +16,7 @@ namespace ClassicalSharp.Entities {
 		public string DisplayName, SkinName, SkinIdentifier;
 		internal ShadowComponent shadow;
 		protected Texture nameTex;
+		internal bool fetchedSkin;
 		
 		public Player(Game game) : base(game) {
 			StepSize = 0.5f;
@@ -79,6 +80,11 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		protected void CheckSkin() {
+			if (!fetchedSkin && Model.UsesSkin) {
+				game.AsyncDownloader.DownloadSkin(SkinIdentifier, SkinName);
+				fetchedSkin = true;
+			}
+			
 			DownloadedItem item;
 			if (!game.AsyncDownloader.TryGetItem(SkinIdentifier, out item)) return;
 			
@@ -109,10 +115,10 @@ namespace ClassicalSharp.Entities {
 			bmp.Dispose();
 		}
 		
-		void ResetSkin() {			
+		void ResetSkin() {
 			MobTextureId = -1;
 			TextureId = -1;
-			SkinType = game.DefaultPlayerSkinType;			
+			SkinType = game.DefaultPlayerSkinType;
 		}
 		
 		unsafe static void ClearHat(Bitmap bmp, SkinType skinType) {
