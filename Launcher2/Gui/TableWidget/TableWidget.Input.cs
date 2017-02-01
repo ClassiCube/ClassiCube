@@ -34,18 +34,21 @@ namespace Launcher.Gui.Widgets {
 		
 		void TrySortColumns(int mouseX) {
 			int x = X;
-			if (mouseX >= x && mouseX < x + ColumnWidths[0] - 10) {
+			if (mouseX >= x && mouseX < x + ColumnWidths[0]) {
 				SortEntries(nameComp, false); return;
 			}
-			x += ColumnWidths[0];
+			
+			x += ColumnWidths[0] + 10;
 			if (mouseX >= x && mouseX < x + ColumnWidths[1]) {
 				SortEntries(playerComp, false); return;
 			}
-			x += ColumnWidths[1];
+			
+			x += ColumnWidths[1] + 10;
 			if (mouseX >= x && mouseX < x + ColumnWidths[2]) {
 				SortEntries(uptimeComp, false); return;
 			}
-			x += ColumnWidths[2];
+			
+			x += ColumnWidths[2] + 10;
 			if (mouseX >= x) {
 				SortEntries(softwareComp, false); return;
 			}
