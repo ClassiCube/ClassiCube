@@ -39,13 +39,15 @@ namespace ClassicalSharp {
 		
 		public void LoadIcon() {
 			string launcherPath = Path.Combine(Program.AppDirectory, "Launcher2.exe");
-			if (File.Exists(launcherPath)) {
-				Icon = Icon.ExtractAssociatedIcon(launcherPath); return;
+			if (!File.Exists(launcherPath)) {
+				launcherPath = Path.Combine(Program.AppDirectory, "Launcher.exe");
 			}
+			if (!File.Exists(launcherPath)) return;
 			
-			launcherPath = Path.Combine(Program.AppDirectory, "Launcher.exe");
-			if (File.Exists(launcherPath)) {
+			try {
 				Icon = Icon.ExtractAssociatedIcon(launcherPath);
+			} catch (Exception ex) {
+				ErrorHandler.LogError("DesktopWindow.LoadIcon()", ex);
 			}
 		}
 		
