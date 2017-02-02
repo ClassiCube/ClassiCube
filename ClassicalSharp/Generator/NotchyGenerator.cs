@@ -129,7 +129,7 @@ namespace ClassicalSharp.Generator {
 					int cenZ = (int)(caveZ + (rnd.Next(4) - 2) * 0.2);
 					double radius = (height - cenY) / (double)height;
 					radius = 1.2 + (radius * 3.5 + 1) * caveRadius;
-					radius = radius + Math.Sin(j * Math.PI / caveLen);
+					radius = radius + Math.Sin(j * Math.PI / caveLen); // TODO: this should be * according to the spec. doesn't seem right though.
 					FillOblateSpheroid(cenX, cenY, cenZ, (float)radius, Block.Air);
 				}
 			}
@@ -265,7 +265,7 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void PlantMushrooms() {
-			int numPatches = width * length * height / 2000;
+			int numPatches = blocks.Length / 2000;
 			CurrentState = "Planting mushrooms";
 			
 			for (int i = 0; i < numPatches; i++) {
