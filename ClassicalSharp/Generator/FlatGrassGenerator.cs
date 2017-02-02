@@ -25,6 +25,7 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		unsafe void MapSet(byte* ptr, int yStart, int yEnd, byte block) {
+			yStart = Math.Max(yStart, 0); yEnd = Math.Max(yEnd, 0);			
 			int startIndex = yStart * length * width;
 			int endIndex = (yEnd * length + (length - 1)) * width + (width - 1);
 			int count = (endIndex - startIndex) + 1, offset = 0;

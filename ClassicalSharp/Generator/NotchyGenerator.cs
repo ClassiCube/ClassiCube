@@ -166,7 +166,7 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void FloodFillWaterBorders() {
-			int waterY = waterLevel - 1;
+			int waterY = waterLevel - 1;			
 			int index1 = (waterY * length + 0) * width + 0;
 			int index2 = (waterY * length + (length - 1)) * width + 0;
 			CurrentState = "Flooding edge water";
@@ -224,7 +224,7 @@ namespace ClassicalSharp.Generator {
 					bool sand = n1.Compute(x, z) > 8;
 					bool gravel = n2.Compute(x, z) > 12;
 					int y = heightmap[hMapIndex++];
-					if (y >= height) continue;
+					if (y < 0 || y >= height) continue;
 					
 					int index = (y * length + z) * width + x;
 					byte blockAbove = y >= (height - 1) ? Block.Air : blocks[index + oneY];
@@ -254,6 +254,8 @@ namespace ClassicalSharp.Generator {
 							continue;
 						
 						int flowerY = heightmap[flowerZ * width + flowerX] + 1;
+						if (flowerY <= 0 || flowerY >= height) continue;
+						
 						int index = (flowerY * length + flowerZ) * width + flowerX;
 						if (blocks[index] == Block.Air && blocks[index - oneY] == Block.Grass)
 							blocks[index] = type;

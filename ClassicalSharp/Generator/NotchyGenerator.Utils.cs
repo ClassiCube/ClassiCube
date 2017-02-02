@@ -33,8 +33,10 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void FloodFill(int startIndex, byte block) {
+			if (startIndex < 0) return; // y below map, immediately ignore
 			FastIntStack stack = new FastIntStack(4);
-			stack.Push(startIndex);
+			stack.Push(startIndex);			
+			
 			while (stack.Size > 0) {
 				int index = stack.Pop();
 				if (blocks[index] != 0) continue;				
