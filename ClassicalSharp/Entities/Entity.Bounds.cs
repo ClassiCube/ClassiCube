@@ -10,18 +10,14 @@ namespace ClassicalSharp.Entities {
 	/// May also contain other fields and properties. </summary>
 	public abstract partial class Entity {
 		
+		AABB modelAABB;
+		
 		/// <summary> Returns the bounding box that contains the model, assuming it is not rotated. </summary>
-		public AABB PickingBounds {
-			get { UpdateModel(); AABB bb = Model.PickingBounds;
-				return bb.Scale(ModelScale).Offset(Position);
-			}
-		}
+		public AABB PickingBounds { get { return modelAABB.Offset(Position); } }
 		
 		/// <summary> Bounding box of the model that collision detection
 		/// is performed with, in world coordinates.  </summary>
-		public virtual AABB Bounds {
-			get { return AABB.Make(Position, Size); }
-		}
+		public AABB Bounds { get { return AABB.Make(Position, Size); } }
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity satisfy the given condition. </summary>

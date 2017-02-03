@@ -23,7 +23,7 @@ using System.Runtime.InteropServices;
 
 namespace SharpDX {  
 	
-    [StructLayout( LayoutKind.Sequential, Size = 4 )]
+    [StructLayout(LayoutKind.Sequential, Size = 4)]
     public struct RawBool {
         private int boolValue;
 
@@ -40,7 +40,7 @@ namespace SharpDX {
         }
     }
     
-    [StructLayout( LayoutKind.Sequential )]
+    [StructLayout(LayoutKind.Sequential)]
 	public struct LockedRectangle {
     	
     	/// <summary> Gets the number of bytes per row. </summary>
@@ -50,7 +50,7 @@ namespace SharpDX {
 		public IntPtr DataPointer;
 	}
     
-    [StructLayout( LayoutKind.Sequential )]
+    [StructLayout(LayoutKind.Sequential)]
     public struct D3DRect {
     	public int Left;
     	public int Top;

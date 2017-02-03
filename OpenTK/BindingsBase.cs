@@ -35,18 +35,18 @@ namespace OpenTK {
 	/// </summary>
 	public abstract class BindingsBase {
 
-		protected abstract IntPtr GetAddress( string funcname );
+		protected abstract IntPtr GetAddress(string funcname);
 		
-		public static bool IsInvalidAddress( IntPtr address ) {
+		public static bool IsInvalidAddress(IntPtr address) {
 			return address == IntPtr.Zero || address == new IntPtr(1) ||
 				address == new IntPtr(2) || address == new IntPtr(-1);
 		}
 
 		// Creates a System.Delegate that can be used to call a dynamically exported OpenGL function.
-		protected internal void LoadDelegate<T>( string name, out T del ) where T : class {
-			IntPtr address = GetAddress( name );
-			del = IsInvalidAddress( address ) ? null :
-				(T)(object)Marshal.GetDelegateForFunctionPointer( address, typeof( T ) );
+		protected internal void LoadDelegate<T>(string name, out T del) where T : class {
+			IntPtr address = GetAddress(name);
+			del = IsInvalidAddress(address) ? null :
+				(T)(object)Marshal.GetDelegateForFunctionPointer(address, typeof(T));
 		}
 	}
 }

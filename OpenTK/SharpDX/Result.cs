@@ -40,7 +40,7 @@ namespace SharpDX {
 		
         public int Code;
 
-        public SharpDXException( int result ) : base( Format( result ) ) {
+        public SharpDXException(int result) : base(Format(result)) {
             HResult = result;
             Code = result;
         }

@@ -73,7 +73,7 @@ namespace OpenTK {
 		/// <param name="obj">The System.Object to check against.</param>
 		/// <returns>True if the System.Object is an equal DisplayResolution; false otherwise.</returns>
 		public override bool Equals(object obj) {
-			if (obj == null || !( obj is DisplayResolution ) ) return false;
+			if (obj == null || !(obj is DisplayResolution)) return false;
 			
 			DisplayResolution res = (DisplayResolution)obj;
 			return Width == res.Width && Height == res.Height &&
