@@ -360,6 +360,7 @@ namespace ClassicalSharp {
 			int flags = 0;
 			byte block = chunk[cIndex];
 			int lightHeight = lighting.heightmap[(z * width) + x];
+			lightFlags = info.LightOffset[block];
 
 			// Use fact Light(Y.Bottom) == Light((Y - 1).Top)
 			int offset = (lightFlags >> Side.Bottom) & 1;
