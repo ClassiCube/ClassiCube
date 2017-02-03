@@ -14,8 +14,8 @@ namespace ClassicalSharp.Physics {
 		public float Length { get { return Max.Z - Min.Z; } }
 		
 		public AABB(float x1, float y1, float z1, float x2, float y2, float z2) {
-			Min = new Vector3(x1, y1, z1);
-			Max = new Vector3(x2, y2, z2);
+			Min.X = x1; Min.Y = y1; Min.Z = z1;
+			Max.X = x2; Max.Y = y2; Max.Z = z2;
 		}
 
 		public AABB(Vector3 min, Vector3 max) {

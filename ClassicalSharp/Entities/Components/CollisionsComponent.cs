@@ -44,13 +44,15 @@ namespace ClassicalSharp.Entities {
 			hitXMin = false; hitYMin = false; hitZMin = false;
 			hitXMax = false; hitYMax = false; hitZMax = false;
 			AABB blockBB = default(AABB);
+			Vector3 bPos;
 
 			for (int i = 0; i < count; i++) {
 				State state = Searcher.stateCache[i];
-				Vector3 blockPos = new Vector3(state.X >> 3, state.Y >> 3, state.Z >> 3);
+				bPos.X = state.X >> 3; bPos.Y = state.Y >> 3; bPos.Z = state.Z >> 3;
+				
 				int block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
-				blockBB.Min = blockPos + info.MinBB[block];
-				blockBB.Max = blockPos + info.MaxBB[block];
+				blockBB.Min = bPos + info.MinBB[block];
+				blockBB.Max = bPos + info.MaxBB[block];
 				if (!entityExtentBB.Intersects(blockBB)) continue;
 				
 				float tx = 0, ty = 0, tz = 0;

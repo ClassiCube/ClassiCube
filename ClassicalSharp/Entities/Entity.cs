@@ -51,9 +51,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		/// <summary> Returns the size of the model that is used for collision detection. </summary>
-		public Vector3 Size {
-			get { UpdateModel(); return Model.CollisionSize * ModelScale; }
-		}
+		public Vector3 Size;
 		
 		void UpdateModel() {
 			BlockModel model = Model as BlockModel;
@@ -109,7 +107,10 @@ namespace ClassicalSharp.Entities {
 			Model = game.ModelCache.Get(ModelName);
 			ParseScale(scale);
 			lastModelChange = DateTime.UtcNow;
-			MobTextureId = -1;		
+			MobTextureId = -1;
+			
+			UpdateModel();
+			Size = Model.CollisionSize * ModelScale;
 		}
 		
 		void ParseScale(string scale) {

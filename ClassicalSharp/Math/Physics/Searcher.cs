@@ -44,12 +44,12 @@ namespace ClassicalSharp.Physics {
 			int elements = (max.X + 1 - min.X) * (max.Y + 1 - min.Y) * (max.Z + 1 - min.Z);
 			if (elements > stateCache.Length) {
 				stateCache = new State[elements];
-			}
-			
+			}			
 			
 			AABB blockBB = default(AABB);
 			BlockInfo info = game.BlockInfo;
 			int count = 0;
+			
 			// Order loops so that we minimise cache misses
 			for (int y = min.Y; y <= max.Y; y++)
 				for (int z = min.Z; z <= max.Z; z++)
