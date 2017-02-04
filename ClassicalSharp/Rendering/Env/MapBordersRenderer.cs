@@ -43,14 +43,16 @@ namespace ClassicalSharp.Renderers {
 			byte block = game.World.Env.SidesBlock;
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			
+			gfx.SetupAlphaState(game.BlockInfo.Draw[block]);
 			gfx.Texturing = true;
-			gfx.AlphaTest = true;
+			
 			gfx.BindTexture(sideTexId);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.BindVb(sidesVb);
 			gfx.DrawIndexedVb_TrisT2fC4b(sidesVertices * 6 / 4, 0);
+			
+			gfx.RestoreAlphaState(game.BlockInfo.Draw[block]);
 			gfx.Texturing = false;
-			gfx.AlphaTest = false;
 		}
 		
 		public void RenderEdges(double delta) {
@@ -59,9 +61,8 @@ namespace ClassicalSharp.Renderers {
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			Vector3 camPos = game.CurrentCameraPos;
-			gfx.AlphaBlending = true;
+			gfx.SetupAlphaState(game.BlockInfo.Draw[block]);
 			gfx.Texturing = true;
-			gfx.AlphaTest = true;
 			
 			gfx.BindTexture(edgeTexId);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
@@ -72,9 +73,8 @@ namespace ClassicalSharp.Renderers {
 			if (camPos.Y >= yVisible)
 				gfx.DrawIndexedVb_TrisT2fC4b(edgesVertices * 6 / 4, 0);
 			
-			gfx.AlphaBlending = false;
+			gfx.RestoreAlphaState(game.BlockInfo.Draw[block]);
 			gfx.Texturing = false;
-			gfx.AlphaTest = false;
 		}
 		
 		public void Dispose() {

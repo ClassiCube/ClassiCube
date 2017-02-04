@@ -233,6 +233,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Raised when the dimensions of the game's window have changed. </summary>
 		public abstract void OnWindowResize(Game game);
+		
 				
 		internal abstract void MakeApiInfo();		
 		public string[] ApiInfo;
@@ -240,6 +241,21 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected virtual void LoadOrthoMatrix(float width, float height) {
 			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000);
 			LoadMatrix(ref matrix);
+		}
+		
+		/// <summary> Sets the appropriate alpha testing/blending states necessary to render the given block. </summary>
+		public void SetupAlphaState(byte draw) {
+			if (draw == DrawType.Translucent)      AlphaBlending = true;
+			if (draw == DrawType.Transparent)      AlphaTest = true;
+			if (draw == DrawType.TransparentThick) AlphaTest = true;
+			if (draw == DrawType.Sprite)           AlphaTest = true;
+		}
+		
+		public void RestoreAlphaState(byte draw) {
+			if (draw == DrawType.Translucent)      AlphaBlending = false;
+			if (draw == DrawType.Transparent)      AlphaTest = false;
+			if (draw == DrawType.TransparentThick) AlphaTest = false;
+			if (draw == DrawType.Sprite)           AlphaTest = false;
 		}
 	}
 }

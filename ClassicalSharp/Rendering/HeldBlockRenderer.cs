@@ -48,11 +48,9 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.LoadMatrix(ref heldBlockProj);
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);
 			SetMatrix();
-			
-			bool translucent = game.BlockInfo.Draw[type] == DrawType.Translucent;			
+					
 			game.Graphics.Texturing = true;
-			if (translucent) game.Graphics.AlphaBlending = true;
-			else game.Graphics.AlphaTest = true;
+			game.Graphics.SetupAlphaState(game.BlockInfo.Draw[type]);
 			game.Graphics.DepthTest = false;
 			
 			SetPos();		
@@ -64,8 +62,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);			
 			
 			game.Graphics.Texturing = false;
-			if (translucent) game.Graphics.AlphaBlending = false;
-			else game.Graphics.AlphaTest = false;
+			game.Graphics.RestoreAlphaState(game.BlockInfo.Draw[type]);
 			game.Graphics.DepthTest = true;
 		}
 		
