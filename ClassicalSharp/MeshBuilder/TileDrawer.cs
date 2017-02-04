@@ -112,7 +112,7 @@ namespace ClassicalSharp {
 			if (topCount != 0) DrawTopFace(topCount);
 		}
 		
-		void PreStretchTiles(int x1, int y1, int z1) {
+		protected virtual void PreStretchTiles(int x1, int y1, int z1) {
 			atlas = game.TerrainAtlas1D;
 			invVerElementSize = atlas.invElementSize;
 			elementsPerAtlas1D = atlas.elementsPerAtlas1D;
@@ -133,7 +133,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void PostStretchTiles(int x1, int y1, int z1) {
+		protected virtual void PostStretchTiles(int x1, int y1, int z1) {
 			for (int i = 0; i < normalParts.Length; i++) {
 				normalParts[i].ExpandToCapacity();
 				translucentParts[i].ExpandToCapacity();
