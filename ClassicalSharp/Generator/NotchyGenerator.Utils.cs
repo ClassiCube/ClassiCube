@@ -88,29 +88,28 @@ namespace ClassicalSharp.Generator {
 			this.seed = (seed ^ value) & mask;
 		}
 		
-		int Raw(int bits) {
-			seed = (seed * value + 0xBL) & mask;
-			return (int)((ulong)seed >> (48 - bits));
-		}
-		
-		public int Next() { return Raw(32); }
-		
 		public int Next(int min, int max) { return min + Next(max - min); }
 		
 		public int Next(int n) {
-			if ((n & -n) == n)  // i.e., n is a power of 2
-				return (int)((n * (long)Raw(31)) >> 31);
+			if ((n & -n) == n) { // i.e., n is a power of 2
+				seed = (seed * value + 0xBL) & mask;
+				long raw = (long)((ulong)seed >> (48 - 31));
+				return (int)((n * raw) >> 31);
+			}
 
 			int bits, val;
 			do {
-				bits = Raw(31);
+				seed = (seed * value + 0xBL) & mask;
+				bits = (int)((ulong)seed >> (48 - 31));
 				val = bits % n;
 			} while (bits - val + (n - 1) < 0);
 			return val;
 		}
 		
 		public float NextFloat() {
-			return Raw(24) / ((float)(1 << 24));
+			seed = (seed * value + 0xBL) & mask;
+			int raw = (int)((ulong)seed >> (48 - 24));
+			return raw / ((float)(1 << 24));
 		}
 	}
 }
