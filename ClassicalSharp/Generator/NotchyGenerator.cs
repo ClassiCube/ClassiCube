@@ -1,4 +1,4 @@
-﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 // Based on:
 // https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-map-generation-algorithm
 // Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
@@ -10,15 +10,18 @@ namespace ClassicalSharp.Generator {
 	
 	public sealed partial class NotchyGenerator : IMapGenerator {
 		
-		int width, height, length;
+		Game game; int width, height, length; bool winter;
 		int waterLevel, oneY;
 		byte[] blocks;
 		short[] heightmap;
+		bool winterMode;
 		JavaRandom rnd;
+
 		
 		public override string GeneratorName { get { return "Vanilla classic"; } }
 		
-		public override byte[] Generate(int width, int height, int length, int seed) {
+		public override byte[] Generate(Game game, int width, int height, int length, int seed, bool winter) {
+			this.game = game;
 			this.width = width;
 			this.height = height;
 			this.length = length;
@@ -26,6 +29,7 @@ namespace ClassicalSharp.Generator {
 			waterLevel = height / 2;
 			blocks = new byte[width * height * length];
 			rnd = new JavaRandom(seed);
+			winterMode = winter; // TODO: add an option when creating the world to enable this.
 			
 			CreateHeightmap();			
 			CreateStrata();
@@ -42,6 +46,9 @@ namespace ClassicalSharp.Generator {
 			PlantFlowers();
 			PlantMushrooms();
 			PlantTrees();
+			if (winterMode) {
+				FreezeWorld();
+			}
 			return blocks;
 		}
 		
@@ -389,6 +396,65 @@ namespace ClassicalSharp.Generator {
 				blocks[index] = Block.Log;
 				index += oneY;
 			}
+		}
+
+		void FreezeWorld() {
+			int index = 0;
+			int indexUp = 0;
+			int indexLand = 0;
+			CurrentState = "Freezing world";
+			for (int x = 0; x < width; x++)
+				for (int z = 0; z < length; z++)
+			{
+				int y = CalcHeightAt(x, z);
+				int yUp = y + 1;
+				if (y >= height - 1) continue;
+				
+				indexUp = (yUp * length + z) * width + x;
+				index = (y * length + z) * width + x;
+				if (blocks[index] == Block.Lava || blocks[index] == Block.StillLava) continue;
+				
+				if (blocks[index] == Block.Leaves) {
+					int yLand = CalcLandAt(x, z);
+					indexLand = (yLand * length + z) * width + x;
+					blocks[indexLand] = (blocks[indexLand] == Block.Water) ? Block.Ice : blocks[indexLand];
+					blocks[indexLand] = (blocks[indexLand] == Block.StillWater) ? Block.Ice : blocks[indexLand];
+					blocks[indexUp] = Block.Snow;
+				}
+				else if (blocks[index] == Block.Water || blocks[index] == Block.StillWater) {
+					blocks[index] = Block.Ice;
+				}else if (blocks[indexUp] == Block.Air)
+					if (blocks[index] != Block.Rose)
+						if (blocks[index] != Block.Dandelion) {
+					blocks[indexUp] = Block.Snow;
+				}
+				float xProg = (float)x * length; //for each x increment, there are length blocks finished.
+				float zProg = (float)z;
+				CurrentProgress = (xProg + zProg) / (width * length);
+			}
+			game.World.Env.SetEdgeBlock(Block.Ice); // TODO: Set the weather to snowy.
+			game.BlockInfo.BlocksLight[Block.Snow] = false;
+		}
+		
+		int CalcHeightAt(int x, int z) {
+			int index = ((height - 1) * length + z) * width + x;
+			
+			for (int y = height - 1; y >= 0; y--) {
+				if (blocks[index] != Block.Air) return y;
+				index -= oneY;
+			}
+			return -1;
+		}
+		int CalcLandAt(int x, int z) {
+			int index = ((height - 1) * length + z) * width + x;
+			int Minimum = 0;
+			Minimum = waterLevel - 20;
+			
+			for (int y = height - 1; y >= Minimum; y--) {
+				if (blocks[index] == Block.Water || blocks[index] == Block.StillWater || blocks[index] == Block.Grass || blocks[index] == Block.Dirt || blocks[index] == Block.Stone || blocks[index] == Block.Sand) return y;
+				index -= oneY;
+			}
+			return -1;
 		}
 	}
 }
