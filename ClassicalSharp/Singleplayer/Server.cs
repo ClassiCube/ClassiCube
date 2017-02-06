@@ -1,4 +1,4 @@
-﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 //#define TEST_VANILLA
 using System;
 using System.Net;
@@ -40,7 +40,7 @@ namespace ClassicalSharp.Singleplayer {
 			
 			game.Events.RaiseBlockPermissionsChanged();
 			int seed = new Random().Next();
-			GenMap(128, 64, 128, seed, new NotchyGenerator());
+			GenMap(128, 64, 128, seed, false, new NotchyGenerator());
 		}
 		
 		char lastCol = '\0';
@@ -104,12 +104,13 @@ namespace ClassicalSharp.Singleplayer {
 			GC.Collect();
 		}
 		
-		internal void GenMap(int width, int height, int length, int seed, IMapGenerator generator) {
+		internal void GenMap(int width, int height, int length, int seed, bool winter, IMapGenerator generator) {
 			game.World.Reset();
 			GC.Collect();
+			bool wintermode = winter;
 			this.generator = generator;
 			game.Gui.SetNewScreen(new LoadingMapScreen(game, "Generating level", "Generating.."));
-			generator.GenerateAsync(game, width, height, length, seed);
+			generator.GenerateAsync(game, width, height, length, seed, wintermode);
 		}		
 
 		void ResetPlayerPosition() {
