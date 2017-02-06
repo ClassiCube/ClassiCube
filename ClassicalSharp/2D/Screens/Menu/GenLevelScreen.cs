@@ -119,7 +119,7 @@ namespace ClassicalSharp.Gui.Screens {
 			} else if (width == 0 || height == 0 || length == 0) {
 				game.Chat.Add("&cOne of the map dimensions is invalid.");
 			} else {
-				server.GenMap(width, height, length, seed, gen);
+				server.GenMap(width, height, length, seed, false, gen);
 			}
 		}
 		
