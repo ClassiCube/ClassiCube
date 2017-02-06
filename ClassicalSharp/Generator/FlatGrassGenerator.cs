@@ -9,11 +9,11 @@ namespace ClassicalSharp.Generator {
 		public override string GeneratorName { get { return "Flatgrass"; } }
 		
 		int width, length;
-		public override byte[] Generate(int width, int height, int length, int seed) {
+		public override byte[] Generate(Game game, int width, int height, int length, int seed, bool winter) {
 			byte[] map = new byte[width * height * length];
 			this.width = width;
 			this.length = length;
-			
+			bool winterMode = winter; // TODO: add winterMode to FlatGrass.
 			fixed(byte* ptr = map) {
 				CurrentState = "Setting dirt blocks";
 				MapSet(ptr, 0, height / 2 - 2, Block.Dirt);
