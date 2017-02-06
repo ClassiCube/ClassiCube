@@ -47,7 +47,7 @@ namespace ClassicalSharp.Network {
 		CpeSetTextColor = 39,
 		CpeSetMapEnvUrl = 40,
 		CpeSetMapEnvProperty = 41,
-		CpeDefineModel = 42,
+		CpeSetEntityProperty = 42,
 	}
 }
 

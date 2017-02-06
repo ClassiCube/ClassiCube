@@ -29,7 +29,7 @@ namespace ClassicalSharp.Entities {
 			RelativePosition = relPos;
 		}
 		
-		static float Clamp(float degrees) {
+		public static float Clamp(float degrees) {
 			// Make sure angle is in [0, 360)
 			degrees = degrees % 360;
 			if (degrees < 0) degrees += 360;

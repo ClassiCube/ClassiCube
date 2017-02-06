@@ -28,9 +28,7 @@ namespace ClassicalSharp.Entities {
 		bool shouldRender = false;
 		public override void RenderModel(double deltaTime, float t) {
 			Position = Vector3.Lerp(interp.prev.Pos, interp.next.Pos, t);
-			HeadY = Utils.LerpAngle(interp.prev.HeadY, interp.next.HeadY, t);
-			RotY = Utils.LerpAngle(interp.prevRotY, interp.nextRotY, t);
-			HeadX = Utils.LerpAngle(interp.prev.HeadX, interp.next.HeadX, t);
+			interp.LerpAngles(t);
 			
 			anim.GetCurrentAnimState(t);
 			shouldRender = Model.ShouldRender(this, game.Culling);
