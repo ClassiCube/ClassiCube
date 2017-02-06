@@ -126,6 +126,16 @@ namespace ClassicalSharp.Renderers {
 			if (fogDensity != 0) {
 				gfx.SetFogMode(Fog.Exp);
 				gfx.SetFogDensity(fogDensity);
+			} else if (game.World.Env.ExpFog) {
+				gfx.SetFogMode(Fog.Exp);
+                // f = 1-z/end   f = e^(-dz)
+                //   solve for f = 0.01 gives:
+                // e^(-dz)=0.01 --> -dz=ln(0.01)
+                // 0.99=z/end   --> z=end*0.99
+                //   therefore
+                // d = -ln(0.01)/(end*0.99)
+                double density = -Math.Log(0.01) / (game.ViewDistance * 0.99);
+                gfx.SetFogDensity((float)density);
 			} else {
 				gfx.SetFogMode(Fog.Linear);
 				gfx.SetFogEnd(game.ViewDistance);

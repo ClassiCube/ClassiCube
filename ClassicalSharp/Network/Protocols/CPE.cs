@@ -346,6 +346,8 @@ namespace ClassicalSharp.Network.Protocols {
 				case 7:
 					Utils.Clamp(ref value, byte.MinValue, byte.MaxValue);
 					env.SetWeatherFade(value / 128f); break;
+				case 8:
+					env.SetExpFog(value != 0); break;
 			}
 		}
 		

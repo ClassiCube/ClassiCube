@@ -60,6 +60,9 @@ namespace ClassicalSharp.Map {
 		/// <summary> Maximum height of the various parts of the map sides, in world space. </summary>
 		public int SidesHeight { get { return EdgeHeight - 2; } }
 		
+		/// <summary> Whether exponential fog mode is used by default. </summary>
+		public bool ExpFog;
+		
 		Game game;
 		public WorldEnv(Game game) {
 			this.game = game;
@@ -81,6 +84,7 @@ namespace ClassicalSharp.Map {
 			FogCol = DefaultFogColour;
 			CloudsCol = DefaultCloudsColour;
 			Weather = Weather.Sunny;
+			ExpFog = false;
 		}
 		
 		void ResetLight() {
@@ -139,6 +143,19 @@ namespace ClassicalSharp.Map {
 		/// EnvVariableChanged event with variable 'EdgeLevel'. </summary>
 		public void SetEdgeLevel(int level) { Set(level, ref EdgeHeight, EnvVar.EdgeLevel); }
 		
+		/// <summary> Sets whether exponential fog is used, and raises
+		/// EnvVariableChanged event with variable 'ExpFog'. </summary>
+		public void SetExpFog(bool expFog) { Set(expFog, ref ExpFog, EnvVar.ExpFog); }
+
+		/// <summary> Sets weather, and raises
+		/// EnvVariableChanged event with variable 'Weather'. </summary>
+		public void SetWeather(Weather weather) {
+			if (weather == Weather) return;
+			Weather = weather;
+			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.Weather);
+		}
+		
+		
 		/// <summary> Sets tsky colour, and raises
 		/// EnvVariableChanged event with variable 'SkyColour'. </summary>
 		public void SetSkyColour(FastColour col) { Set(col, ref SkyCol, EnvVar.SkyColour); }
@@ -168,17 +185,9 @@ namespace ClassicalSharp.Map {
 			if (!Set(col, ref Shadowlight, EnvVar.ShadowlightColour)) return;
 			
 			FastColour.GetShaded(Shadowlight, out ShadowXSide,
-			                     out ShadowZSide, out ShadowYBottom);			
+			                     out ShadowZSide, out ShadowYBottom);
 			Shadow = Shadowlight.Pack();
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.ShadowlightColour);
-		}
-		
-		/// <summary> Sets weather, and raises
-		/// EnvVariableChanged event with variable 'Weather'. </summary>
-		public void SetWeather(Weather weather) {
-			if (weather == Weather) return;
-			Weather = weather;
-			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.Weather);
 		}
 		
 		bool Set<T>(T value, ref T target, EnvVar var) where T : IEquatable<T> {
