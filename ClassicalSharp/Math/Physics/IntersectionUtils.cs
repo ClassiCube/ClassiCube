@@ -17,10 +17,17 @@ namespace ClassicalSharp.Physics {
 			//       \ /     and ray origin and direction    *---*   with the rotated ray
 			//        *                                     /
 			//                                             /
-			Vector3 rotatedOrigin = target.Position + Utils.RotateY(origin - target.Position, -target.HeadYRadians);
-			Vector3 rotatedDir = Utils.RotateY(dir, -target.HeadYRadians);
+			origin = InverseRotate(origin - target.Position, target) + target.Position;
+			dir =    InverseRotate(dir, target);
 			AABB bb = target.PickingBounds;
-			return RayIntersectsBox(rotatedOrigin, rotatedDir, bb.Min, bb.Max, out tMin, out tMax);
+			return RayIntersectsBox(origin, dir, bb.Min, bb.Max, out tMin, out tMax);
+		}
+		
+		static Vector3 InverseRotate(Vector3 pos, Entity target) {
+			pos = Utils.RotateY(pos, -target.RotY * Utils.Deg2Rad);
+			pos = Utils.RotateZ(pos, -target.RotZ * Utils.Deg2Rad);
+			pos = Utils.RotateX(pos, -target.RotX * Utils.Deg2Rad);
+			return pos;
 		}
 		
 		//http://www.cs.utah.edu/~awilliam/box/box.pdf

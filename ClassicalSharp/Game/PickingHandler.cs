@@ -26,10 +26,10 @@ namespace ClassicalSharp {
 			Inventory inv = game.Inventory;
 			
 			if (game.Server.UsingPlayerClick && !game.Gui.ActiveScreen.HandlesAllInput) {
-				byte id = game.Entities.GetClosetPlayer(game.LocalPlayer);
-				input.ButtonStateChanged(MouseButton.Left, left, id);
-				input.ButtonStateChanged(MouseButton.Right, right, id);
-				input.ButtonStateChanged(MouseButton.Middle, middle, id);
+				input.pickingId = -1;
+				input.ButtonStateChanged(MouseButton.Left, left);
+				input.ButtonStateChanged(MouseButton.Right, right);
+				input.ButtonStateChanged(MouseButton.Middle, middle);
 			}
 			
 			int buttonsDown = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);

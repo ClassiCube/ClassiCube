@@ -54,7 +54,7 @@ namespace ClassicalSharp.Model {
 		
 		protected Vector3 pos;
 		protected float cosHead, sinHead;
-		protected float uScale, vScale, scale;
+		protected float uScale, vScale;
 		
 		/// <summary> Returns whether the model should be rendered based on the given entity's position. </summary>
 		public virtual bool ShouldRender(Entity p, FrustumCulling culling) {
@@ -93,8 +93,7 @@ namespace ClassicalSharp.Model {
 			Vector3I P = Vector3I.Floor(p.EyePosition);
 			col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
 			uScale = 1 / 64f; vScale = 1 / 32f;
-			scale = p.ModelScale;
-			
+
 			cols[0] = col;
 			cols[1] = FastColour.ScalePacked(col, FastColour.ShadeYBottom);
 			cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ); cols[3] = cols[2];
@@ -107,13 +106,7 @@ namespace ClassicalSharp.Model {
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			game.Graphics.PushMatrix();
 			
-			Matrix4 m = 
-				Matrix4.RotateZ(-p.RotZ * Utils.Deg2Rad) * 
-				Matrix4.RotateX(-p.RotX * Utils.Deg2Rad) * 
-				Matrix4.RotateY(-p.RotY * Utils.Deg2Rad) * 
-				Matrix4.Scale(scale) * 
-				Matrix4.Translate(pos.X, pos.Y, pos.Z);
-			
+			Matrix4 m = p.TransformMatrix(p.ModelScale);
 			game.Graphics.MultiplyMatrix(ref m);
 			DrawModel(p);
 			game.Graphics.PopMatrix();

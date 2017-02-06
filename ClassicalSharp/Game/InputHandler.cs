@@ -69,13 +69,24 @@ namespace ClassicalSharp {
 			picking.PickBlocks(cooldown, left, middle, right);
 		}
 		
-		internal void ButtonStateChanged(MouseButton button, bool pressed, byte targetId) {
+		// defer getting the targeted entity as it's a costly operation
+		internal int pickingId = -1;
+		internal void ButtonStateChanged(MouseButton button, bool pressed) {
 			if (buttonsDown[(int)button]) {
-				game.Server.SendPlayerClick(button, false, targetId, game.SelectedPos);
+				if (pickingId == -1) {
+					pickingId = game.Entities.GetClosetPlayer(game.LocalPlayer);
+				}
+				
+				game.Server.SendPlayerClick(button, false, (byte)pickingId, game.SelectedPos);
 				buttonsDown[(int)button] = false;
 			}
+			
 			if (pressed) {
-				game.Server.SendPlayerClick(button, true, targetId, game.SelectedPos);
+				if (pickingId == -1) {
+					pickingId = game.Entities.GetClosetPlayer(game.LocalPlayer);
+				}
+				
+				game.Server.SendPlayerClick(button, true, (byte)pickingId, game.SelectedPos);
 				buttonsDown[(int)button] = true;
 			}
 		}
@@ -85,10 +96,10 @@ namespace ClassicalSharp {
 				picking.lastClick = DateTime.UtcNow;
 			
 			if (game.Server.UsingPlayerClick) {
-				byte targetId = game.Entities.GetClosetPlayer(game.LocalPlayer);
-				ButtonStateChanged(MouseButton.Left, false, targetId);
-				ButtonStateChanged(MouseButton.Right, false, targetId);
-				ButtonStateChanged(MouseButton.Middle, false, targetId);
+				pickingId = -1;
+				ButtonStateChanged(MouseButton.Left, false);
+				ButtonStateChanged(MouseButton.Right, false);
+				ButtonStateChanged(MouseButton.Middle, false);
 			}
 		}
 		
@@ -98,8 +109,8 @@ namespace ClassicalSharp {
 		void MouseButtonUp(object sender, MouseButtonEventArgs e) {
 			if (!game.Gui.ActiveScreen.HandlesMouseUp(e.X, e.Y, e.Button)) {
 				if (game.Server.UsingPlayerClick && e.Button <= MouseButton.Middle) {
-					byte targetId = game.Entities.GetClosetPlayer(game.LocalPlayer);
-					ButtonStateChanged(e.Button, false, targetId);
+					pickingId = -1;
+					ButtonStateChanged(e.Button, false);
 				}
 			}
 		}

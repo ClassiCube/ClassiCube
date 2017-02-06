@@ -39,6 +39,7 @@ namespace ClassicalSharp {
 			return value != 0 && (value & (value - 1)) == 0;
 		}
 		
+		
 		/// <summary> Multiply a value in degrees by this to get its value in radians. </summary>
 		public const float Deg2Rad = (float)(Math.PI / 180);
 		/// <summary> Multiply a value in radians by this to get its value in degrees. </summary>
@@ -56,18 +57,29 @@ namespace ClassicalSharp {
 			return packed * 360.0 / 256.0;
 		}
 		
+		
+		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
+		public static Vector3 RotateX(Vector3 v, float angle) {
+			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
+			return new Vector3(v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z);
+		}
+		
 		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY(Vector3 v, float angle) {
-			float cosA = (float)Math.Cos(angle);
-			float sinA = (float)Math.Sin(angle);
+			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
 			return new Vector3(cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z);
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY(float x, float y, float z, float angle) {
-			float cosA = (float)Math.Cos(angle);
-			float sinA = (float)Math.Sin(angle);
+			float cosA = (float)Math.Cos(angle),  sinA = (float)Math.Sin(angle);
 			return new Vector3(cosA * x - sinA * z, y, sinA * x + cosA * z);
+		}
+		
+		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
+		public static Vector3 RotateZ(Vector3 v, float angle) {
+			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
+			return new Vector3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
@@ -84,6 +96,7 @@ namespace ClassicalSharp {
 		public static void RotateZ(ref float x, ref float y, float cosA, float sinA) {
 			float x2 = cosA * x + sinA * y; y = -sinA * x + cosA * y; x = x2;
 		}
+		
 		
 		/// <summary> Returns the square of the euclidean distance between two points. </summary>
 		public static float DistanceSquared(Vector3 p1, Vector3 p2) {
@@ -102,6 +115,7 @@ namespace ClassicalSharp {
 			int dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
 			return dx * dx + dy * dy + dz * dz;
 		}
+		
 		
 		/// <summary> Returns a normalised vector that faces in the direction
 		/// described by the given yaw and pitch. </summary>
@@ -126,6 +140,7 @@ namespace ClassicalSharp {
 		public static int CeilDiv(int a, int b) {
 			return a / b + (a % b != 0 ? 1 : 0);
 		}
+		
 		
 		/// <summary> Performs linear interpolation between two values. </summary>
 		public static float Lerp(float a, float b, float t) {
