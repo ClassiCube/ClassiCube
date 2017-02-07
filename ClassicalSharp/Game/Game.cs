@@ -112,6 +112,8 @@ namespace ClassicalSharp {
 			Graphics.BindIb(defaultIb);
 			accumulator += delta;
 			Vertices = 0;
+			
+			Camera.UpdateMouse();
 			if (!Focused && !Gui.ActiveScreen.HandlesAllInput)
 				Gui.SetNewScreen(new PauseScreen(this));
 			CheckZoomFov();

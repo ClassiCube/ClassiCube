@@ -24,11 +24,11 @@ namespace ClassicalSharp {
 		
 		/// <summary> Whether this camera is using a third person perspective. </summary>
 		/// <remarks> This causes the local player to be renderered if true. </remarks>
-		public abstract bool IsThirdPerson { get; }
-		
-		public virtual void Tick(double elapsed) { }
+		public abstract bool IsThirdPerson { get; }		
 		
 		public virtual bool DoZoom(float deltaPrecise) { return false; }
+		
+		public abstract void UpdateMouse();
 		
 		public abstract void RegrabMouse();
 		
@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 			game.LocalPlayer.SetLocation(update, true);
 		}
 		
-		public override void Tick(double elapsed) {
+		public override void UpdateMouse() {
 			if (game.Gui.ActiveScreen.HandlesAllInput) return;
 			CentreMousePosition();
 			UpdateMouseRotation();

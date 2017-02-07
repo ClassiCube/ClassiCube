@@ -218,18 +218,13 @@ namespace ClassicalSharp {
 		
 		ScheduledTask entTask;
 		void InitScheduledTasks() {
-			const double defTicks = 1.0 / 20, camTicks = 1.0 / 60;
+			const double defTicks = 1.0 / 20;
 			AddScheduledTask(30, AsyncDownloader.PurgeOldEntriesTask);
 			AddScheduledTask(defTicks, Server.Tick);
 			entTask = AddScheduledTask(defTicks, Entities.Tick);
 			
 			AddScheduledTask(defTicks, ParticleManager.Tick);
 			AddScheduledTask(defTicks, Animations.Tick);
-			AddScheduledTask(camTicks, CameraTick);
-		}
-		
-		void CameraTick(ScheduledTask task) {
-			Camera.Tick(task.Interval);
 		}
 	}
 }
