@@ -183,6 +183,7 @@ namespace OpenTK.Platform.Windows {
 		internal const int DISP_CHANGE_FAILED = -1;
 	}
 	
+	#pragma warning disable 0649
 	internal struct CreateStruct {
 		internal IntPtr lpCreateParams;
 		internal IntPtr hInstance;
@@ -204,6 +205,7 @@ namespace OpenTK.Platform.Windows {
 		public WindowStyle Old;
 		public WindowStyle New;
 	}
+	#pragma warning restore 0649
 	
 	[StructLayout(LayoutKind.Sequential)]
 	internal struct PixelFormatDescriptor {
