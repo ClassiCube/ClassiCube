@@ -35,14 +35,21 @@ namespace ClassicalSharp {
 				for (int x = 0; x < size; x++)
 			{
 				// Calculate the colour at this coordinate in the heatmap
-				float lSoupHeat = 0;
-				int xOffset = x + (int)(1.2 * Math.Sin(y * 22.5 * Utils.Deg2Rad));
-				int yOffset = y + (int)(1.2 * Math.Sin(x * 22.5 * Utils.Deg2Rad));
-				for (int j = 0; j < 9; j++) {
-					int xx = xOffset + (j % 3 - 1);
-					int yy = yOffset + (j / 3 - 1);
-					lSoupHeat += soupHeat[(yy & mask) << shift | (xx & mask)];
-				}
+				
+				int xx = x + (int)(1.2 * Math.Sin(y * 22.5 * Utils.Deg2Rad));
+				int yy = y + (int)(1.2 * Math.Sin(x * 22.5 * Utils.Deg2Rad));
+				float lSoupHeat =
+					soupHeat[((yy - 1) & mask) << shift | ((xx - 1) & mask)] +
+					soupHeat[((yy - 1) & mask) << shift | (xx & mask)      ] +
+					soupHeat[((yy - 1) & mask) << shift | ((xx + 1) & mask)] +
+					
+					soupHeat[(yy & mask) << shift       | ((xx - 1) & mask)] +
+					soupHeat[(yy & mask) << shift       | (xx & mask)      ] +
+					soupHeat[(yy & mask) << shift       | ((xx + 1) & mask)] +
+					
+					soupHeat[((yy + 1) & mask) << shift | ((xx - 1) & mask)] +
+					soupHeat[((yy + 1) & mask) << shift | (xx & mask)      ] +
+					soupHeat[((yy + 1) & mask) << shift | ((xx + 1) & mask)];
 				
 				float lPotHeat = 
 					potHeat[i] +                                          // x    , y
