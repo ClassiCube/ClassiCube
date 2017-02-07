@@ -20,7 +20,7 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		void InitSound() {
-			if (digBoard == null) InitSoundboards();			
+			if (digBoard == null) InitSoundboards();
 			monoOutputs = new IAudioOutput[maxSounds];
 			stereoOutputs = new IAudioOutput[maxSounds];
 		}
@@ -51,7 +51,10 @@ namespace ClassicalSharp.Audio {
 			if (snd == null) return;
 			
 			chunk.Channels = snd.Channels;
-			chunk.Frequency = snd.SampleRate;
+			if (board == digBoard)
+				chunk.Frequency = (snd.SampleRate * 4) / 5;
+			else
+				chunk.Frequency = snd.SampleRate;
 			chunk.BitsPerSample = snd.BitsPerSample;
 			chunk.BytesOffset = 0;
 			chunk.BytesUsed = snd.Data.Length;

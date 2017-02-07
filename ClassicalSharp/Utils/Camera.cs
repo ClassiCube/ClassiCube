@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 			// Need to make sure we don't cross the vertical axes, because that gets weird.
 			if (update.HeadX >= 90 && update.HeadX <= 270)
 				update.HeadX = player.interp.next.HeadX < 180 ? 89.9f : 270.1f;
-			game.LocalPlayer.SetLocation(update, true);
+			game.LocalPlayer.SetLocation(update, false);
 		}
 		
 		public override void UpdateMouse() {
