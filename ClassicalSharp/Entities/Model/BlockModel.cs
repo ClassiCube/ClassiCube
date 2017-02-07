@@ -139,7 +139,7 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		
-		NormalBlockBuilder drawer = new NormalBlockBuilder();
+		CuboidDrawer drawer = new CuboidDrawer();
 		void DrawParts(bool sprite) {
 			// SwitchOrder is needed for held block, which renders without depth testing
 			if (sprite) {
@@ -161,31 +161,31 @@ namespace ClassicalSharp.Model {
 			} else {
 				drawer.elementsPerAtlas1D = atlas.elementsPerAtlas1D;
 				drawer.invVerElementSize = atlas.invElementSize;
-				drawer.info = game.BlockInfo;
 				
-				drawer.minBB = game.BlockInfo.MinBB[block];
-				drawer.maxBB = game.BlockInfo.MaxBB[block];
-				drawer.minBB.Y = 1 - drawer.minBB.Y;
-				drawer.maxBB.Y = 1 - drawer.maxBB.Y;
+				drawer.minBB = game.BlockInfo.MinBB[block]; drawer.minBB.Y = 1 - drawer.minBB.Y; 				
+				drawer.maxBB = game.BlockInfo.MaxBB[block]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
 				
 				Vector3 min = game.BlockInfo.RenderMinBB[block];
 				Vector3 max = game.BlockInfo.RenderMaxBB[block];
 				drawer.x1 = min.X - 0.5f; drawer.y1 = min.Y; drawer.z1 = min.Z - 0.5f;
 				drawer.x2 = max.X - 0.5f; drawer.y2 = max.Y; drawer.z2 = max.Z - 0.5f;
 				
-				drawer.DrawBottomFace(1, Colour(FastColour.ShadeYBottom), GetTex(Side.Bottom), cache.vertices, ref index);
+				drawer.Tinted = game.BlockInfo.Tinted[block];
+				drawer.TintColour = game.BlockInfo.FogColour[block];
+				
+				drawer.Bottom(1, Colour(FastColour.ShadeYBottom), GetTex(Side.Bottom), cache.vertices, ref index);
 				if (SwitchOrder) {
-					drawer.DrawRightFace(1, Colour(FastColour.ShadeX), GetTex(Side.Right), cache.vertices, ref index);
-					drawer.DrawBackFace(1,  Colour(FastColour.ShadeZ), GetTex(Side.Back),  cache.vertices, ref index);
-					drawer.DrawLeftFace(1,  Colour(FastColour.ShadeX), GetTex(Side.Left),  cache.vertices, ref index);
-					drawer.DrawFrontFace(1, Colour(FastColour.ShadeZ), GetTex(Side.Front), cache.vertices, ref index);
+					drawer.Right(1, Colour(FastColour.ShadeX), GetTex(Side.Right), cache.vertices, ref index);
+					drawer.Back(1,  Colour(FastColour.ShadeZ), GetTex(Side.Back),  cache.vertices, ref index);
+					drawer.Left(1,  Colour(FastColour.ShadeX), GetTex(Side.Left),  cache.vertices, ref index);
+					drawer.Front(1, Colour(FastColour.ShadeZ), GetTex(Side.Front), cache.vertices, ref index);
 				} else {
-					drawer.DrawFrontFace(1, Colour(FastColour.ShadeZ), GetTex(Side.Front), cache.vertices, ref index);
-					drawer.DrawRightFace(1, Colour(FastColour.ShadeX), GetTex(Side.Right), cache.vertices, ref index);
-					drawer.DrawBackFace(1,  Colour(FastColour.ShadeZ), GetTex(Side.Back),  cache.vertices, ref index);
-					drawer.DrawLeftFace(1,  Colour(FastColour.ShadeX), GetTex(Side.Left),  cache.vertices, ref index);
+					drawer.Front(1, Colour(FastColour.ShadeZ), GetTex(Side.Front), cache.vertices, ref index);
+					drawer.Right(1, Colour(FastColour.ShadeX), GetTex(Side.Right), cache.vertices, ref index);
+					drawer.Back(1,  Colour(FastColour.ShadeZ), GetTex(Side.Back),  cache.vertices, ref index);
+					drawer.Left(1,  Colour(FastColour.ShadeX), GetTex(Side.Left),  cache.vertices, ref index);
 				}
-				drawer.DrawTopFace(1, Colour(1.0f), GetTex(Side.Top), cache.vertices, ref index);
+				drawer.Top(1, Colour(1.0f), GetTex(Side.Top), cache.vertices, ref index);
 			}
 		}
 		

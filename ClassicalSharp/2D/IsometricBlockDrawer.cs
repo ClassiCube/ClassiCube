@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		VertexP3fT2fC4b[] vertices;
 		int vb;
 		
-		NormalBlockBuilder drawer = new NormalBlockBuilder();
+		CuboidDrawer drawer = new CuboidDrawer();
 		
 		public void BeginBatch(Game game, VertexP3fT2fC4b[] vertices, int vb) {
 			this.game = game;
@@ -51,7 +51,6 @@ namespace ClassicalSharp {
 			atlas = game.TerrainAtlas1D;
 			drawer.elementsPerAtlas1D = atlas.elementsPerAtlas1D;
 			drawer.invVerElementSize = atlas.invElementSize;
-			drawer.info = game.BlockInfo;
 			
 			bright = info.FullBright[block];
 			if (info.Draw[block] == DrawType.Gas) return;
@@ -74,17 +73,20 @@ namespace ClassicalSharp {
 				SpriteZQuad(block, false);
 				SpriteXQuad(block, false);
 			} else {
-				drawer.minBB = info.MinBB[block];    drawer.maxBB = info.MaxBB[block];
-				drawer.minBB.Y = 1 - drawer.minBB.Y; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
+				drawer.minBB = info.MinBB[block]; drawer.minBB.Y = 1 - drawer.minBB.Y;    
+				drawer.maxBB = info.MaxBB[block]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;				
 				
-				Vector3 min = game.BlockInfo.MinBB[block], max = game.BlockInfo.MaxBB[block];
+				Vector3 min = info.MinBB[block], max = info.MaxBB[block];
 				drawer.x1 = scale * (1 - min.X * 2) + pos.X; drawer.x2 = scale * (1 - max.X * 2) + pos.X;
 				drawer.y1 = scale * (1 - min.Y * 2) + pos.Y; drawer.y2 = scale * (1 - max.Y * 2) + pos.Y;
 				drawer.z1 = scale * (1 - min.Z * 2) + pos.Z; drawer.z2 = scale * (1 - max.Z * 2) + pos.Z;
 				
-				drawer.DrawRightFace(1, bright ? colNormal : colXSide, GetTex(block, Side.Right), vertices, ref index);
-				drawer.DrawFrontFace(1, bright ? colNormal : colZSide, GetTex(block, Side.Front), vertices, ref index);
-				drawer.DrawTopFace(1,  colNormal                     , GetTex(block, Side.Top),   vertices, ref index);
+				drawer.Tinted = info.Tinted[block];
+				drawer.TintColour = info.FogColour[block];
+				
+				drawer.Right(1, bright ? colNormal : colXSide, GetTex(block, Side.Right), vertices, ref index);
+				drawer.Front(1, bright ? colNormal : colZSide, GetTex(block, Side.Front), vertices, ref index);
+				drawer.Top(1,  colNormal                     , GetTex(block, Side.Top),   vertices, ref index);
 			}
 		}
 		
