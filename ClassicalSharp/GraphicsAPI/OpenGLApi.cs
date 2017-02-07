@@ -74,11 +74,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		FastColour lastFogCol = FastColour.Black;
 		public override void SetFogColour(FastColour col) {
-			if (col != lastFogCol) {
-				Vector4 colRGBA = new Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f);
-				GL.Fogfv(FogParameter.FogColor, &colRGBA.X);
-				lastFogCol = col;
-			}
+			if (col == lastFogCol) return;
+			Vector4 colRGBA = new Vector4(col.R / 255f, col.G / 255f, col.B / 255f, col.A / 255f);
+			GL.Fogfv(FogParameter.FogColor, &colRGBA.X);
+			lastFogCol = col;
 		}
 		
 		float lastFogEnd = -1, lastFogDensity = -1;
@@ -221,7 +220,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		int batchStride;
 		public override void SetDynamicVbData<T>(int id, T[] vertices, int count) {
 			GL.BindBuffer(BufferTarget.ArrayBuffer, id);
-			GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero, 
+			GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero,
 			                 new IntPtr(count * batchStride), vertices);
 		}
 		
@@ -268,7 +267,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void DrawVb(DrawMode mode, int startVertex, int verticesCount) {
 			setupBatchFunc();
 			GL.DrawArrays(modeMappings[(int)mode], startVertex, verticesCount);
-		}		
+		}
 		
 		public override void DrawIndexedVb(DrawMode mode, int indicesCount, int startIndex) {
 			setupBatchFunc();

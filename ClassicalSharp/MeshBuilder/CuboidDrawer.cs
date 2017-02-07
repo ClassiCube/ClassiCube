@@ -6,7 +6,7 @@ using OpenTK;
 namespace ClassicalSharp {
 
 	/// <summary> Draws the vertices for a cuboid region. </summary>
-	public unsafe sealed class CuboidDrawer {
+	public sealed class CuboidDrawer {
 
 		public int elementsPerAtlas1D;
 		public float invVerElementSize;

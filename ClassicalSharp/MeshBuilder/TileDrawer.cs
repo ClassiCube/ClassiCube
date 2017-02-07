@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 			part.iCount += 6 * 4;
 		}
 		
-		unsafe void AddVertices(byte block, int count, int face) {
+		void AddVertices(byte block, int count, int face) {
 			int i = atlas.Get1DIndex(info.GetTextureLoc(block, face));
 			DrawInfo part = info.Draw[block] == DrawType.Translucent ? translucentParts[i] : normalParts[i];
 			part.iCount += 6;

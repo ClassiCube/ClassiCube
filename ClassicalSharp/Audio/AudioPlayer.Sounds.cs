@@ -51,10 +51,7 @@ namespace ClassicalSharp.Audio {
 			if (snd == null) return;
 			
 			chunk.Channels = snd.Channels;
-			if (board == digBoard)
-				chunk.Frequency = (snd.SampleRate * 4) / 5;
-			else
-				chunk.Frequency = snd.SampleRate;
+			chunk.Frequency = snd.SampleRate;
 			chunk.BitsPerSample = snd.BitsPerSample;
 			chunk.BytesOffset = 0;
 			chunk.BytesUsed = snd.Data.Length;

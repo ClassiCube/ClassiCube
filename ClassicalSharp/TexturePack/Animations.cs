@@ -55,7 +55,7 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
-		public unsafe void Tick(ScheduledTask task) {
+		public void Tick(ScheduledTask task) {
 			if (useLavaAnim) {
 				int size = Math.Min(game.TerrainAtlas.elementSize, 64);
 				DrawAnimation(null, 30, size);

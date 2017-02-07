@@ -116,10 +116,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 
-		int fogCol;
+		int fogCol, lastFogCol = FastColour.BlackPacked;
 		public override void SetFogColour(FastColour col) {
 			fogCol = col.ToArgb();
+			if (fogCol == lastFogCol) return;
+			
 			device.SetRenderState(RenderState.FogColor, fogCol);
+			lastFogCol = fogCol;
 		}
 
 		float fogDensity = -1, fogStart = -1, fogEnd = -1;

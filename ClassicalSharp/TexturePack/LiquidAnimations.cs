@@ -86,12 +86,11 @@ namespace ClassicalSharp {
 				for (int x = 0; x < size; x++)
 			{
 				// Calculate the colour at this coordinate in the heatmap
-				float lSoupHeat = 0;
-				for (int j = 0; j < 3; j++) {
-					int xx = x + (j - 1);
-					lSoupHeat += soupHeat[y << shift | (xx & mask)];
-				}								
-				
+				float lSoupHeat =
+					soupHeat[y << shift | ((x - 1) & mask)] +
+					soupHeat[y << shift | x               ] +
+					soupHeat[y << shift | ((x + 1) & mask)];
+
 				soupHeat[i] = lSoupHeat / 3.3f + potHeat[i] * 0.8f;
 				potHeat[i] += flameHeat[i] * 0.05f;
 				if (potHeat[i] < 0) potHeat[i] = 0;
