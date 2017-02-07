@@ -115,16 +115,16 @@ namespace ClassicalSharp {
 			this.minBB = info.MinBB[curBlock]; this.maxBB = info.MaxBB[curBlock];
 			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
 			
-			/*if (leftCount != 0) DrawLeftFace(leftCount);
+			if (leftCount != 0) DrawLeftFace(leftCount);
 			if (rightCount != 0) DrawRightFace(rightCount);
 			if (frontCount != 0) DrawFrontFace(frontCount);
 			if (backCount != 0) DrawBackFace(backCount);
 			if (bottomCount != 0) DrawBottomFace(bottomCount);
-			if (topCount != 0) DrawTopFace(topCount);*/
+			if (topCount != 0) DrawTopFace(topCount);
 		}
 		
 		
-		/*void DrawLeftFace(int count) {
+		void DrawLeftFace(int count) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Left];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
@@ -150,15 +150,15 @@ namespace ClassicalSharp {
 			}
 			
 			if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col0_1);
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col1_1);
+				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
+				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
+				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col0_1);
+				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col1_1);
 			} else {
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col1_1);
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col0_1);
+				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col1_1);
+				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
+				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
+				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col0_1);
 			}
 		}
 
@@ -188,15 +188,15 @@ namespace ClassicalSharp {
 			}
 			
 			if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col0_1);
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col0_0);
+				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
+				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
+				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col0_1);
+				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col0_0);
 			} else {
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col0_1);
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
+				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
+				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col0_1);
+				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col0_0);
+				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
 			}
 		}
 
@@ -226,15 +226,15 @@ namespace ClassicalSharp {
 			}
 			
 			if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_1);
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_1);
+				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
+				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
+				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_1);
+				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_1);
 			} else {
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_1);
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_1);
-				part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
+				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
+				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_1);
+				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_1);
+				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
 			}
 		}
 		
@@ -264,15 +264,15 @@ namespace ClassicalSharp {
 			}
 			
 			if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_0);
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col1_1);
+				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
+				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
+				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_0);
+				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col1_1);
 			} else {
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col1_1);
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
-				part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_0);
+				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col1_1);
+				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
+				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
+				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_0);
 			}
 		}
 		
@@ -302,15 +302,15 @@ namespace ClassicalSharp {
 			}
 			
 			if (aX0_Z1 + aX1_Z0 > aX0_Z0 + aX1_Z1) {
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col0_0);
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col1_0);
+				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
+				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
+				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col0_0);
+				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col1_0);
 			} else {
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col0_0);
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col1_0);
-				part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
+				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
+				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col0_0);
+				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col1_0);
+				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
 			}
 		}
 
@@ -340,17 +340,17 @@ namespace ClassicalSharp {
 			}
 			
 			if (aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0) {
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col0_1);
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
+				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
+				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
+				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col0_1);
+				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
 			} else {
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col0_1);
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
-				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
+				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
+				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col0_1);
+				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
+				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
 			}
-		}*/
+		}
 		
 		int Make(int count) { return Lerp(env.Shadow, env.Sun, count / 4f); }
 		int MakeZSide(int count) { return Lerp(env.ShadowZSide, env.SunZSide, count / 4f); }
