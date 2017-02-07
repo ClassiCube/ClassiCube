@@ -23,7 +23,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws the left face of the given cuboid region. </summary>
 		public void Left(int count, int col, int texId, VertexP3fT2fC4b[] vertices, ref int index) {
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 
 		/// <summary> Draws the right face of the given cuboid region. </summary>
 		public void Right(int count, int col, int texId, VertexP3fT2fC4b[] vertices, ref int index) {
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			float u1 = (count - minBB.Z), u2 = (1 - maxBB.Z) * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
@@ -53,7 +53,7 @@ namespace ClassicalSharp {
 
 		/// <summary> Draws the front face of the given cuboid region. </summary>
 		public void Front(int count, int col, int texId, VertexP3fT2fC4b[] vertices, ref int index) {
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			float u1 = (count - minBB.X), u2 = (1 - maxBB.X) * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws the back face of the given cuboid region. </summary>
 		public void Back(int count, int col, int texId, VertexP3fT2fC4b[] vertices, ref int index) {
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + maxBB.Y * invVerElementSize;
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;			
@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws the bottom face of the given cuboid region. </summary>
 		public void Bottom(int count, int col, int texId, VertexP3fT2fC4b[] vertices, ref int index) {
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;			
+			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
 			float v1 = vOrigin + minBB.Z * invVerElementSize;
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
