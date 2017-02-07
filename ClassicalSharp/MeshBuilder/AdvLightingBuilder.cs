@@ -8,7 +8,11 @@ namespace ClassicalSharp {
 
 	public unsafe sealed class AdvLightingMeshBuilder : ChunkMeshBuilder {
 		
-		int initBitFlags;
+		Vector3 minBB, maxBB;
+		bool isTranslucent;
+		int initBitFlags, lightFlags;
+		float x1, y1, z1, x2, y2, z2;
+		
 		protected override int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block) {
 			if (OccludedLiquid(chunkIndex)) return 0;
 			initBitFlags = ComputeLightFlags(x, y, z, chunkIndex);
@@ -84,7 +88,43 @@ namespace ClassicalSharp {
 		}
 		
 		
-		protected override void DrawLeftFace(int count) {
+		protected override void RenderTile(int index) {
+			if (info.Draw[curBlock] == DrawType.Sprite) {
+				fullBright = info.FullBright[curBlock];
+				tinted = info.Tinted[curBlock];
+				int count = counts[index + Side.Top];
+				if (count != 0) DrawSprite(count);
+				return;
+			}
+			
+			int leftCount = counts[index++], rightCount = counts[index++],
+			frontCount = counts[index++], backCount = counts[index++],
+			bottomCount = counts[index++], topCount = counts[index++];
+			if (leftCount == 0 && rightCount == 0 && frontCount == 0 &&
+			    backCount == 0 && bottomCount == 0 && topCount == 0) return;
+			
+			fullBright = info.FullBright[curBlock];
+			isTranslucent = info.Draw[curBlock] == DrawType.Translucent;
+			lightFlags = info.LightOffset[curBlock];
+			tinted = info.Tinted[curBlock];
+			
+			Vector3 min = info.RenderMinBB[curBlock], max = info.RenderMaxBB[curBlock];
+			x1 = X + min.X; y1 = Y + min.Y; z1 = Z + min.Z;
+			x2 = X + max.X; y2 = Y + max.Y; z2 = Z + max.Z;
+			
+			this.minBB = info.MinBB[curBlock]; this.maxBB = info.MaxBB[curBlock];
+			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
+			
+			/*if (leftCount != 0) DrawLeftFace(leftCount);
+			if (rightCount != 0) DrawRightFace(rightCount);
+			if (frontCount != 0) DrawFrontFace(frontCount);
+			if (backCount != 0) DrawBackFace(backCount);
+			if (bottomCount != 0) DrawBottomFace(bottomCount);
+			if (topCount != 0) DrawTopFace(topCount);*/
+		}
+		
+		
+		/*void DrawLeftFace(int count) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Left];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
@@ -122,7 +162,7 @@ namespace ClassicalSharp {
 			}
 		}
 
-		protected override void DrawRightFace(int count) {
+		void DrawRightFace(int count) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
@@ -160,7 +200,7 @@ namespace ClassicalSharp {
 			}
 		}
 
-		protected override void DrawFrontFace(int count) {
+		void DrawFrontFace(int count) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Front];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
@@ -198,7 +238,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected override void DrawBackFace(int count) {
+		void DrawBackFace(int count) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Back];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
@@ -236,7 +276,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected override void DrawBottomFace(int count) {
+		void DrawBottomFace(int count) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Bottom];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
@@ -274,7 +314,7 @@ namespace ClassicalSharp {
 			}
 		}
 
-		protected override void DrawTopFace(int count) {
+		void DrawTopFace(int count) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Top];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
@@ -310,7 +350,7 @@ namespace ClassicalSharp {
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
 				part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
 			}
-		}
+		}*/
 		
 		int Make(int count) { return Lerp(env.Shadow, env.Sun, count / 4f); }
 		int MakeZSide(int count) { return Lerp(env.ShadowZSide, env.SunZSide, count / 4f); }
@@ -324,6 +364,7 @@ namespace ClassicalSharp {
 			c |= (byte)Utils.Lerp(a & 0x0000FF, b & 0x0000FF, t);
 			return c;
 		}
+		
 		
 		#region Light computation
 		

@@ -12,7 +12,6 @@ namespace ClassicalSharp {
 	public unsafe abstract partial class ChunkMeshBuilder {
 		
 		protected int X, Y, Z;
-		protected float x1, y1, z1, x2, y2, z2;
 		protected byte curBlock;
 		protected BlockInfo info;
 		protected World map;
@@ -135,17 +134,21 @@ namespace ClassicalSharp {
 			int vertCount = (part.iCount / 6 * 4) + 2;
 			info.VbId = gfx.CreateVb(part.vertices, VertexFormat.P3fT2fC4b, vertCount);
 			info.IndicesCount = part.iCount;
-			info.LeftCount = (ushort)part.vCount.left; info.RightCount = (ushort)part.vCount.right;
-			info.FrontCount = (ushort)part.vCount.front; info.BackCount = (ushort)part.vCount.back;
-			info.BottomCount = (ushort)part.vCount.bottom; info.TopCount = (ushort)part.vCount.top;
+			
+			info.LeftCount =   (ushort)part.vCount[Side.Left]; 
+			info.RightCount =  (ushort)part.vCount[Side.Right];
+			info.FrontCount =  (ushort)part.vCount[Side.Front];
+			info.BackCount =   (ushort)part.vCount[Side.Back];
+			info.BottomCount = (ushort)part.vCount[Side.Bottom];
+			info.TopCount =    (ushort)part.vCount[Side.Top];
 			info.SpriteCount = part.spriteCount;
 			
 			info.LeftIndex = info.SpriteCount;
-			info.RightIndex = info.LeftIndex + info.LeftCount;
+			info.RightIndex = info.LeftIndex  + info.LeftCount;
 			info.FrontIndex = info.RightIndex + info.RightCount;
-			info.BackIndex = info.FrontIndex + info.FrontCount;
+			info.BackIndex = info.FrontIndex  + info.FrontCount;
 			info.BottomIndex = info.BackIndex + info.BackCount;
-			info.TopIndex = info.BottomIndex + info.BottomCount;
+			info.TopIndex = info.BottomIndex  + info.BottomCount;
 			
 			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
 			if (parts == null)

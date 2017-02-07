@@ -75,10 +75,8 @@ namespace ClassicalSharp.Model {
 			return base.RenderDistance(p);
 		}
 		
-		int lastTexId = -1, brightCol;
+		int lastTexId = -1;
 		protected override void DrawModel(Entity p) {
-			brightCol = FastColour.WhitePacked;
-			
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
 			if (p is FakePlayer) {
@@ -96,17 +94,10 @@ namespace ClassicalSharp.Model {
 				col = FastColour.ScalePacked(col, colScale);
 				block = ((FakePlayer)p).Block;
 			} else {
+				NoShade = bright;
 				block = Utils.FastByte(p.ModelName);
 			}
-			
-			if (game.BlockInfo.Tinted[block]) {
-                FastColour fogCol = game.BlockInfo.FogColour[block];
-                brightCol = fogCol.Pack();
-                
-                FastColour newCol = FastColour.Unpack(col);
-                newCol *= fogCol;
-                col = newCol.Pack();
-			}
+			if (bright) col = FastColour.WhitePacked;
 			
 			CalcState(block);
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
@@ -114,7 +105,7 @@ namespace ClassicalSharp.Model {
 			lastTexId = -1;
 			atlas = game.TerrainAtlas1D;
 			bool sprite = game.BlockInfo.Draw[block] == DrawType.Sprite;
-			DrawParts(sprite);			
+			DrawParts(sprite);
 			if (index == 0) return;
 			
 			IGraphicsApi gfx = game.Graphics;
@@ -148,6 +139,7 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		
+		NormalBlockBuilder drawer = new NormalBlockBuilder();
 		void DrawParts(bool sprite) {
 			// SwitchOrder is needed for held block, which renders without depth testing
 			if (sprite) {
@@ -167,83 +159,47 @@ namespace ClassicalSharp.Model {
 					SpriteXQuad(Side.Right, true);
 				}
 			} else {
-				YQuad(0, Side.Bottom, FastColour.ShadeYBottom);
+				drawer.elementsPerAtlas1D = atlas.elementsPerAtlas1D;
+				drawer.invVerElementSize = atlas.invElementSize;
+				drawer.info = game.BlockInfo;
+				
+				drawer.minBB = game.BlockInfo.MinBB[block];
+				drawer.maxBB = game.BlockInfo.MaxBB[block];
+				drawer.minBB.Y = 1 - drawer.minBB.Y;
+				drawer.maxBB.Y = 1 - drawer.maxBB.Y;
+				
+				Vector3 min = game.BlockInfo.RenderMinBB[block];
+				Vector3 max = game.BlockInfo.RenderMaxBB[block];
+				drawer.x1 = min.X - 0.5f; drawer.y1 = min.Y; drawer.z1 = min.Z - 0.5f;
+				drawer.x2 = max.X - 0.5f; drawer.y2 = max.Y; drawer.z2 = max.Z - 0.5f;
+				
+				drawer.DrawBottomFace(1, Colour(FastColour.ShadeYBottom), GetTex(Side.Bottom), cache.vertices, ref index);
 				if (SwitchOrder) {
-					XQuad(maxBB.X - 0.5f, Side.Right, FastColour.ShadeX);
-					ZQuad(maxBB.Z - 0.5f, Side.Back,  FastColour.ShadeZ);					
-					XQuad(minBB.X - 0.5f, Side.Left,  FastColour.ShadeX);
-					ZQuad(minBB.Z - 0.5f, Side.Front, FastColour.ShadeZ);
+					drawer.DrawRightFace(1, Colour(FastColour.ShadeX), GetTex(Side.Right), cache.vertices, ref index);
+					drawer.DrawBackFace(1,  Colour(FastColour.ShadeZ), GetTex(Side.Back),  cache.vertices, ref index);
+					drawer.DrawLeftFace(1,  Colour(FastColour.ShadeX), GetTex(Side.Left),  cache.vertices, ref index);
+					drawer.DrawFrontFace(1, Colour(FastColour.ShadeZ), GetTex(Side.Front), cache.vertices, ref index);
 				} else {
-					ZQuad(minBB.Z - 0.5f, Side.Front, FastColour.ShadeZ);
-					XQuad(maxBB.X - 0.5f, Side.Right, FastColour.ShadeX);
-					ZQuad(maxBB.Z - 0.5f, Side.Back,  FastColour.ShadeZ);
-					XQuad(minBB.X - 0.5f, Side.Left,  FastColour.ShadeX);
+					drawer.DrawFrontFace(1, Colour(FastColour.ShadeZ), GetTex(Side.Front), cache.vertices, ref index);
+					drawer.DrawRightFace(1, Colour(FastColour.ShadeX), GetTex(Side.Right), cache.vertices, ref index);
+					drawer.DrawBackFace(1,  Colour(FastColour.ShadeZ), GetTex(Side.Back),  cache.vertices, ref index);
+					drawer.DrawLeftFace(1,  Colour(FastColour.ShadeX), GetTex(Side.Left),  cache.vertices, ref index);
 				}
-				YQuad(height, Side.Top, 1.0f);
+				drawer.DrawTopFace(1, Colour(1.0f), GetTex(Side.Top), cache.vertices, ref index);
 			}
 		}
 		
-		void YQuad(float y, int side, float shade) {
-			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
-			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
+		int GetTex(int side) {
+			int texId = game.BlockInfo.GetTextureLoc(block, side);
+			texIndex = texId / atlas.elementsPerAtlas1D;
+			
 			FlushIfNotSame(texIndex);
-			int col = bright ? brightCol : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
-			
-			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
-			rec.U1 = minBB.X; rec.U2 = maxBB.X;
-			rec.V1 = vOrigin + minBB.Z * atlas.invElementSize;
-			rec.V2 = vOrigin + maxBB.Z * atlas.invElementSize * 15.99f/16f;
-			
-			cache.vertices[index++] = new VertexP3fT2fC4b(minBB.X - 0.5f, y, minBB.Z - 0.5f, rec.U1, rec.V1, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(maxBB.X - 0.5f, y, minBB.Z - 0.5f, rec.U2, rec.V1, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(maxBB.X - 0.5f, y, maxBB.Z - 0.5f, rec.U2, rec.V2, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(minBB.X - 0.5f, y, maxBB.Z - 0.5f, rec.U1, rec.V2, col);
-		}
-
-		void ZQuad(float z, int side, float shade) {
-			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
-			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
-			FlushIfNotSame(texIndex);
-			int col = bright ? brightCol : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
-			
-			if (side == Side.Back) {
-				rec.U1 = minBB.X; rec.U2 = maxBB.X * 15.99f/16f;
-			} else {
-				rec.U1 = (1 - minBB.X); rec.U2 = (1 - maxBB.X) * 15.99f/16f;
-			}
-			
-			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
-			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
-			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;
-			
-			cache.vertices[index++] = new VertexP3fT2fC4b(minBB.X - 0.5f, 0, z, rec.U1, rec.V1, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(minBB.X - 0.5f, height, z, rec.U1, rec.V2, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(maxBB.X - 0.5f, height, z, rec.U2, rec.V2, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(maxBB.X - 0.5f, 0, z, rec.U2, rec.V1, col);
-		}
-
-		void XQuad(float x, int side, float shade) {
-			int texId = game.BlockInfo.GetTextureLoc(block, side), texIndex = 0;
-			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
-			FlushIfNotSame(texIndex);
-			int col = bright ? brightCol : (NoShade ? this.col : FastColour.ScalePacked(this.col, shade));
-			
-			if (side == Side.Left) {
-				rec.U1 = minBB.Z; rec.U2 = maxBB.Z * 15.99f/16f;
-			} else {
-				rec.U1 = (1 - minBB.Z); rec.U2 = (1 - maxBB.Z) * 15.99f/16f;
-			}
-			
-			float vOrigin = (texId % atlas.elementsPerAtlas1D) * atlas.invElementSize;
-			rec.V1 = vOrigin + (1 - minBB.Y) * atlas.invElementSize;
-			rec.V2 = vOrigin + (1 - maxBB.Y) * atlas.invElementSize * 15.99f/16f;			
-			
-			cache.vertices[index++] = new VertexP3fT2fC4b(x, 0, minBB.Z - 0.5f, rec.U1, rec.V1, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(x, height, minBB.Z - 0.5f, rec.U1, rec.V2, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(x, height, maxBB.Z - 0.5f, rec.U2, rec.V2, col);
-			cache.vertices[index++] = new VertexP3fT2fC4b(x, 0, maxBB.Z - 0.5f, rec.U2, rec.V1, col);
+			return texId;
 		}
 		
+		int Colour(float shade) {
+			return NoShade ? col : FastColour.ScalePacked(col, shade); 
+		}
 		
 		void SpriteZQuad(int side, bool firstPart) {
 			SpriteZQuad(side, firstPart, false);
@@ -256,7 +212,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame(texIndex);
 			if (height != 1)
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = bright ? brightCol : this.col;
+			int col = this.col;
 
 			float p1 = 0, p2 = 0;
 			if (firstPart) { // Need to break into two quads for when drawing a sprite model in hand.
@@ -284,7 +240,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame(texIndex);
 			if (height != 1)
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = bright ? brightCol : this.col;
+			int col = this.col;
 			
 			float x1 = 0, x2 = 0, z1 = 0, z2 = 0;
 			if (firstPart) {

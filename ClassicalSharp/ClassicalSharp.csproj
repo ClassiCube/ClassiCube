@@ -204,6 +204,7 @@
     <Compile Include="Entities\Model\ModelBuilder.cs" />
     <Compile Include="MeshBuilder\Builder.cs" />
     <Compile Include="MeshBuilder\FloodFill.cs" />
+    <Compile Include="MeshBuilder\NormalBlockBuilder.cs" />
     <Compile Include="MeshBuilder\NormalBuilder.cs" />
     <Compile Include="MeshBuilder\AdvLightingBuilder.cs" />
     <Compile Include="MeshBuilder\TileDrawer.cs" />
@@ -378,5 +379,8 @@
       <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
       <Name>OpenTK</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ProfilingSessions\Session20170207_150755.sdps" />
   </ItemGroup>
 </Project>

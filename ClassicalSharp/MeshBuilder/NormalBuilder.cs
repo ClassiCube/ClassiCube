@@ -8,6 +8,8 @@ namespace ClassicalSharp {
 
 	public unsafe sealed class NormalMeshBuilder : ChunkMeshBuilder {
 		
+		NormalBlockBuilder drawer = new NormalBlockBuilder();
+		
 		protected override int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block) {
 			if (OccludedLiquid(chunkIndex)) return 0;
 			int count = 1;
@@ -70,129 +72,105 @@ namespace ClassicalSharp {
 				&& (fullBright || IsLit(X, Y, Z, face, initialTile) == IsLit(x, y, z, face, rawBlock));
 		}
 		
-		
-		protected override void DrawLeftFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Left];
-			int i = texId / elementsPerAtlas1D;
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> Side.Left) & 1;
-			
-			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
-			float v1 = vOrigin + maxBB.Y * invVerElementSize;
-			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
-			
-			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-			int col = fullBright ? FastColour.WhitePacked :
-				X >= offset ? lighting.LightCol_XSide_Fast(X - offset, Y, Z) : lighting.OutsideXSide;
-			if (tinted) col = TintBlock(curBlock, col);
-			
-			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col);
-			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
-			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
-			part.vertices[part.vIndex.left++] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col);
+		protected override void PreStretchTiles(int x1, int y1, int z1) {
+			base.PreStretchTiles(x1, y1, z1);
+			drawer.invVerElementSize = invVerElementSize;
+			drawer.elementsPerAtlas1D = elementsPerAtlas1D;
+			drawer.info = game.BlockInfo;
 		}
+		
+		protected override void RenderTile(int index) {
+			if (info.Draw[curBlock] == DrawType.Sprite) {
+				fullBright = info.FullBright[curBlock];
+				tinted = info.Tinted[curBlock];
+				int count = counts[index + Side.Top];
+				if (count != 0) DrawSprite(count);
+				return;
+			}
+			
+			int leftCount = counts[index++], rightCount = counts[index++],
+			frontCount = counts[index++], backCount = counts[index++],
+			bottomCount = counts[index++], topCount = counts[index++];
+			if (leftCount == 0 && rightCount == 0 && frontCount == 0 &&
+			    backCount == 0 && bottomCount == 0 && topCount == 0) return;
+			
+			fullBright = info.FullBright[curBlock];
+			bool isTranslucent = info.Draw[curBlock] == DrawType.Translucent;
+			int lightFlags = info.LightOffset[curBlock];
+			tinted = info.Tinted[curBlock];
+			
+			Vector3 min = info.RenderMinBB[curBlock], max = info.RenderMaxBB[curBlock];
+			drawer.x1 = X + min.X; drawer.y1 = Y + min.Y; drawer.z1 = Z + min.Z;
+			drawer.x2 = X + max.X; drawer.y2 = Y + max.Y; drawer.z2 = Z + max.Z;
+			
+			drawer.minBB = info.MinBB[curBlock];
+			drawer.maxBB = info.MaxBB[curBlock];
+			drawer.minBB.Y = 1 - drawer.minBB.Y;
+			drawer.maxBB.Y = 1 - drawer.maxBB.Y;
+			
+			if (leftCount != 0) {
+				int texId = info.textures[curBlock * Side.Sides + Side.Left];
+				int i = texId / elementsPerAtlas1D;
+				int offset = (lightFlags >> Side.Left) & 1;
+				
+				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+				int col = fullBright ? FastColour.WhitePacked :
+					X >= offset ? lighting.LightCol_XSide_Fast(X - offset, Y, Z) : lighting.OutsideXSide;
+				drawer.DrawLeftFace(leftCount, col, texId, part.vertices, ref part.vIndex[Side.Left]);
+			}
+			
+			if (rightCount != 0) {
+				int texId = info.textures[curBlock * Side.Sides + Side.Right];
+				int i = texId / elementsPerAtlas1D;
+				int offset = (lightFlags >> Side.Right) & 1;
+				
+				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+				int col = fullBright ? FastColour.WhitePacked :
+					X <= (maxX - offset) ? lighting.LightCol_XSide_Fast(X + offset, Y, Z) : lighting.OutsideXSide;
+				drawer.DrawRightFace(rightCount, col, texId, part.vertices, ref part.vIndex[Side.Right]);
+			}
+			
+			if (frontCount != 0) {
+				int texId = info.textures[curBlock * Side.Sides + Side.Front];
+				int i = texId / elementsPerAtlas1D;
+				int offset = (lightFlags >> Side.Front) & 1;
+				
+				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+				int col = fullBright ? FastColour.WhitePacked :
+					Z >= offset ? lighting.LightCol_ZSide_Fast(X, Y, Z - offset) : lighting.OutsideZSide;
+				drawer.DrawFrontFace(frontCount, col, texId, part.vertices, ref part.vIndex[Side.Front]);
+			}
+			
+			if (backCount != 0) {
+				int texId = info.textures[curBlock * Side.Sides + Side.Back];
+				int i = texId / elementsPerAtlas1D;
+				int offset = (lightFlags >> Side.Back) & 1;
+				
+				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+				int col = fullBright ? FastColour.WhitePacked :
+					Z <= (maxZ - offset) ? lighting.LightCol_ZSide_Fast(X, Y, Z + offset) : lighting.OutsideZSide;
+				drawer.DrawBackFace(backCount, col, texId, part.vertices, ref part.vIndex[Side.Back]);
+			}
+			
+			if (bottomCount != 0) {
+				int texId = info.textures[curBlock * Side.Sides + Side.Bottom];
+				int i = texId / elementsPerAtlas1D;
+				int offset = (lightFlags >> Side.Bottom) & 1;
+				
+				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+				int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YBottom_Fast(X, Y - offset, Z);
+				drawer.DrawBottomFace(bottomCount, col, texId, part.vertices, ref part.vIndex[Side.Bottom]);
+			}
+			
+			if (topCount != 0) {
+				int texId = info.textures[curBlock * Side.Sides + Side.Top];
+				int i = texId / elementsPerAtlas1D;
+				int offset = (lightFlags >> Side.Top) & 1;
 
-		protected override void DrawRightFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Right];
-			int i = texId / elementsPerAtlas1D;
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> Side.Right) & 1;
-			
-			float u1 = (count - minBB.Z), u2 = (1 - maxBB.Z) * 15.99f/16f;
-			float v1 = vOrigin + maxBB.Y * invVerElementSize;
-			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
-			
-			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-			int col = fullBright ? FastColour.WhitePacked :
-				X <= (maxX - offset) ? lighting.LightCol_XSide_Fast(X + offset, Y, Z) : lighting.OutsideXSide;
-			if (tinted) col = TintBlock(curBlock, col);
-			
-			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col);
-			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col);
-			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col);
-			part.vertices[part.vIndex.right++] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col);
+				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
+				int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YTop_Fast(X, Y - offset, Z);
+				drawer.DrawTopFace(topCount, col, texId, part.vertices, ref part.vIndex[Side.Top]);
+			}
 		}
-
-		protected override void DrawFrontFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Front];
-			int i = texId / elementsPerAtlas1D;
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> Side.Front) & 1;
-			
-			float u1 = (count - minBB.X), u2 = (1 - maxBB.X) * 15.99f/16f;
-			float v1 = vOrigin + maxBB.Y * invVerElementSize;
-			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
-			
-			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-			int col = fullBright ? FastColour.WhitePacked :
-				Z >= offset ? lighting.LightCol_ZSide_Fast(X, Y, Z - offset) : lighting.OutsideZSide;
-			if (tinted) col = TintBlock(curBlock, col);
-			
-			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col);
-			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
-			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
-			part.vertices[part.vIndex.front++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col);
-		}
-		
-		protected override void DrawBackFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Back];
-			int i = texId / elementsPerAtlas1D;
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> Side.Back) & 1;
-			
-			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
-			float v1 = vOrigin + maxBB.Y * invVerElementSize;
-			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
-			
-			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-			int col = fullBright ? FastColour.WhitePacked :
-				Z <= (maxZ - offset) ? lighting.LightCol_ZSide_Fast(X, Y, Z + offset) : lighting.OutsideZSide;
-			if (tinted) col = TintBlock(curBlock, col);
-			
-			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col);
-			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col);
-			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
-			part.vertices[part.vIndex.back++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col);
-		}
-		
-		protected override void DrawBottomFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Bottom];
-			int i = texId / elementsPerAtlas1D;
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> Side.Bottom) & 1;
-			
-			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
-			float v1 = vOrigin + minBB.Z * invVerElementSize;
-			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
-			
-			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-			int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YBottom_Fast(X, Y - offset, Z);
-			if (tinted) col = TintBlock(curBlock, col);
-			
-			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col);
-			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
-			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col);
-			part.vertices[part.vIndex.bottom++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col);
-		}
-
-		protected override void DrawTopFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Top];
-			int i = texId / elementsPerAtlas1D;
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			int offset = (lightFlags >> Side.Top) & 1;
-			
-			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
-			float v1 = vOrigin + minBB.Z * invVerElementSize;
-			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
-			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-			int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YTop_Fast(X, Y - offset, Z);
-			if (tinted) col = TintBlock(curBlock, col);
-			
-			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col);
-			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
-			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col);
-			part.vertices[part.vIndex.top++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col);
-		}
-		
 	}
 }
