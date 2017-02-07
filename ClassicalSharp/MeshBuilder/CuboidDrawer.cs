@@ -29,10 +29,11 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			if (Tinted) col = TintBlock(col);
 			
-			vertices[index++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col);
+			VertexP3fT2fC4b v; v.X = x1; v.Colour = col;
+			v.Y = y2; v.Z = z2 + (count - 1); v.U = u2; v.V = v1; vertices[index++] = v; 
+			          v.Z = z1;               v.U = u1;           vertices[index++] = v;
+			v.Y = y1;                                   v.V = v2; vertices[index++] = v;
+			          v.Z = z2 + (count - 1); v.U = u2;           vertices[index++] = v;
 		}
 
 		/// <summary> Draws the right face of the given cuboid region. </summary>
@@ -43,10 +44,11 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			if (Tinted) col = TintBlock(col);
 			
-			vertices[index++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col);
+			VertexP3fT2fC4b v; v.X = x2; v.Colour = col;
+			v.Y = y2; v.Z = z1;               v.U = u1; v.V = v1; vertices[index++] = v;
+			          v.Z = z2 + (count - 1); v.U = u2;           vertices[index++] = v;
+			v.Y = y1;                                   v.V = v2; vertices[index++] = v;
+			          v.Z = z1;               v.U = u1;           vertices[index++] = v;
 		}
 
 		/// <summary> Draws the front face of the given cuboid region. </summary>
@@ -57,10 +59,11 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;
 			if (Tinted) col = TintBlock(col);
 			
-			vertices[index++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col);
+			VertexP3fT2fC4b v; v.Z = z1; v.Colour = col;
+			v.X = x2 + (count - 1); v.Y = y1; v.U = u2; v.V = v2; vertices[index++] = v;
+			v.X = x1;                         v.U = u1;           vertices[index++] = v;
+			                        v.Y = y2;           v.V = v1; vertices[index++] = v;
+			v.X = x2 + (count - 1);           v.U = u2;           vertices[index++] = v;
 		}
 		
 		/// <summary> Draws the back face of the given cuboid region. </summary>
@@ -71,10 +74,11 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + minBB.Y * invVerElementSize * 15.99f/16f;			
 			if (Tinted) col = TintBlock(col);
 			
-			vertices[index++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col);
+			VertexP3fT2fC4b v; v.Z = z2; v.Colour = col;
+			v.X = x2 + (count - 1); v.Y = y2; v.U = u2; v.V = v1; vertices[index++] = v;
+			v.X = x1;                         v.U = u1;           vertices[index++] = v;
+			                        v.Y = y1;           v.V = v2; vertices[index++] = v;
+			v.X = x2 + (count - 1);           v.U = u2;           vertices[index++] = v;
 		}
 		
 		/// <summary> Draws the bottom face of the given cuboid region. </summary>
@@ -85,10 +89,11 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			if (Tinted) col = TintBlock(col);
 			
-			vertices[index++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col);
+			VertexP3fT2fC4b v; v.Y = y1; v.Colour = col;
+			v.X = x2 + (count - 1); v.Z = z2; v.U = u2; v.V = v2; vertices[index++] = v;
+			v.X = x1;                         v.U = u1;           vertices[index++] = v;
+			                        v.Z = z1;           v.V = v1; vertices[index++] = v;
+			v.X = x2 + (count - 1);           v.U = u2;           vertices[index++] = v;
 		}
 
 		/// <summary> Draws the top face of the given cuboid region. </summary>
@@ -99,10 +104,11 @@ namespace ClassicalSharp {
 			float v2 = vOrigin + maxBB.Z * invVerElementSize * 15.99f/16f;
 			if (Tinted) col = TintBlock(col);
 			
-			vertices[index++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col);
+			VertexP3fT2fC4b v; v.Y = y2; v.Colour = col;
+			v.X = x2 + (count - 1); v.Z = z1; v.U = u2; v.V = v1; vertices[index++] = v;
+			v.X = x1;                         v.U = u1;           vertices[index++] = v;
+			                        v.Z = z2;           v.V = v2; vertices[index++] = v;
+			v.X = x2 + (count - 1);           v.U = u2;           vertices[index++] = v;
 		}
 
 		int TintBlock(int col) {
