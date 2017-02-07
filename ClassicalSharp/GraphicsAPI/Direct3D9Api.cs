@@ -364,7 +364,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 
 			public void MultiplyTop(ref Matrix4 matrix) {
-				stack[stackIndex] = matrix * stack[stackIndex];
+				Matrix4.Mult(ref matrix, ref stack[stackIndex], out stack[stackIndex]); // top = matrix * top
 				device.SetTransform(matrixType, ref stack[stackIndex]);
 			}
 

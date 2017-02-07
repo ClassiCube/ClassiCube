@@ -4,7 +4,7 @@
     <ProjectGuid>{BEB1C785-5CAD-48FF-A886-876BF0A318D4}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>ClassicalSharp</RootNamespace>
     <AssemblyName>ClassicalSharp</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
@@ -379,8 +379,5 @@
       <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
       <Name>OpenTK</Name>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="ProfilingSessions\Session20170207_150755.sdps" />
   </ItemGroup>
 </Project>

@@ -28,8 +28,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void UpdateDynamicIndexedVb<T>(DrawMode mode, int vb, T[] vertices, int vCount) where T : struct {
 			SetDynamicVbData(vb, vertices, vCount);
 			DrawIndexedVb(mode, vCount * 6 / 4, 0);
-		}
-		
+		}		
 		
 		
 		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];

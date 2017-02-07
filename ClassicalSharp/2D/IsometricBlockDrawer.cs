@@ -26,12 +26,20 @@ namespace ClassicalSharp {
 			index = 0;
 			this.vertices = vertices;
 			this.vb = vb;
+			
+			game.Graphics.PushMatrix();
+			Matrix4 m = transform;
+			game.Graphics.MultiplyMatrix(ref m);
 		}
 		
 		static int colNormal = FastColour.WhitePacked, colXSide, colZSide, colYBottom;
 		static float cosX, sinX, cosY, sinY;
+		static Matrix4 transform;
+		
 		static IsometricBlockDrawer() {
 			FastColour.GetShaded(FastColour.White, out colXSide, out colZSide, out colYBottom);
+			transform = Matrix4.RotateY(45 * Utils.Deg2Rad) * Matrix4.RotateX(-26.565f * Utils.Deg2Rad);
+			
 			cosX = (float)Math.Cos(26.565f * Utils.Deg2Rad);
 			sinX = (float)Math.Sin(26.565f * Utils.Deg2Rad);
 			cosY = (float)Math.Cos(-45f * Utils.Deg2Rad);
@@ -56,6 +64,9 @@ namespace ClassicalSharp {
 			Utils.RotateX(ref pos.Y, ref pos.Z, cosX, -sinX);
 			Utils.RotateY(ref pos.X, ref pos.Z, cosY, -sinY);
 			
+			// See comment in IGraphicsApi.Draw2DTexture()
+			pos.X -= 0.5f; pos.Y -= 0.5f;
+			
 			if (info.Draw[block] == DrawType.Sprite) {
 				SpriteXQuad(block, true);
 				SpriteZQuad(block, true);
@@ -67,23 +78,24 @@ namespace ClassicalSharp {
 				drawer.minBB.Y = 1 - drawer.minBB.Y; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
 				
 				Vector3 min = game.BlockInfo.MinBB[block], max = game.BlockInfo.MaxBB[block];
-				drawer.x1 = scale * (1 - min.X * 2); drawer.x2 = scale * (1 - max.X * 2);
-				drawer.y1 = scale * (1 - min.Y * 2); drawer.y2 = scale * (1 - max.Y * 2);
-				drawer.z1 = scale * (1 - min.Z * 2); drawer.z2 = scale * (1 - max.Z * 2);
+				drawer.x1 = scale * (1 - min.X * 2) + pos.X; drawer.x2 = scale * (1 - max.X * 2) + pos.X;
+				drawer.y1 = scale * (1 - min.Y * 2) + pos.Y; drawer.y2 = scale * (1 - max.Y * 2) + pos.Y;
+				drawer.z1 = scale * (1 - min.Z * 2) + pos.Z; drawer.z2 = scale * (1 - max.Z * 2) + pos.Z;
 				
-				drawer.DrawRightFace(1, bright ? colNormal : colXSide, GetTex(block, Side.Right), vertices, ref index); TransformLast4();
-				drawer.DrawFrontFace(1, bright ? colNormal : colZSide, GetTex(block, Side.Front), vertices, ref index); TransformLast4();
-				drawer.DrawTopFace(1,  colNormal                     , GetTex(block, Side.Top),   vertices, ref index); TransformLast4();
+				drawer.DrawRightFace(1, bright ? colNormal : colXSide, GetTex(block, Side.Right), vertices, ref index);
+				drawer.DrawFrontFace(1, bright ? colNormal : colZSide, GetTex(block, Side.Front), vertices, ref index);
+				drawer.DrawTopFace(1,  colNormal                     , GetTex(block, Side.Top),   vertices, ref index);
 			}
 		}
 		
 		public void EndBatch() {
-			if (index == 0) return;
-			if (texIndex != lastIndex) game.Graphics.BindTexture(atlas.TexIds[texIndex]);
-			
-			game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
-			index = 0;
-			lastIndex = -1;
+			if (index > 0) {
+				if (texIndex != lastIndex) game.Graphics.BindTexture(atlas.TexIds[texIndex]);
+				game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
+				index = 0;
+				lastIndex = -1;
+			}
+			game.Graphics.PopMatrix();
 		}
 		
 		int GetTex(byte block, int side) {
@@ -112,14 +124,13 @@ namespace ClassicalSharp {
 			
 			float x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
-			float minX = scale * (1 - x1 * 2), maxX = scale * (1 - x2 * 2);
-			float minY = scale * (1 - 0 * 2), maxY = scale * (1 - 1.1f * 2);
+			float minX = scale * (1 - x1 * 2) + pos.X, maxX = scale * (1 - x2 * 2)   + pos.X;
+			float minY = scale * (1 - 0 * 2)  + pos.Y, maxY = scale * (1 - 1.1f * 2) + pos.Y;
 			
-			v.X = minX; v.Y = minY; v.Z = 0; v.U = rec.U2; v.V = rec.V2; vertices[index++] = v;
-			v.X = minX; v.Y = maxY; v.Z = 0; v.U = rec.U2; v.V = rec.V1; vertices[index++] = v;
-			v.X = maxX; v.Y = maxY; v.Z = 0; v.U = rec.U1; v.V = rec.V1; vertices[index++] = v;
-			v.X = maxX; v.Y = minY; v.Z = 0; v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
-			TransformLast4();
+			v.X = minX; v.Y = minY; v.Z = pos.Z; v.U = rec.U2; v.V = rec.V2; vertices[index++] = v;
+			v.X = minX; v.Y = maxY; v.Z = pos.Z; v.U = rec.U2; v.V = rec.V1; vertices[index++] = v;
+			v.X = maxX; v.Y = maxY; v.Z = pos.Z; v.U = rec.U1; v.V = rec.V1; vertices[index++] = v;
+			v.X = maxX; v.Y = minY; v.Z = pos.Z; v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
 		}
 
 		void SpriteXQuad(byte block, bool firstPart) {
@@ -139,14 +150,13 @@ namespace ClassicalSharp {
 			
 			float z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
-			float minY = scale * (1 - 0 * 2), maxY = scale * (1 - 1.1f * 2);
-			float minZ = scale * (1 - z1 * 2), maxZ = scale * (1 - z2 * 2);
+			float minY = scale * (1 - 0 * 2)  + pos.Y, maxY = scale * (1 - 1.1f * 2) + pos.Y;
+			float minZ = scale * (1 - z1 * 2) + pos.Z, maxZ = scale * (1 - z2 * 2)   + pos.Z;
 			
-			v.X = 0; v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; vertices[index++] = v;
-			v.X = 0; v.Y = maxY; v.Z = minZ; v.U = rec.U2; v.V = rec.V1; vertices[index++] = v;
-			v.X = 0; v.Y = maxY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; vertices[index++] = v;
-			v.X = 0; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
-			TransformLast4();
+			v.X = pos.X; v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; vertices[index++] = v;
+			v.X = pos.X; v.Y = maxY; v.Z = minZ; v.U = rec.U2; v.V = rec.V1; vertices[index++] = v;
+			v.X = pos.X; v.Y = maxY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; vertices[index++] = v;
+			v.X = pos.X; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
 		}
 		
 		int lastIndex, texIndex;
@@ -155,25 +165,9 @@ namespace ClassicalSharp {
 				game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
 				index = 0;
 			}
+			
 			lastIndex = texIndex;
 			game.Graphics.BindTexture(atlas.TexIds[texIndex]);
-		}
-		
-		void Transform(ref VertexP3fT2fC4b v) {
-			v.X += pos.X; v.Y += pos.Y; v.Z += pos.Z;
-			//Vector3 p = new Vector3(v.X, v.Y, v.Z) + pos;
-			//p = Utils.RotateY(p - pos, time) + pos;
-			//v coords = p
-			
-			// See comment in IGraphicsApi.Draw2DTexture()
-			v.X -= 0.5f; v.Y -= 0.5f;
-			float t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t; // Inlined RotY
-			t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;      // Inlined RotX
-		}
-		
-		void TransformLast4() {
-			for (int i = index - 4; i < index; i++)
-				Transform(ref vertices[i]);
 		}
 	}
 }
