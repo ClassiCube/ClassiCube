@@ -106,7 +106,7 @@ namespace ClassicalSharp.Model {
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			game.Graphics.PushMatrix();
 			
-			Matrix4 m = p.TransformMatrix(p.ModelScale);
+			Matrix4 m = p.TransformMatrix(p.ModelScale, pos);
 			game.Graphics.MultiplyMatrix(ref m);
 			DrawModel(p);
 			game.Graphics.PopMatrix();

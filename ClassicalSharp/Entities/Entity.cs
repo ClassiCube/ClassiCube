@@ -92,8 +92,7 @@ namespace ClassicalSharp.Entities {
 			return game.World.SafeGetBlock(Vector3I.Floor(coords));
 		}
 		
-		internal Matrix4 TransformMatrix(float scale) {
-			Vector3 pos = Position;
+		internal Matrix4 TransformMatrix(float scale, Vector3 pos) {
 			return 
 				Matrix4.RotateZ(-RotZ * Utils.Deg2Rad) * 
 				Matrix4.RotateX(-RotX * Utils.Deg2Rad) * 
