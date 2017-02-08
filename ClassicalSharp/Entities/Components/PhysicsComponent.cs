@@ -266,28 +266,24 @@ namespace ClassicalSharp.Entities {
 			return a * (-49 * u - 196) - 4 * t + 50 * u + 196;
 		}
 		
-		public void DoEntityPush(ref float xMoving, ref float zMoving) {
-			if (!game.ClassicMode || hacks.Flying || hacks.Noclip) return;
-			return;
-			// TODO: Fix
+		public void DoEntityPush() {
+			if (!game.ClassicMode || hacks.Noclip) return;
 			
 			for (int id = 0; id < EntityList.SelfID; id++) {
 				Entity other = game.Entities[id];
 				if (other == null) continue;
 				
-				float dx = other.Position.X - entity.Position.X;
-				float dy = other.Position.Y - entity.Position.Y;
-				float dz = other.Position.Z - entity.Position.Z;
-				float dist = dx * dx + dy * dy + dz * dz;
-				if (dist < 0.0001f || dist > 0.5f) continue;
+				bool yIntersects = 
+					entity.Position.Y <= (other.Position.Y + other.Size.Y) && 
+					other.Position.Y  <= (entity.Position.Y + entity.Size.Y);
+				if (!yIntersects) continue;
 				
-				double yaw = Math.Atan2(dz, dx) - Math.PI / 2;
-				Vector3 dir = Utils.GetDirVector(yaw, 0);
-				Console.WriteLine("Yaw: " + yaw * Utils.Rad2Deg);
-				Console.WriteLine(dir);
-				Console.WriteLine(entity.Position);
-				xMoving = -dir.X;
-				zMoving = -dir.Z;
+				Vector3 d = other.Position - entity.Position;
+				float dist = d.X * d.X + d.Z * d.Z;
+				if (dist < 0.0001f || dist > 1f) continue;
+				
+				Vector3 dir = Vector3.Normalize(d.X, 0, d.Z);
+				entity.Velocity -= dir * (1 - dist) / 32f;
 			}
 		}
 	}

@@ -59,7 +59,7 @@ namespace ClassicalSharp.Entities {
 			bool wasOnGround = onGround;
 			
 			HandleInput(ref xMoving, ref zMoving);
-			physics.DoEntityPush(ref xMoving, ref zMoving);
+			physics.DoEntityPush();
 			physics.UpdateVelocityState(xMoving, zMoving);
 			physics.PhysicsTick(xMoving, zMoving);
 			
