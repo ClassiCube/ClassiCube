@@ -10,6 +10,7 @@ namespace ClassicalSharp.Entities.Mobs {
 		CollisionsComponent collisions;
 		PhysicsComponent physics;
 		static HacksComponent hacks = new HacksComponent(null, null);
+		AI ai;
 		
 		public MobEntity(Game game, string model) : base(game) {
 			StepSize = 0.5f;
@@ -20,6 +21,12 @@ namespace ClassicalSharp.Entities.Mobs {
 			physics = new PhysicsComponent(game, this);
 			physics.hacks = hacks;
 			physics.collisions = collisions;
+			
+			if (Utils.CaselessEquals(model, "pig") || Utils.CaselessEquals(model, "sheep")) {
+				ai = new FleeAI(game, this);
+			} else {
+				ai = new HostileAI(game, this);
+			}
 		}
 		
 		public override void Despawn() { }
@@ -29,11 +36,11 @@ namespace ClassicalSharp.Entities.Mobs {
 		static Random rand = new Random();
 		public override void Tick(double delta) {
 			if (game.World.IsNotLoaded) return;
-			float xMoving = 0.98f, zMoving = 0.98f;
 			interp.AdvanceState();
-			bool wasOnGround = onGround;
-			physics.UpdateVelocityState(xMoving, zMoving);
-			physics.PhysicsTick(xMoving, zMoving);			
+			physics.UpdateVelocityState();
+			
+			ai.Tick(game.LocalPlayer);
+			physics.PhysicsTick(ai.MoveVelocity);
 			interp.next.Pos = Position; Position = interp.prev.Pos;
 			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);			
 		}

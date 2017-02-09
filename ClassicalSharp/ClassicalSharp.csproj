@@ -151,9 +151,7 @@
     <Compile Include="Blocks\DefaultSet.cs" />
     <Compile Include="Commands\SinglePlayerCommands.cs" />
     <Compile Include="Entities\Components\IInterpComponent.cs" />
-    <Compile Include="Entities\Mobs\AI\AI.cs" />
-    <Compile Include="Entities\Mobs\AI\FleeAI.cs" />
-    <Compile Include="Entities\Mobs\AI\HostileAI.cs" />
+    <Compile Include="Entities\Mobs\AI.cs" />
     <Compile Include="Entities\Components\AnimatedComponent.cs" />
     <Compile Include="Entities\Components\HacksComponent.cs" />
     <Compile Include="Entities\Components\InputComponent.cs" />
@@ -343,7 +341,6 @@
     <Folder Include="2D\Widgets\Chat" />
     <Folder Include="2D\Widgets\PlayerList" />
     <Folder Include="Blocks" />
-    <Folder Include="Entities\Mobs\AI" />
     <Folder Include="Entities\Components" />
     <Folder Include="Entities\Mobs" />
     <Folder Include="Events" />

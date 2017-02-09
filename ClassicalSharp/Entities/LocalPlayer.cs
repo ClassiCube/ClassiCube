@@ -60,8 +60,12 @@ namespace ClassicalSharp.Entities {
 			
 			HandleInput(ref xMoving, ref zMoving);
 			physics.DoEntityPush();
-			physics.UpdateVelocityState(xMoving, zMoving);
-			physics.PhysicsTick(xMoving, zMoving);
+			
+			// Immediate stop in noclip mode
+			if (!Hacks.NoclipSlide && (Hacks.Noclip && xMoving == 0 && zMoving == 0))
+				Velocity = Vector3.Zero;
+			physics.UpdateVelocityState();
+			physics.PhysicsTick(GetHeadingVelocity(zMoving, xMoving));
 			
 			interp.next.Pos = Position; Position = interp.prev.Pos;
 			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);
@@ -69,6 +73,11 @@ namespace ClassicalSharp.Entities {
 			CheckSkin();
 			sound.Tick(wasOnGround);
 		}
+		
+		Vector3 GetHeadingVelocity(float xMoving, float zMoving) {
+			return Utils.RotateY(xMoving, 0, zMoving, HeadYRadians);
+		}
+		
 
 		public override void RenderModel(double deltaTime, float t) {
 			anim.GetCurrentAnimState(t);

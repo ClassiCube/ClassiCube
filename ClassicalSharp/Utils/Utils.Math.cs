@@ -128,7 +128,7 @@ namespace ClassicalSharp {
 		
 		public static void GetHeading(Vector3 dir, out double yaw, out double pitch) {
 			pitch = Math.Asin(-dir.Y);
-			yaw = Math.Atan2(dir.Z, dir.X);
+			yaw = Math.Atan2(dir.X, -dir.Z);
 		}
 		
 		public static int Floor(float value) {
