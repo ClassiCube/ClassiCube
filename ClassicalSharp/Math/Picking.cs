@@ -34,7 +34,8 @@ namespace ClassicalSharp {
 		
 		public static void ClipCameraPos(Game game, Vector3 origin, Vector3 dir,
 		                                 float reach, PickedPos pos) {
-			if (!game.CameraClipping || !RayTrace(game, origin, dir, reach, pos, true)) {
+			bool noClip = !game.CameraClipping || game.LocalPlayer.Hacks.Noclip;
+			if (noClip || !RayTrace(game, origin, dir, reach, pos, true)) {
 				pos.SetAsInvalid();
 				pos.Intersect = origin + dir * reach;
 			}

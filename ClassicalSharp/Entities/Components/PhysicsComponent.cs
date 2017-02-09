@@ -280,10 +280,10 @@ namespace ClassicalSharp.Entities {
 				
 				Vector3 d = other.Position - entity.Position;
 				float dist = d.X * d.X + d.Z * d.Z;
-				if (dist < 0.0001f || dist > 1f) continue;
+				if (dist < 0.0001f || dist > 1f) continue; // TODO: range needs to be lower?
 				
 				Vector3 dir = Vector3.Normalize(d.X, 0, d.Z);
-				entity.Velocity -= dir * (1 - dist) / 32f;
+				entity.Velocity -= dir * (1 - dist) / 32f; // TODO: should be 24/25
 			}
 		}
 	}
