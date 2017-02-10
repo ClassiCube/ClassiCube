@@ -19,7 +19,9 @@ namespace ClassicalSharp.Entities {
 		
 		internal bool hitXMin, hitYMin, hitZMin;
 		internal bool hitXMax, hitYMax, hitZMax;
-		internal bool HorCollision { 
+		
+		/// <summary> Whether a collision occurred with any horizontal sides of any blocks. </summary>
+		internal bool HorizontalCollision { 
 			get { return hitXMin || hitXMax || hitZMin || hitZMax; } 
 		}
 		
@@ -39,6 +41,7 @@ namespace ClassicalSharp.Entities {
 
 		void CollideWithReachableBlocks(int count, ref Vector3 size,
 		                                ref AABB entityBB, ref AABB entityExtentBB) {
+			// Reset collision detection states
 			bool wasOn = entity.onGround;
 			entity.onGround = false;
 			hitXMin = false; hitYMin = false; hitZMin = false;
@@ -47,19 +50,21 @@ namespace ClassicalSharp.Entities {
 			Vector3 bPos;
 
 			for (int i = 0; i < count; i++) {
+				// Unpack the block and coordinate data
 				State state = Searcher.stateCache[i];
-				bPos.X = state.X >> 3; bPos.Y = state.Y >> 3; bPos.Z = state.Z >> 3;
-				
+				bPos.X = state.X >> 3; bPos.Y = state.Y >> 3; bPos.Z = state.Z >> 3;				
 				int block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
 				blockBB.Min = bPos + info.MinBB[block];
 				blockBB.Max = bPos + info.MaxBB[block];
 				if (!entityExtentBB.Intersects(blockBB)) continue;
 				
+				// Recheck time to collide with block (as colliding with blocks modifies this)
 				float tx = 0, ty = 0, tz = 0;
 				Searcher.CalcTime(ref entity.Velocity, ref entityBB, ref blockBB, out tx, out ty, out tz);
 				if (tx > 1 || ty > 1 || tz > 1)
 					Utils.LogDebug("t > 1 in physics calculation.. this shouldn't have happened.");
 				
+				// Calculate the location of the entity when it collides with this block
 				Vector3 v = entity.Velocity;
 				v.X *= tx; v.Y *= ty; v.Z *= tz;
 				AABB finalBB = entityBB;

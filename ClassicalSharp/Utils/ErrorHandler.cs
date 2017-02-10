@@ -66,16 +66,16 @@ namespace ClassicalSharp {
 				wroteToCrashLog = false;
 			}
 			
-			string message = wroteToCrashLog ?
-				"The cause of the error has been logged to \"" + fileName + "\". Please consider reporting the error to " +
-				"github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it." :
-				
-				"Failed to log the cause of the the error. Please consider reporting the circumstances " +
-				"of the error to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it." +
-				Environment.NewLine + Environment.NewLine + Format(ex);
-			
-			MessageBox.Show("An error occured and ClassicalSharp was forced to close." + Environment.NewLine +
-			                Environment.NewLine + message, "We're sorry");
+			string line1 = "ClassicalSharp crashed.";
+			if (wroteToCrashLog) {
+				line1 += " The cause of the crash has been logged to \"" + fileName + "\" in the client directory.";
+			}
+			string line2 = "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.";
+			if (!wroteToCrashLog) {
+				line2 += Environment.NewLine + Environment.NewLine + Format(ex);
+			}
+
+			MessageBox.Show(line1 + Environment.NewLine + Environment.NewLine + line2, "We're sorry");
 			Environment.Exit(1);
 		}
 		

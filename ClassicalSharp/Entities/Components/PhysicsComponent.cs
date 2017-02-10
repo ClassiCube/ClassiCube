@@ -63,7 +63,7 @@ namespace ClassicalSharp.Entities {
 					if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.02f;
 				} else if (pastJumpPoint) {
 					// either A) jump bob in water B) climb up solid on side
-					if (collisions.HorCollision)
+					if (collisions.HorizontalCollision)
 						entity.Velocity.Y += touchLava ? 0.30f : 0.13f;
 					else if (canLiquidJump)
 						entity.Velocity.Y += touchLava ? 0.20f : 0.10f;

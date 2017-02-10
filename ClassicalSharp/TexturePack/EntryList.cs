@@ -27,8 +27,7 @@ namespace ClassicalSharp.Textures {
 		public bool Load() {
 			string path = Path.Combine(Program.AppDirectory, folder);
 			path = Path.Combine(path, file);
-			if (!File.Exists(path))
-				return true;
+			if (!File.Exists(path)) return true;
 			
 			try {
 				using (Stream fs = File.OpenRead(path))
