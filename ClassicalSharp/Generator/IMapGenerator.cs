@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Threading;
+using ClassicalSharp.Map;
 using ClassicalSharp.Singleplayer;
 
 namespace ClassicalSharp.Generator {
@@ -9,7 +10,12 @@ namespace ClassicalSharp.Generator {
 		
 		public abstract string GeneratorName { get; }
 		
-		public abstract byte[] Generate(int width, int height, int length, int seed);
+		/// <summary> Generates the raw blocks within the map, using the given seed. </summary>
+		public abstract byte[] Generate(int seed);
+		
+		/// <summary> Applies environment settings (if required) to the newly generated world. </summary>
+		public virtual void ApplyEnv(World world) { }
+		
 		
 		public string CurrentState;
 		
@@ -25,7 +31,7 @@ namespace ClassicalSharp.Generator {
 				() => {
 					SinglePlayerServer server = (SinglePlayerServer)game.Server;
 					try {
-						server.generatedMap = Generate(width, height, length, seed);
+						server.generatedMap = Generate(seed);
 					} catch (Exception ex) {
 						ErrorHandler.LogError("IMapGenerator.RunAsync", ex);
 					}

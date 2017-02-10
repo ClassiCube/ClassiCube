@@ -12,11 +12,11 @@ namespace ClassicalSharp.Generator {
 		
 		void FillOblateSpheroid(int x, int y, int z, float radius, byte block) {
 			int xStart = Utils.Floor(Math.Max(x - radius, 0));
-			int xEnd = Utils.Floor(Math.Min(x + radius, width - 1));
+			int xEnd = Utils.Floor(Math.Min(x + radius, Width - 1));
 			int yStart = Utils.Floor(Math.Max(y - radius, 0));
-			int yEnd = Utils.Floor(Math.Min(y + radius, height - 1));
+			int yEnd = Utils.Floor(Math.Min(y + radius, Height - 1));
 			int zStart = Utils.Floor(Math.Max(z - radius, 0));
-			int zEnd = Utils.Floor(Math.Min(z + radius, length - 1));
+			int zEnd = Utils.Floor(Math.Min(z + radius, Length - 1));
 			float radiusSq = radius * radius;
 			
 			for (int yy = yStart; yy <= yEnd; yy++)
@@ -25,7 +25,7 @@ namespace ClassicalSharp.Generator {
 			{
 				int dx = xx - x, dy = yy - y, dz = zz - z;
 				if ((dx * dx + 2 * dy * dy + dz * dz) < radiusSq) {
-					int index = (yy * length + zz) * width + xx;
+					int index = (yy * Length + zz) * Width + xx;
 					if (blocks[index] == Block.Stone)
 						blocks[index] = block;
 				}
@@ -42,13 +42,13 @@ namespace ClassicalSharp.Generator {
 				if (blocks[index] != 0) continue;				
 				blocks[index] = block;
 				
-				int x = index % width;
+				int x = index % Width;
 				int y = index / oneY;
-				int z = (index / width) % length;
+				int z = (index / Width) % Length;
 				if (x > 0) stack.Push(index - 1);
-				if (x < width - 1) stack.Push(index + 1);
-				if (z > 0) stack.Push(index - width);
-				if (z < length - 1) stack.Push(index + width);
+				if (x < Width - 1) stack.Push(index + 1);
+				if (z > 0) stack.Push(index - Width);
+				if (z < Length - 1) stack.Push(index + Width);
 				if (y > 0) stack.Push(index - oneY);
 			}
 		}
