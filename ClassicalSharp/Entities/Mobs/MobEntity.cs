@@ -10,7 +10,9 @@ namespace ClassicalSharp.Entities.Mobs {
 		CollisionsComponent collisions;
 		PhysicsComponent physics;
 		static HacksComponent hacks = new HacksComponent(null, null);
+		
 		AI ai;
+		int climbCooldown;
 		
 		public MobEntity(Game game, string model) : base(game) {
 			StepSize = 0.5f;
@@ -41,8 +43,18 @@ namespace ClassicalSharp.Entities.Mobs {
 			
 			ai.Tick(game.LocalPlayer);
 			physics.PhysicsTick(ai.MoveVelocity);
+			DoWallClimb();
+			
 			interp.next.Pos = Position; Position = interp.prev.Pos;
-			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);			
+			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);
+		}
+		
+		void DoWallClimb() {
+			if (climbCooldown > 0) { climbCooldown--; return; }
+			if (!physics.collisions.HorizontalCollision) return;
+			
+			physics.DoNormalJump();
+			climbCooldown = 20;
 		}
 		
 		public override void SetLocation(LocationUpdate update, bool interpolate) {

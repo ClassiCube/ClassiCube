@@ -67,7 +67,7 @@ namespace ClassicalSharp.Entities.Mobs {
 		
 		public override void Tick(Entity target) {
 			float distSq = (target.Position - entity.Position).LengthSquared;
-			if (distSq > 32 * 32) {
+			if (distSq > 16 * 16) {
 				MoveRandomly(entity);
 			} else {
 				Vector3 dir = Vector3.Normalize(target.Position - entity.Position);
