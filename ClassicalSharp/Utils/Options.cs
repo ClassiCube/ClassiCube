@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 		public static float GetFloat(string key, float min, float max, float defValue) {
 			string value;
 			float valueFloat = 0;
-			if (!TryGetValue(key, out value) || !Single.TryParse(value, out valueFloat))
+			if (!TryGetValue(key, out value) || !Utils.TryParseDecimal(value, out valueFloat))
 				return defValue;
 			Utils.Clamp(ref valueFloat, min, max);
 			return valueFloat;
