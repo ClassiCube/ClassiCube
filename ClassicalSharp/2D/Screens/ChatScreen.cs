@@ -36,17 +36,13 @@ namespace ClassicalSharp.Gui.Screens {
 			fontSize = (int)(14 * game.GuiChatScale);
 			Utils.Clamp(ref fontSize, 8, 60);
 			announcementFont = new Font(game.FontName, fontSize);
-			ConstructWidgets();
-			
-			int[] indices = new int[chatLines];
-			for (int i = 0; i < indices.Length; i++)
-				indices[i] = -1;
-			Metadata = indices;
-			SetInitialMessages();
+			ContextRecreated();
 			
 			game.Events.ChatReceived += ChatReceived;
 			game.Events.ChatFontChanged += ChatFontChanged;
 			game.Events.ColourCodeChanged += ColourCodeChanged;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
 		void ConstructWidgets() {
@@ -228,6 +224,8 @@ namespace ClassicalSharp.Gui.Screens {
 
 		void ChatReceived(object sender, ChatEventArgs e) {
 			MessageType type = e.Type;
+			if (gfx.LostContext) return;
+			
 			if (type == MessageType.Normal) {
 				chatIndex++;
 				if (game.ChatLines == 0) return;
@@ -251,16 +249,26 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 
 		public override void Dispose() {
+			ContextLost();			
+			chatFont.Dispose();
+			chatUrlFont.Dispose();
+			announcementFont.Dispose();
+			
+			game.Events.ChatReceived -= ChatReceived;
+			game.Events.ChatFontChanged -= ChatFontChanged;
+			game.Events.ColourCodeChanged -= ColourCodeChanged;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
+		}
+		
+		void ContextLost() {
 			if (HandlesAllInput) {
 				game.chatInInputBuffer = input.Text.ToString();
 				game.CursorVisible = false;
 			} else {
 				game.chatInInputBuffer = null;
 			}
-			chatFont.Dispose();
-			chatUrlFont.Dispose();
-			announcementFont.Dispose();
-			
+
 			normalChat.Dispose();
 			input.DisposeFully();
 			altText.Dispose();
@@ -268,10 +276,16 @@ namespace ClassicalSharp.Gui.Screens {
 			bottomRight.Dispose();
 			clientStatus.Dispose();
 			announcement.Dispose();
+		}
+		
+		void ContextRecreated() {
+			ConstructWidgets();
 			
-			game.Events.ChatReceived -= ChatReceived;
-			game.Events.ChatFontChanged -= ChatFontChanged;
-			game.Events.ColourCodeChanged -= ColourCodeChanged;
+			int[] indices = new int[chatLines];
+			for (int i = 0; i < indices.Length; i++)
+				indices[i] = -1;
+			Metadata = indices;
+			SetInitialMessages();
 		}
 		
 		void ChatFontChanged(object sender, EventArgs e) {
