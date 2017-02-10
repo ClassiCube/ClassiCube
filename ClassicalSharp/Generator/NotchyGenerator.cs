@@ -115,8 +115,8 @@ namespace ClassicalSharp.Generator {
 				
 				for (int j = 0; j < caveLen; j++) {
 					caveX += Math.Sin(theta) * Math.Cos(phi);
-					caveY += Math.Cos(theta) * Math.Cos(phi);
-					caveZ += Math.Sin(phi);
+					caveZ += Math.Cos(theta) * Math.Cos(phi);
+					caveY += Math.Sin(phi);
 					
 					theta = theta + deltaTheta * 0.2;
 					deltaTheta = deltaTheta * 0.9 + rnd.NextFloat() - rnd.NextFloat();
@@ -127,9 +127,10 @@ namespace ClassicalSharp.Generator {
 					int cenX = (int)(caveX + (rnd.Next(4) - 2) * 0.2);
 					int cenY = (int)(caveY + (rnd.Next(4) - 2) * 0.2);
 					int cenZ = (int)(caveZ + (rnd.Next(4) - 2) * 0.2);
+					
 					double radius = (height - cenY) / (double)height;
 					radius = 1.2 + (radius * 3.5 + 1) * caveRadius;
-					radius = radius + Math.Sin(j * Math.PI / caveLen); // TODO: this should be * according to the spec. doesn't seem right though.
+					radius = radius * Math.Sin(j * Math.PI / caveLen);
 					FillOblateSpheroid(cenX, cenY, cenZ, (float)radius, Block.Air);
 				}
 			}
@@ -151,8 +152,8 @@ namespace ClassicalSharp.Generator {
 				
 				for (int j = 0; j < veinLen; j++) {
 					veinX += Math.Sin(theta) * Math.Cos(phi);
-					veinY += Math.Cos(theta) * Math.Cos(phi);
-					veinZ += Math.Sin(phi);
+					veinZ += Math.Cos(theta) * Math.Cos(phi);
+					veinY += Math.Sin(phi);
 					
 					theta = deltaTheta * 0.2;
 					deltaTheta = deltaTheta * 0.9 + rnd.NextFloat() - rnd.NextFloat();
