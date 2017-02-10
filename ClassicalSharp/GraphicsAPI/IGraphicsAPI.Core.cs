@@ -16,6 +16,24 @@ namespace ClassicalSharp.GraphicsAPI {
 			DeleteVb(ref texVb);
 		}
 		
+		public void LoseContext(string reason) {
+			LostContext = true;
+			Utils.LogDebug("Lost graphics context" + reason);
+			if (ContextLost != null) ContextLost();			
+			
+			DeleteVb(ref quadVb);
+			DeleteVb(ref texVb);
+		}
+		
+		public void RecreateContext() {
+			LostContext = false;
+			Utils.LogDebug("Recreating graphics context");
+			if (ContextRecreated != null) ContextRecreated();
+			
+			InitDynamicBuffers();
+		}
+		
+		
 		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
 		public void UpdateDynamicVb<T>(DrawMode mode, int vb, T[] vertices, int vCount) where T : struct {

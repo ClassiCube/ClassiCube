@@ -30,14 +30,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Event raised when a context is recreated after having been previously lost. </summary>
 		public event Action ContextRecreated;
-
-		protected void RaiseContextLost() {
-			if (ContextLost != null) ContextLost();
-		}
-		
-		protected void RaiseContextRecreated() {
-			if (ContextRecreated != null) ContextRecreated();
-		}
 		
 		/// <summary> Delegate that is invoked when the current context is lost,
 		/// and is repeatedly invoked until the context can be retrieved. </summary>

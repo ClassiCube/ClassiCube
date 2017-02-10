@@ -392,7 +392,8 @@ namespace ClassicalSharp.GraphicsAPI {
 				throw new SharpDXException(code);
 			
 			// TODO: Make sure this actually works on all graphics cards.
-			Utils.LogDebug("Lost Direct3D device.");
+			
+			LoseContext(" (Direct3D9 device lost)");
 			LoopUntilRetrieved();
 			RecreateDevice(game);
 		}
@@ -405,9 +406,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			while (true) {
 				Thread.Sleep(50);
 				uint code = (uint)device.TestCooperativeLevel();
-				if ((uint)code == (uint)Direct3DError.DeviceNotReset) {
-					Utils.LogDebug("Retrieved Direct3D device again."); return;
-				}
+				if ((uint)code == (uint)Direct3DError.DeviceNotReset) return;
+				
 				task.Callback(task);
 			}
 		}
@@ -417,29 +417,25 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void SetVSync(Game game, bool value) {
 			vsync = value;
 			game.VSync = value;
+			
+			LoseContext(" (toggling VSync)");
 			RecreateDevice(game);
 		}
 		
 		public override void OnWindowResize(Game game) {
+			LoseContext(" (resizing window)");
 			RecreateDevice(game);
 		}
 		
 		void RecreateDevice(Game game) {
 			PresentParameters args = GetPresentArgs(game.Width, game.Height);
-			LostContext = true;
-			RaiseContextLost();
-			DeleteVb(ref quadVb);
-			DeleteVb(ref texVb);
 			
 			while ((uint)device.Reset(args) == (uint)Direct3DError.DeviceLost)
 				LoopUntilRetrieved();
 			
 			SetDefaultRenderStates();
 			RestoreRenderStates();
-			
-			LostContext = false;
-			RaiseContextRecreated();
-			InitDynamicBuffers();
+			RecreateContext();
 		}
 		
 		void SetDefaultRenderStates() {
