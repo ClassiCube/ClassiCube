@@ -32,9 +32,8 @@ namespace ClassicalSharp {
 				input.ButtonStateChanged(MouseButton.Middle, middle);
 			}
 			
-			int buttonsDown = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
-			if (buttonsDown > 1 || game.Gui.ActiveScreen.HandlesAllInput ||
-			    inv.HeldBlock == Block.Air) return;
+			int btns = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
+			if (btns > 1 || game.Gui.ActiveScreen.HandlesAllInput || inv.HeldBlock == Block.Invalid) return;
 			
 			// always play delete animations, even if we aren't picking a block.
 			if (left) {

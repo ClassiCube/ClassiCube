@@ -58,6 +58,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			if (!Utils.IsPowerOf2(bmp.Width) || !Utils.IsPowerOf2(bmp.Height)) {
 				throw new ArgumentOutOfRangeException("Bitmap must have power of two dimensions");
 			}
+			if (LostContext) throw new InvalidOperationException("Cannot create texture when context lost");
 			
 			if (!bmp.IsLocked) bmp.LockBits();		
 			int texId = CreateTexture(bmp.Width, bmp.Height, bmp.Scan0, managedPool);

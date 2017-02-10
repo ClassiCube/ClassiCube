@@ -39,7 +39,7 @@ namespace ClassicalSharp.Mode {
 			if (invCount[index] != 0) return;
 			
 			// bypass HeldBlock's normal behaviour
-			game.Inventory.Hotbar[index] = Block.Invalid;
+			game.Inventory.Hotbar[index] = Block.Air;
 			game.Events.RaiseHeldBlockChanged();
 		}
 		
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Mode {
 			}
 			if (index == -1) {
 				for (int i = hotbar.Length - 1; i >= 0; i--) {
-					if (hotbar[i] == Block.Invalid) index = i;
+					if (hotbar[i] == Block.Air) index = i;
 				}
 			}
 			if (index == -1) return; // no free slots
@@ -116,7 +116,7 @@ namespace ClassicalSharp.Mode {
 			this.game = game;
 			byte[] hotbar = game.Inventory.Hotbar;
 			for (int i = 0; i < hotbar.Length; i++)
-				hotbar[i] = Block.Invalid;
+				hotbar[i] = Block.Air;
 			hotbar[hotbar.Length - 1] = Block.TNT;
 		}
 		
