@@ -31,6 +31,7 @@ namespace ClassicalSharp.Gui.Screens {
 		int alwaysIndex = 100;
 		
 		public override void Init() {
+			base.Init();
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
 			backCol.A = 210;
@@ -101,6 +102,17 @@ namespace ClassicalSharp.Gui.Screens {
 			for (int i = 0; i < labels.Length; i++)
 				labels[i].Dispose();
 		}
+		
+		protected override void ContextLost()
+		{
+			base.ContextLost();
+		}
+		
+		protected override void ContextRecreated()
+		{
+			throw new NotImplementedException();
+		}
+		
 		
 		void InitStandardButtons() {
 			widgets = new ButtonWidget[showAlways ? 4 : 2];

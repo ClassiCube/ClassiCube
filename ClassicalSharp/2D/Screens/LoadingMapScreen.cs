@@ -12,18 +12,106 @@ namespace ClassicalSharp.Gui.Screens {
 	public class LoadingMapScreen : Screen {
 		
 		readonly Font font;
-		public LoadingMapScreen(Game game, string name, string motd) : base(game) {
-			serverName = name;
-			serverMotd = motd;
+		public LoadingMapScreen(Game game, string title, string message) : base(game) {
+			this.title = title;
+			this.message = message;
 			font = new Font(game.FontName, 16);
 		}
 		
-		string serverName, serverMotd;
+		string title, message;
 		float progress;
 		TextWidget titleWidget, messageWidget;
 		const int progWidth = 220, progHeight = 10;
 		readonly FastColour backCol = new FastColour(128, 128, 128);
 		readonly FastColour progressCol = new FastColour(128, 255, 128);
+
+		
+		public override void Init() {
+			gfx.Fog = false;
+			ContextRecreated();
+			
+			game.WorldEvents.MapLoading += MapLoading;
+			gfx.ContextLost += ContextLost;
+			gfx.ContextRecreated += ContextRecreated;
+		}
+		
+		public void SetTitle(string title) {
+			this.title = title;
+			if (titleWidget != null) titleWidget.Dispose();
+			
+			titleWidget = TextWidget.Create(game, title, font)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -80);
+		}
+		
+		public void SetMessage(string message) {
+			this.message = message;
+			if (messageWidget != null) messageWidget.Dispose();
+			
+			messageWidget = TextWidget.Create(game, message, font)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);
+		}
+		
+		public void SetProgress(float progress) {
+			this.progress = progress;
+		}
+
+		void MapLoading(object sender, MapLoadingEventArgs e) {
+			progress = e.Progress;
+		}
+		
+		public override void Dispose() {
+			font.Dispose();
+			ContextLost();
+			
+			game.WorldEvents.MapLoading -= MapLoading;
+			gfx.ContextLost -= ContextLost;
+			gfx.ContextRecreated -= ContextRecreated;
+		}
+		
+		public override void OnResize(int width, int height) {
+			messageWidget.CalculatePosition();
+			titleWidget.CalculatePosition();
+		}
+		
+		protected override void ContextLost() {
+			messageWidget.Dispose();
+			titleWidget.Dispose();
+		}
+		
+		protected override void ContextRecreated() {
+			SetTitle(title);
+			SetMessage(message);
+		}
+		
+		
+		public override bool BlocksWorld { get { return true; } }
+		
+		public override bool HandlesAllInput { get { return true; } }
+		
+		public override bool RenderHudAfter { get { return true; } }
+		
+		public override bool HandlesKeyDown(Key key) {
+			if (key == Key.Tab) return true;
+			return game.Gui.hudScreen.HandlesKeyDown(key);
+		}
+		
+		public override bool HandlesKeyPress(char key)  {
+			return game.Gui.hudScreen.HandlesKeyPress(key);
+		}
+		
+		public override bool HandlesKeyUp(Key key) {
+			if (key == Key.Tab) return true;
+			return game.Gui.hudScreen.HandlesKeyUp(key);
+		}
+		
+		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) { return true; }
+		
+		public override bool HandlesMouseMove(int mouseX, int mouseY) { return true; }
+		
+		public override bool HandlesMouseScroll(int delta)  { return true; }
+		
+		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return true; }
+		
 		
 		public override void Render(double delta) {
 			gfx.Texturing = true;
@@ -73,74 +161,5 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles, cache.vb, cache.vertices, index);
 			index = 0;
 		}
-		
-		public override void Init() {
-			gfx.Fog = false;
-			SetTitle(serverName);
-			SetMessage(serverMotd);
-			game.WorldEvents.MapLoading += MapLoading;
-		}
-		
-		public void SetTitle(string title) {
-			if (titleWidget != null)
-				titleWidget.Dispose();
-			titleWidget = TextWidget.Create(game, title, font)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -80);
-		}
-		
-		public void SetMessage(string message) {
-			if (messageWidget != null)
-				messageWidget.Dispose();
-			messageWidget = TextWidget.Create(game, message, font)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);
-		}
-		
-		public void SetProgress(float progress) {
-			this.progress = progress;
-		}
-
-		void MapLoading(object sender, MapLoadingEventArgs e) {
-			progress = e.Progress;
-		}
-		
-		public override void Dispose() {
-			font.Dispose();
-			messageWidget.Dispose();
-			titleWidget.Dispose();
-			game.WorldEvents.MapLoading -= MapLoading;
-		}
-		
-		public override void OnResize(int width, int height) {
-			messageWidget.CalculatePosition();
-			titleWidget.CalculatePosition();
-		}
-		
-		public override bool BlocksWorld { get { return true; } }
-		
-		public override bool HandlesAllInput { get { return true; } }
-		
-		public override bool RenderHudAfter { get { return true; } }
-		
-		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.Tab) return true;
-			return game.Gui.hudScreen.HandlesKeyDown(key);
-		}
-		
-		public override bool HandlesKeyPress(char key)  {
-			return game.Gui.hudScreen.HandlesKeyPress(key);
-		}
-		
-		public override bool HandlesKeyUp(Key key) {
-			if (key == Key.Tab) return true;
-			return game.Gui.hudScreen.HandlesKeyUp(key);
-		}
-		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) { return true; }
-		
-		public override bool HandlesMouseMove(int mouseX, int mouseY) { return true; }
-		
-		public override bool HandlesMouseScroll(int delta)  { return true; }
-		
-		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return true; }
 	}
 }

@@ -17,7 +17,12 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			
+			ContextRecreated();
+			MakeDefaultValues();
+			MakeValidators();
+		}
+		
+		protected override void ContextRecreated() {
 			widgets = new Widget[] {
 				// Column 1
 				MakeOpt(-1, -150, "Clouds col", OnWidgetClick,
@@ -65,8 +70,6 @@ namespace ClassicalSharp.Gui.Screens {
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null, null,
 			};
-			MakeDefaultValues();
-			MakeValidators();
 		}
 		
 		void MakeDefaultValues() {

@@ -17,7 +17,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
+			ContextRecreated();
 			
+			MakeDefaultValues();
+			MakeValidators();
+			MakeDescriptions();
+			game.Events.HackPermissionsChanged += CheckHacksAllowed;
+		}
+		
+		protected override void ContextRecreated() {
 			widgets = new Widget[] {
 				// Column 1
 				MakeBool(-1, -150, "Hacks enabled", OptionsKey.HacksEnabled,
@@ -69,11 +77,6 @@ namespace ClassicalSharp.Gui.Screens {
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null,
 			};
-			
-			MakeDefaultValues();
-			MakeValidators();
-			MakeDescriptions();
-			game.Events.HackPermissionsChanged += CheckHacksAllowed;
 			CheckHacksAllowed(null, null);
 		}
 		

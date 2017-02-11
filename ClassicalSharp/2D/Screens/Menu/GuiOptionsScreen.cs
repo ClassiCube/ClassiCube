@@ -10,7 +10,12 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			
+			ContextRecreated();
+			MakeValidators();
+			MakeDescriptions();
+		}
+		
+		protected override void ContextRecreated() {
 			widgets = new Widget[] {
 				// Column 1
 				MakeBool(-1, -150, "Black text shadows", OptionsKey.BlackTextShadows,
@@ -69,9 +74,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null,
-			};			
-			MakeValidators();
-			MakeDescriptions();
+			};		
 		}
 		
 		void HandleFontChange() {

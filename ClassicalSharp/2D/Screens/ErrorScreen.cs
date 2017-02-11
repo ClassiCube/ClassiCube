@@ -34,31 +34,23 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
-			game.SkipClear = true;
-			string msg = canReconnect ? "Reconnect in " + delay : "Reconnect";
-			widgets = new Widget[] {
-				TextWidget.Create(game, title, titleFont)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30),
-				TextWidget.Create(game, message, messageFont)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 10),
-				ButtonWidget.Create(game, 301, 40, msg, titleFont, ReconnectClick)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 80),
-			};
-			widgets[2].Disabled = !canReconnect;
+			game.SkipClear = true;		
+			gfx.ContextLost += ContextLost;
+			gfx.ContextRecreated += ContextRecreated;
 			
-			game.Graphics.ContextRecreated += ContextRecreated;
-			initTime = DateTime.UtcNow;
-			clearTime = DateTime.UtcNow.AddSeconds(0.5);
+			ContextRecreated();
+			initTime = DateTime.UtcNow;			
 			lastSecsLeft = delay;
 		}
 
 		public override void Dispose() {
 			game.SkipClear = false;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+			gfx.ContextLost -= ContextLost;
+			gfx.ContextRecreated -= ContextRecreated;
+			
+			ContextLost();
 			titleFont.Dispose();
-			messageFont.Dispose();
-			for (int i = 0; i < widgets.Length; i++)
-				widgets[i].Dispose();
+			messageFont.Dispose();			
 		}
 		
 		public override void OnResize(int width, int height) {
@@ -130,7 +122,22 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Server.Connect(game.IPAddress, game.Port);
 		}
 		
-		void ContextRecreated() {
+		protected override void ContextLost() {
+			for (int i = 0; i < widgets.Length; i++)
+				widgets[i].Dispose();
+		}
+		
+		protected override void ContextRecreated() {
+			string msg = canReconnect ? "Reconnect in " + delay : "Reconnect";
+			widgets = new Widget[] {
+				TextWidget.Create(game, title, titleFont)
+					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30),
+				TextWidget.Create(game, message, messageFont)
+					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 10),
+				ButtonWidget.Create(game, 301, 40, msg, titleFont, ReconnectClick)
+					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 80),
+			};
+			widgets[2].Disabled = !canReconnect;
 			clearTime = DateTime.UtcNow.AddSeconds(0.5);
 		}
 	}

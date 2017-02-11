@@ -23,12 +23,14 @@ namespace ClassicalSharp.Gui.Screens {
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			keyFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16, FontStyle.Italic);
+			base.Init();
 			
 			if (keyNames == null)
 				keyNames = Enum.GetNames(typeof(Key));
 		}
 
 		protected void MakeWidgets(int y) {
+			index = 0;
 			int origin = y;
 			MakeOthers();
 			

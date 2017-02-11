@@ -12,7 +12,21 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
+			ContextRecreated();
 			
+			validators = new MenuInputValidator[] {
+				new BooleanValidator(),
+				new BooleanValidator(),
+				new BooleanValidator(),
+				new BooleanValidator(),
+				
+				new BooleanValidator(),
+				new BooleanValidator(),
+				new BooleanValidator(),
+			};
+		}
+		
+		protected override void ContextRecreated() {
 			widgets = new Widget[] {
 				// Column 1
 				MakeBool(-1, -100, "Classic arms anim", OptionsKey.SimpleArmsAnim, true,
@@ -37,17 +51,6 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(PreviousScreen())),
 				null, null,
-			};
-			
-			validators = new MenuInputValidator[] {
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
-				
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
 			};
 		}
 		

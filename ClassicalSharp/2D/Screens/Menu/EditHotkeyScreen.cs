@@ -61,10 +61,14 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
+			base.Init();
 			game.Keyboard.KeyRepeat = true;
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
-			
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
 			string flags = HotkeyListScreen.MakeFlagsString(curHotkey.Flags);
 			if (curHotkey.Text == null) curHotkey.Text = "";
 			string staysOpen = curHotkey.StaysOpen ? "yes" : "no";
@@ -91,8 +95,8 @@ namespace ClassicalSharp.Gui.Screens {
 				         (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
 			};
 			
-			((InputWidget)widgets[2]).ShowCaret = true;
-			widgets[2].OnClick = InputClick;
+			((InputWidget)widgets[actionI]).ShowCaret = true;
+			widgets[actionI].OnClick = InputClick;
 		}
 		
 		public override void Dispose() {

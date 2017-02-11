@@ -263,7 +263,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
-		void ContextLost() {
+		protected override void ContextLost() {
 			if (HandlesAllInput) {
 				game.chatInInputBuffer = input.Text.ToString();
 				game.CursorVisible = false;
@@ -280,7 +280,7 @@ namespace ClassicalSharp.Gui.Screens {
 			announcement.Dispose();
 		}
 		
-		void ContextRecreated() {
+		protected override void ContextRecreated() {
 			ConstructWidgets();
 			
 			int[] indices = new int[chatLines];

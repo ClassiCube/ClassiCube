@@ -67,12 +67,39 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.Draw2DQuad(cenX - chWeight, cenY - chExtent, chWeight * 2, chExtent * 2, col);
 		}
 		
+		bool hadPlayerList;
+		protected override void ContextLost() {
+			hadPlayerList = playerList != null;
+			if (playerList != null)
+				playerList.Dispose();
+			playerList = null;
+		}
+		
+		protected override void ContextRecreated() {
+			if (!hadPlayerList) return;
+			
+			if (game.UseClassicTabList) {
+				playerList = new ClassicPlayerListWidget(game, playerFont);
+			} else if (game.Server.UsingExtPlayerList) {
+				playerList = new ExtPlayerListWidget(game, playerFont);
+			} else {
+				playerList = new NormalPlayerListWidget(game, playerFont);
+			}
+			
+			playerList.Init();
+			playerList.RecalcYOffset();
+			playerList.CalculatePosition();
+		}
+		
 		public override void Dispose() {
 			playerFont.Dispose();
 			chat.Dispose();
 			hotbar.Dispose();
-			if (playerList != null)
-				playerList.Dispose();
+			ContextLost();
+			
+			game.WorldEvents.OnNewMap -= OnNewMap;
+			gfx.ContextLost -= ContextLost;
+			gfx.ContextRecreated -= ContextRecreated;
 		}
 		
 		public void GainFocus() {
@@ -102,27 +129,26 @@ namespace ClassicalSharp.Gui.Screens {
 			hotbar.Init();
 			chat = new ChatScreen(game, this);
 			chat.Init();
+			
 			game.WorldEvents.OnNewMap += OnNewMap;
+			gfx.ContextLost += ContextLost;
+			gfx.ContextRecreated += ContextRecreated;
 		}
 
-		void OnNewMap(object sender, EventArgs e) {
-			if (playerList != null)
-				playerList.Dispose();
-			playerList = null;
-		}
+		void OnNewMap(object sender, EventArgs e) { ContextLost(); }
 		
 		public override bool HandlesAllInput { get { return chat.HandlesAllInput; } }
 
-		public override bool HandlesKeyPress(char key) {
-			return chat.HandlesKeyPress(key);
-		}
+		public override bool HandlesKeyPress(char key) { return chat.HandlesKeyPress(key); }
 		
 		public override bool HandlesKeyDown(Key key) {
 			Key playerListKey = game.Mapping(KeyBind.PlayerList);
 			bool handles = playerListKey != Key.Tab || !game.TabAutocomplete || !chat.HandlesAllInput;
 			if (key == playerListKey && handles) {
-				if (playerList == null && !game.Server.IsSinglePlayer)
-					CreatePlayerListWidget();
+				if (playerList == null && !game.Server.IsSinglePlayer) {
+					hadPlayerList = true;
+					ContextRecreated();
+				}
 				return true;
 			}
 			
@@ -131,23 +157,10 @@ namespace ClassicalSharp.Gui.Screens {
 			return hotbar.HandlesKeyDown(key);
 		}
 		
-		void CreatePlayerListWidget() {
-			if (game.UseClassicTabList) {
-				playerList = new ClassicPlayerListWidget(game, playerFont);
-			} else if (game.Server.UsingExtPlayerList) {
-				playerList = new ExtPlayerListWidget(game, playerFont);
-			} else {
-				playerList = new NormalPlayerListWidget(game, playerFont);
-			}
-			
-			playerList.Init();
-			playerList.RecalcYOffset();
-			playerList.CalculatePosition();
-		}
-		
 		public override bool HandlesKeyUp(Key key) {
 			if (key == game.Mapping(KeyBind.PlayerList)) {
 				if (playerList != null) {
+					hadPlayerList = false;
 					playerList.Dispose();
 					playerList = null;
 					return true;

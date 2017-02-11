@@ -23,6 +23,16 @@ namespace ClassicalSharp.Gui.Screens {
 			textFont = new Font(game.FontName, 16, FontStyle.Bold);
 			arrowFont = new Font(game.FontName, 18, FontStyle.Bold);
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
+			ContextRecreated();
+		}
+		
+		protected override void ContextLost() {
+			for (int i = 0; i < buttons.Length; i++)
+				buttons[i].Dispose();
+			title.Dispose();
+		}
+		
+		protected override void ContextRecreated() {
 			title = TextWidget.Create(game, titleText, titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -155);
 			
@@ -46,11 +56,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Dispose() {
-			for (int i = 0; i < buttons.Length; i++)
-				buttons[i].Dispose();
+			ContextLost();
 			textFont.Dispose();
 			arrowFont.Dispose();
-			title.Dispose();
 			titleFont.Dispose();
 		}
 		

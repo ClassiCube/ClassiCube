@@ -74,14 +74,24 @@ namespace ClassicalSharp.Gui.Screens {
 			font = new Font(game.FontName, 14);
 			posFont = new Font(game.FontName, 14, FontStyle.Italic);
 			game.Events.ChatFontChanged += ChatFontChanged;
-			
+			ContextRecreated();
+		}
+		
+		// TODO: hook
+		protected override void ContextLost() {
+			fpsText.Dispose();
+			posAtlas.Dispose();
+			hackStates.Dispose();
+		}
+		
+		protected override void ContextRecreated() {
 			fpsText = new TextWidget(game, font)
 				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, 2);
 			fpsText.ReducePadding = true;
 			fpsText.Init();
-			
 			string msg = text.Length > 0 ? text.ToString() : "FPS: no data yet";
 			fpsText.SetText(msg);
+			
 			posAtlas = new TextAtlas(game);
 			posAtlas.Pack("0123456789-, ()", posFont, "Feet pos: ");
 			posAtlas.tex.Y = (short)(fpsText.Height + 2);
@@ -97,10 +107,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Dispose() {
 			font.Dispose();
 			posFont.Dispose();
-			fpsText.Dispose();
-			
-			posAtlas.Dispose();
-			hackStates.Dispose();
+			ContextLost();
 			game.Events.ChatFontChanged -= ChatFontChanged;
 		}
 		

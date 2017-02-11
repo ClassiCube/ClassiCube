@@ -35,5 +35,9 @@ namespace ClassicalSharp.Gui.Screens {
 				action(g, w);
 			};
 		}
+		
+		protected abstract void ContextLost();
+		
+		protected abstract void ContextRecreated();
 	}
 }

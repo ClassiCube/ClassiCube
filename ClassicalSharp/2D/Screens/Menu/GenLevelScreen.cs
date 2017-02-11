@@ -39,10 +39,14 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
+			base.Init();
 			game.Keyboard.KeyRepeat = true;
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
-			
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
 			widgets = new Widget[] {
 				MakeInput(-80, false, game.World.Width.ToString()),
 				MakeInput(-40, false, game.World.Height.ToString()),

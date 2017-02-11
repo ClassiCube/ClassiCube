@@ -13,7 +13,12 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			
+			ContextRecreated();
+			MakeValidators();
+			MakeDescriptions();
+		}
+		
+		protected override void ContextRecreated() {
 			widgets = new Widget[] {	
 				
 				MakeOpt(-1, -50, "FPS mode", OnWidgetClick,
@@ -45,8 +50,6 @@ namespace ClassicalSharp.Gui.Screens {
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null,
 			};
-			MakeValidators();
-			MakeDescriptions();
 		}
 		
 		void SetSmoothLighting(Game g, bool v) {

@@ -22,15 +22,14 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
+			base.Init();
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
-			
-			MakeNormal();
-			CheckHacksAllowed(null, null);
+			ContextRecreated();
 		}
 		
-		void MakeNormal() {
+		protected override void ContextRecreated() {
 			widgets = new Widget[] {
 				Make(-1, -100, "Misc options",
 				     (g, w) => g.Gui.SetNewScreen(new MiscOptionsScreen(g))),
@@ -50,6 +49,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(false, titleFont, 
 				         (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
 			};
+			CheckHacksAllowed(null, null);
 		}
 		
 		void CheckHacksAllowed(object sender, EventArgs e) {

@@ -36,6 +36,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
+			base.Init();
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
 			game.Keyboard.KeyRepeat = true;

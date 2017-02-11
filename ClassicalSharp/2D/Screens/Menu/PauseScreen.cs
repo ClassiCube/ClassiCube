@@ -11,9 +11,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
+			base.Init();
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
-			
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
 			if (game.UseClassicOptions) {
 				MakeClassic();
 			} else {

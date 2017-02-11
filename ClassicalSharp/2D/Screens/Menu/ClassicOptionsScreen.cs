@@ -12,6 +12,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
+			ContextRecreated();
+			MakeValidators();
+		}
+		
+		protected override void ContextRecreated() {
 			IServerConnection network = game.Server;
 			
 			widgets = new Widget[] {
@@ -62,7 +67,6 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(401, "Done", 22, titleFont, (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
 				null, null,
 			};
-			MakeValidators();
 		}
 		
 		void MakeValidators() {

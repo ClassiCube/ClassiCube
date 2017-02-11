@@ -19,15 +19,19 @@ namespace ClassicalSharp.Gui.Screens {
 			right[0] = KeyBind.Left; right[1] = KeyBind.Right; right[2] = KeyBind.Inventory;
 			right[3] = KeyBind.ToggleFog; right[4] = KeyBind.Respawn;
 			leftDesc = new string[] { "Forward", "Back", "Jump", "Chat", "Save loc" };
-			rightDesc = new string[] { "Left", "Right", "Build", "Toggle fog", "Load loc" };
+			rightDesc = new string[] { "Left", "Right", "Build", "Toggle fog", "Load loc" };			
 			
-			widgets = new Widget[left.Length + right.Length + 4];
 			if (game.ClassicHacks) {
 				title = "Normal controls";
 				rightPage = (g, w) => g.Gui.SetNewScreen(new ClassicHacksKeyBindingsScreen(g));
 			} else {
 				btnWidth = 301; btnHeight = 40; btnDistance = 48;
 			}
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
+			widgets = new Widget[left.Length + right.Length + 4];
 			MakeWidgets(-140);
 		}
 	}
@@ -45,9 +49,14 @@ namespace ClassicalSharp.Gui.Screens {
 			leftDesc = new string[] { "Speed", "Noclip", "Half speed" };
 			rightDesc = new string[] { "Fly", "Fly up", "Fly down"	};
 			
-			widgets = new Widget[left.Length + right.Length + 4];
+			
 			leftPage = (g, w) => g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g));
 			title = "Hacks controls";
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
+			widgets = new Widget[left.Length + right.Length + 4];
 			MakeWidgets(-95);
 		}
 	}
@@ -67,9 +76,13 @@ namespace ClassicalSharp.Gui.Screens {
 			leftDesc = new string[] { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list" };
 			rightDesc = new string[] { "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 			
-			widgets = new Widget[left.Length + right.Length + 4];
 			title = "Normal controls";
 			rightPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
+			widgets = new Widget[left.Length + right.Length + 4];
 			MakeWidgets(-140);
 		}
 	}
@@ -88,10 +101,15 @@ namespace ClassicalSharp.Gui.Screens {
 			leftDesc = new string[] { "Speed", "Noclip", "Half speed" };
 			rightDesc = new string[] { "Fly", "Fly up", "Fly down", "Third person" };
 			
-			widgets = new Widget[left.Length + right.Length + 4];
+			
 			title = "Hacks controls";
 			leftPage = (g, w) => g.Gui.SetNewScreen(new NormalKeyBindingsScreen(g));
 			rightPage = (g, w) => g.Gui.SetNewScreen(new OtherKeyBindingsScreen(g));
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
+			widgets = new Widget[left.Length + right.Length + 4];
 			MakeWidgets(-50);
 		}
 	}
@@ -109,10 +127,14 @@ namespace ClassicalSharp.Gui.Screens {
 			leftDesc = new string[] { "Show ext input", "Hide FPS", "Hide gui" };
 			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Toggle auto-rotate" };
 			
-			widgets = new Widget[left.Length + right.Length + 4];
 			title = "Other controls";
 			leftPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
 			rightPage = (g, w) => g.Gui.SetNewScreen(new MouseKeyBindingsScreen(g));
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
+			widgets = new Widget[left.Length + right.Length + 4];
 			MakeWidgets(-50);
 		}
 	}
@@ -127,11 +149,15 @@ namespace ClassicalSharp.Gui.Screens {
 			left[0] = KeyBind.MouseLeft; left[1] = KeyBind.MouseMiddle; left[2] = KeyBind.MouseRight;
 			leftDesc = new string[] { "Left", "Middle", "Right" };
 			
-			widgets = new Widget[left.Length + 5];
 			title = "Mouse key bindings";
 			leftPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
+			widgets = new Widget[left.Length + 5];
 			MakeWidgets(-50);
-
+			
 			widgets[index++] = TextWidget.Create(game, "&eRight click to remove the key binding", regularFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 80);
 		}

@@ -51,12 +51,15 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
+			base.Init();
 			game.Keyboard.KeyRepeat = true;
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
-			
-			input = MenuInputWidget.Create(game, 500, 30, "",
-			                                     regularFont, new PathValidator())
+			ContextRecreated();
+		}
+		
+		protected override void ContextRecreated() {
+			input = MenuInputWidget.Create(game, 500, 30, "", regularFont, new PathValidator())
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);
 			input.ShowCaret = true;
 			

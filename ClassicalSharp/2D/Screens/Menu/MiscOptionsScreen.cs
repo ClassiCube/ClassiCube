@@ -12,8 +12,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
+			ContextRecreated();
+			MakeValidators();
+			MakeDescriptions();
+		}
+		
+		protected override void ContextRecreated() {
 			IServerConnection network = game.Server;
-			
 			widgets = new Widget[] {
 				// Column 1
 				!network.IsSinglePlayer ? null :
@@ -54,8 +59,6 @@ namespace ClassicalSharp.Gui.Screens {
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null,
 			};
-			MakeValidators();
-			MakeDescriptions();
 		}
 		
 		void MakeValidators() {

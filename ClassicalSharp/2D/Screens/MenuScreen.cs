@@ -31,16 +31,25 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.Texturing = false;
 		}
 		
+		public override void Init() {
+			gfx.ContextLost += ContextLost;
+			gfx.ContextRecreated += ContextRecreated;
+		}
+		
 		public override void Dispose() {
+			ContextLost();
+			if (titleFont != null) titleFont.Dispose();
+			if (regularFont != null) regularFont.Dispose();
+			
+			gfx.ContextLost -= ContextLost;
+			gfx.ContextRecreated -= ContextRecreated;
+		}
+		
+		protected override void ContextLost() {
 			for (int i = 0; i < widgets.Length; i++) {
 				if (widgets[i] == null) continue;
 				widgets[i].Dispose();
 			}
-			
-			if (titleFont != null)
-				titleFont.Dispose();
-			if (regularFont != null)
-				regularFont.Dispose();
 		}
 
 		public override void OnResize(int width, int height) {
@@ -49,6 +58,7 @@ namespace ClassicalSharp.Gui.Screens {
 				widgets[i].CalculatePosition();
 			}
 		}
+		
 		
 		public override bool HandlesAllInput { get { return true; } }
 		

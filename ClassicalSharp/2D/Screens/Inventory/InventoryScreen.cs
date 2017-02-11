@@ -101,7 +101,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			font.Dispose();
-			gfx.DeleteTexture(ref blockInfoTexture);
 			game.Events.BlockPermissionsChanged -= BlockPermissionsChanged;
 			game.Keyboard.KeyRepeat = false;
 			
@@ -231,10 +230,15 @@ namespace ClassicalSharp.Gui.Screens {
 				block == Block.Grass || game.BlockInfo.IsLiquid(block);
 		}
 		
-		void ContextLost() { game.Graphics.DeleteVb(ref vb); }
+		protected override void ContextLost() { 
+			gfx.DeleteVb(ref vb);
+			gfx.DeleteTexture(ref blockInfoTexture);
+			lastCreatedIndex = -1000;
+		}
 		
-		void ContextRecreated() {
-			vb = game.Graphics.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
+		protected override void ContextRecreated() {
+			vb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
+			RecreateBlockInfoTexture();
 		}
 	}
 }
