@@ -131,11 +131,14 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextLost() {
+			if (widgets == null) return;
 			for (int i = 0; i < widgets.Length; i++)
 				widgets[i].Dispose();
 		}
 		
 		protected override void ContextRecreated() {
+			if (gfx.LostContext) return;
+			
 			string msg = ReconnectMessage();
 			widgets = new Widget[] {
 				TextWidget.Create(game, title, titleFont)

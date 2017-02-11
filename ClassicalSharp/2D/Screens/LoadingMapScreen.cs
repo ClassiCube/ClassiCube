@@ -74,11 +74,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextLost() {
+			if (messageWidget == null) return;
 			messageWidget.Dispose();
 			titleWidget.Dispose();
 		}
 		
 		protected override void ContextRecreated() {
+			if (gfx.LostContext) return;
 			SetTitle(title);
 			SetMessage(message);
 		}

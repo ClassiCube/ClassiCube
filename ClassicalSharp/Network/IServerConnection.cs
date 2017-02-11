@@ -118,12 +118,11 @@ namespace ClassicalSharp {
 			DateTime lastModified = TextureCache.GetLastModified(url, game.LastModified);
 			string etag = TextureCache.GetETag(url, game.ETags);
 
+			TexturePack.ExtractCurrent(game, url);
 			if (url.Contains(".zip")) {
-				TexturePack.ExtractCachedTexturePack(game, url);
 				game.AsyncDownloader.DownloadData(url, true, "texturePack",
 				                                  lastModified, etag);
 			} else {
-				TexturePack.ExtractCachedTerrainPng(game, url);
 				game.AsyncDownloader.DownloadImage(url, true, "terrain",
 				                                   lastModified, etag);
 			}

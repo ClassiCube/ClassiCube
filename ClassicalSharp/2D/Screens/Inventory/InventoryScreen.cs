@@ -176,7 +176,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		int lastCreatedIndex = -1000;
 		void RecreateBlockInfoTexture() {
-			if (selIndex == lastCreatedIndex) return;
+			if (selIndex == lastCreatedIndex || blocksTable == null) return;
 			lastCreatedIndex = selIndex;
 			
 			gfx.DeleteTexture(ref blockInfoTexture);

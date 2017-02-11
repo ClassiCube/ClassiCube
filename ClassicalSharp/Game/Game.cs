@@ -43,6 +43,7 @@ namespace ClassicalSharp {
 		
 		public bool ChangeTerrainAtlas(Bitmap atlas, Stream data) {
 			if (!ValidateBitmap("terrain.png", atlas)) return false;
+			if (Graphics.LostContext) return false;
 			
 			LoadAtlas(atlas, data);
 			Events.RaiseTerrainAtlasChanged();
