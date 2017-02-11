@@ -80,12 +80,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Dispose() {
 			gfx.DeleteTexture(ref inputTex);
-		}
-		
-		public void DisposeFully() {
-			Dispose();
 			gfx.DeleteTexture(ref caretTex);
 			gfx.DeleteTexture(ref prefixTex);
+		}
+		
+		public override void Recreate() {
+			gfx.DeleteTexture(ref inputTex);
+			Init();
 		}
 
 		public override void CalculatePosition() {
@@ -224,7 +225,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				lines[i] = null;
 			
 			caret = -1;
-			Dispose();
+			gfx.DeleteTexture(ref inputTex);
 		}
 
 		/// <summary> Appends a sequence of characters to current text buffer. </summary>

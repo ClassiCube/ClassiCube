@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.ContextRecreated += ContextRecreated;
 			
 			ContextRecreated();
-			initTime = DateTime.UtcNow;			
+			initTime = DateTime.UtcNow;
 			lastSecsLeft = delay;
 		}
 
@@ -92,8 +92,8 @@ namespace ClassicalSharp.Gui.Screens {
 			double elapsed = (DateTime.UtcNow - initTime).TotalSeconds;
 			int secsLeft = Math.Max(0, (int)(delay - elapsed));
 			if (lastSecsLeft == secsLeft && btn.Active == lastActive) return;
-			if (secsLeft == 0) btn.SetText("Reconnect");
-			else btn.SetText("Reconnect in " + secsLeft);
+			
+			btn.SetText(ReconnectMessage());
 			btn.Disabled = secsLeft != 0;
 			
 			Redraw(delta);
@@ -122,13 +122,21 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Server.Connect(game.IPAddress, game.Port);
 		}
 		
+		string ReconnectMessage() {
+			if (!canReconnect) return "Reconnect";
+			
+			double elapsed = (DateTime.UtcNow - initTime).TotalSeconds;
+			int secsLeft = Math.Max(0, (int)(delay - elapsed));
+			return secsLeft == 0 ? "Reconnect" : "Reconnect in " + secsLeft;
+		}
+		
 		protected override void ContextLost() {
 			for (int i = 0; i < widgets.Length; i++)
 				widgets[i].Dispose();
 		}
 		
 		protected override void ContextRecreated() {
-			string msg = canReconnect ? "Reconnect in " + delay : "Reconnect";
+			string msg = ReconnectMessage();
 			widgets = new Widget[] {
 				TextWidget.Create(game, title, titleFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30),
@@ -137,6 +145,7 @@ namespace ClassicalSharp.Gui.Screens {
 				ButtonWidget.Create(game, 301, 40, msg, titleFont, ReconnectClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 80),
 			};
+			
 			widgets[2].Disabled = !canReconnect;
 			clearTime = DateTime.UtcNow.AddSeconds(0.5);
 		}

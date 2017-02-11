@@ -75,10 +75,14 @@ namespace ClassicalSharp.Gui.Screens {
 			extendedHelp.CalculatePosition();
 		}
 		
-		public override void Dispose() {
+		protected override void ContextLost() {
+			base.ContextLost();
 			DisposeWidgets();
-			game.Keyboard.KeyRepeat = false;
 			DisposeExtendedHelp();
+		}
+		
+		public override void Dispose() {
+			game.Keyboard.KeyRepeat = false;
 			base.Dispose();
 		}
 		

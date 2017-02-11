@@ -29,6 +29,10 @@ namespace ClassicalSharp.Entities {
 			game.Graphics.DeleteTexture(ref nameTex.ID);
 		}
 		
+		public override void ContextLost() {
+			game.Graphics.DeleteTexture(ref nameTex.ID);
+		}
+		
 		protected void MakeNameTexture() {
 			using (Font font = new Font(game.FontName, 24)) {
 				DrawTextArgs args = new DrawTextArgs(DisplayName, font, false);
@@ -53,7 +57,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void UpdateName() {
-			game.Graphics.DeleteTexture(ref nameTex);
+			ContextLost();
 			MakeNameTexture();
 		}
 		

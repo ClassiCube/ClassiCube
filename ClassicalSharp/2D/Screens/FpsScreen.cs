@@ -73,11 +73,13 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			font = new Font(game.FontName, 14);
 			posFont = new Font(game.FontName, 14, FontStyle.Italic);
-			game.Events.ChatFontChanged += ChatFontChanged;
 			ContextRecreated();
+			
+			game.Events.ChatFontChanged += ChatFontChanged;
+			gfx.ContextLost += ContextLost;
+			gfx.ContextRecreated += ContextRecreated;
 		}
 		
-		// TODO: hook
 		protected override void ContextLost() {
 			fpsText.Dispose();
 			posAtlas.Dispose();
@@ -108,7 +110,10 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			posFont.Dispose();
 			ContextLost();
+			
 			game.Events.ChatFontChanged -= ChatFontChanged;
+			gfx.ContextLost -= ContextLost;
+			gfx.ContextRecreated -= ContextRecreated;
 		}
 		
 		void ChatFontChanged(object sender, EventArgs e) { Recreate(); }

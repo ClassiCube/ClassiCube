@@ -27,8 +27,10 @@ namespace ClassicalSharp.Entities {
 		
 		public EntityList(Game game) {
 			this.game = game;
+			game.Graphics.ContextLost += ContextLost;
 			game.Events.ChatFontChanged += ChatFontChanged;
 			game.Events.TextureChanged += TextureChanged;
+			
 			NamesMode = Options.GetEnum(OptionsKey.NamesMode, NameMode.HoveredOnly);
 			if (game.ClassicMode) NamesMode = NameMode.HoveredOnly;
 			ShadowMode = Options.GetEnum(OptionsKey.EntityShadow, EntityShadow.None);
@@ -99,6 +101,13 @@ namespace ClassicalSharp.Entities {
 			gfx.DepthTest = true;
 		}
 		
+		void ContextLost() {
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] == null) continue;
+				Entities[i].ContextLost();
+			}
+		}
+		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name != "char.png") return;
 			for (int i = 0; i < Entities.Length; i++) {
@@ -121,6 +130,8 @@ namespace ClassicalSharp.Entities {
 				if (Entities[i] == null) continue;
 				Entities[i].Despawn();
 			}
+			
+			game.Graphics.ContextLost -= ContextLost;
 			game.Events.ChatFontChanged -= ChatFontChanged;
 			game.Events.TextureChanged -= TextureChanged;
 			if (ShadowComponent.shadowTex > 0)

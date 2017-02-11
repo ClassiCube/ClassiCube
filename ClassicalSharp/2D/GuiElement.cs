@@ -32,7 +32,7 @@ namespace ClassicalSharp.Gui {
 		
 		/// <summary> Causes the gui element to recreate all of its sub-elements and/or textures. </summary>
 		/// <remarks> Typically used when bitmap font changes. </remarks>
-		public void Recreate() { Dispose(); Init(); }
+		public virtual void Recreate() { Dispose(); Init(); }
 		
 		public virtual bool HandlesKeyDown(Key key) { return false; }
 		

@@ -272,7 +272,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 
 			normalChat.Dispose();
-			input.DisposeFully();
+			input.Dispose();
 			altText.Dispose();
 			status.Dispose();
 			bottomRight.Dispose();

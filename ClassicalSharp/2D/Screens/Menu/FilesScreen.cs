@@ -23,7 +23,10 @@ namespace ClassicalSharp.Gui.Screens {
 			textFont = new Font(game.FontName, 16, FontStyle.Bold);
 			arrowFont = new Font(game.FontName, 18, FontStyle.Bold);
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
+			
 			ContextRecreated();
+			gfx.ContextLost += ContextLost;
+			gfx.ContextRecreated += ContextRecreated;
 		}
 		
 		protected override void ContextLost() {
@@ -57,6 +60,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			ContextLost();
+			gfx.ContextLost -= ContextLost;
+			gfx.ContextRecreated -= ContextRecreated;			
+			
 			textFont.Dispose();
 			arrowFont.Dispose();
 			titleFont.Dispose();
