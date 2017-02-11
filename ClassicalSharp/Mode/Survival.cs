@@ -100,7 +100,7 @@ namespace ClassicalSharp.Mode {
 		public void OnNewMapLoaded(Game game) {
 			game.Chat.Add("&fScore: &e" + score, MessageType.Status1);
 			
-			string[] models = { "sheep", "pig", "skeleton", "zombie", "creeper" };
+			string[] models = { "sheep", "pig", "skeleton", "zombie", "creeper", "spider" };
 			for (int i = 0; i < 254; i++) {
 				MobEntity fail = new MobEntity(game, models[rnd.Next(models.Length)]);
 				float x = rnd.Next(0, game.World.Width) + 0.5f;

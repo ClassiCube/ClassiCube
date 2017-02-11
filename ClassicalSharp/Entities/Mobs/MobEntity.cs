@@ -44,17 +44,22 @@ namespace ClassicalSharp.Entities.Mobs {
 			ai.Tick(game.LocalPlayer);
 			physics.PhysicsTick(ai.MoveVelocity);
 			DoWallClimb();
+			physics.DoEntityPush();
 			
 			interp.next.Pos = Position; Position = interp.prev.Pos;
 			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);
 		}
 		
 		void DoWallClimb() {
-			if (climbCooldown > 0) { climbCooldown--; return; }
+			if (climbCooldown > 0) { climbCooldown--; }
 			if (!physics.collisions.HorizontalCollision) return;
-			
-			physics.DoNormalJump();
-			climbCooldown = 20;
+			if (this.ModelName == "spider") {
+			     if (climbCooldown == 4)
+			         physics.DoNormalJump();
+			} else {
+			    if (this.onGround) { physics.DoNormalJump(); }
+			}
+			climbCooldown = 5;
 		}
 		
 		public override void SetLocation(LocationUpdate update, bool interpolate) {

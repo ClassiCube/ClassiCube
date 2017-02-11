@@ -266,7 +266,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void DoEntityPush() {
-			if (!game.ClassicMode || hacks.Noclip) return;
+			//if (!game.ClassicMode || hacks.Noclip) return;
 			
 			for (int id = 0; id < EntityList.MaxCount; id++) {
 				Entity other = game.Entities[id];
