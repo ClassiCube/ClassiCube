@@ -79,8 +79,6 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Dispose() {
 			ContextLost();
-			gfx.DeleteTexture(ref edgeTexId);
-			gfx.DeleteTexture(ref sideTexId);
 			
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.Events.ViewDistanceChanged -= ResetSidesAndEdges;
@@ -95,7 +93,6 @@ namespace ClassicalSharp.Renderers {
 		public void OnNewMap(Game game) {
 			gfx.DeleteVb(ref sidesVb);
 			gfx.DeleteVb(ref edgesVb);
-			
 			MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
 			MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
 		}
@@ -132,25 +129,28 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetSides() {
-			if (game.World.IsNotLoaded || game.Graphics.LostContext) return;
+			if (game.World.IsNotLoaded || gfx.LostContext) return;
 			gfx.DeleteVb(ref sidesVb);
 			RebuildSides(map.Env.SidesHeight, legacy ? 128 : 65536);
 		}
 		
 		void ResetEdges() {
-			if (game.World.IsNotLoaded || game.Graphics.LostContext) return;
+			if (game.World.IsNotLoaded || gfx.LostContext) return;
 			gfx.DeleteVb(ref edgesVb);
 			RebuildEdges(map.Env.EdgeHeight, legacy ? 128 : 65536);
 		}
 		
 		void ContextLost() {
-			game.Graphics.DeleteVb(ref sidesVb);
-			game.Graphics.DeleteVb(ref edgesVb);
+			gfx.DeleteVb(ref sidesVb);
+			gfx.DeleteVb(ref edgesVb);
+			gfx.DeleteTexture(ref edgeTexId);
+			gfx.DeleteTexture(ref sideTexId);
 		}
 		
 		void ContextRecreated() {
 			ResetSides();
 			ResetEdges();
+			ResetTextures(null, null);
 		}
 
 		
@@ -286,12 +286,13 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		int lastEdgeTexLoc, lastSideTexLoc;
-		void MakeTexture(ref int texId, ref int lastTexLoc, byte block) {
+		void MakeTexture(ref int id, ref int lastTexLoc, byte block) {
 			int texLoc = game.BlockInfo.GetTextureLoc(block, Side.Top);
-			if (texLoc == lastTexLoc) return;
+			if (texLoc == lastTexLoc || gfx.LostContext) return;
 			lastTexLoc = texLoc;
-			game.Graphics.DeleteTexture(ref texId);
-			texId = game.TerrainAtlas.LoadTextureElement(texLoc);
+			
+			game.Graphics.DeleteTexture(ref id);
+			id = game.TerrainAtlas.LoadTextureElement(texLoc);
 		}
 	}
 }

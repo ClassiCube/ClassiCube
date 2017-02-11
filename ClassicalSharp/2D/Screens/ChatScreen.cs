@@ -203,6 +203,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 
 		void ColourCodeChanged(object sender, ColourCodeEventArgs e) {
+			if (gfx.LostContext) return;
+			
 			altText.UpdateColours();
 			Recreate(normalChat, e.Code); Recreate(status, e.Code);
 			Recreate(bottomRight, e.Code); Recreate(clientStatus, e.Code);
