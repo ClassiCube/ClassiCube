@@ -337,7 +337,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			input.Text.Clear();
 			input.Text.Append(0, initialText);
-			input.Init();
+			input.Recreate();
 		}
 		
 		public void AppendTextToInput(string text) {
