@@ -526,7 +526,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		internal override void MakeApiInfo() {
 			string adapter = d3d.Adapters[0].Details.Description;
-			float texMem = (uint)device.AvailableTextureMemory / 1024f / 1024f;
+			float texMem = device.AvailableTextureMemory / 1024f / 1024f;
 			
 			ApiInfo = new string[] {
 				"-- Using Direct3D9 api --",

@@ -42,12 +42,7 @@ namespace ClassicalSharp {
 		}
 		
 		public bool ChangeTerrainAtlas(Bitmap atlas, Stream data) {
-			bool pow2 = Utils.IsPowerOf2(atlas.Width) && Utils.IsPowerOf2(atlas.Height);
-			if (!pow2 || atlas.Width != atlas.Height) {
-				Chat.Add("&cCurrent texture pack has an invalid terrain.png");
-				Chat.Add("&cWidth and length must be the same, and also powers of two.");
-				return false;
-			}
+			if (!ValidateBitmap("terrain.png", atlas)) return false;
 			
 			LoadAtlas(atlas, data);
 			Events.RaiseTerrainAtlasChanged();
@@ -177,7 +172,7 @@ namespace ClassicalSharp {
 			// Render water over translucent blocks when underwater for proper alpha blending
 			Vector3 pos = LocalPlayer.Position;
 			if (CurrentCameraPos.Y < World.Env.EdgeHeight
-			   && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length)) {
+			    && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length)) {
 				MapRenderer.RenderTranslucent(delta);
 				MapBordersRenderer.RenderEdges(delta);
 			} else {
@@ -187,8 +182,8 @@ namespace ClassicalSharp {
 			
 			// Need to render again over top of translucent block, as the selection outline
 			// is drawn without writing to the depth buffer
-			if (SelectedPos.Valid && !HideGui 
-			   && BlockInfo.Draw[SelectedPos.Block] == DrawType.Translucent) {
+			if (SelectedPos.Valid && !HideGui
+			    && BlockInfo.Draw[SelectedPos.Block] == DrawType.Translucent) {
 				Picking.Render(delta);
 			}
 			
@@ -269,7 +264,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void CycleCamera() {
-			if (ClassicMode) return;			
+			if (ClassicMode) return;
 			
 			int i = Cameras.IndexOf(Camera);
 			i = (i + 1) % Cameras.Count;
@@ -353,22 +348,9 @@ namespace ClassicalSharp {
 		
 		/// <summary> Reads a bitmap from the stream (converting it to 32 bits per pixel if necessary),
 		/// and updates the native texture for it. </summary>
-		public bool UpdateTexture(ref int texId, string file, byte[] data, bool setSkinType) {
-			int maxSize = Graphics.MaxTextureDimensions;
+		public bool UpdateTexture(ref int texId, string file, byte[] data, bool setSkinType) {			
 			using (Bitmap bmp = Platform.ReadBmp32Bpp(Drawer2D, data)) {
-				if (bmp.Width > maxSize || bmp.Height > maxSize) {
-					Chat.Add("&cUnable to use " + file + " from the texture pack.");
-					Chat.Add("&c Its size is (" + bmp.Width + "," + bmp.Height
-					         + "), your GPU supports (" + maxSize + "," + maxSize + ") at most.");
-					return false;
-				}
-
-				if (!Utils.IsPowerOf2(bmp.Width) || !Utils.IsPowerOf2(bmp.Height)) {
-					Chat.Add("&cUnable to use " + file + " from the texture pack.");
-					Chat.Add("&c Its size is (" + bmp.Width + "," + bmp.Height
-					         + "), which is not power of two dimensions.");
-					return false;
-				}
+				if (!ValidateBitmap(file, bmp)) return false;
 				
 				Graphics.DeleteTexture(ref texId);
 				if (setSkinType) {
@@ -380,6 +362,24 @@ namespace ClassicalSharp {
 				texId = Graphics.CreateTexture(bmp, true);
 				return true;
 			}
+		}
+		
+		public bool ValidateBitmap(string file, Bitmap bmp) {
+			int maxSize = Graphics.MaxTextureDimensions;
+			if (bmp.Width > maxSize || bmp.Height > maxSize) {
+				Chat.Add("&cUnable to use " + file + " from the texture pack.");
+				Chat.Add("&c Its size is (" + bmp.Width + "," + bmp.Height
+				         + "), your GPU supports (" + maxSize + "," + maxSize + ") at most.");
+				return false;
+			}
+
+			if (!Utils.IsPowerOf2(bmp.Width) || !Utils.IsPowerOf2(bmp.Height)) {
+				Chat.Add("&cUnable to use " + file + " from the texture pack.");
+				Chat.Add("&c Its size is (" + bmp.Width + "," + bmp.Height
+				         + "), which is not power of two dimensions.");
+				return false;
+			}
+			return true;
 		}
 		
 		public bool SetRenderType(string type) {
