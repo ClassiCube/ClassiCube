@@ -69,6 +69,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		bool hadPlayerList;
 		protected override void ContextLost() {
+			DisposePlayerList();
+			hotbar.Dispose();
+		}
+		
+		void DisposePlayerList() {
 			hadPlayerList = playerList != null;
 			if (playerList != null)
 				playerList.Dispose();
@@ -76,6 +81,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
+			hotbar.Dispose();
+			hotbar.Init();
+			
 			if (!hadPlayerList) return;
 			
 			if (game.UseClassicTabList) {
@@ -94,7 +102,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Dispose() {
 			playerFont.Dispose();
 			chat.Dispose();
-			hotbar.Dispose();
 			ContextLost();
 			
 			game.WorldEvents.OnNewMap -= OnNewMap;
@@ -135,7 +142,7 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.ContextRecreated += ContextRecreated;
 		}
 
-		void OnNewMap(object sender, EventArgs e) { ContextLost(); }
+		void OnNewMap(object sender, EventArgs e) { DisposePlayerList(); }
 		
 		public override bool HandlesAllInput { get { return chat.HandlesAllInput; } }
 

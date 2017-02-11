@@ -118,6 +118,7 @@ namespace ClassicalSharp.Mode {
 			for (int i = 0; i < hotbar.Length; i++)
 				hotbar[i] = Block.Air;
 			hotbar[hotbar.Length - 1] = Block.TNT;
+			game.Server.AppName += " (survival)";
 		}
 		
 		
