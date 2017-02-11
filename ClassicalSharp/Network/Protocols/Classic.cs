@@ -130,9 +130,9 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			prevScreen = null;
 			
-			int mapWidth = reader.ReadInt16();
-			int mapHeight = reader.ReadInt16();
-			int mapLength = reader.ReadInt16();
+			int mapWidth = reader.ReadUInt16();
+			int mapHeight = reader.ReadUInt16();
+			int mapLength = reader.ReadUInt16();
 			
 			double loadingMs = (DateTime.UtcNow - mapReceiveStart).TotalMilliseconds;
 			Utils.LogDebug("map loading took: " + loadingMs);
