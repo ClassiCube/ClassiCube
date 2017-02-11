@@ -58,6 +58,12 @@ namespace ClassicalSharp.Gui.Screens {
 			ContextRecreated();
 		}
 		
+		protected override void ContextLost() {
+			input.Dispose();
+			DisposeDescWidget();
+			base.ContextLost();
+		}
+		
 		protected override void ContextRecreated() {
 			input = MenuInputWidget.Create(game, 500, 30, "", regularFont, new PathValidator())
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);
@@ -84,8 +90,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			game.Keyboard.KeyRepeat = false;
-			input.Dispose();
-			DisposeDescWidget();
 			base.Dispose();
 		}
 		
