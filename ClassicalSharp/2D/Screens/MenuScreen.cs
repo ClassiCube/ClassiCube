@@ -46,6 +46,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextLost() {
+			if (widgets == null) return;
+			
 			for (int i = 0; i < widgets.Length; i++) {
 				if (widgets[i] == null) continue;
 				widgets[i].Dispose();

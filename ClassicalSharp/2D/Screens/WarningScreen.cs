@@ -25,9 +25,9 @@ namespace ClassicalSharp.Gui.Screens {
 			this.body = body;
 		}
 		
-		string title, lastTitle;
-		string[] body, lastBody;
-		bool confirmNo, confirmMode, showAlways;
+		string title;
+		string[] body;
+		bool confirmNo, confirmingMode, showAlways;
 		int alwaysIndex = 100;
 		
 		public override void Init() {
@@ -35,15 +35,14 @@ namespace ClassicalSharp.Gui.Screens {
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
 			backCol.A = 210;
+			
+			if (game.Graphics.LostContext) return;
 			InitStandardButtons();
-			SetText(title, body);
+			RedrawText();
 		}
 
-		public void SetText(string title, params string[] body) {
-			lastTitle = title;
-			lastBody = body;
-			
-			if (confirmMode) {
+		public void RedrawText() {
+			if (confirmingMode) {
 				SetTextImpl("&eYou might be missing out.",
 				            "Texture packs can play a vital role in the look and feel of maps.",
 				            "", "Sure you don't want to download the texture pack?");
@@ -57,8 +56,6 @@ namespace ClassicalSharp.Gui.Screens {
 				for (int i = 0; i < labels.Length; i++)
 					labels[i].Dispose();
 			}
-			this.title = title;
-			this.body = body;
 			
 			labels = new TextWidget[body.Length + 1];
 			labels[0] = TextWidget.Create(game, title, titleFont)
@@ -96,28 +93,35 @@ namespace ClassicalSharp.Gui.Screens {
 			for (int i = 0; i < labels.Length; i++)
 				labels[i].CalculatePosition();
 		}
-		
-		public override void Dispose() {
-			base.Dispose();
+
+		protected override void ContextLost() {
+			base.ContextLost();
+			if (labels == null) return;	
+			
 			for (int i = 0; i < labels.Length; i++)
 				labels[i].Dispose();
 		}
 		
-		protected override void ContextLost()
-		{
-			base.ContextLost();
-		}
-		
-		protected override void ContextRecreated()
-		{
-			throw new NotImplementedException();
+		protected override void ContextRecreated() {
+			InitStandardButtons();
+			RedrawText();
 		}
 		
 		
 		void InitStandardButtons() {
-			widgets = new ButtonWidget[showAlways ? 4 : 2];
+			base.ContextLost();			
 			alwaysIndex = 100;
 			
+			if (confirmingMode) {
+				widgets = new ButtonWidget[2];
+				widgets[0] = ButtonWidget.Create(game, 160, 35, "I'm sure", titleFont, OnNoClick)
+					.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30);
+				widgets[1] = ButtonWidget.Create(game, 160, 35, "Go back", titleFont, GoBackClick)
+					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
+				return;
+			}
+						
+			widgets = new ButtonWidget[showAlways ? 4 : 2];
 			widgets[0] = ButtonWidget.Create(game, 160, 35, "Yes", titleFont, OnYesClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30);
 			widgets[1] = ButtonWidget.Create(game, 160, 35, "No", titleFont, OnNoClick)
@@ -146,8 +150,10 @@ namespace ClassicalSharp.Gui.Screens {
 			if (btn != MouseButton.Left) return;
 			bool always = Array.IndexOf<Widget>(widgets, w) >= alwaysIndex;
 			
-			if (confirmNo && !confirmMode) {
-				InitConfirmButtons(always); return;
+			if (confirmNo && !confirmingMode) {
+				confirmingMode = true;
+				ContextRecreated();
+				return;
 			}
 			
 			if (noClick != null) noClick(this, always);
@@ -155,23 +161,11 @@ namespace ClassicalSharp.Gui.Screens {
 			CloseScreen();
 		}
 		
-		void InitConfirmButtons(bool always) {
-			alwaysIndex = always ? 0 : 100;
-			widgets = new ButtonWidget[] {
-				ButtonWidget.Create(game, 160, 35, "I'm sure", titleFont, OnNoClick)
-					.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30),
-				ButtonWidget.Create(game, 160, 35, "Go back", titleFont, GoBackClick)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30),
-			};
-			confirmMode = true;
-			SetText(lastTitle, lastBody);
-		}
-		
 		void GoBackClick(Game g, Widget w, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;
-			InitStandardButtons();
-			confirmMode = false;
-			SetText(lastTitle, lastBody);
+			
+			confirmingMode = false;
+			ContextRecreated();
 		}
 	}
 }

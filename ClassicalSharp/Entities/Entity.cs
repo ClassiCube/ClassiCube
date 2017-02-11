@@ -74,6 +74,8 @@ namespace ClassicalSharp.Entities {
 		
 		public virtual void ContextLost() { }
 		
+		public virtual void ContextRecreated() { }
+		
 		
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {

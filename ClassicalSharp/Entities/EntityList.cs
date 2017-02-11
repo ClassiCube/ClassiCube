@@ -28,6 +28,7 @@ namespace ClassicalSharp.Entities {
 		public EntityList(Game game) {
 			this.game = game;
 			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 			game.Events.ChatFontChanged += ChatFontChanged;
 			game.Events.TextureChanged += TextureChanged;
 			
@@ -108,6 +109,13 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
+		void ContextRecreated() {
+			for (int i = 0; i < Entities.Length; i++) {
+				if (Entities[i] == null) continue;
+				Entities[i].ContextRecreated();
+			}
+		}
+		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name != "char.png") return;
 			for (int i = 0; i < Entities.Length; i++) {
@@ -132,8 +140,10 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 			game.Events.ChatFontChanged -= ChatFontChanged;
 			game.Events.TextureChanged -= TextureChanged;
+			
 			if (ShadowComponent.shadowTex > 0)
 				game.Graphics.DeleteTexture(ref ShadowComponent.shadowTex);
 		}
