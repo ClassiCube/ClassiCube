@@ -224,6 +224,7 @@ namespace ClassicalSharp.Gui.Screens {
 			string value = button.GetValue(game);
 			int enumValue = (int)Enum.Parse(type, value, true);
 			enumValue++;
+			
 			// go back to first value
 			if (!Enum.IsDefined(type, enumValue))
 				enumValue = 0;

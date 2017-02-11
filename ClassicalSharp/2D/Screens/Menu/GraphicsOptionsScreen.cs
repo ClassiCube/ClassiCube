@@ -19,36 +19,46 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			widgets = new Widget[] {	
+			widgets = new Widget[] {
 				
 				MakeOpt(-1, -50, "FPS mode", OnWidgetClick,
-				     g => g.FpsLimit.ToString(),
-				     (g, v) => { object raw = Enum.Parse(typeof(FpsLimitMethod), v);
-				     	g.SetFpsLimitMethod((FpsLimitMethod)raw);
-				     	Options.Set(OptionsKey.FpsLimit, v); }),
+				        g => g.FpsLimit.ToString(),
+				        (g, v) => { }),
 
 				MakeOpt(-1, 0, "View distance", OnWidgetClick,
-				     g => g.ViewDistance.ToString(),
-				     (g, v) => g.SetViewDistance(Int32.Parse(v), true)),
+				        g => g.ViewDistance.ToString(),
+				        (g, v) => g.SetViewDistance(Int32.Parse(v), true)),
 				
 				MakeBool(-1, 50, "Advanced lighting", OptionsKey.SmoothLighting,
-				     OnWidgetClick, g => g.SmoothLighting, SetSmoothLighting),
+				         OnWidgetClick, g => g.SmoothLighting, SetSmoothLighting),
 				
 				MakeOpt(1, -50, "Names", OnWidgetClick,
-				     g => g.Entities.NamesMode.ToString(),
-				     (g, v) => { object raw = Enum.Parse(typeof(NameMode), v);
-				     	g.Entities.NamesMode = (NameMode)raw;
-				     	Options.Set(OptionsKey.NamesMode, v); }),
+				        g => g.Entities.NamesMode.ToString(),
+				        (g, v) => { 
+				        	object rawNames = Enum.Parse(typeof(NameMode), v);
+				        	g.Entities.NamesMode = (NameMode)rawNames;
+				        	Options.Set(OptionsKey.NamesMode, v); 
+				        }),
 				
 				MakeOpt(1, 0, "Shadows", OnWidgetClick,
-				     g => g.Entities.ShadowMode.ToString(),
-				     (g, v) => { object raw = Enum.Parse(typeof(EntityShadow), v);
-				     	g.Entities.ShadowMode = (EntityShadow)raw;
-				     	Options.Set(OptionsKey.EntityShadow, v); }),
+				        g => g.Entities.ShadowMode.ToString(),
+				        (g, v) => { 
+				        	object rawShadows = Enum.Parse(typeof(EntityShadow), v);
+				        	g.Entities.ShadowMode = (EntityShadow)rawShadows;
+				        	Options.Set(OptionsKey.EntityShadow, v); 
+				        }),
 				
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null,
+			};
+			
+			// NOTE: we need to override the default setter here, because it recreates the graphics context
+			ButtonWidget btn = (ButtonWidget)widgets[0];
+			btn.SetValue = (g, v) => {
+				object rawFps = Enum.Parse(typeof(FpsLimitMethod), v);
+				g.SetFpsLimitMethod((FpsLimitMethod)rawFps);
+				Options.Set(OptionsKey.FpsLimit, v);
 			};
 		}
 		
@@ -86,7 +96,7 @@ namespace ClassicalSharp.Gui.Screens {
 				"&eAll: &fAll player names are drawn normally.",
 				"&eAllAndHovered: &fName of the targeted player is drawn see-through.",
 				"&f      All other player names are drawn normally.",
-			};			
+			};
 			descriptions[4] = new string[] {
 				"&eNone: &fNo entity shadows are drawn.",
 				"&eSnapToBlock: &fA square shadow is shown on block you are directly above.",
