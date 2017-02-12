@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using ClassicalSharp.Model;
 using OpenTK;
 
 namespace ClassicalSharp.Entities {
@@ -31,7 +32,7 @@ namespace ClassicalSharp.Entities {
 			interp.LerpAngles(t);
 			
 			anim.GetCurrentAnimState(t);
-			shouldRender = Model.ShouldRender(this, game.Culling);
+			shouldRender = IModel.ShouldRender(this, game.Culling);
 			if (shouldRender) Model.Render(this);
 		}
 		

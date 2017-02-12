@@ -42,7 +42,7 @@ namespace ClassicalSharp.Model {
 			get { return (maxBB - minBB) - colShrink; } // to fit slightly inside
 		}
 		
-		static Vector3 offset = new Vector3(-0.5f, -0.5f, -0.5f);
+		static Vector3 offset = new Vector3(-0.5f, 0.0f, -0.5f);
 		public override AABB PickingBounds {
 			get { return new AABB(minBB, maxBB).Offset(offset); }
 		}
@@ -61,12 +61,6 @@ namespace ClassicalSharp.Model {
 				if (game.BlockInfo.Draw[block] == DrawType.Sprite)
 					height = 1;
 			}
-		}
-		
-		public override bool ShouldRender(Entity p, FrustumCulling culling) {
-			block = Utils.FastByte(p.ModelName);
-			CalcState(block);
-			return base.ShouldRender(p, culling);
 		}
 		
 		public override float RenderDistance(Entity p) {
