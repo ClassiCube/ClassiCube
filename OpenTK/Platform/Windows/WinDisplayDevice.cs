@@ -35,38 +35,41 @@ namespace OpenTK.Platform.Windows {
 				if ((winDev.StateFlags & DisplayDeviceStateFlags.AttachedToDesktop) == 0)
 					continue;
 
-				DeviceMode monitor_mode = new DeviceMode();
+				DeviceMode mode = new DeviceMode();
 
 				// The second function should only be executed when the first one fails (e.g. when the monitor is disabled)
-				if (API.EnumDisplaySettings(winDev.DeviceName, (int)DisplayModeSettings.Current, monitor_mode) ||
-				    API.EnumDisplaySettings(winDev.DeviceName, (int)DisplayModeSettings.Registry, monitor_mode)) {
-					currentRes = new DisplayResolution(
-						monitor_mode.Position.X, monitor_mode.Position.Y,
-						monitor_mode.PelsWidth, monitor_mode.PelsHeight,
-						monitor_mode.BitsPerPel, monitor_mode.DisplayFrequency);
-					devPrimary = (winDev.StateFlags & DisplayDeviceStateFlags.PrimaryDevice) != 0;
+				if (API.EnumDisplaySettings(winDev.DeviceName, (int)DisplayModeSettings.Current, mode) ||
+				    API.EnumDisplaySettings(winDev.DeviceName, (int)DisplayModeSettings.Registry, mode)) {
+					if (mode.BitsPerPel > 0) {
+						currentRes = new DisplayResolution(
+							mode.Position.X, mode.Position.Y,
+							mode.PelsWidth, mode.PelsHeight,
+							mode.BitsPerPel, mode.DisplayFrequency);
+						devPrimary = (winDev.StateFlags & DisplayDeviceStateFlags.PrimaryDevice) != 0;
+					}
 				}
 
 				availableRes.Clear();
 				int i = 0;
-				while (API.EnumDisplaySettings(winDev.DeviceName, i++, monitor_mode)) {
+				while (API.EnumDisplaySettings(winDev.DeviceName, i++, mode)) {
 					// For example, the device \.\DISPLAYV1 returns a single resolution with bits per pixel of 0
 					// We must skip these resolutions
-					if (monitor_mode.BitsPerPel <= 0) continue;
+					if (mode.BitsPerPel <= 0) continue;
 					
 					availableRes.Add(new DisplayResolution(
-						monitor_mode.Position.X, monitor_mode.Position.Y,
-						monitor_mode.PelsWidth, monitor_mode.PelsHeight,
-						monitor_mode.BitsPerPel, monitor_mode.DisplayFrequency));
+						mode.Position.X, mode.Position.Y,
+						mode.PelsWidth, mode.PelsHeight,
+						mode.BitsPerPel, mode.DisplayFrequency));
 				}
 				
 				// This device has no valid resolutions, ignore it
-				if (availableRes.Count == 0) continue;
+				if (availableRes.Count == 0 || currentRes == null) continue;
 
 				// Construct the OpenTK DisplayDevice through the accumulated parameters.
 				// The constructor automatically adds the DisplayDevice to the list of available devices.
 				DisplayDevice device = new DisplayDevice(currentRes, devPrimary, availableRes, currentRes.Bounds);
 				available_device_names.Add(device, winDev.DeviceName);
+				currentRes = null;
 			}
 		}
 
@@ -88,7 +91,7 @@ namespace OpenTK.Platform.Windows {
 
 			return Constants.DISP_CHANGE_SUCCESSFUL ==
 				API.ChangeDisplaySettingsEx(available_device_names[device], mode, IntPtr.Zero,
-				                                  ChangeDisplaySettingsEnum.Fullscreen, IntPtr.Zero);
+				                            ChangeDisplaySettingsEnum.Fullscreen, IntPtr.Zero);
 		}
 
 		public bool TryRestoreResolution(DisplayDevice device) {
