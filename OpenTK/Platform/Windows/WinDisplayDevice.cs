@@ -52,7 +52,7 @@ namespace OpenTK.Platform.Windows {
 				while (API.EnumDisplaySettings(winDev.DeviceName, i++, monitor_mode)) {
 					// For example, the device \.\DISPLAYV1 returns a single resolution with bits per pixel of 0
 					// We must skip these resolutions
-					if (monitor_mode.BitsPerPel < 0) continue;
+					if (monitor_mode.BitsPerPel <= 0) continue;
 					
 					availableRes.Add(new DisplayResolution(
 						monitor_mode.Position.X, monitor_mode.Position.Y,
