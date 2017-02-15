@@ -50,11 +50,18 @@ namespace OpenTK.Platform.Windows {
 				availableRes.Clear();
 				int i = 0;
 				while (API.EnumDisplaySettings(winDev.DeviceName, i++, monitor_mode)) {
+					// For example, the device \.\DISPLAYV1 returns a single resolution with bits per pixel of 0
+					// We must skip these resolutions
+					if (monitor_mode.BitsPerPel < 0) continue;
+					
 					availableRes.Add(new DisplayResolution(
 						monitor_mode.Position.X, monitor_mode.Position.Y,
 						monitor_mode.PelsWidth, monitor_mode.PelsHeight,
 						monitor_mode.BitsPerPel, monitor_mode.DisplayFrequency));
 				}
+				
+				// This device has no valid resolutions, ignore it
+				if (availableRes.Count == 0) continue;
 
 				// Construct the OpenTK DisplayDevice through the accumulated parameters.
 				// The constructor automatically adds the DisplayDevice to the list of available devices.
