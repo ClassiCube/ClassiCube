@@ -86,9 +86,12 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void MakeSelectionTexture() {
 			int hSize = (int)selBlockSize;
-			int vSize = (int)Math.Floor(23 * 2 * game.GuiHotbarScale);
-			int y = game.Height - vSize;
-			TextureRec rec = new TextureRec(0, 22/256f, 24/256f, 24/256f);
+			
+			float scale = 2 * game.GuiHotbarScale;
+			int vSize = (int)(22 * scale);
+			int y = game.Height - (int)(23 * scale);
+			
+			TextureRec rec = new TextureRec(0, 22/256f, 24/256f, 23/256f);
 			selTex = new Texture(0, 0, y, hSize, vSize, rec);
 		}
 		
