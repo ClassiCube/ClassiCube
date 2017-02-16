@@ -89,12 +89,12 @@ namespace ClassicalSharp.Model {
 				col = FastColour.ScalePacked(col, colScale);
 				block = ((FakePlayer)p).Block;
 			} else {
-				NoShade = bright;
 				block = Utils.FastByte(p.ModelName);
 			}
-			if (bright) col = FastColour.WhitePacked;
 			
 			CalcState(block);
+			if (!(p is FakePlayer)) NoShade = bright;
+			if (bright) col = FastColour.WhitePacked;
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			lastTexId = -1;
