@@ -211,14 +211,14 @@ namespace ClassicalSharp {
 		/// <summary> Calculates the amount that the block inventory menu should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field InventoryScale). </remarks>
-		public float GuiInventoryScale { get { return Scale(MinWindowScale  * InventoryScale); } }
+		public float GuiInventoryScale { get { return Scale(MinWindowScale  * (InventoryScale * 0.5f)); } }
 		
 		/// <summary> Calculates the amount that 2D chat widgets should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field ChatScale). </remarks>
-		public float GuiChatScale { get { return Scale((Height / 480f) * ChatScale); } }
+		public float GuiChatScale { get { return Scale(MinWindowScale * ChatScale); } }
 		
-		float MinWindowScale { get { return Math.Min(Width / 640f, Height / 480f); } }
+		int MinWindowScale { get { return 1 + (int)(Math.Floor(Math.Min(Width / 640f, Height / 480f))); } }
 		
 		public float Scale(float value) { 
 			return (float)Math.Round(value * 10, MidpointRounding.AwayFromZero) / 10; 

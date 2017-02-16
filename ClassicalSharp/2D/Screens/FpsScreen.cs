@@ -71,8 +71,8 @@ namespace ClassicalSharp.Gui.Screens {
 		string Q(int value) { return value == 1 ? "" : "s"; }
 		
 		public override void Init() {
-			font = new Font(game.FontName, 14);
-			posFont = new Font(game.FontName, 14, FontStyle.Italic);
+			font = new Font(game.FontName, 16);
+			posFont = new Font(game.FontName, 16, FontStyle.Italic);
 			ContextRecreated();
 			
 			game.Events.ChatFontChanged += ChatFontChanged;

@@ -28,12 +28,12 @@ namespace ClassicalSharp.Gui.Screens {
 		Font chatFont, chatUrlFont, announcementFont;
 		public override void Init() {
 			float textScale = game.Drawer2D.UseBitmappedChat ? 1.25f : 1;
-			int fontSize = (int)(12 * game.GuiChatScale * textScale);
+			int fontSize = (int)(8 * game.GuiChatScale);
 			Utils.Clamp(ref fontSize, 8, 60);
 			chatFont = new Font(game.FontName, fontSize);
 			chatUrlFont = new Font(game.FontName, fontSize, FontStyle.Underline);
 			
-			fontSize = (int)(14 * game.GuiChatScale);
+			fontSize = (int)(16 * game.GuiChatScale);
 			Utils.Clamp(ref fontSize, 8, 60);
 			announcementFont = new Font(game.FontName, fontSize);
 			ContextRecreated();
