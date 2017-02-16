@@ -9,7 +9,7 @@ namespace ClassicalSharp.Map {
 		
 		int CalcHeightAt(int x, int maxY, int z, int index) {
 			int mapIndex = (maxY * length + z) * width + x;
-			byte[] blocks = game.World.blocks;
+			BlockID[] blocks = game.World.blocks;
 			
 			for (int y = maxY; y >= 0; y--) {
 				BlockID block = blocks[mapIndex];
@@ -45,7 +45,7 @@ namespace ClassicalSharp.Map {
 			return elemsLeft;
 		}
 		
-		unsafe bool CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, int* skip, byte* mapPtr) {
+		unsafe bool CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, int* skip, BlockID* mapPtr) {
 			int prevRunCount = 0;
 			for (int y = height - 1; y >= 0; y--) {
 				if (elemsLeft <= 0) return true;

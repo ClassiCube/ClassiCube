@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 	public unsafe abstract partial class ChunkMeshBuilder {
 		
 		protected int X, Y, Z;
-		protected byte curBlock;
+		protected BlockID curBlock;
 		protected BlockInfo info;
 		protected World map;
 		protected IWorldLighting lighting;

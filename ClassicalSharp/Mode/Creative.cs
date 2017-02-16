@@ -54,7 +54,7 @@ namespace ClassicalSharp.Mode {
 
 		public void Init(Game game) {
 			this.game = game;
-			game.Inventory.Hotbar = new byte[] { Block.Stone,
+			game.Inventory.Hotbar = new BlockID[] { Block.Stone,
 				Block.Cobblestone, Block.Brick, Block.Dirt, Block.Wood,
 				Block.Log, Block.Leaves, Block.Grass, Block.Slab };
 		}

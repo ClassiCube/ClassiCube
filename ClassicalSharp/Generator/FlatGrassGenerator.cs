@@ -9,10 +9,10 @@ namespace ClassicalSharp.Generator {
 		
 		public override string GeneratorName { get { return "Flatgrass"; } }
 		
-		public override byte[] Generate(int seed) {
-			byte[] map = new byte[Width * Height * Length];
+		public override BlockID[] Generate(int seed) {
+			BlockID[] map = new BlockID[Width * Height * Length];
 			
-			fixed(byte* ptr = map) {
+			fixed(BlockID* ptr = map) {
 				CurrentState = "Setting dirt blocks";
 				MapSet(ptr, 0, Height / 2 - 2, Block.Dirt);
 				
@@ -22,7 +22,7 @@ namespace ClassicalSharp.Generator {
 			return map;
 		}
 		
-		unsafe void MapSet(byte* ptr, int yStart, int yEnd, BlockID block) {
+		unsafe void MapSet(BlockID* ptr, int yStart, int yEnd, BlockID block) {
 			yStart = Math.Max(yStart, 0); yEnd = Math.Max(yEnd, 0);			
 			int startIndex = yStart * Length * Width;
 			int endIndex = (yEnd * Length + (Length - 1)) * Width + (Width - 1);

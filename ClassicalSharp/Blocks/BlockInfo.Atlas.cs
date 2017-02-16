@@ -10,13 +10,13 @@ namespace ClassicalSharp {
 		
 		public byte[] textures = new byte[Block.Count * Side.Sides];
 		
-		internal void SetSide(int textureId, byte blockId) {
+		internal void SetSide(int textureId, BlockID blockId) {
 			int index = blockId * Side.Sides;
 			for (int i = index; i < index + Side.Bottom; i++)
 				textures[i] = (byte)textureId;
 		}
 		
-		internal void SetTex(int textureId, int face, byte blockId) {
+		internal void SetTex(int textureId, int face, BlockID blockId) {
 			textures[blockId * Side.Sides + face] = (byte)textureId;
 		}
 		
@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool FaceOccluded(BlockID block, byte other, int side) {
+		bool FaceOccluded(BlockID block, BlockID other, int side) {
 			Vector2 bMin, bMax, oMin, oMax;
 			GetTextureRegion(block, side, out bMin, out bMax);
 			GetTextureRegion(other, side, out oMin, out oMax);

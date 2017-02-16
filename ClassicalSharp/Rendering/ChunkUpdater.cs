@@ -259,7 +259,7 @@ namespace ClassicalSharp.Renderers {
 				ResetNeighbour(x, y, z + 1, block, cx, cy, cz + 1, minCy, maxCy);
 		}
 		
-		bool Needs(BlockID block, byte other) { 
+		bool Needs(BlockID block, BlockID other) { 
 			return info.Draw[block] != DrawType.Opaque || info.Draw[other] != DrawType.Gas;
 		}
 		
@@ -285,7 +285,7 @@ namespace ClassicalSharp.Renderers {
 			
 			// Update if any blocks in the chunk are affected by light change
 			for (; y >= minY; y--) {
-				byte other = world.blocks[index];
+				BlockID other = world.blocks[index];
 				bool affected = y == nY ? Needs(block, other) : info.Draw[other] != DrawType.Gas;
 				if (affected) { ResetChunk(cx, cy, cz); return; }
 				index -= world.Width * world.Length;

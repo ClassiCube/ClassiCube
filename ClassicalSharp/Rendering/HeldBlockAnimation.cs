@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.Events;
 using ClassicalSharp.Model;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Renderers {
 	
@@ -13,7 +14,7 @@ namespace ClassicalSharp.Renderers {
 		internal Vector3 pos;
 		
 		double time, period = 0.25, speed = Math.PI / 0.25;
-		byte lastType;
+		BlockID lastType;
 		Game game;
 		HeldBlockRenderer held;
 		

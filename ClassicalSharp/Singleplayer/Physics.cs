@@ -29,10 +29,10 @@ namespace ClassicalSharp.Singleplayer {
 			set { enabled = value; liquid.Clear(); }
 		}
 		
-		public Action<int, byte>[] OnActivate = new Action<int, byte>[256];
-		public Action<int, byte>[] OnRandomTick = new Action<int, byte>[256];
-		public Action<int, byte>[] OnPlace = new Action<int, byte>[256];
-		public Action<int, byte>[] OnDelete = new Action<int, byte>[256];
+		public Action<int, BlockID>[] OnActivate = new Action<int, BlockID>[Block.Count];
+		public Action<int, BlockID>[] OnRandomTick = new Action<int, BlockID>[Block.Count];
+		public Action<int, BlockID>[] OnPlace = new Action<int, BlockID>[Block.Count];
+		public Action<int, BlockID>[] OnDelete = new Action<int, BlockID>[Block.Count];
 		
 		public PhysicsBase(Game game) {
 			this.game = game;
@@ -86,10 +86,10 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			
 			if (e.Block == 0) {
-				Action<int, byte> delete = OnDelete[e.OldBlock];
+				Action<int, BlockID> delete = OnDelete[e.OldBlock];
 				if (delete != null) delete(index, e.OldBlock);
 			} else {
-				Action<int, byte> place = OnPlace[block];
+				Action<int, BlockID> place = OnPlace[block];
 				if (place != null) place(index, block);
 			}
 			ActivateNeighbours(p.X, p.Y, p.Z, index);
@@ -108,7 +108,7 @@ namespace ClassicalSharp.Singleplayer {
 		/// <summary> Activates the block at the particular packed coordinates. </summary>
 		public void Activate(int index) {
 			BlockID block = map.blocks[index];
-			Action<int, byte> activate = OnActivate[block];
+			Action<int, BlockID> activate = OnActivate[block];
 			if (activate != null) activate(index, block);
 		}
 		
@@ -148,7 +148,7 @@ namespace ClassicalSharp.Singleplayer {
 				// Inlined 3 random ticks for this chunk
 				int index = rnd.Next(lo, hi);
 				BlockID block = map.blocks[index];
-				Action<int, byte> tick = OnRandomTick[block];
+				Action<int, BlockID> tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 				
 				index = rnd.Next(lo, hi);

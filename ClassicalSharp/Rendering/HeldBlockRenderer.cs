@@ -5,12 +5,13 @@ using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Renderers {
 	
 	public class HeldBlockRenderer : IGameComponent {
 		
-		internal byte type;
+		internal BlockID type;
 		internal BlockModel block;
 		internal HeldBlockAnimation anim;
 		
@@ -119,7 +120,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public FakePlayer(Game game) : base(game) {
 		}
-		public byte Block;
+		public BlockID Block;
 		
 		public override void SetLocation(LocationUpdate update, bool interpolate) { }
 		

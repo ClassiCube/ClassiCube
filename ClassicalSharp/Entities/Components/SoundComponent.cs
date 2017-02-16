@@ -11,7 +11,7 @@ namespace ClassicalSharp.Entities {
 
 		LocalPlayer p;
 		Game game;		
-		Predicate<byte> checkSoundNonSolid, checkSoundSolid;
+		Predicate<BlockID> checkSoundNonSolid, checkSoundSolid;
 		
 		public SoundComponent(Game game, Entity entity) {
 			this.game = game;
@@ -68,7 +68,7 @@ namespace ClassicalSharp.Entities {
 			// then check block standing on
 			pos.Y -= 0.01f;
 			Vector3I feetPos = Vector3I.Floor(pos);
-			byte blockUnder = game.World.SafeGetBlock(feetPos);
+			BlockID blockUnder = game.World.SafeGetBlock(feetPos);
 			float maxY = feetPos.Y + game.BlockInfo.MaxBB[blockUnder].Y;
 			
 			SoundType typeUnder = game.BlockInfo.StepSounds[blockUnder];

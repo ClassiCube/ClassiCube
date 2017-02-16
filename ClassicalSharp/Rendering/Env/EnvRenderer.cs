@@ -39,7 +39,7 @@ namespace ClassicalSharp.Renderers {
 		protected abstract void EnvVariableChanged(object sender, EnvVarEventArgs e);
 		
 		
-		protected byte BlockOn(out float fogDensity, out FastColour fogCol) {
+		protected BlockID BlockOn(out float fogDensity, out FastColour fogCol) {
 			BlockInfo info = game.BlockInfo;
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor(pos);

@@ -17,7 +17,7 @@ namespace ClassicalSharp.Map {
 		//    for z = startZ; z < startZ + 18; z++
 		//       CalcHeightAt(x, maxY, z) if height == short.MaxValue
 		// Except this function is a lot more optimised and minimises cache misses.
-		public unsafe abstract void LightHint(int startX, int startZ, byte* mapPtr);
+		public unsafe abstract void LightHint(int startX, int startZ, BlockID* mapPtr);
 		
 		/// <summary> Returns the y coordinate of the highest block that is fully not in sunlight. </summary>
 		/// <remarks> *** Does NOT check that the coordinates are inside the map. *** <br/>

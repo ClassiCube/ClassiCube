@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui.Screens {
 			font = new Font(game.FontName, 16);
 		}
 		
-		byte[] blocksTable;
+		BlockID[] blocksTable;
 		Texture blockInfoTexture;
 		const int maxRows = 8;
 		int blocksPerRow {

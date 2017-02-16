@@ -64,7 +64,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		
-		public unsafe override void LightHint(int startX, int startZ, byte* mapPtr) {
+		public unsafe override void LightHint(int startX, int startZ, BlockID* mapPtr) {
 			int x1 = Math.Max(startX, 0), x2 = Math.Min(width, startX + 18);
 			int z1 = Math.Max(startZ, 0), z2 = Math.Min(length, startZ + 18);
 			int xCount = x2 - x1, zCount = z2 - z1;

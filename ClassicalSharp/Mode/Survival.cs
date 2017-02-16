@@ -52,7 +52,7 @@ namespace ClassicalSharp.Mode {
 		public Widget MakeHotbar() { return new SurvivalHotbarWidget(game); }
 		
 		
-		void HandleDelete(byte old) {
+		void HandleDelete(BlockID old) {
 			if (old == Block.Log) {
 				AddToHotbar(Block.Wood, rnd.Next(3, 6));
 			} else if (old == Block.CoalOre) {
@@ -76,7 +76,7 @@ namespace ClassicalSharp.Mode {
 		
 		void AddToHotbar(BlockID block, int count) {
 			int index = -1;
-			byte[] hotbar = game.Inventory.Hotbar;
+			BlockID[] hotbar = game.Inventory.Hotbar;
 			
 			// Try searching for same block, then try invalid block
 			for (int i = 0; i < hotbar.Length; i++) {
@@ -115,7 +115,7 @@ namespace ClassicalSharp.Mode {
 		
 		public void Init(Game game) {
 			this.game = game;
-			byte[] hotbar = game.Inventory.Hotbar;
+			BlockID[] hotbar = game.Inventory.Hotbar;
 			for (int i = 0; i < hotbar.Length; i++)
 				hotbar[i] = Block.Air;
 			hotbar[hotbar.Length - 1] = Block.TNT;

@@ -10,7 +10,7 @@ namespace ClassicalSharp.Events {
 		
 		/// <summary> Raised when the user changes a block in the world. </summary>
 		public event EventHandler<BlockChangedEventArgs> BlockChanged;
-		public void RaiseBlockChanged(Vector3I coords, byte old, BlockID block) {
+		public void RaiseBlockChanged(Vector3I coords, BlockID old, BlockID block) {
 			blockArgs.Coords = coords; blockArgs.OldBlock = old; blockArgs.Block = block; 
 			Raise(BlockChanged, blockArgs);
 		}

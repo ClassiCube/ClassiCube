@@ -12,16 +12,16 @@ namespace ClassicalSharp.Generator {
 	public sealed partial class NotchyGenerator : IMapGenerator {
 		
 		int waterLevel, oneY;
-		byte[] blocks;
+		BlockID[] blocks;
 		short[] heightmap;
 		JavaRandom rnd;
 		
 		public override string GeneratorName { get { return "Vanilla classic"; } }
 		
-		public override byte[] Generate(int seed) {
+		public override BlockID[] Generate(int seed) {
 			oneY = Width * Length;
 			waterLevel = Height / 2;
-			blocks = new byte[Width * Height * Length];
+			blocks = new BlockID[Width * Height * Length];
 			rnd = new JavaRandom(seed);
 			
 			CreateHeightmap();			

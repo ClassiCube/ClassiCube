@@ -39,7 +39,7 @@ namespace ClassicalSharp.Singleplayer {
 			// Find lowest air block
 			while (index >= oneY) {
 				index -= oneY;
-				byte other = map.blocks[index];
+				BlockID other = map.blocks[index];
 				if (other == Block.Air || (other >= Block.Water && other <= Block.StillLava))
 					found = index;
 				else

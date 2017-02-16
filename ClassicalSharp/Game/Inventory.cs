@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 		Game game;
 		public bool CanChangeHeldBlock = true;
 		
-		public byte[] Hotbar = new byte[9];
+		public BlockID[] Hotbar = new BlockID[9];
 		public InventoryPermissions CanPlace = new InventoryPermissions();
 		public InventoryPermissions CanDelete = new InventoryPermissions();
 		
@@ -64,7 +64,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		byte[] map = new byte[Block.Count];
+		BlockID[] map = new BlockID[Block.Count];
 		public BlockID MapBlock(int i) { return map[i]; }
 		
 		void MakeMap() {
@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 	
 	public class InventoryPermissions {
 		
-		byte[] values = new byte[256];
+		byte[] values = new byte[Block.Count];
 		public bool this[int index] {
 			get { return (values[index] & 1) != 0; }
 			set {

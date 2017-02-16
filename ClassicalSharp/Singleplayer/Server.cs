@@ -8,13 +8,14 @@ using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Physics;
 using OpenTK;
 using OpenTK.Input;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
 	public sealed class SinglePlayerServer : IServerConnection {
 		
 		internal PhysicsBase physics;
-		internal byte[] generatedMap;
+		internal BlockID[] generatedMap;
 		IMapGenerator generator;
 		string lastState;
 		

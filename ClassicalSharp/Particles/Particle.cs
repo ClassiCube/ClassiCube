@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Particles {
 
@@ -70,7 +71,8 @@ namespace ClassicalSharp.Particles {
 		
 		static Vector2 terrainSize = new Vector2(1/8f, 1/8f);
 		internal TextureRec rec;
-		internal byte texLoc, block;
+		internal byte texLoc;
+		internal BlockID block;
 		
 		public override bool Tick(Game game, double delta) {
 			return Tick(game, 5.4f, delta);
