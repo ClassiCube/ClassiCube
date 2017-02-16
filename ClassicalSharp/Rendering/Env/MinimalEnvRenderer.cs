@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using ClassicalSharp.Events;
 using System;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Renderers {
 	/// <summary> Minimialistic environment renderer 
@@ -18,7 +19,7 @@ namespace ClassicalSharp.Renderers {
 			if (map.IsNotLoaded) return;
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
-			byte block = BlockOn(out fogDensity, out fogCol);
+			BlockID block = BlockOn(out fogDensity, out fogCol);
 			gfx.ClearColour(fogCol);
 			
 			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often

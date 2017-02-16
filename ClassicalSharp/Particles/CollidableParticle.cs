@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Entities;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Particles {
 
@@ -19,7 +20,7 @@ namespace ClassicalSharp.Particles {
 		protected bool Tick(Game game, float gravity, double delta) {
 			hitTerrain = false;
 			lastPos = Position = nextPos;
-			byte curBlock = GetBlock(game, (int)Position.X, (int)Position.Y, (int)Position.Z);
+			BlockID curBlock = GetBlock(game, (int)Position.X, (int)Position.Y, (int)Position.Z);
 			float minY = Utils.Floor(Position.Y) + game.BlockInfo.MinBB[curBlock].Y;
 			float maxY = Utils.Floor(Position.Y) + game.BlockInfo.MaxBB[curBlock].Y;			
 			if (!CanPassThrough(game, curBlock) && Position.Y >= minY && 
@@ -50,7 +51,7 @@ namespace ClassicalSharp.Particles {
 				return false;
 			}
 			
-			byte block = GetBlock(game, (int)Position.X, y, (int)Position.Z);
+			BlockID block = GetBlock(game, (int)Position.X, y, (int)Position.Z);
 			if (CanPassThrough(game, block)) return true;
 			Vector3 minBB = game.BlockInfo.MinBB[block];
 			Vector3 maxBB = game.BlockInfo.MaxBB[block];
@@ -67,20 +68,20 @@ namespace ClassicalSharp.Particles {
 			return true;
 		}
 		
-		bool CanPassThrough(Game game, byte block) {
+		bool CanPassThrough(Game game, BlockID block) {
 			byte draw = game.BlockInfo.Draw[block];
 			return draw == DrawType.Gas || draw == DrawType.Sprite
 				|| (throughLiquids && game.BlockInfo.IsLiquid(block));
 		}
 		
-		bool CollideHor(Game game, byte block) {
+		bool CollideHor(Game game, BlockID block) {
 			Vector3 min = game.BlockInfo.MinBB[block] + FloorHor(Position);
 			Vector3 max = game.BlockInfo.MaxBB[block] + FloorHor(Position);
 			return Position.X >= min.X && Position.Z >= min.Z &&
 				Position.X < max.X && Position.Z < max.Z;
 		}
 		
-		byte GetBlock(Game game, int x, int y, int z) {
+		BlockID GetBlock(Game game, int x, int y, int z) {
 			if (game.World.IsValidPos(x, y, z))
 				return game.World.GetBlock(x, y, z);
 			

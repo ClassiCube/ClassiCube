@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Events;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Particles {
 	
@@ -10,7 +11,7 @@ namespace ClassicalSharp.Particles {
 		void BreakBlockEffect(object sender, BlockChangedEventArgs e) {
 			if (e.Block != 0) return;
 			Vector3I position = e.Coords;
-			byte block = e.OldBlock;
+			BlockID block = e.OldBlock;
 			
 			Vector3 worldPos = new Vector3(position.X, position.Y, position.Z);
 			int texLoc = game.BlockInfo.GetTextureLoc(block, Side.Left), texIndex = 0;

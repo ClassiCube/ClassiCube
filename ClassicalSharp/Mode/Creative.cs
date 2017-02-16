@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Mode {
 	
@@ -18,13 +19,13 @@ namespace ClassicalSharp.Mode {
 			return false;
 		}
 		
-		public void PickLeft(byte old) {
+		public void PickLeft(BlockID old) {
 			Vector3I pos = game.SelectedPos.BlockPos;
 			game.UpdateBlock(pos.X, pos.Y, pos.Z, 0);
 			game.UserEvents.RaiseBlockChanged(pos, old, 0);
 		}
 		
-		public void PickMiddle(byte old) {
+		public void PickMiddle(BlockID old) {
 			Inventory inv = game.Inventory;			
 			if (game.BlockInfo.Draw[old] != DrawType.Gas && (inv.CanPlace[old] || inv.CanDelete[old])) {
 				for (int i = 0; i < inv.Hotbar.Length; i++) {
@@ -36,7 +37,7 @@ namespace ClassicalSharp.Mode {
 			}
 		}
 		
-		public void PickRight(byte old, byte block) {
+		public void PickRight(BlockID old, BlockID block) {
 			Vector3I pos = game.SelectedPos.TranslatedPos;
 			game.UpdateBlock(pos.X, pos.Y, pos.Z, block);
 			game.UserEvents.RaiseBlockChanged(pos, old, block);

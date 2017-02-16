@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.Model;
 using ClassicalSharp.Physics;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Entities {
 	
@@ -21,13 +22,13 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity satisfy the given condition. </summary>
-		public bool TouchesAny(Predicate<byte> condition) {
+		public bool TouchesAny(Predicate<BlockID> condition) {
 			return TouchesAny(Bounds, condition);
 		}
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// given bounding box satisfy the given condition. </summary>
-		public bool TouchesAny(AABB bounds, Predicate<byte> condition) {
+		public bool TouchesAny(AABB bounds, Predicate<BlockID> condition) {
 			Vector3I bbMin = Vector3I.Floor(bounds.Min);
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
 			
@@ -40,7 +41,7 @@ namespace ClassicalSharp.Entities {
 					for (int x = bbMin.X; x <= bbMax.X; x++)
 			{
 				if (!game.World.IsValidPos(x, y, z)) continue;
-				byte block = game.World.GetBlock(x, y, z);
+				BlockID block = game.World.GetBlock(x, y, z);
 				blockBB.Min = new Vector3(x, y, z) + info.MinBB[block];
 				blockBB.Max = new Vector3(x, y, z) + info.MaxBB[block];
 				
@@ -66,7 +67,7 @@ namespace ClassicalSharp.Entities {
 		
 		// If liquid block above, leave height same
 		// otherwise reduce water BB height by 0.5 blocks
-		bool TouchesAnyLiquid(AABB bounds, byte block1, byte block2) {
+		bool TouchesAnyLiquid(AABB bounds, BlockID block1, BlockID block2) {
 			Vector3I bbMin = Vector3I.Floor(bounds.Min);
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
 			
@@ -80,9 +81,9 @@ namespace ClassicalSharp.Entities {
 					for (int x = bbMin.X; x <= bbMax.X; x++)
 			{
 				if (!game.World.IsValidPos(x, y, z)) continue;
-				byte block = game.World.GetBlock(x, y, z);
-				byte below = (y - 1) < 0 ? Block.Air : game.World.GetBlock(x, y - 1, z);
-				byte above = (y + 1) >= height ? Block.Air : game.World.GetBlock(x, y + 1, z);
+				BlockID block = game.World.GetBlock(x, y, z);
+				BlockID below = (y - 1) < 0 ? Block.Air : game.World.GetBlock(x, y - 1, z);
+				BlockID above = (y + 1) >= height ? Block.Air : game.World.GetBlock(x, y + 1, z);
 				
 				// TODO: use recording to find right constants when I have more time
 				blockBB.Min = new Vector3(x, y, z) + info.MinBB[block];

@@ -5,6 +5,7 @@ using ClassicalSharp.Events;
 using ClassicalSharp.Map;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Renderers {
 	
@@ -63,7 +64,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Refresh() { updater.Refresh(); }
 		
-		public void RedrawBlock(int x, int y, int z, byte block, int oldHeight, int newHeight) {
+		public void RedrawBlock(int x, int y, int z, BlockID block, int oldHeight, int newHeight) {
 			updater.RedrawBlock(x, y, z, block, oldHeight, newHeight);
 		}
 		
@@ -124,7 +125,7 @@ namespace ClassicalSharp.Renderers {
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor(pos);
 			
-			byte block = game.World.SafeGetBlock(coords);
+			BlockID block = game.World.SafeGetBlock(coords);
 			bool outside = !game.World.IsValidPos(Vector3I.Floor(pos));
 			inTranslucent = game.BlockInfo.Draw[block] == DrawType.Translucent
 				|| (pos.Y < env.EdgeHeight && outside);

@@ -3,6 +3,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.Map;
 using System;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Physics {
 	
@@ -10,7 +11,7 @@ namespace ClassicalSharp.Physics {
 		public int X, Y, Z;
 		public float tSquared;
 		
-		public State(int x, int y, int z, byte block, float tSquared) {
+		public State(int x, int y, int z, BlockID block, float tSquared) {
 			X = x << 3; Y = y << 3; Z = z << 3;
 			X |= (block & 0x07);
 			Y |= (block & 0x38) >> 3;
@@ -55,7 +56,7 @@ namespace ClassicalSharp.Physics {
 				for (int z = min.Z; z <= max.Z; z++)
 					for (int x = min.X; x <= max.X; x++)
 			{
-				byte block = game.World.GetPhysicsBlock(x, y, z);
+				BlockID block = game.World.GetPhysicsBlock(x, y, z);
 				if (info.Collide[block] != CollideType.Solid) continue;
 				
 				blockBB.Min = info.MinBB[block];

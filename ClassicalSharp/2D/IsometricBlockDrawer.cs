@@ -4,6 +4,7 @@ using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using ClassicalSharp.Textures;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
@@ -46,7 +47,7 @@ namespace ClassicalSharp {
 			sinY = (float)Math.Sin(-45f * Utils.Deg2Rad);
 		}
 		
-		public void DrawBatch(byte block, float size, float x, float y) {
+		public void DrawBatch(BlockID block, float size, float x, float y) {
 			BlockInfo info = game.BlockInfo;
 			atlas = game.TerrainAtlas1D;
 			drawer.elementsPerAtlas1D = atlas.elementsPerAtlas1D;
@@ -100,7 +101,7 @@ namespace ClassicalSharp {
 			game.Graphics.PopMatrix();
 		}
 		
-		int GetTex(byte block, int side) {
+		int GetTex(BlockID block, int side) {
 			int texId = game.BlockInfo.GetTextureLoc(block, side);
 			texIndex = texId / atlas.elementsPerAtlas1D;
 			
@@ -109,7 +110,7 @@ namespace ClassicalSharp {
 		}
 
 		static Vector3 pos = Vector3.Zero;
-		void SpriteZQuad(byte block, bool firstPart) {
+		void SpriteZQuad(BlockID block, bool firstPart) {
 			int texLoc = game.BlockInfo.GetTextureLoc(block, Side.Right);
 			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
 			if (lastIndex != texIndex) Flush();
@@ -135,7 +136,7 @@ namespace ClassicalSharp {
 			v.X = maxX; v.Y = minY; v.Z = pos.Z; v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
 		}
 
-		void SpriteXQuad(byte block, bool firstPart) {
+		void SpriteXQuad(BlockID block, bool firstPart) {
 			int texLoc = game.BlockInfo.GetTextureLoc(block, Side.Right);
 			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
 			if (lastIndex != texIndex) Flush();

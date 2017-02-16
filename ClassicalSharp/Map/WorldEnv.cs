@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Events;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Map {
 
@@ -48,14 +49,14 @@ namespace ClassicalSharp.Map {
 		public Weather Weather = Weather.Sunny;
 		
 		/// <summary> Block that surrounds map the map horizontally (default water) </summary>
-		public byte EdgeBlock = Block.StillWater;
+		public BlockID EdgeBlock = Block.StillWater;
 		
 		/// <summary> Height of the map edge in world space. </summary>
 		public int EdgeHeight;
 		
 		/// <summary> Block that surrounds the map that fills the bottom of the map horizontally,
 		/// fills part of the vertical sides of the map, and also surrounds map the map horizontally. (default bedrock) </summary>
-		public byte SidesBlock = Block.Bedrock;
+		public BlockID SidesBlock = Block.Bedrock;
 		
 		/// <summary> Maximum height of the various parts of the map sides, in world space. </summary>
 		public int SidesHeight { get { return EdgeHeight - 2; } }
@@ -101,7 +102,7 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Sets sides block to the given block, and raises
 		/// EnvVariableChanged event with variable 'SidesBlock'. </summary>
-		public void SetSidesBlock(byte block) {
+		public void SetSidesBlock(BlockID block) {
 			if (block == SidesBlock) return;
 			if (block == Block.MaxDefinedBlock) {
 				Utils.LogDebug("Tried to set sides block to an invalid block: " + block);
@@ -113,7 +114,7 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Sets edge block to the given block, and raises
 		/// EnvVariableChanged event with variable 'EdgeBlock'. </summary>
-		public void SetEdgeBlock(byte block) {
+		public void SetEdgeBlock(BlockID block) {
 			if (block == EdgeBlock) return;
 			if (block == Block.MaxDefinedBlock) {
 				Utils.LogDebug("Tried to set edge block to an invalid block: " + block);

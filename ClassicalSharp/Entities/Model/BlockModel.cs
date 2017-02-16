@@ -6,12 +6,13 @@ using ClassicalSharp.Physics;
 using ClassicalSharp.Renderers;
 using ClassicalSharp.Textures;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Model {
 
 	public class BlockModel : IModel {
 		
-		byte block = (byte)Block.Air;
+		BlockID block = (byte)Block.Air;
 		float height;
 		TerrainAtlas1D atlas;
 		bool bright;
@@ -31,7 +32,7 @@ namespace ClassicalSharp.Model {
 		public override float NameYOffset { get { return height + 0.075f; } }
 		
 		public override float GetEyeY(Entity entity) {
-			byte block = Byte.Parse(entity.ModelName);
+			BlockID block = Byte.Parse(entity.ModelName);
 			float minY = game.BlockInfo.MinBB[block].Y;
 			float maxY = game.BlockInfo.MaxBB[block].Y;
 			return block == 0 ? 1 : (minY + maxY) / 2;
@@ -47,7 +48,7 @@ namespace ClassicalSharp.Model {
 			get { return new AABB(minBB, maxBB).Offset(offset); }
 		}
 		
-		public void CalcState(byte block) {
+		public void CalcState(BlockID block) {
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) {
 				bright = false;
 				minBB = Vector3.Zero;

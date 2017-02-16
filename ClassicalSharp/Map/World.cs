@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.Events;
 using ClassicalSharp.Renderers;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Map {
 	
@@ -12,7 +13,7 @@ namespace ClassicalSharp.Map {
 
 		Game game;
 		BlockInfo info;
-		public byte[] blocks;
+		public BlockID[] blocks;
 		public int Width, Height, Length;
 		
 		/// <summary> Contains the environment metadata for this world. </summary>
@@ -44,7 +45,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		/// <summary> Updates the underlying block array, heightmap, and dimensions of this map. </summary>
-		public void SetNewMap(byte[] blocks, int width, int height, int length) {
+		public void SetNewMap(BlockID[] blocks, int width, int height, int length) {
 			this.blocks = blocks;
 			this.Width = width;
 			this.Height = height;
@@ -59,9 +60,9 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking,
 		/// and also recalculates the heightmap for the given (x,z) column.	</summary>
-		public void SetBlock(int x, int y, int z, byte blockId) {
+		public void SetBlock(int x, int y, int z, BlockID blockId) {
 			int index = (y * Length + z) * Width + x;
-			byte oldBlock = blocks[index];
+			BlockID oldBlock = blocks[index];
 			blocks[index] = blockId;
 			game.Lighting.UpdateLight(x, y, z, oldBlock, blockId);
 			
@@ -72,30 +73,30 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking,
 		/// and also recalculates the heightmap for the given (x,z) column.	</summary>
-		public void SetBlock(Vector3I p, byte blockId) {
+		public void SetBlock(Vector3I p, BlockID blockId) {
 			SetBlock(p.X, p.Y, p.Z, blockId);
 		}
 		
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
-		public byte GetBlock(int x, int y, int z) {
+		public BlockID GetBlock(int x, int y, int z) {
 			return blocks[(y * Length + z) * Width + x];
 		}
 		
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
-		public byte GetBlock(Vector3I p) {
+		public BlockID GetBlock(Vector3I p) {
 			return blocks[(p.Y * Length + p.Z) * Width + p.X];
 		}
 		
 		/// <summary> Returns the block at the given world coordinates with bounds checking,
 		/// returning 0 is the coordinates were outside the map. </summary>
-		public byte SafeGetBlock(int x, int y, int z) {
+		public BlockID SafeGetBlock(int x, int y, int z) {
 			return IsValidPos(x, y, z) ?
 				blocks[(y * Length + z) * Width + x] : Block.Air;
 		}
 		
 		/// <summary> Returns the block at the given world coordinates with bounds checking,
 		/// returning 0 is the coordinates were outside the map. </summary>
-		public byte SafeGetBlock(Vector3I p) {
+		public BlockID SafeGetBlock(Vector3I p) {
 			return IsValidPos(p.X, p.Y, p.Z) ?
 				blocks[(p.Y * Length + p.Z) * Width + p.X] : Block.Air;
 		}
@@ -125,7 +126,7 @@ namespace ClassicalSharp.Map {
 			return new Vector3I(x, y, z);
 		}
 		
-		public byte GetPhysicsBlock(int x, int y, int z) {
+		public BlockID GetPhysicsBlock(int x, int y, int z) {
 			if (x < 0 || x >= Width || z < 0 || z >= Length || y < 0) return Block.Bedrock;			
 			if (y >= Height) return Block.Air;
 			return blocks[(y * Length + z) * Width + x];

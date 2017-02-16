@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Renderers {
 
@@ -121,7 +122,7 @@ namespace ClassicalSharp.Renderers {
 			if (map.IsNotLoaded) return;
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
-			byte block = BlockOn(out fogDensity, out fogCol);
+			BlockID block = BlockOn(out fogDensity, out fogCol);
 			
 			if (fogDensity != 0) {
 				gfx.SetFogMode(Fog.Exp);

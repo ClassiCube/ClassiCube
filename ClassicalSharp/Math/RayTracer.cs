@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Map;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
@@ -18,7 +19,7 @@ namespace ClassicalSharp {
 		public Vector3 Origin, Dir;
 		// Block data
 		public Vector3 Min, Max;
-		public byte Block;
+		public BlockID Block;
 		
 		Vector3I step, cellBoundary;
 		Vector3 tMax, tDelta;

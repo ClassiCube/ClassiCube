@@ -6,6 +6,7 @@ using ClassicalSharp.Map;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Textures;
 using OpenTK.Input;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Gui.Screens {
 	public sealed class LoadLevelScreen : FilesScreen {
@@ -66,7 +67,7 @@ namespace ClassicalSharp.Gui.Screens {
 					}
 					game.BlockInfo.Reset(game);
 					
-					byte[] blocks = importer.Load(fs, game, out width, out height, out length);
+					BlockID[] blocks = importer.Load(fs, game, out width, out height, out length);
 					game.World.SetNewMap(blocks, width, height, length);
 					game.WorldEvents.RaiseOnNewMapLoaded();
 					if (game.AllowServerTextures && game.World.TextureUrl != null)

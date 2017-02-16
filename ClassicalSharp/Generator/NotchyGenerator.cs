@@ -5,6 +5,7 @@
 // I believe this process adheres to clean room reverse engineering.
 using System;
 using System.Collections.Generic;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Generator {
 	
@@ -83,7 +84,7 @@ namespace ClassicalSharp.Generator {
 					blocks[mapIndex] = Block.Lava;
 					mapIndex += oneY;
 					for (int y = 1; y < Height; y++) {
-						byte block = 0;
+						BlockID block = 0;
 						if (y <= stoneHeight) block = Block.Stone;
 						else if (y <= dirtHeight) block = Block.Dirt;
 						
@@ -132,7 +133,7 @@ namespace ClassicalSharp.Generator {
 			}
 		}
 		
-		void CarveOreVeins(float abundance, string blockName, byte block) {
+		void CarveOreVeins(float abundance, string blockName, BlockID block) {
 			int numVeins = (int)(blocks.Length * abundance / 16384);
 			CurrentState = "Carving " + blockName;
 			
@@ -224,7 +225,7 @@ namespace ClassicalSharp.Generator {
 					if (y < 0 || y >= Height) continue;
 					
 					int index = (y * Length + z) * Width + x;
-					byte blockAbove = y >= (Height - 1) ? Block.Air : blocks[index + oneY];
+					BlockID blockAbove = y >= (Height - 1) ? Block.Air : blocks[index + oneY];
 					if (blockAbove == Block.Water && gravel) {
 						blocks[index] = Block.Gravel;
 					} else if (blockAbove == Block.Air) {
@@ -240,7 +241,7 @@ namespace ClassicalSharp.Generator {
 			
 			for (int i = 0; i < numPatches; i++) {
 				CurrentProgress = (float)i / numPatches;
-				byte type = (byte)(Block.Dandelion + rnd.Next(2));
+				BlockID type = (BlockID)(Block.Dandelion + rnd.Next(2));
 				int patchX = rnd.Next(Width), patchZ = rnd.Next(Length);
 				for (int j = 0; j < 10; j++) {
 					int flowerX = patchX, flowerZ = patchZ;

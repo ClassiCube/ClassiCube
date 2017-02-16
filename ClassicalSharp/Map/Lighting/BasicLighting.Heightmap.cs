@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Map {
 	
@@ -11,7 +12,7 @@ namespace ClassicalSharp.Map {
 			byte[] blocks = game.World.blocks;
 			
 			for (int y = maxY; y >= 0; y--) {
-				byte block = blocks[mapIndex];
+				BlockID block = blocks[mapIndex];
 				if (info.BlocksLight[block]) {
 					int offset = (info.LightOffset[block] >> Side.Top) & 1;
 					heightmap[index] = (short)(y - offset);

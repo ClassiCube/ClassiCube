@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using ClassicalSharp.Map;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -56,14 +57,14 @@ namespace ClassicalSharp.Singleplayer {
 			for (int i = 0; i < count; i++) {
 				int index;
 				if (PhysicsBase.CheckItem(Lava, out index)) {
-					byte block = map.blocks[index];
+					BlockID block = map.blocks[index];
 					if (!(block == Block.Lava || block == Block.StillLava)) continue;
 					ActivateLava(index, block);
 				}
 			}
 		}
 		
-		void ActivateLava(int index, byte block) {
+		void ActivateLava(int index, BlockID block) {
 			int x = index % width;
 			int y = index / oneY; // posIndex / (width * length)
 			int z = (index / width) % length;
@@ -76,7 +77,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void PropagateLava(int posIndex, int x, int y, int z) {
-			byte block = map.blocks[posIndex];
+			BlockID block = map.blocks[posIndex];
 			if (block == Block.Water || block == Block.StillWater) {
 				game.UpdateBlock(x, y, z, Block.Stone);
 			} else if (info.Collide[block] == CollideType.WalkThrough) {
@@ -93,14 +94,14 @@ namespace ClassicalSharp.Singleplayer {
 			for (int i = 0; i < count; i++) {
 				int index;
 				if (PhysicsBase.CheckItem(Water, out index)) {
-					byte block = map.blocks[index];
+					BlockID block = map.blocks[index];
 					if (!(block == Block.Water || block == Block.StillWater)) continue;
 					ActivateWater(index, block);
 				}
 			}
 		}
 		
-		void ActivateWater(int index, byte block) {
+		void ActivateWater(int index, BlockID block) {
 			int x = index % width;
 			int y = index / oneY; // posIndex / (width * length)
 			int z = (index / width) % length;
@@ -113,7 +114,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void PropagateWater(int posIndex, int x, int y, int z) {
-			byte block = map.blocks[posIndex];
+			BlockID block = map.blocks[posIndex];
 			if (block == Block.Lava || block == Block.StillLava) {
 				game.UpdateBlock(x, y, z, Block.Stone);
 			} else if (info.Collide[block] == CollideType.WalkThrough && block != Block.Rope) {
@@ -132,7 +133,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 
 		
-		void PlaceSponge(int index, byte block) {
+		void PlaceSponge(int index, BlockID block) {
 			int x = index % width;
 			int y = index / oneY; // posIndex / (width * length)
 			int z = (index / width) % length;
@@ -148,7 +149,7 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		
-		void DeleteSponge(int index, byte block) {
+		void DeleteSponge(int index, BlockID block) {
 			int x = index % width;
 			int y = index / oneY; // posIndex / (width * length)
 			int z = (index / width) % length;

@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Map {
 	
@@ -24,7 +25,7 @@ namespace ClassicalSharp.Map {
 		public abstract int GetLightHeight(int x, int z);
 		
 		/// <summary> Updates the lighting for the block at that position, which may in turn affect other blocks. </summary>
-		public abstract void UpdateLight(int x, int y, int z, byte oldBlock, byte newBlock);
+		public abstract void UpdateLight(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 		
 		
 		/// <summary> Returns whether the block at the given coordinates is fully in sunlight. </summary>

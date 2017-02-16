@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Physics;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Entities {
 	
@@ -91,7 +92,7 @@ namespace ClassicalSharp.Entities {
 			canLiquidJump = false;
 		}
 		
-		bool StandardLiquid(byte block) {
+		bool StandardLiquid(BlockID block) {
 			return info.Collide[block] == CollideType.SwimThrough;
 		}
 		
@@ -216,7 +217,7 @@ namespace ClassicalSharp.Entities {
 				for (int z = bbMin.Z; z <= bbMax.Z; z++)
 					for (int x = bbMin.X; x <= bbMax.X; x++)
 			{
-				byte block = game.World.SafeGetBlock(x, y, z);
+				BlockID block = game.World.SafeGetBlock(x, y, z);
 				if (block == 0) continue;
 				CollideType type = info.Collide[block];
 				if (type == CollideType.Solid && !checkSolid)

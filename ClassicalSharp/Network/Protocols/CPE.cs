@@ -5,6 +5,7 @@ using ClassicalSharp.Hotkeys;
 using ClassicalSharp.Map;
 using ClassicalSharp.Textures;
 using OpenTK.Input;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Network.Protocols {
 
@@ -83,7 +84,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleHoldThis() {
-			byte block = reader.ReadUInt8();
+			BlockID block = reader.ReadUInt8();
 			if (block == Block.Air) block = Block.Invalid;
 			bool canChange = reader.ReadUInt8() == 0;
 			
@@ -282,7 +283,7 @@ namespace ClassicalSharp.Network.Protocols {
 			reader.Skip((bulkCount - count) * sizeof(int));
 			
 			for (int i = 0; i < count; i++) {
-				byte block = reader.ReadUInt8();
+				BlockID block = reader.ReadUInt8();
 				Vector3I coords = game.World.GetCoords(indices[i]);
 				
 				if (coords.X < 0) {

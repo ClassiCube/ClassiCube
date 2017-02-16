@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
@@ -29,12 +30,12 @@ namespace ClassicalSharp {
 		public BlockFace Face;
 		
 		/// <summary> Block ID of the picked block. </summary>
-		public byte Block;
+		public BlockID Block;
 		
 		/// <summary> Mark this as having a selected block, and
 		/// calculates the closest face of the selected block's position. </summary>
 		public void SetAsValid(int x, int y, int z, Vector3 min, Vector3 max,
-		                       byte block, Vector3 intersect) {
+		                       BlockID block, Vector3 intersect) {
 			Min = min;
 			Max = max;
 			BlockPos = new Vector3I(x, y, z);

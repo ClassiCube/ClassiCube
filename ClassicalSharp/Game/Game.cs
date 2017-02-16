@@ -24,6 +24,7 @@ using OpenTK.Input;
 using Android.Graphics;
 #endif
 using PathIO = System.IO.Path; // Android.Graphics.Path clash otherwise
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
@@ -275,7 +276,7 @@ namespace ClassicalSharp {
 			UpdateProjection();
 		}
 		
-		public void UpdateBlock(int x, int y, int z, byte block) {
+		public void UpdateBlock(int x, int y, int z, BlockID block) {
 			int oldHeight = Lighting.GetLightHeight(x, z) + 1;
 			World.SetBlock(x, y, z, block);
 			int newHeight = Lighting.GetLightHeight(x, z) + 1;
@@ -337,7 +338,7 @@ namespace ClassicalSharp {
 			Options.Save();
 		}
 		
-		public bool CanPick(byte block) {
+		public bool CanPick(BlockID block) {
 			if (BlockInfo.Draw[block] == DrawType.Gas) return false;
 			if (BlockInfo.Draw[block] == DrawType.Sprite) return true;
 			if (BlockInfo.Collide[block] != CollideType.SwimThrough) return true;

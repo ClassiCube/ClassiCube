@@ -5,6 +5,7 @@ using ClassicalSharp.Entities.Mobs;
 using ClassicalSharp.Gui.Widgets;
 using OpenTK;
 using OpenTK.Input;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Mode {
 	
@@ -17,17 +18,17 @@ namespace ClassicalSharp.Mode {
 		
 		public bool HandlesKeyDown(Key key) { return false; }
 
-		public void PickLeft(byte old) {
+		public void PickLeft(BlockID old) {
 			Vector3I pos = game.SelectedPos.BlockPos;
 			game.UpdateBlock(pos.X, pos.Y, pos.Z, 0);
 			game.UserEvents.RaiseBlockChanged(pos, old, 0);
 			HandleDelete(old);
 		}
 		
-		public void PickMiddle(byte old) {
+		public void PickMiddle(BlockID old) {
 		}
 		
-		public void PickRight(byte old, byte block) {
+		public void PickRight(BlockID old, BlockID block) {
 			int index = game.Inventory.HeldBlockIndex;
 			if (invCount[index] == 0) return;
 			
@@ -73,7 +74,7 @@ namespace ClassicalSharp.Mode {
 			}
 		}
 		
-		void AddToHotbar(byte block, int count) {
+		void AddToHotbar(BlockID block, int count) {
 			int index = -1;
 			byte[] hotbar = game.Inventory.Hotbar;
 			

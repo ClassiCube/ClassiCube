@@ -10,6 +10,7 @@ using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
 using ClassicalSharp.Textures;
 using ClassicalSharp.Network.Protocols;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Network {
 
@@ -182,7 +183,7 @@ namespace ClassicalSharp.Network {
 		
 		void BlockChanged(object sender, BlockChangedEventArgs e) {
 			Vector3I p = e.Coords;
-			byte block = game.Inventory.HeldBlock;
+			BlockID block = game.Inventory.HeldBlock;
 			
 			if (e.Block == 0) {
 				classic.SendSetBlock(p.X, p.Y, p.Z, false, block);

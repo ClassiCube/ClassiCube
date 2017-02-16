@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using ClassicalSharp.Map;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -33,7 +34,7 @@ namespace ClassicalSharp.Singleplayer {
 			oneY = width * length;
 		}
 
-		void DoFalling(int index, byte block) {
+		void DoFalling(int index, BlockID block) {
 			int found = -1, start = index;
 			// Find lowest air block
 			while (index >= oneY) {

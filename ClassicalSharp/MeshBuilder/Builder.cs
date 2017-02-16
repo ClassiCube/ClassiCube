@@ -4,6 +4,7 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 	
@@ -33,18 +34,19 @@ namespace ClassicalSharp {
 		protected internal int width, length, height, sidesLevel, edgeLevel;
 		protected int maxX, maxY, maxZ;
 		protected int cIndex;
-		protected byte* chunk, counts;
+		protected BlockID* chunk;
+		protected byte* counts;
 		protected int* bitFlags;
 		protected bool useBitFlags;
 		
 		bool BuildChunk(int x1, int y1, int z1) {
 			lighting = game.Lighting;
 			PreStretchTiles(x1, y1, z1);
-			byte* chunkPtr = stackalloc byte[extChunkSize3]; chunk = chunkPtr;
+			BlockID* chunkPtr = stackalloc BlockID[extChunkSize3]; chunk = chunkPtr;
 			byte* countsPtr = stackalloc byte[chunkSize3 * Side.Sides]; counts = countsPtr;
 			int* bitsPtr = stackalloc int[extChunkSize3]; bitFlags = bitsPtr;
 			
-			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3);
+			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockID));
 			if (ReadChunkData(x1, y1, z1)) return false;
 			MemUtils.memset((IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides);
 			
@@ -75,7 +77,7 @@ namespace ClassicalSharp {
 		
 		bool ReadChunkData(int x1, int y1, int z1) {
 			bool allAir = true, allSolid = true;
-			fixed(byte* mapPtr = map.blocks) {
+			fixed(BlockID* mapPtr = map.blocks) {
 				
 				for (int yy = -1; yy < 17; yy++) {
 					int y = yy + y1;
@@ -95,7 +97,7 @@ namespace ClassicalSharp {
 							chunkIndex++;
 							if (x < 0) continue;
 							if (x >= width) break;							
-							byte rawBlock = mapPtr[index];
+							BlockID rawBlock = mapPtr[index];
 							
 							allAir = allAir && info.Draw[rawBlock] == DrawType.Gas;
 							allSolid = allSolid && info.Draw[rawBlock] == DrawType.Opaque;
@@ -180,7 +182,7 @@ namespace ClassicalSharp {
 					int cIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (-1 + 1);
 					for (int x = x1, xx = 0; x < xMax; x++, xx++) {
 						cIndex++;
-						byte b = chunk[cIndex];
+						BlockID b = chunk[cIndex];
 						if (info.Draw[b] == DrawType.Gas) continue;
 						int index = ((yy << 8) + (zz << 4) + xx) * Side.Sides;
 						
@@ -266,11 +268,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected abstract int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block);
+		protected abstract int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block);
 		
-		protected abstract int StretchX(int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face);
+		protected abstract int StretchX(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face);
 		
-		protected abstract int StretchZ(int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face);
+		protected abstract int StretchZ(int zz, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face);
 		
 		protected static int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
 		
@@ -283,8 +285,8 @@ namespace ClassicalSharp {
 				&& info.Draw[chunk[chunkIndex + 324 + 18]] != DrawType.Gas;
 		}
 		
-		protected bool IsLit(int x, int y, int z, int face, byte type) {
-			int offset = (info.LightOffset[type] >> face) & 1;
+		protected bool IsLit(int x, int y, int z, int face, BlockID block) {
+			int offset = (info.LightOffset[block] >> face) & 1;
 			switch (face) {
 				case Side.Left:
 					return x < offset || y > lighting.heightmap[(z * width) + (x - offset)];

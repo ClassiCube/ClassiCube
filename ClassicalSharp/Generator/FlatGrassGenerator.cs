@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Generator {
 	
@@ -21,14 +22,14 @@ namespace ClassicalSharp.Generator {
 			return map;
 		}
 		
-		unsafe void MapSet(byte* ptr, int yStart, int yEnd, byte block) {
+		unsafe void MapSet(byte* ptr, int yStart, int yEnd, BlockID block) {
 			yStart = Math.Max(yStart, 0); yEnd = Math.Max(yEnd, 0);			
 			int startIndex = yStart * Length * Width;
 			int endIndex = (yEnd * Length + (Length - 1)) * Width + (Width - 1);
 			int count = (endIndex - startIndex) + 1, offset = 0;
 			
 			while (offset < count) {
-				int bytes = Math.Min(count - offset, Width * Length);
+				int bytes = Math.Min(count - offset, Width * Length) * sizeof(BlockID);
 				MemUtils.memset((IntPtr)ptr, block, startIndex + offset, bytes);
 				offset += bytes;
 				CurrentProgress = (float)offset / count;

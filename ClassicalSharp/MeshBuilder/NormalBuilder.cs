@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
@@ -10,7 +11,7 @@ namespace ClassicalSharp {
 		
 		CuboidDrawer drawer = new CuboidDrawer();
 		
-		protected override int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block) {
+		protected override int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
 			if (OccludedLiquid(chunkIndex)) return 0;
 			int count = 1;
 			x++;
@@ -29,7 +30,7 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		protected override int StretchX(int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face) {
+		protected override int StretchX(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face) {
 			int count = 1;
 			x++;
 			chunkIndex++;
@@ -47,7 +48,7 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		protected override int StretchZ(int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face) {
+		protected override int StretchZ(int zz, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face) {
 			int count = 1;
 			z++;
 			chunkIndex += extChunkSize;
@@ -65,11 +66,11 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		bool CanStretch(byte initialTile, int chunkIndex, int x, int y, int z, int face) {
+		bool CanStretch(BlockID initialBlock, int chunkIndex, int x, int y, int z, int face) {
 			byte rawBlock = chunk[chunkIndex];
-			return rawBlock == initialTile
+			return rawBlock == initialBlock
 				&& !info.IsFaceHidden(rawBlock, chunk[chunkIndex + offsets[face]], face)
-				&& (fullBright || IsLit(X, Y, Z, face, initialTile) == IsLit(x, y, z, face, rawBlock));
+				&& (fullBright || IsLit(X, Y, Z, face, initialBlock) == IsLit(x, y, z, face, rawBlock));
 		}
 		
 		protected override void PreStretchTiles(int x1, int y1, int z1) {

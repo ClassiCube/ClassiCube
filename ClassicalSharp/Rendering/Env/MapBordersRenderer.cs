@@ -6,6 +6,7 @@ using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Renderers {
 	
@@ -40,7 +41,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void RenderSides(double delta) {
 			if (sidesVb == -1) return;
-			byte block = game.World.Env.SidesBlock;
+			BlockID block = game.World.Env.SidesBlock;
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			gfx.SetupAlphaState(game.BlockInfo.Draw[block]);
@@ -57,7 +58,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void RenderEdges(double delta) {
 			if (edgesVb == -1) return;
-			byte block = game.World.Env.EdgeBlock;
+			BlockID block = game.World.Env.EdgeBlock;
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			Vector3 camPos = game.CurrentCameraPos;
@@ -155,7 +156,7 @@ namespace ClassicalSharp.Renderers {
 
 		
 		void RebuildSides(int y, int axisSize) {
-			byte block = game.World.Env.SidesBlock;
+			BlockID block = game.World.Env.SidesBlock;
 			sidesVertices = 0;
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
@@ -186,7 +187,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void RebuildEdges(int y, int axisSize) {
-			byte block = game.World.Env.EdgeBlock;
+			BlockID block = game.World.Env.EdgeBlock;
 			edgesVertices = 0;
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
@@ -205,12 +206,12 @@ namespace ClassicalSharp.Renderers {
 			edgesVb = gfx.CreateVb(ptr, VertexFormat.P3fT2fC4b, edgesVertices);
 		}
 
-		float HorOffset(byte block) {
+		float HorOffset(BlockID block) {
 			BlockInfo info = game.BlockInfo;
 			return info.RenderMinBB[block].X - info.MinBB[block].X;
 		}
 		
-		float YOffset(byte block) {
+		float YOffset(BlockID block) {
 			BlockInfo info = game.BlockInfo;
 			return info.RenderMinBB[block].Y - info.MinBB[block].Y;
 		}
@@ -286,7 +287,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		int lastEdgeTexLoc, lastSideTexLoc;
-		void MakeTexture(ref int id, ref int lastTexLoc, byte block) {
+		void MakeTexture(ref int id, ref int lastTexLoc, BlockID block) {
 			int texLoc = game.BlockInfo.GetTextureLoc(block, Side.Top);
 			if (texLoc == lastTexLoc || gfx.LostContext) return;
 			lastTexLoc = texLoc;

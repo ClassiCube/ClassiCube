@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 	
@@ -24,7 +25,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		internal void UpdateCulling(byte block) {
+		internal void UpdateCulling(BlockID block) {
 			CheckOpaque(block);
 			CanStretch[block] = 0x3F;
 			
@@ -41,7 +42,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void CalcCulling(byte block, byte other) {
+		void CalcCulling(BlockID block, BlockID other) {
 			Vector3 bMin = MinBB[block], bMax = MaxBB[block];
 			Vector3 oMin = MinBB[other], oMax = MaxBB[other];
 			if (IsLiquid(block)) bMax.Y -= 1.5f/16;
@@ -70,7 +71,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool IsHidden(byte block, byte other, int side) {
+		bool IsHidden(BlockID block, BlockID other, int side) {
 			// Sprite blocks can never hide faces.
 			if (Draw[block] == DrawType.Sprite) return false;
 			
@@ -93,7 +94,7 @@ namespace ClassicalSharp {
 			return canSkip && FaceOccluded(block, other, side);
 		}
 		
-		void SetHidden(byte block, byte other, int side, bool value) {
+		void SetHidden(BlockID block, BlockID other, int side, bool value) {
 			value = IsHidden(block, other, side) && value;
 			int bit = value ? 1 : 0;
 			hidden[block * Block.Count + other] &= (byte)~(1 << side);
@@ -102,17 +103,17 @@ namespace ClassicalSharp {
 		
 		/// <summary> Returns whether the face at the given face of the block
 		/// should be drawn with the neighbour 'other' present on the other side of the face. </summary>
-		public bool IsFaceHidden(byte block, byte other, int tileSide) {
+		public bool IsFaceHidden(BlockID block, BlockID other, int tileSide) {
 			return (hidden[(block << 8) | other] & (1 << tileSide)) != 0;
 		}
 		
-		void SetXStretch(byte block, bool stretch) {
+		void SetXStretch(BlockID block, bool stretch) {
 			const byte mask = 0x3C;
 			CanStretch[block] &= 0xC3; // ~0x3C
 			CanStretch[block] |= (stretch ? mask : (byte)0);
 		}
 		
-		void SetZStretch(byte block, bool stretch) {
+		void SetZStretch(BlockID block, bool stretch) {
 			const byte mask = 0x03;
 			CanStretch[block] &= 0xFC; // ~0x03
 			CanStretch[block] |= (stretch ? mask : (byte)0);

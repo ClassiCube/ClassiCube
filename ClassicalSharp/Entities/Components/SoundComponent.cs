@@ -81,7 +81,7 @@ namespace ClassicalSharp.Entities {
 			p.TouchesAny(bounds, checkSoundSolid);
 		}
 		
-		bool CheckSoundNonSolid(byte b) {
+		bool CheckSoundNonSolid(BlockID b) {
 			SoundType newType = game.BlockInfo.StepSounds[b];
 			CollideType collide = game.BlockInfo.Collide[b];
 			if (newType != SoundType.None && collide != CollideType.Solid)
@@ -92,7 +92,7 @@ namespace ClassicalSharp.Entities {
 			return false;
 		}
 		
-		bool CheckSoundSolid(byte b) {
+		bool CheckSoundSolid(BlockID b) {
 			SoundType newType = game.BlockInfo.StepSounds[b];
 			if (newType != SoundType.None) sndType = newType;
 			

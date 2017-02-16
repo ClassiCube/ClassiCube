@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using ClassicalSharp.Map;
 using ClassicalSharp.Events;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -77,7 +78,7 @@ namespace ClassicalSharp.Singleplayer {
 			if (!Enabled) return;
 			Vector3I p = e.Coords;
 			int index = (p.Y * length + p.Z) * width + p.X;
-			byte block = e.Block;
+			BlockID block = e.Block;
 			
 			if (block == Block.Air && IsEdgeWater(p.X, p.Y, p.Z)) { 
 				block = Block.StillWater; 
@@ -106,7 +107,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		/// <summary> Activates the block at the particular packed coordinates. </summary>
 		public void Activate(int index) {
-			byte block = map.blocks[index];
+			BlockID block = map.blocks[index];
 			Action<int, byte> activate = OnActivate[block];
 			if (activate != null) activate(index, block);
 		}
@@ -146,7 +147,7 @@ namespace ClassicalSharp.Singleplayer {
 				
 				// Inlined 3 random ticks for this chunk
 				int index = rnd.Next(lo, hi);
-				byte block = map.blocks[index];
+				BlockID block = map.blocks[index];
 				Action<int, byte> tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 				

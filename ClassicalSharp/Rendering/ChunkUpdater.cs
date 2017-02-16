@@ -5,6 +5,7 @@ using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Renderers {
 	
@@ -231,7 +232,7 @@ namespace ClassicalSharp.Renderers {
 		void ContextRecreated() { Refresh(); }
 		
 		
-		public void RedrawBlock(int x, int y, int z, byte block, int oldHeight, int newHeight) {
+		public void RedrawBlock(int x, int y, int z, BlockID block, int oldHeight, int newHeight) {
 			int cx = x >> 4, cy = y >> 4, cz = z >> 4;
 			
 			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
@@ -258,11 +259,11 @@ namespace ClassicalSharp.Renderers {
 				ResetNeighbour(x, y, z + 1, block, cx, cy, cz + 1, minCy, maxCy);
 		}
 		
-		bool Needs(byte block, byte other) { 
+		bool Needs(BlockID block, byte other) { 
 			return info.Draw[block] != DrawType.Opaque || info.Draw[other] != DrawType.Gas;
 		}
 		
-		void ResetNeighbour(int x, int y, int z, byte block,
+		void ResetNeighbour(int x, int y, int z, BlockID block,
 		                    int cx, int cy, int cz, int minCy, int maxCy) {
 			World world = game.World;
 			if (minCy == maxCy) {
@@ -277,7 +278,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void ResetNeighourChunk(int cx, int cy, int cz, byte block,
+		void ResetNeighourChunk(int cx, int cy, int cz, BlockID block,
 		                        int y, int index, int nY) {
 			World world = game.World;
 			int minY = cy << 4;

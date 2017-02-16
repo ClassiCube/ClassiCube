@@ -8,6 +8,7 @@ using Ionic.Zlib;
 #else
 using System.IO.Compression;
 #endif
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Network.Protocols {
 
@@ -283,7 +284,7 @@ namespace ClassicalSharp.Network.Protocols {
 			net.SendPacket();
 		}
 		
-		internal void SendSetBlock(int x, int y, int z, bool place, byte block) {
+		internal void SendSetBlock(int x, int y, int z, bool place, BlockID block) {
 			writer.WriteUInt8((byte)Opcode.SetBlockClient);
 			
 			writer.WriteInt16((short)x);

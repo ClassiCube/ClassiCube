@@ -4,6 +4,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.Physics;
 using OpenTK;
 using OpenTK.Input;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
@@ -47,21 +48,21 @@ namespace ClassicalSharp {
 				Vector3I pos = game.SelectedPos.BlockPos;
 				if (!game.World.IsValidPos(pos)) return;
 				
-				byte old = game.World.GetBlock(pos);
+				BlockID old = game.World.GetBlock(pos);
 				game.Mode.PickMiddle(old);
 			} else if (left) {
 				Vector3I pos = game.SelectedPos.BlockPos;
 				if (!game.World.IsValidPos(pos)) return;
 				
-				byte old = game.World.GetBlock(pos);
+				BlockID old = game.World.GetBlock(pos);
 				if (game.BlockInfo.Draw[old] == DrawType.Gas || !inv.CanDelete[old]) return;
 				game.Mode.PickLeft(old);
 			} else if (right) {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
 				if (!game.World.IsValidPos(pos)) return;
 				
-				byte old = game.World.GetBlock(pos);
-				byte block = (byte)inv.HeldBlock;
+				BlockID old = game.World.GetBlock(pos);
+				BlockID block = (byte)inv.HeldBlock;
 				if (game.autoRotate)
 					block = AutoRotate.RotateBlock(game, block);
 				
@@ -71,7 +72,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static bool CheckIsFree(Game game, byte block) {
+		public static bool CheckIsFree(Game game, BlockID block) {
 			Vector3 pos = (Vector3)game.SelectedPos.TranslatedPos;
 			BlockInfo info = game.BlockInfo;
 			LocalPlayer p = game.LocalPlayer;
@@ -138,7 +139,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		static bool IntersectsOtherPlayers(Game game, Vector3 pos, byte block) {
+		static bool IntersectsOtherPlayers(Game game, Vector3 pos, BlockID block) {
 			AABB blockBB = new AABB(pos + game.BlockInfo.MinBB[block],
 			                        pos + game.BlockInfo.MaxBB[block]);
 			

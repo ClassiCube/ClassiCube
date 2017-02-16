@@ -3,6 +3,7 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
@@ -13,7 +14,7 @@ namespace ClassicalSharp {
 		int initBitFlags, lightFlags;
 		float x1, y1, z1, x2, y2, z2;
 		
-		protected override int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block) {
+		protected override int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
 			if (OccludedLiquid(chunkIndex)) return 0;
 			initBitFlags = ComputeLightFlags(x, y, z, chunkIndex);
 			bitFlags[chunkIndex] = initBitFlags;
@@ -35,7 +36,7 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		protected override int StretchX(int xx, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face) {
+		protected override int StretchX(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face) {
 			initBitFlags = ComputeLightFlags(x, y, z, chunkIndex);
 			bitFlags[chunkIndex] = initBitFlags;
 			
@@ -56,7 +57,7 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		protected override int StretchZ(int zz, int countIndex, int x, int y, int z, int chunkIndex, byte block, int face) {
+		protected override int StretchZ(int zz, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face) {
 			initBitFlags = ComputeLightFlags(x, y, z, chunkIndex);
 			bitFlags[chunkIndex] = initBitFlags;
 			
@@ -77,10 +78,10 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		bool CanStretch(byte initialTile, int chunkIndex, int x, int y, int z, int face) {
-			byte rawBlock = chunk[chunkIndex];
+		bool CanStretch(BlockID initialBlock, int chunkIndex, int x, int y, int z, int face) {
+			BlockID rawBlock = chunk[chunkIndex];
 			bitFlags[chunkIndex] = ComputeLightFlags(x, y, z, chunkIndex);
-			return rawBlock == initialTile
+			return rawBlock == initialBlock
 				&& !info.IsFaceHidden(rawBlock, chunk[chunkIndex + offsets[face]], face)
 				&& (initBitFlags == bitFlags[chunkIndex]
 				    // Check that this face is either fully bright or fully in shadow
@@ -411,7 +412,7 @@ namespace ClassicalSharp {
 			if (x < 0 || y < 0 || z < 0
 			    || x >= width || y >= height || z >= length) return 7;
 			int flags = 0;
-			byte block = chunk[cIndex];
+			BlockID block = chunk[cIndex];
 			int lightHeight = lighting.heightmap[(z * width) + x];
 			lightFlags = info.LightOffset[block];
 

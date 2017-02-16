@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 	
@@ -41,7 +42,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Gets or sets the block currently held by the player.
 		/// Fails if the server has forbidden user from changing the held block. </summary>
-		public byte HeldBlock {
+		public BlockID HeldBlock {
 			get { return Hotbar[hotbarIndex]; }
 			set {
 				if (!CanChangeHeldBlock) {
@@ -50,7 +51,7 @@ namespace ClassicalSharp {
 				}
 				for (int i = 0; i < Hotbar.Length; i++) {
 					if (Hotbar[i] == value) {
-						byte held = Hotbar[hotbarIndex];
+						BlockID held = Hotbar[hotbarIndex];
 						Hotbar[hotbarIndex] = Hotbar[i];
 						Hotbar[i] = held;
 						
@@ -63,12 +64,12 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		byte[] map = new byte[256];
-		public byte MapBlock(int i) { return map[i]; }
+		byte[] map = new byte[Block.Count];
+		public BlockID MapBlock(int i) { return map[i]; }
 		
 		void MakeMap() {
 			for (int i = 0; i < map.Length; i++)
-				map[i] = (byte)i;
+				map[i] = (BlockID)i;
 			if (!game.ClassicMode) return;
 			
 			// First row
@@ -84,13 +85,13 @@ namespace ClassicalSharp {
 			// Second row
 			map[Block.Log] = Block.Sapling;
 			for (int i = 0; i < 4; i++)
-				map[Block.Leaves + i] = (byte)(Block.Dandelion + i);
+				map[Block.Leaves + i] = (BlockID)(Block.Dandelion + i);
 			map[Block.Orange] = Block.Sand;
 			map[Block.Yellow] = Block.Gravel;
 			map[Block.Lime] = Block.Sponge;
 			// Third and fourth row
 			for (int i = 0; i < 16; i++)
-				map[Block.Green + i] = (byte)(Block.Red + i);
+				map[Block.Green + i] = (BlockID)(Block.Red + i);
 			map[Block.Gold] = Block.CoalOre;
 			map[Block.Iron] = Block.IronOre;
 			// Fifth row

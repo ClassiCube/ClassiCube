@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Events;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Map {
 	
@@ -117,7 +118,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		
-		public override void UpdateLight(int x, int y, int z, byte oldBlock, byte newBlock) {
+		public override void UpdateLight(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 			bool didBlock = info.BlocksLight[oldBlock];
 			bool nowBlocks = info.BlocksLight[newBlock];
 			if (didBlock == nowBlocks) return;
@@ -141,7 +142,7 @@ namespace ClassicalSharp.Map {
 			} else if (y == lightH && oldOffset == 0) {
 				// For a solid block on top of an upside down slab, they will both have the same light height.
 				// So we need to account for this particular case.
-				byte above = y == (height - 1) ? Block.Air : game.World.GetBlock(x, y + 1, z);
+				BlockID above = y == (height - 1) ? Block.Air : game.World.GetBlock(x, y + 1, z);
 				if (info.BlocksLight[above]) return;
 				
 				if (nowBlocks) {

@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Map;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -15,7 +16,7 @@ namespace ClassicalSharp.Singleplayer {
 			physics.OnPlace[Block.CobblestoneSlab] = HandleCobblestoneSlab;
 		}
 		
-		void HandleSlab(int index, byte block) {
+		void HandleSlab(int index, BlockID block) {
 			if (index < map.Width * map.Length) return; // y < 1
 			if (map.blocks[index - map.Width * map.Length] != Block.Slab) return;
 			
@@ -26,7 +27,7 @@ namespace ClassicalSharp.Singleplayer {
 			game.UpdateBlock(x, y - 1, z, Block.DoubleSlab);
 		}
 		
-		void HandleCobblestoneSlab(int index, byte block) {
+		void HandleCobblestoneSlab(int index, BlockID block) {
 			if (index < map.Width * map.Length) return; // y < 1
 			if (map.blocks[index - map.Width * map.Length] != Block.CobblestoneSlab) return;
 			

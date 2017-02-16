@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 	
@@ -21,11 +22,11 @@ namespace ClassicalSharp {
 		
 		/// <summary> Gets the index in the terrain atlas for the texture of the face of the given block. </summary>
 		/// <param name="face"> Face of the given block, see TileSide constants. </param>
-		public int GetTextureLoc(byte block, int face) {
+		public int GetTextureLoc(BlockID block, int face) {
 			return textures[block * Side.Sides + face];
 		}
 		
-		void GetTextureRegion(byte block, int side, out Vector2 min, out Vector2 max) {
+		void GetTextureRegion(BlockID block, int side, out Vector2 min, out Vector2 max) {
 			min = Vector2.Zero; max = Vector2.One;
 			Vector3 bbMin = MinBB[block], bbMax = MaxBB[block];		
 			switch (side) {
@@ -49,7 +50,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool FaceOccluded(byte block, byte other, int side) {
+		bool FaceOccluded(BlockID block, byte other, int side) {
 			Vector2 bMin, bMax, oMin, oMax;
 			GetTextureRegion(block, side, out bMin, out bMax);
 			GetTextureRegion(other, side, out oMin, out oMax);

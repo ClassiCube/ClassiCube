@@ -5,12 +5,13 @@
 // I believe this process adheres to clean room reverse engineering.
 using System;
 using System.Collections.Generic;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Generator {
 	
 	public sealed partial class NotchyGenerator {
 		
-		void FillOblateSpheroid(int x, int y, int z, float radius, byte block) {
+		void FillOblateSpheroid(int x, int y, int z, float radius, BlockID block) {
 			int xStart = Utils.Floor(Math.Max(x - radius, 0));
 			int xEnd = Utils.Floor(Math.Min(x + radius, Width - 1));
 			int yStart = Utils.Floor(Math.Max(y - radius, 0));
@@ -32,7 +33,7 @@ namespace ClassicalSharp.Generator {
 			}
 		}
 		
-		void FloodFill(int startIndex, byte block) {
+		void FloodFill(int startIndex, BlockID block) {
 			if (startIndex < 0) return; // y below map, immediately ignore
 			FastIntStack stack = new FastIntStack(4);
 			stack.Push(startIndex);			

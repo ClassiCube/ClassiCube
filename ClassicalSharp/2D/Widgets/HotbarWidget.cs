@@ -4,6 +4,7 @@ using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Screens;
 using OpenTK.Input;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Gui.Widgets {
 	public class HotbarWidget : Widget {
@@ -68,7 +69,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			drawer.BeginBatch(game, cache.vertices, cache.vb);
 			
 			for (int i = 0; i < hotbarCount; i++) {
-				byte block = (byte)game.Inventory.Hotbar[i];
+				BlockID block = (byte)game.Inventory.Hotbar[i];
 				int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
 				int y = (int)(game.Height - barHeight / 2);
 				

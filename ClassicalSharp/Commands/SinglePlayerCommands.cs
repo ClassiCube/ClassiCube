@@ -5,6 +5,7 @@ using System.Text;
 using ClassicalSharp.Events;
 using ClassicalSharp.Renderers;
 using OpenTK.Input;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Commands {
 	
@@ -46,7 +47,7 @@ namespace ClassicalSharp.Commands {
 				"&e  will repeatedly cuboid, without needing to be typed in again.",
 			};
 		}
-		byte block = 0xFF;
+		BlockID block = Block.Invalid;
 		Vector3I mark1, mark2;
 		bool persist = false;
 		
@@ -70,7 +71,7 @@ namespace ClassicalSharp.Commands {
 			if (Utils.CaselessEquals(args[1], "yes")) { persist = true; return true; }
 			
 			int temp = -1;
-			byte block = 0;
+			BlockID block = 0;
 			if ((temp = game.BlockInfo.FindID(args[1])) != -1) {
 				block = (byte)temp;
 			} else if (!byte.TryParse(args[1], out block)) {
@@ -109,7 +110,7 @@ namespace ClassicalSharp.Commands {
 			Vector3I max = Vector3I.Max(mark1, mark2);
 			if (!game.World.IsValidPos(min) || !game.World.IsValidPos(max)) return;
 			
-			byte toPlace = block;			
+			BlockID toPlace = block;
 			if (toPlace == Block.Invalid) toPlace = game.Inventory.HeldBlock;
 			
 			for (int y = min.Y; y <= max.Y; y++)

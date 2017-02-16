@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using ClassicalSharp.Blocks;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
@@ -30,7 +31,7 @@ namespace ClassicalSharp {
 	public partial class BlockInfo {
 		
 		/// <summary> Gets whether the given block id is a liquid. (water and lava) </summary>
-		public bool IsLiquid(byte block) { return block >= Block.Water && block <= Block.StillLava; }
+		public bool IsLiquid(BlockID block) { return block >= Block.Water && block <= Block.StillLava; }
 		
 		/// <summary> Gets whether the given block blocks sunlight. </summary>
 		public bool[] BlocksLight = new bool[Block.Count];
@@ -96,13 +97,13 @@ namespace ClassicalSharp {
 			delete[Block.StillLava] = false;
 		}
 		
-		public void SetBlockDraw(byte id, byte draw) {
+		public void SetBlockDraw(BlockID id, byte draw) {
 			if (draw == DrawType.Opaque && Collide[id] != CollideType.Solid)
 				draw = DrawType.Transparent;
 			Draw[id] = draw;
 		}
 		
-		public void ResetBlockProps(byte id) {
+		public void ResetBlockProps(BlockID id) {
 			BlocksLight[id] = DefaultSet.BlocksLight(id);
 			FullBright[id] = DefaultSet.FullBright(id);
 			FogColour[id] = DefaultSet.FogColour(id);
@@ -146,7 +147,7 @@ namespace ClassicalSharp {
 		}
 		
 		static StringBuffer buffer = new StringBuffer(64);
-		static string DefaultName(byte block) {
+		static string DefaultName(BlockID block) {
 			if (block >= Block.CpeCount) return "Invalid";
 			
 			// Find start and end of this particular block name

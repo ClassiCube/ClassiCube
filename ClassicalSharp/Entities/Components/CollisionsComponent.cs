@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Physics;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Entities {
 	
@@ -192,7 +193,7 @@ namespace ClassicalSharp.Entities {
 				for (int z = bbMin.Z; z <= bbMax.Z; z++)
 					for (int x = bbMin.X; x <= bbMax.X; x++)
 			{
-				byte block = game.World.GetPhysicsBlock(x, y, z);
+				BlockID block = game.World.GetPhysicsBlock(x, y, z);
 				Vector3 min = new Vector3(x, y, z) + info.MinBB[block];
 				Vector3 max = new Vector3(x, y, z) + info.MaxBB[block];
 				

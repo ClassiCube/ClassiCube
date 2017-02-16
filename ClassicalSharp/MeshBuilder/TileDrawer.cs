@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Textures;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 	
@@ -98,14 +99,14 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void AddSpriteVertices(byte block) {
+		void AddSpriteVertices(BlockID block) {
 			int i = atlas.Get1DIndex(info.GetTextureLoc(block, Side.Left));
 			DrawInfo part = normalParts[i];
 			part.spriteCount += 6 * 4;
 			part.iCount += 6 * 4;
 		}
 		
-		void AddVertices(byte block, int count, int face) {
+		void AddVertices(BlockID block, int count, int face) {
 			int i = atlas.Get1DIndex(info.GetTextureLoc(block, face));
 			DrawInfo part = info.Draw[block] == DrawType.Translucent ? translucentParts[i] : normalParts[i];
 			part.iCount += 6;
@@ -149,7 +150,7 @@ namespace ClassicalSharp {
 			part.vertices[part.sIndex[3]++] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col);
 		}
 		
-		protected int TintBlock(byte curBlock, int col) {
+		protected int TintBlock(BlockID curBlock, int col) {
 			FastColour fogCol = info.FogColour[curBlock];
 			FastColour newCol = FastColour.Unpack(col);
 			newCol *= fogCol;
