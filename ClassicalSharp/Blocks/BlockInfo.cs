@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 			for (int i = 0; i < DefinedCustomBlocks.Length; i++)
 				DefinedCustomBlocks[i] = 0;
 			for (int block = 0; block < Block.Count; block++)
-				ResetBlockProps((byte)block);
+				ResetBlockProps((BlockID)block);
 			UpdateCulling();
 		}
 

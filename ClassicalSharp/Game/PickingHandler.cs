@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 				if (!game.World.IsValidPos(pos)) return;
 				
 				BlockID old = game.World.GetBlock(pos);
-				BlockID block = (byte)inv.HeldBlock;
+				BlockID block = inv.HeldBlock;
 				if (game.autoRotate)
 					block = AutoRotate.RotateBlock(game, block);
 				

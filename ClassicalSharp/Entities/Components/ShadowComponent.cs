@@ -158,7 +158,7 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			if (index < 4) {
-				data[index].Block = (byte)game.World.Env.EdgeBlock; data[index].Y = 0;
+				data[index].Block = game.World.Env.EdgeBlock; data[index].Y = 0;
 				CalcAlpha(Position.Y, ref data[index]);
 				index++;
 			}

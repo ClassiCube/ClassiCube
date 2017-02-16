@@ -73,7 +73,7 @@ namespace ClassicalSharp.Commands {
 			int temp = -1;
 			BlockID block = 0;
 			if ((temp = game.BlockInfo.FindID(args[1])) != -1) {
-				block = (byte)temp;
+				block = (BlockID)temp;
 			} else if (!byte.TryParse(args[1], out block)) {
 				game.Chat.Add("&eCuboid: &c\"" + args[1] + "\" is not a valid block name or id."); return false;
 			}

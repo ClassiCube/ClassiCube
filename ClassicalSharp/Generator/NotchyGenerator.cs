@@ -268,7 +268,7 @@ namespace ClassicalSharp.Generator {
 			
 			for (int i = 0; i < numPatches; i++) {
 				CurrentProgress = (float)i / numPatches;
-				byte type = (byte)(Block.BrownMushroom + rnd.Next(2));
+				BlockID type = (BlockID)(Block.BrownMushroom + rnd.Next(2));
 				int patchX = rnd.Next(Width);
 				int patchY = rnd.Next(Height);
 				int patchZ = rnd.Next(Length);
