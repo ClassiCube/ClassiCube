@@ -9,7 +9,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public OptionsGroupScreen(Game game) : base(game) {
 		}
+		
 		TextWidget descWidget;
+		string descText;
 		ButtonWidget selectedWidget;
 		
 		public override void Render(double delta) {
@@ -49,6 +51,8 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(false, titleFont, 
 				         (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
 			};
+			
+			if (descWidget != null) MakeDescWidget(descText);		
 			CheckHacksAllowed(null, null);
 		}
 		
@@ -67,14 +71,20 @@ namespace ClassicalSharp.Gui.Screens {
 			if (button == null) return;
 			
 			string text = descriptions[Array.IndexOf<Widget>(widgets, button)];
+			MakeDescWidget(text);
+		}
+		
+		void MakeDescWidget(string text) {
 			descWidget = TextWidget.Create(game, text, regularFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
+			descText = text;
 		}
 		
 		ButtonWidget Make(int dir, int y, string text, Action<Game, Widget> onClick) {
 			return ButtonWidget.Create(game, 301, 40, text, titleFont, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
 		}
+		
 		
 		public override bool HandlesKeyDown(Key key) {
 			if (key == Key.Escape)
@@ -88,9 +98,12 @@ namespace ClassicalSharp.Gui.Screens {
 			base.OnResize(width, height);
 		}
 		
+		protected override void ContextLost() {
+			base.ContextLost();
+			if (descWidget != null) descWidget.Dispose();
+		}
+		
 		public override void Dispose() {
-			if (descWidget != null)
-				descWidget.Dispose();
 			base.Dispose();
 			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
 		}
