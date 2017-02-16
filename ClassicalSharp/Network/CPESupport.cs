@@ -23,7 +23,7 @@ namespace ClassicalSharp.Network {
 			needD3Fix = false; game.UseCPEBlocks = false;
 			
 			NetworkProcessor net = (NetworkProcessor)game.Server;
-			net.ResetProtocols();
+			net.Reset();
 		}
 		
 		/// <summary> Sets fields / updates network handles based on the server 

@@ -164,11 +164,12 @@ namespace ClassicalSharp.Network {
 			reader.Skip(packetSizes[(byte)opcode] - 1);
 		}
 		
-		internal void ResetProtocols() {
+		internal void Reset() {
 			UsingExtPlayerList = false;
 			UsingPlayerClick = false;
 			SupportsPartialMessages = false;
 			SupportsFullCP437 = false;
+			addEntityHack = true;
 			
 			for (int i = 0; i < handlers.Length; i++)
 				handlers[i] = null;

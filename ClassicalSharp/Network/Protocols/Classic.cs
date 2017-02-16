@@ -172,11 +172,12 @@ namespace ClassicalSharp.Network.Protocols {
 			byte id = reader.ReadUInt8();
 			string name = reader.ReadAsciiString();
 			string skin = name;
-			net.CheckName(id, ref name, ref skin);
-			
+			net.CheckName(id, ref name, ref skin);			
 			net.AddEntity(id, name, skin, true);
-			// Also workaround for LegendCraft as it declares it supports ExtPlayerList but
-			// doesn't send ExtAddPlayerName packets.
+			
+			if (!net.addEntityHack) return;
+			// Workaround for some servers that declare they support ExtPlayerList,
+			// but doesn't send ExtAddPlayerName packets.
 			net.AddTablistEntry(id, name, name, "Players", 0);
 			net.needRemoveNames[id >> 3] |= (byte)(1 << (id & 0x7));
 		}

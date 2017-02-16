@@ -8,6 +8,8 @@ namespace ClassicalSharp.Network {
 
 	public partial class NetworkProcessor : IServerConnection {
 		
+		internal bool addEntityHack = true;
+		
 		public override void SendChat(string text, bool partial) {
 			if (String.IsNullOrEmpty(text)) return;
 			classic.SendChat(text, partial);
@@ -70,13 +72,21 @@ namespace ClassicalSharp.Network {
 				game.Entities[id] = null;
 			}
 			
-			// See comment about LegendCraft in HandleAddEntity
+			// See comment about some servers in HandleAddEntity
 			int mask = id >> 3, bit = 1 << (id & 0x7);
-			if ((needRemoveNames[mask] & bit) == 0) return;
-			game.EntityEvents.RaiseTabEntryRemoved(id);
-			game.TabList.Entries[id] = null;
+			if (!addEntityHack || (needRemoveNames[mask] & bit) == 0) return;
+			
+			RemoveTablistEntry(id);
 			needRemoveNames[mask] &= (byte)~bit;
 		}
+		
+		internal void UpdateLocation(byte playerId, LocationUpdate update, bool interpolate) {
+			Entity entity = game.Entities[playerId];
+			if (entity != null) {
+				entity.SetLocation(update, interpolate);
+			}
+		}
+		
 		
 		internal void AddTablistEntry(byte id, string playerName, string listName,
 		                              string groupName, byte groupRank) {
@@ -87,7 +97,7 @@ namespace ClassicalSharp.Network {
 			if (oldInfo != null) {
 				// Only redraw the tab list if something changed.
 				if (info.PlayerName != oldInfo.PlayerName || info.ListName != oldInfo.ListName ||
-				   info.GroupName != oldInfo.GroupName || info.GroupRank != oldInfo.GroupRank) {
+				    info.GroupName != oldInfo.GroupName || info.GroupRank != oldInfo.GroupRank) {
 					game.EntityEvents.RaiseTabListEntryChanged(id);
 				}
 			} else {
@@ -95,10 +105,21 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
-		internal void UpdateLocation(byte playerId, LocationUpdate update, bool interpolate) {
-			Entity entity = game.Entities[playerId];
-			if (entity != null) {
-				entity.SetLocation(update, interpolate);
+		internal void RemoveTablistEntry(byte id) {
+			game.EntityEvents.RaiseTabEntryRemoved(id);
+			game.TabList.Entries[id] = null;
+		}
+		
+		internal void DisableAddEntityHack() {
+			if (!addEntityHack) return;
+			addEntityHack = false;
+			
+			for (int id = 0; id < EntityList.MaxCount; id++) {
+				int mask = id >> 3, bit = 1 << (id & 0x7);
+				if ((needRemoveNames[mask] & bit) == 0) continue;
+				
+				RemoveTablistEntry((byte)id);
+				needRemoveNames[mask] &= (byte)~bit;
 			}
 		}
 	}
