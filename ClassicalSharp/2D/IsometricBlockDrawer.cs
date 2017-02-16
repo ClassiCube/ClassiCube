@@ -39,10 +39,10 @@ namespace ClassicalSharp {
 		
 		static IsometricBlockDrawer() {
 			FastColour.GetShaded(FastColour.White, out colXSide, out colZSide, out colYBottom);
-			transform = Matrix4.RotateY(45 * Utils.Deg2Rad) * Matrix4.RotateX(-26.565f * Utils.Deg2Rad);
+			transform = Matrix4.RotateY(45 * Utils.Deg2Rad) * Matrix4.RotateX(-30f * Utils.Deg2Rad);
 			
-			cosX = (float)Math.Cos(26.565f * Utils.Deg2Rad);
-			sinX = (float)Math.Sin(26.565f * Utils.Deg2Rad);
+			cosX = (float)Math.Cos(30f * Utils.Deg2Rad);
+			sinX = (float)Math.Sin(30f * Utils.Deg2Rad);
 			cosY = (float)Math.Cos(-45f * Utils.Deg2Rad);
 			sinY = (float)Math.Sin(-45f * Utils.Deg2Rad);
 		}
