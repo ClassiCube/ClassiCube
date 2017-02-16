@@ -22,7 +22,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		IsometricBlockDrawer drawer = new IsometricBlockDrawer();
 		
 		public override void Init() {
-			float scale = 2 * game.GuiHotbarScale;
+			float scale = game.GuiHotbarScale;
 			selBlockSize = (float)Math.Ceiling(24 * scale);
 			barHeight = (int)(22 * scale);		
 			Width = (int)(182 * scale);
@@ -87,11 +87,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		void MakeSelectionTexture() {
 			int hSize = (int)selBlockSize;
 			
-			float scale = 2 * game.GuiHotbarScale;
+			float scale = game.GuiHotbarScale;
 			int vSize = (int)(22 * scale);
 			int y = game.Height - (int)(23 * scale);
 			
-			TextureRec rec = new TextureRec(0, 22/256f, 24/256f, 23/256f);
+			TextureRec rec = new TextureRec(0, 22/256f, 24/256f, 22/256f);
 			selTex = new Texture(0, 0, y, hSize, vSize, rec);
 		}
 		

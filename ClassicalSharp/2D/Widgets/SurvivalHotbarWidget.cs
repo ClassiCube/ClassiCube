@@ -60,11 +60,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		void DrawHearts() {
 			Model.ModelCache cache = game.ModelCache;
 			int index = 0, health = game.LocalPlayer.Health;
-			int inner = (int)(14 * game.GuiHotbarScale);
-			int middle = (int)(16 * game.GuiHotbarScale);
-			int outer = (int)(18 * game.GuiHotbarScale);
+			int inner = (int)(7 * game.GuiHotbarScale);
+			int middle = (int)(8 * game.GuiHotbarScale);
+			int outer = (int)(9 * game.GuiHotbarScale);
 			
-			int selBlockSize = (int)(46 * game.GuiHotbarScale);
+			int selBlockSize = (int)(23 * game.GuiHotbarScale);
 			int offset = middle - inner;
 			int y = game.Height - selBlockSize - outer;
 			
