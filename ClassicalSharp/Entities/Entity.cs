@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Model;
 using OpenTK;
+using BlockID = System.Byte;
 
 namespace ClassicalSharp.Entities {
 	
