@@ -41,9 +41,9 @@ namespace ClassicalSharp.Audio {
 			}
 		}
 		
-		public Sound PickRandomSound(SoundType type) {
-			if (type == SoundType.None)  return null;
-			string name = soundNames[(int)type];
+ 		public Sound PickRandomSound(SoundType type) {
+ 			if (type == SoundType.None)  return null;
+ 			string name = soundNames[(int)type];
 			if (name == "Metal") name = "Stone";
 			
 			List<Sound> sounds;
@@ -55,36 +55,49 @@ namespace ClassicalSharp.Audio {
 			using (FileStream fs = File.OpenRead(file))
 				using (BinaryReader r = new BinaryReader(fs))
 			{
-				CheckFourCC(r, "RIFF");
+				string fourCC = GetFourCC(r);
+				if (fourCC != "RIFF") throw new InvalidDataException("Expected RIFF, got " + fourCC);
 				r.ReadInt32(); // file size, but we don't care
-				CheckFourCC(r, "WAVE");
+				
+				fourCC = GetFourCC(r);
+				if (fourCC != "WAVE") throw new InvalidDataException("Expected WAVE, got " + fourCC);
 				Sound snd = new Sound();
 				
-				CheckFourCC(r, "fmt ");
-				int size = r.ReadInt32();
-				if (r.ReadUInt16() != 1)
-					throw new InvalidDataException("Only PCM audio is supported.");
-				size -= 2;
-				
-				snd.Channels = r.ReadUInt16(); size -= 2;
-				snd.SampleRate = r.ReadInt32(); size -= 4;
-				r.ReadInt32(); r.ReadUInt16(); size -= 6;
-				snd.BitsPerSample = r.ReadUInt16(); size -= 2;
-				if (size > 0)
-					fs.Seek(size, SeekOrigin.Current);
-				
-				CheckFourCC(r, "data");
-				size = r.ReadInt32();
-				byte[] data = r.ReadBytes(size);
-				snd.Data = data;
-				return snd;
+				while (fs.Position < fs.Length) {
+					fourCC = GetFourCC(r);
+					int size = r.ReadInt32();
+					
+					if (fourCC == "fmt ") {
+						HandleFormat(r, ref size, snd);
+					} else if (fourCC == "data") {
+						snd.Data = r.ReadBytes(size);
+						return snd;
+					}
+					
+					// Skip over unhandled data
+					if (size > 0) fs.Seek(size, SeekOrigin.Current);
+				}
+				return null;
 			}
 		}
 		
-		void CheckFourCC(BinaryReader r, string fourCC) {
-			if (r.ReadByte() != (byte)fourCC[0] || r.ReadByte() != (byte)fourCC[1]
-			   || r.ReadByte() != (byte)fourCC[2] || r.ReadByte() != (byte)fourCC[3])
-				throw new InvalidDataException("Expected " + fourCC + " fourcc");
+		
+		static void HandleFormat(BinaryReader r, ref int size, Sound snd) {
+			if (r.ReadUInt16() != 1)
+				throw new InvalidDataException("Only PCM audio is supported.");
+			size -= 2;
+			
+			snd.Channels = r.ReadUInt16(); size -= 2;
+			snd.SampleRate = r.ReadInt32(); size -= 4;
+			r.ReadInt32(); r.ReadUInt16(); size -= 6;
+			snd.BitsPerSample = r.ReadUInt16(); size -= 2;
+		}
+		
+		unsafe string GetFourCC(BinaryReader r) {
+			sbyte* fourCC = stackalloc sbyte[4];
+			fourCC[0] = r.ReadSByte(); fourCC[1] = r.ReadSByte();
+			fourCC[2] = r.ReadSByte(); fourCC[3] = r.ReadSByte();
+			return new string(fourCC, 0, 4);
 		}
 		
 		static string[] soundNames;
@@ -92,7 +105,7 @@ namespace ClassicalSharp.Audio {
 			soundNames = Enum.GetNames(typeof(SoundType));
 			for (int i = 0; i < soundNames.Length; i++) {
 				if (soundNames[i] == "Metal") soundNames[i] = "Stone";
-				soundNames[i] = soundNames[i].ToLower();
+ 				soundNames[i] = soundNames[i].ToLower();
 			}
 		}
 	}
