@@ -1,4 +1,4 @@
-﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Threading;
 using ClassicalSharp.Events;
@@ -49,6 +49,7 @@ namespace ClassicalSharp.Audio {
 				return;
 			Sound snd = board.PickRandomSound(type);
 			if (snd == null) return;
+			bool OpenAL = game.IsOpenAL;
 			
 			chunk.Channels = snd.Channels;
 			chunk.Frequency = snd.SampleRate;
@@ -56,6 +57,10 @@ namespace ClassicalSharp.Audio {
 			chunk.BytesOffset = 0;
 			chunk.BytesUsed = snd.Data.Length;
 			chunk.Data = snd.Data;
+			if (OpenAL) {
+				if (type == SoundType.Metal) chunk.Frequency = (chunk.Frequency * 7) / 5;
+				if (board == digBoard) chunk.Frequency = (chunk.Frequency * 4) / 5;
+			}
 			
 			if (snd.Channels == 1) {
 				PlayCurrentSound(monoOutputs);
