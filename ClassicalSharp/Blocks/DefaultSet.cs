@@ -51,7 +51,9 @@ namespace ClassicalSharp.Blocks {
 
 		public static SoundType StepSound(BlockID b) {
 			if (b == Block.Glass) return SoundType.Stone;
-			if (b == Block.Rope) return SoundType.Cloth;			
+			if (b == Block.Rope) return SoundType.Cloth;
+			if (b == Block.Iron || b == Block.Gold)
+				return SoundType.Metal;
 			if (Draw(b) == DrawType.Sprite) return SoundType.None;
 			return DigSound(b);
 		}
@@ -91,6 +93,9 @@ namespace ClassicalSharp.Blocks {
 			if (b == Block.Glass) return SoundType.Glass;
 			if (b == Block.Dirt || b == Block.Gravel)
 				return SoundType.Gravel;
+			
+			if (b == Block.Iron || b == Block.Gold)
+				return SoundType.Metal;
 			
 			if (b == Block.Grass || b == Block.Sapling || b == Block.TNT
 			   || b == Block.Leaves || b == Block.Sponge)
