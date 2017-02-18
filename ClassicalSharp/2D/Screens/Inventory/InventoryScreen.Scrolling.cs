@@ -6,16 +6,17 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public partial class InventoryScreen : Screen {
 		
-		const int scrollbarWidth = 10;
+		const int scrollbarWidth = 15;
 		static FastColour scrollCol = new FastColour(10, 10, 10, 220);
 		static FastColour scrollUsedCol = new FastColour(100, 100, 100, 220);
 		float ScrollbarScale { get { return TableHeight / (float)rows; } }
 		
 		void DrawScrollbar() {
-			gfx.Draw2DQuad(TableX - scrollbarWidth, TableY, scrollbarWidth, TableHeight, scrollCol);
+			int x = TableX + TableWidth;
+			gfx.Draw2DQuad(x, TableY, scrollbarWidth, TableHeight, scrollCol);
 			int y, height;
 			GetScrollbarCoords(out y, out height);
-			gfx.Draw2DQuad(TableX - scrollbarWidth, TableY + y, scrollbarWidth, height, scrollUsedCol);
+			gfx.Draw2DQuad(x, TableY + y, scrollbarWidth, height, scrollUsedCol);
 		}
 		
 		void GetScrollbarCoords(out int y, out int height) {

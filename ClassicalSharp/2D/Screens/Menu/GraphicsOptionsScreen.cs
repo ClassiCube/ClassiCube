@@ -1,9 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using System.Drawing;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Gui.Widgets;
-using ClassicalSharp.Singleplayer;
 
 namespace ClassicalSharp.Gui.Screens {
 	public class GraphicsOptionsScreen : MenuOptionsScreen {
@@ -34,18 +32,18 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeOpt(1, -50, "Names", OnWidgetClick,
 				        g => g.Entities.NamesMode.ToString(),
-				        (g, v) => { 
+				        (g, v) => {
 				        	object rawNames = Enum.Parse(typeof(NameMode), v);
 				        	g.Entities.NamesMode = (NameMode)rawNames;
-				        	Options.Set(OptionsKey.NamesMode, v); 
+				        	Options.Set(OptionsKey.NamesMode, v);
 				        }),
 				
 				MakeOpt(1, 0, "Shadows", OnWidgetClick,
 				        g => g.Entities.ShadowMode.ToString(),
-				        (g, v) => { 
+				        (g, v) => {
 				        	object rawShadows = Enum.Parse(typeof(EntityShadow), v);
 				        	g.Entities.ShadowMode = (EntityShadow)rawShadows;
-				        	Options.Set(OptionsKey.EntityShadow, v); 
+				        	Options.Set(OptionsKey.EntityShadow, v);
 				        }),
 				
 				MakeBack(false, titleFont,
@@ -53,13 +51,20 @@ namespace ClassicalSharp.Gui.Screens {
 				null, null,
 			};
 			
-			// NOTE: we need to override the default setter here, because it recreates the graphics context
+			// NOTE: we need to override the default setter here, because changing FPS limit method
+			// recreates the graphics context on some backends (such as Direct3D9)
 			ButtonWidget btn = (ButtonWidget)widgets[0];
-			btn.SetValue = (g, v) => {
-				object rawFps = Enum.Parse(typeof(FpsLimitMethod), v);
-				g.SetFpsLimitMethod((FpsLimitMethod)rawFps);
-				Options.Set(OptionsKey.FpsLimit, v);
-			};
+			btn.SetValue = SetFPSLimitMethod;
+		}
+		
+		void SetFPSLimitMethod(Game g, string v) {
+			object rawFps = Enum.Parse(typeof(FpsLimitMethod), v);
+			g.SetFpsLimitMethod((FpsLimitMethod)rawFps);
+			Options.Set(OptionsKey.FpsLimit, v);
+			
+			// NOTE: OpenGL backend doesn't recreate context, so cheat and act like recreated anyways
+			ContextLost();
+			ContextRecreated();
 		}
 		
 		void SetSmoothLighting(Game g, bool v) {
