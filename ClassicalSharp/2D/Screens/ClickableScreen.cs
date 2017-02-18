@@ -58,7 +58,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected ButtonWidget MakeBack(int width, string text, int y, Font font, Action<Game, Widget> onClick) {
-			return ButtonWidget.Create(game, width, 40, text, font, LeftOnly(onClick))
+			return ButtonWidget.Create(game, width, text, font, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, y);
 		}
 	}

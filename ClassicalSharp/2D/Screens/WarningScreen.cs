@@ -114,25 +114,25 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if (confirmingMode) {
 				widgets = new ButtonWidget[2];
-				widgets[0] = ButtonWidget.Create(game, 160, 35, "I'm sure", titleFont, OnNoClick)
+				widgets[0] = ButtonWidget.Create(game, 160, "I'm sure", titleFont, OnNoClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30);
-				widgets[1] = ButtonWidget.Create(game, 160, 35, "Go back", titleFont, GoBackClick)
+				widgets[1] = ButtonWidget.Create(game, 160, "Go back", titleFont, GoBackClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
 				return;
 			}
 						
 			widgets = new ButtonWidget[showAlways ? 4 : 2];
-			widgets[0] = ButtonWidget.Create(game, 160, 35, "Yes", titleFont, OnYesClick)
+			widgets[0] = ButtonWidget.Create(game, 160, "Yes", titleFont, OnYesClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30);
-			widgets[1] = ButtonWidget.Create(game, 160, 35, "No", titleFont, OnNoClick)
+			widgets[1] = ButtonWidget.Create(game, 160, "No", titleFont, OnNoClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
 			if (!showAlways) return;
 			
 			alwaysIndex = 2;
-			widgets[2] = ButtonWidget.Create(game, 160, 35, "Always yes", titleFont, OnYesClick)
-				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 80);
-			widgets[3] = ButtonWidget.Create(game, 160, 35, "Always no", titleFont, OnNoClick)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 80);
+			widgets[2] = ButtonWidget.Create(game, 160, "Always yes", titleFont, OnYesClick)
+				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 85);
+			widgets[3] = ButtonWidget.Create(game, 160, "Always no", titleFont, OnNoClick)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 85);
 		}
 		
 		Action<WarningScreen, bool> yesClick, noClick;

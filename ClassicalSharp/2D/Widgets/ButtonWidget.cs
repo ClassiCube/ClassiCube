@@ -13,10 +13,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			this.font = font;
 		}
 		
-		public static ButtonWidget Create(Game game, int width, int height, string text, Font font, ClickHandler onClick) {
+		public static ButtonWidget Create(Game game, int width, string text, Font font, ClickHandler onClick) {
 			ButtonWidget widget = new ButtonWidget(game, font);
 			widget.Init();
-			widget.MinWidth = width; widget.MinHeight = height;
+			widget.MinWidth = width; widget.MinHeight = 40;
 			widget.SetText(text);
 			widget.OnClick = onClick;
 			return widget;
