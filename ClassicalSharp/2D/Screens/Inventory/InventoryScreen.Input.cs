@@ -18,8 +18,8 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			selIndex = -1;
-			if (Contains(startX, startY, blocksPerRow * blockSize,
-			             maxRows * blockSize, mouseX, mouseY)) {
+			if (Contains(startX, startY + 3, blocksPerRow * blockSize,
+			             maxRows * blockSize - 3 * 2, mouseX, mouseY)) {
 				for (int i = 0; i < blocksTable.Length; i++) {
 					int x, y;
 					GetCoords(i, out x, out y);

@@ -7,26 +7,30 @@ namespace ClassicalSharp.Gui.Screens {
 	public partial class InventoryScreen : Screen {
 		
 		const int scrollWidth = 22, scrollBorder = 2, nubsWidth = 3;
-		static FastColour scrollCol = new FastColour(10, 10, 10, 220);
-		static FastColour scrollUsedCol = new FastColour(100, 100, 100, 220);
+		static FastColour scrollBackCol = new FastColour(10, 10, 10, 220);
+		static FastColour scrollBarCol = new FastColour(100, 100, 100, 220);
+		static FastColour scrollHoverCol = new FastColour(122, 122, 122, 220);
 		float ScrollbarScale { get { return (TableHeight - scrollBorder * 2) / (float)rows; } }
 		
 		void DrawScrollbar() {
 			int x = TableX + TableWidth, width = scrollWidth;
-			gfx.Draw2DQuad(x, TableY, width, TableHeight, scrollCol);
+			gfx.Draw2DQuad(x, TableY, width, TableHeight, scrollBackCol);
 			
 			int y, height;
-			GetScrollbarCoords(out y, out height);			
-			x += scrollBorder; width -= scrollBorder * 2;
-			gfx.Draw2DQuad(x, TableY + y, width, height, scrollUsedCol);
+			GetScrollbarCoords(out y, out height);
+			x += scrollBorder; width -= scrollBorder * 2; y += TableY;
+			
+			bool hovered = game.Mouse.Y >= y && game.Mouse.Y < (y + height) &&
+				game.Mouse.X >= x && game.Mouse.X < (x + width);
+			FastColour barCol = hovered ? scrollHoverCol : scrollBarCol;
+			gfx.Draw2DQuad(x, y, width, height, barCol);
 			
 			if (height < 20) return;
-			x += nubsWidth; width -= nubsWidth * 2;
+			x += nubsWidth; width -= nubsWidth * 2; y += (height / 2);
 			
-			y = TableY + y + (height / 2);
-			gfx.Draw2DQuad(x, y - 1 - 4, width, scrollBorder, scrollCol);
-			gfx.Draw2DQuad(x, y - 1,     width, scrollBorder, scrollCol);
-			gfx.Draw2DQuad(x, y - 1 + 4, width, scrollBorder, scrollCol);
+			gfx.Draw2DQuad(x, y - 1 - 4, width, scrollBorder, scrollBackCol);
+			gfx.Draw2DQuad(x, y - 1,     width, scrollBorder, scrollBackCol);
+			gfx.Draw2DQuad(x, y - 1 + 4, width, scrollBorder, scrollBackCol);
 		}
 		
 		void GetScrollbarCoords(out int y, out int height) {
