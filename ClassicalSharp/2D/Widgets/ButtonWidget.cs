@@ -83,16 +83,18 @@ namespace ClassicalSharp.Gui.Widgets {
 				// Button can be drawn normally
 				back.U1 = 0; back.U2 = uWidth;
 				back.Render(gfx);
-			} else {
+			} else {				
 				// Split button down the middle
 				float scale = (Width / 400f) * 0.5f;
+				gfx.BindTexture(back.ID); // avoid bind twice
+				
 				back.Width = (short)(Width / 2); 
 				back.U1 = 0; back.U2 = uWidth * scale;
-				back.Render(gfx);
+				gfx.Draw2DTexture(ref back, FastColour.White);
 				
 				back.X1 += (short)(Width / 2); 
 				back.U1 = uWidth - uWidth * scale; back.U2 = uWidth;
-				back.Render(gfx);
+				gfx.Draw2DTexture(ref back, FastColour.White);
 			}
 			
 			FastColour col = Disabled ? disabledCol : (Active ? activeCol : normCol);

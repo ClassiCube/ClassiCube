@@ -76,20 +76,20 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[] {
 				Make(0, -150, "Key: " + curHotkey.BaseKey,
-				     301, 40, titleFont, BaseKeyClick),
+				     300, 40, titleFont, BaseKeyClick),
 				Make(0, -100, "Modifiers:" + flags,
-				     301, 40, titleFont, ModifiersClick),
+				     300, 40, titleFont, ModifiersClick),
 				
 				MenuInputWidget.Create(game, 500, 30, curHotkey.Text,
 				                       regularFont, new StringValidator(Utils.StringLength))
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -35),
 				Make(-100, 10, "Input stays open: " + staysOpen,
-				     301, 40, titleFont, LeaveOpenClick),
+				     300, 40, titleFont, LeaveOpenClick),
 				
 				Make(0, 80, existed ? "Save changes" : "Add hotkey",
-				     301, 40, titleFont, SaveChangesClick),
+				     300, 40, titleFont, SaveChangesClick),
 				Make(0, 130, existed ? "Remove hotkey" : "Cancel",
-				     301, 40, titleFont, RemoveHotkeyClick),
+				     300, 40, titleFont, RemoveHotkeyClick),
 				
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),

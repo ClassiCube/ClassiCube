@@ -50,11 +50,11 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected ButtonWidget MakeBack(bool toGame, Font font, Action<Game, Widget> onClick) {
-			return MakeBack(201, toGame ? "Back to game" : "Back to menu", 25, font, onClick);
+			return MakeBack(200, toGame ? "Back to game" : "Back to menu", 25, font, onClick);
 		}
 		
 		protected ButtonWidget MakeBack(string text, int y, Font font, Action<Game, Widget> onClick) {
-			return MakeBack(201, text, y, font, onClick);
+			return MakeBack(200, text, y, font, onClick);
 		}
 		
 		protected ButtonWidget MakeBack(int width, string text, int y, Font font, Action<Game, Widget> onClick) {

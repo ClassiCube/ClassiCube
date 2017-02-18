@@ -68,7 +68,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeClassic(0, 50, "Save level",
 				            (g, w) => g.Gui.SetNewScreen(new SaveLevelScreen(g))),
 
-				MakeBack(401, "Back to game", 22, titleFont, (g, w) => g.Gui.SetNewScreen(null)),
+				MakeBack(400, "Back to game", 22, titleFont, (g, w) => g.Gui.SetNewScreen(null)),
 				
 				game.ClassicMode ? null :
 					MakeClassic(0, 150, "Nostalgia options",
@@ -82,12 +82,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		ButtonWidget Make(int dir, int y, string text, Action<Game, Widget> onClick) {
-			return ButtonWidget.Create(game, 301, 40, text, titleFont, LeftOnly(onClick))
+			return ButtonWidget.Create(game, 300, 40, text, titleFont, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
 		}
 		
 		ButtonWidget MakeClassic(int x, int y, string text, Action<Game, Widget> onClick) {
-			return ButtonWidget.Create(game, 401, 40, text, titleFont, LeftOnly(onClick))
+			return ButtonWidget.Create(game, 400, 40, text, titleFont, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		
