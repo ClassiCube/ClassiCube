@@ -17,12 +17,30 @@ namespace Launcher {
 		[STAThread]
 		static void Main(string[] args) {
 			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
-			string clientPath = Path.Combine(AppDirectory, "ClassicalSharp.exe");
-			if (!File.Exists(clientPath)) {
+			if (!CheckFilesExist()) return;
+			
+			// NOTE: we purposely put this in another method, as we need to ensure
+			// that we do not reference any OpenTK code directly in the main function
+			// (which LauncherWindow does), which otherwise causes native crash.
+			RunLauncher();
+		}
+		
+		static bool CheckFilesExist() {
+			string path = Path.Combine(AppDirectory, "ClassicalSharp.exe");
+			if (!File.Exists(path)) {
 				MessageBox.Show("ClassicalSharp.exe needs to be in the same folder as the launcher.", "Missing file");
-				return;
+				return false;
 			}
 			
+			path = Path.Combine(AppDirectory, "OpenTK.dll");
+			if (!File.Exists(path)) {
+				MessageBox.Show("OpenTK.dll needs to be in the same folder as the launcher.", "Missing file");
+				return false;
+			}
+			return true;		
+		}
+		
+		static void RunLauncher() {
 			string logPath = Path.Combine(AppDirectory, "launcher.log");
 			AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
 			ErrorHandler2.InstallHandler(logPath);
