@@ -125,7 +125,7 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		IAudioOutput GetPlatformOut() {
-			if (OpenTK.Configuration.RunningOnWindows)
+			if (OpenTK.Configuration.RunningOnWindows && !Options.GetBool(OptionsKey.ForceOpenAL, false))
 				return new WinMmOut();
 			return new OpenALOut();
 		}

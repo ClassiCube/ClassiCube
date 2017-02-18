@@ -13,6 +13,7 @@ namespace ClassicalSharp {
 		public const string SingleplayerPhysics = "singleplayerphysics";
 		public const string UseMusic = "usemusic";
 		public const string UseSound = "usesound";
+		public const string ForceOpenAL = "forceopenal";
 		public const string NamesMode = "namesmode";
 		public const string InvertMouse = "invertmouse";
 		public const string Sensitivity = "mousesensitivity";
