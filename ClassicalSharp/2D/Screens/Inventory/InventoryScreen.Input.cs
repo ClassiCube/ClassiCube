@@ -37,7 +37,9 @@ namespace ClassicalSharp.Gui.Screens {
 		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
 			if (draggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseClick(mouseX, mouseY, button))
 				return true;
-			if (button == MouseButton.Left && mouseX >= TableX - scrollbarWidth && mouseX < TableX) {
+			
+			int scrollX = TableX + TableWidth;
+			if (button == MouseButton.Left && mouseX >= scrollX && mouseX < scrollX + scrollWidth) {
 				ScrollbarClick(mouseY);
 			} else if (button == MouseButton.Left) {
 				if (selIndex != -1) {
