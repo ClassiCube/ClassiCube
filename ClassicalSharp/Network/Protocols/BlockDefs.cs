@@ -152,8 +152,7 @@ namespace ClassicalSharp.Network.Protocols {
 			stepSnds[2] = SoundType.Gravel; breakSnds[2] = SoundType.Gravel;
 			stepSnds[3] = SoundType.Grass; breakSnds[3] = SoundType.Grass;
 			stepSnds[4] = SoundType.Stone; breakSnds[4] = SoundType.Stone;
-			// TODO: metal sound type, just use stone for now.
-			stepSnds[5] = SoundType.Stone; breakSnds[5] = SoundType.Stone;
+			stepSnds[5] = SoundType.Metal; breakSnds[5] = SoundType.Metal;
 			stepSnds[6] = SoundType.Stone; breakSnds[6] = SoundType.Glass;
 			stepSnds[7] = SoundType.Cloth; breakSnds[7] = SoundType.Cloth;
 			stepSnds[8] = SoundType.Sand; breakSnds[8] = SoundType.Sand;

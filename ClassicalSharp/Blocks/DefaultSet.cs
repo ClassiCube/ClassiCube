@@ -80,6 +80,8 @@ namespace ClassicalSharp.Blocks {
 				return SoundType.Cloth;
 			if (b >= Block.LightPink && b <= Block.Turquoise) 
 				return SoundType.Cloth;
+			if (b == Block.Iron || b == Block.Gold)
+				return SoundType.Metal;
 			
 			if (b == Block.Bookshelf || b == Block.Wood 
 			   || b == Block.Log || b == Block.Crate || b == Block.Fire)
