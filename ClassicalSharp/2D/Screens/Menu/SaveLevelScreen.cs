@@ -70,9 +70,9 @@ namespace ClassicalSharp.Gui.Screens {
 			input.ShowCaret = true;
 			
 			widgets = new Widget[] {
-				ButtonWidget.Create(game, 301, 40, "Save", titleFont, SaveClassic)
+				ButtonWidget.Create(game, 300, "Save", titleFont, SaveClassic)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 20),
-				ButtonWidget.Create(game, 201, 40, "Save schematic", titleFont, SaveSchematic)
+				ButtonWidget.Create(game, 200, "Save schematic", titleFont, SaveSchematic)
 					.SetLocation(Anchor.Centre, Anchor.Centre, -150, 120),
 				TextWidget.Create(game, "&eCan be imported into MCEdit", regularFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 120),

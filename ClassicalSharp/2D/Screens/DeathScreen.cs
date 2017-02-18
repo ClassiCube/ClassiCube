@@ -23,9 +23,9 @@ namespace ClassicalSharp.Gui.Screens {
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -150),
 				TextWidget.Create(game, "Score: 0", titleFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -75),
-				ButtonWidget.Create(game, 401, 40, "Generate new level...", titleFont, GenLevelClick)
+				ButtonWidget.Create(game, 400, "Generate new level...", titleFont, GenLevelClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 25),
-				ButtonWidget.Create(game, 401, 40, "Load level...", titleFont, LoadLevelClick)
+				ButtonWidget.Create(game, 400, "Load level...", titleFont, LoadLevelClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 75),
 			};
 		}

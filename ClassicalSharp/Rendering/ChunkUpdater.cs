@@ -342,6 +342,7 @@ namespace ClassicalSharp.Renderers {
 				int distSqr = distances[i];
 				bool noData = info.NormalParts == null && info.TranslucentParts == null;
 				
+				// Unload chunks beyond visible range
 				if (!noData && distSqr >= userDistSqr + 32 * 16) {
 					DeleteChunk(info, true); continue;
 				}

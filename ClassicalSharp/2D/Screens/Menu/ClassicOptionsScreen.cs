@@ -60,11 +60,11 @@ namespace ClassicalSharp.Gui.Screens {
 					         (g, v) => { g.LocalPlayer.Hacks.Enabled = v;
 					         	g.LocalPlayer.CheckHacksConsistency(); }),
 				
-				ButtonWidget.Create(game, 401, 41, "Controls", titleFont,
+				ButtonWidget.Create(game, 400, "Controls", titleFont,
 				                    LeftOnly((g, w) => g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g))))
 					.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, 95),
 				
-				MakeBack(401, "Done", 22, titleFont, (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
+				MakeBack(400, "Done", 22, titleFont, (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
 				null, null,
 			};
 		}

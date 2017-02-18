@@ -58,9 +58,9 @@ namespace ClassicalSharp.Gui.Screens {
 				TextWidget.Create(game, "Generate new level", regularFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -130),
 				
-				ButtonWidget.Create(game, 201, 40, "Flatgrass", titleFont, GenFlatgrassClick)
+				ButtonWidget.Create(game, 200, "Flatgrass", titleFont, GenFlatgrassClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, -120, 100),
-				ButtonWidget.Create(game, 201, 40, "Vanilla",  titleFont, GenNotchyClick)
+				ButtonWidget.Create(game, 200, "Vanilla",  titleFont, GenNotchyClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 120, 100),
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),

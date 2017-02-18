@@ -85,11 +85,11 @@ namespace Launcher.Patcher {
 			WriteFourCC(w, "fmt ");
 			w.Write(16);
 			w.Write((ushort)1); // audio format, PCM
-			w.Write((ushort)data.Channels);
-			w.Write(data.Frequency);
-			w.Write((data.Frequency * data.Channels * data.BitsPerSample) / 8); // byte rate
-			w.Write((ushort)((data.Channels * data.BitsPerSample) / 8)); // block align
-			w.Write((ushort)data.BitsPerSample);
+			w.Write((ushort)data.Last.Channels);
+			w.Write(data.Last.SampleRate);
+			w.Write((data.Last.SampleRate * data.Last.Channels * data.Last.BitsPerSample) / 8); // byte rate
+			w.Write((ushort)((data.Last.Channels * data.Last.BitsPerSample) / 8)); // block align
+			w.Write((ushort)data.Last.BitsPerSample);
 			
 			WriteFourCC(w, "data");
 			w.Write((int)(stream.Length - 44));

@@ -110,7 +110,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected ButtonWidget MakeOpt(int dir, int y, string text, ClickHandler onClick,
 		                               Func<Game, string> getter, Action<Game, string> setter) {
-			ButtonWidget widget = ButtonWidget.Create(game, 301, 41, text + ": " + getter(game), titleFont, onClick)
+			ButtonWidget widget = ButtonWidget.Create(game, 300, text + ": " + getter(game), titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
 			widget.Metadata = text;
 			widget.GetValue = getter;
@@ -130,7 +130,7 @@ namespace ClassicalSharp.Gui.Screens {
 		                                ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter) {
 			string optName = text;
 			text = text + ": " + (getter(game) ? "ON" : "OFF");
-			ButtonWidget widget = ButtonWidget.Create(game, 301, 41, text, titleFont, onClick)
+			ButtonWidget widget = ButtonWidget.Create(game, 300, text, titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
 			widget.Metadata = optName;
 			widget.GetValue = g => getter(g) ? "yes" : "no";
@@ -208,7 +208,7 @@ namespace ClassicalSharp.Gui.Screens {
 			input.OnClick = InputClick;
 			
 			widgets[widgets.Length - 2] = input;
-			widgets[widgets.Length - 1] = ButtonWidget.Create(game, 40, 30, "OK", titleFont, OnWidgetClick)
+			widgets[widgets.Length - 1] = ButtonWidget.Create(game, 40, "OK", titleFont, OnWidgetClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 240, 110);
 
 			InputOpened();

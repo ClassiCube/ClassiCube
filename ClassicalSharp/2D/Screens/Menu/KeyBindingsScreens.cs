@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Screens {
 				title = "Normal controls";
 				rightPage = (g, w) => g.Gui.SetNewScreen(new ClassicHacksKeyBindingsScreen(g));
 			} else {
-				btnWidth = 301; btnHeight = 40; btnDistance = 48;
+				btnWidth = 300;
 			}
 			ContextRecreated();
 		}
@@ -159,7 +159,7 @@ namespace ClassicalSharp.Gui.Screens {
 			MakeWidgets(-50);
 			
 			widgets[index++] = TextWidget.Create(game, "&eRight click to remove the key binding", regularFont)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 80);
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
 		}
 	}
 }

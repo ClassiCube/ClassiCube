@@ -155,7 +155,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void InputOpened() {
-			widgets[defaultIndex] = ButtonWidget.Create(game, 201, 40, "Default value", titleFont, DefaultButtonClick)
+			widgets[defaultIndex] = ButtonWidget.Create(game, 200, "Default value", titleFont, DefaultButtonClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 150);
 		}
 		

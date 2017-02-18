@@ -21,7 +21,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			textFont = new Font(game.FontName, 16, FontStyle.Bold);
-			arrowFont = new Font(game.FontName, 18, FontStyle.Bold);
+			arrowFont = new Font(game.FontName, 16, FontStyle.Bold);
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			
 			ContextRecreated();
@@ -69,12 +69,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		ButtonWidget MakeText(int x, int y, string text) {
-			return ButtonWidget.Create(game, 301, 40, text, textFont, TextButtonClick)
+			return ButtonWidget.Create(game, 300, text, textFont, TextButtonClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		
 		ButtonWidget Make(int x, int y, string text, Action<Game, Widget> onClick) {
-			return ButtonWidget.Create(game, 41, 40, text, arrowFont, LeftOnly(onClick))
+			return ButtonWidget.Create(game, 40, text, arrowFont, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		

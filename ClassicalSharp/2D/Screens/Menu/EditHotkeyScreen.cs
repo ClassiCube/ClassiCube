@@ -76,20 +76,20 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			widgets = new Widget[] {
 				Make(0, -150, "Key: " + curHotkey.BaseKey,
-				     301, 40, titleFont, BaseKeyClick),
+				     300, titleFont, BaseKeyClick),
 				Make(0, -100, "Modifiers:" + flags,
-				     301, 40, titleFont, ModifiersClick),
+				     300, titleFont, ModifiersClick),
 				
 				MenuInputWidget.Create(game, 500, 30, curHotkey.Text,
 				                       regularFont, new StringValidator(Utils.StringLength))
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -35),
 				Make(-100, 10, "Input stays open: " + staysOpen,
-				     301, 40, titleFont, LeaveOpenClick),
+				     300, titleFont, LeaveOpenClick),
 				
 				Make(0, 80, existed ? "Save changes" : "Add hotkey",
-				     301, 40, titleFont, SaveChangesClick),
+				     300, titleFont, SaveChangesClick),
 				Make(0, 130, existed ? "Remove hotkey" : "Cancel",
-				     301, 40, titleFont, RemoveHotkeyClick),
+				     300, titleFont, RemoveHotkeyClick),
 				
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
@@ -105,9 +105,9 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		ButtonWidget Make(int x, int y, string text, int width, int height,
+		ButtonWidget Make(int x, int y, string text, int width,
 		                  Font font, Action<Game, Widget> onClick) {
-			return ButtonWidget.Create(game, width, height, text, font, LeftOnly(onClick))
+			return ButtonWidget.Create(game, width, text, font, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		
