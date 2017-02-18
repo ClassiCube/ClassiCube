@@ -21,7 +21,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			textFont = new Font(game.FontName, 16, FontStyle.Bold);
-			arrowFont = new Font(game.FontName, 18, FontStyle.Bold);
+			arrowFont = new Font(game.FontName, 16, FontStyle.Bold);
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			
 			ContextRecreated();
