@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 			
 			for (int block = 1; block < Block.Count; block++) {
 				for (int neighbour = 1; neighbour < Block.Count; neighbour++) {
-					CalcCulling((byte)block, (byte)neighbour);
+					CalcCulling((BlockID)block, (BlockID)neighbour);
 				}
 			}
 		}
@@ -30,8 +30,8 @@ namespace ClassicalSharp {
 			CanStretch[block] = 0x3F;
 			
 			for (int other = 1; other < Block.Count; other++) {
-				CalcCulling(block, (byte)other);
-				CalcCulling((byte)other, block);
+				CalcCulling(block, (BlockID)other);
+				CalcCulling((BlockID)other, block);
 			}
 		}
 		

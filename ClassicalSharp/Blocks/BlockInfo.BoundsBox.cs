@@ -49,7 +49,7 @@ namespace ClassicalSharp {
 		public void RecalculateSpriteBB(FastBitmap fastBmp) {
 			for (int i = 0; i < Block.Count; i++) {
 				if (Draw[i] != DrawType.Sprite) continue;
-				RecalculateBB((byte)i, fastBmp);
+				RecalculateBB((BlockID)i, fastBmp);
 			}
 		}
 		

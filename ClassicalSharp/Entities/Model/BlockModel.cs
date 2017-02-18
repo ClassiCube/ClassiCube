@@ -12,7 +12,7 @@ namespace ClassicalSharp.Model {
 
 	public class BlockModel : IModel {
 		
-		BlockID block = (byte)Block.Air;
+		BlockID block = Block.Air;
 		float height;
 		TerrainAtlas1D atlas;
 		bool bright;

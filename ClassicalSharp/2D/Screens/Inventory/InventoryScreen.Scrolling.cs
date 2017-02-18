@@ -6,18 +6,27 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public partial class InventoryScreen : Screen {
 		
-		const int scrollWidth = 22, scrollBorder = 2;
+		const int scrollWidth = 22, scrollBorder = 2, nubsWidth = 3;
 		static FastColour scrollCol = new FastColour(10, 10, 10, 220);
 		static FastColour scrollUsedCol = new FastColour(100, 100, 100, 220);
-		float ScrollbarScale { get { return TableHeight / (float)rows; } }
+		float ScrollbarScale { get { return (TableHeight - scrollBorder * 2) / (float)rows; } }
 		
 		void DrawScrollbar() {
-			int x = TableX + TableWidth;
-			gfx.Draw2DQuad(x, TableY, scrollWidth, TableHeight, scrollCol);
+			int x = TableX + TableWidth, width = scrollWidth;
+			gfx.Draw2DQuad(x, TableY, width, TableHeight, scrollCol);
+			
 			int y, height;
-			GetScrollbarCoords(out y, out height);
-			gfx.Draw2DQuad(x + scrollBorder, TableY + y, 
-			               scrollWidth - scrollBorder * 2, height, scrollUsedCol);
+			GetScrollbarCoords(out y, out height);			
+			x += scrollBorder; width -= scrollBorder * 2;
+			gfx.Draw2DQuad(x, TableY + y, width, height, scrollUsedCol);
+			
+			if (height < 20) return;
+			x += nubsWidth; width -= nubsWidth * 2;
+			
+			y = TableY + y + (height / 2);
+			gfx.Draw2DQuad(x, y - 1 - 4, width, scrollBorder, scrollCol);
+			gfx.Draw2DQuad(x, y - 1,     width, scrollBorder, scrollCol);
+			gfx.Draw2DQuad(x, y - 1 + 4, width, scrollBorder, scrollCol);
 		}
 		
 		void GetScrollbarCoords(out int y, out int height) {
