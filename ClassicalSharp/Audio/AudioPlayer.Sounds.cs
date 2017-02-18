@@ -1,4 +1,4 @@
-﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Threading;
 using ClassicalSharp.Events;
@@ -51,11 +51,18 @@ namespace ClassicalSharp.Audio {
 			if (snd == null) return;
 			
 			chunk.Channels = snd.Channels;
-			chunk.SampleRate = snd.SampleRate;
 			chunk.BitsPerSample = snd.BitsPerSample;
 			chunk.BytesOffset = 0;
 			chunk.BytesUsed = snd.Data.Length;
 			chunk.Data = snd.Data;
+			
+			if (board == digBoard) {
+				if (type == SoundType.Metal) chunk.SampleRate = (snd.SampleRate * 6) / 5;
+				else chunk.SampleRate = (snd.SampleRate * 4) / 5;
+			} else {
+				if (type == SoundType.Metal) chunk.SampleRate = (snd.SampleRate * 7) / 5;
+				else chunk.SampleRate = snd.SampleRate;
+			}
 			
 			if (snd.Channels == 1) {
 				PlayCurrentSound(monoOutputs);

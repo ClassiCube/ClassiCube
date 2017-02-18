@@ -41,9 +41,10 @@ namespace ClassicalSharp.Audio {
 			}
 		}
 		
-		public Sound PickRandomSound(SoundType type) {
-			if (type == SoundType.None)  return null;
-			string name = soundNames[(int)type];
+ 		public Sound PickRandomSound(SoundType type) {
+ 			if (type == SoundType.None)  return null;
+ 			string name = soundNames[(int)type];
+			if (name == "Metal") name = "Stone";
 			
 			List<Sound> sounds;
 			if (!allSounds.TryGetValue(name, out sounds)) return null;
@@ -102,8 +103,10 @@ namespace ClassicalSharp.Audio {
 		static string[] soundNames;
 		static Soundboard() {
 			soundNames = Enum.GetNames(typeof(SoundType));
-			for (int i = 0; i < soundNames.Length; i++)
-				soundNames[i] = soundNames[i].ToLower();
+			for (int i = 0; i < soundNames.Length; i++) {
+				if (soundNames[i] == "Metal") soundNames[i] = "Stone";
+ 				soundNames[i] = soundNames[i].ToLower();
+			}
 		}
 	}
 }
