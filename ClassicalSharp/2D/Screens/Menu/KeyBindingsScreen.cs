@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected string[] leftDesc, rightDesc;
 		protected KeyBind[] left, right;
 		
-		protected int btnDistance = 45, btnWidth = 260, btnHeight = 35;
+		protected int btnDistance = 50, btnWidth = 260;
 		protected string title = "Controls";
 		protected int index;
 		protected Action<Game, Widget> leftPage, rightPage;
@@ -63,9 +63,10 @@ namespace ClassicalSharp.Gui.Screens {
 		void MakePages(int origin) {
 			if (leftPage == null && rightPage == null) return;
 			int btnY = origin + btnDistance * (left.Length / 2);
-			widgets[index++] = ButtonWidget.Create(game, btnHeight, btnHeight, "<", keyFont, LeftOnly(leftPage))
+			
+			widgets[index++] = ButtonWidget.Create(game, 40, 40, "<", keyFont, LeftOnly(leftPage))
 				.SetLocation(Anchor.Centre, Anchor.Centre, -btnWidth - 35, btnY);
-			widgets[index++] = ButtonWidget.Create(game, btnHeight, btnHeight, ">", keyFont, LeftOnly(rightPage))
+			widgets[index++] = ButtonWidget.Create(game, 40, 40, ">", keyFont, LeftOnly(rightPage))
 				.SetLocation(Anchor.Centre, Anchor.Centre, btnWidth + 35, btnY);
 			if (leftPage == null) widgets[index - 2].Disabled = true;
 			if (rightPage == null) widgets[index - 1].Disabled = true;
@@ -73,7 +74,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void Make(int i, int x, ref int y) {
 			string text = ButtonText(i);
-			widgets[index++] = ButtonWidget.Create(game, btnWidth, btnHeight, text, keyFont, OnBindingClick)				
+			widgets[index++] = ButtonWidget.Create(game, btnWidth, 40, text, keyFont, OnBindingClick)				
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 			y += btnDistance;
 		}
