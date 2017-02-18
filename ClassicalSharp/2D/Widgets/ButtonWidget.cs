@@ -40,12 +40,13 @@ namespace ClassicalSharp.Gui.Widgets {
 			Height = defaultHeight;
 		}
 		
+		const float uWidth = 200/256f;
 		static Texture shadowTex = new Texture(0, 0, 0, 0, 0,
-		                                       new TextureRec(0, 66/256f, 200/256f, 20/256f));
+		                                       new TextureRec(0,   66/256f, uWidth, 20/256f));
 		static Texture selectedTex = new Texture(0, 0, 0, 0, 0,
-		                                         new TextureRec(0, 86/256f, 200/256f, 20/256f));
+		                                         new TextureRec(0, 86/256f, uWidth, 20/256f));
 		static Texture disabledTex = new Texture(0, 0, 0, 0, 0,
-		                                         new TextureRec(0, 46/256f, 200/256f, 20/256f));
+		                                         new TextureRec(0, 46/256f, uWidth, 20/256f));
 		public string Text;
 		public void SetText(string text) {
 			gfx.DeleteTexture(ref texture);
@@ -68,16 +69,32 @@ namespace ClassicalSharp.Gui.Widgets {
 		static FastColour normCol = new FastColour(224, 224, 224),
 		activeCol = new FastColour(255, 255, 160),
 		disabledCol = new FastColour(160, 160, 160);
+		
 		public override void Render(double delta) {
 			if (!texture.IsValid) return;
-			Texture backTex = Active ? selectedTex : shadowTex;
-			if (Disabled) backTex = disabledTex;
+			Texture back = Active ? selectedTex : shadowTex;
+			if (Disabled) back = disabledTex;
 			
-			backTex.ID = game.UseClassicGui ? game.Gui.GuiClassicTex : game.Gui.GuiTex;
-			backTex.X1 = X; backTex.Y1 = Y;
-			backTex.Width = (short)Width; backTex.Height = (short)Height;
+			back.ID = game.UseClassicGui ? game.Gui.GuiClassicTex : game.Gui.GuiTex;
+			back.X1 = X; back.Y1 = Y;
+			back.Width = (short)Width; back.Height = (short)Height;			
 			
-			backTex.Render(gfx);
+			if (Width == 400) {
+				// Button can be drawn normally
+				back.U1 = 0; back.U2 = uWidth;
+				back.Render(gfx);
+			} else {
+				// Split button down the middle
+				float scale = (Width / 400f) * 0.5f;
+				back.Width = (short)(Width / 2); 
+				back.U1 = 0; back.U2 = uWidth * scale;
+				back.Render(gfx);
+				
+				back.X1 += (short)(Width / 2); 
+				back.U1 = uWidth - uWidth * scale; back.U2 = uWidth;
+				back.Render(gfx);
+			}
+			
 			FastColour col = Disabled ? disabledCol : (Active ? activeCol : normCol);
 			texture.Render(gfx, col);
 		}
