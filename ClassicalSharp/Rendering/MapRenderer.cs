@@ -12,7 +12,7 @@ namespace ClassicalSharp.Renderers {
 	public class ChunkInfo {
 		
 		public ushort CentreX, CentreY, CentreZ;
-		public bool Visible, Empty, PendingDelete;
+		public bool Visible, Empty, PendingDelete, AllAir;
 		
 		public bool DrawLeft, DrawRight, DrawFront, DrawBack, DrawBottom, DrawTop;
 		#if OCCLUSION
@@ -30,7 +30,7 @@ namespace ClassicalSharp.Renderers {
 			CentreY = (ushort)(y + 8);
 			CentreZ = (ushort)(z + 8);
 			
-			Visible = true; Empty = false; PendingDelete = false;
+			Visible = true; Empty = false; PendingDelete = false; AllAir = false;
 			DrawLeft = false; DrawRight = false; DrawFront = false;
 			DrawBack = false; DrawBottom = false; DrawTop = false;
 		}

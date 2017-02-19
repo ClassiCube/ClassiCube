@@ -206,7 +206,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DeleteChunk(ChunkInfo info, bool decUsed) {
-			info.Empty = false;
+			info.Empty = false; info.AllAir = false;
 			#if OCCLUSION
 			info.OcclusionFlags = 0;
 			info.OccludedFlags = 0;
@@ -234,6 +234,10 @@ namespace ClassicalSharp.Renderers {
 		
 		public void RedrawBlock(int x, int y, int z, BlockID block, int oldHeight, int newHeight) {
 			int cx = x >> 4, cy = y >> 4, cz = z >> 4;
+			
+			// Does this chunk now contain air?
+			ChunkInfo curInfo = renderer.unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+			curInfo.AllAir &= game.BlockInfo.Draw[block] == DrawType.Gas;
 			
 			// NOTE: It's a lot faster to only update the chunks that are affected by the change in shadows,
 			// rather than the entire column.
@@ -306,6 +310,7 @@ namespace ClassicalSharp.Renderers {
 			    cx >= chunksX || cy >= chunksY || cz >= chunksZ) return;
 			
 			ChunkInfo info = renderer.unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+			if (info.AllAir) return; // do not recreate chunks completely air
 			info.Empty = false;
 			info.PendingDelete = true;
 		}
@@ -400,10 +405,11 @@ namespace ClassicalSharp.Renderers {
 			return (viewDist + 24) * (viewDist + 24);
 		}
 		
+		
 		void BuildChunk(ChunkInfo info, ref int chunkUpdates) {
 			game.ChunkUpdates++;
 			builder.GetDrawInfo(info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
-			                    ref info.NormalParts, ref info.TranslucentParts);
+			                    ref info.NormalParts, ref info.TranslucentParts, ref info.AllAir);
 			
 			if (info.NormalParts == null && info.TranslucentParts == null) {
 				info.Empty = true;

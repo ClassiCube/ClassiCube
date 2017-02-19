@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 		protected int* bitFlags;
 		protected bool useBitFlags;
 		
-		bool BuildChunk(int x1, int y1, int z1) {
+		bool BuildChunk(int x1, int y1, int z1, ref bool allAir) {
 			lighting = game.Lighting;
 			PreStretchTiles(x1, y1, z1);
 			BlockID* chunkPtr = stackalloc BlockID[extChunkSize3]; chunk = chunkPtr;
@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 			int* bitsPtr = stackalloc int[extChunkSize3]; bitFlags = bitsPtr;
 			
 			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockID));
-			if (ReadChunkData(x1, y1, z1)) return false;
+			if (ReadChunkData(x1, y1, z1, ref allAir)) return false;
 			MemUtils.memset((IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides);
 			
 			Stretch(x1, y1, z1);
@@ -75,7 +75,7 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		bool ReadChunkData(int x1, int y1, int z1) {
+		bool ReadChunkData(int x1, int y1, int z1, ref bool outAllAir) { // only assign this variable once
 			bool allAir = true, allSolid = true;
 			fixed(BlockID* mapPtr = map.blocks) {
 				
@@ -105,18 +105,19 @@ namespace ClassicalSharp {
 						}
 					}
 				}
+				outAllAir = allAir;
 				
 				if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + chunkSize >= width ||
 				   y1 + chunkSize >= height || z1 + chunkSize >= length) allSolid = false;
-				if (allAir || allSolid) return true;
 				
+				if (allAir || allSolid) return true;				
 				lighting.LightHint(x1 - 1, z1 - 1, mapPtr);
 				return false;
 			}
 		}
 		
-		public void GetDrawInfo(int x, int y, int z, ref ChunkPartInfo[] nParts, ref ChunkPartInfo[] tParts) {
-			if (!BuildChunk(x, y, z)) return;
+		public void GetDrawInfo(int x, int y, int z, ref ChunkPartInfo[] nParts, ref ChunkPartInfo[] tParts, ref bool allAir) {
+			if (!BuildChunk(x, y, z, ref allAir)) return;
 			
 			for (int i = 0; i < arraysCount; i++) {
 				SetPartInfo(normalParts[i], i, ref nParts);
