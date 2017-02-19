@@ -3,7 +3,12 @@ using System;
 using System.Collections.Generic;
 using ClassicalSharp.Blocks;
 using OpenTK;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp {
 
@@ -129,9 +134,15 @@ namespace ClassicalSharp {
 			LightOffset[id] = CalcLightOffset(id);
 			
 			if (id >= Block.CpeCount) {
+				#if USE16_BIT
+				SetTex((id * 10 + (id % 7) + 20) % 80, Side.Top, id);
+				SetTex((id * 8  + (id & 5) + 5 ) % 80, Side.Bottom, id);
+				SetSide((id * 4 + (id / 4) + 4 ) % 80, id);
+				#else
 				SetTex(0, Side.Top, id);
 				SetTex(0, Side.Bottom, id);
 				SetSide(0, id);
+				#endif
 			} else {
 				SetTex(topTex[id], Side.Top, id);
 				SetTex(bottomTex[id], Side.Bottom, id);
@@ -148,6 +159,9 @@ namespace ClassicalSharp {
 		
 		static StringBuffer buffer = new StringBuffer(64);
 		static string DefaultName(BlockID block) {
+			#if USE16_BIT
+			if (block >= 256) return "ID " + block;
+			#endif
 			if (block >= Block.CpeCount) return "Invalid";
 			
 			// Find start and end of this particular block name

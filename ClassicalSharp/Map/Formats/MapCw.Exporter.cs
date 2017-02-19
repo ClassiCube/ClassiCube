@@ -43,7 +43,11 @@ namespace ClassicalSharp.Map {
 				
 				nbt.Write(NbtTagType.Int8Array);
 				nbt.Write("BlockArray"); nbt.WriteInt32(map.blocks.Length);
+				#if USE16_BIT
+				nbt.WriteBytes(Utils.UInt16sToUInt8s(map.blocks));
+				#else
 				nbt.WriteBytes(map.blocks);
+				#endif
 				
 				WriteMetadata();
 				

@@ -8,7 +8,12 @@ using Ionic.Zlib;
 #else
 using System.IO.Compression;
 #endif
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Network.Protocols {
 
@@ -137,7 +142,12 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			double loadingMs = (DateTime.UtcNow - mapReceiveStart).TotalMilliseconds;
 			Utils.LogDebug("map loading took: " + loadingMs);
+			
+			#if USE16_BIT
+			game.World.SetNewMap(Utils.UInt8sToUInt16s(map), mapWidth, mapHeight, mapLength);
+			#else
 			game.World.SetNewMap(map, mapWidth, mapHeight, mapLength);
+			#endif
 			game.WorldEvents.RaiseOnNewMapLoaded();
 			
 			map = null;
@@ -273,10 +283,10 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		internal void SendPosition(Vector3 pos, float rotY, float headX) {
-			byte payload = net.cpeData.sendHeldBlock ? game.Inventory.HeldBlock : (byte)0xFF;
+			int payload = net.cpeData.sendHeldBlock ? game.Inventory.HeldBlock : 0xFF;
 			writer.WriteUInt8((byte)Opcode.EntityTeleport);
 			
-			writer.WriteUInt8(payload); // held block when using HeldBlock, otherwise just 255
+			writer.WriteUInt8((byte)payload); // held block when using HeldBlock, otherwise just 255
 			writer.WriteInt16((short)(pos.X * 32));
 			writer.WriteInt16((short)((int)(pos.Y * 32) + 51));
 			writer.WriteInt16((short)(pos.Z * 32));
@@ -292,7 +302,12 @@ namespace ClassicalSharp.Network.Protocols {
 			writer.WriteInt16((short)y);
 			writer.WriteInt16((short)z);
 			writer.WriteUInt8(place ? (byte)1 : (byte)0);
+			
+			#if USE16_BIT
+			writer.WriteUInt8((byte)block);
+			#else
 			writer.WriteUInt8(block);
+			#endif
 			net.SendPacket();
 		}
 		

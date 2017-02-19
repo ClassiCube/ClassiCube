@@ -5,7 +5,12 @@ using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using OpenTK;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Renderers {
 	

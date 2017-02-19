@@ -4,7 +4,12 @@ using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Screens;
 using OpenTK.Input;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Gui.Widgets {
 	public class HotbarWidget : Widget {

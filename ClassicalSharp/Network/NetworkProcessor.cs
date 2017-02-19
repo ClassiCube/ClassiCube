@@ -10,7 +10,12 @@ using ClassicalSharp.Gui;
 using ClassicalSharp.Network;
 using ClassicalSharp.Textures;
 using ClassicalSharp.Network.Protocols;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Network {
 

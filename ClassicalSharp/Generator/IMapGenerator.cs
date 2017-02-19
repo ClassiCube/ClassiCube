@@ -3,7 +3,12 @@ using System;
 using System.Threading;
 using ClassicalSharp.Map;
 using ClassicalSharp.Singleplayer;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Generator {
 	

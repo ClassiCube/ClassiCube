@@ -1,7 +1,12 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Generator {
 	
@@ -30,7 +35,12 @@ namespace ClassicalSharp.Generator {
 			
 			while (offset < count) {
 				int bytes = Math.Min(count - offset, Width * Length) * sizeof(BlockID);
+				#if USE16_BIT
+				MemUtils.memset((IntPtr)ptr, (byte)block, startIndex + offset, bytes);
+				#else
 				MemUtils.memset((IntPtr)ptr, block, startIndex + offset, bytes);
+				#endif
+				
 				offset += bytes;
 				CurrentProgress = (float)offset / count;
 			}

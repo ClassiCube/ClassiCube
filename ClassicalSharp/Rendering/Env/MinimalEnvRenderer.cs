@@ -1,7 +1,12 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using ClassicalSharp.Events;
 using System;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Renderers {
 	/// <summary> Minimialistic environment renderer 

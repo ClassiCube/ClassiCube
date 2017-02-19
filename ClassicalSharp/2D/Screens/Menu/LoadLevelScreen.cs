@@ -6,7 +6,12 @@ using ClassicalSharp.Map;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Textures;
 using OpenTK.Input;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Gui.Screens {
 	public sealed class LoadLevelScreen : FilesScreen {
@@ -21,7 +26,7 @@ namespace ClassicalSharp.Gui.Screens {
 			for (int i = 0; i < rawFiles.Length; i++) {
 				string file = rawFiles[i];
 				if (file.EndsWith(".cw") || file.EndsWith(".dat")
-				   || file.EndsWith(".fcm") || file.EndsWith(".lvl")) {
+				    || file.EndsWith(".fcm") || file.EndsWith(".lvl")) {
 					count++;
 				} else {
 					rawFiles[i] = null;
@@ -67,8 +72,13 @@ namespace ClassicalSharp.Gui.Screens {
 					}
 					game.BlockInfo.Reset(game);
 					
-					BlockID[] blocks = importer.Load(fs, game, out width, out height, out length);
+					byte[] blocks = importer.Load(fs, game, out width, out height, out length);
+					#if USE16_BIT
+					game.World.SetNewMap(Utils.UInt8sToUInt16s(blocks), width, height, length);
+					#else
 					game.World.SetNewMap(blocks, width, height, length);
+					#endif
+					
 					game.WorldEvents.RaiseOnNewMapLoaded();
 					if (game.AllowServerTextures && game.World.TextureUrl != null)
 						game.Server.RetrieveTexturePack(game.World.TextureUrl);

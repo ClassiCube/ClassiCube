@@ -4,7 +4,12 @@ using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp {
 	
@@ -201,7 +206,11 @@ namespace ClassicalSharp {
 						
 						X = x; Y = y; Z = z;
 						fullBright = info.FullBright[b];
+						#if USE16_BIT
+						int tileIdx = b << 12;
+						#else
 						int tileIdx = b << 8;
+						#endif
 						// All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times.
 						
 						if (counts[index] == 0 || 

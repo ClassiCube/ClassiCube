@@ -5,7 +5,12 @@ using System.Text;
 using ClassicalSharp.Events;
 using ClassicalSharp.Renderers;
 using OpenTK.Input;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Commands {
 	
@@ -74,7 +79,7 @@ namespace ClassicalSharp.Commands {
 			BlockID block = 0;
 			if ((temp = game.BlockInfo.FindID(args[1])) != -1) {
 				block = (BlockID)temp;
-			} else if (!byte.TryParse(args[1], out block)) {
+			} else if (!BlockID.TryParse(args[1], out block)) {
 				game.Chat.Add("&eCuboid: &c\"" + args[1] + "\" is not a valid block name or id."); return false;
 			}
 			

@@ -5,7 +5,12 @@
 // I believe this process adheres to clean room reverse engineering.
 using System;
 using System.Collections.Generic;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Generator {
 	

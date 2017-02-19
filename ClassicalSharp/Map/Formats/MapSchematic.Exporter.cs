@@ -27,9 +27,12 @@ namespace ClassicalSharp.Map {
 				nbt.Write(NbtTagType.Int16);
 				nbt.Write("Length"); nbt.WriteInt16((short)map.Length);
 				
+				#if USE16_BIT
+				WriteBlocks(nbt, Utils.UInt16sToUInt8s(map.blocks));
+				#else
 				WriteBlocks(nbt, map.blocks);
-				
-				WriteBlockData(nbt, map.blocks);
+				#endif
+				WriteBlockData(nbt, map.blocks.Length);
 				
 				nbt.Write(NbtTagType.List);
 				nbt.Write("Entities");
@@ -56,16 +59,16 @@ namespace ClassicalSharp.Map {
 			}
 		}
 		
-		void WriteBlockData(NbtFile nbt, byte[] blocks) {
+		void WriteBlockData(NbtFile nbt, int blocksLength) {
 			const int chunkSize = 64 * 1024;
 			byte[] chunk = new byte[chunkSize];
 			nbt.Write(NbtTagType.Int8Array);
 			nbt.Write("Data");
-			nbt.WriteInt32(blocks.Length);
+			nbt.WriteInt32(blocksLength);
 			
-			for (int i = 0; i < blocks.Length; i += chunkSize) {
+			for (int i = 0; i < blocksLength; i += chunkSize) {
 				// All 0 so we can skip this.
-				int count = Math.Min(chunkSize, blocks.Length - i);
+				int count = Math.Min(chunkSize, blocksLength - i);
 				nbt.WriteBytes(chunk, 0, count);
 			}
 		}

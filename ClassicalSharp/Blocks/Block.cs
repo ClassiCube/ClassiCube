@@ -1,6 +1,11 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp {
 	
@@ -74,7 +79,7 @@ namespace ClassicalSharp {
 		public const BlockID Pillar = 63;
 		public const BlockID Crate = 64;
 		public const BlockID StoneBrick = 65;
-		public const BlockID Invalid = 0xFF;
+		
 		
 		public const string Names = "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava" +
 			" StillLava Sand Gravel GoldOre IronOre CoalOre Log Leaves Sponge Glass Red Orange Yellow Lime Green" +
@@ -86,7 +91,14 @@ namespace ClassicalSharp {
 		public const int OriginalCount = MaxOriginalBlock + 1;
 		public const BlockID MaxCpeBlock = Block.StoneBrick;
 		public const int CpeCount = MaxCpeBlock + 1;
-		public const BlockID MaxDefinedBlock = byte.MaxValue;
+		
+		#if USE16_BIT
+		public const BlockID MaxDefinedBlock = 0xFFF;
+		#else
+		public const BlockID MaxDefinedBlock =  0xFF;
+		#endif
+		
 		public const int Count = MaxDefinedBlock + 1;
+		public const BlockID Invalid = MaxDefinedBlock;
 	}
 }

@@ -3,7 +3,12 @@ using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Gui.Screens {
 	public partial class InventoryScreen : Screen {

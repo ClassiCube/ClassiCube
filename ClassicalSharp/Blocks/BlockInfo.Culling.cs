@@ -1,7 +1,12 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
+
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
 using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp {
 	
@@ -104,7 +109,11 @@ namespace ClassicalSharp {
 		/// <summary> Returns whether the face at the given face of the block
 		/// should be drawn with the neighbour 'other' present on the other side of the face. </summary>
 		public bool IsFaceHidden(BlockID block, BlockID other, int tileSide) {
+			#if USE16_BIT
+			return (hidden[(block << 12) | other] & (1 << tileSide)) != 0;
+			#else
 			return (hidden[(block << 8) | other] & (1 << tileSide)) != 0;
+			#endif
 		}
 		
 		void SetXStretch(BlockID block, bool stretch) {
