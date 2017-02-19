@@ -51,7 +51,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		#region Read
 		void HandleExtInfo() {
-			string appName = reader.ReadAsciiString();
+			string appName = reader.ReadString();
 			game.Chat.Add("Server software: " + appName);
 			if (Utils.CaselessStarts(appName, "D3 server"))
 				net.cpeData.needD3Fix = true;
@@ -63,7 +63,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleExtEntry() {
-			string extName = reader.ReadAsciiString();
+			string extName = reader.ReadString();
 			int extVersion = reader.ReadInt32();
 			Utils.LogDebug("cpe ext: {0}, {1}", extName, extVersion);
 			
@@ -99,8 +99,8 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleSetTextHotkey() {
-			string label = reader.ReadAsciiString();
-			string action = reader.ReadCp437String();
+			string label = reader.ReadString();
+			string action = reader.ReadString();
 			int keyCode = reader.ReadInt32();
 			byte keyMods = reader.ReadUInt8();
 			
@@ -123,11 +123,11 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleExtAddPlayerName() {
 			short id = reader.ReadInt16();
-			string playerName = Utils.StripColours(reader.ReadAsciiString());
+			string playerName = Utils.StripColours(reader.ReadString());
 			playerName = Utils.RemoveEndPlus(playerName);
-			string listName = reader.ReadAsciiString();
+			string listName = reader.ReadString();
 			listName = Utils.RemoveEndPlus(listName);
-			string groupName = reader.ReadAsciiString();
+			string groupName = reader.ReadString();
 			byte groupRank = reader.ReadUInt8();
 			
 			// Some server software will declare they support ExtPlayerList, but send AddEntity then AddPlayerName
@@ -142,8 +142,8 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleExtAddEntity() {
 			byte id = reader.ReadUInt8();
-			string displayName = reader.ReadAsciiString();
-			string skinName = reader.ReadAsciiString();
+			string displayName = reader.ReadString();
+			string skinName = reader.ReadString();
 			net.CheckName(id, ref displayName, ref skinName);
 			net.AddEntity(id, displayName, skinName, false);
 		}
@@ -159,7 +159,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleMakeSelection() {
 			byte selectionId = reader.ReadUInt8();
-			string label = reader.ReadAsciiString();
+			string label = reader.ReadString();
 			short startX = reader.ReadInt16();
 			short startY = reader.ReadInt16();
 			short startZ = reader.ReadInt16();
@@ -225,7 +225,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleChangeModel() {
 			byte playerId = reader.ReadUInt8();
-			string modelName = Utils.ToLower(reader.ReadAsciiString());
+			string modelName = Utils.ToLower(reader.ReadString());
 			Entity entity = game.Entities[playerId];
 			if (entity != null) entity.SetModel(modelName);
 		}
@@ -268,8 +268,8 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleExtAddEntity2() {
 			byte id = reader.ReadUInt8();
-			string displayName = reader.ReadAsciiString();
-			string skinName = reader.ReadAsciiString();
+			string displayName = reader.ReadString();
+			string skinName = reader.ReadString();
 			net.CheckName(id, ref displayName, ref skinName);
 			net.AddEntity(id, displayName, skinName, true);
 		}
@@ -319,7 +319,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleSetMapEnvUrl() {
-			string url = reader.ReadAsciiString();
+			string url = reader.ReadString();
 			if (!game.AllowServerTextures) return;
 			
 			if (url == "") {

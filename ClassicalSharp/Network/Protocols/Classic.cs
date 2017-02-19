@@ -56,8 +56,8 @@ namespace ClassicalSharp.Network.Protocols {
 
 		void HandleHandshake() {
 			byte protocolVer = reader.ReadUInt8();
-			net.ServerName = reader.ReadCp437String();
-			net.ServerMotd = reader.ReadCp437String();
+			net.ServerName = reader.ReadString();
+			net.ServerMotd = reader.ReadString();
 			game.Chat.SetLogName(net.ServerName);
 			
 			game.LocalPlayer.Hacks.SetUserType(reader.ReadUInt8());
@@ -180,7 +180,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleAddEntity() {
 			byte id = reader.ReadUInt8();
-			string name = reader.ReadAsciiString();
+			string name = reader.ReadString();
 			string skin = name;
 			net.CheckName(id, ref name, ref skin);			
 			net.AddEntity(id, name, skin, true);
@@ -247,7 +247,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleKick() {
-			string reason = reader.ReadCp437String();
+			string reason = reader.ReadString();
 			game.Disconnect("&eLost connection to the server", reason);
 			net.Dispose();
 		}

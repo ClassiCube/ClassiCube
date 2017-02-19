@@ -68,7 +68,7 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockInfo info = game.BlockInfo;
 			info.ResetBlockProps(id);
 			
-			info.Name[id] = reader.ReadCp437String();
+			info.Name[id] = reader.ReadString();
 			info.Collide[id] = (CollideType)reader.ReadUInt8();
 			
 			info.SpeedMultiplier[id] = (float)Math.Pow(2, (reader.ReadUInt8() - 128) / 64f);

@@ -72,23 +72,13 @@ namespace ClassicalSharp.Network {
 			return data;
 		}
 
-		public string ReadCp437String() {
-			int length = GetString(false, Utils.StringLength);
-			return new String(characters, 0, length);
-		}
-		
-		public string ReadAsciiString() {
-			int length = GetString(true, Utils.StringLength);
-			return new String(characters, 0, length);
-		}
-		
-		public string ReadAsciiString(int maxLength) {
-			int length = GetString(true, maxLength);
+		public string ReadString() {
+			int length = GetString(Utils.StringLength);
 			return new String(characters, 0, length);
 		}
 		
 		internal string ReadChatString(ref byte messageType) {
-			int length = GetString(false, Utils.StringLength);
+			int length = GetString(Utils.StringLength);
 			
 			int offset = 0;
 			if (length >= womDetail.Length && IsWomDetailString()) {
@@ -109,19 +99,14 @@ namespace ClassicalSharp.Network {
 			return true;
 		}
 		
-		int GetString(bool ascii, int maxLength) {
+		int GetString(int maxLength) {
 			int length = 0;
 			
 			for (int i = maxLength - 1; i >= 0; i--) {
 				byte code = buffer[index + i];
 				if (length == 0 && !(code == 0 || code == 0x20))
 				   length = i + 1;
-				
-				if (ascii) {
-					characters[i] = code >= 0x7F ? '?' : (char)code;
-					continue;
-				}
-				
+
 				// Treat code as an index in code page 437
 				if (code < 0x20) {
 					characters[i] = Utils.ControlCharReplacements[code];
