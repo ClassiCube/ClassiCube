@@ -12,7 +12,8 @@ namespace ClassicalSharp.Renderers {
 	public class ChunkInfo {
 		
 		public ushort CentreX, CentreY, CentreZ;
-		public bool Visible = true, Empty = false;
+		public bool Visible, Empty, PendingDelete;
+		
 		public bool DrawLeft, DrawRight, DrawFront, DrawBack, DrawBottom, DrawTop;
 		#if OCCLUSION
 		public bool Visited = false, Occluded = false;
@@ -22,18 +23,14 @@ namespace ClassicalSharp.Renderers {
 		public ChunkPartInfo[] NormalParts;
 		public ChunkPartInfo[] TranslucentParts;
 		
-		public ChunkInfo(int x, int y, int z) {
-			CentreX = (ushort)(x + 8);
-			CentreY = (ushort)(y + 8);
-			CentreZ = (ushort)(z + 8);
-		}
+		public ChunkInfo(int x, int y, int z) { Reset(x, y, z); }
 		
 		public void Reset(int x, int y, int z) {
 			CentreX = (ushort)(x + 8);
 			CentreY = (ushort)(y + 8);
 			CentreZ = (ushort)(z + 8);
 			
-			Visible = true; Empty = false;
+			Visible = true; Empty = false; PendingDelete = false;
 			DrawLeft = false; DrawRight = false; DrawFront = false;
 			DrawBack = false; DrawBottom = false; DrawTop = false;
 		}

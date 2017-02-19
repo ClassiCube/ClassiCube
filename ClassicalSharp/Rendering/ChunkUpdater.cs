@@ -259,7 +259,7 @@ namespace ClassicalSharp.Renderers {
 				ResetNeighbour(x, y, z + 1, block, cx, cy, cz + 1, minCy, maxCy);
 		}
 		
-		bool Needs(BlockID block, BlockID other) { 
+		bool Needs(BlockID block, BlockID other) {
 			return info.Draw[block] != DrawType.Opaque || info.Draw[other] != DrawType.Gas;
 		}
 		
@@ -303,17 +303,20 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetChunk(int cx, int cy, int cz) {
 			if (cx < 0 || cy < 0 || cz < 0 ||
-			   cx >= chunksX || cy >= chunksY || cz >= chunksZ) return;
-			DeleteChunk(renderer.unsortedChunks[cx + chunksX * (cy + cz * chunksY)], true);
+			    cx >= chunksX || cy >= chunksY || cz >= chunksZ) return;
+			
+			ChunkInfo info = renderer.unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+			info.Empty = false;
+			info.PendingDelete = true;
 		}
 		
 
-		int chunksTarget = 4;
+		int chunksTarget = 12;
 		const double targetTime = (1.0 / 30) + 0.01;
 		public void UpdateChunks(double delta) {
 			int chunkUpdates = 0;
 			chunksTarget += delta < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
-			Utils.Clamp(ref chunksTarget, 4, 16);
+			Utils.Clamp(ref chunksTarget, 4, 20);
 			
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 cameraPos = game.CurrentCameraPos;
@@ -346,8 +349,10 @@ namespace ClassicalSharp.Renderers {
 				if (!noData && distSqr >= userDistSqr + 32 * 16) {
 					DeleteChunk(info, true); continue;
 				}
+				noData |= info.PendingDelete;
 				
 				if (noData && distSqr <= viewDistSqr && chunkUpdates < chunksTarget) {
+					DeleteChunk(info, true);
 					BuildChunk(info, ref chunkUpdates);
 				}
 				info.Visible = distSqr <= viewDistSqr &&
@@ -372,15 +377,16 @@ namespace ClassicalSharp.Renderers {
 				if (!noData && distSqr >= userDistSqr + 32 * 16) {
 					DeleteChunk(info, true); continue;
 				}
+				noData |= info.PendingDelete;
 				
-				if (noData) {
-					if (distSqr <= userDistSqr && chunkUpdates < chunksTarget) {
-						BuildChunk(info, ref chunkUpdates);
-						// only need to update the visibility of chunks in range.
-						info.Visible = distSqr <= viewDistSqr &&
-							game.Culling.SphereInFrustum(info.CentreX, info.CentreY, info.CentreZ, 14); // 14 ~ sqrt(3 * 8^2)
-						if (info.Visible && !info.Empty) { render[j] = info; j++; }
-					}
+				if (noData && distSqr <= userDistSqr && chunkUpdates < chunksTarget) {
+					DeleteChunk(info, true);
+					BuildChunk(info, ref chunkUpdates);
+					
+					// only need to update the visibility of chunks in range.
+					info.Visible = distSqr <= viewDistSqr &&
+						game.Culling.SphereInFrustum(info.CentreX, info.CentreY, info.CentreZ, 14); // 14 ~ sqrt(3 * 8^2)
+					if (info.Visible && !info.Empty) { render[j] = info; j++; }
 				} else if (info.Visible) {
 					render[j] = info; j++;
 				}
