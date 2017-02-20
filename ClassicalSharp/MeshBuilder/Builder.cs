@@ -105,7 +105,7 @@ namespace ClassicalSharp {
 							BlockID rawBlock = mapPtr[index];
 							
 							allAir = allAir && info.Draw[rawBlock] == DrawType.Gas;
-							allSolid = allSolid && info.Draw[rawBlock] == DrawType.Opaque;
+							allSolid = allSolid && info.FullOpaque[rawBlock];
 							chunk[chunkIndex] = rawBlock;
 						}
 					}
@@ -288,7 +288,7 @@ namespace ClassicalSharp {
 		
 		protected bool OccludedLiquid(int chunkIndex) {
 			return 
-				info.Draw[chunk[chunkIndex + 324]] == DrawType.Opaque
+				info.FullOpaque[chunk[chunkIndex + 324]]
 				&& info.Draw[chunk[chunkIndex + 324 - 18]] != DrawType.Gas
 				&& info.Draw[chunk[chunkIndex + 324 - 1]] != DrawType.Gas
 				&& info.Draw[chunk[chunkIndex + 324 + 1]] != DrawType.Gas

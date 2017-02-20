@@ -20,7 +20,7 @@ namespace ClassicalSharp {
 					int chunkIndex = (y + 1) * extChunkSize2 + (z + 1) * extChunkSize + (0 + 1);
 					for (int x = 0; x < 16; x++) {
 						BlockID block = chunk[chunkIndex];
-						if (info.Draw[block] == DrawType.Opaque) {
+						if (info.FullOpaque[block]) {
 							didFlags[flagIndex] |= (1 << x);
 						} else if ((didFlags[flagIndex] & (1 << x)) == 0) {
 							FloodFill(didFlags, stack, i, ref solidX, ref solidY, ref solidZ);

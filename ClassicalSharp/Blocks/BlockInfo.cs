@@ -60,6 +60,8 @@ namespace ClassicalSharp {
 
 		public byte[] Draw = new byte[Block.Count];
 		
+		public bool[] FullOpaque = new bool[Block.Count];
+		
 		public uint[] DefinedCustomBlocks = new uint[Block.Count >> 5];
 		
 		public SoundType[] DigSounds = new SoundType[Block.Count];
@@ -106,6 +108,9 @@ namespace ClassicalSharp {
 			if (draw == DrawType.Opaque && Collide[id] != CollideType.Solid)
 				draw = DrawType.Transparent;
 			Draw[id] = draw;
+			
+			FullOpaque[id] = draw == DrawType.Opaque 
+				&& MinBB[id] == Vector3.Zero && MaxBB[id] == Vector3.One;
 		}
 		
 		public void ResetBlockProps(BlockID id) {
@@ -116,7 +121,6 @@ namespace ClassicalSharp {
 			Collide[id] = DefaultSet.Collide(id);
 			DigSounds[id] = DefaultSet.DigSound(id);
 			StepSounds[id] = DefaultSet.StepSound(id);
-			SetBlockDraw(id, DefaultSet.Draw(id));
 			SpeedMultiplier[id] = 1;
 			Name[id] = DefaultName(id);
 			Tinted[id] = false;
@@ -130,7 +134,9 @@ namespace ClassicalSharp {
 				MaxBB[id].Y = DefaultSet.Height(id);
 			}
 			
+			SetBlockDraw(id, DefaultSet.Draw(id));
 			CalcRenderBounds(id);
+			
 			LightOffset[id] = CalcLightOffset(id);
 			
 			if (id >= Block.CpeCount) {

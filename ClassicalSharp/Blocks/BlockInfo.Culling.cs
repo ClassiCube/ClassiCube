@@ -18,8 +18,6 @@ namespace ClassicalSharp {
 		public byte[] CanStretch = new byte[Block.Count];
 
 		internal void UpdateCulling() {
-			for (int block = 1; block < Block.Count; block++)
-				CheckOpaque(block);
 			for (int block = 0; block < Block.Count; block++)
 				CanStretch[block] = 0x3F;
 			
@@ -31,19 +29,11 @@ namespace ClassicalSharp {
 		}
 		
 		internal void UpdateCulling(BlockID block) {
-			CheckOpaque(block);
 			CanStretch[block] = 0x3F;
 			
 			for (int other = 1; other < Block.Count; other++) {
 				CalcCulling(block, (BlockID)other);
 				CalcCulling((BlockID)other, block);
-			}
-		}
-		
-		void CheckOpaque(int block) {
-			if (MinBB[block] != Vector3.Zero || MaxBB[block] != Vector3.One) {
-				if (Draw[block] == DrawType.Opaque) 
-					Draw[block] = DrawType.Transparent;
 			}
 		}
 		
@@ -96,11 +86,11 @@ namespace ClassicalSharp {
 			CollideType bType = Collide[block], oType = Collide[other];
 			bool canSkip = (bType == CollideType.Solid && oType == CollideType.Solid) 
 				|| bType != CollideType.Solid;
-			return canSkip && FaceOccluded(block, other, side);
+			return canSkip;
 		}
 		
 		void SetHidden(BlockID block, BlockID other, int side, bool value) {
-			value = IsHidden(block, other, side) && value;
+			value = IsHidden(block, other, side) && FaceOccluded(block, other, side) && value;
 			int bit = value ? 1 : 0;
 			hidden[block * Block.Count + other] &= (byte)~(1 << side);
 			hidden[block * Block.Count + other] |= (byte)(bit << side);
