@@ -416,6 +416,7 @@ namespace ClassicalSharp.Renderers {
 			builder.GetDrawInfo(info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
 			                    ref info.NormalParts, ref info.TranslucentParts, ref info.AllAir);
 			
+			info.PendingDelete = false;
 			if (info.NormalParts == null && info.TranslucentParts == null) {
 				info.Empty = true;
 			} else {
