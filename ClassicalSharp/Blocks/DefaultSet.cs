@@ -68,9 +68,7 @@ namespace ClassicalSharp.Blocks {
 
 			if (b == Block.Ice || b == Block.Water || b == Block.StillWater) 
 				return DrawType.Translucent;
-			if (b == Block.Glass || b == Block.Leaves || b == Block.Snow)
-				return DrawType.Transparent;
-			if (b == Block.Slab || b == Block.CobblestoneSlab)
+			if (b == Block.Glass || b == Block.Leaves)
 				return DrawType.Transparent;
 			
 			if (b >= Block.Dandelion && b <= Block.RedMushroom)
