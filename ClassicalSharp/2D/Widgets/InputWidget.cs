@@ -292,12 +292,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool HandlesKeyPress(char key) {
-			if (!game.HideGui) Append(key);
+			Append(key);
 			return true;
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
-			if (game.HideGui) return key < Key.F1 || key > Key.F35;
 			bool clipboardDown = ControlDown();
 			
 			if (key == Key.Left) LeftKey(clipboardDown);
