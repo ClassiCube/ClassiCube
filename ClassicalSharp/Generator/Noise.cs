@@ -6,13 +6,8 @@
 using System;
 
 namespace ClassicalSharp.Generator {
-	
-	public abstract class Noise {
-		
-		public abstract double Compute(double x, double y);
-	}
-	
-	public sealed class ImprovedNoise : Noise {
+
+	public sealed class ImprovedNoise {
 		
 		public ImprovedNoise(JavaRandom rnd) {
 			// shuffle randomly using fisher-yates		
@@ -27,7 +22,7 @@ namespace ClassicalSharp.Generator {
 				p[i + 256] = p[i];
 		}
 		
-		public override double Compute(double x, double y) {
+		public double Compute(double x, double y) {
 			int xFloor = x >= 0 ? (int)x : (int)x - 1;
 			int yFloor = y >= 0 ? (int)y : (int)y - 1;
 			int X = xFloor & 0xFF, Y = yFloor & 0xFF;
@@ -56,7 +51,7 @@ namespace ClassicalSharp.Generator {
 		byte[] p = new byte[512];
 	}
 	
-	public sealed class OctaveNoise : Noise {
+	public sealed class OctaveNoise {
 		
 		readonly ImprovedNoise[] baseNoise;
 		public OctaveNoise(int octaves, JavaRandom rnd) {
@@ -65,7 +60,7 @@ namespace ClassicalSharp.Generator {
 				baseNoise[i] = new ImprovedNoise(rnd);
 		}
 		
-		public override double Compute(double x, double y) {
+		public double Compute(double x, double y) {
 			double amplitude = 1, frequency = 1;
 			double sum = 0;
 			for (int i = 0; i < baseNoise.Length; i++) {
@@ -77,15 +72,15 @@ namespace ClassicalSharp.Generator {
 		}
 	}
 	
-	public sealed class CombinedNoise : Noise {
+	public sealed class CombinedNoise {
 		
-		readonly Noise noise1, noise2;
-		public CombinedNoise(Noise noise1, Noise noise2) {
+		readonly OctaveNoise noise1, noise2;
+		public CombinedNoise(OctaveNoise noise1, OctaveNoise noise2) {
 			this.noise1 = noise1;
 			this.noise2 = noise2;
 		}
 		
-		public override double Compute(double x, double y) {
+		public double Compute(double x, double y) {
 			double offset = noise2.Compute(x, y);
 			return noise1.Compute(x + offset, y);
 		}

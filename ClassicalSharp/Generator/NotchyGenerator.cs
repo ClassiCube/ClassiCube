@@ -29,7 +29,7 @@ namespace ClassicalSharp.Generator {
 			blocks = new BlockID[Width * Height * Length];
 			rnd = new JavaRandom(seed);
 			
-			CreateHeightmap();			
+			CreateHeightmap();
 			CreateStrata();
 			CarveCaves();
 			CarveOreVeins(0.9f, "coal ore", Block.CoalOre);
@@ -48,11 +48,11 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void CreateHeightmap() {
-			Noise n1 = new CombinedNoise(
+			CombinedNoise n1 = new CombinedNoise(
 				new OctaveNoise(8, rnd), new OctaveNoise(8, rnd));
-			Noise n2 = new CombinedNoise(
+			CombinedNoise n2 = new CombinedNoise(
 				new OctaveNoise(8, rnd), new OctaveNoise(8, rnd));
-			Noise n3 = new OctaveNoise(6, rnd);
+			OctaveNoise n3 = new OctaveNoise(6, rnd);
 			int index = 0;
 			short[] hMap = new short[Width * Length];
 			CurrentState = "Building heightmap";
@@ -73,7 +73,7 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void CreateStrata() {
-			Noise n = new OctaveNoise(8, rnd);
+			OctaveNoise n = new OctaveNoise(8, rnd);
 			CurrentState = "Creating strata";
 			
 			int hMapIndex = 0;
@@ -169,7 +169,7 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void FloodFillWaterBorders() {
-			int waterY = waterLevel - 1;			
+			int waterY = waterLevel - 1;
 			int index1 = (waterY * Length + 0) * Width + 0;
 			int index2 = (waterY * Length + (Length - 1)) * Width + 0;
 			CurrentState = "Flooding edge water";
@@ -216,7 +216,7 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		void CreateSurfaceLayer() {
-			Noise n1 = new OctaveNoise(8, rnd), n2 = new OctaveNoise(8, rnd);
+			OctaveNoise n1 = new OctaveNoise(8, rnd), n2 = new OctaveNoise(8, rnd);
 			CurrentState = "Creating surface";
 			// TODO: update heightmap
 			
@@ -224,17 +224,15 @@ namespace ClassicalSharp.Generator {
 			for (int z = 0; z < Length; z++) {
 				CurrentProgress = (float)z / Length;
 				for (int x = 0; x < Width; x++) {
-					bool sand = n1.Compute(x, z) > 8;
-					bool gravel = n2.Compute(x, z) > 12;
 					int y = heightmap[hMapIndex++];
 					if (y < 0 || y >= Height) continue;
 					
 					int index = (y * Length + z) * Width + x;
 					BlockID blockAbove = y >= (Height - 1) ? Block.Air : blocks[index + oneY];
-					if (blockAbove == Block.Water && gravel) {
+					if (blockAbove == Block.Water && (n2.Compute(x, z) > 12)) {
 						blocks[index] = Block.Gravel;
 					} else if (blockAbove == Block.Air) {
-						blocks[index] = (y <= waterLevel && sand) ? Block.Sand : Block.Grass;
+						blocks[index] = (y <= waterLevel && (n1.Compute(x, z) > 8)) ? Block.Sand : Block.Grass;
 					}
 				}
 			}
@@ -311,7 +309,7 @@ namespace ClassicalSharp.Generator {
 						treeX += rnd.Next(6) - rnd.Next(6);
 						treeZ += rnd.Next(6) - rnd.Next(6);
 						if (treeX < 0 || treeZ < 0 || treeX >= Width ||
-						   treeZ >= Length || rnd.NextFloat() >= 0.25)
+						    treeZ >= Length || rnd.NextFloat() >= 0.25)
 							continue;
 						
 						int treeY = heightmap[treeZ * Width + treeX] + 1;
