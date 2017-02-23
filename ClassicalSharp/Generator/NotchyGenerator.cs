@@ -76,7 +76,7 @@ namespace ClassicalSharp.Generator {
 			OctaveNoise n = new OctaveNoise(8, rnd);
 			CurrentState = "Creating strata";
 			
-			int hMapIndex = 0;
+			int hMapIndex = 0, maxY = Height - 1;
 			for (int z = 0; z < Length; z++) {
 				CurrentProgress = (float)z / Length;
 				for (int x = 0; x < Width; x++) {
@@ -88,13 +88,17 @@ namespace ClassicalSharp.Generator {
 					
 					blocks[mapIndex] = Block.Lava;
 					mapIndex += oneY;
-					for (int y = 1; y < Height; y++) {
-						BlockID block = 0;
-						if (y <= stoneHeight) block = Block.Stone;
-						else if (y <= dirtHeight) block = Block.Dirt;
-						
-						blocks[mapIndex] = block;
-						mapIndex += oneY;
+					
+					stoneHeight = Math.Min(stoneHeight, maxY);
+					dirtHeight  = Math.Min(dirtHeight,  maxY);
+					
+					for (int y = 1; y <= stoneHeight; y++) {
+						blocks[mapIndex] = Block.Stone; mapIndex += oneY;
+					}
+					
+					stoneHeight = Math.Max(stoneHeight, 0);
+					for (int y = stoneHeight + 1; y <= dirtHeight; y++) {
+						blocks[mapIndex] = Block.Dirt; mapIndex += oneY;
 					}
 				}
 			}
