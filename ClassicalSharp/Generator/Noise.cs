@@ -70,8 +70,8 @@ namespace ClassicalSharp.Generator {
 			double sum = 0;
 			for (int i = 0; i < baseNoise.Length; i++) {
 				sum += baseNoise[i].Compute(x * frequency, y * frequency) * amplitude;
-				amplitude *= 2;
-				frequency /= 2;
+				amplitude *= 2.0;
+				frequency *= 0.5;
 			}
 			return sum;
 		}

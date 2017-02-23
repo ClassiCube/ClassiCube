@@ -16,16 +16,14 @@ namespace ClassicalSharp {
 		
 		CuboidDrawer drawer = new CuboidDrawer();
 		
-		protected override int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
+		protected override int StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block) {
 			if (OccludedLiquid(chunkIndex)) return 0;
 			int count = 1;
 			x++;
 			chunkIndex++;
 			countIndex += Side.Sides;
-			int max = chunkSize - xx;
 			
-			while (count < max && x < width && CanStretch(block, chunkIndex, x, y, z, Side.Top)
-			       && !OccludedLiquid(chunkIndex)) {
+			while (x < chunkEndX && CanStretch(block, chunkIndex, x, y, z, Side.Top) && !OccludedLiquid(chunkIndex)) {
 				counts[countIndex] = 0;
 				count++;
 				x++;
@@ -35,15 +33,14 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		protected override int StretchX(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face) {
+		protected override int StretchX(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face) {
 			int count = 1;
 			x++;
 			chunkIndex++;
 			countIndex += Side.Sides;
-			int max = chunkSize - xx;
 			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
 			
-			while (count < max && x < width && stretchTile && CanStretch(block, chunkIndex, x, y, z, face)) {
+			while (x < chunkEndX && stretchTile && CanStretch(block, chunkIndex, x, y, z, face)) {
 				counts[countIndex] = 0;
 				count++;
 				x++;
@@ -53,15 +50,14 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		protected override int StretchZ(int zz, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face) {
+		protected override int StretchZ(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face) {
 			int count = 1;
 			z++;
 			chunkIndex += extChunkSize;
 			countIndex += chunkSize * Side.Sides;
-			int max = chunkSize - zz;
 			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
 			
-			while (count < max && z < length && stretchTile && CanStretch(block, chunkIndex, x, y, z, face)) {
+			while (z < chunkEndZ && stretchTile && CanStretch(block, chunkIndex, x, y, z, face)) {
 				counts[countIndex] = 0;
 				count++;
 				z++;
@@ -120,7 +116,7 @@ namespace ClassicalSharp {
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
-					X >= offset ? lighting.LightCol_XSide_Fast(X - offset, Y, Z) : lighting.OutsideXSide;
+					X >= offset ? light.LightCol_XSide_Fast(X - offset, Y, Z) : light.OutsideXSide;
 				drawer.Left(leftCount, col, texId, part.vertices, ref part.vIndex[Side.Left]);
 			}
 			
@@ -131,7 +127,7 @@ namespace ClassicalSharp {
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
-					X <= (maxX - offset) ? lighting.LightCol_XSide_Fast(X + offset, Y, Z) : lighting.OutsideXSide;
+					X <= (maxX - offset) ? light.LightCol_XSide_Fast(X + offset, Y, Z) : light.OutsideXSide;
 				drawer.Right(rightCount, col, texId, part.vertices, ref part.vIndex[Side.Right]);
 			}
 			
@@ -142,7 +138,7 @@ namespace ClassicalSharp {
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
-					Z >= offset ? lighting.LightCol_ZSide_Fast(X, Y, Z - offset) : lighting.OutsideZSide;
+					Z >= offset ? light.LightCol_ZSide_Fast(X, Y, Z - offset) : light.OutsideZSide;
 				drawer.Front(frontCount, col, texId, part.vertices, ref part.vIndex[Side.Front]);
 			}
 			
@@ -153,7 +149,7 @@ namespace ClassicalSharp {
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
-					Z <= (maxZ - offset) ? lighting.LightCol_ZSide_Fast(X, Y, Z + offset) : lighting.OutsideZSide;
+					Z <= (maxZ - offset) ? light.LightCol_ZSide_Fast(X, Y, Z + offset) : light.OutsideZSide;
 				drawer.Back(backCount, col, texId, part.vertices, ref part.vIndex[Side.Back]);
 			}
 			
@@ -163,7 +159,7 @@ namespace ClassicalSharp {
 				int offset = (lightFlags >> Side.Bottom) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-				int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YBottom_Fast(X, Y - offset, Z);
+				int col = fullBright ? FastColour.WhitePacked : light.LightCol_YBottom_Fast(X, Y - offset, Z);
 				drawer.Bottom(bottomCount, col, texId, part.vertices, ref part.vIndex[Side.Bottom]);
 			}
 			
@@ -173,7 +169,7 @@ namespace ClassicalSharp {
 				int offset = (lightFlags >> Side.Top) & 1;
 
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-				int col = fullBright ? FastColour.WhitePacked : lighting.LightCol_YTop_Fast(X, Y - offset, Z);
+				int col = fullBright ? FastColour.WhitePacked : light.LightCol_YTop_Fast(X, Y - offset, Z);
 				drawer.Top(topCount, col, texId, part.vertices, ref part.vIndex[Side.Top]);
 			}
 		}

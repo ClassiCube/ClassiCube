@@ -21,7 +21,7 @@ namespace ClassicalSharp {
 		protected BlockID curBlock;
 		protected BlockInfo info;
 		protected World map;
-		protected IWorldLighting lighting;
+		protected IWorldLighting light;
 		protected WorldEnv env;
 		protected Game game;
 		protected IGraphicsApi gfx;
@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected internal int width, length, height, sidesLevel, edgeLevel;
-		protected int maxX, maxY, maxZ;
+		protected int maxX, maxY, maxZ, chunkEndX, chunkEndZ;
 		protected int cIndex;
 		protected BlockID* chunk;
 		protected byte* counts;
@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 		protected bool useBitFlags;
 		
 		bool BuildChunk(int x1, int y1, int z1, ref bool allAir) {
-			lighting = game.Lighting;
+			light = game.Lighting;
 			PreStretchTiles(x1, y1, z1);
 			BlockID* chunkPtr = stackalloc BlockID[extChunkSize3]; chunk = chunkPtr;
 			byte* countsPtr = stackalloc byte[chunkSize3 * Side.Sides]; counts = countsPtr;
@@ -55,6 +55,8 @@ namespace ClassicalSharp {
 			if (ReadChunkData(x1, y1, z1, ref allAir)) return false;
 			MemUtils.memset((IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides);
 			
+			chunkEndX = Math.Min(x1 + chunkSize, width);
+			chunkEndZ = Math.Min(z1 + chunkSize, length);
 			Stretch(x1, y1, z1);
 			PostStretchTiles(x1, y1, z1);
 			
@@ -116,7 +118,7 @@ namespace ClassicalSharp {
 				   y1 + chunkSize >= height || z1 + chunkSize >= length) allSolid = false;
 				
 				if (allAir || allSolid) return true;				
-				lighting.LightHint(x1 - 1, z1 - 1, mapPtr);
+				light.LightHint(x1 - 1, z1 - 1, mapPtr);
 				return false;
 			}
 		}
@@ -218,7 +220,7 @@ namespace ClassicalSharp {
 						   (x != 0 && (hidden[tileIdx + chunk[cIndex - 1]] & (1 << Side.Left)) != 0)) {
 							counts[index] = 0;
 						} else {
-							int count = StretchZ(zz, index, X, Y, Z, cIndex, b, Side.Left);
+							int count = StretchZ(index, X, Y, Z, cIndex, b, Side.Left);
 							AddVertices(b, count, Side.Left); counts[index] = (byte)count;
 						}
 						
@@ -228,7 +230,7 @@ namespace ClassicalSharp {
 						   (x != maxX && (hidden[tileIdx + chunk[cIndex + 1]] & (1 << Side.Right)) != 0)) {
 							counts[index] = 0;
 						} else {
-							int count = StretchZ(zz, index, X, Y, Z, cIndex, b, Side.Right);
+							int count = StretchZ(index, X, Y, Z, cIndex, b, Side.Right);
 							AddVertices(b, count, Side.Right); counts[index] = (byte)count;
 						}
 						
@@ -238,7 +240,7 @@ namespace ClassicalSharp {
 						   (z != 0 && (hidden[tileIdx + chunk[cIndex - 18]] & (1 << Side.Front)) != 0)) {
 							counts[index] = 0;
 						} else {
-							int count = StretchX(xx, index, X, Y, Z, cIndex, b, Side.Front);
+							int count = StretchX(index, X, Y, Z, cIndex, b, Side.Front);
 							AddVertices(b, count, Side.Front); counts[index] = (byte)count;
 						}
 						
@@ -248,7 +250,7 @@ namespace ClassicalSharp {
 						   (z != maxZ && (hidden[tileIdx + chunk[cIndex + 18]] & (1 << Side.Back)) != 0)) {
 							counts[index] = 0;
 						} else {
-							int count = StretchX(xx, index, X, Y, Z, cIndex, b, Side.Back);
+							int count = StretchX(index, X, Y, Z, cIndex, b, Side.Back);
 							AddVertices(b, count, Side.Back); counts[index] = (byte)count;
 						}
 						
@@ -257,7 +259,7 @@ namespace ClassicalSharp {
 						   (hidden[tileIdx + chunk[cIndex - 324]] & (1 << Side.Bottom)) != 0) {
 							counts[index] = 0;
 						} else {
-							int count = StretchX(xx, index, X, Y, Z, cIndex, b, Side.Bottom);
+							int count = StretchX(index, X, Y, Z, cIndex, b, Side.Bottom);
 							AddVertices(b, count, Side.Bottom); counts[index] = (byte)count;
 						}
 						
@@ -266,10 +268,10 @@ namespace ClassicalSharp {
 						   (hidden[tileIdx + chunk[cIndex + 324]] & (1 << Side.Top)) != 0) {
 							counts[index] = 0;
 						} else if (b < Block.Water || b > Block.StillLava) {
-							int count = StretchX(xx, index, X, Y, Z, cIndex, b, Side.Top);
+							int count = StretchX(index, X, Y, Z, cIndex, b, Side.Top);
 							AddVertices(b, count, Side.Top); counts[index] = (byte)count;
 						} else {
-							int count = StretchXLiquid(xx, index, X, Y, Z, cIndex, b);
+							int count = StretchXLiquid(index, X, Y, Z, cIndex, b);
 							if (count > 0) AddVertices(b, count, Side.Top);
 							counts[index] = (byte)count;
 						}
@@ -278,11 +280,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected abstract int StretchXLiquid(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block);
+		protected abstract int StretchXLiquid(int countIndex, int x, int y, int z, int chunkIndex, BlockID block);
 		
-		protected abstract int StretchX(int xx, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face);
+		protected abstract int StretchX(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face);
 		
-		protected abstract int StretchZ(int zz, int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face);
+		protected abstract int StretchZ(int countIndex, int x, int y, int z, int chunkIndex, BlockID block, int face);
 		
 		protected static int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
 		
@@ -299,17 +301,17 @@ namespace ClassicalSharp {
 			int offset = (info.LightOffset[block] >> face) & 1;
 			switch (face) {
 				case Side.Left:
-					return x < offset || y > lighting.heightmap[(z * width) + (x - offset)];
+					return x < offset || y > light.heightmap[(z * width) + (x - offset)];
 				case Side.Right:
-					return x > (maxX - offset) || y > lighting.heightmap[(z * width) + (x + offset)];
+					return x > (maxX - offset) || y > light.heightmap[(z * width) + (x + offset)];
 				case Side.Front:
-					return z < offset || y > lighting.heightmap[((z - offset) * width) + x];
+					return z < offset || y > light.heightmap[((z - offset) * width) + x];
 				case Side.Back:
-					return z > (maxZ - offset) || y > lighting.heightmap[((z + offset) * width) + x];
+					return z > (maxZ - offset) || y > light.heightmap[((z + offset) * width) + x];
 				case Side.Bottom:
-					return y <= 0 || (y - 1 - offset) >= (lighting.heightmap[(z * width) + x]);
+					return y <= 0 || (y - 1 - offset) >= (light.heightmap[(z * width) + x]);
 				case Side.Top:
-					return y >= maxY || (y - offset) >= (lighting.heightmap[(z * width) + x]);
+					return y >= maxY || (y - offset) >= (light.heightmap[(z * width) + x]);
 			}
 			return true;
 		}
