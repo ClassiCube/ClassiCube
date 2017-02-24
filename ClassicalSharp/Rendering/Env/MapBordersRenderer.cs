@@ -175,6 +175,10 @@ namespace ClassicalSharp.Renderers {
 			
 			fullColSides = game.BlockInfo.FullBright[block];
 			int col = fullColSides ? FastColour.WhitePacked : map.Env.Shadow;
+			if (game.BlockInfo.Tinted[block]) {
+				col = Utils.Tint(col, game.BlockInfo.FogColour[block]);
+			}
+			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
 				DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 0, YOffset(block), ref v);
@@ -203,6 +207,10 @@ namespace ClassicalSharp.Renderers {
 			
 			fullColEdge = game.BlockInfo.FullBright[block];
 			int col = fullColEdge ? FastColour.WhitePacked : map.Env.Sun;
+			if (game.BlockInfo.Tinted[block]) {
+				col = Utils.Tint(col, game.BlockInfo.FogColour[block]);
+			}
+			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
 				DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col,

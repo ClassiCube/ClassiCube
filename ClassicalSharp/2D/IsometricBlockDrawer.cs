@@ -124,11 +124,8 @@ namespace ClassicalSharp {
 			v.Colour = colNormal;
 			
 			if (game.BlockInfo.Tinted[block]) {
-				FastColour fogCol = game.BlockInfo.FogColour[block];
-				FastColour newCol = FastColour.Unpack(v.Colour);
-				newCol *= fogCol;
-				v.Colour = newCol.Pack();
-			}
+				v.Colour = Utils.Tint(v.Colour, game.BlockInfo.FogColour[block]);
+			}			
 			
 			float x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
 			rec.U1 = firstPart ? 0.0f : 0.5f; rec.U2 = (firstPart ? 0.5f : 1.0f) * (15.99f/16f);
@@ -150,10 +147,7 @@ namespace ClassicalSharp {
 			v.Colour = colNormal;
 			
 			if (game.BlockInfo.Tinted[block]) {
-				FastColour fogCol = game.BlockInfo.FogColour[block];
-				FastColour newCol = FastColour.Unpack(v.Colour);
-				newCol *= fogCol;
-				v.Colour = newCol.Pack();
+				v.Colour = Utils.Tint(v.Colour, game.BlockInfo.FogColour[block]);
 			}
 			
 			float z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;

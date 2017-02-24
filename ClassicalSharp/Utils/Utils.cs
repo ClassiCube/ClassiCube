@@ -135,6 +135,12 @@ namespace ClassicalSharp {
 			return CeilDiv(axis1Len, axisSize) * CeilDiv(axis2Len, axisSize) * 4;
 		}
 		
+		public static int Tint(int col, FastColour tint) {
+			FastColour adjCol = FastColour.Unpack(col);
+			adjCol *= tint;
+			return adjCol.Pack();
+		}
+		
 		public static byte FastByte(string s) {
 			int sum = 0;
 			switch (s.Length) {

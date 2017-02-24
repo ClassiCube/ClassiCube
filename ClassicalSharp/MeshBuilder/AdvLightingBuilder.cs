@@ -146,10 +146,11 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z0];
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z1];
 			if (tinted) {
-				col0_0 = TintBlock(curBlock, col0_0);
-				col1_0 = TintBlock(curBlock, col1_0);
-				col1_1 = TintBlock(curBlock, col1_1);
-				col0_1 = TintBlock(curBlock, col0_1);
+				FastColour tint = info.FogColour[curBlock];
+				col0_0 = Utils.Tint(col0_0, tint);
+				col1_0 = Utils.Tint(col1_0, tint);
+				col1_1 = Utils.Tint(col1_1, tint);
+				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
 			if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
@@ -185,10 +186,11 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z0];
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z1];
 			if (tinted) {
-				col0_0 = TintBlock(curBlock, col0_0);
-				col1_0 = TintBlock(curBlock, col1_0);
-				col1_1 = TintBlock(curBlock, col1_1);
-				col0_1 = TintBlock(curBlock, col0_1);
+				FastColour tint = info.FogColour[curBlock];
+				col0_0 = Utils.Tint(col0_0, tint);
+				col1_0 = Utils.Tint(col1_0, tint);
+				col1_1 = Utils.Tint(col1_1, tint);
+				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
 			if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
@@ -224,10 +226,11 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y0], col1_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y0];
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y1], col0_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y1];
 			if (tinted) {
-				col0_0 = TintBlock(curBlock, col0_0);
-				col1_0 = TintBlock(curBlock, col1_0);
-				col1_1 = TintBlock(curBlock, col1_1);
-				col0_1 = TintBlock(curBlock, col0_1);
+				FastColour tint = info.FogColour[curBlock];
+				col0_0 = Utils.Tint(col0_0, tint);
+				col1_0 = Utils.Tint(col1_0, tint);
+				col1_1 = Utils.Tint(col1_1, tint);
+				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
 			if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
@@ -263,10 +266,11 @@ namespace ClassicalSharp {
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y1], col1_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y0];
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y0], col0_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y1];
 			if (tinted) {
-				col0_0 = TintBlock(curBlock, col0_0);
-				col1_0 = TintBlock(curBlock, col1_0);
-				col1_1 = TintBlock(curBlock, col1_1);
-				col0_1 = TintBlock(curBlock, col0_1);
+				FastColour tint = info.FogColour[curBlock];
+				col0_0 = Utils.Tint(col0_0, tint);
+				col1_0 = Utils.Tint(col1_0, tint);
+				col1_1 = Utils.Tint(col1_1, tint);
+				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
 			if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
@@ -302,10 +306,11 @@ namespace ClassicalSharp {
 			int col0_1 = fullBright ? FastColour.WhitePacked : lerpY[aX0_Z1], col1_1 = fullBright ? FastColour.WhitePacked : lerpY[aX1_Z1];
 			int col1_0 = fullBright ? FastColour.WhitePacked : lerpY[aX1_Z0], col0_0 = fullBright ? FastColour.WhitePacked : lerpY[aX0_Z0];
 			if (tinted) {
-				col0_0 = TintBlock(curBlock, col0_0);
-				col1_0 = TintBlock(curBlock, col1_0);
-				col1_1 = TintBlock(curBlock, col1_1);
-				col0_1 = TintBlock(curBlock, col0_1);
+				FastColour tint = info.FogColour[curBlock];
+				col0_0 = Utils.Tint(col0_0, tint);
+				col1_0 = Utils.Tint(col1_0, tint);
+				col1_1 = Utils.Tint(col1_1, tint);
+				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
 			if (aX0_Z1 + aX1_Z0 > aX0_Z0 + aX1_Z1) {
@@ -341,10 +346,11 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerp[aX0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerp[aX1_Z0];
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerp[aX1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerp[aX0_Z1];
 			if (tinted) {
-				col0_0 = TintBlock(curBlock, col0_0);
-				col1_0 = TintBlock(curBlock, col1_0);
-				col1_1 = TintBlock(curBlock, col1_1);
-				col0_1 = TintBlock(curBlock, col0_1);
+				FastColour tint = info.FogColour[curBlock];
+				col0_0 = Utils.Tint(col0_0, tint);
+				col1_0 = Utils.Tint(col1_0, tint);
+				col1_1 = Utils.Tint(col1_1, tint);
+				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
 			if (aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0) {
