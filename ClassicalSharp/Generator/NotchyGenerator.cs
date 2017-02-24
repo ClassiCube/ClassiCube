@@ -20,6 +20,7 @@ namespace ClassicalSharp.Generator {
 		BlockID[] blocks;
 		short[] heightmap;
 		JavaRandom rnd;
+		int minHeight;
 		
 		public override string GeneratorName { get { return "Vanilla classic"; } }
 		
@@ -28,6 +29,7 @@ namespace ClassicalSharp.Generator {
 			waterLevel = Height / 2;
 			blocks = new BlockID[Width * Height * Length];
 			rnd = new JavaRandom(seed);
+			minHeight = Height;
 			
 			CreateHeightmap();
 			CreateStrata();
@@ -66,7 +68,10 @@ namespace ClassicalSharp.Generator {
 					double height = n3.Compute(x, z) > 0 ? hLow : Math.Max(hLow, hHigh);
 					height *= 0.5;
 					if (height < 0) height *= 0.8f;
-					hMap[index++] = (short)(height + waterLevel);
+					
+					short adjHeight = (short)(height + waterLevel);
+					minHeight = adjHeight < minHeight ? adjHeight : minHeight;
+					hMap[index++] = adjHeight;
 				}
 			}
 			heightmap = hMap;
@@ -74,34 +79,55 @@ namespace ClassicalSharp.Generator {
 		
 		void CreateStrata() {
 			OctaveNoise n = new OctaveNoise(8, rnd);
-			CurrentState = "Creating strata";
-			
-			int hMapIndex = 0, maxY = Height - 1;
+			CurrentState = "Creating strata";			
+			int hMapIndex = 0, maxY = Height - 1, mapIndex = 0;
+			int minStoneY = CreateStrataFast();
+
 			for (int z = 0; z < Length; z++) {
 				CurrentProgress = (float)z / Length;
 				for (int x = 0; x < Width; x++) {
 					int dirtThickness = (int)(n.Compute(x, z) / 24 - 4);
 					int dirtHeight = heightmap[hMapIndex++];
-
-					int stoneHeight = dirtHeight + dirtThickness;
-					int mapIndex = z * Width + x;
-					
-					blocks[mapIndex] = Block.Lava;
-					mapIndex += oneY;
+					int stoneHeight = dirtHeight + dirtThickness;	
 					
 					stoneHeight = Math.Min(stoneHeight, maxY);
 					dirtHeight  = Math.Min(dirtHeight,  maxY);
 					
-					for (int y = 1; y <= stoneHeight; y++) {
+					mapIndex = minStoneY * oneY + z * Width + x;
+					for (int y = minStoneY; y <= stoneHeight; y++) {
 						blocks[mapIndex] = Block.Stone; mapIndex += oneY;
 					}
 					
 					stoneHeight = Math.Max(stoneHeight, 0);
+					mapIndex = (stoneHeight + 1) * oneY + z * Width + x;
 					for (int y = stoneHeight + 1; y <= dirtHeight; y++) {
 						blocks[mapIndex] = Block.Dirt; mapIndex += oneY;
 					}
 				}
 			}
+		}
+		
+		int CreateStrataFast() {
+			// Make lava layer at bottom
+			int mapIndex = 0;
+			for (int z = 0; z < Length; z++)
+				for (int x = 0; x < Width; x++)
+			{
+				blocks[mapIndex++] = Block.Lava;
+			}
+			
+			// Invariant: the lowest value dirtThickness can possible be is -14
+			int stoneHeight = minHeight - 14;
+			if (stoneHeight <= 0) return 1; // no layer is fully stone
+			
+			// We can quickly fill in bottom solid layers
+			for (int y = 1; y <= stoneHeight; y++)
+				for (int z = 0; z < Length; z++)
+					for (int x = 0; x < Width; x++)
+			{
+				blocks[mapIndex++] = Block.Stone;
+			}
+			return stoneHeight;
 		}
 		
 		void CarveCaves() {
