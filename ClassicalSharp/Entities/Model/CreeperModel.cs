@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Entities;
-using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Physics;
 using OpenTK;
 
@@ -10,7 +9,8 @@ namespace ClassicalSharp.Model {
 	public class CreeperModel : IModel {
 		
 		public CreeperModel(Game window) : base(window) { }
-		
+
+		/// <inheritdoc/>		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head =  BuildBox(MakeBoxBounds(-4, 18, -4, 4, 26, 4)
@@ -33,18 +33,23 @@ namespace ClassicalSharp.Model {
 			                        .RotOrigin(0, 6, 2));
 		}
 		
+		/// <inheritdoc/>		
 		public override float NameYOffset { get { return 1.7f; } }
-		
+
+		/// <inheritdoc/>		
 		public override float GetEyeY(Entity entity) { return 22/16f; }
-		
+
+		/// <inheritdoc/>		
 		public override Vector3 CollisionSize {
 			get { return new Vector3(8/16f, 26/16f, 8/16f); }
 		}
-		
+
+		/// <inheritdoc/>		
 		public override AABB PickingBounds {
 			get { return new AABB(-4/16f, 0, -6/16f, 4/16f, 26/16f, 6/16f); }
 		}
-		
+
+		/// <inheritdoc/>		
 		protected override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);

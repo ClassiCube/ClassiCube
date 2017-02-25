@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Entities;
-using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Physics;
 using OpenTK;
 
@@ -10,7 +9,8 @@ namespace ClassicalSharp.Model {
 	public class SpiderModel : IModel {
 		
 		public SpiderModel(Game window) : base(window) { }
-		
+
+		/// <inheritdoc/>		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 5];
 			Head = BuildBox(MakeBoxBounds(-4, 4, -11, 4, 12, -3)
@@ -27,21 +27,27 @@ namespace ClassicalSharp.Model {
 			                    .TexOrigin(18, 0)
 			                    .RotOrigin(3, 8, 0));
 		}
-		
+
+		/// <inheritdoc/>		
 		public override float NameYOffset { get { return 1.0125f; } }
-		
+
+		/// <inheritdoc/>		
 		public override float GetEyeY(Entity entity) { return 8/16f; }
 		
+		/// <inheritdoc/>		
 		public override Vector3 CollisionSize {
 			get { return new Vector3(15/16f, 12/16f, 15/16f); }
 		}
-		
+
+		/// <inheritdoc/>		
 		public override AABB PickingBounds {
 			get { return new AABB(-5/16f, 0, -11/16f, 5/16f, 12/16f, 15/16f); }
 		}
 		
 		const float quarterPi = (float)(Math.PI / 4);
 		const float eighthPi = (float)(Math.PI / 8);
+		
+		/// <inheritdoc/>
 		protected override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);

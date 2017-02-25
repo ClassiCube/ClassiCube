@@ -137,7 +137,7 @@ namespace ClassicalSharp {
 			
 			Inventory inv = game.Inventory;
 			bool hotbar = AltDown || ControlDown || ShiftDown;
-			if ((!hotbar && game.Camera.DoZoom(e.DeltaPrecise)) || DoFovZoom(e.DeltaPrecise) || !inv.CanChangeHeldBlock)
+			if ((!hotbar && game.Camera.Zoom(e.DeltaPrecise)) || DoFovZoom(e.DeltaPrecise) || !inv.CanChangeHeldBlock)
 				return;
 			ScrollHotbar(e.DeltaPrecise);
 		}

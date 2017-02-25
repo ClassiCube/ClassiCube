@@ -26,7 +26,8 @@ namespace ClassicalSharp.Model {
 		/// <remarks> e.g. for players when their legs are at the peak of their swing,
 		/// the whole model will be moved slightly down. </remarks>
 		public bool Bobbing = true;
-		
+
+		/// <summary> Whether this entity requires downloading of a skin texture. </summary>		
 		public bool UsesSkin = true;
 		
 		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
@@ -85,7 +86,8 @@ namespace ClassicalSharp.Model {
 			return Math.Min(Math.Abs(dist), Math.Min(dMin, dMax));
 		}
 		
-		/// <summary> Renders the model based on the given entity's position and orientation. </summary>
+		/// <summary> Sets up the state for, then renders an entity model, 
+		/// based on the given entity's position and orientation. </summary>
 		public void Render(Entity p) {
 			index = 0;
 			pos = p.Position;
@@ -113,8 +115,10 @@ namespace ClassicalSharp.Model {
 			game.Graphics.PopMatrix();
 		}
 		
+		/// <summary> Performs the actual rendering of an entity model. </summary>
 		protected abstract void DrawModel(Entity p);
 		
+		/// <summary> Sends the updated vertex data to the GPU. </summary>
 		protected void UpdateVB() {
 			ModelCache cache = game.ModelCache;
 			game.Graphics.UpdateDynamicIndexedVb(
@@ -122,6 +126,7 @@ namespace ClassicalSharp.Model {
 			index = 0;
 		}
 		
+		/// <summary> Disposes of any native resources tied to this entity model. </summary>
 		public virtual void Dispose() { }
 		
 		protected int col;

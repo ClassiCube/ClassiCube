@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Entities;
-using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Physics;
 using OpenTK;
 
@@ -10,7 +9,8 @@ namespace ClassicalSharp.Model {
 	public class PigModel : IModel {
 		
 		public PigModel(Game window) : base(window) { }
-		
+
+		/// <inheritdoc/>		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head = BuildBox(MakeBoxBounds(-4, 8, -14, 4, 16, -6)
@@ -32,18 +32,23 @@ namespace ClassicalSharp.Model {
 			                        .RotOrigin(0, 6, 7));
 		}
 		
+		/// <inheritdoc/>
 		public override float NameYOffset { get { return 1.075f; } }
-		
+
+		/// <inheritdoc/>
 		public override float GetEyeY(Entity entity) { return 12/16f; }
-		
+
+		/// <inheritdoc/>
 		public override Vector3 CollisionSize {
 			get { return new Vector3(14/16f, 14/16f, 14/16f); }
 		}
-		
+
+		/// <inheritdoc/>
 		public override AABB PickingBounds {
 			get { return new AABB(-5/16f, 0, -14/16f, 5/16f, 16/16f, 9/16f); }
 		}
-		
+
+		/// <inheritdoc/>
 		protected override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);

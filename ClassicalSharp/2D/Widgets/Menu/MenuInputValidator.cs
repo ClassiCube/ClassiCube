@@ -19,6 +19,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 	}
 	
+	/// <summary> Ensures that the input conforms to a hex colour code. </summary>
 	public sealed class HexColourValidator : MenuInputValidator {
 		
 		public HexColourValidator() {
@@ -39,7 +40,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			return FastColour.TryParse(s, out col);
 		}
 	}
-	
+
+	/// <summary> Ensures that the input conforms to a whole number integer. </summary>	
 	public class IntegerValidator : MenuInputValidator {
 		
 		int min, max;
@@ -59,7 +61,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override bool IsValidString(string s) {
 			int value;
-			if (s.Length == 1 && s[0] == '-') return true;
+			if (s.Length == 1 && s[0] == '-') return true; // input is just a minus sign
 			return Int32.TryParse(s, out value);
 		}
 		

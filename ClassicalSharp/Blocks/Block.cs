@@ -11,7 +11,8 @@ namespace ClassicalSharp {
 	
 	/// <summary> Enumeration of all blocks in Minecraft Classic, including CPE ones. </summary>
 	public static class Block {
-		
+
+#pragma warning	disable 1591
 		public const BlockID Air = 0;
 		public const BlockID Stone = 1;
 		public const BlockID Grass = 2;
@@ -79,17 +80,24 @@ namespace ClassicalSharp {
 		public const BlockID Pillar = 63;
 		public const BlockID Crate = 64;
 		public const BlockID StoneBrick = 65;
+#pragma warning restore 1591
 		
-		
-		public const string Names = "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava" +
+		internal const string Names = "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava" +
 			" StillLava Sand Gravel GoldOre IronOre CoalOre Log Leaves Sponge Glass Red Orange Yellow Lime Green" +
 			" Teal Aqua Cyan Blue Indigo Violet Magenta Pink Black Gray White Dandelion Rose BrownMushroom RedMushroom" +
 			" Gold Iron DoubleSlab Slab Brick TNT Bookshelf MossyRocks Obsidian CobblestoneSlab Rope Sandstone" +
 			" Snow Fire LightPink ForestGreen Brown DeepBlue Turquoise Ice CeramicTile Magma Pillar Crate StoneBrick";		
-				
+		
+		/// <summary> Max block ID used in original classic. </summary>
 		public const BlockID MaxOriginalBlock = Block.Obsidian;
+		
+		/// <summary> Number of blocks in original classic. </summary>
 		public const int OriginalCount = MaxOriginalBlock + 1;
+		
+		/// <summary> Max block ID used in original classic plus CPE blocks. </summary>
 		public const BlockID MaxCpeBlock = Block.StoneBrick;
+
+		/// <summary> Number of blocks in original classic plus CPE blocks. </summary>		
 		public const int CpeCount = MaxCpeBlock + 1;
 		
 		#if USE16_BIT

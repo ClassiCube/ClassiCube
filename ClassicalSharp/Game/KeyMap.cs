@@ -4,21 +4,27 @@ using OpenTK.Input;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Enumeration of all custom key bindings. </summary>
 	public enum KeyBind {
+#pragma warning disable 1591
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, Chat,
 		Inventory, ToggleFog, SendChat, PauseOrExit, PlayerList,
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtInput, HideFps,
 		Screenshot, Fullscreen, ThirdPerson, HideGui, AxisLines,
 		ZoomScrolling, HalfSpeed, MouseLeft, MouseMiddle, MouseRight, Autorotate,
+#pragma warning restore 1591
 	}
 	
+	/// <summary> Maps a key binding to its actual key on the keyboard. </summary>
 	public class KeyMap {
 		
+		/// <summary> Gets the actual key on the keyboard that maps to the given key binding. </summary>
 		public Key this[KeyBind key] {
 			get { return keys[(int)key]; }
 			set { keys[(int)key] = value; SaveKeyBindings(); }
 		}
 		
+		/// <summary> Gets the default key on the keyboard that maps to the given key binding. </summary>
 		public Key GetDefault(KeyBind key) {
 			return defaultKeys[(int)key];
 		}
@@ -45,6 +51,7 @@ namespace ClassicalSharp {
 				defaultKeys[i] = keys[i];
 			LoadKeyBindings();
 		}
+		
 		
 		void LoadKeyBindings() {
 			string[] names = KeyBind.GetNames(typeof(KeyBind));

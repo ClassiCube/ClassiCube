@@ -3,7 +3,6 @@ using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Physics;
-using ClassicalSharp.Renderers;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
@@ -17,6 +16,7 @@ namespace ClassicalSharp.Model {
 			furIndex = game.ModelCache.GetTextureIndex("sheep_fur.png");
 		}
 		
+		/// <inheritdoc/>
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6 * 2];
 			MakeBaseModel();
@@ -41,8 +41,7 @@ namespace ClassicalSharp.Model {
 			RightLegBack = BuildBox(MakeBoxBounds(1, 0, 5, 5, 12, 9)
 			                        .TexOrigin(0, 16)
 			                        .RotOrigin(0, 12, 7));
-		}
-		
+		}		
 		
 		void MakeFurModel() {
 			FurHead = BuildBox(MakeBoxBounds(-3, -3, -3, 3, 3, 3)
@@ -65,18 +64,24 @@ namespace ClassicalSharp.Model {
 			                           .RotOrigin(0, 12, 7));
 		}
 		
-		public override float NameYOffset { get { return Fur ? 1.48125f: 1.075f; } }
 		
+		/// <inheritdoc/>		
+		public override float NameYOffset { get { return Fur ? 1.48125f: 1.075f; } }
+
+		/// <inheritdoc/>		
 		public override float GetEyeY(Entity entity) { return 20/16f; }
 		
+		/// <inheritdoc/>		
 		public override Vector3 CollisionSize {
 			get { return new Vector3(10/16f, 20/16f, 10/16f); }
 		}
 		
+		/// <inheritdoc/>		
 		public override AABB PickingBounds {
 			get { return new AABB(-6/16f, 0, -13/16f, 6/16f, 23/16f, 10/16f); }
 		}
 		
+		/// <inheritdoc/>		
 		protected override void DrawModel(Entity p) {
 			IGraphicsApi gfx = game.Graphics;
 			gfx.BindTexture(GetTexture(p.MobTextureId));

@@ -12,8 +12,10 @@ namespace ClassicalSharp {
 		protected internal Matrix4 tiltM;
 		internal float bobbingVer, bobbingHor;
 		
+		/// <summary> Calculates the projection matrix for this camera. </summary>
 		public abstract Matrix4 GetProjection();
 		
+		/// <summary> Calculates the world/view matrix for this camera. </summary>
 		public abstract Matrix4 GetView();
 		
 		/// <summary> Calculates the location of the camera's position in the world. </summary>
@@ -23,18 +25,29 @@ namespace ClassicalSharp {
 		public abstract Vector2 GetCameraOrientation();
 		
 		/// <summary> Whether this camera is using a third person perspective. </summary>
-		/// <remarks> This causes the local player to be renderered if true. </remarks>
-		public abstract bool IsThirdPerson { get; }		
+		/// <remarks> Causes the player's own entity model to be renderered if true. </remarks>
+		public abstract bool IsThirdPerson { get; }
 		
-		public virtual bool DoZoom(float deltaPrecise) { return false; }
+		/// <summary> Attempts to zoom the camera's position closer to or further from its origin point. </summary>
+		/// <returns> true if this camera handled zooming </returns>
+		/// <example> Third person cameras override this method to zoom in or out, and hence return true.
+		/// The first person camera does not perform zomming, so returns false. </example>
+		public virtual bool Zoom(float amount) { return false; }
 		
+		/// <summary> Called every frame for the camera to update its state. </summary>
+		/// <example> The perspective cameras gets delta between mouse cursor's current position and the centre of the window,
+		/// then uses this to adjust the player's horizontal and vertical rotation.	</example>
 		public abstract void UpdateMouse();
 		
+		/// <summary> Called after the camera has regrabbed the mouse from 2D input handling. </summary>
+		/// <example> The perspective cameras set the mouse cursor to the centre of the window. </example>
 		public abstract void RegrabMouse();
 		
-		/// <summary> Calculates the picked block based on the camera's current position. </summary>
+		/// <summary> Calculates the picked block based on the camera's current state. </summary>
 		public virtual void GetPickedBlock(PickedPos pos) { }
 		
+		/// <summary> Adjusts the head X rotation of the player to avoid looking straight up or down. </summary>
+		/// <remarks> Looking straight up or down (parallel to camera up vector) can otherwise cause rendering issues. </remarks>
 		protected float AdjustHeadX(float value) {
 			if (value >= 90.0f && value <= 90.1f) return 90.1f * Utils.Deg2Rad;
 			if (value >= 89.9f && value <= 90.0f) return 89.9f * Utils.Deg2Rad;
@@ -137,8 +150,8 @@ namespace ClassicalSharp {
 		
 		bool forward;
 		float dist = 3;
-		public override bool DoZoom(float deltaPrecise) {
-			dist = Math.Max(dist - deltaPrecise, 2);
+		public override bool Zoom(float amount) {
+			dist = Math.Max(dist - amount, 2);
 			return true;
 		}
 		
@@ -153,7 +166,7 @@ namespace ClassicalSharp {
 		public override Vector2 GetCameraOrientation() {
 			if (!forward)
 				return new Vector2(player.HeadYRadians, player.HeadXRadians);
-			return new Vector2(player.HeadYRadians + (float)Math.PI, -player.HeadXRadians);			
+			return new Vector2(player.HeadYRadians + (float)Math.PI, -player.HeadXRadians);
 		}
 		
 		public override Vector3 GetCameraPos(float t) {
