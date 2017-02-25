@@ -125,6 +125,7 @@ namespace ClassicalSharp {
 			Name[id] = DefaultName(id);
 			Tinted[id] = false;
 			
+			Draw[id] = DefaultSet.Draw(id);
 			if (Draw[id] == DrawType.Sprite) {
 				MinBB[id] = new Vector3(2.50f/16f, 0, 2.50f/16f);
 				MaxBB[id] = new Vector3(13.5f/16f, 1, 13.5f/16f);
@@ -134,7 +135,7 @@ namespace ClassicalSharp {
 				MaxBB[id].Y = DefaultSet.Height(id);
 			}
 			
-			SetBlockDraw(id, DefaultSet.Draw(id));
+			SetBlockDraw(id, Draw[id]);
 			CalcRenderBounds(id);
 			
 			LightOffset[id] = CalcLightOffset(id);
