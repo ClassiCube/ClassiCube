@@ -53,8 +53,6 @@ namespace ClassicalSharp.Mode {
 		
 		
 		public void OnNewMapLoaded(Game game) {
-			if (game.Server.IsSinglePlayer)
-				game.Chat.Add("&ePlaying single player", MessageType.Status1);
 		}
 
 		public void Init(Game game) {
