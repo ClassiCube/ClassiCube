@@ -297,25 +297,6 @@ namespace ClassicalSharp {
 				&& info.Draw[chunk[chunkIndex + 324 + 18]] != DrawType.Gas;
 		}
 		
-		protected bool IsLit(int x, int y, int z, int face, BlockID block) {
-			int offset = (info.LightOffset[block] >> face) & 1;
-			switch (face) {
-				case Side.Left:
-					return x < offset || y > light.heightmap[(z * width) + (x - offset)];
-				case Side.Right:
-					return x > (maxX - offset) || y > light.heightmap[(z * width) + (x + offset)];
-				case Side.Front:
-					return z < offset || y > light.heightmap[((z - offset) * width) + x];
-				case Side.Back:
-					return z > (maxZ - offset) || y > light.heightmap[((z + offset) * width) + x];
-				case Side.Bottom:
-					return y <= 0 || (y - 1 - offset) >= (light.heightmap[(z * width) + x]);
-				case Side.Top:
-					return y >= maxY || (y - offset) >= (light.heightmap[(z * width) + x]);
-			}
-			return true;
-		}
-		
 		public void OnNewMapLoaded() {
 			map = game.World;
 			env = game.World.Env;

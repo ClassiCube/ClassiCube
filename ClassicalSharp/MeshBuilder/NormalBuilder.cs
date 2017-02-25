@@ -67,11 +67,30 @@ namespace ClassicalSharp {
 			return count;
 		}
 		
-		bool CanStretch(BlockID initialBlock, int chunkIndex, int x, int y, int z, int face) {
-			BlockID rawBlock = chunk[chunkIndex];
-			return rawBlock == initialBlock
-				&& !info.IsFaceHidden(rawBlock, chunk[chunkIndex + offsets[face]], face)
-				&& (fullBright || IsLit(X, Y, Z, face, initialBlock) == IsLit(x, y, z, face, rawBlock));
+		bool CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, int face) {
+			BlockID cur = chunk[chunkIndex];
+			return cur == initial
+				&& !info.IsFaceHidden(cur, chunk[chunkIndex + offsets[face]], face)
+				&& (fullBright || (LightCol(X, Y, Z, face, initial) == LightCol(x, y, z, face, cur)));
+		}
+		
+		int LightCol(int x, int y, int z, int face, BlockID block) {
+			int offset = (info.LightOffset[block] >> face) & 1;
+			switch (face) {
+				case Side.Left:
+					return x < offset         ? light.OutsideXSide    : light.LightCol_XSide_Fast(x, y, z);
+				case Side.Right:
+					return x > (maxX - offset) ? light.OutsideXSide   : light.LightCol_XSide_Fast(x, y, z);
+				case Side.Front:
+					return z < offset          ? light.OutsideZSide   : light.LightCol_ZSide_Fast(x, y, z);
+				case Side.Back:
+					return z > (maxZ - offset) ? light.OutsideZSide   : light.LightCol_ZSide_Fast(x, y, z);
+				case Side.Bottom:
+					return y <= 0              ? light.OutsideYBottom : light.LightCol_YBottom_Fast(x, y, z);
+				case Side.Top:
+					return y >= maxY           ? light.Outside        : light.LightCol_YTop_Fast(x, y, z);
+			}
+			return 0;
 		}
 		
 		protected override void PreStretchTiles(int x1, int y1, int z1) {

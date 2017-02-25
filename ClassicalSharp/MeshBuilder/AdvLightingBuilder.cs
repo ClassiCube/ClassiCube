@@ -417,7 +417,8 @@ namespace ClassicalSharp {
 		
 		int Lit(int x, int y, int z, int cIndex) {
 			if (x < 0 || y < 0 || z < 0
-			    || x >= width || y >= height || z >= length) return 7;
+			    || x >= width || y >= height || z >= length) return 7; // all faces lit
+			
 			int flags = 0;
 			BlockID block = chunk[cIndex];
 			int lightHeight = light.heightmap[(z * width) + x];
@@ -426,8 +427,10 @@ namespace ClassicalSharp {
 			// Use fact Light(Y.Bottom) == Light((Y - 1).Top)
 			int offset = (lightFlags >> Side.Bottom) & 1;
 			flags |= ((y - offset) > lightHeight ? 1 : 0);
+			
 			// Light is same for all the horizontal faces
 			flags |= (y > lightHeight ? 2 : 0);
+			
 			// Use fact Light((Y + 1).Bottom) == Light(Y.Top)
 			offset = (lightFlags >> Side.Top) & 1;
 			flags |= ((y - offset) >= lightHeight ? 4 : 0);
