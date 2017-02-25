@@ -18,11 +18,10 @@ namespace ClassicalSharp.Entities {
 		
 		AABB modelAABB;
 		
-		/// <summary> Returns the bounding box that contains the model, assuming it is not rotated. </summary>
+		/// <summary> Returns the bounding box that contains the model, without any rotations applied. </summary>
 		public AABB PickingBounds { get { return modelAABB.Offset(Position); } }
 		
-		/// <summary> Bounding box of the model that collision detection
-		/// is performed with, in world coordinates.  </summary>
+		/// <summary> Bounding box of the model that collision detection is performed with, in world coordinates. </summary>
 		public AABB Bounds { get { return AABB.Make(Position, Size); } }
 		
 		/// <summary> Determines whether any of the blocks that intersect the

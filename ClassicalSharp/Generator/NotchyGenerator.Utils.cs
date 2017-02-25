@@ -51,6 +51,7 @@ namespace ClassicalSharp.Generator {
 				int x = index % Width;
 				int y = index / oneY;
 				int z = (index / Width) % Length;
+				
 				if (x > 0) stack.Push(index - 1);
 				if (x < Width - 1) stack.Push(index + 1);
 				if (z > 0) stack.Push(index - Width);

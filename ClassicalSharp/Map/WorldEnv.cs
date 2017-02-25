@@ -12,7 +12,7 @@ namespace ClassicalSharp.Map {
 
 	public enum Weather { Sunny, Rainy, Snowy, }
 	
-	/// <summary> Contains  the environment metadata for a world. </summary>
+	/// <summary> Contains the environment metadata for a world. </summary>
 	public sealed class WorldEnv {
 		
 		/// <summary> Colour of the sky located behind/above clouds. </summary>

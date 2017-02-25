@@ -81,6 +81,7 @@ namespace ClassicalSharp.Generator {
 			OctaveNoise n = new OctaveNoise(8, rnd);
 			CurrentState = "Creating strata";			
 			int hMapIndex = 0, maxY = Height - 1, mapIndex = 0;
+			// Try to bulk fill bottom of the map if possible
 			int minStoneY = CreateStrataFast();
 
 			for (int z = 0; z < Length; z++) {

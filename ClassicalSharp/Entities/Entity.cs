@@ -21,9 +21,15 @@ namespace ClassicalSharp.Entities {
 			anim = new AnimatedComponent(game, this);
 		}
 		
+		/// <summary> The model of this entity. (used for collision detection and rendering) </summary>
 		public IModel Model;
+		
+		/// <summary> The name of the model of this entity. </summary>
 		public string ModelName;
+		
+		/// <summary> Scale applied to the model for collision detection and rendering. </summary>
 		public float ModelScale = 1;
+		
 		public byte ID;
 		public int TextureId = -1, MobTextureId = -1;
 		public short Health = 20;
@@ -113,6 +119,8 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		
+		/// <summary> Sets the model associated with this entity. </summary>
+		/// <param name="model"> Can be either 'name' or 'name'|'scale'. </param>
 		public void SetModel(string model) {
 			ModelScale = 1;
 			int sep = model.IndexOf('|');

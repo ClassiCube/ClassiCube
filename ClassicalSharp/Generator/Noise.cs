@@ -31,6 +31,10 @@ namespace ClassicalSharp.Generator {
 			double u = x * x * x * (x * (x * 6 - 15) + 10); // Fade(x)
 			double v = y * y * y * (y * (y * 6 - 15) + 10); // Fade(y)
 			int A = p[X] + Y, B = p[X + 1] + Y;
+			
+			// Normally, calculating Grad involves a function call. However, we can directly pack this table
+			// (since each value indicates either -1, 0 1) into a set of bit flags. This way we avoid needing 
+			// to call another function that performs branching
 			const int xFlags = 0x46552222, yFlags = 0x2222550A;
 			
 			int hash = (p[p[A]] & 0xF) << 1; 
