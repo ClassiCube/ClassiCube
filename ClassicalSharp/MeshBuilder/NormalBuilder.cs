@@ -78,17 +78,17 @@ namespace ClassicalSharp {
 			int offset = (info.LightOffset[block] >> face) & 1;
 			switch (face) {
 				case Side.Left:
-					return x < offset         ? light.OutsideXSide    : light.LightCol_XSide_Fast(x, y, z);
+					return x < offset          ? light.OutsideXSide    : light.LightCol_XSide_Fast(x - offset, y, z);
 				case Side.Right:
-					return x > (maxX - offset) ? light.OutsideXSide   : light.LightCol_XSide_Fast(x, y, z);
+					return x > (maxX - offset) ? light.OutsideXSide   : light.LightCol_XSide_Fast(x + offset, y, z);
 				case Side.Front:
-					return z < offset          ? light.OutsideZSide   : light.LightCol_ZSide_Fast(x, y, z);
+					return z < offset          ? light.OutsideZSide   : light.LightCol_ZSide_Fast(x, y, z - offset);
 				case Side.Back:
-					return z > (maxZ - offset) ? light.OutsideZSide   : light.LightCol_ZSide_Fast(x, y, z);
+					return z > (maxZ - offset) ? light.OutsideZSide   : light.LightCol_ZSide_Fast(x, y, z + offset);
 				case Side.Bottom:
-					return y <= 0              ? light.OutsideYBottom : light.LightCol_YBottom_Fast(x, y, z);
+					return y <= 0              ? light.OutsideYBottom : light.LightCol_YBottom_Fast(x, y - offset, z);
 				case Side.Top:
-					return y >= maxY           ? light.Outside        : light.LightCol_YTop_Fast(x, y, z);
+					return y >= maxY           ? light.Outside        : light.LightCol_YTop_Fast(x, y - offset, z);
 			}
 			return 0;
 		}
