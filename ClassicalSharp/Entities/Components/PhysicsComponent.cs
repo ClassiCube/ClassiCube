@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Physics;
 using OpenTK;
+using System.Timers;
 
 #if USE16_BIT
 using BlockID = System.UInt16;
@@ -20,6 +21,7 @@ namespace ClassicalSharp.Entities {
 		Entity entity;
 		Game game;
 		BlockInfo info;
+		internal int counter;
 		
 		internal float jumpVel = 0.42f, userJumpVel = 0.42f, serverJumpVel = 0.42f;
 		internal HacksComponent hacks;
@@ -30,6 +32,10 @@ namespace ClassicalSharp.Entities {
 			this.entity = entity;
 			info = game.BlockInfo;
 		}
+		
+		bool isWaterJumpActive = false;
+		bool timerDefined = false;
+		System.Timers.Timer t = new System.Timers.Timer();
 		
 		public void UpdateVelocityState() {
 			if (hacks.Flying || hacks.Noclip) {
@@ -61,7 +67,7 @@ namespace ClassicalSharp.Entities {
 				bounds.Max.Y = Math.Max(bodyY, headY);
 				bool liquidRest = entity.TouchesAny(bounds, StandardLiquid);
 				
-				bool pastJumpPoint = liquidFeet && !liquidRest && (entity.Position.Y % 1 >= 0.4);
+				bool pastJumpPoint = liquidFeet && !liquidRest && (entity.Position.Y % 1 >= 0.5);
 				if (!pastJumpPoint) {
 					canLiquidJump = true;
 					entity.Velocity.Y += 0.04f;
@@ -69,10 +75,18 @@ namespace ClassicalSharp.Entities {
 					if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.02f;
 				} else if (pastJumpPoint) {
 					// either A) jump bob in water B) climb up solid on side
-					if (collisions.HorizontalCollision)
-						entity.Velocity.Y += touchLava ? 0.30f : 0.13f;
-					else if (canLiquidJump)
-						entity.Velocity.Y += touchLava ? 0.20f : 0.10f;
+					if (collisions.HorizontalCollision) {
+						entity.Velocity.Y = 0.30f;
+					}
+					else if (canLiquidJump) {
+						if (!timerDefined && !isWaterJumpActive) {
+							t.Interval = 1;
+							t.Elapsed += LiquidJump;
+							timerDefined = true;
+						}
+						
+						if (!isWaterJumpActive) t.Start();
+					}
 					canLiquidJump = false;
 				}
 			} else if (useLiquidGravity) {
@@ -85,6 +99,29 @@ namespace ClassicalSharp.Entities {
 				canLiquidJump = false;
 			} else if (entity.onGround) {
 				DoNormalJump();
+			}
+		}
+		
+		public void LiquidJump(object sender, ElapsedEventArgs e) {
+			timerDefined = true;
+			isWaterJumpActive = true;
+			bool touchLava = entity.TouchesAnyLava();
+			int counterlimit = touchLava ? 6 : 10;
+			
+			entity.Velocity.Y -= touchLava ? 0.030f : 0.025f;
+			counter += 1;
+			
+			if (counter >= counterlimit) {
+				entity.Velocity.Y += touchLava ? 0f : 0.015f;
+				t.Stop();
+				isWaterJumpActive = false;
+				counter = 0;
+			} else if (counter == counterlimit - 1) {
+				entity.Velocity.Y += touchLava ? 0f : 0.015f;
+			} else if (counter == 1) {
+				entity.Velocity.Y += touchLava ? 0f : 0.020f;
+			} else if (counter == 2) {
+				entity.Velocity.Y += touchLava ? 0f : 0.015f;
 			}
 		}
 		
