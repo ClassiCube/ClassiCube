@@ -1,8 +1,7 @@
-﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Physics;
 using OpenTK;
-using System.Timers;
 
 #if USE16_BIT
 using BlockID = System.UInt16;
@@ -31,11 +30,10 @@ namespace ClassicalSharp.Entities {
 			this.game = game;
 			this.entity = entity;
 			info = game.BlockInfo;
+			game.AddScheduledTask(1.0 / 100, LiquidJump);
 		}
 		
-		bool isWaterJumpActive = false;
-		bool timerDefined = false;
-		System.Timers.Timer t = new System.Timers.Timer();
+		bool isLiquidJumpActive = false;
 		
 		public void UpdateVelocityState() {
 			if (hacks.Flying || hacks.Noclip) {
@@ -79,13 +77,9 @@ namespace ClassicalSharp.Entities {
 						entity.Velocity.Y = 0.30f;
 					}
 					else if (canLiquidJump) {
-						if (!timerDefined && !isWaterJumpActive) {
-							t.Interval = 1;
-							t.Elapsed += LiquidJump;
-							timerDefined = true;
+						if (!isLiquidJumpActive) {
+							isLiquidJumpActive = true;
 						}
-						
-						if (!isWaterJumpActive) t.Start();
 					}
 					canLiquidJump = false;
 				}
@@ -102,26 +96,25 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
-		public void LiquidJump(object sender, ElapsedEventArgs e) {
-			timerDefined = true;
-			isWaterJumpActive = true;
-			bool touchLava = entity.TouchesAnyLava();
-			int counterlimit = touchLava ? 6 : 10;
-			
-			entity.Velocity.Y -= touchLava ? 0.030f : 0.025f;
-			counter += 1;
-			
-			if (counter >= counterlimit) {
-				entity.Velocity.Y += touchLava ? 0f : 0.015f;
-				t.Stop();
-				isWaterJumpActive = false;
-				counter = 0;
-			} else if (counter == counterlimit - 1) {
-				entity.Velocity.Y += touchLava ? 0f : 0.015f;
-			} else if (counter == 1) {
-				entity.Velocity.Y += touchLava ? 0f : 0.020f;
-			} else if (counter == 2) {
-				entity.Velocity.Y += touchLava ? 0f : 0.015f;
+		public void LiquidJump(ScheduledTask task) {
+			if (isLiquidJumpActive == true) {
+				bool touchLava = entity.TouchesAnyLava();
+				int counterlimit = touchLava ? 6 : 10;
+				
+				entity.Velocity.Y -= touchLava ? 0.030f : 0.025f;
+				counter += 1;
+				
+				if (counter >= counterlimit) {
+					entity.Velocity.Y += touchLava ? 0f : 0.015f;
+					isLiquidJumpActive = false;
+					counter = 0;
+				} else if (counter == counterlimit - 1) {
+					entity.Velocity.Y += touchLava ? 0f : 0.015f;
+				} else if (counter == 1) {
+					entity.Velocity.Y += touchLava ? 0f : 0.020f;
+				} else if (counter == 2) {
+					entity.Velocity.Y += touchLava ? 0f : 0.015f;
+				}
 			}
 		}
 		
