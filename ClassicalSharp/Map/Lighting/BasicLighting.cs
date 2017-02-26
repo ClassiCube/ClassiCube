@@ -126,9 +126,14 @@ namespace ClassicalSharp.Map {
 		public override void UpdateLight(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 			bool didBlock = info.BlocksLight[oldBlock];
 			bool nowBlocks = info.BlocksLight[newBlock];
-			if (didBlock == nowBlocks) return;
 			int oldOffset = (info.LightOffset[oldBlock] >> Side.Top) & 1;
 			int newOffset = (info.LightOffset[newBlock] >> Side.Top) & 1;
+			
+			// Two cases we need to handle here:
+			if (didBlock == nowBlocks) {
+				if (!didBlock) return;              // a) both old and new block do not block light			
+				if (oldOffset == newOffset) return; // b) both blocks blocked light at the same Y coordinate
+			}
 			
 			int index = (z * width) + x;
 			int lightH = heightmap[index];
