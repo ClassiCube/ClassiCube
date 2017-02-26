@@ -30,7 +30,6 @@ namespace ClassicalSharp.Entities {
 			this.game = game;
 			this.entity = entity;
 			info = game.BlockInfo;
-			game.AddScheduledTask(1.0 / 100, LiquidJump);
 		}
 		
 		bool isLiquidJumpActive = false;
@@ -45,6 +44,27 @@ namespace ClassicalSharp.Entities {
 				if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.06f * dir;
 			} else if (jumping && entity.TouchesAnyRope() && entity.Velocity.Y > 0.02f) {
 				entity.Velocity.Y = 0.02f;
+			}
+			
+			if (isLiquidJumpActive) {
+				bool touch_Lava = entity.TouchesAnyLava();
+				int counterLimit = touch_Lava ? 2 : 5;
+				counter += 1;
+				// TODO: smoother lava bobbing
+				
+				if (counter >= counterLimit) {
+					entity.Velocity.Y -= touch_Lava ? 0.20f : -0.020f;
+					isLiquidJumpActive = false;
+					counter = 0;
+				} else if (counter == 1) {
+					entity.Velocity.Y -= touch_Lava ? 0.25f : 0.080f;
+				} else if (counter == 2) {
+					entity.Velocity.Y -= touch_Lava ? 00f : 0.070f;
+				} else if (counter == 3) {
+					entity.Velocity.Y -= touch_Lava ? 00f : 0.040f;
+				} else if (counter == 4) {
+					entity.Velocity.Y -= touch_Lava ? 00f : 0.020f;
+				}
 			}
 			
 			if (!jumping) {
@@ -77,7 +97,8 @@ namespace ClassicalSharp.Entities {
 						entity.Velocity.Y = 0.30f;
 					}
 					else if (canLiquidJump) {
-						if (!isLiquidJumpActive) {
+						if (!isLiquidJumpActive && !hacks.Flying && !hacks.Noclip) {
+							counter = 0;
 							isLiquidJumpActive = true;
 						}
 					}
@@ -93,28 +114,6 @@ namespace ClassicalSharp.Entities {
 				canLiquidJump = false;
 			} else if (entity.onGround) {
 				DoNormalJump();
-			}
-		}
-		
-		public void LiquidJump(ScheduledTask task) {
-			if (isLiquidJumpActive == true) {
-				bool touchLava = entity.TouchesAnyLava();
-				int counterlimit = touchLava ? 6 : 10;
-				
-				entity.Velocity.Y -= touchLava ? 0.030f : 0.025f;
-				counter += 1;
-				
-				if (counter >= counterlimit) {
-					entity.Velocity.Y += touchLava ? 0f : 0.015f;
-					isLiquidJumpActive = false;
-					counter = 0;
-				} else if (counter == counterlimit - 1) {
-					entity.Velocity.Y += touchLava ? 0f : 0.015f;
-				} else if (counter == 1) {
-					entity.Velocity.Y += touchLava ? 0f : 0.020f;
-				} else if (counter == 2) {
-					entity.Velocity.Y += touchLava ? 0f : 0.015f;
-				}
 			}
 		}
 		
