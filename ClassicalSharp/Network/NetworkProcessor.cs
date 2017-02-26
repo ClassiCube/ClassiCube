@@ -50,8 +50,8 @@ namespace ClassicalSharp.Network {
 				socket.Connect(address, port);
 			} catch (SocketException ex) {
 				ErrorHandler.LogError("connecting to server", ex);
-				game.Disconnect("&eUnable to reach " + address + ":" + port,
-				                "Unable to establish an underlying connection");
+				game.Disconnect("Failed to connect to " + address + ":" + port,
+				                "You failed to connect to the server. It's probably down!");
 				Dispose();
 				return;
 			}
@@ -211,7 +211,7 @@ namespace ClassicalSharp.Network {
 			testAcc = 0;
 			
 			if (!socket.Connected || (socket.Poll(1000, SelectMode.SelectRead) && socket.Available == 0)) {
-				game.Disconnect("&eDisconnected from the server", "Connection timed out");
+				game.Disconnect("Disconnected!", "You've lost connection to the server");
 				Dispose();
 			}
 		}

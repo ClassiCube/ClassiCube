@@ -147,7 +147,7 @@ namespace ClassicalSharp {
 				MapBordersRenderer.UseLegacyMode(true);
 				EnvRenderer.UseLegacyMode(true);
 			}
-			Gui.SetNewScreen(new LoadingMapScreen(this, connectString, "Waiting for handshake"));
+			Gui.SetNewScreen(new LoadingMapScreen(this, connectString, ""));
 			Server.Connect(IPAddress, Port);
 		}
 		

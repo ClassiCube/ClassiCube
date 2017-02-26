@@ -118,7 +118,7 @@ namespace ClassicalSharp.Gui.Screens {
 				game.Components[i].Reset(game);
 			game.BlockInfo.Reset(game);
 			
-			game.Gui.SetNewScreen(new LoadingMapScreen(game, connectString, "Waiting for handshake"));
+			game.Gui.SetNewScreen(new LoadingMapScreen(game, connectString, ""));
 			game.Server.Connect(game.IPAddress, game.Port);
 		}
 		
