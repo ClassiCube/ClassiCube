@@ -226,7 +226,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (game.PureClassic && IsHackBlock(block)) return false;
 			if (block < Block.CpeCount) {
 				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;
-				return block < count;
+				return block < count && game.BlockInfo.Name[block] != "Invalid";
 			}
 			return game.BlockInfo.Name[block] != "Invalid";
 		}
