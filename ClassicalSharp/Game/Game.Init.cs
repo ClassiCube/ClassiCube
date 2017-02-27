@@ -167,7 +167,7 @@ namespace ClassicalSharp {
 			UseCPE = Options.GetBool(OptionsKey.UseCPE, true);
 			SimpleArmsAnim = Options.GetBool(OptionsKey.SimpleArmsAnim, false);
 			
-			ViewBobbing = Options.GetBool(OptionsKey.ViewBobbing, false);
+			ViewBobbing = Options.GetBool(OptionsKey.ViewBobbing, true);
 			FpsLimitMethod method = Options.GetEnum(OptionsKey.FpsLimit, FpsLimitMethod.LimitVSync);
 			SetFpsLimitMethod(method);
 			ViewDistance = Options.GetInt(OptionsKey.ViewDist, 16, 4096, 512);
