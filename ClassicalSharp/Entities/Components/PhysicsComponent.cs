@@ -46,24 +46,25 @@ namespace ClassicalSharp.Entities {
 				entity.Velocity.Y = 0.02f;
 			}
 			
+			bool touchLava = false;
+			
 			if (isLiquidJumpActive) {
-				bool touch_Lava = entity.TouchesAnyLava();
-				int counterLimit = touch_Lava ? 2 : 5;
+				touchLava = entity.TouchesAnyLava();
+				int counterLimit = touchLava ? 3 : 5;
 				counter += 1;
-				// TODO: smoother lava bobbing
 				
 				if (counter >= counterLimit) {
-					entity.Velocity.Y -= touch_Lava ? 0.20f : -0.020f;
+					entity.Velocity.Y -= touchLava ? 0.01f : -0.02f;
 					isLiquidJumpActive = false;
 					counter = 0;
 				} else if (counter == 1) {
-					entity.Velocity.Y -= touch_Lava ? 0.25f : 0.080f;
+					entity.Velocity.Y -= touchLava ? 0.08f : 0.08f;
 				} else if (counter == 2) {
-					entity.Velocity.Y -= touch_Lava ? 00f : 0.070f;
+					entity.Velocity.Y -= touchLava ? 0.07f : 0.07f;
 				} else if (counter == 3) {
-					entity.Velocity.Y -= touch_Lava ? 00f : 0.040f;
+					entity.Velocity.Y -= touchLava ? 00f : 0.04f;
 				} else if (counter == 4) {
-					entity.Velocity.Y -= touch_Lava ? 00f : 0.020f;
+					entity.Velocity.Y -= touchLava ? 00f : 0.02f;
 				}
 			}
 			
@@ -72,7 +73,7 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			bool touchWater = entity.TouchesAnyWater();
-			bool touchLava = entity.TouchesAnyLava();
+			touchLava = entity.TouchesAnyLava();
 			if (touchWater || touchLava) {
 				AABB bounds = entity.Bounds;
 				int feetY = Utils.Floor(bounds.Min.Y), bodyY = feetY + 1;
