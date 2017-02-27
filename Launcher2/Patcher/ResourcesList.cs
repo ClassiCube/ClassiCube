@@ -32,8 +32,8 @@ namespace Launcher.Patcher {
 			"Agravel3", "Agravel4", "Asand1", "Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3",
 			"Asnow4", "Astone1", "Astone2", "Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
 		
-		public static string[] StepSounds = new string[] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bgrass1",
-			"Bgrass2", "Bgrass3", "Bgrass4", "Agravel1", "Agravel2", "Agravel3", "Agravel4", "Asand1",
+		public static string[] StepSounds = new string[] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Agrass1",
+			"Agrass2", "Agrass3", "Agrass4", "Agravel1", "Agravel2", "Agravel3", "Agravel4", "Asand1",
 			"Asand2", "Asand3", "Asand4", "Asnow1", "Asnow2", "Asnow3", "Asnow4", "Astone1", "Astone2",
 			"Astone3", "Astone4", "Awood1", "Awood2", "Awood3", "Awood4" };
 		
