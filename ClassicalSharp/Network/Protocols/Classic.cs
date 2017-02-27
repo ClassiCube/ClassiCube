@@ -103,7 +103,7 @@ namespace ClassicalSharp.Network.Protocols {
 			// Workaround for some servers that send LevelDataChunk before LevelInit
 			// due to their async packet sending behaviour.
 			if (gzipStream == null) HandleLevelInit();
-			int usedLength = reader.ReadInt16();
+			int usedLength = reader.ReadUInt16();
 			gzippedMap.pos = 0;
 			gzippedMap.bufferPos = reader.index;
 			gzippedMap.len = usedLength;
@@ -158,10 +158,10 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleSetBlock() {
-			int x = reader.ReadInt16();
-			int y = reader.ReadInt16();
-			int z = reader.ReadInt16();
-			byte type = reader.ReadUInt8();
+			int x = reader.ReadUInt16();
+			int y = reader.ReadUInt16();
+			int z = reader.ReadUInt16();
+			byte block = reader.ReadUInt8();
 			
 			#if DEBUG_BLOCKS
 			if (game.World.IsNotLoaded) {
@@ -169,11 +169,11 @@ namespace ClassicalSharp.Network.Protocols {
 			} else if (!game.World.IsValidPos(x, y, z)) {
 				Utils.LogDebug("Server tried to update a block at an invalid position!");
 			} else {
-				game.UpdateBlock(x, y, z, type);
+				game.UpdateBlock(x, y, z, block);
 			}
 			#else
 			if (!game.World.IsNotLoaded && game.World.IsValidPos(x, y, z)) {
-				game.UpdateBlock(x, y, z, type);
+				game.UpdateBlock(x, y, z, block);
 			}
 			#endif
 		}
