@@ -20,6 +20,7 @@ namespace ClassicalSharp.Entities {
 		Entity entity;
 		Game game;
 		BlockInfo info;
+		internal int counter;
 		
 		internal float jumpVel = 0.42f, userJumpVel = 0.42f, serverJumpVel = 0.42f;
 		internal HacksComponent hacks;
@@ -30,6 +31,8 @@ namespace ClassicalSharp.Entities {
 			this.entity = entity;
 			info = game.BlockInfo;
 		}
+		
+		bool isLiquidJumpActive = false;
 		
 		public void UpdateVelocityState() {
 			if (hacks.Flying || hacks.Noclip) {
@@ -43,12 +46,34 @@ namespace ClassicalSharp.Entities {
 				entity.Velocity.Y = 0.02f;
 			}
 			
+			bool touchLava = false;
+			
+			if (isLiquidJumpActive) {
+				touchLava = entity.TouchesAnyLava();
+				int counterLimit = touchLava ? 3 : 5;
+				counter += 1;
+				
+				if (counter >= counterLimit) {
+					entity.Velocity.Y -= touchLava ? 0.01f : -0.02f;
+					isLiquidJumpActive = false;
+					counter = 0;
+				} else if (counter == 1) {
+					entity.Velocity.Y -= touchLava ? 0.08f : 0.08f;
+				} else if (counter == 2) {
+					entity.Velocity.Y -= touchLava ? 0.07f : 0.07f;
+				} else if (counter == 3) {
+					entity.Velocity.Y -= touchLava ? 00f : 0.04f;
+				} else if (counter == 4) {
+					entity.Velocity.Y -= touchLava ? 00f : 0.02f;
+				}
+			}
+			
 			if (!jumping) {
 				canLiquidJump = false; return;
 			}
 			
 			bool touchWater = entity.TouchesAnyWater();
-			bool touchLava = entity.TouchesAnyLava();
+			touchLava = entity.TouchesAnyLava();
 			if (touchWater || touchLava) {
 				AABB bounds = entity.Bounds;
 				int feetY = Utils.Floor(bounds.Min.Y), bodyY = feetY + 1;
@@ -61,7 +86,7 @@ namespace ClassicalSharp.Entities {
 				bounds.Max.Y = Math.Max(bodyY, headY);
 				bool liquidRest = entity.TouchesAny(bounds, StandardLiquid);
 				
-				bool pastJumpPoint = liquidFeet && !liquidRest && (entity.Position.Y % 1 >= 0.4);
+				bool pastJumpPoint = liquidFeet && !liquidRest && (entity.Position.Y % 1 >= 0.5);
 				if (!pastJumpPoint) {
 					canLiquidJump = true;
 					entity.Velocity.Y += 0.04f;
@@ -69,10 +94,15 @@ namespace ClassicalSharp.Entities {
 					if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.02f;
 				} else if (pastJumpPoint) {
 					// either A) jump bob in water B) climb up solid on side
-					if (collisions.HorizontalCollision)
-						entity.Velocity.Y += touchLava ? 0.30f : 0.13f;
-					else if (canLiquidJump)
-						entity.Velocity.Y += touchLava ? 0.20f : 0.10f;
+					if (collisions.HorizontalCollision) {
+						entity.Velocity.Y = 0.30f;
+					}
+					else if (canLiquidJump) {
+						if (!isLiquidJumpActive && !hacks.Flying && !hacks.Noclip) {
+							counter = 0;
+							isLiquidJumpActive = true;
+						}
+					}
 					canLiquidJump = false;
 				}
 			} else if (useLiquidGravity) {
