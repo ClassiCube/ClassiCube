@@ -193,12 +193,12 @@ namespace ClassicalSharp.Gui.Screens {
 			string value = buffer.ToString();
 			
 			DrawTextArgs args = new DrawTextArgs(value, font, true);
-			Size size = game.Drawer2D.MeasureChatSize(ref args);
+			Size size = game.Drawer2D.MeasureSize(ref args);
 			int x = startX + (blockSize * blocksPerRow) / 2 - size.Width / 2;
 			int y = startY - size.Height - 5;
 			
 			args.SkipPartsCheck = true;
-			blockInfoTexture = game.Drawer2D.MakeChatTextTexture(ref args, x, y);
+			blockInfoTexture = game.Drawer2D.MakeTextTexture(ref args, x, y);
 		}
 		
 		void RecreateBlockTable() {

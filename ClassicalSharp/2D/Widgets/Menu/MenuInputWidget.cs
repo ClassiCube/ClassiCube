@@ -43,13 +43,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void RemakeTexture() {
 			DrawTextArgs args = new DrawTextArgs(lines[0], font, false);
-			Size size = game.Drawer2D.MeasureChatSize(ref args);
+			Size size = game.Drawer2D.MeasureSize(ref args);
 			caretAccumulator = 0;
 			
 			// Ensure we don't have 0 text height
 			if (size.Height == 0) {
 				args.Text = Validator.Range;
-				size.Height = game.Drawer2D.MeasureChatSize(ref args).Height;
+				size.Height = game.Drawer2D.MeasureSize(ref args).Height;
 				args.Text = lines[0];
 			} else {
 				args.SkipPartsCheck = true;
@@ -63,16 +63,16 @@ namespace ClassicalSharp.Gui.Widgets {
 				using (IDrawer2D drawer = game.Drawer2D)
 			{
 				drawer.SetBitmap(bmp);
-				drawer.DrawChatText(ref args, Padding, 0);
+				drawer.DrawText(ref args, Padding, 0);
 				
 				args.Text = Validator.Range;
 				args.SkipPartsCheck = false;
-				Size hintSize = drawer.MeasureChatSize(ref args);
+				Size hintSize = drawer.MeasureSize(ref args);
 				
 				args.SkipPartsCheck = true;
 				int hintX = adjSize.Width - hintSize.Width;
 				if (size.Width + 3 < hintX)
-					drawer.DrawChatText(ref args, hintX, 0);
+					drawer.DrawText(ref args, hintX, 0);
 				inputTex = drawer.Make2DTexture(bmp, adjSize, 0, 0);
 			}
 

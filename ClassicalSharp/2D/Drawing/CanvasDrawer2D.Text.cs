@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 			measuringC = new Canvas(measuringBmp);
 		}
 
-		public override void DrawText(ref DrawTextArgs args, int x, int y) {
+		protected override void DrawSysText(ref DrawTextArgs args, int x, int y) {
 			if (!args.SkipPartsCheck)
 				GetTextParts(args.Text);
 			
@@ -41,14 +41,14 @@ namespace ClassicalSharp {
 		}
 		
 		FastBitmap bitmapWrapper = new FastBitmap();
-		public override void DrawBitmappedText(ref DrawTextArgs args, int x, int y) {
+		protected override void DrawBitmappedText(ref DrawTextArgs args, int x, int y) {
 			using (bitmapWrapper) {
 				bitmapWrapper.SetData(curBmp, true, false);
 				DrawBitmapTextImpl(bitmapWrapper, ref args, x, y);
 			}
 		}
 		
-		public override Size MeasureSize(ref DrawTextArgs args) {
+		protected override Size MeasureSysSize(ref DrawTextArgs args) {
 			GetTextParts(args.Text);
 			if (parts.Count == 0)
 				return Size.Empty;
@@ -68,10 +68,6 @@ namespace ClassicalSharp {
 		
 		int PtToPx(int point) {
 			return (int)Math.Ceiling((float)point / 72 * 96); // TODO: not sure if even right, non 96 dpi?
-		}
-		
-		public override Size MeasureBitmappedSize(ref DrawTextArgs args) {
-			return MeasureBitmappedSizeImpl(ref args);
 		}
 		
 		void DisposeText() {

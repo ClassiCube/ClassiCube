@@ -121,7 +121,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void AddPlayerInfo(TabListEntry player, int index) {
 			DrawTextArgs args = new DrawTextArgs(player.ListName, font, true);
-			Texture tex = game.Drawer2D.MakeChatTextTexture(ref args, 0, 0);
+			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(font.Size), 3);
 			
 			if (index < 0) {
@@ -166,7 +166,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void AddGroup(string group, ref int index) {
 			DrawTextArgs args = new DrawTextArgs(group, titleFont, true);
-			Texture tex = game.Drawer2D.MakeChatTextTexture(ref args, 0, 0);
+			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(titleFont.Size), 3);
 			PlayerInfo pInfo = new PlayerInfo(group);
 			

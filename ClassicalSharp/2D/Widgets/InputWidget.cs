@@ -15,14 +15,14 @@ namespace ClassicalSharp.Gui.Widgets {
 			lineSizes = new Size[MaxLines];
 			
 			DrawTextArgs args = new DrawTextArgs("_", font, true);
-			caretTex = game.Drawer2D.MakeChatTextTexture(ref args, 0, 0);
+			caretTex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			caretTex.Width = (short)((caretTex.Width * 3) / 4);
 			caretWidth = caretTex.Width; caretHeight = caretTex.Height;
 			this.font = font;
 			
 			if (Prefix == null) return;
 			args = new DrawTextArgs(Prefix, font, true);
-			Size size = game.Drawer2D.MeasureChatSize(ref args);
+			Size size = game.Drawer2D.MeasureSize(ref args);
 			prefixWidth = Width = size.Width;
 			prefixHeight = Height = size.Height;
 		}
@@ -107,7 +107,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs(null, font, true);
 			for (int y = 0; y < MaxLines; y++) {
 				args.Text = lines[y];
-				lineSizes[y] += game.Drawer2D.MeasureChatSize(ref args);
+				lineSizes[y] += game.Drawer2D.MeasureSize(ref args);
 			}
 			if (lineSizes[0].Height == 0) lineSizes[0].Height = prefixHeight;
 		}
@@ -126,7 +126,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				caretTex.Width = (short)caretWidth;
 			} else {
 				args.Text = lines[caretRow].Substring(0, caretCol);
-				Size trimmedSize = drawer.MeasureChatSize(ref args);
+				Size trimmedSize = drawer.MeasureSize(ref args);
 				if (caretRow == 0) trimmedSize.Width += prefixWidth;
 
 				caretTex.X1 = X + Padding + trimmedSize.Width;
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				string line = lines[caretRow];
 				if (caretCol < line.Length) {
 					args.Text = new String(line[caretCol], 1);
-					caretTex.Width = (short)drawer.MeasureChatSize(ref args).Width;
+					caretTex.Width = (short)drawer.MeasureSize(ref args).Width;
 				} else {
 					caretTex.Width = (short)caretWidth;
 				}
@@ -174,7 +174,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				DrawTextArgs args = new DrawTextArgs(null, font, true);
 				if (Prefix != null) {
 					args.Text = Prefix;
-					drawer.DrawChatText(ref args, 0, 0);
+					drawer.DrawText(ref args, 0, 0);
 				}
 				
 				for (int i = 0; i < lines.Length; i++) {
@@ -185,7 +185,7 @@ namespace ClassicalSharp.Gui.Widgets {
 						args.Text = "&" + lastCol + args.Text;
 					
 					int offset = i == 0 ? prefixWidth : 0;
-					drawer.DrawChatText(ref args, offset, realHeight);
+					drawer.DrawText(ref args, offset, realHeight);
 					realHeight += lineSizes[i].Height;
 				}
 				inputTex = drawer.Make2DTexture(bmp, size, 0, 0);
@@ -453,13 +453,13 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				for (int x = 0; x < line.Length; x++) {
 					args.Text = line.Substring(0, x);
-					int trimmedWidth = drawer.MeasureChatSize(ref args).Width + xOffset;
+					int trimmedWidth = drawer.MeasureSize(ref args).Width + xOffset;
 					// avoid allocating an unnecessary string
 					fixed(char* ptr = oneChar)
 						ptr[0] = line[x];
 					
 					args.Text = oneChar;
-					int elemWidth = drawer.MeasureChatSize(ref args).Width;
+					int elemWidth = drawer.MeasureSize(ref args).Width;
 					
 					if (GuiElement.Contains(trimmedWidth, y * elemHeight, elemWidth, elemHeight, mouseX, mouseY)) {
 						caret = offset + x;

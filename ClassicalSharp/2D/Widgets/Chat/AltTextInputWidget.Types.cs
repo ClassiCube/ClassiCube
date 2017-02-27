@@ -60,7 +60,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				for (int i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
 					for (int j = 0; j < e.CharsPerItem; j++)
 						ptr[j] = e.Contents[i + j];
-					sizes[i / e.CharsPerItem] = game.Drawer2D.MeasureChatSize(ref args);
+					sizes[i / e.CharsPerItem] = game.Drawer2D.MeasureSize(ref args);
 				}
 			}
 		}
@@ -82,7 +82,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs(null, font, false);
 			for (int i = 0; i < elements.Length; i++) {
 				args.Text = elements[i].Title;
-				elements[i].TitleSize = game.Drawer2D.MeasureChatSize(ref args);
+				elements[i].TitleSize = game.Drawer2D.MeasureSize(ref args);
 				elements[i].TitleSize.Width += titleSpacing;
 				totalWidth += elements[i].TitleSize.Width;
 			}
@@ -99,7 +99,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				Size size = elements[i].TitleSize;
 				
 				drawer.Clear(col, x, 0, size.Width, size.Height);
-				drawer.DrawChatText(ref args, x + titleSpacing / 2, 0);
+				drawer.DrawText(ref args, x + titleSpacing / 2, 0);
 				x += size.Width;
 			}
 		}
@@ -117,7 +117,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					
 					int x = (item % wrap) * elementSize.Width, y = (item / wrap) * elementSize.Height;
 					y += yOffset;
-					drawer.DrawChatText(ref args, x, y);
+					drawer.DrawText(ref args, x, y);
 				}
 			}
 		}

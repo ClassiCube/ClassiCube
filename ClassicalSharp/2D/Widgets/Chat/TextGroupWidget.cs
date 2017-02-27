@@ -33,7 +33,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			linkData = new LinkData[ElementsCount];
 			
 			DrawTextArgs args = new DrawTextArgs("I", font, true);
-			int height = game.Drawer2D.MeasureChatSize(ref args).Height;
+			int height = game.Drawer2D.MeasureSize(ref args).Height;
 			game.Drawer2D.ReducePadding(ref height, Utils.Floor(font.Size), 3);
 			defaultHeight = height;
 			

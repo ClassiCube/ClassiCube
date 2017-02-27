@@ -138,9 +138,9 @@ namespace Launcher.Gui.Widgets {
 				r.X += size.Width; r.Width = 10;
 			} else {
 				args.Text = text.Substring(0, Chars.CaretPos);
-				int trimmedWidth = drawer.MeasureChatSize(ref args).Width;
+				int trimmedWidth = drawer.MeasureSize(ref args).Width;
 				args.Text = new String(text[Chars.CaretPos], 1);
-				int charWidth = drawer.MeasureChatSize(ref args).Width;
+				int charWidth = drawer.MeasureSize(ref args).Width;
 				r.X += trimmedWidth; r.Width = charWidth;
 			}
 			return r;
@@ -171,9 +171,9 @@ namespace Launcher.Gui.Widgets {
 			
 			for (int i = 0; i < Text.Length; i++) {
 				args.Text = text.Substring(0, i);
-				int trimmedWidth = drawer.MeasureChatSize(ref args).Width;
+				int trimmedWidth = drawer.MeasureSize(ref args).Width;
 				args.Text = new String(text[i], 1);
-				int charWidth = drawer.MeasureChatSize(ref args).Width;
+				int charWidth = drawer.MeasureSize(ref args).Width;
 				if (mouseX >= trimmedWidth && mouseX < trimmedWidth + charWidth) {
 					Chars.CaretPos = i; return;
 				}

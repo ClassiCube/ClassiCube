@@ -21,18 +21,18 @@ namespace ClassicalSharp {
 			
 			using (IDrawer2D drawer = game.Drawer2D) {
 				args.Text = prefix;
-				Size size = game.Drawer2D.MeasureChatSize(ref args);
+				Size size = game.Drawer2D.MeasureSize(ref args);
 				offset = size.Width;
 				size.Width += 16 * chars.Length;
 				
 				using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size)) {
 					drawer.SetBitmap(bmp);
-					drawer.DrawChatText(ref args, 0, 0);
+					drawer.DrawText(ref args, 0, 0);
 					
 					for (int i = 0; i < chars.Length; i++) {
 						args.Text = new String(chars[i], 1);
-						widths[i] = game.Drawer2D.MeasureChatSize(ref args).Width;
-						drawer.DrawChatText(ref args, offset + 16 * i, 0);
+						widths[i] = game.Drawer2D.MeasureSize(ref args).Width;
+						drawer.DrawText(ref args, offset + 16 * i, 0);
 					}
 					
 					tex = drawer.Make2DTexture(bmp, size, 0, 0);

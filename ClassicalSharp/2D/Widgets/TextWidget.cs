@@ -33,7 +33,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Init() {
 			DrawTextArgs args = new DrawTextArgs("I", font, true);
-			int height = game.Drawer2D.MeasureChatSize(ref args).Height;
+			int height = game.Drawer2D.MeasureSize(ref args).Height;
 			SetHeight(height);
 		}
 		
@@ -51,7 +51,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				Width = 0; Height = defaultHeight;
 			} else {
 				DrawTextArgs args = new DrawTextArgs(text, font, true);
-				texture = game.Drawer2D.MakeChatTextTexture(ref args, 0, 0);
+				texture = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 				if (ReducePadding)
 					game.Drawer2D.ReducePadding(ref texture, Utils.Floor(font.Size));
 				Width = texture.Width; Height = texture.Height;

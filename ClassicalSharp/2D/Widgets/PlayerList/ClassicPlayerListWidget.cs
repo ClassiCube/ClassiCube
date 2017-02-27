@@ -58,7 +58,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (game.PureClassic) name = Utils.StripColours(name);
 			
 			DrawTextArgs args = new DrawTextArgs(name, font, false);
-			Texture tex = game.Drawer2D.MakeChatTextTexture(ref args, 0, 0);
+			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(font.Size), 3);
 			return tex;
 		}

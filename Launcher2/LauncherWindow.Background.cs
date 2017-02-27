@@ -112,13 +112,13 @@ namespace Launcher {
 
 				drawer.UseBitmappedChat = (useBitmappedFont || ClassicBackground) && fontPng;
 				DrawTextArgs args = new DrawTextArgs("&eClassical&fSharp", logoFont, false);
-				Size size = drawer.MeasureChatSize(ref args);
+				Size size = drawer.MeasureSize(ref args);
 				int xStart = Width / 2 - size.Width / 2;
 				
 				args.Text = "&0Classical&0Sharp";
-				drawer.DrawChatText(ref args, xStart + 4, 4);
+				drawer.DrawText(ref args, xStart + 4, 4);
 				args.Text = "&eClassical&fSharp";
-				drawer.DrawChatText(ref args, xStart, 0);
+				drawer.DrawText(ref args, xStart, 0);
 				drawer.UseBitmappedChat = false;
 			}
 		}

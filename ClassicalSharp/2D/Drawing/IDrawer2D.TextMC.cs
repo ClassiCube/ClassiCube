@@ -191,8 +191,8 @@ namespace ClassicalSharp {
 				col = FastColour.White.ToArgb();
 			}
 		}
-		
-		protected Size MeasureBitmappedSizeImpl(ref DrawTextArgs args) {
+
+		protected Size MeasureBitmappedSize(ref DrawTextArgs args) {
 			if (String.IsNullOrEmpty(args.Text)) return Size.Empty;
 			int textHeight = AdjTextSize(Utils.Floor(args.Font.Size));
 			Size total = new Size(0, CellSize(textHeight));

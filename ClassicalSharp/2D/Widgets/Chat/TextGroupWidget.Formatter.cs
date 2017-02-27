@@ -33,7 +33,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		Texture DrawSimple(ref DrawTextArgs args) {
-			return game.Drawer2D.MakeChatTextTexture(ref args, 0, 0);
+			return game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 		}
 		
 		unsafe Texture DrawAdvanced(ref DrawTextArgs args, int index, string text) {
@@ -45,7 +45,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			for (int i = 0; i < data.parts.Length; i++) {
 				args.Text = data.parts[i];
 				args.Font = (i & 1) == 0 ? font : underlineFont;
-				partSizes[i] = game.Drawer2D.MeasureChatSize(ref args);
+				partSizes[i] = game.Drawer2D.MeasureSize(ref args);
 				total.Height = Math.Max(partSizes[i].Height, total.Height);
 				total.Width += partSizes[i].Width;
 			}
@@ -61,7 +61,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					args.Font = (i & 1) == 0 ? font : underlineFont;
 					Size size = partSizes[i];
 					
-					drawer.DrawChatText(ref args, x, 0);
+					drawer.DrawText(ref args, x, 0);
 					data.bounds[i].X = x;
 					data.bounds[i].Width = size.Width;
 					x += size.Width;

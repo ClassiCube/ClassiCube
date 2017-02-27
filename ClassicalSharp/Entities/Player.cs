@@ -38,23 +38,34 @@ namespace ClassicalSharp.Entities {
 		protected void MakeNameTexture() {
 			using (Font font = new Font(game.FontName, 24)) {
 				DrawTextArgs args = new DrawTextArgs(DisplayName, font, false);
-				Size size = game.Drawer2D.MeasureBitmappedSize(ref args);
-				if (size.Width == 0) { nameTex = new Texture(-1, 0, 0, 0, 0, 1, 1); return; }
-				size.Width += 3; size.Height += 3;
+				bool bitmapped = game.Drawer2D.UseBitmappedChat; // we want names to always be drawn without
+				game.Drawer2D.UseBitmappedChat = true;
+				Size size = game.Drawer2D.MeasureSize(ref args);
 				
-				using (IDrawer2D drawer = game.Drawer2D)
-					using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
-				{
-					drawer.SetBitmap(bmp);
-					args.Text = "&\xFF" + Utils.StripColours(args.Text);
-					game.Drawer2D.Colours['\xFF'] = new FastColour(80, 80, 80);
-					game.Drawer2D.DrawBitmappedText(ref args, 3, 3);
-					game.Drawer2D.Colours['\xFF'] = default(FastColour);
-					
-					args.Text = DisplayName;
-					game.Drawer2D.DrawBitmappedText(ref args, 0, 0);
-					nameTex = game.Drawer2D.Make2DTexture(bmp, size, 0, 0);
+				if (size.Width == 0) {
+					nameTex = new Texture(-1, 0, 0, 0, 0, 1, 1);
+				} else {
+					nameTex = MakeNameTextureImpl(size, args);
 				}
+				game.Drawer2D.UseBitmappedChat = bitmapped;
+			}
+		}
+		
+		Texture MakeNameTextureImpl(Size size, DrawTextArgs args) {
+			size.Width += 3; size.Height += 3;
+			
+			using (IDrawer2D drawer = game.Drawer2D)
+				using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
+			{
+				drawer.SetBitmap(bmp);
+				args.Text = "&\xFF" + Utils.StripColours(args.Text);
+				game.Drawer2D.Colours['\xFF'] = new FastColour(80, 80, 80);
+				game.Drawer2D.DrawText(ref args, 3, 3);
+				game.Drawer2D.Colours['\xFF'] = default(FastColour);
+				
+				args.Text = DisplayName;
+				game.Drawer2D.DrawText(ref args, 0, 0);
+				return game.Drawer2D.Make2DTexture(bmp, size, 0, 0);
 			}
 		}
 		
