@@ -30,7 +30,7 @@ namespace ClassicalSharp.Network {
 			skinName = Utils.StripColours(skinName);
 			
 			// Server is only allowed to change our own name colours.
-			if (id != 0xFF) return;
+			if (id != EntityList.SelfID) return;
 			if (Utils.StripColours(displayName) != game.Username)
 				displayName = game.Username;
 			if (skinName == "")
@@ -38,7 +38,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void AddEntity(byte id, string displayName, string skinName, bool readPosition) {
-			if (id != 0xFF) {
+			if (id != EntityList.SelfID) {
 				Entity oldEntity = game.Entities[id];
 				if (oldEntity != null) {
 					game.EntityEvents.RaiseRemoved(id);
@@ -52,10 +52,11 @@ namespace ClassicalSharp.Network {
 				game.LocalPlayer.fetchedSkin = false;
 				game.LocalPlayer.UpdateName();
 			}
-			if (!readPosition) return;
 			
+			if (!readPosition) return;			
 			classic.ReadAbsoluteLocation(id, false);
-			if (id != 0xFF) return;
+			if (id != EntityList.SelfID) return;
+			
 			LocalPlayer p = game.LocalPlayer;
 			p.Spawn = p.Position;
 			p.SpawnRotY = p.HeadY;
@@ -66,7 +67,7 @@ namespace ClassicalSharp.Network {
 			Entity entity = game.Entities[id];
 			if (entity == null) return;
 			
-			if (id != 0xFF) {
+			if (id != EntityList.SelfID) {
 				game.EntityEvents.RaiseRemoved(id);
 				entity.Despawn();
 				game.Entities[id] = null;

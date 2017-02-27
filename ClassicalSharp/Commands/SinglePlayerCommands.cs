@@ -58,7 +58,7 @@ namespace ClassicalSharp.Commands {
 		
 		public override void Execute(string[] args) {
 			game.UserEvents.BlockChanged -= BlockChanged;
-			block = 0xFF;
+			block = Block.Invalid;
 			mark1 = new Vector3I(int.MaxValue);
 			mark2 = new Vector3I(int.MaxValue);
 			persist = false;
