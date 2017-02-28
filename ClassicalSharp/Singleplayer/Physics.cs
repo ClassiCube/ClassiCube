@@ -24,7 +24,7 @@ namespace ClassicalSharp.Singleplayer {
 		public const int tickShift = 27;
 		FallingPhysics falling;
 		TNTPhysics tnt;
-		FoilagePhysics foilage;
+		FoliagePhysics foliage;
 		LiquidPhysics liquid;
 		OtherPhysics other;
 		
@@ -49,7 +49,7 @@ namespace ClassicalSharp.Singleplayer {
 			
 			falling = new FallingPhysics(game, this);
 			tnt = new TNTPhysics(game, this);
-			foilage = new FoilagePhysics(game, this);
+			foliage = new FoliagePhysics(game, this);
 			liquid = new LiquidPhysics(game, this);
 			other = new OtherPhysics(game, this);
 		}

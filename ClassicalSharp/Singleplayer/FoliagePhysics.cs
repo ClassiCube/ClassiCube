@@ -10,13 +10,13 @@ using BlockID = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
-	public class FoilagePhysics {
+	public class FoliagePhysics {
 		Game game;
 		PhysicsBase physics;
 		World map;
 		Random rnd = new Random();
 		
-		public FoilagePhysics(Game game, PhysicsBase physics) {
+		public FoliagePhysics(Game game, PhysicsBase physics) {
 			this.game = game;
 			this.physics = physics;
 			map = game.World;

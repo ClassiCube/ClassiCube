@@ -290,7 +290,7 @@
     <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Singleplayer\FallingPhysics.cs" />
-    <Compile Include="Singleplayer\FoilagePhysics.cs" />
+    <Compile Include="Singleplayer\FoliagePhysics.cs" />
     <Compile Include="Singleplayer\LiquidPhysics.cs" />
     <Compile Include="Singleplayer\OtherPhysics.cs" />
     <Compile Include="Singleplayer\Physics.cs" />
