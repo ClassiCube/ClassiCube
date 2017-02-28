@@ -92,6 +92,7 @@ namespace ClassicalSharp {
 				SetBitmap(bmp);
 				args.SkipPartsCheck = true;
 				DrawText(ref args, 0, 0);
+				
 				Dispose();
 				return Make2DTexture(bmp, size, windowX, windowY);
 			}

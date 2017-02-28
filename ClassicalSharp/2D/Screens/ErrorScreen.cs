@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
-			game.SkipClear = true;		
+			game.SkipClear = true;
 			gfx.ContextLost += ContextLost;
 			gfx.ContextRecreated += ContextRecreated;
 			
@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			ContextLost();
 			titleFont.Dispose();
-			messageFont.Dispose();			
+			messageFont.Dispose();
 		}
 		
 		public override void OnResize(int width, int height) {
@@ -138,19 +138,18 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			if (gfx.LostContext) return;
+			clearTime = DateTime.UtcNow.AddSeconds(0.5);
+			widgets = new Widget[canReconnect ? 3 : 2];
+			
+			widgets[0] = TextWidget.Create(game, title, titleFont)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);
+			widgets[1] = TextWidget.Create(game, message, messageFont)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 10);
 			
 			string msg = ReconnectMessage();
-			widgets = new Widget[] {
-				TextWidget.Create(game, title, titleFont)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30),
-				TextWidget.Create(game, message, messageFont)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 10),
-				ButtonWidget.Create(game, 300, msg, titleFont, ReconnectClick)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 80),
-			};
-			
-			widgets[2].Disabled = !canReconnect;
-			clearTime = DateTime.UtcNow.AddSeconds(0.5);
+			if (!canReconnect) return;
+			widgets[2] = ButtonWidget.Create(game, 300, msg, titleFont, ReconnectClick)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 80);
 		}
 	}
 }
