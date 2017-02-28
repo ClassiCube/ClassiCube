@@ -310,8 +310,6 @@ namespace ClassicalSharp.Network.Protocols {
 			byte code = reader.ReadUInt8();
 			
 			if (code <= ' ' || code > '~') return; // Control chars, space, extended chars cannot be used
-			if ((code >= '0' && code <= '9') || (code >= 'a' && code <= 'f')
-			   || (code >= 'A' && code <= 'F')) return; // Standard chars cannot be used.
 			if (code == '%' || code == '&') return; // colour code signifiers cannot be used
 			
 			game.Drawer2D.Colours[code] = col;
