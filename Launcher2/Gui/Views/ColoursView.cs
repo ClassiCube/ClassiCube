@@ -9,7 +9,7 @@ namespace Launcher.Gui.Views {
 	public sealed class ColoursView : IView {
 		
 		public ColoursView(LauncherWindow game) : base(game) {
-			widgets = new Widget[28];
+			widgets = new Widget[25]; // TODO: add +3 to total for sliders
 		}
 		internal int defIndex, sliderIndex;
 		
@@ -37,7 +37,8 @@ namespace Launcher.Gui.Views {
 				.SetLocation(Anchor.Centre, Anchor.Centre, -70, 60);
 			
 			for (int i = start; i < widgetIndex; i++) {
-				((LabelWidget)widgets[i]).DarkenWhenInactive = true;
+				// TODO: darken when inactive for sliders
+				//((LabelWidget)widgets[i]).DarkenWhenInactive = true;
 				widgets[i].TabSelectable = true;
 			}
 			
@@ -53,6 +54,9 @@ namespace Launcher.Gui.Views {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 120);
 			Makers.Button(this, "Back", 80, 35, titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 170);
+			
+			// TODO: sliders
+			return;
 			
 			sliderIndex = widgetIndex;
 			Makers.Slider(this, 100, 10, 30, 255, FastColour.Red)

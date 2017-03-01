@@ -45,6 +45,8 @@ namespace Launcher.Gui.Screens {
 		protected override void MouseMove(int x, int y, int xDelta, int yDelta) {
 			base.MouseMove(x, y, xDelta, yDelta);
 			
+			// TODO: sliders
+			return;			
 			for (int i = 0; i < 3; i++) {
 				SliderWidget slider = (SliderWidget)widgets[view.sliderIndex + i];				
 				if (x < slider.X || y < slider.Y || x >= slider.X + slider.Width
