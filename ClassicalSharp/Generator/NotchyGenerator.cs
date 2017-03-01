@@ -62,10 +62,13 @@ namespace ClassicalSharp.Generator {
 			for (int z = 0; z < Length; z++) {
 				CurrentProgress = (float)z / Length;
 				for (int x = 0; x < Width; x++) {
-					double hLow = n1.Compute(x * 1.3f, z * 1.3f) / 6 - 4;
-					double hHigh = n2.Compute(x * 1.3f, z * 1.3f) / 5 + 6;
+					double hLow = n1.Compute(x * 1.3f, z * 1.3f) / 6 - 4, height = hLow;
 					
-					double height = n3.Compute(x, z) > 0 ? hLow : Math.Max(hLow, hHigh);
+					if (n3.Compute(x, z) <= 0) {
+						double hHigh = n2.Compute(x * 1.3f, z * 1.3f) / 5 + 6;
+						height = Math.Max(hLow, hHigh);
+					}
+					
 					height *= 0.5;
 					if (height < 0) height *= 0.8f;
 					
