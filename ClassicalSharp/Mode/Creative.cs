@@ -31,15 +31,26 @@ namespace ClassicalSharp.Mode {
 		}
 		
 		public void PickMiddle(BlockID old) {
-			Inventory inv = game.Inventory;			
-			if (game.BlockInfo.Draw[old] != DrawType.Gas && (inv.CanPlace[old] || inv.CanDelete[old])) {
-				for (int i = 0; i < Inventory.BlocksPerRow; i++) {
-					if (inv[i] != old) continue;
-					
-					inv.SelectedIndex = i; return;
-				}
-				inv.Selected = old;
+			Inventory inv = game.Inventory;
+			if (game.BlockInfo.Draw[old] == DrawType.Gas) return;
+			if (!(inv.CanPlace[old] || inv.CanDelete[old])) return;
+			if (!inv.CanChangeSelected()) return;
+			
+			// Is the currently selected block an empty slot
+			if (inv.Hotbar[inv.SelectedIndex] == Block.Air) { 
+				inv.Selected = old; return; 
 			}
+			
+			// Try to replace same block or empty slots first.
+			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
+				if (inv[i] != old && inv[i] != Block.Air) continue;
+				
+				inv[i] = old;
+				inv.SelectedIndex = i; return;
+			}
+			
+			// Finally, replace the currently selected block.
+			inv.Selected = old;
 		}
 		
 		public void PickRight(BlockID old, BlockID block) {

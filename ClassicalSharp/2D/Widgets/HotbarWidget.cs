@@ -106,7 +106,6 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (game.Input.AltDown) {
 					// Pick from first to ninth row
 					game.Inventory.Offset = index * Inventory.BlocksPerRow;
-					game.Events.RaiseHeldBlockChanged();
 					altHandled = true;
 				} else {
 					game.Inventory.SelectedIndex = index;
@@ -127,7 +126,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			// Alternate between first and second row
 			int index = game.Inventory.Offset == 0 ? 1 : 0;
 			game.Inventory.Offset = index * Inventory.BlocksPerRow;
-			game.Events.RaiseHeldBlockChanged();
 			return true;
 		}
 		

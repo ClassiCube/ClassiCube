@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 			#if !ANDROID
 			Hotkeys = new HotkeyList();
 			Hotkeys.LoadSavedHotkeys();
-			#endif			
+			#endif
 		}
 		
 		void RegisterInputHandlers() {
@@ -143,19 +143,28 @@ namespace ClassicalSharp {
 		}
 		
 		void ScrollHotbar(float deltaPrecise) {
+			Inventory inv = game.Inventory;
+			if (AltDown) {
+				inv.Offset = ScrolledIndex(deltaPrecise, inv.Offset);
+			} else {
+				inv.SelectedIndex = ScrolledIndex(deltaPrecise, inv.SelectedIndex);
+			}
+		}
+		
+		int ScrolledIndex(float deltaPrecise, int currentIndex) {
 			// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
 			// We must use rounding at final step, not at every intermediate step.
-			Inventory inv = game.Inventory;
 			deltaAcc += deltaPrecise;
 			int delta = (int)deltaAcc;
 			deltaAcc -= delta;
 			
 			const int blocksPerRow = Inventory.BlocksPerRow;
 			int diff = -delta % blocksPerRow;
-			int newIndex = inv.SelectedIndex + diff;
-			if (newIndex < 0) newIndex += blocksPerRow;
-			if (newIndex >= blocksPerRow) newIndex -= blocksPerRow;
-			inv.SelectedIndex = newIndex;
+			int index = currentIndex + diff;
+			
+			if (index < 0) index += blocksPerRow;
+			if (index >= blocksPerRow) index -= blocksPerRow;
+			return index;
 		}
 
 		void KeyPressHandler(object sender, KeyPressEventArgs e) {

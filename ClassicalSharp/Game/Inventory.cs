@@ -23,21 +23,27 @@ namespace ClassicalSharp {
 		public void OnNewMapLoaded(Game game) { }
 		public void Dispose() { }
 		
-		int selectedI = 0;
+		int selectedI, offset;
 		Game game;
 		public bool CanChangeHeldBlock = true;
 		
 		public const int BlocksPerRow = 9, Rows = 9;
-		public int Offset = 0;
-		
 		public BlockID[] Hotbar = new BlockID[BlocksPerRow * Rows];
 		public InventoryPermissions CanPlace = new InventoryPermissions();
 		public InventoryPermissions CanDelete = new InventoryPermissions();
 		
 		/// <summary> Gets or sets the block at the given index within the current row. </summary>
 		public BlockID this[int index] {
-			get { return Hotbar[Offset + index]; }
-			set { Hotbar[Offset + index] = value; }
+			get { return Hotbar[offset + index]; }
+			set { Hotbar[offset + index] = value; }
+		}
+		
+		public bool CanChangeSelected() {
+			if (!CanChangeHeldBlock) {
+				game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
+				return false;
+			}
+			return true;
 		}
 		
 		/// <summary> Gets or sets the index of the selected block within the current row. </summary>
@@ -45,12 +51,18 @@ namespace ClassicalSharp {
 		public int SelectedIndex {
 			get { return selectedI; }
 			set {
-				if (!CanChangeHeldBlock) {
-					game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
-					return;
-				}
-				selectedI = value;
-				game.Events.RaiseHeldBlockChanged();
+				if (!CanChangeSelected()) return;
+				selectedI = value; game.Events.RaiseHeldBlockChanged();
+			}
+		}
+		
+		/// <summary> Gets or sets the currently selected row. </summary>
+		/// <remarks> Fails if the server has forbidden user from changing the held block. </remarks>
+		public int Offset {
+			get { return offset; }
+			set {
+				if (!CanChangeSelected()) return;
+				offset = value; game.Events.RaiseHeldBlockChanged();
 			}
 		}
 		
@@ -59,11 +71,9 @@ namespace ClassicalSharp {
 		public BlockID Selected {
 			get { return Hotbar[Offset + selectedI]; }
 			set {
-				if (!CanChangeHeldBlock) {
-					game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
-					return;
-				}
+				if (!CanChangeSelected()) return;
 				
+				// Change the selected index if this block already in hotbar
 				for (int i = 0; i < BlocksPerRow; i++) {
 					if (this[i] != value) continue;
 					
