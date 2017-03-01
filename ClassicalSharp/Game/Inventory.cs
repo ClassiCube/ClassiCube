@@ -27,7 +27,7 @@ namespace ClassicalSharp {
 		Game game;
 		public bool CanChangeHeldBlock = true;
 		
-		public const int BlocksPerRow = 9, Rows = 2;
+		public const int BlocksPerRow = 9, Rows = 9;
 		public int Offset = 0;
 		
 		public BlockID[] Hotbar = new BlockID[BlocksPerRow * Rows];

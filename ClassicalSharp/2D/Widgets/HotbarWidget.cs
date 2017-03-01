@@ -101,7 +101,19 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override bool HandlesKeyDown(Key key) {
 			if (key >= Key.Number1 && key <= Key.Number9) {
-				game.Inventory.SelectedIndex = (int)key - (int)Key.Number1;
+				int index = (int)key - (int)Key.Number1;
+				
+				if (game.Input.AltDown) {
+					// Pick from first to ninth row
+					game.Inventory.Offset = index * Inventory.BlocksPerRow;
+				} else {
+					game.Inventory.SelectedIndex = index;
+				}
+				return true;
+			} else if (key == Key.AltLeft || key == Key.AltRight) {
+				// Alternate between first and second row
+				int index = game.Inventory.Offset == 0 ? 1 : 0;
+				game.Inventory.Offset = index * Inventory.BlocksPerRow;
 				return true;
 			}
 			return false;

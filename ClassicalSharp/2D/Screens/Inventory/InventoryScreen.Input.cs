@@ -70,8 +70,7 @@ namespace ClassicalSharp.Gui.Screens {
 				ArrowKeyMove(-blocksPerRow);
 			} else if ((key == Key.Down || key == Key.Keypad2) && selIndex != -1) {
 				ArrowKeyMove(blocksPerRow);
-			} else if (key >= Key.Number1 && key <= Key.Number9) {
-				game.Inventory.SelectedIndex = (int)key - (int)Key.Number1;
+			} else if (game.Gui.hudScreen.hotbar.HandlesKeyDown(key)) {
 			}
 			return true;
 		}
