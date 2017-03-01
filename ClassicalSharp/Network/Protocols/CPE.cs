@@ -94,7 +94,7 @@ namespace ClassicalSharp.Network.Protocols {
 			bool canChange = reader.ReadUInt8() == 0;
 			
 			game.Inventory.CanChangeHeldBlock = true;
-			game.Inventory.HeldBlock = block;
+			game.Inventory.Selected = block;
 			game.Inventory.CanChangeHeldBlock = canChange;
 		}
 		

@@ -18,8 +18,10 @@ namespace ClassicalSharp.Mode {
 		
 		Game game;
 		int score = 0;
-		internal byte[] invCount = new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 10 };
+		internal byte[] invCount = new byte[Inventory.BlocksPerRow * Inventory.Rows];
 		Random rnd = new Random();
+		
+		public SurvivalGameMode() { invCount[8] = 10; } // tnt
 		
 		public bool HandlesKeyDown(Key key) { return false; }
 
@@ -34,18 +36,18 @@ namespace ClassicalSharp.Mode {
 		}
 		
 		public void PickRight(BlockID old, BlockID block) {
-			int index = game.Inventory.HeldBlockIndex;
-			if (invCount[index] == 0) return;
+			int index = game.Inventory.SelectedIndex, offset = game.Inventory.Offset;
+			if (invCount[offset + index] == 0) return;
 			
 			Vector3I pos = game.SelectedPos.TranslatedPos;
 			game.UpdateBlock(pos.X, pos.Y, pos.Z, block);
 			game.UserEvents.RaiseBlockChanged(pos, old, block);
 			
-			invCount[index]--;
-			if (invCount[index] != 0) return;
+			invCount[offset + index]--;
+			if (invCount[offset + index] != 0) return;
 			
 			// bypass HeldBlock's normal behaviour
-			game.Inventory.Hotbar[index] = Block.Air;
+			game.Inventory[index] = Block.Air;
 			game.Events.RaiseHeldBlockChanged();
 		}
 		
@@ -80,24 +82,23 @@ namespace ClassicalSharp.Mode {
 		}
 		
 		void AddToHotbar(BlockID block, int count) {
-			int index = -1;
-			BlockID[] hotbar = game.Inventory.Hotbar;
+			int index = -1, offset = game.Inventory.Offset;
 			
 			// Try searching for same block, then try invalid block
-			for (int i = 0; i < hotbar.Length; i++) {
-				if (hotbar[i] == block) index = i;
+			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
+				if (game.Inventory[i] == block) index = i;
 			}
 			if (index == -1) {
-				for (int i = hotbar.Length - 1; i >= 0; i--) {
-					if (hotbar[i] == Block.Air) index = i;
+				for (int i = Inventory.BlocksPerRow - 1; i >= 0; i--) {
+					if (game.Inventory[i] == Block.Air) index = i;
 				}
 			}
 			if (index == -1) return; // no free slots
 			
 			for (int j = 0; j < count; j++) {
-				if (invCount[index] >= 99) return; // no more count
-				hotbar[index] = block;
-				invCount[index]++; // TODO: do we need to raise an event if changing held block still?
+				if (invCount[offset + index] >= 99) return; // no more count
+				game.Inventory[index] = block;
+				invCount[offset + index]++; // TODO: do we need to raise an event if changing held block still?
 				// TODO: we need to spawn block models instead
 			}
 		}
@@ -123,7 +124,7 @@ namespace ClassicalSharp.Mode {
 			BlockID[] hotbar = game.Inventory.Hotbar;
 			for (int i = 0; i < hotbar.Length; i++)
 				hotbar[i] = Block.Air;
-			hotbar[hotbar.Length - 1] = Block.TNT;
+			hotbar[Inventory.BlocksPerRow - 1] = Block.TNT;
 			game.Server.AppName += " (survival)";
 		}
 		

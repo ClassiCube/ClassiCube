@@ -189,7 +189,7 @@ namespace ClassicalSharp.Network {
 		
 		void BlockChanged(object sender, BlockChangedEventArgs e) {
 			Vector3I p = e.Coords;
-			BlockID block = game.Inventory.HeldBlock;
+			BlockID block = game.Inventory.Selected;
 			
 			if (e.Block == 0) {
 				classic.SendSetBlock(p.X, p.Y, p.Z, false, block);

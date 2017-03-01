@@ -45,11 +45,12 @@ namespace ClassicalSharp.Gui.Widgets {
 			int index = 0;
 			posAtlas.tex.Y = (short)(game.Height - barHeight);
 			
-			for (int i = 0; i < hotbarCount; i++) {
+			int offset = game.Inventory.Offset;
+			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
 				int x = (int)(X + (elemSize + borderSize) * i);
 				posAtlas.curX = x;
-				if (surv.invCount[i] > 1)
-					posAtlas.AddInt(surv.invCount[i], vertices, ref index);
+				if (surv.invCount[offset + i] > 1)
+					posAtlas.AddInt(surv.invCount[offset + i], vertices, ref index);
 			}
 
 			gfx.BindTexture(posAtlas.tex.ID);

@@ -17,10 +17,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		public HotbarWidget(Game game) : base(game) {
 			HorizontalAnchor = Anchor.Centre;
 			VerticalAnchor = Anchor.BottomOrRight;
-			hotbarCount = game.Inventory.Hotbar.Length;
 		}
 		
-		protected int hotbarCount;
 		Texture selTex, backTex;
 		protected float barHeight, selBlockSize, elemSize;
 		protected float barXOffset, borderSize;
@@ -61,7 +59,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			backTex.ID = texId;
 			backTex.Render(gfx);
 			
-			int i = game.Inventory.HeldBlockIndex;
+			int i = game.Inventory.SelectedIndex;
 			int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
 			
 			selTex.ID = texId;
@@ -73,8 +71,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			Model.ModelCache cache = game.ModelCache;
 			drawer.BeginBatch(game, cache.vertices, cache.vb);
 			
-			for (int i = 0; i < hotbarCount; i++) {
-				BlockID block = game.Inventory.Hotbar[i];
+			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
+				BlockID block = game.Inventory[i];
 				int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
 				int y = (int)(game.Height - barHeight / 2);
 				
@@ -103,7 +101,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override bool HandlesKeyDown(Key key) {
 			if (key >= Key.Number1 && key <= Key.Number9) {
-				game.Inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
+				game.Inventory.SelectedIndex = (int)key - (int)Key.Number1;
 				return true;
 			}
 			return false;
@@ -115,13 +113,13 @@ namespace ClassicalSharp.Gui.Widgets {
 			InventoryScreen screen = game.Gui.ActiveScreen as InventoryScreen;
 			if (screen == null) return false;
 			
-			for (int i = 0; i < hotbarCount; i++) {
+			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
 				int x = (int)(X + (elemSize + borderSize) * i);
 				int y = (int)(game.Height - barHeight);
 				Rectangle bounds = new Rectangle(x, y, (int)(elemSize + borderSize), (int)barHeight);
 					
 				if (bounds.Contains(mouseX, mouseY)) {
-					game.Inventory.HeldBlockIndex = i;
+					game.Inventory.SelectedIndex = i;
 					return true;
 				}
 			}

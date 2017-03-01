@@ -283,7 +283,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		internal void SendPosition(Vector3 pos, float rotY, float headX) {
-			int payload = net.cpeData.sendHeldBlock ? game.Inventory.HeldBlock : 0xFF;
+			int payload = net.cpeData.sendHeldBlock ? game.Inventory.Selected : 0xFF;
 			writer.WriteUInt8((byte)Opcode.EntityTeleport);
 			
 			writer.WriteUInt8((byte)payload); // held block when using HeldBlock, otherwise just 255

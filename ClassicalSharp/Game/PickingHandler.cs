@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			}
 			
 			int btns = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
-			if (btns > 1 || game.Gui.ActiveScreen.HandlesAllInput || inv.HeldBlock == Block.Invalid) return;
+			if (btns > 1 || game.Gui.ActiveScreen.HandlesAllInput || inv.Selected == Block.Invalid) return;
 			
 			// always play delete animations, even if we aren't picking a block.
 			if (left) {
@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 				if (!game.World.IsValidPos(pos)) return;
 				
 				BlockID old = game.World.GetBlock(pos);
-				BlockID block = inv.HeldBlock;
+				BlockID block = inv.Selected;
 				if (game.autoRotate)
 					block = AutoRotate.RotateBlock(game, block);
 				

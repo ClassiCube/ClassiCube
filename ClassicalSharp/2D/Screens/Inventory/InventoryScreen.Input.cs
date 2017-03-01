@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Screens {
 				ScrollbarClick(mouseY);
 			} else if (button == MouseButton.Left) {
 				if (selIndex != -1) {
-					game.Inventory.HeldBlock = blocksTable[selIndex];
+					game.Inventory.Selected = blocksTable[selIndex];
 				} else if (Contains(TableX, TableY, TableWidth, TableHeight, mouseX, mouseY)) {
 					return true;
 				}
@@ -60,7 +60,7 @@ namespace ClassicalSharp.Gui.Screens {
 			   key == game.Mapping(KeyBind.Inventory)) {
 				game.Gui.SetNewScreen(null);
 			} else if (key == Key.Enter && selIndex != -1) {
-				game.Inventory.HeldBlock = blocksTable[selIndex];
+				game.Inventory.Selected = blocksTable[selIndex];
 				game.Gui.SetNewScreen(null);
 			} else if ((key == Key.Left || key == Key.Keypad4) && selIndex != -1) {
 				ArrowKeyMove(-1);
@@ -71,7 +71,7 @@ namespace ClassicalSharp.Gui.Screens {
 			} else if ((key == Key.Down || key == Key.Keypad2) && selIndex != -1) {
 				ArrowKeyMove(blocksPerRow);
 			} else if (key >= Key.Number1 && key <= Key.Number9) {
-				game.Inventory.HeldBlockIndex = (int)key - (int)Key.Number1;
+				game.Inventory.SelectedIndex = (int)key - (int)Key.Number1;
 			}
 			return true;
 		}

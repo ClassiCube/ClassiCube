@@ -26,7 +26,7 @@ namespace ClassicalSharp.Renderers {
 		internal void Init(Game game, HeldBlockRenderer held) {
 			this.game = game;
 			this.held = held;
-			lastType = game.Inventory.HeldBlock;
+			lastType = game.Inventory.Selected;
 			
 			game.Events.HeldBlockChanged += DoSwitchBlockAnim;
 			game.UserEvents.BlockChanged += BlockChanged;
@@ -131,7 +131,7 @@ namespace ClassicalSharp.Renderers {
 			speed = Math.PI / period;
 			
 			if (updateLastType)
-				lastType = game.Inventory.HeldBlock;
+				lastType = game.Inventory.Selected;
 			pos = Vector3.Zero;
 		}
 	}

@@ -150,11 +150,12 @@ namespace ClassicalSharp {
 			int delta = (int)deltaAcc;
 			deltaAcc -= delta;
 			
-			int diff = -delta % inv.Hotbar.Length;
-			int newIndex = inv.HeldBlockIndex + diff;
-			if (newIndex < 0) newIndex += inv.Hotbar.Length;
-			if (newIndex >= inv.Hotbar.Length) newIndex -= inv.Hotbar.Length;
-			inv.HeldBlockIndex = newIndex;
+			const int blocksPerRow = Inventory.BlocksPerRow;
+			int diff = -delta % blocksPerRow;
+			int newIndex = inv.SelectedIndex + diff;
+			if (newIndex < 0) newIndex += blocksPerRow;
+			if (newIndex >= blocksPerRow) newIndex -= blocksPerRow;
+			inv.SelectedIndex = newIndex;
 		}
 
 		void KeyPressHandler(object sender, KeyPressEventArgs e) {

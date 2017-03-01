@@ -116,7 +116,7 @@ namespace ClassicalSharp.Commands {
 			if (!game.World.IsValidPos(min) || !game.World.IsValidPos(max)) return;
 			
 			BlockID toPlace = block;
-			if (toPlace == Block.Invalid) toPlace = game.Inventory.HeldBlock;
+			if (toPlace == Block.Invalid) toPlace = game.Inventory.Selected;
 			
 			for (int y = min.Y; y <= max.Y; y++)
 				for (int z = min.Z; z <= max.Z; z++)

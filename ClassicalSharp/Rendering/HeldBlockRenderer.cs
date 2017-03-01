@@ -45,7 +45,7 @@ namespace ClassicalSharp.Renderers {
 
 			Vector3 last = anim.pos;
 			anim.pos = Vector3.Zero;
-			type = game.Inventory.HeldBlock;
+			type = game.Inventory.Selected;
 			block.CosX = 1; block.SinX = 0;
 			block.SwitchOrder = false;			
 			if (anim.doAnim) anim.Update(delta, last);

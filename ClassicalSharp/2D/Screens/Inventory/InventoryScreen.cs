@@ -136,7 +136,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.ContextRecreated += ContextRecreated;
 			
 			RecreateBlockTable();
-			SetBlockTo(game.Inventory.HeldBlock);
+			SetBlockTo(game.Inventory.Selected);
 			game.Keyboard.KeyRepeat = true;
 		}
 		
