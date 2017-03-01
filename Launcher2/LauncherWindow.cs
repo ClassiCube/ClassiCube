@@ -242,6 +242,7 @@ namespace Launcher {
 		bool IsShutdown(Key key) {
 			if (key == Key.F4 && (lastKey == Key.AltLeft || lastKey == Key.AltRight))
 				return true;
+			
 			// On OSX, Cmd+Q should also terminate the process.
 			if (!OpenTK.Configuration.RunningOnMacOS) return false;
 			return key == Key.Q && (lastKey == Key.WinLeft || lastKey == Key.WinRight);

@@ -145,7 +145,7 @@ namespace ClassicalSharp {
 		void ScrollHotbar(float deltaPrecise) {
 			Inventory inv = game.Inventory;
 			if (AltDown) {
-				inv.Offset = ScrolledIndex(deltaPrecise, inv.Offset);
+				inv.Offset = ScrolledIndex(deltaPrecise, inv.Offset) * Inventory.BlocksPerRow;
 			} else {
 				inv.SelectedIndex = ScrolledIndex(deltaPrecise, inv.SelectedIndex);
 			}
