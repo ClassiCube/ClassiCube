@@ -64,7 +64,7 @@ namespace ClassicalSharp.Gui.Screens {
 				                    LeftOnly((g, w) => g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g))))
 					.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, 95),
 				
-				MakeBack(400, "Done", 22, titleFont, (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
+				MakeBack(400, "Done", 25, titleFont, (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
 				null, null,
 			};
 		}

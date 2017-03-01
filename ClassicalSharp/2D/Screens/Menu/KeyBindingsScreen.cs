@@ -54,7 +54,7 @@ namespace ClassicalSharp.Gui.Screens {
 				widgets[index++] = MakeBack(false, titleFont,
 				                            (g, w) => g.Gui.SetNewScreen(new ClassicOptionsScreen(g)));
 			} else {
-				widgets[index++] = MakeBack("Back to menu", 5, titleFont,
+				widgets[index++] = MakeBack(false, titleFont,
 				                            (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g)));
 			}
 		}

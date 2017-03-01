@@ -68,7 +68,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeClassic(0, 50, "Save level",
 				            (g, w) => g.Gui.SetNewScreen(new SaveLevelScreen(g))),
 
-				MakeBack(400, "Back to game", 22, titleFont, (g, w) => g.Gui.SetNewScreen(null)),
+				MakeBack(400, "Back to game", 25, titleFont, (g, w) => g.Gui.SetNewScreen(null)),
 				
 				game.ClassicMode ? null :
 					MakeClassic(0, 150, "Nostalgia options",

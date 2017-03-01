@@ -57,7 +57,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[left.Length + right.Length + 4];
-			MakeWidgets(-95);
+			MakeWidgets(-90);
 		}
 	}
 	
@@ -110,7 +110,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[left.Length + right.Length + 4];
-			MakeWidgets(-50);
+			MakeWidgets(-40);
 		}
 	}
 	
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[left.Length + right.Length + 4];
-			MakeWidgets(-50);
+			MakeWidgets(-40);
 		}
 	}
 	
@@ -156,7 +156,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[left.Length + 5];
-			MakeWidgets(-50);
+			MakeWidgets(-40);
 			
 			widgets[index++] = TextWidget.Create(game, "&eRight click to remove the key binding", regularFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
