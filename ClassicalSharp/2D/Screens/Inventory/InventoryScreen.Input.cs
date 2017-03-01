@@ -75,6 +75,10 @@ namespace ClassicalSharp.Gui.Screens {
 			return true;
 		}
 		
+		public override bool HandlesKeyUp(Key key) {
+			return game.Gui.hudScreen.hotbar.HandlesKeyUp(key);
+		}
+		
 		void ArrowKeyMove(int delta) {
 			int startIndex = selIndex;
 			selIndex += delta;

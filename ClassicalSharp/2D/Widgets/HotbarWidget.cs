@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override void Init() {
 			float scale = game.GuiHotbarScale;
 			selBlockSize = (float)Math.Ceiling(24 * scale);
-			barHeight = (int)(22 * scale);		
+			barHeight = (int)(22 * scale);
 			Width = (int)(182 * scale);
 			Height = (int)barHeight;
 			
@@ -98,7 +98,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			selTex = new Texture(0, 0, y, hSize, vSize, rec);
 		}
 		
-		
+		bool altHandled;
 		public override bool HandlesKeyDown(Key key) {
 			if (key >= Key.Number1 && key <= Key.Number9) {
 				int index = (int)key - (int)Key.Number1;
@@ -106,22 +106,34 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (game.Input.AltDown) {
 					// Pick from first to ninth row
 					game.Inventory.Offset = index * Inventory.BlocksPerRow;
+					game.Events.RaiseHeldBlockChanged();
+					altHandled = true;
 				} else {
 					game.Inventory.SelectedIndex = index;
 				}
-				return true;
-			} else if (key == Key.AltLeft || key == Key.AltRight) {
-				// Alternate between first and second row
-				int index = game.Inventory.Offset == 0 ? 1 : 0;
-				game.Inventory.Offset = index * Inventory.BlocksPerRow;
 				return true;
 			}
 			return false;
 		}
 		
+		public override bool HandlesKeyUp(Key key) {
+			// We need to handle these cases:
+			// a) user presses alt then number
+			// b) user presses alt
+			// thus we only do case b) if case a) did not happen
+			if (!(key == Key.AltLeft || key == Key.AltRight)) return false;			
+			if (altHandled) { altHandled = false; return true; } // handled already
+			
+			// Alternate between first and second row
+			int index = game.Inventory.Offset == 0 ? 1 : 0;
+			game.Inventory.Offset = index * Inventory.BlocksPerRow;
+			game.Events.RaiseHeldBlockChanged();
+			return true;
+		}
+		
 		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
 			if (button != MouseButton.Left || !Bounds.Contains(mouseX, mouseY))
-			   return false;
+				return false;
 			InventoryScreen screen = game.Gui.ActiveScreen as InventoryScreen;
 			if (screen == null) return false;
 			
@@ -129,7 +141,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				int x = (int)(X + (elemSize + borderSize) * i);
 				int y = (int)(game.Height - barHeight);
 				Rectangle bounds = new Rectangle(x, y, (int)(elemSize + borderSize), (int)barHeight);
-					
+				
 				if (bounds.Contains(mouseX, mouseY)) {
 					game.Inventory.SelectedIndex = i;
 					return true;

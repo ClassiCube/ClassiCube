@@ -173,7 +173,7 @@ namespace ClassicalSharp.Gui.Screens {
 					return true;
 				}
 			}
-			return false;
+			return hotbar.HandlesKeyUp(key);
 		}
 		
 		public void OpenTextInputBar(string text) {
