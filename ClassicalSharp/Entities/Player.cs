@@ -134,6 +134,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void ResetSkin() {
+			uScale = 1; vScale = 1;
 			MobTextureId = -1;
 			TextureId = -1;
 			SkinType = game.DefaultPlayerSkinType;
