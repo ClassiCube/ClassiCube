@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 		public int Offset {
 			get { return offset; }
 			set {
-				if (!CanChangeSelected()) return;
+				if (!CanChangeSelected() || game.ClassicMode) return;
 				offset = value; game.Events.RaiseHeldBlockChanged();
 			}
 		}
