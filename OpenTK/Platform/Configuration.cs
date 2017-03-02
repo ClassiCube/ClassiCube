@@ -26,6 +26,7 @@
 #endregion
 
 using System;
+using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace OpenTK {
@@ -33,7 +34,7 @@ namespace OpenTK {
 	/// <summary>Provides information about the underlying OS and runtime.</summary>
 	public static class Configuration {
 		
-		public static bool RunningOnWindows, RunningOnUnix, RunningOnX11, 
+		public static bool RunningOnWindows, RunningOnUnix, RunningOnX11,
 		RunningOnMacOS, RunningOnLinux, RunningOnMono;
 
 		// Detects the underlying OS and runtime.
@@ -80,5 +81,38 @@ namespace OpenTK {
 
 		[DllImport("libc")]
 		unsafe static extern void uname(sbyte* uname_struct);
+		
+		public static void SkipPerfCountersHack() {
+			if (RunningOnMono || !RunningOnWindows) return;
+			
+			// On XP (maybe other versions) with guest account, we get this error
+			/*System.UnauthorizedAccessException: Access to the path 'Global\.net clr networking' is denied.
+				at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+				at System.Threading.Mutex.<>c__DisplayClass3.<.ctor>b__0(Object userData)
+				at System.Runtime.CompilerServices.RuntimeHelpers.ExecuteCodeWithGuaranteedCleanup(TryCode code, CleanupCode backoutCode, Object userData)
+				at System.Threading.Mutex..ctor(Boolean initiallyOwned, String name, Boolean& createdNew, MutexSecurity mutexSecurity)
+				at System.Diagnostics.SharedUtils.EnterMutexWithoutGlobal(String mutexName, Mutex& mutex)
+				at System.Diagnostics.SharedPerformanceCounter.Verify(CategoryEntry* currentCategoryPointer)
+				at System.Diagnostics.SharedPerformanceCounter.FindCategory(CategoryEntry** returnCategoryPointerReference)
+				at System.Diagnostics.SharedPerformanceCounter.GetCounter(String counterName, String instanceName, Boolean enableReuse, PerformanceCounterInstanceLifetime lifetime)
+				at System.Diagnostics.SharedPerformanceCounter..ctor(String catName, String counterName, String instanceName, PerformanceCounterInstanceLifetime lifetime)
+				at System.Diagnostics.PerformanceCounter.Initialize()
+				at System.Diagnostics.PerformanceCounter.set_RawValue(Int64 value)
+				at System.Net.NetworkingPerfCounters.Initialize()*/
+			
+			// So we hack around and prevent them ever being initalised.
+			// TODO: only seems to work before .NET 4.0, not sure if still needed by then
+			try {
+				Assembly assem = typeof(System.Net.IPAddress).Assembly;
+				Type perfType = assem.GetType("System.Net.NetworkingPerfCounters");
+				if (perfType == null) return;
+				
+				FieldInfo field = perfType.GetField("initialized", BindingFlags.NonPublic | BindingFlags.Static);
+				if (field == null) return;
+				
+				field.SetValue(null, true);
+			} catch {				
+			}
+		}
 	}
 }

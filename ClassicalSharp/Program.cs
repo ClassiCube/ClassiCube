@@ -19,6 +19,7 @@ namespace ClassicalSharp {
 			string logPath = Path.Combine(AppDirectory, "client.log");
 			ErrorHandler.InstallHandler(logPath);
 			CleanupMainDirectory();
+			Configuration.SkipPerfCountersHack();
 			
 			Utils.LogDebug("Starting " + AppName + "..");
 			string path = Path.Combine(Program.AppDirectory, TexturePack.Dir);
