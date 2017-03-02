@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using ClassicalSharp.Model;
 using ClassicalSharp.Physics;
 using OpenTK;
 
@@ -275,6 +276,7 @@ namespace ClassicalSharp.Entities {
 			for (int id = 0; id < EntityList.MaxCount; id++) {
 				Entity other = game.Entities[id];
 				if (other == null || other == entity) continue;
+				if (other.Model is BlockModel) continue; // block models shouldn't push you
 				
 				bool yIntersects = 
 					entity.Position.Y <= (other.Position.Y + other.Size.Y) && 
