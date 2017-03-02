@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			font = new Font(game.FontName, 16);
-			posFont = new Font(game.FontName, 16, FontStyle.Italic);
+			posFont = new Font(game.FontName, 16, FontStyle.Regular);
 			ContextRecreated();
 			
 			game.Events.ChatFontChanged += ChatFontChanged;
@@ -95,7 +95,7 @@ namespace ClassicalSharp.Gui.Screens {
 			fpsText.SetText(msg);
 			
 			posAtlas = new TextAtlas(game);
-			posAtlas.Pack("0123456789-, ()", posFont, "Feet pos: ");
+			posAtlas.Pack("0123456789-, ()", posFont, "Position: ");
 			posAtlas.tex.Y = (short)(fpsText.Height + 2);
 			
 			int yOffset = fpsText.Height + posAtlas.tex.Height + 2;

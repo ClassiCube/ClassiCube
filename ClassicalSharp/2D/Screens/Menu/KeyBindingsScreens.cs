@@ -150,7 +150,7 @@ namespace ClassicalSharp.Gui.Screens {
 			leftDesc = new string[] { "Left", "Middle", "Right" };
 			
 			title = "Mouse key bindings";
-			leftPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
+			leftPage = (g, w) => g.Gui.SetNewScreen(new OtherKeyBindingsScreen(g));
 			ContextRecreated();
 		}
 		

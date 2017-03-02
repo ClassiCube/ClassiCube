@@ -20,7 +20,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16, FontStyle.Italic);
+			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
 			base.Init();
 			
 			if (keyNames == null)
