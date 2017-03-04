@@ -285,9 +285,9 @@ namespace ClassicalSharp {
 			game.autoRotate = !game.autoRotate;
 			Key key = Keys[KeyBind.Autorotate];
 			if (game.autoRotate) {
-				game.Chat.Add("  &eAuto rotate is &aenabled. &aPress " + key + " &eto disable.");
+				game.Chat.Add("  &eAuto rotate is &aenabled. &ePress &a" + key + " &eto disable.");
 			} else {
-				game.Chat.Add("  &eAuto rotate is &cdisabled. &aPress " + key + " &eto re-enable.");
+				game.Chat.Add("  &eAuto rotate is &cdisabled. &ePress &a" + key + " &eto re-enable.");
 			}
 		}
 		
