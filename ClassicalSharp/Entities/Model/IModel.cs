@@ -30,6 +30,16 @@ namespace ClassicalSharp.Model {
 		/// <summary> Whether this entity requires downloading of a skin texture. </summary>		
 		public bool UsesSkin = true;
 		
+		/// <summary> Gravity applied to this entity. </summary>
+		public virtual float Gravity { get { return 0.08f; } }
+		
+		/// <summary> Drag applied to the entity. </summary>
+		public virtual Vector3 Drag { get { return new Vector3(0.91f, 0.98f, 0.91f); } }
+		
+		/// <summary> Friction applied to the entity when is on the ground. </summary>
+		public virtual Vector3 GroundFriction { get { return new Vector3(0.6f, 1.0f, 0.6f); } }		
+		
+		
 		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
 		public abstract float NameYOffset { get; }
 		
@@ -44,6 +54,7 @@ namespace ClassicalSharp.Model {
 		
 		/// <summary> Scaling factor applied, multiplied by the entity's current model scale. </summary>
 		public virtual float NameScale { get { return 1; } }
+		
 		
 		/// <summary> The size of the bounding box that is used when
 		/// performing collision detection for this model. </summary>

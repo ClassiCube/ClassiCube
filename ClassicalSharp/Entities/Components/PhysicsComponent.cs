@@ -104,10 +104,8 @@ namespace ClassicalSharp.Entities {
 		
 		static Vector3 waterDrag = new Vector3(0.8f, 0.8f, 0.8f),
 		lavaDrag = new Vector3(0.5f, 0.5f, 0.5f),
-		ropeDrag = new Vector3(0.5f, 0.85f, 0.5f),
-		normalDrag = new Vector3(0.91f, 0.98f, 0.91f),
-		airDrag = new Vector3(0.6f, 1f, 0.6f);
-		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
+		ropeDrag = new Vector3(0.5f, 0.85f, 0.5f);
+		const float liquidGrav = 0.02f, ropeGrav = 0.034f;
 		
 		public void PhysicsTick(Vector3 vel) {
 			if (hacks.Noclip) entity.onGround = false;
@@ -130,12 +128,12 @@ namespace ClassicalSharp.Entities {
 				MoveNormal(vel, 0.02f * 1.7f, ropeDrag, ropeGrav, yMul);
 			} else {
 				float factor = !(hacks.Flying || hacks.Noclip) && entity.onGround ? 0.1f : 0.02f;
-				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
+				float gravity = useLiquidGravity ? liquidGrav : entity.Model.Gravity;
 				
 				if (hacks.Flying || hacks.Noclip) {
-					MoveFlying(vel, factor * horMul, normalDrag, gravity, yMul);
+					MoveFlying(vel, factor * horMul, entity.Model.Drag, gravity, yMul);
 				} else {
-					MoveNormal(vel, factor * horMul, normalDrag, gravity, yMul);
+					MoveNormal(vel, factor * horMul, entity.Model.Drag, gravity, yMul);
 				}
 
 				if (entity.BlockUnderFeet == Block.Ice && !(hacks.Flying || hacks.Noclip)) {
@@ -147,7 +145,7 @@ namespace ClassicalSharp.Entities {
 						entity.Velocity.Z *= scale;
 					}
 				} else if (entity.onGround || hacks.Flying) {
-					entity.Velocity = Utils.Mul(entity.Velocity, airDrag); // air drag or ground friction
+					entity.Velocity = Utils.Mul(entity.Velocity, entity.Model.GroundFriction); // air drag or ground friction
 				}
 			}
 			
