@@ -55,9 +55,14 @@ namespace ClassicalSharp.Gui.Screens {
 			return true;
 		}
 		
+		// We want the user to be able to press B to exit the inventory menu
+		// however since we use KeyRepeat = true, we must wait until the first time they released B
+		// before marking the next press as closing the menu
+		bool releasedInv;
 		public override bool HandlesKeyDown(Key key) {
-			if (key == game.Mapping(KeyBind.PauseOrExit) ||
-			   key == game.Mapping(KeyBind.Inventory)) {
+			if (key == game.Mapping(KeyBind.PauseOrExit)) {
+				game.Gui.SetNewScreen(null);
+			} else if (key == game.Mapping(KeyBind.Inventory) && releasedInv) {
 				game.Gui.SetNewScreen(null);
 			} else if (key == Key.Enter && selIndex != -1) {
 				game.Inventory.Selected = blocksTable[selIndex];
@@ -76,6 +81,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesKeyUp(Key key) {
+			if (key == game.Mapping(KeyBind.Inventory)) {
+				releasedInv = true; return true;
+			}
 			return game.Gui.hudScreen.hotbar.HandlesKeyUp(key);
 		}
 		
