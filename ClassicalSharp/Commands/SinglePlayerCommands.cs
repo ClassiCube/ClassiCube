@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.Renderers;
 using OpenTK.Input;
@@ -123,6 +124,33 @@ namespace ClassicalSharp.Commands {
 					for (int x = min.X; x <= max.X; x++) 
 			{
 				game.UpdateBlock(x, y, z, toPlace);
+			}
+		}
+	}	
+	
+	public sealed class TeleportCommand : Command {
+		
+		public TeleportCommand() {
+			Name = "Teleport";
+			Help = new string[] {
+				"&a/client teleport [x y z]",
+				"&eMoves you to the given coordinates.",
+			};
+		}
+		
+		public override void Execute(string[] args) {
+			if (args.Length != 4) {
+				game.Chat.Add("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
+			} else {
+				float x = 0, y = 0, z = 0;
+				if (!Utils.TryParseDecimal(args[1], out x) ||
+				    !Utils.TryParseDecimal(args[2], out y) ||
+				    !Utils.TryParseDecimal(args[3], out z)) {
+					game.Chat.Add("&e/client teleport: &cCoordinates must be decimals");
+				}
+				
+				LocationUpdate update = LocationUpdate.MakePos(x, y, z, false);
+				game.LocalPlayer.SetLocation(update, false);
 			}
 		}
 	}	

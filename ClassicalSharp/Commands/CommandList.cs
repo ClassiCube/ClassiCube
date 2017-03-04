@@ -27,6 +27,7 @@ namespace ClassicalSharp.Commands {
 			if (!game.Server.IsSinglePlayer) return;
 			Register(new ModelCommand());
 			Register(new CuboidCommand());
+			Register(new TeleportCommand());
 		}
 
 		public void Ready(Game game) { }
