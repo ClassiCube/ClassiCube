@@ -128,7 +128,7 @@ namespace ClassicalSharp.Entities {
 			MobTextureId = -1;
 			
 			// Custom mob textures.
-			if (Utils.IsUrlPrefix(SkinName, 0) && item.TimeAdded > lastModelChange)
+			if (Utils.IsUrlPrefix(SkinName, 0) && item.TimeAdded >= lastModelChange)
 				MobTextureId = TextureId;
 			bmp.Dispose();
 		}
