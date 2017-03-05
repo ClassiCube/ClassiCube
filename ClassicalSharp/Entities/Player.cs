@@ -127,6 +127,8 @@ namespace ClassicalSharp.Entities {
 			TextureId = game.Graphics.CreateTexture(bmp, true);
 			MobTextureId = -1;
 			
+			Console.WriteLine("DOWNLOADED " + DisplayName);
+			
 			// Custom mob textures.
 			if (Utils.IsUrlPrefix(SkinName, 0) && item.TimeAdded >= lastModelChange)
 				MobTextureId = TextureId;

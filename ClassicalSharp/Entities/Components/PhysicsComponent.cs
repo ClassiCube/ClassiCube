@@ -1,6 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Model;
 using ClassicalSharp.Physics;
 using OpenTK;
 
@@ -16,11 +15,11 @@ namespace ClassicalSharp.Entities {
 	public sealed class PhysicsComponent {
 		
 		bool useLiquidGravity = false; // used by BlockDefinitions.
-		bool canLiquidJump = true;
 		internal bool firstJump, secondJump, jumping;
 		Entity entity;
 		Game game;
 		BlockInfo info;
+		internal int counter;
 		
 		internal float jumpVel = 0.42f, userJumpVel = 0.42f, serverJumpVel = 0.42f;
 		internal HacksComponent hacks;
@@ -44,46 +43,16 @@ namespace ClassicalSharp.Entities {
 				entity.Velocity.Y = 0.02f;
 			}
 			
-			if (!jumping) {
-				canLiquidJump = false; return;
-			}
+			if (!jumping) return;
 			
 			bool touchWater = entity.TouchesAnyWater();
 			bool touchLava = entity.TouchesAnyLava();
-			if (touchWater || touchLava) {
-				AABB bounds = entity.Bounds;
-				int feetY = Utils.Floor(bounds.Min.Y), bodyY = feetY + 1;
-				int headY = Utils.Floor(bounds.Max.Y);
-				if (bodyY > headY) bodyY = headY;
-				
-				bounds.Max.Y = bounds.Min.Y = feetY;
-				bool liquidFeet = entity.TouchesAny(bounds, StandardLiquid);
-				bounds.Min.Y = Math.Min(bodyY, headY);
-				bounds.Max.Y = Math.Max(bodyY, headY);
-				bool liquidRest = entity.TouchesAny(bounds, StandardLiquid);
-				
-				bool pastJumpPoint = liquidFeet && !liquidRest && (entity.Position.Y % 1 >= 0.4);
-				if (!pastJumpPoint) {
-					canLiquidJump = true;
-					entity.Velocity.Y += 0.04f;
-					if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += 0.04f;
-					if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.02f;
-				} else if (pastJumpPoint) {
-					// either A) jump bob in water B) climb up solid on side
-					if (collisions.HorizontalCollision)
-						entity.Velocity.Y += touchLava ? 0.30f : 0.13f;
-					else if (canLiquidJump)
-						entity.Velocity.Y += touchLava ? 0.20f : 0.10f;
-					canLiquidJump = false;
-				}
-			} else if (useLiquidGravity) {
+			if (touchWater || touchLava || useLiquidGravity) {
 				entity.Velocity.Y += 0.04f;
 				if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += 0.04f;
 				if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.02f;
-				canLiquidJump = false;
 			} else if (entity.TouchesAnyRope()) {
 				entity.Velocity.Y += (hacks.Speeding && hacks.CanSpeed) ? 0.15f : 0.10f;
-				canLiquidJump = false;
 			} else if (entity.onGround) {
 				DoNormalJump();
 			}
@@ -95,7 +64,6 @@ namespace ClassicalSharp.Entities {
 			entity.Velocity.Y = jumpVel;
 			if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += jumpVel;
 			if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += jumpVel / 2;
-			canLiquidJump = false;
 		}
 		
 		bool StandardLiquid(BlockID block) {
@@ -104,8 +72,10 @@ namespace ClassicalSharp.Entities {
 		
 		static Vector3 waterDrag = new Vector3(0.8f, 0.8f, 0.8f),
 		lavaDrag = new Vector3(0.5f, 0.5f, 0.5f),
-		ropeDrag = new Vector3(0.5f, 0.85f, 0.5f);
-		const float liquidGrav = 0.02f, ropeGrav = 0.034f;
+		ropeDrag = new Vector3(0.5f, 0.85f, 0.5f),
+		normalDrag = new Vector3(0.91f, 0.98f, 0.91f),
+		airDrag = new Vector3(0.6f, 1f, 0.6f);
+		const float liquidGrav = 0.02f, ropeGrav = 0.034f, normalGrav = 0.08f;
 		
 		public void PhysicsTick(Vector3 vel) {
 			if (hacks.Noclip) entity.onGround = false;
@@ -128,12 +98,12 @@ namespace ClassicalSharp.Entities {
 				MoveNormal(vel, 0.02f * 1.7f, ropeDrag, ropeGrav, yMul);
 			} else {
 				float factor = !(hacks.Flying || hacks.Noclip) && entity.onGround ? 0.1f : 0.02f;
-				float gravity = useLiquidGravity ? liquidGrav : entity.Model.Gravity;
+				float gravity = useLiquidGravity ? liquidGrav : normalGrav;
 				
 				if (hacks.Flying || hacks.Noclip) {
-					MoveFlying(vel, factor * horMul, entity.Model.Drag, gravity, yMul);
+					MoveFlying(vel, factor * horMul, normalDrag, gravity, yMul);
 				} else {
-					MoveNormal(vel, factor * horMul, entity.Model.Drag, gravity, yMul);
+					MoveNormal(vel, factor * horMul, normalDrag, gravity, yMul);
 				}
 
 				if (entity.BlockUnderFeet == Block.Ice && !(hacks.Flying || hacks.Noclip)) {
@@ -145,7 +115,7 @@ namespace ClassicalSharp.Entities {
 						entity.Velocity.Z *= scale;
 					}
 				} else if (entity.onGround || hacks.Flying) {
-					entity.Velocity = Utils.Mul(entity.Velocity, entity.Model.GroundFriction); // air drag or ground friction
+					entity.Velocity = Utils.Mul(entity.Velocity, airDrag); // air drag or ground friction
 				}
 			}
 			
@@ -274,10 +244,9 @@ namespace ClassicalSharp.Entities {
 			for (int id = 0; id < EntityList.MaxCount; id++) {
 				Entity other = game.Entities[id];
 				if (other == null || other == entity) continue;
-				if (other.Model is BlockModel) continue; // block models shouldn't push you
 				
-				bool yIntersects = 
-					entity.Position.Y <= (other.Position.Y + other.Size.Y) && 
+				bool yIntersects =
+					entity.Position.Y <= (other.Position.Y + other.Size.Y) &&
 					other.Position.Y  <= (entity.Position.Y + entity.Size.Y);
 				if (!yIntersects) continue;
 				

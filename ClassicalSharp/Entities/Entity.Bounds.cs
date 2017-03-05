@@ -67,10 +67,7 @@ namespace ClassicalSharp.Entities {
 		public const float Adjustment = 0.001f;
 		
 		
-		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 0/16f, 0.25f/16f);
-		
-		// If liquid block above, leave height same
-		// otherwise reduce water BB height by 0.5 blocks
+		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 0, 0.25f/16f);
 		bool TouchesAnyLiquid(AABB bounds, BlockID block1, BlockID block2) {
 			Vector3I bbMin = Vector3I.Floor(bounds.Min);
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
@@ -86,16 +83,8 @@ namespace ClassicalSharp.Entities {
 			{
 				if (!game.World.IsValidPos(x, y, z)) continue;
 				BlockID block = game.World.GetBlock(x, y, z);
-				BlockID below = (y - 1) < 0 ? Block.Air : game.World.GetBlock(x, y - 1, z);
-				BlockID above = (y + 1) >= height ? Block.Air : game.World.GetBlock(x, y + 1, z);
-				
-				// TODO: use recording to find right constants when I have more time
 				blockBB.Min = new Vector3(x, y, z) + info.MinBB[block];
 				blockBB.Max = new Vector3(x, y, z) + info.MaxBB[block];
-				//if (game.BlockInfo.Collide[below] != CollideType.SwimThrough)
-				//	min.Y += 4/16f;
-				//if (game.BlockInfo.Collide[above] != CollideType.SwimThrough)
-				//	max.Y -= 4/16f;
 				
 				if (!blockBB.Intersects(bounds)) continue;
 				if (block == block1 || block == block2) return true;
@@ -106,16 +95,14 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
 		public bool TouchesAnyLava() {
-			// NOTE: Original classic client uses offset (so you can only climb up
-			// alternating liquid-solid elevators on two sides) 
-			AABB bounds = Bounds.Offset(liqExpand);
+			AABB bounds = Bounds.Offset(liqExpand); bounds.Min.Y += 6/16f; bounds.Max.Y -= 6/16f;
 			return TouchesAnyLiquid(bounds, Block.Lava, Block.StillLava);
 		}
 
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
-			AABB bounds = Bounds.Offset(liqExpand);
+			AABB bounds = Bounds.Offset(liqExpand); bounds.Min.Y += 6/16f; bounds.Max.Y -= 6/16f;
 			return TouchesAnyLiquid(bounds, Block.Water, Block.StillWater);
 		}
 	}
