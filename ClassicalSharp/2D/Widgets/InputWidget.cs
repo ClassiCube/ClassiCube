@@ -116,7 +116,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public void UpdateCaret() {
 			if (caret >= Text.Length) caret = -1;
 			Text.GetCoords(caret, lines, out caretCol, out caretRow);
-			DrawTextArgs args = new DrawTextArgs(null, font, true);
+			DrawTextArgs args = new DrawTextArgs(null, font, false);
 			IDrawer2D drawer = game.Drawer2D;
 			caretAccumulator = 0;
 
