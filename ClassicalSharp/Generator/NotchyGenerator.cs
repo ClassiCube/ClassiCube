@@ -348,7 +348,11 @@ namespace ClassicalSharp.Generator {
 						
 						int treeY = heightmap[treeZ * Width + treeX] + 1;
 						int treeHeight = 5 + rnd.Next(3);
-						if (CanGrowTree(treeX, treeY, treeZ, treeHeight)) {
+						
+						int index = (treeY * Length + treeZ) * Width + treeX;
+						BlockID blockUnder = treeY > 0 ? blocks[index - oneY] : Block.Air;
+						
+						if (blockUnder == Block.Grass && CanGrowTree(treeX, treeY, treeZ, treeHeight)) {
 							GrowTree(treeX, treeY, treeZ, treeHeight);
 						}
 					}

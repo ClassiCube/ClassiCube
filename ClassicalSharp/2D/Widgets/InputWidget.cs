@@ -135,6 +135,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				string line = lines[caretRow];
 				if (caretCol < line.Length) {
 					args.Text = new String(line[caretCol], 1);
+					args.UseShadow = true;
 					caretTex.Width = (short)drawer.MeasureSize(ref args).Width;
 				} else {
 					caretTex.Width = (short)caretWidth;

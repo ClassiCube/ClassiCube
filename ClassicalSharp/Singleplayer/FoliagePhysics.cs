@@ -36,7 +36,10 @@ namespace ClassicalSharp.Singleplayer {
 			int x = index % map.Width;
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
-			GrowTree(x, y, z);
+			
+			BlockID below = Block.Air;
+			if (y > 0) below = map.blocks[index - map.Width * map.Length];
+			if (below == Block.Grass) GrowTree(x, y, z);
 		}
 		
 		void HandleDirt(int index, BlockID block) {
