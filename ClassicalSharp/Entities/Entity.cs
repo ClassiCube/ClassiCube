@@ -27,7 +27,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> The name of the model of this entity. </summary>
 		public string ModelName;
 
-        public int Hp = 10;
+       
 		
 		/// <summary> Scale applied to the model for collision detection and rendering. </summary>
 		public float ModelScale = 1;
