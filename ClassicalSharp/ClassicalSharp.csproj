@@ -152,6 +152,7 @@
     <Compile Include="Commands\SinglePlayerCommands.cs" />
     <Compile Include="Entities\Components\IInterpComponent.cs" />
     <Compile Include="Entities\Mobs\AI.cs" />
+    <Compile Include="Entities\Other\TntEntity.cs" />
     <Compile Include="Entities\Components\AnimatedComponent.cs" />
     <Compile Include="Entities\Components\HacksComponent.cs" />
     <Compile Include="Entities\Components\InputComponent.cs" />
@@ -343,6 +344,7 @@
     <Folder Include="Blocks" />
     <Folder Include="Entities\Components" />
     <Folder Include="Entities\Mobs" />
+    <Folder Include="Entities\Other" />
     <Folder Include="Events" />
     <Folder Include="Generator" />
     <Folder Include="Map\Lighting" />
