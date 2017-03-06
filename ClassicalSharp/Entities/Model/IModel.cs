@@ -37,7 +37,9 @@ namespace ClassicalSharp.Model {
 		public virtual Vector3 Drag { get { return new Vector3(0.91f, 0.98f, 0.91f); } }
 		
 		/// <summary> Friction applied to the entity when is on the ground. </summary>
-		public virtual Vector3 GroundFriction { get { return new Vector3(0.6f, 1.0f, 0.6f); } }		
+		public virtual Vector3 GroundFriction { get { return new Vector3(0.6f, 1.0f, 0.6f); } }
+		
+		public virtual Vector3 GroundBounce { get { return new Vector3(0f, 0f, 0f); } }	
 		
 		
 		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
