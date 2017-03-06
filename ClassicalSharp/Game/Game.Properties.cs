@@ -123,6 +123,7 @@ namespace ClassicalSharp {
 		public AudioPlayer AudioPlayer;
 		public AxisLinesRenderer AxisLinesRenderer;
 		public SkyboxRenderer SkyboxRenderer;
+		public TNTPhysics tnt;
 		
 		public List<IGameComponent> Components = new List<IGameComponent>();
 		public List<ScheduledTask> Tasks = new List<ScheduledTask>();
