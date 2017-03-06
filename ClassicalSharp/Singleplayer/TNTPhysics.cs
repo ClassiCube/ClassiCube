@@ -1,7 +1,9 @@
-﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Map;
 using OpenTK;
+using ClassicalSharp.Entities;
+using ClassicalSharp.Entities.Other;
 
 #if USE16_BIT
 using BlockID = System.UInt16;
@@ -21,7 +23,7 @@ namespace ClassicalSharp.Singleplayer {
 			this.game = game;
 			map = game.World;
 			this.physics = physics;
-			physics.OnPlace[Block.TNT] = HandleTnt;
+			physics.OnDelete[Block.TNT] = HandleTnt;
 		}
 		
 		Vector3[] rayDirs;
@@ -29,10 +31,40 @@ namespace ClassicalSharp.Singleplayer {
 		float[] hardness;
 		
 		void HandleTnt(int index, BlockID block) {
-			int x = index % map.Width;
-			int z = (index / map.Width) % map.Length;
-			int y = (index / map.Width) / map.Length;
-			Explode(4, x, y, z);
+			float x = (index % map.Width) + 0.5f;
+			float z = ((index / map.Width) % map.Length) + 0.5f;
+			float y = ((index / map.Width) / map.Length);
+			
+			TntEntity TNT = new TntEntity(game, -1, 4);
+			Vector3 pos = new Vector3(x, y, z);
+			TNT.SetLocation(LocationUpdate.MakePos(pos, false), false);
+			var ent = game.Entities;
+			var entLen = game.Entities.Entities.Length;
+			for(int i = entLen  - 1; i >= 0; i--) {
+				if(ent[i] == null) {
+					ent[i] = TNT;
+					break;
+				}
+			}
+		}
+		
+		void HandleTnt2(int index, BlockID block) {
+			float x = (index % map.Width) + 0.5f;
+			float z = ((index / map.Width) % map.Length) + 0.5f;
+			float y = ((index / map.Width) / map.Length);
+			short intensity = (short)RandomNumber(10, 18);
+			
+			TntEntity TNT = new TntEntity(game, intensity, 4);
+			Vector3 pos = new Vector3(x, y, z);
+			TNT.SetLocation(LocationUpdate.MakePos(pos, false), false);
+			var ent = game.Entities;
+			var entLen = game.Entities.Entities.Length;
+			for(int i = entLen  - 1; i >= 0; i--) {
+				if(ent[i] == null) {
+					ent[i] = TNT;
+					break;
+				}
+			}
 		}
 		
 		// Algorithm source: http://minecraft.gamepedia.com/Explosion
@@ -55,12 +87,20 @@ namespace ClassicalSharp.Singleplayer {
 					Vector3I P = Vector3I.Floor(position);
 					if (!map.IsValidPos(P)) break;
 					
+					int newX = P.X;
+					int newY = P.Y;
+					int newZ = P.Z;
+					bool isTNT = false;
+					int newIndex = (newY * game.World.Length + newZ) * game.World.Width + newX;
+					if (map.blocks[newIndex] == Block.TNT) isTNT = true;
+					
 					BlockID block = map.GetBlock(P);
 					intensity -= (hardness[block] / 5 + 0.3f) * stepLen;
 					if (intensity > 0 && block != 0) {
 						game.UpdateBlock(P.X, P.Y, P.Z, Block.Air);
 						index = (P.Y * map.Length + P.Z) * map.Width + P.X;
 						physics.ActivateNeighbours(P.X, P.Y, P.Z, index);
+						if (isTNT) HandleTnt2(newIndex, block);
 					}
 				}
 			}
@@ -107,6 +147,15 @@ namespace ClassicalSharp.Singleplayer {
 		static Vector3 Normalise(float x, float y, float z) {
 			float scale = 1f / (float)Math.Sqrt(x * x + y * y + z * z);
 			return new Vector3(x * scale, y * scale, z * scale);
+		}
+		
+		private static readonly Random random = new Random();
+		private static readonly object syncLock = new object();
+		public static int RandomNumber(int min, int max)
+		{
+    		lock(syncLock) { // synchronize
+        		return random.Next(min, max);
+    		}
 		}
 	}
 }
