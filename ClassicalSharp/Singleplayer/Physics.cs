@@ -52,6 +52,8 @@ namespace ClassicalSharp.Singleplayer {
 			foliage = new FoliagePhysics(game, this);
 			liquid = new LiquidPhysics(game, this);
 			other = new OtherPhysics(game, this);
+			
+			game.tnt = tnt;
 		}
 		
 		internal static bool CheckItem(Queue<uint> queue, out int posIndex) {
