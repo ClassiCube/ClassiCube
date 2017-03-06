@@ -146,6 +146,12 @@ namespace ClassicalSharp.Entities {
 					}
 				} else if (entity.onGround || hacks.Flying) {
 					entity.Velocity = Utils.Mul(entity.Velocity, entity.Model.GroundFriction); // air drag or ground friction
+									
+					if (!hacks.Flying) {
+						Vector3 OldVel = entity.OldVelocity;
+						Vector3 Bounce = entity.Model.GroundBounce;
+						entity.Velocity -= new Vector3(OldVel.X * Bounce.X, OldVel.Y * Bounce.Y, OldVel.Z * Bounce.Z);
+					}
 				}
 			}
 			
