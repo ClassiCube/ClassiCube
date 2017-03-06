@@ -36,6 +36,14 @@ namespace ClassicalSharp.Model {
 		
 		public override float NameYOffset { get { return height + 0.075f; } }
 		
+		public override float Gravity { get { return 0.04f; } }
+		
+		public override Vector3 Drag { get { return new Vector3(0.95f, 0.98f, 0.95f); } }
+		
+		public override Vector3 GroundFriction { get { return new Vector3(0.6f, 1f, 0.6f); } }
+		
+		public override Vector3 GroundBounce { get { return new Vector3(0f, 0.5f, 0f); } }	
+		
 		public override float GetEyeY(Entity entity) {
 			BlockID block = Byte.Parse(entity.ModelName);
 			float minY = game.BlockInfo.MinBB[block].Y;
