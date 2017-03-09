@@ -46,7 +46,7 @@ namespace ClassicalSharp.Entities {
 		
 		public SkinType SkinType;
 		public AnimatedComponent anim;
-		internal float uScale = 1, vScale = 1;
+		public float uScale = 1, vScale = 1;
 		protected DateTime lastModelChange = new DateTime(1, 1, 1);
 		
 		
