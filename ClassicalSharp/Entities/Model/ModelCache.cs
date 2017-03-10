@@ -115,6 +115,8 @@ namespace ClassicalSharp.Model {
 			Register("block", null, new BlockModel(game));
 			Register("chibi", "char.png", new ChibiModel(game));
 			Register("head", "char.png", new HumanoidHeadModel(game));
+			Register("sit", "char.png", new SittingModel(game));
+			Register("sitting", "char.png", new SittingModel(game));
 		}
 
 		void TextureChanged(object sender, TextureEventArgs e) {

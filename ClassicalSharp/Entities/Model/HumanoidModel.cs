@@ -9,7 +9,7 @@ namespace ClassicalSharp.Model {
 	
 	public class HumanoidModel : IModel {
 		
-		ModelSet Set, SetSlim, Set64;
+		public ModelSet Set, SetSlim, Set64;
 		public HumanoidModel(Game window) : base(window) { }
 		
 		protected BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
@@ -123,7 +123,7 @@ namespace ClassicalSharp.Model {
 			UpdateVB();
 		}
 		
-		class ModelSet {
+		public class ModelSet {
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat,
 			TorsoLayer, LeftLegLayer, RightLegLayer, LeftArmLayer, RightArmLayer;
 		}
