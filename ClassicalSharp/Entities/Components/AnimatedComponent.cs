@@ -71,7 +71,7 @@ namespace ClassicalSharp.Entities {
 				tiltY = (float)Math.Sin(walkTime) * swing * (0.15f * Utils.Deg2Rad);
 			}
 
-			if (entity.Model is HumanoidModel || entity.Model is HumanoidModel)
+			if (entity.Model is HumanoidModel)
 				CalcHumanAnim(idleXRot, idleZRot);
 		}
 		
