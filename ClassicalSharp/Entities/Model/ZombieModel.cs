@@ -12,10 +12,13 @@ namespace ClassicalSharp.Model {
 		public ZombieModel(Game window) : base(window) { }
 		
 		public override void CreateParts() {
-			vertices = new ModelVertex[boxVertices * 6];
+			vertices = new ModelVertex[boxVertices * 7];
 			Head = BuildBox(MakeBoxBounds(-4, 24, -4, 4, 32, 4)
 			                .TexOrigin(0, 0)
 			                .RotOrigin(0, 24, 0));
+			Hat = BuildBox(MakeBoxBounds(-4, 24, -4, 4, 32, 4)
+			                .TexOrigin(32, 0)
+			                .RotOrigin(0, 24, 0).Expand(0.5f));
 			Torso = BuildBox(MakeBoxBounds(-4, 12, -2, 4, 24, 2)
 			                  .TexOrigin(16, 16));
 			LeftLeg = BuildBox(MakeBoxBounds(0, 0, -2, -4, 12, 2)
@@ -53,9 +56,10 @@ namespace ClassicalSharp.Model {
 			DrawRotate(-p.anim.legXRot, 0, 0, RightLeg, false);
 			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.armZRot, LeftArm, false);
 			DrawRotate(90 * Utils.Deg2Rad, 0, -p.anim.armZRot, RightArm, false);
+			DrawRotate(-p.HeadXRadians, 0, 0, Hat, true);
 			UpdateVB();
 		}
 		
-		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
+		ModelPart Head, Hat, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
 	}
 }
