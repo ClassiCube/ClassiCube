@@ -33,7 +33,7 @@ namespace ClassicalSharp.Entities {
 			if (!anyNonAir) soundPos = Utils.MaxPos();
 			
 			if (p.onGround && (DoPlaySound(soundPos) || !wasOnGround)) {
-				game.AudioPlayer.PlayStepSound(sndType);
+				//game.AudioPlayer.PlayStepSound(sndType);
 				lastSoundPos = soundPos;
 			}
 		}
