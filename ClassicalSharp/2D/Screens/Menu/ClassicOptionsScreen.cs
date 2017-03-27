@@ -50,9 +50,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeOpt(1, 0, "FPS mode", OnWidgetClick,
 				        g => g.FpsLimit.ToString(),
-				        (g, v) => { object raw = Enum.Parse(typeof(FpsLimitMethod), v);
-				        	g.SetFpsLimitMethod((FpsLimitMethod)raw);
-				        	Options.Set(OptionsKey.FpsLimit, v); }),
+				        (g, v) => { }),
 				
 				!game.ClassicHacks ? null :
 					MakeBool(0, 60, "Hacks enabled", OptionsKey.HacksEnabled,
@@ -67,6 +65,11 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(400, "Done", 25, titleFont, (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
 				null, null,
 			};
+			
+			// NOTE: we need to override the default setter here, because changing FPS limit method
+			// recreates the graphics context on some backends (such as Direct3D9)
+			ButtonWidget btn = (ButtonWidget)widgets[7];
+			btn.SetValue = SetFPSLimitMethod;
 		}
 		
 		void MakeValidators() {

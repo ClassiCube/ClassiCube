@@ -57,16 +57,6 @@ namespace ClassicalSharp.Gui.Screens {
 			btn.SetValue = SetFPSLimitMethod;
 		}
 		
-		void SetFPSLimitMethod(Game g, string v) {
-			object rawFps = Enum.Parse(typeof(FpsLimitMethod), v);
-			g.SetFpsLimitMethod((FpsLimitMethod)rawFps);
-			Options.Set(OptionsKey.FpsLimit, v);
-			
-			// NOTE: OpenGL backend doesn't recreate context, so cheat and act like recreated anyways
-			ContextLost();
-			ContextRecreated();
-		}
-		
 		void SetSmoothLighting(Game g, bool v) {
 			g.SmoothLighting = v;
 			ChunkMeshBuilder builder = g.MapRenderer.DefaultMeshBuilder();

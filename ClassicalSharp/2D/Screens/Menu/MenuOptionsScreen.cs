@@ -254,5 +254,15 @@ namespace ClassicalSharp.Gui.Screens {
 				widgets[okayIndex].Dispose();
 			widgets[okayIndex] = null;
 		}
+		
+		protected void SetFPSLimitMethod(Game g, string v) {
+			object rawFps = Enum.Parse(typeof(FpsLimitMethod), v);
+			g.SetFpsLimitMethod((FpsLimitMethod)rawFps);
+			Options.Set(OptionsKey.FpsLimit, v);
+			
+			// NOTE: OpenGL backend doesn't recreate context, so cheat and act like recreated anyways
+			ContextLost();
+			ContextRecreated();
+		}
 	}
 }
