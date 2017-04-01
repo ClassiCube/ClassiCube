@@ -99,7 +99,7 @@ namespace ClassicalSharp.Model {
 		
 		/// <summary> Sets up the state for, then renders an entity model, 
 		/// based on the given entity's position and orientation. </summary>
-		public virtual void Render(Entity p) {
+		public void Render(Entity p) {
 			index = 0;
 			pos = p.Position;
 			if (Bobbing) pos.Y += p.anim.bobbingModel;
