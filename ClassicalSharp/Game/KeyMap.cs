@@ -10,8 +10,9 @@ namespace ClassicalSharp {
 		Forward, Back, Left, Right, Jump, Respawn, SetSpawn, Chat,
 		Inventory, ToggleFog, SendChat, PauseOrExit, PlayerList,
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtInput, HideFps,
-		HotbarSwitching, Screenshot, Fullscreen, ThirdPerson, HideGui, AxisLines,
-		ZoomScrolling, HalfSpeed, MouseLeft, MouseMiddle, MouseRight, Autorotate
+		Screenshot, Fullscreen, ThirdPerson, HideGui, AxisLines,
+		ZoomScrolling, HalfSpeed, MouseLeft, MouseMiddle, MouseRight, 
+		Autorotate, HotbarSwitching
 #pragma warning restore 1591
 	}
 	
@@ -41,9 +42,11 @@ namespace ClassicalSharp {
 			keys[11] = Key.Escape; keys[12] = Key.Tab; keys[13] = Key.ShiftLeft;
 			keys[14] = Key.X; keys[15] = Key.Z; keys[16] = Key.Q;
 			keys[17] = Key.E; keys[18] = Key.AltLeft; keys[19] = Key.F3;
-			keys[20] = Key.AltLeft; keys[21] = Key.F12; keys[22] = Key.F11; keys[23] = Key.F5;
-			keys[24] = Key.F1; keys[25] = Key.F7; keys[26] = Key.C; keys[27] = Key.ControlLeft;
-			keys[28] = Key.Unknown; keys[29] = Key.Unknown; keys[30] = Key.Unknown;  keys[31] = Key.F6;
+			keys[20] = Key.F12; keys[21] = Key.F11; keys[22] = Key.F5;
+ 			keys[23] = Key.F1; keys[24] = Key.F7; keys[25] = Key.C;
+			keys[26] = Key.ControlLeft; 
+			keys[27] = Key.Unknown; keys[28] = Key.Unknown; keys[29] = Key.Unknown;
+			keys[30] = Key.F6; keys[31] = Key.AltLeft;
 			
 			defaultKeys = new Key[keys.Length];
 			for (int i = 0; i < defaultKeys.Length; i++)
