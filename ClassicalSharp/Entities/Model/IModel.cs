@@ -30,6 +30,9 @@ namespace ClassicalSharp.Model {
 		/// <summary> Whether this entity requires downloading of a skin texture. </summary>		
 		public bool UsesSkin = true;
 		
+		/// <summary> Whether humanoid animations should be calculated, instead of normal animations. </summary>
+		public bool CalcHumanAnims;
+		
 		/// <summary> Gravity applied to this entity. </summary>
 		public virtual float Gravity { get { return 0.08f; } }
 		

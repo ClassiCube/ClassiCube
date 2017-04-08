@@ -10,7 +10,9 @@ namespace ClassicalSharp.Model {
 	public class HumanoidModel : IModel {
 		
 		public ModelSet Set, SetSlim, Set64;
-		public HumanoidModel(Game window) : base(window) { }
+		public HumanoidModel(Game window) : base(window) {
+			CalcHumanAnims = true;
+		}
 		
 		protected BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 		protected float offset = 0.5f;
