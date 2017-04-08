@@ -20,7 +20,7 @@ namespace ClassicalSharp.Entities {
 		public float walkTime, swing, bobStrength = 1, velTiltStrength = 1;
 		
 		internal float walkTimeO, walkTimeN, swingO, swingN;
-		internal float leftXRot, leftZRot, rightXRot, rightZRot;
+		public float leftXRot, leftZRot, rightXRot, rightZRot;
 		
 		/// <summary> Calculates the next animation state based on old and new position. </summary>
 		public void UpdateAnimState(Vector3 oldPos, Vector3 newPos, double delta) {
