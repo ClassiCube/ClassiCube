@@ -71,7 +71,9 @@ namespace ClassicalSharp.Model {
 		
 		public override void DrawModel(Entity p) {
 			p.anim.legXRot = 1.5f;
-			game.ModelCache.Models[0].Instance.DrawModel(p);
+			IModel model = game.ModelCache.Models[0].Instance;
+			model.SetupState(p);
+			model.DrawModel(p);
 		}		
 	}
 

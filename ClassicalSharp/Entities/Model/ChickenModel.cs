@@ -65,6 +65,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate(0, 0, -Math.Abs(p.anim.armXRot), LeftWing, false);
 			DrawRotate(0, 0, Math.Abs(p.anim.armXRot), RightWing, false);
 			
+			int col = cols[0];
 			for (int i = 0; i < cols.Length; i++) {
 				cols[i] = FastColour.ScalePacked(col, 0.7f);
 			}

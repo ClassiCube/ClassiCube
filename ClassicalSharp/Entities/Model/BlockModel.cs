@@ -75,7 +75,7 @@ namespace ClassicalSharp.Model {
 			return base.RenderDistance(p);
 		}
 		
-		int lastTexId = -1;
+		int lastTexId = -1, col;
 		public override void DrawModel(Entity p) {
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.

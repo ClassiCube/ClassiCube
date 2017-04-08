@@ -67,7 +67,6 @@ namespace ClassicalSharp.Model {
 		/// assuming that the model is not rotated at all.</summary>
 		public abstract AABB PickingBounds { get; }
 		
-		protected Vector3 pos;
 		protected float cosHead, sinHead;
 		protected float uScale, vScale;
 		
@@ -103,22 +102,9 @@ namespace ClassicalSharp.Model {
 		/// <summary> Sets up the state for, then renders an entity model, 
 		/// based on the given entity's position and orientation. </summary>
 		public void Render(Entity p) {
-			index = 0;
-			pos = p.Position;
+			Vector3 pos = p.Position;
 			if (Bobbing) pos.Y += p.anim.bobbingModel;
-			
-			Vector3I P = Vector3I.Floor(p.EyePosition);
-			col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
-			uScale = 1 / 64f; vScale = 1 / 32f;
-
-			cols[0] = col;
-			cols[1] = FastColour.ScalePacked(col, FastColour.ShadeYBottom);
-			cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ); cols[3] = cols[2];
-			cols[4] = FastColour.ScalePacked(col, FastColour.ShadeX); cols[5] = cols[4];
-			
-			float yawDelta = p.HeadY - p.RotY;
-			cosHead = (float)Math.Cos(yawDelta * Utils.Deg2Rad);
-			sinHead = (float)Math.Sin(yawDelta * Utils.Deg2Rad);
+			SetupState(p);
 
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			game.Graphics.PushMatrix();
@@ -127,6 +113,22 @@ namespace ClassicalSharp.Model {
 			game.Graphics.MultiplyMatrix(ref m);
 			DrawModel(p);
 			game.Graphics.PopMatrix();
+		}
+		
+		public void SetupState(Entity p) {
+			index = 0;
+			Vector3I P = Vector3I.Floor(p.EyePosition);
+			int col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
+			uScale = 1 / 64f; vScale = 1 / 32f;
+			
+			cols[0] = col;
+			cols[1] = FastColour.ScalePacked(col, FastColour.ShadeYBottom);
+			cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ); cols[3] = cols[2];
+			cols[4] = FastColour.ScalePacked(col, FastColour.ShadeX); cols[5] = cols[4];
+			
+			float yawDelta = p.HeadY - p.RotY;
+			cosHead = (float)Math.Cos(yawDelta * Utils.Deg2Rad);
+			sinHead = (float)Math.Sin(yawDelta * Utils.Deg2Rad);
 		}
 		
 		/// <summary> Performs the actual rendering of an entity model. </summary>
@@ -148,7 +150,6 @@ namespace ClassicalSharp.Model {
 			return p.TransformMatrix(p.ModelScale, pos);
 		}
 		
-		protected int col;
 		protected int[] cols = new int[6];
 		protected internal ModelVertex[] vertices;
 		protected internal int index, texIndex;
