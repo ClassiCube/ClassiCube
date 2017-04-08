@@ -82,7 +82,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		/// <inheritdoc/>		
-		protected override void DrawModel(Entity p) {
+		public override void DrawModel(Entity p) {
 			IGraphicsApi gfx = game.Graphics;
 			gfx.BindTexture(GetTexture(p.MobTextureId));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);

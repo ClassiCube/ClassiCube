@@ -123,14 +123,14 @@ namespace ClassicalSharp.Model {
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			game.Graphics.PushMatrix();
 			
-			Matrix4 m = p.TransformMatrix(p.ModelScale, pos);
+			Matrix4 m = TransformMatrix(p, pos);
 			game.Graphics.MultiplyMatrix(ref m);
 			DrawModel(p);
 			game.Graphics.PopMatrix();
 		}
 		
 		/// <summary> Performs the actual rendering of an entity model. </summary>
-		protected abstract void DrawModel(Entity p);
+		public abstract void DrawModel(Entity p);
 		
 		/// <summary> Sends the updated vertex data to the GPU. </summary>
 		protected void UpdateVB() {
@@ -142,6 +142,11 @@ namespace ClassicalSharp.Model {
 		
 		/// <summary> Disposes of any native resources tied to this entity model. </summary>
 		public virtual void Dispose() { }
+		
+		
+		protected virtual Matrix4 TransformMatrix(Entity p, Vector3 pos) {
+			return p.TransformMatrix(p.ModelScale, pos);
+		}
 		
 		protected int col;
 		protected int[] cols = new int[6];

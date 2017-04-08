@@ -76,7 +76,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		int lastTexId = -1;
-		protected override void DrawModel(Entity p) {
+		public override void DrawModel(Entity p) {
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
 			if (p is FakePlayer) {
