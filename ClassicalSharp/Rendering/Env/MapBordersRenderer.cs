@@ -170,8 +170,9 @@ namespace ClassicalSharp.Renderers {
 			sidesVertices += Utils.CountVertices(map.Width, map.Length, axisSize); // YQuads beneath map
 			sidesVertices += 2 * Utils.CountVertices(map.Width, Math.Abs(y), axisSize); // ZQuads
 			sidesVertices += 2 * Utils.CountVertices(map.Length, Math.Abs(y), axisSize); // XQuads
-			VertexP3fT2fC4b* v = stackalloc VertexP3fT2fC4b[sidesVertices];
-			IntPtr ptr = (IntPtr)v;
+			
+			VertexP3fT2fC4b[] v = new VertexP3fT2fC4b[sidesVertices];
+			int index = 0;
 			
 			fullColSides = game.BlockInfo.FullBright[block];
 			int col = fullColSides ? FastColour.WhitePacked : map.Env.Shadow;
@@ -181,18 +182,18 @@ namespace ClassicalSharp.Renderers {
 			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
-				DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 0, YOffset(block), ref v);
+				DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col, 0, YOffset(block), v, ref index);
 			}
 			
 			// Work properly for when ground level is below 0
 			int y1 = 0, y2 = y;
 			if (y < 0) { y1 = y; y2 = 0; }
-			DrawY(0, 0, map.Width, map.Length, 0, axisSize, col, 0, 0, ref v);
-			DrawZ(0, 0, map.Width, y1, y2, axisSize, col, ref v);
-			DrawZ(map.Length, 0, map.Width, y1, y2, axisSize, col, ref v);
-			DrawX(0, 0, map.Length, y1, y2, axisSize, col, ref v);
-			DrawX(map.Width, 0, map.Length, y1, y2, axisSize, col, ref v);
-			sidesVb = gfx.CreateVb(ptr, VertexFormat.P3fT2fC4b, sidesVertices);
+			DrawY(0, 0, map.Width, map.Length, 0, axisSize, col, 0, 0, v, ref index);
+			DrawZ(0, 0, map.Width, y1, y2, axisSize, col, v, ref index);
+			DrawZ(map.Length, 0, map.Width, y1, y2, axisSize, col, v, ref index);
+			DrawX(0, 0, map.Length, y1, y2, axisSize, col, v, ref index);
+			DrawX(map.Width, 0, map.Length, y1, y2, axisSize, col, v, ref index);
+			sidesVb = gfx.CreateVb(v, VertexFormat.P3fT2fC4b, sidesVertices);
 		}
 		
 		void RebuildEdges(int y, int axisSize) {
@@ -202,8 +203,8 @@ namespace ClassicalSharp.Renderers {
 				Rectangle r = rects[i];
 				edgesVertices += Utils.CountVertices(r.Width, r.Height, axisSize); // YPlanes outside
 			}
-			VertexP3fT2fC4b* v = stackalloc VertexP3fT2fC4b[edgesVertices];
-			IntPtr ptr = (IntPtr)v;
+			VertexP3fT2fC4b[] v = new VertexP3fT2fC4b[edgesVertices];
+			int index = 0;
 			
 			fullColEdge = game.BlockInfo.FullBright[block];
 			int col = fullColEdge ? FastColour.WhitePacked : map.Env.Sun;
@@ -214,9 +215,9 @@ namespace ClassicalSharp.Renderers {
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
 				DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col,
-				      HorOffset(block), YOffset(block), ref v);
+				      HorOffset(block), YOffset(block), v, ref index);
 			}
-			edgesVb = gfx.CreateVb(ptr, VertexFormat.P3fT2fC4b, edgesVertices);
+			edgesVb = gfx.CreateVb(v, VertexFormat.P3fT2fC4b, edgesVertices);
 		}
 
 		float HorOffset(BlockID block) {
@@ -230,7 +231,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawX(int x, int z1, int z2, int y1, int y2, int axisSize,
-		           int col, ref VertexP3fT2fC4b* v) {
+		           int col, VertexP3fT2fC4b[] v, ref int i) {
 			int endZ = z2, endY = y2, startY = y1;
 			for (; z1 < endZ; z1 += axisSize) {
 				z2 = z1 + axisSize;
@@ -241,16 +242,16 @@ namespace ClassicalSharp.Renderers {
 					if (y2 > endY) y2 = endY;
 					
 					TextureRec rec = new TextureRec(0, 0, z2 - z1, y2 - y1);
-					*v = new VertexP3fT2fC4b(x, y1, z1, rec.U1, rec.V2, col); v++;
-					*v = new VertexP3fT2fC4b(x, y2, z1, rec.U1, rec.V1, col); v++;
-					*v = new VertexP3fT2fC4b(x, y2, z2, rec.U2, rec.V1, col); v++;
-					*v = new VertexP3fT2fC4b(x, y1, z2, rec.U2, rec.V2, col); v++;
+					v[i++] = new VertexP3fT2fC4b(x, y1, z1, rec.U1, rec.V2, col);
+					v[i++] = new VertexP3fT2fC4b(x, y2, z1, rec.U1, rec.V1, col);
+					v[i++] = new VertexP3fT2fC4b(x, y2, z2, rec.U2, rec.V1, col);
+					v[i++] = new VertexP3fT2fC4b(x, y1, z2, rec.U2, rec.V2, col);
 				}
 			}
 		}
 		
 		void DrawZ(int z, int x1, int x2, int y1, int y2, int axisSize,
-		           int col, ref VertexP3fT2fC4b* v) {
+		           int col, VertexP3fT2fC4b[] v, ref int i) {
 			int endX = x2, endY = y2, startY = y1;
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;
@@ -261,16 +262,16 @@ namespace ClassicalSharp.Renderers {
 					if (y2 > endY) y2 = endY;
 					
 					TextureRec rec = new TextureRec(0, 0, x2 - x1, y2 - y1);
-					*v = new VertexP3fT2fC4b(x1, y1, z, rec.U1, rec.V2, col); v++;
-					*v = new VertexP3fT2fC4b(x1, y2, z, rec.U1, rec.V1, col); v++;
-					*v = new VertexP3fT2fC4b(x2, y2, z, rec.U2, rec.V1, col); v++;
-					*v = new VertexP3fT2fC4b(x2, y1, z, rec.U2, rec.V2, col); v++;
+					v[i++] = new VertexP3fT2fC4b(x1, y1, z, rec.U1, rec.V2, col);
+					v[i++] = new VertexP3fT2fC4b(x1, y2, z, rec.U1, rec.V1, col);
+					v[i++] = new VertexP3fT2fC4b(x2, y2, z, rec.U2, rec.V1, col);
+					v[i++] = new VertexP3fT2fC4b(x2, y1, z, rec.U2, rec.V2, col);
 				}
 			}
 		}
 		
 		void DrawY(int x1, int z1, int x2, int z2, float y, int axisSize,
-		           int col, float offset, float yOffset, ref VertexP3fT2fC4b* v) {
+		           int col, float offset, float yOffset, VertexP3fT2fC4b[] v, ref int i) {
 			int endX = x2, endZ = z2, startZ = z1;
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;
@@ -281,10 +282,10 @@ namespace ClassicalSharp.Renderers {
 					if (z2 > endZ) z2 = endZ;
 					
 					TextureRec rec = new TextureRec(0, 0, x2 - x1, z2 - z1);
-					*v = new VertexP3fT2fC4b(x1 + offset, y + yOffset, z1 + offset, rec.U1, rec.V1, col); v++;
-					*v = new VertexP3fT2fC4b(x1 + offset, y + yOffset, z2 + offset, rec.U1, rec.V2, col); v++;
-					*v = new VertexP3fT2fC4b(x2 + offset, y + yOffset, z2 + offset, rec.U2, rec.V2, col); v++;
-					*v = new VertexP3fT2fC4b(x2 + offset, y + yOffset, z1 + offset, rec.U2, rec.V1, col); v++;
+					v[i++] = new VertexP3fT2fC4b(x1 + offset, y + yOffset, z1 + offset, rec.U1, rec.V1, col);
+					v[i++] = new VertexP3fT2fC4b(x1 + offset, y + yOffset, z2 + offset, rec.U1, rec.V2, col);
+					v[i++] = new VertexP3fT2fC4b(x2 + offset, y + yOffset, z2 + offset, rec.U2, rec.V2, col);
+					v[i++] = new VertexP3fT2fC4b(x2 + offset, y + yOffset, z1 + offset, rec.U2, rec.V1, col);
 				}
 			}
 		}
