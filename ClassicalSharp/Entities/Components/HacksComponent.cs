@@ -71,6 +71,7 @@ namespace ClassicalSharp.Entities {
 		public bool HalfSpeeding;
 		
 		public bool CanJumpHigher { get { return Enabled && CanAnyHacks && CanSpeed; } }
+		public bool Floating { get { return Noclip || Flying; } }
 		
 		/// <summary> Parses hack flags specified in the motd and/or name of the server. </summary>
 		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
