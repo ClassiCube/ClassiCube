@@ -62,15 +62,16 @@ namespace ClassicalSharp.Model {
 		public override AABB PickingBounds {
 		    get { return new AABB(-8/16f, 0, -4/16f, 8/16f, (32 - sitOffset)/16f, 4/16f); }
 		}
-
 		
 		protected override Matrix4 TransformMatrix(Entity p, Vector3 pos) {
 			pos.Y -= sitOffset / 16f;
-			return Matrix4.RotateY((float)game.accumulator) * p.TransformMatrix(p.ModelScale, pos);
+			return p.TransformMatrix(p.ModelScale, pos);
 		}
 		
 		public override void DrawModel(Entity p) {
-			p.anim.legXRot = 1.5f;
+			p.anim.leftLegX = 1.5f; p.anim.rightLegX = 1.5f;
+			p.anim.leftLegZ = -0.1f; p.anim.rightLegZ = 0.1f;
+			
 			IModel model = game.ModelCache.Models[0].Instance;
 			model.SetupState(p);
 			model.DrawModel(p);

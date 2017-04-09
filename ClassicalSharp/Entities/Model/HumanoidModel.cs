@@ -102,11 +102,11 @@ namespace ClassicalSharp.Model {
 			DrawRotate(-p.HeadXRadians, 0, 0, model.Head, true);
 			DrawPart(model.Torso);
 			
-			DrawRotate(p.anim.legXRot, 0, 0, model.LeftLeg, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, model.RightLeg, false);
+			DrawRotate(p.anim.leftLegX, 0, p.anim.leftLegZ, model.LeftLeg, false);
+			DrawRotate(p.anim.rightLegX, 0, p.anim.rightLegZ, model.RightLeg, false);
 			Rotate = RotateOrder.XZY;
-			DrawRotate(p.anim.leftXRot, 0, p.anim.leftZRot, model.LeftArm, false);
-			DrawRotate(p.anim.rightXRot, 0, p.anim.rightZRot, model.RightArm, false);
+			DrawRotate(p.anim.leftArmX, 0, p.anim.leftArmZ, model.LeftArm, false);
+			DrawRotate(p.anim.rightArmX, 0, p.anim.rightArmZ, model.RightArm, false);
 			Rotate = RotateOrder.ZYX;
 			UpdateVB();
 			
@@ -114,11 +114,11 @@ namespace ClassicalSharp.Model {
 			index = 0;
 			if (skinType != SkinType.Type64x32) {
 				DrawPart(model.TorsoLayer);
-				DrawRotate(p.anim.legXRot, 0, 0, model.LeftLegLayer, false);
-				DrawRotate(-p.anim.legXRot, 0, 0, model.RightLegLayer, false);
+				DrawRotate(p.anim.leftLegX, 0, 0, model.LeftLegLayer, false);
+				DrawRotate(p.anim.rightLegX, 0, 0, model.RightLegLayer, false);
 				Rotate = RotateOrder.XZY;
-				DrawRotate(p.anim.leftXRot, 0, p.anim.leftZRot, model.LeftArmLayer, false);
-				DrawRotate(p.anim.rightXRot, 0, p.anim.rightZRot, model.RightArmLayer, false);
+				DrawRotate(p.anim.leftArmX, 0, p.anim.leftArmZ, model.LeftArmLayer, false);
+				DrawRotate(p.anim.rightArmX, 0, p.anim.rightArmZ, model.RightArmLayer, false);
 				Rotate = RotateOrder.ZYX;
 			}
 			DrawRotate(-p.HeadXRadians, 0, 0, model.Hat, true);

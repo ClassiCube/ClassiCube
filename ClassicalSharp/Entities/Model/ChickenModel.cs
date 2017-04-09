@@ -62,15 +62,15 @@ namespace ClassicalSharp.Model {
 			DrawRotate(-p.HeadXRadians, 0, 0, Head3, true);
 
 			DrawPart(Torso);
-			DrawRotate(0, 0, -Math.Abs(p.anim.armXRot), LeftWing, false);
-			DrawRotate(0, 0, Math.Abs(p.anim.armXRot), RightWing, false);
+			DrawRotate(0, 0, -Math.Abs(p.anim.leftArmX), LeftWing, false);
+			DrawRotate(0, 0, Math.Abs(p.anim.leftArmX), RightWing, false);
 			
 			int col = cols[0];
 			for (int i = 0; i < cols.Length; i++) {
 				cols[i] = FastColour.ScalePacked(col, 0.7f);
 			}
-			DrawRotate(p.anim.legXRot, 0, 0, LeftLeg, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, RightLeg, false);
+			DrawRotate(p.anim.leftLegX, 0, 0, LeftLeg, false);
+			DrawRotate(p.anim.rightLegX, 0, 0, RightLeg, false);
 			UpdateVB();
 		}
 		

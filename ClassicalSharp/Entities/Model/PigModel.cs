@@ -54,10 +54,10 @@ namespace ClassicalSharp.Model {
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);
 
 			DrawPart(Torso);
-			DrawRotate(p.anim.legXRot, 0, 0, LeftLegFront, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, RightLegFront, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, LeftLegBack, false);
-			DrawRotate(p.anim.legXRot, 0, 0, RightLegBack, false);
+			DrawRotate(p.anim.leftLegX, 0, 0, LeftLegFront, false);
+			DrawRotate(p.anim.rightLegX, 0, 0, RightLegFront, false);
+			DrawRotate(p.anim.rightLegX, 0, 0, LeftLegBack, false);
+			DrawRotate(p.anim.leftLegX, 0, 0, RightLegBack, false);
 			UpdateVB();
 		}
 		
