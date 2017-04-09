@@ -57,11 +57,11 @@ namespace ClassicalSharp.Textures {
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public void Tick(ScheduledTask task) {
 			if (useLavaAnim) {
-				int size = Math.Min(game.TerrainAtlas.elementSize, 64);
+				int size = Math.Min(game.TerrainAtlas.TileSize, 64);
 				DrawAnimation(null, 30, size);
 			}			
 			if (useWaterAnim) {
-				int size = Math.Min(game.TerrainAtlas.elementSize, 64);
+				int size = Math.Min(game.TerrainAtlas.TileSize, 64);
 				DrawAnimation(null, 14, size);
 			}
 			
@@ -160,7 +160,7 @@ namespace ClassicalSharp.Textures {
 				FastBitmap.MovePortion(data.FrameX + data.State * size, 
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size);
 			}
-			gfx.UpdateTexturePart(atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.elementSize, animPart);
+			gfx.UpdateTexturePart(atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.TileSize, animPart);
 		}
 		
 		bool IsDefaultZip() {

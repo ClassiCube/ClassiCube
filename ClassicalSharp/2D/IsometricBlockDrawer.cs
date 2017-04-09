@@ -19,7 +19,6 @@ namespace ClassicalSharp {
 		TerrainAtlas1D atlas;
 		int index;
 		float scale;
-		const float invElemSize = TerrainAtlas2D.invElementSize;
 		bool bright;
 		VertexP3fT2fC4b[] vertices;
 		int vb;
