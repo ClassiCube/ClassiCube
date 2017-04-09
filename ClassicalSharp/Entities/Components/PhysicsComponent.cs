@@ -110,9 +110,11 @@ namespace ClassicalSharp.Entities {
 		public void PhysicsTick(Vector3 vel) {
 			if (hacks.Noclip) entity.onGround = false;
 			float baseSpeed = GetBaseSpeed();
-			float horSpeed = baseSpeed * GetSpeed(true);
-			float verSpeed = baseSpeed * Math.Max(1, GetSpeed(hacks.CanSpeed) / 5);
-
+			float verSpeed = baseSpeed * Math.Max(1, GetSpeed(hacks.CanSpeed, 8f) / 5);
+			float horSpeed = baseSpeed * GetSpeed(true, 8f/5);
+			// previously horSpeed used to be multiplied by factor of 0.02 in last case
+			// it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same
+			
 			if (!hacks.Floating) {
 				if (secondJump) { horSpeed *= 93f; verSpeed *= 10f; }
 				else if (firstJump) { horSpeed *= 46.5f; verSpeed *= 7.5f; }
@@ -125,7 +127,7 @@ namespace ClassicalSharp.Entities {
 			} else if (entity.TouchesAnyRope() && !hacks.Floating) {
 				MoveNormal(vel, 0.02f * 1.7f, ropeDrag, ropeGrav, verSpeed);
 			} else {
-				float factor = !hacks.Floating && entity.onGround ? 0.1f : 0.02f;
+				float factor = hacks.Floating || entity.onGround ? 0.1f : 0.02f;
 				float gravity = useLiquidGravity ? liquidGrav : entity.Model.Gravity;
 				
 				if (hacks.Floating) {
@@ -187,8 +189,8 @@ namespace ClassicalSharp.Entities {
 			entity.Velocity.Y -= gravity;
 		}
 
-		float GetSpeed(bool canSpeed) {
-			float factor = hacks.Floating ? 8 : 1, speed = factor;		
+		float GetSpeed(bool canSpeed, float speedMul) {
+			float factor = hacks.Floating ? speedMul : 1, speed = factor;		
 			if (hacks.Speeding && canSpeed) speed += factor * hacks.SpeedMultiplier;
 			if (hacks.HalfSpeeding && canSpeed) speed += factor * hacks.SpeedMultiplier / 2;
 			return hacks.CanSpeed ? speed : Math.Min(speed, hacks.MaxSpeedMultiplier);
