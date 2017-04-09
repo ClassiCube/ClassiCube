@@ -94,6 +94,7 @@ namespace ClassicalSharp.Model {
 				col = FastColour.ScalePacked(col, colScale);
 				block = ((FakePlayer)p).Block;
 			} else {
+				col = cols[0];
 				block = Utils.FastByte(p.ModelName);
 			}
 			
