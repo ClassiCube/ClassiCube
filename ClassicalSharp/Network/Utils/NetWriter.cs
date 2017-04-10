@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Net.Sockets;
+using OpenTK;
 
 namespace ClassicalSharp.Network {
 	
@@ -35,6 +36,12 @@ namespace ClassicalSharp.Network {
 			for (int i = value.Length; i < Utils.StringLength; i++)
 				buffer[index + i] = (byte)' ';
 			index += Utils.StringLength;
+		}
+		
+		public void WritePosition(Vector3 pos) {
+			WriteInt16((short)(pos.X * 32));
+			WriteInt16((short)((int)(pos.Y * 32) + 51));
+			WriteInt16((short)(pos.Z * 32));
 		}
 		
 		public void WriteUInt8(byte value) {

@@ -257,16 +257,12 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		internal void ReadAbsoluteLocation(byte id, bool interpolate) {
-			float x = reader.ReadInt16() / 32f;
-			float y = (reader.ReadInt16() - 51) / 32f; // We have to do this.
-			if (id == EntityList.SelfID) y += 22/32f;			
-			float z = reader.ReadInt16() / 32f;
-			
+			Vector3 P = reader.ReadPosition(id);	
 			float rotY =  (float)Utils.PackedToDegrees(reader.ReadUInt8());
 			float headX = (float)Utils.PackedToDegrees(reader.ReadUInt8());
 			
 			if (id == EntityList.SelfID) net.receivedFirstPosition = true;
-			LocationUpdate update = LocationUpdate.MakePosAndOri(x, y, z, rotY, headX, false);
+			LocationUpdate update = LocationUpdate.MakePosAndOri(P, rotY, headX, false);
 			net.UpdateLocation(id, update, interpolate);
 		}
 		#endregion
@@ -287,9 +283,7 @@ namespace ClassicalSharp.Network.Protocols {
 			writer.WriteUInt8((byte)Opcode.EntityTeleport);
 			
 			writer.WriteUInt8((byte)payload); // held block when using HeldBlock, otherwise just 255
-			writer.WriteInt16((short)(pos.X * 32));
-			writer.WriteInt16((short)((int)(pos.Y * 32) + 51));
-			writer.WriteInt16((short)(pos.Z * 32));
+			writer.WritePosition(pos);
 			writer.WriteUInt8((byte)Utils.DegreesToPacked(rotY));
 			writer.WriteUInt8((byte)Utils.DegreesToPacked(headX));
 			net.SendPacket();

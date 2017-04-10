@@ -1,6 +1,8 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Net.Sockets;
+using ClassicalSharp.Entities;
+using OpenTK;
 
 namespace ClassicalSharp.Network {
 
@@ -70,6 +72,14 @@ namespace ClassicalSharp.Network {
 			Buffer.BlockCopy(buffer, index, data, 0, length);
 			index += length;
 			return data;
+		}
+		
+		public Vector3 ReadPosition(byte id) {
+			float x = ReadInt16() / 32f;
+			float y = (ReadInt16() - 51) / 32f; // We have to do this.
+			if (id == EntityList.SelfID) y += 22/32f;
+			float z = ReadInt16() / 32f;
+			return new Vector3(x, y, z);
 		}
 
 		public string ReadString() {
