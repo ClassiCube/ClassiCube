@@ -29,7 +29,7 @@ namespace ClassicalSharp.Model {
 		internal AABB pickingBounds;
 		public override AABB PickingBounds { get { return pickingBounds; } }
 		
-		protected override void DrawModel(Entity p) {
+		public override void DrawModel(Entity p) {
 			int texId = p.TextureId <= 0 ? cache.HumanoidTexId : p.TextureId;
 		}
 		

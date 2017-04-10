@@ -44,15 +44,15 @@ namespace ClassicalSharp.Model {
 			get { return new AABB(-4/16f, 0, -4/16f, 4/16f, 32/16f, 4/16f); }
 		}
 		
-		protected override void DrawModel(Entity p) {
+		public override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);
 
 			DrawPart(Torso);
-			DrawRotate(p.anim.legXRot, 0, 0, LeftLeg, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, RightLeg, false);
-			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.armZRot, LeftArm, false);
-			DrawRotate(90 * Utils.Deg2Rad, 0, -p.anim.armZRot, RightArm, false);
+			DrawRotate(p.anim.leftLegX, 0, 0, LeftLeg, false);
+			DrawRotate(p.anim.rightLegX, 0, 0, RightLeg, false);
+			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.leftArmZ, LeftArm, false);
+			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.rightArmZ, RightArm, false);
 			UpdateVB();
 		}
 		

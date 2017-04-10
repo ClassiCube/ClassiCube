@@ -103,7 +103,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (key >= Key.Number1 && key <= Key.Number9) {
 				int index = (int)key - (int)Key.Number1;
 				
-				if (game.Input.AltDown) {
+				if (game.IsKeyDown(KeyBind.HotbarSwitching)) {
 					// Pick from first to ninth row
 					game.Inventory.Offset = index * Inventory.BlocksPerRow;
 					altHandled = true;
@@ -120,7 +120,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			// a) user presses alt then number
 			// b) user presses alt
 			// thus we only do case b) if case a) did not happen
-			if (!(key == Key.AltLeft || key == Key.AltRight)) return false;			
+			if (key != game.Input.Keys[KeyBind.HotbarSwitching]) return false;
 			if (altHandled) { altHandled = false; return true; } // handled already
 			
 			// Alternate between first and second row
