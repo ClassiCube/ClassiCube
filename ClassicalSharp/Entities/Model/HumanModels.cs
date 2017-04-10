@@ -64,7 +64,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		protected override Matrix4 TransformMatrix(Entity p, Vector3 pos) {
-			pos.Y -= sitOffset / 16f;
+			pos.Y -= (sitOffset / 16f) * p.ModelScale;
 			return p.TransformMatrix(p.ModelScale, pos);
 		}
 		
