@@ -34,7 +34,8 @@ namespace Launcher.Gui.Widgets {
 			this.servers = servers;
 			int index = 0;
 			
-			foreach (ServerListEntry e in servers) {
+			for (int i = 0; i < servers.Count; i++) {
+				ServerListEntry e = servers[i];
 				TableEntry tableEntry = default(TableEntry);
 				tableEntry.Hash = e.Hash;
 				tableEntry.Name = e.Name;

@@ -59,8 +59,8 @@ namespace Launcher {
 					}
 					
 					if (AdditionalInfo != null) {
-						foreach (string l in AdditionalInfo)
-							writer.WriteLine(l);
+						for (int i = 0; i < AdditionalInfo.Length; i++)
+							writer.WriteLine(AdditionalInfo[i]);
 						writer.WriteLine();
 					}
 				}

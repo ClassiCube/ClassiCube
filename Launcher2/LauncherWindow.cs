@@ -139,13 +139,14 @@ namespace Launcher {
 			if (String.IsNullOrEmpty(hash)) return false;
 			
 			ClientStartData data = null;
-			foreach (ServerListEntry entry in publicServers) {
-				if (entry.Hash == hash) {
-					data = new ClientStartData(Session.Username, entry.Mppass,
-					                           entry.IPAddress, entry.Port);
-					Client.Start(data, true, ref ShouldExit);
-					return true;
-				}
+			for (int i = 0; i < publicServers.Count; i++) {
+				ServerListEntry entry = publicServers[i];
+				if (entry.Hash != hash) continue;
+				
+				data = new ClientStartData(Session.Username, entry.Mppass,
+				                           entry.IPAddress, entry.Port);
+				Client.Start(data, true, ref ShouldExit);
+				return true;
 			}
 			
 			// Fallback to private server handling
