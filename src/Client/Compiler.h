@@ -14,21 +14,12 @@
 #define CLIENT_API __declspec(dllimport)
 #endif
 
-extern CLIENT_API int nClient;
-
 /*
 
 #include "Client.h"
-
 // This is an example of an exported variable
 CLIENT_API int nClient=0;
-
 // This is an example of an exported function.
-CLIENT_API int fnClient(void)
-{
-return 42;
-}
-
+CLIENT_API int fnClient(void) { return 42; }
 */
-
 #endif
