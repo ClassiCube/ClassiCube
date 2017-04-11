@@ -39,6 +39,12 @@
     <ClInclude Include="Compiler.h">
       <Filter>Header Files\Defines</Filter>
     </ClInclude>
+    <ClInclude Include="Funcs.h">
+      <Filter>Header Files\Defines</Filter>
+    </ClInclude>
+    <ClInclude Include="Block.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
