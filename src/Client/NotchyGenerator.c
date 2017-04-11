@@ -47,10 +47,10 @@ void NotchyGen_CreateHeightmap() {
 	for (Int32 z = 0; z < Length; z++) {
 		CurrentProgress = (Real32)z / Length;
 		for (Int32 x = 0; x < Width; x++) {
-			Real64 hLow = CombinedNoise_Compute(&n1, x * 1.3f, z * 1.3f) / 6 - 4, height = hLow;
+			Real32 hLow = CombinedNoise_Compute(&n1, x * 1.3f, z * 1.3f) / 6 - 4, height = hLow;
 
 			if (OctaveNoise_Compute(&n3, x, z) <= 0) {
-				Real64 hHigh = CombinedNoise_Compute(&n2, x * 1.3f, z * 1.3f) / 5 + 6;
+				Real32 hHigh = CombinedNoise_Compute(&n2, x * 1.3f, z * 1.3f) / 5 + 6;
 				height = max(hLow, hHigh);
 			}
 

@@ -16,14 +16,14 @@ void ImprovedNoise_Init(UInt8* p, Random* rnd) {
 	}
 }
 
-Real64 ImprovedNoise_Compute(UInt8* p, Real64 x, Real64 y) {
+Real32 ImprovedNoise_Compute(UInt8* p, Real32 x, Real32 y) {
 	Int32 xFloor = x >= 0 ? (Int32)x : (Int32)x - 1;
 	Int32 yFloor = y >= 0 ? (Int32)y : (Int32)y - 1;
 	Int32 X = xFloor & 0xFF, Y = yFloor & 0xFF;
 	x -= xFloor; y -= yFloor;
 
-	Real64 u = x * x * x * (x * (x * 6 - 15) + 10); /* Fade(x) */
-	Real64 v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
+	Real32 u = x * x * x * (x * (x * 6 - 15) + 10); /* Fade(x) */
+	Real32 v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
 	Int32 A = p[X] + Y, B = p[X + 1] + Y;
 
 	/* Normally, calculating Grad involves a function call. However, we can directly pack this table
@@ -33,16 +33,16 @@ Real64 ImprovedNoise_Compute(UInt8* p, Real64 x, Real64 y) {
 	#define yFlags 0x2222550A
 
 	Int32 hash = (p[p[A]] & 0xF) << 1;
-	Real64 g22 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
+	Real32 g22 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
 	hash = (p[p[B]] & 0xF) << 1;
-	Real64 g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
-	Real64 c1 = g22 + u * (g12 - g22);
+	Real32 g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
+	Real32 c1 = g22 + u * (g12 - g22);
 
 	hash = (p[p[A + 1]] & 0xF) << 1;
-	Real64 g21 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
+	Real32 g21 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
 	hash = (p[p[B + 1]] & 0xF) << 1;
-	Real64 g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
-	Real64 c2 = g21 + u * (g11 - g21);
+	Real32 g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
+	Real32 c2 = g21 + u * (g11 - g21);
 
 	return c1 + v * (c2 - c1);
 }
@@ -55,9 +55,9 @@ void OctaveNoise_Init(OctaveNoise* n, Random* rnd, Int32 octaves) {
 	}
 }
 
-Real64 OctaveNoise_Compute(OctaveNoise* n, Real64 x, Real64 y) {
-	Real64 amplitude = 1, freq = 1;
-	Real64 sum = 0;
+Real32 OctaveNoise_Compute(OctaveNoise* n, Real32 x, Real32 y) {
+	Real32 amplitude = 1, freq = 1;
+	Real32 sum = 0;
 
 	for (Int32 i = 0; i < n->octaves; i++) {
 		sum += ImprovedNoise_Compute(n->p[i], x * freq, y * freq) * amplitude;
@@ -73,7 +73,7 @@ void CombinedNoise_Init(CombinedNoise* n, Random* rnd, Int32 octaves1, Int32 oct
 	OctaveNoise_Init(&n->noise2, rnd, octaves2);
 }
 
-Real64 CombinedNoise_Compute(CombinedNoise* n, Real64 x, Real64 y) {
-	Real64 offset = OctaveNoise_Compute(&n->noise2, x, y);
+Real32 CombinedNoise_Compute(CombinedNoise* n, Real32 x, Real32 y) {
+	Real32 offset = OctaveNoise_Compute(&n->noise2, x, y);
 	return OctaveNoise_Compute(&n->noise1, x + offset, y);
 }
