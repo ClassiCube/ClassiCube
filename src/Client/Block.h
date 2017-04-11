@@ -1,7 +1,7 @@
 #ifndef CS_BLOCK_H
 #define CS_BLOCK_H
 
-// Classic blocks
+/* Classic blocks */
 #define Block_Air 0
 #define Block_Stone 1
 #define Block_Grass 2
@@ -53,7 +53,7 @@
 #define Block_MossyRocks 48
 #define Block_Obsidian 49
 
-// CPE blocks
+/* CPE blocks */
 #define Block_CobblestoneSlab 50
 #define Block_Rope 51
 #define Block_Sandstone 52

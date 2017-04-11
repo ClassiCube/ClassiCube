@@ -1,15 +1,19 @@
-// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
-// Based on:
-// https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-map-generation-algorithm
-// Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
-// I believe this process adheres to clean room reverse engineering.
+/* Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3 */
+/* Based on:
+ https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-map-generation-algorithm
+ Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
+ I believe this process adheres to clean room reverse engineering.*/
 #include "NotchyGenerator.h"
+#include "Block.h"
+#include "Funcs.h"
+#include "Noise.h"
 #include "Random.h"
 
-// External variables
+/* External variables */
+/* TODO: how do they even work? */
 Real32 CurrentProgress;
 
-// Internal variables
+/* Internal variables */
 Int32 Width, Height, Length;
 Int32 waterLevel, oneY, minHeight;
 BlockID* Blocks;
@@ -65,7 +69,7 @@ void NotchyGen_CreateStrata() {
 	OctaveNoise_Init(&n, &rnd, 8);
 	//CurrentState = "Creating strata";
 	Int32 hMapIndex = 0, maxY = Height - 1, mapIndex = 0;
-	// Try to bulk fill bottom of the map if possible
+	/* Try to bulk fill bottom of the map if possible */
 	Int32 minStoneY = NotchyGen_CreateStrataFast();
 
 	for (Int32 z = 0; z < Length; z++) {
@@ -93,7 +97,7 @@ void NotchyGen_CreateStrata() {
 }
 
 Int32 NotchyGen_CreateStrataFast() {
-	// Make lava layer at bottom
+	/* Make lava layer at bottom */
 	Int32 mapIndex = 0;
 	for (Int32 z = 0; z < Length; z++)
 		for (int x = 0; x < Width; x++)
@@ -101,11 +105,11 @@ Int32 NotchyGen_CreateStrataFast() {
 			Blocks[mapIndex++] = Block_Lava;
 		}
 
-	// Invariant: the lowest value dirtThickness can possible be is -14
+	/* Invariant: the lowest value dirtThickness can possible be is -14 */
 	Int32 stoneHeight = minHeight - 14;
-	if (stoneHeight <= 0) return 1; // no layer is fully stone
+	if (stoneHeight <= 0) return 1; /* no layer is fully stone */
 
-									// We can quickly fill in bottom solid layers
+	/* We can quickly fill in bottom solid layers */
 	for (Int32 y = 1; y <= stoneHeight; y++)
 		for (Int32 z = 0; z < Length; z++)
 			for (Int32 x = 0; x < Width; x++)

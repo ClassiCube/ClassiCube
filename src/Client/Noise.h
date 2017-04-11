@@ -8,6 +8,7 @@ void ImprovedNoise_Init(UInt8* p, Random* rnd);
 Real64 ImprovedNoise_Compute(UInt8* p, Real64 x, Real64 y);
 
 
+/* since we need structure to be a fixed size */
 #define MAX_OCTAVES 8
 typedef struct {
 	UInt8 p[MAX_OCTAVES][NOISE_TABLE_SIZE];

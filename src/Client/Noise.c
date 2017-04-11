@@ -1,7 +1,7 @@
 #include "Noise.h"
 
 void ImprovedNoise_Init(UInt8* p, Random* rnd) {
-	// shuffle randomly using fisher-yates
+	/* shuffle randomly using fisher-yates */
 	for (Int32 i = 0; i < 256; i++) {
 		p[i] = (UInt8)i;
 	}
@@ -22,26 +22,26 @@ Real64 ImprovedNoise_Compute(UInt8* p, Real64 x, Real64 y) {
 	Int32 X = xFloor & 0xFF, Y = yFloor & 0xFF;
 	x -= xFloor; y -= yFloor;
 
-	Real64 u = x * x * x * (x * (x * 6 - 15) + 10); // Fade(x)
-	Real64 v = y * y * y * (y * (y * 6 - 15) + 10); // Fade(y)
+	Real64 u = x * x * x * (x * (x * 6 - 15) + 10); /* Fade(x) */
+	Real64 v = y * y * y * (y * (y * 6 - 15) + 10); /* Fade(y) */
 	Int32 A = p[X] + Y, B = p[X + 1] + Y;
 
-	// Normally, calculating Grad involves a function call. However, we can directly pack this table
-	// (since each value indicates either -1, 0 1) into a set of bit flags. This way we avoid needing 
-	// to call another function that performs branching
+	/* Normally, calculating Grad involves a function call. However, we can directly pack this table
+	 (since each value indicates either -1, 0 1) into a set of bit flags. This way we avoid needing 
+	 to call another function that performs branching */
 	#define xFlags 0x46552222
 	#define yFlags 0x2222550A
 
 	Int32 hash = (p[p[A]] & 0xF) << 1;
-	Real64 g22 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * y; // Grad(p[p[A], x, y)
+	Real64 g22 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[A], x, y) */
 	hash = (p[p[B]] & 0xF) << 1;
-	Real64 g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; // Grad(p[p[B], x - 1, y)
+	Real64 g12 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * y; /* Grad(p[p[B], x - 1, y) */
 	Real64 c1 = g22 + u * (g12 - g22);
 
 	hash = (p[p[A + 1]] & 0xF) << 1;
-	Real64 g21 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * (y - 1); // Grad(p[p[A + 1], x, y - 1)
+	Real64 g21 = (((xFlags >> hash) & 3) - 1) * x + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[A + 1], x, y - 1) */
 	hash = (p[p[B + 1]] & 0xF) << 1;
-	Real64 g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); // Grad(p[p[B + 1], x - 1, y - 1)
+	Real64 g11 = (((xFlags >> hash) & 3) - 1) * (x - 1) + (((yFlags >> hash) & 3) - 1) * (y - 1); /* Grad(p[p[B + 1], x - 1, y - 1) */
 	Real64 c2 = g21 + u * (g11 - g21);
 
 	return c1 + v * (c2 - c1);
