@@ -260,7 +260,7 @@ bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeig
 	return true;
 }
 
-void Notchy_GenTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
+void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
 	Int32 baseHeight = height - 4;
 	Int32 index = 0;
 

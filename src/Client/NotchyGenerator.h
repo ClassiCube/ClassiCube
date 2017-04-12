@@ -14,5 +14,5 @@ CLIENT_FUNC void NotchyGen_PlantFlowers();
 CLIENT_FUNC void NotchyGen_PlantMushrooms();
 CLIENT_FUNC void NotchyGen_PlantTrees();
 bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight);
-void Notchy_GenTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height);
+void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height);
 #endif
