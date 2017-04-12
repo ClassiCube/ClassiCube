@@ -61,9 +61,8 @@ namespace ClassicalSharp.Network.Protocols {
 			game.Chat.SetLogName(net.ServerName);
 			
 			game.LocalPlayer.Hacks.SetUserType(reader.ReadUInt8());
-			game.LocalPlayer.Hacks.ParseHackFlags(net.ServerName, net.ServerMotd);
-			game.LocalPlayer.CheckHacksConsistency();
-			game.Events.RaiseHackPermissionsChanged();
+			game.LocalPlayer.Hacks.HacksFlags = net.ServerName + net.ServerMotd;
+			game.LocalPlayer.Hacks.UpdateHacksState();
 		}
 		
 		void HandlePing() { }
@@ -254,6 +253,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleSetPermission() {
 			game.LocalPlayer.Hacks.SetUserType(reader.ReadUInt8());
+			game.LocalPlayer.Hacks.UpdateHacksState();
 		}
 		
 		internal void ReadAbsoluteLocation(byte id, bool interpolate) {
