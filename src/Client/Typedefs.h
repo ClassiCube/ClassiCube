@@ -15,6 +15,9 @@ typedef signed __int64 Int64;
 typedef float  Real32;
 typedef double Real64;
 
+typedef UInt8 bool;
+#define true 1
+#define false 0
 
 typedef UInt8 BlockID;
 typedef UInt8 EntityID;

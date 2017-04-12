@@ -6,7 +6,7 @@
 typedef Int64 Random;
 
 void Random_Init(Random* rnd, Int32 seed);
-Int32 Random_NextRange(Random* rnd, Int32 min, Int32 max);
+Int32 Random_Range(Random* rnd, Int32 min, Int32 max);
 Int32 Random_Next(Random* rnd, Int32 n);
-Real32 Random_NextFloat(Random* rnd);
+Real32 Random_Float(Random* rnd);
 #endif
