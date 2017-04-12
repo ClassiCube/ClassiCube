@@ -7,7 +7,7 @@ void ImprovedNoise_Init(UInt8* p, Random* rnd) {
 	}
 
 	for (Int32 i = 0; i < 256; i++) {
-		Int32 j = Random_NextRange(rnd, i, 256);
+		Int32 j = Random_Range(rnd, i, 256);
 		UInt8 temp = p[i]; p[i] = p[j]; p[j] = temp;
 	}
 
@@ -16,7 +16,7 @@ void ImprovedNoise_Init(UInt8* p, Random* rnd) {
 	}
 }
 
-Real32 ImprovedNoise_Compute(UInt8* p, Real32 x, Real32 y) {
+Real32 ImprovedNoise_Calc(UInt8* p, Real32 x, Real32 y) {
 	Int32 xFloor = x >= 0 ? (Int32)x : (Int32)x - 1;
 	Int32 yFloor = y >= 0 ? (Int32)y : (Int32)y - 1;
 	Int32 X = xFloor & 0xFF, Y = yFloor & 0xFF;
@@ -55,12 +55,12 @@ void OctaveNoise_Init(OctaveNoise* n, Random* rnd, Int32 octaves) {
 	}
 }
 
-Real32 OctaveNoise_Compute(OctaveNoise* n, Real32 x, Real32 y) {
+Real32 OctaveNoise_Calc(OctaveNoise* n, Real32 x, Real32 y) {
 	Real32 amplitude = 1, freq = 1;
 	Real32 sum = 0;
 
 	for (Int32 i = 0; i < n->octaves; i++) {
-		sum += ImprovedNoise_Compute(n->p[i], x * freq, y * freq) * amplitude;
+		sum += ImprovedNoise_Calc(n->p[i], x * freq, y * freq) * amplitude;
 		amplitude *= 2.0;
 		freq *= 0.5;
 	}
@@ -73,7 +73,7 @@ void CombinedNoise_Init(CombinedNoise* n, Random* rnd, Int32 octaves1, Int32 oct
 	OctaveNoise_Init(&n->noise2, rnd, octaves2);
 }
 
-Real32 CombinedNoise_Compute(CombinedNoise* n, Real32 x, Real32 y) {
-	Real32 offset = OctaveNoise_Compute(&n->noise2, x, y);
-	return OctaveNoise_Compute(&n->noise1, x + offset, y);
+Real32 CombinedNoise_Calc(CombinedNoise* n, Real32 x, Real32 y) {
+	Real32 offset = OctaveNoise_Calc(&n->noise2, x, y);
+	return OctaveNoise_Calc(&n->noise1, x + offset, y);
 }

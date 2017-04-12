@@ -9,7 +9,7 @@ void Random_Init(Random* seed, Int32 seedInit) {
 	*seed = (seedInit ^ value) & mask;
 }
 
-Int32 Random_NextRange(Random* seed, Int32 min, Int32 max) {
+Int32 Random_Range(Random* seed, Int32 min, Int32 max) {
 	return min + Random_Next(seed, max - min);
 }
 
@@ -29,7 +29,7 @@ Int32 Random_Next(Random* seed, Int32 n) {
 	return val;
 }
 
-Real32 Random_NextFloat(Random* seed) {
+Real32 Random_Float(Random* seed) {
 	*seed = (*seed * value + 0xBLL) & mask;
 	Int32 raw = (Int32)((UInt64)*seed >> (48 - 24));
 	return raw / ((Real32)(1 << 24));

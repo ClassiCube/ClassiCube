@@ -9,10 +9,13 @@
 // defined with this macro as being exported.
 
 #ifdef CLIENT_EXPORTS
-#define CLIENT_API __declspec(dllexport)
+#define CLIENT_FUNC __declspec(dllexport)
 #else
-#define CLIENT_API __declspec(dllimport)
+#define CLIENT_FUNC __declspec(dllimport)
 #endif
+
+#define EXPORT_FUNC __declspec(dllexport)
+#define IMPORT_FUNC __declspec(dllimport)
 
 /*
 
