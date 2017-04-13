@@ -1,5 +1,6 @@
 #ifndef CS_COMPILER_H
 #define CS_COMPILER_H
+#include "Typedefs.h"
 
 // The following ifdef block is the standard way of creating macros which make exporting 
 // from a DLL simpler. All files within this DLL are compiled with the CLIENT_EXPORTS
@@ -17,12 +18,5 @@
 #define EXPORT_FUNC __declspec(dllexport)
 #define IMPORT_FUNC __declspec(dllimport)
 
-/*
-
-#include "Client.h"
-// This is an example of an exported variable
-CLIENT_API int nClient=0;
-// This is an example of an exported function.
-CLIENT_API int fnClient(void) { return 42; }
-*/
+int __stdcall DllMain(void* hinstDLL, UInt32 fdwReason, void* pvReserved) { return 1; }
 #endif
