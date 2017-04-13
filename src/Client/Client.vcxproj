@@ -178,9 +178,11 @@
     <ClInclude Include="Typedefs.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Compiler.c" />
     <ClCompile Include="Noise.c" />
     <ClCompile Include="NotchyGenerator.c" />
     <ClCompile Include="Random.c" />
+    <ClCompile Include="Test.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

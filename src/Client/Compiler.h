@@ -18,5 +18,5 @@
 #define EXPORT_FUNC __declspec(dllexport)
 #define IMPORT_FUNC __declspec(dllimport)
 
-int __stdcall DllMain(void* hinstDLL, UInt32 fdwReason, void* pvReserved) { return 1; }
+int __stdcall DllMain(void* hinstDLL, UInt32 fdwReason, void* pvReserved);
 #endif

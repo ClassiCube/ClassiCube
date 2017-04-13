@@ -56,5 +56,11 @@
     <ClCompile Include="Noise.c">
       <Filter>Source Files\Generator</Filter>
     </ClCompile>
+    <ClCompile Include="Test.c">
+      <Filter>Source Files\Generator</Filter>
+    </ClCompile>
+    <ClCompile Include="Compiler.c">
+      <Filter>Source Files\Generator</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -114,8 +114,8 @@ namespace ClassicalSharp.Model {
 			index = 0;
 			if (skinType != SkinType.Type64x32) {
 				DrawPart(model.TorsoLayer);
-				DrawRotate(p.anim.leftLegX, 0, 0, model.LeftLegLayer, false);
-				DrawRotate(p.anim.rightLegX, 0, 0, model.RightLegLayer, false);
+				DrawRotate(p.anim.leftLegX, 0, p.anim.leftLegZ, model.LeftLegLayer, false);
+				DrawRotate(p.anim.rightLegX, 0, p.anim.rightLegZ, model.RightLegLayer, false);
 				Rotate = RotateOrder.XZY;
 				DrawRotate(p.anim.leftArmX, 0, p.anim.leftArmZ, model.LeftArmLayer, false);
 				DrawRotate(p.anim.rightArmX, 0, p.anim.rightArmZ, model.RightArmLayer, false);
