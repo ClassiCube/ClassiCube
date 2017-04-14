@@ -43,6 +43,7 @@ namespace ClassicalSharp.Entities {
 		protected internal bool onGround;
 		internal float StepSize;
 		internal int tickCount;
+		internal Matrix4 transform;
 		
 		public SkinType SkinType;
 		public AnimatedComponent anim;

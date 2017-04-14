@@ -110,6 +110,7 @@ namespace ClassicalSharp.Model {
 			game.Graphics.PushMatrix();
 			
 			Matrix4 m = TransformMatrix(p, pos);
+			p.transform = m;
 			game.Graphics.MultiplyMatrix(ref m);
 			DrawModel(p);
 			game.Graphics.PopMatrix();
@@ -146,7 +147,7 @@ namespace ClassicalSharp.Model {
 		public virtual void Dispose() { }
 		
 		
-		protected virtual Matrix4 TransformMatrix(Entity p, Vector3 pos) {
+		protected internal virtual Matrix4 TransformMatrix(Entity p, Vector3 pos) {
 			return p.TransformMatrix(p.ModelScale, pos);
 		}
 		

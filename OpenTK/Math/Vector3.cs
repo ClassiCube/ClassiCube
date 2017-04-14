@@ -153,6 +153,20 @@ namespace OpenTK {
 			result.Y = vec.Y * scale;
 			result.Z = vec.Z * scale;
 		}
+		
+		public static void Transform(ref Vector3 vec, ref Matrix4 mat, out Vector3 result) {
+			result = new Vector3(
+				vec.X * mat.Row0.X + vec.Y * mat.Row1.X + vec.Z * mat.Row2.X + mat.Row3.X,
+				vec.X * mat.Row0.Y + vec.Y * mat.Row1.Y + vec.Z * mat.Row2.Y + mat.Row3.Y,
+				vec.X * mat.Row0.Z + vec.Y * mat.Row1.Z + vec.Z * mat.Row2.Z + mat.Row3.Z);
+		}
+		
+		public static void TransformY(float y, ref Matrix4 mat, out Vector3 result) {
+			result = new Vector3(
+				y * mat.Row1.X + mat.Row3.X,
+				y * mat.Row1.Y + mat.Row3.Y,
+				y * mat.Row1.Z + mat.Row3.Z);
+		}
 
 		public static Vector3 operator + (Vector3 left, Vector3 right) {
 			left.X += right.X;

@@ -222,7 +222,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		bool Show(BlockID block) {
+		bool Show(BlockID block) { return true;
 			if (game.PureClassic && IsHackBlock(block)) return false;
 			if (block < Block.CpeCount) {
 				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;

@@ -51,7 +51,7 @@ namespace ClassicalSharp.Model {
 		
 		public override float ShadowScale { get { return 0.5f; } }
 		
-		public override float NameYOffset { get { return (32 - sitOffset)/16f + 0.5f/16f; } }
+		public override float NameYOffset { get { return 32/16f + 0.5f/16f; } }
 		
 		public override float GetEyeY(Entity entity) { return (26 - sitOffset)/16f; }
 		
@@ -63,7 +63,7 @@ namespace ClassicalSharp.Model {
 		    get { return new AABB(-8/16f, 0, -4/16f, 8/16f, (32 - sitOffset)/16f, 4/16f); }
 		}
 		
-		protected override Matrix4 TransformMatrix(Entity p, Vector3 pos) {
+		protected internal override Matrix4 TransformMatrix(Entity p, Vector3 pos) {
 			pos.Y -= (sitOffset / 16f) * p.ModelScale;
 			return p.TransformMatrix(p.ModelScale, pos);
 		}
