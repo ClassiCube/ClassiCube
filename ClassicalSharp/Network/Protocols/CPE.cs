@@ -74,7 +74,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleSetClickDistance() {
-			game.LocalPlayer.ReachDistance = reader.ReadInt16() / 32f;
+			game.LocalPlayer.ReachDistance = reader.ReadUInt16() / 32f;
 		}
 		
 		void HandleCustomBlockSupportLevel() {
