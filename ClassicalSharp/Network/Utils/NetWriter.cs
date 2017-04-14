@@ -9,6 +9,7 @@ namespace ClassicalSharp.Network {
 		
 		public byte[] buffer = new byte[131];
 		public int index = 0;
+		public bool ExtendedPositions;
 		Socket socket;
 		
 		public NetWriter(Socket socket) {
@@ -39,9 +40,15 @@ namespace ClassicalSharp.Network {
 		}
 		
 		public void WritePosition(Vector3 pos) {
-			WriteInt16((short)(pos.X * 32));
-			WriteInt16((short)((int)(pos.Y * 32) + 51));
-			WriteInt16((short)(pos.Z * 32));
+			if (ExtendedPositions) {
+				WriteInt32((int)(pos.X * 32));
+				WriteInt32((int)((int)(pos.Y * 32) + 51));
+				WriteInt32((int)(pos.Z * 32));				
+			} else {
+				WriteInt16((short)(pos.X * 32));
+				WriteInt16((short)((int)(pos.Y * 32) + 51));
+				WriteInt16((short)(pos.Z * 32));
+			}
 		}
 		
 		public void WriteUInt8(byte value) {

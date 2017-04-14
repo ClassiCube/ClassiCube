@@ -19,7 +19,9 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		public CPEProtocol(Game game) : base(game) { }
 		
-		public override void Init() {
+		public override void Init() { Reset(); }
+		
+		public override void Reset() {
 			if (!game.UseCPE) return;
 			net.Set(Opcode.CpeExtInfo, HandleExtInfo, 67);
 			net.Set(Opcode.CpeExtEntry, HandleExtEntry, 69);

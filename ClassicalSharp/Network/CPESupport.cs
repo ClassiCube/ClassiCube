@@ -43,7 +43,7 @@ namespace ClassicalSharp.Network {
 			} else if (ext == "EnvMapAppearance") {
 				envMapVer = version;
 				if (version == 1) return;
-				net.packetSizes[(byte)Opcode.CpeEnvSetMapApperance] = 73;
+				net.packetSizes[Opcode.CpeEnvSetMapApperance] += 4;
 			} else if (ext == "LongerMessages") {
 				net.SupportsPartialMessages = true;
 			} else if (ext == "FullCP437") {
@@ -51,10 +51,15 @@ namespace ClassicalSharp.Network {
 			} else if (ext == "BlockDefinitionsExt") {
 				blockDefsExtVer = version;
 				if (version == 1) return;
-				net.packetSizes[(byte)Opcode.CpeDefineBlockExt] = 88;
+				net.packetSizes[Opcode.CpeDefineBlockExt] += 3;
 			} else if (ext == "ExtEntityPositions") {
-				//extEntityPos = true;
-				// TODO: need to increase packet sizes accordingly
+				extEntityPos = true;
+				net.packetSizes[Opcode.EntityTeleport] += 6;
+				net.packetSizes[Opcode.AddEntity] += 6;
+				net.packetSizes[Opcode.CpeExtAddEntity2] += 6;
+				
+				net.reader.ExtendedPositions = true;
+				net.writer.ExtendedPositions = true;
 			}
 		}
 		

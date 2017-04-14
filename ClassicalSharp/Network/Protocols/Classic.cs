@@ -24,6 +24,10 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		public override void Init() {
 			gzippedMap = new FixedBufferStream(net.reader.buffer);
+			Reset();
+		}
+		
+		public override void Reset() {
 			net.Set(Opcode.Handshake, HandleHandshake, 131);
 			net.Set(Opcode.Ping, HandlePing, 1);
 			net.Set(Opcode.LevelInit, HandleLevelInit, 1);

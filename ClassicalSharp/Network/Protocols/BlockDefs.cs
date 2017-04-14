@@ -9,7 +9,9 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		public CPEProtocolBlockDefs(Game game) : base(game) { }
 		
-		public override void Init() {
+		public override void Init() { Reset(); }
+		
+		public override void Reset() {
 			if (!game.UseCPE || !game.AllowCustomBlocks) return;
 			net.Set(Opcode.CpeDefineBlock, HandleDefineBlock, 80);
 			net.Set(Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2);

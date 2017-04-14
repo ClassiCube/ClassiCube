@@ -10,6 +10,7 @@ namespace ClassicalSharp.Network {
 		
 		public byte[] buffer = new byte[4096 * 5];
 		public int index = 0, size = 0;
+		public bool ExtendedPositions;
 		Socket socket;
 		
 		public NetReader(Socket socket) {
@@ -75,11 +76,16 @@ namespace ClassicalSharp.Network {
 		}
 		
 		public Vector3 ReadPosition(byte id) {
-			float x = ReadInt16() / 32f;
-			float y = (ReadInt16() - 51) / 32f; // We have to do this.
-			if (id == EntityList.SelfID) y += 22/32f;
-			float z = ReadInt16() / 32f;
-			return new Vector3(x, y, z);
+			int x = 0, y = 0, z = 0;
+			if (ExtendedPositions) {
+				x = ReadInt32(); y = ReadInt32(); z = ReadInt32();
+			} else {
+				x = ReadInt16(); y = ReadInt16(); z = ReadInt16();
+			}
+			
+			float yAdj = (y - 51) / 32f; // We have to do this.
+			if (id == EntityList.SelfID) yAdj += 22/32f;
+			return new Vector3(x / 32f, yAdj, z / 32f);
 		}
 
 		public string ReadString() {
