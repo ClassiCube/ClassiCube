@@ -133,7 +133,6 @@ namespace ClassicalSharp.Entities {
 		/// <remarks> Parses hack flags specified in the motd and/or name of the server. </remarks>
 		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
 		public void UpdateHacksState() {
-			Console.WriteLine(HacksFlags + "- " + UserType);
 			SetAllHacks(true);
 			MaxSpeedMultiplier = 1;
 			// By default (this is also the case with WoM), we can use hacks.
