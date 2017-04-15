@@ -22,6 +22,12 @@
     <Filter Include="Header Files\Defines">
       <UniqueIdentifier>{405d40c2-3d05-4d42-8ccb-415189b379a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Platform">
+      <UniqueIdentifier>{eab38ecc-57ac-48f4-9ed2-7cbd40effb24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Platform">
+      <UniqueIdentifier>{3b121dcd-fc2e-4c0e-9e69-0a258df73fa8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -45,6 +51,9 @@
     <ClInclude Include="Block.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Platform.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -58,6 +67,9 @@
     </ClCompile>
     <ClCompile Include="Compiler.c">
       <Filter>Source Files\Generator</Filter>
+    </ClCompile>
+    <ClCompile Include="WinPlatform.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

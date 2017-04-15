@@ -1,6 +1,10 @@
 #ifndef CS_COMPILER_H
 #define CS_COMPILER_H
 #include "Typedefs.h"
+/* Compiler-specific attributes and helpers
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+*/
+
 
 // The following ifdef block is the standard way of creating macros which make exporting 
 // from a DLL simpler. All files within this DLL are compiled with the CLIENT_EXPORTS

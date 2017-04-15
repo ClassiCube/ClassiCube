@@ -1,6 +1,9 @@
 #ifndef CS_TYPEDEFS_H
 #define CS_TYPEDEFS_H
-// ensures that variables are of a fixed size
+/* Ensures variables are of a fixed size.
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+*/
+
 
 typedef unsigned __int8  UInt8;
 typedef unsigned __int16 UInt16;

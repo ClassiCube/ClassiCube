@@ -1,5 +1,8 @@
 #ifndef CS_BLOCK_H
 #define CS_BLOCK_H
+/* List of all core/standard block IDs
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
 
 /* Classic blocks */
 #define Block_Air 0

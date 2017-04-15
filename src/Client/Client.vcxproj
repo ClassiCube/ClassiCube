@@ -173,6 +173,7 @@
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Noise.h" />
+    <ClInclude Include="Platform.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="NotchyGenerator.h" />
     <ClInclude Include="Typedefs.h" />
@@ -182,6 +183,7 @@
     <ClCompile Include="Noise.c" />
     <ClCompile Include="NotchyGenerator.c" />
     <ClCompile Include="Random.c" />
+    <ClCompile Include="WinPlatform.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
