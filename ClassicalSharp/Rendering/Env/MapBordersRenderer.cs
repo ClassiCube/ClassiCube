@@ -114,7 +114,7 @@ namespace ClassicalSharp.Renderers {
 				MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
 				if (game.BlockInfo.BlocksLight[map.Env.SidesBlock] != fullColSides)
 					ResetSidesAndEdges(null, null);
-			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesLevel) {
+			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
 				ResetSidesAndEdges(null, null);
 			} else if (e.Var == EnvVar.SunlightColour) {
 				ResetEdges();

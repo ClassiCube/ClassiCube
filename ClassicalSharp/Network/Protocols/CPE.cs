@@ -360,7 +360,7 @@ namespace ClassicalSharp.Network.Protocols {
 				case 8:
 					env.SetExpFog(value != 0); break;
 				case 9:
-					env.SetSidesLevel(value); break;
+					env.SetSidesOffset(value); break;
 			}
 		}
 		
