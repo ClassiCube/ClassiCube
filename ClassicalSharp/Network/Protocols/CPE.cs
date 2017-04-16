@@ -359,6 +359,8 @@ namespace ClassicalSharp.Network.Protocols {
 					env.SetWeatherFade(value / 128f); break;
 				case 8:
 					env.SetExpFog(value != 0); break;
+				case 9:
+					env.SetSidesLevel(value); break;
 			}
 		}
 		

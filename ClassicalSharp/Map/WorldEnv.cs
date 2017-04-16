@@ -64,7 +64,7 @@ namespace ClassicalSharp.Map {
 		public BlockID SidesBlock = Block.Bedrock;
 		
 		/// <summary> Maximum height of the various parts of the map sides, in world space. </summary>
-		public int SidesHeight { get { return EdgeHeight - 2; } }
+		public int SidesHeight;
 		
 		/// <summary> Whether exponential fog mode is used by default. </summary>
 		public bool ExpFog;
@@ -77,13 +77,9 @@ namespace ClassicalSharp.Map {
 
 		/// <summary> Resets all of the environment properties to their defaults. </summary>
 		public void Reset() {
-			EdgeHeight = -1;
-			CloudHeight = -1;
-			EdgeBlock = Block.StillWater;
-			SidesBlock = Block.Bedrock;
-			CloudsSpeed = 1;
-			WeatherSpeed = 1;
-			WeatherFade = 1;
+			EdgeHeight = -1; SidesHeight = -1; CloudHeight = -1;
+			EdgeBlock = Block.StillWater; SidesBlock = Block.Bedrock;
+			CloudsSpeed = 1; WeatherSpeed = 1; WeatherFade = 1;
 			
 			ResetLight();
 			SkyCol = DefaultSkyColour;
@@ -148,6 +144,10 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets height of the map edges in world space, and raises
 		/// EnvVariableChanged event with variable 'EdgeLevel'. </summary>
 		public void SetEdgeLevel(int level) { Set(level, ref EdgeHeight, EnvVar.EdgeLevel); }
+			
+		/// <summary> Sets height of the map sides in world space, and raises
+		/// EnvVariableChanged event with variable 'SidesLevel'. </summary>
+		public void SetSidesLevel(int level) { Set(level, ref SidesHeight, EnvVar.SidesLevel); }
 		
 		/// <summary> Sets whether exponential fog is used, and raises
 		/// EnvVariableChanged event with variable 'ExpFog'. </summary>

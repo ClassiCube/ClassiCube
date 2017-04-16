@@ -89,7 +89,7 @@ namespace ClassicalSharp.Renderers {
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.SunlightColour || e.Var == EnvVar.ShadowlightColour) {
 				Refresh();
-			} else if (e.Var == EnvVar.EdgeLevel) {
+			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesLevel) {
 				int oldClip = builder.edgeLevel;
 				builder.sidesLevel = Math.Max(0, game.World.Env.SidesHeight);
 				builder.edgeLevel = Math.Max(0, game.World.Env.EdgeHeight);
