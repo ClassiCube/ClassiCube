@@ -143,7 +143,7 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Sets height of the map edges in world space, and raises
 		/// EnvVariableChanged event with variable 'EdgeLevel'. </summary>
-		public void SetEdgeLevel(int level) { Set(level, ref EdgeHeight, EnvVar.EdgeLevel); }
+		public void SetEdgeLevel(int level) { SidesHeight = level - 2; Set(level, ref EdgeHeight, EnvVar.EdgeLevel); }
 			
 		/// <summary> Sets height of the map sides in world space, and raises
 		/// EnvVariableChanged event with variable 'SidesLevel'. </summary>
