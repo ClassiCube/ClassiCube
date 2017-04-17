@@ -288,8 +288,8 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			writer.WriteUInt8((byte)payload); // held block when using HeldBlock, otherwise just 255
 			writer.WritePosition(pos);
-			writer.WriteUInt8((byte)Utils.DegreesToPacked(rotY));
-			writer.WriteUInt8((byte)Utils.DegreesToPacked(headX));
+			writer.WriteUInt8(Utils.DegreesToPacked(rotY));
+			writer.WriteUInt8(Utils.DegreesToPacked(headX));
 			net.SendPacket();
 		}
 		

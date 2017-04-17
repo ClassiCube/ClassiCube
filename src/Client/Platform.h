@@ -21,7 +21,6 @@ void Platform_MemFree(void* mem);
 
 /* Sets a block of memory to the given byte value. */
 void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes);
-
 /* Copies a block of non-overlapping memory. */
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
 

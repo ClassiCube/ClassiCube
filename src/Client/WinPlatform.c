@@ -4,7 +4,7 @@
 
 HANDLE heap;
 void Platform_Init() {
-	heap = HeapCreate(0, 0, 0);
+	heap = GetProcessHeap(); // TODO: HeapCreate instead? probably not
 }
 
 void Platform_Free() {
@@ -12,7 +12,7 @@ void Platform_Free() {
 }
 
 void* Platform_MemAlloc(UInt32 numBytes) {
-	return HeapAlloc(heap, 0, 0);
+	return HeapAlloc(heap, 0, numBytes);
 }
 
 void Platform_MemFree(void* mem) {

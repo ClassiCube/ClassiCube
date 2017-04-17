@@ -49,8 +49,8 @@ namespace ClassicalSharp {
 			return (int)(degrees * period / 360.0) % period;
 		}
 		
-		public static int DegreesToPacked(double degrees) {
-			return (int)(degrees * 256 / 360.0) & 0xFF;
+		public static byte DegreesToPacked(double degrees) {
+			return (byte)(degrees * 256 / 360.0);
 		}
 		
 		public static double PackedToDegrees(byte packed) {
