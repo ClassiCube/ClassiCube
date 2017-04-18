@@ -181,9 +181,11 @@ namespace ClassicalSharp.Network {
 				packetSizes[i] = 0;
 			}
 			
-			classic.Reset();
-			cpe.Reset();
-			cpeBlockDefs.Reset();
+			if (classic != null) { // null if no successful connection ever made before
+				classic.Reset();
+				cpe.Reset();
+				cpeBlockDefs.Reset();
+			}
 			
 			reader.ExtendedPositions = false;
 			writer.ExtendedPositions = false;
