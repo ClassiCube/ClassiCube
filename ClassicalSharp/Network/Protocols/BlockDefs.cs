@@ -85,7 +85,13 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			info.SetTex(reader.ReadUInt8(), Side.Bottom, id);
 			
+			// Need to refresh lighting when a block's light blocking state changes
+			bool didBlockLight = info.BlocksLight[id];
 			info.BlocksLight[id] = reader.ReadUInt8() == 0;
+			if (!game.World.IsNotLoaded && (didBlockLight != info.BlocksLight[id])) {
+				game.Lighting.Refresh();
+			}
+			
 			byte sound = reader.ReadUInt8();
 			if (sound < breakSnds.Length) {
 				info.StepSounds[id] = stepSnds[sound];
