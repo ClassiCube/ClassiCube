@@ -32,6 +32,9 @@ namespace ClassicalSharp.Map {
 		/// <summary> Updates the lighting for the block at that position, which may in turn affect other blocks. </summary>
 		public abstract void UpdateLight(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 		
+		/// <summary> Discards all cached lighting information. </summary>
+		public virtual void Refresh() { }
+		
 		
 		/// <summary> Returns whether the block at the given coordinates is fully in sunlight. </summary>
 		/// <remarks> *** Does NOT check that the coordinates are inside the map. *** </remarks>

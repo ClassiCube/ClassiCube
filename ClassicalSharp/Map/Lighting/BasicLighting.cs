@@ -34,8 +34,7 @@ namespace ClassicalSharp.Map {
 			oneY = width * length;
 			
 			heightmap = new short[width * length];
-			for (int i = 0; i < heightmap.Length; i++)
-				heightmap[i] = short.MaxValue;
+			Refresh();
 		}
 		
 		public override void Init(Game game) {
@@ -122,6 +121,11 @@ namespace ClassicalSharp.Map {
 			return y > heightmap[(z * width) + x] ? OutsideZSide : shadowZSide;
 		}
 		
+		
+		public override void Refresh() {
+			for (int i = 0; i < heightmap.Length; i++)
+				heightmap[i] = short.MaxValue;
+		}
 		
 		public override void UpdateLight(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 			bool didBlock = info.BlocksLight[oldBlock];
