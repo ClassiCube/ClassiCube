@@ -107,7 +107,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		public override int LightCol_YTop_Fast(int x, int y, int z) {
-			return y >= heightmap[(z * width) + x] ? Outside : shadow;
+			return y > heightmap[(z * width) + x] ? Outside : shadow;
 		}
 		
 		public override int LightCol_YBottom_Fast(int x, int y, int z) {
