@@ -284,7 +284,14 @@ namespace ClassicalSharp {
 		
 		public void UpdateBlock(int x, int y, int z, BlockID block) {
 			int oldHeight = Lighting.GetLightHeight(x, z) + 1;
+			BlockID oldBlock = World.GetBlock(x, y, z);
 			World.SetBlock(x, y, z, block);
+			
+			Lighting.UpdateLight(x, y, z, oldBlock, block);			
+			WeatherRenderer weather = WeatherRenderer;
+			if (weather.heightmap != null && !World.IsNotLoaded)
+				weather.UpdateHeight(x, y, z, oldBlock, block);
+			
 			int newHeight = Lighting.GetLightHeight(x, z) + 1;
 			MapRenderer.RedrawBlock(x, y, z, block, oldHeight, newHeight);
 		}

@@ -256,14 +256,14 @@ namespace ClassicalSharp.Renderers {
 			if (bX == 0 && cx > 0)
 				ResetNeighbour(x - 1, y, z, block, cx - 1, cy, cz, minCy, maxCy);
 			if (bY == 0 && cy > 0 && Needs(block, world.GetBlock(x, y - 1, z)))
-				ResetChunk(cx, cy - 1, cz);
+				RefreshChunk(cx, cy - 1, cz);
 			if (bZ == 0 && cz > 0)
 				ResetNeighbour(x, y, z - 1, block, cx, cy, cz - 1, minCy, maxCy);
 			
 			if (bX == 15 && cx < chunksX - 1)
 				ResetNeighbour(x + 1, y, z, block, cx + 1, cy, cz, minCy, maxCy);
 			if (bY == 15 && cy < chunksY - 1 && Needs(block, world.GetBlock(x, y + 1, z)))
-				ResetChunk(cx, cy + 1, cz);
+				RefreshChunk(cx, cy + 1, cz);
 			if (bZ == 15 && cz < chunksZ - 1)
 				ResetNeighbour(x, y, z + 1, block, cx, cy, cz + 1, minCy, maxCy);
 		}
@@ -296,21 +296,21 @@ namespace ClassicalSharp.Renderers {
 			for (; y >= minY; y--) {
 				BlockID other = world.blocks[index];
 				bool affected = y == nY ? Needs(block, other) : info.Draw[other] != DrawType.Gas;
-				if (affected) { ResetChunk(cx, cy, cz); return; }
+				if (affected) { RefreshChunk(cx, cy, cz); return; }
 				index -= world.Width * world.Length;
 			}
 		}
 		
 		void ResetColumn(int cx, int cy, int cz, int minCy, int maxCy) {
 			if (minCy == maxCy) {
-				ResetChunk(cx, cy, cz);
+				RefreshChunk(cx, cy, cz);
 			} else {
 				for (cy = maxCy; cy >= minCy; cy--)
-					ResetChunk(cx, cy, cz);
+					RefreshChunk(cx, cy, cz);
 			}
 		}
 		
-		void ResetChunk(int cx, int cy, int cz) {
+		public void RefreshChunk(int cx, int cy, int cz) {
 			if (cx < 0 || cy < 0 || cz < 0 ||
 			    cx >= chunksX || cy >= chunksY || cz >= chunksZ) return;
 			
