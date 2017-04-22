@@ -46,7 +46,7 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		IGraphicsApi gfx;
 		
-		internal int _1DUsed = -1;
+		internal int _1DUsed = -1, chunksX, chunksY, chunksZ;
 		internal int renderCount = 0;
 		internal ChunkInfo[] chunks, renderChunks, unsortedChunks;
 		internal bool[] usedTranslucent, usedNormal;
@@ -67,12 +67,21 @@ namespace ClassicalSharp.Renderers {
 		/// <summary> Discards any built meshes for all chunks in the map.</summary>
 		public void Refresh() { updater.Refresh(); }
 		
-		public void RedrawBlock(int x, int y, int z, BlockID block, int oldHeight, int newHeight) {
-			updater.RedrawBlock(x, y, z, block, oldHeight, newHeight);
+		/// <summary> Retrieves the information for the given chunk. </summary>
+		public ChunkInfo GetChunk(int cx, int cy, int cz) {
+			return unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
 		}
 		
 		/// <summary> Marks the given chunk as needing to be deleted. </summary>
-		public void RefreshChunk(int cx, int cy, int cz) { updater.RefreshChunk(cx, cy, cz); }
+		public void RefreshChunk(int cx, int cy, int cz) {
+			if (cx < 0 || cy < 0 || cz < 0 ||
+			    cx >= chunksX || cy >= chunksY || cz >= chunksZ) return;
+			
+			ChunkInfo info = unsortedChunks[cx + chunksX * (cy + cz * chunksY)];
+			if (info.AllAir) return; // do not recreate chunks completely air
+			info.Empty = false;
+			info.PendingDelete = true;
+		}
 		
 		/// <summary> Potentially generates meshes for several pending chunks. </summary>
 		public void Update(double deltaTime) {

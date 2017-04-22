@@ -68,6 +68,7 @@ namespace ClassicalSharp.Network.Protocols {
 		byte HandleDefineBlockCommonStart(NetReader reader, bool uniqueSideTexs) {
 			byte id = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
+			bool didBlockLight = info.BlocksLight[id];
 			info.ResetBlockProps(id);
 			
 			info.Name[id] = reader.ReadString();
@@ -85,8 +86,7 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			info.SetTex(reader.ReadUInt8(), Side.Bottom, id);
 			
-			// Need to refresh lighting when a block's light blocking state changes
-			bool didBlockLight = info.BlocksLight[id];
+			// Need to refresh lighting when a block's light blocking state changes			
 			info.BlocksLight[id] = reader.ReadUInt8() == 0;
 			if (!game.World.IsNotLoaded && (didBlockLight != info.BlocksLight[id])) {
 				game.Lighting.Refresh();

@@ -191,10 +191,10 @@ namespace ClassicalSharp.Renderers {
 			
 			int index = (x * length) + z;
 			int height = heightmap[index];
-			// Two cases can be skipped:
-			// a) rain height hadn't been calculated to begin with
-			// b) modified is below current rain height
-			if (height == short.MaxValue || y < height) return;
+			// Two cases can be skipped here:
+			// a) rain height was not calculated to begin with (height is short.MaxValue)
+			// b) changed y is below current calculated rain height
+			if (y < height) return;
 			
 			if (nowBlock) {
 				// Simple case: Rest of column below is now not visible to rain.

@@ -283,17 +283,18 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateBlock(int x, int y, int z, BlockID block) {
-			int oldHeight = Lighting.GetLightHeight(x, z) + 1;
 			BlockID oldBlock = World.GetBlock(x, y, z);
 			World.SetBlock(x, y, z, block);
 			
-			Lighting.UpdateLight(x, y, z, oldBlock, block);
 			WeatherRenderer weather = WeatherRenderer;
 			if (weather.heightmap != null && !World.IsNotLoaded)
 				weather.OnBlockChanged(x, y, z, oldBlock, block);
+			Lighting.OnBlockChanged(x, y, z, oldBlock, block);
 			
-			int newHeight = Lighting.GetLightHeight(x, z) + 1;
-			MapRenderer.RedrawBlock(x, y, z, block, oldHeight, newHeight);
+			// Refresh the chunk the block was located in.
+			int cx = x >> 4, cy = y >> 4, cz = z >> 4;
+			MapRenderer.GetChunk(cx, cy, cz).AllAir &= BlockInfo.Draw[block] == DrawType.Gas;
+			MapRenderer.RefreshChunk(cx, cy, cz);
 		}
 		
 		float limitMilliseconds;
