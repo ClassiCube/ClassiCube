@@ -168,7 +168,8 @@ namespace ClassicalSharp {
 			ParticleManager.Render(delta, t);
 			Camera.GetPickedBlock(SelectedPos); // TODO: only pick when necessary
 			EnvRenderer.Render(delta);
-			MapRenderer.Render(delta);
+			MapRenderer.Update(delta);
+			MapRenderer.RenderNormal(delta);
 			MapBordersRenderer.RenderSides(delta);
 			
 			if (SelectedPos.Valid && !HideGui) {

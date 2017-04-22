@@ -64,24 +64,24 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Dispose() { updater.Dispose(); }
 		
+		/// <summary> Discards any built meshes for all chunks in the map.</summary>
 		public void Refresh() { updater.Refresh(); }
 		
 		public void RedrawBlock(int x, int y, int z, BlockID block, int oldHeight, int newHeight) {
 			updater.RedrawBlock(x, y, z, block, oldHeight, newHeight);
 		}
 		
-		public void Render(double deltaTime) {
+		/// <summary> Marks the given chunk as needing to be deleted. </summary>
+		public void RefreshChunk(int cx, int cy, int cz) { updater.RefreshChunk(cx, cy, cz); }
+		
+		/// <summary> Potentially generates meshes for several pending chunks. </summary>
+		public void Update(double deltaTime) {
 			if (chunks == null) return;
 			ChunkSorter.UpdateSortOrder(game, updater);
 			updater.UpdateChunks(deltaTime);
-			RenderNormalChunks(deltaTime);
 		}
 		
-		public void RenderTranslucent(double deltaTime) {
-			if (chunks == null) return;
-			RenderTranslucentChunks(deltaTime);
-		}
-		
+		/// <summary> Sets the mesh builder that is used to generate meshes for chunks. </summary>
 		public void SetMeshBuilder(ChunkMeshBuilder newBuilder) {
 			if (updater.builder != null) updater.builder.Dispose();
 			
@@ -90,6 +90,7 @@ namespace ClassicalSharp.Renderers {
 			updater.builder.OnNewMapLoaded();
 		}
 
+		/// <summary> Creates a new instance of the default mesh builder implementation. </summary>
 		public ChunkMeshBuilder DefaultMeshBuilder() {
 			if (game.SmoothLighting)
 				return new AdvLightingMeshBuilder();
@@ -97,9 +98,11 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		
-		// Render solid and fully transparent to fill depth buffer.
-		// These blocks are treated as having an alpha value of either none or full.
-		void RenderNormalChunks(double deltaTime) {
+		/// <summary> Renders all opaque and transparent blocks. </summary>
+		/// <remarks> Pixels are either treated as fully replacing existing pixel, or skipped. </remarks>
+		public void RenderNormal(double deltaTime) {
+			if (chunks == null) return;
+			
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.Texturing = true;
@@ -122,25 +125,11 @@ namespace ClassicalSharp.Renderers {
 			#endif
 		}
 		
-		void CheckWeather(double deltaTime) {
-			WorldEnv env = game.World.Env;
-			Vector3 pos = game.CurrentCameraPos;
-			Vector3I coords = Vector3I.Floor(pos);
+		/// <summary> Renders all translucent (e.g. water) blocks. </summary>
+		/// <remarks> Pixels drawn blend into existing geometry. </remarks>
+		public void RenderTranslucent(double deltaTime) {
+			if (chunks == null) return;
 			
-			BlockID block = game.World.SafeGetBlock(coords);
-			bool outside = !game.World.IsValidPos(Vector3I.Floor(pos));
-			inTranslucent = game.BlockInfo.Draw[block] == DrawType.Translucent
-				|| (pos.Y < env.EdgeHeight && outside);
-			
-			// If we are under water, render weather before to blend properly
-			if (!inTranslucent || env.Weather == Weather.Sunny) return;
-			gfx.AlphaBlending = true;
-			game.WeatherRenderer.Render(deltaTime);
-			gfx.AlphaBlending = false;
-		}
-		
-		// Render translucent(liquid) blocks. These 'blend' into other blocks.
-		void RenderTranslucentChunks(double deltaTime) {
 			// First fill depth buffer
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
@@ -177,6 +166,24 @@ namespace ClassicalSharp.Renderers {
 			}
 			gfx.AlphaBlending = false;
 			gfx.Texturing = false;
+		}
+		
+		
+		void CheckWeather(double deltaTime) {
+			WorldEnv env = game.World.Env;
+			Vector3 pos = game.CurrentCameraPos;
+			Vector3I coords = Vector3I.Floor(pos);
+			
+			BlockID block = game.World.SafeGetBlock(coords);
+			bool outside = !game.World.IsValidPos(Vector3I.Floor(pos));
+			inTranslucent = game.BlockInfo.Draw[block] == DrawType.Translucent
+				|| (pos.Y < env.EdgeHeight && outside);
+			
+			// If we are under water, render weather before to blend properly
+			if (!inTranslucent || env.Weather == Weather.Sunny) return;
+			gfx.AlphaBlending = true;
+			game.WeatherRenderer.Render(deltaTime);
+			gfx.AlphaBlending = false;
 		}
 		
 		const DrawMode mode = DrawMode.Triangles;
@@ -238,6 +245,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
+		
 		void DrawPart(ChunkInfo info, ref ChunkPartInfo part) {
 			gfx.BindVb(part.VbId);
 			bool drawLeft = info.DrawLeft && part.LeftCount > 0;
@@ -286,50 +294,7 @@ namespace ClassicalSharp.Renderers {
 				game.Vertices += part.TopCount;
 			}
 		}
-		
-		void DrawTranslucentPart(ChunkInfo info, ref ChunkPartInfo part, int m) {
-			gfx.BindVb(part.VbId);
-			bool drawLeft = (inTranslucent || info.DrawLeft) && part.LeftCount > 0;
-			bool drawRight = (inTranslucent || info.DrawRight) && part.RightCount > 0;
-			bool drawBottom = (inTranslucent || info.DrawBottom) && part.BottomCount > 0;
-			bool drawTop = (inTranslucent || info.DrawTop) && part.TopCount > 0;
-			bool drawFront = (inTranslucent || info.DrawFront) && part.FrontCount > 0;
-			bool drawBack = (inTranslucent || info.DrawBack) && part.BackCount > 0;
-			
-			if (drawLeft && drawRight) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, part.LeftIndex);
-				game.Vertices += m * (part.LeftCount + part.RightCount);
-			} else if (drawLeft) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount, part.LeftIndex);
-				game.Vertices += m * part.LeftCount;
-			} else if (drawRight) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.RightCount, part.RightIndex);
-				game.Vertices += m * part.RightCount;
-			}
-			
-			if (drawFront && drawBack) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.FrontCount + part.BackCount, part.FrontIndex);
-				game.Vertices += m * (part.FrontCount + part.BackCount);
-			} else if (drawFront) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.FrontCount, part.FrontIndex);
-				game.Vertices += m * part.FrontCount;
-			} else if (drawBack) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.BackCount, part.BackIndex);
-				game.Vertices += m * part.BackCount;
-			}
-			
-			if (drawBottom && drawTop) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, part.BottomIndex);
-				game.Vertices += m * (part.BottomCount + part.TopCount);
-			} else if (drawBottom) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex);
-				game.Vertices += m * part.BottomCount;
-			} else if (drawTop) {
-				gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
-				game.Vertices += m * part.TopCount;
-			}
-		}
-		
+
 		void DrawBigPart(ChunkInfo info, ref ChunkPartInfo part) {
 			gfx.BindVb(part.VbId);
 			bool drawLeft = info.DrawLeft && part.LeftCount > 0;
@@ -397,6 +362,49 @@ namespace ClassicalSharp.Renderers {
 					gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
 				}
 				game.Vertices += part.TopCount;
+			}
+		}
+		
+		void DrawTranslucentPart(ChunkInfo info, ref ChunkPartInfo part, int m) {
+			gfx.BindVb(part.VbId);
+			bool drawLeft = (inTranslucent || info.DrawLeft) && part.LeftCount > 0;
+			bool drawRight = (inTranslucent || info.DrawRight) && part.RightCount > 0;
+			bool drawBottom = (inTranslucent || info.DrawBottom) && part.BottomCount > 0;
+			bool drawTop = (inTranslucent || info.DrawTop) && part.TopCount > 0;
+			bool drawFront = (inTranslucent || info.DrawFront) && part.FrontCount > 0;
+			bool drawBack = (inTranslucent || info.DrawBack) && part.BackCount > 0;
+			
+			if (drawLeft && drawRight) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, part.LeftIndex);
+				game.Vertices += m * (part.LeftCount + part.RightCount);
+			} else if (drawLeft) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount, part.LeftIndex);
+				game.Vertices += m * part.LeftCount;
+			} else if (drawRight) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.RightCount, part.RightIndex);
+				game.Vertices += m * part.RightCount;
+			}
+			
+			if (drawFront && drawBack) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.FrontCount + part.BackCount, part.FrontIndex);
+				game.Vertices += m * (part.FrontCount + part.BackCount);
+			} else if (drawFront) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.FrontCount, part.FrontIndex);
+				game.Vertices += m * part.FrontCount;
+			} else if (drawBack) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.BackCount, part.BackIndex);
+				game.Vertices += m * part.BackCount;
+			}
+			
+			if (drawBottom && drawTop) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, part.BottomIndex);
+				game.Vertices += m * (part.BottomCount + part.TopCount);
+			} else if (drawBottom) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex);
+				game.Vertices += m * part.BottomCount;
+			} else if (drawTop) {
+				gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
+				game.Vertices += m * part.TopCount;
 			}
 		}
 	}

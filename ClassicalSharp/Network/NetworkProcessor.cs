@@ -146,6 +146,7 @@ namespace ClassicalSharp.Network {
 				writer.index = 0;
 				return;
 			}
+			
 			try {
 				writer.Send();
 			} catch (SocketException) {
