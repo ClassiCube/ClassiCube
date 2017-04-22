@@ -14,6 +14,20 @@ namespace ClassicalSharp.Map {
 	public sealed partial class BasicLighting : IWorldLighting {
 		
 		public override void OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+			int index = (z * width) + x;
+			int lightH = heightmap[index];
+			// Since light wasn't checked to begin with, means column never had meshes for any of its chunks built.
+			// So we don't need to do anything.
+			if (lightH == short.MaxValue) return;
+			
+			UpdateLighting(x, y, z, oldBlock, newBlock, index, lightH);
+			int newHeight = heightmap[index] + 1;
+			RefreshAffected(x, y, z, newBlock, lightH + 1, newHeight);
+		}
+		
+		MapRenderer renderer;		
+		void UpdateLighting(int x, int y, int z, BlockID oldBlock, 
+		                    BlockID newBlock, int index, int lightH) {
 			bool didBlock = info.BlocksLight[oldBlock];
 			bool nowBlocks = info.BlocksLight[newBlock];
 			int oldOffset = (info.LightOffset[oldBlock] >> Side.Top) & 1;
@@ -25,13 +39,6 @@ namespace ClassicalSharp.Map {
 				if (oldOffset == newOffset) return; // b) both blocks blocked light at the same Y coordinate
 			}
 			
-			int index = (z * width) + x;
-			int lightH = heightmap[index];
-			// Since light wasn't checked to begin with, means column never had meshes for any of its chunks built.
-			// So we don't need to do anything.
-			if (lightH == short.MaxValue) return;
-			
-			int oldHeight = lightH + 1;
 			if ((y - newOffset) >= lightH) {
 				if (nowBlocks) {
 					heightmap[index] = (short)(y - newOffset);
@@ -52,11 +59,9 @@ namespace ClassicalSharp.Map {
 					CalcHeightAt(x, y - 1, z, index);
 				}
 			}
-			int newHeight = heightmap[index] + 1;
-			RefreshAffected(x, y, z, newBlock, oldHeight, newHeight);
+			
 		}
 		
-		MapRenderer renderer;
 		void RefreshAffected(int x, int y, int z, BlockID block, int oldHeight, int newHeight) {
 			int cx = x >> 4, cy = y >> 4, cz = z >> 4;
 			renderer = game.MapRenderer;
