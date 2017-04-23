@@ -103,7 +103,7 @@ namespace ClassicalSharp {
 		DateTime last;
 		StreamWriter writer = null;
 		void LogChatToFile(string text) {
-			if (logName == null) return;
+			if (logName == null || !game.ChatLogging) return;
 			DateTime now = DateTime.Now;
 			
 			if (now.Day != last.Day || now.Month != last.Month || now.Year != last.Year) {

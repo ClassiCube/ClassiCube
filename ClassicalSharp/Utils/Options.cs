@@ -24,6 +24,7 @@ namespace ClassicalSharp {
 		public const string RenderType = "normal";
 		public const string SmoothLighting = "gfx-smoothlighting";
 		public const string SurvivalMode = "game-survivalmode";
+		public const string ChatLogging = "chat-logging";
 		
 		public const string HacksEnabled = "hacks-hacksenabled";
 		public const string FieldOfView = "hacks-fov";
