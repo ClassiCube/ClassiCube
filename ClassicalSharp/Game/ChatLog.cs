@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 			this.game = game;
 		}
 
-		public void Ready(Game game) { }			
+		public void Ready(Game game) { }
 		public void Reset(Game game) { logName = null; }
 		public void OnNewMap(Game game) { }
 		public void OnNewMapLoaded(Game game) { }
@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 		
 		static bool Allowed(char c) {
 			return c == '[' || c == ']' || c == '(' || c == ')' ||
-				(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || 
+				(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
 				(c >= 'A' && c <= 'Z');
 		}
 		

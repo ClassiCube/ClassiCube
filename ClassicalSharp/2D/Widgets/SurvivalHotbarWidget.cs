@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override void Init() {
 			base.Init();
 			font = new Font(game.FontName, 16);
-			posAtlas = new TextAtlas(game);
+			posAtlas = new TextAtlas(game, 16);
 			posAtlas.Pack("0123456789", font, "f");
 			game.Events.ChatFontChanged += ChatFontChanged;
 		}
