@@ -33,7 +33,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void UpdateVelocityState() {
-			if (hacks.Floating) {
+			if (hacks.Flying || hacks.Noclip) {
 				entity.Velocity.Y = 0; // eliminate the effect of gravity
 				int dir = (hacks.FlyingUp || jumping) ? 1 : (hacks.FlyingDown ? -1 : 0);
 				
@@ -109,34 +109,34 @@ namespace ClassicalSharp.Entities {
 		
 		public void PhysicsTick(Vector3 vel) {
 			if (hacks.Noclip) entity.onGround = false;
-			float baseSpeed = GetBaseSpeed();
-			float verSpeed = baseSpeed * Math.Max(1, GetSpeed(hacks.CanSpeed, 8f) / 5);
-			float horSpeed = baseSpeed * GetSpeed(true, 8f/5);
-			// previously horSpeed used to be multiplied by factor of 0.02 in last case
-			// it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same
+			float multiply = GetBaseMultiply(true);
+			float yMultiply = GetBaseMultiply(hacks.CanSpeed);
+			float modifier = LowestSpeedModifier();
 			
-			if (!hacks.Floating) {
-				if (secondJump) { horSpeed *= 93f; verSpeed *= 10f; }
-				else if (firstJump) { horSpeed *= 46.5f; verSpeed *= 7.5f; }
+			float yMul = Math.Max(1f, yMultiply / 5) * modifier;
+			float horMul = multiply * modifier;
+			if (!(hacks.Flying || hacks.Noclip)) {
+				if (secondJump) { horMul *= 93f; yMul *= 10f; }
+				else if (firstJump) { horMul *= 46.5f; yMul *= 7.5f; }
 			}
 			
-			if (entity.TouchesAnyWater() && !hacks.Floating) {
-				MoveNormal(vel, 0.02f * horSpeed, waterDrag, liquidGrav, verSpeed);
-			} else if (entity.TouchesAnyLava() && !hacks.Floating) {
-				MoveNormal(vel, 0.02f * horSpeed, lavaDrag, liquidGrav, verSpeed);
-			} else if (entity.TouchesAnyRope() && !hacks.Floating) {
-				MoveNormal(vel, 0.02f * 1.7f, ropeDrag, ropeGrav, verSpeed);
+			if (entity.TouchesAnyWater() && !hacks.Flying && !hacks.Noclip) {
+				MoveNormal(vel, 0.02f * horMul, waterDrag, liquidGrav, yMul);
+			} else if (entity.TouchesAnyLava() && !hacks.Flying && !hacks.Noclip) {
+				MoveNormal(vel, 0.02f * horMul, lavaDrag, liquidGrav, yMul);
+			} else if (entity.TouchesAnyRope() && !hacks.Flying && !hacks.Noclip) {
+				MoveNormal(vel, 0.02f * 1.7f, ropeDrag, ropeGrav, yMul);
 			} else {
-				float factor = hacks.Floating || entity.onGround ? 0.1f : 0.02f;
+				float factor = !(hacks.Flying || hacks.Noclip) && entity.onGround ? 0.1f : 0.02f;
 				float gravity = useLiquidGravity ? liquidGrav : entity.Model.Gravity;
 				
-				if (hacks.Floating) {
-					MoveFlying(vel, factor * horSpeed, entity.Model.Drag, gravity, verSpeed);
+				if (hacks.Flying || hacks.Noclip) {
+					MoveFlying(vel, factor * horMul, entity.Model.Drag, gravity, yMul);
 				} else {
-					MoveNormal(vel, factor * horSpeed, entity.Model.Drag, gravity, verSpeed);
+					MoveNormal(vel, factor * horMul, entity.Model.Drag, gravity, yMul);
 				}
 
-				if (entity.BlockUnderFeet == Block.Ice && !hacks.Floating) {
+				if (entity.BlockUnderFeet == Block.Ice && !(hacks.Flying || hacks.Noclip)) {
 					// limit components to +-0.25f by rescaling vector to [-0.25, 0.25]
 					if (Math.Abs(entity.Velocity.X) > 0.25f || Math.Abs(entity.Velocity.Z) > 0.25f) {
 						float scale = Math.Min(
@@ -189,15 +189,19 @@ namespace ClassicalSharp.Entities {
 			entity.Velocity.Y -= gravity;
 		}
 
-		float GetSpeed(bool canSpeed, float speedMul) {
-			float factor = hacks.Floating ? speedMul : 1, speed = factor;		
-			if (hacks.Speeding && canSpeed) speed += factor * hacks.SpeedMultiplier;
-			if (hacks.HalfSpeeding && canSpeed) speed += factor * hacks.SpeedMultiplier / 2;
-			return hacks.CanSpeed ? speed : Math.Min(speed, hacks.MaxSpeedMultiplier);
+		float GetBaseMultiply(bool canSpeed) {
+			float multiply = 0;
+			float speed = (hacks.Flying || hacks.Noclip) ? 8 : 1;
+			
+			
+			if (hacks.Speeding && canSpeed) multiply += speed * hacks.SpeedMultiplier;
+			if (hacks.HalfSpeeding && canSpeed) multiply += speed * hacks.SpeedMultiplier / 2;
+			if (multiply == 0) multiply = speed;
+			return hacks.CanSpeed ? multiply : Math.Min(multiply, hacks.MaxSpeedMultiplier);
 		}
 		
 		const float inf = float.PositiveInfinity;
-		float GetBaseSpeed() {
+		float LowestSpeedModifier() {
 			AABB bounds = entity.Bounds;
 			useLiquidGravity = false;
 			float baseModifier = LowestModifier(bounds, false);

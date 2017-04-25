@@ -12,13 +12,10 @@ namespace ClassicalSharp.Model {
 		public ZombieModel(Game window) : base(window) { }
 		
 		public override void CreateParts() {
-			vertices = new ModelVertex[boxVertices * 7];
+			vertices = new ModelVertex[boxVertices * 6];
 			Head = BuildBox(MakeBoxBounds(-4, 24, -4, 4, 32, 4)
 			                .TexOrigin(0, 0)
 			                .RotOrigin(0, 24, 0));
-			Hat = BuildBox(MakeBoxBounds(-4, 24, -4, 4, 32, 4)
-			                .TexOrigin(32, 0)
-			                .RotOrigin(0, 24, 0).Expand(0.5f));
 			Torso = BuildBox(MakeBoxBounds(-4, 12, -2, 4, 24, 2)
 			                  .TexOrigin(16, 16));
 			LeftLeg = BuildBox(MakeBoxBounds(0, 0, -2, -4, 12, 2)
@@ -47,19 +44,18 @@ namespace ClassicalSharp.Model {
 			get { return new AABB(-4/16f, 0, -4/16f, 4/16f, 32/16f, 4/16f); }
 		}
 		
-		public override void DrawModel(Entity p) {
+		protected override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);
 			
 			DrawPart(Torso);
-			DrawRotate(p.anim.leftLegX, 0, 0, LeftLeg, false);
-			DrawRotate(p.anim.rightLegX, 0, 0, RightLeg, false);
-			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.leftArmZ, LeftArm, false);
-			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.rightArmZ, RightArm, false);
-			DrawRotate(-p.HeadXRadians, 0, 0, Hat, true);
+			DrawRotate(p.anim.legXRot, 0, 0, LeftLeg, false);
+			DrawRotate(-p.anim.legXRot, 0, 0, RightLeg, false);
+			DrawRotate(90 * Utils.Deg2Rad, 0, p.anim.armZRot, LeftArm, false);
+			DrawRotate(90 * Utils.Deg2Rad, 0, -p.anim.armZRot, RightArm, false);
 			UpdateVB();
 		}
 		
-		ModelPart Head, Hat, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
+		ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm;
 	}
 }

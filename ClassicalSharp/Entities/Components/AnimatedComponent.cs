@@ -14,13 +14,13 @@ namespace ClassicalSharp.Entities {
 			this.game = game;
 			this.entity = entity;
 		}
-				
-		public float bobbingHor, bobbingVer, bobbingModel, tiltX, tiltY;
-		public float walkTime, swing, bobStrength = 1, velTiltStrength = 1;		
-		internal float walkTimeO, walkTimeN, swingO, swingN;
 		
-		public float leftLegX, leftLegZ, rightLegX, rightLegZ;
-		public float leftArmX, leftArmZ, rightArmX, rightArmZ;
+		public float legXRot, armXRot, armZRot;
+		public float bobbingHor, bobbingVer, bobbingModel, tiltX, tiltY;
+		public float walkTime, swing, bobStrength = 1, velTiltStrength = 1;
+		
+		internal float walkTimeO, walkTimeN, swingO, swingN;
+		internal float leftXRot, leftZRot, rightXRot, rightZRot;
 		
 		/// <summary> Calculates the next animation state based on old and new position. </summary>
 		public void UpdateAnimState(Vector3 oldPos, Vector3 newPos, double delta) {
@@ -54,13 +54,9 @@ namespace ClassicalSharp.Entities {
 			float idleXRot = (float)(Math.Sin(idleTime * idleXPeriod) * idleMax);
 			float idleZRot = (float)(idleMax + Math.Cos(idleTime * idleZPeriod) * idleMax);
 			
-			leftArmX = (float)(Math.Cos(walkTime) * swing * armMax) - idleXRot;
-			leftArmZ = -idleZRot;
-			leftLegX = -(float)(Math.Cos(walkTime) * swing * legMax);
-			leftLegZ = 0;
-			
-			rightLegX = -leftLegX; rightLegZ = -leftLegZ;
-			rightArmX = -leftArmX; rightArmZ = -leftArmZ;
+			armXRot = (float)(Math.Cos(walkTime) * swing * armMax) - idleXRot;
+			legXRot = -(float)(Math.Cos(walkTime) * swing * legMax);
+			armZRot = -idleZRot;
 			
 			bobbingHor = (float)(Math.Cos(walkTime) * swing * (2.5f/16f));
 			bobbingVer = (float)(Math.Abs(Math.Sin(walkTime)) * swing * (2.5f/16f));
@@ -75,7 +71,7 @@ namespace ClassicalSharp.Entities {
 				tiltY = (float)Math.Sin(walkTime) * swing * (0.15f * Utils.Deg2Rad);
 			}
 
-			if (entity.Model.CalcHumanAnims && !game.SimpleArmsAnim)
+			if (entity.Model is HumanoidModel)
 				CalcHumanAnim(idleXRot, idleZRot);
 		}
 		
@@ -86,9 +82,14 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void CalcHumanAnim(float idleXRot, float idleZRot) {
-			PerpendicularAnim(0.23f, idleXRot, idleZRot, out leftArmX, out leftArmZ);
-			PerpendicularAnim(0.28f, idleXRot, idleZRot, out rightArmX, out rightArmZ);
-			rightArmX = -rightArmX; rightArmZ = -rightArmZ;
+			if (game.SimpleArmsAnim) {
+				leftXRot = armXRot; leftZRot = armZRot;
+				rightXRot = -armXRot; rightZRot = -armZRot;
+			} else {
+				PerpendicularAnim(0.23f, idleXRot, idleZRot, out leftXRot, out leftZRot);
+				PerpendicularAnim(0.28f, idleXRot, idleZRot, out rightXRot, out rightZRot);
+				rightXRot = -rightXRot; rightZRot = -rightZRot;
+			}
 		}
 		
 		const float maxAngle = 110 * Utils.Deg2Rad;

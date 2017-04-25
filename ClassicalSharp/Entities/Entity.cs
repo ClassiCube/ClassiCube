@@ -44,11 +44,10 @@ namespace ClassicalSharp.Entities {
 		protected internal bool onGround;
 		internal float StepSize;
 		internal int tickCount;
-		internal Matrix4 transform;
 		
 		public SkinType SkinType;
 		public AnimatedComponent anim;
-		public float uScale = 1, vScale = 1;
+		internal float uScale = 1, vScale = 1;
 		protected DateTime lastModelChange = new DateTime(1, 1, 1);
 		
 		
@@ -111,7 +110,7 @@ namespace ClassicalSharp.Entities {
 			return game.World.SafeGetBlock(Vector3I.Floor(coords));
 		}
 		
-		public Matrix4 TransformMatrix(float scale, Vector3 pos) {
+		internal Matrix4 TransformMatrix(float scale, Vector3 pos) {
 			return 
 				Matrix4.RotateZ(-RotZ * Utils.Deg2Rad) * 
 				Matrix4.RotateX(-RotX * Utils.Deg2Rad) * 

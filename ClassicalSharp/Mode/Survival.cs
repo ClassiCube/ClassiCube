@@ -41,6 +41,7 @@ namespace ClassicalSharp.Mode {
         SoundType blocksound;
         int oldwidth;
         int oldlength;
+        bool getblocksafe = false;
 
         public void PickLeft(BlockID old) {
             if (BreakTimer.Enabled == false)
@@ -76,32 +77,32 @@ namespace ClassicalSharp.Mode {
             else if (block == Block.Stone)
             {
 
-                blockhp = 50;
+                blockhp = 10;
                 blocksound = SoundType.Stone;
 
             }
             else if (block == Block.CoalOre)
             {
 
-                blockhp = 55;
+                blockhp = 10;
                 blocksound = SoundType.Stone;
             }
             else if (block == Block.IronOre)
             {
 
-                blockhp = 60;
+                blockhp = 10;
                 blocksound = SoundType.Stone;
             }
             else if (block == Block.GoldOre)
             {
 
-                blockhp = 65;
+                blockhp = 10;
                 blocksound = SoundType.Stone;
             }
             else if (block == Block.Cobblestone)
             {
 
-                blockhp = 50;
+                blockhp = 10;
                 blocksound = SoundType.Stone;
             }
             else if (block == Block.Log)
@@ -208,9 +209,16 @@ namespace ClassicalSharp.Mode {
                     }
                     else
                     {
-                        if (game.Entities[id].ModelName == "sheep" || game.Entities[id].ModelName == "pigs")
+                        if (game.Entities[id].ModelName == "sheep")
                         {
                             score = score + 10;
+                            AddToHotbar(Block.RedMushroom, 1);
+                            AddToHotbar(Block.White, 1);
+                        }
+                        if (game.Entities[id].ModelName == "pig")
+                        {
+                            score = score + 10;
+                            AddToHotbar(Block.RedMushroom, 1);
                         }
                         if (game.Entities[id].ModelName == "zombie")
                         {
@@ -473,34 +481,38 @@ namespace ClassicalSharp.Mode {
             int BlockX = (int)game.LocalPlayer.Position.X;
             int BlockY = (int)game.LocalPlayer.Position.Y - 1;
             int BlockZ = (int)game.LocalPlayer.Position.Z;
-
-            if (game.World.GetBlock(BlockX, BlockY, BlockZ) == Block.Air) { } else
-            if (game.World.GetBlock(BlockX, BlockY, BlockZ) == Block.Water || game.World.GetBlock(BlockX, BlockY + 1, BlockZ) == Block.Lava || game.World.GetBlock(BlockX, BlockY + 1, BlockZ) == Block.StillWater || game.World.GetBlock(BlockX, BlockY + 1, BlockZ) == Block.StillLava) {
-                FallDistance = 0;
-                lastPositionY = game.LocalPlayer.Position.Y;
-            }
-            else
+            if (getblocksafe == true)
             {
-
-                if (FallDistance > 3)
+                if (game.World.SafeGetBlock(BlockX, BlockY, BlockZ) == Block.Air) { }
+                else
+                if (game.World.SafeGetBlock(BlockX, BlockY, BlockZ) == Block.Water || game.World.GetBlock(BlockX, BlockY + 1, BlockZ) == Block.Lava || game.World.GetBlock(BlockX, BlockY + 1, BlockZ) == Block.StillWater || game.World.GetBlock(BlockX, BlockY + 1, BlockZ) == Block.StillLava)
+                {
+                    FallDistance = 0;
+                    lastPositionY = game.LocalPlayer.Position.Y;
+                }
+                else
                 {
 
-                    for (int i = 0; i < FallDistance - 3; i++)
+                    if (FallDistance > 3)
                     {
-                        game.LocalPlayer.Health -= 1;
 
+                        for (int i = 0; i < FallDistance - 3; i++)
+                        {
+                            game.LocalPlayer.Health -= 1;
+
+
+                        }
+                        verifyplayerhp();
 
                     }
-                    verifyplayerhp();
-                    
+
+                    grounded = true;
+                    FallDistance = 0;
+
+
+
+
                 }
-
-                grounded = true;
-                FallDistance = 0;
-
-
-
-
             }
 
         }
@@ -592,7 +604,7 @@ namespace ClassicalSharp.Mode {
             }
             oldwidth = game.World.Width;
             oldlength = game.World.Length;
-
+            getblocksafe = true;
         }
 
         public void Init(Game game) {
