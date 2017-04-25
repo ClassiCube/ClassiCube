@@ -16,9 +16,10 @@ namespace ClassicalSharp {
 		Game game;
 		public void Init(Game game) {
 			this.game = game;
+
 		}
 
-		public void Ready(Game game) { }
+		public void Ready(Game game) { }			
 		public void Reset(Game game) { logName = null; }
 		public void OnNewMap(Game game) { }
 		public void OnNewMapLoaded(Game game) { }
@@ -44,9 +45,16 @@ namespace ClassicalSharp {
 		static char[] trimChars = new char[] { ' ', '\0' };
 		StringBuffer logBuffer = new StringBuffer(128);
 		public void Add(string text) {
-			Log.Add(text);
-			LogChatToFile(text);
-			game.Events.RaiseChatReceived(text, MessageType.Normal);
+            try
+            {
+                Log.Add(text);
+                LogChatToFile(text);
+                game.Events.RaiseChatReceived(text, MessageType.Normal);
+            }
+            catch
+            {
+
+            }
 		}
 		
 		public void Add(string text, MessageType type) {
@@ -83,7 +91,7 @@ namespace ClassicalSharp {
 		string logName;
 		
 		public void SetLogName(string name) {
-			if (logName != null) return;
+            if (logName == null || !game.ChatLogging) return;
 			StringBuffer buffer = new StringBuffer(name.Length);
 			int len = 0;
 			
@@ -96,14 +104,14 @@ namespace ClassicalSharp {
 		
 		static bool Allowed(char c) {
 			return c == '[' || c == ']' || c == '(' || c == ')' ||
-				(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
+				(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || 
 				(c >= 'A' && c <= 'Z');
 		}
 		
 		DateTime last;
 		StreamWriter writer = null;
 		void LogChatToFile(string text) {
-			if (logName == null || !game.ChatLogging) return;
+			if (logName == null) return;
 			DateTime now = DateTime.Now;
 			
 			if (now.Day != last.Day || now.Month != last.Month || now.Year != last.Year) {

@@ -168,17 +168,27 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool) {
 			D3D.Texture texture = null;
-			if (managedPool) {
-				texture = device.CreateTexture(width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Managed);
-				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
-			} else {
-				D3D.Texture sys = device.CreateTexture(width, height, 0, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
-				sys.SetData(0, LockFlags.None, scan0, width * height * 4);
-				
-				texture = device.CreateTexture(width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Default);
-				device.UpdateTexture(sys, texture);				
-				sys.Dispose();
-			}
+            try
+            {
+                if (managedPool)
+                {
+                    texture = device.CreateTexture(width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Managed);
+                    texture.SetData(0, LockFlags.None, scan0, width * height * 4);
+                }
+                else
+                {
+                    D3D.Texture sys = device.CreateTexture(width, height, 0, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
+                    sys.SetData(0, LockFlags.None, scan0, width * height * 4);
+
+                    texture = device.CreateTexture(width, height, 0, Usage.None, Format.A8R8G8B8, Pool.Default);
+                    device.UpdateTexture(sys, texture);
+                    sys.Dispose();
+                }
+            }
+            catch
+            {
+
+            }
 			return GetOrExpand(ref textures, texture, texBufferSize);
 		}
 		

@@ -55,9 +55,11 @@ namespace ClassicalSharp {
 		
 		/// <summary> Handles game mode specific functionality. </summary>
 		public IGameMode Mode;
-		
-		/// <summary> Contains the block data and metadata/properties for the player's current world. </summary>
-		public World World;
+
+        public bool SurvivalMode;
+
+        /// <summary> Contains the block data and metadata/properties for the player's current world. </summary>
+        public World World;
 		
 		/// <summary> Represents a connection to a multiplayer or a singleplayer server. </summary>
 		public IServerConnection Server;
@@ -71,9 +73,11 @@ namespace ClassicalSharp {
 		/// <summary> Contains information for each player in the current world 
 		/// (or for whole server if supported). </summary>
 		public TabList TabList;
-		
-		/// <summary> Current camera the player is using to view the world. </summary>
-		public Camera Camera;
+
+        public bool ChatLogging = true;
+
+        /// <summary> Current camera the player is using to view the world. </summary>
+        public Camera Camera;
 		/// <summary> List of all cameras the user can use to view the world. </summary>
 		public List<Camera> Cameras = new List<Camera>();
 		
@@ -179,8 +183,6 @@ namespace ClassicalSharp {
 		public bool AllowCustomBlocks, UseCPE, AllowServerTextures;
 		
 		public bool SmoothLighting;
-		
-		public bool ChatLogging = true;
 		
 		public bool autoRotate = true;
 		

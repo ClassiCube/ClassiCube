@@ -48,7 +48,7 @@ namespace ClassicalSharp.Model {
 		const float eighthPi = (float)(Math.PI / 8);
 		
 		/// <inheritdoc/>
-		protected override void DrawModel(Entity p) {
+		public override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.MobTextureId));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);
 			

@@ -9,8 +9,10 @@ namespace ClassicalSharp.Model {
 	
 	public class HumanoidModel : IModel {
 		
-		ModelSet Set, SetSlim, Set64;
-		public HumanoidModel(Game window) : base(window) { }
+		public ModelSet Set, SetSlim, Set64;
+		public HumanoidModel(Game window) : base(window) {
+			CalcHumanAnims = true;
+		}
 		
 		protected BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 		protected float offset = 0.5f;
@@ -82,7 +84,7 @@ namespace ClassicalSharp.Model {
 			get { return new AABB(-8/16f, 0, -4/16f, 8/16f, 32/16f, 4/16f); }
 		}
 		
-		protected override void DrawModel(Entity p) {
+		public override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p.TextureId));
 			game.Graphics.AlphaTest = false;
 			
@@ -100,11 +102,11 @@ namespace ClassicalSharp.Model {
 			DrawRotate(-p.HeadXRadians, 0, 0, model.Head, true);
 			DrawPart(model.Torso);
 			
-			DrawRotate(p.anim.legXRot, 0, 0, model.LeftLeg, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, model.RightLeg, false);
+			DrawRotate(p.anim.leftLegX, 0, p.anim.leftLegZ, model.LeftLeg, false);
+			DrawRotate(p.anim.rightLegX, 0, p.anim.rightLegZ, model.RightLeg, false);
 			Rotate = RotateOrder.XZY;
-			DrawRotate(p.anim.leftXRot, 0, p.anim.leftZRot, model.LeftArm, false);
-			DrawRotate(p.anim.rightXRot, 0, p.anim.rightZRot, model.RightArm, false);
+			DrawRotate(p.anim.leftArmX, 0, p.anim.leftArmZ, model.LeftArm, false);
+			DrawRotate(p.anim.rightArmX, 0, p.anim.rightArmZ, model.RightArm, false);
 			Rotate = RotateOrder.ZYX;
 			UpdateVB();
 			
@@ -112,18 +114,18 @@ namespace ClassicalSharp.Model {
 			index = 0;
 			if (skinType != SkinType.Type64x32) {
 				DrawPart(model.TorsoLayer);
-				DrawRotate(p.anim.legXRot, 0, 0, model.LeftLegLayer, false);
-				DrawRotate(-p.anim.legXRot, 0, 0, model.RightLegLayer, false);
+				DrawRotate(p.anim.leftLegX, 0, p.anim.leftLegZ, model.LeftLegLayer, false);
+				DrawRotate(p.anim.rightLegX, 0, p.anim.rightLegZ, model.RightLegLayer, false);
 				Rotate = RotateOrder.XZY;
-				DrawRotate(p.anim.leftXRot, 0, p.anim.leftZRot, model.LeftArmLayer, false);
-				DrawRotate(p.anim.rightXRot, 0, p.anim.rightZRot, model.RightArmLayer, false);
+				DrawRotate(p.anim.leftArmX, 0, p.anim.leftArmZ, model.LeftArmLayer, false);
+				DrawRotate(p.anim.rightArmX, 0, p.anim.rightArmZ, model.RightArmLayer, false);
 				Rotate = RotateOrder.ZYX;
 			}
 			DrawRotate(-p.HeadXRadians, 0, 0, model.Hat, true);
 			UpdateVB();
 		}
 		
-		class ModelSet {
+		public class ModelSet {
 			public ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat,
 			TorsoLayer, LeftLegLayer, RightLegLayer, LeftArmLayer, RightArmLayer;
 		}

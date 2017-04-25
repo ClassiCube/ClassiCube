@@ -44,8 +44,9 @@ namespace ClassicalSharp.Entities {
 		protected internal bool onGround;
 		internal float StepSize;
 		internal int tickCount;
-		
-		public SkinType SkinType;
+        internal Matrix4 transform;
+
+        public SkinType SkinType;
 		public AnimatedComponent anim;
 		internal float uScale = 1, vScale = 1;
 		protected DateTime lastModelChange = new DateTime(1, 1, 1);
