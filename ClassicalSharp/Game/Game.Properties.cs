@@ -180,6 +180,8 @@ namespace ClassicalSharp {
 		
 		public bool SmoothLighting;
 		
+		public bool ChatLogging = true;
+		
 		public bool autoRotate = true;
 		
 		public string FontName = "Arial";

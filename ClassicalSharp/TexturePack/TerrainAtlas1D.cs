@@ -41,15 +41,15 @@ namespace ClassicalSharp.Textures {
 		
 		public void UpdateState(TerrainAtlas2D atlas2D) {
 			int maxVerticalSize = Math.Min(4096, gfx.MaxTextureDimensions);
-			int elementsPerFullAtlas = maxVerticalSize / atlas2D.elementSize;
-			int totalElements = TerrainAtlas2D.RowsCount * TerrainAtlas2D.ElementsPerRow;
+			int elementsPerFullAtlas = maxVerticalSize / atlas2D.TileSize;
+			int totalElements = TerrainAtlas2D.RowsCount * TerrainAtlas2D.TilesPerRow;
 			
 			int atlasesCount = Utils.CeilDiv(totalElements, elementsPerFullAtlas);
 			elementsPerAtlas1D = Math.Min(elementsPerFullAtlas, totalElements);
-			int atlas1DHeight = Utils.NextPowerOf2(elementsPerAtlas1D * atlas2D.elementSize);
+			int atlas1DHeight = Utils.NextPowerOf2(elementsPerAtlas1D * atlas2D.TileSize);
 			
 			Convert2DTo1D(atlas2D, atlasesCount, atlas1DHeight);
-			elementsPerBitmap = atlas1DHeight / atlas2D.elementSize;
+			elementsPerBitmap = atlas1DHeight / atlas2D.TileSize;
 			invElementSize = 1f / elementsPerBitmap;
 		}
 		
@@ -65,8 +65,8 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		void Make1DTexture(int i, FastBitmap atlas, TerrainAtlas2D atlas2D, int atlas1DHeight, ref int index) {
-			int elemSize = atlas2D.elementSize;
-			using (Bitmap atlas1d = Platform.CreateBmp(atlas2D.elementSize, atlas1DHeight))
+			int elemSize = atlas2D.TileSize;
+			using (Bitmap atlas1d = Platform.CreateBmp(atlas2D.TileSize, atlas1DHeight))
 				using (FastBitmap dst = new FastBitmap(atlas1d, true, false))
 			{
 				for (int index1D = 0; index1D < elementsPerAtlas1D; index1D++) {
@@ -80,8 +80,8 @@ namespace ClassicalSharp.Textures {
 		
 		public int CalcMaxUsedRow(TerrainAtlas2D atlas2D, BlockInfo info) {
 			int maxVerSize = Math.Min(4096, gfx.MaxTextureDimensions);
-			int verElements = maxVerSize / atlas2D.elementSize;
-			int totalElements = GetMaxUsedRow(info.textures) * TerrainAtlas2D.ElementsPerRow;
+			int verElements = maxVerSize / atlas2D.TileSize;
+			int totalElements = GetMaxUsedRow(info.textures) * TerrainAtlas2D.TilesPerRow;
 			return Utils.CeilDiv(totalElements, verElements);
 		}
 		

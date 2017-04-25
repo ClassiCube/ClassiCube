@@ -115,7 +115,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void SendNormalText(int i, bool partial) {
 			string text = lines[i];
-			char lastCol = GetLastColour(0, i);
+			char lastCol = i == 0 ? 'f' : GetLastColour(0, i); // no previous colour on first line
+			// TODO: this needs to be better, in case second/third line starts with a colour code
+			
 			if (!IDrawer2D.IsWhiteColour(lastCol))
 				text = "&" + lastCol + text;
 			game.Chat.Send(text, partial);

@@ -45,7 +45,7 @@ namespace ClassicalSharp.Generator {
 			
 			while (stack.Size > 0) {
 				int index = stack.Pop();
-				if (blocks[index] != 0) continue;				
+				if (blocks[index] != 0) continue;
 				blocks[index] = block;
 				
 				int x = index % Width;

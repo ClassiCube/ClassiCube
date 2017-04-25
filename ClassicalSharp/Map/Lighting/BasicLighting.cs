@@ -34,8 +34,7 @@ namespace ClassicalSharp.Map {
 			oneY = width * length;
 			
 			heightmap = new short[width * length];
-			for (int i = 0; i < heightmap.Length; i++)
-				heightmap[i] = short.MaxValue;
+			Refresh();
 		}
 		
 		public override void Init(Game game) {
@@ -81,7 +80,7 @@ namespace ClassicalSharp.Map {
 			}
 		}
 		
-		public override int GetLightHeight(int x, int z) {
+		int GetLightHeight(int x, int z) {
 			int index = (z * width) + x;
 			int lightH = heightmap[index];
 			return lightH == short.MaxValue ? CalcHeightAt(x, height - 1, z, index) : lightH;
@@ -107,7 +106,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		public override int LightCol_YTop_Fast(int x, int y, int z) {
-			return y >= heightmap[(z * width) + x] ? Outside : shadow;
+			return y > heightmap[(z * width) + x] ? Outside : shadow;
 		}
 		
 		public override int LightCol_YBottom_Fast(int x, int y, int z) {
@@ -123,44 +122,9 @@ namespace ClassicalSharp.Map {
 		}
 		
 		
-		public override void UpdateLight(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
-			bool didBlock = info.BlocksLight[oldBlock];
-			bool nowBlocks = info.BlocksLight[newBlock];
-			int oldOffset = (info.LightOffset[oldBlock] >> Side.Top) & 1;
-			int newOffset = (info.LightOffset[newBlock] >> Side.Top) & 1;
-			
-			// Two cases we need to handle here:
-			if (didBlock == nowBlocks) {
-				if (!didBlock) return;              // a) both old and new block do not block light			
-				if (oldOffset == newOffset) return; // b) both blocks blocked light at the same Y coordinate
-			}
-			
-			int index = (z * width) + x;
-			int lightH = heightmap[index];
-			if (lightH == short.MaxValue) {
-				// We have to calculate the entire column for visibility, because the old/new block info is
-				// useless if there is another block higher than block.y that blocks sunlight.
-				CalcHeightAt(x, height - 1, z, index);
-			} else if ((y - newOffset) >= lightH) {
-				if (nowBlocks) {
-					heightmap[index] = (short)(y - newOffset);
-				} else {
-					// Part of the column is now visible to light, we don't know how exactly how high it should be though.
-					// However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y
-					CalcHeightAt(x, y, z, index);
-				}
-			} else if (y == lightH && oldOffset == 0) {
-				// For a solid block on top of an upside down slab, they will both have the same light height.
-				// So we need to account for this particular case.
-				BlockID above = y == (height - 1) ? Block.Air : game.World.GetBlock(x, y + 1, z);
-				if (info.BlocksLight[above]) return;
-				
-				if (nowBlocks) {
-					heightmap[index] = (short)(y - newOffset);
-				} else {
-					CalcHeightAt(x, y - 1, z, index);
-				}
-			}
+		public override void Refresh() {
+			for (int i = 0; i < heightmap.Length; i++)
+				heightmap[i] = short.MaxValue;
 		}
 	}
 }

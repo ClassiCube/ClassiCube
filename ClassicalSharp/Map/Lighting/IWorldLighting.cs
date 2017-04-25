@@ -24,13 +24,13 @@ namespace ClassicalSharp.Map {
 		// Except this function is a lot more optimised and minimises cache misses.
 		public unsafe abstract void LightHint(int startX, int startZ, BlockID* mapPtr);
 		
-		/// <summary> Returns the y coordinate of the highest block that is fully not in sunlight. </summary>
-		/// <remarks> *** Does NOT check that the coordinates are inside the map. *** <br/>
-		/// e.g. if cobblestone was at y = 5, this method would return 4. </remarks>
-		public abstract int GetLightHeight(int x, int z);
+		/// <summary> Called when a block is changed, to update the lighting information. </summary>
+		/// <remarks> Derived classes ***MUST*** mark all chunks affected by this lighting change
+		/// as needing to be refreshed. </remarks>
+		public abstract void OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
 		
-		/// <summary> Updates the lighting for the block at that position, which may in turn affect other blocks. </summary>
-		public abstract void UpdateLight(int x, int y, int z, BlockID oldBlock, BlockID newBlock);
+		/// <summary> Discards all cached lighting information. </summary>
+		public virtual void Refresh() { }
 		
 		
 		/// <summary> Returns whether the block at the given coordinates is fully in sunlight. </summary>

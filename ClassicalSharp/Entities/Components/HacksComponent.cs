@@ -71,25 +71,8 @@ namespace ClassicalSharp.Entities {
 		public bool HalfSpeeding;
 		
 		public bool CanJumpHigher { get { return Enabled && CanAnyHacks && CanSpeed; } }
-		
-		/// <summary> Parses hack flags specified in the motd and/or name of the server. </summary>
-		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
-		public void ParseHackFlags(string name, string motd) {
-			string joined = name + motd;
-			SetAllHacks(true);
-			MaxSpeedMultiplier = 1;
-			// By default (this is also the case with WoM), we can use hacks.
-			if (joined.Contains("-hax")) SetAllHacks(false);
-			
-			ParseFlag(b => CanFly = b, joined, "fly");
-			ParseFlag(b => CanNoclip = b, joined, "noclip");
-			ParseFlag(b => CanSpeed = b, joined, "speed");
-			ParseFlag(b => CanRespawn = b, joined, "respawn");
-
-			if (UserType == 0x64)
-				ParseFlag(b => SetAllHacks(b), joined, "ophax");
-			ParseHorizontalSpeed(joined);
-		}
+		public bool Floating { get { return Noclip || Flying; } }
+		public string HacksFlags;
 		
 		void ParseHorizontalSpeed(string joined) {
 			int start = joined.IndexOf("horspeed=", StringComparison.OrdinalIgnoreCase);
@@ -143,6 +126,31 @@ namespace ClassicalSharp.Entities {
 			
 			if (!CanUseThirdPersonCamera || !Enabled)
 				game.CycleCamera();
+		}
+		
+		
+		/// <summary> Updates ability to use hacks, and raises HackPermissionsChanged event. </summary>
+		/// <remarks> Parses hack flags specified in the motd and/or name of the server. </remarks>
+		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
+		public void UpdateHacksState() {
+			SetAllHacks(true);
+			if (HacksFlags == null) return;
+			
+			MaxSpeedMultiplier = 1;
+			// By default (this is also the case with WoM), we can use hacks.
+			if (HacksFlags.Contains("-hax")) SetAllHacks(false);
+			
+			ParseFlag(b => CanFly = b, HacksFlags, "fly");
+			ParseFlag(b => CanNoclip = b, HacksFlags, "noclip");
+			ParseFlag(b => CanSpeed = b, HacksFlags, "speed");
+			ParseFlag(b => CanRespawn = b, HacksFlags, "respawn");
+
+			if (UserType == 0x64)
+				ParseFlag(b => SetAllHacks(b), HacksFlags, "ophax");
+			ParseHorizontalSpeed(HacksFlags);
+			
+			CheckHacksConsistency();
+			game.Events.RaiseHackPermissionsChanged();
 		}
 	}
 }

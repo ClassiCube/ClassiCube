@@ -22,7 +22,7 @@ namespace ClassicalSharp.Commands {
 			Help = new string[] {
 				"&a/client model [name]",
 				"&bnames: &echibi, chicken, creeper, human, pig, sheep",
-				"&e       skeleton, spider, zombie, <numerical block id>",
+				"&e       skeleton, spider, zombie, sitting, <numerical block id>",
 			};
 		}
 		

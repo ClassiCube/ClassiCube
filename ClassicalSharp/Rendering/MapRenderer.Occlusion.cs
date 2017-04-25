@@ -120,7 +120,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		const byte flagX = 1, flagZ = 2, flagY = 4;
 		
-		public void DebugPickedPos() {
+		void DebugPickedPos() {
 			return;
 			if (game.SelectedPos.Valid) {
 				Vector3I p = game.SelectedPos.BlockPos;

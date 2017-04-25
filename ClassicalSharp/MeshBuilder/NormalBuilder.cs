@@ -88,7 +88,7 @@ namespace ClassicalSharp {
 				case Side.Bottom:
 					return y <= 0              ? light.OutsideYBottom : light.LightCol_YBottom_Fast(x, y - offset, z);
 				case Side.Top:
-					return y >= maxY           ? light.Outside        : light.LightCol_YTop_Fast(x, y - offset, z);
+					return y >= maxY           ? light.Outside        : light.LightCol_YTop_Fast(x, (y + 1) - offset, z);
 			}
 			return 0;
 		}
@@ -188,7 +188,7 @@ namespace ClassicalSharp {
 				int offset = (lightFlags >> Side.Top) & 1;
 
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-				int col = fullBright ? FastColour.WhitePacked : light.LightCol_YTop_Fast(X, Y - offset, Z);
+				int col = fullBright ? FastColour.WhitePacked : light.LightCol_YTop_Fast(X, (Y + 1) - offset, Z);
 				drawer.Top(topCount, col, texId, part.vertices, ref part.vIndex[Side.Top]);
 			}
 		}

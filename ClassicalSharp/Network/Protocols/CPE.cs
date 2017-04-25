@@ -19,7 +19,9 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		public CPEProtocol(Game game) : base(game) { }
 		
-		public override void Init() {
+		public override void Init() { Reset(); }
+		
+		public override void Reset() {
 			if (!game.UseCPE) return;
 			net.Set(Opcode.CpeExtInfo, HandleExtInfo, 67);
 			net.Set(Opcode.CpeExtEntry, HandleExtEntry, 69);
@@ -72,7 +74,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleSetClickDistance() {
-			game.LocalPlayer.ReachDistance = reader.ReadInt16() / 32f;
+			game.LocalPlayer.ReachDistance = reader.ReadUInt16() / 32f;
 		}
 		
 		void HandleCustomBlockSupportLevel() {
@@ -357,6 +359,8 @@ namespace ClassicalSharp.Network.Protocols {
 					env.SetWeatherFade(value / 128f); break;
 				case 8:
 					env.SetExpFog(value != 0); break;
+				case 9:
+					env.SetSidesOffset(value); break;
 			}
 		}
 		

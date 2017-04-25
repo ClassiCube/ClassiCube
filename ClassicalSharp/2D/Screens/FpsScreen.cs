@@ -94,7 +94,7 @@ namespace ClassicalSharp.Gui.Screens {
 			string msg = text.Length > 0 ? text.ToString() : "FPS: no data yet";
 			fpsText.SetText(msg);
 			
-			posAtlas = new TextAtlas(game);
+			posAtlas = new TextAtlas(game, 16);
 			posAtlas.Pack("0123456789-, ()", posFont, "Position: ");
 			posAtlas.tex.Y = (short)(fpsText.Height + 2);
 			

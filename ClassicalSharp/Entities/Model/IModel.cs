@@ -30,6 +30,9 @@ namespace ClassicalSharp.Model {
 		/// <summary> Whether this entity requires downloading of a skin texture. </summary>		
 		public bool UsesSkin = true;
 		
+		/// <summary> Whether humanoid animations should be calculated, instead of normal animations. </summary>
+		public bool CalcHumanAnims;
+		
 		/// <summary> Gravity applied to this entity. </summary>
 		public virtual float Gravity { get { return 0.08f; } }
 		
@@ -64,7 +67,6 @@ namespace ClassicalSharp.Model {
 		/// assuming that the model is not rotated at all.</summary>
 		public abstract AABB PickingBounds { get; }
 		
-		protected Vector3 pos;
 		protected float cosHead, sinHead;
 		protected float uScale, vScale;
 		
@@ -100,14 +102,26 @@ namespace ClassicalSharp.Model {
 		/// <summary> Sets up the state for, then renders an entity model, 
 		/// based on the given entity's position and orientation. </summary>
 		public void Render(Entity p) {
-			index = 0;
-			pos = p.Position;
+			Vector3 pos = p.Position;
 			if (Bobbing) pos.Y += p.anim.bobbingModel;
-			
-			Vector3I P = Vector3I.Floor(p.EyePosition);
-			col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
-			uScale = 1 / 64f; vScale = 1 / 32f;
+			SetupState(p);
 
+			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
+			game.Graphics.PushMatrix();
+			
+			Matrix4 m = TransformMatrix(p, pos);
+			p.transform = m;
+			game.Graphics.MultiplyMatrix(ref m);
+			DrawModel(p);
+			game.Graphics.PopMatrix();
+		}
+		
+		public void SetupState(Entity p) {
+			index = 0;
+			Vector3I P = Vector3I.Floor(p.EyePosition);
+			int col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
+			uScale = 1 / 64f; vScale = 1 / 32f;
+			
 			cols[0] = col;
 			cols[1] = FastColour.ScalePacked(col, FastColour.ShadeYBottom);
 			cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ); cols[3] = cols[2];
@@ -116,18 +130,10 @@ namespace ClassicalSharp.Model {
 			float yawDelta = p.HeadY - p.RotY;
 			cosHead = (float)Math.Cos(yawDelta * Utils.Deg2Rad);
 			sinHead = (float)Math.Sin(yawDelta * Utils.Deg2Rad);
-
-			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			game.Graphics.PushMatrix();
-			
-			Matrix4 m = p.TransformMatrix(p.ModelScale, pos);
-			game.Graphics.MultiplyMatrix(ref m);
-			DrawModel(p);
-			game.Graphics.PopMatrix();
 		}
 		
 		/// <summary> Performs the actual rendering of an entity model. </summary>
-		protected abstract void DrawModel(Entity p);
+		public abstract void DrawModel(Entity p);
 		
 		/// <summary> Sends the updated vertex data to the GPU. </summary>
 		protected void UpdateVB() {
@@ -140,7 +146,11 @@ namespace ClassicalSharp.Model {
 		/// <summary> Disposes of any native resources tied to this entity model. </summary>
 		public virtual void Dispose() { }
 		
-		protected int col;
+		
+		protected internal virtual Matrix4 TransformMatrix(Entity p, Vector3 pos) {
+			return p.TransformMatrix(p.ModelScale, pos);
+		}
+		
 		protected int[] cols = new int[6];
 		protected internal ModelVertex[] vertices;
 		protected internal int index, texIndex;

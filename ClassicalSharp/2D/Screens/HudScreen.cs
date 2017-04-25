@@ -50,21 +50,14 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		const int chExtent = 16, chWeight = 2;
 		static TextureRec chRec = new TextureRec(0, 0, 15/256f, 15/256f);
-		void DrawCrosshairs() {
-			int cenX = game.Width / 2, cenY = game.Height / 2;
-			if (game.Gui.IconsTex > 0) {
-				int extent = (int)(chExtent * game.Scale(game.Height / 480f));
-				Texture chTex = new Texture(game.Gui.IconsTex, cenX - extent,
-				                            cenY - extent, extent * 2, extent * 2, chRec);
-				chTex.Render(gfx);
-				return;
-			}
+		void DrawCrosshairs() {			
+			if (game.Gui.IconsTex <= 0) return;
 			
-			gfx.Texturing = false;
-			int curCol = 150 + (int)(50 * Math.Abs(Math.Sin(game.accumulator)));
-			FastColour col = new FastColour(curCol, curCol, curCol);
-			gfx.Draw2DQuad(cenX - chExtent, cenY - chWeight, chExtent * 2, chWeight * 2, col);
-			gfx.Draw2DQuad(cenX - chWeight, cenY - chExtent, chWeight * 2, chExtent * 2, col);
+			int cenX = game.Width / 2, cenY = game.Height / 2;
+			int extent = (int)(chExtent * game.Scale(game.Height / 480f));
+			Texture chTex = new Texture(game.Gui.IconsTex, cenX - extent,
+			                            cenY - extent, extent * 2, extent * 2, chRec);
+			chTex.Render(gfx);
 		}
 		
 		bool hadPlayerList;

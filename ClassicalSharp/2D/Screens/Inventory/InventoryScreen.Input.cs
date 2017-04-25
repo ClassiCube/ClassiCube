@@ -48,7 +48,7 @@ namespace ClassicalSharp.Gui.Screens {
 					return true;
 				}
 				
-				bool hotbar = game.IsKeyDown(Key.AltLeft) || game.IsKeyDown(Key.AltRight);
+				bool hotbar = game.Input.ControlDown;
 				if (!hotbar)
 					game.Gui.SetNewScreen(null);
 			}

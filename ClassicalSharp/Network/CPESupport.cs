@@ -14,13 +14,14 @@ namespace ClassicalSharp.Network {
 		internal int ServerExtensionsCount;
 		internal bool sendHeldBlock, useMessageTypes;
 		internal int envMapVer = 2, blockDefsExtVer = 2;
-		internal bool needD3Fix;
+		internal bool needD3Fix, extEntityPos;
 		
 		public void Reset(Game game) {
 			ServerExtensionsCount = 0;
 			sendHeldBlock = false; useMessageTypes = false;
 			envMapVer = 2; blockDefsExtVer = 2;
-			needD3Fix = false; game.UseCPEBlocks = false;
+			needD3Fix = false; extEntityPos = false;
+			game.UseCPEBlocks = false;
 			
 			NetworkProcessor net = (NetworkProcessor)game.Server;
 			net.Reset();
@@ -42,7 +43,7 @@ namespace ClassicalSharp.Network {
 			} else if (ext == "EnvMapAppearance") {
 				envMapVer = version;
 				if (version == 1) return;
-				net.packetSizes[(byte)Opcode.CpeEnvSetMapApperance] = 73;
+				net.packetSizes[Opcode.CpeEnvSetMapApperance] += 4;
 			} else if (ext == "LongerMessages") {
 				net.SupportsPartialMessages = true;
 			} else if (ext == "FullCP437") {
@@ -50,7 +51,15 @@ namespace ClassicalSharp.Network {
 			} else if (ext == "BlockDefinitionsExt") {
 				blockDefsExtVer = version;
 				if (version == 1) return;
-				net.packetSizes[(byte)Opcode.CpeDefineBlockExt] = 88;
+				net.packetSizes[Opcode.CpeDefineBlockExt] += 3;
+			} else if (ext == "ExtEntityPositions") {
+				extEntityPos = true;
+				net.packetSizes[Opcode.EntityTeleport] += 6;
+				net.packetSizes[Opcode.AddEntity] += 6;
+				net.packetSizes[Opcode.CpeExtAddEntity2] += 6;
+				
+				net.reader.ExtendedPositions = true;
+				net.writer.ExtendedPositions = true;
 			}
 		}
 		
@@ -59,7 +68,7 @@ namespace ClassicalSharp.Network {
 			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 			"EnvWeatherType", "HackControl", "MessageTypes", "PlayerClick", "FullCP437",
 			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors",
-			"EnvMapAspect", "EntityProperty",
+			"EnvMapAspect", "EntityProperty", "ExtEntityPositions",
 		};
 	}
 }

@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui.Screens {
 				keyNames = Enum.GetNames(typeof(Key));
 		}
 
-		protected void MakeWidgets(int y) {
+		protected void MakeWidgets(int y, int arrowsY) {
 			index = 0;
 			int origin = y;
 			MakeOthers();
@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Screens {
 				for (int i = 0; i < right.Length; i++)
 					Make(i + left.Length, btnWidth / 2 + 5, ref y);
 			}
-			MakePages(origin);
+			MakePages(arrowsY);
 		}
 		
 		void MakeOthers() {
@@ -59,9 +59,8 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		void MakePages(int origin) {
+		void MakePages(int btnY) {
 			if (leftPage == null && rightPage == null) return;
-			int btnY = origin + btnDistance * (left.Length / 2);
 			
 			widgets[index++] = ButtonWidget.Create(game, 40, "<", titleFont, LeftOnly(leftPage))
 				.SetLocation(Anchor.Centre, Anchor.Centre, -btnWidth - 35, btnY);

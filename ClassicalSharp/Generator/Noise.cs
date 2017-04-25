@@ -10,7 +10,7 @@ namespace ClassicalSharp.Generator {
 	public sealed class ImprovedNoise {
 		
 		public ImprovedNoise(JavaRandom rnd) {
-			// shuffle randomly using fisher-yates		
+			// shuffle randomly using fisher-yates
 			for (int i = 0; i < 256; i++)
 				p[i] = (byte)i;
 			

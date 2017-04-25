@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Net.Sockets;
+using OpenTK;
 
 namespace ClassicalSharp.Network {
 	
@@ -8,6 +9,7 @@ namespace ClassicalSharp.Network {
 		
 		public byte[] buffer = new byte[131];
 		public int index = 0;
+		public bool ExtendedPositions;
 		Socket socket;
 		
 		public NetWriter(Socket socket) {
@@ -35,6 +37,18 @@ namespace ClassicalSharp.Network {
 			for (int i = value.Length; i < Utils.StringLength; i++)
 				buffer[index + i] = (byte)' ';
 			index += Utils.StringLength;
+		}
+		
+		public void WritePosition(Vector3 pos) {
+			if (ExtendedPositions) {
+				WriteInt32((int)(pos.X * 32));
+				WriteInt32((int)((int)(pos.Y * 32) + 51));
+				WriteInt32((int)(pos.Z * 32));				
+			} else {
+				WriteInt16((short)(pos.X * 32));
+				WriteInt16((short)((int)(pos.Y * 32) + 51));
+				WriteInt16((short)(pos.Z * 32));
+			}
 		}
 		
 		public void WriteUInt8(byte value) {

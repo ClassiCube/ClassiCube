@@ -3,51 +3,51 @@ using System;
 
 namespace ClassicalSharp.Network {
 	
-	public enum Opcode {
-		Handshake = 0,
-		Ping = 1,
-		LevelInit = 2,
-		LevelDataChunk = 3,
-		LevelFinalise = 4,
-		SetBlockClient = 5,
-		SetBlock = 6,
-		AddEntity = 7,
-		EntityTeleport = 8,
-		RelPosAndOrientationUpdate = 9,
-		RelPosUpdate = 10,
-		OrientationUpdate = 11,
-		RemoveEntity = 12,
-		Message = 13,
-		Kick = 14,
-		SetPermission = 15,
-		
-		CpeExtInfo = 16,
-		CpeExtEntry = 17,
-		CpeSetClickDistance = 18,
-		CpeCustomBlockSupportLevel = 19,
-		CpeHoldThis = 20,
-		CpeSetTextHotkey = 21,
-		CpeExtAddPlayerName = 22,
-		CpeExtAddEntity = 23,
-		CpeExtRemovePlayerName = 24,
-		CpeEnvColours = 25,
-		CpeMakeSelection = 26,
-		CpeRemoveSelection = 27,
-		CpeSetBlockPermission = 28,
-		CpeChangeModel = 29,
-		CpeEnvSetMapApperance = 30,
-		CpeEnvWeatherType = 31,
-		CpeHackControl = 32,
-		CpeExtAddEntity2 = 33,
-		CpePlayerClick = 34,
-		CpeDefineBlock = 35,
-		CpeRemoveBlockDefinition = 36,
-		CpeDefineBlockExt = 37,
-		CpeBulkBlockUpdate = 38,
-		CpeSetTextColor = 39,
-		CpeSetMapEnvUrl = 40,
-		CpeSetMapEnvProperty = 41,
-		CpeSetEntityProperty = 42,
+	public static class Opcode {
+		public const byte Handshake = 0;
+		public const byte Ping = 1;
+		public const byte LevelInit = 2;
+		public const byte LevelDataChunk = 3;
+		public const byte LevelFinalise = 4;
+		public const byte SetBlockClient = 5;
+		public const byte SetBlock = 6;
+		public const byte AddEntity = 7;
+		public const byte EntityTeleport = 8;
+		public const byte RelPosAndOrientationUpdate = 9;
+		public const byte RelPosUpdate = 10;
+		public const byte OrientationUpdate = 11;
+		public const byte RemoveEntity = 12;
+		public const byte Message = 13;
+		public const byte Kick = 14;
+		public const byte SetPermission = 15;
+
+		public const byte CpeExtInfo = 16;
+		public const byte CpeExtEntry = 17;
+		public const byte CpeSetClickDistance = 18;
+		public const byte CpeCustomBlockSupportLevel = 19;
+		public const byte CpeHoldThis = 20;
+		public const byte CpeSetTextHotkey = 21;
+		public const byte CpeExtAddPlayerName = 22;
+		public const byte CpeExtAddEntity = 23;
+		public const byte CpeExtRemovePlayerName = 24;
+		public const byte CpeEnvColours = 25;
+		public const byte CpeMakeSelection = 26;
+		public const byte CpeRemoveSelection = 27;
+		public const byte CpeSetBlockPermission = 28;
+		public const byte CpeChangeModel = 29;
+		public const byte CpeEnvSetMapApperance = 30;
+		public const byte CpeEnvWeatherType = 31;
+		public const byte CpeHackControl = 32;
+		public const byte CpeExtAddEntity2 = 33;
+		public const byte CpePlayerClick = 34;
+		public const byte CpeDefineBlock = 35;
+		public const byte CpeRemoveBlockDefinition = 36;
+		public const byte CpeDefineBlockExt = 37;
+		public const byte CpeBulkBlockUpdate = 38;
+		public const byte CpeSetTextColor = 39;
+		public const byte CpeSetMapEnvUrl = 40;
+		public const byte CpeSetMapEnvProperty = 41;
+		public const byte CpeSetEntityProperty = 42;
 	}
 }
 

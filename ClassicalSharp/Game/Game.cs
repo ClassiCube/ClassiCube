@@ -168,7 +168,8 @@ namespace ClassicalSharp {
 			ParticleManager.Render(delta, t);
 			Camera.GetPickedBlock(SelectedPos); // TODO: only pick when necessary
 			EnvRenderer.Render(delta);
-			MapRenderer.Render(delta);
+			MapRenderer.Update(delta);
+			MapRenderer.RenderNormal(delta);
 			MapBordersRenderer.RenderSides(delta);
 			
 			if (SelectedPos.Valid && !HideGui) {
@@ -282,10 +283,18 @@ namespace ClassicalSharp {
 		}
 		
 		public void UpdateBlock(int x, int y, int z, BlockID block) {
-			int oldHeight = Lighting.GetLightHeight(x, z) + 1;
+			BlockID oldBlock = World.GetBlock(x, y, z);
 			World.SetBlock(x, y, z, block);
-			int newHeight = Lighting.GetLightHeight(x, z) + 1;
-			MapRenderer.RedrawBlock(x, y, z, block, oldHeight, newHeight);
+			
+			WeatherRenderer weather = WeatherRenderer;
+			if (weather.heightmap != null && !World.IsNotLoaded)
+				weather.OnBlockChanged(x, y, z, oldBlock, block);
+			Lighting.OnBlockChanged(x, y, z, oldBlock, block);
+			
+			// Refresh the chunk the block was located in.
+			int cx = x >> 4, cy = y >> 4, cz = z >> 4;
+			MapRenderer.GetChunk(cx, cy, cz).AllAir &= BlockInfo.Draw[block] == DrawType.Gas;
+			MapRenderer.RefreshChunk(cx, cy, cz);
 		}
 		
 		float limitMilliseconds;

@@ -233,8 +233,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		/// <remarks> Potentially recreates the native texture. </remarks>
 		public void Append(string text) {
 			int appended = 0;
-			foreach (char c in text) {
-				if (TryAppendChar(c)) appended++;
+			for (int i = 0; i < text.Length; i++) {
+				if (TryAppendChar(text[i])) appended++;
 			}
 			
 			if (appended == 0) return;

@@ -9,7 +9,9 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		public CPEProtocolBlockDefs(Game game) : base(game) { }
 		
-		public override void Init() {
+		public override void Init() { Reset(); }
+		
+		public override void Reset() {
 			if (!game.UseCPE || !game.AllowCustomBlocks) return;
 			net.Set(Opcode.CpeDefineBlock, HandleDefineBlock, 80);
 			net.Set(Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2);
@@ -66,6 +68,7 @@ namespace ClassicalSharp.Network.Protocols {
 		byte HandleDefineBlockCommonStart(NetReader reader, bool uniqueSideTexs) {
 			byte id = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
+			bool didBlockLight = info.BlocksLight[id];
 			info.ResetBlockProps(id);
 			
 			info.Name[id] = reader.ReadString();
@@ -83,7 +86,12 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			info.SetTex(reader.ReadUInt8(), Side.Bottom, id);
 			
+			// Need to refresh lighting when a block's light blocking state changes			
 			info.BlocksLight[id] = reader.ReadUInt8() == 0;
+			if (!game.World.IsNotLoaded && (didBlockLight != info.BlocksLight[id])) {
+				game.Lighting.Refresh();
+			}
+			
 			byte sound = reader.ReadUInt8();
 			if (sound < breakSnds.Length) {
 				info.StepSounds[id] = stepSnds[sound];

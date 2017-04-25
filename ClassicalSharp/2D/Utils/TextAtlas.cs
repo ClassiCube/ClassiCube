@@ -9,10 +9,11 @@ namespace ClassicalSharp {
 		public Texture tex;
 		Game game;
 		int[] widths;
-		internal int offset, curX, totalWidth;
+		internal int offset, curX, totalWidth, fontSize;
 		
-		public TextAtlas(Game game) {
+		public TextAtlas(Game game, int fontSize) {
 			this.game = game;
+			this.fontSize = fontSize;
 		}
 		
 		public void Pack(string chars, Font font, string prefix) {
@@ -32,7 +33,7 @@ namespace ClassicalSharp {
 					for (int i = 0; i < chars.Length; i++) {
 						args.Text = new String(chars[i], 1);
 						widths[i] = game.Drawer2D.MeasureSize(ref args).Width;
-						drawer.DrawText(ref args, offset + 16 * i, 0);
+						drawer.DrawText(ref args, offset + fontSize * i, 0);
 					}
 					
 					tex = drawer.Make2DTexture(bmp, size, 0, 0);
@@ -52,7 +53,7 @@ namespace ClassicalSharp {
 			int width = widths[charIndex];			
 			Texture part = tex;
 			part.X1 = curX; part.Width = (short)width;
-			part.U1 = (offset + charIndex * 16) / (float)totalWidth;
+			part.U1 = (offset + charIndex * fontSize) / (float)totalWidth;
 			part.U2 = part.U1 + width / (float)totalWidth;
 			
 			curX += width;

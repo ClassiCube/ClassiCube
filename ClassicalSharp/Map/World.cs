@@ -63,23 +63,15 @@ namespace ClassicalSharp.Map {
 			if (Env.CloudHeight == -1) Env.CloudHeight = height + 2;
 		}
 		
-		/// <summary> Sets the block at the given world coordinates without bounds checking,
-		/// and also recalculates the heightmap for the given (x,z) column.	</summary>
+		/// <summary> Sets the block at the given world coordinates without bounds checking. </summary>
 		public void SetBlock(int x, int y, int z, BlockID blockId) {
-			int index = (y * Length + z) * Width + x;
-			BlockID oldBlock = blocks[index];
-			blocks[index] = blockId;
-			game.Lighting.UpdateLight(x, y, z, oldBlock, blockId);
-			
-			WeatherRenderer weather = game.WeatherRenderer;
-			if (weather.heightmap != null && !IsNotLoaded)
-				weather.UpdateHeight(x, y, z, oldBlock, blockId);
+			blocks[(y * Length + z) * Width + x] = blockId;
 		}
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking,
 		/// and also recalculates the heightmap for the given (x,z) column.	</summary>
 		public void SetBlock(Vector3I p, BlockID blockId) {
-			SetBlock(p.X, p.Y, p.Z, blockId);
+			blocks[(p.Y * Length + p.Z) * Width + p.X] = blockId;
 		}
 		
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>

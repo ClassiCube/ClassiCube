@@ -53,7 +53,7 @@ namespace ClassicalSharp.Network {
 				game.LocalPlayer.UpdateName();
 			}
 			
-			if (!readPosition) return;			
+			if (!readPosition) return;
 			classic.ReadAbsoluteLocation(id, false);
 			if (id != EntityList.SelfID) return;
 			

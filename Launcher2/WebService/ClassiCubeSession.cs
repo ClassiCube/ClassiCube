@@ -105,8 +105,8 @@ namespace Launcher.Web {
 			JsonObject root = (JsonObject)Json.ParseValue(response, ref index, ref success);
 			List<object> list = (List<object>)root["servers"];
 			
-			foreach (object server in list) {
-				JsonObject obj = (JsonObject)server;
+			for (int i = 0; i < list.Count; i++) {
+				JsonObject obj = (JsonObject)list[i];
 				servers.Add(new ServerListEntry(
 					(string)obj["hash"], (string)obj["name"],
 					(string)obj["players"], (string)obj["maxplayers"],

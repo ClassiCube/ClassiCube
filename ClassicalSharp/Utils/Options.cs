@@ -24,6 +24,7 @@ namespace ClassicalSharp {
 		public const string RenderType = "normal";
 		public const string SmoothLighting = "gfx-smoothlighting";
 		public const string SurvivalMode = "game-survivalmode";
+		public const string ChatLogging = "chat-logging";
 		
 		public const string HacksEnabled = "hacks-hacksenabled";
 		public const string FieldOfView = "hacks-fov";
@@ -118,18 +119,6 @@ namespace ClassicalSharp {
 			if (!Utils.TryParseEnum(value, defValue, out mapping))
 				Set(key, defValue);
 			return mapping;
-		}
-		
-		public static void Set(string key, string value) {
-			key = key.ToLower();
-			if (value != null) {
-				OptionsSet[key] = value;
-			} else {
-				OptionsSet.Remove(key);
-			}
-			
-			if (!OptionsChanged.Contains(key))
-				OptionsChanged.Add(key);
 		}
 		
 		public static void Set<T>(string key, T value) {

@@ -82,16 +82,16 @@ namespace ClassicalSharp.Model {
 		}
 		
 		/// <inheritdoc/>		
-		protected override void DrawModel(Entity p) {
+		public override void DrawModel(Entity p) {
 			IGraphicsApi gfx = game.Graphics;
 			gfx.BindTexture(GetTexture(p.MobTextureId));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);
 			
 			DrawPart(Torso);
-			DrawRotate(p.anim.legXRot, 0, 0, LeftLegFront, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, RightLegFront, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, LeftLegBack, false);
-			DrawRotate(p.anim.legXRot, 0, 0, RightLegBack, false);
+			DrawRotate(p.anim.leftLegX, 0, 0, LeftLegFront, false);
+			DrawRotate(p.anim.rightLegX, 0, 0, RightLegFront, false);
+			DrawRotate(p.anim.rightLegX, 0, 0, LeftLegBack, false);
+			DrawRotate(p.anim.leftLegX, 0, 0, RightLegBack, false);
 			UpdateVB();
 			
 			if (Utils.CaselessEquals(p.ModelName, "sheep_nofur")) return;
@@ -100,10 +100,10 @@ namespace ClassicalSharp.Model {
 			DrawRotate(-p.HeadXRadians, 0, 0, FurHead, true);
 			
 			DrawPart(FurTorso);
-			DrawRotate(p.anim.legXRot, 0, 0, FurLeftLegFront, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, FurRightLegFront, false);
-			DrawRotate(-p.anim.legXRot, 0, 0, FurLeftLegBack, false);
-			DrawRotate(p.anim.legXRot, 0, 0, FurRightLegBack, false);
+			DrawRotate(p.anim.leftLegX, 0, 0, FurLeftLegFront, false);
+			DrawRotate(p.anim.rightLegX, 0, 0, FurRightLegFront, false);
+			DrawRotate(p.anim.rightLegX, 0, 0, FurLeftLegBack, false);
+			DrawRotate(p.anim.leftLegX, 0, 0, FurRightLegBack, false);
 			UpdateVB();
 		}
 		

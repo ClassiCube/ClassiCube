@@ -184,26 +184,25 @@ namespace ClassicalSharp.Renderers {
 			return -1;
 		}
 		
-		internal void UpdateHeight(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
+		internal void OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 			bool didBlock = !(info.Draw[oldBlock] == DrawType.Gas || info.Draw[oldBlock] == DrawType.Sprite);
 			bool nowBlock =  !(info.Draw[newBlock] == DrawType.Gas || info.Draw[newBlock] == DrawType.Sprite);
 			if (didBlock == nowBlock) return;
 			
 			int index = (x * length) + z;
 			int height = heightmap[index];
-			if (height == short.MaxValue) {
-				if (map.Env.Weather == Weather.Sunny) return;
-				// We have to calculate the entire column for visibility, because the old/new block info is
-				// useless if there is another block higher than block.y that stops rain.
-				CalcHeightAt(x, maxY, z, index);
-			} else if (y >= height) {
-				if (nowBlock) {
-					heightmap[index] = (short)y;
-				} else {
-					// Part of the column is now visible to rain, we don't know how exactly how high it should be though.
-					// However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y
-					CalcHeightAt(x, y, z, index);
-				}
+			// Two cases can be skipped here:
+			// a) rain height was not calculated to begin with (height is short.MaxValue)
+			// b) changed y is below current calculated rain height
+			if (y < height) return;
+			
+			if (nowBlock) {
+				// Simple case: Rest of column below is now not visible to rain.
+				heightmap[index] = (short)y;
+			} else {
+				// Part of the column is now visible to rain, we don't know how exactly how high it should be though.
+				// However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y
+				CalcHeightAt(x, y, z, index);
 			}
 		}
 		

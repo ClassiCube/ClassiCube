@@ -54,5 +54,6 @@ namespace ClassicalSharp.Events {
 		WeatherSpeed,
 		WeatherFade,
 		ExpFog,
+		SidesOffset,
 	}
 }

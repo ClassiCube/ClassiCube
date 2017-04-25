@@ -187,6 +187,7 @@
     <Compile Include="Map\Formats\MapSchematic.Exporter.cs" />
     <Compile Include="Map\Formats\MapLvl.Importer.cs" />
     <Compile Include="Map\Formats\NbtFile.cs" />
+    <Compile Include="Map\Lighting\BasicLighting.Updater.cs" />
     <Compile Include="Map\Lighting\IWorldLighting.cs" />
     <Compile Include="Map\Lighting\BasicLighting.cs" />
     <Compile Include="Map\Lighting\BasicLighting.Heightmap.cs" />
