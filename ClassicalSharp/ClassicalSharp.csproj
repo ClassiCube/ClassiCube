@@ -89,7 +89,7 @@
     <Compile Include="2D\Screens\ChatScreen.cs" />
     <Compile Include="2D\Screens\ClickableScreen.cs" />
     <Compile Include="2D\Screens\DeathScreen.cs" />
-    <Compile Include="2D\Screens\ErrorScreen.cs" />
+    <Compile Include="2D\Screens\DisconnectScreen.cs" />
     <Compile Include="2D\Screens\FpsScreen.cs" />
     <Compile Include="2D\Screens\Inventory\InventoryScreen.cs" />
     <Compile Include="2D\Screens\Inventory\InventoryScreen.Input.cs" />

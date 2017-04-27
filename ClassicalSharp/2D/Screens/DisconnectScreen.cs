@@ -5,7 +5,7 @@ using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class ErrorScreen : ClickableScreen {
+	public class DisconnectScreen : ClickableScreen {
 		
 		string title, message;
 		readonly Font titleFont, messageFont;
@@ -13,7 +13,7 @@ namespace ClassicalSharp.Gui.Screens {
 		DateTime initTime, clearTime;
 		bool canReconnect;
 		
-		public ErrorScreen(Game game, string title, string message) : base(game) {
+		public DisconnectScreen(Game game, string title, string message) : base(game) {
 			this.title = title;
 			this.message = message;
 			

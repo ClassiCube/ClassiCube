@@ -43,11 +43,7 @@ namespace ClassicalSharp {
 		
 		static char[] trimChars = new char[] { ' ', '\0' };
 		StringBuffer logBuffer = new StringBuffer(128);
-		public void Add(string text) {
-			Log.Add(text);
-			LogChatToFile(text);
-			game.Events.RaiseChatReceived(text, MessageType.Normal);
-		}
+		public void Add(string text) { Add(text, MessageType.Normal); }
 		
 		public void Add(string text, MessageType type) {
 			if (type == MessageType.Normal) {

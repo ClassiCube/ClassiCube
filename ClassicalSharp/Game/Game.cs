@@ -267,7 +267,7 @@ namespace ClassicalSharp {
 			Drawer2D.InitColours();
 			BlockInfo.Reset(this);
 			TexturePack.ExtractDefault(this);
-			Gui.SetNewScreen(new ErrorScreen(this, title, reason));
+			Gui.SetNewScreen(new DisconnectScreen(this, title, reason));
 			GC.Collect();
 		}
 		
