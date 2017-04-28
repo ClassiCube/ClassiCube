@@ -99,7 +99,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool StandardLiquid(BlockID block) {
-			return info.Collide[block] == CollideType.SwimThrough;
+			return info.Collide[block] == CollideType.Liquid;
 		}
 		
 		static Vector3 waterDrag = new Vector3(0.8f, 0.8f, 0.8f),
@@ -136,7 +136,7 @@ namespace ClassicalSharp.Entities {
 					MoveNormal(vel, factor * horSpeed, entity.Model.Drag, gravity, verSpeed);
 				}
 
-				if (entity.BlockUnderFeet == Block.Ice && !hacks.Floating) {
+				if (OnIce(entity, info) && !hacks.Floating) {
 					// limit components to +-0.25f by rescaling vector to [-0.25, 0.25]
 					if (Math.Abs(entity.Velocity.X) > 0.25f || Math.Abs(entity.Velocity.Z) > 0.25f) {
 						float scale = Math.Min(
@@ -150,6 +150,14 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			if (entity.onGround) { firstJump = false; secondJump = false; }
+		}
+		
+		static bool OnIce(Entity entity, BlockInfo info) {
+			if (info.ExtendedCollide[entity.BlockUnderFeet] == CollideType.Ice) return true;
+			
+			AABB bounds = entity.Bounds;
+			bounds.Min.Y -= 0.01f; bounds.Max.Y = bounds.Min.Y;
+			return entity.TouchesAny(bounds, b => info.ExtendedCollide[b] == CollideType.SlipperyIce);
 		}
 		
 		void MoveHor(Vector3 vel, float factor) {
@@ -219,8 +227,8 @@ namespace ClassicalSharp.Entities {
 			{
 				BlockID block = game.World.SafeGetBlock(x, y, z);
 				if (block == 0) continue;
-				CollideType type = info.Collide[block];
-				if (type == CollideType.Solid && !checkSolid)
+				byte collide = info.Collide[block];
+				if (collide == CollideType.Solid && !checkSolid)
 					continue;
 				
 				Vector3 min = new Vector3(x, y, z) + info.MinBB[block];
@@ -229,7 +237,7 @@ namespace ClassicalSharp.Entities {
 				if (!blockBB.Intersects(bounds)) continue;
 				
 				modifier = Math.Min(modifier, info.SpeedMultiplier[block]);
-				if (!info.IsLiquid(block) && type == CollideType.SwimThrough)
+				if (!info.IsLiquid(block) && collide == CollideType.Liquid)
 					useLiquidGravity = true;
 			}
 			return modifier;

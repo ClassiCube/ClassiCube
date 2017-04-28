@@ -40,15 +40,27 @@ namespace ClassicalSharp {
 	}
 	
 	/// <summary> Describes the interaction a block has with a player when they collide with it. </summary>
-	public enum CollideType : byte {
-		/// <summary> No interaction when player collides. (typically gas or sprite blocks) </summary>
-		WalkThrough,
+	public static class CollideType {
+		/// <summary> No interaction when player collides. </summary>
+		public const byte Gas = 0;
 		
-		/// <summary> 'swimming'/'bobbing' interaction when player collides. (typically liquid blocks) </summary>
-		SwimThrough,
+		/// <summary> 'swimming'/'bobbing' interaction when player collides. </summary>
+		public const byte Liquid = 1;
 		
-		/// <summary> Block completely stops the player when they are moving. (typically most blocks) </summary>
-		Solid,
+		/// <summary> Block completely stops the player when they are moving. </summary>
+		public const byte Solid = 2;
+		
+		/// <summary> Block is solid and partially slidable on. </summary>
+		public const byte Ice = 3;
+
+		/// <summary> Block is solid and fully slidable on. </summary>		
+		public const byte SlipperyIce = 4;
+
+		/// <summary> Water style 'swimming'/'bobbing' interaction when player collides. </summary>		
+		public const byte LiquidWater = 5;
+
+		/// <summary> Lava style 'swimming'/'bobbing' interaction when player collides. </summary>		
+		public const byte LiquidLava = 6;
 	}
 	
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
@@ -74,7 +86,9 @@ namespace ClassicalSharp {
 		/// <remarks> A value of 0 means this block does not apply fog. </remarks>
 		public float[] FogDensity = new float[Block.Count];
 		
-		public CollideType[] Collide = new CollideType[Block.Count];
+		public byte[] Collide = new byte[Block.Count];
+		
+		public byte[] ExtendedCollide = new byte[Block.Count];
 		
 		public float[] SpeedMultiplier = new float[Block.Count];
 		
@@ -128,57 +142,71 @@ namespace ClassicalSharp {
 			place[Block.Bedrock]    = false; delete[Block.Bedrock]    = false;
 		}
 		
-		public void SetBlockDraw(BlockID id, byte draw) {
-			if (draw == DrawType.Opaque && Collide[id] != CollideType.Solid)
-				draw = DrawType.Transparent;
-			Draw[id] = draw;
+		public void SetCollide(BlockID block, byte collide) {
+			// necessary for cases where servers redefined core blocks before extended types were introduced
+			collide = DefaultSet.MapOldCollide(block, collide);
+			ExtendedCollide[block] = collide;
 			
-			FullOpaque[id] = draw == DrawType.Opaque
-				&& MinBB[id] == Vector3.Zero && MaxBB[id] == Vector3.One;
+			// Reduce extended collision types to their simpler forms
+			if (collide == CollideType.Ice) collide = CollideType.Solid;
+			if (collide == CollideType.SlipperyIce) collide = CollideType.Solid;
+			
+			if (collide == CollideType.LiquidWater) collide = CollideType.Liquid;
+			if (collide == CollideType.LiquidLava) collide = CollideType.Liquid;
+			Collide[block] = collide;
+		}
+		
+		public void SetBlockDraw(BlockID block, byte draw) {
+			if (draw == DrawType.Opaque && Collide[block] != CollideType.Solid)
+				draw = DrawType.Transparent;
+			Draw[block] = draw;
+			
+			FullOpaque[block] = draw == DrawType.Opaque
+				&& MinBB[block] == Vector3.Zero && MaxBB[block] == Vector3.One;
 		}
 		
 		/// <summary> Resets the properties for the given block to their defaults. </summary>
-		public void ResetBlockProps(BlockID id) {
-			BlocksLight[id] = DefaultSet.BlocksLight(id);
-			FullBright[id] = DefaultSet.FullBright(id);
-			FogColour[id] = DefaultSet.FogColour(id);
-			FogDensity[id] = DefaultSet.FogDensity(id);
-			Collide[id] = DefaultSet.Collide(id);
-			DigSounds[id] = DefaultSet.DigSound(id);
-			StepSounds[id] = DefaultSet.StepSound(id);
-			SpeedMultiplier[id] = 1;
-			Name[id] = DefaultName(id);
-			Tinted[id] = false;
+		public void ResetBlockProps(BlockID block) {
+			BlocksLight[block] = DefaultSet.BlocksLight(block);
+			FullBright[block] = DefaultSet.FullBright(block);
+			FogColour[block] = DefaultSet.FogColour(block);
+			FogDensity[block] = DefaultSet.FogDensity(block);
+			SetCollide(block, DefaultSet.Collide(block));
+			DigSounds[block] = DefaultSet.DigSound(block);
+			StepSounds[block] = DefaultSet.StepSound(block);
+			SpeedMultiplier[block] = 1;
+			Name[block] = DefaultName(block);
+			Tinted[block] = false;
 			
-			Draw[id] = DefaultSet.Draw(id);
-			if (Draw[id] == DrawType.Sprite) {
-				MinBB[id] = new Vector3(2.50f/16f, 0, 2.50f/16f);
-				MaxBB[id] = new Vector3(13.5f/16f, 1, 13.5f/16f);
+			Draw[block] = DefaultSet.Draw(block);
+			if (Draw[block] == DrawType.Sprite) {
+				MinBB[block] = new Vector3(2.50f/16f, 0, 2.50f/16f);
+				MaxBB[block] = new Vector3(13.5f/16f, 1, 13.5f/16f);
 			} else {
-				MinBB[id] = Vector3.Zero;
-				MaxBB[id] = Vector3.One;
-				MaxBB[id].Y = DefaultSet.Height(id);
+				MinBB[block] = Vector3.Zero;
+				MaxBB[block] = Vector3.One;
+				MaxBB[block].Y = DefaultSet.Height(block);
 			}
 			
-			SetBlockDraw(id, Draw[id]);
-			CalcRenderBounds(id);			
-			LightOffset[id] = CalcLightOffset(id);
+			SetBlockDraw(block, Draw[block]);
+			CalcRenderBounds(block);			
+			LightOffset[block] = CalcLightOffset(block);
 			
-			if (id >= Block.CpeCount) {
+			if (block >= Block.CpeCount) {
 				#if USE16_BIT
 				// give some random texture ids
-				SetTex((id * 10 + (id % 7) + 20) % 80, Side.Top, id);
-				SetTex((id * 8  + (id & 5) + 5 ) % 80, Side.Bottom, id);
-				SetSide((id * 4 + (id / 4) + 4 ) % 80, id);
+				SetTex((block * 10 + (block % 7) + 20) % 80, Side.Top, block);
+				SetTex((block * 8  + (block & 5) + 5 ) % 80, Side.Bottom, block);
+				SetSide((block * 4 + (block / 4) + 4 ) % 80, block);
 				#else
-				SetTex(0, Side.Top, id);
-				SetTex(0, Side.Bottom, id);
-				SetSide(0, id);
+				SetTex(0, Side.Top, block);
+				SetTex(0, Side.Bottom, block);
+				SetSide(0, block);
 				#endif
 			} else {
-				SetTex(topTex[id], Side.Top, id);
-				SetTex(bottomTex[id], Side.Bottom, id);
-				SetSide(sideTex[id], id);
+				SetTex(topTex[block], Side.Top, block);
+				SetTex(bottomTex[block], Side.Bottom, block);
+				SetSide(sideTex[block], block);
 			}
 		}
 		

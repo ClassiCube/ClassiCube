@@ -83,7 +83,7 @@ namespace ClassicalSharp {
 			if (Draw[block] != DrawType.Translucent || Draw[other] != DrawType.Translucent) return false;
 			
 			// e.g. for water / ice, don't need to draw water.
-			CollideType bType = Collide[block], oType = Collide[other];
+			byte bType = Collide[block], oType = Collide[other];
 			bool canSkip = (bType == CollideType.Solid && oType == CollideType.Solid) 
 				|| bType != CollideType.Solid;
 			return canSkip;

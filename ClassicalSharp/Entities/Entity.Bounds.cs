@@ -71,7 +71,7 @@ namespace ClassicalSharp.Entities {
 		
 		// If liquid block above, leave height same
 		// otherwise reduce water BB height by 0.5 blocks
-		bool TouchesAnyLiquid(AABB bounds, BlockID block1, BlockID block2) {
+		bool TouchesAnyLiquid(AABB bounds, byte collide) {
 			Vector3I bbMin = Vector3I.Floor(bounds.Min);
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
 			
@@ -98,7 +98,7 @@ namespace ClassicalSharp.Entities {
 				//	max.Y -= 4/16f;
 				
 				if (!blockBB.Intersects(bounds)) continue;
-				if (block == block1 || block == block2) return true;
+				if (info.ExtendedCollide[block] == collide) return true;
 			}
 			return false;
 		}
@@ -109,14 +109,14 @@ namespace ClassicalSharp.Entities {
 			// NOTE: Original classic client uses offset (so you can only climb up
 			// alternating liquid-solid elevators on two sides) 
 			AABB bounds = Bounds.Offset(liqExpand);
-			return TouchesAnyLiquid(bounds, Block.Lava, Block.StillLava);
+			return TouchesAnyLiquid(bounds, CollideType.LiquidLava);
 		}
 
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
-			return TouchesAnyLiquid(bounds, Block.Water, Block.StillWater);
+			return TouchesAnyLiquid(bounds, CollideType.LiquidWater);
 		}
 	}
 }

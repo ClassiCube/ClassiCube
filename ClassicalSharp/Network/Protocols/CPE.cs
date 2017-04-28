@@ -124,7 +124,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleExtAddPlayerName() {
-			short id = reader.ReadInt16();
+			int id = reader.ReadInt16() & 0xFF;
 			string playerName = Utils.StripColours(reader.ReadString());
 			playerName = Utils.RemoveEndPlus(playerName);
 			string listName = reader.ReadString();
@@ -135,11 +135,7 @@ namespace ClassicalSharp.Network.Protocols {
 			// Some server software will declare they support ExtPlayerList, but send AddEntity then AddPlayerName
 			// we need to workaround this case by removing all the tab names we added for the AddEntity packets
 			net.DisableAddEntityHack();
-			
-			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
-			if (id < 0) id += 256;
-			if (id >= 0 && id <= 255)
-				net.AddTablistEntry((byte)id, playerName, listName, groupName, groupRank);
+			net.AddTablistEntry((byte)id, playerName, listName, groupName, groupRank);
 		}
 		
 		void HandleExtAddEntity() {
@@ -151,12 +147,8 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleExtRemovePlayerName() {
-			short id = reader.ReadInt16();
-			
-			// Workaround for some servers that don't cast signed bytes to unsigned, before converting them to shorts.
-			if (id < 0) id += 256;			
-			if (id >= 0 && id <= 255)
-				net.RemoveTablistEntry((byte)id);
+			int id = reader.ReadInt16() & 0xFF;
+			net.RemoveTablistEntry((byte)id);
 		}
 		
 		void HandleMakeSelection() {

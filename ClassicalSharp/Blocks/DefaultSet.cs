@@ -41,12 +41,26 @@ namespace ClassicalSharp.Blocks {
 			return default(FastColour);
 		}
 		
-		public static CollideType Collide(BlockID b) {
-			if (b >= Block.Water && b <= Block.StillLava)
-				return CollideType.SwimThrough;
+		public static byte Collide(BlockID b) {
+			if (b == Block.Ice) return CollideType.Ice;
+			if (b == Block.Water || b == Block.StillWater)
+				return CollideType.LiquidWater;
+			if (b == Block.Lava || b == Block.StillLava)
+				return CollideType.LiquidLava;
+			
 			if (b == Block.Snow || b == Block.Air || Draw(b) == DrawType.Sprite)
-				return CollideType.WalkThrough;
+				return CollideType.Gas;
 			return CollideType.Solid;
+		}
+		
+		public static byte MapOldCollide(BlockID b, byte collide) {
+			if (b == Block.Ice && collide == CollideType.Solid) 
+				return CollideType.Ice;
+			if ((b == Block.Water || b == Block.StillWater) && collide == CollideType.Liquid)
+				return CollideType.LiquidWater;
+			if ((b == Block.Lava || b == Block.StillLava) && collide == CollideType.Liquid)
+				return CollideType.LiquidLava;
+			return collide;
 		}
 		
 		public static bool BlocksLight(BlockID b) {

@@ -35,12 +35,12 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleRemoveBlockDefinition() {
-			byte id = reader.ReadUInt8();
+			byte block = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
 			
-			info.DefinedCustomBlocks[id >> 5] &= ~(1u << (id & 0x1F));
-			info.ResetBlockProps(id);
-			info.UpdateCulling(id);
+			info.DefinedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
+			info.ResetBlockProps(block);
+			info.UpdateCulling(block);
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
@@ -66,59 +66,59 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		byte HandleDefineBlockCommonStart(NetReader reader, bool uniqueSideTexs) {
-			byte id = reader.ReadUInt8();
+			byte block = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
-			bool didBlockLight = info.BlocksLight[id];
-			info.ResetBlockProps(id);
+			bool didBlockLight = info.BlocksLight[block];
+			info.ResetBlockProps(block);
 			
-			info.Name[id] = reader.ReadString();
-			info.Collide[id] = (CollideType)reader.ReadUInt8();
+			info.Name[block] = reader.ReadString();
+			info.SetCollide(block, reader.ReadUInt8());
 			
-			info.SpeedMultiplier[id] = (float)Math.Pow(2, (reader.ReadUInt8() - 128) / 64f);
-			info.SetTex(reader.ReadUInt8(), Side.Top, id);
+			info.SpeedMultiplier[block] = (float)Math.Pow(2, (reader.ReadUInt8() - 128) / 64f);
+			info.SetTex(reader.ReadUInt8(), Side.Top, block);
 			if (uniqueSideTexs) {
-				info.SetTex(reader.ReadUInt8(), Side.Left, id);
-				info.SetTex(reader.ReadUInt8(), Side.Right, id);
-				info.SetTex(reader.ReadUInt8(), Side.Front, id);
-				info.SetTex(reader.ReadUInt8(), Side.Back, id);
+				info.SetTex(reader.ReadUInt8(), Side.Left, block);
+				info.SetTex(reader.ReadUInt8(), Side.Right, block);
+				info.SetTex(reader.ReadUInt8(), Side.Front, block);
+				info.SetTex(reader.ReadUInt8(), Side.Back, block);
 			} else {
-				info.SetSide(reader.ReadUInt8(), id);
+				info.SetSide(reader.ReadUInt8(), block);
 			}
-			info.SetTex(reader.ReadUInt8(), Side.Bottom, id);
+			info.SetTex(reader.ReadUInt8(), Side.Bottom, block);
 			
 			// Need to refresh lighting when a block's light blocking state changes			
-			info.BlocksLight[id] = reader.ReadUInt8() == 0;
-			if (!game.World.IsNotLoaded && (didBlockLight != info.BlocksLight[id])) {
+			info.BlocksLight[block] = reader.ReadUInt8() == 0;
+			if (!game.World.IsNotLoaded && (didBlockLight != info.BlocksLight[block])) {
 				game.Lighting.Refresh();
 			}
 			
 			byte sound = reader.ReadUInt8();
 			if (sound < breakSnds.Length) {
-				info.StepSounds[id] = stepSnds[sound];
-				info.DigSounds[id] = breakSnds[sound];
+				info.StepSounds[block] = stepSnds[sound];
+				info.DigSounds[block] = breakSnds[sound];
 			}
-			info.FullBright[id] = reader.ReadUInt8() != 0;
-			return id;
+			info.FullBright[block] = reader.ReadUInt8() != 0;
+			return block;
 		}
 		
-		void HandleDefineBlockCommonEnd(NetReader reader, byte shape, byte id) {
+		void HandleDefineBlockCommonEnd(NetReader reader, byte shape, byte block) {
 			BlockInfo info = game.BlockInfo;
 			byte blockDraw = reader.ReadUInt8();
 			if (shape == 0) blockDraw = DrawType.Sprite;
-			info.LightOffset[id] = info.CalcLightOffset(id);
+			info.LightOffset[block] = info.CalcLightOffset(block);
 			
 			byte fogDensity = reader.ReadUInt8();
-			info.FogDensity[id] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
-			info.FogColour[id] = new FastColour(
+			info.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
+			info.FogColour[block] = new FastColour(
 				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
-			info.Tinted[id] = info.FogColour[id] != FastColour.Black && info.Name[id].IndexOf('#') >= 0;
+			info.Tinted[block] = info.FogColour[block] != FastColour.Black && info.Name[block].IndexOf('#') >= 0;
 			
-			info.SetBlockDraw(id, blockDraw);
-			info.CalcRenderBounds(id);
-			info.UpdateCulling(id);
+			info.SetBlockDraw(block, blockDraw);
+			info.CalcRenderBounds(block);
+			info.UpdateCulling(block);
 			
 			game.Events.RaiseBlockDefinitionChanged();
-			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
+			info.DefinedCustomBlocks[block >> 5] |= (1u << (block & 0x1F));
 		}
 		
 		#if FALSE

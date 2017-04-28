@@ -355,7 +355,7 @@ namespace ClassicalSharp {
 		public bool CanPick(BlockID block) {
 			if (BlockInfo.Draw[block] == DrawType.Gas) return false;
 			if (BlockInfo.Draw[block] == DrawType.Sprite) return true;
-			if (BlockInfo.Collide[block] != CollideType.SwimThrough) return true;
+			if (BlockInfo.Collide[block] != CollideType.Liquid) return true;
 			
 			return !ModifiableLiquids ? false :
 				Inventory.CanPlace[block] && Inventory.CanDelete[block];

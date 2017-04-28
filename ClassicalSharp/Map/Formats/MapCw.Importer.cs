@@ -135,7 +135,7 @@ namespace ClassicalSharp.Map {
 			byte id = (byte)compound["ID"].Value;
 			BlockInfo info = game.BlockInfo;
 			info.Name[id] = (string)compound["Name"].Value;
-			info.Collide[id] = (CollideType)compound["CollideType"].Value;
+			info.SetCollide(id, (byte)compound["CollideType"].Value);
 			info.SpeedMultiplier[id] = (float)compound["Speed"].Value;
 			
 			byte[] data = (byte[])compound["Textures"].Value;

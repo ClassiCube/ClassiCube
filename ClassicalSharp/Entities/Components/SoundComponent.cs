@@ -77,8 +77,8 @@ namespace ClassicalSharp.Entities {
 			float maxY = feetPos.Y + game.BlockInfo.MaxBB[blockUnder].Y;
 			
 			SoundType typeUnder = game.BlockInfo.StepSounds[blockUnder];
-			CollideType collideType = game.BlockInfo.Collide[blockUnder];
-			if (maxY >= pos.Y && collideType == CollideType.Solid && typeUnder != SoundType.None) {
+			byte collideUnder = game.BlockInfo.Collide[blockUnder];
+			if (maxY >= pos.Y && collideUnder == CollideType.Solid && typeUnder != SoundType.None) {
 				anyNonAir = true; sndType = typeUnder; return;
 			}
 			
@@ -89,7 +89,7 @@ namespace ClassicalSharp.Entities {
 		
 		bool CheckSoundNonSolid(BlockID b) {
 			SoundType newType = game.BlockInfo.StepSounds[b];
-			CollideType collide = game.BlockInfo.Collide[b];
+			byte collide = game.BlockInfo.Collide[b];
 			if (newType != SoundType.None && collide != CollideType.Solid)
 				sndType = newType;
 			

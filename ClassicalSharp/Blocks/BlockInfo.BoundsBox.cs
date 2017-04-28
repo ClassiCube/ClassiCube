@@ -19,20 +19,20 @@ namespace ClassicalSharp {
 		public Vector3[] RenderMinBB = new Vector3[Block.Count];
 		public Vector3[] RenderMaxBB = new Vector3[Block.Count];
 		
-		internal void CalcRenderBounds(BlockID id) {
-			Vector3 min = MinBB[id], max = MaxBB[id];
+		internal void CalcRenderBounds(BlockID block) {
+			Vector3 min = MinBB[block], max = MaxBB[block];
 			
-			if (id >= Block.Water && id <= Block.StillLava) {
+			if (block >= Block.Water && block <= Block.StillLava) {
 				min.X -= 0.1f/16f; max.X -= 0.1f/16f; 
 				min.Z -= 0.1f/16f; max.Z -= 0.1f/16f;
 				min.Y -= 1.5f/16f; max.Y -= 1.5f/16f;
-			} else if (Draw[id] == DrawType.Translucent && Collide[id] != CollideType.Solid) {
+			} else if (Draw[block] == DrawType.Translucent && Collide[block] != CollideType.Solid) {
 				min.X += 0.1f/16f; max.X += 0.1f/16f; 
 				min.Z += 0.1f/16f; max.Z += 0.1f/16f;
 				min.Y -= 0.1f/16f; max.Y -= 0.1f/16f;
 			}
 			
-			RenderMinBB[id] = min; RenderMaxBB[id] = max;
+			RenderMinBB[block] = min; RenderMaxBB[block] = max;
 		}
 		
 		internal byte CalcLightOffset(BlockID block) {
