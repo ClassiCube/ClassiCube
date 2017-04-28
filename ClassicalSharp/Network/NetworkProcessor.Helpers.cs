@@ -40,10 +40,8 @@ namespace ClassicalSharp.Network {
 		internal void AddEntity(byte id, string displayName, string skinName, bool readPosition) {
 			if (id != EntityList.SelfID) {
 				Entity oldEntity = game.Entities[id];
-				if (oldEntity != null) {
-					game.EntityEvents.RaiseRemoved(id);
-					oldEntity.Despawn();
-				}
+				if (oldEntity != null) game.Entities.RemoveEntity(id);
+
 				game.Entities[id] = new NetPlayer(displayName, skinName, game, id);
 				game.EntityEvents.RaiseAdded(id);
 			} else {
@@ -65,13 +63,8 @@ namespace ClassicalSharp.Network {
 		
 		internal void RemoveEntity(byte id) {
 			Entity entity = game.Entities[id];
-			if (entity == null) return;
-			
-			if (id != EntityList.SelfID) {
-				game.EntityEvents.RaiseRemoved(id);
-				entity.Despawn();
-				game.Entities[id] = null;
-			}
+			if (entity == null) return;			
+			if (id != EntityList.SelfID) game.Entities.RemoveEntity(id);
 			
 			// See comment about some servers in HandleAddEntity
 			int mask = id >> 3, bit = 1 << (id & 0x7);

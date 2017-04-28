@@ -132,11 +132,17 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
+		public void RemoveEntity(byte id) {
+			game.EntityEvents.RaiseRemoved(id);
+			Entities[id].Despawn();
+			Entities[id] = null;
+		}
+		
 		/// <summary> Disposes of all player entities contained in this list. </summary>
 		public void Dispose() {
 			for (int i = 0; i < Entities.Length; i++) {
 				if (Entities[i] == null) continue;
-				Entities[i].Despawn();
+				RemoveEntity((byte)i);
 			}
 			
 			game.Graphics.ContextLost -= ContextLost;

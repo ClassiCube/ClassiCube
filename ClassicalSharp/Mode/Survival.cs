@@ -62,6 +62,13 @@ namespace ClassicalSharp.Mode {
 			
 			entity.Velocity -= delta;
 			game.Chat.Add("PICKED ON: " + id + "," + entity.ModelName);
+			
+			entity.Health -= 2;
+			if (entity.Health < 0) {
+				game.Entities.RemoveEntity(id);
+				score += GetScore(entity.ModelName);
+				UpdateScore();
+			}
 			return true;
 		}
 		
@@ -114,8 +121,7 @@ namespace ClassicalSharp.Mode {
 
 		
 		public void OnNewMapLoaded(Game game) {
-			game.Chat.Add("&fScore: &e" + score, MessageType.Status1);
-			
+			UpdateScore();
 			string[] models = { "sheep", "pig", "skeleton", "zombie", "creeper", "spider" };
 			for (int i = 0; i < 254; i++) {
 				MobEntity fail = new MobEntity(game, models[rnd.Next(models.Length)]);
@@ -135,6 +141,20 @@ namespace ClassicalSharp.Mode {
 				hotbar[i] = Block.Air;
 			hotbar[Inventory.BlocksPerRow - 1] = Block.TNT;
 			game.Server.AppName += " (survival)";
+		}
+		
+		
+		int GetScore(string model) {
+			if (model == "sheep" || model == "pig") return 10;
+			if (model == "zombie") return 80;
+			if (model == "spider") return 105;
+			if (model == "skeleton") return 120;
+			if (model == "creeper") return 200;
+			return 5;
+		}
+		
+		void UpdateScore() {
+			game.Chat.Add("&fScore: &e" + score, MessageType.Status1);
 		}
 		
 		

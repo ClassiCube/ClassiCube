@@ -32,7 +32,7 @@ namespace ClassicalSharp.Entities {
 		
 		public byte ID;
 		public int TextureId = -1, MobTextureId = -1;
-		public short Health = 20;
+		public short Health = 10;
 		
 		public Vector3 Position;
 		public Vector3 Velocity;
