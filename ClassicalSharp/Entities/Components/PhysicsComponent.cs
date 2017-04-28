@@ -237,7 +237,7 @@ namespace ClassicalSharp.Entities {
 				if (!blockBB.Intersects(bounds)) continue;
 				
 				modifier = Math.Min(modifier, info.SpeedMultiplier[block]);
-				if (!info.IsLiquid(block) && collide == CollideType.Liquid)
+				if (info.ExtendedCollide[block] == CollideType.Liquid)
 					useLiquidGravity = true;
 			}
 			return modifier;
