@@ -52,7 +52,16 @@ namespace ClassicalSharp.Mode {
 		}
 		
 		public bool PickEntity(byte id) {
-			game.Chat.Add("PICKED ON: " + id + "," + game.Entities[id].ModelName);
+			Entity entity = game.Entities[id];
+			Entity player = game.Entities[EntityList.SelfID];
+			
+			Vector3 delta = player.Position - entity.Position;
+			delta.Y = 0.0f;
+			delta = Vector3.Normalize(delta);
+			delta.Y = -0.5f;
+			
+			entity.Velocity -= delta;
+			game.Chat.Add("PICKED ON: " + id + "," + entity.ModelName);
 			return true;
 		}
 		
