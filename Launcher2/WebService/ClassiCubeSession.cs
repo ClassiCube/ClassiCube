@@ -51,15 +51,8 @@ namespace Launcher.Web {
 				Finish(false, null, "&c" + ex.Message); return;
 			}
 			
-			// Retrieve list of public servers
-			Status = "&eRetrieving public servers list..";
-			try {
-				Servers = GetPublicServers();
-			} catch (WebException ex) {
-				Servers = new List<ServerListEntry>();
-				Finish(false, ex, "retrieving servers list"); return;
-			}
-			Finish(true, null, "&eSigned in");
+			FetchServersWorker();
+			if (!Success) Servers = new List<ServerListEntry>();
 		}
 		
 		void FetchServersWorker() {
@@ -68,7 +61,6 @@ namespace Launcher.Web {
 			try {
 				Servers = GetPublicServers();
 			} catch (WebException ex) {
-				Servers = new List<ServerListEntry>();
 				Finish(false, ex, "retrieving servers list"); return;
 			}
 			Finish(true, null, "&eFetched list");
