@@ -91,7 +91,10 @@ namespace ClassicalSharp {
 		}
 		
 		static bool Allowed(char c) {
-			return c == '[' || c == ']' || c == '(' || c == ')' ||
+			return 
+				c == '{' || c == '}' || 
+				c == '[' || c == ']' || 
+				c == '(' || c == ')' ||				
 				(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
 				(c >= 'A' && c <= 'Z');
 		}
