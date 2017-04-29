@@ -31,6 +31,16 @@ namespace Launcher.Web {
 			thread.Start(password);
 		}
 		
+		public void FetchServersAsync() {
+			Working = true;
+			Done = false;
+			Exception = null;
+			
+			Thread thread = new Thread(FetchServersWorker, 256 * 1024);
+			thread.Name = "Launcher.CCFetchAsync";
+			thread.Start();
+		}
+		
 		void LoginWorker(object password) {
 			// Sign in to classicube.net
 			try {
@@ -51,6 +61,19 @@ namespace Launcher.Web {
 			}
 			Finish(true, null, "&eSigned in");
 		}
+		
+		void FetchServersWorker() {
+			// Retrieve list of public servers
+			Status = "&eRetrieving public servers list..";
+			try {
+				Servers = GetPublicServers();
+			} catch (WebException ex) {
+				Servers = new List<ServerListEntry>();
+				Finish(false, ex, "retrieving servers list"); return;
+			}
+			Finish(true, null, "&eFetched list");
+		}
+		
 		
 		void Login(string user, string password) {
 			Username = user;
