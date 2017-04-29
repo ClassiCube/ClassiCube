@@ -20,6 +20,8 @@ namespace Launcher.Gui.Screens {
 		
 		public override void Tick() {
 			base.Tick();
+			if (fetchingList) CheckFetchStatus();
+			
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			if (!game.Window.Mouse[MouseButton.Left]) {
 				table.DraggingColumn = -1;
@@ -178,8 +180,6 @@ namespace Launcher.Gui.Screens {
 				view.RedrawTable();
 				game.Dirty = true;
 			}
-			
-			if (fetchingList) CheckFetchStatus();
 			pendingRedraw = false;
 		}
 		
