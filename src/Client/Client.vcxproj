@@ -169,6 +169,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="DefaultSet.h" />
@@ -182,6 +183,7 @@
     <ClInclude Include="Typedefs.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Block.c" />
     <ClCompile Include="Compiler.c" />
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Noise.c" />

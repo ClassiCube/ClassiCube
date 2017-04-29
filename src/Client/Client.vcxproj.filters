@@ -72,14 +72,17 @@
     <ClInclude Include="String.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="Block.h">
-      <Filter>Header Files\Blocks</Filter>
-    </ClInclude>
     <ClInclude Include="DefaultSet.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
     <ClInclude Include="FastColour.h">
       <Filter>Header Files\2D\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockID.h">
+      <Filter>Header Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Block.h">
+      <Filter>Header Files\Blocks</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -102,6 +105,9 @@
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="DefaultSet.c">
+      <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Block.c">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
   </ItemGroup>

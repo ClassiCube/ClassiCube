@@ -1,97 +1,135 @@
 #ifndef CS_BLOCK_H
 #define CS_BLOCK_H
-/* List of all core/standard block IDs
+#include "Typedefs.h"
+#include "BlockID.h"
+#include "String.h"
+#include "FastColour.h"
+/* Stores properties for blocks
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Classic blocks */
-#define Block_Air 0
-#define Block_Stone 1
-#define Block_Grass 2
-#define Block_Dirt 3
-#define Block_Cobblestone 4
-#define Block_Wood 5
-#define Block_Sapling 6
-#define Block_Bedrock 7
-#define Block_Water 8
-#define Block_StillWater 9
-#define Block_Lava 10
-#define Block_StillLava 11
-#define Block_Sand 12
-#define Block_Gravel 13
-#define Block_GoldOre 14
-#define Block_IronOre 15
-#define Block_CoalOre 16
-#define Block_Log 17
-#define Block_Leaves 18
-#define Block_Sponge 19
-#define Block_Glass 20
-#define Block_Red 21
-#define Block_Orange 22
-#define Block_Yellow 23
-#define Block_Lime 24
-#define Block_Green 25
-#define Block_Teal 26
-#define Block_Aqua 27
-#define Block_Cyan 28
-#define Block_Blue 29
-#define Block_Indigo 30
-#define Block_Violet 31
-#define Block_Magenta 32
-#define Block_Pink 33
-#define Block_Black 34
-#define Block_Gray 35
-#define Block_White 36
-#define Block_Dandelion 37
-#define Block_Rose 38
-#define Block_BrownMushroom 39
-#define Block_RedMushroom 40
-#define Block_Gold 41
-#define Block_Iron 42
-#define Block_DoubleSlab 43
-#define Block_Slab 44
-#define Block_Brick 45
-#define Block_TNT 46
-#define Block_Bookshelf 47
-#define Block_MossyRocks 48
-#define Block_Obsidian 49
 
-/* CPE blocks */
-#define Block_CobblestoneSlab 50
-#define Block_Rope 51
-#define Block_Sandstone 52
-#define Block_Snow 53
-#define Block_Fire 54
-#define Block_LightPink 55
-#define Block_ForestGreen 56
-#define Block_Brown 57
-#define Block_DeepBlue 58
-#define Block_Turquoise 59
-#define Block_Ice 60
-#define Block_CeramicTile 61
-#define Block_Magma 62
-#define Block_Pillar 63
-#define Block_Crate 64
-#define Block_StoneBrick 65
+/* Sound types for blocks. */
 
-/* Max block ID used in original classic */
-#define Block_MaxOriginal Block_Obsidian
+#define SoundType_None 0
+#define SoundType_Wood 1
+#define SoundType_Gravel 2
+#define SoundType_Grass 3
+#define SoundType_Stone 4
+#define SoundType_Metal 5
+#define SoundType_Glass 6
+#define SoundType_Cloth 7
+#define SoundType_Sand 8
+#define SoundType_Snow 9
 
-/* Number of blocks in original classic. */
-#define Block_OriginalCount (Block_MaxOriginal + 1)
 
-/* Max block ID used in original classic plus CPE blocks. */
-#define Block_MaxCpe Block_StoneBrick
+/* Describes how a block is rendered in the world. */
+/* Completely covers blocks behind (e.g. dirt). */
+#define DrawType_Opaque 0
+/*  Blocks behind show (e.g. glass). Pixels are either fully visible or invisible.  */
+#define DrawType_Transparent 1
+/*  Same as Transparent, but all neighbour faces show. (e.g. leaves) */
+#define DrawType_TransparentThick 2
+/* Blocks behind show (e.g. water). Pixels blend with other blocks behind. */
+#define DrawType_Translucent 3
+/* Does not show (e.g. air). Can still be collided with. */
+#define DrawType_Gas 4
+/* Block renders as an X sprite (e.g. sapling). Pixels are either fully visible or invisible. */
+#define DrawType_Sprite 5
 
-/* Number of blocks in original classic plus CPE blocks. */
-#define Block_CpeCount = (Block_MaxCpeBlock + 1)
 
-#if USE16_BIT
-#define Block_MaxDefined 0xFFF
-#else
-#define Block_MaxDefined 0xFF
-#endif
+/* Describes the interaction a block has with a player when they collide with it. */
+/* No interaction when player collides. */
+#define CollideType_Gas 0
+/* 'swimming'/'bobbing' interaction when player collides. */
+#define CollideType_Liquid 1
+/* Block completely stops the player when they are moving. */
+#define CollideType_Solid 2
+/* Block is solid and partially slidable on. */
+#define CollideType_Ice 3
+/* Block is solid and fully slidable on. */
+#define CollideType_SlipperyIce 4
+/* Water style 'swimming'/'bobbing' interaction when player collides. */
+#define CollideType_LiquidWater 5
+/* Lava style 'swimming'/'bobbing' interaction when player collides. */
+#define CollideType_LiquidLava 6
 
-#define Block_Count (MaxDefinedBlock + 1)
-#define Block_Invalid Block_MaxDefined
+
+/* Gets whether the given block is a liquid. (water and lava) */
+bool Block_IsLiquid(BlockID b) { return b >= BlockID_Water && b <= BlockID_StillLava; }
+
+/* Gets whether the given block stops sunlight. */
+bool BlocksLight[Block_Count];
+
+/* Gets whether the given block should draw all its faces in a full white colour. */
+bool FullBright[Block_Count];
+
+/* Gets the name of the given block, or 'Invalid' if the block is not defined. */
+String Name[Block_Count];
+
+/* Gets the custom fog colour that should be used when the player is standing within this block.
+   Note that this is only used for exponential fog mode. */
+FastColour FogColour[Block_Count];
+
+/* Gets the fog density for the given block.
+   A value of 0 means this block does not apply fog.*/
+Real32 FogDensity[Block_Count];
+
+/* Gets the basic collision type for the given block. */
+UInt8 Collide[Block_Count];
+
+/* Gets the action performed when colliding with the given block. */
+UInt8 ExtendedCollide[Block_Count];
+
+/* Speed modifier when colliding (or standing on for solid collide type) with the given block. */
+Real32 SpeedMultiplier[Block_Count];
+
+/* Light offset of each block, as bitflags of 1 per face. */
+UInt8 LightOffset[Block_Count];
+
+/* Gets the DrawType for the given block. */
+UInt8 Draw[Block_Count];
+
+/* Gets whether the given block has an opaque draw type and is also a full tile block.
+   Full tile block means Min of (0, 0, 0) and max of (1, 1, 1).*/
+bool FullOpaque[Block_Count];
+
+UInt32 DefinedCustomBlocks[Block_Count >> 5];
+
+/* Gets the dig sound ID for the given block. */
+UInt8 DigSounds[Block_Count];
+
+/* Gets the step sound ID for the given block. */
+UInt8 StepSounds[Block_Count];
+
+/* Gets whether the given block has a tinting colour applied to it when rendered.
+   The tinting colour used is the block's fog colour. */
+bool Tinted[Block_Count];
+
+/* Recalculates the initial properties and culling states for all blocks. */
+void Block_Reset(Game* game);
+
+/* Calculates the initial properties and culling states for all blocks. */
+void Block_Init();
+
+/* Initialises the default blocks the player is allowed to place and delete. */
+void Block_SetDefaultPerms(InventoryPermissions place, InventoryPermissions del);
+
+/* Sets collision type of a block. */
+void Block_SetCollide(BlockID block, UInt8 collide);
+
+void Block_SetDrawType(BlockID block, UInt8 draw);
+
+/* Resets the properties for the given block to their defaults. */
+void Block_ResetProps(BlockID block);
+
+/* Finds the ID of the block whose name caselessly matches the input, -1 otherwise. */
+Int32 Block_FindID(String name);
+
+
+/* Gets the default name of a block. */
+static String Block_DefaultName(BlockID block);
+
+static void Block_SplitUppercase(String buffer, Int32 start, Int32 end);
+
 #endif
