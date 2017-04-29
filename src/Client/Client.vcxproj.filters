@@ -34,6 +34,18 @@
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{23df7aa9-c2fe-4dd9-ad2e-b07776510024}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Blocks">
+      <UniqueIdentifier>{f693e3de-8aee-440f-9edc-61544d2f7f79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Blocks">
+      <UniqueIdentifier>{3ca12726-ff14-4e95-9f3b-4c4bab3d2122}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\2D">
+      <UniqueIdentifier>{94eedec7-46cb-47cd-8729-fbf215de1cd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\2D\Utils">
+      <UniqueIdentifier>{7d28399b-8919-4015-b261-cfd8d18a7367}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -54,14 +66,20 @@
     <ClInclude Include="Funcs.h">
       <Filter>Header Files\Defines</Filter>
     </ClInclude>
-    <ClInclude Include="Block.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Platform.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
     <ClInclude Include="String.h">
       <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Block.h">
+      <Filter>Header Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="DefaultSet.h">
+      <Filter>Header Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="FastColour.h">
+      <Filter>Header Files\2D\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -82,6 +100,9 @@
     </ClCompile>
     <ClCompile Include="String.c">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="DefaultSet.c">
+      <Filter>Source Files\Blocks</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

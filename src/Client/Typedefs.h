@@ -26,4 +26,6 @@ typedef UInt8 bool;
 typedef UInt8 BlockID;
 typedef UInt8 EntityID;
 
+#define USE16_BIT FALSE
+
 #endif

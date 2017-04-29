@@ -171,6 +171,8 @@
   <ItemGroup>
     <ClInclude Include="Block.h" />
     <ClInclude Include="Compiler.h" />
+    <ClInclude Include="DefaultSet.h" />
+    <ClInclude Include="FastColour.h" />
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Noise.h" />
     <ClInclude Include="Platform.h" />
@@ -181,6 +183,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Compiler.c" />
+    <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Noise.c" />
     <ClCompile Include="NotchyGenerator.c" />
     <ClCompile Include="Random.c" />

@@ -73,4 +73,25 @@
 #define Block_Pillar 63
 #define Block_Crate 64
 #define Block_StoneBrick 65
+
+/* Max block ID used in original classic */
+#define Block_MaxOriginal Block_Obsidian
+
+/* Number of blocks in original classic. */
+#define Block_OriginalCount (Block_MaxOriginal + 1)
+
+/* Max block ID used in original classic plus CPE blocks. */
+#define Block_MaxCpe Block_StoneBrick
+
+/* Number of blocks in original classic plus CPE blocks. */
+#define Block_CpeCount = (Block_MaxCpeBlock + 1)
+
+#if USE16_BIT
+#define Block_MaxDefined 0xFFF
+#else
+#define Block_MaxDefined 0xFF
+#endif
+
+#define Block_Count (MaxDefinedBlock + 1)
+#define Block_Invalid Block_MaxDefined
 #endif
