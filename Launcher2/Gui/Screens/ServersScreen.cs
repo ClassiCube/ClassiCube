@@ -185,8 +185,9 @@ namespace Launcher.Gui.Screens {
 		
 		void CheckFetchStatus() {
 			if (!game.Session.Done) return;
+			fetchingList = false;
 			
-			view.RefreshText = "Refresh";
+			view.RefreshText = game.Session.Exception == null ? "Refresh" : "&cFailed";
 			Resize();
 		}
 		

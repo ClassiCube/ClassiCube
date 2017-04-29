@@ -6,7 +6,7 @@ using Launcher.Drawing;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
 
-namespace Launcher.Gui.Views {	
+namespace Launcher.Gui.Views {
 	public sealed class ServersView : IView {
 		
 		internal int searchIndex = 0, hashIndex = 1, refreshIndex = 5;
@@ -40,7 +40,7 @@ namespace Launcher.Gui.Views {
 				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 10, 10);
 			MakeInput(Get(1), 475, false, 32, "&gclassicube.net/server/play/...")
 				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10);
-				
+			
 			Makers.Button(this, "Back", 110, 30, titleFont)
 				.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, -10, 10);
 			Makers.Button(this, "Connect", 110, 30, titleFont)
@@ -48,7 +48,7 @@ namespace Launcher.Gui.Views {
 			
 			MakeTableWidget();
 			Makers.Button(this, RefreshText, 110, 30, titleFont)
-				.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, -135, 10);	
+				.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, -135, 10);
 		}
 		
 		string Get(int index) {
@@ -80,17 +80,22 @@ namespace Launcher.Gui.Views {
 			TableWidget widget;
 			if (widgets[tableIndex] != null) {
 				widget = (TableWidget)widgets[tableIndex];
+				if (widget.servers != game.Session.Servers) ResetTable(widget);
 			} else {
 				widget = new TableWidget(game);
-				widget.SetEntries(game.Session.Servers);
-				widget.SetDrawData(drawer, tableFont, textFont,
-				                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY);
-				widget.SortDefault();
+				ResetTable(widget);
 				widgets[widgetIndex] = widget;
 			}
 			
 			widget.Height = tableHeight;
 			widgetIndex++;
+		}
+		
+		void ResetTable(TableWidget widget) {
+			widget.SetEntries(game.Session.Servers);
+			widget.SetDrawData(drawer, tableFont, textFont,
+			                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY);
+			widget.SortDefault();
 		}
 		
 		public override void Dispose() {
