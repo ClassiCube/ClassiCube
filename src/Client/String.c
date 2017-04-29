@@ -10,12 +10,13 @@ void String_Empty(String* str, UInt8* buffer, UInt16 capacity) {
 void String_Constant(String* str, const UInt8* buffer) {
 	UInt16 length = 0;
 	UInt8 cur = 0;
+	UInt8* ptr = buffer;
 
 	while ((cur = *buffer) != 0) {
 		length++; buffer++;
 	}
 
-	str->buffer = buffer;
+	str->buffer = ptr;
 	str->capacity = length;
 	str->length = length;
 }

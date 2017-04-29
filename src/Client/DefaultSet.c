@@ -1,6 +1,6 @@
-#include "DefaultSet.h"
 #include "BlockID.h"
-#include "Block.h"
+#include "BlockEnums.h"
+#include "DefaultSet.h"
 
 Real32 DefaultSet_Height(BlockID b) {
 	if (b == BlockID_Slab) return 0.5f;
@@ -43,14 +43,14 @@ UInt8 DefaultSet_Collide(BlockID b) {
 }
 
 UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide) {
-		if (b == BlockID_Ice && collide == CollideType_Solid)
-			return CollideType_Ice;
-		if ((b == BlockID_Water || b == BlockID_StillWater) && collide == CollideType_Liquid)
-			return CollideType_LiquidWater;
-		if ((b == BlockID_Lava || b == BlockID_StillLava) && collide == CollideType_Liquid)
-			return CollideType_LiquidLava;
-		return collide;
-	}
+	if (b == BlockID_Ice && collide == CollideType_Solid)
+		return CollideType_Ice;
+	if ((b == BlockID_Water || b == BlockID_StillWater) && collide == CollideType_Liquid)
+		return CollideType_LiquidWater;
+	if ((b == BlockID_Lava || b == BlockID_StillLava) && collide == CollideType_Liquid)
+		return CollideType_LiquidLava;
+	return collide;
+}
 
 bool DefaultSet_BlocksLight(BlockID b) {
 	return !(b == BlockID_Glass || b == BlockID_Leaves

@@ -169,12 +169,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BlockEnums.h" />
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="DefaultSet.h" />
+    <ClInclude Include="Bitmap.h" />
     <ClInclude Include="FastColour.h" />
     <ClInclude Include="Funcs.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="ExtMath.h" />
     <ClInclude Include="Matrix.h" />
     <ClInclude Include="Noise.h" />
     <ClInclude Include="Platform.h" />
@@ -182,19 +186,20 @@
     <ClInclude Include="NotchyGenerator.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="Typedefs.h" />
-    <ClInclude Include="Vector3.h" />
-    <ClInclude Include="Vector4.h" />
+    <ClInclude Include="Vectors.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Block.c" />
     <ClCompile Include="Compiler.c" />
     <ClCompile Include="DefaultSet.c" />
+    <ClCompile Include="Bitmap.c" />
+    <ClCompile Include="FastColour.c" />
     <ClCompile Include="Matrix.c" />
     <ClCompile Include="Noise.c" />
     <ClCompile Include="NotchyGenerator.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="String.c" />
-    <ClCompile Include="Vector3.c" />
+    <ClCompile Include="Vectors.c" />
     <ClCompile Include="WinPlatform.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

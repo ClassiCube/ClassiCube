@@ -14,9 +14,6 @@
 // returns largest of two numbers
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
-// returns absolute value of a number
-#define abs(x) (x >= 0 ? x : -x)
-
 // returns whether character is uppercase letter
 #define Char_IsUpper(c) ((c) >= 'A' && (c) <= 'Z')
 

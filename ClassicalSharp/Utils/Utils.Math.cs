@@ -72,7 +72,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY(float x, float y, float z, float angle) {
-			float cosA = (float)Math.Cos(angle),  sinA = (float)Math.Sin(angle);
+			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
 			return new Vector3(cosA * x - sinA * z, y, sinA * x + cosA * z);
 		}
 		

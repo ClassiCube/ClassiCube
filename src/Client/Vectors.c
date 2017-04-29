@@ -1,12 +1,22 @@
-#include "Vector3.h"
+#include "Vectors.h"
+#include "ExtMath.h"
 
-Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z) {
-	Vector3 v; v.X = x; v.Y = y; v.Z = z; return v;
+Vector2 Vector2_Create2(Real32 x, Real32 y) {
+	Vector2 v; v.X = x; v.Y = y; return v;
 }
 
 Vector3 Vector3_Create1(Real32 value) {
 	Vector3 v; v.X = value; v.Y = value; v.Z = value; return v;
 }
+
+Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z) {
+	Vector3 v; v.X = x; v.Y = y; v.Z = z; return v;
+}
+
+Vector4 Vector4_Create4(Real32 x, Real32 y, Real32 z, Real32 w) {
+	Vector4 v; v.X = x; v.Y = y; v.Z = z; v.W = w; return v;
+}
+
 
 /* Returns the length of the given vector. */
 Real32 Vector3_Length(Vector3* v) {
@@ -78,16 +88,37 @@ void Vector3_Normalize(Vector3* a, Vector3* result) {
 	result->Z = a->Z * scale;
 }
 
-void Transform(Vector3* a, Matrix* mat, Vector3* result) {
+
+void Vector3_Transform(Vector3* a, Matrix* mat, Vector3* result) {
 	result->X = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
 	result->Y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
 	result->Z = a->X * mat->Row0.Z + a->Y * mat->Row1.Z + a->Z * mat->Row2.Z + mat->Row3.Z;
 }
 
-void TransformY(Real32 y, Matrix* mat, Vector3* result) {
+void Vector3_TransformY(Real32 y, Matrix* mat, Vector3* result) {
 	result->X = y * mat->Row1.X + mat->Row3.X;
 	result->Y = y * mat->Row1.Y + mat->Row3.Y;
 	result->Z = y * mat->Row1.Z + mat->Row3.Z;;
+}
+
+Vector3 Vector3_RotateX(Vector3 v, Real32 angle) {
+	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	return Vector3_Create3(v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z);
+}
+
+Vector3 Vector3_RotateY(Vector3 v, Real32 angle) {
+	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	return Vector3_Create3(cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z);
+}
+
+Vector3 Vector3_RotateY3(Real32 x, Real32 y, Real32 z, Real32 angle) {
+	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	return Vector3_Create3(cosA * x - sinA * z, y, sinA * x + cosA * z);
+}
+
+Vector3 Vector3_RotateZ(Vector3 v, Real32 angle) {
+	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	return Vector3_Create3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);
 }
 
 

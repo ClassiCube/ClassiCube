@@ -52,6 +52,12 @@
     <Filter Include="Source Files\Math">
       <UniqueIdentifier>{eb2aab2d-07f1-4d52-b13f-7ef7d40dcc70}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\2D">
+      <UniqueIdentifier>{cad3dc8e-cd49-4116-bc6b-25a9d639e262}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\2D\Utils">
+      <UniqueIdentifier>{528b0a8e-8aed-4f9d-8e8c-5105210337c6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -90,13 +96,22 @@
     <ClInclude Include="Block.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
-    <ClInclude Include="Vector3.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Vector4.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
     <ClInclude Include="Matrix.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Bitmap.h">
+      <Filter>Header Files\2D\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockEnums.h">
+      <Filter>Header Files\Blocks</Filter>
+    </ClInclude>
+    <ClInclude Include="Vectors.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="ExtMath.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
   </ItemGroup>
@@ -125,11 +140,17 @@
     <ClCompile Include="Block.c">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
-    <ClCompile Include="Vector3.c">
-      <Filter>Source Files\Math</Filter>
-    </ClCompile>
     <ClCompile Include="Matrix.c">
       <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Bitmap.c">
+      <Filter>Source Files\2D\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Vectors.c">
+      <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="FastColour.c">
+      <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
