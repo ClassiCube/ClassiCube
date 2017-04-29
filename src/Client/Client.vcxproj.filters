@@ -46,6 +46,12 @@
     <Filter Include="Header Files\2D\Utils">
       <UniqueIdentifier>{7d28399b-8919-4015-b261-cfd8d18a7367}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Math">
+      <UniqueIdentifier>{7a7adf1b-3c7f-4c3b-833b-656e2e61a2a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Math">
+      <UniqueIdentifier>{eb2aab2d-07f1-4d52-b13f-7ef7d40dcc70}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -84,6 +90,15 @@
     <ClInclude Include="Block.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
+    <ClInclude Include="Vector3.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector4.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Matrix.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -109,6 +124,12 @@
     </ClCompile>
     <ClCompile Include="Block.c">
       <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="Vector3.c">
+      <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Matrix.c">
+      <Filter>Source Files\Math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

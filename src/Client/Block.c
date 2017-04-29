@@ -127,21 +127,19 @@ String Block_DefaultName(BlockID block) {
 	return buffer.ToString();
 }
 
-		static void SplitUppercase(StringBuffer buffer, int start, int end) {
-			int index = 0;
-			for (int i = start; i < end; i++) {
-				char c = Block.Names[i];
-				bool upper = Char.IsUpper(c) && i > start;
-				bool nextLower = i < end - 1 && !Char.IsUpper(Block.Names[i + 1]);
+static void SplitUppercase(StringBuffer buffer, int start, int end) {
+	int index = 0;
+	for (int i = start; i < end; i++) {
+		char c = Block.Names[i];
+		bool upper = Char.IsUpper(c) && i > start;
+		bool nextLower = i < end - 1 && !Char.IsUpper(Block.Names[i + 1]);
 
-				if (upper && nextLower) {
-					buffer.Append(ref index, ' ');
-					buffer.Append(ref index, Char.ToLower(c));
-				}
-				else {
-					buffer.Append(ref index, c);
-				}
-			}
+		if (upper && nextLower) {
+			buffer.Append(ref index, ' ');
+			buffer.Append(ref index, Char.ToLower(c));
+		}
+		else {
+			buffer.Append(ref index, c);
 		}
 	}
 }
