@@ -27,5 +27,5 @@ typedef UInt8 BlockID;
 typedef UInt8 EntityID;
 
 #define USE16_BIT FALSE
-
+#define STRING_SIZE 64
 #endif

@@ -1,5 +1,6 @@
 #include "Block.h"
 #include "DefaultSet.h"
+#include "Funcs.h"
 
 void Block_Reset(Game* game) {
 	Init();
@@ -115,31 +116,35 @@ String Block_DefaultName(BlockID block) {
 		return str;
 	}
 
-	// Find start and end of this particular block name
-	int start = 0;
-	for (int i = 0; i < block; i++)
-		start = Block.Names.IndexOf(' ', start) + 1;
-	int end = Block.Names.IndexOf(' ', start);
-	if (end == -1) end = Block.Names.Length;
+	String blockNames;
+	String_Constant(&blockNames, &Block_RawNames);
 
-	buffer.Clear();
-	SplitUppercase(buffer, start, end);
-	return buffer.ToString();
+	// Find start and end of this particular block name
+	Int32 start = 0;
+	for (Int32 i = 0; i < block; i++) {
+		start = String_IndexOf(&blockNames, ' ', start) + 1;
+	}
+	Int32 end = String_IndexOf(&blockNames, ' ', start);
+	if (end == -1) end = blockNames.length;
+
+	String buffer;
+	String_Empty(&buffer, Block_NamePtr(block), STRING_SIZE);
+	SplitUppercase(&buffer, &blockNames, start, end);
+	return buffer;
 }
 
-static void SplitUppercase(StringBuffer buffer, int start, int end) {
-	int index = 0;
-	for (int i = start; i < end; i++) {
-		char c = Block.Names[i];
-		bool upper = Char.IsUpper(c) && i > start;
-		bool nextLower = i < end - 1 && !Char.IsUpper(Block.Names[i + 1]);
+static void Block_SplitUppercase(String* buffer, String* blockNames, Int32 start, Int32 end) {
+	Int32 index = 0;
+	for (Int32 i = start; i < end; i++) {
+		UInt8 c = String_CharAt(blockNames, i);
+		bool upper = Char_IsUpper(c) && i > start;
+		bool nextLower = i < end - 1 && !Char_IsUpper(String_CharAt(blockNames, i + 1));
 
 		if (upper && nextLower) {
-			buffer.Append(ref index, ' ');
-			buffer.Append(ref index, Char.ToLower(c));
-		}
-		else {
-			buffer.Append(ref index, c);
+			String_Append(buffer, ' ');
+			String_Append(buffer, Char_ToLower(c));
+		} else {
+			String_Append(buffer, c);
 		}
 	}
 }

@@ -54,6 +54,12 @@
 /* Lava style 'swimming'/'bobbing' interaction when player collides. */
 #define CollideType_LiquidLava 6
 
+/* Array of block names. */
+UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * Block_Count];
+
+/* Index of given block name. */
+#define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
+
 
 /* Gets whether the given block is a liquid. (water and lava) */
 bool Block_IsLiquid(BlockID b) { return b >= BlockID_Water && b <= BlockID_StillLava; }
@@ -124,12 +130,11 @@ void Block_SetDrawType(BlockID block, UInt8 draw);
 void Block_ResetProps(BlockID block);
 
 /* Finds the ID of the block whose name caselessly matches the input, -1 otherwise. */
-Int32 Block_FindID(String name);
-
+Int32 Block_FindID(String* name);
 
 /* Gets the default name of a block. */
 static String Block_DefaultName(BlockID block);
 
-static void Block_SplitUppercase(String buffer, Int32 start, Int32 end);
+static void Block_SplitUppercase(String* buffer, String* blockNames, Int32 start, Int32 end);
 
 #endif

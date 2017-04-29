@@ -30,7 +30,13 @@ bool String_Equals(String* a, String* b);
 /* Returns whether two strings have same case-insensitive contents. */
 bool String_CaselessEquals(String* a, String* b);
 
+/* Attempts to append a character to the end of a string. */
+bool String_Append(String* str, UInt8 c);
+
 /* Finds the first index of c in given string, -1 if not found. */
-int String_IndexOf(String* str, UInt8 c);
+int String_IndexOf(String* str, UInt8 c, Int32 offset);
+
+/* Gets the character at the given index in the string. */
+UInt8 String_CharAt(String* str, Int32 offset);
 
 #endif

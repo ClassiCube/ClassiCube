@@ -93,6 +93,12 @@
 #define Block_MaxDefined 0xFF
 #endif
 
+char Block_RawNames[480] = "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava"
+" StillLava Sand Gravel GoldOre IronOre CoalOre Log Leaves Sponge Glass Red Orange Yellow Lime Green Teal"
+" Aqua Cyan Blue Indigo Violet Magenta Pink Black Gray White Dandelion Rose BrownMushroom RedMushroom Gold"
+" Iron DoubleSlab Slab Brick TNT Bookshelf MossyRocks Obsidian CobblestoneSlab Rope Sandstone Snow Fire LightPink"
+" ForestGreen Brown DeepBlue Turquoise Ice CeramicTile Magma Pillar Crate StoneBrick";
+
 #define Block_Count (Block_MaxDefined + 1)
 #define BlockID_Invalid Block_MaxDefined
 #endif

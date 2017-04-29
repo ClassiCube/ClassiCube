@@ -1,4 +1,5 @@
 #include "String.h"
+#include "Funcs.h"
 
 void String_Empty(String* str, UInt8* buffer, UInt16 capacity) {
 	str->buffer = buffer;
@@ -35,17 +36,30 @@ bool String_CaselessEquals(String* a, String* b) {
 		UInt8 aCur = a->buffer[i];
 		UInt8 bCur = b->buffer[i];
 
-		if (aCur >= 'a' && aCur <= 'z') aCur -= 32;
-		if (bCur >= 'a' && bCur <= 'z') bCur -= 32;
+		if (Char_IsUpper(aCur)) aCur = Char_ToLower(aCur);
+		if (Char_IsUpper(bCur)) bCur = Char_ToLower(bCur);
 
 		if (aCur != bCur) return false;
 	}
 	return true;
 }
 
-int String_IndexOf(String* str, UInt8 c) {
-	for (Int32 i = 0; i < str->length; i++) {
+bool String_Append(String* str, UInt8 c) {
+	if (str->length == str->capacity) return false;
+
+	str->buffer[str->length] = c;
+	str->length++;
+	return true;
+}
+
+Int32 String_IndexOf(String* str, UInt8 c, Int32 offset) {
+	for (Int32 i = offset; i < str->length; i++) {
 		if (str->buffer[i] == c) return i;
 	}
 	return -1;
+}
+
+UInt8 String_CharAt(String* str, Int32 offset) {
+	if (offset < 0 || offset >= str->length) return 0;
+	return str->buffer[offset];
 }
