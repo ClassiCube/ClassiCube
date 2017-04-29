@@ -19,10 +19,10 @@ typedef struct String {
 } String;
 
 /* Constructs a new string, filled with NULL characters. */
-void String_Empty(String* str, UInt8* buffer, UInt16 capacity);
+String String_FromBuffer(UInt8* buffer, UInt16 capacity);
 
 /* Constructs a new string from a constant readonly string. */
-void String_Constant(String* str, const UInt8* buffer);
+String String_FromConstant(const UInt8* buffer);
 
 /* Returns whether two strings have same contents. */
 bool String_Equals(String* a, String* b);

@@ -6,7 +6,7 @@
 #include "ExtMath.h"
 
 /* External variables */
-/* TODO: how do they even work? */
+String CurrentState;
 Real32 CurrentProgress;
 
 /* Internal variables */
@@ -28,6 +28,7 @@ void NotchyGen_Init(Int32 width, Int32 height, Int32 length,
 	minHeight = Height;
 
 	CurrentProgress = 0.0f;
+	CurrentState = String_FromConstant("");
 }
 
 
@@ -39,7 +40,7 @@ void NotchyGen_CreateHeightmap() {
 	OctaveNoise_Init(&n3, &rnd, 6);
 
 	Int32 index = 0;
-	//CurrentState = "Building heightmap";
+	CurrentState = String_FromConstant("Building heightmap");
 
 	for (Int32 z = 0; z < Length; z++) {
 		CurrentProgress = (Real32)z / Length;
@@ -64,7 +65,7 @@ void NotchyGen_CreateHeightmap() {
 void NotchyGen_CreateStrata() {
 	OctaveNoise n;
 	OctaveNoise_Init(&n, &rnd, 8);
-	//CurrentState = "Creating strata";
+	CurrentState = String_FromConstant("Creating strata");
 	Int32 hMapIndex = 0, maxY = Height - 1, mapIndex = 0;
 	/* Try to bulk fill bottom of the map if possible */
 	Int32 minStoneY = NotchyGen_CreateStrataFast();
@@ -120,7 +121,7 @@ void NotchyGen_CreateSurfaceLayer() {
 	OctaveNoise n1, n2;
 	OctaveNoise_Init(&n1, &rnd, 8);
 	OctaveNoise_Init(&n2, &rnd, 8);
-	//CurrentState = "Creating surface";
+	CurrentState = String_FromConstant("Creating surface");
 	/* TODO: update heightmap */
 
 	Int32 hMapIndex = 0;
@@ -143,7 +144,7 @@ void NotchyGen_CreateSurfaceLayer() {
 
 void NotchyGen_PlantFlowers() {
 	Int32 numPatches = Width * Length / 3000;
-	//CurrentState = "Planting flowers";
+	CurrentState = String_FromConstant("Planting flowers");
 
 	for (Int32 i = 0; i < numPatches; i++) {
 		CurrentProgress = (Real32)i / numPatches;
@@ -170,7 +171,7 @@ void NotchyGen_PlantFlowers() {
 
 void NotchyGen_PlantMushrooms() {
 	Int32 numPatches = volume / 2000;
-	//CurrentState = "Planting mushrooms";
+	CurrentState = String_FromConstant("Planting mushrooms");
 
 	for (Int32 i = 0; i < numPatches; i++) {
 		CurrentProgress = (Real32)i / numPatches;
@@ -201,7 +202,7 @@ void NotchyGen_PlantMushrooms() {
 
 void NotchyGen_PlantTrees() {
 	Int32 numPatches = Width * Length / 4000;
-	//CurrentState = "Planting trees";
+	CurrentState = String_FromConstant("Planting trees");
 
 	for (Int32 i = 0; i < numPatches; i++) {
 		CurrentProgress = (Real32)i / numPatches;
@@ -231,7 +232,7 @@ void NotchyGen_PlantTrees() {
 }
 
 bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight) {
-	// check tree base
+	/* check tree base */
 	Int32 baseHeight = treeHeight - 4;
 	for (Int32 y = treeY; y < treeY + baseHeight; y++)
 		for (Int32 z = treeZ - 1; z <= treeZ + 1; z++)
@@ -243,7 +244,7 @@ bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeig
 				if (Blocks[index] != 0) return false;
 			}
 
-	// and also check canopy
+	/* and also check canopy */
 	for (Int32 y = treeY + baseHeight; y < treeY + treeHeight; y++)
 		for (Int32 z = treeZ - 2; z <= treeZ + 2; z++)
 			for (Int32 x = treeX - 2; x <= treeX + 2; x++)
@@ -260,7 +261,7 @@ void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
 	Int32 baseHeight = height - 4;
 	Int32 index = 0;
 
-	// leaves bottom layer
+	/* leaves bottom layer */
 	for (Int32 y = treeY + baseHeight; y < treeY + baseHeight + 2; y++)
 		for (Int32 zz = -2; zz <= 2; zz++)
 			for (Int32 xx = -2; xx <= 2; xx++)
@@ -276,7 +277,7 @@ void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
 				}
 			}
 
-	// leaves top layer
+	/* leaves top layer */
 	Int32 bottomY = treeY + baseHeight + 2;
 	for (Int32 y = treeY + baseHeight + 2; y < treeY + height; y++)
 		for (Int32 zz = -1; zz <= 1; zz++)
@@ -292,7 +293,7 @@ void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
 				}
 			}
 
-	// then place trunk
+	/* then place trunk */
 	index = (treeY * Length + treeZ) * Width + treeX;
 	for (Int32 y = 0; y < height - 1; y++) {
 		Blocks[index] = BlockID_Log;

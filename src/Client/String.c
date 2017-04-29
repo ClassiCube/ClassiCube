@@ -1,13 +1,15 @@
 #include "String.h"
 #include "Funcs.h"
 
-void String_Empty(String* str, UInt8* buffer, UInt16 capacity) {
-	str->buffer = buffer;
-	str->capacity = capacity;
-	str->length = 0;
+String String_FromBuffer(UInt8* buffer, UInt16 capacity) {
+	String str;
+	str.buffer = buffer;
+	str.capacity = capacity;
+	str.length = 0;
+	return str;
 }
 
-void String_Constant(String* str, const UInt8* buffer) {
+String String_FromConstant(const UInt8* buffer) {
 	UInt16 length = 0;
 	UInt8 cur = 0;
 	UInt8* ptr = buffer;
@@ -16,9 +18,11 @@ void String_Constant(String* str, const UInt8* buffer) {
 		length++; buffer++;
 	}
 
-	str->buffer = ptr;
-	str->capacity = length;
-	str->length = length;
+	String str;
+	str.buffer = ptr;
+	str.capacity = length;
+	str.length = length;
+	return str;
 }
 
 bool String_Equals(String* a, String* b) {

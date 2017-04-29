@@ -2,12 +2,19 @@
 #define CS_NOTCHY_GEN_H
 #include "Compiler.h"
 #include "Typedefs.h"
+#include "String.h"
 /* Implements original classic vanilla map generation
    Based on: https://github.com/UnknownShadow200/ClassicalSharp/wiki/Minecraft-Classic-map-generation-algorithm
    Thanks to Jerralish for originally reverse engineering classic's algorithm, then preparing a high level overview of the algorithm.
    I believe this process adheres to clean room reverse engineering.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
 */
+
+/* Progress of current operation. */
+extern Real32 CurrentProgress;
+
+/* Name of current operation being performed. */
+extern String CurrentState;
 
 
 /* Initalises state for map generation. */

@@ -5,16 +5,18 @@
 
 void Block_Reset(Game* game) {
 	Block_Init();
-	// TODO: Make this part of TerrainAtlas2D maybe?
+	/* TODO: Make this part of TerrainAtlas2D maybe? */
 	//Block_RecalculateSpriteBB(game->TerrainAtlas.AtlasBitmap);
 }
 
 void Block_Init() {
 	#define DefinedCustomBlocks_Len (Block_Count >> 5)
-	for (Int32 i = 0; i < DefinedCustomBlocks_Len; i++)
+	for (Int32 i = 0; i < DefinedCustomBlocks_Len; i++) {
 		DefinedCustomBlocks[i] = 0;
-	for (Int32 block = 0; block < Block_Count; block++)
+	}
+	for (Int32 block = 0; block < Block_Count; block++) {
 		Block_ResetProps((BlockID)block);
+	}
 	Block_UpdateCullingAll();
 }
 
@@ -33,11 +35,11 @@ void Block_SetDefaultPerms() {
 }
 
 void Block_SetCollide(BlockID block, UInt8 collide) {
-	// necessary for cases where servers redefined core blocks before extended types were introduced
+	/* necessary for cases where servers redefined core blocks before extended types were introduced. */
 	collide = DefaultSet_MapOldCollide(block, collide);
 	Block_ExtendedCollide[block] = collide;
 
-	// Reduce extended collision types to their simpler forms
+	/* Reduce extended collision types to their simpler forms. */
 	if (collide == CollideType_Ice) collide = CollideType_Solid;
 	if (collide == CollideType_SlipperyIce) collide = CollideType_Solid;
 
@@ -47,8 +49,9 @@ void Block_SetCollide(BlockID block, UInt8 collide) {
 }
 
 void Block_SetDrawType(BlockID block, UInt8 draw) {
-	if (draw == DrawType_Opaque && Block_Collide[block] != CollideType_Solid)
+	if (draw == DrawType_Opaque && Block_Collide[block] != CollideType_Solid) {
 		draw = DrawType_Transparent;
+	}
 	Block_Draw[block] = draw;
 
 	Vector3 zero = Vector3_Zero, one = Vector3_One;
@@ -85,7 +88,7 @@ void Block_ResetProps(BlockID block) {
 
 	if (block >= Block_CpeCount) {
 #if USE16_BIT
-		// give some random texture ids
+		/* give some random texture ids */
 		Block_SetTex((block * 10 + (block % 7) + 20) % 80, Side_Top, block);
 		Block_SetTex((block * 8 + (block & 5) + 5) % 80, Side_Bottom, block);
 		Block_SetSide((block * 4 + (block / 4) + 4) % 80, block);
@@ -117,16 +120,13 @@ String Block_DefaultName(BlockID block) {
 	if (block >= 256) return "ID " + block;
 #endif
 	if (block >= Block_CpeCount) {
-		String str;
-		String_Constant(&str, "Invalid");
-		return str;
+		return String_FromConstant("Invalid");
 	}
 
-	String blockNames;
-	// TODO: how much performance impact here
-	String_Constant(&blockNames, Block_RawNames);
+	/* TODO: how much performance impact here. */
+	String blockNames = String_FromConstant(Block_RawNames);
 
-	// Find start and end of this particular block name
+	/* Find start and end of this particular block name. */
 	Int32 start = 0;
 	for (Int32 i = 0; i < block; i++) {
 		start = String_IndexOf(&blockNames, ' ', start) + 1;
@@ -134,8 +134,7 @@ String Block_DefaultName(BlockID block) {
 	Int32 end = String_IndexOf(&blockNames, ' ', start);
 	if (end == -1) end = blockNames.length;
 
-	String buffer;
-	String_Empty(&buffer, Block_NamePtr(block), STRING_SIZE);
+	String buffer = String_FromBuffer(Block_NamePtr(block), STRING_SIZE);
 	Block_SplitUppercase(&buffer, &blockNames, start, end);
 	return buffer;
 }
@@ -218,8 +217,7 @@ void Block_CalcRenderBounds(BlockID block) {
 		min.X -= 0.1f / 16.0f; max.X -= 0.1f / 16.0f;
 		min.Z -= 0.1f / 16.0f; max.Z -= 0.1f / 16.0f;
 		min.Y -= 1.5f / 16.0f; max.Y -= 1.5f / 16.0f;
-	}
-	else if (Block_Draw[block] == DrawType_Translucent && Block_Collide[block] != CollideType_Solid) {
+	} else if (Block_Draw[block] == DrawType_Translucent && Block_Collide[block] != CollideType_Solid) {
 		min.X += 0.1f / 16.0f; max.X += 0.1f / 16.0f;
 		min.Z += 0.1f / 16.0f; max.Z += 0.1f / 16.0f;
 		min.Y -= 0.1f / 16.0f; max.Y -= 0.1f / 16.0f;
@@ -274,8 +272,9 @@ Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp)
 	for (Int32 y = 0; y < size; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (Int32 x = 0; x < size; x++) {
-			if ((UInt8)(row[x] >> 24) != 0)
+			if ((UInt8)(row[x] >> 24) != 0) {
 				return 1 - (float)y / size;
+			}
 		}
 	}
 	return 0;
@@ -285,8 +284,9 @@ Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* b
 	for (Int32 y = size - 1; y >= 0; y--) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (Int32 x = 0; x < size; x++) {
-			if ((UInt8)(row[x] >> 24) != 0)
+			if ((UInt8)(row[x] >> 24) != 0) {
 				return 1 - (float)(y + 1) / size;
+			}
 		}
 	}
 	return 1;
@@ -296,8 +296,9 @@ Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp
 	for (Int32 x = 0; x < size; x++) {
 		for (Int32 y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-			if ((UInt8)(row[x] >> 24) != 0)
+			if ((UInt8)(row[x] >> 24) != 0) {
 				return (float)x / size;
+			}
 		}
 	}
 	return 1;
@@ -307,8 +308,9 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 	for (Int32 x = size - 1; x >= 0; x--) {
 		for (Int32 y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-			if ((UInt8)(row[x] >> 24) != 0)
+			if ((UInt8)(row[x] >> 24) != 0) {
 				return (float)(x + 1) / size;
+			}
 		}
 	}
 	return 0;
@@ -367,22 +369,22 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 }
 
 bool Block_IsHidden(BlockID block, BlockID other, Int32 side) {
-	// Sprite blocks can never hide faces.
+	/* Sprite blocks can never hide faces. */
 	if (Block_Draw[block] == DrawType_Sprite) return false;
 
-	// NOTE: Water is always culled by lava
+	/* NOTE: Water is always culled by lava. */
 	if ((block == BlockID_Water || block == BlockID_StillWater)
 		&& (other == BlockID_Lava || other == BlockID_StillLava))
 		return true;
 
-	// All blocks (except for say leaves) cull with themselves.
+	/* All blocks (except for say leaves) cull with themselves. */
 	if (block == other) return Block_Draw[block] != DrawType_TransparentThick;
 
-	// An opaque neighbour (asides from lava) culls the face.
+	/* An opaque neighbour (asides from lava) culls the face. */
 	if (Block_Draw[other] == DrawType_Opaque && !Block_IsLiquid(other)) return true;
 	if (Block_Draw[block] != DrawType_Translucent || Block_Draw[other] != DrawType_Translucent) return false;
 
-	// e.g. for water / ice, don't need to draw water.
+	/* e.g. for water / ice, don't need to draw water. */
 	UInt8 bType = Block_Collide[block], oType = Block_Collide[other];
 	bool canSkip = (bType == CollideType_Solid && oType == CollideType_Solid)
 		|| bType != CollideType_Solid;
@@ -405,11 +407,11 @@ bool Block_IsFaceHidden(BlockID block, BlockID other, Int32 side) {
 }
 
 void Block_SetXStretch(BlockID block, bool stretch) {
-	Block_CanStretch[block] &= 0xC3; // ~0x3C
+	Block_CanStretch[block] &= 0xC3; /* ~0x3C */
 	Block_CanStretch[block] |= (stretch ? 0x3C : (UInt8)0);
 }
 
 void Block_SetZStretch(BlockID block, bool stretch) {
-	Block_CanStretch[block] &= 0xFC; // ~0x03
+	Block_CanStretch[block] &= 0xFC; /* ~0x03 */
 	Block_CanStretch[block] |= (stretch ? 0x03 : (UInt8)0);
 }
