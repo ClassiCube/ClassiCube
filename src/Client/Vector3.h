@@ -43,16 +43,16 @@ void Vector3_Add(Vector3* a, Vector3* b, Vector3* result);
 void Vector3_Subtract(Vector3* a, Vector3* b, Vector3* result);
 
 /* Multiplies all components of a by scale. */
-void Vector3_Multiply(Vector3* a, Real32 scale, Vector3* result);
+void Vector3_Multiply1(Vector3* a, Real32 scale, Vector3* result);
 
 /* Multiplies components of a by scale. */
-void Vector3_Multiply(Vector3* a, Vector3* scale, Vector3* result);
+void Vector3_Multiply3(Vector3* a, Vector3* scale, Vector3* result);
 
 /* Divides all components of a by scale. */
-void Vector3_Divide(Vector3* a, Real32 scale, Vector3* result);
+void Vector3_Divide1(Vector3* a, Real32 scale, Vector3* result);
 
 /* Divides components of a by scale. */
-void Vector3_Divide(Vector3* a, Vector3* scale, Vector3* result);
+void Vector3_Divide3(Vector3* a, Vector3* scale, Vector3* result);
 
 
 /* Linearly interpolates between two vectors. */

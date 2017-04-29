@@ -13,7 +13,7 @@ void Block_Init() {
 	for (Int32 i = 0; i < DefinedCustomBlocks.Length; i++)
 		DefinedCustomBlocks[i] = 0;
 	for (Int32 block = 0; block < Block_Count; block++)
-		ResetBlockProps((BlockID)block);
+		Block_ResetProps((BlockID)block);
 	UpdateCulling();
 }
 
@@ -58,7 +58,7 @@ void Block_ResetProps(BlockID block) {
 	FullBright[block] = DefaultSet_FullBright(block);
 	FogColour[block] = DefaultSet_FogColour(block);
 	FogDensity[block] = DefaultSet_FogDensity(block);
-	SetCollide(block, DefaultSet_Collide(block));
+	Block_SetCollide(block, DefaultSet_Collide(block));
 	DigSounds[block] = DefaultSet_DigSound(block);
 	StepSounds[block] = DefaultSet_StepSound(block);
 	SpeedMultiplier[block] = 1;
@@ -76,7 +76,7 @@ void Block_ResetProps(BlockID block) {
 		MaxBB[block].Y = DefaultSet_Height(block);
 	}
 
-	SetBlockDraw(block, Draw[block]);
+	Block_SetDrawType(block, Draw[block]);
 	CalcRenderBounds(block);
 	LightOffset[block] = CalcLightOffset(block);
 
@@ -117,7 +117,7 @@ String Block_DefaultName(BlockID block) {
 	}
 
 	String blockNames;
-	String_Constant(&blockNames, &Block_RawNames);
+	String_Constant(&blockNames, Block_RawNames);
 
 	// Find start and end of this particular block name
 	Int32 start = 0;
@@ -129,7 +129,7 @@ String Block_DefaultName(BlockID block) {
 
 	String buffer;
 	String_Empty(&buffer, Block_NamePtr(block), STRING_SIZE);
-	SplitUppercase(&buffer, &blockNames, start, end);
+	Block_SplitUppercase(&buffer, &blockNames, start, end);
 	return buffer;
 }
 

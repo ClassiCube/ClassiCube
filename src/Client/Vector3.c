@@ -32,23 +32,23 @@ void Vector3_Subtract(Vector3* a, Vector3* b, Vector3* result) {
 	result->Z = a->Z - b->Z;
 }
 
-void Vector3_Multiply(Vector3* a, Real32 scale, Vector3* result) {
+void Vector3_Multiply1(Vector3* a, Real32 scale, Vector3* result) {
 	result->X = a->X * scale;
 	result->Y = a->Y * scale;
 	result->Z = a->Z * scale;
 }
 
-void Vector3_Multiply(Vector3* a, Vector3* scale, Vector3* result) {
+void Vector3_Multiply3(Vector3* a, Vector3* scale, Vector3* result) {
 	result->X = a->X * scale->X;
 	result->Y = a->Y * scale->Y;
 	result->Z = a->Z * scale->Z;
 }
 
-void Vector3_Divide(Vector3* a, Real32 scale, Vector3* result) {
-	Vector3_Multiply(a, 1.0f / scale, result);
+void Vector3_Divide1(Vector3* a, Real32 scale, Vector3* result) {
+	Vector3_Multiply1(a, 1.0f / scale, result);
 }
 
-void Vector3_Divide(Vector3* a, Vector3* scale, Vector3* result) {
+void Vector3_Divide3(Vector3* a, Vector3* scale, Vector3* result) {
 	result->X = a->X / scale->X;
 	result->Y = a->Y / scale->Y;
 	result->Z = a->Z / scale->Z;

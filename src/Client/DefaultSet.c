@@ -54,14 +54,14 @@ UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide) {
 
 bool DefaultSet_BlocksLight(BlockID b) {
 	return !(b == BlockID_Glass || b == BlockID_Leaves
-		|| b == BlockID_Air || Draw(b) == DrawType_Sprite);
+		|| b == BlockID_Air || DefaultSet_Draw(b) == DrawType_Sprite);
 }
 
 UInt8 DefaultSet_StepSound(BlockID b) {
 	if (b == BlockID_Glass) return SoundType_Stone;
 	if (b == BlockID_Rope) return SoundType_Cloth;
-	if (Draw(b) == DrawType_Sprite) return SoundType_None;
-	return DigSound(b);
+	if (DefaultSet_Draw(b) == DrawType_Sprite) return SoundType_None;
+	return DefaultSet_DigSound(b);
 }
 
 
