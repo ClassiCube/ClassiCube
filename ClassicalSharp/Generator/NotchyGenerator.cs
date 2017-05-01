@@ -347,6 +347,7 @@ namespace ClassicalSharp.Generator {
 							continue;
 						
 						int treeY = heightmap[treeZ * Width + treeX] + 1;
+						if (treeY >= Height) continue;
 						int treeHeight = 5 + rnd.Next(3);
 						
 						int index = (treeY * Length + treeZ) * Width + treeX;

@@ -218,6 +218,7 @@ void NotchyGen_PlantTrees() {
 					continue;
 
 				Int32 treeY = Heightmap[treeZ * Width + treeX] + 1;
+				if (treeY >= Height) continue;
 				Int32 treeHeight = 5 + Random_Next(&rnd, 3);
 
 				Int32 index = (treeY * Length + treeZ) * Width + treeX;
