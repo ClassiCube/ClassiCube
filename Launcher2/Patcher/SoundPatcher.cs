@@ -43,9 +43,9 @@ namespace Launcher.Patcher {
 					Console.WriteLine("got sound " + identifiers[i]);
 					if (item.Data == null) {
 						setStatus("&cFailed to download " + identifiers[i]);
-						return false;
+					} else {
+						DecodeSound(files[i].Substring(1), (byte[])item.Data);
 					}
-					DecodeSound(files[i].Substring(1), (byte[])item.Data);
 					
 					// TODO: setStatus(next);
 					if (i == identifiers.Length - 1) {
