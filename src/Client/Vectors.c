@@ -13,18 +13,12 @@ Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z) {
 	Vector3 v; v.X = x; v.Y = y; v.Z = z; return v;
 }
 
-Vector4 Vector4_Create4(Real32 x, Real32 y, Real32 z, Real32 w) {
-	Vector4 v; v.X = x; v.Y = y; v.Z = z; v.W = w; return v;
-}
 
-
-/* Returns the length of the given vector. */
 Real32 Vector3_Length(Vector3* v) {
 	Real32 lenSquared = v->X * v->X + v->Y * v->Y + v->Z * v->Z;
 	return Math_Sqrt(lenSquared);
 }
 
-/* Returns the squared length of the given vector. */
 Real32 Vector3_LengthSquared(Vector3* v) {
 	return v->X * v->X + v->Y * v->Y + v->Z * v->Z;
 }

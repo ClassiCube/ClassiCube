@@ -2,7 +2,7 @@
 #define CS_VECTORS_H
 #include "Typedefs.h"
 #include "Matrix.h"
-/* Represents 2, 3, and 4 dimensional vectors.
+/* Represents 2, 3 dimensional vectors.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -17,9 +17,6 @@ Vector3 Vector3_Create1(Real32 value);
 
 /* Constructs a 3D vector from the given coordinates. */
 Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z);
-
-/* Constructs a vector from the given coordinates. */
-Vector4 Vector4_Create4(Real32 x, Real32 y, Real32 z, Real32 w);
 
 /* Returns the length of the given vector. */
 Real32 Vector3_Length(Vector3* v);
@@ -38,13 +35,6 @@ Real32 Vector3_LengthSquared(Vector3* v);
 #define Vector3_UnitZ Vector3_Create3(0.0f, 0.0f, 1.0f)
 #define Vector3_Zero Vector3_Create3(0.0f, 0.0f, 0.0f)
 #define Vector3_One Vector3_Create3(1.0f, 1.0f, 1.0f)
-
-#define Vector4_UnitX Vector4_Create4(1.0f, 0.0f, 0.0f, 0.0f)
-#define Vector4_UnitY Vector4_Create4(0.0f, 1.0f, 0.0f, 0.0f)
-#define Vector4_UnitZ Vector4_Create4(0.0f, 0.0f, 1.0f, 0.0f)
-#define Vector4_UnitW Vector4_Create4(0.0f, 0.0f, 1.0f, 0.0f)
-#define Vector4_Zero Vector4_Create4(0.0f, 0.0f, 0.0f, 0.0f)
-#define Vector4_One Vector4_Create4(1.0f, 1.0f, 1.0f, 1.0f)
 
 
 /* Adds a and b. */

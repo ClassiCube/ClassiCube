@@ -35,3 +35,8 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
 		*dstByte++ = *srcByte++;
 	}
 }
+
+
+void Platform_Log(String message) {
+	// TODO: log to console
+}
