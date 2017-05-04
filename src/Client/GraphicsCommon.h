@@ -1,0 +1,65 @@
+#ifndef CS_GFXCOMMON_H
+#define CS_GFXCOMMON_H
+#include "Typedefs.h"
+#include "FastColour.h"
+#include "String.h"
+#include "Texture.h"
+#include "VertexStructs.h"
+
+/* Provides common/shared methods for a 3D graphics rendering API.
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
+
+/* Initalises common resources. */
+void GfxCommon_Init();
+
+/* Frees common resources. */
+void GfxCommon_Free();
+
+/* Handles a context being lost. */
+void GfxCommon_LoseContext(String reason);
+
+/* Handles a context being recreated. */
+void GfxCommon_RecreateContext();
+
+
+/* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer
+This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
+void GfxCommon_UpdateDynamicVb(Int32 drawMode, Int32 vb, void* vertices, Int32 vCount);
+
+/*Binds and draws the specified subset of the vertices in the current dynamic vertex buffer
+This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
+void GfxCommon_UpdateDynamicIndexedVb(Int32 drawMode, Int32 vb, void* vertices, Int32 vCount);
+
+
+Int32 GfxCommon_quadVb;
+
+/* Draws a 2D flat coloured quad to the screen.*/
+void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height, 
+	FastColour col);
+
+/* Draws a 2D gradient coloured quad to the screen.*/
+void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height, 
+	FastColour topCol, FastColour bottomCol);
+
+
+int GfxCommon_texVb;
+
+/* Draws a 2D texture to the screen. */
+void GfxCommon_Draw2DTexture(Texture* tex, FastColour col);
+
+/* Makes the 2D vertices that compose a texture quad.*/
+void GfxCommon_Make2DQuad(Texture* tex, FastColour col, VertexP3fT2fC4b** vertices);
+
+
+/* Updates the various matrix stacks and properties so that the graphics API state
+is suitable for rendering 2D quads and other 2D graphics to. */
+void GfxCommon_Mode2D(Real32 width, Real32 height, bool setFog);
+
+/* Updates the various matrix stacks and properties so that the graphics API state
+ is suitable for rendering 3D vertices. */
+void GfxCommon_Mode3D(bool setFog);
+
+/* Makes the default index buffer used for drawing quads. */
+Int32 GfxCommon_MakeDefaultIb();
+#endif

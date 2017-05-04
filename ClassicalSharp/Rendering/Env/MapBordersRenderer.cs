@@ -307,7 +307,7 @@ namespace ClassicalSharp.Renderers {
 			lastTexLoc = texLoc;
 			
 			game.Graphics.DeleteTexture(ref id);
-			id = game.TerrainAtlas.LoadTextureElement(texLoc);
+			id = game.TerrainAtlas.LoadTextureElement(gfx, texLoc);
 		}
 	}
 }

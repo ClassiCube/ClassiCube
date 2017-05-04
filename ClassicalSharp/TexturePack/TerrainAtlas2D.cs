@@ -15,14 +15,6 @@ namespace ClassicalSharp {
 		public Bitmap AtlasBitmap;
 		public int TileSize;
 		
-		IGraphicsApi gfx;
-		IDrawer2D drawer;
-		
-		public TerrainAtlas2D(IGraphicsApi gfx, IDrawer2D drawer) {
-			this.gfx = gfx;
-			this.drawer = drawer;
-		}
-		
 		/// <summary> Updates the underlying atlas bitmap, fields, and texture. </summary>
 		public void UpdateState(BlockInfo info, Bitmap bmp) {
 			AtlasBitmap = bmp;
@@ -32,7 +24,7 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>
-		public int LoadTextureElement(int index) {
+		public int LoadTextureElement(IGraphicsApi gfx, int index) {
 			int size = TileSize;
 			using (FastBitmap atlas = new FastBitmap(AtlasBitmap, true, true))
 				using (Bitmap bmp = Platform.CreateBmp(size, size))

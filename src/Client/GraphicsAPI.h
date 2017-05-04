@@ -1,0 +1,221 @@
+#ifndef CS_GFXAPI_H
+#define CS_GFXAPI_H
+#include "Typedefs.h"
+#include "Bitmap.h"
+#include "FastColour.h"
+#include "String.h"
+#include "Matrix.h"
+#include "Game.h"
+
+/* Abstracts a 3D graphics rendering API.
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
+
+
+/* Initalises this graphics API. */
+void Gfx_Init();
+
+/* Maximum supported length of a dimension (width and height) of a 2D texture. */
+Int32 Gfx_MaxTextureDimensions;
+
+/* Minimum near plane value supported by the graphics API. */
+float Gfx_MinZNear;
+
+/* Returns whether this graphics api had a valid context. */
+bool Gfx_LostContext;
+
+/* Maximum number of vertices that can be indexed. */
+#define Gfx_MaxIndices (65536 / 4 * 6)
+
+
+	// TODO: define these, we need an action interface
+	/*/// <summary> Event raised when a context is destroyed after having been previously lost. </summary>
+	public event Action ContextLost;
+
+	/// <summary> Event raised when a context is recreated after having been previously lost. </summary>
+	public event Action ContextRecreated;
+
+	/// <summary> Delegate that is invoked when the current context is lost,
+	/// and is repeatedly invoked until the context can be retrieved. </summary>
+	public Action<ScheduledTask> LostContextFunction;*/
+
+
+/* Creates a new native texture from the given bitmap.
+NOTE: only power of two dimension textures are supported. */
+Int32 Gfx_CreateTexture(Bitmap* bmp, bool managedPool);
+
+/* Updates the sub-rectangle (texX, texY) -> (texX + part.Width, texY + part.Height)
+of the native texture associated with the given ID, with the pixels encapsulated in the 'part' instance. */
+void Gfx_UpdateTexturePart(Int32 texId, Int32 texX, Int32 texY, Bitmap* part);
+
+/* Binds the given texture id so that it can be used for rasterization. */
+void Gfx_BindTexture(Int32 texId);
+
+/* Frees all native resources held for the given texture id. */
+void Gfx_DeleteTexture(Int32* texId);
+
+/* Sets whether texturing is applied when rasterizing primitives. */
+bool Gfx_SetTexturing(bool enabled);
+
+
+/* Sets whether fog is currently enabled. */
+void Gfx_SetFog(bool enabled);
+
+/* Sets the fog colour that is blended with final primitive colours. */
+void Gfx_SetFogColour(FastColour col);
+
+/* Sets the density of exp and exp^2 fog */
+void Gfx_SetFogDensity(float value);
+
+/* Sets the start radius of fog for linear fog. */
+void Gfx_SetFogStart(float value);
+
+/* Sets the end radius of fog for for linear fog. */
+void Gfx_SetFogEnd(float value);
+
+/* Sets the current fog mode. (linear, exp, or exp^2) */
+void Gfx_SetFogMode(Int32 fogMode);
+
+
+/* Whether back facing primitives should be culled by the 3D graphics api. */
+void Gfx_SetFaceCulling(bool enabled);
+
+/* Sets hether alpha testing is currently enabled. */
+void Gfx_SetAlphaTest(bool enabled);
+
+/* Sets the alpha test compare function that is used when alpha testing is enabled. */
+void Gfx_SetAlphaTestFunc(Int32 compareFunc, float refValue);
+
+/* Whether alpha blending is currently enabled. */
+void Gfx_SetAlphaBlending(bool enabled);
+
+/* Sets the alpha blend function that is used when alpha blending is enabled. */
+void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc);
+
+/* Whether blending between the alpha components of the texture and colour are performed. */
+void Gfx_SetAlphaArgBlend(bool enabled);
+
+
+/* Clears the underlying back and/or front buffer. */
+void Gfx_Clear();
+
+/* Sets the colour the screen is cleared to when Clear() is called. */
+void Gfx_ClearColour(FastColour col);
+
+
+/* Whether depth testing is currently enabled. */
+void Gfx_SetDepthTest(bool enabled);
+
+/* Sets the depth test compare function that is used when depth testing is enabled. */
+void Gfx_SetDepthTestFunc(Int32 compareFunc);
+
+/* Whether writing to the colour buffer is enabled. */
+void Gfx_SetColourWrite(bool enabled);
+
+/* Whether writing to the depth buffer is enabled. */
+void Gfx_SetDepthWrite(bool enabled);
+
+
+/* Creates a vertex buffer that can have its data dynamically updated. */
+Int32 Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices);
+
+/* Creates a static vertex buffer that has its data set at creation,
+but the vertex buffer's data cannot be updated after creation.*/
+Int32 Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count);
+
+/* Creates a static index buffer that has its data set at creation,
+but the index buffer's data cannot be updated after creation. */
+Int32 Gfx_CreateIb(void* indices, Int32 indicesCount);
+
+/* Sets the currently active vertex buffer to the given id. */
+void Gfx_BindVb(Int32 vb);
+
+/* Sets the currently active index buffer to the given id. */
+void Gfx_BindIb(Int32 ib);
+
+/* Frees all native resources held for the vertex buffer associated with the given id. */
+void Gfx_DeleteVb(Int32* vb);
+
+/* Frees all native resources held for the index buffer associated with the given id. */
+void Gfx_DeleteIb(Int32* ib);
+
+/* Informs the graphics API that the format of the vertex data used in subsequent
+draw calls will be in the given format. */
+void Gfx_SetBatchFormat(Int32 vertexFormat);
+
+/* Binds and updates the data of the current dynamic vertex buffer's data.
+This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
+void Gfx_SetDynamicVbData(Int32 vb, void* vertices, Int32 vCount);
+
+/* Draws the specified subset of the vertices in the current vertex buffer. */
+void Gfx_DrawVb(Int32 drawMode, Int32 startVertex, Int32 vCount);
+
+/* Draws the specified subset of the vertices in the current vertex buffer. */
+void Gfx_DrawIndexedVb(Int32 drawMode, Int32 indicesCount, Int32 startIndex);
+
+/* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
+void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex);
+
+/* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
+void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex);
+
+Int32 Gfx_strideSizes[2] = { 16, 24 };
+
+
+/* Sets the matrix type that load/push/pop operations should be applied to. */
+void Gfx_SetMatrixMode(Int32 matrixType);
+
+/* Sets the current matrix to the given matrix.*/
+void Gfx_LoadMatrix(Matrix* matrix);
+
+/* Sets the current matrix to the identity matrix. */
+void Gfx_LoadIdentityMatrix();
+
+/* Multiplies the current matrix by the given matrix, then
+sets the current matrix to the result of the multiplication. */
+void Gfx_MultiplyMatrix(Matrix* matrix);
+
+/* Gets the top matrix the current matrix stack and pushes it to the stack. */
+void Gfx_PushMatrix();
+
+/* Removes the top matrix from the current matrix stack, then
+sets the current matrix to the new top matrix of the stack. */
+void Gfx_PopMatrix();
+
+/*Outputs a .png screenshot of the backbuffer to the specified file. */
+void Gfx_TakeScreenshot(String output, Int32 width, Int32 height);
+
+/* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
+Returns boolean of whether legacy rendering mode is needed. */
+bool Gfx_WarnIfNecessary(Game* game);
+
+/* Informs the graphic api to update its state in preparation for a new frame. */
+void Gfx_BeginFrame(Game* game);
+
+/* Informs the graphic api to update its state in preparation for the end of a frame,
+and to prepare that frame for display on the monitor. */
+void Gfx_EndFrame(Game* game);
+
+/* Sets whether the graphics api should tie frame rendering to the refresh rate of the monitor. */
+void Gfx_SetVSync(Game* game, bool value);
+
+/* Raised when the dimensions of the game's window have changed. */
+void Gfx_OnWindowResize(Game* game);
+
+
+/* Makes an array of strings of information about the graphics API. */
+void Gfx_MakeApiInfo();
+
+/* Array of strings for information about the graphics API.
+Max of 32 strings, check if string is included by checking length > 0*/
+String Gfx_ApiInfo[32];
+
+/* Loads an orthographic projection matrix for the given height.*/
+void LoadOrthoMatrix(float width, float height);
+
+/* Sets the appropriate alpha testing/blending states necessary to render the given block. */
+void Gfx_SetupAlphaState(UInt8 draw);
+
+/* Resets the appropriate alpha testing/blending states necessary to render the given block. */
+void Gfx_RestoreAlphaState(UInt8 draw);
+#endif
