@@ -19,7 +19,7 @@ void GfxCommon_LoseContext(String reason) {
 	Platform_Log(reason);
 
 	if (ContextLost != null) ContextLost();
-	GfxCommon_Recreate();
+	GfxCommon_Free();
 }
 
 void GfxCommon_RecreateContext() {
@@ -75,7 +75,7 @@ void GfxCommon_Draw2DTexture(Texture* tex, FastColour col) {
 }
 
 void GfxCommon_Make2DQuad(Texture* tex, FastColour col, VertexP3fT2fC4b** vertices) {
-	float x1 = tex->X, y1 = tex->Y, x2 = tex->X + tex->Width, y2 = tex->Y + tex->Height;
+	Real32 x1 = tex->X, y1 = tex->Y, x2 = tex->X + tex->Width, y2 = tex->Y + tex->Height;
 #if USE_DX
 	// NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",
 	// i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this.

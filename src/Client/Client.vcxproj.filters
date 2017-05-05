@@ -185,5 +185,8 @@
     <ClCompile Include="GraphicsCommon.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
+    <ClCompile Include="Direct3D9Api.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

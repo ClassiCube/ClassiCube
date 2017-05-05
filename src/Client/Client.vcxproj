@@ -199,6 +199,7 @@
     <ClCompile Include="Compiler.c" />
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
+    <ClCompile Include="Direct3D9Api.c" />
     <ClCompile Include="FastColour.c" />
     <ClCompile Include="GraphicsCommon.c" />
     <ClCompile Include="Matrix.c" />

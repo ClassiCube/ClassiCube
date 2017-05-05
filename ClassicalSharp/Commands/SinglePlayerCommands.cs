@@ -53,13 +53,13 @@ namespace ClassicalSharp.Commands {
 				"&e  will repeatedly cuboid, without needing to be typed in again.",
 			};
 		}
-		BlockID block = Block.Invalid;
+		int block = -1;
 		Vector3I mark1, mark2;
 		bool persist = false;
 		
 		public override void Execute(string[] args) {
 			game.UserEvents.BlockChanged -= BlockChanged;
-			block = Block.Invalid;
+			block = -1;
 			mark1 = new Vector3I(int.MaxValue);
 			mark2 = new Vector3I(int.MaxValue);
 			persist = false;
@@ -116,8 +116,8 @@ namespace ClassicalSharp.Commands {
 			Vector3I max = Vector3I.Max(mark1, mark2);
 			if (!game.World.IsValidPos(min) || !game.World.IsValidPos(max)) return;
 			
-			BlockID toPlace = block;
-			if (toPlace == Block.Invalid) toPlace = game.Inventory.Selected;
+			BlockID toPlace = (BlockID)block;
+			if (block == -1) toPlace = game.Inventory.Selected;
 			
 			for (int y = min.Y; y <= max.Y; y++)
 				for (int z = min.Z; z <= max.Z; z++)

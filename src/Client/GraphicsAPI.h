@@ -13,7 +13,7 @@
 
 
 /* Initalises this graphics API. */
-void Gfx_Init();
+void Gfx_Init(Game* game);
 
 /* Maximum supported length of a dimension (width and height) of a 2D texture. */
 Int32 Gfx_MaxTextureDimensions;
@@ -154,7 +154,7 @@ void Gfx_DrawVb(Int32 drawMode, Int32 startVertex, Int32 vCount);
 void Gfx_DrawIndexedVb(Int32 drawMode, Int32 indicesCount, Int32 startIndex);
 
 /* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
-void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex);
+void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex);
 
 /* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex);
@@ -211,7 +211,7 @@ Max of 32 strings, check if string is included by checking length > 0*/
 String Gfx_ApiInfo[32];
 
 /* Loads an orthographic projection matrix for the given height.*/
-void LoadOrthoMatrix(float width, float height);
+void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);
 
 /* Sets the appropriate alpha testing/blending states necessary to render the given block. */
 void Gfx_SetupAlphaState(UInt8 draw);
