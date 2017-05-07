@@ -65,13 +65,13 @@ void Gfx_SetFog(bool enabled);
 void Gfx_SetFogColour(FastColour col);
 
 /* Sets the density of exp and exp^2 fog */
-void Gfx_SetFogDensity(float value);
+void Gfx_SetFogDensity(Real32 value);
 
 /* Sets the start radius of fog for linear fog. */
-void Gfx_SetFogStart(float value);
+void Gfx_SetFogStart(Real32 value);
 
 /* Sets the end radius of fog for for linear fog. */
-void Gfx_SetFogEnd(float value);
+void Gfx_SetFogEnd(Real32 value);
 
 /* Sets the current fog mode. (linear, exp, or exp^2) */
 void Gfx_SetFogMode(Int32 fogMode);
@@ -84,7 +84,7 @@ void Gfx_SetFaceCulling(bool enabled);
 void Gfx_SetAlphaTest(bool enabled);
 
 /* Sets the alpha test compare function that is used when alpha testing is enabled. */
-void Gfx_SetAlphaTestFunc(Int32 compareFunc, float refValue);
+void Gfx_SetAlphaTestFunc(Int32 compareFunc, Real32 refValue);
 
 /* Whether alpha blending is currently enabled. */
 void Gfx_SetAlphaBlending(bool enabled);

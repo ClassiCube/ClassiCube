@@ -20,6 +20,7 @@ bool ErrorHandler_Check(ReturnCode returnCode);
 /* Shows a message box to user, logs message to disc, then fails. */
 void ErrorHandler_Fail(String msg);
 
-/* Checks that the return code of a method is successful. Calls ErrorHandler_Fail if not. */
-void ErrorHandler_CheckOrFail(ReturnCode returnCode, String msg);
+/* Checks that the return code of a method is successful. Calls ErrorHandler_Fail if not.
+NOTE: raw pointer is used here for performance reasons, DO NOT apply this style elsewhere.*/
+void ErrorHandler_CheckOrFail(ReturnCode returnCode, const UInt8* raw_msg);
 #endif
