@@ -114,6 +114,8 @@ namespace ClassicalSharp.Singleplayer {
 		
 		internal void GenMap(int width, int height, int length, int seed, IMapGenerator generator) {
 			game.World.Reset();
+			game.WorldEvents.RaiseOnNewMap();
+			
 			GC.Collect();
 			this.generator = generator;
 			game.Gui.SetNewScreen(new LoadingMapScreen(game, "Generating level", "Generating.."));

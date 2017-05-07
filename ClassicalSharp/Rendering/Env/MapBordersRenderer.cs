@@ -135,13 +135,13 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetSides() {
-			if (game.World.IsNotLoaded || gfx.LostContext) return;
+			if (game.World.blocks == null || gfx.LostContext) return;
 			gfx.DeleteVb(ref sidesVb);
 			RebuildSides(map.Env.SidesHeight, legacy ? 128 : 65536);
 		}
 		
 		void ResetEdges() {
-			if (game.World.IsNotLoaded || gfx.LostContext) return;
+			if (game.World.blocks == null || gfx.LostContext) return;
 			gfx.DeleteVb(ref edgesVb);
 			RebuildEdges(map.Env.EdgeHeight, legacy ? 128 : 65536);
 		}

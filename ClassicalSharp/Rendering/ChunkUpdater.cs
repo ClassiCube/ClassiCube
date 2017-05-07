@@ -65,14 +65,14 @@ namespace ClassicalSharp.Renderers {
 		public void Refresh() {
 			chunkPos = new Vector3I(int.MaxValue);
 			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
-			if (renderer.chunks == null || game.World.IsNotLoaded) return;
+			if (renderer.chunks == null || game.World.blocks == null) return;
 			ClearChunkCache();
 			ResetChunkCache();
 		}
 		
 		void RefreshBorders(int clipLevel) {
 			chunkPos = new Vector3I(int.MaxValue);
-			if (renderer.chunks == null || game.World.IsNotLoaded) return;
+			if (renderer.chunks == null || game.World.blocks == null) return;
 			
 			int index = 0;
 			for (int z = 0; z < chunksZ; z++)

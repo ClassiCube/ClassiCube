@@ -69,7 +69,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		int tickCount = 0;
 		public void Tick() {
-			if (!Enabled || game.World.IsNotLoaded) return;
+			if (!Enabled || game.World.blocks == null) return;
 			
 			//if ((tickCount % 5) == 0) {
 			liquid.TickLava();

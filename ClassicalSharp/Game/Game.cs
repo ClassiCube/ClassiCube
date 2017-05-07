@@ -130,7 +130,7 @@ namespace ClassicalSharp {
 			UpdateViewMatrix();
 			
 			bool visible = Gui.activeScreen == null || !Gui.activeScreen.BlocksWorld;
-			if (World.IsNotLoaded) visible = false;
+			if (World.blocks == null) visible = false;
 			if (visible) {
 				Render3D(delta, t);
 			} else {
@@ -263,6 +263,8 @@ namespace ClassicalSharp {
 			
 			Gui.Reset(this);
 			World.Reset();
+			WorldEvents.RaiseOnNewMap();
+			
 			World.blocks = null;
 			Drawer2D.InitColours();
 			BlockInfo.Reset(this);
@@ -287,7 +289,7 @@ namespace ClassicalSharp {
 			World.SetBlock(x, y, z, block);
 			
 			WeatherRenderer weather = WeatherRenderer;
-			if (weather.heightmap != null && !World.IsNotLoaded)
+			if (weather.heightmap != null)
 				weather.OnBlockChanged(x, y, z, oldBlock, block);
 			Lighting.OnBlockChanged(x, y, z, oldBlock, block);
 			

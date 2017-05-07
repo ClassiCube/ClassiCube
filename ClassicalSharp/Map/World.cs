@@ -16,8 +16,6 @@ namespace ClassicalSharp.Map {
 	/// heightmap, dimensions and various metadata such as environment settings. </summary>
 	public sealed partial class World {
 
-		Game game;
-		BlockInfo info;
 		public BlockID[] blocks;
 		public int Width, Height, Length;
 		
@@ -27,26 +25,19 @@ namespace ClassicalSharp.Map {
 		/// <summary> Unique uuid/guid of this particular world. </summary>
 		public Guid Uuid;
 		
-		/// <summary> Whether this map is empty. </summary>
-		public bool IsNotLoaded = true;
-		
 		/// <summary> Current terrain.png or texture pack url of this map. </summary>
 		public string TextureUrl = null;
 		
 		public World(Game game) {
 			Env = new WorldEnv(game);
-			this.game = game;
-			info = game.BlockInfo;
 		}
 
 		/// <summary> Resets all of the properties to their defaults and raises the 'OnNewMap' event. </summary>
 		public void Reset() {
 			Env.Reset();
 			Width = Height = Length = 0;
-			IsNotLoaded = true;
-			
+			blocks = null;
 			Uuid = Guid.NewGuid();
-			game.WorldEvents.RaiseOnNewMap();
 		}
 		
 		/// <summary> Updates the underlying block array, heightmap, and dimensions of this map. </summary>
@@ -55,7 +46,8 @@ namespace ClassicalSharp.Map {
 			this.Width = width;
 			this.Height = height;
 			this.Length = length;
-			IsNotLoaded = width == 0 || length == 0 || height == 0;
+			if (blocks.Length == 0) this.blocks = null;
+			
 			if (blocks.Length != (width * height * length))
 				throw new InvalidOperationException("Blocks array length does not match volume of map.");
 			

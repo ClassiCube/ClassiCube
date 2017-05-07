@@ -25,6 +25,15 @@ String String_FromConstant(const UInt8* buffer) {
 	return str;
 }
 
+String String_MakeNull() {
+	String str;
+	str.buffer = NULL;
+	str.capacity = 0;
+	str.length = 0;
+	return str;
+}
+
+
 bool String_Equals(String* a, String* b) {
 	if (a->length != b->length) return false;
 
@@ -48,6 +57,7 @@ bool String_CaselessEquals(String* a, String* b) {
 	}
 	return true;
 }
+
 
 bool String_Append(String* str, UInt8 c) {
 	if (str->length == str->capacity) return false;

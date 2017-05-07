@@ -88,7 +88,7 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			// Need to refresh lighting when a block's light blocking state changes			
 			info.BlocksLight[block] = reader.ReadUInt8() == 0;
-			if (!game.World.IsNotLoaded && (didBlockLight != info.BlocksLight[block])) {
+			if (game.World.blocks != null && (didBlockLight != info.BlocksLight[block])) {
 				game.Lighting.Refresh();
 			}
 			

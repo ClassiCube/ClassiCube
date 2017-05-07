@@ -74,6 +74,8 @@ namespace ClassicalSharp.Network.Protocols {
 		void HandleLevelInit() {
 			if (gzipStream != null) return;
 			game.World.Reset();
+			game.WorldEvents.RaiseOnNewMap();
+			
 			prevScreen = game.Gui.activeScreen;
 			if (prevScreen is LoadingMapScreen)
 				prevScreen = null;
@@ -175,7 +177,7 @@ namespace ClassicalSharp.Network.Protocols {
 				game.UpdateBlock(x, y, z, block);
 			}
 			#else
-			if (!game.World.IsNotLoaded && game.World.IsValidPos(x, y, z)) {
+			if (game.World.blocks != null && game.World.IsValidPos(x, y, z)) {
 				game.UpdateBlock(x, y, z, block);
 			}
 			#endif

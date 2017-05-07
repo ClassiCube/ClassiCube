@@ -21,7 +21,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void Render(double deltaTime) {
-			if (map.IsNotLoaded) return;
+			if (map.blocks == null) return;
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
 			BlockID block = BlockOn(out fogDensity, out fogCol);

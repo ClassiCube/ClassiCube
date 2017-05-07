@@ -66,6 +66,8 @@ namespace ClassicalSharp.Gui.Screens {
 				using (FileStream fs = File.OpenRead(path)) {
 					int width, height, length;
 					game.World.Reset();
+					game.WorldEvents.RaiseOnNewMap();
+					
 					if (game.World.TextureUrl != null) {
 						TexturePack.ExtractDefault(game);
 						game.World.TextureUrl = null;

@@ -50,7 +50,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public override void Tick(double delta) {
-			if (game.World.IsNotLoaded) return;
+			if (game.World.blocks == null) return;
 			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks
 				&& Hacks.CanSpeed ? 1 : 0.5f;
 			OldVelocity = Velocity;

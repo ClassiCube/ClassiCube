@@ -263,7 +263,7 @@ namespace ClassicalSharp {
 				} else {
 					CycleDistanceForwards();
 				}
-			} else if (key == Keys[KeyBind.PauseOrExit] && !game.World.IsNotLoaded) {
+			} else if (key == Keys[KeyBind.PauseOrExit] && game.World.blocks != null) {
 				game.Gui.SetNewScreen(new PauseScreen(game));
 			} else if (!game.Mode.HandlesKeyDown(key)) {
 				return false;

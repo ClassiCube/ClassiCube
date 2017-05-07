@@ -271,7 +271,7 @@ namespace ClassicalSharp.Network.Protocols {
 		const int bulkCount = 256;
 		unsafe void HandleBulkBlockUpdate() {
 			int count = reader.ReadUInt8() + 1;
-			if (game.World.IsNotLoaded) {
+			if (game.World.blocks == null) {
 				#if DEBUG_BLOCKS
 				Utils.LogDebug("Server tried to update a block while still sending us the map!");
 				#endif

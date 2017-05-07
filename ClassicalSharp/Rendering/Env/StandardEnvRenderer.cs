@@ -124,7 +124,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void UpdateFog() {
-			if (map.IsNotLoaded) return;
+			if (map.blocks == null) return;
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
 			BlockID block = BlockOn(out fogDensity, out fogCol);
@@ -151,13 +151,13 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetClouds() {
-			if (map.IsNotLoaded || game.Graphics.LostContext) return;
+			if (map.blocks == null || game.Graphics.LostContext) return;
 			gfx.DeleteVb(ref cloudsVb);
 			RebuildClouds((int)game.ViewDistance, legacy ? 128 : 65536);
 		}
 		
 		void ResetSky() {
-			if (map.IsNotLoaded || game.Graphics.LostContext) return;
+			if (map.blocks == null || game.Graphics.LostContext) return;
 			gfx.DeleteVb(ref skyVb);
 			RebuildSky((int)game.ViewDistance, legacy ? 128 : 65536);
 		}

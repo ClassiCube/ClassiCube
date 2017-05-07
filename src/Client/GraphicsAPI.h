@@ -210,7 +210,8 @@ void Gfx_OnWindowResize(Game* game);
 /* Makes an array of strings of information about the graphics API. */
 void Gfx_MakeApiInfo();
 
+#define Gfx_ApiInfo_Count 32
 /* Array of strings for information about the graphics API.
-Max of 32 strings, check if string is included by checking length > 0*/
-String Gfx_ApiInfo[32];
+Max of Gfx_ApiInfo_Count strings, check if string is included by checking length > 0*/
+String Gfx_ApiInfo[Gfx_ApiInfo_Count];
 #endif

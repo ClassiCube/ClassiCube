@@ -24,11 +24,16 @@ String String_FromBuffer(UInt8* buffer, UInt16 capacity);
 /* Constructs a new string from a constant readonly string. */
 String String_FromConstant(const UInt8* buffer);
 
+/* Makes an empty string that points to nowhere. */
+String String_MakeNull();
+
+
 /* Returns whether two strings have same contents. */
 bool String_Equals(String* a, String* b);
 
 /* Returns whether two strings have same case-insensitive contents. */
 bool String_CaselessEquals(String* a, String* b);
+
 
 /* Attempts to append a character to the end of a string. */
 bool String_Append(String* str, UInt8 c);

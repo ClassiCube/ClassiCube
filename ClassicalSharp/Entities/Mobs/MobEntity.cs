@@ -37,7 +37,7 @@ namespace ClassicalSharp.Entities.Mobs {
 		// TODO: this is just so the entities do something, remove later
 		static Random rand = new Random();
 		public override void Tick(double delta) {
-			if (game.World.IsNotLoaded) return;
+			if (game.World.blocks == null) return;
 			interp.AdvanceState();
 			physics.UpdateVelocityState();
 			
