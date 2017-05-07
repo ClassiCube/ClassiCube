@@ -182,6 +182,10 @@ void Gfx_PushMatrix();
 sets the current matrix to the new top matrix of the stack. */
 void Gfx_PopMatrix();
 
+/* Loads an orthographic projection matrix for the given height.*/
+void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);
+
+
 /*Outputs a .png screenshot of the backbuffer to the specified file. */
 void Gfx_TakeScreenshot(String output, Int32 width, Int32 height);
 
@@ -209,7 +213,4 @@ void Gfx_MakeApiInfo();
 /* Array of strings for information about the graphics API.
 Max of 32 strings, check if string is included by checking length > 0*/
 String Gfx_ApiInfo[32];
-
-/* Loads an orthographic projection matrix for the given height.*/
-void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);
 #endif

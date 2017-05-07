@@ -119,6 +119,42 @@ void Gfx_SetAlphaArgBlend(bool enabled) {
 }
 
 
+void Gfx_Clear() {
+	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
+	ReturnCode hresult = IDirect3DDevice9_Clear(device, 0, NULL, flags, d3d9_clearCol, 1.0f, 0);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_Clear");
+}
+
+UInt32 d3d9_clearCol = 0xFF000000;
+void Gfx_ClearColour(FastColour col) {
+	d3d9_clearCol = col.Packed;
+}
+
+
+bool d3d9_depthTest = false;
+void Gfx_SetDepthTest(bool enabled) {
+	d3d9_depthTest = enabled;
+	D3D9_SetRenderState((UInt32)enabled, D3DRS_ZENABLE, "D3D9_SetDepthTest");
+}
+
+D3DCMPFUNC d3d9_depthTestFunc = 0;
+void Gfx_SetDepthTestFunc(Int32 compareFunc) {
+	d3d9_depthTestFunc = d3d9_compareFuncs[compareFunc];
+	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ZFUNC, "D3D9_SetDepthTestFunc");
+}
+
+void Gfx_SetColourWrite(bool enabled) {
+	UInt32 channels = enabled ? 0xF : 0x0;
+	D3D9_SetRenderState(channels, D3DRS_COLORWRITEENABLE, "D3D9_SetColourWrite");
+}
+
+bool d3d9_depthWrite = false;
+void Gfx_SetDepthWrite(bool enabled) {
+	d3d9_depthWrite = enabled;
+	D3D9_SetRenderState((UInt32)enabled, D3DRS_ZWRITEENABLE, "D3D9_SetDepthWrite");
+}
+
+
 D3DPRIMITIVETYPE d3d9_modeMappings[2] = { D3DPT_TRIANGLELIST, D3DPT_LINELIST };
 D3DFORMAT d3d9_depthFormats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
 D3DFORMAT d3d9_viewFormats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
