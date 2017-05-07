@@ -138,6 +138,9 @@
     <ClInclude Include="VertexStructs.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="ErrorHandler.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">

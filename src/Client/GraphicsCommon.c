@@ -2,6 +2,7 @@
 #include "GraphicsAPI.h"
 #include "GraphicsEnums.h"
 #include "Platform.h"
+#include "BlockEnums.h"
 
 void GfxCommon_Init() {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, 4);
@@ -128,4 +129,18 @@ Int32 GfxCommon_MakeDefaultIb() {
 		element += 4;
 	}
 	return Gfx_CreateIb(indices, Gfx_MaxIndices);
+}
+
+void GfxCommon_SetupAlphaState(UInt8 draw) {
+	if (draw == DrawType_Translucent)      Gfx_SetAlphaBlending(true);
+	if (draw == DrawType_Transparent)      Gfx_SetAlphaTest(true);
+	if (draw == DrawType_TransparentThick) Gfx_SetAlphaTest(true);
+	if (draw == DrawType_Sprite)           Gfx_SetAlphaTest(true);
+}
+
+void GfxCommon_RestoreAlphaState(UInt8 draw) {
+	if (draw == DrawType_Translucent)      Gfx_SetAlphaBlending(false);
+	if (draw == DrawType_Transparent)      Gfx_SetAlphaTest(false);
+	if (draw == DrawType_TransparentThick) Gfx_SetAlphaTest(false);
+	if (draw == DrawType_Sprite)           Gfx_SetAlphaTest(false);
 }

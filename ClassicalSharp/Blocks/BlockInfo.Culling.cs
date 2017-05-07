@@ -21,8 +21,8 @@ namespace ClassicalSharp {
 			for (int block = 0; block < Block.Count; block++)
 				CanStretch[block] = 0x3F;
 			
-			for (int block = 1; block < Block.Count; block++) {
-				for (int neighbour = 1; neighbour < Block.Count; neighbour++) {
+			for (int block = 0; block < Block.Count; block++) {
+				for (int neighbour = 0; neighbour < Block.Count; neighbour++) {
 					CalcCulling((BlockID)block, (BlockID)neighbour);
 				}
 			}
@@ -31,7 +31,7 @@ namespace ClassicalSharp {
 		internal void UpdateCulling(BlockID block) {
 			CanStretch[block] = 0x3F;
 			
-			for (int other = 1; other < Block.Count; other++) {
+			for (int other = 0; other < Block.Count; other++) {
 				CalcCulling(block, (BlockID)other);
 				CalcCulling((BlockID)other, block);
 			}

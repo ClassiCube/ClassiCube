@@ -175,6 +175,7 @@
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="DefaultSet.h" />
     <ClInclude Include="Bitmap.h" />
+    <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="FastColour.h" />
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Game.h" />

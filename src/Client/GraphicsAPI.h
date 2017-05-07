@@ -212,10 +212,4 @@ String Gfx_ApiInfo[32];
 
 /* Loads an orthographic projection matrix for the given height.*/
 void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);
-
-/* Sets the appropriate alpha testing/blending states necessary to render the given block. */
-void Gfx_SetupAlphaState(UInt8 draw);
-
-/* Resets the appropriate alpha testing/blending states necessary to render the given block. */
-void Gfx_RestoreAlphaState(UInt8 draw);
 #endif

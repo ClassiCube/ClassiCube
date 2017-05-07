@@ -86,7 +86,6 @@ namespace ClassicalSharp.Textures {
 				string basePath = PathIO.Combine(Program.AppDirectory, Folder);
 				if (!Directory.Exists(basePath))
 					Directory.CreateDirectory(basePath);
-				
 				File.WriteAllBytes(path, data);
 			} catch (IOException ex) {
 				ErrorHandler.LogError("Cache.AddToCache", ex);
