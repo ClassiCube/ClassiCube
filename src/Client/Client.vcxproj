@@ -203,6 +203,7 @@
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
     <ClCompile Include="Direct3D9Api.c" />
+    <ClCompile Include="ExtMath.c" />
     <ClCompile Include="FastColour.c" />
     <ClCompile Include="GraphicsCommon.c" />
     <ClCompile Include="Matrix.c" />
@@ -212,6 +213,7 @@
     <ClCompile Include="String.c" />
     <ClCompile Include="Texture.c" />
     <ClCompile Include="TextureRec.c" />
+    <ClCompile Include="Vector3I.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="WinPlatform.c" />
   </ItemGroup>
