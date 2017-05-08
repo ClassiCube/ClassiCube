@@ -195,6 +195,7 @@
     <ClInclude Include="Vector3I.h" />
     <ClInclude Include="Vectors.h" />
     <ClInclude Include="VertexStructs.h" />
+    <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Block.c" />

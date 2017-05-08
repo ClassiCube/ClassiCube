@@ -64,6 +64,9 @@
     <Filter Include="Source Files\Graphics">
       <UniqueIdentifier>{258fb897-a2f4-437c-9108-d0a5fd0cb8b9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Map">
+      <UniqueIdentifier>{0ff1e440-e67d-4e09-913d-56417fbfe6b1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -143,6 +146,9 @@
     </ClInclude>
     <ClInclude Include="Vector3I.h">
       <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="World.h">
+      <Filter>Header Files\Map</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
