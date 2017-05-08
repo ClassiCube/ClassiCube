@@ -80,23 +80,11 @@ namespace ClassicalSharp.Model {
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
 			if (p is FakePlayer) {
-				Player realP = game.LocalPlayer;
-				Vector3I P = Vector3I.Floor(realP.EyePosition);
-				col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
-				
-				// Adjust pitch so angle when looking straight down is 0.
-				float adjHeadX = realP.HeadX - 90;
-				if (adjHeadX < 0) adjHeadX += 360;
-				
-				// Adjust colour so held block is brighter when looking straght up
-				float t = Math.Abs(adjHeadX - 180) / 180;
-				float colScale = Utils.Lerp(0.9f, 0.7f, t);
-				col = FastColour.ScalePacked(col, colScale);
 				block = ((FakePlayer)p).Block;
 			} else {
-				col = cols[0];
 				block = Utils.FastByte(p.ModelName);
 			}
+			col = cols[0];
 			
 			CalcState(block);
 			if (!(p is FakePlayer)) NoShade = bright;

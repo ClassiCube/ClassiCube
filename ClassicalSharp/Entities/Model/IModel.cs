@@ -118,8 +118,7 @@ namespace ClassicalSharp.Model {
 		
 		public void SetupState(Entity p) {
 			index = 0;
-			Vector3I P = Vector3I.Floor(p.EyePosition);
-			int col = game.World.IsValidPos(P) ? game.Lighting.LightCol(P.X, P.Y, P.Z) : game.Lighting.Outside;
+			int col = p.Colour();
 			uScale = 1 / 64f; vScale = 1 / 32f;
 			
 			cols[0] = col;

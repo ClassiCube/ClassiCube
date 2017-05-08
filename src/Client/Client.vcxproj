@@ -192,6 +192,7 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureRec.h" />
     <ClInclude Include="Typedefs.h" />
+    <ClInclude Include="Vector3I.h" />
     <ClInclude Include="Vectors.h" />
     <ClInclude Include="VertexStructs.h" />
   </ItemGroup>

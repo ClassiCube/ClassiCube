@@ -59,7 +59,7 @@ void Vector3_Divide3(Vector3* a, Vector3* scale, Vector3* result) {
 }
 
 
-void Vector3_Lerp(Vector3* a, Vector3* b, float blend, Vector3* result) {
+void Vector3_Lerp(Vector3* a, Vector3* b, Real32 blend, Vector3* result) {
 	result->X = blend * (b->X - a->X) + a->X;
 	result->Y = blend * (b->Y - a->Y) + a->Y;
 	result->Z = blend * (b->Z - a->Z) + a->Z;

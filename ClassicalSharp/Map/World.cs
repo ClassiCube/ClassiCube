@@ -40,7 +40,7 @@ namespace ClassicalSharp.Map {
 			Uuid = Guid.NewGuid();
 		}
 		
-		/// <summary> Updates the underlying block array, heightmap, and dimensions of this map. </summary>
+		/// <summary> Updates the underlying block array, and dimensions of this map. </summary>
 		public void SetNewMap(BlockID[] blocks, int width, int height, int length) {
 			this.blocks = blocks;
 			this.Width = width;

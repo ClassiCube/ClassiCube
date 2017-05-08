@@ -141,6 +141,9 @@
     <ClInclude Include="ErrorHandler.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
+    <ClInclude Include="Vector3I.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
