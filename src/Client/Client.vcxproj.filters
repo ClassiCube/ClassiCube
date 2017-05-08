@@ -67,6 +67,9 @@
     <Filter Include="Header Files\Map">
       <UniqueIdentifier>{0ff1e440-e67d-4e09-913d-56417fbfe6b1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Map">
+      <UniqueIdentifier>{cb26e83f-9153-4964-9dc2-13502fbb1d1b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -205,6 +208,9 @@
     </ClCompile>
     <ClCompile Include="ExtMath.c">
       <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="World.c">
+      <Filter>Source Files\Map</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

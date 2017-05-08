@@ -9,22 +9,26 @@ Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 
 
 /* Raw blocks of this world. */
-BlockID* World_Blocks;
+BlockID* World_Blocks = NULL;
+
+/* Size of blocks array. */
+Int32 World_BlocksSize = 0;
 
 /* Length of world on X axis.*/
-Int32 World_Width;
+Int32 World_Width = 0;
 
 /* Length of world on Y axis (vertical).*/
-Int32 World_Height;
+Int32 World_Height = 0;
 
 /* Length of world on Z axis.*/
-Int32 World_Length;
+Int32 World_Length = 0;
 
 /* Unique uuid/guid of this particular world. */
 UInt8 World_Uuid[16];
 
 /* Current terrain.png or texture pack url of this map. */
 String World_TextureUrl;
+// TODO: how to initalise this string
 
 
 /* Resets all of the properties to their defaults. */
@@ -63,3 +67,4 @@ bool World_IsValidPos_3I(Vector3I p);
 
 /* Unpacks the given index into the map's block array into its original world coordinates. */
 Vector3I World_GetCoords(int index);
+#endif

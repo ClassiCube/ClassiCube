@@ -216,6 +216,7 @@
     <ClCompile Include="Vector3I.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="WinPlatform.c" />
+    <ClCompile Include="World.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
