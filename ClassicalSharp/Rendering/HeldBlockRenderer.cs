@@ -21,7 +21,7 @@ namespace ClassicalSharp.Renderers {
 		internal HeldBlockAnimation anim;
 		
 		Game game;
-		FakePlayer held;
+		internal FakePlayer held;
 		Matrix4 heldBlockProj;
 		
 		public void Init(Game game) {
@@ -46,7 +46,7 @@ namespace ClassicalSharp.Renderers {
 			Vector3 last = anim.pos;
 			anim.pos = Vector3.Zero;
 			type = game.Inventory.Selected;
-			block.CosX = 1; block.SinX = 0;
+			held.RotX = 0;
 			block.SwitchOrder = false;
 			if (anim.doAnim) anim.Update(delta, last);
 			

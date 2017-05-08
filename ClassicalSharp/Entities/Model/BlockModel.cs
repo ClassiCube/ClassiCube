@@ -23,7 +23,6 @@ namespace ClassicalSharp.Model {
 		bool bright;
 		Vector3 minBB, maxBB;
 		public bool NoShade = false, SwitchOrder = false;
-		public float CosX = 1, SinX = 0;
 		ModelCache cache;
 		
 		public BlockModel(Game game) : base(game) {
@@ -99,7 +98,6 @@ namespace ClassicalSharp.Model {
 			
 			IGraphicsApi gfx = game.Graphics;
 			gfx.BindTexture(lastTexId);
-			TransformVertices();
 			
 			if (sprite) gfx.FaceCulling = true;
 			UpdateVB();
@@ -112,20 +110,10 @@ namespace ClassicalSharp.Model {
 			
 			if (lastTexId != -1) {
 				game.Graphics.BindTexture(lastTexId);
-				TransformVertices();
 				UpdateVB();
 			}
 			lastTexId = texId;
 			index = 0;
-		}
-		
-		void TransformVertices() {
-			for (int i = 0; i < index; i++) {
-				VertexP3fT2fC4b v = cache.vertices[i];
-				float t = 0;
-				t = CosX * v.Y + SinX * v.Z; v.Z = -SinX * v.Y + CosX * v.Z; v.Y = t;        // Inlined RotX
-				cache.vertices[i] = v;
-			}
 		}
 		
 		CuboidDrawer drawer = new CuboidDrawer();
