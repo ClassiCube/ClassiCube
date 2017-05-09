@@ -22,6 +22,13 @@ void Gfx_Init(Game* game) {
 }
 
 
+bool Gfx_SetTexturing(bool enabled) {
+	if (enabled) return;
+	ReturnCode hresult = IDirect3DDevice9_SetTexture(device, 0, NULL);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTexturing");
+}
+
+
 bool d3d9_fogEnable = false;
 void Gfx_SetFog(bool enabled) {
 	if (d3d9_fogEnable == enabled) return;

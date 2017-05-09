@@ -70,6 +70,9 @@
     <Filter Include="Source Files\Map">
       <UniqueIdentifier>{cb26e83f-9153-4964-9dc2-13502fbb1d1b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Events">
+      <UniqueIdentifier>{a912f0d5-3ceb-4e7e-ba4e-28170c634047}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -156,6 +159,15 @@
     <ClInclude Include="WorldEnv.h">
       <Filter>Header Files\Map</Filter>
     </ClInclude>
+    <ClInclude Include="D3D9Api.h">
+      <Filter>Header Files\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="EventHandler.h">
+      <Filter>Header Files\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="WorldEvents.h">
+      <Filter>Header Files\Events</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -203,9 +215,6 @@
     <ClCompile Include="GraphicsCommon.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="Direct3D9Api.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Vector3I.c">
       <Filter>Source Files\Math</Filter>
     </ClCompile>
@@ -217,6 +226,9 @@
     </ClCompile>
     <ClCompile Include="WorldEnv.c">
       <Filter>Source Files\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D9Api.c">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

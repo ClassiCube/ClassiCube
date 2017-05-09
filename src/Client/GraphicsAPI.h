@@ -1,6 +1,7 @@
 #ifndef CS_GFXAPI_H
 #define CS_GFXAPI_H
 #include "Typedefs.h"
+#include "EventHandler.h"
 #include "Bitmap.h"
 #include "FastColour.h"
 #include "String.h"
@@ -16,26 +17,28 @@
 void Gfx_Init(Game* game);
 
 /* Maximum supported length of a dimension (width and height) of a 2D texture. */
-Int32 Gfx_MaxTextureDimensions;
+Int32 Gfx_MaxTextureDimensions = 0;
 
 /* Minimum near plane value supported by the graphics API. */
-float Gfx_MinZNear;
+float Gfx_MinZNear = 0.0f;
 
 /* Returns whether this graphics api had a valid context. */
-bool Gfx_LostContext;
+bool Gfx_LostContext = false;
 
 /* Maximum number of vertices that can be indexed. */
 #define Gfx_MaxIndices (65536 / 4 * 6)
 
 
-	// TODO: define these, we need an action interface
-	/*/// <summary> Event raised when a context is destroyed after having been previously lost. </summary>
-	public event Action ContextLost;
+/* Event raised when a context is destroyed after having been previously lost. */
+Event_Void Gfx_ContextLost[EventHandler_Size];
+Int32 Gfx_ContextLostCount = 0;
 
-	/// <summary> Event raised when a context is recreated after having been previously lost. </summary>
-	public event Action ContextRecreated;
+/* Event raised when a context is recreated after having been previously lost. */
+Event_Void Gfx_ContextRecreated[EventHandler_Size];
+Int32 Gfx_ContextRecreatedCount = 0;
 
-	/// <summary> Delegate that is invoked when the current context is lost,
+// TODO: IMPLEMENT THIS
+/*	/// <summary> Delegate that is invoked when the current context is lost,
 	/// and is repeatedly invoked until the context can be retrieved. </summary>
 	public Action<ScheduledTask> LostContextFunction;*/
 

@@ -173,9 +173,12 @@
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
     <ClInclude Include="Compiler.h" />
+    <ClInclude Include="D3D9Api.h" />
     <ClInclude Include="DefaultSet.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="ErrorHandler.h" />
+    <ClInclude Include="WorldEvents.h" />
+    <ClInclude Include="EventHandler.h" />
     <ClInclude Include="FastColour.h" />
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Game.h" />
@@ -201,9 +204,9 @@
   <ItemGroup>
     <ClCompile Include="Block.c" />
     <ClCompile Include="Compiler.c" />
+    <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
-    <ClCompile Include="Direct3D9Api.c" />
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="FastColour.c" />
     <ClCompile Include="GraphicsCommon.c" />

@@ -20,7 +20,6 @@ namespace ClassicalSharp.Model {
 		BlockID block = Block.Air;
 		float height;
 		TerrainAtlas1D atlas;
-		bool bright;
 		Vector3 minBB, maxBB;
 		public bool SwitchOrder = false;
 		ModelCache cache;

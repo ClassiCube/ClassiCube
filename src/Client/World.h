@@ -66,5 +66,5 @@ bool World_IsValidPos(Int32 x, Int32 y, Int32 z);
 bool World_IsValidPos_3I(Vector3I p);
 
 /* Unpacks the given index into the map's block array into its original world coordinates. */
-Vector3I World_GetCoords(int index);
+Vector3I World_GetCoords(Int32 index);
 #endif

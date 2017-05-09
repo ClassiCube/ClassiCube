@@ -2,11 +2,12 @@
 #include "BlockID.h"
 #include "ErrorHandler.h"
 #include "String.h"
+#include "WorldEnv.h"
 
 void World_Reset() {
 	World_Width = 0; World_Height = 0; World_Length = 0;
 	World_Blocks = NULL; World_BlocksSize = 0;
-	Uuid = Guid.NewGuid();
+	World_Uuid = Guid.NewGuid();
 }
 
 void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length) {
@@ -18,8 +19,12 @@ void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 heigh
 		ErrorHandler_Fail(String_FromConstant("Blocks array size does not match volume of map."));
 	}
 
-	if (Env.EdgeHeight == -1) Env.EdgeHeight = height / 2;
-	if (Env.CloudHeight == -1) Env.CloudHeight = height + 2;
+	if (WorldEnv_EdgeHeight == -1) {
+		WorldEnv_EdgeHeight = height / 2;
+	}
+	if (WorldEnv_CloudHeight == -1) {
+		WorldEnv_CloudHeight = height + 2;
+	}
 }
 
 BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z) {
