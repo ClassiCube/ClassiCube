@@ -47,8 +47,12 @@ echo 1..
 sleep 1
 
 echo Extracting files from CS_Update folder
+TARGETDIR=""`pwd`""
 UPDATEDIR=""`pwd`/CS_Update/""
-find ""$UPDATEDIR"" -name '*.*' | xargs cp -t `pwd`
+
+for FILE in ""$UPDATEDIR""*.* ;do
+  mv ""$FILE"" ""$TARGETDIR""
+done
 
 rm -r ""$UPDATEDIR""
 echo Starting launcher again
