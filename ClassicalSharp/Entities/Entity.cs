@@ -49,6 +49,7 @@ namespace ClassicalSharp.Entities {
 		public AnimatedComponent anim;
 		public float uScale = 1, vScale = 1;
 		protected DateTime lastModelChange = new DateTime(1, 1, 1);
+		public bool NoShade = false;
 		
 		
 		/// <summary> Rotation of the entity's head horizontally. (i.e. looking north or east) </summary>

@@ -27,7 +27,7 @@ namespace ClassicalSharp.Model {
 		/// the whole model will be moved slightly down. </remarks>
 		public bool Bobbing = true;
 
-		/// <summary> Whether this entity requires downloading of a skin texture. </summary>		
+		/// <summary> Whether this entity requires downloading of a skin texture. </summary>
 		public bool UsesSkin = true;
 		
 		/// <summary> Whether humanoid animations should be calculated, instead of normal animations. </summary>
@@ -40,7 +40,7 @@ namespace ClassicalSharp.Model {
 		public virtual Vector3 Drag { get { return new Vector3(0.91f, 0.98f, 0.91f); } }
 		
 		/// <summary> Friction applied to the entity when is on the ground. </summary>
-		public virtual Vector3 GroundFriction { get { return new Vector3(0.6f, 1.0f, 0.6f); } }		
+		public virtual Vector3 GroundFriction { get { return new Vector3(0.6f, 1.0f, 0.6f); } }
 		
 		
 		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
@@ -99,7 +99,7 @@ namespace ClassicalSharp.Model {
 			return Math.Min(Math.Abs(dist), Math.Min(dMin, dMax));
 		}
 		
-		/// <summary> Sets up the state for, then renders an entity model, 
+		/// <summary> Sets up the state for, then renders an entity model,
 		/// based on the given entity's position and orientation. </summary>
 		public void Render(Entity p) {
 			Vector3 pos = p.Position;
@@ -122,9 +122,14 @@ namespace ClassicalSharp.Model {
 			uScale = 1 / 64f; vScale = 1 / 32f;
 			
 			cols[0] = col;
-			cols[1] = FastColour.ScalePacked(col, FastColour.ShadeYBottom);
-			cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ); cols[3] = cols[2];
-			cols[4] = FastColour.ScalePacked(col, FastColour.ShadeX); cols[5] = cols[4];
+			if (!p.NoShade) {
+				cols[1] = FastColour.ScalePacked(col, FastColour.ShadeYBottom);
+				cols[2] = FastColour.ScalePacked(col, FastColour.ShadeZ);
+				cols[4] = FastColour.ScalePacked(col, FastColour.ShadeX);
+			} else {
+				cols[1] = col; cols[2] = col; cols[4] = col;
+			}
+			cols[3] = cols[2]; cols[5] = cols[4];
 			
 			float yawDelta = p.HeadY - p.RotY;
 			cosHead = (float)Math.Cos(yawDelta * Utils.Deg2Rad);

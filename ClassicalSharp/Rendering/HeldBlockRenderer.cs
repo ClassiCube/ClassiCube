@@ -27,7 +27,6 @@ namespace ClassicalSharp.Renderers {
 		public void Init(Game game) {
 			this.game = game;
 			block = new BlockModel(game);
-			block.NoShade = true;
 			held = new FakePlayer(game);
 			game.Events.ProjectionChanged += ProjectionChanged;
 			
@@ -124,6 +123,7 @@ namespace ClassicalSharp.Renderers {
 	internal class FakePlayer : Player {
 		
 		public FakePlayer(Game game) : base(game) {
+			NoShade = true;
 		}
 		public BlockID Block;
 		

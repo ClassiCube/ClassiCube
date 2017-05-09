@@ -22,7 +22,7 @@ namespace ClassicalSharp.Model {
 		TerrainAtlas1D atlas;
 		bool bright;
 		Vector3 minBB, maxBB;
-		public bool NoShade = false, SwitchOrder = false;
+		public bool SwitchOrder = false;
 		ModelCache cache;
 		
 		public BlockModel(Game game) : base(game) {
@@ -54,12 +54,10 @@ namespace ClassicalSharp.Model {
 		
 		public void CalcState(BlockID block) {
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) {
-				bright = false;
 				minBB = Vector3.Zero;
 				maxBB = Vector3.One;
 				height = 1;
 			} else {
-				bright = game.BlockInfo.FullBright[block];
 				minBB = game.BlockInfo.MinBB[block];
 				maxBB = game.BlockInfo.MaxBB[block];
 				height = maxBB.Y - minBB.Y;
@@ -74,7 +72,7 @@ namespace ClassicalSharp.Model {
 			return base.RenderDistance(p);
 		}
 		
-		int lastTexId = -1, col;
+		int lastTexId = -1;
 		public override void DrawModel(Entity p) {
 			// TODO: using 'is' is ugly, but means we can avoid creating
 			// a string every single time held block changes.
@@ -83,11 +81,12 @@ namespace ClassicalSharp.Model {
 			} else {
 				block = Utils.FastByte(p.ModelName);
 			}
-			col = cols[0];
 			
 			CalcState(block);
-			if (!(p is FakePlayer)) NoShade = bright;
-			if (bright) col = FastColour.WhitePacked;
+			if (game.BlockInfo.FullBright[block]) {
+				for (int i = 0; i < cols.Length; i++)
+					cols[i] = FastColour.WhitePacked;
+			}
 			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			lastTexId = -1;
@@ -150,19 +149,19 @@ namespace ClassicalSharp.Model {
 				drawer.Tinted = game.BlockInfo.Tinted[block];
 				drawer.TintColour = game.BlockInfo.FogColour[block];
 				
-				drawer.Bottom(1, Colour(FastColour.ShadeYBottom), GetTex(Side.Bottom), cache.vertices, ref index);
+				drawer.Bottom(1, cols[1], GetTex(Side.Bottom), cache.vertices, ref index);
 				if (SwitchOrder) {
-					drawer.Right(1, Colour(FastColour.ShadeX), GetTex(Side.Right), cache.vertices, ref index);
-					drawer.Back(1,  Colour(FastColour.ShadeZ), GetTex(Side.Back),  cache.vertices, ref index);
-					drawer.Left(1,  Colour(FastColour.ShadeX), GetTex(Side.Left),  cache.vertices, ref index);
-					drawer.Front(1, Colour(FastColour.ShadeZ), GetTex(Side.Front), cache.vertices, ref index);
+					drawer.Right(1, cols[5], GetTex(Side.Right), cache.vertices, ref index);
+					drawer.Back(1,  cols[2], GetTex(Side.Back),  cache.vertices, ref index);
+					drawer.Left(1,  cols[4], GetTex(Side.Left),  cache.vertices, ref index);
+					drawer.Front(1, cols[3], GetTex(Side.Front), cache.vertices, ref index);
 				} else {
-					drawer.Front(1, Colour(FastColour.ShadeZ), GetTex(Side.Front), cache.vertices, ref index);
-					drawer.Right(1, Colour(FastColour.ShadeX), GetTex(Side.Right), cache.vertices, ref index);
-					drawer.Back(1,  Colour(FastColour.ShadeZ), GetTex(Side.Back),  cache.vertices, ref index);
-					drawer.Left(1,  Colour(FastColour.ShadeX), GetTex(Side.Left),  cache.vertices, ref index);
+					drawer.Front(1, cols[3], GetTex(Side.Front), cache.vertices, ref index);
+					drawer.Right(1, cols[5], GetTex(Side.Right), cache.vertices, ref index);
+					drawer.Back(1,  cols[2], GetTex(Side.Back),  cache.vertices, ref index);
+					drawer.Left(1,  cols[4], GetTex(Side.Left),  cache.vertices, ref index);
 				}
-				drawer.Top(1, Colour(1.0f), GetTex(Side.Top), cache.vertices, ref index);
+				drawer.Top(1, cols[0], GetTex(Side.Top), cache.vertices, ref index);
 			}
 		}
 		
@@ -172,10 +171,6 @@ namespace ClassicalSharp.Model {
 			
 			FlushIfNotSame(texIndex);
 			return texId;
-		}
-		
-		int Colour(float shade) {
-			return NoShade ? col : FastColour.ScalePacked(col, shade); 
 		}
 		
 		void SpriteZQuad(int side, bool firstPart) {
@@ -189,7 +184,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame(texIndex);
 			if (height != 1)
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = this.col;
+			int col = cols[0];
 
 			float p1 = 0, p2 = 0;
 			if (firstPart) { // Need to break into two quads for when drawing a sprite model in hand.
@@ -217,7 +212,7 @@ namespace ClassicalSharp.Model {
 			FlushIfNotSame(texIndex);
 			if (height != 1)
 				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = this.col;
+			int col = cols[0];
 			
 			float x1 = 0, x2 = 0, z1 = 0, z2 = 0;
 			if (firstPart) {
