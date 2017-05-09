@@ -153,6 +153,9 @@
     <ClInclude Include="World.h">
       <Filter>Header Files\Map</Filter>
     </ClInclude>
+    <ClInclude Include="WorldEnv.h">
+      <Filter>Header Files\Map</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -210,6 +213,9 @@
       <Filter>Source Files\Math</Filter>
     </ClCompile>
     <ClCompile Include="World.c">
+      <Filter>Source Files\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="WorldEnv.c">
       <Filter>Source Files\Map</Filter>
     </ClCompile>
   </ItemGroup>

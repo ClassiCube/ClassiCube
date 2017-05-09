@@ -4,7 +4,7 @@
 #include "String.h"
 #include "Vector3I.h"
 /* Represents a fixed size 3D array of blocks.
-Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 
