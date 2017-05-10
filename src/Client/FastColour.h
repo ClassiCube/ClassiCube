@@ -24,6 +24,9 @@ FastColour FastColour_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
 /* Constructs a new ARGB colour. */
 FastColour FastColour_Create3(UInt8 r, UInt8 g, UInt8 b);
 
+/* Returns whether two packed colours are equal. */
+bool FastColour_Equals(FastColour a, FastColour b);
+
 /* Multiplies the RGB components by t, where t is in [0, 1] */
 FastColour FastColour_Scale(FastColour value, Real32 t);
 

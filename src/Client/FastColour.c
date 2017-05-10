@@ -12,6 +12,10 @@ FastColour FastColour_Create3(UInt8 r, UInt8 g, UInt8 b) {
 	return col;
 }
 
+bool FastColour_Equals(FastColour a, FastColour b) {
+	return a.Packed == b.Packed;
+}
+
 FastColour FastColour_Scale(FastColour value, Real32 t) {
 	value.R = (UInt8)(value.R * t);
 	value.G = (UInt8)(value.G * t);

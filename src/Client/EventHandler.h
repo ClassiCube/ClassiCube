@@ -27,11 +27,11 @@ void EventHandler_Unregister(void** handlers, Int32* count, void* handler);
 
 
 /* Calls handlers for an event that has no arguments.*/
-void EventHandler_Call_Void(Event_Void* handlers, Int32 handlersCount);
+void EventHandler_Raise_Void(Event_Void* handlers, Int32 handlersCount);
 
-/* Calls handlers for an event that has no arguments.*/
-void EventHandler_Call_Int32(Event_Int32* handlers, Int32 handlersCount);
+/* Calls handlers for an event that takes a 32-bit signed interger argument.*/
+void EventHandler_Raise_Int32(Event_Int32* handlers, Int32 handlersCount, Int32 arg);
 
-/* Calls handlers for an event that has no arguments.*/
-void EventHandler_Call_Float32(Event_Float32* handlers, Int32 handlersCount);
+/* Calls handlers for an event that takes a 32-bit floating point argument.*/
+void EventHandler_Raise_Float32(Event_Float32* handlers, Int32 handlersCount, Real32 arg);
 #endif

@@ -41,21 +41,21 @@ void WorldEvents_RaiseEnvVariableChanged(Int32 envVar);
 
 /* Environment variable identifiers*/
 
-#define EnvVar_SidesBlock 0
-#define EnvVar_EdgeBlock 1
-#define EnvVar_EdgeLevel 2
-#define EnvVar_CloudsLevel 3
-#define EnvVar_CloudsSpeed 4
-#define EnvVar_Weather 5
+#define EnvVar_EdgeBlock 0
+#define EnvVar_SidesBlock 1
+#define EnvVar_EdgeHeight 2
+#define EnvVar_SidesOffset 3
+#define EnvVar_CloudsHeight 4
+#define EnvVar_CloudsSpeed 5
 
-#define EnvVar_SkyCol 6
-#define EnvVar_CloudsCol 7
-#define EnvVar_FogCol 8
-#define EnvVar_SunCol 9
-#define EnvVar_ShadowCol 10
+#define EnvVar_WeatherSpeed 6
+#define EnvVar_WeatherFade 7
+#define EnvVar_Weather 8
+#define EnvVar_ExpFog 9
 
-#define EnvVar_WeatherSpeed 11
-#define EnvVar_WeatherFade 12
-#define EnvVar_ExpFog 13
-#define EnvVar_SidesOffset 14
+#define EnvVar_SkyCol 10
+#define EnvVar_CloudsCol 11
+#define EnvVar_FogCol 12
+#define EnvVar_SunCol 13
+#define EnvVar_ShadowCol 14
 #endif

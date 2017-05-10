@@ -1,4 +1,20 @@
 #include "WorldEnv.h"
+#include "EventHandler.h"
+#include "WorldEvents.h"
+
+
+/* Sets a value and potentially raises event. */
+#define WorldEnv_Set(value, dst, envVar)\
+if (value == dst) return;\
+dst = value;\
+WorldEvents_RaiseEnvVariableChanged(envVar);
+
+/* Sets a colour and potentially raises event. */
+#define WorldEnv_SetCol(value, dst, envVar)\
+if (FastColour_Equals(value, dst)) return;\
+dst = value;\
+WorldEvents_RaiseEnvVariableChanged(envVar);
+
 
 void WorldEnv_Reset() {
 	WorldEnv_DefaultSkyCol = FastColour_Create3(0x99, 0xCC, 0xFF);
@@ -7,7 +23,7 @@ void WorldEnv_Reset() {
 
 	WorldEnv_EdgeHeight = -1; 
 	WorldEnv_SidesOffset = -2; 
-	WorldEnv_CloudHeight = -1;
+	WorldEnv_CloudsHeight = -1;
 
 	WorldEnv_EdgeBlock = BlockID_StillWater; 
 	WorldEnv_SidesBlock = BlockID_Bedrock;
@@ -25,14 +41,89 @@ void WorldEnv_Reset() {
 }
 
 void WorldEnv_ResetLight() {
-	WorldEnv_DefaultShadow = FastColour_Create3(0x9B, 0x9B, 0x9B);
-	WorldEnv_DefaultSun = FastColour_Create3(0xFF, 0xFF, 0xFF);
+	WorldEnv_DefaultShadowCol = FastColour_Create3(0x9B, 0x9B, 0x9B);
+	WorldEnv_DefaultSunCol = FastColour_Create3(0xFF, 0xFF, 0xFF);
 
-	WorldEnv_Shadow = WorldEnv_DefaultShadow;
-	FastColour_GetShaded(WorldEnv_Shadow, &WorldEnv_ShadowXSide, 
+	WorldEnv_ShadowCol = WorldEnv_DefaultShadowCol;
+	FastColour_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide, 
 						&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
 
-	WorldEnv_Sun = WorldEnv_DefaultSun;
-	FastColour_GetShaded(WorldEnv_Sun, &WorldEnv_SunXSide,
+	WorldEnv_SunCol = WorldEnv_DefaultSunCol;
+	FastColour_GetShaded(WorldEnv_SunCol, &WorldEnv_SunXSide,
 						&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
+}
+
+
+void WorldEnv_SetEdgeBlock(BlockID block) {
+	if (block == BlockID_Invalid) return;
+	WorldEnv_Set(block, WorldEnv_EdgeBlock, EnvVar_EdgeBlock);
+}
+
+void WorldEnv_SetSidesBlock(BlockID block) {
+	if (block == BlockID_Invalid) return;
+	WorldEnv_Set(block, WorldEnv_SidesBlock, EnvVar_SidesBlock);
+}
+
+void WorldEnv_SetEdgeHeight(Int32 height) {
+	WorldEnv_Set(height, WorldEnv_EdgeHeight, EnvVar_EdgeHeight);
+}
+
+void WorldEnv_SetSidesOffset(Int32 offset) {
+	WorldEnv_Set(offset, WorldEnv_SidesOffset, EnvVar_SidesOffset);
+}
+
+void WorldEnv_SetCloudsHeight(Int32 height) {
+	WorldEnv_Set(height, WorldEnv_CloudsHeight, EnvVar_CloudsHeight);
+}
+
+void WorldEnv_SetCloudsSpeed(Real32 speed) {
+	WorldEnv_Set(speed, WorldEnv_CloudsSpeed, EnvVar_CloudsSpeed);
+}
+
+
+void WorldEnv_SetWeatherSpeed(Real32 speed) {
+	WorldEnv_Set(speed, WorldEnv_WeatherSpeed, EnvVar_WeatherSpeed);
+}
+
+void WorldEnv_SetWeatherFade(Real32 rate) {
+	WorldEnv_Set(rate, WorldEnv_WeatherFade, EnvVar_WeatherFade);
+}
+
+void WorldEnv_SetWeather(Int32 weather) {
+	WorldEnv_Set(weather, WorldEnv_Weather, EnvVar_Weather);
+}
+
+void WorldEnv_SetExpFog(bool expFog) {
+	WorldEnv_Set(expFog, WorldEnv_ExpFog, EnvVar_ExpFog);
+}
+
+
+void WorldEnv_SetSkyCol(FastColour col) {
+	WorldEnv_SetCol(col, WorldEnv_SkyCol, EnvVar_SkyCol);
+}
+
+void WorldEnv_SetFogCol(FastColour col) {
+	WorldEnv_SetCol(col, WorldEnv_FogCol, EnvVar_FogCol);
+}
+
+void WorldEnv_SetCloudsCol(FastColour col) {
+	WorldEnv_SetCol(col, WorldEnv_CloudsCol, EnvVar_CloudsCol);
+}
+
+void WorldEnv_SetSunCol(FastColour col) {
+	if (FastColour_Equals(col, WorldEnv_SunCol)) return;
+
+	WorldEnv_SunCol = col;
+	FastColour_GetShaded(WorldEnv_SunCol, &WorldEnv_SunXSide,
+						&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
+	WorldEvents_RaiseEnvVariableChanged(EnvVar_SunCol);
+}
+
+void WorldEnv_SetShadowCol(FastColour col) {
+	if (FastColour_Equals(col, WorldEnv_ShadowCol)) return;
+
+	WorldEnv_ShadowCol = col;
+	FastColour_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide,
+		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
+	WorldEvents_RaiseEnvVariableChanged(EnvVar_ShadowCol);
 }
