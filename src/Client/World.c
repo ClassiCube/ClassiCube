@@ -31,34 +31,34 @@ BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z) {
 	if (x < 0 || x >= World_Width || z < 0 || z >= World_Length || y < 0) return BlockID_Bedrock;
 	if (y >= World_Height) return BlockID_Air;
 
-	return World_Blocks[(y * World_Length + z) * World_Width + x];
+	return World_Blocks[World_Pack(x, y, z)];
 }
 
 
 void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID blockId) {
-	World_Blocks[(y * World_Length + z) * World_Width + x] = blockId;
+	World_Blocks[World_Pack(x, y, z)] = blockId;
 }
 
 void World_SetBlock_3I(Vector3I p, BlockID blockId) {
-	World_Blocks[(p.Y * World_Length + p.Z) * World_Width + p.X] = blockId;
+	World_Blocks[World_Pack(p.X, p.Y, p.Z)] = blockId;
 }
 
 BlockID World_GetBlock(Int32 x, Int32 y, Int32 z) {
-	return World_Blocks[(y * World_Length + z) * World_Width + x];
+	return World_Blocks[World_Pack(x, y, z)];
 }
 
 BlockID World_GetBlock_3I(Vector3I p) {
-	return World_Blocks[(p.Y * World_Length + p.Z) * World_Width + p.X];
+	return World_Blocks[World_Pack(p.X, p.Y, p.Z)];
 }
 
 BlockID World_SafeGetBlock(Int32 x, Int32 y, Int32 z) {
-	return World_IsValidPos(x, y, z) ?
-		World_Blocks[(y * World_Length + z) * World_Width + x] : BlockID_Air;
+	return World_IsValidPos(x, y, z) ? 
+		World_Blocks[World_Pack(x, y, z)] : BlockID_Air;
 }
 
 BlockID World_SafeGetBlock_3I(Vector3I p) {
-	return World_IsValidPos(p.X, p.Y, p.Z) ?
-		World_Blocks[(p.Y * World_Length + p.Z) * World_Width + p.X] : BlockID_Air;
+	return World_IsValidPos(p.X, p.Y, p.Z) ? 
+		World_Blocks[World_Pack(p.X, p.Y, p.Z)] : BlockID_Air;
 }
 
 
@@ -77,8 +77,6 @@ Vector3I World_GetCoords(Int32 index) {
 		return Vector3I_Create1(-1);
 
 	Vector3I v;
-	v.X = index % World_Width;
-	v.Y = index / (World_Width * World_Length);
-	v.Z = (index / World_Width) % World_Length;
+	World_Unpack(index, v.X, v.Y, v.Z);
 	return v;
 }
