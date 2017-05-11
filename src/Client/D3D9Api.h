@@ -20,7 +20,7 @@ typedef struct MatrixStack {
 	Int32 Index;
 
 	/* Type of transformation this stack is for. */
-	D3DTRANSFORMSTATETYPE TransformType;
+	D3DTRANSFORMSTATETYPE Type;
 } MatrixStack;
 
 D3DPRIMITIVETYPE d3d9_modeMappings[2] = { D3DPT_TRIANGLELIST, D3DPT_LINELIST };

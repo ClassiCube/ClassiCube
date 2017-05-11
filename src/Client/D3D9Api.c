@@ -8,6 +8,9 @@
 
 IDirect3D9* d3d;
 IDirect3DDevice9* device;
+MatrixStack* curStack;
+MatrixStack viewStack, projStack, texStack;
+
 
 #define D3D9_SetRenderState(raw, state, name) \
 ReturnCode hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
@@ -19,10 +22,14 @@ ErrorHandler_CheckOrFail(hresult, name)
 
 
 void Gfx_Init(Game* game) {
+	// TODO: EVERYTHING ELSE
+	viewStack.Type = D3DTS_VIEW;
+	projStack.Type = D3DTS_PROJECTION;
+	texStack.Type = D3DTS_TEXTURE0;
 }
 
 
-bool Gfx_SetTexturing(bool enabled) {
+void Gfx_SetTexturing(bool enabled) {
 	if (enabled) return;
 	ReturnCode hresult = IDirect3DDevice9_SetTexture(device, 0, NULL);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTexturing");
@@ -157,4 +164,42 @@ void Gfx_SetDepthWrite(bool enabled) {
 	d3d9_depthWrite = enabled;
 	D3D9_SetRenderState((UInt32)enabled, D3DRS_ZWRITEENABLE, "D3D9_SetDepthWrite");
 }
+
+
+*Sets the matrix type that load / push / pop operations should be applied to. * /
+void Gfx_SetMatrixMode(Int32 matrixType);
+
+/* Sets the current matrix to the given matrix.*/
+void Gfx_LoadMatrix(Matrix* matrix);
+
+/* Sets the current matrix to the identity matrix. */
+void Gfx_LoadIdentityMatrix();
+
+/* Multiplies the current matrix by the given matrix, then
+sets the current matrix to the result of the multiplication. */
+void Gfx_MultiplyMatrix(Matrix* matrix);
+
+void Gfx_PushMatrix() {
+	Int32 idx = curStack->Index;
+	if (idx == MatrixStack_Capacity) {
+		ErrorHandler_Fail("Unable to push matrix, at capacity already");
+	}
+
+	curStack->Stack[idx + 1] = curStack->Stack[idx]; /* mimic GL behaviour */
+	curStack->Index++; /* exact same, we don't need to update DirectX state. */
+}
+
+void Gfx_PopMatrix() {
+	Int32 idx = curStack->Index;
+	if (idx == 0) {
+		ErrorHandler_Fail("Unable to pop matrix, at 0 already");
+	}
+
+	curStack->Index--; idx--;
+	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_PopMatrix");
+}
+
+/* Loads an orthographic projection matrix for the given height.*/
+void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);
 #endif

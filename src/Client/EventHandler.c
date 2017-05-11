@@ -2,23 +2,22 @@
 #include "ErrorHandler.h"
 
 void EventHandler_Register(void** handlers, Int32* count, void* handler) {
-	for (int i = 0; i < *count; i++) {
+	for (Int32 i = 0; i < *count; i++) {
 		if (handlers[i] == handler) return;
 	}
 
 	if (*count == EventHandler_Size) {
-		ErrorHandler_Fail(String_FromConstant("Unable to add another event handler"));
-	} else {
-		handlers[*count] = handler;
-		*count++;
+		ErrorHandler_Fail("Unable to add another event handler"));
 	}
+	handlers[*count] = handler;
+	*count++;
 }
 
 void EventHandler_Unregister(void** handlers, Int32* count, void* handler) {
-	for (int i = 0; i < *count; i++) {
+	for (Int32 i = 0; i < *count; i++) {
 		if (handlers[i] != handler) continue;
 
-		// Remove this event handler from the list
+		/* Remove this event handler from the list */
 		for (int j = i; j < *count - 1; j++) {
 			handlers[j] = handlers[j + 1];
 		}
