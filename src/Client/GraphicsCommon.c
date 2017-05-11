@@ -67,7 +67,6 @@ void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height,
 }
 
 void GfxCommon_Draw2DTexture(Texture* tex, FastColour col) {
-	Int32 index = 0;
 	VertexP3fT2fC4b texVerts[4];
 	VertexP3fT2fC4b* ptr = texVerts;
 	GfxCommon_Make2DQuad(tex, col, &ptr);

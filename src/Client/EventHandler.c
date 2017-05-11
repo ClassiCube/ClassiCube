@@ -10,7 +10,7 @@ void EventHandler_Register(void** handlers, Int32* count, void* handler) {
 		ErrorHandler_Fail("Unable to add another event handler");
 	}
 	handlers[*count] = handler;
-	*count++;
+	(*count)++;
 }
 
 void EventHandler_Unregister(void** handlers, Int32* count, void* handler) {
@@ -23,26 +23,26 @@ void EventHandler_Unregister(void** handlers, Int32* count, void* handler) {
 		}
 		handlers[*count - 1] = NULL;
 
-		*count--;
+		(*count)--;
 		return;
 	}
 }
 
 
 void EventHandler_Raise_Void(Event_Void* handlers, Int32 handlersCount) {
-	for (int i = 0; i < handlersCount; i++) {
+	for (Int32 i = 0; i < handlersCount; i++) {
 		handlers[i]();
 	}
 }
 
 void EventHandler_Raise_Int32(Event_Int32* handlers, Int32 handlersCount, Int32 arg) {
-	for (int i = 0; i < handlersCount; i++) {
+	for (Int32 i = 0; i < handlersCount; i++) {
 		handlers[i](arg);
 	}
 }
 
 void EventHandler_Raise_Float32(Event_Float32* handlers, Int32 handlersCount, Real32 arg) {
-	for (int i = 0; i < handlersCount; i++) {
+	for (Int32 i = 0; i < handlersCount; i++) {
 		handlers[i](arg);
 	}
 }

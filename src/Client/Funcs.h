@@ -1,5 +1,6 @@
 #ifndef CS_FUNCS_H
 #define CS_FUNCS_H
+#include "Typedefs.h"
 /* Simple function implementations
    NOTE: doing min(x++, y) etc will increment x twice!
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
@@ -15,8 +16,8 @@
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
 /* returns whether character is uppercase letter */
-#define Char_IsUpper(c) ((c) >= 'A' && (c) <= 'Z')
+bool Char_IsUpper(UInt8 c);
 
 /* Converts uppercase letter to lowercase */
-#define Char_ToLower(c) (c += ' ')
+UInt8 Char_ToLower(UInt8 c);
 #endif

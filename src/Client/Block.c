@@ -159,9 +159,10 @@ static void Block_SplitUppercase(String* buffer, String* blockNames, Int32 start
 
 void Block_SetSide(Int32 textureId, BlockID blockId) {
 	Int32 index = blockId * Side_Sides;
-	for (Int32 i = index; i < index + Side_Bottom; i++) {
-		Block_Textures[i] = (UInt8)textureId;
-	}
+	Block_Textures[index + Side_Left] = (UInt8)textureId;
+	Block_Textures[index + Side_Right] = (UInt8)textureId;
+	Block_Textures[index + Side_Front] = (UInt8)textureId;
+	Block_Textures[index + Side_Back] = (UInt8)textureId;
 }
 
 void Block_SetTex(Int32 textureId, Int32 face, BlockID blockId) {
