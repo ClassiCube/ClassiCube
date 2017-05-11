@@ -1,10 +1,8 @@
-// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 #include "GraphicsAPI.h"
 #include "D3D9Api.h"
 #include "ErrorHandler.h"
 #include "GraphicsEnums.h"
 
-#define USE_DX true
 #ifdef USE_DX
 
 IDirect3D9* d3d;
@@ -23,7 +21,7 @@ ErrorHandler_CheckOrFail(hresult, name)
 
 
 void Gfx_Init(Game* game) {
-	// TODO: EVERYTHING ELSE
+	/* TODO: EVERYTHING ELSE */
 	viewStack.Type = D3DTS_VIEW;
 	projStack.Type = D3DTS_PROJECTION;
 	texStack.Type = D3DTS_TEXTURE0;
@@ -45,7 +43,7 @@ void Gfx_SetFog(bool enabled) {
 	D3D9_SetRenderState((UInt32)enabled, D3DRS_FOGENABLE, "D3D9_SetFog");
 }
 
-UInt32 d3d9_fogCol = 0xFF000000; // black
+UInt32 d3d9_fogCol = 0xFF000000; /* black */
 void Gfx_SetFogColour(FastColour col) {
 	if (col.Packed == d3d9_fogCol) return;
 
@@ -179,7 +177,7 @@ void Gfx_SetMatrixMode(Int32 matrixType) {
 
 void Gfx_LoadMatrix(Matrix* matrix) {
 	if (curStack == &texStack) {
-		matrix->Row2.X = matrix->Row3.X; // NOTE: this hack fixes the texture movements.
+		matrix->Row2.X = matrix->Row3.X; /* NOTE: this hack fixes the texture movements. */
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
 	}
 

@@ -30,6 +30,6 @@ bool FastColour_Equals(FastColour a, FastColour b);
 /* Multiplies the RGB components by t, where t is in [0, 1] */
 FastColour FastColour_Scale(FastColour value, Real32 t);
 
-// TODO: actual constant values? may need to rethink FastColour
+/* TODO: actual constant values? may need to rethink FastColour */
 #define FastColour_White FastColour_Create3(255, 255, 255)
 #endif

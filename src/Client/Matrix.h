@@ -5,7 +5,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-// forward declaration
+/* forward declaration */
 typedef struct Vector3_ Vector3;
 
 typedef struct Vector4 { Real32 X, Y, Z, W; } Vector4;

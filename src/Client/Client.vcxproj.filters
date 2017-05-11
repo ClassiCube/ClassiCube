@@ -93,9 +93,6 @@
     <ClInclude Include="Compiler.h">
       <Filter>Header Files\Defines</Filter>
     </ClInclude>
-    <ClInclude Include="Funcs.h">
-      <Filter>Header Files\Defines</Filter>
-    </ClInclude>
     <ClInclude Include="Platform.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
@@ -171,6 +168,9 @@
     <ClInclude Include="WorldEvents.h">
       <Filter>Header Files\Events</Filter>
     </ClInclude>
+    <ClInclude Include="Funcs.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -238,6 +238,9 @@
     </ClCompile>
     <ClCompile Include="VertexStructs.c">
       <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Funcs.c">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

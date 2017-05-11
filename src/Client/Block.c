@@ -6,7 +6,7 @@
 void Block_Reset(Game* game) {
 	Block_Init();
 	/* TODO: Make this part of TerrainAtlas2D maybe? */
-	//Block_RecalculateSpriteBB(game->TerrainAtlas.AtlasBitmap);
+	/* Block_RecalculateSpriteBB(game->TerrainAtlas.AtlasBitmap); */
 }
 
 void Block_Init() {
@@ -105,7 +105,7 @@ void Block_ResetProps(BlockID block) {
 }
 
 Int32 Block_FindID(String* name) {
-	for (Int32 i = 0; i < Block_Count; i++) {
+	for (Int32 i = BlockID_Air; i < Block_Count; i++) {
 		if (String_CaselessEquals(&Block_Name[i], name)) return i;
 	}
 	return -1;
@@ -140,7 +140,6 @@ String Block_DefaultName(BlockID block) {
 }
 
 static void Block_SplitUppercase(String* buffer, String* blockNames, Int32 start, Int32 end) {
-	Int32 index = 0;
 	for (Int32 i = start; i < end; i++) {
 		UInt8 c = String_CharAt(blockNames, i);
 		bool upper = Char_IsUpper(c) && i > start;
@@ -244,7 +243,7 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 }
 
 void Block_RecalculateSpriteBB(Bitmap* bmp) {
-	for (Int32 i = 0; i < Block_Count; i++) {
+	for (Int32 i = BlockID_Air; i < Block_Count; i++) {
 		if (Block_Draw[i] != DrawType_Sprite) continue;
 		Block_RecalculateBB((BlockID)i, bmp);
 	}
@@ -320,11 +319,11 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 
 
 void Block_UpdateCullingAll() {
-	for (Int32 block = 0; block < Block_Count; block++)
+	for (Int32 block = BlockID_Air; block < Block_Count; block++)
 		Block_CanStretch[block] = 0x3F;
 
-	for (Int32 block = 1; block < Block_Count; block++) {
-		for (Int32 neighbour = 1; neighbour < Block_Count; neighbour++) {
+	for (Int32 block = BlockID_Air; block < Block_Count; block++) {
+		for (Int32 neighbour = BlockID_Air; neighbour < Block_Count; neighbour++) {
 			Block_CalcCulling((BlockID)block, (BlockID)neighbour);
 		}
 	}
@@ -333,7 +332,7 @@ void Block_UpdateCullingAll() {
 void Block_UpdateCulling(BlockID block) {
 	Block_CanStretch[block] = 0x3F;
 
-	for (Int32 other = 1; other < Block_Count; other++) {
+	for (Int32 other = BlockID_Air; other < Block_Count; other++) {
 		Block_CalcCulling(block, (BlockID)other);
 		Block_CalcCulling((BlockID)other, block);
 	}

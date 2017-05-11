@@ -1,7 +1,4 @@
-// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 #include "Random.h"
-
-// Based on https://docs.oracle.com/javase/7/docs/api/java/util/Random.html
 #define value (0x5DEECE66DLL)
 #define mask ((1LL << 48) - 1)
 

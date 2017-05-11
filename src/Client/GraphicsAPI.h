@@ -37,7 +37,7 @@ Int32 Gfx_ContextLostCount;
 Event_Void Gfx_ContextRecreated[EventHandler_Size];
 Int32 Gfx_ContextRecreatedCount;
 
-// TODO: IMPLEMENT THIS
+/* TODO: IMPLEMENT THIS */
 /*	/// <summary> Delegate that is invoked when the current context is lost,
 	/// and is repeatedly invoked until the context can be retrieved. </summary>
 	public Action<ScheduledTask> LostContextFunction;*/

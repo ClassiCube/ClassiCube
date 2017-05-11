@@ -15,7 +15,7 @@ typedef struct VertexP3fC4b {
 
 void VertexP3C4b_Set(VertexP3fC4b* target, Real32 x, Real32 y, Real32 z, FastColour col);
 
-// 3 * 4 + 4 * 1
+/* 3 * 4 + 4 * 1 */
 #define VertexP3fC4b_Size 16
 
 
@@ -29,6 +29,6 @@ typedef struct VertexP3fT2fC4b {
 void VertexP3fT2fC4b_Set(VertexP3fT2fC4b* target, Real32 x, Real32 y, Real32 z,
 	Real32 u, Real32 v, FastColour col);
 
-// 3 * 4 + 2 * 4 + 4 * 1
+/* 3 * 4 + 2 * 4 + 4 * 1 */
 #define VertexP3fT2fC4b_Size 24; 
 #endif

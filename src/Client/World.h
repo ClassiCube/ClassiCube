@@ -38,7 +38,7 @@ UInt8 World_Uuid[16];
 
 /* Current terrain.png or texture pack url of this map. */
 String World_TextureUrl;
-// TODO: how to initalise this string
+/* TODO: how to initalise this string */
 
 
 /* Resets all of the properties to their defaults. */

@@ -21,7 +21,7 @@ void Platform_MemFree(void* mem) {
 
 void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes) {
 	UInt8* dstByte = (UInt8*)dst;
-	// TODO: massively slow
+	/* TODO: massively slow */
 	for (UInt32 i = 0; i < numBytes; i++) {
 		*dstByte++ = value;
 	}
@@ -30,7 +30,7 @@ void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes) {
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
 	UInt8* dstByte = (UInt8*)dst;
 	UInt8* srcByte = (UInt8*)src;
-	// TODO: massively slow
+	/* TODO: massively slow */
 	for (UInt32 i = 0; i < numBytes; i++) {
 		*dstByte++ = *srcByte++;
 	}
@@ -38,7 +38,7 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
 
 
 void Platform_Log(String message) {
-	// TODO: log to console
+	/* TODO: log to console */
 }
 
 

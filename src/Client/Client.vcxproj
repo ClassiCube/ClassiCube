@@ -210,6 +210,7 @@
     <ClCompile Include="EventHandler.c" />
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="FastColour.c" />
+    <ClCompile Include="Funcs.c" />
     <ClCompile Include="GraphicsCommon.c" />
     <ClCompile Include="Matrix.c" />
     <ClCompile Include="Noise.c" />

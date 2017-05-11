@@ -42,4 +42,7 @@ typedef UInt8 EntityID;
 
 #define USE16_BIT FALSE
 #define STRING_SIZE 64
+
+// TODO: put this in project defines, not here
+#define USE_DX true
 #endif
