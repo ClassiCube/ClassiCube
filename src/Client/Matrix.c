@@ -1,10 +1,6 @@
 #include "Matrix.h"
 #include "ExtMath.h"
 
-Vector4 Vector4_Create4(Real32 x, Real32 y, Real32 z, Real32 w) {
-	Vector4 v; v.X = x; v.Y = y; v.Z = z; v.W = w; return v;
-}
-
 /* Transposed, copied from https://open.gl/transformations */
 
 void Matrix_RotateX(Real32 angle, Matrix* result) {
@@ -62,7 +58,7 @@ void Matrix_OrthographicOffCenter(Real32 left, Real32 right, Real32 bottom, Real
 
 void Matrix_PerspectiveFieldOfView(Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* result) {
 	Real32 c = zNear * Math_Tan(0.5f * fovy);
-	CreatePerspectiveOffCenter(-c * aspect, c * aspect, -c, c, zNear, zFar, result);
+	Matrix_PerspectiveOffCenter(-c * aspect, c * aspect, -c, c, zNear, zFar, result);
 }
 
 void Matrix_PerspectiveOffCenter(Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar, Matrix* result) {

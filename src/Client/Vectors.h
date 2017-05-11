@@ -6,8 +6,10 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct Vector2 { Real32 X, Y; } Vector2;
-typedef struct Vector3 { Real32 X, Y, Z; } Vector3;
+typedef struct Vector2_ { Real32 X, Y; } Vector2;
+typedef struct Vector3_ { Real32 X, Y, Z; } Vector3;
+
+
 
 /* Constructs a 2D vector from the given coordinates. */
 Vector2 Vector2_Create2(Real32 x, Real32 y);
@@ -17,6 +19,7 @@ Vector3 Vector3_Create1(Real32 value);
 
 /* Constructs a 3D vector from the given coordinates. */
 Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z);
+
 
 /* Returns the length of the given vector. */
 Real32 Vector3_Length(Vector3* v);

@@ -226,7 +226,6 @@ void Gfx_PopMatrix() {
 		ErrorHandler_Fail("Unable to pop matrix, at 0 already");
 	}
 
-	D3DMATRIX m;
 	curStack->Index--; idx--;
 	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_PopMatrix");

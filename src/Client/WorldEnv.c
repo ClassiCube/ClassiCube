@@ -32,7 +32,7 @@ void WorldEnv_Reset() {
 	WorldEnv_WeatherSpeed = 1.0f; 
 	WorldEnv_WeatherFade = 1.0f;
 
-	ResetLight();
+	WorldEnv_ResetLight();
 	WorldEnv_SkyCol = WorldEnv_DefaultSkyCol;
 	WorldEnv_FogCol = WorldEnv_DefaultFogCol;
 	WorldEnv_CloudsCol = WorldEnv_DefaultCloudsCol;
