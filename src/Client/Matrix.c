@@ -1,6 +1,13 @@
 #include "Matrix.h"
 #include "ExtMath.h"
 
+Matrix Matrix_Identity = {
+	1.0f, 0.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, 1.0f, 0.0f,
+	0.0f, 0.0f, 0.0f, 1.0f
+};
+
 /* Transposed, copied from https://open.gl/transformations */
 
 void Matrix_RotateX(Real32 angle, Matrix* result) {

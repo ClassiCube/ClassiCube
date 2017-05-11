@@ -22,13 +22,7 @@ typedef struct Matrix {
 } Matrix;
 
 /* Identity matrix. */
-Matrix Matrix_Identity = {
-	1.0f, 0.0f, 0.0f, 0.0f,
-	0.0f, 1.0f, 0.0f, 0.0f,
-	0.0f, 0.0f, 1.0f, 0.0f,
-	0.0f, 0.0f, 0.0f, 1.0f
-};
-
+extern Matrix Matrix_Identity;
 
 /* Transformation matrix representing rotation angle radians around X axis. */
 void Matrix_RotateX(Real32 angle, Matrix* result);

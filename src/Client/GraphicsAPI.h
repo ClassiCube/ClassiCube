@@ -17,13 +17,13 @@
 void Gfx_Init(Game* game);
 
 /* Maximum supported length of a dimension (width and height) of a 2D texture. */
-Int32 Gfx_MaxTextureDimensions = 0;
+Int32 Gfx_MaxTextureDimensions;
 
 /* Minimum near plane value supported by the graphics API. */
-float Gfx_MinZNear = 0.0f;
+float Gfx_MinZNear;
 
 /* Returns whether this graphics api had a valid context. */
-bool Gfx_LostContext = false;
+bool Gfx_LostContext;
 
 /* Maximum number of vertices that can be indexed. */
 #define Gfx_MaxIndices (65536 / 4 * 6)
@@ -31,11 +31,11 @@ bool Gfx_LostContext = false;
 
 /* Event raised when a context is destroyed after having been previously lost. */
 Event_Void Gfx_ContextLost[EventHandler_Size];
-Int32 Gfx_ContextLostCount = 0;
+Int32 Gfx_ContextLostCount;
 
 /* Event raised when a context is recreated after having been previously lost. */
 Event_Void Gfx_ContextRecreated[EventHandler_Size];
-Int32 Gfx_ContextRecreatedCount = 0;
+Int32 Gfx_ContextRecreatedCount;
 
 // TODO: IMPLEMENT THIS
 /*	/// <summary> Delegate that is invoked when the current context is lost,
@@ -162,7 +162,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, 
 /* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex);
 
-Int32 Gfx_strideSizes[2] = { 16, 24 };
+static Int32 Gfx_strideSizes[2] = { 16, 24 };
 
 
 /* Sets the matrix type that load/push/pop operations should be applied to. */

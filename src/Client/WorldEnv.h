@@ -14,36 +14,36 @@
 
 
 /* Block that surrounds map the map horizontally (default water) */
-BlockID WorldEnv_EdgeBlock = BlockID_StillWater;
+extern BlockID WorldEnv_EdgeBlock;
 
 /* Block that surrounds the map that fills the bottom of the map horizontally,
 fills part of the vertical sides of the map, and also surrounds map the map horizontally. (default bedrock) */
-BlockID WorldEnv_SidesBlock = BlockID_Bedrock;
+extern BlockID WorldEnv_SidesBlock;
 
 /* Height of the map edge. */
-Int32 WorldEnv_EdgeHeight;
+extern Int32 WorldEnv_EdgeHeight;
 
 /* Offset of height of map sides from height of map edge. */
-Int32 WorldEnv_SidesOffset = -2;
+extern Int32 WorldEnv_SidesOffset;
 
 /* Height of the clouds. */
-Int32 WorldEnv_CloudsHeight;
+extern Int32 WorldEnv_CloudsHeight;
 
 /* Modifier of how fast clouds travel across the world, defaults to 1. */
-Real32 WorldEnv_CloudsSpeed = 1.0f;
+extern Real32 WorldEnv_CloudsSpeed;
 
 
 /* Modifier of how fast rain/snow falls, defaults to 1. */
-Real32 WorldEnv_WeatherSpeed = 1.0f;
+extern Real32 WorldEnv_WeatherSpeed;
 
 /* Modifier of how fast rain/snow fades, defaults to 1. */
-Real32 WorldEnv_WeatherFade = 1.0f;
+extern Real32 WorldEnv_WeatherFade;
 
 /* Current weather for this particular map. */
-Int32 WorldEnv_Weather = Weather_Sunny;
+extern Int32 WorldEnv_Weather;
 
 /* Whether exponential fog mode is used by default. */
-bool WorldEnv_ExpFog = false;
+extern bool WorldEnv_ExpFog;
 
 
 /* Colour of the sky located behind / above clouds. */
