@@ -236,5 +236,8 @@
     <ClCompile Include="EventHandler.c">
       <Filter>Source Files\Events</Filter>
     </ClCompile>
+    <ClCompile Include="VertexStructs.c">
+      <Filter>Source Files\Math</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -65,12 +65,12 @@ ReturnCode Platform_FileCreate(void** file, String path) {
 }
 
 ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
-	BOOL success = ReadFile((HANDLE)file, buffer, count, &bytesRead, NULL);
+	BOOL success = ReadFile((HANDLE)file, buffer, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
 ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten) {
-	BOOL success = WriteFile((HANDLE)file, buffer, count, &bytesWritten, NULL);
+	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWritten, NULL);
 	return success ? 0 : GetLastError();
 }
 
