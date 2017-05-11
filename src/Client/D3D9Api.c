@@ -196,14 +196,18 @@ void Gfx_LoadIdentityMatrix() {
 	}
 
 	Int32 idx = curStack->Index;
-	curStack->Stack[idx] = *matrix;
+	curStack->Stack[idx] = Matrix_Identity;
 
 	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_LoadIdentityMatrix");
 }
 
 void Gfx_MultiplyMatrix(Matrix* matrix) {
-	curStack.MultiplyTop(ref matrix);
+	Int32 idx = curStack->Index;
+	Matrix_Mul(matrix, &curStack->Stack[idx], &curStack->Stack[idx]);
+
+	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_MultiplyMatrix");
 }
 
 void Gfx_PushMatrix() {
@@ -228,6 +232,15 @@ void Gfx_PopMatrix() {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_PopMatrix");
 }
 
-/* Loads an orthographic projection matrix for the given height.*/
-void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);
+#define d3d9_zN -10000.0f
+#define d3d9_zF 10000.0f
+void Gfx_LoadOrthoMatrix(Real32 width, Real32 height) {
+	Matrix matrix;
+	Matrix_OrthographicOffCenter(0, width, height, 0, d3d9_zN, d3d9_zF, &matrix);
+
+	matrix.Row2.Y = 1.0f / (d3d9_zN - d3d9_zF);
+	matrix.Row2.Z = d3d9_zN / (d3d9_zN - d3d9_zF);
+	matrix.Row3.Z = 1.0f;
+	Gfx_LoadMatrix(&matrix);
+}
 #endif

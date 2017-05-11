@@ -18,6 +18,8 @@
 
 #define Math_Cos(x) cosf(x)
 
+#define Math_Tan(x) tanf(x)
+
 #define Math_Sqrt(x) sqrtf(x)
 
 /* Integer floor of a floating-point value. */
