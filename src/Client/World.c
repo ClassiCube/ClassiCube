@@ -3,11 +3,12 @@
 #include "ErrorHandler.h"
 #include "String.h"
 #include "WorldEnv.h"
+#include "Platform.h"
 
 void World_Reset() {
 	World_Width = 0; World_Height = 0; World_Length = 0;
 	World_Blocks = NULL; World_BlocksSize = 0;
-	World_Uuid = Guid.NewGuid();
+	Platform_NewUuid(World_Uuid);
 }
 
 void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length) {
@@ -22,8 +23,8 @@ void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 heigh
 	if (WorldEnv_EdgeHeight == -1) {
 		WorldEnv_EdgeHeight = height / 2;
 	}
-	if (WorldEnv_CloudHeight == -1) {
-		WorldEnv_CloudHeight = height + 2;
+	if (WorldEnv_CloudsHeight == -1) {
+		WorldEnv_CloudsHeight = height + 2;
 	}
 }
 

@@ -11,7 +11,8 @@ Event_Void WorldEvents_NewMap[EventHandler_Size];
 Int32 WorldEvents_NewMapCount = 0;
 
 /* Raises NewMap event. */
-void WorldEvents_RaiseNewMap();
+#define WorldEvents_RaiseNewMap()\
+EventHandler_Raise_Void(WorldEvents_NewMap, WorldEvents_NewMapCount);
 
 
 /* Raised when a portion of the world is read and decompressed, or generated.
@@ -20,23 +21,26 @@ Event_Float32 WorldEvents_MapLoading[EventHandler_Size];
 Int32 WorldEvents_MapLoadingCount = 0;
 
 /* Raises MapLoading event. */
-void WorldEvents_RaiseMapLoading(Real32 progress);
+#define WorldEvents_RaiseMapLoading(progress)\
+EventHandler_Raise_Float32(WorldEvents_MapLoading, WorldEvents_MapLoadingCount, progress);
 
 
 /* Raised when new world has finished loading and the player can now interact with it. */
-Event_Void WorldEvents_NewMapLoaded[EventHandler_Size];
-Int32 WorldEvents_NewMapLoadedCount = 0;
+Event_Void WorldEvents_MapLoaded[EventHandler_Size];
+Int32 WorldEvents_MapLoadedCount = 0;
 
 /* Raises NewMapLoaded event. */
-void WorldEvents_RaiseNewMapLoaded();
+#define WorldEvents_RaiseMapLoaded()\
+EventHandler_Raise_Void(WorldEvents_MapLoaded, WorldEvents_MapLoadedCount);
 
 
 /* Raised when an environment variable of the world is changed by the user, CPE, or WoM config. */
-Event_Int32 WorldEvents_EnvVariableChanged[EventHandler_Size];
-Int32 WorldEvents_EnvVariableChangedCount = 0;
+Event_Int32 WorldEvents_EnvVarChanged[EventHandler_Size];
+Int32 WorldEvents_EnvVarChangedCount = 0;
 
 /* Raises EnvVariableChanged event. */
-void WorldEvents_RaiseEnvVariableChanged(Int32 envVar);
+#define WorldEvents_RaiseEnvVariableChanged(envVar)\
+EventHandler_Raise_Int32(WorldEvents_EnvVarChanged, WorldEvents_EnvVarChangedCount, envVar);
 
 
 /* Environment variable identifiers*/

@@ -58,7 +58,7 @@ void Gfx_BindTexture(Int32 texId);
 void Gfx_DeleteTexture(Int32* texId);
 
 /* Sets whether texturing is applied when rasterizing primitives. */
-bool Gfx_SetTexturing(bool enabled);
+void Gfx_SetTexturing(bool enabled);
 
 
 /* Sets whether fog is currently enabled. */

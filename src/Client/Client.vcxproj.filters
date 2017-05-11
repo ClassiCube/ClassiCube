@@ -73,6 +73,9 @@
     <Filter Include="Header Files\Events">
       <UniqueIdentifier>{a912f0d5-3ceb-4e7e-ba4e-28170c634047}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Events">
+      <UniqueIdentifier>{03efa5de-9e49-4185-bb40-fa5e5a2846e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -229,6 +232,9 @@
     </ClCompile>
     <ClCompile Include="D3D9Api.c">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="EventHandler.c">
+      <Filter>Source Files\Events</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

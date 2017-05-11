@@ -4,6 +4,25 @@
 #include <d3d9caps.h>
 #include <d3d9types.h>
 
+/* Abstracts Direct3D9 3D graphics rendering API.
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
+
+/* Maximum number of matrices that go on a stack. */
+#define MatrixStack_Capacity 24
+
+typedef struct MatrixStack {
+
+	/* Raw array of matrices.*/
+	Matrix Stack[MatrixStack_Capacity];
+
+	/* Current active matrix. */
+	Int32 Index;
+
+	/* Type of transformation this stack is for. */
+	D3DTRANSFORMSTATETYPE TransformType;
+} MatrixStack;
+
 D3DPRIMITIVETYPE d3d9_modeMappings[2] = { D3DPT_TRIANGLELIST, D3DPT_LINELIST };
 D3DFORMAT d3d9_depthFormats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
 D3DFORMAT d3d9_viewFormats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };

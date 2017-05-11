@@ -31,6 +31,9 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
 /* Logs a message to console (if attached). Implictly puts each entry on a newline. */
 void Platform_Log(String message);
 
+/* Generates a new random uuid / guid. */
+void Platform_NewUuid(UInt8* uuid);
+
 
 /* Returns whether a file with the given name exists. */
 bool Platform_FileExists(String path);
