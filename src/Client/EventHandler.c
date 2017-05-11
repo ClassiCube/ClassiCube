@@ -7,7 +7,7 @@ void EventHandler_Register(void** handlers, Int32* count, void* handler) {
 	}
 
 	if (*count == EventHandler_Size) {
-		ErrorHandler_Fail("Unable to add another event handler"));
+		ErrorHandler_Fail("Unable to add another event handler");
 	}
 	handlers[*count] = handler;
 	*count++;

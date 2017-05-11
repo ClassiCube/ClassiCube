@@ -19,7 +19,7 @@ void GfxCommon_LoseContext(String reason) {
 	Platform_Log(String_FromConstant("Lost graphics context:"));
 	Platform_Log(reason);
 
-	EventHandler_Call_Void(Gfx_ContextLost, Gfx_ContextLostCount);
+	EventHandler_Raise_Void(Gfx_ContextLost, Gfx_ContextLostCount);
 	GfxCommon_Free();
 }
 
@@ -27,7 +27,7 @@ void GfxCommon_RecreateContext() {
 	Gfx_LostContext = false;
 	Platform_Log(String_FromConstant("Recreating graphics context"));
 
-	EventHandler_Call_Void(Gfx_ContextRecreated, Gfx_ContextRecreatedCount);
+	EventHandler_Raise_Void(Gfx_ContextRecreated, Gfx_ContextRecreatedCount);
 	GfxCommon_Init();
 }
 

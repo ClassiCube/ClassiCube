@@ -2,6 +2,7 @@
 #include "GraphicsAPI.h"
 #include "D3D9Api.h"
 #include "ErrorHandler.h"
+#include "GraphicsEnums.h"
 
 #define USE_DX true
 #ifdef USE_DX
@@ -166,18 +167,44 @@ void Gfx_SetDepthWrite(bool enabled) {
 }
 
 
-*Sets the matrix type that load / push / pop operations should be applied to. * /
-void Gfx_SetMatrixMode(Int32 matrixType);
+void Gfx_SetMatrixMode(Int32 matrixType) {
+	if (matrixType == MatrixType_Projection) {
+		curStack = &projStack;
+	} else if (matrixType == MatrixType_Modelview) {
+		curStack = &viewStack;
+	} else if (matrixType == MatrixType_Texture) {
+		curStack = &texStack;
+	}
+}
 
-/* Sets the current matrix to the given matrix.*/
-void Gfx_LoadMatrix(Matrix* matrix);
+void Gfx_LoadMatrix(Matrix* matrix) {
+	if (curStack == &texStack) {
+		matrix->Row2.X = matrix->Row3.X; // NOTE: this hack fixes the texture movements.
+		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+	}
 
-/* Sets the current matrix to the identity matrix. */
-void Gfx_LoadIdentityMatrix();
+	Int32 idx = curStack->Index;
+	curStack->Stack[idx] = *matrix;
+	
+	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_LoadMatrix");
+}
 
-/* Multiplies the current matrix by the given matrix, then
-sets the current matrix to the result of the multiplication. */
-void Gfx_MultiplyMatrix(Matrix* matrix);
+void Gfx_LoadIdentityMatrix() {
+	if (curStack == &texStack) {
+		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
+	}
+
+	Int32 idx = curStack->Index;
+	curStack->Stack[idx] = *matrix;
+
+	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_LoadIdentityMatrix");
+}
+
+void Gfx_MultiplyMatrix(Matrix* matrix) {
+	curStack.MultiplyTop(ref matrix);
+}
 
 void Gfx_PushMatrix() {
 	Int32 idx = curStack->Index;
@@ -195,6 +222,7 @@ void Gfx_PopMatrix() {
 		ErrorHandler_Fail("Unable to pop matrix, at 0 already");
 	}
 
+	D3DMATRIX m;
 	curStack->Index--; idx--;
 	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_PopMatrix");
