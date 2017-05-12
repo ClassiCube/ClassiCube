@@ -19,6 +19,11 @@ typedef struct Bitmap {
 	Int32 Height;
 } Bitmap;
 
+
+/* Calculates size of data of a 2D bitmap in bytes. */
+#define Bitmap_DataSize(width, height) (UInt32)width * (UInt32)height * sizeof(UInt32)
+
+
 /* Constructs or updates a Bitmap instance. */
 void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, Int32 stride, UInt8* scan0);
 
@@ -30,4 +35,7 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* sr
 
 /* Copies a row of pixels from one bitmap to another. */
 void Bitmap_CopyRow(Int32 srcY, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 width);
+
+/* Allocates a new bitmap of the given dimensions. You are responsible for freeing its memory! */
+void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height);
 #endif

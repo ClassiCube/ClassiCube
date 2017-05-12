@@ -3,6 +3,8 @@
 #include "GraphicsAPI.h"
 #include "Bitmap.h"
 #include "Platform.h"
+#include "ExtMath.h"
+#include "Block.h"
 
 TextureRec Atlas1D_TexRec(Int32 texId, Int32 uCount, Int32* index) {
 	*index = texId / Atlas1D_ElementsPerAtlas1D;
@@ -20,9 +22,9 @@ void Atlas1D_UpdateState() {
 	Int32 elementsPerFullAtlas = maxVerticalSize / Atlas2D_ElementSize;
 	Int32 totalElements = Atlas2D_RowsCount * Atlas2D_ElementsPerRow;
 
-	Int32 atlasesCount = Utils.CeilDiv(totalElements, elementsPerFullAtlas);
+	Int32 atlasesCount = Math_CeilDiv(totalElements, elementsPerFullAtlas);
 	Atlas1D_ElementsPerAtlas1D = min(elementsPerFullAtlas, totalElements);
-	Int32 atlas1DHeight = Utils.NextPowerOf2(Atlas1D_ElementsPerAtlas1D * Atlas2D_ElementSize);
+	Int32 atlas1DHeight = Math_NextPowOf2(Atlas1D_ElementsPerAtlas1D * Atlas2D_ElementSize);
 
 	Atlas1D_Convert2DTo1D(atlasesCount, atlas1DHeight);
 	Atlas1D_ElementsPerBitmap = atlas1DHeight / Atlas2D_ElementSize;
@@ -39,7 +41,7 @@ void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	String_AppendConstant(&log, " bmps, ");
 	String_AppendInt32(&log, Atlas1D_ElementsPerBitmap);
 	String_AppendConstant(&log, " per bmp");
-	Platform_LogDebug(log);
+	Platform_Log(log);
 
 	Int32 index = 0, i;
 	for (i = 0; i < atlasesCount; i++) {
@@ -49,7 +51,12 @@ void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 
 void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Int32 elemSize = Atlas2D_ElementSize;
-	Bitmap atlas1D = Platform.CreateBmp(elemSize, atlas1DHeight);
+	Bitmap atlas1D;
+	Bitmap_Allocate(&atlas1D, elemSize, atlas1DHeight);
+
+	if (atlas1D.Scan0 == NULL) {
+		ErrorHandler_Fail("Atlas1D_Make1DTexture - couldn't allocate memory");
+	}
 	Int32 index1D;
 
 	for (index1D = 0; index1D < Atlas1D_ElementsPerAtlas1D; index1D++) {
@@ -60,7 +67,9 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 						&Atlas2D_Bitmap, &atlas1D, elemSize);
 		(*index)++;
 	}
+
 	Atlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true);
+	Platform_MemFree(atlas1D.Scan0);
 }
 
 Int32 Atlas1D_UsedAtlasesCount() {

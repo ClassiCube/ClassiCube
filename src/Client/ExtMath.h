@@ -24,4 +24,13 @@
 
 /* Integer floor of a floating-point value. */
 Int32 Math_Floor(Real32 value);
+
+/* Performs rounding upwards integer division.*/
+Int32 Math_CeilDiv(Int32 a, Int32 b);
+
+/* Returns the next highest power of 2 that is greater or equal to the given value. */
+Int32 Math_NextPowOf2(Int32 value);
+
+/* Returns whether the given value is a power of 2. */
+bool Math_IsPowOf2(Int32 value);
 #endif

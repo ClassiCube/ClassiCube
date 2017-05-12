@@ -83,8 +83,9 @@ Vector3 Block_RenderMinBB[Block_Count];
 Vector3 Block_RenderMaxBB[Block_Count];
 
 
+#define Block_TexturesCount Block_Count * Side_Sides
 /* Raw texture ids of each face of each block. */
-UInt8 Block_Textures[Block_Count * Side_Sides];
+UInt8 Block_Textures[Block_TexturesCount];
 
 /* Returns whether player is allowed to place the given block. */
 bool Block_CanPlace[Block_Count];

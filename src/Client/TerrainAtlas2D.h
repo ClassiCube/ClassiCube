@@ -25,6 +25,8 @@ void Atlas2D_UpdateState(Bitmap bmp);
 /* Creates a native texture that contains the tile at the specified index. */
 Int32 Atlas2D_LoadTextureElement(Int32 index);
 
+static Int32 Atlas2D_LoadTextureElement_Raw(Int32 index, Bitmap* element);
+
 /* Disposes of the underlying atlas bitmap. */
 void Atlas2D_Free();
 #endif

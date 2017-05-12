@@ -1,4 +1,5 @@
 #include "Bitmap.h"
+#include "Platform.h"
 
 void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, Int32 stride, UInt8* scan0) {
 	bmp->Width = width; bmp->Height = height; bmp->Stride = stride; bmp->Scan0 = scan0;
@@ -26,4 +27,10 @@ void Bitmap_CopyRow(Int32 srcY, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 widt
 	for (x = 0; x < width; x++) {
 		dstRow[x] = srcRow[x];
 	}
+}
+
+void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
+	bmp->Width = width; bmp->Height = height;
+	bmp->Stride = width * sizeof(UInt32);
+	bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(width, height));
 }
