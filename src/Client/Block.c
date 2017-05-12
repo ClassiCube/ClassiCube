@@ -105,8 +105,9 @@ void Block_ResetProps(BlockID block) {
 }
 
 Int32 Block_FindID(String* name) {
-	for (Int32 i = BlockID_Air; i < Block_Count; i++) {
-		if (String_CaselessEquals(&Block_Name[i], name)) return i;
+	Int32 block;
+	for (block = BlockID_Air; block < Block_Count; block++) {
+		if (String_CaselessEquals(&Block_Name[block], name)) return i;
 	}
 	return -1;
 }
@@ -134,7 +135,7 @@ String Block_DefaultName(BlockID block) {
 	Int32 end = String_IndexOf(&blockNames, ' ', start);
 	if (end == -1) end = blockNames.length;
 
-	String buffer = String_FromBuffer(Block_NamePtr(block), STRING_SIZE);
+	String buffer = String_FromRawBuffer(Block_NamePtr(block), STRING_SIZE);
 	Block_SplitUppercase(&buffer, &blockNames, start, end);
 	return buffer;
 }
@@ -243,9 +244,10 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 }
 
 void Block_RecalculateSpriteBB(Bitmap* bmp) {
-	for (Int32 i = BlockID_Air; i < Block_Count; i++) {
-		if (Block_Draw[i] != DrawType_Sprite) continue;
-		Block_RecalculateBB((BlockID)i, bmp);
+	Int32 block;
+	for (block = BlockID_Air; block < Block_Count; block++) {
+		if (Block_Draw[block] != DrawType_Sprite) continue;
+		Block_RecalculateBB((BlockID)block, bmp);
 	}
 }
 
@@ -269,9 +271,10 @@ void Block_RecalculateBB(BlockID block, Bitmap* bmp) {
 }
 
 Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	for (Int32 y = 0; y < size; y++) {
+	Int32 x, y;
+	for (y = 0; y < size; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-		for (Int32 x = 0; x < size; x++) {
+		for (x = 0; x < size; x++) {
 			if ((UInt8)(row[x] >> 24) != 0) {
 				return 1 - (float)y / size;
 			}
@@ -281,9 +284,10 @@ Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp)
 }
 
 Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	for (Int32 y = size - 1; y >= 0; y--) {
+	Int32 x, y;
+	for (y = size - 1; y >= 0; y--) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-		for (Int32 x = 0; x < size; x++) {
+		for (x = 0; x < size; x++) {
 			if ((UInt8)(row[x] >> 24) != 0) {
 				return 1 - (float)(y + 1) / size;
 			}
@@ -293,8 +297,9 @@ Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* b
 }
 
 Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	for (Int32 x = 0; x < size; x++) {
-		for (Int32 y = 0; y < size; y++) {
+	Int32 x, y;
+	for (x = 0; x < size; x++) {
+		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if ((UInt8)(row[x] >> 24) != 0) {
 				return (float)x / size;
@@ -305,8 +310,9 @@ Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp
 }
 
 Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	for (Int32 x = size - 1; x >= 0; x--) {
-		for (Int32 y = 0; y < size; y++) {
+	Int32 x, y;
+	for (x = size - 1; x >= 0; x--) {
+		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if ((UInt8)(row[x] >> 24) != 0) {
 				return (float)(x + 1) / size;
@@ -319,11 +325,12 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 
 
 void Block_UpdateCullingAll() {
-	for (Int32 block = BlockID_Air; block < Block_Count; block++)
+	Int32 block, neighbour;
+	for (block = BlockID_Air; block < Block_Count; block++)
 		Block_CanStretch[block] = 0x3F;
 
-	for (Int32 block = BlockID_Air; block < Block_Count; block++) {
-		for (Int32 neighbour = BlockID_Air; neighbour < Block_Count; neighbour++) {
+	for (block = BlockID_Air; block < Block_Count; block++) {
+		for (neighbour = BlockID_Air; neighbour < Block_Count; neighbour++) {
 			Block_CalcCulling((BlockID)block, (BlockID)neighbour);
 		}
 	}
@@ -332,7 +339,8 @@ void Block_UpdateCullingAll() {
 void Block_UpdateCulling(BlockID block) {
 	Block_CanStretch[block] = 0x3F;
 
-	for (Int32 other = BlockID_Air; other < Block_Count; other++) {
+	Int32 other;
+	for (other = BlockID_Air; other < Block_Count; other++) {
 		Block_CalcCulling(block, (BlockID)other);
 		Block_CalcCulling((BlockID)other, block);
 	}

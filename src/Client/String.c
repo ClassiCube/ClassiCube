@@ -1,11 +1,20 @@
 #include "String.h"
 #include "Funcs.h"
 
-String String_FromBuffer(UInt8* buffer, UInt16 capacity) {
+String String_FromEmptyBuffer(UInt8* buffer, UInt16 capacity) {
 	String str;
 	str.buffer = buffer;
 	str.capacity = capacity;
 	str.length = 0;
+	return str;
+}
+
+String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
+	String str = String_FromEmptyBuffer(buffer, capacity);
+	// Need to set region occupied by string to NUL for interop with native APIs
+	for (Int32 i = 0; i < capacity + 1; i++) {
+		buffer[i] = 0;
+	}
 	return str;
 }
 
@@ -66,6 +75,7 @@ bool String_Append(String* str, UInt8 c) {
 	str->length++;
 	return true;
 }
+
 
 Int32 String_IndexOf(String* str, UInt8 c, Int32 offset) {
 	for (Int32 i = offset; i < str->length; i++) {

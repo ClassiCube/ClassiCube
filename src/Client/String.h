@@ -18,8 +18,12 @@ typedef struct String {
 	UInt16 capacity;
 } String;
 
-/* Constructs a new string, filled with NULL characters. */
-String String_FromBuffer(UInt8* buffer, UInt16 capacity);
+/* Constructs a new string, pointing a buffer consisting purely of NULL characters. */
+String String_FromEmptyBuffer(UInt8* buffer, UInt16 capacity);
+
+/* Constructs a new string, pointing a buffer consisting of arbitary data.
+NOTE: This method sets the bytes occupied by the string to NUL. */
+String String_FromRawBuffer(UInt8* buffer, UInt16 capacity);
 
 /* Constructs a new string from a constant readonly string. */
 String String_FromConstant(const UInt8* buffer);
