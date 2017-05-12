@@ -2,7 +2,7 @@
 #define CS_STRING_H
 #include "Typedefs.h"
 /* Implements operations for a string.
-   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
 #define String_BufferSize(n) (n + 1)
@@ -41,6 +41,15 @@ bool String_CaselessEquals(String* a, String* b);
 
 /* Attempts to append a character to the end of a string. */
 bool String_Append(String* str, UInt8 c);
+
+/* Attempts to append an integer value to the end of a string. */
+bool String_AppendNum(String* str, Int64 num);
+
+/* Attempts to append an integer value to the end of a string, padding left with 0. */
+bool String_AppendPaddedNum(String* str, Int64 num, Int32 minDigits);
+
+static Int32 String_MakeNum(Int64 num, UInt8* numBuffer);
+
 
 /* Finds the first index of c in given string, -1 if not found. */
 int String_IndexOf(String* str, UInt8 c, Int32 offset);

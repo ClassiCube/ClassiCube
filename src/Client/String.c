@@ -15,7 +15,6 @@ String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
 	for (Int32 i = 0; i < capacity + 1; i++) {
 		buffer[i] = 0;
 	}
-	return str;
 }
 
 String String_FromConstant(const UInt8* buffer) {
@@ -74,6 +73,41 @@ bool String_Append(String* str, UInt8 c) {
 	str->buffer[str->length] = c;
 	str->length++;
 	return true;
+}
+
+bool String_AppendNum(String* str, Int64 num) {
+	UInt8 numBuffer[20];
+	Int32 numLen = MakeNum(num, numBuffer);
+	
+	for (Int32 i = numLen - 1; i >= 0; i--) {
+		if (!String_Append(str, numBuffer[i])) return false;
+	}
+	return true;
+}
+
+bool String_AppendPaddedNum(String* str, Int64 num, Int32 minDigits) {
+	UInt8 numBuffer[20];
+	for (Int32 i = 0; i < minDigits; i++) {
+		numBuffer[i] = '0';
+	}
+
+	Int32 numLen = MakeNum(num, numBuffer);
+	if (numLen < minDigits) numLen = minDigits;
+
+	for (Int32 i = numLen - 1; i >= 0; i--) {
+		if (!String_Append(str, numBuffer[i])) return false;
+	}
+	return true;
+}
+
+static Int32 String_MakeNum(Int64 num, UInt8* numBuffer) {
+	Int32 len = 0;
+
+	do {
+		numBuffer[len] = (char)('0' + (num % 10)); num /= 10;
+		len++; 
+	} while (num > 0);
+	return len;
 }
 
 

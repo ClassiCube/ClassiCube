@@ -107,7 +107,7 @@ void Block_ResetProps(BlockID block) {
 Int32 Block_FindID(String* name) {
 	Int32 block;
 	for (block = BlockID_Air; block < Block_Count; block++) {
-		if (String_CaselessEquals(&Block_Name[block], name)) return i;
+		if (String_CaselessEquals(&Block_Name[block], name)) return block;
 	}
 	return -1;
 }
