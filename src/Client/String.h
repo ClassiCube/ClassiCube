@@ -43,12 +43,15 @@ bool String_CaselessEquals(String* a, String* b);
 bool String_Append(String* str, UInt8 c);
 
 /* Attempts to append an integer value to the end of a string. */
-bool String_AppendNum(String* str, Int64 num);
+bool String_AppendInt32(String* str, Int32 num);
 
 /* Attempts to append an integer value to the end of a string, padding left with 0. */
-bool String_AppendPaddedNum(String* str, Int64 num, Int32 minDigits);
+bool String_AppendPaddedInt32(String* str, Int32 num, Int32 minDigits);
 
-static Int32 String_MakeNum(Int64 num, UInt8* numBuffer);
+static Int32 String_MakeInt32(Int32 num, UInt8* numBuffer);
+
+/* Attempts to append a constant raw null-terminated string. */
+bool String_AppendConstant(String* str, const UInt8* buffer);
 
 
 /* Finds the first index of c in given string, -1 if not found. */

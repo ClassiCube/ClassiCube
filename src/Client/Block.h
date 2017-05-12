@@ -131,10 +131,10 @@ void Block_CalcRenderBounds(BlockID block);
 UInt8 Block_CalcLightOffset(BlockID block);
 
 /* Recalculates bounding boxes of all blocks that are sprites. */
-void Block_RecalculateSpriteBB(Bitmap* bmp);
+void Block_RecalculateSpriteBB();
 
 /* Recalculates bounding box of a sprite. */
-void Block_RecalculateBB(BlockID block, Bitmap* bmp);
+void Block_RecalculateBB(BlockID block);
 
 /* Sets the texture for the four side faces of the given block. */
 void Block_SetSide(Int32 textureId, BlockID blockId);

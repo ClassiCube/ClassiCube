@@ -257,5 +257,8 @@
     <ClCompile Include="TerrainAtlas1D.c">
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
+    <ClCompile Include="TerrainAtlas2D.c">
+      <Filter>Source Files\TexturePack</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

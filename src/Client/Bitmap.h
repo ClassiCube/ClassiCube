@@ -1,4 +1,4 @@
-#ifndef CS_BITMAP_h
+#ifndef CS_BITMAP_H
 #define CS_BITMAP_H
 #include "Typedefs.h"
 /* Represents a 2D array of pixels.

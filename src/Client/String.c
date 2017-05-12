@@ -17,6 +17,7 @@ String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
 	for (i = 0; i < capacity + 1; i++) {
 		buffer[i] = 0;
 	}
+	return str;
 }
 
 String String_FromConstant(const UInt8* buffer) {
@@ -79,9 +80,9 @@ bool String_Append(String* str, UInt8 c) {
 	return true;
 }
 
-bool String_AppendNum(String* str, Int64 num) {
+bool String_AppendInt32(String* str, Int32 num) {
 	UInt8 numBuffer[20];
-	Int32 numLen = MakeNum(num, numBuffer);
+	Int32 numLen = String_MakeInt32(num, numBuffer);
 	Int32 i;
 	
 	for (i = numLen - 1; i >= 0; i--) {
@@ -90,14 +91,14 @@ bool String_AppendNum(String* str, Int64 num) {
 	return true;
 }
 
-bool String_AppendPaddedNum(String* str, Int64 num, Int32 minDigits) {
+bool String_AppendPaddedInt32(String* str, Int32 num, Int32 minDigits) {
 	UInt8 numBuffer[20];
 	Int32 i;
 	for (i = 0; i < minDigits; i++) {
 		numBuffer[i] = '0';
 	}
 
-	Int32 numLen = MakeNum(num, numBuffer);
+	Int32 numLen = String_MakeInt32(num, numBuffer);
 	if (numLen < minDigits) numLen = minDigits;
 
 	for (i = numLen - 1; i >= 0; i--) {
@@ -106,7 +107,7 @@ bool String_AppendPaddedNum(String* str, Int64 num, Int32 minDigits) {
 	return true;
 }
 
-static Int32 String_MakeNum(Int64 num, UInt8* numBuffer) {
+static Int32 String_MakeInt32(Int32 num, UInt8* numBuffer) {
 	Int32 len = 0;
 
 	do {
@@ -114,6 +115,16 @@ static Int32 String_MakeNum(Int64 num, UInt8* numBuffer) {
 		len++; 
 	} while (num > 0);
 	return len;
+}
+
+bool String_AppendConstant(String* str, const UInt8* buffer) {
+	UInt8 cur = 0;
+
+	while ((cur = *buffer) != 0) {
+		if (!String_Append(str, cur)) return false;
+		buffer++;
+	}
+	return true;
 }
 
 

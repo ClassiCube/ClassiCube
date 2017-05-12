@@ -220,6 +220,7 @@
     <ClCompile Include="Random.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="TerrainAtlas1D.c" />
+    <ClCompile Include="TerrainAtlas2D.c" />
     <ClCompile Include="Texture.c" />
     <ClCompile Include="TextureRec.c" />
     <ClCompile Include="Vector3I.c" />

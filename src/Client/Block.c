@@ -2,11 +2,11 @@
 #include "Funcs.h"
 #include "ExtMath.h"
 #include "Block.h"
+#include "TerrainAtlas2D.h"
 
 void Block_Reset(Game* game) {
 	Block_Init();
-	/* TODO: Make this part of TerrainAtlas2D maybe? */
-	/* Block_RecalculateSpriteBB(game->TerrainAtlas.AtlasBitmap); */
+	Block_RecalculateSpriteBB();
 }
 
 void Block_Init() {
@@ -248,16 +248,18 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 	return (UInt8)flags;
 }
 
-void Block_RecalculateSpriteBB(Bitmap* bmp) {
+void Block_RecalculateSpriteBB() {
 	Int32 block;
 	for (block = BlockID_Air; block < Block_Count; block++) {
 		if (Block_Draw[block] != DrawType_Sprite) continue;
-		Block_RecalculateBB((BlockID)block, bmp);
+
+		Block_RecalculateBB((BlockID)block);
 	}
 }
 
-void Block_RecalculateBB(BlockID block, Bitmap* bmp) {
-	Int32 elemSize = bmp->Width / 16;
+void Block_RecalculateBB(BlockID block) {
+	Bitmap* bmp = &Atlas2D_Bitmap;
+	Int32 elemSize = Atlas2D_ElementSize;
 	Int32 texId = Block_GetTextureLoc(block, Side_Right);
 	Int32 texX = texId & 0x0F, texY = texId >> 4;
 
