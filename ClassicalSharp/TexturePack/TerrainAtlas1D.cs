@@ -78,18 +78,12 @@ namespace ClassicalSharp.Textures {
 			}
 		}
 		
-		public int CalcMaxUsedRow(TerrainAtlas2D atlas2D, BlockInfo info) {
-			int maxVerSize = Math.Min(4096, gfx.MaxTextureDimensions);
-			int verElements = maxVerSize / atlas2D.TileSize;
-			int totalElements = GetMaxUsedRow(info.textures) * TerrainAtlas2D.TilesPerRow;
-			return Utils.CeilDiv(totalElements, verElements);
-		}
-		
-		int GetMaxUsedRow(byte[] textures) {
-			int maxElem = 0;
-			for (int i = 0; i < textures.Length; i++)
-				maxElem = Math.Max(maxElem, textures[i]);
-			return (maxElem >> 4) + 1;
+		public int CalcMaxUsedRow(BlockInfo info) {
+			int maxTexId = 0;
+			for (int i = 0; i < info.textures.Length; i++) {
+				maxTexId = Math.Max(maxTexId, info.textures[i]);
+			}
+			return Get1DIndex(maxTexId) + 1;
 		}
 		
 		public void Dispose() {

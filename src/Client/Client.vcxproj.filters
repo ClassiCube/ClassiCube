@@ -76,6 +76,12 @@
     <Filter Include="Source Files\Events">
       <UniqueIdentifier>{03efa5de-9e49-4185-bb40-fa5e5a2846e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\TexturePack">
+      <UniqueIdentifier>{b5bd9aed-4b11-4f9f-86da-3187d3f4f260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\TexturePack">
+      <UniqueIdentifier>{3b30c545-c654-4231-80b0-958667ee1645}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -171,6 +177,12 @@
     <ClInclude Include="Funcs.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="TerrainAtlas1D.h">
+      <Filter>Header Files\TexturePack</Filter>
+    </ClInclude>
+    <ClInclude Include="TerrainAtlas2D.h">
+      <Filter>Header Files\TexturePack</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -241,6 +253,9 @@
     </ClCompile>
     <ClCompile Include="Funcs.c">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainAtlas1D.c">
+      <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
