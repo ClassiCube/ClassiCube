@@ -78,7 +78,7 @@ namespace ClassicalSharp.Textures {
 			}
 		}
 		
-		public int CalcMaxUsedRow(BlockInfo info) {
+		public int UsedAtlasesCount(BlockInfo info) {
 			int maxTexId = 0;
 			for (int i = 0; i < info.textures.Length; i++) {
 				maxTexId = Math.Max(maxTexId, info.textures[i]);

@@ -2,16 +2,17 @@
 
 void ImprovedNoise_Init(UInt8* p, Random* rnd) {
 	/* shuffle randomly using fisher-yates */
-	for (Int32 i = 0; i < 256; i++) {
+	Int32 i;
+	for (i = 0; i < 256; i++) {
 		p[i] = (UInt8)i;
 	}
 
-	for (Int32 i = 0; i < 256; i++) {
+	for (i = 0; i < 256; i++) {
 		Int32 j = Random_Range(rnd, i, 256);
 		UInt8 temp = p[i]; p[i] = p[j]; p[j] = temp;
 	}
 
-	for (Int32 i = 0; i < 256; i++) {
+	for (i = 0; i < 256; i++) {
 		p[i + 256] = p[i];
 	}
 }
@@ -50,7 +51,8 @@ Real32 ImprovedNoise_Calc(UInt8* p, Real32 x, Real32 y) {
 
 void OctaveNoise_Init(OctaveNoise* n, Random* rnd, Int32 octaves) {
 	n->octaves = octaves;
-	for (Int32 i = 0; i < octaves; i++) {
+	Int32 i;
+	for (i = 0; i < octaves; i++) {
 		ImprovedNoise_Init(n->p[i], rnd);
 	}
 }
@@ -58,8 +60,9 @@ void OctaveNoise_Init(OctaveNoise* n, Random* rnd, Int32 octaves) {
 Real32 OctaveNoise_Calc(OctaveNoise* n, Real32 x, Real32 y) {
 	Real32 amplitude = 1, freq = 1;
 	Real32 sum = 0;
+	Int32 i;
 
-	for (Int32 i = 0; i < n->octaves; i++) {
+	for (i = 0; i < n->octaves; i++) {
 		sum += ImprovedNoise_Calc(n->p[i], x * freq, y * freq) * amplitude;
 		amplitude *= 2.0;
 		freq *= 0.5;

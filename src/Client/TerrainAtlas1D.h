@@ -37,8 +37,8 @@ static void TerrainAtlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight
 
 static void TerrainAtlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index);
 
-/* Returns the maximum used 1D atlas index + 1. */
-Int32 TerrainAtlas1D_CalcMaxUsedRow();
+/* Returns the count of used 1D atlases. (i.e. highest used 1D atlas index + 1) */
+Int32 TerrainAtlas1D_UsedAtlasesCount();
 
 void TerrainAtlas1D_Free();
 #endif

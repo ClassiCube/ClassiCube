@@ -42,9 +42,10 @@ void NotchyGen_CreateHeightmap() {
 	Int32 index = 0;
 	CurrentState = String_FromConstant("Building heightmap");
 
-	for (Int32 z = 0; z < Length; z++) {
+	Int32 x, z;
+	for (z = 0; z < Length; z++) {
 		CurrentProgress = (Real32)z / Length;
-		for (Int32 x = 0; x < Width; x++) {
+		for (x = 0; x < Width; x++) {
 			Real32 hLow = CombinedNoise_Calc(&n1, x * 1.3f, z * 1.3f) / 6 - 4, height = hLow;
 
 			if (OctaveNoise_Calc(&n3, x, z) <= 0) {
@@ -70,9 +71,10 @@ void NotchyGen_CreateStrata() {
 	/* Try to bulk fill bottom of the map if possible */
 	Int32 minStoneY = NotchyGen_CreateStrataFast();
 
-	for (Int32 z = 0; z < Length; z++) {
+	Int32 x, y, z;
+	for (z = 0; z < Length; z++) {
 		CurrentProgress = (Real32)z / Length;
-		for (Int32 x = 0; x < Width; x++) {
+		for (x = 0; x < Width; x++) {
 			Int32 dirtThickness = (Int32)(OctaveNoise_Calc(&n, x, z) / 24 - 4);
 			Int32 dirtHeight = Heightmap[hMapIndex++];
 			Int32 stoneHeight = dirtHeight + dirtThickness;
@@ -81,13 +83,13 @@ void NotchyGen_CreateStrata() {
 			dirtHeight = min(dirtHeight, maxY);
 
 			mapIndex = minStoneY * oneY + z * Width + x;
-			for (Int32 y = minStoneY; y <= stoneHeight; y++) {
+			for (y = minStoneY; y <= stoneHeight; y++) {
 				Blocks[mapIndex] = BlockID_Stone; mapIndex += oneY;
 			}
 
 			stoneHeight = max(stoneHeight, 0);
 			mapIndex = (stoneHeight + 1) * oneY + z * Width + x;
-			for (Int32 y = stoneHeight + 1; y <= dirtHeight; y++) {
+			for (y = stoneHeight + 1; y <= dirtHeight; y++) {
 				Blocks[mapIndex] = BlockID_Dirt; mapIndex += oneY;
 			}
 		}
@@ -97,8 +99,10 @@ void NotchyGen_CreateStrata() {
 Int32 NotchyGen_CreateStrataFast() {
 	/* Make lava layer at bottom */
 	Int32 mapIndex = 0;
-	for (Int32 z = 0; z < Length; z++)
-		for (Int32 x = 0; x < Width; x++)
+	Int32 x, y, z;
+
+	for (z = 0; z < Length; z++)
+		for (x = 0; x < Width; x++)
 		{
 			Blocks[mapIndex++] = BlockID_Lava;
 		}
@@ -108,9 +112,9 @@ Int32 NotchyGen_CreateStrataFast() {
 	if (stoneHeight <= 0) return 1; /* no layer is fully stone */
 
 	/* We can quickly fill in bottom solid layers */
-	for (Int32 y = 1; y <= stoneHeight; y++)
-		for (Int32 z = 0; z < Length; z++)
-			for (Int32 x = 0; x < Width; x++)
+	for (y = 1; y <= stoneHeight; y++)
+		for (z = 0; z < Length; z++)
+			for (x = 0; x < Width; x++)
 			{
 				Blocks[mapIndex++] = BlockID_Stone;
 			}
@@ -125,9 +129,10 @@ void NotchyGen_CreateSurfaceLayer() {
 	/* TODO: update heightmap */
 
 	Int32 hMapIndex = 0;
-	for (Int32 z = 0; z < Length; z++) {
+	Int32 x, z;
+	for (z = 0; z < Length; z++) {
 		CurrentProgress = (Real32)z / Length;
-		for (Int32 x = 0; x < Width; x++) {
+		for (x = 0; x < Width; x++) {
 			Int32 y = Heightmap[hMapIndex++];
 			if (y < 0 || y >= Height) continue;
 
@@ -146,13 +151,14 @@ void NotchyGen_PlantFlowers() {
 	Int32 numPatches = Width * Length / 3000;
 	CurrentState = String_FromConstant("Planting flowers");
 
-	for (Int32 i = 0; i < numPatches; i++) {
+	Int32 i, j, k;
+	for (i = 0; i < numPatches; i++) {
 		CurrentProgress = (Real32)i / numPatches;
 		BlockID type = (BlockID)(BlockID_Dandelion + Random_Next(&rnd, 2));
 		Int32 patchX = Random_Next(&rnd, Width), patchZ = Random_Next(&rnd, Length);
-		for (Int32 j = 0; j < 10; j++) {
+		for (j = 0; j < 10; j++) {
 			Int32 flowerX = patchX, flowerZ = patchZ;
-			for (Int32 k = 0; k < 5; k++) {
+			for (k = 0; k < 5; k++) {
 				flowerX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				flowerZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				if (flowerX < 0 || flowerZ < 0 || flowerX >= Width || flowerZ >= Length)
@@ -173,16 +179,17 @@ void NotchyGen_PlantMushrooms() {
 	Int32 numPatches = volume / 2000;
 	CurrentState = String_FromConstant("Planting mushrooms");
 
-	for (Int32 i = 0; i < numPatches; i++) {
+	Int32 i, j, k;
+	for (i = 0; i < numPatches; i++) {
 		CurrentProgress = (Real32)i / numPatches;
 		BlockID type = (BlockID)(BlockID_BrownMushroom + Random_Next(&rnd, 2));
 		Int32 patchX = Random_Next(&rnd, Width);
 		Int32 patchY = Random_Next(&rnd, Height);
 		Int32 patchZ = Random_Next(&rnd, Length);
 
-		for (Int32 j = 0; j < 20; j++) {
+		for (j = 0; j < 20; j++) {
 			Int32 mushX = patchX, mushY = patchY, mushZ = patchZ;
-			for (Int32 k = 0; k < 5; k++) {
+			for (k = 0; k < 5; k++) {
 				mushX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				mushZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				if (mushX < 0 || mushZ < 0 || mushX >= Width || mushZ >= Length)
@@ -204,13 +211,14 @@ void NotchyGen_PlantTrees() {
 	Int32 numPatches = Width * Length / 4000;
 	CurrentState = String_FromConstant("Planting trees");
 
-	for (Int32 i = 0; i < numPatches; i++) {
+	Int32 i, j, k;
+	for (i = 0; i < numPatches; i++) {
 		CurrentProgress = (Real32)i / numPatches;
 		Int32 patchX = Random_Next(&rnd, Width), patchZ = Random_Next(&rnd, Length);
 
-		for (Int32 j = 0; j < 20; j++) {
+		for (j = 0; j < 20; j++) {
 			Int32 treeX = patchX, treeZ = patchZ;
-			for (Int32 k = 0; k < 20; k++) {
+			for (k = 0; k < 20; k++) {
 				treeX += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				treeZ += Random_Next(&rnd, 6) - Random_Next(&rnd, 6);
 				if (treeX < 0 || treeZ < 0 || treeX >= Width ||
@@ -235,9 +243,11 @@ void NotchyGen_PlantTrees() {
 bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight) {
 	/* check tree base */
 	Int32 baseHeight = treeHeight - 4;
-	for (Int32 y = treeY; y < treeY + baseHeight; y++)
-		for (Int32 z = treeZ - 1; z <= treeZ + 1; z++)
-			for (Int32 x = treeX - 1; x <= treeX + 1; x++)
+	Int32 x, y, z;
+
+	for (y = treeY; y < treeY + baseHeight; y++)
+		for (z = treeZ - 1; z <= treeZ + 1; z++)
+			for (x = treeX - 1; x <= treeX + 1; x++)
 			{
 				if (x < 0 || y < 0 || z < 0 || x >= Width || y >= Height || z >= Length)
 					return false;
@@ -246,9 +256,9 @@ bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeig
 			}
 
 	/* and also check canopy */
-	for (Int32 y = treeY + baseHeight; y < treeY + treeHeight; y++)
-		for (Int32 z = treeZ - 2; z <= treeZ + 2; z++)
-			for (Int32 x = treeX - 2; x <= treeX + 2; x++)
+	for (y = treeY + baseHeight; y < treeY + treeHeight; y++)
+		for (z = treeZ - 2; z <= treeZ + 2; z++)
+			for (x = treeX - 2; x <= treeX + 2; x++)
 			{
 				if (x < 0 || y < 0 || z < 0 || x >= Width || y >= Height || z >= Length)
 					return false;
@@ -261,11 +271,12 @@ bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeig
 void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
 	Int32 baseHeight = height - 4;
 	Int32 index = 0;
+	Int32 xx, y, zz;
 
 	/* leaves bottom layer */
-	for (Int32 y = treeY + baseHeight; y < treeY + baseHeight + 2; y++)
-		for (Int32 zz = -2; zz <= 2; zz++)
-			for (Int32 xx = -2; xx <= 2; xx++)
+	for (y = treeY + baseHeight; y < treeY + baseHeight + 2; y++)
+		for (zz = -2; zz <= 2; zz++)
+			for (xx = -2; xx <= 2; xx++)
 			{
 				Int32 x = xx + treeX, z = zz + treeZ;
 				index = (y * Length + z) * Width + x;
@@ -280,9 +291,9 @@ void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
 
 	/* leaves top layer */
 	Int32 bottomY = treeY + baseHeight + 2;
-	for (Int32 y = treeY + baseHeight + 2; y < treeY + height; y++)
-		for (Int32 zz = -1; zz <= 1; zz++)
-			for (Int32 xx = -1; xx <= 1; xx++)
+	for (y = treeY + baseHeight + 2; y < treeY + height; y++)
+		for (zz = -1; zz <= 1; zz++)
+			for (xx = -1; xx <= 1; xx++)
 			{
 				Int32 x = xx + treeX, z = zz + treeZ;
 				index = (y * Length + z) * Width + x;
@@ -296,7 +307,7 @@ void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
 
 	/* then place trunk */
 	index = (treeY * Length + treeZ) * Width + treeX;
-	for (Int32 y = 0; y < height - 1; y++) {
+	for (y = 0; y < height - 1; y++) {
 		Blocks[index] = BlockID_Log;
 		index += oneY;
 	}

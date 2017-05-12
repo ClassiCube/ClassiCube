@@ -11,17 +11,21 @@ void Block_Reset(Game* game) {
 
 void Block_Init() {
 	#define DefinedCustomBlocks_Len (Block_Count >> 5)
-	for (Int32 i = 0; i < DefinedCustomBlocks_Len; i++) {
+	Int32 i;
+	for (i = 0; i < DefinedCustomBlocks_Len; i++) {
 		DefinedCustomBlocks[i] = 0;
 	}
-	for (Int32 block = 0; block < Block_Count; block++) {
+
+	Int32 block;
+	for (block = BlockID_Air; block < Block_Count; block++) {
 		Block_ResetProps((BlockID)block);
 	}
 	Block_UpdateCullingAll();
 }
 
 void Block_SetDefaultPerms() {
-	for (Int32 block = BlockID_Air; block <= Block_MaxDefined; block++) {
+	Int32 block;
+	for (block = BlockID_Air; block <= Block_MaxDefined; block++) {
 		Block_CanPlace[block] = true;
 		Block_CanDelete[block] = true;
 	}
@@ -128,8 +132,8 @@ String Block_DefaultName(BlockID block) {
 	String blockNames = String_FromConstant(Block_RawNames);
 
 	/* Find start and end of this particular block name. */
-	Int32 start = 0;
-	for (Int32 i = 0; i < block; i++) {
+	Int32 start = 0, i;
+	for (i = 0; i < block; i++) {
 		start = String_IndexOf(&blockNames, ' ', start) + 1;
 	}
 	Int32 end = String_IndexOf(&blockNames, ' ', start);
@@ -141,7 +145,8 @@ String Block_DefaultName(BlockID block) {
 }
 
 static void Block_SplitUppercase(String* buffer, String* blockNames, Int32 start, Int32 end) {
-	for (Int32 i = start; i < end; i++) {
+	Int32 i;
+	for (i = start; i < end; i++) {
 		UInt8 c = String_CharAt(blockNames, i);
 		bool upper = Char_IsUpper(c) && i > start;
 		bool nextLower = i < end - 1 && !Char_IsUpper(String_CharAt(blockNames, i + 1));

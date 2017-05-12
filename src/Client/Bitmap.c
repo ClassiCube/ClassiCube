@@ -9,10 +9,11 @@ UInt32* Bitmap_GetRow(Bitmap* bmp, Int32 y) {
 }
 
 void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 size) {
-	for (Int32 y = 0; y < size; y++) {
+	Int32 x, y;
+	for (y = 0; y < size; y++) {
 		UInt32* srcRow = Bitmap_GetRow(src, srcY + y);
 		UInt32* dstRow = Bitmap_GetRow(dst, dstY + y);
-		for (Int32 x = 0; x < size; x++) {
+		for (x = 0; x < size; x++) {
 			dstRow[dstX + x] = srcRow[srcX + x];
 		}
 	}
@@ -21,7 +22,8 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* sr
 void Bitmap_CopyRow(Int32 srcY, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 width) {
 	UInt32* srcRow = Bitmap_GetRow(src, srcY);
 	UInt32* dstRow = Bitmap_GetRow(dst, dstY);
-	for (Int32 x = 0; x < width; x++) {
+	Int32 x;
+	for (x = 0; x < width; x++) {
 		dstRow[x] = srcRow[x];
 	}
 }

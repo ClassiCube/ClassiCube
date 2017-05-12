@@ -34,8 +34,8 @@ void TerrainAtlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	String log = String_FromRawBuffer(logBuffer, 256);
 	Utils.LogDebug("Loaded new atlas: {0} bmps, {1} per bmp", atlasesCount, elementsPerAtlas1D);
 
-	Int32 index = 0;
-	for (Int32 i = 0; i < atlasesCount; i++) {
+	Int32 index = 0, i;
+	for (i = 0; i < atlasesCount; i++) {
 		TerrainAtlas1D_Make1DTexture(i, atlas1DHeight, &index);
 	}
 }
@@ -43,8 +43,9 @@ void TerrainAtlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 void TerrainAtlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Int32 elemSize = TerrainAtlas2D_ElementSize;
 	Bitmap atlas1D = Platform.CreateBmp(atlas2D.TileSize, atlas1DHeight);
+	Int32 index1D;
 
-	for (Int32 index1D = 0; index1D < TerrainAtlas1D_ElementsPerAtlas1D; index1D++) {
+	for (index1D = 0; index1D < TerrainAtlas1D_ElementsPerAtlas1D; index1D++) {
 		Int32 atlasX = (*index & 0x0F) * elemSize;
 		Int32 atlasY = (*index >> 4) * elemSize;
 
@@ -55,16 +56,19 @@ void TerrainAtlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	TerrainAtlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true);
 }
 
-Int32 TerrainAtlas1D_CalcMaxUsedRow() {
+Int32 TerrainAtlas1D_UsedAtlasesCount() {
 	Int32 maxTexId = 0;
-	for (int i = 0; i < Block_TexturesCount; i++) {
+	Int32 i;
+
+	for (i = 0; i < Block_TexturesCount; i++) {
 		maxTexId = max(maxTexId, Block_Textures[i]);
 	}
-	return Get1DIndex(maxTexId) + 1;
+	return TerrainAtlas1D_Get1DIndex(maxTexId) + 1;
 }
 
 void TerrainAtlas1D_Free() {
-	for (Int32 i = 0; i < TerrainAtlas1D_TexIdsCount; i++) {
+	Int32 i;
+	for (i = 0; i < TerrainAtlas1D_TexIdsCount; i++) {
 		Gfx_DeleteTexture(&TerrainAtlas1D_TexIds[i]);
 	}
 }

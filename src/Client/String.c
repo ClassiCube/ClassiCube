@@ -10,9 +10,11 @@ String String_FromEmptyBuffer(UInt8* buffer, UInt16 capacity) {
 }
 
 String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
-	String str = String_FromEmptyBuffer(buffer, capacity);
+	String str = String_FromEmptyBuffer(buffer, capacity);	
+	Int32 i;
+
 	// Need to set region occupied by string to NUL for interop with native APIs
-	for (Int32 i = 0; i < capacity + 1; i++) {
+	for (i = 0; i < capacity + 1; i++) {
 		buffer[i] = 0;
 	}
 }
@@ -44,8 +46,9 @@ String String_MakeNull() {
 
 bool String_Equals(String* a, String* b) {
 	if (a->length != b->length) return false;
+	Int32 i;
 
-	for (Int32 i = 0; i < a->length; i++) {
+	for (i = 0; i < a->length; i++) {
 		if (a->buffer[i] != b->buffer[i]) return false;
 	}
 	return true;
@@ -53,8 +56,9 @@ bool String_Equals(String* a, String* b) {
 
 bool String_CaselessEquals(String* a, String* b) {
 	if (a->length != b->length) return false;
+	Int32 i;
 
-	for (Int32 i = 0; i < a->length; i++) {
+	for (i = 0; i < a->length; i++) {
 		UInt8 aCur = a->buffer[i];
 		UInt8 bCur = b->buffer[i];
 
@@ -78,8 +82,9 @@ bool String_Append(String* str, UInt8 c) {
 bool String_AppendNum(String* str, Int64 num) {
 	UInt8 numBuffer[20];
 	Int32 numLen = MakeNum(num, numBuffer);
+	Int32 i;
 	
-	for (Int32 i = numLen - 1; i >= 0; i--) {
+	for (i = numLen - 1; i >= 0; i--) {
 		if (!String_Append(str, numBuffer[i])) return false;
 	}
 	return true;
@@ -87,14 +92,15 @@ bool String_AppendNum(String* str, Int64 num) {
 
 bool String_AppendPaddedNum(String* str, Int64 num, Int32 minDigits) {
 	UInt8 numBuffer[20];
-	for (Int32 i = 0; i < minDigits; i++) {
+	Int32 i;
+	for (i = 0; i < minDigits; i++) {
 		numBuffer[i] = '0';
 	}
 
 	Int32 numLen = MakeNum(num, numBuffer);
 	if (numLen < minDigits) numLen = minDigits;
 
-	for (Int32 i = numLen - 1; i >= 0; i--) {
+	for (i = numLen - 1; i >= 0; i--) {
 		if (!String_Append(str, numBuffer[i])) return false;
 	}
 	return true;
@@ -112,7 +118,8 @@ static Int32 String_MakeNum(Int64 num, UInt8* numBuffer) {
 
 
 Int32 String_IndexOf(String* str, UInt8 c, Int32 offset) {
-	for (Int32 i = offset; i < str->length; i++) {
+	Int32 i;
+	for (i = offset; i < str->length; i++) {
 		if (str->buffer[i] == c) return i;
 	}
 	return -1;

@@ -116,8 +116,9 @@ Int32 GfxCommon_MakeDefaultIb() {
 	Int32 element = 0;
 	UInt16 indices[Gfx_MaxIndices];
 	UInt16* ptr = indices;
-	
-	for (Int32 i = 0; i < Gfx_MaxIndices; i += 6) {
+	Int32 i;
+
+	for (i = 0; i < Gfx_MaxIndices; i += 6) {
 		*ptr = (UInt16)(element + 0); ptr++;
 		*ptr = (UInt16)(element + 1); ptr++;
 		*ptr = (UInt16)(element + 2); ptr++;

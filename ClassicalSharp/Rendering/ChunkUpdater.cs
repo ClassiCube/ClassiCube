@@ -105,13 +105,13 @@ namespace ClassicalSharp.Renderers {
 				if (refreshRequired) Refresh();
 			}
 			
-			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow(info);
+			renderer._1DUsed = game.TerrainAtlas1D.UsedAtlasesCount(info);
 			elementsPerBitmap = game.TerrainAtlas1D.elementsPerBitmap;
 			ResetUsedFlags();
 		}
 		
 		void BlockDefinitionChanged(object sender, EventArgs e) {
-			renderer._1DUsed = game.TerrainAtlas1D.CalcMaxUsedRow(info);
+			renderer._1DUsed = game.TerrainAtlas1D.UsedAtlasesCount(info);
 			ResetUsedFlags();
 			Refresh();
 		}
