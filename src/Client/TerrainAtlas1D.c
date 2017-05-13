@@ -33,8 +33,8 @@ void Atlas1D_UpdateState() {
 
 void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	Atlas1D_TexIdsCount = atlasesCount;
-	UInt8 logBuffer[String_BufferSize(256)];
-	String log = String_FromRawBuffer(logBuffer, 256);
+	UInt8 logBuffer[String_BufferSize(127)];
+	String log = String_FromRawBuffer(logBuffer, 127);
 
 	String_AppendConstant(&log, "Loaded new atlas: ");
 	String_AppendInt32(&log, atlasesCount);

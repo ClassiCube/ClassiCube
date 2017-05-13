@@ -14,7 +14,10 @@
 
 
 /* Initalises this graphics API. */
-void Gfx_Init(Game* game);
+void Gfx_Init();
+
+/* Frees memory allocated by this graphics API. */
+void Gfx_Free();
 
 /* Maximum supported length of a dimension (width and height) of a 2D texture. */
 Int32 Gfx_MaxTextureDimensions;

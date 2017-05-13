@@ -2,6 +2,7 @@
 #include "D3D9Api.h"
 #include "ErrorHandler.h"
 #include "GraphicsEnums.h"
+#include "Platform.h"
 
 #ifdef USE_DX
 
@@ -19,20 +20,86 @@ ErrorHandler_CheckOrFail(hresult, name)
 hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
 ErrorHandler_CheckOrFail(hresult, name)
 
+#define D3D9_LogLeakedResource(msg, i) \
+logMsg.length = 0;\
+String_AppendConstant(&logMsg, msg);\
+String_AppendInt32(&logMsg, i);\
+Platform_Log(logMsg);
 
-void Gfx_Init(Game* game) {
+#define D3D9_NumPrimitives(mode, vertices) (mode == DrawMode_Triangles ? vertices / 3 : vertices / 2)
+
+
+/* We only ever create a single index buffer internally. */
+IDirect3DIndexBuffer9* d3d9_ibuffers[2];
+Int32 d3d9_ibuffersCapacity = 2;
+bool d3d9_ibuffersAllocated;
+
+/* TODO: This number's probably not big enough... */
+IDirect3DVertexBuffer9* d3d9_vbuffers[2048];
+Int32 d3d9_vbuffersCapacity = 2048;
+bool d3d9_vbuffersAllocated;
+
+/* At most we can have 256 entities with their own texture each.
+Adding another 128 gives us a lot of leeway. */
+IDirect3DTexture9* d3d9_textures[384];
+Int32 d3d9_texturesCapacity = 384;
+bool d3d9_texturesAllocated;
+
+
+void Gfx_Init() {
 	/* TODO: EVERYTHING ELSE */
 	viewStack.Type = D3DTS_VIEW;
 	projStack.Type = D3DTS_PROJECTION;
 	texStack.Type = D3DTS_TEXTURE0;
 }
 
+void Gfx_Free() {
+	UInt8 logMsgBuffer[String_BufferSize(63)];
+	String logMsg = String_FromRawBuffer(logMsgBuffer, 63);
+
+	Int32 i;
+	for (i = 0; i < d3d9_texturesCapacity; i++) {
+		if (d3d9_textures[i] == NULL) continue;
+		Int32 texId = i;
+		Gfx_DeleteTexture(&texId);
+		D3D9_LogLeakedResource("Texture leak! ID: ", i);
+	}
+
+	for (i = 0; i < d3d9_vbuffersCapacity; i++) {
+		if (d3d9_vbuffers[i] == NULL) continue;
+		Int32 vb = i;
+		Gfx_DeleteVb(&vb);
+		D3D9_LogLeakedResource("Vertex buffer leak! ID: ", i);
+	}
+
+	for (i = 0; i < d3d9_ibuffersCapacity; i++) {
+		if (d3d9_ibuffers[i] == NULL) continue;
+		Int32 ib = i;
+		Gfx_DeleteIb(&ib);
+		D3D9_LogLeakedResource("Index buffer leak! ID: ", i);
+	}
+
+	if (d3d9_ibuffersAllocated) Platform_MemFree(d3d9_ibuffers);
+	if (d3d9_vbuffersAllocated) Platform_MemFree(d3d9_vbuffers);
+	if (d3d9_texturesAllocated) Platform_MemFree(d3d9_textures);
+}
+
+
+void Gfx_BindTexture(Int32 texId) {
+	ReturnCode hresult = IDirect3DDevice9_SetTexture(device, 0, d3d9_textures[texId]);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_BindTexture");
+}
+
+void Gfx_DeleteTexture(Int32* texId) {
+	D3D9_DeleteResource((void**)d3d9_textures, d3d9_texturesCapacity, texId);
+}
 
 void Gfx_SetTexturing(bool enabled) {
 	if (enabled) return;
 	ReturnCode hresult = IDirect3DDevice9_SetTexture(device, 0, NULL);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTexturing");
 }
+
 
 
 bool d3d9_fogEnable = false;
@@ -141,6 +208,7 @@ void Gfx_ClearColour(FastColour col) {
 }
 
 
+
 bool d3d9_depthTest = false;
 void Gfx_SetDepthTest(bool enabled) {
 	d3d9_depthTest = enabled;
@@ -163,6 +231,59 @@ void Gfx_SetDepthWrite(bool enabled) {
 	d3d9_depthWrite = enabled;
 	D3D9_SetRenderState((UInt32)enabled, D3DRS_ZWRITEENABLE, "D3D9_SetDepthWrite");
 }
+
+
+Int32 d3d9_batchStride;
+void Gfx_BindVb(Int32 vb) {
+	ReturnCode hresult = IDirect3DDevice9_SetStreamSource(device, 0, d3d9_vbuffers[vb], 0, d3d9_batchStride);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_BindVb");
+}
+
+void Gfx_BindIb(Int32 ib) {
+	ReturnCode hresult = IDirect3DDevice9_SetIndices(device, d3d9_ibuffers[ib]);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_BindIb");
+}
+
+void Gfx_DeleteVb(Int32* vb) {
+	D3D9_DeleteResource((void**)d3d9_vbuffers, d3d9_vbuffersCapacity, vb);
+}
+
+void Gfx_DeleteIb(Int32* ib) {
+	D3D9_DeleteResource((void**)d3d9_ibuffers, d3d9_ibuffersCapacity, ib);
+}
+
+void Gfx_SetBatchFormat(Int32 vertexFormat) {
+	ReturnCode hresult = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[vertexFormat]);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_SetBatchFormat");
+	d3d9_batchStride = Gfx_strideSizes[vertexFormat];
+}
+
+void Gfx_DrawVb(Int32 drawMode, Int32 startVertex, Int32 vCount) {
+	Int32 numPrims = D3D9_NumPrimitives(drawMode, vCount);
+	ReturnCode hresult = IDirect3DDevice9_DrawPrimitive(device, d3d9_modeMappings[drawMode],
+		startVertex, numPrims);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb");
+}
+
+void Gfx_DrawIndexedVb(Int32 drawMode, Int32 indicesCount, Int32 startIndex) {
+	Int32 numPrims = D3D9_NumPrimitives(drawMode, indicesCount);
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, d3d9_modeMappings[drawMode], 0,
+		startIndex / 6 * 4, indicesCount / 6 * 4, startIndex, numPrims);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb");
+}
+
+void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex) {
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, offsetVertex,
+		0, indicesCount / 6 * 4, startIndex, indicesCount / 3);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b_Range");
+}
+
+void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex) {
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 0,
+		startIndex / 6 * 4, indicesCount / 6 * 4, startIndex, indicesCount / 3);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b");
+}
+
 
 
 void Gfx_SetMatrixMode(Int32 matrixType) {
@@ -239,5 +360,27 @@ void Gfx_LoadOrthoMatrix(Real32 width, Real32 height) {
 	matrix.Row2.Z = d3d9_zN / (d3d9_zN - d3d9_zF);
 	matrix.Row3.Z = 1.0f;
 	Gfx_LoadMatrix(&matrix);
+}
+
+
+
+void D3D9_DeleteResource(void** resources, Int32 capacity, Int32* id) {
+	Int32 resourceID = *id;
+	if (resourceID <= 0 || resourceID >= capacity) return;
+
+	void* value = resources[resourceID];
+	*id = -1;
+	if (value == NULL) return;
+
+	IUnknown* unk = (IUnknown*)value;
+	UInt32 refCount = unk->lpVtbl->Release(unk);
+	resources[resourceID] = NULL;
+	if (refCount <= 0) return;
+
+	UInt8 logMsgBuffer[String_BufferSize(127)];
+	String logMsg = String_FromRawBuffer(logMsgBuffer, 127);
+	String_AppendConstant(&logMsg, "D3D9 Resource has outstanding references! ID: ");
+	String_AppendInt32(&logMsg, resourceID);
+	Platform_Log(logMsg);
 }
 #endif
