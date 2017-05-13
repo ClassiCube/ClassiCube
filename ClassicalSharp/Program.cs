@@ -34,7 +34,6 @@ namespace ClassicalSharp {
 			#endif
 			int width, height;
 			SelectResolution(out width, out height);
-			throw new Exception();
 				
 			if (args.Length == 0 || args.Length == 1) {
 				const string skinServer = "http://static.classicube.net/skins/";
