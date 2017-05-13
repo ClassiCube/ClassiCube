@@ -12,10 +12,6 @@ PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b) {
 	return col;
 }
 
-bool PackedCol_Equals(PackedCol a, PackedCol b) {
-	return a.Packed == b.Packed;
-}
-
 PackedCol PackedCol_Scale(PackedCol value, Real32 t) {
 	value.R = (UInt8)(value.R * t);
 	value.G = (UInt8)(value.G * t);

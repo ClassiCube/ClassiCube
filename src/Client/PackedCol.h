@@ -25,7 +25,7 @@ PackedCol PackedCol_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
 PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
 
 /* Returns whether two packed colours are equal. */
-bool PackedCol_Equals(PackedCol a, PackedCol b);
+#define PackedCol_Equals(a, b) (a.Packed == b.Packed)
 
 /* Multiplies the RGB components by t, where t is in [0, 1] */
 PackedCol PackedCol_Scale(PackedCol value, Real32 t);

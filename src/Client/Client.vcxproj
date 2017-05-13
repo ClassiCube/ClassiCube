@@ -226,6 +226,7 @@
     <ClCompile Include="Vector3I.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="VertexStructs.c" />
+    <ClCompile Include="WinErrorHandler.c" />
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="WorldEnv.c" />

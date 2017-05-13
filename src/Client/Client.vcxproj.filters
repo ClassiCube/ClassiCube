@@ -260,5 +260,8 @@
     <ClCompile Include="PackedCol.c">
       <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="WinErrorHandler.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

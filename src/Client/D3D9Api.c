@@ -450,6 +450,7 @@ void D3D9_DeleteResource(void** resources, Int32 capacity, Int32* id) {
 	Platform_Log(logMsg);
 }
 
+/* TODO: I have no clue if this even works. */
 Int32 D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize) {
 	Int32 i;
 	void** resources = *resourcesPtr;
@@ -460,22 +461,22 @@ Int32 D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, In
 		}
 	}
 
-	// Otherwise resize and add more elements
+	/* Otherwise resize and add more elements */
 	Int32 oldLength = *capacity;
 	(*capacity) += expSize;
 
-	// Allocate resized pointers table
+	/*  Allocate resized pointers table */
 	void** newResources = Platform_MemAlloc(*capacity * sizeof(void*));
 	if (newResources == NULL) {
 		ErrorHandler_Fail("D3D9 - failed to resize pointers table");
 	}
 	*resourcesPtr = newResources;
 
-	// Update elements in new table
+	/* Update elements in new table */
 	for (i = 0; i < oldLength; i++) {
 		newResources[i] = resources[i];
 	}
-	// Free old allocated memory if necessary
+	/* Free old allocated memory if necessary */
 	if (oldLength != expSize) Platform_MemFree(resources);
 
 	newResources[oldLength] = resource;
