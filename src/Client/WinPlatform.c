@@ -41,6 +41,12 @@ void Platform_Log(String message) {
 	/* TODO: log to console */
 }
 
+void Platform_NewUuid(UInt8* uuid) {
+	GUID guid;
+	CoCreateGuid(&guid);
+	Platform_MemCpy(uuid, &guid, 16);
+}
+
 
 bool Platform_FileExists(String path) {
 	UInt32 attribs = GetFileAttributesA(path.buffer);

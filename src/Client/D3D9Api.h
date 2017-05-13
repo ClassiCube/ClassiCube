@@ -33,7 +33,16 @@ D3DFOGMODE d3d9_modes[3] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
 Int32 d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 };
 
 
+static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp);
+
+static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg, Int32 lockFlags);
+
+static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg);
+
+
 static void D3D9_DeleteResource(void** resources, Int32 capacity, Int32* id);
+
+static void D3D9_FreeResource(void* resource, Int32 resourceId);
 
 static Int32 D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize);
 #endif

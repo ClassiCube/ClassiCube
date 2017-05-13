@@ -39,6 +39,7 @@ void Matrix_Translate(Real32 x, Real32 y, Real32 z, Matrix* result);
 /* Transformation matrix representing scaling of given axes. */
 void Matrix_Scale(Real32 x, Real32 y, Real32 z, Matrix* result);
 
+
 /* Multiplies two matrices.*/
 void Matrix_Mul(Matrix* left, Matrix* right, Matrix* result);
 

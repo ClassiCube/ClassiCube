@@ -22,7 +22,7 @@ Int32 Atlas2D_LoadTextureElement(Int32 index) {
 	} else {
 		// TODO: does this even work??
 		UInt8 scan0[Bitmap_DataSize(64, 64)];
-		Bitmap_Create(&element, size, size, 64 * sizeof(UInt32), scan0);
+		Bitmap_Create(&element, size, size, 64 * Bitmap_PixelBytesSize, scan0);
 		return Atlas2D_LoadTextureElement_Raw(index, &element);
 	}
 }

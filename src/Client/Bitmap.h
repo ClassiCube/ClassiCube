@@ -20,8 +20,11 @@ typedef struct Bitmap {
 } Bitmap;
 
 
+/* Size of each ARGB pixel in bytes. */
+#define Bitmap_PixelBytesSize 4
+
 /* Calculates size of data of a 2D bitmap in bytes. */
-#define Bitmap_DataSize(width, height) (UInt32)width * (UInt32)height * sizeof(UInt32)
+#define Bitmap_DataSize(width, height) (UInt32)width * (UInt32)height * Bitmap_PixelBytesSize
 
 
 /* Constructs or updates a Bitmap instance. */
