@@ -22,12 +22,12 @@ Real32 DefaultSet_FogDensity(BlockID b) {
 	return 0.0f;
 }
 
-FastColour DefaultSet_FogColour(BlockID b) {
+PackedCol DefaultSet_FogColour(BlockID b) {
 	if (b == BlockID_Water || b == BlockID_StillWater)
-		return FastColour_Create3(5, 5, 51);
+		return PackedCol_Create3(5, 5, 51);
 	if (b == BlockID_Lava || b == BlockID_StillLava)
-		return FastColour_Create3(153, 25, 0);
-	return FastColour_Create4(0, 0, 0, 0);
+		return PackedCol_Create3(153, 25, 0);
+	return PackedCol_Create4(0, 0, 0, 0);
 }
 
 UInt8 DefaultSet_Collide(BlockID b) {

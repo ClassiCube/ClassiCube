@@ -181,7 +181,7 @@
     <ClInclude Include="TerrainAtlas2D.h" />
     <ClInclude Include="WorldEvents.h" />
     <ClInclude Include="EventHandler.h" />
-    <ClInclude Include="FastColour.h" />
+    <ClInclude Include="PackedCol.h" />
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="ExtMath.h" />
@@ -211,7 +211,7 @@
     <ClCompile Include="Bitmap.c" />
     <ClCompile Include="EventHandler.c" />
     <ClCompile Include="ExtMath.c" />
-    <ClCompile Include="FastColour.c" />
+    <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />
     <ClCompile Include="GraphicsCommon.c" />
     <ClCompile Include="Matrix.c" />

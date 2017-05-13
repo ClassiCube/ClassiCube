@@ -1,7 +1,7 @@
 #ifndef CS_DEFAULT_BLOCKS_H
 #define CS_DEFAULT_BLOCKS_H
 #include "Typedefs.h"
-#include "FastColour.h"
+#include "PackedCol.h"
 /* List of properties for core blocks.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -16,7 +16,7 @@ bool DefaultSet_FullBright(BlockID b);
 Real32 DefaultSet_FogDensity(BlockID b);
 
 /* Gets the fog colour of this block. */
-FastColour DefaultSet_FogColour(BlockID b);
+PackedCol DefaultSet_FogColour(BlockID b);
 
 /* Gets the collide type of a block. */
 UInt8 DefaultSet_Collide(BlockID b);

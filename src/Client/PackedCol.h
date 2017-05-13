@@ -6,7 +6,7 @@ Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
-typedef struct FastColour {
+typedef struct PackedCol {
 	union {
 #if USE_DX
 		struct { UInt8 B; UInt8 G; UInt8 R; UInt8 A; };
@@ -15,21 +15,30 @@ typedef struct FastColour {
 #endif
 		UInt32 Packed;
 	};
-} FastColour;
+} PackedCol;
 
 
 /* Constructs a new ARGB colour. */
-FastColour FastColour_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
+PackedCol PackedCol_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
 
 /* Constructs a new ARGB colour. */
-FastColour FastColour_Create3(UInt8 r, UInt8 g, UInt8 b);
+PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
 
 /* Returns whether two packed colours are equal. */
-bool FastColour_Equals(FastColour a, FastColour b);
+bool PackedCol_Equals(PackedCol a, PackedCol b);
 
 /* Multiplies the RGB components by t, where t is in [0, 1] */
-FastColour FastColour_Scale(FastColour value, Real32 t);
+PackedCol PackedCol_Scale(PackedCol value, Real32 t);
 
-/* TODO: actual constant values? may need to rethink FastColour */
-#define FastColour_White FastColour_Create3(255, 255, 255)
+
+#define PackedCol_ShadeX 0.6f
+#define PackedCol_ShadeZ 0.8f
+#define PackedCol_ShadeYBottom 0.5f
+
+/* Retrieves shaded colours for ambient block face lighting. */
+void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yBottom);
+
+
+/* TODO: actual constant values? may need to rethink PackedCol */
+#define FastColour_White PackedCol_Create3(255, 255, 255)
 #endif

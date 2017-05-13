@@ -108,9 +108,6 @@
     <ClInclude Include="DefaultSet.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
-    <ClInclude Include="FastColour.h">
-      <Filter>Header Files\2D\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="BlockID.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
@@ -183,6 +180,9 @@
     <ClInclude Include="TerrainAtlas2D.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
+    <ClInclude Include="PackedCol.h">
+      <Filter>Header Files\2D\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -217,9 +217,6 @@
     </ClCompile>
     <ClCompile Include="Vectors.c">
       <Filter>Source Files\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="FastColour.c">
-      <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Texture.c">
       <Filter>Source Files\Graphics</Filter>
@@ -259,6 +256,9 @@
     </ClCompile>
     <ClCompile Include="TerrainAtlas2D.c">
       <Filter>Source Files\TexturePack</Filter>
+    </ClCompile>
+    <ClCompile Include="PackedCol.c">
+      <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

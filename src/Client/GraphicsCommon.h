@@ -1,7 +1,7 @@
 #ifndef CS_GFXCOMMON_H
 #define CS_GFXCOMMON_H
 #include "Typedefs.h"
-#include "FastColour.h"
+#include "PackedCol.h"
 #include "String.h"
 #include "Texture.h"
 #include "VertexStructs.h"
@@ -36,20 +36,20 @@ Int32 GfxCommon_quadVb;
 
 /* Draws a 2D flat coloured quad to the screen.*/
 void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height, 
-	FastColour col);
+	PackedCol col);
 
 /* Draws a 2D gradient coloured quad to the screen.*/
 void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height, 
-	FastColour topCol, FastColour bottomCol);
+	PackedCol topCol, PackedCol bottomCol);
 
 
 int GfxCommon_texVb;
 
 /* Draws a 2D texture to the screen. */
-void GfxCommon_Draw2DTexture(Texture* tex, FastColour col);
+void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col);
 
 /* Makes the 2D vertices that compose a texture quad.*/
-void GfxCommon_Make2DQuad(Texture* tex, FastColour col, VertexP3fT2fC4b** vertices);
+void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices);
 
 
 /* Updates the various matrix stacks and properties so that the graphics API state

@@ -496,6 +496,7 @@ namespace ClassicalSharp.GraphicsAPI {
 					return i;
 				}
 			}
+			
 			// Otherwise resize and add more elements
 			int oldLength = array.Length;
 			Array.Resize(ref array, array.Length + expSize);

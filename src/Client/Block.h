@@ -4,7 +4,7 @@
 #include "BlockID.h"
 #include "BlockEnums.h"
 #include "String.h"
-#include "FastColour.h"
+#include "PackedCol.h"
 #include "Game.h"
 #include "Vectors.h"
 #include "Bitmap.h"
@@ -31,7 +31,7 @@ String Block_Name[Block_Count];
 
 /* Gets the custom fog colour that should be used when the player is standing within this block.
    Note that this is only used for exponential fog mode. */
-FastColour Block_FogColour[Block_Count];
+PackedCol Block_FogColour[Block_Count];
 
 /* Gets the fog density for the given block.
    A value of 0 means this block does not apply fog.*/

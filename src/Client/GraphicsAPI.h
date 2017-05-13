@@ -3,7 +3,7 @@
 #include "Typedefs.h"
 #include "EventHandler.h"
 #include "Bitmap.h"
-#include "FastColour.h"
+#include "PackedCol.h"
 #include "String.h"
 #include "Matrix.h"
 #include "Game.h"
@@ -68,7 +68,7 @@ void Gfx_SetTexturing(bool enabled);
 void Gfx_SetFog(bool enabled);
 
 /* Sets the fog colour that is blended with final primitive colours. */
-void Gfx_SetFogColour(FastColour col);
+void Gfx_SetFogColour(PackedCol col);
 
 /* Sets the density of exp and exp^2 fog */
 void Gfx_SetFogDensity(Real32 value);
@@ -106,7 +106,7 @@ void Gfx_SetAlphaArgBlend(bool enabled);
 void Gfx_Clear();
 
 /* Sets the colour the screen is cleared to when Clear() is called. */
-void Gfx_ClearColour(FastColour col);
+void Gfx_ClearColour(PackedCol col);
 
 
 /* Whether depth testing is currently enabled. */

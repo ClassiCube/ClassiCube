@@ -23,15 +23,15 @@ WorldEvents_RaiseEnvVariableChanged(envVar);
 
 /* Sets a colour and potentially raises event. */
 #define WorldEnv_SetCol(value, dst, envVar)\
-if (FastColour_Equals(value, dst)) return;\
+if (PackedCol_Equals(value, dst)) return;\
 dst = value;\
 WorldEvents_RaiseEnvVariableChanged(envVar);
 
 
 void WorldEnv_Reset() {
-	WorldEnv_DefaultSkyCol = FastColour_Create3(0x99, 0xCC, 0xFF);
-	WorldEnv_DefaultFogCol = FastColour_Create3(0xFF, 0xFF, 0xFF);
-	WorldEnv_DefaultCloudsCol = FastColour_Create3(0xFF, 0xFF, 0xFF);
+	WorldEnv_DefaultSkyCol = PackedCol_Create3(0x99, 0xCC, 0xFF);
+	WorldEnv_DefaultFogCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
+	WorldEnv_DefaultCloudsCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
 
 	WorldEnv_EdgeHeight = -1; 
 	WorldEnv_SidesOffset = -2; 
@@ -53,16 +53,16 @@ void WorldEnv_Reset() {
 }
 
 void WorldEnv_ResetLight() {
-	WorldEnv_DefaultShadowCol = FastColour_Create3(0x9B, 0x9B, 0x9B);
-	WorldEnv_DefaultSunCol = FastColour_Create3(0xFF, 0xFF, 0xFF);
+	WorldEnv_DefaultShadowCol = PackedCol_Create3(0x9B, 0x9B, 0x9B);
+	WorldEnv_DefaultSunCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
 
 	WorldEnv_ShadowCol = WorldEnv_DefaultShadowCol;
-	FastColour_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide, 
-						&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
+	PackedCol_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide,
+		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
 
 	WorldEnv_SunCol = WorldEnv_DefaultSunCol;
-	FastColour_GetShaded(WorldEnv_SunCol, &WorldEnv_SunXSide,
-						&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
+	PackedCol_GetShaded(WorldEnv_SunCol, &WorldEnv_SunXSide,
+		&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
 }
 
 
@@ -110,32 +110,32 @@ void WorldEnv_SetExpFog(bool expFog) {
 }
 
 
-void WorldEnv_SetSkyCol(FastColour col) {
+void WorldEnv_SetSkyCol(PackedCol col) {
 	WorldEnv_SetCol(col, WorldEnv_SkyCol, EnvVar_SkyCol);
 }
 
-void WorldEnv_SetFogCol(FastColour col) {
+void WorldEnv_SetFogCol(PackedCol col) {
 	WorldEnv_SetCol(col, WorldEnv_FogCol, EnvVar_FogCol);
 }
 
-void WorldEnv_SetCloudsCol(FastColour col) {
+void WorldEnv_SetCloudsCol(PackedCol col) {
 	WorldEnv_SetCol(col, WorldEnv_CloudsCol, EnvVar_CloudsCol);
 }
 
-void WorldEnv_SetSunCol(FastColour col) {
-	if (FastColour_Equals(col, WorldEnv_SunCol)) return;
+void WorldEnv_SetSunCol(PackedCol col) {
+	if (PackedCol_Equals(col, WorldEnv_SunCol)) return;
 
 	WorldEnv_SunCol = col;
-	FastColour_GetShaded(WorldEnv_SunCol, &WorldEnv_SunXSide,
-						&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
+	PackedCol_GetShaded(WorldEnv_SunCol, &WorldEnv_SunXSide,
+		&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
 	WorldEvents_RaiseEnvVariableChanged(EnvVar_SunCol);
 }
 
-void WorldEnv_SetShadowCol(FastColour col) {
-	if (FastColour_Equals(col, WorldEnv_ShadowCol)) return;
+void WorldEnv_SetShadowCol(PackedCol col) {
+	if (PackedCol_Equals(col, WorldEnv_ShadowCol)) return;
 
 	WorldEnv_ShadowCol = col;
-	FastColour_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide,
+	PackedCol_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide,
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
 	WorldEvents_RaiseEnvVariableChanged(EnvVar_ShadowCol);
 }

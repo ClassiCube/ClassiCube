@@ -35,4 +35,5 @@ Int32 d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFV
 
 static void D3D9_DeleteResource(void** resources, Int32 capacity, Int32* id);
 
+static Int32 D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize);
 #endif

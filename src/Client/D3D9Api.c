@@ -30,20 +30,20 @@ Platform_Log(logMsg);
 
 
 /* We only ever create a single index buffer internally. */
-IDirect3DIndexBuffer9* d3d9_ibuffers[2];
-Int32 d3d9_ibuffersCapacity = 2;
-bool d3d9_ibuffersAllocated;
+#define d3d9_iBuffersExpSize 2
+IDirect3DIndexBuffer9* d3d9_ibuffers[d3d9_iBuffersExpSize];
+Int32 d3d9_ibuffersCapacity = d3d9_iBuffersExpSize;
 
 /* TODO: This number's probably not big enough... */
-IDirect3DVertexBuffer9* d3d9_vbuffers[2048];
-Int32 d3d9_vbuffersCapacity = 2048;
-bool d3d9_vbuffersAllocated;
+#define d3d9_vBuffersExpSize 2048
+IDirect3DVertexBuffer9* d3d9_vbuffers[d3d9_vBuffersExpSize];
+Int32 d3d9_vbuffersCapacity = d3d9_vBuffersExpSize;
 
 /* At most we can have 256 entities with their own texture each.
 Adding another 128 gives us a lot of leeway. */
-IDirect3DTexture9* d3d9_textures[384];
-Int32 d3d9_texturesCapacity = 384;
-bool d3d9_texturesAllocated;
+#define d3d9_texturesExpSize 384
+IDirect3DTexture9* d3d9_textures[d3d9_texturesExpSize];
+Int32 d3d9_texturesCapacity = d3d9_texturesExpSize;
 
 
 void Gfx_Init() {
@@ -79,9 +79,15 @@ void Gfx_Free() {
 		D3D9_LogLeakedResource("Index buffer leak! ID: ", i);
 	}
 
-	if (d3d9_ibuffersAllocated) Platform_MemFree(d3d9_ibuffers);
-	if (d3d9_vbuffersAllocated) Platform_MemFree(d3d9_vbuffers);
-	if (d3d9_texturesAllocated) Platform_MemFree(d3d9_textures);
+	if (d3d9_ibuffersCapacity != d3d9_iBuffersExpSize) {
+		Platform_MemFree(d3d9_ibuffers);
+	}
+	if (d3d9_vbuffersCapacity != d3d9_vBuffersExpSize) {
+		Platform_MemFree(d3d9_vbuffers);
+	}
+	if (d3d9_texturesCapacity != d3d9_texturesExpSize) {
+		Platform_MemFree(d3d9_textures);
+	}
 }
 
 
@@ -111,7 +117,7 @@ void Gfx_SetFog(bool enabled) {
 }
 
 UInt32 d3d9_fogCol = 0xFF000000; /* black */
-void Gfx_SetFogColour(FastColour col) {
+void Gfx_SetFogColour(PackedCol col) {
 	if (col.Packed == d3d9_fogCol) return;
 
 	d3d9_fogCol = col.Packed;
@@ -203,7 +209,7 @@ void Gfx_Clear() {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_Clear");
 }
 
-void Gfx_ClearColour(FastColour col) {
+void Gfx_ClearColour(PackedCol col) {
 	d3d9_clearCol = col.Packed;
 }
 
@@ -232,6 +238,51 @@ void Gfx_SetDepthWrite(bool enabled) {
 	D3D9_SetRenderState((UInt32)enabled, D3DRS_ZWRITEENABLE, "D3D9_SetDepthWrite");
 }
 
+
+
+Int32 Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
+	Int32 size = maxVertices * Gfx_strideSizes[vertexFormat];
+	IDirect3DVertexBuffer9* vbuffer;
+	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC, 
+		d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateDynamicVb");
+
+	return D3D9_GetOrExpand(&d3d9_vbuffers, &d3d9_vbuffersCapacity, vbuffer, d3d9_vBuffersExpSize);
+}
+
+Int32 Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
+	Int32 size = count * Gfx_strideSizes[vertexFormat];
+	IDirect3DVertexBuffer9* vbuffer;
+	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, 0,
+		d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateVb");
+
+	void* dst;
+	hresult = IDirect3DVertexBuffer9_Lock(vbuffer, 0, size, dst, 0);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateVb - Lock");
+	Platform_MemCpy(dst, vertices, size);
+	hresult = IDirect3DVertexBuffer9_Unlock(vbuffer);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateVb - Unlock");
+
+	return D3D9_GetOrExpand(&d3d9_vbuffers, &d3d9_vbuffersCapacity, vbuffer, d3d9_vBuffersExpSize);
+}
+
+Int32 Gfx_CreateIb(void* indices, Int32 indicesCount) {
+	Int32 size = indicesCount * sizeof(UInt16);
+	IDirect3DIndexBuffer9* ibuffer;
+	ReturnCode hresult = IDirect3DDevice9_CreateIndexBuffer(device, size, 0, 
+		D3DFMT_INDEX16, D3DPOOL_MANAGED, &ibuffer, NULL);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateIb");
+
+	void* dst;
+	hresult = IDirect3DIndexBuffer9_Lock(ibuffer, 0, size, dst, 0);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateIb - Lock");
+	Platform_MemCpy(dst, indices, size);
+	hresult = IDirect3DIndexBuffer9_Unlock(ibuffer);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateIb - Unlock");
+
+	return D3D9_GetOrExpand(&d3d9_ibuffers, &d3d9_ibuffersCapacity, ibuffer, d3d9_iBuffersExpSize);
+}
 
 Int32 d3d9_batchStride;
 void Gfx_BindVb(Int32 vb) {
@@ -263,6 +314,21 @@ void Gfx_DrawVb(Int32 drawMode, Int32 startVertex, Int32 vCount) {
 	ReturnCode hresult = IDirect3DDevice9_DrawPrimitive(device, d3d9_modeMappings[drawMode],
 		startVertex, numPrims);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb");
+}
+
+void Gfx_SetDynamicVbData(Int32 vb, void* vertices, Int32 vCount) {
+	Int32 size = vCount * d3d9_batchStride;
+	IDirect3DVertexBuffer9* vbuffer = d3d9_vbuffers[vb];
+
+	void* dst;
+	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(vbuffer, 0, size, dst, D3DLOCK_DISCARD);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_SetDynamicVbData - Lock");
+	Platform_MemCpy(dst, vertices, size);
+	hresult = IDirect3DVertexBuffer9_Unlock(vbuffer);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_SetDynamicVbData - Unlock");
+
+	hresult = IDirect3DDevice9_SetStreamSource(device, 0, d3d9_vbuffers[vb], 0, d3d9_batchStride);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_SetDynamicVbData - Bind");
 }
 
 void Gfx_DrawIndexedVb(Int32 drawMode, Int32 indicesCount, Int32 startIndex) {
@@ -382,5 +448,37 @@ void D3D9_DeleteResource(void** resources, Int32 capacity, Int32* id) {
 	String_AppendConstant(&logMsg, "D3D9 Resource has outstanding references! ID: ");
 	String_AppendInt32(&logMsg, resourceID);
 	Platform_Log(logMsg);
+}
+
+Int32 D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize) {
+	Int32 i;
+	void** resources = *resourcesPtr;
+	for (i = 1; i < *capacity; i++) {
+		if (resources[i] == NULL) {
+			resources[i] = resource;
+			return i;
+		}
+	}
+
+	// Otherwise resize and add more elements
+	Int32 oldLength = *capacity;
+	(*capacity) += expSize;
+
+	// Allocate resized pointers table
+	void** newResources = Platform_MemAlloc(*capacity * sizeof(void*));
+	if (newResources == NULL) {
+		ErrorHandler_Fail("D3D9 - failed to resize pointers table");
+	}
+	*resourcesPtr = newResources;
+
+	// Update elements in new table
+	for (i = 0; i < oldLength; i++) {
+		newResources[i] = resources[i];
+	}
+	// Free old allocated memory if necessary
+	if (oldLength != expSize) Platform_MemFree(resources);
+
+	newResources[oldLength] = resource;
+	return oldLength;
 }
 #endif

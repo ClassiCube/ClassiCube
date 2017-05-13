@@ -1,7 +1,7 @@
 #ifndef CS_WORLDENV_H
 #define CS_WORLDENV_H
 #include "Typedefs.h"
-#include "FastColour.h"
+#include "PackedCol.h"
 #include "BlockID.h"
 /* Contains environment metadata for a world.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -47,27 +47,27 @@ extern bool WorldEnv_ExpFog;
 
 
 /* Colour of the sky located behind / above clouds. */
-FastColour WorldEnv_SkyCol;
-FastColour WorldEnv_DefaultSkyCol;
+PackedCol WorldEnv_SkyCol;
+PackedCol WorldEnv_DefaultSkyCol;
 
 /* Colour applied to the fog/horizon looking out horizontally.
 Note the true horizon colour is a blend of this and sky colour. */
-FastColour WorldEnv_FogCol;
-FastColour WorldEnv_DefaultFogCol;
+PackedCol WorldEnv_FogCol;
+PackedCol WorldEnv_DefaultFogCol;
 
 /* Colour applied to the clouds. */
-FastColour WorldEnv_CloudsCol;
-FastColour WorldEnv_DefaultCloudsCol;
+PackedCol WorldEnv_CloudsCol;
+PackedCol WorldEnv_DefaultCloudsCol;
 
 /* Colour applied to blocks located in direct sunlight. */
-FastColour WorldEnv_SunCol;
-FastColour WorldEnv_SunXSide, WorldEnv_SunZSide, WorldEnv_SunYBottom;
-FastColour WorldEnv_DefaultSunCol;
+PackedCol WorldEnv_SunCol;
+PackedCol WorldEnv_SunXSide, WorldEnv_SunZSide, WorldEnv_SunYBottom;
+PackedCol WorldEnv_DefaultSunCol;
 
 /* Colour applied to blocks located in shadow / hidden from direct sunlight. */
-FastColour WorldEnv_ShadowCol;
-FastColour WorldEnv_ShadowXSide, WorldEnv_ShadowZSide, WorldEnv_ShadowYBottom;
-FastColour WorldEnv_DefaultShadowCol;
+PackedCol WorldEnv_ShadowCol;
+PackedCol WorldEnv_ShadowXSide, WorldEnv_ShadowZSide, WorldEnv_ShadowYBottom;
+PackedCol WorldEnv_DefaultShadowCol;
 
 
 /* Resets all of the environment properties to their defaults. */
@@ -110,17 +110,17 @@ void WorldEnv_SetExpFog(bool expFog);
 
 
 /* Sets sky colour, raises event with variable 'SkyCol'. */
-void WorldEnv_SetSkyCol(FastColour col);
+void WorldEnv_SetSkyCol(PackedCol col);
 
 /* Sets fog colour, raises event with variable 'FogCol'. */
-void WorldEnv_SetFogCol(FastColour col);
+void WorldEnv_SetFogCol(PackedCol col);
 
 /* Sets clouds colour, and raises event with variable 'CloudsCol'. */
-void WorldEnv_SetCloudsCol(FastColour col);
+void WorldEnv_SetCloudsCol(PackedCol col);
 
 /* Sets sun colour, and raises event with variable 'SunCol'. */
-void WorldEnv_SetSunCol(FastColour col);
+void WorldEnv_SetSunCol(PackedCol col);
 
 /* Sets shadow colour, and raises event with variable 'ShadowCol'. */
-void WorldEnv_SetShadowCol(FastColour col);
+void WorldEnv_SetShadowCol(PackedCol col);
 #endif

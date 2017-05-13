@@ -34,7 +34,7 @@ void Texture_Render(Texture* tex) {
 	GfxCommon_Draw2DTexture(tex, FastColour_White);
 }
 
-void Texture_RenderShaded(Texture* tex, FastColour shadeColour) {
+void Texture_RenderShaded(Texture* tex, PackedCol shadeColour) {
 	Gfx_BindTexture(tex->ID);
 	GfxCommon_Draw2DTexture(tex, shadeColour);
 }

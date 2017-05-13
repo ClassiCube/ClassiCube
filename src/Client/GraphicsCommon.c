@@ -43,7 +43,7 @@ void GfxCommon_UpdateDynamicIndexedVb(Int32 drawMode, Int32 vb, void* vertices, 
 }
 
 void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height, 
-	FastColour col) {
+	PackedCol col) {
 	VertexP3fC4b quadVerts[4];
 	VertexP3C4b_Set(&quadVerts[0], x, y, 0, col);
 	VertexP3C4b_Set(&quadVerts[1], x + width, y, 0, col);
@@ -55,7 +55,7 @@ void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height,
 }
 
 void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height,
-	FastColour topCol, FastColour bottomCol) {
+	PackedCol topCol, PackedCol bottomCol) {
 	VertexP3fC4b quadVerts[4];
 	VertexP3C4b_Set(&quadVerts[0], x, y, 0, topCol);
 	VertexP3C4b_Set(&quadVerts[1], x + width, y, 0, topCol);
@@ -66,7 +66,7 @@ void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height,
 	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, GfxCommon_quadVb, quadVerts, 4);
 }
 
-void GfxCommon_Draw2DTexture(Texture* tex, FastColour col) {
+void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {
 	VertexP3fT2fC4b texVerts[4];
 	VertexP3fT2fC4b* ptr = texVerts;
 	GfxCommon_Make2DQuad(tex, col, &ptr);
@@ -74,7 +74,7 @@ void GfxCommon_Draw2DTexture(Texture* tex, FastColour col) {
 	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, GfxCommon_texVb, texVerts, 4);
 }
 
-void GfxCommon_Make2DQuad(Texture* tex, FastColour col, VertexP3fT2fC4b** vertices) {
+void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
 	Real32 x1 = tex->X, y1 = tex->Y, x2 = tex->X + tex->Width, y2 = tex->Y + tex->Height;
 #if USE_DX
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx",

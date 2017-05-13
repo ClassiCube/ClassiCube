@@ -1,7 +1,7 @@
 #ifndef CS_TEXTURE_H
 #define CS_TEXTURE_H
 #include "Typedefs.h"
-#include "FastColour.h"
+#include "PackedCol.h"
 #include "TextureRec.h"
 
 /* Represents a simple 2D textured quad.
@@ -47,5 +47,5 @@ bool Texture_IsValid(Texture* tex);
 void Texture_Render(Texture* tex);
 
 /* Renders this texture to the screen, with the given colour as a shade. */
-void Texture_RenderShaded(Texture* tex, FastColour shadeColour);
+void Texture_RenderShaded(Texture* tex, PackedCol shadeColour);
 #endif
