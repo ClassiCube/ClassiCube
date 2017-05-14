@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Windows.Forms;
 using ClassicalSharp.Textures;
 using OpenTK;
 
@@ -24,8 +25,7 @@ namespace ClassicalSharp {
 			Utils.LogDebug("Starting " + AppName + "..");
 			string path = Path.Combine(Program.AppDirectory, TexturePack.Dir);
 			if (!File.Exists(Path.Combine(path, "default.zip"))) {
-				Utils.LogDebug("default.zip not found. Cannot start.");
-				return;
+				MessageDefaultZipMissing(); return;
 			}
 			
 			bool nullContext = true;
@@ -46,6 +46,11 @@ namespace ClassicalSharp {
 			} else {
 				RunMultiplayer(args, nullContext, width, height);
 			}
+		}
+		
+		// put in separate function, because we don't want to load winforms assembly if possible
+		static void MessageDefaultZipMissing() {
+			MessageBox.Show("default.zip not found, try running the launcher first.", "Missing file");
 		}
 		
 		static void SelectResolution(out int width, out int height) {
