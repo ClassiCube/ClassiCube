@@ -82,6 +82,12 @@
     <Filter Include="Source Files\TexturePack">
       <UniqueIdentifier>{3b30c545-c654-4231-80b0-958667ee1645}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\MeshBuilder">
+      <UniqueIdentifier>{e930ab4d-b244-40d2-bf49-374937989d1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\MeshBuilder">
+      <UniqueIdentifier>{1012ed27-a9f2-4b01-a9a4-be75e2a1e2f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -183,6 +189,9 @@
     <ClInclude Include="PackedCol.h">
       <Filter>Header Files\2D\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Drawer.h">
+      <Filter>Header Files\MeshBuilder</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -262,6 +271,9 @@
     </ClCompile>
     <ClCompile Include="WinErrorHandler.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawer.c">
+      <Filter>Source Files\MeshBuilder</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

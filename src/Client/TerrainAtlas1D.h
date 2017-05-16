@@ -8,7 +8,7 @@
 */
 
 /* The number of elements each 1D atlas contains. */
-Int32 Atlas1D_ElementsPerAtlas1D;
+Int32 Atlas1D_ElementsPerAtlas;
 
 /* The number of elements in each adjusted 1D atlas. 
 (in the case only 1 1D atlas used, and is resized vertically to be a power of two) */
@@ -25,10 +25,10 @@ Int32 Atlas1D_TexIdsCount;
 TextureRec Atlas1D_TexRec(Int32 texId, Int32 uCount, Int32* index);
 
 /* Returns the index of the 1D atlas within the array of 1D atlases that contains the given texture id.*/
-#define Atlas1D_Index(texId) (texId) / Atlas1D_ElementsPerAtlas1D
+#define Atlas1D_Index(texId) (texId) / Atlas1D_ElementsPerAtlas
 
 /* Returns the index of the given texture id within a 1D atlas. */
-#define Atlas1D_RowId(texId) (texId) % Atlas1D_ElementsPerAtlas1D
+#define Atlas1D_RowId(texId) (texId) % Atlas1D_ElementsPerAtlas
 
 /* Updates variables and native textures for the 1D atlas array. */
 void Atlas1D_UpdateState();

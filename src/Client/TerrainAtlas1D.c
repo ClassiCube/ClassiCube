@@ -7,14 +7,14 @@
 #include "Block.h"
 
 TextureRec Atlas1D_TexRec(Int32 texId, Int32 uCount, Int32* index) {
-	*index = texId / Atlas1D_ElementsPerAtlas1D;
-	Int32 y = texId % Atlas1D_ElementsPerAtlas1D;
+	*index = texId / Atlas1D_ElementsPerAtlas;
+	Int32 y = texId % Atlas1D_ElementsPerAtlas;
 
-	// Adjust coords to be slightly inside - fixes issues with AMD/ATI cards.
+	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards. */
 	return TextureRec_FromRegion(
 		0.0f, y * Atlas1D_InvElementSize, 
-		(uCount - 1) + 15.99f / 16.0f, 
-		(15.99f / 16.0f) * Atlas1D_InvElementSize);
+		(uCount - 1) + UV2_Scale, 
+		UV2_Scale * Atlas1D_InvElementSize);
 }
 
 void Atlas1D_UpdateState() {
@@ -23,8 +23,8 @@ void Atlas1D_UpdateState() {
 	Int32 totalElements = Atlas2D_RowsCount * Atlas2D_ElementsPerRow;
 
 	Int32 atlasesCount = Math_CeilDiv(totalElements, elementsPerFullAtlas);
-	Atlas1D_ElementsPerAtlas1D = min(elementsPerFullAtlas, totalElements);
-	Int32 atlas1DHeight = Math_NextPowOf2(Atlas1D_ElementsPerAtlas1D * Atlas2D_ElementSize);
+	Atlas1D_ElementsPerAtlas = min(elementsPerFullAtlas, totalElements);
+	Int32 atlas1DHeight = Math_NextPowOf2(Atlas1D_ElementsPerAtlas * Atlas2D_ElementSize);
 
 	Atlas1D_Convert2DTo1D(atlasesCount, atlas1DHeight);
 	Atlas1D_ElementsPerBitmap = atlas1DHeight / Atlas2D_ElementSize;
@@ -59,7 +59,7 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	}
 	Int32 index1D;
 
-	for (index1D = 0; index1D < Atlas1D_ElementsPerAtlas1D; index1D++) {
+	for (index1D = 0; index1D < Atlas1D_ElementsPerAtlas; index1D++) {
 		Int32 atlasX = (*index & 0x0F) * elemSize;
 		Int32 atlasY = (*index >> 4) * elemSize;
 

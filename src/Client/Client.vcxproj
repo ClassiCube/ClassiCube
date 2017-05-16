@@ -176,6 +176,7 @@
     <ClInclude Include="D3D9Api.h" />
     <ClInclude Include="DefaultSet.h" />
     <ClInclude Include="Bitmap.h" />
+    <ClInclude Include="Drawer.h" />
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="TerrainAtlas1D.h" />
     <ClInclude Include="TerrainAtlas2D.h" />
@@ -209,6 +210,7 @@
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
+    <ClCompile Include="Drawer.c" />
     <ClCompile Include="EventHandler.c" />
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="PackedCol.c" />

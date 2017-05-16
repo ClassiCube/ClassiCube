@@ -43,6 +43,9 @@ typedef UInt8 EntityID;
 #define USE16_BIT FALSE
 #define STRING_SIZE 64
 
+/* Minor adjustment to max UV coords, to avoid pixel bleeding errors due to rounding. */
+#define UV2_Scale (15.99f / 16.0f)
+
 // TODO: put this in project defines, not here
 #define USE_DX true
 #endif
