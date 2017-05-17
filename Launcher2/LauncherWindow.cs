@@ -172,10 +172,6 @@ namespace Launcher {
 			platformDrawer.info = Window.WindowInfo;
 			platformDrawer.Init();
 			
-			string audioPath = Path.Combine(Program.AppDirectory, "audio");
-			BinUnpacker.Unpack(audioPath, "dig");
-			BinUnpacker.Unpack(audioPath, "step");
-			
 			fetcher = new ResourceFetcher();
 			fetcher.CheckResourceExistence();
 			checkTask = new UpdateCheckTask();
