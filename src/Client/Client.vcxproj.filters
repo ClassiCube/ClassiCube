@@ -88,6 +88,12 @@
     <Filter Include="Header Files\MeshBuilder">
       <UniqueIdentifier>{1012ed27-a9f2-4b01-a9a4-be75e2a1e2f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Rendering">
+      <UniqueIdentifier>{d746c4e4-411e-4e25-9e79-a2fceabe7cda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Rendering">
+      <UniqueIdentifier>{2134e4ed-c57e-40b2-b329-5f5b7b71a799}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -192,6 +198,9 @@
     <ClInclude Include="Drawer.h">
       <Filter>Header Files\MeshBuilder</Filter>
     </ClInclude>
+    <ClInclude Include="FrustumCulling.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -274,6 +283,9 @@
     </ClCompile>
     <ClCompile Include="Drawer.c">
       <Filter>Source Files\MeshBuilder</Filter>
+    </ClCompile>
+    <ClCompile Include="FrustumCulling.c">
+      <Filter>Source Files\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

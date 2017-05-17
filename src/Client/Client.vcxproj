@@ -178,6 +178,7 @@
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="ErrorHandler.h" />
+    <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="TerrainAtlas1D.h" />
     <ClInclude Include="TerrainAtlas2D.h" />
     <ClInclude Include="WorldEvents.h" />
@@ -213,6 +214,7 @@
     <ClCompile Include="Drawer.c" />
     <ClCompile Include="EventHandler.c" />
     <ClCompile Include="ExtMath.c" />
+    <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />
     <ClCompile Include="GraphicsCommon.c" />
