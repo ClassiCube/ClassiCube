@@ -94,9 +94,4 @@ void Stream_WriteUInt32_LE(Stream* stream, UInt32 value);
 void Stream_WriteUInt32_BE(Stream* stream, UInt32 value);
 /* Writes a big endian signed 64 bit integer from the given stream. */
 #define Stream_WriteInt32_BE(stream, value) Stream_WriteUInt32_BE(stream, (UInt32)value)
-
-/* Writes a big endian unsigned 64 bit integer from the given stream. */
-void Stream_WriteUInt64_BE(Stream* stream, UInt64 value);
-/* Writes a big endian signed 64 bit integer from the given stream. */
-#define Stream_WriteInt64_BE(stream, value) Stream_WriteUInt64_BE(stream, (UInt64)value)
 #endif
