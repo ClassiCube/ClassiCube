@@ -21,7 +21,6 @@ namespace ClassicalSharp.Renderers {
 			game.Events.TextureChanged += TextureChanged;
 			game.Events.TexturePackChanged += TexturePackChanged;
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
-			game.WorldEvents.OnNewMap += OnNewMap;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 			ContextRecreated();
@@ -29,7 +28,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Reset(Game game) { game.Graphics.DeleteTexture(ref tex); }
 		public void Ready(Game game) { }
-		public void OnNewMap(Game game) { }
+		public void OnNewMap(Game game) { MakeVb(); }
 		public void OnNewMapLoaded(Game game) { }
 		
 		public void Dispose() {
@@ -39,12 +38,9 @@ namespace ClassicalSharp.Renderers {
 			game.Events.TextureChanged -= TextureChanged;
 			game.Events.TexturePackChanged -= TexturePackChanged;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
-			game.WorldEvents.OnNewMap -= OnNewMap;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;			
 		}
-
-		void OnNewMap(object sender, EventArgs e) { MakeVb(); }
 		
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var != EnvVar.CloudsColour) return;

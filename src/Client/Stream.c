@@ -93,12 +93,3 @@ void Stream_WriteUInt32_BE(Stream* stream, UInt32 value) {
 	buffer[2] = (UInt8)(value >> 8 ); buffer[3] = (UInt8)(value);
 	Stream_Write(stream, buffer, sizeof(UInt32));
 }
-
-void Stream_WriteUInt64_BE(Stream* stream, UInt64 value) {
-	UInt8 buffer[sizeof(UInt64)];
-	buffer[0] = (UInt8)(value >> 56); buffer[1] = (UInt8)(value >> 48);
-	buffer[2] = (UInt8)(value >> 40); buffer[3] = (UInt8)(value >> 32);
-	buffer[4] = (UInt8)(value >> 24); buffer[5] = (UInt8)(value >> 16);
-	buffer[6] = (UInt8)(value >> 8 ); buffer[7] = (UInt8)(value      );
-	Stream_Write(stream, buffer, sizeof(UInt64));
-}
