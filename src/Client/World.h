@@ -22,16 +22,19 @@ y = (index / World_Width) / World_Length;
 BlockID* World_Blocks = NULL;
 
 /* Size of blocks array. */
-Int32 World_BlocksSize = 0;
+Int32 World_BlocksSize;
 
 /* Length of world on X axis.*/
-Int32 World_Width = 0;
+Int32 World_Width;
 
 /* Length of world on Y axis (vertical).*/
-Int32 World_Height = 0;
+Int32 World_Height;
 
 /* Length of world on Z axis.*/
-Int32 World_Length = 0;
+Int32 World_Length;
+
+/* Amount a packed index must be changed by to advance Y coordinate. */
+Int32 World_OneY;
 
 /* Unique uuid/guid of this particular world. */
 UInt8 World_Uuid[16];

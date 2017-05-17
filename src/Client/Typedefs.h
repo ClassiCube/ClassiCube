@@ -26,7 +26,7 @@ typedef int16_t Int16;
 typedef int32_t Int32;
 typedef int64_t Int64;
 #else
-#error "I didn't add typedefs for this compiler. You'll need to define them in Typedefs.h!'"
+#error "I didn't add typedefs for this compiler. You'll need to define them in Typedefs.h!"
 #endif
 
 typedef float  Real32;

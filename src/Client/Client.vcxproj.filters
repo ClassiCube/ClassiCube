@@ -94,6 +94,12 @@
     <Filter Include="Header Files\Rendering">
       <UniqueIdentifier>{2134e4ed-c57e-40b2-b329-5f5b7b71a799}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\IO">
+      <UniqueIdentifier>{759424b7-9977-45d7-9946-b6cc9875231b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\IO">
+      <UniqueIdentifier>{82a3fbdf-5459-4e08-bff9-04dd23aa4342}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -201,6 +207,9 @@
     <ClInclude Include="FrustumCulling.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="Stream.h">
+      <Filter>Header Files\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -286,6 +295,9 @@
     </ClCompile>
     <ClCompile Include="FrustumCulling.c">
       <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="Stream.c">
+      <Filter>Source Files\IO</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

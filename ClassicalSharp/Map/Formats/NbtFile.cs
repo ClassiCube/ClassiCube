@@ -47,8 +47,6 @@ namespace ClassicalSharp.Map {
 		
 		public void WriteInt16(short v) { writer.Write(IPAddress.HostToNetworkOrder(v)); }
 		
-		public void WriteInt8(sbyte v) { writer.Write((byte)v); }
-		
 		public void WriteUInt8(int v) { writer.Write((byte)v); }
 		
 		public void WriteUInt8(byte v) { writer.Write(v); }
