@@ -219,6 +219,9 @@
     <ClInclude Include="GameStructs.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Intersection.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -310,6 +313,9 @@
     </ClCompile>
     <ClCompile Include="GameStructs.c">
       <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Intersection.c">
+      <Filter>Source Files\Math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
