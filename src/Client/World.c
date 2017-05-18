@@ -4,6 +4,7 @@
 #include "String.h"
 #include "WorldEnv.h"
 #include "Platform.h"
+#include "WorldEvents.h"
 
 void World_Reset() {
 	World_Width = 0; World_Height = 0; World_Length = 0;

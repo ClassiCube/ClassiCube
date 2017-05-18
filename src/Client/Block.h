@@ -102,7 +102,7 @@ UInt8 Block_CanStretch[Block_Count];
 
 
 /* Recalculates the initial properties and culling states for all blocks. */
-void Block_Reset(Game* game);
+void Block_Reset();
 
 /* Calculates the initial properties and culling states for all blocks. */
 void Block_Init();

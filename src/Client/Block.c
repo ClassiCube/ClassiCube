@@ -4,7 +4,7 @@
 #include "Block.h"
 #include "TerrainAtlas2D.h"
 
-void Block_Reset(Game* game) {
+void Block_Reset() {
 	Block_Init();
 	Block_RecalculateSpriteBB();
 }

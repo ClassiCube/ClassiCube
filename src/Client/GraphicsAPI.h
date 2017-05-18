@@ -197,20 +197,20 @@ void Gfx_TakeScreenshot(String output, Int32 width, Int32 height);
 
 /* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
 Returns boolean of whether legacy rendering mode is needed. */
-bool Gfx_WarnIfNecessary(Game* game);
+bool Gfx_WarnIfNecessary();
 
 /* Informs the graphic api to update its state in preparation for a new frame. */
-void Gfx_BeginFrame(Game* game);
+void Gfx_BeginFrame();
 
 /* Informs the graphic api to update its state in preparation for the end of a frame,
 and to prepare that frame for display on the monitor. */
-void Gfx_EndFrame(Game* game);
+void Gfx_EndFrame();
 
 /* Sets whether the graphics api should tie frame rendering to the refresh rate of the monitor. */
-void Gfx_SetVSync(Game* game, bool value);
+void Gfx_SetVSync(bool value);
 
 /* Raised when the dimensions of the game's window have changed. */
-void Gfx_OnWindowResize(Game* game);
+void Gfx_OnWindowResize();
 
 
 /* Makes an array of strings of information about the graphics API. */

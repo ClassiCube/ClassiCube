@@ -100,6 +100,12 @@
     <Filter Include="Header Files\IO">
       <UniqueIdentifier>{82a3fbdf-5459-4e08-bff9-04dd23aa4342}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Game">
+      <UniqueIdentifier>{570b92b8-b3df-40cb-a42a-da14c81c877a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game">
+      <UniqueIdentifier>{62c942cf-1d93-4e9c-8635-61fa1ec2bbdc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -134,9 +140,6 @@
     </ClInclude>
     <ClInclude Include="Matrix.h">
       <Filter>Header Files\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="Game.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Bitmap.h">
       <Filter>Header Files\2D\Utils</Filter>
@@ -209,6 +212,12 @@
     </ClInclude>
     <ClInclude Include="Stream.h">
       <Filter>Header Files\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="Game.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStructs.h">
+      <Filter>Header Files\Game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -298,6 +307,9 @@
     </ClCompile>
     <ClCompile Include="Stream.c">
       <Filter>Source Files\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="GameStructs.c">
+      <Filter>Source Files\Game</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
