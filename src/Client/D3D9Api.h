@@ -1,6 +1,6 @@
 #ifndef CS_D3D9API_H
 #define CS_D3D9API_H
-#define D3D_DISABLE_9EX
+//#define D3D_DISABLE_9EX causes compile errors
 #include <d3d9.h>
 #include <d3d9caps.h>
 #include <d3d9types.h>

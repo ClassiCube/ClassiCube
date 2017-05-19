@@ -1,7 +1,7 @@
 #include "EventHandler.h"
 #include "ErrorHandler.h"
 
-void EventHandler_Register(void** handlers, Int32* count, void* handler) {
+void EventHandler_RegisterImpl(void** handlers, Int32* count, void* handler) {
 	Int32 i;
 	for (i = 0; i < *count; i++) {
 		if (handlers[i] == handler) return;
@@ -14,7 +14,7 @@ void EventHandler_Register(void** handlers, Int32* count, void* handler) {
 	(*count)++;
 }
 
-void EventHandler_Unregister(void** handlers, Int32* count, void* handler) {
+void EventHandler_UnregisterImpl(void** handlers, Int32* count, void* handler) {
 	Int32 i, j;
 	for (i = 0; i < *count; i++) {
 		if (handlers[i] != handler) continue;

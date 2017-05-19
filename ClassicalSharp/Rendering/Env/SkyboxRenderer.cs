@@ -63,7 +63,6 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.BindTexture(tex);
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			
-			Vector3 pos = game.CurrentCameraPos;
 			Matrix4 m = Matrix4.Identity;
 			Vector2 rotation = game.Camera.GetCameraOrientation();
 			m *= Matrix4.RotateY(rotation.X); // yaw

@@ -19,12 +19,11 @@ Int32 TextureEvents_PackChangedCount;
 #define TextureEvents_RaisePackChanged()\
 EventHandler_Raise_Void(TextureEvents_PackChanged, TextureEvents_PackChangedCount);
 
-/* Raised when a file in a texture pack is changed. (such as "terrain", "rain") */
-Event_Texture TextureEvents_TextureChanged[EventHandler_Size];
-Int32 TextureEvents_TextureChangedCount;
-#define TextureEvents_RaiseTextureChanged(name, data, dataSize)\
-EventHandler_Raise_Texture(TextureEvents_TextureChanged, \
-							TextureEvents_TextureChangedCount, name, data, dataSize);
+/* Raised when a file in a texture pack is changed. (such as "terrain.png", "rain.png") */
+Event_Stream TextureEvents_FileChanged[EventHandler_Size];
+Int32 TextureEvents_FileChangedCount;
+#define TextureEvents_RaiseFileChanged(stream)\
+EventHandler_Raise_Stream(TextureEvents_TextureChanged, TextureEvents_FileChangedCount, stream);
 
 
 /* Raised when the user changed their view/fog distance. */

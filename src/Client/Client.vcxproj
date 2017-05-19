@@ -187,10 +187,12 @@
     <ClInclude Include="MiscEvents.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="PickedPos.h" />
+    <ClInclude Include="SkyboxRenderer.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TerrainAtlas1D.h" />
     <ClInclude Include="TerrainAtlas2D.h" />
+    <ClInclude Include="WeatherRenderer.h" />
     <ClInclude Include="WorldEvents.h" />
     <ClInclude Include="EventHandler.h" />
     <ClInclude Include="PackedCol.h" />

@@ -246,6 +246,12 @@
     <ClInclude Include="NetworkEnums.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
+    <ClInclude Include="WeatherRenderer.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyboxRenderer.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">

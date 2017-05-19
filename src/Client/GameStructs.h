@@ -14,6 +14,9 @@ typedef struct IGameComponent {
 	/* Called when the game is being loaded. */
 	Void_Callback Init;
 
+	/* Called when the component is being freed, due to game being closed. */
+	Void_Callback Free;
+
 	/* Called when the texture pack has been loaded and all components have been initalised. */
 	Void_Callback Ready;
 
@@ -31,9 +34,6 @@ typedef struct IGameComponent {
 IGameComponent IGameComponent_MakeEmpty();
 
 
-/* Callback invoked for a scheduled task. */
-typedef void (*ScheduledTask_Callback)(ScheduledTask* task);
-
 /* Represents a task that runs on the main thread every certain interval. */
 typedef struct ScheduledTask {
 
@@ -44,6 +44,6 @@ typedef struct ScheduledTask {
 	Real64 Interval;
 
 	/* Callback function that is periodically invoked. */
-	ScheduledTask_Callback Callback;
+	void (*Callback)(struct ScheduledTask* task);
 } ScheduledTask;
 #endif
