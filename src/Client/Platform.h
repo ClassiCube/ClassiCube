@@ -33,23 +33,4 @@ void Platform_Log(String message);
 
 /* Generates a new random uuid / guid. */
 void Platform_NewUuid(UInt8* uuid);
-
-
-/* Returns whether a file with the given name exists. */
-bool Platform_FileExists(String path);
-
-/* Opens an existing file. */
-ReturnCode Platform_FileOpen(void** file, String path, bool readOnly);
-
-/* Creates or overwrites an existing file. */
-ReturnCode Platform_FileCreate(void** file, String path);
-
-/* Reads a block of bytes from the given file, returning a platform-specific return code. */
-ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead);
-
-/* Writes a block of bytes to the given file, returning a platform-specific return code. */
-ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten);
-
-/* Closes the given file. */
-ReturnCode Platform_FileClose(void* file);
 #endif

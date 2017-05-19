@@ -172,6 +172,7 @@
     <ClInclude Include="BlockEnums.h" />
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="D3D9Api.h" />
     <ClInclude Include="DefaultSet.h" />
@@ -180,8 +181,11 @@
     <ClInclude Include="EntityEvents.h" />
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="FrustumCulling.h" />
+    <ClInclude Include="GameProps.h" />
     <ClInclude Include="Intersection.h" />
+    <ClInclude Include="IO.h" />
     <ClInclude Include="MiscEvents.h" />
+    <ClInclude Include="PickedPos.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TerrainAtlas1D.h" />
@@ -239,6 +243,7 @@
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="VertexStructs.c" />
     <ClCompile Include="WinErrorHandler.c" />
+    <ClCompile Include="WinIO.c" />
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="WorldEnv.c" />

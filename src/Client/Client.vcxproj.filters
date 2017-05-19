@@ -228,6 +228,18 @@
     <ClInclude Include="MiscEvents.h">
       <Filter>Header Files\Events</Filter>
     </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="PickedPos.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="GameProps.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="IO.h">
+      <Filter>Header Files\Platform</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -322,6 +334,9 @@
     </ClCompile>
     <ClCompile Include="Intersection.c">
       <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="WinIO.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
