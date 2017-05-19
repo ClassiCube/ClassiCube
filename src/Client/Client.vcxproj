@@ -185,6 +185,7 @@
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IO.h" />
     <ClInclude Include="MiscEvents.h" />
+    <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="PickedPos.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
@@ -242,6 +243,7 @@
     <ClCompile Include="Vector3I.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="VertexStructs.c" />
+    <ClCompile Include="WeatherRenderer.c" />
     <ClCompile Include="WinErrorHandler.c" />
     <ClCompile Include="WinIO.c" />
     <ClCompile Include="WinPlatform.c" />

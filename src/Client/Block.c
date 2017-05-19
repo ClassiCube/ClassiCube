@@ -162,19 +162,19 @@ static void Block_SplitUppercase(String* buffer, String* blockNames, Int32 start
 
 
 
-void Block_SetSide(Int32 textureId, BlockID blockId) {
+void Block_SetSide(TextureID textureId, BlockID blockId) {
 	Int32 index = blockId * Side_Sides;
-	Block_Textures[index + Side_Left] = (UInt8)textureId;
-	Block_Textures[index + Side_Right] = (UInt8)textureId;
-	Block_Textures[index + Side_Front] = (UInt8)textureId;
-	Block_Textures[index + Side_Back] = (UInt8)textureId;
+	Block_Textures[index + Side_Left] = textureId;
+	Block_Textures[index + Side_Right] = textureId;
+	Block_Textures[index + Side_Front] = textureId;
+	Block_Textures[index + Side_Back] = textureId;
 }
 
-void Block_SetTex(Int32 textureId, Int32 face, BlockID blockId) {
-	Block_Textures[blockId * Side_Sides + face] = (UInt8)textureId;
+void Block_SetTex(TextureID textureId, Int32 face, BlockID blockId) {
+	Block_Textures[blockId * Side_Sides + face] = textureId;
 }
 
-UInt8 Block_GetTextureLoc(BlockID block, Int32 face) {
+TextureID Block_GetTextureLoc(BlockID block, Int32 face) {
 	return Block_Textures[block * Side_Sides + face];
 }
 
@@ -260,7 +260,7 @@ void Block_RecalculateSpriteBB() {
 void Block_RecalculateBB(BlockID block) {
 	Bitmap* bmp = &Atlas2D_Bitmap;
 	Int32 elemSize = Atlas2D_ElementSize;
-	Int32 texId = Block_GetTextureLoc(block, Side_Right);
+	TextureID texId = Block_GetTextureLoc(block, Side_Right);
 	Int32 texX = texId & 0x0F, texY = texId >> 4;
 
 	Real32 topY = Block_GetSpriteBB_TopY(elemSize, texX, texY, bmp);

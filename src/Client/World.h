@@ -33,6 +33,9 @@ Int32 World_Height;
 /* Length of world on Z axis.*/
 Int32 World_Length;
 
+/* Highest valid Y coordinate. */
+Int32 World_MaxY;
+
 /* Amount a packed index must be changed by to advance Y coordinate. */
 Int32 World_OneY;
 

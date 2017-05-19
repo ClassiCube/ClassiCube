@@ -39,10 +39,13 @@ typedef UInt8 bool;
 
 typedef UInt8 BlockID;
 typedef UInt8 EntityID;
+typedef UInt8 TextureID;
+
+#define Int16_MaxValue (Int16)0x7FFF
+#define Int32_MaxValue (Int32)0x7FFFFFFFL
 
 #define USE16_BIT FALSE
 #define STRING_SIZE 64
-
 /* Minor adjustment to max UV coords, to avoid pixel bleeding errors due to rounding. */
 #define UV2_Scale (15.99f / 16.0f)
 

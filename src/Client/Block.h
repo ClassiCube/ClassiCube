@@ -85,7 +85,7 @@ Vector3 Block_RenderMaxBB[Block_Count];
 
 #define Block_TexturesCount Block_Count * Side_Sides
 /* Raw texture ids of each face of each block. */
-UInt8 Block_Textures[Block_TexturesCount];
+TextureID Block_Textures[Block_TexturesCount];
 
 /* Returns whether player is allowed to place the given block. */
 bool Block_CanPlace[Block_Count];
@@ -138,13 +138,13 @@ void Block_RecalculateSpriteBB();
 void Block_RecalculateBB(BlockID block);
 
 /* Sets the texture for the four side faces of the given block. */
-void Block_SetSide(Int32 textureId, BlockID blockId);
+void Block_SetSide(TextureID textureId, BlockID blockId);
 
 /* Sets the texture for the given face of the given block. */
-void Block_SetTex(Int32 textureId, Int32 face, BlockID blockId);
+void Block_SetTex(TextureID textureId, Int32 face, BlockID blockId);
 
 /* Gets the texture ID of the given face of the given block. */
-UInt8 Block_GetTextureLoc(BlockID block, Int32 face);
+TextureID Block_GetTextureLoc(BlockID block, Int32 face);
 
 
 /* Recalculates culling state for all blocks. */

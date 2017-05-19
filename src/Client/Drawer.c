@@ -12,7 +12,7 @@ col.B = (UInt8)(col.B * Drawer_TintColour.B / 255);\
 }
 
 
-void Drawer_XMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices) {
+void Drawer_XMin(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices) {
 	Real32 vOrigin = (texId % Atlas1D_ElementsPerAtlas) * Atlas1D_InvElementSize;
 	Real32 u1 = Drawer_MinBB.Z;
 	Real32 u2 = (count - 1) + Drawer_MaxBB.Z * UV2_Scale;
@@ -29,7 +29,7 @@ void Drawer_XMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vert
 	*vertices = ptr;
 }
 
-void Drawer_XMax(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices) {
+void Drawer_XMax(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices) {
 	Real32 vOrigin = (texId % Atlas1D_ElementsPerAtlas) * Atlas1D_InvElementSize;
 	Real32 u1 = (count - Drawer_MinBB.Z);
 	Real32 u2 = (1 - Drawer_MaxBB.Z) * UV2_Scale;
@@ -46,7 +46,7 @@ void Drawer_XMax(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vert
 	*vertices = ptr;
 }
 
-void Drawer_ZMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices) {
+void Drawer_ZMin(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices) {
 	Real32 vOrigin = (texId % Atlas1D_ElementsPerAtlas) * Atlas1D_InvElementSize;
 	Real32 u1 = (count - Drawer_MinBB.X);
 	Real32 u2 = (1 - Drawer_MaxBB.X) * UV2_Scale;
@@ -63,7 +63,7 @@ void Drawer_ZMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vert
 	*vertices = ptr;
 }
 
-void Drawer_ZMax(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices) {
+void Drawer_ZMax(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices) {
 	Real32 vOrigin = (texId % Atlas1D_ElementsPerAtlas) * Atlas1D_InvElementSize;
 	Real32 u1 = Drawer_MinBB.X;
 	Real32 u2 = (count - 1) + Drawer_MaxBB.X * UV2_Scale;
@@ -80,7 +80,7 @@ void Drawer_ZMax(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vert
 	*vertices = ptr;
 }
 
-void Drawer_YMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices) {
+void Drawer_YMin(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices) {
 	Real32 vOrigin = (texId % Atlas1D_ElementsPerAtlas) * Atlas1D_InvElementSize;
 	Real32 u1 = Drawer_MinBB.X;
 	Real32 u2 = (count - 1) + Drawer_MaxBB.X * UV2_Scale;
@@ -97,7 +97,7 @@ void Drawer_YMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vert
 	*vertices = ptr;
 }
 
-void Drawer_YMax(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices) {
+void Drawer_YMax(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices) {
 	Real32 vOrigin = (texId % Atlas1D_ElementsPerAtlas) * Atlas1D_InvElementSize;
 	Real32 u1 = Drawer_MinBB.X;
 	Real32 u2 = (count - 1) + Drawer_MaxBB.X * UV2_Scale;

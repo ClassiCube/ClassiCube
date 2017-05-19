@@ -106,6 +106,9 @@
     <Filter Include="Source Files\Game">
       <UniqueIdentifier>{62c942cf-1d93-4e9c-8635-61fa1ec2bbdc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Network">
+      <UniqueIdentifier>{8d7c1d32-a06b-483d-ab34-93717e221cc1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -240,6 +243,9 @@
     <ClInclude Include="IO.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
+    <ClInclude Include="NetworkEnums.h">
+      <Filter>Header Files\Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -337,6 +343,9 @@
     </ClCompile>
     <ClCompile Include="WinIO.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="WeatherRenderer.c">
+      <Filter>Source Files\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

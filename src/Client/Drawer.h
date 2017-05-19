@@ -29,20 +29,20 @@ Real32 Drawer_X2, Drawer_Y2, Drawer_Z2;
 
 
 /* Draws the left face of the given cuboid region. */
-void Drawer_XMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices);
+void Drawer_XMin(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices);
 
 /* Draws the right face of the given cuboid region. */
-void Drawer_XMax(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices);
+void Drawer_XMax(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices);
 
 /* Draws the front face of the given cuboid region. */
-void Drawer_ZMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices);
+void Drawer_ZMin(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices);
 
 /* Draws the back face of the given cuboid region. */
-void Drawer_ZMax(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices);
+void Drawer_ZMax(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices);
 
 /* Draws the bottom face of the given cuboid region. */
-void Drawer_YMin(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices);
+void Drawer_YMin(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices);
 
 /* Draws top face of the given cuboid region. */
-void Drawer_YMax(Int32 count, PackedCol col, Int32 texId, VertexP3fT2fC4b** vertices);
+void Drawer_YMax(Int32 count, PackedCol col, TextureID texId, VertexP3fT2fC4b** vertices);
 #endif
