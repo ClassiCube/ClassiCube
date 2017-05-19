@@ -347,5 +347,8 @@
     <ClCompile Include="WeatherRenderer.c">
       <Filter>Source Files\Rendering</Filter>
     </ClCompile>
+    <ClCompile Include="SkyboxRenderer.c">
+      <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

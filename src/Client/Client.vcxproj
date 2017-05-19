@@ -234,6 +234,7 @@
     <ClCompile Include="Noise.c" />
     <ClCompile Include="NotchyGenerator.c" />
     <ClCompile Include="Random.c" />
+    <ClCompile Include="SkyboxRenderer.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="TerrainAtlas1D.c" />
