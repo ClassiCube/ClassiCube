@@ -222,6 +222,12 @@
     <ClInclude Include="Intersection.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
+    <ClInclude Include="EntityEvents.h">
+      <Filter>Header Files\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="MiscEvents.h">
+      <Filter>Header Files\Events</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
