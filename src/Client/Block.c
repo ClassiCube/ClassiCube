@@ -93,17 +93,17 @@ void Block_ResetProps(BlockID block) {
 	if (block >= Block_CpeCount) {
 #if USE16_BIT
 		/* give some random texture ids */
-		Block_SetTex((block * 10 + (block % 7) + 20) % 80, Side_Top, block);
-		Block_SetTex((block * 8 + (block & 5) + 5) % 80, Side_Bottom, block);
+		Block_SetTex((block * 10 + (block % 7) + 20) % 80, Face_YTop, block);
+		Block_SetTex((block * 8 + (block & 5) + 5) % 80, Face_YMin, block);
 		Block_SetSide((block * 4 + (block / 4) + 4) % 80, block);
 #else
-		Block_SetTex(0, Side_Top, block);
-		Block_SetTex(0, Side_Bottom, block);
+		Block_SetTex(0, Face_YTop, block);
+		Block_SetTex(0, Face_YMin, block);
 		Block_SetSide(0, block);
 #endif
 	} else {
-		Block_SetTex(topTex[block], Side_Top, block);
-		Block_SetTex(bottomTex[block], Side_Bottom, block);
+		Block_SetTex(topTex[block], Face_YTop, block);
+		Block_SetTex(bottomTex[block], Face_YMin, block);
 		Block_SetSide(sideTex[block], block);
 	}
 }
@@ -163,52 +163,52 @@ static void Block_SplitUppercase(String* buffer, String* blockNames, Int32 start
 
 
 void Block_SetSide(TextureID textureId, BlockID blockId) {
-	Int32 index = blockId * Side_Sides;
-	Block_Textures[index + Side_Left] = textureId;
-	Block_Textures[index + Side_Right] = textureId;
-	Block_Textures[index + Side_Front] = textureId;
-	Block_Textures[index + Side_Back] = textureId;
+	Int32 index = blockId * Face_Count;
+	Block_Textures[index + Face_XMin] = textureId;
+	Block_Textures[index + Face_XMax] = textureId;
+	Block_Textures[index + Face_ZMin] = textureId;
+	Block_Textures[index + Face_ZMax] = textureId;
 }
 
-void Block_SetTex(TextureID textureId, Int32 face, BlockID blockId) {
-	Block_Textures[blockId * Side_Sides + face] = textureId;
+void Block_SetTex(TextureID textureId, Face face, BlockID blockId) {
+	Block_Textures[blockId * Face_Count + face] = textureId;
 }
 
-TextureID Block_GetTextureLoc(BlockID block, Int32 face) {
-	return Block_Textures[block * Side_Sides + face];
+TextureID Block_GetTex(BlockID block, Face face) {
+	return Block_Textures[block * Face_Count + face];
 }
 
-void Block_GetTextureRegion(BlockID block, Int32 side, Vector2* min, Vector2* max) {
+void Block_GetTextureRegion(BlockID block, Face face, Vector2* min, Vector2* max) {
 	*min = Vector2_Zero; *max = Vector2_One;
 	Vector3 bbMin = Block_MinBB[block], bbMax = Block_MaxBB[block];
 
-	switch (side) {
-	case Side_Left:
-	case Side_Right:
+	switch (face) {
+	case Face_XMin:
+	case Face_XMax:
 		*min = Vector2_Create2(bbMin.Z, bbMin.Y);
 		*max = Vector2_Create2(bbMax.Z, bbMax.Y);
 		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
 		break;
 
-	case Side_Front:
-	case Side_Back:
+	case Face_ZMin:
+	case Face_ZMax:
 		*min = Vector2_Create2(bbMin.X, bbMin.Y);
 		*max = Vector2_Create2(bbMax.X, bbMax.Y);
 		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
 		break;
 
-	case Side_Top:
-	case Side_Bottom:
+	case Face_YTop:
+	case Face_YMin:
 		*min = Vector2_Create2(bbMin.X, bbMin.Z);
 		*max = Vector2_Create2(bbMax.X, bbMax.Z);
 		break;
 	}
 }
 
-bool Block_FaceOccluded(BlockID block, BlockID other, Int32 side) {
+bool Block_FaceOccluded(BlockID block, BlockID other, Face face) {
 	Vector2 bMin, bMax, oMin, oMax;
-	Block_GetTextureRegion(block, side, &bMin, &bMax);
-	Block_GetTextureRegion(other, side, &oMin, &oMax);
+	Block_GetTextureRegion(block, face, &bMin, &bMax);
+	Block_GetTextureRegion(other, face, &oMin, &oMax);
 
 	return bMin.X >= oMin.X && bMin.Y >= oMin.Y
 		&& bMax.X <= oMax.X && bMax.Y <= oMax.Y;
@@ -236,14 +236,14 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 	Int32 flags = 0xFF;
 	Vector3 min = Block_MinBB[block], max = Block_MaxBB[block];
 
-	if (min.X != 0) flags &= ~(1 << Side_Left);
-	if (max.X != 1) flags &= ~(1 << Side_Right);
-	if (min.Z != 0) flags &= ~(1 << Side_Front);
-	if (max.Z != 1) flags &= ~(1 << Side_Back);
+	if (min.X != 0) flags &= ~(1 << Face_XMin);
+	if (max.X != 1) flags &= ~(1 << Face_XMax);
+	if (min.Z != 0) flags &= ~(1 << Face_ZMin);
+	if (max.Z != 1) flags &= ~(1 << Face_ZMax);
 
 	if ((min.Y != 0 && max.Y == 1) && Block_Draw[block] != DrawType_Gas) {
-		flags &= ~(1 << Side_Top);
-		flags &= ~(1 << Side_Bottom);
+		flags &= ~(1 << Face_YTop);
+		flags &= ~(1 << Face_YMin);
 	}
 	return (UInt8)flags;
 }
@@ -260,7 +260,7 @@ void Block_RecalculateSpriteBB() {
 void Block_RecalculateBB(BlockID block) {
 	Bitmap* bmp = &Atlas2D_Bitmap;
 	Int32 elemSize = Atlas2D_ElementSize;
-	TextureID texId = Block_GetTextureLoc(block, Side_Right);
+	TextureID texId = Block_GetTex(block, Face_XMax);
 	Int32 texX = texId & 0x0F, texY = texId >> 4;
 
 	Real32 topY = Block_GetSpriteBB_TopY(elemSize, texX, texY, bmp);
@@ -360,30 +360,30 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 	if (Block_IsLiquid(other)) oMax.Y -= 1.5f / 16;
 
 	if (Block_Draw[block] == DrawType_Sprite) {
-		Block_SetHidden(block, other, Side_Left, true);
-		Block_SetHidden(block, other, Side_Right, true);
-		Block_SetHidden(block, other, Side_Front, true);
-		Block_SetHidden(block, other, Side_Back, true);
-		Block_SetHidden(block, other, Side_Bottom, oMax.Y == 1);
-		Block_SetHidden(block, other, Side_Top, bMax.Y == 1);
+		Block_SetHidden(block, other, Face_XMin, true);
+		Block_SetHidden(block, other, Face_XMax, true);
+		Block_SetHidden(block, other, Face_ZMin, true);
+		Block_SetHidden(block, other, Face_ZMax, true);
+		Block_SetHidden(block, other, Face_YMin, oMax.Y == 1);
+		Block_SetHidden(block, other, Face_YTop, bMax.Y == 1);
 	} else {
 		Block_SetXStretch(block, bMin.X == 0 && bMax.X == 1);
 		Block_SetZStretch(block, bMin.Z == 0 && bMax.Z == 1);
 		bool bothLiquid = Block_IsLiquid(block) && Block_IsLiquid(other);
 
-		Block_SetHidden(block, other, Side_Left, oMax.X == 1 && bMin.X == 0);
-		Block_SetHidden(block, other, Side_Right, oMin.X == 0 && bMax.X == 1);
-		Block_SetHidden(block, other, Side_Front, oMax.Z == 1 && bMin.Z == 0);
-		Block_SetHidden(block, other, Side_Back, oMin.Z == 0 && bMax.Z == 1);
+		Block_SetHidden(block, other, Face_XMin, oMax.X == 1 && bMin.X == 0);
+		Block_SetHidden(block, other, Face_XMax, oMin.X == 0 && bMax.X == 1);
+		Block_SetHidden(block, other, Face_ZMin, oMax.Z == 1 && bMin.Z == 0);
+		Block_SetHidden(block, other, Face_ZMax, oMin.Z == 0 && bMax.Z == 1);
 
-		Block_SetHidden(block, other, Side_Bottom,
+		Block_SetHidden(block, other, Face_YMin,
 			bothLiquid || (oMax.Y == 1 && bMin.Y == 0));
-		Block_SetHidden(block, other, Side_Top,
+		Block_SetHidden(block, other, Face_YTop,
 			bothLiquid || (oMin.Y == 0 && bMax.Y == 1));
 	}
 }
 
-bool Block_IsHidden(BlockID block, BlockID other, Int32 side) {
+bool Block_IsHidden(BlockID block, BlockID other, Face face) {
 	/* Sprite blocks can never hide faces. */
 	if (Block_Draw[block] == DrawType_Sprite) return false;
 
@@ -406,18 +406,18 @@ bool Block_IsHidden(BlockID block, BlockID other, Int32 side) {
 	return canSkip;
 }
 
-void Block_SetHidden(BlockID block, BlockID other, Int32 side, bool value) {
-	value = Block_IsHidden(block, other, side) && Block_FaceOccluded(block, other, side) && value;
+void Block_SetHidden(BlockID block, BlockID other, Face face, bool value) {
+	value = Block_IsHidden(block, other, face) && Block_FaceOccluded(block, other, face) && value;
 	int bit = value ? 1 : 0;
-	Block_Hidden[block * Block_Count + other] &= (UInt8)~(1 << side);
-	Block_Hidden[block * Block_Count + other] |= (UInt8)(bit << side);
+	Block_Hidden[block * Block_Count + other] &= (UInt8)~(1 << face);
+	Block_Hidden[block * Block_Count + other] |= (UInt8)(bit << face);
 }
 
-bool Block_IsFaceHidden(BlockID block, BlockID other, Int32 side) {
+bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
 #if USE16_BIT
-	return (hidden[(block << 12) | other] & (1 << side)) != 0;
+	return (hidden[(block << 12) | other] & (1 << face)) != 0;
 #else
-	return (Block_Hidden[(block << 8) | other] & (1 << side)) != 0;
+	return (Block_Hidden[(block << 8) | other] & (1 << face)) != 0;
 #endif
 }
 

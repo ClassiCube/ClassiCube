@@ -30,7 +30,7 @@ PackedCol DefaultSet_FogColour(BlockID b) {
 	return PackedCol_Create4(0, 0, 0, 0);
 }
 
-UInt8 DefaultSet_Collide(BlockID b) {
+CollideType DefaultSet_Collide(BlockID b) {
 	if (b == BlockID_Ice) return CollideType_Ice;
 	if (b == BlockID_Water || b == BlockID_StillWater)
 		return CollideType_LiquidWater;
@@ -42,7 +42,7 @@ UInt8 DefaultSet_Collide(BlockID b) {
 	return CollideType_Solid;
 }
 
-UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide) {
+CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide) {
 	if (b == BlockID_Ice && collide == CollideType_Solid)
 		return CollideType_Ice;
 	if ((b == BlockID_Water || b == BlockID_StillWater) && collide == CollideType_Liquid)
@@ -57,15 +57,14 @@ bool DefaultSet_BlocksLight(BlockID b) {
 		|| b == BlockID_Air || DefaultSet_Draw(b) == DrawType_Sprite);
 }
 
-UInt8 DefaultSet_StepSound(BlockID b) {
+SoundType DefaultSet_StepSound(BlockID b) {
 	if (b == BlockID_Glass) return SoundType_Stone;
 	if (b == BlockID_Rope) return SoundType_Cloth;
 	if (DefaultSet_Draw(b) == DrawType_Sprite) return SoundType_None;
 	return DefaultSet_DigSound(b);
 }
 
-
-UInt8 DefaultSet_Draw(BlockID b) {
+DrawType DefaultSet_Draw(BlockID b) {
 	if (b == BlockID_Air || b == BlockID_Invalid) return DrawType_Gas;
 	if (b == BlockID_Leaves) return DrawType_TransparentThick;
 
@@ -81,7 +80,7 @@ UInt8 DefaultSet_Draw(BlockID b) {
 	return DrawType_Opaque;
 }
 
-UInt8 DefaultSet_DigSound(BlockID b) {
+SoundType DefaultSet_DigSound(BlockID b) {
 	if (b >= BlockID_Red && b <= BlockID_White)
 		return SoundType_Cloth;
 	if (b >= BlockID_LightPink && b <= BlockID_Turquoise)

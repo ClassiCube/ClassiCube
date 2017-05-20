@@ -41,7 +41,7 @@ void WeatherRenderer_Init() {
 void WeatherRenderer_Render(Real64 deltaTime) {
 	Int32 weather = WorldEnv_Weather;
 	if (weather == Weather_Sunny) return;
-	if (weather_heightmap == NULL) InitHeightmap();
+	if (weather_heightmap == NULL) WeatherRenderer_InitHeightmap();
 
 	Gfx_BindTexture(weather == Weather_Rainy ? weather_rainTex : weather_snowTex);
 	Vector3 camPos = Game_CurrentCameraPos;

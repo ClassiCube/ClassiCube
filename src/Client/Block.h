@@ -38,10 +38,10 @@ PackedCol Block_FogColour[Block_Count];
 Real32 Block_FogDensity[Block_Count];
 
 /* Gets the basic collision type for the given block. */
-UInt8 Block_Collide[Block_Count];
+CollideType Block_Collide[Block_Count];
 
 /* Gets the action performed when colliding with the given block. */
-UInt8 Block_ExtendedCollide[Block_Count];
+CollideType Block_ExtendedCollide[Block_Count];
 
 /* Speed modifier when colliding (or standing on for solid collide type) with the given block. */
 Real32 Block_SpeedMultiplier[Block_Count];
@@ -50,7 +50,7 @@ Real32 Block_SpeedMultiplier[Block_Count];
 UInt8 Block_LightOffset[Block_Count];
 
 /* Gets the DrawType for the given block. */
-UInt8 Block_Draw[Block_Count];
+DrawType Block_Draw[Block_Count];
 
 /* Gets whether the given block has an opaque draw type and is also a full tile block.
    Full tile block means Min of (0, 0, 0) and max of (1, 1, 1).*/
@@ -59,10 +59,10 @@ bool Block_FullOpaque[Block_Count];
 UInt32 DefinedCustomBlocks[Block_Count >> 5];
 
 /* Gets the dig sound ID for the given block. */
-UInt8 Block_DigSounds[Block_Count];
+SoundType Block_DigSounds[Block_Count];
 
 /* Gets the step sound ID for the given block. */
-UInt8 Block_StepSounds[Block_Count];
+SoundType Block_StepSounds[Block_Count];
 
 /* Gets whether the given block has a tinting colour applied to it when rendered.
    The tinting colour used is the block's fog colour. */
@@ -83,7 +83,7 @@ Vector3 Block_RenderMinBB[Block_Count];
 Vector3 Block_RenderMaxBB[Block_Count];
 
 
-#define Block_TexturesCount Block_Count * Side_Sides
+#define Block_TexturesCount Block_Count * Face_Count
 /* Raw texture ids of each face of each block. */
 TextureID Block_Textures[Block_TexturesCount];
 
@@ -141,10 +141,10 @@ void Block_RecalculateBB(BlockID block);
 void Block_SetSide(TextureID textureId, BlockID blockId);
 
 /* Sets the texture for the given face of the given block. */
-void Block_SetTex(TextureID textureId, Int32 face, BlockID blockId);
+void Block_SetTex(TextureID textureId, Face face, BlockID blockId);
 
 /* Gets the texture ID of the given face of the given block. */
-TextureID Block_GetTextureLoc(BlockID block, Int32 face);
+TextureID Block_GetTex(BlockID block, Face face);
 
 
 /* Recalculates culling state for all blocks. */
@@ -155,7 +155,7 @@ void Block_UpdateCulling(BlockID block);
 
 /* Returns whether the face at the given face of the block
 should be drawn with the neighbour 'other' present on the other side of the face. */
-bool Block_IsFaceHidden(BlockID block, BlockID other, Int32 side);
+bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
 
 
 static String Block_DefaultName(BlockID block);
@@ -172,33 +172,33 @@ static Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitm
 static Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp);
 
 
-static void Block_GetTextureRegion(BlockID block, Int32 side, Vector2* min, Vector2* max);
+static void Block_GetTextureRegion(BlockID block, Face face, Vector2* min, Vector2* max);
 
-static bool Block_FaceOccluded(BlockID block, BlockID other, Int32 side);
+static bool Block_FaceOccluded(BlockID block, BlockID other, Face face);
 
 
 static void Block_CalcCulling(BlockID block, BlockID other);
 
-void Block_SetHidden(BlockID block, BlockID other, Int32 side, bool value);
+void Block_SetHidden(BlockID block, BlockID other, Face face, bool value);
 
-static bool Block_IsHidden(BlockID block, BlockID other, Int32 side);
+static bool Block_IsHidden(BlockID block, BlockID other, Face face);
 
 static void Block_SetXStretch(BlockID block, bool stretch);
 
 static void Block_SetZStretch(BlockID block, bool stretch);
 
 
-static UInt8 topTex[Block_CpeCount] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
+static TextureID topTex[Block_CpeCount] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  4,
 36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52, };
 
-static UInt8 sideTex[Block_CpeCount] = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
+static TextureID sideTex[Block_CpeCount] = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 35,
 36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52, };
 
-static UInt8 bottomTex[Block_CpeCount] = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
+static TextureID bottomTex[Block_CpeCount] = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4,
 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };

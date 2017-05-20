@@ -1,6 +1,7 @@
 #include "Typedefs.h"
 #include "Vector3I.h"
 #include "Vectors.h"
+#include "BlockEnums.h"
 
 /* Describes the picked/selected block by the user and its position. */
 typedef struct PickedPos {
@@ -24,16 +25,16 @@ typedef struct PickedPos {
 	bool Valid;
 
 	/* Face of the picked block that is closet to the player. */
-	BlockFace Face;
+	Face ClosestFace;
 
 	/* Block ID of the picked block. */
 	BlockID Block;
 } PickedPos;
 
 /*  Mark as having a selected block, and calculates the closest face of the selected block's position. */
-void PickedPos_SetAsValid(PickedPos* pos, int x, int y, int z, Vector3 min, Vector3 max);
+void PickedPos_SetAsValid(PickedPos* pos, Int32 x, Int32 y, Int32 z, Vector3 min, Vector3 max);
 
 /* Marks as not having a selected block. */
 void PickedPos_SetAsInvalid(PickedPos* pos);
 
-static void PickedPos_TestAxis(float dAxis, float* dist, BlockFace fAxis);
+static void PickedPos_TestAxis(Real32 dAxis, Real32* dist, Face face);

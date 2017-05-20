@@ -1,29 +1,31 @@
 #ifndef CS_BLOCKENUMS_H
 #define CS_BLOCKENUMS_H
+#include "Typedefs.h"
 /* Block related enumerations.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 
 /* Sides of a block. */
+typedef UInt8 Face;
 /* Face X = 0. */
-#define Side_Left 0
+#define Face_XMin 0
 /* Face X = 1. */
-#define Side_Right 1
-/* Face Z = 0. */
-#define Side_Front 2
-/* Face Z = 1. */
-#define Side_Back 3
+#define Face_XMax 1
 /* Face Y = 0. */
-#define Side_Bottom 4
+#define Face_YMin 2
 /* Face Y = 1. */
-#define Side_Top 5
-/* Number of sides on a cube. */
-#define Side_Sides 6
+#define Face_YTop 3
+/* Face Z = 0. */
+#define Face_ZMin 4
+/* Face Z = 1. */
+#define Face_ZMax 5
+/* Number of faces on a cube. */
+#define Face_Count 6
 
 
 /* Sound types for blocks. */
-
+typedef UInt8 SoundType;
 #define SoundType_None 0
 #define SoundType_Wood 1
 #define SoundType_Gravel 2
@@ -37,6 +39,7 @@
 
 
 /* Describes how a block is rendered in the world. */
+typedef UInt8 DrawType;
 /* Completely covers blocks behind (e.g. dirt). */
 #define DrawType_Opaque 0
 /*  Blocks behind show (e.g. glass). Pixels are either fully visible or invisible.  */
@@ -52,6 +55,7 @@
 
 
 /* Describes the interaction a block has with a player when they collide with it. */
+typedef UInt8 CollideType;
 /* No interaction when player collides. */
 #define CollideType_Gas 0
 /* 'swimming'/'bobbing' interaction when player collides. */

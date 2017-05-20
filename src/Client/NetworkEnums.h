@@ -1,6 +1,9 @@
 #ifndef CS_NETWORKENUMS_H
 #define CS_NETWORKSENUM_H
+#include "Typedefs.h"
 
+/* Network packet opcodes. */
+typedef UInt8 Opcode;
 #define Opcode_Handshake 0
 #define Opcode_Ping 1
 #define Opcode_LevelInit 2
@@ -46,6 +49,9 @@
 #define Opcode_CpeSetMapEnvProperty 41
 #define Opcode_CpeSetEntityProperty 42
 
+
+/* Chat message types.*/
+typedef UInt8 MessageType;
 /* CPE message types */
 
 #define MessageType_Normal 0

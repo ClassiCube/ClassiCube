@@ -1,6 +1,7 @@
 #ifndef CS_DEFAULT_BLOCKS_H
 #define CS_DEFAULT_BLOCKS_H
 #include "Typedefs.h"
+#include "BlockEnums.h"
 #include "PackedCol.h"
 /* List of properties for core blocks.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -19,20 +20,20 @@ Real32 DefaultSet_FogDensity(BlockID b);
 PackedCol DefaultSet_FogColour(BlockID b);
 
 /* Gets the collide type of a block. */
-UInt8 DefaultSet_Collide(BlockID b);
+CollideType DefaultSet_Collide(BlockID b);
 
 /* Gets a backwards compatible collide type of a block. */
-UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide);
+CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide);
 
 /* Gets whether the given block prevents light passing through it. */
 bool DefaultSet_BlocksLight(BlockID b);
 
 /* Gets the ID of the sound played when stepping on this block. */
-UInt8 DefaultSet_StepSound(BlockID b);
+SoundType DefaultSet_StepSound(BlockID b);
 
 /* Gets the type of method used to draw/render this block. */
-UInt8 DefaultSet_Draw(BlockID b);
+DrawType DefaultSet_Draw(BlockID b);
 
 /* Gets the ID of the sound played when deleting/placing this block. */
-UInt8 DefaultSet_DigSound(BlockID b);
+SoundType DefaultSet_DigSound(BlockID b);
 #endif
