@@ -93,16 +93,16 @@ void Block_ResetProps(BlockID block) {
 	if (block >= Block_CpeCount) {
 #if USE16_BIT
 		/* give some random texture ids */
-		Block_SetTex((block * 10 + (block % 7) + 20) % 80, Face_YTop, block);
+		Block_SetTex((block * 10 + (block % 7) + 20) % 80, Face_YMax, block);
 		Block_SetTex((block * 8 + (block & 5) + 5) % 80, Face_YMin, block);
 		Block_SetSide((block * 4 + (block / 4) + 4) % 80, block);
 #else
-		Block_SetTex(0, Face_YTop, block);
+		Block_SetTex(0, Face_YMax, block);
 		Block_SetTex(0, Face_YMin, block);
 		Block_SetSide(0, block);
 #endif
 	} else {
-		Block_SetTex(topTex[block], Face_YTop, block);
+		Block_SetTex(topTex[block], Face_YMax, block);
 		Block_SetTex(bottomTex[block], Face_YMin, block);
 		Block_SetSide(sideTex[block], block);
 	}
@@ -197,7 +197,7 @@ void Block_GetTextureRegion(BlockID block, Face face, Vector2* min, Vector2* max
 		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
 		break;
 
-	case Face_YTop:
+	case Face_YMax:
 	case Face_YMin:
 		*min = Vector2_Create2(bbMin.X, bbMin.Z);
 		*max = Vector2_Create2(bbMax.X, bbMax.Z);
@@ -242,7 +242,7 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 	if (max.Z != 1) flags &= ~(1 << Face_ZMax);
 
 	if ((min.Y != 0 && max.Y == 1) && Block_Draw[block] != DrawType_Gas) {
-		flags &= ~(1 << Face_YTop);
+		flags &= ~(1 << Face_YMax);
 		flags &= ~(1 << Face_YMin);
 	}
 	return (UInt8)flags;
@@ -365,7 +365,7 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 		Block_SetHidden(block, other, Face_ZMin, true);
 		Block_SetHidden(block, other, Face_ZMax, true);
 		Block_SetHidden(block, other, Face_YMin, oMax.Y == 1);
-		Block_SetHidden(block, other, Face_YTop, bMax.Y == 1);
+		Block_SetHidden(block, other, Face_YMax, bMax.Y == 1);
 	} else {
 		Block_SetXStretch(block, bMin.X == 0 && bMax.X == 1);
 		Block_SetZStretch(block, bMin.Z == 0 && bMax.Z == 1);
@@ -378,7 +378,7 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 
 		Block_SetHidden(block, other, Face_YMin,
 			bothLiquid || (oMax.Y == 1 && bMin.Y == 0));
-		Block_SetHidden(block, other, Face_YTop,
+		Block_SetHidden(block, other, Face_YMax,
 			bothLiquid || (oMin.Y == 0 && bMax.Y == 1));
 	}
 }

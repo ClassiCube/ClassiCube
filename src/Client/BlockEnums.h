@@ -6,20 +6,20 @@
 */
 
 
-/* Sides of a block. */
+/* Sides of a block. Constants defined to match blockface field in CPE PlayerClicked. */
 typedef UInt8 Face;
-/* Face X = 0. */
-#define Face_XMin 0
 /* Face X = 1. */
-#define Face_XMax 1
-/* Face Y = 0. */
-#define Face_YMin 2
+#define Face_XMax 0
+/* Face X = 0. */
+#define Face_XMin 1
 /* Face Y = 1. */
-#define Face_YTop 3
-/* Face Z = 0. */
-#define Face_ZMin 4
+#define Face_YMax 2
+/* Face Y = 0. */
+#define Face_YMin 3
 /* Face Z = 1. */
-#define Face_ZMax 5
+#define Face_ZMax 4
+/* Face Z = 0. */
+#define Face_ZMin 5
 /* Number of faces on a cube. */
 #define Face_Count 6
 
