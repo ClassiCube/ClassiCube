@@ -33,12 +33,6 @@ void AABB_Make(Vector3* pos, Vector3* size, AABB* result);
 /* Returns a new AABB, with the min and max coordinates of the original AABB translated by the given vector. */
 void AABB_Offset(AABB* bb, Vector3* amount, AABB* result);
 
-/* Returns a new AABB, with the min and max coordinates of the original AABB expanded away from AABB centre by the given vector. */
-void AABB_Expand(AABB* bb, Vector3* amount, AABB* result);
-
-/* Returns a new AABB, with the min and max coordinates of the original AABB scaled by the given value. */
-void AABB_Scale(AABB* bb, Real32 scale, AABB* result);
-
 /* Determines whether this AABB intersects the given AABB on any axes. */
 bool AABB_Intersects(AABB* bb, AABB* other);
 

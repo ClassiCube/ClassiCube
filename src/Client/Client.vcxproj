@@ -169,6 +169,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AABB.h" />
     <ClInclude Include="BlockEnums.h" />
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />

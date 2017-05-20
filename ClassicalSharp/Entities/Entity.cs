@@ -147,7 +147,8 @@ namespace ClassicalSharp.Entities {
 			
 			UpdateModel();
 			Size = Model.CollisionSize * ModelScale;
-			modelAABB = Model.PickingBounds.Scale(ModelScale);
+			modelAABB = Model.PickingBounds;
+			modelAABB.Min *= ModelScale; modelAABB.Max *= ModelScale;
 		}
 		
 		void ParseScale(string scale) {
