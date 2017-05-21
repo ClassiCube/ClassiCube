@@ -85,7 +85,7 @@ namespace ClassicalSharp.Network {
 		internal void AddTablistEntry(byte id, string playerName, string listName,
 		                              string groupName, byte groupRank) {
 			TabListEntry oldInfo = game.TabList.Entries[id];
-			TabListEntry info = new TabListEntry((byte)id, playerName, listName, groupName, groupRank);
+			TabListEntry info = new TabListEntry(playerName, listName, groupName, groupRank);
 			game.TabList.Entries[id] = info;
 			
 			if (oldInfo != null) {

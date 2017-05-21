@@ -22,7 +22,7 @@ namespace ClassicalSharp.Selections {
 		                  ref int index, ref int lineIndex) {
 			float offset = MinDist < 32 * 32 ? 1/32f : 1/16f;
 			Vector3 p1 = (Vector3)Min - new Vector3(offset, offset, offset);
-			Vector3 p2 = (Vector3)Max + new Vector3(offset, offset, offset);		
+			Vector3 p2 = (Vector3)Max + new Vector3(offset, offset, offset);
 			int col = Colour.Pack();
 			
 			HorQuad(vertices, ref index, col, p1.X, p1.Z, p2.X, p2.Z, p1.Y); // bottom

@@ -19,8 +19,6 @@ namespace ClassicalSharp.Entities {
 	
 	public sealed class TabListEntry {
 		
-		public byte NameId;
-		
 		/// <summary> Unformatted name of the player for autocompletion, etc. </summary>
 		/// <remarks> Colour codes are always removed from this. </remarks>
 		public string PlayerName;
@@ -38,9 +36,8 @@ namespace ClassicalSharp.Entities {
 		/// so a player's group rank is not a unique identifier. </remarks>
 		public byte GroupRank;
 		
-		public TabListEntry(byte id, string playerName, string listName,
+		public TabListEntry(string playerName, string listName,
 		                    string groupName, byte groupRank) {
-			NameId = id;
 			PlayerName = playerName;
 			ListName = listName;
 			GroupName = groupName;

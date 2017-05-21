@@ -21,7 +21,7 @@ static void SkyboxRenderer_Free();
 static void SkyboxRenderer_MakeVb();
 
 
-static void SkyboxRenderer_EnvVariableChanged(Int32 envVar);
+static void SkyboxRenderer_EnvVariableChanged(EnvVar envVar);
 
 static void SkyboxRenderer_TexturePackChanged();
 

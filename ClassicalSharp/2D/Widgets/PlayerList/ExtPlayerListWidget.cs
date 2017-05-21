@@ -24,10 +24,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			public byte NameId;
 			public bool IsGroup = false;
 			
-			public PlayerInfo(TabListEntry p) {
+			public PlayerInfo(TabListEntry p, byte id) {
 				ListName = Utils.StripColours(p.ListName);
 				PlayerName = Utils.StripColours(p.PlayerName);
-				NameId = p.NameId;
+				NameId = id;
 				GroupName = p.GroupName;
 				GroupRank = p.GroupRank;
 			}
@@ -79,7 +79,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (!pInfo.IsGroup && pInfo.NameId == e.Id) {
 					Texture tex = textures[i];
 					gfx.DeleteTexture(ref tex);
-					AddPlayerInfo(game.TabList.Entries[e.Id], i);
+					AddPlayerInfo(game.TabList.Entries[e.Id], e.Id, i);
 					SortPlayerInfo();
 					return;
 				}
@@ -97,7 +97,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 
 		void TabEntryAdded(object sender, IdEventArgs e) {
-			AddPlayerInfo(game.TabList.Entries[e.Id], -1);
+			AddPlayerInfo(game.TabList.Entries[e.Id], e.Id, -1);
 			SortPlayerInfo();
 		}
 
@@ -105,7 +105,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			TabListEntry[] entries = game.TabList.Entries;
 			for (int i = 0; i < entries.Length; i++) {
 				TabListEntry e = entries[i];
-				if (e != null) AddPlayerInfo(e, -1);
+				if (e != null) AddPlayerInfo(e, (byte)i, -1);
 			}
 		}
 		
@@ -119,17 +119,17 @@ namespace ClassicalSharp.Gui.Widgets {
 			return null;
 		}
 		
-		void AddPlayerInfo(TabListEntry player, int index) {
+		void AddPlayerInfo(TabListEntry player, byte id, int index) {
 			DrawTextArgs args = new DrawTextArgs(player.ListName, font, true);
 			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(font.Size), 3);
 			
 			if (index < 0) {
-				info[namesCount] = new PlayerInfo(player);
+				info[namesCount] = new PlayerInfo(player, id);
 				textures[namesCount] = tex;
 				namesCount++;
 			} else {
-				info[index] = new PlayerInfo(player);
+				info[index] = new PlayerInfo(player, id);
 				textures[index] = tex;
 			}
 		}

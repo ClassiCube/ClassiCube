@@ -18,10 +18,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			public string Name, ColouredName;
 			public byte Id;
 			
-			public PlayerInfo(TabListEntry p) {
+			public PlayerInfo(TabListEntry p, byte id) {
 				ColouredName = p.PlayerName;
 				Name = Utils.StripColours(p.PlayerName);
-				Id = p.NameId;
+				Id = id;
 			}
 		}
 		
@@ -53,7 +53,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			for (int i = 0; i < entries.Length; i++) {
 				TabListEntry e = entries[i];
 				if (e != null)
-					AddPlayerInfo(new PlayerInfo(e), -1);
+					AddPlayerInfo(new PlayerInfo(e, (byte)i), -1);
 			}
 		}
 		
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void TabEntryAdded(object sender, IdEventArgs e) {
-			AddPlayerInfo(new PlayerInfo(game.TabList.Entries[e.Id]), -1);
+			AddPlayerInfo(new PlayerInfo(game.TabList.Entries[e.Id], e.Id), -1);
 			SortPlayerInfo();
 		}
 		
@@ -88,7 +88,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				Texture tex = textures[i];
 				gfx.DeleteTexture(ref tex);
-				AddPlayerInfo(new PlayerInfo(game.TabList.Entries[e.Id]), i);
+				AddPlayerInfo(new PlayerInfo(game.TabList.Entries[e.Id], e.Id), i);
 				SortPlayerInfo();
 				return;
 			}
