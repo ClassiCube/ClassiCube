@@ -46,6 +46,12 @@ void Vector3I_Floor(Vector3* a, Vector3I* result) {
 	result->Z = Math_Floor(a->Z);
 }
 
+void Vector3I_ToVector3(Vector3I* a, Vector3* result) {
+	result->X = (Real32)a->X;
+	result->Y = (Real32)a->Y;
+	result->Z = (Real32)a->Z;
+}
+
 void Vector3I_Min(Vector3I* a, Vector3I* b, Vector3I* result) {
 	result->X = min(a->X, b->X);
 	result->Y = min(a->Y, b->Y);

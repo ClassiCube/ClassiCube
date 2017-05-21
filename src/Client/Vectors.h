@@ -43,6 +43,9 @@ Real32 Vector3_LengthSquared(Vector3* v);
 /* Adds a and b. */
 void Vector3_Add(Vector3* a, Vector3* b, Vector3* result);
 
+/* Adds b to all components of a. */
+void Vector3_Add1(Vector3* a, Real32 b, Vector3* result);
+
 /* Subtracts b from a. */
 void Vector3_Subtract(Vector3* a, Vector3* b, Vector3* result);
 

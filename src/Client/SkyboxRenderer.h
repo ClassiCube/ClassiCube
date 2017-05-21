@@ -2,6 +2,7 @@
 #define CS_SKYBOXRENDERER_H
 #include "Typedefs.h"
 #include "Stream.h"
+#include "WorldEvents.h"
 /* Renders a skybox.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -19,6 +20,10 @@ static void SkyboxRenderer_Free();
 
 static void SkyboxRenderer_MakeVb();
 
+
+static void SkyboxRenderer_EnvVariableChanged(Int32 envVar);
+
+static void SkyboxRenderer_TexturePackChanged();
 
 static void SkyboxRenderer_FileChanged(Stream* stream);
 

@@ -10,7 +10,6 @@
 #include "TextureRec.h"
 #include "VertexStructs.h"
 #include "WorldEnv.h"
-#include "WorldEvents.h"
 
 Int32 skybox_tex, skybox_vb = -1;
 #define skybox_count (6 * 4)
@@ -41,7 +40,7 @@ void SkyboxRenderer_Free() {
 	EventHandler_Unregister(Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
 }
 
-void SkyboxRenderer_EnvVariableChanged(Int32 envVar) {
+void SkyboxRenderer_EnvVariableChanged(EnvVar envVar) {
 	if (envVar != EnvVar_CloudsCol) return;
 	SkyboxRenderer_MakeVb();
 }

@@ -109,6 +109,12 @@
     <Filter Include="Header Files\Network">
       <UniqueIdentifier>{8d7c1d32-a06b-483d-ab34-93717e221cc1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\SelectionBox">
+      <UniqueIdentifier>{55de84c8-3e19-4dd3-ba8d-a4c19059e6d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\SelectionBox">
+      <UniqueIdentifier>{402f2b0c-e2c2-47d3-b73f-3293c50db513}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -255,6 +261,9 @@
     <ClInclude Include="AABB.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
+    <ClInclude Include="SelectionBox.h">
+      <Filter>Header Files\SelectionBox</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -358,6 +367,9 @@
     </ClCompile>
     <ClCompile Include="SkyboxRenderer.c">
       <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="SelectionBox.c">
+      <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

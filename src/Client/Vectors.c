@@ -30,6 +30,12 @@ void Vector3_Add(Vector3* a, Vector3* b, Vector3* result) {
 	result->Z = a->Z + b->Z;
 }
 
+void Vector3_Add1(Vector3* a, Real32 b, Vector3* result) {
+	result->X = a->X + b;
+	result->Y = a->Y + b;
+	result->Z = a->Z + b;
+}
+
 void Vector3_Subtract(Vector3* a, Vector3* b, Vector3* result) {
 	result->X = a->X - b->X;
 	result->Y = a->Y - b->Y;

@@ -34,7 +34,7 @@ EventHandler_Raise_Int32(WorldEvents_EnvVarChanged, WorldEvents_EnvVarChangedCou
 
 
 /* Environment variable identifiers*/
-
+typedef Int32 EnvVar;
 #define EnvVar_EdgeBlock 0
 #define EnvVar_SidesBlock 1
 #define EnvVar_EdgeHeight 2

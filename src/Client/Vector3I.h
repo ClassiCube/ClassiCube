@@ -39,8 +39,11 @@ void Vector3I_Negate(Vector3I* a, Vector3I* result);
 /* Returns whether the two vectors are exact same on all axes. */
 bool Vector3I_Equals(Vector3I* a, Vector3I* b);
 
-/* Returns a vector such that each component is floor of input floatin-point component.*/
+/* Returns a vector such that each component is floor of input floating-point component.*/
 void Vector3I_Floor(Vector3* a, Vector3I* result);
+
+/* Returns a vector with the integer components converted to floating-point components.*/
+void Vector3I_ToVector3(Vector3I* a, Vector3* result);
 
 /* Returns a vector such that each component is minimum of corresponding a and b component.*/
 void Vector3I_Min(Vector3I* a, Vector3I* b, Vector3I* result);
