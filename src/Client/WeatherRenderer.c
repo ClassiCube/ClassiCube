@@ -164,12 +164,14 @@ void WeatherRenderer_InitHeightmap() {
 
 	Int32 i;
 	for (i = 0; i < World_Width * World_Length; i++) {
-		weather_heightmap[i] = (Int16)0x7FFF; // TODO: Define this as constant Int16_MaxValue
+		weather_heightmap[i] = Int16_MaxValue;
 	}
 }
 
 Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
-	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) return WorldEnv_EdgeHeight;
+	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
+		return (Real32)WorldEnv_EdgeHeight;
+	}
 	Int32 index = (x * World_Length) + z;
 	Int32 height = weather_heightmap[index];
 

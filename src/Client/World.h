@@ -15,7 +15,7 @@ z = (index / World_Width) % World_Length;\
 y = (index / World_Width) / World_Length;
 
 /* Packs a coordinate into a single integer index. */
-#define World_Pack(x, y, z) ((y * World_Length + z) * World_Width + x)
+#define World_Pack(x, y, z) (((y) * World_Length + (z)) * World_Width + (x))
 
 
 /* Raw blocks of this world. */
