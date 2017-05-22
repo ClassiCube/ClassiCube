@@ -179,6 +179,7 @@
     <ClInclude Include="DefaultSet.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="Drawer.h" />
+    <ClInclude Include="Entity.h" />
     <ClInclude Include="EntityEvents.h" />
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="FrustumCulling.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="MiscEvents.h" />
     <ClInclude Include="NetworkEnums.h" />
+    <ClInclude Include="Options.h" />
     <ClInclude Include="PickedPos.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="SkyboxRenderer.h" />

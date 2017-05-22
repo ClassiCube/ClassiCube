@@ -4,7 +4,7 @@
 #include "PackedCol.h"
 #include "WorldEvents.h"
 /* Manages lighting of blocks in the world.
-Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 Int16* Lighting_heightmap;

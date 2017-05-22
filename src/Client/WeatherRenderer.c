@@ -140,7 +140,7 @@ void WeatherRenderer_FileChanged(Stream* stream) {
 
 	if (String_Equals(&stream->Name, &snow)) {
 		Game_UpdateTexture(&weather_snowTex, stream, false);
-	} else if (String_Equals(&stream->Name, &snow)) {
+	} else if (String_Equals(&stream->Name, &rain)) {
 		Game_UpdateTexture(&weather_rainTex, stream, false);
 	}
 }

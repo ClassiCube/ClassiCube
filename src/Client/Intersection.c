@@ -11,16 +11,19 @@ bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* t
 			  *                                     /
 												   /                           
 	*/
-	origin = Intersection_InverseRotate(origin - target.Position, target) + target.Position;
+	Vector3 delta; Vector3_Subtract(&origin, &target->Position, &delta); /* delta  = origin - target.Position */
+	delta = Intersection_InverseRotate(delta, target);                   /* delta  = UndoRotation(delta) */
+	Vector3_Add(&delta, &target->Position, &origin);                     /* origin = delta + target.Position */
+
 	dir = Intersection_InverseRotate(dir, target);
 	AABB bb = target.PickingBounds;
-	return RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
+	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
 }
 
 Vector3 Intersection_InverseRotate(Vector3 pos, Entity* target) {
-	pos = Vector3_RotateY(pos, -target.RotY * MATH_DEG2RAD);
-	pos = Vector3_RotateZ(pos, -target.RotZ * MATH_DEG2RAD);
-	pos = Vector3_RotateX(pos, -target.RotX * MATH_DEG2RAD);
+	pos = Vector3_RotateY(pos, -target->RotY * MATH_DEG2RAD);
+	pos = Vector3_RotateZ(pos, -target->RotZ * MATH_DEG2RAD);
+	pos = Vector3_RotateX(pos, -target->RotX * MATH_DEG2RAD);
 	return pos;
 }
 

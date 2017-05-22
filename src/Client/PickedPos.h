@@ -1,3 +1,5 @@
+#ifndef CS_PICKEDPOS_H
+#define CS_PICKEDPOS_H
 #include "Typedefs.h"
 #include "Vector3I.h"
 #include "Vectors.h"
@@ -38,3 +40,4 @@ void PickedPos_SetAsValid(PickedPos* pos, Int32 x, Int32 y, Int32 z, Vector3 min
 void PickedPos_SetAsInvalid(PickedPos* pos);
 
 static void PickedPos_TestAxis(Real32 dAxis, Real32* dist, Face face);
+#endif

@@ -1,6 +1,7 @@
 #ifndef CS_GAMEPROPS_H
 #define CS_GAMEPROPS_H
 #include "Typedefs.h"
+#include "Options.h"
 #include "String.h"
 #include "PickedPos.h"
 #include "Vectors.h"

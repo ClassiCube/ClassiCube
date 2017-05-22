@@ -115,6 +115,15 @@
     <Filter Include="Source Files\SelectionBox">
       <UniqueIdentifier>{402f2b0c-e2c2-47d3-b73f-3293c50db513}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Entities">
+      <UniqueIdentifier>{dead5fb3-a62a-4eb7-8d74-ce73e66ab9e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Rendering\Env">
+      <UniqueIdentifier>{8ceea67c-909a-4224-824e-30407393055e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rendering\Env">
+      <UniqueIdentifier>{8337186e-f012-4fe2-a630-692a9ce995ec}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -252,12 +261,6 @@
     <ClInclude Include="NetworkEnums.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
-    <ClInclude Include="WeatherRenderer.h">
-      <Filter>Header Files\Rendering</Filter>
-    </ClInclude>
-    <ClInclude Include="SkyboxRenderer.h">
-      <Filter>Header Files\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="AABB.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
@@ -266,6 +269,18 @@
     </ClInclude>
     <ClInclude Include="Lighting.h">
       <Filter>Header Files\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Options.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Entity.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="SkyboxRenderer.h">
+      <Filter>Header Files\Rendering\Env</Filter>
+    </ClInclude>
+    <ClInclude Include="WeatherRenderer.h">
+      <Filter>Header Files\Rendering\Env</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -365,17 +380,17 @@
     <ClCompile Include="WinIO.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
-    <ClCompile Include="WeatherRenderer.c">
-      <Filter>Source Files\Rendering</Filter>
-    </ClCompile>
-    <ClCompile Include="SkyboxRenderer.c">
-      <Filter>Source Files\Rendering</Filter>
-    </ClCompile>
     <ClCompile Include="SelectionBox.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
     <ClCompile Include="Lighting.c">
       <Filter>Source Files\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyboxRenderer.c">
+      <Filter>Source Files\Rendering\Env</Filter>
+    </ClCompile>
+    <ClCompile Include="WeatherRenderer.c">
+      <Filter>Source Files\Rendering\Env</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

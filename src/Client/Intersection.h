@@ -2,6 +2,7 @@
 #define CS_INTERSECTION_H
 #include "Typedefs.h"
 #include "Vectors.h"
+#include "Entity.h"
 /* Contains various methods for intersecting geometry.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
