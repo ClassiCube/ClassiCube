@@ -25,7 +25,7 @@ namespace ClassicalSharp.Renderers {
 		int edgeTexId, sideTexId;
 		int sidesVertices, edgesVertices;
 		internal bool legacy;
-		bool fullColSides, fullColEdge;
+		bool fullBrightSides, fulBrightEdge;
 		
 		public void UseLegacyMode(bool legacy) {
 			this.legacy = legacy;
@@ -108,11 +108,11 @@ namespace ClassicalSharp.Renderers {
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.EdgeBlock) {
 				MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
-				if (game.BlockInfo.BlocksLight[map.Env.EdgeBlock] != fullColEdge)
+				if (game.BlockInfo.FullBright[map.Env.EdgeBlock] != fulBrightEdge)
 					ResetSidesAndEdges(null, null);
 			} else if (e.Var == EnvVar.SidesBlock) {
 				MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
-				if (game.BlockInfo.BlocksLight[map.Env.SidesBlock] != fullColSides)
+				if (game.BlockInfo.FullBright[map.Env.SidesBlock] != fullBrightSides)
 					ResetSidesAndEdges(null, null);
 			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
 				ResetSidesAndEdges(null, null);
@@ -174,8 +174,8 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b[] v = new VertexP3fT2fC4b[sidesVertices];
 			int index = 0;
 			
-			fullColSides = game.BlockInfo.FullBright[block];
-			int col = fullColSides ? FastColour.WhitePacked : map.Env.Shadow;
+			fullBrightSides = game.BlockInfo.FullBright[block];
+			int col = fullBrightSides ? FastColour.WhitePacked : map.Env.Shadow;
 			if (game.BlockInfo.Tinted[block]) {
 				col = Utils.Tint(col, game.BlockInfo.FogColour[block]);
 			}
@@ -206,8 +206,8 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b[] v = new VertexP3fT2fC4b[edgesVertices];
 			int index = 0;
 			
-			fullColEdge = game.BlockInfo.FullBright[block];
-			int col = fullColEdge ? FastColour.WhitePacked : map.Env.Sun;
+			fulBrightEdge = game.BlockInfo.FullBright[block];
+			int col = fulBrightEdge ? FastColour.WhitePacked : map.Env.Sun;
 			if (game.BlockInfo.Tinted[block]) {
 				col = Utils.Tint(col, game.BlockInfo.FogColour[block]);
 			}
