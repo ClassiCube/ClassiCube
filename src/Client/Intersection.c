@@ -1,4 +1,5 @@
 #include "Intersection.h"
+#include "AABB.h"
 #include "ExtMath.h"
 
 bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* target, Real32* tMin, Real32* tMax) {

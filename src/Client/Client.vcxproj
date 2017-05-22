@@ -185,6 +185,7 @@
     <ClInclude Include="GameProps.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IO.h" />
+    <ClInclude Include="Lighting.h" />
     <ClInclude Include="MiscEvents.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="PickedPos.h" />
@@ -231,6 +232,7 @@
     <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="GameStructs.c" />
     <ClCompile Include="Intersection.c" />
+    <ClCompile Include="Lighting.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />
     <ClCompile Include="GraphicsCommon.c" />

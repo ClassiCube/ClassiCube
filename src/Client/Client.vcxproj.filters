@@ -264,6 +264,9 @@
     <ClInclude Include="SelectionBox.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
+    <ClInclude Include="Lighting.h">
+      <Filter>Header Files\Map</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -370,6 +373,9 @@
     </ClCompile>
     <ClCompile Include="SelectionBox.c">
       <Filter>Source Files\SelectionBox</Filter>
+    </ClCompile>
+    <ClCompile Include="Lighting.c">
+      <Filter>Source Files\Map</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

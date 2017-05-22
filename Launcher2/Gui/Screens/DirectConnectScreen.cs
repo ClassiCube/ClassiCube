@@ -150,7 +150,7 @@ namespace Launcher.Gui.Screens {
 			SetStatus("");
 			
 			if (String.IsNullOrEmpty(user)) {
-				SetStatus("&ePlease enter a username"); return null;
+				SetStatus("&eUsername required"); return null;
 			}
 			
 			IPAddress realIp;

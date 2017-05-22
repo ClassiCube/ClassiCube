@@ -55,10 +55,10 @@ namespace Launcher.Gui.Screens {
 		bool signingIn;
 		void LoginAsync(int mouseX, int mouseY) {
 			if (String.IsNullOrEmpty(Get(0))) {
-				SetStatus("&ePlease enter a username"); return;
+				SetStatus("&eUsername required"); return;
 			}
 			if (String.IsNullOrEmpty(Get(1))) {
-				SetStatus("&ePlease enter a password"); return;
+				SetStatus("&ePassword required"); return;
 			}
 			if (signingIn) return;
 			UpdateSignInInfo(Get(0), Get(1));
