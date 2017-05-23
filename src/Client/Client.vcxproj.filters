@@ -282,6 +282,9 @@
     <ClInclude Include="WeatherRenderer.h">
       <Filter>Header Files\Rendering\Env</Filter>
     </ClInclude>
+    <ClInclude Include="DateTime.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">

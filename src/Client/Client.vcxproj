@@ -176,6 +176,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="D3D9Api.h" />
+    <ClInclude Include="DateTime.h" />
     <ClInclude Include="DefaultSet.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="Drawer.h" />

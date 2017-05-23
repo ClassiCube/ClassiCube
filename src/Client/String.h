@@ -2,7 +2,7 @@
 #define CS_STRING_H
 #include "Typedefs.h"
 /* Implements operations for a string.
-Copyright 2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
 #define String_BufferSize(n) (n + 1)

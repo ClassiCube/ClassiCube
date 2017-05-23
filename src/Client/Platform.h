@@ -1,6 +1,7 @@
 #ifndef CS_PLATFORM_H
 #define CS_PLATFORM_H
 #include "Typedefs.h"
+#include "DateTime.h"
 #include "String.h"
 #include "ErrorHandler.h"
 /* Abstracts platform specific memory management, IO, etc.
@@ -33,4 +34,10 @@ void Platform_Log(String message);
 
 /* Generates a new random uuid / guid. */
 void Platform_NewUuid(UInt8* uuid);
+
+/* Gets the current time, in UTC timezone. */
+DateTime Platform_CurrentUTCTime();
+
+/* Gets the current time, in user's local timezone. */
+DateTime Platform_CurrentLocalTime();
 #endif
