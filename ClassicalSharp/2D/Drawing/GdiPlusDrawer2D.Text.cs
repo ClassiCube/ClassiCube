@@ -3,7 +3,9 @@
 using System;
 using System.Drawing;
 using System.Drawing.Text;
+#if !LAUNCHER
 using ClassicalSharp.GraphicsAPI;
+#endif
 
 namespace ClassicalSharp {
 
@@ -12,9 +14,13 @@ namespace ClassicalSharp {
 		StringFormat format;
 		Bitmap measuringBmp;
 		Graphics measuringGraphics;
-		
+
+#if !LAUNCHER		
 		public GdiPlusDrawer2D(IGraphicsApi graphics) {
 			this.graphics = graphics;
+#else
+		public GdiPlusDrawer2D() {
+#endif
 			format = StringFormat.GenericTypographic;
 			format.FormatFlags |= StringFormatFlags.MeasureTrailingSpaces;
 			format.Trimming = StringTrimming.None;

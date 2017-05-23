@@ -232,7 +232,7 @@ namespace ClassicalSharp {
 		/// this method returns "default.zip". </remarks>
 		public string DefaultTexturePack {
 			get {
-				string path = Path.Combine(Program.AppDirectory, TexturePack.Dir);
+				string path = Path.Combine(Program.AppDirectory, "texpacks");
 				path = Path.Combine(path, defTexturePack);
 				return File.Exists(path) && !ClassicMode ? defTexturePack : "default.zip"; 
 			}

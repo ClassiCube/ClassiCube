@@ -10,7 +10,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public TexturePackScreen(Game game) : base(game) {
 			titleText = "Select a texture pack zip";
-			string dir = Path.Combine(Program.AppDirectory, TexturePack.Dir);
+			string dir = Path.Combine(Program.AppDirectory, "texpacks");
 			entries = Directory.GetFiles(dir, "*.zip");
 			
 			for (int i = 0; i < entries.Length; i++)
@@ -21,7 +21,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void TextButtonClick(Game game, Widget widget, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;
 			string file = ((ButtonWidget)widget).Text;
-			string dir = Path.Combine(Program.AppDirectory, TexturePack.Dir);
+			string dir = Path.Combine(Program.AppDirectory, "texpacks");
 			string path = Path.Combine(dir, file);
 			if (!File.Exists(path)) return;
 			

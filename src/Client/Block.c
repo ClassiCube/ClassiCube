@@ -408,7 +408,7 @@ bool Block_IsHidden(BlockID block, BlockID other, Face face) {
 
 void Block_SetHidden(BlockID block, BlockID other, Face face, bool value) {
 	value = Block_IsHidden(block, other, face) && Block_FaceOccluded(block, other, face) && value;
-	int bit = value ? 1 : 0;
+	Int32 bit = value ? 1 : 0;
 	Block_Hidden[block * Block_Count + other] &= (UInt8)~(1 << face);
 	Block_Hidden[block * Block_Count + other] |= (UInt8)(bit << face);
 }

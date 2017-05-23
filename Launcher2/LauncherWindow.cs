@@ -84,7 +84,7 @@ namespace Launcher {
 			try {
 				Window.Icon = Icon.ExtractAssociatedIcon(path);
 			} catch (Exception ex) {
-				ErrorHandler2.LogError("LauncherWindow.Init() - Icon", ex);
+				ErrorHandler.LogError("LauncherWindow.Init() - Icon", ex);
 			}
 			//Minimised = Window.WindowState == WindowState.Minimized;
 			
@@ -153,7 +153,7 @@ namespace Launcher {
 			try {
 				data = Session.GetConnectInfo(hash);
 			} catch (WebException ex) {
-				ErrorHandler2.LogError("retrieving server information", ex);
+				ErrorHandler.LogError("retrieving server information", ex);
 				return false;
 			} catch (ArgumentOutOfRangeException) {
 				return false;
@@ -166,7 +166,7 @@ namespace Launcher {
 			Window = new NativeWindow(640, 400, Program.AppName, 0,
 			                          GraphicsMode.Default, DisplayDevice.Default);
 			Window.Visible = true;
-			Drawer = new GdiPlusDrawer2D(null);
+			Drawer = new GdiPlusDrawer2D();
 			Init();
 			TryLoadTexturePack();
 			platformDrawer.info = Window.WindowInfo;

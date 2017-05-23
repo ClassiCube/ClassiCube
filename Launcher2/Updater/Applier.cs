@@ -74,9 +74,9 @@ namespace Launcher.Updater {
 			try {
 				File.SetLastWriteTimeUtc(path, PatchTime);
 			} catch (IOException ex) {
-				ErrorHandler2.LogError("I/O exception when trying to set modified time for: " + filename, ex);
+				ErrorHandler.LogError("I/O exception when trying to set modified time for: " + filename, ex);
 			} catch (UnauthorizedAccessException ex) {
-				ErrorHandler2.LogError("Permissions exception when trying to set modified time for: " + filename, ex);
+				ErrorHandler.LogError("Permissions exception when trying to set modified time for: " + filename, ex);
 			}
 		}
 	}

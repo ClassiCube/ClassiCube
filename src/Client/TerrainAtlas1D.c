@@ -53,12 +53,11 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Int32 elemSize = Atlas2D_ElementSize;
 	Bitmap atlas1D;
 	Bitmap_Allocate(&atlas1D, elemSize, atlas1DHeight);
-
 	if (atlas1D.Scan0 == NULL) {
-		ErrorHandler_Fail("Atlas1D_Make1DTexture - couldn't allocate memory");
+		ErrorHandler_Fail("Atlas1D_Make1DTexture - failed to allocate memory");
 	}
-	Int32 index1D;
 
+	Int32 index1D;
 	for (index1D = 0; index1D < Atlas1D_ElementsPerAtlas; index1D++) {
 		Int32 atlasX = (*index & 0x0F) * elemSize;
 		Int32 atlasY = (*index >> 4) * elemSize;

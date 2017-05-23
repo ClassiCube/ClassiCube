@@ -40,7 +40,7 @@ namespace Launcher.Web {
 			} catch (WebException ex) {
 				Finish(false, ex, null); return;
 			} catch (Exception ex) {
-				ErrorHandler2.LogError("UpdateCheckTask.CheckUpdates", ex);
+				ErrorHandler.LogError("UpdateCheckTask.CheckUpdates", ex);
 				Finish(false, null, "&cUpdate check failed"); return;
 			}
 			Finish(true, null, null);

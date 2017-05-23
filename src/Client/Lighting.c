@@ -33,7 +33,7 @@ void Lighting_OnNewMapLoaded() {
 	UInt32 size = World_Width * World_Length * sizeof(Int16);
 	Lighting_heightmap = Platform_MemAlloc(size);
 	if (Lighting_heightmap == NULL) {
-		ErrorHandler_Fail("WorldLighting - Failed to allocate heightmap");
+		ErrorHandler_Fail("WorldLighting - failed to allocate heightmap");
 	}
 	Lighting_Refresh();
 }

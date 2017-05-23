@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+#if !LAUNCHER
 using ClassicalSharp.GraphicsAPI;
+#endif
 #if ANDROID
 using Android.Graphics;
 #endif
@@ -13,8 +15,9 @@ namespace ClassicalSharp {
 	/// and for converting bitmaps into graphics api textures. </summary>
 	/// <remarks> Uses GDI+ on Windows, uses Cairo on Mono. </remarks>
 	public abstract partial class IDrawer2D : IDisposable {
-		
+#if !LAUNCHER		
 		protected IGraphicsApi graphics;
+#endif
 		public const float Offset = 1.3f;
 		
 		/// <summary>Whether chat text should be drawn and measuring using the currently bitmapped font, 
@@ -80,6 +83,7 @@ namespace ClassicalSharp {
 			return !UseBitmappedChat ? MeasureSysSize(ref args) : MeasureBitmappedSize(ref args);
 		}
 		
+#if !LAUNCHER
 		/// <summary> Draws the specified string from the arguments into a new bitmap,
 		/// using the specified font or the current bitmapped font depending on 'UseBitmappedChat',
 		/// then creates a 2D texture with origin at the specified window coordinates. </summary>
@@ -97,18 +101,21 @@ namespace ClassicalSharp {
 				return Make2DTexture(bmp, size, windowX, windowY);
 			}
 		}
+#endif
 		
 		
 		/// <summary> Disposes of all native resources used by this class. </summary>
 		/// <remarks> You will no longer be able to perform measuring or drawing calls after this. </remarks>
 		public abstract void DisposeInstance();
 		
+#if !LAUNCHER
 		/// <summary> Creates a 2D texture with origin at the specified window coordinates. </summary>
 		public Texture Make2DTexture(Bitmap bmp, Size used, int windowX, int windowY) {			
 			int texId = graphics.CreateTexture(bmp, false);
 			return new Texture(texId, windowX, windowY, used.Width, used.Height,
 			                   (float)used.Width / bmp.Width, (float)used.Height / bmp.Height);
 		}
+#endif
 		
 		/// <summary> Creates a power-of-2 sized bitmap larger or equal to to the given size. </summary>
 		public static Bitmap CreatePow2Bitmap(Size size) {
@@ -174,12 +181,13 @@ namespace ClassicalSharp {
 				}
 			}
 		}
-		
+	
 		/// <summary> Returns whenever the given character is a valid colour code. </summary>
 		public bool ValidColour(char c) {
 			return (int)c < 256 && Colours[c].A > 0;
 		}
-		
+
+#if !LAUNCHER		
 		/// <summary> Returns the last valid colour code in the given input, 
 		/// or \0 if no valid colour code was found. </summary>
 		public char LastColour(string input, int start) {
@@ -198,6 +206,7 @@ namespace ClassicalSharp {
 			return c == '\0' || c == 'f' || c == 'F';
 		}
 		
+
 		public void ReducePadding(ref Texture tex, int point) {
 			ReducePadding(ref tex, point, 4);
 		}
@@ -223,5 +232,6 @@ namespace ClassicalSharp {
 			int padding = (height - point) / scale;
 			height -= padding * 2;
 		}
+		#endif
 	}
 }

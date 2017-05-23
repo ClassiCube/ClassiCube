@@ -11,9 +11,14 @@ using Android.Graphics;
 #endif
 
 namespace ClassicalSharp.Network {
-	
+
+#if !LAUNCHER	
 	/// <summary> Specialised producer and consumer queue for downloading data asynchronously. </summary>
 	public class AsyncDownloader : IGameComponent {
+#else
+	/// <summary> Specialised producer and consumer queue for downloading data asynchronously. </summary>
+	public class AsyncDownloader {
+#endif
 		
 		EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.AutoReset);
 		Thread worker;
@@ -29,7 +34,7 @@ namespace ClassicalSharp.Network {
 		public IDrawer2D Drawer;	
 		public AsyncDownloader(IDrawer2D drawer) { this.drawer = drawer; }
 		
-		
+#if !LAUNCHER
 		public void Init(Game game) { Init(game.skinServer); }
 		public void Ready(Game game) { }
 		public void Reset(Game game) {
@@ -40,7 +45,8 @@ namespace ClassicalSharp.Network {
 		
 		public void OnNewMap(Game game) { }
 		public void OnNewMapLoaded(Game game) { }
-		
+#endif
+
 		public void Init(string skinServer) {
 			this.skinServer = skinServer;
 			WebRequest.DefaultWebProxy = null;
@@ -51,7 +57,8 @@ namespace ClassicalSharp.Network {
 			worker.Start();
 		}
 		
-		
+
+#if !LAUNCHER
 		/// <summary> Asynchronously downloads a skin. If 'skinName' points to the url then the skin is
 		/// downloaded from that url, otherwise it is downloaded from the url 'defaultSkinServer'/'skinName'.png </summary>
 		/// <remarks> Identifier is skin_'skinName'.</remarks>
@@ -62,6 +69,7 @@ namespace ClassicalSharp.Network {
 			AddRequest(url, true, identifier, RequestType.Bitmap,
 			           DateTime.MinValue , null);
 		}
+#endif
 		
 		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>
 		public void DownloadImage(string url, bool priority, string identifier) {
@@ -94,12 +102,14 @@ namespace ClassicalSharp.Network {
 			AddRequest(url, priority, identifier, RequestType.ByteArray,
 			           lastModified, etag);
 		}
-		
+
+#if !LAUNCHER		
 		/// <summary> Asynchronously retrieves the content length of the body response. </summary>
 		public void RetrieveContentLength(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.ContentLength,
 			           DateTime.MinValue, null);
 		}
+#endif
 		
 		void AddRequest(string url, bool priority, string identifier,
 		                RequestType type, DateTime lastModified, string etag) {
@@ -128,6 +138,7 @@ namespace ClassicalSharp.Network {
 			((IDisposable)handle).Dispose();
 		}
 		
+		#if !LAUNCHER		
 		/// <summary> Removes older entries that were downloaded a certain time ago
 		/// but were never removed from the downloaded queue. </summary>
 		public void PurgeOldEntriesTask(ScheduledTask task) {
@@ -154,6 +165,7 @@ namespace ClassicalSharp.Network {
 				}
 			}
 		}
+		#endif
 		
 		/// <summary> Returns whether the requested item exists in the downloaded queue.
 		/// If it does, it removes the item from the queue and outputs it. </summary>

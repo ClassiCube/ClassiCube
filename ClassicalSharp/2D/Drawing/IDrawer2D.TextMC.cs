@@ -62,11 +62,15 @@ namespace ClassicalSharp {
 			if (args.UseShadow) {
 				int offset = ShadowOffset(args.Font.Size);
 				DrawPart(dst, ref args, x + offset, y + offset, true);
+#if !LAUNCHER
 				if (underline) DrawUnderline(dst, x + offset, 0, ref args, true);
+#endif
 			}
 
 			DrawPart(dst, ref args, x, y, false);
+#if !LAUNCHER
 			if (underline) DrawUnderline(dst, x, -2, ref args, false);
+#endif
 		}
 		
 		void DrawPart(FastBitmap dst, ref DrawTextArgs args, int x, int y, bool shadowCol) {
@@ -156,7 +160,8 @@ namespace ClassicalSharp {
 				x = startX;
 			}
 		}
-		
+
+#if !LAUNCHER		
 		void DrawUnderline(FastBitmap dst, int x, int yOffset, ref DrawTextArgs args, bool shadowCol) {
 			int point = Utils.Floor(args.Font.Size);
 			int padding = CellSize(point) - AdjTextSize(point);
@@ -190,6 +195,7 @@ namespace ClassicalSharp {
 				col = FastColour.White.ToArgb();
 			}
 		}
+#endif
 
 		protected Size MeasureBitmappedSize(ref DrawTextArgs args) {
 			if (String.IsNullOrEmpty(args.Text)) return Size.Empty;

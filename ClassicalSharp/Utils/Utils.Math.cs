@@ -5,10 +5,7 @@ using OpenTK;
 namespace ClassicalSharp {
 	
 	public static partial class Utils {
-		
-		/// <summary> Creates a vector with all components at 1E25. </summary>
-		public static Vector3 MaxPos() { return new Vector3(1E25f, 1E25f, 1E25f); }
-		
+
 		/// <summary> Clamps that specified value such that min ≤ value ≤ max </summary>
 		public static void Clamp(ref float value, float min, float max) {
 			if (value < min) value = min;
@@ -19,11 +16,6 @@ namespace ClassicalSharp {
 		public static void Clamp(ref int value, int min, int max) {
 			if (value < min) value = min;
 			if (value > max) value = max;
-		}
-		
-		public static Vector3 Mul(Vector3 a, Vector3 scale) {
-			a.X *= scale.X; a.Y *= scale.Y; a.Z *= scale.Z;
-			return a;
 		}
 		
 		/// <summary> Returns the next highest power of 2 that is ≥ to the given value. </summary>
@@ -39,6 +31,14 @@ namespace ClassicalSharp {
 			return value != 0 && (value & (value - 1)) == 0;
 		}
 		
+#if !LAUNCHER	
+		/// <summary> Creates a vector with all components at 1E25. </summary>
+		public static Vector3 MaxPos() { return new Vector3(1E25f, 1E25f, 1E25f); }
+				
+		public static Vector3 Mul(Vector3 a, Vector3 scale) {
+			a.X *= scale.X; a.Y *= scale.Y; a.Z *= scale.Z;
+			return a;
+		}
 		
 		/// <summary> Multiply a value in degrees by this to get its value in radians. </summary>
 		public const float Deg2Rad = (float)(Math.PI / 180);
@@ -130,6 +130,7 @@ namespace ClassicalSharp {
 			pitch = Math.Asin(-dir.Y);
 			yaw = Math.Atan2(dir.X, -dir.Z);
 		}
+#endif
 		
 		public static int Floor(float value) {
 			int valueI = (int)value;
@@ -139,14 +140,14 @@ namespace ClassicalSharp {
 		/// <summary> Performs rounding upwards integer division. </summary>
 		public static int CeilDiv(int a, int b) {
 			return a / b + (a % b != 0 ? 1 : 0);
-		}
-		
-		
+		}		
+
 		/// <summary> Performs linear interpolation between two values. </summary>
 		public static float Lerp(float a, float b, float t) {
 			return a + (b - a) * t;
 		}
-		
+
+#if !LAUNCHER		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
 		public static void CalcBillboardPoints(Vector2 size, Vector3 position, ref Matrix4 view, out Vector3 p111,
 		                                       out Vector3 p121, out Vector3 p212, out Vector3 p222) {
@@ -178,5 +179,6 @@ namespace ClassicalSharp {
 			
 			return Lerp(leftAngle, rightAngle, t);
 		}
+#endif
 	}
 }

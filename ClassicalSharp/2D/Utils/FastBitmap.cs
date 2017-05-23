@@ -32,6 +32,7 @@ namespace ClassicalSharp {
 			ReadOnly = readOnly;
 		}
 		
+#if !LAUNCHER
 		public void SetData(int width, int height, int stride, IntPtr scan0, bool readOnly) {
 			Width = width;
 			Height = height;
@@ -40,6 +41,7 @@ namespace ClassicalSharp {
 			scan0Byte = (byte*)scan0;
 			ReadOnly = readOnly;
 		}
+#endif
 		
 		public Bitmap Bitmap;
 		public bool ReadOnly;
@@ -60,7 +62,7 @@ namespace ClassicalSharp {
 		public int* GetRowPtr(int y) {
 			return (int*)(scan0Byte + (y * Stride));
 		}
-		
+	
 		public static void MovePortion(int srcX, int srcY, int dstX, int dstY, FastBitmap src, FastBitmap dst, int size) {
 			for (int y = 0; y < size; y++) {
 				int* srcRow = src.GetRowPtr(srcY + y);
@@ -69,12 +71,14 @@ namespace ClassicalSharp {
 					dstRow[dstX + x] = srcRow[srcX + x];
 			}
 		}
-		
+
+#if !LAUNCHER		
 		public static void CopyRow(int srcY, int dstY, FastBitmap src, FastBitmap dst, int width) {
 			int* srcRow = src.GetRowPtr(srcY), dstRow = dst.GetRowPtr(dstY);
 			for (int x = 0; x < width; x++)
 				dstRow[x] = srcRow[x];
 		}
+#endif
 		
 		public void Dispose() { UnlockBits(); }
 		

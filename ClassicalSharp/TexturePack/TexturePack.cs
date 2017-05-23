@@ -15,11 +15,10 @@ namespace ClassicalSharp.Textures {
 	/// <summary> Extracts resources from a .zip texture pack. </summary>
 	public sealed class TexturePack {
 		
-		public const string Dir = "texpacks";
 		Game game;
 		
 		public void Extract(string path, Game game) {
-			path = PathIO.Combine(Dir, path);
+			path = PathIO.Combine("texpacks", path);
 			path = PathIO.Combine(Program.AppDirectory, path);
 			using (Stream fs = File.OpenRead(path))
 				Extract(fs, game);

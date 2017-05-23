@@ -4,10 +4,6 @@ using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
-namespace ClassicalSharp {	
-	public enum Anchor { LeftOrTop, Centre, BottomOrRight, }	
-}
-
 namespace ClassicalSharp.Gui {
 	public delegate void ClickHandler(Game g, Widget w, MouseButton btn, int mouseX, int mouseY);
 	

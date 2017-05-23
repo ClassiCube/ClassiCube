@@ -31,9 +31,7 @@ namespace ClassicalSharp {
 
 		public FastColour(Color c) { A = c.A; R = c.R; G = c.G; B = c.B; }
 		
-		public Color ToColor() { return Color.FromArgb(A, R, G, B); }
-		
-		
+	
 		/// <summary> Multiplies the RGB components of this instance by the
 		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
 		public static FastColour Scale(FastColour value, float t) {
@@ -42,7 +40,8 @@ namespace ClassicalSharp {
 			value.B = (byte)(value.B * t);
 			return value;
 		}
-		
+	
+#if !LAUNCHER		
 		/// <summary> Multiplies the RGB components of this instance by the
 		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
 		public static int ScalePacked(int value, float t) {
@@ -53,6 +52,7 @@ namespace ClassicalSharp {
 			value &= ~0xFFFFFF;
 			return value | (a << 16) | (b << 8) | c;
 		}
+#endif
 		
 		/// <summary> Linearly interpolates the RGB components of the two colours
 		/// by the specified t parameter, where 0 ≤ t ≤ 1 </summary>
@@ -69,13 +69,15 @@ namespace ClassicalSharp {
 				lo * ((hex >> 1) & 1) + hi * (hex >> 3),
 				lo * ((hex >> 0) & 1) + hi * (hex >> 3));
 		}
-		
+
+#if !LAUNCHER		
 		public const float ShadeX = 0.6f, ShadeZ = 0.8f, ShadeYBottom = 0.5f;
 		public static void GetShaded(FastColour normal, out int xSide, out int zSide, out int yBottom) {
 			xSide = FastColour.Scale(normal, ShadeX).Pack();
 			zSide = FastColour.Scale(normal, ShadeZ).Pack();
 			yBottom = FastColour.Scale(normal, ShadeYBottom).Pack();
 		}
+#endif
 
 		
 		/// <summary> Packs this instance into a 32 bit integer, where A occupies
@@ -90,7 +92,8 @@ namespace ClassicalSharp {
 			col.B = (byte)c;
 			return col;
 		}
-		
+
+#if !LAUNCHER		
 		/// <summary> Packs this instance into a 32 bit integer, where A occupies
 		/// the highest 8 bits, and the order of RGB bytes is determined by the graphics API. </summary>
 		public int Pack() {
@@ -114,6 +117,7 @@ namespace ClassicalSharp {
 			#endif
 			return col;
 		}
+#endif
 		
 		
 		public override bool Equals(object obj) {

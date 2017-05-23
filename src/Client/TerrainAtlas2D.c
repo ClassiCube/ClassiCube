@@ -16,6 +16,10 @@ Int32 Atlas2D_LoadTextureElement(Int32 index) {
 	// Try to allocate bitmap on stack if possible
 	if (size > 64) {
 		Bitmap_Allocate(&element, size, size);
+		if (element.Scan0 == NULL) {
+			ErrorHandler_Fail("Atlas2D_LoadTextureElement - failed to allocate memory");
+		}
+
 		Int32 texId = Atlas2D_LoadTextureElement_Raw(index, &element);
 		Platform_MemFree(element.Scan0);
 		return texId;
@@ -29,7 +33,7 @@ Int32 Atlas2D_LoadTextureElement(Int32 index) {
 
 Int32 Atlas2D_LoadTextureElement_Raw(Int32 index, Bitmap* element) {
 	Int32 size = Atlas2D_ElementSize;
-	int x = index % Atlas2D_ElementsPerRow, y = index / Atlas2D_ElementsPerRow;
+	Int32 x = index % Atlas2D_ElementsPerRow, y = index / Atlas2D_ElementsPerRow;
 	Bitmap_CopyBlock(x * size, y * size, 0, 0,
 		&Atlas2D_Bitmap, element, size);
 

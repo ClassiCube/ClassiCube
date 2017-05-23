@@ -43,7 +43,7 @@ namespace Launcher {
 		static void RunLauncher() {
 			string logPath = Path.Combine(AppDirectory, "launcher.log");
 			AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
-			ErrorHandler2.InstallHandler(logPath);
+			ErrorHandler.InstallHandler(logPath);
 			OpenTK.Configuration.SkipPerfCountersHack();			
 			LauncherWindow window = new LauncherWindow();
 			window.Run();

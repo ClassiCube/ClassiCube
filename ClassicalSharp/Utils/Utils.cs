@@ -2,7 +2,9 @@
 using System;
 using System.Drawing;
 using System.Globalization;
+#if !LAUNCHER
 using ClassicalSharp.Model;
+#endif
 using OpenTK;
 using OpenTK.Input;
 #if ANDROID
@@ -17,9 +19,10 @@ namespace ClassicalSharp {
 	public delegate void Action();
 	public delegate void Action<T1, T2>(T1 arg1, T2 arg2);
 	public delegate void Action<T1, T2, T3>(T1 arg1, T2 arg2, T3 arg3);
-	public delegate TResult Func<TResult>();
 	public delegate TResult Func<T1, TResult>(T1 arg1);
 	// ################################################################
+	
+	public enum Anchor { LeftOrTop, Centre, BottomOrRight, }
 	
 	public static partial class Utils {
 		
@@ -41,7 +44,8 @@ namespace ClassicalSharp {
 			}
 			return new String(output, 0, usedChars);
 		}
-		
+
+#if !LAUNCHER		
 		/// <summary> Returns a string with a + removed if it is the last character in the string. </summary>
 		public static string RemoveEndPlus(string value) {
 			// Workaround for MCDzienny (and others) use a '+' at the end to distinguish classicube.net accounts
@@ -51,6 +55,7 @@ namespace ClassicalSharp {
 			return value[value.Length - 1] == '+' ?
 				value.Substring(0, value.Length - 1) : value;
 		}
+#endif
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
 		/// <summary> Returns whether a equals b, ignoring any case differences. </summary>
@@ -99,8 +104,17 @@ namespace ClassicalSharp {
 				return false;
 			}
 			return true;
+		}		
+				
+		public static void LogDebug(string text) {
+			Console.WriteLine(text);
+		}
+		
+		public static void LogDebug(string text, params object[] args) {
+			Console.WriteLine(String.Format(text, args));
 		}
 
+#if !LAUNCHER
 		/// <summary> Attempts to caselessly parse the given string as a Key enum member,
 		/// returning defValue if there was an error parsing. </summary>
 		public static bool TryParseEnum<T>(string value, T defValue, out T result) {
@@ -114,15 +128,7 @@ namespace ClassicalSharp {
 			result = mapping;
 			return true;
 		}
-		
-		public static void LogDebug(string text) {
-			Console.WriteLine(text);
-		}
-		
-		public static void LogDebug(string text, params object[] args) {
-			Console.WriteLine(String.Format(text, args));
-		}
-		
+	
 		public static int AdjViewDist(float value) {
 			return (int)(1.4142135 * value);
 		}
@@ -147,7 +153,7 @@ namespace ClassicalSharp {
 			}
 			return (byte)sum;
 		}
-		
+	
 		/// <summary> Determines the skin type of the specified bitmap. </summary>
 		public static SkinType GetSkinType(Bitmap bmp) {
 			if (bmp.Width == bmp.Height * 2) {
@@ -172,7 +178,8 @@ namespace ClassicalSharp {
 			int https = value.IndexOf("https://", index);
 			return http == index || https == index;
 		}
-		
+#endif
+
 		/// <summary> Conversion for code page 437 characters from index 0 to 31 to unicode. </summary>
 		public const string ControlCharReplacements = "\0☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼";
 		
@@ -181,6 +188,7 @@ namespace ClassicalSharp {
 			"░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌" +
 			"█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0";
 
+#if !LAUNCHER
 		public static bool IsValidInputChar(char c, Game game) {
 			if (c >= ' ' && c <= '~') return true; // ascii
 			
@@ -189,6 +197,7 @@ namespace ClassicalSharp {
 			bool supportsCP437 = game.Server.SupportsFullCP437;
 			return supportsCP437 && isCP437;
 		}
+#endif
 		
 		public unsafe static string ToLower(string value) {
 			fixed(char* ptr = value) {
@@ -200,7 +209,8 @@ namespace ClassicalSharp {
 			}
 			return value;
 		}
-		
+
+#if !LAUNCHER
 		// Not all languages use . as their decimal point separator
 		public static bool TryParseDecimal(string s, out float result) {
 			if (s.IndexOf(',') >= 0) 
@@ -223,7 +233,8 @@ namespace ClassicalSharp {
 		const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
 			| NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 		
-		
+#endif
+
 		#if USE16_BIT
 		public static ushort[] UInt8sToUInt16s(byte[] src) {
 			ushort[] dst = new ushort[src.Length];

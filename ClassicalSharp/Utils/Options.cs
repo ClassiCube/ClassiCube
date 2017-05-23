@@ -5,11 +5,10 @@ using System.IO;
 using ClassicalSharp.Textures;
 
 namespace ClassicalSharp {
-	
+
 	public static class OptionsKey {
-		
+#if !LAUNCHER		
 		public const string ViewDist = "viewdist";
-		public const string DefaultTexturePack = "defaulttexpack";
 		public const string SingleplayerPhysics = "singleplayerphysics";
 		public const string UseMusic = "usemusic";
 		public const string UseSound = "usesound";
@@ -18,7 +17,10 @@ namespace ClassicalSharp {
 		public const string InvertMouse = "invertmouse";
 		public const string Sensitivity = "mousesensitivity";
 		public const string FpsLimit = "fpslimit";
+#endif
+		public const string DefaultTexturePack = "defaulttexpack";
 		public const string AutoCloseLauncher = "autocloselauncher";
+#if !LAUNCHER
 		public const string ViewBobbing = "viewbobbing";
 		public const string EntityShadow = "entityshadow";
 		public const string RenderType = "normal";
@@ -40,7 +42,9 @@ namespace ClassicalSharp {
 		public const string ShowBlockInHand = "gui-blockinhand";
 		public const string ChatLines = "gui-chatlines";
 		public const string ClickableChat = "gui-chatclickable";
+#endif
 		public const string ArialChatFont = "gui-arialchatfont";
+#if !LAUNCHER
 		public const string HotbarScale = "gui-hotbarscale";
 		public const string InventoryScale = "gui-inventoryscale";
 		public const string ChatScale = "gui-chatscale";
@@ -56,11 +60,12 @@ namespace ClassicalSharp {
 		public const string UseClassicTabList = "nostalgia-classictablist";
 		public const string UseClassicOptions = "nostalgia-classicoptions";
 		public const string AllowClassicHacks = "nostalgia-hacks";
-	}
-	
+	}	
 	public enum FpsLimitMethod {
 		LimitVSync, Limit30FPS, Limit60FPS, Limit120FPS, LimitNone,
+#endif
 	}
+
 	
 	public static class Options {
 		
@@ -98,7 +103,8 @@ namespace ClassicalSharp {
 				return defValue;
 			return valueBool;
 		}
-		
+
+#if !LAUNCHER		
 		public static float GetFloat(string key, float min, float max, float defValue) {
 			string value;
 			float valueFloat = 0;
@@ -107,7 +113,7 @@ namespace ClassicalSharp {
 			Utils.Clamp(ref valueFloat, min, max);
 			return valueFloat;
 		}
-		
+	
 		public static T GetEnum<T>(string key, T defValue) {
 			string value = Get(key.ToLower());
 			if (value == null) {
@@ -120,6 +126,7 @@ namespace ClassicalSharp {
 				Set(key, defValue);
 			return mapping;
 		}
+#endif
 		
 		public static void Set<T>(string key, T value) {
 			key = key.ToLower();
@@ -133,14 +140,12 @@ namespace ClassicalSharp {
 				OptionsChanged.Add(key);
 		}
 		
+		
 		public static bool Load() {
 			// Both of these are from when running from the launcher
 			if (Program.AppDirectory == null)
 				Program.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
-			string defZip = Path.Combine(Program.AppDirectory, "default.zip");
-			string texDir = Path.Combine(Program.AppDirectory, TexturePack.Dir);
-			if (File.Exists(defZip) || !Directory.Exists(texDir))
-				Program.CleanupMainDirectory();
+			Program.CleanupMainDirectory();
 			
 			try {
 				string path = Path.Combine(Program.AppDirectory, Filename);
@@ -154,7 +159,7 @@ namespace ClassicalSharp {
 				ErrorHandler.LogError("loading options", ex);
 				return false;
 			}
-		}
+		}		
 		
 		static void LoadFrom(StreamReader reader) {
 			string line;
