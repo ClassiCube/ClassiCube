@@ -3,18 +3,6 @@
 #include "WorldEvents.h"
 
 
-BlockID WorldEnv_EdgeBlock = BlockID_StillWater;
-BlockID WorldEnv_SidesBlock = BlockID_Bedrock;
-Int32 WorldEnv_EdgeHeight;
-Int32 WorldEnv_SidesOffset = -2;
-Int32 WorldEnv_CloudsHeight;
-Real32 WorldEnv_CloudsSpeed = 1.0f;
-Real32 WorldEnv_WeatherSpeed = 1.0f;
-Real32 WorldEnv_WeatherFade = 1.0f;
-Int32 WorldEnv_Weather = Weather_Sunny;
-bool WorldEnv_ExpFog = false;
-
-
 /* Sets a value and potentially raises event. */
 #define WorldEnv_Set(value, dst, envVar)\
 if (value == dst) return;\

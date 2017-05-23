@@ -7,43 +7,47 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-
+/* Weather types a world can have. */
+typedef Int32 Weather;
 #define Weather_Sunny 0
 #define Weather_Rainy 1
 #define Weather_Snowy 2
 
 
 /* Block that surrounds map the map horizontally (default water) */
-extern BlockID WorldEnv_EdgeBlock;
+BlockID WorldEnv_EdgeBlock;
 
 /* Block that surrounds the map that fills the bottom of the map horizontally,
 fills part of the vertical sides of the map, and also surrounds map the map horizontally. (default bedrock) */
-extern BlockID WorldEnv_SidesBlock;
+BlockID WorldEnv_SidesBlock;
 
 /* Height of the map edge. */
-extern Int32 WorldEnv_EdgeHeight;
+Int32 WorldEnv_EdgeHeight;
 
 /* Offset of height of map sides from height of map edge. */
-extern Int32 WorldEnv_SidesOffset;
+Int32 WorldEnv_SidesOffset;
+
+/* Height of the map sides. */
+#define WorldEnv_SidesHeight (WorldEnv_EdgeHeight + WorldEnv_SidesOffset)
 
 /* Height of the clouds. */
-extern Int32 WorldEnv_CloudsHeight;
+Int32 WorldEnv_CloudsHeight;
 
 /* Modifier of how fast clouds travel across the world, defaults to 1. */
-extern Real32 WorldEnv_CloudsSpeed;
+Real32 WorldEnv_CloudsSpeed;
 
 
 /* Modifier of how fast rain/snow falls, defaults to 1. */
-extern Real32 WorldEnv_WeatherSpeed;
+Real32 WorldEnv_WeatherSpeed;
 
 /* Modifier of how fast rain/snow fades, defaults to 1. */
-extern Real32 WorldEnv_WeatherFade;
+Real32 WorldEnv_WeatherFade;
 
 /* Current weather for this particular map. */
-extern Int32 WorldEnv_Weather;
+Weather WorldEnv_Weather;
 
 /* Whether exponential fog mode is used by default. */
-extern bool WorldEnv_ExpFog;
+bool WorldEnv_ExpFog;
 
 
 /* Colour of the sky located behind / above clouds. */

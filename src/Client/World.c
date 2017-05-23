@@ -20,8 +20,11 @@ void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 heigh
 	if (blocksSize != (width * height * length)) {
 		ErrorHandler_Fail("Blocks array size does not match volume of map");
 	}
+
 	World_OneY = width * length;
+	World_MaxX = width - 1;
 	World_MaxY = height - 1;
+	World_MaxZ = length - 1;
 
 	if (WorldEnv_EdgeHeight == -1) {
 		WorldEnv_EdgeHeight = height / 2;
