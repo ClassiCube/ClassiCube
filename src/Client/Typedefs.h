@@ -39,7 +39,7 @@ typedef UInt8 bool;
 
 typedef UInt8 BlockID;
 typedef UInt8 EntityID;
-typedef UInt8 TextureID;
+typedef UInt8 TextureLoc;
 
 #define Int16_MaxValue (Int16)0x7FFF
 #define Int32_MaxValue (Int32)0x7FFFFFFFL

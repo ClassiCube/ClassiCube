@@ -6,9 +6,9 @@
 #include "ExtMath.h"
 #include "Block.h"
 
-TextureRec Atlas1D_TexRec(Int32 texId, Int32 uCount, Int32* index) {
-	*index = texId / Atlas1D_ElementsPerAtlas;
-	Int32 y = texId % Atlas1D_ElementsPerAtlas;
+TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
+	*index = texLoc / Atlas1D_ElementsPerAtlas;
+	Int32 y = texLoc % Atlas1D_ElementsPerAtlas;
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards. */
 	return TextureRec_FromRegion(
@@ -72,13 +72,13 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 }
 
 Int32 Atlas1D_UsedAtlasesCount() {
-	Int32 maxTexId = 0;
+	TextureLoc maxTexLoc = 0;
 	Int32 i;
 
 	for (i = 0; i < Block_TexturesCount; i++) {
-		maxTexId = max(maxTexId, Block_Textures[i]);
+		maxTexLoc = max(maxTexLoc, Block_Textures[i]);
 	}
-	return Atlas1D_Index(maxTexId) + 1;
+	return Atlas1D_Index(maxTexLoc) + 1;
 }
 
 void Atlas1D_Free() {

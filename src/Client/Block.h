@@ -85,7 +85,7 @@ Vector3 Block_RenderMaxBB[Block_Count];
 
 #define Block_TexturesCount Block_Count * Face_Count
 /* Raw texture ids of each face of each block. */
-TextureID Block_Textures[Block_TexturesCount];
+TextureLoc Block_Textures[Block_TexturesCount];
 
 /* Returns whether player is allowed to place the given block. */
 bool Block_CanPlace[Block_Count];
@@ -138,13 +138,13 @@ void Block_RecalculateSpriteBB();
 void Block_RecalculateBB(BlockID block);
 
 /* Sets the texture for the four side faces of the given block. */
-void Block_SetSide(TextureID textureId, BlockID blockId);
+void Block_SetSide(TextureLoc texLoc, BlockID blockId);
 
 /* Sets the texture for the given face of the given block. */
-void Block_SetTex(TextureID textureId, Face face, BlockID blockId);
+void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
 
 /* Gets the texture ID of the given face of the given block. */
-TextureID Block_GetTex(BlockID block, Face face);
+#define Block_GetTexLoc(block, face) Block_Textures[(block) * Face_Count + face]
 
 
 /* Recalculates culling state for all blocks. */
@@ -188,17 +188,17 @@ static void Block_SetXStretch(BlockID block, bool stretch);
 static void Block_SetZStretch(BlockID block, bool stretch);
 
 
-static TextureID topTex[Block_CpeCount] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
+static TextureLoc topTex[Block_CpeCount] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  4,
 36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52, };
 
-static TextureID sideTex[Block_CpeCount] = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
+static TextureLoc sideTex[Block_CpeCount] = { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 35,
 36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52, };
 
-static TextureID bottomTex[Block_CpeCount] = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
+static TextureLoc bottomTex[Block_CpeCount] = { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4,
 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };

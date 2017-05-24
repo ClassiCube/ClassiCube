@@ -23,9 +23,9 @@ Int32 Atlas2D_ElementSize;
 void Atlas2D_UpdateState(Bitmap bmp);
 
 /* Creates a native texture that contains the tile at the specified index. */
-Int32 Atlas2D_LoadTextureElement(Int32 index);
+Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc);
 
-static Int32 Atlas2D_LoadTextureElement_Raw(Int32 index, Bitmap* element);
+static Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element);
 
 /* Disposes of the underlying atlas bitmap. */
 void Atlas2D_Free();

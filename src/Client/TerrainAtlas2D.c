@@ -9,7 +9,7 @@ void Atlas2D_UpdateState(Bitmap bmp) {
 	Block_RecalculateSpriteBB(&bmp);
 }
 
-Int32 Atlas2D_LoadTextureElement(Int32 index) {
+Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 	Int32 size = Atlas2D_ElementSize;
 	Bitmap element;
 
@@ -20,20 +20,20 @@ Int32 Atlas2D_LoadTextureElement(Int32 index) {
 			ErrorHandler_Fail("Atlas2D_LoadTextureElement - failed to allocate memory");
 		}
 
-		Int32 texId = Atlas2D_LoadTextureElement_Raw(index, &element);
+		Int32 texId = Atlas2D_LoadTextureElement_Raw(texLoc, &element);
 		Platform_MemFree(element.Scan0);
 		return texId;
 	} else {
 		// TODO: does this even work??
 		UInt8 scan0[Bitmap_DataSize(64, 64)];
 		Bitmap_Create(&element, size, size, 64 * Bitmap_PixelBytesSize, scan0);
-		return Atlas2D_LoadTextureElement_Raw(index, &element);
+		return Atlas2D_LoadTextureElement_Raw(texLoc, &element);
 	}
 }
 
-Int32 Atlas2D_LoadTextureElement_Raw(Int32 index, Bitmap* element) {
+Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
 	Int32 size = Atlas2D_ElementSize;
-	Int32 x = index % Atlas2D_ElementsPerRow, y = index / Atlas2D_ElementsPerRow;
+	Int32 x = texLoc % Atlas2D_ElementsPerRow, y = texLoc / Atlas2D_ElementsPerRow;
 	Bitmap_CopyBlock(x * size, y * size, 0, 0,
 		&Atlas2D_Bitmap, element, size);
 
