@@ -1,5 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.Collections.Generic;
 using System.IO;
 using ClassicalSharp.Network;
 
@@ -10,6 +11,12 @@ namespace Launcher.Patcher {
 		public bool Done = false;
 		internal AsyncDownloader downloader;
 		SoundPatcher digPatcher, stepPatcher;
+		public List<string> FilesToDownload = new List<string>();
+		
+		public void QueueItem(string url, string identifier) {
+			downloader.DownloadData(url, false, identifier);
+			FilesToDownload.Add(identifier);
+		}
 		
 		const string jarClassicUri = "http://s3.amazonaws.com/Minecraft.Download/versions/c0.30_01c/c0.30_01c.jar";
 		const string jar162Uri = "http://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar";
@@ -25,25 +32,27 @@ namespace Launcher.Patcher {
 		ushort flags;
 		public void DownloadItems(AsyncDownloader downloader, Action<string> setStatus) {
 			this.downloader = downloader;
-			DownloadMusicFiles();
-			digPatcher = new SoundPatcher(ResourceList.DigSounds, "dig_", "step_cloth1");
-			digPatcher.FetchFiles(digSoundsUri, altDigSoundsUri, this, DigSoundsExist);
-			stepPatcher = new SoundPatcher(ResourceList.StepSounds, "step_", "classic jar");
-			stepPatcher.FetchFiles(stepSoundsUri, altStepSoundsUri, this, StepSoundsExist);
 			
 			flags = 0;
 			foreach (var entry in ResourceList.Files)
 				flags |= entry.Value;
 			
 			if ((flags & ResourceList.cMask) != 0)
-				downloader.DownloadData(jarClassicUri, false, "classic_jar");
+				QueueItem(jarClassicUri, "classic jar");
 			if ((flags & ResourceList.mMask) != 0)
-				downloader.DownloadData(jar162Uri, false, "162_jar");
+				QueueItem(jar162Uri, "1.6.2 jar");
 			if ((flags & ResourceList.gMask) != 0)
-				downloader.DownloadData(pngGuiPatchUri, false, "gui_patch");
+				QueueItem(pngGuiPatchUri, "gui.png patch");
 			if ((flags & ResourceList.tMask) != 0)
-				downloader.DownloadData(pngTerrainPatchUri, false, "terrain_patch");
-			SetFirstStatus(setStatus);
+				QueueItem(pngTerrainPatchUri, "terrain.png patch");
+			
+			DownloadMusicFiles();
+			digPatcher = new SoundPatcher(ResourceList.DigSounds, "dig_");
+			digPatcher.FetchFiles(digSoundsUri, altDigSoundsUri, this, DigSoundsExist);
+			stepPatcher = new SoundPatcher(ResourceList.StepSounds, "step_");
+			stepPatcher.FetchFiles(stepSoundsUri, altStepSoundsUri, this, StepSoundsExist);
+			
+			setStatus(MakeNext());
 		}
 		
 		void DownloadMusicFiles() {
@@ -52,7 +61,7 @@ namespace Launcher.Patcher {
 				if (musicExists[i]) continue;
 				string baseUri = i < 3 ? musicUri : newMusicUri;
 				string url = baseUri + files[i] + ".ogg";
-				downloader.DownloadData(url, false, files[i]);
+				QueueItem(url, files[i]);
 			}
 		}
 		
@@ -60,19 +69,19 @@ namespace Launcher.Patcher {
 			downloader.DownloadData(url, false, identifier);
 		}
 		
-		void SetFirstStatus(Action<string> setStatus) {
-			for (int i = 0; i < musicExists.Length; i++) {
-				if (musicExists[i]) continue;
-				setStatus(MakeNext(ResourceList.MusicFiles[i]));
-				return;
-			}
-			setStatus(MakeNext(FirstItem()));
-		}
-		
 		
 		internal byte[] jarClassic, jar162, pngTerrainPatch, pngGuiPatch;
 		public bool Check(Action<string> setStatus) {
 			if (Done) return true;
+			
+			if (!Download("classic jar", ref jarClassic, setStatus))
+				return false;
+			if (!Download("1.6.2 jar", ref jar162, setStatus))
+				return false;
+			if (!Download("gui.png patch", ref pngGuiPatch, setStatus))
+				return false;
+			if (!Download("terrain.png patch", ref pngTerrainPatch, setStatus))
+				return false;			
 			
 			if (!CheckMusicFiles(setStatus))
 				return false;
@@ -80,62 +89,23 @@ namespace Launcher.Patcher {
 				return false;
 			if (!stepPatcher.CheckDownloaded(this, setStatus))
 				return false;
-			
-			if (!Download("classic_jar", "classic jar", "1.6.2 jar", ref jarClassic, setStatus))
-				return false;
-			if (!Download("162_jar", "1.6.2 jar", "gui.png", ref jar162, setStatus))
-				return false;
-			if (!Download("gui_patch", "gui.png patch", "terrain.png patch", ref pngGuiPatch, setStatus))
-				return false;
-			if (!Download("terrain_patch", "terrain.png patch", null, ref pngTerrainPatch, setStatus))
-				return false;
 
-			Done |= IsDone();
+			Done |= FilesToDownload.Count == 0;
 			return true;
 		}
 		
-		string FirstItem() {
-			if (!DigSoundsExist) return "dig_cloth1";
-			if (!StepSoundsExist) return "step_cloth1";
-			
-			if ((flags & ResourceList.cMask) != 0) 
-				return "classic jar";
-			if ((flags & ResourceList.mMask) != 0) 
-				return "1.6.2 jar";
-			if ((flags & ResourceList.gMask) != 0) 
-				return "gui.png patch";
-			if ((flags & ResourceList.tMask) != 0) 
-				return "terrain.png patch";
-			return "(unknown)";
-		}
-		
-		bool IsDone() {
-			if (flags == 0) return stepPatcher.Done;
-			if ((flags & ResourceList.tMask) != 0) 
-				return pngTerrainPatch != null;
-			if ((flags & ResourceList.gMask) != 0) 
-				return pngGuiPatch != null;
-			if ((flags & ResourceList.mMask) != 0) 
-				return jar162 != null;
-			if ((flags & ResourceList.cMask) != 0) 
-				return jarClassic != null;
-			return true;
-		}
-		
-		bool Download(string identifier, string name, string next,
-		              ref byte[] data, Action<string> setStatus) {
+		bool Download(string identifier, ref byte[] data, Action<string> setStatus) {
 			DownloadedItem item;
 			if (downloader.TryGetItem(identifier, out item)) {
+				FilesToDownload.RemoveAt(0);
 				Console.WriteLine("got resource " + identifier);
+				
 				if (item.Data == null) {
-					setStatus("&cFailed to download " + name);
+					setStatus("&cFailed to download " + identifier);
 					return false;
 				}
 				
-				if (next != null)
-					setStatus(MakeNext(next));
-				else
-					setStatus("&eCreating default.zip..");
+				setStatus(MakeNext());
 				data = (byte[])item.Data;
 				return true;
 			}
@@ -143,8 +113,12 @@ namespace Launcher.Patcher {
 		}
 		
 		const string lineFormat = "&eFetching {0}.. ({1}/{2})";
-		public string MakeNext(string next) {
+		public string MakeNext() {
 			CurrentResource++;
+			string next = "&eCreating default.zip..";
+			if (FilesToDownload.Count > 0)
+				next = FilesToDownload[0];
+			
 			return String.Format(lineFormat, next,
 			                     CurrentResource, ResourcesCount);
 		}
@@ -152,10 +126,9 @@ namespace Launcher.Patcher {
 		bool CheckMusicFiles(Action<string> setStatus) {
 			string[] files = ResourceList.MusicFiles;
 			for (int i = 0; i < files.Length; i++) {
-				string next = i < files.Length - 1 ? files[i + 1] : "dig_cloth1";
 				string name = files[i];
 				byte[] data = null;
-				if (!Download(name, name, next, ref data, setStatus))
+				if (!Download(name, ref data, setStatus))
 					return false;
 				
 				if (data == null) continue;

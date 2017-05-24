@@ -10,13 +10,12 @@ namespace Launcher.Patcher {
 	public sealed class SoundPatcher {
 
 		string[] files, identifiers;
-		string prefix, nextAction;
+		string prefix;
 		public bool Done;
 		
-		public SoundPatcher(string[] files, string prefix, string nextAction) {
+		public SoundPatcher(string[] files, string prefix) {
 			this.files = files;
 			this.prefix = prefix;
-			this.nextAction = nextAction;
 		}
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
@@ -31,7 +30,7 @@ namespace Launcher.Patcher {
 			for (int i = 0; i < files.Length; i++) {
 				string loc = files[i][0] == 'A' ? baseUrl : altBaseUrl;
 				string url = loc + files[i].Substring(1) + ".ogg";
-				fetcher.downloader.DownloadData(url, false, identifiers[i]);
+				fetcher.QueueItem(url, identifiers[i]);
 			}
 		}
 		
@@ -40,20 +39,18 @@ namespace Launcher.Patcher {
 			for (int i = 0; i < identifiers.Length; i++) {
 				DownloadedItem item;
 				if (fetcher.downloader.TryGetItem(identifiers[i], out item)) {
+					fetcher.FilesToDownload.RemoveAt(0);
 					Console.WriteLine("got sound " + identifiers[i]);
+					
 					if (item.Data == null) {
 						setStatus("&cFailed to download " + identifiers[i]);
 					} else {
 						DecodeSound(files[i].Substring(1), (byte[])item.Data);
 					}
 					
-					// TODO: setStatus(next);
-					if (i == identifiers.Length - 1) {
+					if (i == identifiers.Length - 1)
 						Done = true;
-						setStatus(fetcher.MakeNext(nextAction));
-					} else {
-						setStatus(fetcher.MakeNext(identifiers[i + 1]));
-					}
+					setStatus(fetcher.MakeNext());
 				}
 			}
 			return true;
