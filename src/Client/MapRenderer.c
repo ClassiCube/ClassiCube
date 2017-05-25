@@ -59,7 +59,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	if (MapRenderer_Chunks == NULL) return;
 
 	// First fill depth buffer
-	Int64 vertices = Game_Vertices;
+	UInt32 vertices = Game_Vertices;
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
 	Gfx_SetTexturing(false);
 	Gfx_SetAlphaBlending(false);
@@ -133,62 +133,64 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 		bool drawZMin = info->DrawZMin && part.FrontCount > 0;
 		bool drawZMax = info->DrawZMax && part.BackCount > 0;
 
+		Int32 offset = part.SpriteCount;
 		if (drawXMin && drawXMax) {
 			Gfx_SetFaceCulling(true);
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, part.LeftIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, offset);
 			Gfx_SetFaceCulling(false);
 			Game_Vertices += part.LeftCount + part.RightCount;
 		} else if (drawXMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.LeftCount, part.LeftIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.LeftCount, offset);
 			Game_Vertices += part.LeftCount;
 		} else if (drawXMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.RightCount, part.RightIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.RightCount, offset + part.LeftCount);
 			Game_Vertices += part.RightCount;
 		}
+		offset += part.LeftCount + part.RightCount;
 
 		if (drawZMin && drawZMax) {
 			Gfx_SetFaceCulling(true);
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.FrontCount + part.BackCount, part.FrontIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.FrontCount + part.BackCount, offset);
 			Gfx_SetFaceCulling(false);
 			Game_Vertices += part.FrontCount + part.BackCount;
 		} else if (drawZMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.FrontCount, part.FrontIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.FrontCount, offset);
 			Game_Vertices += part.FrontCount;
 		} else if (drawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.BackCount, part.BackIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.BackCount, offset + part.FrontCount);
 			Game_Vertices += part.BackCount;
 		}
+		offset += part.FrontCount + part.BackCount;
 
 		// Special handling for top and bottom face, as these can go over 65536 vertices and we need to adjust the indices in this case.
 		if (drawYMin && drawYMax) {
 			Gfx_SetFaceCulling(true);
-			if (part.IndicesCount > maxIndices) {
-				Int32 part1Count = maxIndices - part.BottomIndex;
-				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, part.BottomIndex);
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount - part1Count, maxVertex, 0);
+			if (part.IndicesCount > Gfx_MaxIndices) {
+				Int32 part1Count = Gfx_MaxIndices - offset;
+				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, offset);
+				Gfx_DrawIndexedVb_TrisT2fC4b_Range(part.BottomCount + part.TopCount - part1Count, Gfx_MaxVertex, 0);
 			} else {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, part.BottomIndex);
+				Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, offset);
 			}
 			Gfx_SetFaceCulling(false);
 			Game_Vertices += part.TopCount + part.BottomCount;
 		} else if (drawYMin) {
 			Int32 part1Count;
-			if (part.IndicesCount > Gfx_MaxIndices &&
-				(part1Count = Gfx_MaxIndices - part.BottomIndex) < part.BottomCount) {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, part.BottomIndex);
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount - part1Count, maxVertex, 0);
+			if (part.IndicesCount > Gfx_MaxIndices && (part1Count = Gfx_MaxIndices - offset) < part.BottomCount) {
+				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, offset);
+				Gfx_DrawIndexedVb_TrisT2fC4b_Range(part.BottomCount - part1Count, Gfx_MaxVertex, 0);
 			} else {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex);
+				Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount, offset);
 			}
 			Game_Vertices += part.BottomCount;
 		} else if (drawYMax) {
+			offset += part.BottomCount;
 			Int32 part1Count;
-			if (part.IndicesCount > Gfx_MaxIndices &&
-				(part1Count = Gfx_MaxIndices - part.TopIndex) < part.TopCount) {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, part.TopIndex);
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.TopCount - part1Count, maxVertex, 0);
+			if (part.IndicesCount > Gfx_MaxIndices && (part1Count = Gfx_MaxIndices - offset) < part.TopCount) {
+				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, offset);
+				Gfx_DrawIndexedVb_TrisT2fC4b_Range(part.TopCount - part1Count, Gfx_MaxVertex, 0);
 			} else {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
+				Gfx_DrawIndexedVb_TrisT2fC4b(part.TopCount, offset);
 			}
 			Game_Vertices += part.TopCount;
 		}
@@ -230,36 +232,39 @@ void RenderTranslucentBatch(Int32 batch) {
 		bool drawZMin = (inTranslucent || info->DrawZMin) && part.FrontCount > 0;
 		bool drawZMax = (inTranslucent || info->DrawZMax) && part.BackCount > 0;
 
+		Int32 offset = part.SpriteCount;
 		if (drawXMin && drawXMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, part.LeftIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, offset);
 			Game_Vertices += (part.LeftCount + part.RightCount);
 		} else if (drawXMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.LeftCount, part.LeftIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.LeftCount, offset);
 			Game_Vertices += part.LeftCount;
 		} else if (drawXMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.RightCount, part.RightIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.RightCount, offset);
 			Game_Vertices += part.RightCount;
 		}
+		offset += part.LeftCount + part.RightCount;
 
 		if (drawZMin && drawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.FrontCount + part.BackCount, part.FrontIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.FrontCount + part.BackCount, offset);
 			Game_Vertices += (part.FrontCount + part.BackCount);
 		} else if (drawZMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.FrontCount, part.FrontIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.FrontCount, offset);
 			Game_Vertices += part.FrontCount;
 		} else if (drawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.BackCount, part.BackIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.BackCount, offset + part.FrontCount);
 			Game_Vertices += part.BackCount;
 		}
+		offset += part.FrontCount + part.BackCount;
 
 		if (drawYMin && drawYMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, part.BottomIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, offset);
 			Game_Vertices += (part.BottomCount + part.TopCount);
 		} else if (drawYMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.BottomCount, offset);
 			Game_Vertices += part.BottomCount;
 		} else if (drawYMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.TopCount, offset + part.BottomCount);
 			Game_Vertices += part.TopCount;
 		}
 	}

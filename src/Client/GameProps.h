@@ -67,7 +67,7 @@ bool Game_SimpleArmsAnim;
 bool Game_InvertMouse;
 
 /* Number of vertices used for rendering terrain this frame. */
-Int64 Game_Vertices;
+UInt32 Game_Vertices;
 
 /* Model view matrix. */
 Matrix Game_View;
