@@ -186,7 +186,7 @@ namespace ClassicalSharp.Renderers {
 			Vector3I coords = Vector3I.Floor(pos);
 			
 			BlockID block = game.World.SafeGetBlock(coords);
-			bool outside = !game.World.IsValidPos(Vector3I.Floor(pos));
+			bool outside = !game.World.IsValidPos(coords);
 			inTranslucent = game.BlockInfo.Draw[block] == DrawType.Translucent
 				|| (pos.Y < env.EdgeHeight && outside);
 			

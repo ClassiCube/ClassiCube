@@ -16,7 +16,7 @@ Int32 Game_ChunkUpdates;
 bool Game_CameraClipping;
 
 /* Whether colour clear gfx call should be skipped. */
-bool Game_SkipClear = false;
+bool Game_SkipClear;
 
 /* Picked pos instance used for block selection. */
 PickedPos Game_SelectedPos;
@@ -44,15 +44,15 @@ String Game_IPAddress;
 Int32 Game_Port;
 
 /* Radius of the sphere the player can see around the position of the current camera. */
-Real32 Game_ViewDistance = 512;
+Real32 Game_ViewDistance;
 /* Maximum view distance player can view up to. */
-Real32 Game_MaxViewDistance = 32768;
+Real32 Game_MaxViewDistance;
 /* 'Real' view distance the player has selected. */
-Real32 Game_UserViewDistance = 512;
+Real32 Game_UserViewDistance;
 
 /* Field of view for the current camera in degrees. */
-Int32 Game_Fov = 70;
-Int32 Game_DefaultFov, Game_ZoomFov = 0;
+Int32 Game_Fov;
+Int32 Game_DefaultFov, Game_ZoomFov;
 
 /* Strategy used to limit how many frames should be displayed at most each second. */
 FpsLimitMethod FpsLimit;
@@ -75,7 +75,7 @@ Matrix Game_View;
 Matrix Game_Projection;
 
 /* How sensitive the client is to changes in the player's mouse position. */
-Int32 Game_MouseSensitivity = 30;
+Int32 Game_MouseSensitivity;
 
 /* Whether tab names autocomplete. */
 bool Game_TabAutocomplete;

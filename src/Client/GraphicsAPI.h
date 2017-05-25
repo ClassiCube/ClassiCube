@@ -30,6 +30,8 @@ bool Gfx_LostContext;
 
 /* Maximum number of vertices that can be indexed. */
 #define Gfx_MaxIndices (65536 / 4 * 6)
+/* Maximum number of vertices that can be indexed. */
+#define Gfx_MaxVertex 65536
 
 
 /* Event raised when a context is destroyed after having been previously lost. */

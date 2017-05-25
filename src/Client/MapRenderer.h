@@ -36,10 +36,10 @@ bool MapRenderer_HasTranslucentParts[Atlas1D_MaxAtlasesCount];
 bool MapRenderer_HasNormalParts[Atlas1D_MaxAtlasesCount];
 
 /* Whether renderer should check if there are any visible Translucent ChunkPartInfos for each 1D atlas batch. */
-bool MapRenderer_CheckingHasTranslucentParts[Atlas1D_MaxAtlasesCount];
+bool MapRenderer_CheckingTranslucentParts[Atlas1D_MaxAtlasesCount];
 
 /* Whether renderer should check if there are any visible Normal ChunkPartInfos for each 1D atlas batch. */
-bool MapRenderer_CheckingHasNormalParts[Atlas1D_MaxAtlasesCount];
+bool MapRenderer_CheckingNormalParts[Atlas1D_MaxAtlasesCount];
 
 
 /* Render info for all chunks in the world. Unsorted.*/
@@ -53,7 +53,7 @@ ChunkInfo** MapRenderer_SortedChunks;
 
 /* Pointers to render info for all chunks in the world, sorted by distance from the camera.
 Chunks that can be rendered (not empty and are visible) are included in this array. */
-ChunkInfo** MapRenderer_RendererChunks;
+ChunkInfo** MapRenderer_RenderChunks;
 
 /* The number of actually used pointers in the RenderChunks array.
 Entries past this count should be ignored and skipped. */

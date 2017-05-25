@@ -127,6 +127,9 @@
     <Filter Include="Header Files\Rendering\Map">
       <UniqueIdentifier>{7704f4d9-92d9-424b-904f-80ec51f313f6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Rendering\Map">
+      <UniqueIdentifier>{74643485-c6aa-4b00-999f-9b4890c1f28e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -409,6 +412,12 @@
     </ClCompile>
     <ClCompile Include="StringConvert.c">
       <Filter>Source Files\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="ChunkInfo.c">
+      <Filter>Source Files\Rendering\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="MapRenderer.c">
+      <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
