@@ -4,13 +4,16 @@
 #include "TextureRec.h"
 #include "TerrainAtlas2D.h"
 /* Represents 2D terrain.png converted into an array of 1D textures.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+
+/* The theoretical largest number of 1D atlases that a 2D atlas can be broken down into. */
+#define Atlas1D_MaxAtlasesCount (Atlas2D_ElementsPerRow * Atlas2D_RowsCount)
 
 /* The number of elements each 1D atlas contains. */
 Int32 Atlas1D_ElementsPerAtlas;
 
-/* The number of elements in each adjusted 1D atlas. 
+/* The number of elements in each adjusted 1D atlas.
 (in the case only 1 1D atlas used, and is resized vertically to be a power of two) */
 Int32 Atlas1D_ElementsPerBitmap;
 
@@ -18,17 +21,17 @@ Int32 Atlas1D_ElementsPerBitmap;
 Real32 Atlas1D_InvElementSize;
 
 /* Native texture ID for each 1D atlas. */
-Int32 Atlas1D_TexIds[Atlas2D_ElementsPerRow * Atlas2D_RowsCount];
+Int32 Atlas1D_TexIds[Atlas1D_MaxAtlasesCount];
 Int32 Atlas1D_TexIdsCount;
 
 /* Retrieves the 1D texture rectangle and 1D atlas index of the given texture. */
-TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index);
+TextureRec Atlas1D_TexRec(Int32 texId, Int32 uCount, Int32* index);
 
-/* Returns the index of the 1D atlas within the array of 1D atlases that contains the given texture location.*/
-#define Atlas1D_Index(texLoc) (texLoc) / Atlas1D_ElementsPerAtlas
+/* Returns the index of the 1D atlas within the array of 1D atlases that contains the given texture id.*/
+#define Atlas1D_Index(texId) (texId) / Atlas1D_ElementsPerAtlas
 
-/* Returns the index of the given texture location within a 1D atlas. */
-#define Atlas1D_RowId(texLoc) (texLoc) % Atlas1D_ElementsPerAtlas
+/* Returns the index of the given texture id within a 1D atlas. */
+#define Atlas1D_RowId(texId) (texId) % Atlas1D_ElementsPerAtlas
 
 /* Updates variables and native textures for the 1D atlas array. */
 void Atlas1D_UpdateState();
