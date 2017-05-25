@@ -148,7 +148,7 @@ namespace ClassicalSharp.Renderers {
 			for (int batch = 0; batch < _1DUsed; batch++) {
 				if (totalUsed[batch] <= 0) continue;
 				if (pendingTranslucent[batch] || usedTranslucent[batch]) {
-					RenderTranslucent(batch);
+					RenderTranslucentBatch(batch);
 					pendingTranslucent[batch] = false;
 				}
 			}
@@ -302,6 +302,7 @@ namespace ClassicalSharp.Renderers {
 				
 				ChunkPartInfo part = info.TranslucentParts[batch];
 				if (part.IndicesCount == 0) continue;
+				usedTranslucent[batch] = true;
 				
 				gfx.BindVb(part.VbId);
 				bool drawLeft = (inTranslucent || info.DrawLeft) && part.LeftCount > 0;
