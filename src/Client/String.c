@@ -81,6 +81,11 @@ bool String_Append(String* str, UInt8 c) {
 }
 
 bool String_AppendInt32(String* str, Int32 num) {
+	if (num < 0) {
+		num = -num;
+		if (!String_Append(str, (UInt8)'-')) return false;
+	}
+
 	UInt8 numBuffer[20];
 	Int32 numLen = String_MakeInt32(num, numBuffer);
 	Int32 i;
