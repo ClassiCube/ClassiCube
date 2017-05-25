@@ -124,6 +124,9 @@
     <Filter Include="Source Files\Rendering\Env">
       <UniqueIdentifier>{8337186e-f012-4fe2-a630-692a9ce995ec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Rendering\Map">
+      <UniqueIdentifier>{7704f4d9-92d9-424b-904f-80ec51f313f6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -285,6 +288,15 @@
     <ClInclude Include="DateTime.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="StringConvert.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="MapRenderer.h">
+      <Filter>Header Files\Rendering\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="ChunkInfo.h">
+      <Filter>Header Files\Rendering\Map</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -394,6 +406,9 @@
     </ClCompile>
     <ClCompile Include="WeatherRenderer.c">
       <Filter>Source Files\Rendering\Env</Filter>
+    </ClCompile>
+    <ClCompile Include="StringConvert.c">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
 #include "TerrainAtlas1D.h"
 #include "ChunkInfo.h"
 /* Renders the blocks of the world by subdividing it into chunks.
-Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 /* Width of the world, in terms of number of chunks. */

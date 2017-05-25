@@ -174,6 +174,7 @@
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="ChunkInfo.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="D3D9Api.h" />
     <ClInclude Include="DateTime.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IO.h" />
     <ClInclude Include="Lighting.h" />
+    <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="MiscEvents.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="Options.h" />
@@ -196,6 +198,7 @@
     <ClInclude Include="SkyboxRenderer.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
+    <ClInclude Include="StringConvert.h" />
     <ClInclude Include="TerrainAtlas1D.h" />
     <ClInclude Include="TerrainAtlas2D.h" />
     <ClInclude Include="WeatherRenderer.h" />
@@ -247,6 +250,7 @@
     <ClCompile Include="SkyboxRenderer.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
+    <ClCompile Include="StringConvert.c" />
     <ClCompile Include="TerrainAtlas1D.c" />
     <ClCompile Include="TerrainAtlas2D.c" />
     <ClCompile Include="Texture.c" />
