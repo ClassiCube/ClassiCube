@@ -7,6 +7,7 @@
 * Hemsindor - testing ClassicalSharp on OSX.
 * FabTheZen - suggestions about how to improve user experience, testing.
 * Jerralish - reverse engineering and documenting the original classic map generation algorithm.
+* Cybertoon - Adding water animation, better metal step/dig sounds, identifying multiple flaws
 
 And a big thanks to everyone else in the ClassiCube community (who I didn't mention here),
 who in the past have provided many suggestions and assisted in identifying bugs.
