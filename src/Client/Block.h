@@ -8,6 +8,7 @@
 #include "Game.h"
 #include "Vectors.h"
 #include "Bitmap.h"
+#include "Constants.h"
 /* Stores properties for blocks
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

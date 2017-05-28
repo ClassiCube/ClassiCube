@@ -177,6 +177,7 @@
     <ClInclude Include="ChunkInfo.h" />
     <ClInclude Include="ChunkSorter.h" />
     <ClInclude Include="Compiler.h" />
+    <ClInclude Include="Constants.h" />
     <ClInclude Include="D3D9Api.h" />
     <ClInclude Include="DateTime.h" />
     <ClInclude Include="DefaultSet.h" />
