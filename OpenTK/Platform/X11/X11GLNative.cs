@@ -482,26 +482,6 @@ namespace OpenTK.Platform.X11 {
 			get { return ClientRectangle.Size; }
 			set { ClientRectangle = new Rectangle(Point.Empty, value); }
 		}
-
-		public int Width {
-			get { return ClientSize.Width; }
-			set { ClientSize = new Size(value, Height); }
-		}
-		
-		public int Height {
-			get { return ClientSize.Height; }
-			set { ClientSize = new Size(Width, value); }
-		}
-		
-		public int X {
-			get { return Location.X; }
-			set { Location = new Point(value, Y); }
-		}
-
-		public int Y {
-			get { return Location.Y; }
-			set { Location = new Point(X, value); }
-		}
 		
 		public Icon Icon {
 			get { return icon; }

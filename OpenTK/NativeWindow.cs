@@ -165,12 +165,6 @@ namespace OpenTK {
 		public bool Focused {
 			get { EnsureUndisposed(); return implementation.Focused; }
 		}
-		
-		/// <summary> Gets or sets the external height of this window. </summary>
-		public int Height {
-			get { EnsureUndisposed(); return implementation.Height; }
-			set { EnsureUndisposed(); implementation.Height = value; }
-		}
 
 		/// <summary> Gets or sets the System.Drawing.Icon for this GameWindow. </summary>
 		public Icon Icon {
@@ -201,12 +195,6 @@ namespace OpenTK {
 			get { EnsureUndisposed(); return implementation.Visible; }
 			set { EnsureUndisposed(); implementation.Visible = value; }
 		}
-
-		/// <summary> Gets or sets the external width of this window. </summary>
-		public int Width {
-			get { EnsureUndisposed(); return implementation.Width; }
-			set { EnsureUndisposed(); implementation.Width = value; }
-		}
 		
 		/// <summary> Gets the <see cref="OpenTK.Platform.IWindowInfo"/> of this window. </summary>
 		public IWindowInfo WindowInfo {
@@ -217,18 +205,6 @@ namespace OpenTK {
 		public virtual WindowState WindowState {
 			get { return implementation.WindowState; }
 			set { implementation.WindowState = value; }
-		}
-		
-		/// <summary> Gets or sets the horizontal location of this window on the desktop. </summary>
-		public int X {
-			get { EnsureUndisposed(); return implementation.X; }
-			set { EnsureUndisposed(); implementation.X = value; }
-		}
-		
-		/// <summary> Gets or sets the vertical location of this window on the desktop. </summary>
-		public int Y {
-			get { EnsureUndisposed(); return implementation.Y; }
-			set { EnsureUndisposed(); implementation.Y = value; }
 		}
 		
 		/// <summary> Gets the primary Keyboard device, or null if no Keyboard exists. </summary>

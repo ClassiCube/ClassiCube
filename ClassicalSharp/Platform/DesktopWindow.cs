@@ -11,6 +11,9 @@ namespace ClassicalSharp {
 	/// <summary> Implementation of a native window and native input handling mechanism on Windows, OSX, and Linux. </summary>
 	public sealed class DesktopWindow : GameWindow, IPlatformWindow {
 		
+		public int Width { get { return ClientSize.Width; } }
+		public int Height { get { return ClientSize.Height; } }
+		
 		Game game;
 		public DesktopWindow(Game game, string username, bool nullContext, int width, int height) :
 			base(width, height, GraphicsMode.Default, Program.AppName + " (" + username + ")", nullContext, 0, DisplayDevice.Default) {

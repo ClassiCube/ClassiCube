@@ -43,10 +43,10 @@ namespace Launcher {
 		public AsyncDownloader Downloader;
 		
 		/// <summary> Returns the width of the client drawing area. </summary>
-		public int Width { get { return Window.Width; } }
+		public int Width { get { return Window.ClientSize.Width; } }
 		
 		/// <summary> Returns the height of the client drawing area. </summary>
-		public int Height { get { return Window.Height; } }
+		public int Height { get { return Window.ClientSize.Height; } }
 		
 		/// <summary> Bitmap that contains the entire array of pixels that describe the client drawing area. </summary>
 		public Bitmap Framebuffer;

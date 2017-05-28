@@ -503,26 +503,6 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public int Width {
-			get { return ClientRectangle.Width; }
-			set { ClientRectangle = new Rectangle(0, 0, value, Height); }
-		}
-
-		public int Height {
-			get { return ClientRectangle.Height; }
-			set { ClientRectangle = new Rectangle(0, 0, Width, value); }
-		}
-
-		public int X {
-			get { return Location.X; }
-			set { Location = new Point(value, Y); }
-		}
-
-		public int Y {
-			get { return Location.Y; }
-			set { Location = new Point(X, value); }
-		}
-
 		public Icon Icon {
 			get { return icon; }
 			set {
