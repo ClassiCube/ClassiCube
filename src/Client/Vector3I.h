@@ -24,30 +24,30 @@ Vector3I Vector3I_Create3(Int32 x, Int32 y, Int32 z);
 
 
 /* Adds a and b. */
-void Vector3I_Add(Vector3I* a, Vector3I* b, Vector3I* result);
+void Vector3I_Add(Vector3I* result, Vector3I* a, Vector3I* b);
 
 /* Subtracts b from a. */
-void Vector3I_Subtract(Vector3I* a, Vector3I* b, Vector3I* result);
+void Vector3I_Subtract(Vector3I* result, Vector3I* a, Vector3I* b);
 
 /* Multiplies all components of a by scale. */
-void Vector3I_Multiply1(Vector3I* a, Int32 scale, Vector3I* result);
+void Vector3I_Multiply1(Vector3I* result, Vector3I* a, Int32 scale);
 
 /* Negates components of a. */
-void Vector3I_Negate(Vector3I* a, Vector3I* result);
+void Vector3I_Negate(Vector3I* result, Vector3I* a);
 
 
 /* Returns whether the two vectors are exact same on all axes. */
 bool Vector3I_Equals(Vector3I* a, Vector3I* b);
 
 /* Returns a vector such that each component is floor of input floating-point component.*/
-void Vector3I_Floor(Vector3* a, Vector3I* result);
+void Vector3I_Floor(Vector3I* result, Vector3* a);
 
 /* Returns a vector with the integer components converted to floating-point components.*/
-void Vector3I_ToVector3(Vector3I* a, Vector3* result);
+void Vector3I_ToVector3(Vector3* result, Vector3I* a);
 
 /* Returns a vector such that each component is minimum of corresponding a and b component.*/
-void Vector3I_Min(Vector3I* a, Vector3I* b, Vector3I* result);
+void Vector3I_Min(Vector3I* result, Vector3I* a, Vector3I* b);
 
 /* Returns a vector such that each component is maximum of corresponding a and b component.*/
-void Vector3I_Max(Vector3I* a, Vector3I* b, Vector3I* result);
+void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b);
 #endif

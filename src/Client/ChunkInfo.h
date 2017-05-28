@@ -42,5 +42,5 @@ typedef struct ChunkInfo {
 } ChunkInfo;
 
 /* Resets contents of given chunk render info structure. */
-void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) { sizeof(ChunkInfo); }
+void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z);
 #endif

@@ -1,8 +1,8 @@
-#ifndef FASTCOLOUR_H
-#define FASTCOLOUR_H
+#ifndef CS_PACKEDCOL_H
+#define CS_PACKEDCOL_H
 #include "Typedefs.h"
 /* Manipulates an ARGB colour, in a format suitable for the native graphics api.
-Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
@@ -40,5 +40,5 @@ void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, P
 
 
 /* TODO: actual constant values? may need to rethink PackedCol */
-#define FastColour_White PackedCol_Create3(255, 255, 255)
+#define PackedCol_White PackedCol_Create3(255, 255, 255)
 #endif

@@ -31,7 +31,7 @@ bool Texture_IsValid(Texture* tex) {
 
 void Texture_Render(Texture* tex) {
 	Gfx_BindTexture(tex->ID);
-	GfxCommon_Draw2DTexture(tex, FastColour_White);
+	GfxCommon_Draw2DTexture(tex, PackedCol_White);
 }
 
 void Texture_RenderShaded(Texture* tex, PackedCol shadeColour) {

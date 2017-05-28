@@ -41,45 +41,45 @@ Real32 Vector3_LengthSquared(Vector3* v);
 
 
 /* Adds a and b. */
-void Vector3_Add(Vector3* a, Vector3* b, Vector3* result);
+void Vector3_Add(Vector3* result, Vector3* a, Vector3* b);
 
 /* Adds b to all components of a. */
-void Vector3_Add1(Vector3* a, Real32 b, Vector3* result);
+void Vector3_Add1(Vector3* result, Vector3* a, Real32 b);
 
 /* Subtracts b from a. */
-void Vector3_Subtract(Vector3* a, Vector3* b, Vector3* result);
+void Vector3_Subtract(Vector3* result, Vector3* a, Vector3* b);
 
 /* Multiplies all components of a by scale. */
-void Vector3_Multiply1(Vector3* a, Real32 scale, Vector3* result);
+void Vector3_Multiply1(Vector3* result, Vector3* a, Real32 scale);
 
 /* Multiplies components of a by scale. */
-void Vector3_Multiply3(Vector3* a, Vector3* scale, Vector3* result);
+void Vector3_Multiply3(Vector3* result, Vector3* a, Vector3* scale);
 
 /* Divides all components of a by scale. */
-void Vector3_Divide1(Vector3* a, Real32 scale, Vector3* result);
+void Vector3_Divide1(Vector3* result, Vector3* a, Real32 scale);
 
 /* Divides components of a by scale. */
-void Vector3_Divide3(Vector3* a, Vector3* scale, Vector3* result);
+void Vector3_Divide3(Vector3* result, Vector3* a, Vector3* scale);
 
 
 /* Linearly interpolates between two vectors. */
-void Vector3_Lerp(Vector3* a, Vector3* b, Real32 blend, Vector3* result);
+void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, Real32 blend);
 
 /* Calculates the dot product of two vectors. */
 Real32 Vector3_Dot(Vector3* left, Vector3* right);
 
 /* Calculates the cross product of two vectors. */
-void Vector3_Cross(Vector3* a, Vector3* b, Vector3* result);
+void Vector3_Cross(Vector3* result, Vector3* a, Vector3* b);
 
 /* Calculates the normal of a vector. */
-void Vector3_Normalize(Vector3* a, Vector3* result);
+void Vector3_Normalize(Vector3* result, Vector3* a);
 
 
 /* Transforms a vector by the given matrix. */
-void Vector3_Transform(Vector3* a, Matrix* mat, Vector3* result);
+void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat);
 
 /* Transforms the Y component of a vector by the given matrix. */
-void Vector3_TransformY(Real32 y, Matrix* mat, Vector3* result);
+void Vector3_TransformY(Vector3* result, Real32 y, Matrix* mat);
 
 /* Rotates the given 3D coordinates around the x axis. */
 Vector3 Vector3_RotateX(Vector3 v, Real32 angle);

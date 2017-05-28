@@ -11,9 +11,9 @@ bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* t
 			  *                                     /
 												   /                           
 	*/
-	Vector3 delta; Vector3_Subtract(&origin, &target->Position, &delta); /* delta  = origin - target.Position */
+	Vector3 delta; Vector3_Subtract(&delta, &origin, &target->Position); /* delta  = origin - target.Position */
 	delta = Intersection_InverseRotate(delta, target);                   /* delta  = UndoRotation(delta) */
-	Vector3_Add(&delta, &target->Position, &origin);                     /* origin = delta + target.Position */
+	Vector3_Add(&origin, &delta, &target->Position);                     /* origin = delta + target.Position */
 
 	dir = Intersection_InverseRotate(dir, target);
 	AABB bb = target.PickingBounds;

@@ -3,8 +3,8 @@
 void SelectionBox_Make(SelectionBox* box, Vector3I* p1, Vector3I* p2, PackedCol col) {
 	box->ID = 0;
 	box->MinDist = 0.0f; box->MaxDist = 0.0f;
-	Vector3I_Min(p1, p2, &box->Min);
-	Vector3I_Max(p1, p2, &box->Max);
+	Vector3I_Min(&box->Min, p1, p2);
+	Vector3I_Max(&box->Max, p1, p2);
 	box->Colour = col;
 }
 
@@ -13,10 +13,10 @@ void SelectionBox_Render(SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4
 	Vector3 p1, p2;
 	PackedCol col = box->Colour;
 
-	Vector3I_ToVector3(&box->Min, &p1);
-	Vector3I_ToVector3(&box->Max, &p2);
-	Vector3_Add1(&p1, -offset, &p1); 
-	Vector3_Add1(&p2,  offset, &p2);	
+	Vector3I_ToVector3(&p1, &box->Min);
+	Vector3I_ToVector3(&p2, &box->Max);
+	Vector3_Add1(&p1, &p1, -offset); 
+	Vector3_Add1(&p2, &p2,  offset);	
 
 	SelectionBox_HorQuad(vertices, col, p1.X, p1.Z, p2.X, p2.Z, p1.Y);       /* bottom */
 	SelectionBox_HorQuad(vertices, col, p1.X, p1.Z, p2.X, p2.Z, p2.Y);       /* top */
