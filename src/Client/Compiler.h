@@ -5,7 +5,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define INLINE inline
+#define HINT_INLINE inline
 
 /* The following ifdef block is the standard way of creating macros which make exporting 
    from a DLL simpler. All files within this DLL are compiled with the CLIENT_EXPORTS

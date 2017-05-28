@@ -102,7 +102,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 void MapRenderer_CheckWeather(Real64 deltaTime) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;
-	Vector3I_Floor(&pos, &coords);
+	Vector3I_Floor(&coords, &pos);
 
 	BlockID block = World_SafeGetBlock_3I(coords);
 	bool outside = !World_IsValidPos_3I(coords);

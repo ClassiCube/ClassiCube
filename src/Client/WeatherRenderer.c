@@ -46,7 +46,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Gfx_BindTexture(weather == Weather_Rainy ? weather_rainTex : weather_snowTex);
 	Vector3 camPos = Game_CurrentCameraPos;
 	Vector3I pos;
-	Vector3I_Floor(&camPos, &pos);
+	Vector3I_Floor(&pos, &camPos);
 	bool moved = !Vector3I_Equals(&pos, &weather_lastPos);
 	weather_lastPos = pos;
 
