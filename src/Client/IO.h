@@ -4,7 +4,7 @@
 #include "String.h"
 #include "ErrorHandler.h"
 /* Abstracts platform specific I/O operations.
-Copyright 2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
 /* Returns whether a file with the given name exists. */

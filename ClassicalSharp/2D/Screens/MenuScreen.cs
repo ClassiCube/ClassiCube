@@ -8,6 +8,7 @@ namespace ClassicalSharp.Gui.Screens {
 	public abstract class MenuScreen : ClickableScreen {
 		
 		public MenuScreen(Game game) : base(game) {
+			HandlesAllInput = true;
 		}
 		protected Widget[] widgets;
 		protected Font titleFont, regularFont;
@@ -61,8 +62,6 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		
-		public override bool HandlesAllInput { get { return true; } }
 		
 		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
 			return HandleMouseClick(widgets, mouseX, mouseY, button);

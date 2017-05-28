@@ -15,6 +15,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public InventoryScreen(Game game) : base(game) {
 			font = new Font(game.FontName, 16);
+			HandlesAllInput = true;
 		}
 		
 		BlockID[] blocksTable;

@@ -7,8 +7,6 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	public partial class InventoryScreen : Screen {
 		
-		public override bool HandlesAllInput { get { return true; } }
-		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
 			if (draggingMouse) {
 				mouseY -= TableY;

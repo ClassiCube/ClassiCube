@@ -175,6 +175,7 @@
     <ClInclude Include="Block.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ChunkInfo.h" />
+    <ClInclude Include="ChunkSorter.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="D3D9Api.h" />
     <ClInclude Include="DateTime.h" />
@@ -186,6 +187,7 @@
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="GameProps.h" />
+    <ClInclude Include="IDrawer2D.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IO.h" />
     <ClInclude Include="Lighting.h" />
@@ -229,6 +231,7 @@
   <ItemGroup>
     <ClCompile Include="Block.c" />
     <ClCompile Include="ChunkInfo.c" />
+    <ClCompile Include="ChunkSorter.c" />
     <ClCompile Include="Compiler.c" />
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DefaultSet.c" />

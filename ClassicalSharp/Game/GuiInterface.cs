@@ -113,11 +113,11 @@ namespace ClassicalSharp {
 			if (activeScreen == null || !activeScreen.HidesHud)
 				fpsScreen.Render(delta);
 			
-			if (activeScreen == null || !activeScreen.HidesHud && !activeScreen.RenderHudAfter)
+			if (activeScreen == null || !activeScreen.HidesHud && !activeScreen.RenderHudOver)
 				hudScreen.Render(delta);
 			if (activeScreen != null)
 				activeScreen.Render(delta);
-			if (activeScreen != null && !activeScreen.HidesHud && activeScreen.RenderHudAfter)
+			if (activeScreen != null && !activeScreen.HidesHud && activeScreen.RenderHudOver)
 				hudScreen.Render(delta);
 			
 			if (overlays.Count > 0)

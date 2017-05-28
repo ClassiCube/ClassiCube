@@ -17,8 +17,8 @@ Int32 MapRenderer_ChunksY;
 Int32 MapRenderer_ChunksZ;
 
 /* Packs a coordinate into a single integer index. */
-#define MapRenderer_Pack(cx, cy, cz) (((cy) * MapRenderer_ChunksZ + (cz)) * MapRenderer_ChunksX + (cx))
-
+#define MapRenderer_Pack(cx, cy, cz) (((cz) * MapRenderer_ChunksY + (cy)) * MapRenderer_ChunksX + (cx))
+/* TODO: Swap Y and Z? Make sure to update ChunkUpdater's ResetChunkCache and ClearChunkCache methods! */
 
 /* The count of actual used 1D atlases. (i.e. 1DIndex(maxTextureLoc) + 1*/
 Int32 MapRenderer_1DUsedCount;
@@ -75,6 +75,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime);
 /*Renders all translucent (e.g. water) blocks.
 Pixels drawn blend into existing geometry.*/
 void MapRenderer_RenderTranslucent(Real64 deltaTime);
+
 
 static void MapRenderer_CheckWeather(Real64 deltaTime);
 

@@ -332,7 +332,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public void OpenTextInputBar(string initialText) {
 			game.CursorVisible = true;
 			suppressNextPress = true;
-			HandlesAllInput = true;
+			SetHandlesAllInput(true);
 			game.Keyboard.KeyRepeat = true;
 			
 			input.Text.Clear();
@@ -347,11 +347,10 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesKeyDown(Key key) {
 			suppressNextPress = false;
-
 			if (HandlesAllInput) { // text input bar
 				if (key == game.Mapping(KeyBind.SendChat) || key == Key.KeypadEnter
 				   || key == game.Mapping(KeyBind.PauseOrExit)) {
-					HandlesAllInput = false;
+					SetHandlesAllInput(false);
 					game.CursorVisible = false;
 					game.Camera.RegrabMouse();
 					game.Keyboard.KeyRepeat = false;
@@ -466,6 +465,11 @@ namespace ClassicalSharp.Gui.Screens {
 			height += input.YOffset;
 			altText.texture.Y1 = game.Height - (height + altText.texture.Height);
 			altText.Y = altText.texture.Y1;
+		}
+		
+		void SetHandlesAllInput(bool handles) {
+			HandlesAllInput = handles;
+			game.Gui.hudScreen.HandlesAllInput = handles;
 		}
 	}
 }

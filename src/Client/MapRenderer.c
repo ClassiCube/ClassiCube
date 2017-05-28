@@ -214,7 +214,7 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 	}
 }
 
-void RenderTranslucentBatch(Int32 batch) {
+void MapRenderer_RenderTranslucentBatch(Int32 batch) {
 	Int32 i;
 	for (Int32 i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];

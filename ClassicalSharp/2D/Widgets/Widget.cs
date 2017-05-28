@@ -45,15 +45,6 @@ namespace ClassicalSharp.Gui.Widgets {
 		/// <summary> Vertical offset from the reference point in pixels. </summary>
 		public int YOffset;
 		
-		/// <summary> Width and height of widget in pixels. </summary>
-		public Size Size { get { return new Size(Width, Height); } }
-		
-		/// <summary> Coordinate of top left corner of widget's bounds in pixels. </summary>
-		public Point TopLeft { get { return new Point(X, Y); } }
-		
-		/// <summary> Coordinate of bottom right corner of widget's bounds in pixels. </summary>
-		public Point BottomRight { get { return new Point(X + Width, Y + Height); } }
-		
 		/// <summary> Specifies the boundaries of the widget in pixels. </summary>
 		public Rectangle Bounds { get { return new Rectangle(X, Y, Width, Height); } }
 		

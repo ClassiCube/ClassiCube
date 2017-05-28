@@ -130,6 +130,9 @@
     <Filter Include="Source Files\Rendering\Map">
       <UniqueIdentifier>{74643485-c6aa-4b00-999f-9b4890c1f28e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\2D\Drawer">
+      <UniqueIdentifier>{db6ca59c-b36f-430d-9353-e86604dfb63a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -300,6 +303,12 @@
     <ClInclude Include="ChunkInfo.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
+    <ClInclude Include="ChunkSorter.h">
+      <Filter>Header Files\Rendering\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="IDrawer2D.h">
+      <Filter>Header Files\2D\Drawer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -417,6 +426,9 @@
       <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
     <ClCompile Include="MapRenderer.c">
+      <Filter>Source Files\Rendering\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="ChunkSorter.c">
       <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
   </ItemGroup>

@@ -15,7 +15,10 @@ namespace ClassicalSharp.Gui.Screens {
 		public LoadingMapScreen(Game game, string title, string message) : base(game) {
 			this.title = title;
 			this.message = message;
-			font = new Font(game.FontName, 16);
+			font = new Font(game.FontName, 16);			
+			BlocksWorld = true;
+			RenderHudOver = true;
+			HandlesAllInput = true;
 		}
 		
 		string title, message;
@@ -85,12 +88,6 @@ namespace ClassicalSharp.Gui.Screens {
 			SetMessage(message);
 		}
 		
-		
-		public override bool BlocksWorld { get { return true; } }
-		
-		public override bool HandlesAllInput { get { return true; } }
-		
-		public override bool RenderHudAfter { get { return true; } }
 		
 		public override bool HandlesKeyDown(Key key) {
 			if (key == Key.Tab) return true;

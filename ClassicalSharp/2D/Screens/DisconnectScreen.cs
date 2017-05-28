@@ -22,6 +22,9 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			messageFont = new Font(game.FontName, 16, FontStyle.Regular);
+			BlocksWorld = true;
+			HidesHud = true;
+			HandlesAllInput = true;
 		}
 		
 		public override void Render(double delta) {
@@ -58,12 +61,7 @@ namespace ClassicalSharp.Gui.Screens {
 				widgets[i].CalculatePosition();
 			clearTime = DateTime.UtcNow.AddSeconds(0.5);
 		}
-		
-		public override bool BlocksWorld { get { return true; } }
-		
-		public override bool HandlesAllInput { get { return true; } }
-		
-		public override bool HidesHud { get { return true; } }
+
 		
 		public override bool HandlesKeyDown(Key key) { return key < Key.F1 || key > Key.F35; }
 		

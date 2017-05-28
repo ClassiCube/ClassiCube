@@ -136,8 +136,6 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 
 		void OnNewMap(object sender, EventArgs e) { DisposePlayerList(); }
-		
-		public override bool HandlesAllInput { get { return chat.HandlesAllInput; } }
 
 		public override bool HandlesKeyPress(char key) { return chat.HandlesKeyPress(key); }
 		

@@ -22,7 +22,6 @@ namespace ClassicalSharp.Renderers {
 		internal ChunkMeshBuilder builder;
 		BlockInfo info;
 		
-		int width, height, length;
 		internal int[] distances;
 		internal Vector3I chunkPos = new Vector3I(int.MaxValue);
 		int elementsPerBitmap = 0;
@@ -157,13 +156,9 @@ namespace ClassicalSharp.Renderers {
 		
 		int chunksX, chunksY, chunksZ;
 		void OnNewMapLoaded(object sender, EventArgs e) {
-			width = NextMultipleOf16(game.World.Width);
-			height = NextMultipleOf16(game.World.Height);
-			length = NextMultipleOf16(game.World.Length);
-			
-			chunksX = width >> 4; renderer.chunksX = chunksX;
-			chunksY = height >> 4; renderer.chunksY = chunksY;
-			chunksZ = length >> 4; renderer.chunksZ = chunksZ;
+			chunksX = Utils.CeilDiv(game.World.Width, 16); renderer.chunksX = chunksX;
+			chunksY = Utils.CeilDiv(game.World.Height, 16); renderer.chunksY = chunksY;
+			chunksZ = Utils.CeilDiv(game.World.Length, 16); renderer.chunksZ = chunksZ;
 			
 			int count = chunksX * chunksY * chunksZ;
 			if (renderer.chunks == null || renderer.chunks.Length != count) {
@@ -181,9 +176,9 @@ namespace ClassicalSharp.Renderers {
 		
 		void CreateChunkCache() {
 			int index = 0;
-			for (int z = 0; z < length; z += 16)
-				for (int y = 0; y < height; y += 16)
-					for (int x = 0; x < width; x += 16)
+			for (int z = 0; z < game.World.Length; z += 16)
+				for (int y = 0; y < game.World.Height; y += 16)
+					for (int x = 0; x < game.World.Width; x += 16)
 			{
 				renderer.chunks[index] = new ChunkInfo(x, y, z);
 				renderer.unsortedChunks[index] = renderer.chunks[index];
@@ -195,9 +190,9 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetChunkCache() {
 			int index = 0;
-			for (int z = 0; z < length; z += 16)
-				for (int y = 0; y < height; y += 16)
-					for (int x = 0; x < width; x += 16)
+			for (int z = 0; z < game.World.Length; z += 16)
+				for (int y = 0; y < game.World.Height; y += 16)
+					for (int x = 0; x < game.World.Width; x += 16)
 			{
 				renderer.unsortedChunks[index].Reset(x, y, z);
 				index++;
@@ -231,8 +226,6 @@ namespace ClassicalSharp.Renderers {
 				game.Graphics.DeleteVb(ref parts[i].VbId);
 			parts = null;
 		}
-		
-		static int NextMultipleOf16(int value) { return (value + 0x0F) & ~0x0F; }
 		
 		void ContextLost() { ClearChunkCache(); }
 		void ContextRecreated() { Refresh(); }
