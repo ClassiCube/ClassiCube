@@ -27,8 +27,8 @@ namespace ClassicalSharp.Mode {
 
 		public void PickLeft(BlockID old) {
 			Vector3I pos = game.SelectedPos.BlockPos;
-			game.UpdateBlock(pos.X, pos.Y, pos.Z, 0);
-			game.UserEvents.RaiseBlockChanged(pos, old, 0);
+			game.UpdateBlock(pos.X, pos.Y, pos.Z, Block.Air);
+			game.UserEvents.RaiseBlockChanged(pos, old, Block.Air);
 			HandleDelete(old);
 		}
 		
