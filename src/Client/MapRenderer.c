@@ -12,14 +12,14 @@
 bool inTranslucent;
 
 ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz) {
-	return &MapRenderer_Chunks[MapRender_Pack(cx, cy, cz)];
+	return &MapRenderer_Chunks[MapRenderer_Pack(cx, cy, cz)];
 }
 
 void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz) {
 	if (cx < 0 || cy < 0 || cz < 0 || cx >= MapRenderer_ChunksX 
 		|| cy >= MapRenderer_ChunksY || cz >= MapRenderer_ChunksZ) return;
 
-	ChunkInfo* info = &MapRenderer_Chunks[MapRender_Pack(cx, cy, cz)];
+	ChunkInfo* info = &MapRenderer_Chunks[MapRenderer_Pack(cx, cy, cz)];
 	if (info->AllAir) return; /* do not recreate chunks completely air */
 	info->Empty = false;
 	info->PendingDelete = true;

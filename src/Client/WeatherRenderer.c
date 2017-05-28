@@ -47,7 +47,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Vector3 camPos = Game_CurrentCameraPos;
 	Vector3I pos;
 	Vector3I_Floor(&pos, &camPos);
-	bool moved = !Vector3I_Equals(&pos, &weather_lastPos);
+	bool moved = Vector3I_NotEquals(&pos, &weather_lastPos);
 	weather_lastPos = pos;
 
 	/* Rain should extend up by 64 blocks, or to the top of the world. */

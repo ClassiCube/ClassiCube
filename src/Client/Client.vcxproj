@@ -196,6 +196,7 @@
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="Options.h" />
     <ClInclude Include="PickedPos.h" />
+    <ClInclude Include="Respawn.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="SkyboxRenderer.h" />
     <ClInclude Include="Stream.h" />
@@ -251,6 +252,7 @@
     <ClCompile Include="Noise.c" />
     <ClCompile Include="NotchyGenerator.c" />
     <ClCompile Include="Random.c" />
+    <ClCompile Include="Respawn.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="SkyboxRenderer.c" />
     <ClCompile Include="Stream.c" />

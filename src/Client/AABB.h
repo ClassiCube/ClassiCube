@@ -27,11 +27,11 @@ void AABB_FromCoords6(Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Rea
 
 void AABB_FromCoords(Vector3* min, Vector3* max, AABB* result);
 
-void AABB_Make(Vector3* pos, Vector3* size, AABB* result);
+void AABB_Make(AABB* result, Vector3* pos, Vector3* size);
 
 
 /* Returns a new AABB, with the min and max coordinates of the original AABB translated by the given vector. */
-void AABB_Offset(AABB* bb, Vector3* amount, AABB* result);
+void AABB_Offset(AABB* result, AABB* bb, Vector3* amount);
 
 /* Determines whether this AABB intersects the given AABB on any axes. */
 bool AABB_Intersects(AABB* bb, AABB* other);

@@ -40,6 +40,10 @@ bool Vector3I_Equals(Vector3I* a, Vector3I* b) {
 	return a->X == b->X && a->Y == b->Y && a->Z == b->Z;
 }
 
+bool Vector3I_NotEquals(Vector3I* a, Vector3I* b) {
+	return a->X != b->X || a->Y != b->Y || a->Z != b->Z;
+}
+
 void Vector3I_Floor(Vector3I* result, Vector3* a) {
 	result->X = Math_Floor(a->X);
 	result->Y = Math_Floor(a->Y);

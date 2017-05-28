@@ -133,6 +133,9 @@
     <Filter Include="Header Files\2D\Drawer">
       <UniqueIdentifier>{db6ca59c-b36f-430d-9353-e86604dfb63a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Entities">
+      <UniqueIdentifier>{47b3db41-6a79-47ca-a2b0-72d5ccb26bfb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -309,6 +312,9 @@
     <ClInclude Include="IDrawer2D.h">
       <Filter>Header Files\2D\Drawer</Filter>
     </ClInclude>
+    <ClInclude Include="Respawn.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -430,6 +436,9 @@
     </ClCompile>
     <ClCompile Include="ChunkSorter.c">
       <Filter>Source Files\Rendering\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Respawn.c">
+      <Filter>Source Files\Entities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

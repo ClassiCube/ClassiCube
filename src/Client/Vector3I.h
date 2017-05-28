@@ -40,6 +40,9 @@ HINT_INLINE void Vector3I_Negate(Vector3I* result, Vector3I* a);
 /* Returns whether the two vectors are exact same on all axes. */
 HINT_INLINE bool Vector3I_Equals(Vector3I* a, Vector3I* b);
 
+/* Returns whether the two vectors are different on any axes. */
+HINT_INLINE bool Vector3I_NotEquals(Vector3I* a, Vector3I* b);
+
 /* Returns a vector such that each component is floor of input floating-point component.*/
 HINT_INLINE void Vector3I_Floor(Vector3I* result, Vector3* a);
 
