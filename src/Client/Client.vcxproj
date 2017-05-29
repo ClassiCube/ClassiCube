@@ -188,6 +188,7 @@
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="GameProps.h" />
+    <ClInclude Include="GZipHeader.h" />
     <ClInclude Include="IDrawer2D.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IO.h" />
@@ -243,6 +244,7 @@
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="GameStructs.c" />
+    <ClCompile Include="GZipHeader.c" />
     <ClCompile Include="Intersection.c" />
     <ClCompile Include="Lighting.c" />
     <ClCompile Include="MapRenderer.c" />

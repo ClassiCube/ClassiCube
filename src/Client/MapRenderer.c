@@ -117,7 +117,7 @@ void MapRenderer_CheckWeather(Real64 deltaTime) {
 
 void MapRenderer_RenderNormalBatch(Int32 batch) {
 	Int32 i;
-	for (Int32 i = 0; i < MapRenderer_RenderChunksCount; i++) {
+	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (info->NormalParts == NULL) continue;
 
@@ -216,7 +216,7 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 
 void MapRenderer_RenderTranslucentBatch(Int32 batch) {
 	Int32 i;
-	for (Int32 i = 0; i < MapRenderer_RenderChunksCount; i++) {
+	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (info->TranslucentParts == NULL) continue;
 

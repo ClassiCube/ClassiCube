@@ -318,6 +318,9 @@
     <ClInclude Include="Constants.h">
       <Filter>Header Files\Defines</Filter>
     </ClInclude>
+    <ClInclude Include="GZipHeader.h">
+      <Filter>Header Files\IO</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -442,6 +445,9 @@
     </ClCompile>
     <ClCompile Include="Respawn.c">
       <Filter>Source Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="GZipHeader.c">
+      <Filter>Source Files\IO</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

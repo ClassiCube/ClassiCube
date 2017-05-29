@@ -40,7 +40,7 @@ namespace OpenTK.Graphics {
         /// <param name="window"></param>
         void Update(IWindowInfo window);
 
-        /// <summary>Gets the GraphicsMode of this instance.</summary>
+        /// <summary> Gets the GraphicsMode of this instance. </summary>
         GraphicsMode GraphicsMode { get; }
 
         /// <summary> Loads all OpenGL entry points. Requires this instance to be current on the calling thread. </summary>
