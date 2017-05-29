@@ -3,11 +3,11 @@
 #define WIN32_LEAN_AND_MEAN
 
 HANDLE heap;
-void Platform_Init() {
+void Platform_Init(void) {
 	heap = GetProcessHeap(); // TODO: HeapCreate instead? probably not
 }
 
-void Platform_Free() {
+void Platform_Free(void) {
 	HeapDestroy(heap);
 }
 
@@ -59,13 +59,13 @@ time.Second = sysTime.wSecond;\
 time.Milliseconds = sysTime.wMilliseconds;\
 return time;\
 
-DateTime Platform_CurrentUTCTime() {
+DateTime Platform_CurrentUTCTime(void) {
 	SYSTEMTIME utcTime;
 	GetSystemTime(&utcTime);
 	Platform_ReturnDateTime(utcTime);
 }
 
-DateTime Platform_CurrentLocalTime() {
+DateTime Platform_CurrentLocalTime(void) {
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
 	Platform_ReturnDateTime(localTime);

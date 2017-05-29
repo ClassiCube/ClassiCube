@@ -4,12 +4,12 @@
 #include "Platform.h"
 #include "BlockEnums.h"
 
-void GfxCommon_Init() {
+void GfxCommon_Init(void) {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, 4);
 	GfxCommon_texVb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, 4);
 }
 
-void GfxCommon_Free() {
+void GfxCommon_Free(void) {
 	Gfx_DeleteVb(&GfxCommon_quadVb);
 	Gfx_DeleteVb(&GfxCommon_texVb);
 }
@@ -23,7 +23,7 @@ void GfxCommon_LoseContext(String reason) {
 	GfxCommon_Free();
 }
 
-void GfxCommon_RecreateContext() {
+void GfxCommon_RecreateContext(void) {
 	Gfx_LostContext = false;
 	Platform_Log(String_FromConstant("Recreating graphics context"));
 

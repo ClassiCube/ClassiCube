@@ -9,7 +9,7 @@
 typedef UInt32 ReturnCode;
 
 /* Initalises required state for this error handler. */
-void ErrorHandler_Init();
+void ErrorHandler_Init(void);
 
 /* Logs a message to the error handler's log file. */
 void ErrorHandler_Log(String msg);

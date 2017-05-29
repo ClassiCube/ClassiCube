@@ -29,7 +29,7 @@ Int16* weather_heightmap;
 Real64 weather_accumulator;
 Vector3I weather_lastPos;
 
-IGameComponent WeatherRenderer_MakeGameComponent() {
+IGameComponent WeatherRenderer_MakeGameComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = WeatherRenderer_Init;
 	comp.Free = WeatherRenderer_Free;
@@ -38,7 +38,7 @@ IGameComponent WeatherRenderer_MakeGameComponent() {
 	return comp;
 }
 
-void WeatherRenderer_Init() {
+void WeatherRenderer_Init(void) {
 	EventHandler_Register(TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
 	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
 
@@ -137,7 +137,7 @@ Real32 WeatherRenderer_AlphaAt(Real32 x) {
 	return 178 + falloff * WorldEnv_WeatherFade;
 }
 
-void WeatherRenderer_Reset() {
+void WeatherRenderer_Reset(void) {
 	if (weather_heightmap != NULL) Platform_MemFree(weather_heightmap);
 	weather_heightmap = NULL;
 	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
@@ -154,7 +154,7 @@ void WeatherRenderer_FileChanged(Stream* stream) {
 	}
 }
 
-void WeatherRenderer_Free() {
+void WeatherRenderer_Free(void) {
 	Gfx_DeleteTexture(&weather_rainTex);
 	Gfx_DeleteTexture(&weather_snowTex);
 	WeatherRenderer_ContextLost();
@@ -165,7 +165,7 @@ void WeatherRenderer_Free() {
 	EventHandler_Unregister(Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
 }
 
-void WeatherRenderer_InitHeightmap() {
+void WeatherRenderer_InitHeightmap(void) {
 	weather_heightmap = Platform_MemAlloc(World_Width * World_Length * sizeof(Int16));
 	if (weather_heightmap == NULL) {
 		ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
@@ -225,10 +225,10 @@ void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 	}
 }
 
-void WeatherRenderer_ContextLost() {
+void WeatherRenderer_ContextLost(void) {
 	Gfx_DeleteVb(&weather_vb);
 }
 
-void WeatherRenderer_ContextRecreated() {
+void WeatherRenderer_ContextRecreated(void) {
 	weather_vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, weather_verticesCount);
 }

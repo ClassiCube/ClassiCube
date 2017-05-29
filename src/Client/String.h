@@ -29,7 +29,7 @@ String String_FromRawBuffer(UInt8* buffer, UInt16 capacity);
 String String_FromConstant(const UInt8* buffer);
 
 /* Makes an empty string that points to nowhere. */
-String String_MakeNull();
+String String_MakeNull(void);
 
 
 /* Returns whether two strings have same contents. */

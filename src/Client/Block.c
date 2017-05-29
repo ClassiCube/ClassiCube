@@ -4,12 +4,12 @@
 #include "Block.h"
 #include "TerrainAtlas2D.h"
 
-void Block_Reset() {
+void Block_Reset(void) {
 	Block_Init();
 	Block_RecalculateSpriteBB();
 }
 
-void Block_Init() {
+void Block_Init(void) {
 	#define DefinedCustomBlocks_Len (Block_Count >> 5)
 	Int32 i;
 	for (i = 0; i < DefinedCustomBlocks_Len; i++) {
@@ -23,7 +23,7 @@ void Block_Init() {
 	Block_UpdateCullingAll();
 }
 
-void Block_SetDefaultPerms() {
+void Block_SetDefaultPerms(void) {
 	Int32 block;
 	for (block = BlockID_Air; block <= Block_MaxDefined; block++) {
 		Block_CanPlace[block] = true;

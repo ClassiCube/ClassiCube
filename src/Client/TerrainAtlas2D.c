@@ -40,7 +40,7 @@ Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
 	return Gfx_CreateTexture(element, true);
 }
 
-void Atlas2D_Free() {
+void Atlas2D_Free(void) {
 	if (Atlas2D_Bitmap.Scan0 == NULL) return;
 	Platform_MemFree(Atlas2D_Bitmap.Scan0);
 }

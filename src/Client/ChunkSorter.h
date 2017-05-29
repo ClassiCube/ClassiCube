@@ -6,7 +6,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-void ChunkSorter_UpdateSortOrder();
+void ChunkSorter_UpdateSortOrder(void);
 
 static void ChunkSorter_QuickSort(Int32 left, Int32 right);
 #endif

@@ -5,7 +5,7 @@
 #include "Vectors.h"
 #include "Vector3I.h"
 
-void ChunkSorter_UpdateSortOrder() {
+void ChunkSorter_UpdateSortOrder(void) {
 	Vector3 cameraPos = Game_CurrentCameraPos;
 	Vector3I newChunkPos = Vector3I.Floor(cameraPos);
 	newChunkPos.X = (newChunkPos.X & ~0x0F) + 8;

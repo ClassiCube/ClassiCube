@@ -22,10 +22,11 @@ Real32 Atlas1D_InvElementSize;
 
 /* Native texture ID for each 1D atlas. */
 Int32 Atlas1D_TexIds[Atlas1D_MaxAtlasesCount];
+/* Number of 1D atlases that actually have textures / are used. */
 Int32 Atlas1D_TexIdsCount;
 
 /* Retrieves the 1D texture rectangle and 1D atlas index of the given texture. */
-TextureRec Atlas1D_TexRec(Int32 texId, Int32 uCount, Int32* index);
+TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index);
 
 /* Returns the index of the 1D atlas within the array of 1D atlases that contains the given texture id.*/
 #define Atlas1D_Index(texId) (texId) / Atlas1D_ElementsPerAtlas
@@ -34,14 +35,14 @@ TextureRec Atlas1D_TexRec(Int32 texId, Int32 uCount, Int32* index);
 #define Atlas1D_RowId(texId) (texId) % Atlas1D_ElementsPerAtlas
 
 /* Updates variables and native textures for the 1D atlas array. */
-void Atlas1D_UpdateState();
+void Atlas1D_UpdateState(void);
 
 static void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight);
 
 static void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index);
 
 /* Returns the count of used 1D atlases. (i.e. highest used 1D atlas index + 1) */
-Int32 Atlas1D_UsedAtlasesCount();
+Int32 Atlas1D_UsedAtlasesCount(void);
 
-void Atlas1D_Free();
+void Atlas1D_Free(void);
 #endif

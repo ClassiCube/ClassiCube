@@ -14,10 +14,10 @@
 
 
 /* Initalises this graphics API. */
-void Gfx_Init();
+void Gfx_Init(void);
 
 /* Frees memory allocated by this graphics API. */
-void Gfx_Free();
+void Gfx_Free(void);
 
 /* Maximum supported length of a dimension (width and height) of a 2D texture. */
 Int32 Gfx_MaxTextureDimensions;
@@ -199,24 +199,24 @@ void Gfx_TakeScreenshot(String output, Int32 width, Int32 height);
 
 /* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
 Returns boolean of whether legacy rendering mode is needed. */
-bool Gfx_WarnIfNecessary();
+bool Gfx_WarnIfNecessary(void);
 
 /* Informs the graphic api to update its state in preparation for a new frame. */
-void Gfx_BeginFrame();
+void Gfx_BeginFrame(void);
 
 /* Informs the graphic api to update its state in preparation for the end of a frame,
 and to prepare that frame for display on the monitor. */
-void Gfx_EndFrame();
+void Gfx_EndFrame(void);
 
 /* Sets whether the graphics api should tie frame rendering to the refresh rate of the monitor. */
 void Gfx_SetVSync(bool value);
 
 /* Raised when the dimensions of the game's window have changed. */
-void Gfx_OnWindowResize();
+void Gfx_OnWindowResize(void);
 
 
 /* Makes an array of strings of information about the graphics API. */
-void Gfx_MakeApiInfo();
+void Gfx_MakeApiInfo(void);
 
 #define Gfx_ApiInfo_Count 32
 /* Array of strings for information about the graphics API.

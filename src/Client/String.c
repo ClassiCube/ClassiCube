@@ -36,7 +36,7 @@ String String_FromConstant(const UInt8* buffer) {
 	return str;
 }
 
-String String_MakeNull() {
+String String_MakeNull(void) {
 	String str;
 	str.buffer = NULL;
 	str.capacity = 0;

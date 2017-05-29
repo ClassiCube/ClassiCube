@@ -17,7 +17,7 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 		UV2_Scale * Atlas1D_InvElementSize);
 }
 
-void Atlas1D_UpdateState() {
+void Atlas1D_UpdateState(void) {
 	Int32 maxVerticalSize = min(4096, Gfx_MaxTextureDimensions);
 	Int32 elementsPerFullAtlas = maxVerticalSize / Atlas2D_ElementSize;
 	Int32 totalElements = Atlas2D_RowsCount * Atlas2D_ElementsPerRow;
@@ -71,7 +71,7 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Platform_MemFree(atlas1D.Scan0);
 }
 
-Int32 Atlas1D_UsedAtlasesCount() {
+Int32 Atlas1D_UsedAtlasesCount(void) {
 	TextureLoc maxTexLoc = 0;
 	Int32 i;
 
@@ -81,7 +81,7 @@ Int32 Atlas1D_UsedAtlasesCount() {
 	return Atlas1D_Index(maxTexLoc) + 1;
 }
 
-void Atlas1D_Free() {
+void Atlas1D_Free(void) {
 	Int32 i;
 	for (i = 0; i < Atlas1D_TexIdsCount; i++) {
 		Gfx_DeleteTexture(&Atlas1D_TexIds[i]);

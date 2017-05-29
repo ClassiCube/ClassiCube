@@ -14,7 +14,7 @@
 Int32 skybox_tex, skybox_vb = -1;
 #define skybox_count (6 * 4)
 
-IGameComponent SkyboxRenderer_MakeGameComponent() {
+IGameComponent SkyboxRenderer_MakeGameComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = SkyboxRenderer_Init;
 	comp.Free = SkyboxRenderer_Free;
@@ -23,11 +23,11 @@ IGameComponent SkyboxRenderer_MakeGameComponent() {
 	return comp;
 }
 
-bool SkyboxRenderer_ShouldRender() {
+bool SkyboxRenderer_ShouldRender(void) {
 	return skybox_tex > 0 && !EnvRenderer_IsMinimal;
 }
 
-void SkyboxRenderer_Init() {
+void SkyboxRenderer_Init(void) {
 	EventHandler_Register(TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
 	EventHandler_Register(TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
 	EventHandler_Register(WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
@@ -35,9 +35,9 @@ void SkyboxRenderer_Init() {
 	EventHandler_Register(Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
 }
 
-void SkyboxRenderer_Reset() { Gfx_DeleteTexture(&skybox_tex); }
+void SkyboxRenderer_Reset(void) { Gfx_DeleteTexture(&skybox_tex); }
 
-void SkyboxRenderer_Free() {
+void SkyboxRenderer_Free(void) {
 	Gfx_DeleteTexture(&skybox_tex);
 	SkyboxRenderer_ContextLost();
 
@@ -53,7 +53,7 @@ void SkyboxRenderer_EnvVariableChanged(EnvVar envVar) {
 	SkyboxRenderer_MakeVb();
 }
 
-void SkyboxRenderer_TexturePackChanged() {
+void SkyboxRenderer_TexturePackChanged(void) {
 	Gfx_DeleteTexture(&skybox_tex);
 }
 
@@ -91,10 +91,10 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_SetDepthWrite(true);
 }
 
-void SkyboxRenderer_ContextLost() { Gfx_DeleteVb(&skybox_vb); }
-void SkyboxRenderer_ContextRecreated() { SkyboxRenderer_MakeVb(); }
+void SkyboxRenderer_ContextLost(void) { Gfx_DeleteVb(&skybox_vb); }
+void SkyboxRenderer_ContextRecreated(void) { SkyboxRenderer_MakeVb(); }
 
-void SkyboxRenderer_MakeVb() {
+void SkyboxRenderer_MakeVb(void) {
 	if (Gfx_LostContext) return;
 	Gfx_DeleteVb(&skybox_vb);
 	VertexP3fT2fC4b vertices[skybox_count];

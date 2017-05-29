@@ -11,16 +11,16 @@
 */
 
 /* Initalises common resources. */
-void GfxCommon_Init();
+void GfxCommon_Init(void);
 
 /* Frees common resources. */
-void GfxCommon_Free();
+void GfxCommon_Free(void);
 
 /* Handles a context being lost. */
 void GfxCommon_LoseContext(String reason);
 
 /* Handles a context being recreated. */
-void GfxCommon_RecreateContext();
+void GfxCommon_RecreateContext(void);
 
 
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer

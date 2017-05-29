@@ -25,7 +25,7 @@ NOTE: Implementations ***MUST*** mark all chunks affected by this lighting chang
 void Lighting_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock);
 
 /* Discards all cached lighting information. */
-void Lighting_Refresh();
+void Lighting_Refresh(void);
 
 
 /* Returns whether the block at the given coordinates is fully in sunlight.
@@ -47,11 +47,11 @@ PackedCol Lighting_Col_YBottom_Fast(Int32 x, Int32 y, Int32 z);
 PackedCol Lighting_Col_XSide_Fast(Int32 x, Int32 y, Int32 z);
 PackedCol Lighting_Col_ZSide_Fast(Int32 x, Int32 y, Int32 z);
 
-static void Lighting_Free();
-static void Lighting_Reset();
-static void Lighting_OnNewMap();
-static void Lighting_OnNewMapLoaded();
-static void Lighting_Init();
+static void Lighting_Free(void);
+static void Lighting_Reset(void);
+static void Lighting_OnNewMap(void);
+static void Lighting_OnNewMapLoaded(void);
+static void Lighting_Init(void);
 
 
 static void Lighting_EnvVariableChanged(EnvVar envVar);

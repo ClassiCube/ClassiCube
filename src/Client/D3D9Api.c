@@ -46,14 +46,14 @@ IDirect3DTexture9* d3d9_textures[d3d9_texturesExpSize];
 Int32 d3d9_texturesCapacity = d3d9_texturesExpSize;
 
 
-void Gfx_Init() {
+void Gfx_Init(void) {
 	/* TODO: EVERYTHING ELSE */
 	viewStack.Type = D3DTS_VIEW;
 	projStack.Type = D3DTS_PROJECTION;
 	texStack.Type = D3DTS_TEXTURE0;
 }
 
-void Gfx_Free() {
+void Gfx_Free(void) {
 	UInt8 logMsgBuffer[String_BufferSize(63)];
 	String logMsg = String_FromRawBuffer(logMsgBuffer, 63);
 

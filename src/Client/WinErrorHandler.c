@@ -16,7 +16,7 @@ String_AppendConstant(&logMsg, "\r\n");
 String_AppendConstant(&logMsg, "\r\nPlease report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
 
 
-void ErrorHandler_Init() {
+void ErrorHandler_Init(void) {
 	/* TODO: Open log file */
 }
 

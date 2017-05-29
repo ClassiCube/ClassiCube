@@ -103,13 +103,13 @@ UInt8 Block_CanStretch[Block_Count];
 
 
 /* Recalculates the initial properties and culling states for all blocks. */
-void Block_Reset();
+void Block_Reset(void);
 
 /* Calculates the initial properties and culling states for all blocks. */
-void Block_Init();
+void Block_Init(void);
 
 /* Initialises the default blocks the player is allowed to place and delete. */
-void Block_SetDefaultPerms();
+void Block_SetDefaultPerms(void);
 
 /* Sets collision type of a block. */
 void Block_SetCollide(BlockID block, UInt8 collide);

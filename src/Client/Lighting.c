@@ -11,26 +11,26 @@
 PackedCol shadow, shadowZSide, shadowXSide, shadowYBottom;
 #define Lighting_Pack(x, z) ((x) + World_Width * (z))
 
-void Lighting_Init() {
+void Lighting_Init(void) {
 	EventHandler_Register(WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
 	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
 }
 
-void Lighting_Reset() {
+void Lighting_Reset(void) {
 	if (Lighting_heightmap != NULL) {
 		Platform_MemFree(Lighting_heightmap);
 		Lighting_heightmap = NULL;
 	}
 }
 
-void Lighting_OnNewMap() {
+void Lighting_OnNewMap(void) {
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
 	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
 	Lighting_Reset();
 }
 
-void Lighting_OnNewMapLoaded() {
+void Lighting_OnNewMapLoaded(void) {
 	UInt32 size = World_Width * World_Length * sizeof(Int16);
 	Lighting_heightmap = Platform_MemAlloc(size);
 	if (Lighting_heightmap == NULL) {
@@ -39,7 +39,7 @@ void Lighting_OnNewMapLoaded() {
 	Lighting_Refresh();
 }
 
-void Lighting_Free() {
+void Lighting_Free(void) {
 	EventHandler_Unregister(WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
 	Lighting_Reset();
 }
@@ -119,7 +119,7 @@ PackedCol Lighting_Col_ZSide_Fast(Int32 x, Int32 y, Int32 z) {
 	return y > Lighting_heightmap[(z * World_Width) + x] ? Lighting_OutsideZSide : shadowZSide;
 }
 
-void Lighting_Refresh() {
+void Lighting_Refresh(void) {
 	Int32 i;
 	for (i = 0; i < World_Width * World_Length; i++) {
 		Lighting_heightmap[i] = Int16_MaxValue;

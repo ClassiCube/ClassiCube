@@ -10,10 +10,10 @@
 
 
 /* Initalises required state for this platform. */
-void Platform_Init();
+void Platform_Init(void);
 
 /* Releases the resources allocated for the required state. */
-void Platform_Free();
+void Platform_Free(void);
 
 
 /* Allocates a block of memory, returning NULL on failure. */
@@ -37,8 +37,8 @@ void Platform_NewUuid(UInt8* uuid);
 /* TODO: Not use OS func for this. just need OS RNG and make a random UUID. */
 
 /* Gets the current time, in UTC timezone. */
-DateTime Platform_CurrentUTCTime();
+DateTime Platform_CurrentUTCTime(void);
 
 /* Gets the current time, in user's local timezone. */
-DateTime Platform_CurrentLocalTime();
+DateTime Platform_CurrentLocalTime(void);
 #endif
