@@ -19,8 +19,8 @@ namespace Launcher.Gui.Widgets {
 			int value = valY.CompareTo(valX);
 			if (value != 0) return value;
 			
-			TimeSpan timeX = UptimeComparer.Parse(a.Uptime);
-			TimeSpan timeY = UptimeComparer.Parse(b.Uptime);
+			long timeX = Int64.Parse(a.RawUptime);
+			long timeY = Int64.Parse(b.RawUptime);
 			return timeY.CompareTo(timeX);
 		}
 	}
@@ -47,28 +47,10 @@ namespace Launcher.Gui.Widgets {
 	sealed class UptimeComparer : TableEntryComparer {
 		
 		public override int Compare(TableEntry a, TableEntry b) {
-			TimeSpan valX = Parse(a.Uptime);
-			TimeSpan valY = Parse(b.Uptime);
-			int value = valX.CompareTo(valY);
+			long timeX = Int64.Parse(a.RawUptime);
+			long timeY = Int64.Parse(b.RawUptime);
+			int value = timeX.CompareTo(timeY);
 			return Invert ? -value : value;
-		}
-		
-		internal static TimeSpan Parse(string s) {
-			int sum = 0;
-			for (int i = 0; i < s.Length - 1; i++) {
-				sum *= 10;
-				sum += s[i] - '0';
-			}
-			
-			char timeType = s[s.Length - 1];
-			switch(timeType) {
-					case 'w' : return TimeSpan.FromDays(sum * 7);
-					case 'd' : return TimeSpan.FromDays(sum);
-					case 'h' : return TimeSpan.FromHours(sum);
-					case 'm' : return TimeSpan.FromMinutes(sum);
-					case 's' : return TimeSpan.FromSeconds(sum);
-					default: throw new NotSupportedException("unsupported uptime type: " + timeType);
-			}
 		}
 	}
 	

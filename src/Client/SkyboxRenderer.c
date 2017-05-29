@@ -14,6 +14,15 @@
 Int32 skybox_tex, skybox_vb = -1;
 #define skybox_count (6 * 4)
 
+IGameComponent SkyboxRenderer_MakeGameComponent() {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = SkyboxRenderer_Init;
+	comp.Free = SkyboxRenderer_Free;
+	comp.OnNewMap = SkyboxRenderer_MakeVb; /* Need to recreate colour component of vertices */
+	comp.Reset = SkyboxRenderer_Reset;
+	return comp;
+}
+
 bool SkyboxRenderer_ShouldRender() {
 	return skybox_tex > 0 && !EnvRenderer_IsMinimal;
 }
@@ -27,7 +36,6 @@ void SkyboxRenderer_Init() {
 }
 
 void SkyboxRenderer_Reset() { Gfx_DeleteTexture(&skybox_tex); }
-void SkyboxRenderer_OnNewMap() { SkyboxRenderer_MakeVb(); }
 
 void SkyboxRenderer_Free() {
 	Gfx_DeleteTexture(&skybox_tex);

@@ -191,9 +191,9 @@ namespace OpenTK.Platform.MacOS
 			int width, height;
 			context.SetFullScreen(window, out width, out height);
 
-			Debug.Print("Prev Size: {0}, {1}", ClientSize.Width, ClientSize.Height);
+			Debug.Print("Prev Size: {0}, {1}", ClientRectangle.Width, ClientRectangle.Height);
 			clientRectangle.Size = new Size(width, height);
-			Debug.Print("New Size: {0}, {1}", ClientSize.Width, ClientSize.Height);
+			Debug.Print("New Size: {0}, {1}", ClientRectangle.Width, ClientRectangle.Height);
 
 			// TODO: if we go full screen we need to make this use the device specified.
 			bounds = mDisplayDevice.Bounds;
@@ -316,12 +316,12 @@ namespace OpenTK.Platform.MacOS
 					return OSStatus.NoError;
 
 				case WindowEventKind.WindowBoundsChanged:
-					int thisWidth = ClientSize.Width;
-					int thisHeight = ClientSize.Height;
+					int thisWidth = ClientRectangle.Width;
+					int thisHeight = ClientRectangle.Height;
 
 					LoadSize();
 
-					if (thisWidth != ClientSize.Width || thisHeight != ClientSize.Height)
+					if (thisWidth != ClientRectangle.Width || thisHeight != ClientRectangle.Height)
 						OnResize();
 
 					return OSStatus.EventNotHandled;

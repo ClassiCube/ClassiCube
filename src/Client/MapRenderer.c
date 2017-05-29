@@ -47,7 +47,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 		}
 	}
 
-	CheckWeather(deltaTime);
+	MapRenderer_CheckWeather(deltaTime);
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
 #if DEBUG_OCCLUSION

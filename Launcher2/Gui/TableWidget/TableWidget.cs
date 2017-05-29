@@ -7,7 +7,7 @@ using ClassicalSharp;
 namespace Launcher.Gui.Widgets {
 
 	internal struct TableEntry {
-		public string Hash, Name, Players, Uptime, Software;
+		public string Hash, Name, Players, Uptime, Software, RawUptime;
 		public int Y, Height;
 	}
 	
@@ -42,6 +42,7 @@ namespace Launcher.Gui.Widgets {
 				tableEntry.Players = e.Players + "/" + e.MaximumPlayers;
 				tableEntry.Software = e.Software;
 				tableEntry.Uptime = MakeUptime(e.Uptime);
+				tableEntry.RawUptime = e.Uptime;
 				
 				entries[index] = tableEntry;
 				usedEntries[index] = tableEntry;

@@ -29,6 +29,15 @@ Int16* weather_heightmap;
 Real64 weather_accumulator;
 Vector3I weather_lastPos;
 
+IGameComponent WeatherRenderer_MakeGameComponent() {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = WeatherRenderer_Init;
+	comp.Free = WeatherRenderer_Free;
+	comp.OnNewMap = WeatherRenderer_Reset;
+	comp.Reset = WeatherRenderer_Reset;
+	return comp;
+}
+
 void WeatherRenderer_Init() {
 	EventHandler_Register(TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
 	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
