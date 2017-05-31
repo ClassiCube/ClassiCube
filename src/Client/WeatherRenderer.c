@@ -39,12 +39,12 @@ IGameComponent WeatherRenderer_MakeGameComponent(void) {
 }
 
 void WeatherRenderer_Init(void) {
-	EventHandler_Register(TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
+	EventHandler_RegisterStream(TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
 	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
 
 	WeatherRenderer_ContextRecreated();
-	EventHandler_Register(Gfx_ContextLost, &WeatherRenderer_ContextLost);
-	EventHandler_Register(Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
+	EventHandler_RegisterVoid(Gfx_ContextLost, &WeatherRenderer_ContextLost);
+	EventHandler_RegisterVoid(Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
 }
 
 void WeatherRenderer_Render(Real64 deltaTime) {
@@ -160,9 +160,9 @@ void WeatherRenderer_Free(void) {
 	WeatherRenderer_ContextLost();
 	WeatherRenderer_Reset();
 
-	EventHandler_Unregister(TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
-	EventHandler_Unregister(Gfx_ContextLost, &WeatherRenderer_ContextLost);
-	EventHandler_Unregister(Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
+	EventHandler_UnregisterStream(TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
+	EventHandler_UnregisterVoid(Gfx_ContextLost, &WeatherRenderer_ContextLost);
+	EventHandler_UnregisterVoid(Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
 }
 
 void WeatherRenderer_InitHeightmap(void) {

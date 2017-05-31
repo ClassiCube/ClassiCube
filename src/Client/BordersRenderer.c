@@ -76,20 +76,20 @@ void BordersRenderer_RenderEdges(Real64 delta) {
 
 
 void BordersRenderer_Init(void) {
-	EventHandler_Register(WorldEvents_EnvVarChanged, BordersRenderer_EnvVariableChanged);
-	EventHandler_Register(GfxEvents_ViewDistanceChanged, BordersRenderer_ResetSidesAndEdges);
-	EventHandler_Register(TextureEvents_AtlasChanged, BordersRenderer_ResetTextures);
-	EventHandler_Register(Gfx_ContextLost, BordersRenderer_ContextLost);
-	EventHandler_Register(Gfx_ContextRecreated, BordersRenderer_ContextRecreated);
+	EventHandler_RegisterInt32(WorldEvents_EnvVarChanged, BordersRenderer_EnvVariableChanged);
+	EventHandler_RegisterVoid(GfxEvents_ViewDistanceChanged, BordersRenderer_ResetSidesAndEdges);
+	EventHandler_RegisterVoid(TextureEvents_AtlasChanged, BordersRenderer_ResetTextures);
+	EventHandler_RegisterVoid(Gfx_ContextLost, BordersRenderer_ContextLost);
+	EventHandler_RegisterVoid(Gfx_ContextRecreated, BordersRenderer_ContextRecreated);
 }
 
 void BordersRenderer_Free(void) {
 	BordersRenderer_ContextLost();
-	EventHandler_Unregister(WorldEvents_EnvVarChanged, BordersRenderer_EnvVariableChanged);
-	EventHandler_Unregister(GfxEvents_ViewDistanceChanged, BordersRenderer_ResetSidesAndEdges);
-	EventHandler_Unregister(TextureEvents_AtlasChanged, BordersRenderer_ResetTextures);
-	EventHandler_Unregister(Gfx_ContextLost, BordersRenderer_ContextLost);
-	EventHandler_Unregister(Gfx_ContextRecreated, BordersRenderer_ContextRecreated);
+	EventHandler_UnregisterInt32(WorldEvents_EnvVarChanged, BordersRenderer_EnvVariableChanged);
+	EventHandler_UnregisterVoid(GfxEvents_ViewDistanceChanged, BordersRenderer_ResetSidesAndEdges);
+	EventHandler_UnregisterVoid(TextureEvents_AtlasChanged, BordersRenderer_ResetTextures);
+	EventHandler_UnregisterVoid(Gfx_ContextLost, BordersRenderer_ContextLost);
+	EventHandler_UnregisterVoid(Gfx_ContextRecreated, BordersRenderer_ContextRecreated);
 }
 
 void BordersRenderer_Reset(void) {

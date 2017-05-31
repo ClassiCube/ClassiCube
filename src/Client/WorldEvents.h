@@ -15,10 +15,10 @@ EventHandler_Raise_Void(WorldEvents_NewMap, WorldEvents_NewMapCount);
 
 /* Raised when a portion of the world is read and decompressed, or generated.
 The floating point argument is progress (from 0 to 1). */
-Event_Float32 WorldEvents_MapLoading[EventHandler_Size];
+Event_Real32 WorldEvents_MapLoading[EventHandler_Size];
 Int32 WorldEvents_MapLoadingCount;
 #define WorldEvents_RaiseMapLoading(progress)\
-EventHandler_Raise_Float32(WorldEvents_MapLoading, WorldEvents_MapLoadingCount, progress);
+EventHandler_Raise_Real32(WorldEvents_MapLoading, WorldEvents_MapLoadingCount, progress);
 
 /* Raised when new world has finished loading and the player can now interact with it. */
 Event_Void WorldEvents_MapLoaded[EventHandler_Size];

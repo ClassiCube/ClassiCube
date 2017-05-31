@@ -3,6 +3,7 @@
 #include "Typedefs.h"
 #include "PackedCol.h"
 #include "WorldEvents.h"
+#include "GameStructs.h"
 /* Manages lighting of blocks in the world.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -13,6 +14,9 @@ PackedCol Lighting_OutsideZSide;
 PackedCol Lighting_OutsideXSide;
 PackedCol Lighting_OutsideYBottom;
 
+
+/* Creates game component implementation. */
+IGameComponent Lighting_MakeGameComponent(void);
 
 /* Equivalent to (but far more optimised form of)
 * for x = startX; x < startX + 18; x++

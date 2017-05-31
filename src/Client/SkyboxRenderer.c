@@ -28,11 +28,11 @@ bool SkyboxRenderer_ShouldRender(void) {
 }
 
 void SkyboxRenderer_Init(void) {
-	EventHandler_Register(TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
-	EventHandler_Register(TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
-	EventHandler_Register(WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
-	EventHandler_Register(Gfx_ContextLost, &SkyboxRenderer_ContextLost);
-	EventHandler_Register(Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
+	EventHandler_RegisterStream(TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
+	EventHandler_RegisterVoid(TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
+	EventHandler_RegisterInt32(WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
+	EventHandler_RegisterVoid(Gfx_ContextLost, &SkyboxRenderer_ContextLost);
+	EventHandler_RegisterVoid(Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
 }
 
 void SkyboxRenderer_Reset(void) { Gfx_DeleteTexture(&skybox_tex); }
@@ -41,11 +41,11 @@ void SkyboxRenderer_Free(void) {
 	Gfx_DeleteTexture(&skybox_tex);
 	SkyboxRenderer_ContextLost();
 
-	EventHandler_Unregister(TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
-	EventHandler_Unregister(TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
-	EventHandler_Unregister(WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
-	EventHandler_Unregister(Gfx_ContextLost, &SkyboxRenderer_ContextLost);
-	EventHandler_Unregister(Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
+	EventHandler_UnregisterStream(TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
+	EventHandler_UnregisterVoid(TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
+	EventHandler_UnregisterInt32(WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
+	EventHandler_UnregisterVoid(Gfx_ContextLost, &SkyboxRenderer_ContextLost);
+	EventHandler_UnregisterVoid(Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
 }
 
 void SkyboxRenderer_EnvVariableChanged(EnvVar envVar) {

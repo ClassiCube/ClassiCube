@@ -11,8 +11,18 @@
 PackedCol shadow, shadowZSide, shadowXSide, shadowYBottom;
 #define Lighting_Pack(x, z) ((x) + World_Width * (z))
 
+IGameComponent Lighting_MakeGameComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = Lighting_Init;
+	comp.Free = Lighting_Free;
+	comp.OnNewMap = Lighting_OnNewMap;
+	comp.OnNewMapLoaded = Lighting_OnNewMapLoaded;
+	comp.Reset = Lighting_Reset;
+	return comp;
+}
+
 void Lighting_Init(void) {
-	EventHandler_Register(WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
+	EventHandler_RegisterInt32(WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
 	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
 }
@@ -40,7 +50,7 @@ void Lighting_OnNewMapLoaded(void) {
 }
 
 void Lighting_Free(void) {
-	EventHandler_Unregister(WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
+	EventHandler_UnregisterInt32(WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
 	Lighting_Reset();
 }
 
