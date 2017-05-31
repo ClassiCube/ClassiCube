@@ -25,7 +25,7 @@ namespace ClassicalSharp.Renderers {
 		int edgeTexId, sideTexId;
 		int sidesVertices, edgesVertices;
 		internal bool legacy;
-		bool fullBrightSides, fulBrightEdge;
+		bool fullBrightSides, fullBrightEdge;
 		
 		public void UseLegacyMode(bool legacy) {
 			this.legacy = legacy;
@@ -108,7 +108,7 @@ namespace ClassicalSharp.Renderers {
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.EdgeBlock) {
 				MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
-				if (game.BlockInfo.FullBright[map.Env.EdgeBlock] != fulBrightEdge)
+				if (game.BlockInfo.FullBright[map.Env.EdgeBlock] != fullBrightEdge)
 					ResetSidesAndEdges(null, null);
 			} else if (e.Var == EnvVar.SidesBlock) {
 				MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
@@ -206,8 +206,8 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b[] v = new VertexP3fT2fC4b[edgesVertices];
 			int index = 0;
 			
-			fulBrightEdge = game.BlockInfo.FullBright[block];
-			int col = fulBrightEdge ? FastColour.WhitePacked : map.Env.Sun;
+			fullBrightEdge = game.BlockInfo.FullBright[block];
+			int col = fullBrightEdge ? FastColour.WhitePacked : map.Env.Sun;
 			if (game.BlockInfo.Tinted[block]) {
 				col = Utils.Tint(col, game.BlockInfo.FogColour[block]);
 			}

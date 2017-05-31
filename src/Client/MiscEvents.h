@@ -29,12 +29,12 @@ EventHandler_Raise_Stream(TextureEvents_TextureChanged, TextureEvents_FileChange
 /* Raised when the user changed their view/fog distance. */
 Event_Void GfxEvents_ViewDistanceChanged[EventHandler_Size];
 Int32 GfxEvents_ViewDistanceChangedCount;
-#define GfxEvents_ViewDistanceChanged()\
+#define GfxEvents_RaiseViewDistanceChanged()\
 EventHandler_Raise_Void(GfxEvents_ViewDistanceChanged, GfxEvents_ViewDistanceCount);
 
-/// <summary> Raised when the projection matrix changes. </summary>
+/* Raised when the projection matrix changes. */
 Event_Void GfxEvents_ProjectionChanged[EventHandler_Size];
 Int32 GfxEvents_ProjectionChangedCount;
-#define GfxEvents_ProjectionChanged()\
+#define GfxEvents_RaiseProjectionChanged()\
 EventHandler_Raise_Void(GfxEvents_ProjectionChanged, GfxEvents_ProjectionCount);
 #endif

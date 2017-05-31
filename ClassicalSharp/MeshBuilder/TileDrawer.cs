@@ -124,7 +124,7 @@ namespace ClassicalSharp {
 			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
 			DrawInfo part = normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked : light.LightCol_Sprite_Fast(X, Y, Z);
-			if (tinted) col = TintBlock(curBlock, col);			
+			if (tinted) col = TintBlock(curBlock, col);
 			
 			// Draw Z axis
 			int index = part.sIndex;

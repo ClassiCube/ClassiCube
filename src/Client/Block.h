@@ -69,6 +69,14 @@ SoundType Block_StepSounds[Block_Count];
    The tinting colour used is the block's fog colour. */
 bool Block_Tinted[Block_Count];
 
+#define Block_Tint(col, block)\
+if (Block_Tinted[block]) {\
+	PackedCol tintCol = Block_FogColour[block];\
+	col.R = (UInt8)(col.R * tintCol.R / 255);\
+	col.G = (UInt8)(col.G * tintCol.G / 255);\
+	col.B = (UInt8)(col.B * tintCol.B / 255);\
+}
+
 
 
 /* Min corner of a block. */

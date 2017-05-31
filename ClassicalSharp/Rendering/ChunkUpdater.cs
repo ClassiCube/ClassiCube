@@ -323,8 +323,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void BuildChunk(ChunkInfo info, ref int chunkUpdates) {
 			game.ChunkUpdates++;
-			builder.GetDrawInfo(info.CentreX - 8, info.CentreY - 8, info.CentreZ - 8,
-			                    ref info.NormalParts, ref info.TranslucentParts, ref info.AllAir);
+			builder.MakeChunk(info);
 			
 			info.PendingDelete = false;
 			if (info.NormalParts == null && info.TranslucentParts == null) {

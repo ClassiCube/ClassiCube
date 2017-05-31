@@ -169,6 +169,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="2DStructs.h" />
     <ClInclude Include="AABB.h" />
     <ClInclude Include="BlockEnums.h" />
     <ClInclude Include="BlockID.h" />
@@ -189,13 +190,14 @@
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="GameProps.h" />
     <ClInclude Include="GZipHeader.h" />
-    <ClInclude Include="IDrawer2D.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IO.h" />
     <ClInclude Include="Lighting.h" />
+    <ClInclude Include="BordersRenderer.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="MiscEvents.h" />
     <ClInclude Include="NetworkEnums.h" />
+    <ClInclude Include="NormalBuilder.h" />
     <ClInclude Include="Options.h" />
     <ClInclude Include="PickedPos.h" />
     <ClInclude Include="Respawn.h" />
@@ -232,7 +234,9 @@
     <ClInclude Include="WorldEnv.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="2DStructs.c" />
     <ClCompile Include="Block.c" />
+    <ClCompile Include="BordersRenderer.c" />
     <ClCompile Include="ChunkInfo.c" />
     <ClCompile Include="ChunkSorter.c" />
     <ClCompile Include="Compiler.c" />

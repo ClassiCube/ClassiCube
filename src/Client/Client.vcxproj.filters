@@ -37,9 +37,6 @@
     <Filter Include="Source Files\Blocks">
       <UniqueIdentifier>{f693e3de-8aee-440f-9edc-61544d2f7f79}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Blocks">
-      <UniqueIdentifier>{3ca12726-ff14-4e95-9f3b-4c4bab3d2122}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\2D">
       <UniqueIdentifier>{94eedec7-46cb-47cd-8729-fbf215de1cd6}</UniqueIdentifier>
     </Filter>
@@ -130,18 +127,15 @@
     <Filter Include="Source Files\Rendering\Map">
       <UniqueIdentifier>{74643485-c6aa-4b00-999f-9b4890c1f28e}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\2D\Drawer">
-      <UniqueIdentifier>{db6ca59c-b36f-430d-9353-e86604dfb63a}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Entities">
       <UniqueIdentifier>{47b3db41-6a79-47ca-a2b0-72d5ccb26bfb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Blocks">
+      <UniqueIdentifier>{3ca12726-ff14-4e95-9f3b-4c4bab3d2122}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
-      <Filter>Header Files\Generator</Filter>
-    </ClInclude>
-    <ClInclude Include="Random.h">
       <Filter>Header Files\Generator</Filter>
     </ClInclude>
     <ClInclude Include="Noise.h">
@@ -309,9 +303,6 @@
     <ClInclude Include="ChunkSorter.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
-    <ClInclude Include="IDrawer2D.h">
-      <Filter>Header Files\2D\Drawer</Filter>
-    </ClInclude>
     <ClInclude Include="Respawn.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
@@ -321,12 +312,21 @@
     <ClInclude Include="GZipHeader.h">
       <Filter>Header Files\IO</Filter>
     </ClInclude>
+    <ClInclude Include="Random.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="NormalBuilder.h">
+      <Filter>Header Files\MeshBuilder</Filter>
+    </ClInclude>
+    <ClInclude Include="2DStructs.h">
+      <Filter>Header Files\2D\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="BordersRenderer.h">
+      <Filter>Header Files\Rendering\Env</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
-      <Filter>Source Files\Generator</Filter>
-    </ClCompile>
-    <ClCompile Include="Random.c">
       <Filter>Source Files\Generator</Filter>
     </ClCompile>
     <ClCompile Include="Noise.c">
@@ -448,6 +448,15 @@
     </ClCompile>
     <ClCompile Include="GZipHeader.c">
       <Filter>Source Files\IO</Filter>
+    </ClCompile>
+    <ClCompile Include="Random.c">
+      <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="2DStructs.c">
+      <Filter>Source Files\2D\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="BordersRenderer.c">
+      <Filter>Source Files\Rendering\Env</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -3,6 +3,7 @@
 using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
+using ClassicalSharp.Renderers;
 using OpenTK;
 
 #if USE16_BIT
@@ -123,17 +124,18 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public void GetDrawInfo(int x, int y, int z, ref ChunkPartInfo[] nParts, ref ChunkPartInfo[] tParts, ref bool allAir) {
-			if (!BuildChunk(x, y, z, ref allAir)) return;
+		public void MakeChunk(ChunkInfo info) {
+			int x = info.CentreX - 8, y = info.CentreY - 8, z = info.CentreZ - 8;
+			if (!BuildChunk(x, y, z, ref info.AllAir)) return;
 			
 			for (int i = 0; i < arraysCount; i++) {
-				SetPartInfo(normalParts[i], i, ref nParts);
-				SetPartInfo(translucentParts[i], i, ref tParts);
+				SetPartInfo(normalParts[i], i, ref info.NormalParts);
+				SetPartInfo(translucentParts[i], i, ref info.TranslucentParts);
 			}
+			
 			#if OCCLUSION
-			//  , ref byte occlusionFlags
-			if (normalParts != null || translucentParts != null)
-				occlusionFlags = (byte)ComputeOcclusion();
+			if (info.NormalParts != null || info.TranslucentParts != null)
+				info.occlusionFlags = (byte)ComputeOcclusion();
 			#endif
 		}
 		
