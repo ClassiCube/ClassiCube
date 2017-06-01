@@ -5,11 +5,23 @@
 #include "WorldEnv.h"
 #include "Platform.h"
 #include "WorldEvents.h"
+#include "Random.h"
 
 void World_Reset() {
 	World_Width = 0; World_Height = 0; World_Length = 0;
 	World_Blocks = NULL; World_BlocksSize = 0;
-	Platform_NewUuid(World_Uuid);
+
+	Random rnd;
+	Random_InitFromCurrentTime(&rnd);
+	Int32 i;
+	for (i = 0; i < 16; i++)
+		World_Uuid[i] = (UInt8)Random_Next(&rnd, 256);
+
+	/* Set version and variant bits */
+	World_Uuid[6] &= 0x0F;
+	World_Uuid[6] |= 0x40; /* version 4*/
+	World_Uuid[8] &= 0x3F;
+	World_Uuid[8] |= 0x80; /* variant 2*/
 }
 
 void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length) {

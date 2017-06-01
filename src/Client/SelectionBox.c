@@ -46,27 +46,27 @@ void SelectionBox_Render(SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4
 void SelectionBox_VerQuad(VertexP3fC4b** vertices, PackedCol col,
 	Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
 	VertexP3fC4b* ptr = *vertices;
-	VertexP3C4b_Set(ptr, x1, y1, z1, col); ptr++;
-	VertexP3C4b_Set(ptr, x1, y2, z1, col); ptr++;
-	VertexP3C4b_Set(ptr, x2, y2, z2, col); ptr++;
-	VertexP3C4b_Set(ptr, x2, y1, z2, col); ptr++;
+	VertexP3fC4b_Set(ptr, x1, y1, z1, col); ptr++;
+	VertexP3fC4b_Set(ptr, x1, y2, z1, col); ptr++;
+	VertexP3fC4b_Set(ptr, x2, y2, z2, col); ptr++;
+	VertexP3fC4b_Set(ptr, x2, y1, z2, col); ptr++;
 	*vertices = ptr;
 }
 
 void SelectionBox_HorQuad(VertexP3fC4b** vertices, PackedCol col,
 	Real32 x1, Real32 z1, Real32 x2, Real32 z2, Real32 y) {
 	VertexP3fC4b* ptr = *vertices;
-	VertexP3C4b_Set(ptr, x1, y, z1, col); ptr++;
-	VertexP3C4b_Set(ptr, x1, y, z2, col); ptr++;
-	VertexP3C4b_Set(ptr, x2, y, z2, col); ptr++;
-	VertexP3C4b_Set(ptr, x2, y, z1, col); ptr++;
+	VertexP3fC4b_Set(ptr, x1, y, z1, col); ptr++;
+	VertexP3fC4b_Set(ptr, x1, y, z2, col); ptr++;
+	VertexP3fC4b_Set(ptr, x2, y, z2, col); ptr++;
+	VertexP3fC4b_Set(ptr, x2, y, z1, col); ptr++;
 	*vertices = ptr;
 }
 
 void SelectionBox_Line(VertexP3fC4b** vertices, PackedCol col,
 	Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2) {
 	VertexP3fC4b* ptr = *vertices;
-	VertexP3C4b_Set(ptr, x1, y1, z1, col); ptr++;
-	VertexP3C4b_Set(ptr, x2, y2, z2, col); ptr++;
+	VertexP3fC4b_Set(ptr, x1, y1, z1, col); ptr++;
+	VertexP3fC4b_Set(ptr, x2, y2, z2, col); ptr++;
 	*vertices = ptr;
 }

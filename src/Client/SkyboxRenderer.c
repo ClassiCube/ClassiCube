@@ -10,6 +10,7 @@
 #include "TextureRec.h"
 #include "VertexStructs.h"
 #include "WorldEnv.h"
+#include "EnvRenderer.h"
 
 Int32 skybox_tex, skybox_vb = -1;
 #define skybox_count (6 * 4)
@@ -24,7 +25,7 @@ IGameComponent SkyboxRenderer_MakeGameComponent(void) {
 }
 
 bool SkyboxRenderer_ShouldRender(void) {
-	return skybox_tex > 0 && !EnvRenderer_IsMinimal;
+	return skybox_tex > 0 && !EnvRenderer_Minimal;
 }
 
 void SkyboxRenderer_Init(void) {

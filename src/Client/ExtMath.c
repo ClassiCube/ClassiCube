@@ -9,6 +9,10 @@ Int32 Math_CeilDiv(Int32 a, Int32 b) {
 	return a / b + (a % b != 0 ? 1 : 0);
 }
 
+Real32 Math_Lerp(Real32 a, Real32 b, Real32 t) {
+	return a + (b - a) * t;
+}
+
 Int32 Math_NextPowOf2(Int32 value) {
 	Int32 next = 1;
 	while (value > next)

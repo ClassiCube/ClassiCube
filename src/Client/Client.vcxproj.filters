@@ -324,6 +324,9 @@
     <ClInclude Include="BordersRenderer.h">
       <Filter>Header Files\Rendering\Env</Filter>
     </ClInclude>
+    <ClInclude Include="EnvRenderer.h">
+      <Filter>Header Files\Rendering\Env</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -456,6 +459,9 @@
       <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
     <ClCompile Include="BordersRenderer.c">
+      <Filter>Source Files\Rendering\Env</Filter>
+    </ClCompile>
+    <ClCompile Include="EnvRenderer.c">
       <Filter>Source Files\Rendering\Env</Filter>
     </ClCompile>
   </ItemGroup>

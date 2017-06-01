@@ -14,6 +14,10 @@
 
 #define Math_Abs(x) abs(x)
 
+#define Math_Pow(x, y) powf(x, y)
+
+#define Math_Log(x) logf(x)
+
 #define Math_Sin(x) sinf(x)
 
 #define Math_Cos(x) cosf(x)
@@ -27,6 +31,9 @@ Int32 Math_Floor(Real32 value);
 
 /* Performs rounding upwards integer division.*/
 Int32 Math_CeilDiv(Int32 a, Int32 b);
+
+/* Performs linear interpolation between two values. */
+Real32 Math_Lerp(Real32 a, Real32 b, Real32 t);
 
 /* Returns the next highest power of 2 that is greater or equal to the given value. */
 Int32 Math_NextPowOf2(Int32 value);

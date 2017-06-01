@@ -1,7 +1,7 @@
 #ifndef CS_PACKEDCOL_H
 #define CS_PACKEDCOL_H
 #include "Typedefs.h"
-/* Manipulates an ARGB colour, in a format suitable for the native graphics api.
+/* Manipulates an ARGB colour, in a format suitable for the native 3d graphics api.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -29,6 +29,9 @@ PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
 
 /* Multiplies the RGB components by t, where t is in [0, 1] */
 PackedCol PackedCol_Scale(PackedCol value, Real32 t);
+
+/* Linearly interpolates the RGB components of both colours by t, where t is in [0, 1] */
+PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, Real32 t);
 
 
 #define PackedCol_ShadeX 0.6f

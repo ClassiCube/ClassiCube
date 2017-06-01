@@ -18,9 +18,7 @@ void WeatherRenderer_Render(Real64 deltaTime);
 
 
 static void WeatherRenderer_Init(void);
-
 static void WeatherRenderer_Reset(void);
-
 static void WeatherRenderer_Free(void);
 
 
@@ -34,8 +32,6 @@ static Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 in
 
 
 static void WeatherRenderer_FileChanged(Stream* stream);
-
 static void WeatherRenderer_ContextLost(void);
-
 static void WeatherRenderer_ContextRecreated(void);
 #endif

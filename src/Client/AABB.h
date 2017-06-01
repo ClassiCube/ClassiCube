@@ -37,7 +37,7 @@ void AABB_Offset(AABB* result, AABB* bb, Vector3* amount);
 bool AABB_Intersects(AABB* bb, AABB* other);
 
 /* Determines whether this AABB entirely contains the AABB on all axes. */
-bool AAAB_Contains(AABB* parent, AABB* child);
+bool AABB_Contains(AABB* parent, AABB* child);
 
 /* Determines whether this AABB entirely contains the coordinates on all axes. */
 bool AABB_ContainsPoint(AABB* parent, Vector3* P);

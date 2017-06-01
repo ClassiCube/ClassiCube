@@ -178,7 +178,7 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	VertexP3fT2fC4b* ptr = v;
 	if (borders_sidesVertices > 4096) {
 		ptr = Platform_MemAlloc(borders_sidesVertices * sizeof(VertexP3fT2fC4b));
-		if (ptr == NULL) ErrorHandler_Fail("BordersRenderer_RebuildSides - failed to allocate memory");
+		if (ptr == NULL) ErrorHandler_Fail("BordersRenderer_Sides - failed to allocate memory");
 	}
 	VertexP3fT2fC4b* temp = ptr;
 
@@ -219,7 +219,7 @@ void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	VertexP3fT2fC4b* ptr = v;
 	if (borders_edgesVertices > 4096) {
 		ptr = Platform_MemAlloc(borders_edgesVertices * sizeof(VertexP3fT2fC4b));
-		if (ptr == NULL) ErrorHandler_Fail("BordersRenderer_RebuildEdges - failed to allocate memory");
+		if (ptr == NULL) ErrorHandler_Fail("BordersRenderer_Edges - failed to allocate memory");
 	}
 	VertexP3fT2fC4b* temp = ptr;
 

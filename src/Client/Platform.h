@@ -32,10 +32,6 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
 /* Logs a message to console (if attached). Implictly puts each entry on a newline. */
 void Platform_Log(String message);
 
-/* Generates a new random uuid / guid. */
-void Platform_NewUuid(UInt8* uuid);
-/* TODO: Not use OS func for this. just need OS RNG and make a random UUID. */
-
 /* Gets the current time, in UTC timezone. */
 DateTime Platform_CurrentUTCTime(void);
 

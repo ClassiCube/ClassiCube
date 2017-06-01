@@ -45,10 +45,10 @@ void GfxCommon_UpdateDynamicIndexedVb(Int32 drawMode, Int32 vb, void* vertices, 
 void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height, 
 	PackedCol col) {
 	VertexP3fC4b quadVerts[4];
-	VertexP3C4b_Set(&quadVerts[0], x, y, 0, col);
-	VertexP3C4b_Set(&quadVerts[1], x + width, y, 0, col);
-	VertexP3C4b_Set(&quadVerts[2], x + width, y + height, 0, col);
-	VertexP3C4b_Set(&quadVerts[3], x, y + height, 0, col);
+	VertexP3fC4b_Set(&quadVerts[0], x, y, 0, col);
+	VertexP3fC4b_Set(&quadVerts[1], x + width, y, 0, col);
+	VertexP3fC4b_Set(&quadVerts[2], x + width, y + height, 0, col);
+	VertexP3fC4b_Set(&quadVerts[3], x, y + height, 0, col);
 
 	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
 	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, GfxCommon_quadVb, quadVerts, 4);
@@ -57,10 +57,10 @@ void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height,
 void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height,
 	PackedCol topCol, PackedCol bottomCol) {
 	VertexP3fC4b quadVerts[4];
-	VertexP3C4b_Set(&quadVerts[0], x, y, 0, topCol);
-	VertexP3C4b_Set(&quadVerts[1], x + width, y, 0, topCol);
-	VertexP3C4b_Set(&quadVerts[2], x + width, y + height, 0, bottomCol);
-	VertexP3C4b_Set(&quadVerts[3], x, y + height, 0, bottomCol);
+	VertexP3fC4b_Set(&quadVerts[0], x, y, 0, topCol);
+	VertexP3fC4b_Set(&quadVerts[1], x + width, y, 0, topCol);
+	VertexP3fC4b_Set(&quadVerts[2], x + width, y + height, 0, bottomCol);
+	VertexP3fC4b_Set(&quadVerts[3], x, y + height, 0, bottomCol);
 
 	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
 	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, GfxCommon_quadVb, quadVerts, 4);

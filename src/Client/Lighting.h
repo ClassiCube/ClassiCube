@@ -51,6 +51,7 @@ PackedCol Lighting_Col_YBottom_Fast(Int32 x, Int32 y, Int32 z);
 PackedCol Lighting_Col_XSide_Fast(Int32 x, Int32 y, Int32 z);
 PackedCol Lighting_Col_ZSide_Fast(Int32 x, Int32 y, Int32 z);
 
+
 static void Lighting_Free(void);
 static void Lighting_Reset(void);
 static void Lighting_OnNewMap(void);

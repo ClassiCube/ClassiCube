@@ -25,16 +25,12 @@ void BordersRenderer_RenderEdges(Real64 delta);
 
 
 static void BordersRenderer_Init(void);
-
 static void BordersRenderer_Free(void);
-
 static void BordersRenderer_Reset(void);
 
 
 static void BordersRenderer_EnvVariableChanged(EnvVar envVar);
-
 static void BordersRenderer_ContextLost(void);
-
 static void BordersRenderer_ContextRecreated(void);
 
 

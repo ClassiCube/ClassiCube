@@ -9,8 +9,11 @@
 
 typedef Int64 Random;
 
-/* Initalises the random number generator with a base seed. */
+/* Initalises the random number generator with an initial given seed. */
 void Random_Init(Random* rnd, Int32 seed);
+
+/* Initalises the random number generator with an initial see based on current time. */
+void Random_InitFromCurrentTime(Random* rnd);
 
 /* Returns a random number between min inclusive and max exclusive. */
 Int32 Random_Range(Random* rnd, Int32 min, Int32 max);

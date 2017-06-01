@@ -186,6 +186,7 @@
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="EntityEvents.h" />
+    <ClInclude Include="EnvRenderer.h" />
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="GameProps.h" />
@@ -244,6 +245,7 @@
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
     <ClCompile Include="Drawer.c" />
+    <ClCompile Include="EnvRenderer.c" />
     <ClCompile Include="EventHandler.c" />
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="FrustumCulling.c" />

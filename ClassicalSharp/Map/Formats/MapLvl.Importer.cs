@@ -58,8 +58,8 @@ namespace ClassicalSharp.Map {
 				
 				int baseIndex = (y * length + z) * width + x;
 				for (int i = 0; i < chunk.Length; i++) {
-					int bx = i & 0xF, by = (i >> 8) & 0xF, bz = (i >> 4) & 0xF;
-					int index = baseIndex + (by * length + bz) * width + bx;
+					int xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
+					int index = baseIndex + (yy * length + zz) * width + xx;
 					
 					if (blocks[index] != customTile) continue;
 					blocks[index] = chunk[i];
