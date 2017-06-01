@@ -327,6 +327,12 @@
     <ClInclude Include="EnvRenderer.h">
       <Filter>Header Files\Rendering\Env</Filter>
     </ClInclude>
+    <ClInclude Include="MapGenerator.h">
+      <Filter>Header Files\Generator</Filter>
+    </ClInclude>
+    <ClInclude Include="FlatgrassGenerator.h">
+      <Filter>Header Files\Generator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -463,6 +469,9 @@
     </ClCompile>
     <ClCompile Include="EnvRenderer.c">
       <Filter>Source Files\Rendering\Env</Filter>
+    </ClCompile>
+    <ClCompile Include="FlatgrassGenerator.c">
+      <Filter>Source Files\Generator</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

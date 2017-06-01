@@ -1,6 +1,6 @@
 #ifndef CS_NOTCHY_GEN_H
 #define CS_NOTCHY_GEN_H
-#include "Compiler.h"
+#include "MapGenerator.h"
 #include "Typedefs.h"
 #include "String.h"
 /* Implements original classic vanilla map generation
@@ -10,41 +10,33 @@
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Progress of current operation. */
-extern Real32 CurrentProgress;
-
-/* Name of current operation being performed. */
-extern String CurrentState;
-
-
-/* Initalises state for map generation. */
-CLIENT_FUNC void NotchyGen_Init(Int32 width, Int32 height, Int32 length,
-								Int32 seed, BlockID* blocks, Int16* heightmap);
+/* Generates the map. */
+void NotchyGen_Generate();
 
 /* Creates the initial heightmap for the generated map. */
-CLIENT_FUNC void NotchyGen_CreateHeightmap();
+static void NotchyGen_CreateHeightmap();
 
 /* Creates the base stone layer and dirt overlay layer of the map. */
-CLIENT_FUNC void NotchyGen_CreateStrata();
+static void NotchyGen_CreateStrata();
 
 /* Quickly fills the base stone layer on tall maps. */
-Int32 NotchyGen_CreateStrataFast();
+static Int32 NotchyGen_CreateStrataFast();
 
 /* Details the map by replacing some surface-layer dirt with grass, sand, or gravel. */
-CLIENT_FUNC void NotchyGen_CreateSurfaceLayer();
+static void NotchyGen_CreateSurfaceLayer();
 
 /* Plants dandelion and rose bunches/groups on the surface of the map. */
-CLIENT_FUNC void NotchyGen_PlantFlowers();
+static void NotchyGen_PlantFlowers();
 
 /* Plants mushroom bunches/groups in caves within the map. */
-CLIENT_FUNC void NotchyGen_PlantMushrooms();
+static void NotchyGen_PlantMushrooms();
 
 /* Plants trees on the surface layer of the map. */
-CLIENT_FUNC void NotchyGen_PlantTrees();
+static void NotchyGen_PlantTrees();
 
 /* Returns whether a tree can grow at the specified coordinates. */
-bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight);
+static bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight);
 
 /* Plants a tree of the given height at the given coordinates. */
-void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height);
+static void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height);
 #endif

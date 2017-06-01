@@ -39,8 +39,8 @@ BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 }
 
 Real32 EnvRenderer_BlendFactor(Real32 x) {
-	/* return -0.05 + 0.22 * Math_Log(Math_Pow(x, 0.25f)); */
-	double blend = -0.13 + 0.28 * Math_Log(Math_Pow(x, 0.25f));
+	/* return -0.05 + 0.22 * Math_LogE(Math_Pow(x, 0.25f)); */
+	double blend = -0.13 + 0.28 * Math_LogE(Math_Pow(x, 0.25f));
 	if (blend < 0) blend = 0;
 	if (blend > 1) blend = 1;
 	return blend;
@@ -88,7 +88,7 @@ void EnvRenderer_UpdateFog(void) {
 		   0.99=z/end   --> z=end*0.99
 		     therefore
 		  d = -ln(0.01)/(end*0.99) */
-		Real32 density = -Math_Log(0.01f) / (Game_ViewDistance * 0.99f);
+		Real32 density = -Math_LogE(0.01f) / (Game_ViewDistance * 0.99f);
 		Gfx_SetFogDensity(density);
 	} else {
 		Gfx_SetFogMode(Fog_Linear);

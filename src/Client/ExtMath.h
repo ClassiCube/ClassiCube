@@ -16,7 +16,9 @@
 
 #define Math_Pow(x, y) powf(x, y)
 
-#define Math_Log(x) logf(x)
+#define Math_LogE(x) logf(x)
+
+#define Math_PowE(x) expf(x)
 
 #define Math_Sin(x) sinf(x)
 

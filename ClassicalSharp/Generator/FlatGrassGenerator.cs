@@ -28,7 +28,7 @@ namespace ClassicalSharp.Generator {
 		}
 		
 		unsafe void MapSet(BlockID* ptr, int yStart, int yEnd, BlockID block) {
-			yStart = Math.Max(yStart, 0); yEnd = Math.Max(yEnd, 0);			
+			yStart = Math.Max(yStart, 0); yEnd = Math.Max(yEnd, 0);
 			int startIndex = yStart * Length * Width;
 			int endIndex = (yEnd * Length + (Length - 1)) * Width + (Width - 1);
 			int count = (endIndex - startIndex) + 1, offset = 0;
