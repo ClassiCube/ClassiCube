@@ -14,8 +14,6 @@
 
 #define Math_Abs(x) abs(x)
 
-#define Math_Pow(x, y) powf(x, y)
-
 #define Math_LogE(x) logf(x)
 
 #define Math_PowE(x) expf(x)

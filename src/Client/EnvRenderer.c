@@ -40,9 +40,11 @@ BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 
 Real32 EnvRenderer_BlendFactor(Real32 x) {
 	/* return -0.05 + 0.22 * Math_LogE(Math_Pow(x, 0.25f)); */
-	double blend = -0.13 + 0.28 * Math_LogE(Math_Pow(x, 0.25f));
-	if (blend < 0) blend = 0;
-	if (blend > 1) blend = 1;
+	/* ln[x^0.25] = ln[(e^ln(x))^0.25] = ln[e^(ln(x) * 0.25)] = ln[x] * 0.25 */
+
+	Real32 blend = -0.13f + 0.28f * (Math_LogE(x) * 0.25f);
+	if (blend < 0.0f) blend = 0.0f;
+	if (blend > 1.0f) blend = 1.0f;
 	return blend;
 }
 

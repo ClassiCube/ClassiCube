@@ -22,6 +22,21 @@ static void NotchyGen_CreateStrata();
 /* Quickly fills the base stone layer on tall maps. */
 static Int32 NotchyGen_CreateStrataFast();
 
+/* Hollows out caves in the map. */
+static void NotchyGen_CarveCaves();
+
+/* Fills out ore veins in the map. */
+static void NotchyGen_CarveOreVeins(Real32 abundance, const UInt8* state, BlockID block);
+
+/* Floods water from the edges of the map. */
+static void NotchyGen_FloodFillWaterBorders();
+
+/* Floods water from random points in the map. */
+static void NotchyGen_FloodFillWater();
+
+/* Floods lava from random points in the map. */
+static void NotchyGen_FloodFillLava();
+
 /* Details the map by replacing some surface-layer dirt with grass, sand, or gravel. */
 static void NotchyGen_CreateSurfaceLayer();
 
@@ -39,4 +54,10 @@ static bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 t
 
 /* Plants a tree of the given height at the given coordinates. */
 static void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height);
+
+/* Fills an oblate spheroid, but only replacing stone blocks. */
+static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, float radius, BlockID block);
+
+/* Floods a block, starting at the given coordinates. */
+static void NotchyGen_FloodFill(Int32 startIndex, BlockID block);
 #endif

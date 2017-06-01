@@ -18,10 +18,16 @@ bool Gen_Done;
 /* Dimensions of the map to be generated. */
 Int32 Gen_Width, Gen_Height, Gen_Length;
 
+/* Maxmimum coordinate of the map. */
+Int32 Gen_MaxX, Gen_MaxY, Gen_MaxZ;
+
 /* Seed used for generating the map. */
 Int32 Gen_Seed;
 
 /* Blocks of the map generated. */
 BlockID* Gen_Blocks;
+
+/* Packs a coordinate into a single integer index. */
+#define Gen_Pack(x, y, z) (((y) * Gen_Length + (z)) * Gen_Width + (x))
 
 #endif
