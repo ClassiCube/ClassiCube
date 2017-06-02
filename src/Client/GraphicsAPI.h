@@ -82,7 +82,7 @@ void Gfx_SetFogStart(Real32 value);
 void Gfx_SetFogEnd(Real32 value);
 
 /* Sets the current fog mode. (linear, exp, or exp^2) */
-void Gfx_SetFogMode(Int32 fogMode);
+void Gfx_SetFogMode(Fog fogMode);
 
 
 /* Whether back facing primitives should be culled by the 3D graphics api. */
@@ -92,13 +92,13 @@ void Gfx_SetFaceCulling(bool enabled);
 void Gfx_SetAlphaTest(bool enabled);
 
 /* Sets the alpha test compare function that is used when alpha testing is enabled. */
-void Gfx_SetAlphaTestFunc(Int32 compareFunc, Real32 refValue);
+void Gfx_SetAlphaTestFunc(CompareFunc compareFunc, Real32 refValue);
 
 /* Whether alpha blending is currently enabled. */
 void Gfx_SetAlphaBlending(bool enabled);
 
 /* Sets the alpha blend function that is used when alpha blending is enabled. */
-void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc);
+void Gfx_SetAlphaBlendFunc(BlendFunc srcBlendFunc, BlendFunc dstBlendFunc);
 
 /* Whether blending between the alpha components of the texture and colour are performed. */
 void Gfx_SetAlphaArgBlend(bool enabled);
@@ -125,11 +125,11 @@ void Gfx_SetDepthWrite(bool enabled);
 
 
 /* Creates a vertex buffer that can have its data dynamically updated. */
-Int32 Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices);
+Int32 Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices);
 
 /* Creates a static vertex buffer that has its data set at creation,
 but the vertex buffer's data cannot be updated after creation.*/
-Int32 Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count);
+Int32 Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count);
 
 /* Creates a static index buffer that has its data set at creation,
 but the index buffer's data cannot be updated after creation. */
@@ -149,17 +149,17 @@ void Gfx_DeleteIb(Int32* ib);
 
 /* Informs the graphics API that the format of the vertex data used in subsequent
 draw calls will be in the given format. */
-void Gfx_SetBatchFormat(Int32 vertexFormat);
+void Gfx_SetBatchFormat(VertexFormat vertexFormat);
 
 /* Binds and updates the data of the current dynamic vertex buffer's data.
 This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void Gfx_SetDynamicVbData(Int32 vb, void* vertices, Int32 vCount);
 
 /* Draws the specified subset of the vertices in the current vertex buffer. */
-void Gfx_DrawVb(Int32 drawMode, Int32 startVertex, Int32 vCount);
+void Gfx_DrawVb(DrawMode drawMode, Int32 startVertex, Int32 vCount);
 
 /* Draws the specified subset of the vertices in the current vertex buffer. */
-void Gfx_DrawIndexedVb(Int32 drawMode, Int32 indicesCount, Int32 startIndex);
+void Gfx_DrawIndexedVb(DrawMode drawMode, Int32 indicesCount, Int32 startIndex);
 
 /* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
 void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex);
@@ -171,7 +171,7 @@ static Int32 Gfx_strideSizes[2] = { 16, 24 };
 
 
 /* Sets the matrix type that load/push/pop operations should be applied to. */
-void Gfx_SetMatrixMode(Int32 matrixType);
+void Gfx_SetMatrixMode(MatrixType matrixType);
 
 /* Sets the current matrix to the given matrix.*/
 void Gfx_LoadMatrix(Matrix* matrix);

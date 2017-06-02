@@ -21,7 +21,7 @@ namespace ClassicalSharp.Renderers {
 		public void Dispose() { 
 			ContextLost();
 			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;			
+			game.Graphics.ContextRecreated -= ContextRecreated;			new TimeSpan(
 		}
 
 		public void Ready(Game game) { }

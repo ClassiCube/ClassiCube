@@ -201,7 +201,7 @@ void Gfx_SetFogEnd(Real32 value) {
 }
 
 D3DFOGMODE fogTableMode = D3DFOG_NONE;
-void Gfx_SetFogMode(Int32 fogMode) {
+void Gfx_SetFogMode(Fog fogMode) {
 	D3DFOGMODE mode = d3d9_modes[fogMode];
 	if (mode == fogTableMode) return;
 
@@ -225,7 +225,7 @@ void Gfx_SetAlphaTest(bool enabled) {
 
 D3DCMPFUNC d3d9_alphaTestFunc = 0;
 Int32 d3d9_alphaTestRef = 0;
-void Gfx_SetAlphaTestFunc(Int32 compareFunc, Real32 refValue) {
+void Gfx_SetAlphaTestFunc(CompareFunc compareFunc, Real32 refValue) {
 	d3d9_alphaTestFunc = d3d9_compareFuncs[compareFunc];
 	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ALPHAFUNC, "D3D9_SetAlphaTestFunc");
 	d3d9_alphaTestRef = (Int32)(refValue * 255);
@@ -242,7 +242,7 @@ void Gfx_SetAlphaBlending(bool enabled) {
 
 D3DBLEND d3d9_srcBlendFunc = 0;
 D3DBLEND d3d9_dstBlendFunc = 0;
-void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc) {
+void Gfx_SetAlphaBlendFunc(BlendFunc srcBlendFunc, BlendFunc dstBlendFunc) {
 	d3d9_srcBlendFunc = d3d9_blendFuncs[srcBlendFunc];
 	D3D9_SetRenderState(d3d9_srcBlendFunc, D3DRS_SRCBLEND, "D3D9_SetAlphaBlendFunc");
 	d3d9_dstBlendFunc = d3d9_blendFuncs[dstBlendFunc];
@@ -275,7 +275,7 @@ void Gfx_SetDepthTest(bool enabled) {
 }
 
 D3DCMPFUNC d3d9_depthTestFunc = 0;
-void Gfx_SetDepthTestFunc(Int32 compareFunc) {
+void Gfx_SetDepthTestFunc(CompareFunc compareFunc) {
 	d3d9_depthTestFunc = d3d9_compareFuncs[compareFunc];
 	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ZFUNC, "D3D9_SetDepthTestFunc");
 }
@@ -293,7 +293,7 @@ void Gfx_SetDepthWrite(bool enabled) {
 
 
 
-Int32 Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
+Int32 Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
 	Int32 size = maxVertices * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC, 
@@ -303,7 +303,7 @@ Int32 Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 	return D3D9_GetOrExpand(&d3d9_vbuffers, &d3d9_vbuffersCapacity, vbuffer, d3d9_vBuffersExpSize);
 }
 
-Int32 Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
+Int32 Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count) {
 	Int32 size = count * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, 0,
@@ -344,13 +344,13 @@ void Gfx_DeleteIb(Int32* ib) {
 	D3D9_DeleteResource((void**)d3d9_ibuffers, d3d9_ibuffersCapacity, ib);
 }
 
-void Gfx_SetBatchFormat(Int32 vertexFormat) {
+void Gfx_SetBatchFormat(VertexFormat vertexFormat) {
 	ReturnCode hresult = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[vertexFormat]);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetBatchFormat");
 	d3d9_batchStride = Gfx_strideSizes[vertexFormat];
 }
 
-void Gfx_DrawVb(Int32 drawMode, Int32 startVertex, Int32 vCount) {
+void Gfx_DrawVb(DrawMode drawMode, Int32 startVertex, Int32 vCount) {
 	Int32 numPrims = D3D9_NumPrimitives(drawMode, vCount);
 	ReturnCode hresult = IDirect3DDevice9_DrawPrimitive(device, d3d9_modeMappings[drawMode],
 		startVertex, numPrims);
@@ -366,7 +366,7 @@ void Gfx_SetDynamicVbData(Int32 vb, void* vertices, Int32 vCount) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetDynamicVbData - Bind");
 }
 
-void Gfx_DrawIndexedVb(Int32 drawMode, Int32 indicesCount, Int32 startIndex) {
+void Gfx_DrawIndexedVb(DrawMode drawMode, Int32 indicesCount, Int32 startIndex) {
 	Int32 numPrims = D3D9_NumPrimitives(drawMode, indicesCount);
 	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, d3d9_modeMappings[drawMode], 0,
 		startIndex / 6 * 4, indicesCount / 6 * 4, startIndex, numPrims);
@@ -387,7 +387,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex) {
 
 
 
-void Gfx_SetMatrixMode(Int32 matrixType) {
+void Gfx_SetMatrixMode(MatrixType matrixType) {
 	if (matrixType == MatrixType_Projection) {
 		curStack = &projStack;
 	} else if (matrixType == MatrixType_Modelview) {

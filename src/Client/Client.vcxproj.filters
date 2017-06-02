@@ -336,6 +336,9 @@
     <ClInclude Include="AxisLinesRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
+    <ClInclude Include="PickedPosRenderer.h">
+      <Filter>Header Files\SelectionBox</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -477,6 +480,9 @@
       <Filter>Source Files\Generator</Filter>
     </ClCompile>
     <ClCompile Include="AxisLinesRenderer.c">
+      <Filter>Source Files\SelectionBox</Filter>
+    </ClCompile>
+    <ClCompile Include="PickedPosRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
   </ItemGroup>

@@ -15,8 +15,8 @@ void SelectionBox_Render(SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4
 
 	Vector3I_ToVector3(&p1, &box->Min);
 	Vector3I_ToVector3(&p2, &box->Max);
-	Vector3_Add1(&p1, &p1, -offset); 
-	Vector3_Add1(&p2, &p2,  offset);	
+	Vector3_Add1(&p1, &p1, -offset);
+	Vector3_Add1(&p2, &p2,  offset);
 
 	SelectionBox_HorQuad(vertices, col, p1.X, p1.Z, p2.X, p2.Z, p1.Y);       /* bottom */
 	SelectionBox_HorQuad(vertices, col, p1.X, p1.Z, p2.X, p2.Z, p2.Y);       /* top */

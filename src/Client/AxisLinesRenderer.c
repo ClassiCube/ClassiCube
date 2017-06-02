@@ -5,6 +5,7 @@
 #include "GraphicsCommon.h"
 #include "SelectionBox.h"
 #include "PackedCol.h"
+#include "Camera.h"
 
 Int32 axisLines_vb = -1;
 #define axisLines_numVertices 12
@@ -39,7 +40,7 @@ void AxisLinesRenderer_Render(Real64 delta) {
 		P.X + axisLines_size, P.Z + axisLines_length, 
 		P.Y);
 
-	if (game.Camera.IsThirdPerson) {
+	if (Camera_ActiveCamera->IsThirdPerson) {
 		SelectionBox_VerQuad(&ptr, PackedCol_Green,
 			P.X - axisLines_size, P.Y,                    P.Z + axisLines_size, 
 			P.X + axisLines_size, P.Y + axisLines_length, P.Z - axisLines_size);
