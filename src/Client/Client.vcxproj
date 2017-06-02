@@ -171,6 +171,7 @@
   <ItemGroup>
     <ClInclude Include="2DStructs.h" />
     <ClInclude Include="AABB.h" />
+    <ClInclude Include="AxisLinesRenderer.h" />
     <ClInclude Include="BlockEnums.h" />
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
@@ -238,6 +239,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="2DStructs.c" />
+    <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
     <ClCompile Include="BordersRenderer.c" />
     <ClCompile Include="ChunkInfo.c" />

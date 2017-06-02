@@ -497,6 +497,7 @@ if (stack_size == 32768) {\
 
 void NotchyGen_FloodFill(Int32 startIndex, BlockID block) {
 	if (startIndex < 0) return; /* y below map, immediately ignore */
+	/* This is way larger size than I actually have seen used, but we play it safe here.*/
 	Int32 stack[32768];
 	Int32 stack_size = 0;
 	Stack_Push(startIndex);

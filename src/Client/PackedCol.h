@@ -44,4 +44,8 @@ void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, P
 
 /* TODO: actual constant values? may need to rethink PackedCol */
 #define PackedCol_White PackedCol_Create3(255, 255, 255)
+#define PackedCol_Black PackedCol_Create3(  0,   0,   0)
+#define PackedCol_Red   PackedCol_Create3(255,   0,   0)
+#define PackedCol_Green PackedCol_Create3(  0, 255,   0)
+#define PackedCol_Blue  PackedCol_Create3(  0,   0, 255)
 #endif

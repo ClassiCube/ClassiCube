@@ -333,6 +333,9 @@
     <ClInclude Include="FlatgrassGenerator.h">
       <Filter>Header Files\Generator</Filter>
     </ClInclude>
+    <ClInclude Include="AxisLinesRenderer.h">
+      <Filter>Header Files\SelectionBox</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -472,6 +475,9 @@
     </ClCompile>
     <ClCompile Include="FlatgrassGenerator.c">
       <Filter>Source Files\Generator</Filter>
+    </ClCompile>
+    <ClCompile Include="AxisLinesRenderer.c">
+      <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
