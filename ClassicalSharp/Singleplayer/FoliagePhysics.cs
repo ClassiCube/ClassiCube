@@ -102,11 +102,13 @@ namespace ClassicalSharp.Singleplayer {
 		// Hence, the random thresholds may be slightly off.
 		public void GrowTree(int x, int y, int z) {
 			int trunkH = rnd.Next(1, 4);
+			game.UpdateBlock(x, y, z, Block.Air);
 
 			// Can the new tree grow?
 			if (!CheckBounds(x, x, y, y + trunkH - 1, z, z) ||
 			   !CheckBounds(x - 2, x + 2, y + trunkH, y + trunkH + 1, z - 2, z + 2) ||
 			   !CheckBounds(x - 1, x + 1, y + trunkH + 2, y + trunkH + 3, z - 1, z + 1)) {
+				game.UpdateBlock(x, y, z, Block.Sapling);
 				return;
 			}
 			
