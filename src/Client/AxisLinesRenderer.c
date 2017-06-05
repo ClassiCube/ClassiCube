@@ -29,7 +29,7 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	Gfx_SetTexturing(false);
 	Vector3 P = LocalPlayer_Instance.Position; P.Y += 0.05f;
 	VertexP3fC4b vertices[axisLines_numVertices];
-	VertexP3fC4b* ptr = &vertices;
+	VertexP3fC4b* ptr = vertices;
 
 	SelectionBox_HorQuad(&ptr, PackedCol_Red,
 		P.X,                    P.Z - axisLines_size, 
@@ -47,7 +47,7 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	}
 
 	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
-	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, axisLines_vb, vertices);
+	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, axisLines_vb, vertices, axisLines_numVertices);
 }
 
 

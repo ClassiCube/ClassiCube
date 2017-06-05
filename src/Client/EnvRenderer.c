@@ -15,6 +15,12 @@ Int32 env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
 Int32 env_cloudVertices, env_skyVertices;
 
 
+void EnvRenderer_UseLegacyMode(bool legacy) {
+	EnvRenderer_Legacy = legacy;
+	EnvRenderer_ContextRecreated();
+}
+
+
 BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;

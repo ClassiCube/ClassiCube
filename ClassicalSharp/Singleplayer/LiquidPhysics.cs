@@ -18,7 +18,11 @@ namespace ClassicalSharp.Singleplayer {
 		Random rnd = new Random();
 		BlockInfo info;
 		int width, length, height, oneY;
-		int maxX, maxY, maxZ, maxWaterX, maxWaterY, maxWaterZ;
+		int maxX, maxY, maxZ, maxWaterX, maxWaterY, maxWaterZ;		
+				
+		const uint tickMask = 0xF8000000;
+		const uint posMask =  0x07FFFFFF;
+		const int tickShift = 27;
 
 		public LiquidPhysics(Game game, PhysicsBase physics) {
 			this.game = game;
@@ -51,17 +55,30 @@ namespace ClassicalSharp.Singleplayer {
 			height = map.Height; maxY = height - 1; maxWaterY = maxY - 2;
 			length = map.Length; maxZ = length - 1; maxWaterZ = maxZ - 2;
 			oneY = width * length;
+		}		
+				
+		static bool CheckItem(Queue<uint> queue, out int posIndex) {
+			uint packed = queue.Dequeue();
+			int tickDelay = (int)((packed & tickMask) >> tickShift);
+			posIndex = (int)(packed & posMask);
+
+			if (tickDelay > 0) {
+				tickDelay--;
+				queue.Enqueue((uint)posIndex | ((uint)tickDelay << tickShift));
+				return false;
+			}
+			return true;
 		}
 
 		
 		Queue<uint> Lava = new Queue<uint>();
-		const uint defLavaTick = 30u << PhysicsBase.tickShift;
+		const uint defLavaTick = 30u << tickShift;
 		
 		public void TickLava() {
 			int count = Lava.Count;
 			for (int i = 0; i < count; i++) {
 				int index;
-				if (PhysicsBase.CheckItem(Lava, out index)) {
+				if (CheckItem(Lava, out index)) {
 					BlockID block = map.blocks[index];
 					if (!(block == Block.Lava || block == Block.StillLava)) continue;
 					ActivateLava(index, block);
@@ -92,13 +109,13 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		Queue<uint> Water = new Queue<uint>();
-		const uint defWaterTick = 5u << PhysicsBase.tickShift;
+		const uint defWaterTick = 5u << tickShift;
 		
 		public void TickWater() {
 			int count = Water.Count;
 			for (int i = 0; i < count; i++) {
 				int index;
-				if (PhysicsBase.CheckItem(Water, out index)) {
+				if (CheckItem(Water, out index)) {
 					BlockID block = map.blocks[index];
 					if (!(block == Block.Water || block == Block.StillWater)) continue;
 					ActivateWater(index, block);
@@ -169,7 +186,7 @@ namespace ClassicalSharp.Singleplayer {
 					index = xx + width * (zz + yy * length);
 					block = map.blocks[index];
 					if (block == Block.Water || block == Block.StillWater)
-						Water.Enqueue((1u << PhysicsBase.tickShift) | (uint)index);
+						Water.Enqueue((1u << tickShift) | (uint)index);
 				}
 			}
 		}

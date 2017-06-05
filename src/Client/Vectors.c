@@ -95,10 +95,22 @@ void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat) {
 	result->Z = a->X * mat->Row0.Z + a->Y * mat->Row1.Z + a->Z * mat->Row2.Z + mat->Row3.Z;
 }
 
+void Vector3_TransformX(Vector3* result, Real32 x, Matrix* mat) {
+	result->X = x * mat->Row0.X + mat->Row3.X;
+	result->Y = x * mat->Row0.Y + mat->Row3.Y;
+	result->Z = x * mat->Row0.Z + mat->Row3.Z;;
+}
+
 void Vector3_TransformY(Vector3* result, Real32 y, Matrix* mat) {
 	result->X = y * mat->Row1.X + mat->Row3.X;
 	result->Y = y * mat->Row1.Y + mat->Row3.Y;
 	result->Z = y * mat->Row1.Z + mat->Row3.Z;;
+}
+
+void Vector3_TransformZ(Vector3* result, Real32 z, Matrix* mat) {
+	result->X = z * mat->Row2.X + mat->Row3.X;
+	result->Y = z * mat->Row2.Y + mat->Row3.Y;
+	result->Z = z * mat->Row2.Z + mat->Row3.Z;;
 }
 
 Vector3 Vector3_RotateX(Vector3 v, Real32 angle) {

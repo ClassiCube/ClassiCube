@@ -79,8 +79,14 @@ HINT_INLINE void Vector3_Normalize(Vector3* result, Vector3* a);
 /* Transforms a vector by the given matrix. */
 HINT_INLINE void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat);
 
-/* Transforms the Y component of a vector by the given matrix. */
+/* Transforms a vector consisting of only a X component by the given matrix. */
+HINT_INLINE void Vector3_TransformX(Vector3* result, Real32 x, Matrix* mat);
+
+/* Transforms a vector consisting of only a Y component by the given matrix. */
 HINT_INLINE void Vector3_TransformY(Vector3* result, Real32 y, Matrix* mat);
+
+/* Transforms a vector consisting of only a Z component by the given matrix. */
+HINT_INLINE void Vector3_TransformZ(Vector3* result, Real32 z, Matrix* mat);
 
 /* Rotates the given 3D coordinates around the x axis. */
 HINT_INLINE Vector3 Vector3_RotateX(Vector3 v, Real32 angle);

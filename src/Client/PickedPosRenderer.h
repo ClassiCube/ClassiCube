@@ -18,6 +18,13 @@ void PickedPosRenderer_Render(Real64 delta);
 void PickedPosRenderer_UpdateState(PickedPos* selected);
 
 
+static void PickedPosRenderer_XQuad(Real32 x, Real32 z1, Real32 y1, Real32 z2, Real32 y2);
+
+static void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y2);
+
+static void PickedPosRenderer_YQuad(Real32 y, Real32 x1, Real32 z1, Real32 x2, Real32 z2);
+
+
 static void PickedPosRenderer_Init(void);
 static void PickedPosRenderer_Free(void);
 static void PickedPosRenderer_ContextLost(void);

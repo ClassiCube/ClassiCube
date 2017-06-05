@@ -7,6 +7,7 @@
 #include "String.h"
 #include "Matrix.h"
 #include "Game.h"
+#include "GraphicsEnums.h"
 
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

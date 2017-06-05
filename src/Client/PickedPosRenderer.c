@@ -21,7 +21,7 @@ IGameComponent PickedPosRenderer_MakeGameComponent(void) {
 
 void PickedPosRenderer_Init(void) {
 	pickedPos_col = PackedCol_Create4(0, 0, 0, 102);
-	ContextRecreated();
+	PickedPosRenderer_ContextRecreated();
 	EventHandler_RegisterVoid(Gfx_ContextLost, PickedPosRenderer_ContextLost);
 	EventHandler_RegisterVoid(Gfx_ContextRecreated, PickedPosRenderer_ContextRecreated);
 }

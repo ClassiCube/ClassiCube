@@ -18,10 +18,7 @@ namespace ClassicalSharp.Singleplayer {
 		Random rnd = new Random();
 		BlockInfo info;
 		int width, length, height, oneY;
-		
-		public const uint tickMask = 0xF8000000;
-		public const uint posMask =  0x07FFFFFF;
-		public const int tickShift = 27;
+
 		FallingPhysics falling;
 		TNTPhysics tnt;
 		FoliagePhysics foliage;
@@ -52,19 +49,6 @@ namespace ClassicalSharp.Singleplayer {
 			foliage = new FoliagePhysics(game, this);
 			liquid = new LiquidPhysics(game, this);
 			other = new OtherPhysics(game, this);
-		}
-		
-		internal static bool CheckItem(Queue<uint> queue, out int posIndex) {
-			uint packed = queue.Dequeue();
-			int tickDelay = (int)((packed & tickMask) >> tickShift);
-			posIndex = (int)(packed & posMask);
-
-			if (tickDelay > 0) {
-				tickDelay--;
-				queue.Enqueue((uint)posIndex | ((uint)tickDelay << tickShift));
-				return false;
-			}
-			return true;
 		}
 		
 		int tickCount = 0;
