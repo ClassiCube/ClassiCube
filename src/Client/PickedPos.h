@@ -4,6 +4,9 @@
 #include "Vector3I.h"
 #include "Vectors.h"
 #include "BlockEnums.h"
+/* Data for picked/selected block by the user, and related methods.
+   Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
+*/
 
 /* Describes the picked/selected block by the user and its position. */
 typedef struct PickedPos {

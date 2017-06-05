@@ -216,6 +216,7 @@
     <ClInclude Include="StringConvert.h" />
     <ClInclude Include="TerrainAtlas1D.h" />
     <ClInclude Include="TerrainAtlas2D.h" />
+    <ClInclude Include="TickQueue.h" />
     <ClInclude Include="WeatherRenderer.h" />
     <ClInclude Include="WorldEvents.h" />
     <ClInclude Include="EventHandler.h" />
@@ -282,6 +283,7 @@
     <ClCompile Include="TerrainAtlas2D.c" />
     <ClCompile Include="Texture.c" />
     <ClCompile Include="TextureRec.c" />
+    <ClCompile Include="TickQueue.c" />
     <ClCompile Include="Vector3I.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="VertexStructs.c" />

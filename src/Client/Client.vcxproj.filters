@@ -133,6 +133,12 @@
     <Filter Include="Header Files\Blocks">
       <UniqueIdentifier>{3ca12726-ff14-4e95-9f3b-4c4bab3d2122}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Singleplayer">
+      <UniqueIdentifier>{3330713d-f0ac-4d06-9364-be620769878d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Singleplayer">
+      <UniqueIdentifier>{c4fcedcf-b438-4dc5-b633-e345e191fbf8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -348,6 +354,9 @@
     <ClInclude Include="LiquidAnimations.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
+    <ClInclude Include="TickQueue.h">
+      <Filter>Header Files\Singleplayer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -496,6 +505,9 @@
     </ClCompile>
     <ClCompile Include="LiquidAnimations.c">
       <Filter>Source Files\TexturePack</Filter>
+    </ClCompile>
+    <ClCompile Include="TickQueue.c">
+      <Filter>Source Files\Singleplayer</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
