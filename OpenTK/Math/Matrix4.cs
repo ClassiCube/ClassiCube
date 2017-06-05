@@ -108,7 +108,7 @@ namespace OpenTK {
 		/// <summary> Gets or sets the value at row 4, column 4 of this instance. </summary>
 		public float M44 { get { return Row3.W; } set { Row3.W = value; } }
 
-		public static void RotateX(float angle, out Matrix4 result) {
+		public static void RotateX(out Matrix4 result, float angle) {
 			float cos = (float)Math.Cos(angle);
 			float sin = (float)Math.Sin(angle);
 
@@ -118,13 +118,7 @@ namespace OpenTK {
 			result.Row3 = Vector4.UnitW;
 		}
 
-		public static Matrix4 RotateX(float angle) {
-			Matrix4 result;
-			RotateX(angle, out result);
-			return result;
-		}
-
-		public static void RotateY(float angle, out Matrix4 result) {
+		public static void RotateY(out Matrix4 result, float angle) {
 			float cos = (float)Math.Cos(angle);
 			float sin = (float)Math.Sin(angle);
 
@@ -134,13 +128,7 @@ namespace OpenTK {
 			result.Row3 = Vector4.UnitW;
 		}
 
-		public static Matrix4 RotateY(float angle) {
-			Matrix4 result;
-			RotateY(angle, out result);
-			return result;
-		}
-
-		public static void RotateZ(float angle, out Matrix4 result) {
+		public static void RotateZ(out Matrix4 result, float angle) {
 			float cos = (float)System.Math.Cos(angle);
 			float sin = (float)System.Math.Sin(angle);
 
@@ -150,32 +138,16 @@ namespace OpenTK {
 			result.Row3 = Vector4.UnitW;
 		}
 
-		public static Matrix4 RotateZ(float angle) {
-			Matrix4 result;
-			RotateZ(angle, out result);
-			return result;
-		}
-
-		public static void Translate(float x, float y, float z, out Matrix4 result) {
+		public static void Translate(out Matrix4 result, float x, float y, float z) {
 			result = Identity;
 			result.Row3 = new Vector4(x, y, z, 1);
 		}
-
-		public static void Translate(ref Vector3 vector, out Matrix4 result) {
-			result = Identity;
-			result.Row3 = new Vector4(vector.X, vector.Y, vector.Z, 1);
-		}
-
-		public static Matrix4 Translate(float x, float y, float z) {
-			Matrix4 result = Identity;
-			result.Row3 = new Vector4(x, y, z, 1);
-			return result;
-		}
-
-		public static Matrix4 Translate(Vector3 vector) {
-			Matrix4 result = Identity;
-			result.Row3 = new Vector4(vector.X, vector.Y, vector.Z, 1);
-			return result;
+		
+		public static void Scale(out Matrix4 result, float x, float y, float z) {
+			result.Row0 = Vector4.UnitX; result.Row0.X *= x;
+			result.Row1 = Vector4.UnitY; result.Row1.Y *= y;
+			result.Row2 = Vector4.UnitZ; result.Row2.Z *= z;
+			result.Row3 = Vector4.UnitW;
 		}
 
 		public static void CreateOrthographic(float width, float height, float zNear, float zFar, out Matrix4 result) {
@@ -264,23 +236,6 @@ namespace OpenTK {
 			return result;
 		}
 
-		public static Matrix4 Scale(float scale) {
-			return Scale(scale, scale, scale);
-		}
-
-		public static Matrix4 Scale(Vector3 scale) {
-			return Scale(scale.X, scale.Y, scale.Z);
-		}
-
-		public static Matrix4 Scale(float x, float y, float z) {
-			Matrix4 result;
-			result.Row0 = Vector4.UnitX; result.Row0.X *= x;
-			result.Row1 = Vector4.UnitY; result.Row1.Y *= y;
-			result.Row2 = Vector4.UnitZ; result.Row2.Z *= z;
-			result.Row3 = Vector4.UnitW;
-			return result;
-		}
-
 		public static Matrix4 LookAt(Vector3 eye, Vector3 target, Vector3 up) {
 			Vector3 z = Vector3.Normalize(eye - target);
 			Vector3 x = Vector3.Normalize(Vector3.Cross(up, z));
@@ -291,18 +246,19 @@ namespace OpenTK {
 			                          new Vector4(x.Z, y.Z, z.Z, 0.0f),
 			                          Vector4.UnitW);
 
-			Matrix4 trans = Matrix4.Translate(-eye);
-
+			
+			Matrix4 trans;
+			Matrix4.Translate(out trans, -eye.X, -eye.Y, -eye.Z);
 			return trans * rot;
 		}
 		
 		public static Matrix4 Mult(Matrix4 left, Matrix4 right) {
 			Matrix4 result;
-			Mult(ref left, ref right, out result);
+			Mult(out result, ref left, ref right);
 			return result;
 		}
 
-		public static void Mult(ref Matrix4 left, ref Matrix4 right, out Matrix4 result) {
+		public static void Mult(out Matrix4 result, ref Matrix4 left, ref Matrix4 right) {
 			// Originally from http://www.edais.co.uk/blog/?p=27
 			float lM11 = left.Row0.X, lM12 = left.Row0.Y, lM13 = left.Row0.Z, lM14 = left.Row0.W,
 			lM21 = left.Row1.X, lM22 = left.Row1.Y, lM23 = left.Row1.Z, lM24 = left.Row1.W,

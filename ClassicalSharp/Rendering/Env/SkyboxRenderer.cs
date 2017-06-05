@@ -63,11 +63,13 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.BindTexture(tex);
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			
-			Matrix4 m = Matrix4.Identity;
+			Matrix4 m = Matrix4.Identity, rotY, rotX;
 			Vector2 rotation = game.Camera.GetCameraOrientation();
-			m *= Matrix4.RotateY(rotation.X); // yaw
-			m *= Matrix4.RotateX(rotation.Y); // pitch
-			m = m * game.Camera.tiltM;
+			Matrix4.RotateY(out rotY, rotation.X); // yaw
+			m *= rotY;
+			Matrix4.RotateX(out rotX, rotation.Y); // pitch
+			m *= rotX;
+			m *= game.Camera.tiltM;
 			game.Graphics.LoadMatrix(ref m);
 			
 			game.Graphics.BindVb(vb);

@@ -126,21 +126,22 @@ namespace ClassicalSharp {
 		
 		protected void CalcViewBobbing(float t, float velTiltScale) {
 			if (!game.ViewBobbing) { tiltM = Matrix4.Identity; return; }
-			
 			LocalPlayer p = game.LocalPlayer;
-			tiltM = Matrix4.RotateZ(-p.anim.tiltX * p.anim.bobStrength);
-			tiltM = tiltM * Matrix4.RotateX(Math.Abs(p.anim.tiltY) * 3 * p.anim.bobStrength);
+			Matrix4 tiltY, velX;
+			Matrix4.RotateZ(out tiltM, -p.anim.tiltX * p.anim.bobStrength);
+			Matrix4.RotateX(out tiltY, Math.Abs(p.anim.tiltY) * 3 * p.anim.bobStrength);
+			tiltM *= tiltY;
 			
 			bobbingHor = (p.anim.bobbingHor * 0.3f) * p.anim.bobStrength;
 			bobbingVer = (p.anim.bobbingVer * 0.6f) * p.anim.bobStrength;
 			
 			float vel = Utils.Lerp(p.OldVelocity.Y + 0.08f, p.Velocity.Y + 0.08f, t);
-			tiltM = tiltM * Matrix4.RotateX(-vel * 0.05f * p.anim.velTiltStrength / velTiltScale);
+			Matrix4.RotateX(out velX, -vel * 0.05f * p.anim.velTiltStrength / velTiltScale);
+			tiltM *= velX;
 		}
 		
 		protected Vector3 GetDirVector() {
-			return Utils.GetDirVector(player.HeadYRadians,
-			                          AdjustHeadX(player.HeadX));
+			return Utils.GetDirVector(player.HeadYRadians, AdjustHeadX(player.HeadX));
 		}
 	}
 	

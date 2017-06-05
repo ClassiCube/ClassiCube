@@ -424,7 +424,7 @@ void Gfx_LoadIdentityMatrix() {
 
 void Gfx_MultiplyMatrix(Matrix* matrix) {
 	Int32 idx = curStack->Index;
-	Matrix_Mul(matrix, &curStack->Stack[idx], &curStack->Stack[idx]);
+	Matrix_Mul(&curStack->Stack[idx], matrix, &curStack->Stack[idx]);
 
 	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_MultiplyMatrix");
@@ -455,7 +455,7 @@ void Gfx_PopMatrix() {
 #define d3d9_zF 10000.0f
 void Gfx_LoadOrthoMatrix(Real32 width, Real32 height) {
 	Matrix matrix;
-	Matrix_OrthographicOffCenter(0, width, height, 0, d3d9_zN, d3d9_zF, &matrix);
+	Matrix_OrthographicOffCenter(&matrix, 0.0f, width, height, 0.0f, d3d9_zN, d3d9_zF);
 
 	matrix.Row2.Y = 1.0f / (d3d9_zN - d3d9_zF);
 	matrix.Row2.Z = d3d9_zN / (d3d9_zN - d3d9_zF);

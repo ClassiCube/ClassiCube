@@ -10,42 +10,42 @@ Matrix Matrix_Identity = {
 
 /* Transposed, copied from https://open.gl/transformations */
 
-void Matrix_RotateX(Real32 angle, Matrix* result) {
+void Matrix_RotateX(Matrix* result, Real32 angle) {
 	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
 	*result = Matrix_Identity;
 	result->Row1.Y = cosA; result->Row1.Z = sinA;
 	result->Row2.Y = -sinA; result->Row2.Z = cosA;
 }
 
-void Matrix_RotateY(Real32 angle, Matrix* result) {
+void Matrix_RotateY(Matrix* result, Real32 angle) {
 	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
 	*result = Matrix_Identity;
 	result->Row1.X = cosA; result->Row1.Z = -sinA;
 	result->Row2.X = sinA; result->Row2.Z = cosA;
 }
 
-void Matrix_RotateZ(Real32 angle, Matrix* result) {
+void Matrix_RotateZ(Matrix* result, Real32 angle) {
 	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
 	*result = Matrix_Identity;
 	result->Row1.X = cosA; result->Row1.Y = sinA;
 	result->Row2.X = -sinA; result->Row2.Y = cosA;
 }
 
-void Matrix_Translate(Real32 x, Real32 y, Real32 z, Matrix* result) {
+void Matrix_Translate(Matrix* result, Real32 x, Real32 y, Real32 z) {
 	*result = Matrix_Identity;
 	result->Row3.X = x;
 	result->Row3.Y = y;
 	result->Row3.Z = z;
 }
 
-void Matrix_Scale(Real32 x, Real32 y, Real32 z, Matrix* result) {
+void Matrix_Scale(Matrix* result, Real32 x, Real32 y, Real32 z) {
 	*result = Matrix_Identity;
 	result->Row0.X = x;
 	result->Row1.Y = y;
 	result->Row2.Z = z;
 }
 
-void Matrix_Mul(Matrix* left, Matrix* right, Matrix* result) {
+void Matrix_Mul(Matrix* result, Matrix* left, Matrix* right) {
 	/* Originally from http://www.edais.co.uk/blog/?p=27 */
 	Real32 
 		lM11 = left->Row0.X, lM12 = left->Row0.Y, lM13 = left->Row0.Z, lM14 = left->Row0.W,
@@ -81,11 +81,11 @@ void Matrix_Mul(Matrix* left, Matrix* right, Matrix* result) {
 
 
 
-void Matrix_Orthographic(Real32 width, Real32 height, Real32 zNear, Real32 zFar, Matrix* result) {
-	Matrix_OrthographicOffCenter(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, zNear, zFar, result);
+void Matrix_Orthographic(Matrix* result, Real32 width, Real32 height, Real32 zNear, Real32 zFar) {
+	Matrix_OrthographicOffCenter(result, -width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, zNear, zFar);
 }
 
-void Matrix_OrthographicOffCenter(Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar, Matrix* result) {
+void Matrix_OrthographicOffCenter(Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
 	/* Transposed, sourced from https://msdn.microsoft.com/en-us/library/dd373965(v=vs.85).aspx */
 	*result = Matrix_Identity;
 
@@ -98,12 +98,12 @@ void Matrix_OrthographicOffCenter(Real32 left, Real32 right, Real32 bottom, Real
 	result->Row3.Z = -(zFar + zNear) / (zFar - zNear);
 }
 
-void Matrix_PerspectiveFieldOfView(Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* result) {
+void Matrix_PerspectiveFieldOfView(Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar) {
 	Real32 c = zNear * Math_Tan(0.5f * fovy);
-	Matrix_PerspectiveOffCenter(-c * aspect, c * aspect, -c, c, zNear, zFar, result);
+	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
 }
 
-void Matrix_PerspectiveOffCenter(Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar, Matrix* result) {
+void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
 	/* Transposed, sourced from https://msdn.microsoft.com/en-us/library/dd373537(v=vs.85).aspx */
 	*result = Matrix_Identity;
 

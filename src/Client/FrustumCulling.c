@@ -29,7 +29,7 @@ bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius)
 
 void FrustumCulling_CalcFrustumEquations(Matrix* projection, Matrix* modelView) {
 	Matrix clipMatrix;
-	Matrix_Mul(modelView, projection, &clipMatrix);
+	Matrix_Mul(&clipMatrix, modelView, projection);
 
 	Real32* clip = (Real32*)&clipMatrix;
 	// Extract the numbers for the RIGHT plane

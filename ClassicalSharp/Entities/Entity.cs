@@ -112,12 +112,14 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public Matrix4 TransformMatrix(float scale, Vector3 pos) {
-			return 
-				Matrix4.RotateZ(-RotZ * Utils.Deg2Rad) * 
-				Matrix4.RotateX(-RotX * Utils.Deg2Rad) * 
-				Matrix4.RotateY(-RotY * Utils.Deg2Rad) * 
-				Matrix4.Scale(scale)                   * 
-				Matrix4.Translate(pos.X, pos.Y, pos.Z);
+			Matrix4 rotZ, rotX, rotY, translate, scaleM;
+			Matrix4.RotateX(out rotX, -RotX * Utils.Deg2Rad);
+			Matrix4.RotateY(out rotY, -RotY * Utils.Deg2Rad);
+			Matrix4.RotateZ(out rotZ, -RotZ * Utils.Deg2Rad);
+			Matrix4.Scale(out scaleM, scale, scale, scale);
+			Matrix4.Translate(out translate, pos.X, pos.Y, pos.Z);
+			
+			return rotZ * rotX * rotY * scaleM * translate;
 		}
 		
 		/// <summary> Gets the brightness colour of this entity. </summary>
