@@ -112,7 +112,7 @@ void GfxCommon_Mode3D(bool setFog) {
 	if (setFog) Gfx_SetFog(true);
 }
 
-Int32 GfxCommon_MakeDefaultIb() {
+GfxResourceID GfxCommon_MakeDefaultIb() {
 	Int32 element = 0;
 	UInt16 indices[Gfx_MaxIndices];
 	UInt16* ptr = indices;

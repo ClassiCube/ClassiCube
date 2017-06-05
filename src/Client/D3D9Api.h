@@ -41,9 +41,9 @@ static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 siz
 static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg);
 
 
-static void D3D9_DeleteResource(void** resources, Int32 capacity, Int32* id);
+static void D3D9_DeleteResource(void** resources, Int32 capacity, GfxResourceID* id);
 
-static void D3D9_FreeResource(void* resource, Int32 resourceId);
+static void D3D9_FreeResource(void* resource, GfxResourceID id);
 
 static Int32 D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize);
 #endif

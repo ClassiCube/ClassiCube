@@ -14,8 +14,8 @@
 #include "Platform.h"
 #include "Funcs.h"
 
-Int32 borders_sidesVb = -1, borders_edgesVb = -1;
-Int32 borders_edgeTexId, borders_sideTexId;
+GfxResourceID borders_sidesVb = -1, borders_edgesVb = -1;
+GfxResourceID borders_edgeTexId, borders_sideTexId;
 Int32 borders_sidesVertices, borders_edgesVertices;
 bool borders_fullBrightSides, borders_fullBrightEdge;
 Rectangle borders_rects[4];
@@ -313,7 +313,7 @@ void BordersRenderer_CalculateRects(Int32 extent) {
 	borders_rects[3] = Rectangle_Make(World_Width, 0, extent, World_Length);
 }
 
-void BordersRenderer_MakeTexture(Int32* texId, TextureLoc* lastTexLoc, BlockID block) {
+void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, BlockID block) {
 	TextureLoc texLoc = Block_GetTexLoc(block, Face_YMax);
 	if (texLoc == *lastTexLoc || Gfx_LostContext) return;
 	*lastTexLoc = texLoc;

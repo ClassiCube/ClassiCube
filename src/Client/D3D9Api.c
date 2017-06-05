@@ -60,21 +60,21 @@ void Gfx_Free(void) {
 	Int32 i;
 	for (i = 0; i < d3d9_texturesCapacity; i++) {
 		if (d3d9_textures[i] == NULL) continue;
-		Int32 texId = i;
+		GfxResourceID texId = i;
 		Gfx_DeleteTexture(&texId);
 		D3D9_LogLeakedResource("Texture leak! ID: ", i);
 	}
 
 	for (i = 0; i < d3d9_vbuffersCapacity; i++) {
 		if (d3d9_vbuffers[i] == NULL) continue;
-		Int32 vb = i;
+		GfxResourceID vb = i;
 		Gfx_DeleteVb(&vb);
 		D3D9_LogLeakedResource("Vertex buffer leak! ID: ", i);
 	}
 
 	for (i = 0; i < d3d9_ibuffersCapacity; i++) {
 		if (d3d9_ibuffers[i] == NULL) continue;
-		Int32 ib = i;
+		GfxResourceID ib = i;
 		Gfx_DeleteIb(&ib);
 		D3D9_LogLeakedResource("Index buffer leak! ID: ", i);
 	}
@@ -92,7 +92,7 @@ void Gfx_Free(void) {
 
 
 
-Int32 Gfx_CreateTexture(Bitmap* bmp, bool managedPool) {
+GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool) {
 	IDirect3DTexture9* texture;
 	ReturnCode hresult;
 
@@ -119,7 +119,7 @@ Int32 Gfx_CreateTexture(Bitmap* bmp, bool managedPool) {
 	return D3D9_GetOrExpand(&d3d9_textures, &d3d9_texturesCapacity, texture, d3d9_texturesExpSize);
 }
 
-void Gfx_UpdateTexturePart(Int32 texId, Int32 texX, Int32 texY, Bitmap* part) {
+void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 texX, Int32 texY, Bitmap* part) {
 	RECT texRec;
 	texRec.left = texX; texRec.right = texX + part->Width;
 	texRec.top = texY; texRec.bottom = texY + part->Height;
@@ -144,12 +144,12 @@ void Gfx_UpdateTexturePart(Int32 texId, Int32 texX, Int32 texY, Bitmap* part) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_UpdateTexturePart - Unlock");
 }
 
-void Gfx_BindTexture(Int32 texId) {
+void Gfx_BindTexture(GfxResourceID texId) {
 	ReturnCode hresult = IDirect3DDevice9_SetTexture(device, 0, d3d9_textures[texId]);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_BindTexture");
 }
 
-void Gfx_DeleteTexture(Int32* texId) {
+void Gfx_DeleteTexture(GfxResourceID* texId) {
 	D3D9_DeleteResource((void**)d3d9_textures, d3d9_texturesCapacity, texId);
 }
 
@@ -293,7 +293,7 @@ void Gfx_SetDepthWrite(bool enabled) {
 
 
 
-Int32 Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
 	Int32 size = maxVertices * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC, 
@@ -303,7 +303,7 @@ Int32 Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
 	return D3D9_GetOrExpand(&d3d9_vbuffers, &d3d9_vbuffersCapacity, vbuffer, d3d9_vBuffersExpSize);
 }
 
-Int32 Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count) {
+GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count) {
 	Int32 size = count * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, 0,
@@ -314,7 +314,7 @@ Int32 Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count) {
 	return D3D9_GetOrExpand(&d3d9_vbuffers, &d3d9_vbuffersCapacity, vbuffer, d3d9_vBuffersExpSize);
 }
 
-Int32 Gfx_CreateIb(void* indices, Int32 indicesCount) {
+GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
 	Int32 size = indicesCount * sizeof(UInt16);
 	IDirect3DIndexBuffer9* ibuffer;
 	ReturnCode hresult = IDirect3DDevice9_CreateIndexBuffer(device, size, 0, 
@@ -326,21 +326,21 @@ Int32 Gfx_CreateIb(void* indices, Int32 indicesCount) {
 }
 
 Int32 d3d9_batchStride;
-void Gfx_BindVb(Int32 vb) {
+void Gfx_BindVb(GfxResourceID vb) {
 	ReturnCode hresult = IDirect3DDevice9_SetStreamSource(device, 0, d3d9_vbuffers[vb], 0, d3d9_batchStride);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_BindVb");
 }
 
-void Gfx_BindIb(Int32 ib) {
+void Gfx_BindIb(GfxResourceID ib) {
 	ReturnCode hresult = IDirect3DDevice9_SetIndices(device, d3d9_ibuffers[ib]);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_BindIb");
 }
 
-void Gfx_DeleteVb(Int32* vb) {
+void Gfx_DeleteVb(GfxResourceID* vb) {
 	D3D9_DeleteResource((void**)d3d9_vbuffers, d3d9_vbuffersCapacity, vb);
 }
 
-void Gfx_DeleteIb(Int32* ib) {
+void Gfx_DeleteIb(GfxResourceID* ib) {
 	D3D9_DeleteResource((void**)d3d9_ibuffers, d3d9_ibuffersCapacity, ib);
 }
 
@@ -357,7 +357,7 @@ void Gfx_DrawVb(DrawMode drawMode, Int32 startVertex, Int32 vCount) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb");
 }
 
-void Gfx_SetDynamicVbData(Int32 vb, void* vertices, Int32 vCount) {
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 	Int32 size = vCount * d3d9_batchStride;
 	IDirect3DVertexBuffer9* vbuffer = d3d9_vbuffers[vb];
 	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_SetDynamicVbData - Lock", "D3D9_SetDynamicVbData - Unlock", D3DLOCK_DISCARD);
@@ -499,8 +499,8 @@ void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const
 
 
 
-void D3D9_DeleteResource(void** resources, Int32 capacity, Int32* id) {
-	Int32 resourceID = *id;
+void D3D9_DeleteResource(void** resources, Int32 capacity, GfxResourceID* id) {
+	GfxResourceID resourceID = *id;
 	if (resourceID <= 0 || resourceID >= capacity) return;
 
 	void* value = resources[resourceID];
@@ -511,7 +511,7 @@ void D3D9_DeleteResource(void** resources, Int32 capacity, Int32* id) {
 	D3D9_FreeResource(value, resourceID);
 }
 
-void D3D9_FreeResource(void* resource, Int32 resourceId) {
+void D3D9_FreeResource(void* resource, GfxResourceID id) {
 	IUnknown* unk = (IUnknown*)resource;
 	UInt32 refCount = unk->lpVtbl->Release(unk);
 	if (refCount <= 0) return;
@@ -519,13 +519,13 @@ void D3D9_FreeResource(void* resource, Int32 resourceId) {
 	UInt8 logMsgBuffer[String_BufferSize(127)];
 	String logMsg = String_FromRawBuffer(logMsgBuffer, 127);
 	String_AppendConstant(&logMsg, "D3D9 Resource has outstanding references! ID: ");
-	String_AppendInt32(&logMsg, resourceId);
+	String_AppendInt32(&logMsg, id);
 	Platform_Log(logMsg);
 }
 
 /* TODO: I have no clue if this even works. */
-Int32 D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize) {
-	Int32 i;
+GfxResourceID D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize) {
+	GfxResourceID i;
 	void** resources = *resourcesPtr;
 	for (i = 1; i < *capacity; i++) {
 		if (resources[i] == NULL) {
@@ -535,7 +535,7 @@ Int32 D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, In
 	}
 
 	/* Otherwise resize and add more elements */
-	Int32 oldLength = *capacity;
+	GfxResourceID oldLength = *capacity;
 	(*capacity) += expSize;
 
 	/*  Allocate resized pointers table */

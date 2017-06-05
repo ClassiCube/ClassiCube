@@ -6,7 +6,7 @@
 #include "GraphicsCommon.h"
 #include "GameProps.h"
 
-Int32 pickedPos_vb;
+GfxResourceID pickedPos_vb;
 PackedCol pickedPos_col;
 #define pickedPos_numVertices (16 * 6)
 VertexP3fC4b pickedPos_vertices[pickedPos_numVertices];

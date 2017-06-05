@@ -17,9 +17,9 @@
 #include "World.h"
 #include "WorldEnv.h"
 
-Int32 weather_rainTex;
-Int32 weather_snowTex;
-Int32 weather_vb;
+GfxResourceID weather_rainTex;
+GfxResourceID weather_snowTex;
+GfxResourceID weather_vb;
 
 #define weather_extent 4
 #define weather_verticesCount 8 * (weather_extent * 2 + 1) * (weather_extent * 2 + 1)
@@ -48,7 +48,7 @@ void WeatherRenderer_Init(void) {
 }
 
 void WeatherRenderer_Render(Real64 deltaTime) {
-	Int32 weather = WorldEnv_Weather;
+	Weather weather = WorldEnv_Weather;
 	if (weather == Weather_Sunny) return;
 	if (weather_heightmap == NULL) WeatherRenderer_InitHeightmap();
 

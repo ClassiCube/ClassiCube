@@ -9,7 +9,10 @@ namespace ClassicalSharp.Model {
 
 	public class ChibiModel : HumanoidModel {
 		
-		public ChibiModel(Game window) : base(window) { }
+		public ChibiModel(Game window) : base(window) {
+			MaxScale = 3.0f;
+			ShadowScale = 0.5f;
+		}
 		
 		const float size = 0.5f;
 		protected override void MakeDescriptions() {
@@ -20,10 +23,6 @@ namespace ClassicalSharp.Model {
 			lArm = lArm.Scale(size); rArm = rArm.Scale(size);
 			offset = 0.5f * size;
 		}
-
-		public override float MaxScale { get { return 3; } }
-		
-		public override float ShadowScale { get { return 0.5f; } }
 		
 		public override float NameYOffset { get { return 20.2f/16; } }
 		
@@ -42,14 +41,11 @@ namespace ClassicalSharp.Model {
 		
 		public SittingModel(Game window) : base(window) {
 			CalcHumanAnims = true;
+			ShadowScale = 0.5f;
 		}
 		
 		const int sitOffset = 10;
 		public override void CreateParts() { }
-
-		public override float MaxScale { get { return 2; } }
-		
-		public override float ShadowScale { get { return 0.5f; } }
 		
 		public override float NameYOffset { get { return 32/16f + 0.5f/16f; } }
 		

@@ -8,7 +8,7 @@
 #include "Camera.h"
 #include "LocalPlayer.h"
 
-Int32 axisLines_vb = -1;
+GfxResourceID axisLines_vb = -1;
 #define axisLines_numVertices 12
 #define axisLines_size (1.0f / 32.0f)
 #define axisLines_length 3.0f

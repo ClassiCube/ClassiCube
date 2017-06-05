@@ -13,7 +13,6 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-
 /* Initalises this graphics API. */
 void Gfx_Init(void);
 
@@ -51,17 +50,17 @@ Int32 Gfx_ContextRecreatedCount;
 
 /* Creates a new native texture from the given bitmap.
 NOTE: only power of two dimension textures are supported. */
-Int32 Gfx_CreateTexture(Bitmap* bmp, bool managedPool);
+GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool);
 
 /* Updates the sub-rectangle (texX, texY) -> (texX + part.Width, texY + part.Height)
 of the native texture associated with the given ID, with the pixels encapsulated in the 'part' instance. */
-void Gfx_UpdateTexturePart(Int32 texId, Int32 texX, Int32 texY, Bitmap* part);
+void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 texX, Int32 texY, Bitmap* part);
 
 /* Binds the given texture id so that it can be used for rasterization. */
-void Gfx_BindTexture(Int32 texId);
+void Gfx_BindTexture(GfxResourceID texId);
 
 /* Frees all native resources held for the given texture id. */
-void Gfx_DeleteTexture(Int32* texId);
+void Gfx_DeleteTexture(GfxResourceID* texId);
 
 /* Sets whether texturing is applied when rasterizing primitives. */
 void Gfx_SetTexturing(bool enabled);
@@ -126,27 +125,27 @@ void Gfx_SetDepthWrite(bool enabled);
 
 
 /* Creates a vertex buffer that can have its data dynamically updated. */
-Int32 Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices);
+GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices);
 
 /* Creates a static vertex buffer that has its data set at creation,
 but the vertex buffer's data cannot be updated after creation.*/
-Int32 Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count);
+GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count);
 
 /* Creates a static index buffer that has its data set at creation,
 but the index buffer's data cannot be updated after creation. */
-Int32 Gfx_CreateIb(void* indices, Int32 indicesCount);
+GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount);
 
 /* Sets the currently active vertex buffer to the given id. */
-void Gfx_BindVb(Int32 vb);
+void Gfx_BindVb(GfxResourceID vb);
 
 /* Sets the currently active index buffer to the given id. */
-void Gfx_BindIb(Int32 ib);
+void Gfx_BindIb(GfxResourceID ib);
 
 /* Frees all native resources held for the vertex buffer associated with the given id. */
-void Gfx_DeleteVb(Int32* vb);
+void Gfx_DeleteVb(GfxResourceID* vb);
 
 /* Frees all native resources held for the index buffer associated with the given id. */
-void Gfx_DeleteIb(Int32* ib);
+void Gfx_DeleteIb(GfxResourceID* ib);
 
 /* Informs the graphics API that the format of the vertex data used in subsequent
 draw calls will be in the given format. */
@@ -154,7 +153,7 @@ void Gfx_SetBatchFormat(VertexFormat vertexFormat);
 
 /* Binds and updates the data of the current dynamic vertex buffer's data.
 This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
-void Gfx_SetDynamicVbData(Int32 vb, void* vertices, Int32 vCount);
+void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount);
 
 /* Draws the specified subset of the vertices in the current vertex buffer. */
 void Gfx_DrawVb(DrawMode drawMode, Int32 startVertex, Int32 vCount);

@@ -2,17 +2,17 @@
 #include "GraphicsCommon.h"
 #include "GraphicsAPI.h"
 
-Texture Texture_FromOrigin(Int32 id, Int32 x, Int32 y, Int32 width, Int32 height,
+Texture Texture_FromOrigin(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	Real32 u2, Real32 v2) {
 	return Texture_From(id, x, y, width, height, 0, u2, 0, v2);
 }
 
-Texture Texture_FromRec(Int32 id, Int32 x, Int32 y, Int32 width, Int32 height,
+Texture Texture_FromRec(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	TextureRec rec) {
 	return Texture_From(id, x, y, width, height, rec.U1, rec.U2, rec.V1, rec.V2);
 }
 
-Texture Texture_From(Int32 id, Int32 x, Int32 y, Int32 width, Int32 height,
+Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	Real32 u1, Real32 u2, Real32 v1, Real32 v2) {
 	Texture tex;
 	tex.ID = id;

@@ -3,6 +3,7 @@
 #include "Typedefs.h"
 #include "PackedCol.h"
 #include "TextureRec.h"
+#include "GraphicsEnums.h"
 
 /* Represents a simple 2D textured quad.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -11,7 +12,7 @@
 /* Contains the information necessary to describe a 2D textured quad. */
 typedef struct Texture {
 	/* Native texture ID.*/
-	Int32 ID;
+	GfxResourceID ID;
 
 	/* Origin of quad. */
 	Int16 X, Y;
@@ -28,15 +29,15 @@ typedef struct Texture {
 
 
 /* Creates a texture, with U1 and V1 being set to 0. */
-Texture Texture_FromOrigin(Int32 id, Int32 x, Int32 y, Int32 width, Int32 height, 
+Texture Texture_FromOrigin(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	Real32 u2, Real32 v2);
 
 /* Creates a texture, with U1/V1/U2/V2 using the input rectangle. */
-Texture Texture_FromRec(Int32 id, Int32 x, Int32 y, Int32 width, Int32 height, 
+Texture Texture_FromRec(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	TextureRec rec);
 
 /* Creates a texture. */
-Texture Texture_From(Int32 id, Int32 x, Int32 y, Int32 width, Int32 height, 
+Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	Real32 u1, Real32 u2, Real32 v1, Real32 v2);
 
 

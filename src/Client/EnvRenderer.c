@@ -11,8 +11,8 @@
 #include "Block.h"
 #include "Platform.h"
 
-Int32 env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
-Int32 env_cloudVertices, env_skyVertices;
+GfxResourceID env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
+GfxResourceID env_cloudVertices, env_skyVertices;
 
 
 void EnvRenderer_UseLegacyMode(bool legacy) {

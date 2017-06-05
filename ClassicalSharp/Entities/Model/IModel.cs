@@ -34,13 +34,13 @@ namespace ClassicalSharp.Model {
 		public bool CalcHumanAnims;
 		
 		/// <summary> Gravity applied to this entity. </summary>
-		public virtual float Gravity { get { return 0.08f; } }
+		public float Gravity = 0.08f;
 		
 		/// <summary> Drag applied to the entity. </summary>
-		public virtual Vector3 Drag { get { return new Vector3(0.91f, 0.98f, 0.91f); } }
+		public Vector3 Drag = new Vector3(0.91f, 0.98f, 0.91f);
 		
 		/// <summary> Friction applied to the entity when is on the ground. </summary>
-		public virtual Vector3 GroundFriction { get { return new Vector3(0.6f, 1.0f, 0.6f); } }
+		public Vector3 GroundFriction = new Vector3(0.6f, 1.0f, 0.6f);
 		
 		
 		/// <summary> Vertical offset from the model's feet/base that the name texture should be drawn at. </summary>
@@ -50,13 +50,13 @@ namespace ClassicalSharp.Model {
 		public abstract float GetEyeY(Entity entity);
 		
 		/// <summary> The maximum scale the entity can have (for collisions and rendering). </summary>
-		public virtual float MaxScale { get { return 2; } }
+		public float MaxScale = 2.0f;
 		
 		/// <summary> Scaling factor applied, multiplied by the entity's current model scale. </summary>
-		public virtual float ShadowScale { get { return 1; } }
+		public float ShadowScale = 1.0f;
 		
 		/// <summary> Scaling factor applied, multiplied by the entity's current model scale. </summary>
-		public virtual float NameScale { get { return 1; } }
+		public float NameScale = 1.0f;
 		
 		
 		/// <summary> The size of the bounding box that is used when

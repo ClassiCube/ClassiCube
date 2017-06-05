@@ -32,7 +32,7 @@ This method also replaces the dynamic vertex buffer's data first with the given 
 void GfxCommon_UpdateDynamicIndexedVb(Int32 drawMode, Int32 vb, void* vertices, Int32 vCount);
 
 
-Int32 GfxCommon_quadVb;
+GfxResourceID GfxCommon_quadVb;
 
 /* Draws a 2D flat coloured quad to the screen.*/
 void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height, 
@@ -43,7 +43,7 @@ void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height,
 	PackedCol topCol, PackedCol bottomCol);
 
 
-int GfxCommon_texVb;
+GfxResourceID GfxCommon_texVb;
 
 /* Draws a 2D texture to the screen. */
 void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col);
@@ -61,7 +61,7 @@ void GfxCommon_Mode2D(Real32 width, Real32 height, bool setFog);
 void GfxCommon_Mode3D(bool setFog);
 
 /* Makes the default index buffer used for drawing quads. */
-Int32 GfxCommon_MakeDefaultIb();
+GfxResourceID GfxCommon_MakeDefaultIb();
 
 /* Sets the appropriate alpha testing/blending states necessary to render the given block. */
 void GfxCommon_SetupAlphaState(UInt8 draw);
