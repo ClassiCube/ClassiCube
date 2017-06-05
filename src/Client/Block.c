@@ -175,28 +175,27 @@ void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId) {
 }
 
 void Block_GetTextureRegion(BlockID block, Face face, Vector2* min, Vector2* max) {
-	*min = Vector2_Zero; *max = Vector2_One;
 	Vector3 bbMin = Block_MinBB[block], bbMax = Block_MaxBB[block];
 
 	switch (face) {
 	case Face_XMin:
 	case Face_XMax:
-		*min = Vector2_Create2(bbMin.Z, bbMin.Y);
-		*max = Vector2_Create2(bbMax.Z, bbMax.Y);
+		min->X = bbMin.Z; min->Y = bbMin.Y;
+		max->X = bbMax.Z; max->Y = bbMax.Y;
 		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
 		break;
 
 	case Face_ZMin:
 	case Face_ZMax:
-		*min = Vector2_Create2(bbMin.X, bbMin.Y);
-		*max = Vector2_Create2(bbMax.X, bbMax.Y);
+		min->X = bbMin.X; min->Y = bbMin.Y;
+		max->X = bbMax.X; max->Y = bbMax.Y;
 		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
 		break;
 
 	case Face_YMax:
 	case Face_YMin:
-		*min = Vector2_Create2(bbMin.X, bbMin.Z);
-		*max = Vector2_Create2(bbMax.X, bbMax.Z);
+		min->X = bbMin.X; min->Y = bbMin.Z;
+		max->X = bbMax.X; max->Y = bbMax.Z;
 		break;
 	}
 }

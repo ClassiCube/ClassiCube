@@ -32,25 +32,28 @@ namespace ClassicalSharp {
 		}
 		
 		void GetTextureRegion(BlockID block, int side, out Vector2 min, out Vector2 max) {
-			min = Vector2.Zero; max = Vector2.One;
 			Vector3 bbMin = MinBB[block], bbMax = MaxBB[block];		
 			switch (side) {
 				case Side.Left:
 				case Side.Right:
-					min = new Vector2(bbMin.Z, bbMin.Y);
-					max = new Vector2(bbMax.Z, bbMax.Y);
+					min.X = bbMin.Z; min.Y = bbMin.Y;
+					max.X = bbMax.Z; max.Y = bbMax.Y;
 					if (IsLiquid(block)) max.Y -= 1.5f/16;
 					break;
 				case Side.Front:
 				case Side.Back: 
-					min = new Vector2(bbMin.X, bbMin.Y);
-					max = new Vector2(bbMax.X, bbMax.Y);
+					min.X = bbMin.X; min.Y = bbMin.Y;
+					max.X = bbMax.X; max.Y = bbMax.Y;
 					if (IsLiquid(block)) max.Y -= 1.5f/16;
 					break;
 				case Side.Top:
 				case Side.Bottom:
-					min = new Vector2(bbMin.X, bbMin.Z);
-					max = new Vector2(bbMax.X, bbMax.Z); 
+					min.X = bbMin.X; min.Y = bbMin.Z;
+					max.X = bbMax.X; max.Y = bbMax.Z; 
+					break;
+				default:
+					min.X = 0; min.Y = 0;
+					max.X = 1; max.Y = 1;
 					break;
 			}
 		}
