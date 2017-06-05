@@ -31,6 +31,9 @@
 /* Integer floor of a floating-point value. */
 Int32 Math_Floor(Real32 value);
 
+/* Log base 2 of given value. */
+Int32 Math_Log2(Int32 value);
+
 /* Performs rounding upwards integer division.*/
 Int32 Math_CeilDiv(Int32 a, Int32 b);
 

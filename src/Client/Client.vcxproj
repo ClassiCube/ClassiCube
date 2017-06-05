@@ -197,6 +197,7 @@
     <ClInclude Include="IO.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="BordersRenderer.h" />
+    <ClInclude Include="LiquidAnimations.h" />
     <ClInclude Include="LocalPlayer.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
@@ -261,6 +262,7 @@
     <ClCompile Include="GZipHeader.c" />
     <ClCompile Include="Intersection.c" />
     <ClCompile Include="Lighting.c" />
+    <ClCompile Include="LiquidAnimations.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />

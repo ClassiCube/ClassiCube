@@ -5,6 +5,12 @@ Int32 Math_Floor(Real32 value) {
 	return value < valueI ? valueI - 1 : valueI;
 }
 
+Int32 Math_Log2(Int32 value) {
+	Int32 shift = 0;
+	while (value > 1) { shift++; value >>= 1; }
+	return shift;
+}
+
 Int32 Math_CeilDiv(Int32 a, Int32 b) {
 	return a / b + (a % b != 0 ? 1 : 0);
 }

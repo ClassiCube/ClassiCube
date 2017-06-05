@@ -9,26 +9,26 @@
 
 /* Raised when the player joins and begins loading a new world. */
 Event_Void WorldEvents_NewMap[EventHandler_Size];
-UInt32 WorldEvents_NewMapCount;
+Int32 WorldEvents_NewMapCount;
 #define WorldEvents_RaiseNewMap()\
 EventHandler_Raise_Void(WorldEvents_NewMap, WorldEvents_NewMapCount);
 
 /* Raised when a portion of the world is read and decompressed, or generated.
 The floating point argument is progress (from 0 to 1). */
 Event_Real32 WorldEvents_MapLoading[EventHandler_Size];
-UInt32 WorldEvents_MapLoadingCount;
+Int32 WorldEvents_MapLoadingCount;
 #define WorldEvents_RaiseMapLoading(progress)\
 EventHandler_Raise_Real32(WorldEvents_MapLoading, WorldEvents_MapLoadingCount, progress);
 
 /* Raised when new world has finished loading and the player can now interact with it. */
 Event_Void WorldEvents_MapLoaded[EventHandler_Size];
-UInt32 WorldEvents_MapLoadedCount;
+Int32 WorldEvents_MapLoadedCount;
 #define WorldEvents_RaiseMapLoaded()\
 EventHandler_Raise_Void(WorldEvents_MapLoaded, WorldEvents_MapLoadedCount);
 
 /* Raised when an environment variable of the world is changed by the user, CPE, or WoM config. */
 Event_Int32 WorldEvents_EnvVarChanged[EventHandler_Size];
-UInt32 WorldEvents_EnvVarChangedCount;
+Int32 WorldEvents_EnvVarChangedCount;
 #define WorldEvents_RaiseEnvVariableChanged(envVar)\
 EventHandler_Raise_Int32(WorldEvents_EnvVarChanged, WorldEvents_EnvVarChangedCount, envVar);
 

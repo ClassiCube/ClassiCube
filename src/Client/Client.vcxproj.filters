@@ -345,6 +345,9 @@
     <ClInclude Include="Player.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="LiquidAnimations.h">
+      <Filter>Header Files\TexturePack</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -490,6 +493,9 @@
     </ClCompile>
     <ClCompile Include="PickedPosRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
+    </ClCompile>
+    <ClCompile Include="LiquidAnimations.c">
+      <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
