@@ -425,7 +425,7 @@ void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
 				Int32 x = xx + treeX, z = zz + treeZ;
 				index = Gen_Pack(x, y, z);
 
-				if (Math_Abs(xx) == 2 && Math_Abs(zz) == 2) {
+				if (Math_AbsI(xx) == 2 && Math_AbsI(zz) == 2) {
 					if (Random_Float(&rnd) >= 0.5f)
 						Gen_Blocks[index] = BlockID_Leaves;
 				} else {

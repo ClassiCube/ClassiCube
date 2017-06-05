@@ -13,7 +13,10 @@
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 typedef struct Entity {
+	/* Position of the entity in the world.*/
 	Vector3 Position;
+
+	/* Rotation of the entity in the world. */
 	Real32 HeadX, HeadY, RotX, RotY, RotZ;
 } Entity;
 #endif

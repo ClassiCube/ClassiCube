@@ -12,7 +12,9 @@
 
 #define MATH_RAD2DEG (180.0f / MATH_PI)
 
-#define Math_Abs(x) abs(x)
+#define Math_AbsF(x) fabsf(x)
+
+#define Math_AbsI(x) abs(x)
 
 #define Math_LogE(x) logf(x)
 

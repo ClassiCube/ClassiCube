@@ -339,6 +339,12 @@
     <ClInclude Include="PickedPosRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
+    <ClInclude Include="LocalPlayer.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">

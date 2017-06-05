@@ -23,7 +23,7 @@ typedef struct Stream {
 
 	/* Moves backwards or forwards by given number of bytes in the stream.
 	Result is a ReturnCode. */
-	Stream_Operation Seek;
+	Stream_Seek Seek;
 
 	/* Attempts to read a byte from the stream, returning -1 on error. */
 	Int32 (*TryReadByte)(void);

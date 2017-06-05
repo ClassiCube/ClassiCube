@@ -8,7 +8,6 @@ void GZipHeader_Init(GZipHeader* header) {
 	header->PartsRead = 0;
 }
 
-/* Reads part of the GZIP header. header.Done is set to true on completion. */
 void GZipHeader_Read(Stream* s, GZipHeader* header) {
 	Int32 temp;
 	switch (header->State) {

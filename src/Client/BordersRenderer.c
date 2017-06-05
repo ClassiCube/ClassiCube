@@ -171,8 +171,8 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 		borders_sidesVertices += Math_CountVertices(r.Width, r.Height, axisSize); /* YQuads outside */
 	}
 	borders_sidesVertices += Math_CountVertices(World_Width, World_Length, axisSize); /* YQuads beneath map */
-	borders_sidesVertices += 2 * Math_CountVertices(World_Width, Math_Abs(y), axisSize); /* ZQuads */
-	borders_sidesVertices += 2 * Math_CountVertices(World_Length, Math_Abs(y), axisSize); /* XQuads */
+	borders_sidesVertices += 2 * Math_CountVertices(World_Width, Math_AbsI(y), axisSize); /* ZQuads */
+	borders_sidesVertices += 2 * Math_CountVertices(World_Length, Math_AbsI(y), axisSize); /* XQuads */
 
 	VertexP3fT2fC4b v[4096];
 	VertexP3fT2fC4b* ptr = v;

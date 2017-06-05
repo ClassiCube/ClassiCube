@@ -11,6 +11,8 @@
 
 /* Chunk axis length, in blocks. */
 #define CHUNK_SIZE 16
+#define CHUNK_SIZE_2 (CHUNK_SIZE * CHUNK_SIZE)
+#define CHUNK_SIZE_3 (CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE)
 
 /* Chunk axis length (and neighbours), in blocks. */
 #define EXTCHUNK_SIZE 18
