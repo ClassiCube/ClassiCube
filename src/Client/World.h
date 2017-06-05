@@ -62,17 +62,17 @@ void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 heigh
 BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z);
 
 
-/* Sets the block at the given oordinates without bounds checking. */
-void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID blockId);
+/* Sets the block at the given coordinates without bounds checking. */
+#define World_SetBlock(x, y, z, blockId) World_Blocks[World_Pack(x, y, z)] = blockId
 
-/* Sets the block at the given oordinates without bounds checking. */
-void World_SetBlock_3I(Vector3I p, BlockID blockId);
+/* Sets the block at the given coordinates without bounds checking. */
+#define World_SetBlock_3I(p, blockId) World_Blocks[World_Pack(p.X, p.Y, p.Z)] = blockId
 
 /* Returns the block at the given coordinates without bounds checking. */
-BlockID World_GetBlock(Int32 x, Int32 y, Int32 z);
+#define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]
 
 /* Returns the block at the given world coordinates without bounds checking. */
-BlockID World_GetBlock_3I(Vector3I p);
+#define World_GetBlock_3I(x, y, z) World_Blocks[World_Pack(p.X, p.Y, p.Z)]
 
 /* Returns block at given coordinates if coordinates are inside the map, 0 if outside. */
 BlockID World_SafeGetBlock(Int32 x, Int32 y, Int32 z);

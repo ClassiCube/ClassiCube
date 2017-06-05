@@ -3,6 +3,7 @@
 #include "Typedefs.h"
 #include "String.h"
 #include "Stream.h"
+#include "Vector3I.h"
 /* Helper method for managing events.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -22,6 +23,9 @@ typedef void(*Event_EntityID)(EntityID argument);
 
 /* Event handler that takes stream as an argument. */
 typedef void(*Event_Stream)(Stream* stream);
+
+/* Event handler that takes a block change argument. */
+typedef void(*Event_Block)(Vector3I coords, BlockID oldBlock, BlockID block);
 
 
 /* Maximum number of event handlers that can be registered. */
@@ -82,5 +86,15 @@ void EventHandler_RegisterStreamImpl(Event_Stream* handlers, Int32* count, Event
 
 #define EventHandler_UnregisterStream(eventName, handler) EventHandler_UnregisterStreamImpl(eventName, &eventName ## Count, handler)
 void EventHandler_UnregisterStreamImpl(Event_Stream* handlers, Int32* count, Event_Stream handler);
+
+
+/* Calls handlers for an event that takes a block change as an argument.*/
+void EventHandler_Raise_Block(Event_Block* handlers, Int32 handlersCount, Vector3I coords, BlockID oldBlock, BlockID block);
+
+#define EventHandler_RegisterBlock(eventName, handler) EventHandler_RegisterBlockImpl(eventName, &eventName ## Count, handler)
+void EventHandler_RegisterBlockImpl(Event_Block* handlers, Int32* count, Event_Block handler);
+
+#define EventHandler_UnregisterBlock(eventName, handler) EventHandler_UnregisterBlockImpl(eventName, &eventName ## Count, handler)
+void EventHandler_UnregisterBlockImpl(Event_Block* handlers, Int32* count, Event_Block handler);
 
 #endif

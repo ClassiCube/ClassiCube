@@ -54,22 +54,6 @@ BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z) {
 }
 
 
-void World_SetBlock(Int32 x, Int32 y, Int32 z, BlockID blockId) {
-	World_Blocks[World_Pack(x, y, z)] = blockId;
-}
-
-void World_SetBlock_3I(Vector3I p, BlockID blockId) {
-	World_Blocks[World_Pack(p.X, p.Y, p.Z)] = blockId;
-}
-
-BlockID World_GetBlock(Int32 x, Int32 y, Int32 z) {
-	return World_Blocks[World_Pack(x, y, z)];
-}
-
-BlockID World_GetBlock_3I(Vector3I p) {
-	return World_Blocks[World_Pack(p.X, p.Y, p.Z)];
-}
-
 BlockID World_SafeGetBlock(Int32 x, Int32 y, Int32 z) {
 	return World_IsValidPos(x, y, z) ? 
 		World_Blocks[World_Pack(x, y, z)] : BlockID_Air;

@@ -109,3 +109,19 @@ void EventHandler_RegisterStreamImpl(Event_Stream* handlers, Int32* count, Event
 void EventHandler_UnregisterStreamImpl(Event_Stream* handlers, Int32* count, Event_Stream handler) {
 	EventHandler_UnregisterImpl((void**)handlers, count, (void*)handler);
 }
+
+
+void EventHandler_Raise_Block(Event_Block* handlers, Int32 handlersCount, Vector3I coords, BlockID oldBlock, BlockID block) {
+	Int32 i;
+	for (i = 0; i < handlersCount; i++) {
+		handlers[i](coords, oldBlock, block);
+	}
+}
+
+void EventHandler_RegisterBlockImpl(Event_Block* handlers, Int32* count, Event_Block handler) {
+	EventHandler_RegisterImpl((void**)handlers, count, (void*)handler);
+}
+
+void EventHandler_UnregisterBlockImpl(Event_Block* handlers, Int32* count, Event_Block handler) {
+	EventHandler_UnregisterImpl((void**)handlers, count, (void*)handler);
+}

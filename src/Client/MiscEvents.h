@@ -37,4 +37,10 @@ Event_Void GfxEvents_ProjectionChanged[EventHandler_Size];
 Int32 GfxEvents_ProjectionChangedCount;
 #define GfxEvents_RaiseProjectionChanged()\
 EventHandler_Raise_Void(GfxEvents_ProjectionChanged, GfxEvents_ProjectionCount);
+
+/* Raised when the user changes a block. */
+Event_Block UserEvents_BlockChanged[EventHandler_Size];
+Int32 UserEvents_BlockChangedCount;
+#define UserEvents_BlockChangedChanged(coords, oldBlock, block)\
+EventHandler_Raise_Block(UserEvents_BlockChanged, UserEvents_BlockChangedCount, coords, oldBlock, block);
 #endif

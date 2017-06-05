@@ -357,6 +357,9 @@
     <ClInclude Include="TickQueue.h">
       <Filter>Header Files\Singleplayer</Filter>
     </ClInclude>
+    <ClInclude Include="Physics.h">
+      <Filter>Header Files\Singleplayer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -507,6 +510,9 @@
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
     <ClCompile Include="TickQueue.c">
+      <Filter>Source Files\Singleplayer</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics.c">
       <Filter>Source Files\Singleplayer</Filter>
     </ClCompile>
   </ItemGroup>

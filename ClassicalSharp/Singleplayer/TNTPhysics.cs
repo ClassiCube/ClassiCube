@@ -50,11 +50,12 @@ namespace ClassicalSharp.Singleplayer {
 				
 				int xx = x + dx, yy = y + dy, zz = z + dz;
 				if (!map.IsValidPos(xx, yy, zz)) continue;
-				byte block = map.GetBlock(xx, yy, zz);
+				index = (yy * map.Length + zz) * map.Width + xx;
+				
+				BlockID block = map.blocks[index];
 				if (block < Block.CpeCount && blocksTnt[block]) continue;		
 				
-				game.UpdateBlock(xx, yy, zz, Block.Air);
-				index = (yy * map.Length + zz) * map.Width + xx;
+				game.UpdateBlock(xx, yy, zz, Block.Air);				
 				physics.ActivateNeighbours(xx, yy, zz, index);
 			}
 		}

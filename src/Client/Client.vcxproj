@@ -205,6 +205,7 @@
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="NormalBuilder.h" />
     <ClInclude Include="Options.h" />
+    <ClInclude Include="Physics.h" />
     <ClInclude Include="PickedPos.h" />
     <ClInclude Include="PickedPosRenderer.h" />
     <ClInclude Include="Player.h" />
@@ -271,6 +272,7 @@
     <ClCompile Include="Matrix.c" />
     <ClCompile Include="Noise.c" />
     <ClCompile Include="NotchyGenerator.c" />
+    <ClCompile Include="Physics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="Respawn.c" />
