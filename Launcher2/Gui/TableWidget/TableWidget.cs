@@ -11,6 +11,8 @@ namespace Launcher.Gui.Widgets {
 		public int Y, Height;
 	}
 	
+	public delegate void TableNeedsRedrawHandler();
+	
 	public partial class TableWidget : Widget {
 		
 		TableView view;
@@ -20,7 +22,7 @@ namespace Launcher.Gui.Widgets {
 			view.Init(window, this);
 		}
 		
-		public Action NeedRedraw;
+		public TableNeedsRedrawHandler NeedRedraw;
 		public Action<string> SelectedChanged;
 		public int SelectedIndex = -1;
 		public int CurrentIndex, Count;
