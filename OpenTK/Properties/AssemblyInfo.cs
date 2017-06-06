@@ -7,6 +7,5 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProduct("The Open Toolkit Library")]
 [assembly: AssemblyCopyright("Copyright © 2006 - 2010 the Open Toolkit Library")]
 [assembly: AssemblyTrademark("OpenTK")]
-[assembly: System.Security.AllowPartiallyTrustedCallers]
 [assembly: ComVisible(false)]
 [assembly: AssemblyVersion("0.99.7")]
