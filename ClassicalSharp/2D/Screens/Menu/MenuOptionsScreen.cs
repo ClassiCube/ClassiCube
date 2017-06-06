@@ -109,7 +109,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected virtual void InputClosed() { }
 		
 		protected ButtonWidget MakeOpt(int dir, int y, string text, ClickHandler onClick,
-		                               Func<Game, string> getter, Action<Game, string> setter) {
+		                               ButtonValueGetter getter, ButtonValueSetter setter) {
 			ButtonWidget widget = ButtonWidget.Create(game, 300, text + ": " + getter(game), titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
 			widget.Metadata = text;
@@ -122,12 +122,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected ButtonWidget MakeBool(int dir, int y, string text, string optKey,
-		                                ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter) {
+		                                ClickHandler onClick, ButtonBoolGetter getter, ButtonBoolSetter setter) {
 			return MakeBool(dir, y, text, optKey, false, onClick, getter, setter);
 		}
 
 		protected ButtonWidget MakeBool(int dir, int y, string text, string optKey, bool invert,
-		                                ClickHandler onClick, Func<Game, bool> getter, Action<Game, bool> setter) {
+		                                ClickHandler onClick, ButtonBoolGetter getter, ButtonBoolSetter setter) {
 			string optName = text;
 			text = text + ": " + (getter(game) ? "ON" : "OFF");
 			ButtonWidget widget = ButtonWidget.Create(game, 300, text, titleFont, onClick)

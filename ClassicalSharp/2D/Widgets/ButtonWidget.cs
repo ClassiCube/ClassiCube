@@ -7,6 +7,16 @@ using Android.Graphics;
 #endif
 
 namespace ClassicalSharp.Gui.Widgets {
+	
+	public delegate void ButtonValueSetter(Game game, string raw);
+	
+	public delegate string ButtonValueGetter(Game game);
+	
+	public delegate void ButtonBoolSetter(Game game, bool value);
+	
+	public delegate bool ButtonBoolGetter(Game game);
+	
+	
 	public sealed class ButtonWidget : Widget {
 		
 		public ButtonWidget(Game game, Font font) : base(game) {
@@ -113,7 +123,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			texture.Y1 += Y - oldY;
 		}
 		
-		public Func<Game, string> GetValue;
-		public Action<Game, string> SetValue;
+		public ButtonValueGetter GetValue;
+		public ButtonValueSetter SetValue;
 	}
 }

@@ -5,6 +5,14 @@ using System.Windows.Forms;
 using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
+	
+	/// <summary> Filters text received from the clipboard. </summary>
+	public delegate string ClipboardTextFilter(string input);
+	
+	/// <summary> Returns true if character is able to be entered. </summary>
+	public delegate bool InputTextFilter(char c);
+	
+
 	/// <summary> Widget that represents text can have modified by the user. </summary>
 	public sealed class InputText {
 		
@@ -12,13 +20,13 @@ namespace Launcher.Gui.Widgets {
 		public int MaxChars = 32;
 		
 		/// <summary> Filter applied to text received from the clipboard. Can be null. </summary>
-		public Func<string, string> ClipboardFilter;
+		public ClipboardTextFilter ClipboardFilter;
 		
 		/// <summary> Delegate invoked when the text changes. </summary>
 		public Action<InputWidget> TextChanged;
 		
 		/// <summary> Delegate that only lets certain characters be entered. </summary>
-		public Func<char, bool> TextFilter;
+		public InputTextFilter TextFilter;
 		
 		/// <summary> Specifies the position that characters are inserted/deleted from. </summary>
 		/// <remarks> -1 to insert/delete characters at end of the text. </remarks>

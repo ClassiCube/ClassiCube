@@ -16,7 +16,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected int btnDistance = 50, btnWidth = 260;
 		protected string title = "Controls";
 		protected int index;
-		protected Action<Game, Widget> leftPage, rightPage;
+		protected SimpleClickHandler leftPage, rightPage;
 		
 		public override void Init() {
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);

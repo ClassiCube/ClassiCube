@@ -76,8 +76,10 @@ namespace Launcher.Gui.Widgets {
 			RedrawData(drawer);
 		}
 		
+		delegate string ColumnFilter(TableEntry entry);
+		
 		int DrawColumn(IDrawer2D drawer, bool separator, Font font, Font titleFont,
-		               string header, int maxWidth, int x, Func<TableEntry, string> filter) {
+		               string header, int maxWidth, int x, ColumnFilter filter) {
 			int y = table.Y + 3;
 			DrawTextArgs args = new DrawTextArgs(header, titleFont, true);
 			TableEntry headerEntry = default(TableEntry);

@@ -80,7 +80,7 @@ namespace ClassicalSharp.Gui.Screens {
 			descText = text;
 		}
 		
-		ButtonWidget Make(int dir, int y, string text, Action<Game, Widget> onClick) {
+		ButtonWidget Make(int dir, int y, string text, SimpleClickHandler onClick) {
 			return ButtonWidget.Create(game, 300, text, titleFont, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
 		}

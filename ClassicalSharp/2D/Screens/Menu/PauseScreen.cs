@@ -81,12 +81,12 @@ namespace ClassicalSharp.Gui.Screens {
 			widgets[4].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // select texture pack
 		}
 		
-		ButtonWidget Make(int dir, int y, string text, Action<Game, Widget> onClick) {
+		ButtonWidget Make(int dir, int y, string text, SimpleClickHandler onClick) {
 			return ButtonWidget.Create(game, 300, text, titleFont, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
 		}
 		
-		ButtonWidget MakeClassic(int x, int y, string text, Action<Game, Widget> onClick) {
+		ButtonWidget MakeClassic(int x, int y, string text, SimpleClickHandler onClick) {
 			return ButtonWidget.Create(game, 400, text, titleFont, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}

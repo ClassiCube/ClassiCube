@@ -106,7 +106,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		ButtonWidget Make(int x, int y, string text, int width,
-		                  Font font, Action<Game, Widget> onClick) {
+		                  Font font, SimpleClickHandler onClick) {
 			return ButtonWidget.Create(game, width, text, font, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}

@@ -5,6 +5,8 @@ using ClassicalSharp.GraphicsAPI;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui {
+	public delegate void SimpleClickHandler(Game g, Widget w);
+		
 	public delegate void ClickHandler(Game g, Widget w, MouseButton btn, int mouseX, int mouseY);
 	
 	public abstract class GuiElement : IDisposable {

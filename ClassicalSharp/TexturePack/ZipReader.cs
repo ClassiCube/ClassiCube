@@ -13,11 +13,16 @@ namespace ClassicalSharp.Textures {
 		public string Filename;
 	}
 	
+	public delegate void ZipEntryProcessor(string filename, byte[] data, ZipEntry entry);
+	
+	public delegate bool ZipEntrySelector(string filename);
+	
+	
 	/// <summary> Extracts files from a stream that represents a .zip file. </summary>
 	public sealed class ZipReader {
 		
-		public Action<string, byte[], ZipEntry> ProcessZipEntry;
-		public Func<string, bool> ShouldProcessZipEntry;
+		public ZipEntryProcessor ProcessZipEntry;
+		public ZipEntrySelector ShouldProcessZipEntry;
 		public ZipEntry[] entries;
 		int index;
 		

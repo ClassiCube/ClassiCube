@@ -5,6 +5,9 @@ using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
+	
+	public delegate void WarningClickHandler(WarningScreen screen, bool isAlways);
+	
 	public sealed class WarningScreen : MenuScreen {
 		
 		public WarningScreen(Game game, bool showAlways, bool confirmNo) : base(game) {
@@ -12,8 +15,8 @@ namespace ClassicalSharp.Gui.Screens {
 			this.showAlways = showAlways;
 		}
 		
-		public void SetHandlers(Action<WarningScreen, bool> yesClick,
-		                        Action<WarningScreen, bool> noClick,
+		public void SetHandlers(WarningClickHandler yesClick,
+		                        WarningClickHandler noClick,
 		                        Action<WarningScreen> renderFrame) {
 			this.yesClick = yesClick;
 			this.noClick = noClick;
@@ -135,7 +138,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 85);
 		}
 		
-		Action<WarningScreen, bool> yesClick, noClick;
+		WarningClickHandler yesClick, noClick;
 		Action<WarningScreen> renderFrame;
 		void OnYesClick(Game g, Widget w, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;

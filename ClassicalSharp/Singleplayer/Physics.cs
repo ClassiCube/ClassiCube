@@ -11,6 +11,8 @@ using BlockID = System.Byte;
 #endif
 
 namespace ClassicalSharp.Singleplayer {
+	
+	public delegate void PhysicsAction(int index, BlockID block);
 
 	public class PhysicsBase {
 		Game game;
@@ -31,10 +33,10 @@ namespace ClassicalSharp.Singleplayer {
 			set { enabled = value; liquid.Clear(); }
 		}
 		
-		public Action<int, BlockID>[] OnActivate = new Action<int, BlockID>[Block.Count];
-		public Action<int, BlockID>[] OnRandomTick = new Action<int, BlockID>[Block.Count];
-		public Action<int, BlockID>[] OnPlace = new Action<int, BlockID>[Block.Count];
-		public Action<int, BlockID>[] OnDelete = new Action<int, BlockID>[Block.Count];
+		public PhysicsAction[] OnActivate = new PhysicsAction[Block.Count];
+		public PhysicsAction[] OnRandomTick = new PhysicsAction[Block.Count];
+		public PhysicsAction[] OnPlace = new PhysicsAction[Block.Count];
+		public PhysicsAction[] OnDelete = new PhysicsAction[Block.Count];
 		
 		public PhysicsBase(Game game) {
 			this.game = game;
@@ -75,10 +77,10 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			
 			if (e.Block == 0) {
-				Action<int, BlockID> delete = OnDelete[e.OldBlock];
+				PhysicsAction delete = OnDelete[e.OldBlock];
 				if (delete != null) delete(index, e.OldBlock);
 			} else {
-				Action<int, BlockID> place = OnPlace[block];
+				PhysicsAction place = OnPlace[block];
 				if (place != null) place(index, block);
 			}
 			ActivateNeighbours(p.X, p.Y, p.Z, index);
@@ -97,7 +99,7 @@ namespace ClassicalSharp.Singleplayer {
 		/// <summary> Activates the block at the particular packed coordinates. </summary>
 		public void Activate(int index) {
 			BlockID block = map.blocks[index];
-			Action<int, BlockID> activate = OnActivate[block];
+			PhysicsAction activate = OnActivate[block];
 			if (activate != null) activate(index, block);
 		}
 		
@@ -137,7 +139,7 @@ namespace ClassicalSharp.Singleplayer {
 				// Inlined 3 random ticks for this chunk
 				int index = rnd.Next(lo, hi);
 				BlockID block = map.blocks[index];
-				Action<int, BlockID> tick = OnRandomTick[block];
+				PhysicsAction tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 				
 				index = rnd.Next(lo, hi);

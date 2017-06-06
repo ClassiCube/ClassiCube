@@ -49,11 +49,11 @@ namespace ClassicalSharp.Gui.Screens {
 		protected virtual void WidgetSelected(Widget widget) {
 		}
 		
-		protected ButtonWidget MakeBack(bool toGame, Font font, Action<Game, Widget> onClick) {
+		protected ButtonWidget MakeBack(bool toGame, Font font, SimpleClickHandler onClick) {
 			return MakeBack(200, toGame ? "Back to game" : "Back to menu", 25, font, onClick);
 		}
 		
-		protected ButtonWidget MakeBack(int width, string text, int y, Font font, Action<Game, Widget> onClick) {
+		protected ButtonWidget MakeBack(int width, string text, int y, Font font, SimpleClickHandler onClick) {
 			return ButtonWidget.Create(game, width, text, font, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, y);
 		}
