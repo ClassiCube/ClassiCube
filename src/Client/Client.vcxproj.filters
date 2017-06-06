@@ -360,6 +360,9 @@
     <ClInclude Include="Physics.h">
       <Filter>Header Files\Singleplayer</Filter>
     </ClInclude>
+    <ClInclude Include="TreeGen.h">
+      <Filter>Header Files\Generator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -514,6 +517,9 @@
     </ClCompile>
     <ClCompile Include="Physics.c">
       <Filter>Source Files\Singleplayer</Filter>
+    </ClCompile>
+    <ClCompile Include="TreeGen.c">
+      <Filter>Source Files\Generator</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

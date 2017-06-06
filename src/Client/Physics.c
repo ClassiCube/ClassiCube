@@ -11,6 +11,8 @@
 #include "Block.h"
 #include "BlockEnums.h"
 #include "Lighting.h"
+#include "Options.h"
+#include "TreeGen.h"
 
 Random physics_rnd;
 Int32 physics_tickCount;
@@ -135,9 +137,14 @@ void Physics_BlockChanged(Vector3I p, BlockID oldBlock, BlockID block) {
 void Physics_OnNewMapLoaded(void) {
 	TickQueue_Clear(&physics_lavaQ);
 	TickQueue_Clear(&physics_waterQ);
+
 	physics_maxWaterX = World_MaxX - 2;
 	physics_maxWaterY = World_MaxY - 2;
 	physics_maxWaterZ = World_MaxZ - 2;
+
+	Tree_Width = World_Width; Tree_Height = World_Height; Tree_Length = World_Length;
+	Tree_Blocks = World_Blocks;
+	Tree_Rnd = &physics_rnd;
 }
 
 void Physics_TickRandomBlocks(void) {
@@ -215,7 +222,23 @@ void Physics_HandleSapling(Int32 index, BlockID block) {
 
 	BlockID below = BlockID_Air;
 	if (y > 0) below = World_Blocks[index - World_OneY];
-	if (below == BlockID_Grass) GrowTree(x, y, z);
+	if (below != BlockID_Grass) return;
+
+	Int32 treeHeight = 5 + Random_Next(&physics_rnd, 3);
+	Game_UpdateBlock(x, y, z, BlockID_Air);
+
+	if (TreeGen_CanGrow(x, y, z, treeHeight)) {
+		Vector3I coords[Tree_BufferCount];
+		BlockID blocks[Tree_BufferCount];
+		Int32 count = TreeGen_Grow(x, y, z, treeHeight, coords, blocks);
+
+		Int32 m;
+		for (m = 0; m < count; m++) {
+			Game_UpdateBlock(coords[m].X, coords[m].Y, coords[m].Z, blocks[m]);
+		}
+	} else {
+		Game_UpdateBlock(x, y, z, BlockID_Sapling);
+	}
 }
 
 void Physics_HandleDirt(Int32 index, BlockID block) {

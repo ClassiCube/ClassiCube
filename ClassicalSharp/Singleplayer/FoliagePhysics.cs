@@ -112,7 +112,6 @@ namespace ClassicalSharp.Singleplayer {
 				return;
 			}
 			
-			game.UpdateBlock(x, y, z, Block.Air);
 			// Leaves bottom layer
 			y += trunkH;
 			for (int zz = -2; zz <= 2; zz++) {

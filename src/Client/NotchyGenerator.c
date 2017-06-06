@@ -6,6 +6,7 @@
 #include "ExtMath.h"
 #include "Platform.h"
 #include "ErrorHandler.h"
+#include "TreeGen.h"
 
 /* Internal variables */
 Int32 waterLevel, oneY, volume, minHeight;
@@ -352,7 +353,11 @@ void NotchyGen_PlantTrees() {
 	Int32 numPatches = Gen_Width * Gen_Length / 4000;
 	Gen_CurrentState = String_FromConstant("Planting trees");
 
-	Int32 i, j, k;
+	Tree_Width = Gen_Width; Tree_Height = Gen_Height; Tree_Length = Gen_Length;
+	Tree_Blocks = Gen_Blocks;
+	Tree_Rnd = &rnd;
+
+	Int32 i, j, k, m;
 	for (i = 0; i < numPatches; i++) {
 		Gen_CurrentProgress = (Real32)i / numPatches;
 		Int32 patchX = Random_Next(&rnd, Gen_Width), patchZ = Random_Next(&rnd, Gen_Length);
@@ -373,8 +378,15 @@ void NotchyGen_PlantTrees() {
 				Int32 index = Gen_Pack(treeX, treeY, treeZ);
 				BlockID blockUnder = treeY > 0 ? Gen_Blocks[index - oneY] : BlockID_Air;
 
-				if (blockUnder == BlockID_Grass && NotchyGen_CanGrowTree(treeX, treeY, treeZ, treeHeight)) {
-					NotchyGen_GrowTree(treeX, treeY, treeZ, treeHeight);
+				if (blockUnder == BlockID_Grass && TreeGen_CanGrow(treeX, treeY, treeZ, treeHeight)) {
+					Vector3I coords[Tree_BufferCount];
+					BlockID blocks[Tree_BufferCount];
+					Int32 count = TreeGen_Grow(treeX, treeY, treeZ, treeHeight, coords, blocks);
+
+					for (m = 0; m < count; m++) {
+						index = Gen_Pack(coords[m].X, coords[m].Y, coords[m].Z);
+						Gen_Blocks[index] = blocks[m];
+					}
 				}
 			}
 		}
@@ -382,86 +394,7 @@ void NotchyGen_PlantTrees() {
 }
 
 
-bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight) {
-	/* check tree base */
-	Int32 baseHeight = treeHeight - 4;
-	Int32 x, y, z;
-
-	for (y = treeY; y < treeY + baseHeight; y++) {
-		for (z = treeZ - 1; z <= treeZ + 1; z++) {
-			for (x = treeX - 1; x <= treeX + 1; x++)
-			{
-				if (x < 0 || y < 0 || z < 0 || x >= Gen_Width || y >= Gen_Height || z >= Gen_Length)
-					return false;
-				Int32 index = Gen_Pack(x, y, z);
-				if (Gen_Blocks[index] != BlockID_Air) return false;
-			}
-		}
-	}
-
-	/* and also check canopy */
-	for (y = treeY + baseHeight; y < treeY + treeHeight; y++) {
-		for (z = treeZ - 2; z <= treeZ + 2; z++) {
-			for (x = treeX - 2; x <= treeX + 2; x++) {
-				if (x < 0 || y < 0 || z < 0 || x >= Gen_Width || y >= Gen_Height || z >= Gen_Length)
-					return false;
-				Int32 index = Gen_Pack(x, y, z);
-				if (Gen_Blocks[index] != BlockID_Air) return false;
-			}
-		}
-	}
-	return true;
-}
-
-void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height) {
-	Int32 baseHeight = height - 4;
-	Int32 index = 0;
-	Int32 xx, y, zz;
-
-	/* leaves bottom layer */
-	for (y = treeY + baseHeight; y < treeY + baseHeight + 2; y++) {
-		for (zz = -2; zz <= 2; zz++) {
-			for (xx = -2; xx <= 2; xx++) {
-				Int32 x = xx + treeX, z = zz + treeZ;
-				index = Gen_Pack(x, y, z);
-
-				if (Math_AbsI(xx) == 2 && Math_AbsI(zz) == 2) {
-					if (Random_Float(&rnd) >= 0.5f)
-						Gen_Blocks[index] = BlockID_Leaves;
-				} else {
-					Gen_Blocks[index] = BlockID_Leaves;
-				}
-			}
-		}
-	}
-
-	/* leaves top layer */
-	Int32 bottomY = treeY + baseHeight + 2;
-	for (y = treeY + baseHeight + 2; y < treeY + height; y++) {
-		for (zz = -1; zz <= 1; zz++) {
-			for (xx = -1; xx <= 1; xx++) {
-				Int32 x = xx + treeX, z = zz + treeZ;
-				index = Gen_Pack(x, y, z);
-
-				if (xx == 0 || zz == 0) {
-					Gen_Blocks[index] = BlockID_Leaves;
-				} else if (y == bottomY && Random_Float(&rnd) >= 0.5f) {
-					Gen_Blocks[index] = BlockID_Leaves;
-				}
-			}
-		}
-	}
-
-	/* then place trunk */
-	index = Gen_Pack(treeX, treeY, treeZ);
-	for (y = 0; y < height - 1; y++) {
-		Gen_Blocks[index] = BlockID_Log;
-		index += oneY;
-	}
-}
-
-
-void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, float radius, BlockID block) {
+void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radius, BlockID block) {
 	Int32 xStart = Math_Floor(max(x - radius, 0));
 	Int32 xEnd   = Math_Floor(min(x + radius, Gen_MaxX));
 	Int32 yStart = Math_Floor(max(y - radius, 0));

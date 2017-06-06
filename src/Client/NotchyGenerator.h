@@ -49,14 +49,8 @@ static void NotchyGen_PlantMushrooms();
 /* Plants trees on the surface layer of the map. */
 static void NotchyGen_PlantTrees();
 
-/* Returns whether a tree can grow at the specified coordinates. */
-static bool NotchyGen_CanGrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight);
-
-/* Plants a tree of the given height at the given coordinates. */
-static void NotchyGen_GrowTree(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height);
-
 /* Fills an oblate spheroid, but only replacing stone blocks. */
-static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, float radius, BlockID block);
+static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radius, BlockID block);
 
 /* Floods a block, starting at the given coordinates. */
 static void NotchyGen_FloodFill(Int32 startIndex, BlockID block);
