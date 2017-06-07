@@ -291,12 +291,13 @@ namespace ClassicalSharp {
 		protected static int[] offsets = { -1, 1, -extChunkSize, extChunkSize, -extChunkSize2, extChunkSize2 };
 		
 		protected bool OccludedLiquid(int chunkIndex) {
+			chunkIndex += 324;
 			return 
-				info.FullOpaque[chunk[chunkIndex + 324]]
-				&& info.Draw[chunk[chunkIndex + 324 - 18]] != DrawType.Gas
-				&& info.Draw[chunk[chunkIndex + 324 - 1]] != DrawType.Gas
-				&& info.Draw[chunk[chunkIndex + 324 + 1]] != DrawType.Gas
-				&& info.Draw[chunk[chunkIndex + 324 + 18]] != DrawType.Gas;
+				info.FullOpaque[chunk[chunkIndex]]
+				&& info.Draw[chunk[chunkIndex - 18]] != DrawType.Gas
+				&& info.Draw[chunk[chunkIndex - 1]] != DrawType.Gas
+				&& info.Draw[chunk[chunkIndex + 1]] != DrawType.Gas
+				&& info.Draw[chunk[chunkIndex + 18]] != DrawType.Gas;
 		}
 		
 		public void OnNewMapLoaded() {

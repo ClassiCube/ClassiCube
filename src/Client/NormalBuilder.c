@@ -6,6 +6,14 @@
 #include "Drawer.h"
 #include "TerrainAtlas1D.h"
 
+void NormalBuilder_SetActive() {
+	Builder_SetDefault();
+	Builder_StretchXLiquid = NormalBuilder_StretchXLiquid;
+	Builder_StretchX = NormalBuilder_StretchX;
+	Builder_StretchZ = NormalBuilder_StretchZ;
+	Builder_RenderBlock = NormalBuilder_RenderBlock;
+}
+
 Int32 NormalBuilder_StretchXLiquid(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block) {
 	if (Builder_OccludedLiquid(chunkIndex)) return 0;
 	Int32 count = 1;
@@ -61,7 +69,7 @@ bool NormalBuilder_CanStretch(BlockID initial, Int32 chunkIndex, Int32 x, Int32 
 	BlockID cur = Builder_Chunk[chunkIndex];
 	return cur == initial
 		&& !Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)
-		&& (Builder_FullBright || (LightCol(Builder_X, Builder_Y, Builder_Z, face, initial) == LightCol(x, y, z, face, cur)));
+		&& (Builder_FullBright || (NormalBuilder_LightCol(Builder_X, Builder_Y, Builder_Z, face, initial).Packed == NormalBuilder_LightCol(x, y, z, face, cur).Packed));
 }
 
 PackedCol NormalBuilder_LightCol(Int32 x, Int32 y, Int32 z, Int32 face, BlockID block) {
@@ -83,7 +91,7 @@ PackedCol NormalBuilder_LightCol(Int32 x, Int32 y, Int32 z, Int32 face, BlockID 
 	return PackedCol_Black;
 }
 
-void NormalBuilder_RenderTile(Int32 index) {
+void NormalBuilder_RenderBlock(Int32 index) {
 	if (Block_Draw[Builder_Block] == DrawType_Sprite) {
 		Builder_FullBright = Block_FullBright[Builder_Block];
 		Builder_Tinted = Block_Tinted[Builder_Block];

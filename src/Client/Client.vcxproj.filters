@@ -539,5 +539,8 @@
     <ClCompile Include="Builder1DPart.c">
       <Filter>Source Files\MeshBuilder</Filter>
     </ClCompile>
+    <ClCompile Include="Builder.c">
+      <Filter>Source Files\MeshBuilder</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

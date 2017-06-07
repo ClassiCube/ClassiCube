@@ -252,6 +252,7 @@
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
     <ClCompile Include="BordersRenderer.c" />
+    <ClCompile Include="Builder.c" />
     <ClCompile Include="Builder1DPart.c" />
     <ClCompile Include="ChunkInfo.c" />
     <ClCompile Include="ChunkSorter.c" />
