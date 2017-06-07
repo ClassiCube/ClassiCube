@@ -22,6 +22,7 @@ Real32 Atlas1D_InvElementSize;
 
 /* Native texture ID for each 1D atlas. */
 Int32 Atlas1D_TexIds[Atlas1D_MaxAtlasesCount];
+
 /* Number of 1D atlases that actually have textures / are used. */
 Int32 Atlas1D_TexIdsCount;
 

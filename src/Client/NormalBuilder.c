@@ -61,7 +61,7 @@ bool NormalBuilder_CanStretch(BlockID initial, Int32 chunkIndex, Int32 x, Int32 
 	BlockID cur = Builder_Chunk[chunkIndex];
 	return cur == initial
 		&& !Block_IsFaceHidden(cur, Builder_Chunk[chunkIndex + Builder_Offsets[face]], face)
-		&& (fullBright || (LightCol(Builder_X, Builder_Y, Builder_Z, face, initial) == LightCol(x, y, z, face, cur)));
+		&& (Builder_FullBright || (LightCol(Builder_X, Builder_Y, Builder_Z, face, initial) == LightCol(x, y, z, face, cur)));
 }
 
 PackedCol NormalBuilder_LightCol(Int32 x, Int32 y, Int32 z, Int32 face, BlockID block) {
@@ -85,22 +85,27 @@ PackedCol NormalBuilder_LightCol(Int32 x, Int32 y, Int32 z, Int32 face, BlockID 
 
 void NormalBuilder_RenderTile(Int32 index) {
 	if (Block_Draw[Builder_Block] == DrawType_Sprite) {
-		this.fullBright = Block_FullBright[Builder_Block];
-		this.tinted = Block_Tinted[Builder_Block];
+		Builder_FullBright = Block_FullBright[Builder_Block];
+		Builder_Tinted = Block_Tinted[Builder_Block];
 
 		Int32 count = Builder_Counts[index + Face_YMax];
-		if (count != 0) DrawSprite(count);
+		if (count != 0) Builder_DrawSprite(count);
 		return;
 	}
 
-	Int32 leftCount = counts[index++], rightCount = counts[index++],
-		frontCount = counts[index++], backCount = counts[index++],
-		bottomCount = counts[index++], topCount = counts[index++];
-	if (leftCount == 0 && rightCount == 0 && frontCount == 0 &&
-		backCount == 0 && bottomCount == 0 && topCount == 0) return;
+	Int32 count_XMin = Builder_Counts[index + Face_XMin];
+	Int32 count_XMax = Builder_Counts[index + Face_XMax];
+	Int32 count_ZMin = Builder_Counts[index + Face_ZMin];
+	Int32 count_ZMax = Builder_Counts[index + Face_ZMax];
+	Int32 count_YMin = Builder_Counts[index + Face_YMin];
+	Int32 count_YMax = Builder_Counts[index + Face_YMax];
+
+	if (count_XMin == 0 && count_XMax == 0 && count_ZMin == 0 &&
+		count_ZMax == 0 && count_YMin == 0 && count_YMax == 0) return;
+
 
 	bool fullBright = Block_FullBright[Builder_Block];
-	bool isTranslucent = Block_Draw[Builder_Block] == DrawType_Translucent;
+	Int32 partOffset = (Block_Draw[Builder_Block] == DrawType_Translucent) * Atlas1D_MaxAtlasesCount;
 	Int32 lightFlags = Block_LightOffset[Builder_Block];
 
 	Drawer_MinBB = Block_MinBB[Builder_Block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
@@ -113,67 +118,62 @@ void NormalBuilder_RenderTile(Int32 index) {
 	Drawer_Tinted = Block_Tinted[Builder_Block];
 	Drawer_TintColour = Block_FogColour[Builder_Block];
 
-	if (leftCount != 0) {
+
+	if (count_XMin != 0) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_XMin);
-		Int32 i = Atlas1D_Index(texLoc);
 		Int32 offset = (lightFlags >> Face_XMin) & 1;
+		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-		Int32 col = fullBright ? FastColour.WhitePacked :
+		PackedCol col = fullBright ? Builder_WhiteCol :
 			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
-		Drawer_XMin(leftCount, col, texLoc, part.vertices, ref part.vIndex[Side.Left]);
+		Drawer_XMin(count_XMin, col, texLoc, part->fVertices[Face_XMin]);
 	}
 
-	if (rightCount != 0) {
+	if (count_XMax != 0) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_XMax);
-		Int32 i = Atlas1D_Index(texLoc);
 		Int32 offset = (lightFlags >> Face_XMax) & 1;
+		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-		Int32 col = fullBright ? FastColour.WhitePacked :
+		PackedCol col = fullBright ? Builder_WhiteCol :
 			Builder_X <= (World_MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
-		Drawer_XMax(rightCount, col, texLoc, part.vertices, ref part.vIndex[Side.Right]);
+		Drawer_XMax(count_XMax, col, texLoc, part->fVertices[Face_XMax]);
 	}
 
-	if (frontCount != 0) {
+	if (count_ZMin != 0) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_ZMin);
-		Int32 i = Atlas1D_Index(texLoc);
 		Int32 offset = (lightFlags >> Face_ZMin) & 1;
+		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-		Int32 col = fullBright ? FastColour.WhitePacked :
+		PackedCol col = fullBright ? Builder_WhiteCol :
 			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Lighting_OutsideZSide;
-		Drawer_ZMin(frontCount, col, texLoc, part.vertices, ref part.vIndex[Side.Front]);
+		Drawer_ZMin(count_ZMin, col, texLoc, part->fVertices[Face_ZMin]);
 	}
 
-	if (backCount != 0) {
+	if (count_ZMax != 0) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_ZMax);
-		Int32 i = Atlas1D_Index(texLoc);
 		Int32 offset = (lightFlags >> Face_ZMax) & 1;
+		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-		Int32 col = fullBright ? FastColour.WhitePacked :
-			Builder_Z <= (World_MaxZ - offset) ? Lighting_LightCol_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Lighting_OutsideZSide;
-		Drawer_ZMax(backCount, col, texLoc, part.vertices, ref part.vIndex[Side.Back]);
+		PackedCol col = fullBright ? Builder_WhiteCol :
+			Builder_Z <= (World_MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Lighting_OutsideZSide;
+		Drawer_ZMax(count_ZMax, col, texLoc, part->fVertices[Face_ZMax]);
 	}
 
-	if (bottomCount != 0) {
+	if (count_YMin != 0) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_YMin);
-		Int32 i = Atlas1D_Index(texLoc);
 		Int32 offset = (lightFlags >> Face_YMin) & 1;
+		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-		Int32 col = fullBright ? FastColour.WhitePacked : Lighting_Col_YBottom_Fast(Builder_X, Builder_Y - offset, Builder_Z);
-		Drawer_YMin(bottomCount, col, texLoc, part.vertices, ref part.vIndex[Side.Bottom]);
+		PackedCol col = fullBright ? Builder_WhiteCol : Lighting_Col_YBottom_Fast(Builder_X, Builder_Y - offset, Builder_Z);
+		Drawer_YMin(count_YMin, col, texLoc, part->fVertices[Face_YMin]);
 	}
 
-	if (topCount != 0) {
+	if (count_YMax != 0) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_YMax);
-		Int32 i = Atlas1D_Index(texLoc);
 		Int32 offset = (lightFlags >> Face_YMax) & 1;
+		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
-		Int32 col = fullBright ? FastColour.WhitePacked : Lighting_Col_YTop_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
-		Drawer_YMax(topCount, col, texLoc, part.vertices, ref part.vIndex[Side.Top]);
+		PackedCol col = fullBright ? Builder_WhiteCol : Lighting_Col_YTop_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
+		Drawer_YMax(count_YMax, col, texLoc, part->fVertices[Face_YMax]);
 	}
 }
