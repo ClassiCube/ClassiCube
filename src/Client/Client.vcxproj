@@ -175,6 +175,7 @@
     <ClInclude Include="BlockEnums.h" />
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
+    <ClInclude Include="Builder.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ChunkInfo.h" />
     <ClInclude Include="ChunkSorter.h" />
@@ -269,6 +270,7 @@
     <ClCompile Include="Lighting.c" />
     <ClCompile Include="LiquidAnimations.c" />
     <ClCompile Include="MapRenderer.c" />
+    <ClCompile Include="NormalBuilder.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />
     <ClCompile Include="GraphicsCommon.c" />

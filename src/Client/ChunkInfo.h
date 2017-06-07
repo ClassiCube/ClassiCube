@@ -33,12 +33,12 @@ typedef struct ChunkInfo {
 	UInt8 DrawYMax : 1;
 	UInt8 : 0; /* pad to next byte */
 #if OCCLUSION
-					public bool Visited = false, Occluded = false;
-					public byte OcclusionFlags, OccludedFlags, DistanceFlags;
+	public bool Visited = false, Occluded = false;
+	public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 #endif
 
-					ChunkPartInfo* NormalParts;
-					ChunkPartInfo* TranslucentParts;
+	ChunkPartInfo* NormalParts;
+	ChunkPartInfo* TranslucentParts;
 } ChunkInfo;
 
 /* Resets contents of given chunk render info structure. */
