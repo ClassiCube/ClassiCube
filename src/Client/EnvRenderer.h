@@ -26,10 +26,10 @@ void EnvRenderer_UseMinimalMode(bool minimal);
 /* Renders the environemnt of the map. */
 void EnvRenderer_Render(Real64 delta);
 
-static void EnvRenderer_Init();
-static void EnvRenderer_Reset();
-static void EnvRenderer_OnNewMapLoaded();
-static void EnvRenderer_Free();
+static void EnvRenderer_Init(void);
+static void EnvRenderer_Reset(void);
+static void EnvRenderer_OnNewMapLoaded(void);
+static void EnvRenderer_Free(void);
 
 static BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol);
 
@@ -37,21 +37,21 @@ static Real32 EnvRenderer_BlendFactor(Real32 x);
 
 
 static void EnvVariableChanged(EnvVar envVar);
-static void EnvRenderer_ContextLost();
-static void EnvRenderer_ContextRecreated();
+static void EnvRenderer_ContextLost(void);
+static void EnvRenderer_ContextRecreated(void);
 
 
 static void EnvRenderer_RenderMainEnv(Real64 deltaTime);
 
-static void EnvRenderer_ResetAllEnv();
+static void EnvRenderer_ResetAllEnv(void);
 
 static void EnvRenderer_RenderClouds(Real64 delta);
 
-static void EnvRenderer_UpdateFog();
+static void EnvRenderer_UpdateFog(void);
 
-static void EnvRenderer_ResetClouds();
+static void EnvRenderer_ResetClouds(void);
 
-static void EnvRenderer_ResetSky();
+static void EnvRenderer_ResetSky(void);
 
 static void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize);
 

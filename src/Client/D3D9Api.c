@@ -256,7 +256,7 @@ void Gfx_SetAlphaArgBlend(bool enabled) {
 }
 
 UInt32 d3d9_clearCol = 0xFF000000;
-void Gfx_Clear() {
+void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
 	ReturnCode hresult = IDirect3DDevice9_Clear(device, 0, NULL, flags, d3d9_clearCol, 1.0f, 0);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_Clear");
@@ -410,7 +410,7 @@ void Gfx_LoadMatrix(Matrix* matrix) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_LoadMatrix");
 }
 
-void Gfx_LoadIdentityMatrix() {
+void Gfx_LoadIdentityMatrix(void) {
 	if (curStack == &texStack) {
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 	}
@@ -430,7 +430,7 @@ void Gfx_MultiplyMatrix(Matrix* matrix) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_MultiplyMatrix");
 }
 
-void Gfx_PushMatrix() {
+void Gfx_PushMatrix(void) {
 	Int32 idx = curStack->Index;
 	if (idx == MatrixStack_Capacity) {
 		ErrorHandler_Fail("Unable to push matrix, at capacity already");
@@ -440,7 +440,7 @@ void Gfx_PushMatrix() {
 	curStack->Index++; /* exact same, we don't need to update DirectX state. */
 }
 
-void Gfx_PopMatrix() {
+void Gfx_PopMatrix(void) {
 	Int32 idx = curStack->Index;
 	if (idx == 0) {
 		ErrorHandler_Fail("Unable to pop matrix, at 0 already");

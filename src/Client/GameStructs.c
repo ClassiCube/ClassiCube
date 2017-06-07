@@ -1,6 +1,6 @@
 #include "GameStructs.h"
 
-IGameComponent IGameComponent_MakeEmpty() {
+IGameComponent IGameComponent_MakeEmpty(void) {
 	IGameComponent comp;
 	comp.Init = NULL;
 	comp.Free = NULL;

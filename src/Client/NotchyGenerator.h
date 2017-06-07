@@ -11,43 +11,43 @@
 */
 
 /* Generates the map. */
-void NotchyGen_Generate();
+void NotchyGen_Generate(void);
 
 /* Creates the initial heightmap for the generated map. */
-static void NotchyGen_CreateHeightmap();
+static void NotchyGen_CreateHeightmap(void);
 
 /* Creates the base stone layer and dirt overlay layer of the map. */
-static void NotchyGen_CreateStrata();
+static void NotchyGen_CreateStrata(void);
 
 /* Quickly fills the base stone layer on tall maps. */
-static Int32 NotchyGen_CreateStrataFast();
+static Int32 NotchyGen_CreateStrataFast(void);
 
 /* Hollows out caves in the map. */
-static void NotchyGen_CarveCaves();
+static void NotchyGen_CarveCaves(void);
 
 /* Fills out ore veins in the map. */
 static void NotchyGen_CarveOreVeins(Real32 abundance, const UInt8* state, BlockID block);
 
 /* Floods water from the edges of the map. */
-static void NotchyGen_FloodFillWaterBorders();
+static void NotchyGen_FloodFillWaterBorders(void);
 
 /* Floods water from random points in the map. */
-static void NotchyGen_FloodFillWater();
+static void NotchyGen_FloodFillWater(void);
 
 /* Floods lava from random points in the map. */
-static void NotchyGen_FloodFillLava();
+static void NotchyGen_FloodFillLava(void);
 
 /* Details the map by replacing some surface-layer dirt with grass, sand, or gravel. */
-static void NotchyGen_CreateSurfaceLayer();
+static void NotchyGen_CreateSurfaceLayer(void);
 
 /* Plants dandelion and rose bunches/groups on the surface of the map. */
-static void NotchyGen_PlantFlowers();
+static void NotchyGen_PlantFlowers(void);
 
 /* Plants mushroom bunches/groups in caves within the map. */
-static void NotchyGen_PlantMushrooms();
+static void NotchyGen_PlantMushrooms(void);
 
 /* Plants trees on the surface layer of the map. */
-static void NotchyGen_PlantTrees();
+static void NotchyGen_PlantTrees(void);
 
 /* Fills an oblate spheroid, but only replacing stone blocks. */
 static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radius, BlockID block);

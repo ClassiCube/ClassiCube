@@ -141,7 +141,7 @@ void Block_CalcRenderBounds(BlockID block);
 UInt8 Block_CalcLightOffset(BlockID block);
 
 /* Recalculates bounding boxes of all blocks that are sprites. */
-void Block_RecalculateSpriteBB();
+void Block_RecalculateSpriteBB(void);
 
 /* Recalculates bounding box of a sprite. */
 void Block_RecalculateBB(BlockID block);
@@ -157,7 +157,7 @@ void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
 
 
 /* Recalculates culling state for all blocks. */
-void Block_UpdateCullingAll();
+void Block_UpdateCullingAll(void);
 
 /* Recalculates culling state for the given blocks. */
 void Block_UpdateCulling(BlockID block);

@@ -61,7 +61,7 @@ void GfxCommon_Mode2D(Real32 width, Real32 height, bool setFog);
 void GfxCommon_Mode3D(bool setFog);
 
 /* Makes the default index buffer used for drawing quads. */
-GfxResourceID GfxCommon_MakeDefaultIb();
+GfxResourceID GfxCommon_MakeDefaultIb(void);
 
 /* Sets the appropriate alpha testing/blending states necessary to render the given block. */
 void GfxCommon_SetupAlphaState(UInt8 draw);

@@ -54,7 +54,7 @@ String World_TextureUrl;
 
 
 /* Resets all of the properties to their defaults. */
-void World_Reset();
+void World_Reset(void);
 
 /* Updates the underlying block array, heightmap, and dimensions of this map. */
 void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length);

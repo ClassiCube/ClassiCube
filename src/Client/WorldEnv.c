@@ -16,7 +16,7 @@ dst = value;\
 WorldEvents_RaiseEnvVariableChanged(envVar);
 
 
-void WorldEnv_Reset() {
+void WorldEnv_Reset(void) {
 	WorldEnv_DefaultSkyCol = PackedCol_Create3(0x99, 0xCC, 0xFF);
 	WorldEnv_DefaultFogCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
 	WorldEnv_DefaultCloudsCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
@@ -40,7 +40,7 @@ void WorldEnv_Reset() {
 	WorldEnv_ExpFog = false;
 }
 
-void WorldEnv_ResetLight() {
+void WorldEnv_ResetLight(void) {
 	WorldEnv_DefaultShadowCol = PackedCol_Create3(0x9B, 0x9B, 0x9B);
 	WorldEnv_DefaultSunCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
 

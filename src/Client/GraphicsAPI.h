@@ -105,7 +105,7 @@ void Gfx_SetAlphaArgBlend(bool enabled);
 
 
 /* Clears the underlying back and/or front buffer. */
-void Gfx_Clear();
+void Gfx_Clear(void);
 
 /* Sets the colour the screen is cleared to when Clear() is called. */
 void Gfx_ClearColour(PackedCol col);
@@ -115,7 +115,7 @@ void Gfx_ClearColour(PackedCol col);
 void Gfx_SetDepthTest(bool enabled);
 
 /* Sets the depth test compare function that is used when depth testing is enabled. */
-void Gfx_SetDepthTestFunc(Int32 compareFunc);
+void Gfx_SetDepthTestFunc(CompareFunc compareFunc);
 
 /* Whether writing to the colour buffer is enabled. */
 void Gfx_SetColourWrite(bool enabled);
@@ -177,18 +177,18 @@ void Gfx_SetMatrixMode(MatrixType matrixType);
 void Gfx_LoadMatrix(Matrix* matrix);
 
 /* Sets the current matrix to the identity matrix. */
-void Gfx_LoadIdentityMatrix();
+void Gfx_LoadIdentityMatrix(void);
 
 /* Multiplies the current matrix by the given matrix, then
 sets the current matrix to the result of the multiplication. */
 void Gfx_MultiplyMatrix(Matrix* matrix);
 
 /* Gets the top matrix the current matrix stack and pushes it to the stack. */
-void Gfx_PushMatrix();
+void Gfx_PushMatrix(void);
 
 /* Removes the top matrix from the current matrix stack, then
 sets the current matrix to the new top matrix of the stack. */
-void Gfx_PopMatrix();
+void Gfx_PopMatrix(void);
 
 /* Loads an orthographic projection matrix for the given height.*/
 void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);

@@ -140,19 +140,20 @@ bool Game_ScreenshotRequested;
 
 /* Calculates the amount that the hotbar widget should be scaled by when rendered.
 Affected by current resolution of the window, as scaling specified by the user */
-Real32 Game_GetGuiHotbarScale();
+Real32 Game_GetGuiHotbarScale(void);
 
 /* Calculates the amount that the block inventory menu should be scaled by when rendered.
 Affected by current resolution of the window, and scaling specified by the user */
-Real32 Game_GetGuiInventoryScale();
+Real32 Game_GetGuiInventoryScale(void);
 
 /* alculates the amount that 2D chat widgets should be scaled by when rendered.
 Affected by current resolution of the window, and scaling specified by the user*/
-Real32 Game_GetGuiChatScale();
+Real32 Game_GetGuiChatScale(void);
 
 /* Gets path of default texture pack path.
 NOTE: If texture pack specified by user can't be found, returns 'default.zip' */
-String GetDefaultTexturePack();
+String GetDefaultTexturePack(void);
+
 /* Sets the default texture pack path. */
 void SetDefaultTexturePack(String value);
 

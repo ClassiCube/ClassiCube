@@ -31,7 +31,7 @@ typedef struct IGameComponent {
 } IGameComponent;
 
 /* Makes an empty game component with all its function pointers initalised to null. */
-IGameComponent IGameComponent_MakeEmpty();
+IGameComponent IGameComponent_MakeEmpty(void);
 
 
 /* Represents a task that runs on the main thread every certain interval. */

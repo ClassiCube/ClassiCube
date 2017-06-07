@@ -7,7 +7,7 @@
 #include "WorldEvents.h"
 #include "Random.h"
 
-void World_Reset() {
+void World_Reset(void) {
 	World_Width = 0; World_Height = 0; World_Length = 0;
 	World_Blocks = NULL; World_BlocksSize = 0;
 

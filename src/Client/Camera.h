@@ -59,30 +59,30 @@ Real32 Camera_AdjustHeadX(Real32 degrees);
 Camera* Camera_ActiveCamera;
 
 /* Initalises and adds the default cameras. */
-void Camera_Init();
+void Camera_Init(void);
 
 /* Cycles the active camera to the next allowed camera type. */
-void Camera_CycleActive();
+void Camera_CycleActive(void);
 
 /* Adds a camera to the list of available cameras. */
 void Camera_Add(Camera camera);
 
 
-static Camera Camera_MakePerspective();
+static Camera Camera_MakePerspective(void);
 
 static void PerspectiveCamera_CalcProj(Matrix* proj);
 
 static void PerspectiveCamera_GetPickedBlock(PickedPos* pos);
 
-static void PerspectiveCamera_CentreMousePosition();
+static void PerspectiveCamera_CentreMousePosition(void);
 
-static void PerspectiveCamera_RegrabMouse();
+static void PerspectiveCamera_RegrabMouse(void);
 
-static void PerspectiveCamera_UpdateMouseRotation();
+static void PerspectiveCamera_UpdateMouseRotation(void);
 
-static void PerspectiveCamera_UpdateMouse();
+static void PerspectiveCamera_UpdateMouse(void);
 
 static void PerspectiveCamera_CalcViewBobbing(Camera* cam, Real32 t, Real32 velTiltScale);
 
-static Vector3 PerspectiveCamera_GetDirVector();
+static Vector3 PerspectiveCamera_GetDirVector(void);
 #endif

@@ -13,7 +13,7 @@ Int32 waterLevel, oneY, volume, minHeight;
 Int16* Heightmap;
 Random rnd;
 
-void NotchyGen_Generate() {
+void NotchyGen_Generate(void) {
 	Heightmap = Platform_MemAlloc(Gen_Width * Gen_Length * sizeof(Int16));
 	if (Heightmap == NULL)
 		ErrorHandler_Fail("NotchyGen_Heightmap - failed to allocate memory");
@@ -50,7 +50,7 @@ void NotchyGen_Generate() {
 }
 
 
-void NotchyGen_CreateHeightmap() {
+void NotchyGen_CreateHeightmap(void) {
 	CombinedNoise n1, n2;
 	CombinedNoise_Init(&n1, &rnd, 8, 8);
 	CombinedNoise_Init(&n2, &rnd, 8, 8);
@@ -81,7 +81,7 @@ void NotchyGen_CreateHeightmap() {
 	}
 }
 
-void NotchyGen_CreateStrata() {
+void NotchyGen_CreateStrata(void) {
 	OctaveNoise n;
 	OctaveNoise_Init(&n, &rnd, 8);
 	Gen_CurrentState = String_FromConstant("Creating strata");
@@ -114,7 +114,7 @@ void NotchyGen_CreateStrata() {
 	}
 }
 
-Int32 NotchyGen_CreateStrataFast() {
+Int32 NotchyGen_CreateStrataFast(void) {
 	/* Make lava layer at bottom */
 	Int32 mapIndex = 0;
 	Int32 x, y, z;
@@ -140,7 +140,7 @@ Int32 NotchyGen_CreateStrataFast() {
 	return stoneHeight;
 }
 
-void NotchyGen_CarveCaves() {
+void NotchyGen_CarveCaves(void) {
 	Int32 cavesCount = volume / 8192;
 	Gen_CurrentState = String_FromConstant("Carving caves");
 
@@ -210,7 +210,7 @@ void NotchyGen_CarveOreVeins(Real32 abundance, const UInt8* state, BlockID block
 	}
 }
 
-void NotchyGen_FloodFillWaterBorders() {
+void NotchyGen_FloodFillWaterBorders(void) {
 	Int32 waterY = waterLevel - 1;
 	Int32 index1 = Gen_Pack(0, waterY, 0);
 	Int32 index2 = Gen_Pack(0, waterY, Gen_Length - 1);
@@ -234,7 +234,7 @@ void NotchyGen_FloodFillWaterBorders() {
 	}
 }
 
-void NotchyGen_FloodFillWater() {
+void NotchyGen_FloodFillWater(void) {
 	Int32 numSources = Gen_Width * Gen_Length / 800;
 	Gen_CurrentState = String_FromConstant("Flooding water");
 
@@ -248,7 +248,7 @@ void NotchyGen_FloodFillWater() {
 	}
 }
 
-void NotchyGen_FloodFillLava() {
+void NotchyGen_FloodFillLava(void) {
 	Int32 numSources = Gen_Width * Gen_Length / 20000;
 	Gen_CurrentState = String_FromConstant("Flooding lava");
 
@@ -262,7 +262,7 @@ void NotchyGen_FloodFillLava() {
 	}
 }
 
-void NotchyGen_CreateSurfaceLayer() {
+void NotchyGen_CreateSurfaceLayer(void) {
 	OctaveNoise n1, n2;
 	OctaveNoise_Init(&n1, &rnd, 8);
 	OctaveNoise_Init(&n2, &rnd, 8);
@@ -289,7 +289,7 @@ void NotchyGen_CreateSurfaceLayer() {
 	}
 }
 
-void NotchyGen_PlantFlowers() {
+void NotchyGen_PlantFlowers(void) {
 	Int32 numPatches = Gen_Width * Gen_Length / 3000;
 	Gen_CurrentState = String_FromConstant("Planting flowers");
 
@@ -317,7 +317,7 @@ void NotchyGen_PlantFlowers() {
 	}
 }
 
-void NotchyGen_PlantMushrooms() {
+void NotchyGen_PlantMushrooms(void) {
 	Int32 numPatches = volume / 2000;
 	Gen_CurrentState = String_FromConstant("Planting mushrooms");
 
@@ -349,7 +349,7 @@ void NotchyGen_PlantMushrooms() {
 	}
 }
 
-void NotchyGen_PlantTrees() {
+void NotchyGen_PlantTrees(void) {
 	Int32 numPatches = Gen_Width * Gen_Length / 4000;
 	Gen_CurrentState = String_FromConstant("Planting trees");
 

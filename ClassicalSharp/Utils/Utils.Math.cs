@@ -80,12 +80,6 @@ namespace ClassicalSharp {
 		public static Vector3 RotateZ(Vector3 v, float angle) {
 			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
 			return new Vector3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);
-		}		
-		
-		/// <summary> Returns the square of the euclidean distance between two points. </summary>
-		public static float DistanceSquared(Vector3 p1, Vector3 p2) {
-			float dx = p2.X - p1.X, dy = p2.Y - p1.Y, dz = p2.Z - p1.Z;
-			return dx * dx + dy * dy + dz * dz;
 		}
 		
 		/// <summary> Returns the square of the euclidean distance between two points. </summary>

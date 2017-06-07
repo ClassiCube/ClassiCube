@@ -75,10 +75,10 @@ PackedCol WorldEnv_DefaultShadowCol;
 
 
 /* Resets all of the environment properties to their defaults. */
-void WorldEnv_Reset();
+void WorldEnv_Reset(void);
 
 /*Resets sun and shadow environment properties to their defaults. */
-void WorldEnv_ResetLight();
+void WorldEnv_ResetLight(void);
 
 
 /* Sets edge block to the given block, and raises event with variable 'EdgeBlock'. */

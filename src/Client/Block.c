@@ -243,7 +243,7 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 	return (UInt8)flags;
 }
 
-void Block_RecalculateSpriteBB() {
+void Block_RecalculateSpriteBB(void) {
 	Int32 block;
 	for (block = BlockID_Air; block < Block_Count; block++) {
 		if (Block_Draw[block] != DrawType_Sprite) continue;
@@ -326,7 +326,7 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 
 
 
-void Block_UpdateCullingAll() {
+void Block_UpdateCullingAll(void) {
 	Int32 block, neighbour;
 	for (block = BlockID_Air; block < Block_Count; block++)
 		Block_CanStretch[block] = 0x3F;
