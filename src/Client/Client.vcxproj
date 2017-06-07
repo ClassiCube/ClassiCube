@@ -176,6 +176,7 @@
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
     <ClInclude Include="Builder.h" />
+    <ClInclude Include="Builder1DPart.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ChunkInfo.h" />
     <ClInclude Include="ChunkSorter.h" />
@@ -251,6 +252,7 @@
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
     <ClCompile Include="BordersRenderer.c" />
+    <ClCompile Include="Builder1DPart.c" />
     <ClCompile Include="ChunkInfo.c" />
     <ClCompile Include="ChunkSorter.c" />
     <ClCompile Include="Compiler.c" />

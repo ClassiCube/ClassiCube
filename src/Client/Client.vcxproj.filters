@@ -369,6 +369,9 @@
     <ClInclude Include="Builder.h">
       <Filter>Header Files\MeshBuilder</Filter>
     </ClInclude>
+    <ClInclude Include="Builder1DPart.h">
+      <Filter>Header Files\MeshBuilder</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -531,6 +534,9 @@
       <Filter>Source Files\2D</Filter>
     </ClCompile>
     <ClCompile Include="NormalBuilder.c">
+      <Filter>Source Files\MeshBuilder</Filter>
+    </ClCompile>
+    <ClCompile Include="Builder1DPart.c">
       <Filter>Source Files\MeshBuilder</Filter>
     </ClCompile>
   </ItemGroup>
