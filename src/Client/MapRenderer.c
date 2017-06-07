@@ -58,7 +58,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	if (MapRenderer_Chunks == NULL) return;
 
-	// First fill depth buffer
+	/* First fill depth buffer */
 	UInt32 vertices = Game_Vertices;
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
 	Gfx_SetTexturing(false);
@@ -75,11 +75,11 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	}
 	Game_Vertices = vertices;
 
-	// Then actually draw the transluscent blocks
+	/* Then actually draw the transluscent blocks */
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetTexturing(true);
 	Gfx_SetColourWrite(true);
-	Gfx_SetDepthWrite(false); // we already calculated depth values in depth pass
+	Gfx_SetDepthWrite(false); /* we already calculated depth values in depth pass */
 
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_PartsCount[batch] <= 0) continue;
@@ -89,7 +89,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	}
 
 	Gfx_SetDepthWrite(true);
-	// If we weren't under water, render weather after to blend properly
+	/* If we weren't under water, render weather after to blend properly */
 	if (!inTranslucent && WorldEnv_Weather != Weather_Sunny) {
 		Gfx_SetAlphaTest(true);
 		WeatherRenderer_Render(deltaTime);
@@ -108,7 +108,7 @@ void MapRenderer_CheckWeather(Real64 deltaTime) {
 	bool outside = !World_IsValidPos_3I(coords);
 	inTranslucent = Block_Draw[block] == DrawType_Translucent || (pos.Y < WorldEnv_EdgeHeight && outside);
 
-	// If we are under water, render weather before to blend properly
+	/* If we are under water, render weather before to blend properly */
 	if (!inTranslucent || WorldEnv_Weather == Weather_Sunny) return;
 	Gfx_SetAlphaBlending(true);
 	WeatherRenderer_Render(deltaTime);
@@ -162,7 +162,7 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 		}
 		offset += part.FrontCount + part.BackCount;
 
-		// Special handling for top and bottom face, as these can go over 65536 vertices and we need to adjust the indices in this case.
+		/* Special handling for top and bottom face, as these can go over 65536 vertices and we need to adjust the indices in this case. */
 		if (drawYMin && drawYMax) {
 			Gfx_SetFaceCulling(true);
 			if (part.IndicesCount > Gfx_MaxIndices) {
@@ -196,7 +196,7 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 		}
 
 		if (part.SpriteCount == 0) continue;
-		Int32 count = part.SpriteCount / 4; // 4 per sprite
+		Int32 count = part.SpriteCount / 4; /* 4 per sprite */
 		Gfx_SetFaceCulling(true);
 		if (info->DrawXMax || info->DrawZMin) {
 			Gfx_DrawIndexedVb_TrisT2fC4b(count, 0); Game_Vertices += count;

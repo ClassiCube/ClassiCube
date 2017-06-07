@@ -5,10 +5,14 @@
 #include "Funcs.h"
 #include "Lighting.h"
 
-Builder_Offsets = { -1, 1, -EXTCHUNK_SIZE, EXTCHUNK_SIZE, EXTCHUNK_SIZE_2, EXTCHUNK_SIZE_2 };
-
 void Builder_Init(void) {
 	Builder_WhiteCol = PackedCol_White;
+	Builder_Offsets[Face_XMin] = -1;
+	Builder_Offsets[Face_XMax] =  1;
+	Builder_Offsets[Face_ZMin] = -EXTCHUNK_SIZE;
+	Builder_Offsets[Face_ZMax] =  EXTCHUNK_SIZE;
+	Builder_Offsets[Face_YMin] = -EXTCHUNK_SIZE_2;
+	Builder_Offsets[Face_YMax] =  EXTCHUNK_SIZE_2;
 }
 
 void Builder_SetDefault(void) {

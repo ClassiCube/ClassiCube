@@ -13,7 +13,7 @@ String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
 	String str = String_FromEmptyBuffer(buffer, capacity);	
 	Int32 i;
 
-	// Need to set region occupied by string to NUL for interop with native APIs
+	/* Need to set region occupied by string to NUL for interop with native APIs */
 	for (i = 0; i < capacity + 1; i++) {
 		buffer[i] = 0;
 	}

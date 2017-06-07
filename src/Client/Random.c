@@ -11,7 +11,7 @@ Int32 Random_Range(Random* seed, Int32 min, Int32 max) {
 }
 
 Int32 Random_Next(Random* seed, Int32 n) {
-	if ((n & -n) == n) { // i.e., n is a power of 2
+	if ((n & -n) == n) { /* i.e., n is a power of 2 */
 		*seed = (*seed * value + 0xBLL) & mask;
 		Int64 raw = (Int64)((UInt64)*seed >> (48 - 31));
 		return (Int32)((n * raw) >> 31);

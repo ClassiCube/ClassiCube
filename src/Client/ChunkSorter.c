@@ -50,7 +50,7 @@ void ChunkSorter_QuickSort(Int32 left, Int32 right) {
 	while (left < right) {
 		Int32 i = left, j = right;
 		UInt32 pivot = keys[(i + j) / 2];
-		// partition the list
+		/* partition the list */
 		while (i <= j) {
 			while (pivot > keys[i]) i++;
 			while (pivot < keys[j]) j--;
@@ -62,7 +62,7 @@ void ChunkSorter_QuickSort(Int32 left, Int32 right) {
 			}
 		}
 
-		// recurse into the smaller subset
+		/* recurse into the smaller subset */
 		if (j - left <= right - i) {
 			if (left < j) QuickSort(left, j);
 			left = i;

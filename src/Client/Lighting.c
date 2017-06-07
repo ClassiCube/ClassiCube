@@ -156,10 +156,10 @@ void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockI
 	Int32 oldOffset = (Block_LightOffset[oldBlock] >> Face_YMax) & 1;
 	Int32 newOffset = (Block_LightOffset[newBlock] >> Face_YMax) & 1;
 
-	// Two cases we need to handle here:
+	/* Two cases we need to handle here: */
 	if (didBlock == nowBlocks) {
-		if (!didBlock) return;              // a) both old and new block do not block light
-		if (oldOffset == newOffset) return; // b) both blocks blocked light at the same Y coordinate
+		if (!didBlock) return;              /* a) both old and new block do not block light */
+		if (oldOffset == newOffset) return; /* b) both blocks blocked light at the same Y coordinate */
 	}
 
 	if ((y - newOffset) >= lightH) {
@@ -291,7 +291,7 @@ Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 
 			}
 			index++;
 		}
-		curRunCount = 0; // We can only skip an entire X row at most.
+		curRunCount = 0; /* We can only skip an entire X row at most. */
 	}
 	return elemsLeft;
 }
@@ -320,8 +320,8 @@ bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32
 					Int32 offset = prevRunCount + curRunCount;
 					Int32 newRunCount = skip[index - offset] + 1;
 
-					// consider case 1 0 1 0, where we are at 0
-					// we need to make this 3 0 0 0 and advance by 1
+					/* consider case 1 0 1 0, where we are at 0 */
+					/* we need to make this 3 0 0 0 and advance by 1 */
 					Int32 oldRunCount = (x - offset + newRunCount) < xCount ? skip[index - offset + newRunCount] : 0;
 					if (oldRunCount != 0) {
 						skip[index - offset + newRunCount] = 0;
@@ -337,7 +337,7 @@ bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32
 			}
 			prevRunCount = 0;
 			heightmapIndex += World_Width;
-			mapIndex = baseIndex + World_Width; // advance one Z
+			mapIndex = baseIndex + World_Width; /* advance one Z */
 		}
 	}
 	return false;

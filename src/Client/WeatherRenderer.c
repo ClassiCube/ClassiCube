@@ -85,7 +85,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 				ParticleManager_AddRainParticle(x, y, z);
 
 			Real32 alpha = WeatherRenderer_AlphaAt(dx * dx + dz * dz);
-			// Clamp between 0 and 255
+			/* Clamp between 0 and 255 */
 			alpha = alpha < 0.0f ? 0.0f : alpha;
 			alpha = alpha > 255.0f ? 255.0f : alpha;
 			col.A = (UInt8)alpha;
@@ -97,22 +97,22 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 #define AddVertex *ptr = v; ptr++;
 
 			v.X = x; v.Y = y; v.Z = z; v.U = 0; v.V = v1; AddVertex
-			// (x, y, z)                  (0, v1)
+			/* (x, y, z)                  (0, v1) */
 			v.Y = y + height; v.V = v2; 				  AddVertex
-			// (x, y + height, z)         (0, v2)
+			/* (x, y + height, z)         (0, v2) */
 			v.X = x + 1; v.Z = z + 1; v.U = 1; 			  AddVertex
-			// (x + 1, y + height, z + 1) (1, v2)
+			/* (x + 1, y + height, z + 1) (1, v2) */
 			v.Y = y; v.V = v1; 							  AddVertex
-			// (x + 1, y, z + 1)          (1, v1)
+			/* (x + 1, y, z + 1)          (1, v1) */
 
 			v.Z = z;									  AddVertex
-			// (x + 1, y, z)              (1, v1)
+			/* (x + 1, y, z)              (1, v1) */
 			v.Y = y + height; v.V = v2; 				  AddVertex
-			// (x + 1, y + height, z)     (1, v2)
+			/* (x + 1, y + height, z)     (1, v2) */
 			v.X = x; v.Z = z + 1; v.U = 0;				  AddVertex
-			// (x, y + height, z + 1)     (0, v2)
+			/* (x, y + height, z + 1)     (0, v2) */
 			v.Y = y; v.V = v1; 							  AddVertex
-			// (x y, z + 1)               (0, v1)
+			/* (x y, z + 1)               (0, v1) */
 		}
 
 	if (particles && (weather_accumulator >= 0.25 || moved))
@@ -132,7 +132,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 }
 
 Real32 WeatherRenderer_AlphaAt(Real32 x) {
-	// Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9}
+	/* Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9} */
 	Real32 falloff = 0.05f * x * x - 7 * x;
 	return 178 + falloff * WorldEnv_WeatherFade;
 }
@@ -210,17 +210,17 @@ void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 
 	Int32 index = (x * World_Length) + z;
 	Int32 height = weather_heightmap[index];
-	// Two cases can be skipped here:
-	// a) rain height was not calculated to begin with (height is short.MaxValue)
-	// b) changed y is below current calculated rain height
+	/* Two cases can be skipped here: */
+	/* a) rain height was not calculated to begin with (height is short.MaxValue) */
+	/* b) changed y is below current calculated rain height */
 	if (y < height) return;
 
 	if (nowBlock) {
-		// Simple case: Rest of column below is now not visible to rain.
+		/* Simple case: Rest of column below is now not visible to rain. */
 		weather_heightmap[index] = (Int16)y;
 	} else {
-		// Part of the column is now visible to rain, we don't know how exactly how high it should be though.
-		// However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y
+		/* Part of the column is now visible to rain, we don't know how exactly how high it should be though. */
+		/* However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y */
 		WeatherRenderer_CalcHeightAt(x, y, z, index);
 	}
 }

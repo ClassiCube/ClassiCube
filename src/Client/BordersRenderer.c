@@ -212,7 +212,7 @@ void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 
 	for (i = 0; i < 4; i++) {
 		Rectangle r = borders_rects[i];
-		borders_edgesVertices += Math_CountVertices(r.Width, r.Height, axisSize); // YPlanes outside
+		borders_edgesVertices += Math_CountVertices(r.Width, r.Height, axisSize); /* YPlanes outside */
 	}
 
 	VertexP3fT2fC4b v[4096];

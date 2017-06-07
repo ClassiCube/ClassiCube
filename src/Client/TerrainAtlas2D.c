@@ -13,7 +13,7 @@ Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 	Int32 size = Atlas2D_ElementSize;
 	Bitmap element;
 
-	// Try to allocate bitmap on stack if possible
+	/* Try to allocate bitmap on stack if possible */
 	if (size > 64) {
 		Bitmap_Allocate(&element, size, size);
 		if (element.Scan0 == NULL) {

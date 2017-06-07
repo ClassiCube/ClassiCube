@@ -37,7 +37,7 @@ BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 		*fogCol = Block_FogColour[block];
 	} else {
 		*fogDensity = 0.0f;
-		// Blend fog and sky together
+		/* Blend fog and sky together */
 		Real32 blend = EnvRenderer_BlendFactor(Game_ViewDistance);
 		*fogCol = PackedCol_Lerp(WorldEnv_FogCol, WorldEnv_SkyCol, blend);
 	}
@@ -61,7 +61,7 @@ void EnvRenderer_RenderClouds(Real64 delta) {
 	Real32 offset = (Real32)(time / 2048.0f * 0.6f * WorldEnv_CloudsSpeed);
 
 	Gfx_SetMatrixMode(MatrixType_Texture);
-	Matrix matrix = Matrix_Identity; matrix.Row3.X = offset; // translate X axis
+	Matrix matrix = Matrix_Identity; matrix.Row3.X = offset; /* translate X axis */
 	Gfx_LoadMatrix(&matrix);
 	Gfx_SetMatrixMode(MatrixType_Modelview);
 
