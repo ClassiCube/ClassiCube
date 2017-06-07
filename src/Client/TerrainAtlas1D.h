@@ -29,10 +29,10 @@ Int32 Atlas1D_TexIdsCount;
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index);
 
 /* Returns the index of the 1D atlas within the array of 1D atlases that contains the given texture id.*/
-#define Atlas1D_Index(texId) (texId) / Atlas1D_ElementsPerAtlas
+#define Atlas1D_Index(texLoc) ((texLoc) / Atlas1D_ElementsPerAtlas)
 
 /* Returns the index of the given texture id within a 1D atlas. */
-#define Atlas1D_RowId(texId) (texId) % Atlas1D_ElementsPerAtlas
+#define Atlas1D_RowId(texLoc) ((texLoc) % Atlas1D_ElementsPerAtlas)
 
 /* Updates variables and native textures for the 1D atlas array. */
 void Atlas1D_UpdateState(void);
