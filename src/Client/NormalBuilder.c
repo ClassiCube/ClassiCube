@@ -134,7 +134,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 
 		PackedCol col = fullBright ? Builder_WhiteCol :
 			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
-		Drawer_XMin(count_XMin, col, texLoc, part->fVertices[Face_XMin]);
+		Drawer_XMin(count_XMin, col, texLoc, &part->fVertices[Face_XMin]);
 	}
 
 	if (count_XMax != 0) {
@@ -144,7 +144,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 
 		PackedCol col = fullBright ? Builder_WhiteCol :
 			Builder_X <= (World_MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
-		Drawer_XMax(count_XMax, col, texLoc, part->fVertices[Face_XMax]);
+		Drawer_XMax(count_XMax, col, texLoc, &part->fVertices[Face_XMax]);
 	}
 
 	if (count_ZMin != 0) {
@@ -154,7 +154,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 
 		PackedCol col = fullBright ? Builder_WhiteCol :
 			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Lighting_OutsideZSide;
-		Drawer_ZMin(count_ZMin, col, texLoc, part->fVertices[Face_ZMin]);
+		Drawer_ZMin(count_ZMin, col, texLoc, &part->fVertices[Face_ZMin]);
 	}
 
 	if (count_ZMax != 0) {
@@ -164,7 +164,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 
 		PackedCol col = fullBright ? Builder_WhiteCol :
 			Builder_Z <= (World_MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Lighting_OutsideZSide;
-		Drawer_ZMax(count_ZMax, col, texLoc, part->fVertices[Face_ZMax]);
+		Drawer_ZMax(count_ZMax, col, texLoc, &part->fVertices[Face_ZMax]);
 	}
 
 	if (count_YMin != 0) {
@@ -173,7 +173,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? Builder_WhiteCol : Lighting_Col_YBottom_Fast(Builder_X, Builder_Y - offset, Builder_Z);
-		Drawer_YMin(count_YMin, col, texLoc, part->fVertices[Face_YMin]);
+		Drawer_YMin(count_YMin, col, texLoc, &part->fVertices[Face_YMin]);
 	}
 
 	if (count_YMax != 0) {
@@ -182,6 +182,6 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? Builder_WhiteCol : Lighting_Col_YTop_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
-		Drawer_YMax(count_YMax, col, texLoc, part->fVertices[Face_YMax]);
+		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[Face_YMax]);
 	}
 }

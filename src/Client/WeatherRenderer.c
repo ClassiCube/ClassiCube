@@ -96,22 +96,22 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			Real32 v1 = y / 6.0f + worldV, v2 = (y + height) / 6.0f + worldV;
 #define AddVertex *ptr = v; ptr++;
 
-			v.X = x; v.Y = y; v.Z = z; v.U = 0; v.V = v1; AddVertex
+			v.X = x; v.Y = y; v.Z = z; v.U = 0.0f; v.V = v1; AddVertex
 			/* (x, y, z)                  (0, v1) */
-			v.Y = y + height; v.V = v2; 				  AddVertex
+			v.Y = y + height; v.V = v2; 					 AddVertex
 			/* (x, y + height, z)         (0, v2) */
-			v.X = x + 1; v.Z = z + 1; v.U = 1; 			  AddVertex
+			v.X = x + 1; v.Z = z + 1; v.U = 1.0f;			 AddVertex
 			/* (x + 1, y + height, z + 1) (1, v2) */
-			v.Y = y; v.V = v1; 							  AddVertex
+			v.Y = y; v.V = v1; 								 AddVertex
 			/* (x + 1, y, z + 1)          (1, v1) */
 
-			v.Z = z;									  AddVertex
+			v.Z = z;										 AddVertex
 			/* (x + 1, y, z)              (1, v1) */
-			v.Y = y + height; v.V = v2; 				  AddVertex
+			v.Y = y + height; v.V = v2; 					 AddVertex
 			/* (x + 1, y + height, z)     (1, v2) */
-			v.X = x; v.Z = z + 1; v.U = 0;				  AddVertex
+			v.X = x; v.Z = z + 1; v.U = 0.0f;				 AddVertex
 			/* (x, y + height, z + 1)     (0, v2) */
-			v.Y = y; v.V = v1; 							  AddVertex
+			v.Y = y; v.V = v1; 								 AddVertex
 			/* (x y, z + 1)               (0, v1) */
 		}
 

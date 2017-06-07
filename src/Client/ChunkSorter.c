@@ -7,7 +7,9 @@
 
 void ChunkSorter_UpdateSortOrder(void) {
 	Vector3 cameraPos = Game_CurrentCameraPos;
-	Vector3I newChunkPos = Vector3I.Floor(cameraPos);
+	Vector3I newChunkPos;
+	Vector3I_Floor(&newChunkPos, &cameraPos);
+
 	newChunkPos.X = (newChunkPos.X & ~0x0F) + 8;
 	newChunkPos.Y = (newChunkPos.Y & ~0x0F) + 8;
 	newChunkPos.Z = (newChunkPos.Z & ~0x0F) + 8;
@@ -23,7 +25,7 @@ void ChunkSorter_UpdateSortOrder(void) {
 	Int32 i = 0;
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		ChunkInfo* info = chunks[i];
-		distances[i] = Utils.DistanceSquared(info.CentreX, info.CentreY, info.CentreZ,
+		distances[i] = Utils.DistanceSquared(info->CentreX, info->CentreY, info->CentreZ,
 			pPos.X, pPos.Y, pPos.Z);
 
 		Int32 dX1 = (info->CentreX - 8) - pPos.X, dX2 = (info->CentreX + 8) - pPos.X;

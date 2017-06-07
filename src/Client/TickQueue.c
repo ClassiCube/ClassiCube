@@ -1,4 +1,6 @@
 #include "TickQueue.h"
+#include "Platform.h"
+#include "ErrorHandler.h"
 
 void TickQueue_Init(TickQueue* queue) {
 	queue->Buffer = NULL;

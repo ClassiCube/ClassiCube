@@ -6,7 +6,7 @@
 void Atlas2D_UpdateState(Bitmap bmp) {
 	Atlas2D_Bitmap = bmp;
 	Atlas2D_ElementSize = bmp.Width / Atlas2D_ElementsPerRow;
-	Block_RecalculateSpriteBB(&bmp);
+	Block_RecalculateSpriteBB();
 }
 
 Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc) {

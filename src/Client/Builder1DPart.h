@@ -9,8 +9,8 @@
 
 
 typedef struct Builder1DPart {
-	/* Pointer to offset within vertices, indexed by face. */
-	VertexP3fT2fC4b** fVertices[Face_Count];
+	/* Pointers to offset within vertices, indexed by face. */
+	VertexP3fT2fC4b* fVertices[Face_Count];
 	/* Number of indices, indexed by face. */
 	Int32 fCount[Face_Count];
 
