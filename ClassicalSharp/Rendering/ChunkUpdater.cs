@@ -63,12 +63,13 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Refresh() {
 			chunkPos = new Vector3I(int.MaxValue);
+			if (renderer.chunks != null && game.World.blocks != null) {
+				ClearChunkCache();
+				ResetChunkCache();
+			}
+			
 			renderer.normalPartsCount = new int[game.TerrainAtlas1D.TexIds.Length];
 			renderer.translucentPartsCount = new int[game.TerrainAtlas1D.TexIds.Length];
-			
-			if (renderer.chunks == null || game.World.blocks == null) return;
-			ClearChunkCache();
-			ResetChunkCache();
 		}
 		
 		void RefreshBorders(int clipLevel) {
