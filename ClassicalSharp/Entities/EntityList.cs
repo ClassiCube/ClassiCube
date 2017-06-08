@@ -30,7 +30,6 @@ namespace ClassicalSharp.Entities {
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 			game.Events.ChatFontChanged += ChatFontChanged;
-			game.Events.TextureChanged += TextureChanged;
 			
 			NamesMode = Options.GetEnum(OptionsKey.NamesMode, NameMode.HoveredOnly);
 			if (game.ClassicMode) NamesMode = NameMode.HoveredOnly;
@@ -116,14 +115,6 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
-		void TextureChanged(object sender, TextureEventArgs e) {
-			if (e.Name != "char.png") return;
-			for (int i = 0; i < Entities.Length; i++) {
-				if (Entities[i] == null || Entities[i].TextureId != -1) continue;
-				Entities[i].SkinType = game.DefaultPlayerSkinType;				
-			}
-		}
-		
 		void ChatFontChanged(object sender, EventArgs e) {
 			for (int i = 0; i < Entities.Length; i++) {
 				if (Entities[i] == null) continue;
@@ -148,7 +139,6 @@ namespace ClassicalSharp.Entities {
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 			game.Events.ChatFontChanged -= ChatFontChanged;
-			game.Events.TextureChanged -= TextureChanged;
 			
 			if (ShadowComponent.shadowTex > 0)
 				game.Graphics.DeleteTexture(ref ShadowComponent.shadowTex);
