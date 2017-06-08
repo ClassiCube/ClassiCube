@@ -8,7 +8,7 @@
 #include "Builder1DPart.h"
 #include "TerrainAtlas1D.h"
 /* Converts a 16x16x16 chunk into a mesh of vertices.
-   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 
@@ -72,41 +72,32 @@ void Builder_OnNewMapLoaded(void);
 void Builder_MakeChunk(ChunkInfo* info);
 
 
-static bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir);
-
-static bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir);
-
-static void Builder_SetPartInfo(Builder1DPart* part, Int32 i, ChunkPartInfo** parts);
-
-static void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1);
-
-
 static void Builder_AddSpriteVertices(BlockID block);
 
 static void Builder_AddVertices(BlockID block, Int32 count, Face face);
 
-
-/* Calculates how many blocks the current block face mesh can be stretched on X axis. */
-Int32 (*Builder_StretchXLiquid)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block);
-
-/* Calculates how many blocks the current block face mesh can be stretched on X axis. */
-Int32 (*Builder_StretchX)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face);
-
-/* Calculates how many blocks the current block face mesh can be stretched on Z axis. */
-Int32 (*Builder_StretchZ)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face);
-
-/* Renders the current block. */
-void (*Builder_RenderBlock)(Int32 countsIndex);
-
-/* Called just before Stretch(). */
-void (*Builder_PreStretchTiles)(Int32 x1, Int32 y1, Int32 z1);
-
-/* Called just after Stretch(). */
-void (*Builder_PostStretchTiles)(Int32 x1, Int32 y1, Int32 z1);
-
-
 /* Returns whether a liquid block is occluded at the given index in the chunk. */
 bool Builder_OccludedLiquid(Int32 chunkIndex);
+
+
+/* Calculates how many blocks the current block face mesh can be stretched on X axis. */
+Int32(*Builder_StretchXLiquid)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block);
+
+/* Calculates how many blocks the current block face mesh can be stretched on X axis. */
+Int32(*Builder_StretchX)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face);
+
+/* Calculates how many blocks the current block face mesh can be stretched on Z axis. */
+Int32(*Builder_StretchZ)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face);
+
+/* Renders the current block. */
+void(*Builder_RenderBlock)(Int32 countsIndex);
+
+/* Called just before Stretch(). */
+void(*Builder_PreStretchTiles)(Int32 x1, Int32 y1, Int32 z1);
+
+/* Called just after Stretch(). */
+void(*Builder_PostStretchTiles)(Int32 x1, Int32 y1, Int32 z1);
+
 
 void Builder_DefaultPreStretchTiles(Int32 x1, Int32 y1, Int32 z1);
 
@@ -115,4 +106,13 @@ void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1);
 
 /* Renders a sprite block. */
 void Builder_DrawSprite(Int32 count);
+
+
+static bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir);
+
+static bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir);
+
+static void Builder_SetPartInfo(Builder1DPart* part, Int32 i, ChunkPartInfo** parts);
+
+static void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1);
 #endif

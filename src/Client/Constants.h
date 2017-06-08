@@ -20,6 +20,7 @@
 /* Chunk axis length (and neighbours), in blocks. */
 #define EXTCHUNK_SIZE 18
 #define EXTCHUNK_SIZE_2 (EXTCHUNK_SIZE * EXTCHUNK_SIZE)
+#define EXTCHUNK_SIZE_3 (EXTCHUNK_SIZE * EXTCHUNK_SIZE * EXTCHUNK_SIZE)
 
 /* Minor adjustment to max UV coords, to avoid pixel bleeding errors due to rounding. */
 #define UV2_Scale (15.99f / 16.0f)

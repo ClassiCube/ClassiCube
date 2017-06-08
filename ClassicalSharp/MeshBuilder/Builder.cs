@@ -56,14 +56,14 @@ namespace ClassicalSharp {
 			if (ReadChunkData(x1, y1, z1, ref allAir)) return false;
 			MemUtils.memset((IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides);
 			
-			chunkEndX = Math.Min(x1 + chunkSize, width);
-			chunkEndZ = Math.Min(z1 + chunkSize, length);
-			Stretch(x1, y1, z1);
-			PostStretchTiles(x1, y1, z1);
-			
 			int xMax = Math.Min(width, x1 + chunkSize);
 			int yMax = Math.Min(height, y1 + chunkSize);
 			int zMax = Math.Min(length, z1 + chunkSize);
+			
+			chunkEndX = xMax; chunkEndZ = zMax;
+			Stretch(x1, y1, z1);
+			PostStretchTiles(x1, y1, z1);		
+			
 			for (int y = y1, yy = 0; y < yMax; y++, yy++) {
 				for (int z = z1, zz = 0; z < zMax; z++, zz++) {
 					
@@ -194,7 +194,7 @@ namespace ClassicalSharp {
 						cIndex++;
 						BlockID b = chunk[cIndex];
 						if (info.Draw[b] == DrawType.Gas) continue;
-						int index = ((yy << 8) + (zz << 4) + xx) * Side.Sides;
+						int index = ((yy << 8) | (zz << 4) | xx) * Side.Sides;
 						
 						// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 						// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
@@ -218,41 +218,41 @@ namespace ClassicalSharp {
 						// All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times.
 						
 						if (counts[index] == 0 || 
-						   (x == 0 && (Y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && Y < edgeLevel))) ||
+						   (x == 0 && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
 						   (x != 0 && (hidden[tileIdx + chunk[cIndex - 1]] & (1 << Side.Left)) != 0)) {
 							counts[index] = 0;
 						} else {
-							int count = StretchZ(index, X, Y, Z, cIndex, b, Side.Left);
+							int count = StretchZ(index, x, y, z, cIndex, b, Side.Left);
 							AddVertices(b, count, Side.Left); counts[index] = (byte)count;
 						}
 						
 						index++;
 						if (counts[index] == 0 || 
-						   (x == maxX && (Y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && Y < edgeLevel))) ||
+						   (x == maxX && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
 						   (x != maxX && (hidden[tileIdx + chunk[cIndex + 1]] & (1 << Side.Right)) != 0)) {
 							counts[index] = 0;
 						} else {
-							int count = StretchZ(index, X, Y, Z, cIndex, b, Side.Right);
+							int count = StretchZ(index, x, y, z, cIndex, b, Side.Right);
 							AddVertices(b, count, Side.Right); counts[index] = (byte)count;
 						}
 						
 						index++;
 						if (counts[index] == 0 || 
-						   (z == 0 && (Y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && Y < edgeLevel))) ||
+						   (z == 0 && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
 						   (z != 0 && (hidden[tileIdx + chunk[cIndex - 18]] & (1 << Side.Front)) != 0)) {
 							counts[index] = 0;
 						} else {
-							int count = StretchX(index, X, Y, Z, cIndex, b, Side.Front);
+							int count = StretchX(index, x, y, z, cIndex, b, Side.Front);
 							AddVertices(b, count, Side.Front); counts[index] = (byte)count;
 						}
 						
 						index++;
 						if (counts[index] == 0 || 
-						   (z == maxZ && (Y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && Y < edgeLevel))) ||
+						   (z == maxZ && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
 						   (z != maxZ && (hidden[tileIdx + chunk[cIndex + 18]] & (1 << Side.Back)) != 0)) {
 							counts[index] = 0;
 						} else {
-							int count = StretchX(index, X, Y, Z, cIndex, b, Side.Back);
+							int count = StretchX(index, x, y, z, cIndex, b, Side.Back);
 							AddVertices(b, count, Side.Back); counts[index] = (byte)count;
 						}
 						
@@ -261,7 +261,7 @@ namespace ClassicalSharp {
 						   (hidden[tileIdx + chunk[cIndex - 324]] & (1 << Side.Bottom)) != 0) {
 							counts[index] = 0;
 						} else {
-							int count = StretchX(index, X, Y, Z, cIndex, b, Side.Bottom);
+							int count = StretchX(index, x, y, z, cIndex, b, Side.Bottom);
 							AddVertices(b, count, Side.Bottom); counts[index] = (byte)count;
 						}
 						
@@ -270,10 +270,10 @@ namespace ClassicalSharp {
 						   (hidden[tileIdx + chunk[cIndex + 324]] & (1 << Side.Top)) != 0) {
 							counts[index] = 0;
 						} else if (b < Block.Water || b > Block.StillLava) {
-							int count = StretchX(index, X, Y, Z, cIndex, b, Side.Top);
+							int count = StretchX(index, x, y, z, cIndex, b, Side.Top);
 							AddVertices(b, count, Side.Top); counts[index] = (byte)count;
 						} else {
-							int count = StretchXLiquid(index, X, Y, Z, cIndex, b);
+							int count = StretchXLiquid(index, x, y, z, cIndex, b);
 							if (count > 0) AddVertices(b, count, Side.Top);
 							counts[index] = (byte)count;
 						}

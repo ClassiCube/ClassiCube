@@ -9,6 +9,7 @@
 #include "WorldEnv.h"
 #include "Vectors.h"
 #include "Vector3I.h"
+#include "ChunkSorter.h"
 bool inTranslucent;
 
 ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz) {
