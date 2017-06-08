@@ -104,8 +104,7 @@ namespace Launcher.Web {
 			if (errors.Count == 0) return null;
 			
 			string err = (string)errors[0];
-			if (err == "username") return "Unrecognised username";
-			if (err == "password") return "Wrong password";
+			if (err == "username" || err == "password") return "Wrong username or password";
 			if (err == "verification") return "Account verification required";
 			return "Unknown error occurred";
 		}
