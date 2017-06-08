@@ -90,13 +90,24 @@ namespace Launcher.Web {
 			index = 0; success = true;
 			data = (JsonObject)Json.ParseValue(response, ref index, ref success);
 			
-			List<object> errors = (List<object>)data["errors"];
-			if (errors.Count > 0 || (data.ContainsKey("username") && data["username"] == null))
-				throw new InvalidOperationException("Wrong username or password.");
+			string err = GetLoginError(data);
+			if (err != null)
+				throw new InvalidOperationException(err);
 			
 			Username = (string)data["username"];
 			Log("cc login took " + sw.ElapsedMilliseconds);
 			sw.Stop();
+		}
+		
+		static string GetLoginError(JsonObject obj) {
+			List<object> errors = (List<object>)obj["errors"];
+			if (errors.Count == 0) return null;
+			
+			string err = (string)errors[0];
+			if (err == "username") return "Unrecognised username";
+			if (err == "password") return "Wrong password";
+			if (err == "verification") return "Account verification required";
+			return "Unknown error occurred";
 		}
 		
 		public ClientStartData GetConnectInfo(string hash) {

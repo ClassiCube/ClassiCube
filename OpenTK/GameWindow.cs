@@ -129,12 +129,6 @@ namespace OpenTK
 			Close();
 		}
 		
-		/// <summary> Makes the GraphicsContext current on the calling thread. </summary>
-		public void MakeCurrent() {
-			EnsureUndisposed();
-			Context.MakeCurrent(WindowInfo);
-		}
-		
 		/// <summary> Called when the NativeWindow is about to close. </summary>
 		/// <param name="e">
 		/// The <see cref="System.ComponentModel.CancelEventArgs" /> for this event.

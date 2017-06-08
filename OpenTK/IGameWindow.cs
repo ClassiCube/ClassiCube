@@ -35,9 +35,6 @@ namespace OpenTK.Platform {
 		/// <summary> Enters the game loop of the GameWindow using the maximum update rate. </summary>
 		void Run();
 
-		/// <summary> Makes the GraphicsContext current on the calling thread. </summary>
-		void MakeCurrent();
-
 		/// <summary> Swaps the front and back buffers of the current GraphicsContext, presenting the rendered scene to the user. </summary>
 		void SwapBuffers();
 
