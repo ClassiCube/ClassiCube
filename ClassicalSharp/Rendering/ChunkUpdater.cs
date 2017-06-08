@@ -63,7 +63,9 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Refresh() {
 			chunkPos = new Vector3I(int.MaxValue);
-			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
+			renderer.normalPartsCount = new int[game.TerrainAtlas1D.TexIds.Length];
+			renderer.translucentPartsCount = new int[game.TerrainAtlas1D.TexIds.Length];
+			
 			if (renderer.chunks == null || game.World.blocks == null) return;
 			ClearChunkCache();
 			ResetChunkCache();
@@ -80,7 +82,7 @@ namespace ClassicalSharp.Renderers {
 			{
 				bool isBorder = x == 0 || z == 0 || x == (chunksX - 1) || z == (chunksZ - 1);
 				if (isBorder && (y * 16) < clipLevel)
-					DeleteChunk(renderer.unsortedChunks[index], true);
+					DeleteChunk(renderer.unsortedChunks[index]);
 				index++;
 			}
 		}
@@ -98,7 +100,8 @@ namespace ClassicalSharp.Renderers {
 
 		void TerrainAtlasChanged(object sender, EventArgs e) {
 			if (renderer._1DUsed == -1) {
-				renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
+				renderer.normalPartsCount = new int[game.TerrainAtlas1D.TexIds.Length];
+				renderer.translucentPartsCount = new int[game.TerrainAtlas1D.TexIds.Length];
 			} else {
 				bool refreshRequired = elementsPerBitmap != game.TerrainAtlas1D.elementsPerBitmap;
 				if (refreshRequired) Refresh();
@@ -122,8 +125,10 @@ namespace ClassicalSharp.Renderers {
 		void OnNewMap(object sender, EventArgs e) {
 			game.ChunkUpdates = 0;
 			ClearChunkCache();
-			for (int i = 0; i < renderer.totalUsed.Length; i++)
-				renderer.totalUsed[i] = 0;
+			for (int i = 0; i < renderer.normalPartsCount.Length; i++) {
+				renderer.normalPartsCount[i] = 0;
+				renderer.translucentPartsCount[i] = 0;
+			}
 			
 			renderer.chunks = null;
 			renderer.unsortedChunks = null;
@@ -202,29 +207,38 @@ namespace ClassicalSharp.Renderers {
 		void ClearChunkCache() {
 			if (renderer.chunks == null) return;
 			for (int i = 0; i < renderer.chunks.Length; i++)
-				DeleteChunk(renderer.chunks[i], false);
-			renderer.totalUsed = new int[game.TerrainAtlas1D.TexIds.Length];
+				DeleteChunk(renderer.chunks[i]);
+			
+			renderer.normalPartsCount = new int[game.TerrainAtlas1D.TexIds.Length];
+			renderer.translucentPartsCount = new int[game.TerrainAtlas1D.TexIds.Length];
 		}
 		
-		void DeleteChunk(ChunkInfo info, bool decUsed) {
+		void DeleteChunk(ChunkInfo info) {
 			info.Empty = false; info.AllAir = false;
 			#if OCCLUSION
 			info.OcclusionFlags = 0;
 			info.OccludedFlags = 0;
 			#endif
 			
-			if (info.NormalParts != null)
-				DeleteData(ref info.NormalParts, decUsed);
-			if (info.TranslucentParts != null)
-				DeleteData(ref info.TranslucentParts, decUsed);
-		}
-		
-		void DeleteData(ref ChunkPartInfo[] parts, bool decUsed) {
-			if (decUsed) DecrementUsed(parts);
+			if (info.NormalParts != null) {
+				ChunkPartInfo[] parts = info.NormalParts;
+				for (int i = 0; i < parts.Length; i++) {
+					game.Graphics.DeleteVb(ref parts[i].VbId);
+					if (parts[i].IndicesCount == 0) continue;
+					renderer.normalPartsCount[i]--;
+				}
+				info.NormalParts = null;
+			}
 			
-			for (int i = 0; i < parts.Length; i++)
-				game.Graphics.DeleteVb(ref parts[i].VbId);
-			parts = null;
+			if (info.TranslucentParts != null) {
+				ChunkPartInfo[] parts = info.TranslucentParts;
+				for (int i = 0; i < parts.Length; i++) {
+					game.Graphics.DeleteVb(ref parts[i].VbId);
+					if (parts[i].IndicesCount == 0) continue;
+					renderer.translucentPartsCount[i]--;
+				}
+				info.TranslucentParts = null;
+			}
 		}
 		
 		void ContextLost() { ClearChunkCache(); }
@@ -267,12 +281,12 @@ namespace ClassicalSharp.Renderers {
 				
 				// Unload chunks beyond visible range
 				if (!noData && distSqr >= userDistSqr + 32 * 16) {
-					DeleteChunk(info, true); continue;
+					DeleteChunk(info); continue;
 				}
 				noData |= info.PendingDelete;
 				
 				if (noData && distSqr <= viewDistSqr && chunkUpdates < chunksTarget) {
-					DeleteChunk(info, true);
+					DeleteChunk(info);
 					BuildChunk(info, ref chunkUpdates);
 				}
 				info.Visible = distSqr <= viewDistSqr &&
@@ -295,12 +309,12 @@ namespace ClassicalSharp.Renderers {
 				bool noData = info.NormalParts == null && info.TranslucentParts == null;
 				
 				if (!noData && distSqr >= userDistSqr + 32 * 16) {
-					DeleteChunk(info, true); continue;
+					DeleteChunk(info); continue;
 				}
 				noData |= info.PendingDelete;
 				
 				if (noData && distSqr <= userDistSqr && chunkUpdates < chunksTarget) {
-					DeleteChunk(info, true);
+					DeleteChunk(info);
 					BuildChunk(info, ref chunkUpdates);
 					
 					// only need to update the visibility of chunks in range.
@@ -323,31 +337,28 @@ namespace ClassicalSharp.Renderers {
 		
 		void BuildChunk(ChunkInfo info, ref int chunkUpdates) {
 			game.ChunkUpdates++;
+			chunkUpdates++;
+			info.PendingDelete = false;
 			builder.MakeChunk(info);
 			
-			info.PendingDelete = false;
 			if (info.NormalParts == null && info.TranslucentParts == null) {
 				info.Empty = true;
-			} else {
-				if (info.NormalParts != null)
-					IncrementUsed(info.NormalParts);
-				if (info.TranslucentParts != null)
-					IncrementUsed(info.TranslucentParts);
+				return;
 			}
-			chunkUpdates++;
-		}
-		
-		void IncrementUsed(ChunkPartInfo[] parts) {
-			for (int i = 0; i < parts.Length; i++) {
-				if (parts[i].IndicesCount == 0) continue;
-				renderer.totalUsed[i]++;
+			
+			if (info.NormalParts != null) {
+				ChunkPartInfo[] parts = info.NormalParts;
+				for (int i = 0; i < parts.Length; i++) {
+					if (parts[i].IndicesCount == 0) continue;
+					renderer.normalPartsCount[i]++;
+				}
 			}
-		}
-		
-		void DecrementUsed(ChunkPartInfo[] parts) {
-			for (int i = 0; i < parts.Length; i++) {
-				if (parts[i].IndicesCount == 0) continue;
-				renderer.totalUsed[i]--;
+			if (info.TranslucentParts != null) {
+				ChunkPartInfo[] parts = info.TranslucentParts;
+				for (int i = 0; i < parts.Length; i++) {
+					if (parts[i].IndicesCount == 0) continue;
+					renderer.translucentPartsCount[i]++;
+				}
 			}
 		}
 	}

@@ -51,7 +51,7 @@ namespace ClassicalSharp.Renderers {
 		internal ChunkInfo[] chunks, renderChunks, unsortedChunks;
 		internal bool[] usedTranslucent, usedNormal;
 		internal bool[] pendingTranslucent, pendingNormal;
-		internal int[] totalUsed;
+		internal int[] normalPartsCount, translucentPartsCount;
 		internal ChunkUpdater updater;
 		bool inTranslucent = false;
 		
@@ -118,7 +118,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.AlphaTest = true;
 			
 			for (int batch = 0; batch < _1DUsed; batch++) {
-				if (totalUsed[batch] <= 0) continue;
+				if (normalPartsCount[batch] <= 0) continue;
 				if (pendingNormal[batch] || usedNormal[batch]) {
 					gfx.BindTexture(texIds[batch]);
 					RenderNormalBatch(batch);
@@ -146,7 +146,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.AlphaBlending = false;
 			gfx.ColourWrite = false;
 			for (int batch = 0; batch < _1DUsed; batch++) {
-				if (totalUsed[batch] <= 0) continue;
+				if (translucentPartsCount[batch] <= 0) continue;
 				if (pendingTranslucent[batch] || usedTranslucent[batch]) {
 					RenderTranslucentBatch(batch);
 					pendingTranslucent[batch] = false;
@@ -162,7 +162,7 @@ namespace ClassicalSharp.Renderers {
 			
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			for (int batch = 0; batch < _1DUsed; batch++) {
-				if (totalUsed[batch] <= 0) continue;
+				if (translucentPartsCount[batch] <= 0) continue;
 				if (!usedTranslucent[batch]) continue;
 				gfx.BindTexture(texIds[batch]);
 				RenderTranslucentBatch(batch);

@@ -23,9 +23,13 @@ Int32 MapRenderer_ChunksZ;
 /* The count of actual used 1D atlases. (i.e. 1DIndex(maxTextureLoc) + 1*/
 Int32 MapRenderer_1DUsedCount;
 
-/* The number of non-empty ChunkPartInfos (across entire world) for each 1D atlas batch.
+/* The number of non-empty Normal ChunkPartInfos (across entire world) for each 1D atlas batch.
 1D atlas batches that do not have any ChunkPartInfos can be entirely skipped. */
-Int32 MapRenderer_PartsCount[Atlas1D_MaxAtlasesCount];
+Int32 MapRenderer_NormalPartsCount[Atlas1D_MaxAtlasesCount];
+
+/* The number of non-empty Translucent ChunkPartInfos (across entire world) for each 1D atlas batch.
+1D atlas batches that do not have any ChunkPartInfos can be entirely skipped. */
+Int32 MapRenderer_TranslucentPartsCount[Atlas1D_MaxAtlasesCount];
 
 /* Whether there are any visible Translucent ChunkPartInfos for each 1D atlas batch.
 1D atlas batches that do not have any visible translucent ChunkPartInfos can be skipped. */

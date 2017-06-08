@@ -40,7 +40,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 
 	Int32 batch;
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
-		if (MapRenderer_PartsCount[batch] <= 0) continue;
+		if (MapRenderer_NormalPartsCount[batch] <= 0) continue;
 		if (MapRenderer_HasNormalParts[batch] || MapRenderer_CheckingNormalParts[batch]) {
 			Gfx_BindTexture(Atlas1D_TexIds[batch]);
 			MapRenderer_RenderNormalBatch(batch);
@@ -68,7 +68,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 
 	Int32 batch;
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
-		if (MapRenderer_PartsCount[batch] <= 0) continue;
+		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
 		if (MapRenderer_HasTranslucentParts[batch] || MapRenderer_CheckingTranslucentParts[batch]) {
 			MapRenderer_RenderTranslucentBatch(batch);
 			MapRenderer_CheckingTranslucentParts[batch] = false;
@@ -83,7 +83,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	Gfx_SetDepthWrite(false); /* we already calculated depth values in depth pass */
 
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
-		if (MapRenderer_PartsCount[batch] <= 0) continue;
+		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
 		if (!MapRenderer_HasTranslucentParts[batch]) continue;
 		Gfx_BindTexture(Atlas1D_TexIds[batch]);
 		MapRenderer_RenderTranslucentBatch(batch);
