@@ -5,6 +5,7 @@
 void TickQueue_Init(TickQueue* queue) {
 	queue->Buffer = NULL;
 	queue->BufferSize = 0;
+	queue->BufferMask = 0;
 	queue->Head = 0;
 	queue->Tail = 0;
 	queue->Size = 0;
@@ -21,13 +22,13 @@ void TickQueue_Enqueue(TickQueue* queue, UInt32 item) {
 		TickQueue_Resize(queue);
 
 	queue->Buffer[queue->Tail] = item;
-	queue->Tail = (queue->Tail + 1) % queue->BufferSize;
+	queue->Tail = (queue->Tail + 1) & queue->BufferMask;
 	queue->Size++;
 }
 
 UInt32 TickQueue_Dequeue(TickQueue* queue) {
 	UInt32 result = queue->Buffer[queue->Head];
-	queue->Head = (queue->Head + 1) % queue->BufferSize;
+	queue->Head = (queue->Head + 1) & queue->BufferMask;
 	queue->Size--;
 	return result;
 }
@@ -45,7 +46,7 @@ void TickQueue_Resize(TickQueue* queue) {
 	
 	Int32 i, idx;
 	for (i = 0; i < queue->Size; i++) {
-		idx = (queue->Head + i) % queue->BufferSize;
+		idx = (queue->Head + i) & queue->BufferMask;
 		newBuffer[i] = queue->Buffer[idx];
 	}
 
@@ -54,6 +55,7 @@ void TickQueue_Resize(TickQueue* queue) {
 
 	queue->Buffer = newBuffer;
 	queue->BufferSize = capacity;
+	queue->BufferMask = capacity - 1; /* capacity is power of two */
 	queue->Head = 0;
 	queue->Tail = queue->Size;
 }

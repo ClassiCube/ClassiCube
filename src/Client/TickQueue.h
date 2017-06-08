@@ -13,6 +13,9 @@ typedef struct TickQueue {
 	/* Max number of elements in the buffer.*/
 	Int32 BufferSize;
 
+	/* BufferSize - 1, as BufferSize is always a power of two. */
+	Int32 BufferMask;
+
 	/* Number of used elements. */
 	Int32 Size;
 
