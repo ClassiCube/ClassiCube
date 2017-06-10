@@ -42,16 +42,14 @@ namespace ClassicalSharp.Entities {
 			float distSq = (lastSoundPos - soundPos).LengthSquared;
 			bool enoughDist = distSq > 1.75f * 1.75f;
 			// just play every certain block interval when not animating
-			if (p.curSwing < 0.999f) return enoughDist;
+			if (p.anim.swing < 0.999f) return enoughDist;
 			
 			// have our legs just crossed over the '0' point?
-				float oldLegRot;
-				float newLegRot;
+			float oldLegRot, newLegRot;
 			if (game.Camera.IsThirdPerson) {
 				oldLegRot = (float)Math.Cos(p.anim.walkTimeO);
 				newLegRot = (float)Math.Cos(p.anim.walkTimeN);
-			}
-			else {
+			} else {
 				oldLegRot = (float)Math.Sin(p.anim.walkTimeO);
 				newLegRot = (float)Math.Sin(p.anim.walkTimeN);
 			}

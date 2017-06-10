@@ -24,13 +24,13 @@ namespace ClassicalSharp.Entities {
 			get { return (float)PhysicsComponent.GetMaxHeight(physics.jumpVel); }
 		}
 		
-		internal float curSwing;
 		internal CollisionsComponent collisions;
 		public HacksComponent Hacks;
 		internal PhysicsComponent physics;
 		internal InputComponent input;
 		internal SoundComponent sound;
 		internal LocalInterpComponent interp;
+		internal TiltComponent tilt;
 		
 		public LocalPlayer(Game game) : base(game) {
 			DisplayName = game.Username;
@@ -43,6 +43,7 @@ namespace ClassicalSharp.Entities {
 			input = new InputComponent(game, this);
 			sound = new SoundComponent(game, this);
 			interp = new LocalInterpComponent(game, this);
+			tilt = new TiltComponent(game);
 			
 			physics.hacks = Hacks; input.Hacks = Hacks;
 			physics.collisions = collisions;
@@ -70,6 +71,7 @@ namespace ClassicalSharp.Entities {
 			
 			interp.next.Pos = Position; Position = interp.prev.Pos;
 			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);
+			tilt.UpdateAnimState(delta);
 			
 			CheckSkin();
 			sound.Tick(wasOnGround);
@@ -82,8 +84,8 @@ namespace ClassicalSharp.Entities {
 
 		public override void RenderModel(double deltaTime, float t) {
 			anim.GetCurrentAnimState(t);
-			curSwing = Utils.Lerp(anim.swingO, anim.swingN, t);
-
+			tilt.GetCurrentAnimState(t);
+			
 			if (!game.Camera.IsThirdPerson) return;
 			Model.Render(this);
 		}
