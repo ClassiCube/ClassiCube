@@ -180,6 +180,7 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ChunkInfo.h" />
     <ClInclude Include="ChunkSorter.h" />
+    <ClInclude Include="ChunkUpdater.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="D3D9Api.h" />
@@ -256,6 +257,7 @@
     <ClCompile Include="Builder1DPart.c" />
     <ClCompile Include="ChunkInfo.c" />
     <ClCompile Include="ChunkSorter.c" />
+    <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="Compiler.c" />
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DefaultSet.c" />

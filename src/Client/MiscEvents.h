@@ -43,4 +43,17 @@ Event_Block UserEvents_BlockChanged[EventHandler_Size];
 Int32 UserEvents_BlockChangedCount;
 #define UserEvents_BlockChangedChanged(coords, oldBlock, block)\
 EventHandler_Raise_Block(UserEvents_BlockChanged, UserEvents_BlockChangedCount, coords, oldBlock, block);
+
+
+/* Raised when the block permissions(can place or delete a block) for the player changes. */
+Event_Void BlockEvents_PermissionsChanged[EventHandler_Size];
+Int32 BlockEvents_PermissionsChangedCount;
+#define BlockEvents_RaisePermissionsChanged()\
+EventHandler_Raise_Void(BlockEvents_PermissionsChanged, BlockEvents_PermissionsChangedCount);
+
+/* Raised when a block definition is changed. */
+Event_Void BlockEvents_BlockDefChanged[EventHandler_Size];
+Int32 BlockEvents_BlockDefChangedCount;
+#define BlockEvents_RaiseBlockDefChanged()\
+EventHandler_Raise_Void(BlockEvents_BlockDefChanged, BlockEvents_BlockDefChangedCount);
 #endif

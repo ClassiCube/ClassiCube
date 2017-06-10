@@ -372,6 +372,9 @@
     <ClInclude Include="Builder1DPart.h">
       <Filter>Header Files\MeshBuilder</Filter>
     </ClInclude>
+    <ClInclude Include="ChunkUpdater.h">
+      <Filter>Header Files\Rendering\Map</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -541,6 +544,9 @@
     </ClCompile>
     <ClCompile Include="Builder.c">
       <Filter>Source Files\MeshBuilder</Filter>
+    </ClCompile>
+    <ClCompile Include="ChunkUpdater.c">
+      <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
