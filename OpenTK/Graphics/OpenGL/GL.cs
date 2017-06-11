@@ -113,6 +113,10 @@ namespace OpenTK.Graphics.OpenGL {
 		public static void End() {
 			Interop.Calli( EndAddress );
 		} static IntPtr EndAddress;
+						
+		public static void EndList() {
+			Interop.Calli( EndListAddress );
+		} static IntPtr EndListAddress;
 
 		public static void Fogf( FogParameter pname, float param ) {
 			Interop.Calli( (int)pname, param, FogfAddress );
@@ -176,7 +180,11 @@ namespace OpenTK.Graphics.OpenGL {
 		
 		public static void MultMatrixf( float* m ) {
 			Interop.Calli( m, MultMatrixfAddress );
-		} static IntPtr MultMatrixfAddress;
+		} static IntPtr MultMatrixfAddress;		
+		
+		public static void NewList( int list, int mode ) {
+			Interop.Calli( list, mode, NewListAddress );
+		} static IntPtr NewListAddress;
 
 		public static void PopMatrix() {
 			Interop.Calli( PopMatrixAddress );

@@ -57,6 +57,7 @@ namespace OpenTK.Graphics.OpenGL {
 			EnableAddress = GetAddress( "glEnable" );
 			EnableClientStateAddress = GetAddress( "glEnableClientState" );
 			EndAddress = GetAddress( "glEnd" );
+			EndListAddress = GetAddress( "glEndList" );
 			FogfAddress = GetAddress( "glFogf" );
 			FogfvAddress = GetAddress( "glFogfv" );
 			FogiAddress = GetAddress( "glFogi" );
@@ -73,9 +74,10 @@ namespace OpenTK.Graphics.OpenGL {
 			
 			HintAddress = GetAddress( "glHint" );			
 			LoadIdentityAddress = GetAddress( "glLoadIdentity" );
-			LoadMatrixfAddress = GetAddress( "glLoadMatrixf" );			
+			LoadMatrixfAddress = GetAddress( "glLoadMatrixf" );
 			MatrixModeAddress = GetAddress( "glMatrixMode" );
 			MultMatrixfAddress = GetAddress( "glMultMatrixf" );
+			NewListAddress = GetAddress( "glNewList" );
 			
 			PopMatrixAddress = GetAddress( "glPopMatrix" );
 			PushMatrixAddress = GetAddress( "glPushMatrix" );			
