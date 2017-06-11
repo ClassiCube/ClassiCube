@@ -144,10 +144,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Creates a static vertex buffer that has its data set at creation,
 		/// but the vertex buffer's data cannot be updated after creation. </summary>
-		public abstract int CreateVb<T>(T[] vertices, VertexFormat format, int count) where T : struct;
-		
-		/// <summary> Creates a static vertex buffer that has its data set at creation,
-		/// but the vertex buffer's data cannot be updated after creation. </summary>
 		public abstract int CreateVb(IntPtr vertices, VertexFormat format, int count);
 		
 		/// <summary> Creates a static index buffer that has its data set at creation,

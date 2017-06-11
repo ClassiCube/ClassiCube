@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 			
 			chunkEndX = xMax; chunkEndZ = zMax;
 			Stretch(x1, y1, z1);
-			PostStretchTiles(x1, y1, z1);		
+			PostStretchTiles(x1, y1, z1);
 			
 			for (int y = y1, yy = 0; y < yMax; y++, yy++) {
 				for (int z = z1, zz = 0; z < zMax; z++, zz++) {
@@ -104,7 +104,7 @@ namespace ClassicalSharp {
 							index++;
 							chunkIndex++;
 							if (x < 0) continue;
-							if (x >= width) break;							
+							if (x >= width) break;
 							BlockID rawBlock = mapPtr[index];
 							
 							allAir = allAir && info.Draw[rawBlock] == DrawType.Gas;
@@ -116,9 +116,9 @@ namespace ClassicalSharp {
 				outAllAir = allAir;
 				
 				if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + chunkSize >= width ||
-				   y1 + chunkSize >= height || z1 + chunkSize >= length) allSolid = false;
+				    y1 + chunkSize >= height || z1 + chunkSize >= length) allSolid = false;
 				
-				if (allAir || allSolid) return true;				
+				if (allAir || allSolid) return true;
 				light.LightHint(x1 - 1, z1 - 1, mapPtr);
 				return false;
 			}
@@ -144,10 +144,13 @@ namespace ClassicalSharp {
 			
 			ChunkPartInfo info;
 			int vertCount = (part.iCount / 6 * 4) + 2;
-			info.VbId = gfx.CreateVb(part.vertices, VertexFormat.P3fT2fC4b, vertCount);
+			
+			fixed (VertexP3fT2fC4b* ptr = part.vertices) {
+				info.VbId = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, vertCount);
+			}
 			info.IndicesCount = part.iCount;
 			
-			info.LeftCount =   (ushort)part.vCount[Side.Left]; 
+			info.LeftCount =   (ushort)part.vCount[Side.Left];
 			info.RightCount =  (ushort)part.vCount[Side.Right];
 			info.FrontCount =  (ushort)part.vCount[Side.Front];
 			info.BackCount =   (ushort)part.vCount[Side.Back];
@@ -217,9 +220,9 @@ namespace ClassicalSharp {
 						#endif
 						// All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times.
 						
-						if (counts[index] == 0 || 
-						   (x == 0 && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
-						   (x != 0 && (hidden[tileIdx + chunk[cIndex - 1]] & (1 << Side.Left)) != 0)) {
+						if (counts[index] == 0 ||
+						    (x == 0 && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
+						    (x != 0 && (hidden[tileIdx + chunk[cIndex - 1]] & (1 << Side.Left)) != 0)) {
 							counts[index] = 0;
 						} else {
 							int count = StretchZ(index, x, y, z, cIndex, b, Side.Left);
@@ -227,9 +230,9 @@ namespace ClassicalSharp {
 						}
 						
 						index++;
-						if (counts[index] == 0 || 
-						   (x == maxX && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
-						   (x != maxX && (hidden[tileIdx + chunk[cIndex + 1]] & (1 << Side.Right)) != 0)) {
+						if (counts[index] == 0 ||
+						    (x == maxX && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
+						    (x != maxX && (hidden[tileIdx + chunk[cIndex + 1]] & (1 << Side.Right)) != 0)) {
 							counts[index] = 0;
 						} else {
 							int count = StretchZ(index, x, y, z, cIndex, b, Side.Right);
@@ -237,9 +240,9 @@ namespace ClassicalSharp {
 						}
 						
 						index++;
-						if (counts[index] == 0 || 
-						   (z == 0 && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
-						   (z != 0 && (hidden[tileIdx + chunk[cIndex - 18]] & (1 << Side.Front)) != 0)) {
+						if (counts[index] == 0 ||
+						    (z == 0 && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
+						    (z != 0 && (hidden[tileIdx + chunk[cIndex - 18]] & (1 << Side.Front)) != 0)) {
 							counts[index] = 0;
 						} else {
 							int count = StretchX(index, x, y, z, cIndex, b, Side.Front);
@@ -247,9 +250,9 @@ namespace ClassicalSharp {
 						}
 						
 						index++;
-						if (counts[index] == 0 || 
-						   (z == maxZ && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
-						   (z != maxZ && (hidden[tileIdx + chunk[cIndex + 18]] & (1 << Side.Back)) != 0)) {
+						if (counts[index] == 0 ||
+						    (z == maxZ && (y < sidesLevel || (b >= Block.Water && b <= Block.StillLava && y < edgeLevel))) ||
+						    (z != maxZ && (hidden[tileIdx + chunk[cIndex + 18]] & (1 << Side.Back)) != 0)) {
 							counts[index] = 0;
 						} else {
 							int count = StretchX(index, x, y, z, cIndex, b, Side.Back);
@@ -258,7 +261,7 @@ namespace ClassicalSharp {
 						
 						index++;
 						if (counts[index] == 0 || y == 0 ||
-						   (hidden[tileIdx + chunk[cIndex - 324]] & (1 << Side.Bottom)) != 0) {
+						    (hidden[tileIdx + chunk[cIndex - 324]] & (1 << Side.Bottom)) != 0) {
 							counts[index] = 0;
 						} else {
 							int count = StretchX(index, x, y, z, cIndex, b, Side.Bottom);
@@ -267,7 +270,7 @@ namespace ClassicalSharp {
 						
 						index++;
 						if (counts[index] == 0 ||
-						   (hidden[tileIdx + chunk[cIndex + 324]] & (1 << Side.Top)) != 0) {
+						    (hidden[tileIdx + chunk[cIndex + 324]] & (1 << Side.Top)) != 0) {
 							counts[index] = 0;
 						} else if (b < Block.Water || b > Block.StillLava) {
 							int count = StretchX(index, x, y, z, cIndex, b, Side.Top);
@@ -292,7 +295,7 @@ namespace ClassicalSharp {
 		
 		protected bool OccludedLiquid(int chunkIndex) {
 			chunkIndex += 324;
-			return 
+			return
 				info.FullOpaque[chunk[chunkIndex]]
 				&& info.Draw[chunk[chunkIndex - 18]] != DrawType.Gas
 				&& info.Draw[chunk[chunkIndex - 1]] != DrawType.Gas

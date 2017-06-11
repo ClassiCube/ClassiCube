@@ -25,11 +25,6 @@ namespace OpenTK.Graphics.OpenGL {
 			Interop.Calli( (int)target, size, data, (int)usage, BufferDataAddress );
 		} static IntPtr BufferDataAddress, BufferDataARBAddress;
 		
-		public static void BufferData<T>( BufferTarget target, IntPtr size, T[] data, BufferUsage usage ) where T : struct {
-			IntPtr dataPtr = Interop.Fixed( ref data[0] );
-			Interop.Calli( (int)target, size, dataPtr, (int)usage, BufferDataAddress );
-		}
-		
 		public static void BufferSubData( BufferTarget target, IntPtr offset, IntPtr size, IntPtr data ) {
 			Interop.Calli( (int)target, offset, size, data, BufferSubDataAddress );
 		} static IntPtr BufferSubDataAddress, BufferSubDataARBAddress;

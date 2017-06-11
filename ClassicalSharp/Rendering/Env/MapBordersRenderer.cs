@@ -193,7 +193,10 @@ namespace ClassicalSharp.Renderers {
 			DrawZ(map.Length, 0, map.Width, y1, y2, axisSize, col, v, ref index);
 			DrawX(0, 0, map.Length, y1, y2, axisSize, col, v, ref index);
 			DrawX(map.Width, 0, map.Length, y1, y2, axisSize, col, v, ref index);
-			sidesVb = gfx.CreateVb(v, VertexFormat.P3fT2fC4b, sidesVertices);
+			
+			fixed (VertexP3fT2fC4b* ptr = v) {
+				sidesVb = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, sidesVertices);
+			}
 		}
 		
 		void RebuildEdges(int y, int axisSize) {
@@ -217,7 +220,10 @@ namespace ClassicalSharp.Renderers {
 				DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, y, axisSize, col,
 				      HorOffset(block), YOffset(block), v, ref index);
 			}
-			edgesVb = gfx.CreateVb(v, VertexFormat.P3fT2fC4b, edgesVertices);
+
+			fixed (VertexP3fT2fC4b* ptr = v) {
+				edgesVb = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, edgesVertices);
+			}
 		}
 
 		float HorOffset(BlockID block) {

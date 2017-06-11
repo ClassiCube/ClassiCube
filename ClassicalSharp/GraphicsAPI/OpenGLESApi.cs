@@ -158,13 +158,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			return id;
 		}
 		
-		public override int CreateVb<T>(T[] vertices, VertexFormat format, int count) {
-			int id = GenAndBind(All.ArrayBuffer);
-			int sizeInBytes = count * strideSizes[(int)format];
-			GL.BufferData(All.ArrayBuffer, new IntPtr(sizeInBytes), vertices, All.StaticDraw);
-			return id;
-		}
-		
 		public override int CreateVb(IntPtr vertices, VertexFormat format, int count) {
 			int id = GenAndBind(All.ArrayBuffer);
 			int sizeInBytes = count * strideSizes[(int)format];
