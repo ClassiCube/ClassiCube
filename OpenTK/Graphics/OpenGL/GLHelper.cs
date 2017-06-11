@@ -23,8 +23,9 @@ namespace OpenTK.Graphics.OpenGL {
 		internal void LoadEntryPoints( GraphicsContextBase context ) {
 			this.context = context;
 			Debug.Print("Loading OpenGL function pointers... ");
-
 			AlphaFuncAddress = GetAddress( "glAlphaFunc" );
+			
+			BeginAddress = GetAddress( "glBegin" );
 			BindBufferAddress = GetAddress( "glBindBuffer" );
 			BindBufferARBAddress = GetAddress( "glBindBufferARB" );
 			BindTextureAddress = GetAddress( "glBindTexture" );
@@ -33,13 +34,18 @@ namespace OpenTK.Graphics.OpenGL {
 			BufferDataARBAddress = GetAddress( "glBufferDataARB" );
 			BufferSubDataAddress = GetAddress( "glBufferSubData" );
 			BufferSubDataARBAddress = GetAddress( "glBufferSubDataARB" );
+			
+			CallListAddress = GetAddress( "glCallList" );
 			ClearAddress = GetAddress( "glClear" );
 			ClearColorAddress = GetAddress( "glClearColor" );
+			Color4ubAddress = GetAddress( "glColor4ub" );
 			ColorMaskAddress = GetAddress( "glColorMask" );
 			ColorPointerAddress = GetAddress( "glColorPointer" );
 			CullFaceAddress = GetAddress( "glCullFace" );
+			
 			DeleteBuffersAddress = GetAddress( "glDeleteBuffers" );
 			DeleteBuffersARBAddress = GetAddress( "glDeleteBuffersARB" );
+			DeleteListsAddress = GetAddress( "glDeleteLists" );
 			DeleteTexturesAddress = GetAddress( "glDeleteTextures" );
 			DepthFuncAddress = GetAddress( "glDepthFunc" );
 			DepthMaskAddress = GetAddress( "glDepthMask" );
@@ -47,32 +53,41 @@ namespace OpenTK.Graphics.OpenGL {
 			DisableClientStateAddress = GetAddress( "glDisableClientState" );
 			DrawArraysAddress = GetAddress( "glDrawArrays" );
 			DrawElementsAddress = GetAddress( "glDrawElements" );
+			
 			EnableAddress = GetAddress( "glEnable" );
 			EnableClientStateAddress = GetAddress( "glEnableClientState" );
+			EndAddress = GetAddress( "glEnd" );
 			FogfAddress = GetAddress( "glFogf" );
 			FogfvAddress = GetAddress( "glFogfv" );
 			FogiAddress = GetAddress( "glFogi" );
+			
 			GenBuffersAddress = GetAddress( "glGenBuffers" );
 			GenBuffersARBAddress = GetAddress( "glGenBuffersARB" );
+			GenListsAddress = GetAddress( "glGenLists" );
 			GenTexturesAddress = GetAddress( "glGenTextures" );
 			GetErrorAddress = GetAddress( "glGetError" );
 			GetFloatvAddress = GetAddress( "glGetFloatv" );
 			GetIntegervAddress = GetAddress( "glGetIntegerv" );
 			GetStringAddress = GetAddress( "glGetString" );
 			GetTexImageAddress = GetAddress( "glGetTexImage" );
-			HintAddress = GetAddress( "glHint" );
+			
+			HintAddress = GetAddress( "glHint" );			
 			LoadIdentityAddress = GetAddress( "glLoadIdentity" );
-			LoadMatrixfAddress = GetAddress( "glLoadMatrixf" );
+			LoadMatrixfAddress = GetAddress( "glLoadMatrixf" );			
 			MatrixModeAddress = GetAddress( "glMatrixMode" );
 			MultMatrixfAddress = GetAddress( "glMultMatrixf" );
+			
 			PopMatrixAddress = GetAddress( "glPopMatrix" );
-			PushMatrixAddress = GetAddress( "glPushMatrix" );
-			ReadPixelsAddress = GetAddress( "glReadPixels" );
+			PushMatrixAddress = GetAddress( "glPushMatrix" );			
+			ReadPixelsAddress = GetAddress( "glReadPixels" );			
 			ShadeModelAddress = GetAddress( "glShadeModel" );
+			
+			TexCoord2fAddress = GetAddress( "glTexCoord2f" );
 			TexCoordPointerAddress = GetAddress( "glTexCoordPointer" );
 			TexImage2DAddress = GetAddress( "glTexImage2D" );
 			TexParameteriAddress = GetAddress( "glTexParameteri" );
 			TexSubImage2DAddress = GetAddress( "glTexSubImage2D" );
+			Vertex3fAddress = GetAddress( "glVertex3f" );
 			VertexPointerAddress = GetAddress( "glVertexPointer" );
 			ViewportAddress = GetAddress( "glViewport" );
 		}

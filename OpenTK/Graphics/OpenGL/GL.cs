@@ -8,6 +8,10 @@ namespace OpenTK.Graphics.OpenGL {
 		public static void AlphaFunc( Compare func, float value ) {
 			Interop.Calli( (int)func, value, AlphaFuncAddress );
 		} static IntPtr AlphaFuncAddress;
+		
+		public static void Begin( BeginMode mode ) {
+			Interop.Calli( (int)mode, BeginAddress );
+		} static IntPtr BeginAddress;
 
 		public static void BindBuffer( BufferTarget target, int buffer ) {
 			Interop.Calli( (int)target, buffer, BindBufferAddress );
@@ -33,6 +37,10 @@ namespace OpenTK.Graphics.OpenGL {
 			IntPtr dataPtr = Interop.Fixed( ref data[0] );
 			Interop.Calli( (int)target, offset, size, dataPtr, BufferSubDataAddress );
 		}
+		
+		public static void CallList( int list ) {
+			Interop.Calli( list, CallListAddress );
+		} static IntPtr CallListAddress;
 
 		public static void Clear( ClearBufferMask mask ) {
 			Interop.Calli( (int)mask, ClearAddress );
@@ -41,7 +49,11 @@ namespace OpenTK.Graphics.OpenGL {
 		public static void ClearColor( float red, float green, float blue, float alpha ) {
 			Interop.Calli( red, green, blue, alpha, ClearColorAddress );
 		} static IntPtr ClearColorAddress;
-
+		
+		public static void Color4ub( byte red, byte green, byte blue, byte alpha ) {
+			Interop.Calli( red, green, blue, alpha, Color4ubAddress );
+		} static IntPtr Color4ubAddress;
+		
 		public static void ColorMask( bool red, bool green, bool blue, bool alpha ) {
 			Interop.Calli( red ? (byte)1 : (byte)0, green ? (byte)1 : (byte)0, blue ? (byte)1 : (byte)0, alpha ? (byte)1 : (byte)0, ColorMaskAddress );
 		} static IntPtr ColorMaskAddress;
@@ -58,6 +70,10 @@ namespace OpenTK.Graphics.OpenGL {
 			Interop.Calli( n, buffers, DeleteBuffersAddress );
 		} static IntPtr DeleteBuffersAddress, DeleteBuffersARBAddress;
 
+		public static void DeleteLists( int n, int* lists ) {
+			Interop.Calli( n, lists, DeleteListsAddress );
+		} static IntPtr DeleteListsAddress;
+		
 		public static void DeleteTextures( int n, int* textures ) {
 			Interop.Calli( n, textures, DeleteTexturesAddress );
 		} static IntPtr DeleteTexturesAddress;
@@ -93,6 +109,10 @@ namespace OpenTK.Graphics.OpenGL {
 		public static void EnableClientState( ArrayCap cap ) {
 			Interop.Calli( (int)cap, EnableClientStateAddress );
 		} static IntPtr EnableClientStateAddress;
+		
+		public static void End() {
+			Interop.Calli( EndAddress );
+		} static IntPtr EndAddress;
 
 		public static void Fogf( FogParameter pname, float param ) {
 			Interop.Calli( (int)pname, param, FogfAddress );
@@ -108,10 +128,14 @@ namespace OpenTK.Graphics.OpenGL {
 		
 		public static void GenBuffers( int n, int* buffers ) {
 			Interop.Calli( n, buffers, GenBuffersAddress );
-		} static IntPtr GenBuffersAddress, GenBuffersARBAddress;
+		} static IntPtr GenBuffersAddress, GenBuffersARBAddress;		
 		
-		public static void GenTextures( int n, int* buffers ) {
-			Interop.Calli( n, buffers, GenTexturesAddress );
+		public static void GenLists( int n, int* lists ) {
+			Interop.Calli( n, lists, GenListsAddress );
+		} static IntPtr GenListsAddress;
+		
+		public static void GenTextures( int n, int* textures ) {
+			Interop.Calli( n, textures, GenTexturesAddress );
 		} static IntPtr GenTexturesAddress;
 		
 		public static ErrorCode GetError() {
@@ -168,7 +192,11 @@ namespace OpenTK.Graphics.OpenGL {
 		
 		public static void ShadeModel( ShadingModel mode ) {
 			Interop.Calli( (int)mode, ShadeModelAddress );
-		} static IntPtr ShadeModelAddress;
+		} static IntPtr ShadeModelAddress;		
+		
+		public static void TexCoord2f( float u, float v ) {
+			Interop.Calli( u, v, TexCoord2fAddress );
+		} static IntPtr TexCoord2fAddress;
 		
 		public static void TexCoordPointer( int size, PointerType type, int stride, IntPtr pointer ) {
 			Interop.Calli( size, (int)type, stride, pointer, TexCoordPointerAddress );
@@ -187,6 +215,10 @@ namespace OpenTK.Graphics.OpenGL {
 		                                   int width, int height, PixelFormat format, PixelType type, IntPtr pixels) {
 			Interop.Calli( (int)target, level, xoffset, yoffset, width, height, (int)format, (int)type, pixels, TexSubImage2DAddress );
 		} static IntPtr TexSubImage2DAddress;
+
+		public static void Vertex3f( float x, float y, float z ) {
+			Interop.Calli( x, y, z, Vertex3fAddress );
+		} static IntPtr Vertex3fAddress;
 		
 		public static void VertexPointer( int size, PointerType type, int stride, IntPtr pointer ) {
 			Interop.Calli( size, (int)type, stride, pointer, VertexPointerAddress );
