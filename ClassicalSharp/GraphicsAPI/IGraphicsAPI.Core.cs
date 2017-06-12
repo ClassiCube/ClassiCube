@@ -128,11 +128,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal unsafe int MakeDefaultIb() {
 			const int maxIndices = 65536 / 4 * 6;
-			int element = 0;
-			ushort* indices = stackalloc ushort[maxIndices];
-			IntPtr ptr = (IntPtr)indices;
-			
-			for (int i = 0; i < maxIndices; i += 6) {
+			ushort* indices = stackalloc ushort[maxIndices];			
+			MakeIndices(indices, maxIndices);
+			return CreateIb((IntPtr)indices, maxIndices);
+		}
+		
+		internal unsafe void MakeIndices(ushort* indices, int iCount) {
+			int element = 0;			
+			for (int i = 0; i < iCount; i += 6) {
 				*indices = (ushort)(element + 0); indices++;
 				*indices = (ushort)(element + 1); indices++;
 				*indices = (ushort)(element + 2); indices++;
@@ -142,7 +145,6 @@ namespace ClassicalSharp.GraphicsAPI {
 				*indices = (ushort)(element + 0); indices++;
 				element += 4;
 			}
-			return CreateIb(ptr, maxIndices);
 		}
 	}
 

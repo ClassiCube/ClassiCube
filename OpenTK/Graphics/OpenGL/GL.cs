@@ -70,8 +70,8 @@ namespace OpenTK.Graphics.OpenGL {
 			Interop.Calli( n, buffers, DeleteBuffersAddress );
 		} static IntPtr DeleteBuffersAddress, DeleteBuffersARBAddress;
 
-		public static void DeleteLists( int n, int* lists ) {
-			Interop.Calli( n, lists, DeleteListsAddress );
+		public static void DeleteLists( int list, int n ) {
+			Interop.Calli( list, n, DeleteListsAddress );
 		} static IntPtr DeleteListsAddress;
 		
 		public static void DeleteTextures( int n, int* textures ) {
@@ -134,8 +134,8 @@ namespace OpenTK.Graphics.OpenGL {
 			Interop.Calli( n, buffers, GenBuffersAddress );
 		} static IntPtr GenBuffersAddress, GenBuffersARBAddress;		
 		
-		public static void GenLists( int n, int* lists ) {
-			Interop.Calli( n, lists, GenListsAddress );
+		public static int GenLists( int n ) {
+			return Interop.Calli_Int32( n, GenListsAddress );
 		} static IntPtr GenListsAddress;
 		
 		public static void GenTextures( int n, int* textures ) {

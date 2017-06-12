@@ -113,22 +113,24 @@ void GfxCommon_Mode3D(bool setFog) {
 }
 
 GfxResourceID GfxCommon_MakeDefaultIb(void) {
-	Int32 element = 0;
 	UInt16 indices[Gfx_MaxIndices];
-	UInt16* ptr = indices;
-	Int32 i;
+	GfxCommon_MakeIndices(indices, Gfx_MaxIndices);
+	return Gfx_CreateIb(indices, Gfx_MaxIndices);
+}
 
-	for (i = 0; i < Gfx_MaxIndices; i += 6) {
-		*ptr = (UInt16)(element + 0); ptr++;
-		*ptr = (UInt16)(element + 1); ptr++;
-		*ptr = (UInt16)(element + 2); ptr++;
+void GfxCommon_MakeIndices(UInt16* indices, Int32 iCount) {
+	Int32 element = 0, i;
 
-		*ptr = (UInt16)(element + 2); ptr++;
-		*ptr = (UInt16)(element + 3); ptr++;
-		*ptr = (UInt16)(element + 0); ptr++;
+	for (i = 0; i < iCount; i += 6) {
+		*indices = (UInt16)(element + 0); indices++;
+		*indices = (UInt16)(element + 1); indices++;
+		*indices = (UInt16)(element + 2); indices++;
+
+		*indices = (UInt16)(element + 2); indices++;
+		*indices = (UInt16)(element + 3); indices++;
+		*indices = (UInt16)(element + 0); indices++;
 		element += 4;
 	}
-	return Gfx_CreateIb(indices, Gfx_MaxIndices);
 }
 
 void GfxCommon_SetupAlphaState(UInt8 draw) {

@@ -55,6 +55,7 @@ namespace OpenTK {
 		public static void Calli( IntPtr address ) { throw rewriteEx; }
 		public static int Calli_Int32( IntPtr address ) { throw rewriteEx; }
 		public static void Calli( int arg0, IntPtr address ) { throw rewriteEx; }
+		public static int Calli_Int32( int arg0, IntPtr address ) { throw rewriteEx; }
 		public static IntPtr Calli_IntPtr( int arg0, IntPtr address ) { throw rewriteEx; }
 		public static void Calli( float* arg0, IntPtr address ) { throw rewriteEx; }
 		public static byte Calli_UInt8( int arg0, IntPtr address ) { throw rewriteEx; }
