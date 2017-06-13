@@ -124,8 +124,7 @@ namespace ClassicalSharp {
 			float t = (float)(entTask.Accumulator / entTask.Interval);
 			LocalPlayer.SetInterpPosition(t);
 			
-			if (!SkipClear || SkyboxRenderer.ShouldRender)
-				Graphics.Clear();
+			if (!SkipClear) Graphics.Clear();
 			CurrentCameraPos = Camera.GetCameraPos(t);
 			UpdateViewMatrix();
 			
