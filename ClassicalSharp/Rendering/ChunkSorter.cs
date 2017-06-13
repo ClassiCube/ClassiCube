@@ -22,20 +22,23 @@ namespace ClassicalSharp.Renderers {
 			
 			for (int i = 0; i < chunks.Length; i++) {
 				ChunkInfo info = chunks[i];
-				distances[i] = Utils.DistanceSquared(info.CentreX, info.CentreY, info.CentreZ,
-				                                     pPos.X, pPos.Y, pPos.Z);
 				
-				int dX1 = (info.CentreX - 8) - pPos.X, dX2 = (info.CentreX + 8) - pPos.X;
-				int dY1 = (info.CentreY - 8) - pPos.Y, dY2 = (info.CentreY + 8) - pPos.Y;
-				int dZ1 = (info.CentreZ - 8) - pPos.Z, dZ2 = (info.CentreZ + 8) - pPos.Z;
+				// Calculate distance to chunk centre
+				int dx = info.CentreX - pPos.X, dy = info.CentreY - pPos.Y, dz = info.CentreZ - pPos.Z;
+				distances[i] = dx * dx + dy * dy + dz * dz;
+				
+				// Can work out distance to chunk faces as offset from distance to chunk centre on each axis.
+				int dXMin = dx - 8, dXMax = dx + 8;
+				int dYMin = dy - 8, dYMax = dy + 8;
+				int dZMin = dz - 8, dZMax = dz + 8;
 				
 				// Back face culling: make sure that the chunk is definitely entirely back facing.
-				info.DrawLeft = !(dX1 <= 0 && dX2 <= 0);
-				info.DrawRight = !(dX1 >= 0 && dX2 >= 0);
-				info.DrawFront = !(dZ1 <= 0 && dZ2 <= 0);
-				info.DrawBack = !(dZ1 >= 0 && dZ2 >= 0);
-				info.DrawBottom = !(dY1 <= 0 && dY2 <= 0);
-				info.DrawTop = !(dY1 >= 0 && dY2 >= 0);
+				info.DrawLeft = !(dXMin <= 0 && dXMax <= 0);
+				info.DrawRight = !(dXMin >= 0 && dXMax >= 0);
+				info.DrawFront = !(dZMin <= 0 && dZMax <= 0);
+				info.DrawBack = !(dZMin >= 0 && dZMax >= 0);
+				info.DrawBottom = !(dYMin <= 0 && dYMax <= 0);
+				info.DrawTop = !(dYMin >= 0 && dYMax >= 0);
 			}
 
 			// NOTE: Over 5x faster compared to normal comparison of IComparer<ChunkInfo>.Compare

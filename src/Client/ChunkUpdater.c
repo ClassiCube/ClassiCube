@@ -12,7 +12,7 @@ void ChunkUpdater_Init(void) {
 	EventHandler_RegisterVoid(TextureEvents_AtlasChanged, ChunkUpdater_TerrainAtlasChanged);
 	EventHandler_RegisterVoid(WorldEvents_NewMap, ChunkUpdater_OnNewMap);
 	EventHandler_RegisterVoid(WorldEvents_MapLoaded, ChunkUpdater_OnNewMapLoaded);
-	EventHandler_RegisterVoid(WorldEvents_EnvVarChanged, ChunkUpdater_EnvVariableChanged);
+	EventHandler_RegisterInt32(WorldEvents_EnvVarChanged, ChunkUpdater_EnvVariableChanged);
 
 	EventHandler_RegisterVoid(BlockEvents_BlockDefChanged, ChunkUpdater_BlockDefinitionChanged);
 	EventHandler_RegisterVoid(GfxEvents_ViewDistanceChanged, ChunkUpdater_ViewDistanceChanged);
@@ -28,7 +28,7 @@ void ChunkUpdater_Free(void) {
 	EventHandler_UnregisterVoid(TextureEvents_AtlasChanged, ChunkUpdater_TerrainAtlasChanged);
 	EventHandler_UnregisterVoid(WorldEvents_NewMap, ChunkUpdater_OnNewMap);
 	EventHandler_UnregisterVoid(WorldEvents_MapLoaded, ChunkUpdater_OnNewMapLoaded);
-	EventHandler_UnregisterVoid(WorldEvents_EnvVarChanged, ChunkUpdater_EnvVariableChanged);
+	EventHandler_UnregisterInt32(WorldEvents_EnvVarChanged, ChunkUpdater_EnvVariableChanged);
 
 	EventHandler_UnregisterVoid(BlockEvents_BlockDefChanged, ChunkUpdater_BlockDefinitionChanged);
 	EventHandler_UnregisterVoid(GfxEvents_ViewDistanceChanged, ChunkUpdater_ViewDistanceChanged);
@@ -40,8 +40,8 @@ void ChunkUpdater_Free(void) {
 void ChunkUpdater_Refresh(void) {
 	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
 	if (MapRenderer_Chunks != NULL && World_Blocks != NULL) {
-		MapRenderer_ClearChunkCache();
-		MapRenderer_ResetChunkCache();
+		ChunkUpdater_ClearChunkCache();
+		ChunkUpdater_ResetChunkCache();
 	}
 	ChunkUpdater_ResetPartCounts();
 }
@@ -116,7 +116,7 @@ void ChunkUpdater_CreateChunkCache(void) {
 				ChunkInfo_Reset(&MapRenderer_Chunks[index], x, y, z);
 				MapRenderer_SortedChunks[index] = &MapRenderer_Chunks[index];
 				MapRenderer_RenderChunks[index] = &MapRenderer_Chunks[index];
-				distances[index] = 0;
+				ChunkUpdater_Distances[index] = 0;
 				index++;
 			}
 		}

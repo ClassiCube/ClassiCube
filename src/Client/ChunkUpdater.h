@@ -8,10 +8,10 @@
 */
 
 
-/* Chunk coordinates the camera is located in.*/
+/* Centre coordinates of chunk the camera is located in.*/
 Vector3I ChunkUpdater_ChunkPos;
 
-/* Distance of c*/
+/* Distance of chunks from the camera. */
 UInt32* ChunkUpdater_Distances;
 
 

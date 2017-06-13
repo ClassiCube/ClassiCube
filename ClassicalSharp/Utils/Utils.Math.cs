@@ -87,13 +87,7 @@ namespace ClassicalSharp {
 			float dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
 			return dx * dx + dy * dy + dz * dz;
 		}
-		
-		/// <summary> Returns the square of the euclidean distance between two points. </summary>
-		public static int DistanceSquared(int x1, int y1, int z1, int x2, int y2, int z2) {
-			int dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
-			return dx * dx + dy * dy + dz * dz;
-		}
-		
+
 		
 		/// <summary> Returns a normalised vector that faces in the direction
 		/// described by the given yaw and pitch. </summary>
