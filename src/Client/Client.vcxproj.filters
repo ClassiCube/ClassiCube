@@ -375,6 +375,9 @@
     <ClInclude Include="ChunkUpdater.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
+    <ClInclude Include="LocationUpdate.h">
+      <Filter>Header Files\Entities</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -547,6 +550,9 @@
     </ClCompile>
     <ClCompile Include="ChunkUpdater.c">
       <Filter>Source Files\Rendering\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="LocationUpdate.c">
+      <Filter>Source Files\Entities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

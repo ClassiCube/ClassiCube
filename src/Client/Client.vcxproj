@@ -203,6 +203,7 @@
     <ClInclude Include="BordersRenderer.h" />
     <ClInclude Include="LiquidAnimations.h" />
     <ClInclude Include="LocalPlayer.h" />
+    <ClInclude Include="LocationUpdate.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="MiscEvents.h" />
@@ -274,6 +275,7 @@
     <ClCompile Include="IsometricDrawer.c" />
     <ClCompile Include="Lighting.c" />
     <ClCompile Include="LiquidAnimations.c" />
+    <ClCompile Include="LocationUpdate.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="NormalBuilder.c" />
     <ClCompile Include="PackedCol.c" />

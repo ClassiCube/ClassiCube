@@ -119,12 +119,33 @@ void ChunkUpdater_ViewDistanceChanged(void) {
 	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
 }
 
+
 void ChunkUpdater_OnNewMap(void) {
 	Game_ChunkUpdates = 0;
 	ChunkUpdater_ClearChunkCache();
 	ChunkUpdater_ResetPartCounts();
 	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+	ChunkUpdater_FreeAllocations();
+}
 
+void ChunkUpdater_OnNewMapLoaded(void) {
+	MapRenderer_ChunksX = (World_Width + CHUNK_MAX) >> CHUNK_SHIFT;
+	MapRenderer_ChunksY = (World_Height + CHUNK_MAX) >> CHUNK_SHIFT;
+	MapRenderer_ChunksZ = (World_Length + CHUNK_MAX) >> CHUNK_SHIFT;
+
+	Int32 count = MapRenderer_ChunksX * MapRenderer_ChunksY * MapRenderer_ChunksZ;
+	if (MapRenderer_ChunksCount != count) {
+		MapRenderer_ChunksCount = count;
+		ChunkUpdater_FreeAllocations();
+		ChunkUpdater_PerformAllocations();
+	}
+
+	ChunkUpdater_CreateChunkCache();
+	Builder_OnNewMapLoaded();
+	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+}
+
+void ChunkUpdater_FreeAllocations(void) {
 	if (MapRenderer_Chunks == NULL) return;
 	Platform_MemFree(MapRenderer_Chunks); MapRenderer_Chunks = NULL;
 	Platform_MemFree(MapRenderer_SortedChunks); MapRenderer_SortedChunks = NULL;
@@ -133,7 +154,14 @@ void ChunkUpdater_OnNewMap(void) {
 	Platform_MemFree(MapRenderer_PartsBuffer); MapRenderer_PartsBuffer = NULL;
 }
 
-static void ChunkUpdater_OnNewMapLoaded(void);
+void ChunkUpdater_PerformAllocations(void) {
+	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo));
+	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo*));
+	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo*));
+	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(Int32));
+	UInt32 partsSize = sizeof(ChunkPartInfo) * cu_atlas1DCount;
+	MapRenderer_PartsBuffer = Platform_MemAlloc(MapRenderer_ChunksCount * partsSize);
+}
 
 
 void ChunkUpdater_UpdateChunks(Real64 delta) {
@@ -277,9 +305,52 @@ void ChunkUpdater_ClearChunkCache(void) {
 }
 
 
-void ChunkUpdater_DeleteChunk(ChunkInfo* info);
+#define ChunkUpdater_DeleteParts(parts, partsCount)\
+if (parts != NULL) {\
+	ChunkPartInfo* ptr = parts;\
+	for (i = 0; i < cu_atlas1DCount; i++) {\
+		Gfx_DeleteVb(&ptr->VbId);\
+		if (ptr->IndicesCount > 0) {partsCount[i]--; }\
+		ptr += MapRenderer_ChunksCount;\
+	}\
+}
 
-void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates);
+void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
+	info->Empty = false; info->AllAir = false;
+#if OCCLUSION
+	info.OcclusionFlags = 0;
+	info.OccludedFlags = 0;
+#endif
+
+	Int32 i;
+	ChunkUpdater_DeleteParts(info->NormalParts, MapRenderer_NormalPartsCount);
+	ChunkUpdater_DeleteParts(info->TranslucentParts, MapRenderer_TranslucentPartsCount);
+}
+
+#define ChunkUpdater_AddParts(parts, partsCount)\
+if (parts != NULL) {\
+	ChunkPartInfo* ptr = parts;\
+	for (i = 0; i < cu_atlas1DCount; i++) {\
+		if (ptr->IndicesCount > 0) { partsCount[i]++; }\
+		ptr += MapRenderer_ChunksCount;\
+	}\
+}
+
+void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
+	Game_ChunkUpdates++;
+	(*chunkUpdates)++;
+	info->PendingDelete = false;
+	Builder_MakeChunk(info);
+
+	if (info->NormalParts == NULL && info->TranslucentParts == NULL) {
+		info->Empty = true;
+		return;
+	}
+
+	Int32 i;
+	ChunkUpdater_AddParts(info->NormalParts, MapRenderer_NormalPartsCount);
+	ChunkUpdater_AddParts(info->TranslucentParts, MapRenderer_TranslucentPartsCount);
+}
 
 static Int32 ChunkUpdater_AdjustViewDist(Real32 dist) {
 	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;

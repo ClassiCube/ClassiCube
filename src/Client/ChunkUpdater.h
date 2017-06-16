@@ -37,9 +37,14 @@ static void ChunkUpdater_ProjectionChanged(void);
 
 static void ChunkUpdater_ViewDistanceChanged(void);
 
+
 static void ChunkUpdater_OnNewMap(void);
 
 static void ChunkUpdater_OnNewMapLoaded(void);
+
+static void ChunkUpdater_FreeAllocations(void);
+
+static void ChunkUpdater_PerformAllocations(void);
 
 
 void ChunkUpdater_UpdateChunks(Real64 delta);

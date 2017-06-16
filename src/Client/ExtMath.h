@@ -28,6 +28,8 @@
 
 #define Math_Sqrt(x) sqrtf(x)
 
+#define Math_Mod(x, y) fmodf(x, y)
+
 /* Integer floor of a floating-point value. */
 Int32 Math_Floor(Real32 value);
 
