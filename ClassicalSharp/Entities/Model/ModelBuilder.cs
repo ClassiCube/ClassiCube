@@ -48,10 +48,6 @@ namespace ClassicalSharp.Model {
 			float temp = X1; X1 = X2; X2 = temp;
 			return this;
 		}
-		
-		public BoxDesc SetX1(float value) { X1 = value / 16f; return this; }
-		
-		public BoxDesc SetX2(float value) { X1 = value / 16f; return this; }
 	}
 
 	/// <summary> Contains methods to create parts of 3D objects, typically boxes and quads. </summary>

@@ -47,6 +47,13 @@ namespace ClassicalSharp.Physics {
 		}
 		
 		/// <summary> Determines whether this bounding box entirely contains
+		/// the given bounding box on all axes. </summary>
+		public bool Contains(AABB other) {
+			return other.Min.X >= Min.X && other.Min.Y >= Min.Y && other.Min.Z >= Min.Z &&
+				other.Max.X <= Max.X && other.Max.Y <= Max.Y && other.Max.Z <= Max.Z;
+		}
+		
+		/// <summary> Determines whether this bounding box entirely contains
 		/// the coordinates on all axes. </summary>
 		public bool Contains(Vector3 P) {
 			return P.X >= Min.X && P.Y >= Min.Y && P.Z >= Min.Z &&

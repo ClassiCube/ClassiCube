@@ -74,9 +74,6 @@ namespace ClassicalSharp.Model {
 		
 		public void Dispose() {
 			game.Events.TextureChanged -= TextureChanged;
-			for (int i = 0; i < Models.Count; i++)
-				Models[i].Instance.Dispose();
-			
 			for (int i = 0; i < Textures.Count; i++) {
 				CachedTexture tex = Textures[i];
 				gfx.DeleteTexture(ref tex.TexID);

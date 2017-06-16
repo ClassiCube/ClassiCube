@@ -10,7 +10,7 @@ namespace ClassicalSharp.Model {
 
 	/// <summary> Contains a set of quads and/or boxes that describe a 3D object as well as
 	/// the bounding boxes that contain the entire set of quads and/or boxes. </summary>
-	public abstract class IModel : IDisposable {
+	public abstract class IModel {
 		protected Game game;
 		protected const int quadVertices = 4;
 		protected const int boxVertices = 6 * quadVertices;
@@ -145,9 +145,6 @@ namespace ClassicalSharp.Model {
 				DrawMode.Triangles, cache.vb, cache.vertices, index);
 			index = 0;
 		}
-		
-		/// <summary> Disposes of any native resources tied to this entity model. </summary>
-		public virtual void Dispose() { }
 		
 		
 		protected internal virtual Matrix4 TransformMatrix(Entity p, Vector3 pos) {
