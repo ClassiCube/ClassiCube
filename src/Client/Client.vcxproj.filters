@@ -139,6 +139,9 @@
     <Filter Include="Header Files\Singleplayer">
       <UniqueIdentifier>{c4fcedcf-b438-4dc5-b633-e345e191fbf8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Entities\Model">
+      <UniqueIdentifier>{1dd38dd7-06fa-492f-9226-9555516dd017}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -377,6 +380,9 @@
     </ClInclude>
     <ClInclude Include="LocationUpdate.h">
       <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelBuilder.h">
+      <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

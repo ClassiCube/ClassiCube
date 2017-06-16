@@ -207,6 +207,7 @@
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="MiscEvents.h" />
+    <ClInclude Include="ModelBuilder.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="NormalBuilder.h" />
     <ClInclude Include="Options.h" />
