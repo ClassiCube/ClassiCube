@@ -167,9 +167,10 @@ void ChunkUpdater_PerformAllocations(void) {
 	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(Int32));
 	if (ChunkUpdater_Distances == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
 
-	UInt32 partsSize = sizeof(ChunkPartInfo) * cu_atlas1DCount;
-	MapRenderer_PartsBuffer = Platform_MemAlloc(MapRenderer_ChunksCount * partsSize);
+	UInt32 partsSize = MapRenderer_ChunksCount * (sizeof(ChunkPartInfo) * cu_atlas1DCount);
+	MapRenderer_PartsBuffer = Platform_MemAlloc(partsSize);
 	if (MapRenderer_PartsBuffer == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
+	Platform_MemSet(MapRenderer_PartsBuffer, 0, partsSize);
 }
 
 
