@@ -112,7 +112,7 @@ static bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir);
 
 static bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir);
 
-static void Builder_SetPartInfo(Builder1DPart* part, Int32 i, ChunkPartInfo** parts);
+static void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* hasParts);
 
 static void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1);
 #endif

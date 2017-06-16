@@ -369,19 +369,19 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 void Gfx_DrawIndexedVb(DrawMode drawMode, Int32 indicesCount, Int32 startIndex) {
 	Int32 numPrims = D3D9_NumPrimitives(drawMode, indicesCount);
 	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, d3d9_modeMappings[drawMode], 0,
-		startIndex / 6 * 4, indicesCount / 6 * 4, startIndex, numPrims);
+		VCOUNT(startIndex), VCOUNT(indicesCount), startIndex, numPrims);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb");
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex) {
 	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, offsetVertex,
-		0, indicesCount / 6 * 4, startIndex, indicesCount / 3);
+		0, VCOUNT(indicesCount), startIndex, indicesCount / 3);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b_Range");
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex) {
 	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 0,
-		startIndex / 6 * 4, indicesCount / 6 * 4, startIndex, indicesCount / 3);
+		VCOUNT(startIndex), VCOUNT(indicesCount), startIndex, indicesCount / 3);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }
 

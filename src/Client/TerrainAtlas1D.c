@@ -32,7 +32,7 @@ void Atlas1D_UpdateState(void) {
 }
 
 void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
-	Atlas1D_TexIdsCount = atlasesCount;
+	Atlas1D_Count = atlasesCount;
 	UInt8 logBuffer[String_BufferSize(127)];
 	String log = String_FromRawBuffer(logBuffer, 127);
 
@@ -83,7 +83,7 @@ Int32 Atlas1D_UsedAtlasesCount(void) {
 
 void Atlas1D_Free(void) {
 	Int32 i;
-	for (i = 0; i < Atlas1D_TexIdsCount; i++) {
+	for (i = 0; i < Atlas1D_Count; i++) {
 		Gfx_DeleteTexture(&Atlas1D_TexIds[i]);
 	}
 }

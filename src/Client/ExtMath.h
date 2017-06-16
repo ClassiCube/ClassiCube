@@ -50,4 +50,8 @@ bool Math_IsPowOf2(Int32 value);
 #define Math_CountVertices(axis1Len, axis2Len, axisSize) (Math_CeilDiv(axis1Len, axisSize) * Math_CeilDiv(axis2Len, axisSize) * 4)
 
 #define Math_AdjViewDist(value) ((Int32)(1.4142135f * (value)))
+
+#define Math_Clamp(value, min, max)\
+value = value < (min) ? (min) : value;\
+value = value > (max) ? (max) : value;
 #endif

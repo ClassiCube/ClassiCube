@@ -204,23 +204,25 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleRelPosAndOrientationUpdate() {
 			byte id = reader.ReadUInt8();
-			float x = reader.ReadInt8() / 32f;
-			float y = reader.ReadInt8() / 32f;
-			float z = reader.ReadInt8() / 32f;
+			Vector3 v;
+			v.X = reader.ReadInt8() / 32f;
+			v.Y = reader.ReadInt8() / 32f;
+			v.Z = reader.ReadInt8() / 32f;
 			
 			float rotY =  (float)Utils.PackedToDegrees(reader.ReadUInt8());
 			float headX = (float)Utils.PackedToDegrees(reader.ReadUInt8());
-			LocationUpdate update = LocationUpdate.MakePosAndOri(x, y, z, rotY, headX, true);
+			LocationUpdate update = LocationUpdate.MakePosAndOri(v, rotY, headX, true);
 			net.UpdateLocation(id, update, true);
 		}
 		
 		void HandleRelPositionUpdate() {
 			byte id = reader.ReadUInt8();
-			float x = reader.ReadInt8() / 32f;
-			float y = reader.ReadInt8() / 32f;
-			float z = reader.ReadInt8() / 32f;
+			Vector3 v;
+			v.X = reader.ReadInt8() / 32f;
+			v.Y = reader.ReadInt8() / 32f;
+			v.Z = reader.ReadInt8() / 32f;
 			
-			LocationUpdate update = LocationUpdate.MakePos(x, y, z, true);
+			LocationUpdate update = LocationUpdate.MakePos(v, true);
 			net.UpdateLocation(id, update, true);
 		}
 		

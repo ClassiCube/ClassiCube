@@ -6,6 +6,8 @@
 #include "Lighting.h"
 #include "World.h"
 #include "Platform.h"
+#include "MapRenderer.h"
+#include "GraphicsAPI.h"
 
 void Builder_Init(void) {
 	Builder_WhiteCol = PackedCol_White;
@@ -40,10 +42,22 @@ void Builder_MakeChunk(ChunkInfo* info) {
 	info->AllAir = allAir;
 	if (!hasMesh) return;
 
-	Int32 i;
-	for (i = 0; i < Atlas1D_TexIdsCount; i++) {
-		Builder_SetPartInfo(&Builder_Parts[i], i, &info->NormalParts);
-		Builder_SetPartInfo(&Builder_Parts[i + Atlas1D_MaxAtlasesCount], i, &info->TranslucentParts);
+	Int32 i, partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
+	bool hasNormal = false, hasTranslucent = false;
+
+	for (i = 0; i < Atlas1D_Count; i++) {
+		Int32 idx = partsIndex + i * MapRenderer_ChunksCount;
+		Builder_SetPartInfo(&Builder_Parts[i], i, 
+			idx, &hasNormal);
+		Builder_SetPartInfo(&Builder_Parts[i + Atlas1D_MaxAtlasesCount], i,
+			idx + MapRenderer_TranslucentBufferOffset, &hasTranslucent);
+	}
+
+	if (hasNormal) {
+		info->NormalParts = &MapRenderer_PartsBuffer[partsIndex];
+	}
+	if (hasTranslucent) {
+		info->NormalParts = &MapRenderer_PartsBuffer[partsIndex + MapRenderer_TranslucentBufferOffset];
 	}
 
 #if OCCLUSION
@@ -220,6 +234,26 @@ bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir) {
 	if (allAir || allSolid) return true;
 	Lighting_LightHint(x1 - 1, z1 - 1);
 	return false;
+}
+
+void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* hasParts) {
+	if (part->iCount == 0) return;
+	ChunkPartInfo info;
+	Int32 vertCount = (part->iCount / 6 * 4) + 2;
+
+	info.VbId = Gfx_CreateVb(part->vertices, VertexFormat_P3fT2fC4b, vertCount);
+	info.IndicesCount = part->iCount;
+
+	info.XMinCount = (UInt16)part->fCount[Face_XMin];
+	info.XMaxCount = (UInt16)part->fCount[Face_XMax];
+	info.ZMinCount = (UInt16)part->fCount[Face_ZMin];
+	info.ZMaxCount = (UInt16)part->fCount[Face_ZMax];
+	info.YMinCount = (UInt16)part->fCount[Face_YMin];
+	info.YMaxCount = (UInt16)part->fCount[Face_YMax];
+	info.SpriteCount = part->sCount;
+
+	*hasParts = true;
+	MapRenderer_PartsBuffer[partsIndex] = info;
 }
 
 void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {

@@ -7,6 +7,20 @@
 #include "MapRenderer.h"
 #include "Constants.h"
 #include "ExtMath.h"
+#include "Builder.h"
+#include "Funcs.h"
+#include "WorldEnv.h"
+#include "GameProps.h"
+#include "Platform.h"
+#include "NormalBuilder.h"
+#include "LocalPlayer.h"
+#include "FrustumCulling.h"
+
+Int32 cu_chunksTarget = 12;
+#define cu_targetTime ((1.0 / 30) + 0.01)
+Vector3 cu_lastCamPos;
+Real32 cu_lastHeadY, cu_lastHeadX;
+Int32 cu_atlas1DCount;
 
 void ChunkUpdater_Init(void) {
 	EventHandler_RegisterVoid(TextureEvents_AtlasChanged, ChunkUpdater_TerrainAtlasChanged);
@@ -35,6 +49,8 @@ void ChunkUpdater_Free(void) {
 	EventHandler_UnregisterVoid(GfxEvents_ProjectionChanged, ChunkUpdater_ProjectionChanged);
 	EventHandler_UnregisterVoid(Gfx_ContextLost, ChunkUpdater_ClearChunkCache);
 	EventHandler_UnregisterVoid(Gfx_ContextRecreated, ChunkUpdater_Refresh);
+
+	ChunkUpdater_OnNewMap();
 }
 
 void ChunkUpdater_Refresh(void) {
@@ -64,30 +80,145 @@ void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
 	}
 }
 
+void ChunkUpdater_ApplyMeshBuilder(void) {
+	if (Game_SmoothLighting) {
+		 /* TODO: Implement advanced lighting builder.*/
+		NormalBuilder_SetActive();
+	} else {
+		NormalBuilder_SetActive();
+	}
+}
 
-void ChunkUpdater_ApplyMeshBuilder(void);
 
+static void ChunkUpdater_EnvVariableChanged(EnvVar envVar) {
+	if (envVar == EnvVar_SunCol || envVar == EnvVar_ShadowCol) {
+		ChunkUpdater_Refresh();
+	} else if (envVar == EnvVar_EdgeHeight || envVar == EnvVar_SidesOffset) {
+		Int32 oldClip = Builder_EdgeLevel;
+		Builder_SidesLevel = max(0, WorldEnv_SidesHeight);
+		Builder_EdgeLevel  = max(0, WorldEnv_EdgeHeight);
 
-static void ChunkUpdater_EnvVariableChanged(Int32 envVar);
+		/* Only need to refresh chunks on map borders up to highest edge level.*/
+		ChunkUpdater_RefreshBorders(max(oldClip, Builder_EdgeLevel));
+	}
+}
 
 static void ChunkUpdater_TerrainAtlasChanged(void);
 
-static void ChunkUpdater_BlockDefinitionChanged(void);
+void ChunkUpdater_BlockDefinitionChanged(void) {
+	MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
+	ChunkUpdater_ResetPartFlags();
+	ChunkUpdater_Refresh();
+}
 
-static void ChunkUpdater_ProjectionChanged(void);
+void ChunkUpdater_ProjectionChanged(void) {
+	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+}
 
-static void ChunkUpdater_ViewDistanceChanged(void);
+void ChunkUpdater_ViewDistanceChanged(void) {
+	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+}
 
-static void ChunkUpdater_OnNewMap(void);
+void ChunkUpdater_OnNewMap(void) {
+	Game_ChunkUpdates = 0;
+	ChunkUpdater_ClearChunkCache();
+	ChunkUpdater_ResetPartCounts();
+	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+
+	if (MapRenderer_Chunks == NULL) return;
+	Platform_MemFree(MapRenderer_Chunks); MapRenderer_Chunks = NULL;
+	Platform_MemFree(MapRenderer_SortedChunks); MapRenderer_SortedChunks = NULL;
+	Platform_MemFree(MapRenderer_RenderChunks); MapRenderer_RenderChunks = NULL;
+	Platform_MemFree(ChunkUpdater_Distances); ChunkUpdater_Distances = NULL;
+	Platform_MemFree(MapRenderer_PartsBuffer); MapRenderer_PartsBuffer = NULL;
+}
 
 static void ChunkUpdater_OnNewMapLoaded(void);
 
 
-void ChunkUpdater_UpdateChunks(Real64 delta);
+void ChunkUpdater_UpdateChunks(Real64 delta) {
+	Int32 chunkUpdates = 0;
+	cu_chunksTarget += delta < cu_targetTime ? 1 : -1; /* build more chunks if 30 FPS or over, otherwise slowdown. */
+	Math_Clamp(cu_chunksTarget, 4, 20);
 
-static Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates);
+	LocalPlayer* p = &LocalPlayer_Instance;
+	Vector3 camPos = Game_CurrentCameraPos;
+	Real32 headX = p->Base.Base.HeadX;
+	Real32 headY = p->Base.Base.HeadY;
 
-static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates);
+	bool samePos = Vector3_Equals(&camPos, &cu_lastCamPos) && headX == cu_lastHeadX && headY == cu_lastHeadY;
+	MapRenderer_RenderChunksCount = samePos ? 
+		ChunkUpdater_UpdateChunksStill(&chunkUpdates) :
+		ChunkUpdater_UpdateChunksAndVisibility(&chunkUpdates);
+
+	cu_lastCamPos = camPos;
+	cu_lastHeadX = headX; cu_lastHeadY = headY;
+
+	if (!samePos || chunkUpdates != 0) {
+		ChunkUpdater_ResetPartFlags();
+	}
+}
+
+static Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
+	Int32 i, j = 0;
+	Int32 viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
+	Int32 userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
+
+	for (i = 0; i < MapRenderer_ChunksCount; i++) {
+		ChunkInfo* info = MapRenderer_SortedChunks[i];
+		if (info->Empty) { continue; }
+		Int32 distSqr = ChunkUpdater_Distances[i];
+		bool noData = info->NormalParts == NULL && info->TranslucentParts == NULL;
+		
+		/* Unload chunks beyond visible range */
+		if (!noData && distSqr >= userDistSqr + 32 * 16) {
+			ChunkUpdater_DeleteChunk(info); continue;
+		}
+		noData |= info->PendingDelete;
+
+		if (noData && distSqr <= viewDistSqr && *chunkUpdates < cu_chunksTarget) {
+			ChunkUpdater_DeleteChunk(info);
+			ChunkUpdater_BuildChunk(info, chunkUpdates);
+		}
+
+		info->Visible = distSqr <= viewDistSqr &&
+			FrustumCulling_SphereInFrustum(info->CentreX, info->CentreY, info->CentreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
+		if (info->Visible && !info->Empty) { MapRenderer_RenderChunks[j] = info; j++; }
+	}
+	return j;
+}
+
+static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates) {
+	Int32 i, j = 0;
+	Int32 viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
+	Int32 userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
+
+	for (i = 0; i < MapRenderer_ChunksCount; i++) {
+		ChunkInfo* info = MapRenderer_SortedChunks[i];
+		if (info->Empty) { continue; }
+		Int32 distSqr = ChunkUpdater_Distances[i];
+		bool noData = info->NormalParts == NULL && info->TranslucentParts == NULL;
+
+		/* Unload chunks beyond visible range */
+		if (!noData && distSqr >= userDistSqr + 32 * 16) {
+			ChunkUpdater_DeleteChunk(info); continue;
+		}
+		noData |= info->PendingDelete;
+
+		if (noData && distSqr <= userDistSqr && *chunkUpdates < cu_chunksTarget) {
+			ChunkUpdater_DeleteChunk(info);
+			ChunkUpdater_BuildChunk(info, chunkUpdates);
+
+			/* only need to update the visibility of chunks in range. */
+			info->Visible = distSqr <= viewDistSqr &&
+				FrustumCulling_SphereInFrustum(info->CentreX, info->CentreY, info->CentreZ, 14); /* 14 ~ sqrt(3 * 8^2) */
+			if (info->Visible && !info->Empty) { MapRenderer_RenderChunks[j] = info; j++; }
+		} else if (info->Visible) {
+			MapRenderer_RenderChunks[j] = info; j++;
+		}
+	}
+	return j;
+}
 
 
 void ChunkUpdater_ResetPartFlags(void) {
@@ -137,8 +268,8 @@ void ChunkUpdater_ResetChunkCache(void) {
 
 void ChunkUpdater_ClearChunkCache(void) {
 	if (MapRenderer_Chunks == NULL) return;
-	Int32 i;
 
+	Int32 i;
 	for (i = 0; i < MapRenderer_ChunksCount; i++) {
 		ChunkUpdater_DeleteChunk(&MapRenderer_Chunks[i]);
 	}
@@ -150,7 +281,7 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info);
 
 void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates);
 
-static Int32 AdjustViewDist(Real32 dist) {
+static Int32 ChunkUpdater_AdjustViewDist(Real32 dist) {
 	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
 	Int32 viewDist = Math_AdjViewDist(dist);
 	return (viewDist + 24) * (viewDist + 24);

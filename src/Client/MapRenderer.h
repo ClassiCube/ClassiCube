@@ -63,6 +63,14 @@ ChunkInfo** MapRenderer_RenderChunks;
 Entries past this count should be ignored and skipped. */
 Int32 MapRenderer_RenderChunksCount;
 
+/* Buffer for all chunk parts. 
+There are MapRenderer_ChunksCount * Atlas1D_Count * 2 parts in the buffer. */
+ChunkPartInfo* MapRenderer_PartsBuffer;
+
+/* Offset of translucent chunk parts in MapRenderer_PartsBuffer. */
+Int32 MapRenderer_TranslucentBufferOffset;
+
+
 /* Retrieves the render info for the given chunk. */
 ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz);
 

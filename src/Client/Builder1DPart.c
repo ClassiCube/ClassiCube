@@ -1,8 +1,7 @@
 #include "Builder1DPart.h"
 #include "Platform.h"
 #include "ErrorHandler.h"
-
-#define VCOUNT(indicesCount) ((indicesCount) / 6 * 4)
+#include "GraphicsAPI.h"
 
 void Builder1DPart_Prepare(Builder1DPart* part) {
 	Int32 vCount = VCOUNT(part->iCount);

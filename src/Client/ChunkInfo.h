@@ -7,8 +7,8 @@
 
 typedef struct ChunkPartInfo {
 	Int32 VbId, IndicesCount, SpriteCount;
-	UInt16 LeftCount, RightCount, FrontCount,
-		BackCount, BottomCount, TopCount;
+	UInt16 XMinCount, XMaxCount, ZMinCount,
+		ZMaxCount, YMinCount, YMaxCount;
 } ChunkPartInfo;
 
 typedef struct ChunkInfo {

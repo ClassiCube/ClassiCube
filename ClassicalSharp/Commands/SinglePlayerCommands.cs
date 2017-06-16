@@ -6,6 +6,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.Renderers;
 using OpenTK.Input;
+using OpenTK;
 
 #if USE16_BIT
 using BlockID = System.UInt16;
@@ -143,7 +144,8 @@ namespace ClassicalSharp.Commands {
 					game.Chat.Add("&e/client teleport: &cCoordinates must be decimals");
 				}
 				
-				LocationUpdate update = LocationUpdate.MakePos(x, y, z, false);
+				Vector3 v = new Vector3(x, y, z);
+				LocationUpdate update = LocationUpdate.MakePos(v, false);
 				game.LocalPlayer.SetLocation(update, false);
 			}
 		}

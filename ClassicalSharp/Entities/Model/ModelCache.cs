@@ -38,8 +38,6 @@ namespace ClassicalSharp.Model {
 			model.Name = modelName;
 			model.Instance = instance;
 			Models.Add(model);
-			
-			instance.data = model;
 			instance.texIndex = GetTextureIndex(texName);
 		}
 		

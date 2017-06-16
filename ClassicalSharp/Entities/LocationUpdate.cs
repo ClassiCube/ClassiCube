@@ -48,11 +48,6 @@ namespace ClassicalSharp.Entities {
 			return new LocationUpdate(0, 0, 0, NaN, rotY, NaN, headX, false, false);
 		}
 
-		/// <summary> Constructs a location update that only consists of position information. </summary>
-		public static LocationUpdate MakePos(float x, float y, float z, bool rel) {
-			return new LocationUpdate(x, y, z, NaN, NaN, NaN, NaN, true, rel);
-		}
-
 		/// <summary> Constructs a location update that only consists of position information. </summary>		
 		public static LocationUpdate MakePos(Vector3 pos, bool rel) {
 			return new LocationUpdate(pos.X, pos.Y, pos.Z, NaN, NaN, NaN, NaN, true, rel);
@@ -61,11 +56,6 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Constructs a location update that consists of position and orientation information. </summary>	
 		public static LocationUpdate MakePosAndOri(Vector3 v, float rotY, float headX, bool rel) {
 			return new LocationUpdate(v.X, v.Y, v.Z, NaN, rotY, NaN, headX, true, rel);
-		}
-
-		/// <summary> Constructs a location update that consists of position and orientation information. </summary>		
-		public static LocationUpdate MakePosAndOri(float x, float y, float z, float rotY, float headX, bool rel) {
-			return new LocationUpdate(x, y, z, NaN, rotY, NaN, headX, true, rel);
 		}
 	}
 }

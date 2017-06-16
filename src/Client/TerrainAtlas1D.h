@@ -24,7 +24,7 @@ Real32 Atlas1D_InvElementSize;
 Int32 Atlas1D_TexIds[Atlas1D_MaxAtlasesCount];
 
 /* Number of 1D atlases that actually have textures / are used. */
-Int32 Atlas1D_TexIdsCount;
+Int32 Atlas1D_Count;
 
 /* Retrieves the 1D texture rectangle and 1D atlas index of the given texture. */
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index);

@@ -15,7 +15,6 @@ namespace ClassicalSharp.Model {
 		protected const int quadVertices = 4;
 		protected const int boxVertices = 6 * quadVertices;
 		protected RotateOrder Rotate = RotateOrder.ZYX;
-		internal CachedModel data;
 		internal bool initalised;
 
 		public IModel(Game game) { this.game = game; }

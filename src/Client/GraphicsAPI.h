@@ -13,6 +13,9 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+#define VCOUNT(indicesCount) ((indicesCount) / 6 * 4)
+#define ICOUNT(verticesCount) ((verticesCount) / 4 * 6)
+
 /* Initalises this graphics API. */
 void Gfx_Init(void);
 
