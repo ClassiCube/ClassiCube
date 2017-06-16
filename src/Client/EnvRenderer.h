@@ -36,7 +36,7 @@ static BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol);
 static Real32 EnvRenderer_BlendFactor(Real32 x);
 
 
-static void EnvVariableChanged(EnvVar envVar);
+static void EnvRenderer_EnvVariableChanged(EnvVar envVar);
 static void EnvRenderer_ContextLost(void);
 static void EnvRenderer_ContextRecreated(void);
 

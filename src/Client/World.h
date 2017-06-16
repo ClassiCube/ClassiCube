@@ -19,7 +19,7 @@ y = (index / World_Width) / World_Length;
 
 
 /* Raw blocks of this world. */
-BlockID* World_Blocks = NULL;
+BlockID* World_Blocks;
 
 /* Size of blocks array. */
 Int32 World_BlocksSize;

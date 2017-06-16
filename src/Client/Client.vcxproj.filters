@@ -554,5 +554,8 @@
     <ClCompile Include="LocationUpdate.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="AABB.c">
+      <Filter>Source Files\Math</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

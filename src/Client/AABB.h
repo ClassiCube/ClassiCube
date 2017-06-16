@@ -23,9 +23,9 @@ typedef struct AABB {
 #define AABB_Length(bb) (bb->Max.Z - bb.Min.Z)
 
 
-void AABB_FromCoords6(Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
+void AABB_FromCoords6(AABB* result, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
 
-void AABB_FromCoords(Vector3* min, Vector3* max, AABB* result);
+void AABB_FromCoords(AABB* result, Vector3* min, Vector3* max);
 
 void AABB_Make(AABB* result, Vector3* pos, Vector3* size);
 

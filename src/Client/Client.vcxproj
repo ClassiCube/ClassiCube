@@ -251,6 +251,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="2DStructs.c" />
+    <ClCompile Include="AABB.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
     <ClCompile Include="BordersRenderer.c" />

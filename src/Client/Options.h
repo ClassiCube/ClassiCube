@@ -13,52 +13,52 @@ typedef UInt8 FpsLimitMethod;
 #define FpsLimitMethod_120FPS 3
 #define FpsLimitMethod_None   4
 	
-const UInt8* OptionsKey_ViewDist = "viewdist";
-const UInt8* OptionsKey_SingleplayerPhysics = "singleplayerphysics";
-const UInt8* OptionsKey_UseMusic = "usemusic";
-const UInt8* OptionsKey_UseSound = "usesound";
-const UInt8* OptionsKey_ForceOpenAL = "forceopenal";
-const UInt8* OptionsKey_NamesMode = "namesmode";
-const UInt8* OptionsKey_InvertMouse = "invertmouse";
-const UInt8* OptionsKey_Sensitivity = "mousesensitivity";
-const UInt8* OptionsKey_FpsLimit = "fpslimit";
-const UInt8* OptionsKey_DefaultTexturePack = "defaulttexpack";
-const UInt8* OptionsKey_AutoCloseLauncher = "autocloselauncher";
-const UInt8* OptionsKey_ViewBobbing = "viewbobbing";
-const UInt8* OptionsKey_EntityShadow = "entityshadow";
-const UInt8* OptionsKey_RenderType = "normal";
-const UInt8* OptionsKey_SmoothLighting = "gfx-smoothlighting";
-const UInt8* OptionsKey_SurvivalMode = "game-survivalmode";
-const UInt8* OptionsKey_ChatLogging = "chat-logging";
+#define OptionsKey_ViewDist "viewdist"
+#define OptionsKey_SingleplayerPhysics "singleplayerphysics"
+#define OptionsKey_UseMusic "usemusic"
+#define OptionsKey_UseSound "usesound"
+#define OptionsKey_ForceOpenAL "forceopenal"
+#define OptionsKey_NamesMode "namesmode"
+#define OptionsKey_InvertMouse "invertmouse"
+#define OptionsKey_Sensitivity "mousesensitivity"
+#define OptionsKey_FpsLimit "fpslimit"
+#define OptionsKey_DefaultTexturePack "defaulttexpack"
+#define OptionsKey_AutoCloseLauncher "autocloselauncher"
+#define OptionsKey_ViewBobbing "viewbobbing"
+#define OptionsKey_EntityShadow "entityshadow"
+#define OptionsKey_RenderType "normal"
+#define OptionsKey_SmoothLighting "gfx-smoothlighting"
+#define OptionsKey_SurvivalMode "game-survivalmode"
+#define OptionsKey_ChatLogging "chat-logging"
 
-const UInt8* OptionsKey_HacksEnabled = "hacks-hacksenabled";
-const UInt8* OptionsKey_FieldOfView = "hacks-fov";
-const UInt8* OptionsKey_Speed = "hacks-speedmultiplier";
-const UInt8* OptionsKey_ModifiableLiquids = "hacks-liquidsbreakable";
-const UInt8* OptionsKey_PushbackPlacing = "hacks-pushbackplacing";
-const UInt8* OptionsKey_NoclipSlide = "hacks-noclipslide";
-const UInt8* OptionsKey_CameraClipping = "hacks-cameraclipping";
-const UInt8* OptionsKey_WOMStyleHacks = "hacks-womstylehacks";
-const UInt8* OptionsKey_FullBlockStep = "hacks-fullblockstep";
+#define OptionsKey_HacksEnabled "hacks-hacksenabled"
+#define OptionsKey_FieldOfView "hacks-fov"
+#define OptionsKey_Speed "hacks-speedmultiplier"
+#define OptionsKey_ModifiableLiquids "hacks-liquidsbreakable"
+#define OptionsKey_PushbackPlacing "hacks-pushbackplacing"
+#define OptionsKey_NoclipSlide "hacks-noclipslide"
+#define OptionsKey_CameraClipping "hacks-cameraclipping"
+#define OptionsKey_WOMStyleHacks "hacks-womstylehacks"
+#define OptionsKey_FullBlockStep "hacks-fullblockstep"
 
-const UInt8* OptionsKey_TabAutocomplete = "gui-tab-autocomplete";
-const UInt8* OptionsKey_ShowBlockInHand = "gui-blockinhand";
-const UInt8* OptionsKey_ChatLines = "gui-chatlines";
-const UInt8* OptionsKey_ClickableChat = "gui-chatclickable";
-const UInt8* OptionsKey_ArialChatFont = "gui-arialchatfont";
-const UInt8* OptionsKey_HotbarScale = "gui-hotbarscale";
-const UInt8* OptionsKey_InventoryScale = "gui-inventoryscale";
-const UInt8* OptionsKey_ChatScale = "gui-chatscale";
-const UInt8* OptionsKey_ShowFPS = "gui-showfps";
-const UInt8* OptionsKey_FontName = "gui-fontname";
-const UInt8* OptionsKey_BlackTextShadows = "gui-blacktextshadows";
+#define OptionsKey_TabAutocomplete "gui-tab-autocomplete"
+#define OptionsKey_ShowBlockInHand "gui-blockinhand"
+#define OptionsKey_ChatLines "gui-chatlines"
+#define OptionsKey_ClickableChat "gui-chatclickable"
+#define OptionsKey_ArialChatFont "gui-arialchatfont"
+#define OptionsKey_HotbarScale "gui-hotbarscale"
+#define OptionsKey_InventoryScale "gui-inventoryscale"
+#define OptionsKey_ChatScale "gui-chatscale"
+#define OptionsKey_ShowFPS "gui-showfps"
+#define OptionsKey_FontName "gui-fontname"
+#define OptionsKey_BlackTextShadows "gui-blacktextshadows"
 
-const UInt8* OptionsKey_AllowCustomBlocks = "nostalgia-customblocks";
-const UInt8* OptionsKey_UseCPE = "nostalgia-usecpe";
-const UInt8* OptionsKey_AllowServerTextures = "nostalgia-servertextures";
-const UInt8* OptionsKey_UseClassicGui = "nostalgia-classicgui";
-const UInt8* OptionsKey_SimpleArmsAnim = "nostalgia-simplearms";
-const UInt8* OptionsKey_UseClassicTabList = "nostalgia-classictablist";
-const UInt8* OptionsKey_UseClassicOptions = "nostalgia-classicoptions";
-const UInt8* OptionsKey_AllowClassicHacks = "nostalgia-hacks";
+#define OptionsKey_AllowCustomBlocks "nostalgia-customblocks"
+#define OptionsKey_UseCPE "nostalgia-usecpe"
+#define OptionsKey_AllowServerTextures "nostalgia-servertextures"
+#define OptionsKey_UseClassicGui "nostalgia-classicgui"
+#define OptionsKey_SimpleArmsAnim "nostalgia-simplearms"
+#define OptionsKey_UseClassicTabList "nostalgia-classictablist"
+#define OptionsKey_UseClassicOptions "nostalgia-classicoptions"
+#define OptionsKey_AllowClassicHacks "nostalgia-hacks"
 #endif

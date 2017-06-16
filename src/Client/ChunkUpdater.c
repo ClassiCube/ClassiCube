@@ -156,11 +156,20 @@ void ChunkUpdater_FreeAllocations(void) {
 
 void ChunkUpdater_PerformAllocations(void) {
 	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo));
+	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
+
 	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo*));
+	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate sorted chunk info");
+
 	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo*));
+	if (MapRenderer_RenderChunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate render chunk info");
+
 	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(Int32));
+	if (ChunkUpdater_Distances == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
+
 	UInt32 partsSize = sizeof(ChunkPartInfo) * cu_atlas1DCount;
 	MapRenderer_PartsBuffer = Platform_MemAlloc(MapRenderer_ChunksCount * partsSize);
+	if (MapRenderer_PartsBuffer == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
 }
 
 

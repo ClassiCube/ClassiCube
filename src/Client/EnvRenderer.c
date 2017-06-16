@@ -14,6 +14,14 @@
 GfxResourceID env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
 GfxResourceID env_cloudVertices, env_skyVertices;
 
+IGameComponent EnvRenderer_MakeGameComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = EnvRenderer_Init;
+	comp.Reset = EnvRenderer_Reset;
+	comp.OnNewMapLoaded = EnvRenderer_OnNewMapLoaded;
+	comp.Free = EnvRenderer_Free;
+	return comp;
+}
 
 void EnvRenderer_UseLegacyMode(bool legacy) {
 	EnvRenderer_Legacy = legacy;
