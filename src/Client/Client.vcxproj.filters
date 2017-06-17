@@ -142,6 +142,9 @@
     <Filter Include="Header Files\Entities\Model">
       <UniqueIdentifier>{1dd38dd7-06fa-492f-9226-9555516dd017}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Entities\Model">
+      <UniqueIdentifier>{d9fb5d8e-29d7-4774-abfb-d30b6ab766e7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -384,6 +387,9 @@
     <ClInclude Include="ModelBuilder.h">
       <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
+    <ClInclude Include="IModel.h">
+      <Filter>Header Files\Entities\Model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -562,6 +568,12 @@
     </ClCompile>
     <ClCompile Include="AABB.c">
       <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelBuilder.c">
+      <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="IModel.c">
+      <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

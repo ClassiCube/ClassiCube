@@ -196,6 +196,7 @@
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="GameProps.h" />
     <ClInclude Include="GZipHeader.h" />
+    <ClInclude Include="IModel.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IO.h" />
     <ClInclude Include="IsometricDrawer.h" />
@@ -273,12 +274,14 @@
     <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="GameStructs.c" />
     <ClCompile Include="GZipHeader.c" />
+    <ClCompile Include="IModel.c" />
     <ClCompile Include="Intersection.c" />
     <ClCompile Include="IsometricDrawer.c" />
     <ClCompile Include="Lighting.c" />
     <ClCompile Include="LiquidAnimations.c" />
     <ClCompile Include="LocationUpdate.c" />
     <ClCompile Include="MapRenderer.c" />
+    <ClCompile Include="ModelBuilder.c" />
     <ClCompile Include="NormalBuilder.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />

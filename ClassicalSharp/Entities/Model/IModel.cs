@@ -7,7 +7,10 @@ using ClassicalSharp.Physics;
 using OpenTK;
 
 namespace ClassicalSharp.Model {
-
+	
+	/// <summary> Describes the type of skin that a humanoid model uses. </summary>
+	public enum SkinType { Type64x32, Type64x64, Type64x64Slim, Invalid }
+	
 	/// <summary> Contains a set of quads and/or boxes that describe a 3D object as well as
 	/// the bounding boxes that contain the entire set of quads and/or boxes. </summary>
 	public abstract class IModel {

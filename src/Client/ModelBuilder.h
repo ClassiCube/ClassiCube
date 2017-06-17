@@ -2,7 +2,8 @@
 #define CS_MODELBUILDER_H
 #include "Typedefs.h"
 #include "Vectors.h"
-/* Containts various structs and methods that assist with building an entity model.
+#include "IModel.h"
+/* Contains various structs and methods that assist with building an entity model.
 Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -19,11 +20,21 @@ typedef struct BoxDesc {
 } BoxDesc;
 
 
+/* Describes the starting index of this part within a model's array of vertices,
+   and the number of vertices following the starting index that this part uses. */
+typedef struct ModelPart {
+	Int32 Offset, Count;
+	Real32 RotX, RotY, RotZ;
+} ModelPart;
+
+void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ);
+
+
 /* Sets the texture origin for this part within the texture atlas. */
 void BoxDesc_TexOrigin(BoxDesc* desc, Int32 x, Int32 y);
 
 /* Sets the the two corners of this box, in pixel coordinates. */
-void BoxDesc_SetModelBounds(BoxDesc* desc, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
+void BoxDesc_SetBounds(BoxDesc* desc, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);
 
 /* Expands the corners of this box outwards by the given amount in pixel coordinates. */
 void BoxDesc_Expand(BoxDesc* desc, Real32 amount);
@@ -75,7 +86,7 @@ let SW = sides width, BW = body width, BH = body height
 |H--------tex---------H|H--------tex---------H|H--------tex---------H|H--------tex---------H|
 |----------SW----------|----------BW----------|----------BW----------|----------------------|
 ********************************************************************************************* */
-ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc desc);
+ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc);
 
 
 static void BoxDesc_XQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
