@@ -30,7 +30,7 @@ Thus it is safe to allocate a string on the stack. */
 
 /* Indicates that a reference to the buffer in a string argument is retained after the function has completed.
 Thus it is NOT SAFE to allocate a string on the stack. */
-#define STRING_REFERENCE
+#define STRING_REF
 
 int __stdcall DllMain(void* hinstDLL, UInt32 fdwReason, void* pvReserved);
 #endif

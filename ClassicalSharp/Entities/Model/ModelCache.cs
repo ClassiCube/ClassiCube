@@ -26,9 +26,9 @@ namespace ClassicalSharp.Model {
 		public void InitCache() {
 			vertices = new VertexP3fT2fC4b[24 * 12];
 			RegisterDefaultModels();
-			game.Events.TextureChanged += TextureChanged;
-			
 			ContextRecreated();
+			
+			game.Events.TextureChanged += TextureChanged;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -72,15 +72,15 @@ namespace ClassicalSharp.Model {
 			return Models[0].Instance;
 		}
 		
-		public void Dispose() {
-			game.Events.TextureChanged -= TextureChanged;
+		public void Dispose() {			
 			for (int i = 0; i < Textures.Count; i++) {
 				CachedTexture tex = Textures[i];
 				gfx.DeleteTexture(ref tex.TexID);
 				Textures[i] = tex;
-			}
-			
+			}			
 			ContextLost();
+			
+			game.Events.TextureChanged -= TextureChanged;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}

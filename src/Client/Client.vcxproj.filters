@@ -390,6 +390,9 @@
     <ClInclude Include="IModel.h">
       <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
+    <ClInclude Include="ModelCache.h">
+      <Filter>Header Files\Entities\Model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -573,6 +576,9 @@
       <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
     <ClCompile Include="IModel.c">
+      <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelCache.c">
       <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
   </ItemGroup>

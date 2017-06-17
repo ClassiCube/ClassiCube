@@ -6,7 +6,7 @@
 #include "BlockEnums.h"
 #include "Entity.h"
 #include "AABB.h"
-/* Containts various structs and methods for an entity model.
+/* Contains various structs and methods for an entity model.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -26,10 +26,15 @@ typedef struct IModel {
 
 	/* Pointer to the raw vertices of the model.*/
 	ModelVertex* vertices;
+
 	/* Count of assigned vertices within the raw vertices array. */
 	Int32 index;
+
 	/* Index within ModelCache's textures of the default texture for this model. */
 	Int32 defaultTexIndex;
+
+	/* Whether the vertices of this model have actually been filled. */
+	bool initalised;
 
 
 	/* Whether the entity should be slightly bobbed up and down when rendering.

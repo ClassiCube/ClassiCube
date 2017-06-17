@@ -209,6 +209,7 @@
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="MiscEvents.h" />
     <ClInclude Include="ModelBuilder.h" />
+    <ClInclude Include="ModelCache.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="NormalBuilder.h" />
     <ClInclude Include="Options.h" />
@@ -282,6 +283,7 @@
     <ClCompile Include="LocationUpdate.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelBuilder.c" />
+    <ClCompile Include="ModelCache.c" />
     <ClCompile Include="NormalBuilder.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />
