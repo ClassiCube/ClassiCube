@@ -67,8 +67,8 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		double BlendFactor(float x) {
-			//return -0.05 + 0.22 * Math.Log(Math.Pow(x, 0.25));
-			double blend = -0.13 + 0.28 * Math.Log(Math.Pow(x, 0.25));
+			//return -0.05 + 0.22 * (0.25 * Math.Log(x));
+			double blend = -0.13 + 0.28 * (0.25 * Math.Log(x));
 			if (blend < 0) blend = 0;
 			if (blend > 1) blend = 1;
 			return blend;

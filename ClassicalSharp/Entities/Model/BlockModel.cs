@@ -64,13 +64,7 @@ namespace ClassicalSharp.Model {
 					height = 1;
 			}
 		}
-		
-		public override float RenderDistance(Entity p) {
-			block = Utils.FastByte(p.ModelName);
-			CalcState(block);
-			return base.RenderDistance(p);
-		}
-		
+
 		int lastTexId = -1;
 		public override void DrawModel(Entity p) {
 			// TODO: using 'is' is ugly, but means we can avoid creating

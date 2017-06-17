@@ -16,7 +16,7 @@ namespace ClassicalSharp.Entities {
 	/// May also contain other fields and properties. </summary>
 	public abstract partial class Entity {
 		
-		AABB modelAABB;
+		internal AABB modelAABB;
 		
 		/// <summary> Returns the bounding box that contains the model, without any rotations applied. </summary>
 		public AABB PickingBounds { get { return modelAABB.Offset(Position); } }

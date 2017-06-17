@@ -83,15 +83,14 @@ namespace ClassicalSharp.Model {
 		}
 		
 		/// <summary> Returns the closest distance of the given entity to the camera. </summary>
-		public virtual float RenderDistance(Entity p) {
+		public static float RenderDistance(Entity p, Vector3 camPos) {
 			Vector3 pos = p.Position;
-			AABB bb = PickingBounds;
+			AABB bb = p.modelAABB;
 			pos.Y += bb.Height / 2; // centre Y coordinate
 			
-			Vector3 cPos = game.CurrentCameraPos;
-			float dx = MinDist(cPos.X - pos.X, bb.Width / 2);
-			float dy = MinDist(cPos.Y - pos.Y, bb.Height / 2);
-			float dz = MinDist(cPos.Z - pos.Z, bb.Length / 2);
+			float dx = MinDist(camPos.X - pos.X, bb.Width / 2);
+			float dy = MinDist(camPos.Y - pos.Y, bb.Height / 2);
+			float dz = MinDist(camPos.Z - pos.Z, bb.Length / 2);
 			return dx * dx + dy * dy + dz * dz;
 		}
 		
