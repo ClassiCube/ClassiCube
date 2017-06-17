@@ -5,6 +5,7 @@
 #include "String.h"
 #include "Texture.h"
 #include "VertexStructs.h"
+#include "Compiler.h"
 
 /* Provides common/shared methods for a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -17,7 +18,7 @@ void GfxCommon_Init(void);
 void GfxCommon_Free(void);
 
 /* Handles a context being lost. */
-void GfxCommon_LoseContext(String reason);
+void GfxCommon_LoseContext(STRING_TRANSIENT String* reason);
 
 /* Handles a context being recreated. */
 void GfxCommon_RecreateContext(void);

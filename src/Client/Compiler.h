@@ -23,5 +23,14 @@
 #define EXPORT_FUNC __declspec(dllexport)
 #define IMPORT_FUNC __declspec(dllimport)
 
+
+/* Indicates that a string argument is discarded after the function has completed.
+Thus it is safe to allocate a string on the stack. */
+#define STRING_TRANSIENT
+
+/* Indicates that a reference to the buffer in a string argument is retained after the function has completed.
+Thus it is NOT SAFE to allocate a string on the stack. */
+#define STRING_REFERENCE
+
 int __stdcall DllMain(void* hinstDLL, UInt32 fdwReason, void* pvReserved);
 #endif

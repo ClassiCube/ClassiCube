@@ -59,7 +59,7 @@ typedef struct IModel {
 	/* Vertical offset from the model's feet/base that the model's eye is located. */
 	Real32 (*GetEyeY)(Entity* entity);
 
-	/*The size of the bounding box that is used when performing collision detection for this model. */
+	/* The size of the bounding box that is used when performing collision detection for this model. */
 	Vector3 (*GetCollisionSize);
 
 	/* Bounding box that contains this model, assuming that the model is not rotated at all. */
@@ -78,7 +78,7 @@ typedef struct IModel {
 	/* Scaling factor applied, multiplied by the entity's current model scale.*/
 	Real32 ShadowScale;
 
-	/*  Scaling factor applied, multiplied by the entity's current model scale.*/
+	/* Scaling factor applied, multiplied by the entity's current model scale.*/
 	Real32 NameScale;
 
 } IModel;

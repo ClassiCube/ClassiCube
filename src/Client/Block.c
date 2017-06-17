@@ -108,7 +108,7 @@ void Block_ResetProps(BlockID block) {
 	}
 }
 
-Int32 Block_FindID(String* name) {
+Int32 Block_FindID(STRING_TRANSIENT String* name) {
 	Int32 block;
 	for (block = BlockID_Air; block < Block_Count; block++) {
 		if (String_CaselessEquals(&Block_Name[block], name)) return block;
@@ -144,7 +144,8 @@ String Block_DefaultName(BlockID block) {
 	return buffer;
 }
 
-static void Block_SplitUppercase(String* buffer, String* blockNames, Int32 start, Int32 end) {
+static void Block_SplitUppercase(STRING_TRANSIENT String* buffer, STRING_TRANSIENT String* blockNames, 
+	Int32 start, Int32 end) {
 	Int32 i;
 	for (i = start; i < end; i++) {
 		UInt8 c = String_CharAt(blockNames, i);
