@@ -11,11 +11,20 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+#define IModel_QuadVertices 4
+#define IModel_BoxVertices (Face_Count * IModel_QuadVertices)
 
 /* Order in which axis rotations are applied to a part. */
 typedef Int32 RotateOrder;
 #define RotateOrder_ZYX 0
 #define RotateOrder_XZY 1
+
+/* Skin layout a humanoid skin texture can have. */
+typedef Int32 SkinType;
+#define SkinType_64x32 0
+#define SkinType_64x64 1
+#define SkinType_64x64Slim 2
+#define SkinType_Invalid 3
 
 
 /* Describes a vertex within a model. */

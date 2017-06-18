@@ -67,7 +67,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Returns the size of the model that is used for collision detection. </summary>
 		public Vector3 Size;
 		
-		void UpdateModel() {
+		protected void UpdateModel() {
 			BlockModel model = Model as BlockModel;
 			if (model != null)
 				model.CalcState(Utils.FastByte(ModelName));

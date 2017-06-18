@@ -82,7 +82,8 @@ namespace ClassicalSharp.Entities {
 			IGraphicsApi gfx = game.Graphics;
 			gfx.BindTexture(nameTex.ID);
 			
-			Vector3 pos;
+			Vector3 pos;			
+			UpdateModel();
 			Vector3.TransformY(Model.NameYOffset, ref transform, out pos);
 			float scale = Math.Min(1, Model.NameScale * ModelScale) / 70f;
 			
