@@ -20,16 +20,6 @@ typedef struct BoxDesc {
 } BoxDesc;
 
 
-/* Describes the starting index of this part within a model's array of vertices,
-   and the number of vertices following the starting index that this part uses. */
-typedef struct ModelPart {
-	Int32 Offset, Count;
-	Real32 RotX, RotY, RotZ;
-} ModelPart;
-
-void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ);
-
-
 /* Sets the texture origin for this part within the texture atlas. */
 void BoxDesc_TexOrigin(BoxDesc* desc, Int32 x, Int32 y);
 

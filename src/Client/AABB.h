@@ -16,11 +16,11 @@ typedef struct AABB {
 
 
 /* Returns the width of the given bounding box. */
-#define AABB_Width(bb)  (bb->Max.X - bb.Min.X)
+#define AABB_Width(bb)  (bb->Max.X - bb->Min.X)
 /* Returns the height of the given bounding box. */
-#define AABB_Height(bb) (bb->Max.Y - bb.Min.Y)
+#define AABB_Height(bb) (bb->Max.Y - bb->Min.Y)
 /* Returns the length of the given bounding box. */
-#define AABB_Length(bb) (bb->Max.Z - bb.Min.Z)
+#define AABB_Length(bb) (bb->Max.Z - bb->Min.Z)
 
 
 void AABB_FromCoords6(AABB* result, Real32 x1, Real32 y1, Real32 z1, Real32 x2, Real32 y2, Real32 z2);

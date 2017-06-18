@@ -229,7 +229,7 @@ namespace ClassicalSharp.Model {
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
 				int quadI = i & 3;
 				if (quadI == 0 || quadI == 3) vertex.V -= 0.01f * vScale;
-				if (quadI == 2 || quadI == 3) vertex.U -= 0.01f * vScale;
+				if (quadI == 2 || quadI == 3) vertex.U -= 0.01f * uScale;
 				finVertices[index++] = vertex;
 			}
 		}

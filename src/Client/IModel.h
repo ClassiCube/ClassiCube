@@ -6,9 +6,16 @@
 #include "BlockEnums.h"
 #include "Entity.h"
 #include "AABB.h"
+#include "GraphicsEnums.h"
 /* Contains various structs and methods for an entity model.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+
+
+/* Order in which axis rotations are applied to a part. */
+typedef Int32 RotateOrder;
+#define RotateOrder_ZYX 0
+#define RotateOrder_XZY 1
 
 
 /* Describes a vertex within a model. */
@@ -18,6 +25,16 @@ typedef struct ModelVertex {
 } ModelVertex;
 
 void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, UInt16 u, UInt16 v);
+
+
+/* Describes the starting index of this part within a model's array of vertices,
+and the number of vertices following the starting index that this part uses. */
+typedef struct ModelPart {
+	Int32 Offset, Count;
+	Real32 RotX, RotY, RotZ;
+} ModelPart;
+
+void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ);
 
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
@@ -35,6 +52,9 @@ typedef struct IModel {
 
 	/* Whether the vertices of this model have actually been filled. */
 	bool initalised;
+
+	/* Specifies order in which axis roations are applied to a part. */
+	RotateOrder Rotation;
 
 
 	/* Whether the entity should be slightly bobbed up and down when rendering.
@@ -88,5 +108,39 @@ typedef struct IModel {
 
 } IModel;
 
+
+/* Colour tint applied to each face, when rendering a model. */
+PackedCol IModel_Cols[Face_Count];
+
+/* Scaling applied to UV coordinates when rendering a model. */
+Real32 IModel_uScale, IModel_vScale;
+
+/* Angle of offset from head to body rotation. */
+Real32 IModel_cosHead, IModel_sinHead;
+
+
+/* Sets default values for fields of a model. */
 void IModel_Init(IModel* model);
+
+/* Returns whether the model should be rendered based on the given entity's position. */
+bool IModel_ShouldRender(Entity* entity);
+
+/* Returns the closest distance of the given entity to the camera. */
+Real32 IModel_RenderDistance(Entity* entity);
+
+static Real32 IModel_MinDist(Real32 dist, Real32 extent);
+
+/*Sets up the state for, then renders an entity model, based on the entity's position and orientation. */
+void IModel_Render(IModel* model, Entity entity);
+
+void IModel_SetupState(Entity* p);
+
+/* Sends the updated vertex data to the GPU. */
+void IModel_UpdateVB(IModel* model);
+
+GfxResourceID IModel_GetTexture(IModel* model, GfxResourceID pTex);
+
+void IModel_DrawPart(IModel* model, ModelPart part);
+
+void IModel_DrawRotate(IModel* model, Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head);
 #endif

@@ -1,11 +1,6 @@
 #include "ModelBuilder.h"
 #include "ExtMath.h"
 
-void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ) {
-	part->Offset = offset; part->Count = count;
-	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
-}
-
 void BoxDesc_TexOrigin(BoxDesc* desc, Int32 x, Int32 y) {
 	desc->TexX = x; desc->TexY = y;
 }

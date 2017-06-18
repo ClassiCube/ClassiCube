@@ -2,6 +2,7 @@
 #define CS_ENTITY_H
 #include "Typedefs.h"
 #include "Vectors.h"
+#include "AABB.h"
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -18,5 +19,15 @@ typedef struct Entity {
 
 	/* Rotation of the entity in the world. */
 	Real32 HeadX, HeadY, RotX, RotY, RotZ;
+
+	/* AABB of the model. Centred around the origin, NOT the position. */
+	AABB modelAABB;
 } Entity;
+
+
+/* Returns the bounding box that contains the model, without any rotations applied. */
+AABB Entity_GetPickingBounds(Entity* entity);
+
+/* Bounding box of the model that collision detection is performed with, in world coordinates. */
+AABB Entity_GetBounds(Entity* entity);
 #endif
