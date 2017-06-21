@@ -264,6 +264,7 @@
     <ClCompile Include="ChunkSorter.c" />
     <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="Compiler.c" />
+    <ClCompile Include="CreeperModel.c" />
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />

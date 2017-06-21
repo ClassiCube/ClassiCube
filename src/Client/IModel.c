@@ -64,7 +64,8 @@ static Real32 IModel_MinDist(Real32 dist, Real32 extent) {
 	return min(Math_AbsF(dist), dMinMax);
 }
 
-void IModel_UpdateVB(IModel* model) {
+void IModel_UpdateVB(void) {
+	IModel* model = IModel_ActiveModel;
 	GfxCommon_UpdateDynamicIndexedVb(
 		DrawMode_Triangles, ModelCache_Vb, ModelCache_Vertices, model->index);
 	model->index = 0;
@@ -74,7 +75,8 @@ GfxResourceID IModel_GetTexture(IModel* model, GfxResourceID pTex) {
 	return pTex > 0 ? pTex : ModelCache_Textures[model->defaultTexIndex].TexID;
 }
 
-void IModel_DrawPart(IModel* model, ModelPart part) {
+void IModel_DrawPart(ModelPart part) {
+	IModel* model = IModel_ActiveModel;
 	VertexP3fT2fC4b* dst = ModelCache_Vertices; dst += model->index;
 	Int32 i;
 
@@ -92,7 +94,8 @@ void IModel_DrawPart(IModel* model, ModelPart part) {
 	}
 }
 
-void IModel_DrawRotate(IModel* model, Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head) {
+void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head) {
+	IModel* model = IModel_ActiveModel;
 	Real32 cosX = Math_Cos(-angleX), sinX = Math_Sin(-angleX);
 	Real32 cosY = Math_Cos(-angleY), sinY = Math_Sin(-angleY);
 	Real32 cosZ = Math_Cos(-angleZ), sinZ = Math_Sin(-angleZ);

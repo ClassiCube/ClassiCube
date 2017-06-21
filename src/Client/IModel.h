@@ -88,16 +88,16 @@ typedef struct IModel {
 
 
 	/* Vertical offset from the model's feet/base that the name texture should be drawn at. */
-	Real32 (*GetNameYOffset);
+	Real32 (*GetNameYOffset)(void);
 
 	/* Vertical offset from the model's feet/base that the model's eye is located. */
 	Real32 (*GetEyeY)(Entity* entity);
 
 	/* The size of the bounding box that is used when performing collision detection for this model. */
-	Vector3 (*GetCollisionSize);
+	Vector3 (*GetCollisionSize)(void);
 
 	/* Bounding box that contains this model, assuming that the model is not rotated at all. */
-	AABB (*GetPickingBounds);
+	AABB (*GetPickingBounds)(void);
 
 	/* Fills out the vertices of this model. */
 	void (*CreateParts)(void);
@@ -127,9 +127,22 @@ Real32 IModel_uScale, IModel_vScale;
 /* Angle of offset from head to body rotation. */
 Real32 IModel_cosHead, IModel_sinHead;
 
+/* Pointer to model that is currently being rendered/drawn. */
+IModel* IModel_ActiveModel;
+
 
 /* Sets default values for fields of a model. */
 void IModel_Init(IModel* model);
+
+/* Sets the function pointers for a model instance assuming typeName_XYZ naming. */
+#define IModel_SetFuncPointers(typeName)\
+typeName.CreateParts = typeName ## _CreateParts;\
+typeName.vertices = typeName ## _Vertices;\
+typeName.GetNameYOffset = typeName ## _GetNameYOffset;\
+typeName.GetCollisionSize = typeName ## _GetCollisionSize;\
+typeName.GetPickingBounds = typeName ## _GetPickingBounds;\
+typeName.DrawModel = typeName ## _DrawModel;
+
 
 /* Returns whether the model should be rendered based on the given entity's position. */
 bool IModel_ShouldRender(Entity* entity);
@@ -145,11 +158,13 @@ void IModel_Render(IModel* model, Entity entity);
 void IModel_SetupState(Entity* p);
 
 /* Sends the updated vertex data to the GPU. */
-void IModel_UpdateVB(IModel* model);
+void IModel_UpdateVB();
 
+/* Gets the appropriate native texture ID for the given model.
+if pTex is > 0 then it is returned. Otherwise ID of the model's default texture is returned. */
 GfxResourceID IModel_GetTexture(IModel* model, GfxResourceID pTex);
 
-void IModel_DrawPart(IModel* model, ModelPart part);
+void IModel_DrawPart(ModelPart part);
 
-void IModel_DrawRotate(IModel* model, Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head);
+void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head);
 #endif

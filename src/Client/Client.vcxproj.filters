@@ -581,5 +581,8 @@
     <ClCompile Include="ModelCache.c">
       <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
+    <ClCompile Include="CreeperModel.c">
+      <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
