@@ -31,6 +31,9 @@ String String_FromConstant(const UInt8* buffer);
 /* Makes an empty string that points to nowhere. */
 String String_MakeNull(void);
 
+/* Sets all characters in the given string to lowercase. */
+void String_MakeLowercase(String* str);
+
 
 /* Returns whether two strings have same contents. */
 bool String_Equals(String* a, String* b);
@@ -55,7 +58,10 @@ bool String_AppendConstant(String* str, const UInt8* buffer);
 
 
 /* Finds the first index of c in given string, -1 if not found. */
-int String_IndexOf(String* str, UInt8 c, Int32 offset);
+Int32 String_IndexOf(String* str, UInt8 c, Int32 offset);
+
+/* Finds the last index of c in given string, -1 if not found. */
+Int32 String_LastIndexOf(String* str, UInt8 c);
 
 /* Gets the character at the given index in the string. */
 UInt8 String_CharAt(String* str, Int32 offset);
