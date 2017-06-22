@@ -143,6 +143,7 @@ namespace ClassicalSharp.Entities {
 			Hacks.WOMStyleHacks = !game.ClassicMode && Options.GetBool(OptionsKey.WOMStyleHacks, false);
 			Hacks.Enabled = !game.PureClassic && Options.GetBool(OptionsKey.HacksEnabled, true);
 			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool(OptionsKey.FullBlockStep, false);
+			Health = 20;
 		}
 		
 		public void Ready(Game game) { }
@@ -155,6 +156,7 @@ namespace ClassicalSharp.Entities {
 			Velocity = Vector3.Zero;
 			physics.jumpVel = 0.42f;
 			physics.serverJumpVel = 0.42f;
+			Health = 20;
 		}
 	}
 }
