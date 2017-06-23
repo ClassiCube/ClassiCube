@@ -14,13 +14,13 @@ namespace ClassicalSharp.Network {
 		internal int ServerExtensionsCount;
 		internal bool sendHeldBlock, useMessageTypes;
 		internal int envMapVer = 2, blockDefsExtVer = 2;
-		internal bool needD3Fix, extEntityPos;
+		internal bool needD3Fix, extEntityPos, twoWayPing;
 		
 		public void Reset(Game game) {
 			ServerExtensionsCount = 0;
 			sendHeldBlock = false; useMessageTypes = false;
 			envMapVer = 2; blockDefsExtVer = 2;
-			needD3Fix = false; extEntityPos = false;
+			needD3Fix = false; extEntityPos = false; twoWayPing = false;
 			game.UseCPEBlocks = false;
 			
 			NetworkProcessor net = (NetworkProcessor)game.Server;
@@ -60,6 +60,8 @@ namespace ClassicalSharp.Network {
 				
 				net.reader.ExtendedPositions = true;
 				net.writer.ExtendedPositions = true;
+			} else if (ext == "TwoWayPing") {
+				twoWayPing = true;
 			}
 		}
 		

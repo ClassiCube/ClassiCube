@@ -43,6 +43,7 @@ namespace ClassicalSharp.Network {
 		internal ScheduledTask task;
 		internal bool receivedFirstPosition;
 		internal byte[] needRemoveNames = new byte[256 >> 3];
+		int pingTicks;
 		
 		public override void Connect(IPAddress address, int port) {
 			socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -74,7 +75,8 @@ namespace ClassicalSharp.Network {
 			game.WorldEvents.OnNewMap += OnNewMap;
 			game.UserEvents.BlockChanged += BlockChanged;
 
-			classic.SendLogin(game.Username, game.Mppass);
+			classic.WriteLogin(game.Username, game.Mppass);
+			SendPacket();
 			lastPacket = DateTime.UtcNow;
 		}
 		
@@ -127,11 +129,18 @@ namespace ClassicalSharp.Network {
 			}
 			
 			reader.RemoveProcessed();
-			if (receivedFirstPosition) {
-				SendPosition(player.Position, player.HeadY, player.HeadX);
-			}
 			CheckAsyncResources();
 			wom.Tick();
+			
+			if (!receivedFirstPosition) return;
+			classic.WritePosition(player.Position, player.HeadY, player.HeadX);
+			pingTicks++;
+			
+			if (pingTicks >= 20) {
+				cpe.WriteTwoWayPing(false, PingList.NextTwoWayPingData());
+				pingTicks = 0;
+			}
+			SendPacket();
 		}
 		
 		/// <summary> Sets the incoming packet handler for the given packet id. </summary>
@@ -200,10 +209,11 @@ namespace ClassicalSharp.Network {
 			BlockID block = game.Inventory.Selected;
 			
 			if (e.Block == 0) {
-				classic.SendSetBlock(p.X, p.Y, p.Z, false, block);
+				classic.WriteSetBlock(p.X, p.Y, p.Z, false, block);
 			} else {
-				classic.SendSetBlock(p.X, p.Y, p.Z, true, e.Block);
+				classic.WriteSetBlock(p.X, p.Y, p.Z, true, e.Block);
 			}
+			SendPacket();
 		}
 		
 		void OnNewMap(object sender, EventArgs e) {

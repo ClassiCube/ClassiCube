@@ -12,15 +12,18 @@ namespace ClassicalSharp.Network {
 		
 		public override void SendChat(string text, bool partial) {
 			if (String.IsNullOrEmpty(text)) return;
-			classic.SendChat(text, partial);
+			classic.WriteChat(text, partial);
+			SendPacket();
 		}
 		
 		public override void SendPosition(Vector3 pos, float rotY, float headX) {
-			classic.SendPosition(pos, rotY, headX);
+			classic.WritePosition(pos, rotY, headX);
+			SendPacket();
 		}
 		
 		public override void SendPlayerClick(MouseButton button, bool buttonDown, byte targetId, PickedPos pos) {
-			cpe.SendPlayerClick(button, buttonDown, targetId, pos);
+			cpe.WritePlayerClick(button, buttonDown, targetId, pos);
+			SendPacket();
 		}
 
 		

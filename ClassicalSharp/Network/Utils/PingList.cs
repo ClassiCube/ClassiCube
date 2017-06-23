@@ -39,7 +39,7 @@ namespace ClassicalSharp.Network {
             return (ushort)(prev + 1);
         }
         
-        public static void Update(ushort data) {
+        public static void Update(ushort data) {        	
             for (int i = 0; i < Entries.Length; i++ ) {
                 if (Entries[i].Data != data) continue;
                 Entries[i].TimeReceived = DateTime.UtcNow;

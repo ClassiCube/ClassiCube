@@ -277,27 +277,24 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		#region Write
 		
-		internal void SendChat(string text, bool partial) {
-			int payload = !net.SupportsPartialMessages ? 0xFF: (partial ? 1 : 0);
-			writer.WriteUInt8((byte)Opcode.Message);
-			
+		internal void WriteChat(string text, bool partial) {
+			int payload = !net.SupportsPartialMessages ? EntityList.SelfID : (partial ? 1 : 0);
+			writer.WriteUInt8((byte)Opcode.Message);			
 			writer.WriteUInt8((byte)payload);
 			writer.WriteString(text);
-			net.SendPacket();
 		}
 		
-		internal void SendPosition(Vector3 pos, float rotY, float headX) {
-			int payload = net.cpeData.sendHeldBlock ? game.Inventory.Selected : 0xFF;
+		internal void WritePosition(Vector3 pos, float rotY, float headX) {
+			int payload = net.cpeData.sendHeldBlock ? game.Inventory.Selected : EntityList.SelfID;
 			writer.WriteUInt8((byte)Opcode.EntityTeleport);
 			
 			writer.WriteUInt8((byte)payload); // held block when using HeldBlock, otherwise just 255
 			writer.WritePosition(pos);
 			writer.WriteUInt8(Utils.DegreesToPacked(rotY));
 			writer.WriteUInt8(Utils.DegreesToPacked(headX));
-			net.SendPacket();
 		}
 		
-		internal void SendSetBlock(int x, int y, int z, bool place, BlockID block) {
+		internal void WriteSetBlock(int x, int y, int z, bool place, BlockID block) {
 			writer.WriteUInt8((byte)Opcode.SetBlockClient);
 			
 			writer.WriteInt16((short)x);
@@ -310,10 +307,9 @@ namespace ClassicalSharp.Network.Protocols {
 			#else
 			writer.WriteUInt8(block);
 			#endif
-			net.SendPacket();
 		}
 		
-		internal void SendLogin(string username, string verKey) {
+		internal void WriteLogin(string username, string verKey) {
 			byte payload = game.UseCPE ? (byte)0x42 : (byte)0x00;
 			writer.WriteUInt8((byte)Opcode.Handshake);
 			
@@ -321,7 +317,6 @@ namespace ClassicalSharp.Network.Protocols {
 			writer.WriteString(username);
 			writer.WriteString(verKey);
 			writer.WriteUInt8(payload);
-			net.SendPacket();
 		}
 		
 		#endregion

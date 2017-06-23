@@ -80,7 +80,8 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleCustomBlockSupportLevel() {
 			byte supportLevel = reader.ReadUInt8();
-			SendCustomBlockSupportLevel(1);
+			WriteCustomBlockSupportLevel(1);
+			net.SendPacket();
 			game.UseCPEBlocks = true;
 
 			if (supportLevel == 1) {
@@ -384,12 +385,10 @@ namespace ClassicalSharp.Network.Protocols {
 		void HandleTwoWayPing() {
 			bool serverToClient = reader.ReadUInt8() != 0;
 			ushort data = reader.ReadUInt16();
-			if (!serverToClient) return;
+			if (!serverToClient) { PingList.Update(data); return; }
 			
-			writer.WriteUInt8((byte)Opcode.TwoWayPing);
-			writer.WriteUInt8(1); // server to client reply
-			writer.WriteInt16((short)data);
-			writer.Send();
+			WriteTwoWayPing(true, data); // server to client reply
+			net.SendPacket();
 		}		
 				
 		
@@ -397,7 +396,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		#region Write
 		
-		internal void SendPlayerClick(MouseButton button, bool buttonDown,
+		internal void WritePlayerClick(MouseButton button, bool buttonDown,
 		                              byte targetId, PickedPos pos) {
 			Player p = game.LocalPlayer;
 			writer.WriteUInt8((byte)Opcode.CpePlayerClick);
@@ -411,27 +410,29 @@ namespace ClassicalSharp.Network.Protocols {
 			writer.WriteInt16((short)pos.BlockPos.Y);
 			writer.WriteInt16((short)pos.BlockPos.Z);
 			writer.WriteUInt8((byte)pos.Face);
-			net.SendPacket();
 		}
 		
-		internal void SendExtInfo(string appName, int extensionsCount) {
+		internal void WriteExtInfo(string appName, int extensionsCount) {
 			writer.WriteUInt8((byte)Opcode.CpeExtInfo);
 			writer.WriteString(appName);
 			writer.WriteInt16((short)extensionsCount);
-			net.SendPacket();
 		}
 		
-		internal void SendExtEntry(string extensionName, int extensionVersion) {
+		internal void WriteExtEntry(string extensionName, int extensionVersion) {
 			writer.WriteUInt8((byte)Opcode.CpeExtEntry);
 			writer.WriteString(extensionName);
 			writer.WriteInt32(extensionVersion);
-			net.SendPacket();
 		}
 		
-		internal void SendCustomBlockSupportLevel(byte version) {
+		internal void WriteCustomBlockSupportLevel(byte version) {
 			writer.WriteUInt8((byte)Opcode.CpeCustomBlockSupportLevel);
 			writer.WriteUInt8(version);
-			net.SendPacket();
+		}
+		
+		internal void WriteTwoWayPing(bool serverToClient, ushort data) {
+			writer.WriteUInt8((byte)Opcode.TwoWayPing);
+			writer.WriteUInt8((byte)(serverToClient ? 1 : 0));
+			writer.WriteInt16((short)data);			
 		}
 		
 		void SendCpeExtInfoReply() {
@@ -440,7 +441,8 @@ namespace ClassicalSharp.Network.Protocols {
 			int count = clientExts.Length;
 			if (!game.AllowCustomBlocks) count -= 2;
 			
-			SendExtInfo(net.AppName, count);
+			WriteExtInfo(net.AppName, count);
+			net.SendPacket();
 			for (int i = 0; i < clientExts.Length; i++) {
 				string name = clientExts[i];
 				int ver = 1;
@@ -448,9 +450,10 @@ namespace ClassicalSharp.Network.Protocols {
 				if (name == "EnvMapAppearance") ver = net.cpeData.envMapVer;
 				if (name == "BlockDefinitionsExt") ver = net.cpeData.blockDefsExtVer;
 				
-				if (!game.AllowCustomBlocks && name.StartsWith("BlockDefinitions"))
-					continue;
-				SendExtEntry(name, ver);
+				if (!game.AllowCustomBlocks && name.StartsWith("BlockDefinitions")) continue;
+				
+				WriteExtEntry(name, ver);
+				net.SendPacket();
 			}
 		}
 		#endregion
