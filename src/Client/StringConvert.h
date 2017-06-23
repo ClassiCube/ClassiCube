@@ -13,7 +13,7 @@
 UInt16 Convert_ControlChars[Convert_ControlCharsCount];
 
 #define Convert_ExtendedCharsCount 129
-/* Unicode values for the 129 extended code page 437 indices. (including DELETE)*/
+/* Unicode values for the 129 extended code page 437 indices. (including DELETE character)*/
 UInt16 Convert_ExtendedChars[Convert_ExtendedCharsCount];
 
 

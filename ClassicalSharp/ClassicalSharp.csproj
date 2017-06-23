@@ -214,6 +214,7 @@
     <Compile Include="Network\Protocols\CPE.cs" />
     <Compile Include="Network\Protocols\IProtocol.cs" />
     <Compile Include="Network\Protocols\WoM.cs" />
+    <Compile Include="Network\Utils\PingList.cs" />
     <Compile Include="Particles\CollidableParticle.cs" />
     <Compile Include="Particles\Particle.cs" />
     <Compile Include="Particles\ParticleManager.cs" />
