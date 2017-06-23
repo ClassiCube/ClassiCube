@@ -44,6 +44,13 @@ String String_MakeNull(void) {
 	return str;
 }
 
+void String_MakeLowercase(String* str) {
+	Int32 i;
+	for (i = 0; i < str->length; i++) {
+		str->buffer[i] = Char_ToLower(str->buffer[i]);
+	}
+}
+
 
 bool String_Equals(String* a, String* b) {
 	if (a->length != b->length) return false;
@@ -136,6 +143,14 @@ bool String_AppendConstant(String* str, const UInt8* buffer) {
 Int32 String_IndexOf(String* str, UInt8 c, Int32 offset) {
 	Int32 i;
 	for (i = offset; i < str->length; i++) {
+		if (str->buffer[i] == c) return i;
+	}
+	return -1;
+}
+
+Int32 String_LastIndexOf(String* str, UInt8 c) {
+	Int32 i;
+	for (i = str->length - 1; i >= 0; i--) {
 		if (str->buffer[i] == c) return i;
 	}
 	return -1;

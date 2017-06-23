@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using ClassicalSharp.Entities;
 using OpenTK;
 
 #if USE16_BIT
@@ -58,9 +59,7 @@ namespace ClassicalSharp {
 		static BlockID RotateOther(Game game, BlockID block, string name, Vector3 offset) {
 			// Fence type blocks
 			if (game.BlockInfo.FindID(name + "-UD") == -1) {
-				float headY = game.LocalPlayer.HeadY;
-				if (headY < 0) headY += 360;
-				
+				float headY = LocationUpdate.Clamp(game.LocalPlayer.HeadY);				
 				if (headY < 45 || (headY >= 135 && headY < 225) || headY > 315)
 					return Find(game, block, name + "-WE");
 				return Find(game, block, name + "-NS");
