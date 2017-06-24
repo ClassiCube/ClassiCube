@@ -23,16 +23,16 @@ namespace ClassicalSharp.Gui.Screens {
 				// Column 1
 				!network.IsSinglePlayer ? null :
 					MakeOpt(-1, -100, "Click distance", OnWidgetClick,
-					     g => g.LocalPlayer.ReachDistance.ToString(),
-					     (g, v) => g.LocalPlayer.ReachDistance = Utils.ParseDecimal(v)),
+					        g => g.LocalPlayer.ReachDistance.ToString(),
+					        (g, v) => g.LocalPlayer.ReachDistance = Utils.ParseDecimal(v)),
 				
-				MakeBool(-1, -50, "Music", OptionsKey.UseMusic,
-				     OnWidgetClick, g => g.UseMusic,
-				     (g, v) => { g.UseMusic = v; g.AudioPlayer.SetMusic(g.UseMusic); }),
+				MakeOpt(-1, -50, "Music volume", OnWidgetClick,
+				        g => g.MusicVolume.ToString(),
+				        (g, v) => { g.MusicVolume = Int32.Parse(v); g.AudioPlayer.SetMusic(g.MusicVolume); }),
 				
-				MakeBool(-1, 0, "Sound", OptionsKey.UseSound,
-				     OnWidgetClick, g => g.UseSound,
-				     (g, v) => { g.UseSound = v; g.AudioPlayer.SetSound(g.UseSound); }),
+				MakeOpt(-1, 0, "Sounds volume", OnWidgetClick,
+				        g => g.SoundsVolume.ToString(),
+				        (g, v) => { g.SoundsVolume = Int32.Parse(v); g.AudioPlayer.SetSounds(g.SoundsVolume); }),
 				
 				MakeBool(-1, 50, "View bobbing", OptionsKey.ViewBobbing,
 				         OnWidgetClick, g => g.ViewBobbing, (g, v) => g.ViewBobbing = v),
@@ -51,9 +51,9 @@ namespace ClassicalSharp.Gui.Screens {
 				         OnWidgetClick, g => g.InvertMouse, (g, v) => g.InvertMouse = v),
 				
 				MakeOpt(1, 50, "Mouse sensitivity", OnWidgetClick,
-				     g => g.MouseSensitivity.ToString(),
-				     (g, v) => { g.MouseSensitivity = Int32.Parse(v);
-				     	Options.Set(OptionsKey.Sensitivity, v); }),
+				        g => g.MouseSensitivity.ToString(),
+				        (g, v) => { g.MouseSensitivity = Int32.Parse(v);
+				        	Options.Set(OptionsKey.Sensitivity, v); }),
 				
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
@@ -65,8 +65,8 @@ namespace ClassicalSharp.Gui.Screens {
 			IServerConnection network = game.Server;
 			validators = new MenuInputValidator[] {
 				network.IsSinglePlayer ? new RealValidator(1, 1024) : null,
-				new BooleanValidator(),
-				new BooleanValidator(),
+				new IntegerValidator(0, 100),
+				new IntegerValidator(0, 100),
 				new BooleanValidator(),
 				
 				network.IsSinglePlayer ? new BooleanValidator() : null,

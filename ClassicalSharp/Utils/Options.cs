@@ -7,12 +7,15 @@ using ClassicalSharp.Textures;
 namespace ClassicalSharp {
 
 	public static class OptionsKey {
-#if !LAUNCHER		
-		public const string ViewDist = "viewdist";
-		public const string SingleplayerPhysics = "singleplayerphysics";
+#if !LAUNCHER
 		public const string UseMusic = "usemusic";
 		public const string UseSound = "usesound";
+		public const string MusicVolume = "musicvolume";
+		public const string SoundsVolume = "soundsvolume";
 		public const string ForceOpenAL = "forceopenal";
+		
+		public const string ViewDist = "viewdist";
+		public const string SingleplayerPhysics = "singleplayerphysics";
 		public const string NamesMode = "namesmode";
 		public const string InvertMouse = "invertmouse";
 		public const string Sensitivity = "mousesensitivity";

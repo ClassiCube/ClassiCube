@@ -22,28 +22,34 @@ namespace ClassicalSharp.Audio {
 				files = Directory.GetFiles(path);
 			else
 				files = new string[0];
-			
-			game.UseMusic = Options.GetBool(OptionsKey.UseMusic, false);
-			SetMusic(game.UseMusic);
-			game.UseSound = Options.GetBool(OptionsKey.UseSound, false);
-			SetSound(game.UseSound);
+						
+			game.MusicVolume = GetVolume(OptionsKey.MusicVolume, OptionsKey.UseMusic);
+			SetMusic(game.MusicVolume);
+			game.SoundsVolume = GetVolume(OptionsKey.SoundsVolume, OptionsKey.UseSound);
+			SetSounds(game.SoundsVolume);
 			game.UserEvents.BlockChanged += PlayBlockSound;
 		}
+		
+		static int GetVolume(string volKey, string boolKey) {
+			int volume = Options.GetInt(volKey, 0, 100, 0);
+			if (volume != 0) return volume;
+			return Options.GetBool(boolKey, false) ? 100 : 0;
+		}
 
-		public void Ready(Game game) { }		
+		public void Ready(Game game) { }
 		public void Reset(Game game) { }
 		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }		
+		public void OnNewMapLoaded(Game game) { }
 		
-		public void SetMusic(bool enabled) {
-			if (enabled)
-				InitMusic();
-			else
-				DisposeMusic();
+		public void SetMusic(int volume) {
+			if (volume > 0) InitMusic();
+			else DisposeMusic();
 		}
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
 		void InitMusic() {
+			if (musicThread != null) { musicOut.SetVolume(game.MusicVolume / 100.0f); return; }
+			
 			int musicCount = 0;
 			for (int i = 0; i < files.Length; i++) {
 				if (files[i].EndsWith(".ogg", comp)) musicCount++;
@@ -54,10 +60,11 @@ namespace ClassicalSharp.Audio {
 				if (!files[i].EndsWith(".ogg", comp)) continue;
 				musicFiles[j] = files[i]; j++;
 			}
-			
+
 			disposingMusic = false;
-			musicThread = MakeThread(DoMusicThread, ref musicOut,
-			                         "ClassicalSharp.DoMusic");
+			musicOut = GetPlatformOut();
+			musicOut.Create(10);
+			musicThread = MakeThread(DoMusicThread, "ClassicalSharp.DoMusic");
 		}
 		
 		EventWaitHandle musicHandle = new EventWaitHandle(false, EventResetMode.AutoReset);
@@ -72,6 +79,7 @@ namespace ClassicalSharp.Audio {
 				using (FileStream fs = File.OpenRead(path)) {
 					OggContainer container = new OggContainer(fs);
 					try {
+						musicOut.SetVolume(game.MusicVolume / 100.0f);
 						musicOut.PlayStreaming(container);
 					} catch (InvalidOperationException ex) {
 						HandleMusicError(ex);
@@ -95,8 +103,8 @@ namespace ClassicalSharp.Audio {
 			else
 				game.Chat.Add("&cAn error occured when trying to play music, disabling music.");
 			
-			SetMusic(false);
-			game.UseMusic = false;
+			SetMusic(0);
+			game.MusicVolume = 0;
 		}
 		
 		bool disposingMusic;
@@ -113,10 +121,7 @@ namespace ClassicalSharp.Audio {
 			DisposeOf(ref musicOut, ref musicThread);
 		}
 		
-		Thread MakeThread(ThreadStart func, ref IAudioOutput output, string name) {
-			output = GetPlatformOut();
-			output.Create(10);
-			
+		Thread MakeThread(ThreadStart func, string name) {
 			Thread thread = new Thread(func);
 			thread.Name = name;
 			thread.IsBackground = true;

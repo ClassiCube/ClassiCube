@@ -126,10 +126,10 @@ static Real32 Game_RawInventoryScale;
 bool Game_ViewBobbing;
 /* Whether block in hand is shown in bottom right. */
 bool Game_ShowBlockInHand;
-/* Whether playing dig and step sounds is enabled. */
-bool Game_UseSound;
-/* Whether background music playing is enabled. */
-bool Game_UseMusic;
+/* Volume of dig and step sounds. 0 means disabled. */
+Int32 Game_SoundsVolume;
+/* Volume of background music played. 0 means disabled */
+Int32 Game_MusicVolume;
 /* Whether water/lava can be placed/deleted like normal blocks. */
 bool Game_ModifiableLiquids;
 

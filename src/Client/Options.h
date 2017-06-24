@@ -12,12 +12,15 @@ typedef UInt8 FpsLimitMethod;
 #define FpsLimitMethod_60FPS  2
 #define FpsLimitMethod_120FPS 3
 #define FpsLimitMethod_None   4
-	
-#define OptionsKey_ViewDist "viewdist"
-#define OptionsKey_SingleplayerPhysics "singleplayerphysics"
+
 #define OptionsKey_UseMusic "usemusic"
 #define OptionsKey_UseSound "usesound"
+#define OptionsKey_MusicVolume "musicvolume"
+#define OptionsKey_SoundVolume "soundvolume"
 #define OptionsKey_ForceOpenAL "forceopenal"
+
+#define OptionsKey_ViewDist "viewdist"
+#define OptionsKey_SingleplayerPhysics "singleplayerphysics"
 #define OptionsKey_NamesMode "namesmode"
 #define OptionsKey_InvertMouse "invertmouse"
 #define OptionsKey_Sensitivity "mousesensitivity"

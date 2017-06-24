@@ -12,11 +12,9 @@ namespace ClassicalSharp.Audio {
 		Soundboard digBoard, stepBoard;
 		const int maxSounds = 6;
 		
-		public void SetSound(bool enabled) {
-			if (enabled)
-				InitSound();
-			else
-				DisposeSound();
+		public void SetSounds(int volume) {
+			if (volume > 0) InitSound();
+			else DisposeSound();
 		}
 		
 		void InitSound() {
@@ -75,7 +73,7 @@ namespace ClassicalSharp.Audio {
 			for (int i = 0; i < monoOutputs.Length; i++) {
 				IAudioOutput output = outputs[i];
 				if (output == null) output = MakeSoundOutput(outputs, i);
-				if (!output.DoneRawAsync()) continue;
+				if (!output.DoneRawAsync()) continue;				
 				
 				LastChunk l = output.Last;
 				if (l.Channels == 0 || (l.Channels == chunk.Channels && l.BitsPerSample == chunk.BitsPerSample 
@@ -107,6 +105,7 @@ namespace ClassicalSharp.Audio {
 		
 		void PlaySound(IAudioOutput output) {
 			try {
+				output.SetVolume(game.SoundsVolume / 100.0f);
 				output.PlayRawAsync(chunk);
 			} catch (InvalidOperationException ex) {
 				ErrorHandler.LogError("AudioPlayer.PlayCurrentSound()", ex);
@@ -115,8 +114,8 @@ namespace ClassicalSharp.Audio {
 				else
 					game.Chat.Add("&cAn error occured when trying to play sounds, disabling sounds.");
 				
-				SetSound(false);
-				game.UseSound = false;
+				SetSounds(0);
+				game.SoundsVolume = 0;
 			}
 		}
 		
