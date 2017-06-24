@@ -136,7 +136,7 @@ namespace ClassicalSharp.Network {
 			classic.WritePosition(player.Position, player.HeadY, player.HeadX);
 			pingTicks++;
 			
-			if (pingTicks >= 20) {
+			if (pingTicks >= 20 && cpeData.twoWayPing) {
 				cpe.WriteTwoWayPing(false, PingList.NextTwoWayPingData());
 				pingTicks = 0;
 			}
