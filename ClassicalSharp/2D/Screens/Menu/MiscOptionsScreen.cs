@@ -27,12 +27,10 @@ namespace ClassicalSharp.Gui.Screens {
 					        (g, v) => g.LocalPlayer.ReachDistance = Utils.ParseDecimal(v)),
 				
 				MakeOpt(-1, -50, "Music volume", OnWidgetClick,
-				        g => g.MusicVolume.ToString(),
-				        (g, v) => { g.MusicVolume = Int32.Parse(v); g.AudioPlayer.SetMusic(g.MusicVolume); }),
+				        g => g.MusicVolume.ToString(), SetMusicVolume),
 				
 				MakeOpt(-1, 0, "Sounds volume", OnWidgetClick,
-				        g => g.SoundsVolume.ToString(),
-				        (g, v) => { g.SoundsVolume = Int32.Parse(v); g.AudioPlayer.SetSounds(g.SoundsVolume); }),
+				        g => g.SoundsVolume.ToString(), SetSoundsVolume),
 				
 				MakeBool(-1, 50, "View bobbing", OptionsKey.ViewBobbing,
 				         OnWidgetClick, g => g.ViewBobbing, (g, v) => g.ViewBobbing = v),
@@ -82,6 +80,18 @@ namespace ClassicalSharp.Gui.Screens {
 				"&eSets how far away you can place/delete blocks",
 				"&fThe default click distance is 5 blocks.",
 			};
+		}
+		
+		void SetMusicVolume(Game g, string v) {
+			g.MusicVolume = Int32.Parse(v);
+			Options.Set(OptionsKey.MusicVolume, v);
+			g.AudioPlayer.SetMusic(g.MusicVolume);
+		}
+		
+		void SetSoundsVolume(Game g, string v) {
+			g.SoundsVolume = Int32.Parse(v);
+			Options.Set(OptionsKey.SoundsVolume, v);
+			g.AudioPlayer.SetSounds(g.SoundsVolume);			
 		}
 	}
 }
