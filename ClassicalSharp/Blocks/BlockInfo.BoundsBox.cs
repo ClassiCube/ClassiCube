@@ -19,6 +19,43 @@ namespace ClassicalSharp {
 		public Vector3[] RenderMinBB = new Vector3[Block.Count];
 		public Vector3[] RenderMaxBB = new Vector3[Block.Count];
 		
+		public Vector3 GetMinBB(byte block, int x, int y, int z) {
+			Vector3 min = MinBB[block];		
+			if (block == Block.Snow && game.World.IsValidPos(x, y - 1, z)) {
+				Vector3 minBelow = MinBB[game.World.GetBlock(x, y - 1, z)];
+				min.X = minBelow.X; min.Z = minBelow.Z;
+			}
+			return min;
+		}
+		
+		public Vector3 GetMaxBB(byte block, int x, int y, int z) {
+			Vector3 max = MaxBB[block];			
+			if (block == Block.Snow && game.World.IsValidPos(x, y - 1, z)) {
+				Vector3 maxBelow = MaxBB[game.World.GetBlock(x, y - 1, z)];
+				max.X = maxBelow.X; max.Z = maxBelow.Z;
+			}
+			return max;
+		}		
+		
+		public Vector3 GetRenderMinBB(byte block, int x, int y, int z) {
+			Vector3 min = RenderMinBB[block];		
+			if (block == Block.Snow && game.World.IsValidPos(x, y - 1, z)) {
+				Vector3 minBelow = RenderMinBB[game.World.GetBlock(x, y - 1, z)];
+				min.X = minBelow.X; min.Z = minBelow.Z;
+			}
+			return min;
+		}
+		
+		public Vector3 GetRenderMaxBB(byte block, int x, int y, int z) {
+			Vector3 max = RenderMaxBB[block];			
+			if (block == Block.Snow && game.World.IsValidPos(x, y - 1, z)) {
+				Vector3 maxBelow = RenderMaxBB[game.World.GetBlock(x, y - 1, z)];
+				max.X = maxBelow.X; max.Z = maxBelow.Z;
+			}
+			return max;
+		}
+		
+		
 		internal void CalcRenderBounds(BlockID block) {
 			Vector3 min = MinBB[block], max = MaxBB[block];
 			
