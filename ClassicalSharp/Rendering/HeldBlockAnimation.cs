@@ -41,7 +41,7 @@ namespace ClassicalSharp.Renderers {
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		internal void SetClickAnim(bool dig) {
 			// TODO: timing still not quite right, rotate2 still not quite right
-			ResetAnimationState(true, dig ? 3.35 : 3.25);
+			ResetAnimationState(true, dig ? 0.35 : 0.25);
 			swingAnim = false;
 			digAnim = dig;
 			doAnim = true;
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Renderers {
 				if (time > period * 0.5)
 					time = period - time;
 			} else {
-				ResetAnimationState(false, 3.25);
+				ResetAnimationState(false, 0.25);
 				doAnim = true;
 				swingAnim = true;
 			}
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Renderers {
 			}
 			time += delta;
 			if (time > period)
-				ResetAnimationState(true, 3.25);
+				ResetAnimationState(true, 0.25);
 		}
 		
 		// Based off incredible gifs from (Thanks goodlyay!)

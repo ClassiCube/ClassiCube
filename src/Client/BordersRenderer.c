@@ -39,7 +39,7 @@ void BordersRenderer_UseLegacyMode(bool legacy) {
 
 /* Avoid code duplication in sides and edge rendering */
 #define BordersRenderer_SetupState(block, texId, vb) \
-if (vb == -1 || Block_Draw[block] == DrawType_Gas) { return; }\
+if (vb == -1) { return; }\
 \
 GfxCommon_SetupAlphaState(Block_Draw[block]);\
 Gfx_SetTexturing(true);\
@@ -160,8 +160,9 @@ void BordersRenderer_ResetEdges(void) {
 void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	BlockID block = WorldEnv_SidesBlock;
 	borders_sidesVertices = 0;
-	Int32 i;
+	if (Block_Draw[block] == DrawType_Gas) return;
 
+	Int32 i;
 	for (i = 0; i < 4; i++) {
 		Rectangle r = borders_rects[i];
 		borders_sidesVertices += Math_CountVertices(r.Width, r.Height, axisSize); /* YQuads outside */
@@ -204,8 +205,9 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	BlockID block = WorldEnv_EdgeBlock;
 	borders_edgesVertices = 0;
-	Int32 i;
+	if (Block_Draw[block] == DrawType_Gas) return;
 
+	Int32 i;
 	for (i = 0; i < 4; i++) {
 		Rectangle r = borders_rects[i];
 		borders_edgesVertices += Math_CountVertices(r.Width, r.Height, axisSize); /* YPlanes outside */

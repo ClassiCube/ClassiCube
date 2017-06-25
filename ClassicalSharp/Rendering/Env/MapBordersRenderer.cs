@@ -47,7 +47,6 @@ namespace ClassicalSharp.Renderers {
 		public void RenderSides(double delta) {
 			if (sidesVb == -1) return;
 			BlockID block = game.World.Env.SidesBlock;
-			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			gfx.SetupAlphaState(game.BlockInfo.Draw[block]);
 			gfx.Texturing = true;
@@ -63,8 +62,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void RenderEdges(double delta) {
 			if (edgesVb == -1) return;
-			BlockID block = game.World.Env.EdgeBlock;
-			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
+			BlockID block = game.World.Env.EdgeBlock;		
 			
 			Vector3 camPos = game.CurrentCameraPos;
 			gfx.SetupAlphaState(game.BlockInfo.Draw[block]);
@@ -161,6 +159,8 @@ namespace ClassicalSharp.Renderers {
 		void RebuildSides(int y, int axisSize) {
 			BlockID block = game.World.Env.SidesBlock;
 			sidesVertices = 0;
+			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
+			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
 				sidesVertices += Utils.CountVertices(r.Width, r.Height, axisSize); // YQuads outside
@@ -200,6 +200,8 @@ namespace ClassicalSharp.Renderers {
 		void RebuildEdges(int y, int axisSize) {
 			BlockID block = game.World.Env.EdgeBlock;
 			edgesVertices = 0;
+			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
+			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
 				edgesVertices += Utils.CountVertices(r.Width, r.Height, axisSize); // YPlanes outside
