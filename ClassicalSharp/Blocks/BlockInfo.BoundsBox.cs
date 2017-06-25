@@ -24,6 +24,7 @@ namespace ClassicalSharp {
 			if (block == Block.Snow && game.World.IsValidPos(x, y - 1, z)) {
 				Vector3 minBelow = MinBB[game.World.GetBlock(x, y - 1, z)];
 				min.X = minBelow.X; min.Z = minBelow.Z;
+				min.Y -= (1 - MaxBB[game.World.GetBlock(x, y - 1, z)].Y);
 			}
 			return min;
 		}
@@ -33,6 +34,7 @@ namespace ClassicalSharp {
 			if (block == Block.Snow && game.World.IsValidPos(x, y - 1, z)) {
 				Vector3 maxBelow = MaxBB[game.World.GetBlock(x, y - 1, z)];
 				max.X = maxBelow.X; max.Z = maxBelow.Z;
+				max.Y -= (1 - MaxBB[game.World.GetBlock(x, y - 1, z)].Y);
 			}
 			return max;
 		}		
@@ -42,6 +44,7 @@ namespace ClassicalSharp {
 			if (block == Block.Snow && game.World.IsValidPos(x, y - 1, z)) {
 				Vector3 minBelow = RenderMinBB[game.World.GetBlock(x, y - 1, z)];
 				min.X = minBelow.X; min.Z = minBelow.Z;
+				min.Y -= (1 - MaxBB[game.World.GetBlock(x, y - 1, z)].Y);
 			}
 			return min;
 		}
@@ -51,6 +54,7 @@ namespace ClassicalSharp {
 			if (block == Block.Snow && game.World.IsValidPos(x, y - 1, z)) {
 				Vector3 maxBelow = RenderMaxBB[game.World.GetBlock(x, y - 1, z)];
 				max.X = maxBelow.X; max.Z = maxBelow.Z;
+				max.Y -= (1 - MaxBB[game.World.GetBlock(x, y - 1, z)].Y);
 			}
 			return max;
 		}
