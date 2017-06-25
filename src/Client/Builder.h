@@ -74,7 +74,7 @@ void Builder_MakeChunk(ChunkInfo* info);
 
 static void Builder_AddSpriteVertices(BlockID block);
 
-static void Builder_AddVertices(BlockID block, Int32 count, Face face);
+static void Builder_AddVertices(BlockID block, Face face);
 
 /* Returns whether a liquid block is occluded at the given index in the chunk. */
 bool Builder_OccludedLiquid(Int32 chunkIndex);

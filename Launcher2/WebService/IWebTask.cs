@@ -69,38 +69,17 @@ namespace Launcher.Web {
 			return (HttpWebResponse)request.GetResponse();
 		}
 		
-		protected IEnumerable<string> GetHtml(string uri, string referer) {
+		protected string Get(string uri, string referer) {
 			HttpWebResponse response = MakeRequest(uri, referer, null);
-			return GetResponseLines(response);
+			return GetResponse(response);
 		}
-
-		protected IEnumerable<string> PostHtml(string uri, string referer, string data) {
+		
+		protected string Post(string uri, string referer, string data) {
 			HttpWebResponse response = MakeRequest(uri, referer, data);
-			return GetResponseLines(response);
+			return GetResponse(response);
 		}
 		
-		protected string GetHtmlAll(string uri, string referer) {
-			HttpWebResponse response = MakeRequest(uri, referer, null);
-			return GetResponseAll(response);
-		}
-		
-		protected string PostHtmlAll(string uri, string referer, string data) {
-			HttpWebResponse response = MakeRequest(uri, referer, data);
-			return GetResponseAll(response);
-		}
-		
-		protected IEnumerable<string> GetResponseLines(HttpWebResponse response) {
-			using (Stream stream = response.GetResponseStream()) {
-				using (StreamReader reader = new StreamReader(stream)) {
-					string line;
-					while ((line = reader.ReadLine()) != null) {
-						yield return line;
-					}
-				}
-			}
-		}
-		
-		protected string GetResponseAll(HttpWebResponse response) {
+		protected string GetResponse(HttpWebResponse response) {
 			using (Stream stream = response.GetResponseStream()) {
 				using (StreamReader reader = new StreamReader(stream)) {
 					return reader.ReadToEnd();

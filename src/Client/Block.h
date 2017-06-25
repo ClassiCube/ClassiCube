@@ -192,7 +192,7 @@ static void Block_CalcCulling(BlockID block, BlockID other);
 
 void Block_SetHidden(BlockID block, BlockID other, Face face, bool value);
 
-static bool Block_IsHidden(BlockID block, BlockID other, Face face);
+static bool Block_IsHidden(BlockID block, BlockID other);
 
 static void Block_SetXStretch(BlockID block, bool stretch);
 

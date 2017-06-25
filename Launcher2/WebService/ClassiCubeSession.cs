@@ -71,7 +71,7 @@ namespace Launcher.Web {
 			Username = user;
 			// Step 1: GET csrf token from login page.
 			var swGet = System.Diagnostics.Stopwatch.StartNew();
-			string getResponse = GetHtmlAll(loginUri, classicubeNetUri);
+			string getResponse = Get(loginUri, classicubeNetUri);
 			int index = 0; bool success = true;
 			JsonObject data = (JsonObject)Json.ParseValue(getResponse, ref index, ref success);
 			string token = (string)data["token"];
@@ -86,7 +86,7 @@ namespace Launcher.Web {
 			Log("cc login took " + swGet.ElapsedMilliseconds);
 			
 			var sw = System.Diagnostics.Stopwatch.StartNew();
-			string response = PostHtmlAll(loginUri, loginUri, loginData);
+			string response = Post(loginUri, loginUri, loginData);
 			index = 0; success = true;
 			data = (JsonObject)Json.ParseValue(response, ref index, ref success);
 			
@@ -111,7 +111,7 @@ namespace Launcher.Web {
 		
 		public ClientStartData GetConnectInfo(string hash) {
 			string uri = playUri + hash;
-			string response = GetHtmlAll(uri, classicubeNetUri);
+			string response = Get(uri, classicubeNetUri);
 			
 			int index = 0; bool success = true;
 			JsonObject root = (JsonObject)Json.ParseValue(response, ref index, ref success);
@@ -125,7 +125,7 @@ namespace Launcher.Web {
 		public List<ServerListEntry> GetPublicServers() {
 			var sw = System.Diagnostics.Stopwatch.StartNew();
 			List<ServerListEntry> servers = new List<ServerListEntry>();
-			string response = GetHtmlAll(publicServersUri, classicubeNetUri);
+			string response = Get(publicServersUri, classicubeNetUri);
 			int index = 0; bool success = true;
 			JsonObject root = (JsonObject)Json.ParseValue(response, ref index, ref success);
 			List<object> list = (List<object>)root["servers"];

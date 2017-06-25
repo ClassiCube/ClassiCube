@@ -213,20 +213,20 @@ namespace ClassicalSharp.Entities {
 		
 		void ClipX(ref Vector3 size, ref AABB entityBB, ref AABB entityExtentBB) {
 			entity.Velocity.X = 0;
-			entityBB.Min.X = entityExtentBB.Min.X = entity.Position.X - size.X / 2;
-			entityBB.Max.X = entityExtentBB.Max.X = entity.Position.X + size.X / 2;
+			entityBB.Min.X = entity.Position.X - size.X / 2; entityExtentBB.Min.X = entityBB.Min.X;
+			entityBB.Max.X = entity.Position.X + size.X / 2; entityExtentBB.Max.X = entityBB.Max.X;
 		}
 		
 		void ClipY(ref Vector3 size, ref AABB entityBB, ref AABB entityExtentBB) {
 			entity.Velocity.Y = 0;
-			entityBB.Min.Y = entityExtentBB.Min.Y = entity.Position.Y;
-			entityBB.Max.Y = entityExtentBB.Max.Y = entity.Position.Y + size.Y;
+			entityBB.Min.Y = entity.Position.Y;              entityExtentBB.Min.Y = entityBB.Min.Y;
+			entityBB.Max.Y = entity.Position.Y + size.Y;     entityExtentBB.Max.Y = entityBB.Max.Y;
 		}
 		
 		void ClipZ(ref Vector3 size, ref AABB entityBB, ref AABB entityExtentBB) {
 			entity.Velocity.Z = 0;
-			entityBB.Min.Z = entityExtentBB.Min.Z = entity.Position.Z - size.Z / 2;
-			entityBB.Max.Z = entityExtentBB.Max.Z = entity.Position.Z + size.Z / 2;
+			entityBB.Min.Z = entity.Position.Z - size.Z / 2; entityExtentBB.Min.Z = entityBB.Min.Z;
+			entityBB.Max.Z = entity.Position.Z + size.Z / 2; entityExtentBB.Max.Z = entityBB.Max.Z;
 		}
 	}
 }

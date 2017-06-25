@@ -73,8 +73,6 @@ namespace ClassicalSharp.Gui.Screens {
 			game.ChunkUpdates = 0;
 		}
 		
-		string Q(int value) { return value == 1 ? "" : "s"; }
-		
 		public override void Init() {
 			font = new Font(game.FontName, 16);
 			ContextRecreated();

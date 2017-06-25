@@ -226,7 +226,7 @@ namespace ClassicalSharp {
 							counts[index] = 0;
 						} else {
 							int count = StretchZ(index, x, y, z, cIndex, b, Side.Left);
-							AddVertices(b, count, Side.Left); counts[index] = (byte)count;
+							AddVertices(b, Side.Left); counts[index] = (byte)count;
 						}
 						
 						index++;
@@ -236,7 +236,7 @@ namespace ClassicalSharp {
 							counts[index] = 0;
 						} else {
 							int count = StretchZ(index, x, y, z, cIndex, b, Side.Right);
-							AddVertices(b, count, Side.Right); counts[index] = (byte)count;
+							AddVertices(b, Side.Right); counts[index] = (byte)count;
 						}
 						
 						index++;
@@ -246,7 +246,7 @@ namespace ClassicalSharp {
 							counts[index] = 0;
 						} else {
 							int count = StretchX(index, x, y, z, cIndex, b, Side.Front);
-							AddVertices(b, count, Side.Front); counts[index] = (byte)count;
+							AddVertices(b, Side.Front); counts[index] = (byte)count;
 						}
 						
 						index++;
@@ -256,7 +256,7 @@ namespace ClassicalSharp {
 							counts[index] = 0;
 						} else {
 							int count = StretchX(index, x, y, z, cIndex, b, Side.Back);
-							AddVertices(b, count, Side.Back); counts[index] = (byte)count;
+							AddVertices(b, Side.Back); counts[index] = (byte)count;
 						}
 						
 						index++;
@@ -265,7 +265,7 @@ namespace ClassicalSharp {
 							counts[index] = 0;
 						} else {
 							int count = StretchX(index, x, y, z, cIndex, b, Side.Bottom);
-							AddVertices(b, count, Side.Bottom); counts[index] = (byte)count;
+							AddVertices(b, Side.Bottom); counts[index] = (byte)count;
 						}
 						
 						index++;
@@ -274,10 +274,10 @@ namespace ClassicalSharp {
 							counts[index] = 0;
 						} else if (b < Block.Water || b > Block.StillLava) {
 							int count = StretchX(index, x, y, z, cIndex, b, Side.Top);
-							AddVertices(b, count, Side.Top); counts[index] = (byte)count;
+							AddVertices(b, Side.Top); counts[index] = (byte)count;
 						} else {
 							int count = StretchXLiquid(index, x, y, z, cIndex, b);
-							if (count > 0) AddVertices(b, count, Side.Top);
+							if (count > 0) AddVertices(b, Side.Top);
 							counts[index] = (byte)count;
 						}
 					}

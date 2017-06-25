@@ -107,7 +107,7 @@ namespace ClassicalSharp {
 			part.iCount += 6 * 4;
 		}
 		
-		void AddVertices(BlockID block, int count, int face) {
+		void AddVertices(BlockID block, int face) {
 			int i = atlas.Get1DIndex(info.GetTextureLoc(block, face));
 			DrawInfo part = info.Draw[block] == DrawType.Translucent ? translucentParts[i] : normalParts[i];
 			part.iCount += 6;

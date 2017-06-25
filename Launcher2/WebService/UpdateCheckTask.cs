@@ -47,7 +47,7 @@ namespace Launcher.Web {
 		}
 		
 		void CheckUpdates() {
-			string response = GetHtmlAll(BuildsUri, UpdatesUri);
+			string response = Get(BuildsUri, UpdatesUri);
 			int index = 0; bool success = true;
 			JsonObject data = (JsonObject)Json.ParseValue(response, ref index, ref success);
 			

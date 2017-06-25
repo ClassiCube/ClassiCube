@@ -74,7 +74,7 @@ void Builder_AddSpriteVertices(BlockID block) {
 	part->iCount += 6 * 4;
 }
 
-void Builder_AddVertices(BlockID block, Int32 count, Face face) {
+void Builder_AddVertices(BlockID block, Face face) {
 	Int32 baseOffset = (Block_Draw[block] == DrawType_Translucent) * Atlas1D_MaxAtlasesCount;
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, face));
 	Builder1DPart* part = &Builder_Parts[baseOffset + i];
@@ -311,7 +311,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					Int32 count = Builder_StretchZ(index, x, y, z, cIndex, b, Face_XMin);
-					Builder_AddVertices(b, count, Face_XMin);
+					Builder_AddVertices(b, Face_XMin);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
@@ -322,7 +322,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					Int32 count = Builder_StretchZ(index, x, y, z, cIndex, b, Face_XMax);
-					Builder_AddVertices(b, count, Face_XMax);
+					Builder_AddVertices(b, Face_XMax);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
@@ -333,7 +333,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					Int32 count = Builder_StretchX(index, Builder_X, Builder_Y, Builder_Z, cIndex, b, Face_ZMin);
-					Builder_AddVertices(b, count, Face_ZMin);
+					Builder_AddVertices(b, Face_ZMin);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
@@ -344,7 +344,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, Face_ZMax);
-					Builder_AddVertices(b, count, Face_ZMax);
+					Builder_AddVertices(b, Face_ZMax);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
@@ -354,7 +354,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 					Builder_Counts[index] = 0;
 				} else {
 					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, Face_YMin);
-					Builder_AddVertices(b, count, Face_YMin);
+					Builder_AddVertices(b, Face_YMin);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
@@ -364,11 +364,11 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 					Builder_Counts[index] = 0;
 				} else if (b < BlockID_Water || b > BlockID_StillLava) {
 					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, Face_YMax);
-					Builder_AddVertices(b, count, Face_YMax);
+					Builder_AddVertices(b, Face_YMax);
 					Builder_Counts[index] = (UInt8)count;
 				} else {
 					Int32 count = Builder_StretchXLiquid(index, x, y, z, cIndex, b);
-					if (count > 0) Builder_AddVertices(b, count, Face_YMax);
+					if (count > 0) Builder_AddVertices(b, Face_YMax);
 					Builder_Counts[index] = (UInt8)count;
 				}
 			}
