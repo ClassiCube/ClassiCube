@@ -403,11 +403,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		void LoopUntilRetrieved() {
 			ScheduledTask task = new ScheduledTask();
-			task.Interval = 1.0 / 20;
+			task.Interval = 1.0 / 60;
 			task.Callback = LostContextFunction;
 			
 			while (true) {
-				Thread.Sleep(50);
+				Thread.Sleep(16);
 				uint code = (uint)device.TestCooperativeLevel();
 				if ((uint)code == (uint)Direct3DError.DeviceNotReset) return;
 				

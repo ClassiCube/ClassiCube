@@ -11,7 +11,7 @@ using Android.Graphics;
 namespace ClassicalSharp.Gui.Screens {
 	public class FpsScreen : Screen, IGameComponent {
 		
-		Font font, posFont;
+		Font font;
 		StringBuffer text;
 		
 		public FpsScreen(Game game) : base(game) {
@@ -72,7 +72,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			font = new Font(game.FontName, 16);
-			posFont = new Font(game.FontName, 16, FontStyle.Regular);
 			ContextRecreated();
 			
 			game.Events.ChatFontChanged += ChatFontChanged;
@@ -95,11 +94,11 @@ namespace ClassicalSharp.Gui.Screens {
 			fpsText.SetText(msg);
 			
 			posAtlas = new TextAtlas(game, 16);
-			posAtlas.Pack("0123456789-, ()", posFont, "Position: ");
+			posAtlas.Pack("0123456789-, ()", font, "Position: ");
 			posAtlas.tex.Y = (short)(fpsText.Height + 2);
 			
 			int yOffset = fpsText.Height + posAtlas.tex.Height + 2;
-			hackStates = new TextWidget(game, posFont)
+			hackStates = new TextWidget(game, font)
 				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, yOffset);
 			hackStates.ReducePadding = true;
 			hackStates.Init();
@@ -108,7 +107,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			font.Dispose();
-			posFont.Dispose();
 			ContextLost();
 			
 			game.Events.ChatFontChanged -= ChatFontChanged;

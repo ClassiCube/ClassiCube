@@ -54,7 +54,7 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Init();
 			game.Keyboard.KeyRepeat = true;
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16, FontStyle.Regular);
+			regularFont = new Font(game.FontName, 16);
 			ContextRecreated();
 		}
 		

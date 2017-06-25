@@ -101,7 +101,6 @@ namespace ClassicalSharp.Network.Protocols {
 			mapSizeIndex = 0;
 			mapIndex = 0;
 			mapReceiveStart = DateTime.UtcNow;
-			net.task.Interval = 1.0 / 60;
 		}
 		
 		void HandleLevelDataChunk() {
@@ -133,7 +132,6 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleLevelFinalise() {
-			net.task.Interval = 1.0 / 20;
 			game.Gui.SetNewScreen(null);
 			game.Gui.activeScreen = prevScreen;
 			if (prevScreen != null && prevCursorVisible != game.CursorVisible) {

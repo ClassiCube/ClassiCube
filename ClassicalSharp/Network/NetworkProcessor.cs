@@ -40,10 +40,9 @@ namespace ClassicalSharp.Network {
 		internal WoMProtocol wom;
 
 		internal CPESupport cpeData;
-		internal ScheduledTask task;
 		internal bool receivedFirstPosition;
 		internal byte[] needRemoveNames = new byte[256 >> 3];
-		int pingTicks;
+		int netTicks, pingTicks;
 		
 		public override void Connect(IPAddress address, int port) {
 			socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -94,9 +93,6 @@ namespace ClassicalSharp.Network {
 			}
 			if (Disconnected) return;
 			
-			LocalPlayer player = game.LocalPlayer;
-			this.task = task;
-			
 			try {
 				reader.ReadPendingData();
 			} catch (SocketException ex) {
@@ -112,6 +108,8 @@ namespace ClassicalSharp.Network {
 				if (cpeData.needD3Fix && lastOpcode == Opcode.CpeHackControl && (opcode == 0x00 || opcode == 0xFF)) {
 					Utils.LogDebug("Skipping invalid HackControl byte from D3 server.");
 					reader.Skip(1);
+					
+					LocalPlayer player = game.LocalPlayer;
 					player.physics.jumpVel = 0.42f; // assume default jump height
 					player.physics.serverJumpVel = player.physics.jumpVel;
 					continue;
@@ -129,10 +127,17 @@ namespace ClassicalSharp.Network {
 			}
 			
 			reader.RemoveProcessed();
+			// Network is ticked 60 times a second. We only send position updates 20 times a second.
+			if ((netTicks % 3) == 0) CoreTick();
+			netTicks++;
+		}
+		
+		void CoreTick() {
 			CheckAsyncResources();
-			wom.Tick();
-			
+			wom.Tick();			
 			if (!receivedFirstPosition) return;
+			
+			LocalPlayer player = game.LocalPlayer;
 			classic.WritePosition(player.Position, player.HeadY, player.HeadX);
 			pingTicks++;
 			

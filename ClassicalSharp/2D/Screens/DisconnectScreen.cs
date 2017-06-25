@@ -21,7 +21,7 @@ namespace ClassicalSharp.Gui.Screens {
 			canReconnect = !(reason.StartsWith("Kicked ") || reason.StartsWith("Banned "));
 			
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			messageFont = new Font(game.FontName, 16, FontStyle.Regular);
+			messageFont = new Font(game.FontName, 16);
 			BlocksWorld = true;
 			HidesHud = true;
 			HandlesAllInput = true;

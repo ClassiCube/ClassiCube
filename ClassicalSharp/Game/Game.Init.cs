@@ -220,8 +220,10 @@ namespace ClassicalSharp {
 		ScheduledTask entTask;
 		void InitScheduledTasks() {
 			const double defTicks = 1.0 / 20;
+			double netTicks = Server.IsSinglePlayer ? (1.0 / 20) : (1.0 / 60);
+			
 			AddScheduledTask(30, AsyncDownloader.PurgeOldEntriesTask);
-			AddScheduledTask(defTicks, Server.Tick);
+			AddScheduledTask(netTicks, Server.Tick);
 			entTask = AddScheduledTask(defTicks, Entities.Tick);
 			
 			AddScheduledTask(defTicks, ParticleManager.Tick);
