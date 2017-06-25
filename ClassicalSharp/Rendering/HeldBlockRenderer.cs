@@ -46,7 +46,6 @@ namespace ClassicalSharp.Renderers {
 			anim.pos = Vector3.Zero;
 			type = game.Inventory.Selected;
 			held.RotX = 0;
-			block.SwitchOrder = false;
 			if (anim.doAnim) anim.Update(delta, last);
 			
 			game.Graphics.SetMatrixMode(MatrixType.Projection);
@@ -59,7 +58,9 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.DepthTest = false;
 			
 			SetPos();
+			game.Graphics.FaceCulling = true;
 			block.Render(held);
+			game.Graphics.FaceCulling = false;
 			
 			game.Graphics.LoadMatrix(ref game.View);
 			game.Graphics.SetMatrixMode(MatrixType.Projection);

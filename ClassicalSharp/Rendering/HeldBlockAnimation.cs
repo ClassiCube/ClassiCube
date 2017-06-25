@@ -98,7 +98,6 @@ namespace ClassicalSharp.Renderers {
 			pos.Z = -0.325f * (float)Math.Sin(angle * 2);
 			
 			angleY = -90 * (float)Math.Sin(angle * 2);
-			held.block.SwitchOrder = angleY <= -30;
 		}
 		
 		void DigSecondCycle() {
@@ -117,7 +116,6 @@ namespace ClassicalSharp.Renderers {
 			
 			held.held.RotX = (rotX * 0.33333f) * Utils.Rad2Deg;
 			angleY = -90 * (float)Math.Sin(angle);
-			held.block.SwitchOrder = angleY <= -30;
 		}
 		
 		void ResetAnimationState(bool updateLastType, double period) {

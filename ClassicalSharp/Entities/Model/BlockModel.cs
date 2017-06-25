@@ -21,7 +21,6 @@ namespace ClassicalSharp.Model {
 		float height;
 		TerrainAtlas1D atlas;
 		Vector3 minBB, maxBB;
-		public bool SwitchOrder = false;
 		ModelCache cache;
 		
 		public BlockModel(Game game) : base(game) {
@@ -112,21 +111,10 @@ namespace ClassicalSharp.Model {
 		void DrawParts(bool sprite) {
 			// SwitchOrder is needed for held block, which renders without depth testing
 			if (sprite) {
-				if (SwitchOrder) {
-					SpriteZQuad(Side.Back, false);
-					SpriteXQuad(Side.Right, false);
-				} else {
-					SpriteXQuad(Side.Right, false);
-					SpriteZQuad(Side.Back, false);
-				}
-				
-				if (SwitchOrder) {
-					SpriteXQuad(Side.Right, true);
-					SpriteZQuad(Side.Back, true);
-				} else {
-					SpriteZQuad(Side.Back, true);
-					SpriteXQuad(Side.Right, true);
-				}
+				SpriteXQuad(Side.Right, false);
+				SpriteZQuad(Side.Back, false);
+				SpriteZQuad(Side.Back, true);
+				SpriteXQuad(Side.Right, true);
 			} else {
 				drawer.elementsPerAtlas1D = atlas.elementsPerAtlas1D;
 				drawer.invVerElementSize = atlas.invElementSize;
@@ -143,17 +131,10 @@ namespace ClassicalSharp.Model {
 				drawer.TintColour = game.BlockInfo.FogColour[block];
 				
 				drawer.Bottom(1, cols[1], GetTex(Side.Bottom), cache.vertices, ref index);
-				if (SwitchOrder) {
-					drawer.Right(1, cols[5], GetTex(Side.Right), cache.vertices, ref index);
-					drawer.Back(1,  cols[2], GetTex(Side.Back),  cache.vertices, ref index);
-					drawer.Left(1,  cols[4], GetTex(Side.Left),  cache.vertices, ref index);
-					drawer.Front(1, cols[3], GetTex(Side.Front), cache.vertices, ref index);
-				} else {
-					drawer.Front(1, cols[3], GetTex(Side.Front), cache.vertices, ref index);
-					drawer.Right(1, cols[5], GetTex(Side.Right), cache.vertices, ref index);
-					drawer.Back(1,  cols[2], GetTex(Side.Back),  cache.vertices, ref index);
-					drawer.Left(1,  cols[4], GetTex(Side.Left),  cache.vertices, ref index);
-				}
+				drawer.Front(1, cols[3], GetTex(Side.Front), cache.vertices, ref index);
+				drawer.Right(1, cols[5], GetTex(Side.Right), cache.vertices, ref index);
+				drawer.Back(1,  cols[2], GetTex(Side.Back),  cache.vertices, ref index);
+				drawer.Left(1,  cols[4], GetTex(Side.Left),  cache.vertices, ref index);
 				drawer.Top(1, cols[0], GetTex(Side.Top), cache.vertices, ref index);
 			}
 		}
