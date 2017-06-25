@@ -36,6 +36,7 @@ namespace ClassicalSharp.Network {
         static ushort SetTwoWayPing(int i, ushort prev) {
             Entries[i].Data = (ushort)(prev + 1);
             Entries[i].TimeSent = DateTime.UtcNow;
+            Entries[i].TimeReceived = default(DateTime);
             return (ushort)(prev + 1);
         }
         

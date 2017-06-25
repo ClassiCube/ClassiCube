@@ -13,13 +13,13 @@ namespace ClassicalSharp {
 		public int GuiTex, GuiClassicTex, IconsTex;
 		Game game;
 		IGraphicsApi gfx;
-		FpsScreen fpsScreen;
+		StatusScreen fpsScreen;
 		internal HudScreen hudScreen;
 		internal Screen activeScreen;
 		internal List<WarningScreen> overlays = new List<WarningScreen>();
 		
 		public GuiInterface(Game game) {
-			fpsScreen = game.AddComponent(new FpsScreen(game));
+			fpsScreen = game.AddComponent(new StatusScreen(game));
 			hudScreen = game.AddComponent(new HudScreen(game));
 		}
 		
