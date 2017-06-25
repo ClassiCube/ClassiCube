@@ -108,12 +108,10 @@ namespace ClassicalSharp.Renderers {
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.EdgeBlock) {
 				MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
-				if (game.BlockInfo.FullBright[map.Env.EdgeBlock] != fullBrightEdge)
-					ResetSidesAndEdges(null, null);
+				ResetEdges();
 			} else if (e.Var == EnvVar.SidesBlock) {
 				MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
-				if (game.BlockInfo.FullBright[map.Env.SidesBlock] != fullBrightSides)
-					ResetSidesAndEdges(null, null);
+				ResetSides();
 			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
 				ResetSidesAndEdges(null, null);
 			} else if (e.Var == EnvVar.SunlightColour) {

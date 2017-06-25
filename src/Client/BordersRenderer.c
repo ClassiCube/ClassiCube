@@ -103,14 +103,10 @@ void BordersRenderer_Reset(void) {
 void BordersRenderer_EnvVariableChanged(EnvVar envVar) {
 	if (envVar == EnvVar_EdgeBlock) {
 		BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);
-		if (Block_FullBright[WorldEnv_EdgeBlock] != borders_fullBrightEdge) {
-			BordersRenderer_ResetSidesAndEdges();
-		}
+		BordersRenderer_ResetEdges();
 	} else if (envVar == EnvVar_SidesBlock) {
 		BordersRenderer_MakeTexture(&borders_sideTexId, &borders_lastSideTexLoc, WorldEnv_SidesBlock);
-		if (Block_FullBright[WorldEnv_SidesBlock] != borders_fullBrightSides) {
-			BordersRenderer_ResetSidesAndEdges();
-		}
+		BordersRenderer_ResetSides();
 	} else if (envVar == EnvVar_EdgeHeight || envVar == EnvVar_SidesOffset) {
 		BordersRenderer_ResetSidesAndEdges();
 	} else if (envVar == EnvVar_SunCol) {
