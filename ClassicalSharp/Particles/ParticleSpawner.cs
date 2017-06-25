@@ -23,9 +23,8 @@ namespace ClassicalSharp.Particles {
 			TextureRec baseRec = game.TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
 			float uScale = (1/16f), vScale = (1/16f) * game.TerrainAtlas1D.invElementSize;
 			
-			Vector3 minBB = game.BlockInfo.GetMinBB(e.OldBlock, e.Coords.X, e.Coords.Y, e.Coords.Z);
-			Vector3 maxBB = game.BlockInfo.GetMaxBB(e.OldBlock, e.Coords.X, e.Coords.Y, e.Coords.Z);
-			
+			Vector3 minBB = game.BlockInfo.MinBB[block];
+			Vector3 maxBB = game.BlockInfo.MaxBB[block];
 			int minU = Math.Min((int)(minBB.X * 16), (int)(minBB.Z * 16));
 			int maxU = Math.Min((int)(maxBB.X * 16), (int)(maxBB.Z * 16));
 			int minV = (int)(16 - maxBB.Y * 16), maxV = (int)(16 - minBB.Y * 16);

@@ -118,10 +118,10 @@ namespace ClassicalSharp {
 			bool isTranslucent = info.Draw[curBlock] == DrawType.Translucent;
 			int lightFlags = info.LightOffset[curBlock];
 			
-			drawer.minBB = info.GetMinBB(curBlock, X, Y, Z); drawer.minBB.Y = 1 - drawer.minBB.Y;
-			drawer.maxBB = info.GetMaxBB(curBlock, X, Y, Z); drawer.maxBB.Y = 1 - drawer.maxBB.Y;
+			drawer.minBB = info.MinBB[curBlock]; drawer.minBB.Y = 1 - drawer.minBB.Y;
+			drawer.maxBB = info.MaxBB[curBlock]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
 			
-			Vector3 min = info.GetRenderMinBB(curBlock, X, Y, Z), max = info.GetRenderMaxBB(curBlock, X, Y, Z);
+			Vector3 min = info.RenderMinBB[curBlock], max = info.RenderMaxBB[curBlock];
 			drawer.x1 = X + min.X; drawer.y1 = Y + min.Y; drawer.z1 = Z + min.Z;
 			drawer.x2 = X + max.X; drawer.y2 = Y + max.Y; drawer.z2 = Z + max.Z;
 			

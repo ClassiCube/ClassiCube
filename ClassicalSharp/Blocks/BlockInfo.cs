@@ -113,16 +113,14 @@ namespace ClassicalSharp {
 		
 		/// <summary> Recalculates the initial properties and culling states for all blocks. </summary>
 		public void Reset(Game game) {
-			Init(game);
+			Init();
 			// TODO: Make this part of TerrainAtlas2D maybe?
 			using (FastBitmap fastBmp = new FastBitmap(game.TerrainAtlas.AtlasBitmap, true, true))
 				RecalculateSpriteBB(fastBmp);
 		}
-		Game game;
 		
 		/// <summary> Calculates the initial properties and culling states for all blocks. </summary>
-		public void Init(Game game) {
-			this.game = game;
+		public void Init() {
 			for (int i = 0; i < DefinedCustomBlocks.Length; i++)
 				DefinedCustomBlocks[i] = 0;
 			for (int block = 0; block < Block.Count; block++)

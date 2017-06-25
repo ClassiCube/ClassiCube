@@ -119,7 +119,7 @@ namespace ClassicalSharp.Model {
 				drawer.elementsPerAtlas1D = atlas.elementsPerAtlas1D;
 				drawer.invVerElementSize = atlas.invElementSize;
 				
-				drawer.minBB = game.BlockInfo.MinBB[block]; drawer.minBB.Y = 1 - drawer.minBB.Y;
+				drawer.minBB = game.BlockInfo.MinBB[block]; drawer.minBB.Y = 1 - drawer.minBB.Y; 				
 				drawer.maxBB = game.BlockInfo.MaxBB[block]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
 				
 				Vector3 min = game.BlockInfo.RenderMinBB[block];

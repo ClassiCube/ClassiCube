@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 			Events.TextureChanged += TextureChangedCore;
 			
 			BlockInfo = new BlockInfo();
-			BlockInfo.Init(this);
+			BlockInfo.Init();
 			ModelCache = new ModelCache(this);
 			ModelCache.InitCache();
 			AsyncDownloader = AddComponent(new AsyncDownloader(Drawer2D));

@@ -81,8 +81,8 @@ namespace ClassicalSharp {
 			for (int i = 0; i < 10000; i++) {
 				int x = t.X, y = t.Y, z = t.Z;
 				t.Block = GetBlock(game.World, x, y, z, pOrigin);
-				Vector3 min = new Vector3(x, y, z) + info.GetRenderMinBB(t.Block, x, y, z);
-				Vector3 max = new Vector3(x, y, z) + info.GetRenderMaxBB(t.Block, x, y, z);
+				Vector3 min = new Vector3(x, y, z) + info.RenderMinBB[t.Block];
+				Vector3 max = new Vector3(x, y, z) + info.RenderMaxBB[t.Block];
 				
 				float dx = Math.Min(Math.Abs(origin.X - min.X), Math.Abs(origin.X - max.X));
 				float dy = Math.Min(Math.Abs(origin.Y - min.Y), Math.Abs(origin.Y - max.Y));

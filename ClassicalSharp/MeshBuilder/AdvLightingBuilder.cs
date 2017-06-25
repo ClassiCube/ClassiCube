@@ -110,11 +110,11 @@ namespace ClassicalSharp {
 			lightFlags = info.LightOffset[curBlock];
 			tinted = info.Tinted[curBlock];
 			
-			Vector3 min = info.GetRenderMinBB(curBlock, X, Y, Z), max = info.GetRenderMaxBB(curBlock, X, Y, Z);
+			Vector3 min = info.RenderMinBB[curBlock], max = info.RenderMaxBB[curBlock];
 			x1 = X + min.X; y1 = Y + min.Y; z1 = Z + min.Z;
 			x2 = X + max.X; y2 = Y + max.Y; z2 = Z + max.Z;
 			
-			minBB = info.GetMinBB(curBlock, X, Y, Z); maxBB = info.GetMaxBB(curBlock, X, Y, Z);
+			this.minBB = info.MinBB[curBlock]; this.maxBB = info.MaxBB[curBlock];
 			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
 			
 			if (leftCount != 0) DrawLeftFace(leftCount);
