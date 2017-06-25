@@ -4,6 +4,7 @@ using System.Drawing;
 using ClassicalSharp.Entities;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Widgets;
+using ClassicalSharp.Network;
 #if ANDROID
 using Android.Graphics;
 #endif
@@ -59,6 +60,11 @@ namespace ClassicalSharp.Gui.Screens {
 			} else {
 				statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunks/s, ")
 					.AppendNum(ref index, game.Vertices).Append(ref index, " vertices");
+				
+				int ping = PingList.AveragePingMilliseconds();
+				if (ping != 0) {
+					statusBuffer.Append(ref index, ", ping ").AppendNum(ref index, ping).Append(ref index, " ms");
+				}
 			}
 			
 			status.SetText(statusBuffer.ToString());

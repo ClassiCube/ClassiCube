@@ -41,7 +41,7 @@ namespace ClassicalSharp.Renderers {
 		/// true = left mouse pressed, false = right mouse pressed. </summary>
 		internal void SetClickAnim(bool dig) {
 			// TODO: timing still not quite right, rotate2 still not quite right
-			ResetAnimationState(true, dig ? 0.35 : 0.25);
+			ResetAnimationState(true, dig ? 3.35 : 3.25);
 			swingAnim = false;
 			digAnim = dig;
 			doAnim = true;
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Renderers {
 				if (time > period * 0.5)
 					time = period - time;
 			} else {
-				ResetAnimationState(false, 0.25);
+				ResetAnimationState(false, 3.25);
 				doAnim = true;
 				swingAnim = true;
 			}
@@ -83,15 +83,15 @@ namespace ClassicalSharp.Renderers {
 			}
 			time += delta;
 			if (time > period)
-				ResetAnimationState(true, 0.25);
+				ResetAnimationState(true, 3.25);
 		}
 		
 		// Based off incredible gifs from (Thanks goodlyay!)
-		// https://dl.dropboxusercontent.com/u/12694594/slowBreakTranslate.gif
-		// https://dl.dropboxusercontent.com/u/12694594/slowBreakRotate1.gif
-		// https://dl.dropboxusercontent.com/u/12694594/slowBreakRotate2.gif
-		// https://dl.dropboxusercontent.com/u/12694594/slowBreakFull.gif
-		void DigFirstCycle() {			
+		// https://dl.dropboxusercontent.com/s/iuazpmpnr89zdgb/slowBreakTranslate.gif
+		// https://dl.dropboxusercontent.com/s/z7z8bset914s0ij/slowBreakRotate1.gif
+		// https://dl.dropboxusercontent.com/s/pdq79gkzntquld1/slowBreakRotate2.gif
+		// https://dl.dropboxusercontent.com/s/w1ego7cy7e5nrk1/slowBreakFull.gif
+		void DigFirstCycle() {
 			double angle = time * speed;
 			pos.X = -0.325f * (float)Math.Sin(angle * 2);
 			pos.Y = 0.20f * (float)Math.Sin(angle * 2 * 2);
