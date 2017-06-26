@@ -86,7 +86,7 @@ namespace ClassicalSharp.Renderers {
 		
 		unsafe void MakeVb() {
 			if (game.Graphics.LostContext) return;
-			game.Graphics.DeleteVb(ref vb);			
+			game.Graphics.DeleteVb(ref vb);
 			VertexP3fT2fC4b* vertices = stackalloc VertexP3fT2fC4b[count];
 			IntPtr start = (IntPtr)vertices;
 			const float pos = 0.5f;
