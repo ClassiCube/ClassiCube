@@ -33,7 +33,10 @@ namespace ClassicalSharp.Audio {
 		static int GetVolume(string volKey, string boolKey) {
 			int volume = Options.GetInt(volKey, 0, 100, 0);
 			if (volume != 0) return volume;
-			return Options.GetBool(boolKey, false) ? 100 : 0;
+			
+			volume = Options.GetBool(boolKey, false) ? 100 : 0;
+			Options.Set<string>(boolKey, null);
+			return volume;
 		}
 
 		public void Ready(Game game) { }
