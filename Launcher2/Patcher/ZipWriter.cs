@@ -12,9 +12,12 @@ namespace Launcher.Patcher {
 		
 		BinaryWriter writer;
 		Stream stream;
+		DateTime now;
+		
 		public ZipWriter(Stream stream) {
 			this.stream = stream;
 			writer = new BinaryWriter(stream);
+			now = DateTime.Now;
 		}
 		
 		internal ZipEntry[] entries;
@@ -65,7 +68,7 @@ namespace Launcher.Patcher {
 			writer.Write((ushort)20); // version needed
 			writer.Write((ushort)0);  // bitflags
 			writer.Write((ushort)0);  // compression method
-			writer.Write(0);          // last modified
+			WriteCurrentDate(writer); // last modified
 			writer.Write(entry.Crc32);
 			writer.Write(entry.CompressedDataSize);
 			writer.Write(entry.UncompressedDataSize);
@@ -83,7 +86,7 @@ namespace Launcher.Patcher {
 			writer.Write((ushort)20); // version needed
 			writer.Write((ushort)0);  // bitflags
 			writer.Write((ushort)0);  // compression method
-			writer.Write(0);          // last modified
+			WriteCurrentDate(writer); // last modified
 			writer.Write(entry.Crc32);
 			writer.Write(entry.CompressedDataSize);
 			writer.Write(entry.UncompressedDataSize);
@@ -97,6 +100,14 @@ namespace Launcher.Patcher {
 			writer.Write(entry.LocalHeaderOffset);
 			for (int i = 0; i < entry.Filename.Length; i++)
 				writer.Write((byte)entry.Filename[i]);
+		}
+		
+		void WriteCurrentDate(BinaryWriter writer) {
+			int modTime = (now.Second / 2) | (now.Minute << 5) | (now.Hour << 11);
+			int modDate = (now.Day) | (now.Month << 5) | ((now.Year - 1980) << 9);
+			
+			writer.Write((ushort)modTime);
+			writer.Write((ushort)modDate);
 		}
 		
 		void WriteEndOfCentralDirectoryRecord(ushort entries, int centralDirSize, int centralDirOffset) {
