@@ -108,8 +108,8 @@ namespace ClassicalSharp {
 		const float slippery = 0.97f;
 		const float adjust = 0.025f;
 		
-		float speedX = 0, speedY = 0;
-		private void UpdateMouseRotation() {
+		static float speedX = 0, speedY = 0;
+		void UpdateMouseRotation() {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
 
 			if (game.SmoothCamera) {
