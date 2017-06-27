@@ -122,10 +122,10 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Init();
 			left = new KeyBind[4];
 			left[0] = KeyBind.ExtInput; left[1] = KeyBind.HideFps; left[2] = KeyBind.HideGui; left[3] = KeyBind.HotbarSwitching;
-			right = new KeyBind[4];
-			right[0] = KeyBind.Screenshot; right[1] = KeyBind.Fullscreen; right[2] = KeyBind.AxisLines; right[3] = KeyBind.Autorotate;
+			right = new KeyBind[5];
+			right[0] = KeyBind.Screenshot; right[1] = KeyBind.Fullscreen; right[2] = KeyBind.AxisLines; right[3] = KeyBind.Autorotate; right[4] = KeyBind.SmoothCamera;
 			leftDesc = new string[] { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching" };
-			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Toggle auto-rotate", };
+			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Toggle auto-rotate", "Toggle smooth cam" };
 			
 			title = "Other controls";
 			leftPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[left.Length + right.Length + 4];
-			MakeWidgets(-40, 10);
+			MakeWidgets(-90, 10);
 		}
 	}
 	

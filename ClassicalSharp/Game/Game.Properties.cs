@@ -184,6 +184,8 @@ namespace ClassicalSharp {
 		
 		public bool autoRotate = true;
 		
+		public bool smoothCamera = false;
+		
 		public string FontName = "Arial";
 		
 		public int ChatLines = 12;

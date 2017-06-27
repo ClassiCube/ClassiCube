@@ -105,10 +105,24 @@ namespace ClassicalSharp {
 		}
 		
 		static readonly float sensiFactor = 0.0002f / 3 * Utils.Rad2Deg;
+		
+		float speedX = 0, speedY = 0;
 		private void UpdateMouseRotation() {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
-			float rotY =  player.interp.next.HeadY + delta.X * sensitivity;
-			float yAdj =  game.InvertMouse ? -delta.Y * sensitivity : delta.Y * sensitivity;
+			const float slippery = 0.97f;
+			const float adjust = 0.025f;
+			if (game.smoothCamera) {
+    			speedX += delta.X * adjust;
+    			speedX *= slippery;
+    			speedY += delta.Y * adjust;
+    			speedY *= slippery;
+			}
+			else {
+			    speedX = delta.X;
+			    speedY = delta.Y;
+			}
+			float rotY =  player.interp.next.HeadY + speedX * sensitivity;
+			float yAdj =  game.InvertMouse ? -speedY * sensitivity : speedY * sensitivity;
 			float headX = player.interp.next.HeadX + yAdj;
 			LocationUpdate update = LocationUpdate.MakeOri(rotY, headX);
 			

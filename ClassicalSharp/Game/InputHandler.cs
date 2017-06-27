@@ -251,6 +251,8 @@ namespace ClassicalSharp {
 					game.window.WindowState = state == WindowState.Fullscreen ?
 						WindowState.Normal : WindowState.Fullscreen;
 				}
+			} else if (key == Keys[KeyBind.SmoothCamera]) {
+				ToggleSmoothCamera();
 			} else if (key == Keys[KeyBind.AxisLines]) {
 				ToggleAxisLines();
 			} else if (key == Keys[KeyBind.Autorotate]) {
@@ -269,6 +271,16 @@ namespace ClassicalSharp {
 				return false;
 			}
 			return true;
+		}
+		
+		void ToggleSmoothCamera() {
+			game.smoothCamera = !game.smoothCamera;
+			Key key = Keys[KeyBind.SmoothCamera];
+			if (game.smoothCamera) {
+				game.Chat.Add("  &eSmooth camera is &aenabled. &ePress &a" + key + " &eto disable.");
+			} else {
+				game.Chat.Add("  &eSmooth camera is &cdisabled. &ePress &a" + key + " &eto re-enable.");
+			}
 		}
 		
 		void ToggleAxisLines() {
