@@ -182,9 +182,9 @@ namespace ClassicalSharp {
 		
 		public bool ChatLogging = true;
 		
-		public bool autoRotate = true;
+		public bool AutoRotate = true;
 		
-		public bool smoothCamera = false;
+		public bool SmoothCamera = false;
 		
 		public string FontName = "Arial";
 		

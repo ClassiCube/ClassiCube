@@ -274,9 +274,9 @@ namespace ClassicalSharp {
 		}
 		
 		void ToggleSmoothCamera() {
-			game.smoothCamera = !game.smoothCamera;
+			game.SmoothCamera = !game.SmoothCamera;
 			Key key = Keys[KeyBind.SmoothCamera];
-			if (game.smoothCamera) {
+			if (game.SmoothCamera) {
 				game.Chat.Add("  &eSmooth camera is &aenabled. &ePress &a" + key + " &eto disable.");
 			} else {
 				game.Chat.Add("  &eSmooth camera is &cdisabled. &ePress &a" + key + " &eto re-enable.");
@@ -294,9 +294,9 @@ namespace ClassicalSharp {
 		}
 		
 		void ToggleAutoRotate() {
-			game.autoRotate = !game.autoRotate;
+			game.AutoRotate = !game.AutoRotate;
 			Key key = Keys[KeyBind.Autorotate];
-			if (game.autoRotate) {
+			if (game.AutoRotate) {
 				game.Chat.Add("  &eAuto rotate is &aenabled. &ePress &a" + key + " &eto disable.");
 			} else {
 				game.Chat.Add("  &eAuto rotate is &cdisabled. &ePress &a" + key + " &eto re-enable.");

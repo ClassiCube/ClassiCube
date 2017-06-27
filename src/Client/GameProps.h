@@ -103,6 +103,9 @@ bool Game_ChatLogging;
 /* Whether auto rotation of blocks with special suffixes is enabled. */
 bool Game_AutoRotate;
 
+/* Whether camera has smooth rotation. */
+bool Game_SmoothCamera;
+
 /* Font name used for text rendering. */
 String Game_FontName;
 

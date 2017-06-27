@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 				
 				BlockID old = game.World.GetBlock(pos);
 				BlockID block = inv.Selected;
-				if (game.autoRotate)
+				if (game.AutoRotate)
 					block = AutoRotate.RotateBlock(game, block);
 				
 				if (game.CanPick(old) || !inv.CanPlace[block]) return;
