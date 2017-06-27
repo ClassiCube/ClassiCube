@@ -125,7 +125,7 @@ namespace ClassicalSharp.Gui.Screens {
 			right = new KeyBind[5];
 			right[0] = KeyBind.Screenshot; right[1] = KeyBind.Fullscreen; right[2] = KeyBind.AxisLines; right[3] = KeyBind.Autorotate; right[4] = KeyBind.SmoothCamera;
 			leftDesc = new string[] { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching" };
-			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Toggle auto-rotate", "Toggle smooth cam" };
+			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera" };
 			
 			title = "Other controls";
 			leftPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
