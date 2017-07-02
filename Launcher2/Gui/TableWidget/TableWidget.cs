@@ -25,6 +25,7 @@ namespace Launcher.Gui.Widgets {
 		public TableNeedsRedrawHandler NeedRedraw;
 		public Action<string> SelectedChanged;
 		public int SelectedIndex = -1;
+		public string SelectedHash = "";
 		public int CurrentIndex, Count;
 		
 		internal TableEntry[] entries, usedEntries;
@@ -56,7 +57,6 @@ namespace Launcher.Gui.Widgets {
 		/// <summary> Filters the table such that only rows with server names
 		/// that contain the input (case insensitive) are shown. </summary>
 		public void FilterEntries(string filter) {
-			string selHash = SelectedIndex >= 0 ? usedEntries[SelectedIndex].Hash : "";
 			Count = 0;
 			int index = 0;
 			
@@ -67,7 +67,7 @@ namespace Launcher.Gui.Widgets {
 					usedEntries[index++] = entry;
 				}
 			}
-			SetSelected(selHash);
+			SetSelected(SelectedHash);
 		}		
 		
 		internal void GetScrollbarCoords(out int y, out int height) {
@@ -85,11 +85,15 @@ namespace Launcher.Gui.Widgets {
 			if (index >= Count) index = Count - 1;
 			if (index < 0) index = 0;
 			
+			SelectedHash = "";
 			SelectedIndex = index;
 			lastIndex = index;
 			ClampIndex();
-			if (Count > 0)
+			
+			if (Count > 0) {
 				SelectedChanged(usedEntries[index].Hash);
+				SelectedHash = usedEntries[index].Hash;
+			}
 		}
 		
 		public void SetSelected(string hash) {

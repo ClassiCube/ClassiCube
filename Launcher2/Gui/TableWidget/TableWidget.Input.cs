@@ -55,14 +55,13 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		void SortEntries(TableEntryComparer comparer, bool noRedraw) {
-			string selHash = SelectedIndex >= 0 ? usedEntries[SelectedIndex].Hash : "";
 			Array.Sort(usedEntries, 0, Count, comparer);
 			Array.Sort(entries, 0, entries.Length, comparer);
 			lastIndex = -10;
 			if (noRedraw) return;
 			
 			comparer.Invert = !comparer.Invert;
-			SetSelected(selHash);
+			SetSelected(SelectedHash);
 			NeedRedraw();
 		}
 		
