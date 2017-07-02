@@ -242,6 +242,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		int batchStride;
 		public override void SetDynamicVbData<T>(int id, T[] vertices, int count) {
 			if (glLists) {
+				activeList = dynamicListId;
 				GL.Begin(BeginMode.Triangles);
 				if (typeof(T) == typeof(VertexP3fT2fC4b)) {
 					VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])((object)vertices);
