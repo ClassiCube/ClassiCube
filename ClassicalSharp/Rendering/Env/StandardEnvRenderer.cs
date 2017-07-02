@@ -114,7 +114,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.BindTexture(game.CloudsTex);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.BindVb(cloudsVb);
-			gfx.DrawIndexedVb_TrisT2fC4b(cloudVertices * 6 / 4, 0);
+			gfx.DrawIndexedVb(DrawMode.Triangles, cloudVertices * 6 / 4, 0);
 			gfx.AlphaTest = false;
 			gfx.Texturing = false;
 			

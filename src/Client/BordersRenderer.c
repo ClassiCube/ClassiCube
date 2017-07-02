@@ -55,7 +55,7 @@ Gfx_SetTexturing(false);
 void BordersRenderer_RenderSides(Real64 delta) {
 	BlockID block = WorldEnv_SidesBlock;
 	BordersRenderer_SetupState(block, borders_sideTexId, borders_sidesVb)
-	Gfx_DrawIndexedVb_TrisT2fC4b(borders_sidesVertices * 6 / 4, 0);
+	Gfx_DrawIndexedVb(DrawMode_Triangles, borders_sidesVertices * 6 / 4, 0);
 	BordersRenderer_ResetState(block);
 }
 
@@ -69,7 +69,7 @@ void BordersRenderer_RenderEdges(Real64 delta) {
 	Vector3 camPos = Game_CurrentCameraPos;
 	Int32 yVisible = min(0, WorldEnv_SidesHeight);
 	if (camPos.Y >= yVisible) {
-		Gfx_DrawIndexedVb_TrisT2fC4b(borders_edgesVertices * 6 / 4, 0);
+		Gfx_DrawIndexedVb(DrawMode_Triangles, borders_edgesVertices * 6 / 4, 0);
 	}
 	BordersRenderer_ResetState(block);
 }

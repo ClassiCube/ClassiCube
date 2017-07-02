@@ -54,7 +54,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.BindTexture(sideTexId);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.BindVb(sidesVb);
-			gfx.DrawIndexedVb_TrisT2fC4b(sidesVertices * 6 / 4, 0);
+			gfx.DrawIndexedVb(DrawMode.Triangles, sidesVertices * 6 / 4, 0);
 			
 			gfx.RestoreAlphaState(game.BlockInfo.Draw[block]);
 			gfx.Texturing = false;
@@ -75,7 +75,7 @@ namespace ClassicalSharp.Renderers {
 			// Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps.
 			float yVisible = Math.Min(0, map.Env.SidesHeight);
 			if (camPos.Y >= yVisible)
-				gfx.DrawIndexedVb_TrisT2fC4b(edgesVertices * 6 / 4, 0);
+				gfx.DrawIndexedVb(DrawMode.Triangles, edgesVertices * 6 / 4, 0);
 			
 			gfx.RestoreAlphaState(game.BlockInfo.Draw[block]);
 			gfx.Texturing = false;

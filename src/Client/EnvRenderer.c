@@ -76,7 +76,7 @@ void EnvRenderer_RenderClouds(Real64 delta) {
 	Gfx_BindTexture(env_cloudsTex);
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
 	Gfx_BindVb(env_cloudsVb);
-	Gfx_DrawIndexedVb_TrisT2fC4b(env_cloudVertices * 6 / 4, 0);
+	Gfx_DrawIndexedVb(DrawMode_Triangles, env_cloudVertices * 6 / 4, 0);
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
 
