@@ -206,11 +206,11 @@ namespace ClassicalSharp.GraphicsAPI {
 				ushort* indicesPtr = stackalloc ushort[maxIndices];
 				MakeIndices(indicesPtr, maxIndices);
 				
-				int size = format == VertexFormat.P3fT2fC4b ? VertexP3fT2fC4b.Size : VertexP3fC4b.Size;
-				GL.VertexPointer(3, PointerType.Float, size, vertices);
-				GL.ColorPointer(4, PointerType.UnsignedByte, size, (IntPtr)((byte*)vertices + 12));
+				int stride = format == VertexFormat.P3fT2fC4b ? VertexP3fT2fC4b.Size : VertexP3fC4b.Size;
+				GL.VertexPointer(3, PointerType.Float, stride, vertices);
+				GL.ColorPointer(4, PointerType.UnsignedByte, stride, (IntPtr)((byte*)vertices + 12));
 				if (format == VertexFormat.P3fT2fC4b) {
-					GL.TexCoordPointer(2, PointerType.Float, size, (IntPtr)((byte*)vertices + 16));
+					GL.TexCoordPointer(2, PointerType.Float, stride, (IntPtr)((byte*)vertices + 16));
 				}
 				
 				GL.DrawElements(BeginMode.Triangles, count * 6 / 4, DrawElementsType.UnsignedShort, (IntPtr)indicesPtr);
@@ -241,17 +241,48 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		int batchStride;
 		public override void SetDynamicVbData<T>(int id, T[] vertices, int count) {
-			if (glLists) return;
+			if (glLists) {
+				GL.Begin(BeginMode.Triangles);
+				if (typeof(T) == typeof(VertexP3fT2fC4b)) {
+					VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])((object)vertices);
+					for (int i = 0; i < count; i += 4) {
+						V(ptr[i + 0]); V(ptr[i + 1]); V(ptr[i + 2]);
+						V(ptr[i + 2]); V(ptr[i + 3]); V(ptr[i + 0]);
+					}
+				} else if (typeof(T) == typeof(VertexP3fC4b)) {
+					VertexP3fC4b[] ptr = (VertexP3fC4b[])((object)vertices);
+					for (int i = 0; i < count; i += 4) {
+						V(ptr[i + 0]); V(ptr[i + 1]); V(ptr[i + 2]);
+						V(ptr[i + 2]); V(ptr[i + 3]); V(ptr[i + 0]);
+					}
+				}
+				GL.End();
+				return;
+			}
+			
 			GL.BindBuffer(BufferTarget.ArrayBuffer, id);
 			GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero,
 			                 new IntPtr(count * batchStride), vertices);
+		}
+		
+		static void V(VertexP3fC4b v) {
+			FastColour AAA = FastColour.Unpack(v.Colour);
+			GL.Color4ub(AAA.R, AAA.G, AAA.B, AAA.A);
+			GL.Vertex3f(v.X, v.Y, v.Z);
+		}
+		
+		static void V(VertexP3fT2fC4b v) {
+			FastColour AAA = FastColour.Unpack(v.Colour);
+			GL.Color4ub(AAA.R, AAA.G, AAA.B, AAA.A);
+			GL.TexCoord2f(v.U, v.V);
+			GL.Vertex3f(v.X, v.Y, v.Z);
 		}
 		
 		public override void DeleteVb(ref int vb) {
 			if (vb <= 0) return;
 			int id = vb; vb = -1;
 			
-			if (glLists) { if (id != dynamicListId) GL.DeleteLists(id, 1); } 
+			if (glLists) { if (id != dynamicListId) GL.DeleteLists(id, 1); }
 			else { GL.DeleteBuffers(1, &id); }
 		}
 		
