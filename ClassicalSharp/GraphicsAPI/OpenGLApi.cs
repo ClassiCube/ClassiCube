@@ -24,8 +24,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			int texDims;
 			GL.GetIntegerv(GetPName.MaxTextureSize, &texDims);
 			texDimensions = texDims;
+			
+			glLists = Options.GetBool(OptionsKey.ForceOldOpenGL, false);
 			CheckVboSupport();
-			//glLists = true;
 			base.InitDynamicBuffers();
 			
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
@@ -45,13 +46,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			if (extensions.Contains("GL_ARB_vertex_buffer_object")) {
 				GL.UseArbVboAddresses();
 			} else {
-				ErrorHandler.LogError("OpenGL VBO support check",
-				                      "Driver does not support OpenGL VBOs, which are required for the OpenGL build." +
-				                      Environment.NewLine + "You may need to install and/or update video card drivers." +
-				                      Environment.NewLine + "Alternatively, you can download the Direct3D 9 build.");
-				throw new InvalidOperationException("VBO support required for OpenGL build");
-			}
-			
+				glLists = true;
+			}			
 		}
 
 		public override bool AlphaTest {
@@ -432,6 +428,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override bool WarnIfNecessary(Chat chat) {
+			if (glLists) {
+				chat.Add("&cYou are using the very outdated OpenGL backend.");
+				chat.Add("&cAs such you may experience poor performance.");
+				chat.Add("&cIt is likely you need to install video card drivers.");
+			}
+			
 			if (!isIntelRenderer) return false;
 			
 			chat.Add("&cIntel graphics cards are known to have issues with the OpenGL build.");

@@ -18,6 +18,7 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_MusicVolume "musicvolume"
 #define OptionsKey_SoundVolume "soundvolume"
 #define OptionsKey_ForceOpenAL "forceopenal"
+#define ForceOldOpenGL "force-oldgl"
 
 #define OptionsKey_ViewDist "viewdist"
 #define OptionsKey_SingleplayerPhysics "singleplayerphysics"

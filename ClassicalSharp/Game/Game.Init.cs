@@ -28,6 +28,8 @@ namespace ClassicalSharp {
 		internal void OnLoad() {
 			Mouse = window.Mouse;
 			Keyboard = window.Keyboard;
+			Options.Load();
+			
 			#if ANDROID
 			Graphics = new OpenGLESApi();
 			#elif !USE_DX
@@ -44,8 +46,6 @@ namespace ClassicalSharp {
 			Drawer2D = new GdiPlusDrawer2D(Graphics);
 			#endif
 			
-			
-			Options.Load();
 			Entities = new EntityList(this);
 			AcceptedUrls.Load();
 			DeniedUrls.Load();

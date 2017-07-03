@@ -13,6 +13,7 @@ namespace ClassicalSharp {
 		public const string MusicVolume = "musicvolume";
 		public const string SoundsVolume = "soundsvolume";
 		public const string ForceOpenAL = "forceopenal";
+		public const string ForceOldOpenGL = "force-oldgl";
 		
 		public const string ViewDist = "viewdist";
 		public const string SingleplayerPhysics = "singleplayerphysics";
