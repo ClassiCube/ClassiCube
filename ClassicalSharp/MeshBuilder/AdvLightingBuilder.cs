@@ -416,8 +416,12 @@ namespace ClassicalSharp {
 		const int xP1_yM1_zP1 = 24, xP1_yCC_zP1 = 25, xP1_yP1_zP1 = 26;
 		
 		int Lit(int x, int y, int z, int cIndex) {
-			if (x < 0 || y < 0 || z < 0
-			    || x >= width || y >= height || z >= length) return 7; // all faces lit
+			if (y < 0 || y >= height) return 7; // all faces lit
+			
+			// TODO: check sides height (if sides > edges), check if edge block casts a shadow
+			if (x < 0 || z < 0 || x >= width || z >= length) {
+				return y >= edgeLevel ? 7 : y == (edgeLevel - 1) ? 6 : 0;
+			}
 			
 			int flags = 0;
 			BlockID block = chunk[cIndex];
