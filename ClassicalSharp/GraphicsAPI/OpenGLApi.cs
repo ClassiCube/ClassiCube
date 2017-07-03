@@ -18,6 +18,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		bool glLists = false;
 		int activeList = -1;
 		const int dynamicListId = 1234567891;
+		object dynamicListData = null;
 		
 		public OpenGLApi() {
 			InitFields();
@@ -47,7 +48,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.UseArbVboAddresses();
 			} else {
 				glLists = true;
-			}			
+			}
 		}
 
 		public override bool AlphaTest {
@@ -239,21 +240,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void SetDynamicVbData<T>(int id, T[] vertices, int count) {
 			if (glLists) {
 				activeList = dynamicListId;
-				GL.Begin(BeginMode.Triangles);
-				if (typeof(T) == typeof(VertexP3fT2fC4b)) {
-					VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])((object)vertices);
-					for (int i = 0; i < count; i += 4) {
-						V(ptr[i + 0]); V(ptr[i + 1]); V(ptr[i + 2]);
-						V(ptr[i + 2]); V(ptr[i + 3]); V(ptr[i + 0]);
-					}
-				} else if (typeof(T) == typeof(VertexP3fC4b)) {
-					VertexP3fC4b[] ptr = (VertexP3fC4b[])((object)vertices);
-					for (int i = 0; i < count; i += 4) {
-						V(ptr[i + 0]); V(ptr[i + 1]); V(ptr[i + 2]);
-						V(ptr[i + 2]); V(ptr[i + 3]); V(ptr[i + 0]);
-					}
-				}
-				GL.End();
+				dynamicListData = vertices;
 				return;
 			}
 			
@@ -320,15 +307,59 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
 		public override void DrawVb(DrawMode mode, int startVertex, int verticesCount) {
-			if (glLists) { if (activeList != dynamicListId) GL.CallList(activeList); return; }
+			if (glLists) { DrawDynamicLines(verticesCount, startVertex); return; }
+			
 			setupBatchFunc();
 			GL.DrawArrays(modeMappings[(int)mode], startVertex, verticesCount);
 		}
 		
 		public override void DrawIndexedVb(DrawMode mode, int indicesCount, int startIndex) {
-			if (glLists) { if (activeList != dynamicListId) GL.CallList(activeList); return; }
+			if (glLists) {
+				if (activeList != dynamicListId) { GL.CallList(activeList); }
+				else { DrawDynamicTriangles(indicesCount, startIndex); }
+				return;
+			}
+			
 			setupBatchFunc();
 			GL.DrawElements(modeMappings[(int)mode], indicesCount, indexType, new IntPtr(startIndex * 2));
+		}
+		
+		void DrawDynamicLines(int verticesCount, int startVertex) {
+			GL.Begin(BeginMode.Lines);
+			if (batchFormat == VertexFormat.P3fT2fC4b) {
+				VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])dynamicListData;
+				for (int i = startVertex; i < startVertex + verticesCount; i += 2) {
+					V(ptr[i + 0]); V(ptr[i + 1]);
+				}
+			} else {
+				VertexP3fC4b[] ptr = (VertexP3fC4b[])dynamicListData;
+				for (int i = startVertex; i < startVertex + verticesCount; i += 2) {
+					V(ptr[i + 0]); V(ptr[i + 1]);
+				}
+			}
+			GL.End();
+		}
+		
+		void DrawDynamicTriangles(int verticesCount, int startVertex) {
+			GL.Begin(BeginMode.Triangles);
+			// indices -> vertices count
+			verticesCount = verticesCount * 4 / 6;
+			startVertex = startVertex * 4 / 6;
+			
+			if (batchFormat == VertexFormat.P3fT2fC4b) {
+				VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])dynamicListData;
+				for (int i = startVertex; i < startVertex + verticesCount; i += 4) {
+					V(ptr[i + 0]); V(ptr[i + 1]); V(ptr[i + 2]);
+					V(ptr[i + 2]); V(ptr[i + 3]); V(ptr[i + 0]);
+				}
+			} else {
+				VertexP3fC4b[] ptr = (VertexP3fC4b[])dynamicListData;
+				for (int i = startVertex; i < startVertex + verticesCount; i += 4) {
+					V(ptr[i + 0]); V(ptr[i + 1]); V(ptr[i + 2]);
+					V(ptr[i + 2]); V(ptr[i + 3]); V(ptr[i + 0]);
+				}
+			}
+			GL.End();
 		}
 		
 		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startIndex) {
