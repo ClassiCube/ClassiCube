@@ -83,7 +83,7 @@ void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y) {
 void IsometricDrawer_EndBatch(void) {
 	if (iso_count > 0) {
 		if (iso_1DIndex != iso_last1DIndex) Gfx_BindTexture(Atlas1D_TexIds[iso_1DIndex]);
-		GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, iso_vb, iso_vertices, iso_count);
+		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_vertices, iso_count);
 
 		iso_count = 0;
 		iso_last1DIndex = -1;
@@ -169,7 +169,7 @@ void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
 
 void IsometricDrawer_Flush(void) {
 	if (iso_last1DIndex != -1) {
-		GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, iso_vb, iso_vertices, iso_count);
+		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_vertices, iso_count);
 		iso_count = 0;
 	}
 

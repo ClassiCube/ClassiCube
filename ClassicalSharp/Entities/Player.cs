@@ -97,7 +97,7 @@ namespace ClassicalSharp.Entities {
 			gfx.texVerts[3] = new VertexP3fT2fC4b(ref p212, nameTex.U2, nameTex.V2, col);
 			
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles, gfx.texVb, gfx.texVerts, 4);
+			gfx.UpdateDynamicVb_IndexedTris(gfx.texVb, gfx.texVerts, 4);
 		}
 		
 		protected void CheckSkin() {

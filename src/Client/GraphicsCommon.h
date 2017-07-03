@@ -26,11 +26,11 @@ void GfxCommon_RecreateContext(void);
 
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer
 This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
-void GfxCommon_UpdateDynamicVb(Int32 drawMode, Int32 vb, void* vertices, Int32 vCount);
+void GfxCommon_UpdateDynamicVb_Lines(Int32 vb, void* vertices, Int32 vCount);
 
 /*Binds and draws the specified subset of the vertices in the current dynamic vertex buffer
 This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
-void GfxCommon_UpdateDynamicIndexedVb(Int32 drawMode, Int32 vb, void* vertices, Int32 vCount);
+void GfxCommon_UpdateDynamicVb_IndexedTris(Int32 vb, void* vertices, Int32 vCount);
 
 
 GfxResourceID GfxCommon_quadVb;

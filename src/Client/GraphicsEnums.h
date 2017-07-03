@@ -9,12 +9,6 @@ typedef Int32 VertexFormat;
 #define VertexFormat_P3fT2fC4b 1
 
 
-/* 3D vertex drawing types*/
-typedef Int32 DrawMode;
-#define DrawMode_Triangles 0
-#define DrawMode_Lines 1
-
-
 /* 3D graphics pixel comparison functions */
 typedef Int32 CompareFunc;
 #define CompareFunc_Always 0

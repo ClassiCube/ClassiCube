@@ -48,7 +48,7 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	}
 
 	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
-	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, axisLines_vb, vertices, axisLines_numVertices);
+	GfxCommon_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, axisLines_numVertices);
 }
 
 

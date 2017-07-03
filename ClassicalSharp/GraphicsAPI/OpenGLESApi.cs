@@ -12,7 +12,6 @@ namespace ClassicalSharp.GraphicsAPI {
 	/// <summary> Implements IGraphicsAPI using OpenGL ES 1.1 </summary>
 	public unsafe class OpenGLESApi : IGraphicsApi {
 		
-		All[] modeMappings;
 		public OpenGLESApi() {
 			InitFields();
 			int texDims;
@@ -226,14 +225,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		const All indexType = All.UnsignedShort;
-		public override void DrawVb(DrawMode mode, int startVertex, int verticesCount) {
+		public override void DrawVb_Lines(int startVertex, int verticesCount) {
 			setupBatchFunc();
-			GL.DrawArrays(modeMappings[(int)mode], startVertex, verticesCount);
+			GL.DrawArrays(All.Lines, startVertex, verticesCount);
 		}		
 		
-		public override void DrawIndexedVb(DrawMode mode, int indicesCount, int startIndex) {
+		public override void DrawVb_IndexedTris(int indicesCount, int startIndex) {
 			setupBatchFunc();
-			GL.DrawElements(modeMappings[(int)mode], indicesCount, indexType, new IntPtr(startIndex * 2));
+			GL.DrawElements(All.Triangles, indicesCount, indexType, new IntPtr(startIndex * 2));
 		}
 
 		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startIndex) {
@@ -361,8 +360,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		void InitFields() {
-			modeMappings = new All[2];
-			modeMappings[0] = All.Triangles; modeMappings[1] = All.Lines;
 			blendFuncs = new All[6];
 			blendFuncs[0] = All.Zero; blendFuncs[1] = All.One;
 			blendFuncs[2] = All.SrcAlpha; blendFuncs[3] = All.OneMinusSrcAlpha;

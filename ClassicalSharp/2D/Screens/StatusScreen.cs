@@ -141,8 +141,7 @@ namespace ClassicalSharp.Gui.Screens {
 			posAtlas.Add(14, vertices, ref index);
 			
 			gfx.BindTexture(posAtlas.tex.ID);
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles,
-			                           game.ModelCache.vb, game.ModelCache.vertices, index);
+			gfx.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
 		}
 		
 		bool speeding, halfSpeeding, noclip, fly;

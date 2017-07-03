@@ -143,8 +143,8 @@ namespace ClassicalSharp.Model {
 		/// <summary> Sends the updated vertex data to the GPU. </summary>
 		protected void UpdateVB() {
 			ModelCache cache = game.ModelCache;
-			game.Graphics.UpdateDynamicIndexedVb(
-				DrawMode.Triangles, cache.vb, cache.vertices, index);
+			game.Graphics.UpdateDynamicVb_IndexedTris(
+				cache.vb, cache.vertices, index);
 			index = 0;
 		}
 		

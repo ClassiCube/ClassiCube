@@ -76,7 +76,7 @@ namespace ClassicalSharp.Entities {
 				game.Graphics.BindTexture(shadowTex);
 				boundShadowTex = true;
 			}
-			game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, verts, index);
+			game.Graphics.UpdateDynamicVb_IndexedTris(vb, verts, index);
 		}
 		
 		const byte c = 255; // avoids 'ambiguous match' compile errors.

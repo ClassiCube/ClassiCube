@@ -39,8 +39,7 @@ void PickedPosRenderer_Render(Real64 delta) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
 
-	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, pickedPos_vb,
-		pickedPos_vertices, pickedPos_numVertices);
+	GfxCommon_UpdateDynamicVb_IndexedTris(pickedPos_vb, pickedPos_vertices, pickedPos_numVertices);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
 }

@@ -32,14 +32,14 @@ void GfxCommon_RecreateContext(void) {
 }
 
 
-void GfxCommon_UpdateDynamicVb(Int32 drawMode, Int32 vb, void* vertices, Int32 vCount) {
+void GfxCommon_UpdateDynamicVb_Lines(Int32 vb, void* vertices, Int32 vCount) {
 	Gfx_SetDynamicVbData(vb, vertices, vCount);
-	Gfx_DrawVb(drawMode, 0, vCount);
+	Gfx_DrawVb_Lines(0, vCount);
 }
 
-void GfxCommon_UpdateDynamicIndexedVb(Int32 drawMode, Int32 vb, void* vertices, Int32 vCount) {
+void GfxCommon_UpdateDynamicVb_IndexedTris(Int32 vb, void* vertices, Int32 vCount) {
 	Gfx_SetDynamicVbData(vb, vertices, vCount);
-	Gfx_DrawIndexedVb(drawMode, vCount * 6 / 4, 0);
+	Gfx_DrawVb_IndexedTris(vCount * 6 / 4, 0);
 }
 
 void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height, 
@@ -51,7 +51,7 @@ void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height,
 	VertexP3fC4b_Set(&quadVerts[3], x, y + height, 0, col);
 
 	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
-	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, GfxCommon_quadVb, quadVerts, 4);
+	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, quadVerts, 4);
 }
 
 void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height,
@@ -63,7 +63,7 @@ void GfxCommon_Draw2DGradient(Real32 x, Real32 y, Real32 width, Real32 height,
 	VertexP3fC4b_Set(&quadVerts[3], x, y + height, 0, bottomCol);
 
 	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
-	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, GfxCommon_quadVb, quadVerts, 4);
+	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, quadVerts, 4);
 }
 
 void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {
@@ -71,7 +71,7 @@ void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {
 	VertexP3fT2fC4b* ptr = texVerts;
 	GfxCommon_Make2DQuad(tex, col, &ptr);
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
-	GfxCommon_UpdateDynamicIndexedVb(DrawMode_Triangles, GfxCommon_texVb, texVerts, 4);
+	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, texVerts, 4);
 }
 
 void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {

@@ -158,11 +158,11 @@ void Gfx_SetBatchFormat(VertexFormat vertexFormat);
 This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount);
 
-/* Draws the specified subset of the vertices in the current vertex buffer. */
-void Gfx_DrawVb(DrawMode drawMode, Int32 startVertex, Int32 vCount);
+/* Draws the specified subset of the vertices in the current vertex buffer as lines. */
+void Gfx_DrawVb_Lines(Int32 startVertex, Int32 vCount);
 
-/* Draws the specified subset of the vertices in the current vertex buffer. */
-void Gfx_DrawIndexedVb(DrawMode drawMode, Int32 indicesCount, Int32 startIndex);
+/* Draws the specified subset of the vertices in the current vertex buffer as triangles. */
+void Gfx_DrawVb_IndexedTris(Int32 indicesCount, Int32 startIndex);
 
 /* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
 void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex);

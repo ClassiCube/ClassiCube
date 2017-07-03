@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 		public void EndBatch() {
 			if (index > 0) {
 				if (texIndex != lastIndex) game.Graphics.BindTexture(atlas.TexIds[texIndex]);
-				game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
+				game.Graphics.UpdateDynamicVb_IndexedTris(vb, vertices, index);
 				index = 0;
 				lastIndex = -1;
 			}
@@ -165,7 +165,7 @@ namespace ClassicalSharp {
 		int lastIndex, texIndex;
 		void Flush() {
 			if (lastIndex != -1) {
-				game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
+				game.Graphics.UpdateDynamicVb_IndexedTris(vb, vertices, index);
 				index = 0;
 			}
 			

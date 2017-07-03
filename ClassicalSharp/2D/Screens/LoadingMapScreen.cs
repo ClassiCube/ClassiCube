@@ -157,7 +157,7 @@ namespace ClassicalSharp.Gui.Screens {
 					
 			ModelCache cache = game.ModelCache;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles, cache.vb, cache.vertices, index);
+			gfx.UpdateDynamicVb_IndexedTris(cache.vb, cache.vertices, index);
 			index = 0;
 		}
 	}

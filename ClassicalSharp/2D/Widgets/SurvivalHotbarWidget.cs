@@ -54,8 +54,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 
 			gfx.BindTexture(posAtlas.tex.ID);
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles,
-			                           game.ModelCache.vb, game.ModelCache.vertices, index);
+			gfx.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
 		}
 		
 		void DrawHearts() {
@@ -81,7 +80,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			gfx.BindTexture(game.Gui.IconsTex);
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles, cache.vb, cache.vertices, index);
+			gfx.UpdateDynamicVb_IndexedTris(cache.vb, cache.vertices, index);
 		}
 		
 		static TextureRec backRec = new TextureRec(16 / 256f, 0 / 256f, 9 / 256f, 9 / 256f);

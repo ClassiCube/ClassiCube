@@ -64,7 +64,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.AlphaBlending = true;
 			gfx.DepthWrite = false;
 			gfx.SetBatchFormat(VertexFormat.P3fC4b);
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
+			gfx.UpdateDynamicVb_IndexedTris(vb, vertices, index);
 			gfx.DepthWrite = true;
 			gfx.AlphaBlending = false;
 		}

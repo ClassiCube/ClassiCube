@@ -14,7 +14,6 @@ namespace ClassicalSharp.GraphicsAPI {
 	/// or 1.2 with the GL_ARB_vertex_buffer_object extension. </summary>
 	public unsafe class OpenGLApi : IGraphicsApi {
 		
-		BeginMode[] modeMappings;
 		bool glLists = false;
 		int activeList = -1;
 		const int dynamicListId = 1234567891;
@@ -306,14 +305,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
-		public override void DrawVb(DrawMode mode, int startVertex, int verticesCount) {
+		public override void DrawVb_Lines(int startVertex, int verticesCount) {
 			if (glLists) { DrawDynamicLines(verticesCount, startVertex); return; }
 			
 			setupBatchFunc();
-			GL.DrawArrays(modeMappings[(int)mode], startVertex, verticesCount);
+			GL.DrawArrays(BeginMode.Lines, startVertex, verticesCount);
 		}
 		
-		public override void DrawIndexedVb(DrawMode mode, int indicesCount, int startIndex) {
+		public override void DrawVb_IndexedTris(int indicesCount, int startIndex) {
 			if (glLists) {
 				if (activeList != dynamicListId) { GL.CallList(activeList); }
 				else { DrawDynamicTriangles(indicesCount, startIndex); }
@@ -321,7 +320,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			
 			setupBatchFunc();
-			GL.DrawElements(modeMappings[(int)mode], indicesCount, indexType, new IntPtr(startIndex * 2));
+			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, new IntPtr(startIndex * 2));
 		}
 		
 		void DrawDynamicLines(int verticesCount, int startVertex) {
@@ -498,9 +497,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			compareFuncs[2] = Compare.Never; compareFuncs[3] = Compare.Less;
 			compareFuncs[4] = Compare.Lequal; compareFuncs[5] = Compare.Equal;
 			compareFuncs[6] = Compare.Gequal; compareFuncs[7] = Compare.Greater;
-			
-			modeMappings = new BeginMode[2];
-			modeMappings[0] = BeginMode.Triangles; modeMappings[1] = BeginMode.Lines;
+
 			fogModes = new FogMode[3];
 			fogModes[0] = FogMode.Linear; fogModes[1] = FogMode.Exp;
 			fogModes[2] = FogMode.Exp2;

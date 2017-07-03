@@ -81,7 +81,7 @@ namespace ClassicalSharp.Particles {
 				if (partCount == 0) continue;
 				
 				gfx.BindTexture(game.TerrainAtlas1D.TexIds[i]);
-				gfx.DrawIndexedVb(DrawMode.Triangles, partCount * 6 / 4, offset * 6 / 4);
+				gfx.DrawVb_IndexedTris(partCount * 6 / 4, offset * 6 / 4);
 				offset += partCount;
 			}
 		}
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Particles {
 			int drawCount = Math.Min(count, maxParticles * 4);
 			if (drawCount == 0) return;
 			gfx.BindTexture(ParticlesTexId);
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, drawCount);
+			gfx.UpdateDynamicVb_IndexedTris(vb, vertices, drawCount);
 		}
 		
 		public void Tick(ScheduledTask task) {

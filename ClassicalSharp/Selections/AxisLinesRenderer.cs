@@ -49,7 +49,7 @@ namespace ClassicalSharp.Selections {
 			}
 			
 			game.Graphics.SetBatchFormat(VertexFormat.P3fC4b);
-			game.Graphics.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
+			game.Graphics.UpdateDynamicVb_IndexedTris(vb, vertices, index);
 		}
 		
 		void ContextLost() { game.Graphics.DeleteVb(ref vb); }

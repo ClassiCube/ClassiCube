@@ -66,8 +66,7 @@ static Real32 IModel_MinDist(Real32 dist, Real32 extent) {
 
 void IModel_UpdateVB(void) {
 	IModel* model = IModel_ActiveModel;
-	GfxCommon_UpdateDynamicIndexedVb(
-		DrawMode_Triangles, ModelCache_Vb, ModelCache_Vertices, model->index);
+	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, ModelCache_Vertices, model->index);
 	model->index = 0;
 }
 

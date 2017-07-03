@@ -108,7 +108,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.AlphaArgBlend = true;
 			
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices, index);
+			gfx.UpdateDynamicVb_IndexedTris(vb, vertices, index);
 			
 			gfx.AlphaArgBlend = false;
 			gfx.AlphaTest = true;

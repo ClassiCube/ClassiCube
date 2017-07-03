@@ -67,12 +67,12 @@ namespace ClassicalSharp.Selections {
 			}
 			
 			gfx.SetBatchFormat(VertexFormat.P3fC4b);
-			gfx.UpdateDynamicVb(DrawMode.Lines, lineVb, lineVertices,
+			gfx.UpdateDynamicVb_Lines(lineVb, lineVertices,
 			                    selections.Count * LineVerticesCount);
 			
 			gfx.DepthWrite = false;
 			gfx.AlphaBlending = true;
-			gfx.UpdateDynamicIndexedVb(DrawMode.Triangles, vb, vertices,
+			gfx.UpdateDynamicVb_IndexedTris(vb, vertices,
 			                           selections.Count * VerticesCount);
 			gfx.DepthWrite = true;
 			gfx.AlphaBlending = false;

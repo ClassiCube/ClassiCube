@@ -26,8 +26,6 @@ String_AppendConstant(&logMsg, msg);\
 String_AppendInt32(&logMsg, i);\
 Platform_Log(logMsg);
 
-#define D3D9_NumPrimitives(mode, vertices) (mode == DrawMode_Triangles ? vertices / 3 : vertices / 2)
-
 
 /* We only ever create a single index buffer internally. */
 #define d3d9_iBuffersExpSize 2
@@ -350,11 +348,10 @@ void Gfx_SetBatchFormat(VertexFormat vertexFormat) {
 	d3d9_batchStride = Gfx_strideSizes[vertexFormat];
 }
 
-void Gfx_DrawVb(DrawMode drawMode, Int32 startVertex, Int32 vCount) {
-	Int32 numPrims = D3D9_NumPrimitives(drawMode, vCount);
-	ReturnCode hresult = IDirect3DDevice9_DrawPrimitive(device, d3d9_modeMappings[drawMode],
-		startVertex, numPrims);
-	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb");
+void Gfx_DrawVb_Lines(Int32 startVertex, Int32 vCount) {
+	ReturnCode hresult = IDirect3DDevice9_DrawPrimitive(device, D3DPT_LINELIST,
+		startVertex, vCount / 2);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb_Lines");
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
@@ -366,11 +363,10 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetDynamicVbData - Bind");
 }
 
-void Gfx_DrawIndexedVb(DrawMode drawMode, Int32 indicesCount, Int32 startIndex) {
-	Int32 numPrims = D3D9_NumPrimitives(drawMode, indicesCount);
-	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, d3d9_modeMappings[drawMode], 0,
-		VCOUNT(startIndex), VCOUNT(indicesCount), startIndex, numPrims);
-	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb");
+void Gfx_DrawVb_IndexedTris(Int32 indicesCount, Int32 startIndex) {
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 0,
+		VCOUNT(startIndex), VCOUNT(indicesCount), startIndex, indicesCount / 3);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb_IndexedTris");
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex) {
