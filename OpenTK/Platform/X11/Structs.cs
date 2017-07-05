@@ -1373,8 +1373,6 @@ namespace OpenTK.Platform.X11
 		public int height_inc;
 	}
 
-	public delegate int XErrorHandler(IntPtr DisplayHandle, ref XErrorEvent error_event);
-
 	public enum XRequest : byte
 	{
 		X_CreateWindow = 1,
