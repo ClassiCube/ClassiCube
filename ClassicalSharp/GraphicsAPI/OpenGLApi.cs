@@ -31,6 +31,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;
+			setupBatchFuncCol4b_Range = SetupVbPos3fCol4b_Range;
+			setupBatchFuncTex2fCol4b_Range = SetupVbPos3fTex2fCol4b_Range;
+			
 			GL.EnableClientState(ArrayCap.VertexArray);
 			GL.EnableClientState(ArrayCap.ColorArray);
 		}
@@ -184,6 +187,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		#region Vertex/index buffers
 		Action setupBatchFunc, setupBatchFuncCol4b, setupBatchFuncTex2fCol4b;
+		Action<int> setupBatchFunc_Range, setupBatchFuncCol4b_Range, setupBatchFuncTex2fCol4b_Range;
 		
 		public override int CreateDynamicVb(VertexFormat format, int maxVertices) {
 			if (glLists) return dynamicListId;
@@ -287,9 +291,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			if (format == VertexFormat.P3fT2fC4b) {
 				GL.EnableClientState(ArrayCap.TextureCoordArray);
 				setupBatchFunc = setupBatchFuncTex2fCol4b;
+				setupBatchFunc_Range = setupBatchFuncTex2fCol4b_Range;
 				batchStride = VertexP3fT2fC4b.Size;
 			} else {
 				setupBatchFunc = setupBatchFuncCol4b;
+				setupBatchFunc_Range = setupBatchFuncCol4b_Range;
 				batchStride = VertexP3fC4b.Size;
 			}
 		}
@@ -319,8 +325,8 @@ namespace ClassicalSharp.GraphicsAPI {
 				return;
 			}
 			
-			setupBatchFunc();
-			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, new IntPtr(startIndex * 2));
+			setupBatchFunc_Range(startIndex);
+			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, IntPtr.Zero);
 		}
 		
 		public override void DrawVb_IndexedTris(int indicesCount) {
@@ -374,18 +380,21 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startIndex) {
 			if (glLists) return;
-			GL.VertexPointer(3, PointerType.Float, 24, zero);
-			GL.ColorPointer(4, PointerType.UnsignedByte, 24, twelve);
-			GL.TexCoordPointer(2, PointerType.Float, 24, sixteen);
-			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, new IntPtr(startIndex * 2));
+			int offset = (startIndex / 6 * 4) * VertexP3fT2fC4b.Size;
+			
+			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
+			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
+			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));
+			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, IntPtr.Zero);
 		}
 		
 		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startVertex, int startIndex) {
 			if (glLists) return;
 			int offset = startVertex * VertexP3fT2fC4b.Size;
-			GL.VertexPointer(3, PointerType.Float, 24, new IntPtr(offset));
-			GL.ColorPointer(4, PointerType.UnsignedByte, 24, new IntPtr(offset + 12));
-			GL.TexCoordPointer(2, PointerType.Float, 24, new IntPtr(offset + 16));
+			
+			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
+			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
+			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));
 			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, IntPtr.Zero);
 		}
 		
@@ -400,6 +409,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, zero);
 			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, twelve);
 			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, sixteen);
+		}
+		
+		void SetupVbPos3fCol4b_Range(int startIndex) {
+			int offset = (startIndex / 6 * 4) * VertexP3fC4b.Size;
+			GL.VertexPointer(3, PointerType.Float, VertexP3fC4b.Size, new IntPtr(offset));
+			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fC4b.Size, new IntPtr(offset + 12));
+		}
+		
+		void SetupVbPos3fTex2fCol4b_Range(int startIndex) {
+			int offset = (startIndex / 6 * 4) * VertexP3fT2fC4b.Size;
+			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
+			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
+			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));
 		}
 		#endregion
 		
