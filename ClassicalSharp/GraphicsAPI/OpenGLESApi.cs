@@ -225,16 +225,21 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		const All indexType = All.UnsignedShort;
-		public override void DrawVb_Lines(int startVertex, int verticesCount) {
+		public override void DrawVb_Lines(int verticesCount) {
 			setupBatchFunc();
-			GL.DrawArrays(All.Lines, startVertex, verticesCount);
+			GL.DrawArrays(All.Lines, 0, verticesCount);
 		}		
 		
 		public override void DrawVb_IndexedTris(int indicesCount, int startIndex) {
 			setupBatchFunc();
 			GL.DrawElements(All.Triangles, indicesCount, indexType, new IntPtr(startIndex * 2));
 		}
-
+		
+		public override void DrawVb_IndexedTris(int indicesCount) {
+			setupBatchFunc();
+			GL.DrawElements(All.Triangles, indicesCount, indexType, IntPtr.Zero);
+		}
+		
 		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startIndex) {
 			GL.VertexPointer(3, All.Float, 24, zero);
 			GL.ColorPointer(4, All.UnsignedByte, 24, twelve);

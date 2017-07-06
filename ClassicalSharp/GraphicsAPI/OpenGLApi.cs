@@ -305,11 +305,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
-		public override void DrawVb_Lines(int startVertex, int verticesCount) {
-			if (glLists) { DrawDynamicLines(verticesCount, startVertex); return; }
+		public override void DrawVb_Lines(int verticesCount) {
+			if (glLists) { DrawDynamicLines(verticesCount); return; }
 			
 			setupBatchFunc();
-			GL.DrawArrays(BeginMode.Lines, startVertex, verticesCount);
+			GL.DrawArrays(BeginMode.Lines, 0, verticesCount);
 		}
 		
 		public override void DrawVb_IndexedTris(int indicesCount, int startIndex) {
@@ -323,16 +323,27 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, new IntPtr(startIndex * 2));
 		}
 		
-		void DrawDynamicLines(int verticesCount, int startVertex) {
+		public override void DrawVb_IndexedTris(int indicesCount) {
+			if (glLists) {
+				if (activeList != dynamicListId) { GL.CallList(activeList); }
+				else { DrawDynamicTriangles(indicesCount, 0); }
+				return;
+			}
+			
+			setupBatchFunc();
+			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, IntPtr.Zero);
+		}
+		
+		void DrawDynamicLines(int verticesCount) {
 			GL.Begin(BeginMode.Lines);
 			if (batchFormat == VertexFormat.P3fT2fC4b) {
 				VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])dynamicListData;
-				for (int i = startVertex; i < startVertex + verticesCount; i += 2) {
+				for (int i = 0; i < verticesCount; i += 2) {
 					V(ptr[i + 0]); V(ptr[i + 1]);
 				}
 			} else {
 				VertexP3fC4b[] ptr = (VertexP3fC4b[])dynamicListData;
-				for (int i = startVertex; i < startVertex + verticesCount; i += 2) {
+				for (int i = 0; i < verticesCount; i += 2) {
 					V(ptr[i + 0]); V(ptr[i + 1]);
 				}
 			}
@@ -375,7 +386,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.VertexPointer(3, PointerType.Float, 24, new IntPtr(offset));
 			GL.ColorPointer(4, PointerType.UnsignedByte, 24, new IntPtr(offset + 12));
 			GL.TexCoordPointer(2, PointerType.Float, 24, new IntPtr(offset + 16));
-			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, new IntPtr(startIndex * 2));
+			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, IntPtr.Zero);
 		}
 		
 		IntPtr zero = new IntPtr(0), twelve = new IntPtr(12), sixteen = new IntPtr(16);

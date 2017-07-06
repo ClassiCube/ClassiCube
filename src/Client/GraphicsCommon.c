@@ -32,14 +32,14 @@ void GfxCommon_RecreateContext(void) {
 }
 
 
-void GfxCommon_UpdateDynamicVb_Lines(Int32 vb, void* vertices, Int32 vCount) {
+void GfxCommon_UpdateDynamicVb_Lines(GfxResourceID vb, void* vertices, Int32 vCount) {
 	Gfx_SetDynamicVbData(vb, vertices, vCount);
-	Gfx_DrawVb_Lines(0, vCount);
+	Gfx_DrawVb_Lines(vCount);
 }
 
-void GfxCommon_UpdateDynamicVb_IndexedTris(Int32 vb, void* vertices, Int32 vCount) {
+void GfxCommon_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, Int32 vCount) {
 	Gfx_SetDynamicVbData(vb, vertices, vCount);
-	Gfx_DrawVb_IndexedTris(vCount * 6 / 4, 0);
+	Gfx_DrawVb_IndexedTris(vCount * 6 / 4);
 }
 
 void GfxCommon_Draw2DFlat(Real32 x, Real32 y, Real32 width, Real32 height, 
