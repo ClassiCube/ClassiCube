@@ -4,7 +4,7 @@ using OpenTK;
 
 namespace ClassicalSharp {
 
-	//http://www.crownandcutlass.com/features/technicaldetails/frustum.html
+	// http://www.crownandcutlass.com/features/technicaldetails/frustum.html
 	public class FrustumCulling {
 		
 		float frustum00, frustum01, frustum02, frustum03,
