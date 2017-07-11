@@ -93,12 +93,12 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			left = new KeyBind[3];
-			left[0] = KeyBind.Speed; left[1] = KeyBind.NoClip; left[2] = KeyBind.HalfSpeed;
+			left = new KeyBind[4];
+			left[0] = KeyBind.Speed; left[1] = KeyBind.NoClip; left[2] = KeyBind.HalfSpeed; left[3] = KeyBind.ZoomScrolling;
 			right = new KeyBind[4];
 			right[0] = KeyBind.Fly; right[1] = KeyBind.FlyUp; right[2] = KeyBind.FlyDown;
 			right[3] = KeyBind.ThirdPerson;
-			leftDesc = new string[] { "Speed", "Noclip", "Half speed" };
+			leftDesc = new string[] { "Speed", "Noclip", "Half speed", "Scroll zoom" };
 			rightDesc = new string[] { "Fly", "Fly up", "Fly down", "Third person" };
 			
 			
