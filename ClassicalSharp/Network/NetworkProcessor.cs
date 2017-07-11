@@ -223,7 +223,7 @@ namespace ClassicalSharp.Network {
 		
 		void OnNewMap(object sender, EventArgs e) {
 			// wipe all existing entity states
-			for (int i = 0; i < 256; i++)
+			for (int i = 0; i < EntityList.MaxCount; i++)
 				RemoveEntity((byte)i);
 		}
 		

@@ -161,6 +161,7 @@ namespace ClassicalSharp.Map {
 			// Fix for older ClassicalSharp versions which saved wrong fog density value
 			if (data[0] == 0xFF) info.FogDensity[id] = 0;
 			info.FogColour[id] = new FastColour(data[1], data[2], data[3]);
+			info.Tinted[id] = info.FogColour[id] != FastColour.Black && info.Name[id].IndexOf('#') >= 0; // TODO: nasty copy paste
 
 			data = (byte[])compound["Coords"].Value;
 			info.MinBB[id] = new Vector3(data[0] / 16f, data[1] / 16f, data[2] / 16f);
