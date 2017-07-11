@@ -99,7 +99,7 @@ void SkyboxRenderer_MakeVb(void) {
 	if (Gfx_LostContext) return;
 	Gfx_DeleteVb(&skybox_vb);
 	VertexP3fT2fC4b vertices[skybox_count];
-	#define extent 0.5f
+	#define extent 1.0f
 	TextureRec rec;
 	PackedCol col = WorldEnv_CloudsCol;
 
