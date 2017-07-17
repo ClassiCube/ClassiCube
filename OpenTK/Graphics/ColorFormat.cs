@@ -14,16 +14,13 @@ namespace OpenTK.Graphics {
     /// <remarks> A ColorFormat contains Red, Green, Blue and Alpha components that descibe
     /// the allocated bits per pixel for the corresponding color. </remarks>
     public struct ColorFormat {
-        byte red, green, blue, alpha;
-        bool isIndexed;
-        int bitsPerPixel;
 
         public ColorFormat(int bpp) {
             if (bpp < 0)
                 throw new ArgumentOutOfRangeException("bpp", "Must be greater or equal to zero.");
-            red = green = blue = alpha = 0;
-            bitsPerPixel = bpp;
-            isIndexed = false;
+            Red = Green = Blue = Alpha = 0;
+            BitsPerPixel = bpp;
+            IsIndexed = false;
 
             switch (bpp) {
                 case 32:
@@ -62,31 +59,31 @@ namespace OpenTK.Graphics {
         public ColorFormat(int red, int green, int blue, int alpha) {
             if (red < 0 || green < 0 || blue < 0 || alpha < 0)
                 throw new ArgumentOutOfRangeException("Arguments must be greater or equal to zero.");
-            this.red = (byte)red;
-            this.green = (byte)green;
-            this.blue = (byte)blue;
-            this.alpha = (byte)alpha;
-            bitsPerPixel = red + green + blue + alpha;
-            isIndexed = bitsPerPixel < 15 && bitsPerPixel != 0;
+            Red = (byte)red;
+            Green = (byte)green;
+            Blue = (byte)blue;
+            Alpha = (byte)alpha;
+            BitsPerPixel = red + green + blue + alpha;
+            IsIndexed = BitsPerPixel < 15 && BitsPerPixel != 0;
         }
 
-        /// <summary>Gets the bits per pixel for the Red channel.</summary>
-        public int Red { get { return red; } private set { red = (byte)value; } }
+        /// <summary> Gets the bits per pixel for the Red channel. </summary>
+        public byte Red;
         
-        /// <summary>Gets the bits per pixel for the Green channel.</summary>
-        public int Green { get { return green; } private set { green = (byte)value; } }
+        /// <summary> Gets the bits per pixel for the Green channel. </summary>
+        public byte Green;
         
         /// <summary>Gets the bits per pixel for the Blue channel.</summary>
-        public int Blue { get { return blue; } private set { blue = (byte)value; } }
+        public byte Blue;
         
         /// <summary>Gets the bits per pixel for the Alpha channel.</summary>
-        public int Alpha { get { return alpha; } private set { alpha = (byte)value; } }
+        public byte Alpha;
         
-        /// <summary>Gets a System.Boolean indicating whether this ColorFormat is indexed.</summary>
-        public bool IsIndexed { get { return isIndexed; } private set { isIndexed = value; } }
+        /// <summary> Gets a System.Boolean indicating whether this ColorFormat is indexed. </summary>
+        public bool IsIndexed;
         
-        /// <summary>Gets the sum of Red, Green, Blue and Alpha bits per pixel.</summary>
-        public int BitsPerPixel { get { return bitsPerPixel; } private set { bitsPerPixel = value; } }
+        /// <summary> Gets the sum of Red, Green, Blue and Alpha bits per pixel.</summary>
+        public int BitsPerPixel;
 
         public static implicit operator ColorFormat(int bpp) {
             return new ColorFormat(bpp);
@@ -97,7 +94,7 @@ namespace OpenTK.Graphics {
 		}
         
 		public bool Equals(ColorFormat other) {
-			return red == other.red && green == other.green && blue == other.blue && alpha == other.alpha;
+			return Red == other.Red && Green == other.Green && Blue == other.Blue && Alpha == other.Alpha;
 		}
         
 		public static bool operator == (ColorFormat lhs, ColorFormat rhs ) {
@@ -113,8 +110,8 @@ namespace OpenTK.Graphics {
         }
         
         public override string ToString() {
-        	return isIndexed ? String.Format( "{0} (indexed)", bitsPerPixel ) : 
-        		String.Format( "{0} ({1}{2}{3}{4})", bitsPerPixel, red, green, blue, alpha );
+        	return IsIndexed ? String.Format( "{0} (indexed)", BitsPerPixel ) : 
+        		String.Format( "{0} ({1}{2}{3}{4})", BitsPerPixel, Red, Green, Blue, Alpha );
         }
     }
 }
