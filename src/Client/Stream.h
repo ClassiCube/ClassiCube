@@ -8,7 +8,7 @@ typedef ReturnCode (*Stream_Operation)(UInt8* data, UInt32 count, UInt32* modifi
 
 typedef ReturnCode (*Stream_Seek)(Int32 offset);
 
-typedef struct Stream {
+typedef struct Stream_ {
 
 	/* The name of the stream. */
 	String Name;

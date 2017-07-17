@@ -6,7 +6,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct LocalPlayer {
+typedef struct LocalPlayer_ {
 	Player Base;
 
 	/* Position the player's position is set to when the 'respawn' key binding is pressed. */

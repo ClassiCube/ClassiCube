@@ -5,13 +5,13 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct ChunkPartInfo {
+typedef struct ChunkPartInfo_ {
 	Int32 VbId, IndicesCount, SpriteCount;
 	UInt16 XMinCount, XMaxCount, ZMinCount,
 		ZMaxCount, YMinCount, YMaxCount;
 } ChunkPartInfo;
 
-typedef struct ChunkInfo {
+typedef struct ChunkInfo_ {
 	/* Centre coordinates of the chunk. */
 	UInt16 CentreX, CentreY, CentreZ;
 

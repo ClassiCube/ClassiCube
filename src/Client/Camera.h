@@ -9,7 +9,7 @@
 Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct Camera {
+typedef struct Camera_ {
 	/* Tilt matrix of this camera. */
 	Matrix tiltM;
 

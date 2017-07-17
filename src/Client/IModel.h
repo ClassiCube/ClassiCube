@@ -28,7 +28,7 @@ typedef Int32 SkinType;
 
 
 /* Describes a vertex within a model. */
-typedef struct ModelVertex {
+typedef struct ModelVertex_ {
 	Real32 X, Y, Z;
 	UInt16 U, V;
 } ModelVertex;
@@ -38,7 +38,7 @@ void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, UInt16 
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
-typedef struct ModelPart {
+typedef struct ModelPart_ {
 	Int32 Offset, Count;
 	Real32 RotX, RotY, RotZ;
 } ModelPart;
@@ -48,7 +48,7 @@ void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Rea
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
 the bounding boxes that contain the entire set of quads and/or boxes. */
-typedef struct IModel {
+typedef struct IModel_ {
 
 	/* Pointer to the raw vertices of the model.*/
 	ModelVertex* vertices;

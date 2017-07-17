@@ -9,7 +9,7 @@
 */
 
 /* Describes the picked/selected block by the user and its position. */
-typedef struct PickedPos {
+typedef struct PickedPos_ {
 
 	/* Minimum world coordinates of the block's bounding box.*/
 	Vector3 Min;

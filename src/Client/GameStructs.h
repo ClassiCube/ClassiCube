@@ -9,7 +9,7 @@
 typedef void (*Void_Callback)(void);
 
 /* Represents a game component. */
-typedef struct IGameComponent {
+typedef struct IGameComponent_ {
 
 	/* Called when the game is being loaded. */
 	Void_Callback Init;
@@ -35,7 +35,7 @@ IGameComponent IGameComponent_MakeEmpty(void);
 
 
 /* Represents a task that runs on the main thread every certain interval. */
-typedef struct ScheduledTask {
+typedef struct ScheduledTask_ {
 
 	/* How much time has elapsed since callback was last invoked. */
 	Real64 Accumulator;

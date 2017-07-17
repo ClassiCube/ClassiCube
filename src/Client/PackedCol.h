@@ -6,7 +6,7 @@
 */
 
 /* Represents an ARGB colour, in a format suitable for the native graphics api. */
-typedef struct PackedCol {
+typedef struct PackedCol_ {
 	union {
 #if USE_DX
 		struct { UInt8 B; UInt8 G; UInt8 R; UInt8 A; };

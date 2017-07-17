@@ -7,7 +7,7 @@
 */
 
 /* Descibes an axis aligned bounding box. */
-typedef struct AABB {
+typedef struct AABB_ {
 	/* Minimum coordinate of this AABB. */
 	Vector3 Min;
 	/* Maximum coordinate of this AABB. */

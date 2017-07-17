@@ -10,7 +10,7 @@
 */
 
 /* Data for a selection box. */
-typedef struct SelectionBox {
+typedef struct SelectionBox_ {
 	/* ID of this selection box.*/
 	UInt8 ID;
 	/* Minimum corner of the box. */

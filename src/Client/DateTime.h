@@ -5,9 +5,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define String_BufferSize(n) (n + 1)
-
-typedef struct DateTime {
+typedef struct DateTime_ {
 	/* Year of this point in time, ranges from 0 to 65535. */
 	UInt16 Year;
 

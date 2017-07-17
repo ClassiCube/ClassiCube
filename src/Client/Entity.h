@@ -13,7 +13,7 @@
 
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
-typedef struct Entity {
+typedef struct Entity_ {
 	/* Position of the entity in the world.*/
 	Vector3 Position;
 

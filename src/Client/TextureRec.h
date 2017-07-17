@@ -6,7 +6,7 @@
 */
 
 /* Stores the four texture coordinates that describe a textured quad.  */
-typedef struct TextureRec {
+typedef struct TextureRec_ {
 	Real32 U1, V1, U2, V2;
 } TextureRec;
 

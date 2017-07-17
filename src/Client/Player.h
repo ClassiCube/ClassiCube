@@ -6,7 +6,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct Player {
+typedef struct Player_ {
 	Entity Base;
 } Player;
 #endif

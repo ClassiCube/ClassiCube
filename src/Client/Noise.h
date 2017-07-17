@@ -17,7 +17,7 @@ Real32 ImprovedNoise_Calc(UInt8* p, Real32 x, Real32 y);
 
 /* since we need structure to be a fixed size */
 #define MAX_OCTAVES 8
-typedef struct OctaveNoise {
+typedef struct OctaveNoise_ {
 	UInt8 p[MAX_OCTAVES][NOISE_TABLE_SIZE];
 	Int32 octaves;
 } OctaveNoise;
@@ -29,7 +29,7 @@ void OctaveNoise_Init(OctaveNoise* n, Random* rnd, Int32 octaves);
 Real32 OctaveNoise_Calc(OctaveNoise* n, Real32 x, Real32 y);
 
 
-typedef struct CombinedNoise {
+typedef struct CombinedNoise_ {
 	OctaveNoise noise1;
 	OctaveNoise noise2;
 } CombinedNoise;

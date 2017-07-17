@@ -8,9 +8,9 @@
 /* forward declaration */
 typedef struct Vector3_ Vector3;
 
-typedef struct Vector4 { Real32 X, Y, Z, W; } Vector4;
+typedef struct Vector4_ { Real32 X, Y, Z, W; } Vector4;
 
-typedef struct Matrix {
+typedef struct Matrix_ {
 	/* Top row of the matrix */
 	Vector4 Row0;
 	/* 2nd row of the matrix */

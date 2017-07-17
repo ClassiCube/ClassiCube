@@ -6,7 +6,7 @@
 */
 
 /* Stores location and dimensions of a 2D rectangle. */
-typedef struct Rectangle {
+typedef struct Rectangle_ {
 	/* Coordinates of top left corner of rectangle.*/
 	Int32 X, Y;
 	/* Size of rectangle. */

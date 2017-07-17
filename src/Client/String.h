@@ -7,7 +7,7 @@
 
 #define String_BufferSize(n) (n + 1)
 
-typedef struct String {
+typedef struct String_ {
 	/* Pointer to raw characters. Size is capacity + 1, as buffer is null terminated. */
 	UInt8* buffer;
 

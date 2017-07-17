@@ -6,7 +6,7 @@
 */
 
 /* Data for a resizable queue. */
-typedef struct TickQueue {
+typedef struct TickQueue_ {
 	/* Buffer holding the items in the tick queue. */
 	UInt32* Buffer;
 

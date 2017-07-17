@@ -8,7 +8,7 @@ Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 /* Describes data for a box being built. */
-typedef struct BoxDesc {
+typedef struct BoxDesc_ {
 	/* Texture coordinates and dimensions. */
 	Int32 TexX, TexY, SidesW, BodyW, BodyH;
 

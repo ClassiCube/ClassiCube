@@ -19,7 +19,7 @@ typedef Int32 GZipState;
 #define GZipState_Comment           9
 #define GZipState_Done              10
 
-typedef struct GZipHeader {
+typedef struct GZipHeader_ {
 	/* State header reader is up to.*/
 	GZipState State;
 	

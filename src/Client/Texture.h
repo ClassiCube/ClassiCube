@@ -10,7 +10,7 @@
 */
 
 /* Contains the information necessary to describe a 2D textured quad. */
-typedef struct Texture {
+typedef struct Texture_ {
 	/* Native texture ID.*/
 	GfxResourceID ID;
 

@@ -7,7 +7,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct Vector3I { Int32 X, Y, Z; } Vector3I;
+typedef struct Vector3I_ { Int32 X, Y, Z; } Vector3I;
 
 /* Constructs a 3D vector with X, Y and Z set to given value. */
 HINT_INLINE Vector3I Vector3I_Create1(Int32 value);

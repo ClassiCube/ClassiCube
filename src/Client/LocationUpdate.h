@@ -8,7 +8,7 @@ Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 
 /* Stores data that describes either a relative position,
 full position, or an orientation update for an entity. */
-typedef struct LocationUpdate {
+typedef struct LocationUpdate_ {
 	/* Position of the update (if included). */
 	Vector3 Pos;
 	/* Orientation of the update (if included). If not, has the value of LocationUpdate_Excluded. */

@@ -5,7 +5,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct Bitmap {
+typedef struct Bitmap_ {
 	/* Pointer to first scaneline. */
 	UInt8* Scan0;
 

@@ -12,7 +12,7 @@
 /* Maximum number of matrices that go on a stack. */
 #define MatrixStack_Capacity 24
 
-typedef struct MatrixStack {
+typedef struct MatrixStack_ {
 
 	/* Raw array of matrices.*/
 	Matrix Stack[MatrixStack_Capacity];
