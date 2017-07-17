@@ -16,7 +16,7 @@ void AABB_Make(AABB* result, Vector3* pos, Vector3* size) {
 	result->Min.Z = pos->Z - size->Z * 0.5f;
 
 	result->Max.X = pos->X + size->X * 0.5f;
-	result->Min.Y = pos->Y + size->Y;
+	result->Max.Y = pos->Y + size->Y;
 	result->Max.Z = pos->Z + size->Z * 0.5f;
 }
 
