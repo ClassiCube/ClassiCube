@@ -53,10 +53,10 @@ void CreeperModel_DrawModel(Entity* entity) {
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Head, true);
 
 	IModel_DrawPart(Torso);
-	IModel_DrawRotate(entity->anim.leftLegX, 0.0f, 0.0f, LeftLegFront, false);
-	IModel_DrawRotate(entity->anim.rightLegX, 0.0f, 0.0f, RightLegFront, false);
-	IModel_DrawRotate(entity->anim.rightLegX, 0.0f, 0.0f, LeftLegBack, false);
-	IModel_DrawRotate(entity->anim.leftLegX, 0.0f, 0.0f, RightLegBack, false);
+	IModel_DrawRotate(entity->Anim.LeftLegX, 0.0f, 0.0f, LeftLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0.0f, 0.0f, RightLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0.0f, 0.0f, LeftLegBack, false);
+	IModel_DrawRotate(entity->Anim.LeftLegX, 0.0f, 0.0f, RightLegBack, false);
 	IModel_UpdateVB();
 }
 

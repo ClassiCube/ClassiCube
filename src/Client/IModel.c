@@ -47,7 +47,7 @@ bool IModel_ShouldRender(Entity* entity) {
 
 Real32 IModel_RenderDistance(Entity* entity) {
 	Vector3 pos = entity->Position;
-	AABB* bb = &entity->modelAABB;
+	AABB* bb = &entity->ModelAABB;
 	pos.Y += AABB_Height(bb) * 0.5f; /* Centre Y coordinate. */
 	Vector3 camPos = Game_CurrentCameraPos;
 

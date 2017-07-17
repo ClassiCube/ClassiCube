@@ -67,12 +67,8 @@ bool String_CaselessEquals(String* a, String* b) {
 	Int32 i;
 
 	for (i = 0; i < a->length; i++) {
-		UInt8 aCur = a->buffer[i];
-		UInt8 bCur = b->buffer[i];
-
-		if (Char_IsUpper(aCur)) aCur = Char_ToLower(aCur);
-		if (Char_IsUpper(bCur)) bCur = Char_ToLower(bCur);
-
+		UInt8 aCur = Char_ToLower(a->buffer[i]);
+		UInt8 bCur = Char_ToLower(b->buffer[i]);
 		if (aCur != bCur) return false;
 	}
 	return true;

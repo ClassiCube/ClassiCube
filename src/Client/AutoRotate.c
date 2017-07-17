@@ -3,6 +3,7 @@
 #include "GameProps.h"
 #include "LocationUpdate.h"
 #include "LocalPlayer.h"
+#include "Funcs.h"
 
 #define AR_EQ1(s, x) (s.length >= 1 && Char_ToLower(s.buffer[0]) == x)
 #define AR_EQ2(s, x, y) (s.length >= 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)

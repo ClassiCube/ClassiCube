@@ -12,7 +12,7 @@ void AnimatedComp_Init(AnimatedComp* anim) {
 	anim->LeftArmX = 0.0f; anim->LeftArmZ = 0.0f; anim->RightArmX = 0.0f; anim->RightArmZ = 0.0f;
 }
 
-void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Real64 delta) {
+void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Real64 delta, bool onGround) {
 	anim->WalkTimeO = anim->WalkTimeN;
 	anim->SwingO = anim->SwingN;
 	Real32 dx = newPos.X - oldPos.X;
@@ -32,7 +32,7 @@ void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Rea
 	anim->BobStrengthO = anim->BobStrengthN;
 	Int32 i;
 	for (i = 0; i < 3; i++) {
-		DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !entity->onGround);
+		AnimatedComp_DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !onGround);
 	}
 }
 
@@ -42,7 +42,7 @@ void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Rea
 #define idleXPeriod (2.0f * MATH_PI / 5.0f)
 #define idleZPeriod (2.0f * MATH_PI / 3.5f)
 
-void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t) {
+void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims) {
 	anim->Swing = Math_Lerp(anim->SwingO, anim->SwingN, t);
 	anim->WalkTime = Math_Lerp(anim->WalkTimeO, anim->WalkTimeN, t);
 	anim->BobStrength = Math_Lerp(anim->BobStrengthO, anim->BobStrengthN, t);
@@ -63,7 +63,7 @@ void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t) {
 	anim->BobbingVer = Math_AbsF(Math_Sin(anim->WalkTime))   * anim->Swing * (2.5f / 16.0f);
 	anim->BobbingModel = Math_AbsF(Math_Cos(anim->WalkTime)) * anim->Swing * (4.0f / 16.0f);
 
-	if (entity->Model.CalcHumanAnims && !Game_SimpleArmsAnim) {
+	if (calcHumanAnims && !Game_SimpleArmsAnim) {
 		AnimatedComp_CalcHumanAnim(anim, idleXRot, idleZRot);
 	}
 }

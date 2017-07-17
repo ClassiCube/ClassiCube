@@ -24,7 +24,7 @@ void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
 	LocalPlayer* p = &LocalPlayer_Instance;
 	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
 
-	AnimatedComp* pAnim = p.anim;
+	AnimatedComp* pAnim = &p->Base.Base.Anim;
 	anim->TiltX = Math_Cos(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 	anim->TiltY = Math_Sin(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
