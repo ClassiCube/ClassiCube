@@ -21,6 +21,7 @@ Int32 cu_chunksTarget = 12;
 Vector3 cu_lastCamPos;
 Real32 cu_lastHeadY, cu_lastHeadX;
 Int32 cu_atlas1DCount;
+Int32 cu_elementsPerBitmap;
 
 void ChunkUpdater_Init(void) {
 	EventHandler_RegisterVoid(TextureEvents_AtlasChanged, ChunkUpdater_TerrainAtlasChanged);
@@ -103,7 +104,16 @@ static void ChunkUpdater_EnvVariableChanged(EnvVar envVar) {
 	}
 }
 
-static void ChunkUpdater_TerrainAtlasChanged(void);
+void ChunkUpdater_TerrainAtlasChanged(void) {
+	if (MapRenderer_1DUsedCount != 0) {
+		bool refreshRequired = cu_elementsPerBitmap != Atlas1D_ElementsPerBitmap;
+		if (refreshRequired) ChunkUpdater_Refresh();
+	}
+
+	MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
+	cu_elementsPerBitmap = Atlas1D_ElementsPerBitmap;
+	ChunkUpdater_ResetPartFlags();
+}
 
 void ChunkUpdater_BlockDefinitionChanged(void) {
 	MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
