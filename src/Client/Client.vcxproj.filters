@@ -416,9 +416,6 @@
     <ClCompile Include="Noise.c">
       <Filter>Source Files\Generator</Filter>
     </ClCompile>
-    <ClCompile Include="Compiler.c">
-      <Filter>Source Files\Generator</Filter>
-    </ClCompile>
     <ClCompile Include="WinPlatform.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
@@ -607,6 +604,9 @@
     </ClCompile>
     <ClCompile Include="TiltComp.c">
       <Filter>Source Files\Entities\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Program.c">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
