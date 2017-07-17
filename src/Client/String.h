@@ -56,6 +56,9 @@ static Int32 String_MakeInt32(Int32 num, UInt8* numBuffer);
 /* Attempts to append a constant raw null-terminated string. */
 bool String_AppendConstant(String* str, const UInt8* buffer);
 
+/* Attempts to append a string. */
+bool String_AppendString(String* str, String* buffer);
+
 
 /* Finds the first index of c in given string, -1 if not found. */
 Int32 String_IndexOf(String* str, UInt8 c, Int32 offset);

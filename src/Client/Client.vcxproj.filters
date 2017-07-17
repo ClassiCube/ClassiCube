@@ -393,6 +393,9 @@
     <ClInclude Include="ModelCache.h">
       <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
+    <ClInclude Include="AutoRotate.h">
+      <Filter>Header Files\Blocks</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -583,6 +586,9 @@
     </ClCompile>
     <ClCompile Include="CreeperModel.c">
       <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="AutoRotate.c">
+      <Filter>Source Files\Blocks</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

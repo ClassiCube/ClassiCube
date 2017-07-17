@@ -139,6 +139,15 @@ bool String_AppendConstant(String* str, const UInt8* buffer) {
 	return true;
 }
 
+bool String_AppendString(String* str, String* buffer) {
+	Int32 i;
+
+	for (i = 0; i < buffer->length; i++) {
+		if (!String_Append(str, buffer->buffer[i])) return false;
+	}
+	return true;
+}
+
 
 Int32 String_IndexOf(String* str, UInt8 c, Int32 offset) {
 	Int32 i;
