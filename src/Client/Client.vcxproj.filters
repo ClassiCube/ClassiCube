@@ -145,6 +145,12 @@
     <Filter Include="Source Files\Entities\Model">
       <UniqueIdentifier>{d9fb5d8e-29d7-4774-abfb-d30b6ab766e7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Entities\Components">
+      <UniqueIdentifier>{45bcb3f5-ebec-46a0-ac73-8480a7b4fe4d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Entities\Components">
+      <UniqueIdentifier>{e36a6223-ce95-4439-aa54-df32b9828ae0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -396,6 +402,9 @@
     <ClInclude Include="AutoRotate.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
+    <ClInclude Include="AnimatedComp.h">
+      <Filter>Header Files\Entities\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -589,6 +598,9 @@
     </ClCompile>
     <ClCompile Include="AutoRotate.c">
       <Filter>Source Files\Blocks</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimatedComp.c">
+      <Filter>Source Files\Entities\Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

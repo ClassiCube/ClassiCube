@@ -171,6 +171,7 @@
   <ItemGroup>
     <ClInclude Include="2DStructs.h" />
     <ClInclude Include="AABB.h" />
+    <ClInclude Include="AnimatedComp.h" />
     <ClInclude Include="AutoRotate.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
     <ClInclude Include="BlockEnums.h" />
@@ -256,6 +257,7 @@
   <ItemGroup>
     <ClCompile Include="2DStructs.c" />
     <ClCompile Include="AABB.c" />
+    <ClCompile Include="AnimatedComp.c" />
     <ClCompile Include="AutoRotate.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />
