@@ -405,6 +405,9 @@
     <ClInclude Include="AnimatedComp.h">
       <Filter>Header Files\Entities\Components</Filter>
     </ClInclude>
+    <ClInclude Include="TiltComp.h">
+      <Filter>Header Files\Entities\Components</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -600,6 +603,9 @@
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
     <ClCompile Include="AnimatedComp.c">
+      <Filter>Source Files\Entities\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="TiltComp.c">
       <Filter>Source Files\Entities\Components</Filter>
     </ClCompile>
   </ItemGroup>

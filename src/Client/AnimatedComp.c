@@ -32,7 +32,7 @@ void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Rea
 	anim->BobStrengthO = anim->BobStrengthN;
 	Int32 i;
 	for (i = 0; i < 3; i++) {
-		DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !entity.onGround);
+		DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !entity->onGround);
 	}
 }
 
@@ -63,7 +63,7 @@ void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t) {
 	anim->BobbingVer = Math_AbsF(Math_Sin(anim->WalkTime))   * anim->Swing * (2.5f / 16.0f);
 	anim->BobbingModel = Math_AbsF(Math_Cos(anim->WalkTime)) * anim->Swing * (4.0f / 16.0f);
 
-	if (entity.Model.CalcHumanAnims && !Game_SimpleArmsAnim) {
+	if (entity->Model.CalcHumanAnims && !Game_SimpleArmsAnim) {
 		AnimatedComp_CalcHumanAnim(anim, idleXRot, idleZRot);
 	}
 }

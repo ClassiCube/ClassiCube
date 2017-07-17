@@ -19,10 +19,10 @@ typedef struct AnimatedComp_ {
 /* Initalises default values for an animated component. */
 void AnimatedComp_Init(AnimatedComp* anim);
 
-/* Calculates the next animation state based on old and new position. */
+/* Calculates the next model animation state based on old and new position. */
 void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Real64 delta);
 
-/*  Calculates the interpolated state between the last and next animation state. */
+/*  Calculates the interpolated state between the last and next model animation state. */
 void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t);
 
 void AnimatedComp_DoTilt(Real32* tilt, bool reduce);
