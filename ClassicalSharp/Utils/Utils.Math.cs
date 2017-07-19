@@ -137,7 +137,7 @@ namespace ClassicalSharp {
 			p121 = centre + a * -0.5f + b *  0.5f;
 			p212 = centre + a *  0.5f + b * -0.5f;
 			p222 = centre + a *  0.5f + b *  0.5f;*/
-		}	
+		}
 		
 		/// <summary> Linearly interpolates between a given angle range, adjusting if necessary. </summary>
 		public static float LerpAngle(float leftAngle, float rightAngle, float t) {

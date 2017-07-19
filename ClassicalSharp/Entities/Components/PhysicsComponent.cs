@@ -253,8 +253,9 @@ namespace ClassicalSharp.Entities {
 			if (jumpHeight >= 512) jumpVel = 16.5f;
 			if (jumpHeight >= 768) jumpVel = 22.5f;
 			
-			while (GetMaxHeight(jumpVel) <= jumpHeight)
+			while (GetMaxHeight(jumpVel) <= jumpHeight) {
 				jumpVel += 0.001f;
+			}
 			if (userVel) userJumpVel = jumpVel;
 		}
 		

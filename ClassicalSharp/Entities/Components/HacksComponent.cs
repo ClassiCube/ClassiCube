@@ -44,9 +44,9 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Whether the player is allowed to pass through all blocks. </summary>
 		public bool CanNoclip = true;
 		/// <summary> Whether the player is allowed to use pushback block placing. </summary>
-		public bool CanPushbackBlocks = true;		
+		public bool CanPushbackBlocks = true;
 		/// <summary> Whether the player is allowed to see all entity name tags. </summary>
-		public bool CanSeeAllNames = true;					
+		public bool CanSeeAllNames = true;
 		/// <summary> Whether the player is allowed to double jump. </summary>
 		public bool CanDoubleJump = true;	
 		/// <summary> Maximum speed the entity can move at horizontally when CanSpeed is false. </summary>

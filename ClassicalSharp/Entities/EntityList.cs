@@ -7,7 +7,7 @@ using ClassicalSharp.Physics;
 
 namespace ClassicalSharp.Entities {
 
-	public enum NameMode { NoNames, HoveredOnly, All, AllAndHovered, }
+	public enum NameMode { Hovered, All, AllHovered, AllUnscaled }
 	
 	public enum EntityShadow { None, SnapToBlock, Circle, CircleAll, }
 	
@@ -23,7 +23,7 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Mode of how names of hovered entities are rendered (with or without depth testing),
 		/// and how other entity names are rendered. </summary>
-		public NameMode NamesMode = NameMode.HoveredOnly;
+		public NameMode NamesMode = NameMode.Hovered;
 		
 		public EntityList(Game game) {
 			this.game = game;
@@ -31,14 +31,14 @@ namespace ClassicalSharp.Entities {
 			game.Graphics.ContextRecreated += ContextRecreated;
 			game.Events.ChatFontChanged += ChatFontChanged;
 			
-			NamesMode = Options.GetEnum(OptionsKey.NamesMode, NameMode.HoveredOnly);
-			if (game.ClassicMode) NamesMode = NameMode.HoveredOnly;
+			NamesMode = Options.GetEnum(OptionsKey.NamesMode, NameMode.Hovered);
+			if (game.ClassicMode) NamesMode = NameMode.Hovered;
 			ShadowMode = Options.GetEnum(OptionsKey.EntityShadow, EntityShadow.None);
 			if (game.ClassicMode) ShadowMode = EntityShadow.None;
 		}
 		
 		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
-		public void Tick(ScheduledTask task) {			
+		public void Tick(ScheduledTask task) {
 			for (int i = 0; i < Entities.Length; i++) {
 				if (Entities[i] == null) continue;
 				Entities[i].Tick(task.Interval);
@@ -61,41 +61,35 @@ namespace ClassicalSharp.Entities {
 		/// If ShowHoveredNames is false, this method only renders names of entities that are
 		/// not currently being looked at by the user. </summary>
 		public void RenderNames(IGraphicsApi gfx, double delta) {
-			if (NamesMode == NameMode.NoNames) return;
+			closestId = GetClosetPlayer(game.LocalPlayer);
+			if (!game.LocalPlayer.Hacks.CanSeeAllNames) return;
+
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
-			LocalPlayer localP = game.LocalPlayer;
-			Vector3 eyePos = localP.EyePosition;
-			closestId = SelfID;
-			
-			if (NamesMode != NameMode.All)
-				closestId = GetClosetPlayer(game.LocalPlayer);
-			if (NamesMode == NameMode.HoveredOnly || !game.LocalPlayer.Hacks.CanSeeAllNames) {
-				gfx.Texturing = false;
-				gfx.AlphaTest = false;
-				return;
-			}
 			
 			for (int i = 0; i < Entities.Length; i++) {
 				if (Entities[i] == null) continue;
 				if (i != closestId || i == SelfID)
 					Entities[i].RenderName();
 			}
+			
 			gfx.Texturing = false;
 			gfx.AlphaTest = false;
 		}
 		
 		public void RenderHoveredNames(IGraphicsApi gfx, double delta) {
-			if (NamesMode == NameMode.NoNames || NamesMode == NameMode.All)
-				return;
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
 			gfx.DepthTest = false;
 			
+			bool allNames = !(NamesMode == NameMode.Hovered || NamesMode == NameMode.All)
+				&& game.LocalPlayer.Hacks.CanSeeAllNames;
 			for (int i = 0; i < Entities.Length; i++) {
-				if (Entities[i] != null && i == closestId && i != SelfID)
+				bool hover = (i == closestId || allNames) && i != SelfID;
+				if (Entities[i] != null && hover)
 					Entities[i].RenderName();
 			}
+			
 			gfx.Texturing = false;
 			gfx.AlphaTest = false;
 			gfx.DepthTest = true;

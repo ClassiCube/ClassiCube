@@ -82,7 +82,7 @@ namespace ClassicalSharp.Entities {
 			IGraphicsApi gfx = game.Graphics;
 			gfx.BindTexture(nameTex.ID);
 			
-			Vector3 pos;			
+			Vector3 pos;
 			UpdateModel();
 			Vector3.TransformY(Model.NameYOffset, ref transform, out pos);
 			float scale = Math.Min(1, Model.NameScale * ModelScale) / 70f;
@@ -90,6 +90,15 @@ namespace ClassicalSharp.Entities {
 			Vector3 p111, p121, p212, p222;
 			int col = FastColour.WhitePacked;
 			Vector2 size = new Vector2(nameTex.Width * scale, nameTex.Height * scale);
+			
+			if (game.Entities.NamesMode == NameMode.AllUnscaled) {
+				// Get W component of transformed position
+				Matrix4 mat;
+				Matrix4.Mult(out mat, ref game.View, ref game.Projection); // TODO: This mul is slow, avoid it
+				float tempW = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
+				size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
+			}
+			
 			Utils.CalcBillboardPoints(size, pos, ref game.View, out p111, out p121, out p212, out p222);
 			gfx.texVerts[0] = new VertexP3fT2fC4b(ref p111, nameTex.U1, nameTex.V2, col);
 			gfx.texVerts[1] = new VertexP3fT2fC4b(ref p121, nameTex.U1, nameTex.V1, col);
