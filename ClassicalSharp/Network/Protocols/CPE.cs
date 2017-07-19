@@ -255,11 +255,13 @@ namespace ClassicalSharp.Network.Protocols {
 			p.Hacks.CanUseThirdPersonCamera = reader.ReadUInt8() != 0;
 			p.CheckHacksConsistency();
 			
-			float jumpHeight = reader.ReadInt16() / 32f;
-			if (jumpHeight < 0)
+			ushort jumpHeight = reader.ReadUInt16();
+			if (jumpHeight == ushort.MaxValue) { // special value of -1 to reset default
 				p.physics.jumpVel = p.Hacks.CanJumpHigher ? p.physics.userJumpVel : 0.42f;
-			else
-				p.physics.CalculateJumpVelocity(false, jumpHeight);
+			} else {
+				p.physics.CalculateJumpVelocity(false, jumpHeight / 32f);
+			}
+			
 			p.physics.serverJumpVel = p.physics.jumpVel;
 			game.Events.RaiseHackPermissionsChanged();
 		}
