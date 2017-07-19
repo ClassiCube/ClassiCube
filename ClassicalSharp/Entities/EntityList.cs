@@ -62,7 +62,7 @@ namespace ClassicalSharp.Entities {
 		/// not currently being looked at by the user. </summary>
 		public void RenderNames(IGraphicsApi gfx, double delta) {
 			closestId = GetClosetPlayer(game.LocalPlayer);
-			if (!game.LocalPlayer.Hacks.CanSeeAllNames) return;
+			if (!game.LocalPlayer.Hacks.CanSeeAllNames || NamesMode != NameMode.All) return;
 
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
