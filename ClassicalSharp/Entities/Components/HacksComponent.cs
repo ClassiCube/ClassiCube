@@ -123,6 +123,7 @@ namespace ClassicalSharp.Entities {
 			if (!CanNoclip || !Enabled) Noclip = false;
 			if (!CanSpeed || !Enabled) { Speeding = false; HalfSpeeding = false; }
 			CanDoubleJump = CanAnyHacks && Enabled && CanSpeed;
+			CanSeeAllNames = CanAnyHacks && CanSeeAllNames;
 			
 			if (!CanUseThirdPersonCamera || !Enabled)
 				game.CycleCamera();
