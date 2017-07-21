@@ -37,18 +37,31 @@ namespace ClassicalSharp.Network.Protocols {
 		void HandleRemoveBlockDefinition() {
 			byte block = reader.ReadUInt8();
 			BlockInfo info = game.BlockInfo;
+			bool didBlockLight = info.BlocksLight[block];
+			
+			
+			info.ResetBlockProps(block);
+			OnBlockUpdated(block, didBlockLight);			
+			info.UpdateCulling(block);
 			
 			info.DefinedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
-			info.ResetBlockProps(block);
-			info.UpdateCulling(block);
 			game.Events.RaiseBlockDefinitionChanged();
+		}
+		
+		void OnBlockUpdated(byte block, bool didBlockLight) {
+			if (game.World.blocks == null) return;
+			
+			// Need to refresh lighting when a block's light blocking state changes
+			if (didBlockLight != game.BlockInfo.BlocksLight[block]) {
+				game.Lighting.Refresh();
+			}			
 		}
 		
 		void HandleDefineBlockExt() {
 			if (!game.AllowCustomBlocks) {
 				net.SkipPacketData(Opcode.CpeDefineBlockExt); return;
 			}
-			byte id = HandleDefineBlockCommonStart(reader, 
+			byte block = HandleDefineBlockCommonStart(reader, 
 			                                       net.cpeData.blockDefsExtVer >= 2);
 			BlockInfo info = game.BlockInfo;
 			Vector3 min, max;
@@ -60,9 +73,9 @@ namespace ClassicalSharp.Network.Protocols {
 			max.Y = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.Y, 1/16f, 1);
 			max.Z = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.Z, 1/16f, 1);
 			
-			info.MinBB[id] = min;
-			info.MaxBB[id] = max;
-			HandleDefineBlockCommonEnd(reader, 1, id);
+			info.MinBB[block] = min;
+			info.MaxBB[block] = max;
+			HandleDefineBlockCommonEnd(reader, 1, block);
 		}
 		
 		byte HandleDefineBlockCommonStart(NetReader reader, bool uniqueSideTexs) {
@@ -86,11 +99,8 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			info.SetTex(reader.ReadUInt8(), Side.Bottom, block);
 			
-			// Need to refresh lighting when a block's light blocking state changes			
 			info.BlocksLight[block] = reader.ReadUInt8() == 0;
-			if (game.World.blocks != null && (didBlockLight != info.BlocksLight[block])) {
-				game.Lighting.Refresh();
-			}
+			OnBlockUpdated(block, didBlockLight);
 			
 			byte sound = reader.ReadUInt8();
 			if (sound < breakSnds.Length) {
@@ -117,8 +127,8 @@ namespace ClassicalSharp.Network.Protocols {
 			info.CalcRenderBounds(block);
 			info.UpdateCulling(block);
 			
-			game.Events.RaiseBlockDefinitionChanged();
 			info.DefinedCustomBlocks[block >> 5] |= (1u << (block & 0x1F));
+			game.Events.RaiseBlockDefinitionChanged();			
 		}
 		
 		#if FALSE
