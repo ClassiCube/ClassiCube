@@ -92,7 +92,7 @@ namespace ClassicalSharp.Gui.Screens {
 			} catch (Exception ex) {
 				ErrorHandler.LogError("loading map", ex);
 				string file = Path.GetFileName(path);
-				game.Chat.Add("&e/client loadmap: Failed to load map \"" + file + "\"");
+				game.Chat.Add("&eFailed to load map \"" + file + "\"");
 			}
 		}
 	}

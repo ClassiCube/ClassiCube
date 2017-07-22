@@ -52,7 +52,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if (game.World.blocks == null) return;
 			
 			// Need to refresh lighting when a block's light blocking state changes
-			if (didBlockLight != game.BlockInfo.BlocksLight[block]) {
+			if (game.BlockInfo.BlocksLight[block] != didBlockLight) {
 				game.Lighting.Refresh();
 			}			
 		}

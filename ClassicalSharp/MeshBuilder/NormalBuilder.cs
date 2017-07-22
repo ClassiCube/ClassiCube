@@ -22,8 +22,9 @@ namespace ClassicalSharp {
 			x++;
 			chunkIndex++;
 			countIndex += Side.Sides;
+			bool stretchTile = (info.CanStretch[block] & (1 << Side.Top)) != 0;
 			
-			while (x < chunkEndX && CanStretch(block, chunkIndex, x, y, z, Side.Top) && !OccludedLiquid(chunkIndex)) {
+			while (x < chunkEndX && stretchTile && CanStretch(block, chunkIndex, x, y, z, Side.Top) && !OccludedLiquid(chunkIndex)) {
 				counts[countIndex] = 0;
 				count++;
 				x++;

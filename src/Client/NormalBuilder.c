@@ -20,8 +20,9 @@ Int32 NormalBuilder_StretchXLiquid(Int32 countIndex, Int32 x, Int32 y, Int32 z, 
 	x++;
 	chunkIndex++;
 	countIndex += Face_Count;
+	bool stretchTile = (Block_CanStretch[block] & (1 << Face_YMax)) != 0;
 
-	while (x < Builder_ChunkEndX && NormalBuilder_CanStretch(block, chunkIndex, x, y, z, Face_YMax) && !Builder_OccludedLiquid(chunkIndex)) {
+	while (x < Builder_ChunkEndX && stretchTile && NormalBuilder_CanStretch(block, chunkIndex, x, y, z, Face_YMax) && !Builder_OccludedLiquid(chunkIndex)) {
 		Builder_Counts[countIndex] = 0;
 		count++;
 		x++;
