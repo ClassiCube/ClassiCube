@@ -85,6 +85,7 @@ namespace ClassicalSharp.Textures {
 				// and we don't want to maintain a reference to the file
 				MemoryStream ms = ReadAllBytes(data);
 				Bitmap bmp = GetBitmap(game.Drawer2D, ms);
+				data.Dispose();
 				
 				if (bmp != null) {
 					game.World.TextureUrl = url;
@@ -92,8 +93,7 @@ namespace ClassicalSharp.Textures {
 					if (game.ChangeTerrainAtlas(bmp)) return;
 				}
 				
-				if (bmp != null) bmp.Dispose();
-				data.Dispose();
+				if (bmp != null) bmp.Dispose();				
 				ms.Dispose();
 			} else {
 				data.Dispose();
