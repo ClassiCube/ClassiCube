@@ -43,7 +43,7 @@ namespace ClassicalSharp.Textures {
 			} else {
 				TexturePack.ExtractCachedTerrainPng(game, url);
 			}
-		}		
+		}
 		
 		public static void ExtractDefault(Game game) {
 			TexturePack extractor = new TexturePack();
@@ -73,7 +73,7 @@ namespace ClassicalSharp.Textures {
 			TextureCache.AddETag(item.Url, item.ETag, game.ETags);
 			TextureCache.AdddLastModified(item.Url, item.LastModified, game.LastModified);
 			
-			if (!game.ChangeTerrainAtlas(bmp, null)) bmp.Dispose();
+			if (!game.ChangeTerrainAtlas(bmp)) bmp.Dispose();
 		}
 		
 		static void ExtractCachedTerrainPng(Game game, string url) {
@@ -81,15 +81,20 @@ namespace ClassicalSharp.Textures {
 			if (data == null) { // e.g. 404 errors
 				if (game.World.TextureUrl != null) ExtractDefault(game);
 			} else if (url != game.World.TextureUrl) {
-				Bitmap bmp = GetBitmap(game.Drawer2D, data);
-				if (bmp == null) { data.Dispose(); return; }
+				// Must read into a MemoryStream, because stream duration must be lifetime of bitmap
+				// and we don't want to maintain a reference to the file
+				MemoryStream ms = ReadAllBytes(data);
+				Bitmap bmp = GetBitmap(game.Drawer2D, ms);
 				
-				game.World.TextureUrl = url;
-				game.Events.RaiseTexturePackChanged();
-				if (game.ChangeTerrainAtlas(bmp, data)) return;
+				if (bmp != null) {
+					game.World.TextureUrl = url;
+					game.Events.RaiseTexturePackChanged();
+					if (game.ChangeTerrainAtlas(bmp)) return;
+				}
 				
-				bmp.Dispose();
+				if (bmp != null) bmp.Dispose();
 				data.Dispose();
+				ms.Dispose();
 			} else {
 				data.Dispose();
 			}
@@ -133,6 +138,17 @@ namespace ClassicalSharp.Textures {
 				ErrorHandler.LogError("Cache.GetBitmap", ex);
 				return null;
 			}
+		}
+		
+		static MemoryStream ReadAllBytes(FileStream src) {
+			MemoryStream dst = new MemoryStream((int)src.Length);
+			byte[] buffer = new byte[4096];
+			for (int i = 0; i < (int)src.Length; i += 4096) {
+				int count = Math.Min(4096, (int)src.Length - i);
+				src.Read(buffer, 0, count);
+				dst.Write(buffer, 0, count);
+			}
+			return dst;
 		}
 	}
 }

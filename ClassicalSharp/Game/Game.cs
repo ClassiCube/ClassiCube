@@ -35,23 +35,19 @@ namespace ClassicalSharp {
 
 	public partial class Game : IDisposable {
 		
-		// For FileStreams we need to keep it open for lifetime of the image
-		Stream lastAtlas;
-		void LoadAtlas(Bitmap bmp, Stream data) {
+		void LoadAtlas(Bitmap bmp) {
 			TerrainAtlas1D.Dispose();
 			TerrainAtlas.Dispose();
-			if (lastAtlas != null) lastAtlas.Dispose();
 			
 			TerrainAtlas.UpdateState(BlockInfo, bmp);
 			TerrainAtlas1D.UpdateState(TerrainAtlas);
-			lastAtlas = data;
 		}
 		
-		public bool ChangeTerrainAtlas(Bitmap atlas, Stream data) {
+		public bool ChangeTerrainAtlas(Bitmap atlas) {
 			if (!ValidateBitmap("terrain.png", atlas)) return false;
 			if (Graphics.LostContext) return false;
 			
-			LoadAtlas(atlas, data);
+			LoadAtlas(atlas);
 			Events.RaiseTerrainAtlasChanged();
 			return true;
 		}
@@ -346,7 +342,6 @@ namespace ClassicalSharp {
 			Drawer2D.DisposeInstance();
 			Graphics.DeleteTexture(ref CloudsTex);
 			Graphics.Dispose();
-			if (lastAtlas != null) lastAtlas.Dispose();
 			
 			if (Options.OptionsChanged.Count == 0) return;
 			Options.Load();
@@ -449,7 +444,7 @@ namespace ClassicalSharp {
 			byte[] data = e.Data;
 			if (e.Name == "terrain.png") {
 				Bitmap atlas = Platform.ReadBmp32Bpp(Drawer2D, data);
-				if (ChangeTerrainAtlas(atlas, null)) return;
+				if (ChangeTerrainAtlas(atlas)) return;
 				atlas.Dispose();
 			} else if (e.Name == "cloud.png" || e.Name == "clouds.png") {
 				UpdateTexture(ref CloudsTex, e.Name, data, false);
