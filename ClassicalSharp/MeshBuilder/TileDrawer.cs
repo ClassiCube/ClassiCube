@@ -114,7 +114,7 @@ namespace ClassicalSharp {
 			part.vCount[face] += 6;
 		}
 		
-		protected void DrawSprite(int count) {
+		protected virtual void DrawSprite(int count) {
 			int texId = info.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
