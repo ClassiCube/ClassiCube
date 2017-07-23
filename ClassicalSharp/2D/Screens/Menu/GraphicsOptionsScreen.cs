@@ -80,7 +80,7 @@ namespace ClassicalSharp.Gui.Screens {
 				"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.",
 				"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.",
 				"&eNoLimit: &fRenders as many frames as possible each second.",
-				"&cUsing NoLimit mode is discouraged for general usage.",
+				"&cUsing NoLimit mode is discouraged.",
 			};
 			descriptions[2] = new string[] {
 				"&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.",
