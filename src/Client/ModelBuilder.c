@@ -37,26 +37,22 @@ void BoxDesc_MirrorX(BoxDesc* desc) {
 
 
 #define BoxDesc_InitBox(desc)\
-BoxDesc_TexOrigin(&desc, 0, 0);\
-BoxDesc_RotOrigin(&desc, 0, 0, 0);\
-BoxDesc_SetBounds(&desc, (Real32)x1, (Real32)y1, (Real32)z1, (Real32)x2, (Real32)y2, (Real32)z2);\
+BoxDesc_TexOrigin(desc, 0, 0);\
+BoxDesc_RotOrigin(desc, 0, 0, 0);\
+BoxDesc_SetBounds(desc, (Real32)x1, (Real32)y1, (Real32)z1, (Real32)x2, (Real32)y2, (Real32)z2);\
 
-BoxDesc BoxDesc_Box(Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
-	BoxDesc desc;
+void BoxDesc_Box(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
 	BoxDesc_InitBox(desc)
-	desc.SidesW = Math_AbsI(z2 - z1);
-	desc.BodyW = Math_AbsI(x2 - x1);
-	desc.BodyH = Math_AbsI(y2 - y1);
-	return desc;
+	desc->SidesW = Math_AbsI(z2 - z1);
+	desc->BodyW = Math_AbsI(x2 - x1);
+	desc->BodyH = Math_AbsI(y2 - y1);
 }
 
-BoxDesc BoxDesc_RotatedBox(Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
-	BoxDesc desc;
+void BoxDesc_RotatedBox(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2) {
 	BoxDesc_InitBox(desc)
-	desc.SidesW = Math_AbsI(y2 - y1);
-	desc.BodyW = Math_AbsI(x2 - x1);
-	desc.BodyH = Math_AbsI(z2 - z1);
-	return desc;
+	desc->SidesW = Math_AbsI(y2 - y1);
+	desc->BodyW = Math_AbsI(x2 - x1);
+	desc->BodyH = Math_AbsI(z2 - z1);
 }
 
 

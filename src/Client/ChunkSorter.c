@@ -50,17 +50,17 @@ void ChunkSorter_UpdateSortOrder(void) {
 
 void ChunkSorter_QuickSort(Int32 left, Int32 right) {
 	ChunkInfo** values = MapRenderer_SortedChunks;
-	UInt32* keys = ChunkUpdater_Distances;
+	Int32* keys = ChunkUpdater_Distances;
 	while (left < right) {
 		Int32 i = left, j = right;
-		UInt32 pivot = keys[(i + j) / 2];
+		Int32 pivot = keys[(i + j) / 2];
 		/* partition the list */
 		while (i <= j) {
 			while (pivot > keys[i]) i++;
 			while (pivot < keys[j]) j--;
 
 			if (i <= j) {
-				UInt32 key = keys[i]; keys[i] = keys[j]; keys[j] = key;
+				Int32 key = keys[i]; keys[i] = keys[j]; keys[j] = key;
 				ChunkInfo* value = values[i]; values[i] = values[j]; values[j] = value;
 				i++; j--;
 			}

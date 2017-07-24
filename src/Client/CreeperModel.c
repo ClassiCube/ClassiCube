@@ -10,31 +10,31 @@ IModel CreeperModel;
 void CreeperModel_CreateParts(void) {
 	BoxDesc desc;
 	
-	desc = BoxDesc_Box(-4, 18, -4, 4, 26, 4);
+	BoxDesc_Box(&desc, -4, 18, -4, 4, 26, 4);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 18, 0);
 	Head = BoxDesc_BuildBox(&CreeperModel, &desc);
 
-	desc = BoxDesc_Box(-4, 6, -2, 4, 18, 2);
+	BoxDesc_Box(&desc, -4, 6, -2, 4, 18, 2);
 	BoxDesc_TexOrigin(&desc, 16, 16);
 	Torso = BoxDesc_BuildBox(&CreeperModel, &desc);
 
-	desc = BoxDesc_Box(-4, 0, -6, 0, 6, -2);
+	BoxDesc_Box(&desc, -4, 0, -6, 0, 6, -2);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, -2);
 	LeftLegFront = BoxDesc_BuildBox(&CreeperModel, &desc);
 
-	desc = BoxDesc_Box(0, 0, -6, 4, 6, -2);
+	BoxDesc_Box(&desc, 0, 0, -6, 4, 6, -2);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, -2);
 	RightLegFront = BoxDesc_BuildBox(&CreeperModel, &desc);
 
-	desc = BoxDesc_Box(-4, 0, 2, 0, 6, 6);
+	BoxDesc_Box(&desc, -4, 0, 2, 0, 6, 6);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, 2);
 	LeftLegBack = BoxDesc_BuildBox(&CreeperModel, &desc);
 
-	desc = BoxDesc_Box(0, 0, 2, 4, 6, 6);
+	BoxDesc_Box(&desc, 0, 0, 2, 4, 6, 6);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, 2);
 	RightLegBack = BoxDesc_BuildBox(&CreeperModel, &desc);

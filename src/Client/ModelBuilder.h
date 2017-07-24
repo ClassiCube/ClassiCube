@@ -41,11 +41,11 @@ void BoxDesc_MirrorX(BoxDesc* desc);
 
 /* Constructs a description of the given box, from two corners.
 See BoxDesc_BuildBox for details on texture layout. */
-BoxDesc BoxDesc_Box(Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
+void BoxDesc_Box(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
 
 /* Constructs a description of the given rotated box, from two corners.
 See BoxDesc_BuildRotatedBox for details on texture layout. */
-BoxDesc BoxDesc_RotatedBox(Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
+void BoxDesc_RotatedBox(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, Int32 y2, Int32 z2);
 
 
 /* Builds a box model assuming the follow texture layout:

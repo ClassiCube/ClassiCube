@@ -614,5 +614,8 @@
     <ClCompile Include="ZombieModel.c">
       <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
+    <ClCompile Include="PigModel.c">
+      <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

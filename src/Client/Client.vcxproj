@@ -298,6 +298,7 @@
     <ClCompile Include="NotchyGenerator.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
+    <ClCompile Include="PigModel.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="Respawn.c" />

@@ -10,37 +10,37 @@ IModel ZombieModel;
 void ZombieModel_CreateParts(void) {
 	BoxDesc desc;
 
-	desc = BoxDesc_Box(-4, 24, -4, 4, 32, 4);
+	BoxDesc_Box(&desc, -4, 24, -4, 4, 32, 4);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 24, 0);
 	Head = BoxDesc_BuildBox(&ZombieModel, &desc);
 
-	desc = BoxDesc_Box(-4, 24, -4, 4, 32, 4);
+	BoxDesc_Box(&desc, -4, 24, -4, 4, 32, 4);
 	BoxDesc_TexOrigin(&desc, 32, 0);
 	BoxDesc_RotOrigin(&desc, 0, 24, 0);
 	BoxDesc_Expand(&desc, 0.5f);
 	Hat = BoxDesc_BuildBox(&ZombieModel, &desc);
 
-	desc = BoxDesc_Box(-4, 12, -2, 4, 24, 2);
+	BoxDesc_Box(&desc, -4, 12, -2, 4, 24, 2);
 	BoxDesc_TexOrigin(&desc, 16, 16);
 	Torso = BoxDesc_BuildBox(&ZombieModel, &desc);
 
-	desc = BoxDesc_Box(0, 0, -2, -4, 12, 2);
+	BoxDesc_Box(&desc, 0, 0, -2, -4, 12, 2);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, 0);
 	LeftLeg = BoxDesc_BuildBox(&ZombieModel, &desc);
 
-	desc = BoxDesc_Box(0, 0, -2, 4, 12, 2);
+	BoxDesc_Box(&desc, 0, 0, -2, 4, 12, 2);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, 0);
 	RightLeg = BoxDesc_BuildBox(&ZombieModel, &desc);
 
-	desc = BoxDesc_Box(-4, 12, -2, -8, 24, 2);
+	BoxDesc_Box(&desc, -4, 12, -2, -8, 24, 2);
 	BoxDesc_TexOrigin(&desc, 40, 16);
 	BoxDesc_RotOrigin(&desc, -6, 22, 0);
 	LeftArm = BoxDesc_BuildBox(&ZombieModel, &desc);
 
-	desc = BoxDesc_Box(4, 12, -2, 8, 24, 2);
+	BoxDesc_Box(&desc, 4, 12, -2, 8, 24, 2);
 	BoxDesc_TexOrigin(&desc, 40, 16);
 	BoxDesc_RotOrigin(&desc, 6, 22, 0);
 	RightArm = BoxDesc_BuildBox(&ZombieModel, &desc);
