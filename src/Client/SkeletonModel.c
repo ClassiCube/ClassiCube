@@ -42,11 +42,14 @@ void SkeletonModel_CreateParts(void) {
 
 Real32 SkeletonModel_GetNameYOffset(void) { return 2.075f; }
 Real32 SkeletonModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
-Vector3 SkeletonModel_GetCollisionSize(void) { return Vector3_Create3(8.0f / 16.0f, 30.0f / 16.0f, 8.0f / 16.0f); }
+Vector3 SkeletonModel_GetCollisionSize(void) { 
+	return Vector3_Create3(8.0f / 16.0f, 30.0f / 16.0f, 8.0f / 16.0f);
+}
 
 AABB SkeletonModel_GetPickingBounds(void) {
 	AABB bb;
-	AABB_FromCoords6(&bb, -4.0f / 16.0f, 0.0f, -4.0f / 16.0f, 4.0f / 16.0f, 32.0f / 16.0f, 4.0f / 16.0f);
+	AABB_FromCoords6(&bb, -4.0f / 16.0f, 0.0f, -4.0f / 16.0f, 
+					4.0f / 16.0f, 32.0f / 16.0f, 4.0f / 16.0f);
 	return bb;
 }
 

@@ -42,11 +42,14 @@ void CreeperModel_CreateParts(void) {
 
 Real32 CreeperModel_GetNameYOffset(void) { return 1.7f; }
 Real32 CreeperModel_GetEyeY(Entity* entity) { return 22.0f / 16.0f; }
-Vector3 CreeperModel_GetCollisionSize(void) { return Vector3_Create3(8.0f / 16.0f, 26.0f / 16.0f, 8.0f / 16.0f); }
+Vector3 CreeperModel_GetCollisionSize(void) { 
+	return Vector3_Create3(8.0f / 16.0f, 26.0f / 16.0f, 8.0f / 16.0f); 
+}
 
 AABB CreeperModel_GetPickingBounds(void) {
 	AABB bb;
-	AABB_FromCoords6(&bb, -4.0f / 16.0f, 0.0f, -6.0f / 16.0f, 4.0f / 16.0f, 26.0f / 16.0f, 6.0f / 16.0f);
+	AABB_FromCoords6(&bb, -4.0f / 16.0f, 0.0f, -6.0f / 16.0f, 
+					4.0f / 16.0f, 26.0f / 16.0f, 6.0f / 16.0f);
 	return bb;
 }
 

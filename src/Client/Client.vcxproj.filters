@@ -611,5 +611,8 @@
     <ClCompile Include="SkeletonModel.c">
       <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
+    <ClCompile Include="ZombieModel.c">
+      <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

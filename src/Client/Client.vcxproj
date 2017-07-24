@@ -323,6 +323,7 @@
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="WorldEnv.c" />
+    <ClCompile Include="ZombieModel.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
