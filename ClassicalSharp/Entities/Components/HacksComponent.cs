@@ -9,10 +9,8 @@ namespace ClassicalSharp.Entities {
 	public sealed class HacksComponent {
 		
 		Game game;
-		Entity entity;
 		public HacksComponent(Game game, Entity entity) {
 			this.game = game;
-			this.entity = entity;
 		}
 		
 		public byte UserType;

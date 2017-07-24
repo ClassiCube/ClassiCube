@@ -479,8 +479,8 @@ void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp) {
 }
 
 void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg, Int32 lockFlags) {
-	void* dst;
-	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(buffer, 0, size, dst, lockFlags);
+	void* dst = NULL;
+	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
 	ErrorHandler_CheckOrFail(hresult, lockMsg);
 
 	Platform_MemCpy(dst, data, size);
@@ -489,8 +489,8 @@ void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, cons
 }
 
 void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg) {
-	void* dst;
-	ReturnCode hresult = IDirect3DIndexBuffer9_Lock(buffer, 0, size, dst, 0);
+	void* dst = NULL;
+	ReturnCode hresult = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
 	ErrorHandler_CheckOrFail(hresult, lockMsg);
 
 	Platform_MemCpy(dst, data, size);
