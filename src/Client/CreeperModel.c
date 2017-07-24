@@ -8,7 +8,9 @@ ModelVertex CreeperModel_Vertices[IModel_BoxVertices * 6];
 IModel CreeperModel;
 
 void CreeperModel_CreateParts(void) {
-	BoxDesc desc = BoxDesc_Box(-4, 18, -4, 4, 26, 4);
+	BoxDesc desc;
+	
+	desc = BoxDesc_Box(-4, 18, -4, 4, 26, 4);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 18, 0);
 	Head = BoxDesc_BuildBox(&CreeperModel, &desc);
@@ -62,6 +64,6 @@ void CreeperModel_DrawModel(Entity* entity) {
 
 IModel* CreeperModel_GetInstance(void) {
 	IModel_Init(&CreeperModel);
-	IModel_SetFuncPointers(CreeperModel);
+	IModel_SetPointers(CreeperModel);
 	return &CreeperModel;
 }

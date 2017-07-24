@@ -302,6 +302,7 @@
     <ClCompile Include="Random.c" />
     <ClCompile Include="Respawn.c" />
     <ClCompile Include="SelectionBox.c" />
+    <ClCompile Include="SkeletonModel.c" />
     <ClCompile Include="SkyboxRenderer.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />

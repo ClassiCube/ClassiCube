@@ -134,8 +134,8 @@ IModel* IModel_ActiveModel;
 /* Sets default values for fields of a model. */
 void IModel_Init(IModel* model);
 
-/* Sets the function pointers for a model instance assuming typeName_XYZ naming. */
-#define IModel_SetFuncPointers(typeName)\
+/* Sets the data and function pointers for a model instance assuming typeName_XYZ naming. */
+#define IModel_SetPointers(typeName)\
 typeName.CreateParts = typeName ## _CreateParts;\
 typeName.vertices = typeName ## _Vertices;\
 typeName.GetNameYOffset = typeName ## _GetNameYOffset;\

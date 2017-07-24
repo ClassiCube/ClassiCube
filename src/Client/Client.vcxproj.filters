@@ -608,5 +608,8 @@
     <ClCompile Include="Program.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SkeletonModel.c">
+      <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

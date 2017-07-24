@@ -17,7 +17,7 @@ namespace ClassicalSharp.Renderers {
 	public class HeldBlockRenderer : IGameComponent {
 		
 		internal BlockID type;
-		internal BlockModel block;
+		IModel model;
 		internal HeldBlockAnimation anim;
 		
 		Game game;
@@ -26,7 +26,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Init(Game game) {
 			this.game = game;
-			block = new BlockModel(game);
+			model = game.ModelCache.Get("0");
 			held = new FakePlayer(game);
 			game.Events.ProjectionChanged += ProjectionChanged;
 			
@@ -59,7 +59,7 @@ namespace ClassicalSharp.Renderers {
 			
 			SetPos();
 			game.Graphics.FaceCulling = true;
-			block.Render(held);
+			model.Render(held);
 			game.Graphics.FaceCulling = false;
 			
 			game.Graphics.LoadMatrix(ref game.View);
