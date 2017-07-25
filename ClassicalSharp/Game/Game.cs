@@ -110,7 +110,7 @@ namespace ClassicalSharp {
 			Graphics.BindIb(defaultIb);
 			accumulator += delta;
 			Vertices = 0;
-			Mode.BeginFrame(this);
+			Mode.BeginFrame(delta);
 			
 			Camera.UpdateMouse();
 			if (!Focused && !Gui.ActiveScreen.HandlesAllInput)

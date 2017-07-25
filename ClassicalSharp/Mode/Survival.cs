@@ -122,7 +122,9 @@ namespace ClassicalSharp.Mode {
 		
 		public void OnNewMapLoaded(Game game) {
 			UpdateScore();
+			wasOnGround = true;
 			string[] models = { "sheep", "pig", "skeleton", "zombie", "creeper", "spider" };
+			
 			for (int i = 0; i < 254; i++) {
 				MobEntity fail = new MobEntity(game, models[rnd.Next(models.Length)]);
 				float x = rnd.Next(0, game.World.Width) + 0.5f;
@@ -164,6 +166,22 @@ namespace ClassicalSharp.Mode {
 		public void Dispose() { }
 		
 		public void BeginFrame(double delta) { }
-		public void EndFrame(double delta) { }
+		
+		bool wasOnGround = true;
+		float fallY = -1000;
+		public void EndFrame(double delta) {
+			LocalPlayer p = game.LocalPlayer;		
+			if (p.onGround) {
+				if (wasOnGround) return;
+				short damage = (short)((fallY - p.interp.next.Pos.Y) - 2);
+				// TODO: shouldn't take damage when land in water or lava
+				// TODO: is the damage formula correct
+				if (damage > 0) p.Health -= damage;
+				fallY = -1000;
+			} else {
+				fallY = Math.Max(fallY, p.interp.prev.Pos.Y);
+			}
+			wasOnGround = p.onGround;
+		}
 	}
 }
