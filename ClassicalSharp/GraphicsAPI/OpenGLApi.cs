@@ -383,7 +383,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			// TODO: This renders the whole map, bad performance!! FIX FIX
 			if (glLists) {
 				if (activeList != lastPartialList) {
-					GL.CallList(activeList); activeList = lastPartialList;
+					GL.CallList(activeList); lastPartialList = activeList; 
 				}
 				return;
 			}
@@ -399,7 +399,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			// TODO: This renders the whole map, bad performance!! FIX FIX
 			if (glLists) {
 				if (activeList != lastPartialList) {
-					GL.CallList(activeList); activeList = lastPartialList;
+					GL.CallList(activeList); lastPartialList = activeList; 
 				}
 				return;
 			}
