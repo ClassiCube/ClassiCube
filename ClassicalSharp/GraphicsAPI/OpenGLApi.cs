@@ -378,10 +378,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.End();
 		}
 		
+		int lastPartialList = -1;
 		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startIndex) {
-			if (glLists) return;
-			int offset = (startIndex / 6 * 4) * VertexP3fT2fC4b.Size;
+			// TODO: This renders the whole map, bad performance!! FIX FIX
+			if (glLists) {
+				if (activeList != lastPartialList) {
+					GL.CallList(activeList); activeList = lastPartialList;
+				}
+				return;
+			}
 			
+			int offset = (startIndex / 6 * 4) * VertexP3fT2fC4b.Size;
 			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
 			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
 			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));
@@ -389,9 +396,15 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startVertex, int startIndex) {
-			if (glLists) return;
-			int offset = startVertex * VertexP3fT2fC4b.Size;
+			// TODO: This renders the whole map, bad performance!! FIX FIX
+			if (glLists) {
+				if (activeList != lastPartialList) {
+					GL.CallList(activeList); activeList = lastPartialList;
+				}
+				return;
+			}
 			
+			int offset = startVertex * VertexP3fT2fC4b.Size;
 			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
 			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
 			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));
@@ -465,6 +478,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void EndFrame(Game game) {
 			game.window.SwapBuffers();
+			activeList = -1;
 		}
 		
 		public override void SetVSync(Game game, bool value) {
