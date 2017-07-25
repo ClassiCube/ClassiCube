@@ -79,5 +79,8 @@ namespace ClassicalSharp.Mode {
 		public void Reset(Game game) { }
 		public void OnNewMap(Game game) { }
 		public void Dispose() { }
+		
+		public void BeginFrame(double delta) { }
+		public void EndFrame(double delta) { }
 	}
 }

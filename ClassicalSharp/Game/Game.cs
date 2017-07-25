@@ -110,6 +110,7 @@ namespace ClassicalSharp {
 			Graphics.BindIb(defaultIb);
 			accumulator += delta;
 			Vertices = 0;
+			Mode.BeginFrame(this);
 			
 			Camera.UpdateMouse();
 			if (!Focused && !Gui.ActiveScreen.HandlesAllInput)
@@ -133,8 +134,9 @@ namespace ClassicalSharp {
 			}
 			
 			Gui.Render(delta);
-			if (screenshotRequested)
-				TakeScreenshot();
+			if (screenshotRequested) TakeScreenshot();
+			
+			Mode.EndFrame(delta);
 			Graphics.EndFrame(this);
 			LimitFPS();
 		}

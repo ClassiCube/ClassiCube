@@ -19,5 +19,7 @@ namespace ClassicalSharp.Mode {
 		void PickRight(BlockID old, BlockID block);
 		bool PickEntity(byte id);
 		Widget MakeHotbar();
+		void BeginFrame(double delta);
+		void EndFrame(double delta);
 	}
 }
