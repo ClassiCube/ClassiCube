@@ -182,7 +182,7 @@ namespace ClassicalSharp.Mode {
 			LocalPlayer p = game.LocalPlayer;
 			if (p.onGround) {
 				if (wasOnGround) return;
-				short damage = (short)((fallY - p.interp.next.Pos.Y) - 2);
+				short damage = (short)((fallY - p.interp.next.Pos.Y) - 3);
 				// TODO: shouldn't take damage when land in water or lava
 				// TODO: is the damage formula correct
 				if (damage > 0) p.Health -= damage;
@@ -192,9 +192,10 @@ namespace ClassicalSharp.Mode {
 			}
 			
 			wasOnGround = p.onGround;
-			if (p.Health < 0 && !showedDeathScreen) {
+			if (p.Health <= 0 && !showedDeathScreen) {
 				showedDeathScreen = true;
 				game.Gui.SetNewScreen(new DeathScreen(game));
+				// TODO: Should only reset inventory when actually click on 'load' or 'generate'
 				ResetInventory();
 			}
 		}
