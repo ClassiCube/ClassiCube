@@ -47,7 +47,7 @@ namespace OpenTK.Platform.Windows
 		readonly WindowProcedure WindowProcedureDelegate;
 
 		bool class_registered, disposed, exists;
-		WinWindowInfo window, child_window;
+		WinWindowInfo window;
 		WindowState windowState = WindowState.Normal;
 		bool focused;
 		bool mouse_outside_window = true;
@@ -66,13 +66,8 @@ namespace OpenTK.Platform.Windows
 
 		public WinGLNative(int x, int y, int width, int height, string title, GameWindowFlags options, DisplayDevice device) {
 			WindowProcedureDelegate = WindowProcedure;
-			// To avoid issues with Ati drivers on Windows 6+ with compositing enabled, the context will not be
-			// bound to the top-level window, but rather to a child window docked in the parent.
 			window = new WinWindowInfo(
 				CreateWindow(x, y, width, height, title, options, device, IntPtr.Zero), null);
-			child_window = new WinWindowInfo(
-				CreateWindow(0, 0, ClientSize.Width, ClientSize.Height, title, options, device, window.WindowHandle), window);
-			
 			exists = true;
 		}
 
@@ -122,7 +117,7 @@ namespace OpenTK.Platform.Windows
 							API.GetClientRect(handle, out rect);
 							client_rectangle = rect.ToRectangle();
 
-							API.SetWindowPos(child_window.WindowHandle, IntPtr.Zero, 0, 0, ClientRectangle.Width, ClientRectangle.Height,
+							API.SetWindowPos(window.WindowHandle, IntPtr.Zero, 0, 0, ClientRectangle.Width, ClientRectangle.Height,
 							                 SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
 							                 SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
 							if (suppress_resize <= 0 && Resize != null)
@@ -353,7 +348,6 @@ namespace OpenTK.Platform.Windows
 
 					API.UnregisterClass(ClassName, Instance);
 					window.Dispose();
-					child_window.Dispose();
 
 					if (Closed != null)
 						Closed(this, EventArgs.Empty);
@@ -368,7 +362,7 @@ namespace OpenTK.Platform.Windows
 		private void EnableMouseTracking() {
 			TrackMouseEventStructure me = new TrackMouseEventStructure();
 			me.Size = TrackMouseEventStructure.SizeInBytes;
-			me.TrackWindowHandle = child_window.WindowHandle;
+			me.TrackWindowHandle = window.WindowHandle;
 			me.Flags = TrackMouseEventFlags.LEAVE;
 
 			if (!API.TrackMouseEvent(ref me))
@@ -694,7 +688,7 @@ namespace OpenTK.Platform.Windows
 		}
 
 		public IWindowInfo WindowInfo {
-			get { return child_window; }
+			get { return window; }
 		}
 		
 		public KeyboardDevice Keyboard {
