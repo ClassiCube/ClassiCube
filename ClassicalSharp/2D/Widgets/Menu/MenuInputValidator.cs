@@ -157,7 +157,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool IsValidChar(char c) {
-			return !(c < ' ' || c == '&' || c > '~');
+			return c != '&' && Utils.IsValidInputChar(c, true);
 		}
 		
 		public override bool IsValidString(string s) {

@@ -82,14 +82,8 @@ namespace ClassicalSharp.Gui.Widgets {
 				inputTex.Y1 += MinHeight / 2 - size.Height / 2;
 		}
 		
-		static bool IsInvalidChar(char c) {
-			// Make sure we're in the printable text range from 0x20 to 0x7E
-			return c < ' ' || c == '&' || c > '~';
-			// TODO: Uncomment this for full unicode support for save level screen
-		}
-		
 		protected override bool AllowedChar(char c) {
-			if (IsInvalidChar(c)) return false;
+			if (c == '&' || !Utils.IsValidInputChar(c, true)) return false;
 			if (!Validator.IsValidChar(c)) return false;
 			if (Text.Length == MaxCharsPerLine) return false;
 			

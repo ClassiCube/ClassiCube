@@ -186,12 +186,11 @@ namespace ClassicalSharp {
 			"█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0";
 
 #if !LAUNCHER
-		public static bool IsValidInputChar(char c, Game game) {
+		public static bool IsValidInputChar(char c, bool supportsCP437) {
 			if (c >= ' ' && c <= '~') return true; // ascii
 			
 			bool isCP437 = Utils.ControlCharReplacements.IndexOf(c) >= 0 ||
 				Utils.ExtendedCharReplacements.IndexOf(c) >= 0;
-			bool supportsCP437 = game.Server.SupportsFullCP437;
 			return supportsCP437 && isCP437;
 		}
 #endif

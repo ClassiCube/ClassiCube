@@ -259,7 +259,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		protected virtual bool AllowedChar(char c) {
-			return Utils.IsValidInputChar(c, game);
+			return Utils.IsValidInputChar(c, game.Server.SupportsFullCP437);
 		}
 		
 		protected void AppendChar(char c) {
