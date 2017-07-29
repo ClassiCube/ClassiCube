@@ -61,29 +61,25 @@ namespace ClassicalSharp {
 			                        vertices, ref index);
 		}
 		
-		public void AddInt(int value, VertexP3fT2fC4b[] vertices, ref int index) {
+		public unsafe void AddInt(int value, VertexP3fT2fC4b[] vertices, ref int index) {
 			if (value < 0) Add(10, vertices, ref index); // - sign
+
+			byte* digits = stackalloc byte[32];
+			int count = MakeDigits(value, digits);
 			
-			int count = 0;
-			value = Reverse(Math.Abs(value), out count);
 			for (int i = 0; i < count; i++) {
-				Add(value % 10, vertices, ref index); value /= 10;
+				Add(digits[count - 1 - i], vertices, ref index);
 			}
 		}
 		
-		static int Reverse(int value, out int count) {
-			int orig = value, reversed = 0;
-			count = 1; value /= 10;
-			while (value > 0) {
-				count++; value /= 10;
-			}
+		unsafe static int MakeDigits(int value, byte* digits) {
+			int count = 0;
+			do {
+				digits[count] = (byte)Math.Abs(value % 10);
+				value /= 10; count++;
+			} while (value != 0);
 			
-			for (int i = 0; i < count; i++) {
-				reversed *= 10;
-				reversed += orig % 10;
-				orig /= 10;
-			}
-			return reversed;
+			return count;
 		}
 	}
 }
