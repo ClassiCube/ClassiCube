@@ -119,8 +119,8 @@ static Int32 String_MakeInt32(Int32 num, UInt8* numBuffer) {
 	Int32 len = 0;
 
 	do {
-		numBuffer[len] = (char)('0' + (num % 10)); num /= 10;
-		len++; 
+		numBuffer[len] = (UInt8)('0' + (num % 10));
+		num /= 10; len++; 
 	} while (num > 0);
 	return len;
 }

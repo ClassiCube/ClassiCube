@@ -63,11 +63,10 @@ namespace ClassicalSharp {
 		
 		int MakeNum(long num) {
 			int len = 0;
-			numBuffer[len++] = (char)('0' + (num % 10)); num /= 10;
-			
-			while (num > 0) {
-				numBuffer[len++] = (char)('0' + (num % 10)); num /= 10;
-			}
+			do {
+				numBuffer[len] = (char)('0' + (num % 10)); 
+				num /= 10; len++;
+			} while (num > 0);
 			return len;
 		}
 		

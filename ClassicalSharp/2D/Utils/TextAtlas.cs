@@ -74,6 +74,7 @@ namespace ClassicalSharp {
 		
 		unsafe static int MakeDigits(int value, byte* digits) {
 			int count = 0;
+			// use a do while loop here, as we still want a '0' digit if input is 0.
 			do {
 				digits[count] = (byte)Math.Abs(value % 10);
 				value /= 10; count++;
