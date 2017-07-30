@@ -163,7 +163,7 @@ namespace ClassicalSharp.Entities {
 			float value;
 			if (!Utils.TryParseDecimal(scale, out value)) return;
 			
-			Utils.Clamp(ref value, 0.25f, Model.MaxScale);
+			Utils.Clamp(ref value, 0.01f, Model.MaxScale);
 			ModelScale = new Vector3(value);
 		}
 	}

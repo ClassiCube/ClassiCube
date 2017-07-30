@@ -383,7 +383,7 @@ namespace ClassicalSharp.Network.Protocols {
 				case 4:
 				case 5:
 					float scale = value / 1000.0f;
-					Utils.Clamp(ref scale, 0.25f, entity.Model.MaxScale);
+					Utils.Clamp(ref scale, 0.01f, entity.Model.MaxScale);
 					if (type == 3) entity.ModelScale.X = scale;
 					if (type == 4) entity.ModelScale.Y = scale;
 					if (type == 5) entity.ModelScale.Z = scale;
