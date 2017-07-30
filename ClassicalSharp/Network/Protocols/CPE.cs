@@ -378,6 +378,18 @@ namespace ClassicalSharp.Network.Protocols {
 					update.RotY = LocationUpdate.Clamp(value); break;
 				case 2:
 					update.RotZ = LocationUpdate.Clamp(value); break;
+					
+				case 3:
+				case 4:
+				case 5:
+					float scale = value / 1000.0f;
+					Utils.Clamp(ref scale, 0.25f, entity.Model.MaxScale);
+					if (type == 3) entity.ModelScale.X = scale;
+					if (type == 4) entity.ModelScale.Y = scale;
+					if (type == 5) entity.ModelScale.Z = scale;
+					
+					entity.UpdateModelBounds();
+					return;
 				default:
 					return;
 			}

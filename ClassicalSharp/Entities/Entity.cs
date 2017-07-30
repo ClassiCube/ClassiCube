@@ -28,7 +28,7 @@ namespace ClassicalSharp.Entities {
 		public string ModelName;
 		
 		/// <summary> Scale applied to the model for collision detection and rendering. </summary>
-		public float ModelScale = 1;
+		public Vector3 ModelScale = new Vector3(1.0f);
 		
 		public byte ID;
 		public int TextureId = -1, MobTextureId = -1;
@@ -94,7 +94,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
 			get { return new Vector3(Position.X,
-			                         Position.Y + Model.GetEyeY(this) * ModelScale, Position.Z); }
+			                         Position.Y + Model.GetEyeY(this) * ModelScale.Y, Position.Z); }
 		}
 
 		/// <summary> Gets the block just underneath the player's feet position. </summary>
@@ -111,12 +111,12 @@ namespace ClassicalSharp.Entities {
 			return game.World.SafeGetBlock(Vector3I.Floor(coords));
 		}
 		
-		public Matrix4 TransformMatrix(float scale, Vector3 pos) {
+		public Matrix4 TransformMatrix(Vector3 scale, Vector3 pos) {
 			Matrix4 rotZ, rotX, rotY, translate, scaleM;
 			Matrix4.RotateX(out rotX, -RotX * Utils.Deg2Rad);
 			Matrix4.RotateY(out rotY, -RotY * Utils.Deg2Rad);
 			Matrix4.RotateZ(out rotZ, -RotZ * Utils.Deg2Rad);
-			Matrix4.Scale(out scaleM, scale, scale, scale);
+			Matrix4.Scale(out scaleM, scale.X, scale.Y, scale.Z);
 			Matrix4.Translate(out translate, pos.X, pos.Y, pos.Z);
 			
 			return rotZ * rotX * rotY * scaleM * translate;
@@ -132,7 +132,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Sets the model associated with this entity. </summary>
 		/// <param name="model"> Can be either 'name' or 'name'|'scale'. </param>
 		public void SetModel(string model) {
-			ModelScale = 1;
+			ModelScale = new Vector3(1.0f);
 			int sep = model.IndexOf('|');
 			string scale = sep == -1 ? null : model.Substring(sep + 1);
 			ModelName = sep == -1 ? model : model.Substring(0, sep);
@@ -148,9 +148,14 @@ namespace ClassicalSharp.Entities {
 			MobTextureId = -1;
 			
 			UpdateModel();
+			UpdateModelBounds();
+		}
+		
+		public void UpdateModelBounds() {
 			Size = Model.CollisionSize * ModelScale;
 			modelAABB = Model.PickingBounds;
-			modelAABB.Min *= ModelScale; modelAABB.Max *= ModelScale;
+			modelAABB.Min *= ModelScale;
+			modelAABB.Max *= ModelScale;
 		}
 		
 		void ParseScale(string scale) {
@@ -159,7 +164,7 @@ namespace ClassicalSharp.Entities {
 			if (!Utils.TryParseDecimal(scale, out value)) return;
 			
 			Utils.Clamp(ref value, 0.25f, Model.MaxScale);
-			ModelScale = value;
+			ModelScale = new Vector3(value);
 		}
 	}
 }

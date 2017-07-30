@@ -85,7 +85,7 @@ namespace ClassicalSharp.Entities {
 			Vector3 pos;
 			UpdateModel();
 			Vector3.TransformY(Model.NameYOffset, ref transform, out pos);
-			float scale = Math.Min(1, Model.NameScale * ModelScale) / 70f;
+			float scale = Math.Min(1, Model.NameScale * ModelScale.Y) / 70f;
 			
 			Vector3 p111, p121, p212, p222;
 			int col = FastColour.WhitePacked;

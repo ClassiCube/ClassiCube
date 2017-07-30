@@ -32,7 +32,7 @@ namespace ClassicalSharp.Entities {
 			float posX = Position.X, posZ = Position.Z;
 			int posY = Math.Min((int)Position.Y, game.World.Height - 1);
 			int index = 0, vb = 0;
-			radius = 7f * Math.Min(entity.ModelScale, 1) * entity.Model.ShadowScale;
+			radius = 7f * Math.Min(entity.ModelScale.Y, 1) * entity.Model.ShadowScale;
 			
 			VertexP3fT2fC4b[] verts = null;
 			int posCount = 0, dataCount = 0;

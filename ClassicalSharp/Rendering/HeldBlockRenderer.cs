@@ -87,7 +87,7 @@ namespace ClassicalSharp.Renderers {
 			bool sprite = info.Draw[type] == DrawType.Sprite;
 			Vector3 offset = sprite ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
-			held.ModelScale = 0.4f;
+			held.ModelScale = new Vector3(0.4f);
 			
 			held.Position = p.EyePosition + anim.pos;
 			held.Position += offset;
