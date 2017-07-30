@@ -18,7 +18,7 @@ It **does not** work with 'modern/premium' Minecraft servers.
 
 #### Requirements
 * Windows: .NET framework 2.0 or Mono. (Vista and later have .NET framework 2.0 built in)
-ClassicalSharp has been verified to work on Windows 2000, unsure about ME and 98.
+ClassicalSharp has been verified to work on Windows 2000 and later. The OpenGL build has been verified to work in a Windows 98 virtual machine, however has not been tested on real hardware running Windows 98.
 * Linux and Mac OSX: Either Wine or Mono.
 
 #### Instructions
