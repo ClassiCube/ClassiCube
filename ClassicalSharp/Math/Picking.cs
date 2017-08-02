@@ -11,7 +11,7 @@ using BlockID = System.Byte;
 #endif
 
 namespace ClassicalSharp {
-	public static class Picking {	
+	public static class Picking {
 		
 		static RayTracer t = new RayTracer();
 		
@@ -34,7 +34,14 @@ namespace ClassicalSharp {
 			if (!Intersection.RayIntersectsBox(t.Origin, t.Dir, t.Min, t.Max, out t0, out t1))
 				return false;
 			Vector3 I = t.Origin + t.Dir * t0;
-			pos.SetAsValid(t.X, t.Y, t.Z, t.Min, t.Max, t.Block, I);
+			
+			float lenSq = (I - t.Origin).LengthSquared;
+			float reach = game.LocalPlayer.ReachDistance;
+			if (lenSq <=  reach * reach) {
+				pos.SetAsValid(t.X, t.Y, t.Z, t.Min, t.Max, t.Block, I);
+			} else {
+				pos.SetAsInvalid();
+			}
 			return true;
 		}
 		
@@ -60,12 +67,12 @@ namespace ClassicalSharp {
 			pos.SetAsValid(t.X, t.Y, t.Z, t.Min, t.Max, t.Block, I);
 			
 			switch (pos.Face) {
-				case BlockFace.XMin: pos.Intersect.X -= adjust; break;
-				case BlockFace.XMax: pos.Intersect.X += adjust; break;
-				case BlockFace.YMin: pos.Intersect.Y -= adjust; break;
-				case BlockFace.YMax: pos.Intersect.Y += adjust; break;
-				case BlockFace.ZMin: pos.Intersect.Z -= adjust; break;
-				case BlockFace.ZMax: pos.Intersect.Z += adjust; break;
+					case BlockFace.XMin: pos.Intersect.X -= adjust; break;
+					case BlockFace.XMax: pos.Intersect.X += adjust; break;
+					case BlockFace.YMin: pos.Intersect.Y -= adjust; break;
+					case BlockFace.YMax: pos.Intersect.Y += adjust; break;
+					case BlockFace.ZMin: pos.Intersect.Z -= adjust; break;
+					case BlockFace.ZMax: pos.Intersect.Z += adjust; break;
 			}
 			return true;
 		}

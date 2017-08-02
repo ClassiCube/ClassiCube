@@ -197,8 +197,6 @@ namespace ClassicalSharp.Renderers {
 			gfx.AlphaBlending = false;
 		}
 		
-		const int maxVertex = 65536;
-		const int maxIndices = maxVertex / 4 * 6;
 		void RenderNormalBatch(int batch) {
 			for (int i = 0; i < renderCount; i++) {
 				ChunkInfo info = renderChunks[i];
@@ -242,37 +240,16 @@ namespace ClassicalSharp.Renderers {
 					game.Vertices += part.BackCount;
 				}
 				
-				// Special handling for top and bottom face, as these can go over 65536 vertices and we need to adjust the indices in this case.
 				if (drawBottom && drawTop) {
 					gfx.FaceCulling = true;
-					if (part.IndicesCount > maxIndices) {
-						int part1Count = maxIndices - part.BottomIndex;
-						gfx.DrawIndexedVb_TrisT2fC4b(part1Count, part.BottomIndex);
-						gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount - part1Count, maxVertex, 0);
-					} else {
-						gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, part.BottomIndex);
-					}
+					gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount + part.TopCount, part.BottomIndex);
 					gfx.FaceCulling = false;
 					game.Vertices += part.TopCount + part.BottomCount;
 				} else if (drawBottom) {
-					int part1Count;
-					if (part.IndicesCount > maxIndices &&
-					    (part1Count = maxIndices - part.BottomIndex) < part.BottomCount) {
-						gfx.DrawIndexedVb_TrisT2fC4b(part1Count, part.BottomIndex);
-						gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount - part1Count, maxVertex, 0);
-					} else {
-						gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex);
-					}
+					gfx.DrawIndexedVb_TrisT2fC4b(part.BottomCount, part.BottomIndex);
 					game.Vertices += part.BottomCount;
 				} else if (drawTop) {
-					int part1Count;
-					if (part.IndicesCount > maxIndices &&
-					    (part1Count = maxIndices - part.TopIndex) < part.TopCount) {
-						gfx.DrawIndexedVb_TrisT2fC4b(part1Count, part.TopIndex);
-						gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount - part1Count, maxVertex, 0);
-					} else {
-						gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
-					}
+					gfx.DrawIndexedVb_TrisT2fC4b(part.TopCount, part.TopIndex);
 					game.Vertices += part.TopCount;
 				}
 				

@@ -374,15 +374,9 @@ void Gfx_DrawVb_IndexedTris_Range(Int32 indicesCount, Int32 startIndex) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb_IndexedTris");
 }
 
-void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex) {
-	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, offsetVertex,
-		0, VCOUNT(indicesCount), startIndex, indicesCount / 3);
-	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b_Range");
-}
-
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex) {
-	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 0,
-		VCOUNT(startIndex), VCOUNT(indicesCount), startIndex, indicesCount / 3);
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, VCOUNT(startIndex),
+		 0, VCOUNT(indicesCount), 0, indicesCount / 3);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }
 

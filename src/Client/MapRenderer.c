@@ -164,36 +164,17 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 		}
 		offset += part.ZMinCount + part.ZMaxCount;
 
-		/* Special handling for top and bottom face, as these can go over 65536 vertices and we need to adjust the indices in this case. */
 		if (drawYMin && drawYMax) {
 			Gfx_SetFaceCulling(true);
-			if (part.IndicesCount > Gfx_MaxIndices) {
-				Int32 part1Count = Gfx_MaxIndices - offset;
-				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, offset);
-				Gfx_DrawIndexedVb_TrisT2fC4b_Range(part.YMinCount + part.YMaxCount - part1Count, Gfx_MaxVertex, 0);
-			} else {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount + part.YMaxCount, offset);
-			}
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount + part.YMaxCount, offset);
 			Gfx_SetFaceCulling(false);
 			Game_Vertices += part.YMaxCount + part.YMinCount;
 		} else if (drawYMin) {
-			Int32 part1Count;
-			if (part.IndicesCount > Gfx_MaxIndices && (part1Count = Gfx_MaxIndices - offset) < part.YMinCount) {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, offset);
-				Gfx_DrawIndexedVb_TrisT2fC4b_Range(part.YMinCount - part1Count, Gfx_MaxVertex, 0);
-			} else {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount, offset);
-			}
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount, offset);
 			Game_Vertices += part.YMinCount;
 		} else if (drawYMax) {
 			offset += part.YMinCount;
-			Int32 part1Count;
-			if (part.IndicesCount > Gfx_MaxIndices && (part1Count = Gfx_MaxIndices - offset) < part.YMaxCount) {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part1Count, offset);
-				Gfx_DrawIndexedVb_TrisT2fC4b_Range(part.YMaxCount - part1Count, Gfx_MaxVertex, 0);
-			} else {
-				Gfx_DrawIndexedVb_TrisT2fC4b(part.YMaxCount, offset);
-			}
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMaxCount, offset);
 			Game_Vertices += part.YMaxCount;
 		}
 

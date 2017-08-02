@@ -168,9 +168,6 @@ void Gfx_DrawVb_IndexedTris_Range(Int32 indicesCount, Int32 startIndex);
 void Gfx_DrawVb_IndexedTris(Int32 indicesCount);
 
 /* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
-void Gfx_DrawIndexedVb_TrisT2fC4b_Range(Int32 indicesCount, Int32 offsetVertex, Int32 startIndex);
-
-/* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex);
 
 static Int32 Gfx_strideSizes[2] = { 16, 24 };
