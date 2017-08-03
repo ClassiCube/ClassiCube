@@ -74,8 +74,8 @@ namespace ClassicalSharp.Renderers {
 					// i.e. the block has gone to bottom of screen and is now returning back up
 					// at this point we switch over to the new held block.
 					if (pos.Y > last.Y)
-						lastType = held.type;
-					held.type = lastType;
+						lastType = held.block;
+					held.block = lastType;
 				}
 			} else {
 				if (time >= period * 0.25) DigSecondCycle();

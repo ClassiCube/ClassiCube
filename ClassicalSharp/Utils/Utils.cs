@@ -140,16 +140,6 @@ namespace ClassicalSharp {
 			adjCol *= tint;
 			return adjCol.Pack();
 		}
-		
-		public static byte FastByte(string s) {
-			int sum = 0;
-			switch (s.Length) {
-				case 1: sum = (s[0] - '0'); break;
-				case 2: sum = (s[0] - '0') * 10 + (s[1] - '0'); break;
-				case 3: sum = (s[0] - '0') * 100 + (s[1] - '0') * 10 + (s[2] - '0'); break;
-			}
-			return (byte)sum;
-		}
 	
 		/// <summary> Determines the skin type of the specified bitmap. </summary>
 		public static SkinType GetSkinType(Bitmap bmp) {

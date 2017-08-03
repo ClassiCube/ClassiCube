@@ -34,10 +34,10 @@ namespace ClassicalSharp.Model {
 		public override float NameYOffset { get { return height + 0.075f; } }
 		
 		public override float GetEyeY(Entity entity) {
-			BlockID block = Byte.Parse(entity.ModelName);
+			BlockID block = entity.ModelBlock;
 			float minY = game.BlockInfo.MinBB[block].Y;
 			float maxY = game.BlockInfo.MaxBB[block].Y;
-			return block == 0 ? 1 : (minY + maxY) / 2;
+			return block == Block.Air ? 1 : (minY + maxY) / 2;
 		}
 		
 		static Vector3 colShrink = new Vector3(0.75f/16, 0.75f/16, 0.75f/16);
@@ -66,15 +66,9 @@ namespace ClassicalSharp.Model {
 
 		int lastTexId = -1;
 		public override void DrawModel(Entity p) {
-			// TODO: using 'is' is ugly, but means we can avoid creating
-			// a string every single time held block changes.
-			if (p is FakePlayer) {
-				block = ((FakePlayer)p).Block;
-			} else {
-				block = Utils.FastByte(p.ModelName);
-			}
-			
+			block = p.ModelBlock;
 			CalcState(block);
+			
 			if (game.BlockInfo.FullBright[block]) {
 				for (int i = 0; i < cols.Length; i++)
 					cols[i] = FastColour.WhitePacked;

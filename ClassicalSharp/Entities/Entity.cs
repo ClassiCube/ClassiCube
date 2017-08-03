@@ -27,6 +27,10 @@ namespace ClassicalSharp.Entities {
 		/// <summary> The name of the model of this entity. </summary>
 		public string ModelName;
 		
+		/// <summary> BlockID if model name is a vaid block id. </summary>
+		/// <remarks> This avoids needing to repeatedly parse ModelName as a byte. </remarks>
+		public BlockID ModelBlock;
+		
 		/// <summary> Scale applied to the model for collision detection and rendering. </summary>
 		public Vector3 ModelScale = new Vector3(1.0f);
 		
@@ -69,8 +73,7 @@ namespace ClassicalSharp.Entities {
 		
 		protected void UpdateModel() {
 			BlockModel model = Model as BlockModel;
-			if (model != null)
-				model.CalcState(Utils.FastByte(ModelName));
+			if (model != null) model.CalcState(ModelBlock);
 		}
 		
 		public abstract void Tick(double delta);
@@ -140,6 +143,11 @@ namespace ClassicalSharp.Entities {
 			if (Utils.CaselessEquals(model, "giant")) {
 				ModelName = "humanoid";
 				ModelScale *= 2;
+			}
+			
+			ModelBlock = Block.Air;
+			if (Byte.TryParse(ModelName, out ModelBlock)) {
+				ModelName = "block";
 			}
 			
 			Model = game.ModelCache.Get(ModelName);

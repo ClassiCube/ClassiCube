@@ -16,7 +16,7 @@ namespace ClassicalSharp.Renderers {
 	
 	public class HeldBlockRenderer : IGameComponent {
 		
-		internal BlockID type;
+		internal BlockID block;
 		IModel model;
 		internal HeldBlockAnimation anim;
 		
@@ -26,7 +26,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Init(Game game) {
 			this.game = game;
-			model = game.ModelCache.Get("0");
+			model = game.ModelCache.Get("block");
 			held = new FakePlayer(game);
 			game.Events.ProjectionChanged += ProjectionChanged;
 			
@@ -44,7 +44,7 @@ namespace ClassicalSharp.Renderers {
 
 			Vector3 last = anim.pos;
 			anim.pos = Vector3.Zero;
-			type = game.Inventory.Selected;
+			block = game.Inventory.Selected;
 			held.RotX = 0;
 			if (anim.doAnim) anim.Update(delta, last);
 			
@@ -54,7 +54,7 @@ namespace ClassicalSharp.Renderers {
 			SetMatrix();
 			
 			game.Graphics.Texturing = true;
-			game.Graphics.SetupAlphaState(game.BlockInfo.Draw[type]);
+			game.Graphics.SetupAlphaState(game.BlockInfo.Draw[block]);
 			game.Graphics.DepthTest = false;
 			
 			SetPos();
@@ -68,7 +68,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);
 			
 			game.Graphics.Texturing = false;
-			game.Graphics.RestoreAlphaState(game.BlockInfo.Draw[type]);
+			game.Graphics.RestoreAlphaState(game.BlockInfo.Draw[block]);
 			game.Graphics.DepthTest = true;
 		}
 		
@@ -84,7 +84,7 @@ namespace ClassicalSharp.Renderers {
 		void SetPos() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
 			BlockInfo info = game.BlockInfo;
-			bool sprite = info.Draw[type] == DrawType.Sprite;
+			bool sprite = info.Draw[block] == DrawType.Sprite;
 			Vector3 offset = sprite ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
 			held.ModelScale = new Vector3(0.4f);
@@ -92,7 +92,7 @@ namespace ClassicalSharp.Renderers {
 			held.Position = p.EyePosition + anim.pos;
 			held.Position += offset;
 			if (!sprite) {
-				float height = info.MaxBB[type].Y - info.MinBB[type].Y;
+				float height = info.MaxBB[block].Y - info.MinBB[block].Y;
 				held.Position.Y += 0.2f * (1 - height);
 			}
 			
@@ -103,7 +103,7 @@ namespace ClassicalSharp.Renderers {
 			held.HeadY = -45 + anim.angleY;
 			held.RotY = -45 + anim.angleY;
 			held.HeadX = 0;
-			held.Block = type;
+			held.ModelBlock = block;
 		}
 		
 		void ProjectionChanged(object sender, EventArgs e) {
@@ -126,7 +126,6 @@ namespace ClassicalSharp.Renderers {
 		public FakePlayer(Game game) : base(game) {
 			NoShade = true;
 		}
-		public BlockID Block;
 		
 		public override void SetLocation(LocationUpdate update, bool interpolate) { }
 		

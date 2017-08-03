@@ -58,11 +58,6 @@ namespace ClassicalSharp.Model {
 
 		
 		public IModel Get(string modelName) {
-			if (modelName == "block") return Models[0].Instance;
-			byte blockId;
-			if (Byte.TryParse(modelName, out blockId))
-				modelName = "block";
-
 			for (int i = 0; i < Models.Count; i++) {
 				CachedModel m = Models[i];
 				if (m.Name != modelName) continue;

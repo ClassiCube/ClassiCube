@@ -7,7 +7,7 @@ ModelPart Head, Head2, Head3, Torso, LeftLeg, RightLeg, LeftWing, RightWing;
 ModelVertex ChickenModel_Vertices[IModel_BoxVertices * 6 + (IModel_QuadVertices * 2) * 2];
 IModel ChickenModel;
 
-ModelPart MakeLeg(Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
+ModelPart ChickenModel_MakeLeg(Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
 	#define y1 (1.0f  / 64.0f)
 	#define y2 (5.0f  / 16.0f)
 	#define z2 (1.0f  / 16.0f)
@@ -57,8 +57,8 @@ void ChickenModel_CreateParts(void) {
 	BoxDesc_RotOrigin(&desc, 3, 11, 0);
 	RightWing = BoxDesc_BuildBox(&ChickenModel, &desc);
 
-	LeftLeg = MakeLeg(-3, 0, -2, -1);
-	RightLeg = MakeLeg(0, 3, 1, 2);
+	LeftLeg = ChickenModel_MakeLeg(-3, 0, -2, -1);
+	RightLeg = ChickenModel_MakeLeg(0, 3, 1, 2);
 }
 
 Real32 ChickenModel_GetNameYOffset(void) { return 1.0125f; }

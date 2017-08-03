@@ -4,11 +4,10 @@
 #include "MiscEvents.h"
 #include "StringConvert.h"
 
-String ModelCache_blockString, ModelCache_charPngString;
+String ModelCache_charPngString;
 Int32 ModelCache_texCount, ModelCache_modelCount;
 
 void ModelCache_Init(void) {
-	ModelCache_blockString = String_FromConstant("block");
 	ModelCache_charPngString = String_FromConstant("char.png");
 	ModelCache_RegisterDefaultModels();
 	ModelCache_ContextRecreated();
@@ -33,20 +32,10 @@ void ModelCache_Free(void) {
 
 
 IModel* ModelCache_Get(STRING_TRANSIENT String* name) {
-	if (String_Equals(name, &ModelCache_blockString)) {
-		return ModelCache_Models[0].Instance;
-	}
-
-	String* modelName = name;
-	UInt8 blockId;
-	if (Convert_TryParseByte(name, &blockId)) {
-		modelName = &ModelCache_blockString;
-	}
-
 	Int32 i;
 	for (i = 0; i < ModelCache_modelCount; i++) {
 		CachedModel* m = &ModelCache_Models[i];
-		if (!String_Equals(&m->Name, modelName)) continue;
+		if (!String_Equals(&m->Name, name)) continue;
 		
 		if (!m->Instance->initalised) {
 			m->Instance->CreateParts();
