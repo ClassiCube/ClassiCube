@@ -35,9 +35,10 @@ namespace ClassicalSharp {
 				return false;
 			Vector3 I = t.Origin + t.Dir * t0;
 			
+			// Only pick the block if the block is precisely within reach distance.
 			float lenSq = (I - t.Origin).LengthSquared;
 			float reach = game.LocalPlayer.ReachDistance;
-			if (lenSq <=  reach * reach) {
+			if (lenSq <= reach * reach) {
 				pos.SetAsValid(t.X, t.Y, t.Z, t.Min, t.Max, t.Block, I);
 			} else {
 				pos.SetAsInvalid();

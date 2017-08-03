@@ -54,7 +54,7 @@ namespace ClassicalSharp.Network.Protocols {
 			// Need to refresh lighting when a block's light blocking state changes
 			if (game.BlockInfo.BlocksLight[block] != didBlockLight) {
 				game.Lighting.Refresh();
-			}			
+			}
 		}
 		
 		void HandleDefineBlockExt() {
