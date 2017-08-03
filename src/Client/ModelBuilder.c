@@ -70,7 +70,8 @@ ModelPart BoxDesc_BuildBox(IModel* m, BoxDesc* desc) {
 	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x1); /* right */
 
 	ModelPart part;
-	ModelPart_Init(&part, m->index - 6 * 4, 6 * 4, desc->RotX, desc->RotY, desc->RotZ);
+	ModelPart_Init(&part, m->index - IModel_BoxVertices, IModel_BoxVertices,
+		desc->RotX, desc->RotY, desc->RotZ);
 	return part;
 }
 
@@ -96,7 +97,8 @@ ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
 	}
 
 	ModelPart part;
-	ModelPart_Init(&part, m->index - 6 * 4, 6 * 4, desc->RotX, desc->RotY, desc->RotZ);
+	ModelPart_Init(&part, m->index - IModel_BoxVertices, IModel_BoxVertices,
+		desc->RotX, desc->RotY, desc->RotZ);
 	return part;
 }
 

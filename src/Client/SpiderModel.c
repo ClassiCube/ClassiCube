@@ -47,7 +47,6 @@ AABB SpiderModel_GetPickingBounds(void) {
 	return bb;
 }
 
-
 #define quarterPi (MATH_PI / 4.0f)
 #define eighthPi  (MATH_PI / 8.0f)
 
