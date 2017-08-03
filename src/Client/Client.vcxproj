@@ -265,6 +265,7 @@
     <ClCompile Include="BordersRenderer.c" />
     <ClCompile Include="Builder.c" />
     <ClCompile Include="Builder1DPart.c" />
+    <ClCompile Include="ChickenModel.c" />
     <ClCompile Include="ChunkInfo.c" />
     <ClCompile Include="ChunkSorter.c" />
     <ClCompile Include="ChunkUpdater.c" />
@@ -305,6 +306,7 @@
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="SkeletonModel.c" />
     <ClCompile Include="SkyboxRenderer.c" />
+    <ClCompile Include="SpiderModel.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="StringConvert.c" />

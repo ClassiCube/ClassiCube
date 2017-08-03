@@ -617,5 +617,11 @@
     <ClCompile Include="PigModel.c">
       <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
+    <ClCompile Include="SpiderModel.c">
+      <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="ChickenModel.c">
+      <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

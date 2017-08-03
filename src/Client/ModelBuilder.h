@@ -79,12 +79,12 @@ let SW = sides width, BW = body width, BH = body height
 ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc);
 
 
-static void BoxDesc_XQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_XQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x);
 
-static void BoxDesc_YQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_YQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y);
 
-static void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
+void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z);
 #endif
