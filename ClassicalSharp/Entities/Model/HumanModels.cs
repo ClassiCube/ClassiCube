@@ -41,6 +41,7 @@ namespace ClassicalSharp.Model {
 		
 		public SittingModel(Game window) : base(window) {
 			CalcHumanAnims = true;
+			UsesHumanSkin = true;
 			ShadowScale = 0.5f;
 		}
 		

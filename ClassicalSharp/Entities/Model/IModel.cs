@@ -29,11 +29,16 @@ namespace ClassicalSharp.Model {
 		/// the whole model will be moved slightly down. </remarks>
 		public bool Bobbing = true;
 
-		/// <summary> Whether this entity requires downloading of a skin texture. </summary>
+		/// <summary> Whether this model uses a skin texture. </summary>
+		/// <remarks> If false, no attempt is made to download the skin of an entity which has this model. </remarks>
 		public bool UsesSkin = true;
 		
 		/// <summary> Whether humanoid animations should be calculated, instead of normal animations. </summary>
 		public bool CalcHumanAnims;
+		
+		/// <summary> Whether the model uses humanoid skin texture, instead of mob skin texture. </summary>
+		public bool UsesHumanSkin;
+		
 		
 		/// <summary> Gravity applied to this entity. </summary>
 		public float Gravity = 0.08f;
@@ -157,7 +162,8 @@ namespace ClassicalSharp.Model {
 		protected internal ModelVertex[] vertices;
 		protected internal int index, texIndex;
 		
-		protected int GetTexture(int pTex) {
+		protected int GetTexture(Entity entity) {
+			int pTex = UsesHumanSkin ? entity.TextureId : entity.MobTextureId;
 			return pTex > 0 ? pTex : game.ModelCache.Textures[texIndex].TexID;
 		}
 		

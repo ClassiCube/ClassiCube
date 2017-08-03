@@ -54,7 +54,7 @@ AABB PigModel_GetPickingBounds(void) {
 }
 
 void PigModel_DrawModel(Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(&PigModel, entity->MobTextureId));
+	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Head, true);
 
 	IModel_DrawPart(Torso);

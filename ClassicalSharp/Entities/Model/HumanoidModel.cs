@@ -12,6 +12,7 @@ namespace ClassicalSharp.Model {
 		public ModelSet Set, SetSlim, Set64;
 		public HumanoidModel(Game window) : base(window) {
 			CalcHumanAnims = true;
+			UsesHumanSkin = true;
 		}
 		
 		protected BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
@@ -85,7 +86,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void DrawModel(Entity p) {
-			game.Graphics.BindTexture(GetTexture(p.TextureId));
+			game.Graphics.BindTexture(GetTexture(p));
 			game.Graphics.AlphaTest = false;
 			
 			bool _64x64 = p.SkinType != SkinType.Type64x32;

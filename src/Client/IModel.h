@@ -70,11 +70,15 @@ typedef struct IModel_ {
 	e.g. for players when their legs are at the peak of their swing, the whole model will be moved slightly down. */
 	bool Bobbing;
 
-	/* Whether this entity requires downloading of a skin texture.*/
+	/* Whether this model uses a skin texture at all.
+	If false, no attempt is made to download the skin of an entity which has this model. */
 	bool UsesSkin;
 
 	/* Whether humanoid animations should be calculated, instead of normal animations.*/
 	bool CalcHumanAnims;
+
+	/* Whether the model uses humanoid skin texture, instead of mob skin texture. */
+	bool UsesHumanSkin;
 
 
 	/* Gravity applied to this entity.*/
@@ -160,9 +164,8 @@ void IModel_SetupState(Entity* p);
 /* Sends the updated vertex data to the GPU. */
 void IModel_UpdateVB();
 
-/* Gets the appropriate native texture ID for the given model.
-if pTex is > 0 then it is returned. Otherwise ID of the model's default texture is returned. */
-GfxResourceID IModel_GetTexture(IModel* model, GfxResourceID pTex);
+/* Gets the appropriate native texture ID for the given entity and current model. */
+GfxResourceID IModel_GetTexture(Entity* entity);
 
 void IModel_DrawPart(ModelPart part);
 

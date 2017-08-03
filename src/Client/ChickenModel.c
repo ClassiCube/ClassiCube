@@ -75,7 +75,7 @@ AABB ChickenModel_GetPickingBounds(void) {
 }
 
 void ChickenModel_DrawModel(Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(&ChickenModel, entity->MobTextureId));
+	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Head, true);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Head2, true);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Head3, true);

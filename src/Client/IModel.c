@@ -22,9 +22,12 @@ void IModel_Init(IModel* model) {
 	model->Bobbing = true;
 	model->UsesSkin = true;
 	model->CalcHumanAnims = false;
+	model->UsesHumanSkin = false;
+
 	model->Gravity = 0.08f;
 	model->Drag = Vector3_Create3(0.91f, 0.98f, 0.91f);
 	model->GroundFriction = Vector3_Create3(0.6f, 1.0f, 0.6f);
+
 	model->MaxScale = 2.0f;
 	model->ShadowScale = 1.0f;
 	model->NameScale = 1.0f;
@@ -70,7 +73,9 @@ void IModel_UpdateVB(void) {
 	model->index = 0;
 }
 
-GfxResourceID IModel_GetTexture(IModel* model, GfxResourceID pTex) {
+GfxResourceID IModel_GetTexture(Entity* entity) {
+	IModel* model = IModel_ActiveModel;
+	GfxResourceID pTex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
 	return pTex > 0 ? pTex : ModelCache_Textures[model->defaultTexIndex].TexID;
 }
 

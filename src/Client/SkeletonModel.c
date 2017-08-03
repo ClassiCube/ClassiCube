@@ -54,7 +54,7 @@ AABB SkeletonModel_GetPickingBounds(void) {
 }
 
 void SkeletonModel_DrawModel(Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(&SkeletonModel, entity->MobTextureId));
+	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Head, true);
 
 	IModel_DrawPart(Torso);

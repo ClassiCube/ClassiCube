@@ -134,8 +134,7 @@ namespace ClassicalSharp.Entities {
 				ResetSkin(); return;
 			}
 			
-			if (Model is HumanoidModel)
-				ClearHat(bmp, SkinType);
+			if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);
 			TextureId = game.Graphics.CreateTexture(bmp, true);
 			MobTextureId = -1;
 			

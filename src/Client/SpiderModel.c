@@ -51,7 +51,7 @@ AABB SpiderModel_GetPickingBounds(void) {
 #define eighthPi  (MATH_PI / 8.0f)
 
 void SpiderModel_DrawModel(Entity* entity) {
-	Gfx_BindTexture(IModel_GetTexture(&SpiderModel, entity->MobTextureId));
+	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Head, true);
 	IModel_DrawPart(Link);
 	IModel_DrawPart(End);
