@@ -61,8 +61,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public override void OnNewMap(Game game) {
 			gfx.Fog = false;
-			gfx.DeleteVb(ref skyVb);
-			gfx.DeleteVb(ref cloudsVb);
+			ContextLost();
 		}
 		
 		public override void OnNewMapLoaded(Game game) {

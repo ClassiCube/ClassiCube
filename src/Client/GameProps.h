@@ -155,10 +155,10 @@ Real32 Game_GetGuiChatScale(void);
 
 /* Gets path of default texture pack path.
 NOTE: If texture pack specified by user can't be found, returns 'default.zip' */
-String GetDefaultTexturePack(void);
+String Game_GetDefaultTexturePack(void);
 
 /* Sets the default texture pack path. */
-void SetDefaultTexturePack(String value);
+void Game_SetDefaultTexturePack(String value);
 
 static bool Game_CursorVisible;
 static bool Game_realCursorVisible;

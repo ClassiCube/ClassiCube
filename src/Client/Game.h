@@ -16,6 +16,9 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
 /* Updates the given texture. */
 void Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType);
 
+/* Sets the view distance of the game. */
+void Game_SetViewDistance(Real32 distance, bool userDist);
+
 /* Performs thread sleeping to limit the FPS. */
 static void Game_LimitFPS(void);
 

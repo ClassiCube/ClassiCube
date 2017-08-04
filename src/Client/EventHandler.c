@@ -8,10 +8,11 @@ void EventHandler_RegisterImpl(void** handlers, Int32* count, void* handler) {
 	}
 
 	if (*count == EventHandler_Size) {
-		ErrorHandler_Fail("Unable to add another event handler");
+		ErrorHandler_Fail("Unable to register another event handler");
+	} else {
+		handlers[*count] = handler;
+		(*count)++;
 	}
-	handlers[*count] = handler;
-	(*count)++;
 }
 
 void EventHandler_UnregisterImpl(void** handlers, Int32* count, void* handler) {
@@ -28,6 +29,7 @@ void EventHandler_UnregisterImpl(void** handlers, Int32* count, void* handler) {
 		(*count)--;
 		return;
 	}
+	ErrorHandler_Fail("Unregistering event handler that was not registered to begin with");
 }
 
 

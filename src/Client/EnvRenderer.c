@@ -10,6 +10,8 @@
 #include "AABB.h"
 #include "Block.h"
 #include "Platform.h"
+#include "SkyboxRenderer.h"
+#include "MiscEvents.h"
 
 GfxResourceID env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
 GfxResourceID env_cloudVertices, env_skyVertices;
@@ -17,7 +19,8 @@ GfxResourceID env_cloudVertices, env_skyVertices;
 IGameComponent EnvRenderer_MakeGameComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = EnvRenderer_Init;
-	comp.Reset = EnvRenderer_Reset;
+	comp.Reset = EnvRenderer_OnNewMap;
+	comp.OnNewMap = EnvRenderer_OnNewMap;
 	comp.OnNewMapLoaded = EnvRenderer_OnNewMapLoaded;
 	comp.Free = EnvRenderer_Free;
 	return comp;
@@ -25,6 +28,11 @@ IGameComponent EnvRenderer_MakeGameComponent(void) {
 
 void EnvRenderer_UseLegacyMode(bool legacy) {
 	EnvRenderer_Legacy = legacy;
+	EnvRenderer_ContextRecreated();
+}
+
+void EnvRenderer_UseMinimalMode(bool minimal) {
+	EnvRenderer_Minimal = minimal;
 	EnvRenderer_ContextRecreated();
 }
 
@@ -61,7 +69,124 @@ Real32 EnvRenderer_BlendFactor(Real32 x) {
 }
 
 
-void EnvRenderer_RenderClouds(Real64 delta) {
+void EnvRenderer_Render(Real64 deltaTime) {
+	if (EnvRenderer_Minimal) {
+		EnvRenderer_RenderMinimal(deltaTime);
+	} else {
+		if (env_skyVb == -1 || env_cloudsVb == -1) return;
+		if (!SkyboxRenderer_ShouldRender()) {
+			EnvRenderer_RenderMainEnv(deltaTime);
+		}
+		EnvRenderer_UpdateFog();
+	}
+}
+
+void EnvRenderer_EnvVariableChanged(EnvVar envVar) {
+	if (EnvRenderer_Minimal) return;
+
+	if (envVar == EnvVar_SkyCol) {
+		EnvRenderer_ResetSky();
+	} else if (envVar == EnvVar_FogCol) {
+		EnvRenderer_UpdateFog();
+	} else if (envVar == EnvVar_CloudsCol) {
+		EnvRenderer_ResetClouds();
+	} else if (envVar == EnvVar_CloudsHeight) {
+		EnvRenderer_ResetSky();
+		EnvRenderer_ResetClouds();
+	}
+}
+
+void EnvRenderer_Init(void) {
+	EnvRenderer_ResetAllEnv();
+	EventHandler_RegisterVoid(GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
+	EventHandler_RegisterVoid(Gfx_ContextLost, EnvRenderer_ContextLost);
+	EventHandler_RegisterVoid(Gfx_ContextRecreated, EnvRenderer_ContextRecreated);
+	EventHandler_RegisterInt32(WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
+	Game_SetViewDistance(Game_UserViewDistance, false);
+}
+
+void EnvRenderer_OnNewMap(void) {
+	Gfx_SetFog(false);
+	EnvRenderer_ContextLost();
+}
+
+void EnvRenderer_OnNewMapLoaded(void) {
+	Gfx_SetFog(!EnvRenderer_Minimal);
+	EnvRenderer_ResetAllEnv();
+}
+
+void EnvRenderer_ResetAllEnv(void) {
+	EnvRenderer_UpdateFog();
+	EnvRenderer_ContextRecreated();
+}
+
+void EnvRenderer_Free(void) {
+	EnvRenderer_ContextLost();
+	EventHandler_UnregisterVoid(GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
+	EventHandler_UnregisterVoid(Gfx_ContextLost, EnvRenderer_ContextLost);
+	EventHandler_UnregisterVoid(Gfx_ContextRecreated, EnvRenderer_ContextRecreated);
+	EventHandler_UnregisterInt32(WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
+}
+
+void EnvRenderer_ContextLost(void) {
+	Gfx_DeleteVb(&env_skyVb);
+	Gfx_DeleteVb(&env_cloudsVb);
+}
+
+void EnvRenderer_ContextRecreated(void) {
+	EnvRenderer_ContextLost();
+	Gfx_SetFog(!EnvRenderer_Minimal);
+
+	if (EnvRenderer_Minimal) {
+		Gfx_ClearColour(WorldEnv_SkyCol);
+	} else {
+		Gfx_SetFogStart(0.0f);
+		EnvRenderer_ResetClouds();
+		EnvRenderer_ResetSky();
+	}
+}
+
+void EnvRenderer_RenderMinimal(Real64 deltaTime) {
+	if (World_Blocks == NULL) return;
+
+	PackedCol fogCol = PackedCol_White;
+	Real32 fogDensity = 0.0f;
+	BlockID block = EnvRenderer_BlockOn(&fogDensity, &fogCol);
+	Gfx_ClearColour(fogCol);
+
+	/* TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often */
+	if (fogDensity != 0.0f) {
+		/* Exp fog mode: f = e^(-density*coord) */
+		/* Solve for f = 0.05 to figure out coord (good approx for fog end) */
+		Real32 dist = (Real32)Math_LogE(0.05f) / -fogDensity;
+		Game_SetViewDistance(dist, false);
+	} else {
+		Game_SetViewDistance(Game_UserViewDistance, false);
+	}
+}
+
+void EnvRenderer_RenderMainEnv(Real64 deltaTime) {
+	Vector3 pos = Game_CurrentCameraPos;
+	Real32 normalY = (Real32)World_Height + 8.0f;
+	Real32 skyY = max(pos.Y + 8.0f, normalY);
+	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
+	Gfx_BindVb(env_skyVb);
+
+	if (skyY == normalY) {
+		Gfx_DrawVb_IndexedTris(ICOUNT(env_skyVertices));
+	} else {
+		Matrix m = Matrix_Identity;
+		m.Row3.Y = skyY - normalY; /* Y translation matrix */
+
+		Gfx_PushMatrix();
+		Gfx_MultiplyMatrix(&m);
+		Gfx_DrawVb_IndexedTris(ICOUNT(env_skyVertices));
+		Gfx_PopMatrix();
+	}
+	EnvRenderer_RenderClouds(deltaTime);
+}
+
+void EnvRenderer_RenderClouds(Real64 deltaTime) {
 	if (WorldEnv_CloudsHeight < -2000) return;
 	Real64 time = Game_Accumulator;
 	Real32 offset = (Real32)(time / 2048.0f * 0.6f * WorldEnv_CloudsSpeed);
@@ -76,7 +201,7 @@ void EnvRenderer_RenderClouds(Real64 delta) {
 	Gfx_BindTexture(env_cloudsTex);
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
 	Gfx_BindVb(env_cloudsVb);
-	Gfx_DrawVb_IndexedTris(env_cloudVertices * 6 / 4);
+	Gfx_DrawVb_IndexedTris(ICOUNT(env_cloudVertices));
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
 
@@ -86,12 +211,12 @@ void EnvRenderer_RenderClouds(Real64 delta) {
 }
 
 void EnvRenderer_UpdateFog(void) {
-	if (World_Blocks == NULL) return;
+	if (World_Blocks == NULL || EnvRenderer_Minimal) return;
 	PackedCol fogCol = PackedCol_White;
-	Real32 fogDensity = 0;
+	Real32 fogDensity = 0.0f;
 	BlockID block = EnvRenderer_BlockOn(&fogDensity, &fogCol);
 
-	if (fogDensity != 0) {
+	if (fogDensity != 0.0f) {
 		Gfx_SetFogMode(Fog_Exp);
 		Gfx_SetFogDensity(fogDensity);
 	} else if (WorldEnv_ExpFog) {

@@ -54,22 +54,22 @@ Gfx_SetTexturing(false);
 
 void BordersRenderer_RenderSides(Real64 delta) {
 	BlockID block = WorldEnv_SidesBlock;
-	BordersRenderer_SetupState(block, borders_sideTexId, borders_sidesVb)
-	Gfx_DrawVb_IndexedTris(borders_sidesVertices * 6 / 4);
+	BordersRenderer_SetupState(block, borders_sideTexId, borders_sidesVb);
+	Gfx_DrawVb_IndexedTris(ICOUNT(borders_sidesVertices));
 	BordersRenderer_ResetState(block);
 }
 
 void BordersRenderer_RenderEdges(Real64 delta) {
 	if (borders_edgesVb == -1) return;
 	BlockID block = WorldEnv_EdgeBlock;
-	BordersRenderer_SetupState(block, borders_sideTexId, borders_sidesVb)
+	BordersRenderer_SetupState(block, borders_sideTexId, borders_sidesVb);
 
 	/* Do not draw water when we cannot see it. */
 	/* Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps. */
 	Vector3 camPos = Game_CurrentCameraPos;
 	Int32 yVisible = min(0, WorldEnv_SidesHeight);
 	if (camPos.Y >= yVisible) {
-		Gfx_DrawVb_IndexedTris(borders_edgesVertices * 6 / 4);
+		Gfx_DrawVb_IndexedTris(ICOUNT(borders_edgesVertices));
 	}
 	BordersRenderer_ResetState(block);
 }

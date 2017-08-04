@@ -26,8 +26,9 @@ void EnvRenderer_UseMinimalMode(bool minimal);
 /* Renders the environemnt of the map. */
 void EnvRenderer_Render(Real64 delta);
 
+
 static void EnvRenderer_Init(void);
-static void EnvRenderer_Reset(void);
+static void EnvRenderer_OnNewMap(void);
 static void EnvRenderer_OnNewMapLoaded(void);
 static void EnvRenderer_Free(void);
 
@@ -43,9 +44,14 @@ static void EnvRenderer_ContextRecreated(void);
 
 static void EnvRenderer_RenderMainEnv(Real64 deltaTime);
 
-static void EnvRenderer_ResetAllEnv(void);
+static void EnvRenderer_RenderMinimal(Real64 deltaTime);
 
-static void EnvRenderer_RenderClouds(Real64 delta);
+static void EnvRenderer_RenderMainEnv(Real64 deltaTime);
+
+static void EnvRenderer_RenderClouds(Real64 deltaTime);
+
+
+static void EnvRenderer_ResetAllEnv(void);
 
 static void EnvRenderer_UpdateFog(void);
 
