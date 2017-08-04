@@ -71,22 +71,6 @@ namespace ClassicalSharp {
 			return obj;
 		}
 		
-		public bool ReplaceComponent<T>(ref T old, T obj) where T : IGameComponent {
-			for (int i = 0; i < Components.Count; i++) {
-				if (!object.ReferenceEquals(Components[i], old)) continue;
-				old.Dispose();
-				
-				Components[i] = obj;
-				old = obj;
-				obj.Init(this);
-				return true;
-			}
-			
-			Components.Add(obj);
-			obj.Init(this);
-			return false;
-		}
-		
 		public void SetViewDistance(float distance, bool userDist) {
 			if (userDist) {
 				UserViewDistance = distance;
@@ -427,18 +411,13 @@ namespace ClassicalSharp {
 				MapBordersRenderer.UseLegacyMode(legacy);
 			}
 			
-			if (minimal) {
-				if (EnvRenderer == null)
-					EnvRenderer = AddComponent(new MinimalEnvRenderer());
-				else
-					ReplaceComponent(ref EnvRenderer, new MinimalEnvRenderer());
-			} else if (EnvRenderer == null) {
+			if (EnvRenderer == null) {
 				EnvRenderer = AddComponent(new StandardEnvRenderer());
-				((StandardEnvRenderer)EnvRenderer).legacy = legacy;
+				EnvRenderer.legacy = legacy;
+				EnvRenderer.minimal = minimal;
 			} else {
-				if (!(EnvRenderer is StandardEnvRenderer))
-					ReplaceComponent(ref EnvRenderer, new StandardEnvRenderer());
-				((StandardEnvRenderer)EnvRenderer).UseLegacyMode(legacy);
+				EnvRenderer.UseLegacyMode(legacy);
+				EnvRenderer.UseMinimalMode(minimal);
 			}
 		}
 		

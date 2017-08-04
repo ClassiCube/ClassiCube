@@ -18,6 +18,7 @@ namespace ClassicalSharp.Renderers {
 		protected World map;
 		protected Game game;
 		protected IGraphicsApi gfx;
+		protected internal bool legacy, minimal;
 		
 		public virtual void Init(Game game) {
 			this.game = game;
@@ -27,6 +28,11 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public virtual void UseLegacyMode(bool legacy) { }
+		
+		/// <summary> Sets mode to minimal environment rendering.
+		/// - only sets the background/clear colour to blended fog colour.
+		/// (no smooth fog, clouds, or proper overhead sky) </summary>
+		public virtual void UseMinimalMode(bool minimal) { }
 		
 		public void Ready(Game game) { }
 		public virtual void Reset(Game game) { OnNewMap(game); }

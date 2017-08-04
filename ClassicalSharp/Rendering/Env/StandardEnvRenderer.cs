@@ -15,18 +15,109 @@ namespace ClassicalSharp.Renderers {
 	public unsafe class StandardEnvRenderer : EnvRenderer {
 		
 		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
-		internal bool legacy;
 		
 		public override void UseLegacyMode(bool legacy) {
 			this.legacy = legacy;
 			ContextRecreated();
 		}
 		
+		public override void UseMinimalMode(bool minimal) {
+			this.minimal = minimal;
+			ContextRecreated();
+		}
+		
 		public override void Render(double deltaTime) {
+			if (minimal) { RenderMinimal(deltaTime); return; }
+			
 			if (skyVb == -1 || cloudsVb == -1) return;
-			if (!game.SkyboxRenderer.ShouldRender)
-				RenderMainEnv(deltaTime);
+			if (!game.SkyboxRenderer.ShouldRender) RenderMainEnv(deltaTime);
 			UpdateFog();
+		}
+		
+		protected override void EnvVariableChanged(object sender, EnvVarEventArgs e) {
+			if (minimal) return;
+			
+			if (e.Var == EnvVar.SkyColour) {
+				ResetSky();
+			} else if (e.Var == EnvVar.FogColour) {
+				UpdateFog();
+			} else if (e.Var == EnvVar.CloudsColour) {
+				ResetClouds();
+			} else if (e.Var == EnvVar.CloudsLevel) {
+				ResetSky();
+				ResetClouds();
+			}
+		}
+		
+		public override void Init(Game game) {
+			base.Init(game);
+			ResetAllEnv(null, null);
+			
+			game.Events.ViewDistanceChanged += ResetAllEnv;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
+			game.SetViewDistance(game.UserViewDistance, false);
+		}
+		
+		public override void OnNewMap(Game game) {
+			gfx.Fog = false;
+			gfx.DeleteVb(ref skyVb);
+			gfx.DeleteVb(ref cloudsVb);
+		}
+		
+		public override void OnNewMapLoaded(Game game) {
+			gfx.Fog = !minimal;
+			ResetAllEnv(null, null);
+		}
+		
+		void ResetAllEnv(object sender, EventArgs e) {
+			UpdateFog();
+			ContextRecreated();
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			ContextLost();
+			
+			game.Events.ViewDistanceChanged -= ResetAllEnv;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
+		}
+		
+		void ContextLost() {
+			game.Graphics.DeleteVb(ref skyVb);
+			game.Graphics.DeleteVb(ref cloudsVb);
+		}
+		
+		void ContextRecreated() {
+			ContextLost();
+			gfx.Fog = !minimal;
+			
+			if (minimal) {
+				gfx.ClearColour(map.Env.SkyCol);
+			} else {
+				gfx.SetFogStart(0);
+				ResetClouds();
+				ResetSky();
+			}
+		}
+		
+		void RenderMinimal(double deltaTime) {
+			if (map.blocks == null) return;
+			FastColour fogCol = FastColour.White;
+			float fogDensity = 0;
+			BlockID block = BlockOn(out fogDensity, out fogCol);
+			gfx.ClearColour(fogCol);
+			
+			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often
+			if (fogDensity != 0) {
+				// Exp fog mode: f = e^(-density*coord)
+				// Solve for f = 0.05 to figure out coord (good approx for fog end)
+				float dist = (float)Math.Log(0.05) / -fogDensity;
+				game.SetViewDistance(dist, false);
+			} else {
+				game.SetViewDistance(game.UserViewDistance, false);
+			}
 		}
 		
 		void RenderMainEnv(double deltaTime) {
@@ -48,56 +139,6 @@ namespace ClassicalSharp.Renderers {
 				gfx.PopMatrix();
 			}
 			RenderClouds(deltaTime);
-		}
-		
-		protected override void EnvVariableChanged(object sender, EnvVarEventArgs e) {
-			if (e.Var == EnvVar.SkyColour) {
-				ResetSky();
-			} else if (e.Var == EnvVar.FogColour) {
-				UpdateFog();
-			} else if (e.Var == EnvVar.CloudsColour) {
-				ResetClouds();
-			} else if (e.Var == EnvVar.CloudsLevel) {
-				ResetSky();
-				ResetClouds();
-			}
-		}
-		
-		public override void Init(Game game) {
-			base.Init(game);
-			gfx.SetFogStart(0);
-			gfx.Fog = true;
-			ResetAllEnv(null, null);
-			
-			game.Events.ViewDistanceChanged += ResetAllEnv;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
-			game.SetViewDistance(game.UserViewDistance, false);
-		}
-		
-		public override void OnNewMap(Game game) {
-			gfx.Fog = false;
-			gfx.DeleteVb(ref skyVb);
-			gfx.DeleteVb(ref cloudsVb);
-		}
-		
-		public override void OnNewMapLoaded(Game game) {
-			gfx.Fog = true;
-			ResetAllEnv(null, null);
-		}
-		
-		void ResetAllEnv(object sender, EventArgs e) {
-			UpdateFog();
-			ContextRecreated();
-		}
-		
-		public override void Dispose() {
-			base.Dispose();
-			ContextLost();
-			
-			game.Events.ViewDistanceChanged -= ResetAllEnv;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		void RenderClouds(double delta) {
@@ -124,7 +165,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void UpdateFog() {
-			if (map.blocks == null) return;
+			if (map.blocks == null || minimal) return;
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
 			BlockID block = BlockOn(out fogDensity, out fogCol);
@@ -161,17 +202,6 @@ namespace ClassicalSharp.Renderers {
 			gfx.DeleteVb(ref skyVb);
 			RebuildSky((int)game.ViewDistance, legacy ? 128 : 65536);
 		}
-		
-		void ContextLost() {
-			game.Graphics.DeleteVb(ref skyVb);
-			game.Graphics.DeleteVb(ref cloudsVb);
-		}
-		
-		void ContextRecreated() {
-			ResetClouds();
-			ResetSky();
-		}
-		
 		
 		void RebuildClouds(int extent, int axisSize) {
 			extent = Utils.AdjViewDist(extent);
