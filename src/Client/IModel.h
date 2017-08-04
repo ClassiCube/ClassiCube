@@ -162,7 +162,7 @@ void IModel_Render(IModel* model, Entity entity);
 void IModel_SetupState(Entity* p);
 
 /* Sends the updated vertex data to the GPU. */
-void IModel_UpdateVB();
+void IModel_UpdateVB(void);
 
 /* Gets the appropriate native texture ID for the given entity and current model. */
 GfxResourceID IModel_GetTexture(Entity* entity);

@@ -6,7 +6,7 @@
 #include "Drawer.h"
 #include "TerrainAtlas1D.h"
 
-void NormalBuilder_SetActive() {
+void NormalBuilder_SetActive(void) {
 	Builder_SetDefault();
 	Builder_StretchXLiquid = NormalBuilder_StretchXLiquid;
 	Builder_StretchX = NormalBuilder_StretchX;

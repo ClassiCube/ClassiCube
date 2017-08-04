@@ -7,7 +7,7 @@
 */
 
 /* Generates the map. */
-void FlatgrassGen_Generate();
+void FlatgrassGen_Generate(void);
 
 /* Sets a number of horizontal slices in the map to the given block. */
 static void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block);

@@ -4,7 +4,7 @@
 #include "Platform.h"
 #include "ErrorHandler.h"
 
-void FlatgrassGen_Generate() {
+void FlatgrassGen_Generate(void) {
 	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length * sizeof(BlockID));
 	if (Gen_Blocks == NULL)
 		ErrorHandler_Fail("FlatgrassGen_Blocks - failed to allocate memory");

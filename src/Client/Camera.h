@@ -35,7 +35,7 @@ typedef struct Camera_ {
 
 	/* Called every frame for the camera to update its state.
 	e.g. Perspective cameras adjusts player's rotatation using delta between mouse position and window centre. */
-	void(*UpdateMouse)();
+	void(*UpdateMouse)(void);
 
 	/* Called after the camera has regrabbed the mouse from 2D input handling.
 	e.g. Perspective cameras set the mouse position to window centre. */

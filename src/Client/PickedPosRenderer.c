@@ -26,7 +26,7 @@ void PickedPosRenderer_Init(void) {
 	EventHandler_RegisterVoid(Gfx_ContextRecreated, PickedPosRenderer_ContextRecreated);
 }
 
-void PickedPosRenderer_Free() {
+void PickedPosRenderer_Free(void) {
 	PickedPosRenderer_ContextLost();
 	EventHandler_UnregisterVoid(Gfx_ContextLost, PickedPosRenderer_ContextLost);
 	EventHandler_UnregisterVoid(Gfx_ContextRecreated, PickedPosRenderer_ContextRecreated);
