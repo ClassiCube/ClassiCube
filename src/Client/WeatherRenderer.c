@@ -68,7 +68,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	weather_accumulator += deltaTime;
 	bool particles = weather == Weather_Rainy;
 
-	Int32 index = 0; // TODO: SET THIS VALUE!!!!
+	Int32 vCount = 0;
 	PackedCol col = WorldEnv_SunCol;
 	VertexP3fT2fC4b v;
 	VertexP3fT2fC4b* ptr = weather_vertices;
@@ -113,11 +113,13 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			/* (x, y + height, z + 1)     (0, v2) */
 			v.Y = y; v.V = v1; 								 AddVertex
 			/* (x y, z + 1)               (0, v1) */
+
+			vCount += 8;
 		}
 
-	if (particles && (weather_accumulator >= 0.25 || moved))
+	if (particles && (weather_accumulator >= 0.25f || moved))
 		weather_accumulator = 0;
-	if (index == 0) return;
+	if (vCount == 0) return;
 
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthWrite(false);

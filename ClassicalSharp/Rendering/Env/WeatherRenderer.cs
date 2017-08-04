@@ -57,7 +57,7 @@ namespace ClassicalSharp.Renderers {
 			rainAcc += deltaTime;
 			bool particles = weather == Weather.Rainy;
 
-			int index = 0;
+			int vCount = 0;
 			FastColour col = game.World.Env.Sunlight;
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			
@@ -81,34 +81,34 @@ namespace ClassicalSharp.Renderers {
 				float worldV = vOffset + (z & 1) / 2f - (x & 0x0F) / 16f;
 				float v1 = y / 6f + worldV, v2 = (y + height) / 6f + worldV;
 				
-				v.X = x; v.Y = y; v.Z = z; v.U = 0; v.V = v1; vertices[index++] = v;
+				v.X = x; v.Y = y; v.Z = z; v.U = 0; v.V = v1; vertices[vCount++] = v;
 				// (x, y, z)                  (0, v1)
-				v.Y = y + height; v.V = v2; 				  vertices[index++] = v;
+				v.Y = y + height; v.V = v2; 				  vertices[vCount++] = v;
 				// (x, y + height, z)         (0, v2)
-				v.X = x + 1; v.Z = z + 1; v.U = 1; 			  vertices[index++] = v;
+				v.X = x + 1; v.Z = z + 1; v.U = 1; 			  vertices[vCount++] = v;
 				// (x + 1, y + height, z + 1) (1, v2)
-				v.Y = y; v.V = v1; 							  vertices[index++] = v;
+				v.Y = y; v.V = v1; 							  vertices[vCount++] = v;
 				// (x + 1, y, z + 1)          (1, v1)
 				
-				v.Z = z;									  vertices[index++] = v;
+				v.Z = z;									  vertices[vCount++] = v;
 				// (x + 1, y, z)              (1, v1)
-				v.Y = y + height; v.V = v2; 				  vertices[index++] = v;
+				v.Y = y + height; v.V = v2; 				  vertices[vCount++] = v;
 				// (x + 1, y + height, z)     (1, v2)
-				v.X = x; v.Z = z + 1; v.U = 0;				  vertices[index++] = v;
+				v.X = x; v.Z = z + 1; v.U = 0;				  vertices[vCount++] = v;
 				// (x, y + height, z + 1)     (0, v2)
-				v.Y = y; v.V = v1; 							  vertices[index++] = v;
+				v.Y = y; v.V = v1; 							  vertices[vCount++] = v;
 				// (x y, z + 1)               (0, v1)
 			}
 			if (particles && (rainAcc >= 0.25 || moved))
 				rainAcc = 0;
-			if (index == 0) return;
+			if (vCount == 0) return;
 			
 			gfx.AlphaTest = false;
 			gfx.DepthWrite = false;
 			gfx.AlphaArgBlend = true;
 			
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			gfx.UpdateDynamicVb_IndexedTris(vb, vertices, index);
+			gfx.UpdateDynamicVb_IndexedTris(vb, vertices, vCount);
 			
 			gfx.AlphaArgBlend = false;
 			gfx.AlphaTest = true;
