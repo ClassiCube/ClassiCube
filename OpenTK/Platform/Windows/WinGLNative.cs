@@ -684,7 +684,7 @@ namespace OpenTK.Platform.Windows
 
 		MSG msg;
 		public void ProcessEvents() {
-			while( API.PeekMessage(ref msg, window.WindowHandle, 0, 0, 1) ) {
+			while( API.PeekMessage(ref msg, IntPtr.Zero, 0, 0, 1) ) {
 				API.TranslateMessage(ref msg);
 				API.DispatchMessage(ref msg);
 			}
