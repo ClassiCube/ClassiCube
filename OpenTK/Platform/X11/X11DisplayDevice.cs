@@ -13,10 +13,10 @@ using System.Runtime.InteropServices;
 
 namespace OpenTK.Platform.X11 {
 	
-	internal class X11DisplayDevice : IDisplayDeviceDriver {
+	internal static class X11DisplayDevice {
 		static bool xinerama_supported, xrandr_supported, xf86_supported;
 		
-		static X11DisplayDevice() {
+		internal static void Init() {
 			List<DisplayDevice> devices = new List<DisplayDevice>();
 			try {
 				xinerama_supported = QueryXinerama(devices);
@@ -50,8 +50,6 @@ namespace OpenTK.Platform.X11 {
 				}
 			}
 		}
-
-		internal X11DisplayDevice() { }
 		
 		static bool QueryXinerama(List<DisplayDevice> devices) {
 			// Try to use Xinerama to obtain the geometry of all output devices.

@@ -33,7 +33,7 @@ namespace OpenTK.Platform {
 	interface IPlatformFactory {
 		INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device);
 
-		IDisplayDeviceDriver CreateDisplayDeviceDriver();
+		void InitDisplayDeviceDriver();
 
 		IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window);
 	}
@@ -57,8 +57,8 @@ namespace OpenTK.Platform.MacOS {
 			return new CarbonGLNative(x, y, width, height, title, options, device);
 		}
 
-		public IDisplayDeviceDriver CreateDisplayDeviceDriver() {
-			return new QuartzDisplayDeviceDriver();
+		public void InitDisplayDeviceDriver() {
+			QuartzDisplayDevice.Init();
 		}
 
 		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
@@ -74,8 +74,8 @@ namespace OpenTK.Platform.Windows {
 			return new WinGLNative(x, y, width, height, title, options, device);
 		}
 
-		public IDisplayDeviceDriver CreateDisplayDeviceDriver() {
-			return new WinDisplayDeviceDriver();
+		public void InitDisplayDeviceDriver() {
+			WinDisplayDevice.Init();
 		}
 
 		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
@@ -91,8 +91,8 @@ namespace OpenTK.Platform.X11 {
 			return new X11GLNative(x, y, width, height, title, mode, options, device);
 		}
 
-		public IDisplayDeviceDriver CreateDisplayDeviceDriver() {
-			return new X11DisplayDevice();
+		public void InitDisplayDeviceDriver() {
+			X11DisplayDevice.Init();
 		}
 
 		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {

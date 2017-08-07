@@ -11,10 +11,10 @@ using System.Collections.Generic;
 
 namespace OpenTK.Platform.Windows {
 	
-	internal class WinDisplayDeviceDriver : IDisplayDeviceDriver {
+	internal static class WinDisplayDevice {
 
 		/// <summary>Queries available display devices and display resolutions.</summary>
-		static WinDisplayDeviceDriver() {
+		internal static void Init() {
 			// To minimize the need to add static methods to OpenTK.Graphics.DisplayDevice
 			// we only allow settings to be set through its constructor.
 			// Thus, we save all necessary parameters in temporary variables
@@ -67,9 +67,6 @@ namespace OpenTK.Platform.Windows {
 				DisplayDevice device = new DisplayDevice(currentRes, devPrimary, availableRes, currentRes.Bounds);
 				currentRes = null;
 			}
-		}
-
-		public WinDisplayDeviceDriver() {
 		}
 	}
 }

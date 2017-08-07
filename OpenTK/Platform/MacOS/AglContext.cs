@@ -69,7 +69,7 @@ namespace OpenTK.Platform.MacOS {
 				IntPtr cgdevice = GetQuartzDevice(carbonWindow);
 
 				if (cgdevice == IntPtr.Zero)
-					cgdevice = QuartzDisplayDeviceDriver.MainDisplay;
+					cgdevice = QuartzDisplayDevice.MainDisplay;
 
 				OSStatus status = API.DMGetGDeviceByDisplayID(cgdevice, out gdevice, false);
 				
@@ -126,8 +126,7 @@ namespace OpenTK.Platform.MacOS {
 			if (window == null)
 				return IntPtr.Zero;
 
-			return QuartzDisplayDeviceDriver.HandleTo(window.TargetDisplayDevice);
-
+			return QuartzDisplayDevice.HandleTo(window.TargetDisplayDevice);
 		}
 		
 		void SetDrawable(CarbonWindowInfo carbonWindow)

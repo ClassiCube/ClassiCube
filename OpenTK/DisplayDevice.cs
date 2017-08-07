@@ -23,12 +23,10 @@ namespace OpenTK {
 		DisplayResolution current_resolution = new DisplayResolution();
 		bool primary;
 		Rectangle bounds;
-
 		static DisplayDevice primary_display;
-		static Platform.IDisplayDeviceDriver implementation;
 
 		static DisplayDevice() {
-			implementation = Platform.Factory.Default.CreateDisplayDeviceDriver();
+			Platform.Factory.Default.InitDisplayDeviceDriver();
 		}
 
 		internal DisplayDevice() { AvailableDisplays.Add(this); }
