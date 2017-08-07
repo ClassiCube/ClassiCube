@@ -37,6 +37,8 @@ using OpenTK.Platform;
 
 namespace OpenTK
 {
+	public enum GameWindowFlags { Default = 0 };
+	
 	/// <summary>
 	/// The GameWindow class contains cross-platform methods to create and render on an OpenGL
 	/// window, handle input and load resources.

@@ -86,11 +86,6 @@ namespace OpenTK {
 			this.device = device;
 
 			implementation = Factory.Default.CreateNativeWindow(x, y, width, height, title, mode, options, this.device);
-
-			if ((options & GameWindowFlags.Fullscreen) != 0) {
-				this.device.ChangeResolution(width, height, mode.ColorFormat.BitsPerPixel, 0);
-				WindowState = WindowState.Fullscreen;
-			}
 		}
 
 		/// <summary> Closes the NativeWindow. </summary>
@@ -271,10 +266,6 @@ namespace OpenTK {
 		/// <summary> Releases all non-managed resources belonging to this NativeWindow. </summary>
 		public virtual void Dispose() {
 			if (!IsDisposed) {
-				if ((options & GameWindowFlags.Fullscreen) != 0) {
-					//if (WindowState == WindowState.Fullscreen) WindowState = WindowState.Normal; // TODO: Revise.
-					device.RestoreResolution();
-				}
 				implementation.Dispose();
 				GC.SuppressFinalize(this);
 				IsDisposed = true;

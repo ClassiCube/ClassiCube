@@ -12,9 +12,6 @@ using System.Collections.Generic;
 namespace OpenTK.Platform.Windows {
 	
 	internal class WinDisplayDeviceDriver : IDisplayDeviceDriver {
-		
-		static Dictionary<DisplayDevice, string> available_device_names =
-			new Dictionary<DisplayDevice, string>(); // Needed for ChangeDisplaySettingsEx
 
 		/// <summary>Queries available display devices and display resolutions.</summary>
 		static WinDisplayDeviceDriver() {
@@ -68,34 +65,11 @@ namespace OpenTK.Platform.Windows {
 				// Construct the OpenTK DisplayDevice through the accumulated parameters.
 				// The constructor automatically adds the DisplayDevice to the list of available devices.
 				DisplayDevice device = new DisplayDevice(currentRes, devPrimary, availableRes, currentRes.Bounds);
-				available_device_names.Add(device, winDev.DeviceName);
 				currentRes = null;
 			}
 		}
 
 		public WinDisplayDeviceDriver() {
-		}
-
-		public bool TryChangeResolution(DisplayDevice device, DisplayResolution resolution) {
-			DeviceMode mode = null;
-
-			if (resolution != null)  {
-				mode = new DeviceMode();
-				mode.PelsWidth = resolution.Width;
-				mode.PelsHeight = resolution.Height;
-				mode.BitsPerPel = resolution.BitsPerPixel;
-				mode.DisplayFrequency = (int)resolution.RefreshRate;
-				mode.Fields = Constants.DM_BITSPERPEL | Constants.DM_PELSWIDTH
-					| Constants.DM_PELSHEIGHT | Constants.DM_DISPLAYFREQUENCY;
-			}
-
-			return Constants.DISP_CHANGE_SUCCESSFUL ==
-				API.ChangeDisplaySettingsEx(available_device_names[device], mode, IntPtr.Zero,
-				                            ChangeDisplaySettingsEnum.Fullscreen, IntPtr.Zero);
-		}
-
-		public bool TryRestoreResolution(DisplayDevice device) {
-			return TryChangeResolution(device, null);
 		}
 	}
 }

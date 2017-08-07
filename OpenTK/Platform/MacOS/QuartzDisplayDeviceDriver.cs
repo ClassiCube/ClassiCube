@@ -7,9 +7,6 @@ namespace OpenTK.Platform.MacOS
 {
 	class QuartzDisplayDeviceDriver : IDisplayDeviceDriver
 	{
-		static Dictionary<DisplayDevice, IntPtr> displayMap =
-			new Dictionary<DisplayDevice, IntPtr>();
-
 		static IntPtr mainDisplay;
 		internal static IntPtr MainDisplay { get { return mainDisplay; } }
 
@@ -81,75 +78,13 @@ namespace OpenTK.Platform.MacOS
 
 				DisplayDevice opentk_dev =
 					new DisplayDevice(opentk_dev_current_res, primary, opentk_dev_available_res, newRect);
-
-				displayMap.Add(opentk_dev, curDisplay);
+				opentk_dev.Metadata = curDisplay;
 			}
 		}
 
-		internal static IntPtr HandleTo(DisplayDevice displayDevice) {
-			if (displayMap.ContainsKey(displayDevice))
-				return displayMap[displayDevice];
-			else
-				return IntPtr.Zero;
+		internal static IntPtr HandleTo(DisplayDevice device) {
+			if (device == null || device.Metadata == null) return IntPtr.Zero;
+			return (IntPtr)device.Metadata;
 		}
-
-		#region IDisplayDeviceDriver Members
-
-		Dictionary<IntPtr, IntPtr> storedModes = new Dictionary<IntPtr, IntPtr>();
-		List<IntPtr> displaysCaptured = new List<IntPtr>();
-		
-		public bool TryChangeResolution(DisplayDevice device, DisplayResolution resolution)
-		{
-			IntPtr display = displayMap[device];
-			IntPtr currentModePtr = CG.CGDisplayCurrentMode(display);
-
-			if (!storedModes.ContainsKey(display)) {
-				storedModes.Add(display, currentModePtr);
-			}
-
-			IntPtr displayModesPtr = CG.CGDisplayAvailableModes(display);
-			CFArray displayModes = new CFArray(displayModesPtr);
-
-			for (int j = 0; j < displayModes.Count; j++) {
-				CFDictionary dict = new CFDictionary(displayModes[j]);
-
-				int width = (int)dict.GetNumberValue("Width");
-				int height = (int)dict.GetNumberValue("Height");
-				int bpp = (int)dict.GetNumberValue("BitsPerPixel");
-				double freq = dict.GetNumberValue("RefreshRate");
-
-				if (width == resolution.Width && height == resolution.Height &&
-				    bpp == resolution.BitsPerPixel && Math.Abs(freq - resolution.RefreshRate) < 1e-6) {
-					if (!displaysCaptured.Contains(display)) {
-						CG.CGDisplayCapture(display);
-					}
-
-					Debug.Print("Changing resolution to {0}x{1}x{2}@{3}.", width, height, bpp, freq);
-					CG.CGDisplaySwitchToMode(display, displayModes[j]);
-					return true;
-				}
-
-			}
-			return false;
-		}
-
-		public bool TryRestoreResolution(DisplayDevice device) {
-			IntPtr display = displayMap[device];
-
-			if (storedModes.ContainsKey(display)) {
-				Debug.Print("Restoring resolution.");
-
-				CG.CGDisplaySwitchToMode(display, storedModes[display]);
-				CG.CGDisplayRelease(display);
-				displaysCaptured.Remove(display);
-
-				return true;
-			}
-
-			return false;
-		}
-
-		#endregion
-
 	}
 }

@@ -55,7 +55,6 @@
     <Compile Include="DisplayResolution.cs" />
     <Compile Include="FrameEventArgs.cs" />
     <Compile Include="GameWindow.cs" />
-    <Compile Include="GameWindowFlags.cs" />
     <Compile Include="Graphics\OpenGL\GL.cs" />
     <Compile Include="IGameWindow.cs" />
     <Compile Include="INativeWindow.cs" />
