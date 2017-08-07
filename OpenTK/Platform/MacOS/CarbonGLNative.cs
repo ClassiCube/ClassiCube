@@ -914,7 +914,6 @@ namespace OpenTK.Platform.MacOS
 		public event EventHandler<CancelEventArgs> Closing;
 		public event EventHandler<EventArgs> Closed;
 		public event EventHandler<EventArgs> Disposed;
-		public event EventHandler<EventArgs> IconChanged;
 		public event EventHandler<EventArgs> ClientSizeChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;

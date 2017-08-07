@@ -531,8 +531,6 @@ namespace OpenTK.Platform.X11 {
 				}
 
 				icon = value;
-				if (IconChanged != null)
-					IconChanged(this, EventArgs.Empty);
 			}
 		}
 		
@@ -637,7 +635,6 @@ namespace OpenTK.Platform.X11 {
 		public event EventHandler<System.ComponentModel.CancelEventArgs> Closing;
 		public event EventHandler<EventArgs> Closed;
 		public event EventHandler<EventArgs> Disposed;
-		public event EventHandler<EventArgs> IconChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;
 		public event EventHandler<EventArgs> WindowStateChanged;

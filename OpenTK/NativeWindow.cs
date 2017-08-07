@@ -230,9 +230,6 @@ namespace OpenTK {
 		/// <summary> Occurs when the <see cref="Focused"/> property of the window changes. </summary>
 		public event EventHandler<EventArgs> FocusedChanged;
 
-		/// <summary> Occurs when the <see cref="Icon"/> property of the window changes. </summary>
-		public event EventHandler<EventArgs> IconChanged;
-
 		/// <summary> Occurs whenever a character is typed. </summary>
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 

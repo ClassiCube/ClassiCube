@@ -120,9 +120,6 @@ namespace OpenTK {
 		/// <summary> Occurs when the window is disposed. </summary>
 		event EventHandler<EventArgs> Disposed;
 
-		/// <summary> Occurs when the <see cref="Icon"/> property of the window changes. </summary>
-		event EventHandler<EventArgs> IconChanged;
-
 		/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
 		event EventHandler<EventArgs> VisibleChanged;
 

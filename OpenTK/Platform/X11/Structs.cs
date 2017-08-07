@@ -820,12 +820,6 @@ namespace OpenTK.Platform.X11
 
 	#pragma warning restore 1591
 
-	public enum GrabMode
-	{
-		GrabModeSync = 0,
-		GrabModeAsync = 1
-	}
-
 	[StructLayout(LayoutKind.Sequential, Pack = 2)]
 	public struct XColor
 	{
@@ -1047,34 +1041,6 @@ namespace OpenTK.Platform.X11
 		}
 	}
 
-	[Flags]
-	public enum GCFunction
-	{
-		GCFunction = 1 << 0,
-		GCPlaneMask = 1 << 1,
-		GCForeground = 1 << 2,
-		GCBackground = 1 << 3,
-		GCLineWidth = 1 << 4,
-		GCLineStyle = 1 << 5,
-		GCCapStyle = 1 << 6,
-		GCJoinStyle = 1 << 7,
-		GCFillStyle = 1 << 8,
-		GCFillRule = 1 << 9,
-		GCTile = 1 << 10,
-		GCStipple = 1 << 11,
-		GCTileStipXOrigin = 1 << 12,
-		GCTileStipYOrigin = 1 << 13,
-		GCFont = 1 << 14,
-		GCSubwindowMode = 1 << 15,
-		GCGraphicsExposures = 1 << 16,
-		GCClipXOrigin = 1 << 17,
-		GCClipYOrigin = 1 << 18,
-		GCClipMask = 1 << 19,
-		GCDashOffset = 1 << 20,
-		GCDashList = 1 << 21,
-		GCArcMode = 1 << 22
-	}
-
 	public enum GCJoinStyle
 	{
 		JoinMiter = 0,
@@ -1169,20 +1135,6 @@ namespace OpenTK.Platform.X11
 		GXorInverted = 0xd,        /* NOT src OR dst */
 		GXnand = 0xe,        /* NOT src OR NOT dst */
 		GXset = 0xf        /* 1 */
-	}
-
-	public enum NetWindowManagerState
-	{
-		Remove = 0,
-		Add = 1,
-		Toggle = 2
-	}
-
-	public enum RevertTo
-	{
-		None = 0,
-		PointerRoot = 1,
-		Parent = 2
 	}
 
 	public enum MapState
