@@ -179,12 +179,6 @@ namespace OpenTK {
 			set { EnsureUndisposed(); implementation.Size = value; }
 		}
 		
-		/// <summary> Gets or sets the NativeWindow title. </summary>
-		public string Title {
-			get { EnsureUndisposed(); return implementation.Title; }
-			set { EnsureUndisposed(); implementation.Title = value; }
-		}
-		
 		/// <summary> Gets or sets a System.Boolean that indicates whether this NativeWindow is visible. </summary>
 		public bool Visible {
 			get { EnsureUndisposed(); return implementation.Visible; }
@@ -254,9 +248,6 @@ namespace OpenTK {
 		/// <summary> Occurs whenever the window is resized. </summary>
 		public event EventHandler<EventArgs> Resize;
 
-		/// <summary> Occurs when the <see cref="Title"/> property of the window changes. </summary>
-		public event EventHandler<EventArgs> TitleChanged;
-
 		/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
 		public event EventHandler<EventArgs> VisibleChanged;
 
@@ -307,11 +298,6 @@ namespace OpenTK {
 			if (FocusedChanged != null) FocusedChanged(this, e);
 		}
 		
-		/// <summary> Called when the <see cref="OpenTK.INativeWindow.Icon"/> property of the NativeWindow has changed. </summary>
-		protected virtual void OnIconChanged(object sender, EventArgs e) {
-			if (IconChanged != null) IconChanged(this, e);
-		}
-		
 		/// <summary> Called when a character is typed. </summary>
 		/// <param name="e">The <see cref="OpenTK.KeyPressEventArgs"/> for this event.</param>
 		protected virtual void OnKeyPress(object sender, KeyPressEventArgs e) {
@@ -337,11 +323,6 @@ namespace OpenTK {
 		/// <param name="e">Not used.</param>
 		protected virtual void OnResize(object sender, EventArgs e) {
 			if (Resize != null) Resize(this, e);
-		}
-		
-		/// <summary> Called when the <see cref="OpenTK.INativeWindow.Title"/> property of the NativeWindow has changed. </summary>
-		protected virtual void OnTitleChanged(object sender, EventArgs e) {
-			if (TitleChanged != null) TitleChanged(this, e);
 		}
 
 		/// <summary> Called when the <see cref="OpenTK.INativeWindow.Visible"/> property of the NativeWindow has changed. </summary>
@@ -377,13 +358,11 @@ namespace OpenTK {
 					implementation.Closing += OnClosing;
 					implementation.Disposed += OnDisposed;
 					implementation.FocusedChanged += OnFocusedChanged;
-					implementation.IconChanged += OnIconChanged;
 					implementation.KeyPress += OnKeyPress;
 					implementation.MouseEnter += OnMouseEnter;
 					implementation.MouseLeave += OnMouseLeave;
 					implementation.Move += OnMove;
 					implementation.Resize += OnResize;
-					implementation.TitleChanged += OnTitleChanged;
 					implementation.VisibleChanged += OnVisibleChanged;
 					implementation.WindowStateChanged += OnWindowStateChanged;
 					events = true;
@@ -392,13 +371,11 @@ namespace OpenTK {
 					implementation.Closing -= OnClosing;
 					implementation.Disposed -= OnDisposed;
 					implementation.FocusedChanged -= OnFocusedChanged;
-					implementation.IconChanged -= OnIconChanged;
 					implementation.KeyPress -= OnKeyPress;
 					implementation.MouseEnter -= OnMouseEnter;
 					implementation.MouseLeave -= OnMouseLeave;
 					implementation.Move -= OnMove;
 					implementation.Resize -= OnResize;
-					implementation.TitleChanged -= OnTitleChanged;
 					implementation.VisibleChanged -= OnVisibleChanged;
 					implementation.WindowStateChanged -= OnWindowStateChanged;
 					events = false;

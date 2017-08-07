@@ -638,7 +638,6 @@ namespace OpenTK.Platform.X11 {
 		public event EventHandler<EventArgs> Closed;
 		public event EventHandler<EventArgs> Disposed;
 		public event EventHandler<EventArgs> IconChanged;
-		public event EventHandler<EventArgs> TitleChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;
 		public event EventHandler<EventArgs> WindowStateChanged;
@@ -701,24 +700,6 @@ namespace OpenTK.Platform.X11 {
 		/// <summary> Gets the current window handle. </summary>
 		public IntPtr Handle {
 			get { return window.WindowHandle; }
-		}
-		
-		/// <summary> TODO: Use atoms for this property.
-		/// Gets or sets the GameWindow title. </summary>
-		public string Title {
-			get {
-				IntPtr name = IntPtr.Zero;
-				API.XFetchName(window.Display, window.WindowHandle, ref name);
-				return name == IntPtr.Zero ? String.Empty : Marshal.PtrToStringAnsi(name);
-			}
-			set {
-				if (value != null && value != Title) {
-					API.XStoreName(window.Display, window.WindowHandle, value);
-				}
-
-				if (TitleChanged != null)
-					TitleChanged(this, EventArgs.Empty);
-			}
 		}
 		
 		public bool Visible {

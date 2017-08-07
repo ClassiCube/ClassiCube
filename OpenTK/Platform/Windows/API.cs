@@ -108,14 +108,8 @@ namespace OpenTK.Platform.Windows {
 		internal static extern uint MapVirtualKey(VirtualKeys vkey, MapVirtualKeyType uMapType);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommand nCmdShow);		
-		
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
-		internal static extern bool SetWindowText(IntPtr hWnd, [MarshalAs(UnmanagedType.LPTStr)] string lpString);
-		
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
-		internal static extern int GetWindowText(IntPtr hWnd, [MarshalAs(UnmanagedType.LPTStr), In, Out] StringBuilder lpString, int nMaxCount);
-		
+		internal static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommand nCmdShow);
+
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		//internal static extern bool ScreenToClient(IntPtr hWnd, ref POINT point);
 		internal static extern bool ScreenToClient(IntPtr hWnd, ref Point point);

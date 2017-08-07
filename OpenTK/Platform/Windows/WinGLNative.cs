@@ -521,19 +521,6 @@ namespace OpenTK.Platform.Windows
 			get { return focused; }
 		}
 
-		StringBuilder sb_title = new StringBuilder(256);
-		public string Title {
-			get {
-				sb_title.Remove(0, sb_title.Length);
-				if (API.GetWindowText(window.WindowHandle, sb_title, sb_title.MaxCapacity) == 0)
-					Debug.Print("Failed to retrieve window title (window:{0}, reason:{1}).", window.WindowHandle, Marshal.GetLastWin32Error());
-				return sb_title.ToString();
-			} set {
-				if (!API.SetWindowText(window.WindowHandle, value))
-					Debug.Print("Failed to change window title (window:{0}, new title:{1}, reason:{2}).", window.WindowHandle, value, Marshal.GetLastWin32Error());
-			}
-		}
-
 		public bool Visible {
 			get { return API.IsWindowVisible(window.WindowHandle); }
 			set {
@@ -673,7 +660,6 @@ namespace OpenTK.Platform.Windows
 		public event EventHandler<EventArgs> Closed;
 		public event EventHandler<EventArgs> Disposed;
 		public event EventHandler<EventArgs> IconChanged;
-		public event EventHandler<EventArgs> TitleChanged;
 		public event EventHandler<EventArgs> ClientSizeChanged;
 		public event EventHandler<EventArgs> VisibleChanged;
 		public event EventHandler<EventArgs> FocusedChanged;
