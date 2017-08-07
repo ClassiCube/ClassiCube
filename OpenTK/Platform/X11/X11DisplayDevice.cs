@@ -70,7 +70,7 @@ namespace OpenTK.Platform.X11 {
 						first = false;
 					}
 					devices.Add(dev);
-					// It seems that all X screens are equal to 0 is Xinerama is enabled, at least on Nvidia (verify?)				
+					// It seems that all X screens are equal to 0 is Xinerama is enabled, at least on Nvidia (verify?)
 					dev.Metadata = 0; /*screen.ScreenNumber*/
 				}
 			}
@@ -105,7 +105,7 @@ namespace OpenTK.Platform.X11 {
 					++resolution_count;
 				}
 				
-				IntPtr screenConfig = API.XRRGetScreenInfo(API.DefaultDisplay, API.XRootWindow(API.DefaultDisplay, screen));			
+				IntPtr screenConfig = API.XRRGetScreenInfo(API.DefaultDisplay, API.XRootWindow(API.DefaultDisplay, screen));
 				ushort curRotation;
 				int curResolutionIndex = API.XRRConfigCurrentConfiguration(screenConfig, out curRotation);
 				float curRefreshRate = API.XRRConfigCurrentRate(screenConfig);
