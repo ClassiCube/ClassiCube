@@ -64,15 +64,12 @@ namespace OpenTK.Platform.Windows
 		const long ExtendedBit = 1 << 24;           // Used to distinguish left and right control, alt and enter keys.
 		KeyPressEventArgs key_press = new KeyPressEventArgs();
 
-		public WinGLNative(int x, int y, int width, int height, string title, GameWindowFlags options, DisplayDevice device) {
+		public WinGLNative(int x, int y, int width, int height, string title, DisplayDevice device) {
 			WindowProcedureDelegate = WindowProcedure;
 			// To avoid issues with Ati drivers on Windows 6+ with compositing enabled, the context will not be
 			// bound to the top-level window, but rather to a child window docked in the parent.
-			window = new WinWindowInfo(
-				CreateWindow(x, y, width, height, title, options, device, IntPtr.Zero), null);
-			child_window = new WinWindowInfo(
-				CreateWindow(0, 0, ClientSize.Width, ClientSize.Height, title, options, device, window.WindowHandle), window);
-			
+			window = new WinWindowInfo(CreateWindow(x, y, width, height, title, device, IntPtr.Zero), null);
+			child_window = new WinWindowInfo(CreateWindow(0, 0, ClientSize.Width, ClientSize.Height, title, device, window.WindowHandle), window);			
 			exists = true;
 		}
 
@@ -376,7 +373,7 @@ namespace OpenTK.Platform.Windows
 				            Marshal.GetLastWin32Error());
 		}
 
-		IntPtr CreateWindow(int x, int y, int width, int height, string title, GameWindowFlags options, DisplayDevice device, IntPtr parentHandle) {
+		IntPtr CreateWindow(int x, int y, int width, int height, string title, DisplayDevice device, IntPtr parentHandle) {
 			// Use win32 to create the native window.
 			// Keep in mind that some construction code runs in the WM_CREATE message handler.
 

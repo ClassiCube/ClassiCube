@@ -85,8 +85,7 @@ namespace OpenTK.Platform.X11 {
 		int keysyms_per_keycode;    // The number of KeySyms for each KeyCode.
 		IntPtr[] keysyms;
 		
-		public X11GLNative(int x, int y, int width, int height, string title,
-		                   GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
+		public X11GLNative(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
 			if (width <= 0)
 				throw new ArgumentOutOfRangeException("width", "Must be higher than zero.");
 			if (height <= 0)

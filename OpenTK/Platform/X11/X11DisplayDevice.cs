@@ -79,39 +79,17 @@ namespace OpenTK.Platform.X11 {
 			// Get available resolutions. Then, for each resolution get all available rates.
 			foreach (DisplayDevice dev in devices) {
 				int screen = (int)dev.Metadata;
-				List<DisplayResolution> available_res = new List<DisplayResolution>();
-				int[] depths = API.XListDepths(API.DefaultDisplay, screen);
-
-				int resolution_count = 0;
-				foreach (XRRScreenSize size in FindAvailableResolutions(screen)) {
-					if (size.Width == 0 || size.Height == 0) {
-						Debug.Print("[Warning] XRandR returned an invalid resolution ({0}) for display device {1}", size, screen);
-						continue;
-					}
-					short[] rates = API.XRRRates(API.DefaultDisplay, screen, resolution_count);
-
-					// It seems that XRRRates returns 0 for modes that are larger than the screen
-					// can support, as well as for all supported modes. On Ubuntu 7.10 the tool
-					// "Screens and Graphics" does report these modes, though.
-					foreach (short rate in rates) {
-						// Note: some X servers (like Xming on Windows) do not report any rates other than 0.
-						// If we only have 1 rate, add it even if it is 0.
-						if (rate != 0 || rates.Length == 1)
-							foreach (int depth in depths)
-								available_res.Add(new DisplayResolution(size.Width, size.Height, depth, rate));
-					}
-					++resolution_count;
-				}
-				
+				XRRScreenSize[] sizes = FindAvailableResolutions(screen);				
 				IntPtr screenConfig = API.XRRGetScreenInfo(API.DefaultDisplay, API.XRootWindow(API.DefaultDisplay, screen));
+				
 				ushort curRotation;
-				int curResolutionIndex = API.XRRConfigCurrentConfiguration(screenConfig, out curRotation);
+				int curSizesIndex = API.XRRConfigCurrentConfiguration(screenConfig, out curRotation);
 				float curRefreshRate = API.XRRConfigCurrentRate(screenConfig);
 				int curDepth = API.XDefaultDepth(API.DefaultDisplay, screen);
 				API.XRRFreeScreenConfigInfo(screenConfig);
 				
 				if (dev.Bounds == Rectangle.Empty)
-					dev.Bounds = new Rectangle(0, 0, available_res[curResolutionIndex].Width, available_res[curResolutionIndex].Height);
+					dev.Bounds = new Rectangle(0, 0, sizes[curSizesIndex].Width, sizes[curSizesIndex].Height);
 				dev.BitsPerPixel = curDepth;
 				dev.RefreshRate = curRefreshRate;
 			}

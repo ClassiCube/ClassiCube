@@ -31,7 +31,7 @@ using OpenTK.Graphics;
 namespace OpenTK.Platform {
 	
 	interface IPlatformFactory {
-		INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device);
+		INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device);
 
 		void InitDisplayDeviceDriver();
 
@@ -53,8 +53,8 @@ namespace OpenTK.Platform {
 namespace OpenTK.Platform.MacOS {
 	class MacOSFactory : IPlatformFactory {
 		
-		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
-			return new CarbonGLNative(x, y, width, height, title, options, device);
+		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
+			return new CarbonGLNative(x, y, width, height, title, device);
 		}
 
 		public void InitDisplayDeviceDriver() {
@@ -70,8 +70,8 @@ namespace OpenTK.Platform.MacOS {
 namespace OpenTK.Platform.Windows {
 	class WinFactory : IPlatformFactory {
 		
-		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
-			return new WinGLNative(x, y, width, height, title, options, device);
+		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
+			return new WinGLNative(x, y, width, height, title, device);
 		}
 
 		public void InitDisplayDeviceDriver() {
@@ -87,8 +87,8 @@ namespace OpenTK.Platform.Windows {
 namespace OpenTK.Platform.X11 {
 	class X11Factory : IPlatformFactory {
 
-		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, GameWindowFlags options, DisplayDevice device) {
-			return new X11GLNative(x, y, width, height, title, mode, options, device);
+		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
+			return new X11GLNative(x, y, width, height, title, mode, device);
 		}
 
 		public void InitDisplayDeviceDriver() {

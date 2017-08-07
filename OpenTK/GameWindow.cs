@@ -92,8 +92,7 @@ namespace OpenTK
 		/// <param name="options">GameWindow options regarding window appearance and behavior.</param>
 		/// <param name="device">The OpenTK.Graphics.DisplayDevice to construct the GameWindow in.</param>
 		public GameWindow(int width, int height, GraphicsMode mode, string title, bool nullContext,
-		                  GameWindowFlags options, DisplayDevice device)
-			: base(width, height, title, options, mode, device) {
+		                  GameWindowFlags options, DisplayDevice device) : base(width, height, title, mode, device) {
 			try {
 				glContext = nullContext ? new NullContext() :
 					Factory.Default.CreateGLContext(mode, WindowInfo);

@@ -66,7 +66,7 @@ namespace OpenTK.Platform.MacOS
 			Application.Initialize();
 		}
 		
-		public CarbonGLNative(int x, int y, int width, int height, string title, GameWindowFlags options, DisplayDevice device)
+		public CarbonGLNative(int x, int y, int width, int height, string title, DisplayDevice device)
 		{
 			this.title = title;
 			CreateNativeWindow(WindowClass.Document,

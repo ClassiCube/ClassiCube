@@ -37,14 +37,9 @@ namespace OpenTK {
 	/// <summary> Instances of this class implement the <see cref="OpenTK.INativeWindow"/> interface on the current platform. </summary>
 	public class NativeWindow : INativeWindow {
 		
-		private readonly GameWindowFlags options;
 		private readonly DisplayDevice device;
 		private readonly INativeWindow implementation;
 		private bool disposed, events;
-		
-		/// <summary>Constructs a new NativeWindow with default attributes without enabling events.</summary>
-		public NativeWindow()
-			: this(640, 480, "OpenTK Native Window", GameWindowFlags.Default, GraphicsMode.Default, DisplayDevice.Default) { }
 
 		/// <summary>Constructs a new centered NativeWindow with the specified attributes.</summary>
 		/// <param name="width">The width of the NativeWindow in pixels.</param>
@@ -55,10 +50,10 @@ namespace OpenTK {
 		/// <param name="device">The OpenTK.Graphics.DisplayDevice to construct the NativeWindow in.</param>
 		/// <exception cref="System.ArgumentOutOfRangeException">If width or height is less than 1.</exception>
 		/// <exception cref="System.ArgumentNullException">If mode or device is null.</exception>
-		public NativeWindow(int width, int height, string title, GameWindowFlags options, GraphicsMode mode, DisplayDevice device)
+		public NativeWindow(int width, int height, string title, GraphicsMode mode, DisplayDevice device)
 			: this(device.Bounds.Left + (device.Bounds.Width - width) / 2,
 			       device.Bounds.Top + (device.Bounds.Height - height) / 2,
-			       width, height, title, options, mode, device) { }
+			       width, height, title, mode, device) { }
 
 		/// <summary>Constructs a new NativeWindow with the specified attributes.</summary>
 		/// <param name="x">Horizontal screen space coordinate of the NativeWindow's origin.</param>
@@ -71,7 +66,7 @@ namespace OpenTK {
 		/// <param name="device">The OpenTK.Graphics.DisplayDevice to construct the NativeWindow in.</param>
 		/// <exception cref="System.ArgumentOutOfRangeException">If width or height is less than 1.</exception>
 		/// <exception cref="System.ArgumentNullException">If mode or device is null.</exception>
-		public NativeWindow(int x, int y, int width, int height, string title, GameWindowFlags options, GraphicsMode mode, DisplayDevice device) {
+		public NativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
 			// TODO: Should a constraint be added for the position?
 			if (width < 1)
 				throw new ArgumentOutOfRangeException("width", "Must be greater than zero.");
@@ -82,10 +77,9 @@ namespace OpenTK {
 			if (device == null)
 				throw new ArgumentNullException("device");
 
-			this.options = options;
 			this.device = device;
 
-			implementation = Factory.Default.CreateNativeWindow(x, y, width, height, title, mode, options, this.device);
+			implementation = Factory.Default.CreateNativeWindow(x, y, width, height, title, mode, this.device);
 		}
 
 		/// <summary> Closes the NativeWindow. </summary>
