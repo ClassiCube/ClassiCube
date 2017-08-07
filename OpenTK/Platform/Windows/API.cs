@@ -134,11 +134,7 @@ namespace OpenTK.Platform.Windows {
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern bool BringWindowToTop(IntPtr hWnd);
-
-		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
-		public static extern int ChangeDisplaySettingsEx([MarshalAs(UnmanagedType.LPTStr)] string lpszDeviceName,
-		                                                  DeviceMode lpDevMode, IntPtr hwnd, ChangeDisplaySettingsEnum dwflags, IntPtr lParam);
-
+		
 		[DllImport("user32.dll", SetLastError = true, CharSet=CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		public static extern bool EnumDisplayDevices([MarshalAs(UnmanagedType.LPTStr)] string lpDevice,
 		                                             int iDevNum, [In, Out] WindowsDisplayDevice lpDisplayDevice, uint dwFlags);
@@ -146,12 +142,6 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern bool EnumDisplaySettings([MarshalAs(UnmanagedType.LPTStr)] string device_name,
 		                                                int graphics_mode, [In, Out] DeviceMode device_mode);
-
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo lpmi);
-
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		public static extern IntPtr MonitorFromWindow(IntPtr hwnd, MonitorFrom dwFlags);
 		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern bool TrackMouseEvent(ref TrackMouseEventStructure lpEventTrack);
@@ -416,15 +406,6 @@ namespace OpenTK.Platform.Windows {
 			rect.bottom = value.Height;
 			return rect;
 		}
-	}
-
-	struct MonitorInfo {
-		public int Size;
-		public RECT Monitor;
-		public RECT Work;
-		public uint Flags;
-
-		public static readonly int SizeInBytes = Marshal.SizeOf(default(MonitorInfo));
 	}
 	
 	struct TrackMouseEventStructure {
@@ -730,12 +711,6 @@ namespace OpenTK.Platform.Windows {
 		VirtualKeyToCharacter = 2,
 		ScanCodeToVirtualKeyExtended = 3,
 		VirtualKeyToScanCodeExtended = 4,
-	}
-	
-	enum MonitorFrom {
-		Null = 0,
-		Primary = 1,
-		Nearest = 2,
 	}
 	
 	[Flags]
