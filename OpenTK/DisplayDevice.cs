@@ -11,8 +11,30 @@ using System.Drawing;
 
 namespace OpenTK {
 	
-	/// <summary> Defines a display device on the underlying system, and provides
-	/// methods to query and change its display parameters. </summary>
+	/// <summary> Contains information regarding a monitor's display resolution. </summary>
+	public class DisplayResolution {		
+		internal DisplayResolution() { }
+		
+		// Creates a new DisplayResolution object for the primary DisplayDevice.
+		internal DisplayResolution(int width, int height, int bitsPerPixel, float refreshRate)  {
+			Width = width; Height = height; 
+			BitsPerPixel = bitsPerPixel; RefreshRate = refreshRate;
+		}
+
+		/// <summary> The width of this display in pixels. </summary>
+		public int Width;
+
+		/// <summary> The height of this display in pixels. </summary>
+		public int Height;
+		
+		/// <summary> The number of bits per pixel of this display. Typical values include 8, 16, 24 and 32. </summary>
+		public int BitsPerPixel;
+		
+		/// <summary> The vertical refresh rate of this display. </summary>
+		public float RefreshRate;
+	}
+	
+	/// <summary> Defines a display device on the underlying system. </summary>
 	public class DisplayDevice {
 		// TODO: Add support for refresh rate queries and switches.
 		// TODO: Check whether bits_per_pixel works correctly under Mono/X11.
