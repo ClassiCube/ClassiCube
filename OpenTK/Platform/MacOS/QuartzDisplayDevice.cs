@@ -44,12 +44,10 @@ namespace OpenTK.Platform.MacOS
 				Debug.Print("Supports {0} display modes.", displayModes.Count);
 
 				DisplayResolution opentk_dev_current_res = null;
-				List<DisplayResolution> opentk_dev_available_res = new List<DisplayResolution>();
 				IntPtr currentModePtr = CG.CGDisplayCurrentMode(curDisplay);
 				CFDictionary currentMode = new CFDictionary(currentModePtr);
 
-				for (int j = 0; j < displayModes.Count; j++)
-				{
+				for (int j = 0; j < displayModes.Count; j++) {
 					CFDictionary dict = new CFDictionary(displayModes[j]);
 					
 					int width = (int) dict.GetNumberValue("Width");
@@ -58,16 +56,9 @@ namespace OpenTK.Platform.MacOS
 					double freq = dict.GetNumberValue("RefreshRate");
 					bool current = currentMode.DictRef == dict.DictRef;
 
-					//if (current) Debug.Write("  * ");
-					//else Debug.Write("    ");
-
-					//Debug.Print("Mode {0} is {1}x{2}x{3} @ {4}.", j, width, height, bpp, freq);
-
-					DisplayResolution thisRes = new DisplayResolution(0, 0, width, height, bpp, (float)freq);
-					opentk_dev_available_res.Add(thisRes);
-
-					if (current)
-						opentk_dev_current_res = thisRes;
+					if (current) {
+						opentk_dev_current_res = new DisplayResolution(0, 0, width, height, bpp, (float)freq);
+					}
 				}
 
 				HIRect bounds = CG.CGDisplayBounds(curDisplay);
@@ -76,8 +67,7 @@ namespace OpenTK.Platform.MacOS
 
 				Debug.Print("Display {0} bounds: {1}", i, newRect);
 
-				DisplayDevice opentk_dev =
-					new DisplayDevice(opentk_dev_current_res, primary, opentk_dev_available_res, newRect);
+				DisplayDevice opentk_dev = new DisplayDevice(opentk_dev_current_res, primary, newRect);
 				opentk_dev.Metadata = curDisplay;
 			}
 		}

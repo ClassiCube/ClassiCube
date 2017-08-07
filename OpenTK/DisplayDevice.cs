@@ -31,16 +31,11 @@ namespace OpenTK {
 
 		internal DisplayDevice() { AvailableDisplays.Add(this); }
 
-		internal DisplayDevice(DisplayResolution currentResolution, bool primary,
-		                       IEnumerable<DisplayResolution> resolutions, Rectangle bounds) : this() {
+		internal DisplayDevice(DisplayResolution currentResolution, bool primary, Rectangle bounds) : this() {
 			#warning "Consolidate current resolution with bounds? Can they fall out of sync right now?"
 			this.current_resolution = currentResolution;
 			IsPrimary = primary;
-			AvailableResolutions.AddRange(resolutions);
 			this.bounds = bounds == Rectangle.Empty ? currentResolution.Bounds : bounds;
-
-			Debug.Print("DisplayDevice {0} ({1}) supports {2} resolutions.",
-			            AvailableDisplays.Count, primary ? "primary" : "secondary", AvailableResolutions.Count);
 		}
 
 		/// <summary> Returns bounds of this instance in pixel coordinates. </summary>
@@ -87,20 +82,10 @@ namespace OpenTK {
 		/// <summary> Data unique to this Display. </summary>
 		public object Metadata;
 
-		/// <summary> The list of <see cref="DisplayResolution"/> objects available on this device. </summary>
-		public List<DisplayResolution> AvailableResolutions = new List<DisplayResolution>();
-
 		/// <summary> The list of available <see cref="DisplayDevice"/> objects. </summary>
 		public static List<DisplayDevice> AvailableDisplays = new List<DisplayDevice>();
 
 		/// <summary>Gets the default (primary) display of this system.</summary>
 		public static DisplayDevice Default { get { return primary_display; } }
-
-		/// <summary> Returns a System.String representing this DisplayDevice. </summary>
-		/// <returns>A System.String representing this DisplayDevice.</returns>
-		public override string ToString() {
-			return String.Format("{0}: {1} ({2} modes available)", IsPrimary ? "Primary" : "Secondary",
-			                     Bounds.ToString(), AvailableResolutions.Count);
-		}
 	}
 }

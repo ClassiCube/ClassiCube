@@ -114,7 +114,6 @@ namespace OpenTK.Platform.X11 {
 					dev.Bounds = new Rectangle(0, 0, available_res[curResolutionIndex].Width, available_res[curResolutionIndex].Height);
 				dev.BitsPerPixel = curDepth;
 				dev.RefreshRate = curRefreshRate;
-				dev.AvailableResolutions = available_res;
 			}
 			return true;
 		}

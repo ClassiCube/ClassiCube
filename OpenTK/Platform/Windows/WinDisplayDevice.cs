@@ -22,7 +22,6 @@ namespace OpenTK.Platform.Windows {
 			// The main DisplayDevice constructor adds the newly constructed device
 			// to the list of available devices.
 			DisplayResolution currentRes = null;
-			List<DisplayResolution> availableRes = new List<DisplayResolution>();
 			bool devPrimary = false;
 			int deviceNum = 0;
 
@@ -45,26 +44,13 @@ namespace OpenTK.Platform.Windows {
 						devPrimary = (winDev.StateFlags & DisplayDeviceStateFlags.PrimaryDevice) != 0;
 					}
 				}
-
-				availableRes.Clear();
-				int i = 0;
-				while (API.EnumDisplaySettings(winDev.DeviceName, i++, mode)) {
-					// For example, the device \.\DISPLAYV1 returns a single resolution with bits per pixel of 0
-					// We must skip these resolutions
-					if (mode.BitsPerPel <= 0) continue;
-					
-					availableRes.Add(new DisplayResolution(
-						mode.Position.X, mode.Position.Y,
-						mode.PelsWidth, mode.PelsHeight,
-						mode.BitsPerPel, mode.DisplayFrequency));
-				}
 				
-				// This device has no valid resolutions, ignore it
-				if (availableRes.Count == 0 || currentRes == null) continue;
+				// This device has no valid resolution, ignore it
+				if (currentRes == null) continue;
 
 				// Construct the OpenTK DisplayDevice through the accumulated parameters.
 				// The constructor automatically adds the DisplayDevice to the list of available devices.
-				DisplayDevice device = new DisplayDevice(currentRes, devPrimary, availableRes, currentRes.Bounds);
+				DisplayDevice device = new DisplayDevice(currentRes, devPrimary, currentRes.Bounds);
 				currentRes = null;
 			}
 		}

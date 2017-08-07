@@ -46,7 +46,7 @@ namespace SharpDX.Direct3D9 {
 			return Interop.Calli(comPointer,(*(IntPtr**)comPointer)[4]);
 		}
 		
-		public AdapterDetails GetAdapterIdentifier( int adapter ) {			
+		public AdapterDetails GetAdapterIdentifier( int adapter ) {
 			AdapterDetails.Native identifierNative = new AdapterDetails.Native();
 			int res = Interop.Calli(comPointer, adapter, 0, (IntPtr)(void*)&identifierNative,(*(IntPtr**)comPointer)[5]);
 			if( res < 0 ) { throw new SharpDXException( res ); }
@@ -54,24 +54,6 @@ namespace SharpDX.Direct3D9 {
 			AdapterDetails identifier = new AdapterDetails();
 			identifier.MarshalFrom(ref identifierNative);			
 			return identifier;
-		}
-		
-		public int GetAdapterModeCount(int adapter, Format format) {
-			return Interop.Calli(comPointer, adapter, (int)format,(*(IntPtr**)comPointer)[6]);
-		}
-		
-		public DisplayMode EnumAdapterModes(int adapter, Format format, int mode) {
-			DisplayMode modeRef = new DisplayMode();
-			int res = Interop.Calli(comPointer, adapter, (int)format, mode, (IntPtr)(void*)&modeRef,(*(IntPtr**)comPointer)[7]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-			return modeRef;
-		}
-		
-		public DisplayMode GetAdapterDisplayMode(int adapter) {
-			DisplayMode modeRef = new DisplayMode();
-			int res = Interop.Calli(comPointer, adapter, (IntPtr)(void*)&modeRef,(*(IntPtr**)comPointer)[8]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-			return modeRef;
 		}
 		
 		public bool CheckDeviceType(int adapter, DeviceType devType, Format adapterFormat, Format backBufferFormat, bool bWindowed) {
@@ -82,17 +64,6 @@ namespace SharpDX.Direct3D9 {
 		public bool CheckDepthStencilMatch(int adapter, DeviceType deviceType, Format adapterFormat, Format renderTargetFormat, Format depthStencilFormat) {
 			return Interop.Calli(comPointer, adapter, (int)deviceType, (int)adapterFormat, 
 			                             (int)renderTargetFormat, (int)depthStencilFormat,(*(IntPtr**)comPointer)[12]) == 0;
-		}
-		
-		public Capabilities GetDeviceCaps(int adapter, DeviceType deviceType) {
-			Capabilities capsRef = new Capabilities();
-			int res = Interop.Calli(comPointer, adapter, (int)deviceType, (IntPtr)(void*)&capsRef,(*(IntPtr**)comPointer)[14]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-			return capsRef;
-		}
-		
-		public IntPtr GetAdapterMonitor(int adapter) {
-			return Interop.Calli_IntPtr(comPointer, adapter,(*(IntPtr**)comPointer)[15]);
 		}
 		
 		public Device CreateDevice(int adapter, DeviceType deviceType, IntPtr hFocusWindow, CreateFlags behaviorFlags,  PresentParameters presentParams) {

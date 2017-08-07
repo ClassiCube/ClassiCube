@@ -21,10 +21,24 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SharpDX.Direct3D9
-{
-	public unsafe class AdapterDetails
-	{
+namespace SharpDX.Direct3D9 {	
+	public class AdapterInformation {
+		readonly Direct3D d3d;
+
+		internal AdapterInformation(Direct3D direct3D, int adapter) {
+			d3d = direct3D;
+			Adapter = adapter;
+			Details = direct3D.GetAdapterIdentifier(adapter);
+		}
+
+		/// <summary> Gets the adapter ordinal. </summary>
+		public int Adapter;
+
+		/// <summary> Gets the details. </summary>
+		public AdapterDetails Details;
+	}
+	
+	public unsafe class AdapterDetails {
 		public Version DriverVersion {
 			get {
 				return new Version((int)(RawDriverVersion >> 48) & 0xFFFF, (int)(RawDriverVersion >> 32) & 0xFFFF, 
@@ -32,24 +46,17 @@ namespace SharpDX.Direct3D9
 			}
 		}
 				
-		public string Driver;
-		
-		public string Description;
-		
-		public string DeviceName;
-		
+		public string Driver;		
+		public string Description;		
+		public string DeviceName;		
 		internal long RawDriverVersion;
 		
-		public int VendorId;
-		
-		public int DeviceId;
-		
-		public int SubsystemId;
-		
+		public int VendorId;	
+		public int DeviceId;	
+		public int SubsystemId;	
 		public int Revision;
 		
-		public Guid DeviceIdentifier;
-		
+		public Guid DeviceIdentifier;		
 		public int WhqlLevel;
 
 		[StructLayout(LayoutKind.Sequential)]

@@ -51,13 +51,6 @@ namespace SharpDX.Direct3D9
 			}
 		}
 		
-		public DisplayMode GetDisplayMode(int iSwapChain) {
-			DisplayMode modeRef = new DisplayMode();
-			int res = Interop.Calli(comPointer, iSwapChain, (IntPtr)(void*)&modeRef,(*(IntPtr**)comPointer)[8]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-			return modeRef;
-		}
-		
 		public int Reset( PresentParameters presentParams ) {
 			return Interop.Calli(comPointer, (IntPtr)(void*)&presentParams,(*(IntPtr**)comPointer)[16]);
 		}

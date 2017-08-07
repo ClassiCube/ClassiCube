@@ -63,12 +63,6 @@ namespace OpenTK {
 			internal set { refresh_rate = value; }
 		}
 
-		/// <summary> Returns a System.String representing this DisplayResolution. </summary>
-		/// <returns>A System.String representing this DisplayResolution.</returns>
-		public override string ToString() {
-			return String.Format("{0}x{1}@{2}Hz", Bounds, bits_per_pixel, refresh_rate);
-		}
-
 		/// <summary>Determines whether the specified resolutions are equal.</summary>
 		/// <param name="obj">The System.Object to check against.</param>
 		/// <returns>True if the System.Object is an equal DisplayResolution; false otherwise.</returns>
