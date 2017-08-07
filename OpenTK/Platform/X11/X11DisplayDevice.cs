@@ -98,7 +98,7 @@ namespace OpenTK.Platform.X11 {
 						// If we only have 1 rate, add it even if it is 0.
 						if (rate != 0 || rates.Length == 1)
 							foreach (int depth in depths)
-								available_res.Add(new DisplayResolution(0, 0, size.Width, size.Height, depth, rate));
+								available_res.Add(new DisplayResolution(size.Width, size.Height, depth, rate));
 					}
 					++resolution_count;
 				}

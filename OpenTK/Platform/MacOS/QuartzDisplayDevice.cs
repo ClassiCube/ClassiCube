@@ -57,7 +57,7 @@ namespace OpenTK.Platform.MacOS
 					bool current = currentMode.DictRef == dict.DictRef;
 
 					if (current) {
-						opentk_dev_current_res = new DisplayResolution(0, 0, width, height, bpp, (float)freq);
+						opentk_dev_current_res = new DisplayResolution(width, height, bpp, (float)freq);
 					}
 				}
 
@@ -67,7 +67,8 @@ namespace OpenTK.Platform.MacOS
 
 				Debug.Print("Display {0} bounds: {1}", i, newRect);
 
-				DisplayDevice opentk_dev = new DisplayDevice(opentk_dev_current_res, primary, newRect);
+				DisplayDevice opentk_dev = new DisplayDevice(opentk_dev_current_res, primary);
+				opentk_dev.Bounds = newRect;
 				opentk_dev.Metadata = curDisplay;
 			}
 		}

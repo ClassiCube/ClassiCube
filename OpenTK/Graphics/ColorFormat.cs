@@ -108,10 +108,5 @@ namespace OpenTK.Graphics {
         public override int GetHashCode() {
             return Red ^ Green ^ Blue ^ Alpha;
         }
-        
-        public override string ToString() {
-        	return IsIndexed ? String.Format( "{0} (indexed)", BitsPerPixel ) : 
-        		String.Format( "{0} ({1}{2}{3}{4})", BitsPerPixel, Red, Green, Blue, Alpha );
-        }
     }
 }

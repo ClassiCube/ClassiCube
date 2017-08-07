@@ -303,10 +303,6 @@ namespace OpenTK {
 			return !left.Equals(right);
 		}
 
-		public override string ToString() {
-			return String.Format("{0}\n{1}\n{2}\n{3}", Row0, Row1, Row2, Row3);
-		}
-
 		public override int GetHashCode() {
 			return Row0.GetHashCode() ^ Row1.GetHashCode() ^ Row2.GetHashCode() ^ Row3.GetHashCode();
 		}

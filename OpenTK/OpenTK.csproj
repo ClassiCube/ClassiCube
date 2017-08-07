@@ -115,7 +115,6 @@
     <Compile Include="SharpDX.Direct3D\AdapterDetails.cs" />
     <Compile Include="SharpDX.Direct3D\Device.cs" />
     <Compile Include="SharpDX.Direct3D\Direct3D.cs" />
-    <Compile Include="SharpDX.Direct3D\DisplayMode.cs" />
     <Compile Include="SharpDX.Direct3D\Enumerations.cs" />
     <Compile Include="SharpDX.Direct3D\PresentParameters.cs" />
     <Compile Include="SharpDX.Direct3D\Resources.cs" />

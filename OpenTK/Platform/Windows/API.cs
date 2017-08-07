@@ -375,10 +375,6 @@ namespace OpenTK.Platform.Windows {
 		internal int Width { get { return right - left; } }
 		internal int Height { get { return bottom - top; } }
 
-		public override string ToString() {
-			return String.Format("({0},{1})-({2},{3})", left, top, right, bottom);
-		}
-
 		internal Rectangle ToRectangle() {
 			return Rectangle.FromLTRB(left, top, right, bottom);
 		}
@@ -726,10 +722,6 @@ namespace OpenTK.Platform.Windows {
 		internal IntPtr LParam;
 		internal uint Time;
 		internal POINT Point;
-
-		public override string ToString() {
-			return String.Format("msg=0x{0:x} ({1}) hwnd=0x{2:x} wparam=0x{3:x} lparam=0x{4:x} pt=0x{5:x}", (int)Message, Message.ToString(), HWnd.ToInt32(), WParam.ToInt32(), LParam.ToInt32(), Point);
-		}
 	}
 	
 	[StructLayout(LayoutKind.Sequential)]
@@ -744,10 +736,6 @@ namespace OpenTK.Platform.Windows {
 
 		internal Point ToPoint() {
 			return new Point(X, Y);
-		}
-
-		public override string ToString() {
-			return "Point {" + X.ToString() + ", " + Y.ToString() + ")";
 		}
 	}
 }

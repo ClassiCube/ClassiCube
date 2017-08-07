@@ -126,7 +126,7 @@ namespace OpenTK.Platform.MacOS
 			IntPtr windowRef;
 			OSStatus err = API.CreateNewWindow(@class, attrib, ref r, out windowRef);
 			API.CheckReturn( err );
-			Debug.Print( "Created window " + windowRef );
+			Debug.Print( "Created window " + windowRef.ToString() );
 			API.SetWindowTitle(windowRef, title);
 
 			window = new CarbonWindowInfo(windowRef);

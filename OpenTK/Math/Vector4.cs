@@ -68,10 +68,6 @@ namespace OpenTK {
 		public static bool operator != (Vector4 left, Vector4 right) {
 			return !left.Equals(right);
 		}
-
-		public override string ToString() {
-			return String.Format("({0}, {1}, {2}, {3})", X, Y, Z, W);
-		}
 		
 		public override int GetHashCode() {
 			return X.GetHashCode() ^ Y.GetHashCode() ^ Z.GetHashCode() ^ W.GetHashCode();

@@ -7,98 +7,36 @@
 #endregion
 
 using System;
-using System.Drawing;
 
 namespace OpenTK {
 	
-	/// <summary>Contains information regarding a monitor's display resolution.</summary>
+	/// <summary> Contains information regarding a monitor's display resolution. </summary>
 	public class DisplayResolution {
-		
-		Rectangle bounds;
-		int bits_per_pixel;
-		float refresh_rate;
-
 		internal DisplayResolution() { }
 		
 		// Creates a new DisplayResolution object for the primary DisplayDevice.
-		internal DisplayResolution(int x, int y, int width, int height, int bitsPerPixel, float refreshRate)  {
+		internal DisplayResolution(int width, int height, int bitsPerPixel, float refreshRate)  {
 			// Refresh rate may be zero, since this information may not be available on some platforms.
 			if (width <= 0) throw new ArgumentOutOfRangeException("width", "Must be greater than zero.");
 			if (height <= 0) throw new ArgumentOutOfRangeException("height", "Must be greater than zero.");
 			if (bitsPerPixel <= 0) throw new ArgumentOutOfRangeException("bitsPerPixel", "Must be greater than zero.");
 			if (refreshRate < 0) throw new ArgumentOutOfRangeException("refreshRate", "Must be greater than, or equal to zero.");
 
-			this.bounds = new Rectangle(x, y, width, height);
-			this.bits_per_pixel = bitsPerPixel;
-			this.refresh_rate = refreshRate;
+			Width = width; Height = height;
+			BitsPerPixel = bitsPerPixel;
+			RefreshRate = refreshRate;
 		}
 
-		/// <summary> Gets a System.Drawing.Rectangle that contains the bounds of this display device. </summary>
-		[Obsolete("This property will return invalid results if a monitor changes resolution. Use DisplayDevice.Bounds instead.")]
-		public Rectangle Bounds {
-			get { return bounds; }
-		}
+		/// <summary> Returns the width of this display in pixels. </summary>
+		public int Width;
 
-		/// <summary>Gets a System.Int32 that contains the width of this display in pixels.</summary>
-		public int Width {
-			get { return bounds.Width; }
-			internal set { bounds.Width = value; }
-		}
-
-		/// <summary>Gets a System.Int32 that contains the height of this display in pixels.</summary>
-		public int Height {
-			get { return bounds.Height; }
-			internal set { bounds.Height = value; }
-		}
-
-		/// <summary>Gets a System.Int32 that contains number of bits per pixel of this display. Typical values include 8, 16, 24 and 32.</summary>
-		public int BitsPerPixel {
-			get { return bits_per_pixel; }
-			internal set { bits_per_pixel = value; }
-		}
-
-		/// <summary> Gets a System.Single representing the vertical refresh rate of this display. </summary>
-		public float RefreshRate {
-			get { return refresh_rate; }
-			internal set { refresh_rate = value; }
-		}
-
-		/// <summary>Determines whether the specified resolutions are equal.</summary>
-		/// <param name="obj">The System.Object to check against.</param>
-		/// <returns>True if the System.Object is an equal DisplayResolution; false otherwise.</returns>
-		public override bool Equals(object obj) {
-			if (obj == null || !(obj is DisplayResolution)) return false;
-			
-			DisplayResolution res = (DisplayResolution)obj;
-			return Width == res.Width && Height == res.Height &&
-				BitsPerPixel == res.BitsPerPixel && RefreshRate == res.RefreshRate;
-		}
-
-		/// <summary>Returns a unique hash representing this resolution.</summary>
-		/// <returns>A System.Int32 that may serve as a hash code for this resolution.</returns>
-		public override int GetHashCode() {
-			return Bounds.GetHashCode() ^ bits_per_pixel ^ refresh_rate.GetHashCode();
-		}
-
-		/// <summary> Compares two instances for equality. </summary>
-		/// <param name="left">The first instance.</param>
-		/// <param name="right">The second instance.</param>
-		/// <returns>True, if left equals right; false otherwise.</returns>
-		public static bool operator == (DisplayResolution left, DisplayResolution right) {
-			if (((object)left) == null && ((object)right) == null)
-				return true;
-			else if ((((object)left) == null && ((object)right) != null) ||
-			         (((object)left) != null && ((object)right) == null))
-				return false;
-			return left.Equals(right);
-		}
-
-		/// <summary> Compares two instances for inequality. </summary>
-		/// <param name="left">The first instance.</param>
-		/// <param name="right">The second instance.</param>
-		/// <returns>True, if left does not equal right; false otherwise.</returns>
-		public static bool operator != (DisplayResolution left, DisplayResolution right) {
-			return !(left == right);
-		}
+		/// <summary> Returns the height of this display in pixels. </summary>
+		public int Height;
+		
+		/// <summary> Returns the number of bits per pixel of this display. Typical values include 8, 16, 24 and 32. </summary>
+		public int BitsPerPixel;
+		
+		/// <summary> Returns the vertical refresh rate of this display. </summary>
+		public float RefreshRate;
 	}
 }

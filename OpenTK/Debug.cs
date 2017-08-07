@@ -12,13 +12,6 @@ namespace OpenTK {
 			} // raised by Mono sometimes when trying to write to console from the finalizer thread.
 		}
 		
-		public static void Print(object arg) {
-			try {
-				Console.WriteLine(arg);
-			} catch (Exception) {
-			}
-		}
-		
 		public static void Print(string text, params object[] args) {
 			try {
 				Console.WriteLine(text, args);

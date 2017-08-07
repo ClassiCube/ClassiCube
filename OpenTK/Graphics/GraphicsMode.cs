@@ -59,13 +59,6 @@ namespace OpenTK.Graphics {
             }
         }
 
-        /// <summary>Returns a System.String describing the current GraphicsFormat.</summary>
-        /// <returns> System.String describing the current GraphicsFormat.</returns>
-        public override string ToString() {
-            return String.Format("Index: {0}, Color: {1}, Depth: {2}, Stencil: {3}, Buffers: {4}",
-                Index, ColorFormat, Depth, Stencil, Buffers);
-        }
-
         /// <summary> Returns the hashcode for this instance. </summary>
         /// <returns>A <see cref="System.Int32"/> hashcode for this instance.</returns>
         public override int GetHashCode() {

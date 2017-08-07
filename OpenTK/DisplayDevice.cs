@@ -7,7 +7,6 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 
 namespace OpenTK {
@@ -20,22 +19,20 @@ namespace OpenTK {
 		// TODO: Add properties that describe the 'usable' size of the Display, i.e. the maximized size without the taskbar etc.
 		// TODO: Does not detect changes to primary device.
 
-		DisplayResolution current_resolution = new DisplayResolution();
-		bool primary;
+		DisplayResolution curResolution = new DisplayResolution();
 		Rectangle bounds;
-		static DisplayDevice primary_display;
 
 		static DisplayDevice() {
 			Platform.Factory.Default.InitDisplayDeviceDriver();
 		}
 
-		internal DisplayDevice() { AvailableDisplays.Add(this); }
+		internal DisplayDevice() { }
 
-		internal DisplayDevice(DisplayResolution currentResolution, bool primary, Rectangle bounds) : this() {
+		internal DisplayDevice(DisplayResolution curResolution, bool primary) {
 			#warning "Consolidate current resolution with bounds? Can they fall out of sync right now?"
-			this.current_resolution = currentResolution;
+			this.curResolution = curResolution;
 			IsPrimary = primary;
-			this.bounds = bounds == Rectangle.Empty ? currentResolution.Bounds : bounds;
+			this.bounds = new Rectangle(0, 0, curResolution.Width, curResolution.Height);
 		}
 
 		/// <summary> Returns bounds of this instance in pixel coordinates. </summary>
@@ -43,49 +40,36 @@ namespace OpenTK {
 			get { return bounds; }
 			internal set {
 				bounds = value;
-				current_resolution.Height = bounds.Height;
-				current_resolution.Width = bounds.Width;
+				curResolution.Height = bounds.Height;
+				curResolution.Width = bounds.Width;
 			}
 		}
 
 		/// <summary> Returns width of this display in pixels. </summary>
-		public int Width { get { return current_resolution.Width; } }
+		public int Width { get { return curResolution.Width; } }
 
 		/// <summary> Returns height of this display in pixels. </summary>
-		public int Height { get { return current_resolution.Height; } }
+		public int Height { get { return curResolution.Height; } }
 
 		/// <summary> Returns number of bits per pixel of this display. Typical values include 8, 16, 24 and 32. </summary>
 		public int BitsPerPixel {
-			get { return current_resolution.BitsPerPixel; }
-			internal set { current_resolution.BitsPerPixel = value; }
+			get { return curResolution.BitsPerPixel; }
+			internal set { curResolution.BitsPerPixel = value; }
 		}
 
 		/// <summary> Returns vertical refresh rate of this display. </summary>
 		public float RefreshRate {
-			get { return current_resolution.RefreshRate; }
-			internal set { current_resolution.RefreshRate = value; }
+			get { return curResolution.RefreshRate; }
+			internal set { curResolution.RefreshRate = value; }
 		}
 
 		/// <summary> Returns whether this Display is the primary Display in systems with multiple Displays.</summary>
-		public bool IsPrimary {
-			get { return primary; }
-			internal set {
-				if (value && primary_display != null && primary_display != this)
-					primary_display.IsPrimary = false;
-
-				primary = value;
-				if (value)
-					primary_display = this;
-			}
-		}
+		public bool IsPrimary { set { if (value) Default = this; } }
 		
 		/// <summary> Data unique to this Display. </summary>
 		public object Metadata;
 
-		/// <summary> The list of available <see cref="DisplayDevice"/> objects. </summary>
-		public static List<DisplayDevice> AvailableDisplays = new List<DisplayDevice>();
-
 		/// <summary>Gets the default (primary) display of this system.</summary>
-		public static DisplayDevice Default { get { return primary_display; } }
+		public static DisplayDevice Default;
 	}
 }

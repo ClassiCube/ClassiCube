@@ -122,7 +122,7 @@ namespace OpenTK.Platform.Windows {
 				pfd.DepthBits, pfd.StencilBits,
 				(pfd.Flags & PixelFormatDescriptorFlags.DOUBLEBUFFER) != 0 ? 2 : 1);
 			
-			Debug.Print(modeIndex);
+			Debug.Print("WGL mode index: " + modeIndex.ToString());
 			if (!API.SetPixelFormat(window.DeviceContext, modeIndex, ref pfd))
 				throw new GraphicsContextException(String.Format(
 					"Requested GraphicsMode not available. SetPixelFormat error: {0}", Marshal.GetLastWin32Error()));

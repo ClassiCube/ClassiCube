@@ -38,7 +38,6 @@ namespace OpenTK.Platform.Windows {
 				    API.EnumDisplaySettings(winDev.DeviceName, (int)DisplayModeSettings.Registry, mode)) {
 					if (mode.BitsPerPel > 0) {
 						currentRes = new DisplayResolution(
-							mode.Position.X, mode.Position.Y,
 							mode.PelsWidth, mode.PelsHeight,
 							mode.BitsPerPel, mode.DisplayFrequency);
 						devPrimary = (winDev.StateFlags & DisplayDeviceStateFlags.PrimaryDevice) != 0;
@@ -50,7 +49,7 @@ namespace OpenTK.Platform.Windows {
 
 				// Construct the OpenTK DisplayDevice through the accumulated parameters.
 				// The constructor automatically adds the DisplayDevice to the list of available devices.
-				DisplayDevice device = new DisplayDevice(currentRes, devPrimary, currentRes.Bounds);
+				DisplayDevice device = new DisplayDevice(currentRes, devPrimary);
 				currentRes = null;
 			}
 		}
