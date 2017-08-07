@@ -5,8 +5,32 @@
 #include "Compiler.h"
 #include "Bitmap.h"
 /* Abstracts creating and managing a native window.
-   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based on OpenTK code
 */
+/*
+   The Open Toolkit Library License
+  
+   Copyright (c) 2006 - 2009 the Open Toolkit library.
+  
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+   the Software, and to permit persons to whom the Software is furnished to do
+   so, subject to the following conditions:
+  
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+  
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+   HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+   OTHER DEALINGS IN THE SOFTWARE.
+   */
 
 /* Gets the current contents of the clipboard. */
 void Window_GetClipboardText(STRING_TRANSIENT String* value);
@@ -16,9 +40,6 @@ void Window_SetClipboardText(STRING_TRANSIENT String* value);
 
 /* Sets the icon of this window. */
 void Window_SetIcon(Bitmap* bmp);
-
-/* Sets the title of the window. */
-void Window_SetTitle(STRING_TRANSIENT String* title);
 
 /* Gets whether this window has input focus. */
 bool Window_GetFocused(void);
@@ -94,12 +115,6 @@ bool Window_GetExists(void);
 
 	/// <summary> Occurs when the window is disposed. </summary>
 	event EventHandler<EventArgs> Disposed;
-
-	/// <summary> Occurs when the <see cref="Icon"/> property of the window changes. </summary>
-	event EventHandler<EventArgs> IconChanged;
-
-	/// <summary> Occurs when the <see cref="Title"/> property of the window changes. </summary>
-	event EventHandler<EventArgs> TitleChanged;
 
 	/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
 	event EventHandler<EventArgs> VisibleChanged;

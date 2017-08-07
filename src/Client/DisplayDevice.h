@@ -29,4 +29,27 @@ typedef struct DisplayResolution_ {
 /* Constructs a new display resolution instance. */
 DisplayResolution DisplayResolution_Make(Int32 width, Int32 height, Int32 bitsPerPixel, Real32 refreshRate);
 
+
+/* Defines a display device on the underlying system.*/
+typedef struct DisplayDevice_ {
+
+	/* The current resolution of the display device.*/
+	DisplayResolution CurResolution;
+
+	/* The bounds of the display device.*/
+	Rectangle Bounds;
+	
+	/* Metadata unique to this display device instance. */
+	void* Metadata;
+} DisplayDevice;
+
+/* Constructs a new display device instance. */
+DisplayDevice DisplayDevice_Make(DisplayResolution* curResolution);
+
+/* Updates the bounds of the display device to the given bounds. */
+void DisplayDevice_SetBounds(DisplayDevice* device, Rectangle* bounds);
+
+/* The primary / default / main display device. */
+DisplayDevice Primary;
+
 #endif
