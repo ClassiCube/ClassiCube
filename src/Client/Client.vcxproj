@@ -189,6 +189,7 @@
     <ClInclude Include="DateTime.h" />
     <ClInclude Include="DefaultSet.h" />
     <ClInclude Include="Bitmap.h" />
+    <ClInclude Include="DisplayDevice.h" />
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="EntityEvents.h" />
@@ -273,6 +274,7 @@
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
+    <ClCompile Include="DisplayDevice.c" />
     <ClCompile Include="Drawer.c" />
     <ClCompile Include="EnvRenderer.c" />
     <ClCompile Include="EventHandler.c" />

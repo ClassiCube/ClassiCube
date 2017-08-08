@@ -1,6 +1,7 @@
 #ifndef CS_DISPLAYDEVICE_H
 #define CS_DISPLAYDEVICE_H
 #include "Typedefs.h"
+#include "2DStructs.h"
 /* Contains structs related to monitor displays.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based originally on OpenTK
 */

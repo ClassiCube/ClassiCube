@@ -151,6 +151,12 @@
     <Filter Include="Header Files\Entities\Components">
       <UniqueIdentifier>{e36a6223-ce95-4439-aa54-df32b9828ae0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Platform\Window">
+      <UniqueIdentifier>{e4324350-79a5-4976-a8cc-28881077ca9a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Platform\Window">
+      <UniqueIdentifier>{37746374-0a3a-415c-99a6-e1e350328eab}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NotchyGenerator.h">
@@ -408,6 +414,9 @@
     <ClInclude Include="TiltComp.h">
       <Filter>Header Files\Entities\Components</Filter>
     </ClInclude>
+    <ClInclude Include="DisplayDevice.h">
+      <Filter>Header Files\Platform\Window</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -622,6 +631,9 @@
     </ClCompile>
     <ClCompile Include="ChickenModel.c">
       <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplayDevice.c">
+      <Filter>Source Files\Platform\Window</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

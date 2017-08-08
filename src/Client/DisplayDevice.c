@@ -17,6 +17,6 @@ DisplayDevice DisplayDevice_Make(DisplayResolution* curResolution) {
 
 void DisplayDevice_SetBounds(DisplayDevice* device, Rectangle* bounds) {
 	device->Bounds = *bounds;
-	device->CurResolution.Width = bounds.Width;
-	device->CurResolution.Height = bounds.Height;
+	device->CurResolution.Width = bounds->Width;
+	device->CurResolution.Height = bounds->Height;
 }
