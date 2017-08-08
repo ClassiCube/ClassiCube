@@ -51,6 +51,6 @@ DisplayDevice DisplayDevice_Make(DisplayResolution* curResolution);
 void DisplayDevice_SetBounds(DisplayDevice* device, Rectangle* bounds);
 
 /* The primary / default / main display device. */
-DisplayDevice Primary;
+DisplayDevice DisplayDevice_Default;
 
 #endif

@@ -13,7 +13,6 @@ namespace ClassicalSharp {
 		public const string AppName = "ClassicalSharp 0.99.9.1";
 		
 		public static string AppDirectory;
-		
 #if !LAUNCHER
 		[STAThread]
 		static void Main(string[] args) {
@@ -78,6 +77,7 @@ namespace ClassicalSharp {
 				return;
 			} else if (port < ushort.MinValue || port > ushort.MaxValue) {
 				Utils.LogDebug("Specified port " + port + " is out of valid range.");
+				return;
 			}
 
 			string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";

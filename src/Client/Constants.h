@@ -4,6 +4,8 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
+#define Program_AppName "ClassicalSharp 0.99.9.2"
+
 #define USE16_BIT FALSE
 
 /* Max number of characters strings can have. */

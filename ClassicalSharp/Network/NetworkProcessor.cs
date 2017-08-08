@@ -31,8 +31,8 @@ namespace ClassicalSharp.Network {
 		Socket socket;
 		DateTime lastPacket;
 		byte lastOpcode;
-		internal NetReader reader;
-		internal NetWriter writer;
+		public NetReader reader;
+		public NetWriter writer;
 		
 		internal ClassicProtocol classic;
 		internal CPEProtocol cpe;
@@ -155,7 +155,7 @@ namespace ClassicalSharp.Network {
 			maxHandledPacket = Math.Max(opcode, maxHandledPacket);
 		}
 		
-		internal void SendPacket() {
+		public void SendPacket() {
 			if (Disconnected) {
 				writer.index = 0;
 				return;
