@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_AXISLINESRENDERER_H
 #define CS_AXISLINESRENDERER_H
 #include "Typedefs.h"
@@ -16,4 +17,5 @@ void AxisLinesRenderer_Render(Real64 delta);
 static void AxisLinesRenderer_Init(void);
 static void AxisLinesRenderer_Free(void);
 static void AxisLinesRenderer_ContextLost(void);
+#endif
 #endif

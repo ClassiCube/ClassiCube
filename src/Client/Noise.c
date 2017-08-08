@@ -1,3 +1,4 @@
+#if 0
 #include "Noise.h"
 
 void ImprovedNoise_Init(UInt8* p, Random* rnd) {
@@ -80,3 +81,4 @@ Real32 CombinedNoise_Calc(CombinedNoise* n, Real32 x, Real32 y) {
 	Real32 offset = OctaveNoise_Calc(&n->noise2, x, y);
 	return OctaveNoise_Calc(&n->noise1, x + offset, y);
 }
+#endif

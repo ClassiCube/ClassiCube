@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_LOCALPLAYER_H
 #define CS_LOCALPLAYER_H
 #include "Typedefs.h"

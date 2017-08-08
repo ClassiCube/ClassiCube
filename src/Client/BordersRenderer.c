@@ -1,3 +1,4 @@
+#if 0
 #include "BordersRenderer.h"
 #include "2DStructs.h"
 #include "GameProps.h"
@@ -319,3 +320,4 @@ void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, B
 	Gfx_DeleteTexture(texId);
 	*texId = Atlas2D_LoadTextureElement(texLoc);
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #include "IModel.h"
 #include "ModelBuilder.h"
 #include "GraphicsAPI.h"
@@ -70,3 +71,4 @@ IModel* CreeperModel_GetInstance(void) {
 	IModel_SetPointers(CreeperModel);
 	return &CreeperModel;
 }
+#endif

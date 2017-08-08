@@ -1,3 +1,4 @@
+#if 0
 #include "AnimatedComp.h"
 #include "ExtMath.h"
 #include "GameProps.h"
@@ -97,3 +98,4 @@ void AnimatedComp_PerpendicularAnim(AnimatedComp* anim, Real32 flapSpeed, Real32
 		anim->RightArmX = xRot; anim->RightArmZ = zRot;
 	}
 }
+#endif

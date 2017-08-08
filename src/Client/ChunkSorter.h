@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_CHUNKSORTER_H
 #define CS_CHUNKSORTER_H
 #include "Typedefs.h"
@@ -9,4 +10,5 @@
 void ChunkSorter_UpdateSortOrder(void);
 
 static void ChunkSorter_QuickSort(Int32 left, Int32 right);
+#endif
 #endif

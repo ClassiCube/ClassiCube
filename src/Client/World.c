@@ -1,3 +1,4 @@
+#if 0
 #include "World.h"
 #include "BlockID.h"
 #include "ErrorHandler.h"
@@ -83,3 +84,4 @@ Vector3I World_GetCoords(Int32 index) {
 	World_Unpack(index, v.X, v.Y, v.Z);
 	return v;
 }
+#endif

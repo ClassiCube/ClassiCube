@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_NORMALBUILDER_H
 #define CS_NORMALBUILDER_H
 #include "Builder.h"
@@ -23,4 +24,5 @@ static bool NormalBuilder_CanStretch(BlockID initial, Int32 chunkIndex, Int32 x,
 static PackedCol NormalBuilder_LightCol(Int32 x, Int32 y, Int32 z, Int32 face, BlockID block);
 
 static void NormalBuilder_RenderBlock(Int32 index);
+#endif
 #endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_CAMERA_H
 #define CS_CAMERA_H
 #include "Typedefs.h"

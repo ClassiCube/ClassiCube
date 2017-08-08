@@ -1,3 +1,4 @@
+#if 0
 #include "IModel.h"
 #include "ModelBuilder.h"
 #include "GraphicsAPI.h"
@@ -100,3 +101,4 @@ IModel* ChickenModel_GetInstance(void) {
 	IModel_SetPointers(ChickenModel);
 	return &ChickenModel;
 }
+#endif

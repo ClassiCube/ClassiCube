@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_GZIPHEADERREADER_H
 #define CS_GZIPHEADERREADER_H
 #include "Typedefs.h"
@@ -40,4 +41,5 @@ void GZipHeader_Read(Stream* s, GZipHeader* header);
 static bool GZipHeader_ReadAndCheckByte(Stream* s, GZipHeader* header, UInt8 expected);
 
 static bool GZipHeader_ReadByte(Stream* s, GZipHeader* header, Int32* value);
+#endif
 #endif

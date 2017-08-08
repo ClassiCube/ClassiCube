@@ -1,3 +1,4 @@
+#if 0
 #include "IModel.h"
 #include "ModelBuilder.h"
 #include "GraphicsAPI.h"
@@ -78,3 +79,4 @@ IModel* ZombieModel_GetInstance(void) {
 	IModel_SetPointers(ZombieModel);
 	return &ZombieModel;
 }
+#endif

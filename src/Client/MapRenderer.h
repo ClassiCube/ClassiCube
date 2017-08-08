@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_MAPRENDERER_H
 #define CS_MAPRENDERER_H
 #include "Typedefs.h"
@@ -94,4 +95,5 @@ static void MapRenderer_CheckWeather(Real64 deltaTime);
 static void MapRenderer_RenderNormalBatch(Int32 batch);
 
 static void MapRenderer_RenderTranslucentBatch(Int32 batch);
+#endif
 #endif

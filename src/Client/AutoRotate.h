@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_AUTOROTATE_H
 #define CS_AUTOROTATE_H
 #include "Typedefs.h"

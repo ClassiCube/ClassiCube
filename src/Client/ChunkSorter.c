@@ -1,3 +1,4 @@
+#if 0
 #include "ChunkSorter.h"
 #include "ChunkUpdater.h"
 #include "MapRenderer.h"
@@ -76,3 +77,4 @@ void ChunkSorter_QuickSort(Int32 left, Int32 right) {
 		}
 	}
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_DRAWER_H
 #define CS_DRAWER_H
 #include "VertexStructs.h"
@@ -45,4 +46,5 @@ void Drawer_YMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 
 /* Draws the top face of the given cuboid region. */
 void Drawer_YMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b** vertices);
+#endif
 #endif

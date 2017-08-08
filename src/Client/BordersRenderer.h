@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_BORDERSRENDERER_H
 #define CS_BORDERSRENDERER_H
 #include "Typedefs.h"
@@ -58,4 +59,5 @@ static void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32
 static void BordersRenderer_CalculateRects(Int32 extent);
 
 static void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, BlockID block);
+#endif
 #endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_NOTCHY_GEN_H
 #define CS_NOTCHY_GEN_H
 #include "MapGenerator.h"
@@ -54,4 +55,5 @@ static void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radiu
 
 /* Floods a block, starting at the given coordinates. */
 static void NotchyGen_FloodFill(Int32 startIndex, BlockID block);
+#endif
 #endif

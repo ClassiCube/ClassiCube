@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_ENVRENDERER_H
 #define CS_ENVRENDERER_H
 #include "Typedefs.h"
@@ -66,4 +67,5 @@ static void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize);
 static void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fC4b* vertices);
 
 static void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fT2fC4b* vertices);
+#endif
 #endif

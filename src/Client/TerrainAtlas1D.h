@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_TERRAINATLAS1D_H
 #define CS_TERRAINATLAS1D_H
 #include "Typedefs.h"
@@ -46,4 +47,5 @@ static void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index);
 Int32 Atlas1D_UsedAtlasesCount(void);
 
 void Atlas1D_Free(void);
+#endif
 #endif

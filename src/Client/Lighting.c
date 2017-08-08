@@ -1,3 +1,4 @@
+#if 0
 #include "Lighting.h"
 #include "Block.h"
 #include "BlockEnums.h"
@@ -356,3 +357,4 @@ void Lighting_FinishHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zC
 		}
 	}
 }
+#endif

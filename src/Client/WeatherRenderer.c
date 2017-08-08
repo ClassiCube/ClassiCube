@@ -1,3 +1,4 @@
+#if 0
 #include "WeatherRenderer.h"
 #include "Block.h"
 #include "BlockEnums.h"
@@ -234,3 +235,4 @@ void WeatherRenderer_ContextLost(void) {
 void WeatherRenderer_ContextRecreated(void) {
 	weather_vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, weather_verticesCount);
 }
+#endif

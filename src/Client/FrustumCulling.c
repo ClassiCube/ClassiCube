@@ -1,3 +1,4 @@
+#if 0
 #include "FrustumCulling.h"
 #include "ExtMath.h"
 
@@ -79,3 +80,4 @@ void FrustumCulling_Normalise(Real32* plane0, Real32* plane1, Real32* plane2, Re
 	*plane2 /= t;
 	*plane3 /= t;
 }
+#endif

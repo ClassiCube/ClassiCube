@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_CHUNKINFO_H
 #define CS_CHUNKINFO_H
 #include "Typedefs.h"
@@ -43,4 +44,5 @@ typedef struct ChunkInfo_ {
 
 /* Resets contents of given chunk render info structure. */
 void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z);
+#endif
 #endif

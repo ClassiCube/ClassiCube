@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_QUEUE_H
 #define CS_QUEUE_H
 #include "Typedefs.h"
@@ -42,4 +43,5 @@ UInt32 TickQueue_Dequeue(TickQueue* queue);
 
 /* Resizes internal buffer of the queue. */
 static void TickQueue_Resize(TickQueue* queue);
+#endif
 #endif

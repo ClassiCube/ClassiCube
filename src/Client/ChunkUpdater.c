@@ -1,3 +1,4 @@
+#if 0
 #include "ChunkUpdater.h"
 #include "MiscEvents.h"
 #include "WorldEvents.h"
@@ -377,3 +378,4 @@ static Int32 ChunkUpdater_AdjustViewDist(Real32 dist) {
 	Int32 viewDist = Math_AdjViewDist(dist);
 	return (viewDist + 24) * (viewDist + 24);
 }
+#endif

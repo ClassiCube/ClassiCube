@@ -1,3 +1,4 @@
+#if 0
 #include "Builder.h"
 #include "Constants.h"
 #include "WorldEnv.h"
@@ -375,3 +376,4 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 		}
 	}
 }
+#endif

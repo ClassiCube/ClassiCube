@@ -1,3 +1,4 @@
+#if 0
 #include "TiltComp.h"
 #include "AnimatedComp.h"
 #include "ExtMath.h"
@@ -28,3 +29,4 @@ void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
 	anim->TiltX = Math_Cos(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 	anim->TiltY = Math_Sin(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
+#endif

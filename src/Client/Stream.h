@@ -45,56 +45,60 @@ void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
 
 /* Reads an unsigned 8 bit integer from the given stream. */
 UInt8 Stream_ReadUInt8(Stream* stream);
+/* Reads a nsigned 8 bit integer from the given stream. */
+#define Stream_ReadInt8(stream) ((Int8)Stream_ReadUInt8(stream))
 
 /* Reads a little endian unsigned 16 bit integer from the given stream. */
 UInt16 Stream_ReadUInt16_LE(Stream* stream);
 /* Reads a little endian signed 16 bit integer from the given stream. */
-#define Stream_ReadInt16_LE(stream) (Int32)Stream_ReadUInt16_LE(stream)
+#define Stream_ReadInt16_LE(stream) ((Int16)Stream_ReadUInt16_LE(stream))
 
 /* Reads a big endian unsigned 16 bit integer from the given stream. */
 UInt16 Stream_ReadUInt16_BE(Stream* stream);
 /* Reads a big endian signed 16 bit integer from the given stream. */
-#define Stream_ReadInt16_BE(stream) (Int32)Stream_ReadUInt16_BE(stream)
+#define Stream_ReadInt16_BE(stream) ((Int16)Stream_ReadUInt16_BE(stream))
 
 /* Reads a little endian unsigned 32 bit integer from the given stream. */
 UInt32 Stream_ReadUInt32_LE(Stream* stream);
 /* Reads a little endian signed 32 bit integer from the given stream. */
-#define Stream_ReadInt32_LE(stream) (Int32)Stream_ReadUInt32_LE(stream)
+#define Stream_ReadInt32_LE(stream) ((Int32)Stream_ReadUInt32_LE(stream))
 
 /* Reads a big endian unsigned 64 bit integer from the given stream. */
 UInt32 Stream_ReadUInt32_BE(Stream* stream);
 /* Reads a big endian signed 64 bit integer from the given stream. */
-#define Stream_ReadInt32_BE(stream) (Int32)Stream_ReadUInt32_BE(stream)
+#define Stream_ReadInt32_BE(stream) ((Int32)Stream_ReadUInt32_BE(stream))
 
 /* Reads a big endian unsigned 64 bit integer from the given stream. */
 UInt64 Stream_ReadUInt64_BE(Stream* stream);
 /* Reads a big endian signed 64 bit integer from the given stream. */
-#define Stream_ReadInt64_BE(stream) (Int64)Stream_ReadUInt64_BE(stream)
+#define Stream_ReadInt64_BE(stream) ((Int64)Stream_ReadUInt64_BE(stream))
 
 
 
 /* === integer write operations === */
 
 /* Writes an unsigned 8 bit integer from the given stream. */
-#define Stream_WriteUInt8(stream, value) Stream_Write(stream, &value, sizeof(UInt8));
+void Stream_WriteUInt8(Stream* stream, UInt8 value);
+/* Writes a signed 8 bit integer from the given stream. */
+#define Stream_WriteInt8(stream, value) Stream_WriteUInt8(stream, (UInt8)(value))
 
 /* Writes a little endian unsigned 16 bit integer from the given stream. */
 void Stream_WriteUInt16_LE(Stream* stream, UInt16 value);
 /* Writes a little endian signed 16 bit integer from the given stream. */
-#define Stream_WriteInt16_LE(stream, value) Stream_WriteUInt16_LE(stream, (UInt16)value)
+#define Stream_WriteInt16_LE(stream, value) Stream_WriteUInt16_LE(stream, (UInt16)(value))
 
 /* Writes a big endian unsigned 16 bit integer from the given stream. */
 void Stream_WriteUInt16_BE(Stream* stream, UInt16 value);
 /* Writes a big endian signed 16 bit integer from the given stream. */
-#define Stream_WriteInt16_BE(stream, value) Stream_WriteUInt16_BE(stream, (UInt16)value)
+#define Stream_WriteInt16_BE(stream, value) Stream_WriteUInt16_BE(stream, (UInt16)(value))
 
 /* Writes a little endian unsigned 32 bit integer from the given stream. */
 void Stream_WriteUInt32_LE(Stream* stream, UInt32 value);
 /* Writes a little endian signed 32 bit integer from the given stream. */
-#define Stream_WriteInt32_LE(stream, value) Stream_WriteUInt32_LE(stream, (UInt32)value)
+#define Stream_WriteInt32_LE(stream, value) Stream_WriteUInt32_LE(stream, (UInt32)(value))
 
-/* Writes a big endian unsigned 64 bit integer from the given stream. */
+/* Writes a big endian unsigned 32 bit integer from the given stream. */
 void Stream_WriteUInt32_BE(Stream* stream, UInt32 value);
-/* Writes a big endian signed 64 bit integer from the given stream. */
-#define Stream_WriteInt32_BE(stream, value) Stream_WriteUInt32_BE(stream, (UInt32)value)
+/* Writes a big endian signed 32 bit integer from the given stream. */
+#define Stream_WriteInt32_BE(stream, value) Stream_WriteUInt32_BE(stream, (UInt32)(value))
 #endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_BUILDER1DPART_H
 #define CS_BUILDER1DPART_H
 #include "Typedefs.h"
@@ -32,4 +33,5 @@ void Builder1DPart_Prepare(Builder1DPart* part);
 
 /* Resets counts to zero for the given part.*/
 void Builder1DPart_Reset(Builder1DPart* part);
+#endif
 #endif

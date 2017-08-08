@@ -1,3 +1,4 @@
+#if 0
 #include "ModelBuilder.h"
 #include "ExtMath.h"
 
@@ -126,3 +127,4 @@ void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texH
 	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, texX + texWidth, texY); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, texX + texWidth, texY + texHeight); m->index++;
 }
+#endif

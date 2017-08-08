@@ -1,3 +1,4 @@
+#if 0
 #include "Intersection.h"
 #include "AABB.h"
 #include "ExtMath.h"
@@ -67,3 +68,4 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 	*t0 = tmin; *t1 = tmax;
 	return *t0 >= 0;
 }
+#endif

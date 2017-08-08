@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_ANIMATEDCOMP_H
 #define CS_ANIMATEDCOMP_H
 #include "Typedefs.h"

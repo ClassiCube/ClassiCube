@@ -1,3 +1,4 @@
+#if 0
 #include "GZipHeader.h"
 #include "ErrorHandler.h"
 
@@ -92,3 +93,4 @@ static bool GZipHeader_ReadByte(Stream* s, GZipHeader* header, Int32* value) {
 	header->State++;
 	return true;
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #include "BlockID.h"
 #include "BlockEnums.h"
 #include "DefaultSet.h"
@@ -111,3 +112,4 @@ SoundType DefaultSet_DigSound(BlockID b) {
 		return SoundType_Stone;
 	return SoundType_None;
 }
+#endif

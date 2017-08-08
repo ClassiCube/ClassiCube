@@ -1,3 +1,4 @@
+#if 0
 #include "Builder1DPart.h"
 #include "Platform.h"
 #include "ErrorHandler.h"
@@ -36,3 +37,4 @@ void Builder1DPart_Reset(Builder1DPart* part) {
 		part->fCount[i] = 0;	
 	}
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_WORLDENV_H
 #define CS_WORLDENV_H
 #include "Typedefs.h"
@@ -127,4 +128,5 @@ void WorldEnv_SetSunCol(PackedCol col);
 
 /* Sets shadow colour, and raises event with variable 'ShadowCol'. */
 void WorldEnv_SetShadowCol(PackedCol col);
+#endif
 #endif

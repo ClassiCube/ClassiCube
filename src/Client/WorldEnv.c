@@ -1,3 +1,4 @@
+#if 0
 #include "WorldEnv.h"
 #include "EventHandler.h"
 #include "WorldEvents.h"
@@ -127,3 +128,4 @@ void WorldEnv_SetShadowCol(PackedCol col) {
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
 	WorldEvents_RaiseEnvVariableChanged(EnvVar_ShadowCol);
 }
+#endif

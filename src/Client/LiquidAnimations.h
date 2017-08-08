@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_LIQUIDANIMS_H
 #define CS_LIQUIDANIMS_H
 #include "Typedefs.h"
@@ -19,4 +20,5 @@ void LavaAnimation_Tick(UInt32* ptr, Int32 size);
 
 /* Animates water */
 void WaterAnimation_Tick(UInt32* ptr, Int32 size);
+#endif
 #endif

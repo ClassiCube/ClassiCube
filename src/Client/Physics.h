@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_PHYSICS_H
 #define CS_PHYSICS_H
 #include "Typedefs.h"
@@ -104,4 +105,5 @@ static void Physics_HandleCobblestoneSlab(Int32 index, BlockID block);
 static void Physics_HandleTnt(Int32 index, BlockID block);
 
 static void Physics_Explode(Int32 x, Int32 y, Int32 z, Int32 power);
+#endif
 #endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_MODEL_H
 #define CS_MODEL_H
 #include "Typedefs.h"
@@ -170,4 +171,5 @@ GfxResourceID IModel_GetTexture(Entity* entity);
 void IModel_DrawPart(ModelPart part);
 
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head);
+#endif
 #endif

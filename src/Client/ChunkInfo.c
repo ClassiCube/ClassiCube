@@ -1,3 +1,4 @@
+#if 0
 #include "ChunkInfo.h"
 
 void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
@@ -10,3 +11,4 @@ void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 	chunk->DrawXMin = false; chunk->DrawXMax = false; chunk->DrawZMin = false;
 	chunk->DrawZMax = false; chunk->DrawYMin = false; chunk->DrawYMax = false;
 }
+#endif

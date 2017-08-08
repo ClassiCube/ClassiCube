@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_RESPAWN_H
 #define CS_RESPAWN_H
 #include "Typedefs.h"

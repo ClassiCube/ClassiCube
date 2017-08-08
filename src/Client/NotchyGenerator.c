@@ -1,3 +1,4 @@
+#if 0
 #include "NotchyGenerator.h"
 #include "BlockID.h"
 #include "Funcs.h"
@@ -452,3 +453,4 @@ void NotchyGen_FloodFill(Int32 startIndex, BlockID block) {
 		if (y > 0)        { Stack_Push(index - oneY); }
 	}
 }
+#endif

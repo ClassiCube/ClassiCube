@@ -1,3 +1,4 @@
+#if 0
 #include "IModel.h"
 #include "ModelBuilder.h"
 #include "GraphicsAPI.h"
@@ -80,3 +81,4 @@ IModel* SpiderModel_GetInstance(void) {
 	IModel_SetPointers(SpiderModel);
 	return &SpiderModel;
 }
+#endif

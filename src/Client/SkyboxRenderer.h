@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_SKYBOXRENDERER_H
 #define CS_SKYBOXRENDERER_H
 #include "Typedefs.h"
@@ -28,4 +29,5 @@ static void SkyboxRenderer_TexturePackChanged(void);
 static void SkyboxRenderer_FileChanged(Stream* stream);
 static void SkyboxRenderer_ContextLost(void);
 static void SkyboxRenderer_ContextRecreated(void);
+#endif
 #endif

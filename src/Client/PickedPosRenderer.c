@@ -1,3 +1,4 @@
+#if 0
 #include "PickedPosRenderer.h"
 #include "PackedCol.h"
 #include "VertexStructs.h"
@@ -131,3 +132,4 @@ void PickedPosRenderer_ContextLost(void) {
 void PickedPosRenderer_ContextRecreated(void) {
 	pickedPos_vb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, pickedPos_numVertices);
 }
+#endif

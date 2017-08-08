@@ -1,3 +1,4 @@
+#if 0
 #include "Physics.h"
 #include "Random.h"
 #include "World.h"
@@ -482,3 +483,4 @@ void Physics_Explode(Int32 x, Int32 y, Int32 z, Int32 power) {
 		}
 	}
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_BUILDER_H
 #define CS_BUILDER_H
 #include "Typedefs.h"
@@ -115,4 +116,5 @@ static bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir)
 static void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* hasParts);
 
 static void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1);
+#endif
 #endif

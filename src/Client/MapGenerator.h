@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_MAP_GEN_H
 #define CS_MAP_GEN_H
 #include "Typedefs.h"
@@ -30,4 +31,5 @@ BlockID* Gen_Blocks;
 /* Packs a coordinate into a single integer index. */
 #define Gen_Pack(x, y, z) (((y) * Gen_Length + (z)) * Gen_Width + (x))
 
+#endif
 #endif

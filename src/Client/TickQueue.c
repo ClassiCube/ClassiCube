@@ -1,3 +1,4 @@
+#if 0
 #include "TickQueue.h"
 #include "Platform.h"
 #include "ErrorHandler.h"
@@ -59,3 +60,4 @@ void TickQueue_Resize(TickQueue* queue) {
 	queue->Head = 0;
 	queue->Tail = queue->Size;
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #include "Drawer.h"
 #include "TerrainAtlas1D.h"
 #include "Constants.h"
@@ -114,3 +115,4 @@ void Drawer_YMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           AddVertex;
 	*vertices = ptr;
 }
+#endif

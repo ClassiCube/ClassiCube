@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_ISOMETRICDRAWER_H
 #define CS_ISOMETRICDRAWER_H
 #include "Typedefs.h"
@@ -40,4 +41,5 @@ static void IsometricDrawer_RotateX(Real32 cosA, Real32 sinA);
 /* Rotates the given 3D coordinates around the y axis. */
 static void IsometricDrawer_RotateY(Real32 cosA, Real32 sinA);
 
+#endif
 #endif

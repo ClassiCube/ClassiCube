@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_PICKEDPOSRENDERER_H
 #define CS_PICKEDPOSRENDERER_H
 #include "Typedefs.h"
@@ -29,4 +30,5 @@ static void PickedPosRenderer_Init(void);
 static void PickedPosRenderer_Free(void);
 static void PickedPosRenderer_ContextLost(void);
 static void PickedPosRenderer_ContextRecreated(void);
+#endif
 #endif

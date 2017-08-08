@@ -1,3 +1,4 @@
+#if 0
 #include "IModel.h"
 #include "ModelBuilder.h"
 #include "GraphicsAPI.h"
@@ -70,3 +71,4 @@ IModel* SkeletonModel_GetInstance(void) {
 	IModel_SetPointers(SkeletonModel);
 	return &SkeletonModel;
 }
+#endif

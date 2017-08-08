@@ -1,3 +1,4 @@
+#if 0
 #include "AxisLinesRenderer.h"
 #include "GraphicsAPI.h"
 #include "GameProps.h"
@@ -64,3 +65,4 @@ void AxisLinesRenderer_Free(void) {
 void AxisLinesRenderer_ContextLost(void) {
 	Gfx_DeleteVb(&axisLines_vb);
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #include "ModelCache.h"
 #include "GraphicsAPI.h"
 #include "Game.h"
@@ -96,3 +97,4 @@ static void ModelCache_ContextLost(void) {
 static void ModelCache_ContextRecreated(void) {
 	ModelCache_Vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, ModelCache_MaxVertices);
 }
+#endif

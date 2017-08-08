@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_CHUNKUPDATER_H
 #define CS_CHUNKUPDATER_H
 #include "Typedefs.h"
@@ -70,4 +71,5 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info);
 void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates);
 
 static Int32 ChunkUpdater_AdjustViewDist(Real32 dist);
+#endif
 #endif

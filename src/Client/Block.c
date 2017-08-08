@@ -1,3 +1,4 @@
+#if 0
 #include "DefaultSet.h"
 #include "Funcs.h"
 #include "ExtMath.h"
@@ -426,3 +427,4 @@ void Block_SetZStretch(BlockID block, bool stretch) {
 	Block_CanStretch[block] &= 0xFC; /* ~0x03 */
 	Block_CanStretch[block] |= (stretch ? 0x03 : (UInt8)0);
 }
+#endif

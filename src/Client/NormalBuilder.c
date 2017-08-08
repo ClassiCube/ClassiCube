@@ -1,3 +1,4 @@
+#if 0
 #include "NormalBuilder.h"
 #include "Block.h"
 #include "Constants.h"
@@ -186,3 +187,4 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[Face_YMax]);
 	}
 }
+#endif

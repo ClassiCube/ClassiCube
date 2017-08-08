@@ -1,3 +1,4 @@
+#if 0
 #include "EnvRenderer.h"
 #include "ExtMath.h"
 #include "World.h"
@@ -331,3 +332,4 @@ void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, In
 		}
 	}
 }
+#endif

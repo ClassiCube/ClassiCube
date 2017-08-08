@@ -1,3 +1,4 @@
+#if 0
 #include "Respawn.h"
 #include "ExtMath.h"
 #include "World.h"
@@ -53,3 +54,4 @@ Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize) {
 	}
 	return spawn;
 }
+#endif

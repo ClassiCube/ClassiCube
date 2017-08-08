@@ -1,3 +1,4 @@
+#if 0
 #include "SkyboxRenderer.h"
 #include "Camera.h"
 #include "EventHandler.h"
@@ -147,3 +148,4 @@ void SkyboxRenderer_MakeVb(void) {
 
 	skybox_vb = Gfx_CreateVb(vertices, VertexFormat_P3fT2fC4b, skybox_count);
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_WORLDLIGHTING_H
 #define CS_WORLDLIGHTING_H
 #include "Typedefs.h"
@@ -89,4 +90,5 @@ static Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount,
 static bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount, Int32 elemsLeft, Int32* skip);
 
 static void Lighting_FinishHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount);
+#endif
 #endif

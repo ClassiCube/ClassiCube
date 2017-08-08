@@ -1,3 +1,4 @@
+#if 0
 #include "MapRenderer.h"
 #include "Block.h"
 #include "BlockEnums.h"
@@ -252,3 +253,4 @@ void MapRenderer_RenderTranslucentBatch(Int32 batch) {
 		}
 	}
 }
+#endif

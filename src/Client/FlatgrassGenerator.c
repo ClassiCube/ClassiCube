@@ -1,3 +1,4 @@
+#if 0
 #include "FlatgrassGenerator.h"
 #include "BlockID.h"
 #include "Funcs.h"
@@ -33,3 +34,4 @@ void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
 		Gen_CurrentProgress = (Real32)offset / count;
 	}
 }
+#endif

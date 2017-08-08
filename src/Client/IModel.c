@@ -1,3 +1,4 @@
+#if 0
 #include "IModel.h"
 #include "ExtMath.h"
 #include "Funcs.h"
@@ -138,3 +139,4 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 		dst++; model->index++;
 	}
 }
+#endif

@@ -1,3 +1,4 @@
+#if 0
 #include "AutoRotate.h"
 #include "Block.h"
 #include "GameProps.h"
@@ -117,3 +118,4 @@ static BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix)
 	if (rotated != -1) return (BlockID)rotated;
 	return block;
 }
+#endif

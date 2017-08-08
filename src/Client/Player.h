@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_PLAYER_H
 #define CS_PLAYER_H
 #include "Typedefs.h"

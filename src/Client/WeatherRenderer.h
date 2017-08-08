@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_WEATHERRENDERER_H
 #define CS_WEATHERRENDERER_H
 #include "Typedefs.h"
@@ -34,4 +35,5 @@ static Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 in
 static void WeatherRenderer_FileChanged(Stream* stream);
 static void WeatherRenderer_ContextLost(void);
 static void WeatherRenderer_ContextRecreated(void);
+#endif
 #endif

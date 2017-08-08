@@ -1,3 +1,4 @@
+#if 0
 #include "TerrainAtlas1D.h"
 #include "Funcs.h"
 #include "GraphicsAPI.h"
@@ -87,3 +88,4 @@ void Atlas1D_Free(void) {
 		Gfx_DeleteTexture(&Atlas1D_TexIds[i]);
 	}
 }
+#endif

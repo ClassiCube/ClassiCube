@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_MODELBUILDER_H
 #define CS_MODELBUILDER_H
 #include "Typedefs.h"
@@ -87,4 +88,5 @@ void BoxDesc_YQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texH
 
 void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z);
+#endif
 #endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_ENTITY_H
 #define CS_ENTITY_H
 #include "Typedefs.h"
@@ -41,4 +42,5 @@ AABB Entity_GetPickingBounds(Entity* entity);
 
 /* Bounding box of the model that collision detection is performed with, in world coordinates. */
 AABB Entity_GetBounds(Entity* entity);
+#endif
 #endif

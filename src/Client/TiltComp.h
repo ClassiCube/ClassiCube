@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_TILTCOMP_H
 #define CS_TILTCOMP_H
 #include "Typedefs.h"

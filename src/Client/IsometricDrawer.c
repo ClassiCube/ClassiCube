@@ -1,3 +1,4 @@
+#if 0
 #include "IsometricDrawer.h"
 #include "Drawer.h"
 #include "GraphicsCommon.h"
@@ -188,3 +189,4 @@ static void IsometricDrawer_RotateY(Real32 cosA, Real32 sinA) {
 	iso_pos.Z = sinA * iso_pos.X + cosA * iso_pos.Z;
 	iso_pos.X = x;
 }
+#endif

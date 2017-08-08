@@ -1,3 +1,4 @@
+#if 0
 #include "LocationUpdate.h"
 #include "ExtMath.h"
 
@@ -36,3 +37,4 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos,
 	Real32 rotY, Real32 headX, bool rel) {
 	LocationUpdate_Construct(update, pos.X, pos.Y, pos.Z, exc, rotY, exc, headX, true, rel);
 }
+#endif

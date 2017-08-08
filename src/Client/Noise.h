@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_IMPROVED_NOISE_H
 #define CS_IMPROVED_NOISE_H
 #include "Typedefs.h"
@@ -40,4 +41,5 @@ void CombinedNoise_Init(CombinedNoise* n, Random* rnd, Int32 octaves1, Int32 oct
 /* Calculates a noise value at the given coordinates. */
 Real32 CombinedNoise_Calc(CombinedNoise* n, Real32 x, Real32 y);
 
+#endif
 #endif

@@ -1,3 +1,4 @@
+#if 0
 #ifndef CS_TREE_GEN_H
 #define CS_TREE_GEN_H
 #include "Typedefs.h"
@@ -33,4 +34,5 @@ bool TreeGen_CanGrow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight);
 /* Plants a tree of the given height at the given coordinates. 
 coords and blocks point to arrays which are filled with the generated positions and block ids. */
 Int32 TreeGen_Grow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height, Vector3I* coords, BlockID* blocks);
+#endif
 #endif

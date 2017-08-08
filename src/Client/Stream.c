@@ -1,30 +1,50 @@
 #include "Stream.h"
 
-/*void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count) {
-	UInt32 read;
-	ReturnCode result = 0;
+#define Stream_SafeReadBlock(stream, buffer, count, read)\
+ReturnCode result = stream->Read(buffer, count, &read);\
+if (read == 0 || !ErrorHandler_Check(result)) {\
+	Stream_Fail(stream, result, "reading from ");\
+}
 
+#define Stream_SafeWriteBlock(stream, buffer, count, write)\
+ReturnCode result = stream->Write(buffer, count, &write);\
+if (write == 0 || !ErrorHandler_Check(result)) {\
+	Stream_Fail(stream, result, "writing to ");\
+}
+
+void Stream_Fail(Stream* stream, ReturnCode result, const UInt8* operation) {
+	UInt8 tmpBuffer[String_BufferSize(400)];
+	String tmp = String_FromRawBuffer(tmpBuffer, 400);
+
+	String_AppendConstant(&tmp, "Failed ");
+	String_AppendConstant(&tmp, operation);
+	String_AppendString(&tmp, &stream->Name);
+	ErrorHandler_FailWithCode(result, tmpBuffer);
+}
+
+void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count) {
+	UInt32 read;
 	while (count > 0) {
-		ReturnCode result = stream->Read(buffer, count, &read);
-		if (read == 0 || !ErrorHandler_Check(result)) {
-			error here or something
-		}
+		Stream_SafeReadBlock(stream, buffer, count, read);
 		count -= read;
 	}
 }
 
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count) {
-	UInt32 totalWritten = 0;
+	UInt32 write;
 	while (count > 0) {
-
+		Stream_SafeWriteBlock(stream, buffer, count, write);
+		count -= write;
 	}
-}*/
+}
 
-// TODO: This one is called frequently, probably needs inline.
+
 UInt8 Stream_ReadUInt8(Stream* stream) {
-	UInt8 result;
-	Stream_Read(stream, &result, sizeof(UInt8));
-	return result;
+	UInt8 buffer;
+	UInt32 read;
+	/* Inline 8 bit reading, because it is very frequently used. */
+	Stream_SafeReadBlock(stream, &buffer, sizeof(UInt8), read);
+	return buffer;
 }
 
 UInt16 Stream_ReadUInt16_LE(Stream* stream) {
@@ -67,6 +87,12 @@ UInt64 Stream_ReadUInt64_BE(Stream* stream) {
 	return (UInt64)(((UInt64)hi) << 32) | ((UInt64)lo);
 }
 
+
+void Stream_WriteUInt8(Stream* stream, UInt8 value) {
+	UInt32 write;
+	/* Inline 8 bit writing, because it is very frequently used. */
+	Stream_SafeWriteBlock(stream, &value, sizeof(UInt8), write);
+}
 
 void Stream_WriteUInt16_LE(Stream* stream, UInt16 value) {
 	UInt8 buffer[sizeof(UInt16)];
