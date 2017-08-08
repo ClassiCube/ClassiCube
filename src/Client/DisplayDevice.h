@@ -38,7 +38,7 @@ typedef struct DisplayDevice_ {
 	DisplayResolution CurResolution;
 
 	/* The bounds of the display device.*/
-	Rectangle Bounds;
+	Rectangle2D Bounds;
 	
 	/* Metadata unique to this display device instance. */
 	void* Metadata;
@@ -48,7 +48,7 @@ typedef struct DisplayDevice_ {
 DisplayDevice DisplayDevice_Make(DisplayResolution* curResolution);
 
 /* Updates the bounds of the display device to the given bounds. */
-void DisplayDevice_SetBounds(DisplayDevice* device, Rectangle* bounds);
+void DisplayDevice_SetBounds(DisplayDevice* device, Rectangle2D* bounds);
 
 /* The primary / default / main display device. */
 DisplayDevice DisplayDevice_Default;

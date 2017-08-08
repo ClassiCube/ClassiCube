@@ -6,17 +6,17 @@
 */
 
 /* Stores location and dimensions of a 2D rectangle. */
-typedef struct Rectangle_ {
+typedef struct Rectangle2D_ {
 	/* Coordinates of top left corner of rectangle.*/
 	Int32 X, Y;
 	/* Size of rectangle. */
 	Int32 Width, Height;
-} Rectangle;
+} Rectangle2D;
 
 
 /* Creates a new rectangle. */
-Rectangle Rectangle_Make(Int32 x, Int32 y, Int32 width, Int32 height);
+Rectangle2D Rectangle2D_Make(Int32 x, Int32 y, Int32 width, Int32 height);
 
 /* Returns whether the given rectangle contains the given point. */
-bool Rectangle_Contains(Rectangle a, Int32 x, Int32 y);
+bool Rectangle2D_Contains(Rectangle2D a, Int32 x, Int32 y);
 #endif

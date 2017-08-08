@@ -24,3 +24,4 @@ static BlockID AutoRotate_RotateDirection(BlockID block, String* name, Vector3 o
 
 static BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix);
 #endif
+#endif

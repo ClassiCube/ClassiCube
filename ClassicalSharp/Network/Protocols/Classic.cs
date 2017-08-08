@@ -186,7 +186,7 @@ namespace ClassicalSharp.Network.Protocols {
 			string name = reader.ReadString();
 			string skin = name;
 			net.CheckName(id, ref name, ref skin);			
-			net.AddEntity(id, name, skin, true);
+			net.AddEntity(id, name, skin, true);			
 			
 			if (!net.addEntityHack) return;
 			// Workaround for some servers that declare they support ExtPlayerList,

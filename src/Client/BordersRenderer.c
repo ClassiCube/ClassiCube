@@ -19,7 +19,7 @@ GfxResourceID borders_sidesVb = -1, borders_edgesVb = -1;
 GfxResourceID borders_edgeTexId, borders_sideTexId;
 Int32 borders_sidesVertices, borders_edgesVertices;
 bool borders_fullBrightSides, borders_fullBrightEdge;
-Rectangle borders_rects[4];
+Rectangle2D borders_rects[4];
 TextureLoc borders_lastEdgeTexLoc, borders_lastSideTexLoc;
 
 /* Creates game component implementation. */
@@ -165,7 +165,7 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 
 	Int32 i;
 	for (i = 0; i < 4; i++) {
-		Rectangle r = borders_rects[i];
+		Rectangle2D r = borders_rects[i];
 		borders_sidesVertices += Math_CountVertices(r.Width, r.Height, axisSize); /* YQuads outside */
 	}
 	borders_sidesVertices += Math_CountVertices(World_Width, World_Length, axisSize); /* YQuads beneath map */
@@ -185,7 +185,7 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
-		Rectangle r = borders_rects[i];
+		Rectangle2D r = borders_rects[i];
 		BordersRenderer_DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (Real32)y, axisSize, col,
 			0, borders_YOffset(block), &temp);
 	}
@@ -210,7 +210,7 @@ void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 
 	Int32 i;
 	for (i = 0; i < 4; i++) {
-		Rectangle r = borders_rects[i];
+		Rectangle2D r = borders_rects[i];
 		borders_edgesVertices += Math_CountVertices(r.Width, r.Height, axisSize); /* YPlanes outside */
 	}
 
@@ -227,7 +227,7 @@ void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
-		Rectangle r = borders_rects[i];
+		Rectangle2D r = borders_rects[i];
 		BordersRenderer_DrawY(r.X, r.Y, r.X + r.Width, r.Y + r.Height, (Real32)y, axisSize, col,
 			borders_HorOffset(block), borders_YOffset(block), &temp);
 	}
@@ -305,11 +305,11 @@ void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int
 
 void BordersRenderer_CalculateRects(Int32 extent) {
 	extent = Math_AdjViewDist(extent);
-	borders_rects[0] = Rectangle_Make(-extent, -extent, extent + World_Width + extent, extent);
-	borders_rects[1] = Rectangle_Make(-extent, World_Length, extent + World_Width + extent, extent);
+	borders_rects[0] = Rectangle2D_Make(-extent, -extent, extent + World_Width + extent, extent);
+	borders_rects[1] = Rectangle2D_Make(-extent, World_Length, extent + World_Width + extent, extent);
 
-	borders_rects[2] = Rectangle_Make(-extent, 0, extent, World_Length);
-	borders_rects[3] = Rectangle_Make(World_Width, 0, extent, World_Length);
+	borders_rects[2] = Rectangle2D_Make(-extent, 0, extent, World_Length);
+	borders_rects[3] = Rectangle2D_Make(World_Width, 0, extent, World_Length);
 }
 
 void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, BlockID block) {
