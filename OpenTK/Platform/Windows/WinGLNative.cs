@@ -41,13 +41,12 @@ namespace OpenTK.Platform.Windows
 	internal sealed class WinGLNative : INativeWindow
 	{
 		const ExtendedWindowStyle ParentStyleEx = ExtendedWindowStyle.WindowEdge | ExtendedWindowStyle.ApplicationWindow;
-		const ExtendedWindowStyle ChildStyleEx = 0;
 		readonly IntPtr Instance = Marshal.GetHINSTANCE(typeof(WinGLNative).Module);
 		readonly IntPtr ClassName = Marshal.StringToHGlobalAuto(Guid.NewGuid().ToString());
 		readonly WindowProcedure WindowProcedureDelegate;
 
 		bool class_registered, disposed, exists;
-		WinWindowInfo window, child_window;
+		WinWindowInfo window;
 		WindowState windowState = WindowState.Normal;
 		bool focused;
 		bool mouse_outside_window = true;
@@ -68,8 +67,7 @@ namespace OpenTK.Platform.Windows
 			WindowProcedureDelegate = WindowProcedure;
 			// To avoid issues with Ati drivers on Windows 6+ with compositing enabled, the context will not be
 			// bound to the top-level window, but rather to a child window docked in the parent.
-			window = new WinWindowInfo(CreateWindow(x, y, width, height, title, device, IntPtr.Zero), null);
-			child_window = new WinWindowInfo(CreateWindow(0, 0, ClientSize.Width, ClientSize.Height, title, device, window.WindowHandle), window);			
+			window = new WinWindowInfo(CreateWindow(x, y, width, height, title, device));
 			exists = true;
 		}
 
@@ -119,7 +117,8 @@ namespace OpenTK.Platform.Windows
 							API.GetClientRect(handle, out rect);
 							client_rectangle = rect.ToRectangle();
 
-							API.SetWindowPos(child_window.WindowHandle, IntPtr.Zero, 0, 0, ClientRectangle.Width, ClientRectangle.Height,
+							API.SetWindowPos(window.WindowHandle, IntPtr.Zero,
+							                 bounds.X, bounds.Y, bounds.Width, bounds.Height,
 							                 SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
 							                 SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
 							if (suppress_resize <= 0 && Resize != null)
@@ -350,7 +349,6 @@ namespace OpenTK.Platform.Windows
 
 					API.UnregisterClass(ClassName, Instance);
 					window.Dispose();
-					child_window.Dispose();
 
 					if (Closed != null)
 						Closed(this, EventArgs.Empty);
@@ -365,7 +363,7 @@ namespace OpenTK.Platform.Windows
 		private void EnableMouseTracking() {
 			TrackMouseEventStructure me = new TrackMouseEventStructure();
 			me.Size = TrackMouseEventStructure.SizeInBytes;
-			me.TrackWindowHandle = child_window.WindowHandle;
+			me.TrackWindowHandle = window.WindowHandle;
 			me.Flags = TrackMouseEventFlags.LEAVE;
 
 			if (!API.TrackMouseEvent(ref me))
@@ -373,21 +371,14 @@ namespace OpenTK.Platform.Windows
 				            Marshal.GetLastWin32Error());
 		}
 
-		IntPtr CreateWindow(int x, int y, int width, int height, string title, DisplayDevice device, IntPtr parentHandle) {
+		IntPtr CreateWindow(int x, int y, int width, int height, string title, DisplayDevice device) {
 			// Use win32 to create the native window.
 			// Keep in mind that some construction code runs in the WM_CREATE message handler.
 
 			// The style of a parent window is different than that of a child window.
 			// Note: the child window should always be visible, even if the parent isn't.
-			WindowStyle style = 0;
-			ExtendedWindowStyle ex_style = 0;
-			if (parentHandle == IntPtr.Zero) {
-				style |= WindowStyle.OverlappedWindow | WindowStyle.ClipChildren;
-				ex_style = ParentStyleEx;
-			} else {
-				style |= WindowStyle.Visible | WindowStyle.Child | WindowStyle.ClipSiblings;
-				ex_style = ChildStyleEx;
-			}
+			WindowStyle style = WindowStyle.OverlappedWindow | WindowStyle.ClipChildren;
+			ExtendedWindowStyle ex_style = ParentStyleEx;
 
 			// Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc).
 			Win32Rectangle rect = new Win32Rectangle();
@@ -419,7 +410,7 @@ namespace OpenTK.Platform.Windows
 			IntPtr handle = API.CreateWindowEx(
 				ex_style, ClassName, window_name, style,
 				rect.left, rect.top, rect.Width, rect.Height,
-				parentHandle, IntPtr.Zero, Instance, IntPtr.Zero);
+				IntPtr.Zero, IntPtr.Zero, Instance, IntPtr.Zero);
 
 			if (handle == IntPtr.Zero)
 				throw new PlatformException(String.Format("Failed to create window. Error: {0}", Marshal.GetLastWin32Error()));
@@ -615,7 +606,7 @@ namespace OpenTK.Platform.Windows
 				style |= (value ? WindowStyle.Popup : WindowStyle.OverlappedWindow);
 
 				// Make sure client size doesn't change when changing the border style.
-				Win32Rectangle rect = Win32Rectangle.From( ClientSize );
+				Win32Rectangle rect = Win32Rectangle.From( bounds );
 				API.AdjustWindowRectEx( ref rect, style, false, ParentStyleEx );
 
 				// This avoids leaving garbage on the background window.
@@ -677,7 +668,7 @@ namespace OpenTK.Platform.Windows
 		}
 
 		public IWindowInfo WindowInfo {
-			get { return child_window; }
+			get { return window; }
 		}
 		
 		public KeyboardDevice Keyboard {

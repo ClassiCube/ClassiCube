@@ -43,17 +43,12 @@ namespace OpenTK.Platform.Windows {
 
 		/// <summary> Constructs a new instance with the specified window handle and parent. </summary>
 		/// <param name="handle">The window handle for this instance.</param>
-		/// <param name="parent">The parent window of this instance (may be null).</param>
-		public WinWindowInfo(IntPtr handle, WinWindowInfo parent) {
+		public WinWindowInfo(IntPtr handle) {
 			this.handle = handle;
-			this.parent = parent;
 		}
 
 		/// <summary> Gets or sets the handle of the window. </summary>
 		public IntPtr WindowHandle { get { return handle; } set { handle = value; } }
-
-		/// <summary> Gets or sets the Parent of the window (may be null). </summary>
-		public WinWindowInfo Parent { get { return parent; } set { parent = value; } }
 
 		/// <summary> Gets the device context for this window instance. </summary>
 		public IntPtr DeviceContext {
@@ -68,8 +63,7 @@ namespace OpenTK.Platform.Windows {
 		/// <summary>Returns a System.String that represents the current window.</summary>
 		/// <returns>A System.String that represents the current window.</returns>
 		public override string ToString() {
-			return String.Format("Windows.WindowInfo: Handle {0}, Parent ({1})",
-			                     WindowHandle, Parent != null ? Parent.ToString() : "null");
+			return String.Format("Windows.WindowInfo: Handle {0}", WindowHandle);
 		}
 
 		/// <summary>Checks if <c>this</c> and <c>obj</c> reference the same win32 window.</summary>
@@ -103,8 +97,6 @@ namespace OpenTK.Platform.Windows {
 					if (!API.ReleaseDC(this.handle, this.dc))
 						Debug.Print("[Warning] Failed to release device context {0}. Windows error: {1}.", this.dc, Marshal.GetLastWin32Error());
 
-				if (manual && parent != null)
-					parent.Dispose();
 				disposed = true;
 			}
 		}
