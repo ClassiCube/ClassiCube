@@ -20,6 +20,6 @@ namespace OpenTK {
         /// <summary> The window covers the whole working area, which includes the desktop but not the taskbar and/or panels. </summary>
         Maximized,
         /// <summary> The window covers the whole screen, including all taskbars and/or panels. </summary>
-        Fullscreen
+        Fullscreen,
     }
 }

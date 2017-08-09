@@ -4,7 +4,7 @@
 #include "Typedefs.h"
 #include "Vectors.h"
 #include "PackedCol.h"
-#include "BlockEnums.h"
+#include "Block.h"
 #include "Entity.h"
 #include "AABB.h"
 #include "GraphicsEnums.h"

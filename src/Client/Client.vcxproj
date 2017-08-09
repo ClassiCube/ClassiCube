@@ -174,7 +174,6 @@
     <ClInclude Include="AnimatedComp.h" />
     <ClInclude Include="AutoRotate.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
-    <ClInclude Include="BlockEnums.h" />
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
     <ClInclude Include="Builder.h" />
@@ -250,7 +249,6 @@
     <ClInclude Include="Texture.h" />
     <ClInclude Include="TextureRec.h" />
     <ClInclude Include="Typedefs.h" />
-    <ClInclude Include="Vector3I.h" />
     <ClInclude Include="Vectors.h" />
     <ClInclude Include="VertexStructs.h" />
     <ClInclude Include="World.h" />
@@ -319,7 +317,6 @@
     <ClCompile Include="TickQueue.c" />
     <ClCompile Include="TiltComp.c" />
     <ClCompile Include="TreeGen.c" />
-    <ClCompile Include="Vector3I.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="VertexStructs.c" />
     <ClCompile Include="WeatherRenderer.c" />

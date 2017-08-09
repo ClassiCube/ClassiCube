@@ -192,9 +192,6 @@
     <ClInclude Include="Bitmap.h">
       <Filter>Header Files\2D\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="BlockEnums.h">
-      <Filter>Header Files\Blocks</Filter>
-    </ClInclude>
     <ClInclude Include="Vectors.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
@@ -221,9 +218,6 @@
     </ClInclude>
     <ClInclude Include="ErrorHandler.h">
       <Filter>Header Files\Platform</Filter>
-    </ClInclude>
-    <ClInclude Include="Vector3I.h">
-      <Filter>Header Files\Math</Filter>
     </ClInclude>
     <ClInclude Include="World.h">
       <Filter>Header Files\Map</Filter>
@@ -454,9 +448,6 @@
     </ClCompile>
     <ClCompile Include="GraphicsCommon.c">
       <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="Vector3I.c">
-      <Filter>Source Files\Math</Filter>
     </ClCompile>
     <ClCompile Include="ExtMath.c">
       <Filter>Source Files\Math</Filter>

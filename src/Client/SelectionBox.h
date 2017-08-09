@@ -4,7 +4,6 @@
 #include "Typedefs.h"
 #include "PackedCol.h"
 #include "Vectors.h"
-#include "Vector3I.h"
 #include "VertexStructs.h"
 /* Describes a selection box, and contains methods related to the selection box.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

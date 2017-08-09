@@ -3,7 +3,7 @@
 #define CS_NORMALBUILDER_H
 #include "Builder.h"
 #include "Typedefs.h"
-#include "BlockEnums.h"
+#include "Block.h"
 #include "PackedCol.h"
 /* Implements a simple chunk mesh builder, where each block face is a single colour. 
    (whatever lighting engine returns as light colour for given block face at given coordinates)

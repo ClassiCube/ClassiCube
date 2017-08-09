@@ -1,7 +1,6 @@
 #if 0
 #include "WeatherRenderer.h"
 #include "Block.h"
-#include "BlockEnums.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "EventHandler.h"
@@ -13,7 +12,7 @@
 #include "MiscEvents.h"
 #include "PackedCol.h"
 #include "Platform.h"
-#include "Vector3I.h"
+#include "Vectors.h"
 #include "VertexStructs.h"
 #include "World.h"
 #include "WorldEnv.h"

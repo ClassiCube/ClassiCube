@@ -3,7 +3,7 @@
 #define CS_WORLD_H
 #include "Typedefs.h"
 #include "String.h"
-#include "Vector3I.h"
+#include "Vectors.h"
 /* Represents a fixed size 3D array of blocks.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

@@ -1,6 +1,6 @@
 #if 0
 #include "BlockID.h"
-#include "BlockEnums.h"
+#include "Block.h"
 #include "DefaultSet.h"
 
 Real32 DefaultSet_Height(BlockID b) {

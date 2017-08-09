@@ -4,7 +4,6 @@
 #include "MapRenderer.h"
 #include "GameProps.h"
 #include "Vectors.h"
-#include "Vector3I.h"
 #include "Constants.h"
 
 void ChunkSorter_UpdateSortOrder(void) {

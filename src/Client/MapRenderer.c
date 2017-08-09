@@ -1,7 +1,6 @@
 #if 0
 #include "MapRenderer.h"
 #include "Block.h"
-#include "BlockEnums.h"
 #include "GameProps.h"
 #include "GraphicsAPI.h"
 #include "GraphicsEnums.h"
@@ -9,7 +8,6 @@
 #include "World.h"
 #include "WorldEnv.h"
 #include "Vectors.h"
-#include "Vector3I.h"
 #include "ChunkSorter.h"
 #include "ChunkUpdater.h"
 bool inTranslucent;

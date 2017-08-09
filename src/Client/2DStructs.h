@@ -13,10 +13,26 @@ typedef struct Rectangle2D_ {
 	Int32 Width, Height;
 } Rectangle2D;
 
+/* Stores a coordinate in 2D space.*/
+typedef struct Point2D_ {
+	Int32 X, Y;
+} Point2D;
+
+/* Stores a point in 2D space. */
+typedef struct Size2D_ {
+	Int32 Width, Height;
+} Size2D;
+
 
 /* Creates a new rectangle. */
 Rectangle2D Rectangle2D_Make(Int32 x, Int32 y, Int32 width, Int32 height);
 
 /* Returns whether the given rectangle contains the given point. */
 bool Rectangle2D_Contains(Rectangle2D a, Int32 x, Int32 y);
+
+/* Creates a new size. */
+Size2D Size2D_Make(Int32 width, Int32 height);
+
+/* Creates a new point. */
+Point2D Point2D_Make(Int32 x, Int32 y);
 #endif

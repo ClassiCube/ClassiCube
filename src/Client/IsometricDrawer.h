@@ -4,7 +4,7 @@
 #include "Typedefs.h"
 #include "GraphicsEnums.h"
 #include "VertexStructs.h"
-#include "BlockEnums.h"
+#include "Block.h"
 /* Draws 2D isometric blocks for the hotbar and inventory UIs.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

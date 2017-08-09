@@ -7,7 +7,6 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 #include "Block.h"
-#include "BlockEnums.h"
 #include "TerrainAtlas1D.h"
 
 Int32 iso_count;

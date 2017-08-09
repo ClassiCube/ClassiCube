@@ -1,5 +1,6 @@
 #include "Vectors.h"
 #include "ExtMath.h"
+#include "Funcs.h"
 
 Vector2 Vector2_Create2(Real32 x, Real32 y) {
 	Vector2 v; v.X = x; v.Y = y; return v;
@@ -13,6 +14,13 @@ Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z) {
 	Vector3 v; v.X = x; v.Y = y; v.Z = z; return v;
 }
 
+Vector3I Vector3I_Create1(Int32 value) {
+	Vector3I v; v.X = value; v.Y = value; v.Z = value; return v;
+}
+
+Vector3I Vector3I_Create3(Int32 x, Int32 y, Int32 z) {
+	Vector3I v; v.X = x; v.Y = y; v.Z = z; return v;
+}
 
 Real32 Vector3_Length(Vector3* v) {
 	Real32 lenSquared = v->X * v->X + v->Y * v->Y + v->Z * v->Z;
@@ -23,31 +31,34 @@ Real32 Vector3_LengthSquared(Vector3* v) {
 	return v->X * v->X + v->Y * v->Y + v->Z * v->Z;
 }
 
+#define Vec3_Add(result, a, b)\
+result->X = a->X + b->X;\
+result->Y = a->Y + b->Y;\
+result->Z = a->Z + b->Z;
 
-void Vector3_Add(Vector3* result, Vector3* a, Vector3* b) {
-	result->X = a->X + b->X;
-	result->Y = a->Y + b->Y;
-	result->Z = a->Z + b->Z;
-}
-
+void Vector3_Add(Vector3* result, Vector3* a, Vector3* b) { Vec3_Add(result, a, b); }
+void Vector3I_Add(Vector3I* result, Vector3I* a, Vector3I* b) { Vec3_Add(result, a, b); }
 void Vector3_Add1(Vector3* result, Vector3* a, Real32 b) {
 	result->X = a->X + b;
 	result->Y = a->Y + b;
 	result->Z = a->Z + b;
 }
 
-void Vector3_Subtract(Vector3* result, Vector3* a, Vector3* b) {
-	result->X = a->X - b->X;
-	result->Y = a->Y - b->Y;
-	result->Z = a->Z - b->Z;
-}
+#define Vec3_Sub(result, a, b)\
+result->X = a->X - b->X;\
+result->Y = a->Y - b->Y;\
+result->Z = a->Z - b->Z;
 
-void Vector3_Multiply1(Vector3* result, Vector3* a, Real32 scale) {
-	result->X = a->X * scale;
-	result->Y = a->Y * scale;
-	result->Z = a->Z * scale;
-}
+void Vector3_Subtract(Vector3* result, Vector3* a, Vector3* b) { Vec3_Sub(result, a, b); }
+void Vector3I_Subtract(Vector3I* result, Vector3I* a, Vector3I* b) { Vec3_Sub(result, a, b); }
 
+#define Vec3_Mul1(result, a, scale)\
+result->X = a->X * scale;\
+result->Y = a->Y * scale;\
+result->Z = a->Z * scale;
+
+void Vector3_Multiply1(Vector3* result, Vector3* a, Real32 scale) { Vec3_Mul1(result, a, scale); }
+void Vector3I_Multiply1(Vector3I* result, Vector3I* a, Int32 scale) { Vec3_Mul1(result, a, scale); }
 void Vector3_Multiply3(Vector3* result, Vector3* a, Vector3* scale) {
 	result->X = a->X * scale->X;
 	result->Y = a->Y * scale->Y;
@@ -62,6 +73,12 @@ void Vector3_Divide3(Vector3* result, Vector3* a, Vector3* scale) {
 	result->X = a->X / scale->X;
 	result->Y = a->Y / scale->Y;
 	result->Z = a->Z / scale->Z;
+}
+
+void Vector3I_Negate(Vector3I* result, Vector3I* a) {
+	result->X = -a->X;
+	result->Y = -a->Y;
+	result->Z = -a->Z;
 }
 
 
@@ -87,7 +104,6 @@ void Vector3_Normalize(Vector3* result, Vector3* a) {
 	result->Y = a->Y * scale;
 	result->Z = a->Z * scale;
 }
-
 
 void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat) {
 	result->X = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
@@ -134,10 +150,35 @@ Vector3 Vector3_RotateZ(Vector3 v, Real32 angle) {
 }
 
 
-bool Vector3_Equals(Vector3* a, Vector3* b) {
-	return a->X == b->X && a->Y == b->Y && a->Z == b->Z;
+#define Vec3_EQ(a, b) a->X == b->X && a->Y == b->Y && a->Z == b->Z
+#define Vec3_NE(a, b) a->X != b->X || a->Y != b->Y || a->Z != b->Z
+
+bool Vector3_Equals(Vector3* a, Vector3* b) { return Vec3_EQ(a, b); }
+bool Vector3_NotEquals(Vector3* a, Vector3* b) { return Vec3_NE(a, b); }
+bool Vector3I_Equals(Vector3I* a, Vector3I* b) { return Vec3_EQ(a, b); }
+bool Vector3I_NotEquals(Vector3I* a, Vector3I* b) { return Vec3_NE(a, b); }
+
+
+void Vector3I_Floor(Vector3I* result, Vector3* a) {
+	result->X = Math_Floor(a->X);
+	result->Y = Math_Floor(a->Y);
+	result->Z = Math_Floor(a->Z);
 }
 
-bool Vector3_NotEquals(Vector3* a, Vector3* b) {
-	return a->X != b->X || a->Y != b->Y || a->Z != b->Z;
+void Vector3I_ToVector3(Vector3* result, Vector3I* a) {
+	result->X = (Real32)a->X;
+	result->Y = (Real32)a->Y;
+	result->Z = (Real32)a->Z;
+}
+
+void Vector3I_Min(Vector3I* result, Vector3I* a, Vector3I* b) {
+	result->X = min(a->X, b->X);
+	result->Y = min(a->Y, b->Y);
+	result->Z = min(a->Z, b->Z);
+}
+
+void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b) {
+	result->X = max(a->X, b->X);
+	result->Y = max(a->Y, b->Y);
+	result->Z = max(a->Z, b->Z);
 }

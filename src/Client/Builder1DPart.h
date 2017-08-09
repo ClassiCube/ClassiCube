@@ -3,7 +3,7 @@
 #define CS_BUILDER1DPART_H
 #include "Typedefs.h"
 #include "VertexStructs.h"
-#include "BlockEnums.h"
+#include "Block.h"
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas)
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

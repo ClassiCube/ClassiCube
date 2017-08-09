@@ -2,7 +2,7 @@
 #ifndef CS_DEFAULT_BLOCKS_H
 #define CS_DEFAULT_BLOCKS_H
 #include "Typedefs.h"
-#include "BlockEnums.h"
+#include "Block.h"
 #include "PackedCol.h"
 /* List of properties for core blocks.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

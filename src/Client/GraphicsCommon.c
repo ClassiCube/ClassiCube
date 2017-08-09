@@ -2,7 +2,7 @@
 #include "GraphicsAPI.h"
 #include "GraphicsEnums.h"
 #include "Platform.h"
-#include "BlockEnums.h"
+#include "Block.h"
 
 void GfxCommon_Init(void) {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, 4);

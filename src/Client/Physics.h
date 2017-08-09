@@ -3,7 +3,7 @@
 #define CS_PHYSICS_H
 #include "Typedefs.h"
 #include "BlockID.h"
-#include "Vector3I.h"
+#include "Vectors.h"
 #include "TickQueue.h"
 /* Implements simple block physics.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3

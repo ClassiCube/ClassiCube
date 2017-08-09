@@ -2,7 +2,7 @@
 #ifndef CS_BUILDER_H
 #define CS_BUILDER_H
 #include "Typedefs.h"
-#include "BlockEnums.h"
+#include "Block.h"
 #include "PackedCol.h"
 #include "ChunkInfo.h"
 #include "BlockID.h"

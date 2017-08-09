@@ -2,9 +2,8 @@
 #ifndef CS_PICKEDPOS_H
 #define CS_PICKEDPOS_H
 #include "Typedefs.h"
-#include "Vector3I.h"
 #include "Vectors.h"
-#include "BlockEnums.h"
+#include "Block.h"
 /* Data for picked/selected block by the user, and related methods.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
 */
