@@ -33,7 +33,6 @@ using OpenTK.Input;
 
 namespace OpenTK.Platform.Windows
 {
-	/// \internal
 	/// <summary>
 	/// Drives GameWindow on Windows.
 	/// This class supports OpenTK, and is not intended for use by OpenTK programs.
@@ -65,8 +64,6 @@ namespace OpenTK.Platform.Windows
 
 		public WinGLNative(int x, int y, int width, int height, string title, DisplayDevice device) {
 			WindowProcedureDelegate = WindowProcedure;
-			// To avoid issues with Ati drivers on Windows 6+ with compositing enabled, the context will not be
-			// bound to the top-level window, but rather to a child window docked in the parent.
 			window = new WinWindowInfo(CreateWindow(x, y, width, height, title, device));
 			exists = true;
 		}

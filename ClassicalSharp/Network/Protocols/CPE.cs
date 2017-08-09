@@ -49,7 +49,7 @@ namespace ClassicalSharp.Network.Protocols {
 			net.Set(Opcode.CpeSetMapEnvUrl, HandleSetMapEnvUrl, 65);
 			net.Set(Opcode.CpeSetMapEnvProperty, HandleSetMapEnvProperty, 6);
 			net.Set(Opcode.CpeSetEntityProperty, HandleSetEntityProperty, 7);
-			net.Set(Opcode.TwoWayPing, HandleTwoWayPing, 4);
+			net.Set(Opcode.CpeTwoWayPing, HandleTwoWayPing, 4);
 		}
 		
 		#region Read
@@ -444,7 +444,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		internal void WriteTwoWayPing(bool serverToClient, ushort data) {
-			writer.WriteUInt8((byte)Opcode.TwoWayPing);
+			writer.WriteUInt8((byte)Opcode.CpeTwoWayPing);
 			writer.WriteUInt8((byte)(serverToClient ? 1 : 0));
 			writer.WriteInt16((short)data);			
 		}

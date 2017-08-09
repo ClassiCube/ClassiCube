@@ -285,8 +285,8 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 				if (Block_Draw[b] == DrawType_Gas) continue;
 				Int32 index = ((yy << 8) | (zz << 4) | xx) * Face_Count;
 
-				// Sprites only use one face to indicate stretching count, so we can take a shortcut here.
-				// Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite.
+				/* Sprites only use one face to indicate stretching count, so we can take a shortcut here.
+				   Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite. */
 				if (Block_Draw[b] == DrawType_Sprite) {
 					index += Face_YMax;
 					if (Builder_Counts[index] != 0) {
