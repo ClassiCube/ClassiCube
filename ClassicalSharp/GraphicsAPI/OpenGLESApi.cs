@@ -39,7 +39,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BlendFunc(blendFuncs[(int)srcFunc], blendFuncs[(int)dstFunc]);
 		}
 		
-		public override bool Fog { set { Toggle(All.Fog, value); } }
+		bool fogEnable;
+		public override bool Fog {
+			get { return fogEnable; }
+			set { fogEnable = value; Toggle(All.Fog, value); } 
+		}
 		
 		FastColour lastFogCol = FastColour.Black;
 		public override void SetFogColour(FastColour col) {

@@ -69,6 +69,9 @@ void Gfx_DeleteTexture(GfxResourceID* texId);
 void Gfx_SetTexturing(bool enabled);
 
 
+/* Gets whether fog is currently enabled. */
+bool Gfx_GetFog(void);
+
 /* Sets whether fog is currently enabled. */
 void Gfx_SetFog(bool enabled);
 

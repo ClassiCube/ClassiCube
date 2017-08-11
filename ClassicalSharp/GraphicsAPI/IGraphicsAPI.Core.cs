@@ -97,10 +97,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			vertices[index++] = new VertexP3fT2fC4b(x2, y2, 0, tex.U2, tex.V2, col);
 			vertices[index++] = new VertexP3fT2fC4b(x1, y2, 0, tex.U1, tex.V2, col);
 		}
+		bool hadFog;
 		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
 		/// is suitable for rendering 2D quads and other 2D graphics to. </summary>
-		public void Mode2D(float width, float height, bool setFog) {
+		public void Mode2D(float width, float height) {
 			SetMatrixMode(MatrixType.Projection);
 			PushMatrix();
 			LoadOrthoMatrix(width, height);
@@ -110,12 +111,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			DepthTest = false;
 			AlphaBlending = true;
-			if (setFog) Fog = false;
+			hadFog = Fog;
+			if (hadFog) Fog = false;
 		}
 		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
 		/// is suitable for rendering 3D vertices. </summary>
-		public void Mode3D(bool setFog) {
+		public void Mode3D() {
 			SetMatrixMode(MatrixType.Projection);
 			PopMatrix(); // Get rid of orthographic 2D matrix.
 			SetMatrixMode(MatrixType.Modelview);
@@ -123,7 +125,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			DepthTest = true;
 			AlphaBlending = false;
-			if (setFog) Fog = true;
+			if (hadFog) Fog = true;
 		}
 		
 		internal unsafe int MakeDefaultIb() {

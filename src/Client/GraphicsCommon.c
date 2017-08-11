@@ -88,7 +88,8 @@ void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertice
 	VertexP3fT2fC4b_Set(*vertices, x1, y2, 0, tex->U1, tex->V2, col); vertices++;
 }
 
-void GfxCommon_Mode2D(Real32 width, Real32 height, bool setFog) {
+bool gfx_hadFog;
+void GfxCommon_Mode2D(Real32 width, Real32 height) {
 	Gfx_SetMatrixMode(MatrixType_Projection);
 	Gfx_PushMatrix();
 	Gfx_LoadOrthoMatrix(width, height);
@@ -98,10 +99,11 @@ void GfxCommon_Mode2D(Real32 width, Real32 height, bool setFog) {
 
 	Gfx_SetDepthTest(false);
 	Gfx_SetAlphaBlending(true);
-	if (setFog) Gfx_SetFog(false);
+	gfx_hadFog = Gfx_GetFog();
+	if (gfx_hadFog) Gfx_SetFog(false);
 }
 
-void GfxCommon_Mode3D(bool setFog) {
+void GfxCommon_Mode3D(void) {
 	Gfx_SetMatrixMode(MatrixType_Projection);
 	Gfx_PopMatrix(); /* Get rid of orthographic 2D matrix. */
 	Gfx_SetMatrixMode(MatrixType_Modelview);
@@ -109,7 +111,7 @@ void GfxCommon_Mode3D(bool setFog) {
 
 	Gfx_SetDepthTest(false);
 	Gfx_SetAlphaBlending(false);
-	if (setFog) Gfx_SetFog(true);
+	if (gfx_hadFog) Gfx_SetFog(true);
 }
 
 GfxResourceID GfxCommon_MakeDefaultIb(void) {

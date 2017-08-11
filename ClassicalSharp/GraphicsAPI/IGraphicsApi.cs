@@ -84,8 +84,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Frees all native resources held for the given texture id. </summary>
 		public void DeleteTexture(ref Texture texture) { DeleteTexture(ref texture.ID); }
 		
-		/// <summary> Sets whether fog is currently enabled. </summary>
-		public abstract bool Fog { set; }
+		/// <summary> Gets or sets whether fog is currently enabled. </summary>
+		public abstract bool Fog { get; set; }
 		
 		/// <summary> Sets the fog colour that is blended with final primitive colours. </summary>
 		public abstract void SetFogColour(FastColour col);

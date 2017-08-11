@@ -111,6 +111,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		bool fogEnable;
 		public override bool Fog {
+			get { return fogEnable;
 			set { if (value == fogEnable) return;
 				fogEnable = value; device.SetRenderState(RenderState.FogEnable, value);
 			}

@@ -55,11 +55,11 @@ void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertice
 
 /* Updates the various matrix stacks and properties so that the graphics API state
 is suitable for rendering 2D quads and other 2D graphics to. */
-void GfxCommon_Mode2D(Real32 width, Real32 height, bool setFog);
+void GfxCommon_Mode2D(Real32 width, Real32 height);
 
 /* Updates the various matrix stacks and properties so that the graphics API state
  is suitable for rendering 3D vertices. */
-void GfxCommon_Mode3D(bool setFog);
+void GfxCommon_Mode3D(void);
 
 /* Makes the default index buffer used for drawing quads. */
 GfxResourceID GfxCommon_MakeDefaultIb(void);
