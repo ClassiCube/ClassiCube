@@ -17,7 +17,7 @@ namespace ClassicalSharp.Mode {
 		Game game;
 		
 		public bool HandlesKeyDown(Key key) {
-			if (key == game.Input.Keys[KeyBind.Inventory]) {
+			if (key == game.Input.Keys[KeyBind.Inventory] && game.Gui.ActiveScreen == game.Gui.hudScreen) {
 				game.Gui.SetNewScreen(new InventoryScreen(game));
 				return true;
 			}
