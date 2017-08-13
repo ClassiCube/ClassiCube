@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 			x++;
 			chunkIndex++;
 			countIndex += Side.Sides;
-			bool stretchTile = (info.CanStretch[block] & (1 << Side.Top)) != 0;
+			bool stretchTile = (BlockInfo.CanStretch[block] & (1 << Side.Top)) != 0;
 			
 			while (x < chunkEndX && stretchTile && CanStretch(block, chunkIndex, x, y, z, Side.Top) && !OccludedLiquid(chunkIndex)) {
 				counts[countIndex] = 0;
@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			x++;
 			chunkIndex++;
 			countIndex += Side.Sides;
-			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
+			bool stretchTile = (BlockInfo.CanStretch[block] & (1 << face)) != 0;
 			
 			while (x < chunkEndX && stretchTile && CanStretch(block, chunkIndex, x, y, z, face)) {
 				counts[countIndex] = 0;
@@ -56,7 +56,7 @@ namespace ClassicalSharp {
 			z++;
 			chunkIndex += extChunkSize;
 			countIndex += chunkSize * Side.Sides;
-			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
+			bool stretchTile = (BlockInfo.CanStretch[block] & (1 << face)) != 0;
 			
 			while (z < chunkEndZ && stretchTile && CanStretch(block, chunkIndex, x, y, z, face)) {
 				counts[countIndex] = 0;
@@ -71,12 +71,12 @@ namespace ClassicalSharp {
 		bool CanStretch(BlockID initial, int chunkIndex, int x, int y, int z, int face) {
 			BlockID cur = chunk[chunkIndex];
 			return cur == initial
-				&& !info.IsFaceHidden(cur, chunk[chunkIndex + offsets[face]], face)
+				&& !BlockInfo.IsFaceHidden(cur, chunk[chunkIndex + offsets[face]], face)
 				&& (fullBright || (LightCol(X, Y, Z, face, initial) == LightCol(x, y, z, face, cur)));
 		}
 		
 		int LightCol(int x, int y, int z, int face, BlockID block) {
-			int offset = (info.LightOffset[block] >> face) & 1;
+			int offset = (BlockInfo.LightOffset[block] >> face) & 1;
 			switch (face) {
 				case Side.Left:
 					return x < offset          ? light.OutsideXSide    : light.LightCol_XSide_Fast(x - offset, y, z);
@@ -101,9 +101,9 @@ namespace ClassicalSharp {
 		}
 		
 		protected override void RenderTile(int index) {
-			if (info.Draw[curBlock] == DrawType.Sprite) {
-				this.fullBright = info.FullBright[curBlock];
-				this.tinted = info.Tinted[curBlock];
+			if (BlockInfo.Draw[curBlock] == DrawType.Sprite) {
+				this.fullBright = BlockInfo.FullBright[curBlock];
+				this.tinted = BlockInfo.Tinted[curBlock];
 				int count = counts[index + Side.Top];
 				if (count != 0) DrawSprite(count);
 				return;
@@ -115,22 +115,22 @@ namespace ClassicalSharp {
 			if (leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			    backCount == 0 && bottomCount == 0 && topCount == 0) return;
 			
-			bool fullBright = info.FullBright[curBlock];
-			bool isTranslucent = info.Draw[curBlock] == DrawType.Translucent;
-			int lightFlags = info.LightOffset[curBlock];
+			bool fullBright = BlockInfo.FullBright[curBlock];
+			bool isTranslucent = BlockInfo.Draw[curBlock] == DrawType.Translucent;
+			int lightFlags = BlockInfo.LightOffset[curBlock];
 			
-			drawer.minBB = info.MinBB[curBlock]; drawer.minBB.Y = 1 - drawer.minBB.Y;
-			drawer.maxBB = info.MaxBB[curBlock]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
+			drawer.minBB = BlockInfo.MinBB[curBlock]; drawer.minBB.Y = 1 - drawer.minBB.Y;
+			drawer.maxBB = BlockInfo.MaxBB[curBlock]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
 			
-			Vector3 min = info.RenderMinBB[curBlock], max = info.RenderMaxBB[curBlock];
+			Vector3 min = BlockInfo.RenderMinBB[curBlock], max = BlockInfo.RenderMaxBB[curBlock];
 			drawer.x1 = X + min.X; drawer.y1 = Y + min.Y; drawer.z1 = Z + min.Z;
 			drawer.x2 = X + max.X; drawer.y2 = Y + max.Y; drawer.z2 = Z + max.Z;
 			
-			drawer.Tinted = game.BlockInfo.Tinted[curBlock];
-			drawer.TintColour = game.BlockInfo.FogColour[curBlock];
+			drawer.Tinted = BlockInfo.Tinted[curBlock];
+			drawer.TintColour = BlockInfo.FogColour[curBlock];
 			
 			if (leftCount != 0) {
-				int texId = info.textures[curBlock * Side.Sides + Side.Left];
+				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Left];
 				int i = texId / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Left) & 1;
 				
@@ -141,7 +141,7 @@ namespace ClassicalSharp {
 			}
 			
 			if (rightCount != 0) {
-				int texId = info.textures[curBlock * Side.Sides + Side.Right];
+				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
 				int i = texId / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Right) & 1;
 				
@@ -152,7 +152,7 @@ namespace ClassicalSharp {
 			}
 			
 			if (frontCount != 0) {
-				int texId = info.textures[curBlock * Side.Sides + Side.Front];
+				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Front];
 				int i = texId / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Front) & 1;
 				
@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 			}
 			
 			if (backCount != 0) {
-				int texId = info.textures[curBlock * Side.Sides + Side.Back];
+				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Back];
 				int i = texId / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Back) & 1;
 				
@@ -174,7 +174,7 @@ namespace ClassicalSharp {
 			}
 			
 			if (bottomCount != 0) {
-				int texId = info.textures[curBlock * Side.Sides + Side.Bottom];
+				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Bottom];
 				int i = texId / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Bottom) & 1;
 				
@@ -184,7 +184,7 @@ namespace ClassicalSharp {
 			}
 			
 			if (topCount != 0) {
-				int texId = info.textures[curBlock * Side.Sides + Side.Top];
+				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Top];
 				int i = texId / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Top) & 1;
 

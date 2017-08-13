@@ -14,7 +14,6 @@ namespace ClassicalSharp.Map {
 	public sealed partial class BasicLighting : IWorldLighting {
 		
 		int oneY, shadow, shadowZSide, shadowXSide, shadowYBottom;
-		BlockInfo info;
 		Game game;
 		
 		public override void Reset(Game game) { heightmap = null; }
@@ -29,7 +28,6 @@ namespace ClassicalSharp.Map {
 			width = game.World.Width;
 			height = game.World.Height;
 			length = game.World.Length;
-			info = game.BlockInfo;
 			this.game = game;
 			oneY = width * length;
 			

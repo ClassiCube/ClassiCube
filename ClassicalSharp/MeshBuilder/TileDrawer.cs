@@ -101,21 +101,21 @@ namespace ClassicalSharp {
 		}
 		
 		void AddSpriteVertices(BlockID block) {
-			int i = atlas.Get1DIndex(info.GetTextureLoc(block, Side.Left));
+			int i = atlas.Get1DIndex(BlockInfo.GetTextureLoc(block, Side.Left));
 			DrawInfo part = normalParts[i];
 			part.spriteCount += 6 * 4;
 			part.iCount += 6 * 4;
 		}
 		
 		void AddVertices(BlockID block, int face) {
-			int i = atlas.Get1DIndex(info.GetTextureLoc(block, face));
-			DrawInfo part = info.Draw[block] == DrawType.Translucent ? translucentParts[i] : normalParts[i];
+			int i = atlas.Get1DIndex(BlockInfo.GetTextureLoc(block, face));
+			DrawInfo part = BlockInfo.Draw[block] == DrawType.Translucent ? translucentParts[i] : normalParts[i];
 			part.iCount += 6;
 			part.vCount[face] += 6;
 		}
 		
 		protected virtual void DrawSprite(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Right];
+			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			const float blockHeight = 1;
@@ -158,7 +158,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected int TintBlock(BlockID curBlock, int col) {
-			FastColour fogCol = info.FogColour[curBlock];
+			FastColour fogCol = BlockInfo.FogColour[curBlock];
 			FastColour newCol = FastColour.Unpack(col);
 			newCol *= fogCol;
 			return newCol.Pack();

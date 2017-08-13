@@ -116,7 +116,7 @@ namespace ClassicalSharp.Map {
 			nbt.Write(NbtTagType.End);
 			
 			nbt.WriteCpeExtCompound("BlockDefinitions", 1);
-			uint[] flags = game.BlockInfo.DefinedCustomBlocks;
+			uint[] flags = BlockInfo.DefinedCustomBlocks;
 			for (int block = 1; block < 256; block++) {
 				if ((flags[block >> 5] & (1u << (block & 0x1F))) != 0)
 					WriteBlockDefinitionCompound((byte)block);
@@ -141,47 +141,46 @@ namespace ClassicalSharp.Map {
 		}
 		
 		unsafe void WriteBlockDefinitionCompound(byte id) {
-			BlockInfo info = game.BlockInfo;
 			nbt.Write(NbtTagType.Compound); nbt.Write("Block" + id);
 			
 			nbt.Write(NbtTagType.Int8);
 			nbt.Write("ID"); nbt.WriteUInt8(id);
 			nbt.Write(NbtTagType.String);
-			nbt.Write("Name"); nbt.Write(info.Name[id]);
+			nbt.Write("Name"); nbt.Write(BlockInfo.Name[id]);
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("CollideType"); nbt.WriteUInt8((byte)info.Collide[id]);		
-			float speed = info.SpeedMultiplier[id];
+			nbt.Write("CollideType"); nbt.WriteUInt8((byte)BlockInfo.Collide[id]);		
+			float speed = BlockInfo.SpeedMultiplier[id];
 			nbt.Write(NbtTagType.Real32);
 			nbt.Write("Speed"); nbt.WriteInt32(*((int*)&speed));
 			
 			nbt.Write(NbtTagType.Int8Array);
 			nbt.Write("Textures"); nbt.WriteInt32(6);
-			nbt.WriteUInt8(info.GetTextureLoc(id, Side.Top));
-			nbt.WriteUInt8(info.GetTextureLoc(id, Side.Bottom));
-			nbt.WriteUInt8(info.GetTextureLoc(id, Side.Left));
-			nbt.WriteUInt8(info.GetTextureLoc(id, Side.Right));
-			nbt.WriteUInt8(info.GetTextureLoc(id, Side.Front));
-			nbt.WriteUInt8(info.GetTextureLoc(id, Side.Back));
+			nbt.WriteUInt8(BlockInfo.GetTextureLoc(id, Side.Top));
+			nbt.WriteUInt8(BlockInfo.GetTextureLoc(id, Side.Bottom));
+			nbt.WriteUInt8(BlockInfo.GetTextureLoc(id, Side.Left));
+			nbt.WriteUInt8(BlockInfo.GetTextureLoc(id, Side.Right));
+			nbt.WriteUInt8(BlockInfo.GetTextureLoc(id, Side.Front));
+			nbt.WriteUInt8(BlockInfo.GetTextureLoc(id, Side.Back));
 			
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("TransmitsLight"); nbt.WriteUInt8(info.BlocksLight[id] ? 0 : 1);
+			nbt.Write("TransmitsLight"); nbt.WriteUInt8(BlockInfo.BlocksLight[id] ? 0 : 1);
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("WalkSound"); nbt.WriteUInt8((byte)info.DigSounds[id]);
+			nbt.Write("WalkSound"); nbt.WriteUInt8((byte)BlockInfo.DigSounds[id]);
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("FullBright"); nbt.WriteUInt8(info.FullBright[id] ? 1 : 0);
+			nbt.Write("FullBright"); nbt.WriteUInt8(BlockInfo.FullBright[id] ? 1 : 0);
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("Shape"); nbt.WriteUInt8(GetShape(info, id));
+			nbt.Write("Shape"); nbt.WriteUInt8(GetShape(id));
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("BlockDraw"); nbt.WriteUInt8(GetDraw(info, id));
+			nbt.Write("BlockDraw"); nbt.WriteUInt8(GetDraw(id));
 			
-			FastColour col = info.FogColour[id];
+			FastColour col = BlockInfo.FogColour[id];
 			nbt.Write(NbtTagType.Int8Array);
 			nbt.Write("Fog"); nbt.WriteInt32(4);
-			byte fog = (byte)(128 * info.FogDensity[id] - 1);
-			nbt.WriteUInt8(info.FogDensity[id] == 0 ? (byte)0 : fog);
+			byte fog = (byte)(128 * BlockInfo.FogDensity[id] - 1);
+			nbt.WriteUInt8(BlockInfo.FogDensity[id] == 0 ? (byte)0 : fog);
 			nbt.WriteUInt8(col.R); nbt.WriteUInt8(col.G); nbt.WriteUInt8(col.B);
 			
-			Vector3 min = info.MinBB[id], max = info.MaxBB[id];
+			Vector3 min = BlockInfo.MinBB[id], max = BlockInfo.MaxBB[id];
 			nbt.Write(NbtTagType.Int8Array);
 			nbt.Write("Coords"); nbt.WriteInt32(6);
 			nbt.WriteUInt8((byte)(min.X * 16)); nbt.WriteUInt8((byte)(min.Y * 16)); 
@@ -190,14 +189,14 @@ namespace ClassicalSharp.Map {
 			nbt.Write(NbtTagType.End);
 		}
 		
-		int GetShape(BlockInfo info, byte id) {
-			return info.Draw[id] == DrawType.Sprite ? 0 : (int)(info.MaxBB[id].Y * 16);
+		int GetShape(byte id) {
+			return BlockInfo.Draw[id] == DrawType.Sprite ? 0 : (int)(BlockInfo.MaxBB[id].Y * 16);
 		}
 		
-		int GetDraw(BlockInfo info, byte id) {
-			if (info.Draw[id] == DrawType.Sprite) 
+		int GetDraw(byte id) {
+			if (BlockInfo.Draw[id] == DrawType.Sprite) 
 				return DrawType.Transparent;
-			return info.Draw[id];
+			return BlockInfo.Draw[id];
 		}
 	}
 }

@@ -53,7 +53,6 @@ namespace ClassicalSharp.Physics {
 			}			
 			
 			AABB blockBB = default(AABB);
-			BlockInfo info = game.BlockInfo;
 			int count = 0;
 			
 			// Order loops so that we minimise cache misses
@@ -62,11 +61,11 @@ namespace ClassicalSharp.Physics {
 					for (int x = min.X; x <= max.X; x++)
 			{
 				BlockID block = game.World.GetPhysicsBlock(x, y, z);
-				if (info.Collide[block] != CollideType.Solid) continue;
+				if (BlockInfo.Collide[block] != CollideType.Solid) continue;
 				
-				blockBB.Min = info.MinBB[block];
+				blockBB.Min = BlockInfo.MinBB[block];
 				blockBB.Min.X += x; blockBB.Min.Y += y; blockBB.Min.Z += z;
-				blockBB.Max = info.MaxBB[block];
+				blockBB.Max = BlockInfo.MaxBB[block];
 				blockBB.Max.X += x; blockBB.Max.Y += y; blockBB.Max.Z += z;
 				
 				if (!entityExtentBB.Intersects(blockBB)) continue; // necessary for non whole blocks. (slabs)

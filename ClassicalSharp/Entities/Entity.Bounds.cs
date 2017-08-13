@@ -35,8 +35,7 @@ namespace ClassicalSharp.Entities {
 		public bool TouchesAny(AABB bounds, Predicate<BlockID> condition) {
 			Vector3I bbMin = Vector3I.Floor(bounds.Min);
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
-			
-			BlockInfo info = game.BlockInfo;
+
 			AABB blockBB = default(AABB);
 			
 			// Order loops so that we minimise cache misses
@@ -46,8 +45,8 @@ namespace ClassicalSharp.Entities {
 			{
 				if (!game.World.IsValidPos(x, y, z)) continue;
 				BlockID block = game.World.GetBlock(x, y, z);
-				blockBB.Min = new Vector3(x, y, z) + info.MinBB[block];
-				blockBB.Max = new Vector3(x, y, z) + info.MaxBB[block];
+				blockBB.Min = new Vector3(x, y, z) + BlockInfo.MinBB[block];
+				blockBB.Max = new Vector3(x, y, z) + BlockInfo.MaxBB[block];
 				
 				if (!blockBB.Intersects(bounds)) continue;
 				if (condition(block)) return true;
@@ -76,7 +75,6 @@ namespace ClassicalSharp.Entities {
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
 			
 			int height = game.World.Height;
-			BlockInfo info = game.BlockInfo;
 			AABB blockBB = default(AABB);
 			
 			// Order loops so that we minimise cache misses
@@ -90,15 +88,15 @@ namespace ClassicalSharp.Entities {
 				BlockID above = (y + 1) >= height ? Block.Air : game.World.GetBlock(x, y + 1, z);
 				
 				// TODO: use recording to find right constants when I have more time
-				blockBB.Min = new Vector3(x, y, z) + info.MinBB[block];
-				blockBB.Max = new Vector3(x, y, z) + info.MaxBB[block];
-				//if (game.BlockInfo.Collide[below] != CollideType.SwimThrough)
+				blockBB.Min = new Vector3(x, y, z) + BlockInfo.MinBB[block];
+				blockBB.Max = new Vector3(x, y, z) + BlockInfo.MaxBB[block];
+				//if (BlockInfo.Collide[below] != CollideType.SwimThrough)
 				//	min.Y += 4/16f;
-				//if (game.BlockInfo.Collide[above] != CollideType.SwimThrough)
+				//if (BlockInfo.Collide[above] != CollideType.SwimThrough)
 				//	max.Y -= 4/16f;
 				
 				if (!blockBB.Intersects(bounds)) continue;
-				if (info.ExtendedCollide[block] == collide) return true;
+				if (BlockInfo.ExtendedCollide[block] == collide) return true;
 			}
 			return false;
 		}

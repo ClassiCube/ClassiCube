@@ -16,11 +16,9 @@ namespace ClassicalSharp.Entities {
 		
 		Game game;
 		Entity entity;
-		BlockInfo info;
 		public CollisionsComponent(Game game, Entity entity) {
 			this.game = game;
 			this.entity = entity;
-			info = game.BlockInfo;
 		}
 		
 		internal bool hitXMin, hitYMin, hitZMin;
@@ -60,8 +58,8 @@ namespace ClassicalSharp.Entities {
 				State state = Searcher.stateCache[i];
 				bPos.X = state.X >> 3; bPos.Y = state.Y >> 3; bPos.Z = state.Z >> 3;				
 				int block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
-				blockBB.Min = bPos + info.MinBB[block];
-				blockBB.Max = bPos + info.MaxBB[block];
+				blockBB.Min = bPos + BlockInfo.MinBB[block];
+				blockBB.Max = bPos + BlockInfo.MaxBB[block];
 				if (!entityExtentBB.Intersects(blockBB)) continue;
 				
 				// Recheck time to collide with block (as colliding with blocks modifies this)
@@ -199,13 +197,13 @@ namespace ClassicalSharp.Entities {
 					for (int x = bbMin.X; x <= bbMax.X; x++)
 			{
 				BlockID block = game.World.GetPhysicsBlock(x, y, z);
-				Vector3 min = new Vector3(x, y, z) + info.MinBB[block];
-				Vector3 max = new Vector3(x, y, z) + info.MaxBB[block];
+				Vector3 min = new Vector3(x, y, z) + BlockInfo.MinBB[block];
+				Vector3 max = new Vector3(x, y, z) + BlockInfo.MaxBB[block];
 				
 				AABB blockBB = new AABB(min, max);
 				if (!blockBB.Intersects(adjFinalBB))
 					continue;
-				if (info.Collide[block] == CollideType.Solid)
+				if (BlockInfo.Collide[block] == CollideType.Solid)
 					return false;
 			}
 			return true;

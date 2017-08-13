@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 			x++;
 			chunkIndex++;
 			countIndex += Side.Sides;
-			bool stretchTile = (info.CanStretch[block] & (1 << Side.Top)) != 0;
+			bool stretchTile = (BlockInfo.CanStretch[block] & (1 << Side.Top)) != 0;
 			
 			while (x < chunkEndX && stretchTile && CanStretch(block, chunkIndex, x, y, z, Side.Top) && !OccludedLiquid(chunkIndex)) {
 				counts[countIndex] = 0;
@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 			x++;
 			chunkIndex++;
 			countIndex += Side.Sides;
-			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
+			bool stretchTile = (BlockInfo.CanStretch[block] & (1 << face)) != 0;
 			
 			while (x < chunkEndX && stretchTile && CanStretch(block, chunkIndex, x, y, z, face)) {
 				counts[countIndex] = 0;
@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 			z++;
 			chunkIndex += extChunkSize;
 			countIndex += chunkSize * Side.Sides;
-			bool stretchTile = (info.CanStretch[block] & (1 << face)) != 0;
+			bool stretchTile = (BlockInfo.CanStretch[block] & (1 << face)) != 0;
 			
 			while (z < chunkEndZ && stretchTile && CanStretch(block, chunkIndex, x, y, z, face)) {
 				counts[countIndex] = 0;
@@ -84,7 +84,7 @@ namespace ClassicalSharp {
 			BlockID rawBlock = chunk[chunkIndex];
 			bitFlags[chunkIndex] = ComputeLightFlags(x, y, z, chunkIndex);
 			return rawBlock == initialBlock
-				&& !info.IsFaceHidden(rawBlock, chunk[chunkIndex + offsets[face]], face)
+				&& !BlockInfo.IsFaceHidden(rawBlock, chunk[chunkIndex + offsets[face]], face)
 				&& (initBitFlags == bitFlags[chunkIndex]
 				    // Check that this face is either fully bright or fully in shadow
 				    && (initBitFlags == 0 || (initBitFlags & masks[face]) == masks[face]));
@@ -92,9 +92,9 @@ namespace ClassicalSharp {
 		
 		
 		protected override void RenderTile(int index) {
-			if (info.Draw[curBlock] == DrawType.Sprite) {
-				fullBright = info.FullBright[curBlock];
-				tinted = info.Tinted[curBlock];
+			if (BlockInfo.Draw[curBlock] == DrawType.Sprite) {
+				fullBright = BlockInfo.FullBright[curBlock];
+				tinted = BlockInfo.Tinted[curBlock];
 				int count = counts[index + Side.Top];
 				if (count != 0) DrawSprite(count);
 				return;
@@ -106,16 +106,16 @@ namespace ClassicalSharp {
 			if (leftCount == 0 && rightCount == 0 && frontCount == 0 &&
 			    backCount == 0 && bottomCount == 0 && topCount == 0) return;
 			
-			fullBright = info.FullBright[curBlock];
-			isTranslucent = info.Draw[curBlock] == DrawType.Translucent;
-			lightFlags = info.LightOffset[curBlock];
-			tinted = info.Tinted[curBlock];
+			fullBright = BlockInfo.FullBright[curBlock];
+			isTranslucent = BlockInfo.Draw[curBlock] == DrawType.Translucent;
+			lightFlags = BlockInfo.LightOffset[curBlock];
+			tinted = BlockInfo.Tinted[curBlock];
 			
-			Vector3 min = info.RenderMinBB[curBlock], max = info.RenderMaxBB[curBlock];
+			Vector3 min = BlockInfo.RenderMinBB[curBlock], max = BlockInfo.RenderMaxBB[curBlock];
 			x1 = X + min.X; y1 = Y + min.Y; z1 = Z + min.Z;
 			x2 = X + max.X; y2 = Y + max.Y; z2 = Z + max.Z;
 			
-			this.minBB = info.MinBB[curBlock]; this.maxBB = info.MaxBB[curBlock];
+			this.minBB = BlockInfo.MinBB[curBlock]; this.maxBB = BlockInfo.MaxBB[curBlock];
 			minBB.Y = 1 - minBB.Y; maxBB.Y = 1 - maxBB.Y;
 			
 			if (leftCount != 0) DrawLeftFace(leftCount);
@@ -128,7 +128,7 @@ namespace ClassicalSharp {
 		
 		
 		void DrawLeftFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Left];
+			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Left];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Left) & 1;
@@ -147,7 +147,7 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z0];
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z1];
 			if (tinted) {
-				FastColour tint = info.FogColour[curBlock];
+				FastColour tint = BlockInfo.FogColour[curBlock];
 				col0_0 = Utils.Tint(col0_0, tint);
 				col1_0 = Utils.Tint(col1_0, tint);
 				col1_1 = Utils.Tint(col1_1, tint);
@@ -168,7 +168,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawRightFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Right];
+			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Right) & 1;
@@ -187,7 +187,7 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z0];
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerpX[aY1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerpX[aY0_Z1];
 			if (tinted) {
-				FastColour tint = info.FogColour[curBlock];
+				FastColour tint = BlockInfo.FogColour[curBlock];
 				col0_0 = Utils.Tint(col0_0, tint);
 				col1_0 = Utils.Tint(col1_0, tint);
 				col1_1 = Utils.Tint(col1_1, tint);
@@ -208,7 +208,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawFrontFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Front];
+			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Front];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Front) & 1;
@@ -227,7 +227,7 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y0], col1_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y0];
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y1], col0_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y1];
 			if (tinted) {
-				FastColour tint = info.FogColour[curBlock];
+				FastColour tint = BlockInfo.FogColour[curBlock];
 				col0_0 = Utils.Tint(col0_0, tint);
 				col1_0 = Utils.Tint(col1_0, tint);
 				col1_1 = Utils.Tint(col1_1, tint);
@@ -248,7 +248,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawBackFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Back];
+			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Back];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Back) & 1;
@@ -267,7 +267,7 @@ namespace ClassicalSharp {
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y1], col1_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX1_Y0];
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y0], col0_1 = fullBright ? FastColour.WhitePacked : lerpZ[aX0_Y1];
 			if (tinted) {
-				FastColour tint = info.FogColour[curBlock];
+				FastColour tint = BlockInfo.FogColour[curBlock];
 				col0_0 = Utils.Tint(col0_0, tint);
 				col1_0 = Utils.Tint(col1_0, tint);
 				col1_1 = Utils.Tint(col1_1, tint);
@@ -288,7 +288,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawBottomFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Bottom];
+			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Bottom];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Bottom) & 1;
@@ -307,7 +307,7 @@ namespace ClassicalSharp {
 			int col0_1 = fullBright ? FastColour.WhitePacked : lerpY[aX0_Z1], col1_1 = fullBright ? FastColour.WhitePacked : lerpY[aX1_Z1];
 			int col1_0 = fullBright ? FastColour.WhitePacked : lerpY[aX1_Z0], col0_0 = fullBright ? FastColour.WhitePacked : lerpY[aX0_Z0];
 			if (tinted) {
-				FastColour tint = info.FogColour[curBlock];
+				FastColour tint = BlockInfo.FogColour[curBlock];
 				col0_0 = Utils.Tint(col0_0, tint);
 				col1_0 = Utils.Tint(col1_0, tint);
 				col1_1 = Utils.Tint(col1_1, tint);
@@ -328,7 +328,7 @@ namespace ClassicalSharp {
 		}
 
 		void DrawTopFace(int count) {
-			int texId = info.textures[curBlock * Side.Sides + Side.Top];
+			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Top];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
 			int offset = (lightFlags >> Side.Top) & 1;
@@ -347,7 +347,7 @@ namespace ClassicalSharp {
 			int col0_0 = fullBright ? FastColour.WhitePacked : lerp[aX0_Z0], col1_0 = fullBright ? FastColour.WhitePacked : lerp[aX1_Z0];
 			int col1_1 = fullBright ? FastColour.WhitePacked : lerp[aX1_Z1], col0_1 = fullBright ? FastColour.WhitePacked : lerp[aX0_Z1];
 			if (tinted) {
-				FastColour tint = info.FogColour[curBlock];
+				FastColour tint = BlockInfo.FogColour[curBlock];
 				col0_0 = Utils.Tint(col0_0, tint);
 				col1_0 = Utils.Tint(col1_0, tint);
 				col1_1 = Utils.Tint(col1_1, tint);
@@ -427,7 +427,7 @@ namespace ClassicalSharp {
 			int flags = 0;
 			BlockID block = chunk[cIndex];
 			int lightHeight = light.heightmap[(z * width) + x];
-			lightFlags = info.LightOffset[block];
+			lightFlags = BlockInfo.LightOffset[block];
 
 			// Use fact Light(Y.Bottom) == Light((Y - 1).Top)
 			int offset = (lightFlags >> Side.Bottom) & 1;
@@ -441,9 +441,9 @@ namespace ClassicalSharp {
 			flags |= ((y - offset) >= lightHeight ? 4 : 0);
 			
 			// Dynamic lighting
-			if (info.FullBright[block])               flags |= 5;
-			if (info.FullBright[chunk[cIndex + 324]]) flags |= 4;
-			if (info.FullBright[chunk[cIndex - 324]]) flags |= 1;
+			if (BlockInfo.FullBright[block])               flags |= 5;
+			if (BlockInfo.FullBright[chunk[cIndex + 324]]) flags |= 4;
+			if (BlockInfo.FullBright[chunk[cIndex - 324]]) flags |= 1;
 			return flags;
 		}
 		

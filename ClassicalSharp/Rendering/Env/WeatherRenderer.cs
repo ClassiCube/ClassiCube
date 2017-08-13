@@ -17,7 +17,6 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		World map;
 		IGraphicsApi gfx;
-		BlockInfo info;
 		
 		public int RainTexId, SnowTexId;
 		int vb;
@@ -32,7 +31,6 @@ namespace ClassicalSharp.Renderers {
 			this.game = game;
 			map = game.World;
 			gfx = game.Graphics;
-			info = game.BlockInfo;
 			game.Events.TextureChanged += TextureChanged;
 			
 			ContextRecreated();
@@ -167,13 +165,13 @@ namespace ClassicalSharp.Renderers {
 			int height = heightmap[index];
 			int y = height == short.MaxValue ? CalcHeightAt(x, maxY, z, index) : height;
 			return y == -1 ? 0 :
-				y + game.BlockInfo.MaxBB[map.GetBlock(x, y, z)].Y;
+				y + BlockInfo.MaxBB[map.GetBlock(x, y, z)].Y;
 		}
 		
 		int CalcHeightAt(int x, int maxY, int z, int index) {
 			int mapIndex = (maxY * length + z) * width + x;
 			for (int y = maxY; y >= 0; y--) {
-				byte draw = info.Draw[map.blocks[mapIndex]];
+				byte draw = BlockInfo.Draw[map.blocks[mapIndex]];
 				if (!(draw == DrawType.Gas || draw == DrawType.Sprite)) {
 					heightmap[index] = (short)y;
 					return y;
@@ -185,8 +183,8 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		internal void OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
-			bool didBlock = !(info.Draw[oldBlock] == DrawType.Gas || info.Draw[oldBlock] == DrawType.Sprite);
-			bool nowBlock =  !(info.Draw[newBlock] == DrawType.Gas || info.Draw[newBlock] == DrawType.Sprite);
+			bool didBlock = !(BlockInfo.Draw[oldBlock] == DrawType.Gas || BlockInfo.Draw[oldBlock] == DrawType.Sprite);
+			bool nowBlock =  !(BlockInfo.Draw[newBlock] == DrawType.Gas || BlockInfo.Draw[newBlock] == DrawType.Sprite);
 			if (didBlock == nowBlock) return;
 			
 			int index = (x * length) + z;

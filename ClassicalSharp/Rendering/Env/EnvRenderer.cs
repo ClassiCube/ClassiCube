@@ -51,18 +51,17 @@ namespace ClassicalSharp.Renderers {
 		
 		
 		protected BlockID BlockOn(out float fogDensity, out FastColour fogCol) {
-			BlockInfo info = game.BlockInfo;
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor(pos);
 			
 			BlockID block = game.World.SafeGetBlock(coords);
 			AABB blockBB = new AABB(
-				(Vector3)coords + info.MinBB[block],
-				(Vector3)coords + info.MaxBB[block]);
+				(Vector3)coords + BlockInfo.MinBB[block],
+				(Vector3)coords + BlockInfo.MaxBB[block]);
 			
-			if (blockBB.Contains(pos) && info.FogDensity[block] != 0) {
-				fogDensity = info.FogDensity[block];
-				fogCol = info.FogColour[block];
+			if (blockBB.Contains(pos) && BlockInfo.FogDensity[block] != 0) {
+				fogDensity = BlockInfo.FogDensity[block];
+				fogCol = BlockInfo.FogColour[block];
 			} else {
 				fogDensity = 0;
 				// Blend fog and sky together

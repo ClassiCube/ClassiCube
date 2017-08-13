@@ -131,7 +131,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int drawnY = 0, height = game.Height;
 			int col = new FastColour(64, 64, 64).Pack();
 			
-			int texLoc = game.BlockInfo.GetTextureLoc(Block.Dirt, Side.Top);
+			int texLoc = BlockInfo.GetTextureLoc(Block.Dirt, Side.Top);
 			TerrainAtlas1D atlas = game.TerrainAtlas1D;
 			Texture tex = new Texture(0, 0, 0, game.Width, 64, 
 			                          atlas.GetTexRec(texLoc, 1, out atlasIndex));

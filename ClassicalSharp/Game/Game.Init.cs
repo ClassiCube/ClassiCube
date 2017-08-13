@@ -69,7 +69,6 @@ namespace ClassicalSharp {
 			WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
 			Events.TextureChanged += TextureChangedCore;
 			
-			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			ModelCache = new ModelCache(this);
 			ModelCache.InitCache();

@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui.Screens {
 						TexturePack.ExtractDefault(game);
 						game.World.TextureUrl = null;
 					}
-					game.BlockInfo.Reset(game);
+					BlockInfo.Reset(game);
 					
 					byte[] blocks = importer.Load(fs, game, out width, out height, out length);
 					#if USE16_BIT

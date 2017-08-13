@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			TerrainAtlas1D.Dispose();
 			TerrainAtlas.Dispose();
 			
-			TerrainAtlas.UpdateState(BlockInfo, bmp);
+			TerrainAtlas.UpdateState(bmp);
 			TerrainAtlas1D.UpdateState(TerrainAtlas);
 		}
 		

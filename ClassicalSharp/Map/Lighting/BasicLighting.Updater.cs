@@ -28,10 +28,10 @@ namespace ClassicalSharp.Map {
 		MapRenderer renderer;		
 		void UpdateLighting(int x, int y, int z, BlockID oldBlock, 
 		                    BlockID newBlock, int index, int lightH) {
-			bool didBlock = info.BlocksLight[oldBlock];
-			bool nowBlocks = info.BlocksLight[newBlock];
-			int oldOffset = (info.LightOffset[oldBlock] >> Side.Top) & 1;
-			int newOffset = (info.LightOffset[newBlock] >> Side.Top) & 1;
+			bool didBlock = BlockInfo.BlocksLight[oldBlock];
+			bool nowBlocks = BlockInfo.BlocksLight[newBlock];
+			int oldOffset = (BlockInfo.LightOffset[oldBlock] >> Side.Top) & 1;
+			int newOffset = (BlockInfo.LightOffset[newBlock] >> Side.Top) & 1;
 			
 			// Two cases we need to handle here:
 			if (didBlock == nowBlocks) {
@@ -51,7 +51,7 @@ namespace ClassicalSharp.Map {
 				// For a solid block on top of an upside down slab, they will both have the same light height.
 				// So we need to account for this particular case.
 				BlockID above = y == (height - 1) ? Block.Air : game.World.GetBlock(x, y + 1, z);
-				if (info.BlocksLight[above]) return;
+				if (BlockInfo.BlocksLight[above]) return;
 				
 				if (nowBlocks) {
 					heightmap[index] = (short)(y - newOffset);
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		bool Needs(BlockID block, BlockID other) {
-			return info.Draw[block] != DrawType.Opaque || info.Draw[other] != DrawType.Gas;
+			return BlockInfo.Draw[block] != DrawType.Opaque || BlockInfo.Draw[other] != DrawType.Gas;
 		}
 		
 		void ResetNeighbour(int x, int y, int z, BlockID block,
@@ -117,7 +117,7 @@ namespace ClassicalSharp.Map {
 			// Update if any blocks in the chunk are affected by light change
 			for (; y >= minY; y--) {
 				BlockID other = world.blocks[index];
-				bool affected = y == nY ? Needs(block, other) : info.Draw[other] != DrawType.Gas;
+				bool affected = y == nY ? Needs(block, other) : BlockInfo.Draw[other] != DrawType.Gas;
 				if (affected) { renderer.RefreshChunk(cx, cy, cz); return; }
 				index -= world.Width * world.Length;
 			}

@@ -78,10 +78,10 @@ namespace ClassicalSharp.Textures {
 			}
 		}
 		
-		public int UsedAtlasesCount(BlockInfo info) {
+		public int UsedAtlasesCount() {
 			int maxTexId = 0;
-			for (int i = 0; i < info.textures.Length; i++) {
-				maxTexId = Math.Max(maxTexId, info.textures[i]);
+			for (int i = 0; i < BlockInfo.textures.Length; i++) {
+				maxTexId = Math.Max(maxTexId, BlockInfo.textures[i]);
 			}
 			return Get1DIndex(maxTexId) + 1;
 		}

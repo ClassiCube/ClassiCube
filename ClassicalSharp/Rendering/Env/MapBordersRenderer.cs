@@ -48,7 +48,7 @@ namespace ClassicalSharp.Renderers {
 			if (sidesVb == -1) return;
 			BlockID block = game.World.Env.SidesBlock;
 			
-			gfx.SetupAlphaState(game.BlockInfo.Draw[block]);
+			gfx.SetupAlphaState(BlockInfo.Draw[block]);
 			gfx.Texturing = true;
 			
 			gfx.BindTexture(sideTexId);
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.BindVb(sidesVb);
 			gfx.DrawVb_IndexedTris(sidesVertices * 6 / 4);
 			
-			gfx.RestoreAlphaState(game.BlockInfo.Draw[block]);
+			gfx.RestoreAlphaState(BlockInfo.Draw[block]);
 			gfx.Texturing = false;
 		}
 		
@@ -65,7 +65,7 @@ namespace ClassicalSharp.Renderers {
 			BlockID block = game.World.Env.EdgeBlock;		
 			
 			Vector3 camPos = game.CurrentCameraPos;
-			gfx.SetupAlphaState(game.BlockInfo.Draw[block]);
+			gfx.SetupAlphaState(BlockInfo.Draw[block]);
 			gfx.Texturing = true;
 			
 			gfx.BindTexture(edgeTexId);
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Renderers {
 			if (camPos.Y >= yVisible)
 				gfx.DrawVb_IndexedTris(edgesVertices * 6 / 4);
 			
-			gfx.RestoreAlphaState(game.BlockInfo.Draw[block]);
+			gfx.RestoreAlphaState(BlockInfo.Draw[block]);
 			gfx.Texturing = false;
 		}
 		
@@ -159,7 +159,7 @@ namespace ClassicalSharp.Renderers {
 		void RebuildSides(int y, int axisSize) {
 			BlockID block = game.World.Env.SidesBlock;
 			sidesVertices = 0;
-			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
+			if (BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
@@ -172,10 +172,10 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b[] v = new VertexP3fT2fC4b[sidesVertices];
 			int index = 0;
 			
-			fullBrightSides = game.BlockInfo.FullBright[block];
+			fullBrightSides = BlockInfo.FullBright[block];
 			int col = fullBrightSides ? FastColour.WhitePacked : map.Env.Shadow;
-			if (game.BlockInfo.Tinted[block]) {
-				col = Utils.Tint(col, game.BlockInfo.FogColour[block]);
+			if (BlockInfo.Tinted[block]) {
+				col = Utils.Tint(col, BlockInfo.FogColour[block]);
 			}
 			
 			for (int i = 0; i < rects.Length; i++) {
@@ -200,7 +200,7 @@ namespace ClassicalSharp.Renderers {
 		void RebuildEdges(int y, int axisSize) {
 			BlockID block = game.World.Env.EdgeBlock;
 			edgesVertices = 0;
-			if (game.BlockInfo.Draw[block] == DrawType.Gas) return;
+			if (BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			for (int i = 0; i < rects.Length; i++) {
 				Rectangle r = rects[i];
@@ -209,10 +209,10 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b[] v = new VertexP3fT2fC4b[edgesVertices];
 			int index = 0;
 			
-			fullBrightEdge = game.BlockInfo.FullBright[block];
+			fullBrightEdge = BlockInfo.FullBright[block];
 			int col = fullBrightEdge ? FastColour.WhitePacked : map.Env.Sun;
-			if (game.BlockInfo.Tinted[block]) {
-				col = Utils.Tint(col, game.BlockInfo.FogColour[block]);
+			if (BlockInfo.Tinted[block]) {
+				col = Utils.Tint(col, BlockInfo.FogColour[block]);
 			}
 			
 			for (int i = 0; i < rects.Length; i++) {
@@ -227,13 +227,11 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		float HorOffset(BlockID block) {
-			BlockInfo info = game.BlockInfo;
-			return info.RenderMinBB[block].X - info.MinBB[block].X;
+			return BlockInfo.RenderMinBB[block].X - BlockInfo.MinBB[block].X;
 		}
 		
 		float YOffset(BlockID block) {
-			BlockInfo info = game.BlockInfo;
-			return info.RenderMinBB[block].Y - info.MinBB[block].Y;
+			return BlockInfo.RenderMinBB[block].Y - BlockInfo.MinBB[block].Y;
 		}
 		
 		void DrawX(int x, int z1, int z2, int y1, int y2, int axisSize,
@@ -308,7 +306,7 @@ namespace ClassicalSharp.Renderers {
 		
 		int lastEdgeTexLoc, lastSideTexLoc;
 		void MakeTexture(ref int id, ref int lastTexLoc, BlockID block) {
-			int texLoc = game.BlockInfo.GetTextureLoc(block, Side.Top);
+			int texLoc = BlockInfo.GetTextureLoc(block, Side.Top);
 			if (texLoc == lastTexLoc || gfx.LostContext) return;
 			lastTexLoc = texLoc;
 			

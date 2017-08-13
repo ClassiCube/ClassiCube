@@ -168,7 +168,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = 0;
 			buffer.Clear();
 			buffer.Append(ref index, "&f");
-			string value = game.BlockInfo.Name[block];
+			string value = BlockInfo.Name[block];
 			buffer.Append(ref index, value);
 			if (game.ClassicMode) return;
 			
@@ -227,14 +227,14 @@ namespace ClassicalSharp.Gui.Screens {
 			if (game.PureClassic && IsHackBlock(block)) return false;
 			if (block < Block.CpeCount) {
 				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;
-				return block < count && game.BlockInfo.Name[block] != "Invalid";
+				return block < count && BlockInfo.Name[block] != "Invalid";
 			}
-			return game.BlockInfo.Name[block] != "Invalid";
+			return BlockInfo.Name[block] != "Invalid";
 		}
 		
 		bool IsHackBlock(BlockID block) {
 			return block == Block.DoubleSlab || block == Block.Bedrock ||
-				block == Block.Grass || game.BlockInfo.IsLiquid(block);
+				block == Block.Grass || BlockInfo.IsLiquid(block);
 		}
 		
 		protected override void ContextLost() { 
