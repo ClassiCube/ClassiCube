@@ -29,6 +29,7 @@ using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using OpenTK.Input;
 
 namespace OpenTK.Platform.Windows
@@ -64,8 +65,16 @@ namespace OpenTK.Platform.Windows
 
 		public WinGLNative(int x, int y, int width, int height, string title, DisplayDevice device) {
 			WindowProcedureDelegate = WindowProcedure;
+			UngroupFromTaskbar();
 			window = new WinWindowInfo(CreateWindow(x, y, width, height, title, device));
 			exists = true;
+		}
+		
+		void UngroupFromTaskbar() {
+			Version version = Environment.OSVersion.Version;
+			if ((version.Major > 6) || (version.Major == 6 && version.Minor >= 1)) {
+				API.SetCurrentProcessExplicitAppUserModelID("ClassicalSharp_" + new Random().Next());
+			}
 		}
 
 		unsafe IntPtr WindowProcedure(IntPtr handle, WindowMessage message, IntPtr wParam, IntPtr lParam) {
@@ -438,9 +447,55 @@ namespace OpenTK.Platform.Windows
 			suppress_resize--;
 		}
 		
-		public string GetClipboardText() { return ""; }
+		const uint GMEM_MOVEABLE = 2;
+		const uint CF_UNICODETEXT = 13;
+		public unsafe string GetClipboardText() {
+			// retry up to 10 times
+			for (int i = 0; i < 10; i++) {
+				if (API.OpenClipboard(window.WindowHandle)) {
+					IntPtr hGlobal = API.GetClipboardData(CF_UNICODETEXT);
+					if (hGlobal == IntPtr.Zero) { API.CloseClipboard(); return ""; }
+					
+					IntPtr src = API.GlobalLock(hGlobal);
+					string value = new String((char*)src);
+					API.GlobalUnlock(hGlobal);
+					
+					API.CloseClipboard();
+					return value;
+				}
+				Thread.Sleep(100);
+			}
+			return "";
+		}
 		
-		public void SetClipboardText( string value ) {	}	
+		public unsafe void SetClipboardText( string value ) {
+			UIntPtr dstSize = (UIntPtr)((value.Length + 1) * Marshal.SystemDefaultCharSize);
+			// retry up to 10 times
+			for (int i = 0; i < 10; i++) {
+				if (API.OpenClipboard(window.WindowHandle)) {
+					IntPtr hGlobal = API.GlobalAlloc(GMEM_MOVEABLE, dstSize);
+					if (hGlobal == IntPtr.Zero) { API.CloseClipboard(); return; }
+					
+					IntPtr dst = API.GlobalLock(hGlobal);
+					fixed (char* src = value) {
+						CopyString((IntPtr)src, dst, value.Length);
+					}
+					API.GlobalUnlock(hGlobal);
+					
+					API.EmptyClipboard();
+					API.SetClipboardData(CF_UNICODETEXT, hGlobal);
+					API.CloseClipboard();
+					return;
+				}
+				Thread.Sleep(100);
+			}
+		}
+		
+		unsafe static void CopyString(IntPtr src, IntPtr dst, int numChars) {
+			char* src2 = (char*)src, dst2 = (char*)dst;
+			for (int i = 0; i < numChars; i++) { dst2[i] = src2[i]; }
+			dst2[numChars] = '\0';
+		}
 
 		public Rectangle Bounds {
 			get { return bounds; }
