@@ -107,6 +107,10 @@ namespace ClassicalSharp {
 		public static SoundType[] DigSounds = new SoundType[Block.Count];
 		
 		public static SoundType[] StepSounds = new SoundType[Block.Count];
+		
+		public static bool[] CanPlace = new bool[Block.Count];
+		
+		public static bool[] CanDelete = new bool[Block.Count];
 
 		/// <summary> Gets whether the given block has a tinting colour applied to it when rendered. </summary>
 		/// <remarks> The tinting colour used is the block's fog colour. </remarks>
@@ -130,17 +134,17 @@ namespace ClassicalSharp {
 		}
 
 		/// <summary> Initialises the default blocks the player is allowed to place and delete. </summary>
-		public static void SetDefaultPerms(InventoryPermissions place, InventoryPermissions delete) {
+		public static void SetDefaultPerms() {
 			for (int block = Block.Stone; block <= Block.MaxDefinedBlock; block++) {
-				place[block] = true;
-				delete[block] = true;
+				CanPlace[block] = true;
+				CanPlace[block] = true;
 			}
 			
-			place[Block.Lava]       = false; delete[Block.Lava]       = false;
-			place[Block.Water]      = false; delete[Block.Water]      = false;
-			place[Block.StillLava]  = false; delete[Block.StillLava]  = false;
-			place[Block.StillWater] = false; delete[Block.StillWater] = false;
-			place[Block.Bedrock]    = false; delete[Block.Bedrock]    = false;
+			CanPlace[Block.Lava]       = false; CanDelete[Block.Lava]       = false;
+			CanPlace[Block.Water]      = false; CanDelete[Block.Water]      = false;
+			CanPlace[Block.StillLava]  = false; CanDelete[Block.StillLava]  = false;
+			CanPlace[Block.StillWater] = false; CanDelete[Block.StillWater] = false;
+			CanPlace[Block.Bedrock]    = false; CanDelete[Block.Bedrock]    = false;
 		}
 		
 		public static void SetCollide(BlockID block, byte collide) {

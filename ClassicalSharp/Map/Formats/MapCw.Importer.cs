@@ -174,8 +174,8 @@ namespace ClassicalSharp.Map {
 			game.Events.RaiseBlockDefinitionChanged();
 			BlockInfo.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 			
-			game.Inventory.CanPlace.SetNotOverridable(true, id);
-			game.Inventory.CanDelete.SetNotOverridable(true, id);
+			BlockInfo.CanPlace[id] = true;
+			BlockInfo.CanDelete[id] = true;
 			game.Events.RaiseBlockPermissionsChanged();
 		}
 	}

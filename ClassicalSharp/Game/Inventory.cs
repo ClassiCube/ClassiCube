@@ -9,7 +9,7 @@ using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 	
-	/// <summary> Contains the hotbar of blocks, as well as the permissions for placing and deleting all blocks. </summary>
+	/// <summary> Manages the hotbar and inventory of blocks. </summary>
 	public sealed class Inventory : IGameComponent {
 		
 		public void Init(Game game) {
@@ -29,8 +29,6 @@ namespace ClassicalSharp {
 		
 		public const int BlocksPerRow = 9, Rows = 9;
 		public BlockID[] Hotbar = new BlockID[BlocksPerRow * Rows];
-		public InventoryPermissions CanPlace = new InventoryPermissions();
-		public InventoryPermissions CanDelete = new InventoryPermissions();
 		
 		/// <summary> Gets or sets the block at the given index within the current row. </summary>
 		public BlockID this[int index] {
@@ -124,24 +122,6 @@ namespace ClassicalSharp {
 			Map[Block.Brick] = Block.Iron;
 			Map[Block.TNT] = Block.Gold;
 			Map[Block.MossyRocks] = Block.TNT;
-		}
-	}
-	
-	public class InventoryPermissions {
-		
-		byte[] values = new byte[Block.Count];
-		public bool this[int index] {
-			get { return (values[index] & 1) != 0; }
-			set {
-				if (values[index] >= 0x80) return;
-				values[index] &= 0xFE; // reset perm bit
-				values[index] |= (byte)(value ? 1 : 0);
-			}
-		}
-		
-		public void SetNotOverridable(bool value, int index) {
-			values[index] &= 0xFE; // reset perm bit
-			values[index] |= (byte)(value ? 0x81 : 0x80); // set 'don't override' bit
 		}
 	}
 }

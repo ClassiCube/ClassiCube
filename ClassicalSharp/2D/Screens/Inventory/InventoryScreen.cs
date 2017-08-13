@@ -175,9 +175,9 @@ namespace ClassicalSharp.Gui.Screens {
 			buffer.Append(ref index, " (ID ");
 			buffer.AppendNum(ref index, block);
 			buffer.Append(ref index, "&f, place ");
-			buffer.Append(ref index, game.Inventory.CanPlace[block] ? "&aYes" : "&cNo");
+			buffer.Append(ref index, BlockInfo.CanPlace[block] ? "&aYes" : "&cNo");
 			buffer.Append(ref index, "&f, delete ");
-			buffer.Append(ref index, game.Inventory.CanDelete[block] ? "&aYes" : "&cNo");
+			buffer.Append(ref index, BlockInfo.CanDelete[block] ? "&aYes" : "&cNo");
 			buffer.Append(ref index, "&f)");
 		}
 		

@@ -33,7 +33,7 @@ namespace ClassicalSharp.Mode {
 		public void PickMiddle(BlockID old) {
 			Inventory inv = game.Inventory;
 			if (BlockInfo.Draw[old] == DrawType.Gas) return;
-			if (!(inv.CanPlace[old] || inv.CanDelete[old])) return;
+			if (!(BlockInfo.CanPlace[old] || BlockInfo.CanDelete[old])) return;
 			if (!inv.CanChangeSelected()) return;
 			
 			// Is the currently selected block an empty slot

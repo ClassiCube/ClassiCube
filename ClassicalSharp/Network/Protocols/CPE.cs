@@ -211,12 +211,12 @@ namespace ClassicalSharp.Network.Protocols {
 			if (blockId == 0) {
 				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;
 				for (int i = 1; i < count; i++) {
-					inv.CanPlace.SetNotOverridable(canPlace, i);
-					inv.CanDelete.SetNotOverridable(canDelete, i);
+					BlockInfo.CanPlace[i] = canPlace;
+					BlockInfo.CanDelete[i] = canDelete;
 				}
 			} else {
-				inv.CanPlace.SetNotOverridable(canPlace, blockId);
-				inv.CanDelete.SetNotOverridable(canDelete, blockId);
+				BlockInfo.CanPlace[blockId] = canPlace;
+				BlockInfo.CanDelete[blockId] = canDelete;
 			}
 			game.Events.RaiseBlockPermissionsChanged();
 		}
