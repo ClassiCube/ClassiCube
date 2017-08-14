@@ -80,7 +80,7 @@ namespace ClassicalSharp {
 				return;
 			}
 
-			string skinServer = args.Length >= 5 ? args[4] : "http://s3.amazonaws.com/MinecraftSkins/";
+			string skinServer = args.Length >= 5 ? args[4] : "http://static.classicube.net/skins/";
 			using (Game game = new Game(args[0], args[1], skinServer, nullContext, width, height)) {
 				game.IPAddress = ip;
 				game.Port = port;
