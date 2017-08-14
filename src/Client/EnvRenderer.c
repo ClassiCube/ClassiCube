@@ -12,7 +12,7 @@
 #include "Block.h"
 #include "Platform.h"
 #include "SkyboxRenderer.h"
-#include "MiscEvents.h"
+#include "Events.h"
 
 GfxResourceID env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
 GfxResourceID env_cloudVertices, env_skyVertices;

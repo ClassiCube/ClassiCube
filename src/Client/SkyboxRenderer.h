@@ -3,7 +3,7 @@
 #define CS_SKYBOXRENDERER_H
 #include "Typedefs.h"
 #include "Stream.h"
-#include "WorldEvents.h"
+#include "Events.h"
 #include "GameStructs.h"
 /* Renders a skybox.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

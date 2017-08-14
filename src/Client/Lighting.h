@@ -3,7 +3,7 @@
 #define CS_WORLDLIGHTING_H
 #include "Typedefs.h"
 #include "PackedCol.h"
-#include "WorldEvents.h"
+#include "Events.h"
 #include "GameStructs.h"
 /* Manages lighting of blocks in the world.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

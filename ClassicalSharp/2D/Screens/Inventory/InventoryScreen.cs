@@ -219,7 +219,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = 0;
 			for (int i = 1; i < count; i++) {
 				BlockID block = game.Inventory.Map[i];
-				if (Show(block))  blocksTable[index++] = block;
+				if (Show(block)) blocksTable[index++] = block;
 			}
 		}
 		

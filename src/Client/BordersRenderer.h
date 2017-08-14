@@ -4,7 +4,7 @@
 #include "Typedefs.h"
 #include "GameStructs.h"
 #include "VertexStructs.h"
-#include "WorldEvents.h"
+#include "Events.h"
 #include "GraphicsEnums.h"
 /* Renders map sides and map edges (horizon) as large quads.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

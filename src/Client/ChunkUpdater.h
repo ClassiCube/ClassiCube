@@ -4,7 +4,7 @@
 #include "Typedefs.h"
 #include "ChunkInfo.h"
 #include "Vectors.h"
-#include "WorldEvents.h"
+#include "Events.h"
 /* Manages the process of building/deleting chunk meshes, in addition to calculating the visibility of chunks
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
