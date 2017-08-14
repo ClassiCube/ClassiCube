@@ -69,7 +69,6 @@ namespace ClassicalSharp {
 			WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
 			Events.TextureChanged += TextureChangedCore;
 			
-			BlockInfo = new BlockInfo();
 			BlockInfo.Init();
 			ModelCache = new ModelCache(this);
 			ModelCache.InitCache();
@@ -84,7 +83,7 @@ namespace ClassicalSharp {
 			Animations = AddComponent(new Animations());
 			Inventory = AddComponent(new Inventory());
 			
-			BlockInfo.SetDefaultPerms(Inventory.CanPlace, Inventory.CanDelete);
+			BlockInfo.SetDefaultPerms();
 			World = new World(this);
 			LocalPlayer = AddComponent(new LocalPlayer(this));
 			Entities[EntityList.SelfID] = LocalPlayer;

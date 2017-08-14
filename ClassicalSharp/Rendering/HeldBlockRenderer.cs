@@ -54,7 +54,7 @@ namespace ClassicalSharp.Renderers {
 			SetMatrix();
 			
 			game.Graphics.Texturing = true;
-			game.Graphics.SetupAlphaState(game.BlockInfo.Draw[block]);
+			game.Graphics.SetupAlphaState(BlockInfo.Draw[block]);
 			game.Graphics.DepthTest = false;
 			
 			SetPos();
@@ -68,7 +68,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);
 			
 			game.Graphics.Texturing = false;
-			game.Graphics.RestoreAlphaState(game.BlockInfo.Draw[block]);
+			game.Graphics.RestoreAlphaState(BlockInfo.Draw[block]);
 			game.Graphics.DepthTest = true;
 		}
 		
@@ -83,8 +83,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void SetPos() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
-			BlockInfo info = game.BlockInfo;
-			bool sprite = info.Draw[block] == DrawType.Sprite;
+			bool sprite = BlockInfo.Draw[block] == DrawType.Sprite;
 			Vector3 offset = sprite ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
 			held.ModelScale = new Vector3(0.4f);
@@ -92,7 +91,7 @@ namespace ClassicalSharp.Renderers {
 			held.Position = p.EyePosition + anim.pos;
 			held.Position += offset;
 			if (!sprite) {
-				float height = info.MaxBB[block].Y - info.MinBB[block].Y;
+				float height = BlockInfo.MaxBB[block].Y - BlockInfo.MinBB[block].Y;
 				held.Position.Y += 0.2f * (1 - height);
 			}
 			

@@ -16,7 +16,6 @@ namespace ClassicalSharp.Singleplayer {
 		Game game;
 		World map;
 		Random rnd = new Random();
-		BlockInfo info;
 		int width, length, height, oneY;
 		int maxX, maxY, maxZ, maxWaterX, maxWaterY, maxWaterZ;		
 				
@@ -27,7 +26,6 @@ namespace ClassicalSharp.Singleplayer {
 		public LiquidPhysics(Game game, PhysicsBase physics) {
 			this.game = game;
 			map = game.World;
-			info = game.BlockInfo;
 			
 			physics.OnPlace[Block.Lava] =
 				(index, b) => Lava.Enqueue(defLavaTick | (uint)index);
@@ -102,7 +100,7 @@ namespace ClassicalSharp.Singleplayer {
 			BlockID block = map.blocks[posIndex];
 			if (block == Block.Water || block == Block.StillWater) {
 				game.UpdateBlock(x, y, z, Block.Stone);
-			} else if (info.Collide[block] == CollideType.Gas) {
+			} else if (BlockInfo.Collide[block] == CollideType.Gas) {
 				Lava.Enqueue(defLavaTick | (uint)posIndex);
 				game.UpdateBlock(x, y, z, Block.Lava);
 			}
@@ -139,7 +137,7 @@ namespace ClassicalSharp.Singleplayer {
 			BlockID block = map.blocks[posIndex];
 			if (block == Block.Lava || block == Block.StillLava) {
 				game.UpdateBlock(x, y, z, Block.Stone);
-			} else if (info.Collide[block] == CollideType.Gas && block != Block.Rope) {
+			} else if (BlockInfo.Collide[block] == CollideType.Gas && block != Block.Rope) {
 				// Sponge check
 				for (int yy = (y < 2 ? 0 : y - 2); yy <= (y > maxWaterY ? maxY : y + 2); yy++)
 					for (int zz = (z < 2 ? 0 : z - 2); zz <= (z > maxWaterZ ? maxZ : z + 2); zz++)

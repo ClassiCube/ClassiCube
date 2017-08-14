@@ -60,7 +60,7 @@ namespace ClassicalSharp {
 				if (!game.World.IsValidPos(pos)) return;
 				
 				BlockID old = game.World.GetBlock(pos);
-				if (game.BlockInfo.Draw[old] == DrawType.Gas || !inv.CanDelete[old]) return;
+				if (BlockInfo.Draw[old] == DrawType.Gas || !BlockInfo.CanDelete[old]) return;
 				game.Mode.PickLeft(old);
 			} else if (right) {
 				Vector3I pos = game.SelectedPos.TranslatedPos;
@@ -71,7 +71,7 @@ namespace ClassicalSharp {
 				if (game.AutoRotate)
 					block = AutoRotate.RotateBlock(game, block);
 				
-				if (game.CanPick(old) || !inv.CanPlace[block]) return;
+				if (game.CanPick(old) || !BlockInfo.CanPlace[block]) return;
 				if (!PickingHandler.CheckIsFree(game, block)) return;
 				game.Mode.PickRight(old, block);
 			}
@@ -79,13 +79,12 @@ namespace ClassicalSharp {
 		
 		public static bool CheckIsFree(Game game, BlockID block) {
 			Vector3 pos = (Vector3)game.SelectedPos.TranslatedPos;
-			BlockInfo info = game.BlockInfo;
 			LocalPlayer p = game.LocalPlayer;
 			
-			if (info.Collide[block] != CollideType.Solid) return true;
+			if (BlockInfo.Collide[block] != CollideType.Solid) return true;
 			if (IntersectsOtherPlayers(game, pos, block)) return false;
 			
-			AABB blockBB = new AABB(pos + info.MinBB[block], pos + info.MaxBB[block]);
+			AABB blockBB = new AABB(pos + BlockInfo.MinBB[block], pos + BlockInfo.MaxBB[block]);
 			// NOTE: We need to also test against nextPos here, because otherwise
 			// we can fall through the block as collision is performed against nextPos
 			AABB localBB = AABB.Make(p.Position, p.Size);
@@ -100,7 +99,7 @@ namespace ClassicalSharp {
 			
 			// Push player up if they are jumping and trying to place a block underneath them.
 			Vector3 next = game.LocalPlayer.interp.next.Pos;
-			next.Y = pos.Y + game.BlockInfo.MaxBB[block].Y + Entity.Adjustment;
+			next.Y = pos.Y + BlockInfo.MaxBB[block].Y + Entity.Adjustment;
 			LocationUpdate update = LocationUpdate.MakePos(next, false);
 			game.LocalPlayer.SetLocation(update, false);
 			return true;
@@ -133,7 +132,7 @@ namespace ClassicalSharp {
 			
 			game.LocalPlayer.Position = newP;
 			if (!game.LocalPlayer.Hacks.Noclip
-			    && game.LocalPlayer.TouchesAny(b => game.BlockInfo.Collide[b] == CollideType.Solid)) {
+			    && game.LocalPlayer.TouchesAny(b => BlockInfo.Collide[b] == CollideType.Solid)) {
 				game.LocalPlayer.Position = oldP;
 				return false;
 			}
@@ -145,8 +144,8 @@ namespace ClassicalSharp {
 		}
 		
 		static bool IntersectsOtherPlayers(Game game, Vector3 pos, BlockID block) {
-			AABB blockBB = new AABB(pos + game.BlockInfo.MinBB[block],
-			                        pos + game.BlockInfo.MaxBB[block]);
+			AABB blockBB = new AABB(pos + BlockInfo.MinBB[block],
+			                        pos + BlockInfo.MaxBB[block]);
 			
 			for (int id = 0; id < EntityList.SelfID; id++) {
 				Entity entity = game.Entities[id];

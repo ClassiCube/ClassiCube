@@ -26,8 +26,8 @@ namespace ClassicalSharp.Particles {
 			hitTerrain = false;
 			lastPos = Position = nextPos;
 			BlockID curBlock = GetBlock(game, (int)Position.X, (int)Position.Y, (int)Position.Z);
-			float minY = Utils.Floor(Position.Y) + game.BlockInfo.MinBB[curBlock].Y;
-			float maxY = Utils.Floor(Position.Y) + game.BlockInfo.MaxBB[curBlock].Y;			
+			float minY = Utils.Floor(Position.Y) + BlockInfo.MinBB[curBlock].Y;
+			float maxY = Utils.Floor(Position.Y) + BlockInfo.MaxBB[curBlock].Y;			
 			if (!CanPassThrough(game, curBlock) && Position.Y >= minY && 
 			   Position.Y < maxY && CollideHor(game, curBlock))
 				return true;
@@ -58,8 +58,8 @@ namespace ClassicalSharp.Particles {
 			
 			BlockID block = GetBlock(game, (int)Position.X, y, (int)Position.Z);
 			if (CanPassThrough(game, block)) return true;
-			Vector3 minBB = game.BlockInfo.MinBB[block];
-			Vector3 maxBB = game.BlockInfo.MaxBB[block];
+			Vector3 minBB = BlockInfo.MinBB[block];
+			Vector3 maxBB = BlockInfo.MaxBB[block];
 			float collideY = y + (topFace ? maxBB.Y : minBB.Y);
 			bool collideVer = topFace ? (Position.Y < collideY) : (Position.Y > collideY);
 			
@@ -74,14 +74,14 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		bool CanPassThrough(Game game, BlockID block) {
-			byte draw = game.BlockInfo.Draw[block];
+			byte draw = BlockInfo.Draw[block];
 			return draw == DrawType.Gas || draw == DrawType.Sprite
-				|| (throughLiquids && game.BlockInfo.IsLiquid(block));
+				|| (throughLiquids && BlockInfo.IsLiquid(block));
 		}
 		
 		bool CollideHor(Game game, BlockID block) {
-			Vector3 min = game.BlockInfo.MinBB[block] + FloorHor(Position);
-			Vector3 max = game.BlockInfo.MaxBB[block] + FloorHor(Position);
+			Vector3 min = BlockInfo.MinBB[block] + FloorHor(Position);
+			Vector3 max = BlockInfo.MaxBB[block] + FloorHor(Position);
 			return Position.X >= min.X && Position.Z >= min.Z &&
 				Position.X < max.X && Position.Z < max.Z;
 		}

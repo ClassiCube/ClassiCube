@@ -18,7 +18,6 @@ namespace ClassicalSharp.Singleplayer {
 		Game game;
 		World map;
 		Random rnd = new Random();
-		BlockInfo info;
 		int width, length, height, oneY;
 
 		FallingPhysics falling;
@@ -41,7 +40,6 @@ namespace ClassicalSharp.Singleplayer {
 		public PhysicsBase(Game game) {
 			this.game = game;
 			map = game.World;
-			info = game.BlockInfo;
 			game.WorldEvents.OnNewMapLoaded += ResetMap;
 			game.UserEvents.BlockChanged += BlockChanged;
 			enabled = Options.GetBool(OptionsKey.SingleplayerPhysics, true);

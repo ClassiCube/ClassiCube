@@ -39,7 +39,7 @@ namespace ClassicalSharp {
 			TerrainAtlas1D.Dispose();
 			TerrainAtlas.Dispose();
 			
-			TerrainAtlas.UpdateState(BlockInfo, bmp);
+			TerrainAtlas.UpdateState(bmp);
 			TerrainAtlas1D.UpdateState(TerrainAtlas);
 		}
 		
@@ -340,7 +340,7 @@ namespace ClassicalSharp {
 			if (BlockInfo.Collide[block] != CollideType.Liquid) return true;
 			
 			return !ModifiableLiquids ? false :
-				Inventory.CanPlace[block] && Inventory.CanDelete[block];
+				BlockInfo.CanPlace[block] && BlockInfo.CanDelete[block];
 		}
 		
 		

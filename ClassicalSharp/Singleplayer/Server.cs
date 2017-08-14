@@ -38,8 +38,8 @@ namespace ClassicalSharp.Singleplayer {
 			game.UseCPEBlocks = game.UseCPE;
 			int max = game.UseCPEBlocks ? Block.MaxCpeBlock : Block.MaxOriginalBlock;
 			for (int i = 1; i <= max; i++) {
-				game.Inventory.CanPlace[i] = true;
-				game.Inventory.CanDelete[i] = true;
+				BlockInfo.CanPlace[i] = true;
+				BlockInfo.CanDelete[i] = true;
 			}
 			game.AsyncDownloader.DownloadSkin(game.LocalPlayer.SkinIdentifier,
 			                                  game.LocalPlayer.SkinName);

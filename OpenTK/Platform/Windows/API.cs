@@ -3,7 +3,7 @@
  * Contributions from Erik Ylvisaker
  * See license.txt for license info
  */
- #endregion
+#endregion
 
 using System;
 using System.Drawing;
@@ -16,6 +16,9 @@ namespace OpenTK.Platform.Windows {
 	
 	internal static class API {
 		
+		[DllImport("shell32.dll")]
+        public static extern int SetCurrentProcessExplicitAppUserModelID([MarshalAs(UnmanagedType.LPWStr)] string AppID);
+		
 		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
 		internal static extern bool SetWindowPos(IntPtr handle, IntPtr insertAfter, int x, int y, int cx, int cy, SetWindowPosFlags flags);
 		
@@ -27,10 +30,10 @@ namespace OpenTK.Platform.Windows {
 
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr CreateWindowEx(ExtendedWindowStyle ExStyle, IntPtr ClassAtom, IntPtr WindowName, WindowStyle Style,
-			int X, int Y, int Width, int Height, IntPtr HandleToParentWindow, IntPtr Menu, IntPtr Instance, IntPtr Param);
+		                                             int X, int Y, int Width, int Height, IntPtr HandleToParentWindow, IntPtr Menu, IntPtr Instance, IntPtr Param);
 		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern bool DestroyWindow(IntPtr windowHandle);	
+		internal static extern bool DestroyWindow(IntPtr windowHandle);
 		
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern ushort RegisterClassEx(ref ExtendedWindowClass window_class);
@@ -80,6 +83,7 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("User32.dll", CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		public extern static IntPtr DefWindowProc(IntPtr hWnd, WindowMessage msg, IntPtr wParam, IntPtr lParam);
 		
+		
 		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr GetDC(IntPtr hwnd);
 
@@ -97,15 +101,13 @@ namespace OpenTK.Platform.Windows {
 		
 		[DllImport("gdi32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool SwapBuffers(IntPtr dc);
+		
 
 		[DllImport("kernel32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr LoadLibrary(string dllName);
 
 		[DllImport("kernel32", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern uint MapVirtualKey(VirtualKeys vkey, MapVirtualKeyType uMapType);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool ShowWindow(IntPtr hWnd, ShowWindowCommand nCmdShow);
@@ -119,9 +121,6 @@ namespace OpenTK.Platform.Windows {
 
 		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
 		public static extern bool IsWindowVisible(IntPtr intPtr);
-
-		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
-		public static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr lpCursorName);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern bool SetForegroundWindow(IntPtr hWnd);
@@ -137,6 +136,38 @@ namespace OpenTK.Platform.Windows {
 		internal static extern bool EnumDisplaySettings([MarshalAs(UnmanagedType.LPTStr)] string device_name,
 		                                                int graphics_mode, [In, Out] DeviceMode device_mode);
 		
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		public static extern bool OpenClipboard(IntPtr hWndNewOwner);
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		public static extern bool EmptyClipboard();
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		public static extern bool CloseClipboard();
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		public static extern IntPtr GetClipboardData(uint uFormat);
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]		
+		public static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+		
+		[DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
+		public static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
+		
+		[DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
+		public static extern IntPtr GlobalFree(IntPtr hMem);
+		
+		[DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
+		public static extern IntPtr GlobalLock(IntPtr hMem);
+		
+		[DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
+		public static extern bool GlobalUnlock(IntPtr hMem);
+		
+
+		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
+		public static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr lpCursorName);
+		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		public static extern bool TrackMouseEvent(ref TrackMouseEventStructure lpEventTrack);
 
@@ -151,6 +182,9 @@ namespace OpenTK.Platform.Windows {
 		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern ushort GetKeyState( int code );
+
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		internal static extern uint MapVirtualKey(VirtualKeys vkey, MapVirtualKeyType uMapType);
 	}
 
 	internal struct Constants {
@@ -302,7 +336,7 @@ namespace OpenTK.Platform.Windows {
 
 		internal static int SizeInBytes = Marshal.SizeOf(default(WindowClass));
 	}
-		
+	
 	[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
 	struct ExtendedWindowClass
 	{
@@ -507,7 +541,7 @@ namespace OpenTK.Platform.Windows {
 		DRAW_TO_WINDOW = 0x04,
 		SUPPORT_OPENGL = 0x20,
 		DEPTH_DONTCARE = 0x20000000,
-	}	
+	}
 	
 	internal enum PixelType : byte {
 		RGBA = 0,
@@ -623,11 +657,11 @@ namespace OpenTK.Platform.Windows {
 	}
 
 	enum MouseKeys {
-		None = 0x00, //No mouse button was pressed.		
-		Left = 0x01, // The left mouse button was pressed.	
-		Right = 0x02, // The right mouse button was pressed.		
-		Middle = 0x10, // The middle mouse button was pressed.		
-		XButton1 = 0x20, // The first XButton was pressed.		
+		None = 0x00, //No mouse button was pressed.
+		Left = 0x01, // The left mouse button was pressed.
+		Right = 0x02, // The right mouse button was pressed.
+		Middle = 0x10, // The middle mouse button was pressed.
+		XButton1 = 0x20, // The first XButton was pressed.
 		XButton2 = 0x40, // The second XButton was pressed.
 	}
 	

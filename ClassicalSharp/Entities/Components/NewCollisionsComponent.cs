@@ -10,7 +10,7 @@ namespace ClassicalSharp.Entities {
 		
 		Game game;
 		Entity entity;
-		BlockInfo info;
+		BlockInfo;
 		static AABB bb;
 		static RayTracer tracerP1Y1 = new RayTracer();
 		static RayTracer tracerP2Y1 = new RayTracer();
@@ -20,7 +20,7 @@ namespace ClassicalSharp.Entities {
 		public NewCollisionsComponent(Game game, Entity entity) {
 			this.game = game;
 			this.entity = entity;
-			info = game.BlockInfo;
+			info = BlockInfo;
 		}
 		
 		internal unsafe void MoveAndWallSlide() {

@@ -49,7 +49,7 @@ namespace ClassicalSharp.Network.Protocols {
 			net.Set(Opcode.CpeSetMapEnvUrl, HandleSetMapEnvUrl, 65);
 			net.Set(Opcode.CpeSetMapEnvProperty, HandleSetMapEnvProperty, 6);
 			net.Set(Opcode.CpeSetEntityProperty, HandleSetEntityProperty, 7);
-			net.Set(Opcode.TwoWayPing, HandleTwoWayPing, 4);
+			net.Set(Opcode.CpeTwoWayPing, HandleTwoWayPing, 4);
 		}
 		
 		#region Read
@@ -211,12 +211,12 @@ namespace ClassicalSharp.Network.Protocols {
 			if (blockId == 0) {
 				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;
 				for (int i = 1; i < count; i++) {
-					inv.CanPlace.SetNotOverridable(canPlace, i);
-					inv.CanDelete.SetNotOverridable(canDelete, i);
+					BlockInfo.CanPlace[i] = canPlace;
+					BlockInfo.CanDelete[i] = canDelete;
 				}
 			} else {
-				inv.CanPlace.SetNotOverridable(canPlace, blockId);
-				inv.CanDelete.SetNotOverridable(canDelete, blockId);
+				BlockInfo.CanPlace[blockId] = canPlace;
+				BlockInfo.CanDelete[blockId] = canDelete;
 			}
 			game.Events.RaiseBlockPermissionsChanged();
 		}
@@ -444,7 +444,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		internal void WriteTwoWayPing(bool serverToClient, ushort data) {
-			writer.WriteUInt8((byte)Opcode.TwoWayPing);
+			writer.WriteUInt8((byte)Opcode.CpeTwoWayPing);
 			writer.WriteUInt8((byte)(serverToClient ? 1 : 0));
 			writer.WriteInt16((short)data);			
 		}

@@ -160,6 +160,7 @@ void Gfx_SetTexturing(bool enabled) {
 
 
 bool d3d9_fogEnable = false;
+bool Gfx_GetFog(void) { return d3d9_fogEnable; }
 void Gfx_SetFog(bool enabled) {
 	if (d3d9_fogEnable == enabled) return;
 

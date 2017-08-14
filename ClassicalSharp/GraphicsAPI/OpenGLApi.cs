@@ -73,8 +73,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BlendFunc(blendFuncs[(int)srcFunc], blendFuncs[(int)dstFunc]);
 		}
 		
+		bool fogEnable;
 		public override bool Fog {
-			set { if (value) GL.Enable(EnableCap.Fog);
+			get { return fogEnable; }
+			set { fogEnable = value;
+				if (value) GL.Enable(EnableCap.Fog);
 				else GL.Disable(EnableCap.Fog); }
 		}
 		

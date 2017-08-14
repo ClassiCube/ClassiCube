@@ -49,7 +49,8 @@ namespace ClassicalSharp.Textures {
 				} else if (sig == 0x06054b50) {
 					break;
 				} else {
-					throw new NotSupportedException("Unsupported signature: " + sig.ToString("X8"));
+					Utils.LogDebug("Unsupported signature: " + sig.ToString("X8"));
+					return;
 				}
 			}
 			
@@ -58,8 +59,11 @@ namespace ClassicalSharp.Textures {
 				ZipEntry entry = entries[i];
 				reader.BaseStream.Seek(entry.LocalHeaderOffset, SeekOrigin.Begin);
 				sig = reader.ReadUInt32();
-				if (sig != 0x04034b50)
-					throw new NotSupportedException("Unsupported signature: " + sig.ToString("X8"));
+				
+				if (sig != 0x04034b50) {
+					Utils.LogDebug(entry.Filename + " is an invalid entry");
+					continue;
+				}
 				ReadLocalFileHeader(reader, entry);
 			}
 			entries = null;

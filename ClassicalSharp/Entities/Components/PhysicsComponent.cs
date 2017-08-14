@@ -20,7 +20,6 @@ namespace ClassicalSharp.Entities {
 		internal bool firstJump, secondJump, jumping;
 		Entity entity;
 		Game game;
-		BlockInfo info;
 		
 		internal float jumpVel = 0.42f, userJumpVel = 0.42f, serverJumpVel = 0.42f;
 		internal HacksComponent hacks;
@@ -29,7 +28,6 @@ namespace ClassicalSharp.Entities {
 		public PhysicsComponent(Game game, Entity entity) {
 			this.game = game;
 			this.entity = entity;
-			info = game.BlockInfo;
 		}
 		
 		public void UpdateVelocityState() {
@@ -99,7 +97,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool StandardLiquid(BlockID block) {
-			return info.Collide[block] == CollideType.Liquid;
+			return BlockInfo.Collide[block] == CollideType.Liquid;
 		}
 		
 		static Vector3 waterDrag = new Vector3(0.8f, 0.8f, 0.8f),
@@ -136,7 +134,7 @@ namespace ClassicalSharp.Entities {
 					MoveNormal(vel, factor * horSpeed, entity.Model.Drag, gravity, verSpeed);
 				}
 
-				if (OnIce(entity, info) && !hacks.Floating) {
+				if (OnIce(entity) && !hacks.Floating) {
 					// limit components to +-0.25f by rescaling vector to [-0.25, 0.25]
 					if (Math.Abs(entity.Velocity.X) > 0.25f || Math.Abs(entity.Velocity.Z) > 0.25f) {
 						float scale = Math.Min(
@@ -152,12 +150,12 @@ namespace ClassicalSharp.Entities {
 			if (entity.onGround) { firstJump = false; secondJump = false; }
 		}
 		
-		static bool OnIce(Entity entity, BlockInfo info) {
-			if (info.ExtendedCollide[entity.BlockUnderFeet] == CollideType.Ice) return true;
+		static bool OnIce(Entity entity) {
+			if (BlockInfo.ExtendedCollide[entity.BlockUnderFeet] == CollideType.Ice) return true;
 			
 			AABB bounds = entity.Bounds;
 			bounds.Min.Y -= 0.01f; bounds.Max.Y = bounds.Min.Y;
-			return entity.TouchesAny(bounds, b => info.ExtendedCollide[b] == CollideType.SlipperyIce);
+			return entity.TouchesAny(bounds, b => BlockInfo.ExtendedCollide[b] == CollideType.SlipperyIce);
 		}
 		
 		void MoveHor(Vector3 vel, float factor) {
@@ -227,17 +225,17 @@ namespace ClassicalSharp.Entities {
 			{
 				BlockID block = game.World.SafeGetBlock(x, y, z);
 				if (block == 0) continue;
-				byte collide = info.Collide[block];
+				byte collide = BlockInfo.Collide[block];
 				if (collide == CollideType.Solid && !checkSolid)
 					continue;
 				
-				Vector3 min = new Vector3(x, y, z) + info.MinBB[block];
-				Vector3 max = new Vector3(x, y, z) + info.MaxBB[block];
+				Vector3 min = new Vector3(x, y, z) + BlockInfo.MinBB[block];
+				Vector3 max = new Vector3(x, y, z) + BlockInfo.MaxBB[block];
 				AABB blockBB = new AABB(min, max);
 				if (!blockBB.Intersects(bounds)) continue;
 				
-				modifier = Math.Min(modifier, info.SpeedMultiplier[block]);
-				if (info.ExtendedCollide[block] == CollideType.Liquid)
+				modifier = Math.Min(modifier, BlockInfo.SpeedMultiplier[block]);
+				if (BlockInfo.ExtendedCollide[block] == CollideType.Liquid)
 					useLiquidGravity = true;
 			}
 			return modifier;

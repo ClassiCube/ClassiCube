@@ -77,10 +77,6 @@ namespace ClassicalSharp {
 		/// <summary> List of all cameras the user can use to view the world. </summary>
 		public List<Camera> Cameras = new List<Camera>();
 		
-		/// <summary> Contains the metadata about each currently defined block. </summary>
-		/// <remarks> e.g. blocks light, height, texture IDs, etc. </remarks>
-		public BlockInfo BlockInfo;
-		
 		/// <summary> Total rendering time(in seconds) elapsed since the client was started. </summary>
 		public double accumulator;
 		public TerrainAtlas2D TerrainAtlas;

@@ -92,12 +92,11 @@ namespace ClassicalSharp.Entities {
 		void DrawCircle(VertexP3fT2fC4b[] verts, ref int index, 
 		                ShadowData* data, int dataCount, float x, float z) {
 			x = Utils.Floor(x); z = Utils.Floor(z);
-			BlockInfo info = game.BlockInfo;
-			Vector3 min = info.MinBB[data[0].Block], max = info.MaxBB[data[0].Block];
+			Vector3 min = BlockInfo.MinBB[data[0].Block], max = BlockInfo.MaxBB[data[0].Block];
 			
 			DrawCoords(verts, ref index, data[0], x + min.X, z + min.Z, x + max.X, z + max.Z);
 			for (int i = 1; i < dataCount; i++) {
-				Vector3 nMin = info.MinBB[data[i].Block], nMax = info.MaxBB[data[i].Block];
+				Vector3 nMin = BlockInfo.MinBB[data[i].Block], nMax = BlockInfo.MaxBB[data[i].Block];
 				DrawCoords(verts, ref index, data[i], x + min.X, z + nMin.Z, x + max.X, z + min.Z);
 				DrawCoords(verts, ref index, data[i], x + min.X, z + max.Z, x + max.X, z + nMax.Z);
 				
@@ -133,7 +132,6 @@ namespace ClassicalSharp.Entities {
 		               int posY, ShadowData* data, ref int index) {
 			int blockX = Utils.Floor(x), blockZ = Utils.Floor(z);
 			Vector3I p = new Vector3I(blockX, 0, blockZ);
-			BlockInfo info = game.BlockInfo;
 			Vector3 Position = entity.Position;
 			index = 0;
 			
@@ -149,17 +147,17 @@ namespace ClassicalSharp.Entities {
 				BlockID block = GetShadowBlock(blockX, posY, blockZ);
 				posY--;
 				
-				byte draw = info.Draw[block];
-				if (draw == DrawType.Gas || draw == DrawType.Sprite || info.IsLiquid(block)) continue;
-				float blockY = posY + 1 + info.MaxBB[block].Y;
+				byte draw = BlockInfo.Draw[block];
+				if (draw == DrawType.Gas || draw == DrawType.Sprite || BlockInfo.IsLiquid(block)) continue;
+				float blockY = posY + 1 + BlockInfo.MaxBB[block].Y;
 				if (blockY >= Position.Y + 0.01f) continue;
 				
 				data[index].Block = block; data[index].Y = blockY;
 				CalcAlpha(Position.Y, ref data[index]);
 				index++;				
 				// Check if the casted shadow will continue on further down.
-				if (info.MinBB[block].X == 0 && info.MaxBB[block].X == 1 &&
-				   info.MinBB[block].Z == 0 && info.MaxBB[block].Z == 1) return true;
+				if (BlockInfo.MinBB[block].X == 0 && BlockInfo.MaxBB[block].X == 1 &&
+				   BlockInfo.MinBB[block].Z == 0 && BlockInfo.MaxBB[block].Z == 1) return true;
 			}
 			
 			if (index < 4) {
@@ -173,9 +171,9 @@ namespace ClassicalSharp.Entities {
 		BlockID GetShadowBlock(int x, int y, int z) {
 			if (x < 0 || z < 0 || x >= game.World.Width || z >= game.World.Length) {
 				if (y == game.World.Env.EdgeHeight - 1)
-					return game.BlockInfo.Draw[game.World.Env.EdgeBlock] == DrawType.Gas ? Block.Air : Block.Bedrock;
+					return BlockInfo.Draw[game.World.Env.EdgeBlock] == DrawType.Gas ? Block.Air : Block.Bedrock;
 				if (y == game.World.Env.SidesHeight - 1)
-					return game.BlockInfo.Draw[game.World.Env.SidesBlock] == DrawType.Gas ? Block.Air : Block.Bedrock;
+					return BlockInfo.Draw[game.World.Env.SidesBlock] == DrawType.Gas ? Block.Air : Block.Bedrock;
 				return Block.Air;
 			}
 			return game.World.GetBlock(x, y, z);

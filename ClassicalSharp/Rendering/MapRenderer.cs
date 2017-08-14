@@ -187,7 +187,7 @@ namespace ClassicalSharp.Renderers {
 			
 			BlockID block = game.World.SafeGetBlock(coords);
 			bool outside = !game.World.IsValidPos(coords);
-			inTranslucent = game.BlockInfo.Draw[block] == DrawType.Translucent
+			inTranslucent = BlockInfo.Draw[block] == DrawType.Translucent
 				|| (pos.Y < env.EdgeHeight && outside);
 			
 			// If we are under water, render weather before to blend properly

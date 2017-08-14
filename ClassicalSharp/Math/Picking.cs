@@ -56,8 +56,7 @@ namespace ClassicalSharp {
 		}
 		
 		static bool CameraClip(Game game, PickedPos pos) {
-			BlockInfo info = game.BlockInfo;
-			if (info.Draw[t.Block] == DrawType.Gas || info.Collide[t.Block] != CollideType.Solid)
+			if (BlockInfo.Draw[t.Block] == DrawType.Gas || BlockInfo.Collide[t.Block] != CollideType.Solid)
 				return false;
 			
 			float t0, t1;
@@ -82,15 +81,14 @@ namespace ClassicalSharp {
 		static bool RayTrace(Game game, Vector3 origin, Vector3 dir, float reach,
 		                     PickedPos pos, bool clipMode) {
 			t.SetVectors(origin, dir);
-			BlockInfo info = game.BlockInfo;
 			float reachSq = reach * reach;
 			Vector3I pOrigin = Vector3I.Floor(origin);
 
 			for (int i = 0; i < 10000; i++) {
 				int x = t.X, y = t.Y, z = t.Z;
 				t.Block = GetBlock(game.World, x, y, z, pOrigin);
-				Vector3 min = new Vector3(x, y, z) + info.RenderMinBB[t.Block];
-				Vector3 max = new Vector3(x, y, z) + info.RenderMaxBB[t.Block];
+				Vector3 min = new Vector3(x, y, z) + BlockInfo.RenderMinBB[t.Block];
+				Vector3 max = new Vector3(x, y, z) + BlockInfo.RenderMaxBB[t.Block];
 				
 				float dx = Math.Min(Math.Abs(origin.X - min.X), Math.Abs(origin.X - max.X));
 				float dy = Math.Min(Math.Abs(origin.Y - min.Y), Math.Abs(origin.Y - max.Y));

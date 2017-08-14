@@ -16,11 +16,11 @@ namespace ClassicalSharp {
 		public int TileSize;
 		
 		/// <summary> Updates the underlying atlas bitmap, fields, and texture. </summary>
-		public void UpdateState(BlockInfo info, Bitmap bmp) {
+		public void UpdateState(Bitmap bmp) {
 			AtlasBitmap = bmp;
 			TileSize = bmp.Width / TilesPerRow;
 			using (FastBitmap fastBmp = new FastBitmap(bmp, true, true))
-				info.RecalculateSpriteBB(fastBmp);
+				BlockInfo.RecalculateSpriteBB(fastBmp);
 		}
 		
 		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>

@@ -4,7 +4,7 @@
 
 HANDLE heap;
 void Platform_Init(void) {
-	heap = GetProcessHeap(); // TODO: HeapCreate instead? probably not
+	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
 }
 
 void Platform_Free(void) {

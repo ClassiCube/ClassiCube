@@ -11,27 +11,27 @@ using BlockID = System.Byte;
 namespace ClassicalSharp {
 	
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
-	public partial class BlockInfo {
+	public static partial class BlockInfo {
 		
-		public byte[] textures = new byte[Block.Count * Side.Sides];
+		public static byte[] textures = new byte[Block.Count * Side.Sides];
 		
-		internal void SetSide(int textureId, BlockID blockId) {
+		internal static void SetSide(int textureId, BlockID blockId) {
 			int index = blockId * Side.Sides;
 			for (int i = index; i < index + Side.Bottom; i++)
 				textures[i] = (byte)textureId;
 		}
 		
-		internal void SetTex(int textureId, int face, BlockID blockId) {
+		internal static void SetTex(int textureId, int face, BlockID blockId) {
 			textures[blockId * Side.Sides + face] = (byte)textureId;
 		}
 		
 		/// <summary> Gets the index in the terrain atlas for the texture of the face of the given block. </summary>
 		/// <param name="face"> Face of the given block, see TileSide constants. </param>
-		public int GetTextureLoc(BlockID block, int face) {
+		public static int GetTextureLoc(BlockID block, int face) {
 			return textures[block * Side.Sides + face];
 		}
 		
-		void GetTextureRegion(BlockID block, int side, out Vector2 min, out Vector2 max) {
+		static void GetTextureRegion(BlockID block, int side, out Vector2 min, out Vector2 max) {
 			Vector3 bbMin = MinBB[block], bbMax = MaxBB[block];		
 			switch (side) {
 				case Side.Left:
@@ -58,7 +58,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		bool FaceOccluded(BlockID block, BlockID other, int side) {
+		static bool FaceOccluded(BlockID block, BlockID other, int side) {
 			Vector2 bMin, bMax, oMin, oMax;
 			GetTextureRegion(block, side, out bMin, out bMax);
 			GetTextureRegion(other, side, out oMin, out oMax);

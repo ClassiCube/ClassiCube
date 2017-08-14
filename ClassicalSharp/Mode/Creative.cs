@@ -17,7 +17,7 @@ namespace ClassicalSharp.Mode {
 		Game game;
 		
 		public bool HandlesKeyDown(Key key) {
-			if (key == game.Input.Keys[KeyBind.Inventory]) {
+			if (key == game.Input.Keys[KeyBind.Inventory] && game.Gui.ActiveScreen == game.Gui.hudScreen) {
 				game.Gui.SetNewScreen(new InventoryScreen(game));
 				return true;
 			}
@@ -32,8 +32,8 @@ namespace ClassicalSharp.Mode {
 		
 		public void PickMiddle(BlockID old) {
 			Inventory inv = game.Inventory;
-			if (game.BlockInfo.Draw[old] == DrawType.Gas) return;
-			if (!(inv.CanPlace[old] || inv.CanDelete[old])) return;
+			if (BlockInfo.Draw[old] == DrawType.Gas) return;
+			if (!(BlockInfo.CanPlace[old] || BlockInfo.CanDelete[old])) return;
 			if (!inv.CanChangeSelected()) return;
 			
 			// Is the currently selected block an empty slot

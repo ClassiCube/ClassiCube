@@ -109,7 +109,7 @@ namespace ClassicalSharp {
 		
 		
 		public void Render(double delta) {
-			gfx.Mode2D(game.Width, game.Height, !game.EnvRenderer.minimal);
+			gfx.Mode2D(game.Width, game.Height);
 			if (activeScreen == null || !activeScreen.HidesHud)
 				fpsScreen.Render(delta);
 			
@@ -122,7 +122,7 @@ namespace ClassicalSharp {
 			
 			if (overlays.Count > 0)
 				overlays[0].Render(delta);
-			gfx.Mode3D(!game.EnvRenderer.minimal);
+			gfx.Mode3D();
 		}
 		
 		internal void OnResize() {

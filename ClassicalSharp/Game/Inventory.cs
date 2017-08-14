@@ -9,16 +9,16 @@ using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 	
-	/// <summary> Contains the hotbar of blocks, as well as the permissions for placing and deleting all blocks. </summary>
+	/// <summary> Manages the hotbar and inventory of blocks. </summary>
 	public sealed class Inventory : IGameComponent {
 		
 		public void Init(Game game) {
 			this.game = game;
-			MakeMap();
+			SetDefaultMapping();
 		}
 
 		public void Ready(Game game) { }
-		public void Reset(Game game) { }
+		public void Reset(Game game) { SetDefaultMapping(); }
 		public void OnNewMap(Game game) { }
 		public void OnNewMapLoaded(Game game) { }
 		public void Dispose() { }
@@ -29,8 +29,6 @@ namespace ClassicalSharp {
 		
 		public const int BlocksPerRow = 9, Rows = 9;
 		public BlockID[] Hotbar = new BlockID[BlocksPerRow * Rows];
-		public InventoryPermissions CanPlace = new InventoryPermissions();
-		public InventoryPermissions CanDelete = new InventoryPermissions();
 		
 		/// <summary> Gets or sets the block at the given index within the current row. </summary>
 		public BlockID this[int index] {
@@ -90,60 +88,40 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		BlockID[] map = new BlockID[Block.Count];
-		public BlockID MapBlock(int i) { return map[i]; }
-		
-		void MakeMap() {
-			for (int i = 0; i < map.Length; i++)
-				map[i] = (BlockID)i;
+		public BlockID[] Map = new BlockID[Block.Count];
+		void SetDefaultMapping() {
+			for (int i = 0; i < Map.Length; i++)
+				Map[i] = (BlockID)i;
 			if (!game.ClassicMode) return;
 			
 			// First row
-			map[Block.Dirt] = Block.Cobblestone;
-			map[Block.Cobblestone] = Block.Brick;
-			map[Block.Wood] = Block.Dirt;
-			map[Block.Sapling] = Block.Wood;
-			map[Block.Sand] = Block.Log;
-			map[Block.Gravel] = Block.Leaves;
-			map[Block.GoldOre] = Block.Glass;
-			map[Block.IronOre] = Block.Slab;
-			map[Block.CoalOre] = Block.MossyRocks;
+			Map[Block.Dirt] = Block.Cobblestone;
+			Map[Block.Cobblestone] = Block.Brick;
+			Map[Block.Wood] = Block.Dirt;
+			Map[Block.Sapling] = Block.Wood;
+			Map[Block.Sand] = Block.Log;
+			Map[Block.Gravel] = Block.Leaves;
+			Map[Block.GoldOre] = Block.Glass;
+			Map[Block.IronOre] = Block.Slab;
+			Map[Block.CoalOre] = Block.MossyRocks;
 			// Second row
-			map[Block.Log] = Block.Sapling;
+			Map[Block.Log] = Block.Sapling;
 			for (int i = 0; i < 4; i++)
-				map[Block.Leaves + i] = (BlockID)(Block.Dandelion + i);
-			map[Block.Orange] = Block.Sand;
-			map[Block.Yellow] = Block.Gravel;
-			map[Block.Lime] = Block.Sponge;
+				Map[Block.Leaves + i] = (BlockID)(Block.Dandelion + i);
+			Map[Block.Orange] = Block.Sand;
+			Map[Block.Yellow] = Block.Gravel;
+			Map[Block.Lime] = Block.Sponge;
 			// Third and fourth row
 			for (int i = 0; i < 16; i++)
-				map[Block.Green + i] = (BlockID)(Block.Red + i);
-			map[Block.Gold] = Block.CoalOre;
-			map[Block.Iron] = Block.IronOre;
+				Map[Block.Green + i] = (BlockID)(Block.Red + i);
+			Map[Block.Gold] = Block.CoalOre;
+			Map[Block.Iron] = Block.IronOre;
 			// Fifth row
-			if (!game.PureClassic) map[Block.DoubleSlab] = Block.GoldOre;
-			map[Block.Slab] = game.PureClassic ? Block.GoldOre : Block.DoubleSlab;
-			map[Block.Brick] = Block.Iron;
-			map[Block.TNT] = Block.Gold;
-			map[Block.MossyRocks] = Block.TNT;
-		}
-	}
-	
-	public class InventoryPermissions {
-		
-		byte[] values = new byte[Block.Count];
-		public bool this[int index] {
-			get { return (values[index] & 1) != 0; }
-			set {
-				if (values[index] >= 0x80) return;
-				values[index] &= 0xFE; // reset perm bit
-				values[index] |= (byte)(value ? 1 : 0);
-			}
-		}
-		
-		public void SetNotOverridable(bool value, int index) {
-			values[index] &= 0xFE; // reset perm bit
-			values[index] |= (byte)(value ? 0x81 : 0x80); // set 'don't override' bit
+			if (!game.PureClassic) Map[Block.DoubleSlab] = Block.GoldOre;
+			Map[Block.Slab] = game.PureClassic ? Block.GoldOre : Block.DoubleSlab;
+			Map[Block.Brick] = Block.Iron;
+			Map[Block.TNT] = Block.Gold;
+			Map[Block.MossyRocks] = Block.TNT;
 		}
 	}
 }

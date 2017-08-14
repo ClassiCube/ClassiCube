@@ -15,13 +15,11 @@ namespace ClassicalSharp.Singleplayer {
 		Game game;
 		PhysicsBase physics;
 		World map;
-		BlockInfo info;
 		int width, length, height, oneY;
 		
 		public FallingPhysics(Game game, PhysicsBase physics) {
 			this.game = game;
 			map = game.World;
-			info = game.BlockInfo;
 			this.physics = physics;
 			
 			physics.OnPlace[Block.Sand] = DoFalling;

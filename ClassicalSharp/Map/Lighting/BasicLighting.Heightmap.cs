@@ -18,8 +18,8 @@ namespace ClassicalSharp.Map {
 			
 			for (int y = maxY; y >= 0; y--) {
 				BlockID block = blocks[mapIndex];
-				if (info.BlocksLight[block]) {
-					int offset = (info.LightOffset[block] >> Side.Top) & 1;
+				if (BlockInfo.BlocksLight[block]) {
+					int offset = (BlockInfo.LightOffset[block] >> Side.Top) & 1;
 					heightmap[index] = (short)(y - offset);
 					return y - offset;
 				}
@@ -64,8 +64,8 @@ namespace ClassicalSharp.Map {
 						int curRunCount = skip[index];
 						x += curRunCount; mapIndex += curRunCount; index += curRunCount;
 						
-						if (x < xCount && info.BlocksLight[mapPtr[mapIndex]]) {
-							int lightOffset = (info.LightOffset[mapPtr[mapIndex]] >> Side.Top) & 1;
+						if (x < xCount && BlockInfo.BlocksLight[mapPtr[mapIndex]]) {
+							int lightOffset = (BlockInfo.LightOffset[mapPtr[mapIndex]] >> Side.Top) & 1;
 							heightmap[heightmapIndex + x] = (short)(y - lightOffset);
 							elemsLeft--;
 							skip[index] = 0;

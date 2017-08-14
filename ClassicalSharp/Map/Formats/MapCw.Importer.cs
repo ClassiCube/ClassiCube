@@ -133,50 +133,49 @@ namespace ClassicalSharp.Map {
 		
 		void ParseBlockDefinition(NbtCompound compound) {
 			byte id = (byte)compound["ID"].Value;
-			BlockInfo info = game.BlockInfo;
-			info.Name[id] = (string)compound["Name"].Value;
-			info.SetCollide(id, (byte)compound["CollideType"].Value);
-			info.SpeedMultiplier[id] = (float)compound["Speed"].Value;
+			BlockInfo.Name[id] = (string)compound["Name"].Value;
+			BlockInfo.SetCollide(id, (byte)compound["CollideType"].Value);
+			BlockInfo.SpeedMultiplier[id] = (float)compound["Speed"].Value;
 			
 			byte[] data = (byte[])compound["Textures"].Value;
-			info.SetTex(data[0], Side.Top, id);
-			info.SetTex(data[1], Side.Bottom, id);
-			info.SetTex(data[2], Side.Left, id);
-			info.SetTex(data[3], Side.Right, id);
-			info.SetTex(data[4], Side.Front, id);
-			info.SetTex(data[5], Side.Back, id);
+			BlockInfo.SetTex(data[0], Side.Top, id);
+			BlockInfo.SetTex(data[1], Side.Bottom, id);
+			BlockInfo.SetTex(data[2], Side.Left, id);
+			BlockInfo.SetTex(data[3], Side.Right, id);
+			BlockInfo.SetTex(data[4], Side.Front, id);
+			BlockInfo.SetTex(data[5], Side.Back, id);
 			
-			info.BlocksLight[id] = (byte)compound["TransmitsLight"].Value == 0;
+			BlockInfo.BlocksLight[id] = (byte)compound["TransmitsLight"].Value == 0;
 			byte soundId = (byte)compound["WalkSound"].Value;
-			info.DigSounds[id] = CPEProtocolBlockDefs.breakSnds[soundId];
-			info.StepSounds[id] = CPEProtocolBlockDefs.stepSnds[soundId];
-			info.FullBright[id] = (byte)compound["FullBright"].Value != 0;
+			BlockInfo.DigSounds[id] = CPEProtocolBlockDefs.breakSnds[soundId];
+			BlockInfo.StepSounds[id] = CPEProtocolBlockDefs.stepSnds[soundId];
+			BlockInfo.FullBright[id] = (byte)compound["FullBright"].Value != 0;
 			
 			byte blockDraw = (byte)compound["BlockDraw"].Value;
 			if ((byte)compound["Shape"].Value == 0)
 				blockDraw = DrawType.Sprite;
 			
 			data = (byte[])compound["Fog"].Value;
-			info.FogDensity[id] = (data[0] + 1) / 128f;
+			BlockInfo.FogDensity[id] = (data[0] + 1) / 128f;
 			// Fix for older ClassicalSharp versions which saved wrong fog density value
-			if (data[0] == 0xFF) info.FogDensity[id] = 0;
-			info.FogColour[id] = new FastColour(data[1], data[2], data[3]);
-			info.Tinted[id] = info.FogColour[id] != FastColour.Black && info.Name[id].IndexOf('#') >= 0; // TODO: nasty copy paste
+			if (data[0] == 0xFF) BlockInfo.FogDensity[id] = 0;
+			BlockInfo.FogColour[id] = new FastColour(data[1], data[2], data[3]);
+			BlockInfo.Tinted[id] = BlockInfo.FogColour[id] != FastColour.Black && BlockInfo.Name[id].IndexOf('#') >= 0; // TODO: nasty copy paste
 
 			data = (byte[])compound["Coords"].Value;
-			info.MinBB[id] = new Vector3(data[0] / 16f, data[1] / 16f, data[2] / 16f);
-			info.MaxBB[id] = new Vector3(data[3] / 16f, data[4] / 16f, data[5] / 16f);
+			BlockInfo.MinBB[id] = new Vector3(data[0] / 16f, data[1] / 16f, data[2] / 16f);
+			BlockInfo.MaxBB[id] = new Vector3(data[3] / 16f, data[4] / 16f, data[5] / 16f);
 			
-			info.SetBlockDraw(id, blockDraw);
-			info.CalcRenderBounds(id);
-			info.UpdateCulling(id);
+			BlockInfo.SetBlockDraw(id, blockDraw);
+			BlockInfo.CalcRenderBounds(id);
+			BlockInfo.UpdateCulling(id);
 			
-			info.LightOffset[id] = info.CalcLightOffset(id);
+			BlockInfo.LightOffset[id] = BlockInfo.CalcLightOffset(id);
 			game.Events.RaiseBlockDefinitionChanged();
-			info.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
+			BlockInfo.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
 			
-			game.Inventory.CanPlace.SetNotOverridable(true, id);
-			game.Inventory.CanDelete.SetNotOverridable(true, id);
+			BlockInfo.CanPlace[id] = true;
+			BlockInfo.CanDelete[id] = true;
 			game.Events.RaiseBlockPermissionsChanged();
 		}
 	}

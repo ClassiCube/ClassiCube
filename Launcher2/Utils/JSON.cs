@@ -145,7 +145,8 @@ namespace Launcher {
 			if (!UInt32.TryParse(str, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out codePoint))
 				return false;
 			
-			s.Append((char)codePoint);
+			// don't want control characters in names/software
+			if (codePoint >= 32) s.Append((char)codePoint);
 			index += 4; // skip 4 chars
 			return true;
 		}

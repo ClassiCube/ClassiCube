@@ -15,7 +15,7 @@ namespace ClassicalSharp {
 	public static class AutoRotate {
 		
 		public static BlockID RotateBlock(Game game, BlockID block) {
-			string name = game.BlockInfo.Name[block];
+			string name = BlockInfo.Name[block];
 			int dirIndex = name.LastIndexOf('-');
 			if (dirIndex == -1) return block; // not a directional block
 			
@@ -58,7 +58,7 @@ namespace ClassicalSharp {
 		
 		static BlockID RotateOther(Game game, BlockID block, string name, Vector3 offset) {
 			// Fence type blocks
-			if (game.BlockInfo.FindID(name + "-UD") == -1) {
+			if (BlockInfo.FindID(name + "-UD") == -1) {
 				float headY = LocationUpdate.Clamp(game.LocalPlayer.HeadY);				
 				if (headY < 45 || (headY >= 135 && headY < 225) || headY > 315)
 					return Find(game, block, name + "-WE");
@@ -104,7 +104,7 @@ namespace ClassicalSharp {
 		}
 		
 		static BlockID Find(Game game, BlockID block, string name) {
-			int rotated = game.BlockInfo.FindID(name);
+			int rotated = BlockInfo.FindID(name);
 			if (rotated != -1) return (BlockID)rotated;
 			return block;
 		}

@@ -12,14 +12,14 @@ using BlockID = System.Byte;
 namespace ClassicalSharp {
 	
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
-	public partial class BlockInfo {
+	public static partial class BlockInfo {
 		
-		public Vector3[] MinBB = new Vector3[Block.Count];
-		public Vector3[] MaxBB = new Vector3[Block.Count];
-		public Vector3[] RenderMinBB = new Vector3[Block.Count];
-		public Vector3[] RenderMaxBB = new Vector3[Block.Count];
+		public static Vector3[] MinBB = new Vector3[Block.Count];
+		public static Vector3[] MaxBB = new Vector3[Block.Count];
+		public static Vector3[] RenderMinBB = new Vector3[Block.Count];
+		public static Vector3[] RenderMaxBB = new Vector3[Block.Count];
 		
-		internal void CalcRenderBounds(BlockID block) {
+		internal static void CalcRenderBounds(BlockID block) {
 			Vector3 min = MinBB[block], max = MaxBB[block];
 			
 			if (block >= Block.Water && block <= Block.StillLava) {
@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 			RenderMinBB[block] = min; RenderMaxBB[block] = max;
 		}
 		
-		internal byte CalcLightOffset(BlockID block) {
+		internal static byte CalcLightOffset(BlockID block) {
 			int flags = 0xFF;
 			Vector3 min = MinBB[block], max = MaxBB[block];
 			
@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 			return (byte)flags;
 		}
 		
-		public void RecalculateSpriteBB(FastBitmap fastBmp) {
+		public static void RecalculateSpriteBB(FastBitmap fastBmp) {
 			for (int i = 0; i < Block.Count; i++) {
 				if (Draw[i] != DrawType.Sprite) continue;
 				RecalculateBB((BlockID)i, fastBmp);
@@ -60,7 +60,7 @@ namespace ClassicalSharp {
 		
 		const float angle = 45f * Utils.Deg2Rad;
 		static readonly Vector3 centre = new Vector3(0.5f, 0, 0.5f);
-		internal void RecalculateBB(BlockID block, FastBitmap fastBmp) {
+		internal static void RecalculateBB(BlockID block, FastBitmap fastBmp) {
 			int elemSize = fastBmp.Width / 16;
 			int texId = GetTextureLoc(block, Side.Right);
 			int texX = texId & 0x0F, texY = texId >> 4;
@@ -75,7 +75,7 @@ namespace ClassicalSharp {
 			CalcRenderBounds(block);
 		}
 		
-		unsafe float GetSpriteBB_TopY(int size, int tileX, int tileY, FastBitmap fastBmp) {
+		unsafe static float GetSpriteBB_TopY(int size, int tileX, int tileY, FastBitmap fastBmp) {
 			for (int y = 0; y < size; y++) {
 				int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
 				for (int x = 0; x < size; x++) {
@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 			return 0;
 		}
 		
-		unsafe float GetSpriteBB_BottomY(int size, int tileX, int tileY, FastBitmap fastBmp) {
+		unsafe static float GetSpriteBB_BottomY(int size, int tileX, int tileY, FastBitmap fastBmp) {
 			for (int y = size - 1; y >= 0; y--) {
 				int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
 				for (int x = 0; x < size; x++) {
@@ -97,7 +97,7 @@ namespace ClassicalSharp {
 			return 1;
 		}
 		
-		unsafe float GetSpriteBB_LeftX(int size, int tileX, int tileY, FastBitmap fastBmp) {
+		unsafe static float GetSpriteBB_LeftX(int size, int tileX, int tileY, FastBitmap fastBmp) {
 			for (int x = 0; x < size; x++) {
 				for (int y = 0; y < size; y++) {
 					int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
@@ -108,7 +108,7 @@ namespace ClassicalSharp {
 			return 1;
 		}
 		
-		unsafe float GetSpriteBB_RightX(int size, int tileX, int tileY, FastBitmap fastBmp) {
+		unsafe static float GetSpriteBB_RightX(int size, int tileX, int tileY, FastBitmap fastBmp) {
 			for (int x = size - 1; x >= 0; x--) {
 				for (int y = 0; y < size; y++) {
 					int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);

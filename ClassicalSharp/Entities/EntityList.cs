@@ -56,6 +56,7 @@ namespace ClassicalSharp.Entities {
 			gfx.Texturing = false;
 			gfx.AlphaTest = false;
 		}
+		bool hadFog;
 		
 		/// <summary> Renders the names of all player entities contained in this list.<br/>
 		/// If ShowHoveredNames is false, this method only renders names of entities that are
@@ -66,6 +67,8 @@ namespace ClassicalSharp.Entities {
 
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
+			hadFog = gfx.Fog;
+			if (hadFog) gfx.Fog = false;
 			
 			for (int i = 0; i < Entities.Length; i++) {
 				if (Entities[i] == null) continue;
@@ -75,12 +78,15 @@ namespace ClassicalSharp.Entities {
 			
 			gfx.Texturing = false;
 			gfx.AlphaTest = false;
+			if (hadFog) gfx.Fog = true;
 		}
 		
 		public void RenderHoveredNames(IGraphicsApi gfx, double delta) {
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
 			gfx.DepthTest = false;
+			hadFog = gfx.Fog;
+			if (hadFog) gfx.Fog = false;
 			
 			bool allNames = !(NamesMode == NameMode.Hovered || NamesMode == NameMode.All)
 				&& game.LocalPlayer.Hacks.CanSeeAllNames;
@@ -93,6 +99,7 @@ namespace ClassicalSharp.Entities {
 			gfx.Texturing = false;
 			gfx.AlphaTest = false;
 			gfx.DepthTest = true;
+			if (hadFog) gfx.Fog = true;
 		}
 		
 		void ContextLost() {

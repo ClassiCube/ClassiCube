@@ -32,9 +32,9 @@ namespace ClassicalSharp.Audio {
 
 		void PlayBlockSound(object sender, BlockChangedEventArgs e) {
 			if (e.Block == 0)
-				PlayDigSound(game.BlockInfo.DigSounds[e.OldBlock]);
+				PlayDigSound(BlockInfo.DigSounds[e.OldBlock]);
 			else
-				PlayDigSound(game.BlockInfo.StepSounds[e.Block]);
+				PlayDigSound(BlockInfo.StepSounds[e.Block]);
 		}
 		
 		public void PlayDigSound(SoundType type) { PlaySound(type, digBoard); }

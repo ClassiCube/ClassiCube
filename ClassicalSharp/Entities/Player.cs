@@ -91,7 +91,7 @@ namespace ClassicalSharp.Entities {
 			int col = FastColour.WhitePacked;
 			Vector2 size = new Vector2(nameTex.Width * scale, nameTex.Height * scale);
 			
-			if (game.Entities.NamesMode == NameMode.AllUnscaled) {
+			if (game.Entities.NamesMode == NameMode.AllUnscaled && game.LocalPlayer.Hacks.CanSeeAllNames) {
 				// Get W component of transformed position
 				Matrix4 mat;
 				Matrix4.Mult(out mat, ref game.View, ref game.Projection); // TODO: This mul is slow, avoid it

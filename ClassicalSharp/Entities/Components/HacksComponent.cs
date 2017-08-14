@@ -104,14 +104,13 @@ namespace ClassicalSharp.Entities {
 		public void SetUserType(byte value) {
 			bool isOp = value >= 100 && value <= 127;
 			UserType = value;
-			Inventory inv = game.Inventory;
-			inv.CanPlace[Block.Bedrock] = isOp;
-			inv.CanDelete[Block.Bedrock] = isOp;
+			BlockInfo.CanPlace[Block.Bedrock] = isOp;
+			BlockInfo.CanDelete[Block.Bedrock] = isOp;
 
-			inv.CanPlace[Block.Water] = isOp;
-			inv.CanPlace[Block.StillWater] = isOp;
-			inv.CanPlace[Block.Lava] = isOp;
-			inv.CanPlace[Block.StillLava] = isOp;
+			BlockInfo.CanPlace[Block.Water] = isOp;
+			BlockInfo.CanPlace[Block.StillWater] = isOp;
+			BlockInfo.CanPlace[Block.Lava] = isOp;
+			BlockInfo.CanPlace[Block.StillLava] = isOp;
 			CanSeeAllNames = isOp;
 		}
 		

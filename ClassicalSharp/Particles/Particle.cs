@@ -92,14 +92,14 @@ namespace ClassicalSharp.Particles {
 			Position = Vector3.Lerp(lastPos, nextPos, t);
 			
 			int col = FastColour.WhitePacked;
-			if (!game.BlockInfo.FullBright[block]) {
+			if (!BlockInfo.FullBright[block]) {
 				Vector3I P = Vector3I.Floor(Position);
 				col = game.World.IsValidPos(P) ?
 					game.Lighting.LightCol_ZSide(P.X, P.Y, P.Z) : game.Lighting.OutsideZSide;
 			}
 			
-			if (game.BlockInfo.Tinted[block]) {
-				FastColour fogCol = game.BlockInfo.FogColour[block];
+			if (BlockInfo.Tinted[block]) {
+				FastColour fogCol = BlockInfo.FogColour[block];
 				FastColour newCol = FastColour.Unpack(col);
 				newCol *= fogCol;
 				col = newCol.Pack();

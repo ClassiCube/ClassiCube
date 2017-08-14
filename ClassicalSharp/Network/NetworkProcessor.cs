@@ -116,8 +116,7 @@ namespace ClassicalSharp.Network {
 				}
 				
 				if (opcode > maxHandledPacket) {
-					ErrorHandler.LogError("NetworkProcessor.Tick",
-					                      "received an invalid opcode of " + opcode);
+					ErrorHandler.LogError("NetworkProcessor.Tick", "received invalid opcode: " + opcode);
 					reader.Skip(1);
 					continue;
 				}

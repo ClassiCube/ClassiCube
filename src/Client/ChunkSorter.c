@@ -45,7 +45,7 @@ void ChunkSorter_UpdateSortOrder(void) {
 
 	ChunkSorter_QuickSort(0, MapRenderer_ChunksCount - 1);
 	ChunkUpdater_ResetPartFlags();
-	//SimpleOcclusionCulling();
+	/*SimpleOcclusionCulling();*/
 }
 
 void ChunkSorter_QuickSort(Int32 left, Int32 right) {
