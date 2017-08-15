@@ -167,6 +167,8 @@ namespace ClassicalSharp.Gui.Screens {
 		void UpdateBlockInfoString(BlockID block) {
 			int index = 0;
 			buffer.Clear();
+			if (game.PureClassic) { buffer.Append(ref index, "Select block"); return; }
+			
 			buffer.Append(ref index, "&f");
 			string value = BlockInfo.Name[block];
 			buffer.Append(ref index, value);
