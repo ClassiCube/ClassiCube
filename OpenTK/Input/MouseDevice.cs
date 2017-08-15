@@ -40,23 +40,16 @@ namespace OpenTK.Input {
 		MouseButtonEventArgs button_args = new MouseButtonEventArgs();
 		MouseWheelEventArgs wheel_args = new MouseWheelEventArgs();
 
-		/// <summary> Gets the absolute wheel position in integer units.
-		/// To support high-precision mice, it is recommended to use <see cref="WheelPrecise"/> instead. </summary>
-		public int Wheel {
-			get { return (int)Math.Round(wheel, MidpointRounding.AwayFromZero); }
-			internal set { WheelPrecise = value; }
-		}
-
 		/// <summary> Gets the absolute wheel position in floating-point units. </summary>
-		public float WheelPrecise {
+		public float Wheel {
 			get { return wheel; }
 			internal set {
 				wheel = value;
 
 				wheel_args.X = pos.X;
 				wheel_args.Y = pos.Y;
-				wheel_args.ValuePrecise = wheel;
-				wheel_args.DeltaPrecise = wheel - last_wheel;
+				wheel_args.Value = wheel;
+				wheel_args.Delta = wheel - last_wheel;
 
 				WheelChanged(this, wheel_args);
 
@@ -65,14 +58,10 @@ namespace OpenTK.Input {
 		}
 
 		/// <summary> Gets an integer representing the absolute x position of the pointer, in window pixel coordinates. </summary>
-		public int X {
-			get { return pos.X; }
-		}
+		public int X { get { return pos.X; } }
 
 		/// <summary> Gets an integer representing the absolute y position of the pointer, in window pixel coordinates. </summary>
-		public int Y {
-			get { return pos.Y; }
-		}
+		public int Y { get { return pos.Y; } }
 
 		/// <summary> Gets a System.Boolean indicating the state of the specified MouseButton. </summary>
 		/// <param name="button">The MouseButton to check.</param>
@@ -149,18 +138,10 @@ namespace OpenTK.Input {
 
 	public class MouseWheelEventArgs : MouseEventArgs {
 
-		/// <summary> Gets the value of the wheel in integer units.
-		/// To support high-precision mice, it is recommended to use <see cref="ValuePrecise"/> instead. </summary>
-		public int Value { get { return (int)Math.Round(ValuePrecise, MidpointRounding.AwayFromZero); } }
-
-		/// <summary> Gets the change in value of the wheel for this event in integer units.
-		/// To support high-precision mice, it is recommended to use <see cref="DeltaPrecise"/> instead. </summary>
-		public int Delta { get { return (int)Math.Round(DeltaPrecise, MidpointRounding.AwayFromZero); } }
-
 		/// <summary> Gets the precise value of the wheel in floating-point units. </summary>
-		public float ValuePrecise;
+		public float Value;
 
 		/// <summary> Gets the precise change in value of the wheel for this event in floating-point units. </summary>
-		public float DeltaPrecise;
+		public float Delta;
 	}
 }

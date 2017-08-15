@@ -110,6 +110,15 @@ namespace ClassicalSharp {
 		public static void LogDebug(string text, params object[] args) {
 			Console.WriteLine(String.Format(text, args));
 		}
+		
+		public static int AccumulateWheelDelta(ref float accmulator, float delta) {
+			// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
+			// We must use rounding at final step, not at every intermediate step.
+			accmulator += delta;
+			int steps = (int)accmulator;
+			accmulator -= steps;
+			return steps;
+		}
 
 #if !LAUNCHER
 		/// <summary> Attempts to caselessly parse the given string as a Key enum member,

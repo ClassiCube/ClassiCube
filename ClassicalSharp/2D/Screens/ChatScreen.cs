@@ -388,9 +388,11 @@ namespace ClassicalSharp.Gui.Screens {
 			return true;
 		}
 		
-		public override bool HandlesMouseScroll(int delta) {
+		float chatAcc;
+		public override bool HandlesMouseScroll(float delta) {
 			if (!HandlesAllInput) return false;
-			chatIndex -= delta;
+			int steps = Utils.AccumulateWheelDelta(ref chatAcc, delta);
+			chatIndex -= steps;
 			ScrollHistory();
 			return true;
 		}

@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui {
 		
 		public virtual bool HandlesMouseMove(int mouseX, int mouseY) { return false; }
 		
-		public virtual bool HandlesMouseScroll(int delta) { return false; }
+		public virtual bool HandlesMouseScroll(float delta) { return false; }
 		
 		public virtual bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return false; }
 		

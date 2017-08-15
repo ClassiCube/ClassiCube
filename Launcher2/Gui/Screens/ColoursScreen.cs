@@ -61,8 +61,10 @@ namespace Launcher.Gui.Screens {
 			}
 		}
 		
+		float colourAcc;
 		protected override void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
-			AdjustSelectedColour(e.Delta);
+			int steps = Utils.AccumulateWheelDelta(ref colourAcc, e.Delta);
+			AdjustSelectedColour(steps);
 		}
 		
 		protected override void KeyDown(object sender, KeyboardKeyEventArgs e) {

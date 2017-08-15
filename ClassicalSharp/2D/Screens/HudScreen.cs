@@ -173,7 +173,7 @@ namespace ClassicalSharp.Gui.Screens {
 			chat.OpenTextInputBar(text);
 		}
 		
-		public override bool HandlesMouseScroll(int delta) {
+		public override bool HandlesMouseScroll(float delta) {
 			return chat.HandlesMouseScroll(delta);
 		}
 		

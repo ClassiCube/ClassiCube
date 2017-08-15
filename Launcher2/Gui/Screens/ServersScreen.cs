@@ -143,9 +143,11 @@ namespace Launcher.Gui.Screens {
 			Resize();
 		}
 		
+		float tableAcc;
 		protected override void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			table.CurrentIndex -= e.Delta;
+			int steps = Utils.AccumulateWheelDelta(ref tableAcc, e.Delta);
+			table.CurrentIndex -= steps;
 			MarkPendingRedraw();
 		}
 		

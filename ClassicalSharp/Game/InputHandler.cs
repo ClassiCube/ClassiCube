@@ -131,36 +131,32 @@ namespace ClassicalSharp {
 			}
 		}
 
-		float deltaAcc = 0;
+		float deltaAcc;
 		void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
 			if (game.Gui.ActiveScreen.HandlesMouseScroll(e.Delta)) return;
 			
 			Inventory inv = game.Inventory;
 			bool hotbar = AltDown || ControlDown || ShiftDown;
-			if ((!hotbar && game.Camera.Zoom(e.DeltaPrecise)) || DoFovZoom(e.DeltaPrecise) || !inv.CanChangeHeldBlock)
+			if ((!hotbar && game.Camera.Zoom(e.Delta)) || DoFovZoom(e.Delta) || !inv.CanChangeHeldBlock)
 				return;
-			ScrollHotbar(e.DeltaPrecise);
+			ScrollHotbar(e.Delta);
 		}
 		
-		void ScrollHotbar(float deltaPrecise) {
+		void ScrollHotbar(float delta) {
 			Inventory inv = game.Inventory;
 			if (AltDown) {
 				int index = inv.Offset / Inventory.BlocksPerRow;
-				inv.Offset = ScrolledIndex(deltaPrecise, index) * Inventory.BlocksPerRow;
+				inv.Offset = ScrolledIndex(delta, index) * Inventory.BlocksPerRow;
 			} else {
-				inv.SelectedIndex = ScrolledIndex(deltaPrecise, inv.SelectedIndex);
+				inv.SelectedIndex = ScrolledIndex(delta, inv.SelectedIndex);
 			}
 		}
 		
-		int ScrolledIndex(float deltaPrecise, int currentIndex) {
-			// Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2)
-			// We must use rounding at final step, not at every intermediate step.
-			deltaAcc += deltaPrecise;
-			int delta = (int)deltaAcc;
-			deltaAcc -= delta;
+		int ScrolledIndex(float delta, int currentIndex) {
+			int steps = Utils.AccumulateWheelDelta(ref deltaAcc, delta);
 			
 			const int blocksPerRow = Inventory.BlocksPerRow;
-			int diff = -delta % blocksPerRow;
+			int diff = -steps % blocksPerRow;
 			int index = currentIndex + diff;
 			
 			if (index < 0) index += blocksPerRow;

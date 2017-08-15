@@ -40,14 +40,16 @@ namespace ClassicalSharp.Gui.Screens {
 			height = Math.Min(y + height, TableHeight - scrollBorder) - y;
 		}
 		
-		public override bool HandlesMouseScroll(int delta) {
+		float invAcc;
+		public override bool HandlesMouseScroll(float delta) {
 			bool bounds = Contains(TableX - scrollWidth, TableY, TableWidth + scrollWidth, 
 			                       TableHeight, game.Mouse.X, game.Mouse.Y);
 			bool hotbar = game.Input.AltDown || game.Input.ControlDown || game.Input.ShiftDown;
 			if (!bounds || hotbar) return false;
 			
 			int rowY = (selIndex / blocksPerRow) - scrollY;
-			scrollY -= delta;
+			int steps = Utils.AccumulateWheelDelta(ref invAcc, delta);
+			scrollY -= steps;
 			ClampScrollY();
 			if (selIndex == - 1) return true;
 			
