@@ -213,6 +213,7 @@
     <ClInclude Include="ModelBuilder.h" />
     <ClInclude Include="ModelCache.h" />
     <ClInclude Include="Key.h" />
+    <ClInclude Include="Mouse.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="NormalBuilder.h" />
     <ClInclude Include="Options.h" />
@@ -291,6 +292,7 @@
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelBuilder.c" />
     <ClCompile Include="ModelCache.c" />
+    <ClCompile Include="Mouse.c" />
     <ClCompile Include="NormalBuilder.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />

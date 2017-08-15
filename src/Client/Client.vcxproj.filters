@@ -411,6 +411,9 @@
     <ClInclude Include="Window.h">
       <Filter>Header Files\Platform\Window</Filter>
     </ClInclude>
+    <ClInclude Include="Mouse.h">
+      <Filter>Header Files\Platform\Window</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -627,6 +630,9 @@
       <Filter>Source Files\Events</Filter>
     </ClCompile>
     <ClCompile Include="Key.c">
+      <Filter>Source Files\Platform\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Mouse.c">
       <Filter>Source Files\Platform\Window</Filter>
     </ClCompile>
   </ItemGroup>

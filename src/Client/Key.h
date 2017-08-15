@@ -72,7 +72,6 @@ typedef enum Key_ {
 	Key_Tilde, Key_Minus, Key_Plus, Key_BracketLeft, Key_BracketRight,
 	Key_Semicolon, Key_Quote, Key_Comma, Key_Period, Key_Slash, Key_BackSlash,
 
-	/* Last available keyboard key */
 	Key_Count,
 } Key;
 
