@@ -1,7 +1,6 @@
-#if 0
+#include "DefaultSet.h"
 #include "BlockID.h"
 #include "Block.h"
-#include "DefaultSet.h"
 
 Real32 DefaultSet_Height(BlockID b) {
 	if (b == BlockID_Slab) return 0.5f;
@@ -112,4 +111,3 @@ SoundType DefaultSet_DigSound(BlockID b) {
 		return SoundType_Stone;
 	return SoundType_None;
 }
-#endif

@@ -1,4 +1,3 @@
-#if 0
 #include "TerrainAtlas2D.h"
 #include "Platform.h"
 #include "Block.h"
@@ -45,4 +44,3 @@ void Atlas2D_Free(void) {
 	if (Atlas2D_Bitmap.Scan0 == NULL) return;
 	Platform_MemFree(Atlas2D_Bitmap.Scan0);
 }
-#endif

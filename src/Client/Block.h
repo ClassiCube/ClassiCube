@@ -1,4 +1,3 @@
-#if 0
 #ifndef CS_BLOCK_H
 #define CS_BLOCK_H
 #include "Typedefs.h"
@@ -277,5 +276,4 @@ static TextureLoc bottomTex[Block_CpeCount] = { 0,  1,  2,  2, 16,  4, 15, 17, 1
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4,
 36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
 
-#endif
 #endif

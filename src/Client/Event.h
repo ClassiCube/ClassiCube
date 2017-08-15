@@ -14,37 +14,37 @@
 /* Event that takes no arguments. */
 typedef void(*Event_Void_Callback)(void);
 typedef struct Event_Void_ {
-	Event_Void_Callback Handlers[Event_MaxCallbacks]; Int32 HandlersCount;
+	Event_Void_Callback Handlers[Event_MaxCallbacks]; Int32 Count;
 } Event_Void;
 
 /* Event that takes single 32 bit signed integer argument. */
 typedef void(*Event_Int32_Callback)(Int32 argument);
 typedef struct Event_Int32_ {
-	Event_Int32_Callback Handlers[Event_MaxCallbacks]; Int32 HandlersCount;
+	Event_Int32_Callback Handlers[Event_MaxCallbacks]; Int32 Count;
 } Event_Int32;
 
 /* Event handler that takes single floating-point argument. */
 typedef void(*Event_Real32_Callback)(Real32 argument);
 typedef struct Event_Real32_ {
-	Event_Real32_Callback Handlers[Event_MaxCallbacks]; Int32 HandlersCount;
+	Event_Real32_Callback Handlers[Event_MaxCallbacks]; Int32 Count;
 } Event_Real32;
 
 /* Event handler that takes an entity ID as an argument. */
 typedef void(*Event_EntityID_Callback)(EntityID argument);
 typedef struct Event_EntityID_ {
-	Event_EntityID_Callback Handlers[Event_MaxCallbacks]; Int32 HandlersCount;
+	Event_EntityID_Callback Handlers[Event_MaxCallbacks]; Int32 Count;
 } Event_EntityID;
 
 /* Event handler that takes stream as an argument. */
 typedef void(*Event_Stream_Callback)(Stream* stream);
 typedef struct Event_Stream_ {
-	Event_Stream_Callback Handlers[Event_MaxCallbacks]; Int32 HandlersCount;
+	Event_Stream_Callback Handlers[Event_MaxCallbacks]; Int32 Count;
 } Event_Stream;
 
 /* Event handler that takes a block change argument. */
 typedef void(*Event_Block_Callback)(Vector3I coords, BlockID oldBlock, BlockID block);
 typedef struct Event_Block_ {
-	Event_Block_Callback Handlers[Event_MaxCallbacks]; Int32 HandlersCount;
+	Event_Block_Callback Handlers[Event_MaxCallbacks]; Int32 Count;
 } Event_Block;
 
 

@@ -212,6 +212,7 @@
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="ModelBuilder.h" />
     <ClInclude Include="ModelCache.h" />
+    <ClInclude Include="Key.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="NormalBuilder.h" />
     <ClInclude Include="Options.h" />
@@ -249,6 +250,7 @@
     <ClInclude Include="Typedefs.h" />
     <ClInclude Include="Vectors.h" />
     <ClInclude Include="VertexStructs.h" />
+    <ClInclude Include="Window.h" />
     <ClInclude Include="World.h" />
     <ClInclude Include="WorldEnv.h" />
   </ItemGroup>
@@ -282,6 +284,7 @@
     <ClCompile Include="IModel.c" />
     <ClCompile Include="Intersection.c" />
     <ClCompile Include="IsometricDrawer.c" />
+    <ClCompile Include="Key.c" />
     <ClCompile Include="Lighting.c" />
     <ClCompile Include="LiquidAnimations.c" />
     <ClCompile Include="LocationUpdate.c" />

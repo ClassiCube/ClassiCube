@@ -1,4 +1,3 @@
-#if 0
 #ifndef CS_DEFAULT_BLOCKS_H
 #define CS_DEFAULT_BLOCKS_H
 #include "Typedefs.h"

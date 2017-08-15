@@ -405,6 +405,12 @@
     <ClInclude Include="Events.h">
       <Filter>Header Files\Events</Filter>
     </ClInclude>
+    <ClInclude Include="Key.h">
+      <Filter>Header Files\Platform\Window</Filter>
+    </ClInclude>
+    <ClInclude Include="Window.h">
+      <Filter>Header Files\Platform\Window</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -619,6 +625,9 @@
     </ClCompile>
     <ClCompile Include="Event.c">
       <Filter>Source Files\Events</Filter>
+    </ClCompile>
+    <ClCompile Include="Key.c">
+      <Filter>Source Files\Platform\Window</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

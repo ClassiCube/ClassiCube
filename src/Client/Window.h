@@ -5,9 +5,11 @@
 #include "Compiler.h"
 #include "Bitmap.h"
 #include "2DStructs.h"
+#include "DisplayDevice.h"
 /* Abstracts creating and managing a native window.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based on OpenTK code
 */
+
 /*
    The Open Toolkit Library License
   
@@ -31,7 +33,20 @@
    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
    OTHER DEALINGS IN THE SOFTWARE.
-   */
+*/
+
+typedef UInt8 WindowState;
+/* The window is in its normal state. */
+#define WindowState_Normal 0
+/* The window is minimized to the taskbar (also known as 'iconified'). */
+#define WindowState_Minimized 1
+/* The window covers the whole working area, which includes the desktop but not the taskbar and/or panels. */
+#define WindowState_Maximized 2
+/* The window covers the whole screen, including all taskbars and/or panels. */
+#define WindowState_Fullscreen 3
+
+/* Creates a new window. */
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT String* title, DisplayDevice* device) {
 
 /* Gets the current contents of the clipboard. */
 void Window_GetClipboardText(STRING_TRANSIENT String* value);
@@ -53,8 +68,10 @@ bool Window_GetExists(void);
 		/// <summary> Gets the <see cref="OpenTK.Platform.IWindowInfo"/> for this window. </summary>
 	IWindowInfo WindowInfo{ get; }
 
-		/// <summary> Gets or sets the <see cref="OpenTK.WindowState"/> for this window. </summary>
-	WindowState WindowState{ get; set; }
+/* Gets the WindowState of this window. */
+WindowState Window_GetWindowState(void);
+/* Sets the WindowState of this window. */
+void Window_SetWindowState(WindowState value);
 
 /* Gets the external bounds of this window, in screen coordinates. 
 External bounds include title bar, borders and drawing area of the window. */
@@ -94,12 +111,6 @@ Point2D Window_PointToClient(Point2D point);
 
 /* Transforms the specified point from client to screen coordinates. */
 Point2D Window_PointToScreen(Point2D point);
-
-	/// <summary> Gets the available KeyboardDevice. </summary>
-	KeyboardDevice Keyboard{ get; }
-
-		/// <summary> Gets the available MouseDevice. </summary>
-	MouseDevice Mouse{ get; }
 
 /* Gets the cursor position in screen coordinates. */
 Point2D Window_GetDesktopCursorPos(void);

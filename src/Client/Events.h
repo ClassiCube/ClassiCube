@@ -111,10 +111,15 @@ Event_Void WindowEvents_OnVisibleChanged;
 Event_Void WindowEvents_OnFocusedChanged;
 /* Raised when the WindowState of the window changes. */
 Event_Void WindowEvents_OnWindowStateChanged;
-/// <summary> Occurs whenever a character is typed. </summary>
-event EventHandler<KeyPressEventArgs> KeyPress;
 /* Raised whenever the mouse cursor leaves the bounds of the window. */
 Event_Void WindowEvents_OnMouseLeave;
 /* Raised whenever the mouse cursor enters the bounds of the window. */
 Event_Void WindowEvents_OnMouseEnter;
+
+/* Raised when a character is typed. */
+Event_Int32 KeyEvents_KeyPress;
+/* Raised when a key is pressed. */
+Event_Int32 KeyEvents_KeyDown;
+/* Raised when a key is released. */
+Event_Int32 KeyEvents_KeyUp;
 #endif

@@ -41,7 +41,7 @@ void Event_RaiseVoid(Event_Void* handlers) {
 void Event_RegisterVoid(Event_Void* handlers, Event_Void_Callback handler) {
 	Event_RegisterImpl(handlers, handler);
 }
-void Event_UnregisterVoid(&Event_Void* handlers, Event_Void_Callback handler) {
+void Event_UnregisterVoid(Event_Void* handlers, Event_Void_Callback handler) {
 	Event_UnregisterImpl(handlers, handler);
 }
 
@@ -54,7 +54,7 @@ void Event_RaiseInt32(Event_Int32* handlers, Int32 arg) {
 void Event_RegisterInt32(Event_Int32* handlers,Event_Int32_Callback handler) {
 	Event_RegisterImpl((Event_Void*)handlers, (Event_Void_Callback)handler);
 }
-void Event_UnregisterInt32Impl(Event_Int32* handlers, Event_Int32_Callback handler) {
+void Event_UnregisterInt32(Event_Int32* handlers, Event_Int32_Callback handler) {
 	Event_UnregisterImpl((Event_Void*)handlers, (Event_Void_Callback)handler);
 }
 
