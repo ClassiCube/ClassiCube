@@ -120,11 +120,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			left = new KeyBind[4];
-			left[0] = KeyBind.ExtInput; left[1] = KeyBind.HideFps; left[2] = KeyBind.HideGui; left[3] = KeyBind.HotbarSwitching;
+			left = new KeyBind[5];
+			left[0] = KeyBind.ExtInput; left[1] = KeyBind.HideFps; left[2] = KeyBind.HideGui; 
+			left[3] = KeyBind.HotbarSwitching; left[4] = KeyBind.DropBlock;
 			right = new KeyBind[5];
-			right[0] = KeyBind.Screenshot; right[1] = KeyBind.Fullscreen; right[2] = KeyBind.AxisLines; right[3] = KeyBind.Autorotate; right[4] = KeyBind.SmoothCamera;
-			leftDesc = new string[] { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching" };
+			right[0] = KeyBind.Screenshot; right[1] = KeyBind.Fullscreen; right[2] = KeyBind.AxisLines; 
+			right[3] = KeyBind.Autorotate; right[4] = KeyBind.SmoothCamera;
+			leftDesc = new string[] { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block" };
 			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera" };
 			
 			title = "Other controls";

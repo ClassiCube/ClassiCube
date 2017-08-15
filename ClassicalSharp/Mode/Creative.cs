@@ -20,6 +20,15 @@ namespace ClassicalSharp.Mode {
 			if (key == game.Input.Keys[KeyBind.Inventory] && game.Gui.ActiveScreen == game.Gui.hudScreen) {
 				game.Gui.SetNewScreen(new InventoryScreen(game));
 				return true;
+			} else if (key == game.Input.Keys[KeyBind.DropBlock] && !game.ClassicMode) {
+				Inventory inv = game.Inventory;
+				if (inv.CanChangeSelected()) {
+					// Don't assign Selected directly, because we don't want held block
+					// switching positions if they already have air in their inventory hotbar.
+					inv[inv.SelectedIndex] = Block.Air;
+					game.Events.RaiseHeldBlockChanged();
+				}
+				return true;
 			}
 			return false;
 		}
