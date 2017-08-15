@@ -3,7 +3,7 @@
 #include "Block.h"
 #include "ExtMath.h"
 #include "Funcs.h"
-#include "EventHandler.h"
+#include "Events.h"
 #include "Game.h"
 #include "GameProps.h"
 #include "GraphicsAPI.h"
@@ -39,12 +39,12 @@ IGameComponent WeatherRenderer_MakeGameComponent(void) {
 }
 
 void WeatherRenderer_Init(void) {
-	EventHandler_RegisterStream(TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
+	Event_RegisterStream(&TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
 	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
 
 	WeatherRenderer_ContextRecreated();
-	EventHandler_RegisterVoid(Gfx_ContextLost, &WeatherRenderer_ContextLost);
-	EventHandler_RegisterVoid(Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
+	Event_RegisterVoid(&GfxEvents_ContextLost, &WeatherRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, &WeatherRenderer_ContextRecreated);
 }
 
 void WeatherRenderer_Render(Real64 deltaTime) {
@@ -162,9 +162,9 @@ void WeatherRenderer_Free(void) {
 	WeatherRenderer_ContextLost();
 	WeatherRenderer_Reset();
 
-	EventHandler_UnregisterStream(TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
-	EventHandler_UnregisterVoid(Gfx_ContextLost, &WeatherRenderer_ContextLost);
-	EventHandler_UnregisterVoid(Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
+	Event_UnregisterStream(&TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
+	Event_UnregisterVoid(&Gfx_ContextLost, &WeatherRenderer_ContextLost);
+	Event_UnregisterVoid(&Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
 }
 
 void WeatherRenderer_InitHeightmap(void) {

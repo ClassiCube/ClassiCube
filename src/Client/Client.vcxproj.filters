@@ -228,12 +228,6 @@
     <ClInclude Include="D3D9Api.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="EventHandler.h">
-      <Filter>Header Files\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="WorldEvents.h">
-      <Filter>Header Files\Events</Filter>
-    </ClInclude>
     <ClInclude Include="Funcs.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
@@ -263,12 +257,6 @@
     </ClInclude>
     <ClInclude Include="Intersection.h">
       <Filter>Header Files\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="EntityEvents.h">
-      <Filter>Header Files\Events</Filter>
-    </ClInclude>
-    <ClInclude Include="MiscEvents.h">
-      <Filter>Header Files\Events</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files\Utils</Filter>
@@ -411,6 +399,12 @@
     <ClInclude Include="DisplayDevice.h">
       <Filter>Header Files\Platform\Window</Filter>
     </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>Header Files\Events</Filter>
+    </ClInclude>
+    <ClInclude Include="Events.h">
+      <Filter>Header Files\Events</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NotchyGenerator.c">
@@ -460,9 +454,6 @@
     </ClCompile>
     <ClCompile Include="D3D9Api.c">
       <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="EventHandler.c">
-      <Filter>Source Files\Events</Filter>
     </ClCompile>
     <ClCompile Include="VertexStructs.c">
       <Filter>Source Files\Math</Filter>
@@ -625,6 +616,9 @@
     </ClCompile>
     <ClCompile Include="DisplayDevice.c">
       <Filter>Source Files\Platform\Window</Filter>
+    </ClCompile>
+    <ClCompile Include="Event.c">
+      <Filter>Source Files\Events</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

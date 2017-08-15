@@ -1,120 +1,55 @@
 #ifndef CS_EVENTS_H
 #define CS_EVENTS_H
-#include "EventHandler.h"
+#include "Event.h"
 #include "Typedefs.h"
 /* Contains the various events that are raised by the client.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-
 /* Raised when an entity is spawned in the current world. */
-Event_EntityID EntityEvents_Added[EventHandler_Size];
-Int32 EntityEvents_AddedCount;
-#define EntityEvents_RaiseAdded(id)\
-EventHandler_Raise_EntityID(EntityEvents_Added, EntityEvents_AddedCount, id);
-
+Event_EntityID EntityEvents_Added;
 /* Raised when an entity is despawned from the current world. */
-Event_EntityID EntityEvents_Removed[EventHandler_Size];
-Int32 EntityEvents_RemovedCount;
-#define EntityEvents_RaiseRemoved(id)\
-EventHandler_Raise_EntityID(EntityEvents_Removed, EntityEvents_RemovedCount, id);
-
+Event_EntityID EntityEvents_Removed;
 
 /* Raised when a tab list entry is created. */
-Event_EntityID TabListEvents_Added[EventHandler_Size];
-Int32 TabListEvents_AddedCount;
-#define TabListEvents_RaiseAdded(id)\
-EventHandler_Raise_EntityID(TabListEvents_Added, TabListEvents_AddedCount, id);
-
+Event_EntityID TabListEvents_Added;
 /* Raised when a tab list entry is modified. */
-Event_EntityID TabListEvents_Changed[EventHandler_Size];
-Int32 TabListEvents_ChangedCount;
-#define TabListEvents_RaiseChanged(id)\
-EventHandler_Raise_EntityID(TabListEvents_Changed, TabListEvents_ChangedCount, id);
-
+Event_EntityID TabListEvents_Changed;
 /* Raised when a tab list entry is removed. */
-Event_EntityID TabListEvents_Removed[EventHandler_Size];
-Int32 TabListEvents_RemovedCount;
-#define TabListEvents_RaiseRemoved(id)\
-EventHandler_Raise_EntityID(TabListEvents_Removed, TabListEvents_RemovedCount, id);
-
+Event_EntityID TabListEvents_Removed;
 
 /* Raised when the terrain atlas ("terrain.png") is changed. */
-Event_Void TextureEvents_AtlasChanged[EventHandler_Size];
-Int32 TextureEvents_AtlasChangedCount;
-#define TextureEvents_RaiseAtlasChanged()\
-EventHandler_Raise_Void(TextureEvents_AtlasChanged, TextureEvents_AtlasChangedCount);
-
+Event_Void TextureEvents_AtlasChanged;
 /* Raised when the texture pack is changed. */
-Event_Void TextureEvents_PackChanged[EventHandler_Size];
-Int32 TextureEvents_PackChangedCount;
-#define TextureEvents_RaisePackChanged()\
-EventHandler_Raise_Void(TextureEvents_PackChanged, TextureEvents_PackChangedCount);
-
+Event_Void TextureEvents_PackChanged;
 /* Raised when a file in a texture pack is changed. (such as "terrain.png", "rain.png") */
-Event_Stream TextureEvents_FileChanged[EventHandler_Size];
-Int32 TextureEvents_FileChangedCount;
-#define TextureEvents_RaiseFileChanged(stream)\
-EventHandler_Raise_Stream(TextureEvents_TextureChanged, TextureEvents_FileChangedCount, stream);
-
+Event_Stream TextureEvents_FileChanged;
 
 /* Raised when the user changed their view/fog distance. */
-Event_Void GfxEvents_ViewDistanceChanged[EventHandler_Size];
-Int32 GfxEvents_ViewDistanceChangedCount;
-#define GfxEvents_RaiseViewDistanceChanged()\
-EventHandler_Raise_Void(GfxEvents_ViewDistanceChanged, GfxEvents_ViewDistanceCount);
-
+Event_Void GfxEvents_ViewDistanceChanged;
 /* Raised when the projection matrix changes. */
-Event_Void GfxEvents_ProjectionChanged[EventHandler_Size];
-Int32 GfxEvents_ProjectionChangedCount;
-#define GfxEvents_RaiseProjectionChanged()\
-EventHandler_Raise_Void(GfxEvents_ProjectionChanged, GfxEvents_ProjectionCount);
+Event_Void GfxEvents_ProjectionChanged;
+/* Event raised when a context is destroyed after having been previously lost. */
+Event_Void GfxEvents_ContextLost;
+/* Event raised when a context is recreated after having been previously lost. */
+Event_Void GfxEvents_ContextRecreated;
 
 /* Raised when the user changes a block. */
-Event_Block UserEvents_BlockChanged[EventHandler_Size];
-Int32 UserEvents_BlockChangedCount;
-#define UserEvents_BlockChangedChanged(coords, oldBlock, block)\
-EventHandler_Raise_Block(UserEvents_BlockChanged, UserEvents_BlockChangedCount, coords, oldBlock, block);
-
-
+Event_Block UserEvents_BlockChanged;
 /* Raised when the block permissions(can place or delete a block) for the player changes. */
-Event_Void BlockEvents_PermissionsChanged[EventHandler_Size];
-Int32 BlockEvents_PermissionsChangedCount;
-#define BlockEvents_RaisePermissionsChanged()\
-EventHandler_Raise_Void(BlockEvents_PermissionsChanged, BlockEvents_PermissionsChangedCount);
-
+Event_Void BlockEvents_PermissionsChanged;
 /* Raised when a block definition is changed. */
-Event_Void BlockEvents_BlockDefChanged[EventHandler_Size];
-Int32 BlockEvents_BlockDefChangedCount;
-#define BlockEvents_RaiseBlockDefChanged()\
-EventHandler_Raise_Void(BlockEvents_BlockDefChanged, BlockEvents_BlockDefChangedCount);
-
+Event_Void BlockEvents_BlockDefChanged;
 
 /* Raised when the player joins and begins loading a new world. */
-Event_Void WorldEvents_NewMap[EventHandler_Size];
-Int32 WorldEvents_NewMapCount;
-#define WorldEvents_RaiseNewMap()\
-EventHandler_Raise_Void(WorldEvents_NewMap, WorldEvents_NewMapCount);
-
+Event_Void WorldEvents_NewMap;
 /* Raised when a portion of the world is read and decompressed, or generated.
 The floating point argument is progress (from 0 to 1). */
-Event_Real32 WorldEvents_MapLoading[EventHandler_Size];
-Int32 WorldEvents_MapLoadingCount;
-#define WorldEvents_RaiseMapLoading(progress)\
-EventHandler_Raise_Real32(WorldEvents_MapLoading, WorldEvents_MapLoadingCount, progress);
-
+Event_Real32 WorldEvents_MapLoading;
 /* Raised when new world has finished loading and the player can now interact with it. */
-Event_Void WorldEvents_MapLoaded[EventHandler_Size];
-Int32 WorldEvents_MapLoadedCount;
-#define WorldEvents_RaiseMapLoaded()\
-EventHandler_Raise_Void(WorldEvents_MapLoaded, WorldEvents_MapLoadedCount);
-
+Event_Void WorldEvents_MapLoaded;
 /* Raised when an environment variable of the world is changed by the user, CPE, or WoM config. */
-Event_Int32 WorldEvents_EnvVarChanged[EventHandler_Size];
-Int32 WorldEvents_EnvVarChangedCount;
-#define WorldEvents_RaiseEnvVariableChanged(envVar)\
-EventHandler_Raise_Int32(WorldEvents_EnvVarChanged, WorldEvents_EnvVarChangedCount, envVar);
-
+Event_Int32 WorldEvents_EnvVarChanged;
 
 /* Environment variable identifiers*/
 typedef Int32 EnvVar;
@@ -135,4 +70,51 @@ typedef Int32 EnvVar;
 #define EnvVar_FogCol 12
 #define EnvVar_SunCol 13
 #define EnvVar_ShadowCol 14
+
+
+/*
+   The Open Toolkit Library License
+  
+   Copyright (c) 2006 - 2009 the Open Toolkit library.
+  
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+   the Software, and to permit persons to whom the Software is furnished to do
+   so, subject to the following conditions:
+  
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+  
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+   OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+   HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+   WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+   OTHER DEALINGS IN THE SOFTWARE.
+   */
+   
+/* Raised when the window is moved. */
+Event_Void WindowEvents_OnMove;
+/* Raised whene the window is resized. */
+Event_Void WindowEvents_OnResize;
+/* Raised when the window is about to close. */
+Event_Void WindowEvents_OnClosing;
+/* Raised after the window has closed. */
+Event_Void WindowEvents_OnClosed;
+/* Raised the visibility of the window changes. */
+Event_Void WindowEvents_OnVisibleChanged;
+/* Raised when the focus of the window changes. */
+Event_Void WindowEvents_OnFocusedChanged;
+/* Raised when the WindowState of the window changes. */
+Event_Void WindowEvents_OnWindowStateChanged;
+/// <summary> Occurs whenever a character is typed. </summary>
+event EventHandler<KeyPressEventArgs> KeyPress;
+/* Raised whenever the mouse cursor leaves the bounds of the window. */
+Event_Void WindowEvents_OnMouseLeave;
+/* Raised whenever the mouse cursor enters the bounds of the window. */
+Event_Void WindowEvents_OnMouseEnter;
 #endif

@@ -3,6 +3,7 @@
 #include "GraphicsEnums.h"
 #include "Platform.h"
 #include "Block.h"
+#include "Events.h"
 
 void GfxCommon_Init(void) {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, 4);
@@ -19,7 +20,7 @@ void GfxCommon_LoseContext(STRING_TRANSIENT String* reason) {
 	Platform_Log(String_FromConstant("Lost graphics context:"));
 	Platform_Log(*reason);
 
-	EventHandler_Raise_Void(Gfx_ContextLost, Gfx_ContextLostCount);
+	Event_RaiseVoid(&GfxEvents_ContextLost);
 	GfxCommon_Free();
 }
 
@@ -27,7 +28,7 @@ void GfxCommon_RecreateContext(void) {
 	Gfx_LostContext = false;
 	Platform_Log(String_FromConstant("Recreating graphics context"));
 
-	EventHandler_Raise_Void(Gfx_ContextRecreated, Gfx_ContextRecreatedCount);
+	Event_RaiseVoid(&GfxEvents_ContextRecreated);
 	GfxCommon_Init();
 }
 

@@ -1,7 +1,6 @@
 #ifndef CS_GFXAPI_H
 #define CS_GFXAPI_H
 #include "Typedefs.h"
-#include "EventHandler.h"
 #include "Bitmap.h"
 #include "PackedCol.h"
 #include "String.h"
@@ -35,15 +34,6 @@ bool Gfx_LostContext;
 #define Gfx_MaxIndices (65536 / 4 * 6)
 /* Maximum number of vertices that can be indexed. */
 #define Gfx_MaxVertex 65536
-
-
-/* Event raised when a context is destroyed after having been previously lost. */
-Event_Void Gfx_ContextLost[EventHandler_Size];
-Int32 Gfx_ContextLostCount;
-
-/* Event raised when a context is recreated after having been previously lost. */
-Event_Void Gfx_ContextRecreated[EventHandler_Size];
-Int32 Gfx_ContextRecreatedCount;
 
 /* TODO: IMPLEMENT THIS */
 /*	/// <summary> Delegate that is invoked when the current context is lost,

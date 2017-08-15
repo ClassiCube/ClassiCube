@@ -1,6 +1,5 @@
 #if 0
 #include "WorldEnv.h"
-#include "EventHandler.h"
 #include "Events.h"
 
 
@@ -8,13 +7,13 @@
 #define WorldEnv_Set(value, dst, envVar)\
 if (value == dst) return;\
 dst = value;\
-WorldEvents_RaiseEnvVariableChanged(envVar);
+Event_RaiseInt32(&WorldEvents_EnvVarChanged, envVar);
 
 /* Sets a colour and potentially raises event. */
 #define WorldEnv_SetCol(value, dst, envVar)\
 if (PackedCol_Equals(value, dst)) return;\
 dst = value;\
-WorldEvents_RaiseEnvVariableChanged(envVar);
+Event_RaiseInt32(&WorldEvents_EnvVarChanged, envVar);
 
 
 void WorldEnv_Reset(void) {
@@ -117,7 +116,7 @@ void WorldEnv_SetSunCol(PackedCol col) {
 	WorldEnv_SunCol = col;
 	PackedCol_GetShaded(WorldEnv_SunCol, &WorldEnv_SunXSide,
 		&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
-	WorldEvents_RaiseEnvVariableChanged(EnvVar_SunCol);
+	Event_RaiseInt32(&WorldEvents_EnvVarChanged, EnvVar_SunCol);
 }
 
 void WorldEnv_SetShadowCol(PackedCol col) {
@@ -126,6 +125,6 @@ void WorldEnv_SetShadowCol(PackedCol col) {
 	WorldEnv_ShadowCol = col;
 	PackedCol_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide,
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
-	WorldEvents_RaiseEnvVariableChanged(EnvVar_ShadowCol);
+	Event_RaiseInt32(&WorldEvents_EnvVarChanged, EnvVar_ShadowCol);
 }
 #endif

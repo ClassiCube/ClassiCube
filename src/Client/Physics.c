@@ -30,8 +30,8 @@ void Physics_SetEnabled(bool enabled) {
 }
 
 void Physics_Init(void) {
-	EventHandler_RegisterVoid(WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
-	EventHandler_RegisterBlock(UserEvents_BlockChanged, Physics_BlockChanged);
+	Event_RegisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
+	Event_RegisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
 	Physics_Enabled = Options_GetBool(OptionsKey_SingleplayerPhysics, true);
 	TickQueue_Init(&physics_lavaQ);
 	TickQueue_Init(&physics_waterQ);
@@ -74,8 +74,8 @@ void Physics_Init(void) {
 }
 
 void Physics_Free(void) {
-	EventHandler_UnregisterVoid(WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
-	EventHandler_UnregisterBlock(UserEvents_BlockChanged, Physics_BlockChanged);
+	Event_UnregisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
+	Event_UnregisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
 }
 
 void Physics_Tick(void) {

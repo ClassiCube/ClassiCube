@@ -191,9 +191,10 @@
     <ClInclude Include="DisplayDevice.h" />
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="Entity.h" />
-    <ClInclude Include="EntityEvents.h" />
     <ClInclude Include="EnvRenderer.h" />
     <ClInclude Include="ErrorHandler.h" />
+    <ClInclude Include="Event.h" />
+    <ClInclude Include="Events.h" />
     <ClInclude Include="FlatgrassGenerator.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="GameProps.h" />
@@ -209,7 +210,6 @@
     <ClInclude Include="LocationUpdate.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
-    <ClInclude Include="MiscEvents.h" />
     <ClInclude Include="ModelBuilder.h" />
     <ClInclude Include="ModelCache.h" />
     <ClInclude Include="NetworkEnums.h" />
@@ -231,8 +231,6 @@
     <ClInclude Include="TiltComp.h" />
     <ClInclude Include="TreeGen.h" />
     <ClInclude Include="WeatherRenderer.h" />
-    <ClInclude Include="WorldEvents.h" />
-    <ClInclude Include="EventHandler.h" />
     <ClInclude Include="PackedCol.h" />
     <ClInclude Include="Funcs.h" />
     <ClInclude Include="Game.h" />
@@ -275,7 +273,7 @@
     <ClCompile Include="DisplayDevice.c" />
     <ClCompile Include="Drawer.c" />
     <ClCompile Include="EnvRenderer.c" />
-    <ClCompile Include="EventHandler.c" />
+    <ClCompile Include="Event.c" />
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="FlatgrassGenerator.c" />
     <ClCompile Include="FrustumCulling.c" />

@@ -23,14 +23,14 @@ IGameComponent PickedPosRenderer_MakeGameComponent(void) {
 void PickedPosRenderer_Init(void) {
 	pickedPos_col = PackedCol_Create4(0, 0, 0, 102);
 	PickedPosRenderer_ContextRecreated();
-	EventHandler_RegisterVoid(Gfx_ContextLost, PickedPosRenderer_ContextLost);
-	EventHandler_RegisterVoid(Gfx_ContextRecreated, PickedPosRenderer_ContextRecreated);
+	Event_RegisterVoid(&GfxEvents_ContextLost, PickedPosRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, PickedPosRenderer_ContextRecreated);
 }
 
 void PickedPosRenderer_Free(void) {
 	PickedPosRenderer_ContextLost();
-	EventHandler_UnregisterVoid(Gfx_ContextLost, PickedPosRenderer_ContextLost);
-	EventHandler_UnregisterVoid(Gfx_ContextRecreated, PickedPosRenderer_ContextRecreated);
+	Event_UnregisterVoid(&Gfx_ContextLost, PickedPosRenderer_ContextLost);
+	Event_UnregisterVoid(&Gfx_ContextRecreated, PickedPosRenderer_ContextRecreated);
 }
 
 void PickedPosRenderer_Render(Real64 delta) {

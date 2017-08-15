@@ -8,6 +8,7 @@
 #include "PackedCol.h"
 #include "Camera.h"
 #include "LocalPlayer.h"
+#include "Events.h"
 
 GfxResourceID axisLines_vb = -1;
 #define axisLines_numVertices 12
@@ -54,12 +55,12 @@ void AxisLinesRenderer_Render(Real64 delta) {
 
 
 void AxisLinesRenderer_Init(void) {
-	EventHandler_RegisterVoid(Gfx_ContextLost, AxisLinesRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextLost, AxisLinesRenderer_ContextLost);
 }
 
 void AxisLinesRenderer_Free(void) {
 	AxisLinesRenderer_ContextLost();
-	EventHandler_UnregisterVoid(Gfx_ContextLost, AxisLinesRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, AxisLinesRenderer_ContextLost);
 }
 
 void AxisLinesRenderer_ContextLost(void) {

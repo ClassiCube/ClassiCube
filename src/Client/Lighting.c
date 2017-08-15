@@ -22,7 +22,7 @@ IGameComponent Lighting_MakeGameComponent(void) {
 }
 
 void Lighting_Init(void) {
-	EventHandler_RegisterInt32(WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
 	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
 }
@@ -50,7 +50,7 @@ void Lighting_OnNewMapLoaded(void) {
 }
 
 void Lighting_Free(void) {
-	EventHandler_UnregisterInt32(WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
 	Lighting_Reset();
 }
 

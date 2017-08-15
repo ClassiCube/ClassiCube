@@ -99,10 +99,10 @@ void EnvRenderer_EnvVariableChanged(EnvVar envVar) {
 
 void EnvRenderer_Init(void) {
 	EnvRenderer_ResetAllEnv();
-	EventHandler_RegisterVoid(GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
-	EventHandler_RegisterVoid(Gfx_ContextLost, EnvRenderer_ContextLost);
-	EventHandler_RegisterVoid(Gfx_ContextRecreated, EnvRenderer_ContextRecreated);
-	EventHandler_RegisterInt32(WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
+	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
+	Event_RegisterVoid(&GfxEvents_ContextLost, EnvRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, EnvRenderer_ContextRecreated);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
 	Game_SetViewDistance(Game_UserViewDistance, false);
 }
 
@@ -123,10 +123,10 @@ void EnvRenderer_ResetAllEnv(void) {
 
 void EnvRenderer_Free(void) {
 	EnvRenderer_ContextLost();
-	EventHandler_UnregisterVoid(GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
-	EventHandler_UnregisterVoid(Gfx_ContextLost, EnvRenderer_ContextLost);
-	EventHandler_UnregisterVoid(Gfx_ContextRecreated, EnvRenderer_ContextRecreated);
-	EventHandler_UnregisterInt32(WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
+	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
+	Event_UnregisterVoid(&Gfx_ContextLost, EnvRenderer_ContextLost);
+	Event_UnregisterVoid(&Gfx_ContextRecreated, EnvRenderer_ContextRecreated);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
 }
 
 void EnvRenderer_ContextLost(void) {

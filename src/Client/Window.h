@@ -110,38 +110,4 @@ void Window_SetDesktopCursorPos(Point2D point);
 bool Window_GetCursorVisible(void);
 /* Sets whether the cursor is visible in the window. */
 void Window_SetCursorVisible(bool visible);
-
-		/// <summary> Occurs whenever the window is moved. </summary>
-	event EventHandler<EventArgs> Move;
-
-	/// <summary> Occurs whenever the window is resized. </summary>
-	event EventHandler<EventArgs> Resize;
-
-	/// <summary> Occurs when the window is about to close. </summary>
-	event EventHandler<CancelEventArgs> Closing;
-
-	/// <summary> Occurs after the window has closed. </summary>
-	event EventHandler<EventArgs> Closed;
-
-	/// <summary> Occurs when the window is disposed. </summary>
-	event EventHandler<EventArgs> Disposed;
-
-	/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
-	event EventHandler<EventArgs> VisibleChanged;
-
-	/// <summary> Occurs when the <see cref="Focused"/> property of the window changes. </summary>
-	event EventHandler<EventArgs> FocusedChanged;
-
-	/// <summary> Occurs when the <see cref="WindowState"/> property of the window changes. </summary>
-	event EventHandler<EventArgs> WindowStateChanged;
-
-	/// <summary> Occurs whenever a character is typed. </summary>
-	event EventHandler<KeyPressEventArgs> KeyPress;
-
-	/// <summary> Occurs whenever the mouse cursor leaves the window <see cref="Bounds"/>. </summary>
-	event EventHandler<EventArgs> MouseLeave;
-
-	/// <summary> Occurs whenever the mouse cursor enters the window <see cref="Bounds"/>. </summary>
-	event EventHandler<EventArgs> MouseEnter;
-
 #endif

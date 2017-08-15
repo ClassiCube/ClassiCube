@@ -13,9 +13,9 @@ void ModelCache_Init(void) {
 	ModelCache_RegisterDefaultModels();
 	ModelCache_ContextRecreated();
 
-	EventHandler_RegisterStream(TextureEvents_FileChanged, ModelCache_TextureChanged);
-	EventHandler_RegisterVoid(Gfx_ContextLost, ModelCache_ContextLost);
-	EventHandler_RegisterVoid(Gfx_ContextRecreated, ModelCache_ContextRecreated);
+	Event_RegisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost, ModelCache_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, ModelCache_ContextRecreated);
 }
 
 void ModelCache_Free(void) {
@@ -26,9 +26,9 @@ void ModelCache_Free(void) {
 	}
 	ModelCache_ContextLost();
 
-	EventHandler_UnregisterStream(TextureEvents_FileChanged, ModelCache_TextureChanged);
-	EventHandler_UnregisterVoid(Gfx_ContextLost, ModelCache_ContextLost);
-	EventHandler_UnregisterVoid(Gfx_ContextRecreated, ModelCache_ContextRecreated);
+	Event_UnregisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
+	Event_UnregisterVoid(&Gfx_ContextLost, ModelCache_ContextLost);
+	Event_UnregisterVoid(&Gfx_ContextRecreated, ModelCache_ContextRecreated);
 }
 
 

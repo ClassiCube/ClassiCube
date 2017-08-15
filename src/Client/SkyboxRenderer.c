@@ -1,7 +1,7 @@
 #if 0
 #include "SkyboxRenderer.h"
 #include "Camera.h"
-#include "EventHandler.h"
+#include "Events.h"
 #include "Game.h"
 #include "GameProps.h"
 #include "GraphicsAPI.h"
@@ -30,11 +30,11 @@ bool SkyboxRenderer_ShouldRender(void) {
 }
 
 void SkyboxRenderer_Init(void) {
-	EventHandler_RegisterStream(TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
-	EventHandler_RegisterVoid(TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
-	EventHandler_RegisterInt32(WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
-	EventHandler_RegisterVoid(Gfx_ContextLost, &SkyboxRenderer_ContextLost);
-	EventHandler_RegisterVoid(Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
+	Event_RegisterStream(&TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
+	Event_RegisterVoid(&TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost, &SkyboxRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, &SkyboxRenderer_ContextRecreated);
 }
 
 void SkyboxRenderer_Reset(void) { Gfx_DeleteTexture(&skybox_tex); }
@@ -43,11 +43,11 @@ void SkyboxRenderer_Free(void) {
 	Gfx_DeleteTexture(&skybox_tex);
 	SkyboxRenderer_ContextLost();
 
-	EventHandler_UnregisterStream(TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
-	EventHandler_UnregisterVoid(TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
-	EventHandler_UnregisterInt32(WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
-	EventHandler_UnregisterVoid(Gfx_ContextLost, &SkyboxRenderer_ContextLost);
-	EventHandler_UnregisterVoid(Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
+	Event_UnregisterStream(&TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
+	Event_UnregisterVoid(&TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
+	Event_UnregisterVoid(&Gfx_ContextLost, &SkyboxRenderer_ContextLost);
+	Event_UnregisterVoid(&Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
 }
 
 void SkyboxRenderer_EnvVariableChanged(EnvVar envVar) {
