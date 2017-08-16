@@ -49,6 +49,7 @@ namespace ClassicalSharp.Network {
 		public const byte CpeSetMapEnvProperty = 41;
 		public const byte CpeSetEntityProperty = 42;
 		public const byte CpeTwoWayPing = 43;
+		public const byte CpeSetInventoryOrder = 44;
 	}
 }
 

@@ -50,6 +50,7 @@ namespace ClassicalSharp.Network.Protocols {
 			net.Set(Opcode.CpeSetMapEnvProperty, HandleSetMapEnvProperty, 6);
 			net.Set(Opcode.CpeSetEntityProperty, HandleSetEntityProperty, 7);
 			net.Set(Opcode.CpeTwoWayPing, HandleTwoWayPing, 4);
+			net.Set(Opcode.CpeSetInventoryOrder, HandleSetInventoryOrder, 3);
 		}
 		
 		#region Read
@@ -403,8 +404,17 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			WriteTwoWayPing(true, data); // server to client reply
 			net.SendPacket();
-		}		
-				
+		}
+		
+		void HandleSetInventoryOrder() {
+			byte block = reader.ReadUInt8();
+			byte order = reader.ReadUInt8();
+			
+			game.Inventory.Remove(block);
+			if (order != Block.Invalid) {
+				game.Inventory.Map[order] = block;
+			}
+		}					
 		
 		#endregion
 		

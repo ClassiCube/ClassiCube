@@ -207,7 +207,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void RecreateBlockTable() {
 			int blocksCount = 0;
 			int count = game.UseCPE ? Block.Count : Block.OriginalCount;
-			for (int i = 1; i < count; i++) {
+			for (int i = 0; i < count; i++) {
 				BlockID block = game.Inventory.Map[i];
 				if (Show(block)) blocksCount++;
 			}
@@ -219,25 +219,22 @@ namespace ClassicalSharp.Gui.Screens {
 			blocksTable = new BlockID[blocksCount];
 			
 			int index = 0;
-			for (int i = 1; i < count; i++) {
+			for (int i = 0; i < count; i++) {
 				BlockID block = game.Inventory.Map[i];
 				if (Show(block)) blocksTable[index++] = block;
 			}
 		}
 		
 		bool Show(BlockID block) {
-			if (game.PureClassic && IsHackBlock(block)) return false;
+			if (block == Block.Invalid) return false;
+
 			if (block < Block.CpeCount) {
 				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;
-				return block < count && BlockInfo.Name[block] != "Invalid";
+				return block < count;
 			}
-			return BlockInfo.Name[block] != "Invalid";
+			return true;
 		}
 		
-		bool IsHackBlock(BlockID block) {
-			return block == Block.DoubleSlab || block == Block.Bedrock ||
-				block == Block.Grass || BlockInfo.IsLiquid(block);
-		}
 		
 		protected override void ContextLost() { 
 			gfx.DeleteVb(ref vb);

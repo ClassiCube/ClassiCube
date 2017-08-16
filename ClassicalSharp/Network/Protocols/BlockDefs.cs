@@ -35,11 +35,16 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleRemoveBlockDefinition() {
 			byte block = reader.ReadUInt8();
-			bool didBlockLight = BlockInfo.BlocksLight[block];		
+			bool didBlockLight = BlockInfo.BlocksLight[block];
 			
 			BlockInfo.ResetBlockProps(block);
-			OnBlockUpdated(block, didBlockLight);			
+			OnBlockUpdated(block, didBlockLight);
 			BlockInfo.UpdateCulling(block);
+			
+			game.Inventory.Reset(block);
+			if (block < Block.CpeCount) {
+				game.Inventory.AddDefault(block);
+			}
 			
 			BlockInfo.DefinedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
 			game.Events.RaiseBlockDefinitionChanged();
@@ -120,8 +125,9 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockInfo.CalcRenderBounds(block);
 			BlockInfo.UpdateCulling(block);
 			
+			game.Inventory.AddDefault(block);
 			BlockInfo.DefinedCustomBlocks[block >> 5] |= (1u << (block & 0x1F));
-			game.Events.RaiseBlockDefinitionChanged();			
+			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
 		#if FALSE

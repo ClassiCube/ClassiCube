@@ -90,38 +90,85 @@ namespace ClassicalSharp {
 		
 		public BlockID[] Map = new BlockID[Block.Count];
 		void SetDefaultMapping() {
-			for (int i = 0; i < Map.Length; i++)
-				Map[i] = (BlockID)i;
-			if (!game.ClassicMode) return;
+			for (int i = 0; i < Map.Length; i++) Map[i] = (BlockID)i;
+			for (int i = 0; i < Map.Length; i++) {
+				BlockID mapping = DefaultMapping(i);
+				if (mapping != i) Map[i] = mapping;
+			}
+		}
+		
+		BlockID DefaultMapping(int i) {
+			if (i >= Block.CpeCount || i == Block.Air) return Block.Invalid;
+			if (!game.ClassicMode) return (BlockID)i;
+			if (game.PureClassic && IsHackBlock(i)) return Block.Invalid;
 			
-			// First row
-			Map[Block.Dirt] = Block.Cobblestone;
-			Map[Block.Cobblestone] = Block.Brick;
-			Map[Block.Wood] = Block.Dirt;
-			Map[Block.Sapling] = Block.Wood;
-			Map[Block.Sand] = Block.Log;
-			Map[Block.Gravel] = Block.Leaves;
-			Map[Block.GoldOre] = Block.Glass;
-			Map[Block.IronOre] = Block.Slab;
-			Map[Block.CoalOre] = Block.MossyRocks;
-			// Second row
-			Map[Block.Log] = Block.Sapling;
-			for (int i = 0; i < 4; i++)
-				Map[Block.Leaves + i] = (BlockID)(Block.Dandelion + i);
-			Map[Block.Orange] = Block.Sand;
-			Map[Block.Yellow] = Block.Gravel;
-			Map[Block.Lime] = Block.Sponge;
-			// Third and fourth row
-			for (int i = 0; i < 16; i++)
-				Map[Block.Green + i] = (BlockID)(Block.Red + i);
-			Map[Block.Gold] = Block.CoalOre;
-			Map[Block.Iron] = Block.IronOre;
-			// Fifth row
-			if (!game.PureClassic) Map[Block.DoubleSlab] = Block.GoldOre;
-			Map[Block.Slab] = game.PureClassic ? Block.GoldOre : Block.DoubleSlab;
-			Map[Block.Brick] = Block.Iron;
-			Map[Block.TNT] = Block.Gold;
-			Map[Block.MossyRocks] = Block.TNT;
+			if (i >= 25 && i <= 40) {
+				return (BlockID)(Block.Red + (i - 25));
+			}
+			if (i >= 18 && i <= 21) {
+				return (BlockID)(Block.Dandelion + (i - 18));
+			}
+			
+			switch (i) {
+				// First row
+				case 3: return Block.Cobblestone;
+				case 4: return Block.Brick;
+				case 5: return Block.Dirt;
+				case 6: return Block.Wood;
+				
+				// Second row
+				case 12: return Block.Log;
+				case 13: return Block.Leaves;
+				case 14: return Block.Glass;
+				case 15: return Block.Slab;
+				case 16: return Block.MossyRocks;
+				case 17: return Block.Sapling;
+					
+				// Third row
+				case 22: return Block.Sand;
+				case 23: return Block.Gravel;
+				case 24: return Block.Sponge;
+					
+				// Fifth row
+				case 41: return Block.CoalOre;
+				case 42: return Block.IronOre;
+				case 43: return Block.GoldOre;
+				case 44: return Block.DoubleSlab;
+				case 45: return Block.Iron;
+				case 46: return Block.Gold;
+				case 47: return Block.Bookshelf;
+				case 48: return Block.TNT;
+			}
+			return (BlockID)i;
+		}
+		
+		static bool IsHackBlock(int b) {
+			return b == Block.DoubleSlab || b == Block.Bedrock ||
+				b == Block.Grass || BlockInfo.IsLiquid((BlockID)b);
+		}
+		
+		public void AddDefault(BlockID block) {
+			if (block >= Block.CpeCount || DefaultMapping(block) == block) {
+				Map[block] = block;
+				return;
+			}
+			
+			for (int i = 0; i < Block.CpeCount; i++) {
+				if (DefaultMapping(i) != block) continue;
+				Map[i] = block; return;
+			}
+		}
+		
+		public void Reset(BlockID block) {
+			for (int i = 0; i < Map.Length; i++) {
+				if (Map[i] == block) Map[i] = DefaultMapping(i);
+			}
+		}
+		
+		public void Remove(BlockID block) {
+			for (int i = 0; i < Map.Length; i++) {
+				if (Map[i] == block) Map[i] = Block.Invalid;
+			}
 		}
 	}
 }
