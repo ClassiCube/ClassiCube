@@ -86,12 +86,14 @@ namespace OpenTK {
 		}
 
 		/// <summary> Returns whether this Display is the primary Display in systems with multiple Displays.</summary>
-		public bool IsPrimary { set { if (value) Default = this; } }
+		public bool IsPrimary { set { if (value) Primary = this; } }
 		
 		/// <summary> Data unique to this Display. </summary>
 		public object Metadata;
 
 		/// <summary>Gets the default (primary) display of this system.</summary>
-		public static DisplayDevice Default;
+		public static DisplayDevice Primary;
+		
+		public static DisplayDevice Default { get { return Primary; } }
 	}
 }

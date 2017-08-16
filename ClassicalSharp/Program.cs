@@ -54,7 +54,7 @@ namespace ClassicalSharp {
 		}
 		
 		static void SelectResolution(out int width, out int height) {
-			DisplayDevice device = DisplayDevice.Default;
+			DisplayDevice device = DisplayDevice.Primary;
 			width = 640; height = 480;
 			
 			if (device.Width >= 1024 && device.Height >= 768) {

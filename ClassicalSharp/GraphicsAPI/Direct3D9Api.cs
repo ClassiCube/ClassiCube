@@ -32,7 +32,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public Direct3D9Api(Game game) {
 			MinZNear = 0.05f;
-			IntPtr windowHandle = ((WinWindowInfo)game.window.WindowInfo).WindowHandle;
+			IntPtr windowHandle = game.window.WindowInfo.WinHandle;
 			d3d = new Direct3D();
 			int adapter = d3d.Adapters[0].Adapter;
 			InitFields();

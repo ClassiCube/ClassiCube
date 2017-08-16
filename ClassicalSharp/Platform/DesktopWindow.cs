@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		
 		Game game;
 		public DesktopWindow(Game game, string username, bool nullContext, int width, int height) :
-			base(width, height, GraphicsMode.Default, Program.AppName + " (" + username + ")", nullContext, 0, DisplayDevice.Default) {
+			base(width, height, GraphicsMode.Default, Program.AppName + " (" + username + ")", nullContext, 0, DisplayDevice.Primary) {
 			this.game = game;
 		}
 		

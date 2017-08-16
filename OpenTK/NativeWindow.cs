@@ -54,6 +54,8 @@ namespace OpenTK {
 			: this(device.Bounds.Left + (device.Bounds.Width - width) / 2,
 			       device.Bounds.Top + (device.Bounds.Height - height) / 2,
 			       width, height, title, mode, device) { }
+		
+		public NativeWindow(int width, int height, string title, GameWindowFlags flags, GraphicsMode mode, DisplayDevice device) : this(width, height, title, mode, device) {}
 
 		/// <summary>Constructs a new NativeWindow with the specified attributes.</summary>
 		/// <param name="x">Horizontal screen space coordinate of the NativeWindow's origin.</param>
