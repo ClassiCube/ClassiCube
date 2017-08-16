@@ -412,7 +412,7 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			game.Inventory.Remove(block);
 			if (order != Block.Invalid) {
-				game.Inventory.Map[order] = block;
+				game.Inventory.Insert(order, block);
 			}
 		}					
 		

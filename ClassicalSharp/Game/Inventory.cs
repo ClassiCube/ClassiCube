@@ -170,5 +170,23 @@ namespace ClassicalSharp {
 				if (Map[i] == block) Map[i] = Block.Invalid;
 			}
 		}
+		
+		public void Insert(int i, BlockID block) {
+			if (Map[i] == block) return;		
+			// Need to push the old block to a different slot if different block			
+			if (Map[i] != Block.Invalid) PushToFreeSlots(i);
+			
+			Map[i] = block;
+		}
+		
+		void PushToFreeSlots(int i) {
+			BlockID block = Map[i];
+			for (int j = block; j < Map.Length; j++) {
+				if (Map[j] == Block.Invalid) { Map[j] = block; return; }
+			}
+			for (int j = 1; j < block; j++) {
+				if (Map[j] == Block.Invalid) { Map[j] = block; return; }
+			}
+		}
 	}
 }
