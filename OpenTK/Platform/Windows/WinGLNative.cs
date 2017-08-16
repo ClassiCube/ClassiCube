@@ -427,7 +427,7 @@ namespace OpenTK.Platform.Windows
 		/// <summary> Starts the teardown sequence for the current window. </summary>
 		void DestroyWindow() {
 			if (exists) {
-				Debug.Print("Destroying window: {0}", window.ToString());
+				Debug.Print("Destroying window: {0}", window.WindowHandle);
 				API.DestroyWindow(window.WindowHandle);
 				exists = false;
 			}
@@ -725,7 +725,7 @@ namespace OpenTK.Platform.Windows
 			}
 			IntPtr foreground = API.GetForegroundWindow();
 			if( foreground != IntPtr.Zero )
-				focused = foreground == window.handle;
+				focused = foreground == window.WindowHandle;
 		}
 
 		public IWindowInfo WindowInfo {

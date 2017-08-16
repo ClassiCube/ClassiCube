@@ -33,7 +33,7 @@ namespace OpenTK.Platform.Windows {
 	/// \internal
 	/// <summary>Describes a win32 window.</summary>
 	public sealed class WinWindowInfo : IWindowInfo {
-		internal IntPtr handle, dc;
+		internal IntPtr dc;
 		bool disposed;
 
 		/// <summary> Constructs a new instance. </summary>
@@ -42,46 +42,20 @@ namespace OpenTK.Platform.Windows {
 
 		/// <summary> Constructs a new instance with the specified window handle and parent. </summary>
 		/// <param name="handle">The window handle for this instance.</param>
-		public WinWindowInfo(IntPtr handle) {
-			this.handle = handle;
+		public WinWindowInfo(IntPtr windowHandle) {
+			WindowHandle = windowHandle;
 		}
 
 		/// <summary> Gets or sets the handle of the window. </summary>
-		public IntPtr WindowHandle { get { return handle; } set { handle = value; } }
+		public IntPtr WindowHandle;
 
 		/// <summary> Gets the device context for this window instance. </summary>
 		public IntPtr DeviceContext {
 			get {
-				if (dc == IntPtr.Zero)
-					dc = API.GetDC(this.WindowHandle);
+				if (dc == IntPtr.Zero) dc = API.GetDC(this.WindowHandle);
 				//dc = Functions.GetWindowDC(this.WindowHandle);
 				return dc;
 			}
-		}
-
-		/// <summary>Returns a System.String that represents the current window.</summary>
-		/// <returns>A System.String that represents the current window.</returns>
-		public override string ToString() {
-			return String.Format("Windows.WindowInfo: Handle {0}", WindowHandle);
-		}
-
-		/// <summary>Checks if <c>this</c> and <c>obj</c> reference the same win32 window.</summary>
-		/// <param name="obj">The object to check against.</param>
-		/// <returns>True if <c>this</c> and <c>obj</c> reference the same win32 window; false otherwise.</returns>
-		public override bool Equals(object obj) {
-			if (obj == null) return false;
-			if (this.GetType() != obj.GetType()) return false;
-			WinWindowInfo info = (WinWindowInfo)obj;
-
-			if (info == null) return false;
-			// TODO: Assumes windows will always have unique handles.
-			return handle.Equals(info.handle);
-		}
-
-		/// <summary>Returns the hash code for this instance.</summary>
-		/// <returns>A hash code for the current <c>WinWindowInfo</c>.</returns>
-		public override int GetHashCode() {
-			return handle.GetHashCode();
 		}
 
 		/// <summary>Releases the unmanaged resources consumed by this instance.</summary>
@@ -92,20 +66,16 @@ namespace OpenTK.Platform.Windows {
 
 		void Dispose(bool manual) {
 			if (!disposed) {
-				if (dc != IntPtr.Zero)
-					if (!API.ReleaseDC(this.handle, this.dc))
-						Debug.Print("[Warning] Failed to release device context {0}. Windows error: {1}.", this.dc, Marshal.GetLastWin32Error());
+				if (dc != IntPtr.Zero && !API.ReleaseDC(WindowHandle, dc)) {
+					Debug.Print("[Warning] Failed to release device context {0}. Windows error: {1}.", this.dc, Marshal.GetLastWin32Error());
+				}
 
 				disposed = true;
 			}
 		}
 
-		~WinWindowInfo() {
-			Dispose(false);
-		}
+		~WinWindowInfo() { Dispose(false); }
 		
-		public IntPtr WinHandle { 
-			get { return WindowHandle; }
-		}
+		public IntPtr WinHandle { get { return WindowHandle; } }
 	}
 }
