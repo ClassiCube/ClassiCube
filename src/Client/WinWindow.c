@@ -5,50 +5,54 @@
 #include "Key.h"
 #include "Events.h"
 
-#define Window_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
-#define Window_StyleEx WS_EX_WINDOWEDGE | WS_EX_APPWINDOW
-HINSTANCE window_Instance;
-HWND window_Handle;
-#define Window_ClassName "ClassicalSharp_Window"
-bool class_registered, disposed, exists;
-WindowState windowState = WindowState_Normal;
-bool focused;
+#define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
+#define win_StyleEx WS_EX_WINDOWEDGE | WS_EX_APPWINDOW
+#define win_ClassName "ClassiCube_Window"
+#define RECT_WIDTH(rect) (rect.right - rect.width)
+#define RECT_HEIGHT(rect) (rect.bottom - rect.top)
+
+HINSTANCE win_Instance;
+HWND win_Handle;
+WindowState win_State = WindowState_Normal;
+bool win_Exists, win_Focused;
 bool mouse_outside_window = true;
 bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
 Int32 suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
 
-Rectangle2D bounds, client_rectangle, previous_bounds; // Used to restore previous size when leaving fullscreen mode.
+Rectangle2D win_Bounds;
+Rectangle2D win_ClientRect;
+Rectangle2D previous_bounds; // Used to restore previous size when leaving fullscreen mode.
 
 const long ExtendedBit = 1 << 24;           // Used to distinguish left and right control, alt and enter keys.
 
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT String* title, DisplayDevice* device) {
-	window_Instance = GetModuleHandleA(NULL);
+	win_Instance = GetModuleHandleA(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
 	RECT rect; rect.left = x; rect.top = y; rect.right = x + width; rect.bottom = y + height;
-	AdjustWindowRectEx(&rect, Window_Style, false, Window_StyleEx);
+	AdjustWindowRectEx(&rect, win_Style, false, win_StyleEx);
 
 	WNDCLASSEXA wc;
 	Platform_MemSet(&wc, 0, sizeof(WNDCLASSEXA));
 	wc.cbSize = sizeof(WNDCLASSEXA);
 	wc.style = CS_OWNDC;
-	wc.hInstance = window_Instance;
+	wc.hInstance = win_Instance;
 	wc.lpfnWndProc = Window_Procedure;
-	wc.lpszClassName = Window_ClassName;
+	wc.lpszClassName = win_ClassName;
 	/* TODO: Set window icons here */
-	wc.hCursor = LoadCursorA(NULL, IDC_ARROW); // CursorName.Arrow
+	wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
 
 	ATOM atom = RegisterClassExA(&wc);
 	if (atom == 0) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to register window class");
 	}
 
-	window_Handle = CreateWindowExA(
-		Window_StyleEx, Window_ClassName, title->buffer, Window_Style,
-		rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top,
-		NULL, NULL, window_Instance, NULL);
-	if (window_Handle == NULL) {
+	win_Handle = CreateWindowExA(
+		win_StyleEx, win_ClassName, title->buffer, win_Style,
+		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
+		NULL, NULL, win_Instance, NULL);
+	if (win_Handle == NULL) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to create window");
 	}
 
@@ -84,7 +88,7 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 
 	case WM_WINDOWPOSCHANGED:
 		pos = (WINDOWPOS*)lParam;
-		if (window != null && pos->hwnd == window.handle) {
+		if (pos->hwnd == win_Handle) {
 			Point new_location = new Point(pos->x, pos->y);
 			if (Location != new_location) {
 				bounds.Location = new_location;
@@ -100,12 +104,13 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 				GetClientRect(handle, &rect);
 				client_rectangle = rect.ToRectangle();
 
-				SetWindowPos(window_Handle, NULL,
+				SetWindowPos(win_Handle, NULL,
 					bounds.X, bounds.Y, bounds.Width, bounds.Height,
 					SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
-				if (suppress_resize <= 0)
-					Resize(this, EventArgs.Empty);
+				if (suppress_resize <= 0) {
+					Event_RaiseVoid(&Window_OnResize);
+				}
 			}
 		}
 		break;
@@ -122,15 +127,15 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_SIZE:
-		new_state = windowState;
+		new_state = win_State;
 		switch (wParam) {
 		case SIZE_RESTORED: new_state = WindowState_Normal; break;
 		case SIZE_MINIMIZED: new_state = WindowState_Minimized; break;
 		case SIZE_MAXIMIZED: new_state = hiddenBorder ? WindowState_Fullscreen : WindowState_Maximized; break;
 		}
 
-		if (new_state != windowState) {
-			windowState = new_state;
+		if (new_state != win_State) {
+			win_State = new_state;
 			Event_RaiseVoid(&WindowEvents_OnWindowStateChanged);
 		}
 		break;
@@ -230,24 +235,27 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 			return IntPtr.Zero;
 
 		case VK_CONTROL:
-			if (extended)
+			if (extended) {
 				Key_SetPressed(Key_ControlRight, pressed);
-			else
+			} else {
 				Key_SetPressed(Key_ControlLeft, pressed);
+			}
 			return 0;
 
 		case VK_MENU:
-			if (extended)
+			if (extended) {
 				Key_SetPressed(Key_AltRight, pressed);
-			else
+			} else {
 				Key_SetPressed(Key_AltLeft, pressed);
+			}
 			return 0;
 
 		case VK_RETURN:
-			if (extended)
+			if (extended) {
 				Key_SetPressed(Key_KeypadEnter, pressed);
-			else
+			} else {
 				Key_SetPressed(Key_Enter, pressed);
+			}
 			return 0;
 
 		default:
@@ -270,77 +278,62 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 
 
 	case WM_CREATE:
-		CreateStruct cs = (CreateStruct)Marshal.PtrToStructure(lParam, typeof(CreateStruct));
-		if (cs.hwndParent == IntPtr.Zero)
-		{
-			bounds.X = cs.x;
-			bounds.Y = cs.y;
-			bounds.Width = cs.cx;
-			bounds.Height = cs.cy;
+		CREATESTRUCT* cs = (CREATESTRUCT*)lParam;
+		if (cs->hwndParent == NULL) {
+			win_Bounds.X = cs.x; win_Bounds.Y = cs.y;
+			win_Bounds.Width = cs.cx; win_Bounds.Height = cs.cy;
 
 			RECT rect;
 			API.GetClientRect(handle, &rect);
-			client_rectangle = rect.ToRectangle();
+			win_ClientRect = rect.ToRectangle();
 			invisible_since_creation = true;
 		}
 		break;
 
 	case WM_CLOSE:
-		System.ComponentModel.CancelEventArgs e = new System.ComponentModel.CancelEventArgs();
-
-		if (Closing != null)
-			Closing(this, e);
-
-		if (!e.Cancel)
-		{
-			if (Unload != null)
-				Unload(this, EventArgs.Empty);
-
-			DestroyWindow();
-			break;
-		}
-
-		return IntPtr.Zero;
+		Event_RaiseVoid(&WindowEvents_Closing);
+		if (Unload != null)
+			Unload(this, EventArgs.Empty);
+		DestroyWindow();
+		break;
 
 	case WM_DESTROY:
-		exists = false;
-
-		UnregisterClassA(Window_ClassName, window_Instance);
+		win_Exists = false;
+		UnregisterClassA(Window_ClassName, win_Instance);
 		window.Dispose();
-
 		Event_RaiseVoid(&WindowEvents_OnClosed);
 		break;
 	}
 	return DefWindowProcA(handle, message, wParam, lParam);
 }
 
-void EnableMouseTracking() {
-	TrackMouseEventStructure me = new TrackMouseEventStructure();
-	me.Size = TrackMouseEventStructure.SizeInBytes;
-	me.TrackWindowHandle = window.handle;
-	me.Flags = TrackMouseEventFlags.LEAVE;
+void Window_EnableMouseTracking(void) {
+	TRACKMOUSEEVENT me;
+	Platform_MemSet(&me, 0, sizeof(TRACKMOUSEEVENT));
+	me.cbSize = sizeof(TRACKMOUSEEVENT);
+	me.hwndTrack = win_Handle;
+	me.dwFlags = TME_LEAVE;
 
-	if (!API.TrackMouseEvent(ref me))
-		Debug.Print("[Warning] Failed to enable mouse tracking, error: {0}.",
-			Marshal.GetLastWin32Error());
-}
-
-/// <summary> Starts the teardown sequence for the current window. </summary>
-void DestroyWindow() {
-	if (exists) {
-		API.DestroyWindow(window_Handle);
-		exists = false;
+	if (!TrackMouseEvent(&me)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Enabling mouse tracking");
 	}
 }
 
-void SetHiddenBorder(bool hidden) {
+void Window_Destroy(void) {
+	if (!win_Exists) return;
+	
+	DestroyWindow(win_Handle);
+	win_Exists = false;
+}
+
+void Window_SetHiddenBorder(bool hidden) {
 	suppress_resize++;
 	HiddenBorder = hidden;
 	ProcessEvents();
 	suppress_resize--;
 }
 
-void ResetWindowState() {
+void Window_ResetWindowState(void) {
 	suppress_resize++;
 	WindowState = WindowState_Normal;
 	ProcessEvents();
@@ -404,50 +397,39 @@ unsafe static void CopyString_Unicode(IntPtr src, IntPtr dst, int numChars) {
 	dst2[numChars] = '\0';
 }
 
-public Rectangle Bounds{
-	get{ return bounds; }
-	set{
-	// Note: the bounds variable is updated when the resize/move message arrives.
-	API.SetWindowPos(window.handle, IntPtr.Zero, value.X, value.Y, value.Width, value.Height, 0);
-}
+Rectangle2D Window_GetBounds(void) { return win_Bounds; }
+void Window_SetBounds(Rectangle2D rect) {
+	/* Note: the bounds variable is updated when the resize/move message arrives.*/
+	SetWindowPos(win_Handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
 }
 
-public Point Location{
-	get{ return Bounds.Location; }
-	set{
-	// Note: the bounds variable is updated when the resize/move message arrives.
-	API.SetWindowPos(window.handle, IntPtr.Zero, value.X, value.Y, 0, 0, SetWindowPosFlags.NOSIZE);
-}
+Point2D Window_GetLocation(void) { return Point2D_Make(win_Bounds.X, win_Bounds.Y); }
+void Window_SetLocation(Point2D point) {
+	SetWindowPos(win_Handle, NULL, point.X, point.Y, 0, 0, SWP_NOSIZE);
 }
 
-public Size Size{
-	get{ return Bounds.Size; }
-	set{
-	// Note: the bounds variable is updated when the resize/move message arrives.
-	API.SetWindowPos(window.handle, IntPtr.Zero, 0, 0, value.Width, value.Height, SetWindowPosFlags.NOMOVE);
-}
+Size2D Window_GetSize(void) { return Size2D_Make(win_Bounds.Width, win_Bounds.Height); }
+void Window_SetSize(Size2D size) {
+	SetWindowPos(win_Handle, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE);
 }
 
-public Rectangle ClientRectangle{
-	get{
-	if (client_rectangle.Width == 0)
-	client_rectangle.Width = 1;
-if (client_rectangle.Height == 0)
-client_rectangle.Height = 1;
-return client_rectangle;
-} set{
-	ClientSize = value.Size;
-}
+Rectangle2D Window_GetClientRectangle(void) { return win_ClientRect; }
+void Window_SetClientRectangle(Rectangle rect) {
+	Size2D size = Size2D_Make(rect.Width, rect.Height);
+	Window_SetClientSize(size);
 }
 
-public Size ClientSize{
-	get{ return ClientRectangle.Size; }
-	set{
-	WindowStyle style = (WindowStyle)API.GetWindowLong_N(window.handle, GetWindowLongOffsets.STYLE);
-Win32Rectangle rect = Win32Rectangle.From(value);
-API.AdjustWindowRect(ref rect, style, false);
-Size = new Size(rect.Width, rect.Height);
+Size2D Window_GetClientSize(void) { 
+	return Size2D_Make(win_ClientRect.Width, win_ClientRect.Height);
 }
+void Window_SetClientSize(Size2D size) {
+	DWORD style = GetWindowLongA(win_Handle, GWL_STYLE);
+	RECT rect; 
+	rect.left = 0; rect.top = 0; 
+	rect.right = size.Width; rect.bottom = size.Height;
+	
+	AdjustWindowRect(&rect, style, false);
+	Window_SetSize(Size2D_Make(RECT_WIDTH(rect), RECT_HEIGHT(rect)));
 }
 
 /* TODO: Set window icon
@@ -467,23 +449,23 @@ if (window.handle != IntPtr.Zero)
 
 bool Window_GetFocused(void) { return focused; }
 
-bool Window_GetVisible(void) { return IsWindowVisible(window_Handle); }
+bool Window_GetVisible(void) { return IsWindowVisible(win_Handle); }
 void Window_SetVisible(bool visible) {
 	if (visible) {
-		ShowWindow(window_Handle, SW_SHOW);
+		ShowWindow(win_Handle, SW_SHOW);
 		if (invisible_since_creation) {
-			BringWindowToTop(window_Handle);
-			SetForegroundWindow(window_Handle);
+			BringWindowToTop(win_Handle);
+			SetForegroundWindow(win_Handle);
 		}
 	} else {
-		ShowWindow(window_Handle, SW_HIDE);
+		ShowWindow(win_Handle, SW_HIDE);
 	}
 }
 
 bool Window_GetExists(void) { return exists; }
 
 void Window_Close(void) {
-	PostMessageA(window_Handle, WM_CLOSE, NULL, NULL);
+	PostMessageA(win_Handle, WM_CLOSE, NULL, NULL);
 }
 
 public WindowState WindowState{
@@ -525,7 +507,7 @@ case WindowState.Fullscreen:
 	SetHiddenBorder(true);
 
 	command = ShowWindowCommand.MAXIMIZE;
-	SetForegroundWindow(window_Handle);
+	SetForegroundWindow(win_Handle);
 	break;
 }
 
@@ -544,43 +526,38 @@ if (command == ShowWindowCommand.RESTORE && previous_bounds != Rectangle.Empty) 
 }
 }
 
-bool hiddenBorder;
-bool HiddenBorder{
-	set{
-	if (hiddenBorder == value) return;
+bool win_hiddenBorder;
+void Window_SetHiddenBorder(bool value) {
+	if (win_hiddenBorder == value) return;
 
-// We wish to avoid making an invisible window visible just to change the border.
-// However, it's a good idea to make a visible window invisible temporarily, to
-// avoid garbage caused by the border change.
-bool was_visible = Visible;
+	/* We wish to avoid making an invisible window visible just to change the border.
+	 However, it's a good idea to make a visible window invisible temporarily, to
+	 avoid garbage caused by the border change. */
+	bool was_visible = Visible;
 
-// To ensure maximized/minimized windows work correctly, reset state to normal,
-// change the border, then go back to maximized/minimized.
-WindowState state = WindowState;
-ResetWindowState();
-WindowStyle style = WindowStyle.ClipChildren | WindowStyle.ClipSiblings;
-style |= (value ? WindowStyle.Popup : WindowStyle.OverlappedWindow);
+	/* To ensure maximized/minimized windows work correctly, reset state to normal,
+	 change the border, then go back to maximized/minimized. */
+	WindowState state = WindowState;
+	Window_ResetWindowState();
+	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
 
-// Make sure client size doesn't change when changing the border style.
-Win32Rectangle rect = Win32Rectangle.From(bounds);
-API.AdjustWindowRectEx(ref rect, style, false, ParentStyleEx);
+	/* Make sure client size doesn't change when changing the border style.*/
+	Win32Rectangle rect = Win32Rectangle.From(bounds);
+	AdjustWindowRectEx(&rect, style, false, win_ExStyle);
 
-// This avoids leaving garbage on the background window.
-if (was_visible)
-Visible = false;
+	/* This avoids leaving garbage on the background window. */
+	if (was_visible) Window_SetVisible(false);
 
-API.SetWindowLong_N(window.handle, GetWindowLongOffsets.STYLE, (IntPtr)(int)style);
-API.SetWindowPos(window.handle, IntPtr.Zero, 0, 0, rect.Width, rect.Height,
-	SetWindowPosFlags.NOMOVE | SetWindowPosFlags.NOZORDER |
-	SetWindowPosFlags.FRAMECHANGED);
+	SetWindowLong(window.handle, GWL_STYLE, style);
+	SetWindowPos(win_Handle, NULL, 0, 0, rect.Width, rect.Height,
+		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
-// Force window to redraw update its borders, but only if it's
-// already visible (invisible windows will change borders when
-// they become visible, so no need to make them visiable prematurely).
-if (was_visible)
-Visible = true;
-WindowState = state;
-}
+	/* Force window to redraw update its borders, but only if it's
+	 already visible (invisible windows will change borders when
+	 they become visible, so no need to make them visiable prematurely).*/
+	if (was_visible) Window_SetVisible(true);
+	WindowState = state;
 }
 
 public Point PointToClient(Point point) {
@@ -592,8 +569,8 @@ public Point PointToClient(Point point) {
 	return point;
 }
 
-public Point PointToScreen(Point p) {
-	throw new NotImplementedException();
+Point2D Window_PointToScreen(Point2D p) {
+	ErrorHandler_Fail("NOT IMPLEMENTED");
 }
 
 public event EventHandler<EventArgs> Load;
@@ -611,22 +588,86 @@ void Window_ProcessEvents() {
 		focused = foreground == window.handle;
 }
 
-public IWindowInfo WindowInfo{
-	get{ return window; }
+Point2D Window_GetDesktopCursorPos(void) {
+	POINT p; GetCursorPos(&p);
+	return Point2D_Make(p.X, p.Y);
+}
+void Window_SetDesktopCursorPos(Point2D point) {
+	SetCursorPos(point.X, point.Y);
 }
 
-public Point DesktopCursorPos{
-	get{
-	POINT pos = default(POINT);
-API.GetCursorPos(ref pos);
-return new Point(pos.X, pos.Y);
-}
-set{ API.SetCursorPos(value.X, value.Y); }
-}
-
-bool cursorVisible = true;
-bool Window_GetCursorVisible(void) { return cursorVisible; }
+bool win_cursorVisible = true;
+bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 void Window_SetCursorVisible(bool visible) {
-	cursorVisible = visible;
+	win_cursorVisible = visible;
 	ShowCursor(visible ? 1 : 0);
 }
+
+internal WinKeyMap(VK key) {
+	if (key >= VK_F1 && key <= VK_F24) {
+		return Key.F1 + (key - VK_F1);
+	}
+	if (key >= '0' && key <= '9') {
+		return Key.Number0 + (key - '0');
+	}
+	if (key >= 'A' && key <= 'Z') {
+		return Key.A + (key - 'A');
+	}
+	// Keypad
+	for (int i = 0; i <= 9; i++) {
+		AddKey((VirtualKeys)((int)VirtualKeys.NUMPAD0 + i), Key.Keypad0 + i);
+	}
+
+			AddKey(VirtualKeys.ESCAPE, Key.Escape);
+			AddKey(VirtualKeys.TAB, Key.Tab);
+			AddKey(VirtualKeys.CAPITAL, Key.CapsLock);
+			AddKey(VirtualKeys.LCONTROL, Key.ControlLeft);
+			AddKey(VirtualKeys.LSHIFT, Key.ShiftLeft);
+			AddKey(VirtualKeys.LWIN, Key.WinLeft);
+			AddKey(VirtualKeys.LMENU, Key.AltLeft);
+			AddKey(VirtualKeys.SPACE, Key.Space);
+			AddKey(VirtualKeys.RMENU, Key.AltRight);
+			AddKey(VirtualKeys.RWIN, Key.WinRight);
+			AddKey(VirtualKeys.APPS, Key.Menu);
+			AddKey(VirtualKeys.RCONTROL, Key.ControlRight);
+			AddKey(VirtualKeys.RSHIFT, Key.ShiftRight);
+			AddKey(VirtualKeys.RETURN, Key.Enter);
+			AddKey(VirtualKeys.BACK, Key.BackSpace);
+
+			AddKey(VirtualKeys.OEM_1, Key.Semicolon);      // Varies by keyboard, ;: on Win2K/US
+			AddKey(VirtualKeys.OEM_2, Key.Slash);          // Varies by keyboard, /? on Win2K/US
+			AddKey(VirtualKeys.OEM_3, Key.Tilde);          // Varies by keyboard, `~ on Win2K/US
+			AddKey(VirtualKeys.OEM_4, Key.BracketLeft);    // Varies by keyboard, [{ on Win2K/US
+			AddKey(VirtualKeys.OEM_5, Key.BackSlash);      // Varies by keyboard, \| on Win2K/US
+			AddKey(VirtualKeys.OEM_6, Key.BracketRight);   // Varies by keyboard, ]} on Win2K/US
+			AddKey(VirtualKeys.OEM_7, Key.Quote);          // Varies by keyboard, '" on Win2K/US
+			AddKey(VirtualKeys.OEM_PLUS, Key.Plus);        // Invariant: +
+			AddKey(VirtualKeys.OEM_COMMA, Key.Comma);      // Invariant: ,
+			AddKey(VirtualKeys.OEM_MINUS, Key.Minus);      // Invariant: -
+			AddKey(VirtualKeys.OEM_PERIOD, Key.Period);    // Invariant: .
+
+			AddKey(VirtualKeys.HOME, Key.Home);
+			AddKey(VirtualKeys.END, Key.End);
+			AddKey(VirtualKeys.DELETE, Key.Delete);
+			AddKey(VirtualKeys.PRIOR, Key.PageUp);
+			AddKey(VirtualKeys.NEXT, Key.PageDown);
+			AddKey(VirtualKeys.PRINT, Key.PrintScreen);
+			AddKey(VirtualKeys.PAUSE, Key.Pause);
+			AddKey(VirtualKeys.NUMLOCK, Key.NumLock);
+
+			AddKey(VirtualKeys.SCROLL, Key.ScrollLock);
+			AddKey(VirtualKeys.SNAPSHOT, Key.PrintScreen);
+			AddKey(VirtualKeys.INSERT, Key.Insert);
+
+			AddKey(VirtualKeys.DECIMAL, Key.KeypadDecimal);
+			AddKey(VirtualKeys.ADD, Key.KeypadAdd);
+			AddKey(VirtualKeys.SUBTRACT, Key.KeypadSubtract);
+			AddKey(VirtualKeys.DIVIDE, Key.KeypadDivide);
+			AddKey(VirtualKeys.MULTIPLY, Key.KeypadMultiply);
+
+			// Navigation
+			AddKey(VirtualKeys.UP, Key.Up);
+			AddKey(VirtualKeys.DOWN, Key.Down);
+			AddKey(VirtualKeys.LEFT, Key.Left);
+			AddKey(VirtualKeys.RIGHT, Key.Right);
+		}
