@@ -110,3 +110,16 @@ void Event_RegisterBlock(Event_Block* handlers, Event_Block_Callback handler) {
 void Event_UnregisterBlock(Event_Block* handlers, Event_Block_Callback handler) {
 	Event_UnregisterImpl((Event_Void*)handlers, (Event_Void_Callback)handler);
 }
+
+void Event_RaiseMouseMove(Event_MouseMove* handlers, Int32 xDelta, Int32 yDelta) {
+	Int32 i;
+	for (i = 0; i < handlers->Count; i++) {
+		handlers->Handlers[i](xDelta, yDelta);
+	}
+}
+void Event_RegisterMouseMove(Event_MouseMove* handlers, Event_MouseMove_Callback handler) {
+	Event_RegisterImpl((Event_Void*)handlers, (Event_Void_Callback)handler);
+}
+void Event_UnregisterMouseMove(Event_MouseMove* handlers, Event_MouseMove_Callback handler) {
+	Event_UnregisterImpl((Event_Void*)handlers, (Event_Void_Callback)handler);
+}

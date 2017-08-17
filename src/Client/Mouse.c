@@ -9,19 +9,21 @@ void Mouse_SetPressed(MouseButton btn, bool pressed) {
 		MouseButton_States[btn] = pressed;
 
 		if (pressed) {
-			Event_RaiseInt32(&KeyEvents_KeyDown, key);
+			Event_RaiseInt32(&MouseEvents_ButtonDown, btn);
 		} else {
-			Event_RaiseInt32(&KeyEvents_KeyUp, key);
+			Event_RaiseInt32(&MouseEvents_ButtonUp, btn);
 		}
 	}
 }
 
 void Mouse_SetWheel(Real32 wheel) {
+	Real32 delta = wheel - Mouse_Wheel;
 	Mouse_Wheel = wheel;
-	Event_RaiseInt32(&KeyEvents_KeyUp, key);
+	Event_RaiseReal32(&MouseEvents_WheelChanged, delta);
 }
 
 void Mouse_SetPosition(Int32 x, Int32 y) {
+	Int32 deltaX = x - Mouse_X, deltaY = y - Mouse_Y;
 	Mouse_X = x; Mouse_Y = y;
-	Event_RaiseInt32(&KeyEvents_KeyUp, key);
+	Event_RaiseMouseMove(&MouseEvents_Move, deltaX, deltaY);
 }

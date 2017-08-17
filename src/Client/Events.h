@@ -116,10 +116,19 @@ Event_Void WindowEvents_OnMouseLeave;
 /* Raised whenever the mouse cursor enters the bounds of the window. */
 Event_Void WindowEvents_OnMouseEnter;
 
-/* Raised when a character is typed. */
+/* Raised when a character is typed. Arg is a character. */
 Event_Int32 KeyEvents_KeyPress;
-/* Raised when a key is pressed. */
+/* Raised when a key is pressed. Arg is a member of Key enumeration. */
 Event_Int32 KeyEvents_KeyDown;
-/* Raised when a key is released. */
+/* Raised when a key is released. Arg is a member of Key enumeration. */
 Event_Int32 KeyEvents_KeyUp;
+
+/*Raised when mouse position is changed. Arg is delta from last position. */
+Event_MouseMove MouseEvents_Move;
+/* Raised when a button is pressed. Arg is a member of MouseButton enum. */
+Event_Int32 MouseEvents_ButtonDown;
+/* Raised when a button is released. Arg is a member of MouseButton enum. */
+Event_Int32 MouseEvents_ButtonUp;
+/* Raised when mouse wheel is moved / scrolled. Arg is wheel delta. */
+Event_Real32 MouseEvents_WheelChanged;
 #endif

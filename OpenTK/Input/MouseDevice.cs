@@ -75,7 +75,6 @@ namespace OpenTK.Input {
 				button_args.X = pos.X;
 				button_args.Y = pos.Y;
 				button_args.Button = button;
-				button_args.IsPressed = value;
 				if (value && !previous_state)
 					ButtonDown(this, button_args);
 				else if (!value && previous_state)
@@ -132,7 +131,7 @@ namespace OpenTK.Input {
 		/// <summary> The mouse button for the event. </summary>
 		public MouseButton Button;
 
-		/// <summary> Gets a System.Boolean representing the state of the mouse button for the event. </summary>
+		[Obsolete]
 		public bool IsPressed;
 	}
 

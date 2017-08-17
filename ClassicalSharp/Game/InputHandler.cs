@@ -225,11 +225,9 @@ namespace ClassicalSharp {
 			
 			if (!(key == left || key == middle || key == right))
 				return false;
-			simArgs.Button = key == left ? MouseButton.Left :
-				key == middle ? MouseButton.Middle : MouseButton.Right;
+			simArgs.Button = key == left ? MouseButton.Left : key == middle ? MouseButton.Middle : MouseButton.Right;
 			simArgs.X = game.Mouse.X;
 			simArgs.Y = game.Mouse.Y;
-			simArgs.IsPressed = pressed;
 			
 			if (pressed) MouseButtonDown(null, simArgs);
 			else MouseButtonUp(null, simArgs);
