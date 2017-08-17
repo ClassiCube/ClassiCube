@@ -635,5 +635,8 @@
     <ClCompile Include="Mouse.c">
       <Filter>Source Files\Platform\Window</Filter>
     </ClCompile>
+    <ClCompile Include="WinWindow.c">
+      <Filter>Source Files\Platform</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

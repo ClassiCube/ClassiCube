@@ -326,6 +326,7 @@
     <ClCompile Include="WinErrorHandler.c" />
     <ClCompile Include="WinIO.c" />
     <ClCompile Include="WinPlatform.c" />
+    <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="WorldEnv.c" />
     <ClCompile Include="ZombieModel.c" />

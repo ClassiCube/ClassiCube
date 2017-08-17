@@ -46,7 +46,7 @@ typedef UInt8 WindowState;
 #define WindowState_Fullscreen 3
 
 /* Creates a new window. */
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT String* title, DisplayDevice* device) {
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT String* title, DisplayDevice* device);
 
 /* Gets the current contents of the clipboard. */
 void Window_GetClipboardText(STRING_TRANSIENT String* value);
@@ -65,8 +65,10 @@ bool Window_GetVisible(void);
 /* Gets whether this window has been created and has not been destroyed. */
 bool Window_GetExists(void);
 
-		/// <summary> Gets the <see cref="OpenTK.Platform.IWindowInfo"/> for this window. </summary>
-	IWindowInfo WindowInfo{ get; }
+/* TODO: IMPLEMENT THIS
+/// <summary> Gets the <see cref="OpenTK.Platform.IWindowInfo"/> for this window. </summary>
+IWindowInfo WindowInfo{ get; }
+*/
 
 /* Gets the WindowState of this window. */
 WindowState Window_GetWindowState(void);
