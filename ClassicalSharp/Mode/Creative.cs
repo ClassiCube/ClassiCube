@@ -43,7 +43,7 @@ namespace ClassicalSharp.Mode {
 			Inventory inv = game.Inventory;
 			if (BlockInfo.Draw[old] == DrawType.Gas) return;
 			if (!(BlockInfo.CanPlace[old] || BlockInfo.CanDelete[old])) return;
-			if (!inv.CanChangeSelected()) return;
+			if (!inv.CanChangeSelected() || inv.Selected == old) return;
 			
 			// Is the currently selected block an empty slot
 			if (inv.Hotbar[inv.SelectedIndex] == Block.Air) { 
