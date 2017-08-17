@@ -53,14 +53,18 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value);
 /* Sets the current contents of the clipboard. */
 void Window_SetClipboardText(STRING_TRANSIENT String* value);
 
+/* TODO: IMPLEMENT THIS
 /* Sets the icon of this window. */
-void Window_SetIcon(Bitmap* bmp);
+/*void Window_SetIcon(Bitmap* bmp);
+*/
 
 /* Gets whether this window has input focus. */
 bool Window_GetFocused(void);
 
 /* Gets whether whether this window is visible. */
 bool Window_GetVisible(void);
+/* Sets whether this window is visible. */
+void Window_SetVisible(bool visible);
 
 /* Gets whether this window has been created and has not been destroyed. */
 bool Window_GetExists(void);

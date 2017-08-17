@@ -15,10 +15,9 @@ WindowState windowState = WindowState_Normal;
 bool focused;
 bool mouse_outside_window = true;
 bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
-int suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
+Int32 suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
 
 Rectangle2D bounds, client_rectangle, previous_bounds; // Used to restore previous size when leaving fullscreen mode.
-Icon icon;
 
 const long ExtendedBit = 1 << 24;           // Used to distinguish left and right control, alt and enter keys.
 
@@ -33,7 +32,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT
 	WNDCLASSEXA wc;
 	Platform_MemSet(&wc, 0, sizeof(WNDCLASSEXA));
 	wc.cbSize = sizeof(WNDCLASSEXA);
-	wc.Style = ClassStyle.OwnDC;
+	wc.style = CS_OWNDC;
 	wc.hInstance = window_Instance;
 	wc.lpfnWndProc = Window_Procedure;
 	wc.lpszClassName = Window_ClassName;
@@ -59,16 +58,19 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT
 WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
 	bool new_focused_state;
 	Real32 wheel_delta;
+	WORD mouse_x, mouse_y;
+	MouseButton btn;
+	WINDOWPOS* pos;
+	WindowState new_state;
+
 	switch (message) {
 
 	case WM_ACTIVATE:
-		// See http://msdn.microsoft.com/en-us/library/ms646274(VS.85).aspx (WM_ACTIVATE notification):
-		// wParam: The low-order word specifies whether the window is being activated or deactivated.
-		new_focused_state = Focused;
-		focused = LOWORD(wParam);
-
-		if (new_focused_state != Focused)
-			FocusedChanged(this, EventArgs.Empty);
+		new_focused_state = LOWORD(wParam);
+		if (new_focused_state != focused) {
+			focused = new_focused_state;
+			Event_RaiseVoid(&WindowEvents_OnFocusedChanged);
+		}
 		break;
 
 	case WM_ENTERMENULOOP:
@@ -81,13 +83,12 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 		return 1;
 
 	case WM_WINDOWPOSCHANGED:
-		WINDOWPOS* pos = (WINDOWPOS*)lParam;
+		pos = (WINDOWPOS*)lParam;
 		if (window != null && pos->hwnd == window.handle) {
 			Point new_location = new Point(pos->x, pos->y);
 			if (Location != new_location) {
 				bounds.Location = new_location;
-				if (Move != null)
-					Move(this, EventArgs.Empty);
+				Event_RaiseVoid(&WindowEvents_OnMove);
 			}
 
 			Size new_size = new Size(pos->cx, pos->cy);
@@ -99,11 +100,11 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 				GetClientRect(handle, &rect);
 				client_rectangle = rect.ToRectangle();
 
-				API.SetWindowPos(window.handle, IntPtr.Zero,
+				SetWindowPos(window_Handle, NULL,
 					bounds.X, bounds.Y, bounds.Width, bounds.Height,
-					SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
-					SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
-				if (suppress_resize <= 0 && Resize != null)
+					SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+
+				if (suppress_resize <= 0)
 					Resize(this, EventArgs.Empty);
 			}
 		}
@@ -121,20 +122,16 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_SIZE:
-		SizeMessage state = (SizeMessage)wParam.ToInt64();
-		WindowState new_state = windowState;
-		switch (state) {
-		case SizeMessage.RESTORED: new_state = WindowState.Normal; break;
-		case SizeMessage.MINIMIZED: new_state = WindowState.Minimized; break;
-		case SizeMessage.MAXIMIZED: new_state = hiddenBorder ?
-			WindowState.Fullscreen : WindowState.Maximized;
-			break;
+		new_state = windowState;
+		switch (wParam) {
+		case SIZE_RESTORED: new_state = WindowState_Normal; break;
+		case SIZE_MINIMIZED: new_state = WindowState_Minimized; break;
+		case SIZE_MAXIMIZED: new_state = hiddenBorder ? WindowState_Fullscreen : WindowState_Maximized; break;
 		}
 
 		if (new_state != windowState) {
 			windowState = new_state;
-			if (WindowStateChanged != null)
-				WindowStateChanged(this, EventArgs.Empty);
+			Event_RaiseVoid(&WindowEvents_OnWindowStateChanged);
 		}
 		break;
 
@@ -150,30 +147,27 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 		break;
 
 	case WM_MOUSEMOVE:
-		WORD mouse_x = LOWORD(lParam);
-		WORD mouse_y = HIWORD(lParam);
+		mouse_x = LOWORD(lParam);
+		mouse_y = HIWORD(lParam);
 		Mouse_SetPosition(mouse_x, mouse_y);
 
 		if (mouse_outside_window) {
-			// Once we receive a mouse move event, it means that the mouse has
-			// re-entered the window.
+			/* Once we receive a mouse move event, it means that the mouse has re-entered the window. */
 			mouse_outside_window = false;
 			EnableMouseTracking();
-
-			if (MouseEnter != null)
-				MouseEnter(this, EventArgs.Empty);
+			Event_RaiseVoid(&WindowEvents_OnMouseEnter);
 		}
 		break;
 
 	case WM_MOUSELEAVE:
 		mouse_outside_window = true;
-		// Mouse tracking is disabled automatically by the OS
+		/* Mouse tracking is disabled automatically by the OS */
+		Event_RaiseVoid(&WindowEvents_OnMouseLeave);
 
-		if (MouseLeave != null)
-			MouseLeave(this, EventArgs.Empty);
-		// Set all mouse buttons to off when user leaves window, prevents them being stuck down.
-		for (MouseButton btn = 0; btn < MouseButton.LastButton; btn++)
-			mouse[btn] = false;
+		/* Set all mouse buttons to off when user leaves window, prevents them being stuck down. */
+		for (btn = 0; btn < MouseButton_Count; btn++) {
+			Mouse_SetPressed(btn, false);
+		}
 		break;
 
 	case WM_MOUSEWHEEL:
@@ -206,7 +200,6 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 		Mouse_SetPressed(HIWORD(wParam) == 1 ? MouseButton_Button1 : MouseButton_Button2, false);
 		break;
 
-		// Keyboard events:
 	case WM_KEYDOWN:
 	case WM_KEYUP:
 	case WM_SYSKEYDOWN:
@@ -231,36 +224,35 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 			bool rShiftDown = (API.GetKeyState(VK_RSHIFT) >> 15) == 1;
 
 			if (!pressed || lShiftDown != rShiftDown) {
-				Keyboard[Input.Key.ShiftLeft] = lShiftDown;
-				Keyboard[Input.Key.ShiftRight] = rShiftDown;
+				Key_SetPressed(Key_ShiftLeft, lShiftDown);
+				Key_SetPressed(Key_ShiftRight, rShiftDown);
 			}
 			return IntPtr.Zero;
 
 		case VK_CONTROL:
 			if (extended)
-				keyboard[Input.Key.ControlRight] = pressed;
+				Key_SetPressed(Key_ControlRight, pressed);
 			else
-				keyboard[Input.Key.ControlLeft] = pressed;
-			return IntPtr.Zero;
+				Key_SetPressed(Key_ControlLeft, pressed);
+			return 0;
 
 		case VK_MENU:
 			if (extended)
-				keyboard[Input.Key.AltRight] = pressed;
+				Key_SetPressed(Key_AltRight, pressed);
 			else
-				keyboard[Input.Key.AltLeft] = pressed;
-			return IntPtr.Zero;
+				Key_SetPressed(Key_AltLeft, pressed);
+			return 0;
 
 		case VK_RETURN:
 			if (extended)
-				keyboard[Key.KeypadEnter] = pressed;
+				Key_SetPressed(Key_KeypadEnter, pressed);
 			else
-				keyboard[Key.Enter] = pressed;
-			return IntPtr.Zero;
+				Key_SetPressed(Key_Enter, pressed);
+			return 0;
 
 		default:
 			Key tkKey;
 			if (!KeyMap.TryGetMappedKey((VirtualKeys)wParam, out tkKey)) {
-				Debug.Print("Virtual key {0} ({1}) not mapped.", (VirtualKeys)wParam, lParam.ToInt64());
 				break;
 			} else {
 				Key_SetPressed(tkKey, pressed);
@@ -313,7 +305,7 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 	case WM_DESTROY:
 		exists = false;
 
-		UnregisterClassA(Window_ClassName, Window_Instance);
+		UnregisterClassA(Window_ClassName, window_Instance);
 		window.Dispose();
 
 		Event_RaiseVoid(&WindowEvents_OnClosed);
@@ -336,7 +328,7 @@ void EnableMouseTracking() {
 /// <summary> Starts the teardown sequence for the current window. </summary>
 void DestroyWindow() {
 	if (exists) {
-		API.DestroyWindow(window.handle);
+		API.DestroyWindow(window_Handle);
 		exists = false;
 	}
 }
@@ -458,6 +450,7 @@ Size = new Size(rect.Width, rect.Height);
 }
 }
 
+/* TODO: Set window icon
 public Icon Icon{
 	get{ return icon; }
 	set{
@@ -470,32 +463,27 @@ if (window.handle != IntPtr.Zero)
 	API.SendMessage(window.handle, WM_SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
 }
 }
-}
+}*/
 
-public bool Focused{
-	get{ return focused; }
-}
+bool Window_GetFocused(void) { return focused; }
 
-public bool Visible{
-	get{ return API.IsWindowVisible(window.handle); }
-	set{
-	if (value) {
-		API.ShowWindow(window.handle, ShowWindowCommand.SHOW);
+bool Window_GetVisible(void) { return IsWindowVisible(window_Handle); }
+void Window_SetVisible(bool visible) {
+	if (visible) {
+		ShowWindow(window_Handle, SW_SHOW);
 		if (invisible_since_creation) {
-			API.BringWindowToTop(window.handle);
-			API.SetForegroundWindow(window.handle);
+			BringWindowToTop(window_Handle);
+			SetForegroundWindow(window_Handle);
 		}
-	}
-	else {
-		API.ShowWindow(window.handle, ShowWindowCommand.HIDE);
+	} else {
+		ShowWindow(window_Handle, SW_HIDE);
 	}
 }
-}
 
-public bool Exists{ get{ return exists; } }
+bool Window_GetExists(void) { return exists; }
 
-public void Close() {
-	API.PostMessage(window.handle, WM_CLOSE, IntPtr.Zero, IntPtr.Zero);
+void Window_Close(void) {
+	PostMessageA(window_Handle, WM_CLOSE, NULL, NULL);
 }
 
 public WindowState WindowState{
