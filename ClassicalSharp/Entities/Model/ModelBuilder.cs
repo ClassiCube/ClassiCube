@@ -53,6 +53,7 @@ namespace ClassicalSharp.Model {
 	/// <summary> Contains methods to create parts of 3D objects, typically boxes and quads. </summary>
 	public static class ModelBuilder {
 		
+		const ushort UVMaxBit = IModel.UVMaxBit;
 		public static BoxDesc MakeBoxBounds(int x1, int y1, int z1, int x2, int y2, int z2) {
 			BoxDesc desc = default(BoxDesc).SetModelBounds(x1, y1, z1, x2, y2, z2);
 			desc.SidesW = Math.Abs(z2 - z1);
@@ -134,26 +135,26 @@ namespace ClassicalSharp.Model {
 		
 		public static void XQuad(IModel m, int texX, int texY, int texWidth, int texHeight,
 		                     float z1, float z2, float y1, float y2, float x) {
-			m.vertices[m.index++] = new ModelVertex(x, y1, z1, texX, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x, y1, z1, texX, texY + texHeight | UVMaxBit);
 			m.vertices[m.index++] = new ModelVertex(x, y2, z1, texX, texY);
-			m.vertices[m.index++] = new ModelVertex(x, y2, z2, texX + texWidth, texY);
-			m.vertices[m.index++] = new ModelVertex(x, y1, z2, texX + texWidth, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x, y2, z2, texX + texWidth | UVMaxBit, texY);
+			m.vertices[m.index++] = new ModelVertex(x, y1, z2, texX + texWidth | UVMaxBit, texY + texHeight | UVMaxBit);
 		}
 		
 		public static void YQuad(IModel m, int texX, int texY, int texWidth, int texHeight,
 		                     float x1, float x2, float z1, float z2, float y) {
-			m.vertices[m.index++] = new ModelVertex(x1, y, z2, texX, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x1, y, z2, texX, texY + texHeight | UVMaxBit);
 			m.vertices[m.index++] = new ModelVertex(x1, y, z1, texX, texY);
-			m.vertices[m.index++] = new ModelVertex(x2, y, z1, texX + texWidth, texY);
-			m.vertices[m.index++] = new ModelVertex(x2, y, z2, texX + texWidth, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x2, y, z1, texX + texWidth | UVMaxBit, texY);
+			m.vertices[m.index++] = new ModelVertex(x2, y, z2, texX + texWidth | UVMaxBit, texY + texHeight | UVMaxBit);
 		}
 		
 		public static void ZQuad(IModel m, int texX, int texY, int texWidth, int texHeight,
 		                     float x1, float x2, float y1, float y2, float z) {
-			m.vertices[m.index++] = new ModelVertex(x1, y1, z, texX, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x1, y1, z, texX, texY + texHeight | UVMaxBit);
 			m.vertices[m.index++] = new ModelVertex(x1, y2, z, texX, texY);
-			m.vertices[m.index++] = new ModelVertex(x2, y2, z, texX + texWidth, texY);
-			m.vertices[m.index++] = new ModelVertex(x2, y1, z, texX + texWidth, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x2, y2, z, texX + texWidth | UVMaxBit, texY);
+			m.vertices[m.index++] = new ModelVertex(x2, y1, z, texX + texWidth | UVMaxBit, texY + texHeight | UVMaxBit);
 		}
 	}
 }

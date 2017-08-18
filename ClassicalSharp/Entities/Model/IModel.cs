@@ -19,6 +19,10 @@ namespace ClassicalSharp.Model {
 		protected const int boxVertices = 6 * quadVertices;
 		protected RotateOrder Rotate = RotateOrder.ZYX;
 		internal bool initalised;
+		
+		public const ushort UVMask   = 0x7FFF;
+		public const ushort UVMaxBit = 0x8000;
+		public const ushort UVMaxShift = 15;
 
 		public IModel(Game game) { this.game = game; }
 		
@@ -193,10 +197,10 @@ namespace ClassicalSharp.Model {
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.Colour = cols[i >> 2];
 				
-				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
-				int quadI = i & 3;
-				if (quadI == 0 || quadI == 3) vertex.V -= 0.01f * vScale;
-				if (quadI == 2 || quadI == 3) vertex.U -= 0.01f * uScale;
+				vertex.U = (v.U & UVMask) * uScale; 
+				vertex.U -= (v.U >> UVMaxShift) * 0.01f * uScale;
+				vertex.V = (v.V & UVMask) * vScale; 
+				vertex.V -= (v.V >> UVMaxShift) * 0.01f * vScale;
 				finVertices[index++] = vertex;
 			}
 		}
@@ -232,10 +236,10 @@ namespace ClassicalSharp.Model {
 				vertex.X = v.X + x; vertex.Y = v.Y + y; vertex.Z = v.Z + z;
 				vertex.Colour = cols[i >> 2];
 				
-				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
-				int quadI = i & 3;
-				if (quadI == 0 || quadI == 3) vertex.V -= 0.01f * vScale;
-				if (quadI == 2 || quadI == 3) vertex.U -= 0.01f * uScale;
+				vertex.U = (v.U & UVMask) * uScale; 
+				vertex.U -= (v.U >> UVMaxShift) * 0.01f * uScale;
+				vertex.V = (v.V & UVMask) * vScale; 
+				vertex.V -= (v.V >> UVMaxShift) * 0.01f * vScale;
 				finVertices[index++] = vertex;
 			}
 		}
