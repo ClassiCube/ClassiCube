@@ -17,7 +17,6 @@ namespace ClassicalSharp.Renderers {
 	public class HeldBlockRenderer : IGameComponent {
 		
 		internal BlockID block;
-		IModel model;
 		internal HeldBlockAnimation anim;
 		
 		Game game;
@@ -26,7 +25,6 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Init(Game game) {
 			this.game = game;
-			model = game.ModelCache.Get("block");
 			held = new FakePlayer(game);
 			game.Events.ProjectionChanged += ProjectionChanged;
 			
@@ -59,9 +57,18 @@ namespace ClassicalSharp.Renderers {
 			
 			SetPos();
 			game.Graphics.FaceCulling = true;
-			model.Render(held);
-			game.Graphics.FaceCulling = false;
 			
+			IModel model;
+			if (BlockInfo.Draw[block] == DrawType.Gas) {
+				model = game.ModelCache.Get("arm");
+				held.ModelScale = new Vector3(1.0f);
+			} else {
+				model = game.ModelCache.Get("block");
+				held.ModelScale = new Vector3(0.4f);
+			}
+			model.Render(held);
+			
+			game.Graphics.FaceCulling = false;		
 			game.Graphics.LoadMatrix(ref game.View);
 			game.Graphics.SetMatrixMode(MatrixType.Projection);
 			game.Graphics.LoadMatrix(ref game.Projection);
@@ -86,7 +93,6 @@ namespace ClassicalSharp.Renderers {
 			bool sprite = BlockInfo.Draw[block] == DrawType.Sprite;
 			Vector3 offset = sprite ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
-			held.ModelScale = new Vector3(0.4f);
 			
 			held.Position = p.EyePosition + anim.pos;
 			held.Position += offset;
@@ -103,6 +109,8 @@ namespace ClassicalSharp.Renderers {
 			held.RotY = -45 + anim.angleY;
 			held.HeadX = 0;
 			held.ModelBlock = block;
+			held.SkinType = p.SkinType;
+			held.TextureId = p.TextureId;
 		}
 		
 		void ProjectionChanged(object sender, EventArgs e) {
