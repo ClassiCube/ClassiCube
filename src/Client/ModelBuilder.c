@@ -1,7 +1,6 @@
 #if 0
 #include "ModelBuilder.h"
 #include "ExtMath.h"
-#define UV_Scale 1000
 
 void BoxDesc_TexOrigin(BoxDesc* desc, Int32 x, Int32 y) {
 	desc->TexX = x; desc->TexY = y;
@@ -59,10 +58,10 @@ void BoxDesc_RotatedBox(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, I
 
 
 ModelPart BoxDesc_BuildBox(IModel* m, BoxDesc* desc) {
-	Int32 sidesW = desc->SidesW * UV_Scale, bodyW = desc->BodyW * UV_Scale, bodyH = desc->BodyH * UV_Scale;
+	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
-	Int32 x = desc->TexX * UV_Scale, y = desc->TexY * UV_Scale;
+	Int32 x = desc->TexX, y = desc->TexY;
 
 	BoxDesc_YQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, z2, z1, y2); /* top */
 	BoxDesc_YQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1); /* bottom */
@@ -78,10 +77,10 @@ ModelPart BoxDesc_BuildBox(IModel* m, BoxDesc* desc) {
 }
 
 ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
-	Int32 sidesW = desc->SidesW * UV_Scale, bodyW = desc->BodyW * UV_Scale, bodyH = desc->BodyH * UV_Scale;
+	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
-	Int32 x = desc->TexX * UV_Scale, y = desc->TexY * UV_Scale;
+	Int32 x = desc->TexX, y = desc->TexY;
 
 	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2); /* top */
 	BoxDesc_YQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1); /* bottom */
@@ -107,25 +106,25 @@ ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
 
 void BoxDesc_XQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x) {
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, texX, texY + texHeight - 1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, texX, texY + texHeight); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, texX + texWidth - 1, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, texX + texWidth - 1, texY + texHeight - 1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, texX + texWidth, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, texX + texWidth, texY + texHeight); m->index++;
 }
 
 void BoxDesc_YQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y) {
-	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, texX, texY + texHeight - 1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, texX, texY + texHeight); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, texX + texWidth - 1, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, texX + texWidth - 1, texY + texHeight - 1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, texX + texWidth, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, texX + texWidth, texY + texHeight); m->index++;
 }
 
 void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z) {
-	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, texX, texY + texHeight - 1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, texX, texY + texHeight); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, texX + texWidth - 1, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, texX + texWidth - 1, texY + texHeight - 1); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, texX + texWidth, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, texX + texWidth, texY + texHeight); m->index++;
 }
 #endif

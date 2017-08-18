@@ -127,7 +127,6 @@ namespace ClassicalSharp.Model {
 			index = 0;
 			int col = p.Colour();
 			uScale = 1 / 64f; vScale = 1 / 32f;
-			uScale /= 1000f; vScale /= 1000f;
 			
 			cols[0] = col;
 			if (!p.NoShade) {
@@ -192,8 +191,12 @@ namespace ClassicalSharp.Model {
 			for (int i = 0; i < part.Count; i++) {
 				ModelVertex v = vertices[part.Offset + i];
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
-				vertex.Colour = cols[i >> 2];				
+				vertex.Colour = cols[i >> 2];
+				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
+				int quadI = i & 3;
+				if (quadI == 0 || quadI == 3) vertex.V -= 0.01f * vScale;
+				if (quadI == 2 || quadI == 3) vertex.U -= 0.01f * uScale;
 				finVertices[index++] = vertex;
 			}
 		}
@@ -226,10 +229,13 @@ namespace ClassicalSharp.Model {
 				if (head) {
 					t = cosHead * v.X - sinHead * v.Z; v.Z = sinHead * v.X + cosHead * v.Z; v.X = t; // Inlined RotY
 				}
-				
 				vertex.X = v.X + x; vertex.Y = v.Y + y; vertex.Z = v.Z + z;
-				vertex.Colour = cols[i >> 2];				
+				vertex.Colour = cols[i >> 2];
+				
 				vertex.U = v.U * uScale; vertex.V = v.V * vScale;
+				int quadI = i & 3;
+				if (quadI == 0 || quadI == 3) vertex.V -= 0.01f * vScale;
+				if (quadI == 2 || quadI == 3) vertex.U -= 0.01f * uScale;
 				finVertices[index++] = vertex;
 			}
 		}
