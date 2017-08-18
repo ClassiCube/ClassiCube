@@ -16,20 +16,19 @@ namespace ClassicalSharp.Renderers {
 	
 	public class HeldBlockRenderer : IGameComponent {
 		
-		internal BlockID block;
-		internal HeldBlockAnimation anim;
-		
+		BlockID block;
 		Game game;
-		internal FakePlayer held;
+		FakePlayer held;
 		Matrix4 heldBlockProj;
 		
 		public void Init(Game game) {
 			this.game = game;
 			held = new FakePlayer(game);
-			game.Events.ProjectionChanged += ProjectionChanged;
+			lastType = game.Inventory.Selected;
 			
-			anim = new HeldBlockAnimation();
-			anim.Init(game, this);
+			game.Events.ProjectionChanged += ProjectionChanged;
+			game.Events.HeldBlockChanged += DoSwitchBlockAnim;
+			game.UserEvents.BlockChanged += BlockChanged;
 		}
 
 		public void Ready(Game game) { }
@@ -37,15 +36,18 @@ namespace ClassicalSharp.Renderers {
 		public void OnNewMap(Game game) { }
 		public void OnNewMapLoaded(Game game) { }
 		
+		public void Dispose() {
+			game.Events.ProjectionChanged -= ProjectionChanged;
+			game.Events.HeldBlockChanged -= DoSwitchBlockAnim;
+			game.UserEvents.BlockChanged -= BlockChanged;
+		}
+		
 		public void Render(double delta) {
 			if (game.Camera.IsThirdPerson || !game.ShowBlockInHand) return;
 
-			Vector3 last = anim.pos;
-			anim.pos = Vector3.Zero;
+			float lastSwingY = swingY; swingY = 0;
 			block = game.Inventory.Selected;
-			held.RotX = 0;
-			if (anim.doAnim) anim.Update(delta, last);
-			
+
 			game.Graphics.SetMatrixMode(MatrixType.Projection);
 			game.Graphics.LoadMatrix(ref heldBlockProj);
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);
@@ -55,7 +57,8 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.SetupAlphaState(BlockInfo.Draw[block]);
 			game.Graphics.DepthTest = false;
 			
-			SetPos();
+			SetInitialPos();
+			DoAnimation(delta, lastSwingY);
 			game.Graphics.FaceCulling = true;
 			
 			IModel model;
@@ -68,7 +71,7 @@ namespace ClassicalSharp.Renderers {
 			}
 			model.Render(held);
 			
-			game.Graphics.FaceCulling = false;		
+			game.Graphics.FaceCulling = false;
 			game.Graphics.LoadMatrix(ref game.View);
 			game.Graphics.SetMatrixMode(MatrixType.Projection);
 			game.Graphics.LoadMatrix(ref game.Projection);
@@ -88,14 +91,13 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.LoadMatrix(ref m);
 		}
 		
-		void SetPos() {
+		void SetInitialPos() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
 			bool sprite = BlockInfo.Draw[block] == DrawType.Sprite;
 			Vector3 offset = sprite ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
 			
-			held.Position = p.EyePosition + anim.pos;
-			held.Position += offset;
+			held.Position = p.EyePosition + offset;
 			if (!sprite) {
 				float height = BlockInfo.MaxBB[block].Y - BlockInfo.MinBB[block].Y;
 				held.Position.Y += 0.2f * (1 - height);
@@ -105,9 +107,8 @@ namespace ClassicalSharp.Renderers {
 			held.Position.Y -= game.Camera.bobbingVer;
 			held.Position.Z -= game.Camera.bobbingHor;
 			
-			held.HeadY = -45 + anim.angleY;
-			held.RotY = -45 + anim.angleY;
-			held.HeadX = 0;
+			held.HeadY = -45; held.RotY = -45;
+			held.HeadX = 0; held.RotX = 0;
 			held.ModelBlock = block;
 			held.SkinType = p.SkinType;
 			held.TextureId = p.TextureId;
@@ -119,10 +120,92 @@ namespace ClassicalSharp.Renderers {
 			heldBlockProj = Matrix4.CreatePerspectiveFieldOfView(70 * Utils.Deg2Rad,
 			                                                     aspectRatio, zNear, game.ViewDistance);
 		}
+
 		
-		public void Dispose() {
-			game.Events.ProjectionChanged -= ProjectionChanged;
-			anim.Dispose();
+		bool animating, breaking, swinging;
+		float swingY;
+		double time, period = 0.25;
+		BlockID lastType;
+
+		public void ClickAnim(bool digging) {
+			// TODO: timing still not quite right, rotate2 still not quite right
+			ResetAnim(true, digging ? 0.35 : 0.25);
+			swinging = false;
+			breaking = digging;
+			animating = true;
+			// Start place animation at bottom of cycle
+			if (!digging) time = period / 2;
+		}
+		
+		void DoSwitchBlockAnim(object sender, EventArgs e) {
+			if (swinging) {
+				// Like graph -sin(x) : x=0.5 and x=2.5 have same y values
+				// but increasing x causes y to change in opposite directions
+				if (time > period * 0.5)
+					time = period - time;
+			} else {
+				ResetAnim(false, 0.25);
+				animating = true;
+				swinging = true;
+			}
+		}
+		
+		void BlockChanged(object sender, BlockChangedEventArgs e) {
+			if (e.Block == 0) return;
+			ClickAnim(false);
+		}
+		
+		void DoAnimation(double delta, float lastSwingY) {
+			if (!animating) return;
+			
+			if (swinging || !breaking) {
+				double t = time / period;
+				swingY = -0.4f * (float)Math.Sin(t * Math.PI);
+				held.Position.Y += swingY;
+				
+				if (swinging) {
+					// i.e. the block has gone to bottom of screen and is now returning back up
+					// at this point we switch over to the new held block.					
+					if (swingY > lastSwingY) lastType = block;
+					block = lastType;
+					held.ModelBlock = block;
+				}
+			} else {
+				DigAnimation();
+			}
+			time += delta;
+			if (time > period) ResetAnim(true, 0.25);
+		}
+		
+		// Based off incredible gifs from (Thanks goodlyay!)
+		// https://dl.dropboxusercontent.com/s/iuazpmpnr89zdgb/slowBreakTranslate.gif
+		// https://dl.dropboxusercontent.com/s/z7z8bset914s0ij/slowBreakRotate1.gif
+		// https://dl.dropboxusercontent.com/s/pdq79gkzntquld1/slowBreakRotate2.gif
+		// https://dl.dropboxusercontent.com/s/w1ego7cy7e5nrk1/slowBreakFull.gif
+		
+		// https://github.com/UnknownShadow200/ClassicalSharp/wiki/Dig-animation-details
+		void DigAnimation() {
+			double t = time / period;
+			double sinHalfCircle = Math.Sin(t * Math.PI);
+			double sqrtLerpPI = Math.Sqrt(t) * Math.PI;
+			
+			held.Position.X -= (float)(Math.Sin(sqrtLerpPI) * 0.4);
+			held.Position.Y += (float)(Math.Sin((sqrtLerpPI * 2)) * 0.2);
+			held.Position.Z -= (float)(sinHalfCircle * 0.2);
+
+			double sinHalfCircleWeird = Math.Sin(t * t * Math.PI);
+			held.RotY -= (float)(Math.Sin(sqrtLerpPI) * 80);
+			held.HeadY -= (float)(Math.Sin(sqrtLerpPI) * 80);
+			held.RotX += (float)(sinHalfCircleWeird * 20);
+		}
+		
+		void ResetAnim(bool updateLastType, double period) {
+			time = 0; swingY = 0;
+			animating = false; swinging = false;			
+			this.period = period;
+			
+			if (updateLastType)
+				lastType = game.Inventory.Selected;
 		}
 	}
 	

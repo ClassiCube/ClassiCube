@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 			
 			// always play delete animations, even if we aren't picking a block.
 			if (left) {
-				game.HeldBlockRenderer.anim.SetClickAnim(true);
+				game.HeldBlockRenderer.ClickAnim(true);
 				byte id = game.Entities.GetClosetPlayer(game.LocalPlayer);
 				if (id != EntityList.SelfID && game.Mode.PickEntity(id)) return;
 			}
