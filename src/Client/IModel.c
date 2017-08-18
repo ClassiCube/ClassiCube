@@ -90,11 +90,8 @@ void IModel_DrawPart(ModelPart part) {
 		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
 		dst->Colour = IModel_Cols[i >> 2];
 
-		dst->U = v.U * IModel_uScale; dst->V = v.V * IModel_vScale;
-		Int32 quadI = i & 3;
-		if (quadI == 0 || quadI == 3) dst->V -= 0.01f * IModel_vScale;
-		if (quadI == 2 || quadI == 3) dst->U -= 0.01f * IModel_uScale;
-
+		dst->U = (v.U & IModel_UVMask) * IModel_uScale - (v.U >> IModel_UVMaxShift) * 0.01f * IModel_uScale;
+		dst->V = (v.V & IModel_UVMask) * IModel_vScale - (v.V >> IModel_UVMaxShift) * 0.01f * IModel_vScale;
 		dst++; model->index++;
 	}
 }
@@ -131,11 +128,8 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 		dst->X = v.X + x; dst->Y = v.Y + y; dst->Z = v.Z + z;
 		dst->Colour = IModel_Cols[i >> 2];
 
-		dst->U = v.U * IModel_uScale; dst->V = v.V * IModel_vScale;
-		Int32 quadI = i & 3;
-		if (quadI == 0 || quadI == 3) dst->V -= 0.01f * IModel_vScale;
-		if (quadI == 2 || quadI == 3) dst->U -= 0.01f * IModel_uScale;
-
+		dst->U = (v.U & IModel_UVMask) * IModel_uScale - (v.U >> IModel_UVMaxShift) * 0.01f * IModel_uScale;
+		dst->V = (v.V & IModel_UVMask) * IModel_vScale - (v.V >> IModel_UVMaxShift) * 0.01f * IModel_vScale;
 		dst++; model->index++;
 	}
 }

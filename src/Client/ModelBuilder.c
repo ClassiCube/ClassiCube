@@ -104,27 +104,28 @@ ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
 }
 
 
+#define UV_MAX IModel_UVMaxBit
 void BoxDesc_XQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x) {
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, texX, texY + texHeight); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, texX, texY + texHeight | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, texX + texWidth, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, texX + texWidth, texY + texHeight); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, texX + texWidth | UV_MAX, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, texX + texWidth | UV_MAX, texY + texHeight | UV_MAX); m->index++;
 }
 
 void BoxDesc_YQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y) {
-	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, texX, texY + texHeight); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, texX, texY + texHeight | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, texX + texWidth, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, texX + texWidth, texY + texHeight); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, texX + texWidth | UV_MAX, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, texX + texWidth | UV_MAX, texY + texHeight | UV_MAX); m->index++;
 }
 
 void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z) {
-	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, texX, texY + texHeight); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, texX, texY + texHeight | UV_MAX); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, texX + texWidth, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, texX + texWidth, texY + texHeight); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, texX + texWidth | UV_MAX, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, texX + texWidth | UV_MAX, texY + texHeight | UV_MAX); m->index++;
 }
 #endif

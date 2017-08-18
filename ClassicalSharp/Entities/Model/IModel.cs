@@ -197,10 +197,8 @@ namespace ClassicalSharp.Model {
 				vertex.X = v.X; vertex.Y = v.Y; vertex.Z = v.Z;
 				vertex.Colour = cols[i >> 2];
 				
-				vertex.U = (v.U & UVMask) * uScale; 
-				vertex.U -= (v.U >> UVMaxShift) * 0.01f * uScale;
-				vertex.V = (v.V & UVMask) * vScale; 
-				vertex.V -= (v.V >> UVMaxShift) * 0.01f * vScale;
+				vertex.U = (v.U & UVMask) * uScale - (v.U >> UVMaxShift) * 0.01f * uScale;
+				vertex.V = (v.V & UVMask) * vScale - (v.V >> UVMaxShift) * 0.01f * vScale;
 				finVertices[index++] = vertex;
 			}
 		}
@@ -236,10 +234,8 @@ namespace ClassicalSharp.Model {
 				vertex.X = v.X + x; vertex.Y = v.Y + y; vertex.Z = v.Z + z;
 				vertex.Colour = cols[i >> 2];
 				
-				vertex.U = (v.U & UVMask) * uScale; 
-				vertex.U -= (v.U >> UVMaxShift) * 0.01f * uScale;
-				vertex.V = (v.V & UVMask) * vScale; 
-				vertex.V -= (v.V >> UVMaxShift) * 0.01f * vScale;
+				vertex.U = (v.U & UVMask) * uScale - (v.U >> UVMaxShift) * 0.01f * uScale;
+				vertex.V = (v.V & UVMask) * vScale - (v.V >> UVMaxShift) * 0.01f * vScale;
 				finVertices[index++] = vertex;
 			}
 		}

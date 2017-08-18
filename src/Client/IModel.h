@@ -14,6 +14,9 @@
 
 #define IModel_QuadVertices 4
 #define IModel_BoxVertices (Face_Count * IModel_QuadVertices)
+#define IModel_UVMask ((UInt16)0x7FFF)
+#define IModel_UVMaxBit ((UInt16)0x8000)
+#define IModel_UVMaxShift 15
 
 /* Order in which axis rotations are applied to a part. */
 typedef Int32 RotateOrder;
