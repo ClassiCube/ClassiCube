@@ -140,7 +140,11 @@ namespace ClassicalSharp.Model {
 			game.Graphics.PushMatrix();
 			game.Graphics.MultiplyMatrix(ref m);
 			
-			DrawRotate(0, 0, 0 * Utils.Deg2Rad, model.RightArm, false);
+			ModelPart part = model.RightArm;
+			part.RotX += 1 / 16.0f;
+			part.RotY -= 4 / 16.0f;
+			DrawRotate(0, 0, 120 * Utils.Deg2Rad, part, false);
+			
 			UpdateVB();
 			game.Graphics.PopMatrix();
 		}
