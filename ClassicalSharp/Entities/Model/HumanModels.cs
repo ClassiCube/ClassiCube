@@ -111,7 +111,10 @@ namespace ClassicalSharp.Model {
 
 	public class ArmModel : HumanoidModel {
 		
-		public ArmModel(Game window) : base(window) { }
+		Matrix4 m;
+		public ArmModel(Game window) : base(window) {
+			Matrix4.Translate(out m, -6 / 16f, -12 / 16f - 0.1f, 0);
+		}
 		public override void CreateParts() { }
 
 		public override float NameYOffset { get { return 2.075f; } }
@@ -126,12 +129,6 @@ namespace ClassicalSharp.Model {
 			get { return new AABB(-4/16f, 0, -4/16f, 4/16f, 32/16f, 4/16f); }
 		}
 		
-		protected internal override Matrix4 TransformMatrix(Entity p, Vector3 pos) {
-			pos.X -= (6 / 16f)  * p.ModelScale.X;
-			pos.Y -= (18 / 16f) * p.ModelScale.Y;
-			return p.TransformMatrix(p.ModelScale, pos);
-		}
-		
 		protected override void RenderParts(Entity p) {
 			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;
 			vertices = human.vertices;
@@ -140,8 +137,12 @@ namespace ClassicalSharp.Model {
 			ModelSet model = skinType == SkinType.Type64x64Slim ? human.SetSlim :
 				(skinType == SkinType.Type64x64 ? human.Set64 : human.Set);
 			
-			DrawRotate(0, 0, 120 * Utils.Deg2Rad, model.RightArm, false);
+			game.Graphics.PushMatrix();
+			game.Graphics.MultiplyMatrix(ref m);
+			
+			DrawRotate(0, 0, 0 * Utils.Deg2Rad, model.RightArm, false);
 			UpdateVB();
+			game.Graphics.PopMatrix();
 		}
 	}
 }

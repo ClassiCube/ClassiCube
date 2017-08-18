@@ -40,10 +40,10 @@ typedef enum Key_ {
 
 	/* Function keys (hopefully enough for most keyboards - mine has 26)
 	/ <keysymdef.h> on X11 reports up to 35 function keys. */
-	F1, F2, F3, F4, F5, F6, F7, F8, F9, F10,
-	F11, F12, F13, F14, F15, F16, F17, F18, F19, F20,
-	F21, F22, F23, F24, F25, F26, F27, F28, F29, F30,
-	F31, F32, F33, F34, F35,
+	Key_F1,  Key_F2,  Key_F3,  Key_F4,  Key_F5,  Key_F6,  Key_F7,  Key_F8,  Key_F9,  Key_F10,
+	Key_F11, Key_F12, Key_F13, Key_F14, Key_F15, Key_F16, Key_F17, Key_F18, Key_F19, Key_F20,
+	Key_F21, Key_F22, Key_F23, Key_F24, Key_F25, Key_F26, Key_F27, Key_F28, Key_F29, Key_F30,
+	Key_F31, Key_F32, Key_F33, Key_F34, Key_F35,
 
 	/* Direction arrows */
 	Key_Up, Key_Down, Key_Left, Key_Right,

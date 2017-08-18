@@ -4,7 +4,8 @@
 #include "DateTime.h"
 #include "String.h"
 #include "ErrorHandler.h"
-/* Abstracts platform specific memory management, IO, etc.
+#include "Compiler.h"
+/* Abstracts platform specific memory management, I/O, etc.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -37,4 +38,34 @@ DateTime Platform_CurrentUTCTime(void);
 
 /* Gets the current time, in user's local timezone. */
 DateTime Platform_CurrentLocalTime(void);
+
+
+
+/* Returns whether a directory with the given name exists. */
+bool Platform_DirectoryExists(STRING_TRANSIENT String* path);
+
+/* Creates a new directory. */
+ReturnCode Platform_DirectoryCreate(STRING_TRANSIENT String* path);
+
+/* Returns whether a file with the given name exists. */
+bool Platform_FileExists(STRING_TRANSIENT String* path);
+
+/* Creates or overwrites an existing file. */
+ReturnCode Platform_FileCreate(void** file, STRING_TRANSIENT String* path);
+
+/* Opens an existing file. */
+ReturnCode Platform_FileOpen(void** file, STRING_TRANSIENT String* path, bool readOnly);
+
+/* Reads a block of bytes from the given file, returning a platform-specific return code. */
+ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead);
+
+/* Writes a block of bytes to the given file, returning a platform-specific return code. */
+ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten);
+
+/* Closes the given file. */
+ReturnCode Platform_FileClose(void* file);
+
+
+/* Blocks the calling thread for given number of milliseconds. */
+void Platform_ThreadSleep(UInt32 milliseconds);
 #endif

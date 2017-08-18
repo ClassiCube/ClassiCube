@@ -201,7 +201,6 @@
     <ClInclude Include="GZipHeader.h" />
     <ClInclude Include="IModel.h" />
     <ClInclude Include="Intersection.h" />
-    <ClInclude Include="IO.h" />
     <ClInclude Include="IsometricDrawer.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="BordersRenderer.h" />
@@ -324,7 +323,6 @@
     <ClCompile Include="VertexStructs.c" />
     <ClCompile Include="WeatherRenderer.c" />
     <ClCompile Include="WinErrorHandler.c" />
-    <ClCompile Include="WinIO.c" />
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />

@@ -267,9 +267,6 @@
     <ClInclude Include="GameProps.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
-    <ClInclude Include="IO.h">
-      <Filter>Header Files\Platform</Filter>
-    </ClInclude>
     <ClInclude Include="NetworkEnums.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
@@ -496,9 +493,6 @@
     </ClCompile>
     <ClCompile Include="Intersection.c">
       <Filter>Source Files\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="WinIO.c">
-      <Filter>Source Files\Platform</Filter>
     </ClCompile>
     <ClCompile Include="SelectionBox.c">
       <Filter>Source Files\SelectionBox</Filter>
