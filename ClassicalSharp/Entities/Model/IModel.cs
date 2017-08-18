@@ -74,8 +74,9 @@ namespace ClassicalSharp.Model {
 		/// assuming that the model is not rotated at all.</summary>
 		public abstract AABB PickingBounds { get; }
 		
-		protected internal float cosHead, sinHead;
-		protected internal float uScale, vScale;
+		protected static float cosHead, sinHead;
+		protected static float uScale, vScale;
+		protected static int[] cols = new int[6];
 		
 		/// <summary> Returns whether the model should be rendered based on the given entity's position. </summary>
 		public static bool ShouldRender(Entity p, FrustumCulling culling) {
@@ -158,7 +159,6 @@ namespace ClassicalSharp.Model {
 			return p.TransformMatrix(p.ModelScale, pos);
 		}
 		
-		protected internal int[] cols = new int[6];
 		protected internal ModelVertex[] vertices;
 		protected internal int index, texIndex;
 		

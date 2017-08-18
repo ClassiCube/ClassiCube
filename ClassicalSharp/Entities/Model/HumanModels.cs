@@ -97,9 +97,6 @@ namespace ClassicalSharp.Model {
 
 		protected override void RenderParts(Entity p) {
 			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;
-			human.cols = cols;
-			human.cosHead = cosHead; human.sinHead = sinHead;
-			human.uScale = uScale; human.vScale = vScale;
 			vertices = human.vertices;
 			
 			DrawRotate(-p.HeadXRadians, 0, 0, human.Set.Head, true);
@@ -137,9 +134,6 @@ namespace ClassicalSharp.Model {
 		
 		protected override void RenderParts(Entity p) {
 			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;
-			human.cols = cols;
-			human.cosHead = cosHead; human.sinHead = sinHead;
-			human.uScale = uScale; human.vScale = vScale;
 			vertices = human.vertices;
 			
 			SkinType skinType = p.SkinType;
