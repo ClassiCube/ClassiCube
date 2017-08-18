@@ -89,12 +89,7 @@ void IModel_DrawPart(ModelPart part) {
 		ModelVertex v = model->vertices[part.Offset + i];
 		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
 		dst->Colour = IModel_Cols[i >> 2];
-
 		dst->U = v.U * IModel_uScale; dst->V = v.V * IModel_vScale;
-		Int32 quadI = i & 3;
-		if (quadI == 0 || quadI == 3) dst->V -= 0.01f * IModel_vScale;
-		if (quadI == 2 || quadI == 3) dst->U -= 0.01f * IModel_uScale;
-
 		dst++; model->index++;
 	}
 }
@@ -128,14 +123,10 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 		if (head) {
 			t = IModel_cosHead * v.X - IModel_sinHead * v.Z; v.Z = IModel_sinHead * v.X + IModel_cosHead * v.Z; v.X = t; /* Inlined RotY */
 		}
+
 		dst->X = v.X + x; dst->Y = v.Y + y; dst->Z = v.Z + z;
 		dst->Colour = IModel_Cols[i >> 2];
-
 		dst->U = v.U * IModel_uScale; dst->V = v.V * IModel_vScale;
-		Int32 quadI = i & 3;
-		if (quadI == 0 || quadI == 3) dst->V -= 0.01f * IModel_vScale;
-		if (quadI == 2 || quadI == 3) dst->U -= 0.01f * IModel_uScale;
-
 		dst++; model->index++;
 	}
 }

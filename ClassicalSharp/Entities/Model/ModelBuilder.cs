@@ -53,6 +53,7 @@ namespace ClassicalSharp.Model {
 	/// <summary> Contains methods to create parts of 3D objects, typically boxes and quads. </summary>
 	public static class ModelBuilder {
 		
+		const int UVScale = 1000;
 		public static BoxDesc MakeBoxBounds(int x1, int y1, int z1, int x2, int y2, int z2) {
 			BoxDesc desc = default(BoxDesc).SetModelBounds(x1, y1, z1, x2, y2, z2);
 			desc.SidesW = Math.Abs(z2 - z1);
@@ -83,10 +84,10 @@ namespace ClassicalSharp.Model {
 		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┃ <br/>
 		/// ┗━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┛ </summary>
 		public static ModelPart BuildBox(IModel m, BoxDesc desc) {
-			int sidesW = desc.SidesW, bodyW = desc.BodyW, bodyH = desc.BodyH;
+			int sidesW = desc.SidesW * UVScale, bodyW = desc.BodyW * UVScale, bodyH = desc.BodyH * UVScale;
 			float x1 = desc.X1, y1 = desc.Y1, z1 = desc.Z1;
 			float x2 = desc.X2, y2 = desc.Y2, z2 = desc.Z2;
-			int x = desc.TexX, y = desc.TexY;
+			int x = desc.TexX * UVScale, y = desc.TexY * UVScale;
 			
 			YQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, z2, z1, y2); // top
 			YQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1); // bottom
@@ -111,10 +112,10 @@ namespace ClassicalSharp.Model {
 		/// ┃┈┈┈┈┈SW┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┈┃┈┈┈┈┈SW┈┈┈┈┈┈┃┈┈┈┈┈BW┈┈┈┈┃ <br/>
 		/// ┗━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┻━━━━━━━━━━━━━┛ </summary>
 		public static ModelPart BuildRotatedBox(IModel m, BoxDesc desc) {
-			int sidesW = desc.SidesW, bodyW = desc.BodyW, bodyH = desc.BodyH;
+			int sidesW = desc.SidesW * UVScale, bodyW = desc.BodyW * UVScale, bodyH = desc.BodyH * UVScale;
 			float x1 = desc.X1, y1 = desc.Y1, z1 = desc.Z1;
 			float x2 = desc.X2, y2 = desc.Y2, z2 = desc.Z2;
-			int x = desc.TexX, y = desc.TexY;
+			int x = desc.TexX * UVScale, y = desc.TexY * UVScale;
 			
 			YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2); // top
 			YQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1); // bottom
@@ -134,26 +135,26 @@ namespace ClassicalSharp.Model {
 		
 		public static void XQuad(IModel m, int texX, int texY, int texWidth, int texHeight,
 		                     float z1, float z2, float y1, float y2, float x) {
-			m.vertices[m.index++] = new ModelVertex(x, y1, z1, texX, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x, y1, z1, texX, texY + texHeight - 1);
 			m.vertices[m.index++] = new ModelVertex(x, y2, z1, texX, texY);
-			m.vertices[m.index++] = new ModelVertex(x, y2, z2, texX + texWidth, texY);
-			m.vertices[m.index++] = new ModelVertex(x, y1, z2, texX + texWidth, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x, y2, z2, texX + texWidth - 1, texY);
+			m.vertices[m.index++] = new ModelVertex(x, y1, z2, texX + texWidth - 1, texY + texHeight - 1);
 		}
 		
 		public static void YQuad(IModel m, int texX, int texY, int texWidth, int texHeight,
 		                     float x1, float x2, float z1, float z2, float y) {
-			m.vertices[m.index++] = new ModelVertex(x1, y, z2, texX, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x1, y, z2, texX, texY + texHeight - 1);
 			m.vertices[m.index++] = new ModelVertex(x1, y, z1, texX, texY);
-			m.vertices[m.index++] = new ModelVertex(x2, y, z1, texX + texWidth, texY);
-			m.vertices[m.index++] = new ModelVertex(x2, y, z2, texX + texWidth, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x2, y, z1, texX + texWidth - 1, texY);
+			m.vertices[m.index++] = new ModelVertex(x2, y, z2, texX + texWidth - 1, texY + texHeight - 1);
 		}
 		
 		public static void ZQuad(IModel m, int texX, int texY, int texWidth, int texHeight,
 		                     float x1, float x2, float y1, float y2, float z) {
-			m.vertices[m.index++] = new ModelVertex(x1, y1, z, texX, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x1, y1, z, texX, texY + texHeight - 1);
 			m.vertices[m.index++] = new ModelVertex(x1, y2, z, texX, texY);
-			m.vertices[m.index++] = new ModelVertex(x2, y2, z, texX + texWidth, texY);
-			m.vertices[m.index++] = new ModelVertex(x2, y1, z, texX + texWidth, texY + texHeight);
+			m.vertices[m.index++] = new ModelVertex(x2, y2, z, texX + texWidth - 1, texY);
+			m.vertices[m.index++] = new ModelVertex(x2, y1, z, texX + texWidth - 1, texY + texHeight - 1);
 		}
 	}
 }

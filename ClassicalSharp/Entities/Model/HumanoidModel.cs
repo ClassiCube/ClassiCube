@@ -92,6 +92,7 @@ namespace ClassicalSharp.Model {
 			bool _64x64 = p.SkinType != SkinType.Type64x32;
 			uScale = p.uScale / 64f;
 			vScale = p.vScale / (_64x64 ? 64 : 32);
+			uScale /= 1000f; vScale /= 1000f;
 			RenderParts(p);
 		}
 		
