@@ -66,7 +66,7 @@ namespace ClassicalSharp.Network {
 			string strippedSkinName = Utils.StripColours(skinName);
 			string url = Utils.IsUrlPrefix(skinName, 0) ? skinName :
 				skinServer + strippedSkinName + ".png";
-			AddRequest(url, true, identifier, RequestType.Bitmap,
+			AddRequest(url, false, identifier, RequestType.Bitmap,
 			           DateTime.MinValue , null);
 		}
 #endif
