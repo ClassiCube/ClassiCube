@@ -30,7 +30,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextRecreated() {
 			widgets = new Widget[] {
 				// Column 1
-				MakeBool(-1, -150, "Classic arm model", OptionsKey.SimpleArmsAnim,
+				MakeBool(-1, -150, "Classic arm model", OptionsKey.ClassicArmModel,
 				         OnWidgetClick, g => g.ClassicArmModel, (g, v) => g.ClassicArmModel = v),
 				MakeBool(-1, -100, "Classic arms anim", OptionsKey.SimpleArmsAnim, true,
 				         OnWidgetClick, g => !g.SimpleArmsAnim, (g, v) => g.SimpleArmsAnim = !v),				

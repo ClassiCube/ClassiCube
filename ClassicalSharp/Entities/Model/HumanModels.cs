@@ -112,9 +112,15 @@ namespace ClassicalSharp.Model {
 	public class ArmModel : HumanoidModel {
 		
 		Matrix4 m;
+		bool classicArms;
 		public ArmModel(Game window) : base(window) { }
 		
 		public override void CreateParts() {
+			classicArms = game.ClassicArmModel;
+			SetTranslationMatrix();
+		}
+		
+		void SetTranslationMatrix() {
 			if (game.ClassicArmModel) {
 				// TODO: Position's not quite right.
 				// Matrix4.Translate(out m, -6 / 16f + 0.2f, -12 / 16f - 0.20f, 0);
@@ -133,6 +139,11 @@ namespace ClassicalSharp.Model {
 		protected override void RenderParts(Entity p) {
 			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;
 			vertices = human.vertices;
+			// If user changes option while game is running
+			if (classicArms != game.ClassicArmModel) {
+				classicArms = game.ClassicArmModel;
+				SetTranslationMatrix();
+			}
 			
 			SkinType skinType = p.SkinType;
 			ModelSet model = skinType == SkinType.Type64x64Slim ? human.SetSlim :
