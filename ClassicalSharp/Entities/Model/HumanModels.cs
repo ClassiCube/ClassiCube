@@ -139,22 +139,30 @@ namespace ClassicalSharp.Model {
 				(skinType == SkinType.Type64x64 ? human.Set64 : human.Set);
 			
 			game.Graphics.PushMatrix();
-			game.Graphics.MultiplyMatrix(ref m);
-			
-			ModelPart part = model.RightArm;
-			part.RotX += 1 / 16.0f;
-			part.RotY -= 4 / 16.0f;
+			game.Graphics.MultiplyMatrix(ref m);			
 			Rotate = RotateOrder.YZX;
 			
+			DrawArmPart(model.RightArm);
+			UpdateVB();			
+			if (skinType != SkinType.Type64x32) {
+				index = 0;
+				game.Graphics.AlphaTest = true;
+				DrawArmPart(model.RightArmLayer);
+				UpdateVB();
+				game.Graphics.AlphaTest = false;
+			}
+			
+			Rotate = RotateOrder.ZYX;
+			game.Graphics.PopMatrix();
+		}
+		
+		void DrawArmPart(ModelPart part) {
+			part.RotX += 1 / 16.0f; part.RotY -= 4 / 16.0f;
 			if (game.ClassicArmModel) {
-				DrawRotate(0, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);				
+				DrawRotate(0, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);
 			} else {
 				DrawRotate(-20 * Utils.Deg2Rad, -70 * Utils.Deg2Rad, 135 * Utils.Deg2Rad, part, false);
-			}			
-			
-			Rotate = RotateOrder.ZYX;			
-			UpdateVB();
-			game.Graphics.PopMatrix();
+			}
 		}
 	}
 }
