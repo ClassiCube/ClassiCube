@@ -225,6 +225,10 @@ namespace ClassicalSharp.Model {
 					t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t; // Inlined RotX
 					t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t; // Inlined RotZ
 					t = cosY * v.X - sinY * v.Z; v.Z =  sinY * v.X + cosY * v.Z; v.X = t; // Inlined RotY
+				} else if (Rotate == RotateOrder.YZX) {
+					t = cosY * v.X - sinY * v.Z; v.Z =  sinY * v.X + cosY * v.Z; v.X = t; // Inlined RotY
+					t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t; // Inlined RotZ
+					t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t; // Inlined RotX
 				}
 				
 				// Rotate globally
@@ -240,6 +244,6 @@ namespace ClassicalSharp.Model {
 			}
 		}
 		
-		protected enum RotateOrder { ZYX, XZY }
+		protected enum RotateOrder { ZYX, XZY, YZX }
 	}
 }

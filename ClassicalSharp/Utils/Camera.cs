@@ -78,6 +78,7 @@ namespace ClassicalSharp {
 			                                 AdjustHeadX(player.HeadX));
 			Vector3 eyePos = player.EyePosition;
 			float reach = game.LocalPlayer.ReachDistance;
+			
 			Picking.CalculatePickedBlock(game, eyePos, dir, reach, pos);
 		}
 		

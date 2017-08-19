@@ -143,7 +143,9 @@ namespace ClassicalSharp.Model {
 			ModelPart part = model.RightArm;
 			part.RotX += 1 / 16.0f;
 			part.RotY -= 4 / 16.0f;
-			DrawRotate(0, 0, 120 * Utils.Deg2Rad, part, false);
+			Rotate = RotateOrder.YZX;
+			DrawRotate(0, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);
+			Rotate = RotateOrder.ZYX;
 			
 			UpdateVB();
 			game.Graphics.PopMatrix();

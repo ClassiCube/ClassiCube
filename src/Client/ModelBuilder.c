@@ -63,12 +63,12 @@ ModelPart BoxDesc_BuildBox(IModel* m, BoxDesc* desc) {
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
 
-	BoxDesc_YQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, z2, z1, y2); /* top */
-	BoxDesc_YQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1); /* bottom */
-	BoxDesc_ZQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z1); /* front */
-	BoxDesc_ZQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z2); /* back */
-	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x2); /* left */
-	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x1); /* right */
+	BoxDesc_YQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, z2, z1, y2, false); /* top */
+	BoxDesc_YQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1, false); /* bottom */
+	BoxDesc_ZQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z1, false); /* front */
+	BoxDesc_ZQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z2, false); /* back */
+	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x2, false); /* left */
+	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x1, false); /* right */
 
 	ModelPart part;
 	ModelPart_Init(&part, m->index - IModel_BoxVertices, IModel_BoxVertices,
@@ -82,12 +82,12 @@ ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
 
-	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2); /* top */
-	BoxDesc_YQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1); /* bottom */
-	BoxDesc_ZQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, y1, y2, z1); /* front */
-	BoxDesc_ZQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x1, x2, y2, y1, z2); /* back */
-	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2); /* left */
-	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1); /* right */
+	BoxDesc_YQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, z1, z2, y2, false); /* top */
+	BoxDesc_YQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1, false); /* bottom */
+	BoxDesc_ZQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, y1, y2, z1, false); /* front */
+	BoxDesc_ZQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x1, x2, y2, y1, z2, false); /* back */
+	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2, false); /* left */
+	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); /* right */
 
 	/* rotate left and right 90 degrees	*/
 	Int32 i;
@@ -106,26 +106,35 @@ ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
 
 #define UV_MAX IModel_UVMaxBit
 void BoxDesc_XQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x) {
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, texX, texY + texHeight | UV_MAX); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, texX + texWidth | UV_MAX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, texX + texWidth | UV_MAX, texY + texHeight | UV_MAX); m->index++;
+	Real32 z1, Real32 z2, Real32 y1, Real32 y2, Real32 x, bool swapU) {
+	Int32 u1 = texX, u2 = texX + texWidth | UV_MAX;
+	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
+
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z1, u1, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y2, z1, u1, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y2, z2, u2, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x, y1, z2, u2, texY + texHeight | UV_MAX); m->index++;
 }
 
 void BoxDesc_YQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y) {
-	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, texX, texY + texHeight | UV_MAX); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, texX + texWidth | UV_MAX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, texX + texWidth | UV_MAX, texY + texHeight | UV_MAX); m->index++;
+	Real32 x1, Real32 x2, Real32 z1, Real32 z2, Real32 y, bool swapU) {
+	Int32 u1 = texX, u2 = texX + texWidth | UV_MAX;
+	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
+
+	ModelVertex_Init(&m->vertices[m->index], x1, y, z2, u1, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y, z1, u1, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z1, u2, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y, z2, u2, texY + texHeight | UV_MAX); m->index++;
 }
 
 void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
-	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z) {
-	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, texX, texY + texHeight | UV_MAX); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, texX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, texX + texWidth | UV_MAX, texY); m->index++;
-	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, texX + texWidth | UV_MAX, texY + texHeight | UV_MAX); m->index++;
+	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z, bool swapU) {
+	Int32 u1 = texX, u2 = texX + texWidth | UV_MAX;
+	if (swapU) { Int32 tmp = u1; u1 = u2; u2 = tmp; }
+
+	ModelVertex_Init(&m->vertices[m->index], x1, y1, z, u1, texY + texHeight | UV_MAX); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x1, y2, z, u1, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, u2, texY); m->index++;
+	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, u2, texY + texHeight | UV_MAX); m->index++;
 }
 #endif

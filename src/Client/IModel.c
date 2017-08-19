@@ -96,6 +96,10 @@ void IModel_DrawPart(ModelPart part) {
 	}
 }
 
+#define IMODEL_ROTATEX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
+#define IMODEL_ROTATEY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;
+#define IMODEL_ROTATEZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
+
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head) {
 	IModel* model = IModel_ActiveModel;
 	Real32 cosX = Math_Cos(-angleX), sinX = Math_Sin(-angleX);
@@ -112,13 +116,17 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 
 		/* Rotate locally */
 		if (model->Rotation == RotateOrder_ZYX) {
-			t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t; /* Inlined RotZ */
-			t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;  /* Inlined RotY */
-			t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t; /* Inlined RotX */
+			IMODEL_ROTATEZ
+			IMODEL_ROTATEY
+			IMODEL_ROTATEX
 		} else if (model->Rotation == RotateOrder_XZY) {
-			t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t; /* Inlined RotX */
-			t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t; /* Inlined RotZ */
-			t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;  /* Inlined RotY */
+			IMODEL_ROTATEX
+			IMODEL_ROTATEZ
+			IMODEL_ROTATEY
+		} else if (model->Rotation == RotateOrder_YZX) {
+			IMODEL_ROTATEY
+			IMODEL_ROTATEZ
+			IMODEL_ROTATEX
 		}
 
 		/* Rotate globally */

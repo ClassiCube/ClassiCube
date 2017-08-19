@@ -19,12 +19,13 @@
 #define IModel_UVMaxShift 15
 
 /* Order in which axis rotations are applied to a part. */
-typedef Int32 RotateOrder;
+typedef UInt8 RotateOrder;
 #define RotateOrder_ZYX 0
 #define RotateOrder_XZY 1
+#define RotateOrder_YZX 2
 
 /* Skin layout a humanoid skin texture can have. */
-typedef Int32 SkinType;
+typedef UInt8 SkinType;
 #define SkinType_64x32 0
 #define SkinType_64x64 1
 #define SkinType_64x64Slim 2
