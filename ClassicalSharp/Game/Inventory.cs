@@ -181,6 +181,12 @@ namespace ClassicalSharp {
 		
 		void PushToFreeSlots(int i) {
 			BlockID block = Map[i];
+			// The slot was already pushed out in the past
+			// TODO: find a better way of fixing this
+			for (int j = 1; j < Map.Length; j++) {
+				if (j != i && Map[j] == block) return;
+			}
+			
 			for (int j = block; j < Map.Length; j++) {
 				if (Map[j] == Block.Invalid) { Map[j] = block; return; }
 			}
