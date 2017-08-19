@@ -166,6 +166,7 @@ namespace ClassicalSharp {
 			UseCPE = Options.GetBool(OptionsKey.UseCPE, true);
 			SimpleArmsAnim = Options.GetBool(OptionsKey.SimpleArmsAnim, false);
 			ChatLogging = Options.GetBool(OptionsKey.ChatLogging, true);
+			ClassicArmModel = Options.GetBool(OptionsKey.ClassicArmModel, ClassicMode);
 			
 			ViewBobbing = Options.GetBool(OptionsKey.ViewBobbing, true);
 			FpsLimitMethod method = Options.GetEnum(OptionsKey.FpsLimit, FpsLimitMethod.LimitVSync);

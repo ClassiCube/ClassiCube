@@ -19,6 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new BooleanValidator(),
+				new BooleanValidator(),
 				
 				new BooleanValidator(),
 				new BooleanValidator(),
@@ -29,6 +30,8 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextRecreated() {
 			widgets = new Widget[] {
 				// Column 1
+				MakeBool(-1, -150, "Classic arm model", OptionsKey.SimpleArmsAnim,
+				         OnWidgetClick, g => g.ClassicArmModel, (g, v) => g.ClassicArmModel = v),
 				MakeBool(-1, -100, "Classic arms anim", OptionsKey.SimpleArmsAnim, true,
 				         OnWidgetClick, g => !g.SimpleArmsAnim, (g, v) => g.SimpleArmsAnim = !v),				
 				MakeBool(-1, -50, "Classic gui textures", OptionsKey.UseClassicGui,
@@ -39,11 +42,11 @@ namespace ClassicalSharp.Gui.Screens {
 				         OnWidgetClick, g => g.UseClassicOptions, (g, v) => g.UseClassicOptions = v),
 				
 				// Column 2
-				MakeBool(1, -100, "Allow custom blocks", OptionsKey.AllowCustomBlocks,
+				MakeBool(1, -150, "Allow custom blocks", OptionsKey.AllowCustomBlocks,
 				         OnWidgetClick, g => g.AllowCustomBlocks, (g, v) => g.AllowCustomBlocks = v),			
-				MakeBool(1, -50, "Use CPE", OptionsKey.UseCPE,
+				MakeBool(1, -100, "Use CPE", OptionsKey.UseCPE,
 				         OnWidgetClick, g => g.UseCPE, (g, v) => g.UseCPE = v),				
-				MakeBool(1, 0, "Use server textures", OptionsKey.AllowServerTextures,
+				MakeBool(1, -50, "Use server textures", OptionsKey.AllowServerTextures,
 				         OnWidgetClick, g => g.AllowServerTextures, (g, v) => g.AllowServerTextures = v),
 
 				TextWidget.Create(game, "&eButtons on the right require a client restart", regularFont)

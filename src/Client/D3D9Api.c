@@ -4,15 +4,17 @@
 #include "GraphicsEnums.h"
 #include "Platform.h"
 #include "Window.h"
+#include "GraphicsCommon.h"
 
 #ifdef USE_DX
 
+bool d3d9_vsync;
 IDirect3D9* d3d;
 IDirect3DDevice9* device;
 MatrixStack* curStack;
 MatrixStack viewStack, projStack, texStack;
 DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-D3DFORMAT viewFormat, depthFormat;
+D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
 
 #define D3D9_SetRenderState(raw, state, name) \
 ReturnCode hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
@@ -66,20 +68,19 @@ void Gfx_Init(void) {
 		createFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
 		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	}
-	if (!ErrorHandler_Check(res)) {
-		ErrorHandler_FailWithCode(res, "Failed to create Direct3D9 device");
-	}
+	ErrorHandler_CheckOrFail(res, "Creating Direct3D9 device");
 
 	viewStack.Type = D3DTS_VIEW;
 	projStack.Type = D3DTS_PROJECTION;
 	texStack.Type = D3DTS_TEXTURE0;
-	SetDefaultRenderStates();
-	InitDynamicBuffers();
+	D3D9_SetDefaultRenderStates();
+	GfxCommon_Init();
 }
 
 void Gfx_Free(void) {
 	UInt8 logMsgBuffer[String_BufferSize(63)];
 	String logMsg = String_FromRawBuffer(logMsgBuffer, 63);
+	GfxCommon_Free();
 
 	Int32 i;
 	for (i = 0; i < d3d9_texturesCapacity; i++) {
@@ -118,8 +119,8 @@ void D3D9_FindCompatibleFormat(void) {
 	Int32 count = sizeof(d3d9_viewFormats) / sizeof(d3d9_viewFormats[0]);
 	Int32 i;
 	for (i = 0; i < count; i++) {
-		viewFormat = d3d9_viewFormats[i];
-		if (IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, true)) break;
+		d3d9_viewFormat = d3d9_viewFormats[i];
+		if (IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, true)) break;
 
 		if (i == count - 1) {
 			ErrorHandler_Fail("Unable to create a back buffer with sufficient precision.");
@@ -128,27 +129,13 @@ void D3D9_FindCompatibleFormat(void) {
 
 	count = sizeof(d3d9_depthFormats) / sizeof(d3d9_depthFormats[0]);
 	for (i = 0; i < count; i++) {
-		depthFormat = d3d9_depthFormats[i];
-		if (IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, depthFormat)) break;
+		d3d9_depthFormat = d3d9_depthFormats[i];
+		if (IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat)) break;
 
 		if (i == count - 1) {
 			ErrorHandler_Fail("Unable to create a depth buffer with sufficient precision.");
 		}
 	}
-}
-
-D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
-	Platform_MemSet(args, 0, sizeof(D3DPRESENT_PARAMETERS));
-	args->AutoDepthStencilFormat = depthFormat;
-	args->BackBufferWidth = width;
-	args->BackBufferHeight = height;
-	args->BackBufferFormat = viewFormat;
-	args->BackBufferCount = 1;
-	args->EnableAutoDepthStencil = true;
-	args->PresentationInterval = vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
-	args->Windowed = true;
-	return args;
 }
 
 
@@ -247,7 +234,9 @@ void Gfx_SetFogDensity(Real32 value) {
 	D3D9_SetRenderState(raw, D3DRS_FOGDENSITY, "D3D9_SetFogDensity");
 }
 
+Real32 d3d9_fogStart = -1.0f;
 void Gfx_SetFogStart(Real32 value) {
+	d3d9_fogStart = value;
 	UInt32 raw = *(UInt32*)&value;
 	D3D9_SetRenderState(raw, D3DRS_FOGSTART, "D3D9_SetFogStart");
 }
@@ -261,12 +250,12 @@ void Gfx_SetFogEnd(Real32 value) {
 	D3D9_SetRenderState(raw, D3DRS_FOGEND, "D3D9_SetFogEnd");
 }
 
-D3DFOGMODE fogTableMode = D3DFOG_NONE;
+D3DFOGMODE d3d9_fogTableMode = D3DFOG_NONE;
 void Gfx_SetFogMode(Fog fogMode) {
 	D3DFOGMODE mode = d3d9_modes[fogMode];
-	if (mode == fogTableMode) return;
+	if (mode == d3d9_fogTableMode) return;
 
-	fogTableMode = mode;
+	d3d9_fogTableMode = mode;
 	D3D9_SetRenderState(mode, D3DRS_FOGTABLEMODE, "D3D9_SetFogMode");
 }
 
@@ -288,9 +277,9 @@ D3DCMPFUNC d3d9_alphaTestFunc = 0;
 Int32 d3d9_alphaTestRef = 0;
 void Gfx_SetAlphaTestFunc(CompareFunc compareFunc, Real32 refValue) {
 	d3d9_alphaTestFunc = d3d9_compareFuncs[compareFunc];
-	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ALPHAFUNC, "D3D9_SetAlphaTestFunc");
+	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ALPHAFUNC, "D3D9_SetAlphaTest_Func");
 	d3d9_alphaTestRef = (Int32)(refValue * 255);
-	D3D9_SetRenderState2(d3d9_alphaTestRef, D3DRS_ALPHAREF, "D3D9_SetAlphaTestFunc2");
+	D3D9_SetRenderState2(d3d9_alphaTestRef, D3DRS_ALPHAREF, "D3D9_SetAlphaTest_Ref");
 }
 
 bool d3d9_alphaBlend = false;
@@ -298,16 +287,16 @@ void Gfx_SetAlphaBlending(bool enabled) {
 	if (d3d9_alphaBlend == enabled) return;
 
 	d3d9_alphaBlend = enabled;
-	D3D9_SetRenderState((UInt32)enabled, D3DRS_ALPHABLENDENABLE, "D3D9_SetAlphaBlend");
+	D3D9_SetRenderState((UInt32)enabled, D3DRS_ALPHABLENDENABLE, "D3D9_SetAlphaBlending");
 }
 
 D3DBLEND d3d9_srcBlendFunc = 0;
 D3DBLEND d3d9_dstBlendFunc = 0;
 void Gfx_SetAlphaBlendFunc(BlendFunc srcBlendFunc, BlendFunc dstBlendFunc) {
 	d3d9_srcBlendFunc = d3d9_blendFuncs[srcBlendFunc];
-	D3D9_SetRenderState(d3d9_srcBlendFunc, D3DRS_SRCBLEND, "D3D9_SetAlphaBlendFunc");
+	D3D9_SetRenderState(d3d9_srcBlendFunc, D3DRS_SRCBLEND, "D3D9_SetAlphaBlendFunc_Src");
 	d3d9_dstBlendFunc = d3d9_blendFuncs[dstBlendFunc];
-	D3D9_SetRenderState2(d3d9_dstBlendFunc, D3DRS_DESTBLEND, "D3D9_SetAlphaBlendFunc2");
+	D3D9_SetRenderState2(d3d9_dstBlendFunc, D3DRS_DESTBLEND, "D3D9_SetAlphaBlendFunc_Dst");
 }
 
 void Gfx_SetAlphaArgBlend(bool enabled) {
@@ -612,5 +601,103 @@ GfxResourceID D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* reso
 
 	newResources[oldLength] = resource;
 	return oldLength;
+}
+
+
+void Gfx_BeginFrame(void) {
+	IDirect3DDevice9_BeginScene(device);
+}
+
+void Gfx_EndFrame(void) {
+	IDirect3DDevice9_EndScene(device);
+	ReturnCode code = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
+	if (code >= 0) return;
+
+	if (code != D3DERR_DEVICELOST) {
+		ErrorHandler_FailWithCode(code, "D3D9_EndFrame");
+	}
+
+	/* TODO: Make sure this actually works on all graphics cards.*/
+	String reason = String_FromConstant(" (Direct3D9 device lost)");
+	GfxCommon_LoseContext(&reason);
+	D3D9_LoopUntilRetrieved();
+	D3D9_RecreateDevice();
+}
+
+void Gfx_OnWindowResize(void) {
+	String reason = String_FromConstant(" (resizing window)");
+	GfxCommon_LoseContext(&reason);
+	D3D9_RecreateDevice();
+}
+
+void D3D9_LoopUntilRetrieved(void) {
+	ScheduledTask task = new ScheduledTask();
+	task.Interval = 1.0 / 60;
+	task.Callback = LostContextFunction;
+
+	while (true) {
+		Platform_ThreadSleep(16);
+		ReturnCode code = IDirect3DDevice9_TestCooperativeLevel(device);
+		if (code == D3DERR_DEVICENOTRESET) return;
+
+		task.Callback(task);
+	}
+}
+
+void D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
+	Platform_MemSet(args, 0, sizeof(D3DPRESENT_PARAMETERS));
+	args->AutoDepthStencilFormat = d3d9_depthFormat;
+	args->BackBufferWidth = width;
+	args->BackBufferHeight = height;
+	args->BackBufferFormat = d3d9_viewFormat;
+	args->BackBufferCount = 1;
+	args->EnableAutoDepthStencil = true;
+	args->PresentationInterval = d3d9_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
+	args->Windowed = true;
+}
+
+void D3D9_RecreateDevice(void) {
+	D3DPRESENT_PARAMETERS args;
+	Size2D size = Window_GetClientSize();
+	D3D9_GetPresentArgs(size.Width, size.Height, &args);
+
+	while (IDirect3DDevice9_Reset(device, &args) == D3DERR_DEVICELOST) {
+		D3D9_LoopUntilRetrieved();
+	}
+
+	D3D9_SetDefaultRenderStates();
+	D3D9_RestoreRenderStates();
+	GfxCommon_RecreateContext();
+}
+
+void D3D9_SetDefaultRenderStates(void) {
+	Gfx_SetFaceCulling(false);
+	D3D9_SetRenderState(D3DRS_COLORVERTEX, false, "D3D9_ColorVertex");
+	D3D9_SetRenderState2(D3DRS_LIGHTING, false, "D3D9_Lighting");
+	D3D9_SetRenderState2(D3DRS_SPECULARENABLE, false, "D3D9_SpecularEnable");
+	D3D9_SetRenderState2(D3DRS_LOCALVIEWER, false, "D3D9_LocalViewer");
+	D3D9_SetRenderState2(D3DRS_DEBUGMONITORTOKEN, false, "D3D9_DebugMonitor");
+}
+
+void D3D9_RestoreRenderStates(void) {
+	UInt32 raw;
+	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, d3d9_alphaTest, "D3D9_AlphaTest");
+	D3D9_SetRenderState2(D3DRS_ALPHABLENDENABLE, d3d9_alphaBlend, "D3D9_AlphaBlend");
+	D3D9_SetRenderState2(D3DRS_ALPHAFUNC, d3d9_alphaTestFunc, "D3D9_AlphaTestFunc");
+	D3D9_SetRenderState2(D3DRS_ALPHAREF, d3d9_alphaTestRef, "D3D9_AlphaRefFunc");
+	D3D9_SetRenderState2(D3DRS_SRCBLEND, d3d9_srcBlendFunc, "D3D9_AlphaSrcBlend");
+	D3D9_SetRenderState2(D3DRS_DESTBLEND, d3d9_dstBlendFunc, "D3D9_AlphaDstBlend");
+	D3D9_SetRenderState2(D3DRS_FOGENABLE, d3d9_fogEnable, "D3D9_Fog");
+	D3D9_SetRenderState2(D3DRS_FOGCOLOR, d3d9_fogCol, "D3D9_FogColor");
+	D3D9_SetRenderState2(D3DRS_FOGDENSITY, d3d9_fogDensity, "D3D9_FogDensity");
+	raw = *(UInt32*)&d3d9_fogStart;
+	D3D9_SetRenderState2(D3DRS_FOGSTART, raw, "D3D9_FogStart");
+	raw = *(UInt32*)&d3d9_fogEnd;
+	D3D9_SetRenderState2(D3DRS_FOGEND, raw, "D3D9_FogEnd");
+	D3D9_SetRenderState2(D3DRS_FOGTABLEMODE, d3d9_fogTableMode, "D3D9_FogMode");
+	D3D9_SetRenderState2(D3DRS_ZFUNC, d3d9_depthTestFunc, "D3D9_DepthTestFunc");
+	D3D9_SetRenderState2(D3DRS_ZENABLE, d3d9_depthTest, "D3D9_DepthTest");
+	D3D9_SetRenderState2(D3DRS_ZWRITEENABLE, d3d9_depthWrite, "D3D9_DepthWrite");
 }
 #endif

@@ -63,6 +63,9 @@ bool Game_ShowAxisLines;
 /* Whether players should animate using simple swinging parallel to their bodies. */
 bool Game_SimpleArmsAnim;
 
+/* Whether the arm model should use the classic position. */
+bool Game_ClassicArmModel;
+
 /* Whether mouse rotation on the y axis should be inverted. */
 bool Game_InvertMouse;
 

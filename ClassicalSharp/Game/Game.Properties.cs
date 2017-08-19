@@ -154,6 +154,9 @@ namespace ClassicalSharp {
 		
 		/// <summary> Whether players should animate using simple swinging parallel to their bodies. </summary>
 		public bool SimpleArmsAnim;
+
+		/// <summary> Whether the arm model should use the classic position. </summary>
+		public bool ClassicArmModel;
 		
 		/// <summary> Whether mouse rotation on the y axis should be inverted. </summary>
 		public bool InvertMouse;

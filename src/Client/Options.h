@@ -66,4 +66,6 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_UseClassicTabList "nostalgia-classictablist"
 #define OptionsKey_UseClassicOptions "nostalgia-classicoptions"
 #define OptionsKey_AllowClassicHacks "nostalgia-hacks"
+#define OptionsKey_ClassicArmModel "nostalgia-classicarm"
+#endif
 #endif

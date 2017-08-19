@@ -115,10 +115,10 @@ namespace ClassicalSharp.Model {
 		public ArmModel(Game window) : base(window) { }
 		
 		public override void CreateParts() {
-			if (game.ClassicMode) {
+			if (game.ClassicArmModel) {
 				// TODO: Position's not quite right.
 				// Matrix4.Translate(out m, -6 / 16f + 0.2f, -12 / 16f - 0.20f, 0);
-				// is better, but that breaks the animation
+				// is better, but that breaks the dig animation
 				Matrix4.Translate(out m, -6 / 16f,         -12 / 16f - 0.10f, 0);
 			} else {
 				Matrix4.Translate(out m, -6 / 16f + 0.10f, -12 / 16f - 0.26f, 0);
@@ -146,7 +146,7 @@ namespace ClassicalSharp.Model {
 			part.RotY -= 4 / 16.0f;
 			Rotate = RotateOrder.YZX;
 			
-			if (game.ClassicMode) {
+			if (game.ClassicArmModel) {
 				DrawRotate(0, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);				
 			} else {
 				DrawRotate(-20 * Utils.Deg2Rad, -70 * Utils.Deg2Rad, 135 * Utils.Deg2Rad, part, false);

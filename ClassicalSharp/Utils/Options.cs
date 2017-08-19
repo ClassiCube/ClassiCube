@@ -64,6 +64,7 @@ namespace ClassicalSharp {
 		public const string UseClassicTabList = "nostalgia-classictablist";
 		public const string UseClassicOptions = "nostalgia-classicoptions";
 		public const string AllowClassicHacks = "nostalgia-hacks";
+		public const string ClassicArmModel = "nostalgia-classicarm";
 	}	
 	public enum FpsLimitMethod {
 		LimitVSync, Limit30FPS, Limit60FPS, Limit120FPS, LimitNone,
