@@ -24,7 +24,7 @@ namespace ClassicalSharp.Renderers {
 		public void Init(Game game) {
 			this.game = game;
 			held = new FakePlayer(game);
-			lastType = game.Inventory.Selected;
+			lastBlock = game.Inventory.Selected;
 			
 			game.Events.ProjectionChanged += ProjectionChanged;
 			game.Events.HeldBlockChanged += DoSwitchBlockAnim;
@@ -53,13 +53,14 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);
 			SetMatrix();
 			
+			ResetHeldState();
+			DoAnimation(delta, lastSwingY);
+			SetBaseOffset();
+			
+			game.Graphics.FaceCulling = true;		
 			game.Graphics.Texturing = true;
 			game.Graphics.SetupAlphaState(BlockInfo.Draw[block]);
 			game.Graphics.DepthTest = false;
-			
-			SetInitialPos();
-			DoAnimation(delta, lastSwingY);
-			game.Graphics.FaceCulling = true;
 			
 			IModel model;
 			if (BlockInfo.Draw[block] == DrawType.Gas) {
@@ -71,15 +72,15 @@ namespace ClassicalSharp.Renderers {
 			}
 			model.Render(held);
 			
+			game.Graphics.Texturing = false;
+			game.Graphics.RestoreAlphaState(BlockInfo.Draw[block]);
+			game.Graphics.DepthTest = true;			
 			game.Graphics.FaceCulling = false;
+			
 			game.Graphics.LoadMatrix(ref game.View);
 			game.Graphics.SetMatrixMode(MatrixType.Projection);
 			game.Graphics.LoadMatrix(ref game.Projection);
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);
-			
-			game.Graphics.Texturing = false;
-			game.Graphics.RestoreAlphaState(BlockInfo.Draw[block]);
-			game.Graphics.DepthTest = true;
 		}
 		
 		static Vector3 nOffset = new Vector3(0.56f, -0.72f, -0.72f);
@@ -91,17 +92,10 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.LoadMatrix(ref m);
 		}
 		
-		void SetInitialPos() {
+		void ResetHeldState() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
-			bool sprite = BlockInfo.Draw[block] == DrawType.Sprite;
-			Vector3 offset = sprite ? sOffset : nOffset;
 			Player p = game.LocalPlayer;
-			
-			held.Position = p.EyePosition + offset;
-			if (!sprite) {
-				float height = BlockInfo.MaxBB[block].Y - BlockInfo.MinBB[block].Y;
-				held.Position.Y += 0.2f * (1 - height);
-			}
+			held.Position = p.EyePosition;
 			
 			held.Position.X -= game.Camera.bobbingHor;
 			held.Position.Y -= game.Camera.bobbingVer;
@@ -112,6 +106,17 @@ namespace ClassicalSharp.Renderers {
 			held.ModelBlock = block;
 			held.SkinType = p.SkinType;
 			held.TextureId = p.TextureId;
+		}
+		
+		void SetBaseOffset() {
+			bool sprite = BlockInfo.Draw[block] == DrawType.Sprite;
+			Vector3 offset = sprite ? sOffset : nOffset;
+			
+			held.Position += offset;
+			if (!sprite) {
+				float height = BlockInfo.MaxBB[block].Y - BlockInfo.MinBB[block].Y;
+				held.Position.Y += 0.2f * (1 - height);
+			}
 		}
 		
 		void ProjectionChanged(object sender, EventArgs e) {
@@ -125,7 +130,7 @@ namespace ClassicalSharp.Renderers {
 		bool animating, breaking, swinging;
 		float swingY;
 		double time, period = 0.25;
-		BlockID lastType;
+		BlockID lastBlock;
 
 		public void ClickAnim(bool digging) {
 			// TODO: timing still not quite right, rotate2 still not quite right
@@ -144,6 +149,7 @@ namespace ClassicalSharp.Renderers {
 				if (time > period * 0.5)
 					time = period - time;
 			} else {
+				if (block == game.Inventory.Selected) return;
 				ResetAnim(false, 0.25);
 				animating = true;
 				swinging = true;
@@ -166,8 +172,8 @@ namespace ClassicalSharp.Renderers {
 				if (swinging) {
 					// i.e. the block has gone to bottom of screen and is now returning back up
 					// at this point we switch over to the new held block.					
-					if (swingY > lastSwingY) lastType = block;
-					block = lastType;
+					if (swingY > lastSwingY) lastBlock = block;
+					block = lastBlock;
 					held.ModelBlock = block;
 				}
 			} else {
@@ -199,13 +205,12 @@ namespace ClassicalSharp.Renderers {
 			held.RotX += (float)(sinHalfCircleWeird * 20);
 		}
 		
-		void ResetAnim(bool updateLastType, double period) {
+		void ResetAnim(bool setLastHeld, double period) {
 			time = 0; swingY = 0;
 			animating = false; swinging = false;			
 			this.period = period;
 			
-			if (updateLastType)
-				lastType = game.Inventory.Selected;
+			if (setLastHeld) lastBlock = game.Inventory.Selected;
 		}
 	}
 	

@@ -399,7 +399,7 @@ namespace OpenTK.Platform.Windows
 				wc.Icon = Icon != null ? Icon.Handle : IntPtr.Zero;
 				#warning "This seems to resize one of the 'large' icons, rather than using a small icon directly (multi-icon files). Investigate!"
 				wc.IconSm = Icon != null ? new Icon(Icon, 16, 16).Handle : IntPtr.Zero;
-				//wc.Cursor = API.LoadCursor(IntPtr.Zero, (IntPtr)32512); // CursorName.Arrow
+				wc.Cursor = API.LoadCursor(IntPtr.Zero, (IntPtr)32512); // CursorName.Arrow
 				ushort atom = API.RegisterClassEx(ref wc);
 
 				if (atom == 0)
