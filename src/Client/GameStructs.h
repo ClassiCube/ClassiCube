@@ -46,4 +46,6 @@ typedef struct ScheduledTask_ {
 	/* Callback function that is periodically invoked. */
 	void (*Callback)(struct ScheduledTask_* task);
 } ScheduledTask;
+
+typedef void (*ScheduledTaskCallback)(ScheduledTask* task);
 #endif

@@ -7,6 +7,7 @@
 #include "Matrix.h"
 #include "Game.h"
 #include "GraphicsEnums.h"
+#include "GameStructs.h"
 
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -35,11 +36,8 @@ bool Gfx_LostContext;
 /* Maximum number of vertices that can be indexed. */
 #define Gfx_MaxVertex 65536
 
-/* TODO: IMPLEMENT THIS */
-/*	/// <summary> Delegate that is invoked when the current context is lost,
-	/// and is repeatedly invoked until the context can be retrieved. </summary>
-	public Action<ScheduledTask> LostContextFunction;*/
-
+/* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
+ScheduledTaskCallback LostContextFunction;
 
 /* Creates a new native texture from the given bitmap.
 NOTE: only power of two dimension textures are supported. */
