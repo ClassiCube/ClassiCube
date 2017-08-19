@@ -8,4 +8,4 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCopyright("Copyright © 2006 - 2010 the Open Toolkit Library")]
 [assembly: AssemblyTrademark("OpenTK")]
 [assembly: ComVisible(false)]
-[assembly: AssemblyVersion("0.99.9.1")]
+[assembly: AssemblyVersion("0.99.9.2")]
