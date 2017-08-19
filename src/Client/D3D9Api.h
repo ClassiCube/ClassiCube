@@ -32,6 +32,9 @@ D3DCMPFUNC d3d9_compareFuncs[8] = { D3DCMP_ALWAYS, D3DCMP_NOTEQUAL, D3DCMP_NEVER
 D3DFOGMODE d3d9_modes[3] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
 Int32 d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 };
 
+static void D3D9_FindCompatibleFormat(void);
+
+static D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args);
 
 static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp);
 

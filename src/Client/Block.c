@@ -10,9 +10,9 @@ void Block_Reset(void) {
 }
 
 void Block_Init(void) {
-	#define DefinedCustomBlocks_Len (Block_Count >> 5)
+	Int32 count = sizeof(DefinedCustomBlocks) / sizeof(DefinedCustomBlocks[0]);
 	Int32 i;
-	for (i = 0; i < DefinedCustomBlocks_Len; i++) {
+	for (i = 0; i < count; i++) {
 		DefinedCustomBlocks[i] = 0;
 	}
 

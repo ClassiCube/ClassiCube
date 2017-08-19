@@ -69,10 +69,8 @@ void Window_SetVisible(bool visible);
 /* Gets whether this window has been created and has not been destroyed. */
 bool Window_GetExists(void);
 
-/* TODO: IMPLEMENT THIS
-/// <summary> Gets the <see cref="OpenTK.Platform.IWindowInfo"/> for this window. </summary>
-IWindowInfo WindowInfo{ get; }
-*/
+/* TODO: IMPLEMENT THIS */
+void* Window_GetWindowHandle(void);
 
 /* Gets the WindowState of this window. */
 WindowState Window_GetWindowState(void);

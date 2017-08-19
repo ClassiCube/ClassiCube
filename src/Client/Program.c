@@ -2,6 +2,7 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Window.h"
+#include "GraphicsAPI.h"
 
 int main(int argc, char* argv[]) {
 	ErrorHandler_Init();
@@ -10,6 +11,7 @@ int main(int argc, char* argv[]) {
 	String str = String_FromConstant("TEST");
 	Window_Create(320, 320, 320, 320, &str, NULL);
 	Window_SetVisible(true);
+	Gfx_Init();
 	while (true) {
 		Window_ProcessEvents();
 		Platform_ThreadSleep(100);

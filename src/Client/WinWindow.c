@@ -570,6 +570,7 @@ API.SendMessage(window.handle, WM_SETICON, (IntPtr)1, icon == null ? IntPtr.Zero
 
 bool Window_GetFocused(void) { return win_Focused; }
 bool Window_GetExists(void) { return win_Exists; }
+void* Window_GetWindowHandle(void) { return win_Handle; }
 
 bool Window_GetVisible(void) { return IsWindowVisible(win_Handle); }
 void Window_SetVisible(bool visible) {

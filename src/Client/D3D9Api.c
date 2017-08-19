@@ -3,6 +3,7 @@
 #include "ErrorHandler.h"
 #include "GraphicsEnums.h"
 #include "Platform.h"
+#include "Window.h"
 
 #ifdef USE_DX
 
@@ -10,7 +11,8 @@ IDirect3D9* d3d;
 IDirect3DDevice9* device;
 MatrixStack* curStack;
 MatrixStack viewStack, projStack, texStack;
-
+DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
+D3DFORMAT viewFormat, depthFormat;
 
 #define D3D9_SetRenderState(raw, state, name) \
 ReturnCode hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
@@ -45,10 +47,34 @@ Int32 d3d9_texturesCapacity = d3d9_texturesExpSize;
 
 
 void Gfx_Init(void) {
-	/* TODO: EVERYTHING ELSE */
+	Gfx_MinZNear = 0.05f;
+	void* winHandle = Window_GetWindowHandle();
+	d3d = Direct3DCreate9(D3D_SDK_VERSION);
+
+	D3D9_FindCompatibleFormat();
+	D3DPRESENT_PARAMETERS args;
+	D3D9_GetPresentArgs(640, 480, &args);
+	ReturnCode res;
+
+	/* Try to create a device with as much hardware usage as possible. */
+	res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
+	if (!ErrorHandler_Check(res)) {
+		createFlags = D3DCREATE_MIXED_VERTEXPROCESSING;
+		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
+	}
+	if (!ErrorHandler_Check(res)) {
+		createFlags = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+		res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
+	}
+	if (!ErrorHandler_Check(res)) {
+		ErrorHandler_FailWithCode(res, "Failed to create Direct3D9 device");
+	}
+
 	viewStack.Type = D3DTS_VIEW;
 	projStack.Type = D3DTS_PROJECTION;
 	texStack.Type = D3DTS_TEXTURE0;
+	SetDefaultRenderStates();
+	InitDynamicBuffers();
 }
 
 void Gfx_Free(void) {
@@ -88,6 +114,42 @@ void Gfx_Free(void) {
 	}
 }
 
+void D3D9_FindCompatibleFormat(void) {
+	Int32 count = sizeof(d3d9_viewFormats) / sizeof(d3d9_viewFormats[0]);
+	Int32 i;
+	for (i = 0; i < count; i++) {
+		viewFormat = d3d9_viewFormats[i];
+		if (IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, true)) break;
+
+		if (i == count - 1) {
+			ErrorHandler_Fail("Unable to create a back buffer with sufficient precision.");
+		}
+	}
+
+	count = sizeof(d3d9_depthFormats) / sizeof(d3d9_depthFormats[0]);
+	for (i = 0; i < count; i++) {
+		depthFormat = d3d9_depthFormats[i];
+		if (IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, viewFormat, viewFormat, depthFormat)) break;
+
+		if (i == count - 1) {
+			ErrorHandler_Fail("Unable to create a depth buffer with sufficient precision.");
+		}
+	}
+}
+
+D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
+	Platform_MemSet(args, 0, sizeof(D3DPRESENT_PARAMETERS));
+	args->AutoDepthStencilFormat = depthFormat;
+	args->BackBufferWidth = width;
+	args->BackBufferHeight = height;
+	args->BackBufferFormat = viewFormat;
+	args->BackBufferCount = 1;
+	args->EnableAutoDepthStencil = true;
+	args->PresentationInterval = vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
+	args->Windowed = true;
+	return args;
+}
 
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool) {
