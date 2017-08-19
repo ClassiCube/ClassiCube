@@ -111,23 +111,16 @@ namespace ClassicalSharp.Model {
 
 	public class ArmModel : HumanoidModel {
 		
-		Matrix4 m;
-		public ArmModel(Game window) : base(window) {
-			Matrix4.Translate(out m, -6 / 16f, -12 / 16f - 0.1f, 0);
+		public ArmModel(Game window) : base(window) {			
 		}
 		public override void CreateParts() { }
 
-		public override float NameYOffset { get { return 2.075f; } }
-		
-		public override float GetEyeY(Entity entity) { return 26/16f; }
-		
-		public override Vector3 CollisionSize {
-			get { return new Vector3(8/16f + 0.6f/16f, 28.1f/16f, 8/16f + 0.6f/16f); }
-		}
-		
-		public override AABB PickingBounds {
-			get { return new AABB(-4/16f, 0, -4/16f, 4/16f, 32/16f, 4/16f); }
-		}
+		public override float NameYOffset { get { return 0; } }
+		public override float GetEyeY(Entity entity) { return 0; }		
+		public override Vector3 CollisionSize { get { return default(Vector3); } }		
+		public override AABB PickingBounds { get { return default(AABB); } }
+		public static int PosX, PosY = -10, PosZ;
+		public static bool DEBUGFRAME;
 		
 		protected override void RenderParts(Entity p) {
 			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;
@@ -138,13 +131,15 @@ namespace ClassicalSharp.Model {
 				(skinType == SkinType.Type64x64 ? human.Set64 : human.Set);
 			
 			game.Graphics.PushMatrix();
+			Matrix4 m;
+			Matrix4.Translate(out m, -6 / 16f + PosX / 100f, -12 / 16f + PosY / 100f, 0 + PosZ / 100f);
 			game.Graphics.MultiplyMatrix(ref m);
 			
 			ModelPart part = model.RightArm;
 			part.RotX += 1 / 16.0f;
 			part.RotY -= 4 / 16.0f;
 			Rotate = RotateOrder.YZX;
-			DrawRotate(0, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);
+			DrawRotate(-45 * Utils.Deg2Rad, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);
 			Rotate = RotateOrder.ZYX;
 			
 			UpdateVB();

@@ -119,6 +119,7 @@ namespace ClassicalSharp {
 			
 			Gui.Render(delta);
 			if (screenshotRequested) TakeScreenshot();
+			if (ArmModel.DEBUGFRAME) { Graphics.DebugFrame(this, Width, Height); ArmModel.DEBUGFRAME = false; }
 			
 			Mode.EndFrame(delta);
 			Graphics.EndFrame(this);

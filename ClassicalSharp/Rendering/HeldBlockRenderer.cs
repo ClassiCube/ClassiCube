@@ -129,7 +129,7 @@ namespace ClassicalSharp.Renderers {
 
 		public void ClickAnim(bool digging) {
 			// TODO: timing still not quite right, rotate2 still not quite right
-			ResetAnim(true, digging ? 0.35 : 0.25);
+			ResetAnim(true, digging ? 5.35 : 0.25);
 			swinging = false;
 			breaking = digging;
 			animating = true;
@@ -226,17 +226,7 @@ namespace ClassicalSharp.Renderers {
 		public override void RenderName() { }
 		
 		public override int Colour() {
-			Player realP = game.LocalPlayer;
-			int col = realP.Colour();
-			
-			// Adjust pitch so angle when looking straight down is 0.
-			float adjHeadX = realP.HeadX - 90;
-			if (adjHeadX < 0) adjHeadX += 360;
-			
-			// Adjust colour so held block is brighter when looking straght up
-			float t = Math.Abs(adjHeadX - 180) / 180;
-			float colScale = Utils.Lerp(0.9f, 0.7f, t);
-			return FastColour.ScalePacked(col, colScale);
+			return FastColour.WhitePacked;
 		}
 	}
 }

@@ -208,6 +208,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Outputs a .png screenshot of the backbuffer to the specified file. </summary>
 		public abstract void TakeScreenshot(string output, int width, int height);
 		
+		public abstract void DebugFrame(Game game, int width, int height);
+		
 		/// <summary> Adds a warning to chat if this graphics API has problems with the current user's GPU. </summary>
 		public virtual bool WarnIfNecessary(Chat chat) { return false; }
 		

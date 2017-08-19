@@ -63,6 +63,7 @@ namespace ClassicalSharp {
 			if (device.Width >= 1920 && device.Height >= 1080) {
 				width = 1600; height = 900;
 			}
+			width = 854; height = 480;
 		}
 		
 		static void RunMultiplayer(string[] args, bool nullContext, int width, int height) {

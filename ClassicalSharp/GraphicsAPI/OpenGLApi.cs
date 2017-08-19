@@ -515,6 +515,33 @@ namespace ClassicalSharp.GraphicsAPI {
 				bmp.Save(output, ImageFormat.Png);
 			}
 		}
+
+		public override void DebugFrame(Game game, int width, int height) {
+			using (Bitmap bmp = new Bitmap(width, height, BmpPixelFormat.Format32bppRgb)) { // ignore alpha component
+				using (FastBitmap fastBmp = new FastBitmap(bmp, true, false))
+					GL.ReadPixels(0, 0, width, height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0);
+				bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
+				
+				int armEndCol = new ClassicalSharp.FastColour(150, 111, 91).ToArgb();
+				int minX = 10000, minY = 10000;
+				int maxX = 0, maxY = 0;
+				using (FastBitmap fastBmp = new FastBitmap(bmp, true, false)) {
+					for (int y = 0; y < height; y++) {
+						for (int x = 0; x < width; x++) {
+							int pixel = fastBmp.GetRowPtr(y)[x];
+							
+							if (pixel != armEndCol) continue;
+							
+							if (y < minY) { minY = y; minX = x; }
+							if (x > maxX) { maxX = x; maxY = y; }
+						}
+					}
+				}
+				
+				// DO IT HERE???
+				game.Chat.Add("ARM WIDTH: " + (maxX - minX));
+			}
+		}
 		
 		public override void OnWindowResize(Game game) {
 			GL.Viewport(0, 0, game.Width, game.Height);

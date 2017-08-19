@@ -29,8 +29,25 @@ namespace ClassicalSharp.Mode {
 					game.Events.RaiseHeldBlockChanged();
 				}
 				return true;
+			} else if (key == Key.Left) {
+				Model.ArmModel.PosX--; PrintInfo();
+			} else if (key == Key.Right) {
+				Model.ArmModel.PosX++; PrintInfo();
+			} else if (key == Key.Up) {
+				Model.ArmModel.PosY++; PrintInfo();
+			} else if (key == Key.Down) {
+				Model.ArmModel.PosY--; PrintInfo();
+			} else if (key == Key.Comma) {
+				Model.ArmModel.PosZ--; PrintInfo();
+			} else if (key == Key.Period) {
+				Model.ArmModel.PosZ++; PrintInfo();
 			}
 			return false;
+		}
+		
+		void PrintInfo() {
+			Model.ArmModel.DEBUGFRAME = true;
+			game.Chat.Add("X: " + Model.ArmModel.PosX + ", Y: " + Model.ArmModel.PosY + ", Z: " + Model.ArmModel.PosZ);
 		}
 		
 		public void PickLeft(BlockID old) {
