@@ -69,7 +69,7 @@ void Window_SetVisible(bool visible);
 /* Gets whether this window has been created and has not been destroyed. */
 bool Window_GetExists(void);
 
-/* TODO: IMPLEMENT THIS */
+/* Gets the handle of this window. */
 void* Window_GetWindowHandle(void);
 
 /* Gets the WindowState of this window. */

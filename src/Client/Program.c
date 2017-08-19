@@ -9,12 +9,15 @@ int main(int argc, char* argv[]) {
 	Platform_Init();
 
 	String str = String_FromConstant("TEST");
-	Window_Create(320, 320, 320, 320, &str, NULL);
+	Window_Create(320, 320, 640, 480, &str, NULL);
 	Window_SetVisible(true);
 	Gfx_Init();
 	while (true) {
 		Window_ProcessEvents();
 		Platform_ThreadSleep(100);
+		Gfx_BeginFrame();
+		Gfx_EndFrame();
 	}
+	Gfx_Free();
 	return 0;
 }
