@@ -442,7 +442,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT
 	}
 
 	win_Handle = CreateWindowExA(
-		win_StyleEx, win_ClassName, title->buffer, win_Style,
+		win_StyleEx, atom, title->buffer, win_Style,
 		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
 		NULL, NULL, win_Instance, NULL);
 

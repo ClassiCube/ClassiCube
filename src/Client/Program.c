@@ -7,7 +7,8 @@ int main(int argc, char* argv[]) {
 	ErrorHandler_Init();
 	Platform_Init();
 
-	Window_Create(0, 0, 320, 320, "TEST", NULL);
+	String str = String_FromConstant("TEST");
+	Window_Create(320, 320, 320, 320, &str, NULL);
 	Window_SetVisible(true);
 	while (true) {
 		Window_ProcessEvents();
