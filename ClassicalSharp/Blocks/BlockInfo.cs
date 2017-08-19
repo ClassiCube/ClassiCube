@@ -137,7 +137,7 @@ namespace ClassicalSharp {
 		public static void SetDefaultPerms() {
 			for (int block = Block.Stone; block <= Block.MaxDefinedBlock; block++) {
 				CanPlace[block] = true;
-				CanPlace[block] = true;
+				CanDelete[block] = true;
 			}
 			
 			CanPlace[Block.Lava]       = false; CanDelete[Block.Lava]       = false;
