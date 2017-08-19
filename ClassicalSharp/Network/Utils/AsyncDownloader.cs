@@ -143,7 +143,7 @@ namespace ClassicalSharp.Network {
 		/// but were never removed from the downloaded queue. </summary>
 		public void PurgeOldEntriesTask(ScheduledTask task) {
 			const int seconds = 10;
-			lock(downloadedLocker) {
+			lock (downloadedLocker) {
 				DateTime now = DateTime.UtcNow;
 				List<string> itemsToRemove = new List<string>(downloaded.Count);
 				
@@ -173,7 +173,7 @@ namespace ClassicalSharp.Network {
 		/// will return 'true' and 'item' will be set. However, the contents of the 'item' object will be null.</remarks>
 		public bool TryGetItem(string identifier, out DownloadedItem item) {
 			bool success = false;
-			lock(downloadedLocker) {
+			lock (downloadedLocker) {
 				success = downloaded.TryGetValue(identifier, out item);
 				if (success) {
 					downloaded.Remove(identifier);
@@ -185,7 +185,7 @@ namespace ClassicalSharp.Network {
 		void DownloadThreadWorker() {
 			while (true) {
 				Request request = null;
-				lock(requestLocker) {
+				lock (requestLocker) {
 					if (requests.Count > 0) {
 						request = requests[0];
 						requests.RemoveAt(0);
@@ -241,7 +241,7 @@ namespace ClassicalSharp.Network {
 			}
 			value = CheckIsValidImage(value, url);
 
-			lock(downloadedLocker) {
+			lock (downloadedLocker) {
 				DownloadedItem oldItem;
 				DownloadedItem newItem = new DownloadedItem(value, request.TimeAdded, url,
 				                                            status, etag, lastModified);
