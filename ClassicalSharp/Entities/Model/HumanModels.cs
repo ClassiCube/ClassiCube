@@ -119,7 +119,7 @@ namespace ClassicalSharp.Model {
 		public override float GetEyeY(Entity entity) { return 0; }		
 		public override Vector3 CollisionSize { get { return default(Vector3); } }		
 		public override AABB PickingBounds { get { return default(AABB); } }
-		public static int PosX, PosY = -10, PosZ;
+		public static int PosX = 10, PosY = -26, PosZ;
 		public static bool DEBUGFRAME;
 		
 		protected override void RenderParts(Entity p) {
@@ -139,7 +139,7 @@ namespace ClassicalSharp.Model {
 			part.RotX += 1 / 16.0f;
 			part.RotY -= 4 / 16.0f;
 			Rotate = RotateOrder.YZX;
-			DrawRotate(-45 * Utils.Deg2Rad, -90 * Utils.Deg2Rad, 120 * Utils.Deg2Rad, part, false);
+			DrawRotate( -20 * Utils.Deg2Rad, -70 * Utils.Deg2Rad, 135 * Utils.Deg2Rad, part, false);
 			Rotate = RotateOrder.ZYX;
 			
 			UpdateVB();
