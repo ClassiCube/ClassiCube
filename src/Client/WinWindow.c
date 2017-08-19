@@ -14,6 +14,7 @@
 
 HINSTANCE win_Instance;
 HWND win_Handle;
+HDC win_DC;
 WindowState win_State = WindowState_Normal;
 bool win_Exists, win_Focused;
 bool mouse_outside_window = true;
@@ -24,41 +25,157 @@ Rectangle2D win_Bounds;
 Rectangle2D win_ClientRect;
 Rectangle2D previous_bounds; // Used to restore previous size when leaving fullscreen mode.
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT String* title, DisplayDevice* device) {
-	win_Instance = GetModuleHandleA(NULL);
-	/* TODO: UngroupFromTaskbar(); */
-
-	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
-	RECT rect; rect.left = x; rect.top = y; rect.right = x + width; rect.bottom = y + height;
-	AdjustWindowRectEx(&rect, win_Style, false, win_StyleEx);
-
-	WNDCLASSEXA wc;
-	Platform_MemSet(&wc, 0, sizeof(WNDCLASSEXA));
-	wc.cbSize = sizeof(WNDCLASSEXA);
-	wc.style = CS_OWNDC;
-	wc.hInstance = win_Instance;
-	wc.lpfnWndProc = Window_Procedure;
-	wc.lpszClassName = win_ClassName;
-	/* TODO: Set window icons here */
-	wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
-
-	ATOM atom = RegisterClassExA(&wc);
-	if (atom == 0) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to register window class");
-	}
-
-	win_Handle = CreateWindowExA(
-		win_StyleEx, win_ClassName, title->buffer, win_Style,
-		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
-		NULL, NULL, win_Instance, NULL);
-
-	if (win_Handle == NULL) {
-		ErrorHandler_FailWithCode(GetLastError(), "Failed to create window");
-	}
-	win_Exists = true;
+Rectangle2D Window_FromRect(RECT rect) {
+	Rectangle2D r;
+	r.X = rect.left; r.Y = rect.top;
+	r.Width = RECT_WIDTH(rect);
+	r.Height = RECT_HEIGHT(rect);
+	return r;
 }
 
-WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
+
+void Window_Destroy(void) {
+	if (!win_Exists) return;
+
+	DestroyWindow(win_Handle);
+	win_Exists = false;
+}
+
+void Window_ResetWindowState(void) {
+	suppress_resize++;
+	Window_SetWindowState(WindowState_Normal);
+	Window_ProcessEvents();
+	suppress_resize--;
+}
+
+bool win_hiddenBorder;
+void Window_DoSetHiddenBorder(bool value) {
+	if (win_hiddenBorder == value) return;
+
+	/* We wish to avoid making an invisible window visible just to change the border.
+	However, it's a good idea to make a visible window invisible temporarily, to
+	avoid garbage caused by the border change. */
+	bool was_visible = Window_GetVisible();
+
+	/* To ensure maximized/minimized windows work correctly, reset state to normal,
+	change the border, then go back to maximized/minimized. */
+	WindowState state = win_State;
+	Window_ResetWindowState();
+	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
+
+	/* Make sure client size doesn't change when changing the border style.*/
+	RECT rect;
+	rect.left = win_Bounds.X; rect.top = win_Bounds.Y;
+	rect.right = rect.left + win_Bounds.Width;
+	rect.bottom = rect.top + win_Bounds.Height;
+	AdjustWindowRectEx(&rect, style, false, win_StyleEx);
+
+	/* This avoids leaving garbage on the background window. */
+	if (was_visible) Window_SetVisible(false);
+
+	SetWindowLongA(win_Handle, GWL_STYLE, style);
+	SetWindowPos(win_Handle, NULL, 0, 0, RECT_WIDTH(rect), RECT_HEIGHT(rect),
+		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
+
+	/* Force window to redraw update its borders, but only if it's
+	already visible (invisible windows will change borders when
+	they become visible, so no need to make them visiable prematurely).*/
+	if (was_visible) Window_SetVisible(true);
+
+	Window_SetWindowState(state);
+}
+
+void Window_SetHiddenBorder(bool hidden) {
+	suppress_resize++;
+	Window_DoSetHiddenBorder(hidden);
+	Window_ProcessEvents();
+	suppress_resize--;
+}
+
+void Window_EnableMouseTracking(void) {
+	TRACKMOUSEEVENT me;
+	Platform_MemSet(&me, 0, sizeof(TRACKMOUSEEVENT));
+	me.cbSize = sizeof(TRACKMOUSEEVENT);
+	me.hwndTrack = win_Handle;
+	me.dwFlags = TME_LEAVE;
+
+	if (!TrackMouseEvent(&me)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Enabling mouse tracking");
+	}
+}
+
+Key Window_MapKey(WPARAM key) {
+	if (key >= VK_F1 && key <= VK_F24) {
+		return Key_F1 + (key - VK_F1);
+	}
+	if (key >= '0' && key <= '9') {
+		return Key_Number0 + (key - '0');
+	}
+	if (key >= 'A' && key <= 'Z') {
+		return Key_A + (key - 'A');
+	}
+	if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
+		return Key_Keypad0 + (key - VK_NUMPAD0);
+	}
+
+	switch (key) {
+	case VK_ESCAPE: return Key_Escape;
+	case VK_TAB: return Key_Tab;
+	case VK_CAPITAL: return Key_CapsLock;
+	case VK_LCONTROL: return Key_ControlLeft;
+	case VK_LSHIFT: return Key_ShiftLeft;
+	case VK_LWIN: return Key_WinLeft;
+	case VK_LMENU: return Key_AltLeft;
+	case VK_SPACE: return Key_Space;
+	case VK_RMENU: return Key_AltRight;
+	case VK_RWIN: return Key_WinRight;
+	case VK_APPS: return Key_Menu;
+	case VK_RCONTROL: return Key_ControlRight;
+	case VK_RSHIFT: return Key_ShiftRight;
+	case VK_RETURN: return Key_Enter;
+	case VK_BACK: return Key_BackSpace;
+
+	case VK_OEM_1: return Key_Semicolon;      /* Varies by keyboard: return ;: on Win2K/US */
+	case VK_OEM_2: return Key_Slash;          /* Varies by keyboard: return /? on Win2K/US */
+	case VK_OEM_3: return Key_Tilde;          /* Varies by keyboard: return `~ on Win2K/US */
+	case VK_OEM_4: return Key_BracketLeft;    /* Varies by keyboard: return [{ on Win2K/US */
+	case VK_OEM_5: return Key_BackSlash;      /* Varies by keyboard: return \| on Win2K/US */
+	case VK_OEM_6: return Key_BracketRight;   /* Varies by keyboard: return ]} on Win2K/US */
+	case VK_OEM_7: return Key_Quote;          /* Varies by keyboard: return '" on Win2K/US */
+	case VK_OEM_PLUS: return Key_Plus;        /* Invariant: +							   */
+	case VK_OEM_COMMA: return Key_Comma;      /* Invariant: : return					   */
+	case VK_OEM_MINUS: return Key_Minus;      /* Invariant: -							   */
+	case VK_OEM_PERIOD: return Key_Period;    /* Invariant: .							   */
+
+	case VK_HOME: return Key_Home;
+	case VK_END: return Key_End;
+	case VK_DELETE: return Key_Delete;
+	case VK_PRIOR: return Key_PageUp;
+	case VK_NEXT: return Key_PageDown;
+	case VK_PRINT: return Key_PrintScreen;
+	case VK_PAUSE: return Key_Pause;
+	case VK_NUMLOCK: return Key_NumLock;
+
+	case VK_SCROLL: return Key_ScrollLock;
+	case VK_SNAPSHOT: return Key_PrintScreen;
+	case VK_INSERT: return Key_Insert;
+
+	case VK_DECIMAL: return Key_KeypadDecimal;
+	case VK_ADD: return Key_KeypadAdd;
+	case VK_SUBTRACT: return Key_KeypadSubtract;
+	case VK_DIVIDE: return Key_KeypadDivide;
+	case VK_MULTIPLY: return Key_KeypadMultiply;
+
+	case VK_UP: return Key_Up;
+	case VK_DOWN: return Key_Down;
+	case VK_LEFT: return Key_Left;
+	case VK_RIGHT: return Key_Right;
+	}
+	return Key_Unknown;
+}
+
+LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
 	bool new_focused_state;
 	Real32 wheel_delta;
 	WORD mouse_x, mouse_y;
@@ -73,7 +190,7 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 	switch (message) {
 
 	case WM_ACTIVATE:
-		new_focused_state = LOWORD(wParam);
+		new_focused_state = LOWORD(wParam) != 0;
 		if (new_focused_state != win_Focused) {
 			win_Focused = new_focused_state;
 			Event_RaiseVoid(&WindowEvents_OnFocusedChanged);
@@ -93,18 +210,18 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 		pos = (WINDOWPOS*)lParam;
 		if (pos->hwnd == win_Handle) {
 			Point2D new_location = Point2D_Make(pos->x, pos->y);
-			if (Location != new_location) {
+			if (!Point2D_Equals(Window_GetLocation(), new_location)) {
 				win_Bounds.X = pos->x; win_Bounds.Y = pos->y;
 				Event_RaiseVoid(&WindowEvents_OnMove);
 			}
 
 			Size2D new_size = Size2D_Make(pos->cx, pos->cy);
-			if (Size != new_size) {
+			if (!Size2D_Equals(Window_GetSize(), new_size)) {
 				win_Bounds.Width = pos->cx; win_Bounds.Height = pos->cy;
 
 				RECT rect;
 				GetClientRect(handle, &rect);
-				client_rectangle = rect.ToRectangle();
+				win_ClientRect = Window_FromRect(rect);
 
 				SetWindowPos(win_Handle, NULL,
 					win_Bounds.X, win_Bounds.Y, win_Bounds.Width, win_Bounds.Height,
@@ -156,7 +273,7 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 		if (mouse_outside_window) {
 			/* Once we receive a mouse move event, it means that the mouse has re-entered the window. */
 			mouse_outside_window = false;
-			EnableMouseTracking();
+			Window_EnableMouseTracking();
 			Event_RaiseVoid(&WindowEvents_OnMouseEnter);
 		}
 		break;
@@ -280,59 +397,59 @@ WNDPROC Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam
 
 			RECT rect;
 			GetClientRect(handle, &rect);
-			win_ClientRect = rect.ToRectangle();
+			win_ClientRect = Window_FromRect(rect);
 			invisible_since_creation = true;
 		}
 		break;
 
 	case WM_CLOSE:
 		Event_RaiseVoid(&WindowEvents_OnClosing);
-		if (Unload != null)
-			Unload(this, EventArgs.Empty);
-		DestroyWindow();
+		Window_Destroy();
 		break;
 
 	case WM_DESTROY:
 		win_Exists = false;
 		UnregisterClassA(win_ClassName, win_Instance);
-		window.Dispose();
+		if (win_DC != NULL) ReleaseDC(win_Handle, win_DC);
 		Event_RaiseVoid(&WindowEvents_OnClosed);
 		break;
 	}
 	return DefWindowProcA(handle, message, wParam, lParam);
 }
 
-void Window_EnableMouseTracking(void) {
-	TRACKMOUSEEVENT me;
-	Platform_MemSet(&me, 0, sizeof(TRACKMOUSEEVENT));
-	me.cbSize = sizeof(TRACKMOUSEEVENT);
-	me.hwndTrack = win_Handle;
-	me.dwFlags = TME_LEAVE;
 
-	if (!TrackMouseEvent(&me)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Enabling mouse tracking");
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT String* title, DisplayDevice* device) {
+	win_Instance = GetModuleHandleA(NULL);
+	/* TODO: UngroupFromTaskbar(); */
+
+	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
+	RECT rect; rect.left = x; rect.top = y; rect.right = x + width; rect.bottom = y + height;
+	AdjustWindowRectEx(&rect, win_Style, false, win_StyleEx);
+
+	WNDCLASSEXA wc;
+	Platform_MemSet(&wc, 0, sizeof(WNDCLASSEXA));
+	wc.cbSize = sizeof(WNDCLASSEXA);
+	wc.style = CS_OWNDC;
+	wc.hInstance = win_Instance;
+	wc.lpfnWndProc = Window_Procedure;
+	wc.lpszClassName = win_ClassName;
+	/* TODO: Set window icons here */
+	wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
+
+	ATOM atom = RegisterClassExA(&wc);
+	if (atom == 0) {
+		ErrorHandler_FailWithCode(GetLastError(), "Failed to register window class");
 	}
-}
 
-void Window_Destroy(void) {
-	if (!win_Exists) return;
-	
-	DestroyWindow(win_Handle);
-	win_Exists = false;
-}
+	win_Handle = CreateWindowExA(
+		win_StyleEx, win_ClassName, title->buffer, win_Style,
+		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
+		NULL, NULL, win_Instance, NULL);
 
-void Window_SetHiddenBorder(bool hidden) {
-	suppress_resize++;
-	Window_DoSetHiddenBorder(hidden);
-	Window_ProcessEvents();
-	suppress_resize--;
-}
-
-void Window_ResetWindowState(void) {
-	suppress_resize++;
-	Window_SetWindowState(WindowState_Normal);
-	Window_ProcessEvents();
-	suppress_resize--;
+	if (win_Handle == NULL) {
+		ErrorHandler_FailWithCode(GetLastError(), "Failed to create window");
+	}
+	win_Exists = true;
 }
 
 void Window_GetClipboardText(STRING_TRANSIENT String* value) {
@@ -360,7 +477,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 				String_Append(value, Convert_UnicodeToCP437(*text)); text++;
 			}
 		} else {
-			UInt8* text = (UInt16*)src;
+			UInt8* text = (UInt8*)src;
 			while (*text != 0) {
 				String_Append(value, *text); text++;
 			}
@@ -400,6 +517,7 @@ void Window_SetClipboardText(STRING_TRANSIENT String* value) {
 	}
 }
 
+
 Rectangle2D Window_GetBounds(void) { return win_Bounds; }
 void Window_SetBounds(Rectangle2D rect) {
 	/* Note: the bounds variable is updated when the resize/move message arrives.*/
@@ -422,35 +540,36 @@ void Window_SetClientRectangle(Rectangle2D rect) {
 	Window_SetClientSize(size);
 }
 
-Size2D Window_GetClientSize(void) { 
+Size2D Window_GetClientSize(void) {
 	return Size2D_Make(win_ClientRect.Width, win_ClientRect.Height);
 }
 void Window_SetClientSize(Size2D size) {
 	DWORD style = GetWindowLongA(win_Handle, GWL_STYLE);
-	RECT rect; 
-	rect.left = 0; rect.top = 0; 
+	RECT rect;
+	rect.left = 0; rect.top = 0;
 	rect.right = size.Width; rect.bottom = size.Height;
-	
+
 	AdjustWindowRect(&rect, style, false);
 	Window_SetSize(Size2D_Make(RECT_WIDTH(rect), RECT_HEIGHT(rect)));
 }
 
 /* TODO: Set window icon
 public Icon Icon{
-	get{ return icon; }
-	set{
-	icon = value;
+get{ return icon; }
+set{
+icon = value;
 if (window.handle != IntPtr.Zero)
 {
-	//Icon small = new Icon( value, 16, 16 );
-	//GC.KeepAlive( small );
-	API.SendMessage(window.handle, WM_SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
-	API.SendMessage(window.handle, WM_SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
+//Icon small = new Icon( value, 16, 16 );
+//GC.KeepAlive( small );
+API.SendMessage(window.handle, WM_SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
+API.SendMessage(window.handle, WM_SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
 }
 }
 }*/
 
 bool Window_GetFocused(void) { return win_Focused; }
+bool Window_GetExists(void) { return win_Exists; }
 
 bool Window_GetVisible(void) { return IsWindowVisible(win_Handle); }
 void Window_SetVisible(bool visible) {
@@ -460,19 +579,19 @@ void Window_SetVisible(bool visible) {
 			BringWindowToTop(win_Handle);
 			SetForegroundWindow(win_Handle);
 		}
-	} else {
+	}
+	else {
 		ShowWindow(win_Handle, SW_HIDE);
 	}
 }
 
-bool Window_GetExists(void) { return win_Exists; }
 
 void Window_Close(void) {
 	PostMessageA(win_Handle, WM_CLOSE, NULL, NULL);
 }
 
-WindowState Window_GetState(void) { return win_State; }
-void Window_SetState(WindowState value) {
+WindowState Window_GetWindowState(void) { return win_State; }
+void Window_SetWindowState(WindowState value) {
 	if (win_State == value) return;
 
 	DWORD command = 0;
@@ -489,7 +608,7 @@ void Window_SetState(WindowState value) {
 
 	case WindowState_Maximized:
 		/* Reset state to avoid strange interactions with fullscreen/minimized windows. */
-		ResetWindowState();
+		Window_ResetWindowState();
 		command = SW_MAXIMIZE;
 		break;
 
@@ -499,13 +618,13 @@ void Window_SetState(WindowState value) {
 
 	case WindowState_Fullscreen:
 		/* We achieve fullscreen by hiding the window border and sending the MAXIMIZE command.
-		   We cannot use the WindowState.Maximized directly, as that will not send the MAXIMIZE
-		   command for windows with hidden borders. */
+		We cannot use the WindowState.Maximized directly, as that will not send the MAXIMIZE
+		command for windows with hidden borders. */
 
 		/* Reset state to avoid strange side-effects from maximized/minimized windows. */
-		ResetWindowState();
-		previous_bounds = Bounds;
-		SetHiddenBorder(true);
+		Window_ResetWindowState();
+		previous_bounds = win_Bounds;
+		Window_SetHiddenBorder(true);
 
 		command = SW_MAXIMIZE;
 		SetForegroundWindow(win_Handle);
@@ -515,63 +634,26 @@ void Window_SetState(WindowState value) {
 	if (command != 0) ShowWindow(win_Handle, command);
 
 	/* Restore previous window border or apply pending border change when leaving fullscreen mode. */
-	if (exiting_fullscreen) SetHiddenBorder(false);
+	if (exiting_fullscreen) Window_SetHiddenBorder(false);
 
 	/* Restore previous window size/location if necessary */
-	if (command == SW_RESTORE && previous_bounds != Rectangle.Empty) {
-		Bounds = previous_bounds;
-		previous_bounds = Rectangle.Empty;
+	if (command == SW_RESTORE && !Rectangle2D_Equals(previous_bounds, Rectangle2D_Empty)) {
+		Window_SetBounds(previous_bounds);
+		previous_bounds = Rectangle2D_Empty;
 	}
-}
-
-bool win_hiddenBorder;
-void Window_DoSetHiddenBorder(bool value) {
-	if (win_hiddenBorder == value) return;
-
-	/* We wish to avoid making an invisible window visible just to change the border.
-	 However, it's a good idea to make a visible window invisible temporarily, to
-	 avoid garbage caused by the border change. */
-	bool was_visible = Window_GetVisible();
-
-	/* To ensure maximized/minimized windows work correctly, reset state to normal,
-	 change the border, then go back to maximized/minimized. */
-	WindowState state = win_State;
-	Window_ResetWindowState();
-	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
-	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
-
-	/* Make sure client size doesn't change when changing the border style.*/
-	Win32Rectangle rect = Win32Rectangle.From(bounds);
-	AdjustWindowRectEx(&rect, style, false, win_StyleEx);
-
-	/* This avoids leaving garbage on the background window. */
-	if (was_visible) Window_SetVisible(false);
-
-	SetWindowLongA(win_Handle, GWL_STYLE, style);
-	SetWindowPos(win_Handle, NULL, 0, 0, rect.Width, rect.Height,
-		SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-
-	/* Force window to redraw update its borders, but only if it's
-	 already visible (invisible windows will change borders when
-	 they become visible, so no need to make them visiable prematurely).*/
-	if (was_visible) Window_SetVisible(true);
-
-	Window_SetWindowState(state);
 }
 
 Point2D Window_PointToClient(Point2D point) {
-	if (!ScreenToClient(win_Handle, ref point)) {
+	POINT p; p.x = point.X; p.y = point.Y;
+	if (!ScreenToClient(win_Handle, &p)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Converting point from client to screen coordinates");
 	}
-	return point;
+	return Point2D_Make(p.x, p.y);
 }
 
 Point2D Window_PointToScreen(Point2D p) {
 	ErrorHandler_Fail("PointToScreen NOT IMPLEMENTED");
 }
-
-public event EventHandler<EventArgs> Load;
-public event EventHandler<EventArgs> Unload;
 
 MSG msg;
 void Window_ProcessEvents() {
@@ -599,74 +681,4 @@ bool Window_GetCursorVisible(void) { return win_cursorVisible; }
 void Window_SetCursorVisible(bool visible) {
 	win_cursorVisible = visible;
 	ShowCursor(visible ? 1 : 0);
-}
-
-Key Window_MapKey(WPARAM key) {
-	if (key >= VK_F1 && key <= VK_F24) {
-		return Key_F1 + (key - VK_F1);
-	}
-	if (key >= '0' && key <= '9') {
-		return Key_Number0 + (key - '0');
-	}
-	if (key >= 'A' && key <= 'Z') {
-		return Key_A + (key - 'A');
-	}
-	if (key >= VK_NUMPAD0 && key <= VK_NUMPAD9) {
-		return Key_Keypad0 + (key - VK_NUMPAD0);
-	}
-
-	switch (key) {
-	case VK_ESCAPE: return Key_Escape;
-	case VK_TAB: return Key_Tab;
-	case VK_CAPITAL: return Key_CapsLock;
-	case VK_LCONTROL: return Key_ControlLeft;
-	case VK_LSHIFT: return Key_ShiftLeft;
-	case VK_LWIN: return Key_WinLeft;
-	case VK_LMENU: return Key_AltLeft;
-	case VK_SPACE: return Key_Space;
-	case VK_RMENU: return Key_AltRight;
-	case VK_RWIN: return Key_WinRight;
-	case VK_APPS: return Key_Menu;
-	case VK_RCONTROL: return Key_ControlRight;
-	case VK_RSHIFT: return Key_ShiftRight;
-	case VK_RETURN: return Key_Enter;
-	case VK_BACK: return Key_BackSpace;
-
-	case VK_OEM_1: return Key_Semicolon;      /* Varies by keyboard: return ;: on Win2K/US */
-	case VK_OEM_2: return Key_Slash;          /* Varies by keyboard: return /? on Win2K/US */
-	case VK_OEM_3: return Key_Tilde;          /* Varies by keyboard: return `~ on Win2K/US */
-	case VK_OEM_4: return Key_BracketLeft;    /* Varies by keyboard: return [{ on Win2K/US */
-	case VK_OEM_5: return Key_BackSlash;      /* Varies by keyboard: return \| on Win2K/US */
-	case VK_OEM_6: return Key_BracketRight;   /* Varies by keyboard: return ]} on Win2K/US */
-	case VK_OEM_7: return Key_Quote;          /* Varies by keyboard: return '" on Win2K/US */
-	case VK_OEM_PLUS: return Key_Plus;        /* Invariant: +							   */
-	case VK_OEM_COMMA: return Key_Comma;      /* Invariant: : return					   */
-	case VK_OEM_MINUS: return Key_Minus;      /* Invariant: -							   */
-	case VK_OEM_PERIOD: return Key_Period;    /* Invariant: .							   */
-
-	case VK_HOME: return Key_Home;
-	case VK_END: return Key_End;
-	case VK_DELETE: return Key_Delete;
-	case VK_PRIOR: return Key_PageUp;
-	case VK_NEXT: return Key_PageDown;
-	case VK_PRINT: return Key_PrintScreen;
-	case VK_PAUSE: return Key_Pause;
-	case VK_NUMLOCK: return Key_NumLock;
-
-	case VK_SCROLL: return Key_ScrollLock;
-	case VK_SNAPSHOT: return Key_PrintScreen;
-	case VK_INSERT: return Key_Insert;
-
-	case VK_DECIMAL: return Key_KeypadDecimal;
-	case VK_ADD: return Key_KeypadAdd;
-	case VK_SUBTRACT: return Key_KeypadSubtract;
-	case VK_DIVIDE: return Key_KeypadDivide;
-	case VK_MULTIPLY: return Key_KeypadMultiply;
-
-	case VK_UP: return Key_Up;
-	case VK_DOWN: return Key_Down;
-	case VK_LEFT: return Key_Left;
-	case VK_RIGHT: return Key_Right;
-	}
-	return Key_Unknown;
 }

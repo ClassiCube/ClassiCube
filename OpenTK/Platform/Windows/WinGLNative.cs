@@ -339,11 +339,7 @@ namespace OpenTK.Platform.Windows
 					if (Closing != null)
 						Closing(this, e);
 
-					if (!e.Cancel)
-					{
-						if (Unload != null)
-							Unload(this, EventArgs.Empty);
-
+					if (!e.Cancel) {
 						DestroyWindow();
 						break;
 					}
@@ -403,7 +399,7 @@ namespace OpenTK.Platform.Windows
 				wc.Icon = Icon != null ? Icon.Handle : IntPtr.Zero;
 				#warning "This seems to resize one of the 'large' icons, rather than using a small icon directly (multi-icon files). Investigate!"
 				wc.IconSm = Icon != null ? new Icon(Icon, 16, 16).Handle : IntPtr.Zero;
-				wc.Cursor = API.LoadCursor(IntPtr.Zero, (IntPtr)32512); // CursorName.Arrow
+				//wc.Cursor = API.LoadCursor(IntPtr.Zero, (IntPtr)32512); // CursorName.Arrow
 				ushort atom = API.RegisterClassEx(ref wc);
 
 				if (atom == 0)
@@ -701,8 +697,6 @@ namespace OpenTK.Platform.Windows
 			throw new NotImplementedException();
 		}
 
-		public event EventHandler<EventArgs> Load;
-		public event EventHandler<EventArgs> Unload;
 		public event EventHandler<EventArgs> Move;
 		public event EventHandler<EventArgs> Resize;
 		public event EventHandler<System.ComponentModel.CancelEventArgs> Closing;
