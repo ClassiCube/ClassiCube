@@ -10,7 +10,7 @@
 */
 
 /* Maximum number of matrices that go on a stack. */
-#define MatrixStack_Capacity 24
+#define MatrixStack_Capacity 4
 
 typedef struct MatrixStack_ {
 

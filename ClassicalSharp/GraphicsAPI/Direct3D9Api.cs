@@ -52,9 +52,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			
 			caps = device.Capabilities;
-			viewStack = new MatrixStack(32, device, TransformState.View);
-			projStack = new MatrixStack(4, device, TransformState.Projection);
-			texStack = new MatrixStack(4, device, TransformState.Texture0);
+			viewStack = new MatrixStack(device, TransformState.View);
+			projStack = new MatrixStack(device, TransformState.Projection);
+			texStack = new MatrixStack(device, TransformState.Texture0);
 			SetDefaultRenderStates();
 			InitDynamicBuffers();
 		}
@@ -353,8 +353,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			Device device;
 			TransformState matrixType;
 
-			public MatrixStack(int capacity, Device device, TransformState matrixType) {
-				stack = new Matrix4[capacity];
+			public MatrixStack(Device device, TransformState matrixType) {
+				stack = new Matrix4[4];
 				stack[0] = Matrix4.Identity;
 				this.device = device;
 				this.matrixType = matrixType;
