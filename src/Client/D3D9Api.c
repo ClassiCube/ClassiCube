@@ -124,9 +124,12 @@ void Gfx_Free(void) {
 void D3D9_FindCompatibleFormat(void) {
 	Int32 count = sizeof(d3d9_viewFormats) / sizeof(d3d9_viewFormats[0]);
 	Int32 i;
+	ReturnCode res;
+
 	for (i = 0; i < count; i++) {
 		d3d9_viewFormat = d3d9_viewFormats[i];
-		if (IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, true)) break;
+		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, true);
+		if (ErrorHandler_Check(res)) break;
 
 		if (i == count - 1) {
 			ErrorHandler_Fail("Unable to create a back buffer with sufficient precision.");
@@ -136,7 +139,8 @@ void D3D9_FindCompatibleFormat(void) {
 	count = sizeof(d3d9_depthFormats) / sizeof(d3d9_depthFormats[0]);
 	for (i = 0; i < count; i++) {
 		d3d9_depthFormat = d3d9_depthFormats[i];
-		if (IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat)) break;
+		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat);
+		if (ErrorHandler_Check(res)) break;
 
 		if (i == count - 1) {
 			ErrorHandler_Fail("Unable to create a depth buffer with sufficient precision.");

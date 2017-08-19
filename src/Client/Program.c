@@ -12,10 +12,13 @@ int main(int argc, char* argv[]) {
 	Window_Create(320, 320, 640, 480, &str, NULL);
 	Window_SetVisible(true);
 	Gfx_Init();
+	Gfx_ClearColour(PackedCol_Red);
+
 	while (true) {
 		Window_ProcessEvents();
 		Platform_ThreadSleep(100);
 		Gfx_BeginFrame();
+		Gfx_Clear();
 		Gfx_EndFrame();
 	}
 	Gfx_Free();
