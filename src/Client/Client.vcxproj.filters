@@ -396,9 +396,6 @@
     <ClInclude Include="TerrainAtlas.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
-    <ClInclude Include="stb_image.h">
-      <Filter>Header Files\TexturePack</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">

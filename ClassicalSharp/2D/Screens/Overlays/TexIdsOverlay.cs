@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (vertices == null) {
 				vertices = new VertexP3fT2fC4b[verticesCount];
 			}
-			dynamicVb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, verticesCount);
+			ContextRecreated();
 		}
 		
 		const int tileSize = 45, textOffset = 3;
@@ -35,9 +35,21 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			RenderWidgets(widgets, delta);
 			RenderTerrain();			
-			RenderTextOverlay();
-			
+			RenderTextOverlay();		
 			gfx.Texturing = false;
+		}
+		
+		protected override void ContextLost() {
+			base.ContextLost();
+			gfx.DeleteVb(ref dynamicVb);
+			idAtlas.Dispose();
+		}
+		
+		protected override void ContextRecreated() {
+			base.ContextRecreated();
+			dynamicVb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, verticesCount);
+			idAtlas = new TextAtlas(game, 16);
+			idAtlas.Pack("0123456789", regularFont, "f");
 		}
 		
 		void RenderTerrain() {
@@ -94,11 +106,6 @@ namespace ClassicalSharp.Gui.Screens {
 			widgets = new Widget[1];
 			widgets[0] = TextWidget.Create(game, "Texture ID reference sheet", titleFont)
 				.SetLocation(Anchor.Centre, Anchor.LeftOrTop, 0, yOffset - 30);
-		}
-		
-		public override void Dispose() {
-			base.Dispose();
-			idAtlas.Dispose();
 		}
 	}
 }
