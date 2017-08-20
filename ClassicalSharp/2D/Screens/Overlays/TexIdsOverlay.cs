@@ -1,6 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
@@ -17,9 +16,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			idAtlas = new TextAtlas(game, 16);
-			idAtlas.Pack("0123456789", regularFont, "f");
-
 			if (vertices == null) {
 				vertices = new VertexP3fT2fC4b[verticesCount];
 			}
@@ -80,7 +76,8 @@ namespace ClassicalSharp.Gui.Screens {
 			for (int y = 0; y < 4; y++) {
 				for (int x = 0; x < TerrainAtlas2D.TilesPerRow; x++) {
 					idAtlas.curX = xOffset + tileSize * x + textOffset;
-					idAtlas.AddInt(x + (y * 16), vertices, ref index);
+					int id = x + (y * TerrainAtlas2D.TilesPerRow);
+					idAtlas.AddInt(id, vertices, ref index);
 				}
 				idAtlas.tex.Y += tileSize;
 			}
@@ -93,8 +90,17 @@ namespace ClassicalSharp.Gui.Screens {
 			if (key == Key.F10 || key == game.Input.Keys[KeyBind.PauseOrExit]) {
 				Dispose();
 				CloseOverlay();
+				return true;
 			}
-			return true;
+			return game.Gui.UnderlyingScreen.HandlesKeyDown(key);
+		}
+		
+		public override bool HandlesKeyPress(char key) {
+			return game.Gui.UnderlyingScreen.HandlesKeyPress(key);
+		}
+		
+		public override bool HandlesKeyUp(Key key) {
+			return game.Gui.UnderlyingScreen.HandlesKeyUp(key);
 		}
 
 		public override void RedrawText() { }
@@ -103,6 +109,7 @@ namespace ClassicalSharp.Gui.Screens {
 			xOffset = (game.Width / 2)  - (tileSize * TerrainAtlas2D.TilesPerRow) / 2;
 			yOffset = (game.Height / 2) - (tileSize * TerrainAtlas2D.RowsCount)   / 2;
 			
+			DisposeWidgets(widgets);
 			widgets = new Widget[1];
 			widgets[0] = TextWidget.Create(game, "Texture ID reference sheet", titleFont)
 				.SetLocation(Anchor.Centre, Anchor.LeftOrTop, 0, yOffset - 30);
