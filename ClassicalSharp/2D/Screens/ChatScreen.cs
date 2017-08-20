@@ -194,10 +194,10 @@ namespace ClassicalSharp.Gui.Screens {
 			int height = InputUsedHeight;
 			if (force || height != inputOldHeight) {
 				clientStatus.YOffset = Math.Max(hud.BottomOffset + 15, height);
-				clientStatus.CalculatePosition();
+				clientStatus.Reposition();
 				
 				normalChat.YOffset = clientStatus.YOffset + clientStatus.GetUsedHeight();
-				normalChat.CalculatePosition();
+				normalChat.Reposition();
 				inputOldHeight = height;
 			}
 		}

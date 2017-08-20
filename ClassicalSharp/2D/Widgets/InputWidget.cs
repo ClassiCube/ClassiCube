@@ -30,7 +30,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public InputWidget SetLocation(Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset) {
 			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
 			XOffset = xOffset; YOffset = yOffset;
-			CalculatePosition();
+			Reposition();
 			return this;
 		}
 		
@@ -89,9 +89,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			Init();
 		}
 
-		public override void CalculatePosition() {
+		public override void Reposition() {
 			int oldX = X, oldY = Y;
-			base.CalculatePosition();
+			base.Reposition();
 			
 			caretTex.X1 += X - oldX; caretTex.Y1 += Y - oldY;
 			inputTex.X1 += X - oldX; inputTex.Y1 += Y - oldY;
@@ -194,7 +194,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			Width = size.Width;
 			Height = realHeight == 0 ? prefixHeight : realHeight;
-			CalculatePosition();
+			Reposition();
 			inputTex.X1 = X + Padding; inputTex.Y1 = Y;
 		}
 		

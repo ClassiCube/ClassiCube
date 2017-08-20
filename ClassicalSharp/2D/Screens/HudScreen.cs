@@ -89,7 +89,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			playerList.Init();
 			playerList.RecalcYOffset();
-			playerList.CalculatePosition();
+			playerList.Reposition();
 		}
 		
 		public override void Dispose() {
@@ -114,11 +114,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize(int width, int height) {
 			chat.OnResize(width, height);
-			hotbar.CalculatePosition();
+			hotbar.Reposition();
 			
 			if (playerList != null) {
 				playerList.RecalcYOffset();
-				playerList.CalculatePosition();
+				playerList.Reposition();
 			}
 		}
 		

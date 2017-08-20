@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public bool RenderHudOver;
 
 		/// <summary> Called when the game window is resized. </summary>
-		public abstract void OnResize(int width, int height);		
+		public abstract void OnResize(int width, int height);
 		
 		protected ClickHandler LeftOnly(SimpleClickHandler action) {
 			if (action == null) return (g, w, btn, x, y) => {};
@@ -43,7 +43,23 @@ namespace ClassicalSharp.Gui.Screens {
 			if (widgets == null) return;
 			
 			for (int i = 0; i < widgets.Length; i++) {
-				widgets[i].Dispose();
+				if (widgets[i] != null) widgets[i].Dispose();
+			}
+		}
+		
+		protected static void RepositionWidgets<T>(T[] widgets) where T : Widget {
+			if (widgets == null) return;
+			
+			for (int i = 0; i < widgets.Length; i++) {
+				if (widgets[i] != null) widgets[i].Reposition();
+			}
+		}
+		
+		protected static void RenderWidgets<T>(T[] widgets, double delta) where T : Widget {
+			if (widgets == null) return;
+			
+			for (int i = 0; i < widgets.Length; i++) {
+				if (widgets[i] != null) widgets[i].Render(delta);
 			}
 		}
 	}

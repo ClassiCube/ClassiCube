@@ -72,8 +72,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void OnResize(int width, int height) {
-			messageWidget.CalculatePosition();
-			titleWidget.CalculatePosition();
+			messageWidget.Reposition();
+			titleWidget.Reposition();
 		}
 		
 		protected override void ContextLost() {

@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			gfx.Texturing = true;
 			overview.YOffset = Y - offset + 5;
-			overview.CalculatePosition();
+			overview.Reposition();
 			overview.Render(delta);
 			
 			for (int i = 0; i < namesCount; i++) {

@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			gfx.Texturing = true;
-			RenderMenuWidgets(delta);
+			RenderWidgets(widgets, delta);
 			
 			if (extendedHelp != null && extEndY <= extClipY)
 				extendedHelp.Render(delta);
@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			extendedHelp.XOffset = game.Width / 2 - extendedHelp.Width / 2;
 			extendedHelp.YOffset = game.Height / 2 + extHelpY;
-			extendedHelp.CalculatePosition();
+			extendedHelp.Reposition();
 		}
 		
 		protected override void ContextLost() {
@@ -167,7 +167,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			extendedHelp.XOffset = game.Width / 2 - extendedHelp.Width / 2;
 			extendedHelp.YOffset = game.Height / 2 + extHelpY;
-			extendedHelp.CalculatePosition();
+			extendedHelp.Reposition();
 		}
 		
 		void DisposeExtendedHelp() {

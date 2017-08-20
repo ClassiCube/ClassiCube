@@ -48,8 +48,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Dispose() { }
 		
-		public override void CalculatePosition() {
-			base.CalculatePosition();
+		public override void Reposition() {
+			base.Reposition();
 			Recreate();
 		}
 		

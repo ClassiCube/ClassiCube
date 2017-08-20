@@ -28,9 +28,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Render(double delta) {
 			RenderMenuBounds();
 			gfx.Texturing = true;
-			RenderMenuWidgets(delta);
-			for (int i = 0; i < labels.Length; i++)
-				labels[i].Render(delta);
+			RenderWidgets(widgets, delta);
+			RenderWidgets(labels, delta);
 			gfx.Texturing = false;
 			
 			if (OnRenderFrame != null) OnRenderFrame(this);
@@ -38,8 +37,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize(int width, int height) {
 			base.OnResize(width, height);
-			for (int i = 0; i < labels.Length; i++)
-				labels[i].CalculatePosition();
+			RepositionWidgets(labels);
 		}
 
 		protected override void ContextLost() {

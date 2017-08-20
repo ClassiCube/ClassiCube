@@ -105,9 +105,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			YOffset = -Math.Max(0, game.Height / 4 - Height / 2);
 		}
 		
-		public override void CalculatePosition() {
+		public override void Reposition() {
 			int oldX = X, oldY = Y;
-			base.CalculatePosition();
+			base.Reposition();
 			
 			for (int i = 0; i < namesCount; i++) {
 				textures[i].X1 += X - oldX;
@@ -164,7 +164,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			OnSort();
 			UpdateTableDimensions();
 			RecalcYOffset();
-			CalculatePosition();
+			Reposition();
 		}
 		
 		protected virtual void OnSort() { }

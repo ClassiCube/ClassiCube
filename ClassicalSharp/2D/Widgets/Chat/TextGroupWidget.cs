@@ -15,7 +15,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public TextGroupWidget SetLocation(Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset) {
 			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
 			XOffset = xOffset; YOffset = yOffset;
-			CalculatePosition();
+			Reposition();
 			return this;
 		}
 		
@@ -107,7 +107,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				Width = Math.Max(Width, Textures[i].Width);
 				Height += Textures[i].Height;
 			}
-			CalculatePosition();
+			Reposition();
 		}
 		
 		public override void Render(double delta) {
@@ -123,9 +123,9 @@ namespace ClassicalSharp.Gui.Widgets {
 				gfx.DeleteTexture(ref Textures[i]);
 		}
 		
-		public override void CalculatePosition() {
+		public override void Reposition() {
 			int oldY = Y;
-			base.CalculatePosition();
+			base.Reposition();
 			if (Textures == null) return;
 			
 			for (int i = 0; i < Textures.Length; i++) {

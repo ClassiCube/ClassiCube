@@ -48,7 +48,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		/// <summary> Specifies the boundaries of the widget in pixels. </summary>
 		public Rectangle Bounds { get { return new Rectangle(X, Y, Width, Height); } }
 		
-		public virtual void CalculatePosition() {
+		public virtual void Reposition() {
 			X = CalcPos(HorizontalAnchor, XOffset, Width, game.Width);
 			Y = CalcPos(VerticalAnchor, YOffset, Height, game.Height);
 		}

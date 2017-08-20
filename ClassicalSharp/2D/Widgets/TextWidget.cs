@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public TextWidget SetLocation(Anchor horAnchor, Anchor verAnchor, int xOffset, int yOffset) {
 			HorizontalAnchor = horAnchor; VerticalAnchor = verAnchor;
 			XOffset = xOffset; YOffset = yOffset;
-			CalculatePosition();
+			Reposition();
 			return this;
 		}
 		
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					game.Drawer2D.ReducePadding(ref texture, Utils.Floor(font.Size));
 				Width = texture.Width; Height = texture.Height;
 
-				CalculatePosition();
+				Reposition();
 				texture.X1 = X; texture.Y1 = Y;
 			}
 		}
@@ -70,9 +70,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			gfx.DeleteTexture(ref texture);
 		}
 		
-		public override void CalculatePosition() {
+		public override void Reposition() {
 			int oldX = X, oldY = Y;
-			base.CalculatePosition();
+			base.Reposition();
 			
 			texture.X1 += X - oldX;
 			texture.Y1 += Y - oldY;

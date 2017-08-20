@@ -20,7 +20,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Render(double delta) {
 			RenderMenuBounds();
 			gfx.Texturing = true;
-			RenderMenuWidgets(delta);
+			RenderWidgets(widgets, delta);
 			input.Render(delta);
 			if (desc != null) desc.Render(delta);
 			gfx.Texturing = false;
@@ -84,7 +84,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		
 		public override void OnResize(int width, int height) {
-			input.CalculatePosition();
+			input.Reposition();
 			base.OnResize(width, height);
 		}
 		

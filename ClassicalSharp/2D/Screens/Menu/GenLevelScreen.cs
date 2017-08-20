@@ -83,7 +83,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 			
 			label.XOffset = -110 - label.Width / 2;
-			label.CalculatePosition();
+			label.Reposition();
 			label.Colour = new FastColour(224, 224, 224);
 			return label;
 		}

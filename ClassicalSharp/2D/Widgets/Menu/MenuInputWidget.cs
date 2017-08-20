@@ -76,7 +76,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				inputTex = drawer.Make2DTexture(bmp, adjSize, 0, 0);
 			}
 
-			CalculatePosition();			
+			Reposition();			
 			inputTex.X1 = X; inputTex.Y1 = Y;
 			if (size.Height < MinHeight)
 				inputTex.Y1 += MinHeight / 2 - size.Height / 2;

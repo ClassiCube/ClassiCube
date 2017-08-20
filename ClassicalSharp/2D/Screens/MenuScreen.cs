@@ -18,17 +18,10 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.Draw2DQuad(0, 0, game.Width, game.Height, backCol);
 		}
 		
-		protected void RenderMenuWidgets(double delta) {
-			for (int i = 0; i < widgets.Length; i++) {
-				if (widgets[i] == null) continue;
-				widgets[i].Render(delta);
-			}
-		}
-		
 		public override void Render(double delta) {
 			RenderMenuBounds();
 			gfx.Texturing = true;
-			RenderMenuWidgets(delta);
+			RenderWidgets(widgets, delta);
 			gfx.Texturing = false;
 		}
 		
@@ -49,10 +42,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextLost() { DisposeWidgets(widgets); }
 
 		public override void OnResize(int width, int height) {
-			for (int i = 0; i < widgets.Length; i++) {
-				if (widgets[i] == null) continue;
-				widgets[i].CalculatePosition();
-			}
+			RepositionWidgets(widgets);
 		}
 		
 		

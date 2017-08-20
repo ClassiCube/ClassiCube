@@ -57,8 +57,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void OnResize(int width, int height) {
-			for (int i = 0; i < widgets.Length; i++)
-				widgets[i].CalculatePosition();
+			RepositionWidgets(widgets);
 			clearTime = DateTime.UtcNow.AddSeconds(0.5);
 		}
 
@@ -104,8 +103,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void Redraw(double delta) {
 			gfx.Draw2DQuad(0, 0, game.Width, game.Height, top, bottom);
 			gfx.Texturing = true;
-			for (int i = 0; i < widgets.Length; i++)
-				widgets[i].Render(delta);
+			RenderWidgets(widgets, delta);
 			gfx.Texturing = false;
 		}
 		
