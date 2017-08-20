@@ -554,9 +554,6 @@
     <ClCompile Include="ModelCache.c">
       <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
-    <ClCompile Include="CreeperModel.c">
-      <Filter>Source Files\Entities\Model</Filter>
-    </ClCompile>
     <ClCompile Include="AutoRotate.c">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
@@ -568,21 +565,6 @@
     </ClCompile>
     <ClCompile Include="Program.c">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SkeletonModel.c">
-      <Filter>Source Files\Entities\Model</Filter>
-    </ClCompile>
-    <ClCompile Include="ZombieModel.c">
-      <Filter>Source Files\Entities\Model</Filter>
-    </ClCompile>
-    <ClCompile Include="PigModel.c">
-      <Filter>Source Files\Entities\Model</Filter>
-    </ClCompile>
-    <ClCompile Include="SpiderModel.c">
-      <Filter>Source Files\Entities\Model</Filter>
-    </ClCompile>
-    <ClCompile Include="ChickenModel.c">
-      <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
     <ClCompile Include="DisplayDevice.c">
       <Filter>Source Files\Platform\Window</Filter>
@@ -604,6 +586,9 @@
     </ClCompile>
     <ClCompile Include="MapGenerator.c">
       <Filter>Source Files\Generator</Filter>
+    </ClCompile>
+    <ClCompile Include="Models.c">
+      <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

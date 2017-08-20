@@ -263,11 +263,9 @@
     <ClCompile Include="BordersRenderer.c" />
     <ClCompile Include="Builder.c" />
     <ClCompile Include="Builder1DPart.c" />
-    <ClCompile Include="ChickenModel.c" />
     <ClCompile Include="ChunkInfo.c" />
     <ClCompile Include="ChunkSorter.c" />
     <ClCompile Include="ChunkUpdater.c" />
-    <ClCompile Include="CreeperModel.c" />
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
@@ -289,6 +287,7 @@
     <ClCompile Include="LocationUpdate.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelCache.c" />
+    <ClCompile Include="Models.c" />
     <ClCompile Include="Mouse.c" />
     <ClCompile Include="NormalBuilder.c" />
     <ClCompile Include="PackedCol.c" />
@@ -298,14 +297,11 @@
     <ClCompile Include="Noise.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
-    <ClCompile Include="PigModel.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="Respawn.c" />
     <ClCompile Include="SelectionBox.c" />
-    <ClCompile Include="SkeletonModel.c" />
     <ClCompile Include="SkyboxRenderer.c" />
-    <ClCompile Include="SpiderModel.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="StringConvert.c" />
@@ -322,7 +318,6 @@
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />
     <ClCompile Include="WorldEnv.c" />
-    <ClCompile Include="ZombieModel.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
