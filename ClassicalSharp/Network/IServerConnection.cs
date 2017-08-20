@@ -59,8 +59,8 @@ namespace ClassicalSharp {
 
 		protected Game game;
 		
-		protected void WarningScreenTick(WarningScreen screen) {
-			string identifier = (string)screen.Metadata;
+		protected void WarningScreenTick(Overlay warning) {
+			string identifier = (string)warning.Metadata;
 			DownloadedItem item;
 			if (!game.AsyncDownloader.TryGetItem(identifier, out item) || item.Data == null) return;
 			
@@ -73,10 +73,8 @@ namespace ClassicalSharp {
 			if (url.StartsWith("https://")) address = url.Substring(8);
 			if (url.StartsWith("http://")) address = url.Substring(7);
 			
-			screen.SetTextData("Do you want to download the server's texture pack?",
-			               "Texture pack url:", address,
-			               "Download size: " + contentLengthMB.ToString("F3") + " MB");
-			screen.RedrawText();
+			warning.lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";
+			warning.RedrawText();
 		}
 		
 		protected internal void RetrieveTexturePack(string url) {
@@ -86,30 +84,31 @@ namespace ClassicalSharp {
 				if (url.StartsWith("https://")) address = url.Substring(8);
 				if (url.StartsWith("http://")) address = url.Substring(7);
 				
-				WarningScreen warning = new WarningScreen(game, true, true);
+				WarningOverlay warning = new WarningOverlay(game, true, true);
 				warning.Metadata = "CL_" + url;
-				warning.SetHandlers(DownloadTexturePack, SkipTexturePack, WarningScreenTick);
+				warning.SetHandlers(DownloadTexturePack, SkipTexturePack);
+				warning.OnRenderFrame = WarningScreenTick;
+				warning.lines[0] = "Do you want to download the server's texture pack?";
 				
-				warning.SetTextData(
-					"Do you want to download the server's texture pack?",
-					"Texture pack url:", address,
-					"Download size: Determining...");
-				game.Gui.ShowWarning(warning);
+				warning.lines[1] = "Texture pack url:";
+				warning.lines[2] = address;
+				warning.lines[3] = "Download size: Determining...";
+				game.Gui.ShowOverlay(warning);
 			} else {
 				DownloadTexturePack(url);
 			}
 		}
 		
-		void DownloadTexturePack(WarningScreen screen, bool always) {
-			string url = ((string)screen.Metadata).Substring(3);
+		void DownloadTexturePack(Overlay texPackOverlay, bool always) {
+			string url = ((string)texPackOverlay.Metadata).Substring(3);
 			DownloadTexturePack(url);
 			if (always && !game.AcceptedUrls.HasEntry(url)) {
 				game.AcceptedUrls.AddEntry(url);
 			}
 		}
 
-		void SkipTexturePack(WarningScreen screen, bool always) {
-			string url = ((string)screen.Metadata).Substring(3);
+		void SkipTexturePack(Overlay texPackOverlay, bool always) {
+			string url = ((string)texPackOverlay.Metadata).Substring(3);
 			if (always && !game.DeniedUrls.HasEntry(url)) {
 				game.DeniedUrls.AddEntry(url);
 			}

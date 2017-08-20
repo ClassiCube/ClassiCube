@@ -38,5 +38,13 @@ namespace ClassicalSharp.Gui.Screens {
 		protected abstract void ContextLost();
 		
 		protected abstract void ContextRecreated();
+		
+		protected static void DisposeWidgets<T>(T[] widgets) where T : Widget {
+			if (widgets == null) return;
+			
+			for (int i = 0; i < widgets.Length; i++) {
+				widgets[i].Dispose();
+			}
+		}
 	}
 }

@@ -423,32 +423,32 @@ namespace ClassicalSharp.Gui.Screens {
 			string url = Utils.StripColours(text);
 			
 			if (Utils.IsUrlPrefix(url, 0)) {
-				WarningScreen warning = new WarningScreen(game, false, false);
-				warning.Metadata = url;
-				warning.SetHandlers(OpenUrl, AppendUrl, null);
+				WarningOverlay overlay = new WarningOverlay(game, false, false);
+				overlay.Metadata = url;
+				overlay.SetHandlers(OpenUrl, AppendUrl);
+				overlay.lines[0] = "&eAre you sure you want to open this link?";
 				
-				warning.SetTextData(
-					"&eAre you sure you want to open this link?",
-					url, "Be careful - links from strangers may be websites that",
-					" have viruses, or things you may not want to open/see.");
-				game.Gui.ShowWarning(warning);
+				overlay.lines[1] = url;
+				overlay.lines[2] = "Be careful - links from strangers may be websites that";
+				overlay.lines[3] = " have viruses, or things you may not want to open/see.";
+				game.Gui.ShowOverlay(overlay);
 			} else if (game.ClickableChat) {
 				input.Append(text);
 			}
 			return true;
 		}
 		
-		void OpenUrl(WarningScreen screen, bool always) {
+		void OpenUrl(Overlay urlOverlay, bool always) {
 			try {
-				Process.Start((string)screen.Metadata);
+				Process.Start((string)urlOverlay.Metadata);
 			} catch (Exception ex) {
 				ErrorHandler.LogError("ChatScreen.OpenUrl", ex);
 			}
 		}
 		
-		void AppendUrl(WarningScreen screen, bool always) {
+		void AppendUrl(Overlay urlOverlay, bool always) {
 			if (!game.ClickableChat) return;
-			input.Append((string)screen.Metadata);
+			input.Append((string)urlOverlay.Metadata);
 		}
 		
 		void ScrollHistory() {

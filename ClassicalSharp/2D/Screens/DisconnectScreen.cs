@@ -128,11 +128,7 @@ namespace ClassicalSharp.Gui.Screens {
 			return secsLeft == 0 ? "Reconnect" : "Reconnect in " + secsLeft;
 		}
 		
-		protected override void ContextLost() {
-			if (widgets == null) return;
-			for (int i = 0; i < widgets.Length; i++)
-				widgets[i].Dispose();
-		}
+		protected override void ContextLost() { DisposeWidgets(widgets); }
 		
 		protected override void ContextRecreated() {
 			if (gfx.LostContext) return;

@@ -131,6 +131,7 @@ namespace ClassicalSharp.Entities {
 		/// <remarks> Parses hack flags specified in the motd and/or name of the server. </remarks>
 		/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
 		public void UpdateHacksState() {
+			return;
 			SetAllHacks(true);
 			if (HacksFlags == null) return;
 			

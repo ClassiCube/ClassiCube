@@ -46,14 +46,7 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.ContextRecreated -= ContextRecreated;
 		}
 		
-		protected override void ContextLost() {
-			if (widgets == null) return;
-			
-			for (int i = 0; i < widgets.Length; i++) {
-				if (widgets[i] == null) continue;
-				widgets[i].Dispose();
-			}
-		}
+		protected override void ContextLost() { DisposeWidgets(widgets); }
 
 		public override void OnResize(int width, int height) {
 			for (int i = 0; i < widgets.Length; i++) {

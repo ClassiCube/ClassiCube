@@ -31,8 +31,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextLost() {
-			for (int i = 0; i < buttons.Length; i++)
-				buttons[i].Dispose();
+			DisposeWidgets(buttons);
 			title.Dispose();
 		}
 		

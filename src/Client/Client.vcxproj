@@ -225,6 +225,7 @@
     <ClInclude Include="Respawn.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="SkyboxRenderer.h" />
+    <ClInclude Include="stb_image.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="StringConvert.h" />

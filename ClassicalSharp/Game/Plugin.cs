@@ -36,30 +36,29 @@ namespace ClassicalSharp {
 		}
 		
 		internal void MakeWarning(Game game, string plugin) {
-			WarningScreen warning = new WarningScreen(game, true, false);
+			WarningOverlay warning = new WarningOverlay(game, true, false);
 			warning.Metadata = plugin;
-			warning.SetHandlers(Accept, Deny, null);
+			warning.SetHandlers(Accept, Deny);
 			
-			warning.SetTextData(
-				"&eAre you sure you want to load plugin " + plugin + " ?",
-				"Be careful - plugins from strangers may have viruses",
-				" or other malicious behaviour.");
-			game.Gui.ShowWarning(warning);
+			warning.lines[0] = "&eAre you sure you want to load plugin " + plugin + " ?";
+			warning.lines[1] = "Be careful - plugins from strangers may have viruses";
+			warning.lines[2] = " or other malicious behaviour.";
+			game.Gui.ShowOverlay(warning);
 		}
 		
 		
-		void Accept(WarningScreen warning, bool always) {
-			string plugin = (string)warning.Metadata;
+		void Accept(Overlay overlay, bool always) {
+			string plugin = (string)overlay.Metadata;
 			if (always && !accepted.HasEntry(plugin)) {
 				accepted.AddEntry(plugin);
 			}
 			
-			string dir = Path.Combine(Program.AppDirectory, "plugins");			
-			Load(Path.Combine(dir, plugin + ".dll"), true);			
+			string dir = Path.Combine(Program.AppDirectory, "plugins");
+			Load(Path.Combine(dir, plugin + ".dll"), true);
 		}
 
-		void Deny(WarningScreen warning, bool always) {
-			string plugin = (string)warning.Metadata;
+		void Deny(Overlay overlay, bool always) {
+			string plugin = (string)overlay.Metadata;
 			if (always && !denied.HasEntry(plugin)) {
 				denied.AddEntry(plugin);
 			}

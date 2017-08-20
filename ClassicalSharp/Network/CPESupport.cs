@@ -68,7 +68,7 @@ namespace ClassicalSharp.Network {
 		public static string[] ClientExtensions = {
 			"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
-			"EnvWeatherType", "HackControl", "MessageTypes", "PlayerClick", "FullCP437",
+			"EnvWeatherType", "MessageTypes", "PlayerClick", "FullCP437",
 			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors",
 			"EnvMapAspect", "EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder",
 		};

@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		StatusScreen fpsScreen;
 		internal HudScreen hudScreen;
 		internal Screen activeScreen;
-		internal List<WarningScreen> overlays = new List<WarningScreen>();
+		internal List<Overlay> overlays = new List<Overlay>();
 		
 		public GuiInterface(Game game) {
 			fpsScreen = game.AddComponent(new StatusScreen(game));
@@ -61,10 +61,9 @@ namespace ClassicalSharp {
 				activeScreen.Dispose();
 			gfx.DeleteTexture(ref GuiTex);
 			gfx.DeleteTexture(ref GuiClassicTex);
-			gfx.DeleteTexture(ref IconsTex);			
+			gfx.DeleteTexture(ref IconsTex);
 			
-			for (int i = 0; i < overlays.Count; i++)
-				overlays[i].Dispose();
+			Reset(game);
 		}
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
@@ -98,13 +97,13 @@ namespace ClassicalSharp {
 		
 		public void RefreshHud() { hudScreen.Recreate(); }
 		
-		public void ShowWarning(WarningScreen screen) {
+		public void ShowOverlay(Overlay overlay) {
 			bool cursorVis = game.CursorVisible;
 			if (overlays.Count == 0) game.CursorVisible = true;
-			overlays.Add(screen);
+			overlays.Add(overlay);
 			if (overlays.Count == 1) game.CursorVisible = cursorVis;
 			// Save cursor visibility state
-			screen.Init();
+			overlay.Init();
 		}
 		
 		
