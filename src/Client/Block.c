@@ -2,7 +2,7 @@
 #include "DefaultSet.h"
 #include "Funcs.h"
 #include "ExtMath.h"
-#include "TerrainAtlas2D.h"
+#include "TerrainAtlas.h"
 
 void Block_Reset(void) {
 	Block_Init();

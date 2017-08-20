@@ -7,7 +7,7 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 #include "Block.h"
-#include "TerrainAtlas1D.h"
+#include "TerrainAtlas.h"
 
 Int32 iso_count;
 Real32 iso_scale;

@@ -5,7 +5,7 @@
 #include "Lighting.h"
 #include "World.h"
 #include "Drawer.h"
-#include "TerrainAtlas1D.h"
+#include "TerrainAtlas.h"
 
 void NormalBuilder_SetActive(void) {
 	Builder_SetDefault();

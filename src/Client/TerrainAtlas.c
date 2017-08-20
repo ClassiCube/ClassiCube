@@ -1,11 +1,53 @@
-#if 0
-#include "TerrainAtlas1D.h"
+#include "TerrainAtlas.h"
+#include "Bitmap.h"
+#include "Block.h"
+#include "ExtMath.h"
 #include "Funcs.h"
 #include "GraphicsAPI.h"
-#include "Bitmap.h"
 #include "Platform.h"
-#include "ExtMath.h"
-#include "Block.h"
+
+void Atlas2D_UpdateState(Bitmap bmp) {
+	Atlas2D_Bitmap = bmp;
+	Atlas2D_ElementSize = bmp.Width / Atlas2D_ElementsPerRow;
+	Block_RecalculateSpriteBB();
+}
+
+Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc) {
+	Int32 size = Atlas2D_ElementSize;
+	Bitmap element;
+
+	/* Try to allocate bitmap on stack if possible */
+	if (size > 64) {
+		Bitmap_Allocate(&element, size, size);
+		if (element.Scan0 == NULL) {
+			ErrorHandler_Fail("Atlas2D_LoadTextureElement - failed to allocate memory");
+		}
+
+		Int32 texId = Atlas2D_LoadTextureElement_Raw(texLoc, &element);
+		Platform_MemFree(element.Scan0);
+		return texId;
+	} else {
+		// TODO: does this even work??
+		UInt8 scan0[Bitmap_DataSize(64, 64)];
+		Bitmap_Create(&element, size, size, 64 * Bitmap_PixelBytesSize, scan0);
+		return Atlas2D_LoadTextureElement_Raw(texLoc, &element);
+	}
+}
+
+Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
+	Int32 size = Atlas2D_ElementSize;
+	Int32 x = texLoc % Atlas2D_ElementsPerRow, y = texLoc / Atlas2D_ElementsPerRow;
+	Bitmap_CopyBlock(x * size, y * size, 0, 0,
+		&Atlas2D_Bitmap, element, size);
+
+	return Gfx_CreateTexture(element, true);
+}
+
+void Atlas2D_Free(void) {
+	if (Atlas2D_Bitmap.Scan0 == NULL) return;
+	Platform_MemFree(Atlas2D_Bitmap.Scan0);
+}
+
 
 TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 	*index = texLoc / Atlas1D_ElementsPerAtlas;
@@ -13,8 +55,8 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards. */
 	return TextureRec_FromRegion(
-		0.0f, y * Atlas1D_InvElementSize, 
-		(uCount - 1) + UV2_Scale, 
+		0.0f, y * Atlas1D_InvElementSize,
+		(uCount - 1) + UV2_Scale,
 		UV2_Scale * Atlas1D_InvElementSize);
 }
 
@@ -63,8 +105,8 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 		Int32 atlasX = (*index & 0x0F) * elemSize;
 		Int32 atlasY = (*index >> 4) * elemSize;
 
-		Bitmap_CopyBlock(atlasX, atlasY, 0, index1D * elemSize, 
-						&Atlas2D_Bitmap, &atlas1D, elemSize);
+		Bitmap_CopyBlock(atlasX, atlasY, 0, index1D * elemSize,
+			&Atlas2D_Bitmap, &atlas1D, elemSize);
 		(*index)++;
 	}
 
@@ -88,4 +130,3 @@ void Atlas1D_Free(void) {
 		Gfx_DeleteTexture(&Atlas1D_TexIds[i]);
 	}
 }
-#endif

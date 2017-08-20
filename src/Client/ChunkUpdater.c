@@ -3,7 +3,7 @@
 #include "Events.h"
 #include "GraphicsAPI.h"
 #include "World.h"
-#include "TerrainAtlas1D.h"
+#include "TerrainAtlas.h"
 #include "MapRenderer.h"
 #include "Constants.h"
 #include "ExtMath.h"

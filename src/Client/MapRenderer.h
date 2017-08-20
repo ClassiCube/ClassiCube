@@ -2,7 +2,7 @@
 #ifndef CS_MAPRENDERER_H
 #define CS_MAPRENDERER_H
 #include "Typedefs.h"
-#include "TerrainAtlas1D.h"
+#include "TerrainAtlas.h"
 #include "ChunkInfo.h"
 /* Renders the blocks of the world by subdividing it into chunks.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

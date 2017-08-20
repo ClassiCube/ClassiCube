@@ -47,4 +47,20 @@ Point2D Point2D_Make(Int32 x, Int32 y);
 
 /* Returns whether the two points are equal. */
 bool Point2D_Equals(Point2D a, Point2D b);
+
+
+/* Stores the four texture coordinates that describe a textured quad.  */
+typedef struct TextureRec_ {
+	Real32 U1, V1, U2, V2;
+} TextureRec;
+
+
+/* Constructs a texture rectangle from origin and size. */
+TextureRec TextureRec_FromRegion(Real32 u, Real32 v, Real32 uWidth, Real32 vHeight);
+
+/* Constructs a texture rectangle from four points. */
+TextureRec TextureRec_FromPoints(Real32 u1, Real32 v1, Real32 u2, Real32 v2);
+
+/* Swaps U1 and U2 of a texture rectangle. */
+void TextureRec_SwapU(TextureRec* rec);
 #endif

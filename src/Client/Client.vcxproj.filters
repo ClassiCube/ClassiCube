@@ -159,9 +159,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NotchyGenerator.h">
-      <Filter>Header Files\Generator</Filter>
-    </ClInclude>
     <ClInclude Include="Noise.h">
       <Filter>Header Files\Generator</Filter>
     </ClInclude>
@@ -210,9 +207,6 @@
     <ClInclude Include="Texture.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="TextureRec.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="VertexStructs.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -230,12 +224,6 @@
     </ClInclude>
     <ClInclude Include="Funcs.h">
       <Filter>Header Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="TerrainAtlas1D.h">
-      <Filter>Header Files\TexturePack</Filter>
-    </ClInclude>
-    <ClInclude Include="TerrainAtlas2D.h">
-      <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
     <ClInclude Include="PackedCol.h">
       <Filter>Header Files\2D\Utils</Filter>
@@ -333,9 +321,6 @@
     <ClInclude Include="MapGenerator.h">
       <Filter>Header Files\Generator</Filter>
     </ClInclude>
-    <ClInclude Include="FlatgrassGenerator.h">
-      <Filter>Header Files\Generator</Filter>
-    </ClInclude>
     <ClInclude Include="AxisLinesRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
@@ -375,9 +360,6 @@
     <ClInclude Include="LocationUpdate.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="ModelBuilder.h">
-      <Filter>Header Files\Entities\Model</Filter>
-    </ClInclude>
     <ClInclude Include="IModel.h">
       <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
@@ -411,11 +393,11 @@
     <ClInclude Include="Mouse.h">
       <Filter>Header Files\Platform\Window</Filter>
     </ClInclude>
+    <ClInclude Include="TerrainAtlas.h">
+      <Filter>Header Files\TexturePack</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NotchyGenerator.c">
-      <Filter>Source Files\Generator</Filter>
-    </ClCompile>
     <ClCompile Include="Noise.c">
       <Filter>Source Files\Generator</Filter>
     </ClCompile>
@@ -443,9 +425,6 @@
     <ClCompile Include="Texture.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="TextureRec.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicsCommon.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
@@ -466,12 +445,6 @@
     </ClCompile>
     <ClCompile Include="Funcs.c">
       <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="TerrainAtlas1D.c">
-      <Filter>Source Files\TexturePack</Filter>
-    </ClCompile>
-    <ClCompile Include="TerrainAtlas2D.c">
-      <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
     <ClCompile Include="PackedCol.c">
       <Filter>Source Files\2D\Utils</Filter>
@@ -536,9 +509,6 @@
     <ClCompile Include="EnvRenderer.c">
       <Filter>Source Files\Rendering\Env</Filter>
     </ClCompile>
-    <ClCompile Include="FlatgrassGenerator.c">
-      <Filter>Source Files\Generator</Filter>
-    </ClCompile>
     <ClCompile Include="AxisLinesRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
@@ -577,9 +547,6 @@
     </ClCompile>
     <ClCompile Include="AABB.c">
       <Filter>Source Files\Math</Filter>
-    </ClCompile>
-    <ClCompile Include="ModelBuilder.c">
-      <Filter>Source Files\Entities\Model</Filter>
     </ClCompile>
     <ClCompile Include="IModel.c">
       <Filter>Source Files\Entities\Model</Filter>
@@ -631,6 +598,12 @@
     </ClCompile>
     <ClCompile Include="WinWindow.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainAtlas.c">
+      <Filter>Source Files\TexturePack</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGenerator.c">
+      <Filter>Source Files\Generator</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

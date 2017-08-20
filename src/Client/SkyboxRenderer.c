@@ -8,7 +8,7 @@
 #include "GraphicsEnums.h"
 #include "Events.h"
 #include "PackedCol.h"
-#include "TextureRec.h"
+#include "2DStructs.h"
 #include "VertexStructs.h"
 #include "WorldEnv.h"
 #include "EnvRenderer.h"

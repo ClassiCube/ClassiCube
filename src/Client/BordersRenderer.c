@@ -9,7 +9,7 @@
 #include "GraphicsCommon.h"
 #include "GraphicsEnums.h"
 #include "Events.h"
-#include "TerrainAtlas2D.h"
+#include "TerrainAtlas.h"
 #include "ExtMath.h"
 #include "Platform.h"
 #include "Funcs.h"

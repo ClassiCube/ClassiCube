@@ -7,7 +7,7 @@
 #include "ChunkInfo.h"
 #include "BlockID.h"
 #include "Builder1DPart.h"
-#include "TerrainAtlas1D.h"
+#include "TerrainAtlas.h"
 /* Converts a 16x16x16 chunk into a mesh of vertices.
 Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

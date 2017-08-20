@@ -199,7 +199,6 @@
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Events.h" />
-    <ClInclude Include="FlatgrassGenerator.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="GameProps.h" />
     <ClInclude Include="GZipHeader.h" />
@@ -213,7 +212,6 @@
     <ClInclude Include="LocationUpdate.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
-    <ClInclude Include="ModelBuilder.h" />
     <ClInclude Include="ModelCache.h" />
     <ClInclude Include="Key.h" />
     <ClInclude Include="Mouse.h" />
@@ -230,8 +228,7 @@
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="StringConvert.h" />
-    <ClInclude Include="TerrainAtlas1D.h" />
-    <ClInclude Include="TerrainAtlas2D.h" />
+    <ClInclude Include="TerrainAtlas.h" />
     <ClInclude Include="TickQueue.h" />
     <ClInclude Include="TiltComp.h" />
     <ClInclude Include="TreeGen.h" />
@@ -247,10 +244,8 @@
     <ClInclude Include="Noise.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Random.h" />
-    <ClInclude Include="NotchyGenerator.h" />
     <ClInclude Include="String.h" />
     <ClInclude Include="Texture.h" />
-    <ClInclude Include="TextureRec.h" />
     <ClInclude Include="Typedefs.h" />
     <ClInclude Include="Vectors.h" />
     <ClInclude Include="VertexStructs.h" />
@@ -281,7 +276,7 @@
     <ClCompile Include="EnvRenderer.c" />
     <ClCompile Include="Event.c" />
     <ClCompile Include="ExtMath.c" />
-    <ClCompile Include="FlatgrassGenerator.c" />
+    <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="GameStructs.c" />
     <ClCompile Include="GZipHeader.c" />
@@ -293,7 +288,6 @@
     <ClCompile Include="LiquidAnimations.c" />
     <ClCompile Include="LocationUpdate.c" />
     <ClCompile Include="MapRenderer.c" />
-    <ClCompile Include="ModelBuilder.c" />
     <ClCompile Include="ModelCache.c" />
     <ClCompile Include="Mouse.c" />
     <ClCompile Include="NormalBuilder.c" />
@@ -302,7 +296,6 @@
     <ClCompile Include="GraphicsCommon.c" />
     <ClCompile Include="Matrix.c" />
     <ClCompile Include="Noise.c" />
-    <ClCompile Include="NotchyGenerator.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="PigModel.c" />
@@ -316,10 +309,8 @@
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
     <ClCompile Include="StringConvert.c" />
-    <ClCompile Include="TerrainAtlas1D.c" />
-    <ClCompile Include="TerrainAtlas2D.c" />
+    <ClCompile Include="TerrainAtlas.c" />
     <ClCompile Include="Texture.c" />
-    <ClCompile Include="TextureRec.c" />
     <ClCompile Include="TickQueue.c" />
     <ClCompile Include="TiltComp.c" />
     <ClCompile Include="TreeGen.c" />

@@ -2,7 +2,7 @@
 #define CS_TEXTURE_H
 #include "Typedefs.h"
 #include "PackedCol.h"
-#include "TextureRec.h"
+#include "2DStructs.h"
 #include "GraphicsEnums.h"
 
 /* Represents a simple 2D textured quad.

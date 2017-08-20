@@ -81,3 +81,4 @@ static void ModelCache_ContextLost(void);
 
 static void ModelCache_ContextRecreated(void);
 #endif
+#endif
