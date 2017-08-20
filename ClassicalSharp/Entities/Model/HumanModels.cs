@@ -99,12 +99,14 @@ namespace ClassicalSharp.Model {
 			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;
 			vertices = human.vertices;
 			
-			DrawRotate(-p.HeadXRadians, 0, 0, human.Set.Head, true);
+			ModelPart part = human.Set.Head; part.RotY += 4 / 16f;
+			DrawRotate(-p.HeadXRadians, 0, 0, part, true);
 			UpdateVB();
 			
 			game.Graphics.AlphaTest = true;
 			index = 0;
-			DrawRotate(-p.HeadXRadians, 0, 0, human.Set.Hat, true);
+			part = human.Set.Hat; part.RotY += 4 / 16f;
+			DrawRotate(-p.HeadXRadians, 0, 0, part, true);
 			UpdateVB();
 		}
 	}
