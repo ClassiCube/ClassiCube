@@ -23,7 +23,6 @@ GfxResourceID weather_vb;
 
 #define weather_extent 4
 #define weather_verticesCount 8 * (weather_extent * 2 + 1) * (weather_extent * 2 + 1)
-VertexP3fT2fC4b weather_vertices[weather_verticesCount];
 
 Int16* weather_heightmap;
 Real64 weather_accumulator;
@@ -71,11 +70,11 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Int32 vCount = 0;
 	PackedCol col = WorldEnv_SunCol;
 	VertexP3fT2fC4b v;
-	VertexP3fT2fC4b* ptr = weather_vertices;
+	VertexP3fT2fC4b vertices[weather_verticesCount];
+	VertexP3fT2fC4b* ptr = vertices;
 
 	for (Int32 dx = -weather_extent; dx <= weather_extent; dx++)
-		for (Int32 dz = -weather_extent; dz <= weather_extent; dz++)
-		{
+		for (Int32 dz = -weather_extent; dz <= weather_extent; dz++) {
 			Int32 x = pos.X + dx, z = pos.Z + dz;
 			Real32 y = WeatherRenderer_RainHeight(x, z);
 			Real32 height = pos.Y - y;
@@ -97,24 +96,24 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 #define AddVertex *ptr = v; ptr++;
 
 			v.X = x; v.Y = y; v.Z = z; v.U = 0.0f; v.V = v1; AddVertex
-			/* (x, y, z)                  (0, v1) */
-			v.Y = y + height; v.V = v2; 					 AddVertex
-			/* (x, y + height, z)         (0, v2) */
-			v.X = x + 1; v.Z = z + 1; v.U = 1.0f;			 AddVertex
-			/* (x + 1, y + height, z + 1) (1, v2) */
-			v.Y = y; v.V = v1; 								 AddVertex
-			/* (x + 1, y, z + 1)          (1, v1) */
+				/* (x, y, z)                  (0, v1) */
+				v.Y = y + height; v.V = v2; 					 AddVertex
+				/* (x, y + height, z)         (0, v2) */
+				v.X = x + 1; v.Z = z + 1; v.U = 1.0f;			 AddVertex
+				/* (x + 1, y + height, z + 1) (1, v2) */
+				v.Y = y; v.V = v1; 								 AddVertex
+				/* (x + 1, y, z + 1)          (1, v1) */
 
-			v.Z = z;										 AddVertex
-			/* (x + 1, y, z)              (1, v1) */
-			v.Y = y + height; v.V = v2; 					 AddVertex
-			/* (x + 1, y + height, z)     (1, v2) */
-			v.X = x; v.Z = z + 1; v.U = 0.0f;				 AddVertex
-			/* (x, y + height, z + 1)     (0, v2) */
-			v.Y = y; v.V = v1; 								 AddVertex
-			/* (x y, z + 1)               (0, v1) */
+				v.Z = z;										 AddVertex
+				/* (x + 1, y, z)              (1, v1) */
+				v.Y = y + height; v.V = v2; 					 AddVertex
+				/* (x + 1, y + height, z)     (1, v2) */
+				v.X = x; v.Z = z + 1; v.U = 0.0f;				 AddVertex
+				/* (x, y + height, z + 1)     (0, v2) */
+				v.Y = y; v.V = v1; 								 AddVertex
+				/* (x y, z + 1)               (0, v1) */
 
-			vCount += 8;
+				vCount += 8;
 		}
 
 	if (particles && (weather_accumulator >= 0.25f || moved))
@@ -126,7 +125,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Gfx_SetAlphaArgBlend(true);
 
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
-	GfxCommon_UpdateDynamicVb_IndexedTris(weather_vb, weather_vertices, vCount);
+	GfxCommon_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
 	Gfx_SetAlphaArgBlend(false);
 	Gfx_SetDepthWrite(false);
