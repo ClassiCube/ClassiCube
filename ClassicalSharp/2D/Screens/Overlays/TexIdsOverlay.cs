@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
@@ -19,10 +20,12 @@ namespace ClassicalSharp.Gui.Screens {
 			if (vertices == null) {
 				vertices = new VertexP3fT2fC4b[verticesCount];
 			}
+			regularFont.Dispose();
+			regularFont = new Font(game.FontName, 8);
 			ContextRecreated();
 		}
 		
-		const int tileSize = 45, textOffset = 3;
+		const int tileSize = 40, textOffset = 3;
 		int xOffset, yOffset;
 		
 		public override void Render(double delta) {
@@ -30,8 +33,8 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.Texturing = true;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			RenderWidgets(widgets, delta);
-			RenderTerrain();			
-			RenderTextOverlay();		
+			RenderTerrain();
+			RenderTextOverlay();
 			gfx.Texturing = false;
 		}
 		
@@ -49,7 +52,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void RenderTerrain() {
-			int elementsPerAtlas = game.TerrainAtlas1D.elementsPerAtlas1D;			
+			int elementsPerAtlas = game.TerrainAtlas1D.elementsPerAtlas1D;
 			for (int i = 0; i < TerrainAtlas2D.TilesPerRow * TerrainAtlas2D.RowsCount;) {
 				int index = 0, texIdx = i / elementsPerAtlas, ignored;
 				
@@ -58,7 +61,7 @@ namespace ClassicalSharp.Gui.Screens {
 					int x = (i + j) % TerrainAtlas2D.TilesPerRow;
 					int y = (i + j) / TerrainAtlas2D.TilesPerRow;
 					
-					Texture tex = new Texture(0, xOffset + x * tileSize, yOffset + y * tileSize, 
+					Texture tex = new Texture(0, xOffset + x * tileSize, yOffset + y * tileSize,
 					                          tileSize, tileSize, rec);
 					IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked, vertices, ref index);
 				}
@@ -73,17 +76,19 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = 0;
 			idAtlas.tex.Y = (short)(yOffset + (tileSize - idAtlas.tex.Height));
 			
-			for (int y = 0; y < 4; y++) {
+			for (int y = 1; y <= TerrainAtlas2D.RowsCount; y++) {
 				for (int x = 0; x < TerrainAtlas2D.TilesPerRow; x++) {
 					idAtlas.curX = xOffset + tileSize * x + textOffset;
-					int id = x + (y * TerrainAtlas2D.TilesPerRow);
+					int id = x + ((y - 1) * TerrainAtlas2D.TilesPerRow);
 					idAtlas.AddInt(id, vertices, ref index);
 				}
 				idAtlas.tex.Y += tileSize;
+				
+				if ((y % 4) != 0) continue;				
+				gfx.BindTexture(idAtlas.tex.ID);
+				gfx.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
+				index = 0;
 			}
-
-			gfx.BindTexture(idAtlas.tex.ID);
-			gfx.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
 		}
 		
 		public override bool HandlesKeyDown(Key key) {

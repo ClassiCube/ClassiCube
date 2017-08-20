@@ -55,6 +55,7 @@ namespace ClassicalSharp.Gui.Screens {
 				game.Gui.overlays.RemoveAt(0);
 			if (game.Gui.overlays.Count == 0)
 				game.CursorVisible = game.realVisible;
+			game.Camera.RegrabMouse();
 		}
 		
 		public abstract void RedrawText();
