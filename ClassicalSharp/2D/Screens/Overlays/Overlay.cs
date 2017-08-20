@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected TextWidget[] labels;
 		public string[] lines = new string[4];
 		
-		public Overlay(Game game) : base(game) { }		
+		public Overlay(Game game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();

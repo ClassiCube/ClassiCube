@@ -267,10 +267,18 @@ namespace ClassicalSharp {
 				}
 			} else if (key == Keys[KeyBind.PauseOrExit] && game.World.blocks != null) {
 				game.Gui.SetNewScreen(new PauseScreen(game));
-			} else if (!game.Mode.HandlesKeyDown(key)) {
+			} else if (game.Mode.HandlesKeyDown(key)) {
+			} else if (key == Key.F10) {
+				ShowTextureIdsOverlay();
+			} else {
 				return false;
 			}
 			return true;
+		}
+		
+		void ShowTextureIdsOverlay() {
+			if (game.Gui.overlays.Count > 0) return;
+			game.Gui.ShowOverlay(new TexIdsOverlay(game));
 		}
 		
 		void Toggle(Key key, ref bool target, string enableMsg, string disableMsg) {
