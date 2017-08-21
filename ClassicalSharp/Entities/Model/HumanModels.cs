@@ -19,8 +19,10 @@ namespace ClassicalSharp.Model {
 			base.MakeDescriptions();
 			head = MakeBoxBounds(-4, 12, -4, 4, 20, 4).RotOrigin(0, 13, 0);
 			torso = torso.Scale(size);
-			lLeg = lLeg.Scale(size); rLeg = rLeg.Scale(size);
-			lArm = lArm.Scale(size); rArm = rArm.Scale(size);
+			lLeg = lLeg.Scale(size); 
+			rLeg = rLeg.Scale(size);
+			lArm = lArm.Scale(size); 
+			rArm = rArm.Scale(size);
 			offset = 0.5f * size;
 		}
 		

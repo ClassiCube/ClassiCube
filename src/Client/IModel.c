@@ -119,15 +119,15 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 		Real32 t = 0;
 
 		/* Rotate locally */
-		if (model->Rotation == RotateOrder_ZYX) {
+		if (IModel_Rotation == RotateOrder_ZYX) {
 			IMODEL_ROTATEZ
 			IMODEL_ROTATEY
 			IMODEL_ROTATEX
-		} else if (model->Rotation == RotateOrder_XZY) {
+		} else if (IModel_Rotation == RotateOrder_XZY) {
 			IMODEL_ROTATEX
 			IMODEL_ROTATEZ
 			IMODEL_ROTATEY
-		} else if (model->Rotation == RotateOrder_YZX) {
+		} else if (IModel_Rotation == RotateOrder_YZX) {
 			IMODEL_ROTATEY
 			IMODEL_ROTATEZ
 			IMODEL_ROTATEX

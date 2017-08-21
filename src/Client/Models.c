@@ -67,12 +67,10 @@ Real32 ChickenModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
 Vector3 ChickenModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 12.0f / 16.0f, 8.0f / 16.0f);
 }
-
-AABB ChickenModel_GetPickingBounds(void) {
-	AABB bb;
-	AABB_FromCoords6(&bb, -4.0f / 16.0f, 0.0f, -8.0f / 16.0f,
-		4.0f / 16.0f, 15.0f / 16.0f, 4.0f / 16.0f);
-	return bb;
+void ChickenModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb, 
+		-4.0f / 16.0f, 0.0f,         -8.0f / 16.0f,
+		 4.0f / 16.0f, 15.0f / 16.0f, 4.0f / 16.0f);
 }
 
 void ChickenModel_DrawModel(Entity* entity) {
@@ -146,12 +144,10 @@ Real32 CreeperModel_GetEyeY(Entity* entity) { return 22.0f / 16.0f; }
 Vector3 CreeperModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 26.0f / 16.0f, 8.0f / 16.0f);
 }
-
-AABB CreeperModel_GetPickingBounds(void) {
-	AABB bb;
-	AABB_FromCoords6(&bb, -4.0f / 16.0f, 0.0f, -6.0f / 16.0f,
-		4.0f / 16.0f, 26.0f / 16.0f, 6.0f / 16.0f);
-	return bb;
+void CreeperModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb, 
+		-4.0f / 16.0f,          0.0f, -6.0f / 16.0f,
+		 4.0f / 16.0f, 26.0f / 16.0f,  6.0f / 16.0f);
 }
 
 void CreeperModel_DrawModel(Entity* entity) {
@@ -217,11 +213,10 @@ Vector3 PigModel_GetCollisionSize(void) {
 	return Vector3_Create3(14.0f / 16.0f, 14.0f / 16.0f, 14.0f / 16.0f);
 }
 
-AABB PigModel_GetPickingBounds(void) {
-	AABB bb;
-	AABB_FromCoords6(&bb, -5.0f / 16.0f, 0.0f, -14.0f / 16.0f,
-		5.0f / 16.0f, 16.0f / 16.0f, 9.0f / 16.0f);
-	return bb;
+void PigModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb, 
+		-5.0f / 16.0f,          0.0f, -14.0f / 16.0f,
+		 5.0f / 16.0f, 16.0f / 16.0f,   9.0f / 16.0f);
 }
 
 void PigModel_DrawModel(Entity* entity) {
@@ -287,11 +282,10 @@ Vector3 SkeletonModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 30.0f / 16.0f, 8.0f / 16.0f);
 }
 
-AABB SkeletonModel_GetPickingBounds(void) {
-	AABB bb;
-	AABB_FromCoords6(&bb, -4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
-		4.0f / 16.0f, 32.0f / 16.0f, 4.0f / 16.0f);
-	return bb;
+void SkeletonModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb, 
+		-4.0f / 16.0f,          0.0f, -4.0f / 16.0f,
+		 4.0f / 16.0f, 32.0f / 16.0f,  4.0f / 16.0f);
 }
 
 void SkeletonModel_DrawModel(Entity* entity) {
@@ -351,11 +345,10 @@ Vector3 SpiderModel_GetCollisionSize(void) {
 	return Vector3_Create3(15.0f / 16.0f, 12.0f / 16.0f, 15.0f / 16.0f);
 }
 
-AABB SpiderModel_GetPickingBounds(void) {
-	AABB bb;
-	AABB_FromCoords6(&bb, -5.0f / 16.0f, 0.0f, -11.0f / 16.0f,
-		5.0f / 16.0f, 12.0f / 16.0f, 15.0f / 16.0f);
-	return bb;
+void SpiderModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb, 
+		-5.0f / 16.0f, 0.0f,         -11.0f / 16.0f,
+		 5.0f / 16.0f, 12.0f / 16.0f, 15.0f / 16.0f);
 }
 
 #define quarterPi (MATH_PI / 4.0f)
@@ -370,7 +363,7 @@ void SpiderModel_DrawModel(Entity* entity) {
 	Real32 rotX = Math_Sin(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
 	Real32 rotZ = Math_Cos(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
 	Real32 rotY = Math_Sin(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
-	IModel_ActiveModel->Rotation = RotateOrder_XZY;
+	IModel_Rotation = RotateOrder_XZY;
 
 	IModel_DrawRotate(rotX, quarterPi + rotY, eighthPi + rotZ, Spider_LeftLeg, false);
 	IModel_DrawRotate(-rotX, eighthPi + rotY, eighthPi + rotZ, Spider_LeftLeg, false);
@@ -382,7 +375,7 @@ void SpiderModel_DrawModel(Entity* entity) {
 	IModel_DrawRotate(rotX, eighthPi - rotY, -eighthPi - rotZ, Spider_RightLeg, false);
 	IModel_DrawRotate(-rotX, quarterPi - rotY, -eighthPi - rotZ, Spider_RightLeg, false);
 
-	IModel_ActiveModel->Rotation = RotateOrder_ZYX;
+	IModel_Rotation = RotateOrder_ZYX;
 	IModel_UpdateVB();
 }
 
@@ -443,11 +436,10 @@ Vector3 ZombieModel_GetCollisionSize(void) {
 	return Vector3_Create3((8.0f + 0.6f) / 16.0f, 28.1f / 16.0f, (8.0f + 0.6f) / 16.0f);
 }
 
-AABB ZombieModel_GetPickingBounds(void) {
-	AABB bb;
-	AABB_FromCoords6(&bb, -4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
-		4.0f / 16.0f, 32.0f / 16.0f, 4.0f / 16.0f);
-	return bb;
+void ZombieModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb, 
+		-4.0f / 16.0f,          0.0f, -4.0f / 16.0f,
+		 4.0f / 16.0f, 32.0f / 16.0f,  4.0f / 16.0f);
 }
 
 void ZombieModel_DrawModel(Entity* entity) {
@@ -469,5 +461,191 @@ IModel* ZombieModel_GetInstance(void) {
 	IModel_SetPointers(ZombieModel);
 	return &ZombieModel;
 }
-\
+
+
+typedef struct ModelSet_ {
+	ModelPart Head, Torso, LeftLeg, RightLeg, LeftArm, RightArm, Hat,
+		TorsoLayer, LeftLegLayer, RightLegLayer, LeftArmLayer, RightArmLayer;
+} ModelSet;
+
+BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
+Real32 offset;
+void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet* setSlim) {
+	BoxDesc_TexOrigin(&head, 0, 0);
+	set->Head = BoxDesc_BuildBox(m, &head);
+
+	BoxDesc_TexOrigin(&torso, 16, 16);
+	set->Torso = BoxDesc_BuildBox(m, &torso);
+
+	BoxDesc_TexOrigin(&head, 32, 0);
+	BoxDesc_Expand(&head, offset);
+	set->Hat = BoxDesc_BuildBox(m, &head);
+
+	BoxDesc_TexOrigin(&lLeg, 0, 16);
+	BoxDesc_MirrorX(&lLeg);
+	set->LeftLeg = BoxDesc_BuildBox(m, &lLeg);
+
+	BoxDesc_TexOrigin(&rLeg, 0, 16);
+	set->RightLeg = BoxDesc_BuildBox(m, &rLeg);
+	
+	BoxDesc_TexOrigin(&lArm, 40, 16);
+	BoxDesc_MirrorX(&lArm);
+	set->LeftArm = BoxDesc_BuildBox(m, &lArm);
+
+	BoxDesc_TexOrigin(&rArm, 40, 16);
+	set->RightArm = BoxDesc_BuildBox(m, &rArm);
+	
+	set64->Head = set->Head;
+	set64->Torso = set->Torso;
+	set64->Hat = set->Hat;
+
+	BoxDesc_MirrorX(&lLeg);
+	BoxDesc_TexOrigin(&lLeg, 16, 48);
+	set64->LeftLeg = BoxDesc_BuildBox(m, &lLeg);
+	set64->RightLeg = set->RightLeg;
+
+	BoxDesc_MirrorX(&lArm);
+	BoxDesc_TexOrigin(&lArm, 32, 48);
+	set64->LeftArm = BoxDesc_BuildBox(m, &lArm);
+	set64->RightArm = set->RightArm;
+
+	BoxDesc_TexOrigin(&torso, 16, 32);
+	BoxDesc_Expand(&torso, offset);
+	set64->TorsoLayer = BoxDesc_BuildBox(m, &torso);
+
+	BoxDesc_TexOrigin(&lLeg, 0, 48);
+	BoxDesc_Expand(&lLeg, offset);
+	set64->LeftLegLayer = BoxDesc_BuildBox(m, &lLeg);
+
+	BoxDesc_TexOrigin(&rLeg, 0, 32);
+	BoxDesc_Expand(&rLeg, offset);
+	set64->RightLegLayer = BoxDesc_BuildBox(m, &rLeg);
+
+	BoxDesc_TexOrigin(&lArm, 48, 48);
+	BoxDesc_Expand(&lArm, offset);
+	set64->LeftArmLayer = BoxDesc_BuildBox(m, &lArm);
+
+	BoxDesc_TexOrigin(&rArm, 40, 32);
+	BoxDesc_Expand(&rArm, offset);
+	set64->RightArmLayer = BoxDesc_BuildBox(m, &rArm);
+
+	setSlim->Head = set64->Head;
+	setSlim->Torso = set64->Torso;
+	setSlim->Hat = set64->Hat;
+	setSlim->LeftLeg = set64->LeftLeg;
+	setSlim->RightLeg = set64->RightLeg;	
+
+	lArm.BodyW -= 1; lArm.X1 += (offset * 2.0f) / 16.0f;
+	BoxDesc_TexOrigin(&lArm, 32, 48);
+	setSlim->LeftArm = BoxDesc_BuildBox(m, &lArm);
+
+	rArm.BodyW -= 1; rArm.X2 -= (offset * 2.0f) / 16.0f;
+	BoxDesc_TexOrigin(&rArm, 40, 16);
+	setSlim->RightArm = BoxDesc_BuildBox(m, &rArm);
+
+	setSlim->TorsoLayer = set64->TorsoLayer;
+	setSlim->LeftLegLayer = set64->LeftLegLayer;
+	setSlim->RightLegLayer = set64->RightLegLayer;
+
+	BoxDesc_TexOrigin(&lArm, 48, 48);
+	BoxDesc_Expand(&lArm, offset);
+	setSlim->LeftArmLayer = BoxDesc_BuildBox(m, &lArm);
+
+	BoxDesc_TexOrigin(&rArm, 40, 32);
+	BoxDesc_Expand(&rArm, offset);
+	setSlim->RightArmLayer = BoxDesc_BuildBox(m, &rArm);
+}
+
+void HumanModel_SetupState(Entity* entity) {
+	Gfx_BindTexture(IModel_GetTexture(entity));
+	Gfx_SetAlphaTest(false);
+
+	bool _64x64 = entity->SkinType != SkinType_64x32;
+	IModel_uScale = entity->uScale / 64.0f;
+	IModel_vScale = entity->vScale / (_64x64 ? 64.0f : 32.0f);
+}
+
+void HumanModel_DrawModel(Entity* p, ModelSet* model) {
+	SkinType skinType = p->SkinType;
+	IModel_DrawRotate(-p->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
+	IModel_DrawPart(model->Torso);
+	IModel_DrawRotate(p->Anim.LeftLegX, 0, p->Anim.LeftLegZ, model->LeftLeg, false);
+	IModel_DrawRotate(p->Anim.RightLegX, 0, p->Anim.RightLegZ, model->RightLeg, false);
+
+	IModel_Rotation = RotateOrder_XZY;
+	IModel_DrawRotate(p->Anim.LeftArmX, 0, p->Anim.LeftArmZ, model->LeftArm, false);
+	IModel_DrawRotate(p->Anim.RightArmX, 0, p->Anim.RightArmZ, model->RightArm, false);
+	IModel_Rotation = RotateOrder_ZYX;
+	IModel_UpdateVB();
+
+	Gfx_SetAlphaTest(true);
+	IModel_ActiveModel->index = 0;
+	if (skinType != SkinType_64x32) {
+		IModel_DrawPart(model->TorsoLayer);
+		IModel_DrawRotate(p->Anim.LeftLegX, 0, p->Anim.LeftLegZ, model->LeftLegLayer, false);
+		IModel_DrawRotate(p->Anim.RightLegX, 0, p->Anim.RightLegZ, model->RightLegLayer, false);
+
+		IModel_Rotation = RotateOrder_XZY;
+		IModel_DrawRotate(p->Anim.LeftArmX, 0, p->Anim.LeftArmZ, model->LeftArmLayer, false);
+		IModel_DrawRotate(p->Anim.RightArmX, 0, p->Anim.RightArmZ, model->RightArmLayer, false);
+		IModel_Rotation = RotateOrder_ZYX;
+	}
+	IModel_DrawRotate(-p->HeadX * MATH_DEG2RAD, 0, 0, model->Hat, true);
+	IModel_UpdateVB();
+}
+
+
+ModelSet Humanoid_Set, Humanoid_Set64, Humanoid_SetSlim;
+ModelVertex HumanoidModel_Vertices[IModel_BoxVertices * (7 + 7 + 4)];
+IModel HumanoidModel;
+
+IModel* HumanoidModel_GetInstance(void) {
+	IModel_Init(&HumanoidModel);
+	IModel_SetPointers(HumanoidModel);
+	HumanoidModel.CalcHumanAnims = true;
+	HumanoidModel.UsesHumanSkin = true;
+	return &HumanoidModel;
+}
+
+void HumanoidModel_MakeBoxDescs(void) {
+	BoxDesc_Box(&head, -4, 24, -4, 4, 32, 4);
+	BoxDesc_RotOrigin(&head, 0, 24, 0);
+	BoxDesc_Box(&torso, -4, 12, -2, 4, 24, 2);
+	BoxDesc_Box(&lLeg, -4, 0, -2, 0, 12, 2);
+	BoxDesc_RotOrigin(&lLeg, 0, 12, 0);
+	BoxDesc_Box(&rLeg, 0, 0, -2, 4, 12, 2);
+	BoxDesc_RotOrigin(&rLeg, 0, 12, 0);
+	BoxDesc_Box(&lArm, -8, 12, -2, -4, 24, 2);
+	BoxDesc_RotOrigin(&lArm, -5, 22, 0);
+	BoxDesc_Box(&rArm, 4, 12, -2, 8, 24, 2);
+	BoxDesc_RotOrigin(&rArm, 5, 22, 0);
+}
+
+void HumanoidModel_CreateParts(void) {
+	HumanoidModel_MakeBoxDescs();
+	offset = 0.5f;
+	HumanModel_CreateParts(&HumanoidModel, &Humanoid_Set, 
+		&Humanoid_Set64, &Humanoid_SetSlim);
+}
+
+Real32 HumanoidModel_GetNameYOffset(void) { return 32.0f / 16.0f + 0.5f / 16.0f; }
+Real32 HumanoidModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
+Vector3 HumanoidModel_GetCollisionSize(void) {
+	return Vector3_Create3(8.0f / 16.0f + 0.6f / 16.0f, 28.1f / 16.0f, 8.0f / 16.0f + 0.6f / 16.0f);
+}
+
+void HumanoidModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb,
+		-8.0f / 16.0f, 0.0f,         -4.0f / 16.0f,
+		 8.0f / 16.0f, 32.0f / 16.0f, 4.0f / 16.0f);
+}
+
+void HumanoidModel_DrawModel(Entity* entity) {
+	HumanModel_SetupState(entity);
+	SkinType skinType = entity->SkinType;
+	ModelSet* model =
+		skinType == SkinType_64x64Slim ? &Humanoid_SetSlim :
+		(skinType == SkinType_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
+	HumanModel_DrawModel(entity, model);
+}
 #endif

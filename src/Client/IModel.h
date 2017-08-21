@@ -64,10 +64,6 @@ typedef struct IModel_ {
 	/* Whether the vertices of this model have actually been filled. */
 	bool initalised;
 
-	/* Specifies order in which axis roations are applied to a part. */
-	RotateOrder Rotation;
-
-
 	/* Whether the entity should be slightly bobbed up and down when rendering.
 	e.g. for players when their legs are at the peak of their swing, the whole model will be moved slightly down. */
 	bool Bobbing;
@@ -103,7 +99,7 @@ typedef struct IModel_ {
 	Vector3 (*GetCollisionSize)(void);
 
 	/* Bounding box that contains this model, assuming that the model is not rotated at all. */
-	AABB (*GetPickingBounds)(void);
+	void (*GetPickingBounds)(AABB* bb);
 
 	/* Fills out the vertices of this model. */
 	void (*CreateParts)(void);
@@ -132,6 +128,9 @@ Real32 IModel_uScale, IModel_vScale;
 
 /* Angle of offset from head to body rotation. */
 Real32 IModel_cosHead, IModel_sinHead;
+
+/* Specifies order in which axis roations are applied to a part. */
+RotateOrder IModel_Rotation;
 
 /* Pointer to model that is currently being rendered/drawn. */
 IModel* IModel_ActiveModel;
