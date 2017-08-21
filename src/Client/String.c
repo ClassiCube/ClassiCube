@@ -20,7 +20,7 @@ String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
 	return str;
 }
 
-String String_FromConstant(const UInt8* buffer) {
+String String_FromReadonly(const UInt8* buffer) {
 	UInt16 length = 0;
 	UInt8 cur = 0;
 	UInt8* ptr = buffer;

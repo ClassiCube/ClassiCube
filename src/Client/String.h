@@ -26,7 +26,10 @@ NOTE: This method sets the bytes occupied by the string to NUL. */
 String String_FromRawBuffer(UInt8* buffer, UInt16 capacity);
 
 /* Constructs a new string from a constant readonly string. */
-String String_FromConstant(const UInt8* buffer);
+String String_FromReadonly(const UInt8* buffer);
+
+#define String_FromConstant(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)};
+
 
 /* Makes an empty string that points to nowhere. */
 String String_MakeNull(void);

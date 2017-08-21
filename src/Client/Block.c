@@ -128,9 +128,7 @@ String Block_DefaultName(BlockID block) {
 		return String_FromConstant("Invalid");
 	}
 
-	/* TODO: how much performance impact here. */
 	String blockNames = String_FromConstant(Block_RawNames);
-
 	/* Find start and end of this particular block name. */
 	Int32 start = 0, i;
 	for (i = 0; i < block; i++) {

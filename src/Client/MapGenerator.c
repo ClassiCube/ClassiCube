@@ -211,7 +211,7 @@ void NotchyGen_CarveCaves(void) {
 
 void NotchyGen_CarveOreVeins(Real32 abundance, const UInt8* state, BlockID block) {
 	Int32 numVeins = (Int32)(volume * abundance / 16384);
-	Gen_CurrentState = String_FromConstant(state);
+	Gen_CurrentState = String_FromReadonly(state);
 
 	Int32 i, j;
 	for (i = 0; i < numVeins; i++) {
