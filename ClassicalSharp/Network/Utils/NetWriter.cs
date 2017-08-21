@@ -20,18 +20,8 @@ namespace ClassicalSharp.Network {
 			int count = Math.Min(value.Length, Utils.StringLength);
 			for (int i = 0; i < count; i++) {
 				char c = value[i];
-				int cpIndex = 0;
-				if (c == '&') {
-					buffer[index + i] = (byte)'%'; // escape colour codes
-				} else if (c >= ' ' && c <= '~') {
-					buffer[index + i] = (byte)c;
-				} else if ((cpIndex = Utils.ControlCharReplacements.IndexOf(c)) >= 0) {
-					buffer[index + i] = (byte)cpIndex;
-				} else if ((cpIndex = Utils.ExtendedCharReplacements.IndexOf(c)) >= 0) {
-					buffer[index + i] = (byte)(cpIndex + 127);
-				} else {
-					buffer[index + i] = (byte)'?';
-				}
+				if (c == '&') c = '%'; // escape colour codes
+				buffer[index + i] = (byte)IDrawer2D.ConvertToCP437(c);
 			}
 			
 			for (int i = value.Length; i < Utils.StringLength; i++)

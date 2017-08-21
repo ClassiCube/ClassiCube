@@ -48,6 +48,8 @@ typedef UInt8 Opcode;
 #define Opcode_CpeSetMapEnvUrl 40
 #define Opcode_CpeSetMapEnvProperty 41
 #define Opcode_CpeSetEntityProperty 42
+#define Opcode_CpeTwoWayPing 43
+#define Opcode_CpeSetInventoryOrder 44
 
 
 /* Chat message types.*/

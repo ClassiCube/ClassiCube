@@ -223,9 +223,8 @@ namespace ClassicalSharp {
 			return total;
 		}
 		
-		protected static int ConvertToCP437(char c) {
-			if (c >= ' ' && c <= '~')
-				return (int)c;
+		public static int ConvertToCP437(char c) {
+			if (c >= ' ' && c <= '~') return (int)c;
 			
 			int cIndex = Utils.ControlCharReplacements.IndexOf(c);
 			if (cIndex >= 0) return cIndex;
