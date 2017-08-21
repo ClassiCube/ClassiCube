@@ -17,7 +17,7 @@ void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u
 }
 
 void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ) {
-	part->Offset = offset; part->Count = count;
+	part->Offset = (UInt16)offset; part->Count = (UInt16)count;
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
 
@@ -86,18 +86,20 @@ GfxResourceID IModel_GetTexture(Entity* entity) {
 
 void IModel_DrawPart(ModelPart part) {
 	IModel* model = IModel_ActiveModel;
-	VertexP3fT2fC4b* dst = ModelCache_Vertices; dst += model->index;
+	ModelVertex* src = &model->vertices[part.Offset];
+	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
 	Int32 i;
 
 	for (i = 0; i < part.Count; i++) {
-		ModelVertex v = model->vertices[part.Offset + i];
+		ModelVertex v = *src;
 		dst->X = v.X; dst->Y = v.Y; dst->Z = v.Z;
 		dst->Colour = IModel_Cols[i >> 2];
 
 		dst->U = (v.U & UV_POS_MASK) * IModel_uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * IModel_uScale;
 		dst->V = (v.V & UV_POS_MASK) * IModel_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * IModel_vScale;
-		dst++; model->index++;
+		src++; dst++;
 	}
+	model->index += part.Count;
 }
 
 #define IMODEL_ROTATEX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
@@ -110,11 +112,12 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 	Real32 cosY = Math_Cos(-angleY), sinY = Math_Sin(-angleY);
 	Real32 cosZ = Math_Cos(-angleZ), sinZ = Math_Sin(-angleZ);
 	Real32 x = part.RotX, y = part.RotY, z = part.RotZ;
-	VertexP3fT2fC4b* dst = ModelCache_Vertices; dst += model->index;
-	Int32 i;
 
+	ModelVertex* src = &model->vertices[part.Offset];
+	VertexP3fT2fC4b* dst = &ModelCache_Vertices[model->index];
+	Int32 i;
 	for (i = 0; i < part.Count; i++) {
-		ModelVertex v = model->vertices[part.Offset + i];
+		ModelVertex v = *src;
 		v.X -= x; v.Y -= y; v.Z -= z;
 		Real32 t = 0;
 
@@ -142,8 +145,9 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 
 		dst->U = (v.U & UV_POS_MASK) * IModel_uScale - (v.U >> UV_MAX_SHIFT) * 0.01f * IModel_uScale;
 		dst->V = (v.V & UV_POS_MASK) * IModel_vScale - (v.V >> UV_MAX_SHIFT) * 0.01f * IModel_vScale;
-		dst++; model->index++;
+		src++; dst++;
 	}
+	model->index += part.Count;
 }
 
 void BoxDesc_TexOrigin(BoxDesc* desc, Int32 x, Int32 y) {

@@ -41,7 +41,7 @@ void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
 typedef struct ModelPart_ {
-	Int32 Offset, Count;
+	UInt16 Offset, Count;
 	Real32 RotX, RotY, RotZ;
 } ModelPart;
 
