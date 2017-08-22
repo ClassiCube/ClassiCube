@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Gui.Widgets;
+using ClassicalSharp.Textures;
 
 namespace ClassicalSharp.Gui.Screens {
 	public class GraphicsOptionsScreen : MenuOptionsScreen {
@@ -46,6 +47,9 @@ namespace ClassicalSharp.Gui.Screens {
 				        	Options.Set(OptionsKey.EntityShadow, v);
 				        }),
 				
+				MakeBool(1, 50, "Mipmaps", OptionsKey.Mipmaps,
+				         OnWidgetClick, g => g.Mipmaps, SetMipmaps),
+				
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
 				null, null,
@@ -64,13 +68,25 @@ namespace ClassicalSharp.Gui.Screens {
 			g.MapRenderer.Refresh();
 		}
 		
+		void SetMipmaps(Game g, bool v) {
+			g.Mipmaps = v;
+			
+			if (game.World.TextureUrl != null) {
+				TexturePack.ExtractCurrent(game, game.World.TextureUrl);
+			} else {
+				TexturePack.ExtractDefault(game);
+			}
+		}
+		
 		void MakeValidators() {
 			validators = new MenuInputValidator[] {
 				new EnumValidator(typeof(FpsLimitMethod)),
 				new IntegerValidator(16, 4096),
 				new BooleanValidator(),
+				
 				new EnumValidator(typeof(NameMode)),
 				new EnumValidator(typeof(EntityShadow)),
+				new BooleanValidator(),
 			};
 		}
 		

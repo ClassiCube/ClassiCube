@@ -33,6 +33,7 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_EntityShadow "entityshadow"
 #define OptionsKey_RenderType "normal"
 #define OptionsKey_SmoothLighting "gfx-smoothlighting"
+#define OptionsKey_Mipmaps "gfx-mipmaps"
 #define OptionsKey_SurvivalMode "game-survivalmode"
 #define OptionsKey_ChatLogging "chat-logging"
 
