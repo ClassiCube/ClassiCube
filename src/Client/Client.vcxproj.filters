@@ -216,9 +216,6 @@
     <ClInclude Include="World.h">
       <Filter>Header Files\Map</Filter>
     </ClInclude>
-    <ClInclude Include="WorldEnv.h">
-      <Filter>Header Files\Map</Filter>
-    </ClInclude>
     <ClInclude Include="Funcs.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
@@ -426,9 +423,6 @@
       <Filter>Source Files\Math</Filter>
     </ClCompile>
     <ClCompile Include="World.c">
-      <Filter>Source Files\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="WorldEnv.c">
       <Filter>Source Files\Map</Filter>
     </ClCompile>
     <ClCompile Include="D3D9Api.c">

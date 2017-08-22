@@ -1,7 +1,8 @@
-#if 0
+#if 1
 #include "IModel.h"
 #include "GraphicsAPI.h"
 #include "ExtMath.h"
+#include "ModelCache.h"
 
 ModelPart Chicken_Head, Chicken_Head2, Chicken_Head3, Chicken_Torso;
 ModelPart Chicken_LeftLeg, Chicken_RightLeg, Chicken_LeftWing, Chicken_RightWing;
@@ -240,6 +241,125 @@ IModel* PigModel_GetInstance(void) {
 }
 
 
+ModelPart Sheep_Head, Sheep_Torso, Sheep_LeftLegFront;
+ModelPart Sheep_RightLegFront, Sheep_LeftLegBack, Sheep_RightLegBack;
+ModelPart Fur_Head, Fur_Torso, Fur_LeftLegFront, Fur_RightLegFront;
+ModelPart Fur_LeftLegBack, Fur_RightLegBack;
+ModelVertex SheepModel_Vertices[IModel_BoxVertices * 6 * 2];
+IModel SheepModel;
+Int32 fur_Index;
+
+void SheepModel_CreateParts(void) {
+	BoxDesc desc;
+
+	BoxDesc_Box(&desc, -3, 16, -14, 3, 22, -6);
+	BoxDesc_TexOrigin(&desc, 0, 0);
+	BoxDesc_RotOrigin(&desc, 0, 18, -8);
+	Sheep_Head = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_RotatedBox(&desc, -4, 12, -8, 4, 18, 8);
+	BoxDesc_TexOrigin(&desc, 28, 8);
+	Sheep_Torso = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_Box(&desc, -5, 0, -7, -1, 12, -3);
+	BoxDesc_TexOrigin(&desc, 0, 16);
+	BoxDesc_RotOrigin(&desc, 0, 12, -5);
+	Sheep_LeftLegFront = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_Box(&desc, 1, 0, -7, 5, 12, -3);
+	BoxDesc_TexOrigin(&desc, 0, 16);
+	BoxDesc_RotOrigin(&desc, 0, 12, -5);
+	Sheep_RightLegFront = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_Box(&desc, -5, 0, 5, -1, 12, 9);
+	BoxDesc_TexOrigin(&desc, 0, 16);
+	BoxDesc_RotOrigin(&desc, 0, 12, 7);
+	Sheep_LeftLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_Box(&desc, 1, 0, 5, 5, 12, 9);
+	BoxDesc_TexOrigin(&desc, 0, 16);
+	BoxDesc_RotOrigin(&desc, 0, 12, 7);
+	Sheep_RightLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
+
+
+	BoxDesc_Box(&desc, -3, -3, -3, 3, 3, 3);
+	BoxDesc_TexOrigin(&desc, 0, 0);
+	BoxDesc_SetBounds(&desc, -3.5f, 15.5f, -12.5f, 3.5f, 22.5f, -5.5f);
+	BoxDesc_RotOrigin(&desc, 0, 18, -8);
+	Fur_Head = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_RotatedBox(&desc, -4, 12, -8, 4, 18, 8);
+	BoxDesc_TexOrigin(&desc, 28, 8);
+	BoxDesc_SetBounds(&desc, -6.0f, 10.5f, -10.0f, 6.0f, 19.5f, 10.0f);
+	Fur_Torso = BoxDesc_BuildRotatedBox(&SheepModel, &desc);
+
+
+	BoxDesc_Box(&desc, -2, -3, -2, 2, 3, 2);
+	BoxDesc_TexOrigin(&desc, 0, 16);
+
+	BoxDesc_SetBounds(&desc, -5.5f, 5.5f, -7.5f, -0.5f, 12.5f, -2.5f);
+	BoxDesc_RotOrigin(&desc, 0, 12, -5);
+	Fur_LeftLegFront = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_SetBounds(&desc, 0.5f, 5.5f, -7.5f, 5.5f, 12.5f, -2.5f);
+	BoxDesc_RotOrigin(&desc, 0, 12, -5);
+	Fur_RightLegFront = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_SetBounds(&desc, -5.5f, 5.5f, 4.5f, -0.5f, 12.5f, 9.5f);
+	BoxDesc_RotOrigin(&desc, 0, 12, 7);
+	Fur_LeftLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
+
+	BoxDesc_SetBounds(&desc, 0.5f, 5.5f, 4.5f, 5.5f, 12.5f, 9.5f);
+	BoxDesc_RotOrigin(&desc, 0, 12, 7);
+	Fur_RightLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
+}
+
+Real32 SheepModel_GetNameYOffset(void) { return 1.48125f; }
+Real32 SheepModel_GetEyeY(Entity* entity) { return 20.0f / 16.0f; }
+Vector3 SheepModel_GetCollisionSize(void) {
+	return Vector3_Create3(10.0f / 16.0f, 20.0f / 16.0f, 10.0f / 16.0f);
+}
+void SheepModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb,
+		-6.0f / 16.0f,          0.0f, -13.0f / 16.0f, 
+		6.0f  / 16.0f, 23.0f / 16.0f, 10.0f  / 16.0f);
+}
+
+void SheepModel_DrawModel(Entity* entity) {
+	Gfx_BindTexture(GetTexture(entity));
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Sheep_Head, true);
+
+	IModel_DrawPart(Sheep_Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Sheep_LeftLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Sheep_RightLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Sheep_LeftLegBack, false);
+	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Sheep_RightLegBack, false);
+	IModel_UpdateVB();
+
+	String sheep_nofur = String_FromConstant("sheep_nofur");
+	if (String_CaselessEquals(&entity->ModelName, &sheep_nofur)) return;
+	Gfx_BindTexture(ModelCache_Textures[fur_Index].TexID);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Fur_Head, true);
+
+	IModel_DrawPart(Fur_Torso);
+	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Fur_LeftLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Fur_RightLegFront, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, 0, Fur_LeftLegBack, false);
+	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Fur_RightLegBack, false);
+	IModel_UpdateVB();
+}
+
+IModel* SheepModel_GetInstance(void) {
+	IModel_Init(&SheepModel);
+	IModel_SetPointers(SheepModel);
+	SheepModel.SurvivalScore = 10;
+
+	String sheep_fur = String_FromConstant("sheep_fur.png");
+	fur_Index = ModelCache_GetTextureIndex(&sheep_fur);
+	return &SheepModel;
+}
+
+
 ModelPart Skeleton_Head, Skeleton_Torso, Skeleton_LeftLeg;
 ModelPart Skeleton_RightLeg, Skeleton_LeftArm, Skeleton_RightArm;
 ModelVertex SkeletonModel_Vertices[IModel_BoxVertices * 6];
@@ -359,7 +479,7 @@ void SpiderModel_GetPickingBounds(AABB* bb) {
 
 void SpiderModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Head, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Spider_Head, true);
 	IModel_DrawPart(Spider_Link);
 	IModel_DrawPart(Spider_End);
 
@@ -385,7 +505,7 @@ void SpiderModel_DrawModel(Entity* entity) {
 IModel* SpiderModel_GetInstance(void) {
 	IModel_Init(&SpiderModel);
 	IModel_SetPointers(SpiderModel);
-	SpiderModel.SurivalScore = 105;
+	SpiderModel.SurvivalScore = 105;
 	return &SpiderModel;
 }
 
@@ -463,7 +583,7 @@ void ZombieModel_DrawModel(Entity* entity) {
 IModel* ZombieModel_GetInstance(void) {
 	IModel_Init(&ZombieModel);
 	IModel_SetPointers(ZombieModel);
-	ZombieModel.SurivalScore = 80;
+	ZombieModel.SurvivalScore = 80;
 	return &ZombieModel;
 }
 
