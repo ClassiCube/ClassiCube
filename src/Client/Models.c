@@ -724,22 +724,16 @@ ModelSet Humanoid_Set, Humanoid_Set64, Humanoid_SetSlim;
 ModelVertex HumanoidModel_Vertices[IModel_BoxVertices * (7 + 7 + 4)];
 IModel HumanoidModel;
 
-IModel* HumanoidModel_GetInstance(void) {
-	IModel_Init(&HumanoidModel);
-	IModel_SetPointers(HumanoidModel);
-	HumanoidModel.CalcHumanAnims = true;
-	HumanoidModel.UsesHumanSkin = true;
-	return &HumanoidModel;
-}
-
 void HumanoidModel_MakeBoxDescs(void) {
 	BoxDesc_Box(&head, -4, 24, -4, 4, 32, 4);
 	BoxDesc_RotOrigin(&head, 0, 24, 0);
 	BoxDesc_Box(&torso, -4, 12, -2, 4, 24, 2);
+
 	BoxDesc_Box(&lLeg, -4, 0, -2, 0, 12, 2);
 	BoxDesc_RotOrigin(&lLeg, 0, 12, 0);
 	BoxDesc_Box(&rLeg, 0, 0, -2, 4, 12, 2);
 	BoxDesc_RotOrigin(&rLeg, 0, 12, 0);
+
 	BoxDesc_Box(&lArm, -8, 12, -2, -4, 24, 2);
 	BoxDesc_RotOrigin(&lArm, -5, 22, 0);
 	BoxDesc_Box(&rArm, 4, 12, -2, 8, 24, 2);
@@ -756,9 +750,8 @@ void HumanoidModel_CreateParts(void) {
 Real32 HumanoidModel_GetNameYOffset(void) { return 32.0f / 16.0f + 0.5f / 16.0f; }
 Real32 HumanoidModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
 Vector3 HumanoidModel_GetCollisionSize(void) {
-	return Vector3_Create3(8.0f / 16.0f + 0.6f / 16.0f, 28.1f / 16.0f, 8.0f / 16.0f + 0.6f / 16.0f);
+	return Vector3_Create3((8.0f + 0.6f) / 16.0f, 28.1f / 16.0f, (8.0f + 0.6f) / 16.0f);
 }
-
 void HumanoidModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-8.0f / 16.0f, 0.0f,         -4.0f / 16.0f,
@@ -773,4 +766,50 @@ void HumanoidModel_DrawModel(Entity* entity) {
 		(skinType == SkinType_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
 	HumanModel_DrawModel(entity, model);
 }
+
+IModel* HumanoidModel_GetInstance(void) {
+	IModel_Init(&HumanoidModel);
+	IModel_SetPointers(HumanoidModel);
+	HumanoidModel.CalcHumanAnims = true;
+	HumanoidModel.UsesHumanSkin = true;
+	return &HumanoidModel;
+}
+
+
+void ChibiModel_Init(void) {
+	MaxScale = 3.0f;
+	ShadowScale = 0.5f;
+}
+
+#define chibi_size 0.5f
+void ChibiModel_MakeBoxDescs(void) {
+	HumanoidModel_MakeBoxDescs();
+	BoxDesc_Box(&head, -4, 12, -4, 4, 20, 4);
+	BoxDesc_RotOrigin(&head, 0, 13, 0);
+
+	BoxDesc_Scale(&torso, chibi_size);
+	BoxDesc_Scale(&lLeg, chibi_size);
+	BoxDesc_Scale(&rLeg, chibi_size);
+	BoxDesc_Scale(&lArm, chibi_size);
+	BoxDesc_Scale(&rArm, chibi_size);
+}
+
+void ChibiModel_CreateParts(void) {
+	ChibiModel_MakeBoxDescs();
+	offset = 0.5f * chibi_size;
+	HumanModel_CreateParts(&ChibiModel, &Chibi_Set,
+		&Chibi_Set64, &Chibi_SetSlim);
+}
+
+Real32 ChibiModel_GetNameYOffset(void) { return 20.2f / 16.0f; }
+Real32 ChibiModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
+Vector3 ChibiModel_GetCollisionSize(void) {
+	return Vector3_Create3((4.0f + 0.6f) / 16.0f, 20.1f / 16.0f, (4.0f + 0.6f) / 16.0f);
+}
+void ChibiModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb,
+		-4.0f / 16.0f,          0.0f, -4.0f / 16.0f, 
+		4.0f  / 16.0f, 16.0f / 16.0f, 4.0f  / 16.0f);
+}
+
 #endif
