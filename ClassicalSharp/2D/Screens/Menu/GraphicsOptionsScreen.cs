@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using System.IO;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Textures;
@@ -71,10 +72,18 @@ namespace ClassicalSharp.Gui.Screens {
 		void SetMipmaps(Game g, bool v) {
 			g.Graphics.Mipmaps = v;
 			
-			if (game.World.TextureUrl != null) {
-				TexturePack.ExtractCurrent(game, game.World.TextureUrl);
-			} else {
-				TexturePack.ExtractDefault(game);
+			string url = game.World.TextureUrl;
+			if (url == null) {
+				TexturePack.ExtractDefault(game); return;
+			}
+			
+			using (Stream data = TextureCache.GetStream(url)) {
+				if (data == null) {
+					TexturePack.ExtractDefault(game); return;
+				}
+				
+				TexturePack extractor = new TexturePack();
+				extractor.Extract(data, game);
 			}
 		}
 		
