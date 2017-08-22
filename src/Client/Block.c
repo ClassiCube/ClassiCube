@@ -119,13 +119,13 @@ Int32 Block_FindID(STRING_TRANSIENT String* name) {
 bool Block_IsLiquid(BlockID b) { return b >= BlockID_Water && b <= BlockID_StillLava; }
 
 
-
 String Block_DefaultName(BlockID block) {
 #if USE16_BIT
 	if (block >= 256) return "ID " + block;
 #endif
 	if (block >= Block_CpeCount) {
-		return String_FromConstant("Invalid");
+		String invalid = String_FromConstant("Invalid");
+		return invalid;
 	}
 
 	String blockNames = String_FromConstant(Block_RawNames);

@@ -219,9 +219,6 @@
     <ClInclude Include="WorldEnv.h">
       <Filter>Header Files\Map</Filter>
     </ClInclude>
-    <ClInclude Include="D3D9Api.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="Funcs.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
@@ -289,9 +286,6 @@
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
     <ClInclude Include="ChunkInfo.h">
-      <Filter>Header Files\Rendering\Map</Filter>
-    </ClInclude>
-    <ClInclude Include="ChunkSorter.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
     <ClInclude Include="Respawn.h">
@@ -486,9 +480,6 @@
       <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
     <ClCompile Include="MapRenderer.c">
-      <Filter>Source Files\Rendering\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="ChunkSorter.c">
       <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
     <ClCompile Include="Respawn.c">

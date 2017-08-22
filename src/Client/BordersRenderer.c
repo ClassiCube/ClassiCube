@@ -3,7 +3,6 @@
 #include "2DStructs.h"
 #include "GameProps.h"
 #include "World.h"
-#include "WorldEnv.h"
 #include "Block.h"
 #include "GraphicsAPI.h"
 #include "GraphicsCommon.h"

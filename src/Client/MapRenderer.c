@@ -6,9 +6,7 @@
 #include "GraphicsEnums.h"
 #include "WeatherRenderer.h"
 #include "World.h"
-#include "WorldEnv.h"
 #include "Vectors.h"
-#include "ChunkSorter.h"
 #include "ChunkUpdater.h"
 bool inTranslucent;
 
@@ -28,7 +26,7 @@ void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz) {
 
 void MapRenderer_Update(Real64 deltaTime) {
 	if (MapRenderer_Chunks == NULL) return;
-	ChunkSorter_UpdateSortOrder();
+	ChunkUpdater_UpdateSortOrder();
 	ChunkUpdater_UpdateChunks(deltaTime);
 }
 

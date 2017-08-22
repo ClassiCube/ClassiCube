@@ -1,5 +1,4 @@
 #include "GraphicsAPI.h"
-#include "D3D9Api.h"
 #include "ErrorHandler.h"
 #include "GraphicsEnums.h"
 #include "Platform.h"
@@ -7,6 +6,29 @@
 #include "GraphicsCommon.h"
 
 #ifdef USE_DX
+//#define D3D_DISABLE_9EX causes compile errors
+#include <d3d9.h>
+#include <d3d9caps.h>
+#include <d3d9types.h>
+
+/* Maximum number of matrices that go on a stack. */
+#define MatrixStack_Capacity 4
+typedef struct MatrixStack_ {
+	/* Raw array of matrices.*/
+	Matrix Stack[MatrixStack_Capacity];
+	/* Current active matrix. */
+	Int32 Index;
+	/* Type of transformation this stack is for. */
+	D3DTRANSFORMSTATETYPE Type;
+} MatrixStack;
+
+
+D3DFORMAT d3d9_depthFormats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
+D3DFORMAT d3d9_viewFormats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
+D3DBLEND d3d9_blendFuncs[6] = { D3DBLEND_ZERO, D3DBLEND_ONE, D3DBLEND_SRCALPHA, D3DBLEND_INVSRCALPHA, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA };
+D3DCMPFUNC d3d9_compareFuncs[8] = { D3DCMP_ALWAYS, D3DCMP_NOTEQUAL, D3DCMP_NEVER, D3DCMP_LESS, D3DCMP_LESSEQUAL, D3DCMP_EQUAL, D3DCMP_GREATEREQUAL, D3DCMP_GREATER };
+D3DFOGMODE d3d9_modes[3] = { D3DFOG_LINEAR, D3DFOG_EXP, D3DFOG_EXP2 };
+Int32 d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 };
 
 bool d3d9_vsync;
 IDirect3D9* d3d;
@@ -15,21 +37,6 @@ MatrixStack* curStack;
 MatrixStack viewStack, projStack, texStack;
 DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
-
-#define D3D9_SetRenderState(raw, state, name) \
-ReturnCode hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
-ErrorHandler_CheckOrFail(hresult, name)
-
-#define D3D9_SetRenderState2(raw, state, name) \
-hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
-ErrorHandler_CheckOrFail(hresult, name)
-
-#define D3D9_LogLeakedResource(msg, i) \
-logMsg.length = 0;\
-String_AppendConstant(&logMsg, msg);\
-String_AppendInt32(&logMsg, i);\
-Platform_Log(logMsg);
-
 
 /* We only ever create a single index buffer internally. */
 #define d3d9_iBuffersExpSize 2
@@ -49,6 +56,183 @@ Adding another 128 gives us a lot of leeway. */
 IDirect3DTexture9* d3d9_default_textures[d3d9_texturesExpSize];
 Int32 d3d9_texturesCapacity = d3d9_texturesExpSize;
 IDirect3DTexture9** d3d9_textures;
+
+
+#define D3D9_SetRenderState(raw, state, name) \
+ReturnCode hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
+ErrorHandler_CheckOrFail(hresult, name)
+
+#define D3D9_SetRenderState2(raw, state, name) \
+hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
+ErrorHandler_CheckOrFail(hresult, name)
+
+#define D3D9_LogLeakedResource(msg, i) \
+logMsg.length = 0;\
+String_AppendConstant(&logMsg, msg);\
+String_AppendInt32(&logMsg, i);\
+Platform_Log(logMsg);
+
+
+void D3D9_DeleteResource(void** resources, Int32 capacity, GfxResourceID* id) {
+	GfxResourceID resourceID = *id;
+	if (resourceID <= 0 || resourceID >= capacity) return;
+
+	void* value = resources[resourceID];
+	*id = -1;
+	if (value == NULL) return;
+
+	resources[resourceID] = NULL;
+	D3D9_FreeResource(value, resourceID);
+}
+
+void D3D9_FreeResource(void* resource, GfxResourceID id) {
+	IUnknown* unk = (IUnknown*)resource;
+	UInt32 refCount = unk->lpVtbl->Release(unk);
+	if (refCount <= 0) return;
+
+	UInt8 logMsgBuffer[String_BufferSize(127)];
+	String logMsg = String_FromRawBuffer(logMsgBuffer, 127);
+	String_AppendConstant(&logMsg, "D3D9 Resource has outstanding references! ID: ");
+	String_AppendInt32(&logMsg, id);
+	Platform_Log(logMsg);
+}
+
+/* TODO: I have no clue if this even works. */
+GfxResourceID D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize) {
+	GfxResourceID i;
+	void** resources = *resourcesPtr;
+	for (i = 1; i < *capacity; i++) {
+		if (resources[i] == NULL) {
+			resources[i] = resource;
+			return i;
+		}
+	}
+
+	/* Otherwise resize and add more elements */
+	GfxResourceID oldLength = *capacity;
+	(*capacity) += expSize;
+
+	/* Allocate resized pointers table */
+	void** newResources = Platform_MemAlloc(*capacity * sizeof(void*));
+	if (newResources == NULL) {
+		ErrorHandler_Fail("D3D9 - failed to resize pointers table");
+	}
+	*resourcesPtr = newResources;
+
+	/* Update elements in new table */
+	for (i = 0; i < oldLength; i++) {
+		newResources[i] = resources[i];
+	}
+	/* Free old allocated memory if necessary */
+	if (oldLength != expSize) Platform_MemFree(resources);
+
+	newResources[oldLength] = resource;
+	return oldLength;
+}
+
+void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp) {
+	D3DLOCKED_RECT rect;
+	ReturnCode hresult = IDirect3DTexture9_LockRect(texture, 0, &rect, NULL, 0);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Lock");
+
+	UInt32 size = Bitmap_DataSize(bmp->Width, bmp->Height);
+	Platform_MemCpy(rect.pBits, bmp->Scan0, size);
+
+	hresult = IDirect3DTexture9_UnlockRect(texture, 0);
+	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Unlock");
+}
+
+void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg, Int32 lockFlags) {
+	void* dst = NULL;
+	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
+	ErrorHandler_CheckOrFail(hresult, lockMsg);
+
+	Platform_MemCpy(dst, data, size);
+	hresult = IDirect3DVertexBuffer9_Unlock(buffer);
+	ErrorHandler_CheckOrFail(hresult, unlockMsg);
+}
+
+void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg) {
+	void* dst = NULL;
+	ReturnCode hresult = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
+	ErrorHandler_CheckOrFail(hresult, lockMsg);
+
+	Platform_MemCpy(dst, data, size);
+	hresult = IDirect3DIndexBuffer9_Unlock(buffer);
+	ErrorHandler_CheckOrFail(hresult, unlockMsg);
+}
+
+void D3D9_LoopUntilRetrieved(void) {
+	ScheduledTask task;
+	task.Interval = 1.0f / 60.0f;
+	task.Callback = LostContextFunction;
+
+	while (true) {
+		Platform_ThreadSleep(16);
+		ReturnCode code = IDirect3DDevice9_TestCooperativeLevel(device);
+		if (code == D3DERR_DEVICENOTRESET) return;
+
+		task.Callback(&task);
+	}
+}
+
+void D3D9_FindCompatibleFormat(void) {
+	Int32 count = sizeof(d3d9_viewFormats) / sizeof(d3d9_viewFormats[0]);
+	Int32 i;
+	ReturnCode res;
+
+	for (i = 0; i < count; i++) {
+		d3d9_viewFormat = d3d9_viewFormats[i];
+		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, true);
+		if (ErrorHandler_Check(res)) break;
+
+		if (i == count - 1) {
+			ErrorHandler_Fail("Unable to create a back buffer with sufficient precision.");
+		}
+	}
+
+	count = sizeof(d3d9_depthFormats) / sizeof(d3d9_depthFormats[0]);
+	for (i = 0; i < count; i++) {
+		d3d9_depthFormat = d3d9_depthFormats[i];
+		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat);
+		if (ErrorHandler_Check(res)) break;
+
+		if (i == count - 1) {
+			ErrorHandler_Fail("Unable to create a depth buffer with sufficient precision.");
+		}
+	}
+}
+
+void D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
+	Platform_MemSet(args, 0, sizeof(D3DPRESENT_PARAMETERS));
+	args->AutoDepthStencilFormat = d3d9_depthFormat;
+	args->BackBufferWidth = width;
+	args->BackBufferHeight = height;
+	args->BackBufferFormat = d3d9_viewFormat;
+	args->BackBufferCount = 1;
+	args->EnableAutoDepthStencil = true;
+	args->PresentationInterval = d3d9_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
+	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
+	args->Windowed = true;
+}
+
+void D3D9_RecreateDevice(void) {
+	D3DPRESENT_PARAMETERS args;
+	Size2D size = Window_GetClientSize();
+	D3D9_GetPresentArgs(size.Width, size.Height, &args);
+
+	while (IDirect3DDevice9_Reset(device, &args) == D3DERR_DEVICELOST) {
+		D3D9_LoopUntilRetrieved();
+	}
+
+	D3D9_SetDefaultRenderStates();
+	D3D9_RestoreRenderStates();
+	GfxCommon_RecreateContext();
+}
+/* Forward declarations for these two functions. */
+static void D3D9_SetDefaultRenderStates(void);
+static void D3D9_RestoreRenderStates(void);
+
 
 void Gfx_Init(void) {
 	Gfx_MinZNear = 0.05f;
@@ -118,33 +302,6 @@ void Gfx_Free(void) {
 	}
 	if (d3d9_texturesCapacity != d3d9_texturesExpSize) {
 		Platform_MemFree(d3d9_textures);
-	}
-}
-
-void D3D9_FindCompatibleFormat(void) {
-	Int32 count = sizeof(d3d9_viewFormats) / sizeof(d3d9_viewFormats[0]);
-	Int32 i;
-	ReturnCode res;
-
-	for (i = 0; i < count; i++) {
-		d3d9_viewFormat = d3d9_viewFormats[i];
-		res = IDirect3D9_CheckDeviceType(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, true);
-		if (ErrorHandler_Check(res)) break;
-
-		if (i == count - 1) {
-			ErrorHandler_Fail("Unable to create a back buffer with sufficient precision.");
-		}
-	}
-
-	count = sizeof(d3d9_depthFormats) / sizeof(d3d9_depthFormats[0]);
-	for (i = 0; i < count; i++) {
-		d3d9_depthFormat = d3d9_depthFormats[i];
-		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat);
-		if (ErrorHandler_Check(res)) break;
-
-		if (i == count - 1) {
-			ErrorHandler_Fail("Unable to create a depth buffer with sufficient precision.");
-		}
 	}
 }
 
@@ -352,7 +509,6 @@ void Gfx_SetDepthWrite(bool enabled) {
 }
 
 
-
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
 	Int32 size = maxVertices * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
@@ -521,99 +677,6 @@ void Gfx_LoadOrthoMatrix(Real32 width, Real32 height) {
 }
 
 
-
-void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp) {
-	D3DLOCKED_RECT rect;
-	ReturnCode hresult = IDirect3DTexture9_LockRect(texture, 0, &rect, NULL, 0);
-	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Lock");
-
-	UInt32 size = Bitmap_DataSize(bmp->Width, bmp->Height);
-	Platform_MemCpy(rect.pBits, bmp->Scan0, size);
-
-	hresult = IDirect3DTexture9_UnlockRect(texture, 0);
-	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Unlock");
-}
-
-void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg, Int32 lockFlags) {
-	void* dst = NULL;
-	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
-	ErrorHandler_CheckOrFail(hresult, lockMsg);
-
-	Platform_MemCpy(dst, data, size);
-	hresult = IDirect3DVertexBuffer9_Unlock(buffer);
-	ErrorHandler_CheckOrFail(hresult, unlockMsg);
-}
-
-void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg) {
-	void* dst = NULL;
-	ReturnCode hresult = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
-	ErrorHandler_CheckOrFail(hresult, lockMsg);
-
-	Platform_MemCpy(dst, data, size);
-	hresult = IDirect3DIndexBuffer9_Unlock(buffer);
-	ErrorHandler_CheckOrFail(hresult, unlockMsg);
-}
-
-
-
-void D3D9_DeleteResource(void** resources, Int32 capacity, GfxResourceID* id) {
-	GfxResourceID resourceID = *id;
-	if (resourceID <= 0 || resourceID >= capacity) return;
-
-	void* value = resources[resourceID];
-	*id = -1;
-	if (value == NULL) return;
-
-	resources[resourceID] = NULL;
-	D3D9_FreeResource(value, resourceID);
-}
-
-void D3D9_FreeResource(void* resource, GfxResourceID id) {
-	IUnknown* unk = (IUnknown*)resource;
-	UInt32 refCount = unk->lpVtbl->Release(unk);
-	if (refCount <= 0) return;
-
-	UInt8 logMsgBuffer[String_BufferSize(127)];
-	String logMsg = String_FromRawBuffer(logMsgBuffer, 127);
-	String_AppendConstant(&logMsg, "D3D9 Resource has outstanding references! ID: ");
-	String_AppendInt32(&logMsg, id);
-	Platform_Log(logMsg);
-}
-
-/* TODO: I have no clue if this even works. */
-GfxResourceID D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize) {
-	GfxResourceID i;
-	void** resources = *resourcesPtr;
-	for (i = 1; i < *capacity; i++) {
-		if (resources[i] == NULL) {
-			resources[i] = resource;
-			return i;
-		}
-	}
-
-	/* Otherwise resize and add more elements */
-	GfxResourceID oldLength = *capacity;
-	(*capacity) += expSize;
-
-	/*  Allocate resized pointers table */
-	void** newResources = Platform_MemAlloc(*capacity * sizeof(void*));
-	if (newResources == NULL) {
-		ErrorHandler_Fail("D3D9 - failed to resize pointers table");
-	}
-	*resourcesPtr = newResources;
-
-	/* Update elements in new table */
-	for (i = 0; i < oldLength; i++) {
-		newResources[i] = resources[i];
-	}
-	/* Free old allocated memory if necessary */
-	if (oldLength != expSize) Platform_MemFree(resources);
-
-	newResources[oldLength] = resource;
-	return oldLength;
-}
-
-
 void Gfx_BeginFrame(void) {
 	IDirect3DDevice9_BeginScene(device);
 }
@@ -640,46 +703,6 @@ void Gfx_OnWindowResize(void) {
 	D3D9_RecreateDevice();
 }
 
-void D3D9_LoopUntilRetrieved(void) {
-	ScheduledTask task;
-	task.Interval = 1.0f / 60.0f;
-	task.Callback = LostContextFunction;
-
-	while (true) {
-		Platform_ThreadSleep(16);
-		ReturnCode code = IDirect3DDevice9_TestCooperativeLevel(device);
-		if (code == D3DERR_DEVICENOTRESET) return;
-
-		task.Callback(&task);
-	}
-}
-
-void D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
-	Platform_MemSet(args, 0, sizeof(D3DPRESENT_PARAMETERS));
-	args->AutoDepthStencilFormat = d3d9_depthFormat;
-	args->BackBufferWidth = width;
-	args->BackBufferHeight = height;
-	args->BackBufferFormat = d3d9_viewFormat;
-	args->BackBufferCount = 1;
-	args->EnableAutoDepthStencil = true;
-	args->PresentationInterval = d3d9_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_IMMEDIATE;
-	args->SwapEffect = D3DSWAPEFFECT_DISCARD;
-	args->Windowed = true;
-}
-
-void D3D9_RecreateDevice(void) {
-	D3DPRESENT_PARAMETERS args;
-	Size2D size = Window_GetClientSize();
-	D3D9_GetPresentArgs(size.Width, size.Height, &args);
-
-	while (IDirect3DDevice9_Reset(device, &args) == D3DERR_DEVICELOST) {
-		D3D9_LoopUntilRetrieved();
-	}
-
-	D3D9_SetDefaultRenderStates();
-	D3D9_RestoreRenderStates();
-	GfxCommon_RecreateContext();
-}
 
 void D3D9_SetDefaultRenderStates(void) {
 	Gfx_SetFaceCulling(false);

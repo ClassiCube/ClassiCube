@@ -10,7 +10,7 @@
 #include "PackedCol.h"
 #include "2DStructs.h"
 #include "VertexStructs.h"
-#include "WorldEnv.h"
+#include "World.h"
 #include "EnvRenderer.h"
 
 GfxResourceID skybox_tex, skybox_vb = -1;

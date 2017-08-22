@@ -5,7 +5,8 @@
 #include "ChunkInfo.h"
 #include "Vectors.h"
 #include "Events.h"
-/* Manages the process of building/deleting chunk meshes, in addition to calculating the visibility of chunks
+/* Manages the process of building/deleting chunk meshes.
+   Also sorts chunks so nearest chunks are ordered first, and calculates chunk visibility.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -71,5 +72,10 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info);
 void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates);
 
 static Int32 ChunkUpdater_AdjustViewDist(Real32 dist);
+
+
+void ChunkUpdater_UpdateSortOrder(void);
+
+static void ChunkUpdater_QuickSort(Int32 left, Int32 right);
 #endif
 #endif

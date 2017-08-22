@@ -2,7 +2,6 @@
 #include "EnvRenderer.h"
 #include "ExtMath.h"
 #include "World.h"
-#include "WorldEnv.h"
 #include "GraphicsEnums.h"
 #include "Funcs.h"
 #include "GraphicsAPI.h"
