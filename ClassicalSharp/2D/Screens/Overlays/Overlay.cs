@@ -76,10 +76,9 @@ namespace ClassicalSharp.Gui.Screens {
 			labels = new TextWidget[count];
 			labels[0] = TextWidget.Create(game, lines[0], titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -120);
-			
-			if (count == 1) return;			
-			for (int i = 1; i < lines.Length; i++) {
-				labels[i] = TextWidget.Create(game,lines[i], regularFont)
+					
+			for (int i = 1; i < count; i++) {
+				labels[i] = TextWidget.Create(game, lines[i], regularFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -70 + 20 * i);
 				labels[i].Colour = new FastColour(224, 224, 224);
 			}

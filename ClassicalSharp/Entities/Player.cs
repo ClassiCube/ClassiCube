@@ -135,7 +135,7 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);
-			TextureId = game.Graphics.CreateTexture(bmp, true);
+			TextureId = game.Graphics.CreateTexture(bmp, true, false);
 			MobTextureId = -1;
 			
 			// Custom mob textures.

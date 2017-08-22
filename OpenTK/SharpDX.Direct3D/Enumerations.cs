@@ -444,6 +444,7 @@ namespace SharpDX.Direct3D9 {
 		WriteOnly = 8,
 		SoftwareProcessing = 16,
 		None = 0,
+		AutoGenMipmap = 0x400,
 	}
 	
 	[Flags]

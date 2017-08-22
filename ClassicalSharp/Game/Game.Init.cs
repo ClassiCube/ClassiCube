@@ -78,8 +78,8 @@ namespace ClassicalSharp {
 			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool(OptionsKey.ArialChatFont, false);
 			Drawer2D.BlackTextShadows = Options.GetBool(OptionsKey.BlackTextShadows, false);
 			
-			TerrainAtlas1D = new TerrainAtlas1D(Graphics);
-			TerrainAtlas = new TerrainAtlas2D();
+			TerrainAtlas1D = new TerrainAtlas1D(this);
+			TerrainAtlas = new TerrainAtlas2D(this);
 			Animations = AddComponent(new Animations());
 			Inventory = AddComponent(new Inventory());
 			

@@ -15,11 +15,9 @@ namespace ClassicalSharp.Textures {
 		public int elementsPerBitmap;
 		public float invElementSize;
 		public int[] TexIds;
-		IGraphicsApi gfx;
 		
-		public TerrainAtlas1D(IGraphicsApi gfx) {
-			this.gfx = gfx;
-		}
+		Game game;		
+		public TerrainAtlas1D(Game game) { this.game = game; }
 		
 		public TextureRec GetTexRec(int texId, int uCount, out int index) {
 			index = texId / elementsPerAtlas1D;
@@ -40,7 +38,7 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		public void UpdateState(TerrainAtlas2D atlas2D) {
-			int maxVerticalSize = Math.Min(4096, gfx.MaxTextureDimensions);
+			int maxVerticalSize = Math.Min(4096, game.Graphics.MaxTextureDimensions);
 			int elementsPerFullAtlas = maxVerticalSize / atlas2D.TileSize;
 			int totalElements = TerrainAtlas2D.RowsCount * TerrainAtlas2D.TilesPerRow;
 			
@@ -74,7 +72,7 @@ namespace ClassicalSharp.Textures {
 					                       0, index1D * elemSize, atlas, dst, elemSize);
 					index++;
 				}
-				TexIds[i] = gfx.CreateTexture(dst, true);
+				TexIds[i] = game.Graphics.CreateTexture(dst, true, game.Mipmaps);
 			}
 		}
 		
@@ -90,7 +88,7 @@ namespace ClassicalSharp.Textures {
 			if (TexIds == null) return;
 			
 			for (int i = 0; i < TexIds.Length; i++) {
-				gfx.DeleteTexture(ref TexIds[i]);
+				game.Graphics.DeleteTexture(ref TexIds[i]);
 			}
 		}
 	}

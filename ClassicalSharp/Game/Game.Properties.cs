@@ -91,6 +91,8 @@ namespace ClassicalSharp {
 		
 		public bool SkipClear = false;
 		
+		public bool Mipmaps = false;
+		
 		public IWorldLighting Lighting;
 		
 		public MapRenderer MapRenderer;

@@ -353,7 +353,7 @@ namespace ClassicalSharp {
 				Graphics.DeleteTexture(ref texId);
 				if (setSkinType) SetDefaultSkinType(bmp);
 				
-				texId = Graphics.CreateTexture(bmp, true);
+				texId = Graphics.CreateTexture(bmp, true, false);
 				return true;
 			}
 		}

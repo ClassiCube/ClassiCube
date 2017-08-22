@@ -279,11 +279,16 @@ namespace OpenTK.Graphics.OpenGL
     public enum TextureFilter : int {
         Nearest = 0x2600,
         Linear = 0x2601,
+        NearestMipmapNearest = 0x2700,
+        LinearMipmapNearest = 0x2701,
+        NearestMipmapLinear = 0x2702,
+        LinearMipmapLinear = 0x2703,
     }
 
     public enum TextureParameterName : int {
         MagFilter = 0x2800,
         MinFilter = 0x2801,
+        GenerateMipmap = 0x8191,
     }
 
     public enum TextureTarget : int {

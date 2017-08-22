@@ -18,6 +18,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		int activeList = -1;
 		const int dynamicListId = 1234567891;
 		object dynamicListData = null;
+		bool supportsMipmaps;
 		
 		public OpenGLApi() {
 			InitFields();
@@ -43,6 +44,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			string version = new String((sbyte*)GL.GetString(StringName.Version));
 			int major = (int)(version[0] - '0'); // x.y. (and so forth)
 			int minor = (int)(version[2] - '0');
+			supportsMipmaps = major > 1 || (major == 1 && minor >= 4);
+			
 			if ((major > 1) || (major == 1 && minor >= 5)) return; // Supported in core since 1.5
 			
 			Utils.LogDebug("Using ARB vertex buffer objects");
@@ -159,12 +162,18 @@ namespace ClassicalSharp.GraphicsAPI {
 				else GL.Disable(EnableCap.Texture2D); }
 		}
 		
-		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool) {
+		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps) {
 			int texId = 0;
 			GL.GenTextures(1, &texId);
 			GL.BindTexture(TextureTarget.Texture2D, texId);
-			GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.Nearest);
 			GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MagFilter, (int)TextureFilter.Nearest);
+			
+			if (mipmaps && supportsMipmaps) {
+				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.NearestMipmapLinear);
+				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.GenerateMipmap, 1);
+			} else {
+				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.Nearest);
+			}
 
 			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0);
