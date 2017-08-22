@@ -261,6 +261,11 @@ void Gfx_Init(void) {
 	}
 	ErrorHandler_CheckOrFail(res, "Creating Direct3D9 device");
 
+	D3DCAPS9 caps;
+	Platform_MemSet(&caps, 0, sizeof(D3DCAPS9));
+	IDirect3DDevice9_GetDeviceCaps(device, &caps);
+	Gfx_AutoMipmaps = (caps.Caps2 & D3DCAPS2_CANAUTOGENMIPMAP) != 0;
+
 	viewStack.Type = D3DTS_VIEW;
 	projStack.Type = D3DTS_PROJECTION;
 	texStack.Type = D3DTS_TEXTURE0;
@@ -374,6 +379,19 @@ void Gfx_SetTexturing(bool enabled) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTexturing");
 }
 
+void Gfx_EnableMipmaps(void) {
+	if (Gfx_Mipmaps && Gfx_AutoMipmaps) {
+		ReturnCode hresult = IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_LINEAR);
+		ErrorHandler_CheckOrFail(hresult, "D3D9_EnableMipmaps");
+	}
+}
+
+void Gfx_DisableMipmaps(void) {
+	if (Gfx_Mipmaps && Gfx_AutoMipmaps) {
+		ReturnCode hresult = IDirect3DDevice9_SetSamplerState(device, 0, D3DSAMP_MIPFILTER, D3DTEXF_NONE);
+		ErrorHandler_CheckOrFail(hresult, "D3D9_DisableMipmaps");
+	}
+}
 
 
 bool d3d9_fogEnable = false;

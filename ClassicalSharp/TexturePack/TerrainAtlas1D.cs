@@ -72,7 +72,7 @@ namespace ClassicalSharp.Textures {
 					                       0, index1D * elemSize, atlas, dst, elemSize);
 					index++;
 				}
-				TexIds[i] = game.Graphics.CreateTexture(dst, true, game.Mipmaps);
+				TexIds[i] = game.Graphics.CreateTexture(dst, true, game.Graphics.Mipmaps);
 			}
 		}
 		

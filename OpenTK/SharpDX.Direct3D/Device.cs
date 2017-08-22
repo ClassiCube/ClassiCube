@@ -149,6 +149,11 @@ namespace SharpDX.Direct3D9
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 		
+		public void SetSamplerState(int sampler, SamplerState type, int value) {
+			int res = Interop.Calli(comPointer, sampler, (int)type, value, (*(IntPtr**)comPointer)[69]);
+            if( res < 0 ) { throw new SharpDXException( res ); }
+        }
+		
 		public void DrawPrimitives(PrimitiveType type, int startVertex, int primitiveCount) {
 			int res = Interop.Calli(comPointer, (int)type, startVertex, primitiveCount,(*(IntPtr**)comPointer)[81]);
 			if( res < 0 ) { throw new SharpDXException( res ); }

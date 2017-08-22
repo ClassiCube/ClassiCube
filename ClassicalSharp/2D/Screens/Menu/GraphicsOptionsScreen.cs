@@ -48,7 +48,7 @@ namespace ClassicalSharp.Gui.Screens {
 				        }),
 				
 				MakeBool(1, 50, "Mipmaps", OptionsKey.Mipmaps,
-				         OnWidgetClick, g => g.Mipmaps, SetMipmaps),
+				         OnWidgetClick, g => g.Graphics.Mipmaps, SetMipmaps),
 				
 				MakeBack(false, titleFont,
 				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
@@ -69,7 +69,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void SetMipmaps(Game g, bool v) {
-			g.Mipmaps = v;
+			g.Graphics.Mipmaps = v;
 			
 			if (game.World.TextureUrl != null) {
 				TexturePack.ExtractCurrent(game, game.World.TextureUrl);

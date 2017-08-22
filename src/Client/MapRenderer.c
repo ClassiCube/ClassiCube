@@ -37,6 +37,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 	Gfx_SetAlphaTest(true);
 
 	Int32 batch;
+	Gfx_EnableMipmaps();
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_NormalPartsCount[batch] <= 0) continue;
 		if (MapRenderer_HasNormalParts[batch] || MapRenderer_CheckingNormalParts[batch]) {
@@ -45,6 +46,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 			MapRenderer_CheckingNormalParts[batch] = false;
 		}
 	}
+	Gfx_DisableMipmaps();
 
 	MapRenderer_CheckWeather(deltaTime);
 	Gfx_SetAlphaTest(false);
@@ -80,12 +82,14 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	Gfx_SetColourWrite(true);
 	Gfx_SetDepthWrite(false); /* we already calculated depth values in depth pass */
 
+	Gfx_EnableMipmaps();
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
 		if (!MapRenderer_HasTranslucentParts[batch]) continue;
 		Gfx_BindTexture(Atlas1D_TexIds[batch]);
 		MapRenderer_RenderTranslucentBatch(batch);
 	}
+	Gfx_DisableMipmaps();
 
 	Gfx_SetDepthWrite(true);
 	/* If we weren't under water, render weather after to blend properly */

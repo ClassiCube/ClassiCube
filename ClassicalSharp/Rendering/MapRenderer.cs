@@ -117,6 +117,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
 			
+			gfx.EnableMipmaps();
 			for (int batch = 0; batch < _1DUsed; batch++) {
 				if (normalPartsCount[batch] <= 0) continue;
 				if (pendingNormal[batch] || usedNormal[batch]) {
@@ -125,6 +126,7 @@ namespace ClassicalSharp.Renderers {
 					pendingNormal[batch] = false;
 				}
 			}
+			gfx.DisableMipmaps();
 			
 			CheckWeather(deltaTime);
 			gfx.AlphaTest = false;
@@ -161,12 +163,14 @@ namespace ClassicalSharp.Renderers {
 			gfx.DepthWrite = false; // we already calculated depth values in depth pass
 			
 			int[] texIds = game.TerrainAtlas1D.TexIds;
+			gfx.EnableMipmaps();
 			for (int batch = 0; batch < _1DUsed; batch++) {
 				if (translucentPartsCount[batch] <= 0) continue;
 				if (!usedTranslucent[batch]) continue;
 				gfx.BindTexture(texIds[batch]);
 				RenderTranslucentBatch(batch);
 			}
+			gfx.DisableMipmaps();
 			
 			gfx.DepthWrite = true;
 			// If we weren't under water, render weather after to blend properly

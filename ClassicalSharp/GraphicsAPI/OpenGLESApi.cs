@@ -18,6 +18,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.GetInteger(All.MaxTextureSize, &texDims);
 			textureDims = texDims;
 			base.InitDynamicBuffers();
+			// TODO: Support mipmaps
 			
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;

@@ -52,6 +52,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			
 			caps = device.Capabilities;
+			AutoMipmaps = (caps.Caps2 & Caps2.CanAutoGenerateMipMap) != 0;
 			viewStack = new MatrixStack(device, TransformState.View);
 			projStack = new MatrixStack(device, TransformState.Projection);
 			texStack = new MatrixStack(device, TransformState.Texture0);
@@ -169,7 +170,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps) {
 			D3D.Texture texture = null;
-			Usage usage = mipmaps ? Usage.AutoGenMipmap : Usage.None;
+			Usage usage = (mipmaps && AutoMipmaps) ? Usage.AutoGenMipmap : Usage.None;
 			if (managedPool) {
 				texture = device.CreateTexture(width, height, 0, usage, Format.A8R8G8B8, Pool.Managed);
 				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
@@ -196,6 +197,19 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void DeleteTexture(ref int texId) {
 			Delete(textures, ref texId);
 		}
+		
+		public override void EnableMipmaps() {
+			if (Mipmaps && AutoMipmaps) {
+				device.SetSamplerState(0, SamplerState.MipFilter, (int)TextureFilter.Linear);
+			}
+		}
+		
+		public override void DisableMipmaps() {
+			if (Mipmaps && AutoMipmaps) {
+				device.SetSamplerState(0, SamplerState.MipFilter, (int)TextureFilter.None);
+			}
+		}
+		
 
 		int lastClearCol;
 		public override void Clear() {

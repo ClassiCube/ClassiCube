@@ -77,6 +77,7 @@ namespace ClassicalSharp {
 			
 			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool(OptionsKey.ArialChatFont, false);
 			Drawer2D.BlackTextShadows = Options.GetBool(OptionsKey.BlackTextShadows, false);
+			Graphics.Mipmaps = Options.GetBool(OptionsKey.Mipmaps, false);
 			
 			TerrainAtlas1D = new TerrainAtlas1D(this);
 			TerrainAtlas = new TerrainAtlas2D(this);

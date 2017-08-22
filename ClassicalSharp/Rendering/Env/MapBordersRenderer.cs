@@ -47,15 +47,17 @@ namespace ClassicalSharp.Renderers {
 		public void RenderSides(double delta) {
 			if (sidesVb == -1) return;
 			BlockID block = game.World.Env.SidesBlock;
-			
-			gfx.SetupAlphaState(BlockInfo.Draw[block]);
+						
 			gfx.Texturing = true;
+			gfx.SetupAlphaState(BlockInfo.Draw[block]);
+			gfx.EnableMipmaps();
 			
 			gfx.BindTexture(sideTexId);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.BindVb(sidesVb);
 			gfx.DrawVb_IndexedTris(sidesVertices * 6 / 4);
 			
+			gfx.DisableMipmaps();
 			gfx.RestoreAlphaState(BlockInfo.Draw[block]);
 			gfx.Texturing = false;
 		}
@@ -64,9 +66,10 @@ namespace ClassicalSharp.Renderers {
 			if (edgesVb == -1) return;
 			BlockID block = game.World.Env.EdgeBlock;		
 			
-			Vector3 camPos = game.CurrentCameraPos;
-			gfx.SetupAlphaState(BlockInfo.Draw[block]);
+			Vector3 camPos = game.CurrentCameraPos;			
 			gfx.Texturing = true;
+			gfx.SetupAlphaState(BlockInfo.Draw[block]);
+			gfx.EnableMipmaps();
 			
 			gfx.BindTexture(edgeTexId);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
@@ -77,6 +80,7 @@ namespace ClassicalSharp.Renderers {
 			if (camPos.Y >= yVisible)
 				gfx.DrawVb_IndexedTris(edgesVertices * 6 / 4);
 			
+			gfx.DisableMipmaps();
 			gfx.RestoreAlphaState(BlockInfo.Draw[block]);
 			gfx.Texturing = false;
 		}

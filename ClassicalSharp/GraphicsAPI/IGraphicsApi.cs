@@ -31,6 +31,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Event raised when a context is recreated after having been previously lost. </summary>
 		public event Action ContextRecreated;
 		
+		/// <summary> Whether mipmapping of terrain textures is used. </summary>
+		public bool Mipmaps;
+		
+		/// <summary> Whether automatic mipmap generation is supported. </summary>
+		public bool AutoMipmaps;
+		
 		/// <summary> Delegate that is invoked when the current context is lost,
 		/// and is repeatedly invoked until the context can be retrieved. </summary>
 		public Action<ScheduledTask> LostContextFunction;
@@ -83,6 +89,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Frees all native resources held for the given texture id. </summary>
 		public void DeleteTexture(ref Texture texture) { DeleteTexture(ref texture.ID); }
+		
+		/// <summary> Enables mipmapping for subsequent texture drawing. </summary>
+		public abstract void EnableMipmaps();
+		
+		/// <summary> Disbles mipmapping for subsequent texture drawing. </summary>
+		public abstract void DisableMipmaps();
 		
 		/// <summary> Gets or sets whether fog is currently enabled. </summary>
 		public abstract bool Fog { get; set; }

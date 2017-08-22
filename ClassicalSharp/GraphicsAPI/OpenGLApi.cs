@@ -18,7 +18,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		int activeList = -1;
 		const int dynamicListId = 1234567891;
 		object dynamicListData = null;
-		bool supportsMipmaps;
 		
 		public OpenGLApi() {
 			InitFields();
@@ -44,7 +43,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			string version = new String((sbyte*)GL.GetString(StringName.Version));
 			int major = (int)(version[0] - '0'); // x.y. (and so forth)
 			int minor = (int)(version[2] - '0');
-			supportsMipmaps = major > 1 || (major == 1 && minor >= 4);
+			AutoMipmaps = major > 1 || (major == 1 && minor >= 4);
 			
 			if ((major > 1) || (major == 1 && minor >= 5)) return; // Supported in core since 1.5
 			
@@ -168,7 +167,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture(TextureTarget.Texture2D, texId);
 			GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MagFilter, (int)TextureFilter.Nearest);
 			
-			if (mipmaps && supportsMipmaps) {
+			if (mipmaps && AutoMipmaps) {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.NearestMipmapLinear);
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.GenerateMipmap, 1);
 			} else {
@@ -195,6 +194,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			int id = texId; GL.DeleteTextures(1, &id);
 			texId = -1;
 		}
+		
+		public override void EnableMipmaps() { }
+		
+		public override void DisableMipmaps() { }
 		#endregion
 		
 		#region Vertex/index buffers

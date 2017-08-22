@@ -40,14 +40,16 @@ void BordersRenderer_UseLegacyMode(bool legacy) {
 #define BordersRenderer_SetupState(block, texId, vb) \
 if (vb == -1) { return; }\
 \
-GfxCommon_SetupAlphaState(Block_Draw[block]);\
 Gfx_SetTexturing(true);\
+GfxCommon_SetupAlphaState(Block_Draw[block]);\
+Gfx_EnableMipmaps();
 \
 Gfx_BindTexture(texId);\
 Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);\
 Gfx_BindVb(vb);
 
 #define BordersRenderer_ResetState(block) \
+Gfx_DisableMipmaps();\
 GfxCommon_RestoreAlphaState(Block_Draw[block]);\
 Gfx_SetTexturing(false);
 
