@@ -25,8 +25,14 @@ namespace ClassicalSharp.Gui.Screens {
 			ContextRecreated();
 		}
 		
-		const int tileSize = 40, textOffset = 3;
-		int xOffset, yOffset;
+		const int textOffset = 3;
+		int xOffset, yOffset, tileSize;
+		
+		void UpdateTileSize() {
+			tileSize = game.window.Height / TerrainAtlas2D.RowsCount;
+			tileSize = (tileSize / 8) * 8;
+			Utils.Clamp(ref tileSize, 8, 40);
+		}
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();
@@ -49,6 +55,7 @@ namespace ClassicalSharp.Gui.Screens {
 			dynamicVb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, verticesCount);
 			idAtlas = new TextAtlas(game, 16);
 			idAtlas.Pack("0123456789", regularFont, "f");
+			UpdateTileSize();
 		}
 		
 		void RenderTerrain() {
@@ -82,7 +89,7 @@ namespace ClassicalSharp.Gui.Screens {
 					int id = x + ((y - 1) * TerrainAtlas2D.TilesPerRow);
 					idAtlas.AddInt(id, vertices, ref index);
 				}
-				idAtlas.tex.Y += tileSize;
+				idAtlas.tex.Y += (short)tileSize;
 				
 				if ((y % 4) != 0) continue;				
 				gfx.BindTexture(idAtlas.tex.ID);
@@ -111,6 +118,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void RedrawText() { }
 		
 		public override void MakeButtons() {
+			UpdateTileSize();
 			xOffset = (game.Width / 2)  - (tileSize * TerrainAtlas2D.TilesPerRow) / 2;
 			yOffset = (game.Height / 2) - (tileSize * TerrainAtlas2D.RowsCount)   / 2;
 			

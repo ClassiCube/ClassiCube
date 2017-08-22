@@ -151,7 +151,8 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		static bool OnIce(Entity entity) {
-			if (BlockInfo.ExtendedCollide[entity.BlockUnderFeet] == CollideType.Ice) return true;
+			Vector3 under = entity.Position; under.Y -= 0.01f;
+			if (BlockInfo.ExtendedCollide[entity.GetBlock(under)] == CollideType.Ice) return true;
 			
 			AABB bounds = entity.Bounds;
 			bounds.Min.Y -= 0.01f; bounds.Max.Y = bounds.Min.Y;
