@@ -73,17 +73,9 @@ String_AppendInt32(&logMsg, i);\
 Platform_Log(logMsg);
 
 
-void D3D9_DeleteResource(void** resources, Int32 capacity, GfxResourceID* id) {
-	GfxResourceID resourceID = *id;
-	if (resourceID <= 0 || resourceID >= capacity) return;
-
-	void* value = resources[resourceID];
-	*id = -1;
-	if (value == NULL) return;
-
-	resources[resourceID] = NULL;
-	D3D9_FreeResource(value, resourceID);
-}
+/* Forward declarations for these two functions. */
+static void D3D9_SetDefaultRenderStates(void);
+static void D3D9_RestoreRenderStates(void);
 
 void D3D9_FreeResource(void* resource, GfxResourceID id) {
 	IUnknown* unk = (IUnknown*)resource;
@@ -95,6 +87,18 @@ void D3D9_FreeResource(void* resource, GfxResourceID id) {
 	String_AppendConstant(&logMsg, "D3D9 Resource has outstanding references! ID: ");
 	String_AppendInt32(&logMsg, id);
 	Platform_Log(logMsg);
+}
+
+void D3D9_DeleteResource(void** resources, Int32 capacity, GfxResourceID* id) {
+	GfxResourceID resourceID = *id;
+	if (resourceID <= 0 || resourceID >= capacity) return;
+
+	void* value = resources[resourceID];
+	*id = -1;
+	if (value == NULL) return;
+
+	resources[resourceID] = NULL;
+	D3D9_FreeResource(value, resourceID);
 }
 
 /* TODO: I have no clue if this even works. */
@@ -229,9 +233,6 @@ void D3D9_RecreateDevice(void) {
 	D3D9_RestoreRenderStates();
 	GfxCommon_RecreateContext();
 }
-/* Forward declarations for these two functions. */
-static void D3D9_SetDefaultRenderStates(void);
-static void D3D9_RestoreRenderStates(void);
 
 
 void Gfx_Init(void) {

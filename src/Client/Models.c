@@ -776,12 +776,11 @@ IModel* HumanoidModel_GetInstance(void) {
 }
 
 
-void ChibiModel_Init(void) {
-	MaxScale = 3.0f;
-	ShadowScale = 0.5f;
-}
-
+ModelSet Chibi_Set, Chibi_Set64, Chibi_SetSlim;
+ModelVertex ChibiModel_Vertices[IModel_BoxVertices * (7 + 7 + 4)];
+IModel ChibiModel;
 #define chibi_size 0.5f
+
 void ChibiModel_MakeBoxDescs(void) {
 	HumanoidModel_MakeBoxDescs();
 	BoxDesc_Box(&head, -4, 12, -4, 4, 20, 4);
@@ -812,4 +811,22 @@ void ChibiModel_GetPickingBounds(AABB* bb) {
 		4.0f  / 16.0f, 16.0f / 16.0f, 4.0f  / 16.0f);
 }
 
+void ChibiModel_DrawModel(Entity* entity) {
+	HumanModel_SetupState(entity);
+	SkinType skinType = entity->SkinType;
+	ModelSet* model =
+		skinType == SkinType_64x64Slim ? &Chibi_SetSlim :
+		(skinType == SkinType_64x64 ? &Chibi_Set64 : &Chibi_Set);
+	HumanModel_DrawModel(entity, model);
+}
+
+IModel* ChibiModel_GetInstance(void) {
+	IModel_Init(&ChibiModel);
+	IModel_SetPointers(ChibiModel);
+	ChibiModel.CalcHumanAnims = true;
+	ChibiModel.UsesHumanSkin = true;
+	ChibiModel.MaxScale = 3.0f;
+	ChibiModel.ShadowScale = 0.5f;
+	return &ChibiModel;
+}
 #endif

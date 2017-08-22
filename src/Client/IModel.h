@@ -161,9 +161,9 @@ Real32 IModel_RenderDistance(Entity* entity);
 static Real32 IModel_MinDist(Real32 dist, Real32 extent);
 
 /*Sets up the state for, then renders an entity model, based on the entity's position and orientation. */
-void IModel_Render(IModel* model, Entity entity);
+void IModel_Render(IModel* model, Entity* entity);
 
-void IModel_SetupState(Entity* p);
+void IModel_SetupState(Entity* entity);
 
 /* Sends the updated vertex data to the GPU. */
 void IModel_UpdateVB(void);
