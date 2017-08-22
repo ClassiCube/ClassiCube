@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class PigModel : IModel {
 		
-		public PigModel(Game window) : base(window) { }
+		public PigModel(Game window) : base(window) { SurivalScore = 10; }
 
 		/// <inheritdoc/>		
 		public override void CreateParts() {

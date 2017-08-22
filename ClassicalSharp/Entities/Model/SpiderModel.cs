@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class SpiderModel : IModel {
 		
-		public SpiderModel(Game window) : base(window) { }
+		public SpiderModel(Game window) : base(window) { SurivalScore = 105; }
 
 		/// <inheritdoc/>		
 		public override void CreateParts() {

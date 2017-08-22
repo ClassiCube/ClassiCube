@@ -18,10 +18,11 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
+			string score = game.Chat.Status1.Text;
 			widgets = new Widget[] {
 				TextWidget.Create(game, "Game over!", regularFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -150),
-				TextWidget.Create(game, "Score: 0", titleFont)
+				TextWidget.Create(game, score, titleFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -75),
 				ButtonWidget.Create(game, 400, "Generate new level...", titleFont, GenLevelClick)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 25),

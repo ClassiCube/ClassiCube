@@ -13,6 +13,7 @@ namespace ClassicalSharp.Model {
 		int furIndex;
 		
 		public SheepModel(Game game) : base(game) {
+			SurivalScore = 10;
 			furIndex = game.ModelCache.GetTextureIndex("sheep_fur.png");
 		}
 		

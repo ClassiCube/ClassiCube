@@ -78,6 +78,9 @@ typedef struct IModel_ {
 	/* Whether the model uses humanoid skin texture, instead of mob skin texture. */
 	bool UsesHumanSkin;
 
+	/* Score earned by killing an entity with this model in survival mode. */
+	UInt8 SurvivalScore;
+
 
 	/* Gravity applied to this entity.*/
 	Real32 Gravity;

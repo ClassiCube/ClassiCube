@@ -8,7 +8,7 @@ namespace ClassicalSharp.Model {
 
 	public class SkeletonModel : IModel {
 		
-		public SkeletonModel(Game window) : base(window) { }
+		public SkeletonModel(Game window) : base(window) { SurivalScore = 120; }
 		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];

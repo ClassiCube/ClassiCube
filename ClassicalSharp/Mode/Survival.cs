@@ -54,11 +54,13 @@ namespace ClassicalSharp.Mode {
 		
 		public bool PickEntity(byte id) {
 			Entity entity = game.Entities[id];
-			Entity player = game.Entities[EntityList.SelfID];
+			LocalPlayer p = game.LocalPlayer;
 			
-			Vector3 delta = player.Position - entity.Position;
+			Vector3 delta = p.Position - entity.Position;
+			if (delta.LengthSquared > p.ReachDistance * p.ReachDistance) return false;
+			
 			delta.Y = 0.0f;
-			delta = Vector3.Normalize(delta);
+			delta = Vector3.Normalize(delta) * 0.5f;
 			delta.Y = -0.5f;
 			
 			entity.Velocity -= delta;
@@ -67,7 +69,7 @@ namespace ClassicalSharp.Mode {
 			entity.Health -= 2;
 			if (entity.Health < 0) {
 				game.Entities.RemoveEntity(id);
-				score += GetScore(entity.ModelName);
+				score += entity.Model.SurivalScore;
 				UpdateScore();
 			}
 			return true;
@@ -150,16 +152,6 @@ namespace ClassicalSharp.Mode {
 			for (int i = 0; i < hotbar.Length; i++)
 				hotbar[i] = Block.Air;
 			hotbar[Inventory.BlocksPerRow - 1] = Block.TNT;
-		}
-		
-		
-		int GetScore(string model) {
-			if (model == "sheep" || model == "pig") return 10;
-			if (model == "zombie") return 80;
-			if (model == "spider") return 105;
-			if (model == "skeleton") return 120;
-			if (model == "creeper") return 200;
-			return 5;
 		}
 		
 		void UpdateScore() {

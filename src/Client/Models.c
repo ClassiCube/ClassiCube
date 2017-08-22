@@ -165,6 +165,7 @@ void CreeperModel_DrawModel(Entity* entity) {
 IModel* CreeperModel_GetInstance(void) {
 	IModel_Init(&CreeperModel);
 	IModel_SetPointers(CreeperModel);
+	CreeperModel.SurvivalScore = 200;
 	return &CreeperModel;
 }
 
@@ -234,6 +235,7 @@ void PigModel_DrawModel(Entity* entity) {
 IModel* PigModel_GetInstance(void) {
 	IModel_Init(&PigModel);
 	IModel_SetPointers(PigModel);
+	PigModel.SurvivalScore = 10;
 	return &PigModel;
 }
 
@@ -303,6 +305,7 @@ void SkeletonModel_DrawModel(Entity* entity) {
 IModel* SkeletonModel_GetInstance(void) {
 	IModel_Init(&SkeletonModel);
 	IModel_SetPointers(SkeletonModel);
+	SkeletonModel.SurvivalScore = 120;
 	return &SkeletonModel;
 }
 
@@ -382,6 +385,7 @@ void SpiderModel_DrawModel(Entity* entity) {
 IModel* SpiderModel_GetInstance(void) {
 	IModel_Init(&SpiderModel);
 	IModel_SetPointers(SpiderModel);
+	SpiderModel.SurivalScore = 105;
 	return &SpiderModel;
 }
 
@@ -459,6 +463,7 @@ void ZombieModel_DrawModel(Entity* entity) {
 IModel* ZombieModel_GetInstance(void) {
 	IModel_Init(&ZombieModel);
 	IModel_SetPointers(ZombieModel);
+	ZombieModel.SurivalScore = 80;
 	return &ZombieModel;
 }
 

@@ -43,6 +43,9 @@ namespace ClassicalSharp.Model {
 		/// <summary> Whether the model uses humanoid skin texture, instead of mob skin texture. </summary>
 		public bool UsesHumanSkin;
 		
+		/// <summary> Amount player score increased by when they kill an entity with this model. </summary>
+		public byte SurivalScore = 5;
+		
 		
 		/// <summary> Gravity applied to this entity. </summary>
 		public float Gravity = 0.08f;
