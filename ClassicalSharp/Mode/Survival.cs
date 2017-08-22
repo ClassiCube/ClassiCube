@@ -57,7 +57,7 @@ namespace ClassicalSharp.Mode {
 			LocalPlayer p = game.LocalPlayer;
 			
 			Vector3 delta = p.Position - entity.Position;
-			if (delta.LengthSquared > p.ReachDistance * p.ReachDistance) return false;
+			if (delta.LengthSquared > p.ReachDistance * p.ReachDistance) return true;
 			
 			delta.Y = 0.0f;
 			delta = Vector3.Normalize(delta) * 0.5f;
