@@ -23,8 +23,10 @@ UInt16 Convert_CP437ToUnicode(UInt8 c);
 /* Converts a unicode character into a code page 437 index. */
 UInt8 Convert_UnicodeToCP437(UInt16 c);
 
+/* Attempts to parse the given string as a signed 32 bit integer.*/
+bool Convert_TryParseInt32(STRING_TRANSIENT String* str, Int32* value);
 
-/* Attempts to parse the given string as a byte.*/
-bool Convert_TryParseByte(STRING_TRANSIENT String* str, UInt8* value);
+/* Attempts to parse the given string as an unsigned 8 bit integer.*/
+bool Convert_TryParseUInt8(STRING_TRANSIENT String* str, UInt8* value);
 
 #endif

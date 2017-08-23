@@ -81,3 +81,12 @@ bool Convert_TryParseInt32(STRING_TRANSIENT String* str, Int32* value) {
 	*value = sum;
 	return true;
 }
+
+bool Convert_TryParseUInt8(STRING_TRANSIENT String* str, UInt8* value) {
+	*value = 0;
+	Int32 tmp;
+	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
+
+	*value = (UInt8)tmp;
+	return true;
+}
