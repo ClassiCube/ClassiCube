@@ -190,14 +190,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		unsafe void MipmapLevel(int lvlWidth, int lvlHeight, int lvl, int width, int height, IntPtr scan0) {
-			Console.WriteLine("MIPMAPS: " + lvlWidth + "," + lvlHeight + " - " + width + ", " + height);
 			int[] lblPixels = new int[lvlWidth * lvlHeight];
 			fixed (int* lvlPtr = lblPixels) {
 				int* baseSrc = (int*)scan0, baseDst = (int*)lvlPtr;
 				
 				for (int y = 0; y < lvlHeight; y++) {
-					int dstY = y * height / lvlHeight;
-					int* src = baseSrc + y * width;
+					int srcY = y * height / lvlHeight;
+					int* src = baseSrc + srcY * width;
 					int* dst = baseDst + y * lvlWidth;
 					
 					for (int x = 0; x < lvlWidth; x++) {
@@ -205,10 +204,8 @@ namespace ClassicalSharp.GraphicsAPI {
 					}
 				}
 				
-				Console.WriteLine("LEVEL: " + lvl);
 				GL.TexImage2D(TextureTarget.Texture2D, lvl, PixelInternalFormat.Rgba, lvlWidth, lvlHeight,
 				              GlPixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)lvlPtr);
-				Console.WriteLine(GL.GetError());
 			}
 		}
 		
