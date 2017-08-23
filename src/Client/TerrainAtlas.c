@@ -40,7 +40,7 @@ Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
 	Bitmap_CopyBlock(x * size, y * size, 0, 0,
 		&Atlas2D_Bitmap, element, size);
 
-	return Gfx_CreateTexture(element, true);
+	return Gfx_CreateTexture(element, true, Gfx_Mipmaps);
 }
 
 void Atlas2D_Free(void) {
@@ -110,7 +110,7 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 		(*index)++;
 	}
 
-	Atlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true);
+	Atlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx_Mipmaps);
 	Platform_MemFree(atlas1D.Scan0);
 }
 

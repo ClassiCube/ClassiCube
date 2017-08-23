@@ -61,20 +61,29 @@ bool Convert_TryParseInt32(STRING_TRANSIENT String* str, Int32* value) {
 		if (c < '0' || c > '9') return false;
 		Int32 digit = c - '0';
 
-		/* Cannot add another digit without overflow */
-		if (sum >= (Int32)214748364) return false;
-		sum *= 10;
-
-		/* Can only add a certain digit here */
-		if (sum >= (Int32)2147483639) {
-			/* Potential for adding digit to overflow */
-			while (digit > 0) {
-				if (sum == Int32_MaxValue) return false;
-				sum++; digit--;
-			}
-		} else {
-			sum += digit;
+		/* Magnitude of largest negative integer cannot be expressed
+		as a positive integer, so this case must be specially handled. */
+		if (sum == (Int32)214748364 && digit == 8 && negate) {
+			*value = Int32_MinValue;
+			return true;
 		}
+
+		/* Overflow handling */
+		if (sum >= (Int32)214748364) {
+			Int32 diff = sum - (Int32)214748364;
+			diff *= 10; diff += digit;
+
+			/* Handle magnitude of max negative value specially,
+			as it cannot be represented as a positive integer */
+			if (diff == 8 && negate) {
+				*value = Int32_MinValue;
+				return true;
+			}
+
+			/* Overflows max positive value */
+			if (diff > 7) return false;
+		}
+		sum *= 10; sum += digit;
 	}
 
 	if (negate) sum = -sum;
