@@ -55,10 +55,10 @@ namespace ClassicalSharp.Entities {
 				if (bodyY > headY) bodyY = headY;
 				
 				bounds.Max.Y = bounds.Min.Y = feetY;
-				bool liquidFeet = entity.TouchesAny(bounds, StandardLiquid);
+				bool liquidFeet = entity.TouchesAny(bounds, TouchesStandardLiquid);
 				bounds.Min.Y = Math.Min(bodyY, headY);
 				bounds.Max.Y = Math.Max(bodyY, headY);
-				bool liquidRest = entity.TouchesAny(bounds, StandardLiquid);
+				bool liquidRest = entity.TouchesAny(bounds, TouchesStandardLiquid);
 				
 				bool pastJumpPoint = liquidFeet && !liquidRest && (entity.Position.Y % 1 >= 0.4);
 				if (!pastJumpPoint) {
@@ -96,7 +96,7 @@ namespace ClassicalSharp.Entities {
 			canLiquidJump = false;
 		}
 		
-		bool StandardLiquid(BlockID block) {
+		bool TouchesStandardLiquid(BlockID block) {
 			return BlockInfo.Collide[block] == CollideType.Liquid;
 		}
 		
@@ -150,13 +150,18 @@ namespace ClassicalSharp.Entities {
 			if (entity.onGround) { firstJump = false; secondJump = false; }
 		}
 		
+		static Predicate<BlockID> slipperyIce = TouchesSlipperyIce;
 		static bool OnIce(Entity entity) {
 			Vector3 under = entity.Position; under.Y -= 0.01f;
 			if (BlockInfo.ExtendedCollide[entity.GetBlock(under)] == CollideType.Ice) return true;
 			
 			AABB bounds = entity.Bounds;
 			bounds.Min.Y -= 0.01f; bounds.Max.Y = bounds.Min.Y;
-			return entity.TouchesAny(bounds, b => BlockInfo.ExtendedCollide[b] == CollideType.SlipperyIce);
+			return entity.TouchesAny(bounds, slipperyIce);
+		}
+		
+		static bool TouchesSlipperyIce(BlockID b) {
+			return BlockInfo.ExtendedCollide[b] == CollideType.SlipperyIce;
 		}
 		
 		void MoveHor(Vector3 vel, float factor) {
