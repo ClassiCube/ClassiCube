@@ -312,23 +312,25 @@ void Gfx_Free(void) {
 }
 
 
-GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool) {
+GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 	IDirect3DTexture9* texture;
 	ReturnCode hresult;
+	DWORD usage = (mipmaps && Gfx_AutoMipmaps) ? D3DUSAGE_AUTOGENMIPMAP : 0;
+	Int32 levels = (mipmaps && Gfx_AutoMipmaps) ? 0 : 1;
 
 	if (managedPool) {
-		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, 0, 0, 
+		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, usage,
 			D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &texture, NULL);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture");
 		D3D9_SetTextureData(texture, bmp);
 	} else {
 		IDirect3DTexture9* sys;
-		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, 0, 0,
+		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, usage,
 			D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture - SystemMem");
 		D3D9_SetTextureData(sys, bmp);
 
-		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, 0, 0,
+		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, usage,
 			D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &texture, NULL);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture - GPU");
 
@@ -616,7 +618,6 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex) {
 		 0, VCOUNT(indicesCount), 0, indicesCount / 3);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }
-
 
 
 void Gfx_SetMatrixMode(MatrixType matrixType) {

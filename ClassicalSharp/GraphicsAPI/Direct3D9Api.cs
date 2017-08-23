@@ -171,14 +171,16 @@ namespace ClassicalSharp.GraphicsAPI {
 		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps) {
 			D3D.Texture texture = null;
 			Usage usage = (mipmaps && AutoMipmaps) ? Usage.AutoGenMipmap : Usage.None;
+			int levels = (mipmaps && AutoMipmaps) ? 0 : 1;
+			
 			if (managedPool) {
-				texture = device.CreateTexture(width, height, 0, usage, Format.A8R8G8B8, Pool.Managed);
+				texture = device.CreateTexture(width, height, levels, usage, Format.A8R8G8B8, Pool.Managed);
 				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
 			} else {
-				D3D.Texture sys = device.CreateTexture(width, height, 0, usage, Format.A8R8G8B8, Pool.SystemMemory);
+				D3D.Texture sys = device.CreateTexture(width, height, levels, usage, Format.A8R8G8B8, Pool.SystemMemory);
 				sys.SetData(0, LockFlags.None, scan0, width * height * 4);
 				
-				texture = device.CreateTexture(width, height, 0, usage, Format.A8R8G8B8, Pool.Default);
+				texture = device.CreateTexture(width, height, levels, usage, Format.A8R8G8B8, Pool.Default);
 				device.UpdateTexture(sys, texture);				
 				sys.Dispose();
 			}
