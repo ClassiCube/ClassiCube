@@ -531,7 +531,7 @@ void Gfx_SetDepthWrite(bool enabled) {
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
 	Int32 size = maxVertices * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
-	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC, 
+	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 
 		d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateDynamicVb");
 
@@ -541,7 +541,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) 
 GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count) {
 	Int32 size = count * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
-	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, 0,
+	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_WRITEONLY,
 		d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateVb");
 
@@ -552,7 +552,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 coun
 GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
 	Int32 size = indicesCount * sizeof(UInt16);
 	IDirect3DIndexBuffer9* ibuffer;
-	ReturnCode hresult = IDirect3DDevice9_CreateIndexBuffer(device, size, 0, 
+	ReturnCode hresult = IDirect3DDevice9_CreateIndexBuffer(device, size, D3DUSAGE_WRITEONLY,
 		D3DFMT_INDEX16, D3DPOOL_MANAGED, &ibuffer, NULL);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateIb");
 

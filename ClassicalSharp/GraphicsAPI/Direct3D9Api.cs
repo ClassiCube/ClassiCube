@@ -250,7 +250,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override int CreateDynamicVb(VertexFormat format, int maxVertices) {
 			int size = maxVertices * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.Dynamic,
+			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.Dynamic | Usage.WriteOnly,
 			                                              formatMapping[(int)format], Pool.Default);
 			return GetOrExpand(ref vBuffers, buffer, iBufferSize);
 		}
@@ -266,14 +266,16 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override int CreateVb(IntPtr vertices, VertexFormat format, int count) {
 			int size = count * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.None, formatMapping[(int)format], Pool.Default);
+			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.WriteOnly, 
+			                                              formatMapping[(int)format], Pool.Default);
 			buffer.SetData(vertices, size, LockFlags.None);
 			return GetOrExpand(ref vBuffers, buffer, vBufferSize);
 		}
 		
 		public override int CreateIb(IntPtr indices, int indicesCount) {
 			int size = indicesCount * sizeof(ushort);
-			DataBuffer buffer = device.CreateIndexBuffer(size, Usage.None, Format.Index16, Pool.Managed);
+			DataBuffer buffer = device.CreateIndexBuffer(size, Usage.WriteOnly,
+			                                             Format.Index16, Pool.Managed);
 			buffer.SetData(indices, size, LockFlags.None);
 			return GetOrExpand(ref iBuffers, buffer, iBufferSize);
 		}
