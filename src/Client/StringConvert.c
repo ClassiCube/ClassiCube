@@ -44,3 +44,40 @@ UInt8 Convert_UnicodeToCP437(UInt16 c) {
 	}
 	return (UInt8)'?';
 }
+
+bool Convert_TryParseInt32(STRING_TRANSIENT String* str, Int32* value) {
+	Int32 sum = 0, i = 0;
+	*value = 0;
+
+	/* Handle negative numbers */
+	bool negate = false;
+	if (str->length > 0 && str->buffer[0] == '-') {
+		negate = true; i++;
+	}
+
+	/* TODO: CHECK THIS WORKS!!! */
+	for (; i < str->length; i++) {
+		UInt8 c = str->buffer[i];
+		if (c < '0' || c > '9') return false;
+		Int32 digit = c - '0';
+
+		/* Cannot add another digit without overflow */
+		if (sum >= (Int32)214748364) return false;
+		sum *= 10;
+
+		/* Can only add a certain digit here */
+		if (sum >= (Int32)2147483639) {
+			/* Potential for adding digit to overflow */
+			while (digit > 0) {
+				if (sum == Int32_MaxValue) return false;
+				sum++; digit--;
+			}
+		} else {
+			sum += digit;
+		}
+	}
+
+	if (negate) sum = -sum;
+	*value = sum;
+	return true;
+}

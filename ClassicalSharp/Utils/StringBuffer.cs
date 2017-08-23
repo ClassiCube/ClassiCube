@@ -45,14 +45,14 @@ namespace ClassicalSharp {
 		}
 		
 		static char[] numBuffer = new char[20];
-		public StringBuffer AppendNum(ref int index, long num) {
+		public StringBuffer AppendNum(ref int index, int num) {
 			int numLen = MakeNum(num);
 			for (int i = numLen - 1; i >= 0; i--)
 				value[index++] = numBuffer[i];
 			return this;
 		}
 		
-		public StringBuffer AppendPaddedNum(ref int index, int minDigits, long num) {
+		public StringBuffer AppendPaddedNum(ref int index, int minDigits, int num) {
 			for (int i = 0; i < minDigits; i++)
 				numBuffer[i] = '0';
 			int numLen = Math.Max(minDigits, MakeNum(num));
@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 			return this;
 		}
 		
-		int MakeNum(long num) {
+		int MakeNum(int num) {
 			int len = 0;
 			do {
 				numBuffer[len] = (char)('0' + (num % 10)); 

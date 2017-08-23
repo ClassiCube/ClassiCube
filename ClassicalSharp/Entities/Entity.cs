@@ -105,14 +105,21 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public Matrix4 TransformMatrix(Vector3 scale, Vector3 pos) {
-			Matrix4 rotZ, rotX, rotY, translate, scaleM;
-			Matrix4.RotateX(out rotX, -RotX * Utils.Deg2Rad);
-			Matrix4.RotateY(out rotY, -RotY * Utils.Deg2Rad);
-			Matrix4.RotateZ(out rotZ, -RotZ * Utils.Deg2Rad);
-			Matrix4.Scale(out scaleM, scale.X, scale.Y, scale.Z);
-			Matrix4.Translate(out translate, pos.X, pos.Y, pos.Z);
+			Matrix4 m = Matrix4.Identity, tmp;
 			
-			return rotZ * rotX * rotY * scaleM * translate;
+			Matrix4.RotateZ(out tmp, -RotZ * Utils.Deg2Rad); 
+			Matrix4.Mult(out m, ref m, ref tmp);
+			Matrix4.RotateX(out tmp, -RotX * Utils.Deg2Rad);
+			Matrix4.Mult(out m, ref m, ref tmp);		
+			Matrix4.RotateY(out tmp, -RotY * Utils.Deg2Rad);
+			Matrix4.Mult(out m, ref m, ref tmp);
+			Matrix4.Scale(out tmp, scale.X, scale.Y, scale.Z);
+			Matrix4.Mult(out m, ref m, ref tmp);
+			Matrix4.Translate(out tmp, pos.X, pos.Y, pos.Z);
+			Matrix4.Mult(out m, ref m, ref tmp);
+			
+			//return rotZ * rotX * rotY * scale * translate;
+			return m;
 		}
 		
 		/// <summary> Gets the brightness colour of this entity. </summary>

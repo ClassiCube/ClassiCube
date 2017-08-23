@@ -142,7 +142,7 @@ namespace ClassicalSharp.Renderers {
 			if (chunks == null) return;
 			
 			// First fill depth buffer
-			long vertices = game.Vertices;
+			int vertices = game.Vertices;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.Texturing = false;
 			gfx.AlphaBlending = false;

@@ -70,7 +70,7 @@ bool Game_ClassicArmModel;
 bool Game_InvertMouse;
 
 /* Number of vertices used for rendering terrain this frame. */
-UInt32 Game_Vertices;
+Int32 Game_Vertices;
 
 /* Model view matrix. */
 Matrix Game_View;

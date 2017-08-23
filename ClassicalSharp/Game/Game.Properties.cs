@@ -161,7 +161,7 @@ namespace ClassicalSharp {
 		/// <summary> Whether mouse rotation on the y axis should be inverted. </summary>
 		public bool InvertMouse;
 		
-		public long Vertices;
+		public int Vertices;
 		public FrustumCulling Culling;
 		public AsyncDownloader AsyncDownloader;
 		public Matrix4 View, Projection;
