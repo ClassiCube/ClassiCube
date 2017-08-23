@@ -134,15 +134,15 @@ GfxResourceID D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* reso
 	return oldLength;
 }
 
-void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp) {
+void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 lvl) {
 	D3DLOCKED_RECT rect;
-	ReturnCode hresult = IDirect3DTexture9_LockRect(texture, 0, &rect, NULL, 0);
+	ReturnCode hresult = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Lock");
 
 	UInt32 size = Bitmap_DataSize(bmp->Width, bmp->Height);
 	Platform_MemCpy(rect.pBits, bmp->Scan0, size);
 
-	hresult = IDirect3DTexture9_UnlockRect(texture, 0);
+	hresult = IDirect3DTexture9_UnlockRect(texture, lvl);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Unlock");
 }
 
@@ -322,13 +322,13 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, usage,
 			D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &texture, NULL);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture");
-		D3D9_SetTextureData(texture, bmp);
+		D3D9_SetTextureData(texture, bmp, 0);
 	} else {
 		IDirect3DTexture9* sys;
 		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, usage,
 			D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture - SystemMem");
-		D3D9_SetTextureData(sys, bmp);
+		D3D9_SetTextureData(sys, bmp, 0);
 
 		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, usage,
 			D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &texture, NULL);

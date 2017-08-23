@@ -148,6 +148,31 @@ namespace ClassicalSharp.GraphicsAPI {
 				element += 4;
 			}
 		}
+				
+		internal static unsafe void GenMipmaps(int lvlWidth, int lvlHeight, IntPtr lvlScan0, 
+		                                       int width, int height, IntPtr scan0) {
+			int* baseSrc = (int*)scan0, baseDst = (int*)lvlScan0;
+			const int alphaMask = unchecked((int)0xFF000000);
+			
+			for (int y = 0; y < lvlHeight; y++) {
+				int srcY = y * height / lvlHeight;
+				int* src0 = baseSrc + srcY * width;
+				int* src1 = src0 + width;
+				int* dst = baseDst + y * lvlWidth;
+				
+				for (int x = 0; x < lvlWidth; x++) {
+					int srcX = x * width / lvlWidth;
+					int src00 = src0[srcX], src01 = src0[srcX + 1];
+					int src10 = src1[srcX], src11 = src1[srcX + 1];
+					
+					// Average the four pixels in the original texture for this mipmapped pixel
+					int r = (((src00 & 0x0000FF) >>  0) + ((src01 & 0x0000FF) >>  0) + ((src10 & 0x0000FF) >>  0) + ((src11 & 0x0000FF) >>  0)) >> 2;
+					int g = (((src00 & 0x00FF00) >>  8) + ((src01 & 0x00FF00) >>  8) + ((src10 & 0x00FF00) >>  8) + ((src11 & 0x00FF00) >>  8)) >> 2;
+					int b = (((src00 & 0xFF0000) >> 16) + ((src01 & 0xFF0000) >> 16) + ((src10 & 0xFF0000) >> 16) + ((src11 & 0xFF0000) >> 16)) >> 2;				
+					dst[x] = r | (g << 8) | (b << 16) | (src00 & alphaMask);
+				}
+			}
+		}
 	}
 
 	public enum VertexFormat {

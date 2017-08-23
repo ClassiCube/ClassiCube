@@ -176,6 +176,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			if (managedPool) {
 				texture = device.CreateTexture(width, height, levels, usage, Format.A8R8G8B8, Pool.Managed);
 				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
+				
+				/*if (mipmaps) DoMipmaps(texture, width, height, scan0);
+				
+				if (mipmaps && AutoMipmaps) {
+					DoMipmaps(texture, 1, width / 2, height / 2, width, height, scan0);
+					DoMipmaps(texture, 2, width / 4, height / 4, width, height, scan0);
+					DoMipmaps(texture, 3, width / 8, height / 8, width, height, scan0);
+					DoMipmaps(texture, 4, width / 16, height / 16, width, height, scan0);
+				}*/
 			} else {
 				D3D.Texture sys = device.CreateTexture(width, height, levels, usage, Format.A8R8G8B8, Pool.SystemMemory);
 				sys.SetData(0, LockFlags.None, scan0, width * height * 4);
@@ -186,6 +195,29 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			return GetOrExpand(ref textures, texture, texBufferSize);
 		}
+		
+		/*		
+		unsafe void DoMipmaps(D3D.Texture texture, int width, int height, IntPtr scan0) {
+			IntPtr prev = scan0;
+			for (int lvl = 1; lvl <= 4; lvl++) {
+				int size = (width / 2) * (height / 2) * 4;
+				IntPtr ptr = System.Runtime.InteropServices.Marshal.AllocHGlobal(size);
+				MakeMipmaps(width / 2, height / 2, ptr, width, height, prev);
+				
+				texture.SetData(lvl, LockFlags.None, ptr, size);
+				prev = ptr;
+				width /= 2; height /= 2;
+			}
+		}
+		
+		unsafe void DoMipmaps(D3D.Texture texture, int lvl, int lvlWidth, int lvlHeight,
+		               int width, int height, IntPtr scan0) {
+			int[] pixels = new int[lvlWidth * lvlHeight];
+			fixed (int* ptr = pixels) {
+				MakeMipmaps(lvlWidth, lvlHeight, (IntPtr)ptr, width, height, scan0);
+				texture.SetData(lvl, LockFlags.None, (IntPtr)ptr, lvlWidth * lvlHeight * 4);
+			}
+		}*/
 		
 		public override void UpdateTexturePart(int texId, int texX, int texY, FastBitmap part) {
 			D3D.Texture texture = textures[texId];
