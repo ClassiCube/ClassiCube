@@ -167,16 +167,49 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture(TextureTarget.Texture2D, texId);
 			GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MagFilter, (int)TextureFilter.Nearest);
 			
-			if (mipmaps && AutoMipmaps) {
+			if (mipmaps) {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.NearestMipmapLinear);
-				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.GenerateMipmap, 1);
 			} else {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.Nearest);
 			}
 
 			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0);
+			
+			if (mipmaps) {
+				int lvl = 1, lvlWidth = width, lvlHeight = height;
+				while (lvlWidth > 1 || lvlHeight > 1) {
+					if (lvlWidth > 1) lvlWidth /= 2;
+					if (lvlHeight > 1) lvlHeight /= 2;
+					
+					MipmapLevel(lvlWidth, lvlHeight, lvl, width, height, scan0);
+					lvl++;
+				}
+			}
 			return texId;
+		}
+		
+		unsafe void MipmapLevel(int lvlWidth, int lvlHeight, int lvl, int width, int height, IntPtr scan0) {
+			Console.WriteLine("MIPMAPS: " + lvlWidth + "," + lvlHeight + " - " + width + ", " + height);
+			int[] lblPixels = new int[lvlWidth * lvlHeight];
+			fixed (int* lvlPtr = lblPixels) {
+				int* baseSrc = (int*)scan0, baseDst = (int*)lvlPtr;
+				
+				for (int y = 0; y < lvlHeight; y++) {
+					int dstY = y * height / lvlHeight;
+					int* src = baseSrc + y * width;
+					int* dst = baseDst + y * lvlWidth;
+					
+					for (int x = 0; x < lvlWidth; x++) {
+						dst[x] = src[x * width / lvlWidth];
+					}
+				}
+				
+				Console.WriteLine("LEVEL: " + lvl);
+				GL.TexImage2D(TextureTarget.Texture2D, lvl, PixelInternalFormat.Rgba, lvlWidth, lvlHeight,
+				              GlPixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)lvlPtr);
+				Console.WriteLine(GL.GetError());
+			}
 		}
 		
 		public override void BindTexture(int texture) {
@@ -398,7 +431,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			// TODO: This renders the whole map, bad performance!! FIX FIX
 			if (glLists) {
 				if (activeList != lastPartialList) {
-					GL.CallList(activeList); lastPartialList = activeList; 
+					GL.CallList(activeList); lastPartialList = activeList;
 				}
 				return;
 			}
