@@ -185,7 +185,7 @@ namespace ClassicalSharp.Entities {
 			gfx.Texturing = true;
 			
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			((Player)Entities[SelfID]).shadow.Draw();
+			ShadowComponent.Draw(game, Entities[SelfID]);
 			if (ShadowMode == EntityShadow.CircleAll)
 				DrawOtherShadows();
 			
@@ -199,7 +199,7 @@ namespace ClassicalSharp.Entities {
 			for (int i = 0; i < SelfID; i++) {
 				if (Entities[i] == null) continue;
 				Player p = Entities[i] as Player;
-				if (p != null) p.shadow.Draw();
+				if (p != null) ShadowComponent.Draw(game, p);
 			}
 		}
 	}

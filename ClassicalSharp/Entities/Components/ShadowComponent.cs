@@ -16,17 +16,16 @@ using BlockID = System.Byte;
 namespace ClassicalSharp.Entities {
 
 	/// <summary> Entity component that draws square and circle shadows beneath entities. </summary>
-	public unsafe sealed class ShadowComponent {
+	public unsafe static class ShadowComponent {
 		
-		Game game;
-		Entity entity;
-		public ShadowComponent(Game game, Entity entity) {
-			this.game = game;
-			this.entity = entity;
-		}
-		float radius = 7f;
+		static Game game;
+		static Entity entity;
+		static float radius = 7f;
 		
-		internal void Draw() {
+		internal static void Draw(Game game, Entity entity) {
+			ShadowComponent.game = game;
+			ShadowComponent.entity = entity;
+			
 			EntityShadow mode = game.Entities.ShadowMode;
 			Vector3 Position = entity.Position;
 			float posX = Position.X, posZ = Position.Z;
@@ -80,7 +79,8 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		const byte c = 255; // avoids 'ambiguous match' compile errors.
-		void DraqSquareShadow(VertexP3fT2fC4b[] verts, ref int index, float y, byte alpha, float x, float z) {
+		static void DraqSquareShadow(VertexP3fT2fC4b[] verts, ref int index,
+		                             float y, byte alpha, float x, float z) {
 			int col = new FastColour(c, c, c, alpha).ToArgb();
 			TextureRec rec = new TextureRec(63/128f, 63/128f, 1/128f, 1/128f);
 			verts[index++] = new VertexP3fT2fC4b(x, y, z, rec.U1, rec.V1, col);
@@ -89,8 +89,8 @@ namespace ClassicalSharp.Entities {
 			verts[index++] = new VertexP3fT2fC4b(x, y, z + 1, rec.U1, rec.V2, col);
 		}
 		
-		void DrawCircle(VertexP3fT2fC4b[] verts, ref int index, 
-		                ShadowData* data, int dataCount, float x, float z) {
+		static void DrawCircle(VertexP3fT2fC4b[] verts, ref int index,
+		                       ShadowData* data, int dataCount, float x, float z) {
 			x = Utils.Floor(x); z = Utils.Floor(z);
 			Vector3 min = BlockInfo.MinBB[data[0].Block], max = BlockInfo.MaxBB[data[0].Block];
 			
@@ -105,8 +105,9 @@ namespace ClassicalSharp.Entities {
 				min = nMin; max = nMax;
 			}
 		}
-		void DrawCoords(VertexP3fT2fC4b[] verts, ref int index, ShadowData data, 
-		                float x1, float z1, float x2, float z2) {
+		
+		static void DrawCoords(VertexP3fT2fC4b[] verts, ref int index, ShadowData data,
+		                       float x1, float z1, float x2, float z2) {
 			Vector3 cen = entity.Position;
 			
 			if (lequal(x2, x1) || lequal(z2, z1)) return;
@@ -128,8 +129,8 @@ namespace ClassicalSharp.Entities {
 			verts[index++] = new VertexP3fT2fC4b(x1, data.Y, z2, u1, v2, col);
 		}
 		
-		bool GetBlocks(Vector3I* coords, ref int posCount, float x, float z,
-		               int posY, ShadowData* data, ref int index) {
+		static bool GetBlocks(Vector3I* coords, ref int posCount, float x, float z,
+		                      int posY, ShadowData* data, ref int index) {
 			int blockX = Utils.Floor(x), blockZ = Utils.Floor(z);
 			Vector3I p = new Vector3I(blockX, 0, blockZ);
 			Vector3 Position = entity.Position;
@@ -154,10 +155,10 @@ namespace ClassicalSharp.Entities {
 				
 				data[index].Block = block; data[index].Y = blockY;
 				CalcAlpha(Position.Y, ref data[index]);
-				index++;				
+				index++;
 				// Check if the casted shadow will continue on further down.
 				if (BlockInfo.MinBB[block].X == 0 && BlockInfo.MaxBB[block].X == 1 &&
-				   BlockInfo.MinBB[block].Z == 0 && BlockInfo.MaxBB[block].Z == 1) return true;
+				    BlockInfo.MinBB[block].Z == 0 && BlockInfo.MaxBB[block].Z == 1) return true;
 			}
 			
 			if (index < 4) {
@@ -168,7 +169,7 @@ namespace ClassicalSharp.Entities {
 			return true;
 		}
 		
-		BlockID GetShadowBlock(int x, int y, int z) {
+		static BlockID GetShadowBlock(int x, int y, int z) {
 			if (x < 0 || z < 0 || x >= game.World.Width || z >= game.World.Length) {
 				if (y == game.World.Env.EdgeHeight - 1)
 					return BlockInfo.Draw[game.World.Env.EdgeBlock] == DrawType.Gas ? Block.Air : Block.Bedrock;

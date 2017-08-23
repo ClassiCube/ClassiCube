@@ -14,13 +14,11 @@ namespace ClassicalSharp.Entities {
 	public abstract partial class Player : Entity {
 		
 		public string DisplayName, SkinName, SkinIdentifier;
-		internal ShadowComponent shadow;
 		protected Texture nameTex;
 		internal bool fetchedSkin;
 		
 		public Player(Game game) : base(game) {
 			StepSize = 0.5f;
-			shadow = new ShadowComponent(game, this);
 			SetModel("humanoid");
 		}
 		
