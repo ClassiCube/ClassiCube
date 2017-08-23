@@ -167,46 +167,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture(TextureTarget.Texture2D, texId);
 			GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MagFilter, (int)TextureFilter.Nearest);
 			
-			if (mipmaps) {
+			if (mipmaps && AutoMipmaps) {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.NearestMipmapLinear);
+				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.GenerateMipmap, 1);
+				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 4);
 			} else {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.Nearest);
 			}
 
 			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0);
-			
-			if (mipmaps) {
-				int lvl = 1, lvlWidth = width, lvlHeight = height;
-				while (lvlWidth > 1 || lvlHeight > 1) {
-					if (lvlWidth > 1) lvlWidth /= 2;
-					if (lvlHeight > 1) lvlHeight /= 2;
-					
-					MipmapLevel(lvlWidth, lvlHeight, lvl, width, height, scan0);
-					lvl++;
-				}
-			}
 			return texId;
-		}
-		
-		unsafe void MipmapLevel(int lvlWidth, int lvlHeight, int lvl, int width, int height, IntPtr scan0) {
-			int[] lblPixels = new int[lvlWidth * lvlHeight];
-			fixed (int* lvlPtr = lblPixels) {
-				int* baseSrc = (int*)scan0, baseDst = (int*)lvlPtr;
-				
-				for (int y = 0; y < lvlHeight; y++) {
-					int srcY = y * height / lvlHeight;
-					int* src = baseSrc + srcY * width;
-					int* dst = baseDst + y * lvlWidth;
-					
-					for (int x = 0; x < lvlWidth; x++) {
-						dst[x] = src[x * width / lvlWidth];
-					}
-				}
-				
-				GL.TexImage2D(TextureTarget.Texture2D, lvl, PixelInternalFormat.Rgba, lvlWidth, lvlHeight,
-				              GlPixelFormat.Bgra, PixelType.UnsignedByte, (IntPtr)lvlPtr);
-			}
 		}
 		
 		public override void BindTexture(int texture) {

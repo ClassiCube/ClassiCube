@@ -288,6 +288,7 @@ namespace OpenTK.Graphics.OpenGL
     public enum TextureParameterName : int {
         MagFilter = 0x2800,
         MinFilter = 0x2801,
+        TextureMaxLevel = 0x813D,
         GenerateMipmap = 0x8191,
     }
 
