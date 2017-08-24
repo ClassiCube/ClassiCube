@@ -19,7 +19,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void LoseContext(string reason) {
 			LostContext = true;
 			Utils.LogDebug("Lost graphics context" + reason);
-			if (ContextLost != null) ContextLost();			
+			if (ContextLost != null) ContextLost();
 			
 			DeleteVb(ref quadVb);
 			DeleteVb(ref texVb);
@@ -46,7 +46,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void UpdateDynamicVb_IndexedTris<T>(int vb, T[] vertices, int vCount) where T : struct {
 			SetDynamicVbData(vb, vertices, vCount);
 			DrawVb_IndexedTris(vCount * 6 / 4);
-		}		
+		}
 		
 		
 		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];
@@ -130,13 +130,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal unsafe int MakeDefaultIb() {
 			const int maxIndices = 65536 / 4 * 6;
-			ushort* indices = stackalloc ushort[maxIndices];			
+			ushort* indices = stackalloc ushort[maxIndices];
 			MakeIndices(indices, maxIndices);
 			return CreateIb((IntPtr)indices, maxIndices);
 		}
 		
 		internal unsafe void MakeIndices(ushort* indices, int iCount) {
-			int element = 0;			
+			int element = 0;
 			for (int i = 0; i < iCount; i += 6) {
 				*indices = (ushort)(element + 0); indices++;
 				*indices = (ushort)(element + 1); indices++;
@@ -148,11 +148,40 @@ namespace ClassicalSharp.GraphicsAPI {
 				element += 4;
 			}
 		}
-				
-		internal static unsafe void GenMipmaps(int lvlWidth, int lvlHeight, IntPtr lvlScan0, 
+		
+		const int alphaMask = unchecked((int)0xFF000000);
+		// Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
+		// The short version: if you want your renderer to properly handle textures with alphas when using
+		// bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas.
+		static int Average(int p1, int p2) {			
+			int a1 = ((p1 & alphaMask) >> 24) & 0xFF;
+			int a2 = ((p2 & alphaMask) >> 24) & 0xFF;
+			int aSum = (a1 + a2);			
+			aSum = aSum > 0 ? aSum : 2; // avoid divide by 0 below
+			
+			// Convert RGB to pre-multiplied form
+			int r1 = ((p1 >> 16) & 0xFF) * a1;
+			int r2 = ((p2 >> 16) & 0xFF) * a2;			
+			int g1 = ((p1 >> 8) & 0xFF) * a1;
+			int g2 = ((p2 >> 8) & 0xFF) * a2;			
+			int b1 = (p1 & 0xFF) * a1;
+			int b2 = (p2 & 0xFF) * a2;
+			
+			// https://stackoverflow.com/a/347376
+			// We need to convert RGB back from the pre-multiplied average into normal form
+			// ((r1 + r2) / 2) / ((a1 + a2) / 2)
+			// but we just cancel out the / 2
+			int aAve = aSum >> 1;
+			int rAve = (r1 + r2) / aSum;
+			int gAve = (g1 + g2) / aSum;
+			int bAve = (b1 + b2) / aSum;
+			
+			return (aAve << 24) | (rAve << 16) | (gAve << 8) | bAve;
+		}
+		
+		internal static unsafe void GenMipmaps(int lvlWidth, int lvlHeight, IntPtr lvlScan0,
 		                                       int width, int height, IntPtr scan0) {
-			int* baseSrc = (int*)scan0, baseDst = (int*)lvlScan0;
-			const int alphaMask = unchecked((int)0xFF000000);
+			int* baseSrc = (int*)scan0, baseDst = (int*)lvlScan0;			
 			
 			for (int y = 0; y < lvlHeight; y++) {
 				int srcY = y * height / lvlHeight;
@@ -165,11 +194,10 @@ namespace ClassicalSharp.GraphicsAPI {
 					int src00 = src0[srcX], src01 = src0[srcX + 1];
 					int src10 = src1[srcX], src11 = src1[srcX + 1];
 					
-					// Average the four pixels in the original texture for this mipmapped pixel
-					int r = (((src00 & 0x0000FF) >>  0) + ((src01 & 0x0000FF) >>  0) + ((src10 & 0x0000FF) >>  0) + ((src11 & 0x0000FF) >>  0)) >> 2;
-					int g = (((src00 & 0x00FF00) >>  8) + ((src01 & 0x00FF00) >>  8) + ((src10 & 0x00FF00) >>  8) + ((src11 & 0x00FF00) >>  8)) >> 2;
-					int b = (((src00 & 0xFF0000) >> 16) + ((src01 & 0xFF0000) >> 16) + ((src10 & 0xFF0000) >> 16) + ((src11 & 0xFF0000) >> 16)) >> 2;				
-					dst[x] = r | (g << 8) | (b << 16) | (src00 & alphaMask);
+					// bilinear filter this mipmap				
+					int ave0 = Average(src00, src01);
+					int ave1 = Average(src10, src11);
+					dst[x] = Average(ave0, ave1);
 				}
 			}
 		}
