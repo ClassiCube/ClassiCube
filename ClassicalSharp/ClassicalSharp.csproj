@@ -162,7 +162,6 @@
     <Compile Include="Entities\Components\PhysicsComponent.cs" />
     <Compile Include="Entities\Components\ShadowComponent.cs" />
     <Compile Include="Entities\Components\SoundComponent.cs" />
-    <Compile Include="Entities\Entity.Bounds.cs" />
     <Compile Include="Entities\Entity.cs" />
     <Compile Include="Entities\EntityList.cs" />
     <Compile Include="Entities\LocalPlayer.cs" />

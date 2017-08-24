@@ -56,7 +56,7 @@ namespace ClassicalSharp.Entities {
 			}
 			return true;
 		}
-		
+				
 		void DoRespawn() {
 			LocalPlayer p = (LocalPlayer)entity;
 			Vector3 spawn = p.Spawn;
@@ -71,9 +71,12 @@ namespace ClassicalSharp.Entities {
 			// Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before
 			AABB bb = entity.Bounds;
 			bb.Min.Y -= 0.01f; bb.Max.Y = bb.Min.Y;
-			entity.onGround = entity.TouchesAny(bb, b => BlockInfo.Collide[b] == CollideType.Solid);
+			entity.onGround = entity.TouchesAny(bb, touchesAnySolid);
 		}
 		
+		static Predicate<BlockID> touchesAnySolid = IsSolidCollide;
+		static bool IsSolidCollide(BlockID b) { return BlockInfo.Collide[b] == CollideType.Solid; }
+
 		void FindHighestFree(ref Vector3 spawn) {
 			AABB bb = AABB.Make(spawn, entity.Size);
 			

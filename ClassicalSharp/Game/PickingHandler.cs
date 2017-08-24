@@ -106,42 +106,44 @@ namespace ClassicalSharp {
 		}
 		
 		static bool PushbackPlace(Game game, AABB blockBB) {
-			Vector3 newP = game.LocalPlayer.Position;
-			Vector3 oldP = game.LocalPlayer.Position;
+			LocalPlayer p = game.LocalPlayer;
+			Vector3 curPos = p.Position, adjPos = p.Position;
 			
 			// Offset position by the closest face
 			PickedPos selected = game.SelectedPos;
 			if (selected.Face == BlockFace.XMax) {
-				newP.X = blockBB.Max.X + 0.5f;
+				adjPos.X = blockBB.Max.X + 0.5f;
 			} else if (selected.Face == BlockFace.ZMax) {
-				newP.Z = blockBB.Max.Z + 0.5f;
+				adjPos.Z = blockBB.Max.Z + 0.5f;
 			} else if (selected.Face == BlockFace.XMin) {
-				newP.X = blockBB.Min.X - 0.5f;
+				adjPos.X = blockBB.Min.X - 0.5f;
 			} else if (selected.Face == BlockFace.ZMin) {
-				newP.Z = blockBB.Min.Z - 0.5f;
+				adjPos.Z = blockBB.Min.Z - 0.5f;
 			} else if (selected.Face == BlockFace.YMax) {
-				newP.Y = blockBB.Min.Y + 1 + Entity.Adjustment;
+				adjPos.Y = blockBB.Min.Y + 1 + Entity.Adjustment;
 			} else if (selected.Face == BlockFace.YMin) {
-				newP.Y = blockBB.Min.Y - game.LocalPlayer.Size.Y - Entity.Adjustment;
+				adjPos.Y = blockBB.Min.Y - p.Size.Y - Entity.Adjustment;
 			}
 			
-			Vector3I newLoc = Vector3I.Floor(newP);
+			Vector3I newLoc = Vector3I.Floor(adjPos);
 			bool validPos = newLoc.X >= 0 && newLoc.Y >= 0 && newLoc.Z >= 0 &&
-				newLoc.X < game.World.Width && newP.Z < game.World.Length;
+				newLoc.X < game.World.Width && adjPos.Z < game.World.Length;
 			if (!validPos) return false;
 			
-			game.LocalPlayer.Position = newP;
-			if (!game.LocalPlayer.Hacks.Noclip
-			    && game.LocalPlayer.TouchesAny(b => BlockInfo.Collide[b] == CollideType.Solid)) {
-				game.LocalPlayer.Position = oldP;
+			p.Position = adjPos;
+			if (!p.Hacks.Noclip && p.TouchesAny(p.Bounds, touchesAnySolid)) {
+				p.Position = curPos;
 				return false;
 			}
 			
-			game.LocalPlayer.Position = oldP;
-			LocationUpdate update = LocationUpdate.MakePos(newP, false);
-			game.LocalPlayer.SetLocation(update, false);
+			p.Position = curPos;
+			LocationUpdate update = LocationUpdate.MakePos(adjPos, false);
+			p.SetLocation(update, false);
 			return true;
 		}
+				
+		static Predicate<BlockID> touchesAnySolid = IsSolidCollide;
+		static bool IsSolidCollide(BlockID b) { return BlockInfo.Collide[b] == CollideType.Solid; }
 		
 		static bool IntersectsOtherPlayers(Game game, Vector3 pos, BlockID block) {
 			AABB blockBB = new AABB(pos + BlockInfo.MinBB[block],

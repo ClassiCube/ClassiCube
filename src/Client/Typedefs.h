@@ -41,11 +41,11 @@ typedef UInt8 BlockID;
 typedef UInt8 EntityID;
 typedef UInt8 TextureLoc;
 
-#define UInt8_MaxValue ((UInt8)0xFF)
-#define Int16_MaxValue ((Int16)0x7FFF)
+#define UInt8_MaxValue  ((UInt8)0xFF)
+#define Int16_MaxValue  ((Int16)0x7FFF)
 #define UInt16_MaxValue ((UInt16)0xFFFF)
-#define Int32_MaxValue ((Int32)0x7FFFFFFFL)
-#define Int32_MinValue ((Int32)0xFFFFFFFFL)
+#define Int32_MaxValue  ((Int32)0x7FFFFFFFL)
+#define Int32_MinValue  ((Int32)0xFFFFFFFFL)
 
 #define USE_DX true
 #endif
