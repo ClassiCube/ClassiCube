@@ -38,6 +38,15 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 	LocationUpdate_Construct(update, pos.X, pos.Y, pos.Z, exc, rotY, exc, headX, true, rel);
 }
 
+
+void Entity_GetPickingBounds(Entity* entity, AABB* bb) {
+	AABB_Offset(bb, &entity->ModelAABB, &entity->Position);
+}
+
+void Entity_GetBounds(Entity* entity, AABB* bb) {
+	AABB_Make(bb, &entity->Position, &entity->Size);
+}
+
 bool Entity_TouchesAny(AABB* bounds, TouchesAny_Condition condition) {
 	Vector3I bbMin, bbMax;
 	Vector3I_Floor(&bbMin, &bounds->Min);
@@ -64,5 +73,28 @@ bool Entity_TouchesAny(AABB* bounds, TouchesAny_Condition condition) {
 		}
 	}
 	return false;
+}
+
+bool Entity_IsRope(BlockID b) { return b == BlockID_Rope; }
+bool Entity_TouchesAnyRope(Entity* entity) {
+	AABB bounds; Entity_GetBounds(entity, &bounds);
+	bounds.Max.Y += 0.5f / 16.0f;
+	return Entity_TouchesAny(&bounds, Entity_IsRope);
+}
+
+Vector3 entity_liqExpand = { 0.25f / 16.0f, 0.0f / 16.0f, 0.25f / 16.0f };
+
+bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == CollideType_LiquidLava; }
+bool Entity_TouchesAnyLava(Entity* entity) {
+	AABB bounds; Entity_GetBounds(entity, &bounds);
+	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
+	return Entity_TouchesAny(&bounds, Entity_IsLava);
+}
+
+bool Entity_IsWater(BlockID b) { return Block_ExtendedCollide[b] == CollideType_LiquidWater; }
+bool Entity_TouchesAnyWater(Entity* entity) {
+	AABB bounds; Entity_GetBounds(entity, &bounds);
+	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
+	return Entity_TouchesAny(&bounds, Entity_IsWater);
 }
 #endif

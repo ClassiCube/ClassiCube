@@ -35,6 +35,10 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Scale applied to the model for collision detection and rendering. </summary>
 		public Vector3 ModelScale = new Vector3(1.0f);
 		
+		/// <summary> Returns the size of the model that is used for collision detection. </summary>
+		public Vector3 Size;
+
+		
 		public byte ID;
 		public int TextureId = -1, MobTextureId = -1;
 		public short Health = 10;
@@ -58,24 +62,10 @@ namespace ClassicalSharp.Entities {
 		
 		
 		/// <summary> Rotation of the entity's head horizontally. (i.e. looking north or east) </summary>
-		public float HeadYRadians {
-			get { return HeadY * Utils.Deg2Rad; }
-			set { HeadY = value * Utils.Rad2Deg; }
-		}
+		public float HeadYRadians { get { return HeadY * Utils.Deg2Rad; } }
 		
 		/// <summary> Rotation of the entity's head vertically. (i.e. looking up or down) </summary>
-		public float HeadXRadians {
-			get { return HeadX * Utils.Deg2Rad; }
-			set { HeadX = value * Utils.Rad2Deg; }
-		}
-		
-		/// <summary> Returns the size of the model that is used for collision detection. </summary>
-		public Vector3 Size;
-		
-		protected void UpdateModel() {
-			BlockModel model = Model as BlockModel;
-			if (model != null) model.CalcState(ModelBlock);
-		}
+		public float HeadXRadians { get { return HeadX * Utils.Deg2Rad; } }
 		
 		public abstract void Tick(double delta);
 		
@@ -99,10 +89,6 @@ namespace ClassicalSharp.Entities {
 		public Vector3 EyePosition {
 			get { return new Vector3(Position.X,
 			                         Position.Y + Model.GetEyeY(this) * ModelScale.Y, Position.Z); }
-		}
-		
-		public BlockID GetBlock(Vector3 coords) {
-			return game.World.SafeGetBlock(Vector3I.Floor(coords));
 		}
 		
 		public Matrix4 TransformMatrix(Vector3 scale, Vector3 pos) {
@@ -153,7 +139,7 @@ namespace ClassicalSharp.Entities {
 			lastModelChange = DateTime.UtcNow;
 			MobTextureId = -1;
 			
-			UpdateModel();
+			Model.RecalcProperties(this);
 			UpdateModelBounds();
 		}
 		
@@ -192,19 +178,25 @@ namespace ClassicalSharp.Entities {
 			Vector3I bbMax = Vector3I.Floor(bounds.Max);
 
 			AABB blockBB = default(AABB);
+			Vector3 v;
 			
 			// Order loops so that we minimise cache misses
-			for (int y = bbMin.Y; y <= bbMax.Y; y++)
-				for (int z = bbMin.Z; z <= bbMax.Z; z++)
-					for (int x = bbMin.X; x <= bbMax.X; x++)
-			{
-				if (!game.World.IsValidPos(x, y, z)) continue;
-				BlockID block = game.World.GetBlock(x, y, z);
-				blockBB.Min = new Vector3(x, y, z) + BlockInfo.MinBB[block];
-				blockBB.Max = new Vector3(x, y, z) + BlockInfo.MaxBB[block];
-				
-				if (!blockBB.Intersects(bounds)) continue;
-				if (condition(block)) return true;
+			for (int y = bbMin.Y; y <= bbMax.Y; y++) {
+				v.Y = y;
+				for (int z = bbMin.Z; z <= bbMax.Z; z++) {
+					v.Z = z;
+					for (int x = bbMin.X; x <= bbMax.X; x++) {
+						if (!game.World.IsValidPos(x, y, z)) continue;
+						v.X = x;
+						
+						BlockID block = game.World.GetBlock(x, y, z);
+						blockBB.Min = v + BlockInfo.MinBB[block];
+						blockBB.Max = v + BlockInfo.MaxBB[block];
+						
+						if (!blockBB.Intersects(bounds)) continue;
+						if (condition(block)) return true;
+					}
+				}
 			}
 			return false;
 		}

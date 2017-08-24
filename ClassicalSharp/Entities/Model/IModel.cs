@@ -161,6 +161,10 @@ namespace ClassicalSharp.Model {
 			index = 0;
 		}
 		
+		/// <summary> Recalculates properties such as name Y offset, collision size. </summary>
+		/// <remarks> This is not used by majority of models. (BlockModel is the exception). </remarks>
+		public virtual void RecalcProperties(Entity p) { }
+		
 		
 		protected internal virtual Matrix4 TransformMatrix(Entity p, Vector3 pos) {
 			return p.TransformMatrix(p.ModelScale, pos);

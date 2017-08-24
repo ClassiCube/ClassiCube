@@ -50,7 +50,8 @@ namespace ClassicalSharp.Model {
 			get { return new AABB(minBB, maxBB).Offset(offset); }
 		}
 		
-		public void CalcState(BlockID block) {
+		public override void RecalcProperties(Entity p) {
+			BlockID block = p.ModelBlock;
 			if (BlockInfo.Draw[block] == DrawType.Gas) {
 				minBB = Vector3.Zero;
 				maxBB = Vector3.One;
@@ -67,7 +68,7 @@ namespace ClassicalSharp.Model {
 		int lastTexId = -1;
 		public override void DrawModel(Entity p) {
 			block = p.ModelBlock;
-			CalcState(block);
+			RecalcProperties(p);
 			
 			if (BlockInfo.FullBright[block]) {
 				for (int i = 0; i < cols.Length; i++)

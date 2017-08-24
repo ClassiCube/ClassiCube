@@ -81,7 +81,7 @@ namespace ClassicalSharp.Entities {
 			gfx.BindTexture(nameTex.ID);
 			
 			Vector3 pos;
-			UpdateModel();
+			Model.RecalcProperties(this);
 			Vector3.TransformY(Model.NameYOffset, ref transform, out pos);
 			float scale = Math.Min(1, Model.NameScale * ModelScale.Y) / 70f;
 			

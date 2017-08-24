@@ -65,14 +65,15 @@ typedef struct Entity_ {
 	/* The model of this entity. (used for collision detection and rendering) */
 	IModel* Model;
 	/* The name of the model of this entity. Is "block" for all block ID models. */
-	String ModelName;
-		
+	String ModelName;		
 	/* BlockID, if model name was originally a vaid block id. Avoids needing to repeatedly parse ModelName as a byte. */
 	BlockID ModelBlock;
 	/* AABB of the model. Centred around the origin, NOT the position. */
 	AABB ModelAABB;
 	/* Scale applied to the model on each axis. */
 	Vector3 ModelScale;
+	/* Returns the size of the model that is used for collision detection. */
+	Vector3 Size;
 } Entity;
 
 
