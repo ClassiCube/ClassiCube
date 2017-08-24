@@ -345,9 +345,6 @@
     <ClInclude Include="ChunkUpdater.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
-    <ClInclude Include="LocationUpdate.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
     <ClInclude Include="IModel.h">
       <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
@@ -521,9 +518,6 @@
     <ClCompile Include="ChunkUpdater.c">
       <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
-    <ClCompile Include="LocationUpdate.c">
-      <Filter>Source Files\Entities</Filter>
-    </ClCompile>
     <ClCompile Include="AABB.c">
       <Filter>Source Files\Math</Filter>
     </ClCompile>
@@ -568,6 +562,9 @@
     </ClCompile>
     <ClCompile Include="Models.c">
       <Filter>Source Files\Entities\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="Entity.c">
+      <Filter>Source Files\Entities</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

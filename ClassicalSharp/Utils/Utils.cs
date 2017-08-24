@@ -185,8 +185,11 @@ namespace ClassicalSharp {
 			"█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0";
 
 		public static bool IsValidInputChar(char c, bool supportsCP437) {
-			bool isCP437 = UnicodeToCP437(c) != c;
-			return supportsCP437 || !isCP437;
+			if (c == '?') return true;
+			byte cp437 = UnicodeToCP437(c);
+			if (cp437 == '?') return false; // not code page 437
+			
+			return supportsCP437 || (cp437 == c);
 		}
 
 		public static byte UnicodeToCP437(char c) {

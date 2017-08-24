@@ -13,8 +13,39 @@
 
 /* Constant offset used to avoid floating point roundoff errors. */
 #define Entity_Adjustment 0.001f
+/* Constant value specifying an angle is not included in an orientation update. */
+#define LocationUpdate_Excluded -100000.31415926535f
 
-typedef bool(*TouchesAny_Condition)(BlockID block);
+typedef bool (*TouchesAny_Condition)(BlockID block);
+
+/* Represents a location update for an entity.
+This can be a relative position, full position, and/or an orientation update. */
+typedef struct LocationUpdate_ {
+	/* Position of the update (if included). */
+	Vector3 Pos;
+	/* Orientation of the update (if included). If not, has the value of LocationUpdate_Excluded. */
+	Real32 RotX, RotY, RotZ, HeadX;
+	/* Whether this update includes an absolute or relative position. */
+	bool IncludesPosition;
+	/* Whether the positon is absolute, or relative to the last positionreceived from the server. */
+	bool RelativePosition;
+} LocationUpdate;
+
+/* Clamps the given angle so it lies between [0, 360). */
+Real32 LocationUpdate_Clamp(Real32 degrees);
+
+/* Constructs a location update with values for every field.
+You should generally prefer using the alternative constructors. */
+void LocationUpdate_Construct(LocationUpdate* update, Real32 x, Real32 y, Real32 z,
+	Real32 rotX, Real32 rotY, Real32 rotZ, Real32 headX, bool incPos, bool relPos);
+/* Constructs a location update that does not have any position or orientation information. */
+void LocationUpdate_Empty(LocationUpdate* update);
+/* Constructs a location update that only consists of orientation information. */
+void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX);
+/* Constructs a location update that only consists of position information. */
+void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel);
+/* Constructs a location update that consists of position and orientation information. */
+void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel);
 
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */

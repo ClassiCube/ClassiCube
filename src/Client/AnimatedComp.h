@@ -32,3 +32,4 @@ static void AnimatedComp_CalcHumanAnim(AnimatedComp* anim, Real32 idleXRot, Real
 
 static void AnimatedComp_PerpendicularAnim(AnimatedComp* anim, Real32 flapSpeed, Real32 idleXRot, Real32 idleZRot, bool left);
 #endif
+#endif

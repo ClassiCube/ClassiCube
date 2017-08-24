@@ -207,7 +207,6 @@
     <ClInclude Include="BordersRenderer.h" />
     <ClInclude Include="LiquidAnimations.h" />
     <ClInclude Include="LocalPlayer.h" />
-    <ClInclude Include="LocationUpdate.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="ModelCache.h" />
@@ -279,7 +278,7 @@
     <ClCompile Include="Key.c" />
     <ClCompile Include="Lighting.c" />
     <ClCompile Include="LiquidAnimations.c" />
-    <ClCompile Include="LocationUpdate.c" />
+    <ClCompile Include="Entity.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelCache.c" />
     <ClCompile Include="Models.c" />
