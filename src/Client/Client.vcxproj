@@ -225,7 +225,6 @@
     <ClInclude Include="SkyboxRenderer.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
-    <ClInclude Include="StringConvert.h" />
     <ClInclude Include="TerrainAtlas.h" />
     <ClInclude Include="TickQueue.h" />
     <ClInclude Include="TiltComp.h" />
@@ -300,7 +299,6 @@
     <ClCompile Include="SkyboxRenderer.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />
-    <ClCompile Include="StringConvert.c" />
     <ClCompile Include="TerrainAtlas.c" />
     <ClCompile Include="Texture.c" />
     <ClCompile Include="TickQueue.c" />

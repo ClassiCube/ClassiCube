@@ -94,7 +94,7 @@ namespace ClassicalSharp {
 						col = BlackTextShadows ? FastColour.Black : FastColour.Scale(col, 0.25f);
 					i++; continue; // Skip over the colour code.
 				}
-				int coords = ConvertToCP437(c);
+				int coords = Utils.UnicodeToCP437(c);
 				
 				// First character in the string, begin run counting
 				if (lastY == -1) {
@@ -185,7 +185,7 @@ namespace ClassicalSharp {
 					}
 					if (shadowCol) col = FastColour.Black.ToArgb();
 					
-					int coords = ConvertToCP437(c);
+					int coords = Utils.UnicodeToCP437(c);
 					int width = PaddedWidth(point, widths[coords]);
 					for (int xx = 0; xx < width; xx++)
 						dstRow[x + xx] = col;
@@ -210,7 +210,7 @@ namespace ClassicalSharp {
 					i++; continue; // Skip over the colour code.
 				}
 				
-				int coords = ConvertToCP437(c);
+				int coords = Utils.UnicodeToCP437(c);
 				total.Width += PaddedWidth(point, widths[coords]);
 			}
 			
@@ -221,16 +221,6 @@ namespace ClassicalSharp {
 				total.Width += offset; total.Height += offset;
 			}
 			return total;
-		}
-		
-		public static int ConvertToCP437(char c) {
-			if (c >= ' ' && c <= '~') return (int)c;
-			
-			int cIndex = Utils.ControlCharReplacements.IndexOf(c);
-			if (cIndex >= 0) return cIndex;
-			int eIndex = Utils.ExtendedCharReplacements.IndexOf(c);
-			if (eIndex >= 0) return 127 + eIndex;
-			return (int)'?';
 		}
 		
 		protected int ShadowOffset(float fontSize) {

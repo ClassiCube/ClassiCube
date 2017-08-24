@@ -4,7 +4,7 @@
 #include "Mouse.h"
 #include "Key.h"
 #include "Events.h"
-#include "StringConvert.h"
+#include "String.h"
 
 #define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
 #define win_StyleEx WS_EX_WINDOWEDGE | WS_EX_APPWINDOW

@@ -21,7 +21,7 @@ namespace ClassicalSharp.Network {
 			for (int i = 0; i < count; i++) {
 				char c = value[i];
 				if (c == '&') c = '%'; // escape colour codes
-				buffer[index + i] = (byte)IDrawer2D.ConvertToCP437(c);
+				buffer[index + i] = Utils.UnicodeToCP437(c);
 			}
 			
 			for (int i = value.Length; i < Utils.StringLength; i++)

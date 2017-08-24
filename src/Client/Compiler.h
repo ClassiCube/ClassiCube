@@ -28,7 +28,7 @@
 Thus it is safe to allocate a string on the stack. */
 #define STRING_TRANSIENT
 
-/* Indicates that a reference to the buffer in a string argument is retained after the function has completed.
+/* Indicates that a reference to the buffer in a string argument is persisted after the function has completed.
 Thus it is NOT SAFE to allocate a string on the stack. */
 #define STRING_REF
 #endif

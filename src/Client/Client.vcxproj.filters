@@ -276,9 +276,6 @@
     <ClInclude Include="DateTime.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="StringConvert.h">
-      <Filter>Header Files\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="MapRenderer.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
@@ -466,9 +463,6 @@
     </ClCompile>
     <ClCompile Include="WeatherRenderer.c">
       <Filter>Source Files\Rendering\Env</Filter>
-    </ClCompile>
-    <ClCompile Include="StringConvert.c">
-      <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="ChunkInfo.c">
       <Filter>Source Files\Rendering\Map</Filter>

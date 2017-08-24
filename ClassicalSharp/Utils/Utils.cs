@@ -177,22 +177,33 @@ namespace ClassicalSharp {
 #endif
 
 		/// <summary> Conversion for code page 437 characters from index 0 to 31 to unicode. </summary>
-		public const string ControlCharReplacements = "\0☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼";
+		const string ControlCharReplacements = "\0☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼";
 		
 		/// <summary> Conversion for code page 437 characters from index 127 to 255 to unicode. </summary>
-		public const string ExtendedCharReplacements = "⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»" +
+		const string ExtendedCharReplacements = "⌂ÇüéâäàåçêëèïîìÄÅÉæÆôöòûùÿÖÜ¢£¥₧ƒáíóúñÑªº¿⌐¬½¼¡«»" +
 			"░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌" +
 			"█▄▌▐▀αßΓπΣσµτΦΘΩδ∞φε∩≡±≥≤⌠⌡÷≈°∙·√ⁿ²■\u00a0";
 
-#if !LAUNCHER
 		public static bool IsValidInputChar(char c, bool supportsCP437) {
-			if (c >= ' ' && c <= '~') return true; // ascii
-			
-			bool isCP437 = Utils.ControlCharReplacements.IndexOf(c) >= 0 ||
-				Utils.ExtendedCharReplacements.IndexOf(c) >= 0;
-			return supportsCP437 && isCP437;
+			bool isCP437 = UnicodeToCP437(c) != c;
+			return supportsCP437 || !isCP437;
 		}
-#endif
+
+		public static byte UnicodeToCP437(char c) {
+			if (c >= ' ' && c <= '~') return (byte)c;
+			
+			int cIndex = ControlCharReplacements.IndexOf(c);
+			if (cIndex >= 0) return (byte)cIndex;
+			int eIndex = ExtendedCharReplacements.IndexOf(c);
+			if (eIndex >= 0) return (byte)(127 + eIndex);
+			return (byte)'?';
+		}
+		
+		public static char CP437ToUnicode(byte c) {
+			if (c < 0x20) return ControlCharReplacements[c];
+			if (c < 0x7F) return (char)c;
+			return ExtendedCharReplacements[c - 0x7F];
+		}
 		
 		public unsafe static string ToLower(string value) {
 			fixed(char* ptr = value) {

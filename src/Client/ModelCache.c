@@ -3,7 +3,7 @@
 #include "GraphicsAPI.h"
 #include "Game.h"
 #include "Events.h"
-#include "StringConvert.h"
+#include "String.h"
 
 String ModelCache_charPngString;
 Int32 ModelCache_texCount, ModelCache_modelCount;

@@ -122,15 +122,8 @@ namespace ClassicalSharp.Network {
 				byte code = buffer[index + i];
 				if (length == 0 && !(code == 0 || code == 0x20))
 				   length = i + 1;
-
-				// Treat code as an index in code page 437
-				if (code < 0x20) {
-					characters[i] = Utils.ControlCharReplacements[code];
-				} else if (code < 0x7F) {
-					characters[i] = (char)code;
-				} else {
-					characters[i] = Utils.ExtendedCharReplacements[code - 0x7F];
-				}
+				
+				characters[i] = Utils.CP437ToUnicode(code);
 			}
 			index += maxLength;
 			return length;
