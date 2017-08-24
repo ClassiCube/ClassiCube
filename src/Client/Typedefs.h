@@ -40,6 +40,8 @@ typedef UInt8 bool;
 typedef UInt8 BlockID;
 typedef UInt8 EntityID;
 typedef UInt8 TextureLoc;
+/* Sides of a block. TODO: Map this to CPE PlayerClicked blockface enums. */
+typedef UInt8 Face;
 
 #define UInt8_MaxValue  ((UInt8)0xFF)
 #define Int16_MaxValue  ((Int16)0x7FFF)

@@ -1,4 +1,3 @@
-#if 0
 #ifndef CS_MODELCACHE_H
 #define CS_MODELCACHE_H
 #include "Typedefs.h"
@@ -80,5 +79,4 @@ static void ModelCache_TextureChanged(Stream* stream);
 static void ModelCache_ContextLost(void);
 
 static void ModelCache_ContextRecreated(void);
-#endif
 #endif

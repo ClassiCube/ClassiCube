@@ -1,4 +1,3 @@
-#if 0
 #ifndef CS_OPTIONS_H
 #define CS_OPTIONS_H
 #include "Typedefs.h"
@@ -68,5 +67,4 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_UseClassicOptions "nostalgia-classicoptions"
 #define OptionsKey_AllowClassicHacks "nostalgia-hacks"
 #define OptionsKey_ClassicArmModel "nostalgia-classicarm"
-#endif
 #endif

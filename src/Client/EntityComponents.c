@@ -1,7 +1,43 @@
-#if 0
-#include "AnimatedComp.h"
+#include "EntityComponents.h"
 #include "ExtMath.h"
-#include "GameProps.h"
+#include "Game.h"
+#include "Player.h"
+
+#define maxAngle (110 * MATH_DEG2RAD)
+#define armMax (60.0f * MATH_DEG2RAD)
+#define legMax (80.0f * MATH_DEG2RAD)
+#define idleMax (3.0f * MATH_DEG2RAD)
+#define idleXPeriod (2.0f * MATH_PI / 5.0f)
+#define idleZPeriod (2.0f * MATH_PI / 3.5f)
+
+
+void AnimatedComp_DoTilt(Real32* tilt, bool reduce) {
+	if (reduce) {
+		(*tilt) *= 0.84f;
+	} else {
+		(*tilt) += 0.1f;
+	}
+	Math_Clamp(*tilt, 0.0f, 1.0f);
+}
+
+void AnimatedComp_PerpendicularAnim(AnimatedComp* anim, Real32 flapSpeed, Real32 idleXRot, Real32 idleZRot, bool left) {
+	Real32 verAngle = 0.5f + 0.5f * Math_Sin(anim->WalkTime * flapSpeed);
+	Real32 zRot = -idleZRot - verAngle * anim->Swing * maxAngle;
+	Real32 horAngle = Math_Cos(anim->WalkTime) * anim->Swing * armMax * 1.5f;
+	Real32 xRot = idleXRot + horAngle;
+
+	if (left) {
+		anim->LeftArmX = xRot;  anim->LeftArmZ = zRot;
+	} else {
+		anim->RightArmX = xRot; anim->RightArmZ = zRot;
+	}
+}
+
+void AnimatedComp_CalcHumanAnim(AnimatedComp* anim, Real32 idleXRot, Real32 idleZRot) {
+	AnimatedComp_PerpendicularAnim(anim, 0.23f, idleXRot, idleZRot, true);
+	AnimatedComp_PerpendicularAnim(anim, 0.28f, idleXRot, idleZRot, false);
+	anim->RightArmX = -anim->RightArmX; anim->RightArmZ = -anim->RightArmZ;
+}
 
 void AnimatedComp_Init(AnimatedComp* anim) {
 	anim->BobbingHor = 0.0f; anim->BobbingVer = 0.0f; anim->BobbingModel = 0.0f;
@@ -37,11 +73,6 @@ void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Rea
 	}
 }
 
-#define armMax (60.0f * MATH_DEG2RAD)
-#define legMax (80.0f * MATH_DEG2RAD)
-#define idleMax (3.0f * MATH_DEG2RAD)
-#define idleXPeriod (2.0f * MATH_PI / 5.0f)
-#define idleZPeriod (2.0f * MATH_PI / 3.5f)
 
 void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims) {
 	anim->Swing = Math_Lerp(anim->SwingO, anim->SwingN, t);
@@ -69,33 +100,28 @@ void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims) 
 	}
 }
 
-void AnimatedComp_DoTilt(Real32* tilt, bool reduce) {
-	if (reduce) {
-		(*tilt) *= 0.84f;
-	} else {
-		(*tilt) += 0.1f;
-	}
-	Math_Clamp(*tilt, 0.0f, 1.0f);
+
+void TiltComp_Init(TiltComp* anim) {
+	anim->TiltX = 0.0f; anim->TiltY = 0.0f; anim->VelTiltStrength = 1.0f;
+	anim->VelTiltStrengthO = 1.0f; anim->VelTiltStrengthN = 1.0f;
 }
 
+void TiltComp_Update(TiltComp* anim, Real64 delta) {
+	anim->VelTiltStrengthO = anim->VelTiltStrengthN;
+	LocalPlayer* p = &LocalPlayer_Instance;
 
-void AnimatedComp_CalcHumanAnim(AnimatedComp* anim, Real32 idleXRot, Real32 idleZRot) {
-	AnimatedComp_PerpendicularAnim(anim, 0.23f, idleXRot, idleZRot, true);
-	AnimatedComp_PerpendicularAnim(anim, 0.28f, idleXRot, idleZRot, false);
-	anim->RightArmX = -anim->RightArmX; anim->RightArmZ = -anim->RightArmZ;
-}
-
-#define maxAngle (110 * MATH_DEG2RAD)
-void AnimatedComp_PerpendicularAnim(AnimatedComp* anim, Real32 flapSpeed, Real32 idleXRot, Real32 idleZRot, bool left) {
-	Real32 verAngle = 0.5f + 0.5f * Math_Sin(anim->WalkTime * flapSpeed);
-	Real32 zRot = -idleZRot - verAngle * anim->Swing * maxAngle;
-	Real32 horAngle = Math_Cos(anim->WalkTime) * anim->Swing * armMax * 1.5f;
-	Real32 xRot = idleXRot + horAngle;
-
-	if (left) {
-		anim->LeftArmX = xRot;  anim->LeftArmZ = zRot;
-	} else {
-		anim->RightArmX = xRot; anim->RightArmZ = zRot;
+	/* TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second */
+	Int32 i;
+	for (i = 0; i < 3; i++) {
+		AnimatedComp_DoTilt(&anim->VelTiltStrengthN, p->Hacks.Noclip || p->Hacks.Flying);
 	}
 }
-#endif
+
+void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
+
+	AnimatedComp* pAnim = &p->Base.Base.Anim;
+	anim->TiltX = Math_Cos(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
+	anim->TiltY = Math_Sin(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
+}

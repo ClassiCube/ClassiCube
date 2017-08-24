@@ -1,9 +1,9 @@
-#if 0
 #ifndef CS_WORLD_H
 #define CS_WORLD_H
 #include "Typedefs.h"
 #include "String.h"
 #include "Vectors.h"
+#include "PackedCol.h"
 /* Represents a fixed size 3D array of blocks.
    Also contains associated environment metadata.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -213,5 +213,4 @@ void WorldEnv_SetSunCol(PackedCol col);
 
 /* Sets shadow colour, and raises event with variable 'ShadowCol'. */
 void WorldEnv_SetShadowCol(PackedCol col);
-#endif
 #endif

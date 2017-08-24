@@ -175,7 +175,6 @@
   <ItemGroup>
     <ClInclude Include="2DStructs.h" />
     <ClInclude Include="AABB.h" />
-    <ClInclude Include="AnimatedComp.h" />
     <ClInclude Include="AutoRotate.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
     <ClInclude Include="BlockID.h" />
@@ -198,15 +197,14 @@
     <ClInclude Include="Event.h" />
     <ClInclude Include="Events.h" />
     <ClInclude Include="FrustumCulling.h" />
-    <ClInclude Include="GameProps.h" />
     <ClInclude Include="GZipHeader.h" />
+    <ClInclude Include="EntityComponents.h" />
     <ClInclude Include="IModel.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IsometricDrawer.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="BordersRenderer.h" />
     <ClInclude Include="LiquidAnimations.h" />
-    <ClInclude Include="LocalPlayer.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="ModelCache.h" />
@@ -226,7 +224,6 @@
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TerrainAtlas.h" />
     <ClInclude Include="TickQueue.h" />
-    <ClInclude Include="TiltComp.h" />
     <ClInclude Include="TreeGen.h" />
     <ClInclude Include="WeatherRenderer.h" />
     <ClInclude Include="PackedCol.h" />
@@ -251,7 +248,7 @@
   <ItemGroup>
     <ClCompile Include="2DStructs.c" />
     <ClCompile Include="AABB.c" />
-    <ClCompile Include="AnimatedComp.c" />
+    <ClCompile Include="EntityComponents.c" />
     <ClCompile Include="AutoRotate.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />

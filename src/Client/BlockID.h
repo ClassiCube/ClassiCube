@@ -4,7 +4,6 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-
 /* Classic blocks */
 #define BlockID_Air 0
 #define BlockID_Stone 1

@@ -1,4 +1,3 @@
-#if 0
 #include "World.h"
 #include "BlockID.h"
 #include "ErrorHandler.h"
@@ -209,4 +208,3 @@ void WorldEnv_SetShadowCol(PackedCol col) {
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
 	Event_RaiseInt32(&WorldEvents_EnvVarChanged, EnvVar_ShadowCol);
 }
-#endif

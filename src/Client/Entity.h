@@ -1,14 +1,15 @@
-#if 0
 #ifndef CS_ENTITY_H
 #define CS_ENTITY_H
+#include "IModel.h"
 #include "Typedefs.h"
 #include "Vectors.h"
 #include "AABB.h"
-#include "AnimatedComp.h"
+#include "EntityComponents.h"
 #include "GraphicsEnums.h"
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct IModel_ IModel; /* Forward declaration */
 
 
 /* Constant offset used to avoid floating point roundoff errors. */
@@ -97,5 +98,4 @@ bool Entity_TouchesAnyLava(Entity* entity);
 
 /* Determines whether any of the blocks that intersect the AABB of this entity are water or still water. */
 bool Entity_TouchesAnyWater(Entity* entity);
-#endif
 #endif

@@ -148,9 +148,6 @@
     <Filter Include="Source Files\Entities\Components">
       <UniqueIdentifier>{45bcb3f5-ebec-46a0-ac73-8480a7b4fe4d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Entities\Components">
-      <UniqueIdentifier>{e36a6223-ce95-4439-aa54-df32b9828ae0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Platform\Window">
       <UniqueIdentifier>{e4324350-79a5-4976-a8cc-28881077ca9a}</UniqueIdentifier>
     </Filter>
@@ -246,9 +243,6 @@
     <ClInclude Include="PickedPos.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
-    <ClInclude Include="GameProps.h">
-      <Filter>Header Files\Game</Filter>
-    </ClInclude>
     <ClInclude Include="NetworkEnums.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
@@ -315,9 +309,6 @@
     <ClInclude Include="PickedPosRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
-    <ClInclude Include="LocalPlayer.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
@@ -354,12 +345,6 @@
     <ClInclude Include="AutoRotate.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
-    <ClInclude Include="AnimatedComp.h">
-      <Filter>Header Files\Entities\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="TiltComp.h">
-      <Filter>Header Files\Entities\Components</Filter>
-    </ClInclude>
     <ClInclude Include="DisplayDevice.h">
       <Filter>Header Files\Platform\Window</Filter>
     </ClInclude>
@@ -380,6 +365,9 @@
     </ClInclude>
     <ClInclude Include="TerrainAtlas.h">
       <Filter>Header Files\TexturePack</Filter>
+    </ClInclude>
+    <ClInclude Include="EntityComponents.h">
+      <Filter>Header Files\Entities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -530,9 +518,6 @@
     <ClCompile Include="AutoRotate.c">
       <Filter>Source Files\Blocks</Filter>
     </ClCompile>
-    <ClCompile Include="AnimatedComp.c">
-      <Filter>Source Files\Entities\Components</Filter>
-    </ClCompile>
     <ClCompile Include="TiltComp.c">
       <Filter>Source Files\Entities\Components</Filter>
     </ClCompile>
@@ -565,6 +550,9 @@
     </ClCompile>
     <ClCompile Include="Entity.c">
       <Filter>Source Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="EntityComponents.c">
+      <Filter>Source Files\Entities\Components</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

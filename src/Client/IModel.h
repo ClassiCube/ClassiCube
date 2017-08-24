@@ -1,4 +1,3 @@
-#if 0
 #ifndef CS_MODEL_H
 #define CS_MODEL_H
 #include "Typedefs.h"
@@ -11,6 +10,7 @@
 /* Contains various structs and methods for an entity model.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct Entity_ Entity; /* Forward declaration */
 
 #define IModel_QuadVertices 4
 #define IModel_BoxVertices (Face_Count * IModel_QuadVertices)
@@ -256,5 +256,4 @@ void BoxDesc_YQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texH
 
 void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texHeight,
 	Real32 x1, Real32 x2, Real32 y1, Real32 y2, Real32 z, bool swapU);
-#endif
 #endif

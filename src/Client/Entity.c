@@ -1,4 +1,3 @@
-#if 0
 #include "Entity.h"
 #include "ExtMath.h"
 #include "World.h"
@@ -97,4 +96,3 @@ bool Entity_TouchesAnyWater(Entity* entity) {
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsWater);
 }
-#endif

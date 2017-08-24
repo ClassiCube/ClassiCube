@@ -101,7 +101,7 @@ namespace ClassicalSharp.Model {
 				(skinType == SkinType.Type64x64 ? Set64 : Set);
 			
 			DrawRotate(-p.HeadXRadians, 0, 0, model.Head, true);
-			DrawPart(model.Torso);
+			DrawPart(model.Torso); DateTime.UtcNow.mi
 			
 			DrawRotate(p.anim.leftLegX, 0, p.anim.leftLegZ, model.LeftLeg, false);
 			DrawRotate(p.anim.rightLegX, 0, p.anim.rightLegZ, model.RightLeg, false);

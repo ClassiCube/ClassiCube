@@ -1,8 +1,7 @@
-#if 0
 #include "IModel.h"
 #include "ExtMath.h"
 #include "Funcs.h"
-#include "GameProps.h"
+#include "Game.h"
 #include "ModelCache.h"
 #include "GraphicsCommon.h"
 #include "FrustumCulling.h"
@@ -23,7 +22,6 @@ void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Rea
 
 
 void IModel_Init(IModel* model) {
-	model->Rotation = RotateOrder_ZYX;
 	model->Bobbing = true;
 	model->UsesSkin = true;
 	model->CalcHumanAnims = false;
@@ -41,7 +39,7 @@ void IModel_Init(IModel* model) {
 
 bool IModel_ShouldRender(Entity* entity) {
 	Vector3 pos = entity->Position;
-	AABB bb = Entity_GetPickingBounds(entity);
+	AABB bb; Entity_GetPickingBounds(entity, &bb);
 
 	AABB* bbPtr = &bb;
 	Real32 bbWidth = AABB_Width(bbPtr);
@@ -285,4 +283,3 @@ void BoxDesc_ZQuad(IModel* m, Int32 texX, Int32 texY, Int32 texWidth, Int32 texH
 	ModelVertex_Init(&m->vertices[m->index], x2, y2, z, u2, texY); m->index++;
 	ModelVertex_Init(&m->vertices[m->index], x2, y1, z, u2, texY + texHeight | UV_MAX); m->index++;
 }
-#endif

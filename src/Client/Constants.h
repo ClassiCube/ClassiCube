@@ -28,4 +28,19 @@
 
 /* Minor adjustment to max UV coords, to avoid pixel bleeding errors due to rounding. */
 #define UV2_Scale (15.99f / 16.0f)
+
+/* Face X = 0. */
+#define Face_XMin 0
+/* Face X = 1. */
+#define Face_XMax 1
+/* Face Z = 0. */
+#define Face_ZMin 2
+/* Face Z = 1. */
+#define Face_ZMax 3
+/* Face Y = 0. */
+#define Face_YMin 4
+/* Face Y = 1. */
+#define Face_YMax 5
+/* Number of faces on a cube. */
+#define Face_Count 6
 #endif

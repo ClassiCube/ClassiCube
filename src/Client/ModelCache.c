@@ -5,11 +5,10 @@
 #include "Events.h"
 #include "String.h"
 
-String ModelCache_charPngString;
+String ModelCache_charPngString = String_FromConstant("char.png");
 Int32 ModelCache_texCount, ModelCache_modelCount;
 
 void ModelCache_Init(void) {
-	ModelCache_charPngString = String_FromConstant("char.png");
 	ModelCache_RegisterDefaultModels();
 	ModelCache_ContextRecreated();
 
@@ -27,8 +26,8 @@ void ModelCache_Free(void) {
 	ModelCache_ContextLost();
 
 	Event_UnregisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
-	Event_UnregisterVoid(&Gfx_ContextLost, ModelCache_ContextLost);
-	Event_UnregisterVoid(&Gfx_ContextRecreated, ModelCache_ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, ModelCache_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, ModelCache_ContextRecreated);
 }
 
 
