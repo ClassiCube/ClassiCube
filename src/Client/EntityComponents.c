@@ -125,3 +125,149 @@ void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
 	anim->TiltX = Math_Cos(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 	anim->TiltY = Math_Sin(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
+
+/* Entity component that performs management of hack states. */
+typedef struct HacksComponent_ {
+	UInt8 UserType;
+	/* Speed player move at, relative to normal speed, when the 'speeding' key binding is held down. */
+	Real32 SpeedMultiplier = 10;
+	/* Whether blocks that the player places that intersect themselves, should cause the player to
+	be pushed back in the opposite direction of the placed block. */
+	bool PushbackPlacing;
+	/* Whether the player should be able to step up whole blocks, instead of just slabs. */
+	bool FullBlockStep;
+
+	/* Whether the player has allowed hacks usage as an option. Note 'can use X' set by the server override this. */
+	bool Enabled = true;
+	/* Whether the player is allowed to use any type of hacks. */
+	bool CanAnyHacks = true;
+	/* Whether the player is allowed to use the types of cameras that use third person. */
+	bool CanUseThirdPersonCamera = true;
+	/* Whether the player is allowed to increase its speed beyond the normal walking speed. */
+	bool CanSpeed = true;
+	/* Whether the player is allowed to fly in the world. */
+	bool CanFly = true;
+	/* Whether the player is allowed to teleport to their respawn coordinates. */
+	bool CanRespawn = true;
+	/* Whether the player is allowed to pass through all blocks. */
+	bool CanNoclip = true;
+	/* Whether the player is allowed to use pushback block placing. */
+	bool CanPushbackBlocks = true;
+	/* Whether the player is allowed to see all entity name tags. */
+	bool CanSeeAllNames = true;
+	/* Whether the player is allowed to double jump. */
+	bool CanDoubleJump = true;
+	/* Maximum speed the entity can move at horizontally when CanSpeed is false. */
+	Real32 MaxSpeedMultiplier = 1;
+
+	/* Whether the player should slide after letting go of movement buttons in noclip.  */
+	bool NoclipSlide = true;
+	/* Whether the player has allowed the usage of fast double jumping abilities. */
+	bool WOMStyleHacks = false;
+
+	/* Whether the player currently has noclip on. */
+	bool Noclip;
+	/* Whether the player currently has fly mode active. */
+	bool Flying;
+	/* Whether the player is currently flying upwards. */
+	bool FlyingUp;
+	/* Whether the player is currently flying downwards. */
+	bool FlyingDown;
+	/* Whether the player is currently walking at base speed * speed multiplier. */
+	bool Speeding;
+	/* Whether the player is currently walking at base speed * 0.5 * speed multiplier. */
+	bool HalfSpeeding;
+
+	UInt8 HacksFlagsBuffer[String_BufferSize(128)];
+	/* The actual hack flags usage string.*/
+	String HacksFlags;
+} HacksComponent;
+
+bool HacksComponent_CanJumpHigher(HacksComponent* hacks) {
+	return hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed;
+}
+
+bool HacksComponent_Floating(HacksComponent* hacks) {
+	return hacks->Noclip || hacks->Flying;
+}
+
+void ParseHorizontalSpeed(String joined) {
+	int start = joined.IndexOf("horspeed=", StringComparison.OrdinalIgnoreCase);
+	if (start < 0) return;
+	start += 9;
+
+	int end = joined.IndexOf(' ', start);
+	if (end < 0) end = joined.Length;
+
+	string num = joined.Substring(start, end - start);
+	float value = 0;
+	if (!Utils.TryParseDecimal(num, out value) || value <= 0) return;
+	MaxSpeedMultiplier = value;
+}
+
+	void SetAllHacks(bool allowed) {
+		CanAnyHacks = CanFly = CanNoclip = CanRespawn = CanSpeed =
+			CanPushbackBlocks = CanUseThirdPersonCamera = allowed;
+	}
+
+static void ParseFlag(Action<bool> action, string joined, string flag) {
+		if (joined.Contains("+" + flag)) {
+			action(true);
+		} else if (joined.Contains("-" + flag)) {
+			action(false);
+		}
+	}
+
+/* Sets the user type of this user. This is used to control permissions for grass,
+bedrock, water and lava blocks on servers that don't support CPE block permissions. */
+void SetUserType(HacksComponent* hacks, UInt8 value) {
+	bool isOp = value >= 100 && value <= 127;
+	hacks->UserType = value;
+	Block_CanPlace[BlockID_Bedrock] = isOp;
+	Block_CanDelete[BlockID_Bedrock] = isOp;
+
+	Block_CanPlace[BlockID_Water] = isOp;
+	Block_CanPlace[BlockID_StillWater] = isOp;
+	Block_CanPlace[BlockID_Lava] = isOp;
+	Block_CanPlace[BlockID_StillLava] = isOp;
+	hacks->CanSeeAllNames = isOp;
+}
+
+/* Disables any hacks if their respective CanHackX value is set to false. */
+void HacksComponent_CheckConsistency(HacksComponent* hacks) {
+	if (!CanFly || !Enabled) { Flying = false; FlyingDown = false; FlyingUp = false; }
+	if (!CanNoclip || !Enabled) Noclip = false;
+	if (!CanSpeed || !Enabled) { Speeding = false; HalfSpeeding = false; }
+	CanDoubleJump = CanAnyHacks && Enabled && CanSpeed;
+	CanSeeAllNames = CanAnyHacks && CanSeeAllNames;
+
+	if (!CanUseThirdPersonCamera || !Enabled)
+		game.CycleCamera();
+}
+
+
+	/* Updates ability to use hacks, and raises HackPermissionsChanged event. */
+	/// <remarks> Parses hack flags specified in the motd and/or name of the server. </remarks>
+	/// <remarks> Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz </remarks>
+	void UpdateHacksState() {
+		SetAllHacks(true);
+		if (HacksFlags == null) return;
+
+		MaxSpeedMultiplier = 1;
+		// By default (this is also the case with WoM), we can use hacks.
+		if (HacksFlags.Contains("-hax")) SetAllHacks(false);
+
+		ParseFlag(b = > CanFly = b, HacksFlags, "fly");
+		ParseFlag(b = > CanNoclip = b, HacksFlags, "noclip");
+		ParseFlag(b = > CanSpeed = b, HacksFlags, "speed");
+		ParseFlag(b = > CanRespawn = b, HacksFlags, "respawn");
+
+		if (UserType == 0x64)
+			ParseFlag(b = > SetAllHacks(b), HacksFlags, "ophax");
+		ParseHorizontalSpeed(HacksFlags);
+
+		CheckHacksConsistency();
+		game.Events.RaiseHackPermissionsChanged();
+	}
+}
+}
