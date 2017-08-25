@@ -213,7 +213,7 @@
     <ClInclude Include="NormalBuilder.h" />
     <ClInclude Include="Options.h" />
     <ClInclude Include="Physics.h" />
-    <ClInclude Include="PickedPos.h" />
+    <ClInclude Include="Picking.h" />
     <ClInclude Include="PickedPosRenderer.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Respawn.h" />
@@ -247,6 +247,7 @@
   <ItemGroup>
     <ClCompile Include="2DStructs.c" />
     <ClCompile Include="AABB.c" />
+    <ClCompile Include="Camera.c" />
     <ClCompile Include="EntityComponents.c" />
     <ClCompile Include="AxisLinesRenderer.c" />
     <ClCompile Include="Block.c" />

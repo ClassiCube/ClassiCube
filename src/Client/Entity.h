@@ -81,6 +81,9 @@ typedef struct Entity_ {
 /* Initalises the given entity. */
 void Entity_Init(Entity* entity);
 
+/* Gets the position of the player's eye in the world. */
+Vector3 Entity_GetEyePosition(Entity* entity);
+
 /* Returns the bounding box that contains the model, without any rotations applied. */
 void Entity_GetPickingBounds(Entity* entity, AABB* bb);
 

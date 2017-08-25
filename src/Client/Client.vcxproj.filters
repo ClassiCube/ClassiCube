@@ -240,9 +240,6 @@
     <ClInclude Include="Camera.h">
       <Filter>Header Files\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="PickedPos.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
     <ClInclude Include="NetworkEnums.h">
       <Filter>Header Files\Network</Filter>
     </ClInclude>
@@ -365,6 +362,9 @@
     </ClInclude>
     <ClInclude Include="EntityComponents.h">
       <Filter>Header Files\Entities</Filter>
+    </ClInclude>
+    <ClInclude Include="Picking.h">
+      <Filter>Header Files\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -547,6 +547,9 @@
     </ClCompile>
     <ClCompile Include="EntityComponents.c">
       <Filter>Source Files\Entities\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.c">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

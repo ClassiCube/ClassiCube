@@ -182,3 +182,16 @@ void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b) {
 	result->Y = max(a->Y, b->Y);
 	result->Z = max(a->Z, b->Z);
 }
+
+
+Vector3 Vector3_GetDirVector(Real32 yawRad, Real32 pitchRad) {
+	Real32 x = -Math_Cos(pitchRad) * -Math_Sin(yawRad);
+	Real32 y = -Math_Sin(pitchRad);
+	Real32 z = -Math_Cos(pitchRad) * Math_Cos(yawRad);
+	return Vector3_Create3(x, y, z);
+}
+
+void Vector3_GetHeading(Vector3 dir, Real32* yaw, Real32* pitch) {
+	*pitch = Math_Asin(-dir.Y);
+	*yaw = Math_Atan2(dir.X, -dir.Z);
+}

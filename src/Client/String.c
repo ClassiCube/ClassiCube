@@ -337,8 +337,7 @@ bool Convert_TryParseReal32(STRING_TRANSIENT String* str, Real32* value) {
 		Int32 digit = c - '0';
 		if (!foundDecimalPoint) {
 			whole *= 10; whole += digit;
-		}
-		else {
+		} else {
 			fract += digit / divide; divide *= 10;
 		}
 	}

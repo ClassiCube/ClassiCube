@@ -1,10 +1,10 @@
-#ifndef CS_PICKEDPOS_H
-#define CS_PICKEDPOS_H
+#ifndef CS_PICKING_H
+#define CS_PICKING_H
 #include "Typedefs.h"
 #include "Constants.h"
 #include "Vectors.h"
 #include "BlockID.h"
-/* Data for picked/selected block by the user, and related methods.
+/* Data for picking/selecting block by the user, and clipping the camera.
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -33,4 +33,8 @@ void PickedPos_SetAsValid(PickedPos* pos, Int32 x, Int32 y, Int32 z, Vector3 min
 
 /* Marks as not having a selected block. */
 void PickedPos_SetAsInvalid(PickedPos* pos);
+
+void Picking_CalculatePickedBlock(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos);
+
+void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos);
 #endif

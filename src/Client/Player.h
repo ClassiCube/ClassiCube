@@ -21,6 +21,8 @@ typedef struct LocalPlayer_ {
 	Real32 SpawnRotY, SpawnHeadX;
 	/* Hacks state of this player. */
 	HacksComponent Hacks;
+	/* Distance (in blocks) that players are allowed to reach to and interact/modify blocks in. */
+	Real32 ReachDistance;
 } LocalPlayer;
 
 

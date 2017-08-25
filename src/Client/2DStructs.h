@@ -12,7 +12,6 @@ typedef struct Rectangle2D_ {
 	/* Size of rectangle. */
 	Int32 Width, Height;
 } Rectangle2D;
-
 /* Empty 2D rectangle. */
 Rectangle2D Rectangle2D_Empty;
 
@@ -20,12 +19,15 @@ Rectangle2D Rectangle2D_Empty;
 typedef struct Point2D_ {
 	Int32 X, Y;
 } Point2D;
+/* Point at X = 0 and Y = 0 */
+Point2D Point2D_Empty;
 
 /* Stores a point in 2D space. */
 typedef struct Size2D_ {
 	Int32 Width, Height;
 } Size2D;
-
+/* Size with Width = 0 and Height = 0 */
+Size2D Size2D_Empty;
 
 /* Creates a new rectangle. */
 Rectangle2D Rectangle2D_Make(Int32 x, Int32 y, Int32 width, Int32 height);

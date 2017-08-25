@@ -3,7 +3,7 @@
 #include "Typedefs.h"
 #include "Stream.h"
 #include "GraphicsEnums.h"
-#include "PickedPos.h"
+#include "Picking.h"
 #include "Options.h"
 /* Represents the game.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

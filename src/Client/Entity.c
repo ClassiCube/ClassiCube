@@ -38,6 +38,12 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 }
 
 
+Vector3 Entity_GetEyePosition(Entity* entity) {
+	Vector3 pos = entity->Position;
+	pos.Y += entity->Model->GetEyeY(entity) * entity->ModelScale.Y;
+	return pos;
+}
+
 void Entity_GetPickingBounds(Entity* entity, AABB* bb) {
 	AABB_Offset(bb, &entity->ModelAABB, &entity->Position);
 }

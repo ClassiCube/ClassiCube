@@ -66,6 +66,10 @@ namespace ClassicalSharp {
 			tiltM = Matrix4.Identity;
 		}
 		
+		protected Vector3 GetDirVector() {
+			return Utils.GetDirVector(player.HeadYRadians, AdjustHeadX(player.HeadX));
+		}
+		
 		public override Matrix4 GetProjection() {
 			float fovy = game.Fov * Utils.Deg2Rad;
 			float aspectRatio = (float)game.Width / game.Height;
@@ -74,8 +78,7 @@ namespace ClassicalSharp {
 		}
 		
 		public override void GetPickedBlock(PickedPos pos) {
-			Vector3 dir = Utils.GetDirVector(player.HeadYRadians,
-			                                 AdjustHeadX(player.HeadX));
+			Vector3 dir = GetDirVector();
 			Vector3 eyePos = player.EyePosition;
 			float reach = game.LocalPlayer.ReachDistance;
 			
@@ -154,10 +157,6 @@ namespace ClassicalSharp {
 			float vel = Utils.Lerp(p.OldVelocity.Y + 0.08f, p.Velocity.Y + 0.08f, t);
 			Matrix4.RotateX(out velX, -vel * 0.05f * p.tilt.velTiltStrength / velTiltScale);
 			tiltM *= velX;
-		}
-		
-		protected Vector3 GetDirVector() {
-			return Utils.GetDirVector(player.HeadYRadians, AdjustHeadX(player.HeadX));
 		}
 	}
 	
