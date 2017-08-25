@@ -147,16 +147,17 @@ namespace ClassicalSharp {
 			if (!game.ViewBobbing) { tiltM = Matrix4.Identity; return; }
 			LocalPlayer p = game.LocalPlayer;
 			Matrix4 tiltY, velX;
+			
 			Matrix4.RotateZ(out tiltM, -p.tilt.tiltX * p.anim.bobStrength);
 			Matrix4.RotateX(out tiltY, Math.Abs(p.tilt.tiltY) * 3 * p.anim.bobStrength);
-			tiltM *= tiltY;
+			Matrix4.Mult(out tiltM, ref tiltM, ref tiltY);
 			
 			bobbingHor = (p.anim.bobbingHor * 0.3f) * p.anim.bobStrength;
 			bobbingVer = (p.anim.bobbingVer * 0.6f) * p.anim.bobStrength;
 			
 			float vel = Utils.Lerp(p.OldVelocity.Y + 0.08f, p.Velocity.Y + 0.08f, t);
 			Matrix4.RotateX(out velX, -vel * 0.05f * p.tilt.velTiltStrength / velTiltScale);
-			tiltM *= velX;
+			Matrix4.Mult(out tiltM, ref tiltM, ref velX);
 		}
 	}
 	

@@ -19,10 +19,12 @@ typedef struct LocalPlayer_ {
 	Vector3 Spawn;
 	/* Orientation set to when player respawns.*/
 	Real32 SpawnRotY, SpawnHeadX;
-	/* Hacks state of this player. */
-	HacksComponent Hacks;
+	/* Hacks state of the player. */
+	HacksComp Hacks;
 	/* Distance (in blocks) that players are allowed to reach to and interact/modify blocks in. */
 	Real32 ReachDistance;
+	/* Tilt animation state of the player. */
+	TiltComp Tilt;
 } LocalPlayer;
 
 

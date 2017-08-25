@@ -103,23 +103,28 @@ void PerspectiveCamera_UpdateMouse(void) {
 }
 
 void PerspectiveCamera_CalcViewBobbing(Real32 t, Real32 velTiltScale) {
-	if (!Game_ViewBobbing) { Camera_TiltMatrix = Matrix_Identity; return; }
-	LocalPlayer p = game.LocalPlayer;
-	Matrix tiltY, velX;
-	Matrix_RotateZ(out tiltM, -p.tilt.tiltX * p.anim.bobStrength);
-	Matrix_RotateX(out tiltY, Math.Abs(p.tilt.tiltY) * 3 * p.anim.bobStrength);
-	tiltM *= tiltY;
+	if (!Game_ViewBobbing) { Camera_TiltM = Matrix_Identity; return; }
+	LocalPlayer* p = &LocalPlayer_Instance;
+	Entity* e = &p->Base.Base;
+	Matrix Camera_tiltY, Camera_velX;
 
-	bobbingHor = (p.anim.bobbingHor * 0.3f) * p.anim.bobStrength;
-	bobbingVer = (p.anim.bobbingVer * 0.6f) * p.anim.bobStrength;
+	Matrix_RotateZ(&Camera_TiltM, -p->Tilt.TiltX * e->Anim.BobStrength);
+	Matrix_RotateX(&Camera_tiltY, Math_AbsF(p->Tilt.TiltY) * 3.0f * e->Anim.BobStrength);
+	Matrix_MulBy(&Camera_TiltM, &Camera_tiltY);
 
-	float vel = Utils.Lerp(p.OldVelocity.Y + 0.08f, p.Velocity.Y + 0.08f, t);
-	Matrix4.RotateX(out velX, -vel * 0.05f * p.tilt.velTiltStrength / velTiltScale);
-	tiltM *= velX;
+	Camera_BobbingHor = (e->Anim.BobbingHor * 0.3f) * e->Anim.BobStrength;
+	Camera_BobbingVer = (e->Anim.BobbingVer * 0.6f) * e->Anim.BobStrength;
+
+	Real32 vel = Math_Lerp(e->OldVelocity.Y + 0.08f, e->Velocity.Y + 0.08f, t);
+	Matrix_RotateX(&Camera_velX, -vel * 0.05f * p->Tilt.VelTiltStrength / velTiltScale);
+	Matrix_MulBy(&Camera_TiltM, &Camera_velX);
 }
 
 void PerspectiveCamera_Init(Camera* cam) {
-
+	cam->GetProjection = PerspectiveCamera_GetProjection;
+	cam->UpdateMouse = PerspectiveCamera_UpdateMouse;
+	cam->RegrabMouse = PerspectiveCamera_RegrabMouse;
+	cam->GetPickedBlock = PerspectiveCamera_GetPickedBlock;
 }
 
 	public class ThirdPersonCamera : PerspectiveCamera {

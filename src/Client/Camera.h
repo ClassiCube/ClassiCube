@@ -9,7 +9,7 @@
 */
 
 /* Tilt matrix applied to the active camera. */
-Matrix Camera_TiltMatrix;
+Matrix Camera_TiltM;
 /* Bobbing applied to the active camera. */
 Real32 Camera_BobbingVer, Camera_BobbingHor;
 

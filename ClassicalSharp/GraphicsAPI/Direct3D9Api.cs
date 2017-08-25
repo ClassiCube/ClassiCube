@@ -170,27 +170,19 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps) {
 			D3D.Texture texture = null;
-			Usage usage = (mipmaps && AutoMipmaps) ? Usage.None : Usage.None;
-			int levels = (mipmaps && AutoMipmaps) ? 5 : 1;
+			int levels = mipmaps ? 5 : 1;
 			
 			if (managedPool) {
-				texture = device.CreateTexture(width, height, levels, usage, Format.A8R8G8B8, Pool.Managed);
+				texture = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Managed);
 				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
 				
 				// TODO: FIX THIS MEMORY LEAK!!!!!
 				if (mipmaps) DoMipmaps(texture, width, height, scan0);
-				
-				/*if (mipmaps && AutoMipmaps) {
-					DoMipmaps(texture, 1, width / 2, height / 2, width, height, scan0);
-					DoMipmaps(texture, 2, width / 4, height / 4, width, height, scan0);
-					DoMipmaps(texture, 3, width / 8, height / 8, width, height, scan0);
-					DoMipmaps(texture, 4, width / 16, height / 16, width, height, scan0);
-				}*/
 			} else {
-				D3D.Texture sys = device.CreateTexture(width, height, levels, usage, Format.A8R8G8B8, Pool.SystemMemory);
+				D3D.Texture sys = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
 				sys.SetData(0, LockFlags.None, scan0, width * height * 4);
 				
-				texture = device.CreateTexture(width, height, levels, usage, Format.A8R8G8B8, Pool.Default);
+				texture = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Default);
 				device.UpdateTexture(sys, texture);				
 				sys.Dispose();
 			}

@@ -129,15 +129,15 @@ void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
 	anim->TiltY = Math_Sin(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
 
-void HacksComponent_SetAll(HacksComponent* hacks, bool allowed) {
+void HacksComponent_SetAll(HacksComp* hacks, bool allowed) {
 	hacks->CanAnyHacks = allowed; hacks->CanFly = allowed;
 	hacks->CanNoclip = allowed; hacks->CanRespawn = allowed;
 	hacks->CanSpeed = allowed; hacks->CanPushbackBlocks = allowed;
 	hacks->CanUseThirdPersonCamera = allowed;
 }
 
-void HacksComponent_Init(HacksComponent* hacks) {
-	Platform_MemSet(hacks, 0, sizeof(HacksComponent));
+void HacksComponent_Init(HacksComp* hacks) {
+	Platform_MemSet(hacks, 0, sizeof(HacksComp));
 	HacksComponent_SetAll(hacks, true);
 	hacks->SpeedMultiplier = 10.0f;
 	hacks->Enabled = true;
@@ -148,15 +148,15 @@ void HacksComponent_Init(HacksComponent* hacks) {
 	hacks->HacksFlags = String_FromRawBuffer(&hacks->HacksFlagsBuffer[0], 128);
 }
 
-bool HacksComponent_CanJumpHigher(HacksComponent* hacks) {
+bool HacksComponent_CanJumpHigher(HacksComp* hacks) {
 	return hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed;
 }
 
-bool HacksComponent_Floating(HacksComponent* hacks) {
+bool HacksComponent_Floating(HacksComp* hacks) {
 	return hacks->Noclip || hacks->Flying;
 }
 
-void HacksComponent_ParseHorizontalSpeed(HacksComponent* hacks) {
+void HacksComponent_ParseHorizontalSpeed(HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
 	String horSpeed = String_FromConstant("horspeed=");
 	Int32 start = String_IndexOfString(joined, &horSpeed);
@@ -172,7 +172,7 @@ void HacksComponent_ParseHorizontalSpeed(HacksComponent* hacks) {
 	hacks->MaxSpeedMultiplier = speed;
 }
 
-void HacksComponent_ParseFlag(HacksComponent* hacks, const UInt8* incFlag, const UInt8* excFlag, bool* target) {
+void HacksComponent_ParseFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag, bool* target) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
@@ -184,7 +184,7 @@ void HacksComponent_ParseFlag(HacksComponent* hacks, const UInt8* incFlag, const
 	}
 }
 
-void HacksComponent_ParseAllFlag(HacksComponent* hacks, const UInt8* incFlag, const UInt8* excFlag) {
+void HacksComponent_ParseAllFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
@@ -198,7 +198,7 @@ void HacksComponent_ParseAllFlag(HacksComponent* hacks, const UInt8* incFlag, co
 
 /* Sets the user type of this user. This is used to control permissions for grass,
 bedrock, water and lava blocks on servers that don't support CPE block permissions. */
-void HacksComponent_SetUserType(HacksComponent* hacks, UInt8 value) {
+void HacksComponent_SetUserType(HacksComp* hacks, UInt8 value) {
 	bool isOp = value >= 100 && value <= 127;
 	hacks->UserType = value;
 	Block_CanPlace[BlockID_Bedrock] = isOp;
@@ -212,7 +212,7 @@ void HacksComponent_SetUserType(HacksComponent* hacks, UInt8 value) {
 }
 
 /* Disables any hacks if their respective CanHackX value is set to false. */
-void HacksComponent_CheckConsistency(HacksComponent* hacks) {
+void HacksComponent_CheckConsistency(HacksComp* hacks) {
 	if (!hacks->CanFly || !hacks->Enabled) { 
 		hacks->Flying = false; hacks->FlyingDown = false; hacks->FlyingUp = false; 
 	}
@@ -235,7 +235,7 @@ void HacksComponent_CheckConsistency(HacksComponent* hacks) {
 /* Updates ability to use hacks, and raises HackPermissionsChanged event. 
 Parses hack flags specified in the motd and/or name of the server.
 Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz */
-void HacksComponent_UpdateState(HacksComponent* hacks) {
+void HacksComponent_UpdateState(HacksComp* hacks) {
 	HacksComponent_SetAll(hacks, true);
 	if (hacks->HacksFlags.length == 0) return;
 

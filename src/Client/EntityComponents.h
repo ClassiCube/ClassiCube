@@ -96,26 +96,26 @@ typedef struct HacksComponent_ {
 	UInt8 HacksFlagsBuffer[String_BufferSize(128)];
 	/* The actual hack flags usage string.*/
 	String HacksFlags;
-} HacksComponent;
+} HacksComp;
 
 /* Initalises the state of this HacksComponent. */
-void HacksComponent_Init(HacksComponent* hacks);
+void HacksComponent_Init(HacksComp* hacks);
 
 /* Returns whether hacks flags allow for jumping higher usage. */
-bool HacksComponent_CanJumpHigher(HacksComponent* hacks);
+bool HacksComponent_CanJumpHigher(HacksComp* hacks);
 
 /* Returns whether noclip or flying modes are on.*/
-bool HacksComponent_Floating(HacksComponent* hacks);
+bool HacksComponent_Floating(HacksComp* hacks);
 
 /* Sets the user type of this user. This is used to control permissions for grass,
 bedrock, water and lava blocks on servers that don't support CPE block permissions. */
-void HacksComponent_SetUserType(HacksComponent* hacks, UInt8 value);
+void HacksComponent_SetUserType(HacksComp* hacks, UInt8 value);
 
 /* Disables any hacks if their respective CanHackX value is set to false. */
-void HacksComponent_CheckConsistency(HacksComponent* hacks);
+void HacksComponent_CheckConsistency(HacksComp* hacks);
 
 /* Updates ability to use hacks, and raises UserEvents_HackPermissionsChanged event.
 Parses hack flags specified in the motd and/or name of the server.
 Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz */
-void HacksComponent_UpdateState(HacksComponent* hacks);
+void HacksComponent_UpdateState(HacksComp* hacks);
 #endif
