@@ -58,8 +58,10 @@ namespace ClassicalSharp.Gui.Screens {
 			if (game.ClassicMode) {
 				statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunk updates");
 			} else {
-				statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunks/s, ")
-					.AppendNum(ref index, game.Vertices).Append(ref index, " vertices");
+				if (game.ChunkUpdates > 0) {
+					statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunks/s, ");
+				}			
+				statusBuffer.AppendNum(ref index, game.Vertices).Append(ref index, " vertices");
 				
 				int ping = PingList.AveragePingMilliseconds();
 				if (ping != 0) {
@@ -125,7 +127,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = 0;
 			Texture tex = posAtlas.tex;
 			tex.X1 = 2; tex.Width = (short)posAtlas.offset;
-			IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked, 
+			IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked,
 			                        game.ModelCache.vertices, ref index);
 			
 			Vector3I pos = Vector3I.Floor(game.LocalPlayer.Position);
@@ -149,7 +151,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void UpdateHackState(bool force) {
 			HacksComponent hacks = game.LocalPlayer.Hacks;
 			if (force || hacks.Speeding != speeding || hacks.HalfSpeeding != halfSpeeding || hacks.Noclip != noclip ||
-			   hacks.Flying != fly || game.Fov != lastFov) {
+			    hacks.Flying != fly || game.Fov != lastFov) {
 				speeding = hacks.Speeding; halfSpeeding = hacks.HalfSpeeding; noclip = hacks.Noclip; fly = hacks.Flying;
 				lastFov = game.Fov;
 				int index = 0;
