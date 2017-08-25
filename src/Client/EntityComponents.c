@@ -166,10 +166,10 @@ void HacksComponent_ParseHorizontalSpeed(HacksComponent* hacks) {
 	Int32 end = String_IndexOf(joined, ' ', start);
 	if (end < 0) end = joined->length;
 
-	string num = joined.Substring(start, end - start);
-	Real32 value = 0.0f;
-	if (!Convert_TryParseReal32(num, &value) || value <= 0.0f) return;
-	hacks->MaxSpeedMultiplier = value;
+	String speedStr = String_UNSAFE_Substring(joined, start, end - start);
+	Real32 speed = 0.0f;
+	if (!Convert_TryParseReal32(&speedStr, &speed) || speed <= 0.0f) return;
+	hacks->MaxSpeedMultiplier = speed;
 }
 
 void HacksComponent_ParseFlag(HacksComponent* hacks, const UInt8* incFlag, const UInt8* excFlag, bool* target) {

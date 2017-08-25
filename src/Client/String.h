@@ -35,6 +35,10 @@ String String_MakeNull(void);
 void String_MakeLowercase(STRING_TRANSIENT String* str);
 /* Sets all characters in the given string to NULL, then sets length t0 0. */
 void String_Clear(STRING_TRANSIENT String* str);
+/* Returns a string that points directly to a substring of the given string.
+NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE SUBSTRING IS NOT NULL TERMINATED */
+String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length);
+#define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
 
 /* Returns whether two strings have same contents. */
 bool String_Equals(STRING_TRANSIENT String* a, STRING_TRANSIENT String* b);
@@ -62,9 +66,9 @@ UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset);
 /* Find the first index of sub in given string, -1 if not found. */
 Int32 String_IndexOfString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub);
 /* Returns whether sub is contained within string. */
-bool String_ContainsString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub);
+#define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
 /* Returns whether given string starts with sub. */
-bool String_StartsWith(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub);
+#define String_StartsWith(str, sub) (String_IndexOfString(str, sub) == 0)
 
 /* Converts a code page 437 index into a unicode character. */
 UInt16 Convert_CP437ToUnicode(UInt8 c);

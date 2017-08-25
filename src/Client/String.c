@@ -1,5 +1,6 @@
 #include "String.h"
 #include "Funcs.h"
+#include "ErrorHandler.h"
 
 String String_FromEmptyBuffer(UInt8* buffer, UInt16 capacity) {
 	String str;
@@ -52,6 +53,24 @@ void String_Clear(STRING_TRANSIENT String* str) {
 		str->buffer[i] = 0;
 	}
 	str->length = 0;
+}
+
+String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length) {
+	if (offset < 0 || offset > str->length) {
+		ErrorHandler_Fail("Offset for substring out of range");
+	}
+	if (length < 0 || length > str->length) {
+		ErrorHandler_Fail("Length for substring out of range");
+	}
+	if (offset + length > str->length) {
+		ErrorHandler_Fail("Result substring is out of range");
+	}
+
+	String sub = *str;
+	sub.buffer += offset;
+	sub.length = length; 
+	sub.capacity = length;
+	return sub;
 }
 
 
@@ -184,14 +203,6 @@ Int32 String_IndexOfString(STRING_TRANSIENT String* str, STRING_TRANSIENT String
 		if (j == sub->length) return i;
 	}
 	return -1;
-}
-
-bool String_ContainsString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub) {
-	return String_IndexOfString(str, sub) >= 0;
-}
-
-bool String_StartsWith(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub) {
-	return String_IndexOfString(str, sub) == 0;
 }
 
 

@@ -157,15 +157,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			int a1 = ((p1 & alphaMask) >> 24) & 0xFF;
 			int a2 = ((p2 & alphaMask) >> 24) & 0xFF;
 			int aSum = (a1 + a2);			
-			aSum = aSum > 0 ? aSum : 2; // avoid divide by 0 below
+			aSum = aSum > 0 ? aSum : 1; // avoid divide by 0 below
 			
 			// Convert RGB to pre-multiplied form
-			int r1 = ((p1 >> 16) & 0xFF) * a1;
-			int r2 = ((p2 >> 16) & 0xFF) * a2;			
-			int g1 = ((p1 >> 8) & 0xFF) * a1;
-			int g2 = ((p2 >> 8) & 0xFF) * a2;			
-			int b1 = (p1 & 0xFF) * a1;
-			int b2 = (p2 & 0xFF) * a2;
+			int r1 = ((p1 >> 16) & 0xFF) * a1, g1 = ((p1 >> 8) & 0xFF) * a1, b1 = (p1 & 0xFF) * a1;
+			int r2 = ((p2 >> 16) & 0xFF) * a2, g2 = ((p2 >> 8) & 0xFF) * a2, b2 = (p2 & 0xFF) * a2;
 			
 			// https://stackoverflow.com/a/347376
 			// We need to convert RGB back from the pre-multiplied average into normal form

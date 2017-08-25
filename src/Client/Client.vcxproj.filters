@@ -342,9 +342,6 @@
     <ClInclude Include="ModelCache.h">
       <Filter>Header Files\Entities\Model</Filter>
     </ClInclude>
-    <ClInclude Include="AutoRotate.h">
-      <Filter>Header Files\Blocks</Filter>
-    </ClInclude>
     <ClInclude Include="DisplayDevice.h">
       <Filter>Header Files\Platform\Window</Filter>
     </ClInclude>
@@ -514,9 +511,6 @@
     </ClCompile>
     <ClCompile Include="ModelCache.c">
       <Filter>Source Files\Entities\Model</Filter>
-    </ClCompile>
-    <ClCompile Include="AutoRotate.c">
-      <Filter>Source Files\Blocks</Filter>
     </ClCompile>
     <ClCompile Include="TiltComp.c">
       <Filter>Source Files\Entities\Components</Filter>
