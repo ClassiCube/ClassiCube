@@ -38,11 +38,20 @@ String String_MakeNull(void) {
 	return String_FromEmptyBuffer(NULL, 0);
 }
 
+
 void String_MakeLowercase(STRING_TRANSIENT String* str) {
 	Int32 i;
 	for (i = 0; i < str->length; i++) {
 		str->buffer[i] = Char_ToLower(str->buffer[i]);
 	}
+}
+
+void String_Clear(STRING_TRANSIENT String* str) {
+	Int32 i;
+	for (i = 0; i < str->length; i++) {
+		str->buffer[i] = 0;
+	}
+	str->length = 0;
 }
 
 
@@ -160,6 +169,31 @@ UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset) {
 	return str->buffer[offset];
 }
 
+Int32 String_IndexOfString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub) {
+	Int32 i, j;
+	/* Special case, sub is an empty string*/
+	if (sub->length == 0) return 0;
+
+	UInt8 subFirst = sub->buffer[0];
+	for (i = 0; i < str->length; i++) {
+		if (str->buffer[i] != subFirst) continue;
+		
+		for (j = 1; j < sub->length; j++) {
+			if (str->buffer[i + j] != sub->buffer[j]) break;
+		}
+		if (j == sub->length) return i;
+	}
+	return -1;
+}
+
+bool String_ContainsString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub) {
+	return String_IndexOfString(str, sub) >= 0;
+}
+
+bool String_StartsWith(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub) {
+	return String_IndexOfString(str, sub) == 0;
+}
+
 
 #define Convert_ControlCharsCount 32
 UInt16 Convert_ControlChars[Convert_ControlCharsCount] = {
@@ -214,8 +248,9 @@ bool Convert_TryParseInt32(STRING_TRANSIENT String* str, Int32* value) {
 
 	/* Handle number signs */
 	bool negate = false;
-	if (str->length > 0 && str->buffer[0] == '-') { negate = true; i++; }
-	if (str->length > 0 && str->buffer[0] == '+') { i++; }
+	if (str->length == 0) return false;
+	if (str->buffer[0] == '-') { negate = true; i++; }
+	if (str->buffer[0] == '+') { i++; }
 
 	/* TODO: CHECK THIS WORKS!!! */
 	for (; i < str->length; i++) {
@@ -273,8 +308,9 @@ bool Convert_TryParseReal32(STRING_TRANSIENT String* str, Real32* value) {
 
 	/* Handle number signs */
 	bool negate = false;
-	if (str->length > 0 && str->buffer[0] == '-') { negate = true; i++; }
-	if (str->length > 0 && str->buffer[0] == '+') { i++; }
+	if (str->length == 0) return false;
+	if (str->buffer[0] == '-') { negate = true; i++; }
+	if (str->buffer[0] == '+') { i++; }
 
 	/* TODO: CHECK THIS WORKS!!! */
 	for (; i < str->length; i++) {

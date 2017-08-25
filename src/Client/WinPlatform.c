@@ -47,15 +47,15 @@ void Platform_NewUuid(UInt8* uuid) {
 	Platform_MemCpy(uuid, &guid, 16);
 }
 
-/* It's not worth making this an actual function, just use an inline macro. */
+/* Not worth making this an actual function, just use an inline macro. */
 #define Platform_ReturnDateTime(sysTime)\
 DateTime time;\
 time.Year = sysTime.wYear;\
-time.Month = sysTime.wMonth;\
-time.Day = sysTime.wDay;\
-time.Hour = sysTime.wHour;\
-time.Minute = sysTime.wMinute;\
-time.Second = sysTime.wSecond;\
+time.Month = (UInt8)sysTime.wMonth;\
+time.Day = (UInt8)sysTime.wDay;\
+time.Hour = (UInt8)sysTime.wHour;\
+time.Minute = (UInt8)sysTime.wMinute;\
+time.Second = (UInt8)sysTime.wSecond;\
 time.Milliseconds = sysTime.wMilliseconds;\
 return time;\
 

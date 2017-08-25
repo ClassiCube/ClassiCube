@@ -19,6 +19,8 @@ typedef struct LocalPlayer_ {
 	Vector3 Spawn;
 	/* Orientation set to when player respawns.*/
 	Real32 SpawnRotY, SpawnHeadX;
+	/* Hacks state of this player. */
+	HacksComponent Hacks;
 } LocalPlayer;
 
 

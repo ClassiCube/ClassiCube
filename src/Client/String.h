@@ -33,6 +33,8 @@ String String_MakeNull(void);
 
 /* Sets all characters in the given string to lowercase. */
 void String_MakeLowercase(STRING_TRANSIENT String* str);
+/* Sets all characters in the given string to NULL, then sets length t0 0. */
+void String_Clear(STRING_TRANSIENT String* str);
 
 /* Returns whether two strings have same contents. */
 bool String_Equals(STRING_TRANSIENT String* a, STRING_TRANSIENT String* b);
@@ -56,6 +58,13 @@ Int32 String_IndexOf(STRING_TRANSIENT String* str, UInt8 c, Int32 offset);
 Int32 String_LastIndexOf(STRING_TRANSIENT String* str, UInt8 c);
 /* Gets the character at the given index in the string. */
 UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset);
+
+/* Find the first index of sub in given string, -1 if not found. */
+Int32 String_IndexOfString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub);
+/* Returns whether sub is contained within string. */
+bool String_ContainsString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub);
+/* Returns whether given string starts with sub. */
+bool String_StartsWith(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub);
 
 /* Converts a code page 437 index into a unicode character. */
 UInt16 Convert_CP437ToUnicode(UInt8 c);

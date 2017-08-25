@@ -87,3 +87,4 @@ static void PerspectiveCamera_CalcViewBobbing(Camera* cam, Real32 t, Real32 velT
 
 static Vector3 PerspectiveCamera_GetDirVector(void);
 #endif
+#endif

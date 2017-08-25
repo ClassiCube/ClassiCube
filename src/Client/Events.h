@@ -36,6 +36,9 @@ Event_Void GfxEvents_ContextRecreated;
 
 /* Raised when the user changes a block. */
 Event_Block UserEvents_BlockChanged;
+/* Raised when when the hack permissions of the player changes. */
+Event_Void UserEvents_HackPermissionsChanged;
+
 /* Raised when the block permissions(can place or delete a block) for the player changes. */
 Event_Void BlockEvents_PermissionsChanged;
 /* Raised when a block definition is changed. */
