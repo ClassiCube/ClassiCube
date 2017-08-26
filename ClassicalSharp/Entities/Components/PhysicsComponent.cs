@@ -113,7 +113,8 @@ namespace ClassicalSharp.Entities {
 			// previously horSpeed used to be multiplied by factor of 0.02 in last case
 			// it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same
 			
-			if (!hacks.Floating) {
+			bool womSpeedBoost = hacks.CanDoubleJump && hacks.WOMStyleHacks;
+			if (!hacks.Floating && womSpeedBoost) {
 				if (multiJumps == 1) { horSpeed *= 46.5f; verSpeed *= 7.5f; }
 				else if (multiJumps > 1) { horSpeed *= 93f; verSpeed *= 10f; }
 			}
