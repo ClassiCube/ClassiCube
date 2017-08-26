@@ -74,6 +74,8 @@ typedef struct HacksComponent_ {
 	bool CanDoubleJump;
 	/* Maximum speed the entity can move at horizontally when CanSpeed is false. */
 	Real32 MaxSpeedMultiplier;
+	/* Max amount of jumps the player can perform. */
+	Int32 MaxJumps;
 
 	/* Whether the player should slide after letting go of movement buttons in noclip.  */
 	bool NoclipSlide;

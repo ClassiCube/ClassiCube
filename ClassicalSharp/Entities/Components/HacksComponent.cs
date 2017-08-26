@@ -50,12 +50,12 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Maximum speed the entity can move at horizontally when CanSpeed is false. </summary>
 		public float MaxSpeedMultiplier = 1;
 		/// <summary> Amount of jumps the player can perform. </summary>
-		public int Jumps = 0;
+		public int MaxJumps = 1;
 		
 		/// <summary> Whether the player should slide after letting go of movement buttons in noclip.  </summary>
 		public bool NoclipSlide = true;		
 		/// <summary> Whether the player has allowed the usage of fast double jumping abilities. </summary>
-		public bool WOMStyleHacks = false;
+		public bool WOMStyleHacks;
 		
 		/// <summary> Whether the player currently has noclip on. </summary>
 		public bool Noclip;
@@ -74,32 +74,32 @@ namespace ClassicalSharp.Entities {
 		public bool Floating { get { return Noclip || Flying; } }
 		public string HacksFlags;
 		
-		void ParseHorizontalSpeed(string joined) {
-			int start = joined.IndexOf("horspeed=", StringComparison.OrdinalIgnoreCase);
-			if (start < 0) return;
-			start += 9;
+		string GetFlagValue(string flag) {
+			int start = HacksFlags.IndexOf(flag, StringComparison.OrdinalIgnoreCase);
+			if (start < 0) return null;
+			start += flag.Length;
 			
-			int end = joined.IndexOf(' ', start);
-			if (end < 0) end = joined.Length;
+			int end = HacksFlags.IndexOf(' ', start);
+			if (end < 0) end = HacksFlags.Length;		
+			return HacksFlags.Substring(start, end - start);
+		}
+		
+		void ParseHorizontalSpeed() {
+			string num = GetFlagValue("horspeed=");
+			if (num == null) return;
 			
-			string num = joined.Substring(start, end - start);
 			float value = 0;
 			if (!Utils.TryParseDecimal(num, out value) || value <= 0) return;
 			MaxSpeedMultiplier = value;
 		}
 		
-		void ParseMultiJumps(string joined) {
-			int start = joined.IndexOf("jumps=", StringComparison.OrdinalIgnoreCase);
-			if (start < 0) return;
-			start += 6;
+		void ParseMultiJumps() {
+			string num = GetFlagValue("jumps=");
+			if (num == null) return;
 			
-			int end = joined.IndexOf(' ', start);
-			if (end < 0) end = joined.Length;
-			
-			string num = joined.Substring(start, end - start);
-			float value = 1;
-			if (!Utils.TryParseDecimal(num, out value) || value < 0) return;
-			Jumps = (int)value;
+			int value = 0;
+			if (!int.TryParse(num, out value) || value < 0) return;
+			MaxJumps = value;
 		}
 		
 		void SetAllHacks(bool allowed) {
@@ -151,7 +151,7 @@ namespace ClassicalSharp.Entities {
 			if (HacksFlags == null) return;
 			
 			MaxSpeedMultiplier = 1;
-			Jumps = 1;
+			MaxJumps = 1;
 			// By default (this is also the case with WoM), we can use hacks.
 			if (HacksFlags.Contains("-hax")) SetAllHacks(false);
 			
@@ -160,10 +160,12 @@ namespace ClassicalSharp.Entities {
 			ParseFlag(b => CanSpeed = b, HacksFlags, "speed");
 			ParseFlag(b => CanRespawn = b, HacksFlags, "respawn");
 
-			if (UserType == 0x64)
+			if (UserType == 0x64) {
 				ParseFlag(b => SetAllHacks(b), HacksFlags, "ophax");
-			ParseHorizontalSpeed(HacksFlags);
-			ParseMultiJumps(HacksFlags);
+			}
+			
+			ParseHorizontalSpeed();
+			ParseMultiJumps();
 			
 			CheckHacksConsistency();
 			game.Events.RaiseHackPermissionsChanged();

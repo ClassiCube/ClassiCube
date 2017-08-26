@@ -44,11 +44,10 @@ namespace ClassicalSharp.Entities {
 				if (Hacks.Noclip) entity.Velocity.Y = 0;
 				Hacks.Noclip = !Hacks.Noclip;
 			} else if (key == keys[KeyBind.Jump] && !entity.onGround && !(Hacks.Flying || Hacks.Noclip)) {
-			    if (physics.womJumps < 2 && Hacks.CanDoubleJump && Hacks.WOMStyleHacks) {
-					physics.DoNormalJump();
-					physics.womJumps++;
-			    }
-			    else if (physics.multiJumps < Hacks.Jumps -1) {
+				int maxJumps = Hacks.CanDoubleJump && Hacks.WOMStyleHacks ? 2 : 0;
+				maxJumps = Math.Max(maxJumps, Hacks.MaxJumps - 1);
+				
+			    if (physics.multiJumps < maxJumps) {
 					physics.DoNormalJump();
 					physics.multiJumps++;
 				}

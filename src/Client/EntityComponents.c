@@ -144,6 +144,7 @@ void HacksComponent_Init(HacksComp* hacks) {
 	hacks->CanSeeAllNames = true;
 	hacks->CanDoubleJump = true;
 	hacks->MaxSpeedMultiplier = 1.0f;
+	hacks->MaxJumps = 1;
 	hacks->NoclipSlide = true;
 	hacks->HacksFlags = String_FromRawBuffer(&hacks->HacksFlagsBuffer[0], 128);
 }
@@ -156,20 +157,36 @@ bool HacksComponent_Floating(HacksComp* hacks) {
 	return hacks->Noclip || hacks->Flying;
 }
 
-void HacksComponent_ParseHorizontalSpeed(HacksComp* hacks) {
+String HacksComponent_GetFlagValue(String* flag, HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
-	String horSpeed = String_FromConstant("horspeed=");
-	Int32 start = String_IndexOfString(joined, &horSpeed);
-	if (start < 0) return;
-	start += horSpeed.length;
+	Int32 start = String_IndexOfString(joined, flag);
+	if (start < 0) return String_MakeNull();
+	start += flag->length;
 
 	Int32 end = String_IndexOf(joined, ' ', start);
 	if (end < 0) end = joined->length;
 
-	String speedStr = String_UNSAFE_Substring(joined, start, end - start);
+	return String_UNSAFE_Substring(joined, start, end - start);
+}
+
+void HacksComponent_ParseHorizontalSpeed(HacksComp* hacks) {
+	String horSpeedFlag = String_FromConstant("horspeed=");
+	String speedStr = HacksComponent_GetFlagValue(&horSpeedFlag, hacks);
+	if (speedStr.length == 0) return;
+
 	Real32 speed = 0.0f;
 	if (!Convert_TryParseReal32(&speedStr, &speed) || speed <= 0.0f) return;
 	hacks->MaxSpeedMultiplier = speed;
+}
+
+void HacksComponent_ParseMultiSpeed(HacksComp* hacks) {
+	String jumpsFlag = String_FromConstant("jumps=");
+	String jumpsStr = HacksComponent_GetFlagValue(&jumpsFlag, hacks);
+	if (jumpsStr.length == 0) return;
+
+	Int32 jumps = 0;
+	if (!Convert_TryParseInt32(&jumpsStr, &jumps) || jumps < 0) return;
+	hacks->MaxJumps = jumps;
 }
 
 void HacksComponent_ParseFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag, bool* target) {
@@ -240,6 +257,7 @@ void HacksComponent_UpdateState(HacksComp* hacks) {
 	if (hacks->HacksFlags.length == 0) return;
 
 	hacks->MaxSpeedMultiplier = 1;
+	hacks->MaxJumps = 1;
 	/* By default (this is also the case with WoM), we can use hacks. */
 	String excHacks = String_FromConstant("-hax");
 	if (String_ContainsString(&hacks->HacksFlags, &excHacks)) {
@@ -255,6 +273,7 @@ void HacksComponent_UpdateState(HacksComp* hacks) {
 		HacksComponent_ParseAllFlag(hacks, "+ophax", "-ophax");
 	}
 	HacksComponent_ParseHorizontalSpeed(hacks);
+	HacksComponent_ParseMultiSpeed(hacks);
 
 	HacksComponent_CheckConsistency(hacks);
 	Event_RaiseVoid(&UserEvents_HackPermissionsChanged);
