@@ -84,6 +84,9 @@ void Entity_Init(Entity* entity);
 /* Gets the position of the player's eye in the world. */
 Vector3 Entity_GetEyePosition(Entity* entity);
 
+/* Calculates the transformation matrix for the given entity. */
+void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale, Matrix* m);
+
 /* Returns the bounding box that contains the model, without any rotations applied. */
 void Entity_GetPickingBounds(Entity* entity, AABB* bb);
 
@@ -96,7 +99,7 @@ bool Entity_TouchesAny(AABB* bb, TouchesAny_Condition condition);
 /* Determines whether any of the blocks that intersect the AABB of this entity are rope. */
 bool Entity_TouchesAnyRope(Entity* entity);
 		
-/* Determines whether any of the blocks that intersect thee AABB of this entity are lava or still lava. */
+/* Determines whether any of the blocks that intersect the AABB of this entity are lava or still lava. */
 bool Entity_TouchesAnyLava(Entity* entity);
 
 /* Determines whether any of the blocks that intersect the AABB of this entity are water or still water. */

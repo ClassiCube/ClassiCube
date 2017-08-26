@@ -54,7 +54,4 @@ void Camera_Init(void);
 
 /* Cycles the active camera to the next allowed camera type. */
 void Camera_CycleActive(void);
-
-/* Adds a camera to the list of available cameras. */
-void Camera_Add(Camera camera);
 #endif

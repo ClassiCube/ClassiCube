@@ -127,6 +127,7 @@ void PerspectiveCamera_Init(Camera* cam) {
 	cam->GetPickedBlock = PerspectiveCamera_GetPickedBlock;
 }
 
+
 	public class ThirdPersonCamera : PerspectiveCamera {
 		public ThirdPersonCamera(Game window, bool forward) : base(window) { this.forward = forward; }
 		public override bool IsThirdPerson{ get{ return true; } }
@@ -163,6 +164,7 @@ void PerspectiveCamera_Init(Camera* cam) {
 			return game.CameraClipPos.Intersect;
 		}
 	}
+
 
 void FirstPersonCamera_GetView(Matrix* mat) {
 	Vector3 camPos = Game_CurrentCameraPos;

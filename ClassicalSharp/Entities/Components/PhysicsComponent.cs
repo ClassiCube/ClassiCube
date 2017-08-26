@@ -17,7 +17,8 @@ namespace ClassicalSharp.Entities {
 		
 		bool useLiquidGravity = false; // used by BlockDefinitions.
 		bool canLiquidJump = true;
-		internal bool firstJump, secondJump, jumping;
+		internal bool jumping;
+		internal int womJumps;
 		Entity entity;
 		Game game;
 		
@@ -113,8 +114,8 @@ namespace ClassicalSharp.Entities {
 			// it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same
 			
 			if (!hacks.Floating) {
-				if (secondJump) { horSpeed *= 93f; verSpeed *= 10f; }
-				else if (firstJump) { horSpeed *= 46.5f; verSpeed *= 7.5f; }
+				if (womJumps == 1) { horSpeed *= 46.5f; verSpeed *= 7.5f; }
+				else if (womJumps > 1) { horSpeed *= 93f; verSpeed *= 10f; }
 			}
 			
 			if (entity.TouchesAnyWater() && !hacks.Floating) {
@@ -146,7 +147,7 @@ namespace ClassicalSharp.Entities {
 				}
 			}
 			
-			if (entity.onGround) { firstJump = false; secondJump = false; }
+			if (entity.onGround) womJumps = 0;
 		}
 		
 		

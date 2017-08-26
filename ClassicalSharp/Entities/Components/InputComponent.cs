@@ -44,12 +44,9 @@ namespace ClassicalSharp.Entities {
 				if (Hacks.Noclip) entity.Velocity.Y = 0;
 				Hacks.Noclip = !Hacks.Noclip;
 			} else if (key == keys[KeyBind.Jump] && !entity.onGround && !(Hacks.Flying || Hacks.Noclip)) {
-				if (!physics.firstJump && Hacks.CanDoubleJump && Hacks.WOMStyleHacks) {
+				if (physics.womJumps < 2 && Hacks.CanDoubleJump && Hacks.WOMStyleHacks) {
 					physics.DoNormalJump();
-					physics.firstJump = true;
-				} else if (!physics.secondJump && Hacks.CanDoubleJump && Hacks.WOMStyleHacks) {
-					physics.DoNormalJump();
-					physics.secondJump = true;
+					physics.womJumps++;
 				}
 			} else {
 				return false;

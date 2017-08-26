@@ -44,6 +44,23 @@ Vector3 Entity_GetEyePosition(Entity* entity) {
 	return pos;
 }
 
+void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale, Matrix* m) {
+	*m = Matrix_Identity;
+	Matrix tmp;
+
+	Matrix_RotateZ(&tmp, -entity->RotZ * MATH_DEG2RAD);
+	Matrix_Mult(m, m, &tmp);
+	Matrix_RotateX(&tmp, -entity->RotX * MATH_DEG2RAD);
+	Matrix_Mult(m, m, &tmp);
+	Matrix_RotateY(&tmp, -entity->RotY * MATH_DEG2RAD);
+	Matrix_Mult(m, m, &tmp);
+	Matrix_Scale(&tmp, scale.X, scale.Y, scale.Z);
+	Matrix_Mult(m, m, &tmp);
+	Matrix_Translate(&tmp, pos.X, pos.Y, pos.Z);
+	Matrix_Mult(m, m, &tmp);
+	/* return rotZ * rotX * rotY * scale * translate; */
+}
+
 void Entity_GetPickingBounds(Entity* entity, AABB* bb) {
 	AABB_Offset(bb, &entity->ModelAABB, &entity->Position);
 }
