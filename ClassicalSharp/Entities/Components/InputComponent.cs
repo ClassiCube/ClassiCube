@@ -31,7 +31,6 @@ namespace ClassicalSharp.Entities {
 			
 			if (key == keys[KeyBind.Respawn] && Hacks.CanRespawn) {
 				DoRespawn();
-				game.Chat.Add("Hacks.Jumps: " + Hacks.Jumps + ".");
 			} else if (key == keys[KeyBind.SetSpawn] && Hacks.CanRespawn) {
 				p.Spawn = entity.Position;
 				p.Spawn.X = Utils.Floor(p.Spawn.X) + 0.5f;
