@@ -19,6 +19,7 @@ namespace ClassicalSharp.Entities {
 		bool canLiquidJump = true;
 		internal bool jumping;
 		internal int womJumps;
+		internal int multiJumps;
 		Entity entity;
 		Game game;
 		
@@ -89,7 +90,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void DoNormalJump() {
-			if (jumpVel == 0) return;
+			if (jumpVel == 0 || hacks.Jumps == 0) return;
 			
 			entity.Velocity.Y = jumpVel;
 			if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += jumpVel;
@@ -147,7 +148,7 @@ namespace ClassicalSharp.Entities {
 				}
 			}
 			
-			if (entity.onGround) womJumps = 0;
+			if (entity.onGround) { womJumps = 0; multiJumps = 0; }
 		}
 		
 		

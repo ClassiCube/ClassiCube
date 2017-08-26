@@ -49,6 +49,8 @@ namespace ClassicalSharp.Entities {
 		public bool CanDoubleJump = true;	
 		/// <summary> Maximum speed the entity can move at horizontally when CanSpeed is false. </summary>
 		public float MaxSpeedMultiplier = 1;
+		/// <summary> Amount of jumps the player can perform. </summary>
+		public int Jumps = 0;
 		
 		/// <summary> Whether the player should slide after letting go of movement buttons in noclip.  </summary>
 		public bool NoclipSlide = true;		
@@ -84,6 +86,20 @@ namespace ClassicalSharp.Entities {
 			float value = 0;
 			if (!Utils.TryParseDecimal(num, out value) || value <= 0) return;
 			MaxSpeedMultiplier = value;
+		}
+		
+		void ParseMultiJumps(string joined) {
+			int start = joined.IndexOf("jumps=", StringComparison.OrdinalIgnoreCase);
+			if (start < 0) return;
+			start += 6;
+			
+			int end = joined.IndexOf(' ', start);
+			if (end < 0) end = joined.Length;
+			
+			string num = joined.Substring(start, end - start);
+			float value = 1;
+			if (!Utils.TryParseDecimal(num, out value) || value < 0) return;
+			Jumps = (int)value;
 		}
 		
 		void SetAllHacks(bool allowed) {
@@ -135,6 +151,7 @@ namespace ClassicalSharp.Entities {
 			if (HacksFlags == null) return;
 			
 			MaxSpeedMultiplier = 1;
+			Jumps = 1;
 			// By default (this is also the case with WoM), we can use hacks.
 			if (HacksFlags.Contains("-hax")) SetAllHacks(false);
 			
@@ -146,6 +163,7 @@ namespace ClassicalSharp.Entities {
 			if (UserType == 0x64)
 				ParseFlag(b => SetAllHacks(b), HacksFlags, "ophax");
 			ParseHorizontalSpeed(HacksFlags);
+			ParseMultiJumps(HacksFlags);
 			
 			CheckHacksConsistency();
 			game.Events.RaiseHackPermissionsChanged();

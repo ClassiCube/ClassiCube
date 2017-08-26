@@ -31,6 +31,7 @@ namespace ClassicalSharp.Entities {
 			
 			if (key == keys[KeyBind.Respawn] && Hacks.CanRespawn) {
 				DoRespawn();
+				game.Chat.Add("Hacks.Jumps: " + Hacks.Jumps + ".");
 			} else if (key == keys[KeyBind.SetSpawn] && Hacks.CanRespawn) {
 				p.Spawn = entity.Position;
 				p.Spawn.X = Utils.Floor(p.Spawn.X) + 0.5f;
@@ -44,9 +45,13 @@ namespace ClassicalSharp.Entities {
 				if (Hacks.Noclip) entity.Velocity.Y = 0;
 				Hacks.Noclip = !Hacks.Noclip;
 			} else if (key == keys[KeyBind.Jump] && !entity.onGround && !(Hacks.Flying || Hacks.Noclip)) {
-				if (physics.womJumps < 2 && Hacks.CanDoubleJump && Hacks.WOMStyleHacks) {
+			    if (physics.womJumps < 2 && Hacks.CanDoubleJump && Hacks.WOMStyleHacks) {
 					physics.DoNormalJump();
 					physics.womJumps++;
+			    }
+			    else if (physics.multiJumps < Hacks.Jumps -1) {
+					physics.DoNormalJump();
+					physics.multiJumps++;
 				}
 			} else {
 				return false;
