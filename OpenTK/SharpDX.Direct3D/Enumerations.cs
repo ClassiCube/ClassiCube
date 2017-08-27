@@ -367,6 +367,7 @@ namespace SharpDX.Direct3D9 {
 		MagFilter = 5,
 		MinFilter = 6,
 		MipFilter = 7,
+		MipMapLODBias  = 8,
 		MaxMipLevel = 9,
 	}
 
