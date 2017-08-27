@@ -16,10 +16,7 @@ namespace ClassicalSharp {
 				potHeat = new float[size * size];
 				soupHeat = new float[size * size];
 			}
-			
-			int shift = 0;
-			while (size > 1) { shift++; size >>= 1; }
-			return shift;
+			return Utils.Log2(size);
 		}
 	}
 	

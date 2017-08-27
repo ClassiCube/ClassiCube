@@ -196,6 +196,12 @@ namespace ClassicalSharp.GraphicsAPI {
 				}
 			}
 		}
+		
+		internal static int MipmapsLevels(int width, int height) {
+			int lvlsWidth = Utils.Log2(width), lvlsHeight = Utils.Log2(height);	
+			int lvls = Math.Min(lvlsWidth, lvlsHeight);
+			return Math.Min(lvls, 4);
+		}
 	}
 
 	public enum VertexFormat {

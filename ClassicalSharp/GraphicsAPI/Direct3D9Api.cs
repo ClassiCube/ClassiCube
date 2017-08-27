@@ -169,13 +169,12 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps) {
 			D3D.Texture texture = null;
-			int levels = mipmaps ? 5 : 1;
+			int levels = 1 + (mipmaps ? MipmapsLevels(width, height) : 0);
 			
 			if (managedPool) {
 				texture = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Managed);
 				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
 				
-				// TODO: FIX THIS MEMORY LEAK!!!!!
 				if (mipmaps) DoMipmaps(texture, width, height, scan0);
 			} else {
 				D3D.Texture sys = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
@@ -190,7 +189,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 		unsafe void DoMipmaps(D3D.Texture texture, int width, int height, IntPtr scan0) {
 			IntPtr prev = scan0;
-			for (int lvl = 1; lvl <= 4; lvl++) {
+			int lvls = MipmapsLevels(width, height);
+			
+			for (int lvl = 1; lvl <= lvls; lvl++) {
 				width /= 2; height /= 2;
 				int size = width * height * 4;
 				
@@ -202,6 +203,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				
 				prev = cur;
 			}
+			if (prev != scan0) Marshal.FreeHGlobal(prev);
 		}
 		
 		public override void UpdateTexturePart(int texId, int texX, int texY, FastBitmap part) {

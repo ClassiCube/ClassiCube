@@ -118,6 +118,12 @@ namespace ClassicalSharp {
 		public static float Lerp(float a, float b, float t) {
 			return a + (b - a) * t;
 		}
+		
+		public static int Log2(int value) {
+			int shift = 0;
+			while (value > 1) { shift++; value >>= 1; }
+			return shift;
+		}
 
 #if !LAUNCHER		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/

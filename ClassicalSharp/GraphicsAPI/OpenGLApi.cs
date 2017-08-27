@@ -169,7 +169,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			if (mipmaps) {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.NearestMipmapLinear);
-				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 4);
+				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, MipmapsLevels(width, height));
 			} else {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.Nearest);
 			}
@@ -183,7 +183,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		unsafe void DoMipmaps(int texture, int width, int height, IntPtr scan0) {
 			IntPtr prev = scan0;
-			for (int lvl = 1; lvl <= 4; lvl++) {
+			int lvls = MipmapsLevels(width, height);
+			
+			for (int lvl = 1; lvl <= lvls; lvl++) {
 				width /= 2; height /= 2;				
 				int size = width * height * 4;
 				
@@ -196,6 +198,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				
 				prev = cur;
 			}
+			if (prev != scan0) Marshal.FreeHGlobal(prev);
 		}
 		
 		public override void BindTexture(int texture) {

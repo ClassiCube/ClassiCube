@@ -82,8 +82,12 @@ namespace ClassicalSharp.Gui.Screens {
 					TexturePack.ExtractDefault(game); return;
 				}
 				
-				TexturePack extractor = new TexturePack();
-				extractor.Extract(data, game);
+				if (url.Contains(".zip")) {
+					TexturePack extractor = new TexturePack();
+					extractor.Extract(data, game);
+				} else {
+					TexturePack.ExtractTerrainPng(game, data, url);
+				}
 			}
 		}
 		

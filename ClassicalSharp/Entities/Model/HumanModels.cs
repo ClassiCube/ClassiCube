@@ -135,10 +135,10 @@ namespace ClassicalSharp.Model {
 			}
 		}
 
-		public override float NameYOffset { get { return 0; } }
-		public override float GetEyeY(Entity entity) { return 0; }
-		public override Vector3 CollisionSize { get { return default(Vector3); } }
-		public override AABB PickingBounds { get { return default(AABB); } }
+		public override float NameYOffset { get { return 0.5f; } }
+		public override float GetEyeY(Entity entity) { return 0.5f; }
+		public override Vector3 CollisionSize { get { return Vector3.One; } }
+		public override AABB PickingBounds { get { return new AABB(-0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f); } }
 		
 		protected override void RenderParts(Entity p) {
 			HumanoidModel human = (HumanoidModel)game.ModelCache.Models[0].Instance;

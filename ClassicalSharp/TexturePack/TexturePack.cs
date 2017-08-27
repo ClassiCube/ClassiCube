@@ -77,27 +77,29 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		static void ExtractCachedTerrainPng(Game game, string url) {
-			FileStream data = TextureCache.GetStream(url);
-			if (data == null) { // e.g. 404 errors
-				if (game.World.TextureUrl != null) ExtractDefault(game);
-			} else if (url != game.World.TextureUrl) {
-				// Must read into a MemoryStream, because stream duration must be lifetime of bitmap
-				// and we don't want to maintain a reference to the file
-				MemoryStream ms = ReadAllBytes(data);
-				Bitmap bmp = GetBitmap(game.Drawer2D, ms);
-				data.Dispose();
-				
-				if (bmp != null) {
-					game.World.TextureUrl = url;
-					game.Events.RaiseTexturePackChanged();
-					if (game.ChangeTerrainAtlas(bmp)) return;
+			using (Stream data = TextureCache.GetStream(url)) {
+				if (data == null) { // e.g. 404 errors
+					if (game.World.TextureUrl != null) ExtractDefault(game);
+				} else if (url != game.World.TextureUrl) {
+					ExtractTerrainPng(game, data, url);
 				}
-				
-				if (bmp != null) bmp.Dispose();				
-				ms.Dispose();
-			} else {
-				data.Dispose();
 			}
+		}
+		
+		internal static void ExtractTerrainPng(Game game, Stream data, string url) {
+			// Must read into a MemoryStream, because stream duration must be lifetime of bitmap
+			// and we don't want to maintain a reference to the file
+			MemoryStream ms = ReadAllBytes(data);
+			Bitmap bmp = GetBitmap(game.Drawer2D, ms);
+			
+			if (bmp != null) {
+				game.World.TextureUrl = url;
+				game.Events.RaiseTexturePackChanged();
+				if (game.ChangeTerrainAtlas(bmp)) return;
+			}
+			
+			if (bmp != null) bmp.Dispose();
+			ms.Dispose();
 		}
 		
 		internal static void ExtractTexturePack(Game game, DownloadedItem item) {
@@ -140,7 +142,7 @@ namespace ClassicalSharp.Textures {
 			}
 		}
 		
-		static MemoryStream ReadAllBytes(FileStream src) {
+		static MemoryStream ReadAllBytes(Stream src) {
 			MemoryStream dst = new MemoryStream((int)src.Length);
 			byte[] buffer = new byte[4096];
 			for (int i = 0; i < (int)src.Length; i += 4096) {
