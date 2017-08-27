@@ -138,9 +138,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture(All.Texture2D, texture);
 		}
 		
-		public override void UpdateTexturePart(int texId, int texX, int texY, FastBitmap part) {
+		public override void UpdateTexturePart(int texId, int x, int y, FastBitmap part) {
 			GL.BindTexture(All.Texture2D, texId);
-			GL.TexSubImage2D(All.Texture2D, 0, texX, texY, part.Width, part.Height,
+			GL.TexSubImage2D(All.Texture2D, 0, x, y, part.Width, part.Height,
 				All.BgraExt, All.UnsignedByte, part.Scan0);
 		}
 		

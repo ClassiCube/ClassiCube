@@ -177,25 +177,31 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0);
 			
-			if (mipmaps) DoMipmaps(texId, width, height, scan0);
+			if (mipmaps) DoMipmaps(texId, 0, 0, width, height, scan0, false);
 			return texId;
 		}
 		
-		unsafe void DoMipmaps(int texture, int width, int height, IntPtr scan0) {
+		unsafe void DoMipmaps(int texId, int x, int y, int width,
+		                      int height, IntPtr scan0, bool partial) {
 			IntPtr prev = scan0;
 			int lvls = MipmapsLevels(width, height);
 			
 			for (int lvl = 1; lvl <= lvls; lvl++) {
-				width /= 2; height /= 2;				
+				x /= 2; y /= 2; width /= 2; height /= 2;
 				int size = width * height * 4;
 				
 				IntPtr cur = Marshal.AllocHGlobal(size);
 				GenMipmaps(width, height, cur, prev);
 				
-				GL.TexImage2D(TextureTarget.Texture2D, lvl, PixelInternalFormat.Rgba, width, height,
-			              GlPixelFormat.Bgra, PixelType.UnsignedByte, cur);
-				if (prev != scan0) Marshal.FreeHGlobal(prev);
+				if (partial) {
+					GL.TexSubImage2D(TextureTarget.Texture2D, lvl, x, y, width, height,
+					                 GlPixelFormat.Bgra, PixelType.UnsignedByte, cur);
+				} else {
+					GL.TexImage2D(TextureTarget.Texture2D, lvl, PixelInternalFormat.Rgba, width, height,
+					              GlPixelFormat.Bgra, PixelType.UnsignedByte, cur);
+				}
 				
+				if (prev != scan0) Marshal.FreeHGlobal(prev);
 				prev = cur;
 			}
 			if (prev != scan0) Marshal.FreeHGlobal(prev);
@@ -205,10 +211,11 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture(TextureTarget.Texture2D, texture);
 		}
 		
-		public override void UpdateTexturePart(int texId, int texX, int texY, FastBitmap part) {
+		public override void UpdateTexturePart(int texId, int x, int y, FastBitmap part, bool mipmaps) {
 			GL.BindTexture(TextureTarget.Texture2D, texId);
-			GL.TexSubImage2D(TextureTarget.Texture2D, 0, texX, texY, part.Width, part.Height,
+			GL.TexSubImage2D(TextureTarget.Texture2D, 0, x, y, part.Width, part.Height,
 			                 GlPixelFormat.Bgra, PixelType.UnsignedByte, part.Scan0);
+			if (mipmaps) DoMipmaps(texId, x, y, part.Width, part.Height, part.Scan0, true);
 		}
 		
 		public override void DeleteTexture(ref int texId) {

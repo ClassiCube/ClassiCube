@@ -175,7 +175,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				texture = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Managed);
 				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
 				
-				if (mipmaps) DoMipmaps(texture, width, height, scan0);
+				if (mipmaps) DoMipmaps(texture, 0, 0, width, height, scan0, false);
 			} else {
 				D3D.Texture sys = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
 				sys.SetData(0, LockFlags.None, scan0, width * height * 4);
@@ -187,28 +187,34 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand(ref textures, texture, texBufferSize);
 		}
 			
-		unsafe void DoMipmaps(D3D.Texture texture, int width, int height, IntPtr scan0) {
+		unsafe void DoMipmaps(D3D.Texture texture, int x, int y, int width, 
+		                      int height, IntPtr scan0, bool partial) {
 			IntPtr prev = scan0;
 			int lvls = MipmapsLevels(width, height);
 			
 			for (int lvl = 1; lvl <= lvls; lvl++) {
-				width /= 2; height /= 2;
+				x /= 2; y /= 2; width /= 2; height /= 2;
 				int size = width * height * 4;
 				
 				IntPtr cur = Marshal.AllocHGlobal(size);
 				GenMipmaps(width, height, cur, prev);
 				
-				texture.SetData(lvl, LockFlags.None, cur, size);
-				if (prev != scan0) Marshal.FreeHGlobal(prev);
+				if (partial) {
+					texture.SetPartData(lvl, LockFlags.None, cur, x, y, width, height);
+				} else {
+					texture.SetData(lvl, LockFlags.None, cur, size);
+				}
 				
+				if (prev != scan0) Marshal.FreeHGlobal(prev);				
 				prev = cur;
 			}
 			if (prev != scan0) Marshal.FreeHGlobal(prev);
 		}
 		
-		public override void UpdateTexturePart(int texId, int texX, int texY, FastBitmap part) {
+		public override void UpdateTexturePart(int texId, int x, int y, FastBitmap part, bool mipmaps) {
 			D3D.Texture texture = textures[texId];
-			texture.SetPartData(0, LockFlags.None, part.Scan0, texX, texY, part.Width, part.Height);
+			texture.SetPartData(0, LockFlags.None, part.Scan0, x, y, part.Width, part.Height);
+			if (Mipmaps) DoMipmaps(texture, x, y, part.Width, part.Height, part.Scan0, true);
 		}
 
 		public override void BindTexture(int texId) {

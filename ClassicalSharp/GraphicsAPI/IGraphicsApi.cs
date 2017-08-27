@@ -74,9 +74,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// because otherwise they will not display properly on certain graphics cards.	</remarks>
 		protected abstract int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps);
 		
-		/// <summary> Updates the sub-rectangle (texX, texY) -> (texX + part.Width, texY + part.Height)
+		/// <summary> Updates the sub-rectangle (x, y) -> (x + part.Width, y + part.Height)
 		/// of the native texture associated with the given ID, with the pixels encapsulated in the 'part' instance. </summary>
-		public abstract void UpdateTexturePart(int texId, int texX, int texY, FastBitmap part);
+		public abstract void UpdateTexturePart(int texId, int x, int y, FastBitmap part, bool mipmaps);
 		
 		/// <summary> Binds the given texture id so that it can be used for rasterization. </summary>
 		public abstract void BindTexture(int texId);

@@ -160,7 +160,7 @@ namespace ClassicalSharp.Textures {
 				FastBitmap.MovePortion(data.FrameX + data.State * size, 
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size);
 			}
-			gfx.UpdateTexturePart(atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.TileSize, animPart);
+			gfx.UpdateTexturePart(atlas.TexIds[index], 0, rowNum * game.TerrainAtlas.TileSize, animPart, game.Graphics.Mipmaps);
 		}
 		
 		bool IsDefaultZip() {
