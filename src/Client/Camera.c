@@ -43,8 +43,8 @@ void PerspectiveCamera_CentreMousePosition(void) {
 
 	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
 	Size2D size = Window_GetClientSize();
-	Int32 cenX = topLeft.X + size.Width  * 0.5f;
-	Int32 cenY = topLeft.Y + size.Height * 0.5f;
+	Int32 cenX = topLeft.X + size.Width  / 2;
+	Int32 cenY = topLeft.Y + size.Height / 2;
 
 	Window_SetDesktopCursorPos(Point2D_Make(cenX, cenY));
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
@@ -56,8 +56,8 @@ void PerspectiveCamera_RegrabMouse(void) {
 
 	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
 	Size2D size = Window_GetClientSize();
-	Int32 cenX = topLeft.X + size.Width  * 0.5f;
-	Int32 cenY = topLeft.Y + size.Height * 0.5f;
+	Int32 cenX = topLeft.X + size.Width  / 2;
+	Int32 cenY = topLeft.Y + size.Height / 2;
 
 	Point2D point = Point2D_Make(cenX, cenY);
 	Window_SetDesktopCursorPos(point);
@@ -79,8 +79,8 @@ void PersepctiveCamera_UpdateMouseRotation(void) {
 		speedY += delta.Y * adjust;
 		speedY *= slippery;
 	} else {
-		speedX = delta.X;
-		speedY = delta.Y;
+		speedX = (Real32)delta.X;
+		speedY = (Real32)delta.Y;
 	}
 
 	Real32 rotY = player.interp.next.HeadY + speedX * sensitivity;

@@ -34,9 +34,6 @@ bool Gfx_LostContext;
 /* Whether mipmapping of terrain textures is used. */
 bool Gfx_Mipmaps;
 
-/* Whether automatic mipmap generation is supported. */
-bool Gfx_AutoMipmaps;
-
 /* Maximum number of vertices that can be indexed. */
 #define Gfx_MaxIndices (65536 / 4 * 6)
 /* Maximum number of vertices that can be indexed. */
@@ -49,9 +46,9 @@ ScheduledTaskCallback LostContextFunction;
 NOTE: only power of two dimension textures are supported. */
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
 
-/* Updates the sub-rectangle (texX, texY) -> (texX + part.Width, texY + part.Height)
+/* Updates the sub-rectangle (x, y) -> (x + part.Width, y + part.Height)
 of the native texture associated with the given ID, with the pixels encapsulated in the 'part' instance. */
-void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 texX, Int32 texY, Bitmap* part);
+void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps);
 
 /* Binds the given texture id so that it can be used for rasterization. */
 void Gfx_BindTexture(GfxResourceID texId);

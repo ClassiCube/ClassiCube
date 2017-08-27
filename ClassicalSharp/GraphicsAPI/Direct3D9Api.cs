@@ -205,7 +205,7 @@ namespace ClassicalSharp.GraphicsAPI {
 					texture.SetData(lvl, LockFlags.None, cur, size);
 				}
 				
-				if (prev != scan0) Marshal.FreeHGlobal(prev);				
+				if (prev != scan0) Marshal.FreeHGlobal(prev);
 				prev = cur;
 			}
 			if (prev != scan0) Marshal.FreeHGlobal(prev);

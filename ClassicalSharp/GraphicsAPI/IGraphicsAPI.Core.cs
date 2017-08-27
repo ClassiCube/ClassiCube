@@ -189,7 +189,7 @@ namespace ClassicalSharp.GraphicsAPI {
 					int src00 = src0[srcX], src01 = src0[srcX + 1];
 					int src10 = src1[srcX], src11 = src1[srcX + 1];
 					
-					// bilinear filter this mipmap				
+					// bilinear filter this mipmap
 					int ave0 = Average(src00, src01);
 					int ave1 = Average(src10, src11);
 					dst[x] = Average(ave0, ave1);

@@ -72,4 +72,9 @@ void GfxCommon_SetupAlphaState(UInt8 draw);
 
 /* Resets the appropriate alpha testing/blending states necessary to render the given block. */
 void GfxCommon_RestoreAlphaState(UInt8 draw);
+
+
+void GfxCommon_GenMipmaps(Int32 width, Int32 height, UInt8* lvlScan0, UInt8* scan0);
+
+Int32 GfxCommon_MipmapsLevels(Int32 width, Int32 height);
 #endif
