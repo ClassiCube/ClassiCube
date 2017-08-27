@@ -52,7 +52,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			
 			caps = device.Capabilities;
-			AutoMipmaps = (caps.Caps2 & Caps2.CanAutoGenerateMipMap) != 0;
 			viewStack = new MatrixStack(device, TransformState.View);
 			projStack = new MatrixStack(device, TransformState.Projection);
 			texStack = new MatrixStack(device, TransformState.Texture0);
@@ -192,14 +191,16 @@ namespace ClassicalSharp.GraphicsAPI {
 		unsafe void DoMipmaps(D3D.Texture texture, int width, int height, IntPtr scan0) {
 			IntPtr prev = scan0;
 			for (int lvl = 1; lvl <= 4; lvl++) {
-				int size = (width / 2) * (height / 2) * 4;
+				width /= 2; height /= 2;
+				int size = width * height * 4;
+				
 				IntPtr cur = Marshal.AllocHGlobal(size);
-				GenMipmaps(width / 2, height / 2, cur, prev);
+				GenMipmaps(width, height, cur, prev);
 				
 				texture.SetData(lvl, LockFlags.None, cur, size);
 				if (prev != scan0) Marshal.FreeHGlobal(prev);
 				
-				prev = cur; width /= 2; height /= 2;
+				prev = cur;
 			}
 		}
 		
@@ -217,13 +218,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void EnableMipmaps() {
-			if (Mipmaps && AutoMipmaps) {
+			if (Mipmaps) {
 				device.SetSamplerState(0, SamplerState.MipFilter, (int)TextureFilter.Linear);
 			}
 		}
 		
 		public override void DisableMipmaps() {
-			if (Mipmaps && AutoMipmaps) {
+			if (Mipmaps) {
 				device.SetSamplerState(0, SamplerState.MipFilter, (int)TextureFilter.None);
 			}
 		}

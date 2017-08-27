@@ -34,9 +34,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Whether mipmapping of terrain textures is used. </summary>
 		public bool Mipmaps;
 		
-		/// <summary> Whether automatic mipmap generation is supported. </summary>
-		public bool AutoMipmaps;
-		
 		/// <summary> Delegate that is invoked when the current context is lost,
 		/// and is repeatedly invoked until the context can be retrieved. </summary>
 		public Action<ScheduledTask> LostContextFunction;

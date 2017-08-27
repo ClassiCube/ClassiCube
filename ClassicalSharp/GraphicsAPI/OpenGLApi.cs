@@ -3,6 +3,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using BmpPixelFormat = System.Drawing.Imaging.PixelFormat;
@@ -43,7 +44,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			string version = new String((sbyte*)GL.GetString(StringName.Version));
 			int major = (int)(version[0] - '0'); // x.y. (and so forth)
 			int minor = (int)(version[2] - '0');
-			AutoMipmaps = major > 1 || (major == 1 && minor >= 4);
 			
 			if ((major > 1) || (major == 1 && minor >= 5)) return; // Supported in core since 1.5
 			
@@ -167,9 +167,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.BindTexture(TextureTarget.Texture2D, texId);
 			GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MagFilter, (int)TextureFilter.Nearest);
 			
-			if (mipmaps && AutoMipmaps) {
+			if (mipmaps) {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.NearestMipmapLinear);
-				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.GenerateMipmap, 1);
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 4);
 			} else {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.Nearest);
@@ -177,7 +176,26 @@ namespace ClassicalSharp.GraphicsAPI {
 
 			GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, width, height,
 			              GlPixelFormat.Bgra, PixelType.UnsignedByte, scan0);
+			
+			if (mipmaps) DoMipmaps(texId, width, height, scan0);
 			return texId;
+		}
+		
+		unsafe void DoMipmaps(int texture, int width, int height, IntPtr scan0) {
+			IntPtr prev = scan0;
+			for (int lvl = 1; lvl <= 4; lvl++) {
+				width /= 2; height /= 2;				
+				int size = width * height * 4;
+				
+				IntPtr cur = Marshal.AllocHGlobal(size);
+				GenMipmaps(width, height, cur, prev);
+				
+				GL.TexImage2D(TextureTarget.Texture2D, lvl, PixelInternalFormat.Rgba, width, height,
+			              GlPixelFormat.Bgra, PixelType.UnsignedByte, cur);
+				if (prev != scan0) Marshal.FreeHGlobal(prev);
+				
+				prev = cur;
+			}
 		}
 		
 		public override void BindTexture(int texture) {
