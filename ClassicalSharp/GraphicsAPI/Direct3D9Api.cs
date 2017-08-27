@@ -3,12 +3,12 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
 using System.Threading;
 using OpenTK;
 using SharpDX;
 using SharpDX.Direct3D9;
 using D3D = SharpDX.Direct3D9;
-using WinWindowInfo = OpenTK.Platform.Windows.WinWindowInfo;
 
 namespace ClassicalSharp.GraphicsAPI {
 
@@ -193,21 +193,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			IntPtr prev = scan0;
 			for (int lvl = 1; lvl <= 4; lvl++) {
 				int size = (width / 2) * (height / 2) * 4;
-				IntPtr ptr = System.Runtime.InteropServices.Marshal.AllocHGlobal(size);
-				GenMipmaps(width / 2, height / 2, ptr, width, height, prev);
+				IntPtr cur = Marshal.AllocHGlobal(size);
+				GenMipmaps(width / 2, height / 2, cur, prev);
 				
-				texture.SetData(lvl, LockFlags.None, ptr, size);
-				prev = ptr;
-				width /= 2; height /= 2;
-			}
-		}
-		
-		unsafe void DoMipmaps(D3D.Texture texture, int lvl, int lvlWidth, int lvlHeight,
-		               int width, int height, IntPtr scan0) {
-			int[] pixels = new int[lvlWidth * lvlHeight];
-			fixed (int* ptr = pixels) {
-				GenMipmaps(lvlWidth, lvlHeight, (IntPtr)ptr, width, height, scan0);
-				texture.SetData(lvl, LockFlags.None, (IntPtr)ptr, lvlWidth * lvlHeight * 4);
+				texture.SetData(lvl, LockFlags.None, cur, size);
+				if (prev != scan0) Marshal.FreeHGlobal(prev);
+				
+				prev = cur; width /= 2; height /= 2;
 			}
 		}
 		

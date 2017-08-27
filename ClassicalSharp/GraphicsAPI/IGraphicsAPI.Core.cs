@@ -175,18 +175,17 @@ namespace ClassicalSharp.GraphicsAPI {
 			return (aAve << 24) | (rAve << 16) | (gAve << 8) | bAve;
 		}
 		
-		internal static unsafe void GenMipmaps(int lvlWidth, int lvlHeight, IntPtr lvlScan0,
-		                                       int width, int height, IntPtr scan0) {
-			int* baseSrc = (int*)scan0, baseDst = (int*)lvlScan0;			
+		internal static unsafe void GenMipmaps(int width, int height, IntPtr lvlScan0, IntPtr scan0) {
+			int* baseSrc = (int*)scan0, baseDst = (int*)lvlScan0;
+			int srcWidth = width << 1;
 			
-			for (int y = 0; y < lvlHeight; y++) {
-				int srcY = y * height / lvlHeight;
-				int* src0 = baseSrc + srcY * width;
-				int* src1 = src0 + width;
-				int* dst = baseDst + y * lvlWidth;
+			for (int y = 0; y < height; y++) {
+				int srcY = (y << 1);
+				int* src0 = baseSrc + srcY * srcWidth, src1 = src0 + srcWidth;
+				int* dst = baseDst + y * width;
 				
-				for (int x = 0; x < lvlWidth; x++) {
-					int srcX = x * width / lvlWidth;
+				for (int x = 0; x < width; x++) {
+					int srcX = (x << 1);
 					int src00 = src0[srcX], src01 = src0[srcX + 1];
 					int src10 = src1[srcX], src11 = src1[srcX + 1];
 					
