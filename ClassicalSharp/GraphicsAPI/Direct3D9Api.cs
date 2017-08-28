@@ -51,6 +51,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				}
 			}
 			
+			CustomMipmapsLevels = true;
 			caps = device.Capabilities;
 			viewStack = new MatrixStack(device, TransformState.View);
 			projStack = new MatrixStack(device, TransformState.Projection);
@@ -193,7 +194,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			int lvls = MipmapsLevels(width, height);
 			
 			for (int lvl = 1; lvl <= lvls; lvl++) {
-				x /= 2; y /= 2; width /= 2; height /= 2;
+				x /= 2; y /= 2; 
+				if (width > 1)   width /= 2;
+				if (height > 1) height /= 2;
 				int size = width * height * 4;
 				
 				IntPtr cur = Marshal.AllocHGlobal(size);

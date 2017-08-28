@@ -33,6 +33,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Whether mipmapping of terrain textures is used. </summary>
 		public bool Mipmaps;
+
+		/// <summary> Whether the backend supports setting the number of custom mipmaps levels. </summary>
+		public bool CustomMipmapsLevels;
 		
 		/// <summary> Delegate that is invoked when the current context is lost,
 		/// and is repeatedly invoked until the context can be retrieved. </summary>

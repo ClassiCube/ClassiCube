@@ -27,6 +27,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			texDimensions = texDims;
 			
 			glLists = Options.GetBool(OptionsKey.ForceOldOpenGL, false);
+			CustomMipmapsLevels = !glLists;
 			CheckVboSupport();
 			base.InitDynamicBuffers();
 			
@@ -52,6 +53,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.UseArbVboAddresses();
 			} else {
 				glLists = true;
+				CustomMipmapsLevels = false;
 			}
 		}
 
@@ -169,7 +171,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			if (mipmaps) {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.NearestMipmapLinear);
-				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, MipmapsLevels(width, height));
+				if (CustomMipmapsLevels) {
+					GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, MipmapsLevels(width, height));
+				}
 			} else {
 				GL.TexParameteri(TextureTarget.Texture2D, TextureParameterName.MinFilter, (int)TextureFilter.Nearest);
 			}
@@ -187,7 +191,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			int lvls = MipmapsLevels(width, height);
 			
 			for (int lvl = 1; lvl <= lvls; lvl++) {
-				x /= 2; y /= 2; width /= 2; height /= 2;
+				x /= 2; y /= 2;
+				if (width > 1)   width /= 2;
+				if (height > 1) height /= 2;
 				int size = width * height * 4;
 				
 				IntPtr cur = Marshal.AllocHGlobal(size);

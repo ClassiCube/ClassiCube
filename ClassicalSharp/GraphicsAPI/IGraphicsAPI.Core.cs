@@ -197,10 +197,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		internal static int MipmapsLevels(int width, int height) {
+		internal int MipmapsLevels(int width, int height) {
 			int lvlsWidth = Utils.Log2(width), lvlsHeight = Utils.Log2(height);	
-			int lvls = Math.Min(lvlsWidth, lvlsHeight);
-			return Math.Min(lvls, 4);
+			if (CustomMipmapsLevels) {
+				int lvls = Math.Min(lvlsWidth, lvlsHeight);
+				return Math.Min(lvls, 4);
+			} else {
+				return Math.Max(lvlsWidth, lvlsHeight);			
+			}
 		}
 	}
 

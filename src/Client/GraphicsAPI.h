@@ -34,6 +34,9 @@ bool Gfx_LostContext;
 /* Whether mipmapping of terrain textures is used. */
 bool Gfx_Mipmaps;
 
+/* Whether the backend supports setting the number of custom mipmaps levels. */
+bool Gfx_CustomMipmapsLevels;
+
 /* Maximum number of vertices that can be indexed. */
 #define Gfx_MaxIndices (65536 / 4 * 6)
 /* Maximum number of vertices that can be indexed. */

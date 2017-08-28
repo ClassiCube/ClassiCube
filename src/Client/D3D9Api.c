@@ -233,6 +233,7 @@ void Gfx_Init(void) {
 	Platform_MemSet(&caps, 0, sizeof(D3DCAPS9));
 	IDirect3DDevice9_GetDeviceCaps(device, &caps);
 
+	Gfx_CustomMipmapsLevels = true;
 	viewStack.Type = D3DTS_VIEW;
 	projStack.Type = D3DTS_PROJECTION;
 	texStack.Type = D3DTS_TEXTURE0;
@@ -321,10 +322,12 @@ void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, b
 	Int32 lvl, width = bmp->Width, height = bmp->Height;
 
 	for (lvl = 1; lvl <= lvls; lvl++) {
-		x /= 2; y /= 2; width /= 2; height /= 2;
+		x /= 2; y /= 2; 
+		if (width > 1)   width /= 2; 
+		if (height > 1) height /= 2;
 		UInt32 size = Bitmap_DataSize(width, height);
-		UInt8* cur = Platform_MemAlloc(size);
 
+		UInt8* cur = Platform_MemAlloc(size);
 		if (cur == NULL) {
 			ErrorHandler_Fail("Allocating memory for mipmaps");
 		}
