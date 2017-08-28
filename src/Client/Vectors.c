@@ -75,11 +75,13 @@ void Vector3_Divide3(Vector3* result, Vector3* a, Vector3* scale) {
 	result->Z = a->Z / scale->Z;
 }
 
-void Vector3I_Negate(Vector3I* result, Vector3I* a) {
-	result->X = -a->X;
-	result->Y = -a->Y;
-	result->Z = -a->Z;
-}
+#define Vec3_Negate(result, a)\
+result->X = -a->X;\
+result->Y = -a->Y;\
+result->Z = -a->Z;
+
+void Vector3_Negate(Vector3* result, Vector3* a) { Vec3_Negate(result, a); }
+void Vector3I_Negate(Vector3I* result, Vector3I* a) { Vec3_Negate(result, a); }
 
 
 void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, Real32 blend) {
@@ -93,40 +95,44 @@ Real32 Vector3_Dot(Vector3* a, Vector3* b) {
 }
 
 void Vector3_Cross(Vector3* result, Vector3* a, Vector3* b) {
-	result->X = a->Y * b->Z - a->Z * b->Y;
-	result->Y = a->Z * b->X - a->X * b->Z;
-	result->Z = a->X * b->Y - a->Y * b->X;
+	/* a or b could be pointing to result - can't directly assign X/Y/Z therefore */
+	Real32 x = a->Y * b->Z - a->Z * b->Y;
+	Real32 y = a->Z * b->X - a->X * b->Z;
+	Real32 z = a->X * b->Y - a->Y * b->X;
+	result->X = x; result->Y = y; result->Z = z;
 }
 
 void Vector3_Normalize(Vector3* result, Vector3* a) {
-	float scale = 1.0f / Vector3_Length(a);
+	Real32 scale = 1.0f / Vector3_Length(a);
 	result->X = a->X * scale;
 	result->Y = a->Y * scale;
 	result->Z = a->Z * scale;
 }
 
 void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat) {
-	result->X = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
-	result->Y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
-	result->Z = a->X * mat->Row0.Z + a->Y * mat->Row1.Z + a->Z * mat->Row2.Z + mat->Row3.Z;
+	/* a could be pointing to result - can't directly assign X/Y/Z therefore */
+	Real32 x = a->X * mat->Row0.X + a->Y * mat->Row1.X + a->Z * mat->Row2.X + mat->Row3.X;
+	Real32 y = a->X * mat->Row0.Y + a->Y * mat->Row1.Y + a->Z * mat->Row2.Y + mat->Row3.Y;
+	Real32 z = a->X * mat->Row0.Z + a->Y * mat->Row1.Z + a->Z * mat->Row2.Z + mat->Row3.Z;
+	result->X = x; result->Y = y; result->Z = z;
 }
 
 void Vector3_TransformX(Vector3* result, Real32 x, Matrix* mat) {
 	result->X = x * mat->Row0.X + mat->Row3.X;
 	result->Y = x * mat->Row0.Y + mat->Row3.Y;
-	result->Z = x * mat->Row0.Z + mat->Row3.Z;;
+	result->Z = x * mat->Row0.Z + mat->Row3.Z;
 }
 
 void Vector3_TransformY(Vector3* result, Real32 y, Matrix* mat) {
 	result->X = y * mat->Row1.X + mat->Row3.X;
 	result->Y = y * mat->Row1.Y + mat->Row3.Y;
-	result->Z = y * mat->Row1.Z + mat->Row3.Z;;
+	result->Z = y * mat->Row1.Z + mat->Row3.Z;
 }
 
 void Vector3_TransformZ(Vector3* result, Real32 z, Matrix* mat) {
 	result->X = z * mat->Row2.X + mat->Row3.X;
 	result->Y = z * mat->Row2.Y + mat->Row3.Y;
-	result->Z = z * mat->Row2.Z + mat->Row3.Z;;
+	result->Z = z * mat->Row2.Z + mat->Row3.Z;
 }
 
 Vector3 Vector3_RotateX(Vector3 v, Real32 angle) {

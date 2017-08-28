@@ -1,5 +1,6 @@
 #include "Matrix.h"
 #include "ExtMath.h"
+#include "Vectors.h"
 
 Matrix Matrix_Identity = {
 	1.0f, 0.0f, 0.0f, 0.0f,
@@ -115,4 +116,22 @@ void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real
 	result->Row2.Y = (top + bottom) / (top - bottom);
 	result->Row2.Z = -(zFar + zNear) / (zFar - zNear);
 	result->Row2.W = -1.0f;
+}
+
+
+void Matrix_LookAt(Matrix* result, Vector3 eye, Vector3 target, Vector3 up) {
+	/* Transposed, sourced from https://msdn.microsoft.com/en-us/library/windows/desktop/bb281711(v=vs.85).aspx */
+	Vector3 x, y, z;
+	Vector3_Sub(&z, &eye, &target); Vector3_Normalize(&z, &z);
+	Vector3_Cross(&x, &up, &z);     Vector3_Normalize(&x, &x);
+	Vector3_Cross(&y, &z, &x);      Vector3_Normalize(&y, &y);
+
+	result->Row0.X = x.X; result->Row0.Y = y.X; result->Row0.Z = z.X; result->Row0.W = 0.0f;
+	result->Row1.X = x.Y; result->Row1.Y = y.Y; result->Row1.Z = z.Y; result->Row1.W = 0.0f;
+	result->Row2.X = x.Z; result->Row2.Y = y.Z; result->Row2.Z = z.Z; result->Row2.W = 0.0f;
+
+	result->Row3.X = -Vector3_Dot(&x, &eye);
+	result->Row3.Y = -Vector3_Dot(&y, &eye);
+	result->Row3.Z = -Vector3_Dot(&z, &eye);
+	result->Row3.W = 1.0f;
 }

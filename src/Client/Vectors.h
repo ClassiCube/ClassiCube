@@ -66,6 +66,8 @@ void Vector3_Divide1(Vector3* result, Vector3* a, Real32 scale);
 /* Divides components of a by scale. */
 void Vector3_Divide3(Vector3* result, Vector3* a, Vector3* scale);
 /* Negates components of a. */
+void Vector3_Negate(Vector3* result, Vector3* a);
+/* Negates components of a. */
 void Vector3I_Negate(Vector3I* result, Vector3I* a);
 
 /* Linearly interpolates between two vectors. */

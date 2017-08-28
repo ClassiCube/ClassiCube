@@ -173,11 +173,10 @@ namespace ClassicalSharp {
 		}
 		
 		public override Matrix4 GetView() {
+			Vector3 camPos = game.CurrentCameraPos;
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
-			
-			Vector3 cameraPos = game.CurrentCameraPos;
-			return Matrix4.LookAt(cameraPos, eyePos, Vector3.UnitY) * tiltM;
+			return Matrix4.LookAt(camPos, eyePos, Vector3.UnitY) * tiltM;
 		}
 		
 		public override Vector2 GetCameraOrientation() {
