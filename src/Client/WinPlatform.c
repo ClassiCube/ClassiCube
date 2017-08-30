@@ -41,12 +41,6 @@ void Platform_Log(String message) {
 	/* TODO: log to console */
 }
 
-void Platform_NewUuid(UInt8* uuid) {
-	GUID guid;
-	CoCreateGuid(&guid);
-	Platform_MemCpy(uuid, &guid, 16);
-}
-
 /* Not worth making this an actual function, just use an inline macro. */
 #define Platform_ReturnDateTime(sysTime)\
 DateTime time;\

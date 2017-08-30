@@ -77,11 +77,12 @@ bool Entity_TouchesAny(AABB* bounds, TouchesAny_Condition condition) {
 	Vector3 v;
 
 	/* Order loops so that we minimise cache misses */
-	for (Int32 y = bbMin.Y; y <= bbMax.Y; y++) {
+	Int32 x, y, z;
+	for (y = bbMin.Y; y <= bbMax.Y; y++) {
 		v.Y = (Real32)y;
-		for (Int32 z = bbMin.Z; z <= bbMax.Z; z++) {
+		for (z = bbMin.Z; z <= bbMax.Z; z++) {
 			v.Z = (Real32)z;
-			for (Int32 x = bbMin.X; x <= bbMax.X; x++) {
+			for (x = bbMin.X; x <= bbMax.X; x++) {
 				if (!World_IsValidPos(x, y, z)) continue;
 				v.X = (Real32)x;
 
