@@ -21,7 +21,7 @@ void FrustumCulling_Normalise(Real32* plane0, Real32* plane1, Real32* plane2, Re
 }
 
 bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius) {
-	float d = frustum00 * x + frustum01 * y + frustum02 * z + frustum03;
+	Real32 d = frustum00 * x + frustum01 * y + frustum02 * z + frustum03;
 	if (d <= -radius) return false;
 
 	d = frustum10 * x + frustum11 * y + frustum12 * z + frustum13;

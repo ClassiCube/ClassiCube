@@ -284,7 +284,7 @@ void NotchyGen_FloodFillLava(void) {
 
 	Int32 i;
 	for (i = 0; i < numSources; i++) {
-		Gen_CurrentProgress = (float)i / numSources;
+		Gen_CurrentProgress = (Real32)i / numSources;
 		Int32 x = Random_Next(&rnd, Gen_Width);
 		Int32 z = Random_Next(&rnd, Gen_Length);
 		Int32 y = (Int32)((waterLevel - 3) * Random_Float(&rnd) * Random_Float(&rnd));

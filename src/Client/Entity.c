@@ -49,15 +49,15 @@ void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale, Matrix* m) 
 	Matrix tmp;
 
 	Matrix_RotateZ(&tmp, -entity->RotZ * MATH_DEG2RAD);
-	Matrix_Mult(m, m, &tmp);
+	Matrix_MulBy(m, &tmp);
 	Matrix_RotateX(&tmp, -entity->RotX * MATH_DEG2RAD);
-	Matrix_Mult(m, m, &tmp);
+	Matrix_MulBy(m, &tmp);
 	Matrix_RotateY(&tmp, -entity->RotY * MATH_DEG2RAD);
-	Matrix_Mult(m, m, &tmp);
+	Matrix_MulBy(m, &tmp);
 	Matrix_Scale(&tmp, scale.X, scale.Y, scale.Z);
-	Matrix_Mult(m, m, &tmp);
+	Matrix_MulBy(m, &tmp);
 	Matrix_Translate(&tmp, pos.X, pos.Y, pos.Z);
-	Matrix_Mult(m, m, &tmp);
+	Matrix_MulBy(m, &tmp);
 	/* return rotZ * rotX * rotY * scale * translate; */
 }
 

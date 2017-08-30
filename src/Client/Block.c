@@ -26,7 +26,7 @@ void Block_Reset(void) {
 }
 
 void Block_Init(void) {
-	Int32 count = sizeof(DefinedCustomBlocks) / sizeof(DefinedCustomBlocks[0]);
+	Int32 count = Array_NumElements(DefinedCustomBlocks);
 	Int32 i;
 	for (i = 0; i < count; i++) {
 		DefinedCustomBlocks[i] = 0;
@@ -293,7 +293,7 @@ Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp)
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
 			if ((UInt8)(row[x] >> 24) != 0) {
-				return 1 - (float)y / size;
+				return 1 - (Real32)y / size;
 			}
 		}
 	}
@@ -306,7 +306,7 @@ Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* b
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
 			if ((UInt8)(row[x] >> 24) != 0) {
-				return 1 - (float)(y + 1) / size;
+				return 1 - (Real32)(y + 1) / size;
 			}
 		}
 	}
@@ -319,7 +319,7 @@ Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp
 		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if ((UInt8)(row[x] >> 24) != 0) {
-				return (float)x / size;
+				return (Real32)x / size;
 			}
 		}
 	}
@@ -332,7 +332,7 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if ((UInt8)(row[x] >> 24) != 0) {
-				return (float)(x + 1) / size;
+				return (Real32)(x + 1) / size;
 			}
 		}
 	}

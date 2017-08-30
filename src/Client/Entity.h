@@ -6,6 +6,7 @@
 #include "AABB.h"
 #include "EntityComponents.h"
 #include "GraphicsEnums.h"
+#include "Matrix.h"
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

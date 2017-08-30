@@ -466,7 +466,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int height = Math.Max(input.Height + input.YOffset, hud.BottomOffset);
 			height += input.YOffset;
 			altText.texture.Y1 = game.Height - (height + altText.texture.Height);
-			altText.Y = altText.texture.Y1;
+			altText.Y = altText.texture.Y;
 		}
 		
 		void SetHandlesAllInput(bool handles) {

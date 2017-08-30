@@ -31,14 +31,12 @@ typedef struct TiltComp_ {
 	Real32 VelTiltStrengthO, VelTiltStrengthN;
 } TiltComp;
 
-
 /* Initalises default values for a tilt component. */
 void TiltComp_Init(TiltComp* anim);
 /* Calculates the next tilt animation state. */
 void TiltComp_Update(TiltComp* anim, Real64 delta);
 /*  Calculates the interpolated state between the last and next tilt animation state. */
 void TiltComp_GetCurrent(TiltComp* anim, Real32 t);
-
 
 
 /* Entity component that performs management of hack states. */
@@ -101,23 +99,18 @@ typedef struct HacksComponent_ {
 } HacksComp;
 
 /* Initalises the state of this HacksComponent. */
-void HacksComponent_Init(HacksComp* hacks);
-
+void HacksComp_Init(HacksComp* hacks);
 /* Returns whether hacks flags allow for jumping higher usage. */
-bool HacksComponent_CanJumpHigher(HacksComp* hacks);
-
+bool HacksComp_CanJumpHigher(HacksComp* hacks);
 /* Returns whether noclip or flying modes are on.*/
-bool HacksComponent_Floating(HacksComp* hacks);
-
+bool HacksComp_Floating(HacksComp* hacks);
 /* Sets the user type of this user. This is used to control permissions for grass,
 bedrock, water and lava blocks on servers that don't support CPE block permissions. */
-void HacksComponent_SetUserType(HacksComp* hacks, UInt8 value);
-
+void HacksComp_SetUserType(HacksComp* hacks, UInt8 value);
 /* Disables any hacks if their respective CanHackX value is set to false. */
-void HacksComponent_CheckConsistency(HacksComp* hacks);
-
+void HacksComp_CheckConsistency(HacksComp* hacks);
 /* Updates ability to use hacks, and raises UserEvents_HackPermissionsChanged event.
 Parses hack flags specified in the motd and/or name of the server.
 Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz */
-void HacksComponent_UpdateState(HacksComp* hacks);
+void HacksComp_UpdateState(HacksComp* hacks);
 #endif

@@ -129,16 +129,17 @@ void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
 	anim->TiltY = Math_Sin(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
 
-void HacksComponent_SetAll(HacksComp* hacks, bool allowed) {
+
+void HacksComp_SetAll(HacksComp* hacks, bool allowed) {
 	hacks->CanAnyHacks = allowed; hacks->CanFly = allowed;
 	hacks->CanNoclip = allowed; hacks->CanRespawn = allowed;
 	hacks->CanSpeed = allowed; hacks->CanPushbackBlocks = allowed;
 	hacks->CanUseThirdPersonCamera = allowed;
 }
 
-void HacksComponent_Init(HacksComp* hacks) {
+void HacksComp_Init(HacksComp* hacks) {
 	Platform_MemSet(hacks, 0, sizeof(HacksComp));
-	HacksComponent_SetAll(hacks, true);
+	HacksComp_SetAll(hacks, true);
 	hacks->SpeedMultiplier = 10.0f;
 	hacks->Enabled = true;
 	hacks->CanSeeAllNames = true;
@@ -149,15 +150,15 @@ void HacksComponent_Init(HacksComp* hacks) {
 	hacks->HacksFlags = String_FromRawBuffer(&hacks->HacksFlagsBuffer[0], 128);
 }
 
-bool HacksComponent_CanJumpHigher(HacksComp* hacks) {
+bool HacksComp_CanJumpHigher(HacksComp* hacks) {
 	return hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed;
 }
 
-bool HacksComponent_Floating(HacksComp* hacks) {
+bool HacksComp_Floating(HacksComp* hacks) {
 	return hacks->Noclip || hacks->Flying;
 }
 
-String HacksComponent_GetFlagValue(String* flag, HacksComp* hacks) {
+String HacksComp_GetFlagValue(String* flag, HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
 	Int32 start = String_IndexOfString(joined, flag);
 	if (start < 0) return String_MakeNull();
@@ -169,9 +170,9 @@ String HacksComponent_GetFlagValue(String* flag, HacksComp* hacks) {
 	return String_UNSAFE_Substring(joined, start, end - start);
 }
 
-void HacksComponent_ParseHorizontalSpeed(HacksComp* hacks) {
+void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
 	String horSpeedFlag = String_FromConstant("horspeed=");
-	String speedStr = HacksComponent_GetFlagValue(&horSpeedFlag, hacks);
+	String speedStr = HacksComp_GetFlagValue(&horSpeedFlag, hacks);
 	if (speedStr.length == 0) return;
 
 	Real32 speed = 0.0f;
@@ -179,9 +180,9 @@ void HacksComponent_ParseHorizontalSpeed(HacksComp* hacks) {
 	hacks->MaxSpeedMultiplier = speed;
 }
 
-void HacksComponent_ParseMultiSpeed(HacksComp* hacks) {
+void HacksComp_ParseMultiSpeed(HacksComp* hacks) {
 	String jumpsFlag = String_FromConstant("jumps=");
-	String jumpsStr = HacksComponent_GetFlagValue(&jumpsFlag, hacks);
+	String jumpsStr = HacksComp_GetFlagValue(&jumpsFlag, hacks);
 	if (jumpsStr.length == 0) return;
 
 	Int32 jumps = 0;
@@ -189,7 +190,7 @@ void HacksComponent_ParseMultiSpeed(HacksComp* hacks) {
 	hacks->MaxJumps = jumps;
 }
 
-void HacksComponent_ParseFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag, bool* target) {
+void HacksComp_ParseFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag, bool* target) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
@@ -201,21 +202,21 @@ void HacksComponent_ParseFlag(HacksComp* hacks, const UInt8* incFlag, const UInt
 	}
 }
 
-void HacksComponent_ParseAllFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag) {
+void HacksComp_ParseAllFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
 
 	if (String_ContainsString(joined, &include)) {
-		HacksComponent_SetAll(hacks, true);
+		HacksComp_SetAll(hacks, true);
 	} else if (String_ContainsString(joined, &exclude)) {
-		HacksComponent_SetAll(hacks, false);
+		HacksComp_SetAll(hacks, false);
 	}
 }
 
 /* Sets the user type of this user. This is used to control permissions for grass,
 bedrock, water and lava blocks on servers that don't support CPE block permissions. */
-void HacksComponent_SetUserType(HacksComp* hacks, UInt8 value) {
+void HacksComp_SetUserType(HacksComp* hacks, UInt8 value) {
 	bool isOp = value >= 100 && value <= 127;
 	hacks->UserType = value;
 	Block_CanPlace[BlockID_Bedrock] = isOp;
@@ -229,7 +230,7 @@ void HacksComponent_SetUserType(HacksComp* hacks, UInt8 value) {
 }
 
 /* Disables any hacks if their respective CanHackX value is set to false. */
-void HacksComponent_CheckConsistency(HacksComp* hacks) {
+void HacksComp_CheckConsistency(HacksComp* hacks) {
 	if (!hacks->CanFly || !hacks->Enabled) { 
 		hacks->Flying = false; hacks->FlyingDown = false; hacks->FlyingUp = false; 
 	}
@@ -252,8 +253,8 @@ void HacksComponent_CheckConsistency(HacksComp* hacks) {
 /* Updates ability to use hacks, and raises HackPermissionsChanged event. 
 Parses hack flags specified in the motd and/or name of the server.
 Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz */
-void HacksComponent_UpdateState(HacksComp* hacks) {
-	HacksComponent_SetAll(hacks, true);
+void HacksComp_UpdateState(HacksComp* hacks) {
+	HacksComp_SetAll(hacks, true);
 	if (hacks->HacksFlags.length == 0) return;
 
 	hacks->MaxSpeedMultiplier = 1;
@@ -261,20 +262,20 @@ void HacksComponent_UpdateState(HacksComp* hacks) {
 	/* By default (this is also the case with WoM), we can use hacks. */
 	String excHacks = String_FromConstant("-hax");
 	if (String_ContainsString(&hacks->HacksFlags, &excHacks)) {
-		HacksComponent_SetAll(hacks, false);
+		HacksComp_SetAll(hacks, false);
 	}
 
-	HacksComponent_ParseFlag(hacks, "+fly", "-fly", &hacks->CanFly);
-	HacksComponent_ParseFlag(hacks, "+noclip", "-noclip", &hacks->CanNoclip);
-	HacksComponent_ParseFlag(hacks, "+speed", "-speed", &hacks->CanSpeed);
-	HacksComponent_ParseFlag(hacks, "+respawn", "-respawn", &hacks->CanRespawn);
+	HacksComp_ParseFlag(hacks, "+fly", "-fly", &hacks->CanFly);
+	HacksComp_ParseFlag(hacks, "+noclip", "-noclip", &hacks->CanNoclip);
+	HacksComp_ParseFlag(hacks, "+speed", "-speed", &hacks->CanSpeed);
+	HacksComp_ParseFlag(hacks, "+respawn", "-respawn", &hacks->CanRespawn);
 
 	if (hacks->UserType == 0x64) {
-		HacksComponent_ParseAllFlag(hacks, "+ophax", "-ophax");
+		HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
 	}
-	HacksComponent_ParseHorizontalSpeed(hacks);
-	HacksComponent_ParseMultiSpeed(hacks);
+	HacksComp_ParseHorizontalSpeed(hacks);
+	HacksComp_ParseMultiSpeed(hacks);
 
-	HacksComponent_CheckConsistency(hacks);
+	HacksComp_CheckConsistency(hacks);
 	Event_RaiseVoid(&UserEvents_HackPermissionsChanged);
 }

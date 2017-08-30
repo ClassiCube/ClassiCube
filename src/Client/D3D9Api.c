@@ -4,6 +4,7 @@
 #include "Platform.h"
 #include "Window.h"
 #include "GraphicsCommon.h"
+#include "Funcs.h"
 
 #ifdef USE_DX
 //#define D3D_DISABLE_9EX causes compile errors
@@ -149,7 +150,7 @@ void D3D9_LoopUntilRetrieved(void) {
 }
 
 void D3D9_FindCompatibleFormat(void) {
-	Int32 count = sizeof(d3d9_viewFormats) / sizeof(d3d9_viewFormats[0]);
+	Int32 count = Array_NumElements(d3d9_viewFormats);
 	Int32 i;
 	ReturnCode res;
 
@@ -163,7 +164,7 @@ void D3D9_FindCompatibleFormat(void) {
 		}
 	}
 
-	count = sizeof(d3d9_depthFormats) / sizeof(d3d9_depthFormats[0]);
+	count = Array_NumElements(d3d9_depthFormats);
 	for (i = 0; i < count; i++) {
 		d3d9_depthFormat = d3d9_depthFormats[i];
 		res = IDirect3D9_CheckDepthStencilMatch(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, d3d9_viewFormat, d3d9_viewFormat, d3d9_depthFormat);

@@ -70,7 +70,7 @@ void PerspectiveCamera_RegrabMouse(void) {
 #define adjust 0.025f
 
 Real32 speedX = 0.0f, speedY = 0.0f;
-void PersepctiveCamera_UpdateMouseRotation(void) {
+void PerspectiveCamera_UpdateMouseRotation(void) {
 	Real32 sensitivity = sensiFactor * Game_MouseSensitivity;
 
 	if (Game_SmoothCamera) {
@@ -98,8 +98,8 @@ void PersepctiveCamera_UpdateMouseRotation(void) {
 
 void PerspectiveCamera_UpdateMouse(void) {
 	if (game.Gui.ActiveScreen.HandlesAllInput) return;
-	CentreMousePosition();
-	UpdateMouseRotation();
+	PerspectiveCamera_CentreMousePosition();
+	PerspectiveCamera_UpdateMouseRotation();
 }
 
 void PerspectiveCamera_CalcViewBobbing(Real32 t, Real32 velTiltScale) {
@@ -179,7 +179,7 @@ void ThirdPersonCamera_GetView(Matrix* mat) {
 }
 
 Vector3 ThirdPersonCamera_GetCameraPosShared(Real32 t, Real32 dist, bool forward) {
-	CalcViewBobbing(t, dist);
+	PerspectiveCamera_CalcViewBobbing(t, dist);
 	Entity* p = &LocalPlayer_Instance.Base.Base;
 	Vector3 eyePos = Entity_GetEyePosition(p);
 	eyePos.Y += Camera_BobbingVer;

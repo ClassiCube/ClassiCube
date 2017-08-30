@@ -122,9 +122,9 @@ void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real
 void Matrix_LookAt(Matrix* result, Vector3 eye, Vector3 target, Vector3 up) {
 	/* Transposed, sourced from https://msdn.microsoft.com/en-us/library/windows/desktop/bb281711(v=vs.85).aspx */
 	Vector3 x, y, z;
-	Vector3_Sub(&z, &eye, &target); Vector3_Normalize(&z, &z);
-	Vector3_Cross(&x, &up, &z);     Vector3_Normalize(&x, &x);
-	Vector3_Cross(&y, &z, &x);      Vector3_Normalize(&y, &y);
+	Vector3_Subtract(&z, &eye, &target); Vector3_Normalize(&z, &z);
+	Vector3_Cross(&x, &up, &z);          Vector3_Normalize(&x, &x);
+	Vector3_Cross(&y, &z, &x);           Vector3_Normalize(&y, &y);
 
 	result->Row0.X = x.X; result->Row0.Y = y.X; result->Row0.Z = z.X; result->Row0.W = 0.0f;
 	result->Row1.X = x.Y; result->Row1.Y = y.Y; result->Row1.Z = z.Y; result->Row1.W = 0.0f;
