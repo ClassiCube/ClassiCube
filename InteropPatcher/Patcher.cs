@@ -22,6 +22,7 @@ using System.IO;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Pdb;
+using Mono.Collections.Generic;
 
 namespace InteropPatcher {
 	
@@ -66,7 +67,7 @@ namespace InteropPatcher {
 			if( !method.HasBody ) return;
 			ILProcessor ilProcessor = method.Body.GetILProcessor();
 
-			var instructions = method.Body.Instructions;
+			Collection<Instruction> instructions = method.Body.Instructions;
 			for (int i = 0; i < instructions.Count; i++)
 			{
 				Instruction instruction = instructions[i];
