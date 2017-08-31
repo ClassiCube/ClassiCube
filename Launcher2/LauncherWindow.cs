@@ -61,11 +61,6 @@ namespace Launcher {
 			get { return Window.WindowState == WindowState.Minimized || (Width == 1 && Height == 1); }
 		}
 		
-		/// <summary> Contains metadata attached for different screen instances,
-		/// typically used to save 'last text entered' text when a screen is disposed. </summary>
-		public Dictionary<string, Dictionary<string, object>> ScreenMetadata =
-			new Dictionary<string, Dictionary<string, object>>();
-		
 		internal ResourceFetcher fetcher;
 		internal UpdateCheckTask checkTask;
 		bool fullRedraw;

@@ -107,7 +107,7 @@ namespace ClassicalSharp {
 		public PickedPosRenderer Picking;
 		public PickedPos SelectedPos = new PickedPos(), CameraClipPos = new PickedPos();
 		public ModelCache ModelCache;
-		internal string skinServer, chatInInputBuffer = null;
+		internal string skinServer;
 		internal int defaultIb;
 		public OtherEvents Events = new OtherEvents();
 		public EntityEvents EntityEvents = new EntityEvents();

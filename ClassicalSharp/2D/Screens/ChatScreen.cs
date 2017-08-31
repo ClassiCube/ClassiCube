@@ -26,6 +26,9 @@ namespace ClassicalSharp.Gui.Screens {
 		AltTextInputWidget altText;
 		
 		Font chatFont, chatUrlFont, announcementFont;
+		// needed for lost contexts, to restore chat typed in
+		static string chatInInputBuffer = null;
+		
 		public override void Init() {
 			float textScale = game.Drawer2D.UseBitmappedChat ? 1.25f : 1;
 			int fontSize = (int)(8 * game.GuiChatScale);
@@ -89,9 +92,9 @@ namespace ClassicalSharp.Gui.Screens {
 			for (int i = 0; i < chat.ClientStatus.Length; i++)
 				clientStatus.SetText(i, chat.ClientStatus[i].Text);
 			
-			if (game.chatInInputBuffer != null) {
-				OpenTextInputBar(game.chatInInputBuffer);
-				game.chatInInputBuffer = null;
+			if (chatInInputBuffer != null) {
+				OpenTextInputBar(chatInInputBuffer);
+				chatInInputBuffer = null;
 			}
 		}
 		
@@ -265,10 +268,10 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextLost() {
 			if (HandlesAllInput) {
-				game.chatInInputBuffer = input.Text.ToString();
+				chatInInputBuffer = input.Text.ToString();
 				game.CursorVisible = false;
 			} else {
-				game.chatInInputBuffer = null;
+				chatInInputBuffer = null;
 			}
 
 			normalChat.Dispose();

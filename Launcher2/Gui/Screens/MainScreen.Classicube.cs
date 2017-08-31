@@ -132,22 +132,17 @@ namespace Launcher.Gui.Screens {
 			game.Dirty = true;
 		}
 		
+		static string cachedUser, cachedPass;
 		void StoreFields() {
-			Dictionary<string, object> metadata;
-			if (!game.ScreenMetadata.TryGetValue("screen-CC", out metadata)) {
-				metadata = new Dictionary<string, object>();
-				game.ScreenMetadata["screen-CC"] = metadata;
-			}
-			metadata["user"] = Get(0);
-			metadata["pass"] = Get(1);
+			cachedUser = Get(0);
+			cachedPass = Get(1);
 		}
 		
 		void LoadSavedInfo() {
-			Dictionary<string, object> metadata;
 			// restore what user last typed into the various fields
-			if (game.ScreenMetadata.TryGetValue("screen-CC", out metadata)) {
-				Set(0, (string)metadata["user"]);
-				Set(1, (string)metadata["pass"]);
+			if (cachedUser != null) {
+				Set(0, cachedUser);
+				Set(1, cachedPass);
 			} else {
 				LoadFromOptions();
 			}
