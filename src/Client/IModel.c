@@ -20,6 +20,9 @@ void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Rea
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
 
+void IModel_GetTransform(Matrix* m, Entity* entity, Vector3 pos) {
+	Entity_GetTransform(entity, pos, entity->ModelScale, m);
+}
 
 void IModel_Init(IModel* model) {
 	model->Bobbing = true;
@@ -35,6 +38,8 @@ void IModel_Init(IModel* model) {
 	model->MaxScale = 2.0f;
 	model->ShadowScale = 1.0f;
 	model->NameScale = 1.0f;
+
+	model->GetTransform = IModel_GetTransform;
 }
 
 bool IModel_ShouldRender(Entity* entity) {

@@ -1,4 +1,3 @@
-#if 0
 #include "IModel.h"
 #include "GraphicsAPI.h"
 #include "ExtMath.h"
@@ -808,7 +807,7 @@ Vector3 ChibiModel_GetCollisionSize(void) {
 void ChibiModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f,          0.0f, -4.0f / 16.0f, 
-		4.0f  / 16.0f, 16.0f / 16.0f, 4.0f  / 16.0f);
+		 4.0f / 16.0f, 16.0f / 16.0f,  4.0f / 16.0f);
 }
 
 void ChibiModel_DrawModel(Entity* entity) {
@@ -829,4 +828,82 @@ IModel* ChibiModel_GetInstance(void) {
 	ChibiModel.ShadowScale = 0.5f;
 	return &ChibiModel;
 }
-#endif
+
+
+IModel SittingModel;
+#define SIT_OFFSET 10.0f
+void SittingModel_CreateParts(void) { }
+
+Real32 SittingModel_GetNameYOffset(void) { return (32.0f + 0.5f) / 16.0f; }
+Real32 SittingModel_GetEyeY(Entity* entity) { return (26.0f - SIT_OFFSET) / 16.0f; }
+Vector3 SittingModel_GetCollisionSize(void) {
+	return Vector3_Create3((8.0f + 0.6f) / 16.0f, (28.1f - SIT_OFFSET) / 16.0f, (8.0f + 0.6f) / 16.0f);
+}
+void SittingModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb,
+		-8.0f / 16.0f,                         0.0f, -4.0f / 16.0f,
+		 8.0f / 16.0f, (32.0f - SIT_OFFSET) / 16.0f,  4.0f / 16.0f);
+}
+
+void SittingModel_GetTransform(Matrix* m, Entity* p, Vector3 pos) {
+	pos.Y -= (SIT_OFFSET / 16.0f) * p->ModelScale.Y;
+	Entity_GetTransform(p, pos, p->ModelScale, m);
+}
+
+void SittingModel_DrawModel(Entity* p) {
+	p->Anim.LeftLegX = 1.5f;  p->Anim.RightLegX = 1.5f;
+	p->Anim.LeftLegZ = -0.1f; p->Anim.RightLegZ = 0.1f;
+	IModel_SetupState(&HumanoidModel, p);
+	IModel_Render(&HumanoidModel, p);
+}
+
+IModel* SittingModel_GetInstance(void) {
+	IModel_Init(&SittingModel);
+	IModel_SetPointers(SittingModel);
+	SittingModel.CalcHumanAnims = true;
+	SittingModel.UsesHumanSkin = true;
+	SittingModel.ShadowScale = 0.5f;
+	return &SittingModel;
+}
+
+
+IModel HeadModel;
+void HeadModel_CreateParts(void) { }
+
+Real32 HeadModel_GetNameYOffset(void) { return (32.0f + 0.5f) / 16.0f; }
+Real32 HeadModel_GetEyeY(Entity* entity) { return 6.0f / 16.0f; }
+Vector3 HeadModel_GetCollisionSize(void) {
+	return Vector3_Create3(7.9f / 16.0f, 7.9f / 16.0f, 7.9f / 16.0f);
+}
+void HeadModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords6(bb,
+		-4.0f / 16.0f,         0.0f, -4.0f / 16.0f,
+		 4.0f / 16.0f, 8.0f / 16.0f,  4.0f / 16.0f);
+}
+
+void HeadModel_GetTransform(Matrix* m, Entity* p, Vector3 pos) {
+	pos.Y -= (24.0f / 16.0f) * p->ModelScale.Y;
+	Entity_GetTransform(p, pos, p->ModelScale, m);
+}
+
+void HeadModel_DrawModel(Entity* p) {
+	HumanModel_SetupState(p);
+
+	ModelPart part = Humanoid_Set.Head; part.RotY += 4.0f / 16.0f;
+	IModel_DrawRotate(-p->HeadX * MATH_DEG2RAD, 0, 0, part, true);
+	IModel_UpdateVB();
+
+	Gfx_SetAlphaTest(true);
+	IModel_ActiveModel->index = 0;
+	part = Humanoid_Set.Hat; part.RotY += 4.0f / 16.0f;
+	IModel_DrawRotate(-p->HeadX * MATH_DEG2RAD, 0, 0, part, true);
+	IModel_UpdateVB();
+}
+
+IModel* HeadModel_GetInstance(void) {
+	IModel_Init(&HeadModel);
+	IModel_SetPointers(HeadModel);
+	HeadModel.CalcHumanAnims = true;
+	HeadModel.UsesHumanSkin = true;
+	return &HeadModel;
+}

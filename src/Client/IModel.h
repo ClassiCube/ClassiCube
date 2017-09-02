@@ -87,6 +87,8 @@ typedef struct IModel_ {
 	void (*CreateParts)(void);
 	/* Performs the actual rendering of an entity model. */
 	void (*DrawModel)(Entity* entity);
+	/* Gets the transformation matrix of this entity. */
+	void (*GetTransform)(Matrix* m, Entity* entity, Vector3 pos);
 
 	/* The maximum scale the entity can have (for collisions and rendering).*/
 	Real32 MaxScale;
@@ -127,7 +129,7 @@ Real32 IModel_RenderDistance(Entity* entity);
 /*Sets up the state for, then renders an entity model, based on the entity's position and orientation. */
 void IModel_Render(IModel* model, Entity* entity);
 
-void IModel_SetupState(Entity* entity);
+void IModel_SetupState(IModel* model, Entity* entity);
 
 /* Sends the updated vertex data to the GPU. */
 void IModel_UpdateVB(void);
