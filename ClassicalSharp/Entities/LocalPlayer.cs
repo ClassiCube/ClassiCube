@@ -35,7 +35,6 @@ namespace ClassicalSharp.Entities {
 		public LocalPlayer(Game game) : base(game) {
 			DisplayName = game.Username;
 			SkinName = game.Username;
-			SkinIdentifier = "skin_255";
 			
 			collisions = new CollisionsComponent(game, this);
 			Hacks = new HacksComponent(game, this);

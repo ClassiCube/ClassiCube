@@ -52,6 +52,13 @@ bool IModel_ShouldRender(Entity* entity) {
 	return FrustumCulling_SphereInFrustum(pos.X, pos.Y, pos.Z, maxXYZ);
 }
 
+Real32 IModel_MinDist(Real32 dist, Real32 extent) {
+	/* Compare min coord, centre coord, and max coord */
+	Real32 dMin = Math_AbsF(dist - extent), dMax = Math_AbsF(dist + extent);
+	Real32 dMinMax = min(dMin, dMax);
+	return min(Math_AbsF(dist), dMinMax);
+}
+
 Real32 IModel_RenderDistance(Entity* entity) {
 	Vector3 pos = entity->Position;
 	AABB* bb = &entity->ModelAABB;
@@ -62,13 +69,6 @@ Real32 IModel_RenderDistance(Entity* entity) {
 	Real32 dy = IModel_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
 	Real32 dz = IModel_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
 	return dx * dx + dy * dy + dz * dz;
-}
-
-static Real32 IModel_MinDist(Real32 dist, Real32 extent) {
-	/* Compare min coord, centre coord, and max coord */
-	Real32 dMin = Math_AbsF(dist - extent), dMax = Math_AbsF(dist + extent);
-	Real32 dMinMax = min(dMin, dMax);
-	return min(Math_AbsF(dist), dMinMax);
 }
 
 void IModel_UpdateVB(void) {

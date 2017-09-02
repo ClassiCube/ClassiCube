@@ -11,7 +11,6 @@ namespace ClassicalSharp.Entities {
 		public NetPlayer(string displayName, string skinName, Game game, byte id) : base(game) {
 			DisplayName = displayName;
 			SkinName = skinName;
-			SkinIdentifier = "skin_" + id;
 			interp = new NetInterpComponent(game, this);
 		}
 		

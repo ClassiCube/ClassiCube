@@ -57,7 +57,6 @@ namespace ClassicalSharp.Entities {
 		public SkinType SkinType;
 		public AnimatedComponent anim;
 		public float uScale = 1, vScale = 1;
-		protected DateTime lastModelChange = new DateTime(1, 1, 1);
 		public bool NoShade = false;
 		
 		
@@ -136,7 +135,6 @@ namespace ClassicalSharp.Entities {
 			
 			Model = game.ModelCache.Get(ModelName);
 			ParseScale(scale);
-			lastModelChange = DateTime.UtcNow;
 			MobTextureId = -1;
 			
 			Model.RecalcProperties(this);

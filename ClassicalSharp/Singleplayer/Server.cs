@@ -41,7 +41,7 @@ namespace ClassicalSharp.Singleplayer {
 				BlockInfo.CanPlace[i] = true;
 				BlockInfo.CanDelete[i] = true;
 			}
-			game.AsyncDownloader.DownloadSkin(game.LocalPlayer.SkinIdentifier,
+			game.AsyncDownloader.DownloadSkin(game.LocalPlayer.SkinName,
 			                                  game.LocalPlayer.SkinName);
 			
 			game.Events.RaiseBlockPermissionsChanged();

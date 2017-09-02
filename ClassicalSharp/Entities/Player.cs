@@ -13,7 +13,7 @@ namespace ClassicalSharp.Entities {
 
 	public abstract partial class Player : Entity {
 		
-		public string DisplayName, SkinName, SkinIdentifier;
+		public string DisplayName, SkinName;
 		protected Texture nameTex;
 		internal bool fetchedSkin;
 		
@@ -23,8 +23,11 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public override void Despawn() {
-			game.Graphics.DeleteTexture(ref TextureId);
-			game.Graphics.DeleteTexture(ref nameTex.ID);
+			Player first = FirstOtherWithSameSkin();
+			if (first == null) {
+				game.Graphics.DeleteTexture(ref TextureId);
+			}
+			ContextLost();
 		}
 		
 		public override void ContextLost() {
@@ -109,37 +112,74 @@ namespace ClassicalSharp.Entities {
 		
 		protected void CheckSkin() {
 			if (!fetchedSkin && Model.UsesSkin) {
-				game.AsyncDownloader.DownloadSkin(SkinIdentifier, SkinName);
+				Player first = FirstOtherWithSameSkin();
+				if (first == null || (first.TextureId <= 0 && !AnyOthersFetchedSkin())) {
+					game.AsyncDownloader.DownloadSkin(SkinName, SkinName);
+				} else {
+					ApplySkin(first);
+				}
 				fetchedSkin = true;
 			}
 			
 			DownloadedItem item;
-			if (!game.AsyncDownloader.TryGetItem(SkinIdentifier, out item)) return;
-			
-			if (item == null || item.Data == null) { ResetSkin(); return; }
+			if (!game.AsyncDownloader.TryGetItem(SkinName, out item)) return;
+			if (item == null || item.Data == null) { SetSkinAll(true); return; }
 			
 			Bitmap bmp = (Bitmap)item.Data;
 			game.Graphics.DeleteTexture(ref TextureId);
-			uScale = 1; vScale = 1;
-			EnsurePow2(ref bmp);
 			
+			SetSkinAll(true);		
+			EnsurePow2(ref bmp);			
 			SkinType = Utils.GetSkinType(bmp);
-			if (SkinType == SkinType.Invalid) {
-				string format = "Skin {0} has unsupported dimensions({1}, {2}), reverting to default.";
-				Utils.LogDebug(format, SkinName, bmp.Width, bmp.Height);
-				bmp.Dispose();
-				
-				ResetSkin(); return;
-			}
 			
-			if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);
-			TextureId = game.Graphics.CreateTexture(bmp, true, false);
+			if (SkinType == SkinType.Invalid) {
+				SetSkinAll(true);
+			} else {
+				if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);				
+				TextureId = game.Graphics.CreateTexture(bmp, true, false);
+				SetSkinAll(false);
+			}
+			bmp.Dispose();
+		}
+		
+		Player FirstOtherWithSameSkin() {
+			for (int i = 0; i < EntityList.MaxCount; i++) {
+				if (game.Entities[i] == null || game.Entities[i] == this) continue;
+				Player p = game.Entities[i] as Player;
+				if (p != null && p.SkinName == SkinName) return p;
+			}
+			return null;
+		}
+		
+		bool AnyOthersFetchedSkin() {
+			for (int i = 0; i < EntityList.MaxCount; i++) {
+				if (game.Entities[i] == null) continue;
+				Player p = game.Entities[i] as Player;
+				if (p != null && p.SkinName == SkinName && p.fetchedSkin) return true;
+			}
+			return false;
+		}
+		
+		// Apply or reset skin, for all players with same skin
+		void SetSkinAll(bool reset) {
+			for (int i = 0; i < EntityList.MaxCount; i++) {
+				if (game.Entities[i] == null) continue;
+				Player p = game.Entities[i] as Player;
+				if (p == null || p.SkinName != SkinName) continue;
+				
+				if (reset) { p.ResetSkin(); } 
+				else { p.ApplySkin(this); }
+			}
+		}
+		
+		void ApplySkin(Player src) {
+			TextureId = src.TextureId;
 			MobTextureId = -1;
+			SkinType = src.SkinType;
+			uScale = src.uScale; vScale = src.vScale;
 			
 			// Custom mob textures.
-			if (Utils.IsUrlPrefix(SkinName, 0) && item.TimeAdded >= lastModelChange)
-				MobTextureId = TextureId;
-			bmp.Dispose();
+			if (Utils.IsUrlPrefix(SkinName, 0)) MobTextureId = TextureId;
 		}
 		
 		void ResetSkin() {
