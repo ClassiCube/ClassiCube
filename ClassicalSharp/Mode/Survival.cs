@@ -37,7 +37,7 @@ namespace ClassicalSharp.Mode {
 			if (game.Inventory.Selected == Block.RedMushroom) {
 				DepleteInventoryHeld();
 				game.LocalPlayer.Health -= 5;
-				CheckPlayerDied();				
+				CheckPlayerDied();
 				return true;
 			} else if (game.Inventory.Selected == Block.BrownMushroom) {
 				DepleteInventoryHeld();

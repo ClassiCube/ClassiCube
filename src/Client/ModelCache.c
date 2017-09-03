@@ -958,9 +958,9 @@ void SittingModel_GetPickingBounds(AABB* bb) {
 		8.0f / 16.0f, (32.0f - SIT_OFFSET) / 16.0f, 4.0f / 16.0f);
 }
 
-void SittingModel_GetTransform(Matrix* m, Entity* entity, Vector3 pos) {
+void SittingModel_GetTransform(Entity* entity, Vector3 pos) {
 	pos.Y -= (SIT_OFFSET / 16.0f) * entity->ModelScale.Y;
-	Entity_GetTransform(entity, pos, entity->ModelScale, m);
+	Entity_GetTransform(entity, pos, entity->ModelScale);
 }
 
 void SittingModel_DrawModel(Entity* entity) {
@@ -996,9 +996,9 @@ void HeadModel_GetPickingBounds(AABB* bb) {
 		4.0f / 16.0f, 8.0f / 16.0f, 4.0f / 16.0f);
 }
 
-void HeadModel_GetTransform(Matrix* m, Entity* entity, Vector3 pos) {
+void HeadModel_GetTransform(Entity* entity, Vector3 pos) {
 	pos.Y -= (24.0f / 16.0f) * entity->ModelScale.Y;
-	Entity_GetTransform(entity, pos, entity->ModelScale, m);
+	Entity_GetTransform(entity, pos, entity->ModelScale);
 }
 
 void HeadModel_DrawModel(Entity* entity) {

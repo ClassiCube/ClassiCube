@@ -104,7 +104,6 @@ namespace ClassicalSharp.Model {
 		
 		CuboidDrawer drawer = new CuboidDrawer();
 		void DrawParts(bool sprite) {
-			// SwitchOrder is needed for held block, which renders without depth testing
 			if (sprite) {
 				SpriteXQuad(Side.Right, false);
 				SpriteZQuad(Side.Back, false);

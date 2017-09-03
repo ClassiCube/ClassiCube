@@ -5,6 +5,7 @@
 #include "ModelCache.h"
 #include "GraphicsCommon.h"
 #include "FrustumCulling.h"
+#include "GraphicsAPI.h"
 
 #define UV_POS_MASK ((UInt16)0x7FFF)
 #define UV_MAX ((UInt16)0x8000)
@@ -20,8 +21,8 @@ void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Rea
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
 
-void IModel_GetTransform(Matrix* m, Entity* entity, Vector3 pos) {
-	Entity_GetTransform(entity, pos, entity->ModelScale, m);
+void IModel_GetTransform(Entity* entity, Vector3 pos) {
+	Entity_GetTransform(entity, pos, entity->ModelScale);
 }
 
 void IModel_Init(IModel* model) {
@@ -74,6 +75,43 @@ Real32 IModel_RenderDistance(Entity* entity) {
 	Real32 dy = IModel_MinDist(camPos.Y - pos.Y, AABB_Height(bb) * 0.5f);
 	Real32 dz = IModel_MinDist(camPos.Z - pos.Z, AABB_Length(bb) * 0.5f);
 	return dx * dx + dy * dy + dz * dz;
+}
+
+Matrix IModel_transform;
+void IModel_Render(IModel* model, Entity* entity) {
+	Vector3 pos = entity->Position;
+	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
+	IModel_SetupState(model, entity);
+
+	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_PushMatrix();
+
+	model->GetTransform(entity, pos);
+	Gfx_MultiplyMatrix(&entity->Transform);
+	model->DrawModel(entity);
+	Gfx_PopMatrix();
+}
+
+void IModel_SetupState(IModel* model, Entity* entity) {
+	model->index = 0;
+	PackedCol col = entity->GetCol(entity);
+	IModel_uScale = 1.0f / 64.0f; 
+	IModel_vScale = 1.0f / 32.0f;
+
+	IModel_Cols[0] = col;
+	if (!entity->NoShade) {
+		IModel_Cols[1] = PackedCol_Scale(col, PackedCol_ShadeYBottom);
+		IModel_Cols[2] = PackedCol_Scale(col, PackedCol_ShadeZ);
+		IModel_Cols[4] = PackedCol_Scale(col, PackedCol_ShadeX);
+	} else {
+		IModel_Cols[1] = col; IModel_Cols[2] = col; IModel_Cols[4] = col;
+	}
+	IModel_Cols[3] = IModel_Cols[2]; 
+	IModel_Cols[5] = IModel_Cols[4];
+
+	Real32 yawDelta = entity->HeadY - entity->RotY;
+	IModel_cosHead = Math_Cos(yawDelta * MATH_DEG2RAD);
+	IModel_sinHead = Math_Sin(yawDelta * MATH_DEG2RAD);
 }
 
 void IModel_UpdateVB(void) {

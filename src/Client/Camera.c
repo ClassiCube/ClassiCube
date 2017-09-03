@@ -94,7 +94,9 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 	if (update->HeadX >= 90.0f && update->HeadX <= 270.0f) {
 		update->HeadX = player->Interp.Next.HeadX < 180.0f ? 89.9f : 270.1f;
 	}
-	game.LocalPlayer.SetLocation(update, false);
+
+	Entity* e = &player->Base.Base;
+	e->SetLocation(e, update, false);
 }
 
 void PerspectiveCamera_UpdateMouse(void) {

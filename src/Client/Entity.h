@@ -98,6 +98,17 @@ typedef struct Entity_ {
 	Vector3 ModelScale;
 	/* Returns the size of the model that is used for collision detection. */
 	Vector3 Size;
+
+	/* Transformation matrix of this entity when rendering */
+	Matrix Transform;
+	/* Whether no shading should be applied to the faces of model parts of this entity's model. */
+	bool NoShade;
+
+	/* TODO: SHOULD THESE BE A SEPARATE VTABLE STRUCT? (only need 1 shared pointer that way) */
+	/* Sets the location of this entity. */
+	void (*SetLocation)(struct Entity_* entity, LocationUpdate* update, bool interpolate);
+	/* Gets the colour of this entity for rendering. */
+	PackedCol (*GetCol)(struct Entity_* entity);
 } Entity;
 
 
@@ -108,7 +119,7 @@ void Entity_Init(Entity* entity);
 Vector3 Entity_GetEyePosition(Entity* entity);
 
 /* Calculates the transformation matrix for the given entity. */
-void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale, Matrix* m);
+void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale);
 
 /* Returns the bounding box that contains the model, without any rotations applied. */
 void Entity_GetPickingBounds(Entity* entity, AABB* bb);
@@ -236,7 +247,7 @@ typedef struct InterpComp_ {
 
 void InterpComp_LerpAngles(InterpComp* interp, Entity* entity, Real32 t);
 
-void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate update, bool interpolate);
+void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, bool interpolate);
 
 void LocalInterpComp_AdvanceState(InterpComp* interp);
 
@@ -249,7 +260,7 @@ typedef struct NetInterpComp_ {
 	InterpState States[10];
 } NetInterpComp;
 
-void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate update, bool interpolate);
+void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bool interpolate);
 
 void NetInterpComp_AdvanceState(NetInterpComp* interp);
 #endif

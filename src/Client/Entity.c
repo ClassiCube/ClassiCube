@@ -50,7 +50,8 @@ Vector3 Entity_GetEyePosition(Entity* entity) {
 	return pos;
 }
 
-void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale, Matrix* m) {
+void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale) {
+	Matrix* m = &entity->Transform;
 	*m = Matrix_Identity;
 	Matrix tmp;
 
@@ -463,17 +464,17 @@ void NetInterpComp_AddState(NetInterpComp* interp, InterpState state) {
 	interp->States[interp->StatesCount] = state; interp->StatesCount++;
 }
 
-void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate update, bool interpolate) {
+void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bool interpolate) {
 	InterpState last = interp->Cur;
 	InterpState* cur = &interp->Cur;
-	if (update.IncludesPosition) {
-		InterpComp_SetPos(cur, &update);
+	if (update->IncludesPosition) {
+		InterpComp_SetPos(cur, update);
 	}
 
-	cur->RotX = NetInterpComp_Next(update.RotX, cur->RotX);
-	cur->RotZ = NetInterpComp_Next(update.RotZ, cur->RotZ);
-	cur->HeadX = NetInterpComp_Next(update.HeadX, cur->HeadX);
-	cur->HeadY = NetInterpComp_Next(update.RotY, cur->HeadY);
+	cur->RotX  = NetInterpComp_Next(update->RotX,  cur->RotX);
+	cur->RotZ  = NetInterpComp_Next(update->RotZ,  cur->RotZ);
+	cur->HeadX = NetInterpComp_Next(update->HeadX, cur->HeadX);
+	cur->HeadY = NetInterpComp_Next(update->RotY,  cur->HeadY);
 
 	if (!interpolate) {
 		interp->Base.Prev = *cur; interp->Base.PrevRotY = cur->HeadY;
@@ -512,13 +513,13 @@ Real32 LocalInterpComp_Next(Real32 next, Real32 cur, Real32* last, bool interpol
 	return next;
 }
 
-void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate update, bool interpolate) {
+void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, bool interpolate) {
 	Entity* entity = &LocalPlayer_Instance.Base.Base;
 	InterpState* prev = &interp->Prev;
 	InterpState* next = &interp->Next;
 
-	if (update.IncludesPosition) {
-		InterpComp_SetPos(next, &update);
+	if (update->IncludesPosition) {
+		InterpComp_SetPos(next, update);
 		Real32 blockOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
 		if (blockOffset < Entity_Adjustment) {
 			next->Pos.Y += Entity_Adjustment;
@@ -529,15 +530,15 @@ void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate update, bool
 		}
 	}
 
-	next->RotX = LocalInterpComp_Next(update.RotX, next->RotX, &prev->RotX, interpolate);
-	next->RotZ = LocalInterpComp_Next(update.RotZ, next->RotZ, &prev->RotZ, interpolate);
-	next->HeadX = LocalInterpComp_Next(update.HeadX, next->HeadX, &prev->HeadX, interpolate);
-	next->HeadY = LocalInterpComp_Next(update.RotY, next->HeadY, &prev->HeadY, interpolate);
+	next->RotX  = LocalInterpComp_Next(update->RotX,  next->RotX,  &prev->RotX,  interpolate);
+	next->RotZ  = LocalInterpComp_Next(update->RotZ,  next->RotZ,  &prev->RotZ,  interpolate);
+	next->HeadX = LocalInterpComp_Next(update->HeadX, next->HeadX, &prev->HeadX, interpolate);
+	next->HeadY = LocalInterpComp_Next(update->RotY,  next->HeadY, &prev->HeadY, interpolate);
 
-	if (update.RotY != LocationUpdate_Excluded) {
+	if (update->RotY != LocationUpdate_Excluded) {
 		if (!interpolate) {
-			interp->NextRotY = update.RotY;
-			entity->RotY = update.RotY;
+			interp->NextRotY = update->RotY;
+			entity->RotY = update->RotY;
 			interp->RotYCount = 0;
 		} else {
 			/* Body Y rotation lags slightly behind */

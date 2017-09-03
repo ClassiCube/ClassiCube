@@ -88,7 +88,7 @@ typedef struct IModel_ {
 	/* Performs the actual rendering of an entity model. */
 	void (*DrawModel)(Entity* entity);
 	/* Gets the transformation matrix of this entity. */
-	void (*GetTransform)(Matrix* m, Entity* entity, Vector3 pos);
+	void (*GetTransform)(Entity* entity, Vector3 pos);
 
 	/* The maximum scale the entity can have (for collisions and rendering).*/
 	Real32 MaxScale;
