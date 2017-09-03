@@ -4,6 +4,7 @@
 #include "Window.h"
 #include "GraphicsAPI.h"
 #include "Player.h"
+#include "Funcs.h"
 
 Real32 Camera_AdjustHeadX(Real32 value) {
 	if (value >= 90.00f && value <= 90.10f) return 90.10f * MATH_DEG2RAD;
@@ -240,4 +241,28 @@ void ForwardThirdPersonCamera_Init(Camera* cam) {
 	cam->GetCameraPos = ForwardThirdPersonCamera_GetCameraPos;
 	cam->GetCameraOrientation = ForwardThirdPersonCamera_GetCameraOrientation;
 	cam->Zoom = ForwardThirdPersonCamera_Zoom;
+}
+
+Camera Camera_Cameras[3];
+Int32 Camera_ActiveIndex;
+void Camera_Init(void) {
+	FirstPersonCamera_Init(&Camera_Cameras[0]);
+	ThirdPersonCamera_Init(&Camera_Cameras[1]);
+	ForwardThirdPersonCamera_Init(&Camera_Cameras[2]);
+
+	Camera_ActiveCamera = &Camera_Cameras[0];
+	Camera_ActiveIndex = 0;
+}
+
+void Camera_CycleActive(void) {
+	if (Game_ClassicMode) return;
+
+	Int32 i = Camera_ActiveIndex;
+	i = (i + 1) % Array_NumElements(Camera_Cameras);
+
+	LocalPlayer* player = &LocalPlayer_Instance;
+	if (!player->Hacks.CanUseThirdPersonCamera || !player->Hacks.Enabled) { i = 0; }
+
+	Camera_ActiveCamera = &Camera_Cameras[i];
+	Game_UpdateProjection();
 }
