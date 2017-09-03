@@ -10,11 +10,9 @@ namespace Launcher.Web {
 	public sealed class ClassicubeSession : IWebTask {
 		
 		const string classicubeNetUri = "https://www.classicube.net/",
-		loginUri = "https://www.classicube.net/api/login/",
-		publicServersUri = "https://www.classicube.net/api/servers",
-		playUri = "https://www.classicube.net/api/server/";
-		const string wrongCredentialsMessage = "Login failed";
-		const string loggedInAs = @"<a href=""/acc"" class=""button"">";
+		loginUri  = "https://www.classicube.net/api/login/",
+		listUri   = "https://www.classicube.net/api/servers",
+		serverUri = "https://www.classicube.net/api/server/";
 		
 		public List<ServerListEntry> Servers = new List<ServerListEntry>();
 		
@@ -110,7 +108,7 @@ namespace Launcher.Web {
 		}
 		
 		public ClientStartData GetConnectInfo(string hash) {
-			string uri = playUri + hash;
+			string uri = serverUri + hash;
 			string response = Get(uri, classicubeNetUri);
 			
 			int index = 0; bool success = true;
@@ -125,7 +123,7 @@ namespace Launcher.Web {
 		public List<ServerListEntry> GetPublicServers() {
 			DateTime start = DateTime.UtcNow;
 			List<ServerListEntry> servers = new List<ServerListEntry>();
-			string response = Get(publicServersUri, classicubeNetUri);
+			string response = Get(listUri, classicubeNetUri);
 			int index = 0; bool success = true;
 			JsonObject root = (JsonObject)Json.ParseValue(response, ref index, ref success);
 			List<object> list = (List<object>)root["servers"];

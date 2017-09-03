@@ -65,11 +65,11 @@ Int32 ModelCache_GetTextureIndex(STRING_TRANSIENT String* texName);
 	
 /* Registers the given model to be able to be used as a model for entities.
 You can use ModelCache_Get to get pointer to the model. */
-void ModelCache_RegisterModel(STRING_REF String* name, STRING_REF String* defaultTexName, IModel* instance);
+void ModelCache_Register(STRING_REF const UInt8* name, STRING_TRANSIENT const UInt8* defaultTexName, IModel* instance);
 
 /* Registers the given texture to be tracked by the model cache.
 You can use ModelCache_GetTextureIndex to get the index of this texture. */
-void ModelCache_RegisterTexture(STRING_REF String* texName);
+void ModelCache_RegisterTexture(STRING_REF const UInt8* texName);
 
 
 static void ModelCache_RegisterDefaultModels(void);

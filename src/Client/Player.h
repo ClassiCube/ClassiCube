@@ -25,6 +25,8 @@ typedef struct LocalPlayer_ {
 	Real32 ReachDistance;
 	/* Tilt animation state of the player. */
 	TiltComp Tilt;
+	/* Interpolation state of the player. */
+	InterpComp Interp;
 } LocalPlayer;
 
 

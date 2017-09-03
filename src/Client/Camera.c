@@ -83,21 +83,22 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 		speedY = (Real32)delta.Y;
 	}
 
-	Real32 rotY = player.interp.next.HeadY + speedX * sensitivity;
+	LocalPlayer* player = &LocalPlayer_Instance;
+	Real32 rotY = player->Interp.Next.HeadY + speedX * sensitivity;
 	Real32 yAdj = Game_InvertMouse ? -speedY * sensitivity : speedY * sensitivity;
-	Real32 headX = player.interp.next.HeadX + yAdj;
+	Real32 headX = player->Interp.Next.HeadX + yAdj;
 	LocationUpdate* update;
 	LocationUpdate_MakeOri(update, rotY, headX);
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
 	if (update->HeadX >= 90.0f && update->HeadX <= 270.0f) {
-		update->HeadX = player.interp.next.HeadX < 180.0f ? 89.9f : 270.1f;
+		update->HeadX = player->Interp.Next.HeadX < 180.0f ? 89.9f : 270.1f;
 	}
 	game.LocalPlayer.SetLocation(update, false);
 }
 
 void PerspectiveCamera_UpdateMouse(void) {
-	if (game.Gui.ActiveScreen.HandlesAllInput) return;
+	/* if (Gui.ActiveScreen.HandlesAllInput) return; TODO: NEED TO IMPLEMENT GUI CODE FIRSTLY */
 	PerspectiveCamera_CentreMousePosition();
 	PerspectiveCamera_UpdateMouseRotation();
 }

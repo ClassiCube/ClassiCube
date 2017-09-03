@@ -67,39 +67,35 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		// Last known position and orientation sent by the server.
-		internal Vector3 curPos;
-		internal float curRotX, curRotZ, curHeadX, curHeadY;
-		
+		internal State cur;
+
 		public override void SetLocation(LocationUpdate update, bool interpolate) {
-			Vector3 lastPos = curPos;
-			float lastRotX = curRotX, lastRotZ = curRotZ;
-			float lastHeadX = curHeadX, lastHeadY = curHeadY;
-			
+			State last = cur;			
 			if (update.IncludesPosition) {
-				curPos = update.RelativePosition ? curPos + update.Pos : update.Pos;
+				cur.Pos = update.RelativePosition ? cur.Pos + update.Pos : update.Pos;
 			}
-			curRotX =  Next(update.RotX,  curRotX);
-			curRotZ =  Next(update.RotZ,  curRotZ);
-			curHeadX = Next(update.HeadX, curHeadX);
-			curHeadY = Next(update.RotY,  curHeadY);
+			cur.RotX =  Next(update.RotX,  cur.RotX);
+			cur.RotZ =  Next(update.RotZ,  cur.RotZ);
+			cur.HeadX = Next(update.HeadX, cur.HeadX);
+			cur.HeadY = Next(update.RotY,  cur.HeadY);
 			
 			if (!interpolate) {
 				stateCount = 0;
-				next = prev = new State(curPos, curHeadX, curHeadY, curRotX, curRotZ);
+				next = cur; prev = next;
 				rotYStateCount = 0;
-				nextRotY = prevRotY = curHeadY;
+				nextRotY = prevRotY = cur.HeadY;
 			} else {
 				// Smoother interpolation by also adding midpoint.
-				Vector3 midPos = Vector3.Lerp(lastPos, curPos, 0.5f);
-				float midRotX =  Utils.LerpAngle(lastRotX,  curRotX,  0.5f);
-				float midRotZ =  Utils.LerpAngle(lastRotZ,  curRotZ,  0.5f);				
-				float midHeadX = Utils.LerpAngle(lastHeadX, curHeadX, 0.5f);
-				float midHeadY = Utils.LerpAngle(lastHeadY, curHeadY, 0.5f);
+				State mid;
+				mid.Pos   = Vector3.Lerp(last.Pos,      cur.Pos,   0.5f);
+				mid.RotX  = Utils.LerpAngle(last.RotX,  cur.RotX,  0.5f);
+				mid.RotZ  = Utils.LerpAngle(last.RotZ,  cur.RotZ,  0.5f);				
+				mid.HeadX = Utils.LerpAngle(last.HeadX, cur.HeadX, 0.5f);
+				mid.HeadY = Utils.LerpAngle(last.HeadY, cur.HeadY, 0.5f);				
+				AddState(mid); AddState(cur);
 				
-				AddState(new State(midPos, midHeadX, midHeadY, midRotX, midRotZ));
-				AddState(new State(curPos, curHeadX, curHeadY, curRotX, curRotZ));
 				for (int i = 0; i < 3; i++)
-					AddRotY(Utils.LerpAngle(lastHeadY, curHeadY, (i + 1) / 3f));
+					AddRotY(Utils.LerpAngle(last.HeadY, cur.HeadY, (i + 1) / 3f));
 			}
 		}
 

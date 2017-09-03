@@ -34,6 +34,8 @@ Int32 Math_CeilDiv(Int32 a, Int32 b);
 
 /* Performs linear interpolation between two values. */
 Real32 Math_Lerp(Real32 a, Real32 b, Real32 t);
+/* Linearly interpolates between a given angle range, adjusting if necessary. */
+Real32 Math_LerpAngle(Real32 leftAngle, Real32 rightAngle, Real32 t);
 
 /* Returns the next highest power of 2 that is greater or equal to the given value. */
 Int32 Math_NextPowOf2(Int32 value);
