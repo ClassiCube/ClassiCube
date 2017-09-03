@@ -40,31 +40,25 @@ namespace ClassicalSharp {
 			
 			int btns = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
 			if (btns > 1 || game.Gui.ActiveScreen.HandlesAllInput || inv.Selected == Block.Invalid) return;
-			
-			// always play delete animations, even if we aren't picking a block.
-			if (left) {
-				game.HeldBlockRenderer.ClickAnim(true);
-				byte id = game.Entities.GetClosetPlayer(game.LocalPlayer);
-				if (id != EntityList.SelfID && game.Mode.PickEntity(id)) return;
-			}
-			if (!game.SelectedPos.Valid) return;
-			
+
 			if (middle) {
 				Vector3I pos = game.SelectedPos.BlockPos;
-				if (!game.World.IsValidPos(pos)) return;
+				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
 				
 				BlockID old = game.World.GetBlock(pos);
 				game.Mode.PickMiddle(old);
 			} else if (left) {
+				if (game.Mode.PickingLeft()) return;
 				Vector3I pos = game.SelectedPos.BlockPos;
-				if (!game.World.IsValidPos(pos)) return;
+				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
 				
 				BlockID old = game.World.GetBlock(pos);
 				if (BlockInfo.Draw[old] == DrawType.Gas || !BlockInfo.CanDelete[old]) return;
 				game.Mode.PickLeft(old);
 			} else if (right) {
+				if (game.Mode.PickingRight()) return;
 				Vector3I pos = game.SelectedPos.TranslatedPos;
-				if (!game.World.IsValidPos(pos)) return;
+				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
 				
 				BlockID old = game.World.GetBlock(pos);
 				BlockID block = inv.Selected;

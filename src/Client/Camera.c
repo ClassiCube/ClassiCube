@@ -65,19 +65,19 @@ void PerspectiveCamera_RegrabMouse(void) {
 	delta = Point2D_Empty;
 }
 
-#define sensiFactor (0.0002f / 3.0f * MATH_RAD2DEG)
-#define slippery 0.97f
-#define adjust 0.025f
+#define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
+#define CAMERA_SLIPPERY 0.97f
+#define CAMERA_ADJUST 0.025f
 
 Real32 speedX = 0.0f, speedY = 0.0f;
 void PerspectiveCamera_UpdateMouseRotation(void) {
-	Real32 sensitivity = sensiFactor * Game_MouseSensitivity;
+	Real32 sensitivity = CAMERA_SENSI_FACTOR * Game_MouseSensitivity;
 
 	if (Game_SmoothCamera) {
-		speedX += delta.X * adjust;
-		speedX *= slippery;
-		speedY += delta.Y * adjust;
-		speedY *= slippery;
+		speedX += delta.X * CAMERA_ADJUST;
+		speedX *= CAMERA_SLIPPERY;
+		speedY += delta.Y * CAMERA_ADJUST;
+		speedY *= CAMERA_SLIPPERY;
 	} else {
 		speedX = (Real32)delta.X;
 		speedY = (Real32)delta.Y;

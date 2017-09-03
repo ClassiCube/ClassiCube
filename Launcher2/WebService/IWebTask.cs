@@ -56,7 +56,7 @@ namespace Launcher.Web {
 			request.KeepAlive = true;
 			request.CookieContainer = cookies;
 			
-			request.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+			request.AutomaticDecompression = DecompressionMethods.GZip;
 			if (data != null) {
 				request.Method = "POST";
 				request.ContentType = "application/x-www-form-urlencoded; charset=UTF-8;";

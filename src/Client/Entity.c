@@ -128,13 +128,12 @@ bool Entity_TouchesAnyWater(Entity* entity) {
 }
 
 
-#define maxAngle (110 * MATH_DEG2RAD)
-#define armMax (60.0f * MATH_DEG2RAD)
-#define legMax (80.0f * MATH_DEG2RAD)
-#define idleMax (3.0f * MATH_DEG2RAD)
-#define idleXPeriod (2.0f * MATH_PI / 5.0f)
-#define idleZPeriod (2.0f * MATH_PI / 3.5f)
-
+#define ANIM_MAX_ANGLE (110 * MATH_DEG2RAD)
+#define ANIM_ARM_MAX (60.0f * MATH_DEG2RAD)
+#define ANIM_LEG_MAX (80.0f * MATH_DEG2RAD)
+#define ANIM_IDLE_MAX (3.0f * MATH_DEG2RAD)
+#define ANIM_IDLE_XPERIOD (2.0f * MATH_PI / 5.0f)
+#define ANIM_IDLE_ZPERIOD (2.0f * MATH_PI / 3.5f)
 
 void AnimatedComp_DoTilt(Real32* tilt, bool reduce) {
 	if (reduce) {
@@ -147,8 +146,8 @@ void AnimatedComp_DoTilt(Real32* tilt, bool reduce) {
 
 void AnimatedComp_PerpendicularAnim(AnimatedComp* anim, Real32 flapSpeed, Real32 idleXRot, Real32 idleZRot, bool left) {
 	Real32 verAngle = 0.5f + 0.5f * Math_Sin(anim->WalkTime * flapSpeed);
-	Real32 zRot = -idleZRot - verAngle * anim->Swing * maxAngle;
-	Real32 horAngle = Math_Cos(anim->WalkTime) * anim->Swing * armMax * 1.5f;
+	Real32 zRot = -idleZRot - verAngle * anim->Swing * ANIM_MAX_ANGLE;
+	Real32 horAngle = Math_Cos(anim->WalkTime) * anim->Swing * ANIM_ARM_MAX * 1.5f;
 	Real32 xRot = idleXRot + horAngle;
 
 	if (left) {
@@ -205,12 +204,12 @@ void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims) 
 	anim->BobStrength = Math_Lerp(anim->BobStrengthO, anim->BobStrengthN, t);
 
 	Real32 idleTime = (Real32)Game_Accumulator;
-	Real32 idleXRot = Math_Sin(idleTime * idleXPeriod) * idleMax;
-	Real32 idleZRot = idleMax + Math_Cos(idleTime * idleZPeriod) * idleMax;
+	Real32 idleXRot = Math_Sin(idleTime * ANIM_IDLE_XPERIOD) * ANIM_IDLE_MAX;
+	Real32 idleZRot = ANIM_IDLE_MAX + Math_Cos(idleTime * ANIM_IDLE_ZPERIOD) * ANIM_IDLE_MAX;
 
-	anim->LeftArmX = (Math_Cos(anim->WalkTime) * anim->Swing * armMax) - idleXRot;
+	anim->LeftArmX = (Math_Cos(anim->WalkTime) * anim->Swing * ANIM_ARM_MAX) - idleXRot;
 	anim->LeftArmZ = -idleZRot;
-	anim->LeftLegX = -(Math_Cos(anim->WalkTime) * anim->Swing * legMax);
+	anim->LeftLegX = -(Math_Cos(anim->WalkTime) * anim->Swing * ANIM_LEG_MAX);
 	anim->LeftLegZ = 0;
 
 	anim->RightLegX = -anim->LeftLegX; anim->RightLegZ = -anim->LeftLegZ;

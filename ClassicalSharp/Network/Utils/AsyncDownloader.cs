@@ -369,13 +369,10 @@ namespace ClassicalSharp.Network {
 		public DateTime TimeAdded;
 		
 		/// <summary> Point in time the item was fully downloaded. </summary>
-		public DateTime TimeDownloaded;
+		public DateTime TimeDownloaded;		
 		
 		/// <summary> Full URL this item was downloaded from. </summary>
 		public string Url;
-		
-		/// <summary> HTTP status code returned by the server for this request. </summary>
-		public HttpStatusCode ResponseCode;
 		
 		/// <summary> Unique identifier assigned by the server to this item. </summary>
 		public string ETag;
@@ -390,7 +387,6 @@ namespace ClassicalSharp.Network {
 			TimeAdded = timeAdded;
 			TimeDownloaded = DateTime.UtcNow;
 			Url = url;
-			ResponseCode = code;
 			ETag = etag;
 			LastModified = lastModified;
 		}

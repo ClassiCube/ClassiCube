@@ -33,6 +33,14 @@ namespace ClassicalSharp.Mode {
 			return false;
 		}
 		
+		public bool PickingLeft() { 
+			// always play delete animations, even if we aren't picking a block.
+			game.HeldBlockRenderer.ClickAnim(true);
+			return false; 
+		}
+		
+		public bool PickingRight() { return false; }
+		
 		public void PickLeft(BlockID old) {
 			Vector3I pos = game.SelectedPos.BlockPos;
 			game.UpdateBlock(pos.X, pos.Y, pos.Z, Block.Air);
@@ -67,13 +75,10 @@ namespace ClassicalSharp.Mode {
 			game.UpdateBlock(pos.X, pos.Y, pos.Z, block);
 			game.UserEvents.RaiseBlockChanged(pos, old, block);
 		}
+
+		public Widget MakeHotbar() { return new HotbarWidget(game); }		
 		
-		public bool PickEntity(byte id) { return false; }
-		public Widget MakeHotbar() { return new HotbarWidget(game); }
-		
-		
-		public void OnNewMapLoaded(Game game) {
-		}
+		public void OnNewMapLoaded(Game game) { }
 
 		public void Init(Game game) {
 			this.game = game;
