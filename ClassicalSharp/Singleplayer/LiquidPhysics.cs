@@ -27,10 +27,8 @@ namespace ClassicalSharp.Singleplayer {
 			this.game = game;
 			map = game.World;
 			
-			physics.OnPlace[Block.Lava] =
-				(index, b) => Lava.Enqueue(defLavaTick | (uint)index);
-			physics.OnPlace[Block.Water] =
-				(index, b) => Water.Enqueue(defWaterTick | (uint)index);
+			physics.OnPlace[Block.Lava] = OnPlaceLava;
+			physics.OnPlace[Block.Water] = OnPlaceWater;
 			physics.OnPlace[Block.Sponge] = PlaceSponge;
 			physics.OnDelete[Block.Sponge] = DeleteSponge;
 			
@@ -44,6 +42,9 @@ namespace ClassicalSharp.Singleplayer {
 			physics.OnRandomTick[Block.Lava] = ActivateLava;
 			physics.OnRandomTick[Block.StillLava] = ActivateLava;
 		}
+		
+		void OnPlaceLava(int index, BlockID b) { Lava.Enqueue(defLavaTick | (uint)index); }
+		void OnPlaceWater(int index, BlockID b) { Water.Enqueue(defWaterTick | (uint)index); }
 		
 		public void Clear() { Lava.Clear(); Water.Clear(); }
 		

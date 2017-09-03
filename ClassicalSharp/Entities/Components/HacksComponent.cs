@@ -107,11 +107,19 @@ namespace ClassicalSharp.Entities {
 				CanPushbackBlocks = CanUseThirdPersonCamera = allowed;
 		}
 		
-		static void ParseFlag(Action<bool> action, string joined, string flag) {
-			if (joined.Contains("+" + flag)) {
-				action(true);
-			} else if (joined.Contains("-" + flag)) {
-				action(false);
+		void ParseFlag(ref bool target, string flag) {
+			if (HacksFlags.Contains("+" + flag)) {
+				target = true;
+			} else if (HacksFlags.Contains("-" + flag)) {
+				target = false;
+			}
+		}
+		
+		void ParseAllFlag(string flag) {
+			if (HacksFlags.Contains("+" + flag)) {
+				SetAllHacks(true);
+			} else if (HacksFlags.Contains("-" + flag)) {
+				SetAllHacks(false);
 			}
 		}
 		
@@ -155,15 +163,12 @@ namespace ClassicalSharp.Entities {
 			// By default (this is also the case with WoM), we can use hacks.
 			if (HacksFlags.Contains("-hax")) SetAllHacks(false);
 			
-			ParseFlag(b => CanFly = b, HacksFlags, "fly");
-			ParseFlag(b => CanNoclip = b, HacksFlags, "noclip");
-			ParseFlag(b => CanSpeed = b, HacksFlags, "speed");
-			ParseFlag(b => CanRespawn = b, HacksFlags, "respawn");
+			ParseFlag(ref CanFly, "fly");
+			ParseFlag(ref CanNoclip, "noclip");
+			ParseFlag(ref CanSpeed, "speed");
+			ParseFlag(ref CanRespawn, "respawn");
 
-			if (UserType == 0x64) {
-				ParseFlag(b => SetAllHacks(b), HacksFlags, "ophax");
-			}
-			
+			if (UserType == 0x64) ParseAllFlag("ophax");
 			ParseHorizontalSpeed();
 			ParseMultiJumps();
 			

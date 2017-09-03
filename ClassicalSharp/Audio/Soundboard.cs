@@ -10,35 +10,49 @@ namespace ClassicalSharp.Audio {
 		public byte[] Data;
 	}
 	
+	public class SoundGroup {
+		public string Name;
+		public List<Sound> Sounds;
+	}
+	
 	public class Soundboard {
 		
 		public byte[] Data;
-		Dictionary<string, List<Sound>> allSounds = new Dictionary<string, List<Sound>>();
+		List<SoundGroup> groups = new List<SoundGroup>();
 		Random rnd = new Random();
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
-		public void Init(string group, string[] files) {
+		public void Init(string sndGroup, string[] files) {
 			for (int i = 0; i < files.Length; i++) {
 				string name = Path.GetFileNameWithoutExtension(files[i]);
-				if (!name.StartsWith(group, comp)) continue;
+				if (!name.StartsWith(sndGroup, comp)) continue;
 				
 				// Convert dig_grass1.wav to grass
-				name = Utils.ToLower(name.Substring(group.Length));
+				name = Utils.ToLower(name.Substring(sndGroup.Length));
 				name = name.Substring(0, name.Length - 1);
 				
-				List<Sound> sounds = null;
-				if (!allSounds.TryGetValue(name, out sounds)) {
-					sounds = new List<Sound>();
-					allSounds[name] = sounds;
+				SoundGroup group = Find(name);
+				if (group == null) {
+					group = new SoundGroup();
+					group.Name = name;
+					group.Sounds = new List<Sound>();
+					groups.Add(group);
 				}
 				
 				try {
 					Sound snd = ReadWave(files[i]);
-					sounds.Add(snd);
+					group.Sounds.Add(snd);
 				} catch (Exception ex) {
 					ErrorHandler.LogError("Soundboard.ReadWave()", ex);
 				}
 			}
+		}
+		
+		SoundGroup Find(string name) {
+			for (int i = 0; i < groups.Count; i++) {
+				if (groups[i].Name == name) return groups[i];
+			}
+			return null;
 		}
 		
 		public Sound PickRandomSound(SoundType type) {
@@ -46,9 +60,9 @@ namespace ClassicalSharp.Audio {
 			if (type == SoundType.Metal) type = SoundType.Stone;
 			string name = soundNames[(int)type];
 			
-			List<Sound> sounds;
-			if (!allSounds.TryGetValue(name, out sounds)) return null;
-			return sounds[rnd.Next(sounds.Count)];
+			SoundGroup group = Find(name);
+			if (group == null) return null;
+			return group.Sounds[rnd.Next(group.Sounds.Count)];
 		}
 		
 		Sound ReadWave(string file) {
