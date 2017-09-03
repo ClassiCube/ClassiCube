@@ -64,6 +64,11 @@ typedef struct Entity_ {
 	/* Animation component of the entity. */
 	AnimatedComp Anim;
 
+	/* Skin type of this entity. */
+	SkinType SkinType;
+	/* U and V scale of this entity, usually 1. */
+	Real32 uScale, vScale;
+
 	/* The model of this entity. (used for collision detection and rendering) */
 	IModel* Model;
 	/* The name of the model of this entity. Is "block" for all block ID models. */

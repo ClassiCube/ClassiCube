@@ -97,6 +97,7 @@ void ChickenModel_DrawModel(Entity* entity) {
 IModel* ChickenModel_GetInstance(void) {
 	IModel_Init(&ChickenModel);
 	IModel_SetPointers(ChickenModel);
+	ChickenModel.vertices = ChickenModel_Vertices;
 	return &ChickenModel;
 }
 
@@ -165,6 +166,7 @@ void CreeperModel_DrawModel(Entity* entity) {
 IModel* CreeperModel_GetInstance(void) {
 	IModel_Init(&CreeperModel);
 	IModel_SetPointers(CreeperModel);
+	CreeperModel.vertices = CreeperModel_Vertices;
 	CreeperModel.SurvivalScore = 200;
 	return &CreeperModel;
 }
@@ -235,6 +237,7 @@ void PigModel_DrawModel(Entity* entity) {
 IModel* PigModel_GetInstance(void) {
 	IModel_Init(&PigModel);
 	IModel_SetPointers(PigModel);
+	PigModel.vertices = PigModel_Vertices;
 	PigModel.SurvivalScore = 10;
 	return &PigModel;
 }
@@ -325,7 +328,7 @@ void SheepModel_GetPickingBounds(AABB* bb) {
 }
 
 void SheepModel_DrawModel(Entity* entity) {
-	Gfx_BindTexture(GetTexture(entity));
+	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Sheep_Head, true);
 
 	IModel_DrawPart(Sheep_Torso);
@@ -351,6 +354,7 @@ void SheepModel_DrawModel(Entity* entity) {
 IModel* SheepModel_GetInstance(void) {
 	IModel_Init(&SheepModel);
 	IModel_SetPointers(SheepModel);
+	SheepModel.vertices = SheepModel_Vertices;
 	SheepModel.SurvivalScore = 10;
 
 	String sheep_fur = String_FromConstant("sheep_fur.png");
@@ -424,6 +428,7 @@ void SkeletonModel_DrawModel(Entity* entity) {
 IModel* SkeletonModel_GetInstance(void) {
 	IModel_Init(&SkeletonModel);
 	IModel_SetPointers(SkeletonModel);
+	SkeletonModel.vertices = SkeletonModel_Vertices;
 	SkeletonModel.SurvivalScore = 120;
 	return &SkeletonModel;
 }
@@ -504,6 +509,7 @@ void SpiderModel_DrawModel(Entity* entity) {
 IModel* SpiderModel_GetInstance(void) {
 	IModel_Init(&SpiderModel);
 	IModel_SetPointers(SpiderModel);
+	SpiderModel.vertices = SpiderModel_Vertices;
 	SpiderModel.SurvivalScore = 105;
 	return &SpiderModel;
 }
@@ -582,6 +588,7 @@ void ZombieModel_DrawModel(Entity* entity) {
 IModel* ZombieModel_GetInstance(void) {
 	IModel_Init(&ZombieModel);
 	IModel_SetPointers(ZombieModel);
+	ZombieModel.vertices = ZombieModel_Vertices;
 	ZombieModel.SurvivalScore = 80;
 	return &ZombieModel;
 }
@@ -689,16 +696,16 @@ void HumanModel_SetupState(Entity* entity) {
 	IModel_vScale = entity->vScale / (_64x64 ? 64.0f : 32.0f);
 }
 
-void HumanModel_DrawModel(Entity* p, ModelSet* model) {
-	SkinType skinType = p->SkinType;
-	IModel_DrawRotate(-p->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
+void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
+	SkinType skinType = entity->SkinType;
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
 	IModel_DrawPart(model->Torso);
-	IModel_DrawRotate(p->Anim.LeftLegX, 0, p->Anim.LeftLegZ, model->LeftLeg, false);
-	IModel_DrawRotate(p->Anim.RightLegX, 0, p->Anim.RightLegZ, model->RightLeg, false);
+	IModel_DrawRotate(entity->Anim.LeftLegX, 0, entity->Anim.LeftLegZ, model->LeftLeg, false);
+	IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLeg, false);
 
 	IModel_Rotation = RotateOrder_XZY;
-	IModel_DrawRotate(p->Anim.LeftArmX, 0, p->Anim.LeftArmZ, model->LeftArm, false);
-	IModel_DrawRotate(p->Anim.RightArmX, 0, p->Anim.RightArmZ, model->RightArm, false);
+	IModel_DrawRotate(entity->Anim.LeftArmX, 0, entity->Anim.LeftArmZ, model->LeftArm, false);
+	IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, model->RightArm, false);
 	IModel_Rotation = RotateOrder_ZYX;
 	IModel_UpdateVB();
 
@@ -706,15 +713,15 @@ void HumanModel_DrawModel(Entity* p, ModelSet* model) {
 	IModel_ActiveModel->index = 0;
 	if (skinType != SkinType_64x32) {
 		IModel_DrawPart(model->TorsoLayer);
-		IModel_DrawRotate(p->Anim.LeftLegX, 0, p->Anim.LeftLegZ, model->LeftLegLayer, false);
-		IModel_DrawRotate(p->Anim.RightLegX, 0, p->Anim.RightLegZ, model->RightLegLayer, false);
+		IModel_DrawRotate(entity->Anim.LeftLegX, 0, entity->Anim.LeftLegZ, model->LeftLegLayer, false);
+		IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLegLayer, false);
 
 		IModel_Rotation = RotateOrder_XZY;
-		IModel_DrawRotate(p->Anim.LeftArmX, 0, p->Anim.LeftArmZ, model->LeftArmLayer, false);
-		IModel_DrawRotate(p->Anim.RightArmX, 0, p->Anim.RightArmZ, model->RightArmLayer, false);
+		IModel_DrawRotate(entity->Anim.LeftArmX, 0, entity->Anim.LeftArmZ, model->LeftArmLayer, false);
+		IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, model->RightArmLayer, false);
 		IModel_Rotation = RotateOrder_ZYX;
 	}
-	IModel_DrawRotate(-p->HeadX * MATH_DEG2RAD, 0, 0, model->Hat, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Hat, true);
 	IModel_UpdateVB();
 }
 
@@ -769,6 +776,7 @@ void HumanoidModel_DrawModel(Entity* entity) {
 IModel* HumanoidModel_GetInstance(void) {
 	IModel_Init(&HumanoidModel);
 	IModel_SetPointers(HumanoidModel);
+	HumanoidModel.vertices = HumanoidModel_Vertices;
 	HumanoidModel.CalcHumanAnims = true;
 	HumanoidModel.UsesHumanSkin = true;
 	return &HumanoidModel;
@@ -778,23 +786,23 @@ IModel* HumanoidModel_GetInstance(void) {
 ModelSet Chibi_Set, Chibi_Set64, Chibi_SetSlim;
 ModelVertex ChibiModel_Vertices[IModel_BoxVertices * (7 + 7 + 4)];
 IModel ChibiModel;
-#define chibi_size 0.5f
+#define CHIBI_SIZE 0.5f
 
 void ChibiModel_MakeBoxDescs(void) {
 	HumanoidModel_MakeBoxDescs();
 	BoxDesc_Box(&head, -4, 12, -4, 4, 20, 4);
 	BoxDesc_RotOrigin(&head, 0, 13, 0);
 
-	BoxDesc_Scale(&torso, chibi_size);
-	BoxDesc_Scale(&lLeg, chibi_size);
-	BoxDesc_Scale(&rLeg, chibi_size);
-	BoxDesc_Scale(&lArm, chibi_size);
-	BoxDesc_Scale(&rArm, chibi_size);
+	BoxDesc_Scale(&torso, CHIBI_SIZE);
+	BoxDesc_Scale(&lLeg, CHIBI_SIZE);
+	BoxDesc_Scale(&rLeg, CHIBI_SIZE);
+	BoxDesc_Scale(&lArm, CHIBI_SIZE);
+	BoxDesc_Scale(&rArm, CHIBI_SIZE);
 }
 
 void ChibiModel_CreateParts(void) {
 	ChibiModel_MakeBoxDescs();
-	offset = 0.5f * chibi_size;
+	offset = 0.5f * CHIBI_SIZE;
 	HumanModel_CreateParts(&ChibiModel, &Chibi_Set,
 		&Chibi_Set64, &Chibi_SetSlim);
 }
@@ -822,6 +830,7 @@ void ChibiModel_DrawModel(Entity* entity) {
 IModel* ChibiModel_GetInstance(void) {
 	IModel_Init(&ChibiModel);
 	IModel_SetPointers(ChibiModel);
+	ChibiModel.vertices = ChibiModel_Vertices;
 	ChibiModel.CalcHumanAnims = true;
 	ChibiModel.UsesHumanSkin = true;
 	ChibiModel.MaxScale = 3.0f;
@@ -845,24 +854,26 @@ void SittingModel_GetPickingBounds(AABB* bb) {
 		 8.0f / 16.0f, (32.0f - SIT_OFFSET) / 16.0f,  4.0f / 16.0f);
 }
 
-void SittingModel_GetTransform(Matrix* m, Entity* p, Vector3 pos) {
-	pos.Y -= (SIT_OFFSET / 16.0f) * p->ModelScale.Y;
-	Entity_GetTransform(p, pos, p->ModelScale, m);
+void SittingModel_GetTransform(Matrix* m, Entity* entity, Vector3 pos) {
+	pos.Y -= (SIT_OFFSET / 16.0f) * entity->ModelScale.Y;
+	Entity_GetTransform(entity, pos, entity->ModelScale, m);
 }
 
-void SittingModel_DrawModel(Entity* p) {
-	p->Anim.LeftLegX = 1.5f;  p->Anim.RightLegX = 1.5f;
-	p->Anim.LeftLegZ = -0.1f; p->Anim.RightLegZ = 0.1f;
-	IModel_SetupState(&HumanoidModel, p);
-	IModel_Render(&HumanoidModel, p);
+void SittingModel_DrawModel(Entity* entity) {
+	entity->Anim.LeftLegX = 1.5f;  entity->Anim.RightLegX = 1.5f;
+	entity->Anim.LeftLegZ = -0.1f; entity->Anim.RightLegZ = 0.1f;
+	IModel_SetupState(&HumanoidModel, entity);
+	IModel_Render(&HumanoidModel, entity);
 }
 
 IModel* SittingModel_GetInstance(void) {
 	IModel_Init(&SittingModel);
 	IModel_SetPointers(SittingModel);
+	SittingModel.vertices = HumanoidModel_Vertices;
 	SittingModel.CalcHumanAnims = true;
 	SittingModel.UsesHumanSkin = true;
 	SittingModel.ShadowScale = 0.5f;
+	SittingModel.GetTransform = SittingModel_GetTransform;
 	return &SittingModel;
 }
 
@@ -881,29 +892,104 @@ void HeadModel_GetPickingBounds(AABB* bb) {
 		 4.0f / 16.0f, 8.0f / 16.0f,  4.0f / 16.0f);
 }
 
-void HeadModel_GetTransform(Matrix* m, Entity* p, Vector3 pos) {
-	pos.Y -= (24.0f / 16.0f) * p->ModelScale.Y;
-	Entity_GetTransform(p, pos, p->ModelScale, m);
+void HeadModel_GetTransform(Matrix* m, Entity* entity, Vector3 pos) {
+	pos.Y -= (24.0f / 16.0f) * entity->ModelScale.Y;
+	Entity_GetTransform(entity, pos, entity->ModelScale, m);
 }
 
-void HeadModel_DrawModel(Entity* p) {
-	HumanModel_SetupState(p);
+void HeadModel_DrawModel(Entity* entity) {
+	HumanModel_SetupState(entity);
 
 	ModelPart part = Humanoid_Set.Head; part.RotY += 4.0f / 16.0f;
-	IModel_DrawRotate(-p->HeadX * MATH_DEG2RAD, 0, 0, part, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
 	IModel_UpdateVB();
 
 	Gfx_SetAlphaTest(true);
 	IModel_ActiveModel->index = 0;
 	part = Humanoid_Set.Hat; part.RotY += 4.0f / 16.0f;
-	IModel_DrawRotate(-p->HeadX * MATH_DEG2RAD, 0, 0, part, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, part, true);
 	IModel_UpdateVB();
 }
 
 IModel* HeadModel_GetInstance(void) {
 	IModel_Init(&HeadModel);
 	IModel_SetPointers(HeadModel);
+	HeadModel.vertices = HumanoidModel_Vertices;
 	HeadModel.CalcHumanAnims = true;
 	HeadModel.UsesHumanSkin = true;
+	HeadModel.GetTransform = HeadModel_GetTransform;
 	return &HeadModel;
+}
+
+
+IModel ArmModel;
+bool arm_classic;
+Matrix arm_translate;
+
+void ArmModel_SetTranslationMatrix(void) {
+	if (Game_ClassicArmModel) {
+		/* TODO: Position's not quite right.
+		Matrix_Translate(&arm_translate, -6.0f / 16.0f + 0.2f, -12.0f / 16.0f - 0.20f, 0.0f);
+		is better, but that breaks the dig animation */
+		Matrix_Translate(&arm_translate, -6.0f / 16.0f,      -12.0f / 16.0f - 0.10f, 0.0f);
+	} else {
+		Matrix_Translate(&arm_translate, -6.0f / 16.0f + 0.10f, -12 / 16.0f - 0.26f, 0.0f);
+	}
+}
+
+void ArmModel_CreateParts(void) {
+	arm_classic = Game_ClassicArmModel;
+	ArmModel_SetTranslationMatrix();
+}
+
+Real32 ArmModel_GetNameYOffset(void) { return 0.5f; }
+Real32 ArmModel_GetEyeY(Entity* entity) { return 0.5f; }
+Vector3 ArmModel_GetCollisionSize(void) { return Vector3_Create3(1.0f, 1.0f, 1.0f); }
+void ArmModel_GetPickingBounds(AABB* bb) { AABB_FromCoords6(bb, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f); }
+
+void ArmModel_DrawPart(ModelPart part) {
+	part.RotX += 1.0f / 16.0f; part.RotY -= 4.0f / 16.0f;
+	if (Game_ClassicArmModel) {
+		IModel_DrawRotate(0,                  -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, part, false);
+	} else {
+		IModel_DrawRotate(-20 * MATH_DEG2RAD, -70 * MATH_DEG2RAD, 135 * MATH_DEG2RAD, part, false);
+	}
+}
+
+void ArmModel_DrawModel(Entity* entity) {
+	HumanModel_SetupState(entity);
+	/* If user changes option while game is running */
+	if (arm_classic != Game_ClassicArmModel) { ArmModel_CreateParts(); }
+
+	SkinType skinType = entity->SkinType;
+	ModelSet* model =
+		skinType == SkinType_64x64Slim ? &Humanoid_SetSlim :
+		(skinType == SkinType_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
+
+	Gfx_PushMatrix();
+	Gfx_MultiplyMatrix(&arm_translate);
+	IModel_Rotation = RotateOrder_YZX;
+
+	ArmModel_DrawPart(model->RightArm);
+	IModel_UpdateVB();
+
+	if (skinType != SkinType_64x32) {
+		ArmModel.index = 0;
+		Gfx_SetAlphaTest(true);
+		ArmModel_DrawPart(model->RightArmLayer);
+		IModel_UpdateVB();
+		Gfx_SetAlphaTest(false);
+	}
+
+	IModel_Rotation = RotateOrder_ZYX;
+	Gfx_PopMatrix();
+}
+
+IModel* ArmModel_GetInstance(void) {
+	IModel_Init(&ArmModel);
+	IModel_SetPointers(ArmModel);
+	ArmModel.vertices = HumanoidModel_Vertices;
+	ArmModel.CalcHumanAnims = true;
+	ArmModel.UsesHumanSkin = true;
+	return &ArmModel;
 }
