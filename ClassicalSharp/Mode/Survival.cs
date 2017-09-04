@@ -194,7 +194,7 @@ namespace ClassicalSharp.Mode {
 		bool wasOnGround = true;
 		float fallY = -1000;
 		bool showedDeathScreen = false;
-		
+
 		public void EndFrame(double delta) {
 			LocalPlayer p = game.LocalPlayer;
 			if (p.onGround) {
@@ -202,7 +202,7 @@ namespace ClassicalSharp.Mode {
 				short damage = (short)((fallY - p.interp.next.Pos.Y) - 3);
 				// TODO: shouldn't take damage when land in water or lava
 				// TODO: is the damage formula correct
-				if (damage > 0) p.Health -= damage;
+				if (damage > 0 && !(p.TouchesAnyWater() | p.TouchesAnyLava())) p.Health -= damage;
 				fallY = -1000;
 			} else {
 				fallY = Math.Max(fallY, p.interp.prev.Pos.Y);
