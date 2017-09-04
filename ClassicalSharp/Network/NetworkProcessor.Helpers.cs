@@ -48,9 +48,15 @@ namespace ClassicalSharp.Network {
 				game.Entities[id] = new NetPlayer(displayName, skinName, game, id);
 				game.EntityEvents.RaiseAdded(id);
 			} else {
-				game.LocalPlayer.DisplayName = displayName;
-				game.LocalPlayer.SkinName = skinName;
+				game.LocalPlayer.Despawn();
+				// Always reset the texture here, in case other network players are using the same skin as us.
+				// In that case, we don't want the fetching of new skin for us to delete the texture used by them.
+				game.LocalPlayer.TextureId = -1;
+				game.LocalPlayer.MobTextureId = -1;
 				game.LocalPlayer.fetchedSkin = false;
+				
+				game.LocalPlayer.DisplayName = displayName;
+				game.LocalPlayer.SkinName = skinName;				
 				game.LocalPlayer.UpdateName();
 			}
 			
