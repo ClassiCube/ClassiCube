@@ -26,6 +26,7 @@ namespace ClassicalSharp.Entities {
 			Player first = FirstOtherWithSameSkin();
 			if (first == null) {
 				game.Graphics.DeleteTexture(ref TextureId);
+				ResetSkin();
 			}
 			ContextLost();
 		}
@@ -182,7 +183,7 @@ namespace ClassicalSharp.Entities {
 			if (Utils.IsUrlPrefix(SkinName, 0)) MobTextureId = TextureId;
 		}
 		
-		void ResetSkin() {
+		internal void ResetSkin() {
 			uScale = 1; vScale = 1;
 			MobTextureId = -1;
 			TextureId = -1;

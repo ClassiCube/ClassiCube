@@ -93,8 +93,8 @@ namespace ClassicalSharp.Model {
 			YQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1, false); // bottom
 			ZQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z1, true); // front
 			ZQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z2, true); // back
-			XQuad(m, x, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x2, true); // left
-			XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true); // right
+			XQuad(m, x, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x2, true); // right
+			XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true); // left
 			return new ModelPart(m.index - 6 * 4, 6 * 4, desc.RotX, desc.RotY, desc.RotZ);
 		}
 		
@@ -121,8 +121,8 @@ namespace ClassicalSharp.Model {
 			YQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, z1, z2, y1, false); // bottom
 			ZQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, y1, y2, z1, false); // front
 			ZQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x1, x2, y2, y1, z2, false); // back
-			XQuad(m, x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2, false); // left
-			XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); // right
+			XQuad(m, x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2, false); // right
+			XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); // left
 			
 			// rotate left and right 90 degrees
 			for (int i = m.index - 8; i < m.index; i++) {
