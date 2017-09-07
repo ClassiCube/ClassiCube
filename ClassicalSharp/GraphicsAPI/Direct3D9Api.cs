@@ -558,7 +558,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		protected unsafe override void LoadOrthoMatrix(float width, float height) {
-			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000);
+			Matrix4 matrix;
+			Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000, out matrix);
 			const float zN = -10000, zF = 10000;
 			matrix.M33 = 1 / (zN - zF);
 			matrix.M43 = zN / (zN - zF);

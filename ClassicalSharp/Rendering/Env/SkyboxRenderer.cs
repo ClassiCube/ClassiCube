@@ -65,13 +65,14 @@ namespace ClassicalSharp.Renderers {
 			
 			Matrix4 m = Matrix4.Identity, rotY, rotX;
 			Vector2 rotation = game.Camera.GetCameraOrientation();
-			Matrix4.RotateY(out rotY, rotation.X); // yaw
-			m *= rotY;
-			Matrix4.RotateX(out rotX, rotation.Y); // pitch
-			m *= rotX;
-			m *= game.Camera.tiltM;
-			game.Graphics.LoadMatrix(ref m);
 			
+			Matrix4.RotateY(out rotY, rotation.X); // yaw
+			Matrix4.Mult(out m, ref m, ref rotY);
+			Matrix4.RotateX(out rotX, rotation.Y); // pitch
+			Matrix4.Mult(out m, ref m, ref rotX);
+			Matrix4.Mult(out m, ref m, ref game.Camera.tiltM);
+			
+			game.Graphics.LoadMatrix(ref m);			
 			game.Graphics.BindVb(vb);
 			game.Graphics.DrawVb_IndexedTris(count * 6 / 4);
 			

@@ -51,8 +51,7 @@ namespace ClassicalSharp.Network {
 				game.LocalPlayer.Despawn();
 				// Always reset the texture here, in case other network players are using the same skin as us.
 				// In that case, we don't want the fetching of new skin for us to delete the texture used by them.
-				game.LocalPlayer.TextureId = -1;
-				game.LocalPlayer.MobTextureId = -1;
+				game.LocalPlayer.ResetSkin();
 				game.LocalPlayer.fetchedSkin = false;
 				
 				game.LocalPlayer.DisplayName = displayName;

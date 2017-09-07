@@ -150,16 +150,6 @@ namespace OpenTK {
 			result.Row3 = Vector4.UnitW;
 		}
 
-		public static void CreateOrthographic(float width, float height, float zNear, float zFar, out Matrix4 result) {
-			CreateOrthographicOffCenter(-width / 2, width / 2, -height / 2, height / 2, zNear, zFar, out result);
-		}
-		
-		public static Matrix4 CreateOrthographic(float width, float height, float zNear, float zFar) {
-			Matrix4 result;
-			CreateOrthographicOffCenter(-width / 2, width / 2, -height / 2, height / 2, zNear, zFar, out result);
-			return result;
-		}
-
 		public static void CreateOrthographicOffCenter(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4 result) {
 			result = new Matrix4();
 
@@ -175,12 +165,6 @@ namespace OpenTK {
 			result.M42 = -(top + bottom) * invTB;
 			result.M43 = -(zFar + zNear) * invFN;
 			result.M44 = 1;
-		}
-
-		public static Matrix4 CreateOrthographicOffCenter(float left, float right, float bottom, float top, float zNear, float zFar) {
-			Matrix4 result;
-			CreateOrthographicOffCenter(left, right, bottom, top, zNear, zFar, out result);
-			return result;
 		}
 		
 		public static void CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar, out Matrix4 result) {
@@ -201,12 +185,6 @@ namespace OpenTK {
 			float xMax = yMax * aspect;
 
 			CreatePerspectiveOffCenter(xMin, xMax, yMin, yMax, zNear, zFar, out result);
-		}
-
-		public static Matrix4 CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar) {
-			Matrix4 result;
-			CreatePerspectiveFieldOfView(fovy, aspect, zNear, zFar, out result);
-			return result;
 		}
 		
 		public static void CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4 result) {
@@ -229,14 +207,8 @@ namespace OpenTK {
 			                     a, b, c, -1,
 			                     0, 0, d,  0);
 		}
-		
-		public static Matrix4 CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float zNear, float zFar) {
-			Matrix4 result;
-			CreatePerspectiveOffCenter(left, right, bottom, top, zNear, zFar, out result);
-			return result;
-		}
 
-		public static Matrix4 LookAt(Vector3 eye, Vector3 target, Vector3 up) {
+		public static void LookAt(Vector3 eye, Vector3 target, Vector3 up, out Matrix4 result) {
 			Vector3 z = Vector3.Normalize(eye - target);
 			Vector3 x = Vector3.Normalize(Vector3.Cross(up, z));
 			Vector3 y = Vector3.Normalize(Vector3.Cross(z, x));
@@ -245,17 +217,10 @@ namespace OpenTK {
 			                          new Vector4(x.Y, y.Y, z.Y, 0.0f),
 			                          new Vector4(x.Z, y.Z, z.Z, 0.0f),
 			                          Vector4.UnitW);
-
 			
 			Matrix4 trans;
-			Matrix4.Translate(out trans, -eye.X, -eye.Y, -eye.Z);
-			return trans * rot;
-		}
-		
-		public static Matrix4 Mult(Matrix4 left, Matrix4 right) {
-			Matrix4 result;
-			Mult(out result, ref left, ref right);
-			return result;
+			Translate(out trans, -eye.X, -eye.Y, -eye.Z);
+			Mult(out result, ref trans, ref rot);
 		}
 
 		public static void Mult(out Matrix4 result, ref Matrix4 left, ref Matrix4 right) {
@@ -289,10 +254,6 @@ namespace OpenTK {
 			result.Row3.Y = (((lM41 * rM12) + (lM42 * rM22)) + (lM43 * rM32)) + (lM44 * rM42);
 			result.Row3.Z = (((lM41 * rM13) + (lM42 * rM23)) + (lM43 * rM33)) + (lM44 * rM43);
 			result.Row3.W = (((lM41 * rM14) + (lM42 * rM24)) + (lM43 * rM34)) + (lM44 * rM44);
-		}
-
-		public static Matrix4 operator * (Matrix4 left, Matrix4 right) {
-			return Matrix4.Mult(left, right);
 		}
 
 		public static bool operator == (Matrix4 left, Matrix4 right) {

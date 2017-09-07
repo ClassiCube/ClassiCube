@@ -133,10 +133,9 @@ namespace ClassicalSharp {
 		
 		void UpdateViewMatrix() {
 			Graphics.SetMatrixMode(MatrixType.Modelview);
-			Matrix4 modelView = Camera.GetView();
-			View = modelView;
-			Graphics.LoadMatrix(ref modelView);
-			Culling.CalcFrustumEquations(ref Projection, ref modelView);
+			Camera.GetView(out View);
+			Graphics.LoadMatrix(ref View);
+			Culling.CalcFrustumEquations(ref Projection, ref View);
 		}
 		
 		void Render3D(double delta, float t) {
@@ -223,11 +222,10 @@ namespace ClassicalSharp {
 		
 		public void UpdateProjection() {
 			DefaultFov = Options.GetInt(OptionsKey.FieldOfView, 1, 150, 70);
-			Matrix4 projection = Camera.GetProjection();
-			Projection = projection;
+			Camera.GetProjection(out Projection);
 			
 			Graphics.SetMatrixMode(MatrixType.Projection);
-			Graphics.LoadMatrix(ref projection);
+			Graphics.LoadMatrix(ref Projection);
 			Graphics.SetMatrixMode(MatrixType.Modelview);
 			Events.RaiseProjectionChanged();
 		}
@@ -337,10 +335,9 @@ namespace ClassicalSharp {
 		public bool CanPick(BlockID block) {
 			if (BlockInfo.Draw[block] == DrawType.Gas) return false;
 			if (BlockInfo.Draw[block] == DrawType.Sprite) return true;
-			if (BlockInfo.Collide[block] != CollideType.Liquid) return true;
 			
-			return !ModifiableLiquids ? false :
-				BlockInfo.CanPlace[block] && BlockInfo.CanDelete[block];
+			if (BlockInfo.Collide[block] != CollideType.Liquid) return true;		
+			return ModifiableLiquids && BlockInfo.CanPlace[block] && BlockInfo.CanDelete[block];
 		}
 		
 		
