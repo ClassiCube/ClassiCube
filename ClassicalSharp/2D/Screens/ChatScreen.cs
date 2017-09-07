@@ -24,7 +24,6 @@ namespace ClassicalSharp.Gui.Screens {
 		bool suppressNextPress = true;
 		int chatIndex;
 		AltTextInputWidget altText;
-		int[] chatIndices;
 		
 		Font chatFont, chatUrlFont, announcementFont;
 		// needed for lost contexts, to restore chat typed in
@@ -90,8 +89,9 @@ namespace ClassicalSharp.Gui.Screens {
 			bottomRight.SetText(1, chat.BottomRight2.Text);
 			bottomRight.SetText(0, chat.BottomRight3.Text);
 			announcement.SetText(chat.Announcement.Text);
-			for (int i = 0; i < chat.ClientStatus.Length; i++)
+			for (int i = 0; i < chat.ClientStatus.Length; i++) {
 				clientStatus.SetText(i, chat.ClientStatus[i].Text);
+			}
 			
 			if (chatInInputBuffer != null) {
 				OpenTextInputBar(chatInInputBuffer);
@@ -158,11 +158,15 @@ namespace ClassicalSharp.Gui.Screens {
 		void RenderRecentChat(DateTime now, double delta) {
 			for (int i = 0; i < normalChat.Textures.Length; i++) {
 				Texture texture = normalChat.Textures[i];
-				if (!texture.IsValid || chatIndices[i] == -1) continue;
+				int logIdx = chatIndex + i;
 				
-				DateTime received = game.Chat.Log[chatIndices[i]].Received;
-				if ((now - received).TotalSeconds <= 10)
+				if (!texture.IsValid) continue;
+				if (logIdx < 0 || logIdx >= game.Chat.Log.Count) continue;
+				
+				DateTime received = game.Chat.Log[logIdx].Received;
+				if ((now - received).TotalSeconds <= 10) {
 					texture.Render(gfx);
+				}
 			}
 		}
 		
@@ -234,13 +238,10 @@ namespace ClassicalSharp.Gui.Screens {
 			if (type == MessageType.Normal) {
 				chatIndex++;
 				if (game.ChatLines == 0) return;
+				
 				List<ChatLine> chat = game.Chat.Log;
 				normalChat.PushUpAndReplaceLast(chat[chatIndex + chatLines - 1].Text);
-				
-				for (int i = 0; i < chatLines - 1; i++) {
-					chatIndices[i] = chatIndices[i + 1];
-				}
-				chatIndices[chatLines - 1] = chatIndex + chatLines - 1;
+
 			} else if (type >= MessageType.Status1 && type <= MessageType.Status3) {
 				status.SetText(2 + (int)(type - MessageType.Status1), e.Text);
 			} else if (type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3) {
@@ -285,11 +286,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			ConstructWidgets();
-			
-			chatIndices = new int[chatLines];
-			for (int i = 0; i < chatIndices.Length; i++) {
-				chatIndices[i] = -1;
-			}
 			SetInitialMessages();
 		}
 		
@@ -308,14 +304,10 @@ namespace ClassicalSharp.Gui.Screens {
 		void ResetChat() {
 			normalChat.Dispose();
 			List<ChatLine> chat = game.Chat.Log;
-			for (int i = 0; i < chatLines; i++) {
-				chatIndices[i] = -1;
-			}
 			
 			for (int i = chatIndex; i < chatIndex + chatLines; i++) {
 				if (i >= 0 && i < chat.Count) {
 					normalChat.PushUpAndReplaceLast(chat[i].Text);
-					chatIndices[i - chatIndex] = i;
 				}
 			}
 		}
