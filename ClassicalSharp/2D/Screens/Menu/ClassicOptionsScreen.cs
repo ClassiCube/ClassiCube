@@ -78,13 +78,13 @@ namespace ClassicalSharp.Gui.Screens {
 			text = text + ": " + (getter(game) ? "ON" : "OFF");
 			ButtonWidget widget = ButtonWidget.Create(game, 300, text, titleFont, OnWidgetClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
-			widget.Metadata = optName;
+			widget.OptName = optName;
 			widget.GetValue = g => getter(g) ? "yes" : "no";
 			
 			widget.SetValue = (g, v) => {
 				setter(g, v == "yes");
 				Options.Set(optKey, v == "yes" ? 100 : 0);
-				widget.SetText((string)widget.Metadata + ": " + (v == "yes" ? "ON" : "OFF"));
+				widget.SetText(widget.OptName + ": " + (v == "yes" ? "ON" : "OFF"));
 			};
 			return widget;
 		}

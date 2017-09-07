@@ -112,11 +112,11 @@ namespace ClassicalSharp.Gui.Screens {
 		                               ButtonValueGetter getter, ButtonValueSetter setter) {
 			ButtonWidget widget = ButtonWidget.Create(game, 300, text + ": " + getter(game), titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
-			widget.Metadata = text;
+			widget.OptName = text;
 			widget.GetValue = getter;
 			widget.SetValue = (g, v) => {
 				setter(g, v);
-				widget.SetText((string)widget.Metadata + ": " + getter(g));
+				widget.SetText(widget.OptName + ": " + getter(g));
 			};
 			return widget;
 		}
@@ -132,14 +132,14 @@ namespace ClassicalSharp.Gui.Screens {
 			text = text + ": " + (getter(game) ? "ON" : "OFF");
 			ButtonWidget widget = ButtonWidget.Create(game, 300, text, titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
-			widget.Metadata = optName;
+			widget.OptName = optName;
 			widget.GetValue = g => getter(g) ? "yes" : "no";
 			string target = invert ? "no" : "yes";
 			
 			widget.SetValue = (g, v) => {
 				setter(g, v == "yes");
 				Options.Set(optKey, v == target);
-				widget.SetText((string)widget.Metadata + ": " + (v == "yes" ? "ON" : "OFF"));
+				widget.SetText(widget.OptName + ": " + (v == "yes" ? "ON" : "OFF"));
 			};
 			return widget;
 		}

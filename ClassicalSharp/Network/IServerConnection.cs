@@ -60,7 +60,7 @@ namespace ClassicalSharp {
 		protected Game game;
 		
 		protected void WarningScreenTick(Overlay warning) {
-			string identifier = (string)warning.Metadata;
+			string identifier = warning.Metadata;
 			DownloadedItem item;
 			if (!game.AsyncDownloader.TryGetItem(identifier, out item) || item.Data == null) return;
 			
@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DownloadTexturePack(Overlay texPackOverlay, bool always) {
-			string url = ((string)texPackOverlay.Metadata).Substring(3);
+			string url = texPackOverlay.Metadata.Substring(3);
 			DownloadTexturePack(url);
 			if (always && !game.AcceptedUrls.HasEntry(url)) {
 				game.AcceptedUrls.AddEntry(url);
@@ -108,7 +108,7 @@ namespace ClassicalSharp {
 		}
 
 		void SkipTexturePack(Overlay texPackOverlay, bool always) {
-			string url = ((string)texPackOverlay.Metadata).Substring(3);
+			string url = texPackOverlay.Metadata.Substring(3);
 			if (always && !game.DeniedUrls.HasEntry(url)) {
 				game.DeniedUrls.AddEntry(url);
 			}

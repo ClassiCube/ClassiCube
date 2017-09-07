@@ -11,6 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public Action<Overlay> OnRenderFrame;
 		protected TextWidget[] labels;
 		public string[] lines = new string[4];
+		public string Metadata;
 		
 		public Overlay(Game game) : base(game) { }
 		

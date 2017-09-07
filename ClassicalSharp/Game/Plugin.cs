@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 		
 		
 		void Accept(Overlay overlay, bool always) {
-			string plugin = (string)overlay.Metadata;
+			string plugin = overlay.Metadata;
 			if (always && !accepted.HasEntry(plugin)) {
 				accepted.AddEntry(plugin);
 			}
@@ -58,7 +58,7 @@ namespace ClassicalSharp {
 		}
 
 		void Deny(Overlay overlay, bool always) {
-			string plugin = (string)overlay.Metadata;
+			string plugin = overlay.Metadata;
 			if (always && !denied.HasEntry(plugin)) {
 				denied.AddEntry(plugin);
 			}

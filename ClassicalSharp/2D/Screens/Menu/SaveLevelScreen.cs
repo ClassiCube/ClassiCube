@@ -112,9 +112,9 @@ namespace ClassicalSharp.Gui.Screens {
 			text = Path.Combine(Program.AppDirectory, "maps");
 			text = Path.Combine(text, file);
 			
-			if (File.Exists(text) && widget.Metadata == null) {
+			if (File.Exists(text) && ((ButtonWidget)widget).OptName == null) {
 				((ButtonWidget)widget).SetText("&cOverwrite existing?");
-				((ButtonWidget)widget).Metadata = true;
+				((ButtonWidget)widget).OptName = "O";
 			} else {
 				// NOTE: We don't immediately save here, because otherwise the 'saving...'
 				// will not be rendered in time because saving is done on the main thread.
@@ -125,14 +125,16 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void RemoveOverwrites() {
-			RemoveOverwrite(widgets[0]); RemoveOverwrite(widgets[1]);
+			RemoveOverwrite(widgets[0], "Save"); 
+			RemoveOverwrite(widgets[1], "Save schematic");
 		}
 		
-		void RemoveOverwrite(Widget widget) {
+		void RemoveOverwrite(Widget widget, string defaultText) {
 			ButtonWidget button = (ButtonWidget)widget;
-			if (button.Metadata == null) return;
-			button.Metadata = null;
-			button.SetText("Save");
+			if (button.OptName == null) return;
+			
+			button.OptName = null;
+			button.SetText(defaultText);
 		}
 		
 		string textPath;

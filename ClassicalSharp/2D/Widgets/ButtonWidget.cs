@@ -18,6 +18,7 @@ namespace ClassicalSharp.Gui.Widgets {
 	
 	
 	public sealed class ButtonWidget : Widget {
+		public string OptName;
 		
 		public ButtonWidget(Game game, Font font) : base(game) {
 			this.font = font;
