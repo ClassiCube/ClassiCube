@@ -45,7 +45,7 @@ namespace ClassicalSharp {
 			Matrix4 rotY, rotX;
 			Matrix4.RotateY(out rotY, 45 * Utils.Deg2Rad);
 			Matrix4.RotateX(out rotX, -30f * Utils.Deg2Rad);
-			transform = rotY * rotX;
+			Matrix4.Mult(out transform, ref rotY, ref rotX);
 			
 			cosX = (float)Math.Cos(30f * Utils.Deg2Rad);
 			sinX = (float)Math.Sin(30f * Utils.Deg2Rad);

@@ -29,7 +29,8 @@ typedef struct PickedPos_ {
 } PickedPos;
 
 /*  Mark as having a selected block, and calculates the closest face of the selected block's position. */
-void PickedPos_SetAsValid(PickedPos* pos, Int32 x, Int32 y, Int32 z, Vector3 min, Vector3 max);
+void PickedPos_SetAsValid(PickedPos* pos, Int32 x, Int32 y, Int32 z, 
+	Vector3 min, Vector3 max, BlockID block, Vector3 intersect);
 
 /* Marks as not having a selected block. */
 void PickedPos_SetAsInvalid(PickedPos* pos);

@@ -241,7 +241,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public string[] ApiInfo;
 		
 		protected virtual void LoadOrthoMatrix(float width, float height) {
-			Matrix4 matrix = Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000);
+			Matrix4 matrix;
+			Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000, out matrix);
 			LoadMatrix(ref matrix);
 		}
 		

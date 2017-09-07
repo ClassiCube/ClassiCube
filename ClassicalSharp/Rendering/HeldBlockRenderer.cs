@@ -57,7 +57,7 @@ namespace ClassicalSharp.Renderers {
 			DoAnimation(delta, lastSwingY);
 			SetBaseOffset();
 			
-			game.Graphics.FaceCulling = true;		
+			game.Graphics.FaceCulling = true;
 			game.Graphics.Texturing = true;
 			game.Graphics.SetupAlphaState(BlockInfo.Draw[block]);
 			game.Graphics.DepthTest = false;
@@ -74,7 +74,7 @@ namespace ClassicalSharp.Renderers {
 			
 			game.Graphics.Texturing = false;
 			game.Graphics.RestoreAlphaState(BlockInfo.Draw[block]);
-			game.Graphics.DepthTest = true;			
+			game.Graphics.DepthTest = true;
 			game.Graphics.FaceCulling = false;
 			
 			game.Graphics.LoadMatrix(ref game.View);
@@ -88,7 +88,10 @@ namespace ClassicalSharp.Renderers {
 		void SetMatrix() {
 			Player p = game.LocalPlayer;
 			Vector3 eyePos = p.EyePosition;
-			Matrix4 m = Matrix4.LookAt(eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY) * game.Camera.tiltM;
+			
+			Matrix4 m, lookAt;
+			Matrix4.LookAt(eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY, out lookAt);
+			Matrix4.Mult(out m, ref lookAt, ref game.Camera.tiltM);
 			game.Graphics.LoadMatrix(ref m);
 		}
 		
@@ -122,8 +125,8 @@ namespace ClassicalSharp.Renderers {
 		void ProjectionChanged(object sender, EventArgs e) {
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
-			heldBlockProj = Matrix4.CreatePerspectiveFieldOfView(70 * Utils.Deg2Rad,
-			                                                     aspectRatio, zNear, game.ViewDistance);
+			Matrix4.CreatePerspectiveFieldOfView(70 * Utils.Deg2Rad,
+			                                     aspectRatio, zNear, game.ViewDistance, out heldBlockProj);
 		}
 
 		
@@ -171,7 +174,7 @@ namespace ClassicalSharp.Renderers {
 				
 				if (swinging) {
 					// i.e. the block has gone to bottom of screen and is now returning back up
-					// at this point we switch over to the new held block.					
+					// at this point we switch over to the new held block.
 					if (swingY > lastSwingY) lastBlock = block;
 					block = lastBlock;
 					held.ModelBlock = block;
@@ -207,7 +210,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetAnim(bool setLastHeld, double period) {
 			time = 0; swingY = 0;
-			animating = false; swinging = false;			
+			animating = false; swinging = false;
 			this.period = period;
 			
 			if (setLastHeld) lastBlock = game.Inventory.Selected;

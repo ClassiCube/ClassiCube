@@ -136,7 +136,7 @@ namespace ClassicalSharp.Entities {
 			if (SkinType == SkinType.Invalid) {
 				SetSkinAll(true);
 			} else {
-				if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);				
+				if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);
 				TextureId = game.Graphics.CreateTexture(bmp, true, false);
 				SetSkinAll(false);
 			}
