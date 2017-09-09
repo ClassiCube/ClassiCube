@@ -113,8 +113,8 @@ namespace ClassicalSharp.Entities {
 		
 		protected void CheckSkin() {
 			if (!fetchedSkin && Model.UsesSkin) {
-				Player first = FirstOtherWithSameSkin();
-				if (first == null || (first.TextureId <= 0 && !AnyOthersFetchedSkin())) {
+				Player first = FirstOtherWithSameSkinAndFetchedSkin();
+				if (first == null) {
 					game.AsyncDownloader.DownloadSkin(SkinName, SkinName);
 				} else {
 					ApplySkin(first);
@@ -152,13 +152,13 @@ namespace ClassicalSharp.Entities {
 			return null;
 		}
 		
-		bool AnyOthersFetchedSkin() {
+		Player FirstOtherWithSameSkinAndFetchedSkin() {
 			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (game.Entities[i] == null) continue;
+				if (game.Entities[i] == null || game.Entities[i] == this) continue;
 				Player p = game.Entities[i] as Player;
-				if (p != null && p.SkinName == SkinName && p.fetchedSkin) return true;
+				if (p != null && p.SkinName == SkinName && p.fetchedSkin) return p;
 			}
-			return false;
+			return null;
 		}
 		
 		// Apply or reset skin, for all players with same skin
