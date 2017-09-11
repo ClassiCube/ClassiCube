@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 		
 		public void BeginBatch(Game game, VertexP3fT2fC4b[] vertices, int vb) {
 			this.game = game;
-			lastIndex = -1;
+			lastTexIndex = -1;
 			index = 0;
 			this.vertices = vertices;
 			this.vb = vb;
@@ -97,28 +97,24 @@ namespace ClassicalSharp {
 		}
 		
 		public void EndBatch() {
-			if (index > 0) {
-				if (texIndex != lastIndex) game.Graphics.BindTexture(atlas.TexIds[texIndex]);
-				game.Graphics.UpdateDynamicVb_IndexedTris(vb, vertices, index);
-				index = 0;
-				lastIndex = -1;
-			}
+			if (index > 0) { lastTexIndex = texIndex; Flush(); }
+			lastTexIndex = -1;
 			game.Graphics.PopMatrix();
 		}
 		
 		int GetTex(BlockID block, int side) {
-			int texId = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texId / atlas.elementsPerAtlas1D;
+			int texLoc = BlockInfo.GetTextureLoc(block, side);
+			texIndex = texLoc / atlas.elementsPerAtlas1D;
 			
-			if (lastIndex != texIndex) Flush();
-			return texId;
+			if (lastTexIndex != texIndex) Flush();
+			return texLoc;
 		}
 
 		static Vector3 pos = Vector3.Zero;
 		void SpriteZQuad(BlockID block, bool firstPart) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Right);
 			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
-			if (lastIndex != texIndex) Flush();
+			if (lastTexIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
@@ -141,7 +137,7 @@ namespace ClassicalSharp {
 		void SpriteXQuad(BlockID block, bool firstPart) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Right);
 			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
-			if (lastIndex != texIndex) Flush();
+			if (lastTexIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
 			v.Colour = colNormal;
@@ -161,15 +157,15 @@ namespace ClassicalSharp {
 			v.X = pos.X; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
 		}
 		
-		int lastIndex, texIndex;
+		int lastTexIndex, texIndex;
 		void Flush() {
-			if (lastIndex != -1) {
+			if (lastTexIndex != -1) {
+				game.Graphics.BindTexture(atlas.TexIds[lastTexIndex]);
 				game.Graphics.UpdateDynamicVb_IndexedTris(vb, vertices, index);
-				index = 0;
 			}
 			
-			lastIndex = texIndex;
-			game.Graphics.BindTexture(atlas.TexIds[texIndex]);
+			lastTexIndex = texIndex;
+			index = 0;			
 		}
 		
 		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>

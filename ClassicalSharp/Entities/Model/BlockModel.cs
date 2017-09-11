@@ -60,12 +60,10 @@ namespace ClassicalSharp.Model {
 				minBB = BlockInfo.MinBB[block];
 				maxBB = BlockInfo.MaxBB[block];
 				height = maxBB.Y - minBB.Y;
-				if (BlockInfo.Draw[block] == DrawType.Sprite)
-					height = 1;
 			}
 		}
 
-		int lastTexId = -1;
+		int lastTexIndex = -1;
 		public override void DrawModel(Entity p) {
 			block = p.ModelBlock;
 			RecalcProperties(p);
@@ -76,29 +74,24 @@ namespace ClassicalSharp.Model {
 			}
 			if (BlockInfo.Draw[block] == DrawType.Gas) return;
 			
-			lastTexId = -1;
+			lastTexIndex = -1;
 			atlas = game.TerrainAtlas1D;
 			bool sprite = BlockInfo.Draw[block] == DrawType.Sprite;
 			DrawParts(sprite);
 			if (index == 0) return;
 			
-			IGraphicsApi gfx = game.Graphics;
-			gfx.BindTexture(lastTexId);
-			
-			if (sprite) gfx.FaceCulling = true;
-			UpdateVB();
-			if (sprite) gfx.FaceCulling = false;
+			if (sprite) game.Graphics.FaceCulling = true;
+			lastTexIndex = texIndex; Flush();
+			if (sprite) game.Graphics.FaceCulling = false;
 		}
 		
-		void FlushIfNotSame(int texIndex) {
-			int texId = game.TerrainAtlas1D.TexIds[texIndex];
-			if (texId == lastTexId) return;
-			
-			if (lastTexId != -1) {
-				game.Graphics.BindTexture(lastTexId);
+		void Flush() {
+			if (lastTexIndex != -1) {
+				game.Graphics.BindTexture(atlas.TexIds[texIndex]);
 				UpdateVB();
 			}
-			lastTexId = texId;
+			
+			lastTexIndex = texIndex;
 			index = 0;
 		}
 		
@@ -134,11 +127,11 @@ namespace ClassicalSharp.Model {
 		}
 		
 		int GetTex(int side) {
-			int texId = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texId / atlas.elementsPerAtlas1D;
+			int texLoc = BlockInfo.GetTextureLoc(block, side);
+			texIndex = texLoc / atlas.elementsPerAtlas1D;
 			
-			FlushIfNotSame(texIndex);
-			return texId;
+			if (lastTexIndex != texIndex) Flush();
+			return texLoc;
 		}
 		
 		void SpriteZQuad(int side, bool firstPart) {
@@ -147,13 +140,11 @@ namespace ClassicalSharp.Model {
 		}
 		
 		void SpriteZQuad(int side, bool firstPart, bool mirror) {
-			int texId = BlockInfo.GetTextureLoc(block, side), texIndex = 0;
-			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
-			FlushIfNotSame(texIndex);
-			if (height != 1)
-				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
+			int texLoc = BlockInfo.GetTextureLoc(block, side), texIndex = 0;
+			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
+			if (lastTexIndex != texIndex) Flush();
+			
 			int col = cols[0];
-
 			float p1 = 0, p2 = 0;
 			if (firstPart) { // Need to break into two quads for when drawing a sprite model in hand.
 				if (mirror) { rec.U1 = 0.5f; p1 = -5.5f/16; }
@@ -175,13 +166,11 @@ namespace ClassicalSharp.Model {
 		}
 
 		void SpriteXQuad(int side, bool firstPart, bool mirror) {
-			int texId = BlockInfo.GetTextureLoc(block, side), texIndex = 0;
-			TextureRec rec = atlas.GetTexRec(texId, 1, out texIndex);
-			FlushIfNotSame(texIndex);
-			if (height != 1)
-				rec.V2 = rec.V1 + height * atlas.invElementSize * (15.99f/16f);
-			int col = cols[0];
-			
+			int texLoc = BlockInfo.GetTextureLoc(block, side), texIndex = 0;
+			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
+			if (lastTexIndex != texIndex) Flush();			
+
+			int col = cols[0];			
 			float x1 = 0, x2 = 0, z1 = 0, z2 = 0;
 			if (firstPart) {
 				if (mirror) { rec.U2 = 0.5f; x2 = -5.5f/16; z2 = 5.5f/16; }
