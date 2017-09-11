@@ -4,28 +4,42 @@ using System.Collections.Generic;
 
 namespace Launcher.Patcher {
 	
-	public sealed class ResourceList {
+	public static class ResourceList {	
+		public const byte mask_classic = 0x01;
+		public const byte mask_modern  = 0x02;
+		public const byte mask_gui     = 0x04;
+		public const byte mask_terrain = 0x08;
 		
-		public const ushort cMask = 0xF000;
-		public const ushort mMask = 0x0F00;
-		public const ushort gMask = 0x00F0;
-		public const ushort tMask = 0x000F;
-		
-		public static Dictionary<string, ushort> Files = new Dictionary<string, ushort>() {
+		public static string[] Filenames = new string[] {
 			// classic jar files
-			{ "char.png", cMask }, { "clouds.png", cMask },
-			{ "default.png", cMask }, { "particles.png", cMask },
-			{ "rain.png", cMask }, { "terrain.png", cMask | tMask },
-			{ "gui_classic.png", cMask }, { "icons.png", cMask },
-			//{ "arrows.png", cMask }, { "sign.png", cMask },
-			{ "creeper.png", cMask }, { "pig.png", cMask },
-			{ "sheep.png", cMask }, { "sheep_fur.png", cMask },
-			{ "skeleton.png", cMask }, { "spider.png", cMask },
-			{ "zombie.png", cMask },
-			// Other files
-			{ "snow.png", mMask }, { "chicken.png", mMask },
-			{ "animations.png", mMask }, { "gui.png", gMask },
+			"char.png", "clouds.png", "default.png", "particles.png",
+			"rain.png", "gui_classic.png", "icons.png", "terrain.png",
+			"creeper.png", "pig.png", "sheep.png", "sheep_fur.png",
+			"skeleton.png", "spider.png", "zombie.png", // "arrows.png", "sign.png"			
+			// other files
+			"snow.png", "chicken.png", "animations.png", "gui.png",
 		};
+		
+		public static byte[] FileMasks = new byte[] {
+			// classic jar files
+			mask_classic, mask_classic, mask_classic, mask_classic,
+			mask_classic, mask_classic, mask_classic, mask_classic | mask_terrain,
+			mask_classic, mask_classic, mask_classic, mask_classic,
+			mask_classic, mask_classic, mask_classic, // cMask, cMask
+			// other files
+			mask_modern, mask_modern, mask_modern, mask_gui,
+		};
+		
+		public static bool[] FilesExist = new bool[Filenames.Length];
+		
+		public static byte GetFetchFlags() {
+			byte flags = 0;
+			for (int i = 0; i < Filenames.Length; i++) {
+				if (FilesExist[i]) continue;
+				flags |= FileMasks[i];
+			}
+			return flags;
+		}
 		
 		public static string[] DigSounds = new string[] { "Acloth1", "Acloth2", "Acloth3", "Acloth4", "Bglass1",
 			"Bglass2", "Bglass3", "Agrass1", "Agrass2", "Agrass3", "Agrass4", "Agravel1", "Agravel2",

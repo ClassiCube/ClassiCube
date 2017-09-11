@@ -29,21 +29,17 @@ namespace Launcher.Patcher {
 		const string musicUri = "http://s3.amazonaws.com/MinecraftResources/music/";
 		const string newMusicUri = "http://s3.amazonaws.com/MinecraftResources/newmusic/";
 		
-		ushort flags;
 		public void DownloadItems(AsyncDownloader downloader, Action<string> setStatus) {
-			this.downloader = downloader;
+			this.downloader = downloader;		
+			byte fetchFlags = ResourceList.GetFetchFlags();
 			
-			flags = 0;
-			foreach (var entry in ResourceList.Files)
-				flags |= entry.Value;
-			
-			if ((flags & ResourceList.cMask) != 0)
+			if ((fetchFlags & ResourceList.mask_classic) != 0)
 				QueueItem(jarClassicUri, "classic jar");
-			if ((flags & ResourceList.mMask) != 0)
+			if ((fetchFlags & ResourceList.mask_modern) != 0)
 				QueueItem(jar162Uri, "1.6.2 jar");
-			if ((flags & ResourceList.gMask) != 0)
+			if ((fetchFlags & ResourceList.mask_gui) != 0)
 				QueueItem(pngGuiPatchUri, "gui.png patch");
-			if ((flags & ResourceList.tMask) != 0)
+			if ((fetchFlags & ResourceList.mask_terrain) != 0)
 				QueueItem(pngTerrainPatchUri, "terrain.png patch");
 			
 			DownloadMusicFiles();

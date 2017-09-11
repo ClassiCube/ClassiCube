@@ -132,8 +132,7 @@ namespace Launcher {
 		
 		static bool ParseEscaped(string json, ref int index, StringBuilder s) {
 			char c = json[index++];
-			if (c == '\\') { s.Append('\\'); return true; }
-			if (c == '"') { s.Append('"'); return true; }
+			if (c == '/' || c == '\\' || c == '"') { s.Append(c); return true; }
 			if (c != 'u') { s.Append('?'); return true; }
 			
 			int remaining = json.Length - index;

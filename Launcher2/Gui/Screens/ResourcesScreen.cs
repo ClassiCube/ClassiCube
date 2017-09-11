@@ -40,7 +40,7 @@ namespace Launcher.Gui.Screens {
 				failed = true;
 			
 			if (!fetcher.Done) return;
-			if (ResourceList.Files.Count > 0) {
+			if (ResourceList.GetFetchFlags() != 0) {
 				ResourcePatcher patcher = new ResourcePatcher(fetcher, drawer);
 				patcher.Run();
 			}
