@@ -25,6 +25,8 @@ void IModel_GetTransform(Entity* entity, Vector3 pos) {
 	Entity_GetTransform(entity, pos, entity->ModelScale);
 }
 
+void IModel_RecalcProperties(Entity* entity) { }
+
 void IModel_Init(IModel* model) {
 	model->Bobbing = true;
 	model->UsesSkin = true;
@@ -41,6 +43,7 @@ void IModel_Init(IModel* model) {
 	model->NameScale = 1.0f;
 
 	model->GetTransform = IModel_GetTransform;
+	model->RecalcProperties = IModel_RecalcProperties;
 }
 
 bool IModel_ShouldRender(Entity* entity) {

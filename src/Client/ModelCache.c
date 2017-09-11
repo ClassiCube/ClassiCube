@@ -5,6 +5,8 @@
 #include "ExtMath.h"
 #include "IModel.h"
 #include "String.h"
+#include "TerrainAtlas.h"
+#include "Drawer.h"
 
 String ModelCache_charPngString = String_FromConstant("char.png");
 Int32 ModelCache_texCount, ModelCache_modelCount;
@@ -57,7 +59,7 @@ Int32 ModelCache_GetTextureIndex(STRING_TRANSIENT String* texName) {
 }
 
 void ModelCache_Register(STRING_REF const UInt8* name, STRING_TRANSIENT const UInt8* defaultTexName, IModel* instance) {
-	if (ModelCache_texCount < ModelCache_MaxModels) {
+	if (ModelCache_modelCount < ModelCache_MaxModels) {
 		CachedModel model;
 		model.Name = String_FromReadonly(name);
 		model.Instance = instance;
@@ -166,7 +168,6 @@ void ChickenModel_CreateParts(void) {
 	Chicken_RightLeg = ChickenModel_MakeLeg(0, 3, 1, 2);
 }
 
-Real32 ChickenModel_GetNameYOffset(void) { return 1.0125f; }
 Real32 ChickenModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
 Vector3 ChickenModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 12.0f / 16.0f, 8.0f / 16.0f);
@@ -201,6 +202,7 @@ void ChickenModel_DrawModel(Entity* entity) {
 IModel* ChickenModel_GetInstance(void) {
 	IModel_Init(&ChickenModel);
 	IModel_SetPointers(ChickenModel);
+	ChickenModel.NameYOffset = 1.0125f;
 	ChickenModel.vertices = ChickenModel_Vertices;
 	return &ChickenModel;
 }
@@ -244,7 +246,6 @@ void CreeperModel_CreateParts(void) {
 	Creeper_RightLegBack = BoxDesc_BuildBox(&CreeperModel, &desc);
 }
 
-Real32 CreeperModel_GetNameYOffset(void) { return 1.7f; }
 Real32 CreeperModel_GetEyeY(Entity* entity) { return 22.0f / 16.0f; }
 Vector3 CreeperModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 26.0f / 16.0f, 8.0f / 16.0f);
@@ -272,6 +273,7 @@ IModel* CreeperModel_GetInstance(void) {
 	IModel_SetPointers(CreeperModel);
 	CreeperModel.vertices = CreeperModel_Vertices;
 	CreeperModel.SurvivalScore = 200;
+	CreeperModel.NameYOffset = 1.7f;
 	return &CreeperModel;
 }
 
@@ -314,7 +316,6 @@ void PigModel_CreateParts(void) {
 	Pig_RightLegBack = BoxDesc_BuildBox(&PigModel, &desc);
 }
 
-Real32 PigModel_GetNameYOffset(void) { return 1.075f; }
 Real32 PigModel_GetEyeY(Entity* entity) { return 12.0f / 16.0f; }
 Vector3 PigModel_GetCollisionSize(void) {
 	return Vector3_Create3(14.0f / 16.0f, 14.0f / 16.0f, 14.0f / 16.0f);
@@ -343,6 +344,7 @@ IModel* PigModel_GetInstance(void) {
 	IModel_SetPointers(PigModel);
 	PigModel.vertices = PigModel_Vertices;
 	PigModel.SurvivalScore = 10;
+	PigModel.NameYOffset = 1.075f;
 	return &PigModel;
 }
 
@@ -420,7 +422,6 @@ void SheepModel_CreateParts(void) {
 	Fur_RightLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
 }
 
-Real32 SheepModel_GetNameYOffset(void) { return 1.48125f; }
 Real32 SheepModel_GetEyeY(Entity* entity) { return 20.0f / 16.0f; }
 Vector3 SheepModel_GetCollisionSize(void) {
 	return Vector3_Create3(10.0f / 16.0f, 20.0f / 16.0f, 10.0f / 16.0f);
@@ -460,6 +461,7 @@ IModel* SheepModel_GetInstance(void) {
 	IModel_SetPointers(SheepModel);
 	SheepModel.vertices = SheepModel_Vertices;
 	SheepModel.SurvivalScore = 10;
+	SheepModel.NameYOffset = 1.48125f;
 
 	String sheep_fur = String_FromConstant("sheep_fur.png");
 	fur_Index = ModelCache_GetTextureIndex(&sheep_fur);
@@ -505,7 +507,6 @@ void SkeletonModel_CreateParts(void) {
 	Skeleton_RightArm = BoxDesc_BuildBox(&SkeletonModel, &desc);
 }
 
-Real32 SkeletonModel_GetNameYOffset(void) { return 2.075f; }
 Real32 SkeletonModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
 Vector3 SkeletonModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 30.0f / 16.0f, 8.0f / 16.0f);
@@ -534,6 +535,7 @@ IModel* SkeletonModel_GetInstance(void) {
 	IModel_SetPointers(SkeletonModel);
 	SkeletonModel.vertices = SkeletonModel_Vertices;
 	SkeletonModel.SurvivalScore = 120;
+	SkeletonModel.NameYOffset = 2.075f;
 	return &SkeletonModel;
 }
 
@@ -570,7 +572,6 @@ void SpiderModel_CreateParts(void) {
 	Spider_RightLeg = BoxDesc_BuildBox(&SpiderModel, &desc);
 }
 
-Real32 SpiderModel_GetNameYOffset(void) { return 1.0125f; }
 Real32 SpiderModel_GetEyeY(Entity* entity) { return 8.0f / 16.0f; }
 Vector3 SpiderModel_GetCollisionSize(void) {
 	return Vector3_Create3(15.0f / 16.0f, 12.0f / 16.0f, 15.0f / 16.0f);
@@ -615,6 +616,7 @@ IModel* SpiderModel_GetInstance(void) {
 	IModel_SetPointers(SpiderModel);
 	SpiderModel.vertices = SpiderModel_Vertices;
 	SpiderModel.SurvivalScore = 105;
+	SpiderModel.NameYOffset = 1.0125f;
 	return &SpiderModel;
 }
 
@@ -663,7 +665,6 @@ void ZombieModel_CreateParts(void) {
 	Zombie_RightArm = BoxDesc_BuildBox(&ZombieModel, &desc);
 }
 
-Real32 ZombieModel_GetNameYOffset(void) { return 2.075f; }
 Real32 ZombieModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
 Vector3 ZombieModel_GetCollisionSize(void) {
 	return Vector3_Create3((8.0f + 0.6f) / 16.0f, 28.1f / 16.0f, (8.0f + 0.6f) / 16.0f);
@@ -694,6 +695,7 @@ IModel* ZombieModel_GetInstance(void) {
 	IModel_SetPointers(ZombieModel);
 	ZombieModel.vertices = ZombieModel_Vertices;
 	ZombieModel.SurvivalScore = 80;
+	ZombieModel.NameYOffset = 2.075f;
 	return &ZombieModel;
 }
 
@@ -857,7 +859,6 @@ void HumanoidModel_CreateParts(void) {
 		&Humanoid_Set64, &Humanoid_SetSlim);
 }
 
-Real32 HumanoidModel_GetNameYOffset(void) { return 32.0f / 16.0f + 0.5f / 16.0f; }
 Real32 HumanoidModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
 Vector3 HumanoidModel_GetCollisionSize(void) {
 	return Vector3_Create3((8.0f + 0.6f) / 16.0f, 28.1f / 16.0f, (8.0f + 0.6f) / 16.0f);
@@ -883,6 +884,7 @@ IModel* HumanoidModel_GetInstance(void) {
 	HumanoidModel.vertices = HumanoidModel_Vertices;
 	HumanoidModel.CalcHumanAnims = true;
 	HumanoidModel.UsesHumanSkin = true;
+	HumanoidModel.NameYOffset = 32.5f / 16.0f;
 	return &HumanoidModel;
 }
 
@@ -911,7 +913,6 @@ void ChibiModel_CreateParts(void) {
 		&Chibi_Set64, &Chibi_SetSlim);
 }
 
-Real32 ChibiModel_GetNameYOffset(void) { return 20.2f / 16.0f; }
 Real32 ChibiModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
 Vector3 ChibiModel_GetCollisionSize(void) {
 	return Vector3_Create3((4.0f + 0.6f) / 16.0f, 20.1f / 16.0f, (4.0f + 0.6f) / 16.0f);
@@ -939,6 +940,7 @@ IModel* ChibiModel_GetInstance(void) {
 	ChibiModel.UsesHumanSkin = true;
 	ChibiModel.MaxScale = 3.0f;
 	ChibiModel.ShadowScale = 0.5f;
+	ChibiModel.NameYOffset = 20.2f / 16.0f;
 	return &ChibiModel;
 }
 
@@ -947,7 +949,6 @@ IModel SittingModel;
 #define SIT_OFFSET 10.0f
 void SittingModel_CreateParts(void) { }
 
-Real32 SittingModel_GetNameYOffset(void) { return (32.0f + 0.5f) / 16.0f; }
 Real32 SittingModel_GetEyeY(Entity* entity) { return (26.0f - SIT_OFFSET) / 16.0f; }
 Vector3 SittingModel_GetCollisionSize(void) {
 	return Vector3_Create3((8.0f + 0.6f) / 16.0f, (28.1f - SIT_OFFSET) / 16.0f, (8.0f + 0.6f) / 16.0f);
@@ -978,6 +979,7 @@ IModel* SittingModel_GetInstance(void) {
 	SittingModel.UsesHumanSkin = true;
 	SittingModel.ShadowScale = 0.5f;
 	SittingModel.GetTransform = SittingModel_GetTransform;
+	SittingModel.NameYOffset = 32.5f / 16.0f;
 	return &SittingModel;
 }
 
@@ -985,7 +987,6 @@ IModel* SittingModel_GetInstance(void) {
 IModel HeadModel;
 void HeadModel_CreateParts(void) { }
 
-Real32 HeadModel_GetNameYOffset(void) { return (32.0f + 0.5f) / 16.0f; }
 Real32 HeadModel_GetEyeY(Entity* entity) { return 6.0f / 16.0f; }
 Vector3 HeadModel_GetCollisionSize(void) {
 	return Vector3_Create3(7.9f / 16.0f, 7.9f / 16.0f, 7.9f / 16.0f);
@@ -1022,6 +1023,7 @@ IModel* HeadModel_GetInstance(void) {
 	HeadModel.CalcHumanAnims = true;
 	HeadModel.UsesHumanSkin = true;
 	HeadModel.GetTransform = HeadModel_GetTransform;
+	HeadModel.NameYOffset = 32.5f / 16.0f;
 	return &HeadModel;
 }
 
@@ -1046,7 +1048,6 @@ void ArmModel_CreateParts(void) {
 	ArmModel_SetTranslationMatrix();
 }
 
-Real32 ArmModel_GetNameYOffset(void) { return 0.5f; }
 Real32 ArmModel_GetEyeY(Entity* entity) { return 0.5f; }
 Vector3 ArmModel_GetCollisionSize(void) { return Vector3_Create3(1.0f, 1.0f, 1.0f); }
 void ArmModel_GetPickingBounds(AABB* bb) { AABB_FromCoords6(bb, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f); }
@@ -1095,8 +1096,186 @@ IModel* ArmModel_GetInstance(void) {
 	ArmModel.vertices = HumanoidModel_Vertices;
 	ArmModel.CalcHumanAnims = true;
 	ArmModel.UsesHumanSkin = true;
+	ArmModel.NameYOffset = 0.5f;
 	return &ArmModel;
 }
+
+
+IModel BlockModel;
+BlockID BlockModel_block = BlockID_Air;
+Vector3 BlockModel_minBB, BlockModel_maxBB;
+Int32 BlockModel_lastTexIndex = -1, BlockModel_texIndex;
+
+void BlockModel_CreateParts(void) { }
+
+Real32 BlockModel_GetEyeY(Entity* entity) {
+	BlockID block = entity->ModelBlock;
+	Real32 minY = Block_MinBB[block].Y;
+	Real32 maxY = Block_MaxBB[block].Y;
+	return block == BlockID_Air ? 1 : (minY + maxY) / 2.0f;
+}
+
+Vector3 BlockModel_GetCollisionSize(void) {
+	Vector3 size;
+	Vector3_Subtract(&size, &BlockModel_maxBB, &BlockModel_minBB);
+	/* to fit slightly inside */
+	Vector3 sizeShrink = Vector3_Create1(0.75f / 16.0f);
+	Vector3_Subtract(&size, &size, &sizeShrink);
+	return size;
+}
+
+void BlockModel_GetPickingBounds(AABB* bb) {
+	AABB_FromCoords(bb, &BlockModel_minBB, &BlockModel_maxBB);
+	Vector3 offset = Vector3_Create3(-0.5f, 0.0f, -0.5f);
+	AABB_Offset(bb, bb, &offset);
+}
+
+void BlockModel_RecalcProperties(Entity* p) {
+	BlockID block = p->ModelBlock;
+	Real32 height;
+
+	if (Block_Draw[block] == DrawType_Gas) {
+		BlockModel_minBB = Vector3_Zero;
+		BlockModel_maxBB = Vector3_One;
+		height = 1.0f;
+	} else {
+		BlockModel_minBB = Block_MinBB[block];
+		BlockModel_maxBB = Block_MaxBB[block];
+		height = BlockModel_maxBB.Y - BlockModel_minBB.Y;
+	}
+	BlockModel.NameYOffset = height + 0.075f;
+}
+
+void BlockModel_Flush(void) {
+	if (BlockModel_lastTexIndex != -1) {
+		Gfx_BindTexture(Atlas1D_TexIds[BlockModel_lastTexIndex]);
+		IModel_UpdateVB();
+	}
+
+	BlockModel_lastTexIndex = BlockModel_texIndex;
+	BlockModel.index = 0;
+}
+
+#define BlockModel_FlushIfNotSame if (BlockModel_lastTexIndex != BlockModel_texIndex) { BlockModel_Flush(); }
+Int32 BlockModel_GetTex(Face face) {
+	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, face);
+	BlockModel_texIndex = texLoc / Atlas1D_ElementsPerAtlas;
+	BlockModel_FlushIfNotSame;
+	return texLoc;
+}
+
+void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
+	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, Face_ZMax);
+	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
+	BlockModel_FlushIfNotSame;
+
+	PackedCol col = IModel_Cols[0];
+	Real32 p1 = 0, p2 = 0;
+	if (firstPart) { /* Need to break into two quads for when drawing a sprite model in hand. */
+		if (mirror) { rec.U1 = 0.5f; p1 = -5.5f / 16.0f; }
+		else {        rec.U2 = 0.5f; p2 = -5.5f / 16.0f; }
+	} else {
+		if (mirror) { rec.U2 = 0.5f; p2 = 5.5f / 16.0f; }
+		else {        rec.U1 = 0.5f; p1 = 5.5f / 16.0f; }
+	}
+
+	Int32 index = BlockModel.index;
+	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 0], p1, 0.0f, p1, rec.U2, rec.V2, col);
+	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 1], p1, 1.0f, p1, rec.U2, rec.V1, col);
+	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 2], p2, 1.0f, p2, rec.U1, rec.V1, col);
+	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 3], p2, 0.0f, p2, rec.U1, rec.V2, col);
+	BlockModel.index += 4;
+}
+
+void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
+	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, Face_XMax);
+	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
+	BlockModel_FlushIfNotSame;
+
+	PackedCol col = IModel_Cols[0];
+	Real32 x1 = 0, x2 = 0, z1 = 0, z2 = 0;
+	if (firstPart) {
+		if (mirror) { rec.U2 = 0.5f; x2 = -5.5f / 16.0f; z2 = 5.5f / 16.0f; }
+		else {        rec.U1 = 0.5f; x1 = -5.5f / 16.0f; z1 = 5.5f / 16.0f; }
+	} else {
+		if (mirror) { rec.U1 = 0.5f; x1 = 5.5f / 16.0f; z1 = -5.5f / 16.0f; }
+		else {        rec.U2 = 0.5f; x2 = 5.5f / 16.0f; z2 = -5.5f / 16.0f; }
+	}
+
+	Int32 index = BlockModel.index;
+	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 0], x1, 0.0f, z1, rec.U2, rec.V2, col);
+	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 1], x1, 1.0f, z1, rec.U2, rec.V1, col);
+	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 2], x2, 1.0f, z2, rec.U1, rec.V1, col);
+	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 3], x2, 0.0f, z2, rec.U1, rec.V2, col);
+	BlockModel.index += 4;
+}
+
+void BlockModel_DrawParts(bool sprite) {
+	if (sprite) {
+		BlockModel_SpriteXQuad(false, false);
+		BlockModel_SpriteXQuad(false, true);
+		BlockModel_SpriteZQuad(false, false);
+		BlockModel_SpriteZQuad(false, true);
+
+		BlockModel_SpriteZQuad(true, false);
+		BlockModel_SpriteZQuad(true, true);
+		BlockModel_SpriteXQuad(true, false);
+		BlockModel_SpriteXQuad(true, true);
+	} else {
+		Drawer_MinBB = Block_MinBB[BlockModel_block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
+		Drawer_MaxBB = Block_MaxBB[BlockModel_block]; Drawer_MaxBB.Y = 1.0f - Drawer_MaxBB.Y;
+
+		Vector3 min = Block_RenderMinBB[BlockModel_block];
+		Vector3 max = Block_RenderMaxBB[BlockModel_block];
+		Drawer_X1 = min.X - 0.5f; Drawer_Y1 = min.Y; Drawer_Z1 = min.Z - 0.5f;
+		Drawer_X2 = max.X - 0.5f; Drawer_Y2 = max.Y; Drawer_Z2 = max.Z - 0.5f;
+
+		Drawer_Tinted = Block_Tinted[BlockModel_block];
+		Drawer_TintColour = Block_FogColour[BlockModel_block];
+
+		VertexP3fT2fC4b* ptr = &ModelCache_Vertices[BlockModel.index];
+		Drawer_YMin(1, IModel_Cols[1], BlockModel_GetTex(Face_YMin), &ptr);
+		Drawer_ZMin(1, IModel_Cols[3], BlockModel_GetTex(Face_ZMin), &ptr);
+		Drawer_XMax(1, IModel_Cols[5], BlockModel_GetTex(Face_XMax), &ptr);
+		Drawer_ZMax(1, IModel_Cols[2], BlockModel_GetTex(Face_ZMax), &ptr);
+		Drawer_XMin(1, IModel_Cols[4], BlockModel_GetTex(Face_XMin), &ptr);
+		Drawer_YMax(1, IModel_Cols[0], BlockModel_GetTex(Face_YMax), &ptr);
+		BlockModel.index += 4 * Face_Count;
+	}
+}
+
+void BlockModel_DrawModel(Entity* p) {
+	BlockModel_block = p->ModelBlock;
+	BlockModel_RecalcProperties(p);
+
+	if (Block_FullBright[BlockModel_block]) {
+		Int32 i;
+		for (i = 0; i < Face_Count; i++) {
+			IModel_Cols[i] = PackedCol_White;
+		}
+	}
+	if (Block_Draw[BlockModel_block] == DrawType_Gas) return;
+
+	BlockModel_lastTexIndex = -1;
+	bool sprite = Block_Draw[BlockModel_block] == DrawType_Sprite;
+	BlockModel_DrawParts(sprite);
+	if (BlockModel.index == 0) return;
+
+	if (sprite) Gfx_SetFaceCulling(true);
+	BlockModel_lastTexIndex = BlockModel_texIndex;
+	BlockModel_Flush();
+	if (sprite) Gfx_SetFaceCulling(false);
+}
+
+IModel* BlockModel_GetInstance(void) {
+	IModel_Init(&BlockModel);
+	IModel_SetPointers(BlockModel);
+	BlockModel.Bobbing = true;
+	BlockModel.UsesSkin = true;
+	BlockModel.RecalcProperties = BlockModel_RecalcProperties;
+	return &BlockModel;
+}
+
 
 static void ModelCache_RegisterDefaultModels(void) {
 	ModelCache_RegisterTexture("char.png");

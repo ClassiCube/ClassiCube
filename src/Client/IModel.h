@@ -75,8 +75,6 @@ typedef struct IModel_ {
 	/* Friction applied to the entity when is on the ground.*/
 	Vector3 GroundFriction;
 
-	/* Vertical offset from the model's feet/base that the name texture should be drawn at. */
-	Real32 (*GetNameYOffset)(void);
 	/* Vertical offset from the model's feet/base that the model's eye is located. */
 	Real32 (*GetEyeY)(Entity* entity);
 	/* The size of the bounding box that is used when performing collision detection for this model. */
@@ -89,7 +87,12 @@ typedef struct IModel_ {
 	void (*DrawModel)(Entity* entity);
 	/* Gets the transformation matrix of this entity. */
 	void (*GetTransform)(Entity* entity, Vector3 pos);
+	/* Recalculates properties such as name Y offset, collision size. 
+	Not used by majority of models. (BlockModel is the exception).*/
+	void (*RecalcProperties)(Entity* entity);
 
+	/* Vertical offset from the model's feet/base that the name texture should be drawn at. */
+	Real32 NameYOffset;
 	/* The maximum scale the entity can have (for collisions and rendering).*/
 	Real32 MaxScale;
 	/* Scaling factor applied, multiplied by the entity's current model scale.*/
@@ -108,36 +111,29 @@ Real32 IModel_cosHead, IModel_sinHead;
 RotateOrder IModel_Rotation;
 /* Pointer to model that is currently being rendered/drawn. */
 IModel* IModel_ActiveModel;
-
 /* Sets default values for fields of a model. */
 void IModel_Init(IModel* model);
 
 /* Sets the data and function pointers for a model instance assuming typeName_XYZ naming. */
 #define IModel_SetPointers(typeName)\
-typeName.CreateParts = typeName ## _CreateParts;\
-typeName.GetNameYOffset = typeName ## _GetNameYOffset;\
-typeName.GetCollisionSize = typeName ## _GetCollisionSize;\
+typeName.GetEyeY = typeName ## _GetEyeY;\
+typeName.GetCollisionSize = typeName ## _GetCollisionSize; \
 typeName.GetPickingBounds = typeName ## _GetPickingBounds;\
+typeName.CreateParts = typeName ## _CreateParts;\
 typeName.DrawModel = typeName ## _DrawModel;
 
 /* Returns whether the model should be rendered based on the given entity's position. */
 bool IModel_ShouldRender(Entity* entity);
 /* Returns the closest distance of the given entity to the camera. */
 Real32 IModel_RenderDistance(Entity* entity);
-
 /*Sets up the state for, then renders an entity model, based on the entity's position and orientation. */
 void IModel_Render(IModel* model, Entity* entity);
-
 void IModel_SetupState(IModel* model, Entity* entity);
-
 /* Sends the updated vertex data to the GPU. */
 void IModel_UpdateVB(void);
-
 /* Gets the appropriate native texture ID for the given entity and current model. */
 GfxResourceID IModel_GetTexture(Entity* entity);
-
 void IModel_DrawPart(ModelPart part);
-
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head);
 
 /* Describes data for a box being built. */
