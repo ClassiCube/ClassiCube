@@ -70,7 +70,7 @@ namespace ClassicalSharp.Blocks {
 
 		public static SoundType StepSound(BlockID b) {
 			if (b == Block.Glass) return SoundType.Stone;
-			if (b == Block.Rope) return SoundType.Cloth;			
+			if (b == Block.Rope) return SoundType.Cloth;
 			if (Draw(b) == DrawType.Sprite) return SoundType.None;
 			return DigSound(b);
 		}

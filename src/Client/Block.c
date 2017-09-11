@@ -267,26 +267,6 @@ void Block_RecalculateSpriteBB(void) {
 	}
 }
 
-void Block_RecalculateBB(BlockID block) {
-	Bitmap* bmp = &Atlas2D_Bitmap;
-	Int32 elemSize = Atlas2D_ElementSize;
-	TextureLoc texLoc = Block_GetTexLoc(block, Face_XMax);
-	Int32 texX = texLoc & 0x0F, texY = texLoc >> 4;
-
-	Real32 topY = Block_GetSpriteBB_TopY(elemSize, texX, texY, bmp);
-	Real32 bottomY = Block_GetSpriteBB_BottomY(elemSize, texX, texY, bmp);
-	Real32 leftX = Block_GetSpriteBB_LeftX(elemSize, texX, texY, bmp);
-	Real32 rightX = Block_GetSpriteBB_RightX(elemSize, texX, texY, bmp);
-
-	Vector3 centre = Vector3_Create3(0.5f, 0, 0.5f);
-	Vector3 minRaw = Vector3_RotateY3(leftX - 0.5f, bottomY, 0, 45.0f * MATH_DEG2RAD);
-	Vector3 maxRaw = Vector3_RotateY3(rightX - 0.5f, topY, 0, 45.0f * MATH_DEG2RAD);
-
-	Vector3_Add(&minRaw, &centre, &Block_MinBB[block]);
-	Vector3_Add(&maxRaw, &centre, &Block_MaxBB[block]);
-	Block_CalcRenderBounds(block);
-}
-
 Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
@@ -339,28 +319,36 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 	return 0;
 }
 
+void Block_RecalculateBB(BlockID block) {
+	Bitmap* bmp = &Atlas2D_Bitmap;
+	Int32 elemSize = Atlas2D_ElementSize;
+	TextureLoc texLoc = Block_GetTexLoc(block, Face_XMax);
+	Int32 texX = texLoc & 0x0F, texY = texLoc >> 4;
 
+	Real32 topY = Block_GetSpriteBB_TopY(elemSize, texX, texY, bmp);
+	Real32 bottomY = Block_GetSpriteBB_BottomY(elemSize, texX, texY, bmp);
+	Real32 leftX = Block_GetSpriteBB_LeftX(elemSize, texX, texY, bmp);
+	Real32 rightX = Block_GetSpriteBB_RightX(elemSize, texX, texY, bmp);
 
-void Block_UpdateCullingAll(void) {
-	Int32 block, neighbour;
-	for (block = BlockID_Air; block < Block_Count; block++)
-		Block_CanStretch[block] = 0x3F;
+	Vector3 centre = Vector3_Create3(0.5f, 0, 0.5f);
+	Vector3 minRaw = Vector3_RotateY3(leftX - 0.5f, bottomY, 0, 45.0f * MATH_DEG2RAD);
+	Vector3 maxRaw = Vector3_RotateY3(rightX - 0.5f, topY, 0, 45.0f * MATH_DEG2RAD);
 
-	for (block = BlockID_Air; block < Block_Count; block++) {
-		for (neighbour = BlockID_Air; neighbour < Block_Count; neighbour++) {
-			Block_CalcCulling((BlockID)block, (BlockID)neighbour);
-		}
-	}
+	Vector3_Add(&minRaw, &centre, &Block_MinBB[block]);
+	Vector3_Add(&maxRaw, &centre, &Block_MaxBB[block]);
+	Block_CalcRenderBounds(block);
 }
 
-void Block_UpdateCulling(BlockID block) {
-	Block_CanStretch[block] = 0x3F;
 
-	Int32 other;
-	for (other = BlockID_Air; other < Block_Count; other++) {
-		Block_CalcCulling(block, (BlockID)other);
-		Block_CalcCulling((BlockID)other, block);
-	}
+
+void Block_SetXStretch(BlockID block, bool stretch) {
+	Block_CanStretch[block] &= 0xC3; /* ~0x3C */
+	Block_CanStretch[block] |= (stretch ? 0x3C : (UInt8)0);
+}
+
+void Block_SetZStretch(BlockID block, bool stretch) {
+	Block_CanStretch[block] &= 0xFC; /* ~0x03 */
+	Block_CanStretch[block] |= (stretch ? 0x03 : (UInt8)0);
 }
 
 void Block_CalcCulling(BlockID block, BlockID other) {
@@ -390,6 +378,28 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 			bothLiquid || (oMax.Y == 1 && bMin.Y == 0));
 		Block_SetHidden(block, other, Face_YMax,
 			bothLiquid || (oMin.Y == 0 && bMax.Y == 1));
+	}
+}
+
+void Block_UpdateCullingAll(void) {
+	Int32 block, neighbour;
+	for (block = BlockID_Air; block < Block_Count; block++)
+		Block_CanStretch[block] = 0x3F;
+
+	for (block = BlockID_Air; block < Block_Count; block++) {
+		for (neighbour = BlockID_Air; neighbour < Block_Count; neighbour++) {
+			Block_CalcCulling((BlockID)block, (BlockID)neighbour);
+		}
+	}
+}
+
+void Block_UpdateCulling(BlockID block) {
+	Block_CanStretch[block] = 0x3F;
+
+	Int32 other;
+	for (other = BlockID_Air; other < Block_Count; other++) {
+		Block_CalcCulling(block, (BlockID)other);
+		Block_CalcCulling((BlockID)other, block);
 	}
 }
 
@@ -431,15 +441,6 @@ bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
 #endif
 }
 
-void Block_SetXStretch(BlockID block, bool stretch) {
-	Block_CanStretch[block] &= 0xC3; /* ~0x3C */
-	Block_CanStretch[block] |= (stretch ? 0x3C : (UInt8)0);
-}
-
-void Block_SetZStretch(BlockID block, bool stretch) {
-	Block_CanStretch[block] &= 0xFC; /* ~0x03 */
-	Block_CanStretch[block] |= (stretch ? 0x03 : (UInt8)0);
-}
 
 
 #define AR_EQ1(s, x) (s.length >= 1 && Char_ToLower(s.buffer[0]) == x)
