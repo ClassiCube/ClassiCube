@@ -81,35 +81,32 @@ namespace ClassicalSharp.Hotkeys {
 		
 		const string prefix = "hotkey-";
 		public void LoadSavedHotkeys() {
-			foreach (var pair in Options.OptionsSet) {
-				if (!Utils.CaselessStarts(pair.Key, prefix)) continue;
+			for (int i = 0; i < Options.OptionsKeys.Count; i++) {
+				string key = Options.OptionsKeys[i];
+				if (!Utils.CaselessStarts(key, prefix)) continue;			
+				int keySplit = key.IndexOf('&', prefix.Length);
+				if (keySplit < 0) continue; // invalid key
 				
-				int keySplit = pair.Key.IndexOf('&', prefix.Length);
-				if (keySplit < 0) {
-					Utils.LogDebug("Hotkey {0} has an invalid key", pair.Key);
-					continue;
-				}
-				string strKey = pair.Key.Substring(prefix.Length, keySplit - prefix.Length);
-				string strFlags = pair.Key.Substring(keySplit + 1, pair.Key.Length - keySplit - 1);
+				string strKey   = key.Substring(prefix.Length, keySplit - prefix.Length);
+				string strFlags = key.Substring(keySplit + 1, key.Length - keySplit - 1);
 				
-				int valueSplit = pair.Value.IndexOf('&', 0);
-				if (valueSplit < 0) {
-					Utils.LogDebug("Hotkey {0} has an invalid value", pair.Key);
-					continue;
-				}
-				string strMoreInput = pair.Value.Substring(0, valueSplit - 0);
-				string strText = pair.Value.Substring(valueSplit + 1, pair.Value.Length - valueSplit - 1);
+				string value = Options.OptionsValues[i];
+				int valueSplit = value.IndexOf('&', 0);
+				if (valueSplit < 0) continue; // invalid value
+				
+				string strMoreInput = value.Substring(0, valueSplit - 0);
+				string strText      = value.Substring(valueSplit + 1, value.Length - valueSplit - 1);
 				
 				// Then try to parse the key and value
-				Key key; byte flags; bool moreInput;
-				if (!Utils.TryParseEnum(strKey, Key.Unknown, out key) ||
+				Key hotkey; byte flags; bool moreInput;
+				if (!Utils.TryParseEnum(strKey, Key.Unknown, out hotkey) ||
 				   !Byte.TryParse(strFlags, out flags) ||
 				   !Boolean.TryParse(strMoreInput, out moreInput) ||
 				   strText.Length == 0) {
-					Utils.LogDebug("Hotkey {0} has invalid arguments", pair.Key);
+					Utils.LogDebug("Hotkey {0} has invalid arguments", key);
 					continue;
 				}
-				AddHotkey(key, flags, strText, moreInput);
+				AddHotkey(hotkey, flags, strText, moreInput);
 			}
 		}
 		

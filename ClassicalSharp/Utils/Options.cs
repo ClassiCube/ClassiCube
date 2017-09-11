@@ -7,7 +7,7 @@ using ClassicalSharp.Textures;
 namespace ClassicalSharp {
 
 	public static class OptionsKey {
-#if !LAUNCHER
+		#if !LAUNCHER
 		public const string UseMusic = "usemusic";
 		public const string UseSound = "usesound";
 		public const string MusicVolume = "musicvolume";
@@ -21,10 +21,10 @@ namespace ClassicalSharp {
 		public const string InvertMouse = "invertmouse";
 		public const string Sensitivity = "mousesensitivity";
 		public const string FpsLimit = "fpslimit";
-#endif
+		#endif
 		public const string DefaultTexturePack = "defaulttexpack";
 		public const string AutoCloseLauncher = "autocloselauncher";
-#if !LAUNCHER
+		#if !LAUNCHER
 		public const string ViewBobbing = "viewbobbing";
 		public const string EntityShadow = "entityshadow";
 		public const string RenderType = "normal";
@@ -47,9 +47,9 @@ namespace ClassicalSharp {
 		public const string ShowBlockInHand = "gui-blockinhand";
 		public const string ChatLines = "gui-chatlines";
 		public const string ClickableChat = "gui-chatclickable";
-#endif
+		#endif
 		public const string ArialChatFont = "gui-arialchatfont";
-#if !LAUNCHER
+		#if !LAUNCHER
 		public const string HotbarScale = "gui-hotbarscale";
 		public const string InventoryScale = "gui-inventoryscale";
 		public const string ChatScale = "gui-chatscale";
@@ -66,25 +66,32 @@ namespace ClassicalSharp {
 		public const string UseClassicOptions = "nostalgia-classicoptions";
 		public const string AllowClassicHacks = "nostalgia-hacks";
 		public const string ClassicArmModel = "nostalgia-classicarm";
-	}	
+	}
 	public enum FpsLimitMethod {
 		LimitVSync, Limit30FPS, Limit60FPS, Limit120FPS, LimitNone,
-#endif
+		#endif
 	}
 
 	
 	public static class Options {
 		
-		public static Dictionary<string, string> OptionsSet = new Dictionary<string, string>();
+		public static List<string> OptionsKeys = new List<string>();
+		public static List<string> OptionsValues = new List<string>();
 		public static List<string> OptionsChanged = new List<string>();
 		const string Filename = "options.txt";
 		
 		static bool TryGetValue(string key, out string value) {
-			if (OptionsSet.TryGetValue(key, out value)) return true;
-			int index = key.IndexOf('-');
+			value = null;		
+			int i = FindOption(key);
+			if (i >= 0) { value = OptionsValues[i]; return true; }
 			
-			if (index == -1) return false;
-			return OptionsSet.TryGetValue(key.Substring(index + 1), out value);
+			int sepIndex = key.IndexOf('-');
+			if (sepIndex == -1) return false;
+			
+			key = key.Substring(sepIndex + 1);
+			i = FindOption(key);
+			if (i >= 0) { value = OptionsValues[i]; return true; }
+			return false;
 		}
 		
 		public static string Get(string key) {
@@ -110,7 +117,7 @@ namespace ClassicalSharp {
 			return valueBool;
 		}
 
-#if !LAUNCHER		
+		#if !LAUNCHER
 		public static float GetFloat(string key, float min, float max, float defValue) {
 			string value;
 			float valueFloat = 0;
@@ -119,9 +126,9 @@ namespace ClassicalSharp {
 			Utils.Clamp(ref valueFloat, min, max);
 			return valueFloat;
 		}
-	
+		
 		public static T GetEnum<T>(string key, T defValue) {
-			string value = Get(key.ToLower());
+			string value = Get(key);
 			if (value == null) {
 				Set(key, defValue);
 				return defValue;
@@ -132,18 +139,41 @@ namespace ClassicalSharp {
 				Set(key, defValue);
 			return mapping;
 		}
-#endif
+		#endif
+		
+		static int FindOption(string key) {
+			for (int i = 0; i < OptionsKeys.Count; i++) {
+				if (Utils.CaselessEquals(OptionsKeys[i], key)) return i;
+			}
+			return -1;
+		}
 		
 		public static void Set<T>(string key, T value) {
-			key = key.ToLower();
-			if (value != null) {
-				OptionsSet[key] = value.ToString();
+			if (value == null) {
+				int i = FindOption(key);
+				if (i >= 0) RemoveOption(i);
 			} else {
-				OptionsSet.Remove(key);
+				SetOption(key, value.ToString());
 			}
 			
-			if (!OptionsChanged.Contains(key))
+			if (!OptionsChanged.Contains(key)) {
 				OptionsChanged.Add(key);
+			}
+		}
+		
+		static void SetOption(string key, string value) {
+			int i = FindOption(key);
+			if (i >= 0) {
+				OptionsValues[i] = value;
+			} else {
+				OptionsKeys.Add(key);
+				OptionsValues.Add(value);
+			}
+		}
+		
+		static void RemoveOption(int i) {
+			OptionsKeys.RemoveAt(i);
+			OptionsValues.RemoveAt(i);
 		}
 		
 		
@@ -165,19 +195,17 @@ namespace ClassicalSharp {
 				ErrorHandler.LogError("loading options", ex);
 				return false;
 			}
-		}		
+		}
 		
 		static void LoadFrom(StreamReader reader) {
-			string line;
 			// remove all the unchanged options
-			List<string> toRemove = new List<string>();
-			foreach (KeyValuePair<string, string> kvp in OptionsSet) {
-				if (!OptionsChanged.Contains(kvp.Key))
-					toRemove.Add(kvp.Key);
+			for (int i = OptionsKeys.Count - 1; i >= 0; i--) {
+				string key = OptionsKeys[i];
+				if (OptionsChanged.Contains(key)) continue;
+				RemoveOption(i);
 			}
-			for (int i = 0; i < toRemove.Count; i++)
-				OptionsSet.Remove(toRemove[i]);
-			
+
+			string line;
 			while ((line = reader.ReadLine()) != null) {
 				if (line.Length == 0 || line[0] == '#') continue;
 				
@@ -188,8 +216,10 @@ namespace ClassicalSharp {
 				sepIndex++;
 				if (sepIndex == line.Length) continue;
 				string value = line.Substring(sepIndex, line.Length - sepIndex);
-				if (!OptionsChanged.Contains(key))
-					OptionsSet[key] = value;
+				
+				if (!OptionsChanged.Contains(key)) {
+					SetOption(key, value);
+				}
 			}
 		}
 		
@@ -211,10 +241,10 @@ namespace ClassicalSharp {
 		}
 		
 		static void SaveTo(StreamWriter writer) {
-			foreach (KeyValuePair<string, string> pair in OptionsSet) {
-				writer.Write(pair.Key);
+			for (int i = 0; i < OptionsKeys.Count; i++) {
+				writer.Write(OptionsKeys[i]);
 				writer.Write('=');
-				writer.Write(pair.Value);
+				writer.Write(OptionsValues[i]);
 				writer.WriteLine();
 			}
 		}
