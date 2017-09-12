@@ -61,14 +61,14 @@ namespace ClassicalSharp.Particles {
 			gfx.Texturing = false;
 		}
 		
-		void RenderTerrainParticles(IGraphicsApi gfx, Particle[] particles, int elems, double delta, float t) {
+		void RenderTerrainParticles(IGraphicsApi gfx, TerrainParticle[] particles, int elems, double delta, float t) {
 			int count = elems * 4;
 			if (count > vertices.Length)
 				vertices = new VertexP3fT2fC4b[count];
 
 			Update1DCounts(particles, elems);
 			for (int i = 0; i < elems; i++) {
-				int index = particles[i].Get1DBatch(game);
+				int index = game.TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
 				particles[i].Render(game, t, vertices, ref terrain1DIndices[index]);
 			}
 			int drawCount = Math.Min(count, maxParticles * 4);
@@ -86,20 +86,20 @@ namespace ClassicalSharp.Particles {
 			}
 		}
 		
-		void Update1DCounts(Particle[] particles, int elems) {
+		void Update1DCounts(TerrainParticle[] particles, int elems) {
 			for (int i = 0; i < terrain1DCount.Length; i++) {
 				terrain1DCount[i] = 0;
 				terrain1DIndices[i] = 0;
 			}
 			for (int i = 0; i < elems; i++) {
-				int index = particles[i].Get1DBatch(game);
+				int index = game.TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
 				terrain1DCount[index] += 4;
 			}
 			for (int i = 1; i < terrain1DCount.Length; i++)
 				terrain1DIndices[i] = terrain1DIndices[i - 1] + terrain1DCount[i - 1];
 		}
 		
-		void RenderRainParticles(IGraphicsApi gfx, Particle[] particles, int elems, double delta, float t) {
+		void RenderRainParticles(IGraphicsApi gfx, RainParticle[] particles, int elems, double delta, float t) {
 			int count = elems * 4;
 			if (count > vertices.Length)
 				vertices = new VertexP3fT2fC4b[count];

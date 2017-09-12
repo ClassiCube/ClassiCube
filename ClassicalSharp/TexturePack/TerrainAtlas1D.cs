@@ -19,23 +19,19 @@ namespace ClassicalSharp.Textures {
 		Game game;		
 		public TerrainAtlas1D(Game game) { this.game = game; }
 		
-		public TextureRec GetTexRec(int texId, int uCount, out int index) {
-			index = texId / elementsPerAtlas1D;
-			int y = texId % elementsPerAtlas1D;
+		public TextureRec GetTexRec(int texLoc, int uCount, out int index) {
+			index = texLoc / elementsPerAtlas1D;
+			int y = texLoc % elementsPerAtlas1D;
 			// Adjust coords to be slightly inside - fixes issues with AMD/ATI cards.
 			return new TextureRec(0, y * invElementSize, (uCount - 1) + 15.99f/16f, (15.99f/16f) * invElementSize);
 		}
 		
 		/// <summary> Returns the index of the 1D texture within the array of 1D textures
 		/// containing the given texture id. </summary>
-		public int Get1DIndex(int texId) {
-			return texId / elementsPerAtlas1D;
-		}
+		public int Get1DIndex(int texLoc) { return texLoc / elementsPerAtlas1D; }
 		
 		/// <summary> Returns the index of the given texture id within a 1D texture. </summary>
-		public int Get1DRowId(int texId) {
-			return texId % elementsPerAtlas1D;
-		}
+		public int Get1DRowId(int texLoc) { return texLoc % elementsPerAtlas1D; }
 		
 		public void UpdateState(TerrainAtlas2D atlas2D) {
 			int maxVerticalSize = Math.Min(4096, game.Graphics.MaxTextureDimensions);
@@ -77,11 +73,11 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		public int UsedAtlasesCount() {
-			int maxTexId = 0;
+			int maxTexLoc = 0;
 			for (int i = 0; i < BlockInfo.textures.Length; i++) {
-				maxTexId = Math.Max(maxTexId, BlockInfo.textures[i]);
+				maxTexLoc = Math.Max(maxTexLoc, BlockInfo.textures[i]);
 			}
-			return Get1DIndex(maxTexId) + 1;
+			return Get1DIndex(maxTexLoc) + 1;
 		}
 		
 		public void Dispose() {

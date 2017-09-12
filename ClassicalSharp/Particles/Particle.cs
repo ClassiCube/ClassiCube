@@ -17,10 +17,6 @@ namespace ClassicalSharp.Particles {
 		public Vector3 Velocity;
 		public float Lifetime;
 		protected Vector3 lastPos, nextPos;
-
-		public abstract int Get1DBatch(Game game);
-		
-		public abstract void Render(Game game, float t, VertexP3fT2fC4b[] vertices, ref int index);
 		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
 		public static void DoRender(Game g, ref Vector2 size, ref Vector3 pos, ref TextureRec rec,
@@ -67,9 +63,7 @@ namespace ClassicalSharp.Particles {
 			return hitTerrain ? true : dies;
 		}
 		
-		public override int Get1DBatch(Game game) { return 0; }
-		
-		public override void Render(Game game, float t, VertexP3fT2fC4b[] vertices, ref int index) {
+		public void Render(Game game, float t, VertexP3fT2fC4b[] vertices, ref int index) {
 			Vector3 pos = Vector3.Lerp(lastPos, nextPos, t);
 			Vector2 size = Big ? bigSize : (Tiny ? tinySize : smallSize);
 			
@@ -90,11 +84,7 @@ namespace ClassicalSharp.Particles {
 			return Tick(game, 5.4f, delta);
 		}
 		
-		public override int Get1DBatch(Game game) {
-			return game.TerrainAtlas1D.Get1DIndex(texLoc);
-		}
-		
-		public override void Render(Game game, float t, VertexP3fT2fC4b[] vertices, ref int index) {
+		public void Render(Game game, float t, VertexP3fT2fC4b[] vertices, ref int index) {
 			Vector3 pos = Vector3.Lerp(lastPos, nextPos, t);			
 			int col = FastColour.WhitePacked;
 			if (!BlockInfo.FullBright[block]) {
