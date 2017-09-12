@@ -172,14 +172,7 @@ void Block_UpdateCulling(BlockID block);
 should be drawn with the neighbour 'other' present on the other side of the face. */
 bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
 
-static String Block_DefaultName(BlockID block);
-
-static void Block_SplitUppercase(STRING_TRANSIENT String* buffer, STRING_TRANSIENT String* blockNames, 
-	Int32 start, Int32 end);
-
 void Block_SetHidden(BlockID block, BlockID other, Face face, bool value);
-
-static bool Block_IsHidden(BlockID block, BlockID other);
 
 /* Attempts to find the rotated block based on the user's orientation and offset on selected block. */
 BlockID AutoRotate_RotateBlock(BlockID block);

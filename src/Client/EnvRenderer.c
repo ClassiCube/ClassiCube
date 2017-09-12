@@ -1,11 +1,9 @@
-#if 0
 #include "EnvRenderer.h"
 #include "ExtMath.h"
 #include "World.h"
 #include "GraphicsEnums.h"
 #include "Funcs.h"
 #include "GraphicsAPI.h"
-#include "GameProps.h"
 #include "Matrix.h"
 #include "AABB.h"
 #include "Block.h"
@@ -15,27 +13,6 @@
 
 GfxResourceID env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
 GfxResourceID env_cloudVertices, env_skyVertices;
-
-IGameComponent EnvRenderer_MakeGameComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = EnvRenderer_Init;
-	comp.Reset = EnvRenderer_OnNewMap;
-	comp.OnNewMap = EnvRenderer_OnNewMap;
-	comp.OnNewMapLoaded = EnvRenderer_OnNewMapLoaded;
-	comp.Free = EnvRenderer_Free;
-	return comp;
-}
-
-void EnvRenderer_UseLegacyMode(bool legacy) {
-	EnvRenderer_Legacy = legacy;
-	EnvRenderer_ContextRecreated();
-}
-
-void EnvRenderer_UseMinimalMode(bool minimal) {
-	EnvRenderer_Minimal = minimal;
-	EnvRenderer_ContextRecreated();
-}
-
 
 BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 	Vector3 pos = Game_CurrentCameraPos;
@@ -69,83 +46,6 @@ Real32 EnvRenderer_BlendFactor(Real32 x) {
 }
 
 
-void EnvRenderer_Render(Real64 deltaTime) {
-	if (EnvRenderer_Minimal) {
-		EnvRenderer_RenderMinimal(deltaTime);
-	} else {
-		if (env_skyVb == -1 || env_cloudsVb == -1) return;
-		if (!SkyboxRenderer_ShouldRender()) {
-			EnvRenderer_RenderMainEnv(deltaTime);
-		}
-		EnvRenderer_UpdateFog();
-	}
-}
-
-void EnvRenderer_EnvVariableChanged(EnvVar envVar) {
-	if (EnvRenderer_Minimal) return;
-
-	if (envVar == EnvVar_SkyCol) {
-		EnvRenderer_ResetSky();
-	} else if (envVar == EnvVar_FogCol) {
-		EnvRenderer_UpdateFog();
-	} else if (envVar == EnvVar_CloudsCol) {
-		EnvRenderer_ResetClouds();
-	} else if (envVar == EnvVar_CloudsHeight) {
-		EnvRenderer_ResetSky();
-		EnvRenderer_ResetClouds();
-	}
-}
-
-void EnvRenderer_Init(void) {
-	EnvRenderer_ResetAllEnv();
-	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
-	Event_RegisterVoid(&GfxEvents_ContextLost, EnvRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, EnvRenderer_ContextRecreated);
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
-	Game_SetViewDistance(Game_UserViewDistance, false);
-}
-
-void EnvRenderer_OnNewMap(void) {
-	Gfx_SetFog(false);
-	EnvRenderer_ContextLost();
-}
-
-void EnvRenderer_OnNewMapLoaded(void) {
-	Gfx_SetFog(!EnvRenderer_Minimal);
-	EnvRenderer_ResetAllEnv();
-}
-
-void EnvRenderer_ResetAllEnv(void) {
-	EnvRenderer_UpdateFog();
-	EnvRenderer_ContextRecreated();
-}
-
-void EnvRenderer_Free(void) {
-	EnvRenderer_ContextLost();
-	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
-	Event_UnregisterVoid(&Gfx_ContextLost, EnvRenderer_ContextLost);
-	Event_UnregisterVoid(&Gfx_ContextRecreated, EnvRenderer_ContextRecreated);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
-}
-
-void EnvRenderer_ContextLost(void) {
-	Gfx_DeleteVb(&env_skyVb);
-	Gfx_DeleteVb(&env_cloudsVb);
-}
-
-void EnvRenderer_ContextRecreated(void) {
-	EnvRenderer_ContextLost();
-	Gfx_SetFog(!EnvRenderer_Minimal);
-
-	if (EnvRenderer_Minimal) {
-		Gfx_ClearColour(WorldEnv_SkyCol);
-	} else {
-		Gfx_SetFogStart(0.0f);
-		EnvRenderer_ResetClouds();
-		EnvRenderer_ResetSky();
-	}
-}
-
 void EnvRenderer_RenderMinimal(Real64 deltaTime) {
 	if (World_Blocks == NULL) return;
 
@@ -163,27 +63,6 @@ void EnvRenderer_RenderMinimal(Real64 deltaTime) {
 	} else {
 		Game_SetViewDistance(Game_UserViewDistance, false);
 	}
-}
-
-void EnvRenderer_RenderMainEnv(Real64 deltaTime) {
-	Vector3 pos = Game_CurrentCameraPos;
-	Real32 normalY = (Real32)World_Height + 8.0f;
-	Real32 skyY = max(pos.Y + 8.0f, normalY);
-	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
-	Gfx_BindVb(env_skyVb);
-
-	if (skyY == normalY) {
-		Gfx_DrawVb_IndexedTris(ICOUNT(env_skyVertices));
-	} else {
-		Matrix m = Matrix_Identity;
-		m.Row3.Y = skyY - normalY; /* Y translation matrix */
-
-		Gfx_PushMatrix();
-		Gfx_MultiplyMatrix(&m);
-		Gfx_DrawVb_IndexedTris(ICOUNT(env_skyVertices));
-		Gfx_PopMatrix();
-	}
-	EnvRenderer_RenderClouds(deltaTime);
 }
 
 void EnvRenderer_RenderClouds(Real64 deltaTime) {
@@ -208,6 +87,27 @@ void EnvRenderer_RenderClouds(Real64 deltaTime) {
 	Gfx_SetMatrixMode(MatrixType_Texture);
 	Gfx_LoadIdentityMatrix();
 	Gfx_SetMatrixMode(MatrixType_Modelview);
+}
+
+void EnvRenderer_RenderMainEnv(Real64 deltaTime) {
+	Vector3 pos = Game_CurrentCameraPos;
+	Real32 normalY = (Real32)World_Height + 8.0f;
+	Real32 skyY = max(pos.Y + 8.0f, normalY);
+	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
+	Gfx_BindVb(env_skyVb);
+
+	if (skyY == normalY) {
+		Gfx_DrawVb_IndexedTris(ICOUNT(env_skyVertices));
+	} else {
+		Matrix m = Matrix_Identity;
+		m.Row3.Y = skyY - normalY; /* Y translation matrix */
+
+		Gfx_PushMatrix();
+		Gfx_MultiplyMatrix(&m);
+		Gfx_DrawVb_IndexedTris(ICOUNT(env_skyVertices));
+		Gfx_PopMatrix();
+	}
+	EnvRenderer_RenderClouds(deltaTime);
 }
 
 void EnvRenderer_UpdateFog(void) {
@@ -237,55 +137,16 @@ void EnvRenderer_UpdateFog(void) {
 	Gfx_SetFogColour(fogCol);
 }
 
-void EnvRenderer_ResetClouds(void) {
-	if (World_Blocks == NULL || Gfx_LostContext) return;
-	Gfx_DeleteVb(&env_cloudsVb);
-	EnvRenderer_RebuildClouds((Int32)Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
-}
-
-void EnvRenderer_ResetSky(void) {
-	if (World_Blocks == NULL || Gfx_LostContext) return;
-	Gfx_DeleteVb(&env_skyVb);
-	EnvRenderer_RebuildSky((Int32)Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
-}
-
-void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
-	extent = Math_AdjViewDist(extent);
-	Int32 x1 = -extent, x2 = World_Width + extent;
-	Int32 z1 = -extent, z2 = World_Length + extent;
-	env_cloudVertices = Math_CountVertices(x2 - x1, z2 - z1, axisSize);
-
-	VertexP3fT2fC4b v[4096];
-	VertexP3fT2fC4b* ptr = v;
-	if (env_cloudVertices > 4096) {
-		ptr = Platform_MemAlloc(env_cloudVertices * sizeof(VertexP3fT2fC4b));
-		if (ptr == NULL) ErrorHandler_Fail("EnvRenderer_Clouds - failed to allocate memory");
+void EnvRenderer_Render(Real64 deltaTime) {
+	if (EnvRenderer_Minimal) {
+		EnvRenderer_RenderMinimal(deltaTime);
+	} else {
+		if (env_skyVb == -1 || env_cloudsVb == -1) return;
+		if (!SkyboxRenderer_ShouldRender()) {
+			EnvRenderer_RenderMainEnv(deltaTime);
+		}
+		EnvRenderer_UpdateFog();
 	}
-
-	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, WorldEnv_CloudsHeight, axisSize, WorldEnv_CloudsCol, ptr);
-	env_cloudsVb = Gfx_CreateVb(ptr, VertexFormat_P3fT2fC4b, env_cloudVertices);
-
-	if (env_cloudVertices > 4096) Platform_MemFree(ptr);
-}
-
-void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
-	extent = Math_AdjViewDist(extent);
-	Int32 x1 = -extent, x2 = World_Width + extent;
-	Int32 z1 = -extent, z2 = World_Length + extent;
-	env_skyVertices = Math_CountVertices(x2 - x1, z2 - z1, axisSize);
-
-	VertexP3fC4b v[4096];
-	VertexP3fC4b* ptr = v;
-	if (env_skyVertices > 4096) {
-		ptr = Platform_MemAlloc(env_skyVertices * sizeof(VertexP3fC4b));
-		if (ptr == NULL) ErrorHandler_Fail("EnvRenderer_Sky - failed to allocate memory");
-	}
-
-	Int32 height = max((World_Height + 2) + 6, WorldEnv_CloudsHeight + 6);
-	EnvRenderer_DrawSkyY(x1, z1, x2, z2, height, axisSize, WorldEnv_SkyCol, ptr);
-	env_skyVb = Gfx_CreateVb(ptr, VertexFormat_P3fC4b, env_skyVertices);
-
-	if (env_skyVertices > 4096) Platform_MemFree(ptr);
 }
 
 void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fC4b* vertices) {
@@ -331,4 +192,140 @@ void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, In
 		}
 	}
 }
-#endif
+
+void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
+	extent = Math_AdjViewDist(extent);
+	Int32 x1 = -extent, x2 = World_Width + extent;
+	Int32 z1 = -extent, z2 = World_Length + extent;
+	env_cloudVertices = Math_CountVertices(x2 - x1, z2 - z1, axisSize);
+
+	VertexP3fT2fC4b v[4096];
+	VertexP3fT2fC4b* ptr = v;
+	if (env_cloudVertices > 4096) {
+		ptr = Platform_MemAlloc(env_cloudVertices * sizeof(VertexP3fT2fC4b));
+		if (ptr == NULL) ErrorHandler_Fail("EnvRenderer_Clouds - failed to allocate memory");
+	}
+
+	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, WorldEnv_CloudsHeight, axisSize, WorldEnv_CloudsCol, ptr);
+	env_cloudsVb = Gfx_CreateVb(ptr, VertexFormat_P3fT2fC4b, env_cloudVertices);
+
+	if (env_cloudVertices > 4096) Platform_MemFree(ptr);
+}
+
+void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
+	extent = Math_AdjViewDist(extent);
+	Int32 x1 = -extent, x2 = World_Width + extent;
+	Int32 z1 = -extent, z2 = World_Length + extent;
+	env_skyVertices = Math_CountVertices(x2 - x1, z2 - z1, axisSize);
+
+	VertexP3fC4b v[4096];
+	VertexP3fC4b* ptr = v;
+	if (env_skyVertices > 4096) {
+		ptr = Platform_MemAlloc(env_skyVertices * sizeof(VertexP3fC4b));
+		if (ptr == NULL) ErrorHandler_Fail("EnvRenderer_Sky - failed to allocate memory");
+	}
+
+	Int32 height = max((World_Height + 2) + 6, WorldEnv_CloudsHeight + 6);
+	EnvRenderer_DrawSkyY(x1, z1, x2, z2, height, axisSize, WorldEnv_SkyCol, ptr);
+	env_skyVb = Gfx_CreateVb(ptr, VertexFormat_P3fC4b, env_skyVertices);
+
+	if (env_skyVertices > 4096) Platform_MemFree(ptr);
+}
+
+void EnvRenderer_ResetClouds(void) {
+	if (World_Blocks == NULL || Gfx_LostContext) return;
+	Gfx_DeleteVb(&env_cloudsVb);
+	EnvRenderer_RebuildClouds((Int32)Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
+}
+
+void EnvRenderer_ResetSky(void) {
+	if (World_Blocks == NULL || Gfx_LostContext) return;
+	Gfx_DeleteVb(&env_skyVb);
+	EnvRenderer_RebuildSky((Int32)Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
+}
+
+void EnvRenderer_ContextLost(void) {
+	Gfx_DeleteVb(&env_skyVb);
+	Gfx_DeleteVb(&env_cloudsVb);
+}
+
+void EnvRenderer_ContextRecreated(void) {
+	EnvRenderer_ContextLost();
+	Gfx_SetFog(!EnvRenderer_Minimal);
+
+	if (EnvRenderer_Minimal) {
+		Gfx_ClearColour(WorldEnv_SkyCol);
+	} else {
+		Gfx_SetFogStart(0.0f);
+		EnvRenderer_ResetClouds();
+		EnvRenderer_ResetSky();
+	}
+}
+
+void EnvRenderer_ResetAllEnv(void) {
+	EnvRenderer_UpdateFog();
+	EnvRenderer_ContextRecreated();
+}
+
+void EnvRenderer_EnvVariableChanged(EnvVar envVar) {
+	if (EnvRenderer_Minimal) return;
+
+	if (envVar == EnvVar_SkyCol) {
+		EnvRenderer_ResetSky();
+	} else if (envVar == EnvVar_FogCol) {
+		EnvRenderer_UpdateFog();
+	} else if (envVar == EnvVar_CloudsCol) {
+		EnvRenderer_ResetClouds();
+	} else if (envVar == EnvVar_CloudsHeight) {
+		EnvRenderer_ResetSky();
+		EnvRenderer_ResetClouds();
+	}
+}
+
+
+void EnvRenderer_UseLegacyMode(bool legacy) {
+	EnvRenderer_Legacy = legacy;
+	EnvRenderer_ContextRecreated();
+}
+
+void EnvRenderer_UseMinimalMode(bool minimal) {
+	EnvRenderer_Minimal = minimal;
+	EnvRenderer_ContextRecreated();
+}
+
+void EnvRenderer_Init(void) {
+	EnvRenderer_ResetAllEnv();
+	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
+	Event_RegisterVoid(&GfxEvents_ContextLost, EnvRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, EnvRenderer_ContextRecreated);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
+	Game_SetViewDistance(Game_UserViewDistance, false);
+}
+
+void EnvRenderer_OnNewMap(void) {
+	Gfx_SetFog(false);
+	EnvRenderer_ContextLost();
+}
+
+void EnvRenderer_OnNewMapLoaded(void) {
+	Gfx_SetFog(!EnvRenderer_Minimal);
+	EnvRenderer_ResetAllEnv();
+}
+
+void EnvRenderer_Free(void) {
+	EnvRenderer_ContextLost();
+	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, EnvRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, EnvRenderer_ContextRecreated);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
+}
+
+IGameComponent EnvRenderer_MakeGameComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = EnvRenderer_Init;
+	comp.Reset = EnvRenderer_OnNewMap;
+	comp.OnNewMap = EnvRenderer_OnNewMap;
+	comp.OnNewMapLoaded = EnvRenderer_OnNewMapLoaded;
+	comp.Free = EnvRenderer_Free;
+	return comp;
+}

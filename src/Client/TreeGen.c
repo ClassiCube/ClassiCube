@@ -1,4 +1,3 @@
-#if 0
 #include "TreeGen.h"
 #include "BlockID.h"
 #include "ExtMath.h"
@@ -83,4 +82,3 @@ Int32 TreeGen_Grow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 height, Vector3I
 	}
 	return count;
 }
-#endif

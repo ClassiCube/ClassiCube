@@ -1,7 +1,6 @@
-#if 0
 #include "BordersRenderer.h"
 #include "2DStructs.h"
-#include "GameProps.h"
+#include "Game.h"
 #include "World.h"
 #include "Block.h"
 #include "GraphicsAPI.h"
@@ -20,21 +19,6 @@ bool borders_fullBrightSides, borders_fullBrightEdge;
 Rectangle2D borders_rects[4];
 TextureLoc borders_lastEdgeTexLoc, borders_lastSideTexLoc;
 
-/* Creates game component implementation. */
-IGameComponent BordersRenderer_MakeGameComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = BordersRenderer_Init;
-	comp.Free = BordersRenderer_Free;
-	comp.OnNewMap = BordersRenderer_Reset;
-	comp.Reset = BordersRenderer_Reset;
-	comp.OnNewMapLoaded = BordersRenderer_ResetSidesAndEdges;
-	return comp;
-}
-
-void BordersRenderer_UseLegacyMode(bool legacy) {
-	BordersRenderer_Legacy = legacy;
-	BordersRenderer_ResetSidesAndEdges();
-}
 
 /* Avoid code duplication in sides and edge rendering */
 #define BordersRenderer_SetupState(block, texId, vb) \
@@ -42,7 +26,7 @@ if (vb == -1) { return; }\
 \
 Gfx_SetTexturing(true);\
 GfxCommon_SetupAlphaState(Block_Draw[block]);\
-Gfx_EnableMipmaps();
+Gfx_EnableMipmaps();\
 \
 Gfx_BindTexture(texId);\
 Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);\
@@ -76,60 +60,23 @@ void BordersRenderer_RenderEdges(Real64 delta) {
 }
 
 
-void BordersRenderer_Init(void) {
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged, BordersRenderer_EnvVariableChanged);
-	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, BordersRenderer_ResetSidesAndEdges);
-	Event_RegisterVoid(&TextureEvents_AtlasChanged, BordersRenderer_ResetTextures);
-	Event_RegisterVoid(&GfxEvents_ContextLost, BordersRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, BordersRenderer_ContextRecreated);
+void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, BlockID block) {
+	TextureLoc texLoc = Block_GetTexLoc(block, Face_YMax);
+	if (texLoc == *lastTexLoc || Gfx_LostContext) return;
+	*lastTexLoc = texLoc;
+
+	Gfx_DeleteTexture(texId);
+	*texId = Atlas2D_LoadTextureElement(texLoc);
 }
 
-void BordersRenderer_Free(void) {
-	BordersRenderer_ContextLost();
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, BordersRenderer_EnvVariableChanged);
-	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, BordersRenderer_ResetSidesAndEdges);
-	Event_UnregisterVoid(&TextureEvents_AtlasChanged, BordersRenderer_ResetTextures);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, BordersRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, BordersRenderer_ContextRecreated);
+void BordersRenderer_CalculateRects(Int32 extent) {
+	extent = Math_AdjViewDist(extent);
+	borders_rects[0] = Rectangle2D_Make(-extent, -extent, extent + World_Width + extent, extent);
+	borders_rects[1] = Rectangle2D_Make(-extent, World_Length, extent + World_Width + extent, extent);
+
+	borders_rects[2] = Rectangle2D_Make(-extent, 0, extent, World_Length);
+	borders_rects[3] = Rectangle2D_Make(World_Width, 0, extent, World_Length);
 }
-
-void BordersRenderer_Reset(void) {
-	Gfx_DeleteVb(&borders_sidesVb);
-	Gfx_DeleteVb(&borders_edgesVb);
-	BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);
-	BordersRenderer_MakeTexture(&borders_sideTexId, &borders_lastSideTexLoc, WorldEnv_SidesBlock);
-}
-
-
-void BordersRenderer_EnvVariableChanged(EnvVar envVar) {
-	if (envVar == EnvVar_EdgeBlock) {
-		BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);
-		BordersRenderer_ResetEdges();
-	} else if (envVar == EnvVar_SidesBlock) {
-		BordersRenderer_MakeTexture(&borders_sideTexId, &borders_lastSideTexLoc, WorldEnv_SidesBlock);
-		BordersRenderer_ResetSides();
-	} else if (envVar == EnvVar_EdgeHeight || envVar == EnvVar_SidesOffset) {
-		BordersRenderer_ResetSidesAndEdges();
-	} else if (envVar == EnvVar_SunCol) {
-		BordersRenderer_ResetEdges();
-	} else if (envVar == EnvVar_ShadowCol) {
-		BordersRenderer_ResetSides();
-	}
-}
-
-void BordersRenderer_ContextLost(void) {
-	Gfx_DeleteVb(&borders_sidesVb);
-	Gfx_DeleteVb(&borders_edgesVb);
-	Gfx_DeleteTexture(&borders_edgeTexId);
-	Gfx_DeleteTexture(&borders_sideTexId);
-}
-
-void BordersRenderer_ContextRecreated(void) {
-	BordersRenderer_ResetSides();
-	BordersRenderer_ResetEdges();
-	BordersRenderer_ResetTextures();
-}
-
 
 void BordersRenderer_ResetTextures(void) {
 	borders_lastEdgeTexLoc = UInt8_MaxValue;
@@ -138,25 +85,76 @@ void BordersRenderer_ResetTextures(void) {
 	BordersRenderer_MakeTexture(&borders_sideTexId, &borders_lastSideTexLoc, WorldEnv_SidesBlock);
 }
 
-void BordersRenderer_ResetSidesAndEdges(void) {
-	BordersRenderer_CalculateRects((Int32)Game_ViewDistance);
-	BordersRenderer_ContextRecreated();
-}
 
-void BordersRenderer_ResetSides(void) {
-	if (World_Blocks == NULL || Gfx_LostContext) return;
-	Gfx_DeleteVb(&borders_sidesVb);
-	BordersRenderer_RebuildSides(WorldEnv_SidesHeight, BordersRenderer_Legacy ? 128 : 65536);
-}
-
-void BordersRenderer_ResetEdges(void) {
-	if (World_Blocks == NULL || Gfx_LostContext) return;
-	Gfx_DeleteVb(&borders_edgesVb);
-	BordersRenderer_RebuildEdges(WorldEnv_EdgeHeight, BordersRenderer_Legacy ? 128 : 65536);
-}
 
 #define borders_HorOffset(block) (Block_RenderMinBB[block].X - Block_MinBB[block].X)
 #define borders_YOffset(block) (Block_RenderMinBB[block].Y - Block_MinBB[block].Y)
+
+void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** v) {
+	Int32 endZ = z2, endY = y2, startY = y1;
+	VertexP3fT2fC4b* ptr = *v;
+
+	for (; z1 < endZ; z1 += axisSize) {
+		z2 = z1 + axisSize;
+		if (z2 > endZ) z2 = endZ;
+		y1 = startY;
+		for (; y1 < endY; y1 += axisSize) {
+			y2 = y1 + axisSize;
+			if (y2 > endY) y2 = endY;
+
+			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)z2 - (Real32)z1, (Real32)y2 - (Real32)y1);
+			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y1, (Real32)z1, rec.U1, rec.V2, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y2, (Real32)z1, rec.U1, rec.V1, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y2, (Real32)z2, rec.U2, rec.V1, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y1, (Real32)z2, rec.U2, rec.V2, col); ptr++;
+		}
+	}
+	*v = ptr;
+}
+
+void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** v) {
+	Int32 endX = x2, endY = y2, startY = y1;
+	VertexP3fT2fC4b* ptr = *v;
+
+	for (; x1 < endX; x1 += axisSize) {
+		x2 = x1 + axisSize;
+		if (x2 > endX) x2 = endX;
+		y1 = startY;
+		for (; y1 < endY; y1 += axisSize) {
+			y2 = y1 + axisSize;
+			if (y2 > endY) y2 = endY;
+
+			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)x2 - (Real32)x1, (Real32)y2 - (Real32)y1);
+			VertexP3fT2fC4b_Set(ptr, (Real32)x1, (Real32)y1, (Real32)z, rec.U1, rec.V2, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x1, (Real32)y2, (Real32)z, rec.U1, rec.V1, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x2, (Real32)y2, (Real32)z, rec.U2, rec.V1, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x2, (Real32)y1, (Real32)z, rec.U2, rec.V2, col); ptr++;
+		}
+	}
+	*v = ptr;
+}
+
+void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int32 axisSize, PackedCol col, Real32 offset, Real32 yOffset, VertexP3fT2fC4b** v) {
+	Int32 endX = x2, endZ = z2, startZ = z1;
+	VertexP3fT2fC4b* ptr = *v;
+
+	for (; x1 < endX; x1 += axisSize) {
+		x2 = x1 + axisSize;
+		if (x2 > endX) x2 = endX;
+		z1 = startZ;
+		for (; z1 < endZ; z1 += axisSize) {
+			z2 = z1 + axisSize;
+			if (z2 > endZ) z2 = endZ;
+
+			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)x2 - (Real32)x1, (Real32)z2 - (Real32)z1);
+			VertexP3fT2fC4b_Set(ptr, (Real32)x1 + offset, y + yOffset, (Real32)z1 + offset, rec.U1, rec.V1, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x1 + offset, y + yOffset, (Real32)z2 + offset, rec.U1, rec.V2, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x2 + offset, y + yOffset, (Real32)z2 + offset, rec.U2, rec.V2, col); ptr++;
+			VertexP3fT2fC4b_Set(ptr, (Real32)x2 + offset, y + yOffset, (Real32)z1 + offset, rec.U2, rec.V1, col); ptr++;
+		}
+	}
+	*v = ptr;
+}
 
 void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	BlockID block = WorldEnv_SidesBlock;
@@ -236,88 +234,89 @@ void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	if (borders_edgesVertices > 4096) Platform_MemFree(ptr);
 }
 
-void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** v) {
-	Int32 endZ = z2, endY = y2, startY = y1;
-	VertexP3fT2fC4b* ptr = *v;
 
-	for (; z1 < endZ; z1 += axisSize) {
-		z2 = z1 + axisSize;
-		if (z2 > endZ) z2 = endZ;
-		y1 = startY;
-		for (; y1 < endY; y1 += axisSize) {
-			y2 = y1 + axisSize;
-			if (y2 > endY) y2 = endY;
+void BordersRenderer_ResetSides(void) {
+	if (World_Blocks == NULL || Gfx_LostContext) return;
+	Gfx_DeleteVb(&borders_sidesVb);
+	BordersRenderer_RebuildSides(WorldEnv_SidesHeight, BordersRenderer_Legacy ? 128 : 65536);
+}
 
-			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)z2 - (Real32)z1, (Real32)y2 - (Real32)y1);
-			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y1, (Real32)z1, rec.U1, rec.V2, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y2, (Real32)z1, rec.U1, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y2, (Real32)z2, rec.U2, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y1, (Real32)z2, rec.U2, rec.V2, col); ptr++;
-		}
+void BordersRenderer_ResetEdges(void) {
+	if (World_Blocks == NULL || Gfx_LostContext) return;
+	Gfx_DeleteVb(&borders_edgesVb);
+	BordersRenderer_RebuildEdges(WorldEnv_EdgeHeight, BordersRenderer_Legacy ? 128 : 65536);
+}
+
+void BordersRenderer_ContextLost(void) {
+	Gfx_DeleteVb(&borders_sidesVb);
+	Gfx_DeleteVb(&borders_edgesVb);
+	Gfx_DeleteTexture(&borders_edgeTexId);
+	Gfx_DeleteTexture(&borders_sideTexId);
+}
+
+void BordersRenderer_ContextRecreated(void) {
+	BordersRenderer_ResetSides();
+	BordersRenderer_ResetEdges();
+	BordersRenderer_ResetTextures();
+}
+
+void BordersRenderer_ResetSidesAndEdges(void) {
+	BordersRenderer_CalculateRects((Int32)Game_ViewDistance);
+	BordersRenderer_ContextRecreated();
+}
+
+void BordersRenderer_EnvVariableChanged(EnvVar envVar) {
+	if (envVar == EnvVar_EdgeBlock) {
+		BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);
+		BordersRenderer_ResetEdges();
+	} else if (envVar == EnvVar_SidesBlock) {
+		BordersRenderer_MakeTexture(&borders_sideTexId, &borders_lastSideTexLoc, WorldEnv_SidesBlock);
+		BordersRenderer_ResetSides();
+	} else if (envVar == EnvVar_EdgeHeight || envVar == EnvVar_SidesOffset) {
+		BordersRenderer_ResetSidesAndEdges();
+	} else if (envVar == EnvVar_SunCol) {
+		BordersRenderer_ResetEdges();
+	} else if (envVar == EnvVar_ShadowCol) {
+		BordersRenderer_ResetSides();
 	}
-	*v = ptr;
 }
 
-void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** v) {
-	Int32 endX = x2, endY = y2, startY = y1;
-	VertexP3fT2fC4b* ptr = *v;
-
-	for (; x1 < endX; x1 += axisSize) {
-		x2 = x1 + axisSize;
-		if (x2 > endX) x2 = endX;
-		y1 = startY;
-		for (; y1 < endY; y1 += axisSize) {
-			y2 = y1 + axisSize;
-			if (y2 > endY) y2 = endY;
-
-			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)x2 - (Real32)x1, (Real32)y2 - (Real32)y1);
-			VertexP3fT2fC4b_Set(ptr, (Real32)x1, (Real32)y1, (Real32)z, rec.U1, rec.V2, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x1, (Real32)y2, (Real32)z, rec.U1, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x2, (Real32)y2, (Real32)z, rec.U2, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x2, (Real32)y1, (Real32)z, rec.U2, rec.V2, col); ptr++;
-		}
-	}
-	*v = ptr;
+void BordersRenderer_UseLegacyMode(bool legacy) {
+	BordersRenderer_Legacy = legacy;
+	BordersRenderer_ResetSidesAndEdges();
 }
 
-void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int32 axisSize, PackedCol col, Real32 offset, Real32 yOffset, VertexP3fT2fC4b** v) {
-	Int32 endX = x2, endZ = z2, startZ = z1;
-	VertexP3fT2fC4b* ptr = *v;
+void BordersRenderer_Init(void) {
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged, BordersRenderer_EnvVariableChanged);
+	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, BordersRenderer_ResetSidesAndEdges);
+	Event_RegisterVoid(&TextureEvents_AtlasChanged, BordersRenderer_ResetTextures);
+	Event_RegisterVoid(&GfxEvents_ContextLost, BordersRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, BordersRenderer_ContextRecreated);
+}
 
-	for (; x1 < endX; x1 += axisSize) {
-		x2 = x1 + axisSize;
-		if (x2 > endX) x2 = endX;
-		z1 = startZ;
-		for (; z1 < endZ; z1 += axisSize) {
-			z2 = z1 + axisSize;
-			if (z2 > endZ) z2 = endZ;
+void BordersRenderer_Free(void) {
+	BordersRenderer_ContextLost();
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, BordersRenderer_EnvVariableChanged);
+	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, BordersRenderer_ResetSidesAndEdges);
+	Event_UnregisterVoid(&TextureEvents_AtlasChanged, BordersRenderer_ResetTextures);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, BordersRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, BordersRenderer_ContextRecreated);
+}
 
-			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)x2 - (Real32)x1, (Real32)z2 - (Real32)z1);
-			VertexP3fT2fC4b_Set(ptr, (Real32)x1 + offset, y + yOffset, (Real32)z1 + offset, rec.U1, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x1 + offset, y + yOffset, (Real32)z2 + offset, rec.U1, rec.V2, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x2 + offset, y + yOffset, (Real32)z2 + offset, rec.U2, rec.V2, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x2 + offset, y + yOffset, (Real32)z1 + offset, rec.U2, rec.V1, col); ptr++;
-		}
-	}
-	*v = ptr;
+void BordersRenderer_Reset(void) {
+	Gfx_DeleteVb(&borders_sidesVb);
+	Gfx_DeleteVb(&borders_edgesVb);
+	BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);
+	BordersRenderer_MakeTexture(&borders_sideTexId, &borders_lastSideTexLoc, WorldEnv_SidesBlock);
 }
 
 
-void BordersRenderer_CalculateRects(Int32 extent) {
-	extent = Math_AdjViewDist(extent);
-	borders_rects[0] = Rectangle2D_Make(-extent, -extent, extent + World_Width + extent, extent);
-	borders_rects[1] = Rectangle2D_Make(-extent, World_Length, extent + World_Width + extent, extent);
-
-	borders_rects[2] = Rectangle2D_Make(-extent, 0, extent, World_Length);
-	borders_rects[3] = Rectangle2D_Make(World_Width, 0, extent, World_Length);
+IGameComponent BordersRenderer_MakeGameComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = BordersRenderer_Init;
+	comp.Free = BordersRenderer_Free;
+	comp.OnNewMap = BordersRenderer_Reset;
+	comp.Reset = BordersRenderer_Reset;
+	comp.OnNewMapLoaded = BordersRenderer_ResetSidesAndEdges;
+	return comp;
 }
-
-void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, BlockID block) {
-	TextureLoc texLoc = Block_GetTexLoc(block, Face_YMax);
-	if (texLoc == *lastTexLoc || Gfx_LostContext) return;
-	*lastTexLoc = texLoc;
-
-	Gfx_DeleteTexture(texId);
-	*texId = Atlas2D_LoadTextureElement(texLoc);
-}
-#endif

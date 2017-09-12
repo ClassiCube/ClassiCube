@@ -17,6 +17,8 @@ typedef struct Stream_ {
 	Stream_Operation Write;
 	/* Moves backwards or forwards by given number of bytes in the stream. Result is a ReturnCode. */
 	Stream_Seek Seek;
+	/* Attempts to read the next byte from the stream.*/
+	Int32 (*TryReadByte)(void);
 } Stream;
 
 /* Fully reads up to count bytes or fails. */

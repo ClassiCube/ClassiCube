@@ -1,11 +1,9 @@
-#if 0
 #include "WeatherRenderer.h"
 #include "Block.h"
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Events.h"
 #include "Game.h"
-#include "GameProps.h"
 #include "GraphicsAPI.h"
 #include "GraphicsEnums.h"
 #include "GraphicsCommon.h"
@@ -15,7 +13,6 @@
 #include "Vectors.h"
 #include "VertexStructs.h"
 #include "World.h"
-#include "WorldEnv.h"
 
 GfxResourceID weather_rainTex;
 GfxResourceID weather_snowTex;
@@ -28,22 +25,72 @@ Int16* weather_heightmap;
 Real64 weather_accumulator;
 Vector3I weather_lastPos;
 
-IGameComponent WeatherRenderer_MakeGameComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = WeatherRenderer_Init;
-	comp.Free = WeatherRenderer_Free;
-	comp.OnNewMap = WeatherRenderer_Reset;
-	comp.Reset = WeatherRenderer_Reset;
-	return comp;
+void WeatherRenderer_InitHeightmap(void) {
+	weather_heightmap = Platform_MemAlloc(World_Width * World_Length * sizeof(Int16));
+	if (weather_heightmap == NULL) {
+		ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
+	}
+
+	Int32 i;
+	for (i = 0; i < World_Width * World_Length; i++) {
+		weather_heightmap[i] = Int16_MaxValue;
+	}
 }
 
-void WeatherRenderer_Init(void) {
-	Event_RegisterStream(&TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
-	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
+Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
+	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
+		return (Real32)WorldEnv_EdgeHeight;
+	}
+	Int32 index = (x * World_Length) + z;
+	Int32 height = weather_heightmap[index];
 
-	WeatherRenderer_ContextRecreated();
-	Event_RegisterVoid(&GfxEvents_ContextLost, &WeatherRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, &WeatherRenderer_ContextRecreated);
+	Int32 y = height == Int16_MaxValue ? WeatherRenderer_CalcHeightAt(x, World_MaxY, z, index) : height;
+	return y == -1 ? 0 : y + Block_MaxBB[World_GetBlock(x, y, z)].Y;
+}
+
+Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
+	Int32 mapIndex = (maxY * World_Length + z) * World_Width + x;
+	Int32 y = maxY;
+	for (y = maxY; y >= 0; y--) {
+		UInt8 draw = Block_Draw[World_Blocks[mapIndex]];
+		if (!(draw == DrawType_Gas || draw == DrawType_Sprite)) {
+			weather_heightmap[index] = (Int16)y;
+			return y;
+		}
+		mapIndex -= World_OneY;
+	}
+	weather_heightmap[index] = -1;
+	return -1;
+}
+
+void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock) {
+	bool didBlock = !(Block_Draw[oldBlock] == DrawType_Gas || Block_Draw[oldBlock] == DrawType_Sprite);
+	bool nowBlock = !(Block_Draw[newBlock] == DrawType_Gas || Block_Draw[newBlock] == DrawType_Sprite);
+	if (didBlock == nowBlock) return;
+
+	Int32 index = (x * World_Length) + z;
+	Int32 height = weather_heightmap[index];
+	/* Two cases can be skipped here: */
+	/* a) rain height was not calculated to begin with (height is short.MaxValue) */
+	/* b) changed y is below current calculated rain height */
+	if (y < height) return;
+
+	if (nowBlock) {
+		/* Simple case: Rest of column below is now not visible to rain. */
+		weather_heightmap[index] = (Int16)y;
+	} else {
+		/* Part of the column is now visible to rain, we don't know how exactly how high it should be though. */
+		/* However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y */
+		WeatherRenderer_CalcHeightAt(x, y, z, index);
+	}
+}
+
+void WeatherRenderer_ContextLost(void) {
+	Gfx_DeleteVb(&weather_vb);
+}
+
+void WeatherRenderer_ContextRecreated(void) {
+	weather_vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, weather_verticesCount);
 }
 
 void WeatherRenderer_Render(Real64 deltaTime) {
@@ -116,8 +163,9 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			vCount += 8;
 		}
 
-	if (particles && (weather_accumulator >= 0.25f || moved))
+	if (particles && (weather_accumulator >= 0.25f || moved)) {
 		weather_accumulator = 0;
+	}
 	if (vCount == 0) return;
 
 	Gfx_SetAlphaTest(false);
@@ -138,12 +186,6 @@ Real32 WeatherRenderer_AlphaAt(Real32 x) {
 	return 178 + falloff * WorldEnv_WeatherFade;
 }
 
-void WeatherRenderer_Reset(void) {
-	if (weather_heightmap != NULL) Platform_MemFree(weather_heightmap);
-	weather_heightmap = NULL;
-	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
-}
-
 void WeatherRenderer_FileChanged(Stream* stream) {
 	String snow = String_FromConstant("snow.png");
 	String rain = String_FromConstant("rain.png");
@@ -155,6 +197,21 @@ void WeatherRenderer_FileChanged(Stream* stream) {
 	}
 }
 
+void WeatherRenderer_Init(void) {
+	Event_RegisterStream(&TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
+	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
+
+	WeatherRenderer_ContextRecreated();
+	Event_RegisterVoid(&GfxEvents_ContextLost, &WeatherRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, &WeatherRenderer_ContextRecreated);
+}
+
+void WeatherRenderer_Reset(void) {
+	if (weather_heightmap != NULL) Platform_MemFree(weather_heightmap);
+	weather_heightmap = NULL;
+	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
+}
+
 void WeatherRenderer_Free(void) {
 	Gfx_DeleteTexture(&weather_rainTex);
 	Gfx_DeleteTexture(&weather_snowTex);
@@ -162,75 +219,15 @@ void WeatherRenderer_Free(void) {
 	WeatherRenderer_Reset();
 
 	Event_UnregisterStream(&TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
-	Event_UnregisterVoid(&Gfx_ContextLost, &WeatherRenderer_ContextLost);
-	Event_UnregisterVoid(&Gfx_ContextRecreated, &WeatherRenderer_ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, &WeatherRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, &WeatherRenderer_ContextRecreated);
 }
 
-void WeatherRenderer_InitHeightmap(void) {
-	weather_heightmap = Platform_MemAlloc(World_Width * World_Length * sizeof(Int16));
-	if (weather_heightmap == NULL) {
-		ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
-	}
-
-	Int32 i;
-	for (i = 0; i < World_Width * World_Length; i++) {
-		weather_heightmap[i] = Int16_MaxValue;
-	}
+IGameComponent WeatherRenderer_MakeGameComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = WeatherRenderer_Init;
+	comp.Free = WeatherRenderer_Free;
+	comp.OnNewMap = WeatherRenderer_Reset;
+	comp.Reset = WeatherRenderer_Reset;
+	return comp;
 }
-
-Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
-	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
-		return (Real32)WorldEnv_EdgeHeight;
-	}
-	Int32 index = (x * World_Length) + z;
-	Int32 height = weather_heightmap[index];
-
-	Int32 y = height == Int16_MaxValue ? WeatherRenderer_CalcHeightAt(x, World_MaxY, z, index) : height;
-	return y == -1 ? 0 : y + Block_MaxBB[World_GetBlock(x, y, z)].Y;
-}
-
-Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
-	Int32 mapIndex = (maxY * World_Length + z) * World_Width + x;
-	Int32 y = maxY;
-	for (y = maxY; y >= 0; y--) {
-		UInt8 draw = Block_Draw[World_Blocks[mapIndex]];
-		if (!(draw == DrawType_Gas || draw == DrawType_Sprite)) {
-			weather_heightmap[index] = (Int16)y;
-			return y;
-		}
-		mapIndex -= World_OneY;
-	}
-	weather_heightmap[index] = -1;
-	return -1;
-}
-
-void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock) {
-	bool didBlock = !(Block_Draw[oldBlock] == DrawType_Gas || Block_Draw[oldBlock] == DrawType_Sprite);
-	bool nowBlock = !(Block_Draw[newBlock] == DrawType_Gas || Block_Draw[newBlock] == DrawType_Sprite);
-	if (didBlock == nowBlock) return;
-
-	Int32 index = (x * World_Length) + z;
-	Int32 height = weather_heightmap[index];
-	/* Two cases can be skipped here: */
-	/* a) rain height was not calculated to begin with (height is short.MaxValue) */
-	/* b) changed y is below current calculated rain height */
-	if (y < height) return;
-
-	if (nowBlock) {
-		/* Simple case: Rest of column below is now not visible to rain. */
-		weather_heightmap[index] = (Int16)y;
-	} else {
-		/* Part of the column is now visible to rain, we don't know how exactly how high it should be though. */
-		/* However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y */
-		WeatherRenderer_CalcHeightAt(x, y, z, index);
-	}
-}
-
-void WeatherRenderer_ContextLost(void) {
-	Gfx_DeleteVb(&weather_vb);
-}
-
-void WeatherRenderer_ContextRecreated(void) {
-	weather_vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, weather_verticesCount);
-}
-#endif

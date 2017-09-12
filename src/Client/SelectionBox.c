@@ -1,4 +1,3 @@
-#if 0
 #include "SelectionBox.h"
 
 void SelectionBox_Make(SelectionBox* box, Vector3I* p1, Vector3I* p2, PackedCol col) {
@@ -71,4 +70,3 @@ void SelectionBox_Line(VertexP3fC4b** vertices, PackedCol col,
 	VertexP3fC4b_Set(ptr, x2, y2, z2, col); ptr++;
 	*vertices = ptr;
 }
-#endif

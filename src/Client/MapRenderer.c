@@ -1,7 +1,6 @@
-#if 0
 #include "MapRenderer.h"
 #include "Block.h"
-#include "GameProps.h"
+#include "Game.h"
 #include "GraphicsAPI.h"
 #include "GraphicsEnums.h"
 #include "WeatherRenderer.h"
@@ -28,78 +27,6 @@ void MapRenderer_Update(Real64 deltaTime) {
 	if (MapRenderer_Chunks == NULL) return;
 	ChunkUpdater_UpdateSortOrder();
 	ChunkUpdater_UpdateChunks(deltaTime);
-}
-
-void MapRenderer_RenderNormal(Real64 deltaTime) {
-	if (MapRenderer_Chunks == NULL) return;
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
-	Gfx_SetTexturing(true);
-	Gfx_SetAlphaTest(true);
-
-	Int32 batch;
-	Gfx_EnableMipmaps();
-	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
-		if (MapRenderer_NormalPartsCount[batch] <= 0) continue;
-		if (MapRenderer_HasNormalParts[batch] || MapRenderer_CheckingNormalParts[batch]) {
-			Gfx_BindTexture(Atlas1D_TexIds[batch]);
-			MapRenderer_RenderNormalBatch(batch);
-			MapRenderer_CheckingNormalParts[batch] = false;
-		}
-	}
-	Gfx_DisableMipmaps();
-
-	MapRenderer_CheckWeather(deltaTime);
-	Gfx_SetAlphaTest(false);
-	Gfx_SetTexturing(false);
-#if DEBUG_OCCLUSION
-	DebugPickedPos();
-#endif
-}
-
-void MapRenderer_RenderTranslucent(Real64 deltaTime) {
-	if (MapRenderer_Chunks == NULL) return;
-
-	/* First fill depth buffer */
-	UInt32 vertices = Game_Vertices;
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
-	Gfx_SetTexturing(false);
-	Gfx_SetAlphaBlending(false);
-	Gfx_SetColourWrite(false);
-
-	Int32 batch;
-	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
-		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
-		if (MapRenderer_HasTranslucentParts[batch] || MapRenderer_CheckingTranslucentParts[batch]) {
-			MapRenderer_RenderTranslucentBatch(batch);
-			MapRenderer_CheckingTranslucentParts[batch] = false;
-		}
-	}
-	Game_Vertices = vertices;
-
-	/* Then actually draw the transluscent blocks */
-	Gfx_SetAlphaBlending(true);
-	Gfx_SetTexturing(true);
-	Gfx_SetColourWrite(true);
-	Gfx_SetDepthWrite(false); /* we already calculated depth values in depth pass */
-
-	Gfx_EnableMipmaps();
-	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
-		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
-		if (!MapRenderer_HasTranslucentParts[batch]) continue;
-		Gfx_BindTexture(Atlas1D_TexIds[batch]);
-		MapRenderer_RenderTranslucentBatch(batch);
-	}
-	Gfx_DisableMipmaps();
-
-	Gfx_SetDepthWrite(true);
-	/* If we weren't under water, render weather after to blend properly */
-	if (!inTranslucent && WorldEnv_Weather != Weather_Sunny) {
-		Gfx_SetAlphaTest(true);
-		WeatherRenderer_Render(deltaTime);
-		Gfx_SetAlphaTest(false);
-	}
-	Gfx_SetAlphaBlending(false);
-	Gfx_SetTexturing(false);
 }
 
 void MapRenderer_CheckWeather(Real64 deltaTime) {
@@ -198,6 +125,32 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 	}
 }
 
+void MapRenderer_RenderNormal(Real64 deltaTime) {
+	if (MapRenderer_Chunks == NULL) return;
+	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetTexturing(true);
+	Gfx_SetAlphaTest(true);
+
+	Int32 batch;
+	Gfx_EnableMipmaps();
+	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
+		if (MapRenderer_NormalPartsCount[batch] <= 0) continue;
+		if (MapRenderer_HasNormalParts[batch] || MapRenderer_CheckingNormalParts[batch]) {
+			Gfx_BindTexture(Atlas1D_TexIds[batch]);
+			MapRenderer_RenderNormalBatch(batch);
+			MapRenderer_CheckingNormalParts[batch] = false;
+		}
+	}
+	Gfx_DisableMipmaps();
+
+	MapRenderer_CheckWeather(deltaTime);
+	Gfx_SetAlphaTest(false);
+	Gfx_SetTexturing(false);
+#if DEBUG_OCCLUSION
+	DebugPickedPos();
+#endif
+}
+
 void MapRenderer_RenderTranslucentBatch(Int32 batch) {
 	Int32 i;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
@@ -253,4 +206,49 @@ void MapRenderer_RenderTranslucentBatch(Int32 batch) {
 		}
 	}
 }
-#endif
+
+void MapRenderer_RenderTranslucent(Real64 deltaTime) {
+	if (MapRenderer_Chunks == NULL) return;
+
+	/* First fill depth buffer */
+	UInt32 vertices = Game_Vertices;
+	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetTexturing(false);
+	Gfx_SetAlphaBlending(false);
+	Gfx_SetColourWrite(false);
+
+	Int32 batch;
+	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
+		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
+		if (MapRenderer_HasTranslucentParts[batch] || MapRenderer_CheckingTranslucentParts[batch]) {
+			MapRenderer_RenderTranslucentBatch(batch);
+			MapRenderer_CheckingTranslucentParts[batch] = false;
+		}
+	}
+	Game_Vertices = vertices;
+
+	/* Then actually draw the transluscent blocks */
+	Gfx_SetAlphaBlending(true);
+	Gfx_SetTexturing(true);
+	Gfx_SetColourWrite(true);
+	Gfx_SetDepthWrite(false); /* we already calculated depth values in depth pass */
+
+	Gfx_EnableMipmaps();
+	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
+		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
+		if (!MapRenderer_HasTranslucentParts[batch]) continue;
+		Gfx_BindTexture(Atlas1D_TexIds[batch]);
+		MapRenderer_RenderTranslucentBatch(batch);
+	}
+	Gfx_DisableMipmaps();
+
+	Gfx_SetDepthWrite(true);
+	/* If we weren't under water, render weather after to blend properly */
+	if (!inTranslucent && WorldEnv_Weather != Weather_Sunny) {
+		Gfx_SetAlphaTest(true);
+		WeatherRenderer_Render(deltaTime);
+		Gfx_SetAlphaTest(false);
+	}
+	Gfx_SetAlphaBlending(false);
+	Gfx_SetTexturing(false);
+}

@@ -128,10 +128,11 @@ namespace ClassicalSharp {
 			float minX = scale * (1 - x1 * 2) + pos.X, maxX = scale * (1 - x2 * 2)   + pos.X;
 			float minY = scale * (1 - 0 * 2)  + pos.Y, maxY = scale * (1 - 1.1f * 2) + pos.Y;
 			
-			v.X = minX; v.Y = minY; v.Z = pos.Z; v.U = rec.U2; v.V = rec.V2; vertices[index++] = v;
-			v.X = minX; v.Y = maxY; v.Z = pos.Z; v.U = rec.U2; v.V = rec.V1; vertices[index++] = v;
-			v.X = maxX; v.Y = maxY; v.Z = pos.Z; v.U = rec.U1; v.V = rec.V1; vertices[index++] = v;
-			v.X = maxX; v.Y = minY; v.Z = pos.Z; v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
+			v.Z = pos.Z;
+			v.X = minX; v.Y = minY; v.U = rec.U2; v.V = rec.V2; vertices[index++] = v;
+			            v.Y = maxY;               v.V = rec.V1; vertices[index++] = v;
+			v.X = maxX;             v.U = rec.U1;               vertices[index++] = v;
+			            v.Y = minY;               v.V = rec.V2; vertices[index++] = v;
 		}
 
 		void SpriteXQuad(BlockID block, bool firstPart) {
@@ -151,10 +152,11 @@ namespace ClassicalSharp {
 			float minY = scale * (1 - 0 * 2)  + pos.Y, maxY = scale * (1 - 1.1f * 2) + pos.Y;
 			float minZ = scale * (1 - z1 * 2) + pos.Z, maxZ = scale * (1 - z2 * 2)   + pos.Z;
 			
-			v.X = pos.X; v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; vertices[index++] = v;
-			v.X = pos.X; v.Y = maxY; v.Z = minZ; v.U = rec.U2; v.V = rec.V1; vertices[index++] = v;
-			v.X = pos.X; v.Y = maxY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V1; vertices[index++] = v;
-			v.X = pos.X; v.Y = minY; v.Z = maxZ; v.U = rec.U1; v.V = rec.V2; vertices[index++] = v;
+			v.X = pos.X; 
+			v.Y = minY; v.Z = minZ; v.U = rec.U2; v.V = rec.V2; vertices[index++] = v;
+			v.Y = maxY;                           v.V = rec.V1; vertices[index++] = v;
+			            v.Z = maxZ; v.U = rec.U1;               vertices[index++] = v;
+			v.Y = minY;                           v.V = rec.V2; vertices[index++] = v;
 		}
 		
 		int lastTexIndex, texIndex;

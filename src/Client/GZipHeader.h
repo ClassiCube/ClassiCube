@@ -1,4 +1,3 @@
-#if 0
 #ifndef CS_GZIPHEADERREADER_H
 #define CS_GZIPHEADERREADER_H
 #include "Typedefs.h"
@@ -23,23 +22,14 @@ typedef Int32 GZipState;
 typedef struct GZipHeader_ {
 	/* State header reader is up to.*/
 	GZipState State;
-	
 	/* Whether header has finished being read. */
 	bool Done;
-
 	Int32 Flags;
-
 	Int32 PartsRead;
 } GZipHeader;
 
 /* Initalises state of GZIP header. */
 void GZipHeader_Init(GZipHeader* header);
-
 /* Reads part of the GZIP header. header.Done is set to true on completion. */
 void GZipHeader_Read(Stream* s, GZipHeader* header);
-
-static bool GZipHeader_ReadAndCheckByte(Stream* s, GZipHeader* header, UInt8 expected);
-
-static bool GZipHeader_ReadByte(Stream* s, GZipHeader* header, Int32* value);
-#endif
 #endif

@@ -1,19 +1,31 @@
-#if 0
 #include "AxisLinesRenderer.h"
 #include "GraphicsAPI.h"
-#include "GameProps.h"
+#include "Game.h"
 #include "GraphicsEnums.h"
 #include "GraphicsCommon.h"
 #include "SelectionBox.h"
 #include "PackedCol.h"
 #include "Camera.h"
-#include "LocalPlayer.h"
+#include "Player.h"
 #include "Events.h"
 
 GfxResourceID axisLines_vb = -1;
 #define axisLines_numVertices 12
 #define axisLines_size (1.0f / 32.0f)
 #define axisLines_length 3.0f
+
+void AxisLinesRenderer_ContextLost(void) {
+	Gfx_DeleteVb(&axisLines_vb);
+}
+
+void AxisLinesRenderer_Init(void) {
+	Event_RegisterVoid(&GfxEvents_ContextLost, AxisLinesRenderer_ContextLost);
+}
+
+void AxisLinesRenderer_Free(void) {
+	AxisLinesRenderer_ContextLost();
+	Event_UnregisterVoid(&GfxEvents_ContextLost, AxisLinesRenderer_ContextLost);
+}
 
 IGameComponent AxisLinesRenderer_MakeGameComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
@@ -52,18 +64,3 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
 	GfxCommon_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, axisLines_numVertices);
 }
-
-
-void AxisLinesRenderer_Init(void) {
-	Event_RegisterVoid(&GfxEvents_ContextLost, AxisLinesRenderer_ContextLost);
-}
-
-void AxisLinesRenderer_Free(void) {
-	AxisLinesRenderer_ContextLost();
-	Event_UnregisterVoid(&GfxEvents_ContextLost, AxisLinesRenderer_ContextLost);
-}
-
-void AxisLinesRenderer_ContextLost(void) {
-	Gfx_DeleteVb(&axisLines_vb);
-}
-#endif

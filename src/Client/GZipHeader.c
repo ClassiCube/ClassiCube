@@ -1,4 +1,3 @@
-#if 0
 #include "GZipHeader.h"
 #include "ErrorHandler.h"
 
@@ -7,6 +6,24 @@ void GZipHeader_Init(GZipHeader* header) {
 	header->Done = false;
 	header->Flags = 0;
 	header->PartsRead = 0;
+}
+
+bool GZipHeader_ReadByte(Stream* s, GZipHeader* header, Int32* value) {
+	*value = s->TryReadByte();
+	if (*value == -1) return false;
+
+	header->State++;
+	return true;
+}
+
+bool GZipHeader_ReadAndCheckByte(Stream* s, GZipHeader* header, UInt8 expected) {
+	Int32 value;
+	if (!GZipHeader_ReadByte(s, header, &value)) return false;
+
+	if (value != expected) {
+		ErrorHandler_Fail("Unexpected constant in GZIP header");
+	}
+	return true;
 }
 
 void GZipHeader_Read(Stream* s, GZipHeader* header) {
@@ -75,22 +92,3 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 		header->Done = true;
 	}
 }
-
-static bool GZipHeader_ReadAndCheckByte(Stream* s, GZipHeader* header, UInt8 expected) {
-	Int32 value;
-	if (!GZipHeader_ReadByte(s, header, &value)) return false;
-
-	if (value != expected) {
-		ErrorHandler_Fail("Unexpected constant in GZIP header");
-	}
-	return true;
-}
-
-static bool GZipHeader_ReadByte(Stream* s, GZipHeader* header, Int32* value) {
-	*value = s->TryReadByte();
-	if (*value == -1) return false;
-
-	header->State++;
-	return true;
-}
-#endif

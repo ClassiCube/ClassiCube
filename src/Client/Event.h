@@ -47,11 +47,6 @@ typedef struct Event_MouseMove_ {
 } Event_MouseMove;
 
 
-/* Adds given event handler to handlers list for the given event. */
-static void Event_RegisterImpl(Event_Void* handlers, Event_Void_Callback handler);
-/* Removes given event handler from handlers list of the given event. */
-static void Event_UnregisterImpl(Event_Void* handlers, Event_Void_Callback handler);
-
 void Event_RaiseVoid(Event_Void* handlers);
 void Event_RegisterVoid(Event_Void* handlers, Event_Void_Callback handler);
 void Event_UnregisterVoid(Event_Void* handlers, Event_Void_Callback handler);

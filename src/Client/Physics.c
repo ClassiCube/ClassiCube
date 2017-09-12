@@ -1,4 +1,3 @@
-#if 0
 #include "Physics.h"
 #include "Random.h"
 #include "World.h"
@@ -23,71 +22,23 @@ TickQueue physics_lavaQ, physics_waterQ;
 #define physics_defLavaTick (30UL << physics_tickShift)
 #define physics_defWaterTick (5UL << physics_tickShift)
 
+void Physics_OnNewMapLoaded(void) {
+	TickQueue_Clear(&physics_lavaQ);
+	TickQueue_Clear(&physics_waterQ);
+
+	physics_maxWaterX = World_MaxX - 2;
+	physics_maxWaterY = World_MaxY - 2;
+	physics_maxWaterZ = World_MaxZ - 2;
+
+	Tree_Width = World_Width; Tree_Height = World_Height; Tree_Length = World_Length;
+	Tree_Blocks = World_Blocks;
+	Tree_Rnd = &physics_rnd;
+}
+
 void Physics_SetEnabled(bool enabled) {
 	Physics_Enabled = enabled;
 	Physics_OnNewMapLoaded();
 }
-
-void Physics_Init(void) {
-	Event_RegisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
-	Event_RegisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
-	Physics_Enabled = Options_GetBool(OptionsKey_SingleplayerPhysics, true);
-	TickQueue_Init(&physics_lavaQ);
-	TickQueue_Init(&physics_waterQ);
-
-	Physics_OnPlace[BlockID_Sand] = Physics_DoFalling;
-	Physics_OnPlace[BlockID_Gravel] = Physics_DoFalling;
-	Physics_OnActivate[BlockID_Sand] = Physics_DoFalling;
-	Physics_OnActivate[BlockID_Gravel] = Physics_DoFalling;
-	Physics_OnRandomTick[BlockID_Sand] = Physics_DoFalling;
-	Physics_OnRandomTick[BlockID_Gravel] = Physics_DoFalling;
-
-	Physics_OnPlace[BlockID_Sapling] = Physics_HandleSapling;
-	Physics_OnRandomTick[BlockID_Sapling] = Physics_HandleSapling;
-	Physics_OnRandomTick[BlockID_Dirt] = Physics_HandleDirt;
-	Physics_OnRandomTick[BlockID_Grass] = Physics_HandleGrass;
-
-	Physics_OnRandomTick[BlockID_Dandelion] = Physics_HandleFlower;
-	Physics_OnRandomTick[BlockID_Rose] = Physics_HandleFlower;
-	Physics_OnRandomTick[BlockID_RedMushroom] = Physics_HandleMushroom;
-	Physics_OnRandomTick[BlockID_BrownMushroom] = Physics_HandleMushroom;
-
-	Physics_OnPlace[BlockID_Lava] = Physics_PlaceLava;
-	Physics_OnPlace[BlockID_Water] = Physics_PlaceWater;
-	Physics_OnPlace[BlockID_Sponge] = Physics_PlaceSponge;
-	Physics_OnDelete[BlockID_Sponge] = Physics_DeleteSponge;
-
-	Physics_OnActivate[BlockID_Water] = Physics_OnPlace[BlockID_Water];
-	Physics_OnActivate[BlockID_StillWater] = Physics_OnPlace[BlockID_Water];
-	Physics_OnActivate[BlockID_Lava] = Physics_OnPlace[BlockID_Lava];
-	Physics_OnActivate[BlockID_StillLava] = Physics_OnPlace[BlockID_Lava];
-
-	Physics_OnRandomTick[BlockID_Water] = Physics_ActivateWater;
-	Physics_OnRandomTick[BlockID_StillWater] = Physics_ActivateWater;
-	Physics_OnRandomTick[BlockID_Lava] = Physics_ActivateLava;
-	Physics_OnRandomTick[BlockID_StillLava] = Physics_ActivateLava;
-
-	Physics_OnPlace[BlockID_Slab] = Physics_HandleSlab;
-	Physics_OnPlace[BlockID_CobblestoneSlab] = Physics_HandleCobblestoneSlab;
-	Physics_OnPlace[BlockID_TNT] = Physics_HandleTnt;
-}
-
-void Physics_Free(void) {
-	Event_UnregisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
-	Event_UnregisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
-}
-
-void Physics_Tick(void) {
-	if (!Physics_Enabled || World_Blocks == NULL) return;
-
-	/*if ((tickCount % 5) == 0) {*/
-	Physics_TickLava();
-	Physics_TickWater();
-	/*}*/
-	physics_tickCount++;
-	Physics_TickRandomBlocks();
-}
-
 
 void Physics_ActivateNeighbours(Int32 x, Int32 y, Int32 z, Int32 index) {
 	if (x > 0)          Physics_Activate(index - 1);
@@ -130,19 +81,6 @@ void Physics_BlockChanged(Vector3I p, BlockID oldBlock, BlockID block) {
 		if (placeHandler != NULL) placeHandler(index, block);
 	}
 	Physics_ActivateNeighbours(p.X, p.Y, p.Z, index);
-}
-
-void Physics_OnNewMapLoaded(void) {
-	TickQueue_Clear(&physics_lavaQ);
-	TickQueue_Clear(&physics_waterQ);
-
-	physics_maxWaterX = World_MaxX - 2;
-	physics_maxWaterY = World_MaxY - 2;
-	physics_maxWaterZ = World_MaxZ - 2;
-
-	Tree_Width = World_Width; Tree_Height = World_Height; Tree_Length = World_Length;
-	Tree_Blocks = World_Blocks;
-	Tree_Rnd = &physics_rnd;
 }
 
 void Physics_TickRandomBlocks(void) {
@@ -294,31 +232,8 @@ void Physics_HandleMushroom(Int32 index, BlockID block) {
 }
 
 
-void Physics_TickLava(void) {
-	Int32 i, count = physics_lavaQ.Size;
-	for (i = 0; i < count; i++) {
-		Int32 index;
-		if (Physics_CheckItem(&physics_lavaQ, &index)) {
-			BlockID block = World_Blocks[index];
-			if (!(block == BlockID_Lava || block == BlockID_StillLava)) continue;
-			Physics_ActivateLava(index, block);
-		}
-	}
-}
-
 void Physics_PlaceLava(Int32 index, BlockID block) {
 	TickQueue_Enqueue(&physics_lavaQ, physics_defLavaTick | (UInt32)index);
-}
-
-void Physics_ActivateLava(Int32 index, BlockID block) {
-	Int32 x, y, z;
-	World_Unpack(index, x, y, z);
-
-	if (x > 0)          Physics_PropagateLava(index - 1,           x - 1, y,     z);
-	if (x < World_MaxX) Physics_PropagateLava(index + 1,           x + 1, y,     z);
-	if (z > 0)          Physics_PropagateLava(index - World_Width, x,     y,     z - 1);
-	if (z < World_MaxZ) Physics_PropagateLava(index + World_Width, x,     y,     z + 1);
-	if (y > 0)          Physics_PropagateLava(index - World_OneY,  x,     y - 1, z);
 }
 
 void Physics_PropagateLava(Int32 posIndex, Int32 x, Int32 y, Int32 z) {
@@ -331,32 +246,32 @@ void Physics_PropagateLava(Int32 posIndex, Int32 x, Int32 y, Int32 z) {
 	}
 }
 
+void Physics_ActivateLava(Int32 index, BlockID block) {
+	Int32 x, y, z;
+	World_Unpack(index, x, y, z);
 
-void Physics_TickWater(void) {
-	Int32 i, count = physics_waterQ.Size;
+	if (x > 0)          Physics_PropagateLava(index - 1, x - 1, y, z);
+	if (x < World_MaxX) Physics_PropagateLava(index + 1, x + 1, y, z);
+	if (z > 0)          Physics_PropagateLava(index - World_Width, x, y, z - 1);
+	if (z < World_MaxZ) Physics_PropagateLava(index + World_Width, x, y, z + 1);
+	if (y > 0)          Physics_PropagateLava(index - World_OneY, x, y - 1, z);
+}
+
+void Physics_TickLava(void) {
+	Int32 i, count = physics_lavaQ.Size;
 	for (i = 0; i < count; i++) {
 		Int32 index;
-		if (Physics_CheckItem(&physics_waterQ, &index)) {
+		if (Physics_CheckItem(&physics_lavaQ, &index)) {
 			BlockID block = World_Blocks[index];
-			if (!(block == BlockID_Water || block == BlockID_StillWater)) continue;
-			Physics_ActivateWater(index, block);
+			if (!(block == BlockID_Lava || block == BlockID_StillLava)) continue;
+			Physics_ActivateLava(index, block);
 		}
 	}
 }
 
+
 void Physics_PlaceWater(Int32 index, BlockID block) {
 	TickQueue_Enqueue(&physics_waterQ, physics_defWaterTick | (UInt32)index);
-}
-
-void Physics_ActivateWater(Int32 index, BlockID block) {
-	Int32 x, y, z;
-	World_Unpack(index, x, y, z);
-
-	if (x > 0)          Physics_PropagateWater(index - 1,           x - 1, y,     z);
-	if (x < World_MaxX) Physics_PropagateWater(index + 1,           x + 1, y,     z);
-	if (z > 0)          Physics_PropagateWater(index - World_Width, x,     y,     z - 1);
-	if (z < World_MaxZ) Physics_PropagateWater(index + World_Width, x,     y,     z + 1);
-	if (y > 0)          Physics_PropagateWater(index - World_OneY,  x,     y - 1, z);
 }
 
 void Physics_PropagateWater(Int32 posIndex, Int32 x, Int32 y, Int32 z) {
@@ -377,6 +292,29 @@ void Physics_PropagateWater(Int32 posIndex, Int32 x, Int32 y, Int32 z) {
 
 		TickQueue_Enqueue(&physics_waterQ, physics_defWaterTick | (UInt32)posIndex);
 		Game_UpdateBlock(x, y, z, BlockID_Water);
+	}
+}
+
+void Physics_ActivateWater(Int32 index, BlockID block) {
+	Int32 x, y, z;
+	World_Unpack(index, x, y, z);
+
+	if (x > 0)          Physics_PropagateWater(index - 1,           x - 1, y,     z);
+	if (x < World_MaxX) Physics_PropagateWater(index + 1,           x + 1, y,     z);
+	if (z > 0)          Physics_PropagateWater(index - World_Width, x,     y,     z - 1);
+	if (z < World_MaxZ) Physics_PropagateWater(index + World_Width, x,     y,     z + 1);
+	if (y > 0)          Physics_PropagateWater(index - World_OneY,  x,     y - 1, z);
+}
+
+void Physics_TickWater(void) {
+	Int32 i, count = physics_waterQ.Size;
+	for (i = 0; i < count; i++) {
+		Int32 index;
+		if (Physics_CheckItem(&physics_waterQ, &index)) {
+			BlockID block = World_Blocks[index];
+			if (!(block == BlockID_Water || block == BlockID_StillWater)) continue;
+			Physics_ActivateWater(index, block);
+		}
 	}
 }
 
@@ -449,12 +387,6 @@ UInt8 physics_blocksTnt[Block_CpeCount] = {
 	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,
 };
 
-void Physics_HandleTnt(Int32 index, BlockID block) {
-	Int32 x, y, z;
-	World_Unpack(index, x, y, z);
-	Physics_Explode(z, y, z, 4);
-}
-
 void Physics_Explode(Int32 x, Int32 y, Int32 z, Int32 power) {
 	Game_UpdateBlock(x, y, z, BlockID_Air);
 	Int32 index = World_Pack(x, y, z);
@@ -480,4 +412,69 @@ void Physics_Explode(Int32 x, Int32 y, Int32 z, Int32 power) {
 		}
 	}
 }
-#endif
+
+void Physics_HandleTnt(Int32 index, BlockID block) {
+	Int32 x, y, z;
+	World_Unpack(index, x, y, z);
+	Physics_Explode(z, y, z, 4);
+}
+
+void Physics_Init(void) {
+	Event_RegisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
+	Event_RegisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
+	Physics_Enabled = Options_GetBool(OptionsKey_SingleplayerPhysics, true);
+	TickQueue_Init(&physics_lavaQ);
+	TickQueue_Init(&physics_waterQ);
+
+	Physics_OnPlace[BlockID_Sand] = Physics_DoFalling;
+	Physics_OnPlace[BlockID_Gravel] = Physics_DoFalling;
+	Physics_OnActivate[BlockID_Sand] = Physics_DoFalling;
+	Physics_OnActivate[BlockID_Gravel] = Physics_DoFalling;
+	Physics_OnRandomTick[BlockID_Sand] = Physics_DoFalling;
+	Physics_OnRandomTick[BlockID_Gravel] = Physics_DoFalling;
+
+	Physics_OnPlace[BlockID_Sapling] = Physics_HandleSapling;
+	Physics_OnRandomTick[BlockID_Sapling] = Physics_HandleSapling;
+	Physics_OnRandomTick[BlockID_Dirt] = Physics_HandleDirt;
+	Physics_OnRandomTick[BlockID_Grass] = Physics_HandleGrass;
+
+	Physics_OnRandomTick[BlockID_Dandelion] = Physics_HandleFlower;
+	Physics_OnRandomTick[BlockID_Rose] = Physics_HandleFlower;
+	Physics_OnRandomTick[BlockID_RedMushroom] = Physics_HandleMushroom;
+	Physics_OnRandomTick[BlockID_BrownMushroom] = Physics_HandleMushroom;
+
+	Physics_OnPlace[BlockID_Lava] = Physics_PlaceLava;
+	Physics_OnPlace[BlockID_Water] = Physics_PlaceWater;
+	Physics_OnPlace[BlockID_Sponge] = Physics_PlaceSponge;
+	Physics_OnDelete[BlockID_Sponge] = Physics_DeleteSponge;
+
+	Physics_OnActivate[BlockID_Water] = Physics_OnPlace[BlockID_Water];
+	Physics_OnActivate[BlockID_StillWater] = Physics_OnPlace[BlockID_Water];
+	Physics_OnActivate[BlockID_Lava] = Physics_OnPlace[BlockID_Lava];
+	Physics_OnActivate[BlockID_StillLava] = Physics_OnPlace[BlockID_Lava];
+
+	Physics_OnRandomTick[BlockID_Water] = Physics_ActivateWater;
+	Physics_OnRandomTick[BlockID_StillWater] = Physics_ActivateWater;
+	Physics_OnRandomTick[BlockID_Lava] = Physics_ActivateLava;
+	Physics_OnRandomTick[BlockID_StillLava] = Physics_ActivateLava;
+
+	Physics_OnPlace[BlockID_Slab] = Physics_HandleSlab;
+	Physics_OnPlace[BlockID_CobblestoneSlab] = Physics_HandleCobblestoneSlab;
+	Physics_OnPlace[BlockID_TNT] = Physics_HandleTnt;
+}
+
+void Physics_Free(void) {
+	Event_UnregisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
+	Event_UnregisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
+}
+
+void Physics_Tick(void) {
+	if (!Physics_Enabled || World_Blocks == NULL) return;
+
+	/*if ((tickCount % 5) == 0) {*/
+	Physics_TickLava();
+	Physics_TickWater();
+	/*}*/
+	physics_tickCount++;
+	Physics_TickRandomBlocks();
+}

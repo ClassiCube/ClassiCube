@@ -1,7 +1,13 @@
-#if 0
 #include "Intersection.h"
 #include "AABB.h"
 #include "ExtMath.h"
+
+Vector3 Intersection_InverseRotate(Vector3 pos, Entity* target) {
+	pos = Vector3_RotateY(pos, -target->RotY * MATH_DEG2RAD);
+	pos = Vector3_RotateZ(pos, -target->RotZ * MATH_DEG2RAD);
+	pos = Vector3_RotateX(pos, -target->RotX * MATH_DEG2RAD);
+	return pos;
+}
 
 bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* target, Real32* tMin, Real32* tMax) {
 	/* This is the rotated AABB of the model we want to test for intersection
@@ -17,15 +23,9 @@ bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* t
 	Vector3_Add(&origin, &delta, &target->Position);                     /* origin = delta + target.Position */
 
 	dir = Intersection_InverseRotate(dir, target);
-	AABB bb = Entity_GetPickingBounds(target);
+	AABB bb;
+	Entity_GetPickingBounds(target, &bb);
 	return Intersection_RayIntersectsBox(origin, dir, bb.Min, bb.Max, tMin, tMax);
-}
-
-Vector3 Intersection_InverseRotate(Vector3 pos, Entity* target) {
-	pos = Vector3_RotateY(pos, -target->RotY * MATH_DEG2RAD);
-	pos = Vector3_RotateZ(pos, -target->RotZ * MATH_DEG2RAD);
-	pos = Vector3_RotateX(pos, -target->RotX * MATH_DEG2RAD);
-	return pos;
 }
 
 bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, Real32* t0, Real32* t1) {
@@ -68,4 +68,3 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 	*t0 = tmin; *t1 = tmax;
 	return *t0 >= 0;
 }
-#endif

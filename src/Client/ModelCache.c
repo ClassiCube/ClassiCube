@@ -11,28 +11,13 @@
 String ModelCache_charPngString = String_FromConstant("char.png");
 Int32 ModelCache_texCount, ModelCache_modelCount;
 
-void ModelCache_Init(void) {
-	ModelCache_RegisterDefaultModels();
-	ModelCache_ContextRecreated();
-
-	Event_RegisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost, ModelCache_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, ModelCache_ContextRecreated);
+void ModelCache_ContextLost(void) {
+	Gfx_DeleteVb(&ModelCache_Vb);
 }
 
-void ModelCache_Free(void) {
-	Int32 i;
-	for (i = 0; i < ModelCache_texCount; i++) {
-		CachedTexture* tex = &ModelCache_Textures[i];
-		Gfx_DeleteTexture(&tex->TexID);
-	}
-	ModelCache_ContextLost();
-
-	Event_UnregisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, ModelCache_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, ModelCache_ContextRecreated);
+void ModelCache_ContextRecreated(void) {
+	ModelCache_Vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, ModelCache_MaxVertices);
 }
-
 
 IModel* ModelCache_Get(STRING_TRANSIENT String* name) {
 	Int32 i;
@@ -98,14 +83,6 @@ static void ModelCache_TextureChanged(Stream* stream) {
 		Game_UpdateTexture(&tex->TexID, stream, isCharPng);
 		return;
 	}
-}
-
-static void ModelCache_ContextLost(void) {
-	Gfx_DeleteVb(&ModelCache_Vb);
-}
-
-static void ModelCache_ContextRecreated(void) {
-	ModelCache_Vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, ModelCache_MaxVertices);
 }
 
 
@@ -1307,4 +1284,26 @@ static void ModelCache_RegisterDefaultModels(void) {
 	ModelCache_Register("sit", "char.png", SittingModel_GetInstance());
 	ModelCache_Register("sitting", "char.png", &SittingModel);
 	ModelCache_Register("arm", "char.png", ArmModel_GetInstance());
+}
+
+void ModelCache_Init(void) {
+	ModelCache_RegisterDefaultModels();
+	ModelCache_ContextRecreated();
+
+	Event_RegisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost, ModelCache_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, ModelCache_ContextRecreated);
+}
+
+void ModelCache_Free(void) {
+	Int32 i;
+	for (i = 0; i < ModelCache_texCount; i++) {
+		CachedTexture* tex = &ModelCache_Textures[i];
+		Gfx_DeleteTexture(&tex->TexID);
+	}
+	ModelCache_ContextLost();
+
+	Event_UnregisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, ModelCache_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, ModelCache_ContextRecreated);
 }

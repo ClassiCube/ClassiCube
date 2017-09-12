@@ -1,11 +1,11 @@
-#if 0
 #include "PickedPosRenderer.h"
 #include "PackedCol.h"
 #include "VertexStructs.h"
 #include "GraphicsAPI.h"
 #include "GraphicsEnums.h"
 #include "GraphicsCommon.h"
-#include "GameProps.h"
+#include "Game.h"
+#include "Events.h"
 
 GfxResourceID pickedPos_vb;
 PackedCol pickedPos_col;
@@ -13,11 +13,12 @@ PackedCol pickedPos_col;
 VertexP3fC4b pickedPos_vertices[pickedPos_numVertices];
 VertexP3fC4b* pickedPos_ptr;
 
-IGameComponent PickedPosRenderer_MakeGameComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = PickedPosRenderer_Init;
-	comp.Free = PickedPosRenderer_Free;
-	return comp;
+void PickedPosRenderer_ContextLost(void) {
+	Gfx_DeleteVb(&pickedPos_vb);
+}
+
+void PickedPosRenderer_ContextRecreated(void) {
+	pickedPos_vb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, pickedPos_numVertices);
 }
 
 void PickedPosRenderer_Init(void) {
@@ -29,8 +30,8 @@ void PickedPosRenderer_Init(void) {
 
 void PickedPosRenderer_Free(void) {
 	PickedPosRenderer_ContextLost();
-	Event_UnregisterVoid(&Gfx_ContextLost, PickedPosRenderer_ContextLost);
-	Event_UnregisterVoid(&Gfx_ContextRecreated, PickedPosRenderer_ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, PickedPosRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, PickedPosRenderer_ContextRecreated);
 }
 
 void PickedPosRenderer_Render(Real64 delta) {
@@ -43,6 +44,27 @@ void PickedPosRenderer_Render(Real64 delta) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(pickedPos_vb, pickedPos_vertices, pickedPos_numVertices);
 	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaBlending(false);
+}
+
+void PickedPosRenderer_XQuad(Real32 x, Real32 z1, Real32 y1, Real32 z2, Real32 y2) {
+	VertexP3fC4b_Set(pickedPos_ptr, x, y1, z1, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x, y2, z1, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x, y2, z2, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x, y1, z2, pickedPos_col); pickedPos_ptr++;
+}
+
+void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y2) {
+	VertexP3fC4b_Set(pickedPos_ptr, x1, y1, z, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x1, y2, z, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x2, y2, z, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x2, y1, z, pickedPos_col); pickedPos_ptr++;
+}
+
+void PickedPosRenderer_YQuad(Real32 y, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
+	VertexP3fC4b_Set(pickedPos_ptr, x1, y, z1, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x1, y, z2, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x2, y, z2, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b_Set(pickedPos_ptr, x2, y, z1, pickedPos_col); pickedPos_ptr++;
 }
 
 void PickedPosRenderer_UpdateState(PickedPos* selected) {
@@ -65,7 +87,6 @@ void PickedPosRenderer_UpdateState(PickedPos* selected) {
 	if (dist <  8.0f *  8.0f) size = 1.0f / 96.0f;
 	if (dist <  4.0f *  4.0f) size = 1.0f / 128.0f;
 	if (dist <  2.0f *  2.0f) size = 1.0f / 192.0f;
-
 
 	/* bottom face */
 	PickedPosRenderer_YQuad(p1.Y, p1.X, p1.Z + size, p1.X + size, p2.Z - size);
@@ -104,32 +125,9 @@ void PickedPosRenderer_UpdateState(PickedPos* selected) {
 	PickedPosRenderer_ZQuad(p2.Z, p1.X, p2.Y, p2.X, p2.Y - size);
 }
 
-void PickedPosRenderer_XQuad(Real32 x, Real32 z1, Real32 y1, Real32 z2, Real32 y2) {
-	VertexP3fC4b_Set(pickedPos_ptr, x, y1, z1, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x, y2, z1, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x, y2, z2, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x, y1, z2, pickedPos_col); pickedPos_ptr++;
+IGameComponent PickedPosRenderer_MakeGameComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = PickedPosRenderer_Init;
+	comp.Free = PickedPosRenderer_Free;
+	return comp;
 }
-
-void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y2) {
-	VertexP3fC4b_Set(pickedPos_ptr, x1, y1, z, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x1, y2, z, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x2, y2, z, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x2, y1, z, pickedPos_col); pickedPos_ptr++;
-}
-
-void PickedPosRenderer_YQuad(Real32 y, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
-	VertexP3fC4b_Set(pickedPos_ptr, x1, y, z1, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x1, y, z2, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x2, y, z2, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x2, y, z1, pickedPos_col); pickedPos_ptr++;
-}
-
-void PickedPosRenderer_ContextLost(void) { 
-	Gfx_DeleteVb(&pickedPos_vb);
-}
-
-void PickedPosRenderer_ContextRecreated(void) {
-	pickedPos_vb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, pickedPos_numVertices);
-}
-#endif

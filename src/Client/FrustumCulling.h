@@ -9,7 +9,6 @@
 
 /* Returns whether the given bounding sphere is in the view frustum. */
 bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius);
-
 /* Calculates the planes that constitute view frustum. */
 void FrustumCulling_CalcFrustumEquations(Matrix* projection, Matrix* modelView);
 #endif

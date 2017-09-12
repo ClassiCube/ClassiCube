@@ -1,4 +1,3 @@
-#if 0
 #include "TickQueue.h"
 #include "Platform.h"
 #include "ErrorHandler.h"
@@ -18,22 +17,6 @@ void TickQueue_Clear(TickQueue* queue) {
 	TickQueue_Init(queue);
 }
 
-void TickQueue_Enqueue(TickQueue* queue, UInt32 item) {
-	if (queue->Size == queue->BufferSize)
-		TickQueue_Resize(queue);
-
-	queue->Buffer[queue->Tail] = item;
-	queue->Tail = (queue->Tail + 1) & queue->BufferMask;
-	queue->Size++;
-}
-
-UInt32 TickQueue_Dequeue(TickQueue* queue) {
-	UInt32 result = queue->Buffer[queue->Head];
-	queue->Head = (queue->Head + 1) & queue->BufferMask;
-	queue->Size--;
-	return result;
-}
-
 void TickQueue_Resize(TickQueue* queue) {
 	if (queue->BufferSize >= (Int32_MaxValue / 4))
 		ErrorHandler_Fail("Queue - too large to resize.");
@@ -44,7 +27,7 @@ void TickQueue_Resize(TickQueue* queue) {
 	UInt32* newBuffer = Platform_MemAlloc(capacity * sizeof(UInt32));
 	if (newBuffer == NULL)
 		ErrorHandler_Fail("Queue - failed to allocate memory");
-	
+
 	Int32 i, idx;
 	for (i = 0; i < queue->Size; i++) {
 		idx = (queue->Head + i) & queue->BufferMask;
@@ -60,4 +43,19 @@ void TickQueue_Resize(TickQueue* queue) {
 	queue->Head = 0;
 	queue->Tail = queue->Size;
 }
-#endif
+
+void TickQueue_Enqueue(TickQueue* queue, UInt32 item) {
+	if (queue->Size == queue->BufferSize)
+		TickQueue_Resize(queue);
+
+	queue->Buffer[queue->Tail] = item;
+	queue->Tail = (queue->Tail + 1) & queue->BufferMask;
+	queue->Size++;
+}
+
+UInt32 TickQueue_Dequeue(TickQueue* queue) {
+	UInt32 result = queue->Buffer[queue->Head];
+	queue->Head = (queue->Head + 1) & queue->BufferMask;
+	queue->Size--;
+	return result;
+}

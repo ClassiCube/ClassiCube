@@ -80,6 +80,46 @@ void Block_SetDrawType(BlockID block, UInt8 draw) {
 		&& Vector3_Equals(&Block_MaxBB[block], &one);
 }
 
+
+void Block_SplitUppercase(STRING_TRANSIENT String* buffer, STRING_TRANSIENT String* blockNames, Int32 start, Int32 end) {
+	Int32 i;
+	for (i = start; i < end; i++) {
+		UInt8 c = String_CharAt(blockNames, i);
+		bool upper = Char_IsUpper(c) && i > start;
+		bool nextLower = i < end - 1 && !Char_IsUpper(String_CharAt(blockNames, i + 1));
+
+		if (upper && nextLower) {
+			String_Append(buffer, ' ');
+			String_Append(buffer, Char_ToLower(c));
+		} else {
+			String_Append(buffer, c);
+		}
+	}
+}
+
+String Block_DefaultName(BlockID block) {
+#if USE16_BIT
+	if (block >= 256) return "ID " + block;
+#endif
+	if (block >= Block_CpeCount) {
+		String invalid = String_FromConstant("Invalid");
+		return invalid;
+	}
+
+	String blockNames = String_FromConstant(Block_RawNames);
+	/* Find start and end of this particular block name. */
+	Int32 start = 0, i;
+	for (i = 0; i < block; i++) {
+		start = String_IndexOf(&blockNames, ' ', start) + 1;
+	}
+	Int32 end = String_IndexOf(&blockNames, ' ', start);
+	if (end == -1) end = blockNames.length;
+
+	String buffer = String_FromRawBuffer(Block_NamePtr(block), STRING_SIZE);
+	Block_SplitUppercase(&buffer, &blockNames, start, end);
+	return buffer;
+}
+
 void Block_ResetProps(BlockID block) {
 	Block_BlocksLight[block] = DefaultSet_BlocksLight(block);
 	Block_FullBright[block] = DefaultSet_FullBright(block);
@@ -133,48 +173,6 @@ Int32 Block_FindID(STRING_TRANSIENT String* name) {
 }
 
 bool Block_IsLiquid(BlockID b) { return b >= BlockID_Water && b <= BlockID_StillLava; }
-
-
-String Block_DefaultName(BlockID block) {
-#if USE16_BIT
-	if (block >= 256) return "ID " + block;
-#endif
-	if (block >= Block_CpeCount) {
-		String invalid = String_FromConstant("Invalid");
-		return invalid;
-	}
-
-	String blockNames = String_FromConstant(Block_RawNames);
-	/* Find start and end of this particular block name. */
-	Int32 start = 0, i;
-	for (i = 0; i < block; i++) {
-		start = String_IndexOf(&blockNames, ' ', start) + 1;
-	}
-	Int32 end = String_IndexOf(&blockNames, ' ', start);
-	if (end == -1) end = blockNames.length;
-
-	String buffer = String_FromRawBuffer(Block_NamePtr(block), STRING_SIZE);
-	Block_SplitUppercase(&buffer, &blockNames, start, end);
-	return buffer;
-}
-
-static void Block_SplitUppercase(STRING_TRANSIENT String* buffer, STRING_TRANSIENT String* blockNames, 
-	Int32 start, Int32 end) {
-	Int32 i;
-	for (i = start; i < end; i++) {
-		UInt8 c = String_CharAt(blockNames, i);
-		bool upper = Char_IsUpper(c) && i > start;
-		bool nextLower = i < end - 1 && !Char_IsUpper(String_CharAt(blockNames, i + 1));
-
-		if (upper && nextLower) {
-			String_Append(buffer, ' ');
-			String_Append(buffer, Char_ToLower(c));
-		} else {
-			String_Append(buffer, c);
-		}
-	}
-}
-
 
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {

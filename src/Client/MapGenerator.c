@@ -1,4 +1,3 @@
-#if 0
 #include "MapGenerator.h"
 #include "BlockID.h"
 #include "ErrorHandler.h"
@@ -9,17 +8,6 @@
 #include "Random.h"
 #include "TreeGen.h"
 
-void FlatgrassGen_Generate(void) {
-	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length * sizeof(BlockID));
-	if (Gen_Blocks == NULL)
-		ErrorHandler_Fail("FlatgrassGen - failed to allocate Blocks array");
-
-	Gen_CurrentState = String_FromConstant("Setting dirt blocks");
-	FlatgrassGen_MapSet(0, Gen_Height / 2 - 2, BlockID_Dirt);
-
-	Gen_CurrentState = String_FromConstant("Setting grass blocks");
-	FlatgrassGen_MapSet(Gen_Height / 2 - 1, Gen_Height / 2 - 1, BlockID_Grass);
-}
 
 void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
 	yStart = max(yStart, 0); yEnd = max(yEnd, 0);
@@ -39,44 +27,82 @@ void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
 	}
 }
 
+void FlatgrassGen_Generate(void) {
+	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length * sizeof(BlockID));
+	if (Gen_Blocks == NULL)
+		ErrorHandler_Fail("FlatgrassGen - failed to allocate Blocks array");
+
+	String dirtStr = String_FromConstant("Setting dirt blocks");
+	Gen_CurrentState = dirtStr;
+	FlatgrassGen_MapSet(0, Gen_Height / 2 - 2, BlockID_Dirt);
+
+	String grassStr = String_FromConstant("Setting grass blocks");
+	Gen_CurrentState = grassStr;
+	FlatgrassGen_MapSet(Gen_Height / 2 - 1, Gen_Height / 2 - 1, BlockID_Grass);
+}
+
+
 Int32 waterLevel, oneY, volume, minHeight;
 Int16* Heightmap;
 Random rnd;
 
-void NotchyGen_Generate(void) {
-	Heightmap = Platform_MemAlloc(Gen_Width * Gen_Length * sizeof(Int16));
-	if (Heightmap == NULL)
-		ErrorHandler_Fail("NotchyGen - Failed to allocate Heightmap array");
-	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length * sizeof(BlockID));
-	if (Gen_Blocks == NULL)
-		ErrorHandler_Fail("NotchyGen - Failed to allocate Blocks array");
+void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radius, BlockID block) {
+	Int32 xStart = Math_Floor(max(x - radius, 0));
+	Int32 xEnd = Math_Floor(min(x + radius, Gen_MaxX));
+	Int32 yStart = Math_Floor(max(y - radius, 0));
+	Int32 yEnd = Math_Floor(min(y + radius, Gen_MaxY));
+	Int32 zStart = Math_Floor(max(z - radius, 0));
+	Int32 zEnd = Math_Floor(min(z + radius, Gen_MaxZ));
 
-	oneY = Gen_Width * Gen_Length;
-	volume = Gen_Width * Gen_Length * Gen_Height;
-	waterLevel = Gen_Height / 2;
-	Random_Init(&rnd, Gen_Seed);
-	minHeight = Gen_Height;
+	Real32 radiusSq = radius * radius;
+	Int32 xx, yy, zz;
 
-	Gen_CurrentProgress = 0.0f;
-	Gen_CurrentState = String_FromConstant("");
+	for (yy = yStart; yy <= yEnd; yy++) {
+		Int32 dy = yy - y;
+		for (zz = zStart; zz <= zEnd; zz++) {
+			Int32 dz = zz - z;
+			for (xx = xStart; xx <= xEnd; xx++) {
+				Int32 dx = xx - x;
+				if ((dx * dx + 2 * dy * dy + dz * dz) < radiusSq) {
+					Int32 index = Gen_Pack(xx, yy, zz);
+					if (Gen_Blocks[index] == BlockID_Stone)
+						Gen_Blocks[index] = block;
+				}
+			}
+		}
+	}
+}
 
-	NotchyGen_CreateHeightmap();
-	NotchyGen_CreateStrata();
-	NotchyGen_CarveCaves();
-	NotchyGen_CarveOreVeins(0.9f, "Carving coal ore", BlockID_CoalOre);
-	NotchyGen_CarveOreVeins(0.7f, "Carving iron ore", BlockID_IronOre);
-	NotchyGen_CarveOreVeins(0.5f, "Carving gold ore", BlockID_GoldOre);
+#define Stack_Push(index)\
+stack[stack_size] = index;\
+stack_size++;\
+if (stack_size == 32768) {\
+	ErrorHandler_Fail("NotchyGen_FloodFail - stack limit hit");\
+}
 
-	NotchyGen_FloodFillWaterBorders();
-	NotchyGen_FloodFillWater();
-	NotchyGen_FloodFillLava();
+void NotchyGen_FloodFill(Int32 startIndex, BlockID block) {
+	if (startIndex < 0) return; /* y below map, immediately ignore */
+								/* This is way larger size than I actually have seen used, but we play it safe here.*/
+	Int32 stack[32768];
+	Int32 stack_size = 0;
+	Stack_Push(startIndex);
 
-	NotchyGen_CreateSurfaceLayer();
-	NotchyGen_PlantFlowers();
-	NotchyGen_PlantMushrooms();
-	NotchyGen_PlantTrees();
+	while (stack_size > 0) {
+		stack_size--;
+		Int32 index = stack[stack_size];
+		if (Gen_Blocks[index] != 0) continue;
+		Gen_Blocks[index] = block;
 
-	Platform_MemFree(Heightmap);
+		Int32 x = index % Gen_Width;
+		Int32 y = index / oneY;
+		Int32 z = (index / Gen_Width) % Gen_Length;
+
+		if (x > 0) { Stack_Push(index - 1); }
+		if (x < Gen_MaxX) { Stack_Push(index + 1); }
+		if (z > 0) { Stack_Push(index - Gen_Width); }
+		if (z < Gen_MaxZ) { Stack_Push(index + Gen_Width); }
+		if (y > 0) { Stack_Push(index - oneY); }
+	}
 }
 
 
@@ -88,7 +114,8 @@ void NotchyGen_CreateHeightmap(void) {
 	OctaveNoise_Init(&n3, &rnd, 6);
 
 	Int32 index = 0;
-	Gen_CurrentState = String_FromConstant("Building heightmap");
+	String state = String_FromConstant("Building heightmap");
+	Gen_CurrentState = state;
 
 	Int32 x, z;
 	for (z = 0; z < Gen_Length; z++) {
@@ -114,7 +141,8 @@ void NotchyGen_CreateHeightmap(void) {
 void NotchyGen_CreateStrata(void) {
 	OctaveNoise n;
 	OctaveNoise_Init(&n, &rnd, 8);
-	Gen_CurrentState = String_FromConstant("Creating strata");
+	String state = String_FromConstant("Creating strata");
+	Gen_CurrentState = state;
 	Int32 hMapIndex = 0, maxY = Gen_Height - 1, mapIndex = 0;
 	/* Try to bulk fill bottom of the map if possible */
 	Int32 minStoneY = NotchyGen_CreateStrataFast();
@@ -172,7 +200,8 @@ Int32 NotchyGen_CreateStrataFast(void) {
 
 void NotchyGen_CarveCaves(void) {
 	Int32 cavesCount = volume / 8192;
-	Gen_CurrentState = String_FromConstant("Carving caves");
+	String state = String_FromConstant("Carving caves");
+	Gen_CurrentState = state;
 
 	Int32 i, j;
 	for (i = 0; i < cavesCount; i++) {
@@ -244,7 +273,8 @@ void NotchyGen_FloodFillWaterBorders(void) {
 	Int32 waterY = waterLevel - 1;
 	Int32 index1 = Gen_Pack(0, waterY, 0);
 	Int32 index2 = Gen_Pack(0, waterY, Gen_Length - 1);
-	Gen_CurrentState = String_FromConstant("Flooding edge water");
+	String state = String_FromConstant("Flooding edge water");
+	Gen_CurrentState = state;
 	Int32 x, z;
 
 	for (x = 0; x < Gen_Width; x++) {
@@ -266,7 +296,8 @@ void NotchyGen_FloodFillWaterBorders(void) {
 
 void NotchyGen_FloodFillWater(void) {
 	Int32 numSources = Gen_Width * Gen_Length / 800;
-	Gen_CurrentState = String_FromConstant("Flooding water");
+	String state = String_FromConstant("Flooding water");
+	Gen_CurrentState = state;
 
 	Int32 i;
 	for (i = 0; i < numSources; i++) {
@@ -280,7 +311,8 @@ void NotchyGen_FloodFillWater(void) {
 
 void NotchyGen_FloodFillLava(void) {
 	Int32 numSources = Gen_Width * Gen_Length / 20000;
-	Gen_CurrentState = String_FromConstant("Flooding lava");
+	String state = String_FromConstant("Flooding lava");
+	Gen_CurrentState = state;
 
 	Int32 i;
 	for (i = 0; i < numSources; i++) {
@@ -296,7 +328,8 @@ void NotchyGen_CreateSurfaceLayer(void) {
 	OctaveNoise n1, n2;
 	OctaveNoise_Init(&n1, &rnd, 8);
 	OctaveNoise_Init(&n2, &rnd, 8);
-	Gen_CurrentState = String_FromConstant("Creating surface");
+	String state = String_FromConstant("Creating surface");
+	Gen_CurrentState = state;
 	/* TODO: update heightmap */
 
 	Int32 hMapIndex = 0;
@@ -322,7 +355,8 @@ void NotchyGen_CreateSurfaceLayer(void) {
 
 void NotchyGen_PlantFlowers(void) {
 	Int32 numPatches = Gen_Width * Gen_Length / 3000;
-	Gen_CurrentState = String_FromConstant("Planting flowers");
+	String state = String_FromConstant("Planting flowers");
+	Gen_CurrentState = state;
 
 	Int32 i, j, k;
 	for (i = 0; i < numPatches; i++) {
@@ -350,7 +384,8 @@ void NotchyGen_PlantFlowers(void) {
 
 void NotchyGen_PlantMushrooms(void) {
 	Int32 numPatches = volume / 2000;
-	Gen_CurrentState = String_FromConstant("Planting mushrooms");
+	String state = String_FromConstant("Planting mushrooms");
+	Gen_CurrentState = state;
 
 	Int32 i, j, k;
 	for (i = 0; i < numPatches; i++) {
@@ -382,7 +417,8 @@ void NotchyGen_PlantMushrooms(void) {
 
 void NotchyGen_PlantTrees(void) {
 	Int32 numPatches = Gen_Width * Gen_Length / 4000;
-	Gen_CurrentState = String_FromConstant("Planting trees");
+	String state = String_FromConstant("Planting trees");
+	Gen_CurrentState = state;
 
 	Tree_Width = Gen_Width; Tree_Height = Gen_Height; Tree_Length = Gen_Length;
 	Tree_Blocks = Gen_Blocks;
@@ -424,63 +460,39 @@ void NotchyGen_PlantTrees(void) {
 	}
 }
 
+void NotchyGen_Generate(void) {
+	Heightmap = Platform_MemAlloc(Gen_Width * Gen_Length * sizeof(Int16));
+	if (Heightmap == NULL)
+		ErrorHandler_Fail("NotchyGen - Failed to allocate Heightmap array");
+	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length * sizeof(BlockID));
+	if (Gen_Blocks == NULL)
+		ErrorHandler_Fail("NotchyGen - Failed to allocate Blocks array");
 
-void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radius, BlockID block) {
-	Int32 xStart = Math_Floor(max(x - radius, 0));
-	Int32 xEnd = Math_Floor(min(x + radius, Gen_MaxX));
-	Int32 yStart = Math_Floor(max(y - radius, 0));
-	Int32 yEnd = Math_Floor(min(y + radius, Gen_MaxY));
-	Int32 zStart = Math_Floor(max(z - radius, 0));
-	Int32 zEnd = Math_Floor(min(z + radius, Gen_MaxZ));
+	oneY = Gen_Width * Gen_Length;
+	volume = Gen_Width * Gen_Length * Gen_Height;
+	waterLevel = Gen_Height / 2;
+	Random_Init(&rnd, Gen_Seed);
+	minHeight = Gen_Height;
 
-	Real32 radiusSq = radius * radius;
-	Int32 xx, yy, zz;
+	Gen_CurrentProgress = 0.0f;
+	String state = String_FromConstant("");
+	Gen_CurrentState = state;
 
-	for (yy = yStart; yy <= yEnd; yy++) {
-		Int32 dy = yy - y;
-		for (zz = zStart; zz <= zEnd; zz++) {
-			Int32 dz = zz - z;
-			for (xx = xStart; xx <= xEnd; xx++) {
-				Int32 dx = xx - x;
-				if ((dx * dx + 2 * dy * dy + dz * dz) < radiusSq) {
-					Int32 index = Gen_Pack(xx, yy, zz);
-					if (Gen_Blocks[index] == BlockID_Stone)
-						Gen_Blocks[index] = block;
-				}
-			}
-		}
-	}
+	NotchyGen_CreateHeightmap();
+	NotchyGen_CreateStrata();
+	NotchyGen_CarveCaves();
+	NotchyGen_CarveOreVeins(0.9f, "Carving coal ore", BlockID_CoalOre);
+	NotchyGen_CarveOreVeins(0.7f, "Carving iron ore", BlockID_IronOre);
+	NotchyGen_CarveOreVeins(0.5f, "Carving gold ore", BlockID_GoldOre);
+
+	NotchyGen_FloodFillWaterBorders();
+	NotchyGen_FloodFillWater();
+	NotchyGen_FloodFillLava();
+
+	NotchyGen_CreateSurfaceLayer();
+	NotchyGen_PlantFlowers();
+	NotchyGen_PlantMushrooms();
+	NotchyGen_PlantTrees();
+
+	Platform_MemFree(Heightmap);
 }
-
-#define Stack_Push(index)\
-stack[stack_size] = index;\
-stack_size++;\
-if (stack_size == 32768) {\
-	ErrorHandler_Fail("NotchyGen_FloodFail - stack limit hit");\
-}
-
-void NotchyGen_FloodFill(Int32 startIndex, BlockID block) {
-	if (startIndex < 0) return; /* y below map, immediately ignore */
-								/* This is way larger size than I actually have seen used, but we play it safe here.*/
-	Int32 stack[32768];
-	Int32 stack_size = 0;
-	Stack_Push(startIndex);
-
-	while (stack_size > 0) {
-		stack_size--;
-		Int32 index = stack[stack_size];
-		if (Gen_Blocks[index] != 0) continue;
-		Gen_Blocks[index] = block;
-
-		Int32 x = index % Gen_Width;
-		Int32 y = index / oneY;
-		Int32 z = (index / Gen_Width) % Gen_Length;
-
-		if (x > 0) { Stack_Push(index - 1); }
-		if (x < Gen_MaxX) { Stack_Push(index + 1); }
-		if (z > 0) { Stack_Push(index - Gen_Width); }
-		if (z < Gen_MaxZ) { Stack_Push(index + Gen_Width); }
-		if (y > 0) { Stack_Push(index - oneY); }
-	}
-}
-#endif

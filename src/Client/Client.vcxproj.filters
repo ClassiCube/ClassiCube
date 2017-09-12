@@ -267,9 +267,6 @@
     <ClInclude Include="MapRenderer.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
-    <ClInclude Include="ChunkInfo.h">
-      <Filter>Header Files\Rendering\Map</Filter>
-    </ClInclude>
     <ClInclude Include="Respawn.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
@@ -281,9 +278,6 @@
     </ClInclude>
     <ClInclude Include="Random.h">
       <Filter>Header Files\Math</Filter>
-    </ClInclude>
-    <ClInclude Include="NormalBuilder.h">
-      <Filter>Header Files\MeshBuilder</Filter>
     </ClInclude>
     <ClInclude Include="2DStructs.h">
       <Filter>Header Files\2D\Utils</Filter>
@@ -322,9 +316,6 @@
       <Filter>Header Files\2D</Filter>
     </ClInclude>
     <ClInclude Include="Builder.h">
-      <Filter>Header Files\MeshBuilder</Filter>
-    </ClInclude>
-    <ClInclude Include="Builder1DPart.h">
       <Filter>Header Files\MeshBuilder</Filter>
     </ClInclude>
     <ClInclude Include="ChunkUpdater.h">
@@ -440,9 +431,6 @@
     <ClCompile Include="WeatherRenderer.c">
       <Filter>Source Files\Rendering\Env</Filter>
     </ClCompile>
-    <ClCompile Include="ChunkInfo.c">
-      <Filter>Source Files\Rendering\Map</Filter>
-    </ClCompile>
     <ClCompile Include="MapRenderer.c">
       <Filter>Source Files\Rendering\Map</Filter>
     </ClCompile>
@@ -484,12 +472,6 @@
     </ClCompile>
     <ClCompile Include="IsometricDrawer.c">
       <Filter>Source Files\2D</Filter>
-    </ClCompile>
-    <ClCompile Include="NormalBuilder.c">
-      <Filter>Source Files\MeshBuilder</Filter>
-    </ClCompile>
-    <ClCompile Include="Builder1DPart.c">
-      <Filter>Source Files\MeshBuilder</Filter>
     </ClCompile>
     <ClCompile Include="Builder.c">
       <Filter>Source Files\MeshBuilder</Filter>

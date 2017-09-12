@@ -179,9 +179,7 @@
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />
     <ClInclude Include="Builder.h" />
-    <ClInclude Include="Builder1DPart.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="ChunkInfo.h" />
     <ClInclude Include="ChunkUpdater.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="Constants.h" />
@@ -209,7 +207,6 @@
     <ClInclude Include="Key.h" />
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="NetworkEnums.h" />
-    <ClInclude Include="NormalBuilder.h" />
     <ClInclude Include="Options.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Picking.h" />
@@ -251,8 +248,6 @@
     <ClCompile Include="Block.c" />
     <ClCompile Include="BordersRenderer.c" />
     <ClCompile Include="Builder.c" />
-    <ClCompile Include="Builder1DPart.c" />
-    <ClCompile Include="ChunkInfo.c" />
     <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DefaultSet.c" />
@@ -276,7 +271,6 @@
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelCache.c" />
     <ClCompile Include="Mouse.c" />
-    <ClCompile Include="NormalBuilder.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />
     <ClCompile Include="GraphicsCommon.c" />

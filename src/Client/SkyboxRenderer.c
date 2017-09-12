@@ -1,9 +1,7 @@
-#if 0
 #include "SkyboxRenderer.h"
 #include "Camera.h"
 #include "Events.h"
 #include "Game.h"
-#include "GameProps.h"
 #include "GraphicsAPI.h"
 #include "GraphicsEnums.h"
 #include "Events.h"
@@ -16,47 +14,8 @@
 GfxResourceID skybox_tex, skybox_vb = -1;
 #define skybox_count (6 * 4)
 
-IGameComponent SkyboxRenderer_MakeGameComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = SkyboxRenderer_Init;
-	comp.Free = SkyboxRenderer_Free;
-	comp.OnNewMap = SkyboxRenderer_MakeVb; /* Need to recreate colour component of vertices */
-	comp.Reset = SkyboxRenderer_Reset;
-	return comp;
-}
-
 bool SkyboxRenderer_ShouldRender(void) {
 	return skybox_tex > 0 && !EnvRenderer_Minimal;
-}
-
-void SkyboxRenderer_Init(void) {
-	Event_RegisterStream(&TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
-	Event_RegisterVoid(&TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost, &SkyboxRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, &SkyboxRenderer_ContextRecreated);
-}
-
-void SkyboxRenderer_Reset(void) { Gfx_DeleteTexture(&skybox_tex); }
-
-void SkyboxRenderer_Free(void) {
-	Gfx_DeleteTexture(&skybox_tex);
-	SkyboxRenderer_ContextLost();
-
-	Event_UnregisterStream(&TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
-	Event_UnregisterVoid(&TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
-	Event_UnregisterVoid(&Gfx_ContextLost, &SkyboxRenderer_ContextLost);
-	Event_UnregisterVoid(&Gfx_ContextRecreated, &SkyboxRenderer_ContextRecreated);
-}
-
-void SkyboxRenderer_EnvVariableChanged(EnvVar envVar) {
-	if (envVar != EnvVar_CloudsCol) return;
-	SkyboxRenderer_MakeVb();
-}
-
-void SkyboxRenderer_TexturePackChanged(void) {
-	Gfx_DeleteTexture(&skybox_tex);
 }
 
 void SkyboxRenderer_FileChanged(Stream* src) {
@@ -82,7 +41,7 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Matrix_RotateX(&rotX, rotation.X); /* Pitch */
 	Matrix_MulBy(&m, &rotX);
 	/* Tilt skybox too. */
-	Matrix_MulBy(&m, &Camera_ActiveCamera->tiltM);
+	Matrix_MulBy(&m, &Camera_TiltM);
 	Gfx_LoadMatrix(&m);
 
 	Gfx_BindVb(skybox_vb);
@@ -92,9 +51,6 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_LoadMatrix(&Game_View);
 	Gfx_SetDepthWrite(true);
 }
-
-void SkyboxRenderer_ContextLost(void) { Gfx_DeleteVb(&skybox_vb); }
-void SkyboxRenderer_ContextRecreated(void) { SkyboxRenderer_MakeVb(); }
 
 void SkyboxRenderer_MakeVb(void) {
 	if (Gfx_LostContext) return;
@@ -148,4 +104,45 @@ void SkyboxRenderer_MakeVb(void) {
 
 	skybox_vb = Gfx_CreateVb(vertices, VertexFormat_P3fT2fC4b, skybox_count);
 }
-#endif
+
+void SkyboxRenderer_ContextLost(void) { Gfx_DeleteVb(&skybox_vb); }
+void SkyboxRenderer_ContextRecreated(void) { SkyboxRenderer_MakeVb(); }
+
+void SkyboxRenderer_EnvVariableChanged(EnvVar envVar) {
+	if (envVar != EnvVar_CloudsCol) return;
+	SkyboxRenderer_MakeVb();
+}
+
+void SkyboxRenderer_TexturePackChanged(void) {
+	Gfx_DeleteTexture(&skybox_tex);
+}
+
+void SkyboxRenderer_Init(void) {
+	Event_RegisterStream(&TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
+	Event_RegisterVoid(&TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost, &SkyboxRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, &SkyboxRenderer_ContextRecreated);
+}
+
+void SkyboxRenderer_Reset(void) { Gfx_DeleteTexture(&skybox_tex); }
+
+void SkyboxRenderer_Free(void) {
+	Gfx_DeleteTexture(&skybox_tex);
+	SkyboxRenderer_ContextLost();
+
+	Event_UnregisterStream(&TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
+	Event_UnregisterVoid(&TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, &SkyboxRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, &SkyboxRenderer_ContextRecreated);
+}
+
+IGameComponent SkyboxRenderer_MakeGameComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = SkyboxRenderer_Init;
+	comp.Free = SkyboxRenderer_Free;
+	comp.OnNewMap = SkyboxRenderer_MakeVb; /* Need to recreate colour component of vertices */
+	comp.Reset = SkyboxRenderer_Reset;
+	return comp;
+}

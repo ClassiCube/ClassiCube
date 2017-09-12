@@ -58,9 +58,4 @@ void ModelCache_Register(STRING_REF const UInt8* name, STRING_TRANSIENT const UI
 /* Registers the given texture to be tracked by the model cache.
 You can use ModelCache_GetTextureIndex to get the index of this texture. */
 void ModelCache_RegisterTexture(STRING_REF const UInt8* texName);
-
-static void ModelCache_RegisterDefaultModels(void);
-static void ModelCache_TextureChanged(Stream* stream);
-static void ModelCache_ContextLost(void);
-static void ModelCache_ContextRecreated(void);
 #endif

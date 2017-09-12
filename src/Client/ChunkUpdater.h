@@ -1,8 +1,6 @@
-#if 0
 #ifndef CS_CHUNKUPDATER_H
 #define CS_CHUNKUPDATER_H
 #include "Typedefs.h"
-#include "ChunkInfo.h"
 #include "Vectors.h"
 #include "Events.h"
 /* Manages the process of building/deleting chunk meshes.
@@ -10,72 +8,65 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+/* Describes a portion of the data needed for rendering a chunk. */
+typedef struct ChunkPartInfo_ {
+	Int32 VbId, IndicesCount, SpriteCount;
+	UInt16 XMinCount, XMaxCount, ZMinCount,
+		ZMaxCount, YMinCount, YMaxCount;
+} ChunkPartInfo;
+
+/* Describes data necessary for rendering a chunk. */
+typedef struct ChunkInfo_ {
+	/* Centre coordinates of the chunk. */
+	UInt16 CentreX, CentreY, CentreZ;
+
+	/* Whether chunk is visibile to the player. */
+	UInt8 Visible : 1;
+	/* Whether the chunk is empty of data. */
+	UInt8 Empty : 1;
+	/* Whether chunk is pending deletion.*/
+	UInt8 PendingDelete : 1;
+	/* Whether chunk is completely air. */
+	UInt8 AllAir : 1;
+	UInt8 : 0; /* pad to next byte*/
+
+	UInt8 DrawXMin : 1;
+	UInt8 DrawXMax : 1;
+	UInt8 DrawZMin : 1;
+	UInt8 DrawZMax : 1;
+	UInt8 DrawYMin : 1;
+	UInt8 DrawYMax : 1;
+	UInt8 : 0; /* pad to next byte */
+#if OCCLUSION
+	public bool Visited = false, Occluded = false;
+	public byte OcclusionFlags, OccludedFlags, DistanceFlags;
+#endif
+	ChunkPartInfo* NormalParts;
+	ChunkPartInfo* TranslucentParts;
+} ChunkInfo;
+
+/* Resets contents of given chunk render info structure. */
+void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z);
 
 /* Centre coordinates of chunk the camera is located in.*/
 Vector3I ChunkUpdater_ChunkPos;
-
 /* Distance of chunks from the camera. */
 Int32* ChunkUpdater_Distances; /* TODO: Use UInt32s instead of Int32s? */
 
-
 void ChunkUpdater_Init(void);
-
 void ChunkUpdater_Free(void);
-
 void ChunkUpdater_Refresh(void);
-
 void ChunkUpdater_RefreshBorders(Int32 clipLevel);
-
 void ChunkUpdater_ApplyMeshBuilder(void);
-
-
-static void ChunkUpdater_EnvVariableChanged(EnvVar envVar);
-
-static void ChunkUpdater_TerrainAtlasChanged(void);
-
-static void ChunkUpdater_BlockDefinitionChanged(void);
-
-static void ChunkUpdater_ProjectionChanged(void);
-
-static void ChunkUpdater_ViewDistanceChanged(void);
-
-
-static void ChunkUpdater_OnNewMap(void);
-
-static void ChunkUpdater_OnNewMapLoaded(void);
-
-static void ChunkUpdater_FreeAllocations(void);
-
-static void ChunkUpdater_PerformAllocations(void);
-
-
 void ChunkUpdater_UpdateChunks(Real64 delta);
 
-static Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates);
-
-static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates);
-
-
 void ChunkUpdater_ResetPartFlags(void);
-
 void ChunkUpdater_ResetPartCounts(void);
-
 void ChunkUpdater_CreateChunkCache(void);
-
 void ChunkUpdater_ResetChunkCache(void);
-
 void ChunkUpdater_ClearChunkCache(void);
 
-
 void ChunkUpdater_DeleteChunk(ChunkInfo* info);
-
 void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates);
-
-static Int32 ChunkUpdater_AdjustViewDist(Real32 dist);
-
-
 void ChunkUpdater_UpdateSortOrder(void);
-
-static void ChunkUpdater_QuickSort(Int32 left, Int32 right);
-#endif
 #endif
