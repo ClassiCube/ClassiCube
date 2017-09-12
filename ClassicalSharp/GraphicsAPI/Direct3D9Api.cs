@@ -319,7 +319,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		int batchStride;
+		VertexFormat batchFormat = (VertexFormat)999;
 		public override void SetBatchFormat(VertexFormat format) {
+			if (format == batchFormat) return;
+			batchFormat = format;
+			
 			device.SetVertexFormat(formatMapping[(int)format]);
 			batchStride = strideSizes[(int)format];
 		}

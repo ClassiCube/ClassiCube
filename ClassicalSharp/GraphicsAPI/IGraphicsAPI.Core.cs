@@ -92,10 +92,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			x1 -= 0.5f; x2 -= 0.5f;
 			y1 -= 0.5f; y2 -= 0.5f;
 			#endif
-			vertices[index++] = new VertexP3fT2fC4b(x1, y1, 0, tex.U1, tex.V1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2, y1, 0, tex.U2, tex.V1, col);
-			vertices[index++] = new VertexP3fT2fC4b(x2, y2, 0, tex.U2, tex.V2, col);
-			vertices[index++] = new VertexP3fT2fC4b(x1, y2, 0, tex.U1, tex.V2, col);
+			
+			VertexP3fT2fC4b v; v.Z = 0; v.Colour = col;
+			v.X = x1; v.Y = y1; v.U = tex.U1; v.V = tex.V1; vertices[index++] = v;
+			v.X = x2;           v.U = tex.U2;               vertices[index++] = v;
+			          v.Y = y2;               v.V = tex.V2; vertices[index++] = v;
+			v.X = x1;           v.U = tex.U1;               vertices[index++] = v;
 		}
 		bool hadFog;
 		

@@ -38,12 +38,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			Colour = c;
 		}
 		
-		public VertexP3fT2fC4b(ref Vector3 p, float u, float v, int c) {
-			X = p.X; Y = p.Y; Z = p.Z; 
-			U = u; V = v;
-			Colour = c;
-		}
-		
 		public const int Size = 24; // 3 * 4 + 2 * 4 + 4 * 1
 	}
 }

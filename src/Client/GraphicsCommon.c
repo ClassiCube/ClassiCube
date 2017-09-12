@@ -80,17 +80,22 @@ void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {
 }
 
 void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
-	Real32 x1 = tex->X, y1 = tex->Y, x2 = tex->X + tex->Width, y2 = tex->Y + tex->Height;
+	Real32 x1 = (Real32)tex->X, x2 = (Real32)(tex->X + tex->Width);
+	Real32 y1 = (Real32)tex->Y, y2 = (Real32)(tex->Y + tex->Height);
 #if USE_DX
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
 	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
 	x1 -= 0.5f; x2 -= 0.5f;
 	y1 -= 0.5f; y2 -= 0.5f;
 #endif
-	VertexP3fT2fC4b_Set(*vertices, x1, y1, 0, tex->U1, tex->V1, col); vertices++;
-	VertexP3fT2fC4b_Set(*vertices, x2, y1, 0, tex->U2, tex->V1, col); vertices++;
-	VertexP3fT2fC4b_Set(*vertices, x2, y2, 0, tex->U2, tex->V2, col); vertices++;
-	VertexP3fT2fC4b_Set(*vertices, x1, y2, 0, tex->U1, tex->V2, col); vertices++;
+
+	VertexP3fT2fC4b* ptr = *vertices;
+	VertexP3fT2fC4b v; v.Z = 0.0f; v.Colour = col;
+	v.X = x1; v.Y = y1; v.U = tex->U1; v.V = tex->V1; ptr[0] = v;
+	v.X = x2;           v.U = tex->U2;                ptr[1] = v;
+	v.Y = y2;                         v.V = tex->V2;  ptr[2] = v;
+	v.X = x1;           v.U = tex->U1;                ptr[3] = v;
+	vertices += 4;
 }
 
 bool gfx_hadFog;

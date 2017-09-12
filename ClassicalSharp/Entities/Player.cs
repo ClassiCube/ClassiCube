@@ -4,6 +4,7 @@ using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Model;
 using ClassicalSharp.Network;
+using ClassicalSharp.Particles;
 using OpenTK;
 #if ANDROID
 using Android.Graphics;
@@ -88,8 +89,6 @@ namespace ClassicalSharp.Entities {
 			Model.RecalcProperties(this);
 			Vector3.TransformY(Model.NameYOffset, ref transform, out pos);
 			float scale = Math.Min(1, Model.NameScale * ModelScale.Y) / 70f;
-			
-			Vector3 p111, p121, p212, p222;
 			int col = FastColour.WhitePacked;
 			Vector2 size = new Vector2(nameTex.Width * scale, nameTex.Height * scale);
 			
@@ -101,11 +100,9 @@ namespace ClassicalSharp.Entities {
 				size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
 			}
 			
-			Utils.CalcBillboardPoints(size, pos, ref game.View, out p111, out p121, out p212, out p222);
-			gfx.texVerts[0] = new VertexP3fT2fC4b(ref p111, nameTex.U1, nameTex.V2, col);
-			gfx.texVerts[1] = new VertexP3fT2fC4b(ref p121, nameTex.U1, nameTex.V1, col);
-			gfx.texVerts[2] = new VertexP3fT2fC4b(ref p222, nameTex.U2, nameTex.V1, col);
-			gfx.texVerts[3] = new VertexP3fT2fC4b(ref p212, nameTex.U2, nameTex.V2, col);
+			int index = 0;
+			TextureRec rec; rec.U1 = 0; rec.V1 = 0; rec.U2 = nameTex.U2; rec.V2 = nameTex.V2;
+			Particle.DoRender(game, ref size, ref pos, ref rec, col, gfx.texVerts, ref index);
 			
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.UpdateDynamicVb_IndexedTris(gfx.texVb, gfx.texVerts, 4);

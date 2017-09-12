@@ -125,26 +125,7 @@ namespace ClassicalSharp {
 			return shift;
 		}
 
-#if !LAUNCHER		
-		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
-		public static void CalcBillboardPoints(Vector2 size, Vector3 position, ref Matrix4 view, out Vector3 p111,
-		                                       out Vector3 p121, out Vector3 p212, out Vector3 p222) {
-			Vector3 centre = position; centre.Y += size.Y / 2;
-			Vector3 a = new Vector3(view.Row0.X * size.X, view.Row1.X * size.X, view.Row2.X * size.X) * 0.5f; // right * size.X
-			Vector3 b = new Vector3(view.Row0.Y * size.Y, view.Row1.Y * size.Y, view.Row2.Y * size.Y) * 0.5f; // up * size.Y
-			
-			p111 = centre - a - b; p121 = centre - a + b;
-			p212 = centre + a - b; p222 = centre + a + b;
-			
-			/*Vector3 a = new Vector3(view.Row0.X * size.X, view.Row1.X * size.X, view.Row2.X * size.X); // right * size.X
-			Vector3 b = new Vector3(view.Row0.Y * size.Y, view.Row1.Y * size.Y, view.Row2.Y * size.Y); // up * size.Y
-			
-			p111 = centre + a * -0.5f + b * -0.5f;
-			p121 = centre + a * -0.5f + b *  0.5f;
-			p212 = centre + a *  0.5f + b * -0.5f;
-			p222 = centre + a *  0.5f + b *  0.5f;*/
-		}
-		
+#if !LAUNCHER	
 		/// <summary> Linearly interpolates between a given angle range, adjusting if necessary. </summary>
 		public static float LerpAngle(float leftAngle, float rightAngle, float t) {
 			// we have to cheat a bit for angles here.

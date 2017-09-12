@@ -16,7 +16,7 @@ namespace ClassicalSharp.Particles {
 		protected bool hitTerrain = false, throughLiquids = true;
 		
 		public void ResetState(Vector3 pos, Vector3 velocity, double lifetime) {
-			Position = lastPos = nextPos = pos;
+			lastPos = nextPos = pos;
 			Velocity = velocity;
 			Lifetime = (float)lifetime;
 			hitTerrain = false;
@@ -24,18 +24,17 @@ namespace ClassicalSharp.Particles {
 
 		protected bool Tick(Game game, float gravity, double delta) {
 			hitTerrain = false;
-			lastPos = Position = nextPos;
-			BlockID curBlock = GetBlock(game, (int)Position.X, (int)Position.Y, (int)Position.Z);
-			float minY = Utils.Floor(Position.Y) + BlockInfo.MinBB[curBlock].Y;
-			float maxY = Utils.Floor(Position.Y) + BlockInfo.MaxBB[curBlock].Y;			
-			if (!CanPassThrough(game, curBlock) && Position.Y >= minY && 
-			   Position.Y < maxY && CollideHor(game, curBlock))
+			lastPos = nextPos;
+			BlockID curBlock = GetBlock(game, (int)nextPos.X, (int)nextPos.Y, (int)nextPos.Z);
+			float minY = Utils.Floor(nextPos.Y) + BlockInfo.MinBB[curBlock].Y;
+			float maxY = Utils.Floor(nextPos.Y) + BlockInfo.MaxBB[curBlock].Y;			
+			if (!CanPassThrough(game, curBlock) && nextPos.Y >= minY && nextPos.Y < maxY && CollideHor(game, curBlock))
 				return true;
 			
 			Velocity.Y -= gravity * (float)delta;
-			int startY = (int)Math.Floor(Position.Y);
-			Position += Velocity * (float)delta * 3;
-			int endY = (int)Math.Floor(Position.Y);
+			int startY = (int)Math.Floor(nextPos.Y);
+			nextPos += Velocity * (float)delta * 3;
+			int endY = (int)Math.Floor(nextPos.Y);
 			
 			if (Velocity.Y > 0) {
 				// don't test block we are already in
@@ -43,29 +42,27 @@ namespace ClassicalSharp.Particles {
 			} else {
 				for (int y = startY; y >= endY && TestY(game, y, true); y--);
 			}
-			nextPos = Position;
-			Position = lastPos;
 			return base.Tick(game, delta);
 		}	
 		
 		bool TestY(Game game, int y, bool topFace) {
 			if (y < 0) {
-				Position.Y = nextPos.Y = lastPos.Y = 0 + Entity.Adjustment;
+				nextPos.Y = lastPos.Y = 0 + Entity.Adjustment;
 				Velocity = Vector3.Zero;
 				hitTerrain = true;
 				return false;
 			}
 			
-			BlockID block = GetBlock(game, (int)Position.X, y, (int)Position.Z);
+			BlockID block = GetBlock(game, (int)nextPos.X, y, (int)nextPos.Z);
 			if (CanPassThrough(game, block)) return true;
 			Vector3 minBB = BlockInfo.MinBB[block];
 			Vector3 maxBB = BlockInfo.MaxBB[block];
 			float collideY = y + (topFace ? maxBB.Y : minBB.Y);
-			bool collideVer = topFace ? (Position.Y < collideY) : (Position.Y > collideY);
+			bool collideVer = topFace ? (nextPos.Y < collideY) : (nextPos.Y > collideY);
 			
 			if (collideVer && CollideHor(game, block)) {
 				float adjust = topFace ? Entity.Adjustment : -Entity.Adjustment;
-				Position.Y = nextPos.Y = lastPos.Y = collideY + adjust;
+				nextPos.Y = lastPos.Y = collideY + adjust;
 				Velocity = Vector3.Zero;
 				hitTerrain = true;
 				return false;
@@ -80,10 +77,10 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		bool CollideHor(Game game, BlockID block) {
-			Vector3 min = BlockInfo.MinBB[block] + FloorHor(Position);
-			Vector3 max = BlockInfo.MaxBB[block] + FloorHor(Position);
-			return Position.X >= min.X && Position.Z >= min.Z &&
-				Position.X < max.X && Position.Z < max.Z;
+			Vector3 min = BlockInfo.MinBB[block] + FloorHor(nextPos);
+			Vector3 max = BlockInfo.MaxBB[block] + FloorHor(nextPos);
+			return nextPos.X >= min.X && nextPos.Z >= min.Z &&
+				nextPos.X < max.X && nextPos.Z < max.Z;
 		}
 		
 		BlockID GetBlock(Game game, int x, int y, int z) {

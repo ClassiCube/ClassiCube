@@ -69,7 +69,7 @@ namespace ClassicalSharp.Particles {
 			Update1DCounts(particles, elems);
 			for (int i = 0; i < elems; i++) {
 				int index = particles[i].Get1DBatch(game);
-				particles[i].Render(game, delta, t, vertices, ref terrain1DIndices[index]);
+				particles[i].Render(game, t, vertices, ref terrain1DIndices[index]);
 			}
 			int drawCount = Math.Min(count, maxParticles * 4);
 			if (drawCount == 0) return;
@@ -106,7 +106,7 @@ namespace ClassicalSharp.Particles {
 			
 			int index = 0;
 			for (int i = 0; i < elems; i++)
-				particles[i].Render(game, delta, t, vertices, ref index);
+				particles[i].Render(game, t, vertices, ref index);
 			
 			int drawCount = Math.Min(count, maxParticles * 4);
 			if (drawCount == 0) return;

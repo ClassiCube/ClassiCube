@@ -617,10 +617,14 @@ void Gfx_DeleteIb(GfxResourceID* ib) {
 	D3D9_DeleteResource((void**)d3d9_iBuffers, d3d9_ibuffersCapacity, ib);
 }
 
-void Gfx_SetBatchFormat(VertexFormat vertexFormat) {
-	ReturnCode hresult = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[vertexFormat]);
+VertexFormat d3d9_batchFormat = -1;
+void Gfx_SetBatchFormat(VertexFormat format) {
+	if (format == d3d9_batchFormat) return;
+	d3d9_batchFormat = format;
+
+	ReturnCode hresult = IDirect3DDevice9_SetFVF(device, d3d9_formatMappings[format]);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetBatchFormat");
-	d3d9_batchStride = Gfx_strideSizes[vertexFormat];
+	d3d9_batchStride = Gfx_strideSizes[format];
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
