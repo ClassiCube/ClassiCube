@@ -76,14 +76,9 @@ UInt32 Stream_ReadUInt32_BE(Stream* stream) {
 }
 
 UInt64 Stream_ReadUInt64_BE(Stream* stream) {
-	UInt8 buffer[sizeof(UInt64)];
-	Stream_Read(stream, buffer, sizeof(UInt64));
-	UInt32 hi = (UInt32)(
-		((UInt32)buffer[0] << 24) | ((UInt32)buffer[1] << 16) |
-		((UInt32)buffer[2] << 8)  | (UInt32)buffer[3]);
-	UInt32 lo = (UInt32)(
-		((UInt32)buffer[4] << 24) | ((UInt32)buffer[5] << 16) |
-		((UInt32)buffer[6] << 8)  | (UInt32)buffer[7]);
+	/* infrequently called, so not bothering to optimise this. */
+	UInt32 hi = Stream_ReadUInt32_BE(stream);
+	UInt32 lo = Stream_ReadUInt32_LE(stream);
 	return (UInt64)(((UInt64)hi) << 32) | ((UInt64)lo);
 }
 

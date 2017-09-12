@@ -7,6 +7,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+Int16* Weather_Heightmap;
 /* Creates game component implementation. */
 IGameComponent WeatherRenderer_MakeGameComponent(void);
 /* Invokes to update state of rain/snow heightmap when a block is changed in the world. */

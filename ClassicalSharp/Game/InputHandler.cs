@@ -246,16 +246,16 @@ namespace ClassicalSharp {
 						WindowState.Normal : WindowState.Fullscreen;
 				}
 			} else if (key == Keys[KeyBind.SmoothCamera]) {
-				Toggle(key, ref game.SmoothCamera, 
-				       "  &eSmooth camera is &aenabled", 
+				Toggle(key, ref game.SmoothCamera,
+				       "  &eSmooth camera is &aenabled",
 				       "  &eSmooth camera is &cdisabled");
 			} else if (key == Keys[KeyBind.AxisLines]) {
 				Toggle(key, ref game.ShowAxisLines,
-				       "  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show", 
+				       "  &eAxis lines (&4X&e, &2Y&e, &1Z&e) now show",
 				       "  &eAxis lines no longer show");
 			} else if (key == Keys[KeyBind.Autorotate]) {
 				Toggle(key, ref game.AutoRotate,
-				       "  &eAuto rotate is &aenabled", 
+				       "  &eAuto rotate is &aenabled",
 				       "  &eAuto rotate is &cdisabled");
 			} else if (key == Keys[KeyBind.ThirdPerson]) {
 				game.CycleCamera();
@@ -269,18 +269,14 @@ namespace ClassicalSharp {
 				game.Gui.SetNewScreen(new PauseScreen(game));
 			} else if (game.Mode.HandlesKeyDown(key)) {
 			} else if (key == Key.F10) {
-				ShowTextureIdsOverlay();
+				if (game.Gui.overlays.Count > 0) return true;
+				game.Gui.ShowOverlay(new TexIdsOverlay(game));
 			} else {
 				return false;
 			}
 			return true;
 		}
-		
-		void ShowTextureIdsOverlay() {
-			if (game.Gui.overlays.Count > 0) return;
-			game.Gui.ShowOverlay(new TexIdsOverlay(game));
-		}
-		
+
 		void Toggle(Key key, ref bool target, string enableMsg, string disableMsg) {
 			target = !target;
 			if (target) {

@@ -215,7 +215,7 @@ namespace ClassicalSharp {
 		/// <summary> Calculates the amount that the block inventory menu should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field InventoryScale). </remarks>
-		public float GuiInventoryScale { get { return Scale(MinWindowScale  * (InventoryScale * 0.5f)); } }
+		public float GuiInventoryScale { get { return Scale(MinWindowScale * (InventoryScale * 0.5f)); } }
 		
 		/// <summary> Calculates the amount that 2D chat widgets should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the

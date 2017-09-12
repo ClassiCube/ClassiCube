@@ -21,19 +21,18 @@ GfxResourceID weather_vb;
 #define weather_extent 4
 #define weather_verticesCount 8 * (weather_extent * 2 + 1) * (weather_extent * 2 + 1)
 
-Int16* weather_heightmap;
 Real64 weather_accumulator;
 Vector3I weather_lastPos;
 
 void WeatherRenderer_InitHeightmap(void) {
-	weather_heightmap = Platform_MemAlloc(World_Width * World_Length * sizeof(Int16));
-	if (weather_heightmap == NULL) {
+	Weather_Heightmap = Platform_MemAlloc(World_Width * World_Length * sizeof(Int16));
+	if (Weather_Heightmap == NULL) {
 		ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
 	}
 
 	Int32 i;
 	for (i = 0; i < World_Width * World_Length; i++) {
-		weather_heightmap[i] = Int16_MaxValue;
+		Weather_Heightmap[i] = Int16_MaxValue;
 	}
 }
 
@@ -43,12 +42,12 @@ Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	for (y = maxY; y >= 0; y--) {
 		UInt8 draw = Block_Draw[World_Blocks[mapIndex]];
 		if (!(draw == DrawType_Gas || draw == DrawType_Sprite)) {
-			weather_heightmap[index] = (Int16)y;
+			Weather_Heightmap[index] = (Int16)y;
 			return y;
 		}
 		mapIndex -= World_OneY;
 	}
-	weather_heightmap[index] = -1;
+	Weather_Heightmap[index] = -1;
 	return -1;
 }
 
@@ -57,7 +56,7 @@ Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
 		return (Real32)WorldEnv_EdgeHeight;
 	}
 	Int32 index = (x * World_Length) + z;
-	Int32 height = weather_heightmap[index];
+	Int32 height = Weather_Heightmap[index];
 
 	Int32 y = height == Int16_MaxValue ? WeatherRenderer_CalcHeightAt(x, World_MaxY, z, index) : height;
 	return y == -1 ? 0 : y + Block_MaxBB[World_GetBlock(x, y, z)].Y;
@@ -69,7 +68,7 @@ void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 	if (didBlock == nowBlock) return;
 
 	Int32 index = (x * World_Length) + z;
-	Int32 height = weather_heightmap[index];
+	Int32 height = Weather_Heightmap[index];
 	/* Two cases can be skipped here: */
 	/* a) rain height was not calculated to begin with (height is short.MaxValue) */
 	/* b) changed y is below current calculated rain height */
@@ -77,7 +76,7 @@ void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 
 	if (nowBlock) {
 		/* Simple case: Rest of column below is now not visible to rain. */
-		weather_heightmap[index] = (Int16)y;
+		Weather_Heightmap[index] = (Int16)y;
 	} else {
 		/* Part of the column is now visible to rain, we don't know how exactly how high it should be though. */
 		/* However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y */
@@ -102,7 +101,7 @@ Real32 WeatherRenderer_AlphaAt(Real32 x) {
 void WeatherRenderer_Render(Real64 deltaTime) {
 	Weather weather = WorldEnv_Weather;
 	if (weather == Weather_Sunny) return;
-	if (weather_heightmap == NULL) WeatherRenderer_InitHeightmap();
+	if (Weather_Heightmap == NULL) WeatherRenderer_InitHeightmap();
 
 	Gfx_BindTexture(weather == Weather_Rainy ? weather_rainTex : weather_snowTex);
 	Vector3 camPos = Game_CurrentCameraPos;
@@ -209,8 +208,8 @@ void WeatherRenderer_Init(void) {
 }
 
 void WeatherRenderer_Reset(void) {
-	if (weather_heightmap != NULL) Platform_MemFree(weather_heightmap);
-	weather_heightmap = NULL;
+	if (Weather_Heightmap != NULL) Platform_MemFree(Weather_Heightmap);
+	Weather_Heightmap = NULL;
 	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
 }
 
