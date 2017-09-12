@@ -29,13 +29,28 @@ void Lighting_EnvVariableChanged(EnvVar envVar) {
 	}
 }
 
+Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
+	Int32 mapIndex = World_Pack(x, maxY, z);
+	Int32 y;
+
+	for (y = maxY; y >= 0; y--) {
+		BlockID block = World_Blocks[mapIndex];
+		if (Block_BlocksLight[block]) {
+			Int32 offset = (Block_LightOffset[block] >> Face_YMax) & 1;
+			Lighting_heightmap[index] = (Int16)(y - offset);
+			return y - offset;
+		}
+		mapIndex -= World_OneY;
+	}
+	Lighting_heightmap[index] = (Int16)-10;
+	return -10;
+}
 
 Int32 Lighting_GetLightHeight(Int32 x, Int32 z) {
 	Int32 index = (z * World_Width) + x;
 	Int32 lightH = Lighting_heightmap[index];
 	return lightH == Int16_MaxValue ? Lighting_CalcHeightAt(x, World_Height - 1, z, index) : lightH;
 }
-
 
 /* Outside colour is same as sunlight colour, so we reuse when possible */
 bool Lighting_IsLit(Int32 x, Int32 y, Int32 z) {
@@ -195,23 +210,6 @@ void Lighting_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockI
 	Lighting_RefreshAffected(x, y, z, newBlock, lightH + 1, newHeight);
 }
 
-
-Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
-	Int32 mapIndex = World_Pack(x, maxY, z);
-	Int32 y;
-
-	for (y = maxY; y >= 0; y--) {
-		BlockID block = World_Blocks[mapIndex];
-		if (Block_BlocksLight[block]) {
-			Int32 offset = (Block_LightOffset[block] >> Face_YMax) & 1;
-			Lighting_heightmap[index] = (Int16)(y - offset);
-			return y - offset;
-		}
-		mapIndex -= World_OneY;
-	}
-	Lighting_heightmap[index] = (Int16)-10;
-	return -10;
-}
 
 Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount, Int32* skip) {
 	Int32 elemsLeft = 0, index = 0, curRunCount = 0;

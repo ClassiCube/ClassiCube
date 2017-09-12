@@ -15,6 +15,12 @@ Int32 Math_CeilDiv(Int32 a, Int32 b) {
 	return a / b + (a % b != 0 ? 1 : 0);
 }
 
+Int32 Math_Sign(Real32 value) {
+	if (value > 0.0f) return +1;
+	if (value < 0.0f) return -1;
+	return 0;
+}
+
 Real32 Math_Lerp(Real32 a, Real32 b, Real32 t) {
 	return a + (b - a) * t;
 }

@@ -12,6 +12,15 @@ void Atlas2D_UpdateState(Bitmap bmp) {
 	Block_RecalculateSpriteBB();
 }
 
+Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
+	Int32 size = Atlas2D_ElementSize;
+	Int32 x = texLoc % Atlas2D_ElementsPerRow, y = texLoc / Atlas2D_ElementsPerRow;
+	Bitmap_CopyBlock(x * size, y * size, 0, 0,
+		&Atlas2D_Bitmap, element, size);
+
+	return Gfx_CreateTexture(element, true, Gfx_Mipmaps);
+}
+
 Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 	Int32 size = Atlas2D_ElementSize;
 	Bitmap element;
@@ -32,15 +41,6 @@ Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 		Bitmap_Create(&element, size, size, 64 * Bitmap_PixelBytesSize, scan0);
 		return Atlas2D_LoadTextureElement_Raw(texLoc, &element);
 	}
-}
-
-Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
-	Int32 size = Atlas2D_ElementSize;
-	Int32 x = texLoc % Atlas2D_ElementsPerRow, y = texLoc / Atlas2D_ElementsPerRow;
-	Bitmap_CopyBlock(x * size, y * size, 0, 0,
-		&Atlas2D_Bitmap, element, size);
-
-	return Gfx_CreateTexture(element, true, Gfx_Mipmaps);
 }
 
 void Atlas2D_Free(void) {

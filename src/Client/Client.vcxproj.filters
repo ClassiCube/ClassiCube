@@ -518,5 +518,11 @@
     <ClCompile Include="Camera.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Picking.c">
+      <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Game.c">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

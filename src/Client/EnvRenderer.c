@@ -14,6 +14,14 @@
 GfxResourceID env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
 GfxResourceID env_cloudVertices, env_skyVertices;
 
+Real32 EnvRenderer_BlendFactor(Real32 x) {
+	/* return -0.05 + 0.22 * (Math_LogE(x) * 0.25f); */
+	Real32 blend = -0.13f + 0.28f * (Math_LogE(x) * 0.25f);
+	if (blend < 0.0f) blend = 0.0f;
+	if (blend > 1.0f) blend = 1.0f;
+	return blend;
+}
+
 BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;
@@ -35,14 +43,6 @@ BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 		*fogCol = PackedCol_Lerp(WorldEnv_FogCol, WorldEnv_SkyCol, blend);
 	}
 	return block;
-}
-
-Real32 EnvRenderer_BlendFactor(Real32 x) {
-	/* return -0.05 + 0.22 * (Math_LogE(x) * 0.25f); */
-	Real32 blend = -0.13f + 0.28f * (Math_LogE(x) * 0.25f);
-	if (blend < 0.0f) blend = 0.0f;
-	if (blend > 1.0f) blend = 1.0f;
-	return blend;
 }
 
 

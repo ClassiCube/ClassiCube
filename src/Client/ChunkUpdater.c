@@ -161,6 +161,12 @@ void ChunkUpdater_OnNewMapLoaded(void) {
 }
 
 
+Int32 ChunkUpdater_AdjustViewDist(Real32 dist) {
+	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
+	Int32 viewDist = Math_AdjViewDist(dist);
+	return (viewDist + 24) * (viewDist + 24);
+}
+
 Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
 	Int32 i, j = 0;
 	Int32 viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
@@ -347,12 +353,6 @@ void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
 	Int32 i;
 	ChunkUpdater_AddParts(info->NormalParts, MapRenderer_NormalPartsCount);
 	ChunkUpdater_AddParts(info->TranslucentParts, MapRenderer_TranslucentPartsCount);
-}
-
-Int32 ChunkUpdater_AdjustViewDist(Real32 dist) {
-	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
-	Int32 viewDist = Math_AdjViewDist(dist);
-	return (viewDist + 24) * (viewDist + 24);
 }
 
 void ChunkUpdater_QuickSort(Int32 left, Int32 right) {

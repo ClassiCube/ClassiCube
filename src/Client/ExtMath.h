@@ -9,6 +9,7 @@
 #define MATH_PI 3.1415926535897931f
 #define MATH_DEG2RAD (MATH_PI / 180.0f)
 #define MATH_RAD2DEG (180.0f / MATH_PI)
+#define MATH_LARGENUM 1000000000.0f
 
 #define Math_AbsF(x) fabsf(x)
 #define Math_AbsI(x) abs(x)
@@ -31,6 +32,8 @@ Int32 Math_Floor(Real32 value);
 Int32 Math_Log2(Int32 value);
 /* Performs rounding upwards integer division.*/
 Int32 Math_CeilDiv(Int32 a, Int32 b);
+/* Returns sign of the given value. */
+Int32 Math_Sign(Real32 value);
 
 /* Performs linear interpolation between two values. */
 Real32 Math_Lerp(Real32 a, Real32 b, Real32 t);

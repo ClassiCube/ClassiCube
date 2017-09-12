@@ -138,6 +138,32 @@ void NotchyGen_CreateHeightmap(void) {
 	}
 }
 
+Int32 NotchyGen_CreateStrataFast(void) {
+	/* Make lava layer at bottom */
+	Int32 mapIndex = 0;
+	Int32 x, y, z;
+
+	for (z = 0; z < Gen_Length; z++) {
+		for (x = 0; x < Gen_Width; x++) {
+			Gen_Blocks[mapIndex++] = BlockID_Lava;
+		}
+	}
+
+	/* Invariant: the lowest value dirtThickness can possible be is -14 */
+	Int32 stoneHeight = minHeight - 14;
+	if (stoneHeight <= 0) return 1; /* no layer is fully stone */
+
+									/* We can quickly fill in bottom solid layers */
+	for (y = 1; y <= stoneHeight; y++) {
+		for (z = 0; z < Gen_Length; z++) {
+			for (x = 0; x < Gen_Width; x++) {
+				Gen_Blocks[mapIndex++] = BlockID_Stone;
+			}
+		}
+	}
+	return stoneHeight;
+}
+
 void NotchyGen_CreateStrata(void) {
 	OctaveNoise n;
 	OctaveNoise_Init(&n, &rnd, 8);
@@ -170,32 +196,6 @@ void NotchyGen_CreateStrata(void) {
 			}
 		}
 	}
-}
-
-Int32 NotchyGen_CreateStrataFast(void) {
-	/* Make lava layer at bottom */
-	Int32 mapIndex = 0;
-	Int32 x, y, z;
-
-	for (z = 0; z < Gen_Length; z++) {
-		for (x = 0; x < Gen_Width; x++) {
-			Gen_Blocks[mapIndex++] = BlockID_Lava;
-		}
-	}
-
-	/* Invariant: the lowest value dirtThickness can possible be is -14 */
-	Int32 stoneHeight = minHeight - 14;
-	if (stoneHeight <= 0) return 1; /* no layer is fully stone */
-
-									/* We can quickly fill in bottom solid layers */
-	for (y = 1; y <= stoneHeight; y++) {
-		for (z = 0; z < Gen_Length; z++) {
-			for (x = 0; x < Gen_Width; x++) {
-				Gen_Blocks[mapIndex++] = BlockID_Stone;
-			}
-		}
-	}
-	return stoneHeight;
 }
 
 void NotchyGen_CarveCaves(void) {

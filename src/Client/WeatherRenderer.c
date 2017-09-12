@@ -37,17 +37,6 @@ void WeatherRenderer_InitHeightmap(void) {
 	}
 }
 
-Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
-	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
-		return (Real32)WorldEnv_EdgeHeight;
-	}
-	Int32 index = (x * World_Length) + z;
-	Int32 height = weather_heightmap[index];
-
-	Int32 y = height == Int16_MaxValue ? WeatherRenderer_CalcHeightAt(x, World_MaxY, z, index) : height;
-	return y == -1 ? 0 : y + Block_MaxBB[World_GetBlock(x, y, z)].Y;
-}
-
 Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	Int32 mapIndex = (maxY * World_Length + z) * World_Width + x;
 	Int32 y = maxY;
@@ -61,6 +50,17 @@ Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	}
 	weather_heightmap[index] = -1;
 	return -1;
+}
+
+Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
+	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
+		return (Real32)WorldEnv_EdgeHeight;
+	}
+	Int32 index = (x * World_Length) + z;
+	Int32 height = weather_heightmap[index];
+
+	Int32 y = height == Int16_MaxValue ? WeatherRenderer_CalcHeightAt(x, World_MaxY, z, index) : height;
+	return y == -1 ? 0 : y + Block_MaxBB[World_GetBlock(x, y, z)].Y;
 }
 
 void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock) {
@@ -91,6 +91,12 @@ void WeatherRenderer_ContextLost(void) {
 
 void WeatherRenderer_ContextRecreated(void) {
 	weather_vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, weather_verticesCount);
+}
+
+Real32 WeatherRenderer_AlphaAt(Real32 x) {
+	/* Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9} */
+	Real32 falloff = 0.05f * x * x - 7 * x;
+	return 178 + falloff * WorldEnv_WeatherFade;
 }
 
 void WeatherRenderer_Render(Real64 deltaTime) {
@@ -127,10 +133,12 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			Real32 height = pos.Y - y;
 			if (height <= 0) continue;
 
-			if (particles && (weather_accumulator >= 0.25 || moved))
+			if (particles && (weather_accumulator >= 0.25 || moved)) {
 				ParticleManager_AddRainParticle(x, y, z);
+			}
 
-			Real32 alpha = WeatherRenderer_AlphaAt(dx * dx + dz * dz);
+			Real32 dist = (Real32)dx * (Real32)dx + (Real32)dz * (Real32)dz;
+			Real32 alpha = WeatherRenderer_AlphaAt(dist);
 			/* Clamp between 0 and 255 */
 			alpha = alpha < 0.0f ? 0.0f : alpha;
 			alpha = alpha > 255.0f ? 255.0f : alpha;
@@ -178,12 +186,6 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Gfx_SetAlphaArgBlend(false);
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaTest(false);
-}
-
-Real32 WeatherRenderer_AlphaAt(Real32 x) {
-	/* Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9} */
-	Real32 falloff = 0.05f * x * x - 7 * x;
-	return 178 + falloff * WorldEnv_WeatherFade;
 }
 
 void WeatherRenderer_FileChanged(Stream* stream) {
