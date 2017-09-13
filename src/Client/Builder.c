@@ -368,42 +368,44 @@ void Builder_DrawSprite(Int32 count) {
 	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvElementSize;
 	Real32 X = (Real32)Builder_X, Y = (Real32)Builder_Y, Z = (Real32)Builder_Z;
 
-#define sHeight 1.0f
 #define u1 0.0f
 #define u2 UV2_Scale
-
+	Real32 x1 = (Real32)X + 2.50f / 16.0f, y1 = (Real32)Y,        z1 = (Real32)Z + 2.50f / 16.0f;
+	Real32 x2 = (Real32)X + 13.5f / 16.0f, y2 = (Real32)Y + 1.0f, z2 = (Real32)Z + 13.5f / 16.0f;
 	Real32 v1 = vOrigin, v2 = vOrigin + Atlas1D_InvElementSize * UV2_Scale;
+	
 	Builder1DPart* part = &Builder_Parts[i];
 	PackedCol col = Builder_FullBright ? Builder_WhiteCol : Lighting_Col_Sprite_Fast(Builder_X, Builder_Y, Builder_Z);
 	Block_Tint(col, Builder_Block);
+	VertexP3fT2fC4b v; v.Colour = col;
 
 	/* Draw Z axis */
 	Int32 index = part->sOffset;
-	VertexP3fT2fC4b_Set(&part->vertices[index + 0], X + 2.50f / 16.0f, Y, Z + 2.50f / 16.0f, u2, v2, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 1], X + 2.50f / 16.0f, Y + sHeight, Z + 2.50f / 16.0f, u2, v1, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 2], X + 13.5f / 16.0f, Y + sHeight, Z + 13.5f / 16.0f, u1, v1, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 3], X + 13.5f / 16.0f, Y, Z + 13.5f / 16.0f, u1, v2, col);
+	v.X = x1; v.Y = y1; v.Z = z1; v.U = u2; v.V = v2; part->vertices[index + 0] = v;
+	          v.Y = y2;                     v.V = v1; part->vertices[index + 1] = v;
+	v.X = x2;           v.Z = z2; v.U = u1;           part->vertices[index + 2] = v;
+	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
 
 	/* Draw Z axis mirrored */
 	index += part->sAdvance;
-	VertexP3fT2fC4b_Set(&part->vertices[index + 0], X + 13.5f / 16.0f, Y, Z + 13.5f / 16.0f, u2, v2, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 1], X + 13.5f / 16.0f, Y + sHeight, Z + 13.5f / 16.0f, u2, v1, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 2], X + 2.50f / 16.0f, Y + sHeight, Z + 2.50f / 16.0f, u1, v1, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 3], X + 2.50f / 16.0f, Y, Z + 2.50f / 16.0f, u1, v2, col);
+	v.X = x2; v.Y = y1; v.Z = z2; v.U = u2;           part->vertices[index + 0] = v;
+	          v.Y = y2;                     v.V = v1; part->vertices[index + 1] = v;
+	v.X = x1;           v.Z = z1; v.U = u1;           part->vertices[index + 2] = v;
+	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
 
 	/* Draw X axis */
 	index += part->sAdvance;
-	VertexP3fT2fC4b_Set(&part->vertices[index + 0], X + 2.50f / 16.0f, Y, Z + 13.5f / 16.0f, u2, v2, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 1], X + 2.50f / 16.0f, Y + sHeight, Z + 13.5f / 16.0f, u2, v1, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 2], X + 13.5f / 16.0f, Y + sHeight, Z + 2.50f / 16.0f, u1, v1, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 3], X + 13.5f / 16.0f, Y, Z + 2.50f / 16.0f, u1, v2, col);
+	v.X = x1; v.Y = y1; v.Z = z2; v.U = u2;           part->vertices[index + 0] = v;
+	          v.Y = y2;                     v.V = v1; part->vertices[index + 1] = v;
+	v.X = x2;           v.Z = z1; v.U = u1;           part->vertices[index + 2] = v;
+	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
 
 	/* Draw X axis mirrored */
 	index += part->sAdvance;
-	VertexP3fT2fC4b_Set(&part->vertices[index + 0], X + 13.5f / 16.0f, Y, Z + 2.50f / 16.0f, u2, v2, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 1], X + 13.5f / 16.0f, Y + sHeight, Z + 2.50f / 16.0f, u2, v1, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 2], X + 2.50f / 16.0f, Y + sHeight, Z + 13.5f / 16.0f, u1, v1, col);
-	VertexP3fT2fC4b_Set(&part->vertices[index + 3], X + 2.50f / 16.0f, Y, Z + 13.5f / 16.0f, u1, v2, col);
+	v.X = x2; v.Y = y1; v.Z = z1; v.U = u2;           part->vertices[index + 0] = v;
+	          v.Y = y2;                     v.V = v1; part->vertices[index + 1] = v;
+	v.X = x1;           v.Z = z2; v.U = u1;           part->vertices[index + 2] = v;
+	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
 
 	part->sOffset += 4;
 }

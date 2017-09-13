@@ -118,41 +118,44 @@ namespace ClassicalSharp {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
 			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
-			const float blockHeight = 1;
 			
+			float x1 = X + 2.50f/16, y1 = Y,     z1 = Z + 2.5f/16;
+			float x2 = X + 13.5f/16, y2 = Y + 1, z2 = Z + 13.5f/16;
 			const float u1 = 0, u2 = 15.99f/16f;
 			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
+			
 			DrawInfo part = normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked : light.LightCol_Sprite_Fast(X, Y, Z);
 			if (tinted) col = TintBlock(curBlock, col);
+			VertexP3fT2fC4b v; v.Colour = col;
 			
 			// Draw Z axis
 			int index = part.sIndex;
-			part.vertices[index + 0] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 2.5f/16, u2, v2, col);
-			part.vertices[index + 1] = new VertexP3fT2fC4b(X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col);
-			part.vertices[index + 2] = new VertexP3fT2fC4b(X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col);
-			part.vertices[index + 3] = new VertexP3fT2fC4b(X + 13.5f/16, Y, Z + 13.5f/16, u1, v2, col);
+			v.X = x1; v.Y = y1; v.Z = z1; v.U = u2; v.V = v2; part.vertices[index + 0] = v;
+			          v.Y = y2;                     v.V = v1; part.vertices[index + 1] = v;
+			v.X = x2;           v.Z = z2; v.U = u1;           part.vertices[index + 2] = v;
+			          v.Y = y1;                     v.V = v2; part.vertices[index + 3] = v;
 			
 			// Draw Z axis mirrored
 			index += part.sAdvance;
-			part.vertices[index + 0] = new VertexP3fT2fC4b(X + 13.5f/16, Y, Z + 13.5f/16, u2, v2, col);
-			part.vertices[index + 1] = new VertexP3fT2fC4b(X + 13.5f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col);
-			part.vertices[index + 2] = new VertexP3fT2fC4b(X + 2.50f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col);
-			part.vertices[index + 3] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 2.5f/16, u1, v2, col);
+			v.X = x2; v.Y = y1; v.Z = z2; v.U = u2;           part.vertices[index + 0] = v;
+			          v.Y = y2;                     v.V = v1; part.vertices[index + 1] = v;
+			v.X = x1;           v.Z = z1; v.U = u1;           part.vertices[index + 2] = v;
+			          v.Y = y1;                     v.V = v2; part.vertices[index + 3] = v;
 
 			// Draw X axis
 			index += part.sAdvance;
-			part.vertices[index + 0] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 13.5f/16, u2, v2, col);
-			part.vertices[index + 1] = new VertexP3fT2fC4b(X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u2, v1, col);
-			part.vertices[index + 2] = new VertexP3fT2fC4b(X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u1, v1, col);
-			part.vertices[index + 3] = new VertexP3fT2fC4b(X + 13.5f/16, Y, Z + 2.5f/16, u1, v2, col);
+			v.X = x1; v.Y = y1; v.Z = z2; v.U = u2;           part.vertices[index + 0] = v;
+			          v.Y = y2;                     v.V = v1; part.vertices[index + 1] = v;
+			v.X = x2;           v.Z = z1; v.U = u1;           part.vertices[index + 2] = v;
+			          v.Y = y1;                     v.V = v2; part.vertices[index + 3] = v;
 			
 			// Draw X axis mirrored
 			index += part.sAdvance;
-			part.vertices[index + 0] = new VertexP3fT2fC4b(X + 13.5f/16, Y, Z + 2.5f/16, u2, v2, col);
-			part.vertices[index + 1] = new VertexP3fT2fC4b(X + 13.5f/16, Y + blockHeight, Z + 2.5f/16, u2, v1, col);
-			part.vertices[index + 2] = new VertexP3fT2fC4b(X + 2.50f/16, Y + blockHeight, Z + 13.5f/16, u1, v1, col);
-			part.vertices[index + 3] = new VertexP3fT2fC4b(X + 2.50f/16, Y, Z + 13.5f/16, u1, v2, col);
+			v.X = x2; v.Y = y1; v.Z = z1; v.U = u2;           part.vertices[index + 0] = v;
+			          v.Y = y2;                     v.V = v1; part.vertices[index + 1] = v;
+			v.X = x1;           v.Z = z2; v.U = u1;           part.vertices[index + 2] = v;
+			          v.Y = y1;                     v.V = v2; part.vertices[index + 3] = v;
 			
 			part.sIndex += 4;
 		}
