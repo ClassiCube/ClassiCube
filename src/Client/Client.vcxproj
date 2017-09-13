@@ -272,6 +272,7 @@
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelCache.c" />
     <ClCompile Include="Mouse.c" />
+    <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="Funcs.c" />
     <ClCompile Include="GraphicsCommon.c" />

@@ -1,10 +1,10 @@
 #ifndef CS_OPTIONS_H
 #define CS_OPTIONS_H
 #include "Typedefs.h"
+#include "String.h"
 /* Manages loading and saving options.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-
 
 typedef UInt8 FpsLimitMethod;
 #define FpsLimitMethod_VSync  0
@@ -18,7 +18,7 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_MusicVolume "musicvolume"
 #define OptionsKey_SoundVolume "soundvolume"
 #define OptionsKey_ForceOpenAL "forceopenal"
-#define ForceOldOpenGL "force-oldgl"
+#define OptionsKey_ForceOldOpenGL "force-oldgl"
 
 #define OptionsKey_ViewDist "viewdist"
 #define OptionsKey_SingleplayerPhysics "singleplayerphysics"
@@ -67,4 +67,21 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_UseClassicOptions "nostalgia-classicoptions"
 #define OptionsKey_AllowClassicHacks "nostalgia-hacks"
 #define OptionsKey_ClassicArmModel "nostalgia-classicarm"
+
+#define OPTIONS_LARGESTRS 4
+#define OPTIONS_MEDSTRS 16
+#define OPTIONS_SMALLSTRS 32
+#define OPTIONS_TINYSTRS 64
+#define OPTIONS_COUNT (OPTIONS_LARGESTRS + OPTIONS_MEDSTRS + OPTIONS_SMALLSTRS + OPTIONS_TINYSTRS)
+
+String Options_Keys[OPTIONS_COUNT];
+String Options_Values[OPTIONS_COUNT];
+bool Options_Changed[OPTIONS_COUNT];
+
+void Options_Init(void);
+
+String Options_Get(const UInt8* key);
+Int32 Options_GetInt(const UInt8* key, Int32 min, Int32 max, Int32 defValue);
+bool Options_GetBool(const UInt8* key, bool defValue);
+Real32 Options_GetFloat(const UInt8* key, Real32 min, Real32 max, Real32 defValue);
 #endif

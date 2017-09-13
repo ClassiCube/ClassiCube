@@ -4,6 +4,19 @@
 #include "WeatherRenderer.h"
 #include "Lighting.h"
 #include "MapRenderer.h"
+#include "GraphicsAPI.h"
+#include "Camera.h"
+#include "Options.h"
+
+void Game_UpdateProjection(void) {
+	Game_DefaultFov = Options_GetInt(OptionsKey_FieldOfView, 1, 150, 70);
+	Camera_ActiveCamera->GetProjection(&Game_Projection);
+
+	Gfx_SetMatrixMode(MatrixType_Projection);
+	Gfx_LoadMatrix(&Game_Projection);
+	Gfx_SetMatrixMode(MatrixType_Modelview);
+	Event_RaiseVoid(&GfxEvents_ProjectionChanged);
+}
 
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	BlockID oldBlock = World_GetBlock(x, y, z);

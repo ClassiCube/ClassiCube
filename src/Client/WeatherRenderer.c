@@ -125,7 +125,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	VertexP3fT2fC4b vertices[weather_verticesCount];
 	VertexP3fT2fC4b* ptr = vertices;
 
-	for (Int32 dx = -weather_extent; dx <= weather_extent; dx++)
+	for (Int32 dx = -weather_extent; dx <= weather_extent; dx++) {
 		for (Int32 dz = -weather_extent; dz <= weather_extent; dz++) {
 			Int32 x = pos.X + dx, z = pos.Z + dz;
 			Real32 y = WeatherRenderer_RainHeight(x, z);
@@ -147,28 +147,22 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			v.Colour = col;
 			Real32 worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
 			Real32 v1 = y / 6.0f + worldV, v2 = (y + height) / 6.0f + worldV;
-#define AddVertex *ptr = v; ptr++;
+			Real32 x1 = (Real32)x,       y1 = (Real32)y,            z1 = (Real32)z;
+			Real32 x2 = (Real32)(x + 1), y2 = (Real32)(y + height), z2 = (Real32)(z + 1);
 
-			v.X = x; v.Y = y; v.Z = z; v.U = 0.0f; v.V = v1; AddVertex;
-			/* (x, y, z)                  (0, v1) */
-			v.Y = y + height; v.V = v2; 					 AddVertex;
-			/* (x, y + height, z)         (0, v2) */
-			v.X = x + 1; v.Z = z + 1; v.U = 1.0f;			 AddVertex;
-			/* (x + 1, y + height, z + 1) (1, v2) */
-			v.Y = y; v.V = v1; 								 AddVertex;
-			/* (x + 1, y, z + 1)          (1, v1) */
+			v.X = x1; v.Y = y1; v.Z = z1; v.U = 0.0f; v.V = v1; *ptr = v; ptr++;
+			          v.Y = y2;                      v.V = v2;  *ptr = v; ptr++;
+			v.X = x2;           v.Z = z2; v.U = 1.0f; 	        *ptr = v; ptr++;
+			          v.Y = y1;                      v.V = v1;  *ptr = v; ptr++;
 
-			v.Z = z;										 AddVertex;
-			/* (x + 1, y, z)              (1, v1) */
-			v.Y = y + height; v.V = v2; 					 AddVertex;
-			/* (x + 1, y + height, z)     (1, v2) */
-			v.X = x; v.Z = z + 1; v.U = 0.0f;				 AddVertex;
-			/* (x, y + height, z + 1)     (0, v2) */
-			v.Y = y; v.V = v1; 								 AddVertex;
-			/* (x y, z + 1)               (0, v1) */
+			                    v.Z = z1;					    *ptr = v; ptr++;
+			          v.Y = y2;                       v.V = v2; *ptr = v; ptr++;
+			v.X = x1;           v.Z = z2; v.U = 0.0f;		    *ptr = v; ptr++;
+			          v.Y = y1;                       v.V = v1; *ptr = v; ptr++;
 
 			vCount += 8;
 		}
+	}
 
 	if (particles && (weather_accumulator >= 0.25f || moved)) {
 		weather_accumulator = 0;

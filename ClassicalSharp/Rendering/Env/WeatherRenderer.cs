@@ -78,27 +78,22 @@ namespace ClassicalSharp.Renderers {
 				v.Colour = col.Pack();
 				float worldV = vOffset + (z & 1) / 2f - (x & 0x0F) / 16f;
 				float v1 = y / 6f + worldV, v2 = (y + height) / 6f + worldV;
+				float x1 = x,     y1 = y,          z1 = z;
+				float x2 = x + 1, y2 = y + height, z2 = z + 1;
 				
-				v.X = x; v.Y = y; v.Z = z; v.U = 0; v.V = v1; vertices[vCount++] = v;
-				// (x, y, z)                  (0, v1)
-				v.Y = y + height; v.V = v2; 				  vertices[vCount++] = v;
-				// (x, y + height, z)         (0, v2)
-				v.X = x + 1; v.Z = z + 1; v.U = 1; 			  vertices[vCount++] = v;
-				// (x + 1, y + height, z + 1) (1, v2)
-				v.Y = y; v.V = v1; 							  vertices[vCount++] = v;
-				// (x + 1, y, z + 1)          (1, v1)
+				v.X = x1; v.Y = y1; v.Z = z1; v.U = 0; v.V = v1; vertices[vCount++] = v;
+				          v.Y = y2;                    v.V = v2; vertices[vCount++] = v;
+				v.X = x2;           v.Z = z2; v.U = 1; 	         vertices[vCount++] = v;
+				          v.Y = y1;                    v.V = v1; vertices[vCount++] = v;
 				
-				v.Z = z;									  vertices[vCount++] = v;
-				// (x + 1, y, z)              (1, v1)
-				v.Y = y + height; v.V = v2; 				  vertices[vCount++] = v;
-				// (x + 1, y + height, z)     (1, v2)
-				v.X = x; v.Z = z + 1; v.U = 0;				  vertices[vCount++] = v;
-				// (x, y + height, z + 1)     (0, v2)
-				v.Y = y; v.V = v1; 							  vertices[vCount++] = v;
-				// (x y, z + 1)               (0, v1)
+				                    v.Z = z1;					vertices[vCount++] = v;
+				          v.Y = y2;                   v.V = v2; vertices[vCount++] = v;
+				v.X = x1;           v.Z = z2; v.U = 0;		    vertices[vCount++] = v;
+				          v.Y = y1;                   v.V = v1; vertices[vCount++] = v;
 			}
-			if (particles && (rainAcc >= 0.25 || moved))
+			if (particles && (rainAcc >= 0.25 || moved)) {
 				rainAcc = 0;
+			}
 			if (vCount == 0) return;
 			
 			gfx.AlphaTest = false;
@@ -164,8 +159,7 @@ namespace ClassicalSharp.Renderers {
 			int index = (x * length) + z;
 			int height = heightmap[index];
 			int y = height == short.MaxValue ? CalcHeightAt(x, maxY, z, index) : height;
-			return y == -1 ? 0 :
-				y + BlockInfo.MaxBB[map.GetBlock(x, y, z)].Y;
+			return y == -1 ? 0 : y + BlockInfo.MaxBB[map.GetBlock(x, y, z)].Y;
 		}
 		
 		int CalcHeightAt(int x, int maxY, int z, int index) {

@@ -187,7 +187,9 @@ namespace ClassicalSharp {
 				string path = Path.Combine(Program.AppDirectory, Filename);
 				using (Stream fs = File.OpenRead(path))
 					using (StreamReader reader = new StreamReader(fs, false))
+				{
 						LoadFrom(reader);
+				}
 				return true;
 			} catch (FileNotFoundException) {
 				return true;

@@ -347,3 +347,17 @@ bool Convert_TryParseReal32(STRING_TRANSIENT String* str, Real32* value) {
 	*value = sum;
 	return true;
 }
+
+bool Convert_TryParseBool(STRING_TRANSIENT String* str, bool* value) {
+	String trueStr  = String_FromConstant("true");
+	if (String_CaselessEquals(str, &trueStr)) {
+		*value = true; return true;
+	}
+
+	String falseStr = String_FromConstant("false");
+	if (String_CaselessEquals(str, &falseStr)) {
+		*value = false; return true;
+	}
+
+	*value = false; return false;
+}

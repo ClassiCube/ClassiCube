@@ -83,4 +83,6 @@ bool Convert_TryParseUInt8(STRING_TRANSIENT String* str, UInt8* value);
 bool Convert_TryParseUInt16(STRING_TRANSIENT String* str, UInt16* value);
 /* Attempts to parse the given string as a 32 bit floating point number. */
 bool Convert_TryParseReal32(STRING_TRANSIENT String* str, Real32* value);
+/* Attempts to parse the given string as a boolean. */
+bool Convert_TryParseBool(STRING_TRANSIENT String* str, bool* value);
 #endif

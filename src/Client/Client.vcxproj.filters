@@ -524,5 +524,8 @@
     <ClCompile Include="Game.c">
       <Filter>Source Files\Game</Filter>
     </ClCompile>
+    <ClCompile Include="Options.c">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

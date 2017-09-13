@@ -362,7 +362,8 @@ void Builder_DefaultPreStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 	Int32 i;
 	for (i = 0; i < Atlas1D_MaxAtlasesCount * 2; i++) {
-		if (Builder_Parts[i].iCount == 0) continue;
+		Int32 vCount = Builder1DPart_VerticesCount(&Builder_Parts[i]);
+		if (vCount == 0) continue;
 		Builder1DPart_Prepare(&Builder_Parts[i]);
 	}
 }
