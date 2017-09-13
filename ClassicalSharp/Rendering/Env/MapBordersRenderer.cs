@@ -239,8 +239,11 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void DrawX(int x, int z1, int z2, int y1, int y2, int axisSize,
-		           int col, VertexP3fT2fC4b[] v, ref int i) {
+		           int col, VertexP3fT2fC4b[] vertices, ref int i) {
 			int endZ = z2, endY = y2, startY = y1;
+			VertexP3fT2fC4b v;
+			v.X = x; v.Colour = col;
+			
 			for (; z1 < endZ; z1 += axisSize) {
 				z2 = z1 + axisSize;
 				if (z2 > endZ) z2 = endZ;
@@ -249,18 +252,21 @@ namespace ClassicalSharp.Renderers {
 					y2 = y1 + axisSize;
 					if (y2 > endY) y2 = endY;
 					
-					TextureRec rec = new TextureRec(0, 0, z2 - z1, y2 - y1);
-					v[i++] = new VertexP3fT2fC4b(x, y1, z1, rec.U1, rec.V2, col);
-					v[i++] = new VertexP3fT2fC4b(x, y2, z1, rec.U1, rec.V1, col);
-					v[i++] = new VertexP3fT2fC4b(x, y2, z2, rec.U2, rec.V1, col);
-					v[i++] = new VertexP3fT2fC4b(x, y1, z2, rec.U2, rec.V2, col);
+					float u2 = z2 - z1, v2 = y2 - y1;
+					v.Y = y1; v.Z = z1; v.U = 0f; v.V = v2; vertices[i++] = v;
+					v.Y = y2;                     v.V = 0f; vertices[i++] = v;
+					          v.Z = z2; v.U = u2;           vertices[i++] = v;
+					v.Y = y1;                     v.V = v2; vertices[i++] = v;
 				}
 			}
 		}
 		
 		void DrawZ(int z, int x1, int x2, int y1, int y2, int axisSize,
-		           int col, VertexP3fT2fC4b[] v, ref int i) {
+		           int col, VertexP3fT2fC4b[] vertices, ref int i) {
 			int endX = x2, endY = y2, startY = y1;
+			VertexP3fT2fC4b v;
+			v.Z = z; v.Colour = col;
+			
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;
 				if (x2 > endX) x2 = endX;
@@ -269,18 +275,21 @@ namespace ClassicalSharp.Renderers {
 					y2 = y1 + axisSize;
 					if (y2 > endY) y2 = endY;
 					
-					TextureRec rec = new TextureRec(0, 0, x2 - x1, y2 - y1);
-					v[i++] = new VertexP3fT2fC4b(x1, y1, z, rec.U1, rec.V2, col);
-					v[i++] = new VertexP3fT2fC4b(x1, y2, z, rec.U1, rec.V1, col);
-					v[i++] = new VertexP3fT2fC4b(x2, y2, z, rec.U2, rec.V1, col);
-					v[i++] = new VertexP3fT2fC4b(x2, y1, z, rec.U2, rec.V2, col);
+					float u2 = x2 - x1, v2 = y2 - y1;
+					v.X = x1; v.Y = y1; v.U = 0f; v.V = v2; vertices[i++] = v;
+					          v.Y = y2;           v.V = 0f; vertices[i++] = v;
+					v.X = x2;           v.U = u2;           vertices[i++] = v;
+					          v.Y = y1;           v.V = v2; vertices[i++] = v;
 				}
 			}
 		}
 		
 		void DrawY(int x1, int z1, int x2, int z2, float y, int axisSize,
-		           int col, float offset, float yOffset, VertexP3fT2fC4b[] v, ref int i) {
+		           int col, float offset, float yOffset, VertexP3fT2fC4b[] vertices, ref int i) {
 			int endX = x2, endZ = z2, startZ = z1;
+			VertexP3fT2fC4b v;
+			v.Y = y + yOffset; v.Colour = col;
+			
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;
 				if (x2 > endX) x2 = endX;
@@ -289,11 +298,11 @@ namespace ClassicalSharp.Renderers {
 					z2 = z1 + axisSize;
 					if (z2 > endZ) z2 = endZ;
 					
-					TextureRec rec = new TextureRec(0, 0, x2 - x1, z2 - z1);
-					v[i++] = new VertexP3fT2fC4b(x1 + offset, y + yOffset, z1 + offset, rec.U1, rec.V1, col);
-					v[i++] = new VertexP3fT2fC4b(x1 + offset, y + yOffset, z2 + offset, rec.U1, rec.V2, col);
-					v[i++] = new VertexP3fT2fC4b(x2 + offset, y + yOffset, z2 + offset, rec.U2, rec.V2, col);
-					v[i++] = new VertexP3fT2fC4b(x2 + offset, y + yOffset, z1 + offset, rec.U2, rec.V1, col);
+					float u2 = x2 - x1, v2 = z2 - z1;
+					v.X = x1 + offset; v.Z = z1 + offset; v.U = 0f; v.V = 0f; vertices[i++] = v;
+					                   v.Z = z2 + offset;           v.V = v2; vertices[i++] = v;
+					v.X = x2 + offset;                    v.U = u2;           vertices[i++] = v;
+					                   v.Z = z1 + offset;           v.V = 0f; vertices[i++] = v;
 				}
 			}
 		}

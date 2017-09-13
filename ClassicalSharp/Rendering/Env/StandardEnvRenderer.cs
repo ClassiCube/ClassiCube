@@ -233,6 +233,8 @@ namespace ClassicalSharp.Renderers {
 		void DrawSkyY(int x1, int z1, int x2, int z2, int y, int axisSize, int col, VertexP3fC4b[] vertices) {
 			int endX = x2, endZ = z2, startZ = z1;
 			int i = 0;
+			VertexP3fC4b v;
+			v.Y = y; v.Colour = col;
 			
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;
@@ -242,10 +244,10 @@ namespace ClassicalSharp.Renderers {
 					z2 = z1 + axisSize;
 					if (z2 > endZ) z2 = endZ;
 					
-					vertices[i++] = new VertexP3fC4b(x1, y, z1, col);
-					vertices[i++] = new VertexP3fC4b(x1, y, z2, col);
-					vertices[i++] = new VertexP3fC4b(x2, y, z2, col);
-					vertices[i++] = new VertexP3fC4b(x2, y, z1, col);
+					v.X = x1; v.Z = z1; vertices[i++] = v;
+					          v.Z = z2; vertices[i++] = v;
+					v.X = x2;           vertices[i++] = v;
+					          v.Z = z1; vertices[i++] = v;
 				}
 			}
 		}
@@ -255,6 +257,8 @@ namespace ClassicalSharp.Renderers {
 			// adjust range so that largest negative uv coordinate is shifted to 0 or above.
 			float offset = Utils.CeilDiv(-x1, 2048);
 			int i = 0;
+			VertexP3fT2fC4b v;
+			v.Y = y + 0.1f; v.Colour = col;
 			
 			for (; x1 < endX; x1 += axisSize) {
 				x2 = x1 + axisSize;
@@ -264,10 +268,12 @@ namespace ClassicalSharp.Renderers {
 					z2 = z1 + axisSize;
 					if (z2 > endZ) z2 = endZ;
 					
-					vertices[i++] = new VertexP3fT2fC4b(x1, y + 0.1f, z1, x1 / 2048f + offset, z1 / 2048f + offset, col);
-					vertices[i++] = new VertexP3fT2fC4b(x1, y + 0.1f, z2, x1 / 2048f + offset, z2 / 2048f + offset, col);
-					vertices[i++] = new VertexP3fT2fC4b(x2, y + 0.1f, z2, x2 / 2048f + offset, z2 / 2048f + offset, col);
-					vertices[i++] = new VertexP3fT2fC4b(x2, y + 0.1f, z1, x2 / 2048f + offset, z1 / 2048f + offset, col);
+					float u1 = x1 / 2048f + offset, u2 = x2 / 2048f + offset;
+					float v1 = z1 / 2048f + offset, v2 = z2 / 2048f + offset;
+					v.X = x1; v.Z = z1; v.U = u1; v.V = v1; vertices[i++] = v;
+					          v.Z = z2;           v.V = v2; vertices[i++] = v;
+					v.X = x2;           v.U = u2;           vertices[i++] = v;
+					          v.Z = z1;           v.V = v1; vertices[i++] = v;
 				}
 			}
 		}

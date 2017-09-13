@@ -120,7 +120,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		int fogCol, lastFogCol = FastColour.BlackPacked;
 		public override void SetFogColour(FastColour col) {
-			fogCol = col.ToArgb();
+			fogCol = col.Pack();
 			if (fogCol == lastFogCol) return;
 			
 			device.SetRenderState(RenderState.FogColor, fogCol);
@@ -247,7 +247,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void ClearColour(FastColour col) {
-			lastClearCol = col.ToArgb();
+			lastClearCol = col.Pack();
 		}
 
 		public override bool ColourWrite {

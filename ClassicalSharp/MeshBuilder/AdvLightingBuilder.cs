@@ -154,17 +154,19 @@ namespace ClassicalSharp {
 				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
+			int index = part.vIndex[Side.Left];
 			if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
-				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
-				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col0_1);
-				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col1_1);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col0_1);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col1_1);
 			} else {
-				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col1_1);
-				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
-				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex[Side.Left]++] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col0_1);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x1, y2, z2 + (count - 1), u2, v1, col1_1);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col1_0);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x1, y1, z2 + (count - 1), u2, v2, col0_1);
 			}
+			part.vIndex[Side.Left] += 4;
 		}
 
 		void DrawRightFace(int count) {
@@ -194,17 +196,19 @@ namespace ClassicalSharp {
 				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
+			int index = part.vIndex[Side.Right];
 			if (aY0_Z0 + aY1_Z1 > aY0_Z1 + aY1_Z0) {
-				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
-				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
-				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col0_1);
-				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col0_0);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col0_1);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col0_0);
 			} else {
-				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
-				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col0_1);
-				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex[Side.Right]++] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x2, y2, z2 + (count - 1), u2, v1, col1_1);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x2, y1, z2 + (count - 1), u2, v2, col0_1);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x2, y1, z1, u1, v2, col0_0);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2, y2, z1, u1, v1, col1_0);
 			}
+			part.vIndex[Side.Right] += 4;
 		}
 
 		void DrawFrontFace(int count) {
@@ -234,17 +238,19 @@ namespace ClassicalSharp {
 				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
+			int index = part.vIndex[Side.Front];
 			if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
-				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
-				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_1);
-				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_1);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_1);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_1);
 			} else {
-				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
-				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_1);
-				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_1);
-				part.vertices[part.vIndex[Side.Front]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x1, y1, z1, u1, v2, col0_0);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_1);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_1);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v2, col1_0);
 			}
+			part.vIndex[Side.Front] += 4;
 		}
 		
 		void DrawBackFace(int count) {
@@ -274,17 +280,19 @@ namespace ClassicalSharp {
 				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
+			int index = part.vIndex[Side.Back];
 			if (aX1_Y1 + aX0_Y0 > aX0_Y1 + aX1_Y0) {
-				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
-				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
-				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_0);
-				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col1_1);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_0);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col1_1);
 			} else {
-				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col1_1);
-				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
-				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
-				part.vertices[part.vIndex[Side.Back]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_0);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v1, col1_1);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y2, z2, u1, v1, col0_1);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_0);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_0);
 			}
+			part.vIndex[Side.Back] += 4;
 		}
 		
 		void DrawBottomFace(int count) {
@@ -314,17 +322,19 @@ namespace ClassicalSharp {
 				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
+			int index = part.vIndex[Side.Bottom];
 			if (aX0_Z1 + aX1_Z0 > aX0_Z0 + aX1_Z1) {
-				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
-				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
-				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col0_0);
-				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col1_0);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col0_0);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col1_0);
 			} else {
-				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
-				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col0_0);
-				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col1_0);
-				part.vertices[part.vIndex[Side.Bottom]++] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x1, y1, z2, u1, v2, col0_1);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y1, z1, u1, v1, col0_0);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z1, u2, v1, col1_0);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2 + (count - 1), y1, z2, u2, v2, col1_1);
 			}
+			part.vIndex[Side.Bottom] += 4;
 		}
 
 		void DrawTopFace(int count) {
@@ -354,17 +364,19 @@ namespace ClassicalSharp {
 				col0_1 = Utils.Tint(col0_1, tint);
 			}
 			
+			int index = part.vIndex[Side.Top];
 			if (aX0_Z0 + aX1_Z1 > aX0_Z1 + aX1_Z0) {
-				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
-				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
-				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col0_1);
-				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col0_1);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
 			} else {
-				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
-				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col0_1);
-				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
-				part.vertices[part.vIndex[Side.Top]++] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
+				part.vertices[index    ] = new VertexP3fT2fC4b(x1, y2, z1, u1, v1, col0_0);
+				part.vertices[index + 1] = new VertexP3fT2fC4b(x1, y2, z2, u1, v2, col0_1);
+				part.vertices[index + 2] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z2, u2, v2, col1_1);
+				part.vertices[index + 3] = new VertexP3fT2fC4b(x2 + (count - 1), y2, z1, u2, v1, col1_0);
 			}
+			part.vIndex[Side.Top] += 4;
 		}
 		
 		int[] lerp = new int[5], lerpX = new int[5], lerpZ = new int[5], lerpY = new int[5];		

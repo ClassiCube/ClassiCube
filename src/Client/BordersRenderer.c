@@ -90,9 +90,11 @@ void BordersRenderer_ResetTextures(void) {
 #define borders_HorOffset(block) (Block_RenderMinBB[block].X - Block_MinBB[block].X)
 #define borders_YOffset(block) (Block_RenderMinBB[block].Y - Block_MinBB[block].Y)
 
-void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** v) {
+void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** vertices) {
 	Int32 endZ = z2, endY = y2, startY = y1;
-	VertexP3fT2fC4b* ptr = *v;
+	VertexP3fT2fC4b* ptr = *vertices;
+	VertexP3fT2fC4b v;
+	v.X = x; v.Colour = col;
 
 	for (; z1 < endZ; z1 += axisSize) {
 		z2 = z1 + axisSize;
@@ -102,19 +104,21 @@ void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int3
 			y2 = y1 + axisSize;
 			if (y2 > endY) y2 = endY;
 
-			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)z2 - (Real32)z1, (Real32)y2 - (Real32)y1);
-			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y1, (Real32)z1, rec.U1, rec.V2, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y2, (Real32)z1, rec.U1, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y2, (Real32)z2, rec.U2, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x, (Real32)y1, (Real32)z2, rec.U2, rec.V2, col); ptr++;
+			Real32 u2 = (Real32)z2 - (Real32)z1, v2 = (Real32)y2 - (Real32)y1;
+			v.Y = (Real32)y1; v.Z = (Real32)z1; v.U = 0.0f; v.V = v2;   *ptr = v; ptr++;
+			v.Y = (Real32)y2;                               v.V = 0.0f; *ptr = v; ptr++;
+			                  v.Z = (Real32)z2; v.U = u2;               *ptr = v; ptr++;
+			v.Y = (Real32)y1;                               v.V = v2;   *ptr = v; ptr++;
 		}
 	}
-	*v = ptr;
+	*vertices = ptr;
 }
 
-void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** v) {
+void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** vertices) {
 	Int32 endX = x2, endY = y2, startY = y1;
-	VertexP3fT2fC4b* ptr = *v;
+	VertexP3fT2fC4b* ptr = *vertices;
+	VertexP3fT2fC4b v;
+	v.Z = z; v.Colour = col;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -124,19 +128,21 @@ void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int3
 			y2 = y1 + axisSize;
 			if (y2 > endY) y2 = endY;
 
-			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)x2 - (Real32)x1, (Real32)y2 - (Real32)y1);
-			VertexP3fT2fC4b_Set(ptr, (Real32)x1, (Real32)y1, (Real32)z, rec.U1, rec.V2, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x1, (Real32)y2, (Real32)z, rec.U1, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x2, (Real32)y2, (Real32)z, rec.U2, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x2, (Real32)y1, (Real32)z, rec.U2, rec.V2, col); ptr++;
+			Real32 u2 = (Real32)x2 - (Real32)x1, v2 = (Real32)y2 - (Real32)y1;
+			v.X = (Real32)x1; v.Y = (Real32)y1; v.U = 0.0f; v.V = v2;   *ptr = v; ptr++;
+			                  v.Y = (Real32)y2;             v.V = 0.0f; *ptr = v; ptr++;
+			v.X = (Real32)x2;                   v.U = u2;               *ptr = v; ptr++;
+			                  v.Y = (Real32)y1;             v.V = v2;   *ptr = v; ptr++;
 		}
 	}
-	*v = ptr;
+	*vertices = ptr;
 }
 
-void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int32 axisSize, PackedCol col, Real32 offset, Real32 yOffset, VertexP3fT2fC4b** v) {
+void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int32 axisSize, PackedCol col, Real32 offset, Real32 yOffset, VertexP3fT2fC4b** vertices) {
 	Int32 endX = x2, endZ = z2, startZ = z1;
-	VertexP3fT2fC4b* ptr = *v;
+	VertexP3fT2fC4b* ptr = *vertices;
+	VertexP3fT2fC4b v;
+	v.Y = y + yOffset; v.Colour = col;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -146,14 +152,14 @@ void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			TextureRec rec = TextureRec_FromPoints(0, 0, (Real32)x2 - (Real32)x1, (Real32)z2 - (Real32)z1);
-			VertexP3fT2fC4b_Set(ptr, (Real32)x1 + offset, y + yOffset, (Real32)z1 + offset, rec.U1, rec.V1, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x1 + offset, y + yOffset, (Real32)z2 + offset, rec.U1, rec.V2, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x2 + offset, y + yOffset, (Real32)z2 + offset, rec.U2, rec.V2, col); ptr++;
-			VertexP3fT2fC4b_Set(ptr, (Real32)x2 + offset, y + yOffset, (Real32)z1 + offset, rec.U2, rec.V1, col); ptr++;
+			Real32 u2 = (Real32)x2 - (Real32)x1, v2 = (Real32)z2 - (Real32)z1;
+			v.X = (Real32)x1 + offset; v.Z = (Real32)z1 + offset; v.U = 0.0f; v.V = 0.0f; *ptr = v; ptr++;
+			                           v.Z = (Real32)z2 + offset;             v.V = v2;   *ptr = v; ptr++;
+			v.X = (Real32)x2 + offset;                            v.U = u2;               *ptr = v; ptr++;
+			                           v.Z = (Real32)z1 + offset;             v.V = 0.0f; *ptr = v; ptr++;
 		}
 	}
-	*v = ptr;
+	*vertices = ptr;
 }
 
 void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {

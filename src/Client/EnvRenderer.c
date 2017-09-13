@@ -151,6 +151,8 @@ void EnvRenderer_Render(Real64 deltaTime) {
 
 void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fC4b* vertices) {
 	Int32 endX = x2, endZ = z2, startZ = z1;
+	VertexP3fC4b v;
+	v.Y = (Real32)y; v.Colour = col;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -160,10 +162,10 @@ void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			VertexP3fC4b_Set(vertices, (Real32)x1, (Real32)y, (Real32)z1, col); vertices++;
-			VertexP3fC4b_Set(vertices, (Real32)x1, (Real32)y, (Real32)z2, col); vertices++;
-			VertexP3fC4b_Set(vertices, (Real32)x2, (Real32)y, (Real32)z2, col); vertices++;
-			VertexP3fC4b_Set(vertices, (Real32)x2, (Real32)y, (Real32)z1, col); vertices++;
+			v.X = (Real32)x1; v.Z = (Real32)z1; *vertices = v; vertices++;
+			                  v.Z = (Real32)z2; *vertices = v; vertices++;
+			v.X = (Real32)x2;                   *vertices = v; vertices++;
+			                  v.Z = (Real32)z1; *vertices = v; vertices++;
 		}
 	}
 }
@@ -172,6 +174,8 @@ void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, In
 	Int32 endX = x2, endZ = z2, startZ = z1;
 	/* adjust range so that largest negative uv coordinate is shifted to 0 or above. */
 	Real32 offset = (Real32)Math_CeilDiv(-x1, 2048);
+	VertexP3fT2fC4b v;
+	v.Y = (Real32)y + 0.1f; v.Colour = col;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -181,14 +185,12 @@ void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, In
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			VertexP3fT2fC4b_Set(vertices, (Real32)x1, (Real32)y + 0.1f, (Real32)z1, 
-				(Real32)x1 / 2048.0f + offset, (Real32)z1 / 2048.0f + offset, col); vertices++;
-			VertexP3fT2fC4b_Set(vertices, (Real32)x1, (Real32)y + 0.1f, (Real32)z2,
-				(Real32)x1 / 2048.0f + offset, (Real32)z2 / 2048.0f + offset, col); vertices++;
-			VertexP3fT2fC4b_Set(vertices, (Real32)x2, (Real32)y + 0.1f, (Real32)z2,
-				(Real32)x2 / 2048.0f + offset, (Real32)z2 / 2048.0f + offset, col); vertices++;
-			VertexP3fT2fC4b_Set(vertices, (Real32)x2, (Real32)y + 0.1f, (Real32)z1,
-				(Real32)x2 / 2048.0f + offset, (Real32)z1 / 2048.0f + offset, col); vertices++;
+			Real32 u1 = (Real32)x1 / 2048.0f + offset, u2 = (Real32)x2 / 2048.0f + offset;
+			Real32 v1 = (Real32)z1 / 2048.0f + offset, v2 = (Real32)z2 / 2048.0f + offset;
+			v.X = (Real32)x1; v.Z = (Real32)z1; v.U = u1; v.V = v1; *vertices = v; vertices++;
+			                  v.Z = (Real32)z2;           v.V = v2; *vertices = v; vertices++;
+			v.X = (Real32)x2;                   v.U = u2;           *vertices = v; vertices++;
+			                  v.Z = (Real32)z1;           v.V = v1; *vertices = v; vertices++;
 		}
 	}
 }

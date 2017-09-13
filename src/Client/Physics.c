@@ -32,6 +32,7 @@ void Physics_OnNewMapLoaded(void) {
 
 	Tree_Width = World_Width; Tree_Height = World_Height; Tree_Length = World_Length;
 	Tree_Blocks = World_Blocks;
+	Random_InitFromCurrentTime(&physics_rnd);
 	Tree_Rnd = &physics_rnd;
 }
 
