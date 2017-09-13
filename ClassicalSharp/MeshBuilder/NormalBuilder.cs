@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 			int offset = (BlockInfo.LightOffset[block] >> face) & 1;
 			switch (face) {
 				case Side.Left:
-					return x < offset          ? light.OutsideXSide    : light.LightCol_XSide_Fast(x - offset, y, z);
+					return x < offset          ? light.OutsideXSide   : light.LightCol_XSide_Fast(x - offset, y, z);
 				case Side.Right:
 					return x > (maxX - offset) ? light.OutsideXSide   : light.LightCol_XSide_Fast(x + offset, y, z);
 				case Side.Front:
@@ -130,67 +130,67 @@ namespace ClassicalSharp {
 			drawer.TintColour = BlockInfo.FogColour[curBlock];
 			
 			if (leftCount != 0) {
-				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Left];
-				int i = texId / elementsPerAtlas1D;
+				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Left];
+				int i = texLoc / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Left) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
 					X >= offset ? light.LightCol_XSide_Fast(X - offset, Y, Z) : light.OutsideXSide;
-				drawer.Left(leftCount, col, texId, part.vertices, ref part.vIndex[Side.Left]);
+				drawer.Left(leftCount, col, texLoc, part.vertices, ref part.vIndex[Side.Left]);
 			}
 			
 			if (rightCount != 0) {
-				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
-				int i = texId / elementsPerAtlas1D;
+				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
+				int i = texLoc / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Right) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
 					X <= (maxX - offset) ? light.LightCol_XSide_Fast(X + offset, Y, Z) : light.OutsideXSide;
-				drawer.Right(rightCount, col, texId, part.vertices, ref part.vIndex[Side.Right]);
+				drawer.Right(rightCount, col, texLoc, part.vertices, ref part.vIndex[Side.Right]);
 			}
 			
 			if (frontCount != 0) {
-				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Front];
-				int i = texId / elementsPerAtlas1D;
+				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Front];
+				int i = texLoc / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Front) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
 					Z >= offset ? light.LightCol_ZSide_Fast(X, Y, Z - offset) : light.OutsideZSide;
-				drawer.Front(frontCount, col, texId, part.vertices, ref part.vIndex[Side.Front]);
+				drawer.Front(frontCount, col, texLoc, part.vertices, ref part.vIndex[Side.Front]);
 			}
 			
 			if (backCount != 0) {
-				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Back];
-				int i = texId / elementsPerAtlas1D;
+				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Back];
+				int i = texLoc / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Back) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
 					Z <= (maxZ - offset) ? light.LightCol_ZSide_Fast(X, Y, Z + offset) : light.OutsideZSide;
-				drawer.Back(backCount, col, texId, part.vertices, ref part.vIndex[Side.Back]);
+				drawer.Back(backCount, col, texLoc, part.vertices, ref part.vIndex[Side.Back]);
 			}
 			
 			if (bottomCount != 0) {
-				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Bottom];
-				int i = texId / elementsPerAtlas1D;
+				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Bottom];
+				int i = texLoc / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Bottom) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked : light.LightCol_YBottom_Fast(X, Y - offset, Z);
-				drawer.Bottom(bottomCount, col, texId, part.vertices, ref part.vIndex[Side.Bottom]);
+				drawer.Bottom(bottomCount, col, texLoc, part.vertices, ref part.vIndex[Side.Bottom]);
 			}
 			
 			if (topCount != 0) {
-				int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Top];
-				int i = texId / elementsPerAtlas1D;
+				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Top];
+				int i = texLoc / elementsPerAtlas1D;
 				int offset = (lightFlags >> Side.Top) & 1;
 
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked : light.LightCol_YTop_Fast(X, (Y + 1) - offset, Z);
-				drawer.Top(topCount, col, texId, part.vertices, ref part.vIndex[Side.Top]);
+				drawer.Top(topCount, col, texLoc, part.vertices, ref part.vIndex[Side.Top]);
 			}
 		}
 	}

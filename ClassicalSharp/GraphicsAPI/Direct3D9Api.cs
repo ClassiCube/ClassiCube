@@ -495,6 +495,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		void SetDefaultRenderStates() {
 			FaceCulling = false;
+			batchFormat = (VertexFormat)999;
 			device.SetRenderState(RenderState.ColorVertex, false);
 			device.SetRenderState(RenderState.Lighting, false);
 			device.SetRenderState(RenderState.SpecularEnable, false);

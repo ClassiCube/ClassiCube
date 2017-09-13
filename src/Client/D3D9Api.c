@@ -766,6 +766,7 @@ void Gfx_OnWindowResize(void) {
 
 void D3D9_SetDefaultRenderStates(void) {
 	Gfx_SetFaceCulling(false);
+	d3d9_batchFormat = -1;
 	D3D9_SetRenderState(D3DRS_COLORVERTEX, false, "D3D9_ColorVertex");
 	D3D9_SetRenderState2(D3DRS_LIGHTING, false, "D3D9_Lighting");
 	D3D9_SetRenderState2(D3DRS_SPECULARENABLE, false, "D3D9_SpecularEnable");
