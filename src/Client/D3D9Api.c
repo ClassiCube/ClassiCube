@@ -653,9 +653,9 @@ void Gfx_DrawVb_IndexedTris_Range(Int32 indicesCount, Int32 startIndex) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb_IndexedTris");
 }
 
-void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex) {
-	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, VCOUNT(startIndex),
-		 0, VCOUNT(indicesCount), 0, indicesCount / 3);
+void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, startVertex,
+		 0, verticesCount, 0, verticesCount >> 1);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }
 

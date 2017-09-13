@@ -29,14 +29,14 @@ typedef struct Builder1DPart_ {
 	VertexP3fT2fC4b* vertices;
 	/* Number of elements in the vertices pointer. */
 	Int32 verticesBufferCount;
-	/* Total number of indices. (Sprite indices + number indices for each face). */
-	Int32 iCount;
 } Builder1DPart;
 
 /* Prepares the given part for building vertices. */
 void Builder1DPart_Prepare(Builder1DPart* part);
 /* Resets counts to zero for the given part.*/
 void Builder1DPart_Reset(Builder1DPart* part);
+/* Counts the total number of vertices in the given part. */
+Int32 Builder1DPart_VerticesCount(Builder1DPart* part);
 
 /* Current world coordinates being processed. */
 Int32 Builder_X, Builder_Y, Builder_Z;

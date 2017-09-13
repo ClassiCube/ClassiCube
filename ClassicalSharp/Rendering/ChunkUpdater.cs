@@ -219,7 +219,7 @@ namespace ClassicalSharp.Renderers {
 				ChunkPartInfo[] parts = info.NormalParts;
 				for (int i = 0; i < parts.Length; i++) {
 					game.Graphics.DeleteVb(ref parts[i].VbId);
-					if (parts[i].IndicesCount == 0) continue;
+					if (parts[i].VerticesCount == 0) continue;
 					renderer.normalPartsCount[i]--;
 				}
 				info.NormalParts = null;
@@ -229,7 +229,7 @@ namespace ClassicalSharp.Renderers {
 				ChunkPartInfo[] parts = info.TranslucentParts;
 				for (int i = 0; i < parts.Length; i++) {
 					game.Graphics.DeleteVb(ref parts[i].VbId);
-					if (parts[i].IndicesCount == 0) continue;
+					if (parts[i].VerticesCount == 0) continue;
 					renderer.translucentPartsCount[i]--;
 				}
 				info.TranslucentParts = null;
@@ -343,14 +343,14 @@ namespace ClassicalSharp.Renderers {
 			if (info.NormalParts != null) {
 				ChunkPartInfo[] parts = info.NormalParts;
 				for (int i = 0; i < parts.Length; i++) {
-					if (parts[i].IndicesCount == 0) continue;
+					if (parts[i].VerticesCount == 0) continue;
 					renderer.normalPartsCount[i]++;
 				}
 			}
 			if (info.TranslucentParts != null) {
 				ChunkPartInfo[] parts = info.TranslucentParts;
 				for (int i = 0; i < parts.Length; i++) {
-					if (parts[i].IndicesCount == 0) continue;
+					if (parts[i].VerticesCount == 0) continue;
 					renderer.translucentPartsCount[i]++;
 				}
 			}

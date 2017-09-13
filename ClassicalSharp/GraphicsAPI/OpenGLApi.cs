@@ -429,7 +429,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		int lastPartialList = -1;
-		internal override void DrawIndexedVb_TrisT2fC4b(int indicesCount, int startIndex) {
+		internal override void DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
 			// TODO: This renders the whole map, bad performance!! FIX FIX
 			if (glLists) {
 				if (activeList != lastPartialList) {
@@ -438,11 +438,11 @@ namespace ClassicalSharp.GraphicsAPI {
 				return;
 			}
 			
-			int offset = (startIndex / 6 * 4) * VertexP3fT2fC4b.Size;
+			int offset = startVertex * VertexP3fT2fC4b.Size;
 			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
 			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
 			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));
-			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, IntPtr.Zero);
+			GL.DrawElements(BeginMode.Triangles, (verticesCount * 6) >> 2, indexType, IntPtr.Zero);
 		}
 		
 		IntPtr zero = new IntPtr(0), twelve = new IntPtr(12), sixteen = new IntPtr(16);

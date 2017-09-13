@@ -10,30 +10,30 @@
 #include "Drawer.h"
 
 void Builder1DPart_Prepare(Builder1DPart* part) {
-	Int32 vCount = VCOUNT(part->iCount);
 	part->sOffset = 0;
-	part->sAdvance = (part->sCount / 6);
+	part->sAdvance = (part->sCount / 4);
 
 	/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
-	if ((vCount + 2) > part->verticesBufferCount) {
+	Int32 vCount = Builder1DPart_VerticesCount(part);
+	if (vCount > part->verticesBufferCount) {
 		if (part->vertices != NULL)
 			Platform_MemFree(part->vertices);
 
 		part->vertices = Platform_MemAlloc((vCount + 2) * sizeof(VertexP3fT2fC4b));
+		part->verticesBufferCount = vCount;
 		if (part->vertices == NULL) {
 			ErrorHandler_Fail("Builder1DPart_Prepare - failed to allocate memory");
 		}
 	}
 
-	Int32 offset = VCOUNT(part->sCount), i;
+	Int32 offset = part->sCount, i;
 	for (i = 0; i < Face_Count; i++) {
 		part->fVertices[i] = &part->vertices[offset];
-		offset += VCOUNT(part->fCount[i]);
+		offset += part->fCount[i];
 	}
 }
 
 void Builder1DPart_Reset(Builder1DPart* part) {
-	part->iCount = 0;
 	part->sCount = 0; part->sOffset = 0; part->sAdvance = 0;
 
 	Int32 i;
@@ -41,6 +41,13 @@ void Builder1DPart_Reset(Builder1DPart* part) {
 		part->fVertices[i] = NULL;
 		part->fCount[i] = 0;
 	}
+}
+
+Int32 Builder1DPart_VerticesCount(Builder1DPart* part) {
+	Int32 count = part->sCount;
+	Int32 i;
+	for (i = 0; i < Face_Count; i++) { count += part->fCount[i]; }
+	return count;
 }
 
 void Builder_Init(void) {
@@ -72,25 +79,23 @@ void Builder_OnNewMapLoaded(void) {
 void Builder_AddSpriteVertices(BlockID block) {
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, Face_XMin));
 	Builder1DPart* part = &Builder_Parts[i];
-	part->sCount += 6 * 4;
-	part->iCount += 6 * 4;
+	part->sCount += 4 * 4;
 }
 
 void Builder_AddVertices(BlockID block, Face face) {
 	Int32 baseOffset = (Block_Draw[block] == DrawType_Translucent) * Atlas1D_MaxAtlasesCount;
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, face));
 	Builder1DPart* part = &Builder_Parts[baseOffset + i];
-	part->fCount[face] += 6;
-	part->iCount += 6;
+	part->fCount[face] += 4;
 }
 
 void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* hasParts) {
-	if (part->iCount == 0) return;
-	ChunkPartInfo info;
-	Int32 vertCount = (part->iCount / 6 * 4) + 2;
+	Int32 vCount = Builder1DPart_VerticesCount(part);
+	if (vCount == 0) return;
 
-	info.VbId = Gfx_CreateVb(part->vertices, VertexFormat_P3fT2fC4b, vertCount);
-	info.IndicesCount = part->iCount;
+	ChunkPartInfo info;
+	info.VbId = Gfx_CreateVb(part->vertices, VertexFormat_P3fT2fC4b, vCount);
+	info.VerticesCount = vCount;
 
 	info.XMinCount = (UInt16)part->fCount[Face_XMin];
 	info.XMaxCount = (UInt16)part->fCount[Face_XMax];

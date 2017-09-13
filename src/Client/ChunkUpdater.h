@@ -10,7 +10,7 @@
 
 /* Describes a portion of the data needed for rendering a chunk. */
 typedef struct ChunkPartInfo_ {
-	Int32 VbId, IndicesCount, SpriteCount;
+	Int32 VbId, VerticesCount, SpriteCount;
 	UInt16 XMinCount, XMaxCount, ZMinCount,
 		ZMaxCount, YMinCount, YMaxCount;
 } ChunkPartInfo;

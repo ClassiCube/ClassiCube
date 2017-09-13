@@ -60,8 +60,9 @@ namespace ClassicalSharp.Gui.Screens {
 			} else {
 				if (game.ChunkUpdates > 0) {
 					statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunks/s, ");
-				}			
-				statusBuffer.AppendNum(ref index, game.Vertices).Append(ref index, " vertices");
+				}
+				int indices = (game.Vertices / 4) * 6;
+				statusBuffer.AppendNum(ref index, indices).Append(ref index, " vertices");
 				
 				int ping = PingList.AveragePingMilliseconds();
 				if (ping != 0) {

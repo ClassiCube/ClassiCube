@@ -43,27 +43,33 @@ namespace ClassicalSharp {
 		protected class DrawInfo {
 			public VertexP3fT2fC4b[] vertices;
 			public int[] vIndex = new int[6], vCount = new int[6];
-			public int iCount, spriteCount, sIndex, sAdvance;
+			public int spriteCount, sIndex, sAdvance;
+			
+			public int VerticesCount() {
+				int count = spriteCount;
+				for (int i = 0; i < vCount.Length; i++) { count += vCount[i]; }
+				return count;
+			}
 			
 			public void ExpandToCapacity() {
-				int vertCount = iCount / 6 * 4;
-				if (vertices == null || (vertCount + 2) > vertices.Length) {
-					vertices = new VertexP3fT2fC4b[vertCount + 2]; 
+				int vertsCount = VerticesCount();
+				if (vertices == null || (vertsCount + 2) > vertices.Length) {
+					vertices = new VertexP3fT2fC4b[vertsCount + 2]; 
 					// ensure buffer is up to 64 bits aligned for last element
 				}
 				sIndex = 0; 
-				sAdvance = (spriteCount / 6);
+				sAdvance = spriteCount / 4;
 				
-				vIndex[Side.Left]   = (spriteCount / 6) * 4;
-				vIndex[Side.Right]  = vIndex[Side.Left]   + (vCount[Side.Left]   / 6) * 4;
-				vIndex[Side.Front]  = vIndex[Side.Right]  + (vCount[Side.Right]  / 6) * 4;
-				vIndex[Side.Back]   = vIndex[Side.Front]  + (vCount[Side.Front]  / 6) * 4;
-				vIndex[Side.Bottom] = vIndex[Side.Back]   + (vCount[Side.Back]   / 6) * 4;
-				vIndex[Side.Top]    = vIndex[Side.Bottom] + (vCount[Side.Bottom] / 6) * 4;
+				vIndex[Side.Left]   = spriteCount;
+				vIndex[Side.Right]  = vIndex[Side.Left]   + vCount[Side.Left];
+				vIndex[Side.Front]  = vIndex[Side.Right]  + vCount[Side.Right];
+				vIndex[Side.Back]   = vIndex[Side.Front]  + vCount[Side.Front];
+				vIndex[Side.Bottom] = vIndex[Side.Back]   + vCount[Side.Back];
+				vIndex[Side.Top]    = vIndex[Side.Bottom] + vCount[Side.Bottom];
 			}
 			
 			public void ResetState() {
-				iCount = 0; spriteCount = 0; sIndex = 0; sAdvance = 0;
+				spriteCount = 0; sIndex = 0; sAdvance = 0;
 				for (int i = 0; i < Side.Sides; i++) {
 					vIndex[i] = 0; vCount[i] = 0;
 				}
@@ -103,15 +109,13 @@ namespace ClassicalSharp {
 		void AddSpriteVertices(BlockID block) {
 			int i = atlas.Get1DIndex(BlockInfo.GetTextureLoc(block, Side.Left));
 			DrawInfo part = normalParts[i];
-			part.spriteCount += 6 * 4;
-			part.iCount += 6 * 4;
+			part.spriteCount += 4 * 4;
 		}
 		
 		void AddVertices(BlockID block, int face) {
 			int i = atlas.Get1DIndex(BlockInfo.GetTextureLoc(block, face));
 			DrawInfo part = BlockInfo.Draw[block] == DrawType.Translucent ? translucentParts[i] : normalParts[i];
-			part.iCount += 6;
-			part.vCount[face] += 6;
+			part.vCount[face] += 4;
 		}
 		
 		protected virtual void DrawSprite(int count) {

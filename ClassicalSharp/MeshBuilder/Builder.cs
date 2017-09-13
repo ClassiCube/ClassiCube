@@ -138,15 +138,14 @@ namespace ClassicalSharp {
 		}
 		
 		void SetPartInfo(DrawInfo part, int i, ref ChunkPartInfo[] parts) {
-			if (part.iCount == 0) return;
+			int vertCount = part.VerticesCount();
+			if (vertCount == 0) return;
 			
 			ChunkPartInfo info;
-			int vertCount = (part.iCount / 6 * 4) + 2;
-			
 			fixed (VertexP3fT2fC4b* ptr = part.vertices) {
 				info.VbId = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, vertCount);
 			}
-			info.IndicesCount = part.iCount;
+			info.VerticesCount = vertCount;
 			
 			info.LeftCount =   (ushort)part.vCount[Side.Left];
 			info.RightCount =  (ushort)part.vCount[Side.Right];
@@ -156,12 +155,12 @@ namespace ClassicalSharp {
 			info.TopCount =    (ushort)part.vCount[Side.Top];
 			info.SpriteCount = part.spriteCount;
 			
-			info.LeftIndex = info.SpriteCount;
-			info.RightIndex = info.LeftIndex  + info.LeftCount;
-			info.FrontIndex = info.RightIndex + info.RightCount;
-			info.BackIndex = info.FrontIndex  + info.FrontCount;
-			info.BottomIndex = info.BackIndex + info.BackCount;
-			info.TopIndex = info.BottomIndex  + info.BottomCount;
+			info.LeftIndex =   (ushort)(info.SpriteCount);
+			info.RightIndex =  (ushort)(info.LeftIndex   + info.LeftCount);
+			info.FrontIndex =  (ushort)(info.RightIndex  + info.RightCount);
+			info.BackIndex =   (ushort)(info.FrontIndex  + info.FrontCount);
+			info.BottomIndex = (ushort)(info.BackIndex   + info.BackCount);
+			info.TopIndex =    (ushort)(info.BottomIndex + info.BottomCount);
 			
 			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
 			if (parts == null)
@@ -314,10 +313,8 @@ namespace ClassicalSharp {
 	
 	public struct ChunkPartInfo {
 		
-		public int VbId, IndicesCount, SpriteCount;
-		public int LeftIndex, RightIndex, FrontIndex,
-		BackIndex, BottomIndex, TopIndex;
-		public ushort LeftCount, RightCount, FrontCount,
-		BackCount, BottomCount, TopCount;
+		public int VbId, VerticesCount, SpriteCount;
+		public ushort LeftIndex, RightIndex, FrontIndex, BackIndex, BottomIndex, TopIndex;
+		public ushort LeftCount, RightCount, FrontCount, BackCount, BottomCount, TopCount;
 	}
 }

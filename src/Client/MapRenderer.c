@@ -52,7 +52,7 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 		if (info->NormalParts == NULL) continue;
 
 		ChunkPartInfo part = info->NormalParts[batch];
-		if (part.IndicesCount == 0) continue;
+		if (part.VerticesCount == 0) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
 		Gfx_BindVb(part.VbId);
@@ -158,7 +158,7 @@ void MapRenderer_RenderTranslucentBatch(Int32 batch) {
 		if (info->TranslucentParts == NULL) continue;
 
 		ChunkPartInfo part = info->TranslucentParts[batch];
-		if (part.IndicesCount == 0) continue;
+		if (part.VerticesCount == 0) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 
 		Gfx_BindVb(part.VbId);

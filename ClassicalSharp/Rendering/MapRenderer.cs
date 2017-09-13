@@ -207,7 +207,7 @@ namespace ClassicalSharp.Renderers {
 				if (info.NormalParts == null) continue;
 
 				ChunkPartInfo part = info.NormalParts[batch];
-				if (part.IndicesCount == 0) continue;
+				if (part.VerticesCount == 0) continue;
 				usedNormal[batch] = true;
 				
 				gfx.BindVb(part.VbId);
@@ -282,7 +282,7 @@ namespace ClassicalSharp.Renderers {
 				if (info.TranslucentParts == null) continue;
 				
 				ChunkPartInfo part = info.TranslucentParts[batch];
-				if (part.IndicesCount == 0) continue;
+				if (part.VerticesCount == 0) continue;
 				usedTranslucent[batch] = true;
 				
 				gfx.BindVb(part.VbId);
