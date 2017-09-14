@@ -58,11 +58,10 @@ namespace ClassicalSharp.Gui.Screens {
 					         (g, v) => { g.LocalPlayer.Hacks.Enabled = v;
 					         	g.LocalPlayer.CheckHacksConsistency(); }),
 				
-				ButtonWidget.Create(game, 400, "Controls", titleFont,
-				                    LeftOnly((g, w) => g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g))))
+				ButtonWidget.Create(game, 400, "Controls", titleFont, LeftOnly(SwitchClassic))
 					.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, 95),
 				
-				MakeBack(400, "Done", 25, titleFont, (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
+				MakeBack(400, "Done", 25, titleFont, SwitchPause),
 				null, null,
 			};
 			
@@ -71,6 +70,8 @@ namespace ClassicalSharp.Gui.Screens {
 			ButtonWidget btn = (ButtonWidget)widgets[7];
 			btn.SetValue = SetFPSLimitMethod;
 		}
+		
+		void SwitchClassic(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g)); }
 		
 		ButtonWidget MakeVolumeBool(int dir, int y, string text, string optKey,
 		                            ButtonBoolGetter getter, ButtonBoolSetter setter) {

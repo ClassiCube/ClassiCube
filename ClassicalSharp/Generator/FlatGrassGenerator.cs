@@ -14,7 +14,7 @@ namespace ClassicalSharp.Generator {
 		
 		public override string GeneratorName { get { return "Flatgrass"; } }
 		
-		public override BlockID[] Generate(int seed) {
+		public override BlockID[] Generate() {
 			BlockID[] map = new BlockID[Width * Height * Length];
 			
 			fixed(BlockID* ptr = map) {

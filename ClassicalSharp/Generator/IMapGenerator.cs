@@ -17,7 +17,7 @@ namespace ClassicalSharp.Generator {
 		public abstract string GeneratorName { get; }
 		
 		/// <summary> Generates the raw blocks within the map, using the given seed. </summary>
-		public abstract BlockID[] Generate(int seed);
+		public abstract BlockID[] Generate();
 		
 		/// <summary> Applies environment settings (if required) to the newly generated world. </summary>
 		public virtual void ApplyEnv(World world) { }
@@ -31,15 +31,14 @@ namespace ClassicalSharp.Generator {
 		/// <summary> Whether the generation has completed all operations. </summary>
 		public bool Done = false;
 		
-		public int Width, Height, Length;	
+		public int Width, Height, Length, Seed;
 		
-		public void GenerateAsync(Game game, int width, int height, int length, int seed) {
-			Width = width; Height = height; Length = length;
+		public void GenerateAsync(Game game) {
 			Thread thread = new Thread(
 				() => {
 					SinglePlayerServer server = (SinglePlayerServer)game.Server;
 					try {
-						server.generatedMap = Generate(seed);
+						server.generatedMap = Generate();
 					} catch (Exception ex) {
 						ErrorHandler.LogError("IMapGenerator.RunAsync", ex);
 					}

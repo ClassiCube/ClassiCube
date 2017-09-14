@@ -53,8 +53,7 @@ namespace ClassicalSharp.Gui.Screens {
 				        (g, v) => { g.MouseSensitivity = Int32.Parse(v);
 				        	Options.Set(OptionsKey.Sensitivity, v); }),
 				
-				MakeBack(false, titleFont,
-				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
+				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
 			};
 		}

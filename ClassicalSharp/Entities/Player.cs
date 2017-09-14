@@ -12,7 +12,7 @@ using Android.Graphics;
 
 namespace ClassicalSharp.Entities {
 
-	public abstract partial class Player : Entity {
+	public abstract class Player : Entity {
 		
 		public string DisplayName, SkinName;
 		protected Texture nameTex;

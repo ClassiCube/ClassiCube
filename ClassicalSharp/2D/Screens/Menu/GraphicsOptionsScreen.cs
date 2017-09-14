@@ -51,8 +51,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBool(1, 50, "Mipmaps", OptionsKey.Mipmaps,
 				         OnWidgetClick, g => g.Graphics.Mipmaps, SetMipmaps),
 				
-				MakeBack(false, titleFont,
-				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
+				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
 			};
 			

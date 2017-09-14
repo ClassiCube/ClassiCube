@@ -33,28 +33,27 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[] {
-				Make(-1, -100, "Misc options",
-				     (g, w) => g.Gui.SetNewScreen(new MiscOptionsScreen(g))),
-				Make(-1, -50, "Gui options",
-				     (g, w) => g.Gui.SetNewScreen(new GuiOptionsScreen(g))),
-				Make(-1, 0, "Graphics options",
-				     (g, w) => g.Gui.SetNewScreen(new GraphicsOptionsScreen(g))),
-				Make(-1, 50, "Controls",
-				     (g, w) => g.Gui.SetNewScreen(new NormalKeyBindingsScreen(g))),
-				Make(1, -50, "Hacks settings",
-				     (g, w) => g.Gui.SetNewScreen(new HacksSettingsScreen(g))),
-				Make(1, 0, "Env settings",
-				     (g, w) => g.Gui.SetNewScreen(new EnvSettingsScreen(g))),
-				Make(1, 50, "Nostalgia options",
-				     (g, w) => g.Gui.SetNewScreen(new NostalgiaScreen(g))),
-				
-				MakeBack(false, titleFont, 
-				         (g, w) => g.Gui.SetNewScreen(new PauseScreen(g))),
+				Make(-1, -100, "Misc options", SwitchMiscOptions),
+				Make(-1, -50, "Gui options", SwitchGuiOptions),
+				Make(-1, 0, "Graphics options", SwitchGfxOptions),
+				Make(-1, 50, "Controls", SwitchControls),
+				Make(1, -50, "Hacks settings", SwitchHacksOptions),
+				Make(1, 0, "Env settings", SwitchEnvOptions),
+				Make(1, 50, "Nostalgia options", SwitchNostalgiaOptions),				
+				MakeBack(false, titleFont, SwitchPause),
 			};
 			
 			if (descWidget != null) MakeDescWidget(descText);		
 			CheckHacksAllowed(null, null);
 		}
+		
+		void SwitchMiscOptions(Game g, Widget w) { g.Gui.SetNewScreen(new MiscOptionsScreen(g)); }
+		void SwitchGuiOptions(Game g, Widget w) { g.Gui.SetNewScreen(new GuiOptionsScreen(g)); }
+		void SwitchGfxOptions(Game g, Widget w) { g.Gui.SetNewScreen(new GraphicsOptionsScreen(g)); }
+		void SwitchControls(Game g, Widget w) { g.Gui.SetNewScreen(new NormalKeyBindingsScreen(g)); }
+		void SwitchHacksOptions(Game g, Widget w) { g.Gui.SetNewScreen(new HacksSettingsScreen(g)); }
+		void SwitchEnvOptions(Game g, Widget w) { g.Gui.SetNewScreen(new EnvSettingsScreen(g)); }
+		void SwitchNostalgiaOptions(Game g, Widget w) { g.Gui.SetNewScreen(new NostalgiaScreen(g)); }
 		
 		void CheckHacksAllowed(object sender, EventArgs e) {
 			if (game.UseClassicOptions) return;

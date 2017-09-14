@@ -66,8 +66,7 @@ namespace ClassicalSharp.Gui.Screens {
 				     g => g.World.Env.EdgeHeight.ToString(),
 				     (g, v) => g.World.Env.SetEdgeLevel(Int32.Parse(v))),
 				
-				MakeBack(false, titleFont,
-				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
+				MakeBack(false, titleFont, SwitchOptions),
 				null, null, null,
 			};
 		}

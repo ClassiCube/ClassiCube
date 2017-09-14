@@ -14,7 +14,7 @@ namespace ClassicalSharp.Map {
 	
 	/// <summary> Represents a fixed size map of blocks. Stores the raw block data,
 	/// heightmap, dimensions and various metadata such as environment settings. </summary>
-	public sealed partial class World {
+	public sealed class World {
 
 		public BlockID[] blocks;
 		public int Width, Height, Length;

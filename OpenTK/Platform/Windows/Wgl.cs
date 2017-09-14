@@ -4,7 +4,7 @@ using System.Security;
 
 namespace OpenTK.Platform.Windows {
 
-	internal partial class Wgl : BindingsBase {
+	internal class Wgl : BindingsBase {
 
 		protected override IntPtr GetAddress( string funcname ) {
 			return Wgl.wglGetProcAddress( funcname );

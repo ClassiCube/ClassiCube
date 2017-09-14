@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if (game.ClassicHacks) {
 				title = "Normal controls";
-				rightPage = (g, w) => g.Gui.SetNewScreen(new ClassicHacksKeyBindingsScreen(g));
+				rightPage = SwitchClassicHacks;
 			} else {
 				btnWidth = 300;
 			}
@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui.Screens {
 			rightDesc = new string[] { "Fly", "Fly up", "Fly down"	};
 			
 			
-			leftPage = (g, w) => g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g));
+			leftPage = SwitchClassic;
 			title = "Hacks controls";
 			ContextRecreated();
 		}
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Gui.Screens {
 			rightDesc = new string[] { "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 			
 			title = "Normal controls";
-			rightPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
+			rightPage = SwitchHacks;
 			ContextRecreated();
 		}
 		
@@ -103,8 +103,8 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			
 			title = "Hacks controls";
-			leftPage = (g, w) => g.Gui.SetNewScreen(new NormalKeyBindingsScreen(g));
-			rightPage = (g, w) => g.Gui.SetNewScreen(new OtherKeyBindingsScreen(g));
+			leftPage = SwitchNormal;
+			rightPage = SwitchOther;
 			ContextRecreated();
 		}
 		
@@ -130,8 +130,8 @@ namespace ClassicalSharp.Gui.Screens {
 			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera" };
 			
 			title = "Other controls";
-			leftPage = (g, w) => g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g));
-			rightPage = (g, w) => g.Gui.SetNewScreen(new MouseKeyBindingsScreen(g));
+			leftPage = SwitchHacks;
+			rightPage = SwitchMouse;
 			ContextRecreated();
 		}
 		
@@ -152,7 +152,7 @@ namespace ClassicalSharp.Gui.Screens {
 			leftDesc = new string[] { "Left", "Middle", "Right" };
 			
 			title = "Mouse key bindings";
-			leftPage = (g, w) => g.Gui.SetNewScreen(new OtherKeyBindingsScreen(g));
+			leftPage = SwitchOther;
 			ContextRecreated();
 		}
 		

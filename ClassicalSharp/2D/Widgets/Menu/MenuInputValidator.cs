@@ -150,10 +150,8 @@ namespace ClassicalSharp.Gui.Widgets {
 	
 	public sealed class StringValidator : MenuInputValidator {
 		
-		int maxLen;
-		public StringValidator(int len) {
+		public StringValidator() {
 			Range = "&7(Enter text)";
-			maxLen = len;
 		}
 		
 		public override bool IsValidChar(char c) {
@@ -161,7 +159,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool IsValidString(string s) {
-			return s.Length <= maxLen;
+			return s.Length <= Utils.StringLength;
 		}
 	}
 }

@@ -33,48 +33,46 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeNormal() {
 			widgets = new Widget[] {
-				Make(-1, -50, "Options",
-				     (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
-				Make(1, -50, "Generate level",
-				     (g, w) => g.Gui.SetNewScreen(new GenLevelScreen(g))),
-				Make(1, 0, "Load level",
-				     (g, w) => g.Gui.SetNewScreen(new LoadLevelScreen(g))),
-				Make(1, 50, "Save level",
-				     (g, w) => g.Gui.SetNewScreen(new SaveLevelScreen(g))),
-				Make(-1, 0, "Select texture pack",
-				     (g, w) => g.Gui.SetNewScreen(new TexturePackScreen(g))),
+				Make(-1, -50, "Options", SwitchOptions),
+				Make(1, -50, "Generate level", SwitchGenLevel),
+				Make(1, 0, "Load level", SwitchLoadLevel),
+				Make(1, 50, "Save level", SwitchSaveLevel),
+				Make(-1, 0, "Select texture pack", SwitchTexPack),
 				#if !ANDROID
-				Make(-1, 50, "Hotkeys",
-				     (g, w) => g.Gui.SetNewScreen(new HotkeyListScreen(g))),
+				Make(-1, 50, "Hotkeys", SwitchHotkeys),
 				#else
 				null,
 				#endif
 				
 				// Other
-				ButtonWidget.Create(game, 120, "Quit game", titleFont, LeftOnly((g, w) => g.Exit()))
+				ButtonWidget.Create(game, 120, "Quit game", titleFont, LeftOnly(QuitGame))
 					.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, 5, 5),
-				MakeBack(true, titleFont, (g, w) => g.Gui.SetNewScreen(null)),
+				MakeBack(true, titleFont, SwitchGame),
 			};
 		}
 		
 		void MakeClassic() {
 			widgets = new Widget[] {
-				MakeClassic(0, -100, "Options",
-				            (g, w) => g.Gui.SetNewScreen(new ClassicOptionsScreen(g))),
-				MakeClassic(0, -50, "Generate level",
-				            (g, w) => g.Gui.SetNewScreen(new GenLevelScreen(g))),
-				MakeClassic(0, 0, "Load level",
-				            (g, w) => g.Gui.SetNewScreen(new LoadLevelScreen(g))),
-				MakeClassic(0, 50, "Save level",
-				            (g, w) => g.Gui.SetNewScreen(new SaveLevelScreen(g))),
-
-				MakeBack(400, "Back to game", 25, titleFont, (g, w) => g.Gui.SetNewScreen(null)),
+				MakeClassic(0, -100, "Options", SwitchClassicOptions),
+				MakeClassic(0, -50, "Generate level", SwitchGenLevel),
+				MakeClassic(0, 0, "Load level", SwitchLoadLevel),
+				MakeClassic(0, 50, "Save level", SwitchSaveLevel),
+				MakeBack(400, "Back to game", 25, titleFont, SwitchGame),
 				
 				game.ClassicMode ? null :
-					MakeClassic(0, 150, "Nostalgia options",
-					            (g, w) => g.Gui.SetNewScreen(new NostalgiaScreen(g))),
+					MakeClassic(0, 150, "Nostalgia options", SwitchNostalgiaOptions),
 			};
 		}
+		
+		void SwitchGenLevel(Game g, Widget w) { g.Gui.SetNewScreen(new GenLevelScreen(g)); }
+		void SwitchLoadLevel(Game g, Widget w) { g.Gui.SetNewScreen(new LoadLevelScreen(g)); }
+		void SwitchSaveLevel(Game g, Widget w) { g.Gui.SetNewScreen(new SaveLevelScreen(g)); }
+		void SwitchTexPack(Game g, Widget w) { g.Gui.SetNewScreen(new TexturePackScreen(g)); }
+		void SwitchHotkeys(Game g, Widget w) { g.Gui.SetNewScreen(new HotkeyListScreen(g)); }
+		void SwitchNostalgiaOptions(Game g, Widget w) { g.Gui.SetNewScreen(new NostalgiaScreen(g)); }
+		void SwitchGame(Game g, Widget w) { g.Gui.SetNewScreen(null); }
+		void SwitchClassicOptions(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicOptionsScreen(g)); }
+		void QuitGame(Game g, Widget w) { g.Exit(); }
 		
 		void CheckHacksAllowed(object sender, EventArgs e) {
 			if (game.UseClassicOptions) return;

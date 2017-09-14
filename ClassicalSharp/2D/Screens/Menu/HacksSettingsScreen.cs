@@ -73,8 +73,7 @@ namespace ClassicalSharp.Gui.Screens {
 				        }),
 				
 				null,
-				MakeBack(false, titleFont,
-				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
+				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
 			};
 			CheckHacksAllowed(null, null);

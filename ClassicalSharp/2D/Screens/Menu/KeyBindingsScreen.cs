@@ -51,13 +51,19 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -180);
 			
 			if (game.UseClassicOptions) {
-				widgets[index++] = MakeBack(false, titleFont,
-				                            (g, w) => g.Gui.SetNewScreen(new ClassicOptionsScreen(g)));
+				widgets[index++] = MakeBack(false, titleFont, SwitchClassicOptions);
 			} else {
-				widgets[index++] = MakeBack(false, titleFont,
-				                            (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g)));
+				widgets[index++] = MakeBack(false, titleFont, SwitchOptions);
 			}
 		}
+		
+		void SwitchClassicOptions(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicOptionsScreen(g)); }
+		protected void SwitchClassic(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g)); }
+		protected void SwitchClassicHacks(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicHacksKeyBindingsScreen(g)); }
+		protected void SwitchNormal(Game g, Widget w) { g.Gui.SetNewScreen(new NormalKeyBindingsScreen(g)); }
+		protected void SwitchHacks(Game g, Widget w) { g.Gui.SetNewScreen(new HacksKeyBindingsScreen(g)); }
+		protected void SwitchOther(Game g, Widget w) { g.Gui.SetNewScreen(new OtherKeyBindingsScreen(g)); }
+		protected void SwitchMouse(Game g, Widget w) { g.Gui.SetNewScreen(new MouseKeyBindingsScreen(g)); }
 		
 		void MakePages(int btnY) {
 			if (leftPage == null && rightPage == null) return;

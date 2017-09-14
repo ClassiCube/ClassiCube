@@ -53,8 +53,10 @@ namespace ClassicalSharp.Hotkeys {
 			
 			Hotkeys.Add(hotkey);
 			// sort so that hotkeys with largest modifiers are first
-			Hotkeys.Sort((a, b) => b.Flags.CompareTo(a.Flags));
+			Hotkeys.Sort(compareHotkeys);
 		}
+		static int CompareHotkeys(Hotkey a, Hotkey b) { return b.Flags.CompareTo(a.Flags); }
+		static Comparison<Hotkey> compareHotkeys = CompareHotkeys;
 		
 		/// <summary> Determines whether a hotkey is active based on the given key,
 		/// and the currently active control, alt, and shift modifiers </summary>

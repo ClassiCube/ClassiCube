@@ -50,7 +50,7 @@ namespace OpenTK.Platform.X11
 
 	#endregion
 
-	partial class Glx : BindingsBase
+	class Glx : BindingsBase
 	{
 		const string Library = "libGL.so.1";
 

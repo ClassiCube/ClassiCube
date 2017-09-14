@@ -112,14 +112,15 @@ namespace ClassicalSharp.Singleplayer {
 			GC.Collect();
 		}
 		
-		internal void GenMap(int width, int height, int length, int seed, IMapGenerator generator) {
+		internal void GenMap(int width, int height, int length, int seed, IMapGenerator gen) {
 			game.World.Reset();
 			game.WorldEvents.RaiseOnNewMap();
 			
 			GC.Collect();
-			this.generator = generator;
+			this.generator = gen;
 			game.Gui.SetNewScreen(new LoadingMapScreen(game, "Generating level", "Generating.."));
-			generator.GenerateAsync(game, width, height, length, seed);
+			gen.Width = width; gen.Height = height; gen.Length = length; gen.Seed = seed;
+			gen.GenerateAsync(game);
 		}		
 
 		void ResetPlayerPosition() {

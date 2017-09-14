@@ -53,7 +53,12 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			Key hKey = (Key)Enum.Parse(typeof(Key), key);
 			HotkeyList hotkeys = game.Input.Hotkeys;
-			return hotkeys.Hotkeys.Find(h => h.BaseKey == hKey && h.Flags == flags);
+			
+			for (int i = 0; i < hotkeys.Hotkeys.Count; i++) {
+				Hotkey h = hotkeys.Hotkeys[i];
+				if (h.BaseKey == hKey && h.Flags == flags) return h;
+			}
+			return default(Hotkey);
 		}
 	}
 }

@@ -24,11 +24,11 @@ namespace ClassicalSharp.Generator {
 		
 		public override string GeneratorName { get { return "Vanilla classic"; } }
 		
-		public override BlockID[] Generate(int seed) {
+		public override BlockID[] Generate() {
 			oneY = Width * Length;
 			waterLevel = Height / 2;
 			blocks = new BlockID[Width * Height * Length];
-			rnd = new JavaRandom(seed);
+			rnd = new JavaRandom(Seed);
 			minHeight = Height;
 			
 			CreateHeightmap();

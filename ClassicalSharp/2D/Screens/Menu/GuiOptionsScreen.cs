@@ -71,8 +71,7 @@ namespace ClassicalSharp.Gui.Screens {
 				     	HandleFontChange();
 				     }),
 				
-				MakeBack(false, titleFont,
-				         (g, w) => g.Gui.SetNewScreen(new OptionsGroupScreen(g))),
+				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
 			};		
 		}
@@ -110,7 +109,7 @@ namespace ClassicalSharp.Gui.Screens {
 				new RealValidator(0.25f, 4f),
 				new IntegerValidator(0, 30),
 				new BooleanValidator(),
-				new StringValidator(32),
+				new StringValidator(),
 			};
 		}
 		
