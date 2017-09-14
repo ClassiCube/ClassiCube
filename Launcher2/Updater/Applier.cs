@@ -60,7 +60,6 @@ namespace Launcher.Updater {
 				string path = Path.Combine(Program.AppDirectory, "CS_Update");
 				Directory.CreateDirectory(path);
 				
-				reader.ShouldProcessZipEntry = (f) => true;
 				reader.ProcessZipEntry = ProcessZipEntry;
 				reader.Extract(stream);
 			}

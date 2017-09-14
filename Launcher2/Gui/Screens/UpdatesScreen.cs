@@ -21,13 +21,18 @@ namespace Launcher.Gui.Screens {
 		UpdateCheckTask checkTask;
 		public override void Init() {
 			base.Init();
-			view.Init();			
-			SetWidgetHandlers();
+			view.Init();
+			
+			widgets[view.relIndex].OnClick = UpdateStableD3D9;
+			widgets[view.relIndex + 1].OnClick = UpdateStableOpenGL;
+			widgets[view.devIndex].OnClick = UpdateDevD3D9;
+			widgets[view.devIndex + 1].OnClick = UpdateStableOpenGL;	
+			widgets[view.backIndex].OnClick = SwitchToSettings;			
 			Resize();
 			
-			if (game.checkTask != null && game.checkTask.Done && game.checkTask.Success)
+			if (game.checkTask != null && game.checkTask.Done && game.checkTask.Success) {
 				SuccessfulUpdateCheck(game.checkTask);
-			
+			}			
 			checkTask = new UpdateCheckTask();
 			checkTask.CheckForUpdatesAsync();
 		}
@@ -67,16 +72,11 @@ namespace Launcher.Gui.Screens {
 			game.Dirty = true;
 		}
 		
-		void SetWidgetHandlers() {
-			widgets[view.relIndex].OnClick = (x, y) => UpdateBuild(true, true);
-			widgets[view.relIndex + 1].OnClick = (x, y) => UpdateBuild(true, false);
-
-			widgets[view.devIndex].OnClick =  (x, y) => UpdateBuild(false, true);
-			widgets[view.devIndex + 1].OnClick = (x, y) => UpdateBuild(false, false);
-			
-			widgets[view.backIndex].OnClick =
-				(x, y) => game.SetScreen(new SettingsScreen(game));
-		}
+		void UpdateStableD3D9(int x, int y) { UpdateBuild(true, true); }
+		void UpdateStableOpenGL(int x, int y) { UpdateBuild(true, false); }
+		void UpdateDevD3D9(int x, int y) { UpdateBuild(false, true); }
+		void UpdateDevOpenGL(int x, int y) { UpdateBuild(false, false); }
+		void SwitchToSettings(int x, int y) { game.SetScreen(new MainScreen(game)); }
 		
 		void UpdateBuild(bool release, bool dx) {
 			DateTime last = release ? view.LastStable : view.LastDev;

@@ -54,14 +54,15 @@ namespace Launcher.Web {
 			JsonObject devBuild = (JsonObject)data["latest"];
 			JsonObject releaseBuilds = (JsonObject)data["releases"];
 			LatestDev = MakeBuild(devBuild, false);
-			Build[] stableBuilds = new Build[releaseBuilds.Count];
 			
-			int i = 0;
-			foreach (KeyValuePair<string, object> pair in releaseBuilds)
-				stableBuilds[i++] = MakeBuild((JsonObject)pair.Value, true);
-			Array.Sort<Build>(stableBuilds,
-			                  (a, b) => b.TimeBuilt.CompareTo(a.TimeBuilt));
-			LatestStable = stableBuilds[0];
+			DateTime releaseTime = DateTime.MinValue;
+			foreach (KeyValuePair<string, object> pair in releaseBuilds) {
+				Build build = MakeBuild((JsonObject)pair.Value, true);
+				if (build.TimeBuilt < releaseTime) continue;
+				
+				LatestStable = build;
+				releaseTime = build.TimeBuilt;
+			}
 		}
 		
 		static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);

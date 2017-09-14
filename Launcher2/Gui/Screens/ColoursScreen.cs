@@ -20,8 +20,8 @@ namespace Launcher.Gui.Screens {
 			base.Init();
 			view.Init();
 			
-			widgets[view.defIndex].OnClick = (x, y) => ResetColours();
-			widgets[view.defIndex + 1].OnClick = (x, y) => game.SetScreen(new SettingsScreen(game));
+			widgets[view.defIndex].OnClick = ResetColours;
+			widgets[view.defIndex + 1].OnClick = SwitchToSettings;
 			SetupInputHandlers();
 			for (int i = 0; i < widgets.Length; i++) {
 				InputWidget input = widgets[i] as InputWidget;
@@ -30,7 +30,15 @@ namespace Launcher.Gui.Screens {
 			}
 			Resize();
 		}
-
+		
+		void SwitchToSettings(int x, int y) { game.SetScreen(new SettingsScreen(game)); }
+		void ResetColours(int x, int y) {
+			LauncherSkin.ResetToDefault();
+			view.MakeAllRGBTriplets(true);
+			game.RedrawBackground();
+			Resize();
+		}
+		
 		public override void Resize() {
 			view.DrawAll();
 			game.Dirty = true;
@@ -46,11 +54,11 @@ namespace Launcher.Gui.Screens {
 			base.MouseMove(x, y, xDelta, yDelta);
 			
 			// TODO: sliders
-			return;			
+			return;
 			for (int i = 0; i < 3; i++) {
-				SliderWidget slider = (SliderWidget)widgets[view.sliderIndex + i];				
+				SliderWidget slider = (SliderWidget)widgets[view.sliderIndex + i];
 				if (x < slider.X || y < slider.Y || x >= slider.X + slider.Width
-				   || y >= slider.Y + slider.Height) continue;
+				    || y >= slider.Y + slider.Height) continue;
 				
 				int value = x - slider.X;
 				// Map from 0 to 255
@@ -97,13 +105,6 @@ namespace Launcher.Gui.Screens {
 			TextChanged(curInput);
 		}
 		
-		void ResetColours() {
-			LauncherSkin.ResetToDefault();
-			view.MakeAllRGBTriplets(true);
-			game.RedrawBackground();
-			Resize();
-		}
-		
 		void TextChanged(InputWidget widget) {
 			bool changed = false;
 			int index = Array.IndexOf<Widget>(widgets, widget);
@@ -121,8 +122,8 @@ namespace Launcher.Gui.Screens {
 		bool Parse(int index, ref FastColour dst) {
 			byte r, g, b;
 			if (!Byte.TryParse(widgets[index + 0].Text, out r)
-			   || !Byte.TryParse(widgets[index + 1].Text, out g)
-			   || !Byte.TryParse(widgets[index + 2].Text, out b))
+			    || !Byte.TryParse(widgets[index + 1].Text, out g)
+			    || !Byte.TryParse(widgets[index + 2].Text, out b))
 				return false;
 			dst.R = r; dst.G = g; dst.B = b;
 			return true;

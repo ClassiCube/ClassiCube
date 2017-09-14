@@ -40,10 +40,14 @@ namespace Launcher {
 		void ExtractTexturePack(string texPack) {
 			using (Stream fs = new FileStream(texPack, FileMode.Open, FileAccess.Read, FileShare.Read)) {
 				ZipReader reader = new ZipReader();
-				reader.ShouldProcessZipEntry = (f) => f == "default.png" || f == "terrain.png";
+				reader.SelectZipEntry = SelectZipEntry;
 				reader.ProcessZipEntry = ProcessZipEntry;
 				reader.Extract(fs);
 			}
+		}
+		
+		bool SelectZipEntry(string filename) {
+			return filename == "default.png" || filename == "terrain.png";
 		}
 		
 		void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {

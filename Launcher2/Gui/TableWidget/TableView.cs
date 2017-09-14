@@ -60,14 +60,10 @@ namespace Launcher.Gui.Widgets {
 		public void RedrawData(IDrawer2D drawer) {
 			int x = table.X + 5;
 			DrawGrid(drawer);
-			x += DrawColumn(drawer, false, font, titleFont,
-			                "Name", table.ColumnWidths[0], x, e => e.Name) + 5;
-			x += DrawColumn(drawer, true, font, titleFont,
-			                "Players", table.ColumnWidths[1], x, e => e.Players) + 5;
-			x += DrawColumn(drawer, true, font, titleFont,
-			                "Uptime", table.ColumnWidths[2], x, e => e.Uptime) + 5;
-			x += DrawColumn(drawer, true, font, titleFont,
-			                "Software", table.ColumnWidths[3], x, e => e.Software) + 5;
+			x += DrawColumn(drawer, "Name",     0, x, filterName)     + 5;
+			x += DrawColumn(drawer, "Players",  1, x, filterPlayers)  + 5;
+			x += DrawColumn(drawer, "Uptime",   2, x, filterUptime)   + 5;
+			x += DrawColumn(drawer, "Software", 3, x, FilterSoftware) + 5;
 			DrawScrollbar(drawer);
 		}
 		
@@ -77,16 +73,23 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		delegate string ColumnFilter(TableEntry entry);
+		// cache to avoid allocations every redraw
+		static string FilterName(TableEntry e)     { return e.Name; }     static ColumnFilter filterName     = FilterName; 
+		static string FilterPlayers(TableEntry e)  { return e.Players; }  static ColumnFilter filterPlayers  = FilterPlayers;
+		static string FilterUptime(TableEntry e)   { return e.Uptime; }   static ColumnFilter filterUptime   = FilterUptime;
+		static string FilterSoftware(TableEntry e) { return e.Software; } static ColumnFilter filterSoftware = FilterSoftware;
 		
-		int DrawColumn(IDrawer2D drawer, bool separator, Font font, Font titleFont,
-		               string header, int maxWidth, int x, ColumnFilter filter) {
+		int DrawColumn(IDrawer2D drawer, string header, int columnI, int x, ColumnFilter filter) {
 			int y = table.Y + 3;
+			int maxWidth = table.ColumnWidths[columnI];
+			bool separator = columnI > 0;
+			
 			DrawTextArgs args = new DrawTextArgs(header, titleFont, true);
 			TableEntry headerEntry = default(TableEntry);
 			DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref headerEntry);
 			maxIndex = table.Count;
-			y += 5;
 			
+			y += 5;		
 			for (int i = table.CurrentIndex; i < table.Count; i++) {
 				args = new DrawTextArgs(filter(table.usedEntries[i]), font, true);
 				if (i == table.SelectedIndex && !separator) {
@@ -100,8 +103,9 @@ namespace Launcher.Gui.Widgets {
 				}
 			}
 			
-			if (separator && !window.ClassicBackground)
+			if (separator && !window.ClassicBackground) {
 				drawer.Clear(LauncherSkin.BackgroundCol, x - 7, table.Y, 2, table.Height);
+			}
 			return maxWidth + 5;
 		}
 		

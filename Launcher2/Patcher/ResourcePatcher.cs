@@ -28,7 +28,7 @@ namespace Launcher.Patcher {
 		byte[] jarClassic, jar162, pngTerrainPatch, pngGuiPatch;
 		public void Run() {
 			reader = new ZipReader();
-			reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Classic;
+			reader.SelectZipEntry = SelectZipEntry_Classic;
 			reader.ProcessZipEntry = ProcessZipEntry_Classic;
 			string texDir = Path.Combine(Program.AppDirectory, "texpacks");
 			string path = Path.Combine(texDir, "default.zip");
@@ -59,7 +59,6 @@ namespace Launcher.Patcher {
 			if (!File.Exists(path)) return;
 			
 			using (Stream src = new FileStream(path, FileMode.Open, FileAccess.Read)) {
-				reader.ShouldProcessZipEntry = (file) => true;
 				reader.ProcessZipEntry = ExtractExisting;
 				reader.Extract(src);
 			}
@@ -80,13 +79,13 @@ namespace Launcher.Patcher {
 		void ExtractClassic() {
 			if (jarClassic == null) return;
 			using (Stream src = new MemoryStream(jarClassic)) {
-				reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Classic;
+				reader.SelectZipEntry = SelectZipEntry_Classic;
 				reader.ProcessZipEntry = ProcessZipEntry_Classic;
 				reader.Extract(src);
 			}
 		}
 		
-		bool ShouldProcessZipEntry_Classic(string filename) {
+		bool SelectZipEntry_Classic(string filename) {
 			return filename.StartsWith("gui")
 				|| filename.StartsWith("mob") || filename.IndexOf('/') < 0;
 		}
@@ -121,7 +120,7 @@ namespace Launcher.Patcher {
 			using (Stream src = new MemoryStream(jar162)) {
 				// Grab animations and snow
 				animBitmap = Platform.CreateBmp(1024, 64);
-				reader.ShouldProcessZipEntry = ShouldProcessZipEntry_Modern;
+				reader.SelectZipEntry = SelectZipEntry_Modern;
 				reader.ProcessZipEntry = ProcessZipEntry_Modern;
 				reader.Extract(src);
 				
@@ -133,7 +132,7 @@ namespace Launcher.Patcher {
 			}
 		}
 		
-		bool ShouldProcessZipEntry_Modern(string filename) {
+		bool SelectZipEntry_Modern(string filename) {
 			return filename.StartsWith("assets/minecraft/textures") &&
 				(filename == "assets/minecraft/textures/environment/snow.png" ||
 				 filename == "assets/minecraft/textures/blocks/water_still.png" ||

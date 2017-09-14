@@ -64,8 +64,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override void DisposeInstance() {
-			foreach (var pair in brushCache)
+			foreach (KeyValuePair<int, SolidBrush> pair in brushCache) {
 				pair.Value.Dispose();
+			}
 			
 			DisposeText();
 			DisposeBitmappedText();

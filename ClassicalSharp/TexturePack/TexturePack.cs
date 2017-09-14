@@ -30,7 +30,6 @@ namespace ClassicalSharp.Textures {
 			if (game.Graphics.LostContext) return;
 			
 			ZipReader reader = new ZipReader();
-			reader.ShouldProcessZipEntry = (f) => true;
 			reader.ProcessZipEntry = ProcessZipEntry;
 			reader.Extract(stream);
 		}

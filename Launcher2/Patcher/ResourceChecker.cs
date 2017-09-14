@@ -75,14 +75,14 @@ namespace Launcher.Patcher {
 		
 		void CheckDefaultZip(string path) {
 			ZipReader reader = new ZipReader();
-			reader.ShouldProcessZipEntry = ShouldProcessZipEntry;
+			reader.SelectZipEntry = SelectZipEntry;
 			reader.ProcessZipEntry = ProcessZipEntry;
 			
 			using (Stream src = new FileStream(path, FileMode.Open, FileAccess.Read))
 				reader.Extract(src);
 		}
 
-		bool ShouldProcessZipEntry(string filename) {
+		bool SelectZipEntry(string filename) {
 			string name = ResourceList.GetFile(filename);
 			for (int i = 0; i < ResourceList.Filenames.Length; i++) {
 				if (ResourceList.FilesExist[i]) continue;

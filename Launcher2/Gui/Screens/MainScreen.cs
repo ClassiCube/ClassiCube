@@ -8,7 +8,7 @@ using Launcher.Gui.Views;
 using Launcher.Web;
 using Launcher.Gui.Widgets;
 
-namespace Launcher.Gui.Screens {	
+namespace Launcher.Gui.Screens {
 	public sealed partial class MainScreen : InputScreen {
 		
 		MainView view;
@@ -22,7 +22,13 @@ namespace Launcher.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			view.Init();
-			SetupWidgetHandlers();
+			
+			widgets[view.loginIndex].OnClick = LoginAsync;
+			widgets[view.resIndex].OnClick = DoResume;
+			widgets[view.dcIndex].OnClick = SwitchToDirectConnect;
+			widgets[view.spIndex].OnClick = StartSingleplayer;
+			widgets[view.settingsIndex].OnClick = SwitchToSettings;
+			SetupInputHandlers();
 			Resize();
 			
 			using (drawer) {
@@ -34,6 +40,38 @@ namespace Launcher.Gui.Screens {
 		public override void Resize() {
 			view.DrawAll();
 			game.Dirty = true;
+		}
+		
+		void SwitchToDirectConnect(int x, int y) { game.SetScreen(new DirectConnectScreen(game)); }
+		void StartSingleplayer(int x, int y) { Client.Start(widgets[0].Text, ref game.ShouldExit); }
+		void SwitchToSettings(int x, int y) { game.SetScreen(new SettingsScreen(game)); }
+
+		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
+		string resumeUser, resumeIp, resumePort, resumeMppass;
+		bool resumeCCSkins, resumeValid;
+		
+		void DoResume(int mouseX, int mouseY) {
+			if (!resumeValid) return;
+			ClientStartData data = new ClientStartData(resumeUser, resumeMppass, resumeIp, resumePort);
+			Client.Start(data, resumeCCSkins, ref game.ShouldExit);
+		}
+		
+		
+		void LoadResumeInfo() {
+			resumeUser = Options.Get("launcher-username");
+			resumeIp = Options.Get("launcher-ip") ?? "";
+			resumePort = Options.Get("launcher-port") ?? "";
+			resumeCCSkins = Options.GetBool("launcher-ccskins", true);
+			
+			IPAddress address;
+			if (!IPAddress.TryParse(resumeIp, out address)) resumeIp = "";
+			ushort portNum;
+			if (!UInt16.TryParse(resumePort, out portNum)) resumePort = "";
+			
+			string mppass = Options.Get("launcher-mppass") ?? null;
+			resumeMppass = Secure.Decode(mppass, resumeUser);
+			resumeValid = !String.IsNullOrEmpty(resumeUser) && !String.IsNullOrEmpty(resumeIp)
+				&& !String.IsNullOrEmpty(resumePort) && !String.IsNullOrEmpty(resumeMppass);
 		}
 		
 		bool updateDone;
@@ -56,45 +94,6 @@ namespace Launcher.Gui.Screens {
 			SelectWidget(selectedWidget, 0, 0);
 		}
 		
-		void SetupWidgetHandlers() {
-			widgets[view.loginIndex].OnClick = LoginAsync;
-			widgets[view.resIndex].OnClick = ResumeClick;
-			widgets[view.dcIndex].OnClick =
-				(x, y) => game.SetScreen(new DirectConnectScreen(game));
-			widgets[view.spIndex].OnClick =
-				(x, y) => Client.Start(widgets[0].Text, ref game.ShouldExit);
-
-			widgets[view.settingsIndex].OnClick =
-				(x, y) => game.SetScreen(new SettingsScreen(game));
-			SetupInputHandlers();
-		}
-
-		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
-		string resumeUser, resumeIp, resumePort, resumeMppass;
-		bool resumeCCSkins, resumeValid;
-		
-		void LoadResumeInfo() {
-			resumeUser = Options.Get("launcher-username");
-			resumeIp = Options.Get("launcher-ip") ?? "";
-			resumePort = Options.Get("launcher-port") ?? "";
-			resumeCCSkins = Options.GetBool("launcher-ccskins", true);
-			
-			IPAddress address;
-			if (!IPAddress.TryParse(resumeIp, out address)) resumeIp = "";
-			ushort portNum;
-			if (!UInt16.TryParse(resumePort, out portNum)) resumePort = "";
-			
-			string mppass = Options.Get("launcher-mppass") ?? null;
-			resumeMppass = Secure.Decode(mppass, resumeUser);
-			resumeValid = !String.IsNullOrEmpty(resumeUser) && !String.IsNullOrEmpty(resumeIp)
-				&& !String.IsNullOrEmpty(resumePort) && !String.IsNullOrEmpty(resumeMppass);
-		}
-		
-		void ResumeClick(int mouseX, int mouseY) {
-			if (!resumeValid) return;
-			ClientStartData data = new ClientStartData(resumeUser, resumeMppass, resumeIp, resumePort);
-			Client.Start(data, resumeCCSkins, ref game.ShouldExit);
-		}
 		
 		protected override void SelectWidget(Widget widget, int mouseX, int mouseY) {
 			base.SelectWidget(widget, mouseX, mouseY);

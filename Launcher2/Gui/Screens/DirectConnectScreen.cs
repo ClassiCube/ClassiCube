@@ -32,13 +32,14 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void SetWidgetHandlers() {
-			widgets[view.backIndex].OnClick =
-				(x, y) => game.SetScreen(new MainScreen(game));
+			widgets[view.backIndex].OnClick = SwitchToMain;
 			widgets[view.connectIndex].OnClick = StartClient;
 			widgets[view.ccSkinsIndex].OnClick = UseClassicubeSkinsClick;			
 			SetupInputHandlers();
 			LoadSavedInfo();
 		}
+		
+		void SwitchToMain(int x, int y) { game.SetScreen(new MainScreen(game)); }
 		
 		void SetStatus(string text) {
 			LabelWidget widget = (LabelWidget)widgets[view.statusIndex];

@@ -18,16 +18,17 @@ namespace Launcher.Gui.Screens {
 			base.Init();
 			view.Init();
 			
-			widgets[view.modeIndex].OnClick = (x, y) => 
-				game.SetScreen(new ChooseModeScreen(game, false));
-			widgets[view.updatesIndex].OnClick = (x, y) => 
-				game.SetScreen(new UpdatesScreen(game));
-			widgets[view.coloursIndex].OnClick = (x, y) =>
-				game.SetScreen(new ColoursScreen(game));
-			widgets[view.backIndex].OnClick = (x, y) =>
-				game.SetScreen(new MainScreen(game));
+			widgets[view.modeIndex].OnClick = SwitchToChooseMode;
+			widgets[view.updatesIndex].OnClick = SwitchToUpdates;
+			widgets[view.coloursIndex].OnClick = SwitchToColours;
+			widgets[view.backIndex].OnClick = SwitchToMain;
 			Resize();
 		}
+		
+		void SwitchToChooseMode(int x, int y) { game.SetScreen(new ChooseModeScreen(game, false)); }
+		void SwitchToUpdates(int x, int y) { game.SetScreen(new UpdatesScreen(game)); }
+		void SwitchToColours(int x, int y) { game.SetScreen(new ColoursScreen(game)); }
+		void SwitchToMain(int x, int y) { game.SetScreen(new MainScreen(game)); }
 		
 		public override void Tick() { }
 

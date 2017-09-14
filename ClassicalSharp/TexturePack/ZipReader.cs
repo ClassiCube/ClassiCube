@@ -22,7 +22,7 @@ namespace ClassicalSharp.Textures {
 	public sealed class ZipReader {
 		
 		public ZipEntryProcessor ProcessZipEntry;
-		public ZipEntrySelector ShouldProcessZipEntry;
+		public ZipEntrySelector SelectZipEntry;
 		public ZipEntry[] entries;
 		int index;
 		
@@ -81,10 +81,11 @@ namespace ClassicalSharp.Textures {
 			if (compressedSize == 0) compressedSize = entry.CompressedDataSize;
 			int uncompressedSize = reader.ReadInt32();
 			if (uncompressedSize == 0) uncompressedSize = entry.UncompressedDataSize;
+			
 			ushort fileNameLen = reader.ReadUInt16();
 			ushort extraFieldLen = reader.ReadUInt16();
 			string fileName = enc.GetString(reader.ReadBytes(fileNameLen));
-			if (!ShouldProcessZipEntry(fileName)) return;
+			if (SelectZipEntry != null && !SelectZipEntry(fileName)) return;
 			
 			reader.ReadBytes(extraFieldLen);
 			if (versionNeeded > 20)

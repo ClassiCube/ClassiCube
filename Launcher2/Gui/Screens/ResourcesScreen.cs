@@ -27,8 +27,8 @@ namespace Launcher.Gui.Screens {
 		
 		void SetWidgetHandlers() {
 			widgets[view.yesIndex].OnClick = DownloadResources;
-			widgets[view.noIndex].OnClick = (x, y) => GotoNextMenu();
-			widgets[view.cancelIndex].OnClick = (x, y) => GotoNextMenu();
+			widgets[view.noIndex].OnClick = GotoNextMenu;
+			widgets[view.cancelIndex].OnClick = GotoNextMenu;
 		}
 		
 		bool failed;
@@ -48,7 +48,7 @@ namespace Launcher.Gui.Screens {
 			fetcher = null;
 			GC.Collect();
 			game.TryLoadTexturePack();
-			GotoNextMenu();
+			GotoNextMenu(0, 0);
 		}
 		
 		public override void Resize() {
@@ -92,7 +92,7 @@ namespace Launcher.Gui.Screens {
 			Resize();
 		}
 		
-		void GotoNextMenu() {
+		void GotoNextMenu(int x, int y) {
 			if (File.Exists("options.txt")) {
 				game.SetScreen(new MainScreen(game));
 			} else {

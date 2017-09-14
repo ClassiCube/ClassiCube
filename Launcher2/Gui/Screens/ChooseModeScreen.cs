@@ -19,16 +19,19 @@ namespace Launcher.Gui.Screens {
 			base.Init();
 			view.Init();
 			
-			widgets[view.nIndex].OnClick = (x, y) => ModeClick(false, false);
-			widgets[view.clIndex].OnClick = (x, y) => ModeClick(true, false);
-			widgets[view.clHaxIndex].OnClick = (x, y) => ModeClick(true, true);
-			
+			widgets[view.nIndex].OnClick = UseModeEnhanced;
+			widgets[view.clIndex].OnClick = UseModeClassicHax;
+			widgets[view.clHaxIndex].OnClick = UseModeClassic;		
 			if (view.backIndex >= 0) {
-				widgets[view.backIndex].OnClick = (x, y)
-					=> game.SetScreen(new SettingsScreen(game));
+				widgets[view.backIndex].OnClick = SwitchToSettings;
 			}
 			Resize();
 		}
+		
+		void UseModeEnhanced(int x, int y) { ModeClick(false, false); }
+		void UseModeClassicHax(int x, int y) { ModeClick(true, false); }
+		void UseModeClassic(int x, int y) { ModeClick(true, true); }
+		void SwitchToSettings(int x, int y) { game.SetScreen(new SettingsScreen(game)); }
 		
 		public override void Tick() { }
 
