@@ -61,7 +61,7 @@ namespace ClassicalSharp {
 		
 		protected void WarningScreenTick(Overlay warning) {
 			string identifier = warning.Metadata;
-			DownloadedItem item;
+			Request item;
 			if (!game.AsyncDownloader.TryGetItem(identifier, out item) || item.Data == null) return;
 			
 			long contentLength = (long)item.Data;
@@ -130,7 +130,7 @@ namespace ClassicalSharp {
 		}
 		
 		protected void CheckAsyncResources() {
-			DownloadedItem item;
+			Request item;
 			if (game.AsyncDownloader.TryGetItem("terrain", out item)) {
 				TexturePack.ExtractTerrainPng(game, item);
 			}

@@ -62,7 +62,7 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		
-		internal static void ExtractTerrainPng(Game game, DownloadedItem item) {
+		internal static void ExtractTerrainPng(Game game, Request item) {
 			if (item.Data == null) return;
 			game.World.TextureUrl = item.Url;
 			game.Events.RaiseTexturePackChanged();
@@ -101,7 +101,7 @@ namespace ClassicalSharp.Textures {
 			ms.Dispose();
 		}
 		
-		internal static void ExtractTexturePack(Game game, DownloadedItem item) {
+		internal static void ExtractTexturePack(Game game, Request item) {
 			if (item.Data == null) return;
 			game.World.TextureUrl = item.Url;
 			byte[] data = (byte[])item.Data;

@@ -119,7 +119,7 @@ namespace ClassicalSharp.Entities {
 				fetchedSkin = true;
 			}
 			
-			DownloadedItem item;
+			Request item;
 			if (!game.AsyncDownloader.TryGetItem(SkinName, out item)) return;
 			if (item == null || item.Data == null) { SetSkinAll(true); return; }
 			

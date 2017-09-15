@@ -16,7 +16,7 @@ namespace ClassicalSharp.Network.Protocols {
 		internal bool sendWomId = false, sentWomId = false;
 
 		public override void Tick() {
-			DownloadedItem item;
+			Request item;
 			game.AsyncDownloader.TryGetItem(womEnvIdentifier, out item);
 			if (item != null && item.Data != null) {
 				ParseWomConfig((string)item.Data);

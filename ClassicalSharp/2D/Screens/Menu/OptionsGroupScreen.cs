@@ -69,7 +69,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (descWidget != null) descWidget.Dispose();
 			if (button == null) return;
 			
-			string text = descriptions[Array.IndexOf<Widget>(widgets, button)];
+			string text = descriptions[IndexOfWidget(button)];
 			MakeDescWidget(text);
 		}
 		

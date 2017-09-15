@@ -22,10 +22,10 @@ namespace ClassicalSharp.Network {
 		
 		EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.AutoReset);
 		Thread worker;
-		readonly object requestLocker = new object();
-		List<Request> requests = new List<Request>();
-		readonly object downloadedLocker = new object();
-		Dictionary<string, DownloadedItem> downloaded = new Dictionary<string, DownloadedItem>();
+		readonly object pendingLocker = new object();
+		List<Request> pending = new List<Request>();
+		readonly object processedLocker = new object();
+		List<Request> processed = new List<Request>();
 		string skinServer = null;
 		readonly IDrawer2D drawer;
 		
@@ -38,8 +38,8 @@ namespace ClassicalSharp.Network {
 		public void Init(Game game) { Init(game.skinServer); }
 		public void Ready(Game game) { }
 		public void Reset(Game game) {
-			lock (requestLocker)
-				requests.Clear();
+			lock (pendingLocker)
+				pending.Clear();
 			handle.Set();
 		}
 		
@@ -113,12 +113,12 @@ namespace ClassicalSharp.Network {
 		
 		void AddRequest(string url, bool priority, string identifier,
 		                RequestType type, DateTime lastModified, string etag) {
-			lock (requestLocker) {
+			lock (pendingLocker) {
 				Request request = new Request(url, identifier, type, lastModified, etag);
 				if (priority) {
-					requests.Insert(0, request);
+					pending.Insert(0, request);
 				} else {
-					requests.Add(request);
+					pending.Add(request);
 				}
 			}
 			handle.Set();
@@ -129,8 +129,8 @@ namespace ClassicalSharp.Network {
 		/// Note that this will *block** the calling thread as the method waits until the asynchronous
 		/// thread has exited the for loop. </summary>
 		public void Dispose() {
-			lock (requestLocker)  {
-				requests.Insert(0, null);
+			lock (pendingLocker)  {
+				pending.Insert(0, null);
 			}
 			
 			handle.Set();
@@ -142,26 +142,14 @@ namespace ClassicalSharp.Network {
 		/// <summary> Removes older entries that were downloaded a certain time ago
 		/// but were never removed from the downloaded queue. </summary>
 		public void PurgeOldEntriesTask(ScheduledTask task) {
-			const int seconds = 10;
-			lock (downloadedLocker) {
+			lock (processedLocker) {
 				DateTime now = DateTime.UtcNow;
-				List<string> itemsToRemove = new List<string>(downloaded.Count);
-				
-				foreach (var item in downloaded) {
-					DateTime timestamp = item.Value.TimeDownloaded;
-					if ((now - timestamp).TotalSeconds > seconds) {
-						itemsToRemove.Add(item.Key);
-					}
-				}
-				
-				for (int i = 0; i < itemsToRemove.Count; i++) {
-					string key = itemsToRemove[i];
-					DownloadedItem item;
-					downloaded.TryGetValue(key, out item);
-					downloaded.Remove(key);
-					Bitmap bmp = item.Data as Bitmap;
-					if (bmp != null)
-						bmp.Dispose();
+				for (int i = processed.Count - 1; i >= 0; i--) {
+					Request item = processed[i];
+					if ((now - item.TimeDownloaded).TotalSeconds < 10) continue;
+					
+					item.Dispose();
+					processed.RemoveAt(i);
 				}
 			}
 		}
@@ -171,13 +159,12 @@ namespace ClassicalSharp.Network {
 		/// If it does, it removes the item from the queue and outputs it. </summary>
 		/// <remarks> If the asynchronous thread failed to download the item, this method
 		/// will return 'true' and 'item' will be set. However, the contents of the 'item' object will be null.</remarks>
-		public bool TryGetItem(string identifier, out DownloadedItem item) {
+		public bool TryGetItem(string identifier, out Request item) {
 			bool success = false;
-			lock (downloadedLocker) {
-				success = downloaded.TryGetValue(identifier, out item);
-				if (success) {
-					downloaded.Remove(identifier);
-				}
+			lock (processedLocker) {
+				int i = FindRequest(identifier, out item);
+				success = i >= 0;
+				if (success) processed.RemoveAt(i);
 			}
 			return success;
 		}
@@ -185,14 +172,14 @@ namespace ClassicalSharp.Network {
 		void DownloadThreadWorker() {
 			while (true) {
 				Request request = null;
-				lock (requestLocker) {
-					if (requests.Count > 0) {
-						request = requests[0];
-						requests.RemoveAt(0);
-						if (request == null)
-							return;
+				lock (pendingLocker) {
+					if (pending.Count > 0) {
+						request = pending[0];
+						pending.RemoveAt(0);
+						if (request == null) return;
 					}
 				}
+				
 				if (request != null) {
 					CurrentItem = request;
 					CurrentItemProgress = -2;
@@ -206,21 +193,30 @@ namespace ClassicalSharp.Network {
 			}
 		}
 		
+		int FindRequest(string identifer, out Request item) {
+			item = null;
+			for (int i = 0; i < processed.Count; i++) {
+				if (processed[i].Identifier != identifer) continue;				
+				item = processed[i]; 
+				return i;
+			}
+			return -1;
+		}
+		
 		void ProcessRequest(Request request) {
 			string url = request.Url;
 			Utils.LogDebug("Downloading {0} from: {1}", request.Type, url);
-			object value = null;
 			HttpStatusCode status = HttpStatusCode.OK;
-			string etag = null;
-			DateTime lastModified = DateTime.MinValue;
+			request.Data = null;
 			
 			try {
 				HttpWebRequest req = MakeRequest(request);
 				using (HttpWebResponse response = (HttpWebResponse)req.GetResponse()) {
-					etag = response.Headers[HttpResponseHeader.ETag];
-					if (response.Headers[HttpResponseHeader.LastModified] != null)
-						lastModified = response.LastModified;					
-					value = DownloadContent(request, response);
+					request.ETag = response.Headers[HttpResponseHeader.ETag];
+					if (response.Headers[HttpResponseHeader.LastModified] != null) {
+						request.LastModified = response.LastModified;					
+					}
+					request.Data = DownloadContent(request, response);
 				}
 			} catch (Exception ex) {
 				if (!(ex is WebException || ex is ArgumentException || ex is UriFormatException || ex is IOException)) throw;
@@ -239,24 +235,24 @@ namespace ClassicalSharp.Network {
 					Utils.LogDebug("Failed to download from: " + url);
 				}
 			}
-			value = CheckIsValidImage(value, url);
-
-			lock (downloadedLocker) {
-				DownloadedItem oldItem;
-				DownloadedItem newItem = new DownloadedItem(value, request.TimeAdded, url,
-				                                            status, etag, lastModified);
+			
+			request.Data = CheckIsValidImage(request.Data, url);
+			request.TimeDownloaded = DateTime.UtcNow;
+			
+			lock (processedLocker) {
+				Request older;
+				int index = FindRequest(request.Identifier, out older);
 				
-				if (downloaded.TryGetValue(request.Identifier, out oldItem)) {
-					if (oldItem.TimeAdded > newItem.TimeAdded) {
-						DownloadedItem old = oldItem;
-						oldItem = newItem;
-						newItem = old;
+				if (index >= 0) {
+					if (older.TimeAdded > request.TimeAdded) {
+						Request tmp = older; older = request; request = tmp;
 					}
-
-					Bitmap oldBmp = oldItem.Data as Bitmap;
-					if (oldBmp != null) oldBmp.Dispose();
+					
+					older.Dispose();
+					processed[index] = request;
+				} else {
+					processed.Add(request);
 				}
-				downloaded[request.Identifier] = newItem;
 			}
 		}
 		
@@ -331,25 +327,25 @@ namespace ClassicalSharp.Network {
 	public sealed class Request {
 		
 		/// <summary> Full url to GET from. </summary>
-		public string Url;
-		
+		public string Url;		
 		/// <summary> Unique identifier for this request. </summary>
-		public string Identifier;
-		
+		public string Identifier;		
 		/// <summary> Type of data to return for this request. </summary>
 		public RequestType Type;
 		
 		/// <summary> Point in time this request was added to the fetch queue. </summary>
 		public DateTime TimeAdded;
+		/// <summary> Point in time the item was fully downloaded. </summary>
+		public DateTime TimeDownloaded;
+		/// <summary> Contents that were downloaded. </summary>
+		public object Data;
 		
 		/// <summary> Point in time the item most recently cached. (if at all) </summary>
-		public DateTime LastModified;
-		
+		public DateTime LastModified;		
 		/// <summary> ETag of the item most recently cached. (if any) </summary>
 		public string ETag;
 		
-		public Request(string url, string identifier, RequestType type,
-		               DateTime lastModified, string etag) {
+		public Request(string url, string identifier, RequestType type, DateTime lastModified, string etag) {
 			Url = url;
 			Identifier = identifier;
 			Type = type;
@@ -357,38 +353,10 @@ namespace ClassicalSharp.Network {
 			LastModified = lastModified;
 			ETag = etag;
 		}
-	}
-	
-	/// <summary> Represents an item that was asynchronously downloaded. </summary>
-	public class DownloadedItem {
 		
-		/// <summary> Contents that were downloaded. </summary>
-		public object Data;
-		
-		/// <summary> Point in time the item was originally added to the download queue. </summary>
-		public DateTime TimeAdded;
-		
-		/// <summary> Point in time the item was fully downloaded. </summary>
-		public DateTime TimeDownloaded;		
-		
-		/// <summary> Full URL this item was downloaded from. </summary>
-		public string Url;
-		
-		/// <summary> Unique identifier assigned by the server to this item. </summary>
-		public string ETag;
-		
-		/// <summary> Time the server indicates this item was last modified. </summary>
-		public DateTime LastModified;
-		
-		public DownloadedItem(object data, DateTime timeAdded,
-		                      string url, HttpStatusCode code,
-		                      string etag, DateTime lastModified) {
-			Data = data;
-			TimeAdded = timeAdded;
-			TimeDownloaded = DateTime.UtcNow;
-			Url = url;
-			ETag = etag;
-			LastModified = lastModified;
+		public void Dispose() {
+			Bitmap bmp = Data as Bitmap;
+			if (bmp != null) bmp.Dispose();
 		}
 	}
 }

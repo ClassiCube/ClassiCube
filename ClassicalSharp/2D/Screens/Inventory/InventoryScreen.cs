@@ -142,11 +142,18 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public void SetBlockTo(BlockID block) {
-			selIndex = Array.IndexOf<BlockID>(blocksTable, block);
+			selIndex = IndexOfBlock(block);
 			scrollY = (selIndex / blocksPerRow) - (maxRows - 1);
 			ClampScrollY();
 			MoveCursorToSelected();
 			RecreateBlockInfoTexture();
+		}
+		
+		int IndexOfBlock(BlockID block) {
+			for (int i = 0; i < blocksTable.Length; i++) {
+				if (blocksTable[i] == block) return i;
+			}
+			return -1;
 		}
 		
 		void MoveCursorToSelected() {

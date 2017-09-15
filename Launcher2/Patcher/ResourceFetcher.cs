@@ -91,7 +91,7 @@ namespace Launcher.Patcher {
 		}
 		
 		bool Download(string identifier, ref byte[] data, Action<string> setStatus) {
-			DownloadedItem item;
+			Request item;
 			if (downloader.TryGetItem(identifier, out item)) {
 				FilesToDownload.RemoveAt(0);
 				Console.WriteLine("got resource " + identifier);

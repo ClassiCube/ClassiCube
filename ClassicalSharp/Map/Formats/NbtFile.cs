@@ -112,21 +112,24 @@ namespace ClassicalSharp.Map {
 					NbtList list = new NbtList();
 					list.ChildTagId = (NbtTagType)reader.ReadByte();
 					list.ChildrenValues = new object[ReadInt32()];
-					for (int i = 0; i < list.ChildrenValues.Length; i++)
+					for (int i = 0; i < list.ChildrenValues.Length; i++) {
 						list.ChildrenValues[i] = ReadTag((byte)list.ChildTagId, false).Value;
+					}
 					tag.Value = list; break;
 					
 				case NbtTagType.Compound:
 					Dictionary<string, NbtTag> children = new Dictionary<string, NbtTag>();
 					NbtTag child;
-					while ((child = ReadTag(reader.ReadByte(), true)).TagId != NbtTagType.Invalid)
+					while ((child = ReadTag(reader.ReadByte(), true)).TagId != NbtTagType.Invalid) {
 						children[child.Name] = child;
+					}
 					tag.Value = children; break;
 					
 				case NbtTagType.Int32Array:
 					int[] array = new int[ReadInt32()];
-					for (int i = 0; i < array.Length; i++)
+					for (int i = 0; i < array.Length; i++) {
 						array[i] = ReadInt32();
+					}
 					tag.Value = array; break;
 					
 				default:

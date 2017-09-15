@@ -66,7 +66,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void OnYesClick(Game g, Widget w, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;
-			bool always = Array.IndexOf<Widget>(widgets, w) >= alwaysIndex;
+			bool always = IndexOfWidget(w) >= alwaysIndex;
 			
 			if (yesClick != null) yesClick(this, always);
 			Dispose();
@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void OnNoClick(Game g, Widget w, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;
-			bool always = Array.IndexOf<Widget>(widgets, w) >= alwaysIndex;
+			bool always = IndexOfWidget(w) >= alwaysIndex;
 			
 			if (confirmNo && !confirmingMode) {
 				confirmingMode = true;

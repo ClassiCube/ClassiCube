@@ -149,7 +149,7 @@ namespace ClassicalSharp.Gui.Screens {
 			bool canShow = input == null && selectedWidget != null && descriptions != null;
 			if (!canShow) return;
 			
-			int index = Array.IndexOf<Widget>(widgets, selectedWidget);
+			int index = IndexOfWidget(selectedWidget);
 			if (index < 0 || index >= descriptions.Length) return;
 			string[] desc = descriptions[index];
 			if (desc == null) return;
@@ -186,7 +186,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (button == null) return;
 			DisposeExtendedHelp();
 			
-			int index = Array.IndexOf<Widget>(widgets, button);
+			int index = IndexOfWidget(button);
 			MenuInputValidator validator = validators[index];
 			if (validator is BooleanValidator) {
 				string value = button.GetValue(game);

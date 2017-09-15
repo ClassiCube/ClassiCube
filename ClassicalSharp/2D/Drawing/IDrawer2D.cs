@@ -10,6 +10,20 @@ using Android.Graphics;
 #endif
 
 namespace ClassicalSharp {
+	
+	/// <summary> Contains arguments for measuring or drawing text. </summary>
+	public struct DrawTextArgs {		
+		public string Text;
+		public Font Font;
+		public bool UseShadow, SkipPartsCheck;
+		
+		public DrawTextArgs(string text, Font font, bool useShadow) {
+			Text = text;
+			Font = font;
+			UseShadow = useShadow;
+			SkipPartsCheck = false;
+		}		
+	}
 
 	/// <summary> Class responsible for performing drawing operations on bitmaps
 	/// and for converting bitmaps into graphics api textures. </summary>

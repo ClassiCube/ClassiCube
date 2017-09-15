@@ -57,14 +57,8 @@
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\ClassicalSharp\2D\Drawing\DrawTextArgs.cs">
-      <Link>Shared\DrawTextArgs.cs</Link>
-    </Compile>
     <Compile Include="..\ClassicalSharp\2D\Drawing\GdiPlusDrawer2D.cs">
       <Link>Shared\GdiPlusDrawer2D.cs</Link>
-    </Compile>
-    <Compile Include="..\ClassicalSharp\2D\Drawing\GdiPlusDrawer2D.Text.cs">
-      <Link>Shared\GdiPlusDrawer2D.Text.cs</Link>
     </Compile>
     <Compile Include="..\ClassicalSharp\2D\Drawing\IDrawer2D.cs">
       <Link>Shared\IDrawer2D.cs</Link>

@@ -80,7 +80,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void HandleFontChange() {
-			int selIndex = Array.IndexOf<Widget>(widgets, selectedWidget);
+			int selIndex = IndexOfWidget(selectedWidget);
 			game.Events.RaiseChatFontChanged();
 			base.Dispose();
 			base.Init();

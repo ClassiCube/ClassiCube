@@ -90,19 +90,19 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = 0;
 			if (btn == MouseButton.Right && (curWidget == null || curWidget == widget)) {
 				curWidget = (ButtonWidget)widget;
-				index = Array.IndexOf<Widget>(widgets, curWidget) - 2;
+				index = IndexOfWidget(curWidget) - 2;
 				KeyBind mapping = Get(index, left, right);
 				HandlesKeyDown(game.Input.Keys.GetDefault(mapping));
 			}
 			if (btn != MouseButton.Left) return;
 			
 			if (curWidget != null) {
-				index = Array.IndexOf<Widget>(widgets, curWidget) - 2;
+				index = IndexOfWidget(curWidget) - 2;
 				curWidget.SetText(ButtonText(index));
 				curWidget = null;
 			}
 			
-			index = Array.IndexOf<Widget>(widgets, widget) - 2;
+			index = IndexOfWidget(widget) - 2;
 			string text = ButtonText(index);
 			curWidget = (ButtonWidget)widget;
 			curWidget.SetText("> " + text + " <");
@@ -119,7 +119,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (key == Key.Escape) {
 				game.Gui.SetNewScreen(null);
 			} else if (curWidget != null) {
-				int index = Array.IndexOf<Widget>(widgets, curWidget) - 2;
+				int index = IndexOfWidget(curWidget) - 2;
 				KeyBind mapping = Get(index, left, right);
 				game.Input.Keys[mapping] = key;			
 				curWidget.SetText(ButtonText(index));

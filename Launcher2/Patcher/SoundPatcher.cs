@@ -37,7 +37,7 @@ namespace Launcher.Patcher {
 		public bool CheckDownloaded(ResourceFetcher fetcher, Action<string> setStatus) {
 			if (Done) return true;
 			for (int i = 0; i < identifiers.Length; i++) {
-				DownloadedItem item;
+				Request item;
 				if (fetcher.downloader.TryGetItem(identifiers[i], out item)) {
 					fetcher.FilesToDownload.RemoveAt(0);
 					Console.WriteLine("got sound " + identifiers[i]);
