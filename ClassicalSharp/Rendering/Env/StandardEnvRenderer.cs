@@ -105,7 +105,7 @@ namespace ClassicalSharp.Renderers {
 			if (map.blocks == null) return;
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
-			BlockID block = BlockOn(out fogDensity, out fogCol);
+			BlockOn(out fogDensity, out fogCol);
 			gfx.ClearColour(fogCol);
 			
 			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often
@@ -167,7 +167,7 @@ namespace ClassicalSharp.Renderers {
 			if (map.blocks == null || minimal) return;
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
-			BlockID block = BlockOn(out fogDensity, out fogCol);
+			BlockOn(out fogDensity, out fogCol);
 			
 			if (fogDensity != 0) {
 				gfx.SetFogMode(Fog.Exp);

@@ -32,7 +32,7 @@ void LocationUpdate_Empty(LocationUpdate* update) {
 }
 
 void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX) {
-	LocationUpdate_Construct(update, 0.0f, 0.0f, 0.0f, exc, rotY, exc, exc, false, false);
+	LocationUpdate_Construct(update, 0.0f, 0.0f, 0.0f, exc, rotY, exc, headX, false, false);
 }
 
 void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel) {

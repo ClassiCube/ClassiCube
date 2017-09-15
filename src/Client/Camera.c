@@ -14,7 +14,7 @@ Real32 Camera_AdjustHeadX(Real32 value) {
 	return value * MATH_DEG2RAD;
 }
 
-Vector3 PerspectiveCamera_GetDirVector() {
+Vector3 PerspectiveCamera_GetDirVector(void) {
 	Entity* p = &LocalPlayer_Instance.Base.Base;
 	Real32 yaw = p->HeadY * MATH_DEG2RAD;
 	Real32 pitch = Camera_AdjustHeadX(p->HeadX);

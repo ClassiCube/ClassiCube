@@ -744,7 +744,7 @@ void Gfx_BeginFrame(void) {
 void Gfx_EndFrame(void) {
 	IDirect3DDevice9_EndScene(device);
 	ReturnCode code = IDirect3DDevice9_Present(device, NULL, NULL, NULL, NULL);
-	if (code >= 0) return;
+	if ((Int32)code >= 0) return;
 
 	if (code != D3DERR_DEVICELOST) {
 		ErrorHandler_FailWithCode(code, "D3D9_EndFrame");

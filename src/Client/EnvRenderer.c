@@ -22,7 +22,7 @@ Real32 EnvRenderer_BlendFactor(Real32 x) {
 	return blend;
 }
 
-BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
+void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;
 	Vector3I_Floor(&coords, &pos);     /* coords = floor(pos); */
@@ -42,7 +42,6 @@ BlockID EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 		Real32 blend = EnvRenderer_BlendFactor(Game_ViewDistance);
 		*fogCol = PackedCol_Lerp(WorldEnv_FogCol, WorldEnv_SkyCol, blend);
 	}
-	return block;
 }
 
 
@@ -51,7 +50,7 @@ void EnvRenderer_RenderMinimal(Real64 deltaTime) {
 
 	PackedCol fogCol = PackedCol_White;
 	Real32 fogDensity = 0.0f;
-	BlockID block = EnvRenderer_BlockOn(&fogDensity, &fogCol);
+	EnvRenderer_BlockOn(&fogDensity, &fogCol);
 	Gfx_ClearColour(fogCol);
 
 	/* TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often */
@@ -114,7 +113,7 @@ void EnvRenderer_UpdateFog(void) {
 	if (World_Blocks == NULL || EnvRenderer_Minimal) return;
 	PackedCol fogCol = PackedCol_White;
 	Real32 fogDensity = 0.0f;
-	BlockID block = EnvRenderer_BlockOn(&fogDensity, &fogCol);
+	EnvRenderer_BlockOn(&fogDensity, &fogCol);
 
 	if (fogDensity != 0.0f) {
 		Gfx_SetFogMode(Fog_Exp);

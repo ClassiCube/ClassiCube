@@ -7,6 +7,7 @@
 #include "GraphicsAPI.h"
 #include "Camera.h"
 #include "Options.h"
+#include "Funcs.h"
 
 void Game_UpdateProjection(void) {
 	Game_DefaultFov = Options_GetInt(OptionsKey_FieldOfView, 1, 150, 70);
@@ -32,6 +33,20 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	ChunkInfo* chunk = MapRenderer_GetChunk(cx, cy, cz);
 	chunk->AllAir &= Block_Draw[block] == DrawType_Gas;
 	MapRenderer_RefreshChunk(cx, cy, cz);
+}
+
+void Game_SetViewDistance(Real32 distance, bool userDist) {
+	if (userDist) {
+		Game_UserViewDistance = distance;
+		Options_SetInt32(OptionsKey_ViewDist, (Int32)distance);
+	}
+
+	distance = min(distance, Game_MaxViewDistance);
+	if (distance == Game_ViewDistance) return;
+	Game_ViewDistance = distance;
+
+	Event_RaiseVoid(&GfxEvents_ViewDistanceChanged);
+	Game_UpdateProjection();
 }
 
 bool Game_CanPick(BlockID block) {

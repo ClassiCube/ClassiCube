@@ -121,7 +121,7 @@ bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num) {
 		if (!String_Append(str, (UInt8)'-')) return false;
 	}
 
-	UInt8 numBuffer[20];
+	UInt8 numBuffer[STRING_INT32CHARS];
 	Int32 numLen = String_MakeInt32(num, numBuffer);
 	Int32 i;
 	
@@ -132,7 +132,7 @@ bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num) {
 }
 
 bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits) {
-	UInt8 numBuffer[20];
+	UInt8 numBuffer[STRING_INT32CHARS];
 	Int32 i;
 	for (i = 0; i < minDigits; i++) {
 		numBuffer[i] = '0';

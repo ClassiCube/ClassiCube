@@ -50,7 +50,7 @@ namespace ClassicalSharp.Renderers {
 		protected abstract void EnvVariableChanged(object sender, EnvVarEventArgs e);
 		
 		
-		protected BlockID BlockOn(out float fogDensity, out FastColour fogCol) {
+		protected void BlockOn(out float fogDensity, out FastColour fogCol) {
 			Vector3 pos = game.CurrentCameraPos;
 			Vector3I coords = Vector3I.Floor(pos);
 			
@@ -68,7 +68,6 @@ namespace ClassicalSharp.Renderers {
 				float blend = (float)BlendFactor(game.ViewDistance);
 				fogCol = FastColour.Lerp(map.Env.FogCol, map.Env.SkyCol, blend);
 			}
-			return block;
 		}
 		
 		double BlendFactor(float x) {

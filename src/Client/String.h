@@ -9,6 +9,7 @@
 */
 
 #define String_BufferSize(n) (n + 1)
+#define STRING_INT32CHARS 20
 
 typedef struct String_ {
 	/* Pointer to raw characters. Size is capacity + 1, as buffer is null terminated. */

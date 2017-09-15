@@ -90,13 +90,11 @@ void RayTracer_Step(RayTracer* t) {
 		/* tMax.X is the lowest, an YZ cell boundary plane is nearest. */
 		t->X += t->step.X;
 		t->tMax.X += t->tDelta.X;
-	}
-	else if (t->tMax.Y < t->tMax.Z) {
+	} else if (t->tMax.Y < t->tMax.Z) {
 		/* tMax.Y is the lowest, an XZ cell boundary plane is nearest. */
 		t->Y += t->step.Y;
 		t->tMax.Y += t->tDelta.Y;
-	}
-	else {
+	} else {
 		/* tMax.Z is the lowest, an XY cell boundary plane is nearest. */
 		t->Z += t->step.Z;
 		t->tMax.Z += t->tDelta.Z;
@@ -165,7 +163,9 @@ bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos,
 		if (intersect(pos)) return true;
 		RayTracer_Step(&tracer);
 	}
+
 	ErrorHandler_Fail("Something went wrong, did over 10,000 iterations in Picking_RayTrace()");
+	return false;
 }
 
 bool Picking_ClipBlock(PickedPos* pos) {
