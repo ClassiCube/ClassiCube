@@ -140,7 +140,7 @@ namespace ClassicalSharp.Entities {
 			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool(OptionsKey.PushbackPlacing, false);
 			Hacks.NoclipSlide = Options.GetBool(OptionsKey.NoclipSlide, false);
 			Hacks.WOMStyleHacks = !game.ClassicMode && Options.GetBool(OptionsKey.WOMStyleHacks, false);
-			Hacks.Enabled = !game.PureClassic && Options.GetBool(OptionsKey.HacksEnabled, true);
+			Hacks.Enabled = !game.PureClassic && Options.GetBool(OptionsKey.HacksOn, true);
 			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool(OptionsKey.FullBlockStep, false);
 			Health = 20;
 		}

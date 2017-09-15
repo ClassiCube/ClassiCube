@@ -1,7 +1,7 @@
 #include "Options.h"
 #include "ExtMath.h"
 
-UInt8 Options_KeysBuffer[String_BufferSize(24) * OPTIONS_COUNT];
+UInt8 Options_KeysBuffer[String_BufferSize(26) * OPTIONS_COUNT];
 UInt8 Options_ValuesBuffer[
 	String_BufferSize(8)   * OPTIONS_TINYSTRS +
 	String_BufferSize(16)  * OPTIONS_SMALLSTRS +

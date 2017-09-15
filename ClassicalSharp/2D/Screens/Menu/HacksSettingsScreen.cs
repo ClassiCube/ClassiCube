@@ -26,57 +26,65 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
+			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
-				// Column 1
-				MakeBool(-1, -150, "Hacks enabled", OptionsKey.HacksEnabled,
-				         OnWidgetClick, g => g.LocalPlayer.Hacks.Enabled,
-				         (g, v) => { g.LocalPlayer.Hacks.Enabled = v;
-				         	g.LocalPlayer.CheckHacksConsistency(); }),
-				
-				MakeOpt(-1, -100, "Speed multiplier", OnWidgetClick,
-				        g => g.LocalPlayer.Hacks.SpeedMultiplier.ToString("F2"),
-				        (g, v) => { g.LocalPlayer.Hacks.SpeedMultiplier = Utils.ParseDecimal(v);
-				        	Options.Set(OptionsKey.Speed, v); }),
-				
-				MakeBool(-1, -50, "Camera clipping", OptionsKey.CameraClipping,
-				         OnWidgetClick, g => g.CameraClipping, (g, v) => g.CameraClipping = v),
-				
-				MakeOpt(-1, 0, "Jump height", OnWidgetClick,
-				        g => g.LocalPlayer.JumpHeight.ToString("F3"),
-				        (g, v) => g.LocalPlayer.physics.CalculateJumpVelocity(true, Utils.ParseDecimal(v))),
-				
-				MakeBool(-1, 50, "WOM style hacks", OptionsKey.WOMStyleHacks,
-				         OnWidgetClick, g => g.LocalPlayer.Hacks.WOMStyleHacks,
-				         (g, v) => g.LocalPlayer.Hacks.WOMStyleHacks = v),
-				
-				// Column 2
-				MakeBool(1, -150, "Full block stepping", OptionsKey.FullBlockStep,
-				         OnWidgetClick, g => g.LocalPlayer.Hacks.FullBlockStep,
-				         (g, v) => g.LocalPlayer.Hacks.FullBlockStep = v),
-				
-				MakeBool(1, -100, "Modifiable liquids", OptionsKey.ModifiableLiquids,
-				         OnWidgetClick, g => g.ModifiableLiquids, (g, v) => g.ModifiableLiquids = v),
-				
-				MakeBool(1, -50, "Pushback placing", OptionsKey.PushbackPlacing,
-				         OnWidgetClick, g => g.LocalPlayer.Hacks.PushbackPlacing,
-				         (g, v) => g.LocalPlayer.Hacks.PushbackPlacing = v),
-				
-				MakeBool(1, 0, "Noclip slide", OptionsKey.NoclipSlide,
-				         OnWidgetClick, g => g.LocalPlayer.Hacks.NoclipSlide,
-				         (g, v) => g.LocalPlayer.Hacks.NoclipSlide = v),
-				
-				MakeOpt(1, 50, "Field of view", OnWidgetClick,
-				        g => g.Fov.ToString(),
-				        (g, v) => { g.Fov = Int32.Parse(v);
-				        	Options.Set(OptionsKey.FieldOfView, v);
-				        	g.UpdateProjection();
-				        }),
+				MakeBool(-1, -150, "Hacks enabled", OptionsKey.HacksOn,          onClick, GetHacks,       SetHacks),
+				MakeOpt(-1, -100, "Speed multiplier",                                 onClick, GetSpeed,       SetSpeed),
+				MakeBool(-1, -50, "Camera clipping", OptionsKey.CameraClipping,       onClick, GetCameraClip,  SetCameraClip),				
+				MakeOpt(-1, 0, "Jump height",                                         onClick, GetJump,        SetJump),				
+				MakeBool(-1, 50, "WOM style hacks", OptionsKey.WOMStyleHacks,         onClick, GetWOMHacks,    SetWOMHacks),
+
+				MakeBool(1, -150, "Full block stepping", OptionsKey.FullBlockStep,    onClick, GetFullStep,    SetFullStep),
+				MakeBool(1, -100, "Modifiable liquids", OptionsKey.ModifiableLiquids, onClick, GetLiquids,     SetLiquids),
+				MakeBool(1, -50, "Pushback placing", OptionsKey.PushbackPlacing,      onClick, GetPushback,    SetPushback),
+				MakeBool(1, 0, "Noclip slide", OptionsKey.NoclipSlide,                onClick, GetNoclipSlide, SetNoclipSlide),
+				MakeOpt(1, 50, "Field of view",                                       onClick, GetFOV,         SetFOV),
 				
 				null,
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
 			};
 			CheckHacksAllowed(null, null);
+		}
+		
+		static bool GetHacks(Game g) { return g.LocalPlayer.Hacks.Enabled; }
+		static void SetHacks(Game g, bool v) { 
+			g.LocalPlayer.Hacks.Enabled = v; g.LocalPlayer.CheckHacksConsistency(); 
+		}
+		
+		static string GetSpeed(Game g) { return g.LocalPlayer.Hacks.SpeedMultiplier.ToString("F2"); }
+		static void SetSpeed(Game g, string v) {
+			g.LocalPlayer.Hacks.SpeedMultiplier = Utils.ParseDecimal(v); Options.Set(OptionsKey.Speed, v);
+		}
+		
+		static bool GetCameraClip(Game g) { return g.CameraClipping; }
+		static void SetCameraClip(Game g, bool v) { g.CameraClipping = v; }		
+		
+		static string GetJump(Game g) { return g.LocalPlayer.JumpHeight.ToString("F3"); }
+		static void SetJump(Game g, string v) {
+			g.LocalPlayer.physics.CalculateJumpVelocity(true, Utils.ParseDecimal(v));
+		}		
+		
+		static bool GetWOMHacks(Game g) { return  g.LocalPlayer.Hacks.WOMStyleHacks; }
+		static void SetWOMHacks(Game g, bool v) { g.LocalPlayer.Hacks.WOMStyleHacks = v; }
+		
+		static bool GetFullStep(Game g) { return  g.LocalPlayer.Hacks.FullBlockStep; }
+		static void SetFullStep(Game g, bool v) { g.LocalPlayer.Hacks.FullBlockStep = v; }
+		
+		static bool GetPushback(Game g) { return  g.LocalPlayer.Hacks.PushbackPlacing; }
+		static void SetPushback(Game g, bool v) { g.LocalPlayer.Hacks.PushbackPlacing = v; }
+		
+		static bool GetLiquids(Game g) { return  g.ModifiableLiquids; }
+		static void SetLiquids(Game g, bool v) { g.ModifiableLiquids = v; }
+		
+		static bool GetNoclipSlide(Game g) { return  g.LocalPlayer.Hacks.NoclipSlide; }
+		static void SetNoclipSlide(Game g, bool v) { g.LocalPlayer.Hacks.NoclipSlide = v; }
+		
+		static string GetFOV(Game g) { return g.Fov.ToString(); }
+		static void SetFOV(Game g, string v) {
+			g.Fov = Int32.Parse(v);
+			Options.Set(OptionsKey.FieldOfView, v);
+			g.UpdateProjection();
 		}
 		
 		void CheckHacksAllowed(object sender, EventArgs e) {

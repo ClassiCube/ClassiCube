@@ -42,7 +42,7 @@ namespace ClassicalSharp.Singleplayer {
 			map = game.World;
 			game.WorldEvents.OnNewMapLoaded += ResetMap;
 			game.UserEvents.BlockChanged += BlockChanged;
-			enabled = Options.GetBool(OptionsKey.SingleplayerPhysics, true);
+			enabled = Options.GetBool(OptionsKey.Physics, true);
 			
 			falling = new FallingPhysics(game, this);
 			tnt = new TNTPhysics(game, this);

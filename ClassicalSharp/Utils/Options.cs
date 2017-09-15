@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		public const string ForceOldOpenGL = "force-oldgl";
 		
 		public const string ViewDist = "viewdist";
-		public const string SingleplayerPhysics = "singleplayerphysics";
+		public const string Physics = "singleplayerphysics";
 		public const string NamesMode = "namesmode";
 		public const string InvertMouse = "invertmouse";
 		public const string Sensitivity = "mousesensitivity";
@@ -33,7 +33,7 @@ namespace ClassicalSharp {
 		public const string SurvivalMode = "game-survivalmode";
 		public const string ChatLogging = "chat-logging";
 		
-		public const string HacksEnabled = "hacks-hacksenabled";
+		public const string HacksOn = "hacks-hacksenabled";
 		public const string FieldOfView = "hacks-fov";
 		public const string Speed = "hacks-speedmultiplier";
 		public const string ModifiableLiquids = "hacks-liquidsbreakable";
@@ -48,18 +48,18 @@ namespace ClassicalSharp {
 		public const string ChatLines = "gui-chatlines";
 		public const string ClickableChat = "gui-chatclickable";
 		#endif
-		public const string ArialChatFont = "gui-arialchatfont";
+		public const string UseChatFont = "gui-arialchatfont";
 		#if !LAUNCHER
 		public const string HotbarScale = "gui-hotbarscale";
 		public const string InventoryScale = "gui-inventoryscale";
 		public const string ChatScale = "gui-chatscale";
 		public const string ShowFPS = "gui-showfps";
 		public const string FontName = "gui-fontname";
-		public const string BlackTextShadows = "gui-blacktextshadows";
+		public const string BlackText = "gui-blacktextshadows";
 		
-		public const string AllowCustomBlocks = "nostalgia-customblocks";
+		public const string UseCustomBlocks = "nostalgia-customblocks";
 		public const string UseCPE = "nostalgia-usecpe";
-		public const string AllowServerTextures = "nostalgia-servertextures";
+		public const string UseServerTextures = "nostalgia-servertextures";
 		public const string UseClassicGui = "nostalgia-classicgui";
 		public const string SimpleArmsAnim = "nostalgia-simplearms";
 		public const string UseClassicTabList = "nostalgia-classictablist";

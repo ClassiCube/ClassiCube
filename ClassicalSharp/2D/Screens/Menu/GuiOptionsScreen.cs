@@ -16,64 +16,67 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
+			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
-				// Column 1
-				MakeBool(-1, -150, "Black text shadows", OptionsKey.BlackTextShadows,
-				     OnWidgetClick, g => g.Drawer2D.BlackTextShadows,
-				     (g, v) => { g.Drawer2D.BlackTextShadows = v; HandleFontChange(); }),		
-				
-				MakeBool(-1, -100, "Show FPS", OptionsKey.ShowFPS,
-				         OnWidgetClick, g => g.ShowFPS, (g, v) => g.ShowFPS = v),
-				
-				MakeOpt(-1, -50, "Hotbar scale", OnWidgetClick,
-				     g => g.HotbarScale.ToString("F1"),
-				     (g, v) => { g.HotbarScale = Utils.ParseDecimal(v);
-				     	Options.Set(OptionsKey.HotbarScale, v);
-				     	g.Gui.RefreshHud();
-				     }),
-				
-				MakeOpt(-1, 0, "Inventory scale", OnWidgetClick,
-				     g => g.InventoryScale.ToString("F1"),
-				     (g, v) => { g.InventoryScale = Utils.ParseDecimal(v);
-				     	Options.Set(OptionsKey.InventoryScale, v);
-				     	g.Gui.RefreshHud();
-				     }),
-				
-				MakeBool(-1, 50, "Tab auto-complete", OptionsKey.TabAutocomplete, 
-				         OnWidgetClick, g => g.TabAutocomplete, (g, v) => g.TabAutocomplete = v),
-				
-				// Column 2				
-				MakeBool(1, -150, "Clickable chat", OptionsKey.ClickableChat,
-				     OnWidgetClick, g => g.ClickableChat, (g, v) => g.ClickableChat = v),
-				
-				MakeOpt(1, -100, "Chat scale", OnWidgetClick,
-				     g => g.ChatScale.ToString("F1"),
-				     (g, v) => { g.ChatScale = Utils.ParseDecimal(v);
-				     	Options.Set(OptionsKey.ChatScale, v);
-				     	g.Gui.RefreshHud();
-				     }),
+				MakeBool(-1, -150, "Black text shadows", OptionsKey.BlackText,    onClick, GetShadows,   SetShadows),				
+				MakeBool(-1, -100, "Show FPS", OptionsKey.ShowFPS,                onClick, GetShowFPS,   SetShowFPS),
+				MakeOpt(-1, -50, "Hotbar scale",                                  onClick, GetHotbar,    SetHotbar),
+				MakeOpt(-1, 0, "Inventory scale",                                 onClick, GetInventory, SetInventory),
+				MakeBool(-1, 50, "Tab auto-complete", OptionsKey.TabAutocomplete, onClick, GetTabAuto,   SetTabAuto),
 
-				MakeOpt(1, -50, "Chat lines", OnWidgetClick,
-				     g => g.ChatLines.ToString(),
-				     (g, v) => { g.ChatLines = Int32.Parse(v);
-				     	Options.Set(OptionsKey.ChatLines, v);
-				     	g.Gui.RefreshHud();
-				     }),
-				
-				MakeBool(1, 0, "Use font", OptionsKey.ArialChatFont,
-				     OnWidgetClick, g => !g.Drawer2D.UseBitmappedChat,
-				     (g, v) => { g.Drawer2D.UseBitmappedChat = !v; HandleFontChange(); }),
-				
-				MakeOpt(1, 50, "Font", OnWidgetClick,
-				     g => g.FontName,
-				     (g, v) => { g.FontName = v;
-				     	Options.Set(OptionsKey.FontName, v);
-				     	HandleFontChange();
-				     }),
+				MakeBool(1, -150, "Clickable chat", OptionsKey.ClickableChat,     onClick, GetClickable, SetClickable),				
+				MakeOpt(1, -100, "Chat scale",                                    onClick, GetChatScale, SetChatScale),
+				MakeOpt(1, -50, "Chat lines",                                     onClick, GetChatlines, SetChatlines),
+				MakeBool(1, 0, "Use font", OptionsKey.UseChatFont,                onClick, GetUseFont,   SetUseFont),
+				MakeOpt(1, 50, "Font",                                            onClick, GetFont,      SetFont),
 				
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
-			};		
+			};
+		}
+		
+		static bool GetShadows(Game g) { return g.Drawer2D.BlackTextShadows; }
+		void SetShadows(Game g, bool v) { g.Drawer2D.BlackTextShadows = v; HandleFontChange(); }
+		
+		static bool GetShowFPS(Game g) { return g.ShowFPS; }
+		static void SetShowFPS(Game g, bool v) { g.ShowFPS = v; }
+		
+		static void SetScale(Game g, string v, ref float target, string optKey) {
+			target = Utils.ParseDecimal(v);
+			Options.Set(optKey, v);
+			g.Gui.RefreshHud();
+		}
+		
+		static string GetHotbar(Game g) { return g.HotbarScale.ToString("F1"); }
+		static void SetHotbar(Game g, string v) { SetScale(g, v, ref g.HotbarScale, OptionsKey.HotbarScale); }
+		
+		static string GetInventory(Game g) { return g.InventoryScale.ToString("F1"); }
+		static void SetInventory(Game g, string v) { SetScale(g, v, ref g.InventoryScale, OptionsKey.InventoryScale); }
+		
+		static bool GetTabAuto(Game g) { return g.TabAutocomplete; }
+		void SetTabAuto(Game g, bool v) { g.TabAutocomplete = v; }
+		
+		static bool GetClickable(Game g) { return g.ClickableChat; }
+		void SetClickable(Game g, bool v) { g.ClickableChat = v; }
+		
+		static string GetChatScale(Game g) { return g.ChatScale.ToString("F1"); }
+		static void SetChatScale(Game g, string v) { SetScale(g, v, ref g.ChatScale, OptionsKey.ChatScale); }
+		
+		static string GetChatlines(Game g) { return g.ChatLines.ToString(); }
+		static void SetChatlines(Game g, string v) {
+			g.ChatLines = Int32.Parse(v);
+			Options.Set(OptionsKey.ChatLines, v);
+			g.Gui.RefreshHud();
+		}
+		
+		static bool GetUseFont(Game g) { return !g.Drawer2D.UseBitmappedChat; }
+		void SetUseFont(Game g, bool v) { g.Drawer2D.UseBitmappedChat = !v; HandleFontChange(); }
+		
+		static string GetFont(Game g) { return g.FontName; }
+		void SetFont(Game g, string v) {
+			g.FontName = v;
+			Options.Set(OptionsKey.FontName, v);
+			HandleFontChange();
 		}
 		
 		void HandleFontChange() {

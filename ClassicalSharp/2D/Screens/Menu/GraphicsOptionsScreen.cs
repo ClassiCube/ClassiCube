@@ -19,37 +19,15 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
+			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
+				MakeOpt(-1, -50, "FPS mode",                                     onClick, GetFPS,      SetFPS),
+				MakeOpt(-1, 0, "View distance",                                  onClick, GetViewDist, SetViewDist),
+				MakeBool(-1, 50, "Advanced lighting", OptionsKey.SmoothLighting, onClick, GetSmooth,   SetSmooth),
 				
-				MakeOpt(-1, -50, "FPS mode", OnWidgetClick,
-				        g => g.FpsLimit.ToString(),
-				        (g, v) => { }),
-
-				MakeOpt(-1, 0, "View distance", OnWidgetClick,
-				        g => g.ViewDistance.ToString(),
-				        (g, v) => g.SetViewDistance(Int32.Parse(v), true)),
-				
-				MakeBool(-1, 50, "Advanced lighting", OptionsKey.SmoothLighting,
-				         OnWidgetClick, g => g.SmoothLighting, SetSmoothLighting),
-				
-				MakeOpt(1, -50, "Names", OnWidgetClick,
-				        g => g.Entities.NamesMode.ToString(),
-				        (g, v) => {
-				        	object rawNames = Enum.Parse(typeof(NameMode), v);
-				        	g.Entities.NamesMode = (NameMode)rawNames;
-				        	Options.Set(OptionsKey.NamesMode, v);
-				        }),
-				
-				MakeOpt(1, 0, "Shadows", OnWidgetClick,
-				        g => g.Entities.ShadowMode.ToString(),
-				        (g, v) => {
-				        	object rawShadows = Enum.Parse(typeof(EntityShadow), v);
-				        	g.Entities.ShadowMode = (EntityShadow)rawShadows;
-				        	Options.Set(OptionsKey.EntityShadow, v);
-				        }),
-				
-				MakeBool(1, 50, "Mipmaps", OptionsKey.Mipmaps,
-				         OnWidgetClick, g => g.Graphics.Mipmaps, SetMipmaps),
+				MakeOpt(1, -50, "Names",                                         onClick, GetNames,    SetNames),			
+				MakeOpt(1, 0, "Shadows",                                         onClick, GetShadows,  SetShadows),			
+				MakeBool(1, 50, "Mipmaps", OptionsKey.Mipmaps,                   onClick, GetMipmaps,  SetMipmaps),
 				
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
@@ -60,32 +38,55 @@ namespace ClassicalSharp.Gui.Screens {
 			ButtonWidget btn = (ButtonWidget)widgets[0];
 			btn.SetValue = SetFPSLimitMethod;
 		}
+
 		
-		void SetSmoothLighting(Game g, bool v) {
+		static string GetFPS(Game g) { return g.FpsLimit.ToString(); }
+		static void SetFPS(Game g, string v) { }
+		
+		static string GetViewDist(Game g) { return g.ViewDistance.ToString(); }
+		static void SetViewDist(Game g, string v) { g.SetViewDistance(Int32.Parse(v), true); }
+		
+		static bool GetSmooth(Game g) { return g.SmoothLighting; }
+		static void SetSmooth(Game g, bool v) {
 			g.SmoothLighting = v;
 			ChunkMeshBuilder builder = g.MapRenderer.DefaultMeshBuilder();
 			g.MapRenderer.SetMeshBuilder(builder);
 			g.MapRenderer.Refresh();
 		}
 		
-		void SetMipmaps(Game g, bool v) {
+		static string GetNames(Game g) { return g.Entities.NamesMode.ToString(); }
+		static void SetNames(Game g, string v) {
+			object rawNames = Enum.Parse(typeof(NameMode), v);
+			g.Entities.NamesMode = (NameMode)rawNames;
+			Options.Set(OptionsKey.NamesMode, v);
+		}
+		
+		static string GetShadows(Game g) { return g.Entities.ShadowMode.ToString(); }
+		static void SetShadows(Game g, string v) {
+			object rawShadows = Enum.Parse(typeof(EntityShadow), v);
+			g.Entities.ShadowMode = (EntityShadow)rawShadows;
+			Options.Set(OptionsKey.EntityShadow, v);
+		}
+		
+		static bool GetMipmaps(Game g) { return g.Graphics.Mipmaps; }
+		static void SetMipmaps(Game g, bool v) {
 			g.Graphics.Mipmaps = v;
 			
-			string url = game.World.TextureUrl;
+			string url = g.World.TextureUrl;
 			if (url == null) {
-				TexturePack.ExtractDefault(game); return;
+				TexturePack.ExtractDefault(g); return;
 			}
 			
 			using (Stream data = TextureCache.GetStream(url)) {
 				if (data == null) {
-					TexturePack.ExtractDefault(game); return;
+					TexturePack.ExtractDefault(g); return;
 				}
 				
 				if (url.Contains(".zip")) {
 					TexturePack extractor = new TexturePack();
-					extractor.Extract(data, game);
+					extractor.Extract(data, g);
 				} else {
-					TexturePack.ExtractTerrainPng(game, data, url);
+					TexturePack.ExtractTerrainPng(g, data, url);
 				}
 			}
 		}

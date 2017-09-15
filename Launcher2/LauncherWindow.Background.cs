@@ -56,7 +56,7 @@ namespace Launcher {
 				
 				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer, data);
 				Drawer.SetFontBitmap(bmp);
-				useBitmappedFont = !Options.GetBool(OptionsKey.ArialChatFont, false);
+				useBitmappedFont = !Options.GetBool(OptionsKey.UseChatFont, false);
 				fontPng = true;
 			} else if (filename == "terrain.png") {
 				if (terrainPng) return;

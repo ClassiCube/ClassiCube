@@ -94,7 +94,7 @@ namespace ClassicalSharp.Map {
 				map.Env.SetWeather((Weather)weather);
 			}
 			
-			if (game.AllowCustomBlocks && CheckKey("BlockDefinitions", 1, metadata)) {
+			if (game.UseCustomBlocks && CheckKey("BlockDefinitions", 1, metadata)) {
 				foreach (var pair in curCpeExt) {
 					if (pair.Value.TagId != NbtTagType.Compound) continue;
 					if (!Utils.CaselessStarts(pair.Key, "Block")) continue;

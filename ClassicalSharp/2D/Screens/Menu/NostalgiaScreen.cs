@@ -28,26 +28,17 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
+			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
-				// Column 1
-				MakeBool(-1, -150, "Classic hand model", OptionsKey.ClassicArmModel,
-				         OnWidgetClick, g => g.ClassicArmModel, (g, v) => g.ClassicArmModel = v),
-				MakeBool(-1, -100, "Classic walk anim", OptionsKey.SimpleArmsAnim, true,
-				         OnWidgetClick, g => !g.SimpleArmsAnim, (g, v) => g.SimpleArmsAnim = !v),				
-				MakeBool(-1, -50, "Classic gui textures", OptionsKey.UseClassicGui,
-				         OnWidgetClick, g => g.UseClassicGui, (g, v) => g.UseClassicGui = v),				
-				MakeBool(-1, 0, "Classic player list", OptionsKey.UseClassicTabList,
-				         OnWidgetClick, g => g.UseClassicTabList, (g, v) => g.UseClassicTabList = v),				
-				MakeBool(-1, 50, "Classic options", OptionsKey.UseClassicOptions,
-				         OnWidgetClick, g => g.UseClassicOptions, (g, v) => g.UseClassicOptions = v),
-				
-				// Column 2
-				MakeBool(1, -150, "Allow custom blocks", OptionsKey.AllowCustomBlocks,
-				         OnWidgetClick, g => g.AllowCustomBlocks, (g, v) => g.AllowCustomBlocks = v),			
-				MakeBool(1, -100, "Use CPE", OptionsKey.UseCPE,
-				         OnWidgetClick, g => g.UseCPE, (g, v) => g.UseCPE = v),				
-				MakeBool(1, -50, "Use server textures", OptionsKey.AllowServerTextures,
-				         OnWidgetClick, g => g.AllowServerTextures, (g, v) => g.AllowServerTextures = v),
+				MakeBool(-1, -150, "Classic hand model", OptionsKey.ClassicArmModel,     onClick, GetHand,   SetHand),
+				MakeBool(-1, -100, "Classic walk anim", OptionsKey.SimpleArmsAnim, true, onClick, GetAnim,   SetAnim),
+				MakeBool(-1, -50, "Classic gui textures", OptionsKey.UseClassicGui,      onClick, GetGui,    SetGui),
+				MakeBool(-1, 0, "Classic player list", OptionsKey.UseClassicTabList,     onClick, GetList,   SetList),
+				MakeBool(-1, 50, "Classic options", OptionsKey.UseClassicOptions,        onClick, GetOpts,   SetOpts),				
+
+				MakeBool(1, -150, "Allow custom blocks", OptionsKey.UseCustomBlocks,     onClick, GetCustom, SetCustom),
+				MakeBool(1, -100, "Use CPE", OptionsKey.UseCPE,                          onClick, GetCPE,    SetCPE),
+				MakeBool(1, -50, "Use server textures", OptionsKey.UseServerTextures,    onClick, GetTexs,   SetTexs),
 
 				TextWidget.Create(game, "&eButtons on the right require a client restart", regularFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100),
@@ -57,6 +48,30 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 		}
 		
+		static bool GetHand(Game g) { return  g.ClassicArmModel; }
+		static void SetHand(Game g, bool v) { g.ClassicArmModel = v; }
+		
+		static bool GetAnim(Game g) { return  !g.SimpleArmsAnim; }
+		static void SetAnim(Game g, bool v) { g.SimpleArmsAnim = !v; }
+		
+		static bool GetGui(Game g) { return  g.UseClassicGui; }
+		static void SetGui(Game g, bool v) { g.UseClassicGui = v; }
+		
+		static bool GetList(Game g) { return  g.UseClassicTabList; }
+		static void SetList(Game g, bool v) { g.UseClassicTabList = v; }
+		
+		static bool GetOpts(Game g) { return  g.UseClassicOptions; }
+		static void SetOpts(Game g, bool v) { g.UseClassicOptions = v; }
+		
+		static bool GetCustom(Game g) { return  g.UseCustomBlocks; }
+		static void SetCustom(Game g, bool v) { g.UseCustomBlocks = v; }
+		
+		static bool GetCPE(Game g) { return  g.UseCPE; }
+		static void SetCPE(Game g, bool v) { g.UseCPE = v; }
+		
+		static bool GetTexs(Game g) { return  g.AllowServerTextures; }
+		static void SetTexs(Game g, bool v) { g.AllowServerTextures = v; }
+				
 		Screen PreviousScreen() {
 			if (game.UseClassicOptions) return new PauseScreen(game);
 			return new OptionsGroupScreen(game);

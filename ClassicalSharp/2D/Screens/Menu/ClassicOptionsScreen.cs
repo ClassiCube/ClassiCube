@@ -17,50 +17,22 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			IServerConnection network = game.Server;
-			
+			bool multi = !game.Server.IsSinglePlayer, hacks = game.ClassicHacks;
+			ClickHandler onClick = OnWidgetClick;			
 			widgets = new Widget[] {
-				// Column 1
-				MakeVolumeBool(-1, -150, "Music", OptionsKey.MusicVolume,
-				        g => g.MusicVolume > 0,
-				        (g, v) => { g.MusicVolume = v ? 100 : 0; g.AudioPlayer.SetMusic(g.MusicVolume); }),
+				MakeVolumeBool(-1, -150, "Music", OptionsKey.MusicVolume,                     GetMusic,    SetMusic),				
+				MakeBool(-1, -100, "Invert mouse", OptionsKey.InvertMouse,           onClick, GetInvert,   SetInvert),				
+				MakeOpt(-1, -50, "View distance",                                    onClick, GetViewDist, SetViewDist),			
+				multi ? null : MakeBool(-1, 0, "Block physics", OptionsKey.Physics,  onClick, GetPhysics,  SetPhysics),
 				
-				MakeBool(-1, -100, "Invert mouse", OptionsKey.InvertMouse,
-				         OnWidgetClick, g => g.InvertMouse, (g, v) => g.InvertMouse = v),
-				
-				MakeOpt(-1, -50, "View distance", OnWidgetClick,
-				        g => g.ViewDistance.ToString(),
-				        (g, v) => g.SetViewDistance(Int32.Parse(v), true)),
-				
-				!network.IsSinglePlayer ? null :
-					MakeBool(-1, 0, "Block physics", OptionsKey.SingleplayerPhysics, OnWidgetClick,
-					         g => ((SinglePlayerServer)network).physics.Enabled,
-					         (g, v) => ((SinglePlayerServer)network).physics.Enabled = v),
-				
-				// Column 2
-				MakeVolumeBool(1, -150, "Sound", OptionsKey.SoundsVolume,
-				        g => g.SoundsVolume > 0,
-				        (g, v) => { g.SoundsVolume = v ? 100 : 0; g.AudioPlayer.SetSounds(g.SoundsVolume); }),
-				
-				MakeBool(1, -100, "Show FPS", OptionsKey.ShowFPS,
-				         OnWidgetClick, g => g.ShowFPS, (g, v) => g.ShowFPS = v),
-				
-				MakeBool(1, -50, "View bobbing", OptionsKey.ViewBobbing,
-				         OnWidgetClick, g => g.ViewBobbing, (g, v) => g.ViewBobbing = v),
-				
-				MakeOpt(1, 0, "FPS mode", OnWidgetClick,
-				        g => g.FpsLimit.ToString(),
-				        (g, v) => { }),
-				
-				!game.ClassicHacks ? null :
-					MakeBool(0, 60, "Hacks enabled", OptionsKey.HacksEnabled,
-					         OnWidgetClick, g => g.LocalPlayer.Hacks.Enabled,
-					         (g, v) => { g.LocalPlayer.Hacks.Enabled = v;
-					         	g.LocalPlayer.CheckHacksConsistency(); }),
+				MakeVolumeBool(1, -150, "Sound", OptionsKey.SoundsVolume,                     GetSounds,  SetSounds),
+				MakeBool(1, -100, "Show FPS", OptionsKey.ShowFPS,                    onClick, GetShowFPS, SetShowFPS),				
+				MakeBool(1, -50, "View bobbing", OptionsKey.ViewBobbing,             onClick, GetViewBob, SetViewBob),				
+				MakeOpt(1, 0, "FPS mode",                                            onClick, GetFPS,     SetFPS),				
+				!hacks ? null : MakeBool(0, 60, "Hacks enabled", OptionsKey.HacksOn, onClick, GetHacks, SetHacks),
 				
 				ButtonWidget.Create(game, 400, "Controls", titleFont, LeftOnly(SwitchClassic))
-					.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, 95),
-				
+					.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, 95),				
 				MakeBack(400, "Done", 25, titleFont, SwitchPause),
 				null, null,
 			};
@@ -71,7 +43,34 @@ namespace ClassicalSharp.Gui.Screens {
 			btn.SetValue = SetFPSLimitMethod;
 		}
 		
-		void SwitchClassic(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g)); }
+		static bool GetMusic(Game g) { return g.MusicVolume > 0; }
+		static void SetMusic(Game g, bool v) { g.MusicVolume = v ? 100 : 0; g.AudioPlayer.SetMusic(g.MusicVolume); }
+		
+		static bool GetInvert(Game g) { return g.InvertMouse; }
+		static void SetInvert(Game g, bool v) { g.InvertMouse = v; }
+		
+		static string GetViewDist(Game g) { return g.ViewDistance.ToString(); }
+		static void SetViewDist(Game g, string v) { g.SetViewDistance(Int32.Parse(v), true); }
+		
+		static bool GetPhysics(Game g) { return ((SinglePlayerServer)g.Server).physics.Enabled; }
+		static void SetPhysics(Game g, bool v) { ((SinglePlayerServer)g.Server).physics.Enabled = v; }
+		
+		static bool GetSounds(Game g) { return g.SoundsVolume > 0; }
+		static void SetSounds(Game g, bool v) { g.SoundsVolume = v ? 100 : 0; g.AudioPlayer.SetSounds(g.SoundsVolume); }
+		
+		static bool GetShowFPS(Game g) { return g.ShowFPS; }
+		static void SetShowFPS(Game g, bool v) { g.ShowFPS = v; }
+		
+		static bool GetViewBob(Game g) { return g.ViewBobbing; }
+		static void SetViewBob(Game g, bool v) { g.ViewBobbing = v; }
+		
+		static string GetFPS(Game g) { return g.FpsLimit.ToString(); }
+		static void SetFPS(Game g, string v) { }
+		
+		static bool GetHacks(Game g) { return g.LocalPlayer.Hacks.Enabled; }
+		static void SetHacks(Game g, bool v) { g.LocalPlayer.Hacks.Enabled = v; g.LocalPlayer.CheckHacksConsistency(); }
+		
+		static void SwitchClassic(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g)); }
 		
 		ButtonWidget MakeVolumeBool(int dir, int y, string text, string optKey,
 		                            ButtonBoolGetter getter, ButtonBoolSetter setter) {

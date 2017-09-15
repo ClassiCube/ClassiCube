@@ -64,15 +64,15 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 		}
 		
-		void SwitchGenLevel(Game g, Widget w) { g.Gui.SetNewScreen(new GenLevelScreen(g)); }
-		void SwitchLoadLevel(Game g, Widget w) { g.Gui.SetNewScreen(new LoadLevelScreen(g)); }
-		void SwitchSaveLevel(Game g, Widget w) { g.Gui.SetNewScreen(new SaveLevelScreen(g)); }
-		void SwitchTexPack(Game g, Widget w) { g.Gui.SetNewScreen(new TexturePackScreen(g)); }
-		void SwitchHotkeys(Game g, Widget w) { g.Gui.SetNewScreen(new HotkeyListScreen(g)); }
-		void SwitchNostalgiaOptions(Game g, Widget w) { g.Gui.SetNewScreen(new NostalgiaScreen(g)); }
-		void SwitchGame(Game g, Widget w) { g.Gui.SetNewScreen(null); }
-		void SwitchClassicOptions(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicOptionsScreen(g)); }
-		void QuitGame(Game g, Widget w) { g.Exit(); }
+		static void SwitchGenLevel(Game g, Widget w) { g.Gui.SetNewScreen(new GenLevelScreen(g)); }
+		static void SwitchLoadLevel(Game g, Widget w) { g.Gui.SetNewScreen(new LoadLevelScreen(g)); }
+		static void SwitchSaveLevel(Game g, Widget w) { g.Gui.SetNewScreen(new SaveLevelScreen(g)); }
+		static void SwitchTexPack(Game g, Widget w) { g.Gui.SetNewScreen(new TexturePackScreen(g)); }
+		static void SwitchHotkeys(Game g, Widget w) { g.Gui.SetNewScreen(new HotkeyListScreen(g)); }
+		static void SwitchNostalgiaOptions(Game g, Widget w) { g.Gui.SetNewScreen(new NostalgiaScreen(g)); }
+		static void SwitchGame(Game g, Widget w) { g.Gui.SetNewScreen(null); }
+		static void SwitchClassicOptions(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicOptionsScreen(g)); }
+		static void QuitGame(Game g, Widget w) { g.Exit(); }
 		
 		void CheckHacksAllowed(object sender, EventArgs e) {
 			if (game.UseClassicOptions) return;

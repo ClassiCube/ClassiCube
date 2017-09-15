@@ -75,8 +75,8 @@ namespace ClassicalSharp {
 			AsyncDownloader = AddComponent(new AsyncDownloader(Drawer2D));
 			Lighting = AddComponent(new BasicLighting());
 			
-			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool(OptionsKey.ArialChatFont, false);
-			Drawer2D.BlackTextShadows = Options.GetBool(OptionsKey.BlackTextShadows, false);
+			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool(OptionsKey.UseChatFont, false);
+			Drawer2D.BlackTextShadows = Options.GetBool(OptionsKey.BlackText, false);
 			Graphics.Mipmaps = Options.GetBool(OptionsKey.Mipmaps, false);
 			
 			TerrainAtlas1D = new TerrainAtlas1D(this);
@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 		void LoadOptions() {
 			ClassicMode = Options.GetBool("mode-classic", false);
 			ClassicHacks = Options.GetBool(OptionsKey.AllowClassicHacks, false);
-			AllowCustomBlocks = Options.GetBool(OptionsKey.AllowCustomBlocks, true);
+			UseCustomBlocks = Options.GetBool(OptionsKey.UseCustomBlocks, true);
 			UseCPE = Options.GetBool(OptionsKey.UseCPE, true);
 			SimpleArmsAnim = Options.GetBool(OptionsKey.SimpleArmsAnim, false);
 			ChatLogging = Options.GetBool(OptionsKey.ChatLogging, true);
@@ -182,7 +182,7 @@ namespace ClassicalSharp {
 			ModifiableLiquids = !ClassicMode && Options.GetBool(OptionsKey.ModifiableLiquids, false);
 			CameraClipping = Options.GetBool(OptionsKey.CameraClipping, true);
 			
-			AllowServerTextures = Options.GetBool(OptionsKey.AllowServerTextures, true);
+			AllowServerTextures = Options.GetBool(OptionsKey.UseServerTextures, true);
 			MouseSensitivity = Options.GetInt(OptionsKey.Sensitivity, 1, 100, 30);
 			ShowBlockInHand = Options.GetBool(OptionsKey.ShowBlockInHand, true);
 			InvertMouse = Options.GetBool(OptionsKey.InvertMouse, false);
