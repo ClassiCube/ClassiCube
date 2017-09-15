@@ -18,13 +18,13 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextRecreated() {
 			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
-				MakeBool(-1, -150, "Black text shadows", OptionsKey.BlackText,    onClick, GetShadows,   SetShadows),				
+				MakeBool(-1, -150, "Black text shadows", OptionsKey.BlackText,    onClick, GetShadows,   SetShadows),
 				MakeBool(-1, -100, "Show FPS", OptionsKey.ShowFPS,                onClick, GetShowFPS,   SetShowFPS),
 				MakeOpt(-1, -50, "Hotbar scale",                                  onClick, GetHotbar,    SetHotbar),
 				MakeOpt(-1, 0, "Inventory scale",                                 onClick, GetInventory, SetInventory),
 				MakeBool(-1, 50, "Tab auto-complete", OptionsKey.TabAutocomplete, onClick, GetTabAuto,   SetTabAuto),
 
-				MakeBool(1, -150, "Clickable chat", OptionsKey.ClickableChat,     onClick, GetClickable, SetClickable),				
+				MakeBool(1, -150, "Clickable chat", OptionsKey.ClickableChat,     onClick, GetClickable, SetClickable),
 				MakeOpt(1, -100, "Chat scale",                                    onClick, GetChatScale, SetChatScale),
 				MakeOpt(1, -50, "Chat lines",                                     onClick, GetChatlines, SetChatlines),
 				MakeBool(1, 0, "Use font", OptionsKey.UseChatFont,                onClick, GetUseFont,   SetUseFont),

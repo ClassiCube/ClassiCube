@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui.Screens {
 
 				multi ? null : MakeBool(1, -100, "Block physics", OptionsKey.Physics, onClick, GetPhysics,     SetPhysics),
 				MakeBool(1, -50, "Auto close launcher", OptionsKey.AutoCloseLauncher, onClick, GetAutoClose,   SetAutoClose),
-				MakeBool(1, 0, "Invert mouse", OptionsKey.InvertMouse,                onClick, GetInvert,      SetInvert),				
+				MakeBool(1, 0, "Invert mouse", OptionsKey.InvertMouse,                onClick, GetInvert,      SetInvert),
 				MakeOpt(1, 50, "Mouse sensitivity",                                   onClick, GetSensitivity, SetSensitivity),
 
 				MakeBack(false, titleFont, SwitchOptions),

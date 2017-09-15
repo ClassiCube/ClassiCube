@@ -29,12 +29,12 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(-1, -100, "Sky col",     onClick, GetSkyCol,       SetSkyCol),
 				MakeOpt(-1, -50,  "Fog col",     onClick, GetFogCol,       SetFogCol),
 				MakeOpt(-1, 0, "Clouds speed",   onClick, GetCloudsSpeed,  SetCloudsSpeed),
-				MakeOpt(-1, 50, "Clouds height", onClick, GetCloudsHeight, SetCloudsHeight),				
+				MakeOpt(-1, 50, "Clouds height", onClick, GetCloudsHeight, SetCloudsHeight),
 
 				MakeOpt(1, -150, "Sunlight col", onClick, GetSunCol,       SetSunCol),
 				MakeOpt(1, -100, "Shadow col",   onClick, GetShadowCol,    SetShadowCol),
-				MakeOpt(1, -50, "Weather",       onClick, GetWeather,      SetWeather),			
-				MakeOpt(1, 0, "Rain/Snow speed", onClick, GetWeatherSpeed, SetWeatherSpeed),				
+				MakeOpt(1, -50, "Weather",       onClick, GetWeather,      SetWeather),
+				MakeOpt(1, 0, "Rain/Snow speed", onClick, GetWeatherSpeed, SetWeatherSpeed),
 				MakeOpt(1, 50, "Water level",    onClick, GetEdgeHeight,   SetEdgeHeight),
 				
 				MakeBack(false, titleFont, SwitchOptions),

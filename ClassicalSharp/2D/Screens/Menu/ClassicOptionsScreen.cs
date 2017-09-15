@@ -20,19 +20,19 @@ namespace ClassicalSharp.Gui.Screens {
 			bool multi = !game.Server.IsSinglePlayer, hacks = game.ClassicHacks;
 			ClickHandler onClick = OnWidgetClick;			
 			widgets = new Widget[] {
-				MakeVolumeBool(-1, -150, "Music", OptionsKey.MusicVolume,                     GetMusic,    SetMusic),				
-				MakeBool(-1, -100, "Invert mouse", OptionsKey.InvertMouse,           onClick, GetInvert,   SetInvert),				
-				MakeOpt(-1, -50, "View distance",                                    onClick, GetViewDist, SetViewDist),			
+				MakeVolumeBool(-1, -150, "Music", OptionsKey.MusicVolume,                     GetMusic,    SetMusic),
+				MakeBool(-1, -100, "Invert mouse", OptionsKey.InvertMouse,           onClick, GetInvert,   SetInvert),
+				MakeOpt(-1, -50, "View distance",                                    onClick, GetViewDist, SetViewDist),
 				multi ? null : MakeBool(-1, 0, "Block physics", OptionsKey.Physics,  onClick, GetPhysics,  SetPhysics),
 				
 				MakeVolumeBool(1, -150, "Sound", OptionsKey.SoundsVolume,                     GetSounds,  SetSounds),
-				MakeBool(1, -100, "Show FPS", OptionsKey.ShowFPS,                    onClick, GetShowFPS, SetShowFPS),				
-				MakeBool(1, -50, "View bobbing", OptionsKey.ViewBobbing,             onClick, GetViewBob, SetViewBob),				
-				MakeOpt(1, 0, "FPS mode",                                            onClick, GetFPS,     SetFPS),				
+				MakeBool(1, -100, "Show FPS", OptionsKey.ShowFPS,                    onClick, GetShowFPS, SetShowFPS),
+				MakeBool(1, -50, "View bobbing", OptionsKey.ViewBobbing,             onClick, GetViewBob, SetViewBob),
+				MakeOpt(1, 0, "FPS mode",                                            onClick, GetFPS,     SetFPS),
 				!hacks ? null : MakeBool(0, 60, "Hacks enabled", OptionsKey.HacksOn, onClick, GetHacks, SetHacks),
 				
 				ButtonWidget.Create(game, 400, "Controls", titleFont, LeftOnly(SwitchClassic))
-					.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, 95),				
+					.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, 95),
 				MakeBack(400, "Done", 25, titleFont, SwitchPause),
 				null, null,
 			};

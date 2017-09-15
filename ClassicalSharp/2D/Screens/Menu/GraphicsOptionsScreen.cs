@@ -25,8 +25,8 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(-1, 0, "View distance",                                  onClick, GetViewDist, SetViewDist),
 				MakeBool(-1, 50, "Advanced lighting", OptionsKey.SmoothLighting, onClick, GetSmooth,   SetSmooth),
 				
-				MakeOpt(1, -50, "Names",                                         onClick, GetNames,    SetNames),			
-				MakeOpt(1, 0, "Shadows",                                         onClick, GetShadows,  SetShadows),			
+				MakeOpt(1, -50, "Names",                                         onClick, GetNames,    SetNames),
+				MakeOpt(1, 0, "Shadows",                                         onClick, GetShadows,  SetShadows),
 				MakeBool(1, 50, "Mipmaps", OptionsKey.Mipmaps,                   onClick, GetMipmaps,  SetMipmaps),
 				
 				MakeBack(false, titleFont, SwitchOptions),

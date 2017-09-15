@@ -28,17 +28,17 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextRecreated() {
 			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
-				MakeBool(-1, -150, "Hacks enabled", OptionsKey.HacksOn,          onClick, GetHacks,       SetHacks),
-				MakeOpt(-1, -100, "Speed multiplier",                                 onClick, GetSpeed,       SetSpeed),
-				MakeBool(-1, -50, "Camera clipping", OptionsKey.CameraClipping,       onClick, GetCameraClip,  SetCameraClip),				
-				MakeOpt(-1, 0, "Jump height",                                         onClick, GetJump,        SetJump),				
-				MakeBool(-1, 50, "WOM style hacks", OptionsKey.WOMStyleHacks,         onClick, GetWOMHacks,    SetWOMHacks),
+				MakeBool(-1, -150, "Hacks enabled", OptionsKey.HacksOn,               onClick, GetHacks,    SetHacks),
+				MakeOpt(-1, -100, "Speed multiplier",                                 onClick, GetSpeed,    SetSpeed),
+				MakeBool(-1, -50, "Camera clipping", OptionsKey.CameraClipping,       onClick, GetClipping, SetClipping),
+				MakeOpt(-1, 0, "Jump height",                                         onClick, GetJump,     SetJump),
+				MakeBool(-1, 50, "WOM style hacks", OptionsKey.WOMStyleHacks,         onClick, GetWOMHacks, SetWOMHacks),
 
-				MakeBool(1, -150, "Full block stepping", OptionsKey.FullBlockStep,    onClick, GetFullStep,    SetFullStep),
-				MakeBool(1, -100, "Modifiable liquids", OptionsKey.ModifiableLiquids, onClick, GetLiquids,     SetLiquids),
-				MakeBool(1, -50, "Pushback placing", OptionsKey.PushbackPlacing,      onClick, GetPushback,    SetPushback),
-				MakeBool(1, 0, "Noclip slide", OptionsKey.NoclipSlide,                onClick, GetNoclipSlide, SetNoclipSlide),
-				MakeOpt(1, 50, "Field of view",                                       onClick, GetFOV,         SetFOV),
+				MakeBool(1, -150, "Full block stepping", OptionsKey.FullBlockStep,    onClick, GetFullStep, SetFullStep),
+				MakeBool(1, -100, "Modifiable liquids", OptionsKey.ModifiableLiquids, onClick, GetLiquids,  SetLiquids),
+				MakeBool(1, -50, "Pushback placing", OptionsKey.PushbackPlacing,      onClick, GetPushback, SetPushback),
+				MakeBool(1, 0, "Noclip slide", OptionsKey.NoclipSlide,                onClick, GetSlide,    SetSlide),
+				MakeOpt(1, 50, "Field of view",                                       onClick, GetFOV,      SetFOV),
 				
 				null,
 				MakeBack(false, titleFont, SwitchOptions),
@@ -57,8 +57,8 @@ namespace ClassicalSharp.Gui.Screens {
 			g.LocalPlayer.Hacks.SpeedMultiplier = Utils.ParseDecimal(v); Options.Set(OptionsKey.Speed, v);
 		}
 		
-		static string GetCameraClip(Game g) { return GetBool(g.CameraClipping); }
-		static void SetCameraClip(Game g, bool v) { g.CameraClipping = v; }		
+		static string GetClipping(Game g) { return GetBool(g.CameraClipping); }
+		static void SetClipping(Game g, bool v) { g.CameraClipping = v; }		
 		
 		static string GetJump(Game g) { return g.LocalPlayer.JumpHeight.ToString("F3"); }
 		static void SetJump(Game g, string v) {
@@ -77,8 +77,8 @@ namespace ClassicalSharp.Gui.Screens {
 		static string GetLiquids(Game g) { return GetBool(g.ModifiableLiquids); }
 		static void SetLiquids(Game g, bool v) { g.ModifiableLiquids = v; }
 		
-		static string GetNoclipSlide(Game g) { return GetBool(g.LocalPlayer.Hacks.NoclipSlide); }
-		static void SetNoclipSlide(Game g, bool v) { g.LocalPlayer.Hacks.NoclipSlide = v; }
+		static string GetSlide(Game g) { return GetBool(g.LocalPlayer.Hacks.NoclipSlide); }
+		static void SetSlide(Game g, bool v) { g.LocalPlayer.Hacks.NoclipSlide = v; }
 		
 		static string GetFOV(Game g) { return g.Fov.ToString(); }
 		static void SetFOV(Game g, string v) {
