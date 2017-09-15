@@ -527,5 +527,8 @@
     <ClCompile Include="Options.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="DateTime.c">
+      <Filter>Source Files\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

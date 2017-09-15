@@ -250,6 +250,7 @@
     <ClCompile Include="Builder.c" />
     <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="D3D9Api.c" />
+    <ClCompile Include="DateTime.c" />
     <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
     <ClCompile Include="DisplayDevice.c" />

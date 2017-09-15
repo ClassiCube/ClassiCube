@@ -113,7 +113,7 @@ namespace ClassicalSharp {
 			
 			// handling of blocks inside the map, above, and on borders
 			if (x >= 0 && z >= 0 && x < map.Width && z < map.Length) {
-				if (y >= map.Height) return 0;
+				if (y >= map.Height) return Block.Air;
 				if (sides && y == -1 && origin.Y > 0) return border;
 				if (sides && y == 0  && origin.Y < 0) return border;
 				
@@ -127,12 +127,12 @@ namespace ClassicalSharp {
 			}
 			
 			// pick blocks on the map boundaries (when inside the map)
-			if (!sides || !insideMap) return 0;
+			if (!sides || !insideMap) return Block.Air;
 			if (y == 0 && origin.Y < 0) return border;
 			bool validX = (x == -1 || x == map.Width) && (z >= 0 && z < map.Length);
 			bool validZ = (z == -1 || z == map.Length) && (x >= 0 && x < map.Width);
 			if (y >= 0 && y < height && (validX || validZ)) return border;
-			return 0;
+			return Block.Air;
 		}
 	}
 }
