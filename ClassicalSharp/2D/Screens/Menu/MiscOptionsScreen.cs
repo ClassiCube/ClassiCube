@@ -53,16 +53,16 @@ namespace ClassicalSharp.Gui.Screens {
 			g.AudioPlayer.SetSounds(g.SoundsVolume);
 		}
 		
-		static bool GetViewBob(Game g) { return  g.ViewBobbing; }
+		static string GetViewBob(Game g) { return GetBool(g.ViewBobbing); }
 		static void SetViewBob(Game g, bool v) { g.ViewBobbing = v; }
 		
-		static bool GetPhysics(Game g) { return  ((SinglePlayerServer)g.Server).physics.Enabled; }
+		static string GetPhysics(Game g) { return GetBool(((SinglePlayerServer)g.Server).physics.Enabled); }
 		static void SetPhysics(Game g, bool v) { ((SinglePlayerServer)g.Server).physics.Enabled = v; }
 		
-		static bool GetAutoClose(Game g) { return  Options.GetBool(OptionsKey.AutoCloseLauncher, false); }
+		static string GetAutoClose(Game g) { return GetBool(Options.GetBool(OptionsKey.AutoCloseLauncher, false)); }
 		static void SetAutoClose(Game g, bool v) { Options.Set(OptionsKey.AutoCloseLauncher, v); }
 		
-		static bool GetInvert(Game g) { return  g.InvertMouse; }
+		static string GetInvert(Game g) { return GetBool(g.InvertMouse); }
 		static void SetInvert(Game g, bool v) { g.InvertMouse = v; }
 		
 		static string GetSensitivity(Game g) { return g.MouseSensitivity.ToString(); }

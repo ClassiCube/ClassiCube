@@ -47,7 +47,7 @@ namespace ClassicalSharp.Gui.Screens {
 			CheckHacksAllowed(null, null);
 		}
 		
-		static bool GetHacks(Game g) { return g.LocalPlayer.Hacks.Enabled; }
+		static string GetHacks(Game g) { return GetBool(g.LocalPlayer.Hacks.Enabled); }
 		static void SetHacks(Game g, bool v) { 
 			g.LocalPlayer.Hacks.Enabled = v; g.LocalPlayer.CheckHacksConsistency(); 
 		}
@@ -57,7 +57,7 @@ namespace ClassicalSharp.Gui.Screens {
 			g.LocalPlayer.Hacks.SpeedMultiplier = Utils.ParseDecimal(v); Options.Set(OptionsKey.Speed, v);
 		}
 		
-		static bool GetCameraClip(Game g) { return g.CameraClipping; }
+		static string GetCameraClip(Game g) { return GetBool(g.CameraClipping); }
 		static void SetCameraClip(Game g, bool v) { g.CameraClipping = v; }		
 		
 		static string GetJump(Game g) { return g.LocalPlayer.JumpHeight.ToString("F3"); }
@@ -65,19 +65,19 @@ namespace ClassicalSharp.Gui.Screens {
 			g.LocalPlayer.physics.CalculateJumpVelocity(true, Utils.ParseDecimal(v));
 		}		
 		
-		static bool GetWOMHacks(Game g) { return  g.LocalPlayer.Hacks.WOMStyleHacks; }
+		static string GetWOMHacks(Game g) { return GetBool(g.LocalPlayer.Hacks.WOMStyleHacks); }
 		static void SetWOMHacks(Game g, bool v) { g.LocalPlayer.Hacks.WOMStyleHacks = v; }
 		
-		static bool GetFullStep(Game g) { return  g.LocalPlayer.Hacks.FullBlockStep; }
+		static string GetFullStep(Game g) { return GetBool(g.LocalPlayer.Hacks.FullBlockStep); }
 		static void SetFullStep(Game g, bool v) { g.LocalPlayer.Hacks.FullBlockStep = v; }
 		
-		static bool GetPushback(Game g) { return  g.LocalPlayer.Hacks.PushbackPlacing; }
+		static string GetPushback(Game g) { return GetBool(g.LocalPlayer.Hacks.PushbackPlacing); }
 		static void SetPushback(Game g, bool v) { g.LocalPlayer.Hacks.PushbackPlacing = v; }
 		
-		static bool GetLiquids(Game g) { return  g.ModifiableLiquids; }
+		static string GetLiquids(Game g) { return GetBool(g.ModifiableLiquids); }
 		static void SetLiquids(Game g, bool v) { g.ModifiableLiquids = v; }
 		
-		static bool GetNoclipSlide(Game g) { return  g.LocalPlayer.Hacks.NoclipSlide; }
+		static string GetNoclipSlide(Game g) { return GetBool(g.LocalPlayer.Hacks.NoclipSlide); }
 		static void SetNoclipSlide(Game g, bool v) { g.LocalPlayer.Hacks.NoclipSlide = v; }
 		
 		static string GetFOV(Game g) { return g.Fov.ToString(); }

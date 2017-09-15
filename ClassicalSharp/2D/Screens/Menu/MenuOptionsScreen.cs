@@ -122,27 +122,28 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected ButtonWidget MakeBool(int dir, int y, string text, string optKey,
-		                                ClickHandler onClick, ButtonBoolGetter getter, ButtonBoolSetter setter) {
+		                                ClickHandler onClick, ButtonValueGetter getter, ButtonBoolSetter setter) {
 			return MakeBool(dir, y, text, optKey, false, onClick, getter, setter);
 		}
 
 		protected ButtonWidget MakeBool(int dir, int y, string text, string optKey, bool invert,
-		                                ClickHandler onClick, ButtonBoolGetter getter, ButtonBoolSetter setter) {
+		                                ClickHandler onClick, ButtonValueGetter getter, ButtonBoolSetter setter) {
 			string optName = text;
-			text = text + ": " + (getter(game) ? "ON" : "OFF");
+			text = text + ": " + getter(game);
 			ButtonWidget widget = ButtonWidget.Create(game, 300, text, titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
 			widget.OptName = optName;
-			widget.GetValue = g => getter(g) ? "yes" : "no";
-			string target = invert ? "no" : "yes";
+			widget.GetValue = getter;
 			
+			string target = invert ? "OFF" : "ON";		
 			widget.SetValue = (g, v) => {
-				setter(g, v == "yes");
+				setter(g, v == "ON");
 				Options.Set(optKey, v == target);
-				widget.SetText(widget.OptName + ": " + (v == "yes" ? "ON" : "OFF"));
+				widget.SetText(widget.OptName + ": " + v);
 			};
 			return widget;
 		}
+		protected static string GetBool(bool v) { return v ? "ON" : "OFF"; }
 		
 		void ShowExtendedHelp() {
 			bool canShow = input == null && selectedWidget != null && descriptions != null;
@@ -189,7 +190,7 @@ namespace ClassicalSharp.Gui.Screens {
 			MenuInputValidator validator = validators[index];
 			if (validator is BooleanValidator) {
 				string value = button.GetValue(game);
-				button.SetValue(game, value == "yes" ? "no" : "yes");
+				button.SetValue(game, value == "ON" ? "OFF" : "ON");
 				UpdateDescription(button);
 				return;
 			} else if (validator is EnumValidator) {
@@ -234,8 +235,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void ChangeSetting() {
 			string text = input.Text.ToString();
-			if (((MenuInputWidget)input).Validator.IsValidValue(text))
+			if (((MenuInputWidget)input).Validator.IsValidValue(text)) {
 				targetWidget.SetValue(game, text);
+			}
 			
 			DisposeWidgets();
 			UpdateDescription(targetWidget);

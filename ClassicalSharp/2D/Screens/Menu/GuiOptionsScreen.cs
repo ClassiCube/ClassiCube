@@ -35,10 +35,10 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 		}
 		
-		static bool GetShadows(Game g) { return g.Drawer2D.BlackTextShadows; }
+		static string GetShadows(Game g) { return GetBool(g.Drawer2D.BlackTextShadows); }
 		void SetShadows(Game g, bool v) { g.Drawer2D.BlackTextShadows = v; HandleFontChange(); }
 		
-		static bool GetShowFPS(Game g) { return g.ShowFPS; }
+		static string GetShowFPS(Game g) { return GetBool(g.ShowFPS); }
 		static void SetShowFPS(Game g, bool v) { g.ShowFPS = v; }
 		
 		static void SetScale(Game g, string v, ref float target, string optKey) {
@@ -53,10 +53,10 @@ namespace ClassicalSharp.Gui.Screens {
 		static string GetInventory(Game g) { return g.InventoryScale.ToString("F1"); }
 		static void SetInventory(Game g, string v) { SetScale(g, v, ref g.InventoryScale, OptionsKey.InventoryScale); }
 		
-		static bool GetTabAuto(Game g) { return g.TabAutocomplete; }
+		static string GetTabAuto(Game g) { return GetBool(g.TabAutocomplete); }
 		void SetTabAuto(Game g, bool v) { g.TabAutocomplete = v; }
 		
-		static bool GetClickable(Game g) { return g.ClickableChat; }
+		static string GetClickable(Game g) { return GetBool(g.ClickableChat); }
 		void SetClickable(Game g, bool v) { g.ClickableChat = v; }
 		
 		static string GetChatScale(Game g) { return g.ChatScale.ToString("F1"); }
@@ -69,7 +69,7 @@ namespace ClassicalSharp.Gui.Screens {
 			g.Gui.RefreshHud();
 		}
 		
-		static bool GetUseFont(Game g) { return !g.Drawer2D.UseBitmappedChat; }
+		static string GetUseFont(Game g) { return GetBool(!g.Drawer2D.UseBitmappedChat); }
 		void SetUseFont(Game g, bool v) { g.Drawer2D.UseBitmappedChat = !v; HandleFontChange(); }
 		
 		static string GetFont(Game g) { return g.FontName; }

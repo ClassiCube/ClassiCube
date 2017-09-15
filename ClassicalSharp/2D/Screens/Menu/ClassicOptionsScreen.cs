@@ -43,48 +43,48 @@ namespace ClassicalSharp.Gui.Screens {
 			btn.SetValue = SetFPSLimitMethod;
 		}
 		
-		static bool GetMusic(Game g) { return g.MusicVolume > 0; }
+		static string GetMusic(Game g) { return GetBool(g.MusicVolume > 0); }
 		static void SetMusic(Game g, bool v) { g.MusicVolume = v ? 100 : 0; g.AudioPlayer.SetMusic(g.MusicVolume); }
 		
-		static bool GetInvert(Game g) { return g.InvertMouse; }
+		static string GetInvert(Game g) { return GetBool(g.InvertMouse); }
 		static void SetInvert(Game g, bool v) { g.InvertMouse = v; }
 		
 		static string GetViewDist(Game g) { return g.ViewDistance.ToString(); }
 		static void SetViewDist(Game g, string v) { g.SetViewDistance(Int32.Parse(v), true); }
 		
-		static bool GetPhysics(Game g) { return ((SinglePlayerServer)g.Server).physics.Enabled; }
+		static string GetPhysics(Game g) { return GetBool(((SinglePlayerServer)g.Server).physics.Enabled); }
 		static void SetPhysics(Game g, bool v) { ((SinglePlayerServer)g.Server).physics.Enabled = v; }
 		
-		static bool GetSounds(Game g) { return g.SoundsVolume > 0; }
+		static string GetSounds(Game g) { return GetBool(g.SoundsVolume > 0); }
 		static void SetSounds(Game g, bool v) { g.SoundsVolume = v ? 100 : 0; g.AudioPlayer.SetSounds(g.SoundsVolume); }
 		
-		static bool GetShowFPS(Game g) { return g.ShowFPS; }
+		static string GetShowFPS(Game g) { return GetBool(g.ShowFPS); }
 		static void SetShowFPS(Game g, bool v) { g.ShowFPS = v; }
 		
-		static bool GetViewBob(Game g) { return g.ViewBobbing; }
+		static string GetViewBob(Game g) { return GetBool(g.ViewBobbing); }
 		static void SetViewBob(Game g, bool v) { g.ViewBobbing = v; }
 		
 		static string GetFPS(Game g) { return g.FpsLimit.ToString(); }
 		static void SetFPS(Game g, string v) { }
 		
-		static bool GetHacks(Game g) { return g.LocalPlayer.Hacks.Enabled; }
+		static string GetHacks(Game g) { return GetBool(g.LocalPlayer.Hacks.Enabled); }
 		static void SetHacks(Game g, bool v) { g.LocalPlayer.Hacks.Enabled = v; g.LocalPlayer.CheckHacksConsistency(); }
 		
 		static void SwitchClassic(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g)); }
 		
 		ButtonWidget MakeVolumeBool(int dir, int y, string text, string optKey,
-		                            ButtonBoolGetter getter, ButtonBoolSetter setter) {
+		                            ButtonValueGetter getter, ButtonBoolSetter setter) {
 			string optName = text;
-			text = text + ": " + (getter(game) ? "ON" : "OFF");
+			text = text + ": " + getter;
 			ButtonWidget widget = ButtonWidget.Create(game, 300, text, titleFont, OnWidgetClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
 			widget.OptName = optName;
-			widget.GetValue = g => getter(g) ? "yes" : "no";
+			widget.GetValue = getter;
 			
 			widget.SetValue = (g, v) => {
-				setter(g, v == "yes");
-				Options.Set(optKey, v == "yes" ? 100 : 0);
-				widget.SetText(widget.OptName + ": " + (v == "yes" ? "ON" : "OFF"));
+				setter(g, v == "ON");
+				Options.Set(optKey, v == "ON" ? 100 : 0);
+				widget.SetText(widget.OptName + ": " + v);
 			};
 			return widget;
 		}

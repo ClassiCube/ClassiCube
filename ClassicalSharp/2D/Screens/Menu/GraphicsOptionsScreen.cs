@@ -46,7 +46,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static string GetViewDist(Game g) { return g.ViewDistance.ToString(); }
 		static void SetViewDist(Game g, string v) { g.SetViewDistance(Int32.Parse(v), true); }
 		
-		static bool GetSmooth(Game g) { return g.SmoothLighting; }
+		static string GetSmooth(Game g) { return GetBool(g.SmoothLighting); }
 		static void SetSmooth(Game g, bool v) {
 			g.SmoothLighting = v;
 			ChunkMeshBuilder builder = g.MapRenderer.DefaultMeshBuilder();
@@ -68,7 +68,7 @@ namespace ClassicalSharp.Gui.Screens {
 			Options.Set(OptionsKey.EntityShadow, v);
 		}
 		
-		static bool GetMipmaps(Game g) { return g.Graphics.Mipmaps; }
+		static string GetMipmaps(Game g) { return GetBool(g.Graphics.Mipmaps); }
 		static void SetMipmaps(Game g, bool v) {
 			g.Graphics.Mipmaps = v;
 			

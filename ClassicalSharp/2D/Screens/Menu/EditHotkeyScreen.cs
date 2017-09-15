@@ -71,7 +71,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextRecreated() {
 			string flags = HotkeyListScreen.MakeFlagsString(curHotkey.Flags);
 			if (curHotkey.Text == null) curHotkey.Text = "";
-			string staysOpen = curHotkey.StaysOpen ? "yes" : "no";
+			string staysOpen = curHotkey.StaysOpen ? "ON" : "OFF";
 			bool existed = origHotkey.BaseKey != Key.Unknown;
 			
 			widgets = new Widget[] {
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void LeaveOpenClick(Game game, Widget widget) {
 			LostFocus();
 			curHotkey.StaysOpen = !curHotkey.StaysOpen;
-			string staysOpen = curHotkey.StaysOpen ? "yes" : "no";
+			string staysOpen = curHotkey.StaysOpen ? "ON" : "OFF";
 			staysOpen = "Input stays open: " + staysOpen;
 			SetButton(widgets[3], staysOpen);
 		}
