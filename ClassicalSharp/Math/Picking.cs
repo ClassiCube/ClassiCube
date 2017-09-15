@@ -114,8 +114,8 @@ namespace ClassicalSharp {
 			// handling of blocks inside the map, above, and on borders
 			if (x >= 0 && z >= 0 && x < map.Width && z < map.Length) {
 				if (y >= map.Height) return 0;
-				if (sides && y == -1 && insideMap) return border;
-				if (sides && y == 0 && origin.Y < 0) return border;
+				if (sides && y == -1 && origin.Y > 0) return border;
+				if (sides && y == 0  && origin.Y < 0) return border;
 				
 				if (sides && x == 0 && y >= 0 && y < height && origin.X < 0) return border;
 				if (sides && z == 0 && y >= 0 && y < height && origin.Z < 0) return border;

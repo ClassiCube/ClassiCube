@@ -116,8 +116,8 @@ BlockID Picking_GetBlock(Int32 x, Int32 y, Int32 z, Vector3I origin) {
 	/* handling of blocks inside the map, above, and on borders */
 	if (x >= 0 && z >= 0 && x < World_Width && z < World_Length) {
 		if (y >= World_Height) return 0;
-		if (sides && y == -1 && insideMap)   return PICKING_BORDER;
-		if (sides && y == 0 && origin.Y < 0) return PICKING_BORDER;
+		if (sides && y == -1 && origin.Y > 0) return PICKING_BORDER;
+		if (sides && y == 0  && origin.Y < 0) return PICKING_BORDER;
 
 		if (sides && x == 0 && y >= 0 && y < height && origin.X < 0) return PICKING_BORDER;
 		if (sides && z == 0 && y >= 0 && y < height && origin.Z < 0) return PICKING_BORDER;
