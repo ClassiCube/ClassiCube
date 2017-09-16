@@ -186,10 +186,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void DrawVb_Lines(int verticesCount);
 		
 		/// <summary> Draws the specified subset of the vertices in the current vertex buffer as triangles. </summary>
-		public abstract void DrawVb_IndexedTris(int indicesCount, int startIndex);
+		public abstract void DrawVb_IndexedTris(int verticesCount, int startVertex);
 		
 		/// <summary> Draws the specified subset of the vertices in the current vertex buffer as triangles. </summary>
-		public abstract void DrawVb_IndexedTris(int indicesCount);
+		public abstract void DrawVb_IndexedTris(int verticesCount);
 		
 		/// <summary> Optimised version of DrawIndexedVb for VertexFormat.Pos3fTex2fCol4b </summary>
 		internal abstract void DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex);

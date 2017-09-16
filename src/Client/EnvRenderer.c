@@ -79,7 +79,7 @@ void EnvRenderer_RenderClouds(Real64 deltaTime) {
 	Gfx_BindTexture(env_cloudsTex);
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
 	Gfx_BindVb(env_cloudsVb);
-	Gfx_DrawVb_IndexedTris(ICOUNT(env_cloudVertices));
+	Gfx_DrawVb_IndexedTris(env_cloudVertices);
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
 
@@ -96,14 +96,14 @@ void EnvRenderer_RenderMainEnv(Real64 deltaTime) {
 	Gfx_BindVb(env_skyVb);
 
 	if (skyY == normalY) {
-		Gfx_DrawVb_IndexedTris(ICOUNT(env_skyVertices));
+		Gfx_DrawVb_IndexedTris(env_skyVertices);
 	} else {
 		Matrix m = Matrix_Identity;
 		m.Row3.Y = skyY - normalY; /* Y translation matrix */
 
 		Gfx_PushMatrix();
 		Gfx_MultiplyMatrix(&m);
-		Gfx_DrawVb_IndexedTris(ICOUNT(env_skyVertices));
+		Gfx_DrawVb_IndexedTris(env_skyVertices);
 		Gfx_PopMatrix();
 	}
 	EnvRenderer_RenderClouds(deltaTime);

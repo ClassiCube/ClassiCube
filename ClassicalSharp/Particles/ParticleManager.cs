@@ -81,7 +81,7 @@ namespace ClassicalSharp.Particles {
 				if (partCount == 0) continue;
 				
 				gfx.BindTexture(game.TerrainAtlas1D.TexIds[i]);
-				gfx.DrawVb_IndexedTris(partCount * 6 / 4, offset * 6 / 4);
+				gfx.DrawVb_IndexedTris(partCount, offset);
 				offset += partCount;
 			}
 		}

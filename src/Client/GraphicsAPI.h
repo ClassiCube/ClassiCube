@@ -12,8 +12,6 @@
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-
-#define VCOUNT(indicesCount) ((indicesCount) / 6 * 4)
 #define ICOUNT(verticesCount) ((verticesCount) / 4 * 6)
 
 /* Initalises this graphics API. */
@@ -125,11 +123,11 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount);
 /* Draws the specified subset of the vertices in the current vertex buffer as lines. */
 void Gfx_DrawVb_Lines(Int32 verticesCount);
 /* Draws the specified subset of the vertices in the current vertex buffer as triangles. */
-void Gfx_DrawVb_IndexedTris_Range(Int32 indicesCount, Int32 startIndex);
+void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex);
 /* Draws the specified subset of the vertices in the current vertex buffer as triangles. */
-void Gfx_DrawVb_IndexedTris(Int32 indicesCount);
+void Gfx_DrawVb_IndexedTris(Int32 verticesCount);
 /* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
-void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 indicesCount, Int32 startIndex);
+void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex);
 static Int32 Gfx_strideSizes[2] = { 16, 24 };
 
 /* Sets the matrix type that load/push/pop operations should be applied to. */

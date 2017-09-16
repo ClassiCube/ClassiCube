@@ -337,17 +337,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void DrawVb_Lines(int verticesCount) {
-			device.DrawPrimitives(PrimitiveType.LineList, 0, verticesCount / 2);
+			device.DrawPrimitives(PrimitiveType.LineList, 0, verticesCount >> 1);
 		}
 
-		public override void DrawVb_IndexedTris(int indicesCount, int startIndex) {
-			device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, startIndex / 6 * 4,
-			                             indicesCount / 6 * 4, startIndex, indicesCount / 3);
+		public override void DrawVb_IndexedTris(int verticesCount, int startVertex) {
+			device.DrawIndexedPrimitives(PrimitiveType.TriangleList, startVertex, 0,
+			                             verticesCount, 0, verticesCount >> 1);
 		}
 
-		public override void DrawVb_IndexedTris(int indicesCount) {
+		public override void DrawVb_IndexedTris(int verticesCount) {
 			device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0,
-			                             indicesCount / 6 * 4, 0, indicesCount / 3);
+			                             verticesCount, 0, verticesCount >> 1);
 		}
 		
 		internal override void DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {

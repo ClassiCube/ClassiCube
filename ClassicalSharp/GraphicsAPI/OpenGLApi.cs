@@ -263,7 +263,7 @@ namespace ClassicalSharp.GraphicsAPI {
 					GL.TexCoordPointer(2, PointerType.Float, stride, (IntPtr)((byte*)vertices + 16));
 				}
 				
-				GL.DrawElements(BeginMode.Triangles, count * 6 / 4, DrawElementsType.UnsignedShort, (IntPtr)indicesPtr);
+				GL.DrawElements(BeginMode.Triangles, (count >> 2) * 6, DrawElementsType.UnsignedShort, (IntPtr)indicesPtr);
 				GL.EndList();
 				return list;
 			}
@@ -368,26 +368,26 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawArrays(BeginMode.Lines, 0, verticesCount);
 		}
 		
-		public override void DrawVb_IndexedTris(int indicesCount, int startIndex) {
+		public override void DrawVb_IndexedTris(int verticesCount, int startVertex) {
 			if (glLists) {
 				if (activeList != dynamicListId) { GL.CallList(activeList); }
-				else { DrawDynamicTriangles(indicesCount, startIndex); }
+				else { DrawDynamicTriangles(verticesCount, startVertex); }
 				return;
 			}
 			
-			setupBatchFunc_Range(startIndex);
-			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, IntPtr.Zero);
+			setupBatchFunc_Range(startVertex);
+			GL.DrawElements(BeginMode.Triangles, (verticesCount >> 2) * 6, indexType, IntPtr.Zero);
 		}
 		
-		public override void DrawVb_IndexedTris(int indicesCount) {
+		public override void DrawVb_IndexedTris(int verticesCount) {
 			if (glLists) {
 				if (activeList != dynamicListId) { GL.CallList(activeList); }
-				else { DrawDynamicTriangles(indicesCount, 0); }
+				else { DrawDynamicTriangles(verticesCount, 0); }
 				return;
 			}
 			
 			setupBatchFunc();
-			GL.DrawElements(BeginMode.Triangles, indicesCount, indexType, IntPtr.Zero);
+			GL.DrawElements(BeginMode.Triangles, (verticesCount >> 2) * 6, indexType, IntPtr.Zero);
 		}
 		
 		void DrawDynamicLines(int verticesCount) {
@@ -408,10 +408,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		void DrawDynamicTriangles(int verticesCount, int startVertex) {
 			GL.Begin(BeginMode.Triangles);
-			// indices -> vertices count
-			verticesCount = verticesCount * 4 / 6;
-			startVertex = startVertex * 4 / 6;
-			
 			if (batchFormat == VertexFormat.P3fT2fC4b) {
 				VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])dynamicListData;
 				for (int i = startVertex; i < startVertex + verticesCount; i += 4) {
@@ -442,7 +438,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
 			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
 			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));
-			GL.DrawElements(BeginMode.Triangles, (verticesCount * 6) >> 2, indexType, IntPtr.Zero);
+			GL.DrawElements(BeginMode.Triangles, (verticesCount >> 2) * 6, indexType, IntPtr.Zero);
 		}
 		
 		IntPtr zero = new IntPtr(0), twelve = new IntPtr(12), sixteen = new IntPtr(16);
@@ -458,14 +454,14 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, sixteen);
 		}
 		
-		void SetupVbPos3fCol4b_Range(int startIndex) {
-			int offset = (startIndex / 6 * 4) * VertexP3fC4b.Size;
+		void SetupVbPos3fCol4b_Range(int startVertex) {
+			int offset = startVertex * VertexP3fC4b.Size;
 			GL.VertexPointer(3, PointerType.Float, VertexP3fC4b.Size, new IntPtr(offset));
 			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fC4b.Size, new IntPtr(offset + 12));
 		}
 		
-		void SetupVbPos3fTex2fCol4b_Range(int startIndex) {
-			int offset = (startIndex / 6 * 4) * VertexP3fT2fC4b.Size;
+		void SetupVbPos3fTex2fCol4b_Range(int startVertex) {
+			int offset = startVertex * VertexP3fT2fC4b.Size;
 			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
 			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
 			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));

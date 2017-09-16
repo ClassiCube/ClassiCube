@@ -45,7 +45,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
 		public void UpdateDynamicVb_IndexedTris<T>(int vb, T[] vertices, int vCount) where T : struct {
 			SetDynamicVbData(vb, vertices, vCount);
-			DrawVb_IndexedTris(vCount * 6 / 4);
+			DrawVb_IndexedTris(vCount);
 		}
 		
 		

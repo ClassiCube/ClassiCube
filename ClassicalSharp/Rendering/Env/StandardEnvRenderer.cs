@@ -127,14 +127,14 @@ namespace ClassicalSharp.Renderers {
 			gfx.SetBatchFormat(VertexFormat.P3fC4b);
 			gfx.BindVb(skyVb);
 			if (skyY == normalY) {
-				gfx.DrawVb_IndexedTris(skyVertices * 6 / 4);
+				gfx.DrawVb_IndexedTris(skyVertices);
 			} else {
 				Matrix4 m = Matrix4.Identity;
 				m.Row3.Y = skyY - normalY; // Y translation matrix
 				
 				gfx.PushMatrix();
 				gfx.MultiplyMatrix(ref m);
-				gfx.DrawVb_IndexedTris(skyVertices * 6 / 4);
+				gfx.DrawVb_IndexedTris(skyVertices);
 				gfx.PopMatrix();
 			}
 			RenderClouds(deltaTime);
@@ -154,7 +154,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.BindTexture(game.CloudsTex);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.BindVb(cloudsVb);
-			gfx.DrawVb_IndexedTris(cloudVertices * 6 / 4);
+			gfx.DrawVb_IndexedTris(cloudVertices);
 			gfx.AlphaTest = false;
 			gfx.Texturing = false;
 			

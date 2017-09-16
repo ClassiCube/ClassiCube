@@ -640,25 +640,25 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 }
 
 void Gfx_DrawVb_Lines(Int32 verticesCount) {
-	ReturnCode hresult = IDirect3DDevice9_DrawPrimitive(device, D3DPT_LINELIST, 0, verticesCount / 2);
+	ReturnCode hresult = IDirect3DDevice9_DrawPrimitive(device, D3DPT_LINELIST, 0, verticesCount >> 1);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb_Lines");
 }
 
-void Gfx_DrawVb_IndexedTris(Int32 indicesCount) {
-	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 0,
-		0, VCOUNT(indicesCount), 0, indicesCount / 3);
+void Gfx_DrawVb_IndexedTris(Int32 verticesCount) {
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 
+		0, 0, verticesCount, 0, verticesCount >> 1);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb_IndexedTris");
 }
 
-void Gfx_DrawVb_IndexedTris_Range(Int32 indicesCount, Int32 startIndex) {
-	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 0,
-		VCOUNT(startIndex), VCOUNT(indicesCount), startIndex, indicesCount / 3);
+void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex) {
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 
+		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawVb_IndexedTris");
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
-	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, startVertex,
-		 0, verticesCount, 0, verticesCount >> 1);
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 
+		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }
 

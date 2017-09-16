@@ -74,7 +74,7 @@ namespace ClassicalSharp.Renderers {
 			
 			game.Graphics.LoadMatrix(ref m);			
 			game.Graphics.BindVb(vb);
-			game.Graphics.DrawVb_IndexedTris(count * 6 / 4);
+			game.Graphics.DrawVb_IndexedTris(count);
 			
 			game.Graphics.Texturing = false;
 			game.Graphics.LoadMatrix(ref game.View);

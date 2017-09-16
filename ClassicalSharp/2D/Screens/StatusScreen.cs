@@ -61,7 +61,7 @@ namespace ClassicalSharp.Gui.Screens {
 				if (game.ChunkUpdates > 0) {
 					statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunks/s, ");
 				}
-				int indices = (game.Vertices / 4) * 6;
+				int indices = (game.Vertices >> 2) * 6;
 				statusBuffer.AppendNum(ref index, indices).Append(ref index, " vertices");
 				
 				int ping = PingList.AveragePingMilliseconds();
