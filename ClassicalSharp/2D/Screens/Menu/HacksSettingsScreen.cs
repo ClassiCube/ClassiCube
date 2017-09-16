@@ -49,12 +49,14 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		static string GetHacks(Game g) { return GetBool(g.LocalPlayer.Hacks.Enabled); }
 		static void SetHacks(Game g, bool v) { 
-			g.LocalPlayer.Hacks.Enabled = v; g.LocalPlayer.CheckHacksConsistency(); 
+			g.LocalPlayer.Hacks.Enabled = v; 
+			g.LocalPlayer.CheckHacksConsistency();
 		}
 		
 		static string GetSpeed(Game g) { return g.LocalPlayer.Hacks.SpeedMultiplier.ToString("F2"); }
 		static void SetSpeed(Game g, string v) {
-			g.LocalPlayer.Hacks.SpeedMultiplier = Utils.ParseDecimal(v); Options.Set(OptionsKey.Speed, v);
+			g.LocalPlayer.Hacks.SpeedMultiplier = Utils.ParseDecimal(v); 
+			Options.Set(OptionsKey.Speed, v);
 		}
 		
 		static string GetClipping(Game g) { return GetBool(g.CameraClipping); }

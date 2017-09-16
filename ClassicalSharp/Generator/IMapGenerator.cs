@@ -31,24 +31,25 @@ namespace ClassicalSharp.Generator {
 		/// <summary> Whether the generation has completed all operations. </summary>
 		public bool Done = false;
 		
+		/// <summary> Blocks of the map generated. </summary>
+		public volatile BlockID[] Blocks;
+		
 		public int Width, Height, Length, Seed;
 		
 		public void GenerateAsync(Game game) {
-			Thread thread = new Thread(
-				() => {
-					SinglePlayerServer server = (SinglePlayerServer)game.Server;
-					try {
-						server.generatedMap = Generate();
-					} catch (Exception ex) {
-						ErrorHandler.LogError("IMapGenerator.RunAsync", ex);
-					}
-					Done = true;
-				}
-			);
-			
+			Thread thread = new Thread(DoGenerate);
 			thread.IsBackground = true;
-			thread.Name = "IMapGenerator.RunAsync";
+			thread.Name = "IMapGenerator.GenAsync()";
 			thread.Start();
+		}
+		
+		void DoGenerate() {
+			try {
+				Blocks = Generate();
+			} catch (Exception ex) {
+				ErrorHandler.LogError("IMapGenerator.RunAsync", ex);
+			}
+			Done = true;
 		}
 	}
 }

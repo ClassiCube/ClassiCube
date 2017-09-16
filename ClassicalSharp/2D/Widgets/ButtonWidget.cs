@@ -8,14 +8,9 @@ using Android.Graphics;
 
 namespace ClassicalSharp.Gui.Widgets {
 	
-	public delegate void ButtonValueSetter(Game game, string raw);
-	
-	public delegate string ButtonValueGetter(Game game);
-	
-	public delegate void ButtonBoolSetter(Game game, bool value);
-	
-	public delegate bool ButtonBoolGetter(Game game);
-	
+	public delegate void ButtonValueSetter(Game game, string raw);	
+	public delegate string ButtonValueGetter(Game game);	
+	public delegate void ButtonBoolSetter(Game game, bool value);	
 	
 	public sealed class ButtonWidget : Widget {
 		public string OptName;

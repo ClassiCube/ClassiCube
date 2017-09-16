@@ -32,17 +32,8 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
 			};
-			
-			// NOTE: we need to override the default setter here, because changing FPS limit method
-			// recreates the graphics context on some backends (such as Direct3D9)
-			ButtonWidget btn = (ButtonWidget)widgets[0];
-			btn.SetValue = SetFPSLimitMethod;
 		}
 
-		
-		static string GetFPS(Game g) { return g.FpsLimit.ToString(); }
-		static void SetFPS(Game g, string v) { }
-		
 		static string GetViewDist(Game g) { return g.ViewDistance.ToString(); }
 		static void SetViewDist(Game g, string v) { g.SetViewDistance(Int32.Parse(v), true); }
 		
@@ -56,15 +47,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		static string GetNames(Game g) { return g.Entities.NamesMode.ToString(); }
 		static void SetNames(Game g, string v) {
-			object rawNames = Enum.Parse(typeof(NameMode), v);
-			g.Entities.NamesMode = (NameMode)rawNames;
+			object raw = Enum.Parse(typeof(NameMode), v);
+			g.Entities.NamesMode = (NameMode)raw;
 			Options.Set(OptionsKey.NamesMode, v);
 		}
 		
 		static string GetShadows(Game g) { return g.Entities.ShadowMode.ToString(); }
 		static void SetShadows(Game g, string v) {
-			object rawShadows = Enum.Parse(typeof(EntityShadow), v);
-			g.Entities.ShadowMode = (EntityShadow)rawShadows;
+			object raw = Enum.Parse(typeof(EntityShadow), v);
+			g.Entities.ShadowMode = (EntityShadow)raw;
 			Options.Set(OptionsKey.EntityShadow, v);
 		}
 		

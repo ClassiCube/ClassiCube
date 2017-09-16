@@ -9,19 +9,12 @@ using ClassicalSharp.Physics;
 using OpenTK;
 using OpenTK.Input;
 
-#if USE16_BIT
-using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
-
 namespace ClassicalSharp.Singleplayer {
 
 	public sealed class SinglePlayerServer : IServerConnection {
 		
 		internal PhysicsBase physics;
-		internal BlockID[] generatedMap;
-		IMapGenerator generator;
+		IMapGenerator gen;
 		string lastState;
 		
 		public SinglePlayerServer(Game window) {
@@ -81,11 +74,11 @@ namespace ClassicalSharp.Singleplayer {
 			physics.Tick();
 			CheckAsyncResources();
 			
-			if (generator == null) return;
-			if (generator.Done) { EndGeneration(); return; }
+			if (gen == null) return;
+			if (gen.Done) { EndGeneration(); return; }
 			
-			string state = generator.CurrentState;
-			float progress = generator.CurrentProgress;
+			string state = gen.CurrentState;
+			float progress = gen.CurrentProgress;
 			LoadingMapScreen screen = ((LoadingMapScreen)game.Gui.UnderlyingScreen);
 			
 			screen.SetProgress(progress);
@@ -96,19 +89,18 @@ namespace ClassicalSharp.Singleplayer {
 		
 		void EndGeneration() {
 			game.Gui.SetNewScreen(null);
-			if (generatedMap == null) {
+			if (gen.Blocks == null) {
 				game.Chat.Add("&cFailed to generate the map.");
 			} else {
-				IMapGenerator gen = generator;
-				game.World.SetNewMap(generatedMap, gen.Width, gen.Height, gen.Length);
-				generatedMap = null;
+				game.World.SetNewMap(gen.Blocks, gen.Width, gen.Height, gen.Length);
+				gen.Blocks = null;
 				ResetPlayerPosition();
 				
 				game.WorldEvents.RaiseOnNewMapLoaded();
 				gen.ApplyEnv(game.World);
 			}
 			
-			generator = null;
+			gen = null;
 			GC.Collect();
 		}
 		
@@ -117,7 +109,7 @@ namespace ClassicalSharp.Singleplayer {
 			game.WorldEvents.RaiseOnNewMap();
 			
 			GC.Collect();
-			this.generator = gen;
+			this.gen = gen;
 			game.Gui.SetNewScreen(new LoadingMapScreen(game, "Generating level", "Generating.."));
 			gen.Width = width; gen.Height = height; gen.Length = length; gen.Seed = seed;
 			gen.GenerateAsync(game);

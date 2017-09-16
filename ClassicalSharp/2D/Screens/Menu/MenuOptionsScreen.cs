@@ -108,17 +108,14 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected virtual void InputClosed() { }
 		
-		protected ButtonWidget MakeOpt(int dir, int y, string text, ClickHandler onClick,
+		protected ButtonWidget MakeOpt(int dir, int y, string optName, ClickHandler onClick,
 		                               ButtonValueGetter getter, ButtonValueSetter setter) {
-			ButtonWidget widget = ButtonWidget.Create(game, 300, text + ": " + getter(game), titleFont, onClick)
+			ButtonWidget btn = ButtonWidget.Create(game, 300, optName + ": " + getter(game), titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
-			widget.OptName = text;
-			widget.GetValue = getter;
-			widget.SetValue = (g, v) => {
-				setter(g, v);
-				widget.SetText(widget.OptName + ": " + getter(g));
-			};
-			return widget;
+			btn.OptName = optName;
+			btn.GetValue = getter;
+			btn.SetValue = setter;
+			return btn;
 		}
 		
 		protected ButtonWidget MakeBool(int dir, int y, string text, string optKey,
@@ -139,7 +136,6 @@ namespace ClassicalSharp.Gui.Screens {
 			widget.SetValue = (g, v) => {
 				setter(g, v == "ON");
 				Options.Set(optKey, v == target);
-				widget.SetText(widget.OptName + ": " + v);
 			};
 			return widget;
 		}
@@ -190,7 +186,7 @@ namespace ClassicalSharp.Gui.Screens {
 			MenuInputValidator validator = validators[index];
 			if (validator is BooleanValidator) {
 				string value = button.GetValue(game);
-				button.SetValue(game, value == "ON" ? "OFF" : "ON");
+				SetButtonValue(button, value == "ON" ? "OFF" : "ON");
 				UpdateDescription(button);
 				return;
 			} else if (validator is EnumValidator) {
@@ -222,21 +218,20 @@ namespace ClassicalSharp.Gui.Screens {
 		}		
 		
 		void HandleEnumOption(ButtonWidget button, Type type) {
-			string value = button.GetValue(game);
-			int enumValue = (int)Enum.Parse(type, value, true);
-			enumValue++;
-			
+			string rawName = button.GetValue(game);
+			int value = (int)Enum.Parse(type, rawName, true);
+			value++;		
 			// go back to first value
-			if (!Enum.IsDefined(type, enumValue))
-				enumValue = 0;
-			button.SetValue(game, Enum.GetName(type, enumValue));
+			if (!Enum.IsDefined(type, value)) value = 0;
+			
+			SetButtonValue(button, Enum.GetName(type, value));
 			UpdateDescription(button);
 		}
 		
 		void ChangeSetting() {
 			string text = input.Text.ToString();
 			if (((MenuInputWidget)input).Validator.IsValidValue(text)) {
-				targetWidget.SetValue(game, text);
+				SetButtonValue(targetWidget, text);
 			}
 			
 			DisposeWidgets();
@@ -245,9 +240,15 @@ namespace ClassicalSharp.Gui.Screens {
 			InputClosed();
 		}
 		
+		void SetButtonValue(ButtonWidget btn, string text) {
+			btn.SetValue(game, text);
+			int index = IndexOfWidget(btn);
+			// e.g. changing FPS invalidates all widgets
+			if (index >= 0) btn.SetText(btn.OptName + ": " + btn.GetValue(game));
+		}
+		
 		void DisposeWidgets() {
-			if (input != null)
-				input.Dispose();
+			if (input != null) input.Dispose();
 			widgets[widgets.Length - 2] = null;
 			input = null;
 			
@@ -257,9 +258,10 @@ namespace ClassicalSharp.Gui.Screens {
 			widgets[okayIndex] = null;
 		}
 		
-		protected void SetFPSLimitMethod(Game g, string v) {
-			object rawFps = Enum.Parse(typeof(FpsLimitMethod), v);
-			g.SetFpsLimitMethod((FpsLimitMethod)rawFps);
+		protected static string GetFPS(Game g) { return g.FpsLimit.ToString(); }
+		protected void SetFPS(Game g, string v) {
+			object raw = Enum.Parse(typeof(FpsLimitMethod), v);
+			g.SetFpsLimitMethod((FpsLimitMethod)raw);
 			Options.Set(OptionsKey.FpsLimit, v);
 			
 			// NOTE: OpenGL backend doesn't recreate context, so cheat and act like recreated anyways

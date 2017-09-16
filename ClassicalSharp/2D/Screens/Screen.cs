@@ -28,10 +28,9 @@ namespace ClassicalSharp.Gui.Screens {
 		public abstract void OnResize(int width, int height);
 		
 		protected ClickHandler LeftOnly(SimpleClickHandler action) {
-			if (action == null) return (g, w, btn, x, y) => {};
 			return (g, w, btn, x, y) => {
 				if (btn != MouseButton.Left) return;
-				action(g, w);
+				if (action != null) action(g, w);
 			};
 		}
 		

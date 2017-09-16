@@ -30,7 +30,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public void SetActive(bool active) {
 			Active = active;
-			Height = active ? texture.Height : 0;
+			Height = active ? (int)texture.Height : 0;
 		}
 		
 		public override void Render(double delta) {

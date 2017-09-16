@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using ClassicalSharp.Entities;
@@ -95,7 +96,7 @@ namespace ClassicalSharp.Map {
 			}
 			
 			if (game.UseCustomBlocks && CheckKey("BlockDefinitions", 1, metadata)) {
-				foreach (var pair in curCpeExt) {
+				foreach (KeyValuePair<string, NbtTag> pair in curCpeExt) {
 					if (pair.Value.TagId != NbtTagType.Compound) continue;
 					if (!Utils.CaselessStarts(pair.Key, "Block")) continue;
 					ParseBlockDefinition((NbtCompound)pair.Value.Value);
