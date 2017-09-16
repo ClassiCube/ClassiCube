@@ -78,7 +78,7 @@ namespace ClassicalSharp.Mode {
 		}
 		
 		bool PickEntity(byte id) {
-			Entity entity = game.Entities[id];
+			Entity entity = game.Entities.List[id];
 			LocalPlayer p = game.LocalPlayer;
 			
 			Vector3 delta = p.Position - entity.Position;
@@ -162,7 +162,7 @@ namespace ClassicalSharp.Mode {
 				
 				Vector3 pos = Respawn.FindSpawnPosition(game, x, z, fail.Size);
 				fail.SetLocation(LocationUpdate.MakePos(pos, false), false);
-				game.Entities[i] = fail;
+				game.Entities.List[i] = fail;
 			}
 		}
 		

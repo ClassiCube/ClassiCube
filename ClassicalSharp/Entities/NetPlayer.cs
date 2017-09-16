@@ -8,7 +8,7 @@ namespace ClassicalSharp.Entities {
 	public sealed class NetPlayer : Player {
 		
 		NetInterpComponent interp;
-		public NetPlayer(string displayName, string skinName, Game game, byte id) : base(game) {
+		public NetPlayer(string displayName, string skinName, Game game) : base(game) {
 			DisplayName = displayName;
 			SkinName = skinName;
 			interp = new NetInterpComponent(game, this);

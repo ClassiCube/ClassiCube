@@ -38,7 +38,7 @@ Real32 Respawn_HighestFreeY(AABB* bb) {
 
 Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize) {
 	Vector3 spawn = Vector3_Create3(x, 0.0f, z);
-	spawn.Y = World_Height + Entity_Adjustment;
+	spawn.Y = World_Height + ENTITY_ADJUSTMENT;
 	AABB bb;
 	AABB_Make(&bb, &spawn, &modelSize);
 	spawn.Y = 0.0f;

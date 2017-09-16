@@ -11,11 +11,12 @@
 */
 typedef struct IModel_ IModel; /* Forward declaration */
 
-
-/* Constant offset used to avoid floating point roundoff errors. */
-#define Entity_Adjustment 0.001f
-/* Constant value specifying an angle is not included in an orientation update. */
-#define LocationUpdate_Excluded -100000.31415926535f
+/* Offset used to avoid floating point roundoff errors. */
+#define ENTITY_ADJUSTMENT 0.001f
+/* Special value specifying an angle is not included in an orientation update. */
+#define LOCATIONUPDATE_EXCLUDED -100000.31415926535f
+/* Maxmimum number of characters in a model name. */
+#define ENTITY_MAX_MODEL_LENGTH 10
 
 typedef bool (*TouchesAny_Condition)(BlockID block);
 
@@ -24,7 +25,7 @@ This can be a relative position, full position, and/or an orientation update. */
 typedef struct LocationUpdate_ {
 	/* Position of the update (if included). */
 	Vector3 Pos;
-	/* Orientation of the update (if included). If not, has the value of LocationUpdate_Excluded. */
+	/* Orientation of the update (if included). If not, has the value of LOCATIONUPDATE_EXCLUDED. */
 	Real32 RotX, RotY, RotZ, HeadX;
 	/* Whether this update includes an absolute or relative position. */
 	bool IncludesPosition;
@@ -88,6 +89,7 @@ typedef struct Entity_ {
 
 	/* The model of this entity. (used for collision detection and rendering) */
 	IModel* Model;
+	UInt8 ModelNameBuffer[String_BufferSize(ENTITY_MAX_MODEL_LENGTH)];
 	/* The name of the model of this entity. Is "block" for all block ID models. */
 	String ModelName;		
 	/* BlockID, if model name was originally a vaid block id. Avoids needing to repeatedly parse ModelName as a byte. */
@@ -114,28 +116,23 @@ typedef struct Entity_ {
 
 /* Initalises the given entity. */
 void Entity_Init(Entity* entity);
-
 /* Gets the position of the player's eye in the world. */
 Vector3 Entity_GetEyePosition(Entity* entity);
-
 /* Calculates the transformation matrix for the given entity. */
 void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale);
-
 /* Returns the bounding box that contains the model, without any rotations applied. */
 void Entity_GetPickingBounds(Entity* entity, AABB* bb);
-
 /* Bounding box of the model that collision detection is performed with, in world coordinates. */
 void Entity_GetBounds(Entity* entity, AABB* bb);
-
+/* Sets the model associated with this entity. ('name' or 'name|scale') */
+void Entity_SetModel(Entity* entity, String* model);
+void Entity_UpdateModelBounds(Entity* entity);
 /* Determines whether any of the blocks that intersect the given bounding box satisfy the given condition. */
 bool Entity_TouchesAny(AABB* bb, TouchesAny_Condition condition);
-	
 /* Determines whether any of the blocks that intersect the AABB of this entity are rope. */
-bool Entity_TouchesAnyRope(Entity* entity);
-		
+bool Entity_TouchesAnyRope(Entity* entity);	
 /* Determines whether any of the blocks that intersect the AABB of this entity are lava or still lava. */
 bool Entity_TouchesAnyLava(Entity* entity);
-
 /* Determines whether any of the blocks that intersect the AABB of this entity are water or still water. */
 bool Entity_TouchesAnyWater(Entity* entity);
 

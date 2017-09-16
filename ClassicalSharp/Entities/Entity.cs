@@ -38,8 +38,6 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Returns the size of the model that is used for collision detection. </summary>
 		public Vector3 Size;
 
-		
-		public byte ID;
 		public int TextureId = -1, MobTextureId = -1;
 		public short Health = 10;
 		
@@ -57,7 +55,7 @@ namespace ClassicalSharp.Entities {
 		public SkinType SkinType;
 		public AnimatedComponent anim;
 		public float uScale = 1, vScale = 1;
-		public bool NoShade = false;
+		public bool NoShade;
 		
 		
 		/// <summary> Rotation of the entity's head horizontally. (i.e. looking north or east) </summary>

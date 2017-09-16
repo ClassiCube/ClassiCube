@@ -87,7 +87,7 @@ namespace ClassicalSharp {
 			BlockInfo.SetDefaultPerms();
 			World = new World(this);
 			LocalPlayer = AddComponent(new LocalPlayer(this));
-			Entities[EntityList.SelfID] = LocalPlayer;
+			Entities.List[EntityList.SelfID] = LocalPlayer;
 			Width = window.Width; Height = window.Height;
 			
 			MapRenderer = new MapRenderer(this);

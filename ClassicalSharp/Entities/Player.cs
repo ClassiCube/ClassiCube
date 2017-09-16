@@ -141,18 +141,20 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		Player FirstOtherWithSameSkin() {
+			Entity[] entities = game.Entities.List;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (game.Entities[i] == null || game.Entities[i] == this) continue;
-				Player p = game.Entities[i] as Player;
+				if (entities[i] == null || entities[i] == this) continue;
+				Player p = entities[i] as Player;
 				if (p != null && p.SkinName == SkinName) return p;
 			}
 			return null;
 		}
 		
 		Player FirstOtherWithSameSkinAndFetchedSkin() {
+			Entity[] entities = game.Entities.List;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (game.Entities[i] == null || game.Entities[i] == this) continue;
-				Player p = game.Entities[i] as Player;
+				if (entities[i] == null || entities[i] == this) continue;
+				Player p = entities[i] as Player;
 				if (p != null && p.SkinName == SkinName && p.fetchedSkin) return p;
 			}
 			return null;
@@ -160,9 +162,10 @@ namespace ClassicalSharp.Entities {
 		
 		// Apply or reset skin, for all players with same skin
 		void SetSkinAll(bool reset) {
+			Entity[] entities = game.Entities.List;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (game.Entities[i] == null) continue;
-				Player p = game.Entities[i] as Player;
+				if (entities[i] == null) continue;
+				Player p = entities[i] as Player;
 				if (p == null || p.SkinName != SkinName) continue;
 				
 				if (reset) { p.ResetSkin(); } 

@@ -285,7 +285,7 @@ namespace ClassicalSharp.Entities {
 		
 		public void DoEntityPush() {
 			for (int id = 0; id < EntityList.MaxCount; id++) {
-				Entity other = game.Entities[id];
+				Entity other = game.Entities.List[id];
 				if (other == null || other == entity) continue;
 				if (other.Model is BlockModel) continue; // block models shouldn't push you
 				

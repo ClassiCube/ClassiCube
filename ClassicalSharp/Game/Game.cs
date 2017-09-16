@@ -360,9 +360,10 @@ namespace ClassicalSharp {
 			if (DefaultPlayerSkinType == SkinType.Invalid)
 				throw new NotSupportedException("char.png has invalid dimensions");
 			
+			Entity[] entities = Entities.List;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (Entities[i] == null || Entities[i].TextureId != -1) continue;
-				Entities[i].SkinType = DefaultPlayerSkinType;
+				if (entities[i] == null || entities[i].TextureId != -1) continue;
+				entities[i].SkinType = DefaultPlayerSkinType;
 			}
 		}
 		

@@ -42,10 +42,10 @@ namespace ClassicalSharp.Network {
 		
 		internal void AddEntity(byte id, string displayName, string skinName, bool readPosition) {
 			if (id != EntityList.SelfID) {
-				Entity oldEntity = game.Entities[id];
+				Entity oldEntity = game.Entities.List[id];
 				if (oldEntity != null) game.Entities.RemoveEntity(id);
 
-				game.Entities[id] = new NetPlayer(displayName, skinName, game, id);
+				game.Entities.List[id] = new NetPlayer(displayName, skinName, game);
 				game.EntityEvents.RaiseAdded(id);
 			} else {
 				game.LocalPlayer.Despawn();
@@ -70,7 +70,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void RemoveEntity(byte id) {
-			Entity entity = game.Entities[id];
+			Entity entity = game.Entities.List[id];
 			if (entity == null) return;			
 			if (id != EntityList.SelfID) game.Entities.RemoveEntity(id);
 			
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		internal void UpdateLocation(byte playerId, LocationUpdate update, bool interpolate) {
-			Entity entity = game.Entities[playerId];
+			Entity entity = game.Entities.List[playerId];
 			if (entity != null) {
 				entity.SetLocation(update, interpolate);
 			}

@@ -223,9 +223,9 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleChangeModel() {
-			byte playerId = reader.ReadUInt8();
+			byte id = reader.ReadUInt8();
 			string modelName = Utils.ToLower(reader.ReadString());
-			Entity entity = game.Entities[playerId];
+			Entity entity = game.Entities.List[id];
 			if (entity != null) entity.SetModel(modelName);
 		}
 		
@@ -368,7 +368,7 @@ namespace ClassicalSharp.Network.Protocols {
 			byte type = reader.ReadUInt8();
 			int value = reader.ReadInt32();
 			
-			Entity entity = game.Entities[id];
+			Entity entity = game.Entities.List[id];
 			if (entity == null) return;
 			LocationUpdate update = LocationUpdate.Empty();
 			

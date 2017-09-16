@@ -8,6 +8,7 @@
 #include "Camera.h"
 #include "Platform.h"
 #include "Funcs.h"
+#include "ModelCache.h"
 
 Real32 LocationUpdate_Clamp(Real32 degrees) {
 	degrees = Math_Mod(degrees, 360.0f);
@@ -26,7 +27,7 @@ void LocationUpdate_Construct(LocationUpdate* update, Real32 x, Real32 y, Real32
 	update->RelativePosition = relPos;
 }
 
-#define exc LocationUpdate_Excluded
+#define exc LOCATIONUPDATE_EXCLUDED
 void LocationUpdate_Empty(LocationUpdate* update) {
 	LocationUpdate_Construct(update, 0.0f, 0.0f, 0.0f, exc, exc, exc, exc, false, false);
 }
@@ -43,6 +44,16 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 	LocationUpdate_Construct(update, pos.X, pos.Y, pos.Z, exc, rotY, exc, headX, true, rel);
 }
 
+
+void Entity_Init(Entity* entity) {
+	entity->ModelScale = Vector3_Create1(1.0f);
+	entity->TextureId = -1;
+	entity->MobTextureId = -1;
+	entity->uScale = 1.0f;
+	entity->vScale = 1.0f;
+	UInt8* ptr = entity->ModelNameBuffer;
+	entity->ModelName = String_FromRawBuffer(ptr, ENTITY_MAX_MODEL_LENGTH);
+}
 
 Vector3 Entity_GetEyePosition(Entity* entity) {
 	Vector3 pos = entity->Position;
@@ -74,6 +85,61 @@ void Entity_GetPickingBounds(Entity* entity, AABB* bb) {
 
 void Entity_GetBounds(Entity* entity, AABB* bb) {
 	AABB_Make(bb, &entity->Position, &entity->Size);
+}
+
+void Entity_ParseScale(Entity* entity, String scale) {
+	if (scale.buffer == NULL) return;
+	Real32 value;
+	if (!Convert_TryParseReal32(&scale, &value)) return;
+
+	Real32 maxScale = entity->Model->MaxScale;
+	Math_Clamp(value, 0.01f, maxScale);
+	entity->ModelScale = Vector3_Create1(value);
+}
+
+void Entity_SetModel(Entity* entity, String* model) {
+	entity->ModelScale = Vector3_Create1(1.0f);
+	entity->ModelBlock = BlockID_Air;
+	String_Clear(&entity->ModelName);
+
+	Int32 sep = String_IndexOf(model, '|', 0);
+	String name, scale;
+	if (sep == -1) {
+		name  = *model;
+		scale = String_MakeNull();	
+	} else {
+		name  = String_UNSAFE_SubstringAt(model, sep + 1);
+		scale = String_UNSAFE_Substring(model, 0, sep);
+	}
+
+	/* 'giant' model kept for backwards compatibility */
+	String giant = String_FromConstant("giant");
+	if (String_CaselessEquals(model, &giant)) {		
+		String_AppendConstant(&entity->ModelName, "humanoid");
+		entity->ModelScale = Vector3_Create1(2.0f);
+	} else if (Convert_TryParseUInt8(model, &entity->ModelBlock)) {
+		String_AppendConstant(&entity->ModelName, "block");
+	} else {
+		String_AppendString(&entity->ModelName, &name);
+	}
+
+	entity->Model = ModelCache_Get(&entity->ModelName);
+	Entity_ParseScale(entity, scale);
+	entity->MobTextureId = -1;
+
+	entity->Model->RecalcProperties(entity);
+	Entity_UpdateModelBounds(entity);
+}
+
+void Entity_UpdateModelBounds(Entity* entity) {
+	IModel* model = entity->Model;
+	Vector3 baseSize = model->GetCollisionSize();
+	Vector3_Multiply3(&entity->Size, &baseSize, &entity->ModelScale);
+
+	AABB* bb = &entity->ModelAABB;
+	model->GetPickingBounds(bb);
+	Vector3_Multiply3(&bb->Min, &bb->Min, &entity->ModelScale);
+	Vector3_Multiply3(&bb->Max, &bb->Max, &entity->ModelScale);
 }
 
 bool Entity_TouchesAny(AABB* bounds, TouchesAny_Condition condition) {
@@ -445,7 +511,7 @@ void InterpComp_SetPos(InterpState* state, LocationUpdate* update) {
 }
 
 Real32 NetInterpComp_Next(Real32 next, Real32 cur) {
-	if (next == LocationUpdate_Excluded) return cur;
+	if (next == LOCATIONUPDATE_EXCLUDED) return cur;
 	return next;
 }
 
@@ -508,7 +574,7 @@ void NetInterpComp_AdvanceState(NetInterpComp* interp) {
 }
 
 Real32 LocalInterpComp_Next(Real32 next, Real32 cur, Real32* last, bool interpolate) {
-	if (next == LocationUpdate_Excluded) return cur;
+	if (next == LOCATIONUPDATE_EXCLUDED) return cur;
 	if (!interpolate) *last = next;
 	return next;
 }
@@ -521,8 +587,8 @@ void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, boo
 	if (update->IncludesPosition) {
 		InterpComp_SetPos(next, update);
 		Real32 blockOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
-		if (blockOffset < Entity_Adjustment) {
-			next->Pos.Y += Entity_Adjustment;
+		if (blockOffset < ENTITY_ADJUSTMENT) {
+			next->Pos.Y += ENTITY_ADJUSTMENT;
 		}
 		if (!interpolate) {
 			prev->Pos = next->Pos;
@@ -535,7 +601,7 @@ void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, boo
 	next->HeadX = LocalInterpComp_Next(update->HeadX, next->HeadX, &prev->HeadX, interpolate);
 	next->HeadY = LocalInterpComp_Next(update->RotY,  next->HeadY, &prev->HeadY, interpolate);
 
-	if (update->RotY != LocationUpdate_Excluded) {
+	if (update->RotY != LOCATIONUPDATE_EXCLUDED) {
 		if (!interpolate) {
 			interp->NextRotY = update->RotY;
 			entity->RotY = update->RotY;

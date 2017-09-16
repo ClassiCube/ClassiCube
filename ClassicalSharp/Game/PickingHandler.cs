@@ -144,7 +144,7 @@ namespace ClassicalSharp {
 			                        pos + BlockInfo.MaxBB[block]);
 			
 			for (int id = 0; id < EntityList.SelfID; id++) {
-				Entity entity = game.Entities[id];
+				Entity entity = game.Entities.List[id];
 				if (entity == null) continue;
 				
 				AABB bounds = entity.Bounds;
