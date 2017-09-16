@@ -81,7 +81,7 @@ namespace ClassicalSharp.Map {
 				if (curCpeExt.ContainsKey("TextureURL"))
 					url = (string)curCpeExt["TextureURL"].Value;
 				if (url.Length == 0) url = null;
-				if (game.AllowServerTextures && url != null)
+				if (game.UseServerTextures && url != null)
 					game.Server.RetrieveTexturePack(url);
 				
 				byte sidesBlock = (byte)curCpeExt["SideBlock"].Value;

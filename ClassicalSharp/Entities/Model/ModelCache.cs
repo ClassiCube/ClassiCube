@@ -104,7 +104,7 @@ namespace ClassicalSharp.Model {
 			
 			Register("block", null, new BlockModel(game));
 			Register("chibi", "char.png", new ChibiModel(game));
-			Register("head", "char.png", new HumanoidHeadModel(game));
+			Register("head", "char.png", new HeadModel(game));
 			Register("sit", "char.png", new SittingModel(game));
 			Register("sitting", "char.png", new SittingModel(game));
 			Register("arm", "char.png", new ArmModel(game));

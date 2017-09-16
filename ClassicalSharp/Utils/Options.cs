@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 		public const string ForceOldOpenGL = "force-oldgl";
 		
 		public const string ViewDist = "viewdist";
-		public const string Physics = "singleplayerphysics";
+		public const string BlockPhysics = "singleplayerphysics";
 		public const string NamesMode = "namesmode";
 		public const string InvertMouse = "invertmouse";
 		public const string Sensitivity = "mousesensitivity";

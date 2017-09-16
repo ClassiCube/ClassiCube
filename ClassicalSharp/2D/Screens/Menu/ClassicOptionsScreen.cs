@@ -20,16 +20,16 @@ namespace ClassicalSharp.Gui.Screens {
 			bool multi = !game.Server.IsSinglePlayer, hacks = game.ClassicHacks;
 			ClickHandler onClick = OnWidgetClick;			
 			widgets = new Widget[] {
-				MakeOpt(-1, -150, "Music",                                           onClick, GetMusic,    SetMusic),
-				MakeBool(-1, -100, "Invert mouse", OptionsKey.InvertMouse,           onClick, GetInvert,   SetInvert),
-				MakeOpt(-1, -50, "View distance",                                    onClick, GetViewDist, SetViewDist),
-				multi ? null : MakeBool(-1, 0, "Block physics", OptionsKey.Physics,  onClick, GetPhysics,  SetPhysics),
+				MakeOpt(-1, -150, "Music",                      onClick, GetMusic,    SetMusic),
+				MakeOpt(-1, -100, "Invert mouse",               onClick, GetInvert,   SetInvert),
+				MakeOpt(-1, -50, "View distance",               onClick, GetViewDist, SetViewDist),
+				multi ? null : MakeOpt(-1, 0, "Block physics",  onClick, GetPhysics,  SetPhysics),
 				
-				MakeOpt(1, -150, "Sound",                                            onClick, GetSounds,   SetSounds),
-				MakeBool(1, -100, "Show FPS", OptionsKey.ShowFPS,                    onClick, GetShowFPS,  SetShowFPS),
-				MakeBool(1, -50, "View bobbing", OptionsKey.ViewBobbing,             onClick, GetViewBob,  SetViewBob),
-				MakeOpt(1, 0, "FPS mode",                                            onClick, GetFPS,      SetFPS),
-				!hacks ? null : MakeBool(0, 60, "Hacks enabled", OptionsKey.HacksOn, onClick, GetHacks,    SetHacks),
+				MakeOpt(1, -150, "Sound",                       onClick, GetSounds,   SetSounds),
+				MakeOpt(1, -100, "Show FPS",                    onClick, GetShowFPS,  SetShowFPS),
+				MakeOpt(1, -50, "View bobbing",                 onClick, GetViewBob,  SetViewBob),
+				MakeOpt(1, 0, "FPS mode",                       onClick, GetFPS,      SetFPS),
+				!hacks ? null : MakeOpt(0, 60, "Hacks enabled", onClick, GetHacks,    SetHacks),
 				
 				ButtonWidget.Create(game, 400, "Controls", titleFont, LeftOnly(SwitchClassic))
 					.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, 95),
@@ -46,13 +46,15 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		static string GetInvert(Game g) { return GetBool(g.InvertMouse); }
-		static void SetInvert(Game g, bool v) { g.InvertMouse = v; }
+		static void SetInvert(Game g, string v) { g.InvertMouse = SetBool(v, OptionsKey.InvertMouse); }
 		
 		static string GetViewDist(Game g) { return g.ViewDistance.ToString(); }
 		static void SetViewDist(Game g, string v) { g.SetViewDistance(Int32.Parse(v), true); }
 		
 		static string GetPhysics(Game g) { return GetBool(((SinglePlayerServer)g.Server).physics.Enabled); }
-		static void SetPhysics(Game g, bool v) { ((SinglePlayerServer)g.Server).physics.Enabled = v; }
+		static void SetPhysics(Game g, string v) { 
+			((SinglePlayerServer)g.Server).physics.Enabled = SetBool(v, OptionsKey.BlockPhysics);
+		}
 		
 		static string GetSounds(Game g) { return GetBool(g.SoundsVolume > 0); }
 		static void SetSounds(Game g, string v) { 
@@ -62,14 +64,14 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		static string GetShowFPS(Game g) { return GetBool(g.ShowFPS); }
-		static void SetShowFPS(Game g, bool v) { g.ShowFPS = v; }
+		static void SetShowFPS(Game g, string v) { g.ShowFPS = SetBool(v, OptionsKey.ShowFPS); }
 		
 		static string GetViewBob(Game g) { return GetBool(g.ViewBobbing); }
-		static void SetViewBob(Game g, bool v) { g.ViewBobbing = v; }
+		static void SetViewBob(Game g, string v) { g.ViewBobbing = SetBool(v, OptionsKey.ViewBobbing); }
 		
 		static string GetHacks(Game g) { return GetBool(g.LocalPlayer.Hacks.Enabled); }
-		static void SetHacks(Game g, bool v) { 
-			g.LocalPlayer.Hacks.Enabled = v; 
+		static void SetHacks(Game g, string v) { 
+			g.LocalPlayer.Hacks.Enabled = SetBool(v, OptionsKey.HacksOn);
 			g.LocalPlayer.CheckHacksConsistency();
 		}
 		

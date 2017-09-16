@@ -21,7 +21,7 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_ForceOldOpenGL "force-oldgl"
 
 #define OptionsKey_ViewDist "viewdist"
-#define OptionsKey_Physics "singleplayerphysics"
+#define OptionsKey_BlockPhysics "singleplayerphysics"
 #define OptionsKey_NamesMode "namesmode"
 #define OptionsKey_InvertMouse "invertmouse"
 #define OptionsKey_Sensitivity "mousesensitivity"

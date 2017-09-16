@@ -21,13 +21,13 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextRecreated() {
 			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
-				MakeOpt(-1, -50, "FPS mode",                                     onClick, GetFPS,      SetFPS),
-				MakeOpt(-1, 0, "View distance",                                  onClick, GetViewDist, SetViewDist),
-				MakeBool(-1, 50, "Advanced lighting", OptionsKey.SmoothLighting, onClick, GetSmooth,   SetSmooth),
+				MakeOpt(-1, -50, "FPS mode",         onClick, GetFPS,      SetFPS),
+				MakeOpt(-1, 0, "View distance",      onClick, GetViewDist, SetViewDist),
+				MakeOpt(-1, 50, "Advanced lighting", onClick, GetSmooth,   SetSmooth),
 				
-				MakeOpt(1, -50, "Names",                                         onClick, GetNames,    SetNames),
-				MakeOpt(1, 0, "Shadows",                                         onClick, GetShadows,  SetShadows),
-				MakeBool(1, 50, "Mipmaps", OptionsKey.Mipmaps,                   onClick, GetMipmaps,  SetMipmaps),
+				MakeOpt(1, -50, "Names",             onClick, GetNames,    SetNames),
+				MakeOpt(1, 0, "Shadows",             onClick, GetShadows,  SetShadows),
+				MakeOpt(1, 50, "Mipmaps",            onClick, GetMipmaps,  SetMipmaps),
 				
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
@@ -38,8 +38,8 @@ namespace ClassicalSharp.Gui.Screens {
 		static void SetViewDist(Game g, string v) { g.SetViewDistance(Int32.Parse(v), true); }
 		
 		static string GetSmooth(Game g) { return GetBool(g.SmoothLighting); }
-		static void SetSmooth(Game g, bool v) {
-			g.SmoothLighting = v;
+		static void SetSmooth(Game g, string v) {
+			g.SmoothLighting = SetBool(v, OptionsKey.SmoothLighting);
 			ChunkMeshBuilder builder = g.MapRenderer.DefaultMeshBuilder();
 			g.MapRenderer.SetMeshBuilder(builder);
 			g.MapRenderer.Refresh();
@@ -60,8 +60,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		static string GetMipmaps(Game g) { return GetBool(g.Graphics.Mipmaps); }
-		static void SetMipmaps(Game g, bool v) {
-			g.Graphics.Mipmaps = v;
+		static void SetMipmaps(Game g, string v) {
+			g.Graphics.Mipmaps = SetBool(v, OptionsKey.Mipmaps);
 			
 			string url = g.World.TextureUrl;
 			if (url == null) {

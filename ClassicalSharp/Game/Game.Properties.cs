@@ -175,7 +175,7 @@ namespace ClassicalSharp {
 		
 		public bool PureClassic { get { return ClassicMode && !ClassicHacks; } }
 		
-		public bool UseCustomBlocks, UseCPE, AllowServerTextures;
+		public bool UseCustomBlocks, UseCPE, UseServerTextures;
 		
 		public bool SmoothLighting;
 		

@@ -118,28 +118,11 @@ namespace ClassicalSharp.Gui.Screens {
 			return btn;
 		}
 		
-		protected ButtonWidget MakeBool(int dir, int y, string text, string optKey,
-		                                ClickHandler onClick, ButtonValueGetter getter, ButtonBoolSetter setter) {
-			return MakeBool(dir, y, text, optKey, false, onClick, getter, setter);
-		}
-
-		protected ButtonWidget MakeBool(int dir, int y, string text, string optKey, bool invert,
-		                                ClickHandler onClick, ButtonValueGetter getter, ButtonBoolSetter setter) {
-			string optName = text;
-			text = text + ": " + getter(game);
-			ButtonWidget widget = ButtonWidget.Create(game, 300, text, titleFont, onClick)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 160 * dir, y);
-			widget.OptName = optName;
-			widget.GetValue = getter;
-			
-			string target = invert ? "OFF" : "ON";		
-			widget.SetValue = (g, v) => {
-				setter(g, v == "ON");
-				Options.Set(optKey, v == target);
-			};
-			return widget;
-		}
 		protected static string GetBool(bool v) { return v ? "ON" : "OFF"; }
+		protected static bool SetBool(string v, string key) {
+			Options.Set(key, v == "ON");
+			return v == "ON";
+		}
 		
 		void ShowExtendedHelp() {
 			bool canShow = input == null && selectedWidget != null && descriptions != null;

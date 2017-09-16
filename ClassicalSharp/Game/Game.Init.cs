@@ -182,7 +182,7 @@ namespace ClassicalSharp {
 			ModifiableLiquids = !ClassicMode && Options.GetBool(OptionsKey.ModifiableLiquids, false);
 			CameraClipping = Options.GetBool(OptionsKey.CameraClipping, true);
 			
-			AllowServerTextures = Options.GetBool(OptionsKey.UseServerTextures, true);
+			UseServerTextures = Options.GetBool(OptionsKey.UseServerTextures, true);
 			MouseSensitivity = Options.GetInt(OptionsKey.Sensitivity, 1, 100, 30);
 			ShowBlockInHand = Options.GetBool(OptionsKey.ShowBlockInHand, true);
 			InvertMouse = Options.GetBool(OptionsKey.InvertMouse, false);

@@ -77,9 +77,9 @@ namespace ClassicalSharp.Model {
 		}
 	}
 
-	public class HumanoidHeadModel : HumanoidModel {
+	public class HeadModel : HumanoidModel {
 		
-		public HumanoidHeadModel(Game window) : base(window) { }
+		public HeadModel(Game window) : base(window) { }
 		public override void CreateParts() { }
 		
 		public override float GetEyeY(Entity entity) { return 6/16f; }

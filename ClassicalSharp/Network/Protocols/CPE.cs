@@ -319,7 +319,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleSetMapEnvUrl() {
 			string url = reader.ReadString();
-			if (!game.AllowServerTextures) return;
+			if (!game.UseServerTextures) return;
 			
 			if (url == "") {
 				TexturePack.ExtractDefault(game);

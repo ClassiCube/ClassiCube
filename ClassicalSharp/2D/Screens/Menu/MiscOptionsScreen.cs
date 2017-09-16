@@ -21,15 +21,15 @@ namespace ClassicalSharp.Gui.Screens {
 			bool multi = !game.Server.IsSinglePlayer;
 			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
-				multi ? null : MakeOpt(-1, -100, "Click distance",                    onClick, GetReach,       SetReach),
-				MakeOpt(-1, -50, "Music volume",                                      onClick, GetMusic,       SetMusic),
-				MakeOpt(-1, 0, "Sounds volume",                                       onClick, GetSounds,      SetSounds),
-				MakeBool(-1, 50, "View bobbing", OptionsKey.ViewBobbing,              onClick, GetViewBob,     SetViewBob),
+				multi ? null : MakeOpt(-1, -100, "Click distance", onClick, GetReach,       SetReach),
+				MakeOpt(-1, -50, "Music volume",                   onClick, GetMusic,       SetMusic),
+				MakeOpt(-1, 0, "Sounds volume",                    onClick, GetSounds,      SetSounds),
+				MakeOpt(-1, 50, "View bobbing",                    onClick, GetViewBob,     SetViewBob),
 
-				multi ? null : MakeBool(1, -100, "Block physics", OptionsKey.Physics, onClick, GetPhysics,     SetPhysics),
-				MakeBool(1, -50, "Auto close launcher", OptionsKey.AutoCloseLauncher, onClick, GetAutoClose,   SetAutoClose),
-				MakeBool(1, 0, "Invert mouse", OptionsKey.InvertMouse,                onClick, GetInvert,      SetInvert),
-				MakeOpt(1, 50, "Mouse sensitivity",                                   onClick, GetSensitivity, SetSensitivity),
+				multi ? null : MakeOpt(1, -100, "Block physics",  onClick, GetPhysics,     SetPhysics),
+				MakeOpt(1, -50, "Auto close launcher",            onClick, GetAutoClose,   SetAutoClose),
+				MakeOpt(1, 0, "Invert mouse",                     onClick, GetInvert,      SetInvert),
+				MakeOpt(1, 50, "Mouse sensitivity",               onClick, GetSensitivity, SetSensitivity),
 
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
@@ -54,16 +54,18 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		static string GetViewBob(Game g) { return GetBool(g.ViewBobbing); }
-		static void SetViewBob(Game g, bool v) { g.ViewBobbing = v; }
+		static void SetViewBob(Game g, string v) { g.ViewBobbing = SetBool(v, OptionsKey.ViewBobbing); }
 		
 		static string GetPhysics(Game g) { return GetBool(((SinglePlayerServer)g.Server).physics.Enabled); }
-		static void SetPhysics(Game g, bool v) { ((SinglePlayerServer)g.Server).physics.Enabled = v; }
+		static void SetPhysics(Game g, string v) { 
+			((SinglePlayerServer)g.Server).physics.Enabled = SetBool(v, OptionsKey.BlockPhysics);
+		}
 		
 		static string GetAutoClose(Game g) { return GetBool(Options.GetBool(OptionsKey.AutoCloseLauncher, false)); }
-		static void SetAutoClose(Game g, bool v) { Options.Set(OptionsKey.AutoCloseLauncher, v); }
+		static void SetAutoClose(Game g, string v) { SetBool(v, OptionsKey.AutoCloseLauncher); }
 		
 		static string GetInvert(Game g) { return GetBool(g.InvertMouse); }
-		static void SetInvert(Game g, bool v) { g.InvertMouse = v; }
+		static void SetInvert(Game g, string v) { g.InvertMouse = SetBool(v, OptionsKey.InvertMouse); }
 		
 		static string GetSensitivity(Game g) { return g.MouseSensitivity.ToString(); }
 		static void SetSensitivity(Game g, string v) {

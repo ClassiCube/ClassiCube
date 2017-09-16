@@ -82,7 +82,7 @@ namespace ClassicalSharp.Gui.Screens {
 					#endif
 					
 					game.WorldEvents.RaiseOnNewMapLoaded();
-					if (game.AllowServerTextures && game.World.TextureUrl != null)
+					if (game.UseServerTextures && game.World.TextureUrl != null)
 						game.Server.RetrieveTexturePack(game.World.TextureUrl);
 					
 					LocalPlayer p = game.LocalPlayer;
