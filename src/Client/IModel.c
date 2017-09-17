@@ -33,6 +33,7 @@ void IModel_Init(IModel* model) {
 	model->CalcHumanAnims = false;
 	model->UsesHumanSkin = false;
 	model->SurvivalScore = 5;
+	model->Pushes = true;
 
 	model->Gravity = 0.08f;
 	model->Drag = Vector3_Create3(0.91f, 0.98f, 0.91f);

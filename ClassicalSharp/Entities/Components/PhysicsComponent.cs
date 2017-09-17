@@ -287,18 +287,19 @@ namespace ClassicalSharp.Entities {
 			for (int id = 0; id < EntityList.MaxCount; id++) {
 				Entity other = game.Entities.List[id];
 				if (other == null || other == entity) continue;
-				if (other.Model is BlockModel) continue; // block models shouldn't push you
+				if (!other.Model.Pushes) continue;
 				
 				bool yIntersects = 
 					entity.Position.Y <= (other.Position.Y + other.Size.Y) && 
 					other.Position.Y  <= (entity.Position.Y + entity.Size.Y);
 				if (!yIntersects) continue;
 				
-				Vector3 d = other.Position - entity.Position;
-				float dist = d.X * d.X + d.Z * d.Z;
+				float dX = other.Position.X - entity.Position.X;
+				float dZ = other.Position.Z - entity.Position.Z;
+				float dist = dX * dX + dZ * dZ;
 				if (dist < 0.0001f || dist > 1f) continue; // TODO: range needs to be lower?
 				
-				Vector3 dir = Vector3.Normalize(d.X, 0, d.Z);
+				Vector3 dir = Vector3.Normalize(dX, 0, dZ);
 				entity.Velocity -= dir * (1 - dist) / 32f; // TODO: should be 24/25
 			}
 		}

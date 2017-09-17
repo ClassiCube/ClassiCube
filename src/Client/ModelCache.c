@@ -999,6 +999,7 @@ IModel* HeadModel_GetInstance(void) {
 	HeadModel.vertices = HumanoidModel_Vertices;
 	HeadModel.CalcHumanAnims = true;
 	HeadModel.UsesHumanSkin = true;
+	HeadModel.Pushes = false;
 	HeadModel.GetTransform = HeadModel_GetTransform;
 	HeadModel.NameYOffset = 32.5f / 16.0f;
 	return &HeadModel;
@@ -1073,6 +1074,7 @@ IModel* ArmModel_GetInstance(void) {
 	ArmModel.vertices = HumanoidModel_Vertices;
 	ArmModel.CalcHumanAnims = true;
 	ArmModel.UsesHumanSkin = true;
+	ArmModel.Pushes = false;
 	ArmModel.NameYOffset = 0.5f;
 	return &ArmModel;
 }
@@ -1249,6 +1251,7 @@ IModel* BlockModel_GetInstance(void) {
 	IModel_SetPointers(BlockModel);
 	BlockModel.Bobbing = true;
 	BlockModel.UsesSkin = true;
+	BlockModel.Pushes = false;
 	BlockModel.RecalcProperties = BlockModel_RecalcProperties;
 	return &BlockModel;
 }

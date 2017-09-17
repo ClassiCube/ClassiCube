@@ -28,6 +28,7 @@ namespace ClassicalSharp.Model {
 			cache = game.ModelCache;
 			Bobbing = false;
 			UsesSkin = false;
+			Pushes = false;
 		}
 		
 		public override void CreateParts() { }

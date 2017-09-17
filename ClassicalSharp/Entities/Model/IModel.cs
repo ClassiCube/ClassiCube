@@ -46,6 +46,9 @@ namespace ClassicalSharp.Model {
 		/// <summary> Amount player score increased by when they kill an entity with this model. </summary>
 		public byte SurivalScore = 5;
 		
+		/// <summary> Whether this model pushes other models when collided with. </summary>
+		public bool Pushes = true;
+		
 		
 		/// <summary> Gravity applied to this entity. </summary>
 		public float Gravity = 0.08f;

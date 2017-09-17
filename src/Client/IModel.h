@@ -67,6 +67,8 @@ typedef struct IModel_ {
 	bool UsesHumanSkin;
 	/* Score earned by killing an entity with this model in survival mode. */
 	UInt8 SurvivalScore;
+	/* Whether this model pushes other models when collided with. */
+	bool Pushes;
 
 	/* Gravity applied to this entity.*/
 	Real32 Gravity;
