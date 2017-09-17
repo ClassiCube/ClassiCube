@@ -142,6 +142,7 @@ namespace ClassicalSharp.Commands {
 				    !Utils.TryParseDecimal(args[2], out y) ||
 				    !Utils.TryParseDecimal(args[3], out z)) {
 					game.Chat.Add("&e/client teleport: &cCoordinates must be decimals");
+					return;
 				}
 				
 				Vector3 v = new Vector3(x, y, z);
