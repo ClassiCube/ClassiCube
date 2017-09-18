@@ -17,8 +17,8 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> The speed that the player move at, relative to normal speed,
 		/// when the 'speeding' key binding is held down. </summary>
-		public float SpeedMultiplier = 10;		
-				
+		public float SpeedMultiplier = 10;
+		
 		/// <summary> Whether blocks that the player places that intersect themselves
 		/// should cause the player to be pushed back in the opposite direction of the placed block. </summary>
 		public bool PushbackPlacing;
@@ -46,14 +46,16 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Whether the player is allowed to see all entity name tags. </summary>
 		public bool CanSeeAllNames = true;
 		/// <summary> Whether the player is allowed to double jump. </summary>
-		public bool CanDoubleJump = true;	
+		public bool CanDoubleJump = true;
+		/// <summary> Whether the player can be pushed by other players. </summary>
+		public bool CanBePushed = true;
 		/// <summary> Maximum speed the entity can move at horizontally when CanSpeed is false. </summary>
 		public float MaxSpeedMultiplier = 1;
 		/// <summary> Amount of jumps the player can perform. </summary>
 		public int MaxJumps = 1;
 		
 		/// <summary> Whether the player should slide after letting go of movement buttons in noclip.  </summary>
-		public bool NoclipSlide = true;		
+		public bool NoclipSlide = true;
 		/// <summary> Whether the player has allowed the usage of fast double jumping abilities. </summary>
 		public bool WOMStyleHacks;
 		
@@ -80,7 +82,7 @@ namespace ClassicalSharp.Entities {
 			start += flag.Length;
 			
 			int end = HacksFlags.IndexOf(' ', start);
-			if (end < 0) end = HacksFlags.Length;		
+			if (end < 0) end = HacksFlags.Length;
 			return HacksFlags.Substring(start, end - start);
 		}
 		
@@ -160,6 +162,8 @@ namespace ClassicalSharp.Entities {
 			
 			MaxSpeedMultiplier = 1;
 			MaxJumps = 1;
+			CanBePushed = true;
+			
 			// By default (this is also the case with WoM), we can use hacks.
 			if (HacksFlags.Contains("-hax")) SetAllHacks(false);
 			
@@ -167,6 +171,7 @@ namespace ClassicalSharp.Entities {
 			ParseFlag(ref CanNoclip, "noclip");
 			ParseFlag(ref CanSpeed, "speed");
 			ParseFlag(ref CanRespawn, "respawn");
+			ParseFlag(ref CanBePushed, "push");
 
 			if (UserType == 0x64) ParseAllFlag("ophax");
 			ParseHorizontalSpeed();

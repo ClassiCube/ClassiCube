@@ -35,7 +35,7 @@ namespace ClassicalSharp.Audio {
 			if (volume != 0) return volume;
 			
 			volume = Options.GetBool(boolKey, false) ? 100 : 0;
-			Options.Set<string>(boolKey, null);
+			Options.Set(boolKey, null);
 			return volume;
 		}
 

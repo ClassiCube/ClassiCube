@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 		public void SetViewDistance(float distance, bool userDist) {
 			if (userDist) {
 				UserViewDistance = distance;
-				Options.Set(OptionsKey.ViewDist, distance);
+				Options.Set(OptionsKey.ViewDist, (int)distance);
 			}
 			
 			distance = Math.Min(distance, MaxViewDistance);

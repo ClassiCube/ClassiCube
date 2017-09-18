@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 		void SaveKeyBindings() {
 			string[] names = KeyBind.GetNames(typeof(KeyBind));
 			for (int i = 0; i < names.Length; i++) {
-				Options.Set("key-" + names[i], keys[i]);
+				Options.Set("key-" + names[i], keys[i].ToString());
 			}
 		}
 	}

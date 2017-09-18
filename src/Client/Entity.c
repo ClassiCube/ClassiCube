@@ -97,7 +97,7 @@ void Entity_ParseScale(Entity* entity, String scale) {
 	entity->ModelScale = Vector3_Create1(value);
 }
 
-void Entity_SetModel(Entity* entity, String* model) {
+void Entity_SetModel(Entity* entity, STRING_TRANSIENT String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->ModelBlock = BlockID_Air;
 	String_Clear(&entity->ModelName);
@@ -335,6 +335,7 @@ void HacksComp_Init(HacksComp* hacks) {
 	hacks->MaxSpeedMultiplier = 1.0f;
 	hacks->MaxJumps = 1;
 	hacks->NoclipSlide = true;
+	hacks->CanBePushed = true;
 	hacks->HacksFlags = String_FromRawBuffer(&hacks->HacksFlagsBuffer[0], 128);
 }
 
@@ -447,6 +448,8 @@ void HacksComp_UpdateState(HacksComp* hacks) {
 
 	hacks->MaxSpeedMultiplier = 1;
 	hacks->MaxJumps = 1;
+	hacks->CanBePushed = true;
+
 	/* By default (this is also the case with WoM), we can use hacks. */
 	String excHacks = String_FromConstant("-hax");
 	if (String_ContainsString(&hacks->HacksFlags, &excHacks)) {
@@ -457,6 +460,7 @@ void HacksComp_UpdateState(HacksComp* hacks) {
 	HacksComp_ParseFlag(hacks, "+noclip", "-noclip", &hacks->CanNoclip);
 	HacksComp_ParseFlag(hacks, "+speed", "-speed", &hacks->CanSpeed);
 	HacksComp_ParseFlag(hacks, "+respawn", "-respawn", &hacks->CanRespawn);
+	HacksComp_ParseFlag(hacks, "+push", "-push", &hacks->CanBePushed);
 
 	if (hacks->UserType == 0x64) {
 		HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");

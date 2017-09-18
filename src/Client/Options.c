@@ -121,7 +121,7 @@ void Options_SetInt32(const UInt8* keyRaw, Int32 value) {
 	Options_Set(keyRaw, numStr);
 }
 
-void Options_Set(const UInt8* keyRaw, String value) {
+void Options_Set(const UInt8* keyRaw, STRING_TRANSIENT String value) {
 	String key = String_FromReadonly(keyRaw);
 	Int32 i;
 	if (value.buffer == NULL) {

@@ -129,14 +129,13 @@ namespace ClassicalSharp {
 		
 		public static T GetEnum<T>(string key, T defValue) {
 			string value = Get(key);
-			if (value == null) {
-				Set(key, defValue);
-				return defValue;
-			}
+			if (value == null) return defValue;
 			
 			T mapping;
-			if (!Utils.TryParseEnum(value, defValue, out mapping))
-				Set(key, defValue);
+			if (!Utils.TryParseEnum(value, defValue, out mapping)) {
+				Set(key, defValue.ToString());
+				mapping = defValue;
+			}
 			return mapping;
 		}
 		#endif
@@ -148,12 +147,14 @@ namespace ClassicalSharp {
 			return -1;
 		}
 		
-		public static void Set<T>(string key, T value) {
+		public static void Set(string key, int value)  { Set(key, value.ToString()); }
+		public static void Set(string key, bool value) { Set(key, value.ToString()); }
+		public static void Set(string key, string value) {
 			if (value == null) {
 				int i = FindOption(key);
 				if (i >= 0) RemoveOption(i);
 			} else {
-				SetOption(key, value.ToString());
+				SetOption(key, value);
 			}
 			
 			if (!OptionsChanged.Contains(key)) {
