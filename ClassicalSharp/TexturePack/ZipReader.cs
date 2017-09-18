@@ -7,8 +7,9 @@ using System.Text;
 namespace ClassicalSharp.Textures {
 
 	public struct ZipEntry {
-		public int CompressedDataSize, UncompressedDataSize;
-		public int LocalHeaderOffset, CentralHeaderOffset;
+		public int CompressedDataSize;
+		public int UncompressedDataSize;
+		public int LocalHeaderOffset;
 		public uint Crc32;
 		public string Filename;
 	}
@@ -98,7 +99,6 @@ namespace ClassicalSharp.Textures {
 		
 		void ReadCentralDirectory(BinaryReader reader, ZipEntry[] entries) {
 			ZipEntry entry;
-			entry.CentralHeaderOffset = (int)(reader.BaseStream.Position - 4);
 			reader.ReadUInt16(); // OS
 			ushort versionNeeded = reader.ReadUInt16();
 			ushort flags = reader.ReadUInt16();

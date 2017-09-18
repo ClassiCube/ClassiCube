@@ -4,8 +4,14 @@
 #include "String.h"
 #include "ErrorHandler.h"
 
-typedef ReturnCode (*Stream_Operation)(UInt8* data, UInt32 count, UInt32* modified);
-typedef ReturnCode (*Stream_Seek)(Int32 offset);
+#define STREAM_SEEK_BEGIN 0
+#define STREAM_SEEK_CURRENT 1
+#define STREAM_SEEK_END 2
+
+typedef ReturnCode(*Stream_Operation)(UInt8* data, UInt32 count, UInt32* modified);
+typedef ReturnCode(*Stream_Seek)(Int32 offset, Int32 seekType);
+typedef UInt32(*Stream_Length)(void);
+typedef UInt32(*Stream_Position)(void);
 
 /* Represents a stream that can be written to and/or read from. */
 typedef struct Stream_ {
@@ -15,8 +21,12 @@ typedef struct Stream_ {
 	Stream_Operation Read;
 	/* Performs a write. Result is a ReturnCode, number of written bytes is output via pointer. */
 	Stream_Operation Write;
-	/* Moves backwards or forwards by given number of bytes in the stream. Result is a ReturnCode. */
+	/* Moves backwards or forwards by given number of bytes from seek offset in the stream. Result is a ReturnCode. */
 	Stream_Seek Seek;
+	/* Gets the length of the given stream. */
+	Stream_Length Length;
+	/* Gets the position of the given stream. */
+	Stream_Position Position;
 	/* Attempts to read the next byte from the stream.*/
 	Int32 (*TryReadByte)(void);
 } Stream;
