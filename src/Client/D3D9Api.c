@@ -335,7 +335,7 @@ void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, b
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		Bitmap mipmap;
-		Bitmap_Create(&mipmap, width, height, width * Bitmap_PixelBytesSize, cur);
+		Bitmap_Create(&mipmap, width, height, cur);
 		if (partial) {
 			D3D9_SetTexturePartData(texture, x, y, &mipmap, lvl);
 		} else {

@@ -119,10 +119,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		protected abstract void SortInfoList();
 		
-		protected void RemoveInfoAt<T>(T[] info, int i) {
+		protected void RemoveTextureAt(int i) {
 			Texture tex = textures[i];
-			gfx.DeleteTexture(ref tex);
-			RemoveItemAt(info, i);
+			gfx.DeleteTexture(ref tex);			
 			RemoveItemAt(textures, i);
 			namesCount--;
 			SortPlayerInfo();

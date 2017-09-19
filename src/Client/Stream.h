@@ -4,9 +4,9 @@
 #include "String.h"
 #include "ErrorHandler.h"
 
-#define STREAM_SEEK_BEGIN 0
-#define STREAM_SEEK_CURRENT 1
-#define STREAM_SEEK_END 2
+#define STREAM_SEEKFROM_BEGIN 0
+#define STREAM_SEEKFROM_CURRENT 1
+#define STREAM_SEEKFROM_END 2
 
 typedef ReturnCode(*Stream_Operation)(UInt8* data, UInt32 count, UInt32* modified);
 typedef ReturnCode(*Stream_Seek)(Int32 offset, Int32 seekType);

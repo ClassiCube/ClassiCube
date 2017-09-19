@@ -1,14 +1,13 @@
 #include "Bitmap.h"
 #include "Platform.h"
+#include "PackedCol.h"
+#include "ExtMath.h"
 
-void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, Int32 stride, UInt8* scan0) {
-	bmp->Width = width; bmp->Height = height; bmp->Stride = stride; bmp->Scan0 = scan0;
+void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
+	bmp->Width = width; bmp->Height = height; 
+	bmp->Stride = width * Bitmap_PixelBytesSize; 
+	bmp->Scan0 = scan0;
 }
-
-UInt32* Bitmap_GetRow(Bitmap* bmp, Int32 y) {
-	return (UInt32*)(bmp->Scan0 + (y * bmp->Stride));
-}
-
 void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 size) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
@@ -31,6 +30,6 @@ void Bitmap_CopyRow(Int32 srcY, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 widt
 
 void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
-	bmp->Stride = width * sizeof(UInt32);
+	bmp->Stride = width * Bitmap_PixelBytesSize;
 	bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(width, height));
 }

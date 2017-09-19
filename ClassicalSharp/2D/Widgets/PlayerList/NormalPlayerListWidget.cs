@@ -98,7 +98,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			for (int i = 0; i < namesCount; i++) {
 				PlayerInfo pInfo = info[i];
 				if (pInfo.Id == e.Id) {
-					RemoveInfoAt(info, i);
+					RemoveItemAt(info, i);
+					RemoveTextureAt(i);
 					return;
 				}
 			}

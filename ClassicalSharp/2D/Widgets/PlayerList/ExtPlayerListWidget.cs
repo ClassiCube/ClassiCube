@@ -90,7 +90,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			for (int i = 0; i < namesCount; i++) {
 				PlayerInfo pInfo = info[i];
 				if (!pInfo.IsGroup && pInfo.NameId == e.Id) {
-					RemoveInfoAt(info, i);
+					RemoveItemAt(info, i);
+					RemoveTextureAt(i);
 					return;
 				}
 			}
@@ -168,19 +169,16 @@ namespace ClassicalSharp.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs(group, titleFont, true);
 			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(titleFont.Size), 3);
-			PlayerInfo pInfo = new PlayerInfo(group);
 			
-			PushDown(info, index, pInfo);
-			PushDown(textures, index, tex);
+			for (int i = info.Length - 1; i > index; i--) {
+				info[i] = info[i - 1];
+				textures[i] = textures[i - 1];
+			}
+			info[index] = new PlayerInfo(group);
+			textures[index] = tex;
+			
 			index++;
 			namesCount++;
-		}
-		
-		void PushDown<T>(T[] array, int index, T value) {
-			for (int i = array.Length - 1; i > index; i--) {
-				array[i] = array[i - 1];
-			}
-			array[index] = value;
 		}
 		
 		int GetGroupCount(int startIndex) {

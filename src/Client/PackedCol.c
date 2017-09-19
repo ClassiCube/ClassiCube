@@ -13,6 +13,10 @@ PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b) {
 	return col;
 }
 
+UInt32 PackedCol_ToARGB(PackedCol col) {
+	return PackedCol_ARGB(col.R, col.G, col.B, col.A);
+}
+
 PackedCol PackedCol_Scale(PackedCol value, Real32 t) {
 	value.R = (UInt8)(value.R * t);
 	value.G = (UInt8)(value.G * t);
