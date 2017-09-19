@@ -246,10 +246,6 @@ namespace ClassicalSharp.Gui.Screens {
 			object raw = Enum.Parse(typeof(FpsLimitMethod), v);
 			g.SetFpsLimitMethod((FpsLimitMethod)raw);
 			Options.Set(OptionsKey.FpsLimit, v);
-			
-			// NOTE: OpenGL backend doesn't recreate context, so cheat and act like recreated anyways
-			ContextLost();
-			ContextRecreated();
 		}
 	}
 }

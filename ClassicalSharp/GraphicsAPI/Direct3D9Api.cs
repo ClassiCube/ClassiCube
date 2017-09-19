@@ -470,8 +470,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		bool vsync = false;
 		public override void SetVSync(Game game, bool value) {
-			vsync = value;
 			game.VSync = value;
+			if (vsync == value) return;
+			vsync = value;
 			
 			LoseContext(" (toggling VSync)");
 			RecreateDevice(game);
