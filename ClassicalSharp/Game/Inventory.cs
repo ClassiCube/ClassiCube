@@ -98,7 +98,11 @@ namespace ClassicalSharp {
 		}
 		
 		BlockID DefaultMapping(int i) {
+#if USE16_BIT
+			if ((i >= Block.CpeCount && i < 256) || i == Block.Air) return Block.Invalid;			
+#else
 			if (i >= Block.CpeCount || i == Block.Air) return Block.Invalid;
+#endif
 			if (!game.ClassicMode) return (BlockID)i;
 			if (game.PureClassic && IsHackBlock(i)) return Block.Invalid;
 			

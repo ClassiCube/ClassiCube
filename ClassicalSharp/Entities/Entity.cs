@@ -127,7 +127,7 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			ModelBlock = Block.Air;
-			if (Byte.TryParse(ModelName, out ModelBlock)) {
+			if (BlockID.TryParse(ModelName, out ModelBlock)) {
 				ModelName = "block";
 			}
 			
