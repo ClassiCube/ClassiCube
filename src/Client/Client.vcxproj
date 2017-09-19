@@ -194,7 +194,7 @@
     <ClInclude Include="Event.h" />
     <ClInclude Include="Events.h" />
     <ClInclude Include="FrustumCulling.h" />
-    <ClInclude Include="GZipHeader.h" />
+    <ClInclude Include="Deflate.h" />
     <ClInclude Include="IModel.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IsometricDrawer.h" />
@@ -262,7 +262,7 @@
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="GameStructs.c" />
-    <ClCompile Include="GZipHeader.c" />
+    <ClCompile Include="Deflate.c" />
     <ClCompile Include="IModel.c" />
     <ClCompile Include="Intersection.c" />
     <ClCompile Include="IsometricDrawer.c" />

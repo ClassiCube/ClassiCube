@@ -92,12 +92,14 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public int GetUsedHeight() {
-			int sum = 0;
-			for (int i = 0; i < Textures.Length; i++) {
-				if (!Textures[i].IsValid) continue;
-				sum += Textures[i].Height;
+			int height = 0, i = 0;
+			for (i = 0; i < Textures.Length; i++) {
+				if (Textures[i].IsValid) break;
 			}
-			return sum;
+			for (; i < Textures.Length; i++) {
+				height += Textures[i].Height;
+			}
+			return height;
 		}
 		
 		void UpdateDimensions() {
