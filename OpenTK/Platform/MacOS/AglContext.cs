@@ -114,10 +114,10 @@ namespace OpenTK.Platform.MacOS {
 		{
 			IntPtr windowRef = carbonWindow.WindowRef;
 
-			if (!CarbonGLNative.WindowRefMap.ContainsKey(windowRef))
+			if (!CarbonGLNative.WindowRefs.ContainsKey(windowRef))
 				return IntPtr.Zero;
 
-			WeakReference nativeRef = CarbonGLNative.WindowRefMap[windowRef];
+			WeakReference nativeRef = CarbonGLNative.WindowRefs[windowRef];
 			if (!nativeRef.IsAlive)
 				return IntPtr.Zero;
 
@@ -176,7 +176,7 @@ namespace OpenTK.Platform.MacOS {
 
 		private CarbonGLNative GetCarbonWindow(CarbonWindowInfo carbonWindow)
 		{
-			WeakReference r = CarbonGLNative.WindowRefMap[carbonWindow.WindowRef];
+			WeakReference r = CarbonGLNative.WindowRefs[carbonWindow.WindowRef];
 			return r.IsAlive ? (CarbonGLNative)r.Target : null;
 		}
 

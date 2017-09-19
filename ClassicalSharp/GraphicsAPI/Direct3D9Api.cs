@@ -371,7 +371,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public unsafe override void LoadMatrix(ref Matrix4 matrix) {
 			if (curStack == texStack) {
-				matrix.M31 = matrix.M41; // NOTE: this hack fixes the texture movements.
+				matrix.Row2.X = matrix.Row3.X; // NOTE: this hack fixes the texture movements.
 				device.SetTextureStageState(0, TextureStage.TextureTransformFlags, (int)TextureTransform.Count2);
 			}
 			curStack.SetTop(ref matrix);
@@ -567,9 +567,8 @@ namespace ClassicalSharp.GraphicsAPI {
 			Matrix4 matrix;
 			Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000, out matrix);
 			const float zN = -10000, zF = 10000;
-			matrix.M33 = 1 / (zN - zF);
-			matrix.M43 = zN / (zN - zF);
-			matrix.M44 = 1;
+			matrix.Row2.Z = 1 / (zN - zF);
+			matrix.Row3.Z = zN / (zN - zF);
 			curStack.SetTop(ref matrix);
 		}
 		

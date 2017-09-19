@@ -60,54 +60,6 @@ namespace OpenTK {
 			Row3 = new Vector4(m30, m31, m32, m33);
 		}
 
-		/// <summary> Gets or sets the value at row 1, column 1 of this instance. </summary>
-		public float M11 { get { return Row0.X; } set { Row0.X = value; } }
-
-		/// <summary> Gets or sets the value at row 1, column 2 of this instance. </summary>
-		public float M12 { get { return Row0.Y; } set { Row0.Y = value; } }
-
-		/// <summary> Gets or sets the value at row 1, column 3 of this instance. </summary>
-		public float M13 { get { return Row0.Z; } set { Row0.Z = value; } }
-
-		/// <summary> Gets or sets the value at row 1, column 4 of this instance. </summary>
-		public float M14 { get { return Row0.W; } set { Row0.W = value; } }
-
-		/// <summary> Gets or sets the value at row 2, column 1 of this instance. </summary>
-		public float M21 { get { return Row1.X; } set { Row1.X = value; } }
-
-		/// <summary> Gets or sets the value at row 2, column 2 of this instance. </summary>
-		public float M22 { get { return Row1.Y; } set { Row1.Y = value; } }
-
-		/// <summary> Gets or sets the value at row 2, column 3 of this instance. </summary>
-		public float M23 { get { return Row1.Z; } set { Row1.Z = value; } }
-
-		/// <summary> Gets or sets the value at row 2, column 4 of this instance. </summary>
-		public float M24 { get { return Row1.W; } set { Row1.W = value; } }
-
-		/// <summary> Gets or sets the value at row 3, column 1 of this instance. </summary>
-		public float M31 { get { return Row2.X; } set { Row2.X = value; } }
-
-		/// <summary> Gets or sets the value at row 3, column 2 of this instance. </summary>
-		public float M32 { get { return Row2.Y; } set { Row2.Y = value; } }
-
-		/// <summary> Gets or sets the value at row 3, column 3 of this instance. </summary>
-		public float M33 { get { return Row2.Z; } set { Row2.Z = value; } }
-
-		/// <summary> Gets or sets the value at row 3, column 4 of this instance. </summary>
-		public float M34 { get { return Row2.W; } set { Row2.W = value; } }
-
-		/// <summary> Gets or sets the value at row 4, column 1 of this instance. </summary>
-		public float M41 { get { return Row3.X; } set { Row3.X = value; } }
-
-		/// <summary> Gets or sets the value at row 4, column 2 of this instance. </summary>
-		public float M42 { get { return Row3.Y; } set { Row3.Y = value; } }
-
-		/// <summary> Gets or sets the value at row 4, column 3 of this instance. </summary>
-		public float M43 { get { return Row3.Z; } set { Row3.Z = value; } }
-
-		/// <summary> Gets or sets the value at row 4, column 4 of this instance. </summary>
-		public float M44 { get { return Row3.W; } set { Row3.W = value; } }
-
 		public static void RotateX(out Matrix4 result, float angle) {
 			float cos = (float)Math.Cos(angle);
 			float sin = (float)Math.Sin(angle);
@@ -157,14 +109,14 @@ namespace OpenTK {
 			float invTB = 1 / (top - bottom);
 			float invFN = 1 / (zFar - zNear);
 
-			result.M11 = 2 * invRL;
-			result.M22 = 2 * invTB;
-			result.M33 = -2 * invFN;
+			result.Row0.X = 2 * invRL;
+			result.Row1.Y = 2 * invTB;
+			result.Row2.Z = -2 * invFN;
 
-			result.M41 = -(right + left) * invRL;
-			result.M42 = -(top + bottom) * invTB;
-			result.M43 = -(zFar + zNear) * invFN;
-			result.M44 = 1;
+			result.Row3.X = -(right + left) * invRL;
+			result.Row3.Y = -(top + bottom) * invTB;
+			result.Row3.Z = -(zFar + zNear) * invFN;
+			result.Row3.W = 1;
 		}
 		
 		public static void CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar, out Matrix4 result) {

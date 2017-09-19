@@ -48,19 +48,16 @@ namespace OpenTK.Platform.MacOS
 		Rectangle windowedBounds;
 		bool mIsDisposed = false;
 		bool mExists = true;
-		DisplayDevice mDisplayDevice;
+		internal DisplayDevice TargetDisplayDevice;
 
 		WindowPositionMethod mPositionMethod = WindowPositionMethod.CenterOnMainScreen;
 		int mTitlebarHeight;
-		private WindowState windowState = WindowState.Normal;
-		static Dictionary<IntPtr, WeakReference> mWindows = new Dictionary<IntPtr, WeakReference>();
+		WindowState windowState = WindowState.Normal;
+		internal static Dictionary<IntPtr, WeakReference> WindowRefs = new Dictionary<IntPtr, WeakReference>();
 		KeyPressEventArgs mKeyPressArgs = new KeyPressEventArgs();
 		bool mMouseIn = false;
 		bool mIsActive = false;
 		Icon mIcon;
-
-		static internal Dictionary<IntPtr, WeakReference> WindowRefMap { get { return mWindows; } }
-		internal DisplayDevice TargetDisplayDevice { get { return mDisplayDevice; } }
 
 		static CarbonGLNative() {
 			Application.Initialize();
@@ -74,7 +71,7 @@ namespace OpenTK.Platform.MacOS
 			                   WindowAttributes.InWindowMenu | WindowAttributes.LiveResize,
 			                   new Rect((short)x, (short)y, (short)width, (short)height));
 			
-			mDisplayDevice = device;
+			TargetDisplayDevice = device;
 		}
 
 		#region IDisposable
@@ -95,7 +92,7 @@ namespace OpenTK.Platform.MacOS
 			mExists = false;
 
 			if (disposing) {
-				mWindows.Remove(window.WindowRef);
+				WindowRefs.Remove(window.WindowRef);
 				window = null;
 			}
 			DisposeUPP();
@@ -132,7 +129,7 @@ namespace OpenTK.Platform.MacOS
 			window = new CarbonWindowInfo(windowRef);
 			SetLocation(r.X, r.Y);
 			SetSize(r.Width, r.Height);
-			mWindows.Add(windowRef, new WeakReference(this));
+			WindowRefs.Add(windowRef, new WeakReference(this));
 			LoadSize();
 
 			Rect titleSize = API.GetWindowBounds(window.WindowRef, WindowRegionCode.TitleBarRegion);
@@ -196,7 +193,7 @@ namespace OpenTK.Platform.MacOS
 			Debug.Print("New Size: {0}, {1}", ClientRectangle.Width, ClientRectangle.Height);
 
 			// TODO: if we go full screen we need to make this use the device specified.
-			bounds = mDisplayDevice.Bounds;
+			bounds = TargetDisplayDevice.Bounds;
 			windowState = WindowState.Fullscreen;
 		}
 
@@ -231,14 +228,14 @@ namespace OpenTK.Platform.MacOS
 		{
 			// bail out if the window passed in is not actually our window.
 			// I think this happens if using winforms with a GameWindow sometimes.
-			if (!mWindows.ContainsKey(userData))
+			if (!WindowRefs.ContainsKey(userData))
 				return OSStatus.EventNotHandled;
 
-			WeakReference reference = mWindows[userData];
+			WeakReference reference = WindowRefs[userData];
 
 			// bail out if the CarbonGLNative window has been garbage collected.
 			if (!reference.IsAlive) {
-				mWindows.Remove(userData);
+				WindowRefs.Remove(userData);
 				return OSStatus.EventNotHandled;
 			}
 
