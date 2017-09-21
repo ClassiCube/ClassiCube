@@ -39,10 +39,10 @@ namespace OpenTK.Platform {
 		void SwapBuffers();
 
 		/// <summary> Occurs before the window is displayed for the first time. </summary>
-		event EventHandler<EventArgs> Load;
+		event EventHandler Load;
 
 		/// <summary> Occurs before the window is destroyed.  </summary>
-		event EventHandler<EventArgs> Unload;
+		event EventHandler Unload;
 
 		/// <summary> Occurs when it is time to render a frame. </summary>
 		event EventHandler<FrameEventArgs> RenderFrame;

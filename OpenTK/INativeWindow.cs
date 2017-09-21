@@ -106,36 +106,36 @@ namespace OpenTK {
 		bool CursorVisible { get; set; }
 
 		/// <summary> Occurs whenever the window is moved. </summary>
-		event EventHandler<EventArgs> Move;
+		event EventHandler Move;
 
 		/// <summary> Occurs whenever the window is resized. </summary>
-		event EventHandler<EventArgs> Resize;
+		event EventHandler Resize;
 
 		/// <summary> Occurs when the window is about to close. </summary>
 		event EventHandler<CancelEventArgs> Closing;
 
 		/// <summary> Occurs after the window has closed. </summary>
-		event EventHandler<EventArgs> Closed;
+		event EventHandler Closed;
 
 		/// <summary> Occurs when the window is disposed. </summary>
-		event EventHandler<EventArgs> Disposed;
+		event EventHandler Disposed;
 
 		/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
-		event EventHandler<EventArgs> VisibleChanged;
+		event EventHandler VisibleChanged;
 
 		/// <summary> Occurs when the <see cref="Focused"/> property of the window changes. </summary>
-		event EventHandler<EventArgs> FocusedChanged;
+		event EventHandler FocusedChanged;
 
 		/// <summary> Occurs when the <see cref="WindowState"/> property of the window changes. </summary>
-		event EventHandler<EventArgs> WindowStateChanged;
+		event EventHandler WindowStateChanged;
 
 		/// <summary> Occurs whenever a character is typed. </summary>
 		event EventHandler<KeyPressEventArgs> KeyPress;
 
 		/// <summary> Occurs whenever the mouse cursor leaves the window <see cref="Bounds"/>. </summary>
-		event EventHandler<EventArgs> MouseLeave;
+		event EventHandler MouseLeave;
 
 		/// <summary> Occurs whenever the mouse cursor enters the window <see cref="Bounds"/>. </summary>
-		event EventHandler<EventArgs> MouseEnter;
+		event EventHandler MouseEnter;
 	}
 }

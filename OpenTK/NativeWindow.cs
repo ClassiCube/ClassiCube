@@ -215,37 +215,37 @@ namespace OpenTK {
 		}
 		
 		/// <summary> Occurs after the window has closed. </summary>
-		public event EventHandler<EventArgs> Closed;
+		public event EventHandler Closed;
 
 		/// <summary> Occurs when the window is about to close. </summary>
 		public event EventHandler<CancelEventArgs> Closing;
 
 		/// <summary> Occurs when the window is disposed. </summary>
-		public event EventHandler<EventArgs> Disposed;
+		public event EventHandler Disposed;
 
 		/// <summary> Occurs when the <see cref="Focused"/> property of the window changes. </summary>
-		public event EventHandler<EventArgs> FocusedChanged;
+		public event EventHandler FocusedChanged;
 
 		/// <summary> Occurs whenever a character is typed. </summary>
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 
 		/// <summary> Occurs whenever the window is moved. </summary>
-		public event EventHandler<EventArgs> Move;
+		public event EventHandler Move;
 
 		/// <summary> Occurs whenever the mouse cursor enters the window <see cref="Bounds"/>. </summary>
-		public event EventHandler<EventArgs> MouseEnter;
+		public event EventHandler MouseEnter;
 		
 		/// <summary> Occurs whenever the mouse cursor leaves the window <see cref="Bounds"/>. </summary>
-		public event EventHandler<EventArgs> MouseLeave;
+		public event EventHandler MouseLeave;
 
 		/// <summary> Occurs whenever the window is resized. </summary>
-		public event EventHandler<EventArgs> Resize;
+		public event EventHandler Resize;
 
 		/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
-		public event EventHandler<EventArgs> VisibleChanged;
+		public event EventHandler VisibleChanged;
 
 		/// <summary> Occurs when the <see cref="WindowState"/> property of the window changes. </summary>
-		public event EventHandler<EventArgs> WindowStateChanged;
+		public event EventHandler WindowStateChanged;
 		
 		/// <summary> Releases all non-managed resources belonging to this NativeWindow. </summary>
 		public virtual void Dispose() {

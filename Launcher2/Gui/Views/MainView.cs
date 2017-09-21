@@ -5,7 +5,7 @@ using ClassicalSharp;
 using Launcher.Gui.Widgets;
 
 namespace Launcher.Gui.Views {
-	public sealed partial class MainView : IView {
+	public sealed class MainView : IView {
 		
 		Font buttonFont, updateFont;
 		internal int loginIndex, resIndex, dcIndex, spIndex, statusIndex;

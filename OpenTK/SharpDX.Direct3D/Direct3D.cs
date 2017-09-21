@@ -18,7 +18,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using OpenTK;
 
@@ -31,12 +30,13 @@ namespace SharpDX.Direct3D9 {
 			comPointer = Direct3DCreate9( SdkVersion );
 			
 			int count = GetAdapterCount();
-			Adapters = new List<AdapterInformation>( count );
-			for( int i = 0; i < count; i++ )
-				Adapters.Add( new AdapterInformation( this, i ) );
+			Adapters = new AdapterInformation[count];
+			for( int i = 0; i < count; i++ ) {
+				Adapters[i] = new AdapterInformation( this, i );
+			}
 		}
 
-		public List<AdapterInformation> Adapters;
+		public AdapterInformation[] Adapters;
 		
 		const int SdkVersion = 32;
 		[DllImport( "d3d9.dll" )]

@@ -627,19 +627,19 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 
-		public event EventHandler<EventArgs> Load;
-		public event EventHandler<EventArgs> Unload;
-		public event EventHandler<EventArgs> Move;
-		public event EventHandler<EventArgs> Resize;
-		public event EventHandler<System.ComponentModel.CancelEventArgs> Closing;
-		public event EventHandler<EventArgs> Closed;
-		public event EventHandler<EventArgs> Disposed;
-		public event EventHandler<EventArgs> VisibleChanged;
-		public event EventHandler<EventArgs> FocusedChanged;
-		public event EventHandler<EventArgs> WindowStateChanged;
+		public event EventHandler Load;
+		public event EventHandler Unload;
+		public event EventHandler Move;
+		public event EventHandler Resize;
+		public event EventHandler<CancelEventArgs> Closing;
+		public event EventHandler Closed;
+		public event EventHandler Disposed;
+		public event EventHandler VisibleChanged;
+		public event EventHandler FocusedChanged;
+		public event EventHandler WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
-		public event EventHandler<EventArgs> MouseEnter;
-		public event EventHandler<EventArgs> MouseLeave;
+		public event EventHandler MouseEnter;
+		public event EventHandler MouseLeave;
 		
 		public KeyboardDevice Keyboard {
 			get { return keyboard; }

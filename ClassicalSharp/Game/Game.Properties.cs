@@ -42,10 +42,11 @@ namespace ClassicalSharp {
 		void OnNewMapLoaded(Game game);
 	}
 	
+	public delegate void ScheduledTaskCallback(ScheduledTask task);	
 	/// <summary> Represents a task that runs on the main thread every certain interval. </summary>
 	public class ScheduledTask {
 		public double Accumulator, Interval;
-		public Action<ScheduledTask> Callback;
+		public ScheduledTaskCallback Callback;
 	}
 	
 	public partial class Game {

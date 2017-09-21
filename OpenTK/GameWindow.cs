@@ -271,13 +271,13 @@ namespace OpenTK
 		}
 		
 		/// <summary> Occurs before the window is displayed for the first time. </summary>
-		public event EventHandler<EventArgs> Load;
+		public event EventHandler Load;
 
 		/// <summary> Occurs when it is time to render a frame. </summary>
 		public event EventHandler<FrameEventArgs> RenderFrame;
 
 		/// <summary> Occurs before the window is destroyed. </summary>
-		public event EventHandler<EventArgs> Unload;
+		public event EventHandler Unload;
 		
 		/// <summary> Override to add custom cleanup logic. </summary>
 		/// <param name="manual">True, if this method was called by the application; false if this was called by the finalizer thread.</param>

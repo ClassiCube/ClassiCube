@@ -151,6 +151,13 @@ namespace Launcher.Gui.Screens {
 				tabDown = false;
 		}
 		
+		protected int IndexOfWidget(Widget w) {
+			for (int i = 0; i < widgets.Length; i++) {
+				if (widgets[i] == w) return i;
+			}
+			return -1;
+		}
+		
 		protected bool tabDown = false;
 		protected void HandleTab() {
 			if (tabDown) return;
@@ -161,7 +168,7 @@ namespace Launcher.Gui.Screens {
 			int dir = shiftDown ? -1 : 1;
 			int index = 0;
 			if (lastClicked != null) {
-				index = Array.IndexOf<Widget>(widgets, lastClicked);
+				index = IndexOfWidget(lastClicked);
 				index += dir;
 			}
 			

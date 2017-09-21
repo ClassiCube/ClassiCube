@@ -89,8 +89,9 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		T AddParticle<T>(T[] particles, ref int count, bool rain) where T : Particle, new() {
-			if (count == maxParticles)
+			if (count == maxParticles) {
 				RemoveAt(0, particles, ref count);
+			}
 			count++;
 			
 			T old = particles[count - 1];

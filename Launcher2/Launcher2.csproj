@@ -138,7 +138,6 @@
     <Compile Include="Gui\Widgets\Makers.cs" />
     <Compile Include="LauncherWindow.Background.cs" />
     <Compile Include="LauncherWindow.cs" />
-    <Compile Include="Patcher\Animations.cs" />
     <Compile Include="Patcher\ResourceChecker.cs" />
     <Compile Include="Patcher\ResourceFetcher.cs" />
     <Compile Include="Patcher\ResourcePatcher.cs" />

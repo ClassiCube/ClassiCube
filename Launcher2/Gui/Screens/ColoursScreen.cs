@@ -91,7 +91,7 @@ namespace Launcher.Gui.Screens {
 		
 		void AdjustSelectedColour(int delta) {
 			if (curInput == null) return;
-			int index = Array.IndexOf<Widget>(widgets, curInput);
+			int index = IndexOfWidget(curInput);
 			if (index >= 15) return;
 			
 			byte col;
@@ -107,7 +107,7 @@ namespace Launcher.Gui.Screens {
 		
 		void TextChanged(InputWidget widget) {
 			bool changed = false;
-			int index = Array.IndexOf<Widget>(widgets, widget);
+			int index = IndexOfWidget(widget);
 			if (index < 3) changed |= Parse(0, ref LauncherSkin.BackgroundCol);
 			else if (index < 6) changed |= Parse(3, ref LauncherSkin.ButtonBorderCol);
 			else if (index < 9) changed |= Parse(6, ref LauncherSkin.ButtonHighlightCol);

@@ -126,9 +126,5 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			return true;
 		}
-		
-		T Get<T>(int index, T[] a, T[] b) {
-			return index < a.Length ? a[index] : b[index - a.Length];
-		}
 	}
 }
