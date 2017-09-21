@@ -13,14 +13,14 @@ namespace ClassicalSharp {
 		public int GuiTex, GuiClassicTex, IconsTex;
 		Game game;
 		IGraphicsApi gfx;
-		StatusScreen fpsScreen;
+		StatusScreen statusScreen;
 		internal HudScreen hudScreen;
 		internal Screen activeScreen;
 		internal List<Overlay> overlays = new List<Overlay>();
 		
 		public GuiInterface(Game game) {
-			fpsScreen = game.AddComponent(new StatusScreen(game));
-			hudScreen = game.AddComponent(new HudScreen(game));
+			statusScreen = new StatusScreen(game); game.Components.Add(statusScreen);
+			hudScreen = new HudScreen(game); game.Components.Add(hudScreen);
 		}
 		
 		/// <summary> Gets the screen that the user is currently interacting with. </summary>
@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 		public void Dispose() {
 			game.Events.TextureChanged -= TextureChanged;
 			SetNewScreen(null);
-			fpsScreen.Dispose();
+			statusScreen.Dispose();
 			
 			if (activeScreen != null)
 				activeScreen.Dispose();
@@ -110,7 +110,7 @@ namespace ClassicalSharp {
 		public void Render(double delta) {
 			gfx.Mode2D(game.Width, game.Height);
 			if (activeScreen == null || !activeScreen.HidesHud)
-				fpsScreen.Render(delta);
+				statusScreen.Render(delta);
 			
 			if (activeScreen == null || !activeScreen.HidesHud && !activeScreen.RenderHudOver)
 				hudScreen.Render(delta);

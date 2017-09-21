@@ -53,18 +53,20 @@ namespace ClassicalSharp {
 			LastModified.Load();
 			
 			if (Options.GetBool(OptionsKey.SurvivalMode, false)) {
-				Mode = AddComponent(new SurvivalGameMode());
+				Mode = new SurvivalGameMode();
 			} else {
-				Mode = AddComponent(new CreativeGameMode());
+				Mode = new CreativeGameMode();
 			}
+			Components.Add(Mode);
 			
 			Input = new InputHandler(this);
 			defaultIb = Graphics.MakeDefaultIb();
-			ParticleManager = AddComponent(new ParticleManager());
-			TabList = AddComponent(new TabList());
+			ParticleManager = new ParticleManager(); Components.Add(ParticleManager);
+			TabList = new TabList(); Components.Add(TabList);			
 			LoadOptions();
 			LoadGuiOptions();
-			Chat = AddComponent(new Chat());
+			Chat = new Chat(); Components.Add(Chat);
+			
 			WorldEvents.OnNewMap += OnNewMapCore;
 			WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
 			Events.TextureChanged += TextureChangedCore;
@@ -72,8 +74,8 @@ namespace ClassicalSharp {
 			BlockInfo.Init();
 			ModelCache = new ModelCache(this);
 			ModelCache.InitCache();
-			AsyncDownloader = AddComponent(new AsyncDownloader(Drawer2D));
-			Lighting = AddComponent(new BasicLighting());
+			AsyncDownloader = new AsyncDownloader(Drawer2D); Components.Add(AsyncDownloader);
+			Lighting = new BasicLighting(); Components.Add(Lighting);
 			
 			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool(OptionsKey.UseChatFont, false);
 			Drawer2D.BlackTextShadows = Options.GetBool(OptionsKey.BlackText, false);
@@ -81,12 +83,12 @@ namespace ClassicalSharp {
 			
 			TerrainAtlas1D = new TerrainAtlas1D(this);
 			TerrainAtlas = new TerrainAtlas2D(this);
-			Animations = AddComponent(new Animations());
-			Inventory = AddComponent(new Inventory());
+			Animations = new Animations(); Components.Add(Animations);
+			Inventory = new Inventory(); Components.Add(Inventory);
 			
 			BlockInfo.SetDefaultPerms();
 			World = new World(this);
-			LocalPlayer = AddComponent(new LocalPlayer(this));
+			LocalPlayer = new LocalPlayer(this); Components.Add(LocalPlayer);
 			Entities.List[EntityList.SelfID] = LocalPlayer;
 			Width = window.Width; Height = window.Height;
 			
@@ -108,11 +110,11 @@ namespace ClassicalSharp {
 			Camera = Cameras[0];
 			UpdateProjection();
 			
-			Gui = AddComponent(new GuiInterface(this));
-			CommandList = AddComponent(new CommandList());
-			SelectionManager = AddComponent(new SelectionManager());
-			WeatherRenderer = AddComponent(new WeatherRenderer());
-			HeldBlockRenderer = AddComponent(new HeldBlockRenderer());
+			Gui = new GuiInterface(this); Components.Add(Gui);
+			CommandList = new CommandList(); Components.Add(CommandList);
+			SelectionManager = new SelectionManager(); Components.Add(SelectionManager);
+			WeatherRenderer = new WeatherRenderer(); Components.Add(WeatherRenderer);
+			HeldBlockRenderer = new HeldBlockRenderer(); Components.Add(HeldBlockRenderer);
 			
 			Graphics.DepthTest = true;
 			Graphics.DepthTestFunc(CompareFunc.LessEqual);
@@ -120,10 +122,10 @@ namespace ClassicalSharp {
 			Graphics.AlphaBlendFunc(BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha);
 			Graphics.AlphaTestFunc(CompareFunc.Greater, 0.5f);
 			Culling = new FrustumCulling();
-			Picking = AddComponent(new PickedPosRenderer());
-			AudioPlayer = AddComponent(new AudioPlayer());
-			AxisLinesRenderer = AddComponent(new AxisLinesRenderer());
-			SkyboxRenderer = AddComponent(new SkyboxRenderer());
+			Picking = new PickedPosRenderer(); Components.Add(Picking);
+			AudioPlayer = new AudioPlayer(); Components.Add(AudioPlayer);
+			AxisLinesRenderer = new AxisLinesRenderer(); Components.Add(AxisLinesRenderer);
+			SkyboxRenderer = new SkyboxRenderer(); Components.Add(SkyboxRenderer);
 			
 			plugins = new PluginLoader(this);
 			List<string> nonLoaded = plugins.LoadAll();

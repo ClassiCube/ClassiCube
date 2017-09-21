@@ -100,7 +100,7 @@ namespace ClassicalSharp {
 					
 					if (plugin == null)
 						throw new InvalidOperationException("Type " + types[i].Name + " returned null instance");
-					game.AddComponent(plugin);
+					game.Components.Add(plugin);
 				}
 			} catch (Exception ex) {
 				path = Path.GetFileNameWithoutExtension(path);

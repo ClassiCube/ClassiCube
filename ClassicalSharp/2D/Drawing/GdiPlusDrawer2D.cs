@@ -60,10 +60,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public override void Clear(FastColour colour) {
-			g.Clear(colour);
-		}
-		
 		public override void Clear(FastColour colour, int x, int y, int width, int height) {
 			g.SmoothingMode = SmoothingMode.None;
 			Brush brush = GetOrCreateBrush(colour);

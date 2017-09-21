@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 		
 		/// <summary>Whether chat text should be drawn and measuring using the currently bitmapped font, 
 		/// false uses the font supplied as the DrawTextArgs argument supplied to the function. </summary>
-		public bool UseBitmappedChat = false;
+		public bool UseBitmappedChat;
 		
 		/// <summary> Whether the shadows behind text (that uses shadows) is fully black. </summary>
 		public bool BlackTextShadows;
@@ -51,9 +51,6 @@ namespace ClassicalSharp {
 		/// <summary> Draws the outline of a 2D flat rectangle of the specified dimensions
 		/// at the specified coordinates in the currently bound bitmap. </summary>
 		public abstract void DrawRectBounds(FastColour colour, float lineWidth, int x, int y, int width, int height);
-		
-		/// <summary> Clears the entire bound bitmap to the specified colour. </summary>
-		public abstract void Clear(FastColour colour);
 		
 		/// <summary> Clears the entire given area to the specified colour. </summary>
 		public abstract void Clear(FastColour colour, int x, int y, int width, int height);

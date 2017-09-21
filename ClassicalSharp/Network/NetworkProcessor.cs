@@ -23,7 +23,7 @@ namespace ClassicalSharp.Network {
 		
 		public NetworkProcessor(Game window) {
 			game = window;
-			cpeData = game.AddComponent(new CPESupport());
+			cpeData = new CPESupport(); game.Components.Add(cpeData);
 		}
 		
 		public override bool IsSinglePlayer { get { return false; } }

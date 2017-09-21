@@ -66,11 +66,6 @@ namespace ClassicalSharp {
 				Components[i].OnNewMapLoaded(this);
 		}
 		
-		public T AddComponent<T>(T obj) where T : IGameComponent {
-			Components.Add(obj);
-			return obj;
-		}
-		
 		public void SetViewDistance(float distance, bool userDist) {
 			if (userDist) {
 				UserViewDistance = distance;
@@ -403,14 +398,14 @@ namespace ClassicalSharp {
 		
 		void SetNewRenderType(bool legacy, bool minimal) {
 			if (MapBordersRenderer == null) {
-				MapBordersRenderer = AddComponent(new MapBordersRenderer());
+				MapBordersRenderer = new MapBordersRenderer(); Components.Add(MapBordersRenderer);
 				MapBordersRenderer.legacy = legacy;
 			} else {
 				MapBordersRenderer.UseLegacyMode(legacy);
 			}
 			
 			if (EnvRenderer == null) {
-				EnvRenderer = AddComponent(new StandardEnvRenderer());
+				EnvRenderer = new StandardEnvRenderer(); Components.Add(EnvRenderer);
 				EnvRenderer.legacy = legacy;
 				EnvRenderer.minimal = minimal;
 			} else {
