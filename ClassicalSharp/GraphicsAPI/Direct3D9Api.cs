@@ -285,7 +285,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			return GetOrExpand(ref vBuffers, buffer, iBufferSize);
 		}
 		
-		public override void SetDynamicVbData<T>(int vb, T[] vertices, int count) {
+		public override void SetDynamicVbData(int vb, IntPtr vertices, int count) {
 			int size = count * batchStride;
 			DataBuffer buffer = vBuffers[vb];
 			buffer.SetData(vertices, size, LockFlags.Discard);

@@ -61,13 +61,6 @@ namespace SharpDX.Direct3D9 {
 			Unlock();
 		}
 		
-		public void SetData<T>( T[] data, int bytes, LockFlags flags ) where T : struct {
-			IntPtr src = Interop.Fixed( ref data[0] );
-			IntPtr dst = Lock( 0, bytes, flags );
-			MemUtils.memcpy( src, dst, bytes );
-			Unlock();
-		}
-		
 		public void Unlock() {
 			int res = Interop.Calli(comPointer, (*(IntPtr**)comPointer)[12]);
 			if( res < 0 ) { throw new SharpDXException( res ); }

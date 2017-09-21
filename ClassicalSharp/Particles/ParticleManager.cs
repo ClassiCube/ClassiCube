@@ -61,7 +61,7 @@ namespace ClassicalSharp.Particles {
 			gfx.Texturing = false;
 		}
 		
-		void RenderTerrainParticles(IGraphicsApi gfx, TerrainParticle[] particles, int elems, double delta, float t) {
+		unsafe void RenderTerrainParticles(IGraphicsApi gfx, TerrainParticle[] particles, int elems, double delta, float t) {
 			int count = elems * 4;
 			if (count > vertices.Length)
 				vertices = new VertexP3fT2fC4b[count];
@@ -74,15 +74,17 @@ namespace ClassicalSharp.Particles {
 			int drawCount = Math.Min(count, maxParticles * 4);
 			if (drawCount == 0) return;
 			
-			gfx.SetDynamicVbData(vb, vertices, drawCount);
-			int offset = 0;
-			for (int i = 0; i < terrain1DCount.Length; i++) {
-				int partCount = terrain1DCount[i];
-				if (partCount == 0) continue;
-				
-				gfx.BindTexture(game.TerrainAtlas1D.TexIds[i]);
-				gfx.DrawVb_IndexedTris(partCount, offset);
-				offset += partCount;
+			fixed (VertexP3fT2fC4b* ptr = vertices) {
+				gfx.SetDynamicVbData(vb, (IntPtr)ptr, drawCount);
+				int offset = 0;
+				for (int i = 0; i < terrain1DCount.Length; i++) {
+					int partCount = terrain1DCount[i];
+					if (partCount == 0) continue;
+					
+					gfx.BindTexture(game.TerrainAtlas1D.TexIds[i]);
+					gfx.DrawVb_IndexedTris(partCount, offset);
+					offset += partCount;
+				}
 			}
 		}
 		
@@ -95,8 +97,9 @@ namespace ClassicalSharp.Particles {
 				int index = game.TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
 				terrain1DCount[index] += 4;
 			}
-			for (int i = 1; i < terrain1DCount.Length; i++)
+			for (int i = 1; i < terrain1DCount.Length; i++) {
 				terrain1DIndices[i] = terrain1DIndices[i - 1] + terrain1DCount[i - 1];
+			}
 		}
 		
 		void RenderRainParticles(IGraphicsApi gfx, RainParticle[] particles, int elems, double delta, float t) {

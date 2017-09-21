@@ -18,7 +18,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		bool glLists = false;
 		int activeList = -1;
 		const int dynamicListId = 1234567891;
-		object dynamicListData = null;
+		IntPtr dynamicListData;
 		
 		public OpenGLApi() {
 			InitFields();
@@ -290,7 +290,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		int batchStride;
-		public override void SetDynamicVbData<T>(int id, T[] vertices, int count) {
+		public override void SetDynamicVbData(int id, IntPtr vertices, int count) {
 			if (glLists) {
 				activeList = dynamicListId;
 				dynamicListData = vertices;
@@ -390,15 +390,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.DrawElements(BeginMode.Triangles, (verticesCount >> 2) * 6, indexType, IntPtr.Zero);
 		}
 		
-		void DrawDynamicLines(int verticesCount) {
+		unsafe void DrawDynamicLines(int verticesCount) {
 			GL.Begin(BeginMode.Lines);
 			if (batchFormat == VertexFormat.P3fT2fC4b) {
-				VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])dynamicListData;
+				VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)dynamicListData;
 				for (int i = 0; i < verticesCount; i += 2) {
 					V(ptr[i + 0]); V(ptr[i + 1]);
 				}
 			} else {
-				VertexP3fC4b[] ptr = (VertexP3fC4b[])dynamicListData;
+				VertexP3fC4b* ptr = (VertexP3fC4b*)dynamicListData;
 				for (int i = 0; i < verticesCount; i += 2) {
 					V(ptr[i + 0]); V(ptr[i + 1]);
 				}
@@ -406,16 +406,16 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.End();
 		}
 		
-		void DrawDynamicTriangles(int verticesCount, int startVertex) {
+		unsafe void DrawDynamicTriangles(int verticesCount, int startVertex) {
 			GL.Begin(BeginMode.Triangles);
 			if (batchFormat == VertexFormat.P3fT2fC4b) {
-				VertexP3fT2fC4b[] ptr = (VertexP3fT2fC4b[])dynamicListData;
+				VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)dynamicListData;
 				for (int i = startVertex; i < startVertex + verticesCount; i += 4) {
 					V(ptr[i + 0]); V(ptr[i + 1]); V(ptr[i + 2]);
 					V(ptr[i + 2]); V(ptr[i + 3]); V(ptr[i + 0]);
 				}
 			} else {
-				VertexP3fC4b[] ptr = (VertexP3fC4b[])dynamicListData;
+				VertexP3fC4b* ptr = (VertexP3fC4b*)dynamicListData;
 				for (int i = startVertex; i < startVertex + verticesCount; i += 4) {
 					V(ptr[i + 0]); V(ptr[i + 1]); V(ptr[i + 2]);
 					V(ptr[i + 2]); V(ptr[i + 3]); V(ptr[i + 0]);

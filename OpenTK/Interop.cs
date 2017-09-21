@@ -25,7 +25,6 @@ namespace OpenTK {
 	public static unsafe class Interop {
 		
 		static Exception rewriteEx = new NotImplementedException( "You need to run InteropPatcher on this dll." );
-		public static IntPtr Fixed<T>( ref T data ) { throw rewriteEx; }
 		// Direct3D9 interop definitions
 		public static int Calli(IntPtr comPtr, IntPtr methodPtr) { throw rewriteEx; }
 		public static void Calli_V(IntPtr comPtr, IntPtr methodPtr) { throw rewriteEx; }

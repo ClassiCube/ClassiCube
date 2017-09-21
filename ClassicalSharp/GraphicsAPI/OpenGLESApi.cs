@@ -184,7 +184,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		int batchStride;		
-		public override void SetDynamicVbData<T>(int id, T[] vertices, int count) {
+		public override void SetDynamicVbData(int id, IntPtr vertices, int count) {
 			GL.BindBuffer(All.ArrayBuffer, id);
 			GL.BufferSubData(All.ArrayBuffer, IntPtr.Zero, 
 			                 new IntPtr(count * batchStride), vertices);

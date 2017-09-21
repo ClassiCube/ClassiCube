@@ -4,7 +4,7 @@ using System;
 namespace ClassicalSharp.GraphicsAPI {
 	
 	/// <summary> Abstracts a 3D graphics rendering API. </summary>
-	public abstract partial class IGraphicsApi {
+	public abstract unsafe partial class IGraphicsApi {
 		
 		protected void InitDynamicBuffers() {
 			quadVb = CreateDynamicVb(VertexFormat.P3fC4b, 4);
@@ -36,16 +36,29 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public void UpdateDynamicVb_Lines<T>(int vb, T[] vertices, int vCount) where T : struct {
-			SetDynamicVbData(vb, vertices, vCount);
-			DrawVb_Lines(vCount);
+		public void UpdateDynamicVb_Lines(int vb, VertexP3fC4b[] vertices, int vCount) {
+			fixed (VertexP3fC4b* ptr = vertices) {
+				SetDynamicVbData(vb, (IntPtr)ptr, vCount);
+				DrawVb_Lines(vCount);
+			}
 		}
 		
 		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public void UpdateDynamicVb_IndexedTris<T>(int vb, T[] vertices, int vCount) where T : struct {
-			SetDynamicVbData(vb, vertices, vCount);
-			DrawVb_IndexedTris(vCount);
+		public void UpdateDynamicVb_IndexedTris(int vb, VertexP3fC4b[] vertices, int vCount) {
+			fixed (VertexP3fC4b* ptr = vertices) {
+				SetDynamicVbData(vb, (IntPtr)ptr, vCount);
+				DrawVb_IndexedTris(vCount);
+			}
+		}
+		
+		/// <summary> Binds and draws the specified subset of the vertices in the current dynamic vertex buffer<br/>
+		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
+		public void UpdateDynamicVb_IndexedTris(int vb, VertexP3fT2fC4b[] vertices, int vCount) {
+			fixed (VertexP3fT2fC4b* ptr = vertices) {
+				SetDynamicVbData(vb, (IntPtr)ptr, vCount);
+				DrawVb_IndexedTris(vCount);
+			}
 		}
 		
 		
@@ -96,7 +109,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			VertexP3fT2fC4b v; v.Z = 0; v.Colour = col;
 			v.X = x1; v.Y = y1; v.U = tex.U1; v.V = tex.V1; vertices[index++] = v;
 			v.X = x2;           v.U = tex.U2;               vertices[index++] = v;
-			          v.Y = y2;               v.V = tex.V2; vertices[index++] = v;
+			v.Y = y2;                         v.V = tex.V2; vertices[index++] = v;
 			v.X = x1;           v.U = tex.U1;               vertices[index++] = v;
 		}
 		bool hadFog;
@@ -155,10 +168,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		// Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
 		// The short version: if you want your renderer to properly handle textures with alphas when using
 		// bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas.
-		static int Average(int p1, int p2) {			
+		static int Average(int p1, int p2) {
 			int a1 = ((p1 & alphaMask) >> 24) & 0xFF;
 			int a2 = ((p2 & alphaMask) >> 24) & 0xFF;
-			int aSum = (a1 + a2);			
+			int aSum = (a1 + a2);
 			aSum = aSum > 0 ? aSum : 1; // avoid divide by 0 below
 			
 			// Convert RGB to pre-multiplied form
@@ -201,10 +214,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal int MipmapsLevels(int width, int height) {
 			int lvlsWidth = Utils.Log2(width), lvlsHeight = Utils.Log2(height);
-			int lvls = Math.Min(lvlsWidth, lvlsHeight);
-			
-			if (lvls > 4 && CustomMipmapsLevels) lvls = 4;
-			return lvls;
+			if (CustomMipmapsLevels) {
+				int lvls = Math.Min(lvlsWidth, lvlsHeight);
+				return Math.Min(lvls, 4);
+			} else {
+				return Math.Max(lvlsWidth, lvlsHeight);
+			}
 		}
 	}
 

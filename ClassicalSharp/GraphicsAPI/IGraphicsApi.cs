@@ -180,7 +180,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Binds and updates the data of the current dynamic vertex buffer's data.<br/>
 		/// This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. </summary>
-		public abstract void SetDynamicVbData<T>(int vb, T[] vertices, int vCount) where T : struct;
+		public abstract void SetDynamicVbData(int vb, IntPtr vertices, int vCount);
 		
 		/// <summary> Draws the specified subset of the vertices in the current vertex buffer as lines. </summary>
 		public abstract void DrawVb_Lines(int verticesCount);

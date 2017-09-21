@@ -213,8 +213,10 @@ void GfxCommon_GenMipmaps(Int32 width, Int32 height, UInt8* lvlScan0, UInt8* sca
 
 Int32 GfxCommon_MipmapsLevels(Int32 width, Int32 height) {
 	Int32 lvlsWidth = Math_Log2(width), lvlsHeight = Math_Log2(height);
-	Int32 lvls = min(lvlsWidth, lvlsHeight);
-
-	if (lvls > 4 && Gfx_CustomMipmapsLevels) lvls = 4;
-	return lvls;
+	if (Gfx_CustomMipmapsLevels) {
+		Int32 lvls = min(lvlsWidth, lvlsHeight);
+		return min(lvls, 4);
+	} else {
+		return max(lvlsWidth, lvlsHeight);
+	}
 }
