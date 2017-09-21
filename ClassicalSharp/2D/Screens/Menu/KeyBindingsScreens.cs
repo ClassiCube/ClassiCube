@@ -12,14 +12,15 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			// See comment in KeyMap() constructor for why this is necessary.
-			left = new KeyBind[5];
-			left[0] = KeyBind.Forward; left[1] = KeyBind.Back; left[2] = KeyBind.Jump;
-			left[3] = KeyBind.Chat; left[4] = KeyBind.SetSpawn;
-			right = new KeyBind[5];
-			right[0] = KeyBind.Left; right[1] = KeyBind.Right; right[2] = KeyBind.Inventory;
-			right[3] = KeyBind.ToggleFog; right[4] = KeyBind.Respawn;
-			leftDesc = new string[] { "Forward", "Back", "Jump", "Chat", "Save loc" };
-			rightDesc = new string[] { "Left", "Right", "Build", "Toggle fog", "Load loc" };			
+			binds = new KeyBind[10];
+			binds[0] = KeyBind.Forward; binds[1] = KeyBind.Back; binds[2] = KeyBind.Jump;
+			binds[3] = KeyBind.Chat; binds[4] = KeyBind.SetSpawn;
+			binds[5] = KeyBind.Left; binds[6] = KeyBind.Right; binds[7] = KeyBind.Inventory;
+			binds[8] = KeyBind.ToggleFog; binds[9] = KeyBind.Respawn;
+			
+			desc = new string[] { "Forward", "Back", "Jump", "Chat", "Save loc",
+				"Left", "Right", "Build", "Toggle fog", "Load loc" };
+			leftLength = 5;
 			
 			if (game.ClassicHacks) {
 				title = "Normal controls";
@@ -31,7 +32,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			widgets = new Widget[left.Length + right.Length + 4];
+			widgets = new Widget[binds.Length + 4];
 			MakeWidgets(-140, -40);
 		}
 	}
@@ -42,12 +43,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			left = new KeyBind[3];
-			left[0] = KeyBind.Speed; left[1] = KeyBind.NoClip; left[2] = KeyBind.HalfSpeed;
-			right = new KeyBind[3];
-			right[0] = KeyBind.Fly; right[1] = KeyBind.FlyUp; right[2] = KeyBind.FlyDown;
-			leftDesc = new string[] { "Speed", "Noclip", "Half speed" };
-			rightDesc = new string[] { "Fly", "Fly up", "Fly down"	};
+			binds = new KeyBind[6];
+			binds[0] = KeyBind.Speed; binds[1] = KeyBind.NoClip; binds[2] = KeyBind.HalfSpeed;
+			binds[3] = KeyBind.Fly; binds[4] = KeyBind.FlyUp; binds[5] = KeyBind.FlyDown;
+			
+			desc = new string[] { "Speed", "Noclip", "Half speed",
+				"Fly", "Fly up", "Fly down"	};
+			leftLength = 3;
 			
 			
 			leftPage = SwitchClassic;
@@ -56,7 +58,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			widgets = new Widget[left.Length + right.Length + 4];
+			widgets = new Widget[binds.Length + 4];
 			MakeWidgets(-90, -40);
 		}
 	}
@@ -67,14 +69,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			left = new KeyBind[6];
-			left[0] = KeyBind.Forward; left[1] = KeyBind.Back; left[2] = KeyBind.Jump;
-			left[3] = KeyBind.Chat; left[4] = KeyBind.SetSpawn; left[5] = KeyBind.PlayerList;
-			right = new KeyBind[6];
-			right[0] = KeyBind.Left; right[1] = KeyBind.Right; right[2] = KeyBind.Inventory;
-			right[3] = KeyBind.ToggleFog; right[4] = KeyBind.Respawn; right[5] = KeyBind.SendChat;
-			leftDesc = new string[] { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list" };
-			rightDesc = new string[] { "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
+			binds = new KeyBind[12];
+			binds[0] = KeyBind.Forward; binds[1] = KeyBind.Back; binds[2] = KeyBind.Jump;
+			binds[3] = KeyBind.Chat; binds[4] = KeyBind.SetSpawn; binds[5] = KeyBind.PlayerList;
+			binds[6] = KeyBind.Left; binds[7] = KeyBind.Right; binds[8] = KeyBind.Inventory;
+			binds[9] = KeyBind.ToggleFog; binds[10] = KeyBind.Respawn; binds[11] = KeyBind.SendChat;
+			
+			desc = new string[] { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list",
+				"Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
+			leftLength = 6;
 			
 			title = "Normal controls";
 			rightPage = SwitchHacks;
@@ -82,7 +85,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			widgets = new Widget[left.Length + right.Length + 4];
+			widgets = new Widget[binds.Length + 4];
 			MakeWidgets(-140, 10);
 		}
 	}
@@ -93,14 +96,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			left = new KeyBind[4];
-			left[0] = KeyBind.Speed; left[1] = KeyBind.NoClip; left[2] = KeyBind.HalfSpeed; left[3] = KeyBind.ZoomScrolling;
-			right = new KeyBind[4];
-			right[0] = KeyBind.Fly; right[1] = KeyBind.FlyUp; right[2] = KeyBind.FlyDown;
-			right[3] = KeyBind.ThirdPerson;
-			leftDesc = new string[] { "Speed", "Noclip", "Half speed", "Scroll zoom" };
-			rightDesc = new string[] { "Fly", "Fly up", "Fly down", "Third person" };
+			binds = new KeyBind[8];
+			binds[0] = KeyBind.Speed; binds[1] = KeyBind.NoClip; binds[2] = KeyBind.HalfSpeed; binds[3] = KeyBind.ZoomScrolling;
+			binds[4] = KeyBind.Fly; binds[5] = KeyBind.FlyUp; binds[6] = KeyBind.FlyDown; binds[7] = KeyBind.ThirdPerson;
 			
+			desc = new string[] { "Speed", "Noclip", "Half speed", "Scroll zoom",
+				"Fly", "Fly up", "Fly down", "Third person" };
+			leftLength = 4;
 			
 			title = "Hacks controls";
 			leftPage = SwitchNormal;
@@ -109,7 +111,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			widgets = new Widget[left.Length + right.Length + 4];
+			widgets = new Widget[binds.Length + 4];
 			MakeWidgets(-40, 10);
 		}
 	}
@@ -120,14 +122,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			left = new KeyBind[5];
-			left[0] = KeyBind.ExtInput; left[1] = KeyBind.HideFps; left[2] = KeyBind.HideGui; 
-			left[3] = KeyBind.HotbarSwitching; left[4] = KeyBind.DropBlock;
-			right = new KeyBind[5];
-			right[0] = KeyBind.Screenshot; right[1] = KeyBind.Fullscreen; right[2] = KeyBind.AxisLines; 
-			right[3] = KeyBind.Autorotate; right[4] = KeyBind.SmoothCamera;
-			leftDesc = new string[] { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block" };
-			rightDesc = new string[] { "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera" };
+			binds = new KeyBind[10];
+			binds[0] = KeyBind.ExtInput; binds[1] = KeyBind.HideFps; binds[2] = KeyBind.HideGui;
+			binds[3] = KeyBind.HotbarSwitching; binds[4] = KeyBind.DropBlock;
+			binds[5] = KeyBind.Screenshot; binds[6] = KeyBind.Fullscreen; binds[7] = KeyBind.AxisLines;
+			binds[8] = KeyBind.Autorotate; binds[9] = KeyBind.SmoothCamera;
+			
+			desc = new string[] { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block",
+				"Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera" };
+			leftLength = 5;
 			
 			title = "Other controls";
 			leftPage = SwitchHacks;
@@ -136,7 +139,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			widgets = new Widget[left.Length + right.Length + 4];
+			widgets = new Widget[binds.Length + 4];
 			MakeWidgets(-90, 10);
 		}
 	}
@@ -147,9 +150,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			left = new KeyBind[3];
-			left[0] = KeyBind.MouseLeft; left[1] = KeyBind.MouseMiddle; left[2] = KeyBind.MouseRight;
-			leftDesc = new string[] { "Left", "Middle", "Right" };
+			binds = new KeyBind[3];
+			binds[0] = KeyBind.MouseLeft; binds[1] = KeyBind.MouseMiddle; binds[2] = KeyBind.MouseRight;
+			desc = new string[] { "Left", "Middle", "Right" };
 			
 			title = "Mouse key bindings";
 			leftPage = SwitchOther;
@@ -157,7 +160,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			widgets = new Widget[left.Length + 5];
+			widgets = new Widget[binds.Length + 5];
 			MakeWidgets(-40, 10);
 			
 			widgets[index++] = TextWidget.Create(game, "&eRight click to remove the key binding", regularFont)

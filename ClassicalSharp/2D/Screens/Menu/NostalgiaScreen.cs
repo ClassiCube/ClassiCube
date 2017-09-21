@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Screens {
 
 				TextWidget.Create(game, "&eButtons on the right require a client restart", regularFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100),
-				classic ? MakeBack(false, titleFont, SwitchPause) : MakeBack(false, titleFont, SwitchOptions),
+				MakeBack(false, titleFont, SwitchBack),
 				null, null,
 			};
 		}
@@ -74,5 +74,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		static string GetTexs(Game g) { return GetBool(g.UseServerTextures); }
 		static void SetTexs(Game g, string v) { g.UseServerTextures = SetBool(v, OptionsKey.UseServerTextures); }
+		
+		static void SwitchBack(Game g, Widget w) {
+			if (g.UseClassicOptions) {
+				SwitchPause(g, w);
+			} else {
+				SwitchOptions(g, w);
+			}
+		}
 	}
 }

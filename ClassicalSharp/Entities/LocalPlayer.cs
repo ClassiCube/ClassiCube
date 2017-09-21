@@ -7,7 +7,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp.Entities {
 	
-	public partial class LocalPlayer : Player, IGameComponent {
+	public class LocalPlayer : Player, IGameComponent {
 		
 		/// <summary> Position the player's position is set to when the 'respawn' key binding is pressed. </summary>
 		public Vector3 Spawn;
