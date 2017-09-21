@@ -192,16 +192,11 @@ namespace ClassicalSharp {
 			if (input == null || input.Length < 6) return false;
 			
 			try {
-				int i = input.Length > 6 ? 1 : 0;
-				if (input.Length > 6 && (input[0] != '#' || input.Length > 7))
-					return false;
-				
-				int r = Utils.ParseHex(input[i + 0]) * 16 + Utils.ParseHex(input[i + 1]);
-				int g = Utils.ParseHex(input[i + 2]) * 16 + Utils.ParseHex(input[i + 3]);
-				int b = Utils.ParseHex(input[i + 4]) * 16 + Utils.ParseHex(input[i + 5]);
-				value = new FastColour(r, g, b);
+				if (input.Length > 6 && (input[0] != '#' || input.Length > 7)) return false;
+				value = Parse(input);
 				return true;
 			} catch (FormatException) {
+				value = default(FastColour);
 				return false;
 			}
 		}
