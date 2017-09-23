@@ -59,7 +59,7 @@ namespace ClassicalSharp.Entities {
 			bool wasOnGround = onGround;
 			
 			HandleInput(ref xMoving, ref zMoving);
-			if (!Hacks.Noclip && Hacks.CanBePushed) physics.DoEntityPush();
+			if (!Hacks.Floating && Hacks.CanBePushed) physics.DoEntityPush();
 			
 			// Immediate stop in noclip mode
 			if (!Hacks.NoclipSlide && (Hacks.Noclip && xMoving == 0 && zMoving == 0))
