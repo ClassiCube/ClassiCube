@@ -17,16 +17,22 @@ namespace Launcher.Gui.Screens {
 			game.Window.Mouse.WheelChanged += MouseWheelChanged;
 			game.Window.KeyPress += KeyPress;
 			game.Window.Keyboard.KeyRepeat = true;
+			last = DateTime.UtcNow;
 		}
 		
-		DateTime widgetOpenTime;
-		bool lastCaretFlash = false;
+		DateTime last;
+		bool lastCaretShow = false;
 		Rectangle lastRec;
+		double elapsed;
+		
 		public override void Tick() {
-			double elapsed = (DateTime.UtcNow - widgetOpenTime).TotalSeconds;
+			DateTime now = DateTime.UtcNow;
+			elapsed += (now - last).TotalSeconds;
+			last = now;
+			
 			bool caretShow = (elapsed % 1) < 0.5;
-			if (caretShow == lastCaretFlash || curInput == null)
-				return;
+			if (caretShow == lastCaretShow || curInput == null) return;
+			lastCaretShow = caretShow;
 			
 			using (drawer) {
 				drawer.SetBitmap(game.Framebuffer);
@@ -41,8 +47,7 @@ namespace Launcher.Gui.Screens {
 				if (lastRec == r) game.DirtyArea = r;
 				lastRec = r;
 				game.Dirty = true;
-			}
-			lastCaretFlash = caretShow;
+			}			
 		}
 		
 		protected override void KeyDown(object sender, KeyboardKeyEventArgs e) {
@@ -69,11 +74,9 @@ namespace Launcher.Gui.Screens {
 			} else if (e.Key == Key.C && ControlDown) {
 				curInput.Chars.CopyToClipboard();
 			} else if (e.Key == Key.V && ControlDown) {
-				if (curInput.Chars.CopyFromClipboard())
-					RedrawLastInput();
+				if (curInput.Chars.CopyFromClipboard()) RedrawLastInput();
 			} else if (e.Key == Key.Escape) {
-				if (curInput.Chars.Clear())
-					RedrawLastInput();
+				if (curInput.Chars.Clear()) RedrawLastInput();
 			} else if (e.Key == Key.Left) {
 				curInput.AdvanceCaretPos(false);
 				RedrawLastInput();
@@ -98,8 +101,10 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		protected virtual void RedrawLastInput() {
-			if (curInput.RealWidth > curInput.ButtonWidth)
+			if (curInput.RealWidth > curInput.ButtonWidth) {
 				game.ResetArea(curInput.X, curInput.Y, curInput.RealWidth, curInput.Height);
+			}
+			elapsed = 0; lastCaretShow = false;
 			
 			using (drawer) {
 				drawer.SetBitmap(game.Framebuffer);
@@ -136,8 +141,7 @@ namespace Launcher.Gui.Screens {
 				}
 				
 				input.Active = true;
-				widgetOpenTime = DateTime.UtcNow;
-				lastCaretFlash = false;
+				elapsed = 0; lastCaretShow = false;
 				input.SetCaretToCursor(mouseX, mouseY, drawer);
 				input.Redraw(drawer);
 			}

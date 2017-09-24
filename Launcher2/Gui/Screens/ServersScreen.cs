@@ -73,8 +73,8 @@ namespace Launcher.Gui.Screens {
 		
 		protected override void RedrawLastInput() {
 			base.RedrawLastInput();
-			if (curInput != widgets[view.hashIndex])
-				return;
+			if (curInput != widgets[view.hashIndex]) return;
+			
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.SetSelected(widgets[view.hashIndex].Text);
 			MarkPendingRedraw();
