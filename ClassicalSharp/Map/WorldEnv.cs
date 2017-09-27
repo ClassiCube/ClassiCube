@@ -72,6 +72,12 @@ namespace ClassicalSharp.Map {
 		/// <summary> Whether exponential fog mode is used by default. </summary>
 		public bool ExpFog;
 		
+		/// <summary> Horizontal skybox rotation speed. </summary>
+		public float SkyboxHorSpeed;
+		
+		/// <summary> Vertical skybox rotation speed. </summary>
+		public float SkyboxVerSpeed;
+		
 		Game game;
 		public WorldEnv(Game game) {
 			this.game = game;
@@ -83,6 +89,7 @@ namespace ClassicalSharp.Map {
 			EdgeHeight = -1; SidesOffset = -2; CloudHeight = -1;
 			EdgeBlock = Block.StillWater; SidesBlock = Block.Bedrock;
 			CloudsSpeed = 1; WeatherSpeed = 1; WeatherFade = 1;
+			SkyboxHorSpeed = 0; SkyboxVerSpeed = 0;
 			
 			ResetLight();
 			SkyCol = DefaultSkyColour;
@@ -147,7 +154,7 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets height of the map edges in world space, and raises
 		/// EnvVariableChanged event with variable 'EdgeLevel'. </summary>
 		public void SetEdgeLevel(int level) { Set(level, ref EdgeHeight, EnvVar.EdgeLevel); }
-			
+		
 		/// <summary> Sets offset of the height of the map sides from map edges in world space, and raises
 		/// EnvVariableChanged event with variable 'SidesLevel'. </summary>
 		public void SetSidesOffset(int level) { Set(level, ref SidesOffset, EnvVar.SidesOffset); }
@@ -155,6 +162,14 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets whether exponential fog is used, and raises
 		/// EnvVariableChanged event with variable 'ExpFog'. </summary>
 		public void SetExpFog(bool expFog) { Set(expFog, ref ExpFog, EnvVar.ExpFog); }
+		
+		/// <summary> Sets horizontal speed of skybox rotation, and raises
+		/// EnvVariableChanged event with variable 'SkyboxHorSpeed'. </summary>
+		public void SetSkyboxHorSpeed(float speed) { Set(speed, ref SkyboxHorSpeed, EnvVar.SkyboxHorSpeed); }
+		
+		/// <summary> Sets vertical speed of skybox rotation, and raises
+		/// EnvVariableChanged event with variable 'SkyboxVerSpeed'. </summary>
+		public void SetSkyboxVerSpeed(float speed) { Set(speed, ref SkyboxVerSpeed, EnvVar.SkyboxVerSpeed); }
 
 		/// <summary> Sets weather, and raises
 		/// EnvVariableChanged event with variable 'Weather'. </summary>

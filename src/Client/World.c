@@ -112,6 +112,8 @@ void WorldEnv_Reset(void) {
 	WorldEnv_CloudsSpeed = 1.0f;
 	WorldEnv_WeatherSpeed = 1.0f;
 	WorldEnv_WeatherFade = 1.0f;
+	WorldEnv_SkyboxHorSpeed = 0.0f;
+	WorldEnv_SkyboxVerSpeed = 0.0f;
 
 	WorldEnv_ResetLight();
 	WorldEnv_SkyCol = WorldEnv_DefaultSkyCol;
@@ -176,6 +178,14 @@ void WorldEnv_SetWeather(Weather weather) {
 
 void WorldEnv_SetExpFog(bool expFog) {
 	WorldEnv_Set(expFog, WorldEnv_ExpFog, EnvVar_ExpFog);
+}
+
+void WorldEnv_SetSkyboxHorSpeed(Real32 speed) {
+	WorldEnv_Set(speed, WorldEnv_SkyboxHorSpeed, EnvVar_SkyboxHorSpeed);
+}
+
+void WorldEnv_SetSkyboxVerSpeed(Real32 speed) {
+	WorldEnv_Set(speed, WorldEnv_SkyboxVerSpeed, EnvVar_SkyboxVerSpeed);
 }
 
 

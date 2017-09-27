@@ -360,6 +360,10 @@ namespace ClassicalSharp.Network.Protocols {
 					env.SetExpFog(value != 0); break;
 				case 9:
 					env.SetSidesOffset(value); break;
+				case 10:
+					env.SetSkyboxHorSpeed(value / 128f); break;
+				case 11:
+					env.SetSkyboxVerSpeed(value / 128f); break;
 			}
 		}
 		

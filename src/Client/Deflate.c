@@ -148,6 +148,10 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 #define DeflateState_UncompressedHeader 1
 #define DeflateState_UncompressedData 2
 #define DeflateState_DynamicHeader 3
+#define DeflateState_DynamicCodeLens 4
+#define DeflateState_DynamicLits 5
+#define DeflateState_DynamicDists 6
+#define DeflateState_CompressedData 7
 
 #define DeflateState_Done 250
 
@@ -184,11 +188,11 @@ state->NumBits -= tmp;
 
 #define DEFLATE_NEXTBLOCK_STATE(state) state->State = state->LastBlock ? DeflateState_Done : DeflateState_Header;
 
-void Deflate_Process(DeflateState* state) {
+bool Deflate_Step(DeflateState* state) {
 	switch (state->State) {
 	case DeflateState_Header: {
 		while (state->NumBits < 3) {
-			if (state->AvailIn == 0) return;
+			if (state->AvailIn == 0) return false;
 			DEFLATE_GET_BYTE(state);
 		}
 
@@ -203,10 +207,10 @@ void Deflate_Process(DeflateState* state) {
 			state->State = DeflateState_UncompressedHeader;
 		} break;
 
-		case 1: { /* Compressed with FIXED huffman table*/
+		case 1: { /* TODO: Compressed with FIXED huffman table*/
 		} break;
 
-		case 2: { /* Compressed with dynamic huffman table */
+		case 2: { /* TODO: Compressed with dynamic huffman table */
 
 		} break;
 
@@ -218,7 +222,7 @@ void Deflate_Process(DeflateState* state) {
 
 	case DeflateState_UncompressedHeader: {
 		while (state->NumBits < 32) {
-			if (state->AvailIn == 0) return;
+			if (state->AvailIn == 0) return false;
 			DEFLATE_GET_BYTE(state);
 		}
 
@@ -228,40 +232,77 @@ void Deflate_Process(DeflateState* state) {
 		if (len != (nlen ^ 0xFFFFUL)) {
 			ErrorHandler_Fail("DEFLATE - Uncompressed block LEN check failed");
 		}
-		state->UncompressedLen = len;
+		state->Index = len; /* Reuse for 'uncompressed length' */
 		state->State = DeflateState_UncompressedData;
 	} break;
 
 	case DeflateState_UncompressedData: {
-		/* TODO: HOW TO HANDLE INFINITE LOOP HERE ?????????? */
-		/* TODO TODO TODO TODO TODO TODO */
-		while (state->AvailIn > 0 && state->AvailOut > 0) {
-			UInt32 copyLen = min(state->AvailIn, state->AvailOut);
-			copyLen = min(copyLen, state->UncompressedLen);
+		if (state->AvailIn > 0 || state->AvailOut > 0) return false;
+		UInt32 copyLen = min(state->AvailIn, state->AvailOut);
+		copyLen = min(copyLen, state->Index);
 
-			Platform_MemCpy(state->Output, state->Input, copyLen);
-			state->Output += copyLen;
-			state->AvailIn -= copyLen;
-			state->AvailOut -= copyLen;
-			state->UncompressedLen -= copyLen;
+		Platform_MemCpy(state->Output, state->Input, copyLen);
+		state->Output += copyLen;
+		state->AvailIn -= copyLen;
+		state->AvailOut -= copyLen;
+		state->Index -= copyLen;
 
-			if (state->UncompressedLen == 0) {
-				state->State = DEFLATE_NEXTBLOCK_STATE(state);
-				break;
-			}
+		if (state->Index == 0) {
+			state->State = DEFLATE_NEXTBLOCK_STATE(state);
 		}
 	} break;
 
 	case DeflateState_DynamicHeader: {
 		while (state->NumBits < 14) {
-			if (state->AvailIn == 0) return;
+			if (state->AvailIn == 0) return false;
 			DEFLATE_GET_BYTE(state);
 		}
 
-		UInt32 numLits, numDists, numCodeLens;
-		DEFLATE_CONSUME_BITS(state, 5, numLits); numLits += 257;
-		DEFLATE_CONSUME_BITS(state, 5, numDists); numDists += 1;
-		DEFLATE_CONSUME_BITS(state, 4, numCodeLens); numCodeLens += 4;
+		DEFLATE_CONSUME_BITS(state, 5, state->NumLits);     state->NumLits += 257;
+		DEFLATE_CONSUME_BITS(state, 5, state->NumDists);    state->NumDists += 1;
+		DEFLATE_CONSUME_BITS(state, 4, state->NumCodeLens); state->NumCodeLens += 4;
+		state->State = DeflateState_DynamicCodeLens;
 	} break;
+
+	case DeflateState_DynamicCodeLens: {
+		while (state->Index < state->NumCodeLens) {
+			while (state->NumBits < 3) {
+				if (state->AvailIn == 0) return false;
+				DEFLATE_GET_BYTE(state);
+			}
+		}
+		state->Index = 0;
+		state->State = DeflateState_DynamicLits;
+	} break;
+
+	case DeflateState_DynamicLits: {
+		while (state->Index < state->NumLits) {
+			/* TODO ???????? */
+		}
+		state->Index = 0;
+		state->State = DeflateState_DynamicDists;
+	} break;
+
+	case DeflateState_DynamicDists: {
+		while (state->Index < state->NumDists) {
+			/* TODO ???????? */
+		}
+		state->Index = 0;
+		state->State = DeflateState_CompressedData;
+	} break;
+
+	case DeflateState_CompressedData: {
+		/* TODO ????? */
+	}
+
+	case DeflateState_Done:
+		return false;
+	}
+	return true;
+}
+
+void Deflate_Process(DeflateState* state) {
+	while (state->AvailIn > 0 || state->AvailOut > 0) {
+		if (!Deflate_Step(state)) return;
 	}
 }

@@ -47,7 +47,8 @@ typedef struct DeflateState_ {
 	UInt8* Output;    /* Pointer for output data */
 	UInt32 AvailOut;  /* Max number of bytes to output */
 
-	UInt32 UncompressedLen;
+	UInt32 Index; /* General purpose reusable index / counter */
+	UInt32 NumCodeLens, NumLits, NumDists;
 } DeflateState;
 
 void Deflate_Init(DeflateState* state, Stream* source);

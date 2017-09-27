@@ -10,6 +10,7 @@
 #include "VertexStructs.h"
 #include "World.h"
 #include "EnvRenderer.h"
+#include "ExtMath.h"
 
 GfxResourceID skybox_tex, skybox_vb = -1;
 #define SKYBOX_COUNT (6 * 4)
@@ -33,17 +34,25 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
 
 	Matrix m = Matrix_Identity;
-	Vector2 rotation = Camera_ActiveCamera->GetCameraOrientation();
-
 	Matrix rotX, rotY;
-	Matrix_RotateY(&rotY, rotation.Y); /* Yaw */
+
+	/* Base skybox rotation */
+	Real32 rotTime = (Real32)(Game_Accumulator * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
+	Matrix_RotateY(&rotY, WorldEnv_SkyboxHorSpeed * rotTime);
 	Matrix_MulBy(&m, &rotY);
-	Matrix_RotateX(&rotX, rotation.X); /* Pitch */
+	Matrix_RotateX(&rotX, WorldEnv_SkyboxVerSpeed * rotTime);
+	Matrix_MulBy(&m, &rotX);
+
+	/* Rotate around camera */
+	Vector2 rotation = Camera_ActiveCamera->GetCameraOrientation();
+	Matrix_RotateY(&rotY, rotation.Y); /* Camera yaw */
+	Matrix_MulBy(&m, &rotY);
+	Matrix_RotateX(&rotX, rotation.X); /* Camera pitch */
 	Matrix_MulBy(&m, &rotX);
 	/* Tilt skybox too. */
 	Matrix_MulBy(&m, &Camera_TiltM);
-	Gfx_LoadMatrix(&m);
 
+	Gfx_LoadMatrix(&m);
 	Gfx_BindVb(skybox_vb);
 	Gfx_DrawVb_IndexedTris(SKYBOX_COUNT);
 
