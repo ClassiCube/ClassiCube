@@ -361,9 +361,9 @@ namespace ClassicalSharp.Network.Protocols {
 				case 9:
 					env.SetSidesOffset(value); break;
 				case 10:
-					env.SetSkyboxHorSpeed(value / 128f); break;
+					env.SetSkyboxHorSpeed(value / 1024f); break;
 				case 11:
-					env.SetSkyboxVerSpeed(value / 128f); break;
+					env.SetSkyboxVerSpeed(value / 1024f); break;
 			}
 		}
 		
