@@ -1,10 +1,41 @@
 #include "Platform.h"
 #include <Windows.h>
 #define WIN32_LEAN_AND_MEAN
+#include "DisplayDevice.h"
 
 HANDLE heap;
 void Platform_Init(void) {
-	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
+	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */	
+	UInt32 deviceNum = 0;
+	/* Get available video adapters and enumerate all monitors */
+	DISPLAY_DEVICEA device;
+	Platform_MemSet(&device, 0, sizeof(DISPLAY_DEVICEA));
+	device.cb = sizeof(DISPLAY_DEVICEA);
+
+	while (EnumDisplayDevicesA(NULL, deviceNum, &device, 0)) {
+		deviceNum++;
+		if ((device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) == 0) continue;
+		bool devPrimary = false;
+		DisplayResolution resolution = DisplayResolution_Make(0, 0, 0, 0.0f);
+		DEVMODEA mode;
+		Platform_MemSet(&mode, 0, sizeof(DEVMODEA));
+		mode.dmSize = sizeof(DEVMODEA);
+
+		/* The second function should only be executed when the first one fails (e.g. when the monitor is disabled) */
+		if (EnumDisplaySettingsA(device.DeviceName, ENUM_CURRENT_SETTINGS, &mode) ||
+			EnumDisplaySettingsA(device.DeviceName, ENUM_REGISTRY_SETTINGS, &mode)) {
+			if (mode.dmBitsPerPel > 0) {
+				resolution = DisplayResolution_Make(mode.dmPelsWidth, mode.dmPelsHeight,
+					mode.dmBitsPerPel, (Real32)mode.dmDisplayFrequency);
+				devPrimary = (device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
+			}
+		}
+
+		/* This device has no valid resolution, ignore it */
+		if (resolution.Width == 0 && resolution.Height == 0) continue;
+		if (!devPrimary) continue;
+		DisplayDevice_Default = DisplayDevice_Make(&resolution);
+	}
 }
 
 void Platform_Free(void) {
