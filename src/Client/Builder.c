@@ -383,7 +383,7 @@ void Builder_DrawSprite(Int32 count) {
 	Builder1DPart* part = &Builder_Parts[i];
 	PackedCol col = Builder_FullBright ? Builder_WhiteCol : Lighting_Col_Sprite_Fast(Builder_X, Builder_Y, Builder_Z);
 	Block_Tint(col, Builder_Block);
-	VertexP3fT2fC4b v; v.Colour = col;
+	VertexP3fT2fC4b v; v.Col = col;
 
 	/* Draw Z axis */
 	Int32 index = part->sOffset;

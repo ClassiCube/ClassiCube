@@ -75,8 +75,8 @@ void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
 
 	VertexP3fT2fC4b v;
-	v.Colour = iso_colNormal;
-	Block_Tint(v.Colour, block);
+	v.Col = iso_colNormal;
+	Block_Tint(v.Col, block);
 
 	Real32 x1 = firstPart ? 0.5f : -0.1f, x2 = firstPart ? 1.1f : 0.5f;
 	rec.U1 = firstPart ? 0.0f : 0.5f;
@@ -100,8 +100,8 @@ void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
 
 	VertexP3fT2fC4b v;
-	v.Colour = iso_colNormal;
-	Block_Tint(v.Colour, block);
+	v.Col = iso_colNormal;
+	Block_Tint(v.Col, block);
 
 	Real32 z1 = firstPart ? 0.5f : -0.1f, z2 = firstPart ? 1.1f : 0.5f;
 	rec.U1 = firstPart ? 0.0f : 0.5f;

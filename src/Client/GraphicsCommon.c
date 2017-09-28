@@ -90,7 +90,7 @@ void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertice
 #endif
 
 	VertexP3fT2fC4b* ptr = *vertices;
-	VertexP3fT2fC4b v; v.Z = 0.0f; v.Colour = col;
+	VertexP3fT2fC4b v; v.Z = 0.0f; v.Col = col;
 	v.X = x1; v.Y = y1; v.U = tex->U1; v.V = tex->V1; ptr[0] = v;
 	v.X = x2;           v.U = tex->U2;                ptr[1] = v;
 	v.Y = y2;                         v.V = tex->V2;  ptr[2] = v;
@@ -134,14 +134,15 @@ void GfxCommon_MakeIndices(UInt16* indices, Int32 iCount) {
 	Int32 element = 0, i;
 
 	for (i = 0; i < iCount; i += 6) {
-		*indices = (UInt16)(element + 0); indices++;
-		*indices = (UInt16)(element + 1); indices++;
-		*indices = (UInt16)(element + 2); indices++;
+		indices[0] = (UInt16)(element + 0);
+		indices[1] = (UInt16)(element + 1);
+		indices[2] = (UInt16)(element + 2);
 
-		*indices = (UInt16)(element + 2); indices++;
-		*indices = (UInt16)(element + 3); indices++;
-		*indices = (UInt16)(element + 0); indices++;
-		element += 4;
+		indices[3] = (UInt16)(element + 2);
+		indices[4] = (UInt16)(element + 3);
+		indices[5] = (UInt16)(element + 0);
+
+		indices += 6; element += 4;
 	}
 }
 

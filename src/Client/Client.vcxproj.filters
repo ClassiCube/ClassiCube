@@ -530,5 +530,8 @@
     <ClCompile Include="Deflate.c">
       <Filter>Source Files\IO</Filter>
     </ClCompile>
+    <ClCompile Include="OpenGLApi.c">
+      <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

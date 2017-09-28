@@ -94,7 +94,7 @@ void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int3
 	Int32 endZ = z2, endY = y2, startY = y1;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
-	v.X = (Real32)x; v.Colour = col;
+	v.X = (Real32)x; v.Col = col;
 
 	for (; z1 < endZ; z1 += axisSize) {
 		z2 = z1 + axisSize;
@@ -118,7 +118,7 @@ void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int3
 	Int32 endX = x2, endY = y2, startY = y1;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
-	v.Z = (Real32)z; v.Colour = col;
+	v.Z = (Real32)z; v.Col = col;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -142,7 +142,7 @@ void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int
 	Int32 endX = x2, endZ = z2, startZ = z1;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
-	v.Y = y + yOffset; v.Colour = col;
+	v.Y = y + yOffset; v.Col = col;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;

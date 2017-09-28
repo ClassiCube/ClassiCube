@@ -144,7 +144,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			col.A = (UInt8)alpha;
 
 			/* NOTE: Making vertex is inlined since this is called millions of times. */
-			v.Colour = col;
+			v.Col = col;
 			Real32 worldV = vOffset + (z & 1) / 2.0f - (x & 0x0F) / 16.0f;
 			Real32 v1 = y / 6.0f + worldV, v2 = (y + height) / 6.0f + worldV;
 			Real32 x1 = (Real32)x,       y1 = (Real32)y,            z1 = (Real32)z;

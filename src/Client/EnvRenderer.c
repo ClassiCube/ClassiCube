@@ -153,7 +153,7 @@ void EnvRenderer_Render(Real64 deltaTime) {
 void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fC4b* vertices) {
 	Int32 endX = x2, endZ = z2, startZ = z1;
 	VertexP3fC4b v;
-	v.Y = (Real32)y; v.Colour = col;
+	v.Y = (Real32)y; v.Col = col;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;
@@ -176,7 +176,7 @@ void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, In
 	/* adjust range so that largest negative uv coordinate is shifted to 0 or above. */
 	Real32 offset = (Real32)Math_CeilDiv(-x1, 2048);
 	VertexP3fT2fC4b v;
-	v.Y = (Real32)y + 0.1f; v.Colour = col;
+	v.Y = (Real32)y + 0.1f; v.Col = col;
 
 	for (; x1 < endX; x1 += axisSize) {
 		x2 = x1 + axisSize;

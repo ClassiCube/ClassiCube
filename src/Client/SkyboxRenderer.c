@@ -75,7 +75,7 @@ void SkyboxRenderer_MakeVb(void) {
 	Gfx_DeleteVb(&skybox_vb);
 	VertexP3fT2fC4b vertices[SKYBOX_COUNT];
 	#define pos 1.0f
-	VertexP3fT2fC4b v; v.Colour = WorldEnv_CloudsCol;
+	VertexP3fT2fC4b v; v.Col = WorldEnv_CloudsCol;
 
 	/* Render the front quad */
 	                        v.Z = -pos;

@@ -17,7 +17,7 @@ typedef struct SelectionBox_ {
 	/* Maximum corner of the box. */
 	Vector3I Max;
 	/* Colour of this box. */
-	PackedCol Colour;
+	PackedCol Col;
 	/* Closest distance to player of any of the eight corners of the box. */
 	Real32 MinDist;
 	/* Furthest distance to player of any of the eight corners of the box. */

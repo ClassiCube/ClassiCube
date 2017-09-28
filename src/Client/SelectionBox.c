@@ -5,13 +5,13 @@ void SelectionBox_Make(SelectionBox* box, Vector3I* p1, Vector3I* p2, PackedCol 
 	box->MinDist = 0.0f; box->MaxDist = 0.0f;
 	Vector3I_Min(&box->Min, p1, p2);
 	Vector3I_Max(&box->Max, p1, p2);
-	box->Colour = col;
+	box->Col = col;
 }
 
 void SelectionBox_Render(SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
 	Real32 offset = box->MinDist < 32.0f * 32.0f ? (1.0f / 32.0f) : (1.0f / 16.0f);
 	Vector3 p1, p2;
-	PackedCol col = box->Colour;
+	PackedCol col = box->Col;
 
 	Vector3I_ToVector3(&p1, &box->Min);
 	Vector3I_ToVector3(&p2, &box->Max);

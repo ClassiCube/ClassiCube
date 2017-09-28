@@ -12,7 +12,7 @@
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-#define ICOUNT(verticesCount) ((verticesCount) / 4 * 6)
+#define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
 
 /* Initalises this graphics API. */
 void Gfx_Init(void);
@@ -87,7 +87,6 @@ void Gfx_SetAlphaArgBlend(bool enabled);
 void Gfx_Clear(void);
 /* Sets the colour the screen is cleared to when Clear() is called. */
 void Gfx_ClearColour(PackedCol col);
-
 /* Whether depth testing is currently enabled. */
 void Gfx_SetDepthTest(bool enabled);
 /* Sets the depth test compare function that is used when depth testing is enabled. */

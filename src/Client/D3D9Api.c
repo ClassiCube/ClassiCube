@@ -6,7 +6,7 @@
 #include "GraphicsCommon.h"
 #include "Funcs.h"
 
-#ifdef USE_DX
+#if USE_DX
 //#define D3D_DISABLE_9EX causes compile errors
 #include <d3d9.h>
 #include <d3d9caps.h>
@@ -233,6 +233,7 @@ void Gfx_Init(void) {
 	D3DCAPS9 caps;
 	Platform_MemSet(&caps, 0, sizeof(D3DCAPS9));
 	IDirect3DDevice9_GetDeviceCaps(device, &caps);
+	Gfx_MaxTextureDimensions = min(caps.MaxTextureWidth, caps.MaxTextureHeight);
 
 	Gfx_CustomMipmapsLevels = true;
 	viewStack.Type = D3DTS_VIEW;
@@ -329,9 +330,7 @@ void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, b
 		UInt32 size = Bitmap_DataSize(width, height);
 
 		UInt8* cur = Platform_MemAlloc(size);
-		if (cur == NULL) {
-			ErrorHandler_Fail("Allocating memory for mipmaps");
-		}
+		if (cur == NULL) ErrorHandler_Fail("Allocating memory for mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		Bitmap mipmap;
@@ -512,6 +511,7 @@ void Gfx_SetAlphaArgBlend(bool enabled) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetAlphaArgBlend");
 }
 
+
 UInt32 d3d9_clearCol = 0xFF000000;
 void Gfx_Clear(void) {
 	DWORD flags = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
@@ -522,8 +522,6 @@ void Gfx_Clear(void) {
 void Gfx_ClearColour(PackedCol col) {
 	d3d9_clearCol = col.Packed;
 }
-
-
 
 bool d3d9_depthTest = false;
 void Gfx_SetDepthTest(bool enabled) {
