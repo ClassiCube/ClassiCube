@@ -144,7 +144,7 @@ namespace OpenTK.Platform.X11 {
 			Glx.glXGetConfig( display, ref info, GLXAttribute.DOUBLEBUFFER, out buffers );
 			++buffers;
 			// the above lines returns 0 - false and 1 - true.
-			return new GraphicsMode( info.VisualID, new ColorFormat(r, g, b, a), depth, stencil, buffers );
+			return new GraphicsMode( new ColorFormat(r, g, b, a), depth, stencil, buffers );
 		}
 
 		// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig

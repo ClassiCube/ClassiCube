@@ -15,17 +15,17 @@
 #define GL_ELEMENT_ARRAY_BUFFER       0x8893
 #define GL_STATIC_DRAW                0x88E4
 #define GL_DYNAMIC_DRAW               0x88E8
-typedef void (APIENTRY *PFNGLBINDBUFFERPROC) (GLenum target, GLuint buffer);
-typedef void (APIENTRY *PFNGLDELETEBUFFERSPROC) (GLsizei n, const GLuint *buffers);
-typedef void (APIENTRY *PFNGLGENBUFFERSPROC) (GLsizei n, GLuint *buffers);
-typedef void (APIENTRY *PFNGLBUFFERDATAPROC) (GLenum target, const void* size, const void *data, GLenum usage);
-typedef void (APIENTRY *PFNGLBUFFERSUBDATAPROC) (GLenum target, const void* offset, const void* size, const void *data);
+typedef void (APIENTRY *FN_GLBINDBUFFER) (GLenum target, GLuint buffer);
+typedef void (APIENTRY *FN_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
+typedef void (APIENTRY *FN_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
+typedef void (APIENTRY *FN_GLBUFFERDATA) (GLenum target, const void* size, const void *data, GLenum usage);
+typedef void (APIENTRY *FN_GLBUFFERSUBDATA) (GLenum target, const void* offset, const void* size, const void *data);
 /* TODO: NEED TO ASSIGN THESE TO VALID PROC ADDRESSES */
-PFNGLBINDBUFFERPROC glBindBuffer;
-PFNGLDELETEBUFFERSPROC glDeleteBuffers;
-PFNGLGENBUFFERSPROC glGenBuffers;
-PFNGLBUFFERDATAPROC glBufferData;
-PFNGLBUFFERSUBDATAPROC glBufferSubData;
+FN_GLBINDBUFFER glBindBuffer;
+FN_GLDELETEBUFFERS glDeleteBuffers;
+FN_GLGENBUFFERS glGenBuffers;
+FN_GLBUFFERDATA glBufferData;
+FN_GLBUFFERSUBDATA glBufferSubData;
 
 
 bool gl_lists = false;
@@ -44,11 +44,23 @@ void GL_CheckVboSupport() {
 	Int32 major = (Int32)(version.buffer[0] - '0'); /* x.y. (and so forth) */
 	Int32 minor = (Int32)(version.buffer[2] - '0');
 
-	if ((major > 1) || (major == 1 && minor >= 5)) return; /* Supported in core since 1.5 */
+	/* Supported in core since 1.5 */
+	if ((major > 1) || (major == 1 && minor >= 5)) {
+		glBindBuffer = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
+		glDeleteBuffers = (FN_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
+		glGenBuffers = (FN_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
+		glBufferData = (FN_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
+		glBufferSubData = (FN_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
+		return;
+	}
 
 	String vboExt = String_FromConstant("GL_ARB_vertex_buffer_object");
 	if (String_ContainsString(&extensions, &vboExt)) {
-		glUseArbVboAddresses();
+		glBindBuffer = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
+		glDeleteBuffers = (FN_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
+		glGenBuffers = (FN_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
+		glBufferData = (FN_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
+		glBufferSubData = (FN_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
 	} else {
 		gl_lists = true;
 		Gfx_CustomMipmapsLevels = false;
@@ -56,14 +68,20 @@ void GL_CheckVboSupport() {
 }
 
 void Gfx_Init(void) {
+	GraphicsMode mode = GraphicsMode_MakeDefault();
+	GLContext_Init(mode);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTextureDimensions);
 	gl_lists = Options_GetBool(OptionsKey_ForceOldOpenGL, false);
 	Gfx_CustomMipmapsLevels = !gl_lists;
 
-	CheckVboSupport();
+	GL_CheckVboSupport();
 	GfxCommon_Init();
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
+}
+
+void Gfx_Free(void) {
+	GLContext_Free();
 }
 
 #define GL_TOGGLE(cap)\
@@ -479,6 +497,12 @@ void Gfx_LoadOrthoMatrix(Real32 width, Real32 height) {
 	Gfx_LoadMatrix(&matrix);
 }
 
+
+void Gfx_BeginFrame(void) { }
+void Gfx_EndFrame(void) {
+	GLContext_SwapBuffers();
+	gl_activeList = -1;
+}
 
 void Gfx_OnWindowResize(void) {
 	Size2D size = Window_GetClientSize();

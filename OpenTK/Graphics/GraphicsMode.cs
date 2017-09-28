@@ -11,7 +11,7 @@ using System;
 namespace OpenTK.Graphics {
 	
     /// <summary>Defines the format for graphics operations.</summary>
-    public class GraphicsMode : IEquatable<GraphicsMode> {
+    public class GraphicsMode {
 
         static GraphicsMode defaultMode;       
 
@@ -21,20 +21,16 @@ namespace OpenTK.Graphics {
         /// <param name="depth">The number of bits in the depth buffer.</param>
         /// <param name="stencil">The number of bits in the stencil buffer.</param>
         /// <param name="buffers">The number of render buffers. Typical values include one (single-), two (double-) or three (triple-buffering).</param>
-        internal GraphicsMode(IntPtr? index, ColorFormat color, int depth, int stencil, int buffers) {
+        internal GraphicsMode(ColorFormat color, int depth, int stencil, int buffers) {
             if (depth < 0) throw new ArgumentOutOfRangeException("depth", "Must be greater than, or equal to zero.");
             if (stencil < 0) throw new ArgumentOutOfRangeException("stencil", "Must be greater than, or equal to zero.");
             if (buffers <= 0) throw new ArgumentOutOfRangeException("buffers", "Must be greater than zero.");
 
-            Index = index;
             ColorFormat = color;
             Depth = depth;
             Stencil = stencil;
             Buffers = buffers;
         }
-
-        /// <summary> Gets a nullable <see cref="System.IntPtr"/> value, indicating the platform-specific index for this GraphicsMode. </summary>
-        public IntPtr? Index; // The id of the pixel format or visual.
 
         /// <summary> The OpenTK.Graphics.ColorFormat that describes the color format for this GraphicsFormat. </summary>
         public ColorFormat ColorFormat;
@@ -53,30 +49,10 @@ namespace OpenTK.Graphics {
             get {
         		if (defaultMode == null) {
         			Debug.Print( "Creating default GraphicsMode ({0}, {1}, {2}, {3}).", DisplayDevice.Primary.BitsPerPixel, 24, 0, 2 );
-        			defaultMode = new GraphicsMode( null, DisplayDevice.Primary.BitsPerPixel, 24, 0, 2 );
+        			defaultMode = new GraphicsMode( DisplayDevice.Primary.BitsPerPixel, 24, 0, 2 );
         		}
         		return defaultMode;
             }
-        }
-
-        /// <summary> Returns the hashcode for this instance. </summary>
-        /// <returns>A <see cref="System.Int32"/> hashcode for this instance.</returns>
-        public override int GetHashCode() {
-            return Index.GetHashCode();
-        }
-
-        /// <summary> Indicates whether obj is equal to this instance. </summary>
-        /// <param name="obj">An object instance to compare for equality.</param>
-        /// <returns>True, if obj equals this instance; false otherwise.</returns>
-        public override bool Equals(object obj) {
-        	return (obj is GraphicsMode) && Equals((GraphicsMode)obj);
-        }
-
-        /// <summary> Indicates whether other represents the same mode as this instance. </summary>
-        /// <param name="other">The GraphicsMode to compare to.</param>
-        /// <returns>True, if other is equal to this instance; false otherwise.</returns>
-        public bool Equals(GraphicsMode other) {
-            return Index.HasValue && Index == other.Index;
         }
     }
 }

@@ -118,7 +118,7 @@ namespace OpenTK.Platform.Windows {
 			API.DescribePixelFormat(deviceContext, modeIndex, pfd.Size, ref pfd);
 			
 			Mode = new GraphicsMode(
-				(IntPtr)modeIndex, new ColorFormat(pfd.RedBits, pfd.GreenBits, pfd.BlueBits, pfd.AlphaBits),
+				new ColorFormat(pfd.RedBits, pfd.GreenBits, pfd.BlueBits, pfd.AlphaBits),
 				pfd.DepthBits, pfd.StencilBits,
 				(pfd.Flags & PixelFormatDescriptorFlags.DOUBLEBUFFER) != 0 ? 2 : 1);
 			

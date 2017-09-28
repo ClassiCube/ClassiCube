@@ -683,3 +683,98 @@ void Window_SetCursorVisible(bool visible) {
 	win_cursorVisible = visible;
 	ShowCursor(visible ? 1 : 0);
 }
+
+#if !USE_DX
+
+void GLContext_SelectGraphicsMode(GraphicsMode mode) {
+	ColorFormat color = mode.Format;
+
+	PIXELFORMATDESCRIPTOR pfd;
+	Platform_MemSet(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion = 1;
+	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
+	/* TODO: PFD_SUPPORT_COMPOSITION FLAG? CHECK IF IT WORKS ON XP */
+	pfd.cColorBits = (UInt8)(color.R + color.G + color.B);
+
+	pfd.iPixelType = color.IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
+	pfd.cRedBits = (UInt8)color.R;
+	pfd.cGreenBits = (UInt8)color.G;
+	pfd.cBlueBits = (UInt8)color.B;
+	pfd.cAlphaBits = (UInt8)color.A;
+
+	pfd.cDepthBits = (UInt8)mode.Depth;
+	pfd.cStencilBits = (UInt8)mode.Stencil;
+	if (mode.Depth <= 0) pfd.dwFlags |= PFD_DEPTH_DONTCARE;
+	if (mode.Buffers > 1) pfd.dwFlags |= PFD_DOUBLEBUFFER;
+
+	Int32 modeIndex = ChoosePixelFormat(win_DC, &pfd);
+	if (modeIndex == 0) {
+		ErrorHandler_Fail("Requested graphics mode not available");
+	}
+
+	Platform_MemSet(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+	pfd.nVersion = 1;
+
+	DescribePixelFormat(win_DC, modeIndex, pfd.nSize, &pfd);
+	if (!SetPixelFormat(win_DC, modeIndex, &pfd)) {
+		ErrorHandler_FailWithCode(GetLastError(), "SetPixelFormat failed");
+	}
+}
+
+HGLRC GLContext_Handle;
+HDC GLContext_DC;
+typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
+typedef int (WINAPI *FN_WGLGETSWAPINTERVAL)(void);
+FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
+FN_WGLGETSWAPINTERVAL wglGetSwapIntervalEXT;
+bool GLContext_vSync;
+
+void GLContext_Init(GraphicsMode mode) {
+	GLContext_SelectGraphicsMode(mode);
+	GLContext_Handle = wglCreateContext(win_DC);
+	if (GLContext_Handle == NULL) {
+		GLContext_Handle = wglCreateContext(win_DC);
+	}
+	if (GLContext_Handle == NULL) {
+		ErrorHandler_FailWithCode(GetLastError(), "Failed to create OpenGL context");
+	}
+
+	if (!wglMakeCurrent(win_DC, GLContext_Handle)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Failed to make OpenGL context current");
+	}
+	GLContext_DC = wglGetCurrentDC();
+
+	wglGetSwapIntervalEXT = (FN_WGLGETSWAPINTERVAL)GLContext_GetAddress("wglGetSwapIntervalEXT");
+	wglSwapIntervalEXT = (FN_WGLSWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
+	GLContext_vSync = wglGetSwapIntervalEXT != NULL && wglSwapIntervalEXT != NULL;
+}
+
+void GLContext_Update(void) { }
+void GLContext_Free(void) {
+	if (!wglDeleteContext(GLContext_Handle)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Failed to destroy OpenGL context");
+	}
+	GLContext_Handle = NULL;
+}
+
+void* GLContext_GetAddress(const UInt8* function) {
+	void* address = wglGetProcAddress(function);
+	return GLContext_IsInvalidAddress(address) ? NULL : address;
+}
+
+void GLContext_SwapBuffers(void) {
+	if (!SwapBuffers(GLContext_DC)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Failed to swap buffers");
+	}
+}
+
+bool GLContext_GetVSync(void) {
+	return GLContext_vSync && wglGetSwapIntervalEXT();
+}
+
+void GLContext_SetVSync(bool enabled) {
+	if (GLContext_vSync) wglSwapIntervalEXT(enabled ? 1 : 0);
+}
+#endif

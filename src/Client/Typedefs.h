@@ -49,5 +49,5 @@ typedef UInt8 Face;
 #define Int32_MaxValue  ((Int32)0x7FFFFFFFL)
 #define Int32_MinValue  ((Int32)0xFFFFFFFFL)
 
-#define USE_DX true
+#define USE_DX false
 #endif

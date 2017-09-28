@@ -88,25 +88,5 @@ namespace OpenTK.Graphics {
         public static implicit operator ColorFormat(int bpp) {
             return new ColorFormat(bpp);
         }
-
-        public override bool Equals( object obj ) {
-			return (obj is ColorFormat) && Equals( (ColorFormat)obj );
-		}
-        
-		public bool Equals(ColorFormat other) {
-			return Red == other.Red && Green == other.Green && Blue == other.Blue && Alpha == other.Alpha;
-		}
-        
-		public static bool operator == (ColorFormat lhs, ColorFormat rhs ) {
-			return lhs.Equals( rhs );
-		}
-        
-		public static bool operator != ( ColorFormat lhs, ColorFormat rhs ) {
-			return !lhs.Equals( rhs );
-		}
-
-        public override int GetHashCode() {
-            return Red ^ Green ^ Blue ^ Alpha;
-        }
     }
 }
