@@ -440,7 +440,6 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT
 	if (atom == 0) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to register window class");
 	}
-
 	win_Handle = CreateWindowExA(
 		win_StyleEx, atom, title->buffer, win_Style,
 		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
@@ -448,6 +447,10 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT
 
 	if (win_Handle == NULL) {
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to create window");
+	}
+	win_DC = GetDC(win_Handle);
+	if (win_DC == NULL) {
+		ErrorHandler_FailWithCode(GetLastError(), "Failed to get device context");
 	}
 	win_Exists = true;
 }

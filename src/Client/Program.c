@@ -12,9 +12,11 @@ int main(int argc, char* argv[]) {
 	Window_Create(320, 320, 640, 480, &str, NULL);
 	Window_SetVisible(true);
 	Gfx_Init();
-	Gfx_ClearColour(PackedCol_Red);
 
+	UInt8 RGB = 0;
 	while (true) {
+		Gfx_ClearColour(PackedCol_Create3(RGB, RGB, RGB));
+		RGB++;
 		Window_ProcessEvents();
 		Platform_ThreadSleep(100);
 		Gfx_BeginFrame();
