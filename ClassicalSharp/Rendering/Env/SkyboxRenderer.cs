@@ -50,11 +50,15 @@ namespace ClassicalSharp.Renderers {
 		
 		void TexturePackChanged(object sender, EventArgs e) {
 			game.Graphics.DeleteTexture(ref tex);
+			game.World.Env.SkyboxClouds = false;
 		}
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
-			if (e.Name == "skybox.png")
+			if (e.Name == "skybox.png") {
 				game.UpdateTexture(ref tex, e.Name, e.Data, false);
+			} else if (e.Name == "useclouds") {
+				game.World.Env.SkyboxClouds = true;
+			}
 		}
 		
 		public void Render(double deltaTime) {

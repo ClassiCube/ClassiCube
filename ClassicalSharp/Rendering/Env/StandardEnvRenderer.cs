@@ -27,10 +27,15 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void Render(double deltaTime) {
-			if (minimal) { RenderMinimal(deltaTime); return; }
-			
+			if (minimal) { RenderMinimal(deltaTime); return; }			
 			if (skyVb == -1 || cloudsVb == -1) return;
-			if (!game.SkyboxRenderer.ShouldRender) RenderMainEnv(deltaTime);
+			
+			if (!game.SkyboxRenderer.ShouldRender) {
+				RenderSky(deltaTime);
+				RenderClouds(deltaTime);
+			} else if (game.World.Env.SkyboxClouds) {
+				RenderClouds(deltaTime);
+			}
 			UpdateFog();
 		}
 		
@@ -119,7 +124,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		void RenderMainEnv(double deltaTime) {
+		void RenderSky(double delta) {
 			Vector3 pos = game.CurrentCameraPos;
 			float normalY = map.Height + 8;
 			float skyY = Math.Max(pos.Y + 8, normalY);
@@ -137,7 +142,6 @@ namespace ClassicalSharp.Renderers {
 				gfx.DrawVb_IndexedTris(skyVertices);
 				gfx.PopMatrix();
 			}
-			RenderClouds(deltaTime);
 		}
 		
 		void RenderClouds(double delta) {

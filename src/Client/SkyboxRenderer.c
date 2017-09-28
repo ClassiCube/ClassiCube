@@ -19,10 +19,19 @@ bool SkyboxRenderer_ShouldRender(void) {
 	return skybox_tex > 0 && !EnvRenderer_Minimal;
 }
 
+void SkyboxRenderer_TexturePackChanged(void) {
+	Gfx_DeleteTexture(&skybox_tex);
+	WorldEnv_SkyboxClouds = false;
+}
+
 void SkyboxRenderer_FileChanged(Stream* src) {
 	String skybox = String_FromConstant("skybox.png");
+	String useclouds = String_FromConstant("useclouds");
+
 	if (String_Equals(&src->Name, &skybox)) {
 		Game_UpdateTexture(&skybox_tex, src, false);
+	} else if (String_Equals(&src->Name, &useclouds)) {
+		WorldEnv_SkyboxClouds = true;
 	}
 }
 
@@ -119,10 +128,6 @@ void SkyboxRenderer_ContextRecreated(void) { SkyboxRenderer_MakeVb(); }
 void SkyboxRenderer_EnvVariableChanged(EnvVar envVar) {
 	if (envVar != EnvVar_CloudsCol) return;
 	SkyboxRenderer_MakeVb();
-}
-
-void SkyboxRenderer_TexturePackChanged(void) {
-	Gfx_DeleteTexture(&skybox_tex);
 }
 
 void SkyboxRenderer_Init(void) {

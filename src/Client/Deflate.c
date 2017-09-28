@@ -216,7 +216,7 @@ bool Deflate_Step(DeflateState* state) {
 
 		case 3:
 			ErrorHandler_Fail("DEFLATE - Invalid block type");
-			return;
+			return false;
 		}
 	} break;
 

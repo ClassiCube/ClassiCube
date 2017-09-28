@@ -101,6 +101,8 @@ bool WorldEnv_ExpFog;
 Real32 WorldEnv_SkyboxHorSpeed;
 /* Vertical skybox rotation speed. */
 Real32 WorldEnv_SkyboxVerSpeed;
+/* Whether clouds still render, even with skybox. */
+bool WorldEnv_SkyboxClouds;
 
 /* Colour of the sky located behind / above clouds. */
 PackedCol WorldEnv_SkyCol;

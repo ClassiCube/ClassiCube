@@ -88,7 +88,7 @@ void EnvRenderer_RenderClouds(Real64 deltaTime) {
 	Gfx_SetMatrixMode(MatrixType_Modelview);
 }
 
-void EnvRenderer_RenderMainEnv(Real64 deltaTime) {
+void EnvRenderer_RenderSky(Real64 deltaTime) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Real32 normalY = (Real32)World_Height + 8.0f;
 	Real32 skyY = max(pos.Y + 8.0f, normalY);
@@ -106,7 +106,6 @@ void EnvRenderer_RenderMainEnv(Real64 deltaTime) {
 		Gfx_DrawVb_IndexedTris(env_skyVertices);
 		Gfx_PopMatrix();
 	}
-	EnvRenderer_RenderClouds(deltaTime);
 }
 
 void EnvRenderer_UpdateFog(void) {
@@ -142,7 +141,10 @@ void EnvRenderer_Render(Real64 deltaTime) {
 	} else {
 		if (env_skyVb == -1 || env_cloudsVb == -1) return;
 		if (!SkyboxRenderer_ShouldRender()) {
-			EnvRenderer_RenderMainEnv(deltaTime);
+			EnvRenderer_RenderSky(deltaTime);
+			EnvRenderer_RenderClouds(deltaTime);
+		} else if (WorldEnv_SkyboxClouds) {
+			EnvRenderer_RenderClouds(deltaTime);
 		}
 		EnvRenderer_UpdateFog();
 	}

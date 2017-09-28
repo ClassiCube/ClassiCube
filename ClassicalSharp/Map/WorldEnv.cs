@@ -78,6 +78,9 @@ namespace ClassicalSharp.Map {
 		/// <summary> Vertical skybox rotation speed. </summary>
 		public float SkyboxVerSpeed;
 		
+		/// <summary> Whether clouds still render, even with skybox. </summary>
+		public bool SkyboxClouds;
+		
 		Game game;
 		public WorldEnv(Game game) {
 			this.game = game;
