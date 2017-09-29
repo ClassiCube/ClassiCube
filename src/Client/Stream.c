@@ -1,13 +1,14 @@
 #include "Stream.h"
+#include "Platform.h"
 
 #define Stream_SafeReadBlock(stream, buffer, count, read)\
-ReturnCode result = stream->Read(buffer, count, &read);\
+ReturnCode result = stream->Read(stream, buffer, count, &read);\
 if (read == 0 || !ErrorHandler_Check(result)) {\
 	Stream_Fail(stream, result, "reading from ");\
 }
 
 #define Stream_SafeWriteBlock(stream, buffer, count, write)\
-ReturnCode result = stream->Write(buffer, count, &write);\
+ReturnCode result = stream->Write(stream, buffer, count, &write);\
 if (write == 0 || !ErrorHandler_Check(result)) {\
 	Stream_Fail(stream, result, "writing to ");\
 }
@@ -36,6 +37,39 @@ void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count) {
 		Stream_SafeWriteBlock(stream, buffer, count, write);
 		count -= write;
 	}
+}
+
+
+ReturnCode Stream_FileRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	return Platform_FileRead(stream->Data, data, count, modified);
+}
+ReturnCode Stream_FileWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	return Platform_FileWrite(stream->Data, data, count, modified);
+}
+ReturnCode Stream_FileClose(Stream* stream) {
+	return Platform_FileClose(stream->Data);
+}
+ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
+	return Platform_FileSeek(stream->Data, offset, seekType);
+}
+UInt32 Stream_FileLength(Stream* stream) {
+	return Platform_FileLength(stream->Data);
+}
+UInt32 Stream_FilePosition(Stream* stream) {
+	return Platform_FilePosition(stream->Data);
+}
+
+void Stream_FromFile(void* file, Stream* stream, STRING_TRANSIENT String* name) {
+	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
+	String_AppendString(&stream->Name, name);
+	stream->Data = file;
+
+	stream->Read = Stream_FileRead;
+	stream->Write = Stream_FileWrite;
+	stream->Close = Stream_FileClose;
+	stream->Seek = Stream_FileSeek;
+	stream->Length = Stream_FileLength;
+	stream->Position = Stream_FilePosition;
 }
 
 

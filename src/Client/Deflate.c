@@ -3,8 +3,15 @@
 #include "Funcs.h"
 #include "Platform.h"
 
+Int32 Header_TryReadByte(Stream* s) {
+	UInt8 buffer;
+	UInt32 read;
+	s->Read(s, &buffer, sizeof(buffer), &read);
+	return read == 0 ? -1 : buffer;
+}
+
 bool Header_ReadByte(Stream* s, UInt8* state, Int32* value) {
-	*value = s->TryReadByte();
+	*value = Header_TryReadByte(s);
 	if (*value == -1) return false;
 
 	(*state)++;
@@ -61,7 +68,7 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 
 	case GZipState_LastModifiedTime:
 		for (; header->PartsRead < 4; header->PartsRead++) {
-			temp = s->TryReadByte();
+			temp = Header_TryReadByte(s);
 			if (temp == -1) return;
 		}
 		header->State++;
@@ -76,7 +83,7 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 	case GZipState_Filename:
 		if ((header->Flags & 0x08) != 0) {
 			for (; ;) {
-				temp = s->TryReadByte();
+				temp = Header_TryReadByte(s);
 				if (temp == -1) return;
 				if (temp == 0) break;
 			}
@@ -86,7 +93,7 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 	case GZipState_Comment:
 		if ((header->Flags & 0x10) != 0) {
 			for (; ;) {
-				temp = s->TryReadByte();
+				temp = Header_TryReadByte(s);
 				if (temp == -1) return;
 				if (temp == 0) break;
 			}
@@ -96,7 +103,7 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 	case GZipState_HeaderChecksum:
 		if ((header->Flags & 0x02) != 0) {
 			for (; header->PartsRead < 2; header->PartsRead++) {
-				temp = s->TryReadByte();
+				temp = Header_TryReadByte(s);
 				if (temp == -1) return;
 			}
 		}

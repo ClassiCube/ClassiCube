@@ -7,34 +7,42 @@
 #define STREAM_SEEKFROM_BEGIN 0
 #define STREAM_SEEKFROM_CURRENT 1
 #define STREAM_SEEKFROM_END 2
+#define STREAM_NAME_LEN 80
 
-typedef ReturnCode(*Stream_Operation)(UInt8* data, UInt32 count, UInt32* modified);
-typedef ReturnCode(*Stream_Seek)(Int32 offset, Int32 seekType);
-typedef UInt32(*Stream_Length)(void);
-typedef UInt32(*Stream_Position)(void);
+typedef ReturnCode (*Stream_Operation)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
+typedef ReturnCode (*Stream_Seek)(struct Stream_* stream, Int32 offset, Int32 seekType);
+typedef ReturnCode (*Stream_Close)(struct Stream_* stream);
+typedef UInt32 (*Stream_Length)(struct Stream_* stream);
+typedef UInt32 (*Stream_Position)(struct Stream_* stream);
 
 /* Represents a stream that can be written to and/or read from. */
 typedef struct Stream_ {
+	/* Raw name buffer */
+	UInt8 NameBuffer[String_BufferSize(STREAM_NAME_LEN)];
 	/* The name of the stream. */
 	String Name;
 	/* Performs a read. Result is a ReturnCode, number of read bytes is output via pointer. */
 	Stream_Operation Read;
 	/* Performs a write. Result is a ReturnCode, number of written bytes is output via pointer. */
 	Stream_Operation Write;
+	/* Closes the stream. Result is a ReturnCode. */
+	Stream_Close Close;
 	/* Moves backwards or forwards by given number of bytes from seek offset in the stream. Result is a ReturnCode. */
 	Stream_Seek Seek;
 	/* Gets the length of the given stream. */
 	Stream_Length Length;
 	/* Gets the position of the given stream. */
 	Stream_Position Position;
-	/* Attempts to read the next byte from the stream.*/
-	Int32 (*TryReadByte)(void);
+	/* General purpose metadata for the stream. */
+	void* Data;
 } Stream;
 
 /* Fully reads up to count bytes or fails. */
 void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count);
 /* Fully writes up to count bytes or fails. */
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
+/* Constructs a Stream wrapping a file. */
+void Stream_FromFile(void* file, Stream* stream, STRING_TRANSIENT String* name);
 
 /* Reads an unsigned 8 bit integer from the given stream. */
 UInt8 Stream_ReadUInt8(Stream* stream);

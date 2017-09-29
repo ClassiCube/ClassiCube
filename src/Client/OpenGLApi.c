@@ -5,6 +5,7 @@
 #include "Window.h"
 #include "GraphicsCommon.h"
 #include "Funcs.h"
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <GL/gl.h>
 

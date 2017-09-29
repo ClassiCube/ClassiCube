@@ -1,7 +1,8 @@
 #include "Platform.h"
-#include <Windows.h>
-#define WIN32_LEAN_AND_MEAN
+#include "Stream.h"
 #include "DisplayDevice.h"
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 
 HANDLE heap;
 void Platform_Init(void) {
@@ -143,6 +144,37 @@ ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* b
 ReturnCode Platform_FileClose(void* file) {
 	BOOL success = CloseHandle((HANDLE)file);
 	return success ? 0 : GetLastError();
+}
+
+ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
+	DWORD pos;
+	switch (seekType) {
+	case STREAM_SEEKFROM_BEGIN:
+		pos = SetFilePointer(file, offset, NULL, 0); break;
+	case STREAM_SEEKFROM_CURRENT:
+		pos = SetFilePointer(file, offset, NULL, 1); break;
+	case STREAM_SEEKFROM_END:
+		pos = SetFilePointer(file, offset, NULL, 2); break;
+	default:
+		ErrorHandler_Fail("Invalid SeekType provided when seeking file");
+	}
+	return pos == INVALID_SET_FILE_POINTER ? GetLastError() : 0;
+}
+
+UInt32 Platform_FilePosition(void* file) {
+	DWORD pos = SetFilePointer(file, 0, NULL, 1); /* SEEK_CUR */
+	if (pos == INVALID_SET_FILE_POINTER) {
+		ErrorHandler_FailWithCode(GetLastError(), "Getting file position");
+	}
+	return pos;
+}
+
+UInt32 Platform_FileLength(void* file) {
+	DWORD pos = GetFileSize(file, NULL);
+	if (pos == INVALID_FILE_SIZE) {
+		ErrorHandler_FailWithCode(GetLastError(), "Getting file length");
+	}
+	return pos;
 }
 
 
