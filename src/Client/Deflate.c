@@ -253,9 +253,8 @@ bool Deflate_Step(DeflateState* state) {
 		} break;
 
 		case 2: { /* TODO: Compressed with dynamic huffman table */
-
+			state->State = DeflateState_DynamicHeader;
 		} break;
-
 		case 3:
 			ErrorHandler_Fail("DEFLATE - Invalid block type");
 			return false;
@@ -303,7 +302,8 @@ bool Deflate_Step(DeflateState* state) {
 		DEFLATE_CONSUME_BITS(state, 5, state->NumLits);     state->NumLits += 257;
 		DEFLATE_CONSUME_BITS(state, 5, state->NumDists);    state->NumDists += 1;
 		DEFLATE_CONSUME_BITS(state, 4, state->NumCodeLens); state->NumCodeLens += 4;
-		state->State = DeflateState_DynamicCodeLens;
+		state->Index = 0;
+		state->State = DeflateState_DynamicCodeLens;		
 	} break;
 
 	case DeflateState_DynamicCodeLens: {
