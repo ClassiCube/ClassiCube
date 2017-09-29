@@ -155,6 +155,41 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 
 #define DeflateState_Done 250
 
+
+/* TODO: This is probably completely broken. just tryna get something. */
+void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
+	Int32 i;
+	table->FirstCodewords[0] = 0;
+	table->FirstOffsets[0] = 0;
+
+	Int32 bl_count[DEFLATE_MAX_BITS];
+	Platform_MemSet(bl_count, 0, sizeof(bl_count));
+	for (i = 0; i < count; i++) {
+		bl_count[bitLens[i]]++;
+	}
+	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
+		if (bl_count[i] > (1 << i)) {
+			ErrorHandler_Fail("Too many huffman codes for bit length");
+		}
+	}
+
+	Int32 code = 0, value = 0;
+	Int32 next_code[DEFLATE_MAX_BITS];
+	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
+		code = (code + bl_count[i - 1]) << 1;
+		next_code[i] = code;
+		table->FirstCodewords[i] = (UInt16)code;
+		table->FirstOffsets[i] = (UInt16)value;
+		value += bl_count[i - 1];
+
+		if (bl_count[i] == 0) {
+			table->EndCodewords[i] = -1;
+		} else {
+			table->EndCodewords[i] = code + (bl_count[i] - 1);
+		}
+	}
+}
+
 void Deflate_Init(DeflateState* state, Stream* source) {
 	state->State = DeflateState_Header;
 	state->Source = source;
@@ -265,20 +300,23 @@ bool Deflate_Step(DeflateState* state) {
 	} break;
 
 	case DeflateState_DynamicCodeLens: {
+		UInt8 order[DEFLATE_MAX_CODELENS] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+		Int32 i;
+
 		while (state->Index < state->NumCodeLens) {
 			while (state->NumBits < 3) {
 				if (state->AvailIn == 0) return false;
 				DEFLATE_GET_BYTE(state);
 			}
 
-			DEFLATE_CONSUME_BITS(state, 3, state->Buffer[state->Index]);
+			i = order[state->Index];
+			DEFLATE_CONSUME_BITS(state, 3, state->Buffer[i]);
 			state->Index++;
 		}
-
-		Int32 i;
 		for (i = state->NumCodeLens; i < DEFLATE_MAX_CODELENS; i++) {
-			state->Buffer[i] = 0;
+			state->Buffer[order[i]] = 0;
 		}
+
 		state->Index = 0;
 		state->State = DeflateState_DynamicLits;
 	} break;
