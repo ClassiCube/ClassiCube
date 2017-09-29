@@ -168,12 +168,14 @@ void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	Int32 i;
 	table->FirstCodewords[0] = 0;
 	table->FirstOffsets[0] = 0;
+	table->EndCodewords[0] = -1;
 
 	Int32 bl_count[DEFLATE_MAX_BITS];
 	Platform_MemSet(bl_count, 0, sizeof(bl_count));
 	for (i = 0; i < count; i++) {
 		bl_count[bitLens[i]]++;
 	}
+	bl_count[0] = 0;
 	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
 		if (bl_count[i] > (1 << i)) {
 			ErrorHandler_Fail("Too many huffman codes for bit length");
@@ -187,7 +189,7 @@ void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 		next_code[i] = code;
 		table->FirstCodewords[i] = (UInt16)code;
 		table->FirstOffsets[i] = (UInt16)value;
-		value += bl_count[i - 1];
+		value += bl_count[i];
 
 		if (bl_count[i] == 0) {
 			table->EndCodewords[i] = -1;
@@ -326,6 +328,9 @@ bool Deflate_Step(DeflateState* state) {
 
 		state->Index = 0;
 		state->State = DeflateState_DynamicLits;
+		/* TODO: actually do something with this table */
+		HuffmanTable table;
+		Huffman_Build(&table, state->Buffer, DEFLATE_MAX_CODELENS);
 	} break;
 
 	case DeflateState_DynamicLits: {
