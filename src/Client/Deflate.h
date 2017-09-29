@@ -31,7 +31,10 @@ void ZLibHeader_Init(ZLibHeader* header);
 void ZLibHeader_Read(Stream* s, ZLibHeader* header);
 
 
-#define DEFLATE_INPUT_MAX 1024
+#define DEFLATE_MAX_INPUT 1024
+#define DEFLATE_MAX_CODELENS 19
+#define DEFLATE_MAX_LITS 288
+#define DEFLATE_MAX_DISTS 32
 typedef struct DeflateState_ {
 	UInt8 State;
 	Stream* Source;
@@ -40,15 +43,16 @@ typedef struct DeflateState_ {
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
 
-	UInt8 Input[DEFLATE_INPUT_MAX]; /* Buffer for input to DEFLATE */
+	UInt8 Input[DEFLATE_MAX_INPUT]; /* Buffer for input to DEFLATE */
 	UInt32 NextIn;                  /* Index within Input of byte being read */
 	UInt32 AvailIn;                 /* Number of bytes that can be read from Input */
 
 	UInt8* Output;    /* Pointer for output data */
 	UInt32 AvailOut;  /* Max number of bytes to output */
 
-	UInt32 Index; /* General purpose reusable index / counter */
 	UInt32 NumCodeLens, NumLits, NumDists;
+	UInt32 Index;                                       /* General purpose index / counter */
+	UInt8 Buffer[DEFLATE_MAX_LITS + DEFLATE_MAX_DISTS]; /* General purpose array */	
 } DeflateState;
 
 void Deflate_Init(DeflateState* state, Stream* source);

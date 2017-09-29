@@ -333,7 +333,7 @@ namespace ClassicalSharp.Network.Protocols {
 			byte type = reader.ReadUInt8();
 			int value = reader.ReadInt32();
 			WorldEnv env = game.World.Env;
-			Utils.Clamp(ref value, short.MinValue, short.MaxValue);
+			Utils.Clamp(ref value, -0xFFFFFF, 0xFFFFFF);
 			
 			switch (type) {
 				case 0:
@@ -347,6 +347,7 @@ namespace ClassicalSharp.Network.Protocols {
 				case 3:
 					env.SetCloudsLevel(value); break;
 				case 4:
+					Utils.Clamp(ref value, -0x7FFF, 0x7FFF);
 					game.MaxViewDistance = value <= 0 ? 32768 : value;
 					game.SetViewDistance(game.UserViewDistance, false); break;
 				case 5:

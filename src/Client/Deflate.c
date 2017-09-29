@@ -270,6 +270,14 @@ bool Deflate_Step(DeflateState* state) {
 				if (state->AvailIn == 0) return false;
 				DEFLATE_GET_BYTE(state);
 			}
+
+			DEFLATE_CONSUME_BITS(state, 3, state->Buffer[state->Index]);
+			state->Index++;
+		}
+
+		Int32 i;
+		for (i = state->NumCodeLens; i < DEFLATE_MAX_CODELENS; i++) {
+			state->Buffer[i] = 0;
 		}
 		state->Index = 0;
 		state->State = DeflateState_DynamicLits;
