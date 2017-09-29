@@ -88,16 +88,16 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 	Real32 rotY = player->Interp.Next.HeadY + speedX * sensitivity;
 	Real32 yAdj = Game_InvertMouse ? -speedY * sensitivity : speedY * sensitivity;
 	Real32 headX = player->Interp.Next.HeadX + yAdj;
-	LocationUpdate* update;
-	LocationUpdate_MakeOri(update, rotY, headX);
+	LocationUpdate update;
+	LocationUpdate_MakeOri(&update, rotY, headX);
 
 	/* Need to make sure we don't cross the vertical axes, because that gets weird. */
-	if (update->HeadX >= 90.0f && update->HeadX <= 270.0f) {
-		update->HeadX = player->Interp.Next.HeadX < 180.0f ? 89.9f : 270.1f;
+	if (update.HeadX >= 90.0f && update.HeadX <= 270.0f) {
+		update.HeadX = player->Interp.Next.HeadX < 180.0f ? 89.9f : 270.1f;
 	}
 
 	Entity* e = &player->Base.Base;
-	e->SetLocation(e, update, false);
+	e->SetLocation(e, &update, false);
 }
 
 void PerspectiveCamera_UpdateMouse(void) {
