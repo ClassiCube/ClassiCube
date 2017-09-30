@@ -62,10 +62,6 @@ typedef struct DeflateState_ {
 	UInt32 NumCodeLens, NumLits, NumDists;
 	UInt32 Index;                                       /* General purpose index / counter */
 	UInt8 Buffer[DEFLATE_MAX_LITS + DEFLATE_MAX_DISTS]; /* General purpose array */	
-
-	HuffmanTable CodeLensTable;
-	HuffmanTable LitsTable;
-	HuffmanTable DistsTable;
 } DeflateState;
 
 void Deflate_Init(DeflateState* state, Stream* source);
