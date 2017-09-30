@@ -197,12 +197,12 @@ namespace ClassicalSharp {
 		public static bool ValidColCode(string text, int i) {
 			if (i >= text.Length) return false;
 			char c = text[i];
-			return c < '\xFF' && Cols[c].A > 0;
+			return c <= '\xFF' && Cols[c].A > 0;
 		}
 		
 		/// <summary> Returns whenever the given character is a valid colour code. </summary>
 		public static bool ValidColCode(char c) {
-			return c < '\xFF' && Cols[c].A > 0;
+			return c <= '\xFF' && Cols[c].A > 0;
 		}
 		
 		public static bool EmptyText(string text) {
