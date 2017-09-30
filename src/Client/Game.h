@@ -154,4 +154,6 @@ bool Game_CanPick(BlockID block);
 static void Game_LimitFPS(void);
 /* Frees all resources held by the game. */
 void Game_Free(void);
+
+void ParticleManager_AddRainParticle(Int32 x, Int32 y, Int32 z);
 #endif

@@ -9,6 +9,9 @@
 #include "Options.h"
 #include "Funcs.h"
 
+void Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType) { }
+void ParticleManager_AddRainParticle(Int32 x, Int32 y, Int32 z) { }
+
 void Game_UpdateProjection(void) {
 	Game_DefaultFov = Options_GetInt(OptionsKey_FieldOfView, 1, 150, 70);
 	Camera_ActiveCamera->GetProjection(&Game_Projection);
