@@ -2,8 +2,13 @@
 #define CS_DEFLATE_H
 #include "Typedefs.h"
 #include "Stream.h"
-/* Decodes data compressed using DEFLATE.
-Copyright 2017 ClassicalSharp | Licensed under BSD-3
+/* Decodes data compressed using DEFLATE in a streaming manner.
+   Based off information from
+	https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
+	http://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art001
+	https://www.ietf.org/rfc/rfc1951.txt
+	https://github.com/nothings/stb/blob/master/stb_image.h
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
 typedef struct GZipHeader_ {

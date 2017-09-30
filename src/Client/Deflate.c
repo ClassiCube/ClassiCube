@@ -189,7 +189,7 @@ while (state->NumBits < bitsCount) {\
 
 #define DEFLATE_NEXTBLOCK_STATE(state) state->State = state->LastBlock ? DeflateState_Done : DeflateState_Header;
 
-/* TODO: This is probably completely broken. just tryna get something. */
+/* TODO: This needs to be massively optimised. */
 void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	Int32 i;
 	table->FirstCodewords[0] = 0;
@@ -288,10 +288,27 @@ bool Deflate_Step(DeflateState* state) {
 			state->State = DeflateState_UncompressedHeader;
 		} break;
 
-		case 1: { /* TODO: Compressed with FIXED huffman table*/
+		case 1: { /* Fixed/static huffman compressed */
+			UInt8 fixed_lits[DEFLATE_MAX_LITS] = {
+				8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+				8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+				8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+				8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,
+				8,8,8,8,8,8,8,8,8,8,8,8,8,8,8,8, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+				9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+				9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+				9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9, 9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,9,
+				7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7, 7,7,7,7,7,7,7,7,8,8,8,8,8,8,8,8
+			};
+			UInt8 fixed_dists[DEFLATE_MAX_DISTS] = {
+				5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5
+			};
+			Huffman_Build(&state->LitsTable, fixed_lits, DEFLATE_MAX_LITS);
+			Huffman_Build(&state->DistsTable, fixed_dists, DEFLATE_MAX_DISTS);
+			state->State = DeflateState_CompressedData;
 		} break;
 
-		case 2: { /* TODO: Compressed with dynamic huffman table */
+		case 2: /* Dynamic huffman compressed */ {
 			state->State = DeflateState_DynamicHeader;
 		} break;
 		case 3:
@@ -338,7 +355,7 @@ bool Deflate_Step(DeflateState* state) {
 	} break;
 
 	case DeflateState_DynamicCodeLens: {
-		UInt8 order[DEFLATE_MAX_CODELENS] = { 16, 17, 18, 0, 8, 7, 9, 6, 10, 5, 11, 4, 12, 3, 13, 2, 14, 1, 15 };
+		UInt8 order[DEFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
 		Int32 i;
 
 		while (state->Index < state->NumCodeLens) {
@@ -377,11 +394,13 @@ bool Deflate_Step(DeflateState* state) {
 					}
 					repeatCount += 3; repeatValue = state->Buffer[state->Index - 1];
 					break;
+
 				case 17:
 					DEFLATE_ENSURE_BITS(state, 3);
 					DEFLATE_CONSUME_BITS(state, 3, repeatCount);
 					repeatCount += 3; repeatValue = 0;
 					break;
+
 				case 18:
 					DEFLATE_ENSURE_BITS(state, 7);
 					DEFLATE_CONSUME_BITS(state, 7, repeatCount);
