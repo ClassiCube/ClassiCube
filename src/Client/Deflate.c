@@ -156,60 +156,10 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 #define DeflateState_UncompressedData 2
 #define DeflateState_DynamicHeader 3
 #define DeflateState_DynamicCodeLens 4
-#define DeflateState_DynamicLits 5
-#define DeflateState_DynamicDists 6
-#define DeflateState_CompressedData 7
+#define DeflateState_DynamicLitsDists 5
+#define DeflateState_CompressedData 6
 
 #define DeflateState_Done 250
-
-
-/* TODO: This is probably completely broken. just tryna get something. */
-void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
-	Int32 i;
-	table->FirstCodewords[0] = 0;
-	table->FirstOffsets[0] = 0;
-	table->EndCodewords[0] = -1;
-
-	Int32 bl_count[DEFLATE_MAX_BITS];
-	Platform_MemSet(bl_count, 0, sizeof(bl_count));
-	for (i = 0; i < count; i++) {
-		bl_count[bitLens[i]]++;
-	}
-	bl_count[0] = 0;
-	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
-		if (bl_count[i] > (1 << i)) {
-			ErrorHandler_Fail("Too many huffman codes for bit length");
-		}
-	}
-
-	Int32 code = 0, value = 0;
-	Int32 next_code[DEFLATE_MAX_BITS];
-	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
-		code = (code + bl_count[i - 1]) << 1;
-		next_code[i] = code;
-		table->FirstCodewords[i] = (UInt16)code;
-		table->FirstOffsets[i] = (UInt16)value;
-		value += bl_count[i];
-
-		if (bl_count[i] == 0) {
-			table->EndCodewords[i] = -1;
-		} else {
-			table->EndCodewords[i] = code + (bl_count[i] - 1);
-		}
-	}
-}
-
-void Deflate_Init(DeflateState* state, Stream* source) {
-	state->State = DeflateState_Header;
-	state->Source = source;
-	state->Bits = 0;
-	state->NumBits = 0;
-	state->AvailIn = 0;
-	state->NextIn = 0;
-	state->LastBlock = false;
-	state->AvailOut = 0;
-	state->Output = NULL;
-}
 
 /* Insert this byte into the bit buffer */
 #define DEFLATE_GET_BYTE(state)\
@@ -231,6 +181,86 @@ state->Bits >>= tmp;\
 state->NumBits -= tmp;
 
 #define DEFLATE_NEXTBLOCK_STATE(state) state->State = state->LastBlock ? DeflateState_Done : DeflateState_Header;
+
+/* TODO: This is probably completely broken. just tryna get something. */
+void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
+	Int32 i;
+	table->FirstCodewords[0] = 0;
+	table->FirstOffsets[0] = 0;
+	table->EndCodewords[0] = -1;
+
+	Int32 bl_count[DEFLATE_MAX_BITS];
+	Platform_MemSet(bl_count, 0, sizeof(bl_count));
+	for (i = 0; i < count; i++) {
+		bl_count[bitLens[i]]++;
+	}
+	bl_count[0] = 0;
+	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
+		if (bl_count[i] >(1 << i)) {
+			ErrorHandler_Fail("Too many huffman codes for bit length");
+		}
+	}
+
+	Int32 code = 0, offset = 0;
+	Int32 next_code[DEFLATE_MAX_BITS];
+	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
+		code = (code + bl_count[i - 1]) << 1;
+		next_code[i] = code;
+		table->FirstCodewords[i] = (UInt16)code;
+		table->FirstOffsets[i] = (UInt16)offset;
+		offset += bl_count[i];
+
+		if (bl_count[i] == 0) {
+			table->EndCodewords[i] = -1;
+		} else {
+			table->EndCodewords[i] = code + (bl_count[i] - 1);
+		}
+	}
+
+	Int32 value = 0, j;
+	for (i = 0, j = 0; i < count; i++, value++) {
+		if (bitLens[i] > 0) {
+			table->Values[j] = (UInt16)value; j++;
+		}
+	}
+}
+
+/* TODO: This needs to be massively optimised. */
+Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
+	Int32 i;
+	Int32 codeword = 0;
+	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
+		if (state->NumBits == 0) {
+			DEFLATE_GET_BYTE(state);
+			if (state->NumBits == 0) return -1;
+		}
+
+		codeword <<= 1;
+		codeword |= state->Bits & 1;
+		state->Bits >>= 1;
+		state->NumBits--;
+
+		if (codeword >= table->FirstCodewords[i] && codeword <= table->EndCodewords[i]) {
+			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
+			return table->Values[offset];
+		}
+	}
+
+	ErrorHandler_Fail("Invalid huffman code");
+	return -1;
+}
+
+void Deflate_Init(DeflateState* state, Stream* source) {
+	state->State = DeflateState_Header;
+	state->Source = source;
+	state->Bits = 0;
+	state->NumBits = 0;
+	state->AvailIn = 0;
+	state->NextIn = 0;
+	state->LastBlock = false;
+	state->AvailOut = 0;
+	state->Output = NULL;
+}
 
 bool Deflate_Step(DeflateState* state) {
 	switch (state->State) {
@@ -305,7 +335,7 @@ bool Deflate_Step(DeflateState* state) {
 		DEFLATE_CONSUME_BITS(state, 5, state->NumDists);    state->NumDists += 1;
 		DEFLATE_CONSUME_BITS(state, 4, state->NumCodeLens); state->NumCodeLens += 4;
 		state->Index = 0;
-		state->State = DeflateState_DynamicCodeLens;		
+		state->State = DeflateState_DynamicCodeLens;
 	} break;
 
 	case DeflateState_DynamicCodeLens: {
@@ -327,22 +357,14 @@ bool Deflate_Step(DeflateState* state) {
 		}
 
 		state->Index = 0;
-		state->State = DeflateState_DynamicLits;
-		/* TODO: actually do something with this table */
-		HuffmanTable table;
-		Huffman_Build(&table, state->Buffer, DEFLATE_MAX_CODELENS);
+		state->State = DeflateState_DynamicLitsDists;
+		Huffman_Build(&state->CodeLensTable, state->Buffer, DEFLATE_MAX_CODELENS);
 	} break;
 
-	case DeflateState_DynamicLits: {
-		while (state->Index < state->NumLits) {
-			/* TODO ???????? */
-		}
-		state->Index = 0;
-		state->State = DeflateState_DynamicDists;
-	} break;
-
-	case DeflateState_DynamicDists: {
-		while (state->Index < state->NumDists) {
+	case DeflateState_DynamicLitsDists: {
+		Int32 count = state->NumLits + state->NumDists;
+		while (state->Index < count) {
+			Int32 bits = Huffman_Decode(state, &state->CodeLensTable);
 			/* TODO ???????? */
 		}
 		state->Index = 0;

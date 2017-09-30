@@ -3,14 +3,14 @@
 #include "Typedefs.h"
 #include "Stream.h"
 /* Decodes data compressed using DEFLATE.
-   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
 typedef struct GZipHeader_ {
 	UInt8 State;
 	bool Done;
 	UInt8 PartsRead;
-	Int32 Flags;	
+	Int32 Flags;
 } GZipHeader;
 
 /* Initalises state of GZIP header. */
@@ -61,7 +61,11 @@ typedef struct DeflateState_ {
 
 	UInt32 NumCodeLens, NumLits, NumDists;
 	UInt32 Index;                                       /* General purpose index / counter */
-	UInt8 Buffer[DEFLATE_MAX_LITS + DEFLATE_MAX_DISTS]; /* General purpose array */	
+	UInt8 Buffer[DEFLATE_MAX_LITS + DEFLATE_MAX_DISTS]; /* General purpose array */
+
+	HuffmanTable CodeLensTable;
+	HuffmanTable LitsTable;
+	HuffmanTable DistsTable;
 } DeflateState;
 
 void Deflate_Init(DeflateState* state, Stream* source);
