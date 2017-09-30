@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 			
 			string line1 = "ClassicalSharp crashed.";
 			if (wroteToCrashLog) {
-				line1 += " The cause of the crash has been logged to \"" + fileName + "\" in the client directory.";
+				line1 += " The cause has been logged to \"" + fileName + "\" in " + Program.AppDirectory;
 			}
 			string line2 = "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.";
 			if (!wroteToCrashLog) {
