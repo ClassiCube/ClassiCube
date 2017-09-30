@@ -133,19 +133,19 @@ namespace ClassicalSharp {
 			return Platform.CreateBmp(Utils.NextPowerOf2(size.Width), Utils.NextPowerOf2(size.Height));
 		}
 		
-		public FastColour[] Colours = new FastColour[256];
+		public static FastColour[] Cols = new FastColour[256];
 		
 		public IDrawer2D() { InitColours(); }
 		
 		public void InitColours() {
-			for (int i = 0; i < Colours.Length; i++)
-				Colours[i] = default(FastColour);
+			for (int i = 0; i < Cols.Length; i++)
+				Cols[i] = default(FastColour);
 			
 			for (int i = 0; i <= 9; i++)
-				Colours['0' + i] = FastColour.GetHexEncodedCol(i, 191, 64);
+				Cols['0' + i] = FastColour.GetHexEncodedCol(i, 191, 64);
 			for (int i = 10; i <= 15; i++) {
-				Colours['a' + i - 10] = FastColour.GetHexEncodedCol(i, 191, 64);
-				Colours['A' + i - 10] = Colours['a' + i - 10];
+				Cols['a' + i - 10] = FastColour.GetHexEncodedCol(i, 191, 64);
+				Cols['A' + i - 10] = Cols['a' + i - 10];
 			}
 		}
 		
@@ -162,9 +162,9 @@ namespace ClassicalSharp {
 		
 		protected void GetTextParts(string value) {
 			parts.Clear();
-			if (String.IsNullOrEmpty(value)) {
+			if (EmptyText(value)) {
 			} else if (value.IndexOf('&') == -1) {
-				parts.Add(new TextPart(value, Colours['f']));
+				parts.Add(new TextPart(value, Cols['f']));
 			} else {
 				SplitText(value);
 			}
@@ -179,12 +179,12 @@ namespace ClassicalSharp {
 				
 				if (partLength > 0) {
 					string part = value.Substring(i, partLength);
-					parts.Add(new TextPart(part, Colours[code]));
+					parts.Add(new TextPart(part, Cols[code]));
 				}
 				i += partLength + 1;
 				
-				if (nextCol >= 0 && nextCol + 1 < value.Length) {
-					if (!ValidColour(value[nextCol + 1])) {
+				if (nextCol >= 0) {
+					if (!ValidColCode(value, nextCol + 1)) {
 						i--; // include character that isn't a valid colour.
 					} else {
 						code = value[nextCol + 1];
@@ -194,29 +194,45 @@ namespace ClassicalSharp {
 		}
 	
 		/// <summary> Returns whenever the given character is a valid colour code. </summary>
-		public bool ValidColour(char c) {
-			return (int)c < 256 && Colours[c].A > 0;
+		public static bool ValidColCode(string text, int i) {
+			if (i >= text.Length) return false;
+			char c = text[i];
+			return c < '\xFF' && Cols[c].A > 0;
+		}
+		
+		/// <summary> Returns whenever the given character is a valid colour code. </summary>
+		public static bool ValidColCode(char c) {
+			return c < '\xFF' && Cols[c].A > 0;
+		}
+		
+		public static bool EmptyText(string text) {
+			if (text == null || text.Length == 0) return true;
+			
+			for (int i = 0; i < text.Length; i++) {
+				if (text[i] != '&') return false;
+				if (!ValidColCode(text, i + 1)) return false;
+				i++; // skip colour code
+			}
+			return true;
 		}
 
 #if !LAUNCHER		
 		/// <summary> Returns the last valid colour code in the given input, 
 		/// or \0 if no valid colour code was found. </summary>
-		public char LastColour(string input, int start) {
-			if (start >= input.Length)
-				start = input.Length - 1;
+		public static char LastCol(string text, int start) {
+			if (start >= text.Length)
+				start = text.Length - 1;
 			
 			for (int i = start; i >= 0; i--) {
-				if (input[i] != '&') continue;
-				if (i < input.Length - 1 && ValidColour(input[i + 1]))
-					return input[i + 1];
+				if (text[i] != '&') continue;
+				if (ValidColCode(text, i + 1)) return text[i + 1];
 			}
 			return '\0';
 		}
 		
-		public static bool IsWhiteColour(char c) {
+		public static bool IsWhiteCol(char c) {
 			return c == '\0' || c == 'f' || c == 'F';
 		}
-		
 
 		public void ReducePadding(ref Texture tex, int point) {
 			ReducePadding(ref tex, point, 4);

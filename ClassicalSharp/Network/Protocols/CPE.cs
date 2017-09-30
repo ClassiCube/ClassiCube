@@ -313,7 +313,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if (code <= ' ' || code > '~') return; // Control chars, space, extended chars cannot be used
 			if (code == '%' || code == '&') return; // colour code signifiers cannot be used
 			
-			game.Drawer2D.Colours[code] = col;
+			IDrawer2D.Cols[code] = col;
 			game.Events.RaiseColourCodeChanged((char)code);
 		}
 		

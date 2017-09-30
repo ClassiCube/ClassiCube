@@ -14,7 +14,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			linkData[index] = default(LinkData);
 			LinkFlags prevFlags = index > 0 ? linkData[index - 1].flags : 0;
 			
-			if (!String.IsNullOrEmpty(text)) {
+			if (!IDrawer2D.EmptyText(text)) {
 				Texture tex = NextToken(text, 0, ref prevFlags) == -1 ? DrawSimple(ref args) :
 					DrawAdvanced(ref args, index, text);
 				game.Drawer2D.ReducePadding(ref tex, Utils.Floor(args.Font.Size), 3);
@@ -122,9 +122,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			// We may split up a line into say %e<word><url>
 			// url and word both need to have %e at the start.
 			
-			if (lastCol >= 0 && lastCol < line.Length - 1) {
-				if (game.Drawer2D.ValidColour(line[lastCol + 1]))
-					part = "&" + line[lastCol + 1] + part;
+			if (lastCol >= 0 && IDrawer2D.ValidColCode(line,lastCol + 1)) {
+				part = "&" + line[lastCol + 1] + part;
 			}
 			return part;
 		}

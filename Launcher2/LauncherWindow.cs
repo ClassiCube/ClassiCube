@@ -94,7 +94,7 @@ namespace Launcher {
 				platformDrawer = new OSXPlatformDrawer();
 			}
 			
-			Drawer.Colours['g'] = new FastColour(125, 125, 125);
+			IDrawer2D.Cols['g'] = new FastColour(125, 125, 125);
 		}
 		
 		void LoadFont() {

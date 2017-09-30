@@ -153,11 +153,10 @@ namespace ClassicalSharp {
 		
 		protected override Size MeasureSysSize(ref DrawTextArgs args) {
 			GetTextParts(args.Text);
-			int count = parts.Count;
-			if (count == 0) return Size.Empty;
+			if (EmptyText(args.Text)) return Size.Empty;
 			
 			float width = 0, height = 0;
-			for (int i = 0; i < count; i++) {
+			for (int i = 0; i < parts.Count; i++) {
 				SizeF size = measuringGraphics.MeasureString(parts[i].Text, args.Font, Int32.MaxValue, format);
 				height = Math.Max(height, size.Height);
 				width += size.Width;

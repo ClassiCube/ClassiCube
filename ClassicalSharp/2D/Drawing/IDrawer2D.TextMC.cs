@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawPart(FastBitmap dst, ref DrawTextArgs args, int x, int y, bool shadowCol) {
-			FastColour col = Colours['f'];
+			FastColour col = Cols['f'];
 			if (shadowCol)
 				col = BlackTextShadows ? FastColour.Black : FastColour.Scale(col, 0.25f);
 			FastColour lastCol = col;
@@ -87,9 +87,8 @@ namespace ClassicalSharp {
 			
 			for (int i = 0; i < text.Length; i++) {
 				char c = text[i];
-				bool isColCode = c == '&' && i < text.Length - 1;
-				if (isColCode && ValidColour(text[i + 1])) {
-					col = Colours[text[i + 1]];
+				if (c == '&' && ValidColCode(text, i + 1)) {
+					col = Cols[text[i + 1]];
 					if (shadowCol)
 						col = BlackTextShadows ? FastColour.Black : FastColour.Scale(col, 0.25f);
 					i++; continue; // Skip over the colour code.
@@ -178,9 +177,8 @@ namespace ClassicalSharp {
 				
 				for (int i = 0; i < text.Length; i++) {
 					char c = text[i];
-					bool isColCode = c == '&' && i < text.Length - 1;
-					if (isColCode && ValidColour(text[i + 1])) {
-						col = Colours[text[i + 1]].ToArgb();
+					if (c == '&' && ValidColCode(text, i + 1)) {
+						col = Cols[text[i + 1]].ToArgb();
 						i++; continue; // Skip over the colour code.
 					}
 					if (shadowCol) col = FastColour.Black.ToArgb();
@@ -198,15 +196,14 @@ namespace ClassicalSharp {
 #endif
 
 		protected Size MeasureBitmappedSize(ref DrawTextArgs args) {
-			if (String.IsNullOrEmpty(args.Text)) return Size.Empty;
+			if (EmptyText(args.Text)) return Size.Empty;
 			int textHeight = AdjTextSize(Utils.Floor(args.Font.Size));
 			Size total = new Size(0, CellSize(textHeight));
 			int point = Utils.Floor(args.Font.Size);
 			
 			for (int i = 0; i < args.Text.Length; i++) {
 				char c = args.Text[i];
-				bool isColCode = c == '&' && i < args.Text.Length - 1;
-				if (isColCode && ValidColour(args.Text[i + 1])) {
+				if (c == '&' && ValidColCode(args.Text, i + 1)) {
 					i++; continue; // Skip over the colour code.
 				}
 				

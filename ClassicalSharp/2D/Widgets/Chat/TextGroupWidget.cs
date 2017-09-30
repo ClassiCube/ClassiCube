@@ -93,6 +93,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public int GetUsedHeight() {
 			int height = 0, i = 0;
+			
 			for (i = 0; i < Textures.Length; i++) {
 				if (Textures[i].IsValid) break;
 			}

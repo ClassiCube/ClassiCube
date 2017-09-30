@@ -118,7 +118,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			char lastCol = i == 0 ? 'f' : GetLastColour(0, i); // no previous colour on first line
 			// TODO: this needs to be better, in case second/third line starts with a colour code
 			
-			if (!IDrawer2D.IsWhiteColour(lastCol))
+			if (!IDrawer2D.IsWhiteCol(lastCol))
 				text = "&" + lastCol + text;
 			game.Chat.Send(text, partial);
 		}

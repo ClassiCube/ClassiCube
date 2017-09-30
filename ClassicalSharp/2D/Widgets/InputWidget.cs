@@ -145,7 +145,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			// Update the colour of the caret
 			char code = GetLastColour(caretCol, caretRow);
-			if (code != '\0') caretColour = drawer.Colours[code];
+			if (code != '\0') caretColour = IDrawer2D.Cols[code];
 		}
 		
 		protected void RenderCaret(double delta) {
@@ -182,7 +182,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					if (lines[i] == null) break;
 					args.Text = lines[i];
 					char lastCol = GetLastColour(0, i);
-					if (!IDrawer2D.IsWhiteColour(lastCol))
+					if (!IDrawer2D.IsWhiteCol(lastCol))
 						args.Text = "&" + lastCol + args.Text;
 					
 					int offset = i == 0 ? prefixWidth : 0;
@@ -203,7 +203,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			IDrawer2D drawer = game.Drawer2D;
 			for (int y = indexY; y >= 0; y--) {
 				string part = lines[y];
-				char code = drawer.LastColour(part, x);
+				char code = IDrawer2D.LastCol(part, x);
 				if (code != '\0') return code;
 				if (y > 0) x = lines[y - 1].Length;
 			}
@@ -354,7 +354,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		bool CheckColour(int index) {
 			if (index < 0) return false;
 			char code = Text.value[index], col = Text.value[index + 1];
-			return (code == '%' || code == '&') && game.Drawer2D.ValidColour(col);
+			return (code == '%' || code == '&') && IDrawer2D.ValidColCode(col);
 		}
 		
 		void DeleteKey() {

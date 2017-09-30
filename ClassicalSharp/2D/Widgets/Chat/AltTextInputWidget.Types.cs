@@ -21,14 +21,14 @@ namespace ClassicalSharp.Gui.Widgets {
 			int count = 0;
 			for (int i = ' '; i <= '~'; i++) {
 				if (i >= 'A' && i <= 'F') continue;
-				if (game.Drawer2D.Colours[i].A > 0) count++;
+				if (IDrawer2D.Cols[i].A > 0) count++;
 			}
 			
 			StringBuffer buffer = new StringBuffer(count * 4);
 			int index = 0;
 			for (int i = ' '; i <= '~'; i++) {
 				if (i >= 'A' && i <= 'F') continue;
-				if (game.Drawer2D.Colours[i].A == 0) continue;
+				if (IDrawer2D.Cols[i].A == 0) continue;
 				
 				buffer.Append(ref index, '&').Append(ref index, (char)i)
 					.Append(ref index, '%').Append(ref index, (char)i);

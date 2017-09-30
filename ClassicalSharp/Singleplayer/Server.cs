@@ -51,10 +51,10 @@ namespace ClassicalSharp.Singleplayer {
 		
 		void AddChat(string text) {
 			text = text.TrimEnd().Replace('%', '&');
-			if (!IDrawer2D.IsWhiteColour(lastCol))
+			if (!IDrawer2D.IsWhiteCol(lastCol))
 				text = "&" + lastCol + text;
 			
-			char col = game.Drawer2D.LastColour(text, text.Length);
+			char col = IDrawer2D.LastCol(text, text.Length);
 			if (col != '\0') lastCol = col;
 			game.Chat.Add(text, MessageType.Normal);
 		}

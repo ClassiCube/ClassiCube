@@ -62,9 +62,9 @@ namespace ClassicalSharp.Entities {
 			{
 				drawer.SetBitmap(bmp);
 				args.Text = "&\xFF" + Utils.StripColours(args.Text);
-				game.Drawer2D.Colours['\xFF'] = new FastColour(80, 80, 80);
+				IDrawer2D.Cols['\xFF'] = new FastColour(80, 80, 80);
 				game.Drawer2D.DrawText(ref args, 3, 3);
-				game.Drawer2D.Colours['\xFF'] = default(FastColour);
+				IDrawer2D.Cols['\xFF'] = default(FastColour);
 				
 				args.Text = DisplayName;
 				game.Drawer2D.DrawText(ref args, 0, 0);

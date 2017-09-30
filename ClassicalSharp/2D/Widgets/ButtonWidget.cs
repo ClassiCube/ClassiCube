@@ -57,7 +57,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public void SetText(string text) {
 			gfx.DeleteTexture(ref texture);
 			Text = text;
-			if (String.IsNullOrEmpty(text)) {
+			if (IDrawer2D.EmptyText(text)) {
 				texture = default(Texture);
 				Width = 0; Height = defaultHeight;
 			} else {

@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 			}
 			// convert %0-f to &0-f for colour preview.
 			for (int i = 0; i < totalChars - 1; i++) {
-				if (value[i] == '%' && drawer.ValidColour(value[i + 1]))
+				if (value[i] == '%' && IDrawer2D.ValidColCode(value[i + 1]))
 					value[i] = '&';
 			}
 			
