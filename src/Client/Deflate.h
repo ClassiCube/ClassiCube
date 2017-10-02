@@ -42,7 +42,6 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header);
 #define DEFLATE_MAX_DISTS 32
 #define DEFLATE_MAX_BITS 16
 #define DEFLATE_ZFAST_BITS 9
-#define DEFLATE_ZFAST_MASK ((1 << DEFLATE_ZFAST_BITS) - 1)
 
 typedef struct HuffmanTable_ {
 	UInt16 FirstCodewords[DEFLATE_MAX_BITS]; /* Starting codeword for each bit length */
