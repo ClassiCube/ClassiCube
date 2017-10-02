@@ -168,9 +168,11 @@ state->Bits |= (UInt32)(state->Input[state->NextIn]) << state->NumBits;\
 state->NextIn++;\
 state->NumBits += 8;\
 
-/* Gets bytes from the bit buffer */
-#define DEFLATE_CONSUME_BITS(state, bits, result)\
-result = state->Bits & ((1UL << (bits)) - 1UL);\
+/* Retrieves bits from the bit buffer */
+#define DEFLATE_PEEK_BITS(state, bits) (state->Bits & ((1UL << (bits)) - 1UL))
+
+/* Consumes/eats up bits from the bit buffer */
+#define DEFLATE_CONSUME_BITS(state, bits)\
 state->Bits >>= bits;\
 state->NumBits -= bits;
 
@@ -187,7 +189,18 @@ while (state->NumBits < bitsCount) {\
 	DEFLATE_GET_BYTE(state);\
 }
 
+/* Peeks then consumes given bits. */
+#define DEFLATE_READ_BITS(state, bitsCount) DEFLATE_PEEK_BITS(state, bitsCount); DEFLATE_CONSUME_BITS(state, bitsCount);
+
 #define DEFLATE_NEXTBLOCK_STATE(state) state->State = state->LastBlock ? DeflateState_Done : DeflateState_Header;
+
+UInt32 Huffman_ReverseBits(UInt32 n, UInt8 bits) {
+	n = ((n & 0xAAAA) >> 1) | ((n & 0x5555) << 1);
+	n = ((n & 0xCCCC) >> 2) | ((n & 0x3333) << 2);
+	n = ((n & 0xF0F0) >> 4) | ((n & 0x0F0F) << 4);
+	n = ((n & 0xFF00) >> 8) | ((n & 0x00FF) << 8);
+	return n >> (16 - bits);
+}
 
 /* TODO: This needs to be massively optimised. */
 void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
@@ -203,36 +216,52 @@ void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	}
 	bl_count[0] = 0;
 	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
-		if (bl_count[i] >(1 << i)) {
+		if (bl_count[i] > (1 << i)) {
 			ErrorHandler_Fail("Too many huffman codes for bit length");
 		}
 	}
 
 	Int32 code = 0, offset = 0;
-	Int32 next_code[DEFLATE_MAX_BITS];
 	UInt16 bl_offsets[DEFLATE_MAX_BITS];
 	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
 		code = (code + bl_count[i - 1]) << 1;
-		next_code[i] = code;
 		bl_offsets[i] = (UInt16)offset;
 		table->FirstCodewords[i] = (UInt16)code;
 		table->FirstOffsets[i] = (UInt16)offset;
 
 		offset += bl_count[i];
 		if (bl_count[i]) {
-			table->EndCodewords[i] = code + (bl_count[i] - 1);			
+			table->EndCodewords[i] = code + (bl_count[i] - 1);
 		} else {
 			table->EndCodewords[i] = -1;
 		}
 	}
 
 	Int32 value = 0;
+	Platform_MemSet(table->Fast, UInt8_MaxValue, sizeof(table->Fast));
 	for (i = 0; i < count; i++, value++) {
 		Int32 len = bitLens[i];
-		if (len) {		
-			table->Values[bl_offsets[len]] = (UInt16)value;
-			bl_offsets[len]++;
+		if (len == 0) continue;
+		table->Values[bl_offsets[len]] = (UInt16)value;
+
+		/* Computes the accelerated lookup table values for this codeword
+		 * For example, assume len = 4 and codeword = 0100
+		 * - Shift it left to be 0100_00000
+		 * - Then, for all the indices from 0100_00000 to 0100_11111,
+		 *   - bit reverse index, as huffman codes are read backwards
+		 *   - set fast value to specify a 'value' value, and to skip 'len' bits
+		 */
+		if (len <= DEFLATE_ZFAST_BITS) {
+			Int16 packed = (Int16)((len << 9) | value), j;
+			Int32 codeword = table->FirstCodewords[len] + (bl_offsets[len] - table->FirstOffsets[len]);
+			codeword <<= (DEFLATE_ZFAST_BITS - len);
+
+			for (j = 0; j < 1 << (DEFLATE_ZFAST_BITS - len); j++, codeword++) {
+				Int32 index = Huffman_ReverseBits(codeword, DEFLATE_ZFAST_BITS);
+				table->Fast[index] = packed;
+			}
 		}
+		bl_offsets[len]++;
 	}
 }
 
@@ -248,8 +277,7 @@ Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
 
 		codeword <<= 1;
 		codeword |= state->Bits & 1;
-		state->Bits >>= 1;
-		state->NumBits--;
+		DEFLATE_CONSUME_BITS(state, 1);
 
 		if (codeword >= table->FirstCodewords[i] && codeword <= table->EndCodewords[i]) {
 			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
@@ -277,8 +305,7 @@ bool Deflate_Step(DeflateState* state) {
 	switch (state->State) {
 	case DeflateState_Header: {
 		DEFLATE_ENSURE_BITS(state, 3);
-		UInt32 blockHeader;
-		DEFLATE_CONSUME_BITS(state, 3, blockHeader);
+		UInt32 blockHeader = DEFLATE_READ_BITS(state, 3);
 		state->LastBlock = blockHeader & 1;
 
 		switch (blockHeader >> 1) {
@@ -319,9 +346,9 @@ bool Deflate_Step(DeflateState* state) {
 
 	case DeflateState_UncompressedHeader: {
 		DEFLATE_ENSURE_BITS(state, 32);
-		UInt32 len, nlen;
-		DEFLATE_CONSUME_BITS(state, 16, len);
-		DEFLATE_CONSUME_BITS(state, 16, nlen);
+		UInt32 len = DEFLATE_READ_BITS(state, 16);
+		UInt32 nlen = DEFLATE_READ_BITS(state, 16);
+
 		if (len != (nlen ^ 0xFFFFUL)) {
 			ErrorHandler_Fail("DEFLATE - Uncompressed block LEN check failed");
 		}
@@ -330,15 +357,22 @@ bool Deflate_Step(DeflateState* state) {
 	} break;
 
 	case DeflateState_UncompressedData: {
-		if (state->AvailIn > 0 || state->AvailOut > 0) return false;
+		while (state->NumBits > 0 && state->AvailOut > 0 && state->Index > 0) {
+			*state->Output = DEFLATE_READ_BITS(state, 8);
+			state->AvailOut--;
+			state->Index--;
+		}
+
+		if (state->AvailIn == 0 || state->AvailOut == 0) return false;
 		UInt32 copyLen = min(state->AvailIn, state->AvailOut);
 		copyLen = min(copyLen, state->Index);
-
-		Platform_MemCpy(state->Output, state->Input, copyLen);
-		state->Output += copyLen;
-		state->AvailIn -= copyLen;
-		state->AvailOut -= copyLen;
-		state->Index -= copyLen;
+		if (copyLen > 0) {
+			Platform_MemCpy(state->Output, state->Input, copyLen);
+			state->Output += copyLen;
+			state->AvailIn -= copyLen;
+			state->AvailOut -= copyLen;
+			state->Index -= copyLen;
+		}
 
 		if (state->Index == 0) {
 			state->State = DEFLATE_NEXTBLOCK_STATE(state);
@@ -347,9 +381,9 @@ bool Deflate_Step(DeflateState* state) {
 
 	case DeflateState_DynamicHeader: {
 		DEFLATE_ENSURE_BITS(state, 14);
-		DEFLATE_CONSUME_BITS(state, 5, state->NumLits);     state->NumLits += 257;
-		DEFLATE_CONSUME_BITS(state, 5, state->NumDists);    state->NumDists += 1;
-		DEFLATE_CONSUME_BITS(state, 4, state->NumCodeLens); state->NumCodeLens += 4;
+		state->NumLits     = DEFLATE_READ_BITS(state, 5); state->NumLits += 257;
+		state->NumDists    = DEFLATE_READ_BITS(state, 5); state->NumDists += 1;
+		state->NumCodeLens = DEFLATE_READ_BITS(state, 4); state->NumCodeLens += 4;
 		state->Index = 0;
 		state->State = DeflateState_DynamicCodeLens;
 	} break;
@@ -361,7 +395,7 @@ bool Deflate_Step(DeflateState* state) {
 		while (state->Index < state->NumCodeLens) {
 			DEFLATE_ENSURE_BITS(state, 3);
 			i = order[state->Index];
-			DEFLATE_CONSUME_BITS(state, 3, state->Buffer[i]);
+			state->Buffer[i] = DEFLATE_READ_BITS(state, 3);
 			state->Index++;
 		}
 		for (i = state->NumCodeLens; i < DEFLATE_MAX_CODELENS; i++) {
@@ -388,7 +422,7 @@ bool Deflate_Step(DeflateState* state) {
 				switch (bits) {
 				case 16:
 					DEFLATE_ENSURE_BITS(state, 2);
-					DEFLATE_CONSUME_BITS(state, 2, repeatCount);
+					repeatCount = DEFLATE_READ_BITS(state, 2);
 					if (state->Index == 0) {
 						ErrorHandler_Fail("DEFLATE - Tried to repeat invalid byte");
 					}
@@ -397,13 +431,13 @@ bool Deflate_Step(DeflateState* state) {
 
 				case 17:
 					DEFLATE_ENSURE_BITS(state, 3);
-					DEFLATE_CONSUME_BITS(state, 3, repeatCount);
+					repeatCount = DEFLATE_READ_BITS(state, 3);
 					repeatCount += 3; repeatValue = 0;
 					break;
 
 				case 18:
 					DEFLATE_ENSURE_BITS(state, 7);
-					DEFLATE_CONSUME_BITS(state, 7, repeatCount);
+					repeatCount = DEFLATE_READ_BITS(state, 7);
 					repeatCount += 11; repeatValue = 0;
 					break;
 				}

@@ -17,10 +17,6 @@ typedef UInt32 (*Stream_Position)(struct Stream_* stream);
 
 /* Represents a stream that can be written to and/or read from. */
 typedef struct Stream_ {
-	/* Raw name buffer */
-	UInt8 NameBuffer[String_BufferSize(STREAM_NAME_LEN)];
-	/* The name of the stream. */
-	String Name;
 	/* Performs a read. Result is a ReturnCode, number of read bytes is output via pointer. */
 	Stream_Operation Read;
 	/* Performs a write. Result is a ReturnCode, number of written bytes is output via pointer. */
@@ -35,6 +31,10 @@ typedef struct Stream_ {
 	Stream_Position Position;
 	/* General purpose metadata for the stream. */
 	void* Data;
+	/* Raw name buffer */
+	UInt8 NameBuffer[String_BufferSize(STREAM_NAME_LEN)];
+	/* The name of the stream. */
+	String Name;
 } Stream;
 
 /* Fully reads up to count bytes or fails. */
