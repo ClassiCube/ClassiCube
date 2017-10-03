@@ -59,7 +59,7 @@ UInt32 Stream_FilePosition(Stream* stream) {
 	return Platform_FilePosition(stream->Data);
 }
 
-void Stream_FromFile(void* file, Stream* stream, STRING_TRANSIENT String* name) {
+void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name) {
 	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
 	String_AppendString(&stream->Name, name);
 	stream->Data = file;

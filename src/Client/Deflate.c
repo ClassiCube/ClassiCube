@@ -345,14 +345,16 @@ void Deflate_Process(DeflateState* state) {
 				state->State = DeflateState_CompressedData;
 			} break;
 
-			case 2: /* Dynamic huffman compressed */ {
+			case 2: { /* Dynamic huffman compressed */
 				state->State = DeflateState_DynamicHeader;
 			} break;
 
-			case 3:
+			case 3: {
 				ErrorHandler_Fail("DEFLATE - Invalid block type");
 			} break;
-		} break;
+			}
+			break;
+		}
 
 		case DeflateState_UncompressedHeader: {
 			DEFLATE_ENSURE_BITS(state, 32);
@@ -364,7 +366,7 @@ void Deflate_Process(DeflateState* state) {
 			}
 			state->Index = len; /* Reuse for 'uncompressed length' */
 			state->State = DeflateState_UncompressedData;
-		} break;
+		}
 
 		case DeflateState_UncompressedData: {
 			while (state->NumBits > 0 && state->AvailOut > 0 && state->Index > 0) {
@@ -387,7 +389,8 @@ void Deflate_Process(DeflateState* state) {
 			if (state->Index == 0) {
 				state->State = DEFLATE_NEXTBLOCK_STATE(state);
 			}
-		} break;
+			break;
+		}
 
 		case DeflateState_DynamicHeader: {
 			DEFLATE_ENSURE_BITS(state, 14);
@@ -396,7 +399,7 @@ void Deflate_Process(DeflateState* state) {
 			state->NumCodeLens = 4   + DEFLATE_READ_BITS(state, 4);
 			state->Index = 0;
 			state->State = DeflateState_DynamicCodeLens;
-		} break;
+		}
 
 		case DeflateState_DynamicCodeLens: {
 			UInt8 order[DEFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
@@ -415,7 +418,7 @@ void Deflate_Process(DeflateState* state) {
 			state->Index = 0;
 			state->State = DeflateState_DynamicLitsDists;
 			Huffman_Build(&state->CodeLensTable, state->Buffer, DEFLATE_MAX_CODELENS);
-		} break;
+		}
 
 		case DeflateState_DynamicLitsDists: {
 			UInt32 count = state->NumLits + state->NumDists;
@@ -425,8 +428,7 @@ void Deflate_Process(DeflateState* state) {
 					if (bits == -1) return;
 					state->Buffer[state->Index] = (UInt8)bits;
 					state->Index++;
-				}
-				else {
+				} else {
 					UInt32 repeatCount;
 					UInt8 repeatValue;
 
@@ -464,10 +466,9 @@ void Deflate_Process(DeflateState* state) {
 			state->State = DeflateState_CompressedData;
 			Huffman_Build(&state->LitsTable, state->Buffer, state->NumLits);
 			Huffman_Build(&state->DistsTable, &state->Buffer[state->NumLits], state->NumDists);
-		} break;
+		}
 
 		case DeflateState_CompressedData: {
-			if (state->AvailIn == 0 || state->AvailOut == 0) return;
 			while (state->AvailOut > 0) {
 				Int32 lit = Huffman_Decode(&state, &state->LitsTable);
 				/* TODO TODO TODO: PARTIAL READS */
@@ -503,13 +504,58 @@ void Deflate_Process(DeflateState* state) {
 
 					DEFLATE_ENSURE_BITS(state, bits);
 					UInt32 dist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
-					int j = 323;
 				}
 			}
-		} break;
+			break;
+		}
 
 		case DeflateState_Done:
 			return;
 		}
 	}
+}
+
+ReturnCode Deflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	DeflateState* state = (DeflateState*)stream->Data;
+	if (state->NextIn == DEFLATE_MAX_INPUT && state->AvailIn == 0) {
+		state->NextIn = 0;
+	}
+
+	state->Output = data;
+	state->AvailOut = count;
+	Deflate_Process(state);
+	*modified = count - state->AvailOut;
+}
+
+ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	*modified = 0;
+	return 1;
+}
+ReturnCode Deflate_StreamClose(Stream* stream) {
+	return 0;
+}
+ReturnCode Deflate_StreamSeek(Stream* stream, Int32 offset, Int32 seekType) {
+	return 1;
+}
+UInt32 Deflate_StreamLength(Stream* stream) {
+	ErrorHandler_Fail("DEFLATE - cannot get stream length");
+	return 0;
+}
+UInt32 Deflate_StreamPosition(Stream* stream) {
+	ErrorHandler_Fail("DEFLATE - cannot get stream position");
+	return 0;
+}
+
+void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying) {
+	Deflate_Init(state, underlying);
+	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
+	String_AppendString(&stream->Name, &underlying->Name);
+	stream->Data = state;
+
+	stream->Read = Deflate_StreamRead;
+	stream->Write = Deflate_StreamWrite;
+	stream->Close = Deflate_StreamClose;
+	stream->Seek = Deflate_StreamSeek;
+	stream->Length = Deflate_StreamLength;
+	stream->Position = Deflate_StreamPosition;
 }

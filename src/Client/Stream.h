@@ -42,7 +42,7 @@ void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count);
 /* Fully writes up to count bytes or fails. */
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
 /* Constructs a Stream wrapping a file. */
-void Stream_FromFile(void* file, Stream* stream, STRING_TRANSIENT String* name);
+void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name);
 
 /* Reads an unsigned 8 bit integer from the given stream. */
 UInt8 Stream_ReadUInt8(Stream* stream);
