@@ -277,7 +277,7 @@ Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
 		if (i >= 0) {
 			Int32 bits = i >> 9;
 			DEFLATE_CONSUME_BITS(state, bits);
-			return i & 0x1FFFF;
+			return i & 0x1FF;
 		}
 	}
 
@@ -310,7 +310,7 @@ void Deflate_Init(DeflateState* state, Stream* source) {
 	state->Output = NULL;
 }
 
-void Deflate_Step(DeflateState* state) {
+void Deflate_Process(DeflateState* state) {
 	/* TODO: Read input here */
 	for (;;) {
 		switch (state->State) {
@@ -391,9 +391,9 @@ void Deflate_Step(DeflateState* state) {
 
 		case DeflateState_DynamicHeader: {
 			DEFLATE_ENSURE_BITS(state, 14);
-			state->NumLits = DEFLATE_READ_BITS(state, 5); state->NumLits += 257;
-			state->NumDists = DEFLATE_READ_BITS(state, 5); state->NumDists += 1;
-			state->NumCodeLens = DEFLATE_READ_BITS(state, 4); state->NumCodeLens += 4;
+			state->NumLits     = 257 + DEFLATE_READ_BITS(state, 5);
+			state->NumDists    = 1   + DEFLATE_READ_BITS(state, 5);
+			state->NumCodeLens = 4   + DEFLATE_READ_BITS(state, 4);
 			state->Index = 0;
 			state->State = DeflateState_DynamicCodeLens;
 		} break;
@@ -468,11 +468,45 @@ void Deflate_Step(DeflateState* state) {
 
 		case DeflateState_CompressedData: {
 			if (state->AvailIn == 0 || state->AvailOut == 0) return;
-			Int32 len = Huffman_Decode(state, &state->LitsTable);
+			while (state->AvailOut > 0) {
+				Int32 lit = Huffman_Decode(&state, &state->LitsTable);
+				/* TODO TODO TODO: PARTIAL READS */
+				if (lit < 256) {
+					*state->Output = (UInt8)lit;
+					state->Output++;
+					state->AvailOut--;
+				} else if (lit == 256) {
+					state->State = DEFLATE_NEXTBLOCK_STATE(state);
+					break;
+				} else {
+					lit -= 257;
+					UInt8 len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
+						15,17,19,23,27,31,35,43,51,59,
+						67,83,99,115,131,163,195,227,258,0,0 };
+					UInt8 len_bits[31] = { 0,0,0,0,0,0,0,0,1,1,
+						1,1,2,2,2,2,3,3,3,3,
+						4,4,4,4,5,5,5,5,0,0,0 };
+					UInt32 bits = len_bits[lit];
 
-			Int32 dist = Huffman_Decode(state, &state->DistsTable);
-			/* TODO: Do stuff from here*/
-		}
+					DEFLATE_ENSURE_BITS(state, bits);
+					UInt32 length = len_base[lit] + DEFLATE_READ_BITS(state, bits);
+
+					/* TODO TODO TODO: PARTIAL READS */
+					Int32 distIdx = Huffman_Decode(&state, &state->DistsTable);
+					UInt8 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
+						33,49,65,97,129,193,257,385,513,769,
+						1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 };
+					UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
+						4,4,5,5,6,6,7,7,8,8,
+						9,9,10,10,11,11,12,12,13,13,0,0 };
+					bits = dist_bits[distIdx];
+
+					DEFLATE_ENSURE_BITS(state, bits);
+					UInt32 dist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
+					int j = 323;
+				}
+			}
+		} break;
 
 		case DeflateState_Done:
 			return;
