@@ -5,6 +5,9 @@
 #include "Platform.h"
 #include "Events.h"
 #include "Random.h"
+#include "Block.h"
+#include "Entity.h"
+#include "ExtMath.h"
 
 void World_Reset(void) {
 	World_Width = 0; World_Height = 0; World_Length = 0;
@@ -13,8 +16,9 @@ void World_Reset(void) {
 	Random rnd;
 	Random_InitFromCurrentTime(&rnd);
 	Int32 i;
-	for (i = 0; i < 16; i++)
+	for (i = 0; i < 16; i++) {
 		World_Uuid[i] = (UInt8)Random_Next(&rnd, 256);
+	}
 
 	/* Set version and variant bits */
 	World_Uuid[6] &= 0x0F;
@@ -217,4 +221,52 @@ void WorldEnv_SetShadowCol(PackedCol col) {
 	PackedCol_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide,
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
 	Event_RaiseInt32(&WorldEvents_EnvVarChanged, EnvVar_ShadowCol);
+}
+
+#define Respawn_NotFound -10000.0f
+Real32 Respawn_HighestFreeY(AABB* bb) {
+	Int32 minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
+	Int32 minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
+	Int32 minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
+
+	Real32 spawnY = Respawn_NotFound;
+	AABB blockBB;
+	Int32 x, y, z;
+	Vector3 pos;
+
+	for (y = minY; y <= maxY; y++) {
+		pos.Y = (Real32)y;
+		for (z = minZ; z <= maxZ; z++) {
+			pos.Z = (Real32)z;
+			for (x = minX; x <= maxX; x++) {
+				pos.X = (Real32)x;
+				BlockID block = World_GetPhysicsBlock(x, y, z);
+				Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
+				Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
+
+				if (Block_Collide[block] != CollideType_Solid) continue;
+				if (!AABB_Intersects(bb, &blockBB)) continue;
+				if (blockBB.Max.Y > spawnY) blockBB.Max.Y = spawnY;
+			}
+		}
+	}
+	return spawnY;
+}
+
+Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize) {
+	Vector3 spawn = Vector3_Create3(x, 0.0f, z);
+	spawn.Y = World_Height + ENTITY_ADJUSTMENT;
+	AABB bb;
+	AABB_Make(&bb, &spawn, &modelSize);
+	spawn.Y = 0.0f;
+
+	Int32 y;
+	for (y = World_Height; y >= 0; y--) {
+		Real32 highestY = Respawn_HighestFreeY(&bb);
+		if (highestY != Respawn_NotFound) {
+			spawn.Y = highestY; break;
+		}
+		bb.Min.Y -= 1.0f; bb.Max.Y -= 1.0f;
+	}
+	return spawn;
 }

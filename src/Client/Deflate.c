@@ -271,18 +271,18 @@ Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
 	}
 
 	/* Try fast accelerated table lookup */
-	Int32 i;
 	if (state->NumBits >= 9) {
-		i = table->Fast[DEFLATE_PEEK_BITS(state, DEFLATE_ZFAST_BITS)];
-		if (i >= 0) {
-			Int32 bits = i >> 9;
+		Int32 packed = table->Fast[DEFLATE_PEEK_BITS(state, DEFLATE_ZFAST_BITS)];
+		if (packed >= 0) {
+			Int32 bits = packed >> 9;
 			DEFLATE_CONSUME_BITS(state, bits);
-			return i & 0x1FF;
+			return packed & 0x1FF;
 		}
 	}
 
 	/* Slow, bit by bit lookup */
 	Int32 codeword = 0;
+	UInt32 i;
 	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
 		if (state->NumBits < i) return -1;
 		codeword = (codeword << 1) | ((state->Bits >> i) & 1);
@@ -308,6 +308,7 @@ void Deflate_Init(DeflateState* state, Stream* source) {
 	state->LastBlock = false;
 	state->AvailOut = 0;
 	state->Output = NULL;
+	state->WindowIndex = 0;
 }
 
 void Deflate_Process(DeflateState* state) {
@@ -380,6 +381,7 @@ void Deflate_Process(DeflateState* state) {
 			copyLen = min(copyLen, state->Index);
 			if (copyLen > 0) {
 				Platform_MemCpy(state->Output, state->Input, copyLen);
+				/* TODO: Copy to window */
 				state->Output += copyLen;
 				state->AvailIn -= copyLen;
 				state->AvailOut -= copyLen;
@@ -424,6 +426,7 @@ void Deflate_Process(DeflateState* state) {
 			UInt32 count = state->NumLits + state->NumDists;
 			while (state->Index < count) {
 				Int32 bits = Huffman_Decode(state, &state->CodeLensTable);
+				/* TODO: Handle input end before repeatCount read */
 				if (bits < 16) {
 					if (bits == -1) return;
 					state->Buffer[state->Index] = (UInt8)bits;
@@ -470,7 +473,7 @@ void Deflate_Process(DeflateState* state) {
 
 		case DeflateState_CompressedData: {
 			while (state->AvailOut > 0) {
-				Int32 lit = Huffman_Decode(&state, &state->LitsTable);
+				Int32 lit = Huffman_Decode(state, &state->LitsTable);
 				/* TODO TODO TODO: PARTIAL READS */
 				if (lit < 256) {
 					*state->Output = (UInt8)lit;
@@ -481,7 +484,7 @@ void Deflate_Process(DeflateState* state) {
 					break;
 				} else {
 					lit -= 257;
-					UInt8 len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
+					UInt16 len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
 						15,17,19,23,27,31,35,43,51,59,
 						67,83,99,115,131,163,195,227,258,0,0 };
 					UInt8 len_bits[31] = { 0,0,0,0,0,0,0,0,1,1,
@@ -493,8 +496,8 @@ void Deflate_Process(DeflateState* state) {
 					UInt32 length = len_base[lit] + DEFLATE_READ_BITS(state, bits);
 
 					/* TODO TODO TODO: PARTIAL READS */
-					Int32 distIdx = Huffman_Decode(&state, &state->DistsTable);
-					UInt8 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
+					Int32 distIdx = Huffman_Decode(state, &state->DistsTable);
+					UInt16 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
 						33,49,65,97,129,193,257,385,513,769,
 						1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 };
 					UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,

@@ -267,9 +267,6 @@
     <ClInclude Include="MapRenderer.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
-    <ClInclude Include="Respawn.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
     <ClInclude Include="Constants.h">
       <Filter>Header Files\Defines</Filter>
     </ClInclude>
@@ -433,9 +430,6 @@
     </ClCompile>
     <ClCompile Include="MapRenderer.c">
       <Filter>Source Files\Rendering\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="Respawn.c">
-      <Filter>Source Files\Entities</Filter>
     </ClCompile>
     <ClCompile Include="Random.c">
       <Filter>Source Files\Math</Filter>
