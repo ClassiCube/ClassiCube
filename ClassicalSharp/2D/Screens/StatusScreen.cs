@@ -127,7 +127,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void DrawPosition() {
 			int index = 0;
 			Texture tex = posAtlas.tex;
-			tex.X1 = 2; tex.Width = (short)posAtlas.offset;
+			tex.X1 = 2; tex.Width = (ushort)posAtlas.offset;
 			IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked,
 			                        game.ModelCache.vertices, ref index);
 			

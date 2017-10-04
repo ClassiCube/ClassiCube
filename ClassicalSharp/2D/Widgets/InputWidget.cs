@@ -16,7 +16,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			DrawTextArgs args = new DrawTextArgs("_", font, true);
 			caretTex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
-			caretTex.Width = (short)((caretTex.Width * 3) / 4);
+			caretTex.Width = (ushort)((caretTex.Width * 3) / 4);
 			caretWidth = caretTex.Width; caretHeight = caretTex.Height;
 			this.font = font;
 			
@@ -123,7 +123,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (caretCol == MaxCharsPerLine) {
 				caretTex.X1 = X + Padding + lineSizes[caretRow].Width;
 				caretColour = FastColour.Yellow;
-				caretTex.Width = (short)caretWidth;
+				caretTex.Width = (ushort)caretWidth;
 			} else {
 				args.Text = lines[caretRow].Substring(0, caretCol);
 				Size trimmedSize = drawer.MeasureSize(ref args);
@@ -136,9 +136,9 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (caretCol < line.Length) {
 					args.Text = new String(line[caretCol], 1);
 					args.UseShadow = true;
-					caretTex.Width = (short)drawer.MeasureSize(ref args).Width;
+					caretTex.Width = (ushort)drawer.MeasureSize(ref args).Width;
 				} else {
-					caretTex.Width = (short)caretWidth;
+					caretTex.Width = (ushort)caretWidth;
 				}
 			}
 			caretTex.Y1 = lineSizes[0].Height * caretRow + inputTex.Y1 + 2;

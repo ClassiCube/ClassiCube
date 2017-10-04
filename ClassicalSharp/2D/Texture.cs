@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 		
 		public int ID;
 		public short X, Y;
-		public short Width, Height;
+		public ushort Width, Height;
 		public float U1, V1;
 		public float U2, V2;
 
@@ -28,7 +28,7 @@ namespace ClassicalSharp {
 		               float u1, float u2, float v1, float v2) {
 			ID = id;
 			X = (short)x; Y = (short)y;
-			Width = (short)width; Height = (short)height;
+			Width = (ushort)width; Height = (ushort)height;
 			U1 = u1; V1 = v1;
 			U2 = u2; V2 = v2;
 		}

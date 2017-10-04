@@ -83,7 +83,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			back.ID = game.UseClassicGui ? game.Gui.GuiClassicTex : game.Gui.GuiTex;
 			back.X1 = X; back.Y1 = Y;
-			back.Width = (short)Width; back.Height = (short)Height;			
+			back.Width = (ushort)Width; back.Height = (ushort)Height;			
 			
 			if (Width == 400) {
 				// Button can be drawn normally
@@ -94,7 +94,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				float scale = (Width / 400f) * 0.5f;
 				gfx.BindTexture(back.ID); // avoid bind twice
 				
-				back.Width = (short)(Width / 2); 
+				back.Width = (ushort)(Width / 2); 
 				back.U1 = 0; back.U2 = uWidth * scale;
 				gfx.Draw2DTexture(ref back, FastColour.White);
 				

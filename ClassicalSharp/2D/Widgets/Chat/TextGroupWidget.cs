@@ -38,7 +38,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			defaultHeight = height;
 			
 			for (int i = 0; i < Textures.Length; i++) {
-				Textures[i].Height = (short)defaultHeight;
+				Textures[i].Height = (ushort)defaultHeight;
 				PlaceholderHeight[i] = true;
 			}
 			UpdateDimensions();
@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			int newHeight = placeHolder ? defaultHeight : 0;
 			Textures[index].Y1 = CalcY(index, newHeight);
-			Textures[index].Height = (short)newHeight;
+			Textures[index].Height = (ushort)newHeight;
 		}
 		
 		public void PushUpAndReplaceLast(string text) {
