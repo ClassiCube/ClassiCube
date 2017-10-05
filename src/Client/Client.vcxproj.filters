@@ -348,6 +348,9 @@
     <ClInclude Include="Deflate.h">
       <Filter>Header Files\IO</Filter>
     </ClInclude>
+    <ClInclude Include="Formats.h">
+      <Filter>Header Files\Map</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -526,6 +529,9 @@
     </ClCompile>
     <ClCompile Include="OpenGLApi.c">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Formats.c">
+      <Filter>Source Files\Map</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

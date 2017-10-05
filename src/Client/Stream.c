@@ -39,6 +39,14 @@ void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count) {
 	}
 }
 
+Int32 Stream_TryReadByte(Stream* stream) {
+	UInt8 buffer;
+	UInt32 read;
+	stream->Read(stream, &buffer, sizeof(buffer), &read);
+	/* TODO: Check return code here?? Fail if not EndOfStream ?? */
+	return read == 0 ? -1 : buffer;
+}
+
 
 ReturnCode Stream_FileRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	return Platform_FileRead(stream->Data, data, count, modified);

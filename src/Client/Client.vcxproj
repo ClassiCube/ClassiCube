@@ -193,6 +193,7 @@
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Events.h" />
+    <ClInclude Include="Formats.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="Deflate.h" />
     <ClInclude Include="IModel.h" />
@@ -257,6 +258,7 @@
     <ClCompile Include="EnvRenderer.c" />
     <ClCompile Include="Event.c" />
     <ClCompile Include="ExtMath.c" />
+    <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="FrustumCulling.c" />

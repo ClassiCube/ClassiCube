@@ -3,6 +3,10 @@
 #include "Typedefs.h"
 #include "String.h"
 #include "ErrorHandler.h"
+/* Defines an abstract way of reading and writing data in a streaming manner.
+   Also provides common helper methods for reading/writing data to/from streams.
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+*/
 
 #define STREAM_SEEKFROM_BEGIN 0
 #define STREAM_SEEKFROM_CURRENT 1
@@ -41,6 +45,8 @@ typedef struct Stream_ {
 void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count);
 /* Fully writes up to count bytes or fails. */
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
+/* Attempts to read a byte (returning -1 if could not read) */
+Int32 Stream_TryReadByte(Stream* stream);
 /* Constructs a Stream wrapping a file. */
 void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name);
 

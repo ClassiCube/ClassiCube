@@ -11,6 +11,9 @@
 #define MATH_RAD2DEG (180.0f / MATH_PI)
 #define MATH_LARGENUM 1000000000.0f
 
+#define Math_Deg2Packed(x) ((UInt8)((x) * 256.0f / 360.0f))
+#define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
+
 #define Math_AbsF(x) fabsf(x)
 #define Math_AbsI(x) abs(x)
 
