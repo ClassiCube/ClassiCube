@@ -157,9 +157,12 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 #define DeflateState_DynamicHeader 3
 #define DeflateState_DynamicCodeLens 4
 #define DeflateState_DynamicLitsDists 5
-#define DeflateState_CompressedData 6
-
-#define DeflateState_Done 250
+#define DeflateState_DynamicLitsDistsRepeat 6
+#define DeflateState_CompressedLit 7
+#define DeflateState_CompressedLitRepeat 8
+#define DeflateState_CompressedDist 9
+#define DeflateState_CompressedDistRepeat 10
+#define DeflateState_Done 11
 
 /* Insert this byte into the bit buffer */
 #define DEFLATE_GET_BYTE(state)\
@@ -343,7 +346,7 @@ void Deflate_Process(DeflateState* state) {
 				};
 				Huffman_Build(&state->LitsTable, fixed_lits, DEFLATE_MAX_LITS);
 				Huffman_Build(&state->DistsTable, fixed_dists, DEFLATE_MAX_DISTS);
-				state->State = DeflateState_CompressedData;
+				state->State = DeflateState_CompressedLit;
 			} break;
 
 			case 2: { /* Dynamic huffman compressed */
@@ -426,56 +429,70 @@ void Deflate_Process(DeflateState* state) {
 			UInt32 count = state->NumLits + state->NumDists;
 			while (state->Index < count) {
 				Int32 bits = Huffman_Decode(state, &state->CodeLensTable);
-				/* TODO: Handle input end before repeatCount read */
 				if (bits < 16) {
 					if (bits == -1) return;
 					state->Buffer[state->Index] = (UInt8)bits;
 					state->Index++;
-				} else {
-					UInt32 repeatCount;
-					UInt8 repeatValue;
-
-					switch (bits) {
-					case 16:
-						DEFLATE_ENSURE_BITS(state, 2);
-						repeatCount = DEFLATE_READ_BITS(state, 2);
-						if (state->Index == 0) {
-							ErrorHandler_Fail("DEFLATE - Tried to repeat invalid byte");
-						}
-						repeatCount += 3; repeatValue = state->Buffer[state->Index - 1];
-						break;
-
-					case 17:
-						DEFLATE_ENSURE_BITS(state, 3);
-						repeatCount = DEFLATE_READ_BITS(state, 3);
-						repeatCount += 3; repeatValue = 0;
-						break;
-
-					case 18:
-						DEFLATE_ENSURE_BITS(state, 7);
-						repeatCount = DEFLATE_READ_BITS(state, 7);
-						repeatCount += 11; repeatValue = 0;
-						break;
-					}
-
-					if (state->Index + repeatCount > count) {
-						ErrorHandler_Fail("DEFLATE - Tried to repeat past end");
-					}
-					Platform_MemSet(&state->Buffer[state->Index], repeatValue, repeatCount);
-					state->Index += repeatCount;
+				} else {				
+					state->TmpCodeLens = bits;
+					state->State = DeflateState_DynamicLitsDistsRepeat;
+					break;
 				}
 			}
-			state->Index = 0;
-			state->State = DeflateState_CompressedData;
-			Huffman_Build(&state->LitsTable, state->Buffer, state->NumLits);
-			Huffman_Build(&state->DistsTable, &state->Buffer[state->NumLits], state->NumDists);
+
+			if (state->Index == count) {
+				state->Index = 0;
+				state->State = DeflateState_CompressedLit;
+				Huffman_Build(&state->LitsTable, state->Buffer, state->NumLits);
+				Huffman_Build(&state->DistsTable, &state->Buffer[state->NumLits], state->NumDists);
+			}
+			break;
 		}
 
-		case DeflateState_CompressedData: {
+		case DeflateState_DynamicLitsDistsRepeat: {			
+			UInt32 repeatCount;
+			UInt8 repeatValue;
+
+			switch (state->TmpCodeLens) {
+			case 16:
+				DEFLATE_ENSURE_BITS(state, 2);
+				repeatCount = DEFLATE_READ_BITS(state, 2);
+				if (state->Index == 0) {
+					ErrorHandler_Fail("DEFLATE - Tried to repeat invalid byte");
+				}
+				repeatCount += 3; repeatValue = state->Buffer[state->Index - 1];
+				break;
+
+			case 17:
+				DEFLATE_ENSURE_BITS(state, 3);
+				repeatCount = DEFLATE_READ_BITS(state, 3);
+				repeatCount += 3; repeatValue = 0;
+				break;
+
+			case 18:
+				DEFLATE_ENSURE_BITS(state, 7);
+				repeatCount = DEFLATE_READ_BITS(state, 7);
+				repeatCount += 11; repeatValue = 0;
+				break;
+			}
+
+			UInt32 count = state->NumLits + state->NumDists;
+			if (state->Index + repeatCount > count) {
+				ErrorHandler_Fail("DEFLATE - Tried to repeat past end");
+			}
+
+			Platform_MemSet(&state->Buffer[state->Index], repeatValue, repeatCount);
+			state->Index += repeatCount;
+			state->State = DeflateState_DynamicLitsDists;
+			break;
+		}
+
+		case DeflateState_CompressedLit: {
 			while (state->AvailOut > 0) {
 				Int32 lit = Huffman_Decode(state, &state->LitsTable);
 				/* TODO TODO TODO: PARTIAL READS */
 				if (lit < 256) {
+					if (lit == -1) return;
 					*state->Output = (UInt8)lit;
 					state->Output++;
 					state->AvailOut--;
@@ -483,34 +500,50 @@ void Deflate_Process(DeflateState* state) {
 					state->State = DEFLATE_NEXTBLOCK_STATE(state);
 					break;
 				} else {
-					lit -= 257;
-					UInt16 len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
-						15,17,19,23,27,31,35,43,51,59,
-						67,83,99,115,131,163,195,227,258,0,0 };
-					UInt8 len_bits[31] = { 0,0,0,0,0,0,0,0,1,1,
-						1,1,2,2,2,2,3,3,3,3,
-						4,4,4,4,5,5,5,5,0,0,0 };
-					UInt32 bits = len_bits[lit];
-
-					DEFLATE_ENSURE_BITS(state, bits);
-					UInt32 length = len_base[lit] + DEFLATE_READ_BITS(state, bits);
-
-					/* TODO TODO TODO: PARTIAL READS */
-					Int32 distIdx = Huffman_Decode(state, &state->DistsTable);
-					UInt16 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
-						33,49,65,97,129,193,257,385,513,769,
-						1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 };
-					UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
-						4,4,5,5,6,6,7,7,8,8,
-						9,9,10,10,11,11,12,12,13,13,0,0 };
-					bits = dist_bits[distIdx];
-
-					DEFLATE_ENSURE_BITS(state, bits);
-					UInt32 dist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
+					state->TmpLit = lit - 257;
+					state->State = DeflateState_CompressedLitRepeat;
+					break;
 				}
 			}
 			break;
 		}
+
+		case DeflateState_CompressedLitRepeat: {
+			UInt32 lenIdx = (UInt32)state->TmpLit;
+			UInt16 len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
+				15,17,19,23,27,31,35,43,51,59,
+				67,83,99,115,131,163,195,227,258,0,0 };
+			UInt8 len_bits[31] = { 0,0,0,0,0,0,0,0,1,1,
+				1,1,2,2,2,2,3,3,3,3,
+				4,4,4,4,5,5,5,5,0,0,0 };
+
+			UInt32 bits = len_bits[lenIdx];
+			DEFLATE_ENSURE_BITS(state, bits);
+			state->TmpLit = len_base[lenIdx] + DEFLATE_READ_BITS(state, bits);
+			state->State = DeflateState_CompressedDist;
+		}
+
+		case DeflateState_CompressedDist: {
+			state->TmpDist = Huffman_Decode(state, &state->DistsTable);
+			if (state->TmpDist == -1) return;
+			state->State = DeflateState_CompressedDistRepeat;
+		}
+
+		case DeflateState_CompressedDistRepeat: {
+			UInt32 distIdx = (UInt32)state->TmpDist;
+			UInt16 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
+				33,49,65,97,129,193,257,385,513,769,
+				1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 };
+			UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
+				4,4,5,5,6,6,7,7,8,8,
+				9,9,10,10,11,11,12,12,13,13,0,0 };
+
+			UInt32 bits = dist_bits[distIdx];
+			DEFLATE_ENSURE_BITS(state, bits);
+			UInt32 dist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
+			state->State = DeflateState_CompressedLit;
+			break;
+		 }
 
 		case DeflateState_Done:
 			return;
@@ -528,6 +561,7 @@ ReturnCode Deflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	state->AvailOut = count;
 	Deflate_Process(state);
 	*modified = count - state->AvailOut;
+	return 0;
 }
 
 ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
