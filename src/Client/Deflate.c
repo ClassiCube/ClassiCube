@@ -566,15 +566,12 @@ void Deflate_Process(DeflateState* state) {
 
 ReturnCode Deflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	DeflateState* state = (DeflateState*)stream->Data;
-	/* Fully used up input buffer. Cycle back to start. */
-	if (state->NextIn == DEFLATE_MAX_INPUT && state->AvailIn == 0) {
-		state->NextIn = 0;
-	}
+	if (state->AvailIn == 0) {
+		/* Fully used up input buffer. Cycle back to start. */
+		if (state->NextIn == DEFLATE_MAX_INPUT) state->NextIn = 0;
 
-	UInt32 used = state->NextIn + state->AvailIn;
-	if (used < DEFLATE_MAX_INPUT) {
-		UInt8* ptr = &state->Input[used];
-		UInt32 read, remaining = DEFLATE_MAX_INPUT - used;
+		UInt8* ptr = &state->Input[state->NextIn];
+		UInt32 read, remaining = DEFLATE_MAX_INPUT - state->NextIn;
 		ReturnCode code = state->Source->Read(state->Source, ptr, remaining, &read);
 		if (code != 0) return code;
 		state->AvailIn += read;
