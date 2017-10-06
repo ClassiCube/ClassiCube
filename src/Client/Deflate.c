@@ -540,19 +540,19 @@ void Deflate_Process(DeflateState* state) {
 			if (state->AvailOut == 0) return;
 			UInt32 len = (UInt32)state->TmpLit, dist = (UInt32)state->TmpDist;
 			len = min(len, state->AvailOut);
-			UInt32 startIdx = (state->WindowIndex - dist) & DEFLATE_WINDOW_MASK;
+			UInt32 startIdx = (state->WindowIndex - dist) & DEFLATE_WINDOW_MASK, curIdx = state->WindowIndex;
 			UInt32 i;
 
 			/* TODO: Should we test outside of the loop, whether a masking will be required or not? */
 			for (i = 0; i < len; i++) {
 				UInt8 value = state->Window[(startIdx + i) & DEFLATE_WINDOW_MASK];
 				*state->Output = value;
-				state->Window[state->WindowIndex] = value;
+				state->Window[(curIdx + i) & DEFLATE_WINDOW_MASK] = value;
 				state->Output++; state->AvailOut--;
-				state->WindowIndex = (state->WindowIndex + 1) & DEFLATE_WINDOW_MASK;
 			}
 
 			/* In case LZ77 length is less than output length */
+			state->WindowIndex = (curIdx + len) & DEFLATE_WINDOW_MASK;
 			state->TmpLit -= len;
 			if (state->TmpLit == 0) state->State = DeflateState_CompressedLit;
 			break;
