@@ -155,7 +155,8 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 #define DeflateState_CompressedLitRepeat 8
 #define DeflateState_CompressedDist 9
 #define DeflateState_CompressedDistRepeat 10
-#define DeflateState_Done 11
+#define DeflateState_CompressedData 11
+#define DeflateState_Done 12
 
 /* Insert this byte into the bit buffer */
 #define DEFLATE_GET_BYTE(state)\
@@ -308,7 +309,6 @@ void Deflate_Init(DeflateState* state, Stream* source) {
 }
 
 void Deflate_Process(DeflateState* state) {
-	/* TODO: Read input here */
 	for (;;) {
 		switch (state->State) {
 		case DeflateState_Header: {
@@ -377,10 +377,9 @@ void Deflate_Process(DeflateState* state) {
 			copyLen = min(copyLen, state->Index);
 			if (copyLen > 0) {
 				Platform_MemCpy(state->Output, state->Input, copyLen);
-				/* TODO: Copy to window */
-				state->Output += copyLen;
+				/* TODO: Copy output to window!!! */
+				state->Output += copyLen; state->AvailOut -= copyLen;
 				state->AvailIn -= copyLen;
-				state->AvailOut -= copyLen;
 				state->Index -= copyLen;
 			}
 
@@ -486,8 +485,9 @@ void Deflate_Process(DeflateState* state) {
 				if (lit < 256) {
 					if (lit == -1) return;
 					*state->Output = (UInt8)lit;
-					state->Output++;
-					state->AvailOut--;
+					state->Window[state->WindowIndex] = (UInt8)lit;
+					state->Output++; state->AvailOut--;
+					state->WindowIndex = (state->WindowIndex + 1) & DEFLATE_WINDOW_MASK;
 				} else if (lit == 256) {
 					state->State = DEFLATE_NEXTBLOCK_STATE(state);
 					break;
@@ -532,11 +532,31 @@ void Deflate_Process(DeflateState* state) {
 
 			UInt32 bits = dist_bits[distIdx];
 			DEFLATE_ENSURE_BITS(state, bits);
-			UInt32 dist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
-			state->State = DeflateState_CompressedLit;
-			break;
-		 }
+			state->TmpDist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
+			state->State = DeflateState_CompressedData;
+		}
 
+		case DeflateState_CompressedData: {
+			UInt32 len = (UInt32)state->TmpLit, dist = (UInt32)state->TmpDist;
+			len = min(len, state->AvailOut);
+			UInt32 startIdx = (state->WindowIndex - dist) & DEFLATE_WINDOW_MASK;
+			UInt32 i;
+
+			/* TODO: Should we test outside of the loop, whether a masking will be required or not? */
+			for (i = 0; i < len; i++) {
+				UInt8 value = state->Window[(startIdx + i) & DEFLATE_WINDOW_MASK];
+				*state->Output = value;
+				state->Window[state->WindowIndex] = value;
+				state->Output++; state->AvailOut--;
+				state->WindowIndex = (state->WindowIndex + 1) & DEFLATE_WINDOW_MASK;
+			}
+
+			/* In case LZ77 length is less than output length */
+			state->TmpLit -= len;
+			if (state->TmpLit == 0) state->State = DeflateState_CompressedLit;
+			break;
+		} 
+		
 		case DeflateState_Done:
 			return;
 		}
@@ -548,6 +568,7 @@ ReturnCode Deflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	if (state->NextIn == DEFLATE_MAX_INPUT && state->AvailIn == 0) {
 		state->NextIn = 0;
 	}
+	/* TODO: Do the actual reading here.... */
 
 	state->Output = data;
 	state->AvailOut = count;
