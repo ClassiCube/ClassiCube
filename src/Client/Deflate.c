@@ -480,22 +480,22 @@ void Deflate_Process(DeflateState* state) {
 		}
 
 		case DeflateState_CompressedLit: {
-			while (state->AvailOut > 0) {
-				Int32 lit = Huffman_Decode(state, &state->LitsTable);
-				if (lit < 256) {
-					if (lit == -1) return;
-					*state->Output = (UInt8)lit;
-					state->Window[state->WindowIndex] = (UInt8)lit;
-					state->Output++; state->AvailOut--;
-					state->WindowIndex = (state->WindowIndex + 1) & DEFLATE_WINDOW_MASK;
-				} else if (lit == 256) {
-					state->State = DEFLATE_NEXTBLOCK_STATE(state);
-					break;
-				} else {
-					state->TmpLit = lit - 257;
-					state->State = DeflateState_CompressedLitRepeat;
-					break;
-				}
+			if (state->AvailOut == 0) return;
+
+			Int32 lit = Huffman_Decode(state, &state->LitsTable);
+			if (lit < 256) {
+				if (lit == -1) return;
+				*state->Output = (UInt8)lit;
+				state->Window[state->WindowIndex] = (UInt8)lit;
+				state->Output++; state->AvailOut--;
+				state->WindowIndex = (state->WindowIndex + 1) & DEFLATE_WINDOW_MASK;
+			} else if (lit == 256) {
+				state->State = DEFLATE_NEXTBLOCK_STATE(state);
+				break;
+			} else {
+				state->TmpLit = lit - 257;
+				state->State = DeflateState_CompressedLitRepeat;
+				break;
 			}
 			break;
 		}
@@ -537,6 +537,7 @@ void Deflate_Process(DeflateState* state) {
 		}
 
 		case DeflateState_CompressedData: {
+			if (state->AvailOut == 0) return;
 			UInt32 len = (UInt32)state->TmpLit, dist = (UInt32)state->TmpDist;
 			len = min(len, state->AvailOut);
 			UInt32 startIdx = (state->WindowIndex - dist) & DEFLATE_WINDOW_MASK;
@@ -565,10 +566,19 @@ void Deflate_Process(DeflateState* state) {
 
 ReturnCode Deflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	DeflateState* state = (DeflateState*)stream->Data;
+	/* Fully used up input buffer. Cycle back to start. */
 	if (state->NextIn == DEFLATE_MAX_INPUT && state->AvailIn == 0) {
 		state->NextIn = 0;
 	}
-	/* TODO: Do the actual reading here.... */
+
+	UInt32 used = state->NextIn + state->AvailIn;
+	if (used < DEFLATE_MAX_INPUT) {
+		UInt8* ptr = &state->Input[used];
+		UInt32 read, remaining = DEFLATE_MAX_INPUT - used;
+		ReturnCode code = state->Source->Read(state->Source, ptr, remaining, &read);
+		if (code != 0) return code;
+		state->AvailIn += read;
+	}
 
 	state->Output = data;
 	state->AvailOut = count;
