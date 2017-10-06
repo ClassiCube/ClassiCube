@@ -278,10 +278,10 @@ Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
 
 	/* Slow, bit by bit lookup */
 	Int32 codeword = 0;
-	UInt32 i;
-	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
+	UInt32 i, j;
+	for (i = 1, j = 0; i < DEFLATE_MAX_BITS; i++, j++) {
 		if (state->NumBits < i) return -1;
-		codeword = (codeword << 1) | ((state->Bits >> i) & 1);
+		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
 		if (codeword >= table->FirstCodewords[i] && codeword <= table->EndCodewords[i]) {
 			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
