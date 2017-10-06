@@ -12,7 +12,7 @@ void Map_ReadBlocks(Stream* stream) {
 	if (World_Blocks == NULL) {
 		ErrorHandler_Fail("Failed to allocate memory when reading blocks array from file");
 	}
-	Stream_Read(&stream, World_Blocks, World_BlocksSize);
+	Stream_Read(stream, World_Blocks, World_BlocksSize);
 }
 
 #define LVL_VERSION 1874
@@ -123,16 +123,16 @@ void Fcm_Load(Stream* stream) {
 		ErrorHandler_Fail("Invalid revision in .fcm file");
 	}
 
-	World_Width = Stream_ReadUInt16_LE(&stream);
-	World_Length = Stream_ReadUInt16_LE(&stream);
-	World_Height = Stream_ReadUInt16_LE(&stream);
+	World_Width = Stream_ReadUInt16_LE(stream);
+	World_Length = Stream_ReadUInt16_LE(stream);
+	World_Height = Stream_ReadUInt16_LE(stream);
 
 	LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = Stream_ReadInt32_LE(&stream) / 32.0f;
-	p->Spawn.Y = Stream_ReadInt32_LE(&stream) / 32.0f;
-	p->Spawn.Z = Stream_ReadInt16_LE(&stream) / 32.0f;
-	p->SpawnRotY = Math_Packed2Deg(Stream_ReadUInt8(&stream));
-	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadUInt8(&stream));
+	p->Spawn.X = Stream_ReadInt32_LE(stream) / 32.0f;
+	p->Spawn.Y = Stream_ReadInt32_LE(stream) / 32.0f;
+	p->Spawn.Z = Stream_ReadInt16_LE(stream) / 32.0f;
+	p->SpawnRotY = Math_Packed2Deg(Stream_ReadUInt8(stream));
+	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadUInt8(stream));
 
 	UInt8 tmp[26];
 	Stream_Read(stream, tmp, 4); /* date modified */

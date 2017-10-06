@@ -483,7 +483,6 @@ void Deflate_Process(DeflateState* state) {
 		case DeflateState_CompressedLit: {
 			while (state->AvailOut > 0) {
 				Int32 lit = Huffman_Decode(state, &state->LitsTable);
-				/* TODO TODO TODO: PARTIAL READS */
 				if (lit < 256) {
 					if (lit == -1) return;
 					*state->Output = (UInt8)lit;

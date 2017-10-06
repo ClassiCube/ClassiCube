@@ -69,7 +69,7 @@ typedef struct DeflateState_ {
 	UInt32 Index;                          /* General purpose index / counter */
 	UInt32 WindowIndex;                    /* Current index within window circular buffer */
 	UInt32 NumCodeLens, NumLits, NumDists; /* Temp counters */
-	UInt32 TmpCodeLens, TmpLits, TmpDists; /* Temp huffman codes */
+	UInt32 TmpCodeLens, TmpLit, TmpDist;   /* Temp huffman codes */
 
 	UInt8 Input[DEFLATE_MAX_INPUT];       /* Buffer for input to DEFLATE */
 	UInt8 Buffer[DEFLATE_MAX_LITS_DISTS]; /* General purpose array */
