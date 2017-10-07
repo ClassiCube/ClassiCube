@@ -585,34 +585,19 @@ ReturnCode Deflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 }
 
 ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	*modified = 0;
-	return 1;
+	*modified = 0; return 1;
 }
-ReturnCode Deflate_StreamClose(Stream* stream) {
-	return 0;
-}
-ReturnCode Deflate_StreamSeek(Stream* stream, Int32 offset, Int32 seekType) {
-	return 1;
-}
-UInt32 Deflate_StreamLength(Stream* stream) {
-	ErrorHandler_Fail("DEFLATE - cannot get stream length");
-	return 0;
-}
-UInt32 Deflate_StreamPosition(Stream* stream) {
-	ErrorHandler_Fail("DEFLATE - cannot get stream position");
-	return 0;
-}
+ReturnCode Deflate_StreamClose(Stream* stream) { return 0; }
+ReturnCode Deflate_StreamSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
 
 void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying) {
 	Deflate_Init(state, underlying);
-	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
-	String_AppendString(&stream->Name, &underlying->Name);
+	Stream_SetName(stream, &underlying->Name);
 	stream->Data = state;
+	stream->Data2 = 0;
 
 	stream->Read = Deflate_StreamRead;
 	stream->Write = Deflate_StreamWrite;
 	stream->Close = Deflate_StreamClose;
 	stream->Seek = Deflate_StreamSeek;
-	stream->Length = Deflate_StreamLength;
-	stream->Position = Deflate_StreamPosition;
 }

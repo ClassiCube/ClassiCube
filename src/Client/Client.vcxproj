@@ -239,6 +239,7 @@
     <ClInclude Include="VertexStructs.h" />
     <ClInclude Include="Window.h" />
     <ClInclude Include="World.h" />
+    <ClInclude Include="ZipArchive.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="2DStructs.c" />
@@ -301,6 +302,7 @@
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="World.c" />
+    <ClCompile Include="ZipArchive.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

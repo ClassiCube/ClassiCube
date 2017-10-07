@@ -60,24 +60,21 @@ ReturnCode Stream_FileClose(Stream* stream) {
 ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
 	return Platform_FileSeek(stream->Data, offset, seekType);
 }
-UInt32 Stream_FileLength(Stream* stream) {
-	return Platform_FileLength(stream->Data);
-}
-UInt32 Stream_FilePosition(Stream* stream) {
-	return Platform_FilePosition(stream->Data);
+
+void Stream_SetName(Stream* stream, STRING_TRANSIENT String* name) {
+	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
+	String_AppendString(&stream->Name, name);
 }
 
 void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name) {
-	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
-	String_AppendString(&stream->Name, name);
+	Stream_SetName(stream, name);
 	stream->Data = file;
+	stream->Data2 = 0;
 
 	stream->Read = Stream_FileRead;
 	stream->Write = Stream_FileWrite;
 	stream->Close = Stream_FileClose;
 	stream->Seek = Stream_FileSeek;
-	stream->Length = Stream_FileLength;
-	stream->Position = Stream_FilePosition;
 }
 
 

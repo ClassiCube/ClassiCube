@@ -11,13 +11,11 @@
 #define STREAM_SEEKFROM_BEGIN 0
 #define STREAM_SEEKFROM_CURRENT 1
 #define STREAM_SEEKFROM_END 2
-#define STREAM_NAME_LEN 80
+#define STREAM_NAME_LEN 256
 
 typedef ReturnCode (*Stream_Operation)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
 typedef ReturnCode (*Stream_Seek)(struct Stream_* stream, Int32 offset, Int32 seekType);
 typedef ReturnCode (*Stream_Close)(struct Stream_* stream);
-typedef UInt32 (*Stream_Length)(struct Stream_* stream);
-typedef UInt32 (*Stream_Position)(struct Stream_* stream);
 
 /* Represents a stream that can be written to and/or read from. */
 typedef struct Stream_ {
@@ -29,12 +27,10 @@ typedef struct Stream_ {
 	Stream_Close Close;
 	/* Moves backwards or forwards by given number of bytes from seek offset in the stream. Result is a ReturnCode. */
 	Stream_Seek Seek;
-	/* Gets the length of the given stream. */
-	Stream_Length Length;
-	/* Gets the position of the given stream. */
-	Stream_Position Position;
-	/* General purpose metadata for the stream. */
+	/* General purpose pointer metadata for the stream. */
 	void* Data;
+	/* General purpose numerical metadata for the stream. */
+	UInt32 Data2;
 	/* Raw name buffer */
 	UInt8 NameBuffer[String_BufferSize(STREAM_NAME_LEN)];
 	/* The name of the stream. */
@@ -47,6 +43,8 @@ void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
 /* Attempts to read a byte (returning -1 if could not read) */
 Int32 Stream_TryReadByte(Stream* stream);
+/* Sets the name of the given stream. */
+void Stream_SetName(Stream* stream, STRING_TRANSIENT String* name);
 /* Constructs a Stream wrapping a file. */
 void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name);
 

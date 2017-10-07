@@ -351,6 +351,9 @@
     <ClInclude Include="Formats.h">
       <Filter>Header Files\Map</Filter>
     </ClInclude>
+    <ClInclude Include="ZipArchive.h">
+      <Filter>Header Files\TexturePack</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -532,6 +535,9 @@
     </ClCompile>
     <ClCompile Include="Formats.c">
       <Filter>Source Files\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="ZipArchive.c">
+      <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
