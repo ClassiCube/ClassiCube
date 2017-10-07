@@ -47,6 +47,9 @@ Int32 Stream_TryReadByte(Stream* stream);
 void Stream_SetName(Stream* stream, STRING_TRANSIENT String* name);
 /* Constructs a Stream wrapping a file. */
 void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name);
+/* Constructs a readonly Stream wrapping another Stream, 
+but only allowing reading up to 'len' bytes from the wrapped stream. */
+void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len);
 
 /* Reads an unsigned 8 bit integer from the given stream. */
 UInt8 Stream_ReadUInt8(Stream* stream);

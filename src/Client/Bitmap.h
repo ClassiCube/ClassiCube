@@ -10,7 +10,7 @@ typedef struct Bitmap_ {
 	/* Pointer to first scaneline. */
 	UInt8* Scan0;
 	/* Number of bytes in each scanline. */
-	Int32 Stride; /* TODO: Obsolete this completely and just use Width << 2 ? */
+	UInt32 Stride; /* TODO: Obsolete this completely and just use Width << 2 ? */
 	/* Number of pixels horizontally. */
 	Int32 Width;
 	/* Number of pixels vertically. */

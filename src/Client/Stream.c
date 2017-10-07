@@ -1,5 +1,6 @@
 #include "Stream.h"
 #include "Platform.h"
+#include "Funcs.h"
 
 #define Stream_SafeReadBlock(stream, buffer, count, read)\
 ReturnCode result = stream->Read(stream, buffer, count, &read);\
@@ -48,6 +49,11 @@ Int32 Stream_TryReadByte(Stream* stream) {
 }
 
 
+void Stream_SetName(Stream* stream, STRING_TRANSIENT String* name) {
+	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
+	String_AppendString(&stream->Name, name);
+}
+
 ReturnCode Stream_FileRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	return Platform_FileRead(stream->Data, data, count, modified);
 }
@@ -61,11 +67,6 @@ ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
 	return Platform_FileSeek(stream->Data, offset, seekType);
 }
 
-void Stream_SetName(Stream* stream, STRING_TRANSIENT String* name) {
-	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
-	String_AppendString(&stream->Name, name);
-}
-
 void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name) {
 	Stream_SetName(stream, name);
 	stream->Data = file;
@@ -75,6 +76,30 @@ void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name) 
 	stream->Write = Stream_FileWrite;
 	stream->Close = Stream_FileClose;
 	stream->Seek = Stream_FileSeek;
+}
+
+ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	count = min(count, stream->Data2);
+	Stream* underlying = (Stream*)stream->Data;
+	ReturnCode code = underlying->Read(underlying, data, count, modified);
+	stream->Data2 -= *modified;
+	return code;
+}
+ReturnCode Stream_PortionWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	*modified = 0; return 1;
+}
+ReturnCode Stream_PortionClose(Stream* stream) { return 0; }
+ReturnCode Stream_PortionSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
+
+void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
+	Stream_SetName(stream, &underlying->Name);
+	stream->Data = underlying;
+	stream->Data2 = len;
+
+	stream->Read = Stream_PortionRead;
+	stream->Write = Stream_PortionWrite;
+	stream->Close = Stream_PortionClose;
+	stream->Seek = Stream_PortionSeek;
 }
 
 

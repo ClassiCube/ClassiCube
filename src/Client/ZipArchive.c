@@ -2,31 +2,6 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Deflate.h"
-#include "Funcs.h"
-
-ReturnCode Zip_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Data2);
-	ReturnCode code = ((Stream*)stream->Data)->Read(stream, data, count, modified);
-	stream->Data2 -= *modified;
-	return code;
-}
-
-ReturnCode Zip_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	*modified = 0; return 1;
-}
-ReturnCode Zip_StreamClose(Stream* stream) { return 0; }
-ReturnCode Zip_StreamSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
-
-void Zip_MakeStream(Stream* stream, Stream* underlying, UInt32 len) {
-	Stream_SetName(stream, &underlying->Name);
-	stream->Data = underlying;
-	stream->Data2 = len;
-
-	stream->Read = Zip_StreamRead;
-	stream->Write = Zip_StreamWrite;
-	stream->Close = Zip_StreamClose;
-	stream->Seek = Zip_StreamSeek;
-}
 
 String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
 	String fileName;
@@ -38,7 +13,6 @@ String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
 	buffer[length] = NULL; /* Ensure null terminated */
 	return fileName;
 }
-
 
 void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	Stream* stream = state->Input;
@@ -67,11 +41,11 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 
 	Stream portion, compStream;
 	if (compressionMethod == 0) {
-		Zip_MakeStream(&portion, stream, uncompressedSize);
+		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
 		state->ProcessEntry(filename, &portion, entry);
 	} else if (compressionMethod == 8) {
 		DeflateState deflate;
-		Zip_MakeStream(&portion, stream, uncompressedSize);
+		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 		Deflate_MakeStream(&compStream, &deflate, &portion);
 		state->ProcessEntry(filename, &compStream, entry);
 	}

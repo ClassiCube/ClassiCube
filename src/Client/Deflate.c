@@ -548,12 +548,13 @@ void Deflate_Process(DeflateState* state) {
 				UInt8 value = state->Window[(startIdx + i) & DEFLATE_WINDOW_MASK];
 				*state->Output = value;
 				state->Window[(curIdx + i) & DEFLATE_WINDOW_MASK] = value;
-				state->Output++; state->AvailOut--;
+				state->Output++;
 			}
 
 			/* In case LZ77 length is less than output length */
 			state->WindowIndex = (curIdx + len) & DEFLATE_WINDOW_MASK;
 			state->TmpLit -= len;
+			state->AvailOut -= len;
 			if (state->TmpLit == 0) state->State = DeflateState_CompressedLit;
 			break;
 		} 
@@ -573,7 +574,7 @@ ReturnCode Deflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 		UInt8* ptr = &state->Input[state->NextIn];
 		UInt32 read, remaining = DEFLATE_MAX_INPUT - state->NextIn;
 		ReturnCode code = state->Source->Read(state->Source, ptr, remaining, &read);
-		if (code != 0) return code;
+		if (code != 0) { *modified = 0; return code; }
 		state->AvailIn += read;
 	}
 
