@@ -50,7 +50,7 @@ Int32 Stream_TryReadByte(Stream* stream) {
 
 
 void Stream_SetName(Stream* stream, STRING_TRANSIENT String* name) {
-	stream->Name = String_FromRawBuffer(stream->NameBuffer, STREAM_NAME_LEN);
+	stream->Name = String_FromRawBuffer(stream->NameBuffer, FILENAME_SIZE);
 	String_AppendString(&stream->Name, name);
 }
 

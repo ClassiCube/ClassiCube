@@ -10,6 +10,7 @@
 
 /* Max number of characters strings can have. */
 #define STRING_SIZE 64
+#define FILENAME_SIZE 260
 
 /* Chunk axis length, in blocks. */
 #define CHUNK_SIZE 16

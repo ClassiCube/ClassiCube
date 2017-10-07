@@ -65,20 +65,15 @@ void Png_CheckHeader(Stream* stream) {
 	}
 }
 
-void Png_Filter(UInt8 type, UInt8 bpp, UInt8* line, UInt8* prior, UInt32 lineLen) {
-	UInt32 i;
-	Int32 p, pa, pb, pc;
-	UInt8 a, b, c;
-
+void Png_Filter(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt32 lineLen) {
+	UInt32 i, j;
 	switch (type) {
 	case PNG_FILTER_NONE:
 		return;
 
 	case PNG_FILTER_SUB:
-		a = 0;
-		for (i = 0; i < lineLen; i++) {
-			line[i] = (UInt8)(line[i] + a);
-			a = line[i];
+		for (i = bytesPerPixel, j = 0; i < lineLen; i++, j++) {
+			line[i] = (UInt8)(line[i] + line[j]);
 		}
 		return;
 
@@ -89,27 +84,26 @@ void Png_Filter(UInt8 type, UInt8 bpp, UInt8* line, UInt8* prior, UInt32 lineLen
 		return;
 
 	case PNG_FILTER_AVERAGE:
-		a = 0;
-		for (i = 0; i < lineLen; i++) {
-			line[i] = (UInt8)(line[i] + ((prior[i] + a) >> 1));
-			a = line[i];
+		for (i = 0; i < bytesPerPixel; i++) {
+			line[i] = (UInt8)(line[i] + (prior[i] >> 1));
+		}
+		for (j = 0; i < lineLen; i++, j++) {
+			line[i] = (UInt8)(line[i] + ((prior[i] + line[j]) >> 1));
 		}
 		return;
 
 	case PNG_FILTER_PAETH:
-		a = 0; c = 0;
-		for (i = 0; i < lineLen; i++) {
-			b = prior[i];
-			p = a + b - c;
-			pa = Math_AbsI(p - a);
-			pb = Math_AbsI(p - b);
-			pc = Math_AbsI(p - c);
+		/* TODO: verify this is right */
+		for (i = bytesPerPixel, j = 0; i < lineLen; i++, j++) {
+			UInt8 a = line[j], b = prior[i], c = prior[j];
+			Int32 p = a + b - c;
+			Int32 pa = Math_AbsI(p - a);
+			Int32 pb = Math_AbsI(p - b);
+			Int32 pc = Math_AbsI(p - c);
 
 			if (pa <= pb && pa <= pc) { line[i] = (UInt8)(line[i] + a); } 
 			else if (pb <= pc)        { line[i] = (UInt8)(line[i] + b); }
 			else                      { line[i] = (UInt8)(line[i] + c); }
-
-			a = line[i]; c = b;
 		}
 		return;
 
@@ -119,14 +113,14 @@ void Png_Filter(UInt8 type, UInt8 bpp, UInt8* line, UInt8* prior, UInt32 lineLen
 	}
 }
 
-void Png_Expand_GRAYSCALE(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+void Png_Expand_GRAYSCALE(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 #define PNG_DO_GRAYSCALE(tmp, dstI, srcI, scale) tmp = src[srcI] * scale; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
 #define PNG_DO_GRAYSCALE_X(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
 	UInt8 cur, rgb1, rgb2, rgb3, rgb4;
 	Int32 mask;
 
-	switch (bpp) {
+	switch (bitsPerSample) {
 	case 1:
 		for (i = 0, j = 0; i < (width & ~0x7); i += 8, j++) {
 			cur = src[j];
@@ -174,12 +168,12 @@ void Png_Expand_GRAYSCALE(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, U
 	}
 }
 
-void Png_Expand_RGB(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+void Png_Expand_RGB(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 #define PNG_DO_RGB__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], 255);
 #define PNG_DO_RGB_16(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 3], src[srcI + 5], 255);
 
-	if (bpp == 8) {
+	if (bitsPerSample == 8) {
 		for (i = 0, j = 0; i < (width & ~0x03); i += 4, j += 12) {
 			PNG_DO_RGB__8(i    , j    ); PNG_DO_RGB__8(i + 1, j + 3);
 			PNG_DO_RGB__8(i + 2, j + 6); PNG_DO_RGB__8(i + 3, j + 9);
@@ -190,13 +184,13 @@ void Png_Expand_RGB(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32*
 	}
 }
 
-void Png_Expand_INDEXED(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+void Png_Expand_INDEXED(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 #define PNG_DO_INDEXED(dstI, srcI) dst[dstI] = palette[srcI];
 	UInt8 cur;
 	Int32 mask;
 
-	switch (bpp) {
+	switch (bitsPerSample) {
 	case 1:
 		for (i = 0, j = 0; i < (width & ~0x7); i += 8, j++) {
 			cur = src[j];
@@ -241,13 +235,13 @@ void Png_Expand_INDEXED(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UIn
 	}
 }
 
-void Png_Expand_GRAYSCALE_A(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+void Png_Expand_GRAYSCALE_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 #define PNG_DO_GRAYSCALE_A__8(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 1]);
 #define PNG_DO_GRAYSCALE_A_16(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 2]);
 	UInt8 rgb1, rgb2, rgb3, rgb4;
 
-	if (bpp == 8) {
+	if (bitsPerSample == 8) {
 		for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 8) {
 			PNG_DO_GRAYSCALE_A__8(rgb1, i    , j    ); PNG_DO_GRAYSCALE_A__8(rgb2, i + 1, j + 2);
 			PNG_DO_GRAYSCALE_A__8(rgb3, i + 2, j + 4); PNG_DO_GRAYSCALE_A__8(rgb4, i + 3, j + 5);
@@ -258,12 +252,12 @@ void Png_Expand_GRAYSCALE_A(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src,
 	}
 }
 
-void Png_Expand_RGB_A(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+void Png_Expand_RGB_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 #define PNG_DO_RGB_A__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
 #define PNG_DO_RGB_A_16(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 3], src[srcI + 5], src[srcI + 7]);
 
-	if (bpp == 8) {
+	if (bitsPerSample == 8) {
 		for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 16) {
 			PNG_DO_RGB_A__8(i    , j     ); PNG_DO_RGB_A__8(i + 1, j + 4 );
 			PNG_DO_RGB_A__8(i + 2, j + 8 ); PNG_DO_RGB_A__8(i + 3, j + 12);
@@ -287,12 +281,13 @@ void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
 	}
 }
 
+/* TODO: Test a lot of .png files and ensure output is right */
 #define PNG_MAX_DIMS 0x10000L
 void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 	Png_CheckHeader(stream);
 	Bitmap_Create(bmp, 0, 0, NULL);
 	UInt32 transparentCol = PackedCol_ARGB(0, 0, 0, 255);
-	UInt8 col, bpp;
+	UInt8 col, bitsPerSample, bytesPerPixel;
 	Png_RowExpander rowExpander;
 
 	UInt32 palette[PNG_PALETTE];
@@ -329,19 +324,20 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(bmp->Width, bmp->Height));
 			if (bmp->Scan0 == NULL) ErrorHandler_Fail("Failed to allocate memory for PNG bitmap");
 
-			bpp = Stream_ReadUInt8(stream);
-			if (bpp > 16 || !Math_IsPowOf2(bpp)) ErrorHandler_Fail("PNG has invalid bits per pixel");
+			bitsPerSample = Stream_ReadUInt8(stream);
+			if (bitsPerSample > 16 || !Math_IsPowOf2(bitsPerSample)) ErrorHandler_Fail("PNG has invalid bits per pixel");
 			col = Stream_ReadUInt8(stream);
 			if (col == 1 || col == 3 || col > 6) ErrorHandler_Fail("PNG has invalid colour type");
-			if (bpp < 8 && (col >= PNG_COL_RGB && col != PNG_COL_INDEXED)) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
-			if (bpp == 16 && col == PNG_COL_INDEXED) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
+			if (bitsPerSample < 8 && (col >= PNG_COL_RGB && col != PNG_COL_INDEXED)) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
+			if (bitsPerSample == 16 && col == PNG_COL_INDEXED) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
 
 			if (Stream_ReadUInt8(stream) != 0) ErrorHandler_Fail("PNG compression method must be DEFLATE");
 			if (Stream_ReadUInt8(stream) != 0) ErrorHandler_Fail("PNG filter method must be ADAPTIVE");
 			if (Stream_ReadUInt8(stream) != 0) ErrorHandler_Fail("PNG interlacing not supported");
 
 			UInt32 samplesPerPixel[7] = { 1,0,3,1,2,0,4 };
-			scanlineSize = ((samplesPerPixel[col] * bpp * bmp->Width) + 7) >> 3;
+			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
+			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
 			Platform_MemSet(scanlineA, 0, scanlineSize + 1); /* Prior row should be 0 per PNG spec */
 
 			switch (col) {
@@ -406,7 +402,6 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			while (scanlineY < bmp->Height) {
 				UInt32 toRead = scanlineBytes - scanlineIndex, read;
 				UInt8* scanline = (scanlineY & 1) == 0 ? scanlineB : scanlineA;
-				UInt32 pos = Platform_FilePosition(stream->Data);
 				ReturnCode code = compStream.Read(&compStream, &scanline[scanlineIndex], toRead, &read);
 				if (code != 0) ErrorHandler_FailWithCode(code, "PNG - reading image bulk data");
 
@@ -414,8 +409,8 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 				scanlineIndex += read;				
 				if (scanlineIndex == scanlineBytes) {
 					UInt8* prior = (scanlineY & 1) == 0 ? scanlineA : scanlineB;
-					Png_Filter(scanline[0], bpp, &scanline[1], &prior[1], scanlineSize);
-					rowExpander(bpp, bmp->Width, palette, &scanline[1], Bitmap_GetRow(bmp, scanlineY));
+					Png_Filter(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
+					rowExpander(bitsPerSample, bmp->Width, palette, &scanline[1], Bitmap_GetRow(bmp, scanlineY));
 
 					scanlineIndex = 0;
 					scanlineY++;

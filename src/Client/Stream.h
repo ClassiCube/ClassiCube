@@ -3,6 +3,7 @@
 #include "Typedefs.h"
 #include "String.h"
 #include "ErrorHandler.h"
+#include "Constants.h"
 /* Defines an abstract way of reading and writing data in a streaming manner.
    Also provides common helper methods for reading/writing data to/from streams.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
@@ -11,7 +12,6 @@
 #define STREAM_SEEKFROM_BEGIN 0
 #define STREAM_SEEKFROM_CURRENT 1
 #define STREAM_SEEKFROM_END 2
-#define STREAM_NAME_LEN 256
 
 typedef ReturnCode (*Stream_Operation)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
 typedef ReturnCode (*Stream_Seek)(struct Stream_* stream, Int32 offset, Int32 seekType);
@@ -32,7 +32,7 @@ typedef struct Stream_ {
 	/* General purpose numerical metadata for the stream. */
 	UInt32 Data2;
 	/* Raw name buffer */
-	UInt8 NameBuffer[String_BufferSize(STREAM_NAME_LEN)];
+	UInt8 NameBuffer[String_BufferSize(FILENAME_SIZE)];
 	/* The name of the stream. */
 	String Name;
 } Stream;
