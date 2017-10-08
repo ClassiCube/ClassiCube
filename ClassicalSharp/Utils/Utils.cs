@@ -101,11 +101,11 @@ namespace ClassicalSharp {
 		}		
 				
 		public static void LogDebug(string text) {
-			Console.WriteLine(text);
+			try { Console.WriteLine(text); } catch { }
 		}
 		
 		public static void LogDebug(string text, params object[] args) {
-			Console.WriteLine(String.Format(text, args));
+			try { Console.WriteLine(String.Format(text, args)); } catch { }
 		}
 		
 		public static int AccumulateWheelDelta(ref float accmulator, float delta) {

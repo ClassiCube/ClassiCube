@@ -84,13 +84,7 @@ namespace ClassicalSharp.Network.Protocols {
 			WriteCustomBlockSupportLevel(1);
 			net.SendPacket();
 			game.UseCPEBlocks = true;
-
-			if (supportLevel == 1) {
-				game.Events.RaiseBlockPermissionsChanged();
-			} else {
-				Utils.LogDebug("Server's block support level is {0}, this client only supports level 1.", supportLevel);
-				Utils.LogDebug("You won't be able to see or use blocks from levels above level 1");
-			}
+			game.Events.RaiseBlockPermissionsChanged();
 		}
 		
 		void HandleHoldThis() {

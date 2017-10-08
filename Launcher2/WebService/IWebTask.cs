@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Text;
+using ClassicalSharp;
 
 namespace Launcher.Web {
 
@@ -87,8 +88,6 @@ namespace Launcher.Web {
 			}
 		}
 		
-		protected static void Log(string text) {
-			Console.WriteLine(text);
-		}
+		protected static void Log(string text) { Utils.LogDebug(text); }
 	}
 }

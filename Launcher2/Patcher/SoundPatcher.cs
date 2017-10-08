@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.IO;
+using ClassicalSharp;
 using ClassicalSharp.Network;
 using SharpWave;
 using SharpWave.Codecs.Vorbis;
@@ -40,7 +41,7 @@ namespace Launcher.Patcher {
 				Request item;
 				if (fetcher.downloader.TryGetItem(identifiers[i], out item)) {
 					fetcher.FilesToDownload.RemoveAt(0);
-					Console.WriteLine("got sound " + identifiers[i]);
+					Utils.LogDebug("got sound " + identifiers[i]);
 					
 					if (item.Data == null) {
 						setStatus("&cFailed to download " + identifiers[i]);

@@ -6,17 +6,12 @@ namespace OpenTK {
 	public static class Debug {
 		
 		public static void Print(string text) {
-			try {
-				Console.WriteLine(text);
-			} catch (Exception) {
-			} // raised by Mono sometimes when trying to write to console from the finalizer thread.
+			try { Console.WriteLine(text); } catch { } 
+			// raised by Mono sometimes when trying to write to console from the finalizer thread.
 		}
 		
 		public static void Print(string text, params object[] args) {
-			try {
-				Console.WriteLine(text, args);
-			} catch (Exception) {
-			}
+			try { Console.WriteLine(text, args); } catch { }
 		}
 	}
 }

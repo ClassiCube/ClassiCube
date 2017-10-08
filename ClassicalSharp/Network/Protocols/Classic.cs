@@ -165,20 +165,9 @@ namespace ClassicalSharp.Network.Protocols {
 			int y = reader.ReadUInt16();
 			int z = reader.ReadUInt16();
 			byte block = reader.ReadUInt8();
-			
-			#if DEBUG_BLOCKS
-			if (game.World.IsNotLoaded) {
-				Utils.LogDebug("Server tried to update a block while still sending us the map!");
-			} else if (!game.World.IsValidPos(x, y, z)) {
-				Utils.LogDebug("Server tried to update a block at an invalid position!");
-			} else {
-				game.UpdateBlock(x, y, z, block);
-			}
-			#else
 			if (game.World.blocks != null && game.World.IsValidPos(x, y, z)) {
 				game.UpdateBlock(x, y, z, block);
 			}
-			#endif
 		}
 		
 		void HandleAddEntity() {

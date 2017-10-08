@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ClassicalSharp;
 using ClassicalSharp.Network;
 
 namespace Launcher.Patcher {
@@ -94,7 +95,7 @@ namespace Launcher.Patcher {
 			Request item;
 			if (downloader.TryGetItem(identifier, out item)) {
 				FilesToDownload.RemoveAt(0);
-				Console.WriteLine("got resource " + identifier);
+				Utils.LogDebug("got resource " + identifier);
 				
 				if (item.Data == null) {
 					setStatus("&cFailed to download " + identifier);
