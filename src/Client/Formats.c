@@ -60,14 +60,15 @@ void Lvl_ConvertPhysicsBlocks(void) {
 
 	Int32 alignedBlocksSize = World_BlocksSize & ~3;
 	/* Bulk convert 4 blocks at once */
+	UInt8* blocks = World_Blocks;
 	for (i = 0; i < alignedBlocksSize; i += 4) {
-		World_Blocks[i + 0] = conv[World_Blocks[i + 0]];
-		World_Blocks[i + 1] = conv[World_Blocks[i + 1]];
-		World_Blocks[i + 2] = conv[World_Blocks[i + 2]];
-		World_Blocks[i + 3] = conv[World_Blocks[i + 3]];
+		*blocks = conv[*blocks]; blocks++;
+		*blocks = conv[*blocks]; blocks++;
+		*blocks = conv[*blocks]; blocks++;
+		*blocks = conv[*blocks]; blocks++;
 	}
 	for (i = alignedBlocksSize; i < World_BlocksSize; i++) {
-		World_Blocks[i] = conv[World_Blocks[i]];
+		*blocks = conv[*blocks]; blocks++;
 	}
 }
 

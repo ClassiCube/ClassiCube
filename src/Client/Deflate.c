@@ -384,11 +384,18 @@ void Deflate_InflateFast(DeflateState* state) {
 			DEFLATE_UNSAFE_ENSURE_BITS(state, bits);
 			UInt32 dist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
 
-			/* TODO: Should we test outside of the loop, whether a masking will be required or not? */
 			UInt32 startIdx = (curIdx - dist) & DEFLATE_WINDOW_MASK;
 			UInt32 i;
-			for (i = 0; i < len; i++) {
-				window[(curIdx + i) & DEFLATE_WINDOW_MASK] = window[(startIdx + i) & DEFLATE_WINDOW_MASK];
+			if (curIdx >= startIdx && (curIdx + len) < DEFLATE_WINDOW_SIZE) {
+				UInt8* src = &window[startIdx]; UInt8* dst = &window[curIdx];
+				for (i = 0; i < (len & ~0x3); i += 4) {
+					*dst++ = *src++; *dst++ = *src++; *dst++ = *src++; *dst++ = *src++;
+				}
+				for (; i < len; i++) { *dst++ = *src++; }
+			} else {
+				for (i = 0; i < len; i++) {
+					window[(curIdx + i) & DEFLATE_WINDOW_MASK] = window[(startIdx + i) & DEFLATE_WINDOW_MASK];
+				}
 			}
 			curIdx = (curIdx + len) & DEFLATE_WINDOW_MASK;
 			state->AvailOut -= len; copyLen += len;
@@ -577,13 +584,14 @@ void Deflate_Process(DeflateState* state) {
 				state->Window[state->WindowIndex] = (UInt8)lit;
 				state->Output++; state->AvailOut--;
 				state->WindowIndex = (state->WindowIndex + 1) & DEFLATE_WINDOW_MASK;
+				break;
 			} else if (lit == 256) {
 				state->State = DEFLATE_NEXTBLOCK_STATE(state);
+				break;
 			} else {
 				state->TmpLit = lit - 257;
 				state->State = DeflateState_CompressedLitRepeat;
 			}
-			break;
 		}
 
 		case DeflateState_CompressedLitRepeat: {
