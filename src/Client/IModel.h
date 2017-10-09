@@ -21,13 +21,6 @@ typedef UInt8 RotateOrder;
 #define RotateOrder_XZY 1
 #define RotateOrder_YZX 2
 
-/* Skin layout a humanoid skin texture can have. */
-typedef UInt8 SkinType;
-#define SkinType_64x32 0
-#define SkinType_64x64 1
-#define SkinType_64x64Slim 2
-#define SkinType_Invalid 3
-
 /* Describes a vertex within a model. */
 typedef struct ModelVertex_ {
 	Real32 X, Y, Z;

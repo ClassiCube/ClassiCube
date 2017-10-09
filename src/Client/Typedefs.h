@@ -42,6 +42,8 @@ typedef UInt8 EntityID;
 typedef UInt8 TextureLoc;
 /* Sides of a block. TODO: Map this to CPE PlayerClicked blockface enums. */
 typedef UInt8 Face;
+/* Skin layout a humanoid skin texture can have. */
+typedef UInt8 SkinType;
 
 #define UInt8_MaxValue  ((UInt8)0xFF)
 #define Int16_MaxValue  ((Int16)0x7FFF)

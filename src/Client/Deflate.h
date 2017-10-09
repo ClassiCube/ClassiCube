@@ -3,7 +3,7 @@
 #include "Typedefs.h"
 #include "Stream.h"
 /* Decodes data compressed using DEFLATE in a streaming manner.
-   Based off information from
+   Partially based off information from
 	https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
 	http://commandlinefanatic.com/cgi-bin/showarticle.cgi?article=art001
 	https://www.ietf.org/rfc/rfc1951.txt
@@ -36,7 +36,7 @@ void ZLibHeader_Init(ZLibHeader* header);
 void ZLibHeader_Read(Stream* s, ZLibHeader* header);
 
 
-#define DEFLATE_MAX_INPUT 4096
+#define DEFLATE_MAX_INPUT 8192
 #define DEFLATE_MAX_CODELENS 19
 #define DEFLATE_MAX_LITS 288
 #define DEFLATE_MAX_DISTS 32

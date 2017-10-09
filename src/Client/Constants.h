@@ -44,4 +44,9 @@
 #define Face_YMax 5
 /* Number of faces on a cube. */
 #define Face_Count 6
+
+#define SkinType_64x32 0
+#define SkinType_64x64 1
+#define SkinType_64x64Slim 2
+#define SkinType_Invalid 3
 #endif

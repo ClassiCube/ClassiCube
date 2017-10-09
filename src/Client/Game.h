@@ -17,6 +17,7 @@ Int32 Game_ChunkUpdates;
 bool Game_CameraClipping;
 /* Whether colour clear gfx call should be skipped. */
 bool Game_SkipClear;
+SkinType Game_DefaultPlayerSkinType;
 /* Picked pos instance used for block selection. */
 PickedPos Game_SelectedPos;
 /* Picked pos instance used for camera clipping. */
@@ -144,7 +145,7 @@ void Game_UpdateProjection(void);
 /* Updates the block at the given coordinates. */
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
 /* Updates the given texture. */
-void Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType);
+bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType);
 /* Sets the view distance of the game. */
 void Game_SetViewDistance(Real32 distance, bool userDist);
 /* Returns whether the player can pick the given block.*/

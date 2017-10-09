@@ -133,7 +133,8 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			if (height <= 0) continue;
 
 			if (particles && (weather_accumulator >= 0.25 || moved)) {
-				ParticleManager_AddRainParticle(x, y, z);
+				/* TODO: Implement particles*/
+				//ParticleManager_AddRainParticle(x, y, z);
 			}
 
 			Real32 dist = (Real32)dx * (Real32)dx + (Real32)dz * (Real32)dz;
