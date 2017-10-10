@@ -61,7 +61,9 @@ ReturnCode Stream_FileWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* m
 	return Platform_FileWrite(stream->Data, data, count, modified);
 }
 ReturnCode Stream_FileClose(Stream* stream) {
-	return Platform_FileClose(stream->Data);
+	ReturnCode code = Platform_FileClose(stream->Data);
+	stream->Data = NULL;
+	return code;
 }
 ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
 	return Platform_FileSeek(stream->Data, offset, seekType);

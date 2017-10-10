@@ -2,7 +2,7 @@
 #include "ErrorHandler.h"
 
 void Event_RegisterImpl(Event_Void* handlers, Event_Void_Callback handler) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		if (handlers->Handlers[i] == handler) return;
 	}
@@ -16,7 +16,7 @@ void Event_RegisterImpl(Event_Void* handlers, Event_Void_Callback handler) {
 }
 
 void Event_UnregisterImpl(Event_Void* handlers, Event_Void_Callback handler) {
-	Int32 i, j;
+	UInt32 i, j;
 	for (i = 0; i < handlers->Count; i++) {
 		if (handlers->Handlers[i] != handler) continue;
 
@@ -33,7 +33,7 @@ void Event_UnregisterImpl(Event_Void* handlers, Event_Void_Callback handler) {
 }
 
 void Event_RaiseVoid(Event_Void* handlers) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i]();
 	}
@@ -46,7 +46,7 @@ void Event_UnregisterVoid(Event_Void* handlers, Event_Void_Callback handler) {
 }
 
 void Event_RaiseInt32(Event_Int32* handlers, Int32 arg) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](arg);
 	}
@@ -59,7 +59,7 @@ void Event_UnregisterInt32(Event_Int32* handlers, Event_Int32_Callback handler) 
 }
 
 void Event_RaiseReal32(Event_Real32* handlers, Real32 arg) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](arg);
 	}
@@ -73,7 +73,7 @@ void Event_UnregisterReal32(Event_Real32* handlers, Event_Real32_Callback handle
 }
 
 void Event_RaiseEntityID(Event_EntityID* handlers, EntityID arg) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](arg);
 	}
@@ -99,7 +99,7 @@ void Event_UnregisterStream(Event_Stream* handlers, Event_Stream_Callback handle
 }
 
 void Event_RaiseBlock(Event_Block* handlers, Vector3I coords, BlockID oldBlock, BlockID block) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](coords, oldBlock, block);
 	}
@@ -112,7 +112,7 @@ void Event_UnregisterBlock(Event_Block* handlers, Event_Block_Callback handler) 
 }
 
 void Event_RaiseMouseMove(Event_MouseMove* handlers, Int32 xDelta, Int32 yDelta) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](xDelta, yDelta);
 	}

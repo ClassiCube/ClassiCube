@@ -9,6 +9,8 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+/* Width and height of game window */
+Int32 Game_Width, Game_Height;
 /* Total rendering time(in seconds) elapsed since the client was started. */
 Real64 Game_Accumulator;
 /* Accumulator for the number of chunk updates performed. Reset every second. */

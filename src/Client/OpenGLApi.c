@@ -506,7 +506,6 @@ void Gfx_EndFrame(void) {
 }
 
 void Gfx_OnWindowResize(void) {
-	Size2D size = Window_GetClientSize();
-	glViewport(0, 0, size.Width, size.Height);
+	glViewport(0, 0, Game_Width, Game_Height);
 }
 #endif

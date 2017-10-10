@@ -191,8 +191,7 @@ void D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args)
 
 void D3D9_RecreateDevice(void) {
 	D3DPRESENT_PARAMETERS args;
-	Size2D size = Window_GetClientSize();
-	D3D9_GetPresentArgs(size.Width, size.Height, &args);
+	D3D9_GetPresentArgs(Game_Width, Game_Height, &args);
 
 	while (IDirect3DDevice9_Reset(device, &args) == D3DERR_DEVICELOST) {
 		D3D9_LoopUntilRetrieved();

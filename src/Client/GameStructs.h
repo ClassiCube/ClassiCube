@@ -10,22 +10,16 @@ typedef void (*Void_Callback)(void);
 
 /* Represents a game component. */
 typedef struct IGameComponent_ {
-
 	/* Called when the game is being loaded. */
 	Void_Callback Init;
-
 	/* Called when the component is being freed, due to game being closed. */
 	Void_Callback Free;
-
 	/* Called when the texture pack has been loaded and all components have been initalised. */
 	Void_Callback Ready;
-
 	/* Called to reset the component's state when the user is reconnecting to a server */
 	Void_Callback Reset;
-
 	/* Called to update the component's state when the user begins loading a new map. */
 	Void_Callback OnNewMap;
-
 	/* Called to update the component's state when the user has finished loading a new map. */
 	Void_Callback OnNewMapLoaded;
 } IGameComponent;

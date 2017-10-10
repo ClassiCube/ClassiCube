@@ -5,6 +5,7 @@
 #include "GraphicsAPI.h"
 #include "Player.h"
 #include "Funcs.h"
+#include "Gui.h"
 
 Real32 Camera_AdjustHeadX(Real32 value) {
 	if (value >= 90.00f && value <= 90.10f) return 90.10f * MATH_DEG2RAD;
@@ -23,8 +24,7 @@ Vector3 PerspectiveCamera_GetDirVector(void) {
 
 void PerspectiveCamera_GetProjection(Matrix* proj) {
 	Real32 fovy = Game_Fov * MATH_DEG2RAD;
-	Size2D size = Window_GetClientSize();
-	Real32 aspectRatio = (Real32)size.Width / (Real32)size.Height;
+	Real32 aspectRatio = (Real32)Game_Width / (Real32)Game_Height;
 	Matrix_PerspectiveFieldOfView(proj, fovy, aspectRatio, Gfx_MinZNear, Game_ViewDistance);
 }
 
@@ -43,9 +43,8 @@ void PerspectiveCamera_CentreMousePosition(void) {
 	delta = Point2D_Make(current.X - previous.X, current.Y - previous.Y);
 
 	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
-	Size2D size = Window_GetClientSize();
-	Int32 cenX = topLeft.X + size.Width  / 2;
-	Int32 cenY = topLeft.Y + size.Height / 2;
+	Int32 cenX = topLeft.X + Game_Width  / 2;
+	Int32 cenY = topLeft.Y + Game_Height / 2;
 
 	Window_SetDesktopCursorPos(Point2D_Make(cenX, cenY));
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
@@ -56,9 +55,8 @@ void PerspectiveCamera_RegrabMouse(void) {
 	if (!Window_GetExists()) return;
 
 	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
-	Size2D size = Window_GetClientSize();
-	Int32 cenX = topLeft.X + size.Width  / 2;
-	Int32 cenY = topLeft.Y + size.Height / 2;
+	Int32 cenX = topLeft.X + Game_Width  / 2;
+	Int32 cenY = topLeft.Y + Game_Height / 2;
 
 	Point2D point = Point2D_Make(cenX, cenY);
 	Window_SetDesktopCursorPos(point);
@@ -101,7 +99,8 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 }
 
 void PerspectiveCamera_UpdateMouse(void) {
-	/* if (Gui.ActiveScreen.HandlesAllInput) return; TODO: NEED TO IMPLEMENT GUI CODE FIRSTLY */
+	Screen* screen = Gui_GetActiveScreen();
+	if (screen->HandlesAllInput) return;
 	PerspectiveCamera_CentreMousePosition();
 	PerspectiveCamera_UpdateMouseRotation();
 }
