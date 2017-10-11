@@ -52,20 +52,11 @@ void Platform_MemFree(void* mem) {
 }
 
 void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes) {
-	UInt8* dstByte = (UInt8*)dst;
-	/* TODO: massively slow */
-	for (UInt32 i = 0; i < numBytes; i++) {
-		*dstByte++ = value;
-	}
+	return memset(dst, value, numBytes);
 }
 
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
-	UInt8* dstByte = (UInt8*)dst;
-	UInt8* srcByte = (UInt8*)src;
-	/* TODO: massively slow */
-	for (UInt32 i = 0; i < numBytes; i++) {
-		*dstByte++ = *srcByte++;
-	}
+	return memcpy(dst, src, numBytes);
 }
 
 

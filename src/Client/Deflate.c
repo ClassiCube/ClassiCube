@@ -355,6 +355,7 @@ UInt16 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
 UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
 4,4,5,5,6,6,7,7,8,8,
 9,9,10,10,11,11,12,12,13,13,0,0 };
+UInt8 codelens_order[DEFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
 
 void Deflate_InflateFast(DeflateState* state) {
 	UInt32 copyStart = state->WindowIndex, copyLen = 0;
@@ -494,17 +495,15 @@ void Deflate_Process(DeflateState* state) {
 		}
 
 		case DeflateState_DynamicCodeLens: {
-			UInt8 order[DEFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
 			Int32 i;
-
 			while (state->Index < state->NumCodeLens) {
 				DEFLATE_ENSURE_BITS(state, 3);
-				i = order[state->Index];
+				i = codelens_order[state->Index];
 				state->Buffer[i] = DEFLATE_READ_BITS(state, 3);
 				state->Index++;
 			}
 			for (i = state->NumCodeLens; i < DEFLATE_MAX_CODELENS; i++) {
-				state->Buffer[order[i]] = 0;
+				state->Buffer[codelens_order[i]] = 0;
 			}
 
 			state->Index = 0;

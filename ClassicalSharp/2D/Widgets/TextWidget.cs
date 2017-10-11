@@ -32,8 +32,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public bool IsValid { get { return texture.IsValid; } }
 		
 		public override void Init() {
-			DrawTextArgs args = new DrawTextArgs("I", font, true);
-			int height = game.Drawer2D.MeasureSize(ref args).Height;
+			int height = game.Drawer2D.FontHeight(font, true);
 			SetHeight(height);
 		}
 		

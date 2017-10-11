@@ -5,36 +5,25 @@
 #include "GraphicsAPI.h"
 #include "Events.h"
 
-void GuiElement_Fail(void) {
-
+Screen* Gui_Status;
+void GuiElement_Recreate(GuiElement* elem) {
+	elem->Free(elem);
+	elem->Init(elem);
 }
+bool GuiElement_ReturnFalse(void) { return false; }
 
-bool GuiElement_ReturnFalse(void) {
-	return false;
-}
 void GuiElement_Init(GuiElement* elem) {
-	/* Initalises state of this GUI element */
-	Gui_Void Init;
-	/* Draws this gui element on screen */
-	Gui_Render Render;
-	/* Frees the state of this GUI element */
-	Gui_Void Free;
-	/* Recreates all sub-elements and/or textures. (e.g. for when bitmap font changes) */
-	Gui_Void Recreate;
-	/* Returns whether this GUI element handles a key being pressed. */
-	Gui_KeyHandler HandlesKeyDown;
-	/* Returns whether this GUI element handles a key being released. */
-	Gui_KeyHandler HandlesKeyUp;
-	/* Returns whether this GUI element handles a character being input */
-	Gui_KeyPress HandlesKeyPress;
-	/* Returns whether this GUI element handles a mouse button being pressed. */
-	Gui_MouseHandler HandlesMouseDown;
-	/* Returns whether this GUI element handles a mouse button being released. */
-	Gui_MouseHandler HandlesMouseUp;
-	/* Returns whether this GUI element handles the mouse being moved. */
-	Gui_MouseMove HandlesMouseMove;
-	/* Returns whether this GUI element handles the mouse being scrolled. */
-	Gui_MouseScroll HandlesMouseScroll;
+	elem->Init = NULL;
+	elem->Render = NULL;
+	elem->Free = NULL;
+	elem->Recreate = GuiElement_Recreate;
+	elem->HandlesKeyDown = GuiElement_ReturnFalse;
+	elem->HandlesKeyUp = GuiElement_ReturnFalse;
+	elem->HandlesKeyPress = GuiElement_ReturnFalse;
+	elem->HandlesMouseDown = GuiElement_ReturnFalse;
+	elem->HandlesMouseUp = GuiElement_ReturnFalse;
+	elem->HandlesMouseMove = GuiElement_ReturnFalse;
+	elem->HandlesMouseScroll = GuiElement_ReturnFalse;
 }
 
 void Screen_Init(Screen* screen) {
@@ -43,12 +32,28 @@ void Screen_Init(Screen* screen) {
 	screen->BlocksWorld = false;
 	screen->HidesHUD = false;
 	screen->RenderHUDOver = false;
-	screen->
+	screen->OnResize = NULL;
+	screen->OnContextLost = NULL;
+	screen->OnContextRecreated = NULL;
+}
+
+void Widget_DefaultReposition(Widget* w) {
+	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );
+	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
 
 void Widget_Init(Widget* widget) {
-
+	widget->Active = false;
+	widget->Disabled = false;
+	widget->OnClick = NULL;
+	widget->X = 0; widget->Y = 0;
+	widget->Width = 0; widget->Height = 0;
+	widget->HorAnchor = ANCHOR_LEFT_OR_TOP;
+	widget->VerAnchor = ANCHOR_LEFT_OR_TOP;
+	widget->XOffset = 0; widget->YOffset = 0;
+	widget->Reposition = Widget_DefaultReposition;
 }
+
 
 Int32 Gui_CalcPos(Anchor anchor, Int32 offset, Int32 size, Int32 axisLen) {
 	if (anchor == ANCHOR_LEFT_OR_TOP)     return offset;
@@ -74,15 +79,15 @@ void Gui_FileChanged(Stream* stream) {
 	}
 }
 
-void Gui_Init() {
+void Gui_Init(void) {
 	Event_RegisterStream(&TextureEvents_FileChanged, Gui_FileChanged);
+	/* TODO: Init Gui_Status, Gui_HUD*/
 }
 
 void Gui_Reset(void) {
 	UInt32 i;
 	for (i = 0; i < Gui_OverlayCount; i++) {
-		overlays[i].Dispose();
-		Gui_Overlays[i]->Base.Free(Gui_Overlays[i]);
+		Gui_Overlays[i]->Base.Free(&Gui_Overlays[i]->Base);
 	}
 	Gui_OverlayCount = 0;
 }
@@ -90,10 +95,10 @@ void Gui_Reset(void) {
 void Gui_Free(void) {
 	Event_UnregisterStream(&TextureEvents_FileChanged, Gui_FileChanged);
 	Gui_SetScreen(NULL);
-	statusScreen.Dispose();
+	Gui_Status->Base.Free(&Gui_Status->Base);
 
-	if (Gui_Active != null) {
-		Gui_Active->Base.Free(Gui_Active);
+	if (Gui_Active != NULL) {
+		Gui_Active->Base.Free(&Gui_Active->Base);
 	}
 	Gfx_DeleteTexture(&Gui_GuiTex);
 	Gfx_DeleteTexture(&Gui_GuiClassicTex);
@@ -124,46 +129,50 @@ void Gui_SetScreen(Screen* screen) {
 
 	if (screen == NULL) {
 		hudScreen.GainFocus();
-	} else if (activeScreen == null) {
+	} else if (Gui_Active == NULL) {
 		hudScreen.LoseFocus();
 	}
 
-	if (screen != null)
-		screen.Init();
-	activeScreen = screen;
+	if (screen != NULL) {
+		screen->Base.Init(&screen->Base);
+	}
+	Gui_Active = screen;
 }
 
 void Gui_RefreshHud(void) {
-	Gui_HUD->Base.Recreate(Gui_HUD);
+	Gui_HUD->Base.Recreate(&Gui_HUD->Base);
 }
 
-void Gui_ShowOverlay(Screen* overlay) 
-bool cursorVis = game.CursorVisible;
-if (overlays.Count == 0) game.CursorVisible = true;
-overlays.Add(overlay);
-if (overlays.Count == 1) game.CursorVisible = cursorVis;
-// Save cursor visibility state
-overlay.Init();
+void Gui_ShowOverlay(Screen* overlay) {
+	if (Gui_OverlayCount == GUI_MAX_OVERLAYS) {
+		ErrorHandler_Fail("Cannot have more than 40 overlays");
+	}
+	bool visible = Game_GetCursorVisible();
+	if (Gui_OverlayCount == 0) Game_SetCursorVisible(true);
+
+	Gui_Overlays[Gui_OverlayCount++] = overlay;
+	if (Gui_OverlayCount == 1) Game_SetCursorVisible(visible); /* Save cursor visibility state */
+	overlay->Base.Init(&overlay->Base);
 }
 
 void Gui_RenderGui(Real64 delta) {
 	GfxCommon_Mode2D(Game_Width, Game_Height);
 	if (Gui_Active == NULL || !Gui_Active->HidesHUD) {
-		statusScreen.Render(delta)
+		Gui_Status->Base.Render(&Gui_Status->Base, delta);
 	}
 
 	if (Gui_Active == NULL || !Gui_Active->HidesHUD && !Gui_Active->RenderHUDOver) {
-		Gui_HUD->Base.Render(Gui_HUD, delta);
+		Gui_HUD->Base.Render(&Gui_HUD->Base, delta);
 	}
 	if (Gui_Active != NULL) {
-		Gui_Active->Base.Render(Gui_Active, delta);
+		Gui_Active->Base.Render(&Gui_Active->Base, delta);
 	}
 	if (Gui_Active != NULL && !Gui_Active->HidesHUD && Gui_Active->RenderHUDOver) {
-		Gui_HUD->Base.Render(Gui_HUD, delta);
+		Gui_HUD->Base.Render(&Gui_HUD->Base, delta);
 	}
 
 	if (Gui_OverlayCount > 0) {
-		Gui_Overlays[0]->Base.Render(Gui_Overlays[0], delta);
+		Gui_Overlays[0]->Base.Render(&Gui_Overlays[0]->Base, delta);
 	}
 	GfxCommon_Mode3D();
 }

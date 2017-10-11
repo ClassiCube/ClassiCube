@@ -34,7 +34,7 @@ namespace ClassicalSharp {
 #endif
 		public const float Offset = 1.3f;
 		
-		/// <summary>Whether chat text should be drawn and measuring using the currently bitmapped font, 
+		/// <summary> Whether chat text should be drawn and measuring using the currently bitmapped font, 
 		/// false uses the font supplied as the DrawTextArgs argument supplied to the function. </summary>
 		public bool UseBitmappedChat;
 		
@@ -58,10 +58,8 @@ namespace ClassicalSharp {
 		/// <summary> Disposes of any resources used by this class that are associated with the underlying bitmap. </summary>
 		public abstract void Dispose();
 		
-		/// <summary> Returns a new bitmap that has 32-bpp pixel format. </summary>
 		public abstract Bitmap ConvertTo32Bpp(Bitmap src);
 		
-		/// <summary> Returns a new bitmap that has 32-bpp pixel format. </summary>
 		public void ConvertTo32Bpp(ref Bitmap src) {
 			Bitmap newBmp = ConvertTo32Bpp(src);
 			src.Dispose();
@@ -76,9 +74,6 @@ namespace ClassicalSharp {
 
 		protected abstract void DrawBitmappedText(ref DrawTextArgs args, int x, int y);
 		
-		/// <summary> Draws a string using the specified arguments, using the specified font or 
-		/// the current bitmapped font depending on 'UseBitmappedChat', at the
-		/// specified coordinates in the currently bound bitmap. </summary>
 		public void DrawText(ref DrawTextArgs args, int x, int y) {
 			if (!UseBitmappedChat)
 				DrawSysText(ref args, x, y);
@@ -88,16 +83,16 @@ namespace ClassicalSharp {
 		
 		protected abstract Size MeasureSysSize(ref DrawTextArgs args);
 		
-		/// <summary> Returns the size of a bitmap needed to contain the specified text with the given arguments,
-		/// when drawn with the specified font or the current bitmapped font depending on 'UseBitmappedChat'. </summary>
 		public Size MeasureSize(ref DrawTextArgs args) {
 			return !UseBitmappedChat ? MeasureSysSize(ref args) : MeasureBitmappedSize(ref args);
 		}
 		
+		public int FontHeight(Font font, bool useShadow) {
+			DrawTextArgs args = new DrawTextArgs("I", font, useShadow);
+			return MeasureSize(ref args).Height;
+		}
+		
 #if !LAUNCHER
-		/// <summary> Draws the specified string from the arguments into a new bitmap,
-		/// using the specified font or the current bitmapped font depending on 'UseBitmappedChat',
-		/// then creates a 2D texture with origin at the specified window coordinates. </summary>
 		public Texture MakeTextTexture(ref DrawTextArgs args, int windowX, int windowY) {
 			Size size = MeasureSize(ref args);
 			if (size == Size.Empty)
@@ -120,7 +115,6 @@ namespace ClassicalSharp {
 		public abstract void DisposeInstance();
 		
 #if !LAUNCHER
-		/// <summary> Creates a 2D texture with origin at the specified window coordinates. </summary>
 		public Texture Make2DTexture(Bitmap bmp, Size used, int windowX, int windowY) {			
 			int texId = graphics.CreateTexture(bmp, false, false);
 			return new Texture(texId, windowX, windowY, used.Width, used.Height,

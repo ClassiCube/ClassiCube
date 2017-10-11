@@ -98,13 +98,6 @@ bool Game_HideGui;
 /* Whether FPS status in top left is hidden. */
 bool Game_ShowFPS;
 
-/* Raw hotbar scale.*/
-static Real32 Game_RawHotbarScale;
-/* Raw chat scale. */
-static Real32 Game_RawChatScale;
-/* Raw inventory scale*/
-static Real32 Game_RawInventoryScale;
-
 /* Whether view bobbing is enabled. */
 bool Game_ViewBobbing;
 /* Whether block in hand is shown in bottom right. */
@@ -116,41 +109,24 @@ Int32 Game_MusicVolume;
 /* Whether water/lava can be placed/deleted like normal blocks. */
 bool Game_ModifiableLiquids;
 
-/* Current position of the camera. */
 Vector3 Game_CurrentCameraPos;
-/* Whether a screenshot is requested. */
 bool Game_ScreenshotRequested;
 
-/* Calculates the amount that the hotbar widget should be scaled by when rendered.
-Affected by current resolution of the window, as scaling specified by the user */
-Real32 Game_GetGuiHotbarScale(void);
-/* Calculates the amount that the block inventory menu should be scaled by when rendered.
-Affected by current resolution of the window, and scaling specified by the user */
-Real32 Game_GetGuiInventoryScale(void);
-/* alculates the amount that 2D chat widgets should be scaled by when rendered.
-Affected by current resolution of the window, and scaling specified by the user*/
-Real32 Game_GetGuiChatScale(void);
+Real32 Game_RawHotbarScale, Game_RawChatScale, Game_RawInventoryScale;
+Real32 Game_Scale(Real32 value);
+Real32 Game_GetHotbarScale(void);
+Real32 Game_GetInventoryScale(void);
+Real32 Game_GetChatScale(void);
 
-/* Gets path of default texture pack path.
-NOTE: If texture pack specified by user can't be found, returns 'default.zip' */
 String Game_GetDefaultTexturePack(void);
-/* Sets the default texture pack path. */
 void Game_SetDefaultTexturePack(String value);
-
-static bool Game_CursorVisible;
-static bool Game_realCursorVisible;
-/* Sets whether the cursor is visible. */
+bool Game_GetCursorVisible(void);
 void Game_SetCursorVisible(bool visible);
 
-/* Called when projection matrix is updated. */
 void Game_UpdateProjection(void);
-/* Updates the block at the given coordinates. */
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
-/* Updates the given texture. */
 bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType);
-/* Sets the view distance of the game. */
 void Game_SetViewDistance(Real32 distance, bool userDist);
-/* Returns whether the player can pick the given block.*/
 bool Game_CanPick(BlockID block);
 
 /* Performs thread sleeping to limit the FPS. */
