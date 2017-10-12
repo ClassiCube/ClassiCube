@@ -48,7 +48,7 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header);
 
 typedef struct HuffmanTable_ {
 	UInt16 FirstCodewords[DEFLATE_MAX_BITS]; /* Starting codeword for each bit length */
-	Int32 EndCodewords[DEFLATE_MAX_BITS];    /* End codeword for each bit length. -1 is ignored. */
+	UInt16 EndCodewords[DEFLATE_MAX_BITS];    /* (Last codeword + 1) for each bit length. 0 is ignored. */
 	UInt16 FirstOffsets[DEFLATE_MAX_BITS];   /* Base offset into Values for codewords of each bit length. */
 	UInt16 Values[DEFLATE_MAX_LITS];         /* Values/Symbols list */
 	Int16 Fast[1 << DEFLATE_ZFAST_BITS];     /* Fast lookup table for huffman codes */

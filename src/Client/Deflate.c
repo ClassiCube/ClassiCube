@@ -218,10 +218,12 @@ void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 		table->FirstOffsets[i] = (UInt16)offset;
 
 		offset += bl_count[i];
+		/* Last codeword is actually: code + (bl_count[i] - 1) */
+		/* When decoding we peform < against this value though, so we need to add 1 here */
 		if (bl_count[i]) {
-			table->EndCodewords[i] = code + (bl_count[i] - 1);
+			table->EndCodewords[i] = (UInt16)(code + bl_count[i]); 
 		} else {
-			table->EndCodewords[i] = -1;
+			table->EndCodewords[i] = 0;
 		}
 	}
 
@@ -271,13 +273,13 @@ Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
 	}
 
 	/* Slow, bit by bit lookup */
-	Int32 codeword = 0;
+	UInt32 codeword = 0;
 	UInt32 i, j;
 	for (i = 1, j = 0; i < DEFLATE_MAX_BITS; i++, j++) {
 		if (state->NumBits < i) return -1;
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
-		if (codeword >= table->FirstCodewords[i] && codeword <= table->EndCodewords[i]) {
+		if (codeword < table->EndCodewords[i]) {
 			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
 			DEFLATE_CONSUME_BITS(state, i);
 			return table->Values[offset];
@@ -304,7 +306,7 @@ Int32 Huffman_Unsafe_Decode(DeflateState* state, HuffmanTable* table) {
 	for (i = DEFLATE_ZFAST_BITS + 1, j = DEFLATE_ZFAST_BITS; i < DEFLATE_MAX_BITS; i++, j++) {
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
 
-		if (codeword >= table->FirstCodewords[i] && (Int32)codeword <= table->EndCodewords[i]) {
+		if (codeword < table->EndCodewords[i]) {
 			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
 			DEFLATE_CONSUME_BITS(state, i);
 			return table->Values[offset];
