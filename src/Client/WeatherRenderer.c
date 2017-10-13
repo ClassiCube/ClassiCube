@@ -13,6 +13,7 @@
 #include "Vectors.h"
 #include "VertexStructs.h"
 #include "World.h"
+#include "Particle.h"
 
 GfxResourceID weather_rainTex;
 GfxResourceID weather_snowTex;
@@ -133,8 +134,8 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			if (height <= 0) continue;
 
 			if (particles && (weather_accumulator >= 0.25 || moved)) {
-				/* TODO: Implement particles*/
-				//ParticleManager_AddRainParticle(x, y, z);
+				Vector3 particlePos = Vector3_Create3((Real32)x, y, (Real32)z);
+				Particles_RainSnowEffect(particlePos);
 			}
 
 			Real32 dist = (Real32)dx * (Real32)dx + (Real32)dz * (Real32)dz;

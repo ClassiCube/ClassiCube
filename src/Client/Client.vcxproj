@@ -215,6 +215,7 @@
     <ClInclude Include="Mouse.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="Options.h" />
+    <ClInclude Include="Particle.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Picking.h" />
     <ClInclude Include="PickedPosRenderer.h" />
@@ -289,6 +290,7 @@
     <ClCompile Include="GraphicsCommon.c" />
     <ClCompile Include="Matrix.c" />
     <ClCompile Include="Noise.c" />
+    <ClCompile Include="Particle.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />

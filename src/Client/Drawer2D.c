@@ -18,19 +18,6 @@ Int32 Drawer2D_BoxSize;
 #define DRAWER2D_LOG2_CHARS_PER_ROW 4
 Int32 Drawer2D_Widths[256];
 
-void Drawer2D_FreeFontBitmap(void) {
-	if (Drawer2D_FontBitmap.Scan0 == NULL) return;
-	Platform_MemFree(Drawer2D_FontBitmap.Scan0);
-	Drawer2D_FontBitmap.Scan0 = NULL;
-}
-
-void Drawer2D_SetFontBitmap(Bitmap bmp) {
-	Drawer2D_FreeFontBitmap();
-	Drawer2D_FontBitmap = bmp;
-	Drawer2D_BoxSize = bmp.Width >> DRAWER2D_LOG2_CHARS_PER_ROW;
-	Drawer2D_CalculateTextWidths();
-}
-
 void Drawer2D_CalculateTextWidths(void) {
 	Int32 width = Drawer2D_FontBitmap.Width, height = Drawer2D_FontBitmap.Height;
 	Int32 i;
@@ -61,6 +48,19 @@ void Drawer2D_CalculateTextWidths(void) {
 	Drawer2D_Widths[' '] = Drawer2D_BoxSize / 4;
 }
 
+void Drawer2D_FreeFontBitmap(void) {
+	if (Drawer2D_FontBitmap.Scan0 == NULL) return;
+	Platform_MemFree(Drawer2D_FontBitmap.Scan0);
+	Drawer2D_FontBitmap.Scan0 = NULL;
+}
+
+void Drawer2D_SetFontBitmap(Bitmap bmp) {
+	Drawer2D_FreeFontBitmap();
+	Drawer2D_FontBitmap = bmp;
+	Drawer2D_BoxSize = bmp.Width >> DRAWER2D_LOG2_CHARS_PER_ROW;
+	Drawer2D_CalculateTextWidths();
+}
+
 
 void Drawer2D_HexEncodedCol(Int32 i, Int32 hex, UInt8 lo, UInt8 hi) {
 	PackedCol* col = &Drawer2D_Cols[i];
@@ -78,11 +78,11 @@ void Drawer2D_Init(void) {
 	}
 
 	for (i = 0; i <= 9; i++) {
-		Drawer2D_GetHexEncodedCol('0' + i, i, 191, 64);
+		Drawer2D_HexEncodedCol('0' + i, i, 191, 64);
 	}
 	for (i = 10; i <= 15; i++) {
-		Drawer2D_GetHexEncodedCol('a' + (i - 10), i, 191, 64);
-		Drawer2D_GetHexEncodedCol('a' + (i - 10), i, 191, 64);
+		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
+		Drawer2D_HexEncodedCol('a' + (i - 10), i, 191, 64);
 	}
 }
 
@@ -128,7 +128,7 @@ Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 window
 
 	Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
-	Drawer2D_DrawText(&args, 0, 0);
+	Drawer2D_DrawText(args, 0, 0);
 	Drawer2D_End();
 	return Drawer2D_Make2DTexture(&bmp, size, windowX, windowY);
 }
@@ -151,7 +151,7 @@ bool Drawer2D_IsEmptyText(STRING_TRANSIENT String* text) {
 	Int32 i;
 	for (i = 0; i < text->length; i++) {
 		if (text->buffer[i] != '&') return false;
-		if (!ValidColCode(text, i + 1)) return false;
+		if (!Drawer2D_ValidColCodeAt(text, i + 1)) return false;
 		i++; /* skip colour code */
 	}
 	return true;
@@ -162,7 +162,7 @@ UInt8 Drawer2D_LastCol(STRING_TRANSIENT String* text, Int32 start) {
 	Int32 i;
 	for (i = start; i >= 0; i--) {
 		if (text->buffer[i] != '&') continue;
-		if (Drawer2D_ValidColCode(text, i + 1)) {
+		if (Drawer2D_ValidColCodeAt(text, i + 1)) {
 			return text->buffer[i + 1];
 		}
 	}
@@ -185,7 +185,7 @@ void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale) {
 	point = Drawer2D_AdjTextSize(point);
 
 	Int32 padding = (tex->Height - point) / scale;
-	Real32 vAdj = (Real32)padding / Math_NextPowerOf2(tex->Height);
+	Real32 vAdj = (Real32)padding / Math_NextPowOf2(tex->Height);
 	tex->V1 += vAdj; tex->V2 -= vAdj;
 	tex->Height -= (UInt16)(padding * 2);
 }
