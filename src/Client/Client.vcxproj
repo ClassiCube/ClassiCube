@@ -99,7 +99,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,7 +119,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -136,6 +136,8 @@
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -145,7 +147,7 @@
       <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -162,6 +164,8 @@
       <PrecompiledHeaderFile />
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <BufferSecurityCheck>false</BufferSecurityCheck>
+      <AdditionalOptions>
+      </AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -169,7 +173,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -196,6 +200,7 @@
     <ClInclude Include="Formats.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="Deflate.h" />
+    <ClInclude Include="Gui.h" />
     <ClInclude Include="IModel.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="IsometricDrawer.h" />
@@ -261,6 +266,7 @@
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
+    <ClCompile Include="Gui.c" />
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="GameStructs.c" />

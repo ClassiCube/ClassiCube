@@ -27,10 +27,8 @@ namespace Launcher.Gui.Widgets {
 			this.font = font;
 			this.titleFont = titleFont;
 			
-			DrawTextArgs args = new DrawTextArgs("IMP", titleFont, true);
-			headerHeight = drawer.MeasureSize(ref args).Height;
-			args = new DrawTextArgs("IMP", font, true);
-			entryHeight = drawer.MeasureSize(ref args).Height;
+			headerHeight = drawer.FontHeight(titleFont, true);
+			entryHeight = drawer.FontHeight(font, true);
 		}
 		
 		public void RecalculateDrawData() {

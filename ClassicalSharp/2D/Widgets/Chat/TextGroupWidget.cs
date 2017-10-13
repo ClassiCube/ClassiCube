@@ -31,9 +31,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			PlaceholderHeight = new bool[ElementsCount];
 			lines = new string[ElementsCount];
 			linkData = new LinkData[ElementsCount];
-			
-			DrawTextArgs args = new DrawTextArgs("I", font, true);
-			int height = game.Drawer2D.MeasureSize(ref args).Height;
+
+			int height = game.Drawer2D.FontHeight(font, true);
 			game.Drawer2D.ReducePadding(ref height, Utils.Floor(font.Size), 3);
 			defaultHeight = height;
 			

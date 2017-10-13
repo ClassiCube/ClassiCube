@@ -41,8 +41,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		internal Font font;
 		
 		public override void Init() {
-			DrawTextArgs args = new DrawTextArgs("I", font, true);
-			defaultHeight = game.Drawer2D.MeasureSize(ref args).Height;
+			defaultHeight = game.Drawer2D.FontHeight(font, true);
 			Height = defaultHeight;
 		}
 		

@@ -85,7 +85,7 @@ typedef struct Widget_ {
 	/* Top left corner, and dimensions, of this widget */
 	Int32 X, Y, Width, Height;
 	/* Specifies the reference point for when this widget is resized */
-	Anchor HorizontalAnchor, VerticalAnchor;
+	Anchor HorAnchor, VerAnchor;
 	/* Offset from the reference point */
 	Int32 XOffset, YOffset;
 	Widget_Reposition Reposition;
@@ -95,7 +95,7 @@ void Widget_Init(Widget* widget);
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 Screen* Gui_HUD;
 Screen* Gui_Active;
-#define GUI_MAX_OVERLAYS 32
+#define GUI_MAX_OVERLAYS 40
 Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 UInt32 Gui_OverlayCount;
 
