@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 					}
 					
 					tex = drawer.Make2DTexture(bmp, size, 0, 0);
-					drawer.ReducePadding(ref tex, Utils.Floor(font.Size));
+					drawer.ReducePadding(ref tex, Utils.Floor(font.Size), 4);
 					
 					tex.U2 = (float)offset / bmp.Width;
 					tex.Width = (ushort)offset;

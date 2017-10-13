@@ -86,7 +86,7 @@ void Event_UnregisterEntityID(Event_EntityID* handlers, Event_EntityID_Callback 
 }
 
 void Event_RaiseStream(Event_Stream* handlers, Stream* stream) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](stream);
 	}

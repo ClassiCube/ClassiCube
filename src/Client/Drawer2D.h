@@ -1,0 +1,61 @@
+#ifndef CS_DRAWER2D_H
+#define CS_DRAWER2D_H
+/*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
+Copyright 2017 ClassicalSharp | Licensed under BSD-3
+*/
+#include "Typedefs.h"
+#include "String.h"
+#include "Bitmap.h"
+#include "PackedCol.h"
+#include "2DStructs.h"
+#include "Texture.h"
+
+/* Contains arguments for measuring or drawing text. */
+typedef struct DrawTextArgs_ {
+	String Text;
+	void* Font;
+	bool UseShadow;
+} DrawTextArgs;
+void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, void* font, bool useShadow);
+
+const float Offset = 1.3f;
+
+/* Whether chat text should be drawn and measuring using the currently bitmapped font, 
+ false uses the font supplied as the DrawTextArgs argument supplied to the function. */
+bool Drawer2D_UseBitmappedChat;
+/* Whether the shadows behind text (that uses shadows) is fully black. */
+bool Drawer2D_BlackTextShadows;
+#define DRAWER2D_MAX_COLS 256
+PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
+
+void Drawer2D_Init(void);
+void Drawer2D_Free(void);
+
+/* Sets the underlying bitmap that drawing operations are performed on. */
+void Drawer2D_Begin(Bitmap* bmp);
+/* Frees any resources associated with the underlying bitmap. */
+void Drawer2D_End(void);
+/* Draws a 2D flat rectangle. */
+void Drawer2D_Rect(PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+/* Clears the entire given area to the specified colour. */
+void Drawer2D_Clear(PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+
+void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
+Size2D Drawer2D_MeasureText(DrawTextArgs* args);
+Int32 Drawer2D_FontHeight(void* font, bool useShadow);
+
+Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 windowY);
+Texture Drawer2D_Make2DTexture(Bitmap* bmp, Size2D used, Int32 windowX, Int32 windowY);
+
+bool Drawer2D_ValidColCodeAt(STRING_TRANSIENT String* text, Int32 i);
+bool Drawer2D_ValidColCode(UInt8 c);
+bool Drawer2D_IsEmptyText(STRING_TRANSIENT String* text);
+/* Returns the last valid colour code in the given input, or \0 if no valid colour code was found. */
+UInt8 Drawer2D_LastCol(STRING_TRANSIENT String* text, Int32 start);
+bool Drawer2D_IsWhiteCol(UInt8 c);
+
+void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale);
+void Drawer2D_ReducePadding_Height(Int32* height, Int32 point, Int32 scale);
+Bitmap Drawer2D_FontBitmap;
+void Drawer2D_SetFontBitmap(Bitmap bmp);
+#endif

@@ -38,7 +38,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		protected void SetHeight(int height) {
 			if (ReducePadding)
-				game.Drawer2D.ReducePadding(ref height, Utils.Floor(font.Size));
+				game.Drawer2D.ReducePadding(ref height, Utils.Floor(font.Size), 4);
 			defaultHeight = height;
 			Height = height;
 		}
@@ -52,7 +52,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				DrawTextArgs args = new DrawTextArgs(text, font, true);
 				texture = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 				if (ReducePadding)
-					game.Drawer2D.ReducePadding(ref texture, Utils.Floor(font.Size));
+					game.Drawer2D.ReducePadding(ref texture, Utils.Floor(font.Size), 4);
 				Width = texture.Width; Height = texture.Height;
 
 				Reposition();

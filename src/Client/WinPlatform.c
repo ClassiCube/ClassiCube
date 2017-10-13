@@ -52,11 +52,11 @@ void Platform_MemFree(void* mem) {
 }
 
 void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes) {
-	return memset(dst, value, numBytes);
+	memset(dst, value, numBytes);
 }
 
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
-	return memcpy(dst, src, numBytes);
+	memcpy(dst, src, numBytes);
 }
 
 

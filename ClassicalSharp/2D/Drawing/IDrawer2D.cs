@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Draws the outline of a 2D flat rectangle of the specified dimensions
 		/// at the specified coordinates in the currently bound bitmap. </summary>
-		public abstract void DrawRectBounds(FastColour colour, float lineWidth, int x, int y, int width, int height);
+		public abstract void DrawRectBounds(FastColour colour, int lineWidth, int x, int y, int width, int height);
 		
 		/// <summary> Clears the entire given area to the specified colour. </summary>
 		public abstract void Clear(FastColour colour, int x, int y, int width, int height);
@@ -226,14 +226,6 @@ namespace ClassicalSharp {
 		
 		public static bool IsWhiteCol(char c) {
 			return c == '\0' || c == 'f' || c == 'F';
-		}
-
-		public void ReducePadding(ref Texture tex, int point) {
-			ReducePadding(ref tex, point, 4);
-		}
-
-		public void ReducePadding(ref int height, int point) {
-			ReducePadding(ref height, point, 4);
 		}
 		
 		public void ReducePadding(ref Texture tex, int point, int scale) {

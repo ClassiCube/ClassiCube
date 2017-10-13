@@ -192,6 +192,7 @@
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="DisplayDevice.h" />
     <ClInclude Include="Drawer.h" />
+    <ClInclude Include="Drawer2D.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="EnvRenderer.h" />
     <ClInclude Include="ErrorHandler.h" />
@@ -223,7 +224,6 @@
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TerrainAtlas.h" />
-    <ClInclude Include="TickQueue.h" />
     <ClInclude Include="TreeGen.h" />
     <ClInclude Include="WeatherRenderer.h" />
     <ClInclude Include="PackedCol.h" />
@@ -261,6 +261,7 @@
     <ClCompile Include="Bitmap.c" />
     <ClCompile Include="DisplayDevice.c" />
     <ClCompile Include="Drawer.c" />
+    <ClCompile Include="Drawer2D.c" />
     <ClCompile Include="EnvRenderer.c" />
     <ClCompile Include="Event.c" />
     <ClCompile Include="ExtMath.c" />
@@ -299,7 +300,6 @@
     <ClCompile Include="String.c" />
     <ClCompile Include="TerrainAtlas.c" />
     <ClCompile Include="Texture.c" />
-    <ClCompile Include="TickQueue.c" />
     <ClCompile Include="TreeGen.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="VertexStructs.c" />

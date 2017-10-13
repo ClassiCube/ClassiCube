@@ -33,7 +33,18 @@ void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
 	bmp->Stride = width * Bitmap_PixelBytesSize;
 	bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(width, height));
+	
+	if (bmp->Scan0 == NULL) {
+		ErrorHandler_Fail("Bitmap - failed to allocate memory");
+	}
 }
+
+void Bitmap_AllocatePow2(Bitmap* bmp, Int32 width, Int32 height) {
+	width = Math_NextPowOf2(width);
+	height = Math_NextPowOf2(height);
+	Bitmap_Allocate(bmp, width, height);
+}
+
 
 #define PNG_HEADER 8
 #define PNG_RGB_MASK 0xFFFFFFUL

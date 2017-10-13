@@ -53,7 +53,7 @@ namespace ClassicalSharp {
 			g.FillRectangle(brush, x, y, width, height);
 		}
 		
-		public override void DrawRectBounds(FastColour colour, float lineWidth, int x, int y, int width, int height) {
+		public override void DrawRectBounds(FastColour colour, int lineWidth, int x, int y, int width, int height) {
 			using (Pen pen = new Pen(colour, lineWidth)) {
 				pen.Alignment = PenAlignment.Inset;
 				g.DrawRectangle(pen, x, y, width, height);

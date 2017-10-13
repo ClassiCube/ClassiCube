@@ -297,9 +297,6 @@
     <ClInclude Include="LiquidAnimations.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
-    <ClInclude Include="TickQueue.h">
-      <Filter>Header Files\Singleplayer</Filter>
-    </ClInclude>
     <ClInclude Include="Physics.h">
       <Filter>Header Files\Singleplayer</Filter>
     </ClInclude>
@@ -355,6 +352,9 @@
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
     <ClInclude Include="Gui.h">
+      <Filter>Header Files\2D</Filter>
+    </ClInclude>
+    <ClInclude Include="Drawer2D.h">
       <Filter>Header Files\2D</Filter>
     </ClInclude>
   </ItemGroup>
@@ -461,9 +461,6 @@
     <ClCompile Include="LiquidAnimations.c">
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
-    <ClCompile Include="TickQueue.c">
-      <Filter>Source Files\Singleplayer</Filter>
-    </ClCompile>
     <ClCompile Include="Physics.c">
       <Filter>Source Files\Singleplayer</Filter>
     </ClCompile>
@@ -543,6 +540,9 @@
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
     <ClCompile Include="Gui.c">
+      <Filter>Source Files\2D</Filter>
+    </ClCompile>
+    <ClCompile Include="Drawer2D.c">
       <Filter>Source Files\2D</Filter>
     </ClCompile>
   </ItemGroup>

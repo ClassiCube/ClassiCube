@@ -28,10 +28,6 @@ Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 	/* Try to allocate bitmap on stack if possible */
 	if (size > 64) {
 		Bitmap_Allocate(&element, size, size);
-		if (element.Scan0 == NULL) {
-			ErrorHandler_Fail("Atlas2D_LoadTextureElement - failed to allocate memory");
-		}
-
 		Int32 texId = Atlas2D_LoadTextureElement_Raw(texLoc, &element);
 		Platform_MemFree(element.Scan0);
 		return texId;
@@ -64,9 +60,6 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Int32 elemSize = Atlas2D_ElementSize;
 	Bitmap atlas1D;
 	Bitmap_Allocate(&atlas1D, elemSize, atlas1DHeight);
-	if (atlas1D.Scan0 == NULL) {
-		ErrorHandler_Fail("Atlas1D_Make1DTexture - failed to allocate memory");
-	}
 
 	Int32 index1D;
 	for (index1D = 0; index1D < Atlas1D_ElementsPerAtlas; index1D++) {
