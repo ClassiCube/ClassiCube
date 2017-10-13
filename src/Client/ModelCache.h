@@ -11,19 +11,14 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-
 typedef struct CachedModel_ {
-	/* Name associated with the model, all lowercase. */
-	String Name;
-	/* Pointer to the actual model instance. */
-	IModel* Instance;
+	String Name;      /* Name associated with the model, all lowercase. */
+	IModel* Instance; /* Pointer to the actual model instance. */
 } CachedModel;
 
-typedef struct CachedTexture_ {
-	/* Filename of the texture. */
-	String Name;
-	/* Native texture ID. */
-	GfxResourceID TexID;
+typedef struct CachedTexture_ {	
+	String Name;         /* Filename of the texture. */
+	GfxResourceID TexID; /* Native texture ID. */
 } CachedTexture;
 
 #if FALSE
@@ -31,18 +26,18 @@ public CustomModel[] CustomModels = new CustomModel[256];
 #endif
 
 /* Maximum number of models (or textures) that can be registered. */
-#define ModelCache_MaxModels 24
+#define MODELCACHE_MAX_MODELS 24
 /* The models that have been registered previously.
 The first model (index 0) is the humanoid model. */
-CachedModel ModelCache_Models[ModelCache_MaxModels];
+CachedModel ModelCache_Models[MODELCACHE_MAX_MODELS];
 /* The textures that have been registered previously. */
-CachedTexture ModelCache_Textures[ModelCache_MaxModels];
+CachedTexture ModelCache_Textures[MODELCACHE_MAX_MODELS];
 /* Maximum number of vertices a model can have. */
-#define ModelCache_MaxVertices (24 * 12)
+#define MODELCACHE_MAX_VERTICES (24 * 12)
 /* Dynamic vertex buffer for model rendering. */
 GfxResourceID ModelCache_Vb;
 /* Raw vertices for model rendering. */
-VertexP3fT2fC4b ModelCache_Vertices[ModelCache_MaxVertices];
+VertexP3fT2fC4b ModelCache_Vertices[MODELCACHE_MAX_VERTICES];
 
 /* Initalises the model cache and hooks events. */
 void ModelCache_Init(void);

@@ -262,7 +262,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 coun
 		Int32 list = glGenLists(1);
 		glNewList(list, GL_COMPILE);
 
-		UInt16 indices[Gfx_MaxIndices];
+		UInt16 indices[GFX_MAX_INDICES];
 		GfxCommon_MakeIndices(indices, ICOUNT(count));
 
 		Int32 stride = vertexFormat == VertexFormat_P3fT2fC4b ? VertexP3fT2fC4b_Size : VertexP3fC4b_Size;

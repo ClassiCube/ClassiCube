@@ -83,7 +83,7 @@ void Builder_AddSpriteVertices(BlockID block) {
 }
 
 void Builder_AddVertices(BlockID block, Face face) {
-	Int32 baseOffset = (Block_Draw[block] == DrawType_Translucent) * Atlas1D_MaxAtlasesCount;
+	Int32 baseOffset = (Block_Draw[block] == DrawType_Translucent) * ATLAS1D_MAX_ATLASES_COUNT;
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, face));
 	Builder1DPart* part = &Builder_Parts[baseOffset + i];
 	part->fCount[face] += 4;
@@ -325,7 +325,7 @@ void Builder_MakeChunk(ChunkInfo* info) {
 		Int32 idx = partsIndex + i * MapRenderer_ChunksCount;
 		Builder_SetPartInfo(&Builder_Parts[i], i, 
 			idx, &hasNormal);
-		Builder_SetPartInfo(&Builder_Parts[i + Atlas1D_MaxAtlasesCount], i,
+		Builder_SetPartInfo(&Builder_Parts[i + ATLAS1D_MAX_ATLASES_COUNT], i,
 			idx + MapRenderer_TranslucentBufferOffset, &hasTranslucent);
 	}
 
@@ -354,14 +354,14 @@ bool Builder_OccludedLiquid(Int32 chunkIndex) {
 
 void Builder_DefaultPreStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 	Int32 i;
-	for (i = 0; i < Atlas1D_MaxAtlasesCount * 2; i++) {
+	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT * 2; i++) {
 		Builder1DPart_Reset(&Builder_Parts[i]);
 	}
 }
 
 void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 	Int32 i;
-	for (i = 0; i < Atlas1D_MaxAtlasesCount * 2; i++) {
+	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT * 2; i++) {
 		Int32 vCount = Builder1DPart_VerticesCount(&Builder_Parts[i]);
 		if (vCount == 0) continue;
 		Builder1DPart_Prepare(&Builder_Parts[i]);
@@ -517,7 +517,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 
 
 	bool fullBright = Block_FullBright[Builder_Block];
-	Int32 partOffset = (Block_Draw[Builder_Block] == DrawType_Translucent) * Atlas1D_MaxAtlasesCount;
+	Int32 partOffset = (Block_Draw[Builder_Block] == DrawType_Translucent) * ATLAS1D_MAX_ATLASES_COUNT;
 	Int32 lightFlags = Block_LightOffset[Builder_Block];
 
 	Drawer_MinBB = Block_MinBB[Builder_Block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;

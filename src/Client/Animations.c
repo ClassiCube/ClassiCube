@@ -1,11 +1,10 @@
-#if 0
-#include "LiquidAnimations.h"
+#include "Animations.h"
 #include "ExtMath.h"
 #include "Random.h"
 
-Real32 L_soupHeat[LiquidAnim_Max * LiquidAnim_Max];
-Real32 L_potHeat[LiquidAnim_Max * LiquidAnim_Max];
-Real32 L_flameHeat[LiquidAnim_Max * LiquidAnim_Max];
+Real32 L_soupHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+Real32 L_potHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+Real32 L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random L_rnd;
 bool L_rndInitalised;
 
@@ -66,9 +65,9 @@ void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 }
 
 
-Real32 W_soupHeat[LiquidAnim_Max * LiquidAnim_Max];
-Real32 W_potHeat[LiquidAnim_Max * LiquidAnim_Max];
-Real32 W_flameHeat[LiquidAnim_Max * LiquidAnim_Max];
+Real32 W_soupHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+Real32 W_potHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+Real32 W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random W_rnd;
 bool W_rndInitalised;
 
@@ -113,4 +112,3 @@ void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 		}
 	}
 }
-#endif

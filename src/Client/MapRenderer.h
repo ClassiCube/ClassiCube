@@ -21,20 +21,20 @@ Int32 MapRenderer_ChunksZ;
 Int32 MapRenderer_1DUsedCount;
 /* The number of non-empty Normal ChunkPartInfos (across entire world) for each 1D atlas batch.
 1D atlas batches that do not have any ChunkPartInfos can be entirely skipped. */
-Int32 MapRenderer_NormalPartsCount[Atlas1D_MaxAtlasesCount];
+Int32 MapRenderer_NormalPartsCount[ATLAS1D_MAX_ATLASES_COUNT];
 /* The number of non-empty Translucent ChunkPartInfos (across entire world) for each 1D atlas batch.
 1D atlas batches that do not have any ChunkPartInfos can be entirely skipped. */
-Int32 MapRenderer_TranslucentPartsCount[Atlas1D_MaxAtlasesCount];
+Int32 MapRenderer_TranslucentPartsCount[ATLAS1D_MAX_ATLASES_COUNT];
 /* Whether there are any visible Translucent ChunkPartInfos for each 1D atlas batch.
 1D atlas batches that do not have any visible translucent ChunkPartInfos can be skipped. */
-bool MapRenderer_HasTranslucentParts[Atlas1D_MaxAtlasesCount];
+bool MapRenderer_HasTranslucentParts[ATLAS1D_MAX_ATLASES_COUNT];
 /* Whether there are any visible Normal ChunkPartInfos for each 1D atlas batch.
 1D atlas batches that do not have any visible normal ChunkPartInfos can be skipped. */
-bool MapRenderer_HasNormalParts[Atlas1D_MaxAtlasesCount];
+bool MapRenderer_HasNormalParts[ATLAS1D_MAX_ATLASES_COUNT];
 /* Whether renderer should check if there are any visible Translucent ChunkPartInfos for each 1D atlas batch. */
-bool MapRenderer_CheckingTranslucentParts[Atlas1D_MaxAtlasesCount];
+bool MapRenderer_CheckingTranslucentParts[ATLAS1D_MAX_ATLASES_COUNT];
 /* Whether renderer should check if there are any visible Normal ChunkPartInfos for each 1D atlas batch. */
-bool MapRenderer_CheckingNormalParts[Atlas1D_MaxAtlasesCount];
+bool MapRenderer_CheckingNormalParts[ATLAS1D_MAX_ATLASES_COUNT];
 
 /* Render info for all chunks in the world. Unsorted.*/
 ChunkInfo* MapRenderer_Chunks;

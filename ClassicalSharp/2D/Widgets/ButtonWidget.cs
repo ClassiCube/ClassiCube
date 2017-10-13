@@ -10,10 +10,11 @@ namespace ClassicalSharp.Gui.Widgets {
 	
 	public delegate void ButtonValueSetter(Game game, string raw);	
 	public delegate string ButtonValueGetter(Game game);	
-	public delegate void ButtonBoolSetter(Game game, bool value);	
 	
 	public sealed class ButtonWidget : Widget {
-		public string OptName;
+		public string OptName;		
+		public ButtonValueGetter GetValue;
+		public ButtonValueSetter SetValue;
 		
 		public ButtonWidget(Game game, Font font) : base(game) {
 			this.font = font;
@@ -117,8 +118,5 @@ namespace ClassicalSharp.Gui.Widgets {
 			texture.X1 += X - oldX;
 			texture.Y1 += Y - oldY;
 		}
-		
-		public ButtonValueGetter GetValue;
-		public ButtonValueSetter SetValue;
 	}
 }

@@ -67,8 +67,8 @@ Int32 Builder_ChunkEndX, Builder_ChunkEndZ;
 /* Offset chunk indices for each face. */
 Int32 Builder_Offsets[6];
 /* Part builder data, for both normal and translucent parts.
-The first Atlas1D_MaxAtlasesCount parts are for normal parts, remainder are for translucent parts. */
-Builder1DPart Builder_Parts[Atlas1D_MaxAtlasesCount * 2];
+The first ATLAS1D_MAX_ATLASES_COUNT parts are for normal parts, remainder are for translucent parts. */
+Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES_COUNT * 2];
 
 /* Initalises state of this mesh builder. */
 void Builder_Init(void);

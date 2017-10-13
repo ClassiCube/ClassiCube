@@ -125,9 +125,9 @@ void GfxCommon_Mode3D(void) {
 }
 
 GfxResourceID GfxCommon_MakeDefaultIb(void) {
-	UInt16 indices[Gfx_MaxIndices];
-	GfxCommon_MakeIndices(indices, Gfx_MaxIndices);
-	return Gfx_CreateIb(indices, Gfx_MaxIndices);
+	UInt16 indices[GFX_MAX_INDICES];
+	GfxCommon_MakeIndices(indices, GFX_MAX_INDICES);
+	return Gfx_CreateIb(indices, GFX_MAX_INDICES);
 }
 
 void GfxCommon_MakeIndices(UInt16* indices, Int32 iCount) {

@@ -254,7 +254,7 @@ void ChunkUpdater_UpdateChunks(Real64 delta) {
 
 void ChunkUpdater_ResetPartFlags(void) {
 	Int32 i;
-	for (i = 0; i < Atlas1D_MaxAtlasesCount; i++) {
+	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT; i++) {
 		MapRenderer_CheckingNormalParts[i] = true;
 		MapRenderer_HasNormalParts[i] = false;
 		MapRenderer_CheckingTranslucentParts[i] = true;
@@ -264,7 +264,7 @@ void ChunkUpdater_ResetPartFlags(void) {
 
 void ChunkUpdater_ResetPartCounts(void) {
 	Int32 i;
-	for (i = 0; i < Atlas1D_MaxAtlasesCount; i++) {
+	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT; i++) {
 		MapRenderer_NormalPartsCount[i] = 0;
 		MapRenderer_TranslucentPartsCount[i] = 0;
 	}

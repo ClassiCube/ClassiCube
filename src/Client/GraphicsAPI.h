@@ -31,9 +31,9 @@ bool Gfx_Mipmaps;
 bool Gfx_CustomMipmapsLevels;
 
 /* Maximum number of vertices that can be indexed. */
-#define Gfx_MaxIndices (65536 / 4 * 6)
+#define GFX_MAX_INDICES (65536 / 4 * 6)
 /* Maximum number of vertices that can be indexed. */
-#define Gfx_MaxVertex 65536
+#define GFX_MAX_VERTICES 65536
 
 /* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
 ScheduledTaskCallback LostContextFunction;

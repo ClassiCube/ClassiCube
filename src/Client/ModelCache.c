@@ -16,7 +16,7 @@ void ModelCache_ContextLost(void) {
 }
 
 void ModelCache_ContextRecreated(void) {
-	ModelCache_Vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, ModelCache_MaxVertices);
+	ModelCache_Vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, MODELCACHE_MAX_VERTICES);
 }
 
 IModel* ModelCache_Get(STRING_TRANSIENT String* name) {
@@ -44,7 +44,7 @@ Int32 ModelCache_GetTextureIndex(STRING_TRANSIENT String* texName) {
 }
 
 void ModelCache_Register(STRING_REF const UInt8* name, STRING_TRANSIENT const UInt8* defaultTexName, IModel* instance) {
-	if (ModelCache_modelCount < ModelCache_MaxModels) {
+	if (ModelCache_modelCount < MODELCACHE_MAX_MODELS) {
 		CachedModel model;
 		model.Name = String_FromReadonly(name);
 		model.Instance = instance;
@@ -61,7 +61,7 @@ void ModelCache_Register(STRING_REF const UInt8* name, STRING_TRANSIENT const UI
 }
 
 void ModelCache_RegisterTexture(STRING_REF const UInt8* texName) {
-	if (ModelCache_texCount < ModelCache_MaxModels) {
+	if (ModelCache_texCount < MODELCACHE_MAX_MODELS) {
 		CachedTexture tex;
 		tex.Name = String_FromReadonly(texName);
 		tex.TexID = -1;

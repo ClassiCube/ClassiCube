@@ -8,13 +8,13 @@
 
 void Atlas2D_UpdateState(Bitmap bmp) {
 	Atlas2D_Bitmap = bmp;
-	Atlas2D_ElementSize = bmp.Width / Atlas2D_ElementsPerRow;
+	Atlas2D_ElementSize = bmp.Width / ATLAS2D_ELEMENTS_PER_ROW;
 	Block_RecalculateSpriteBB();
 }
 
 Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
 	Int32 size = Atlas2D_ElementSize;
-	Int32 x = texLoc % Atlas2D_ElementsPerRow, y = texLoc / Atlas2D_ElementsPerRow;
+	Int32 x = texLoc % ATLAS2D_ELEMENTS_PER_ROW, y = texLoc / ATLAS2D_ELEMENTS_PER_ROW;
 	Bitmap_CopyBlock(x * size, y * size, 0, 0,
 		&Atlas2D_Bitmap, element, size);
 
@@ -96,7 +96,7 @@ void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 void Atlas1D_UpdateState(void) {
 	Int32 maxVerticalSize = min(4096, Gfx_MaxTextureDimensions);
 	Int32 elementsPerFullAtlas = maxVerticalSize / Atlas2D_ElementSize;
-	Int32 totalElements = Atlas2D_RowsCount * Atlas2D_ElementsPerRow;
+	Int32 totalElements = ATLAS2D_ROWS_COUNT * ATLAS2D_ELEMENTS_PER_ROW;
 
 	Int32 atlasesCount = Math_CeilDiv(totalElements, elementsPerFullAtlas);
 	Atlas1D_ElementsPerAtlas = min(elementsPerFullAtlas, totalElements);

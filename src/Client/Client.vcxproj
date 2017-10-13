@@ -207,7 +207,7 @@
     <ClInclude Include="IsometricDrawer.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="BordersRenderer.h" />
-    <ClInclude Include="LiquidAnimations.h" />
+    <ClInclude Include="Animations.h" />
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="ModelCache.h" />
@@ -278,7 +278,7 @@
     <ClCompile Include="IsometricDrawer.c" />
     <ClCompile Include="Key.c" />
     <ClCompile Include="Lighting.c" />
-    <ClCompile Include="LiquidAnimations.c" />
+    <ClCompile Include="Animations.c" />
     <ClCompile Include="Entity.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelCache.c" />

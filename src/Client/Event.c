@@ -7,7 +7,7 @@ void Event_RegisterImpl(Event_Void* handlers, Event_Void_Callback handler) {
 		if (handlers->Handlers[i] == handler) return;
 	}
 
-	if (handlers->Count == Event_MaxCallbacks) {
+	if (handlers->Count == EVENT_MAX_CALLBACKS) {
 		ErrorHandler_Fail("Unable to register another event handler");
 	} else {
 		handlers->Handlers[handlers->Count] = handler;
