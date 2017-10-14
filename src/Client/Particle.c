@@ -26,13 +26,13 @@ void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol c
 	v.U = rec->U1; v.V = rec->V2; ptr[0] = v;
 
 	v.X = centre.X - aX + bX; v.Y = centre.Y - aY + bY; v.Z = centre.Z - aZ + bZ;
-	v.V = rec->V1; ptr[1] = v;
+				   v.V = rec->V1; ptr[1] = v;
 
 	v.X = centre.X + aX + bX; v.Y = centre.Y + aY + bY; v.Z = centre.Z + aZ + bZ;
 	v.U = rec->U2;                ptr[2] = v;
 
 	v.X = centre.X + aX - bX; v.Y = centre.Y + aY - bY; v.Z = centre.Z + aZ - bZ;
-	v.V = rec->V2; ptr[3] = v;
+				   v.V = rec->V2; ptr[3] = v;
 }
 
 void Particle_Reset(Particle* p, Vector3 pos, Vector3 velocity, Real32 lifetime) {

@@ -88,11 +88,6 @@ namespace ClassicalSharp {
 			value[index] = c;
 		}
 		
-		public void InsertAt(int index, string s) {
-			for (int i = 0; i < s.Length; i++)
-				InsertAt(index + i, s[i]);
-		}
-		
 		public bool Empty {
 			get {
 				for (int i = 0; i < Capacity; i++) {

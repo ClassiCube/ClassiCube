@@ -76,20 +76,20 @@ typedef void (*Widget_Reposition)(struct Widget_* widget);
 
 /* Represents an individual 2D gui component. */
 typedef struct Widget_ {
+	GuiElement Base;
+	/* Top left corner, and dimensions, of this widget */
+	Int32 X, Y, Width, Height;
 	/* Whether this widget is currently being moused over. */
 	bool Active;
 	/* Whether widget is prevented from being interacted with. */
 	bool Disabled;
-	/* Invoked when this widget is clicked on. Can be null. */
-	Gui_MouseHandler OnClick;
-	/* Top left corner, and dimensions, of this widget */
-	Int32 X, Y, Width, Height;
 	/* Specifies the reference point for when this widget is resized */
 	Anchor HorAnchor, VerAnchor;
 	/* Offset from the reference point */
 	Int32 XOffset, YOffset;
 	Widget_Reposition Reposition;
 } Widget;
+void Widget_DoReposition(Widget* w);
 void Widget_Init(Widget* widget);
 
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;

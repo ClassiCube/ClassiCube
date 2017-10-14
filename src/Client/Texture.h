@@ -24,11 +24,13 @@ Texture Texture_FromOrigin(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int3
 Texture Texture_FromRec(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height, TextureRec rec);
 /* Creates a texture. */
 Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height, Real32 u1, Real32 u2, Real32 v1, Real32 v2);
+/* Makes an invalid texture. */
+Texture Texture_MakeInvalid(void);
 
 /* Returns whether the given texture has a valid texture ID. */
 bool Texture_IsValid(Texture* tex);
 /* Renders this texture to the screen. */
 void Texture_Render(Texture* tex);
 /* Renders this texture to the screen, with the given colour as a shade. */
-void Texture_RenderShaded(Texture* tex, PackedCol shadeColour);
+void Texture_RenderShaded(Texture* tex, PackedCol shadeCol);
 #endif

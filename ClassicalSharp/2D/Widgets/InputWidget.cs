@@ -63,7 +63,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		protected string[] lines; // raw text of each line
 		protected Size[] lineSizes; // size of each line in pixels
-		protected int caretCol, caretRow; // coordinates of caret
+		protected int caretX, caretY; // coordinates of caret in lines
 		protected double caretAccumulator;
 		
 		public override void Init() {
@@ -115,36 +115,36 @@ namespace ClassicalSharp.Gui.Widgets {
 		/// <summary> Calculates the location and size of the caret character </summary>
 		public void UpdateCaret() {
 			if (caret >= Text.Length) caret = -1;
-			Text.GetCoords(caret, lines, out caretCol, out caretRow);
+			Text.GetCoords(caret, lines, out caretX, out caretY);
 			DrawTextArgs args = new DrawTextArgs(null, font, false);
 			IDrawer2D drawer = game.Drawer2D;
 			caretAccumulator = 0;
 
-			if (caretCol == MaxCharsPerLine) {
-				caretTex.X1 = X + Padding + lineSizes[caretRow].Width;
+			if (caretX == MaxCharsPerLine) {
+				caretTex.X1 = X + Padding + lineSizes[caretY].Width;
 				caretColour = FastColour.Yellow;
 				caretTex.Width = (ushort)caretWidth;
 			} else {
-				args.Text = lines[caretRow].Substring(0, caretCol);
+				args.Text = lines[caretY].Substring(0, caretX);
 				Size trimmedSize = drawer.MeasureSize(ref args);
-				if (caretRow == 0) trimmedSize.Width += prefixWidth;
+				if (caretY == 0) trimmedSize.Width += prefixWidth;
 
 				caretTex.X1 = X + Padding + trimmedSize.Width;
 				caretColour = FastColour.Scale(FastColour.White, 0.8f);
 				
-				string line = lines[caretRow];
-				if (caretCol < line.Length) {
-					args.Text = new String(line[caretCol], 1);
+				string line = lines[caretY];
+				if (caretX < line.Length) {
+					args.Text = new String(line[caretX], 1);
 					args.UseShadow = true;
 					caretTex.Width = (ushort)drawer.MeasureSize(ref args).Width;
 				} else {
 					caretTex.Width = (ushort)caretWidth;
 				}
 			}
-			caretTex.Y1 = lineSizes[0].Height * caretRow + inputTex.Y1 + 2;
+			caretTex.Y1 = lineSizes[0].Height * caretY + inputTex.Y1 + 2;
 			
 			// Update the colour of the caret
-			char code = GetLastColour(caretCol, caretRow);
+			char code = GetLastColour(caretX, caretY);
 			if (code != '\0') caretColour = IDrawer2D.Cols[code];
 		}
 		

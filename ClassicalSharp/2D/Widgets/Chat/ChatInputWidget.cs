@@ -50,7 +50,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			for (int i = 0; i < lineSizes.Length; i++) {
 				if (i > 0 && lineSizes[i].Height == 0) break;
-				bool caretAtEnd = (caretRow == i) && (caretCol == MaxCharsPerLine || caret == -1);
+				bool caretAtEnd = (caretY == i) && (caretX == MaxCharsPerLine || caret == -1);
 				int drawWidth = lineSizes[i].Width + (caretAtEnd ? (int)caretTex.Width : 0);
 				// Cover whole window width to match original classic behaviour
 				if (game.PureClassic)

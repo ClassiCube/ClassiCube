@@ -34,7 +34,7 @@ String String_MakeNull(void);
 
 /* Sets all characters in the given string to lowercase. */
 void String_MakeLowercase(STRING_TRANSIENT String* str);
-/* Sets all characters in the given string to NULL, then sets length t0 0. */
+/* Sets all characters in the given string to NULL, then sets length to 0. */
 void String_Clear(STRING_TRANSIENT String* str);
 /* Returns a string that points directly to a substring of the given string.
 NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE SUBSTRING IS NOT NULL TERMINATED */

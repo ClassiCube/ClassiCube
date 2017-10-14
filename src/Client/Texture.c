@@ -24,6 +24,14 @@ Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 heig
 	return tex;
 }
 
+Texture Texture_MakeInvalid(void) {
+	Texture tex;
+	tex.ID = -1;
+	tex.X = 0; tex.Y = 0; tex.Width = 0; tex.Height = 0;
+	tex.U1 = 0.0f; tex.U2 = 0.0f; tex.V1 = 0.0f; tex.V2 = 0.0f;
+	return tex;
+}
+
 
 bool Texture_IsValid(Texture* tex) {
 	return tex->ID > 0;
@@ -34,7 +42,7 @@ void Texture_Render(Texture* tex) {
 	GfxCommon_Draw2DTexture(tex, PackedCol_White);
 }
 
-void Texture_RenderShaded(Texture* tex, PackedCol shadeColour) {
+void Texture_RenderShaded(Texture* tex, PackedCol shadeCol) {
 	Gfx_BindTexture(tex->ID);
-	GfxCommon_Draw2DTexture(tex, shadeColour);
+	GfxCommon_Draw2DTexture(tex, shadeCol);
 }

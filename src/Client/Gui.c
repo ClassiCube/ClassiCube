@@ -37,21 +37,22 @@ void Screen_Init(Screen* screen) {
 	screen->OnContextRecreated = NULL;
 }
 
-void Widget_DefaultReposition(Widget* w) {
+void Widget_DoReposition(Widget* w) {
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
 
 void Widget_Init(Widget* widget) {
+	GuiElement_Init(&widget->Base);
 	widget->Active = false;
 	widget->Disabled = false;
-	widget->OnClick = NULL;
+	widget->Base.HandlesMouseDown = NULL;
 	widget->X = 0; widget->Y = 0;
 	widget->Width = 0; widget->Height = 0;
 	widget->HorAnchor = ANCHOR_LEFT_OR_TOP;
 	widget->VerAnchor = ANCHOR_LEFT_OR_TOP;
 	widget->XOffset = 0; widget->YOffset = 0;
-	widget->Reposition = Widget_DefaultReposition;
+	widget->Reposition = Widget_DoReposition;
 }
 
 

@@ -95,21 +95,21 @@ namespace ClassicalSharp {
 		}
 		
 		/// <summary> Calculates where the given raw index is located in the wrapped lines. </summary>
-		public void GetCoords(int index, string[] lines, out int col, out int row) {
+		public void GetCoords(int index, string[] lines, out int coordX, out int coordY) {
 			if (index == -1) index = Int32.MaxValue;		
-			int total = 0; col = -1; row = 0;
+			int total = 0; coordX = -1; coordY = 0;
 			
 			for (int y = 0; y < lines.Length; y++) {
 				int lineLength = LineLength(lines[y]);
 				if (lineLength == 0) break;
 				
-				row = y;
+				coordY = y;
 				if (index < total + lineLength) {
-					col = index - total; break;
+					coordX = index - total; break;
 				}
 				total += lineLength;
 			}
-			if (col == -1) col = LineLength(lines[row]);
+			if (coordX == -1) coordX = LineLength(lines[coordY]);
 		}
 		
 		static int LineLength(string line) { return line == null ? 0 : line.Length; }
