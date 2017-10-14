@@ -1,5 +1,5 @@
-#ifndef CS_DATETIME_H
-#define CS_DATETIME_H
+#ifndef CS_WORDWRAP_H
+#define CS_WORDWRAP_H
 #include "Typedefs.h"
 #include "String.h"
 /* Allows wrapping a single line of text into multiple lines.

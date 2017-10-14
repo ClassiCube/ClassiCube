@@ -87,13 +87,11 @@
     <Compile Include="2D\Screens\ClickableScreen.cs" />
     <Compile Include="2D\Screens\DeathScreen.cs" />
     <Compile Include="2D\Screens\DisconnectScreen.cs" />
+    <Compile Include="2D\Screens\InventoryScreen.cs" />
     <Compile Include="2D\Screens\Overlays\Overlay.cs" />
     <Compile Include="2D\Screens\Overlays\TexIdsOverlay.cs" />
     <Compile Include="2D\Screens\Overlays\WarningOverlay.cs" />
     <Compile Include="2D\Screens\StatusScreen.cs" />
-    <Compile Include="2D\Screens\Inventory\InventoryScreen.cs" />
-    <Compile Include="2D\Screens\Inventory\InventoryScreen.Input.cs" />
-    <Compile Include="2D\Screens\Inventory\InventoryScreen.Scrolling.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
     <Compile Include="2D\Screens\MenuScreen.cs" />
     <Compile Include="2D\Screens\Menu\ClassicOptionsScreen.cs" />
@@ -135,7 +133,9 @@
     <Compile Include="2D\Widgets\PlayerList\ExtPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\PlayerList\NormalPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\PlayerList\PlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\ScrollbarWidget.cs" />
     <Compile Include="2D\Widgets\SurvivalHotbarWidget.cs" />
+    <Compile Include="2D\Widgets\TableWidget.cs" />
     <Compile Include="2D\Widgets\TextWidget.cs" />
     <Compile Include="2D\Widgets\Widget.cs" />
     <Compile Include="Audio\AudioPlayer.cs" />
@@ -328,7 +328,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="2D\Drawing" />
-    <Folder Include="2D\Screens\Inventory" />
     <Folder Include="2D\Screens\Overlays" />
     <Folder Include="2D\Utils" />
     <Folder Include="2D\Screens" />

@@ -1,24 +1,38 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using System.Drawing;
 using OpenTK.Input;
 
-namespace ClassicalSharp.Gui.Screens {
-	public partial class InventoryScreen : Screen {
+namespace ClassicalSharp.Gui.Widgets {
+	public sealed class ScrollbarWidget : Widget {
 		
+		public ScrollbarWidget(Game game) : base(game) {
+			Width = scrollWidth;
+		}
+		
+		public int TotalRows, ScrollY;
+		
+		public void ClampScrollY() {
+			int maxRows = TotalRows - TableWidget.MaxRowsDisplayed;
+			if (ScrollY >= maxRows) ScrollY = maxRows;
+			if (ScrollY < 0) ScrollY = 0;
+		}		
+		
+		public override void Init() { }
+		public override void Dispose() { }
+
 		const int scrollWidth = 22, scrollBorder = 2, nubsWidth = 3;
 		static FastColour scrollBackCol = new FastColour(10, 10, 10, 220);
 		static FastColour scrollBarCol = new FastColour(100, 100, 100, 220);
 		static FastColour scrollHoverCol = new FastColour(122, 122, 122, 220);
-		float ScrollbarScale { get { return (TableHeight - scrollBorder * 2) / (float)rows; } }
+		float ScrollbarScale { get { return (Height - scrollBorder * 2) / (float)TotalRows; } }
 		
-		void DrawScrollbar() {
-			int x = TableX + TableWidth, width = scrollWidth;
-			gfx.Draw2DQuad(x, TableY, width, TableHeight, scrollBackCol);
+		public override void Render(double delta) {
+			int x = X, width = Width;
+			gfx.Draw2DQuad(x, Y, width, Height, scrollBackCol);
 			
 			int y, height;
 			GetScrollbarCoords(out y, out height);
-			x += scrollBorder; width -= scrollBorder * 2; y += TableY;
+			x += scrollBorder; width -= scrollBorder * 2; y += Y;
 			
 			bool hovered = game.Mouse.Y >= y && game.Mouse.Y < (y + height) &&
 				game.Mouse.X >= x && game.Mouse.X < (x + width);
@@ -35,50 +49,50 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void GetScrollbarCoords(out int y, out int height) {
 			float scale = ScrollbarScale;
-			y = (int)Math.Ceiling(scrollY * scale) + scrollBorder;
-			height = (int)Math.Ceiling(maxRows * scale);
-			height = Math.Min(y + height, TableHeight - scrollBorder) - y;
+			y = (int)Math.Ceiling(ScrollY * scale) + scrollBorder;
+			height = (int)Math.Ceiling(TableWidget.MaxRowsDisplayed * scale);
+			height = Math.Min(y + height, Height - scrollBorder) - y;
 		}
+		
 		
 		float invAcc;
 		public override bool HandlesMouseScroll(float delta) {
-			bool bounds = Contains(TableX - scrollWidth, TableY, TableWidth + scrollWidth, 
-			                       TableHeight, game.Mouse.X, game.Mouse.Y);
-			bool hotbar = game.Input.AltDown || game.Input.ControlDown || game.Input.ShiftDown;
-			if (!bounds || hotbar) return false;
-			
-			int rowY = (selIndex / blocksPerRow) - scrollY;
 			int steps = Utils.AccumulateWheelDelta(ref invAcc, delta);
-			scrollY -= steps;
+			ScrollY -= steps;
 			ClampScrollY();
-			if (selIndex == - 1) return true;
-			
-			selIndex = scrollY * blocksPerRow + (selIndex % blocksPerRow);
-			for (int row = 0; row < rowY; row++) {
-				selIndex += blocksPerRow;
-			}
-			
-			if (selIndex >= blocksTable.Length)
-				selIndex = -1;			
-			RecreateBlockInfoTexture();
 			return true;
 		}
-		int scrollY;
 		
-		void ClampScrollY() {
-			if (scrollY >= rows - maxRows) scrollY = rows - maxRows;
-			if (scrollY < 0) scrollY = 0;
+		public override bool HandlesMouseMove(int mouseX, int mouseY) {
+			if (draggingMouse) {
+				mouseY -= Y;
+				ScrollY = (int)((mouseY - mouseOffset) / ScrollbarScale);
+				ClampScrollY();
+				return true;
+			}
+			return false;
 		}
 		
+		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+			if (draggingMouse) return true;
+			if (button != MouseButton.Left) return false;
+			
+			if (mouseX >= X && mouseX < X + Width) {
+				ScrollbarClick(mouseY);
+				return true;
+			}
+			return false;
+		}
+
 		void ScrollbarClick(int mouseY) {
-			mouseY -= TableY;
+			mouseY -= Y;
 			int y, height;
 			GetScrollbarCoords(out y, out height);
 			
 			if (mouseY < y) {
-				scrollY -= maxRows;
+				ScrollY -= TableWidget.MaxRowsDisplayed;
 			} else if (mouseY >= y + height) {
-				scrollY += maxRows;
+				ScrollY += TableWidget.MaxRowsDisplayed;
 			} else {
 				draggingMouse = true;
 				mouseOffset = mouseY - y;
@@ -86,9 +100,8 @@ namespace ClassicalSharp.Gui.Screens {
 			ClampScrollY();
 		}
 		
-		bool draggingMouse = false;
-		int mouseOffset = 0;
-		
+		internal bool draggingMouse = false;
+		int mouseOffset = 0;		
 		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) {
 			draggingMouse = false;
 			mouseOffset = 0;
