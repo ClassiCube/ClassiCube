@@ -24,7 +24,14 @@ namespace ClassicalSharp.Gui.Widgets {
 		protected float barXOffset, borderSize;
 		IsometricBlockDrawer drawer = new IsometricBlockDrawer();
 		
-		public override void Init() {
+		public override void Init() { Reposition(); }
+		public override void Dispose() { }		
+		public override void Render(double delta) {
+			RenderHotbarOutline();
+			RenderHotbarBlocks();
+		}
+
+		public override void Reposition() {
 			float scale = game.GuiHotbarScale;
 			selBlockSize = (float)Math.Ceiling(24 * scale);
 			barHeight = (int)(22 * scale);
@@ -34,23 +41,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			elemSize = 16 * scale;
 			barXOffset = 3.1f * scale;
 			borderSize = 4 * scale;
-			X = game.Width / 2 - Width / 2;
-			Y = game.Height - Height;
-			
-			MakeBackgroundTexture();
-			MakeSelectionTexture();
-		}
-		
-		public override void Render(double delta) {
-			RenderHotbarOutline();
-			RenderHotbarBlocks();
-		}
-		
-		public override void Dispose() { }
-		
-		public override void Reposition() {
+
 			base.Reposition();
-			Recreate();
+			RepositonBackgroundTexture();
+			RepositionSelectionTexture();
 		}
 		
 		
@@ -74,7 +68,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
 				BlockID block = game.Inventory[i];
 				int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
-				int y = (int)(game.Height - barHeight / 2);
+				int y = (int)(Y + (Height - barHeight / 2));
 				
 				float scale = (elemSize * 13.5f/16f) / 2f;
 				drawer.DrawBatch(block, scale, x, y);
@@ -82,17 +76,17 @@ namespace ClassicalSharp.Gui.Widgets {
 			drawer.EndBatch();
 		}
 		
-		void MakeBackgroundTexture() {
+		void RepositonBackgroundTexture() {
 			TextureRec rec = new TextureRec(0, 0, 182/256f, 22/256f);
 			backTex = new Texture(0, X, Y, Width, Height, rec);
 		}
 		
-		void MakeSelectionTexture() {
+		void RepositionSelectionTexture() {
 			int hSize = (int)selBlockSize;
 			
 			float scale = game.GuiHotbarScale;
 			int vSize = (int)(22 * scale);
-			int y = game.Height - (int)(23 * scale);
+			int y = Y + (Height - (int)(23 * scale));
 			
 			TextureRec rec = new TextureRec(0, 22/256f, 24/256f, 22/256f);
 			selTex = new Texture(0, 0, y, hSize, vSize, rec);
@@ -137,7 +131,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
 				int x = (int)(X + (elemSize + borderSize) * i);
-				int y = (int)(game.Height - barHeight);
+				int y = (int)(Y + (Height - barHeight));
 				Rectangle bounds = new Rectangle(x, y, (int)(elemSize + borderSize), (int)barHeight);
 				
 				if (bounds.Contains(mouseX, mouseY)) {
