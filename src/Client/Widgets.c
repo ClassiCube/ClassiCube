@@ -5,6 +5,8 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 #include "Window.h"
+#include "Inventory.h"
+#include "IsometricDrawer.h"
 
 void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
@@ -145,7 +147,8 @@ void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, In
 	widget->Base.Base.Render = ButtonWidget_Render;
 	widget->Base.Base.Free   = ButtonWidget_Free;
 
-	ButtonWidget_Init(&widget->Base.Base);
+	GuiElement* elem = &widget->Base.Base;
+	elem->Init(elem);
 	widget->MinWidth = minWidth; widget->MinHeight = 40;
 	ButtonWidget_SetText(widget, text);
 	widget->Base.Base.HandlesMouseDown = onClick;
@@ -171,52 +174,51 @@ void ButtonWidget_SetText(ButtonWidget* widget, STRING_TRANSIENT String* text) {
 }
 
 
-#define TABLEWIDGET_MAX_ROWS_DISPLAYED 8
-#define SCROLLWIDGET_WIDTH 22
-#define SCROLLWIDGET_BORDER 2
-#define SCROLLWIDGET_NUBS_WIDTH 3
-PackedCol ScrollWidget_BackCol  = PACKEDCOL_CONST(10, 10, 10, 220);
-PackedCol ScrollWidget_BarCol   = PACKEDCOL_CONST(100, 100, 100, 220);
-PackedCol ScrollWidget_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
+#define TABLE_MAX_ROWS_DISPLAYED 8
+#define SCROLL_WIDTH 22
+#define SCROLL_BORDER 2
+#define SCROLL_NUBS_WIDTH 3
+PackedCol Scroll_BackCol  = PACKEDCOL_CONST(10, 10, 10, 220);
+PackedCol Scroll_BarCol   = PACKEDCOL_CONST(100, 100, 100, 220);
+PackedCol Scroll_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
 
 void ScrollbarWidget_Init(GuiElement* elem) { }
 void ScrollbarWidget_Free(GuiElement* elem) { }
 
 Real32 ScrollbarWidget_GetScale(ScrollbarWidget* widget) {
 	Real32 rows = (Real32)widget->TotalRows;
-	return (widget->Base.Height - SCROLLWIDGET_BORDER * 2) / rows;
+	return (widget->Base.Height - SCROLL_BORDER * 2) / rows;
 }
 
 void ScrollbarWidget_GetScrollbarCoords(ScrollbarWidget* widget, Int32* y, Int32* height) {
 	Real32 scale = ScrollbarWidget_GetScale(widget);
-	*y = Math_Ceil(widget->ScrollY * scale) + SCROLLWIDGET_BORDER;
-	*height = Math_Ceil(TABLEWIDGET_MAX_ROWS_DISPLAYED * scale);
-	*height = min(*y + *height, widget->Base.Height - SCROLLWIDGET_BORDER) - *y;
+	*y = Math_Ceil(widget->ScrollY * scale) + SCROLL_BORDER;
+	*height = Math_Ceil(TABLE_MAX_ROWS_DISPLAYED * scale);
+	*height = min(*y + *height, widget->Base.Height - SCROLL_BORDER) - *y;
 }
 
 void ScrollbarWidget_Render(GuiElement* elem, Real64 delta) {
 	ScrollbarWidget* widget = (ScrollbarWidget*)elem;
 	Widget* elemW = &widget->Base;
 	Int32 x = elemW->X, width = elemW->Width;
-	GfxCommon_Draw2DFlat(x, elemW->Y, width, elemW->Height, ScrollWidget_BackCol);
+	GfxCommon_Draw2DFlat(x, elemW->Y, width, elemW->Height, Scroll_BackCol);
 
 	Int32 y, height;
 	ScrollbarWidget_GetScrollbarCoords(widget, &y, &height);
-	x += SCROLLWIDGET_BORDER; y += elemW->Y;
-	width -= SCROLLWIDGET_BORDER * 2; 
+	x += SCROLL_BORDER; y += elemW->Y;
+	width -= SCROLL_BORDER * 2; 
 
-	Point2D mouse = Window_GetDesktopCursorPos();
-	bool hovered = mouse.Y >= y && mouse.Y < (y + height) && mouse.X >= x && mouse.X < (x + width);
-	PackedCol barCol = hovered ? ScrollWidget_HoverCol : ScrollWidget_BarCol;
+	bool hovered = Mouse_Y >= y && Mouse_Y < (y + height) && Mouse_X >= x && Mouse_X < (x + width);
+	PackedCol barCol = hovered ? Scroll_HoverCol : Scroll_BarCol;
 	GfxCommon_Draw2DFlat(x, y, width, height, barCol);
 
 	if (height < 20) return;
-	x += SCROLLWIDGET_NUBS_WIDTH; y += (height / 2);
-	width -= SCROLLWIDGET_NUBS_WIDTH * 2;
+	x += SCROLL_NUBS_WIDTH; y += (height / 2);
+	width -= SCROLL_NUBS_WIDTH * 2;
 
-	GfxCommon_Draw2DFlat(x, y - 1 - 4, width, SCROLLWIDGET_BORDER, ScrollWidget_BackCol);
-	GfxCommon_Draw2DFlat(x, y - 1,     width, SCROLLWIDGET_BORDER, ScrollWidget_BackCol);
-	GfxCommon_Draw2DFlat(x, y - 1 + 4, width, SCROLLWIDGET_BORDER, ScrollWidget_BackCol);
+	GfxCommon_Draw2DFlat(x, y - 1 - 4, width, SCROLL_BORDER, Scroll_BackCol);
+	GfxCommon_Draw2DFlat(x, y - 1,     width, SCROLL_BORDER, Scroll_BackCol);
+	GfxCommon_Draw2DFlat(x, y - 1 + 4, width, SCROLL_BORDER, Scroll_BackCol);
 }
 
 bool ScrollbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
@@ -250,9 +252,9 @@ bool ScrollbarWidget_HandlesMouseClick(GuiElement* elem, Int32 x, Int32 y, Mouse
 	ScrollbarWidget_GetScrollbarCoords(widget, &curY, &height);
 
 	if (y < curY) {
-		widget->ScrollY -= TABLEWIDGET_MAX_ROWS_DISPLAYED;
+		widget->ScrollY -= TABLE_MAX_ROWS_DISPLAYED;
 	} else if (y >= curY + height) {
-		widget->ScrollY += TABLEWIDGET_MAX_ROWS_DISPLAYED;
+		widget->ScrollY += TABLE_MAX_ROWS_DISPLAYED;
 	} else {
 		widget->DraggingMouse = true;
 		widget->MouseOffset = y - curY;
@@ -270,7 +272,7 @@ bool ScrollbarWidget_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseBut
 
 void ScrollbarWidget_Create(ScrollbarWidget* widget) {
 	Widget_Init(widget);
-	widget->Base.Width = SCROLLWIDGET_WIDTH;
+	widget->Base.Width = SCROLL_WIDTH;
 	widget->Base.Base.Init = ScrollbarWidget_Init;
 	widget->Base.Base.Render = ScrollbarWidget_Render;
 	widget->Base.Base.Free = ScrollbarWidget_Free;
@@ -284,7 +286,341 @@ void ScrollbarWidget_Create(ScrollbarWidget* widget) {
 }
 
 void ScrollbarWidget_ClampScrollY(ScrollbarWidget* widget) {
-	Int32 maxRows = widget->TotalRows - TABLEWIDGET_MAX_ROWS_DISPLAYED;
+	Int32 maxRows = widget->TotalRows - TABLE_MAX_ROWS_DISPLAYED;
 	if (widget->ScrollY >= maxRows) widget->ScrollY = maxRows;
 	if (widget->ScrollY < 0) widget->ScrollY = 0;
+}
+
+Int32 Table_X(TableWidget* widget) { return widget->Base.X - 5 - 10; }
+Int32 Table_Y(TableWidget* widget) { return widget->Base.Y - 5 - 30; }
+Int32 Table_Width(TableWidget* widget) { 
+	return widget->ElementsPerRow * widget->BlockSize + 10 + 20; 
+}
+Int32 Table_Height(TableWidget* widget) {
+	return min(widget->RowsCount, TABLE_MAX_ROWS_DISPLAYED) * widget->BlockSize + 10 + 40;
+}
+
+/* These were sourced by taking a screenshot of vanilla
+   Then using paInt32 to extract the colour components
+   Then using wolfram alpha to solve the glblendfunc equation */
+PackedCol Table_TopCol       = PACKEDCOL_CONST( 34,  34,  34, 168);
+PackedCol Table_BottomCol    = PACKEDCOL_CONST( 57,  57, 104, 202);
+PackedCol Table_TopSelCol    = PACKEDCOL_CONST(255, 255, 255, 142);
+PackedCol Table_BottomSelCol = PACKEDCOL_CONST(255, 255, 255, 192);
+#define TABLE_MAX_VERTICES (8 * 10 * (4 * 4))
+
+bool TableWidget_GetCoords(TableWidget* widget, Int32 i, Int32* winX, Int32* winY) {
+	Int32 x = i % widget->ElementsPerRow, y = i / widget->ElementsPerRow;
+	*winX = widget->Base.X + widget->BlockSize * x;
+	*winY = widget->Base.Y + widget->BlockSize * y + 3;
+
+	*winY -= widget->Scroll.ScrollY * widget->BlockSize;
+	y -= widget->Scroll.ScrollY;
+	return y >= 0 && y < TABLE_MAX_ROWS_DISPLAYED;
+}
+
+void TableWidget_Render(GuiElement* elem, Real64 delta) {
+	TableWidget* widget = (TableWidget*)elem;
+	GfxCommon_Draw2DGradient(Table_X(widget), Table_Y(widget), 
+		Table_Width(widget), Table_Height(widget), Table_TopCol, Table_BottomCol);
+	if (widget->RowsCount > TABLE_MAX_ROWS_DISPLAYED) {
+		GuiElement* scroll = &widget->Scroll.Base.Base;
+		scroll->Render(scroll, delta);
+	}
+
+	Real32 blockSize = widget->BlockSize;
+	if (widget->SelectedIndex != -1 && Game_ClassicMode) {
+		Int32 x, y;
+		TableWidget_GetCoords(widget, widget->SelectedIndex, &x, &y);
+		Real32 off = blockSize * 0.1f;
+		GfxCommon_Draw2DQuadGradient(x - off, y - off, blockSize + off * 2,
+			blockSize + off * 2, Table_TopSelCol, Table_BottomSelCol);
+	}
+	Gfx_SetTexturing(true);
+	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+
+	VertexP3fT2fC4b vertices[TABLE_MAX_VERTICES];
+	IsometricDrawer_BeginBatch(vertices, widget->VB);
+	Int32 i;
+	for (i = 0; i < widget->ElementsCount; i++) {
+		Int32 x, y;
+		if (!TableWidget_GetCoords(widget, i, &x, &y)) continue;
+
+		/* We want to always draw the selected block on top of others */
+		if (i == widget->SelectedIndex) continue;
+		IsometricDrawer_DrawBatch(widget->Elements[i], blockSize * 0.7f / 2.0f,
+			x + blockSize / 2, y + blockSize / 2);
+	}
+
+	i = widget->SelectedIndex;
+	if (i != -1) {
+		Int32 x, y;
+		TableWidget_GetCoords(widget, i, &x, &y);
+		IsometricDrawer_DrawBatch(widget->Elements[i], 
+			(blockSize + widget->SelBlockExpand) * 0.7f / 2.0f,
+			x + blockSize / 2, y + blockSize / 2);
+	}
+	IsometricDrawer_EndBatch();
+
+	if (Texture_IsValid(&widget->DescTex)) {
+		Texture_Render(&widget->DescTex);
+	}
+	Gfx_SetTexturing(false);
+}
+
+void TableWidget_UpdateScrollbarPos(TableWidget* widget) {
+	ScrollbarWidget* scroll = &widget->Scroll;
+	scroll->Base.X = Table_X(widget) + Table_Width(widget);
+	scroll->Base.Y = Table_Y(widget);
+	scroll->Base.Height = Table_Height(widget);
+	scroll->TotalRows = widget->RowsCount;
+}
+
+void TableWidget_MoveCursorToSelected(TableWidget* widget) {
+	if (widget->SelectedIndex == -1) return;
+
+	Int32 x, y, i = widget->SelectedIndex;
+	TableWidget_GetCoords(widget, i, &x, &y);
+	x += widget->BlockSize / 2; y += widget->BlockSize / 2;
+
+	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
+	x += topLeft.X; y += topLeft.Y;
+	Window_SetDesktopCursorPos(Point2D_Make(x, y));
+}
+
+void TableWidget_MakeBlockDesc(STRING_TRANSIENT String* desc, BlockID block) {
+	if (Game_PureClassic) { String_AppendConstant(desc, "Select block"); return; }
+	String_AppendString(desc, &Block_Name[block]);
+	if (Game_ClassicMode) return;
+
+	String_AppendConstant(desc, " (ID ");
+	String_AppendInt32(desc, block);
+	String_AppendConstant(desc, "&f, place ");
+	String_AppendConstant(desc, Block_CanPlace[block] ? "&aYes" : "&cNo");
+	String_AppendConstant(desc, "&f, delete ");
+	String_AppendConstant(desc, Block_CanDelete[block] ? "&aYes" : "&cNo");
+	String_AppendConstant(desc, "&f)");
+}
+
+#define TABLE_NAME_LEN 128
+void TableWidget_RecreateDescTex(TableWidget* widget) {
+	if (widget->SelectedIndex == widget->LastCreatedIndex) return;
+	if (widget->ElementsCount == 0) return;
+	widget->LastCreatedIndex = widget->SelectedIndex;
+
+	Gfx_DeleteTexture(&widget->DescTex.ID);
+	if (widget->SelectedIndex == -1) return;
+
+	UInt8 descBuffer[String_BufferSize(TABLE_NAME_LEN)];
+	String desc = String_FromRawBuffer(descBuffer, TABLE_NAME_LEN);
+	BlockID block = widget->Elements[widget->SelectedIndex];
+	TableWidget_MakeBlockDesc(&desc, block);
+
+	DrawTextArgs args;
+	DrawTextArgs_Make(&args, &desc, font, true);
+	Size2D size = Drawer2D_MeasureText(&args);
+	Int32 width = widget->BlockSize * widget->ElementsPerRow;
+
+	Int32 x = widget->Base.X + width / 2 - size.Width / 2;
+	Int32 y = wisget->Base.Y - size.Height - 5;
+	widget->DescTex = Drawer2D_MakeTextTexture(&args, x, y);
+}
+
+void TableWidget_UpdatePos(TableWidget* widget) {
+	Int32 rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, widget->ElementsCount);
+	Int32 blockSize = widget->BlockSize, elemsPerRow = widget->ElementsPerRow;
+	widget->Base.X = Game_Width  / 2  - (blockSize * elemsPerRow)   / 2;
+	widget->Base.Y = Game_Height / 2  - (blockSize * rowsDisplayed) / 2;
+}
+
+void TableWidget_RecreateElements(TableWidget* widget) {
+	widget->ElementsCount = 0;
+	Int32 count = Game_UseCPE ? BLOCK_COUNT : BLOCK_ORIGINAL_COUNT, i;
+	for (i = 0; i < count; i++) {
+		BlockID block = Inventory_Map[i];
+		if (TableWidget_Show(block)) {
+			widget->ElementsCount++;
+		}
+	}
+
+	widget->RowsCount = Math_CeilDiv(widget->ElementsCount, widget->ElementsPerRow);
+	TableWidget_UpdateScrollbarPos(widget);
+	TableWidget_UpdatePos(widget);
+
+	Int32 index = 0;
+	for (i = 0; i < count; i++) {
+		BlockID block = Inventory_Map[i];
+		if (TableWidget_Show(block)) {
+			widget->Elements[index++] = block;
+		}
+	}
+}
+
+bool TableWidget_Show(BlockID block) {
+	if (block == BlockID_Invalid) return false;
+
+	if (block < BLOCK_CPE_COUNT) {
+		Int32 count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
+		return block < count;
+	}
+	return true;
+}
+
+void TableWidget_Init(GuiElement* elem) {
+	TableWidget* widget = (TableWidget*)elem;
+	ScrollbarWidget_Create(&widget->Scroll);
+	TableWidget_RecreateElements(widget);
+	widget->Base.Reposition(&widget->Base);
+	TableWidget_SetBlockTo(widget, Inventory_SelectedBlock);
+	elem->Recreate(elem);
+}
+
+void TableWidget_Free(GuiElement* elem) {
+	TableWidget* widget = (TableWidget*)elem;
+	Gfx_DeleteVb(&widget->VB);
+	Gfx_DeleteTexture(&widget->DescTex.ID);
+	widget->LastCreatedIndex = -1000;
+}
+
+void TableWidget_Recreate(GuiElement* elem) {
+	TableWidget* widget = (TableWidget*)elem;
+	elem->Free(elem);
+	widget->VB = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, TABLE_MAX_VERTICES);
+	TableWidget_RecreateDescTex(widget);
+}
+
+void TableWidget_Reposition(Widget* elem) {
+	TableWidget* widget = (TableWidget*)elem;
+	Real32 scale = Game_GetInventoryScale();
+	widget->BlockSize = (Int32)(50 * Math_Sqrt(scale));
+	widget->SelBlockExpand = 25.0f * Math_Sqrt(scale);
+	TableWidget_UpdatePos(widget);
+
+	Int32 width = widget->BlockSize * widget->ElementsPerRow;
+	widget->DescTex.X = widget->Base.X + width / 2 - widget->DescTex.Width / 2;
+	widget->DescTex.Y = widget->Base.Y - widget->DescTex.Height - 5;
+	TableWidget_UpdateScrollbarPos(widget);
+}
+
+bool TableWidget_HandlesMouseMove(Int32 mouseX, Int32 mouseY) {
+	if (scroll.HandlesMouseMove(mouseX, mouseY)) return true;
+
+	SelectedIndex = -1;
+	if (Contains(X, Y + 3, ElementsPerRow * blockSize,
+		MaxRowsDisplayed * blockSize - 3 * 2, mouseX, mouseY)) {
+		for (Int32 i = 0; i < Elements.Length; i++) {
+			Int32 x, y;
+			GetCoords(i, out x, out y);
+
+			if (Contains(x, y, blockSize, blockSize, mouseX, mouseY)) {
+				SelectedIndex = i;
+				break;
+			}
+		}
+	}
+	RecreateBlockInfoTexture();
+	return true;
+}
+
+bool TableWidget_HandlesMouseClick(Int32 mouseX, Int32 mouseY, MouseButton button) {
+	PendingClose = false;
+	if (button != MouseButton.Left) return false;
+
+	if (scroll.HandlesMouseClick(mouseX, mouseY, button)) {
+		return true;
+	} else if (SelectedIndex != -1) {
+		game.Inventory.Selected = Elements[SelectedIndex];
+		PendingClose = true;
+		return true;
+	} else if (Contains(TableX, TableY, TableWidth, TableHeight, mouseX, mouseY)) {
+		return true;
+	}
+	return false;
+}
+
+void TableWidget_ScrollRelative(TableWidget* widget, Int32 delta) {
+	Int32 startIndex = widget->SelectedIndex, index = widget->SelectedIndex;
+	index += delta;
+	if (index < 0) index -= delta;
+	if (index >= widget->ElementsCount) index -= delta;
+	widget->SelectedIndex = index;
+
+	Int32 scrollDelta = (index / widget->ElementsPerRow) - (startIndex / widget->ElementsPerRow);
+	widget->Scroll.ScrollY += scrollDelta;
+	ScrollbarWidget_ClampScrollY(&widget->Scroll);
+	TableWidget_RecreateDescTex(widget);
+	TableWidget_MoveCursorToSelected(widget);
+}
+
+bool TableWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+	TableWidget* widget = (GuiElement*)widget;
+	if (widget->SelectedIndex == -1) return false;
+
+	if (key == Key_Left || key == Key_Keypad4) {
+		TableWidget_ScrollRelative(widget, -1);
+	} else if (key == Key_Right || key == Key_Keypad6) {
+		TableWidget_ScrollRelative(widget, 1);
+	} else if (key == Key_Up || key == Key_Keypad8) {
+		TableWidget_ScrollRelative(widget, -widget->ElementsPerRow);
+	} else if (key == Key_Down || key == Key_Keypad2) {
+		TableWidget_ScrollRelative(widget, widget->ElementsPerRow);
+	} else {
+		return false;
+	}
+	return true;
+}
+
+bool TableWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
+	TableWidget* widget = (GuiElement*)widget;
+	Int32 scrollWidth = widget->Scroll.Base.Width;
+	bool bounds = Gui_Contains(Table_X(widget) - scrollWidth, Table_Y(widget),
+		Table_Width(widget) + scrollWidth, Table_Height(widget), Mouse_X, Mouse_Y);
+	if (!bounds) return false;
+
+	Int32 startScrollY = widget->Scroll.ScrollY;
+	scroll.HandlesMouseScroll(delta);
+	if (widget->SelectedIndex == -1) return true;
+
+	Int32 index = widget->SelectedIndex;
+	index += (widget->Scroll.ScrollY - startScrollY) * widget->ElementsPerRow;
+	if (index >= widget->ElementsCount) index = -1;
+
+	widget->SelectedIndex = index;
+	TableWidget_RecreateDescTex(widget);
+	return true;
+}
+
+bool TableWidget_HandlesMouseUp(Int32 x, Int32 y, MouseButton btn) {
+	return scroll.HandlesMouseUp(x, y, btn);
+}
+
+void TableWidget_Create(TableWidget* widget) {
+	Widget_Init(&widget->Base);
+	widget->LastCreatedIndex = -1000;
+	/* TODO: INITALISE EVERYTHING HERE */
+}
+
+void TableWidget_SetBlockTo(TableWidget* widget, BlockID block) {
+	widget->SelectedIndex = -1;
+	Int32 i;
+	for (i = 0; i < widget->ElementsCount; i++) {
+		if (widget->Elements[i] == block) widget->SelectedIndex = i;
+	}
+
+	widget->Scroll.ScrollY = widget->SelectedIndex / widget->ElementsPerRow;
+	widget->Scroll.ScrollY -= (TABLE_MAX_ROWS_DISPLAYED - 1);
+	ScrollbarWidget_ClampScrollY(&widget->Scroll);
+	TableWidget_MoveCursorToSelected(widget);
+	TableWidget_RecreateDescTex(widget);
+}
+
+void TableWidget_OnInventoryChanged(TableWidget* widget) {
+	TableWidget_RecreateElements(widget);
+	if (widget->SelectedIndex >= widget->ElementsCount) {
+		widget->SelectedIndex = widget->ElementsCount - 1;
+	}
+
+	widget->Scroll.ScrollY = widget->SelectedIndex / widget->ElementsPerRow;
+	ScrollbarWidget_ClampScrollY(&widget->Scroll);
+	TableWidget_RecreateDescTex(widget);
 }

@@ -54,6 +54,7 @@ void ScrollbarWidget_ClampScrollY(ScrollbarWidget* widget);
 
 
 typedef struct HotbarWidget_ {
+	Widget Base;
 	Texture SelTex, BackTex;
 	Real32 BarHeight, SelBlockSize, ElemSize;
 	Real32 BarXOffset, BorderSize;
@@ -66,6 +67,7 @@ void HotbarWidget_Create(HotbarWidget* widget);
 typedef struct TableWidget_ {
 	Widget Base;
 	Int32 ElementsCount, ElementsPerRow, RowsCount;
+	Int32 LastCreatedIndex;
 	void* Font;
 	bool PendingClose;
 	Int32 SelectedIndex, BlockSize;
@@ -74,7 +76,7 @@ typedef struct TableWidget_ {
 
 	BlockID Elements[BLOCK_COUNT];
 	ScrollbarWidget Scroll;
-	Texture BlockInfoTexture;
+	Texture DescTex;
 } TableWidget;
 
 void TableWidget_Create(TableWidget* widget);

@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			SurvivalGameMode surv = (SurvivalGameMode)game.Mode;
 			VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
 			int index = 0;
-			posAtlas.tex.Y = (short)(game.Height - barHeight);
+			posAtlas.tex.Y = (short)(Y + (Height - barHeight));
 			
 			int offset = game.Inventory.Offset;
 			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
@@ -66,7 +66,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			int selBlockSize = (int)(23 * game.GuiHotbarScale);
 			int offset = middle - inner;
-			int y = game.Height - selBlockSize - outer;
+			int y = Y + (Height - selBlockSize - outer);
 			
 			for (int heart = 0; heart < 10; heart++) {
 				Texture tex = new Texture(0, X + middle * heart, y, outer, outer, backRec);

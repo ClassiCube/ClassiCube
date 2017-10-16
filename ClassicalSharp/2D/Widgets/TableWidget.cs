@@ -124,16 +124,20 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override void Reposition() {
 			blockSize = (int)(50 * Math.Sqrt(game.GuiInventoryScale));
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiInventoryScale));
-			int rowsDisplayed = Math.Min(MaxRowsDisplayed, totalRows);
-			X = game.Width / 2 - (blockSize * ElementsPerRow) / 2;
-			Y = game.Height / 2 - (rowsDisplayed * blockSize) / 2;			
+			UpdatePos();
 			
 			blockInfoTexture.X1 = X + (blockSize * ElementsPerRow) / 2 - blockInfoTexture.Width / 2;
 			blockInfoTexture.Y1 = Y - blockInfoTexture.Height - 5;
-			UpdateScrollbarPosition();
+			UpdateScrollbarPos();
 		}
 		
-		void UpdateScrollbarPosition() {
+		void UpdatePos() {
+			int rowsDisplayed = Math.Min(MaxRowsDisplayed, totalRows);
+			X = game.Width / 2  - (blockSize * ElementsPerRow) / 2;
+			Y = game.Height / 2 - (blockSize * rowsDisplayed)  / 2;	
+		}
+		
+		void UpdateScrollbarPos() {
 			scroll.X = TableX + TableWidth;
 			scroll.Y = TableY;
 			scroll.Height = TableHeight;
@@ -172,9 +176,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			buffer.Clear();
 			if (game.PureClassic) { buffer.Append(ref index, "Select block"); return; }
 			
-			buffer.Append(ref index, "&f");
-			string value = BlockInfo.Name[block];
-			buffer.Append(ref index, value);
+			buffer.Append(ref index, BlockInfo.Name[block]);
 			if (game.ClassicMode) return;
 			
 			buffer.Append(ref index, " (ID ");
@@ -216,13 +218,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			totalRows = Utils.CeilDiv(totalElements, ElementsPerRow);
-			UpdateScrollbarPosition();
-			
-			int rowsDisplayed = Math.Min(MaxRowsDisplayed, totalRows);
-			X = game.Width / 2 - (blockSize * ElementsPerRow) / 2;
-			Y = game.Height / 2 - (rowsDisplayed * blockSize) / 2;
-			Elements = new BlockID[totalElements];
-			
+			UpdateScrollbarPos();
+			UpdatePos();
+
+			Elements = new BlockID[totalElements];			
 			int index = 0;
 			for (int i = 0; i < count; i++) {
 				BlockID block = game.Inventory.Map[i];
