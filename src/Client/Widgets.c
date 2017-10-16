@@ -75,13 +75,109 @@ void TextWidget_SetText(TextWidget* widget, STRING_TRANSIENT String* text) {
 	}
 }
 
+#define BUTTON_uWIDTH (200.0f / 256.0f)
+Texture Button_ShadowTex   = { 0, 0, 0, 0, 0,  0.0f, 66.0f / 256.0f, 200.0f / 256.0f,  86.0f / 256.0f };
+Texture Button_SelectedTex = { 0, 0, 0, 0, 0,  0.0f, 86.0f / 256.0f, 200.0f / 256.0f, 106.0f / 256.0f };
+Texture Button_DisabledTex = { 0, 0, 0, 0, 0,  0.0f, 46.0f / 256.0f, 200.0f / 256.0f,  66.0f / 256.0f };
+PackedCol Button_NormCol     = PACKEDCOL_CONST(224, 224, 244, 255);
+PackedCol Button_ActiveCol   = PACKEDCOL_CONST(255, 255, 160, 255);
+PackedCol Button_DisabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
+
+void ButtonWidget_Init(GuiElement* elem) {
+	ButtonWidget* widget = (ButtonWidget*)elem;
+	widget->DefaultHeight = Drawer2D_FontHeight(widget->Font, true);
+	widget->Base.Height = widget->DefaultHeight;
+}
+
+void ButtonWidget_Free(GuiElement* elem) {
+	ButtonWidget* widget = (ButtonWidget*)elem;
+	Gfx_DeleteTexture(&widget->Texture.ID);
+}
+
+void ButtonWidget_Reposition(Widget* elem) {
+	Int32 oldX = elem->X, oldY = elem->Y;
+	Widget_DoReposition(elem);
+
+	ButtonWidget* widget = (ButtonWidget*)elem;
+	widget->Texture.X += elem->X - oldX;
+	widget->Texture.Y += elem->Y - oldY;
+}
+
+void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
+	ButtonWidget* widget = (ButtonWidget*)elem;
+	Widget* elemW = &widget->Base;
+	if (!Texture_IsValid(&widget->Texture)) return;
+	Texture back = elemW->Active ? Button_SelectedTex : Button_ShadowTex;
+	if (elemW->Disabled) back = Button_DisabledTex;
+
+	back.ID = Game_UseClassicGui ? Gui_GuiClassicTex : Gui_GuiTex;
+	back.X = (Int16)elemW->X; back.Width  = (UInt16)elemW->Width;
+	back.Y = (Int16)elemW->Y; back.Height = (UInt16)elemW->Height;
+
+	if (elemW->Width == 400) {
+		/* Button can be drawn normally */
+		back.U1 = 0.0f; back.U2 = BUTTON_uWIDTH;
+		Texture_Render(&back);
+	} else {
+		/* Split button down the middle */
+		Real32 scale = (elemW->Width / 400.0f) * 0.5f;
+		Gfx_BindTexture(back.ID); /* avoid bind twice */
+		PackedCol white = PACKEDCOL_WHITE;
+
+		back.Width = (UInt16)(elemW->Width / 2);
+		back.U1 = 0.0f; back.U2 = BUTTON_uWIDTH * scale;
+		GfxCommon_Draw2DTexture(&back, white);
+
+		back.X += (Int16)(elemW->Width / 2);
+		back.U1 = BUTTON_uWIDTH * (1.0f - scale); back.U2 = BUTTON_uWIDTH;
+		GfxCommon_Draw2DTexture(&back, white);
+	}
+
+	PackedCol col = elemW->Disabled ? Button_DisabledCol : (elemW->Active ? Button_ActiveCol : Button_NormCol);
+	Texture_RenderShaded(&widget->Texture, col);
+}
+
+void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, Int32 minWidth, void* font, Gui_MouseHandler onClick) {
+	Widget_Init(&widget->Base);
+	widget->Font = font;
+	widget->Base.Reposition  = ButtonWidget_Reposition;
+	widget->Base.Base.Init   = ButtonWidget_Init;
+	widget->Base.Base.Render = ButtonWidget_Render;
+	widget->Base.Base.Free   = ButtonWidget_Free;
+
+	ButtonWidget_Init(&widget->Base.Base);
+	widget->MinWidth = minWidth; widget->MinHeight = 40;
+	ButtonWidget_SetText(widget, text);
+	widget->Base.Base.HandlesMouseDown = onClick;
+}
+
+void ButtonWidget_SetText(ButtonWidget* widget, STRING_TRANSIENT String* text) {
+	Gfx_DeleteTexture(&widget->Texture.ID);
+	Widget* elem = &widget->Base;
+	if (Drawer2D_EmptyText(text)) {
+		widget->Texture = Texture_MakeInvalid();
+		elem->Width = 0; elem->Height = widget->DefaultHeight;
+	} else {
+		DrawTextArgs args;
+		DrawTextArgs_Make(&args, text, widget->Font, true);
+		widget->Texture = Drawer2D_MakeTextTexture(&args, 0, 0);
+		elem->Width  = max(widget->Texture.Width,  widget->MinWidth);
+		elem->Height = max(widget->Texture.Height, widget->MinHeight);
+
+		widget->Base.Reposition(&widget->Base);
+		widget->Texture.X = elem->X + (elem->Width / 2  - widget->Texture.Width  / 2);
+		widget->Texture.Y = elem->Y + (elem->Height / 2 - widget->Texture.Height / 2);
+	}
+}
+
+
 #define TABLEWIDGET_MAX_ROWS_DISPLAYED 8
 #define SCROLLWIDGET_WIDTH 22
 #define SCROLLWIDGET_BORDER 2
 #define SCROLLWIDGET_NUBS_WIDTH 3
-PackedCol ScrollWidget_BackCol = { 10, 10, 10, 220 };
-PackedCol ScrollWidget_BarCol = { 100, 100, 100, 220 };
-PackedCol ScrollWidget_HoverCol = { 122, 122, 122, 220 };
+PackedCol ScrollWidget_BackCol  = PACKEDCOL_CONST(10, 10, 10, 220);
+PackedCol ScrollWidget_BarCol   = PACKEDCOL_CONST(100, 100, 100, 220);
+PackedCol ScrollWidget_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
 
 void ScrollbarWidget_Init(GuiElement* elem) { }
 void ScrollbarWidget_Free(GuiElement* elem) { }

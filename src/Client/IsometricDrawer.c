@@ -36,7 +36,8 @@ void IsometricDrawer_RotateY(Real32 cosA, Real32 sinA) {
 void IsometricDrawer_InitCache(void) {
 	if (iso_cacheInitalisesd) return;
 	iso_cacheInitalisesd = true;
-	iso_colNormal = PackedCol_White;
+	PackedCol white = PACKEDCOL_WHITE;
+	iso_colNormal = white;
 	PackedCol_GetShaded(iso_colNormal, &iso_colXSide, &iso_colZSide, &iso_colYBottom);
 
 	Matrix rotY, rotX;

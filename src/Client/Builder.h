@@ -48,8 +48,6 @@ Int32 Builder_ChunkIndex;
 bool Builder_FullBright;
 /* Whether current block being processed is tinted. */
 bool Builder_Tinted;
-/* Completely white colour. */
-PackedCol Builder_WhiteCol;
 
 /* Pointer to current chunk on stack.*/
 BlockID* Builder_Chunk;

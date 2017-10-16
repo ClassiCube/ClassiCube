@@ -147,7 +147,7 @@ Vector2 Terrain_Size = { 1.0f / 8.0f, 1.0f / 8.0f };
 void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b** vertices) {
 	Vector3 pos;
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
-	PackedCol col = PackedCol_White;
+	PackedCol col = PACKEDCOL_WHITE;
 	if (!Block_FullBright[p->Block]) {
 		Int32 x = Math_Floor(pos.X), y = Math_Floor(pos.Y), z = Math_Floor(pos.Z);
 		col = World_IsValidPos(x, y, z) ? Lighting_Col_ZSide(x, y, z) : Lighting_OutsideZSide;

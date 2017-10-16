@@ -28,7 +28,7 @@ Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 heig
 Texture Texture_MakeInvalid(void);
 
 /* Returns whether the given texture has a valid texture ID. */
-bool Texture_IsValid(Texture* tex);
+#define Texture_IsValid(tex) ((tex)->ID > 0)
 /* Renders this texture to the screen. */
 void Texture_Render(Texture* tex);
 /* Renders this texture to the screen, with the given colour as a shade. */

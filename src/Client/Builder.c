@@ -51,7 +51,6 @@ Int32 Builder1DPart_VerticesCount(Builder1DPart* part) {
 }
 
 void Builder_Init(void) {
-	Builder_WhiteCol = PackedCol_White;
 	Builder_Offsets[Face_XMin] = -1;
 	Builder_Offsets[Face_XMax] = 1;
 	Builder_Offsets[Face_ZMin] = -EXTCHUNK_SIZE;
@@ -381,7 +380,8 @@ void Builder_DrawSprite(Int32 count) {
 	Real32 v1 = vOrigin, v2 = vOrigin + Atlas1D_InvElementSize * UV2_Scale;
 	
 	Builder1DPart* part = &Builder_Parts[i];
-	PackedCol col = Builder_FullBright ? Builder_WhiteCol : Lighting_Col_Sprite_Fast(Builder_X, Builder_Y, Builder_Z);
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col = Builder_FullBright ? white : Lighting_Col_Sprite_Fast(Builder_X, Builder_Y, Builder_Z);
 	Block_Tint(col, Builder_Block);
 	VertexP3fT2fC4b v; v.Col = col;
 
@@ -433,7 +433,9 @@ PackedCol NormalBuilder_LightCol(Int32 x, Int32 y, Int32 z, Int32 face, BlockID 
 	case Face_YMax:
 		return y >= World_MaxY ? Lighting_Outside : Lighting_Col_YTop_Fast(x, (y + 1) - offset, z);
 	}
-	return PackedCol_Black;
+
+	PackedCol black = PACKEDCOL_BLACK;
+	return black;
 }
 
 bool NormalBuilder_CanStretch(BlockID initial, Int32 chunkIndex, Int32 x, Int32 y, Int32 z, Face face) {
@@ -529,14 +531,14 @@ void NormalBuilder_RenderBlock(Int32 index) {
 
 	Drawer_Tinted = Block_Tinted[Builder_Block];
 	Drawer_TintColour = Block_FogColour[Builder_Block];
-
+	PackedCol white = PACKEDCOL_WHITE;
 
 	if (count_XMin != 0) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_XMin);
 		Int32 offset = (lightFlags >> Face_XMin) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		PackedCol col = fullBright ? Builder_WhiteCol :
+		PackedCol col = fullBright ? white :
 			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
 		Drawer_XMin(count_XMin, col, texLoc, &part->fVertices[Face_XMin]);
 	}
@@ -546,7 +548,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Int32 offset = (lightFlags >> Face_XMax) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		PackedCol col = fullBright ? Builder_WhiteCol :
+		PackedCol col = fullBright ? white :
 			Builder_X <= (World_MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
 		Drawer_XMax(count_XMax, col, texLoc, &part->fVertices[Face_XMax]);
 	}
@@ -556,7 +558,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Int32 offset = (lightFlags >> Face_ZMin) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		PackedCol col = fullBright ? Builder_WhiteCol :
+		PackedCol col = fullBright ? white :
 			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Lighting_OutsideZSide;
 		Drawer_ZMin(count_ZMin, col, texLoc, &part->fVertices[Face_ZMin]);
 	}
@@ -566,7 +568,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Int32 offset = (lightFlags >> Face_ZMax) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		PackedCol col = fullBright ? Builder_WhiteCol :
+		PackedCol col = fullBright ? white :
 			Builder_Z <= (World_MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Lighting_OutsideZSide;
 		Drawer_ZMax(count_ZMax, col, texLoc, &part->fVertices[Face_ZMax]);
 	}
@@ -576,7 +578,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Int32 offset = (lightFlags >> Face_YMin) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		PackedCol col = fullBright ? Builder_WhiteCol : Lighting_Col_YBottom_Fast(Builder_X, Builder_Y - offset, Builder_Z);
+		PackedCol col = fullBright ? white : Lighting_Col_YBottom_Fast(Builder_X, Builder_Y - offset, Builder_Z);
 		Drawer_YMin(count_YMin, col, texLoc, &part->fVertices[Face_YMin]);
 	}
 
@@ -585,7 +587,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Int32 offset = (lightFlags >> Face_YMax) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
-		PackedCol col = fullBright ? Builder_WhiteCol : Lighting_Col_YTop_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
+		PackedCol col = fullBright ? white : Lighting_Col_YTop_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
 		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[Face_YMax]);
 	}
 }

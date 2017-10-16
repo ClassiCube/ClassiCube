@@ -17,6 +17,12 @@ typedef struct PackedCol_ {
 	};
 } PackedCol;
 
+#if USE_DX
+#define PACKEDCOL_CONST(r, g, b, a) { b, g, r, a };
+#else
+#define PACKEDCOL_CONST(r, g, b, a) { r, g, b, a };
+#endif
+
 
 /* Constructs a new ARGB colour. */
 PackedCol PackedCol_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
@@ -39,10 +45,9 @@ PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, Real32 t);
 /* Retrieves shaded colours for ambient block face lighting. */
 void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yBottom);
 
-/* TODO: actual constant values? may need to rethink PackedCol */
-#define PackedCol_White PackedCol_Create3(255, 255, 255)
-#define PackedCol_Black PackedCol_Create3(  0,   0,   0)
-#define PackedCol_Red   PackedCol_Create3(255,   0,   0)
-#define PackedCol_Green PackedCol_Create3(  0, 255,   0)
-#define PackedCol_Blue  PackedCol_Create3(  0,   0, 255)
+#define PACKEDCOL_WHITE PACKEDCOL_CONST(255, 255, 255, 255)
+#define PACKEDCOL_BLACK PACKEDCOL_CONST(  0,   0,   0, 255)
+#define PACKEDCOL_RED   PACKEDCOL_CONST(255,   0,   0, 255)
+#define PACKEDCOL_GREEN PACKEDCOL_CONST(  0, 255,   0, 255)
+#define PACKEDCOL_BLUE  PACKEDCOL_CONST(  0,   0, 255, 255)
 #endif

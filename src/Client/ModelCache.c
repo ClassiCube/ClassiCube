@@ -1229,8 +1229,9 @@ void BlockModel_DrawModel(Entity* p) {
 
 	if (Block_FullBright[BlockModel_block]) {
 		Int32 i;
+		PackedCol white = PACKEDCOL_WHITE;
 		for (i = 0; i < Face_Count; i++) {
-			IModel_Cols[i] = PackedCol_White;
+			IModel_Cols[i] = white;
 		}
 	}
 	if (Block_Draw[BlockModel_block] == DrawType_Gas) return;

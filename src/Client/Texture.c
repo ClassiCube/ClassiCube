@@ -32,14 +32,10 @@ Texture Texture_MakeInvalid(void) {
 	return tex;
 }
 
-
-bool Texture_IsValid(Texture* tex) {
-	return tex->ID > 0;
-}
-
 void Texture_Render(Texture* tex) {
 	Gfx_BindTexture(tex->ID);
-	GfxCommon_Draw2DTexture(tex, PackedCol_White);
+	PackedCol white = PACKEDCOL_WHITE;
+	GfxCommon_Draw2DTexture(tex, white);
 }
 
 void Texture_RenderShaded(Texture* tex, PackedCol shadeCol) {

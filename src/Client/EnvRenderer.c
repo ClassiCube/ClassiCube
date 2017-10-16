@@ -48,7 +48,7 @@ void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 void EnvRenderer_RenderMinimal(Real64 deltaTime) {
 	if (World_Blocks == NULL) return;
 
-	PackedCol fogCol = PackedCol_White;
+	PackedCol fogCol = PACKEDCOL_WHITE;
 	Real32 fogDensity = 0.0f;
 	EnvRenderer_BlockOn(&fogDensity, &fogCol);
 	Gfx_ClearColour(fogCol);
@@ -110,7 +110,7 @@ void EnvRenderer_RenderSky(Real64 deltaTime) {
 
 void EnvRenderer_UpdateFog(void) {
 	if (World_Blocks == NULL || EnvRenderer_Minimal) return;
-	PackedCol fogCol = PackedCol_White;
+	PackedCol fogCol = PACKEDCOL_WHITE;
 	Real32 fogDensity = 0.0f;
 	EnvRenderer_BlockOn(&fogDensity, &fogCol);
 

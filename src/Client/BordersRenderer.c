@@ -185,7 +185,8 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	VertexP3fT2fC4b* temp = ptr;
 
 	borders_fullBrightSides = Block_FullBright[block];
-	PackedCol col = borders_fullBrightSides ? PackedCol_White : WorldEnv_ShadowCol;
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col = borders_fullBrightSides ? white : WorldEnv_ShadowCol;
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
@@ -227,7 +228,8 @@ void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	VertexP3fT2fC4b* temp = ptr;
 
 	borders_fullBrightEdge = Block_FullBright[block];
-	PackedCol col = borders_fullBrightEdge ? PackedCol_White : WorldEnv_SunCol;
+	PackedCol white = PACKEDCOL_WHITE;
+	PackedCol col = borders_fullBrightEdge ? white : WorldEnv_SunCol;
 	Block_Tint(col, block)
 
 	for (i = 0; i < 4; i++) {
