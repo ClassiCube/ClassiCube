@@ -38,6 +38,8 @@ Event_Void GfxEvents_ContextRecreated;
 Event_Block UserEvents_BlockChanged;
 /* Raised when when the hack permissions of the player changes. */
 Event_Void UserEvents_HackPermissionsChanged;
+/* Raised when when the held block in hotbar changes. */
+Event_Void UserEvents_HeldBlockChanged;
 
 /* Raised when the block permissions(can place or delete a block) for the player changes. */
 Event_Void BlockEvents_PermissionsChanged;

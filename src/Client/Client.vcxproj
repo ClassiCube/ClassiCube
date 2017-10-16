@@ -204,6 +204,7 @@
     <ClInclude Include="Gui.h" />
     <ClInclude Include="IModel.h" />
     <ClInclude Include="Intersection.h" />
+    <ClInclude Include="Inventory.h" />
     <ClInclude Include="IsometricDrawer.h" />
     <ClInclude Include="Lighting.h" />
     <ClInclude Include="BordersRenderer.h" />
@@ -271,6 +272,7 @@
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
     <ClCompile Include="Gui.c" />
+    <ClCompile Include="Inventory.c" />
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="GameStructs.c" />
