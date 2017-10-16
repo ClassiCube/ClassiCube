@@ -2,7 +2,12 @@
 
 Int32 Math_Floor(Real32 value) {
 	Int32 valueI = (Int32)value;
-	return value < valueI ? valueI - 1 : valueI;
+	return valueI > value ? valueI - 1 : valueI;
+}
+
+Int32 Math_Ceil(Real32 value) {
+	Int32 valueI = (Int32)value;
+	return valueI < value ? valueI + 1 : valueI;
 }
 
 Int32 Math_Log2(Int32 value) {
@@ -46,4 +51,13 @@ Int32 Math_NextPowOf2(Int32 value) {
 
 bool Math_IsPowOf2(Int32 value) {
 	return value != 0 && (value & (value - 1)) == 0;
+}
+
+Int32 Math_AccumulateWheelDelta(Real32* accmulator, Real32 delta) {
+	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
+	/* We must use rounding at final step, not at every intermediate step. */
+	*accmulator += delta;
+	Int32 steps = (Int32)accmulator;
+	*accmulator -= steps;
+	return steps;
 }

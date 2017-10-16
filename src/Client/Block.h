@@ -60,43 +60,43 @@ typedef UInt8 CollideType;
 #define CollideType_LiquidLava 6
 
 /* Array of block names. */
-UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * Block_Count];
+UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
 /* Index of given block name. */
 #define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
 
 /* Gets whether the given block stops sunlight. */
-bool Block_BlocksLight[Block_Count];
+bool Block_BlocksLight[BLOCK_COUNT];
 /* Gets whether the given block should draw all its faces in a full white colour. */
-bool Block_FullBright[Block_Count];
+bool Block_FullBright[BLOCK_COUNT];
 /* Gets the name of the given block, or 'Invalid' if the block is not defined. */
-String Block_Name[Block_Count];
+String Block_Name[BLOCK_COUNT];
 /* Gets the custom fog colour that should be used when the player is standing within this block.
    Note that this is only used for exponential fog mode. */
-PackedCol Block_FogColour[Block_Count];
+PackedCol Block_FogColour[BLOCK_COUNT];
 /* Gets the fog density for the given block.
    A value of 0 means this block does not apply fog.*/
-Real32 Block_FogDensity[Block_Count];
+Real32 Block_FogDensity[BLOCK_COUNT];
 /* Gets the basic collision type for the given block. */
-CollideType Block_Collide[Block_Count];
+CollideType Block_Collide[BLOCK_COUNT];
 /* Gets the action performed when colliding with the given block. */
-CollideType Block_ExtendedCollide[Block_Count];
+CollideType Block_ExtendedCollide[BLOCK_COUNT];
 /* Speed modifier when colliding (or standing on for solid collide type) with the given block. */
-Real32 Block_SpeedMultiplier[Block_Count];
+Real32 Block_SpeedMultiplier[BLOCK_COUNT];
 /* Light offset of each block, as bitflags of 1 per face. */
-UInt8 Block_LightOffset[Block_Count];
+UInt8 Block_LightOffset[BLOCK_COUNT];
 /* Gets the DrawType for the given block. */
-DrawType Block_Draw[Block_Count];
+DrawType Block_Draw[BLOCK_COUNT];
 /* Gets whether the given block has an opaque draw type and is also a full tile block.
    Full tile block means Min of (0, 0, 0) and max of (1, 1, 1).*/
-bool Block_FullOpaque[Block_Count];
-UInt32 DefinedCustomBlocks[Block_Count >> 5];
+bool Block_FullOpaque[BLOCK_COUNT];
+UInt32 DefinedCustomBlocks[BLOCK_COUNT >> 5];
 /* Gets the dig sound ID for the given block. */
-SoundType Block_DigSounds[Block_Count];
+SoundType Block_DigSounds[BLOCK_COUNT];
 /* Gets the step sound ID for the given block. */
-SoundType Block_StepSounds[Block_Count];
+SoundType Block_StepSounds[BLOCK_COUNT];
 /* Gets whether the given block has a tinting colour applied to it when rendered.
    The tinting colour used is the block's fog colour. */
-bool Block_Tinted[Block_Count];
+bool Block_Tinted[BLOCK_COUNT];
 
 #define Block_Tint(col, block)\
 if (Block_Tinted[block]) {\
@@ -108,26 +108,26 @@ if (Block_Tinted[block]) {\
 
 
 /* Min corner of a block. */
-Vector3 Block_MinBB[Block_Count];
+Vector3 Block_MinBB[BLOCK_COUNT];
 /* Max corner of a block. */
-Vector3 Block_MaxBB[Block_Count];
+Vector3 Block_MaxBB[BLOCK_COUNT];
 /* Rendered min corner of a block. */
-Vector3 Block_RenderMinBB[Block_Count];
+Vector3 Block_RenderMinBB[BLOCK_COUNT];
 /* Rendered max corner of a block. */
-Vector3 Block_RenderMaxBB[Block_Count];
+Vector3 Block_RenderMaxBB[BLOCK_COUNT];
 
-#define Block_TexturesCount Block_Count * Face_Count
+#define Block_TexturesCount BLOCK_COUNT * Face_Count
 /* Raw texture ids of each face of each block. */
 TextureLoc Block_Textures[Block_TexturesCount];
 /* Returns whether player is allowed to place the given block. */
-bool Block_CanPlace[Block_Count];
+bool Block_CanPlace[BLOCK_COUNT];
 /* Returns whether player is allowed to delete the given block. */
-bool Block_CanDelete[Block_Count];
+bool Block_CanDelete[BLOCK_COUNT];
 
 /* Gets a bit flags of faces hidden of two neighbouring blocks. */
-UInt8 Block_Hidden[Block_Count * Block_Count];
+UInt8 Block_Hidden[BLOCK_COUNT * BLOCK_COUNT];
 /* Gets a bit flags of which faces of a block can stretch with greedy meshing. */
-UInt8 Block_CanStretch[Block_Count];
+UInt8 Block_CanStretch[BLOCK_COUNT];
 
 /* Recalculates the initial properties and culling states for all blocks. */
 void Block_Reset(void);

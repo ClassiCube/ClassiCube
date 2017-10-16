@@ -14,6 +14,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public ChatInputWidget(Game game, Font font) : base(game, font) {
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			ShowCaret = true;
+			Padding = 5;
 		}
 
 		static FastColour backColour = new FastColour(0, 0, 0, 127);
@@ -23,7 +24,6 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override int MaxLines { get { return game.ClassicMode ? 1 : 3; } }
 		public override string Prefix { get { return "> "; } }
-		public override int Padding { get { return 5; } }
 		public override int MaxCharsPerLine {
 			get {
 				bool allChars = game.ClassicMode || game.Server.SupportsPartialMessages;

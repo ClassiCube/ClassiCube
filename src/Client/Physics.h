@@ -8,10 +8,10 @@
 */
 
 typedef void (*PhysicsHandler)(Int32 index, BlockID block);
-PhysicsHandler Physics_OnActivate[Block_Count];
-PhysicsHandler Physics_OnRandomTick[Block_Count];
-PhysicsHandler Physics_OnPlace[Block_Count];
-PhysicsHandler Physics_OnDelete[Block_Count];
+PhysicsHandler Physics_OnActivate[BLOCK_COUNT];
+PhysicsHandler Physics_OnRandomTick[BLOCK_COUNT];
+PhysicsHandler Physics_OnPlace[BLOCK_COUNT];
+PhysicsHandler Physics_OnDelete[BLOCK_COUNT];
 
 bool Physics_Enabled;
 void Physics_SetEnabled(bool enabled);

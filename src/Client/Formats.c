@@ -19,7 +19,7 @@ void Map_ReadBlocks(Stream* stream) {
 #define LVL_CUSTOMTILE ((BlockID)163)
 #define LVL_CHUNKSIZE 16
 
-UInt8 Lvl_table[256 - Block_CpeCount] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 22,
+UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 22,
 22, 22, 22, 4, 0, 22, 21, 0, 22, 23, 24, 22, 26, 27, 28, 30, 31, 32, 33,
 34, 35, 36, 22, 20, 49, 45, 1, 4, 0, 9, 11, 4, 19, 5, 17, 10, 49, 20, 1,
 18, 12, 5, 25, 46, 44, 17, 49, 20, 1, 18, 12, 5, 25, 36, 34, 0, 9, 11, 46,
@@ -53,10 +53,10 @@ void Lvl_ReadCustomBlocks(Stream* stream) {
 void Lvl_ConvertPhysicsBlocks(void) {
 	UInt8 conv[256];
 	Int32 i;
-	for (i = 0; i < Block_CpeCount; i++)
+	for (i = 0; i < BLOCK_CPE_COUNT; i++)
 		conv[i] = (UInt8)i;
-	for (i = Block_CpeCount; i < 256; i++)
-		conv[i] = Lvl_table[i - Block_CpeCount];
+	for (i = BLOCK_CPE_COUNT; i < 256; i++)
+		conv[i] = Lvl_table[i - BLOCK_CPE_COUNT];
 
 	Int32 alignedBlocksSize = World_BlocksSize & ~3;
 	/* Bulk convert 4 blocks at once */

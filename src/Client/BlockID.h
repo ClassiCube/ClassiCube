@@ -75,29 +75,26 @@
 #define BlockID_StoneBrick 65
 
 /* Max block ID used in original classic */
-#define Block_MaxOriginal BlockID_Obsidian
-
+#define BLOCK_MAX_ORIGINAL BlockID_Obsidian
 /* Number of blocks in original classic. */
-#define Block_OriginalCount (Block_MaxOriginal + 1)
-
+#define BLOCK_ORIGINAL_COUNT (BLOCK_MAX_ORIGINAL + 1)
 /* Max block ID used in original classic plus CPE blocks. */
-#define Block_MaxCpe BlockID_StoneBrick
-
+#define BLOCK_MAX_CPE BlockID_StoneBrick
 /* Number of blocks in original classic plus CPE blocks. */
-#define Block_CpeCount (Block_MaxCpe + 1)
+#define BLOCK_CPE_COUNT (BLOCK_MAX_CPE + 1)
 
 #if USE16_BIT
-#define Block_MaxDefined 0xFFF
+#define BLOCK_MAX_DEFINED 0xFFF
 #else
-#define Block_MaxDefined 0xFF
+#define BLOCK_MAX_DEFINED 0xFF
 #endif
 
-#define Block_RawNames "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava"\
+#define BLOCK_RAW_NAMES "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava"\
 " StillLava Sand Gravel GoldOre IronOre CoalOre Log Leaves Sponge Glass Red Orange Yellow Lime Green Teal"\
 " Aqua Cyan Blue Indigo Violet Magenta Pink Black Gray White Dandelion Rose BrownMushroom RedMushroom Gold"\
 " Iron DoubleSlab Slab Brick TNT Bookshelf MossyRocks Obsidian CobblestoneSlab Rope Sandstone Snow Fire LightPink"\
 " ForestGreen Brown DeepBlue Turquoise Ice CeramicTile Magma Pillar Crate StoneBrick"
 
-#define Block_Count (Block_MaxDefined + 1)
-#define BlockID_Invalid Block_MaxDefined
+#define BLOCK_COUNT (BLOCK_MAX_DEFINED + 1)
+#define BlockID_Invalid BLOCK_MAX_DEFINED
 #endif

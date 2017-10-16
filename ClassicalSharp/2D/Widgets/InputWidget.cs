@@ -55,7 +55,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		/// <summary> The horizontal offset (in pixels) from the start of the box background
 		/// to the beginning of the input texture. </summary>
-		public abstract int Padding { get; }
+		public int Padding;
 		
 		/// <summary> Whether a caret should be drawn at the position characters 
 		/// are inserted/deleted from the input text. </summary>

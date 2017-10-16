@@ -17,6 +17,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			input.MinWidth = width;
 			input.MinHeight = height;
 			input.Validator = validator;
+			input.Padding = 3;
 			
 			input.Init();
 			input.Append(text);
@@ -29,7 +30,6 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override int MaxLines { get { return 1; } }
 		public override string Prefix { get { return null; } }
-		public override int Padding { get { return 3; } }
 		public override int MaxCharsPerLine { get { return Utils.StringLength; } }
 		
 		public override void Render(double delta) {

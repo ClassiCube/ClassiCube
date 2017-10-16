@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui.Screens {
 		TextGroupWidget status, bottomRight, normalChat, clientStatus;
 		bool suppressNextPress = true;
 		int chatIndex;
-		AltTextInputWidget altText;
+		SpecialInputWidget altText;
 		
 		Font chatFont, chatUrlFont, announcementFont;
 		// needed for lost contexts, to restore chat typed in
@@ -51,7 +51,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void ConstructWidgets() {
 			input = new ChatInputWidget(game, chatFont)
 				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 5, 5);
-			altText = new AltTextInputWidget(game, chatFont, input);
+			altText = new SpecialInputWidget(game, chatFont, input);
 			altText.Init();
 			UpdateAltTextY();
 			

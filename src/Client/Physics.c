@@ -452,7 +452,7 @@ void Physics_HandleCobblestoneSlab(Int32 index, BlockID block) {
 }
 
 
-UInt8 physics_blocksTnt[Block_CpeCount] = {
+UInt8 physics_blocksTnt[BLOCK_CPE_COUNT] = {
 	0, 1, 0, 0, 1, 0, 0, 1,  1, 1, 1, 1, 0, 0, 1, 1,  1, 0, 0, 0, 0, 0, 0, 0,
 	0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0,  0, 1, 1, 1, 1, 1, 0, 0,
 	1, 1, 1, 0, 1, 0, 0, 0,  0, 0, 0, 0, 0, 1, 1, 1,  1, 1,
@@ -475,7 +475,7 @@ void Physics_Explode(Int32 x, Int32 y, Int32 z, Int32 power) {
 				index = World_Pack(xx, yy, zz);
 
 				BlockID block = World_Blocks[index];
-				if (block < Block_CpeCount && physics_blocksTnt[block]) continue;
+				if (block < BLOCK_CPE_COUNT && physics_blocksTnt[block]) continue;
 
 				Game_UpdateBlock(xx, yy, zz, BlockID_Air);
 				Physics_ActivateNeighbours(xx, yy, zz, index);

@@ -31,6 +31,8 @@
 
 /* Integer floor of a floating-point value. */
 Int32 Math_Floor(Real32 value);
+/* Integer ceiling of a floating-point value. */
+Int32 Math_Ceil(Real32 value);
 /* Log base 2 of given value. */
 Int32 Math_Log2(Int32 value);
 /* Performs rounding upwards integer division.*/
@@ -47,6 +49,8 @@ Real32 Math_LerpAngle(Real32 leftAngle, Real32 rightAngle, Real32 t);
 Int32 Math_NextPowOf2(Int32 value);
 /* Returns whether the given value is a power of 2. */
 bool Math_IsPowOf2(Int32 value);
+
+Int32 Math_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
 
 /* Returns the number of vertices needed to subdivide a quad. */
 #define Math_CountVertices(axis1Len, axis2Len, axisSize) (Math_CeilDiv(axis1Len, axisSize) * Math_CeilDiv(axis2Len, axisSize) * 4)
