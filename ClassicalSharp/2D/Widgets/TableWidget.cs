@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		internal ScrollbarWidget scroll;
 		public bool PendingClose;
 		
-		Texture blockInfoTexture;
+		Texture descTex;
 		int totalRows, blockSize;
 		float selBlockExpand;
 		StringBuffer buffer = new StringBuffer(128);
@@ -77,8 +77,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			drawer.EndBatch();
 			
-			if (blockInfoTexture.IsValid)
-				blockInfoTexture.Render(gfx);
+			if (descTex.IsValid)
+				descTex.Render(gfx);
 			gfx.Texturing = false;
 		}
 		
@@ -111,30 +111,35 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Dispose() {
 			gfx.DeleteVb(ref vb);
-			gfx.DeleteTexture(ref blockInfoTexture);
+			gfx.DeleteTexture(ref descTex);
 			lastCreatedIndex = -1000;
 		}
 		
 		public override void Recreate() {
 			Dispose();
 			vb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
-			RecreateBlockInfoTexture();
+			RecreateDescTex();
 		}
 		
 		public override void Reposition() {
 			blockSize = (int)(50 * Math.Sqrt(game.GuiInventoryScale));
 			selBlockExpand = (float)(25 * Math.Sqrt(game.GuiInventoryScale));
 			UpdatePos();
-			
-			blockInfoTexture.X1 = X + (blockSize * ElementsPerRow) / 2 - blockInfoTexture.Width / 2;
-			blockInfoTexture.Y1 = Y - blockInfoTexture.Height - 5;
 			UpdateScrollbarPos();
+		}
+		
+		void UpdateDescTexPos() {
+			descTex.X1 = X + Width / 2 - descTex.Width / 2;
+			descTex.Y1 = Y - descTex.Height - 5;
 		}
 		
 		void UpdatePos() {
 			int rowsDisplayed = Math.Min(MaxRowsDisplayed, totalRows);
-			X = game.Width / 2  - (blockSize * ElementsPerRow) / 2;
-			Y = game.Height / 2 - (blockSize * rowsDisplayed)  / 2;	
+			Width  = blockSize * ElementsPerRow;
+			Height = blockSize * rowsDisplayed;
+			X = game.Width  / 2 - Width  / 2;
+			Y = game.Height / 2 - Height / 2;
+			UpdateDescTexPos();
 		}
 		
 		void UpdateScrollbarPos() {
@@ -153,7 +158,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			scroll.ScrollY = (SelectedIndex / ElementsPerRow) - (MaxRowsDisplayed - 1);
 			scroll.ClampScrollY();
 			MoveCursorToSelected();
-			RecreateBlockInfoTexture();
+			RecreateDescTex();
 		}
 		
 		public void OnInventoryChanged() {
@@ -163,7 +168,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			scroll.ScrollY = SelectedIndex / ElementsPerRow;
 			scroll.ClampScrollY();
-			RecreateBlockInfoTexture();
+			RecreateDescTex();
 		}
 		
 		void MoveCursorToSelected() {
@@ -189,11 +194,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		int lastCreatedIndex = -1000;
-		void RecreateBlockInfoTexture() {
+		void RecreateDescTex() {
 			if (SelectedIndex == lastCreatedIndex || Elements == null) return;
 			lastCreatedIndex = SelectedIndex;
 			
-			gfx.DeleteTexture(ref blockInfoTexture);
+			gfx.DeleteTexture(ref descTex);
 			if (SelectedIndex == -1) return;
 			
 			BlockID block = Elements[SelectedIndex];
@@ -201,12 +206,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			string value = buffer.ToString();
 			
 			DrawTextArgs args = new DrawTextArgs(value, font, true);
-			Size size = game.Drawer2D.MeasureSize(ref args);
-			int x = X + (blockSize * ElementsPerRow) / 2 - size.Width / 2;
-			int y = Y - size.Height - 5;
-			
-			args.SkipPartsCheck = true;
-			blockInfoTexture = game.Drawer2D.MakeTextTexture(ref args, x, y);
+			descTex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
+			UpdateDescTexPos();
 		}
 		
 		void RecreateElements() {
@@ -221,7 +222,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			UpdateScrollbarPos();
 			UpdatePos();
 
-			Elements = new BlockID[totalElements];			
+			Elements = new BlockID[totalElements];
 			int index = 0;
 			for (int i = 0; i < count; i++) {
 				BlockID block = game.Inventory.Map[i];
@@ -243,8 +244,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (scroll.HandlesMouseMove(mouseX, mouseY)) return true;
 			
 			SelectedIndex = -1;
-			if (Contains(X, Y + 3, ElementsPerRow * blockSize,
-			             MaxRowsDisplayed * blockSize - 3 * 2, mouseX, mouseY)) {
+			if (Contains(X, Y + 3, Width, MaxRowsDisplayed * blockSize - 3 * 2, mouseX, mouseY)) {
 				for (int i = 0; i < Elements.Length; i++) {
 					int x, y;
 					GetCoords(i, out x, out y);
@@ -255,13 +255,13 @@ namespace ClassicalSharp.Gui.Widgets {
 					}
 				}
 			}
-			RecreateBlockInfoTexture();
+			RecreateDescTex();
 			return true;
 		}
 		
 		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
 			PendingClose = false;
-			if (button != MouseButton.Left) return false;			
+			if (button != MouseButton.Left) return false;
 
 			if (scroll.HandlesMouseClick(mouseX, mouseY, button)) {
 				return true;
@@ -301,13 +301,13 @@ namespace ClassicalSharp.Gui.Widgets {
 			int scrollDelta = (SelectedIndex / ElementsPerRow) - (startIndex / ElementsPerRow);
 			scroll.ScrollY += scrollDelta;
 			scroll.ClampScrollY();
-			RecreateBlockInfoTexture();
+			RecreateDescTex();
 			MoveCursorToSelected();
 		}
 		
 		public override bool HandlesMouseScroll(float delta) {
 			int startScrollY = scroll.ScrollY;
-			bool bounds = Contains(TableX - scroll.Width, TableY, TableWidth + scroll.Width, 
+			bool bounds = Contains(TableX - scroll.Width, TableY, TableWidth + scroll.Width,
 			                       TableHeight, game.Mouse.X, game.Mouse.Y);
 			if (!bounds) return false;
 			
@@ -317,7 +317,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			SelectedIndex += (scroll.ScrollY - startScrollY) * ElementsPerRow;
 			if (SelectedIndex >= Elements.Length) SelectedIndex = -1;
 			
-			RecreateBlockInfoTexture();
+			RecreateDescTex();
 			return true;
 		}
 		
