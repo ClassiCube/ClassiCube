@@ -18,8 +18,8 @@ void Stream_Fail(Stream* stream, ReturnCode result, const UInt8* operation) {
 	UInt8 tmpBuffer[String_BufferSize(400)];
 	String tmp = String_FromRawBuffer(tmpBuffer, 400);
 
-	String_AppendConstant(&tmp, "Failed ");
-	String_AppendConstant(&tmp, operation);
+	String_AppendConst(&tmp, "Failed ");
+	String_AppendConst(&tmp, operation);
 	String_AppendString(&tmp, &stream->Name);
 	ErrorHandler_FailWithCode(result, tmpBuffer);
 }

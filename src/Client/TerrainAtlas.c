@@ -80,11 +80,11 @@ void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	UInt8 logBuffer[String_BufferSize(127)];
 	String log = String_FromRawBuffer(logBuffer, 127);
 
-	String_AppendConstant(&log, "Loaded new atlas: ");
+	String_AppendConst(&log, "Loaded new atlas: ");
 	String_AppendInt32(&log, atlasesCount);
-	String_AppendConstant(&log, " bmps, ");
+	String_AppendConst(&log, " bmps, ");
 	String_AppendInt32(&log, Atlas1D_ElementsPerBitmap);
-	String_AppendConstant(&log, " per bmp");
+	String_AppendConst(&log, " per bmp");
 	Platform_Log(log);
 
 	Int32 index = 0, i;

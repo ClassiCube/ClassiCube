@@ -203,6 +203,7 @@
     <ClInclude Include="Deflate.h" />
     <ClInclude Include="Gui.h" />
     <ClInclude Include="IModel.h" />
+    <ClInclude Include="Input.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="IsometricDrawer.h" />
@@ -212,8 +213,6 @@
     <ClInclude Include="MapGenerator.h" />
     <ClInclude Include="MapRenderer.h" />
     <ClInclude Include="ModelCache.h" />
-    <ClInclude Include="Key.h" />
-    <ClInclude Include="Mouse.h" />
     <ClInclude Include="NetworkEnums.h" />
     <ClInclude Include="Options.h" />
     <ClInclude Include="Particle.h" />
@@ -280,13 +279,12 @@
     <ClCompile Include="IModel.c" />
     <ClCompile Include="Intersection.c" />
     <ClCompile Include="IsometricDrawer.c" />
-    <ClCompile Include="Key.c" />
+    <ClCompile Include="Input.c" />
     <ClCompile Include="Lighting.c" />
     <ClCompile Include="Animations.c" />
     <ClCompile Include="Entity.c" />
     <ClCompile Include="MapRenderer.c" />
     <ClCompile Include="ModelCache.c" />
-    <ClCompile Include="Mouse.c" />
     <ClCompile Include="OpenGLApi.c" />
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />

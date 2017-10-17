@@ -84,6 +84,7 @@ String Options_Get(const UInt8* key);
 Int32 Options_GetInt(const UInt8* key, Int32 min, Int32 max, Int32 defValue);
 bool Options_GetBool(const UInt8* key, bool defValue);
 Real32 Options_GetFloat(const UInt8* key, Real32 min, Real32 max, Real32 defValue);
+UInt32 Options_GetEnum(const UInt8* key, UInt32 defValue, const UInt8** names, UInt32 namesCount);
 
 void Options_SetInt32(const UInt8* keyRaw, Int32 value);
 void Options_Set(const UInt8* keyRaw, STRING_TRANSIENT String value);

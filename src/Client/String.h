@@ -53,7 +53,7 @@ bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 /* Attempts to append an integer value to the end of a string, padding left with 0. */
 bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits);
 /* Attempts to append a constant raw null-terminated string. */
-bool String_AppendConstant(STRING_TRANSIENT String* str, const UInt8* buffer);
+bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* buffer);
 /* Attempts to append a string. */
 bool String_AppendString(STRING_TRANSIENT String* str, String* buffer);
 

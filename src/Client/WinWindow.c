@@ -1,8 +1,7 @@
 #include "Window.h"
 #include <Windows.h>
 #include "Platform.h"
-#include "Mouse.h"
-#include "Key.h"
+#include "Input.h"
 #include "Events.h"
 #include "String.h"
 

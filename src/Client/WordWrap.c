@@ -24,7 +24,7 @@ void WordWrap_OutputLines(String* text, String** lines, Int32* lineLens, Int32 n
 	}
 }
 
-bool WordWrapper_IsWrapper(UInt8 c) {
+bool WordWrap_IsWrapper(UInt8 c) {
 	return c == NULL || c == ' ' || c == '-' || c == '>'
 		|| c == '<' || c == '/' || c == '\\';
 }
@@ -33,7 +33,7 @@ Int32 WordWrap_WrapLine(String* text, Int32 index, Int32 lineSize) {
 	Int32 lineEnd = index + (lineSize - 1), i;
 	/* wrap - but we don't want to wrap if the entire line is filled. */
 	for (i = lineEnd; i >= index + 1; i--) {
-		if (!WordWrapper_IsWrapper(text->buffer[i])) continue;
+		if (!WordWrap_IsWrapper(text->buffer[i])) continue;
 
 		for (Int32 j = lineEnd; j >= i + 1; j--) {
 			InsertAt(index + lineSize, text->buffer[j]);
@@ -66,7 +66,7 @@ void WordWrap_Do(String* text, String** lines, Int32 numLines, Int32 maxPerLine)
 		/* Do we need word wrapping? */
 		bool needWrap = !WordWrap_IsWrapper(copy.buffer[lineEnd]) 
 			&& nextStart < totalChars && !WordWrap_IsWrapper(copy.buffer[nextStart]);
-		Int32 wrappedLen = needWrap ? WordWrapper_WrapLine(index, maxPerLine) : maxPerLine;
+		Int32 wrappedLen = needWrap ? WordWrap_WrapLine(&copy, index, maxPerLine) : maxPerLine;
 
 		/* Calculate the maximum size of this line */
 		Int32 lineLen = maxPerLine;

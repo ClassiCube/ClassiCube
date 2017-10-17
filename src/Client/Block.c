@@ -448,7 +448,7 @@ BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix) {
 	UInt8 buffer[String_BufferSize(128)];
 	String temp = String_FromRawBuffer(buffer, 128);
 	String_AppendString(&temp, name);
-	String_AppendConstant(&temp, suffix);
+	String_AppendConst(&temp, suffix);
 
 	Int32 rotated = Block_FindID(&temp);
 	if (rotated != -1) return (BlockID)rotated;

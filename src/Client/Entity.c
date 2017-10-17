@@ -115,10 +115,10 @@ void Entity_SetModel(Entity* entity, STRING_TRANSIENT String* model) {
 	/* 'giant' model kept for backwards compatibility */
 	String giant = String_FromConstant("giant");
 	if (String_CaselessEquals(model, &giant)) {		
-		String_AppendConstant(&entity->ModelName, "humanoid");
+		String_AppendConst(&entity->ModelName, "humanoid");
 		entity->ModelScale = Vector3_Create1(2.0f);
 	} else if (Convert_TryParseUInt8(model, &entity->ModelBlock)) {
-		String_AppendConstant(&entity->ModelName, "block");
+		String_AppendConst(&entity->ModelName, "block");
 	} else {
 		String_AppendString(&entity->ModelName, &name);
 	}

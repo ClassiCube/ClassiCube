@@ -147,7 +147,7 @@ bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 min
 	return true;
 }
 
-bool String_AppendConstant(STRING_TRANSIENT String* str, const UInt8* buffer) {
+bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* buffer) {
 	UInt8 cur = 0;
 
 	while ((cur = *buffer) != 0) {

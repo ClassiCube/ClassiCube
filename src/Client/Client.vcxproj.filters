@@ -324,13 +324,7 @@
     <ClInclude Include="Events.h">
       <Filter>Header Files\Events</Filter>
     </ClInclude>
-    <ClInclude Include="Key.h">
-      <Filter>Header Files\Platform\Window</Filter>
-    </ClInclude>
     <ClInclude Include="Window.h">
-      <Filter>Header Files\Platform\Window</Filter>
-    </ClInclude>
-    <ClInclude Include="Mouse.h">
       <Filter>Header Files\Platform\Window</Filter>
     </ClInclude>
     <ClInclude Include="TerrainAtlas.h">
@@ -368,6 +362,9 @@
     </ClInclude>
     <ClInclude Include="Inventory.h">
       <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Header Files\Platform</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -503,12 +500,6 @@
     <ClCompile Include="Event.c">
       <Filter>Source Files\Events</Filter>
     </ClCompile>
-    <ClCompile Include="Key.c">
-      <Filter>Source Files\Platform\Window</Filter>
-    </ClCompile>
-    <ClCompile Include="Mouse.c">
-      <Filter>Source Files\Platform\Window</Filter>
-    </ClCompile>
     <ClCompile Include="WinWindow.c">
       <Filter>Source Files\Platform</Filter>
     </ClCompile>
@@ -568,6 +559,9 @@
     </ClCompile>
     <ClCompile Include="Inventory.c">
       <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Input.c">
+      <Filter>Source Files\Platform</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

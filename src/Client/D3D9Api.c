@@ -69,7 +69,7 @@ ErrorHandler_CheckOrFail(hresult, name)
 
 #define D3D9_LogLeakedResource(msg, i) \
 logMsg.length = 0;\
-String_AppendConstant(&logMsg, msg);\
+String_AppendConst(&logMsg, msg);\
 String_AppendInt32(&logMsg, i);\
 Platform_Log(logMsg);
 
@@ -85,7 +85,7 @@ void D3D9_FreeResource(void* resource, GfxResourceID id) {
 
 	UInt8 logMsgBuffer[String_BufferSize(127)];
 	String logMsg = String_FromRawBuffer(logMsgBuffer, 127);
-	String_AppendConstant(&logMsg, "D3D9 Resource has outstanding references! ID: ");
+	String_AppendConst(&logMsg, "D3D9 Resource has outstanding references! ID: ");
 	String_AppendInt32(&logMsg, id);
 	Platform_Log(logMsg);
 }

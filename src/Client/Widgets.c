@@ -273,7 +273,7 @@ bool ScrollbarWidget_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 }
 
 void ScrollbarWidget_Create(ScrollbarWidget* widget) {
-	Widget_Init(widget);	
+	Widget_Init(&widget->Base);	
 	widget->Base.Base.Init   = ScrollbarWidget_Init;
 	widget->Base.Base.Render = ScrollbarWidget_Render;
 	widget->Base.Base.Free   = ScrollbarWidget_Free;
@@ -346,17 +346,17 @@ void TableWidget_MoveCursorToSelected(TableWidget* widget) {
 }
 
 void TableWidget_MakeBlockDesc(STRING_TRANSIENT String* desc, BlockID block) {
-	if (Game_PureClassic) { String_AppendConstant(desc, "Select block"); return; }
+	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
 	String_AppendString(desc, &Block_Name[block]);
 	if (Game_ClassicMode) return;
 
-	String_AppendConstant(desc, " (ID ");
+	String_AppendConst(desc, " (ID ");
 	String_AppendInt32(desc, block);
-	String_AppendConstant(desc, "&f, place ");
-	String_AppendConstant(desc, Block_CanPlace[block] ? "&aYes" : "&cNo");
-	String_AppendConstant(desc, "&f, delete ");
-	String_AppendConstant(desc, Block_CanDelete[block] ? "&aYes" : "&cNo");
-	String_AppendConstant(desc, "&f)");
+	String_AppendConst(desc, "&f, place ");
+	String_AppendConst(desc, Block_CanPlace[block] ? "&aYes" : "&cNo");
+	String_AppendConst(desc, "&f, delete ");
+	String_AppendConst(desc, Block_CanDelete[block] ? "&aYes" : "&cNo");
+	String_AppendConst(desc, "&f)");
 }
 
 void TableWidget_UpdateDescTexPos(TableWidget* widget) {
@@ -393,6 +393,16 @@ void TableWidget_RecreateDescTex(TableWidget* widget) {
 	TableWidget_UpdateDescTexPos(widget);
 }
 
+bool TableWidget_Show(BlockID block) {
+	if (block == BlockID_Invalid) return false;
+
+	if (block < BLOCK_CPE_COUNT) {
+		Int32 count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
+		return block < count;
+	}
+	return true;
+}
+
 void TableWidget_RecreateElements(TableWidget* widget) {
 	widget->ElementsCount = 0;
 	Int32 count = Game_UseCPE ? BLOCK_COUNT : BLOCK_ORIGINAL_COUNT, i;
@@ -416,16 +426,6 @@ void TableWidget_RecreateElements(TableWidget* widget) {
 	}
 }
 
-bool TableWidget_Show(BlockID block) {
-	if (block == BlockID_Invalid) return false;
-
-	if (block < BLOCK_CPE_COUNT) {
-		Int32 count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
-		return block < count;
-	}
-	return true;
-}
-
 void TableWidget_Init(GuiElement* elem) {
 	TableWidget* widget = (TableWidget*)elem;
 	ScrollbarWidget_Create(&widget->Scroll);
@@ -444,12 +444,12 @@ void TableWidget_Render(GuiElement* elem, Real64 delta) {
 		scroll->Render(scroll, delta);
 	}
 
-	Real32 blockSize = widget->BlockSize;
+	Int32 blockSize = widget->BlockSize;
 	if (widget->SelectedIndex != -1 && Game_ClassicMode) {
 		Int32 x, y;
 		TableWidget_GetCoords(widget, widget->SelectedIndex, &x, &y);
 		Real32 off = blockSize * 0.1f;
-		GfxCommon_Draw2DQuadGradient(x - off, y - off, blockSize + off * 2,
+		GfxCommon_Draw2DGradient(x - off, y - off, blockSize + off * 2,
 			blockSize + off * 2, Table_TopSelCol, Table_BottomSelCol);
 	}
 	Gfx_SetTexturing(true);
@@ -540,13 +540,13 @@ bool TableWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButto
 }
 
 bool TableWidget_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	TableWidget* widget = (GuiElement*)widget;
+	TableWidget* widget = (TableWidget*)elem;
 	GuiElement* scroll = &widget->Scroll.Base.Base;
 	return scroll->HandlesMouseUp(scroll, x, y, btn);
 }
 
 bool TableWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
-	TableWidget* widget = (GuiElement*)widget;
+	TableWidget* widget = (TableWidget*)elem;
 	Int32 scrollWidth = widget->Scroll.Base.Width;
 	bool bounds = Gui_Contains(Table_X(widget) - scrollWidth, Table_Y(widget),
 		Table_Width(widget) + scrollWidth, Table_Height(widget), Mouse_X, Mouse_Y);

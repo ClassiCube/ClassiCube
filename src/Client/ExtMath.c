@@ -57,7 +57,7 @@ Int32 Math_AccumulateWheelDelta(Real32* accmulator, Real32 delta) {
 	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
 	/* We must use rounding at final step, not at every intermediate step. */
 	*accmulator += delta;
-	Int32 steps = (Int32)accmulator;
+	Int32 steps = (Int32)*accmulator;
 	*accmulator -= steps;
 	return steps;
 }

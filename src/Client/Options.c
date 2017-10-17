@@ -87,6 +87,19 @@ Real32 Options_GetFloat(const UInt8* key, Real32 min, Real32 max, Real32 defValu
 	return value;
 }
 
+UInt32 Options_GetEnum(const UInt8* key, UInt32 defValue, const UInt8** names, UInt32 namesCount) {
+	String str;
+	Real32 value;
+	if (!Options_TryGetValue(key, &str)) return defValue;
+
+	UInt32 i;
+	for (i = 0; i < namesCount; i++) {
+		String name = String_FromReadonly(names[i]);
+		if (String_CaselessEquals(&str, &name)) return i;
+	}
+	return defValue;
+}
+
 void Options_Remove(Int32 i) {
 	String_Clear(&Options_Keys[i]);
 	String_Clear(&Options_Values[i]);

@@ -93,7 +93,7 @@ BlockID Inventory_DefaultMapping(Int32 i) {
 	return (BlockID)i;
 }
 
-void Inventory_SetDefaultMapping() {
+void Inventory_SetDefaultMapping(void) {
 	Int32 i;
 	for (i = 0; i < Array_NumElements(Inventory_Map); i++) {
 		Inventory_Map[i] = (BlockID)i;

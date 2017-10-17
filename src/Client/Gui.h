@@ -1,8 +1,7 @@
 #ifndef CS_GUI_H
 #define CS_GUI_H
 #include "Typedefs.h"
-#include "Mouse.h"
-#include "Key.h"
+#include "Input.h"
 #include "GameStructs.h"
 #include "GraphicsEnums.h"
 /* Describes and manages 2D GUI elements on screen.
