@@ -116,7 +116,7 @@ Key KeyBind_Defaults[KeyBind_Count] = {
 	Key_Unknown, Key_Unknown, Key_F6, Key_AltLeft, 
 	Key_F8, Key_G,
 };
-const UInt8** KeyBind_Names[KeyBind_Count] = {
+const UInt8* KeyBind_Names[KeyBind_Count] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat",
 	"Inventory", "ToggleFog", "SendChat", "PauseOrExit",
@@ -130,6 +130,7 @@ const UInt8** KeyBind_Names[KeyBind_Count] = {
 
 Key KeyBind_Get(KeyBind binding) { return KeyBind_Keys[binding]; }
 Key KeyBind_GetDefault(KeyBind binding) { return KeyBind_Defaults[binding]; }
+bool KeyBind_GetPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding]]; }
 
 #define KeyBind_MakeName(name) String_Clear(&name); String_AppendConst(&name, "key-"); String_AppendConst(&name, KeyBind_Names[i]);
 

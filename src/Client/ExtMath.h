@@ -50,12 +50,8 @@ Int32 Math_NextPowOf2(Int32 value);
 /* Returns whether the given value is a power of 2. */
 bool Math_IsPowOf2(Int32 value);
 
-Int32 Math_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
-
 /* Returns the number of vertices needed to subdivide a quad. */
 #define Math_CountVertices(axis1Len, axis2Len, axisSize) (Math_CeilDiv(axis1Len, axisSize) * Math_CeilDiv(axis2Len, axisSize) * 4)
-
-#define Math_AdjViewDist(value) ((Int32)(1.4142135f * (value)))
 
 #define Math_Clamp(value, min, max)\
 value = value < (min) ? (min) : value;\

@@ -13,6 +13,7 @@
 #include "Vectors.h"
 #include "World.h"
 #include "Builder.h"
+#include "Utils.h"
 
 void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 	chunk->CentreX = (UInt16)(x + 8);
@@ -163,7 +164,7 @@ void ChunkUpdater_OnNewMapLoaded(void) {
 
 Int32 ChunkUpdater_AdjustViewDist(Real32 dist) {
 	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
-	Int32 viewDist = Math_AdjViewDist(dist);
+	Int32 viewDist = Utils_AdjViewDist(dist);
 	return (viewDist + 24) * (viewDist + 24);
 }
 

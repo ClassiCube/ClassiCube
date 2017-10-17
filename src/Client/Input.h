@@ -139,6 +139,8 @@ typedef enum KeyBind_ {
 Key KeyBind_Get(KeyBind binding);
 /* Gets the default keyboard key that the given binding maps to. */
 Key KeyBind_GetDefault(KeyBind binding);
+/* Gets whether the keyboard key that the given maps to is currently pressed. */
+bool KeyBind_GetPressed(KeyBind binding);
 /* Sets the keyboard key that the given binding maps to. */
 void KeyBind_Set(KeyBind binding, Key key);
 /* Initalises and loads key bindings. */

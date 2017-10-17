@@ -39,7 +39,7 @@ Int32 gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL
 Int32 gl_fogModes[3] = { GL_LINEAR, GL_EXP, GL_EXP2 };
 Int32 gl_matrixModes[3] = { GL_PROJECTION, GL_MODELVIEW, GL_TEXTURE };
 
-void GL_CheckVboSupport() {
+void GL_CheckVboSupport(void) {
 	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
 	String version = String_FromReadonly(glGetString(GL_VERSION));
 	Int32 major = (Int32)(version.buffer[0] - '0'); /* x.y. (and so forth) */

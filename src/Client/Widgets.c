@@ -7,6 +7,8 @@
 #include "Window.h"
 #include "Inventory.h"
 #include "IsometricDrawer.h"
+#include "Utils.h"
+#include "ModelCache.h"
 
 void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
@@ -254,7 +256,7 @@ bool ScrollbarWidget_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseBut
 
 bool ScrollbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	ScrollbarWidget* widget = (ScrollbarWidget*)elem;
-	Int32 steps = Math_AccumulateWheelDelta(&widget->ScrollingAcc, delta);
+	Int32 steps = Utils_AccumulateWheelDelta(&widget->ScrollingAcc, delta);
 	widget->ScrollY -= steps;
 	ScrollbarWidget_ClampScrollY(widget);
 	return true;
@@ -297,6 +299,152 @@ void ScrollbarWidget_ClampScrollY(ScrollbarWidget* widget) {
 	if (widget->ScrollY < 0) widget->ScrollY = 0;
 }
 
+
+void HotbarWidget_RenderHotbarOutline(HotbarWidget* widget) {
+	Widget* w = &widget->Base;
+	GfxResourceID texId = Game_UseClassicGui ? Gui_GuiClassicTex : Gui_GuiTex;
+	widget->BackTex.ID = texId;
+	Texture_Render(&widget->BackTex);
+
+	Int32 i = Inventory_SelectedIndex;
+	Int32 width = widget->ElemSize + widget->BorderSize;
+	Int32 x = (Int32)(w->X + widget->BarXOffset + width * i + widget->ElemSize / 2);
+
+	widget->SelTex.ID = texId;
+	widget->SelTex.X = (Int32)(x - widget->SelBlockSize / 2);
+	PackedCol white = PACKEDCOL_WHITE;
+	GfxCommon_Draw2DTexture(&widget->SelTex, white);
+}
+
+void HotbarWidget_RenderHotbarBlocks(HotbarWidget* widget) {
+	/* TODO: Should hotbar use its own VB? */
+	VertexP3fT2fC4b vertices[INVENTORY_BLOCKS_PER_HOTBAR * ISOMETRICDRAWER_MAXVERTICES];
+	IsometricDrawer_BeginBatch(vertices, ModelCache_Vb);
+	Widget* w = &widget->Base;
+
+	Int32 width = widget->ElemSize + widget->BorderSize;
+	UInt32 i;
+	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+		BlockID block = Inventory_Get(i);
+		Int32 x = (Int32)(w->X + widget->BarXOffset + width * i + widget->ElemSize / 2);
+		Int32 y = (Int32)(w->Y + (w->Height - widget->BarHeight / 2));
+
+		Real32 scale = (widget->ElemSize * 13.5f / 16.0f) / 2.0f;
+		IsometricDrawer_DrawBatch(block, scale, x, y);
+	}
+	IsometricDrawer_EndBatch();
+}
+
+void HotbarWidget_RepositonBackgroundTexture(HotbarWidget* widget) {
+	Widget* w = &widget->Base;
+	TextureRec rec = TextureRec_FromPoints(0.0f, 0.0f, 182.0f / 256.0f, 22.0f / 256.0f);
+	widget->BackTex = Texture_FromRec(0, w->X, w->Y, w->Width, w->Height, rec);
+}
+
+void HotbarWidget_RepositionSelectionTexture(HotbarWidget* widget) {
+	Widget* w = &widget->Base;
+	Int32 hSize = (Int32)widget->SelBlockSize;
+
+	Real32 scale = Game_GetHotbarScale();
+	Int32 vSize = (Int32)(22.0f * scale);
+	Int32 y = w->Y + (w->Height - (Int32)(23.0f * scale));
+
+	TextureRec rec = TextureRec_FromPoints(0.0f, 22.0f / 256.0f, 24.0f / 256.0f, 22.0f / 256.0f);
+	widget->SelTex = Texture_FromRec(0, 0, y, hSize, vSize, rec);
+}
+
+void HotbarWidget_Reposition(Widget* elem) {
+	HotbarWidget* widget = (HotbarWidget*)elem;
+	Real32 scale = Game_GetHotbarScale();
+
+	widget->BarHeight = (Int32)(22 * scale);
+	elem->Width = (Int32)(182 * scale);
+	elem->Height = widget->BarHeight;
+
+	widget->SelBlockSize = (Real32)Math_Ceil(24.0f * scale);
+	widget->ElemSize     = 16.0f * scale;
+	widget->BarXOffset   = 3.1f * scale;
+	widget->BorderSize   = 4.0f * scale;
+
+	elem->Reposition(elem);
+	HotbarWidget_RepositonBackgroundTexture(widget);
+	HotbarWidget_RepositionSelectionTexture(widget);
+}
+
+void HotbarWidget_Init(GuiElement* elem) { 
+	Widget* widget = (Widget*)elem;
+	widget->Reposition(widget);
+}
+
+void HotbarWidget_Render(GuiElement* elem, Real64 delta) {
+	HotbarWidget* widget = (HotbarWidget*)elem;
+	HotbarWidget_RenderHotbarOutline(widget);
+	HotbarWidget_RenderHotbarBlocks(widget);
+}
+void HotbarWidget_Free(GuiElement* elem) { }
+
+
+bool HotbarWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+	if (key >= Key_1 && key <= Key_9) {
+		Int32 index = key - Key_1;
+		if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
+			/* Pick from first to ninth row */
+			Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
+			HotbarWidget* widget = (HotbarWidget*)elem;
+			widget->AltHandled = true;
+		} else {
+			Inventory_SetSelectedIndex(index);
+		}
+		return true;
+	}
+	return false;
+}
+
+bool HotbarWidget_HandlesKeyUp(GuiElement* elem, Key key) {
+	/* We need to handle these cases:
+	   a) user presses alt then number
+	   b) user presses alt
+	   thus we only do case b) if case a) did not happen */
+	HotbarWidget* widget = (HotbarWidget*)elem;
+	if (key != KeyBind_Get(KeyBind_HotbarSwitching)) return false;
+	if (widget->AltHandled) { widget->AltHandled = false; return true; } /* handled already */
+
+	/* Alternate between first and second row */
+	Int32 index = Inventory_Offset == 0 ? 1 : 0;
+	Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
+	return true;
+}
+
+bool HotbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	Widget* w = (Widget*)elem;
+	if (btn != MouseButton_Left || !Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y)) return false;
+	InventoryScreen screen = game.Gui.ActiveScreen as InventoryScreen;
+	if (screen == null) return false;
+
+	HotbarWidget* widget = (HotbarWidget*)elem;
+	Int32 width  = (Int32)(widget->ElemSize * widget->BorderSize);
+	Int32 height = Math_Ceil(widget->BarHeight);
+	UInt32 i;
+
+	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+		Int32 winX = (Int32)(w->X + width * i);
+		Int32 winY = (Int32)(w->Y + (w->Height - height));
+
+		if (Gui_Contains(winX, winY, width, height, x, y)) {
+			Inventory_SetSelectedIndex(i);
+			return true;
+		}
+	}
+	return false;
+}
+
+void HotbarWidget_Create(HotbarWidget* widget) {
+	Widget_Init(&widget->Base);
+	widget->Base.HorAnchor = ANCHOR_CENTRE;
+	widget->Base.VerAnchor = ANCHOR_BOTTOM_OR_RIGHT;
+}
+
+
 Int32 Table_X(TableWidget* widget) { return widget->Base.X - 5 - 10; }
 Int32 Table_Y(TableWidget* widget) { return widget->Base.Y - 5 - 30; }
 Int32 Table_Width(TableWidget* widget) { 
@@ -313,7 +461,7 @@ PackedCol Table_TopCol       = PACKEDCOL_CONST( 34,  34,  34, 168);
 PackedCol Table_BottomCol    = PACKEDCOL_CONST( 57,  57, 104, 202);
 PackedCol Table_TopSelCol    = PACKEDCOL_CONST(255, 255, 255, 142);
 PackedCol Table_BottomSelCol = PACKEDCOL_CONST(255, 255, 255, 192);
-#define TABLE_MAX_VERTICES (8 * 10 * (4 * 4))
+#define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
 bool TableWidget_GetCoords(TableWidget* widget, Int32 i, Int32* winX, Int32* winY) {
 	Int32 x = i % widget->ElementsPerRow, y = i / widget->ElementsPerRow;
@@ -373,20 +521,6 @@ void TableWidget_UpdatePos(TableWidget* widget) {
 	TableWidget_UpdateDescTexPos(widget);
 }
 
-void TableWidget_UpdateDescTexPos(TableWidget* widget) {
-	widget->DescTex.X = widget->Base.X + widget->Base.Width / 2 - widget->DescTex.Width / 2;
-	widget->DescTex.Y = widget->Base.Y - widget->DescTex.Height - 5;
-}
-
-void TableWidget_UpdatePos(TableWidget* widget) {
-	Int32 rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, widget->ElementsCount);
-	widget->Base.Width = widget->BlockSize * widget->ElementsPerRow;
-	widget->Base.Height = widget->BlockSize * rowsDisplayed;
-	widget->Base.X = Game_Width  / 2 - widget->Base.Width  / 2;
-	widget->Base.Y = Game_Height / 2 - widget->Base.Height / 2;
-	TableWidget_UpdateDescTexPos(widget);
-}
-
 #define TABLE_NAME_LEN 128
 void TableWidget_RecreateDescTex(TableWidget* widget) {
 	if (widget->SelectedIndex == widget->LastCreatedIndex) return;
@@ -402,7 +536,7 @@ void TableWidget_RecreateDescTex(TableWidget* widget) {
 	TableWidget_MakeBlockDesc(&desc, block);
 
 	DrawTextArgs args;
-	DrawTextArgs_Make(&args, &desc, font, true);
+	DrawTextArgs_Make(&args, &desc, widget->Font, true);
 	widget->DescTex = Drawer2D_MakeTextTexture(&args, 0, 0);
 	TableWidget_UpdateDescTexPos(widget);
 }

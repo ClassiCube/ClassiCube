@@ -10,6 +10,7 @@
 #include "Platform.h"
 #include "SkyboxRenderer.h"
 #include "Events.h"
+#include "Utils.h"
 
 GfxResourceID env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
 GfxResourceID env_cloudVertices, env_skyVertices;
@@ -197,7 +198,7 @@ void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, In
 }
 
 void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
-	extent = Math_AdjViewDist(extent);
+	extent = Utils_AdjViewDist(extent);
 	Int32 x1 = -extent, x2 = World_Width + extent;
 	Int32 z1 = -extent, z2 = World_Length + extent;
 	env_cloudVertices = Math_CountVertices(x2 - x1, z2 - z1, axisSize);
@@ -216,7 +217,7 @@ void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
 }
 
 void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
-	extent = Math_AdjViewDist(extent);
+	extent = Utils_AdjViewDist(extent);
 	Int32 x1 = -extent, x2 = World_Width + extent;
 	Int32 z1 = -extent, z2 = World_Length + extent;
 	env_skyVertices = Math_CountVertices(x2 - x1, z2 - z1, axisSize);

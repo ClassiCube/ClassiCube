@@ -109,7 +109,7 @@ Key Window_MapKey(WPARAM key) {
 		return Key_F1 + (key - VK_F1);
 	}
 	if (key >= '0' && key <= '9') {
-		return Key_Number0 + (key - '0');
+		return Key_0 + (key - '0');
 	}
 	if (key >= 'A' && key <= 'Z') {
 		return Key_A + (key - 'A');
@@ -659,7 +659,7 @@ Point2D Window_PointToScreen(Point2D p) {
 }
 
 MSG msg;
-void Window_ProcessEvents() {
+void Window_ProcessEvents(void) {
 	while (PeekMessageA(&msg, NULL, 0, 0, 1)) {
 		TranslateMessage(&msg);
 		DispatchMessageA(&msg);

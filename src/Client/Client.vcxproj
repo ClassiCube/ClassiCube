@@ -226,6 +226,7 @@
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TerrainAtlas.h" />
     <ClInclude Include="TreeGen.h" />
+    <ClInclude Include="Utils.h" />
     <ClInclude Include="WeatherRenderer.h" />
     <ClInclude Include="PackedCol.h" />
     <ClInclude Include="Funcs.h" />
@@ -305,6 +306,7 @@
     <ClCompile Include="TerrainAtlas.c" />
     <ClCompile Include="Texture.c" />
     <ClCompile Include="TreeGen.c" />
+    <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
     <ClCompile Include="VertexStructs.c" />
     <ClCompile Include="WeatherRenderer.c" />

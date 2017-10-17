@@ -11,6 +11,7 @@
 #include "ExtMath.h"
 #include "Platform.h"
 #include "Funcs.h"
+#include "Utils.h"
 
 GfxResourceID borders_sidesVb = -1, borders_edgesVb = -1;
 GfxResourceID borders_edgeTexId, borders_sideTexId;
@@ -70,7 +71,7 @@ void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, B
 }
 
 void BordersRenderer_CalculateRects(Int32 extent) {
-	extent = Math_AdjViewDist(extent);
+	extent = Utils_AdjViewDist(extent);
 	borders_rects[0] = Rectangle2D_Make(-extent, -extent, extent + World_Width + extent, extent);
 	borders_rects[1] = Rectangle2D_Make(-extent, World_Length, extent + World_Width + extent, extent);
 

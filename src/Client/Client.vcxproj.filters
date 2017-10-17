@@ -366,6 +366,9 @@
     <ClInclude Include="Input.h">
       <Filter>Header Files\Platform</Filter>
     </ClInclude>
+    <ClInclude Include="Utils.h">
+      <Filter>Header Files\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -562,6 +565,9 @@
     </ClCompile>
     <ClCompile Include="Input.c">
       <Filter>Source Files\Platform</Filter>
+    </ClCompile>
+    <ClCompile Include="Utils.c">
+      <Filter>Source Files\Utils</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

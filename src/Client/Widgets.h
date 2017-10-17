@@ -92,11 +92,12 @@ typedef struct SpecialInputTab_ {
 	Int32 ItemsPerRow;
 	Int32 CharsPerItem;
 } SpecialInputTab;
-void SpecialInputTab_Init(String title, Int32 itemsPerRow, Int32 charsPerItem, String contents);
+void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String title, 
+	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String contents);
 
 typedef struct SpecialInputWidget_ {
 	Widget Base;
-	Texture texture;
+	Texture Tex;
 	void* Font;
 	SpecialInputAppendFunc AppendFunc;
 	Size2D ElementSize;
@@ -181,7 +182,7 @@ typedef struct TextGroupWidget_ {
 void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, void* font, void* underlineFont);
 void TextGroupWidget_SetUsePlaceHolder(TextGroupWidget* widget, Int32 index, bool placeHolder);
 void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_TRANSIENT String* text);
-Int32 TextGroupWidget_GetUsedHeight();
+Int32 TextGroupWidget_GetUsedHeight(TextGroupWidget* widget);
 void TextGroupWidget_GetSelected(TextGroupWidget* widget, String* dstText, Int32 mouseX, Int32 mouseY);
-void TextGroupWidget_SetText(TextGroupWidget* widget, int index, String* text);
+void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, String* text);
 #endif
