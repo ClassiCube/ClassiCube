@@ -373,6 +373,20 @@ void TableWidget_UpdatePos(TableWidget* widget) {
 	TableWidget_UpdateDescTexPos(widget);
 }
 
+void TableWidget_UpdateDescTexPos(TableWidget* widget) {
+	widget->DescTex.X = widget->Base.X + widget->Base.Width / 2 - widget->DescTex.Width / 2;
+	widget->DescTex.Y = widget->Base.Y - widget->DescTex.Height - 5;
+}
+
+void TableWidget_UpdatePos(TableWidget* widget) {
+	Int32 rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, widget->ElementsCount);
+	widget->Base.Width = widget->BlockSize * widget->ElementsPerRow;
+	widget->Base.Height = widget->BlockSize * rowsDisplayed;
+	widget->Base.X = Game_Width  / 2 - widget->Base.Width  / 2;
+	widget->Base.Y = Game_Height / 2 - widget->Base.Height / 2;
+	TableWidget_UpdateDescTexPos(widget);
+}
+
 #define TABLE_NAME_LEN 128
 void TableWidget_RecreateDescTex(TableWidget* widget) {
 	if (widget->SelectedIndex == widget->LastCreatedIndex) return;
