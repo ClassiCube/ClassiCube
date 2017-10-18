@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		IsometricBlockDrawer drawer = new IsometricBlockDrawer();
 		
 		public override void Init() { Reposition(); }
-		public override void Dispose() { }		
+		public override void Dispose() { }
 		public override void Render(double delta) {
 			RenderHotbarOutline();
 			RenderHotbarBlocks();
@@ -140,6 +140,28 @@ namespace ClassicalSharp.Gui.Widgets {
 				}
 			}
 			return false;
+		}
+		
+		float deltaAcc;
+		public override bool HandlesMouseScroll(float delta) {
+			if (game.Input.AltDown) {
+				int index = game.Inventory.Offset / Inventory.BlocksPerRow;
+				game.Inventory.Offset = ScrolledIndex(delta, index, 1) * Inventory.BlocksPerRow;
+				altHandled = true;
+			} else {
+				game.Inventory.SelectedIndex = ScrolledIndex(delta, game.Inventory.SelectedIndex, -1);
+			}
+			return true;
+		}
+		
+		int ScrolledIndex(float delta, int index, int dir) {
+			int steps = Utils.AccumulateWheelDelta(ref deltaAcc, delta);
+			const int blocksPerRow = Inventory.BlocksPerRow;
+			
+			index += (dir * steps) % blocksPerRow;
+			if (index < 0) index += blocksPerRow;
+			if (index >= blocksPerRow) index -= blocksPerRow;
+			return index;
 		}
 	}
 }

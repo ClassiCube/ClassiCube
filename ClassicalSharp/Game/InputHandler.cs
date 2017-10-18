@@ -131,7 +131,6 @@ namespace ClassicalSharp {
 			}
 		}
 
-		float deltaAcc;
 		void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
 			if (game.Gui.ActiveScreen.HandlesMouseScroll(e.Delta)) return;
 			
@@ -139,29 +138,8 @@ namespace ClassicalSharp {
 			bool hotbar = AltDown || ControlDown || ShiftDown;
 			if ((!hotbar && game.Camera.Zoom(e.Delta)) || DoFovZoom(e.Delta) || !inv.CanChangeHeldBlock)
 				return;
-			ScrollHotbar(e.Delta);
-		}
-		
-		void ScrollHotbar(float delta) {
-			Inventory inv = game.Inventory;
-			if (AltDown) {
-				int index = inv.Offset / Inventory.BlocksPerRow;
-				inv.Offset = ScrolledIndex(delta, index) * Inventory.BlocksPerRow;
-			} else {
-				inv.SelectedIndex = ScrolledIndex(delta, inv.SelectedIndex);
-			}
-		}
-		
-		int ScrolledIndex(float delta, int currentIndex) {
-			int steps = Utils.AccumulateWheelDelta(ref deltaAcc, delta);
 			
-			const int blocksPerRow = Inventory.BlocksPerRow;
-			int diff = -steps % blocksPerRow;
-			int index = currentIndex + diff;
-			
-			if (index < 0) index += blocksPerRow;
-			if (index >= blocksPerRow) index -= blocksPerRow;
-			return index;
+			game.Gui.hudScreen.hotbar.HandlesMouseScroll(e.Delta);
 		}
 
 		void KeyPressHandler(object sender, KeyPressEventArgs e) {

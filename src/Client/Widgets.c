@@ -353,6 +353,17 @@ void HotbarWidget_RepositionSelectionTexture(HotbarWidget* widget) {
 	widget->SelTex = Texture_FromRec(0, 0, y, hSize, vSize, rec);
 }
 
+Int32 HotbarWidget_ScrolledIndex(HotbarWidget* widget, Real32 delta, Int32 index, Int32 dir) {
+	Int32 steps = Utils_AccumulateWheelDelta(&widget->ScrollAcc, delta);
+	index += (dir * steps) % INVENTORY_BLOCKS_PER_HOTBAR;
+
+	if (index < 0) index += INVENTORY_BLOCKS_PER_HOTBAR;
+	if (index >= INVENTORY_BLOCKS_PER_HOTBAR) {
+		index -= INVENTORY_BLOCKS_PER_HOTBAR;
+	}
+	return index;
+}
+
 void HotbarWidget_Reposition(Widget* elem) {
 	HotbarWidget* widget = (HotbarWidget*)elem;
 	Real32 scale = Game_GetHotbarScale();
@@ -438,10 +449,34 @@ bool HotbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButt
 	return false;
 }
 
+bool HotbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
+	HotbarWidget* widget = (HotbarWidget*)elem;
+	if (Key_IsAltPressed()) {
+		Int32 index = Inventory_Offset / INVENTORY_BLOCKS_PER_HOTBAR;
+		index = HotbarWidget_ScrolledIndex(widget, delta, index, 1);
+		Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
+		widget->AltHandled = true;
+	} else {
+		Int32 index = HotbarWidget_ScrolledIndex(widget, delta, Inventory_SelectedIndex, -1);
+		Inventory_SetSelectedIndex(index);
+	}
+	return true;
+}
+
 void HotbarWidget_Create(HotbarWidget* widget) {
 	Widget_Init(&widget->Base);
 	widget->Base.HorAnchor = ANCHOR_CENTRE;
 	widget->Base.VerAnchor = ANCHOR_BOTTOM_OR_RIGHT;
+
+	widget->Base.Base.Init   = HotbarWidget_Init;
+	widget->Base.Base.Render = HotbarWidget_Render;
+	widget->Base.Base.Free   = HotbarWidget_Free;
+	widget->Base.Reposition  = HotbarWidget_Reposition;
+
+	widget->Base.Base.HandlesKeyDown     = HotbarWidget_HandlesKeyDown;
+	widget->Base.Base.HandlesKeyUp       = HotbarWidget_HandlesKeyUp;
+	widget->Base.Base.HandlesMouseDown   = HotbarWidget_HandlesMouseDown;
+	widget->Base.Base.HandlesMouseScroll = HotbarWidget_HandlesMouseScroll;
 }
 
 

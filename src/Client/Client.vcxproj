@@ -300,6 +300,7 @@
     <ClCompile Include="Picking.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />
+    <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="SkyboxRenderer.c" />
     <ClCompile Include="Stream.c" />

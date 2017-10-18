@@ -572,5 +572,8 @@
     <ClCompile Include="Utils.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="Screens.c">
+      <Filter>Source Files\2D</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

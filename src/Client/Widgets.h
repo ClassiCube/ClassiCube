@@ -62,6 +62,7 @@ typedef struct HotbarWidget_ {
 	Real32 BarHeight, SelBlockSize, ElemSize;
 	Real32 BarXOffset, BorderSize;
 	bool AltHandled;
+	Real32 ScrollAcc;
 } HotbarWidget;
 
 void HotbarWidget_Create(HotbarWidget* widget);
