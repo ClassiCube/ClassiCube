@@ -14,7 +14,6 @@ namespace ClassicalSharp.Singleplayer {
 	public sealed class SinglePlayerServer : IServerConnection {
 		
 		internal PhysicsBase physics;
-		IMapGenerator gen;
 		string lastState;
 		
 		public SinglePlayerServer(Game window) {
@@ -39,7 +38,7 @@ namespace ClassicalSharp.Singleplayer {
 			
 			game.Events.RaiseBlockPermissionsChanged();
 			int seed = new Random().Next();
-			GenMap(128, 64, 128, seed, new NotchyGenerator());
+			BeginGeneration(128, 64, 128, seed, new NotchyGenerator());
 		}
 		
 		char lastCol = '\0';
@@ -73,57 +72,6 @@ namespace ClassicalSharp.Singleplayer {
 			if (Disconnected) return;
 			physics.Tick();
 			CheckAsyncResources();
-			
-			if (gen == null) return;
-			if (gen.Done) { EndGeneration(); return; }
-			
-			string state = gen.CurrentState;
-			float progress = gen.CurrentProgress;
-			LoadingMapScreen screen = ((LoadingMapScreen)game.Gui.UnderlyingScreen);
-			
-			screen.SetProgress(progress);
-			if (state == lastState) return;
-			lastState = state;
-			screen.SetMessage(state);
-		}
-		
-		void EndGeneration() {
-			game.Gui.SetNewScreen(null);
-			if (gen.Blocks == null) {
-				game.Chat.Add("&cFailed to generate the map.");
-			} else {
-				game.World.SetNewMap(gen.Blocks, gen.Width, gen.Height, gen.Length);
-				gen.Blocks = null;
-				ResetPlayerPosition();
-				
-				game.WorldEvents.RaiseOnNewMapLoaded();
-				gen.ApplyEnv(game.World);
-			}
-			
-			gen = null;
-			GC.Collect();
-		}
-		
-		internal void GenMap(int width, int height, int length, int seed, IMapGenerator gen) {
-			game.World.Reset();
-			game.WorldEvents.RaiseOnNewMap();
-			
-			GC.Collect();
-			this.gen = gen;
-			game.Gui.SetNewScreen(new LoadingMapScreen(game, "Generating level", "Generating.."));
-			gen.Width = width; gen.Height = height; gen.Length = length; gen.Seed = seed;
-			gen.GenerateAsync(game);
-		}		
-
-		void ResetPlayerPosition() {
-			float x = (game.World.Width / 2) + 0.5f;
-			float z = (game.World.Length / 2) + 0.5f;			
-			Vector3 spawn = Respawn.FindSpawnPosition(game, x, z, game.LocalPlayer.Size);
-			
-			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, 0, 0, false);
-			game.LocalPlayer.SetLocation(update, false);
-			game.LocalPlayer.Spawn = spawn;
-			game.CurrentCameraPos = game.Camera.GetCameraPos(0);
 		}
 	}
 }

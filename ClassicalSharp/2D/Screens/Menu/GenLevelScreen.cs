@@ -112,7 +112,6 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void GenerateMap(IMapGenerator gen) {
-			SinglePlayerServer server = (SinglePlayerServer)game.Server;
 			int width = GetInt(0), height = GetInt(1);
 			int length = GetInt(2), seed = GetSeedInt(3);
 			
@@ -122,7 +121,7 @@ namespace ClassicalSharp.Gui.Screens {
 			} else if (width == 0 || height == 0 || length == 0) {
 				game.Chat.Add("&cOne of the map dimensions is invalid.");
 			} else {
-				server.GenMap(width, height, length, seed, gen);
+				game.Server.BeginGeneration(width, height, length, seed, gen);
 			}
 		}
 		

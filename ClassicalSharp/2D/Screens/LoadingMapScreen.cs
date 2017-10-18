@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using ClassicalSharp.Events;
+using ClassicalSharp.Generator;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Model;
@@ -15,7 +16,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public LoadingMapScreen(Game game, string title, string message) : base(game) {
 			this.title = title;
 			this.message = message;
-			font = new Font(game.FontName, 16);			
+			font = new Font(game.FontName, 16);
 			BlocksWorld = true;
 			RenderHudOver = true;
 			HandlesAllInput = true;
@@ -159,6 +160,27 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.UpdateDynamicVb_IndexedTris(cache.vb, cache.vertices, index);
 			index = 0;
+		}
+	}
+	
+	public class GeneratingMapScreen : LoadingMapScreen{
+		
+		string lastState;
+		IMapGenerator gen;
+		public GeneratingMapScreen(Game game, IMapGenerator gen) : base(game, "Generating level", "Generating..") {
+			this.gen = gen;
+		}
+		
+		public override void Render(double delta) {
+			base.Render(delta);
+			if (gen.Done) { game.Server.EndGeneration(); return; }
+			
+			string state = gen.CurrentState;
+			SetProgress(gen.CurrentProgress);
+			if (state == lastState) return;
+			
+			lastState = state;
+			SetMessage(state);
 		}
 	}
 }

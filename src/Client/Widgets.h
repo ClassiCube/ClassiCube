@@ -6,6 +6,9 @@
 #include "String.h"
 #include "BlockID.h"
 #include "Constants.h"
+/* Contains all 2D widget implementations.
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
 
 void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset);
 
