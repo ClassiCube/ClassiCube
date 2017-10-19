@@ -147,7 +147,7 @@ void Gfx_PopMatrix(void);
 void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);
 
 /*Outputs a .png screenshot of the backbuffer to the specified file. */
-void Gfx_TakeScreenshot(String output, Int32 width, Int32 height);
+void Gfx_TakeScreenshot(STRING_TRANSIENT String* output, Int32 width, Int32 height);
 /* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
 Returns boolean of whether legacy rendering mode is needed. */
 bool Gfx_WarnIfNecessary(void);

@@ -37,7 +37,7 @@ void TextWidget_Render(GuiElement* elem, Real64 delta) {
 	}
 }
 
-void TextWidget_Free(Widget* elem) {
+void TextWidget_Free(GuiElement* elem) {
 	TextWidget* widget = (TextWidget*)elem;
 	Gfx_DeleteTexture(&widget->Texture.ID);
 }

@@ -4,6 +4,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+
 HANDLE heap;
 void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */	

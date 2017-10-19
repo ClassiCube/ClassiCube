@@ -97,8 +97,8 @@ typedef struct SpecialInputTab_ {
 	Int32 ItemsPerRow;
 	Int32 CharsPerItem;
 } SpecialInputTab;
-void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String title, 
-	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String contents);
+void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title, 
+	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String* contents);
 
 typedef struct SpecialInputWidget_ {
 	Widget Base;
@@ -152,7 +152,7 @@ void InputWidget_UpdateCaret(InputWidget* widget);
 /* Clears all the characters from the text buffer. Deletes the native texture. */
 void InputWidget_Clear(InputWidget* widget);
 /* Appends a sequence of characters to current text buffer. May recreate the native texture. */
-void InputWidget_Append(InputWidget* widget, STRING_TRANSIENT String* text);
+void InputWidget_AppendString(InputWidget* widget, STRING_TRANSIENT String* text);
 /* Appends a single character to current text buffer. May recreate the native texture. */
 void InputWidget_Append(InputWidget* widget, UInt8 c);
 
@@ -188,6 +188,6 @@ void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, void* fon
 void TextGroupWidget_SetUsePlaceHolder(TextGroupWidget* widget, Int32 index, bool placeHolder);
 void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_TRANSIENT String* text);
 Int32 TextGroupWidget_GetUsedHeight(TextGroupWidget* widget);
-void TextGroupWidget_GetSelected(TextGroupWidget* widget, String* dstText, Int32 mouseX, Int32 mouseY);
-void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, String* text);
+void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* dstText, Int32 mouseX, Int32 mouseY);
+void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_TRANSIENT String* text);
 #endif

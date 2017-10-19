@@ -31,23 +31,23 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	UInt16 extraFieldLen = Stream_ReadUInt16_LE(stream);
 	UInt8 filenameBuffer[String_BufferSize(UInt16_MaxValue)];
 	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
-	if (!state->SelectEntry(filename)) return;
+	if (!state->SelectEntry(&filename)) return;
 
 	stream->Seek(stream, extraFieldLen, STREAM_SEEKFROM_CURRENT);
 	if (versionNeeded > 20) {
 		String warnMsg = String_FromConstant("May not be able to properly extract a .zip enty with a version later than 2.0");
-		Platform_Log(warnMsg);
+		Platform_Log(&warnMsg);
 	}
 
 	Stream portion, compStream;
 	if (compressionMethod == 0) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
-		state->ProcessEntry(filename, &portion, entry);
+		state->ProcessEntry(&filename, &portion, entry);
 	} else if (compressionMethod == 8) {
 		DeflateState deflate;
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 		Deflate_MakeStream(&compStream, &deflate, &portion);
-		state->ProcessEntry(filename, &compStream, entry);
+		state->ProcessEntry(&filename, &compStream, entry);
 	}
 }
 
@@ -90,8 +90,8 @@ void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirectoryOffse
 #define ZIP_CENTRALDIR      0x02014b50UL
 #define ZIP_LOCALFILEHEADER 0x04034b50UL
 
-void Zip_DefaultProcessor(String path, Stream* data, ZipEntry* entry) { }
-bool Zip_DefaultSelector(String path) { return true; }
+void Zip_DefaultProcessor(STRING_TRANSIENT String* path, Stream* data, ZipEntry* entry) { }
+bool Zip_DefaultSelector(STRING_TRANSIENT String* path) { return true; }
 void Zip_Init(ZipState* state, Stream* input) {
 	state->Input = input;
 	state->EntriesCount = 0;
@@ -130,7 +130,7 @@ void Zip_Extract(ZipState* state) {
 			break;
 		} else {
 			String sigMsg = String_FromConstant("ZIP - Unsupported signature found, aborting");
-			ErrorHandler_Log(sigMsg);
+			ErrorHandler_Log(&sigMsg);
 			return;
 		}
 	}
@@ -145,7 +145,7 @@ void Zip_Extract(ZipState* state) {
 		sig = Stream_ReadUInt32_LE(stream);
 		if (sig != ZIP_LOCALFILEHEADER) {
 			String sigMsg = String_FromConstant("ZIP - Invalid entry found, skipping");
-			ErrorHandler_Log(sigMsg);
+			ErrorHandler_Log(&sigMsg);
 			continue;
 		}
 		Zip_ReadLocalFileHeader(state, entry);

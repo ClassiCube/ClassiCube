@@ -24,7 +24,7 @@ void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes);
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
 
 /* Logs a message to console (if attached). Implictly puts each entry on a newline. */
-void Platform_Log(String message);
+void Platform_Log(STRING_TRANSIENT String* message);
 /* Gets the current time, in UTC timezone. */
 DateTime Platform_CurrentUTCTime(void);
 /* Gets the current time, in user's local timezone. */

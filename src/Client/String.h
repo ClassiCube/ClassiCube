@@ -55,7 +55,7 @@ bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 min
 /* Attempts to append a constant raw null-terminated string. */
 bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* buffer);
 /* Attempts to append a string. */
-bool String_AppendString(STRING_TRANSIENT String* str, String* buffer);
+bool String_AppendString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* buffer);
 
 /* Finds the first index of c in given string, -1 if not found. */
 Int32 String_IndexOf(STRING_TRANSIENT String* str, UInt8 c, Int32 offset);

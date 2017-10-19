@@ -85,7 +85,7 @@ void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	String_AppendConst(&log, " bmps, ");
 	String_AppendInt32(&log, Atlas1D_ElementsPerBitmap);
 	String_AppendConst(&log, " per bmp");
-	Platform_Log(log);
+	Platform_Log(&log);
 
 	Int32 index = 0, i;
 	for (i = 0; i < atlasesCount; i++) {

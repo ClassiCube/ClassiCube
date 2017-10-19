@@ -11,16 +11,13 @@ typedef struct ZipEntry_ {
 	UInt32 Crc32;
 } ZipEntry;
 
-/* Processes the data of a .ZIP entry */
-typedef void (*ZipEntryProcessor)(String path, Stream* data, ZipEntry* entry);
-/* Selects which .ZIP entries are actually processed */
-typedef bool (*ZipEntrySelector)(String path);
-
 #define ZIP_MAX_ENTRIES 2048
 typedef struct ZipState_ {
 	Stream* Input;
-	ZipEntryProcessor ProcessEntry;
-	ZipEntrySelector SelectEntry;
+	/* Processes the data of a .ZIP entry */
+	void (*ProcessEntry)(STRING_TRANSIENT String* path, Stream* data, ZipEntry* entry);
+	/* Selects which .ZIP entries are actually processed */
+	bool (*SelectEntry)(STRING_TRANSIENT String* path);
 	Int32 EntriesCount;
 	ZipEntry Entries[ZIP_MAX_ENTRIES];
 } ZipState;
