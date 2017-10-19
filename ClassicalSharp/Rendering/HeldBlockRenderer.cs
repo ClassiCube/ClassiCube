@@ -116,7 +116,7 @@ namespace ClassicalSharp.Renderers {
 			Vector3 offset = sprite ? sOffset : nOffset;
 			
 			held.Position += offset;
-			if (!sprite) {
+			if (!sprite && BlockInfo.Draw[block] != DrawType.Gas) {
 				float height = BlockInfo.MaxBB[block].Y - BlockInfo.MinBB[block].Y;
 				held.Position.Y += 0.2f * (1 - height);
 			}
