@@ -161,7 +161,7 @@ void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, In
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_TRANSIENT String* text) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	Widget* elem = &widget->Base;
-	if (Drawer2D_EmptyText(text)) {
+	if (Drawer2D_IsEmptyText(text)) {
 		widget->Texture = Texture_MakeInvalid();
 		elem->Width = 0; elem->Height = widget->DefaultHeight;
 	} else {
@@ -307,7 +307,7 @@ void HotbarWidget_RenderHotbarOutline(HotbarWidget* widget) {
 	Texture_Render(&widget->BackTex);
 
 	Int32 i = Inventory_SelectedIndex;
-	Int32 width = widget->ElemSize + widget->BorderSize;
+	Real32 width = widget->ElemSize + widget->BorderSize;
 	Int32 x = (Int32)(w->X + widget->BarXOffset + width * i + widget->ElemSize / 2);
 
 	widget->SelTex.ID = texId;
@@ -322,7 +322,7 @@ void HotbarWidget_RenderHotbarBlocks(HotbarWidget* widget) {
 	IsometricDrawer_BeginBatch(vertices, ModelCache_Vb);
 	Widget* w = &widget->Base;
 
-	Int32 width = widget->ElemSize + widget->BorderSize;
+	Real32 width = widget->ElemSize + widget->BorderSize;
 	UInt32 i;
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
 		BlockID block = Inventory_Get(i);
@@ -370,7 +370,7 @@ void HotbarWidget_Reposition(Widget* elem) {
 
 	widget->BarHeight = (Int32)(22 * scale);
 	elem->Width = (Int32)(182 * scale);
-	elem->Height = widget->BarHeight;
+	elem->Height = (Int32)widget->BarHeight;
 
 	widget->SelBlockSize = (Real32)Math_Ceil(24.0f * scale);
 	widget->ElemSize     = 16.0f * scale;
@@ -398,7 +398,7 @@ void HotbarWidget_Free(GuiElement* elem) { }
 bool HotbarWidget_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key >= Key_1 && key <= Key_9) {
 		Int32 index = key - Key_1;
-		if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
+		if (KeyBind_GetPressed(KeyBind_HotbarSwitching)) {
 			/* Pick from first to ninth row */
 			Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
 			HotbarWidget* widget = (HotbarWidget*)elem;

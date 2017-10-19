@@ -141,7 +141,7 @@ void KeyBind_Load(void) {
 
 	for (i = 0; i < KeyBind_Count; i++) {
 		KeyBind_MakeName(name);
-		Key mapping = Options_GetEnum(&name.buffer, KeyBind_Keys[i], Key_Names, Key_Count);
+		Key mapping = Options_GetEnum(name.buffer, KeyBind_Keys[i], Key_Names, Key_Count);
 		if (mapping != Key_Escape) KeyBind_Keys[i] = mapping;
 	}
 }
@@ -154,7 +154,7 @@ void KeyBind_Save(void) {
 	for (i = 0; i < KeyBind_Count; i++) {
 		KeyBind_MakeName(name);
 		String value = String_FromReadonly(Key_Names[i]);
-		Options_Set(&name.buffer, value);
+		Options_Set(name.buffer, value);
 	}
 }
 

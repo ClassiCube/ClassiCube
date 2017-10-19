@@ -14,7 +14,6 @@ namespace ClassicalSharp.Singleplayer {
 	public sealed class SinglePlayerServer : IServerConnection {
 		
 		internal PhysicsBase physics;
-		string lastState;
 		
 		public SinglePlayerServer(Game window) {
 			game = window;

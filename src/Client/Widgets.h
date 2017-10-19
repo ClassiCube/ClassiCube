@@ -28,6 +28,7 @@ void TextWidget_SetText(TextWidget* widget, STRING_TRANSIENT String* text);
 
 typedef void (*ButtonWidget_SetValue)(STRING_TRANSIENT String* raw);
 typedef void (*ButtonWidget_GetValue)(STRING_TRANSIENT String* raw);
+typedef bool (Gui_MouseHandler)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
 typedef struct ButtonWidget_ {
 	Widget Base;
 	Texture Texture;
@@ -123,8 +124,8 @@ typedef struct InputWidget_ {
 	Int32 MaxLines;
 	Int32 MaxCharsPerLine;
 	Int32 Padding;
-	Gui_Void RemakeTexture;  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
-	Gui_Void OnPressedEnter; /* Invoked when the user presses enter. */
+	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
+	void (*OnPressedEnter)(GuiElement* elem); /* Invoked when the user presses enter. */
 
 	String Text;
 	String Lines[INPUTWIDGET_MAX_LINES];     /* raw text of each line */

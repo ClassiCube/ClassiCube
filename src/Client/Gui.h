@@ -14,43 +14,33 @@ typedef UInt8 Anchor;
 #define ANCHOR_BOTTOM_OR_RIGHT 2
 
 struct GuiElement_;
-typedef void (*Gui_Void)(struct GuiElement_* elem);
-typedef void (*Gui_Render)(struct GuiElement_* elem, Real64 delta);
-typedef bool (*Gui_KeyHandler)(struct GuiElement_* elem, Key key);
-typedef bool (*Gui_KeyPress)(struct GuiElement_* elem, UInt8 keyChar);
-typedef bool (*Gui_MouseHandler)(struct GuiElement_* elem, Int32 x, Int32 y, MouseButton btn);
-typedef bool (*Gui_MouseMove)(struct GuiElement_* elem, Int32 x, Int32 y);
-typedef bool (*Gui_MouseScroll)(struct GuiElement_* elem, Real32 delta);
-
 typedef struct GuiElement_ {
 	/* Initalises state of this GUI element */
-	Gui_Void Init;
+	void (*Init)(struct GuiElement_* elem);
 	/* Draws this gui element on screen */
-	Gui_Render Render;
+	void (*Render)(struct GuiElement_* elem, Real64 delta);
 	/* Frees the state of this GUI element */
-	Gui_Void Free;
+	void (*Free)(struct GuiElement_* elem);
 	/* Recreates all sub-elements and/or textures. (e.g. for when bitmap font changes) */
-	Gui_Void Recreate;
+	void (*Recreate)(struct GuiElement_* elem);
 	/* Returns whether this GUI element handles a key being pressed. */
-	Gui_KeyHandler HandlesKeyDown;
+	bool (*HandlesKeyDown)(struct GuiElement_* elem, Key key);
 	/* Returns whether this GUI element handles a key being released. */
-	Gui_KeyHandler HandlesKeyUp;
+	bool (*HandlesKeyUp)(struct GuiElement_* elem, Key key);
 	/* Returns whether this GUI element handles a character being input */
-	Gui_KeyPress HandlesKeyPress;
+	bool (*HandlesKeyPress)(struct GuiElement_* elem, UInt8 keyChar);
 	/* Returns whether this GUI element handles a mouse button being pressed. */
-	Gui_MouseHandler HandlesMouseDown;
+	bool (*HandlesMouseDown)(struct GuiElement_* elem, Int32 x, Int32 y, MouseButton btn);
 	/* Returns whether this GUI element handles a mouse button being released. */
-	Gui_MouseHandler HandlesMouseUp;
+	bool (*HandlesMouseUp)(struct GuiElement_* elem, Int32 x, Int32 y, MouseButton btn);
 	/* Returns whether this GUI element handles the mouse being moved. */
-	Gui_MouseMove HandlesMouseMove;
+	bool (*HandlesMouseMove)(struct GuiElement_* elem, Int32 x, Int32 y);
 	/* Returns whether this GUI element handles the mouse being scrolled. */
-	Gui_MouseScroll HandlesMouseScroll;
+	bool (*HandlesMouseScroll)(struct GuiElement_* elem, Real32 delta);
 } GuiElement;
 void GuiElement_Init(GuiElement* elem);
 
 struct Screen_;
-typedef void (*Screen_Void)(struct Screen_* screen);
-
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 typedef struct Screen_ {
 	GuiElement Base;
@@ -64,15 +54,13 @@ typedef struct Screen_ {
 	/* Whether the normal in-game HUD should be drawn over the top of this screen. */
 	bool RenderHUDOver;
 	/* Called when the game window is resized. */
-	Screen_Void OnResize;
-	Screen_Void OnContextLost;
-	Screen_Void OnContextRecreated;
+	void (*OnResize)(struct Screen_* screen);
+	void (*OnContextLost)(struct Screen_* screen);
+	void (*OnContextRecreated)(struct Screen_* screen);
 } Screen;
 void Screen_Init(Screen* screen);
 
 struct Widget_;
-typedef void (*Widget_Reposition)(struct Widget_* widget);
-
 /* Represents an individual 2D gui component. */
 typedef struct Widget_ {
 	GuiElement Base;
@@ -86,7 +74,7 @@ typedef struct Widget_ {
 	Anchor HorAnchor, VerAnchor;
 	/* Offset from the reference point */
 	Int32 XOffset, YOffset;
-	Widget_Reposition Reposition;
+	void (*Reposition)(struct Widget_* widget);
 } Widget;
 void Widget_DoReposition(Widget* w);
 void Widget_Init(Widget* widget);

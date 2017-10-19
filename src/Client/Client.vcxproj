@@ -220,7 +220,7 @@
     <ClInclude Include="Picking.h" />
     <ClInclude Include="PickedPosRenderer.h" />
     <ClInclude Include="Player.h" />
-    <ClInclude Include="Screen.h" />
+    <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="SkyboxRenderer.h" />
     <ClInclude Include="Stream.h" />

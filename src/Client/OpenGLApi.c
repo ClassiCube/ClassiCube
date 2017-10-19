@@ -251,7 +251,7 @@ GfxResourceID GL_GenAndBind(GLenum target) {
 GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
 	if (gl_lists) return gl_DYNAMICLISTID;
 	Int32 id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	Int32 sizeInBytes = maxVertices * Gfx_strideSizes[vertexFormat];
+	UInt32 sizeInBytes = maxVertices * Gfx_strideSizes[vertexFormat];
 	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, NULL, GL_DYNAMIC_DRAW);
 	return id;
 }
@@ -278,7 +278,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 coun
 	}
 
 	Int32 id = GL_GenAndBind(GL_ARRAY_BUFFER);
-	Int32 sizeInBytes = count * Gfx_strideSizes[vertexFormat];
+	UInt32 sizeInBytes = count * Gfx_strideSizes[vertexFormat];
 	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, vertices, GL_STATIC_DRAW);
 	return id;
 }
@@ -286,7 +286,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 coun
 GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
 	if (gl_lists) return 0;
 	Int32 id = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
-	Int32 sizeInBytes = indicesCount * sizeof(UInt16);
+	UInt32 sizeInBytes = indicesCount * sizeof(UInt16);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (void*)sizeInBytes, indices, GL_STATIC_DRAW);
 	return id;
 }
@@ -341,13 +341,13 @@ void GL_SetupVbPos3fTex2fCol4b(void) {
 }
 
 void GL_SetupVbPos3fCol4b_Range(Int32 startVertex) {
-	Int32 offset = startVertex * VertexP3fC4b_Size;
+	UInt32 offset = startVertex * VertexP3fC4b_Size;
 	glVertexPointer(3, GL_FLOAT, VertexP3fC4b_Size, (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE, VertexP3fC4b_Size, (void*)(offset + 12));
 }
 
 void GL_SetupVbPos3fTex2fCol4b_Range(Int32 startVertex) {
-	Int32 offset = startVertex * VertexP3fT2fC4b_Size;
+	UInt32 offset = startVertex * VertexP3fT2fC4b_Size;
 	glVertexPointer(3, GL_FLOAT, VertexP3fT2fC4b_Size, (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE, VertexP3fT2fC4b_Size, (void*)(offset + 12));
 	glTexCoordPointer(2, GL_FLOAT, VertexP3fT2fC4b_Size, (void*)(offset + 16));
@@ -380,7 +380,7 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, vb);
-	Int32 sizeInBytes = vCount * gl_batchStride;
+	UInt32 sizeInBytes = vCount * gl_batchStride;
 	glBufferSubData(GL_ARRAY_BUFFER, NULL, (void*)sizeInBytes, vertices);
 }
 
@@ -471,7 +471,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
 		return;
 	}
 
-	Int32 offset = startVertex * VertexP3fT2fC4b_Size;
+	UInt32 offset = startVertex * VertexP3fT2fC4b_Size;
 	glVertexPointer(3, GL_FLOAT, VertexP3fT2fC4b_Size, (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE, VertexP3fT2fC4b_Size, (void*)(offset + 12));
 	glTexCoordPointer(2, GL_FLOAT, VertexP3fT2fC4b_Size, (void*)(offset + 16));

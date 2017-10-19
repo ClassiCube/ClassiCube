@@ -10,20 +10,26 @@ void GuiElement_Recreate(GuiElement* elem) {
 	elem->Free(elem);
 	elem->Init(elem);
 }
-bool GuiElement_ReturnFalse(void) { return false; }
+
+bool Gui_FalseKey(GuiElement* elem, Key key) { return false; }
+bool Gui_FalseKeyPress(GuiElement* elem, UInt8 keyChar) { return false; }
+bool Gui_FalseMouse(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
+bool Gui_FalseMouseMove(GuiElement* elem, Int32 x, Int32 y) { return false; }
+bool Gui_FalseMouseScroll(GuiElement* elem, Real32 delta) { return false; }
 
 void GuiElement_Init(GuiElement* elem) {
-	elem->Init = NULL;
-	elem->Render = NULL;
-	elem->Free = NULL;
+	elem->Init     = NULL;
+	elem->Render   = NULL;
+	elem->Free     = NULL;
 	elem->Recreate = GuiElement_Recreate;
-	elem->HandlesKeyDown = GuiElement_ReturnFalse;
-	elem->HandlesKeyUp = GuiElement_ReturnFalse;
-	elem->HandlesKeyPress = GuiElement_ReturnFalse;
-	elem->HandlesMouseDown = GuiElement_ReturnFalse;
-	elem->HandlesMouseUp = GuiElement_ReturnFalse;
-	elem->HandlesMouseMove = GuiElement_ReturnFalse;
-	elem->HandlesMouseScroll = GuiElement_ReturnFalse;
+
+	elem->HandlesKeyDown     = Gui_FalseKey;
+	elem->HandlesKeyUp       = Gui_FalseKey;
+	elem->HandlesKeyPress    = Gui_FalseKeyPress;
+	elem->HandlesMouseDown   = Gui_FalseMouse;
+	elem->HandlesMouseUp     = Gui_FalseMouse;
+	elem->HandlesMouseMove   = Gui_FalseMouseMove;
+	elem->HandlesMouseScroll = Gui_FalseMouseScroll;
 }
 
 void Screen_Init(Screen* screen) {
