@@ -167,23 +167,20 @@ namespace ClassicalSharp {
 		/// <summary> Splits the input string by recognised colour codes. (e.g &amp;f) </summary>
 		protected void SplitText(string value) {
 			char code = 'f';
-			for (int i = 0; i < value.Length; i++) {
-				int nextCol = value.IndexOf('&', i);
-				int partLength = nextCol == -1 ? value.Length - i : nextCol - i;
+			for (int i = 0; i < value.Length; ) {
+				int length = 0, start = i;
+				for (; i < value.Length; i++) {
+					if (value[i] == '&' && ValidColCode(value, i + 1)) break;
+					length++;
+				}
 				
-				if (partLength > 0) {
-					string part = value.Substring(i, partLength);
+				if (length > 0) {
+					string part = value.Substring(start, length);
 					parts.Add(new TextPart(part, Cols[code]));
 				}
-				i += partLength + 1;
 				
-				if (nextCol >= 0) {
-					if (!ValidColCode(value, nextCol + 1)) {
-						i--; // include character that isn't a valid colour.
-					} else {
-						code = value[nextCol + 1];
-					}
-				}
+				i += 2; // skip over colour code
+				if (i <= value.Length) code = value[i - 1];
 			}
 		}
 	
