@@ -45,6 +45,9 @@ typedef UInt8 Face;
 /* Skin layout a humanoid skin texture can have. */
 typedef UInt8 SkinType;
 
+typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
+typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
+
 #define UInt8_MaxValue   ((UInt8)0xFF)
 #define Int16_MaxValue   ((Int16)0x7FFF)
 #define UInt16_MaxValue  ((UInt16)0xFFFF)

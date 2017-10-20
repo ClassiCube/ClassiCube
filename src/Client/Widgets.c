@@ -18,7 +18,7 @@ void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int3
 
 void TextWidget_SetHeight(TextWidget* widget, Int32 height) {
 	if (widget->ReducePadding) {
-		Drawer2D_ReducePadding_Height(&height, font.Size, 4);
+		Drawer2D_ReducePadding_Height(&height, widget->Font.Size, 4);
 	}
 	widget->DefaultHeight = height;
 	widget->Base.Height = height;
@@ -26,7 +26,7 @@ void TextWidget_SetHeight(TextWidget* widget, Int32 height) {
 
 void TextWidget_Init(GuiElement* elem) {
 	TextWidget* widget = (TextWidget*)elem;
-	Int32 height = Drawer2D_FontHeight(widget->Font, true);
+	Int32 height = Drawer2D_FontHeight(&widget->Font, true);
 	TextWidget_SetHeight(widget, height);
 }
 
@@ -50,11 +50,11 @@ void TextWidget_Reposition(Widget* elem) {
 	widget->Texture.Y += elem->Y - oldY;
 }
 
-void TextWidget_Create(TextWidget* widget, STRING_TRANSIENT String* text, void* font) {
+void TextWidget_Create(TextWidget* widget, STRING_TRANSIENT String* text, FontDesc* font) {
 	Widget_Init(&widget->Base);
 	PackedCol col = PACKEDCOL_WHITE;
 	widget->Col = col;
-	widget->Font = font;
+	widget->Font = *font;
 	widget->Base.Reposition  = TextWidget_Reposition;
 	widget->Base.Base.Init   = TextWidget_Init;
 	widget->Base.Base.Render = TextWidget_Render;
@@ -69,10 +69,10 @@ void TextWidget_SetText(TextWidget* widget, STRING_TRANSIENT String* text) {
 		elem->Width = 0; elem->Height = widget->DefaultHeight;
 	} else {
 		DrawTextArgs args;
-		DrawTextArgs_Make(&args, text, widget->Font, true);
+		DrawTextArgs_Make(&args, text, &widget->Font, true);
 		widget->Texture = Drawer2D_MakeTextTexture(&args, 0, 0);
 		if (widget->ReducePadding) {
-			Drawer2D_ReducePadding_Tex(&widget->Texture, font.Size, 4);
+			Drawer2D_ReducePadding_Tex(&widget->Texture, widget->Font.Size, 4);
 		}
 
 		elem->Width = widget->Texture.Width; elem->Height = widget->Texture.Height;
@@ -91,7 +91,7 @@ PackedCol Button_DisabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
 
 void ButtonWidget_Init(GuiElement* elem) {
 	ButtonWidget* widget = (ButtonWidget*)elem;
-	widget->DefaultHeight = Drawer2D_FontHeight(widget->Font, true);
+	widget->DefaultHeight = Drawer2D_FontHeight(&widget->Font, true);
 	widget->Base.Height = widget->DefaultHeight;
 }
 
@@ -143,14 +143,14 @@ void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
-void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, Int32 minWidth, void* font, Gui_MouseHandler onClick) {
+void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick) {
 	Widget_Init(&widget->Base);
 	widget->Base.Base.Init   = ButtonWidget_Init;
 	widget->Base.Base.Render = ButtonWidget_Render;
 	widget->Base.Base.Free   = ButtonWidget_Free;
 	widget->Base.Reposition  = ButtonWidget_Reposition;
 
-	widget->Font = font;
+	widget->Font = *font;
 	GuiElement* elem = &widget->Base.Base;
 	elem->Init(elem);
 	widget->MinWidth = minWidth; widget->MinHeight = 40;
@@ -166,7 +166,7 @@ void ButtonWidget_SetText(ButtonWidget* widget, STRING_TRANSIENT String* text) {
 		elem->Width = 0; elem->Height = widget->DefaultHeight;
 	} else {
 		DrawTextArgs args;
-		DrawTextArgs_Make(&args, text, widget->Font, true);
+		DrawTextArgs_Make(&args, text, &widget->Font, true);
 		widget->Texture = Drawer2D_MakeTextTexture(&args, 0, 0);
 		elem->Width  = max(widget->Texture.Width,  widget->MinWidth);
 		elem->Height = max(widget->Texture.Height, widget->MinHeight);
@@ -571,7 +571,7 @@ void TableWidget_RecreateDescTex(TableWidget* widget) {
 	TableWidget_MakeBlockDesc(&desc, block);
 
 	DrawTextArgs args;
-	DrawTextArgs_Make(&args, &desc, widget->Font, true);
+	DrawTextArgs_Make(&args, &desc, &widget->Font, true);
 	widget->DescTex = Drawer2D_MakeTextTexture(&args, 0, 0);
 	TableWidget_UpdateDescTexPos(widget);
 }

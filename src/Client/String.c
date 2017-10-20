@@ -157,7 +157,7 @@ bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* buffer) {
 	return true;
 }
 
-bool String_AppendString(STRING_TRANSIENT String* str, String* buffer) {
+bool String_AppendString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* buffer) {
 	Int32 i;
 
 	for (i = 0; i < buffer->length; i++) {
@@ -184,8 +184,37 @@ Int32 String_LastIndexOf(STRING_TRANSIENT String* str, UInt8 c) {
 }
 
 UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset) {
-	if (offset < 0 || offset >= str->length) return 0;
+	if (offset < 0 || offset >= str->length) return NULL;
 	return str->buffer[offset];
+}
+
+void String_InsertAt(STRING_TRANSIENT String* str, UInt8 c, Int32 offset) {
+	if (offset < 0 || offset > str->length) {
+		ErrorHandler_Fail("Offset for InsertAt out of range");
+	}
+	if (str->length == str->capacity) {
+		ErrorHandler_Fail("Cannot insert character into full string");
+	}
+
+	Int32 i;
+	for (i = str->length; i > offset; i--) {
+		str->buffer[i] = str->buffer[i - 1];
+	}
+	str->buffer[offset] = c;
+	str->length++;
+}
+
+void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset) {
+	if (offset < 0 || offset >= str->length) {
+		ErrorHandler_Fail("Offset for DeleteAt out of range");
+	}
+
+	Int32 i;
+	for (i = offset; i < str->length - 1; i++) {
+		str->buffer[i] = str->buffer[i + 1];
+	}
+	str->buffer[str->length - 1] = NULL;
+	str->length--;
 }
 
 Int32 String_IndexOfString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub) {

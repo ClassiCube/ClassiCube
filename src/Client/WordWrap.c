@@ -36,7 +36,8 @@ Int32 WordWrap_WrapLine(String* text, Int32 index, Int32 lineSize) {
 		if (!WordWrap_IsWrapper(text->buffer[i])) continue;
 
 		for (Int32 j = lineEnd; j >= i + 1; j--) {
-			InsertAt(index + lineSize, text->buffer[j]);
+			UInt8 c = text->buffer[j];
+			String_InsertAt(text, index + lineSize, c);
 			text->buffer[j] = ' ';
 		}
 		return (i + 1) - index;

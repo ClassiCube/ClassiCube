@@ -63,6 +63,10 @@ Int32 String_IndexOf(STRING_TRANSIENT String* str, UInt8 c, Int32 offset);
 Int32 String_LastIndexOf(STRING_TRANSIENT String* str, UInt8 c);
 /* Gets the character at the given index in the string. */
 UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset);
+/* Inserts a character at the given index in the string. */
+void String_InsertAt(STRING_TRANSIENT String* str, UInt8 c, Int32 offset);
+/* Deletes a character at the given index in the string. */
+void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
 
 /* Find the first index of sub in given string, -1 if not found. */
 Int32 String_IndexOfString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub);

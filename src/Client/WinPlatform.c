@@ -1,6 +1,7 @@
 #include "Platform.h"
 #include "Stream.h"
 #include "DisplayDevice.h"
+#include "ExtMath.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
@@ -61,7 +62,7 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
 }
 
 
-void Platform_Log(String message) {
+void Platform_Log(STRING_TRANSIENT String* message) {
 	/* TODO: log to console */
 }
 
@@ -172,4 +173,26 @@ UInt32 Platform_FileLength(void* file) {
 
 void Platform_ThreadSleep(UInt32 milliseconds) {
 	Sleep(milliseconds);
+}
+
+
+void Platform_MakeFont(FontDesc* desc) {
+	LOGFONTA font = { 0 };
+	font.lfHeight    = -Math_Ceil(desc->Size * GetDeviceCaps(hDC, LOGPIXELSY) / 72.0f);
+	font.lfItalic    = desc->Style == FONT_STYLE_ITALIC;
+	font.lfUnderline = desc->Style == FONT_STYLE_UNDERLINE;
+	font.lfWeight    = desc->Style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
+	font.lfQuality   = ANTIALIASED_QUALITY;
+
+	desc->Handle = CreateFontIndirectA(&font);
+	if (desc->Handle == NULL) {
+		ErrorHandler_Fail("Creating font handle failed");
+	}
+}
+
+void Platform_FreeFont(FontDesc* desc) {
+	if (!DeleteObject(desc->Handle)) {
+		ErrorHandler_Fail("Deleting font handle failed");
+	}
+	desc->Handle = NULL;
 }

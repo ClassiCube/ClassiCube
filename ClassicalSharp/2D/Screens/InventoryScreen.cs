@@ -26,7 +26,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void InitTableWidget() {
 			table = new TableWidget(game);
 			table.font = font;
-			table.ElementsPerRow = game.ClassicMode && !game.ClassicHacks ? 9 : 10;
+			table.ElementsPerRow = game.PureClassic ? 9 : 10;
 			table.Init();
 		}
 		

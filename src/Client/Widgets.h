@@ -16,13 +16,13 @@ typedef struct TextWidget_ {
 	Widget Base;
 	Texture Texture;
 	Int32 DefaultHeight;
-	void* Font;
+	FontDesc Font;
 
 	bool ReducePadding;
 	PackedCol Col;
 } TextWidget;
 
-void TextWidget_Create(TextWidget* widget, STRING_TRANSIENT String* text, void* font);
+void TextWidget_Create(TextWidget* widget, STRING_TRANSIENT String* text, FontDesc* font);
 void TextWidget_SetText(TextWidget* widget, STRING_TRANSIENT String* text);
 
 
@@ -33,7 +33,7 @@ typedef struct ButtonWidget_ {
 	Widget Base;
 	Texture Texture;
 	Int32 DefaultHeight;
-	void* Font;
+	FontDesc Font;
 
 	String OptName;
 	ButtonWidget_GetValue GetValue;
@@ -41,7 +41,7 @@ typedef struct ButtonWidget_ {
 	Int32 MinWidth, MinHeight, Metadata;
 } ButtonWidget;
 
-void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, Int32 minWidth, void* font, Gui_MouseHandler onClick);
+void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick);
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_TRANSIENT String* text);
 
 
@@ -49,8 +49,8 @@ typedef struct ScrollbarWidget_ {
 	Widget Base;
 	Int32 TotalRows, ScrollY;
 	Real32 ScrollingAcc;
-	bool DraggingMouse;
 	Int32 MouseOffset;
+	bool DraggingMouse;
 } ScrollbarWidget;
 
 void ScrollbarWidget_Create(ScrollbarWidget* widget);
@@ -62,8 +62,8 @@ typedef struct HotbarWidget_ {
 	Texture SelTex, BackTex;
 	Real32 BarHeight, SelBlockSize, ElemSize;
 	Real32 BarXOffset, BorderSize;
-	bool AltHandled;
 	Real32 ScrollAcc;
+	bool AltHandled;
 } HotbarWidget;
 
 void HotbarWidget_Create(HotbarWidget* widget);
@@ -73,11 +73,11 @@ typedef struct TableWidget_ {
 	Widget Base;
 	Int32 ElementsCount, ElementsPerRow, RowsCount;
 	Int32 LastCreatedIndex;
-	void* Font;
-	bool PendingClose;
+	FontDesc Font;
 	Int32 SelectedIndex, BlockSize;
 	Real32 SelBlockExpand;
 	GfxResourceID VB;
+	bool PendingClose;
 
 	BlockID Elements[BLOCK_COUNT];
 	ScrollbarWidget Scroll;
@@ -103,13 +103,13 @@ void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title,
 typedef struct SpecialInputWidget_ {
 	Widget Base;
 	Texture Tex;
-	void* Font;
+	FontDesc Font;
 	SpecialInputAppendFunc AppendFunc;
 	Size2D ElementSize;
 	SpecialInputTab Tabs[5];
 } SpecialInputWidget;
 
-void SpecialInputWidget_Create(SpecialInputWidget* widget, void* font, SpecialInputAppendFunc appendFunc);
+void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, SpecialInputAppendFunc appendFunc);
 void SpecialInputWidget_UpdateColours(SpecialInputWidget* widget);
 void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
 void SpecialInputWidget_Redraw(SpecialInputWidget* widget);
@@ -120,7 +120,7 @@ struct InputWidget_;
 /* Remakes the raw texture containing all the chat lines. Also updates the dimensions of the widget. */
 typedef struct InputWidget_ {
 	Widget Base;
-	void* Font;	
+	FontDesc Font;	
 	Int32 MaxLines;
 	Int32 MaxCharsPerLine;
 	Int32 Padding;
@@ -144,7 +144,7 @@ typedef struct InputWidget_ {
 	Real64 CaretAccumulator;
 } InputWidget;
 
-void InputWidget_Create(InputWidget* widget, void* font);
+void InputWidget_Create(InputWidget* widget, FontDesc* font);
 /* Calculates the sizes of each line in the text buffer. */
 void InputWidget_CalculateLineSizes(InputWidget* widget);
 /* Calculates the location and size of the caret character. */
@@ -176,15 +176,14 @@ typedef struct LinkData_ {
 typedef struct TextGroupWidget_ {
 	Widget Base;
 	Int32 LinesCount, DefaultHeight;
-	void* Font;
-	void* UnderlineFont;	
+	FontDesc Font, UnderlineFont;	
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
 	String Lines[TEXTGROUPWIDGET_MAX_LINES];
 	LinkData LinkDatas[TEXTGROUPWIDGET_MAX_LINES];
 	Texture Textures[TEXTGROUPWIDGET_MAX_LINES];
 } TextGroupWidget;
 
-void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, void* font, void* underlineFont);
+void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont);
 void TextGroupWidget_SetUsePlaceHolder(TextGroupWidget* widget, Int32 index, bool placeHolder);
 void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_TRANSIENT String* text);
 Int32 TextGroupWidget_GetUsedHeight(TextGroupWidget* widget);

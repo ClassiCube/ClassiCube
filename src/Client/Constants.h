@@ -49,4 +49,9 @@
 #define SkinType_64x64 1
 #define SkinType_64x64Slim 2
 #define SkinType_Invalid 3
+
+#define FONT_STYLE_NORMAL    0
+#define FONT_STYLE_ITALIC    1
+#define FONT_STYLE_BOLD      2
+#define FONT_STYLE_UNDERLINE 3
 #endif

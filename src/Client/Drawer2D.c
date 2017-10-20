@@ -4,9 +4,9 @@
 #include "Platform.h"
 #include "ExtMath.h"
 
-void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, void* font, bool useShadow) {
+void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow) {
 	args->Text = *text;
-	args->Font = font;
+	args->Font = *font;
 	args->UseShadow = useShadow;
 }
 
@@ -113,7 +113,7 @@ void Drawer2D_Clear(PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height) 
 void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
 Size2D Drawer2D_MeasureText(DrawTextArgs* args);
 
-Int32 Drawer2D_FontHeight(void* font, bool useShadow) {
+Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow) {
 	DrawTextArgs args;
 	String text = String_FromConstant("I");
 	DrawTextArgs_Make(&args, &text, font, useShadow);

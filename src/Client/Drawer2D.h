@@ -10,13 +10,7 @@ Copyright 2017 ClassicalSharp | Licensed under BSD-3
 #include "2DStructs.h"
 #include "Texture.h"
 
-/* Contains arguments for measuring or drawing text. */
-typedef struct DrawTextArgs_ {
-	String Text;
-	void* Font;
-	bool UseShadow;
-} DrawTextArgs;
-void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, void* font, bool useShadow);
+void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
 
 const float Offset = 1.3f;
 
@@ -42,7 +36,7 @@ void Drawer2D_Clear(PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 
 void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
 Size2D Drawer2D_MeasureText(DrawTextArgs* args);
-Int32 Drawer2D_FontHeight(void* font, bool useShadow);
+Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow);
 
 Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 windowY);
 Texture Drawer2D_Make2DTexture(Bitmap* bmp, Size2D used, Int32 windowX, Int32 windowY);

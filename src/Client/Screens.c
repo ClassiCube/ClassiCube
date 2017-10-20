@@ -1,5 +1,7 @@
 #include "Screens.h"
 #include "Widgets.h"
+#include "Game.h"
+#include "Events.h"
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;

@@ -56,4 +56,9 @@ UInt32 Platform_FileLength(void* file);
 
 /* Blocks the calling thread for given number of milliseconds. */
 void Platform_ThreadSleep(UInt32 milliseconds);
+
+/* Allocates handle for the given font. */
+void Platform_MakeFont(FontDesc* desc);
+/* Frees handle for the given font. */
+void Platform_FreeFont(FontDesc* desc);
 #endif

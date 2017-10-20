@@ -341,7 +341,7 @@ namespace ClassicalSharp.Network {
 		public object Data;
 		
 		/// <summary> Point in time the item most recently cached. (if at all) </summary>
-		public DateTime LastModified;		
+		public DateTime LastModified;
 		/// <summary> ETag of the item most recently cached. (if any) </summary>
 		public string ETag;
 		
