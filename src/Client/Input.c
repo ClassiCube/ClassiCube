@@ -114,7 +114,7 @@ Key KeyBind_Defaults[KeyBind_Count] = {
 	Key_F12, Key_F11, Key_F5, Key_F1,
 	Key_F7, Key_C, Key_ControlLeft, Key_Unknown,
 	Key_Unknown, Key_Unknown, Key_F6, Key_AltLeft, 
-	Key_F8, Key_G,
+	Key_F8, Key_G, Key_F10,
 };
 const UInt8* KeyBind_Names[KeyBind_Count] = {
 	"Forward", "Back", "Left", "Right",
@@ -125,7 +125,7 @@ const UInt8* KeyBind_Names[KeyBind_Count] = {
 	"Screenshot", "Fullscreen", "ThirdPerson", "HideGUI",
 	"AxisLines", "ZoomScrolling", "HalfSpeed", "MouseLeft",
 	"MouseMiddle", "MouseRight", "AutoRotate", "HotbarSwitching",
-	"SmoothCamera", "DropBlock",
+	"SmoothCamera", "DropBlock", "IDOverlay",
 };
 
 Key KeyBind_Get(KeyBind binding) { return KeyBind_Keys[binding]; }

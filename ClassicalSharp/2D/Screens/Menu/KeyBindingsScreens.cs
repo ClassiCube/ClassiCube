@@ -122,15 +122,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			binds = new KeyBind[10];
+			binds = new KeyBind[11];
 			binds[0] = KeyBind.ExtInput; binds[1] = KeyBind.HideFps; binds[2] = KeyBind.HideGui;
 			binds[3] = KeyBind.HotbarSwitching; binds[4] = KeyBind.DropBlock;
 			binds[5] = KeyBind.Screenshot; binds[6] = KeyBind.Fullscreen; binds[7] = KeyBind.AxisLines;
-			binds[8] = KeyBind.Autorotate; binds[9] = KeyBind.SmoothCamera;
+			binds[8] = KeyBind.Autorotate; binds[9] = KeyBind.SmoothCamera; binds[10] = KeyBind.IDOverlay;
 			
 			desc = new string[] { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block",
-				"Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera" };
-			leftLength = 5;
+				"Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay" };
+			leftLength = 6;
 			
 			title = "Other controls";
 			leftPage = SwitchHacks;
@@ -140,7 +140,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[binds.Length + 4];
-			MakeWidgets(-90, 10);
+			MakeWidgets(-140, 10);
 		}
 	}
 	

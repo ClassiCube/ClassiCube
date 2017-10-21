@@ -12,7 +12,7 @@ namespace ClassicalSharp {
 		Speed, NoClip, Fly, FlyUp, FlyDown, ExtInput, HideFps,
 		Screenshot, Fullscreen, ThirdPerson, HideGui, AxisLines,
 		ZoomScrolling, HalfSpeed, MouseLeft, MouseMiddle, MouseRight, 
-		Autorotate, HotbarSwitching, SmoothCamera, DropBlock
+		Autorotate, HotbarSwitching, SmoothCamera, DropBlock, IDOverlay,
 #pragma warning restore 1591
 	}
 	
@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 		public KeyMap() {
 			// We can't use enum array initaliser because this causes problems when building with mono
 			// and running on default .NET (https://bugzilla.xamarin.com/show_bug.cgi?id=572)
-			keys = new Key[34];
+			keys = new Key[35];
 			keys[0] = Key.W; keys[1] = Key.S; keys[2] = Key.A; keys[3] = Key.D;
 			keys[4] = Key.Space; keys[5] = Key.R; keys[6] = Key.Enter; keys[7] = Key.T;
 			keys[8] = Key.B; keys[9] = Key.F; keys[10] = Key.Enter;
@@ -47,6 +47,7 @@ namespace ClassicalSharp {
 			keys[26] = Key.ControlLeft; 
 			keys[27] = Key.Unknown; keys[28] = Key.Unknown; keys[29] = Key.Unknown;
 			keys[30] = Key.F6; keys[31] = Key.AltLeft; keys[32] = Key.F8; keys[33] = Key.G;
+			keys[34] = Key.F10;
 			
 			defaultKeys = new Key[keys.Length];
 			for (int i = 0; i < defaultKeys.Length; i++)

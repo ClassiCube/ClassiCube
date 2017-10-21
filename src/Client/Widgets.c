@@ -856,9 +856,9 @@ void SpecialInputWidget_Redraw(SpecialInputWidget* widget) {
 
 void SpecialInputWidget_Make(SpecialInputWidget* widget, SpecialInputTab* e) {
 	Size2D sizes = stackalloc Size[e.Contents.Length / e.CharsPerItem];
-	MeasureContentSizes(e, font, sizes);
-	Size2D bodySize = CalculateContentSize(e, sizes, out elementSize);
-	Int32 titleWidth = MeasureTitles(font);
+	SpecialInputWidget_MeasureContentSizes(e, font, sizes);
+	Size2D bodySize = SpecialInputWidget_CalculateContentSize(e, sizes, out elementSize);
+	Int32 titleWidth = SpecialInputWidget_MeasureTitles(font);
 	Int32 titleHeight = widget->Tabs[0].TitleSize.Height;
 	Size2D size = Size2D_Make(max(bodySize.Width, titleWidth), bodySize.Height + titleHeight);
 	Gfx_DeleteTexture(&widget->Tex.ID);
@@ -867,18 +867,18 @@ void SpecialInputWidget_Make(SpecialInputWidget* widget, SpecialInputTab* e) {
 	Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 
-	DrawTitles(drawer, font);
+	SpecialInputWidget_DrawTitles(widget);
 	PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
 	Drawer2D_Clear(col, 0, titleHeight, size.Width, bodySize.Height);
-	DrawContent(drawer, font, e, titleHeight);
-	texture = drawer.Make2DTexture(bmp, size, X, Y);
+	SpecialInputWidget_DrawContent(widget, e, titleHeight);
+	widget->Tex = Drawer2D_Make2DTexture(&bmp, size, widget->Base.X, widget->Base.Y);
 
 	Drawer2D_End();
 }
 
-bool IntersectsHeader(int widgetX, int widgetY) {
+bool SpecialInputWidget_IntersectsHeader(Int32 widgetX, Int32 widgetY) {
 	Rectangle bounds = new Rectangle(0, 0, 0, 0);
-	for (int i = 0; i < elements.Length; i++) {
+	for (Int32 i = 0; i < elements.Length; i++) {
 		Size size = elements[i].TitleSize;
 		bounds.Width = size.Width; bounds.Height = size.Height;
 		if (bounds.Contains(widgetX, widgetY)) {
@@ -890,11 +890,11 @@ bool IntersectsHeader(int widgetX, int widgetY) {
 	return false;
 }
 
-void IntersectsBody(int widgetX, int widgetY) {
+void SpecialInputWidget_IntersectsBody(Int32 widgetX, Int32 widgetY) {
 	widgetY -= elements[0].TitleSize.Height;
 	widgetX /= elementSize.Width; widgetY /= elementSize.Height;
 	SpecialInputTab e = elements[selectedIndex];
-	int index = widgetY * e.ItemsPerRow + widgetX;
+	Int32 index = widgetY * e.ItemsPerRow + widgetX;
 	if (index * e.CharsPerItem < e.Contents.Length) {
 		if (selectedIndex == 0) {
 			// TODO: need to insert characters that don't affect caret index, adjust caret colour
@@ -910,10 +910,10 @@ bool SpecialInputWidget_HandlesMouseClick(GuiElement* elem, Int32 x, Int32 y, Mo
 	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
 	x -= widget->Base.X; y -= widget->Base.Y;
 
-	if (IntersectsHeader(x, y)) {
-		Redraw();
+	if (SpecialInputWidget_IntersectsHeader(x, y)) {
+		SpecialInputWidget_Redraw(widget);
 	} else {
-		IntersectsBody(x, y);
+		SpecialInputWidget_IntersectsBody(x, y);
 	}
 	return true;
 }
@@ -949,15 +949,15 @@ void SpecialInputWidget_InitTabs(SpecialInputWidget* widget) {
 }
 
 string GetColourString() {
-	int count = 0;
-	for (int i = ' '; i <= '~'; i++) {
+	Int32 count = 0;
+	for (Int32 i = ' '; i <= '~'; i++) {
 		if (i >= 'A' && i <= 'F') continue;
 		if (IDrawer2D.Cols[i].A > 0) count++;
 	}
 
 	StringBuffer buffer = new StringBuffer(count * 4);
-	int index = 0;
-	for (int i = ' '; i <= '~'; i++) {
+	Int32 index = 0;
+	for (Int32 i = ' '; i <= '~'; i++) {
 		if (i >= 'A' && i <= 'F') continue;
 		if (IDrawer2D.Cols[i].A == 0) continue;
 
@@ -974,8 +974,8 @@ void SpecialInputWidget_MeasureContentSizes(SpecialInputTab* e, FontDesc* font, 
 	DrawTextArgs_Make(&args, &s, font, false);
 	// avoid allocating temporary strings here
 	fixed(char* ptr = s) {
-		for (int i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
-			for (int j = 0; j < e.CharsPerItem; j++)
+		for (Int32 i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
+			for (Int32 j = 0; j < e.CharsPerItem; j++)
 				ptr[j] = e.Contents[i + j];
 			sizes[i / e.CharsPerItem] = game.Drawer2D.MeasureSize(ref args);
 		}
@@ -995,11 +995,11 @@ Size2D SpecialInputWidget_CalculateContentSize(SpecialInputTab* e, Size2D* sizes
 	return Size2D_Make(elemSize->Width * e->ItemsPerRow, elemSize->Height * rows);
 }
 
-const int titleSpacing = 10, contentSpacing = 5;
-int MeasureTitles(Font font) {
-	int totalWidth = 0;
+const Int32 titleSpacing = 10, contentSpacing = 5;
+Int32 SpecialInputWidget_MeasureTitles(Font font) {
+	Int32 totalWidth = 0;
 	DrawTextArgs args = new DrawTextArgs(null, font, false);
-	for (int i = 0; i < elements.Length; i++) {
+	for (Int32 i = 0; i < elements.Length; i++) {
 		args.Text = elements[i].Title;
 		elements[i].TitleSize = game.Drawer2D.MeasureSize(ref args);
 		elements[i].TitleSize.Width += titleSpacing;
@@ -1008,11 +1008,14 @@ int MeasureTitles(Font font) {
 	return totalWidth;
 }
 
-void DrawTitles(IDrawer2D drawer, Font font) {
-	int x = 0;
-	DrawTextArgs args = new DrawTextArgs(null, font, false);
-	for (int i = 0; i < elements.Length; i++) {
-		args.Text = elements[i].Title;
+void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget) {
+	Int32 x = 0;
+	DrawTextArgs args;
+	String str = String_MakeNull();
+	DrawTextArgs_Make(&args, &str, &widget->Font, false);
+
+	for (Int32 i = 0; i < elements.Length; i++) {
+		args.Text = widget->Tabs[i].Title;
 		FastColour col = i == selectedIndex ? new FastColour(30, 30, 30, 200) :
 			new FastColour(0, 0, 0, 127);
 		Size size = elements[i].TitleSize;
@@ -1023,18 +1026,18 @@ void DrawTitles(IDrawer2D drawer, Font font) {
 	}
 }
 
-void DrawContent(IDrawer2D drawer, Font font, SpecialInputTab e, int yOffset) {
+void SpecialInputWidget_DrawContent(SpecialInputWidget* widget, SpecialInputTab* e, Int32 yOffset) {
 	string s = new String('\0', e.CharsPerItem);
-	int wrap = e.ItemsPerRow;
+	Int32 wrap = e.ItemsPerRow;
 	DrawTextArgs args = new DrawTextArgs(s, font, false);
 
 	fixed(char* ptr = s) {
-		for (int i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
-			for (int j = 0; j < e.CharsPerItem; j++)
+		for (Int32 i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
+			for (Int32 j = 0; j < e.CharsPerItem; j++)
 				ptr[j] = e.Contents[i + j];
-			int item = i / e.CharsPerItem;
+			Int32 item = i / e.CharsPerItem;
 
-			int x = (item % wrap) * elementSize.Width, y = (item / wrap) * elementSize.Height;
+			Int32 x = (item % wrap) * elementSize.Width, y = (item / wrap) * elementSize.Height;
 			y += yOffset;
 			drawer.DrawText(ref args, x, y);
 		}

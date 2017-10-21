@@ -246,7 +246,7 @@ namespace ClassicalSharp {
 			} else if (key == Keys[KeyBind.PauseOrExit] && game.World.blocks != null) {
 				game.Gui.SetNewScreen(new PauseScreen(game));
 			} else if (game.Mode.HandlesKeyDown(key)) {
-			} else if (key == Key.F10) {
+			} else if (key == Keys[KeyBind.IDOverlay]) {
 				if (game.Gui.overlays.Count > 0) return true;
 				game.Gui.ShowOverlay(new TexIdsOverlay(game));
 			} else {
