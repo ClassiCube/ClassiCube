@@ -201,7 +201,6 @@ namespace ClassicalSharp.Network.Protocols {
 			byte blockId = reader.ReadUInt8();
 			bool canPlace = reader.ReadUInt8() != 0;
 			bool canDelete = reader.ReadUInt8() != 0;
-			Inventory inv = game.Inventory;
 			
 			if (blockId == 0) {
 				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;

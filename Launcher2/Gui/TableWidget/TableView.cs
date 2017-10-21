@@ -61,7 +61,7 @@ namespace Launcher.Gui.Widgets {
 			x += DrawColumn(drawer, "Name",     0, x, filterName)     + 5;
 			x += DrawColumn(drawer, "Players",  1, x, filterPlayers)  + 5;
 			x += DrawColumn(drawer, "Uptime",   2, x, filterUptime)   + 5;
-			x += DrawColumn(drawer, "Software", 3, x, FilterSoftware) + 5;
+			x += DrawColumn(drawer, "Software", 3, x, filterSoftware) + 5;
 			DrawScrollbar(drawer);
 		}
 		

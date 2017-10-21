@@ -200,7 +200,6 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		protected char GetLastColour(int indexX, int indexY) {
 			int x = indexX;
-			IDrawer2D drawer = game.Drawer2D;
 			for (int y = indexY; y >= 0; y--) {
 				string part = lines[y];
 				char code = IDrawer2D.LastCol(part, x);

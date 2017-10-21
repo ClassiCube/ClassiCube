@@ -30,7 +30,6 @@ namespace ClassicalSharp.Gui.Screens {
 		static string chatInInputBuffer = null;
 		
 		public override void Init() {
-			float textScale = game.Drawer2D.UseBitmappedChat ? 1.25f : 1;
 			int fontSize = (int)(8 * game.GuiChatScale);
 			Utils.Clamp(ref fontSize, 8, 60);
 			chatFont = new Font(game.FontName, fontSize);

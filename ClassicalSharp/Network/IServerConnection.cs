@@ -71,10 +71,6 @@ namespace ClassicalSharp {
 			string url = identifier.Substring(3);
 			
 			float contentLengthMB = (contentLength / 1024f / 1024f);
-			string address = url;
-			if (url.StartsWith("https://")) address = url.Substring(8);
-			if (url.StartsWith("http://")) address = url.Substring(7);
-			
 			warning.lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";
 			warning.RedrawText();
 		}

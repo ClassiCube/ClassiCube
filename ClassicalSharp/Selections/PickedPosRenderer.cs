@@ -38,8 +38,7 @@ namespace ClassicalSharp.Renderers {
 			index = 0;
 			Vector3 camPos = game.CurrentCameraPos;
 			float dist = (camPos - selected.Min).LengthSquared;
-			IGraphicsApi gfx = game.Graphics;
-			
+
 			float offset = 0.01f;
 			if (dist < 4 * 4) offset = 0.00625f;
 			if (dist < 2 * 2) offset = 0.00500f;

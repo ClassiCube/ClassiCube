@@ -20,7 +20,6 @@ namespace Launcher.Gui.Views {
 		
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
-			int middle = game.Width / 2;
 			
 			updatesIndex = widgetIndex;
 			Makers.Button(this, "Updates", 110, 35, titleFont)
