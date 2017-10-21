@@ -10,6 +10,7 @@ Copyright 2017 ClassicalSharp | Licensed under BSD-3
 #include "2DStructs.h"
 #include "Texture.h"
 
+typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
 
 const float Offset = 1.3f;

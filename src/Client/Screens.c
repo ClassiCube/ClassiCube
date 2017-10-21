@@ -83,3 +83,6 @@ void ClickableScreen_Create(ClickableScreen* screen) {
 	screen->LastX = -1; screen->LastY = -1;
 	screen->OnWidgetSelected = ClickableScreen_DefaultWidgetSelected;
 }
+
+Screen AA;
+extern Screen* InventoryScreen_Unsafe_RawPointer = &AA;

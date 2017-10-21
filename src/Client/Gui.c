@@ -101,7 +101,7 @@ void Gui_Reset(void) {
 
 void Gui_Free(void) {
 	Event_UnregisterStream(&TextureEvents_FileChanged, Gui_FileChanged);
-	Gui_SetScreen(NULL);
+	Gui_SetNewScreen(NULL);
 	Gui_Status->Base.Free(&Gui_Status->Base);
 
 	if (Gui_Active != NULL) {
@@ -129,10 +129,11 @@ Screen* Gui_GetUnderlyingScreen(void) {
 	return Gui_Active == NULL ? Gui_HUD : Gui_Active;
 }
 
-void Gui_SetScreen(Screen* screen) {
-	game.Input.ScreenChanged(activeScreen, screen);
-	if (activeScreen != NULL && disposeOld)
-		activeScreen.Dispose();
+void Gui_SetScreen(Screen* screen, bool freeOld) {
+	game.Input.ScreenChanged(Gui_Active, screen);
+	if (Gui_Active != NULL && freeOld) {
+		Gui_Active->Base.Free(&Gui_Active->Base);
+	}
 
 	if (screen == NULL) {
 		hudScreen.GainFocus();
@@ -145,6 +146,8 @@ void Gui_SetScreen(Screen* screen) {
 	}
 	Gui_Active = screen;
 }
+
+void Gui_SetNewScreen(Screen* screen) { Gui_SetScreen(screen, true); }
 
 void Gui_RefreshHud(void) {
 	Gui_HUD->Base.Recreate(&Gui_HUD->Base);

@@ -102,17 +102,17 @@ void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title,
 
 typedef struct SpecialInputWidget_ {
 	Widget Base;
+	Size2D ElementSize;
+	Int32 SelectedIndex;
+	SpecialInputAppendFunc AppendFunc;
 	Texture Tex;
 	FontDesc Font;
-	SpecialInputAppendFunc AppendFunc;
-	Size2D ElementSize;
 	SpecialInputTab Tabs[5];
 } SpecialInputWidget;
 
 void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, SpecialInputAppendFunc appendFunc);
 void SpecialInputWidget_UpdateColours(SpecialInputWidget* widget);
 void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
-void SpecialInputWidget_Redraw(SpecialInputWidget* widget);
 
 
 #define INPUTWIDGET_MAX_LINES 4
