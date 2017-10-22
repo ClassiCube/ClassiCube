@@ -179,7 +179,6 @@ void Platform_ThreadSleep(UInt32 milliseconds) {
 void Platform_MakeFont(FontDesc* desc) {
 	LOGFONTA font = { 0 };
 	font.lfHeight    = -Math_Ceil(desc->Size * GetDeviceCaps(hDC, LOGPIXELSY) / 72.0f);
-	font.lfItalic    = desc->Style == FONT_STYLE_ITALIC;
 	font.lfUnderline = desc->Style == FONT_STYLE_UNDERLINE;
 	font.lfWeight    = desc->Style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
 	font.lfQuality   = ANTIALIASED_QUALITY;

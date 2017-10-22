@@ -64,7 +64,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		internal VertexP3fC4b[] quadVerts = new VertexP3fC4b[4];
 		internal int quadVb;
-		public virtual void Draw2DQuad(float x, float y, float width, float height,
+		public virtual void Draw2DQuad(int x, int y, int width, int height,
 		                               FastColour col) {
 			int c = col.Pack();
 			quadVerts[0] = new VertexP3fC4b(x, y, 0, c);
@@ -75,7 +75,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			UpdateDynamicVb_IndexedTris(quadVb, quadVerts, 4);
 		}
 		
-		public virtual void Draw2DQuad(float x, float y, float width, float height,
+		public virtual void Draw2DQuad(int x, int y, int width, int height,
 		                               FastColour topCol, FastColour bottomCol) {
 			int c = topCol.Pack();
 			quadVerts[0] = new VertexP3fC4b(x, y, 0, c);
@@ -116,7 +116,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Updates the various matrix stacks and properties so that the graphics API state
 		/// is suitable for rendering 2D quads and other 2D graphics to. </summary>
-		public void Mode2D(float width, float height) {
+		public void Mode2D(int width, int height) {
 			SetMatrixMode(MatrixType.Projection);
 			PushMatrix();
 			LoadOrthoMatrix(width, height);

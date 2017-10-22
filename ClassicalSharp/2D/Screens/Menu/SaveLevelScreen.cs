@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (desc != null) desc.Render(delta);
 			gfx.Texturing = false;
 			
-			float cX = game.Width / 2, cY = game.Height / 2;
+			int cX = game.Width / 2, cY = game.Height / 2;
 			gfx.Draw2DQuad(cX - 250, cY + 90, 500, 2, grey);
 			if (textPath == null) return;
 			SaveMap(textPath);

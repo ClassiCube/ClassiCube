@@ -52,8 +52,9 @@ namespace ClassicalSharp.Gui.Widgets {
 				int x, y;
 				GetCoords(SelectedIndex, out x, out y);
 				float off = blockSize * 0.1f;
-				gfx.Draw2DQuad(x - off, y - off, blockSize + off * 2,
-				               blockSize + off * 2, topSelCol, bottomSelCol);
+				int size = (int)(blockSize + off * 2);
+				gfx.Draw2DQuad((int)(x - off), (int)(y - off),
+				               size, size, topSelCol, bottomSelCol);
 			}
 			gfx.Texturing = true;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);

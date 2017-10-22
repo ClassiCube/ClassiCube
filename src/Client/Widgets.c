@@ -632,8 +632,9 @@ void TableWidget_Render(GuiElement* elem, Real64 delta) {
 		Int32 x, y;
 		TableWidget_GetCoords(widget, widget->SelectedIndex, &x, &y);
 		Real32 off = blockSize * 0.1f;
-		GfxCommon_Draw2DGradient(x - off, y - off, blockSize + off * 2,
-			blockSize + off * 2, Table_TopSelCol, Table_BottomSelCol);
+		Int32 size = (Int32)(blockSize + off * 2);
+		GfxCommon_Draw2DGradient((Int32)(x - off), (Int32)(y - off), 
+			size, size, Table_TopSelCol, Table_BottomSelCol);
 	}
 	Gfx_SetTexturing(true);
 	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);

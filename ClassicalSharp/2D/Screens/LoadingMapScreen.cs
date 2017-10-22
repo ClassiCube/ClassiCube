@@ -123,7 +123,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int progX = game.Width / 2 - progWidth / 2;
 			int progY = game.Height / 2 - progHeight / 2;
 			gfx.Draw2DQuad(progX, progY, progWidth, progHeight, backCol);
-			gfx.Draw2DQuad(progX, progY, progWidth * progress, progHeight, progressCol);
+			gfx.Draw2DQuad(progX, progY, (int)(progWidth * progress), progHeight, progressCol);
 		}
 		
 		void DrawBackground() {
