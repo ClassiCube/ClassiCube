@@ -18,7 +18,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public void UpdateColours() {
-			elements[0] = new SpecialInputTab("Colours", 10, 4, GetColourString());
+			elements[0].Contents = GetColourString();
 			Redraw();
 			SetActive(Active);
 		}

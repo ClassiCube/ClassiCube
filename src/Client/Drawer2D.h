@@ -9,6 +9,7 @@ Copyright 2017 ClassicalSharp | Licensed under BSD-3
 #include "PackedCol.h"
 #include "2DStructs.h"
 #include "Texture.h"
+#include "Constants.h"
 
 typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
@@ -20,7 +21,6 @@ const float Offset = 1.3f;
 bool Drawer2D_UseBitmappedChat;
 /* Whether the shadows behind text (that uses shadows) is fully black. */
 bool Drawer2D_BlackTextShadows;
-#define DRAWER2D_MAX_COLS 256
 PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 
 void Drawer2D_Init(void);

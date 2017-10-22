@@ -48,7 +48,7 @@ bool Particle_CanPass(BlockID block, bool throughLiquids) {
 }
 
 bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
-	Vector3 horPos = Vector3_Create3(Math_Floor(nextPos->X), 0.0f, Math_Floor(nextPos->Z));
+	Vector3 horPos = Vector3_Create3((Real32)Math_Floor(nextPos->X), 0.0f, (Real32)Math_Floor(nextPos->Z));
 	Vector3 min, max;
 	Vector3_Add(&min, &Block_MinBB[block], &horPos);
 	Vector3_Add(&min, &Block_MaxBB[block], &horPos);

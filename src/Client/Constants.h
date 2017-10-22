@@ -54,4 +54,6 @@
 #define FONT_STYLE_ITALIC    1
 #define FONT_STYLE_BOLD      2
 #define FONT_STYLE_UNDERLINE 3
+
+#define DRAWER2D_MAX_COLS 256
 #endif

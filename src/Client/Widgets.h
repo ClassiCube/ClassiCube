@@ -89,7 +89,7 @@ void TableWidget_SetBlockTo(TableWidget* widget, BlockID block);
 void TableWidget_OnInventoryChanged(TableWidget* widget);
 
 
-typedef void (*SpecialInputAppendFunc)(UInt8 c);
+typedef void (*SpecialInputAppendFunc)(void* userData, UInt8 c);
 typedef struct SpecialInputTab_ {
 	String Title;
 	Size2D TitleSize;
@@ -105,13 +105,16 @@ typedef struct SpecialInputWidget_ {
 	Size2D ElementSize;
 	Int32 SelectedIndex;
 	SpecialInputAppendFunc AppendFunc;
+	void* AppendObj;
 	Texture Tex;
 	FontDesc Font;
 	SpecialInputTab Tabs[5];
+	String ColString;
+	UInt8 ColBuffer[String_BufferSize(DRAWER2D_MAX_COLS * 4)];
 } SpecialInputWidget;
 
-void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, SpecialInputAppendFunc appendFunc);
-void SpecialInputWidget_UpdateColours(SpecialInputWidget* widget);
+void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, SpecialInputAppendFunc appendFunc, void* appendObj);
+void SpecialInputWidget_UpdateCols(SpecialInputWidget* widget);
 void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
 
 
