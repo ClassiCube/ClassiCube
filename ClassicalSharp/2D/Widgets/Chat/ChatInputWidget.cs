@@ -11,7 +11,7 @@ using Android.Graphics;
 namespace ClassicalSharp.Gui.Widgets {
 	public sealed class ChatInputWidget : InputWidget {
 
-		public ChatInputWidget(Game game, Font font) : base(game, font) {
+		public ChatInputWidget(Game game, Font font) : base(game, font, "> ", 3) {
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			ShowCaret = true;
 			Padding = 5;
@@ -20,28 +20,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		static FastColour backColour = new FastColour(0, 0, 0, 127);
 		int typingLogPos;
 		string originalText;
-		bool shownWarning;
 		
-		public override int MaxLines { get { return game.ClassicMode ? 1 : 3; } }
-		public override string Prefix { get { return "> "; } }
-		public override int MaxCharsPerLine {
-			get {
-				bool allChars = game.ClassicMode || game.Server.SupportsPartialMessages;
-				return allChars ? 64 : 62; // need 2 chars for colour in multilined chat, when server doesn't support partial messages
-			}
-		}
-		
-		public override void Init() {
-			base.Init();
-			bool supports = game.Server.SupportsPartialMessages;
-			
-			if (Text.Length > MaxCharsPerLine && !shownWarning && !supports) {
-				game.Chat.Add("&eNote: On this server, each line will be sent separately.", MessageType.ClientStatus6);
-				shownWarning = true;
-			} else if (Text.Length <= MaxCharsPerLine && shownWarning) {
-				game.Chat.Add(null, MessageType.ClientStatus6);
-				shownWarning = false;
-			}
+		public override int UsedLines { 
+			get { return !game.ClassicMode && game.Server.SupportsPartialMessages ? 3 : 1; }
 		}
 		
 		public override void Render(double delta) {
@@ -71,9 +52,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			originalText = null;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			
-			game.Chat.Add(null, MessageType.ClientStatus4);
-			game.Chat.Add(null, MessageType.ClientStatus5);
-			game.Chat.Add(null, MessageType.ClientStatus6);
+			game.Chat.Add(null, MessageType.ClientStatus2);
+			game.Chat.Add(null, MessageType.ClientStatus3);
 			base.EnterInput();
 		}
 		
@@ -167,7 +147,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void DownKey(bool controlDown) {
 			if (controlDown) {
-				if (caret == -1 || caret >= (lines.Length - 1) * MaxCharsPerLine) return;
+				if (caret == -1 || caret >= (UsedLines - 1) * MaxCharsPerLine) return;
 				caret += MaxCharsPerLine;
 				UpdateCaret();
 				return;
@@ -200,7 +180,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			string part = new String(value, start, pos + 1 - start);
 			List<string> matches = new List<string>();
-			game.Chat.Add(null, MessageType.ClientStatus5);
+			game.Chat.Add(null, MessageType.ClientStatus3);
 			
 			TabListEntry[] entries = game.TabList.Entries;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
@@ -232,7 +212,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					sb.Append(ref index, match);
 					sb.Append(ref index, ' ');
 				}
-				game.Chat.Add(sb.ToString(), MessageType.ClientStatus5);
+				game.Chat.Add(sb.ToString(), MessageType.ClientStatus3);
 			}
 		}
 		

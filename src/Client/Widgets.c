@@ -370,7 +370,7 @@ void HotbarWidget_Reposition(Widget* elem) {
 	Real32 scale = Game_GetHotbarScale();
 
 	widget->BarHeight = (Real32)Math_Floor(22.0f * scale);
-	elem->Width = (Int32)(182 * scale);
+	elem->Width  = (Int32)(182 * scale);
 	elem->Height = (Int32)widget->BarHeight;
 
 	widget->SelBlockSize = (Real32)Math_Ceil(24.0f * scale);

@@ -20,9 +20,8 @@ namespace ClassicalSharp.Singleplayer {
 			physics = new PhysicsBase(game);
 			SupportsFullCP437 = !game.ClassicMode;
 			SupportsPartialMessages = true;
+			IsSinglePlayer = true;
 		}
-		
-		public override bool IsSinglePlayer { get { return true; } }
 		
 		public override void Connect(IPAddress address, int port) {
 			game.Chat.SetLogName("Singleplayer");

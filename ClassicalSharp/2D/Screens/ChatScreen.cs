@@ -247,7 +247,7 @@ namespace ClassicalSharp.Gui.Screens {
 				bottomRight.SetText(2 - (int)(type - MessageType.BottomRight1), e.Text);
 			} else if (type == MessageType.Announcement) {
 				announcement.SetText(e.Text);
-			} else if (type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus6) {
+			} else if (type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus3) {
 				clientStatus.SetText((int)(type - MessageType.ClientStatus1), e.Text);
 				UpdateChatYOffset(true);
 			}

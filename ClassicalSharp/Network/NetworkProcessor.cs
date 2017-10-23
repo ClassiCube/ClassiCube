@@ -24,9 +24,8 @@ namespace ClassicalSharp.Network {
 		public NetworkProcessor(Game window) {
 			game = window;
 			cpeData = new CPESupport(); game.Components.Add(cpeData);
+			IsSinglePlayer = false;
 		}
-		
-		public override bool IsSinglePlayer { get { return false; } }
 		
 		Socket socket;
 		DateTime lastPacket;

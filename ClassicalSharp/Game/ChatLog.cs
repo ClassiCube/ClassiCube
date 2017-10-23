@@ -11,7 +11,7 @@ namespace ClassicalSharp {
 		
 		public ChatLine Status1, Status2, Status3, BottomRight1,
 		BottomRight2, BottomRight3, Announcement;
-		public ChatLine[] ClientStatus = new ChatLine[6];
+		public ChatLine[] ClientStatus = new ChatLine[3];
 		
 		Game game;
 		public void Init(Game game) {
@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 				BottomRight3 = text;
 			} else if (type == MessageType.Announcement) {
 				Announcement = text;
-			} else if (type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus6) {
+			} else if (type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus3) {
 				ClientStatus[(int)(type - MessageType.ClientStatus1)] = text;
 			}
 			game.Events.RaiseChatReceived(text, type);

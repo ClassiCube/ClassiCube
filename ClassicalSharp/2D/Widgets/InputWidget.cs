@@ -9,16 +9,17 @@ using Android.Graphics;
 namespace ClassicalSharp.Gui.Widgets {
 	public abstract class InputWidget : Widget {
 		
-		public InputWidget(Game game, Font font) : base(game) {
-			Text = new WrappableStringBuffer(Utils.StringLength * MaxLines);
-			lines = new string[MaxLines];
-			lineSizes = new Size[MaxLines];
+		public InputWidget(Game game, Font font, string prefix, int maxLines) : base(game) {
+			Text = new WrappableStringBuffer(Utils.StringLength * maxLines);
+			lines = new string[maxLines];
+			lineSizes = new Size[maxLines];
+			this.font = font;
+			Prefix = prefix;
 			
 			DrawTextArgs args = new DrawTextArgs("_", font, true);
 			caretTex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			caretTex.Width = (ushort)((caretTex.Width * 3) / 4);
 			caretWidth = caretTex.Width; caretHeight = caretTex.Height;
-			this.font = font;
 			
 			if (Prefix == null) return;
 			args = new DrawTextArgs(Prefix, font, true);
@@ -45,13 +46,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		public WrappableStringBuffer Text;
 		
 		/// <summary> The maximum number of lines that may be entered. </summary>
-		public abstract int MaxLines { get; }
+		public abstract int UsedLines { get; }
 		
 		/// <summary> The maximum number of characters that can fit on one line. </summary>
-		public abstract int MaxCharsPerLine { get; }
+		public int MaxCharsPerLine = Utils.StringLength;
 		
 		/// <summary> The prefix string that is always shown before the input text. Can be null. </summary>
-		public abstract string Prefix { get; }
+		public string Prefix;
 		
 		/// <summary> The horizontal offset (in pixels) from the start of the box background
 		/// to the beginning of the input texture. </summary>
@@ -67,7 +68,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		protected double caretAccumulator;
 		
 		public override void Init() {
-			if (lines.Length > 1) {
+			if (UsedLines > 1) {
 				Text.WordWrap(game.Drawer2D, lines, MaxCharsPerLine);
 			} else {
 				lines[0] = Text.ToString();
@@ -105,7 +106,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			lineSizes[0].Width = prefixWidth;
 			
 			DrawTextArgs args = new DrawTextArgs(null, font, true);
-			for (int y = 0; y < MaxLines; y++) {
+			for (int y = 0; y < UsedLines; y++) {
 				args.Text = lines[y];
 				lineSizes[y] += game.Drawer2D.MeasureSize(ref args);
 			}
@@ -114,7 +115,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		/// <summary> Calculates the location and size of the caret character </summary>
 		public void UpdateCaret() {
-			if (caret >= Text.Length) caret = -1;
+			int maxChars = UsedLines * MaxCharsPerLine;
+			if (caret >= maxChars) caret = -1;
 			Text.GetCoords(caret, lines, out caretX, out caretY);
 			DrawTextArgs args = new DrawTextArgs(null, font, false);
 			IDrawer2D drawer = game.Drawer2D;
@@ -160,7 +162,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		/// <remarks> Also updates the dimensions of the widget. </remarks>
 		public virtual void RemakeTexture() {
 			int totalHeight = 0, maxWidth = 0;
-			for (int i = 0; i < MaxLines; i++) {
+			for (int i = 0; i < UsedLines; i++) {
 				totalHeight += lineSizes[i].Height;
 				maxWidth = Math.Max(maxWidth, lineSizes[i].Width);
 			}
@@ -249,8 +251,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		
 		bool TryAppendChar(char c) {
-			int totalChars = MaxCharsPerLine * lines.Length;
-			if (Text.Length == totalChars) return false;
+			int maxChars = UsedLines * MaxCharsPerLine;
+			if (Text.Length >= maxChars) return false;
 			if (!AllowedChar(c)) return false;
 			
 			AppendChar(c);
@@ -409,15 +411,15 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		bool OtherKey(Key key) {
-			int totalChars = MaxCharsPerLine * lines.Length;
-			if (key == Key.V && Text.Length < totalChars) {
+			int maxChars = UsedLines * MaxCharsPerLine;
+			if (key == Key.V && Text.Length < maxChars) {
 				string text = null;
 				try {
 					text = game.window.ClipboardText.Trim(trimChars);
 				} catch (Exception ex) {
 					ErrorHandler.LogError("Paste from clipboard", ex);
 					const string warning = "&cError while trying to paste from clipboard.";
-					game.Chat.Add(warning, MessageType.ClientStatus4);
+					game.Chat.Add(warning, MessageType.ClientStatus2);
 					return true;
 				}
 
@@ -431,7 +433,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				} catch (Exception ex) {
 					ErrorHandler.LogError("Copy to clipboard", ex);
 					const string warning = "&cError while trying to copy to clipboard.";
-					game.Chat.Add(warning, MessageType.ClientStatus4);
+					game.Chat.Add(warning, MessageType.ClientStatus2);
 				}
 				return true;
 			}

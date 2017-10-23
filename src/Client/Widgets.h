@@ -118,14 +118,13 @@ void SpecialInputWidget_UpdateCols(SpecialInputWidget* widget);
 void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
 
 
-#define INPUTWIDGET_MAX_LINES 4
+#define INPUTWIDGET_MAX_LINES 3
 struct InputWidget_;
 /* Remakes the raw texture containing all the chat lines. Also updates the dimensions of the widget. */
 typedef struct InputWidget_ {
 	Widget Base;
 	FontDesc Font;	
-	Int32 MaxLines;
-	Int32 MaxCharsPerLine;
+	Int32 (*GetMaxLines)(GuiElement* elem);
 	Int32 Padding;
 	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(GuiElement* elem); /* Invoked when the user presses enter. */
@@ -147,7 +146,7 @@ typedef struct InputWidget_ {
 	Real64 CaretAccumulator;
 } InputWidget;
 
-void InputWidget_Create(InputWidget* widget, FontDesc* font);
+void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* prefix);
 /* Calculates the sizes of each line in the text buffer. */
 void InputWidget_CalculateLineSizes(InputWidget* widget);
 /* Calculates the location and size of the caret character. */

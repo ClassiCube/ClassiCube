@@ -66,12 +66,9 @@ namespace ClassicalSharp {
 		Announcement = 100,
 		
 		// client defined message ids
-		ClientStatus1 = 256,
-		ClientStatus2 = 257,
-		ClientStatus3 = 258, // cuboid messages
-		ClientStatus4 = 259, // clipboard invalid characters
-		ClientStatus5 = 260, // tab list matching names
-		ClientStatus6 = 261, // no LongerMessages warning
+		ClientStatus1 = 256, // cuboid messages
+		ClientStatus2 = 257, // clipboard invalid characters
+		ClientStatus3 = 258, // tab list matching names
 	}
 	
 	public enum BlockFace { XMax, XMin, YMax, YMin, ZMax, ZMin, }
