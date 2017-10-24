@@ -1,5 +1,5 @@
-#ifndef CS_SKYBOXRENDERER_H
-#define CS_SKYBOXRENDERER_H
+#ifndef CC_SKYBOXRENDERER_H
+#define CC_SKYBOXRENDERER_H
 #include "Typedefs.h"
 #include "Stream.h"
 #include "Events.h"

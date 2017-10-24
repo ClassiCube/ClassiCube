@@ -1,5 +1,5 @@
-#ifndef CS_FRUSTUMCULLING_H
-#define CS_FRUSTUMCULLING_H
+#ifndef CC_FRUSTUMCULLING_H
+#define CC_FRUSTUMCULLING_H
 #include "Matrix.h"
 #include "Typedefs.h"
 /* Implements frustum culling of bounding spheres.

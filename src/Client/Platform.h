@@ -1,5 +1,5 @@
-#ifndef CS_PLATFORM_H
-#define CS_PLATFORM_H
+#ifndef CC_PLATFORM_H
+#define CC_PLATFORM_H
 #include "Typedefs.h"
 #include "DateTime.h"
 #include "String.h"

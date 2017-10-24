@@ -1,5 +1,5 @@
-#ifndef CS_CHUNKUPDATER_H
-#define CS_CHUNKUPDATER_H
+#ifndef CC_CHUNKUPDATER_H
+#define CC_CHUNKUPDATER_H
 #include "Typedefs.h"
 #include "Vectors.h"
 #include "Events.h"

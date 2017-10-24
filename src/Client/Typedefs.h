@@ -1,5 +1,5 @@
-#ifndef CS_TYPEDEFS_H
-#define CS_TYPEDEFS_H
+#ifndef CC_TYPEDEFS_H
+#define CC_TYPEDEFS_H
 /* Ensures variables are of a fixed size.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */

@@ -1,5 +1,5 @@
-#ifndef CS_OPTIONS_H
-#define CS_OPTIONS_H
+#ifndef CC_OPTIONS_H
+#define CC_OPTIONS_H
 #include "Typedefs.h"
 #include "String.h"
 /* Manages loading and saving options.

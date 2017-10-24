@@ -1,5 +1,5 @@
-#ifndef CS_DISPLAYDEVICE_H
-#define CS_DISPLAYDEVICE_H
+#ifndef CC_DISPLAYDEVICE_H
+#define CC_DISPLAYDEVICE_H
 #include "Typedefs.h"
 #include "2DStructs.h"
 /* Contains structs related to monitor displays.

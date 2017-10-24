@@ -1,5 +1,5 @@
-#ifndef CS_INPUT_H
-#define CS_INPUT_H
+#ifndef CC_INPUT_H
+#define CC_INPUT_H
 #include "Typedefs.h"
 /* Manages the keyboard, and raises events when keys are pressed etc.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3 | Based on OpenTK code

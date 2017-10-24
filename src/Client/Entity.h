@@ -1,5 +1,5 @@
-#ifndef CS_ENTITY_H
-#define CS_ENTITY_H
+#ifndef CC_ENTITY_H
+#define CC_ENTITY_H
 #include "IModel.h"
 #include "Typedefs.h"
 #include "Vectors.h"

@@ -1,5 +1,5 @@
-#ifndef CS_EVENTS_H
-#define CS_EVENTS_H
+#ifndef CC_EVENTS_H
+#define CC_EVENTS_H
 #include "Event.h"
 #include "Typedefs.h"
 /* Contains the various events that are raised by the client.

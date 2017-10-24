@@ -1,5 +1,5 @@
-#ifndef CS_INVENTORY_H
-#define CS_INVENTORY_H
+#ifndef CC_INVENTORY_H
+#define CC_INVENTORY_H
 #include "Typedefs.h"
 #include "GameStructs.h"
 #include "BlockID.h"

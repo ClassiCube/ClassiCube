@@ -1,5 +1,5 @@
-#ifndef CS_PLAYER_H
-#define CS_PLAYER_H
+#ifndef CC_PLAYER_H
+#define CC_PLAYER_H
 #include "Typedefs.h"
 #include "Entity.h"
 /* Represents a player entity.

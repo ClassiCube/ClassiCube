@@ -1,5 +1,5 @@
-#ifndef CS_AXISLINESRENDERER_H
-#define CS_AXISLINESRENDERER_H
+#ifndef CC_AXISLINESRENDERER_H
+#define CC_AXISLINESRENDERER_H
 #include "Typedefs.h"
 #include "GameStructs.h"
 /* Renders 3 lines showing direction of each axis.

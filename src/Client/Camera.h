@@ -1,5 +1,5 @@
-#ifndef CS_CAMERA_H
-#define CS_CAMERA_H
+#ifndef CC_CAMERA_H
+#define CC_CAMERA_H
 #include "Typedefs.h"
 #include "Vectors.h"
 #include "Picking.h"

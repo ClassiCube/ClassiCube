@@ -1,5 +1,5 @@
-#ifndef CS_ENVRENDERER_H
-#define CS_ENVRENDERER_H
+#ifndef CC_ENVRENDERER_H
+#define CC_ENVRENDERER_H
 #include "Typedefs.h"
 #include "GameStructs.h"
 #include "VertexStructs.h"

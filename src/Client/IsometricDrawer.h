@@ -1,5 +1,5 @@
-#ifndef CS_ISOMETRICDRAWER_H
-#define CS_ISOMETRICDRAWER_H
+#ifndef CC_ISOMETRICDRAWER_H
+#define CC_ISOMETRICDRAWER_H
 #include "Typedefs.h"
 #include "GraphicsEnums.h"
 #include "VertexStructs.h"

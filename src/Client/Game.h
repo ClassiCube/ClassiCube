@@ -1,5 +1,5 @@
-#ifndef CS_GAME_H
-#define CS_GAME_H
+#ifndef CC_GAME_H
+#define CC_GAME_H
 #include "Typedefs.h"
 #include "Stream.h"
 #include "GraphicsEnums.h"

@@ -1,5 +1,5 @@
-#ifndef CS_MAPRENDERER_H
-#define CS_MAPRENDERER_H
+#ifndef CC_MAPRENDERER_H
+#define CC_MAPRENDERER_H
 #include "Typedefs.h"
 #include "TerrainAtlas.h"
 #include "ChunkUpdater.h"

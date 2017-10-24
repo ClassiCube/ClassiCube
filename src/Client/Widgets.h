@@ -1,5 +1,5 @@
-#ifndef CS_WIDGETS_H
-#define CS_WIDGETS_H
+#ifndef CC_WIDGETS_H
+#define CC_WIDGETS_H
 #include "Gui.h"
 #include "Texture.h"
 #include "PackedCol.h"

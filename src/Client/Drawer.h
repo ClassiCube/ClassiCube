@@ -1,5 +1,5 @@
-#ifndef CS_DRAWER_H
-#define CS_DRAWER_H
+#ifndef CC_DRAWER_H
+#define CC_DRAWER_H
 #include "VertexStructs.h"
 #include "PackedCol.h"
 #include "Typedefs.h"

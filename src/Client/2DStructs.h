@@ -1,5 +1,5 @@
-#ifndef CS_2DSTRUCTS_H
-#define CS_2DSTRUCTS_H
+#ifndef CC_2DSTRUCTS_H
+#define CC_2DSTRUCTS_H
 #include "Typedefs.h"
 /* Represents simple structures useful for 2D operations.
    Copyright 22017 ClassicalSharp | Licensed under BSD-3

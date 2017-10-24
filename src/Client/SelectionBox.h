@@ -1,5 +1,5 @@
-#ifndef CS_SELECTIONBOX_H
-#define CS_SELECTIONBOX_H
+#ifndef CC_SELECTIONBOX_H
+#define CC_SELECTIONBOX_H
 #include "Typedefs.h"
 #include "PackedCol.h"
 #include "Vectors.h"

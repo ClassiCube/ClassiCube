@@ -1,5 +1,5 @@
-#ifndef CS_RANDOM_H
-#define CS_RANDOM_H
+#ifndef CC_RANDOM_H
+#define CC_RANDOM_H
 #include "Typedefs.h"
 /* Implemented a random number generation algorithm.
    Based on Java's implementation from https://docs.oracle.com/javase/7/docs/api/java/util/Random.html

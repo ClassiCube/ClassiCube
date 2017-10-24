@@ -1,5 +1,5 @@
-#ifndef CS_WINDOW_H
-#define CS_WINDOW_H
+#ifndef CC_WINDOW_H
+#define CC_WINDOW_H
 #include "Typedefs.h"
 #include "String.h"
 #include "Compiler.h"

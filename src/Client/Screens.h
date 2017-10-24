@@ -1,5 +1,5 @@
-#ifndef CS_SCREEN_H
-#define CS_SCREEN_H
+#ifndef CC_SCREEN_H
+#define CC_SCREEN_H
 #include "Typedefs.h"
 #include "Gui.h"
 

@@ -1,5 +1,5 @@
-#ifndef CS_FUNCS_H
-#define CS_FUNCS_H
+#ifndef CC_FUNCS_H
+#define CC_FUNCS_H
 #include "Typedefs.h"
 /* Simple function implementations
    NOTE: doing min(x++, y) etc will increment x twice!

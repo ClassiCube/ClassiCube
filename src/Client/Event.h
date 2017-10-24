@@ -1,5 +1,5 @@
-#ifndef CS_EVENT_H
-#define CS_EVENT_H
+#ifndef CC_EVENT_H
+#define CC_EVENT_H
 #include "Typedefs.h"
 #include "String.h"
 #include "Stream.h"

@@ -1,5 +1,5 @@
-#ifndef CS_MAP_GEN_H
-#define CS_MAP_GEN_H
+#ifndef CC_MAP_GEN_H
+#define CC_MAP_GEN_H
 #include "Typedefs.h"
 #include "String.h"
 /* Implements flatgrass map generator, and original classic vanilla map generation.

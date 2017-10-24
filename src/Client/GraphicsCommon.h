@@ -1,5 +1,5 @@
-#ifndef CS_GFXCOMMON_H
-#define CS_GFXCOMMON_H
+#ifndef CC_GFXCOMMON_H
+#define CC_GFXCOMMON_H
 #include "Typedefs.h"
 #include "PackedCol.h"
 #include "String.h"

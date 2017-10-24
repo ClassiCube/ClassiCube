@@ -1,5 +1,5 @@
-#ifndef CS_MODELCACHE_H
-#define CS_MODELCACHE_H
+#ifndef CC_MODELCACHE_H
+#define CC_MODELCACHE_H
 #include "Typedefs.h"
 #include "String.h"
 #include "IModel.h"

@@ -1,5 +1,5 @@
-#ifndef CS_ERRORHANDLER_H
-#define CS_ERRORHANDLER_H
+#ifndef CC_ERRORHANDLER_H
+#define CC_ERRORHANDLER_H
 #include "Typedefs.h"
 #include "String.h"
 /* Support methods for checking and handling errors.

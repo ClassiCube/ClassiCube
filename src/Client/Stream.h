@@ -1,5 +1,5 @@
-#ifndef CS_STREAM_H
-#define CS_STREAM_H
+#ifndef CC_STREAM_H
+#define CC_STREAM_H
 #include "Typedefs.h"
 #include "String.h"
 #include "ErrorHandler.h"

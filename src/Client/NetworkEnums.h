@@ -1,5 +1,5 @@
-#ifndef CS_NETWORKENUMS_H
-#define CS_NETWORKSENUM_H
+#ifndef CC_NETWORKENUMS_H
+#define CC_NETWORKSENUM_H
 #include "Typedefs.h"
 
 /* Network packet opcodes. */

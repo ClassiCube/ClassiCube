@@ -1,5 +1,5 @@
-#ifndef CS_ZIPARCHIVE_H
-#define CS_ZIPARCHIVE_H
+#ifndef CC_ZIPARCHIVE_H
+#define CC_ZIPARCHIVE_H
 #include "Typedefs.h"
 #include "String.h"
 #include "Stream.h"

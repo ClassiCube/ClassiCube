@@ -1,5 +1,5 @@
-#ifndef CS_BORDERSRENDERER_H
-#define CS_BORDERSRENDERER_H
+#ifndef CC_BORDERSRENDERER_H
+#define CC_BORDERSRENDERER_H
 #include "Typedefs.h"
 #include "GameStructs.h"
 #include "VertexStructs.h"

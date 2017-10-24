@@ -1,5 +1,5 @@
-#ifndef CS_MODEL_H
-#define CS_MODEL_H
+#ifndef CC_MODEL_H
+#define CC_MODEL_H
 #include "Typedefs.h"
 #include "Vectors.h"
 #include "PackedCol.h"

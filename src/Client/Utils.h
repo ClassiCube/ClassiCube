@@ -1,7 +1,10 @@
-#ifndef CS_UTILS_H
-#define CS_UTILS_H
+#ifndef CC_UTILS_H
+#define CC_UTILS_H
 #include "Typedefs.h"
 #include "String.h"
+/* Implements various utility functions.
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
 
 Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
 

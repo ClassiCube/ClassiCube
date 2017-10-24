@@ -1,5 +1,5 @@
-#ifndef CS_GFXAPI_H
-#define CS_GFXAPI_H
+#ifndef CC_GFXAPI_H
+#define CC_GFXAPI_H
 #include "Typedefs.h"
 #include "Bitmap.h"
 #include "PackedCol.h"

@@ -1,5 +1,5 @@
-#ifndef CS_DRAWER2D_H
-#define CS_DRAWER2D_H
+#ifndef CC_DRAWER2D_H
+#define CC_DRAWER2D_H
 /*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
 Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */

@@ -1,5 +1,5 @@
-#ifndef CS_AABB_H
-#define CS_AABB_H
+#ifndef CC_AABB_H
+#define CC_AABB_H
 #include "Typedefs.h"
 #include "Vectors.h"
 /* Describes an axis aligned bounding box, and contains various methods related to them.

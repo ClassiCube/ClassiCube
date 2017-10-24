@@ -1,5 +1,5 @@
-#ifndef CS_CONSTANTS_H
-#define CS_CONSTANTS_H
+#ifndef CC_CONSTANTS_H
+#define CC_CONSTANTS_H
 /* Defines useful constants.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */

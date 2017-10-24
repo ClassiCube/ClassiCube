@@ -1,5 +1,5 @@
-#ifndef CS_VECTORS_H
-#define CS_VECTORS_H
+#ifndef CC_VECTORS_H
+#define CC_VECTORS_H
 #include "Typedefs.h"
 #include "Matrix.h"
 #include "Compiler.h"

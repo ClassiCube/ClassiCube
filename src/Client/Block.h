@@ -1,5 +1,5 @@
-#ifndef CS_BLOCK_H
-#define CS_BLOCK_H
+#ifndef CC_BLOCK_H
+#define CC_BLOCK_H
 #include "Typedefs.h"
 #include "BlockID.h"
 #include "String.h"

@@ -1,5 +1,5 @@
-#ifndef CS_MATH_H
-#define CS_MATH_H
+#ifndef CC_MATH_H
+#define CC_MATH_H
 #include <math.h>
 #include "Typedefs.h"
 /* Simple math functions and constants.

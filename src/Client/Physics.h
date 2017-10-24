@@ -1,5 +1,5 @@
-#ifndef CS_PHYSICS_H
-#define CS_PHYSICS_H
+#ifndef CC_PHYSICS_H
+#define CC_PHYSICS_H
 #include "Typedefs.h"
 #include "BlockID.h"
 #include "Vectors.h"

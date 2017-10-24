@@ -1,5 +1,5 @@
-#ifndef CS_COMPILER_H
-#define CS_COMPILER_H
+#ifndef CC_COMPILER_H
+#define CC_COMPILER_H
 #include "Typedefs.h"
 /* Compiler-specific attributes and helpers
    Copyright 2017 ClassicalSharp | Licensed under BSD-3

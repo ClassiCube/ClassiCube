@@ -1,5 +1,5 @@
-#ifndef CS_ANIMS_H
-#define CS_ANIMS_H
+#ifndef CC_ANIMS_H
+#define CC_ANIMS_H
 #include "Typedefs.h"
 #include "String.h"
 #include "Stream.h"

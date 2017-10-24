@@ -1,5 +1,5 @@
-#ifndef CS_INTERSECTION_H
-#define CS_INTERSECTION_H
+#ifndef CC_INTERSECTION_H
+#define CC_INTERSECTION_H
 #include "Typedefs.h"
 #include "Vectors.h"
 #include "Entity.h"

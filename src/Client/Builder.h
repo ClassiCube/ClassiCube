@@ -1,5 +1,5 @@
-#ifndef CS_BUILDER_H
-#define CS_BUILDER_H
+#ifndef CC_BUILDER_H
+#define CC_BUILDER_H
 #include "Typedefs.h"
 #include "Block.h"
 #include "PackedCol.h"

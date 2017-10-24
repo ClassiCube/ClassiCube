@@ -1,5 +1,5 @@
-#ifndef CS_TERRAINATLAS_H
-#define CS_TERRAINATLAS_H
+#ifndef CC_TERRAINATLAS_H
+#define CC_TERRAINATLAS_H
 #include "Typedefs.h"
 #include "Bitmap.h"
 #include "2DStructs.h"

@@ -1,5 +1,5 @@
-#ifndef CS_PICKING_H
-#define CS_PICKING_H
+#ifndef CC_PICKING_H
+#define CC_PICKING_H
 #include "Typedefs.h"
 #include "Constants.h"
 #include "Vectors.h"

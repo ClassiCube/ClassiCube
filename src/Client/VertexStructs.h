@@ -1,5 +1,5 @@
-#ifndef CS_VERTEXSTRUCTS_H
-#define CS_VERTEXSTRUCTS_H
+#ifndef CC_VERTEXSTRUCTS_H
+#define CC_VERTEXSTRUCTS_H
 #include "Typedefs.h"
 #include "PackedCol.h"
 /* Represents simple vertex formats.

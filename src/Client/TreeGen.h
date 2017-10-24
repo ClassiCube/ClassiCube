@@ -1,5 +1,5 @@
-#ifndef CS_TREE_GEN_H
-#define CS_TREE_GEN_H
+#ifndef CC_TREE_GEN_H
+#define CC_TREE_GEN_H
 #include "Typedefs.h"
 #include "Random.h"
 #include "Vectors.h"

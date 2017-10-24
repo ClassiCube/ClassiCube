@@ -1,5 +1,5 @@
-#ifndef CS_WEATHERRENDERER_H
-#define CS_WEATHERRENDERER_H
+#ifndef CC_WEATHERRENDERER_H
+#define CC_WEATHERRENDERER_H
 #include "Typedefs.h"
 #include "Stream.h"
 #include "GameStructs.h"

@@ -1,5 +1,5 @@
-#ifndef CS_BITMAP_H
-#define CS_BITMAP_H
+#ifndef CC_BITMAP_H
+#define CC_BITMAP_H
 #include "Typedefs.h"
 #include "Stream.h"
 /* Represents a 2D array of pixels.

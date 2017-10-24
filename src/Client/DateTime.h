@@ -1,5 +1,5 @@
-#ifndef CS_DATETIME_H
-#define CS_DATETIME_H
+#ifndef CC_DATETIME_H
+#define CC_DATETIME_H
 #include "Typedefs.h"
 /* Represents a particular instance in time in some timezone. Not necessarily UTC time.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3

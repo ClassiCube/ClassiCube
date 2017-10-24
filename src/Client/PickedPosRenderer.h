@@ -1,5 +1,5 @@
-#ifndef CS_PICKEDPOSRENDERER_H
-#define CS_PICKEDPOSRENDERER_H
+#ifndef CC_PICKEDPOSRENDERER_H
+#define CC_PICKEDPOSRENDERER_H
 #include "Typedefs.h"
 #include "GameStructs.h"
 #include "Picking.h"

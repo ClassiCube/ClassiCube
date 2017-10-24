@@ -1,5 +1,5 @@
-#ifndef CS_WORLDLIGHTING_H
-#define CS_WORLDLIGHTING_H
+#ifndef CC_WORLDLIGHTING_H
+#define CC_WORLDLIGHTING_H
 #include "Typedefs.h"
 #include "PackedCol.h"
 #include "Events.h"

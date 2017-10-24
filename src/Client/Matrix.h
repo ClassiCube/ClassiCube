@@ -1,5 +1,5 @@
-#ifndef CS_MATRIX_H
-#define CS_MATRIX_H
+#ifndef CC_MATRIX_H
+#define CC_MATRIX_H
 #include "Typedefs.h"
 /* Represents a 4 by 4 matrix.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3

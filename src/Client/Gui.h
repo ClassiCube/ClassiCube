@@ -1,5 +1,5 @@
-#ifndef CS_GUI_H
-#define CS_GUI_H
+#ifndef CC_GUI_H
+#define CC_GUI_H
 #include "Typedefs.h"
 #include "Input.h"
 #include "GameStructs.h"

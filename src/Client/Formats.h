@@ -1,5 +1,5 @@
-#ifndef CS_MAPFORMATS_H
-#define CS_MAPFORMATS_H
+#ifndef CC_MAPFORMATS_H
+#define CC_MAPFORMATS_H
 #include "Stream.h"
 /* Imports/exports a world and associated metadata from/to a particular map file format.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3

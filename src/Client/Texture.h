@@ -1,5 +1,5 @@
-#ifndef CS_TEXTURE_H
-#define CS_TEXTURE_H
+#ifndef CC_TEXTURE_H
+#define CC_TEXTURE_H
 #include "Typedefs.h"
 #include "PackedCol.h"
 #include "2DStructs.h"

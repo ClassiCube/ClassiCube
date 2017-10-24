@@ -1,5 +1,5 @@
-#ifndef CS_WORLD_H
-#define CS_WORLD_H
+#ifndef CC_WORLD_H
+#define CC_WORLD_H
 #include "Typedefs.h"
 #include "String.h"
 #include "Vectors.h"

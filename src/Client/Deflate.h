@@ -1,5 +1,5 @@
-#ifndef CS_DEFLATE_H
-#define CS_DEFLATE_H
+#ifndef CC_DEFLATE_H
+#define CC_DEFLATE_H
 #include "Typedefs.h"
 #include "Stream.h"
 /* Decodes data compressed using DEFLATE in a streaming manner.

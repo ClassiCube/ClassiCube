@@ -1,5 +1,5 @@
-#ifndef CS_BLOCKID_H
-#define CS_BLOCKID_H
+#ifndef CC_BLOCKID_H
+#define CC_BLOCKID_H
 /* List of all core/standard block IDs
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

@@ -1,5 +1,5 @@
-#ifndef CS_DEFAULT_BLOCKS_H
-#define CS_DEFAULT_BLOCKS_H
+#ifndef CC_DEFAULT_BLOCKS_H
+#define CC_DEFAULT_BLOCKS_H
 #include "Typedefs.h"
 #include "Block.h"
 #include "PackedCol.h"

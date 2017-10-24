@@ -1,5 +1,5 @@
-#ifndef CS_STRING_H
-#define CS_STRING_H
+#ifndef CC_STRING_H
+#define CC_STRING_H
 #include "Typedefs.h"
 #include "Compiler.h"
 /* Implements operations for a string.
