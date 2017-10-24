@@ -201,6 +201,7 @@
     <ClInclude Include="Formats.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="Deflate.h" />
+    <ClInclude Include="GameMode.h" />
     <ClInclude Include="Gui.h" />
     <ClInclude Include="IModel.h" />
     <ClInclude Include="Input.h" />
@@ -272,6 +273,7 @@
     <ClCompile Include="ExtMath.c" />
     <ClCompile Include="Formats.c" />
     <ClCompile Include="Game.c" />
+    <ClCompile Include="GameMode.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="MapGenerator.c" />

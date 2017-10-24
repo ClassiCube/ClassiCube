@@ -54,7 +54,7 @@ namespace ClassicalSharp.Mode {
 			if (!inv.CanChangeSelected() || inv.Selected == old) return;
 			
 			// Is the currently selected block an empty slot
-			if (inv.Hotbar[inv.SelectedIndex] == Block.Air) { 
+			if (inv[inv.SelectedIndex] == Block.Air) { 
 				inv.Selected = old; return; 
 			}
 			
