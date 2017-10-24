@@ -10,7 +10,7 @@ namespace ClassicalSharp {
 			wrap = new char[capacity];
 		}
 		
-		public void WordWrap(IDrawer2D drawer, string[] lines, int maxPerLine) {
+		public void WordWrap(IDrawer2D drawer, string[] lines, int maxLines, int maxPerLine) {
 			int len = Length;
 			int* lineLens = stackalloc int[lines.Length];
 			for (int i = 0; i < lines.Length; i++) {
@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 			char[] realText = value;
 			MakeWrapCopy();
 			
-			int usedLines = 0, totalChars = maxPerLine * lines.Length;
+			int usedLines = 0, totalChars = maxPerLine * maxLines;
 			for (int index = 0; index < totalChars; index += maxPerLine) {
 				if (value[index] == '\0') break;
 				
@@ -44,7 +44,7 @@ namespace ClassicalSharp {
 			}
 			
 			// Output the used lines
-			OutputLines(drawer, lines, lineLens, usedLines, maxPerLine);
+			OutputLines(drawer, lines, lineLens, usedLines, maxLines, maxPerLine);
 			value = realText;
 		}
 		
@@ -58,8 +58,8 @@ namespace ClassicalSharp {
 			value = wrap;
 		}
 		
-		void OutputLines(IDrawer2D drawer, string[] lines, int* lineLens, int usedLines, int charsPerLine) {
-			int totalChars = charsPerLine * lines.Length;
+		void OutputLines(IDrawer2D drawer, string[] lines, int* lineLens, int usedLines, int maxLines, int charsPerLine) {
+			int totalChars = charsPerLine * maxLines;
 			for (int i = 0; i < totalChars; i++) {
 				if (value[i] == '\0') value[i] = ' ';
 			}

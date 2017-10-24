@@ -124,8 +124,8 @@ struct InputWidget_;
 typedef struct InputWidget_ {
 	Widget Base;
 	FontDesc Font;	
-	Int32 (*GetMaxLines)(GuiElement* elem);
-	Int32 Padding;
+	Int32 (*GetMaxLines)(void);
+	Int32 Padding, MaxCharsPerLine;
 	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(GuiElement* elem); /* Invoked when the user presses enter. */
 
@@ -134,11 +134,11 @@ typedef struct InputWidget_ {
 	Size2D LineSizes[INPUTWIDGET_MAX_LINES]; /* size of each line in pixels */
 	Texture InputTex;
 	String Prefix;
-	Int32 PrefixWidth, PrefixHeight;
+	UInt16 PrefixWidth, PrefixHeight;
 	Texture PrefixTex;
 
 	Int32 CaretX, CaretY;          /* Coordinates of caret in lines */
-	Int32 CaretWidth, CaretHeight;	
+	UInt16 CaretWidth, CaretHeight;	
 	Int32 CaretPos;                /* Position of caret, -1 for at end of string. */
 	bool ShowCaret;
 	PackedCol CaretCol;

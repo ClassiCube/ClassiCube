@@ -17,3 +17,7 @@ UInt32 Utils_ParseEnum(STRING_TRANSIENT String* text, UInt32 defValue, const UIn
 	}
 	return defValue;
 }
+
+bool Utils_IsValidInputChar(UInt8 c, bool supportsCP437) {
+	return supportsCP437 || (Convert_CP437ToUnicode(c) == c);
+}

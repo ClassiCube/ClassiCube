@@ -3,7 +3,7 @@
 #include "Funcs.h"
 #include "Platform.h"
 
-void WordWrap_OutputLines(String* text, String** lines, Int32* lineLens, Int32 numLines, Int32 usedLines, Int32 charsPerLine) {
+void WordWrap_OutputLines(String* text, String* lines, Int32* lineLens, Int32 numLines, Int32 usedLines, Int32 charsPerLine) {
 	Int32 totalChars = charsPerLine * numLines, i, j;
 	for (i = 0; i < totalChars; i++) {
 		if (text->buffer[i] == NULL) text->buffer[i] = ' ';
@@ -18,7 +18,7 @@ void WordWrap_OutputLines(String* text, String** lines, Int32* lineLens, Int32 n
 
 	usedLines = max(1, usedLines);
 	for (i = 0; i < usedLines; i++) {
-		String* dst = lines[i];
+		String* dst = &lines[i];
 		UInt8* src = &text->buffer[i * charsPerLine];
 		for (j = 0; j < lineLens[i]; j++) { String_Append(dst, src[j]); }
 	}
@@ -45,11 +45,11 @@ Int32 WordWrap_WrapLine(String* text, Int32 index, Int32 lineSize) {
 	return lineSize;
 }
 
-void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String** lines, Int32 numLines, Int32 maxPerLine) {
+void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 maxPerLine) {
 	Int32 len = text->length, i;
 	Int32 lineLens[WORDWRAP_MAX_LINES_TO_WRAP];
 	for (i = 0; i < numLines; i++) {
-		String_Clear(lines[i]);
+		String_Clear(&lines[i]);
 		lineLens[i] = 0;
 	}
 
@@ -83,12 +83,12 @@ void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String** lines,
 }
 
 /* Calculates where the given raw index is located in the wrapped lines. */
-void WordWrap_GetCoords(Int32 index, STRING_TRANSIENT String** lines, Int32 numLines, Int32* coordX, Int32* coordY) {
+void WordWrap_GetCoords(Int32 index, STRING_TRANSIENT String* lines, Int32 numLines, Int32* coordX, Int32* coordY) {
 	if (index == -1) index = Int32_MaxValue;
 	Int32 offset = 0; *coordX = -1; *coordY = 0;
 
 	for (Int32 y = 0; y < numLines; y++) {
-		Int32 lineLength = lines[y]->length;
+		Int32 lineLength = lines[y].length;
 		if (lineLength == 0) break;
 
 		*coordY = y;
@@ -97,7 +97,7 @@ void WordWrap_GetCoords(Int32 index, STRING_TRANSIENT String** lines, Int32 numL
 		}
 		offset += lineLength;
 	}
-	if (*coordX == -1) *coordX = lines[*coordY]->length;
+	if (*coordX == -1) *coordX = lines[*coordY].length;
 }
 
 Int32 WordWrap_GetBackLength(STRING_TRANSIENT String* text, Int32 index) {

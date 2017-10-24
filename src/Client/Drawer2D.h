@@ -13,6 +13,7 @@ Copyright 2017 ClassicalSharp | Licensed under BSD-3
 
 typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
+void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow);
 
 const float Offset = 1.3f;
 

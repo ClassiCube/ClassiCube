@@ -473,6 +473,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 		if (hGlobal == NULL) { CloseClipboard(); return; }
 		LPVOID src = GlobalLock(hGlobal);
 
+		/* TODO: Trim space / tabs from start and end of clipboard text */
 		if (isUnicode) {
 			UInt16* text = (UInt16*)src;
 			while (*text != NULL) {

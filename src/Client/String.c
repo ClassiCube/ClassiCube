@@ -188,7 +188,7 @@ UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset) {
 	return str->buffer[offset];
 }
 
-void String_InsertAt(STRING_TRANSIENT String* str, UInt8 c, Int32 offset) {
+void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UInt8 c) {
 	if (offset < 0 || offset > str->length) {
 		ErrorHandler_Fail("Offset for InsertAt out of range");
 	}

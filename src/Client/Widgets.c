@@ -10,6 +10,8 @@
 #include "Utils.h"
 #include "ModelCache.h"
 #include "Screens.h"
+#include "Platform.h"
+#include "WordWrap.h"
 
 void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
@@ -878,7 +880,7 @@ void SpecialInputWidget_IntersectsBody(SpecialInputWidget* widget, Int32 x, Int3
 
 	SpecialInputAppendFunc append = widget->AppendFunc;
 	if (widget->SelectedIndex == 0) {
-		/* TODO: need to insert characters that don't affect caret index, adjust caret colour */
+		/* TODO: need to insert characters that don't affect widget->CaretPos index, adjust widget->CaretPos colour */
 		append(widget->AppendObj, e.Contents.buffer[index * e.CharsPerItem]);
 		append(widget->AppendObj, e.Contents.buffer[index * e.CharsPerItem + 1]);
 	} else {
@@ -921,8 +923,7 @@ void SpecialInputWidget_InitTabs(SpecialInputWidget* widget) {
 #define SPECIAL_CONTENT_SPACING 5
 Int32 SpecialInputWidget_MeasureTitles(SpecialInputWidget* widget) {
 	Int32 totalWidth = 0;
-	String str = String_MakeNull();
-	DrawTextArgs args; DrawTextArgs_Make(&args, &str, &widget->Font, false);
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
 
 	Int32 i;
 	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
@@ -936,8 +937,7 @@ Int32 SpecialInputWidget_MeasureTitles(SpecialInputWidget* widget) {
 
 void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget) {
 	Int32 x = 0;
-	String str = String_MakeNull();
-	DrawTextArgs args; DrawTextArgs_Make(&args, &str, &widget->Font, false);
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
 
 	Int32 i;
 	PackedCol col_selected = PACKEDCOL_CONST(30, 30, 30, 200);
@@ -1079,4 +1079,438 @@ void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, Speci
 	widget->Base.Base.Render = SpecialInputWidget_Render;
 	widget->Base.Base.Free   = SpecialInputWidget_Free;
 	widget->Base.Base.HandlesMouseDown   = SpecialInputWidget_HandlesMouseDown;
+}
+
+
+void InputWidget_CalculateLineSizes(InputWidget* widget) {
+	Int32 y;
+	for (y = 0; y < INPUTWIDGET_MAX_LINES; y++) {
+		widget->LineSizes[y] = Size2D_Empty;
+	}
+	widget->LineSizes[0].Width = widget->PrefixWidth;
+
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
+	for (y = 0; y < widget->GetMaxLines(); y++) {
+		args.Text = widget->Lines[y];
+		Size2D textSize = Drawer2D_MeasureText(&args);
+		widget->LineSizes[y].Width += textSize.Width;
+		widget->LineSizes[y].Height = textSize.Height;
+	}
+
+	if (widget->LineSizes[0].Height == 0) {
+		widget->LineSizes[0].Height = widget->PrefixHeight;
+	}
+}
+
+UInt8 InputWidget_GetLastCol(InputWidget* widget, Int32 indexX, Int32 indexY) {
+	Int32 x = indexX, y;
+	for (y = indexY; y >= 0; y--) {
+		UInt8 code = Drawer2D_LastCol(&widget->Lines[y], x);
+		if (code != NULL) return code;
+		if (y > 0) { x = widget->Lines[y - 1].length; }
+	}
+	return NULL;
+}
+
+void InputWidget_UpdateCaret(InputWidget* widget) {
+	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
+	if (widget->CaretPos >= maxChars) widget->CaretPos = -1;
+	WordWrap_GetCoords(widget->CaretPos, widget->Lines, widget->GetMaxLines(), &widget->CaretX, &widget->CaretY);
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
+	widget->CaretAccumulator = 0;
+
+	/* Caret is at last character on line */
+	Widget* elem = &widget->Base;
+	if (widget->CaretX == widget->MaxCharsPerLine) {
+		widget->CaretTex.X = elem->X + widget->Padding + widget->LineSizes[widget->CaretY].Width;
+		PackedCol yellow = PACKEDCOL_YELLOW; widget->CaretCol = yellow;
+		widget->CaretTex.Width = widget->CaretWidth;
+	} else {
+		String* line = &widget->Lines[widget->CaretY];
+		args.Text = String_UNSAFE_Substring(line, 0, widget->CaretX);
+		Size2D trimmedSize = Drawer2D_MeasureText(&args);
+		if (widget->CaretY == 0) { trimmedSize.Width += widget->PrefixWidth; }
+
+		widget->CaretTex.X = elem->X + widget->Padding + trimmedSize.Width;
+		PackedCol white = PACKEDCOL_WHITE;
+		widget->CaretCol = PackedCol_Scale(white, 0.8f);
+
+		if (widget->CaretX < line->length) {
+			args.Text = String_UNSAFE_Substring(line, widget->CaretX, 1);
+			args.UseShadow = true;
+			widget->CaretTex.Width = (UInt16)Drawer2D_MeasureText(&args).Width;
+		} else {
+			widget->CaretTex.Width = widget->CaretWidth;
+		}
+	}
+	widget->CaretTex.Y = widget->LineSizes[0].Height * widget->CaretY + widget->InputTex.Y + 2;
+
+	/* Update the colour of the widget->CaretPos */
+	UInt8 code = InputWidget_GetLastCol(widget, widget->CaretX, widget->CaretY);
+	if (code != NULL) widget->CaretCol = Drawer2D_Cols[code];
+}
+
+void InputWidget_RenderCaret(InputWidget* widget, Real64 delta) {
+	if (!widget->ShowCaret) return;
+
+	widget->CaretAccumulator += delta;
+	Real64 second = widget->CaretAccumulator - (Real64)Math_Floor((Real32)widget->CaretAccumulator);
+	if (second < 0.5) {
+		GfxCommon_Draw2DTexture(&widget->CaretTex, widget->CaretCol);
+	}
+}
+
+void InputWidget_RemakeTexture(InputWidget* widget) {
+	Int32 totalHeight = 0, maxWidth = 0, i;
+	for (i = 0; i < widget->GetMaxLines(); i++) {
+		totalHeight += widget->LineSizes[i].Height;
+		maxWidth = max(maxWidth, widget->LineSizes[i].Width);
+	}
+	Size2D size = Size2D_Make(maxWidth, totalHeight);
+	widget->CaretAccumulator = 0;
+
+	Int32 realHeight = 0;
+	Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+	Drawer2D_Begin(&bmp);
+
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
+	if (widget->Prefix.length > 0) {
+		args.Text = widget->Prefix;
+		Drawer2D_DrawText(&args, 0, 0);
+	}
+
+	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE + 2)];
+	for (i = 0; i < Array_NumElements(widget->Lines); i++) {
+		if (widget->Lines[i].length == 0) break;
+		args.Text = widget->Lines[i];
+		UInt8 lastCol = InputWidget_GetLastCol(widget, 0, i);
+
+		/* Colour code goes to next line */
+		if (!Drawer2D_IsWhiteCol(lastCol)) {
+			String tmp = String_FromRawBuffer(tmpBuffer, STRING_SIZE + 2);
+			String_Append(&tmp, '&'); String_Append(&tmp, lastCol);
+			String_AppendString(&tmp, &args.Text);
+			args.Text = tmp;
+		}
+
+		Int32 offset = i == 0 ? widget->PrefixWidth : 0;
+		Drawer2D_DrawText(&args, offset, realHeight);
+		realHeight += widget->LineSizes[i].Height;
+	}
+	widget->InputTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
+
+	Drawer2D_End();
+	Platform_MemFree(bmp.Scan0);
+
+	Widget* elem = &widget->Base;
+	elem->Width = size.Width;
+	elem->Height = realHeight == 0 ? widget->PrefixHeight : realHeight;
+	elem->Reposition(elem);
+	widget->InputTex.X = elem->X + widget->Padding;
+	widget->InputTex.Y = elem->Y;
+}
+
+void InputWidget_EnterInput(InputWidget* widget) {
+	InputWidget_Clear(widget);
+	widget->Base.Height = widget->PrefixHeight;
+}
+
+void InputWidget_Clear(InputWidget* widget) {
+	String_Clear(&widget->Text);
+	Int32 i;
+	for (i = 0; i < Array_NumElements(widget->Lines); i++) {
+		String_Clear(&widget->Lines[i]);
+	}
+
+	widget->CaretPos = -1;
+	Gfx_DeleteTexture(&widget->InputTex.ID);
+}
+
+bool InputWidget_AllowedChar(InputWidget* widget, UInt8 c) {
+	return Utils_IsValidInputChar(c, game.Server.SupportsFullCP437);
+}
+
+void InputWidget_AppendChar(InputWidget* widget, UInt8 c) {
+	if (widget->CaretPos == -1) {
+		String_InsertAt(&widget->Text, widget->Text.length, c);
+	} else {
+		String_InsertAt(&widget->Text, widget->CaretPos, c);
+		widget->CaretPos++;
+		if (widget->CaretPos >= widget->Text.length) { widget->CaretPos = -1; }
+	}
+}
+
+bool InputWidget_TryAppendChar(InputWidget* widget, UInt8 c) {
+	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
+	if (widget->Text.length >= maxChars) return false;
+	if (!InputWidget_AllowedChar(widget, c)) return false;
+
+	InputWidget_AppendChar(widget, c);
+	return true;
+}
+
+void InputWidget_AppendString(InputWidget* widget, String text) {
+	Int32 appended = 0, i;
+	for (i = 0; i < text.length; i++) {
+		if (InputWidget_TryAppendChar(widget, text.buffer[i])) appended++;
+	}
+
+	if (appended == 0) return;
+	GuiElement* elem = &widget->Base.Base;
+	elem->Recreate(elem);
+}
+
+void InputWidget_Append(InputWidget* widget, UInt8 c) {
+	if (!InputWidget_TryAppendChar(widget, c)) return;
+	GuiElement* elem = &widget->Base.Base;
+	elem->Recreate(elem);
+}
+
+void InputWidget_DeleteChar(InputWidget* widget) {
+	if (widget->Text.length == 0) return;
+
+	if (widget->CaretPos == -1) {
+		String_DeleteAt(&widget->Text, widget->Text.length - 1);
+	} else if (widget->CaretPos > 0) {
+		widget->CaretPos--;
+		String_DeleteAt(&widget->Text, widget->CaretPos);
+	}
+}
+
+bool InputWidget_CheckCol(InputWidget* widget, Int32 index) {
+	if (index < 0) return false;
+	UInt8 code = widget->Text.buffer[index];
+	UInt8 col = widget->Text.buffer[index + 1];
+	return (code == '%' || code == '&') && Drawer2D_ValidColCode(col);
+}
+
+void InputWidget_BackspaceKey(InputWidget* widget, bool controlDown) {
+	if (controlDown) {
+		if (widget->CaretPos == -1) { widget->CaretPos = widget->Text.length - 1; }
+		Int32 len = WordWrap_GetBackLength(&widget->Text, widget->CaretPos);
+		if (len == 0) return;
+
+		widget->CaretPos -= len;
+		if (widget->CaretPos < 0) { widget->CaretPos = 0; }
+		Int32 i;
+		for (i = 0; i <= len; i++) {
+			String_DeleteAt(&widget->Text, widget->CaretPos);
+		}
+
+		if (widget->CaretPos >= widget->Text.length) { widget->CaretPos = -1; }
+		if (widget->CaretPos == -1 && widget->Text.length > 0) {
+			String_InsertAt(&widget->Text, widget->Text.length, ' ');
+		} else if (widget->CaretPos >= 0 && widget->Text.buffer[widget->CaretPos] != ' ') {
+			String_InsertAt(&widget->Text, widget->CaretPos, ' ');
+		}
+		GuiElement* elem = &widget->Base.Base;
+		elem->Recreate(elem);
+	} else if (widget->Text.length > 0 && widget->CaretPos != 0) {
+		Int32 index = widget->CaretPos == -1 ? widget->Text.length - 1 : widget->CaretPos;
+		if (InputWidget_CheckCol(widget, index - 1)) {
+			InputWidget_DeleteChar(widget); /* backspace XYZ%e to XYZ */
+		} else if (InputWidget_CheckCol(widget, index - 2)) {
+			InputWidget_DeleteChar(widget); 
+			InputWidget_DeleteChar(widget); /* backspace XYZ%eH to XYZ */
+		}
+
+		InputWidget_DeleteChar(widget);
+		GuiElement* elem = &widget->Base.Base;
+		elem->Recreate(elem);
+	}
+}
+
+void InputWidget_DeleteKey(InputWidget* widget) {
+	if (widget->Text.length > 0 && widget->CaretPos != -1) {
+		String_DeleteAt(&widget->Text, widget->CaretPos);
+		if (widget->CaretPos >= widget->Text.length) { widget->CaretPos = -1; }
+		GuiElement* elem = &widget->Base.Base;
+		elem->Recreate(elem);
+	}
+}
+
+void InputWidget_LeftKey(InputWidget* widget, bool controlDown) {
+	if (controlDown) {
+		if (widget->CaretPos == -1) { widget->CaretPos = widget->Text.length - 1; }
+		widget->CaretPos -= WordWrap_GetBackLength(&widget->Text, widget->CaretPos);
+		InputWidget_UpdateCaret(widget);
+		return;
+	}
+
+	if (widget->Text.length > 0) {
+		if (widget->CaretPos == -1) { widget->CaretPos = widget->Text.length; }
+		widget->CaretPos--;
+		if (widget->CaretPos < 0) { widget->CaretPos = 0; }
+		InputWidget_UpdateCaret(widget);
+	}
+}
+
+void InputWidget_RightKey(InputWidget* widget, bool controlDown) {
+	if (controlDown) {
+		widget->CaretPos += WordWrap_GetForwardLength(&widget->Text, widget->CaretPos);
+		if (widget->CaretPos >= widget->Text.length) { widget->CaretPos = -1; }
+		InputWidget_UpdateCaret(widget);
+		return;
+	}
+
+	if (widget->Text.length > 0 && widget->CaretPos != -1) {
+		widget->CaretPos++;
+		if (widget->CaretPos >= widget->Text.length) { widget->CaretPos = -1; }
+		InputWidget_UpdateCaret(widget);
+	}
+}
+
+void InputWidget_HomeKey(InputWidget* widget) {
+	if (widget->Text.length == 0) return;
+	widget->CaretPos = 0;
+	InputWidget_UpdateCaret(widget);
+}
+
+void InputWidget_EndKey(InputWidget* widget) {
+	widget->CaretPos = -1;
+	InputWidget_UpdateCaret(widget);
+}
+
+bool InputWidget_OtherKey(InputWidget* widget, Key key) {
+	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
+	if (key == Key_V && widget->Text.length < maxChars) {
+		UInt8 textBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
+		String text = String_FromRawBuffer(textBuffer, INPUTWIDGET_MAX_LINES * STRING_SIZE);
+		Window_GetClipboardText(&text);
+
+		if (text.length == 0) return true;
+		InputWidget_AppendString(widget, text);
+		return true;
+	} else if (key == Key_C) {
+		if (widget->Text.length == 0) return true;
+		Window_SetClipboardText(&widget->Text);
+		return true;
+	}
+	return false;
+}
+
+void InputWidget_Init(GuiElement* elem) {
+	InputWidget* widget = (InputWidget*)elem;
+	Int32 lines = widget->GetMaxLines();
+	if (lines > 1) {
+		WordWrap_Do(&widget->Text, widget->Lines, lines, widget->MaxCharsPerLine);
+	} else {
+		String_Clear(&widget->Lines[0]);
+		String_AppendString(&widget->Lines[0], &widget->Text);
+	}
+
+	InputWidget_CalculateLineSizes(widget);
+	InputWidget_RemakeTexture(widget);
+	InputWidget_UpdateCaret(widget);
+}
+
+void InputWidget_Free(GuiElement* elem) {
+	InputWidget* widget = (InputWidget*)elem;
+	Gfx_DeleteTexture(&widget->InputTex.ID);
+	Gfx_DeleteTexture(&widget->CaretTex.ID);
+	Gfx_DeleteTexture(&widget->PrefixTex.ID);
+}
+
+void InputWidget_Recreate(GuiElement* elem) {
+	InputWidget* widget = (InputWidget*)elem;
+	Gfx_DeleteTexture(&widget->InputTex.ID);
+	InputWidget_Init(elem);
+}
+
+void InputWidget_Reposition(Widget* elem) {
+	Int32 oldX = elem->X, oldY = elem->Y;
+	Widget_DoReposition(elem);
+
+	InputWidget* widget = (InputWidget*)elem;
+	widget->CaretTex.X += elem->X - oldX; widget->CaretTex.Y += elem->Y - oldY;
+	widget->InputTex.X += elem->X - oldX; widget->InputTex.Y += elem->Y - oldY;
+}
+
+bool InputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+#if CC_BUILD_OSX
+	bool clipboardDown = Key_IsWinPressed();
+#else
+	bool clipboardDown = Key_IsControlPressed();
+#endif
+	InputWidget* widget = (InputWidget*)elem;
+
+	if (key == Key_Left) {
+		InputWidget_LeftKey(widget, clipboardDown);
+	} else if (key == Key_Right) {
+		InputWidget_RightKey(widget, clipboardDown);
+	} else if (key == Key_BackSpace) {
+		InputWidget_BackspaceKey(widget, clipboardDown);
+	} else if (key == Key_Delete) {
+		InputWidget_DeleteKey(widget);
+	} else if (key == Key_Home) {
+		InputWidget_HomeKey(widget);
+	} else if (key == Key_End) {
+		InputWidget_EndKey(widget);
+	} else if (clipboardDown && !InputWidget_OtherKey(widget, key)) {
+		return false;
+	}
+	return true;
+}
+
+bool InputWidget_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
+
+bool InputWidget_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	InputWidget* widget = (InputWidget*)elem;
+	InputWidget_AppendChar(widget, key);
+	return true;
+}
+
+bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton button) {
+	InputWidget* widget = (InputWidget*)elem;
+	if (button == MouseButton_Left) {
+		x -= widget->InputTex.X; y -= widget->InputTex.Y;
+		DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
+		Int32 offset = 0, charHeight = widget->CaretHeight;
+
+		Int32 charX, i;
+		for (i = 0; i < widget->GetMaxLines(); i++) {
+			String* line = &widget->Lines[i];
+			Int32 xOffset = i == 0 ? widget->PrefixWidth : 0;
+			if (line->length == 0) continue;
+
+			for (charX = 0; charX < line->length; charX++) {
+				args.Text = String_UNSAFE_Substring(line, 0, charX);
+				Int32 charOffset = Drawer2D_MeasureText(&args).Width + xOffset;
+
+				args.Text = String_UNSAFE_Substring(line, charX, 1);
+				Int32 charWidth = Drawer2D_MeasureText(&args).Width;
+
+				if (Gui_Contains(charOffset, i * charHeight, charWidth, charHeight, x, y)) {
+					widget->CaretPos = offset + charX;
+					InputWidget_UpdateCaret(widget);
+					return true;
+				}
+			}
+			offset += line->length;
+		}
+		widget->CaretPos = -1;
+		InputWidget_UpdateCaret(widget);
+	}
+	return true;
+}
+
+void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* prefix) {
+	Widget_Init(&widget->Base);
+	widget->Font = *font;
+	widget->Prefix = *prefix;
+	widget->CaretPos = -1;
+	widget->MaxCharsPerLine = STRING_SIZE;
+
+	String caret = String_FromConstant("_");
+	DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
+	widget->CaretTex = Drawer2D_MakeTextTexture(&args, 0, 0);
+	widget->CaretTex.Width = (UInt16)((widget->CaretTex.Width * 3) / 4);
+	widget->CaretWidth  = (UInt16)widget->CaretTex.Width;
+	widget->CaretHeight = (UInt16)widget->CaretTex.Height;
+
+	if (prefix->length == 0) return;
+	DrawTextArgs_Make(&args, prefix, font, true);
+	Size2D size = Drawer2D_MeasureText(&args);
+	widget->PrefixWidth  = (UInt16)size.Width;  widget->Base.Width  = size.Width;
+	widget->PrefixHeight = (UInt16)size.Height; widget->Base.Height = size.Height;
 }

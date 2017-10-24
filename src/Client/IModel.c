@@ -104,9 +104,9 @@ void IModel_SetupState(IModel* model, Entity* entity) {
 
 	IModel_Cols[0] = col;
 	if (!entity->NoShade) {
-		IModel_Cols[1] = PackedCol_Scale(col, PackedCol_ShadeYBottom);
-		IModel_Cols[2] = PackedCol_Scale(col, PackedCol_ShadeZ);
-		IModel_Cols[4] = PackedCol_Scale(col, PackedCol_ShadeX);
+		IModel_Cols[1] = PackedCol_Scale(col, PACKEDCOL_SHADE_YMIN);
+		IModel_Cols[2] = PackedCol_Scale(col, PACKEDCOL_SHADE_Z);
+		IModel_Cols[4] = PackedCol_Scale(col, PACKEDCOL_SHADE_X);
 	} else {
 		IModel_Cols[1] = col; IModel_Cols[2] = col; IModel_Cols[4] = col;
 	}

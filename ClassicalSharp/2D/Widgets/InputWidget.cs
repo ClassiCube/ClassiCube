@@ -68,8 +68,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		protected double caretAccumulator;
 		
 		public override void Init() {
-			if (UsedLines > 1) {
-				Text.WordWrap(game.Drawer2D, lines, MaxCharsPerLine);
+			int numLines = UsedLines;
+			if (numLines > 1) {
+				Text.WordWrap(game.Drawer2D, lines, numLines, MaxCharsPerLine);
 			} else {
 				lines[0] = Text.ToString();
 			}

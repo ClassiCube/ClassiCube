@@ -64,7 +64,7 @@ Int32 String_LastIndexOf(STRING_TRANSIENT String* str, UInt8 c);
 /* Gets the character at the given index in the string. */
 UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset);
 /* Inserts a character at the given index in the string. */
-void String_InsertAt(STRING_TRANSIENT String* str, UInt8 c, Int32 offset);
+void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UInt8 c);
 /* Deletes a character at the given index in the string. */
 void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
 

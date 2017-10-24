@@ -10,6 +10,12 @@ void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* fo
 	args->UseShadow = useShadow;
 }
 
+void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow) {
+	args->Text = String_MakeNull();
+	args->Font = *font;
+	args->UseShadow = useShadow;
+}
+
 Bitmap Drawer2D_FontBitmap;
 Bitmap* Drawer2D_Cur;
 Int32 Drawer2D_BoxSize;
@@ -269,7 +275,7 @@ void Drawer2D_DrawPart(DrawTextArgs* args, Int32 x, Int32 y, bool shadowCol) {
 			coordsPtr[0] = (UInt8)coords; runCount = 1;
 			continue;
 		}
-		if (lastY == (coords >> 4) && col.Packed == lastCol.Packed) {
+		if (lastY == (coords >> 4) && PackedCol_Equals(col, lastCol)) {
 			coordsPtr[runCount] = (UInt8)coords; runCount++;
 			continue;
 		}

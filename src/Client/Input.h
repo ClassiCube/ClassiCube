@@ -83,6 +83,7 @@ void Key_SetPressed(Key key, bool pressed);
 #define Key_IsAltPressed() (Key_GetPressed(Key_AltLeft) || Key_GetPressed(Key_AltRight))
 #define Key_IsControlPressed() (Key_GetPressed(Key_ControlLeft) || Key_GetPressed(Key_ControlRight))
 #define Key_IsShiftPressed() (Key_GetPressed(Key_ShiftLeft) || Key_GetPressed(Key_ShiftRight))
+#define Key_IsWinPressed() (Key_GetPressed(Key_WinLeft) || Key_GetPressed(Key_WinRight))
 
 /* Gets whether key repeating is on or not. If on (desirable for text input), multiple KeyDowns (varies by OS) 
 are generated for the same key when it is held down for a period of time. Should be off for game input. */

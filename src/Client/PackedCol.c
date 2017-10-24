@@ -31,8 +31,8 @@ PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, Real32 t) {
 	return a;
 }
 
-void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yBottom) {
-	*xSide = PackedCol_Scale(normal, PackedCol_ShadeX);
-	*zSide = PackedCol_Scale(normal, PackedCol_ShadeZ);
-	*yBottom = PackedCol_Scale(normal, PackedCol_ShadeYBottom);
+void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, PackedCol* yMin) {
+	*xSide = PackedCol_Scale(normal, PACKEDCOL_SHADE_X);
+	*zSide = PackedCol_Scale(normal, PACKEDCOL_SHADE_Z);
+	*yMin  = PackedCol_Scale(normal, PACKEDCOL_SHADE_YMIN);
 }
