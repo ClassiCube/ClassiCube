@@ -73,6 +73,7 @@ namespace ClassicalSharp.Gui.Screens {
 						game.World.TextureUrl = null;
 					}
 					BlockInfo.Reset(game);
+					game.Inventory.SetDefaultMapping();
 					
 					byte[] blocks = importer.Load(fs, game, out width, out height, out length);
 					#if USE16_BIT

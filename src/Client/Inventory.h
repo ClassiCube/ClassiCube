@@ -40,6 +40,8 @@ void Inventory_SetOffset(Int32 offset);
 /* Sets the block currently selected by the player.
 Fails if the server has forbidden user from changing the held block. */
 void Inventory_SetSelectedBlock(BlockID block);
+/* Sets default mapping for every block. */
+void Inventory_SetDefaultMapping(void);
 
 void Inventory_AddDefault(BlockID block);
 void Inventory_Reset(BlockID block);

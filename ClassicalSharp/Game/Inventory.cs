@@ -89,7 +89,7 @@ namespace ClassicalSharp {
 		}
 		
 		public BlockID[] Map = new BlockID[Block.Count];
-		void SetDefaultMapping() {
+		public void SetDefaultMapping() {
 			for (int i = 0; i < Map.Length; i++) Map[i] = (BlockID)i;
 			for (int i = 0; i < Map.Length; i++) {
 				BlockID mapping = DefaultMapping(i);

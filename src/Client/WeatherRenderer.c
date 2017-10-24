@@ -126,8 +126,9 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	VertexP3fT2fC4b vertices[weather_verticesCount];
 	VertexP3fT2fC4b* ptr = vertices;
 
-	for (Int32 dx = -weather_extent; dx <= weather_extent; dx++) {
-		for (Int32 dz = -weather_extent; dz <= weather_extent; dz++) {
+	Int32 dx, dz;
+	for (dx = -weather_extent; dx <= weather_extent; dx++) {
+		for (dz = -weather_extent; dz <= weather_extent; dz++) {
 			Int32 x = pos.X + dx, z = pos.Z + dz;
 			Real32 y = WeatherRenderer_RainHeight(x, z);
 			Real32 height = pos.Y - y;

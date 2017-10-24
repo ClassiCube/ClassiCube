@@ -13,20 +13,16 @@
 #define STREAM_SEEKFROM_CURRENT 1
 #define STREAM_SEEKFROM_END 2
 
-typedef ReturnCode (*Stream_Operation)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
-typedef ReturnCode (*Stream_Seek)(struct Stream_* stream, Int32 offset, Int32 seekType);
-typedef ReturnCode (*Stream_Close)(struct Stream_* stream);
-
 /* Represents a stream that can be written to and/or read from. */
 typedef struct Stream_ {
 	/* Performs a read. Result is a ReturnCode, number of read bytes is output via pointer. */
-	Stream_Operation Read;
+	ReturnCode (*Read)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
 	/* Performs a write. Result is a ReturnCode, number of written bytes is output via pointer. */
-	Stream_Operation Write;
+	ReturnCode (*Write)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
 	/* Closes the stream. Result is a ReturnCode. */
-	Stream_Close Close;
+	ReturnCode (*Close)(struct Stream_* stream);
 	/* Moves backwards or forwards by given number of bytes from seek offset in the stream. Result is a ReturnCode. */
-	Stream_Seek Seek;
+	ReturnCode (*Seek)(struct Stream_* stream, Int32 offset, Int32 seekType);
 	/* General purpose pointer metadata for the stream. */
 	void* Data;
 	/* General purpose numerical metadata for the stream. */

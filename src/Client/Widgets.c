@@ -1249,10 +1249,10 @@ bool InputWidget_TryAppendChar(InputWidget* widget, UInt8 c) {
 	return true;
 }
 
-void InputWidget_AppendString(InputWidget* widget, String text) {
+void InputWidget_AppendString(InputWidget* widget, STRING_TRANSIENT String* text) {
 	Int32 appended = 0, i;
-	for (i = 0; i < text.length; i++) {
-		if (InputWidget_TryAppendChar(widget, text.buffer[i])) appended++;
+	for (i = 0; i < text->length; i++) {
+		if (InputWidget_TryAppendChar(widget, text->buffer[i])) appended++;
 	}
 
 	if (appended == 0) return;
@@ -1379,7 +1379,7 @@ bool InputWidget_OtherKey(InputWidget* widget, Key key) {
 		Window_GetClipboardText(&text);
 
 		if (text.length == 0) return true;
-		InputWidget_AppendString(widget, text);
+		InputWidget_AppendString(widget, &text);
 		return true;
 	} else if (key == Key_C) {
 		if (widget->Text.length == 0) return true;
@@ -1500,6 +1500,16 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->Prefix = *prefix;
 	widget->CaretPos = -1;
 	widget->MaxCharsPerLine = STRING_SIZE;
+
+	widget->Base.Base.Init     = InputWidget_Init;
+	widget->Base.Base.Free     = InputWidget_Free;
+	widget->Base.Base.Recreate = InputWidget_Recreate;
+	widget->Base.Reposition    = InputWidget_Reposition;
+
+	widget->Base.Base.HandlesKeyDown   = InputWidget_HandlesKeyDown;
+	widget->Base.Base.HandlesKeyUp     = InputWidget_HandlesKeyUp;
+	widget->Base.Base.HandlesKeyPress  = InputWidget_HandlesKeyPress;
+	widget->Base.Base.HandlesMouseDown = InputWidget_HandlesMouseDown;
 
 	String caret = String_FromConstant("_");
 	DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
