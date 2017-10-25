@@ -95,7 +95,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		public override int LightCol_ZSide(int x, int y, int z) {
-			return y > GetLightHeight(x, z) ? OutsideZSide : shadowZSide;
+			return y > GetLightHeight(x, z) ? OutsideXSide : shadowXSide;
 		}
 		
 

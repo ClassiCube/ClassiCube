@@ -61,8 +61,8 @@ PackedCol Lighting_Col(Int32 x, Int32 y, Int32 z) {
 	return y > Lighting_GetLightHeight(x, z) ? Lighting_Outside : shadow;
 }
 
-PackedCol Lighting_Col_ZSide(Int32 x, Int32 y, Int32 z) {
-	return y > Lighting_GetLightHeight(x, z) ? Lighting_OutsideZSide : shadowZSide;
+PackedCol Lighting_Col_XSide(Int32 x, Int32 y, Int32 z) {
+	return y > Lighting_GetLightHeight(x, z) ? Lighting_OutsideXSide : shadowXSide;
 }
 
 PackedCol Lighting_Col_Sprite_Fast(Int32 x, Int32 y, Int32 z) {

@@ -42,7 +42,8 @@ namespace ClassicalSharp.Map {
 		public abstract int LightCol(int x, int y, int z);
 
 		/// <summary> Returns the light colour of the block at the given coordinates. </summary>
-		/// <remarks> *** Does NOT check that the coordinates are inside the map. *** </remarks>
+		/// <remarks> *** Does NOT check that the coordinates are inside the map. *** 
+		/// NOTE: This actually returns X shaded colour, but is called ZSide to avoid breaking compatibility. </remarks>
 		public abstract int LightCol_ZSide(int x, int y, int z);
 		
 

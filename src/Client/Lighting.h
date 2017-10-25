@@ -36,7 +36,7 @@ NOTE: Does ***NOT*** check that the coordinates are inside the map. */
 PackedCol Lighting_Col(Int32 x, Int32 y, Int32 z);
 /* Returns the light colour of the block at the given coordinates.
 NOTE: Does ***NOT*** check that the coordinates are inside the map. */
-PackedCol Lighting_Col_ZSide(Int32 x, Int32 y, Int32 z);
+PackedCol Lighting_Col_XSide(Int32 x, Int32 y, Int32 z);
 
 PackedCol Lighting_Col_Sprite_Fast(Int32 x, Int32 y, Int32 z);
 PackedCol Lighting_Col_YTop_Fast(Int32 x, Int32 y, Int32 z);
