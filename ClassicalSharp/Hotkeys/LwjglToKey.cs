@@ -44,12 +44,12 @@ namespace ClassicalSharp.Hotkeys {
 			for (int i = 0; i < 10; i++)
 				Add((Key)(i + Key.F1));
 			Add(Key.NumLock); Add(Key.ScrollLock);
-			Add(Key.Number7); Add(Key.Number8);
-			Add(Key.Number9); Add(Key.KeypadSubtract);
-			Add(Key.Number4); Add(Key.Number5);
-			Add(Key.Number6); Add(Key.KeypadAdd);
-			Add(Key.Number1); Add(Key.Number2);
-			Add(Key.Number3); Add(Key.Number0);
+			Add(Key.Keypad7); Add(Key.Keypad8);
+			Add(Key.Keypad9); Add(Key.KeypadSubtract);
+			Add(Key.Keypad4); Add(Key.Keypad5);
+			Add(Key.Keypad6); Add(Key.KeypadAdd);
+			Add(Key.Keypad1); Add(Key.Keypad2);
+			Add(Key.Keypad3); Add(Key.Keypad0);
 			Add(Key.KeypadDecimal); Skip(3);
 			Add(Key.F11); Add(Key.F12);
 			Skip(11);
