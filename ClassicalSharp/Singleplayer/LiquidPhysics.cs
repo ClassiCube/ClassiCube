@@ -50,7 +50,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public void ResetMap() {
 			Clear();
-			width = map.Width; maxX = width - 1; maxWaterX = maxX - 2;
+			width = map.Width;   maxX = width  - 1; maxWaterX = maxX - 2;
 			height = map.Height; maxY = height - 1; maxWaterY = maxY - 2;
 			length = map.Length; maxZ = length - 1; maxWaterZ = maxZ - 2;
 			oneY = width * length;

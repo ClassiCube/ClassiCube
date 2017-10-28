@@ -11,6 +11,13 @@
 #define String_BufferSize(n) (n + 1)
 #define STRING_INT32CHARS 20
 
+/* Indicates that a string argument is discarded after the function has completed.
+Thus it is safe to allocate a string on the stack. */
+#define STRING_TRANSIENT
+/* Indicates that a reference to the buffer in a string argument is persisted after the function has completed.
+Thus it is NOT SAFE to allocate a string on the stack. */
+#define STRING_REF
+
 typedef struct String_ {
 	/* Pointer to raw characters. Size is capacity + 1, as buffer is null terminated. */
 	UInt8* buffer;

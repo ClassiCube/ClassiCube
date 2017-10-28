@@ -6,8 +6,6 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef UInt32 ReturnCode;
-
 /* Initalises required state for this error handler. */
 void ErrorHandler_Init(void);
 /* Logs a message to the error handler's log file. */

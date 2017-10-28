@@ -17,7 +17,7 @@ namespace ClassicalSharp.Map {
 	public sealed class World {
 
 		public BlockID[] blocks;
-		public int Width, Height, Length;
+		public int Width, Height, Length, MaxX, MaxY, MaxZ;
 		
 		/// <summary> Contains the environment metadata for this world. </summary>
 		public WorldEnv Env;
@@ -43,9 +43,9 @@ namespace ClassicalSharp.Map {
 		/// <summary> Updates the underlying block array, and dimensions of this map. </summary>
 		public void SetNewMap(BlockID[] blocks, int width, int height, int length) {
 			this.blocks = blocks;
-			this.Width = width;
-			this.Height = height;
-			this.Length = length;
+			this.Width  = width;  MaxX = width  - 1;
+			this.Height = height; MaxY = height - 1;
+			this.Length = length; MaxZ = length - 1;
 			if (blocks.Length == 0) this.blocks = null;
 			
 			if (blocks.Length != (width * height * length))

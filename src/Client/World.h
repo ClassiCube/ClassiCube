@@ -61,7 +61,7 @@ BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z);
 /* Returns the block at the given coordinates without bounds checking. */
 #define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]
 /* Returns the block at the given world coordinates without bounds checking. */
-#define World_GetBlock_3I(x, y, z) World_Blocks[World_Pack(p.X, p.Y, p.Z)]
+#define World_GetBlock_3I(p) World_Blocks[World_Pack(p.X, p.Y, p.Z)]
 /* Returns block at given coordinates if coordinates are inside the map, 0 if outside. */
 BlockID World_SafeGetBlock(Int32 x, Int32 y, Int32 z);
 /* Returns block at given coordinates if coordinates are inside the map, 0 if outside. */

@@ -87,11 +87,11 @@ namespace ClassicalSharp.Singleplayer {
 		/// <summary> Activates the direct neighbouring blocks of the given coordinates. </summary>
 		public void ActivateNeighbours(int x, int y, int z, int index) {
 			if (x > 0) Activate(index - 1);
-			if (x < map.Width - 1) Activate(index + 1);
+			if (x < map.MaxX) Activate(index + 1);
 			if (z > 0) Activate(index - map.Width);
-			if (z < map.Length - 1) Activate(index + map.Width);
+			if (z < map.MaxZ) Activate(index + map.Width);
 			if (y > 0) Activate(index - oneY);
-			if (y < map.Height - 1) Activate(index + oneY);
+			if (y < map.MaxY) Activate(index + oneY);
 		}
 		
 		/// <summary> Activates the block at the particular packed coordinates. </summary>

@@ -14,7 +14,7 @@ namespace ClassicalSharp.Entities {
 	
 	/// <summary> Contains a model, along with position, velocity, and rotation.
 	/// May also contain other fields and properties. </summary>
-	public abstract partial class Entity {
+	public abstract class Entity {
 		
 		public Entity(Game game) {
 			this.game = game;
@@ -170,19 +170,20 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// given bounding box satisfy the given condition. </summary>
 		public bool TouchesAny(AABB bounds, Predicate<BlockID> condition) {
-			Vector3I bbMin = Vector3I.Floor(bounds.Min);
-			Vector3I bbMax = Vector3I.Floor(bounds.Max);
+			Vector3I min = Vector3I.Floor(bounds.Min);
+			Vector3I max = Vector3I.Floor(bounds.Max);
 
 			AABB blockBB = default(AABB);
-			Vector3 v;
+			Vector3 v;		
+			min.X = min.X < 0 ? 0 : min.X; max.X = max.X > game.World.MaxX ? game.World.MaxX : max.X;
+			min.Y = min.Y < 0 ? 0 : min.Y; max.Y = max.Y > game.World.MaxY ? game.World.MaxY : max.Y;
+			min.Z = min.Z < 0 ? 0 : min.Z; max.Z = max.Z > game.World.MaxZ ? game.World.MaxZ : max.Z;
 			
-			// Order loops so that we minimise cache misses
-			for (int y = bbMin.Y; y <= bbMax.Y; y++) {
+			for (int y = min.Y; y <= max.Y; y++) {
 				v.Y = y;
-				for (int z = bbMin.Z; z <= bbMax.Z; z++) {
+				for (int z = min.Z; z <= max.Z; z++) {
 					v.Z = z;
-					for (int x = bbMin.X; x <= bbMax.X; x++) {
-						if (!game.World.IsValidPos(x, y, z)) continue;
+					for (int x = min.X; x <= max.X; x++) {
 						v.X = x;
 						
 						BlockID block = game.World.GetBlock(x, y, z);

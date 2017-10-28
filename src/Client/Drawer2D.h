@@ -4,14 +4,13 @@
 Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 #include "Typedefs.h"
-#include "String.h"
+#include "Platform.h"
 #include "Bitmap.h"
 #include "PackedCol.h"
 #include "2DStructs.h"
 #include "Texture.h"
 #include "Constants.h"
 
-typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow);
 

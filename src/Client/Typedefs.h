@@ -44,6 +44,7 @@ typedef UInt8 TextureLoc;
 typedef UInt8 Face;
 /* Skin layout a humanoid skin texture can have. */
 typedef UInt8 SkinType;
+typedef UInt32 ReturnCode;
 
 typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
 

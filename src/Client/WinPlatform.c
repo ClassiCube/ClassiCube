@@ -2,13 +2,17 @@
 #include "Stream.h"
 #include "DisplayDevice.h"
 #include "ExtMath.h"
+#include "ErrorHandler.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
-
+HDC hdc;
 HANDLE heap;
 void Platform_Init(void) {
-	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */	
+	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
+	hdc = CreateCompatibleDC(NULL);
+	if (hdc == NULL) ErrorHandler_Fail("Failed to get screen DC");
+
 	UInt32 deviceNum = 0;
 	/* Get available video adapters and enumerate all monitors */
 	DISPLAY_DEVICEA device;
@@ -43,6 +47,7 @@ void Platform_Init(void) {
 
 void Platform_Free(void) {
 	HeapDestroy(heap);
+	DeleteDC(hdc);
 }
 
 void* Platform_MemAlloc(UInt32 numBytes) {
@@ -178,7 +183,7 @@ void Platform_ThreadSleep(UInt32 milliseconds) {
 
 void Platform_MakeFont(FontDesc* desc) {
 	LOGFONTA font = { 0 };
-	font.lfHeight    = -Math_Ceil(desc->Size * GetDeviceCaps(hDC, LOGPIXELSY) / 72.0f);
+	font.lfHeight    = -Math_Ceil(desc->Size * GetDeviceCaps(hdc, LOGPIXELSY) / 72.0f);
 	font.lfUnderline = desc->Style == FONT_STYLE_UNDERLINE;
 	font.lfWeight    = desc->Style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
 	font.lfQuality   = ANTIALIASED_QUALITY;
@@ -194,4 +199,19 @@ void Platform_FreeFont(FontDesc* desc) {
 		ErrorHandler_Fail("Deleting font handle failed");
 	}
 	desc->Handle = NULL;
+}
+
+Size2D Platform_MeasureText(DrawTextArgs* args) {
+	HDC hDC = GetDC(NULL);
+	RECT r = { 0 };
+	DrawTextA(hDC, args->Text.buffer, args->Text.length,
+		&r, DT_CALCRECT | DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
+	return Size2D_Make(r.right, r.bottom);
+}
+
+void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
+	HDC hDC = GetDC(NULL);
+	RECT r = { 0 };
+	DrawTextA(hDC, args->Text.buffer, args->Text.length,
+		&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
 }

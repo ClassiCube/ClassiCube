@@ -149,14 +149,16 @@ bool Entity_TouchesAny(AABB* bounds, TouchesAny_Condition condition) {
 	AABB blockBB;
 	Vector3 v;
 
-	/* Order loops so that we minimise cache misses */
+	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World_MaxX);
+	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World_MaxY);
+	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World_MaxZ);
+
 	Int32 x, y, z;
 	for (y = bbMin.Y; y <= bbMax.Y; y++) {
 		v.Y = (Real32)y;
 		for (z = bbMin.Z; z <= bbMax.Z; z++) {
 			v.Z = (Real32)z;
 			for (x = bbMin.X; x <= bbMax.X; x++) {
-				if (!World_IsValidPos(x, y, z)) continue;
 				v.X = (Real32)x;
 
 				BlockID block = World_GetBlock(x, y, z);

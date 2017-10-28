@@ -6,20 +6,13 @@
 */
 
 typedef struct DateTime_ {
-	/* Year of this point in time, ranges from 0 to 65535. */
-	UInt16 Year;
-	/* Month of this point in time, ranges from 1 to 12. */
-	UInt8 Month;
-	/* Day of this point in time, ranges from 1 to 31. */
-	UInt8 Day;
-	/* Hour of this point in time, ranges from 0 to 23. */
-	UInt8 Hour;
-	/* Minute of this point in time, ranges from 0 to 59. */
-	UInt8 Minute;
-	/* Second of this point in time, ranges from 0 to 59. */
-	UInt8 Second;
-	/* Milliseconds of this point in time, ranges from 0 to 999. */
-	UInt16 Milliseconds;
+	UInt16 Year; /* Year of this point in time, ranges from 0 to 65535. */	
+	UInt8 Month; /* Month of this point in time, ranges from 1 to 12. */	
+	UInt8 Day; /* Day of this point in time, ranges from 1 to 31. */	
+	UInt8 Hour; /* Hour of this point in time, ranges from 0 to 23. */
+	UInt8 Minute; /* Minute of this point in time, ranges from 0 to 59. */
+	UInt8 Second; /* Second of this point in time, ranges from 0 to 59. */
+	UInt16 Milliseconds; /* Milliseconds of this point in time, ranges from 0 to 999. */
 } DateTime;
 
 #define DATETIME_MILLISECS_PER_SECOND 1000
@@ -29,5 +22,4 @@ typedef struct DateTime_ {
 
 Int64 DateTime_TotalMilliseconds(DateTime* time);
 Int64 DateTime_MillisecondsBetween(DateTime* start, DateTime* end);
-
 #endif
