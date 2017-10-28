@@ -55,13 +55,18 @@ namespace ClassicalSharp.Mode {
 			
 			// Is the currently selected block an empty slot
 			if (inv[inv.SelectedIndex] == Block.Air) { 
-				inv.Selected = old; return; 
+				inv.Selected = old; return;
 			}
 			
-			// Try to replace same block or empty slots first.
+			// Try to replace same block
 			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
-				if (inv[i] != old && inv[i] != Block.Air) continue;
-				
+				if (inv[i] != old) continue;
+				inv.SelectedIndex = i; return;
+			}
+			
+			// Try to replace empty slots
+			for (int i = 0; i < Inventory.BlocksPerRow; i++) {
+				if (inv[i] != Block.Air) continue;		
 				inv[i] = old;
 				inv.SelectedIndex = i; return;
 			}
