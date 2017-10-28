@@ -95,22 +95,28 @@ void Drawer2D_Free(void) {
 	Drawer2D_FreeFontBitmap();
 }
 
-/* Sets the underlying bitmap that drawing operations are performed on. */
-void Drawer2D_Begin(Bitmap* bmp);
-/* Frees any resources associated with the underlying bitmap. */
-void Drawer2D_End(void);
-/* Draws a 2D flat rectangle. */
-void Drawer2D_Rect(PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+void Drawer2D_Begin(Bitmap* bmp) {
+	Platform_SetBitmap(bmp);
+	Drawer2D_Cur = bmp;
+}
 
-void Drawer2D_Clear(PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height) {
-	if (x < 0 || y < 0 || (x + width) > Drawer2D_Cur->Width || (y + height) > Drawer2D_Cur->Height) {
+void Drawer2D_End(void) {	
+	Platform_SetBitmap(Drawer2D_Cur);
+	Drawer2D_Cur = NULL;
+}
+
+/* Draws a 2D flat rectangle. */
+void Drawer2D_Rect(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+
+void Drawer2D_Clear(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height) {
+	if (x < 0 || y < 0 || (x + width) > bmp->Width || (y + height) > bmp->Height) {
 		ErrorHandler_Fail("Drawer2D_Clear - tried to clear at invalid coords");
 	}
 
 	Int32 xx, yy;
 	UInt32 argb = PackedCol_ToARGB(col);
 	for (yy = 0; yy < height; yy++) {
-		UInt32* row = Bitmap_GetRow(Drawer2D_Cur, y + yy) + x;
+		UInt32* row = Bitmap_GetRow(bmp, y + yy) + x;
 		for (xx = 0; xx < width; xx++) { row[xx] = argb; }
 	}
 }
@@ -359,5 +365,18 @@ Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
 	return total;
 }
 
-void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
-Size2D Drawer2D_MeasureText(DrawTextArgs* args);
+void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
+	if (Drawer2D_UseBitmappedChat) {
+		Drawer2D_DrawBitmapText(args, x, y);
+	} else {
+		Platform_DrawText(args, x, y);
+	}
+}
+
+Size2D Drawer2D_MeasureText(DrawTextArgs* args) {
+	if (Drawer2D_UseBitmappedChat) {
+		return Drawer2D_MeasureBitmapText(args);
+	} else {
+		return Platform_MeasureText(args);
+	}
+}

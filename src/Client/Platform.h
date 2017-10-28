@@ -3,10 +3,10 @@
 #include "Typedefs.h"
 #include "DateTime.h"
 #include "String.h"
+#include "2DStructs.h"
 /* Abstracts platform specific memory management, I/O, etc.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
 
 /* Initalises required state for this platform. */
 void Platform_Init(void);
@@ -56,12 +56,18 @@ UInt32 Platform_FileLength(void* file);
 /* Blocks the calling thread for given number of milliseconds. */
 void Platform_ThreadSleep(UInt32 milliseconds);
 
+struct DrawTextArgs_;
+struct Bitmap_;
 /* Allocates handle for the given font. */
 void Platform_MakeFont(FontDesc* desc);
 /* Frees handle for the given font. */
 void Platform_FreeFont(FontDesc* desc);
 /* Measures size of given text.*/
-Size2D Platform_MeasureText(DrawTextArgs* args);
+Size2D Platform_MeasureText(struct DrawTextArgs_* args);
 /* Draws text onto the actively selected bitmap. */
-void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
+void Platform_DrawText(struct DrawTextArgs_* args, Int32 x, Int32 y);
+/* Sets the bitmap used for text drawing. */
+void Platform_SetBitmap(struct Bitmap_* bmp);
+/* Releases the bitmap that was used for text drawing.*/
+void Platform_ReleaseBitmap(struct Bitmap_* bmp);
 #endif

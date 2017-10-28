@@ -11,6 +11,7 @@ Copyright 2017 ClassicalSharp | Licensed under BSD-3
 #include "Texture.h"
 #include "Constants.h"
 
+typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow);
 
@@ -26,14 +27,14 @@ PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
 void Drawer2D_Init(void);
 void Drawer2D_Free(void);
 
-/* Sets the underlying bitmap that drawing operations are performed on. */
+/* Sets the underlying bitmap that text operations are performed on. */
 void Drawer2D_Begin(Bitmap* bmp);
 /* Frees any resources associated with the underlying bitmap. */
 void Drawer2D_End(void);
 /* Draws a 2D flat rectangle. */
-void Drawer2D_Rect(PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+void Drawer2D_Rect(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 /* Clears the entire given area to the specified colour. */
-void Drawer2D_Clear(PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
+void Drawer2D_Clear(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, Int32 height);
 
 void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
 Size2D Drawer2D_MeasureText(DrawTextArgs* args);

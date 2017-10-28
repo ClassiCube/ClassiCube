@@ -935,7 +935,7 @@ Int32 SpecialInputWidget_MeasureTitles(SpecialInputWidget* widget) {
 	return totalWidth;
 }
 
-void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget) {
+void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget, Bitmap* bmp) {
 	Int32 x = 0;
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
 
@@ -947,7 +947,7 @@ void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget) {
 		PackedCol col = i == widget->SelectedIndex ? col_selected : col_inactive;
 		Size2D size = widget->Tabs[i].TitleSize;
 
-		Drawer2D_Clear(col, x, 0, size.Width, size.Height);
+		Drawer2D_Clear(bmp, col, x, 0, size.Width, size.Height);
 		Drawer2D_DrawText(&args, x + SPECIAL_TITLE_SPACING / 2, 0);
 		x += size.Width;
 	}
@@ -1011,9 +1011,9 @@ void SpecialInputWidget_Make(SpecialInputWidget* widget, SpecialInputTab* e) {
 	Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 
-	SpecialInputWidget_DrawTitles(widget);
+	SpecialInputWidget_DrawTitles(widget, &bmp);
 	PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
-	Drawer2D_Clear(col, 0, titleHeight, size.Width, bodySize.Height);
+	Drawer2D_Clear(&bmp, col, 0, titleHeight, size.Width, bodySize.Height);
 	SpecialInputWidget_DrawContent(widget, e, titleHeight);
 	widget->Tex = Drawer2D_Make2DTexture(&bmp, size, widget->Base.X, widget->Base.Y);
 

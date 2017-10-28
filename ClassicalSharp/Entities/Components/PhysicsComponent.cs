@@ -225,23 +225,27 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		float LowestModifier(AABB bounds, bool checkSolid) {
-			Vector3I bbMin = Vector3I.Floor(bounds.Min);
-			Vector3I bbMax = Vector3I.Floor(bounds.Max);
+			Vector3I min = Vector3I.Floor(bounds.Min);
+			Vector3I max = Vector3I.Floor(bounds.Max);
 			float modifier = inf;
 			
-			for (int y = bbMin.Y; y <= bbMax.Y; y++)
-				for (int z = bbMin.Z; z <= bbMax.Z; z++)
-					for (int x = bbMin.X; x <= bbMax.X; x++)
+			AABB blockBB = default(AABB);
+			min.X = min.X < 0 ? 0 : min.X; max.X = max.X > game.World.MaxX ? game.World.MaxX : max.X;
+			min.Y = min.Y < 0 ? 0 : min.Y; max.Y = max.Y > game.World.MaxY ? game.World.MaxY : max.Y;
+			min.Z = min.Z < 0 ? 0 : min.Z; max.Z = max.Z > game.World.MaxZ ? game.World.MaxZ : max.Z;
+			
+			for (int y = min.Y; y <= max.Y; y++)
+				for (int z = min.Z; z <= max.Z; z++)
+					for (int x = min.X; x <= max.X; x++)
 			{
-				BlockID block = game.World.SafeGetBlock(x, y, z);
+				BlockID block = game.World.GetBlock(x, y, z);
 				if (block == 0) continue;
 				byte collide = BlockInfo.Collide[block];
-				if (collide == CollideType.Solid && !checkSolid)
-					continue;
+				if (collide == CollideType.Solid && !checkSolid) continue;
 				
-				Vector3 min = new Vector3(x, y, z) + BlockInfo.MinBB[block];
-				Vector3 max = new Vector3(x, y, z) + BlockInfo.MaxBB[block];
-				AABB blockBB = new AABB(min, max);
+				Vector3 v = new Vector3(x, y, z);
+				blockBB.Min = v + BlockInfo.MinBB[block];
+				blockBB.Max = v + BlockInfo.MaxBB[block];
 				if (!blockBB.Intersects(bounds)) continue;
 				
 				modifier = Math.Min(modifier, BlockInfo.SpeedMultiplier[block]);

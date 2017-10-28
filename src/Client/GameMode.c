@@ -54,21 +54,24 @@ void GameMode_PickMiddle(BlockID old) {
 	if (Block_Draw[old] == DrawType_Gas) return;
 	if (!(Block_CanPlace[old] || Block_CanDelete[old])) return;
 	if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == old) return;
+	UInt32 i;
 
-	// Is the currently selected block an empty slot
+	/* Is the currently selected block an empty slot */
 	if (Inventory_Get(Inventory_SelectedIndex) == BlockID_Air) {
-		Inventory_SetSelectedBlock(old);
-		return;
+		Inventory_SetSelectedBlock(old); return;
 	}
 
-	/* Try to replace same block or empty slots first */
-	UInt32 i;
+	/* Try to replace same block */	
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-		if (Inventory_Get(i) != old && Inventory_Get(i) != BlockID_Air) continue;
+		if (Inventory_Get(i) != old) continue;
+		Inventory_SetSelectedIndex(i); return;
+	}
 
+	/* Try to replace empty slots */
+	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
+		if (Inventory_Get(i) != BlockID_Air) continue;
 		Inventory_Set(i, old);
-		Inventory_SetSelectedIndex(i);
-		return;
+		Inventory_SetSelectedIndex(i); return;
 	}
 
 	/* Finally, replace the currently selected block */

@@ -3,11 +3,14 @@
 #include "DisplayDevice.h"
 #include "ExtMath.h"
 #include "ErrorHandler.h"
+#include "Drawer2D.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
 HDC hdc;
+HBITMAP hbmp;
 HANDLE heap;
+
 void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
 	hdc = CreateCompatibleDC(NULL);
@@ -189,19 +192,15 @@ void Platform_MakeFont(FontDesc* desc) {
 	font.lfQuality   = ANTIALIASED_QUALITY;
 
 	desc->Handle = CreateFontIndirectA(&font);
-	if (desc->Handle == NULL) {
-		ErrorHandler_Fail("Creating font handle failed");
-	}
+	if (desc->Handle == NULL) ErrorHandler_Fail("Creating font handle failed");
 }
 
 void Platform_FreeFont(FontDesc* desc) {
-	if (!DeleteObject(desc->Handle)) {
-		ErrorHandler_Fail("Deleting font handle failed");
-	}
+	if (!DeleteObject(desc->Handle)) ErrorHandler_Fail("Deleting font handle failed");
 	desc->Handle = NULL;
 }
 
-Size2D Platform_MeasureText(DrawTextArgs* args) {
+Size2D Platform_MeasureText(struct DrawTextArgs_* args) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
@@ -209,9 +208,22 @@ Size2D Platform_MeasureText(DrawTextArgs* args) {
 	return Size2D_Make(r.right, r.bottom);
 }
 
-void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
+void Platform_DrawText(struct DrawTextArgs_* args, Int32 x, Int32 y) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
 		&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
+}
+
+void Platform_SetBitmap(struct Bitmap_* bmp) {
+	hbmp = CreateBitmap(bmp->Width, bmp->Height, 1, 32, bmp->Scan0);
+	if (hbmp == NULL) ErrorHandler_Fail("Creating bitmap handle failed");
+	/* TODO: Should we be using CreateDIBitmap here? */
+
+	if (!SelectObject(hdc, hbmp)) ErrorHandler_Fail("Selecting bitmap handle");
+}
+
+void Platform_ReleaseBitmap(struct Bitmap_* bmp) {
+	if (!DeleteObject(hbmp)) ErrorHandler_Fail("Deleting bitmap handle failed");
+	hbmp = NULL;
 }
