@@ -6,7 +6,7 @@
 
 bool Inventory_CanChangeSelected(void) {
 	if (!Inventory_CanChangeHeldBlock) {
-		game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
+		//game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
 		return false;
 	}
 	return true;
@@ -39,9 +39,9 @@ void Inventory_SetSelectedBlock(BlockID block) {
 	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 }
 
-bool Inventory_IsHackBlock(Int32 b) {
+bool Inventory_IsHackBlock(BlockID b) {
 	return b == BlockID_DoubleSlab || b == BlockID_Bedrock ||
-		b == BlockID_Grass || Block_IsLiquid((BlockID)b);
+		b == BlockID_Grass || Block_IsLiquid(b);
 }
 
 BlockID Inventory_DefaultMapping(Int32 i) {
@@ -51,7 +51,6 @@ BlockID Inventory_DefaultMapping(Int32 i) {
 	if (i >= BLOCK_CPE_COUNT || i == BlockID_Air) return BlockID_Invalid;
 #endif
 	if (!Game_ClassicMode) return (BlockID)i;
-	if (Game_PureClassic && Inventory_IsHackBlock(i)) return BlockID_Invalid;
 
 	if (i >= 25 && i <= 40) {
 		return (BlockID)(BlockID_Red + (i - 25));
@@ -100,6 +99,9 @@ void Inventory_SetDefaultMapping(void) {
 	}
 	for (i = 0; i < Array_NumElements(Inventory_Map); i++) {
 		BlockID mapping = Inventory_DefaultMapping(i);
+		if (Game_PureClassic && Inventory_IsHackBlock(mapping)) {
+			mapping = BlockID_Invalid;
+		}
 		if (mapping != i) Inventory_Map[i] = mapping;
 	}
 }

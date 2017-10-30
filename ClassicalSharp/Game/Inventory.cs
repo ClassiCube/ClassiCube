@@ -93,6 +93,7 @@ namespace ClassicalSharp {
 			for (int i = 0; i < Map.Length; i++) Map[i] = (BlockID)i;
 			for (int i = 0; i < Map.Length; i++) {
 				BlockID mapping = DefaultMapping(i);
+				if (game.PureClassic && IsHackBlock(mapping)) mapping = Block.Invalid;
 				if (mapping != i) Map[i] = mapping;
 			}
 		}
@@ -104,7 +105,6 @@ namespace ClassicalSharp {
 			if (i >= Block.CpeCount || i == Block.Air) return Block.Invalid;
 #endif
 			if (!game.ClassicMode) return (BlockID)i;
-			if (game.PureClassic && IsHackBlock(i)) return Block.Invalid;
 			
 			if (i >= 25 && i <= 40) {
 				return (BlockID)(Block.Red + (i - 25));
@@ -146,9 +146,9 @@ namespace ClassicalSharp {
 			return (BlockID)i;
 		}
 		
-		static bool IsHackBlock(int b) {
+		static bool IsHackBlock(BlockID b) {
 			return b == Block.DoubleSlab || b == Block.Bedrock ||
-				b == Block.Grass || BlockInfo.IsLiquid((BlockID)b);
+				b == Block.Grass || BlockInfo.IsLiquid(b);
 		}
 		
 		public void AddDefault(BlockID block) {
