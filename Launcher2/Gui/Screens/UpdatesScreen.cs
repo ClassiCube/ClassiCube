@@ -26,7 +26,7 @@ namespace Launcher.Gui.Screens {
 			widgets[view.relIndex].OnClick = UpdateStableD3D9;
 			widgets[view.relIndex + 1].OnClick = UpdateStableOpenGL;
 			widgets[view.devIndex].OnClick = UpdateDevD3D9;
-			widgets[view.devIndex + 1].OnClick = UpdateStableOpenGL;	
+			widgets[view.devIndex + 1].OnClick = UpdateDevOpenGL;	
 			widgets[view.backIndex].OnClick = SwitchToSettings;			
 			Resize();
 			
