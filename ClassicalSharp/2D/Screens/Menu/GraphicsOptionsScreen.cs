@@ -85,7 +85,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void MakeValidators() {
 			validators = new MenuInputValidator[] {
 				new EnumValidator(typeof(FpsLimitMethod)),
-				new IntegerValidator(16, 4096),
+				new IntegerValidator(8, 4096),
 				new BooleanValidator(),
 				
 				new EnumValidator(typeof(NameMode)),
