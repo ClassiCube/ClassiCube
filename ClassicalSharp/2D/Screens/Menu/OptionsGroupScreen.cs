@@ -33,13 +33,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[] {
-				Make(-1, -100, "Misc options", SwitchMiscOptions),
-				Make(-1, -50, "Gui options", SwitchGuiOptions),
-				Make(-1, 0, "Graphics options", SwitchGfxOptions),
-				Make(-1, 50, "Controls", SwitchControls),
-				Make(1, -50, "Hacks settings", SwitchHacksOptions),
-				Make(1, 0, "Env settings", SwitchEnvOptions),
-				Make(1, 50, "Nostalgia options", SwitchNostalgiaOptions),				
+				Make(-1, -100, "Misc options...",      SwitchMiscOptions),
+				Make(-1,  -50, "Gui options...",       SwitchGuiOptions),
+				Make(-1,    0, "Graphics options...",  SwitchGfxOptions),
+				Make(-1,   50, "Controls...",          SwitchControls),
+				Make( 1,  -50, "Hacks settings...",    SwitchHacksOptions),
+				Make( 1,    0, "Env settings...",      SwitchEnvOptions),
+				Make( 1,   50, "Nostalgia options...", SwitchNostalgiaOptions),				
 				MakeBack(false, titleFont, SwitchPause),
 			};
 			

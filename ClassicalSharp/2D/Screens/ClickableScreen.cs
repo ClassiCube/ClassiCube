@@ -50,7 +50,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected ButtonWidget MakeBack(bool toGame, Font font, SimpleClickHandler onClick) {
-			return MakeBack(200, toGame ? "Back to game" : "Back to menu", 25, font, onClick);
+			int width = game.UseClassicOptions ? 400 : 200;
+			return MakeBack(width, toGame ? "Back to game" : "Cancel", 25, font, onClick);
 		}
 		
 		protected ButtonWidget MakeBack(int width, string text, int y, Font font, SimpleClickHandler onClick) {

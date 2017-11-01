@@ -33,13 +33,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeNormal() {
 			widgets = new Widget[] {
-				Make(-1, -50, "Options", SwitchOptions),
-				Make(1, -50, "Generate level", SwitchGenLevel),
-				Make(1, 0, "Load level", SwitchLoadLevel),
-				Make(1, 50, "Save level", SwitchSaveLevel),
-				Make(-1, 0, "Select texture pack", SwitchTexPack),
+				Make(-1, -50, "Options...",             SwitchOptions),
+				Make( 1, -50, "Generate new level...",  SwitchGenLevel),
+				Make( 1,   0, "Load level...",          SwitchLoadLevel),
+				Make( 1,  50, "Save level...",          SwitchSaveLevel),
+				Make(-1,   0, "Change texture pack...", SwitchTexPack),
 				#if !ANDROID
-				Make(-1, 50, "Hotkeys", SwitchHotkeys),
+				Make(-1,  50, "Hotkeys...",             SwitchHotkeys),
 				#else
 				null,
 				#endif
@@ -53,18 +53,19 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeClassic() {
 			widgets = new Widget[] {
-				MakeClassic(0, -100, "Options", SwitchClassicOptions),
-				MakeClassic(0, -50, "Generate level", SwitchGenLevel),
-				MakeClassic(0, 0, "Load level", SwitchLoadLevel),
-				MakeClassic(0, 50, "Save level", SwitchSaveLevel),
-				MakeBack(400, "Back to game", 25, titleFont, SwitchGame),
+				MakeClassic(0, -100, "Options...",            SwitchClassicOptions),
+				MakeClassic(0,  -50, "Generate new level...", SwitchClassicGenLevel),
+				MakeClassic(0,    0, "Load level...",         SwitchLoadLevel),
+				MakeClassic(0,   50, "Save level...",         SwitchSaveLevel),
 				
 				game.ClassicMode ? null :
-					MakeClassic(0, 150, "Nostalgia options", SwitchNostalgiaOptions),
+					MakeClassic(0, 150, "Nostalgia options...", SwitchNostalgiaOptions),				
+				MakeBack(400, "Back to game", 25, titleFont, SwitchGame),
 			};
 		}
 		
 		static void SwitchGenLevel(Game g, Widget w) { g.Gui.SetNewScreen(new GenLevelScreen(g)); }
+		static void SwitchClassicGenLevel(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicGenLevelScreen(g)); }
 		static void SwitchLoadLevel(Game g, Widget w) { g.Gui.SetNewScreen(new LoadLevelScreen(g)); }
 		static void SwitchSaveLevel(Game g, Widget w) { g.Gui.SetNewScreen(new SaveLevelScreen(g)); }
 		static void SwitchTexPack(Game g, Widget w) { g.Gui.SetNewScreen(new TexturePackScreen(g)); }
