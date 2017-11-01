@@ -94,7 +94,7 @@ void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* h
 
 	ChunkPartInfo info;
 	info.VbId = Gfx_CreateVb(part->vertices, VertexFormat_P3fT2fC4b, vCount);
-	info.VerticesCount = vCount;
+	info.HasVertices = vCount > 0;
 
 	info.XMinCount = (UInt16)part->fCount[Face_XMin];
 	info.XMaxCount = (UInt16)part->fCount[Face_XMax];
@@ -102,7 +102,7 @@ void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* h
 	info.ZMaxCount = (UInt16)part->fCount[Face_ZMax];
 	info.YMinCount = (UInt16)part->fCount[Face_YMin];
 	info.YMaxCount = (UInt16)part->fCount[Face_YMax];
-	info.SpriteCount = part->sCount;
+	info.SpriteCountDiv4 = part->sCount >> 2;
 
 	*hasParts = true;
 	MapRenderer_PartsBuffer[partsIndex] = info;

@@ -82,6 +82,7 @@ void Gfx_Init(void) {
 }
 
 void Gfx_Free(void) {
+	GfxCommon_Free();
 	GLContext_Free();
 }
 
@@ -155,7 +156,7 @@ void Gfx_BindTexture(GfxResourceID texId) {
 void Gfx_DeleteTexture(GfxResourceID* texId) {
 	if (*texId <= 0) return;
 	glDeleteTextures(1, texId);
-	*texId = -1;
+	*texId = NULL;
 }
 
 void Gfx_SetTexturing(bool enabled) { GL_TOGGLE(GL_TEXTURE_2D); }
@@ -312,13 +313,13 @@ void Gfx_DeleteVb(GfxResourceID* vb) {
 	} else { 
 		glDeleteBuffers(1, vb); 
 	}
-	*vb = -1;
+	*vb = NULL;
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
 	if (gl_lists || *ib <= 0) return;
 	glDeleteBuffers(1, ib);
-	*ib = -1;
+	*ib = NULL;
 }
 
 

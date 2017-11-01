@@ -10,25 +10,21 @@
 
 /* Describes a portion of the data needed for rendering a chunk. */
 typedef struct ChunkPartInfo_ {
-	Int32 VbId, VerticesCount, SpriteCount;
-	UInt16 XMinCount, XMaxCount, ZMinCount,
-		ZMaxCount, YMinCount, YMaxCount;
+	GfxResourceID VbId;
+	UInt16 HasVertices;     /* Does this chunk have any vertices at all? */
+	UInt16 SpriteCountDiv4; /* Sprite vertices count, divided by 4 */
+	UInt16 XMinCount, XMaxCount, ZMinCount, ZMaxCount, YMinCount, YMaxCount; /* Counts per face */
 } ChunkPartInfo;
 
 /* Describes data necessary for rendering a chunk. */
-typedef struct ChunkInfo_ {
-	/* Centre coordinates of the chunk. */
-	UInt16 CentreX, CentreY, CentreZ;
+typedef struct ChunkInfo_ {	
+	UInt16 CentreX, CentreY, CentreZ; /* Centre coordinates of the chunk */
 
-	/* Whether chunk is visibile to the player. */
-	UInt8 Visible : 1;
-	/* Whether the chunk is empty of data. */
-	UInt8 Empty : 1;
-	/* Whether chunk is pending deletion.*/
-	UInt8 PendingDelete : 1;
-	/* Whether chunk is completely air. */
-	UInt8 AllAir : 1;
-	UInt8 : 0; /* pad to next byte*/
+	UInt8 Visible : 1;       /* Whether chunk is visibile to the player */
+	UInt8 Empty : 1;         /* Whether the chunk is empty of data */
+	UInt8 PendingDelete : 1; /* Whether chunk is pending deletion*/	
+	UInt8 AllAir : 1;        /* Whether chunk is completely air */
+	UInt8 : 0;               /* pad to next byte*/
 
 	UInt8 DrawXMin : 1;
 	UInt8 DrawXMax : 1;
@@ -36,7 +32,7 @@ typedef struct ChunkInfo_ {
 	UInt8 DrawZMax : 1;
 	UInt8 DrawYMin : 1;
 	UInt8 DrawYMax : 1;
-	UInt8 : 0; /* pad to next byte */
+	UInt8 : 0;          /* pad to next byte */
 #if OCCLUSION
 	public bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;

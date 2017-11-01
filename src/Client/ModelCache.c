@@ -64,7 +64,7 @@ void ModelCache_RegisterTexture(STRING_REF const UInt8* texName) {
 	if (ModelCache_texCount < MODELCACHE_MAX_MODELS) {
 		CachedTexture tex;
 		tex.Name = String_FromReadonly(texName);
-		tex.TexID = -1;
+		tex.TexID = NULL;
 		ModelCache_Textures[ModelCache_texCount] = tex;
 		ModelCache_texCount++;
 	} else {

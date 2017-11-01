@@ -47,8 +47,6 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 
 void Entity_Init(Entity* entity) {
 	entity->ModelScale = Vector3_Create1(1.0f);
-	entity->TextureId = -1;
-	entity->MobTextureId = -1;
 	entity->uScale = 1.0f;
 	entity->vScale = 1.0f;
 	UInt8* ptr = entity->ModelNameBuffer;
@@ -125,7 +123,7 @@ void Entity_SetModel(Entity* entity, STRING_TRANSIENT String* model) {
 
 	entity->Model = ModelCache_Get(&entity->ModelName);
 	Entity_ParseScale(entity, scale);
-	entity->MobTextureId = -1;
+	entity->MobTextureId = NULL;
 
 	entity->Model->RecalcProperties(entity);
 	Entity_UpdateModelBounds(entity);

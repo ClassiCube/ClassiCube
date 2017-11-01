@@ -39,26 +39,6 @@ MatrixStack viewStack, projStack, texStack;
 DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
 
-/* We only ever create a single index buffer internally. */
-#define d3d9_iBuffersExpSize 2
-IDirect3DIndexBuffer9* d3d9_default_iBuffers[d3d9_iBuffersExpSize];
-Int32 d3d9_ibuffersCapacity = d3d9_iBuffersExpSize;
-IDirect3DIndexBuffer9** d3d9_iBuffers;
-
-/* TODO: This number's probably not big enough... */
-#define d3d9_vBuffersExpSize 2048
-IDirect3DVertexBuffer9* d3d9_default_vBuffers[d3d9_vBuffersExpSize];
-Int32 d3d9_vbuffersCapacity = d3d9_vBuffersExpSize;
-IDirect3DVertexBuffer9** d3d9_vBuffers;
-
-/* At most we can have 256 entities with their own texture each.
-Adding another 128 gives us a lot of leeway. */
-#define d3d9_texturesExpSize 384
-IDirect3DTexture9* d3d9_default_textures[d3d9_texturesExpSize];
-Int32 d3d9_texturesCapacity = d3d9_texturesExpSize;
-IDirect3DTexture9** d3d9_textures;
-
-
 #define D3D9_SetRenderState(raw, state, name) \
 ReturnCode hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
 ErrorHandler_CheckOrFail(hresult, name)
@@ -68,71 +48,28 @@ hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
 ErrorHandler_CheckOrFail(hresult, name)
 
 #define D3D9_LogLeakedResource(msg, i) \
-logMsg.length = 0;\
+String_Clear(&logMsg);\
 String_AppendConst(&logMsg, msg);\
 String_AppendInt32(&logMsg, i);\
-Platform_Log(logMsg);
+Platform_Log(&logMsg);
 
 
 /* Forward declarations for these two functions. */
 static void D3D9_SetDefaultRenderStates(void);
 static void D3D9_RestoreRenderStates(void);
 
-void D3D9_FreeResource(void* resource, GfxResourceID id) {
+void D3D9_FreeResource(GfxResourceID* resource) {
+	if (resource == NULL) return;
 	IUnknown* unk = (IUnknown*)resource;
 	UInt32 refCount = unk->lpVtbl->Release(unk);
+	*resource = NULL;
 	if (refCount <= 0) return;
 
 	UInt8 logMsgBuffer[String_BufferSize(127)];
 	String logMsg = String_FromRawBuffer(logMsgBuffer, 127);
 	String_AppendConst(&logMsg, "D3D9 Resource has outstanding references! ID: ");
 	String_AppendInt32(&logMsg, id);
-	Platform_Log(logMsg);
-}
-
-void D3D9_DeleteResource(void** resources, Int32 capacity, GfxResourceID* id) {
-	GfxResourceID resourceID = *id;
-	if (resourceID <= 0 || resourceID >= capacity) return;
-
-	void* value = resources[resourceID];
-	*id = -1;
-	if (value == NULL) return;
-
-	resources[resourceID] = NULL;
-	D3D9_FreeResource(value, resourceID);
-}
-
-/* TODO: I have no clue if this even works. */
-GfxResourceID D3D9_GetOrExpand(void*** resourcesPtr, Int32* capacity, void* resource, Int32 expSize) {
-	GfxResourceID i;
-	void** resources = *resourcesPtr;
-	for (i = 1; i < *capacity; i++) {
-		if (resources[i] == NULL) {
-			resources[i] = resource;
-			return i;
-		}
-	}
-
-	/* Otherwise resize and add more elements */
-	GfxResourceID oldLength = *capacity;
-	(*capacity) += expSize;
-
-	/* Allocate resized pointers table */
-	void** newResources = Platform_MemAlloc(*capacity * sizeof(void*));
-	if (newResources == NULL) {
-		ErrorHandler_Fail("D3D9 - failed to resize pointers table");
-	}
-	*resourcesPtr = newResources;
-
-	/* Update elements in new table */
-	for (i = 0; i < oldLength; i++) {
-		newResources[i] = resources[i];
-	}
-	/* Free old allocated memory if necessary */
-	if (oldLength != expSize) Platform_MemFree(resources);
-
-	newResources[oldLength] = resource;
-	return oldLength;
+	Platform_Log(&logMsg);
 }
 
 void D3D9_LoopUntilRetrieved(void) {
@@ -213,10 +150,6 @@ void Gfx_Init(void) {
 	D3D9_GetPresentArgs(640, 480, &args);
 	ReturnCode res;
 
-	d3d9_iBuffers = d3d9_default_iBuffers;
-	d3d9_vBuffers = d3d9_default_vBuffers;
-	d3d9_textures = d3d9_default_textures;
-
 	/* Try to create a device with as much hardware usage as possible. */
 	res = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, winHandle, createFlags, &args, &device);
 	if (!ErrorHandler_Check(res)) {
@@ -243,43 +176,8 @@ void Gfx_Init(void) {
 }
 
 void Gfx_Free(void) {
-	UInt8 logMsgBuffer[String_BufferSize(63)];
-	String logMsg = String_FromRawBuffer(logMsgBuffer, 63);
 	GfxCommon_Free();
-
-	Int32 i;
-	for (i = 0; i < d3d9_texturesCapacity; i++) {
-		if (d3d9_textures[i] == NULL) continue;
-		GfxResourceID texId = i;
-		Gfx_DeleteTexture(&texId);
-		D3D9_LogLeakedResource("Texture leak! ID: ", i);
-	}
-
-	for (i = 0; i < d3d9_vbuffersCapacity; i++) {
-		if (d3d9_vBuffers[i] == NULL) continue;
-		GfxResourceID vb = i;
-		Gfx_DeleteVb(&vb);
-		D3D9_LogLeakedResource("Vertex buffer leak! ID: ", i);
-	}
-
-	for (i = 0; i < d3d9_ibuffersCapacity; i++) {
-		if (d3d9_iBuffers[i] == NULL) continue;
-		GfxResourceID ib = i;
-		Gfx_DeleteIb(&ib);
-		D3D9_LogLeakedResource("Index buffer leak! ID: ", i);
-	}
-
-	if (d3d9_ibuffersCapacity != d3d9_iBuffersExpSize) {
-		Platform_MemFree(d3d9_iBuffers);
-	}
-	if (d3d9_vbuffersCapacity != d3d9_vBuffersExpSize) {
-		Platform_MemFree(d3d9_vBuffers);
-	}
-	if (d3d9_texturesCapacity != d3d9_texturesExpSize) {
-		Platform_MemFree(d3d9_textures);
-	}
 }
-
 
 void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 lvl) {
 	D3DLOCKED_RECT rect;
@@ -372,25 +270,23 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 
 		hresult = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)texture);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture - Update");
-		D3D9_FreeResource(sys, 0);
+		D3D9_FreeResource((GfxResourceID*)sys);
 	}
-	return D3D9_GetOrExpand(&d3d9_textures, &d3d9_texturesCapacity, texture, d3d9_texturesExpSize);
+	return texture;
 }
 
 void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps) {
-	IDirect3DTexture9* texture = d3d9_textures[texId];
+	IDirect3DTexture9* texture = (IDirect3DTexture9*)texId;
 	D3D9_SetTexturePartData(texture, x, y, part, 0);
 	if (mipmaps) D3D9_DoMipmaps(texture, x, y, part, true);
 }
 
 void Gfx_BindTexture(GfxResourceID texId) {
-	ReturnCode hresult = IDirect3DDevice9_SetTexture(device, 0, (IDirect3DBaseTexture9*)d3d9_textures[texId]);
+	ReturnCode hresult = IDirect3DDevice9_SetTexture(device, 0, (IDirect3DBaseTexture9*)texId);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_BindTexture");
 }
 
-void Gfx_DeleteTexture(GfxResourceID* texId) {
-	D3D9_DeleteResource((void**)d3d9_textures, d3d9_texturesCapacity, texId);
-}
+void Gfx_DeleteTexture(GfxResourceID* texId) { D3D9_FreeResource(texId); }
 
 void Gfx_SetTexturing(bool enabled) {
 	if (enabled) return;
@@ -553,7 +449,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) 
 		d3d9_formatMappings[vertexFormat], D3DPOOL_DEFAULT, &vbuffer, NULL);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateDynamicVb");
 
-	return D3D9_GetOrExpand(&d3d9_vBuffers, &d3d9_vbuffersCapacity, vbuffer, d3d9_vBuffersExpSize);
+	return vbuffer;
 }
 
 void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg, Int32 lockFlags) {
@@ -574,7 +470,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 coun
 	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateVb");
 
 	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_CreateVb - Lock", "D3D9_CreateVb - Unlock", 0);
-	return D3D9_GetOrExpand(&d3d9_vBuffers, &d3d9_vbuffersCapacity, vbuffer, d3d9_vBuffersExpSize);
+	return vbuffer;
 }
 
 void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg) {
@@ -595,27 +491,24 @@ GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateIb");
 
 	D3D9_SetIbData(ibuffer, indices, size, "D3D9_CreateIb - Lock", "D3D9_CreateIb - Unlock");
-	return D3D9_GetOrExpand(&d3d9_iBuffers, &d3d9_ibuffersCapacity, ibuffer, d3d9_iBuffersExpSize);
+	return ibuffer;
 }
 
 Int32 d3d9_batchStride;
 void Gfx_BindVb(GfxResourceID vb) {
-	ReturnCode hresult = IDirect3DDevice9_SetStreamSource(device, 0, d3d9_vBuffers[vb], 0, d3d9_batchStride);
+	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
+	ReturnCode hresult = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, d3d9_batchStride);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_BindVb");
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
-	ReturnCode hresult = IDirect3DDevice9_SetIndices(device, d3d9_iBuffers[ib]);
+	IDirect3DIndexBuffer9* ibuffer = (IDirect3DIndexBuffer9*)ib;
+	ReturnCode hresult = IDirect3DDevice9_SetIndices(device, ibuffer);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_BindIb");
 }
 
-void Gfx_DeleteVb(GfxResourceID* vb) {
-	D3D9_DeleteResource((void**)d3d9_vBuffers, d3d9_vbuffersCapacity, vb);
-}
-
-void Gfx_DeleteIb(GfxResourceID* ib) {
-	D3D9_DeleteResource((void**)d3d9_iBuffers, d3d9_ibuffersCapacity, ib);
-}
+void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
+void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
 
 VertexFormat d3d9_batchFormat = -1;
 void Gfx_SetBatchFormat(VertexFormat format) {
@@ -629,7 +522,7 @@ void Gfx_SetBatchFormat(VertexFormat format) {
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 	Int32 size = vCount * d3d9_batchStride;
-	IDirect3DVertexBuffer9* vbuffer = d3d9_vBuffers[vb];
+	IDirect3DVertexBuffer9* vbuffer = (IDirect3DVertexBuffer9*)vb;
 	D3D9_SetVbData(vbuffer, vertices, size, "D3D9_SetDynamicVbData - Lock", "D3D9_SetDynamicVbData - Unlock", D3DLOCK_DISCARD);
 
 	ReturnCode hresult = IDirect3DDevice9_SetStreamSource(device, 0, vbuffer, 0, d3d9_batchStride);

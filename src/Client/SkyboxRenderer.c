@@ -12,7 +12,7 @@
 #include "EnvRenderer.h"
 #include "ExtMath.h"
 
-GfxResourceID skybox_tex, skybox_vb = -1;
+GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
 
 bool SkyboxRenderer_ShouldRender(void) {
@@ -36,7 +36,7 @@ void SkyboxRenderer_FileChanged(Stream* src) {
 }
 
 void SkyboxRenderer_Render(Real64 deltaTime) {
-	if (skybox_vb == -1) return;
+	if (skybox_vb == 0) return;
 	Gfx_SetDepthWrite(false);
 	Gfx_SetTexturing(false);
 	Gfx_BindTexture(skybox_tex);

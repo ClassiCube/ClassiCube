@@ -131,7 +131,7 @@ Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow) {
 Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 windowY) {
 	Size2D size = Drawer2D_MeasureText(args);
 	if (Size2D_Equals(size, Size2D_Empty)) {
-		return Texture_FromOrigin(-1, windowX, windowY, 0, 0, 1.0f, 1.0f);
+		return Texture_FromOrigin(NULL, windowX, windowY, 0, 0, 1.0f, 1.0f);
 	}
 
 	Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);

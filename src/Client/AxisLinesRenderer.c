@@ -9,7 +9,7 @@
 #include "Player.h"
 #include "Events.h"
 
-GfxResourceID axisLines_vb = -1;
+GfxResourceID axisLines_vb;
 #define axisLines_numVertices 12
 #define axisLines_size (1.0f / 32.0f)
 #define axisLines_length 3.0f
@@ -37,7 +37,7 @@ IGameComponent AxisLinesRenderer_MakeGameComponent(void) {
 void AxisLinesRenderer_Render(Real64 delta) {
 	if (!Game_ShowAxisLines || Gfx_LostContext) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
-	if (axisLines_vb == -1) {
+	if (axisLines_vb == NULL) {
 		axisLines_vb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, axisLines_numVertices);
 	}
 

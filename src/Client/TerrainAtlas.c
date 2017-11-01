@@ -12,7 +12,7 @@ void Atlas2D_UpdateState(Bitmap bmp) {
 	Block_RecalculateSpriteBB();
 }
 
-Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
+GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
 	Int32 size = Atlas2D_ElementSize;
 	Int32 x = texLoc % ATLAS2D_ELEMENTS_PER_ROW, y = texLoc / ATLAS2D_ELEMENTS_PER_ROW;
 	Bitmap_CopyBlock(x * size, y * size, 0, 0,
@@ -21,14 +21,14 @@ Int32 Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
 	return Gfx_CreateTexture(element, true, Gfx_Mipmaps);
 }
 
-Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc) {
+GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 	Int32 size = Atlas2D_ElementSize;
 	Bitmap element;
 
 	/* Try to allocate bitmap on stack if possible */
 	if (size > 64) {
 		Bitmap_Allocate(&element, size, size);
-		Int32 texId = Atlas2D_LoadTextureElement_Raw(texLoc, &element);
+		GfxResourceID texId = Atlas2D_LoadTextureElement_Raw(texLoc, &element);
 		Platform_MemFree(element.Scan0);
 		return texId;
 	} else {

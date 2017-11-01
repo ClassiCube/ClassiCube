@@ -45,14 +45,14 @@ void MapRenderer_CheckWeather(Real64 deltaTime) {
 	Gfx_SetAlphaBlending(false);
 }
 
-void MapRenderer_RenderNormalBatch(Int32 batch) {
-	Int32 i;
+void MapRenderer_RenderNormalBatch(UInt32 batch) {
+	UInt32 i;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (info->NormalParts == NULL) continue;
 
 		ChunkPartInfo part = info->NormalParts[batch];
-		if (part.VerticesCount == 0) continue;
+		if (!part.HasVertices) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
 		Gfx_BindVb(part.VbId);
@@ -63,7 +63,7 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 		bool drawZMin = info->DrawZMin && part.ZMinCount > 0;
 		bool drawZMax = info->DrawZMax && part.ZMaxCount > 0;
 
-		Int32 offset = part.SpriteCount;
+		UInt32 offset = part.SpriteCountDiv4 << 2;
 		if (drawXMin && drawXMax) {
 			Gfx_SetFaceCulling(true);
 			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMinCount + part.XMaxCount, offset);
@@ -106,8 +106,8 @@ void MapRenderer_RenderNormalBatch(Int32 batch) {
 			Game_Vertices += part.YMaxCount;
 		}
 
-		if (part.SpriteCount == 0) continue;
-		Int32 count = part.SpriteCount / 4; /* 4 per sprite */
+		if (part.SpriteCountDiv4 == 0) continue;
+		UInt32 count = part.SpriteCountDiv4; /* 4 per sprite */
 		Gfx_SetFaceCulling(true);
 		if (info->DrawXMax || info->DrawZMin) {
 			Gfx_DrawIndexedVb_TrisT2fC4b(count, 0); Game_Vertices += count;
@@ -131,7 +131,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
-	Int32 batch;
+	UInt32 batch;
 	Gfx_EnableMipmaps();
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_NormalPartsCount[batch] <= 0) continue;
@@ -151,14 +151,14 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 #endif
 }
 
-void MapRenderer_RenderTranslucentBatch(Int32 batch) {
-	Int32 i;
+void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
+	UInt32 i;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (info->TranslucentParts == NULL) continue;
 
 		ChunkPartInfo part = info->TranslucentParts[batch];
-		if (part.VerticesCount == 0) continue;
+		if (!part.HasVertices) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 
 		Gfx_BindVb(part.VbId);
@@ -169,7 +169,7 @@ void MapRenderer_RenderTranslucentBatch(Int32 batch) {
 		bool drawZMin = (inTranslucent || info->DrawZMin) && part.ZMinCount > 0;
 		bool drawZMax = (inTranslucent || info->DrawZMax) && part.ZMaxCount > 0;
 
-		Int32 offset = part.SpriteCount;
+		UInt32 offset = 0;
 		if (drawXMin && drawXMax) {
 			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMinCount + part.XMaxCount, offset);
 			Game_Vertices += (part.XMinCount + part.XMaxCount);
@@ -217,7 +217,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 	Gfx_SetAlphaBlending(false);
 	Gfx_SetColourWrite(false);
 
-	Int32 batch;
+	UInt32 batch;
 	for (batch = 0; batch < MapRenderer_1DUsedCount; batch++) {
 		if (MapRenderer_TranslucentPartsCount[batch] <= 0) continue;
 		if (MapRenderer_HasTranslucentParts[batch] || MapRenderer_CheckingTranslucentParts[batch]) {

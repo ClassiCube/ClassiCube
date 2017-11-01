@@ -20,7 +20,7 @@ Int32 Atlas2D_ElementSize;
 /* Updates the underlying atlas bitmap, fields, and texture. */
 void Atlas2D_UpdateState(Bitmap bmp);
 /* Creates a native texture that contains the tile at the specified index. */
-Int32 Atlas2D_LoadTextureElement(TextureLoc texLoc);
+GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc);
 /* Disposes of the underlying atlas bitmap. */
 void Atlas2D_Free(void);
 
@@ -34,7 +34,7 @@ Int32 Atlas1D_ElementsPerBitmap;
 /* Size of a texture coord V for an element in a 1D atlas. */
 Real32 Atlas1D_InvElementSize;
 /* Native texture ID for each 1D atlas. */
-Int32 Atlas1D_TexIds[ATLAS1D_MAX_ATLASES_COUNT];
+GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES_COUNT];
 /* Number of 1D atlases that actually have textures / are used. */
 Int32 Atlas1D_Count;
 /* Retrieves the 1D texture rectangle and 1D atlas index of the given texture. */

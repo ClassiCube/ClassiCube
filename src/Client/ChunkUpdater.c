@@ -314,7 +314,7 @@ if (parts != NULL) {\
 	ChunkPartInfo* ptr = parts;\
 	for (i = 0; i < cu_atlas1DCount; i++) {\
 		Gfx_DeleteVb(&ptr->VbId);\
-		if (ptr->VerticesCount > 0) {partsCount[i]--; }\
+		if (ptr->HasVertices) { partsCount[i]--; }\
 		ptr += MapRenderer_ChunksCount;\
 	}\
 }
@@ -335,7 +335,7 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
 if (parts != NULL) {\
 	ChunkPartInfo* ptr = parts;\
 	for (i = 0; i < cu_atlas1DCount; i++) {\
-		if (ptr->VerticesCount > 0) { partsCount[i]++; }\
+		if (ptr->HasVertices) { partsCount[i]++; }\
 		ptr += MapRenderer_ChunksCount;\
 	}\
 }

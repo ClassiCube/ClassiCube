@@ -13,7 +13,7 @@
 #include "Funcs.h"
 #include "Utils.h"
 
-GfxResourceID borders_sidesVb = -1, borders_edgesVb = -1;
+GfxResourceID borders_sidesVb, borders_edgesVb;
 GfxResourceID borders_edgeTexId, borders_sideTexId;
 Int32 borders_sidesVertices, borders_edgesVertices;
 bool borders_fullBrightSides, borders_fullBrightEdge;
@@ -23,7 +23,7 @@ TextureLoc borders_lastEdgeTexLoc, borders_lastSideTexLoc;
 
 /* Avoid code duplication in sides and edge rendering */
 #define BordersRenderer_SetupState(block, texId, vb) \
-if (vb == -1) { return; }\
+if (vb == NULL) { return; }\
 \
 Gfx_SetTexturing(true);\
 GfxCommon_SetupAlphaState(Block_Draw[block]);\
@@ -46,7 +46,7 @@ void BordersRenderer_RenderSides(Real64 delta) {
 }
 
 void BordersRenderer_RenderEdges(Real64 delta) {
-	if (borders_edgesVb == -1) return;
+	if (borders_edgesVb == NULL) return;
 	BlockID block = WorldEnv_EdgeBlock;
 	BordersRenderer_SetupState(block, borders_sideTexId, borders_sidesVb);
 

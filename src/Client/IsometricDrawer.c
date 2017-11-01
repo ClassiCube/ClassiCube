@@ -11,7 +11,7 @@
 Int32 iso_count;
 Real32 iso_scale;
 VertexP3fT2fC4b* iso_vertices;
-Int32 iso_vb;
+GfxResourceID iso_vb;
 
 bool iso_cacheInitalisesd;
 PackedCol iso_colNormal, iso_colXSide, iso_colZSide, iso_colYBottom;

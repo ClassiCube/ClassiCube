@@ -12,8 +12,8 @@
 #include "Events.h"
 #include "Utils.h"
 
-GfxResourceID env_cloudsVb = -1, env_skyVb = -1, env_cloudsTex = -1;
-GfxResourceID env_cloudVertices, env_skyVertices;
+GfxResourceID env_cloudsVb, env_skyVb, env_cloudsTex;
+Int32 env_cloudVertices, env_skyVertices;
 
 Real32 EnvRenderer_BlendFactor(Real32 x) {
 	/* return -0.05 + 0.22 * (Math_LogE(x) * 0.25f); */
@@ -140,7 +140,7 @@ void EnvRenderer_Render(Real64 deltaTime) {
 	if (EnvRenderer_Minimal) {
 		EnvRenderer_RenderMinimal(deltaTime);
 	} else {
-		if (env_skyVb == -1 || env_cloudsVb == -1) return;
+		if (env_skyVb == 0 || env_cloudsVb == 0) return;
 		if (!SkyboxRenderer_ShouldRender()) {
 			EnvRenderer_RenderSky(deltaTime);
 			EnvRenderer_RenderClouds(deltaTime);
