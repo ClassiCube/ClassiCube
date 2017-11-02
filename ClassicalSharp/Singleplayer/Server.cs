@@ -40,10 +40,15 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		char lastCol = '\0';
-		public override void SendChat(string text, bool partial) {
-			if (!String.IsNullOrEmpty(text))
-				AddChat(text);
-			if (!partial) lastCol = '\0';
+		public override void SendChat(string text) {
+			if (String.IsNullOrEmpty(text)) return;
+			lastCol = '\0';
+			
+			while (text.Length > Utils.StringLength) {
+				AddChat(text.Substring(0, Utils.StringLength));
+				text = text.Substring(Utils.StringLength);
+			}
+			AddChat(text);
 		}
 		
 		void AddChat(string text) {

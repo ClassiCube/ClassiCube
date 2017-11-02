@@ -42,7 +42,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		internal void CheckSendWomID() {
 			if (sendWomId && !sentWomId) {
-				net.SendChat("/womid WoMClient-2.0.7", false);
+				net.SendChat("/womid WoMClient-2.0.7");
 				sentWomId = true;
 			}
 		}

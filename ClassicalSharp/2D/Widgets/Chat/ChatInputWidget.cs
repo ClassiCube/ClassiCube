@@ -21,7 +21,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		int typingLogPos;
 		string originalText;
 		
-		public override int UsedLines { 
+		public override int UsedLines {
 			get { return !game.ClassicMode && game.Server.SupportsPartialMessages ? 3 : 1; }
 		}
 		
@@ -48,7 +48,12 @@ namespace ClassicalSharp.Gui.Widgets {
 
 		
 		public override void EnterInput() {
-			SendChat();
+			if (!Text.Empty) {
+				// Don't want trailing spaces in output message
+				string allText = new String(Text.value, 0, Text.TextLength);
+				game.Chat.Send(allText);
+			}
+			
 			originalText = null;
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.
 			
@@ -56,53 +61,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			game.Chat.Add(null, MessageType.ClientStatus3);
 			base.EnterInput();
 		}
-		
-		
-		void SendChat() {
-			if (Text.Empty) return;
-			// Don't want trailing spaces in output message
-			string allText = new String(Text.value, 0, Text.TextLength);
-			game.Chat.InputLog.Add(allText);
-			
-			if (game.Server.SupportsPartialMessages) {
-				SendWithPartial(allText);
-			} else {
-				SendNormal();
-			}
-		}
-		
-		void SendWithPartial(string allText) {
-			// don't automatically word wrap the message.
-			while (allText.Length > Utils.StringLength) {
-				game.Chat.Send(allText.Substring(0, Utils.StringLength), true);
-				allText = allText.Substring(Utils.StringLength);
-			}
-			game.Chat.Send(allText, false);
-		}
-		
-		void SendNormal() {
-			int packetsCount = 0;
-			for (int i = 0; i < lines.Length; i++) {
-				if (lines[i] == null) break;
-				packetsCount++;
-			}
-			
-			// split up into both partial and final packet.
-			for (int i = 0; i < packetsCount - 1; i++)
-				SendNormalText(i, true);
-			SendNormalText(packetsCount - 1, false);
-		}
-		
-		void SendNormalText(int i, bool partial) {
-			string text = lines[i];
-			char lastCol = i == 0 ? 'f' : GetLastColour(0, i); // no previous colour on first line
-			// TODO: this needs to be better, in case second/third line starts with a colour code
-			
-			if (!IDrawer2D.IsWhiteCol(lastCol))
-				text = "&" + lastCol + text;
-			game.Chat.Send(text, partial);
-		}
-		
 		
 		#region Input handling
 		

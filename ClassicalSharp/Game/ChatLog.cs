@@ -30,15 +30,15 @@ namespace ClassicalSharp {
 		/// <summary> List of chat messages sent by the user to the server. </summary>
 		public List<string> InputLog = new List<string>();
 		
-		public void Send(string text, bool partial) {
-			text = text.TrimEnd(trimChars);
+		public void Send(string text) {
 			if (String.IsNullOrEmpty(text)) return;
 			
+			InputLog.Add(text);
 			if (game.CommandList.IsCommandPrefix(text)) {
 				game.CommandList.Execute(text);
-				return;
+			} else {
+				game.Server.SendChat(text);
 			}
-			game.Server.SendChat(text, partial);
 		}
 		
 		static char[] trimChars = new char[] { ' ', '\0' };
@@ -91,10 +91,10 @@ namespace ClassicalSharp {
 		}
 		
 		static bool Allowed(char c) {
-			return 
-				c == '{' || c == '}' || 
-				c == '[' || c == ']' || 
-				c == '(' || c == ')' ||				
+			return
+				c == '{' || c == '}' ||
+				c == '[' || c == ']' ||
+				c == '(' || c == ')' ||
 				(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
 				(c >= 'A' && c <= 'Z');
 		}

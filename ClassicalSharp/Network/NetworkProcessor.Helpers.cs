@@ -10,9 +10,15 @@ namespace ClassicalSharp.Network {
 		
 		internal bool addEntityHack = true;
 		
-		public override void SendChat(string text, bool partial) {
+		public override void SendChat(string text) {
 			if (String.IsNullOrEmpty(text)) return;
-			classic.WriteChat(text, partial);
+			
+			while (text.Length > Utils.StringLength) {
+				classic.WriteChat(text.Substring(0, Utils.StringLength), true);
+				SendPacket();
+				text = text.Substring(Utils.StringLength);
+			}
+			classic.WriteChat(text, false);
 			SendPacket();
 		}
 		
@@ -55,7 +61,7 @@ namespace ClassicalSharp.Network {
 				game.LocalPlayer.fetchedSkin = false;
 				
 				game.LocalPlayer.DisplayName = displayName;
-				game.LocalPlayer.SkinName = skinName;				
+				game.LocalPlayer.SkinName = skinName;
 				game.LocalPlayer.UpdateName();
 			}
 			
@@ -71,7 +77,7 @@ namespace ClassicalSharp.Network {
 		
 		internal void RemoveEntity(byte id) {
 			Entity entity = game.Entities.List[id];
-			if (entity == null) return;			
+			if (entity == null) return;
 			if (id != EntityList.SelfID) game.Entities.RemoveEntity(id);
 			
 			// See comment about some servers in HandleAddEntity

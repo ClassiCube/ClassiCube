@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 		/// <summary> Opens a connection to the given IP address and port, and prepares the initial state of the client. </summary>
 		public abstract void Connect(IPAddress address, int port);
 		
-		public abstract void SendChat(string text, bool partial);
+		public abstract void SendChat(string text);
 		
 		/// <summary> Informs the server of the client's current position and orientation. </summary>
 		public abstract void SendPosition(Vector3 pos, float rotY, float headX);
