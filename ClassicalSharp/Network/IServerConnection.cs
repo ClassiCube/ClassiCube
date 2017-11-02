@@ -168,8 +168,8 @@ namespace ClassicalSharp {
 		}
 
 		void ResetPlayerPosition() {
-			float x = (game.World.Width  / 2) + 0.5f;
-			float z = (game.World.Length / 2) + 0.5f;
+			float x = ((float)game.World.Width  / 2) + 0.5f;
+			float z = ((float)game.World.Length / 2) + 0.5f;
 			Vector3 spawn = Respawn.FindSpawnPosition(game, x, z, game.LocalPlayer.Size);
 			
 			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, 0, 0, false);

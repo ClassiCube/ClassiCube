@@ -67,14 +67,14 @@ namespace ClassicalSharp.Gui.Widgets {
 				// We want to always draw the selected block on top of others
 				if (i == SelectedIndex) continue;
 				drawer.DrawBatch(Elements[i], blockSize * 0.7f / 2f,
-				                 x + blockSize / 2, y + blockSize / 2);
+				                 (float)(x + blockSize) / 2, (float)(y + blockSize) / 2);
 			}
 			
 			if (SelectedIndex != -1) {
 				int x, y;
 				GetCoords(SelectedIndex, out x, out y);
 				drawer.DrawBatch(Elements[SelectedIndex], (blockSize + selBlockExpand) * 0.7f / 2,
-				                 x + blockSize / 2, y + blockSize / 2);
+                                 (float)(x + blockSize) / 2, (float)(y + blockSize) / 2);
 			}
 			drawer.EndBatch();
 			
