@@ -11,6 +11,8 @@ HDC hdc;
 HBITMAP hbmp;
 HANDLE heap;
 
+UInt8* Platform_NewLine = "\r\n";
+
 void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
 	hdc = CreateCompatibleDC(NULL);

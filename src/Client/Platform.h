@@ -8,6 +8,9 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
+/* Newline for text */
+extern UInt8* Platform_NewLine;
+
 /* Initalises required state for this platform. */
 void Platform_Init(void);
 /* Releases the resources allocated for the required state. */
@@ -59,7 +62,7 @@ void Platform_ThreadSleep(UInt32 milliseconds);
 struct DrawTextArgs_;
 struct Bitmap_;
 /* Allocates handle for the given font. */
-void Platform_MakeFont(FontDesc* desc);
+void Platform_MakeFont(FontDesc* desc, STRING_TRANSIENT String* fontName);
 /* Frees handle for the given font. */
 void Platform_FreeFont(FontDesc* desc);
 /* Measures size of given text.*/
@@ -69,5 +72,5 @@ void Platform_DrawText(struct DrawTextArgs_* args, Int32 x, Int32 y);
 /* Sets the bitmap used for text drawing. */
 void Platform_SetBitmap(struct Bitmap_* bmp);
 /* Releases the bitmap that was used for text drawing.*/
-void Platform_ReleaseBitmap(struct Bitmap_* bmp);
+void Platform_ReleaseBitmap(void);
 #endif

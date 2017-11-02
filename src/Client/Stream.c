@@ -180,3 +180,74 @@ void Stream_WriteUInt32_BE(Stream* stream, UInt32 value) {
 	buffer[2] = (UInt8)(value >> 8 ); buffer[3] = (UInt8)(value);
 	Stream_Write(stream, buffer, sizeof(UInt32));
 }
+
+
+void Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
+	for (;;) {
+		UInt32 byteCount = 0, read = 0;
+		UInt8 header;
+
+		ReturnCode code = stream->Read(stream, &header, 1, &read);
+		if (read == 0) break;
+		if (!ErrorHandler_Check(code)) { Stream_Fail(stream, code, "reading line from "); }
+
+		/* Header byte encodes variable number of following bytes */
+		/* The remaining bits of the header form first part of the character */
+		Int32 bit;
+		for (bit = 7; bit >= 0; bit--) {
+			if ((header & (1 << bit)) != 0) {
+				byteCount++;
+				header &= (UInt8)~(1 << bit);
+			} else {
+				break;
+			}
+		}
+
+		UInt16 codeword;
+		if (byteCount == 0) {
+			codeword = (UInt8)header;
+		} else {
+			codeword = header;
+			Int32 i;
+			for (i = 0; i < byteCount - 1; i++) {
+				codeword <<= 6;
+				/* Top two bits of each are always 10 */
+				codeword |= (UInt16)(Stream_ReadUInt8(stream) & 0x3F);
+			}
+		}
+
+		/* Handle \r\n or \n line endings */
+		if (codeword == '\r') continue;
+		if (codeword == '\n') break;
+		String_Append(text, Convert_UnicodeToCP437(codeword));
+	}
+}
+
+void Stream_WriteLine(Stream* stream, STRING_TRANSIENT String* text) {
+	UInt8 buffer[3584];
+	UInt32 i, j = 0;
+
+	for (i = 0; i < text->length; i++) {
+		/* Just in case, handle extremely large strings */
+		if (j >= 3032) {
+			Stream_Write(stream, buffer, j);
+			j = 0;
+		}
+
+		UInt16 codepoint = Convert_CP437ToUnicode(text->buffer[i]);
+		if (codepoint <= 0x7F) {
+			buffer[j++] = (UInt8)codepoint;
+		} else if (codepoint >= 0x80 && codepoint <= 0x7FF) {
+			buffer[j++] = (UInt8)(0xC0 | (codepoint >> 6) & 0x1F);
+			buffer[j++] = (UInt8)(0x80 | (codepoint) & 0x3F);
+		} else {
+			buffer[j++] = (UInt8)(0xE0 | (codepoint >> 12) & 0x0F);
+			buffer[j++] = (UInt8)(0x80 | (codepoint >> 6) & 0x3F);
+			buffer[j++] = (UInt8)(0x80 | (codepoint) & 0x3F);
+		}
+	}
+	
+	UInt8* ptr = Platform_NewLine;
+	while (*ptr != NULL) { buffer[j++] = *ptr++; }
+	if (j > 0) Stream_Write(stream, buffer, j);
+}
