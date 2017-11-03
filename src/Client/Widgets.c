@@ -492,12 +492,12 @@ Int32 Table_Height(TableWidget* widget) {
 }
 
 /* These were sourced by taking a screenshot of vanilla
-   Then using paInt32 to extract the colour components
+   Then using paint to extract the colour components
    Then using wolfram alpha to solve the glblendfunc equation */
-PackedCol Table_TopCol       = PACKEDCOL_CONST( 34,  34,  34, 168);
-PackedCol Table_BottomCol    = PACKEDCOL_CONST( 57,  57, 104, 202);
-PackedCol Table_TopSelCol    = PACKEDCOL_CONST(255, 255, 255, 142);
-PackedCol Table_BottomSelCol = PACKEDCOL_CONST(255, 255, 255, 192);
+PackedCol Table_TopBackCol    = PACKEDCOL_CONST( 34,  34,  34, 168);
+PackedCol Table_BottomBackCol = PACKEDCOL_CONST( 57,  57, 104, 202);
+PackedCol Table_TopSelCol     = PACKEDCOL_CONST(255, 255, 255, 142);
+PackedCol Table_BottomSelCol  = PACKEDCOL_CONST(255, 255, 255, 192);
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
 bool TableWidget_GetCoords(TableWidget* widget, Int32 i, Int32* winX, Int32* winY) {
@@ -623,7 +623,7 @@ void TableWidget_Init(GuiElement* elem) {
 void TableWidget_Render(GuiElement* elem, Real64 delta) {
 	TableWidget* widget = (TableWidget*)elem;
 	GfxCommon_Draw2DGradient(Table_X(widget), Table_Y(widget),
-		Table_Width(widget), Table_Height(widget), Table_TopCol, Table_BottomCol);
+		Table_Width(widget), Table_Height(widget), Table_TopBackCol, Table_BottomBackCol);
 	if (widget->RowsCount > TABLE_MAX_ROWS_DISPLAYED) {
 		GuiElement* scroll = &widget->Scroll.Base.Base;
 		scroll->Render(scroll, delta);

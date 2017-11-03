@@ -120,7 +120,6 @@ void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
 
 #define INPUTWIDGET_MAX_LINES 3
 struct InputWidget_;
-/* Remakes the raw texture containing all the chat lines. Also updates the dimensions of the widget. */
 typedef struct InputWidget_ {
 	Widget Base;
 	FontDesc Font;	

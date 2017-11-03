@@ -37,15 +37,15 @@ namespace ClassicalSharp.Gui.Widgets {
 		// These were sourced by taking a screenshot of vanilla
 		// Then using paint to extract the colour components
 		// Then using wolfram alpha to solve the glblendfunc equation
-		static FastColour topCol = new FastColour(34, 34, 34, 168);
-		static FastColour bottomCol = new FastColour(57, 57, 104, 202);
+		static FastColour topBackCol = new FastColour(34, 34, 34, 168);
+		static FastColour bottomBackCol = new FastColour(57, 57, 104, 202);
 		static FastColour topSelCol = new FastColour(255, 255, 255, 142);
 		static FastColour bottomSelCol = new FastColour(255, 255, 255, 192);
 		
 		static VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * 10 * (4 * 4)];
 		int vb;
 		public override void Render(double delta) {
-			gfx.Draw2DQuad(TableX, TableY, TableWidth, TableHeight, topCol, bottomCol);
+			gfx.Draw2DQuad(TableX, TableY, TableWidth, TableHeight, topBackCol, bottomBackCol);
 			if (totalRows > MaxRowsDisplayed) scroll.Render(delta);
 			
 			if (SelectedIndex != -1 && game.ClassicMode) {

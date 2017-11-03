@@ -12,7 +12,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		protected Widget[] widgets;
 		protected Font titleFont, regularFont;
-		protected FastColour backCol = new FastColour(60, 60, 60, 160);
+		
+		// These were sourced by taking a screenshot of vanilla
+		// Then using paint to extract the colour components
+		// Then using wolfram alpha to solve the glblendfunc equation
+		static FastColour topBackCol = new FastColour(24, 24, 24, 105);
+		static FastColour bottomBackCol = new FastColour(51, 51, 98, 162);
 		
 		protected int IndexOfWidget(Widget w) {
 			for (int i = 0; i < widgets.Length; i++) {
@@ -22,7 +27,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected void RenderMenuBounds() {
-			gfx.Draw2DQuad(0, 0, game.Width, game.Height, backCol);
+			gfx.Draw2DQuad(0, 0, game.Width, game.Height, topBackCol, bottomBackCol);
 		}
 		
 		public override void Render(double delta) {

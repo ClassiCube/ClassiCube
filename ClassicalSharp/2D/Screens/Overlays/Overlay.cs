@@ -19,7 +19,6 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Init();
 			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			regularFont = new Font(game.FontName, 16);
-			backCol.A = 210;
 			
 			if (game.Graphics.LostContext) return;
 			MakeButtons();
