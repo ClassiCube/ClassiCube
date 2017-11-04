@@ -2,6 +2,7 @@
 #include "Widgets.h"
 #include "Game.h"
 #include "Events.h"
+#include "GraphicsCommon.h"
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -31,6 +32,17 @@ void Screen_RenderWidgets(Widget** widgets, UInt32 widgetsCount, Real64 delta) {
 	}
 }
 
+
+
+/* These were sourced by taking a screenshot of vanilla
+   Then using paint to extract the colour components
+   Then using wolfram alpha to solve the glblendfunc equation */
+PackedCol Menu_TopBackCol    = PACKEDCOL_CONST(24, 24, 24, 105);
+PackedCol Menu_BottomBackCol = PACKEDCOL_CONST(51, 51, 98, 162);
+
+void ClickableScreen_RenderMenuBounds(void) {
+	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, Menu_TopBackCol, Menu_BottomBackCol);
+}
 
 void ClickableScreen_DefaultWidgetSelected(GuiElement* elem, Widget* widget) { }
 

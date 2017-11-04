@@ -132,7 +132,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Render(double delta) {
-			gfx.Draw2DQuad(0, 0, game.Width, game.Height, new FastColour(60, 60, 60, 160));
+			RenderMenuBounds();
 			gfx.Texturing = true;
 			title.Render(delta);
 			RenderWidgets(buttons, delta);
