@@ -37,17 +37,10 @@ namespace ClassicalSharp {
 				input.ButtonStateChanged(MouseButton.Right, right);
 				input.ButtonStateChanged(MouseButton.Middle, middle);
 			}
-			
-			int btns = (left ? 1 : 0) + (right ? 1 : 0) + (middle ? 1 : 0);
-			if (btns > 1 || game.Gui.ActiveScreen.HandlesAllInput || inv.Selected == Block.Invalid) return;
 
-			if (middle) {
-				Vector3I pos = game.SelectedPos.BlockPos;
-				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
-				
-				BlockID old = game.World.GetBlock(pos);
-				game.Mode.PickMiddle(old);
-			} else if (left) {
+			if (game.Gui.ActiveScreen.HandlesAllInput || inv.Selected == Block.Invalid) return;
+
+			if (left) {
 				if (game.Mode.PickingLeft()) return;
 				Vector3I pos = game.SelectedPos.BlockPos;
 				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
@@ -68,6 +61,12 @@ namespace ClassicalSharp {
 				if (game.CanPick(old) || !BlockInfo.CanPlace[block]) return;
 				if (!PickingHandler.CheckIsFree(game, block)) return;
 				game.Mode.PickRight(old, block);
+			} else if (middle) {
+				Vector3I pos = game.SelectedPos.BlockPos;
+				if (!game.SelectedPos.Valid || !game.World.IsValidPos(pos)) return;
+				
+				BlockID old = game.World.GetBlock(pos);
+				game.Mode.PickMiddle(old);
 			}
 		}
 		
