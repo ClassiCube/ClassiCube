@@ -29,7 +29,7 @@ namespace ClassicalSharp.Blocks {
 			if (b == Block.Water || b == Block.StillWater)
 				return 0.1f;
 			if (b == Block.Lava || b == Block.StillLava)
-				return 2f;
+				return 1.8f;
 			return 0;
 		}
 		

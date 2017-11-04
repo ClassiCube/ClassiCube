@@ -18,7 +18,7 @@ Real32 DefaultSet_FogDensity(BlockID b) {
 	if (b == BlockID_Water || b == BlockID_StillWater)
 		return 0.1f;
 	if (b == BlockID_Lava || b == BlockID_StillLava)
-		return 2.0f;
+		return 1.8f;
 	return 0.0f;
 }
 
