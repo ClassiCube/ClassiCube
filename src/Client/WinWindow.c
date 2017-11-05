@@ -417,7 +417,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 }
 
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT String* title, DisplayDevice* device) {
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE String* title, DisplayDevice* device) {
 	win_Instance = GetModuleHandleA(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 
@@ -492,7 +492,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 	}
 }
 
-void Window_SetClipboardText(STRING_TRANSIENT String* value) {
+void Window_SetClipboardText(STRING_PURE String* value) {
 	/* retry up to 10 times*/
 	Int32 i;
 	value->length = 0;

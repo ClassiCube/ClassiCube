@@ -46,11 +46,11 @@ typedef UInt8 WindowState;
 #define WindowState_Fullscreen 3
 
 /* Creates a new window. */
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_TRANSIENT String* title, DisplayDevice* device);
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE String* title, DisplayDevice* device);
 /* Gets the current contents of the clipboard. */
 void Window_GetClipboardText(STRING_TRANSIENT String* value);
 /* Sets the current contents of the clipboard. */
-void Window_SetClipboardText(STRING_TRANSIENT String* value);
+void Window_SetClipboardText(STRING_PURE String* value);
 /* TODO: IMPLEMENT THIS
 /* Sets the icon of this window. */
 /*void Window_SetIcon(Bitmap* bmp);

@@ -146,7 +146,7 @@ void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
-void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick) {
+void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick) {
 	Widget_Init(&widget->Base);
 	widget->Base.Base.Init   = ButtonWidget_Init;
 	widget->Base.Base.Render = ButtonWidget_Render;
@@ -161,7 +161,7 @@ void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, In
 	widget->Base.Base.HandlesMouseDown = onClick;
 }
 
-void ButtonWidget_SetText(ButtonWidget* widget, STRING_TRANSIENT String* text) {
+void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	Widget* elem = &widget->Base;
 	if (Drawer2D_IsEmptyText(text)) {
@@ -1249,7 +1249,7 @@ bool InputWidget_TryAppendChar(InputWidget* widget, UInt8 c) {
 	return true;
 }
 
-void InputWidget_AppendString(InputWidget* widget, STRING_TRANSIENT String* text) {
+void InputWidget_AppendString(InputWidget* widget, STRING_PURE String* text) {
 	Int32 appended = 0, i;
 	for (i = 0; i < text->length; i++) {
 		if (InputWidget_TryAppendChar(widget, text->buffer[i])) appended++;

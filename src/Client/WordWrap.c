@@ -83,7 +83,7 @@ void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String* lines, 
 }
 
 /* Calculates where the given raw index is located in the wrapped lines. */
-void WordWrap_GetCoords(Int32 index, STRING_TRANSIENT String* lines, Int32 numLines, Int32* coordX, Int32* coordY) {
+void WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY) {
 	if (index == -1) index = Int32_MaxValue;
 	Int32 offset = 0; *coordX = -1; *coordY = 0;
 
@@ -100,7 +100,7 @@ void WordWrap_GetCoords(Int32 index, STRING_TRANSIENT String* lines, Int32 numLi
 	if (*coordX == -1) *coordX = lines[*coordY].length;
 }
 
-Int32 WordWrap_GetBackLength(STRING_TRANSIENT String* text, Int32 index) {
+Int32 WordWrap_GetBackLength(STRING_PURE String* text, Int32 index) {
 	if (index <= 0) return 0;
 	if (index >= text->length) {
 		ErrorHandler_Fail("WordWrap_GetBackLength - index past end of string");
@@ -118,7 +118,7 @@ Int32 WordWrap_GetBackLength(STRING_TRANSIENT String* text, Int32 index) {
 	return start - index;
 }
 
-Int32 WordWrap_GetForwardLength(STRING_TRANSIENT String* text, Int32 index) {
+Int32 WordWrap_GetForwardLength(STRING_PURE String* text, Int32 index) {
 	if (index == -1) return 0;
 	if (index >= text->length) {
 		ErrorHandler_Fail("WordWrap_GetForwardLength - index past end of string");

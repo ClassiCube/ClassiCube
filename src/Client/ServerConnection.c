@@ -22,7 +22,7 @@ void ServerConnection_ResetState(void) {
 }
 
 
-void SPConnection_Connect(STRING_TRANSIENT String* ip, Int32 port) {
+void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 	String logName = String_FromConstant("Singleplayer");
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
@@ -41,7 +41,7 @@ void SPConnection_Connect(STRING_TRANSIENT String* ip, Int32 port) {
 }
 
 UInt8 SPConnection_LastCol = NULL;
-void SPConnection_AddChat(STRING_TRANSIENT String* text) {
+void SPConnection_AddChat(STRING_PURE String* text) {
 	UInt8 tmpBuffer[STRING_SIZE * 2];
 	String tmp = String_FromRawBuffer(tmpBuffer, STRING_SIZE * 2);
 	/* Prepend colour codes for subsequent lines of multi-line chat */
@@ -67,7 +67,7 @@ void SPConnection_AddChat(STRING_TRANSIENT String* text) {
 	Chat_Add(text);
 }
 
-void SPConnection_SendChat(STRING_TRANSIENT String* text) {
+void SPConnection_SendChat(STRING_PURE String* text) {
 	if (text->length == 0) return;
 	SPConnection_LastCol = NULL;
 

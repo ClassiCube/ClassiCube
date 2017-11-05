@@ -74,7 +74,7 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 }
 
 
-bool String_Equals(STRING_TRANSIENT String* a, STRING_TRANSIENT String* b) {
+bool String_Equals(STRING_PURE String* a, STRING_PURE String* b) {
 	if (a->length != b->length) return false;
 	Int32 i;
 
@@ -84,7 +84,7 @@ bool String_Equals(STRING_TRANSIENT String* a, STRING_TRANSIENT String* b) {
 	return true;
 }
 
-bool String_CaselessEquals(STRING_TRANSIENT String* a, STRING_TRANSIENT String* b) {
+bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b) {
 	if (a->length != b->length) return false;
 	Int32 i;
 
@@ -147,27 +147,27 @@ bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 min
 	return true;
 }
 
-bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* buffer) {
+bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend) {
 	UInt8 cur = 0;
 
-	while ((cur = *buffer) != 0) {
+	while ((cur = *toAppend) != 0) {
 		if (!String_Append(str, cur)) return false;
-		buffer++;
+		toAppend++;
 	}
 	return true;
 }
 
-bool String_AppendString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* buffer) {
+bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend) {
 	Int32 i;
 
-	for (i = 0; i < buffer->length; i++) {
-		if (!String_Append(str, buffer->buffer[i])) return false;
+	for (i = 0; i < toAppend->length; i++) {
+		if (!String_Append(str, toAppend->buffer[i])) return false;
 	}
 	return true;
 }
 
 
-Int32 String_IndexOf(STRING_TRANSIENT String* str, UInt8 c, Int32 offset) {
+Int32 String_IndexOf(STRING_PURE String* str, UInt8 c, Int32 offset) {
 	Int32 i;
 	for (i = offset; i < str->length; i++) {
 		if (str->buffer[i] == c) return i;
@@ -175,7 +175,7 @@ Int32 String_IndexOf(STRING_TRANSIENT String* str, UInt8 c, Int32 offset) {
 	return -1;
 }
 
-Int32 String_LastIndexOf(STRING_TRANSIENT String* str, UInt8 c) {
+Int32 String_LastIndexOf(STRING_PURE String* str, UInt8 c) {
 	Int32 i;
 	for (i = str->length - 1; i >= 0; i--) {
 		if (str->buffer[i] == c) return i;
@@ -183,7 +183,7 @@ Int32 String_LastIndexOf(STRING_TRANSIENT String* str, UInt8 c) {
 	return -1;
 }
 
-UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset) {
+UInt8 String_CharAt(STRING_PURE String* str, Int32 offset) {
 	if (offset < 0 || offset >= str->length) return NULL;
 	return str->buffer[offset];
 }
@@ -217,7 +217,7 @@ void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset) {
 	str->length--;
 }
 
-Int32 String_IndexOfString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub) {
+Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 	Int32 i, j;
 	/* Special case, sub is an empty string*/
 	if (sub->length == 0) return 0;
@@ -282,7 +282,7 @@ UInt8 Convert_UnicodeToCP437(UInt16 c) {
 	return (UInt8)'?';
 }
 
-bool Convert_TryParseInt32(STRING_TRANSIENT String* str, Int32* value) {
+bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value) {
 	Int32 sum = 0, i = 0;
 	*value = 0;
 
@@ -328,19 +328,19 @@ bool Convert_TryParseInt32(STRING_TRANSIENT String* str, Int32* value) {
 	return true;
 }
 
-bool Convert_TryParseUInt8(STRING_TRANSIENT String* str, UInt8* value) {
+bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value) {
 	*value = 0; Int32 tmp;
 	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
 	*value = (UInt8)tmp; return true;
 }
 
-bool Convert_TryParseUInt16(STRING_TRANSIENT String* str, UInt16* value) {
+bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value) {
 	*value = 0; Int32 tmp;
 	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
 	*value = (UInt16)tmp; return true;
 }
 
-bool Convert_TryParseReal32(STRING_TRANSIENT String* str, Real32* value) {
+bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {
 	Int32 i = 0;
 	*value = 0.0f;
 	bool foundDecimalPoint = false;
@@ -377,7 +377,7 @@ bool Convert_TryParseReal32(STRING_TRANSIENT String* str, Real32* value) {
 	return true;
 }
 
-bool Convert_TryParseBool(STRING_TRANSIENT String* str, bool* value) {
+bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 	String trueStr  = String_FromConstant("true");
 	if (String_CaselessEquals(str, &trueStr)) {
 		*value = true; return true;

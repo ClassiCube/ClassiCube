@@ -17,7 +17,7 @@ void GfxCommon_Init(void);
 void GfxCommon_Free(void);
 
 /* Handles a context being lost. */
-void GfxCommon_LoseContext(STRING_TRANSIENT String* reason);
+void GfxCommon_LoseContext(STRING_PURE String* reason);
 /* Handles a context being recreated. */
 void GfxCommon_RecreateContext(void);
 

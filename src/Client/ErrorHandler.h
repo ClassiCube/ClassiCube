@@ -9,7 +9,7 @@
 /* Initalises required state for this error handler. */
 void ErrorHandler_Init(void);
 /* Logs a message to the error handler's log file. */
-void ErrorHandler_Log(STRING_TRANSIENT String* msg);
+void ErrorHandler_Log(STRING_PURE String* msg);
 /* Checks that the return code of a method is successful. */
 #define ErrorHandler_Check(returnCode) (returnCode == 0)
 /* Shows a message box to user, logs message to disc, then fails.

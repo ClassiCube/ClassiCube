@@ -118,8 +118,8 @@ Real32 Game_GetHotbarScale(void);
 Real32 Game_GetInventoryScale(void);
 Real32 Game_GetChatScale(void);
 
-void Game_GetDefaultTexturePack(STRING_TRANSIENT String* dst);
-void Game_SetDefaultTexturePack(STRING_TRANSIENT String* value);
+void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack);
+void Game_SetDefaultTexturePack(STRING_PURE String* texPack);
 bool Game_GetCursorVisible(void);
 void Game_SetCursorVisible(bool visible);
 

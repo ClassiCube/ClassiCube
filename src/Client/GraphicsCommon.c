@@ -17,7 +17,7 @@ void GfxCommon_Free(void) {
 	Gfx_DeleteVb(&GfxCommon_texVb);
 }
 
-void GfxCommon_LoseContext(STRING_TRANSIENT String* reason) {
+void GfxCommon_LoseContext(STRING_PURE String* reason) {
 	Gfx_LostContext = true;
 	String logMsg = String_FromConstant("Lost graphics context:");
 	Platform_Log(&logMsg);

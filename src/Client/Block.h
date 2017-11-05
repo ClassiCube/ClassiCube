@@ -144,7 +144,7 @@ void Block_SetDrawType(BlockID block, UInt8 draw);
 void Block_ResetProps(BlockID block);
 
 /* Finds the ID of the block whose name caselessly matches the input, -1 otherwise. */
-Int32 Block_FindID(STRING_TRANSIENT String* name);
+Int32 Block_FindID(STRING_PURE String* name);
 /* Gets whether the given block is a liquid. (water and lava) */
 bool Block_IsLiquid(BlockID b);
 

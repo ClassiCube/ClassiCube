@@ -44,12 +44,12 @@ void ModelCache_Init(void);
 /* Frees textures and vertex buffer of the model cache, and then unhooks events. */
 void ModelCache_Free(void);
 /* Gets the model which has the given name, or pointer to humanoid model if not found. */
-IModel* ModelCache_Get(STRING_TRANSIENT String* name);
+IModel* ModelCache_Get(STRING_PURE String* name);
 /* Gets the index of the texture which has the given name, or -1 if not found. */
-Int32 ModelCache_GetTextureIndex(STRING_TRANSIENT String* texName);
+Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName);
 /* Registers the given model to be able to be used as a model for entities.
 You can use ModelCache_Get to get pointer to the model. */
-void ModelCache_Register(STRING_REF const UInt8* name, STRING_TRANSIENT const UInt8* defaultTexName, IModel* instance);
+void ModelCache_Register(STRING_REF const UInt8* name, STRING_PURE const UInt8* defaultTexName, IModel* instance);
 /* Registers the given texture to be tracked by the model cache.
 You can use ModelCache_GetTextureIndex to get the index of this texture. */
 void ModelCache_RegisterTexture(STRING_REF const UInt8* texName);

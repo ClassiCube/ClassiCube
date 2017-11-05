@@ -11,20 +11,18 @@
 #define String_BufferSize(n) (n + 1)
 #define STRING_INT32CHARS 20
 
-/* Indicates that a string argument is discarded after the function has completed.
-Thus it is safe to allocate a string on the stack. */
+/* Indicates that a string argument is discarded after the function has completed, and is not modified. */
+#define STRING_PURE
+/* Indicates that a string argument is discarded after the function has completed, but **MAY BE MODIFIED**. */
 #define STRING_TRANSIENT
 /* Indicates that a reference to the buffer in a string argument is persisted after the function has completed.
-Thus it is NOT SAFE to allocate a string on the stack. */
+Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define STRING_REF
 
-typedef struct String_ {
-	/* Pointer to raw characters. Size is capacity + 1, as buffer is null terminated. */
-	UInt8* buffer;
-	/* Number of characters used. */
-	UInt16 length;
-	/* Max number of characters that can be in buffer. */
-	UInt16 capacity;
+typedef struct String_ {	
+	UInt8* buffer;   /* Pointer to raw characters. Size is capacity + 1, as buffer is null terminated. */	
+	UInt16 length;   /* Number of characters used. */
+	UInt16 capacity; /* Max number of characters that can be in buffer. */
 } String;
 
 /* Constructs a new string, pointing a buffer consisting purely of NULL characters. */
@@ -49,9 +47,9 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
 
 /* Returns whether two strings have same contents. */
-bool String_Equals(STRING_TRANSIENT String* a, STRING_TRANSIENT String* b);
+bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
 /* Returns whether two strings have same case-insensitive contents. */
-bool String_CaselessEquals(STRING_TRANSIENT String* a, STRING_TRANSIENT String* b);
+bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
 
 /* Attempts to append a character to the end of a string. */
 bool String_Append(STRING_TRANSIENT String* str, UInt8 c);
@@ -60,23 +58,23 @@ bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 /* Attempts to append an integer value to the end of a string, padding left with 0. */
 bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits);
 /* Attempts to append a constant raw null-terminated string. */
-bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* buffer);
+bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend);
 /* Attempts to append a string. */
-bool String_AppendString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* buffer);
+bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
 
 /* Finds the first index of c in given string, -1 if not found. */
-Int32 String_IndexOf(STRING_TRANSIENT String* str, UInt8 c, Int32 offset);
+Int32 String_IndexOf(STRING_PURE String* str, UInt8 c, Int32 offset);
 /* Finds the last index of c in given string, -1 if not found. */
-Int32 String_LastIndexOf(STRING_TRANSIENT String* str, UInt8 c);
+Int32 String_LastIndexOf(STRING_PURE String* str, UInt8 c);
 /* Gets the character at the given index in the string. */
-UInt8 String_CharAt(STRING_TRANSIENT String* str, Int32 offset);
+UInt8 String_CharAt(STRING_PURE String* str, Int32 offset);
 /* Inserts a character at the given index in the string. */
 void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UInt8 c);
 /* Deletes a character at the given index in the string. */
 void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
 
 /* Find the first index of sub in given string, -1 if not found. */
-Int32 String_IndexOfString(STRING_TRANSIENT String* str, STRING_TRANSIENT String* sub);
+Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 /* Returns whether sub is contained within string. */
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
 /* Returns whether given string starts with sub. */
@@ -88,13 +86,13 @@ UInt16 Convert_CP437ToUnicode(UInt8 c);
 UInt8 Convert_UnicodeToCP437(UInt16 c);
 
 /* Attempts to parse the given string as a signed 32 bit integer.*/
-bool Convert_TryParseInt32(STRING_TRANSIENT String* str, Int32* value);
+bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value);
 /* Attempts to parse the given string as an unsigned 8 bit integer.*/
-bool Convert_TryParseUInt8(STRING_TRANSIENT String* str, UInt8* value);
+bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value);
 /* Attempts to parse the given string as an unsigned 8 bit integer.*/
-bool Convert_TryParseUInt16(STRING_TRANSIENT String* str, UInt16* value);
+bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
 /* Attempts to parse the given string as a 32 bit floating point number. */
-bool Convert_TryParseReal32(STRING_TRANSIENT String* str, Real32* value);
+bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
 /* Attempts to parse the given string as a boolean. */
-bool Convert_TryParseBool(STRING_TRANSIENT String* str, bool* value);
+bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
 #endif

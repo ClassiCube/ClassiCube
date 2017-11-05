@@ -24,7 +24,7 @@ String Chat_LogName;
 Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
 
-void Chat_Send(STRING_TRANSIENT String* text) {
+void Chat_Send(STRING_PURE String* text) {
 	if (text->length == 0) return;
 
 	if (game.CommandList.IsCommandPrefix(text)) {
@@ -46,7 +46,7 @@ bool Chat_AllowedLogChar(UInt8 c) {
 		(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
-void Chat_SetLogName(STRING_TRANSIENT String* name) {
+void Chat_SetLogName(STRING_PURE String* name) {
 	if (Chat_LogName.length > 0) return;
 
 	Chat_LogName = String_FromEmptyBuffer(Chat_LogNameBuffer, STRING_SIZE);
@@ -100,7 +100,7 @@ void Chat_OpenLog(DateTime* now) {
 	ErrorHandler_LogError("creating chat log", "Failed to open chat log file after 20 tries, giving up");
 }
 
-void Chat_AppendLog(STRING_TRANSIENT String* text) {
+void Chat_AppendLog(STRING_PURE String* text) {
 	if (Chat_LogName.length == 0 || !Game_ChatLogging) return;
 	DateTime now = Platform_CurrentLocalTime();
 
@@ -129,8 +129,8 @@ void Chat_AppendLog(STRING_TRANSIENT String* text) {
 	Stream_WriteLine(&Chat_LogStream, &str);
 }
 
-void Chat_Add(STRING_TRANSIENT String* text) { Chat_AddOf(text, MessageType_Normal); }
-void Chat_AddOf(STRING_TRANSIENT String* text, MessageType type) {
+void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MessageType_Normal); }
+void Chat_AddOf(STRING_PURE String* text, MessageType type) {
 	if (type == MessageType_Normal) {
 		/* todo use a single byte array for all strings, each 'string' is 22 bits offsrt, 10 bits length into this array. */
 		/* means resizing is expensive tho*/

@@ -49,7 +49,7 @@ Int32 Stream_TryReadByte(Stream* stream) {
 }
 
 
-void Stream_SetName(Stream* stream, STRING_TRANSIENT String* name) {
+void Stream_SetName(Stream* stream, STRING_PURE String* name) {
 	stream->Name = String_FromRawBuffer(stream->NameBuffer, FILENAME_SIZE);
 	String_AppendString(&stream->Name, name);
 }
@@ -69,7 +69,7 @@ ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
 	return Platform_FileSeek(stream->Data, offset, seekType);
 }
 
-void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name) {
+void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 	Stream_SetName(stream, name);
 	stream->Data = file;
 	stream->Data2 = 0;

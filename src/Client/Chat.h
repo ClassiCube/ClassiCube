@@ -18,14 +18,14 @@ ChatLine Chat_BottomRight[3];
 ChatLine Chat_ClientStatus[3];
 ChatLine Chat_Announcement;
 
-void Chat_Get(UInt32 idx, STRING_TRANSIENT String* dst);
+void Chat_Get(UInt32 idx, STRING_PURE String* dst);
 UInt32 Chat_Count;
-void Chat_InputGet(UInt32 idx, STRING_TRANSIENT String* dst);
+void Chat_InputGet(UInt32 idx, STRING_PURE String* dst);
 UInt32 Chat_InputCount;
 
 IGameComponent Chat_MakeGameComponent(void);
-void Chat_SetLogName(STRING_TRANSIENT String* name);
-void Chat_Send(STRING_TRANSIENT String* text);
-void Chat_Add(STRING_TRANSIENT String* text);
-void Chat_AddOf(STRING_TRANSIENT String* text, MessageType type);
+void Chat_SetLogName(STRING_PURE String* name);
+void Chat_Send(STRING_PURE String* text);
+void Chat_Add(STRING_PURE String* text);
+void Chat_AddOf(STRING_PURE String* text, MessageType type);
 #endif

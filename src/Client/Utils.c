@@ -9,7 +9,7 @@ Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta) {
 	return steps;
 }
 
-UInt32 Utils_ParseEnum(STRING_TRANSIENT String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount) {
+UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount) {
 	UInt32 i;
 	for (i = 0; i < namesCount; i++) {
 		String name = String_FromReadonly(names[i]);

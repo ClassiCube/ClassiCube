@@ -147,13 +147,13 @@ Texture Drawer2D_Make2DTexture(Bitmap* bmp, Size2D used, Int32 windowX, Int32 wi
 		(Real32)used.Width / (Real32)bmp->Width, (Real32)used.Height / (Real32)bmp->Height);
 }
 
-bool Drawer2D_ValidColCodeAt(STRING_TRANSIENT String* text, Int32 i) {
+bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i) {
 	if (i >= text->length) return false;
 	return Drawer2D_Cols[text->buffer[i]].A > 0;
 }
 bool Drawer2D_ValidColCode(UInt8 c) { return Drawer2D_Cols[c].A > 0; }
 
-bool Drawer2D_IsEmptyText(STRING_TRANSIENT String* text) {
+bool Drawer2D_IsEmptyText(STRING_PURE String* text) {
 	if (text->length == 0) return true;
 
 	Int32 i;
@@ -165,7 +165,7 @@ bool Drawer2D_IsEmptyText(STRING_TRANSIENT String* text) {
 	return true;
 }
 
-UInt8 Drawer2D_LastCol(STRING_TRANSIENT String* text, Int32 start) {
+UInt8 Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 	if (start >= text->length) start = text->length - 1;
 	Int32 i;
 	for (i = start; i >= 0; i--) {

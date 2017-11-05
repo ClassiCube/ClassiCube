@@ -40,9 +40,9 @@ void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
 /* Attempts to read a byte (returning -1 if could not read) */
 Int32 Stream_TryReadByte(Stream* stream);
 /* Sets the name of the given stream. */
-void Stream_SetName(Stream* stream, STRING_TRANSIENT String* name);
+void Stream_SetName(Stream* stream, STRING_PURE String* name);
 /* Constructs a Stream wrapping a file. */
-void Stream_FromFile(Stream* stream, void* file, STRING_TRANSIENT String* name);
+void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name);
 /* Constructs a readonly Stream wrapping another Stream, 
 but only allowing reading up to 'len' bytes from the wrapped stream. */
 void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len);

@@ -22,8 +22,8 @@ typedef struct TextWidget_ {
 	PackedCol Col;
 } TextWidget;
 
-void TextWidget_Create(TextWidget* widget, STRING_TRANSIENT String* text, FontDesc* font);
-void TextWidget_SetText(TextWidget* widget, STRING_TRANSIENT String* text);
+void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* font);
+void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text);
 
 
 typedef void (*ButtonWidget_SetValue)(STRING_TRANSIENT String* raw);
@@ -41,8 +41,8 @@ typedef struct ButtonWidget_ {
 	Int32 MinWidth, MinHeight, Metadata;
 } ButtonWidget;
 
-void ButtonWidget_Create(ButtonWidget* widget, STRING_TRANSIENT String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick);
-void ButtonWidget_SetText(ButtonWidget* widget, STRING_TRANSIENT String* text);
+void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick);
+void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text);
 
 
 typedef struct ScrollbarWidget_ {
@@ -153,7 +153,7 @@ void InputWidget_UpdateCaret(InputWidget* widget);
 /* Clears all the characters from the text buffer. Deletes the native texture. */
 void InputWidget_Clear(InputWidget* widget);
 /* Appends a sequence of characters to current text buffer. May recreate the native texture. */
-void InputWidget_AppendString(InputWidget* widget, STRING_TRANSIENT String* text);
+void InputWidget_AppendString(InputWidget* widget, STRING_PURE String* text);
 /* Appends a single character to current text buffer. May recreate the native texture. */
 void InputWidget_Append(InputWidget* widget, UInt8 c);
 
@@ -186,8 +186,8 @@ typedef struct TextGroupWidget_ {
 
 void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont);
 void TextGroupWidget_SetUsePlaceHolder(TextGroupWidget* widget, Int32 index, bool placeHolder);
-void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_TRANSIENT String* text);
+void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE String* text);
 Int32 TextGroupWidget_GetUsedHeight(TextGroupWidget* widget);
-void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* dstText, Int32 mouseX, Int32 mouseY);
-void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_TRANSIENT String* text);
+void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 mouseX, Int32 mouseY);
+void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_PURE String* text);
 #endif

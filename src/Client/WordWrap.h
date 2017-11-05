@@ -10,7 +10,7 @@
 
 void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 maxPerLine);
 /* Calculates where the given raw index is located in the wrapped lines. */
-void WordWrap_GetCoords(Int32 index, STRING_TRANSIENT String* lines, Int32 numLines, Int32* coordX, Int32* coordY);
-Int32 WordWrap_GetBackLength(STRING_TRANSIENT String* text, Int32 index);
-Int32 WordWrap_GetForwardLength(STRING_TRANSIENT String* text, Int32 index);
+void WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY);
+Int32 WordWrap_GetBackLength(STRING_PURE String* text, Int32 index);
+Int32 WordWrap_GetForwardLength(STRING_PURE String* text, Int32 index);
 #endif

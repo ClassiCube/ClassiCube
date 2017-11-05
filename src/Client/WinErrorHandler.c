@@ -20,7 +20,7 @@ void ErrorHandler_Init(void) {
 	/* TODO: Open log file */
 }
 
-void ErrorHandler_Log(STRING_TRANSIENT String* msg) {
+void ErrorHandler_Log(STRING_PURE String* msg) {
 	/* TODO: write to log file */
 }
 

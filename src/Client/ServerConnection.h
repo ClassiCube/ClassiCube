@@ -16,8 +16,8 @@ String ServerConnection_ServerName;
 String ServerConnection_ServerMOTD;
 String ServerConnection_AppName;
 
-void (*ServerConnection_Connect)(STRING_TRANSIENT String* ip, Int32 port);
-void (*ServerConnection_SendChat)(STRING_TRANSIENT String* text);
+void (*ServerConnection_Connect)(STRING_PURE String* ip, Int32 port);
+void (*ServerConnection_SendChat)(STRING_PURE String* text);
 void (*ServerConnection_SendPosition)(Vector3 pos, Real32 rotY, Real32 headX);
 void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, PickedPos* pos);
 void (*ServerConnection_Tick)(ScheduledTask* task);
@@ -34,7 +34,7 @@ bool ServerConnection_SupportsPartialMessages;
 /* Whether the server supports receiving all code page 437 characters from this client. */
 bool ServerConnection_SupportsFullCP437;
 
-void ServerConnection_RetrieveTexturePack(STRING_TRANSIENT String* url);
+void ServerConnection_RetrieveTexturePack(STRING_PURE String* url);
 void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, Int32 seed, bool vanilla);
 void ServerConnection_EndGeneration(void);
 void ServerConnection_InitSingleplayer(void);
