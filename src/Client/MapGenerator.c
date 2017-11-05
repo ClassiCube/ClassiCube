@@ -32,11 +32,11 @@ void FlatgrassGen_Generate(void) {
 	if (Gen_Blocks == NULL)
 		ErrorHandler_Fail("FlatgrassGen - failed to allocate Blocks array");
 
-	String dirtStr = String_FromConstant("Setting dirt blocks");
+	String dirtStr = String_FromConst("Setting dirt blocks");
 	Gen_CurrentState = dirtStr;
 	FlatgrassGen_MapSet(0, Gen_Height / 2 - 2, BlockID_Dirt);
 
-	String grassStr = String_FromConstant("Setting grass blocks");
+	String grassStr = String_FromConst("Setting grass blocks");
 	Gen_CurrentState = grassStr;
 	FlatgrassGen_MapSet(Gen_Height / 2 - 1, Gen_Height / 2 - 1, BlockID_Grass);
 }
@@ -114,7 +114,7 @@ void NotchyGen_CreateHeightmap(void) {
 	OctaveNoise_Init(&n3, &rnd, 6);
 
 	Int32 index = 0;
-	String state = String_FromConstant("Building heightmap");
+	String state = String_FromConst("Building heightmap");
 	Gen_CurrentState = state;
 
 	Int32 x, z;
@@ -167,7 +167,7 @@ Int32 NotchyGen_CreateStrataFast(void) {
 void NotchyGen_CreateStrata(void) {
 	OctaveNoise n;
 	OctaveNoise_Init(&n, &rnd, 8);
-	String state = String_FromConstant("Creating strata");
+	String state = String_FromConst("Creating strata");
 	Gen_CurrentState = state;
 	Int32 hMapIndex = 0, maxY = Gen_Height - 1, mapIndex = 0;
 	/* Try to bulk fill bottom of the map if possible */
@@ -200,7 +200,7 @@ void NotchyGen_CreateStrata(void) {
 
 void NotchyGen_CarveCaves(void) {
 	Int32 cavesCount = volume / 8192;
-	String state = String_FromConstant("Carving caves");
+	String state = String_FromConst("Carving caves");
 	Gen_CurrentState = state;
 
 	Int32 i, j;
@@ -273,7 +273,7 @@ void NotchyGen_FloodFillWaterBorders(void) {
 	Int32 waterY = waterLevel - 1;
 	Int32 index1 = Gen_Pack(0, waterY, 0);
 	Int32 index2 = Gen_Pack(0, waterY, Gen_Length - 1);
-	String state = String_FromConstant("Flooding edge water");
+	String state = String_FromConst("Flooding edge water");
 	Gen_CurrentState = state;
 	Int32 x, z;
 
@@ -296,7 +296,7 @@ void NotchyGen_FloodFillWaterBorders(void) {
 
 void NotchyGen_FloodFillWater(void) {
 	Int32 numSources = Gen_Width * Gen_Length / 800;
-	String state = String_FromConstant("Flooding water");
+	String state = String_FromConst("Flooding water");
 	Gen_CurrentState = state;
 
 	Int32 i;
@@ -311,7 +311,7 @@ void NotchyGen_FloodFillWater(void) {
 
 void NotchyGen_FloodFillLava(void) {
 	Int32 numSources = Gen_Width * Gen_Length / 20000;
-	String state = String_FromConstant("Flooding lava");
+	String state = String_FromConst("Flooding lava");
 	Gen_CurrentState = state;
 
 	Int32 i;
@@ -328,7 +328,7 @@ void NotchyGen_CreateSurfaceLayer(void) {
 	OctaveNoise n1, n2;
 	OctaveNoise_Init(&n1, &rnd, 8);
 	OctaveNoise_Init(&n2, &rnd, 8);
-	String state = String_FromConstant("Creating surface");
+	String state = String_FromConst("Creating surface");
 	Gen_CurrentState = state;
 	/* TODO: update heightmap */
 
@@ -355,7 +355,7 @@ void NotchyGen_CreateSurfaceLayer(void) {
 
 void NotchyGen_PlantFlowers(void) {
 	Int32 numPatches = Gen_Width * Gen_Length / 3000;
-	String state = String_FromConstant("Planting flowers");
+	String state = String_FromConst("Planting flowers");
 	Gen_CurrentState = state;
 
 	Int32 i, j, k;
@@ -384,7 +384,7 @@ void NotchyGen_PlantFlowers(void) {
 
 void NotchyGen_PlantMushrooms(void) {
 	Int32 numPatches = volume / 2000;
-	String state = String_FromConstant("Planting mushrooms");
+	String state = String_FromConst("Planting mushrooms");
 	Gen_CurrentState = state;
 
 	Int32 i, j, k;
@@ -417,7 +417,7 @@ void NotchyGen_PlantMushrooms(void) {
 
 void NotchyGen_PlantTrees(void) {
 	Int32 numPatches = Gen_Width * Gen_Length / 4000;
-	String state = String_FromConstant("Planting trees");
+	String state = String_FromConst("Planting trees");
 	Gen_CurrentState = state;
 
 	Tree_Width = Gen_Width; Tree_Height = Gen_Height; Tree_Length = Gen_Length;
@@ -475,7 +475,7 @@ void NotchyGen_Generate(void) {
 	minHeight = Gen_Height;
 
 	Gen_CurrentProgress = 0.0f;
-	String state = String_FromConstant("");
+	String state = String_FromConst("");
 	Gen_CurrentState = state;
 
 	NotchyGen_CreateHeightmap();

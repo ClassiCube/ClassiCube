@@ -173,7 +173,7 @@ UInt16 Terrain_1DIndices[ATLAS1D_MAX_ATLASES_COUNT];
 Random rnd;
 
 void Particles_FileChanged(Stream* stream) {
-	String particlesPng = String_FromConstant("particles.png");
+	String particlesPng = String_FromConst("particles.png");
 	if (String_Equals(&stream->Name, &particlesPng)) {
 		//Game_UpdateTexture(&Particles_TexId, stream, false);
 	}

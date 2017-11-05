@@ -55,7 +55,7 @@ void GL_CheckVboSupport(void) {
 		return;
 	}
 
-	String vboExt = String_FromConstant("GL_ARB_vertex_buffer_object");
+	String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
 	if (String_ContainsString(&extensions, &vboExt)) {
 		glBindBuffer = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
 		glDeleteBuffers = (FN_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");

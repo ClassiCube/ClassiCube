@@ -73,9 +73,9 @@ bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, In
 }
 
 void Gui_FileChanged(Stream* stream) {
-	String gui        = String_FromConstant("gui.png");
-	String guiClassic = String_FromConstant("gui_classic.png");
-	String icons      = String_FromConstant("icons.png");
+	String gui        = String_FromConst("gui.png");
+	String guiClassic = String_FromConst("gui_classic.png");
+	String icons      = String_FromConst("icons.png");
 
 	if (String_Equals(&stream->Name, &gui)) {
 		Game_UpdateTexture(&Gui_GuiTex, stream, false);

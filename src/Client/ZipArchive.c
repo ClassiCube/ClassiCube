@@ -35,7 +35,7 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 
 	stream->Seek(stream, extraFieldLen, STREAM_SEEKFROM_CURRENT);
 	if (versionNeeded > 20) {
-		String warnMsg = String_FromConstant("May not be able to properly extract a .zip enty with a version later than 2.0");
+		String warnMsg = String_FromConst("May not be able to properly extract a .zip enty with a version later than 2.0");
 		Platform_Log(&warnMsg);
 	}
 
@@ -129,7 +129,7 @@ void Zip_Extract(ZipState* state) {
 		} else if (sig == ZIP_ENDOFCENTRALDIR) {
 			break;
 		} else {
-			String sigMsg = String_FromConstant("ZIP - Unsupported signature found, aborting");
+			String sigMsg = String_FromConst("ZIP - Unsupported signature found, aborting");
 			ErrorHandler_Log(&sigMsg);
 			return;
 		}
@@ -144,7 +144,7 @@ void Zip_Extract(ZipState* state) {
 
 		sig = Stream_ReadUInt32_LE(stream);
 		if (sig != ZIP_LOCALFILEHEADER) {
-			String sigMsg = String_FromConstant("ZIP - Invalid entry found, skipping");
+			String sigMsg = String_FromConst("ZIP - Invalid entry found, skipping");
 			ErrorHandler_Log(&sigMsg);
 			continue;
 		}

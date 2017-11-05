@@ -14,7 +14,7 @@ String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
 	String str = String_FromEmptyBuffer(buffer, capacity);	
 	Int32 i;
 
-	/* Need to set region occupied by string to NUL for interop with native APIs */
+	/* Need to set region occupied by string to NULL for interop with native APIs */
 	for (i = 0; i < capacity + 1; i++) {
 		buffer[i] = 0;
 	}
@@ -378,12 +378,12 @@ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {
 }
 
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
-	String trueStr  = String_FromConstant("true");
+	String trueStr  = String_FromConst("true");
 	if (String_CaselessEquals(str, &trueStr)) {
 		*value = true; return true;
 	}
 
-	String falseStr = String_FromConstant("false");
+	String falseStr = String_FromConst("false");
 	if (String_CaselessEquals(str, &falseStr)) {
 		*value = false; return true;
 	}

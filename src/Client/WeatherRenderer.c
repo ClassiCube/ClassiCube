@@ -185,8 +185,8 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 }
 
 void WeatherRenderer_FileChanged(Stream* stream) {
-	String snow = String_FromConstant("snow.png");
-	String rain = String_FromConstant("rain.png");
+	String snow = String_FromConst("snow.png");
+	String rain = String_FromConst("rain.png");
 
 	if (String_Equals(&stream->Name, &snow)) {
 		Game_UpdateTexture(&weather_snowTex, stream, false);

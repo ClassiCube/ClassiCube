@@ -644,14 +644,14 @@ void Gfx_EndFrame(void) {
 	}
 
 	/* TODO: Make sure this actually works on all graphics cards.*/
-	String reason = String_FromConstant(" (Direct3D9 device lost)");
+	String reason = String_FromConst(" (Direct3D9 device lost)");
 	GfxCommon_LoseContext(&reason);
 	D3D9_LoopUntilRetrieved();
 	D3D9_RecreateDevice();
 }
 
 void Gfx_OnWindowResize(void) {
-	String reason = String_FromConstant(" (resizing window)");
+	String reason = String_FromConst(" (resizing window)");
 	GfxCommon_LoseContext(&reason);
 	D3D9_RecreateDevice();
 }

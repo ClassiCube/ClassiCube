@@ -10,11 +10,10 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* TODO: WORK THESE OUT*/
 bool ServerConnection_IsSinglePlayer;
-String ServerConnection_ServerName;
-String ServerConnection_ServerMOTD;
-String ServerConnection_AppName;
+extern String ServerConnection_ServerName;
+extern String ServerConnection_ServerMOTD;
+extern String ServerConnection_AppName;
 
 void (*ServerConnection_Connect)(STRING_PURE String* ip, Int32 port);
 void (*ServerConnection_SendChat)(STRING_PURE String* text);

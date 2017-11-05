@@ -4,6 +4,7 @@
 #include "Events.h"
 #include "Game.h"
 #include "ErrorHandler.h"
+#include "ServerConnection.h"
 
 void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 	String dst = String_FromRawBuffer(line->Buffer, STRING_SIZE);
@@ -11,26 +12,19 @@ void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 	line->Received = Platform_CurrentUTCTime();
 }
 
-void InputLine_Make(InputLine* line, STRING_TRANSIENT String* text) {
-	String dst = String_FromRawBuffer(line->Buffer, STRING_SIZE);
-	String_AppendString(&dst, text);
-}
-
-ChatLine Log[256];
-InputLine InputLog[256];
-
 UInt8 Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
-String Chat_LogName;
+String Chat_LogName = String_EmptyConstArray(Chat_LogNameBuffer);
 Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
 
 void Chat_Send(STRING_PURE String* text) {
 	if (text->length == 0) return;
+	StringsBuffer_Add(&InputLog, text);
 
 	if (game.CommandList.IsCommandPrefix(text)) {
 		game.CommandList.Execute(text);
 	} else {
-		game.Server.SendChat(text);
+		ServerConnection_SendChat(text);
 	}
 }
 
@@ -48,9 +42,8 @@ bool Chat_AllowedLogChar(UInt8 c) {
 
 void Chat_SetLogName(STRING_PURE String* name) {
 	if (Chat_LogName.length > 0) return;
-
-	Chat_LogName = String_FromEmptyBuffer(Chat_LogNameBuffer, STRING_SIZE);
 	String_Clear(&Chat_LogName);
+
 	Int32 i;
 	for (i = 0; i < name->length; i++) {
 		if (Chat_AllowedLogChar(name->buffer[i])) {
@@ -60,7 +53,7 @@ void Chat_SetLogName(STRING_PURE String* name) {
 }
 
 void Chat_OpenLog(DateTime* now) {
-	String logsDir = String_FromConstant("logs");
+	String logsDir = String_FromConst("logs");
 	if (!Platform_DirectoryExists(&logsDir)) {
 		Platform_DirectoryCreate(&logsDir);
 	}
@@ -132,9 +125,7 @@ void Chat_AppendLog(STRING_PURE String* text) {
 void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MessageType_Normal); }
 void Chat_AddOf(STRING_PURE String* text, MessageType type) {
 	if (type == MessageType_Normal) {
-		/* todo use a single byte array for all strings, each 'string' is 22 bits offsrt, 10 bits length into this array. */
-		/* means resizing is expensive tho*/
-		Log.Add(text);
+		StringsBuffer_Add(&ChatLog, text);
 		Chat_AppendLog(text);
 	} else if (type >= MessageType_Status1 && type <= MessageType_Status3) {
 		ChatLine_Make(&Chat_Status[type - MessageType_Status1], text);

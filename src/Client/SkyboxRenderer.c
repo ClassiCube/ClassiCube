@@ -25,8 +25,8 @@ void SkyboxRenderer_TexturePackChanged(void) {
 }
 
 void SkyboxRenderer_FileChanged(Stream* src) {
-	String skybox = String_FromConstant("skybox.png");
-	String useclouds = String_FromConstant("useclouds");
+	String skybox = String_FromConst("skybox.png");
+	String useclouds = String_FromConst("useclouds");
 
 	if (String_Equals(&src->Name, &skybox)) {
 		Game_UpdateTexture(&skybox_tex, src, false);

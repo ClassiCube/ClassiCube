@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 	return 0;*/
 
 	void* file;
-	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\src\\x64\\Release\\canyon.lvl");
+	String path = String_FromConst("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\src\\x64\\Release\\canyon.lvl");
 	ReturnCode openCode = Platform_FileOpen(&file, &path, true);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);

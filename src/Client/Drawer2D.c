@@ -123,7 +123,7 @@ void Drawer2D_Clear(Bitmap* bmp, PackedCol col, Int32 x, Int32 y, Int32 width, I
 
 Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow) {
 	DrawTextArgs args;
-	String text = String_FromConstant("I");
+	String text = String_FromConst("I");
 	DrawTextArgs_Make(&args, &text, font, useShadow);
 	return Drawer2D_MeasureText(&args).Height;
 }

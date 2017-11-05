@@ -7,11 +7,12 @@
 #include "Random.h"
 #include "Events.h"
 
-/* TODO: WORK THESE OUT*/
-bool ServerConnection_IsSinglePlayer;
-String ServerConnection_ServerName;
-String ServerConnection_ServerMOTD;
-String ServerConnection_AppName;
+UInt8 ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
+String ServerConnection_ServerName = String_EmptyConstArray(ServerConnection_ServerNameBuffer);
+UInt8 ServerConnection_ServerMOTDBuffer[String_BufferSize(STRING_SIZE)];
+String ServerConnection_ServerMOTD = String_EmptyConstArray(ServerConnection_ServerMOTDBuffer);
+UInt8 ServerConnection_AppNameBuffer[String_BufferSize(STRING_SIZE)];
+String ServerConnection_AppName = String_EmptyConstArray(ServerConnection_AppNameBuffer);
 
 void ServerConnection_ResetState(void) {
 	ServerConnection_Disconnected = false;
@@ -23,7 +24,7 @@ void ServerConnection_ResetState(void) {
 
 
 void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
-	String logName = String_FromConstant("Singleplayer");
+	String logName = String_FromConst("Singleplayer");
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
 

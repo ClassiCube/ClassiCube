@@ -95,7 +95,7 @@ void Entity_ParseScale(Entity* entity, String scale) {
 	entity->ModelScale = Vector3_Create1(value);
 }
 
-void Entity_SetModel(Entity* entity, STRING_TRANSIENT String* model) {
+void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->ModelBlock = BlockID_Air;
 	String_Clear(&entity->ModelName);
@@ -111,7 +111,7 @@ void Entity_SetModel(Entity* entity, STRING_TRANSIENT String* model) {
 	}
 
 	/* 'giant' model kept for backwards compatibility */
-	String giant = String_FromConstant("giant");
+	String giant = String_FromConst("giant");
 	if (String_CaselessEquals(model, &giant)) {		
 		String_AppendConst(&entity->ModelName, "humanoid");
 		entity->ModelScale = Vector3_Create1(2.0f);
@@ -360,7 +360,7 @@ String HacksComp_GetFlagValue(String* flag, HacksComp* hacks) {
 }
 
 void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
-	String horSpeedFlag = String_FromConstant("horspeed=");
+	String horSpeedFlag = String_FromConst("horspeed=");
 	String speedStr = HacksComp_GetFlagValue(&horSpeedFlag, hacks);
 	if (speedStr.length == 0) return;
 
@@ -370,7 +370,7 @@ void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
 }
 
 void HacksComp_ParseMultiSpeed(HacksComp* hacks) {
-	String jumpsFlag = String_FromConstant("jumps=");
+	String jumpsFlag = String_FromConst("jumps=");
 	String jumpsStr = HacksComp_GetFlagValue(&jumpsFlag, hacks);
 	if (jumpsStr.length == 0) return;
 
@@ -451,7 +451,7 @@ void HacksComp_UpdateState(HacksComp* hacks) {
 	hacks->CanBePushed = true;
 
 	/* By default (this is also the case with WoM), we can use hacks. */
-	String excHacks = String_FromConstant("-hax");
+	String excHacks = String_FromConst("-hax");
 	if (String_ContainsString(&hacks->HacksFlags, &excHacks)) {
 		HacksComp_SetAll(hacks, false);
 	}

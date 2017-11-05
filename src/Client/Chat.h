@@ -11,17 +11,8 @@
 */
 
 typedef struct ChatLine_ { UInt8 Buffer[String_BufferSize(STRING_SIZE)]; DateTime Received; } ChatLine;
-typedef struct InputLine_ { UInt8 Buffer[String_BufferSize(STRING_SIZE)]; } InputLine;
-
-ChatLine Chat_Status[3];
-ChatLine Chat_BottomRight[3];
-ChatLine Chat_ClientStatus[3];
-ChatLine Chat_Announcement;
-
-void Chat_Get(UInt32 idx, STRING_PURE String* dst);
-UInt32 Chat_Count;
-void Chat_InputGet(UInt32 idx, STRING_PURE String* dst);
-UInt32 Chat_InputCount;
+ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
+StringsBuffer ChatLog, InputLog;
 
 IGameComponent Chat_MakeGameComponent(void);
 void Chat_SetLogName(STRING_PURE String* name);

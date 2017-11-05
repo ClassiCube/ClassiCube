@@ -12,6 +12,7 @@
 #include "Screens.h"
 #include "Platform.h"
 #include "WordWrap.h"
+#include "ServerConnection.h"
 
 void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
@@ -898,24 +899,24 @@ void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title,
 }
 
 void SpecialInputWidget_InitTabs(SpecialInputWidget* widget) {
-	String title_cols = String_FromConstant("Colours");
+	String title_cols = String_FromConst("Colours");
 	SpecialInputWidget_UpdateColString(widget);
 	SpecialInputTab_Init(&widget->Tabs[0], &title_cols, 10, 4, &widget->ColString);
 
-	String title_math = String_FromConstant("Math");
-	String tab_math = String_FromConstant("\x9F\xAB\xAC\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xFB\xFC\xFD");
+	String title_math = String_FromConst("Math");
+	String tab_math = String_FromConst("\x9F\xAB\xAC\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xFB\xFC\xFD");
 	SpecialInputTab_Init(&widget->Tabs[1], &title_math, 16, 1, &tab_math);
 
-	String title_line = String_FromConstant("Line/Box");
-	String tab_line = String_FromConstant("\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\xBA\xBB\xBC\xBD\xBE\xBF\xC0\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1\xD2\xD3\xD4\xD5\xD6\xD7\xD8\xD9\xDA\xDB\xDC\xDD\xDE\xDF\xFE");
+	String title_line = String_FromConst("Line/Box");
+	String tab_line = String_FromConst("\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\xBA\xBB\xBC\xBD\xBE\xBF\xC0\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1\xD2\xD3\xD4\xD5\xD6\xD7\xD8\xD9\xDA\xDB\xDC\xDD\xDE\xDF\xFE");
 	SpecialInputTab_Init(&widget->Tabs[2], &title_line, 17, 1, &tab_line);
 
-	String title_letters = String_FromConstant("Letters");
-	String tab_letters = String_FromConstant("\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\xA0\xA1\xA2\xA3\xA4\xA5");
+	String title_letters = String_FromConst("Letters");
+	String tab_letters = String_FromConst("\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\xA0\xA1\xA2\xA3\xA4\xA5");
 	SpecialInputTab_Init(&widget->Tabs[3], &title_letters, 17, 1, &tab_letters);
 
-	String title_other = String_FromConstant("Other");
-	String tab_other = String_FromConstant("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F\x9B\x9C\x9D\x9E\xA6\xA7\xA8\xA9\xAA\xAD\xAE\xAF\xF9\xFA");
+	String title_other = String_FromConst("Other");
+	String tab_other = String_FromConst("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F\x9B\x9C\x9D\x9E\xA6\xA7\xA8\xA9\xAA\xAD\xAE\xAF\xF9\xFA");
 	SpecialInputTab_Init(&widget->Tabs[4], &title_other, 16, 1, &tab_other);
 }
 
@@ -1227,7 +1228,7 @@ void InputWidget_Clear(InputWidget* widget) {
 }
 
 bool InputWidget_AllowedChar(InputWidget* widget, UInt8 c) {
-	return Utils_IsValidInputChar(c, game.Server.SupportsFullCP437);
+	return Utils_IsValidInputChar(c, ServerConnection_SupportsFullCP437);
 }
 
 void InputWidget_AppendChar(InputWidget* widget, UInt8 c) {
@@ -1511,7 +1512,7 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->Base.Base.HandlesKeyPress  = InputWidget_HandlesKeyPress;
 	widget->Base.Base.HandlesMouseDown = InputWidget_HandlesMouseDown;
 
-	String caret = String_FromConstant("_");
+	String caret = String_FromConst("_");
 	DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
 	widget->CaretTex = Drawer2D_MakeTextTexture(&args, 0, 0);
 	widget->CaretTex.Width = (UInt16)((widget->CaretTex.Width * 3) / 4);

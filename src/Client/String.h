@@ -35,7 +35,9 @@ String String_FromReadonly(const UInt8* buffer);
 /* Makes an empty string that points to nowhere. */
 String String_MakeNull(void);
 /* Constructs a new string from a compile time string constant. */
-#define String_FromConstant(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)};
+#define String_FromConst(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)};
+/* Constructs a new string from a compile time empty string buffer. */
+#define String_EmptyConstArray(buffer) { buffer, 0, (UInt16)(sizeof(buffer) - 1)};
 
 /* Sets all characters in the given string to lowercase. */
 void String_MakeLowercase(STRING_TRANSIENT String* str);
@@ -95,4 +97,17 @@ bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
 bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
 /* Attempts to parse the given string as a boolean. */
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
+
+
+/* todo use a single byte array for all strings, each 'string' is 22 bits offsrt, 10 bits length into this array. */
+/* means resizing is expensive tho*/
+typedef struct StringsBuffer_ {
+	UInt8* TextBuffer;
+	UInt32 TextBufferSize;
+	UInt32* FlagsBuffer;
+	UInt32 FlagsBufferSize;
+	UInt32 Count;
+} StringsBuffer;
+void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text);
+void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
 #endif

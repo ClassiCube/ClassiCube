@@ -81,7 +81,7 @@ void Block_SetDrawType(BlockID block, UInt8 draw) {
 }
 
 
-void Block_SplitUppercase(STRING_TRANSIENT String* buffer, STRING_TRANSIENT String* blockNames, Int32 start, Int32 end) {
+void Block_SplitUppercase(STRING_TRANSIENT String* buffer, STRING_PURE String* blockNames, Int32 start, Int32 end) {
 	Int32 i;
 	for (i = start; i < end; i++) {
 		UInt8 c = String_CharAt(blockNames, i);
@@ -102,11 +102,11 @@ String Block_DefaultName(BlockID block) {
 	if (block >= 256) return "ID " + block;
 #endif
 	if (block >= BLOCK_CPE_COUNT) {
-		String invalid = String_FromConstant("Invalid");
+		String invalid = String_FromConst("Invalid");
 		return invalid;
 	}
 
-	String blockNames = String_FromConstant(BLOCK_RAW_NAMES);
+	String blockNames = String_FromConst(BLOCK_RAW_NAMES);
 	/* Find start and end of this particular block name. */
 	Int32 start = 0, i;
 	for (i = 0; i < block; i++) {

@@ -417,7 +417,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 }
 
 
-void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_PURE String* title, DisplayDevice* device) {
+void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, DisplayDevice* device) {
 	win_Instance = GetModuleHandleA(NULL);
 	/* TODO: UngroupFromTaskbar(); */
 

@@ -125,7 +125,7 @@ void Entity_GetPickingBounds(Entity* entity, AABB* bb);
 /* Bounding box of the model that collision detection is performed with, in world coordinates. */
 void Entity_GetBounds(Entity* entity, AABB* bb);
 /* Sets the model associated with this entity. ('name' or 'name|scale') */
-void Entity_SetModel(Entity* entity, STRING_TRANSIENT String* model);
+void Entity_SetModel(Entity* entity, STRING_PURE String* model);
 void Entity_UpdateModelBounds(Entity* entity);
 /* Determines whether any of the blocks that intersect the given bounding box satisfy the given condition. */
 bool Entity_TouchesAny(AABB* bb, TouchesAny_Condition condition);
