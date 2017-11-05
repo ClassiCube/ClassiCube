@@ -184,6 +184,7 @@
     <ClInclude Include="Block.h" />
     <ClInclude Include="Builder.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Chat.h" />
     <ClInclude Include="ChunkUpdater.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="Constants.h" />
@@ -223,6 +224,7 @@
     <ClInclude Include="Player.h" />
     <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
+    <ClInclude Include="ServerConnection.h" />
     <ClInclude Include="SkyboxRenderer.h" />
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
@@ -260,6 +262,7 @@
     <ClCompile Include="Block.c" />
     <ClCompile Include="BordersRenderer.c" />
     <ClCompile Include="Builder.c" />
+    <ClCompile Include="Chat.c" />
     <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DateTime.c" />
@@ -304,6 +307,7 @@
     <ClCompile Include="Random.c" />
     <ClCompile Include="Screens.c" />
     <ClCompile Include="SelectionBox.c" />
+    <ClCompile Include="ServerConnection.c" />
     <ClCompile Include="SkyboxRenderer.c" />
     <ClCompile Include="Stream.c" />
     <ClCompile Include="String.c" />

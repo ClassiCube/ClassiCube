@@ -51,7 +51,7 @@ bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
 	Vector3 horPos = Vector3_Create3((Real32)Math_Floor(nextPos->X), 0.0f, (Real32)Math_Floor(nextPos->Z));
 	Vector3 min, max;
 	Vector3_Add(&min, &Block_MinBB[block], &horPos);
-	Vector3_Add(&min, &Block_MaxBB[block], &horPos);
+	Vector3_Add(&max, &Block_MaxBB[block], &horPos);
 	return nextPos->X >= min.X && nextPos->Z >= min.Z && nextPos->X < max.X && nextPos->Z < max.Z;
 }
 
@@ -175,7 +175,7 @@ Random rnd;
 void Particles_FileChanged(Stream* stream) {
 	String particlesPng = String_FromConstant("particles.png");
 	if (String_Equals(&stream->Name, &particlesPng)) {
-		Game_UpdateTexture(&Particles_TexId, stream, false);
+		//Game_UpdateTexture(&Particles_TexId, stream, false);
 	}
 }
 

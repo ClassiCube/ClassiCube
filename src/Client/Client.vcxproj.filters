@@ -34,9 +34,6 @@
     <Filter Include="Source Files\Utils">
       <UniqueIdentifier>{23df7aa9-c2fe-4dd9-ad2e-b07776510024}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Blocks">
-      <UniqueIdentifier>{f693e3de-8aee-440f-9edc-61544d2f7f79}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\2D">
       <UniqueIdentifier>{94eedec7-46cb-47cd-8729-fbf215de1cd6}</UniqueIdentifier>
     </Filter>
@@ -150,6 +147,12 @@
     </Filter>
     <Filter Include="Header Files\Platform\Window">
       <UniqueIdentifier>{37746374-0a3a-415c-99a6-e1e350328eab}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Network">
+      <UniqueIdentifier>{9e70549b-2798-4372-b887-876f8403a7ff}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Blocks">
+      <UniqueIdentifier>{f693e3de-8aee-440f-9edc-61544d2f7f79}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -375,6 +378,12 @@
     <ClInclude Include="GameMode.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Chat.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerConnection.h">
+      <Filter>Header Files\Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -580,6 +589,12 @@
     </ClCompile>
     <ClCompile Include="GameMode.c">
       <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Chat.c">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="ServerConnection.c">
+      <Filter>Source Files\Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
