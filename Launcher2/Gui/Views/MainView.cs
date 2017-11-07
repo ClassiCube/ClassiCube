@@ -7,7 +7,6 @@ using Launcher.Gui.Widgets;
 namespace Launcher.Gui.Views {
 	public sealed class MainView : IView {
 		
-		Font buttonFont, updateFont;
 		internal int loginIndex, resIndex, dcIndex, spIndex, statusIndex;
 		internal int sslIndex, settingsIndex;
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
@@ -17,24 +16,15 @@ namespace Launcher.Gui.Views {
 		}
 		
 		public override void Init() {
-			titleFont = new Font(game.FontName, 15, FontStyle.Bold);
+			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			textFont = new Font(game.FontName, 14, FontStyle.Regular);
 			inputHintFont = new Font(game.FontName, 12, FontStyle.Italic);
-			
-			buttonFont = new Font(game.FontName, 16, FontStyle.Bold);
-			updateFont = new Font(game.FontName, 12, FontStyle.Italic);
 			MakeWidgets();
 		}
 		
 		string Get(int index) {
 			Widget widget = widgets[index];
 			return widget == null ? "" : widget.Text;
-		}
-		
-		public override void Dispose() {
-			buttonFont.Dispose();
-			updateFont.Dispose();
-			base.Dispose();
 		}
 
 		
@@ -47,7 +37,7 @@ namespace Launcher.Gui.Views {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -75);
 			
 			loginIndex = widgetIndex;
-			Makers.Button(this, "Sign in", 100, buttonHeight, buttonFont)
+			Makers.Button(this, "Sign in", 100, buttonHeight, titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -90, -25);
 			statusIndex = widgetIndex;
 			Makers.Label(this, Get(statusIndex), textFont)
@@ -55,13 +45,13 @@ namespace Launcher.Gui.Views {
 			
 			
 			resIndex = widgetIndex;
-			Makers.Button(this, "Resume", 100, buttonHeight, buttonFont)
+			Makers.Button(this, "Resume", 100, buttonHeight, titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 90, -25);
 			dcIndex = widgetIndex;
-			Makers.Button(this, "Direct connect", 200, buttonHeight, buttonFont)
+			Makers.Button(this, "Direct connect", 200, buttonHeight, titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 60);
 			spIndex = widgetIndex;
-			Makers.Button(this, "Singleplayer", 200, buttonHeight, buttonFont)
+			Makers.Button(this, "Singleplayer", 200, buttonHeight, titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 110);
 
 			sslIndex = widgetIndex;
@@ -73,11 +63,11 @@ namespace Launcher.Gui.Views {
 			widgets[sslIndex].Visible = sslVisible;
 			widgets[sslIndex + 1].Visible = sslVisible;
 			
-			Makers.Label(this, updateText, updateFont)
+			Makers.Label(this, updateText, inputHintFont)
 				.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -45);
 			
 			settingsIndex = widgetIndex;
-			Makers.Button(this, "Options", 100, buttonHeight, buttonFont)
+			Makers.Button(this, "Options", 100, buttonHeight, titleFont)
 				.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, -6, -6);
 		}
 	}

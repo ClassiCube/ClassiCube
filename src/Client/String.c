@@ -15,29 +15,20 @@ String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
 	Int32 i;
 
 	/* Need to set region occupied by string to NULL for interop with native APIs */
-	for (i = 0; i < capacity + 1; i++) {
-		buffer[i] = 0;
-	}
+	for (i = 0; i < capacity + 1; i++) { buffer[i] = NULL; }
 	return str;
 }
 
 String String_FromReadonly(const UInt8* buffer) {
 	UInt16 length = 0;
-	UInt8 cur = 0;
-	UInt8* ptr = buffer;
+	UInt8* cur = buffer;
+	while ((*cur) != NULL) { cur++; length++; }
 
-	while ((cur = *buffer) != 0) {
-		length++; buffer++;
-	}
-
-	String str = String_FromEmptyBuffer(ptr, length);
+	String str = String_FromEmptyBuffer(buffer, length);
 	str.length = length;
 	return str;
 }
-
-String String_MakeNull(void) {
-	return String_FromEmptyBuffer(NULL, 0);
-}
+String String_MakeNull(void) { return String_FromEmptyBuffer(NULL, 0); }
 
 
 void String_MakeLowercase(STRING_TRANSIENT String* str) {
@@ -49,8 +40,8 @@ void String_MakeLowercase(STRING_TRANSIENT String* str) {
 
 void String_Clear(STRING_TRANSIENT String* str) {
 	Int32 i;
-	for (i = 0; i < str->length; i++) {
-		str->buffer[i] = 0;
+	for (i = 0; i < str->length; i++) { 
+		str->buffer[i] = NULL; 
 	}
 	str->length = 0;
 }
@@ -389,4 +380,19 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 	}
 
 	*value = false; return false;
+}
+
+#define STRINGSBUFFER_LEN_SHIFT 10
+#define STRINGSBUFFER_LEN_MASK  0x3FFUL
+void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text) {
+	if (index >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
+	String_Clear(text);
+
+	UInt32 flags  = buffer->FlagsBuffer[index];
+	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
+	UInt32 len    = flags & STRINGSBUFFER_LEN_MASK;
+
+	UInt8* src = &buffer->FlagsBuffer[offset];
+	UInt32 i;
+	for (i = 0; i < len; i++) { String_Append(text, src[i]); }
 }

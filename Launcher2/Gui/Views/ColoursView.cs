@@ -14,7 +14,7 @@ namespace Launcher.Gui.Views {
 		internal int defIndex, sliderIndex;
 		
 		public override void Init() {
-			titleFont = new Font(game.FontName, 15, FontStyle.Bold);
+			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			textFont = new Font(game.FontName, 14, FontStyle.Regular);
 			inputHintFont = new Font(game.FontName, 12, FontStyle.Italic);
 			MakeWidgets();

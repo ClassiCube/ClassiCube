@@ -10,10 +10,8 @@ using Launcher.Gui.Widgets;
 namespace Launcher.Gui.Screens {	
 	public sealed class DirectConnectScreen : InputScreen {
 		
-		Font booleanFont;
 		DirectConnectView view;
 		public DirectConnectScreen(LauncherWindow game) : base(game) {
-			booleanFont = new Font(game.FontName, 22, FontStyle.Regular);
 			enterIndex = 3;
 			view = new DirectConnectView(game);
 			widgets = view.widgets;
@@ -57,7 +55,6 @@ namespace Launcher.Gui.Screens {
 		public override void Dispose() {
 			StoreFields();
 			base.Dispose();
-			booleanFont.Dispose();
 		}
 		
 		static string cachedUser, cachedAddress, cachedMppass;

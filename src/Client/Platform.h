@@ -10,6 +10,8 @@
 
 /* Newline for text */
 extern UInt8* Platform_NewLine;
+extern UInt8 Platform_DirectorySeparator;
+extern ReturnCode ReturnCode_FileShareViolation;
 
 /* Initalises required state for this platform. */
 void Platform_Init(void);

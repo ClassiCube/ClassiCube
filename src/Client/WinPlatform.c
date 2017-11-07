@@ -12,6 +12,8 @@ HBITMAP hbmp;
 HANDLE heap;
 
 UInt8* Platform_NewLine = "\r\n";
+UInt8 Platform_DirectorySeparator = '\\';
+ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 
 void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */

@@ -108,6 +108,8 @@ typedef struct StringsBuffer_ {
 	UInt32 FlagsBufferSize;
 	UInt32 Count;
 } StringsBuffer;
+
 void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text);
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
+void StringsBuffer_Free(StringsBuffer* buffer);
 #endif

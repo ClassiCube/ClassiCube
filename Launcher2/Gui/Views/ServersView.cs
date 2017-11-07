@@ -4,7 +4,6 @@ using System.Drawing;
 using ClassicalSharp;
 using Launcher.Drawing;
 using Launcher.Gui.Widgets;
-using OpenTK.Input;
 
 namespace Launcher.Gui.Views {
 	public sealed class ServersView : IView {
@@ -20,7 +19,7 @@ namespace Launcher.Gui.Views {
 		}
 		
 		public override void Init() {
-			titleFont = new Font(game.FontName, 15, FontStyle.Bold);
+			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
 			textFont = new Font(game.FontName, 14, FontStyle.Regular);
 			inputHintFont = new Font(game.FontName, 12, FontStyle.Italic);
 			tableFont = new Font(game.FontName, 11, FontStyle.Regular);
