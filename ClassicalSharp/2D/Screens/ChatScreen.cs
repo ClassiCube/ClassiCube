@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 		HudScreen hud;
 		int chatLines;
 		TextWidget announcement;
-		InputWidget input;
+		internal InputWidget input;
 		TextGroupWidget status, bottomRight, normalChat, clientStatus;
 		bool suppressNextPress = true;
 		int chatIndex;

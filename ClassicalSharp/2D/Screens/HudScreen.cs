@@ -24,6 +24,11 @@ namespace ClassicalSharp.Gui.Screens {
 		internal int BottomOffset { get { return hotbar.Height; } }
 		
 		public override void Render(double delta) {
+			if (game.HideGui && chat.HandlesAllInput) {
+				gfx.Texturing = true;
+				chat.input.Render(delta);
+				gfx.Texturing = false;
+			}
 			if (game.HideGui) return;
 			
 			bool showMinimal = game.Gui.ActiveScreen.BlocksWorld;

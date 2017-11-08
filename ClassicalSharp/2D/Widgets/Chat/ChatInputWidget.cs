@@ -65,12 +65,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		#region Input handling
 		
 		public override bool HandlesKeyPress(char key) {
-			if (!game.HideGui) Append(key);
-			return true;
+			Append(key); return true;
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
-			if (game.HideGui) return key < Key.F1 || key > Key.F35;
 			bool controlDown = ControlDown();
 			
 			if (key == Key.Tab) { TabKey(); return true; }
