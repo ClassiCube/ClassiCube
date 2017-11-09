@@ -32,8 +32,10 @@ namespace ClassicalSharp {
 			#if !USE_DX
 			nullContext = false;
 			#endif
-			int width, height;
-			SelectResolution(out width, out height);
+			
+			int width = 854, height = 480;			
+			DisplayDevice device = DisplayDevice.Primary;		
+			if (device.Width < 854) width = 640;
 				
 			if (args.Length == 0 || args.Length == 1) {
 				const string skinServer = "http://static.classicube.net/skins/";
@@ -51,18 +53,6 @@ namespace ClassicalSharp {
 		// put in separate function, because we don't want to load winforms assembly if possible
 		static void MessageDefaultZipMissing() {
 			MessageBox.Show("default.zip not found, try running the launcher first.", "Missing file");
-		}
-		
-		static void SelectResolution(out int width, out int height) {
-			DisplayDevice device = DisplayDevice.Primary;
-			width = 640; height = 480;
-			
-			if (device.Width >= 1024 && device.Height >= 768) {
-				width = 800; height = 600;
-			}
-			if (device.Width >= 1920 && device.Height >= 1080) {
-				width = 1600; height = 900;
-			}
 		}
 		
 		static void RunMultiplayer(string[] args, bool nullContext, int width, int height) {
