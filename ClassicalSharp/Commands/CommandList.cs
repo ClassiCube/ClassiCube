@@ -23,6 +23,7 @@ namespace ClassicalSharp.Commands {
 			Register(new GpuInfoCommand());
 			Register(new HelpCommand());
 			Register(new RenderTypeCommand());
+			Register(new ResolutionCommand());
 			
 			if (!game.Server.IsSinglePlayer) return;
 			Register(new ModelCommand());

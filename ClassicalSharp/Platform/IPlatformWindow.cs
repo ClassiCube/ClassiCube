@@ -10,6 +10,8 @@ namespace ClassicalSharp {
 	/// <summary> Abstracts away a platform specific window, and input handler mechanism. </summary>
 	public interface IPlatformWindow {
 		
+		Size ClientSize { get; set; }
+		
 		int Width { get; }
 		
 		int Height { get; }

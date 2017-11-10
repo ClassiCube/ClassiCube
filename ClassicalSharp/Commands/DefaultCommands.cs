@@ -90,4 +90,28 @@ namespace ClassicalSharp.Commands {
 			}
 		}
 	}
+	
+	public sealed class ResolutionCommand : Command {
+		
+		public ResolutionCommand() {
+			Name = "Resolution";
+			Help = new string[] {
+				"&a/client resolution [width] [height]",
+				"&ePrecisely sets the size of the rendered window.",
+			};
+		}
+		
+		public override void Execute(string[] args) {
+			int width, height;
+			if (args.Length < 3) {
+				game.Chat.Add("&e/client: &cYou didn't specify width and height");
+			} else if (!Int32.TryParse(args[1], out width) || !Int32.TryParse(args[2], out height)) {
+				game.Chat.Add("&e/client: &cWidth and height must be integers.");
+			} else if (width <= 0 || height <= 0) {
+				game.Chat.Add("&e/client: &cWidth and height must be above 0.");
+			} else {
+				game.window.ClientSize = new System.Drawing.Size(width, height);
+			}
+		}
+	}
 }
