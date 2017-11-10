@@ -111,7 +111,7 @@ Int32 Atlas1D_UsedAtlasesCount(void) {
 	TextureLoc maxTexLoc = 0;
 	Int32 i;
 
-	for (i = 0; i < Block_TexturesCount; i++) {
+	for (i = 0; i < Array_NumElements(Block_Textures); i++) {
 		maxTexLoc = max(maxTexLoc, Block_Textures[i]);
 	}
 	return Atlas1D_Index(maxTexLoc) + 1;

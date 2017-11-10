@@ -172,7 +172,11 @@ Int32 Block_FindID(STRING_PURE String* name) {
 	return -1;
 }
 
-bool Block_IsLiquid(BlockID b) { return b >= BlockID_Water && b <= BlockID_StillLava; }
+bool Block_IsLiquid(BlockID b) {
+	CollideType collide = Block_ExtendedCollide[b];
+	return Block_Draw[b] == DrawType_Translucent &&
+		(collide == CollideType_LiquidWater || collide == CollideType_LiquidLava);
+}
 
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
@@ -227,7 +231,7 @@ bool Block_FaceOccluded(BlockID block, BlockID other, Face face) {
 void Block_CalcRenderBounds(BlockID block) {
 	Vector3 min = Block_MinBB[block], max = Block_MaxBB[block];
 
-	if (block >= BlockID_Water && block <= BlockID_StillLava) {
+	if (Block_IsLiquid(block)) {
 		min.X -= 0.1f / 16.0f; max.X -= 0.1f / 16.0f;
 		min.Z -= 0.1f / 16.0f; max.Z -= 0.1f / 16.0f;
 		min.Y -= 1.5f / 16.0f; max.Y -= 1.5f / 16.0f;

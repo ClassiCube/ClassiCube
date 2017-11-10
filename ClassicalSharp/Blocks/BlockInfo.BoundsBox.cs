@@ -22,7 +22,7 @@ namespace ClassicalSharp {
 		internal static void CalcRenderBounds(BlockID block) {
 			Vector3 min = MinBB[block], max = MaxBB[block];
 			
-			if (block >= Block.Water && block <= Block.StillLava) {
+			if (IsLiquid(block)) {
 				min.X -= 0.1f/16f; max.X -= 0.1f/16f; 
 				min.Z -= 0.1f/16f; max.Z -= 0.1f/16f;
 				min.Y -= 1.5f/16f; max.Y -= 1.5f/16f;

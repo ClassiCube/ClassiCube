@@ -67,56 +67,33 @@ namespace ClassicalSharp {
 	/// <remarks> e.g. blocks light, height, texture IDs, etc. </remarks>
 	public static partial class BlockInfo {
 		
-		/// <summary> Gets whether the given block is a liquid. (water and lava) </summary>
-		public static bool IsLiquid(BlockID block) { return block >= Block.Water && block <= Block.StillLava; }
-		
-		/// <summary> Gets whether the given block stops sunlight. </summary>
+		public static bool IsLiquid(BlockID block) {
+			byte collide = ExtendedCollide[block];
+			return Draw[block] == DrawType.Translucent &&
+				(collide == CollideType.LiquidWater || collide == CollideType.LiquidLava);
+		}
+
 		public static bool[] BlocksLight = new bool[Block.Count];
-		
-		/// <summary> Gets whether the given block should draw all its faces in a full white colour. </summary>
 		public static bool[] FullBright = new bool[Block.Count];
-		
-		/// <summary> Gets the name of the given block, or 'Invalid' if the block is not defined. </summary>
 		public static string[] Name = new string[Block.Count];
-		
-		/// <summary> Gets the custom fog colour that should be used when the player is standing within this block.
-		/// Note that this is only used for exponential fog mode. </summary>
 		public static FastColour[] FogColour = new FastColour[Block.Count];
-
-		/// <summary> Gets the fog density for the given block. </summary>
-		/// <remarks> A value of 0 means this block does not apply fog. </remarks>
-		public static float[] FogDensity = new float[Block.Count];
-		
-		public static byte[] Collide = new byte[Block.Count];
-		
-		public static byte[] ExtendedCollide = new byte[Block.Count];
-		
-		public static float[] SpeedMultiplier = new float[Block.Count];
-		
+		public static float[] FogDensity = new float[Block.Count];		
+		public static byte[] Collide = new byte[Block.Count];		
+		public static byte[] ExtendedCollide = new byte[Block.Count];		
+		public static float[] SpeedMultiplier = new float[Block.Count];		
 		public static byte[] LightOffset = new byte[Block.Count];
-
-		/// <summary> Gets the DrawType for the given block. </summary>
-		public static byte[] Draw = new byte[Block.Count];
+		public static byte[] Draw = new byte[Block.Count];		
+		public static uint[] DefinedCustomBlocks = new uint[Block.Count >> 5];		
+		public static SoundType[] DigSounds = new SoundType[Block.Count];		
+		public static SoundType[] StepSounds = new SoundType[Block.Count];		
+		public static bool[] CanPlace = new bool[Block.Count];		
+		public static bool[] CanDelete = new bool[Block.Count];		
+		public static bool[] Tinted = new bool[Block.Count];
 		
 		/// <summary> Gets whether the given block has an opaque draw type and is also a full tile block. </summary>
 		/// <remarks> Full tile block means Min of (0, 0, 0) and max of (1, 1, 1). </remarks>
 		public static bool[] FullOpaque = new bool[Block.Count];
 		
-		public static uint[] DefinedCustomBlocks = new uint[Block.Count >> 5];
-		
-		public static SoundType[] DigSounds = new SoundType[Block.Count];
-		
-		public static SoundType[] StepSounds = new SoundType[Block.Count];
-		
-		public static bool[] CanPlace = new bool[Block.Count];
-		
-		public static bool[] CanDelete = new bool[Block.Count];
-
-		/// <summary> Gets whether the given block has a tinting colour applied to it when rendered. </summary>
-		/// <remarks> The tinting colour used is the block's fog colour. </remarks>
-		public static bool[] Tinted = new bool[Block.Count];
-		
-		/// <summary> Recalculates the initial properties and culling states for all blocks. </summary>
 		public static void Reset(Game game) {
 			Init();
 			// TODO: Make this part of TerrainAtlas2D maybe?
@@ -124,7 +101,6 @@ namespace ClassicalSharp {
 				RecalculateSpriteBB(fastBmp);
 		}
 		
-		/// <summary> Calculates the initial properties and culling states for all blocks. </summary>
 		public static void Init() {
 			for (int i = 0; i < DefinedCustomBlocks.Length; i++)
 				DefinedCustomBlocks[i] = 0;
@@ -133,7 +109,6 @@ namespace ClassicalSharp {
 			UpdateCulling();
 		}
 
-		/// <summary> Initialises the default blocks the player is allowed to place and delete. </summary>
 		public static void SetDefaultPerms() {
 			for (int block = Block.Stone; block <= Block.MaxDefinedBlock; block++) {
 				CanPlace[block] = true;
@@ -170,7 +145,6 @@ namespace ClassicalSharp {
 				&& MinBB[block] == Vector3.Zero && MaxBB[block] == Vector3.One;
 		}
 		
-		/// <summary> Resets the properties for the given block to their defaults. </summary>
 		public static void ResetBlockProps(BlockID block) {
 			BlocksLight[block] = DefaultSet.BlocksLight(block);
 			FullBright[block] = DefaultSet.FullBright(block);
@@ -214,8 +188,7 @@ namespace ClassicalSharp {
 				SetSide(sideTex[block], block);
 			}
 		}
-		
-		/// <summary> Finds the ID of the block whose name caselessly matches the input, -1 otherwise. </summary>
+
 		public static int FindID(string name) {
 			for (int i = 0; i < Block.Count; i++) {
 				if (Utils.CaselessEquals(Name[i], name)) return i;
