@@ -423,6 +423,9 @@ bool HotbarWidget_HandlesKeyUp(GuiElement* elem, Key key) {
 	if (key != KeyBind_Get(KeyBind_HotbarSwitching)) return false;
 	if (widget->AltHandled) { widget->AltHandled = false; return true; } /* handled already */
 
+	/* Don't switch hotbar when alt+tab */
+	if (!Window_GetFocused()) return true;
+
 	/* Alternate between first and second row */
 	Int32 index = Inventory_Offset == 0 ? 1 : 0;
 	Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);

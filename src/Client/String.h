@@ -82,22 +82,13 @@ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 /* Returns whether given string starts with sub. */
 #define String_StartsWith(str, sub) (String_IndexOfString(str, sub) == 0)
 
-/* Converts a code page 437 index into a unicode character. */
 UInt16 Convert_CP437ToUnicode(UInt8 c);
-/* Converts a unicode character into a code page 437 index. */
 UInt8 Convert_UnicodeToCP437(UInt16 c);
-
-/* Attempts to parse the given string as a signed 32 bit integer.*/
 bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value);
-/* Attempts to parse the given string as an unsigned 8 bit integer.*/
 bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value);
-/* Attempts to parse the given string as an unsigned 8 bit integer.*/
 bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
-/* Attempts to parse the given string as a 32 bit floating point number. */
 bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
-/* Attempts to parse the given string as a boolean. */
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
-
 
 /* todo use a single byte array for all strings, each 'string' is 22 bits offsrt, 10 bits length into this array. */
 /* means resizing is expensive tho*/

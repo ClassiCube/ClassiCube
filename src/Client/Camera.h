@@ -8,9 +8,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Tilt matrix applied to the active camera. */
 Matrix Camera_TiltM;
-/* Bobbing applied to the active camera. */
 Real32 Camera_BobbingVer, Camera_BobbingHor;
 
 typedef struct Camera_ {
@@ -41,17 +39,11 @@ typedef struct Camera_ {
 	bool (*Zoom)(Real32 amount);
 } Camera;
 
-/* Adjusts head X rotation of the player to avoid looking straight up or down.
-Returns the resulting angle in radians.
+/* Adjusts head X rotation of the player to avoid looking straight up or down. Returns result angle in radians.
 NOTE: looking straight up or down (parallel to camera up vector) can otherwise cause rendering issues. */
 Real32 Camera_AdjustHeadX(Real32 degrees);
 
-/* Returns the active camera instance. */
 Camera* Camera_ActiveCamera;
-
-/* Initalises and adds the default cameras. */
 void Camera_Init(void);
-
-/* Cycles the active camera to the next allowed camera type. */
 void Camera_CycleActive(void);
 #endif

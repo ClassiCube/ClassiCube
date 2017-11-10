@@ -117,6 +117,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (key != game.Input.Keys[KeyBind.HotbarSwitching]) return false;
 			if (altHandled) { altHandled = false; return true; } // handled already
 			
+			// Don't switch hotbar when alt+tab
+			if (!game.window.Focused) return true;
+			
 			// Alternate between first and second row
 			int index = game.Inventory.Offset == 0 ? 1 : 0;
 			game.Inventory.Offset = index * Inventory.BlocksPerRow;
