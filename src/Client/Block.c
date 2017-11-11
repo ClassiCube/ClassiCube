@@ -174,8 +174,9 @@ Int32 Block_FindID(STRING_PURE String* name) {
 
 bool Block_IsLiquid(BlockID b) {
 	CollideType collide = Block_ExtendedCollide[b];
-	return Block_Draw[b] == DrawType_Translucent &&
-		(collide == CollideType_LiquidWater || collide == CollideType_LiquidLava);
+	return
+		(collide == CollideType_LiquidWater && Block_Draw[b] == DrawType_Translucent) ||
+		(collide == CollideType_LiquidLava  && Block_Draw[b] == DrawType_Transparent);
 }
 
 

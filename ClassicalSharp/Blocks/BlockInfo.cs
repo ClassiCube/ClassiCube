@@ -69,8 +69,9 @@ namespace ClassicalSharp {
 		
 		public static bool IsLiquid(BlockID block) {
 			byte collide = ExtendedCollide[block];
-			return Draw[block] == DrawType.Translucent &&
-				(collide == CollideType.LiquidWater || collide == CollideType.LiquidLava);
+			return 
+				(collide == CollideType.LiquidWater && Draw[block] == DrawType.Translucent) ||
+				(collide == CollideType.LiquidLava  && Draw[block] == DrawType.Transparent);
 		}
 
 		public static bool[] BlocksLight = new bool[Block.Count];
