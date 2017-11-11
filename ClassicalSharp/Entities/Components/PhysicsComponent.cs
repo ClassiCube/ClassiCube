@@ -209,9 +209,9 @@ namespace ClassicalSharp.Entities {
 				if (!pastJumpPoint) {
 					didLiquidJump = false;
 				} else if (pastJumpPoint) {
-					//either A) jump bob in water B) climb up solid on side
+					//TODO: fix pastJumpPoint to work better/more accurately.
 					if (collisions.HorizontalCollision && entity.Velocity.Y >= -0.05) {
-						addVel += touchLava ? 0.150f : 0.15f;
+						addVel += 0.30f;
 						didLiquidJump = true;
 					}
 				}
@@ -222,18 +222,12 @@ namespace ClassicalSharp.Entities {
 				entity.Velocity = Utils.Mul(entity.Velocity, drag);
 				entity.Velocity.Y -= gravity;
 			} else {
-				//Vector3 newDrag = drag;
-				//newDrag.Y = entity.Model.Drag.Y;
-				//entity.Velocity = Utils.Mul(entity.Velocity, newDrag);
-				
-				gravity = useLiquidGravity ? liquidGrav : entity.Model.Gravity;
-				entity.Velocity.Y -= gravity;
+				entity.Velocity.Y = addVel;
+				addVel = 0;
 				
 				didLiquidJump = false;
 			}
-			
-			entity.Velocity.Y += addVel;
-			addVel = 0;
+
 			
 		}
 
