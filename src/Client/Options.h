@@ -35,6 +35,8 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_Mipmaps "gfx-mipmaps"
 #define OptionsKey_SurvivalMode "game-survivalmode"
 #define OptionsKey_ChatLogging "chat-logging"
+#define OptionsKey_WindowWidth "window-width"
+#define OptionsKey_WindowHeight "window-height"
 
 #define OptionsKey_HacksEnabled "hacks-hacksenabled"
 #define OptionsKey_FieldOfView "hacks-fov"

@@ -28,7 +28,6 @@ namespace ClassicalSharp {
 		internal void OnLoad() {
 			Mouse = window.Mouse;
 			Keyboard = window.Keyboard;
-			Options.Load();
 			
 			#if ANDROID
 			Graphics = new OpenGLESApi();

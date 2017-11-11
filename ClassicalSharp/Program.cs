@@ -13,7 +13,7 @@ namespace ClassicalSharp {
 		public const string AppName = "ClassicalSharp 0.99.9.5";
 		
 		public static string AppDirectory;
-#if !LAUNCHER
+		#if !LAUNCHER
 		[STAThread]
 		static void Main(string[] args) {
 			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
@@ -33,10 +33,17 @@ namespace ClassicalSharp {
 			nullContext = false;
 			#endif
 			
-			int width = 854, height = 480;			
-			DisplayDevice device = DisplayDevice.Primary;		
-			if (device.Width < 854) width = 640;
-				
+			Options.Load();
+			int width  = Options.GetInt(OptionsKey.WindowWidth,  0, 65536, 0);
+			int height = Options.GetInt(OptionsKey.WindowHeight, 0, 65536, 0);
+			
+			// No custom resolution has been set
+			if (width == 0 || height == 0) {
+				width = 854; height = 480;
+				DisplayDevice device = DisplayDevice.Primary;
+				if (device.Width < 854) width = 640;
+			}
+			
 			if (args.Length == 0 || args.Length == 1) {
 				const string skinServer = "http://static.classicube.net/skins/";
 				string user = args.Length > 0 ? args[0] : "Singleplayer";
@@ -44,7 +51,7 @@ namespace ClassicalSharp {
 					game.Run();
 			} else if (args.Length < 4) {
 				Utils.LogDebug("ClassicalSharp.exe is only the raw client. You must either use the launcher or"
-				     + " provide command line arguments to start the client.");
+				               + " provide command line arguments to start the client.");
 			} else {
 				RunMultiplayer(args, nullContext, width, height);
 			}
@@ -77,7 +84,7 @@ namespace ClassicalSharp {
 				game.Run();
 			}
 		}
-#endif
+		#endif
 		
 		internal static void CleanupMainDirectory() {
 			string mapPath = Path.Combine(Program.AppDirectory, "maps");

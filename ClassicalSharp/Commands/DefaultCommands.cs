@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using ClassicalSharp.Renderers;
 using OpenTK.Input;
@@ -110,7 +111,9 @@ namespace ClassicalSharp.Commands {
 			} else if (width <= 0 || height <= 0) {
 				game.Chat.Add("&e/client: &cWidth and height must be above 0.");
 			} else {
-				game.window.ClientSize = new System.Drawing.Size(width, height);
+				game.window.ClientSize = new Size(width, height);
+				Options.Set(OptionsKey.WindowWidth, width);
+				Options.Set(OptionsKey.WindowHeight, height);
 			}
 		}
 	}

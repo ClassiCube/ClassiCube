@@ -32,6 +32,8 @@ namespace ClassicalSharp {
 		public const string Mipmaps = "gfx-mipmaps";
 		public const string SurvivalMode = "game-survivalmode";
 		public const string ChatLogging = "chat-logging";
+		public const string WindowWidth = "window-width";
+		public const string WindowHeight = "window-height";
 		
 		public const string HacksOn = "hacks-hacksenabled";
 		public const string FieldOfView = "hacks-fov";
