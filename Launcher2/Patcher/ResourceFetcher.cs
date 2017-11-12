@@ -21,7 +21,7 @@ namespace Launcher.Patcher {
 		
 		const string jarClassicUri = "http://s3.amazonaws.com/Minecraft.Download/versions/c0.30_01c/c0.30_01c.jar";
 		const string jar162Uri = "http://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar";
-		const string pngTerrainPatchUri = "http://static.classicube.net/terrain-patch.png";
+		const string pngTerrainPatchUri = "http://static.classicube.net/terrain-patch2.png";
 		const string pngGuiPatchUri = "http://static.classicube.net/gui.png";
 		const string digSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/dig/";
 		const string altDigSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/random/";

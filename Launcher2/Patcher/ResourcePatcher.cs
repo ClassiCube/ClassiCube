@@ -22,8 +22,10 @@ namespace Launcher.Patcher {
 		ZipWriter writer;
 		IDrawer2D drawer;
 		
-		Bitmap animBitmap;
+		Bitmap animsBmp;
 		List<string> existing = new List<string>();
+		Bitmap terrainBmp;
+		bool patchedTerrain;
 		
 		byte[] jarClassic, jar162, pngTerrainPatch, pngGuiPatch;
 		public void Run() {
@@ -45,6 +47,9 @@ namespace Launcher.Patcher {
 				if (pngGuiPatch != null) {
 					using (Bitmap gui = Platform.ReadBmp32Bpp(drawer, pngGuiPatch))
 						writer.WriteNewImage(gui, "gui.png");
+				}
+				if (patchedTerrain) {
+					writer.WriteNewImage(terrainBmp, "terrain.png");
 				}
 				writer.WriteCentralDirectoryRecords();
 			}
@@ -98,14 +103,20 @@ namespace Launcher.Patcher {
 			if (entry.Filename != "terrain.png") {
 				if (entry.Filename == "gui.png")
 					entry.Filename = "gui_classic.png";
+				
 				if (!existing.Contains(entry.Filename))
 					writer.WriteZipEntry(entry, data);
-				return;
 			} else if (!existing.Contains("terrain.png")){
-				using (Bitmap dst = Platform.ReadBmp32Bpp(drawer, data),
-				      mask = Platform.ReadBmp32Bpp(drawer, pngTerrainPatch)) {
-					PatchImage(dst, mask);
-					writer.WriteNewImage(dst, "terrain.png");
+				terrainBmp = Platform.ReadBmp32Bpp(drawer, data);
+				using (Bitmap mask = Platform.ReadBmp32Bpp(drawer, pngTerrainPatch)) {
+					CopyTile( 0,  0,  3 * 16, 3 * 16, mask, terrainBmp);
+					CopyTile(16,  0,  6 * 16, 3 * 16, mask, terrainBmp);
+					CopyTile(32,  0,  6 * 16, 2 * 16, mask, terrainBmp);
+					
+					CopyTile( 0, 16,  5 * 16, 3 * 16, mask, terrainBmp);
+					CopyTile(16, 16,  6 * 16, 5 * 16, mask, terrainBmp);
+					CopyTile(32, 16, 11 * 16, 0 * 16, mask, terrainBmp);				
+					patchedTerrain = true;
 				}
 			}
 		}
@@ -119,74 +130,85 @@ namespace Launcher.Patcher {
 			
 			using (Stream src = new MemoryStream(jar162)) {
 				// Grab animations and snow
-				animBitmap = Platform.CreateBmp(1024, 64);
+				animsBmp = Platform.CreateBmp(512, 16);
 				reader.SelectZipEntry = SelectZipEntry_Modern;
 				reader.ProcessZipEntry = ProcessZipEntry_Modern;
 				reader.Extract(src);
 				
 				if (!existing.Contains("animations.png"))
-					writer.WriteNewImage(animBitmap, "animations.png");
+					writer.WriteNewImage(animsBmp, "animations.png");
 				if (!existing.Contains("animations.txt"))
 					writer.WriteNewString(animationsTxt, "animations.txt");
-				animBitmap.Dispose();
+				animsBmp.Dispose();
 			}
 		}
 		
 		bool SelectZipEntry_Modern(string filename) {
 			return filename.StartsWith("assets/minecraft/textures") &&
-				(filename == "assets/minecraft/textures/environment/snow.png" ||
-				 filename == "assets/minecraft/textures/blocks/water_still.png" ||
-				 filename == "assets/minecraft/textures/blocks/lava_still.png" ||
-				 filename == "assets/minecraft/textures/blocks/fire_layer_1.png" ||
-				 filename == "assets/minecraft/textures/entity/chicken.png");
+				(filename == "assets/minecraft/textures/environment/snow.png"              ||
+				 filename == "assets/minecraft/textures/entity/chicken.png"                ||
+				 filename == "assets/minecraft/textures/blocks/fire_layer_1.png"           ||
+				 filename == "assets/minecraft/textures/blocks/sandstone_bottom.png"       ||
+				 filename == "assets/minecraft/textures/blocks/sandstone_normal.png"       ||
+				 filename == "assets/minecraft/textures/blocks/sandstone_top.png"          ||
+				 filename == "assets/minecraft/textures/blocks/quartz_block_lines_top.png" ||
+				 filename == "assets/minecraft/textures/blocks/quartz_block_lines.png"     ||
+				 filename == "assets/minecraft/textures/blocks/stonebrick.png"             ||
+				 filename == "assets/minecraft/textures/blocks/snow.png"                   ||
+				 filename == "assets/minecraft/textures/blocks/wool_colored_blue.png"      ||
+				 filename == "assets/minecraft/textures/blocks/wool_colored_brown.png"     ||
+				 filename == "assets/minecraft/textures/blocks/wool_colored_cyan.png"      ||
+				 filename == "assets/minecraft/textures/blocks/wool_colored_green.png"     ||
+				 filename == "assets/minecraft/textures/blocks/wool_colored_pink.png"
+				);
 		}
 		
 		void ProcessZipEntry_Modern(string filename, byte[] data, ZipEntry entry) {
 			entry.Filename = ResourceList.GetFile(filename);
-			switch(filename) {
-				case "assets/minecraft/textures/environment/snow.png":
-					if (!existing.Contains("snow.png"))
-						writer.WriteZipEntry(entry, data);
-					break;
-				case "assets/minecraft/textures/entity/chicken.png":
-					if (!existing.Contains("chicken.png"))
-						writer.WriteZipEntry(entry, data);
-					break;
-				case "assets/minecraft/textures/blocks/water_still.png":
-					PatchDefault(data, 0);
-					break;
-				case "assets/minecraft/textures/blocks/lava_still.png":
-					PatchCycle(data, 16);
-					break;
-				case "assets/minecraft/textures/blocks/fire_layer_1.png":
-					PatchDefault(data, 32);
-					break;
+			if (filename == "assets/minecraft/textures/environment/snow.png") {
+				if (!existing.Contains("snow.png")) {
+					writer.WriteZipEntry(entry, data);
+				}
+			} else if (filename == "assets/minecraft/textures/entity/chicken.png") {
+				if (!existing.Contains("chicken.png")) {
+					writer.WriteZipEntry(entry, data);
+				}
+			} else if (filename == "assets/minecraft/textures/blocks/fire_layer_1.png") {
+				PatchAnim(data);
+			} else if (filename == "assets/minecraft/textures/blocks/sandstone_bottom.png") {
+				PatchBlock(data, 9, 3);
+			} else if (filename == "assets/minecraft/textures/blocks/sandstone_normal.png") {
+				PatchBlock(data, 9, 2);
+			} else if (filename == "assets/minecraft/textures/blocks/sandstone_top.png") {
+				PatchBlock(data, 9, 1);
+			} else if (filename == "assets/minecraft/textures/blocks/quartz_block_lines_top.png") {
+				PatchBlock(data, 10, 3);
+				PatchBlock(data, 10, 1);
+			} else if (filename == "assets/minecraft/textures/blocks/quartz_block_lines.png") {
+				PatchBlock(data, 10, 2);
+			} else if (filename == "assets/minecraft/textures/blocks/stonebrick.png") {
+				PatchBlock(data, 4, 3);
+			} else if (filename == "assets/minecraft/textures/blocks/snow.png") {
+				PatchBlock(data, 2, 3);
+			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_blue.png") {
+				PatchBlock(data, 3, 5);
+			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_brown.png") {
+				PatchBlock(data, 2, 5);
+			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_cyan.png") {
+				PatchBlock(data, 4, 5);
+			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_green.png") {
+				PatchBlock(data, 1, 5);
+			} else if (filename == "assets/minecraft/textures/blocks/wool_colored_pink.png") {
+				PatchBlock(data, 0, 5);
 			}
 		}
 		
 		#endregion
 		
-		unsafe void PatchImage(Bitmap dstBitmap, Bitmap maskBitmap) {
-			using (FastBitmap dst = new FastBitmap(dstBitmap, true, false),
-			      src = new FastBitmap(maskBitmap, true, true)) {
-				int size = src.Width, tileSize = size / 16;
-				
-				for (int y = 0; y < size; y += tileSize) {
-					int* row = src.GetRowPtr(y);
-					for (int x = 0; x < size; x += tileSize) {
-						if (row[x] != unchecked((int)0x80000000)) {
-							FastBitmap.MovePortion(x, y, x, y, src, dst, tileSize);
-						}
-					}
-				}
-			}
-		}
-		
-		void CopyTile(int src, int dst, int y, Bitmap bmp) {
+		void CopyTile(int srcX, int srcY, int dstX, int dstY, Bitmap src, Bitmap dst) {
 			for (int yy = 0; yy < 16; yy++) {
 				for (int xx = 0; xx < 16; xx++) {
-					animBitmap.SetPixel(dst + xx, y + yy,
-					                    bmp.GetPixel(xx, src + yy));
+					dst.SetPixel(dstX + xx, dstY + yy, src.GetPixel(srcX + xx, srcY + yy));
 				}
 			}
 		}
@@ -194,43 +216,32 @@ namespace Launcher.Patcher {
 		
 		const string animationsTxt = @"# This file defines the animations used in a texture pack for ClassicalSharp and other supporting applications.
 # Each line is in the format: <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>
-# - TileX and TileY indicate the coordinates of the tile in terrain.png that 
+# - TileX and TileY indicate the coordinates of the tile in terrain.png that
 #     will be replaced by the animation frames. These range from 0 to 15. (inclusive of 15)
 # - FrameX and FrameY indicates the pixel coordinates of the first animation frame in animations.png.
 # - Frame Size indicates the size in pixels of an animation frame.
-# - Frames count indicates the number of used frames.  The first frame is located at 
+# - Frames count indicates the number of used frames.  The first frame is located at
 #     (FrameX, FrameY), the second one at (FrameX + FrameSize, FrameY) and so on.
 # - Tick delay is the number of ticks a frame doesn't change. For instance, a value of 0
-#     means that the frame would be changed every tick, while a value of 2 would mean 
+#     means that the frame would be changed every tick, while a value of 2 would mean
 #    'replace with frame 1, don't change frame, don't change frame, replace with frame 2'.
 # NOTE: If a file called 'uselavaanim' is in the texture pack,  ClassicalSharp 0.99.2 onwards uses its built-in dynamic generation for the lava texture animation.
 # NOTE: If a file called 'usewateranim' is in the texture pack, ClassicalSharp 0.99.5 onwards uses its built-in dynamic generation for the water texture animation.
 
-# still water
-14 0 0 0 16 32 2
-# still lava
-14 1 0 16 16 39 2
 # fire
-6 2 0 32 16 32 0";
+6 2 0 0 16 32 0";
 		
-		unsafe void PatchDefault(byte[] data, int y) {
-			// Sadly files in modern are 24 rgb, so we can't use fastbitmap here
+		void PatchBlock(byte[] data, int x, int y) {
 			using (Bitmap bmp = Platform.ReadBmp32Bpp(drawer, data)) {
-				for (int tile = 0; tile < bmp.Height; tile += 16) {
-					CopyTile(tile, tile, y, bmp);
-				}
+				CopyTile(0, 0, x * 16, y * 16, bmp, terrainBmp);
 			}
+			patchedTerrain = true;
 		}
 		
-		unsafe void PatchCycle(byte[] data, int y) {
+		void PatchAnim(byte[] data) {
 			using (Bitmap bmp = Platform.ReadBmp32Bpp(drawer, data)) {
-				int dst = 0;
-				for (int tile = 0; tile < bmp.Height; tile += 16, dst += 16) {
-					CopyTile(tile, dst, y, bmp);
-				}
-				// Cycle back to first frame.
-				for (int tile = bmp.Height - 32; tile >= 0; tile -= 16, dst += 16) {
-					CopyTile(tile, dst, y, bmp);
+				for (int i = 0; i < bmp.Height; i += 16) {
+					CopyTile(0, i, i, 0, bmp, animsBmp);
 				}
 			}
 		}
