@@ -90,14 +90,14 @@ namespace ClassicalSharp.Entities {
 		
 		public Matrix4 TransformMatrix(Vector3 scale, Vector3 pos) {
 			Matrix4 m = Matrix4.Identity, tmp;
-			
+
+			Matrix4.Scale(out tmp, scale.X, scale.Y, scale.Z);
+			Matrix4.Mult(out m, ref m, ref tmp);			
 			Matrix4.RotateZ(out tmp, -RotZ * Utils.Deg2Rad); 
 			Matrix4.Mult(out m, ref m, ref tmp);
 			Matrix4.RotateX(out tmp, -RotX * Utils.Deg2Rad);
 			Matrix4.Mult(out m, ref m, ref tmp);		
 			Matrix4.RotateY(out tmp, -RotY * Utils.Deg2Rad);
-			Matrix4.Mult(out m, ref m, ref tmp);
-			Matrix4.Scale(out tmp, scale.X, scale.Y, scale.Z);
 			Matrix4.Mult(out m, ref m, ref tmp);
 			Matrix4.Translate(out tmp, pos.X, pos.Y, pos.Z);
 			Matrix4.Mult(out m, ref m, ref tmp);
@@ -226,6 +226,8 @@ namespace ClassicalSharp.Entities {
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
+			bounds.Min.Y += 5f/16f;
+			bounds.Max.Y -= 5f/16f;
 			return TouchesAny(bounds, touchesAnyWater);
 		}
 		static Predicate<BlockID> touchesAnyWater = IsWater;
