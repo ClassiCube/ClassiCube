@@ -2,54 +2,47 @@
 #include "ExtMath.h"
 #include "ErrorHandler.h"
 #include "Utils.h"
-
-UInt8 Options_KeysBuffer[String_BufferSize(26) * OPTIONS_COUNT];
-UInt8 Options_ValuesBuffer[
-	String_BufferSize(8)   * OPTIONS_TINYSTRS +
-	String_BufferSize(16)  * OPTIONS_SMALLSTRS +
-	String_BufferSize(32)  * OPTIONS_MEDSTRS +
-	String_BufferSize(512) * OPTIONS_LARGESTRS
-];
-
-#define Options_InitStrs(strArray, count, elemLen)\
-for (i = 0; i < count; i++, j++) {\
-	strArray[j] = String_FromEmptyBuffer(buffer, elemLen);\
-	buffer += String_BufferSize(elemLen);\
-}
+#include "Funcs.h"
+#define OPT_NOT_FOUND UInt32_MaxValue
 
 void Options_Init(void) {
-	Int32 i, j = 0;
-	UInt8* buffer = Options_KeysBuffer;
-	Options_InitStrs(Options_Keys, OPTIONS_COUNT, 24);
-
-	j = 0;
-	buffer = Options_ValuesBuffer;
-	Options_InitStrs(Options_Values, OPTIONS_TINYSTRS,    8);
-	Options_InitStrs(Options_Values, OPTIONS_SMALLSTRS,  16);
-	Options_InitStrs(Options_Values, OPTIONS_MEDSTRS,    32);
-	Options_InitStrs(Options_Values, OPTIONS_LARGESTRS, 512);
+	StringBuffers_Init(&Options_Keys);
+	StringBuffers_Init(&Options_Values);
 }
 
-Int32 Options_Find(String key) {
-	Int32 i;
-	for (i = 0; i < OPTIONS_COUNT; i++) {
-		if (String_CaselessEquals(&Options_Keys[i], &key)) return i;
+void Options_Free(void) {
+	StringsBuffer_Free(&Options_Keys);
+	StringsBuffer_Free(&Options_Values);
+}
+
+UInt32 Options_Find(String key) {
+	UInt32 i;
+	for (i = 0; i < Options_Keys.Count; i++) {
+		String curKey = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
+		if (String_CaselessEquals(&curKey, &key)) return i;
 	}
-	return -1;
+	return OPT_NOT_FOUND;
 }
 
-bool Options_TryGetValue(const UInt8* keyRaw, String* value) {
+bool Options_TryGetValue(const UInt8* keyRaw, STRING_TRANSIENT String* value) {
 	String key = String_FromReadonly(keyRaw);
 	*value = String_MakeNull();
-	Int32 i = Options_Find(key);
-	if (i >= 0) { *value = Options_Values[i]; return true; }
+
+	UInt32 i = Options_Find(key);
+	if (i != OPT_NOT_FOUND) {
+		*value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
+		return true; 
+	}
 
 	Int32 sepIndex = String_IndexOf(&key, '-', 0);
 	if (sepIndex == -1) return false;
-
 	key = String_UNSAFE_SubstringAt(&key, sepIndex + 1);
+
 	i = Options_Find(key);
-	if (i >= 0) { *value = Options_Values[i]; return true; }
+	if (i != OPT_NOT_FOUND) {
+		*value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
+		return true;
+	}
 	return false;
 }
 
@@ -94,48 +87,41 @@ UInt32 Options_GetEnum(const UInt8* key, UInt32 defValue, const UInt8** names, U
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
 }
 
-void Options_Remove(Int32 i) {
-	String_Clear(&Options_Keys[i]);
-	String_Clear(&Options_Values[i]);
+void Options_Remove(UInt32 i) {
+	StringsBuffer_Remove(&Options_Keys, i);
+	StringsBuffer_Remove(&Options_Values, i);
 }
 
 Int32 Options_Insert(String key, String value) {
-	Int32 i = Options_Find(key);
-	/* The new value may not fit in the old slot, always insert into a new slot. */
-	if (i >= 0) {
+	UInt32 i = Options_Find(key);
+	if (i != OPT_NOT_FOUND) {
 		Options_Remove(i);
-		Options_Changed[i] = false;
+		/* Reset Changed state for this option */
+		for (; i < Array_NumElements(Options_Changed) - 1; i++) {
+			Options_Changed[i] = Options_Changed[i + 1];
+		}
 	}
 
-	for (i = 0; i < OPTIONS_COUNT; i++) {
-		if (Options_Keys[i].length > 0) continue;
-		if (Options_Values[i].capacity < value.length) continue;
-
-		String_AppendString(&Options_Keys[i], &key);
-		String_AppendString(&Options_Values[i], &value);
-		return i;
-	}
-
-	ErrorHandler_Fail("No free slot left to save option");
-	return -1;
+	StringsBuffer_Add(&Options_Keys, &key);
+	StringsBuffer_Add(&Options_Values, &value);
+	return Options_Keys.Count;
 }
 
 void Options_SetInt32(const UInt8* keyRaw, Int32 value) {
 	UInt8 numBuffer[String_BufferSize(STRING_INT32CHARS)];
-	UInt8* ptr = numBuffer;
-	String numStr = String_FromRawBuffer(ptr, STRING_INT32CHARS);
+	String numStr = String_FromRawBuffer(numBuffer, STRING_INT32CHARS);
 	String_AppendInt32(&numStr, value);
 	Options_Set(keyRaw, numStr);
 }
 
 void Options_Set(const UInt8* keyRaw, STRING_PURE String value) {
 	String key = String_FromReadonly(keyRaw);
-	Int32 i;
+	UInt32 i;
 	if (value.buffer == NULL) {
 		i = Options_Find(key);
-		if (i >= 0) Options_Remove(i);
+		if (i != OPT_NOT_FOUND) Options_Remove(i);
 	} else {
 		i = Options_Insert(key, value);
 	}
-	if (i >= 0) Options_Changed[i] = true;
+	if (i != OPT_NOT_FOUND) Options_Changed[i] = true;
 }

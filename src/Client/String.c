@@ -2,7 +2,7 @@
 #include "Funcs.h"
 #include "ErrorHandler.h"
 
-String String_FromEmptyBuffer(UInt8* buffer, UInt16 capacity) {
+String String_FromEmptyBuffer(STRING_REF UInt8* buffer, UInt16 capacity) {
 	String str;
 	str.buffer = buffer;
 	str.capacity = capacity;
@@ -10,7 +10,7 @@ String String_FromEmptyBuffer(UInt8* buffer, UInt16 capacity) {
 	return str;
 }
 
-String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
+String String_FromRawBuffer(STRING_REF UInt8* buffer, UInt16 capacity) {
 	String str = String_FromEmptyBuffer(buffer, capacity);	
 	Int32 i;
 
@@ -19,7 +19,7 @@ String String_FromRawBuffer(UInt8* buffer, UInt16 capacity) {
 	return str;
 }
 
-String String_FromReadonly(const UInt8* buffer) {
+String String_FromReadonly(STRING_REF const UInt8* buffer) {
 	UInt16 length = 0;
 	UInt8* cur = buffer;
 	while ((*cur) != NULL) { cur++; length++; }
@@ -385,14 +385,20 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 #define STRINGSBUFFER_LEN_SHIFT 10
 #define STRINGSBUFFER_LEN_MASK  0x3FFUL
 void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text) {
-	if (index >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
+	String raw = StringsBuffer_UNSAFE_Get(buffer, index);
 	String_Clear(text);
+	String_AppendString(text, &raw);
+}
 
-	UInt32 flags  = buffer->FlagsBuffer[index];
+String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index) {
+	if (index >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
+
+	UInt32 flags = buffer->FlagsBuffer[index];
 	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
-	UInt32 len    = flags & STRINGSBUFFER_LEN_MASK;
+	UInt32 len    = flags  & STRINGSBUFFER_LEN_MASK;
 
-	UInt8* src = &buffer->FlagsBuffer[offset];
-	UInt32 i;
-	for (i = 0; i < len; i++) { String_Append(text, src[i]); }
+	String raw;
+	raw.buffer = &buffer->TextBuffer[offset];
+	raw.length = len; raw.capacity = len;
+	return raw;
 }

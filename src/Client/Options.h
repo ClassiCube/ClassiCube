@@ -70,18 +70,14 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_AllowClassicHacks "nostalgia-hacks"
 #define OptionsKey_ClassicArmModel "nostalgia-classicarm"
 
-#define OPTIONS_LARGESTRS 4
-#define OPTIONS_MEDSTRS 16
-#define OPTIONS_SMALLSTRS 32
-#define OPTIONS_TINYSTRS 64
-#define OPTIONS_COUNT (OPTIONS_LARGESTRS + OPTIONS_MEDSTRS + OPTIONS_SMALLSTRS + OPTIONS_TINYSTRS)
-
-String Options_Keys[OPTIONS_COUNT];
-String Options_Values[OPTIONS_COUNT];
-bool Options_Changed[OPTIONS_COUNT];
+StringsBuffer Options_Keys;
+StringsBuffer Options_Values;
+bool Options_Changed[256];
 
 void Options_Init(void);
+void Options_Free(void);
 
+/* TODO: eliminate this and use STRING_TRANSIENT ARG */
 String Options_Get(const UInt8* key);
 Int32 Options_GetInt(const UInt8* key, Int32 min, Int32 max, Int32 defValue);
 bool Options_GetBool(const UInt8* key, bool defValue);

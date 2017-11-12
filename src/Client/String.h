@@ -26,12 +26,12 @@ typedef struct String_ {
 } String;
 
 /* Constructs a new string, pointing a buffer consisting purely of NULL characters. */
-String String_FromEmptyBuffer(UInt8* buffer, UInt16 capacity);
+String String_FromEmptyBuffer(STRING_REF UInt8* buffer, UInt16 capacity);
 /* Constructs a new string, pointing a buffer consisting of arbitary data.
-NOTE: This method sets the bytes occupied by the string to NUL. */
-String String_FromRawBuffer(UInt8* buffer, UInt16 capacity);
+NOTE: This method sets the bytes occupied by the string to NULL. */
+String String_FromRawBuffer(STRING_REF UInt8* buffer, UInt16 capacity);
 /* Constructs a new string from a constant readonly buffer. */
-String String_FromReadonly(const UInt8* buffer);
+String String_FromReadonly(STRING_REF const UInt8* buffer);
 /* Makes an empty string that points to nowhere. */
 String String_MakeNull(void);
 /* Constructs a new string from a compile time string constant. */
@@ -48,9 +48,7 @@ NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE 
 String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length);
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
 
-/* Returns whether two strings have same contents. */
 bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
-/* Returns whether two strings have same case-insensitive contents. */
 bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
 
 /* Attempts to append a character to the end of a string. */
@@ -100,7 +98,10 @@ typedef struct StringsBuffer_ {
 	UInt32 Count;
 } StringsBuffer;
 
-void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text);
-void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
+void StringBuffers_Init(StringsBuffer* buffer);
 void StringsBuffer_Free(StringsBuffer* buffer);
+void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text);
+STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index);
+void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
+void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index);
 #endif
