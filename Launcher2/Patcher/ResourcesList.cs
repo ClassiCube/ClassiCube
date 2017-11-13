@@ -23,7 +23,7 @@ namespace Launcher.Patcher {
 		public static byte[] FileMasks = new byte[] {
 			// classic jar files
 			mask_classic, mask_classic, mask_classic, mask_classic,
-			mask_classic, mask_classic, mask_classic, mask_classic | mask_terrain,
+			mask_classic, mask_classic, mask_classic, mask_classic | mask_terrain | mask_modern,
 			mask_classic, mask_classic, mask_classic, mask_classic,
 			mask_classic, mask_classic, mask_classic, // cMask, cMask
 			// other files
