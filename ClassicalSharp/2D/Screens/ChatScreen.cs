@@ -68,7 +68,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15);
 			normalChat.Init();
 			
-			clientStatus = new TextGroupWidget(game, game.Chat.ClientStatus.Length, chatFont, chatUrlFont)				
+			clientStatus = new TextGroupWidget(game, game.Chat.ClientStatus.Length, chatFont, chatUrlFont)
 				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15);
 			clientStatus.Init();
 			
@@ -254,7 +254,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 
 		public override void Dispose() {
-			ContextLost();			
+			ContextLost();
 			chatFont.Dispose();
 			chatUrlFont.Dispose();
 			announcementFont.Dispose();
@@ -342,8 +342,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override bool HandlesKeyDown(Key key) {
 			suppressNextPress = false;
 			if (HandlesAllInput) { // text input bar
-				if (key == game.Mapping(KeyBind.SendChat) || key == Key.KeypadEnter
-				   || key == game.Mapping(KeyBind.PauseOrExit)) {
+				if (key == game.Mapping(KeyBind.SendChat) || key == Key.KeypadEnter || key == game.Mapping(KeyBind.PauseOrExit)) {
 					SetHandlesAllInput(false);
 					game.CursorVisible = false;
 					game.Camera.RegrabMouse();
@@ -354,16 +353,19 @@ namespace ClassicalSharp.Gui.Screens {
 					input.EnterInput();
 					altText.SetActive(false);
 					
-					chatIndex = game.Chat.Log.Count - chatLines;
-					ScrollHistory();
+					// Do we need to move all chat down?
+					int resetIndex = game.Chat.Log.Count - chatLines;
+					if (chatIndex != resetIndex) {
+						chatIndex = resetIndex;
+						ScrollHistory();
+					}
 				} else if (key == Key.PageUp) {
 					chatIndex -= chatLines;
 					ScrollHistory();
 				} else if (key == Key.PageDown) {
 					chatIndex += chatLines;
 					ScrollHistory();
-				} else if (game.Server.SupportsFullCP437 &&
-				          key == game.Input.Keys[KeyBind.ExtInput]) {
+				} else if (game.Server.SupportsFullCP437 && key == game.Input.Keys[KeyBind.ExtInput]) {
 					altText.SetActive(!altText.Active);
 				} else {
 					input.HandlesKeyDown(key);
