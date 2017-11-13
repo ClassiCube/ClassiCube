@@ -226,8 +226,6 @@ namespace ClassicalSharp.Entities {
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
-			bounds.Min.Y += 5f/16f;
-			bounds.Max.Y -= 5f/16f;
 			return TouchesAny(bounds, touchesAnyWater);
 		}
 		static Predicate<BlockID> touchesAnyWater = IsWater;
