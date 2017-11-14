@@ -38,6 +38,7 @@ namespace ClassicalSharp {
 		public const string HacksOn = "hacks-hacksenabled";
 		public const string FieldOfView = "hacks-fov";
 		public const string Speed = "hacks-speedmultiplier";
+		public const string JumpVelocity = "hacks-jumpvelocity";
 		public const string ModifiableLiquids = "hacks-liquidsbreakable";
 		public const string PushbackPlacing = "hacks-pushbackplacing";
 		public const string NoclipSlide = "hacks-noclipslide";

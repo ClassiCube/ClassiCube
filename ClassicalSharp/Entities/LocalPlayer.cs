@@ -135,13 +135,18 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void Init(Game game) {
-			Hacks.SpeedMultiplier = Options.GetFloat(OptionsKey.Speed, 0.1f, 50, 10);
-			Hacks.PushbackPlacing = !game.ClassicMode && Options.GetBool(OptionsKey.PushbackPlacing, false);
-			Hacks.NoclipSlide = Options.GetBool(OptionsKey.NoclipSlide, false);
-			Hacks.WOMStyleHacks = !game.ClassicMode && Options.GetBool(OptionsKey.WOMStyleHacks, false);
 			Hacks.Enabled = !game.PureClassic && Options.GetBool(OptionsKey.HacksOn, true);
-			Hacks.FullBlockStep = !game.ClassicMode && Options.GetBool(OptionsKey.FullBlockStep, false);
 			Health = 20;
+			if (game.ClassicMode) return;
+			
+			Hacks.SpeedMultiplier = Options.GetFloat(OptionsKey.Speed, 0.1f, 50, 10);
+			Hacks.PushbackPlacing = Options.GetBool(OptionsKey.PushbackPlacing, false);
+			Hacks.NoclipSlide     = Options.GetBool(OptionsKey.NoclipSlide, false);
+			Hacks.WOMStyleHacks   = Options.GetBool(OptionsKey.WOMStyleHacks, false);			
+			Hacks.FullBlockStep   = Options.GetBool(OptionsKey.FullBlockStep, false);			
+			physics.userJumpVel   = Options.GetFloat(OptionsKey.JumpVelocity, 0.0f, 52.0f, 0.42f);
+			physics.jumpVel = physics.userJumpVel;
+			
 		}
 		
 		public void Ready(Game game) { }

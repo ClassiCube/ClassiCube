@@ -41,6 +41,7 @@ typedef UInt8 FpsLimitMethod;
 #define OptionsKey_HacksEnabled "hacks-hacksenabled"
 #define OptionsKey_FieldOfView "hacks-fov"
 #define OptionsKey_Speed "hacks-speedmultiplier"
+#define OptionsKey_JumpVelocity "hacks-jumpvelocity"
 #define OptionsKey_ModifiableLiquids "hacks-liquidsbreakable"
 #define OptionsKey_PushbackPlacing "hacks-pushbackplacing"
 #define OptionsKey_NoclipSlide "hacks-noclipslide"
