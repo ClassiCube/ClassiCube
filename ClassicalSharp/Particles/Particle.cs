@@ -13,6 +13,15 @@ using BlockID = System.Byte;
 
 namespace ClassicalSharp.Particles {
 
+	class FakeEntity : Entity {
+		public FakeEntity(Game game) : base(game) { }
+		public override void RenderName() { }
+		public override void RenderModel(double delta, float t) { }
+		public override void Despawn() { }
+		public override void Tick(double delta) { }
+		public override void SetLocation(LocationUpdate update, bool interpolate) { }
+	}
+	
 	public abstract class Particle {		
 		public Vector3 Velocity;
 		public float Lifetime;
@@ -49,68 +58,30 @@ namespace ClassicalSharp.Particles {
 			hitTerrain = false;
 		}
 
+		static Entity fakeEntity;
+		static CollisionsComponent comp;
 		protected bool Tick(Game game, float gravity, double delta) {
-			hitTerrain = false;
-			lastPos = nextPos;
-			BlockID curBlock = GetBlock(game, (int)nextPos.X, (int)nextPos.Y, (int)nextPos.Z);
-			float minY = Utils.Floor(nextPos.Y) + BlockInfo.MinBB[curBlock].Y;
-			float maxY = Utils.Floor(nextPos.Y) + BlockInfo.MaxBB[curBlock].Y;			
-			if (!CanPassThrough(game, curBlock) && nextPos.Y >= minY && nextPos.Y < maxY && CollideHor(game, curBlock))
-				return true;
-			
-			Velocity.Y -= gravity * (float)delta;
-			int startY = (int)Math.Floor(nextPos.Y);
-			nextPos += Velocity * (float)delta * 3;
-			int endY = (int)Math.Floor(nextPos.Y);
-			
-			if (Velocity.Y > 0) {
-				// don't test block we are already in
-				for (int y = startY + 1; y <= endY && TestY(game, y, false); y++);
-			} else {
-				for (int y = startY; y >= endY && TestY(game, y, true); y--);
+			if (comp == null) {
+				fakeEntity = new FakeEntity(game);
+				fakeEntity.modelAABB = new ClassicalSharp.Physics.AABB(0, 0, 0, 0.01f, 0.01f, 0.01f);
+				fakeEntity.Size = new Vector3(0.01f, 0.01f, 0.01f);
+				comp = new CollisionsComponent(game, fakeEntity);
 			}
 			
+			fakeEntity.Position = nextPos;
+			fakeEntity.onGround = false;
+			Velocity.Y -= gravity * (float)delta;
+			fakeEntity.Velocity = Velocity * (float)delta * 3;
+			lastPos = nextPos;
+			
+			comp.MoveAndWallSlide();
+			hitTerrain = fakeEntity.onGround;
+
+			Velocity = fakeEntity.Velocity / ((float)delta * 3);
+			nextPos = fakeEntity.Position + fakeEntity.Velocity;
 			Lifetime -= (float)delta;
 			return Lifetime < 0;
 		}	
-		
-		bool TestY(Game game, int y, bool topFace) {
-			if (y < 0) {
-				nextPos.Y = lastPos.Y = 0 + Entity.Adjustment;
-				Velocity = Vector3.Zero;
-				hitTerrain = true;
-				return false;
-			}
-			
-			BlockID block = GetBlock(game, (int)nextPos.X, y, (int)nextPos.Z);
-			if (CanPassThrough(game, block)) return true;
-			Vector3 minBB = BlockInfo.MinBB[block];
-			Vector3 maxBB = BlockInfo.MaxBB[block];
-			float collideY = y + (topFace ? maxBB.Y : minBB.Y);
-			bool collideVer = topFace ? (nextPos.Y < collideY) : (nextPos.Y > collideY);
-			
-			if (collideVer && CollideHor(game, block)) {
-				float adjust = topFace ? Entity.Adjustment : -Entity.Adjustment;
-				nextPos.Y = lastPos.Y = collideY + adjust;
-				Velocity = Vector3.Zero;
-				hitTerrain = true;
-				return false;
-			}
-			return true;
-		}
-		
-		bool CanPassThrough(Game game, BlockID block) {
-			byte draw = BlockInfo.Draw[block];
-			return draw == DrawType.Gas || draw == DrawType.Sprite
-				|| (throughLiquids && BlockInfo.IsLiquid(block));
-		}
-		
-		bool CollideHor(Game game, BlockID block) {
-			Vector3 min = BlockInfo.MinBB[block] + FloorHor(nextPos);
-			Vector3 max = BlockInfo.MaxBB[block] + FloorHor(nextPos);
-			return nextPos.X >= min.X && nextPos.Z >= min.Z &&
-				nextPos.X < max.X && nextPos.Z < max.Z;
-		}
 		
 		BlockID GetBlock(Game game, int x, int y, int z) {
 			if (game.World.IsValidPos(x, y, z))
