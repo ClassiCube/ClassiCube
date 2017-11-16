@@ -217,7 +217,8 @@ namespace ClassicalSharp.Particles {
 				
 				p.texLoc = (byte)texLoc;
 				p.block = block;
-				p.Size = 8;
+				int type = rnd.Next(0, 30);
+				p.Size = (byte)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}
 		}
 		

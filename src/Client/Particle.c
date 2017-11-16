@@ -386,7 +386,8 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block
 				p->Rec = rec;
 				p->TexLoc = (TextureLoc)texLoc;
 				p->Block = block;
-				p->Base.Size = 8;
+				Int32 type = Random_Range(&rnd, 0, 30);
+				p->Base.Size = (UInt8)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}
 }
 
