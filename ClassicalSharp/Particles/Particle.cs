@@ -17,7 +17,8 @@ namespace ClassicalSharp.Particles {
 		public Vector3 Velocity;
 		public float Lifetime;
 		protected Vector3 lastPos, nextPos;
-		protected bool hitTerrain = false, throughLiquids = true;
+		protected bool hitTerrain = false;
+		public byte Size;
 		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
 		public static void DoRender(Game g, ref Vector2 size, ref Vector3 pos, ref TextureRec rec,
@@ -49,13 +50,13 @@ namespace ClassicalSharp.Particles {
 			hitTerrain = false;
 		}
 
-		protected bool Tick(Game game, float gravity, double delta) {
+		protected bool Tick(Game game, float gravity, bool throughLiquids, double delta) {
 			hitTerrain = false;
 			lastPos = nextPos;
 			BlockID curBlock = GetBlock(game, (int)nextPos.X, (int)nextPos.Y, (int)nextPos.Z);
 			float minY = Utils.Floor(nextPos.Y) + BlockInfo.MinBB[curBlock].Y;
 			float maxY = Utils.Floor(nextPos.Y) + BlockInfo.MaxBB[curBlock].Y;			
-			if (!CanPassThrough(game, curBlock) && nextPos.Y >= minY && nextPos.Y < maxY && CollideHor(game, curBlock))
+			if (!CanPassThrough(game, curBlock, throughLiquids) && nextPos.Y >= minY && nextPos.Y < maxY && CollideHor(game, curBlock))
 				return true;
 			
 			Velocity.Y -= gravity * (float)delta;
@@ -65,16 +66,16 @@ namespace ClassicalSharp.Particles {
 			
 			if (Velocity.Y > 0) {
 				// don't test block we are already in
-				for (int y = startY + 1; y <= endY && TestY(game, y, false); y++);
+				for (int y = startY + 1; y <= endY && TestY(game, y, false, throughLiquids); y++);
 			} else {
-				for (int y = startY; y >= endY && TestY(game, y, true); y--);
+				for (int y = startY; y >= endY && TestY(game, y, true, throughLiquids); y--);
 			}
 			
 			Lifetime -= (float)delta;
 			return Lifetime < 0;
 		}	
 		
-		bool TestY(Game game, int y, bool topFace) {
+		bool TestY(Game game, int y, bool topFace, bool throughLiquids) {
 			if (y < 0) {
 				nextPos.Y = lastPos.Y = 0 + Entity.Adjustment;
 				Velocity = Vector3.Zero;
@@ -83,7 +84,7 @@ namespace ClassicalSharp.Particles {
 			}
 			
 			BlockID block = GetBlock(game, (int)nextPos.X, y, (int)nextPos.Z);
-			if (CanPassThrough(game, block)) return true;
+			if (CanPassThrough(game, block, throughLiquids)) return true;
 			Vector3 minBB = BlockInfo.MinBB[block];
 			Vector3 maxBB = BlockInfo.MaxBB[block];
 			float collideY = y + (topFace ? maxBB.Y : minBB.Y);
@@ -99,7 +100,7 @@ namespace ClassicalSharp.Particles {
 			return true;
 		}
 		
-		bool CanPassThrough(Game game, BlockID block) {
+		bool CanPassThrough(Game game, BlockID block, bool throughLiquids) {
 			byte draw = BlockInfo.Draw[block];
 			return draw == DrawType.Gas || draw == DrawType.Sprite
 				|| (throughLiquids && BlockInfo.IsLiquid(block));
@@ -127,24 +128,16 @@ namespace ClassicalSharp.Particles {
 	}
 	
 	public sealed class RainParticle : Particle {
-		
-		static Vector2 bigSize = new Vector2(1/16f, 1/16f);
-		static Vector2 smallSize = new Vector2(0.75f/16f, 0.75f/16f);
-		static Vector2 tinySize = new Vector2(0.5f/16f, 0.5f/16f);
 		static TextureRec rec = new TextureRec(2/128f, 14/128f, 3/128f, 2/128f);
 		
-		public RainParticle() { throughLiquids = false; }
-		
-		public bool Big, Tiny;
-		
 		public bool Tick(Game game, double delta) {
-			bool dies = Tick(game, 3.5f, delta);
+			bool dies = Tick(game, 3.5f, false, delta);
 			return hitTerrain ? true : dies;
 		}
 		
 		public void Render(Game game, float t, VertexP3fT2fC4b[] vertices, ref int index) {
 			Vector3 pos = Vector3.Lerp(lastPos, nextPos, t);
-			Vector2 size = Big ? bigSize : (Tiny ? tinySize : smallSize);
+			Vector2 size; size.X = Size * 0.015625f; size.Y = size.X;
 			
 			int x = Utils.Floor(pos.X), y = Utils.Floor(pos.Y), z = Utils.Floor(pos.Z);
 			int col = game.World.IsValidPos(x, y, z) ? game.Lighting.LightCol(x, y, z) : game.Lighting.Outside;
@@ -153,18 +146,18 @@ namespace ClassicalSharp.Particles {
 	}
 	
 	public sealed class TerrainParticle : Particle {
-		
-		static Vector2 terrainSize = new Vector2(1/8f, 1/8f);
 		internal TextureRec rec;
 		internal byte texLoc;
-		internal BlockID block;
+		internal BlockID block;		
 		
 		public bool Tick(Game game, double delta) {
-			return Tick(game, 5.4f, delta);
+			return Tick(game, 5.4f, true, delta);
 		}
 		
 		public void Render(Game game, float t, VertexP3fT2fC4b[] vertices, ref int index) {
-			Vector3 pos = Vector3.Lerp(lastPos, nextPos, t);			
+			Vector3 pos = Vector3.Lerp(lastPos, nextPos, t);
+			Vector2 size; size.X = Size * 0.015625f; size.Y = size.X;
+
 			int col = FastColour.WhitePacked;
 			if (!BlockInfo.FullBright[block]) {
 				int x = Utils.Floor(pos.X), y = Utils.Floor(pos.Y), z = Utils.Floor(pos.Z);
@@ -177,7 +170,7 @@ namespace ClassicalSharp.Particles {
 				newCol *= fogCol;
 				col = newCol.Pack();
 			}
-			DoRender(game, ref terrainSize, ref pos, ref rec, col, vertices, ref index);
+			DoRender(game, ref size, ref pos, ref rec, col, vertices, ref index);
 		}
 	}
 }

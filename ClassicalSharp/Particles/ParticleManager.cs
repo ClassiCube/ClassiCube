@@ -217,6 +217,7 @@ namespace ClassicalSharp.Particles {
 				
 				p.texLoc = (byte)texLoc;
 				p.block = block;
+				p.Size = 8;
 			}
 		}
 		
@@ -248,8 +249,8 @@ namespace ClassicalSharp.Particles {
 				double life = 40;
 				RainParticle p = GetRainParticle();
 				p.ResetState(pos, velocity, life);
-				p.Big = rnd.Next(0, 20) >= 18;
-				p.Tiny = rnd.Next(0, 30) >= 28;
+				int type = rnd.Next(0, 30);
+				p.Size = (byte)(type >= 28 ? 2 : (type >= 25 ? 4 : 3));
 			}
 		}
 		

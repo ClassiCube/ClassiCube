@@ -15,6 +15,7 @@ typedef struct Particle_ {
 	Real32 Lifetime;
 	Vector3 LastPos, NextPos;
 	bool HitTerrain;
+	UInt8 Size;
 } Particle;
 
 /* http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/ */
@@ -24,7 +25,6 @@ bool Particle_PhysicsTick(Particle* p, Real32 gravity, bool throughLiquids, Real
 
 typedef struct RainParticle_ {
 	Particle Base;
-	bool Big, Tiny;
 } RainParticle;
 
 bool RainParticle_Tick(RainParticle* p, Real64 delta);
