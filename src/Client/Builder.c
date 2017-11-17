@@ -159,7 +159,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 				/* All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times. */
 
 				if (Builder_Counts[index] == 0 ||
-					(x == 0 && (y < Builder_SidesLevel || (b >= BlockID_Water && b <= BlockID_StillLava && y < Builder_EdgeLevel))) ||
+					(x == 0 && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
 					(x != 0 && (Block_Hidden[tileIdx + Builder_Chunk[cIndex - 1]] & (1 << Face_XMin)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
@@ -170,7 +170,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
-					(x == World_MaxX && (y < Builder_SidesLevel || (b >= BlockID_Water && b <= BlockID_StillLava && y < Builder_EdgeLevel))) ||
+					(x == World_MaxX && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
 					(x != World_MaxX && (Block_Hidden[tileIdx + Builder_Chunk[cIndex + 1]] & (1 << Face_XMax)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
@@ -181,7 +181,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
-					(z == 0 && (y < Builder_SidesLevel || (b >= BlockID_Water && b <= BlockID_StillLava && y < Builder_EdgeLevel))) ||
+					(z == 0 && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
 					(z != 0 && (Block_Hidden[tileIdx + Builder_Chunk[cIndex - EXTCHUNK_SIZE]] & (1 << Face_ZMin)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
@@ -192,7 +192,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
-					(z == World_MaxZ && (y < Builder_SidesLevel || (b >= BlockID_Water && b <= BlockID_StillLava && y < Builder_EdgeLevel))) ||
+					(z == World_MaxZ && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
 					(z != World_MaxZ && (Block_Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE]] & (1 << Face_ZMax)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
@@ -215,7 +215,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 				if (Builder_Counts[index] == 0 ||
 					(Block_Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE_2]] & (1 << Face_YMax)) != 0) {
 					Builder_Counts[index] = 0;
-				} else if (b < BlockID_Water || b > BlockID_StillLava) {
+				} else if (b < BLOCK_WATER || b > BLOCK_STILL_LAVA) {
 					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, Face_YMax);
 					Builder_AddVertices(b, Face_YMax);
 					Builder_Counts[index] = (UInt8)count;
@@ -278,7 +278,7 @@ bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 	UInt8 counts[CHUNK_SIZE_3 * Face_Count]; Builder_Counts = counts;
 	Int32 bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
 
-	Platform_MemSet(chunk, BlockID_Air, EXTCHUNK_SIZE_3 * sizeof(BlockID));
+	Platform_MemSet(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
 	if (Builder_ReadChunkData(x1, y1, z1, allAir)) return false;
 	Platform_MemSet(counts, 1, CHUNK_SIZE_3 * Face_Count);
 

@@ -1,5 +1,4 @@
 #include "Block.h"
-#include "DefaultSet.h"
 #include "Funcs.h"
 #include "ExtMath.h"
 #include "TerrainAtlas.h"
@@ -33,7 +32,7 @@ void Block_Init(void) {
 	}
 
 	Int32 block;
-	for (block = BlockID_Air; block < BLOCK_COUNT; block++) {
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		Block_ResetProps((BlockID)block);
 	}
 	Block_UpdateCullingAll();
@@ -41,17 +40,17 @@ void Block_Init(void) {
 
 void Block_SetDefaultPerms(void) {
 	Int32 block;
-	for (block = BlockID_Air; block <= BLOCK_MAX_DEFINED; block++) {
+	for (block = BLOCK_AIR; block <= BLOCK_MAX_DEFINED; block++) {
 		Block_CanPlace[block] = true;
 		Block_CanDelete[block] = true;
 	}
 
-	Block_CanPlace[BlockID_Air] = false;        Block_CanDelete[BlockID_Air] = false;
-	Block_CanPlace[BlockID_Lava] = false;       Block_CanDelete[BlockID_Lava] = false;
-	Block_CanPlace[BlockID_Water] = false;      Block_CanDelete[BlockID_Water] = false;
-	Block_CanPlace[BlockID_StillLava] = false;  Block_CanDelete[BlockID_StillLava] = false;
-	Block_CanPlace[BlockID_StillWater] = false; Block_CanDelete[BlockID_StillWater] = false;
-	Block_CanPlace[BlockID_Bedrock] = false;    Block_CanDelete[BlockID_Bedrock] = false;
+	Block_CanPlace[BLOCK_AIR] = false;        Block_CanDelete[BLOCK_AIR] = false;
+	Block_CanPlace[BLOCK_LAVA] = false;       Block_CanDelete[BLOCK_LAVA] = false;
+	Block_CanPlace[BLOCK_WATER] = false;      Block_CanDelete[BLOCK_WATER] = false;
+	Block_CanPlace[BLOCK_STILL_LAVA] = false;  Block_CanDelete[BLOCK_STILL_LAVA] = false;
+	Block_CanPlace[BLOCK_STILL_WATER] = false; Block_CanDelete[BLOCK_STILL_WATER] = false;
+	Block_CanPlace[BLOCK_BEDROCK] = false;    Block_CanDelete[BLOCK_BEDROCK] = false;
 }
 
 void Block_SetCollide(BlockID block, UInt8 collide) {
@@ -166,7 +165,7 @@ void Block_ResetProps(BlockID block) {
 
 Int32 Block_FindID(STRING_PURE String* name) {
 	Int32 block;
-	for (block = BlockID_Air; block < BLOCK_COUNT; block++) {
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		if (String_CaselessEquals(&Block_Name[block], name)) return block;
 	}
 	return -1;
@@ -263,7 +262,7 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 
 void Block_RecalculateSpriteBB(void) {
 	Int32 block;
-	for (block = BlockID_Air; block < BLOCK_COUNT; block++) {
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
 		if (Block_Draw[block] != DrawType_Sprite) continue;
 
 		Block_RecalculateBB((BlockID)block);
@@ -386,11 +385,11 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 
 void Block_UpdateCullingAll(void) {
 	Int32 block, neighbour;
-	for (block = BlockID_Air; block < BLOCK_COUNT; block++)
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++)
 		Block_CanStretch[block] = 0x3F;
 
-	for (block = BlockID_Air; block < BLOCK_COUNT; block++) {
-		for (neighbour = BlockID_Air; neighbour < BLOCK_COUNT; neighbour++) {
+	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+		for (neighbour = BLOCK_AIR; neighbour < BLOCK_COUNT; neighbour++) {
 			Block_CalcCulling((BlockID)block, (BlockID)neighbour);
 		}
 	}
@@ -400,7 +399,7 @@ void Block_UpdateCulling(BlockID block) {
 	Block_CanStretch[block] = 0x3F;
 
 	Int32 other;
-	for (other = BlockID_Air; other < BLOCK_COUNT; other++) {
+	for (other = BLOCK_AIR; other < BLOCK_COUNT; other++) {
 		Block_CalcCulling(block, (BlockID)other);
 		Block_CalcCulling((BlockID)other, block);
 	}
@@ -411,8 +410,8 @@ bool Block_IsHidden(BlockID block, BlockID other) {
 	if (Block_Draw[block] == DrawType_Sprite) return false;
 
 	/* NOTE: Water is always culled by lava. */
-	if ((block == BlockID_Water || block == BlockID_StillWater)
-		&& (other == BlockID_Lava || other == BlockID_StillLava))
+	if ((block == BLOCK_WATER || block == BLOCK_STILL_WATER)
+		&& (other == BLOCK_LAVA || other == BLOCK_STILL_LAVA))
 		return true;
 
 	/* All blocks (except for say leaves) cull with themselves. */
@@ -483,7 +482,7 @@ BlockID AutoRotate_RotateVertical(BlockID block, String* name, Vector3 offset) {
 
 BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
 	/* Fence type blocks */
-	if (AutoRotate_Find(BlockID_Invalid, name, "-UD") == BlockID_Invalid) {
+	if (AutoRotate_Find(BLOCK_Invalid, name, "-UD") == BLOCK_Invalid) {
 		Real32 headY = LocalPlayer_Instance.Base.Base.HeadY;
 		headY = LocationUpdate_Clamp(headY);
 
@@ -556,4 +555,113 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 		return AutoRotate_RotateOther(block, &baseName, offset);
 	}
 	return block;
+}
+
+
+Real32 DefaultSet_Height(BlockID b) {
+	if (b == BLOCK_SLAB) return 0.5f;
+	if (b == BLOCK_COBBLE_SLAB) return 0.5f;
+	if (b == BLOCK_SNOW) return 0.25f;
+	return 1.0f;
+}
+
+bool DefaultSet_FullBright(BlockID b) {
+	return b == BLOCK_LAVA || b == BLOCK_STILL_LAVA
+		|| b == BLOCK_MAGMA || b == BLOCK_FIRE;
+}
+
+Real32 DefaultSet_FogDensity(BlockID b) {
+	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER)
+		return 0.1f;
+	if (b == BLOCK_LAVA || b == BLOCK_STILL_LAVA)
+		return 1.8f;
+	return 0.0f;
+}
+
+PackedCol DefaultSet_FogColour(BlockID b) {
+	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER)
+		return PackedCol_Create3(5, 5, 51);
+	if (b == BLOCK_LAVA || b == BLOCK_STILL_LAVA)
+		return PackedCol_Create3(153, 25, 0);
+	return PackedCol_Create4(0, 0, 0, 0);
+}
+
+CollideType DefaultSet_Collide(BlockID b) {
+	if (b == BLOCK_ICE) return CollideType_Ice;
+	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER)
+		return CollideType_LiquidWater;
+	if (b == BLOCK_LAVA || b == BLOCK_STILL_LAVA)
+		return CollideType_LiquidLava;
+
+	if (b == BLOCK_SNOW || b == BLOCK_AIR || DefaultSet_Draw(b) == DrawType_Sprite)
+		return CollideType_Gas;
+	return CollideType_Solid;
+}
+
+CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide) {
+	if (b == BLOCK_ICE && collide == CollideType_Solid)
+		return CollideType_Ice;
+	if ((b == BLOCK_WATER || b == BLOCK_STILL_WATER) && collide == CollideType_Liquid)
+		return CollideType_LiquidWater;
+	if ((b == BLOCK_LAVA || b == BLOCK_STILL_LAVA) && collide == CollideType_Liquid)
+		return CollideType_LiquidLava;
+	return collide;
+}
+
+bool DefaultSet_BlocksLight(BlockID b) {
+	return !(b == BLOCK_GLASS || b == BLOCK_LEAVES
+		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DrawType_Sprite);
+}
+
+SoundType DefaultSet_StepSound(BlockID b) {
+	if (b == BLOCK_GLASS) return SoundType_Stone;
+	if (b == BLOCK_ROPE) return SoundType_Cloth;
+	if (DefaultSet_Draw(b) == DrawType_Sprite) return SoundType_None;
+	return DefaultSet_DigSound(b);
+}
+
+DrawType DefaultSet_Draw(BlockID b) {
+	if (b == BLOCK_AIR || b == BLOCK_Invalid) return DrawType_Gas;
+	if (b == BLOCK_LEAVES) return DrawType_TransparentThick;
+
+	if (b == BLOCK_ICE || b == BLOCK_WATER || b == BLOCK_STILL_WATER)
+		return DrawType_Translucent;
+	if (b == BLOCK_GLASS || b == BLOCK_LEAVES)
+		return DrawType_Transparent;
+
+	if (b >= BLOCK_DANDELION && b <= BLOCK_RED_SHROOM)
+		return DrawType_Sprite;
+	if (b == BLOCK_SAPLING || b == BLOCK_ROPE || b == BLOCK_FIRE)
+		return DrawType_Sprite;
+	return DrawType_Opaque;
+}
+
+SoundType DefaultSet_DigSound(BlockID b) {
+	if (b >= BLOCK_RED && b <= BLOCK_WHITE)
+		return SoundType_Cloth;
+	if (b >= BLOCK_LIGHT_PINK && b <= BLOCK_TURQUOISE)
+		return SoundType_Cloth;
+	if (b == BLOCK_IRON || b == BLOCK_GOLD)
+		return SoundType_Metal;
+
+	if (b == BLOCK_BOOKSHELF || b == BLOCK_WOOD || b == BLOCK_LOG || b == BLOCK_CRATE || b == BLOCK_FIRE)
+		return SoundType_Wood;
+
+	if (b == BLOCK_ROPE) return SoundType_Cloth;
+	if (b == BLOCK_SAND) return SoundType_Sand;
+	if (b == BLOCK_SNOW) return SoundType_Snow;
+	if (b == BLOCK_GLASS) return SoundType_Glass;
+	if (b == BLOCK_DIRT || b == BLOCK_GRAVEL)
+		return SoundType_Gravel;
+
+	if (b == BLOCK_GRASS || b == BLOCK_SAPLING || b == BLOCK_TNT || b == BLOCK_LEAVES || b == BLOCK_SPONGE)
+		return SoundType_Grass;
+
+	if (b >= BLOCK_DANDELION && b <= BLOCK_RED_SHROOM)
+		return SoundType_Grass;
+	if (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA)
+		return SoundType_None;
+	if (b >= BLOCK_STONE && b <= BLOCK_STONE_BRICK)
+		return SoundType_Stone;
+	return SoundType_None;
 }

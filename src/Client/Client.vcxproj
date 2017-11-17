@@ -189,7 +189,6 @@
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="Constants.h" />
     <ClInclude Include="DateTime.h" />
-    <ClInclude Include="DefaultSet.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="DisplayDevice.h" />
     <ClInclude Include="Drawer.h" />
@@ -266,7 +265,6 @@
     <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="D3D9Api.c" />
     <ClCompile Include="DateTime.c" />
-    <ClCompile Include="DefaultSet.c" />
     <ClCompile Include="Bitmap.c" />
     <ClCompile Include="DisplayDevice.c" />
     <ClCompile Include="Drawer.c" />

@@ -8,9 +8,9 @@
 
 void GameMode_Init(void) {
 	BlockID* inv = Inventory_Table;
-	inv[0] = BlockID_Stone;  inv[1] = BlockID_Cobblestone; inv[2] = BlockID_Brick;
-	inv[3] = BlockID_Dirt;   inv[4] = BlockID_Wood;        inv[5] = BlockID_Log;
-	inv[6] = BlockID_Leaves; inv[7] = BlockID_Grass;       inv[8] = BlockID_Slab;
+	inv[0] = BLOCK_STONE;  inv[1] = BLOCK_COBBLE; inv[2] = BLOCK_BRICK;
+	inv[3] = BLOCK_DIRT;   inv[4] = BLOCK_WOOD;   inv[5] = BLOCK_LOG;
+	inv[6] = BLOCK_LEAVES; inv[7] = BLOCK_GRASS;  inv[8] = BLOCK_SLAB;
 }
 
 IGameComponent GameMode_MakeComponent(void) {
@@ -29,7 +29,7 @@ bool GameMode_HandlesKeyDown(Key key) {
 		if (Inventory_CanChangeSelected()) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			   switching positions if they already have air in their inventory hotbar. */
-			Inventory_Set(Inventory_SelectedIndex, BlockID_Air);
+			Inventory_Set(Inventory_SelectedIndex, BLOCK_AIR);
 			Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 		}
 		return true;
@@ -46,8 +46,8 @@ bool GameMode_PickingRight(void) { return false; }
 
 void GameMode_PickLeft(BlockID old) {
 	Vector3I pos = Game_SelectedPos.BlockPos;
-	Game_UpdateBlock(pos.X, pos.Y, pos.Z, BlockID_Air);
-	Event_RaiseBlock(&UserEvents_BlockChanged, pos, old, BlockID_Air);
+	Game_UpdateBlock(pos.X, pos.Y, pos.Z, BLOCK_AIR);
+	Event_RaiseBlock(&UserEvents_BlockChanged, pos, old, BLOCK_AIR);
 }
 
 void GameMode_PickMiddle(BlockID old) {
@@ -57,7 +57,7 @@ void GameMode_PickMiddle(BlockID old) {
 	UInt32 i;
 
 	/* Is the currently selected block an empty slot */
-	if (Inventory_Get(Inventory_SelectedIndex) == BlockID_Air) {
+	if (Inventory_Get(Inventory_SelectedIndex) == BLOCK_AIR) {
 		Inventory_SetSelectedBlock(old); return;
 	}
 
@@ -69,7 +69,7 @@ void GameMode_PickMiddle(BlockID old) {
 
 	/* Try to replace empty slots */
 	for (i = 0; i < INVENTORY_BLOCKS_PER_HOTBAR; i++) {
-		if (Inventory_Get(i) != BlockID_Air) continue;
+		if (Inventory_Get(i) != BLOCK_AIR) continue;
 		Inventory_Set(i, old);
 		Inventory_SetSelectedIndex(i); return;
 	}

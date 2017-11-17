@@ -97,7 +97,7 @@ void Entity_ParseScale(Entity* entity, String scale) {
 
 void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
-	entity->ModelBlock = BlockID_Air;
+	entity->ModelBlock = BLOCK_AIR;
 	String_Clear(&entity->ModelName);
 
 	Int32 sep = String_IndexOf(model, '|', 0);
@@ -171,7 +171,7 @@ bool Entity_TouchesAny(AABB* bounds, TouchesAny_Condition condition) {
 	return false;
 }
 
-bool Entity_IsRope(BlockID b) { return b == BlockID_Rope; }
+bool Entity_IsRope(BlockID b) { return b == BLOCK_ROPE; }
 bool Entity_TouchesAnyRope(Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;
@@ -408,13 +408,13 @@ bedrock, water and lava blocks on servers that don't support CPE block permissio
 void HacksComp_SetUserType(HacksComp* hacks, UInt8 value) {
 	bool isOp = value >= 100 && value <= 127;
 	hacks->UserType = value;
-	Block_CanPlace[BlockID_Bedrock] = isOp;
-	Block_CanDelete[BlockID_Bedrock] = isOp;
+	Block_CanPlace[BLOCK_BEDROCK] = isOp;
+	Block_CanDelete[BLOCK_BEDROCK] = isOp;
 
-	Block_CanPlace[BlockID_Water] = isOp;
-	Block_CanPlace[BlockID_StillWater] = isOp;
-	Block_CanPlace[BlockID_Lava] = isOp;
-	Block_CanPlace[BlockID_StillLava] = isOp;
+	Block_CanPlace[BLOCK_WATER] = isOp;
+	Block_CanPlace[BLOCK_STILL_WATER] = isOp;
+	Block_CanPlace[BLOCK_LAVA] = isOp;
+	Block_CanPlace[BLOCK_STILL_LAVA] = isOp;
 	hacks->CanSeeAllNames = isOp;
 }
 

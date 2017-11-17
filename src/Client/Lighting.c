@@ -116,7 +116,7 @@ void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockI
 	} else if (y == lightH && oldOffset == 0) {
 		/* For a solid block on top of an upside down slab, they will both have the same light height. */
 		/* So we need to account for this particular case. */
-		BlockID above = y == (World_Height - 1) ? BlockID_Air : World_GetBlock(x, y + 1, z);
+		BlockID above = y == (World_Height - 1) ? BLOCK_AIR : World_GetBlock(x, y + 1, z);
 		if (Block_BlocksLight[above]) return;
 
 		if (nowBlocks) {

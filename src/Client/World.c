@@ -50,8 +50,8 @@ void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 heigh
 }
 
 BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z) {
-	if (x < 0 || x >= World_Width || z < 0 || z >= World_Length || y < 0) return BlockID_Bedrock;
-	if (y >= World_Height) return BlockID_Air;
+	if (x < 0 || x >= World_Width || z < 0 || z >= World_Length || y < 0) return BLOCK_BEDROCK;
+	if (y >= World_Height) return BLOCK_AIR;
 
 	return World_Blocks[World_Pack(x, y, z)];
 }
@@ -59,12 +59,12 @@ BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z) {
 
 BlockID World_SafeGetBlock(Int32 x, Int32 y, Int32 z) {
 	return World_IsValidPos(x, y, z) ? 
-		World_Blocks[World_Pack(x, y, z)] : BlockID_Air;
+		World_Blocks[World_Pack(x, y, z)] : BLOCK_AIR;
 }
 
 BlockID World_SafeGetBlock_3I(Vector3I p) {
 	return World_IsValidPos(p.X, p.Y, p.Z) ? 
-		World_Blocks[World_Pack(p.X, p.Y, p.Z)] : BlockID_Air;
+		World_Blocks[World_Pack(p.X, p.Y, p.Z)] : BLOCK_AIR;
 }
 
 
@@ -110,8 +110,8 @@ void WorldEnv_Reset(void) {
 	WorldEnv_SidesOffset = -2;
 	WorldEnv_CloudsHeight = -1;
 
-	WorldEnv_EdgeBlock = BlockID_StillWater;
-	WorldEnv_SidesBlock = BlockID_Bedrock;
+	WorldEnv_EdgeBlock = BLOCK_STILL_WATER;
+	WorldEnv_SidesBlock = BLOCK_BEDROCK;
 
 	WorldEnv_CloudsSpeed = 1.0f;
 	WorldEnv_WeatherSpeed = 1.0f;
@@ -142,12 +142,12 @@ void WorldEnv_ResetLight(void) {
 
 
 void WorldEnv_SetEdgeBlock(BlockID block) {
-	if (block == BlockID_Invalid) return;
+	if (block == BLOCK_Invalid) return;
 	WorldEnv_Set(block, WorldEnv_EdgeBlock, EnvVar_EdgeBlock);
 }
 
 void WorldEnv_SetSidesBlock(BlockID block) {
-	if (block == BlockID_Invalid) return;
+	if (block == BLOCK_Invalid) return;
 	WorldEnv_Set(block, WorldEnv_SidesBlock, EnvVar_SidesBlock);
 }
 

@@ -45,7 +45,7 @@ void PickedPos_SetAsInvalid(PickedPos* pos) {
 	pos->BlockPos = Vector3I_MinusOne;
 	pos->TranslatedPos = Vector3I_MinusOne;
 	pos->ClosestFace = (Face)Face_Count;
-	pos->Block = BlockID_Air;
+	pos->Block = BLOCK_AIR;
 }
 
 Real32 RayTracer_Div(Real32 a, Real32 b) {
@@ -102,11 +102,11 @@ void RayTracer_Step(RayTracer* t) {
 }
 
 RayTracer tracer;
-#define PICKING_BORDER BlockID_Bedrock
+#define PICKING_BORDER BLOCK_BEDROCK
 typedef bool(*IntersectTest)(PickedPos* pos);
 
 BlockID Picking_GetBlock(Int32 x, Int32 y, Int32 z, Vector3I origin) {
-	bool sides = WorldEnv_SidesBlock != BlockID_Air;
+	bool sides = WorldEnv_SidesBlock != BLOCK_AIR;
 	Int32 height = WorldEnv_SidesHeight;
 	if (height < 1) height = 1;
 	bool insideMap = World_IsValidPos_3I(origin);
@@ -127,13 +127,13 @@ BlockID Picking_GetBlock(Int32 x, Int32 y, Int32 z, Vector3I origin) {
 	}
 
 	/* pick blocks on the map boundaries (when inside the map) */
-	if (!sides || !insideMap)   return BlockID_Air;
+	if (!sides || !insideMap)   return BLOCK_AIR;
 	if (y == 0 && origin.Y < 0) return PICKING_BORDER;
 
 	bool validX = (x == -1 || x == World_Width) && (z >= 0 && z < World_Length);
 	bool validZ = (z == -1 || z == World_Length) && (x >= 0 && x < World_Width);
 	if (y >= 0 && y < height && (validX || validZ)) return PICKING_BORDER;
-	return BlockID_Air;
+	return BLOCK_AIR;
 }
 
 bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos, IntersectTest intersect) {

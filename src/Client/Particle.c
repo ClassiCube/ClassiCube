@@ -58,7 +58,7 @@ bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
 BlockID Particle_GetBlock(Int32 x, Int32 y, Int32 z) {
 	if (World_IsValidPos(x, y, z)) { return World_GetBlock(x, y, z); }
 
-	if (y >= WorldEnv_EdgeHeight) return BlockID_Air;
+	if (y >= WorldEnv_EdgeHeight) return BLOCK_AIR;
 	if (y >= WorldEnv_SidesHeight) return WorldEnv_EdgeBlock;
 	return WorldEnv_SidesBlock;
 }
@@ -325,7 +325,7 @@ void Particles_Tick(ScheduledTask* task) {
 }
 
 void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block) {
-	if (block != BlockID_Air) return;
+	if (block != BLOCK_AIR) return;
 	block = oldBlock;
 
 	Vector3 worldPos;

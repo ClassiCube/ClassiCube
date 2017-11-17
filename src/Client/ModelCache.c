@@ -1081,7 +1081,7 @@ IModel* ArmModel_GetInstance(void) {
 
 
 IModel BlockModel;
-BlockID BlockModel_block = BlockID_Air;
+BlockID BlockModel_block = BLOCK_AIR;
 Vector3 BlockModel_minBB, BlockModel_maxBB;
 Int32 BlockModel_lastTexIndex = -1, BlockModel_texIndex;
 
@@ -1091,7 +1091,7 @@ Real32 BlockModel_GetEyeY(Entity* entity) {
 	BlockID block = entity->ModelBlock;
 	Real32 minY = Block_MinBB[block].Y;
 	Real32 maxY = Block_MaxBB[block].Y;
-	return block == BlockID_Air ? 1 : (minY + maxY) / 2.0f;
+	return block == BLOCK_AIR ? 1 : (minY + maxY) / 2.0f;
 }
 
 Vector3 BlockModel_GetCollisionSize(void) {

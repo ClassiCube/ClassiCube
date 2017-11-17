@@ -118,4 +118,16 @@ void Block_SetHidden(BlockID block, BlockID other, Face face, bool value);
 
 /* Attempts to find the rotated block based on the user's orientation and offset on selected block. */
 BlockID AutoRotate_RotateBlock(BlockID block);
+
+Real32 DefaultSet_Height(BlockID b);
+bool DefaultSet_FullBright(BlockID b);
+Real32 DefaultSet_FogDensity(BlockID b);
+PackedCol DefaultSet_FogColour(BlockID b);
+CollideType DefaultSet_Collide(BlockID b);
+/* Gets a backwards compatible collide type of a block. */
+CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide);
+bool DefaultSet_BlocksLight(BlockID b);
+SoundType DefaultSet_StepSound(BlockID b);
+DrawType DefaultSet_Draw(BlockID b);
+SoundType DefaultSet_DigSound(BlockID b);
 #endif
