@@ -4,6 +4,8 @@
 #include "GraphicsCommon.h"
 #include "GraphicsAPI.h"
 #include "Events.h"
+#include "Drawer2D.h"
+#include "ExtMath.h"
 
 Screen* Gui_Status;
 void GuiElement_Recreate(GuiElement* elem) {
@@ -196,5 +198,65 @@ void Gui_OnResize(void) {
 	UInt32 i;
 	for (i = 0; i < Gui_OverlayCount; i++) {
 		Gui_Overlays[i]->OnResize(Gui_Overlays[i]);
+	}
+}
+
+
+void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font, STRING_PURE String* prefix) {
+	DrawTextArgs args; DrawTextArgs_Make(&args, prefix, font, true);
+	Size2D size = Drawer2D_MeasureText(&args);
+	atlas->Offset = size.Width;
+	atlas->FontSize = font->Size;
+	size.Width += 16 * chars->length;
+
+	Platform_MemSet(atlas->Widths, 0, sizeof(atlas->Widths));
+	Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+	Drawer2D_Begin(&bmp);
+		
+	Drawer2D_DrawText(&args, 0, 0);
+	Int32 i;
+	for (i = 0; i < chars->length; i++) {
+		args.Text = String_UNSAFE_Substring(chars, i, 1);
+		atlas->Widths[i] = Drawer2D_MeasureText(&args).Width;
+		Drawer2D_DrawText(&args, atlas->Offset + font->Size * i, 0);
+	}
+
+	Drawer2D_End();
+	atlas->Tex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
+	Platform_MemFree(bmp.Scan0);
+
+	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);
+	atlas->Tex.U2 = (Real32)atlas->Offset / (Real32)bmp.Width;
+	atlas->Tex.Width = (UInt16)atlas->Offset;
+	atlas->TotalWidth = bmp.Width;
+}
+
+void TextAtlas_Free(TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->Tex.ID); }
+
+void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices) {
+	Int32 width = atlas->Widths[charI];
+	Texture part = atlas->Tex;
+	part.X = (UInt16)atlas->CurX; part.Width = (UInt16)width;
+	part.U1 = (atlas->Offset + charI * atlas->FontSize) / (Real32)atlas->TotalWidth;
+	part.U2 = part.U1 + width / (Real32)atlas->TotalWidth;
+
+	atlas->CurX += width;
+	PackedCol white = PACKEDCOL_WHITE;
+	GfxCommon_Make2DQuad(&part, white, vertices);
+}
+
+void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices) {
+	if (value < 0) TextAtlas_Add(atlas, 10, vertices); /* - sign */
+
+	UInt32 i, count = 0;
+	UInt8 digits[STRING_SIZE];
+	/* use a do while loop here, as we still want a '0' digit if input is 0 */
+	do {
+		digits[count] = (UInt8)Math_AbsI(value % 10);
+		value /= 10; count++;
+	} while (value != 0);
+
+	for (i = 0; i < count; i++) {
+		TextAtlas_Add(atlas, digits[count - 1 - i], vertices);
 	}
 }

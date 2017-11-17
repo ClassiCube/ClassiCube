@@ -54,7 +54,7 @@ void TextWidget_Reposition(Widget* elem) {
 	widget->Texture.Y += elem->Y - oldY;
 }
 
-void TextWidget_Create(TextWidget* widget, STRING_TRANSIENT String* text, FontDesc* font) {
+void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* font) {
 	Widget_Init(&widget->Base);
 	PackedCol col = PACKEDCOL_WHITE;
 	widget->Col = col;
@@ -63,9 +63,13 @@ void TextWidget_Create(TextWidget* widget, STRING_TRANSIENT String* text, FontDe
 	widget->Base.Base.Init   = TextWidget_Init;
 	widget->Base.Base.Render = TextWidget_Render;
 	widget->Base.Base.Free   = TextWidget_Free;
+
+	GuiElement* elem = &widget->Base.Base;
+	elem->Init(elem);
+	TextWidget_SetText(widget, text);
 }
 
-void TextWidget_SetText(TextWidget* widget, STRING_TRANSIENT String* text) {
+void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text) {
 	Gfx_DeleteTexture(&widget->Texture.ID);
 	Widget* elem = (Widget*)widget;
 	if (Drawer2D_IsEmptyText(text)) {
