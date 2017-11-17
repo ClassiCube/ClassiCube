@@ -16,7 +16,7 @@ if (write == 0 || !ErrorHandler_Check(result)) {\
 
 void Stream_Fail(Stream* stream, ReturnCode result, const UInt8* operation) {
 	UInt8 tmpBuffer[String_BufferSize(400)];
-	String tmp = String_FromRawBuffer(tmpBuffer, 400);
+	String tmp = String_InitAndClear(tmpBuffer, 400);
 
 	String_AppendConst(&tmp, "Failed ");
 	String_AppendConst(&tmp, operation);
@@ -50,7 +50,7 @@ Int32 Stream_TryReadByte(Stream* stream) {
 
 
 void Stream_SetName(Stream* stream, STRING_PURE String* name) {
-	stream->Name = String_FromRawBuffer(stream->NameBuffer, FILENAME_SIZE);
+	stream->Name = String_InitAndClear(stream->NameBuffer, FILENAME_SIZE);
 	String_AppendString(&stream->Name, name);
 }
 

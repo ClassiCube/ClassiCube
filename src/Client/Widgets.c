@@ -572,7 +572,7 @@ void TableWidget_RecreateDescTex(TableWidget* widget) {
 	if (widget->SelectedIndex == -1) return;
 
 	UInt8 descBuffer[String_BufferSize(TABLE_NAME_LEN)];
-	String desc = String_FromRawBuffer(descBuffer, TABLE_NAME_LEN);
+	String desc = String_InitAndClear(descBuffer, TABLE_NAME_LEN);
 	BlockID block = widget->Elements[widget->SelectedIndex];
 	TableWidget_MakeBlockDesc(&desc, block);
 
@@ -850,7 +850,7 @@ void SpecialInputWidget_UpdateColString(SpecialInputWidget* widget) {
 		if (Drawer2D_Cols[i].A > 0) count++;
 	}
 
-	widget->ColString = String_FromRawBuffer(widget->ColBuffer, DRAWER2D_MAX_COLS * 4);
+	widget->ColString = String_InitAndClear(widget->ColBuffer, DRAWER2D_MAX_COLS * 4);
 	String* buffer = &widget->ColString;
 	Int32 index = 0;
 	for (i = ' '; i <= '~'; i++) {
@@ -972,7 +972,7 @@ Size2D SpecialInputWidget_CalculateContentSize(SpecialInputTab* e, Size2D* sizes
 
 void SpecialInputWidget_MeasureContentSizes(SpecialInputWidget* widget, SpecialInputTab* e, Size2D* sizes) {
 	UInt8 buffer[String_BufferSize(STRING_SIZE)];
-	String s = String_FromRawBuffer(buffer, e->CharsPerItem);
+	String s = String_InitAndClear(buffer, e->CharsPerItem);
 	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
 
 	Int32 i, j;
@@ -986,7 +986,7 @@ void SpecialInputWidget_MeasureContentSizes(SpecialInputWidget* widget, SpecialI
 
 void SpecialInputWidget_DrawContent(SpecialInputWidget* widget, SpecialInputTab* e, Int32 yOffset) {
 	UInt8 buffer[String_BufferSize(STRING_SIZE)];
-	String s = String_FromRawBuffer(buffer, e->CharsPerItem);
+	String s = String_InitAndClear(buffer, e->CharsPerItem);
 	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
 
 	Int32 i, j, wrap = e->ItemsPerRow;
@@ -1191,7 +1191,7 @@ void InputWidget_RemakeTexture(InputWidget* widget) {
 
 		/* Colour code goes to next line */
 		if (!Drawer2D_IsWhiteCol(lastCol)) {
-			String tmp = String_FromRawBuffer(tmpBuffer, STRING_SIZE + 2);
+			String tmp = String_InitAndClear(tmpBuffer, STRING_SIZE + 2);
 			String_Append(&tmp, '&'); String_Append(&tmp, lastCol);
 			String_AppendString(&tmp, &args.Text);
 			args.Text = tmp;
@@ -1379,7 +1379,7 @@ bool InputWidget_OtherKey(InputWidget* widget, Key key) {
 	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
 	if (key == Key_V && widget->Text.length < maxChars) {
 		UInt8 textBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
-		String text = String_FromRawBuffer(textBuffer, INPUTWIDGET_MAX_LINES * STRING_SIZE);
+		String text = String_InitAndClear(textBuffer, INPUTWIDGET_MAX_LINES * STRING_SIZE);
 		Window_GetClipboardText(&text);
 
 		if (text.length == 0) return true;

@@ -137,7 +137,7 @@ bool KeyBind_GetPressed(KeyBind binding) { return Key_States[KeyBind_Keys[bindin
 void KeyBind_Load(void) {
 	UInt32 i;
 	UInt8 nameBuffer[String_BufferSize(STRING_SIZE)];
-	String name = String_FromRawBuffer(nameBuffer, STRING_SIZE);
+	String name = String_InitAndClear(nameBuffer, STRING_SIZE);
 
 	for (i = 0; i < KeyBind_Count; i++) {
 		KeyBind_MakeName(name);
@@ -149,7 +149,7 @@ void KeyBind_Load(void) {
 void KeyBind_Save(void) {
 	UInt32 i;
 	UInt8 nameBuffer[String_BufferSize(STRING_SIZE)];
-	String name = String_FromRawBuffer(nameBuffer, STRING_SIZE);
+	String name = String_InitAndClear(nameBuffer, STRING_SIZE);
 
 	for (i = 0; i < KeyBind_Count; i++) {
 		KeyBind_MakeName(name);

@@ -6,6 +6,8 @@
 #include "Block.h"
 #include "Random.h"
 #include "Events.h"
+#include "AsyncDownloader.h"
+#include "Player.h"
 
 UInt8 ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerName = String_EmptyConstArray(ServerConnection_ServerNameBuffer);
@@ -33,7 +35,10 @@ void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 		Block_CanPlace[i]  = true;
 		Block_CanDelete[i] = true;
 	}
-	game.AsyncDownloader.DownloadSkin(game.LocalPlayer.SkinName, game.LocalPlayer.SkinName);
+
+	Player* player = &LocalPlayer_Instance.Base;
+	String skin = String_FromRaw(player->SkinNameRaw, STRING_SIZE);
+	AsyncDownloader_DownloadSkin(&skin, &skin);
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 	
 	Random rnd; Random_InitFromCurrentTime(&rnd);
@@ -44,7 +49,7 @@ void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 UInt8 SPConnection_LastCol = NULL;
 void SPConnection_AddChat(STRING_PURE String* text) {
 	UInt8 tmpBuffer[STRING_SIZE * 2];
-	String tmp = String_FromRawBuffer(tmpBuffer, STRING_SIZE * 2);
+	String tmp = String_InitAndClear(tmpBuffer, STRING_SIZE * 2);
 	/* Prepend colour codes for subsequent lines of multi-line chat */
 	if (!Drawer2D_IsWhiteCol(SPConnection_LastCol)) {
 		String_Append(&tmp, '&');

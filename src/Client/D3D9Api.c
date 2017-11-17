@@ -66,7 +66,7 @@ void D3D9_FreeResource(GfxResourceID* resource) {
 	if (refCount <= 0) return;
 
 	UInt8 logMsgBuffer[String_BufferSize(127)];
-	String logMsg = String_FromRawBuffer(logMsgBuffer, 127);
+	String logMsg = String_InitAndClear(logMsgBuffer, 127);
 	String_AppendConst(&logMsg, "D3D9 Resource has outstanding references! ID: ");
 	String_AppendInt32(&logMsg, id);
 	Platform_Log(&logMsg);

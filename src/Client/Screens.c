@@ -88,7 +88,7 @@ bool ClickableScreens_HandleMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 }
 
 void ClickableScreen_Create(ClickableScreen* screen) {
-	Screen_Init(&screen->Base);
+	Screen_Reset(&screen->Base);
 	screen->Base.Base.HandlesMouseDown = ClickableScreen_HandlesMouseDown;
 	screen->Base.Base.HandlesMouseMove = ClickableScreens_HandleMouseMove;
 

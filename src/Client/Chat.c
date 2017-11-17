@@ -7,7 +7,7 @@
 #include "ServerConnection.h"
 
 void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
-	String dst = String_FromRawBuffer(line->Buffer, STRING_SIZE);
+	String dst = String_InitAndClear(line->Buffer, STRING_SIZE);
 	String_AppendString(&dst, text);
 	line->Received = Platform_CurrentUTCTime();
 }
@@ -62,7 +62,7 @@ void Chat_OpenLog(DateTime* now) {
 	UInt32 i;
 	for (i = 0; i < 20; i++) {
 		UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
-		String path = String_FromRawBuffer(pathBuffer, FILENAME_SIZE);
+		String path = String_InitAndClear(pathBuffer, FILENAME_SIZE);
 		String_AppendConst(&path, "logs");
 		String_Append(&path, Platform_DirectorySeparator);
 
@@ -105,7 +105,7 @@ void Chat_AppendLog(STRING_PURE String* text) {
 	ChatLog_LastLogDate = now;
 	if (Chat_LogStream.Data == NULL) return;
 	UInt8 logBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String str = String_FromRawBuffer(logBuffer, STRING_SIZE * 2);
+	String str = String_InitAndClear(logBuffer, STRING_SIZE * 2);
 
 	/* [HH:mm:ss] text */
 	String_Append(&str, '['); String_AppendPaddedInt32(&str, now.Hour,   2);

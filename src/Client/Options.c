@@ -109,7 +109,7 @@ Int32 Options_Insert(String key, String value) {
 
 void Options_SetInt32(const UInt8* keyRaw, Int32 value) {
 	UInt8 numBuffer[String_BufferSize(STRING_INT32CHARS)];
-	String numStr = String_FromRawBuffer(numBuffer, STRING_INT32CHARS);
+	String numStr = String_InitAndClear(numBuffer, STRING_INT32CHARS);
 	String_AppendInt32(&numStr, value);
 	Options_Set(keyRaw, numStr);
 }

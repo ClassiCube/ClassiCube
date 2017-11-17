@@ -1,6 +1,9 @@
 #ifndef CC_NETWORKENUMS_H
 #define CC_NETWORKSENUM_H
 #include "Typedefs.h"
+/* Constants for network related data.
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
 
 /* Network packet opcodes. */
 typedef UInt8 Opcode;

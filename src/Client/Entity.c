@@ -49,8 +49,7 @@ void Entity_Init(Entity* entity) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->uScale = 1.0f;
 	entity->vScale = 1.0f;
-	UInt8* ptr = entity->ModelNameBuffer;
-	entity->ModelName = String_FromRawBuffer(ptr, ENTITY_MAX_MODEL_LENGTH);
+	Platform_MemSet(entity->ModelNameRaw, NULL, sizeof(entity->ModelNameRaw));
 }
 
 Vector3 Entity_GetEyePosition(Entity* entity) {
@@ -98,7 +97,8 @@ void Entity_ParseScale(Entity* entity, String scale) {
 void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->ModelBlock = BLOCK_AIR;
-	String_Clear(&entity->ModelName);
+	String entModel = String_FromRaw(entity->ModelNameRaw, ENTITY_MAX_MODEL_LENGTH);
+	String_Clear(&entModel);
 
 	Int32 sep = String_IndexOf(model, '|', 0);
 	String name, scale;
@@ -112,16 +112,16 @@ void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 
 	/* 'giant' model kept for backwards compatibility */
 	String giant = String_FromConst("giant");
-	if (String_CaselessEquals(model, &giant)) {		
-		String_AppendConst(&entity->ModelName, "humanoid");
+	if (String_CaselessEquals(model, &giant)) {
+		String_AppendConst(&entModel, "humanoid");
 		entity->ModelScale = Vector3_Create1(2.0f);
 	} else if (Convert_TryParseUInt8(model, &entity->ModelBlock)) {
-		String_AppendConst(&entity->ModelName, "block");
+		String_AppendConst(&entModel, "block");
 	} else {
-		String_AppendString(&entity->ModelName, &name);
+		String_AppendString(&entModel, &name);
 	}
 
-	entity->Model = ModelCache_Get(&entity->ModelName);
+	entity->Model = ModelCache_Get(&entModel);
 	Entity_ParseScale(entity, scale);
 	entity->MobTextureId = NULL;
 
@@ -336,7 +336,7 @@ void HacksComp_Init(HacksComp* hacks) {
 	hacks->MaxJumps = 1;
 	hacks->NoclipSlide = true;
 	hacks->CanBePushed = true;
-	hacks->HacksFlags = String_FromRawBuffer(&hacks->HacksFlagsBuffer[0], 128);
+	hacks->HacksFlags = String_InitAndClear(&hacks->HacksFlagsBuffer[0], 128);
 }
 
 bool HacksComp_CanJumpHigher(HacksComp* hacks) {
@@ -403,22 +403,19 @@ void HacksComp_ParseAllFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8*
 	}
 }
 
-/* Sets the user type of this user. This is used to control permissions for grass,
-bedrock, water and lava blocks on servers that don't support CPE block permissions. */
 void HacksComp_SetUserType(HacksComp* hacks, UInt8 value) {
 	bool isOp = value >= 100 && value <= 127;
 	hacks->UserType = value;
-	Block_CanPlace[BLOCK_BEDROCK] = isOp;
-	Block_CanDelete[BLOCK_BEDROCK] = isOp;
-
-	Block_CanPlace[BLOCK_WATER] = isOp;
-	Block_CanPlace[BLOCK_STILL_WATER] = isOp;
-	Block_CanPlace[BLOCK_LAVA] = isOp;
-	Block_CanPlace[BLOCK_STILL_LAVA] = isOp;
 	hacks->CanSeeAllNames = isOp;
+
+	Block_CanPlace[BLOCK_BEDROCK]     = isOp;
+	Block_CanDelete[BLOCK_BEDROCK]    = isOp;
+	Block_CanPlace[BLOCK_WATER]       = isOp;
+	Block_CanPlace[BLOCK_STILL_WATER] = isOp;
+	Block_CanPlace[BLOCK_LAVA]        = isOp;
+	Block_CanPlace[BLOCK_STILL_LAVA]  = isOp;
 }
 
-/* Disables any hacks if their respective CanHackX value is set to false. */
 void HacksComp_CheckConsistency(HacksComp* hacks) {
 	if (!hacks->CanFly || !hacks->Enabled) {
 		hacks->Flying = false; hacks->FlyingDown = false; hacks->FlyingUp = false;
@@ -438,10 +435,6 @@ void HacksComp_CheckConsistency(HacksComp* hacks) {
 	}
 }
 
-
-/* Updates ability to use hacks, and raises HackPermissionsChanged event.
-Parses hack flags specified in the motd and/or name of the server.
-Recognises +/-hax, +/-fly, +/-noclip, +/-speed, +/-respawn, +/-ophax, and horspeed=xyz */
 void HacksComp_UpdateState(HacksComp* hacks) {
 	HacksComp_SetAll(hacks, true);
 	if (hacks->HacksFlags.length == 0) return;

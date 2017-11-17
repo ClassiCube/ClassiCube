@@ -70,28 +70,17 @@ void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims);
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 typedef struct Entity_ {
-	/* Position of the entity in the world.*/
 	Vector3 Position;
-	/* Rotation of the entity in the world. */
 	Real32 HeadX, HeadY, RotX, RotY, RotZ;
-	/* Velocity the entity is moving at. */
 	Vector3 Velocity, OldVelocity;
-	
-	/* Texture IDs for this entity's skin. */
-	GfxResourceID TextureId, MobTextureId;
-	/* Animation component of the entity. */
-	AnimatedComp Anim;
 
-	/* Skin type of this entity. */
+	GfxResourceID TextureId, MobTextureId;
+	AnimatedComp Anim;
 	UInt8 SkinType;
-	/* U and V scale of this entity, usually 1. */
 	Real32 uScale, vScale;
 
-	/* The model of this entity. (used for collision detection and rendering) */
 	IModel* Model;
-	UInt8 ModelNameBuffer[String_BufferSize(ENTITY_MAX_MODEL_LENGTH)];
-	/* The name of the model of this entity. Is "block" for all block ID models. */
-	String ModelName;		
+	UInt8 ModelNameRaw[String_BufferSize(ENTITY_MAX_MODEL_LENGTH)];
 	/* BlockID, if model name was originally a vaid block id. Avoids needing to repeatedly parse ModelName as a byte. */
 	BlockID ModelBlock;
 	/* AABB of the model. Centred around the origin, NOT the position. */
@@ -107,9 +96,7 @@ typedef struct Entity_ {
 	bool NoShade;
 
 	/* TODO: SHOULD THESE BE A SEPARATE VTABLE STRUCT? (only need 1 shared pointer that way) */
-	/* Sets the location of this entity. */
 	void (*SetLocation)(struct Entity_* entity, LocationUpdate* update, bool interpolate);
-	/* Gets the colour of this entity for rendering. */
 	PackedCol (*GetCol)(struct Entity_* entity);
 } Entity;
 

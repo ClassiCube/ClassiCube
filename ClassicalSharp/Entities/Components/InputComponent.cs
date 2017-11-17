@@ -58,6 +58,7 @@ namespace ClassicalSharp.Entities {
 		}
 				
 		void DoRespawn() {
+			if (game.World.blocks == null) return;
 			LocalPlayer p = (LocalPlayer)entity;
 			Vector3 spawn = p.Spawn;
 			if (game.World.IsValidPos(Vector3I.Floor(spawn)))

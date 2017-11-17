@@ -38,7 +38,7 @@ typedef struct GuiElement_ {
 	/* Returns whether this GUI element handles the mouse being scrolled. */
 	bool (*HandlesMouseScroll)(struct GuiElement_* elem, Real32 delta);
 } GuiElement;
-void GuiElement_Init(GuiElement* elem);
+void GuiElement_Reset(GuiElement* elem);
 
 struct Screen_;
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
@@ -58,7 +58,7 @@ typedef struct Screen_ {
 	void (*OnContextLost)(struct Screen_* screen);
 	void (*OnContextRecreated)(struct Screen_* screen);
 } Screen;
-void Screen_Init(Screen* screen);
+void Screen_Reset(Screen* screen);
 
 struct Widget_;
 /* Represents an individual 2D gui component. */

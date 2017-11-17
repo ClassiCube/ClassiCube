@@ -17,7 +17,7 @@ bool Gui_FalseMouse(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { retur
 bool Gui_FalseMouseMove(GuiElement* elem, Int32 x, Int32 y) { return false; }
 bool Gui_FalseMouseScroll(GuiElement* elem, Real32 delta) { return false; }
 
-void GuiElement_Init(GuiElement* elem) {
+void GuiElement_Reset(GuiElement* elem) {
 	elem->Init     = NULL;
 	elem->Render   = NULL;
 	elem->Free     = NULL;
@@ -32,8 +32,8 @@ void GuiElement_Init(GuiElement* elem) {
 	elem->HandlesMouseScroll = Gui_FalseMouseScroll;
 }
 
-void Screen_Init(Screen* screen) {
-	GuiElement_Init(&screen->Base);
+void Screen_Reset(Screen* screen) {
+	GuiElement_Reset(&screen->Base);
 	screen->HandlesAllInput = false;
 	screen->BlocksWorld = false;
 	screen->HidesHUD = false;
@@ -49,7 +49,7 @@ void Widget_DoReposition(Widget* w) {
 }
 
 void Widget_Init(Widget* widget) {
-	GuiElement_Init(&widget->Base);
+	GuiElement_Reset(&widget->Base);
 	widget->Active = false;
 	widget->Disabled = false;
 	widget->Base.HandlesMouseDown = NULL;

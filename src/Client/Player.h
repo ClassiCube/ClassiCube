@@ -2,6 +2,7 @@
 #define CC_PLAYER_H
 #include "Typedefs.h"
 #include "Entity.h"
+#include "Texture.h"
 /* Represents a player entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -9,23 +10,21 @@
 /* Represents a player entity. */
 typedef struct Player_ {
 	Entity Base;
+	UInt8 DisplayNameRaw[String_BufferSize(STRING_SIZE)];
+	UInt8 SkinNameRaw[String_BufferSize(STRING_SIZE)];
+	Texture NameTex;
+	bool FetchedSkin;
 } Player;
 
 
 /* Represents the user/player's own entity. */
 typedef struct LocalPlayer_ {
 	Player Base;
-	/* Position the player's position is set to when the 'respawn' key binding is pressed. */
 	Vector3 Spawn;
-	/* Orientation set to when player respawns.*/
-	Real32 SpawnRotY, SpawnHeadX;
-	/* Hacks state of the player. */
-	HacksComp Hacks;
-	/* Distance (in blocks) that players are allowed to reach to and interact/modify blocks in. */
+	Real32 SpawnRotY, SpawnHeadX;	
+	HacksComp Hacks; 	
 	Real32 ReachDistance;
-	/* Tilt animation state of the player. */
-	TiltComp Tilt;
-	/* Interpolation state of the player. */
+	TiltComp Tilt; 	
 	InterpComp Interp;
 } LocalPlayer;
 

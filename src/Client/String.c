@@ -2,16 +2,16 @@
 #include "Funcs.h"
 #include "ErrorHandler.h"
 
-String String_FromEmptyBuffer(STRING_REF UInt8* buffer, UInt16 capacity) {
+String String_Init(STRING_REF UInt8* buffer, UInt16 length, UInt16 capacity) {
 	String str;
 	str.buffer = buffer;
+	str.length = length;
 	str.capacity = capacity;
-	str.length = 0;
 	return str;
 }
 
-String String_FromRawBuffer(STRING_REF UInt8* buffer, UInt16 capacity) {
-	String str = String_FromEmptyBuffer(buffer, capacity);	
+String String_InitAndClear(STRING_REF UInt8* buffer, UInt16 capacity) {
+	String str = String_Init(buffer, 0, capacity);	
 	Int32 i;
 
 	/* Need to set region occupied by string to NULL for interop with native APIs */
@@ -19,16 +19,21 @@ String String_FromRawBuffer(STRING_REF UInt8* buffer, UInt16 capacity) {
 	return str;
 }
 
-String String_FromReadonly(STRING_REF const UInt8* buffer) {
+String String_MakeNull(void) { return String_Init(NULL, 0, 0); }
+
+String String_FromRaw(STRING_REF UInt8* buffer, UInt16 capacity) {
 	UInt16 length = 0;
 	UInt8* cur = buffer;
-	while ((*cur) != NULL) { cur++; length++; }
+	while (length < capacity && *cur != NULL) { cur++; length++; }
 
-	String str = String_FromEmptyBuffer(buffer, length);
-	str.length = length;
+	return String_Init(buffer, length, capacity);
+}
+
+String String_FromReadonly(STRING_REF const UInt8* buffer) {
+	String str = String_FromRaw(buffer, UInt16_MaxValue);
+	str.capacity = str.length;
 	return str;
 }
-String String_MakeNull(void) { return String_FromEmptyBuffer(NULL, 0); }
 
 
 void String_MakeLowercase(STRING_TRANSIENT String* str) {
@@ -56,12 +61,7 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 	if (offset + length > str->length) {
 		ErrorHandler_Fail("Result substring is out of range");
 	}
-
-	String sub = *str;
-	sub.buffer += offset;
-	sub.length = length; 
-	sub.capacity = length;
-	return sub;
+	return String_Init(str->buffer + offset, (UInt16)length, (UInt16)length);
 }
 
 
@@ -396,9 +396,5 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index) {
 	UInt32 flags = buffer->FlagsBuffer[index];
 	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
 	UInt32 len    = flags  & STRINGSBUFFER_LEN_MASK;
-
-	String raw;
-	raw.buffer = &buffer->TextBuffer[offset];
-	raw.length = len; raw.capacity = len;
-	return raw;
+	return String_Init(&buffer->TextBuffer[offset], (UInt16)len, (UInt16)len);
 }

@@ -114,7 +114,7 @@ String Block_DefaultName(BlockID block) {
 	Int32 end = String_IndexOf(&blockNames, ' ', start);
 	if (end == -1) end = blockNames.length;
 
-	String buffer = String_FromRawBuffer(Block_NamePtr(block), STRING_SIZE);
+	String buffer = String_InitAndClear(Block_NamePtr(block), STRING_SIZE);
 	Block_SplitUppercase(&buffer, &blockNames, start, end);
 	return buffer;
 }
@@ -450,7 +450,7 @@ bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
 
 BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix) {
 	UInt8 buffer[String_BufferSize(128)];
-	String temp = String_FromRawBuffer(buffer, 128);
+	String temp = String_InitAndClear(buffer, 128);
 	String_AppendString(&temp, name);
 	String_AppendConst(&temp, suffix);
 
