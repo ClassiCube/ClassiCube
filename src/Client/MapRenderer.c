@@ -127,7 +127,7 @@ void MapRenderer_RenderNormalBatch(UInt32 batch) {
 
 void MapRenderer_RenderNormal(Real64 deltaTime) {
 	if (MapRenderer_Chunks == NULL) return;
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
@@ -212,7 +212,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 
 	/* First fill depth buffer */
 	UInt32 vertices = Game_Vertices;
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_SetTexturing(false);
 	Gfx_SetAlphaBlending(false);
 	Gfx_SetColourWrite(false);

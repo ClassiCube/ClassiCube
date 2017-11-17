@@ -40,7 +40,7 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetTexturing(false);
 	Gfx_BindTexture(skybox_tex);
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	Matrix m = Matrix_Identity;
 	Matrix rotX, rotY;
@@ -119,7 +119,7 @@ void SkyboxRenderer_MakeVb(void) {
 	v.X =  pos;                         v.U = 0.50f;              vertices[22] = v;
 	                        v.Z = -pos;              v.V = 0.50f; vertices[23] = v;
 
-	skybox_vb = Gfx_CreateVb(vertices, VertexFormat_P3fT2fC4b, SKYBOX_COUNT);
+	skybox_vb = Gfx_CreateVb(vertices, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
 }
 
 void SkyboxRenderer_ContextLost(void) { Gfx_DeleteVb(&skybox_vb); }

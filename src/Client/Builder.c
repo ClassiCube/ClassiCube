@@ -93,7 +93,7 @@ void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* h
 	if (vCount == 0) return;
 
 	ChunkPartInfo info;
-	info.VbId = Gfx_CreateVb(part->vertices, VertexFormat_P3fT2fC4b, vCount);
+	info.VbId = Gfx_CreateVb(part->vertices, VERTEX_FORMAT_P3FT2FC4B, vCount);
 	info.HasVertices = vCount > 0;
 
 	info.XMinCount = (UInt16)part->fCount[Face_XMin];

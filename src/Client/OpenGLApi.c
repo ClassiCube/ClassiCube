@@ -266,10 +266,10 @@ GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 coun
 		UInt16 indices[GFX_MAX_INDICES];
 		GfxCommon_MakeIndices(indices, ICOUNT(count));
 
-		Int32 stride = vertexFormat == VertexFormat_P3fT2fC4b ? VertexP3fT2fC4b_Size : VertexP3fC4b_Size;
+		Int32 stride = vertexFormat == VERTEX_FORMAT_P3FT2FC4B ? VertexP3fT2fC4b_Size : VertexP3fC4b_Size;
 		glVertexPointer(3, GL_FLOAT, stride, vertices);
 		glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((UInt8*)vertices + 12));
-		if (vertexFormat == VertexFormat_P3fT2fC4b) {
+		if (vertexFormat == VERTEX_FORMAT_P3FT2FC4B) {
 			glTexCoordPointer(2, GL_FLOAT, stride, (void*)((UInt8*)vertices + 16));
 		}
 
@@ -357,13 +357,13 @@ void GL_SetupVbPos3fTex2fCol4b_Range(Int32 startVertex) {
 void Gfx_SetBatchFormat(VertexFormat vertexFormat) {
 	if (vertexFormat == gl_batchFormat) return;
 
-	if (gl_batchFormat == VertexFormat_P3fT2fC4b) {
+	if (gl_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	}
 	gl_batchFormat = vertexFormat;
 	gl_batchStride = Gfx_strideSizes[vertexFormat];
 
-	if (vertexFormat == VertexFormat_P3fT2fC4b) {
+	if (vertexFormat == VERTEX_FORMAT_P3FT2FC4B) {
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		gl_setupVBFunc = GL_SetupVbPos3fTex2fCol4b;
 		gl_setupVBRangeFunc = GL_SetupVbPos3fTex2fCol4b_Range;
@@ -399,7 +399,7 @@ void GL_V24(VertexP3fT2fC4b v) {
 void GL_DrawDynamicLines(Int32 verticesCount) {
 	glBegin(GL_LINES);
 	Int32 i;
-	if (gl_batchFormat == VertexFormat_P3fT2fC4b) {
+	if (gl_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
 		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
 		for (i = 0; i < verticesCount; i += 2) {
 			GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]);
@@ -416,7 +416,7 @@ void GL_DrawDynamicLines(Int32 verticesCount) {
 void GL_DrawDynamicTriangles(Int32 verticesCount, Int32 startVertex) {
 	glBegin(GL_TRIANGLES);
 	Int32 i;
-	if (gl_batchFormat == VertexFormat_P3fT2fC4b) {
+	if (gl_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
 		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
 		for (i = startVertex; i < startVertex + verticesCount; i += 4) {
 			GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]); GL_V24(ptr[i + 2]);

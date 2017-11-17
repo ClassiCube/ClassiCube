@@ -90,7 +90,7 @@ void WeatherRenderer_ContextLost(void) {
 }
 
 void WeatherRenderer_ContextRecreated(void) {
-	weather_vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, weather_verticesCount);
+	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, weather_verticesCount);
 }
 
 Real32 WeatherRenderer_AlphaAt(Real32 x) {
@@ -176,7 +176,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaArgBlend(true);
 
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
 	Gfx_SetAlphaArgBlend(false);

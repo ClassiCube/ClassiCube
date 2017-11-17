@@ -179,7 +179,7 @@ void Particles_FileChanged(Stream* stream) {
 
 void Particles_ContextLost(void) { Gfx_DeleteVb(&Particles_VB); }
 void Particles_ContextRecreated(void) {
-	Particles_VB = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, PARTICLES_MAX * 4);
+	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
 }
 
 void Particles_Init(void) {
@@ -273,7 +273,7 @@ void Particles_Render(Real64 delta, Real32 t) {
 	Gfx_SetTexturing(true);
 	Gfx_SetAlphaTest(true);
 
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Terrain_Render(t);
 	Rain_Render(t);
 

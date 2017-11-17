@@ -8,8 +8,8 @@
 #include "ExtMath.h"
 
 void GfxCommon_Init(void) {
-	GfxCommon_quadVb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, 4);
-	GfxCommon_texVb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, 4);
+	GfxCommon_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
+	GfxCommon_texVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
 }
 
 void GfxCommon_Free(void) {
@@ -56,7 +56,7 @@ void GfxCommon_Draw2DFlat(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol
 	                           v.Y = (Real32)(y + height); quadVerts[2] = v;
 	v.X = (Real32)x;                                       quadVerts[3] = v;
 
-	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, quadVerts, 4);
 }
 
@@ -69,7 +69,7 @@ void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, Packe
 	                           v.Y = (Real32)(y + height); v.Col = bottomCol; quadVerts[2] = v;
 	v.X = (Real32)x;                                                          quadVerts[3] = v;
 
-	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, quadVerts, 4);
 }
 
@@ -77,7 +77,7 @@ void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {
 	VertexP3fT2fC4b texVerts[4];
 	VertexP3fT2fC4b* ptr = texVerts;
 	GfxCommon_Make2DQuad(tex, col, &ptr);
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, texVerts, 4);
 }
 
@@ -102,10 +102,10 @@ void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertice
 
 bool gfx_hadFog;
 void GfxCommon_Mode2D(Int32 width, Int32 height) {
-	Gfx_SetMatrixMode(MatrixType_Projection);
+	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_PushMatrix();
 	Gfx_LoadOrthoMatrix((Real32)width, (Real32)height);
-	Gfx_SetMatrixMode(MatrixType_Modelview);
+	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
 	Gfx_PushMatrix();
 	Gfx_LoadIdentityMatrix();
 
@@ -116,9 +116,9 @@ void GfxCommon_Mode2D(Int32 width, Int32 height) {
 }
 
 void GfxCommon_Mode3D(void) {
-	Gfx_SetMatrixMode(MatrixType_Projection);
+	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_PopMatrix(); /* Get rid of orthographic 2D matrix. */
-	Gfx_SetMatrixMode(MatrixType_Modelview);
+	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
 	Gfx_PopMatrix();
 
 	Gfx_SetDepthTest(false);

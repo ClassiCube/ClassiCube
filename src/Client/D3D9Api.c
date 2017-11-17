@@ -554,11 +554,11 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
 
 
 void Gfx_SetMatrixMode(MatrixType matrixType) {
-	if (matrixType == MatrixType_Projection) {
+	if (matrixType == MATRIX_TYPE_PROJECTION) {
 		curStack = &projStack;
-	} else if (matrixType == MatrixType_Modelview) {
+	} else if (matrixType == MATRIX_TYPE_MODELVIEW) {
 		curStack = &viewStack;
-	} else if (matrixType == MatrixType_Texture) {
+	} else if (matrixType == MATRIX_TYPE_TEXTURE) {
 		curStack = &texStack;
 	}
 }

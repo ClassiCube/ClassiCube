@@ -647,7 +647,7 @@ void TableWidget_Render(GuiElement* elem, Real64 delta) {
 			size, size, Table_TopSelCol, Table_BottomSelCol);
 	}
 	Gfx_SetTexturing(true);
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	VertexP3fT2fC4b vertices[TABLE_MAX_VERTICES];
 	IsometricDrawer_BeginBatch(vertices, widget->VB);
@@ -688,7 +688,7 @@ void TableWidget_Free(GuiElement* elem) {
 void TableWidget_Recreate(GuiElement* elem) {
 	TableWidget* widget = (TableWidget*)elem;
 	elem->Free(elem);
-	widget->VB = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, TABLE_MAX_VERTICES);
+	widget->VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(widget);
 }
 

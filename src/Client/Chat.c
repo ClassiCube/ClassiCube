@@ -122,19 +122,19 @@ void Chat_AppendLog(STRING_PURE String* text) {
 	Stream_WriteLine(&Chat_LogStream, &str);
 }
 
-void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MessageType_Normal); }
+void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MESSAGE_TYPE_NORMAL); }
 void Chat_AddOf(STRING_PURE String* text, MessageType type) {
-	if (type == MessageType_Normal) {
+	if (type == MESSAGE_TYPE_NORMAL) {
 		StringsBuffer_Add(&ChatLog, text);
 		Chat_AppendLog(text);
-	} else if (type >= MessageType_Status1 && type <= MessageType_Status3) {
-		ChatLine_Make(&Chat_Status[type - MessageType_Status1], text);
-	} else if (type >= MessageType_BottomRight1 && type <= MessageType_BottomRight3) {
-		ChatLine_Make(&Chat_BottomRight[type - MessageType_BottomRight1], text);
-	} else if (type == MessageType_Announcement) {
+	} else if (type >= MESSAGE_TYPE_STATUS_1 && type <= MESSAGE_TYPE_STATUS_3) {
+		ChatLine_Make(&Chat_Status[type - MESSAGE_TYPE_STATUS_1], text);
+	} else if (type >= MESSAGE_TYPE_BOTTOMRIGHT_1 && type <= MESSAGE_TYPE_BOTTOMRIGHT_3) {
+		ChatLine_Make(&Chat_BottomRight[type - MESSAGE_TYPE_BOTTOMRIGHT_1], text);
+	} else if (type == MESSAGE_TYPE_ANNOUNCEMENT) {
 		ChatLine_Make(&Chat_Announcement, text);
-	} else if (type >= MessageType_ClientStatus1 && type <= MessageType_ClientStatus3) {
-		ChatLine_Make(&Chat_ClientStatus[type - MessageType_ClientStatus1], text);
+	} else if (type >= MESSAGE_TYPE_CLIENTSTATUS_1 && type <= MESSAGE_TYPE_CLIENTSTATUS_3) {
+		ChatLine_Make(&Chat_ClientStatus[type - MESSAGE_TYPE_CLIENTSTATUS_1], text);
 	}
 	Events_RaiseChatReceived(text, type);
 }

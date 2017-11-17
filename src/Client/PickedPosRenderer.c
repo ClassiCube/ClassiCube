@@ -18,7 +18,7 @@ void PickedPosRenderer_ContextLost(void) {
 }
 
 void PickedPosRenderer_ContextRecreated(void) {
-	pickedPos_vb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, pickedPos_numVertices);
+	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, pickedPos_numVertices);
 }
 
 void PickedPosRenderer_Init(void) {
@@ -39,7 +39,7 @@ void PickedPosRenderer_Render(Real64 delta) {
 
 	Gfx_SetAlphaBlending(true);
 	Gfx_SetDepthWrite(false);
-	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 
 	GfxCommon_UpdateDynamicVb_IndexedTris(pickedPos_vb, pickedPos_vertices, pickedPos_numVertices);
 	Gfx_SetDepthWrite(true);

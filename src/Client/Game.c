@@ -51,9 +51,9 @@ void Game_UpdateProjection(void) {
 	Game_DefaultFov = Options_GetInt(OptionsKey_FieldOfView, 1, 150, 70);
 	Camera_ActiveCamera->GetProjection(&Game_Projection);
 
-	Gfx_SetMatrixMode(MatrixType_Projection);
+	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&Game_Projection);
-	Gfx_SetMatrixMode(MatrixType_Modelview);
+	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
 	Event_RaiseVoid(&GfxEvents_ProjectionChanged);
 }
 

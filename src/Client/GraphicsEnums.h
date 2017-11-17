@@ -3,38 +3,38 @@
 
 /* Vertex data format types*/
 typedef Int32 VertexFormat;
-#define VertexFormat_P3fC4b 0
-#define VertexFormat_P3fT2fC4b 1
+#define VERTEX_FORMAT_P3FC4B 0
+#define VERTEX_FORMAT_P3FT2FC4B 1
 
 /* 3D graphics pixel comparison functions */
 typedef Int32 CompareFunc;
-#define CompareFunc_Always 0
-#define CompareFunc_NotEqual 1
-#define CompareFunc_Never 2
-#define CompareFunc_Less 3
-#define CompareFunc_LessEqual 4
-#define CompareFunc_Equal 5
-#define CompareFunc_GreaterEqual 6
-#define CompareFunc_Greater 7
+#define COMPARE_FUNC_ALWAYS 0
+#define COMPARE_FUNC_NOTEQUAL 1
+#define COMPARE_FUNC_NEVER 2
+#define COMPARE_FUNC_LESS 3
+#define COMPARE_FUNC_LESSEQUAL 4
+#define COMPARE_FUNC_EQUAL 5
+#define COMPARE_FUNC_GREATEREQUAL 6
+#define COMPARE_FUNC_GREATER 7
 
 /* 3D graphics pixel blending functions */
 typedef Int32 BlendFunc;
-#define BlendFunc_Zero 0
-#define BlendFunc_One 1
-#define BlendFunc_SourceAlpha 2
-#define BlendFunc_InvSourceAlpha 3
-#define BlendFunc_DestAlpha 4
-#define BlendFunc_InvDestAlpha 5
+#define BLEND_FUNC_ZERO 0
+#define BLEND_FUNC_ONE 1
+#define BLEND_FUNC_SRC_ALPHA 2
+#define BLEND_FUNC_INV_SRC_ALPHA 3
+#define BLEND_FUNC_DST_ALPHA 4
+#define BLEND_FUNC_INV_DST_ALPHA 5
 
 /* 3D graphics pixel fog blending functions */
 typedef Int32 Fog;
-#define Fog_Linear 0
-#define Fog_Exp 1
-#define Fog_Exp2 2
+#define FOG_LINEAR 0
+#define FOG_EXP 1
+#define FOG_EXP2 2
 
 /* 3D graphics matrix types */
 typedef Int32 MatrixType;
-#define MatrixType_Projection 0
-#define MatrixType_Modelview 1
-#define MatrixType_Texture 2
+#define MATRIX_TYPE_PROJECTION 0
+#define MATRIX_TYPE_MODELVIEW 1
+#define MATRIX_TYPE_TEXTURE 2
 #endif

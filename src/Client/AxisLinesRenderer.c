@@ -38,7 +38,7 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	if (!Game_ShowAxisLines || Gfx_LostContext) return;
 	/* Don't do it in a ContextRecreated handler, because we only want VB recreated if ShowAxisLines in on. */
 	if (axisLines_vb == NULL) {
-		axisLines_vb = Gfx_CreateDynamicVb(VertexFormat_P3fC4b, axisLines_numVertices);
+		axisLines_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, axisLines_numVertices);
 	}
 
 	Gfx_SetTexturing(false);
@@ -65,6 +65,6 @@ void AxisLinesRenderer_Render(Real64 delta) {
 			P.X + axisLines_size, P.Y + axisLines_length, P.Z - axisLines_size);
 	}
 
-	Gfx_SetBatchFormat(VertexFormat_P3fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, axisLines_numVertices);
 }

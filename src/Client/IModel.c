@@ -87,7 +87,7 @@ void IModel_Render(IModel* model, Entity* entity) {
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
 	IModel_SetupState(model, entity);
 
-	Gfx_SetBatchFormat(VertexFormat_P3fT2fC4b);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 	Gfx_PushMatrix();
 
 	model->GetTransform(entity, pos);

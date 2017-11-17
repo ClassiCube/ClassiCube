@@ -16,7 +16,7 @@ void ModelCache_ContextLost(void) {
 }
 
 void ModelCache_ContextRecreated(void) {
-	ModelCache_Vb = Gfx_CreateDynamicVb(VertexFormat_P3fT2fC4b, MODELCACHE_MAX_VERTICES);
+	ModelCache_Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, MODELCACHE_MAX_VERTICES);
 }
 
 IModel* ModelCache_Get(STRING_PURE String* name) {
