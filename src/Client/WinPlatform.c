@@ -61,6 +61,10 @@ void* Platform_MemAlloc(UInt32 numBytes) {
 	return HeapAlloc(heap, 0, numBytes);
 }
 
+void* Platform_MemRealloc(void* mem, UInt32 numBytes) {
+	return HeapReAlloc(heap, 0, mem, numBytes);
+}
+
 void Platform_MemFree(void* mem) {
 	HeapFree(heap, 0, mem);
 }
@@ -188,13 +192,15 @@ void Platform_ThreadSleep(UInt32 milliseconds) {
 }
 
 
-void Platform_MakeFont(FontDesc* desc) {
+void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName) {
 	LOGFONTA font = { 0 };
 	font.lfHeight    = -Math_Ceil(desc->Size * GetDeviceCaps(hdc, LOGPIXELSY) / 72.0f);
 	font.lfUnderline = desc->Style == FONT_STYLE_UNDERLINE;
 	font.lfWeight    = desc->Style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
 	font.lfQuality   = ANTIALIASED_QUALITY;
 
+	String dstName = String_Init(font.lfFaceName, 0, LF_FACESIZE);
+	String_AppendString(&dstName, fontName);
 	desc->Handle = CreateFontIndirectA(&font);
 	if (desc->Handle == NULL) ErrorHandler_Fail("Creating font handle failed");
 }
@@ -204,6 +210,7 @@ void Platform_FreeFont(FontDesc* desc) {
 	desc->Handle = NULL;
 }
 
+/* TODO: Associate Font with device */
 Size2D Platform_MeasureText(struct DrawTextArgs_* args) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };

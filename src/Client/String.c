@@ -1,6 +1,7 @@
 #include "String.h"
 #include "Funcs.h"
 #include "ErrorHandler.h"
+#include "Platform.h"
 
 String String_Init(STRING_REF UInt8* buffer, UInt16 length, UInt16 capacity) {
 	String str;
@@ -384,6 +385,23 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 
 #define STRINGSBUFFER_LEN_SHIFT 10
 #define STRINGSBUFFER_LEN_MASK  0x3FFUL
+void StringBuffers_Init(StringsBuffer* buffer) {
+	buffer->Count = 0;
+	buffer->TextBuffer  = buffer->DefaultBuffer;
+	buffer->FlagsBuffer = buffer->DefaultFlags;
+	buffer->TextBufferSize   = STRINGSBUFFER_DEF_BUFFER_SIZE;
+	buffer->FlagsBufferElems = STRINGSBUFFER_DEF_FLAGS_ELEMS;
+}
+
+void StringsBuffer_Free(StringsBuffer* buffer) {
+	if (buffer->TextBufferSize > STRINGSBUFFER_DEF_BUFFER_SIZE) {
+		Platform_MemFree(buffer->TextBuffer);
+	}
+	if (buffer->FlagsBufferElems > STRINGSBUFFER_DEF_FLAGS_ELEMS) {
+		Platform_MemFree(buffer->FlagsBuffer);
+	}
+}
+
 void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text) {
 	String raw = StringsBuffer_UNSAFE_Get(buffer, index);
 	String_Clear(text);
@@ -393,8 +411,32 @@ void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT Str
 String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index) {
 	if (index >= buffer->Count) ErrorHandler_Fail("Tried to get String past StringsBuffer end");
 
-	UInt32 flags = buffer->FlagsBuffer[index];
+	UInt32 flags  = buffer->FlagsBuffer[index];
 	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
 	UInt32 len    = flags  & STRINGSBUFFER_LEN_MASK;
 	return String_Init(&buffer->TextBuffer[offset], (UInt16)len, (UInt16)len);
+}
+
+void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index) {
+	if (index >= buffer->Count) ErrorHandler_Fail("Tried to remove String past StringsBuffer end");
+
+	UInt32 flags  = buffer->FlagsBuffer[index];
+	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
+	UInt32 len    = flags  & STRINGSBUFFER_LEN_MASK;
+
+	UInt32 lastFlags  = buffer->FlagsBuffer[buffer->Count - 1];
+	UInt32 lastOffset = lastFlags >> STRINGSBUFFER_LEN_SHIFT;
+	UInt32 lastLen    = lastFlags  & STRINGSBUFFER_LEN_MASK;
+
+	/* Imagine buffer is this: XXYYYYZZZ, and want to delete X */
+	/* Start points to first character of Y */
+	/* End points to last character of Z */
+	UInt32 i, start = offset + len, end = lastOffset + lastLen;
+	for (i = start; i < end; i++) { 
+		buffer->TextBuffer[i - len] = buffer->TextBuffer[i]; 
+	}
+	for (i = index; i < buffer->Count; i++) {
+		buffer->FlagsBuffer[i] = buffer->FlagsBuffer[i + 1];
+	}
+	buffer->Count--;
 }

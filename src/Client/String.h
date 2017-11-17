@@ -72,14 +72,16 @@ bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
 bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
 
-/* todo use a single byte array for all strings, each 'string' is 22 bits offsrt, 10 bits length into this array. */
-/* means resizing is expensive tho*/
+#define STRINGSBUFFER_DEF_BUFFER_SIZE 4096
+#define STRINGSBUFFER_DEF_FLAGS_ELEMS 256
 typedef struct StringsBuffer_ {
 	UInt8* TextBuffer;
 	UInt32 TextBufferSize;
 	UInt32* FlagsBuffer;
-	UInt32 FlagsBufferSize;
+	UInt32 FlagsBufferElems;
 	UInt32 Count;
+	UInt8 DefaultBuffer[STRINGSBUFFER_DEF_BUFFER_SIZE];
+	UInt32 DefaultFlags[STRINGSBUFFER_DEF_FLAGS_ELEMS];
 } StringsBuffer;
 
 void StringBuffers_Init(StringsBuffer* buffer);
