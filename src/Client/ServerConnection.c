@@ -5,7 +5,7 @@
 #include "Chat.h"
 #include "Block.h"
 #include "Random.h"
-#include "Events.h"
+#include "Event.h"
 #include "AsyncDownloader.h"
 #include "Player.h"
 

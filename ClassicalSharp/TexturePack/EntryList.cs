@@ -36,7 +36,7 @@ namespace ClassicalSharp.Textures {
 					string line;
 					while ((line = reader.ReadLine()) != null) {
 						line = line.Trim();
-						if (line.Length == 0 || line[0] == '#') continue;
+						if (line.Length == 0) continue;
 						Entries.Add(line);
 					}
 				}

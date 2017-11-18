@@ -1,7 +1,7 @@
 #include "Screens.h"
 #include "Widgets.h"
 #include "Game.h"
-#include "Events.h"
+#include "Event.h"
 #include "GraphicsCommon.h"
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {

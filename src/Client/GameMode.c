@@ -4,7 +4,7 @@
 #include "Game.h"
 #include "Screens.h"
 #include "Block.h"
-#include "Events.h"
+#include "Event.h"
 
 void GameMode_Init(void) {
 	BlockID* inv = Inventory_Table;

@@ -405,7 +405,7 @@ void HotbarWidget_Free(GuiElement* elem) { }
 bool HotbarWidget_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key >= Key_1 && key <= Key_9) {
 		Int32 index = key - Key_1;
-		if (KeyBind_GetPressed(KeyBind_HotbarSwitching)) {
+		if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
 			/* Pick from first to ninth row */
 			Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);
 			HotbarWidget* widget = (HotbarWidget*)elem;

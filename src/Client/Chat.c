@@ -1,7 +1,7 @@
 #include "Chat.h"
 #include "Stream.h"
 #include "Platform.h"
-#include "Events.h"
+#include "Event.h"
 #include "Game.h"
 #include "ErrorHandler.h"
 #include "ServerConnection.h"

@@ -5,7 +5,7 @@
 #include "GraphicsEnums.h"
 #include "GraphicsCommon.h"
 #include "Game.h"
-#include "Events.h"
+#include "Event.h"
 
 GfxResourceID pickedPos_vb;
 PackedCol pickedPos_col;

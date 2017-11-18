@@ -1,5 +1,5 @@
 #include "Input.h"
-#include "Events.h"
+#include "Event.h"
 #include "Funcs.h"
 #include "Options.h"
 
@@ -55,16 +55,16 @@ const UInt8* Key_Names[Key_Count] = {
 };*/
 
 bool Key_States[Key_Count];
-bool Key_GetPressed(Key key) { return Key_States[key]; }
+bool Key_IsPressed(Key key) { return Key_States[key]; }
 
 void Key_SetPressed(Key key, bool pressed) {
 	if (Key_States[key] != pressed || Key_KeyRepeat) {
 		Key_States[key] = pressed;
 
 		if (pressed) {
-			Event_RaiseInt32(&KeyEvents_KeyDown, key);
+			Event_RaiseInt32(&KeyEvents_Down, key);
 		} else {
-			Event_RaiseInt32(&KeyEvents_KeyUp, key);
+			Event_RaiseInt32(&KeyEvents_Up, key);
 		}
 	}
 }
@@ -78,16 +78,16 @@ void Key_Clear(void) {
 
 
 bool MouseButton_States[MouseButton_Count];
-bool Mouse_GetPressed(MouseButton btn) { return MouseButton_States[btn]; }
+bool Mouse_IsPressed(MouseButton btn) { return MouseButton_States[btn]; }
 
 void Mouse_SetPressed(MouseButton btn, bool pressed) {
 	if (MouseButton_States[btn] != pressed) {
 		MouseButton_States[btn] = pressed;
 
 		if (pressed) {
-			Event_RaiseInt32(&MouseEvents_ButtonDown, btn);
+			Event_RaiseInt32(&MouseEvents_Down, btn);
 		} else {
-			Event_RaiseInt32(&MouseEvents_ButtonUp, btn);
+			Event_RaiseInt32(&MouseEvents_Up, btn);
 		}
 	}
 }
@@ -95,13 +95,13 @@ void Mouse_SetPressed(MouseButton btn, bool pressed) {
 void Mouse_SetWheel(Real32 wheel) {
 	Real32 delta = wheel - Mouse_Wheel;
 	Mouse_Wheel = wheel;
-	Event_RaiseReal32(&MouseEvents_WheelChanged, delta);
+	Event_RaiseReal32(&MouseEvents_Wheel, delta);
 }
 
 void Mouse_SetPosition(Int32 x, Int32 y) {
 	Int32 deltaX = x - Mouse_X, deltaY = y - Mouse_Y;
 	Mouse_X = x; Mouse_Y = y;
-	Event_RaiseMouseMove(&MouseEvents_Move, deltaX, deltaY);
+	Event_RaiseMouseMove(&MouseEvents_Moved, deltaX, deltaY);
 }
 
 Key KeyBind_Keys[KeyBind_Count];
@@ -130,7 +130,7 @@ const UInt8* KeyBind_Names[KeyBind_Count] = {
 
 Key KeyBind_Get(KeyBind binding) { return KeyBind_Keys[binding]; }
 Key KeyBind_GetDefault(KeyBind binding) { return KeyBind_Defaults[binding]; }
-bool KeyBind_GetPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding]]; }
+bool KeyBind_IsPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding]]; }
 
 #define KeyBind_MakeName(name) String_Clear(&name); String_AppendConst(&name, "key-"); String_AppendConst(&name, KeyBind_Names[i]);
 

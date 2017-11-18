@@ -7,7 +7,7 @@
 #include "PackedCol.h"
 #include "Camera.h"
 #include "Player.h"
-#include "Events.h"
+#include "Event.h"
 
 GfxResourceID axisLines_vb;
 #define axisLines_numVertices 12

@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include "Platform.h"
 #include "Input.h"
-#include "Events.h"
+#include "Event.h"
 #include "String.h"
 
 #define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
@@ -192,7 +192,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 		new_focused_state = LOWORD(wParam) != 0;
 		if (new_focused_state != win_Focused) {
 			win_Focused = new_focused_state;
-			Event_RaiseVoid(&WindowEvents_OnFocusedChanged);
+			Event_RaiseVoid(&WindowEvents_FocusChanged);
 		}
 		break;
 
@@ -211,7 +211,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 			Point2D new_location = Point2D_Make(pos->x, pos->y);
 			if (!Point2D_Equals(Window_GetLocation(), new_location)) {
 				win_Bounds.X = pos->x; win_Bounds.Y = pos->y;
-				Event_RaiseVoid(&WindowEvents_OnMove);
+				Event_RaiseVoid(&WindowEvents_Moved);
 			}
 
 			Size2D new_size = Size2D_Make(pos->cx, pos->cy);
@@ -227,7 +227,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 					SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
 				if (suppress_resize <= 0) {
-					Event_RaiseVoid(&WindowEvents_OnResize);
+					Event_RaiseVoid(&WindowEvents_Resized);
 				}
 			}
 		}
@@ -254,14 +254,14 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 
 		if (new_state != win_State) {
 			win_State = new_state;
-			Event_RaiseVoid(&WindowEvents_OnWindowStateChanged);
+			Event_RaiseVoid(&WindowEvents_WindowStateChanged);
 		}
 		break;
 
 
 	case WM_CHAR:
 		keyChar = Convert_UnicodeToCP437((UInt16)wParam);
-		Event_RaiseInt32(&KeyEvents_KeyPress, keyChar);
+		Event_RaiseInt32(&KeyEvents_Press, keyChar);
 		break;
 
 	case WM_MOUSEMOVE:
@@ -273,14 +273,14 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 			/* Once we receive a mouse move event, it means that the mouse has re-entered the window. */
 			mouse_outside_window = false;
 			Window_EnableMouseTracking();
-			Event_RaiseVoid(&WindowEvents_OnMouseEnter);
+			Event_RaiseVoid(&WindowEvents_MouseEnter);
 		}
 		break;
 
 	case WM_MOUSELEAVE:
 		mouse_outside_window = true;
 		/* Mouse tracking is disabled automatically by the OS */
-		Event_RaiseVoid(&WindowEvents_OnMouseLeave);
+		Event_RaiseVoid(&WindowEvents_MouseLeave);
 
 		/* Set all mouse buttons to off when user leaves window, prevents them being stuck down. */
 		for (btn = 0; btn < MouseButton_Count; btn++) {
@@ -402,7 +402,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 		break;
 
 	case WM_CLOSE:
-		Event_RaiseVoid(&WindowEvents_OnClosing);
+		Event_RaiseVoid(&WindowEvents_Closing);
 		Window_Destroy();
 		break;
 
@@ -410,7 +410,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 		win_Exists = false;
 		UnregisterClassA(win_ClassName, win_Instance);
 		if (win_DC != NULL) ReleaseDC(win_Handle, win_DC);
-		Event_RaiseVoid(&WindowEvents_OnClosed);
+		Event_RaiseVoid(&WindowEvents_Closed);
 		break;
 	}
 	return DefWindowProcA(handle, message, wParam, lParam);

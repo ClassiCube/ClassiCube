@@ -2,7 +2,7 @@
 #include "Funcs.h"
 #include "Game.h"
 #include "Block.h"
-#include "Events.h"
+#include "Event.h"
 
 bool Inventory_CanChangeSelected(void) {
 	if (!Inventory_CanChangeHeldBlock) {

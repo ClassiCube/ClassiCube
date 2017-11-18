@@ -198,7 +198,6 @@
     <ClInclude Include="EnvRenderer.h" />
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="Event.h" />
-    <ClInclude Include="Events.h" />
     <ClInclude Include="Formats.h" />
     <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="Deflate.h" />
