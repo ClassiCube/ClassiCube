@@ -142,6 +142,7 @@ namespace ClassicalSharp.Map {
 		
 		unsafe void WriteBlockDefinitionCompound(byte id) {
 			nbt.Write(NbtTagType.Compound); nbt.Write("Block" + id);
+			bool sprite = BlockInfo.Draw[id] == DrawType.Sprite;
 			
 			nbt.Write(NbtTagType.Int8);
 			nbt.Write("ID"); nbt.WriteUInt8(id);
@@ -167,11 +168,14 @@ namespace ClassicalSharp.Map {
 			nbt.Write(NbtTagType.Int8);
 			nbt.Write("WalkSound"); nbt.WriteUInt8((byte)BlockInfo.DigSounds[id]);
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("FullBright"); nbt.WriteUInt8(BlockInfo.FullBright[id] ? 1 : 0);
+			nbt.Write("FullBright"); nbt.WriteUInt8(BlockInfo.FullBright[id] ? 1 : 0);			
+						
+			int shape = sprite ? 0 : (int)(BlockInfo.MaxBB[id].Y * 16);
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("Shape"); nbt.WriteUInt8(GetShape(id));
+			nbt.Write("Shape"); nbt.WriteUInt8(shape);
+			byte draw = sprite ? BlockInfo.SpriteOffset[id] : BlockInfo.Draw[id];
 			nbt.Write(NbtTagType.Int8);
-			nbt.Write("BlockDraw"); nbt.WriteUInt8(GetDraw(id));
+			nbt.Write("BlockDraw"); nbt.WriteUInt8(draw);
 			
 			FastColour col = BlockInfo.FogColour[id];
 			nbt.Write(NbtTagType.Int8Array);
@@ -187,16 +191,6 @@ namespace ClassicalSharp.Map {
 			nbt.WriteUInt8((byte)(min.Z * 16)); nbt.WriteUInt8((byte)(max.X * 16));
 			nbt.WriteUInt8((byte)(max.Y * 16)); nbt.WriteUInt8((byte)(max.Z * 16));
 			nbt.Write(NbtTagType.End);
-		}
-		
-		int GetShape(byte id) {
-			return BlockInfo.Draw[id] == DrawType.Sprite ? 0 : (int)(BlockInfo.MaxBB[id].Y * 16);
-		}
-		
-		int GetDraw(byte id) {
-			if (BlockInfo.Draw[id] == DrawType.Sprite) 
-				return DrawType.Transparent;
-			return BlockInfo.Draw[id];
 		}
 	}
 }

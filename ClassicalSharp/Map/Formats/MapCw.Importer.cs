@@ -153,8 +153,10 @@ namespace ClassicalSharp.Map {
 			BlockInfo.FullBright[id] = (byte)compound["FullBright"].Value != 0;
 			
 			byte blockDraw = (byte)compound["BlockDraw"].Value;
-			if ((byte)compound["Shape"].Value == 0)
+			if ((byte)compound["Shape"].Value == 0) {
+				BlockInfo.SpriteOffset[id] = blockDraw;
 				blockDraw = DrawType.Sprite;
+			}
 			
 			data = (byte[])compound["Fog"].Value;
 			BlockInfo.FogDensity[id] = (data[0] + 1) / 128f;

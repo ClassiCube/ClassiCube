@@ -8,6 +8,7 @@
 #include "GraphicsAPI.h"
 #include "ErrorHandler.h"
 #include "Drawer.h"
+#include "Random.h"
 
 void Builder1DPart_Prepare(Builder1DPart* part) {
 	part->sOffset = 0;
@@ -367,6 +368,7 @@ void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 	}
 }
 
+Random spriteRng;
 void Builder_DrawSprite(Int32 count) {
 	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_XMax);
 	Int32 i = Atlas1D_Index(texLoc);
@@ -378,6 +380,18 @@ void Builder_DrawSprite(Int32 count) {
 	Real32 x1 = (Real32)X + 2.50f / 16.0f, y1 = (Real32)Y,        z1 = (Real32)Z + 2.50f / 16.0f;
 	Real32 x2 = (Real32)X + 13.5f / 16.0f, y2 = (Real32)Y + 1.0f, z2 = (Real32)Z + 13.5f / 16.0f;
 	Real32 v1 = vOrigin, v2 = vOrigin + Atlas1D_InvElementSize * UV2_Scale;
+
+	UInt8 offsetType = Block_SpriteOffset[Builder_Block];
+	if (offsetType >= 6 && offsetType <= 7) {
+		Random_SetSeed(&spriteRng, (Builder_X + 1217 * Builder_Y + 4751 * Builder_Z) & 0x7fffffff);
+		Real32 valX = Random_Next(&spriteRng, -3, 3 + 1) / 16.0f;
+		Real32 valY = Random_Next(&spriteRng, 0,  3 + 1) / 16.0f;
+		Real32 valZ = Random_Next(&spriteRng, -3, 3 + 1) / 16.0f;
+
+		x1 += valX - 1.7f; x2 += valX + 1.7f;
+		z1 += valZ - 1.7f; z2 += valZ + 1.7f;
+		if (offsetType == 7) { y1 -= valY; y2 -= valY; }
+	}
 	
 	Builder1DPart* part = &Builder_Parts[i];
 	PackedCol white = PACKEDCOL_WHITE;

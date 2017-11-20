@@ -66,6 +66,7 @@ bool Block_Tinted[BLOCK_COUNT];
 /* Gets whether the given block has an opaque draw type and is also a full tile block.
 Full tile block means Min of (0, 0, 0) and max of (1, 1, 1).*/
 bool Block_FullOpaque[BLOCK_COUNT];
+UInt8 Block_SpriteOffset[BLOCK_COUNT];
 
 #define Block_Tint(col, block)\
 if (Block_Tinted[block]) {\

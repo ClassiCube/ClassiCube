@@ -1,6 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using System.Runtime.InteropServices;
+using ClassicalSharp.Generator;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Textures;
 using OpenTK;
@@ -54,10 +54,10 @@ namespace ClassicalSharp {
 			public void ExpandToCapacity() {
 				int vertsCount = VerticesCount();
 				if (vertices == null || (vertsCount + 2) > vertices.Length) {
-					vertices = new VertexP3fT2fC4b[vertsCount + 2]; 
+					vertices = new VertexP3fT2fC4b[vertsCount + 2];
 					// ensure buffer is up to 64 bits aligned for last element
 				}
-				sIndex = 0; 
+				sIndex = 0;
 				sAdvance = spriteCount / 4;
 				
 				vIndex[Side.Left]   = spriteCount;
@@ -74,7 +74,7 @@ namespace ClassicalSharp {
 					vIndex[i] = 0; vCount[i] = 0;
 				}
 			}
-		}		
+		}
 
 		protected abstract void RenderTile(int index);
 		
@@ -118,6 +118,7 @@ namespace ClassicalSharp {
 			part.vCount[face] += 4;
 		}
 		
+		static JavaRandom spriteRng = new JavaRandom(0);
 		protected virtual void DrawSprite(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
 			int i = texId / elementsPerAtlas1D;
@@ -127,6 +128,18 @@ namespace ClassicalSharp {
 			float x2 = X + 13.5f/16, y2 = Y + 1, z2 = Z + 13.5f/16;
 			const float u1 = 0, u2 = 15.99f/16f;
 			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
+			
+			byte offsetType = BlockInfo.SpriteOffset[curBlock];
+			if (offsetType >= 6) {
+				spriteRng.SetSeed((X + 1217 * Y + 4751 * Z) & 0x7fffffff);
+				float valX = spriteRng.Next(-3, 3 + 1) / 16.0f;
+				float valY = spriteRng.Next(0,  3 + 1) / 16.0f;
+				float valZ = spriteRng.Next(-3, 3 + 1) / 16.0f;
+				
+				x1 += valX - 1.7f; x2 += valX + 1.7f;
+				z1 += valZ - 1.7f; z2 += valZ + 1.7f;
+				if (offsetType == 7) { y1 -= valY; y2 -= valY; }
+			}
 			
 			DrawInfo part = normalParts[i];
 			int col = fullBright ? FastColour.WhitePacked : light.LightCol_Sprite_Fast(X, Y, Z);

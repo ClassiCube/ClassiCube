@@ -127,9 +127,10 @@ void Block_ResetProps(BlockID block) {
 	Block_SetCollide(block, DefaultSet_Collide(block));
 	Block_DigSounds[block] = DefaultSet_DigSound(block);
 	Block_StepSounds[block] = DefaultSet_StepSound(block);
-	Block_SpeedMultiplier[block] = 1;
+	Block_SpeedMultiplier[block] = 1.0f;
 	Block_Name[block] = Block_DefaultName(block);
 	Block_Tinted[block] = false;
+	Block_SpriteOffset[block] = 0;
 
 	Block_Draw[block] = DefaultSet_Draw(block);
 	if (Block_Draw[block] == DrawType_Sprite) {

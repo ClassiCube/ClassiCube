@@ -112,7 +112,10 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleDefineBlockCommonEnd(NetReader reader, byte shape, byte block) {
 			byte blockDraw = reader.ReadUInt8();
-			if (shape == 0) blockDraw = DrawType.Sprite;
+			if (shape == 0) {
+				BlockInfo.SpriteOffset[block] = blockDraw;
+				blockDraw = DrawType.Sprite;
+			}
 			BlockInfo.LightOffset[block] = BlockInfo.CalcLightOffset(block);
 			
 			byte fogDensity = reader.ReadUInt8();

@@ -91,7 +91,8 @@ namespace ClassicalSharp.Generator {
 		const long value = 0x5DEECE66DL;
 		const long mask = (1L << 48) - 1;
 		
-		public JavaRandom(int seed) {
+		public JavaRandom(int seed) { SetSeed(seed); }
+		public void SetSeed(int seed) {
 			this.seed = (seed ^ value) & mask;
 		}
 		

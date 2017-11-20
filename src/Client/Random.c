@@ -3,14 +3,15 @@
 #define RND_VALUE (0x5DEECE66DLL)
 #define RND_MASK ((1LL << 48) - 1)
 
-void Random_Init(Random* seed, Int32 seedInit) {
-	*seed = (seedInit ^ RND_VALUE) & RND_MASK;
-}
-
+void Random_Init(Random* seed, Int32 seedInit) { Random_SetSeed(seed, seedInit); }
 void Random_InitFromCurrentTime(Random* rnd) {
 	DateTime now = Platform_CurrentUTCTime();
 	Int64 totalMS = DateTime_TotalMilliseconds(&now);
 	Random_Init(rnd, (Int32)totalMS);
+}
+
+void Random_SetSeed(Random* seed, Int32 seedInit) {
+	*seed = (seedInit ^ RND_VALUE) & RND_MASK;
 }
 
 Int32 Random_Range(Random* seed, Int32 min, Int32 max) {
