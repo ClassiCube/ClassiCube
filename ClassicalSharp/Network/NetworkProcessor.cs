@@ -41,7 +41,7 @@ namespace ClassicalSharp.Network {
 		internal CPESupport cpeData;
 		internal bool receivedFirstPosition;
 		internal byte[] needRemoveNames = new byte[256 >> 3];
-		int netTicks, pingTicks;
+		int pingTicks;
 		
 		public override void Connect(IPAddress address, int port) {
 			socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);

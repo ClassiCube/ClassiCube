@@ -73,8 +73,12 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public override void Tick(ScheduledTask task) {
 			if (Disconnected) return;
-			physics.Tick();
-			CheckAsyncResources();
+			// Network ticked 60 times a second, only do physics 20 times a second
+			if ((netTicks % 3) == 0) {
+				physics.Tick();
+				CheckAsyncResources();
+			}
+			netTicks++;			
 		}
 	}
 }

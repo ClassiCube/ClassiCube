@@ -222,7 +222,7 @@ namespace ClassicalSharp {
 		ScheduledTask entTask;
 		void InitScheduledTasks() {
 			const double defTicks = 1.0 / 20;
-			double netTicks = Server.IsSinglePlayer ? (1.0 / 20) : (1.0 / 60);
+			const double netTicks = 1.0 / 60;
 			
 			AddScheduledTask(30, AsyncDownloader.PurgeOldEntriesTask);
 			AddScheduledTask(netTicks, Server.Tick);

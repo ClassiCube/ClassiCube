@@ -15,6 +15,7 @@ UInt8 ServerConnection_ServerMOTDBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerMOTD = String_EmptyConstArray(ServerConnection_ServerMOTDBuffer);
 UInt8 ServerConnection_AppNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_AppName = String_EmptyConstArray(ServerConnection_AppNameBuffer);
+Int32 ServerConnection_Ticks;
 
 void ServerConnection_ResetState(void) {
 	ServerConnection_Disconnected = false;
@@ -91,8 +92,11 @@ void SPConnection_SendPlayerClick(MouseButton button, bool isDown, EntityID targ
 
 void SPConnection_Tick(ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
-	Physics_Tick();
-	ServerConnection_CheckAsyncResources();
+	if ((ServerConnection_Ticks % 3) == 0) {
+		Physics_Tick();
+		ServerConnection_CheckAsyncResources();
+	}
+	ServerConnection_Ticks++;
 }
 
 void SPConnection_Free(void) { Physics_Free(); }

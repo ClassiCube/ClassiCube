@@ -388,8 +388,9 @@ void Builder_DrawSprite(Int32 count) {
 		Real32 valY = Random_Range(&spriteRng, 0,  3 + 1) / 16.0f;
 		Real32 valZ = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
 
-		x1 += valX - 1.7f; x2 += valX + 1.7f;
-		z1 += valZ - 1.7f; z2 += valZ + 1.7f;
+#define stretch 1.7f / 16.0f
+		x1 += valX - stretch; x2 += valX + stretch;
+		z1 += valZ - stretch; z2 += valZ + stretch;
 		if (offsetType == 7) { y1 -= valY; y2 -= valY; }
 	}
 	

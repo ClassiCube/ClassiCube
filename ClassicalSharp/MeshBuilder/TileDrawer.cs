@@ -136,8 +136,9 @@ namespace ClassicalSharp {
 				float valY = spriteRng.Next(0,  3 + 1) / 16.0f;
 				float valZ = spriteRng.Next(-3, 3 + 1) / 16.0f;
 				
-				x1 += valX - 1.7f; x2 += valX + 1.7f;
-				z1 += valZ - 1.7f; z2 += valZ + 1.7f;
+				const float stretch = 1.7f / 16.0f;
+				x1 += valX - stretch; x2 += valX + stretch;
+				z1 += valZ - stretch; z2 += valZ + stretch;
 				if (offsetType == 7) { y1 -= valY; y2 -= valY; }
 			}
 			

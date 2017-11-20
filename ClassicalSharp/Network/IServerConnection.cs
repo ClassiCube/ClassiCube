@@ -60,6 +60,7 @@ namespace ClassicalSharp {
 		#region Texture pack / terrain.png
 
 		protected Game game;
+		protected int netTicks;
 		
 		protected void WarningScreenTick(Overlay warning) {
 			string identifier = warning.Metadata;
