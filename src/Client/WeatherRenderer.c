@@ -41,7 +41,7 @@ Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	Int32 y = maxY;
 	for (y = maxY; y >= 0; y--) {
 		UInt8 draw = Block_Draw[World_Blocks[mapIndex]];
-		if (!(draw == DrawType_Gas || draw == DrawType_Sprite)) {
+		if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {
 			Weather_Heightmap[index] = (Int16)y;
 			return y;
 		}
@@ -63,8 +63,8 @@ Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
 }
 
 void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock) {
-	bool didBlock = !(Block_Draw[oldBlock] == DrawType_Gas || Block_Draw[oldBlock] == DrawType_Sprite);
-	bool nowBlock = !(Block_Draw[newBlock] == DrawType_Gas || Block_Draw[newBlock] == DrawType_Sprite);
+	bool didBlock = !(Block_Draw[oldBlock] == DRAW_GAS || Block_Draw[oldBlock] == DRAW_SPRITE);
+	bool nowBlock = !(Block_Draw[newBlock] == DRAW_GAS || Block_Draw[newBlock] == DRAW_SPRITE);
 	if (didBlock == nowBlock) return;
 
 	Int32 index = (x * World_Length) + z;

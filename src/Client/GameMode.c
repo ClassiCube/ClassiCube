@@ -51,7 +51,7 @@ void GameMode_PickLeft(BlockID old) {
 }
 
 void GameMode_PickMiddle(BlockID old) {
-	if (Block_Draw[old] == DrawType_Gas) return;
+	if (Block_Draw[old] == DRAW_GAS) return;
 	if (!(Block_CanPlace[old] || Block_CanDelete[old])) return;
 	if (!Inventory_CanChangeSelected() || Inventory_SelectedBlock == old) return;
 	UInt32 i;

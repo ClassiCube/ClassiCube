@@ -129,7 +129,7 @@ void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockI
 
 
 bool Lighting_Needs(BlockID block, BlockID other) {
-	return Block_Draw[block] != DrawType_Opaque || Block_Draw[other] != DrawType_Gas;
+	return Block_Draw[block] != DRAW_OPAQUE || Block_Draw[other] != DRAW_GAS;
 }
 
 void Lighting_ResetNeighourChunk(Int32 cx, Int32 cy, Int32 cz, BlockID block, Int32 y, Int32 index, Int32 nY) {
@@ -138,7 +138,7 @@ void Lighting_ResetNeighourChunk(Int32 cx, Int32 cy, Int32 cz, BlockID block, In
 	/* Update if any blocks in the chunk are affected by light change. */
 	for (; y >= minY; y--) {
 		BlockID other = World_Blocks[index];
-		bool affected = y == nY ? Lighting_Needs(block, other) : Block_Draw[other] != DrawType_Gas;
+		bool affected = y == nY ? Lighting_Needs(block, other) : Block_Draw[other] != DRAW_GAS;
 		if (affected) { MapRenderer_RefreshChunk(cx, cy, cz); return; }
 		index -= World_OneY;
 	}

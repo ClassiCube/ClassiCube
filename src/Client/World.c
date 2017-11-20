@@ -244,7 +244,7 @@ Real32 Respawn_HighestFreeY(AABB* bb) {
 				Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 				Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
 
-				if (Block_Collide[block] != CollideType_Solid) continue;
+				if (Block_Collide[block] != COLLIDE_SOLID) continue;
 				if (!AABB_Intersects(bb, &blockBB)) continue;
 				if (blockBB.Max.Y > spawnY) blockBB.Max.Y = spawnY;
 			}

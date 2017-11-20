@@ -149,17 +149,17 @@ void GfxCommon_MakeIndices(UInt16* indices, Int32 iCount) {
 }
 
 void GfxCommon_SetupAlphaState(UInt8 draw) {
-	if (draw == DrawType_Translucent)      Gfx_SetAlphaBlending(true);
-	if (draw == DrawType_Transparent)      Gfx_SetAlphaTest(true);
-	if (draw == DrawType_TransparentThick) Gfx_SetAlphaTest(true);
-	if (draw == DrawType_Sprite)           Gfx_SetAlphaTest(true);
+	if (draw == DRAW_TRANSLUCENT)      Gfx_SetAlphaBlending(true);
+	if (draw == DRAW_TRANSPARENT)      Gfx_SetAlphaTest(true);
+	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(true);
+	if (draw == DRAW_SPRITE)           Gfx_SetAlphaTest(true);
 }
 
 void GfxCommon_RestoreAlphaState(UInt8 draw) {
-	if (draw == DrawType_Translucent)      Gfx_SetAlphaBlending(false);
-	if (draw == DrawType_Transparent)      Gfx_SetAlphaTest(false);
-	if (draw == DrawType_TransparentThick) Gfx_SetAlphaTest(false);
-	if (draw == DrawType_Sprite)           Gfx_SetAlphaTest(false);
+	if (draw == DRAW_TRANSLUCENT)      Gfx_SetAlphaBlending(false);
+	if (draw == DRAW_TRANSPARENT)      Gfx_SetAlphaTest(false);
+	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(false);
+	if (draw == DRAW_SPRITE)           Gfx_SetAlphaTest(false);
 }
 
 

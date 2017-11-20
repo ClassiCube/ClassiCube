@@ -166,7 +166,7 @@ void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int
 void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	BlockID block = WorldEnv_SidesBlock;
 	borders_sidesVertices = 0;
-	if (Block_Draw[block] == DrawType_Gas) return;
+	if (Block_Draw[block] == DRAW_GAS) return;
 
 	Int32 i;
 	for (i = 0; i < 4; i++) {
@@ -212,7 +212,7 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	BlockID block = WorldEnv_EdgeBlock;
 	borders_edgesVertices = 0;
-	if (Block_Draw[block] == DrawType_Gas) return;
+	if (Block_Draw[block] == DRAW_GAS) return;
 
 	Int32 i;
 	for (i = 0; i < 4; i++) {

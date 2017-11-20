@@ -15,36 +15,33 @@
 */
 
 /* Sound types for blocks. */
-typedef UInt8 SoundType;
-#define SoundType_None 0
-#define SoundType_Wood 1
-#define SoundType_Gravel 2
-#define SoundType_Grass 3
-#define SoundType_Stone 4
-#define SoundType_Metal 5
-#define SoundType_Glass 6
-#define SoundType_Cloth 7
-#define SoundType_Sand 8
-#define SoundType_Snow 9
+#define SOUND_NONE   0
+#define SOUND_WOOD   1
+#define SOUND_GRAVEL 2
+#define SOUND_GRASS  3
+#define SOUND_STONE  4
+#define SOUND_METAL  5
+#define SOUND_GLASS  6
+#define SOUND_CLOTH  7
+#define SOUND_SAND   8
+#define SOUND_SNOW   9
 
 /* Describes how a block is rendered in the world. */
-typedef UInt8 DrawType;
-#define DrawType_Opaque 0           /* Completely covers blocks behind (e.g. dirt). */
-#define DrawType_Transparent 1      /* Blocks behind show (e.g. glass). Pixels either fully visible or invisible. */
-#define DrawType_TransparentThick 2 /* Same as Transparent, but all neighbour faces show. (e.g. leaves) */
-#define DrawType_Translucent 3      /* Blocks behind show (e.g. water). Pixels blend with other blocks behind. */
-#define DrawType_Gas 4              /* Does not show (e.g. air). Can still be collided with. */
-#define DrawType_Sprite 5           /* Block renders as an X (e.g. sapling). Pixels either fully visible or invisible. */
+#define DRAW_OPAQUE            0 /* Completely covers blocks behind (e.g. dirt). */
+#define DRAW_TRANSPARENT       1 /* Blocks behind show (e.g. glass). Pixels either fully visible or invisible. */
+#define DRAW_TRANSPARENT_THICK 2 /* Same as Transparent, but all neighbour faces show. (e.g. leaves) */
+#define DRAW_TRANSLUCENT       3 /* Blocks behind show (e.g. water). Pixels blend with other blocks behind. */
+#define DRAW_GAS               4 /* Does not show (e.g. air). Can still be collided with. */
+#define DRAW_SPRITE            5 /* Block renders as an X (e.g. sapling). Pixels either fully visible or invisible. */
 
 /* Describes the interaction a block has with a player when they collide with it. */
-typedef UInt8 CollideType;
-#define CollideType_Gas 0         /* No interaction when player collides. */
-#define CollideType_Liquid 1      /* 'swimming'/'bobbing' interaction when player collides. */
-#define CollideType_Solid 2       /* Block completely stops the player when they are moving. */
-#define CollideType_Ice 3         /* Block is solid and partially slidable on. */
-#define CollideType_SlipperyIce 4 /* Block is solid and fully slidable on. */
-#define CollideType_LiquidWater 5 /* Water style 'swimming'/'bobbing' interaction when player collides. */
-#define CollideType_LiquidLava 6  /* Lava style 'swimming'/'bobbing' interaction when player collides. */
+#define COLLIDE_GAS          0 /* No interaction when player collides. */
+#define COLLIDE_LIQUID       1 /* 'swimming'/'bobbing' interaction when player collides. */
+#define COLLIDE_SOLID        2 /* Block completely stops the player when they are moving. */
+#define COLLIDE_ICE          3 /* Block is solid and partially slidable on. */
+#define COLLIDE_SLIPPERY_ICE 4 /* Block is solid and fully slidable on. */
+#define COLLIDE_LIQUID_WATER 5 /* Water style 'swimming'/'bobbing' interaction when player collides. */
+#define COLLIDE_LIQUID_LAVA  6 /* Lava style 'swimming'/'bobbing' interaction when player collides. */
 
 UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
@@ -54,14 +51,14 @@ bool Block_FullBright[BLOCK_COUNT];
 String Block_Name[BLOCK_COUNT];
 PackedCol Block_FogColour[BLOCK_COUNT];
 Real32 Block_FogDensity[BLOCK_COUNT];
-CollideType Block_Collide[BLOCK_COUNT];
-CollideType Block_ExtendedCollide[BLOCK_COUNT];
+UInt8 Block_Collide[BLOCK_COUNT];
+UInt8 Block_ExtendedCollide[BLOCK_COUNT];
 Real32 Block_SpeedMultiplier[BLOCK_COUNT];
 UInt8 Block_LightOffset[BLOCK_COUNT];
-DrawType Block_Draw[BLOCK_COUNT];
+UInt8 Block_Draw[BLOCK_COUNT];
 UInt32 DefinedCustomBlocks[BLOCK_COUNT >> 5];
-SoundType Block_DigSounds[BLOCK_COUNT];
-SoundType Block_StepSounds[BLOCK_COUNT];
+UInt8 Block_DigSounds[BLOCK_COUNT];
+UInt8 Block_StepSounds[BLOCK_COUNT];
 bool Block_Tinted[BLOCK_COUNT];
 /* Gets whether the given block has an opaque draw type and is also a full tile block.
 Full tile block means Min of (0, 0, 0) and max of (1, 1, 1).*/
@@ -124,11 +121,11 @@ Real32 DefaultSet_Height(BlockID b);
 bool DefaultSet_FullBright(BlockID b);
 Real32 DefaultSet_FogDensity(BlockID b);
 PackedCol DefaultSet_FogColour(BlockID b);
-CollideType DefaultSet_Collide(BlockID b);
+UInt8 DefaultSet_Collide(BlockID b);
 /* Gets a backwards compatible collide type of a block. */
-CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide);
+UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide);
 bool DefaultSet_BlocksLight(BlockID b);
-SoundType DefaultSet_StepSound(BlockID b);
-DrawType DefaultSet_Draw(BlockID b);
-SoundType DefaultSet_DigSound(BlockID b);
+UInt8 DefaultSet_StepSound(BlockID b);
+UInt8 DefaultSet_Draw(BlockID b);
+UInt8 DefaultSet_DigSound(BlockID b);
 #endif

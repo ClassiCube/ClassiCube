@@ -195,7 +195,7 @@ bool Picking_ClipBlock(PickedPos* pos) {
 }
 
 bool Picking_ClipCamera(PickedPos* pos) {
-	if (Block_Draw[tracer.Block] == DrawType_Gas || Block_Collide[tracer.Block] != CollideType_Solid) {
+	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) {
 		return false;
 	}
 

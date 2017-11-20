@@ -44,7 +44,7 @@ void Particle_Reset(Particle* p, Vector3 pos, Vector3 velocity, Real32 lifetime)
 
 bool Particle_CanPass(BlockID block, bool throughLiquids) {
 	DrawType draw = Block_Draw[block];
-	return draw == DrawType_Gas || draw == DrawType_Sprite || (throughLiquids && Block_IsLiquid(block));
+	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Block_IsLiquid(block));
 }
 
 bool Particle_CollideHor(Vector3* nextPos, BlockID block) {

@@ -133,7 +133,7 @@ void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
 
 void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y) {
 	bool bright = Block_FullBright[block];
-	if (Block_Draw[block] == DrawType_Gas) return;
+	if (Block_Draw[block] == DRAW_GAS) return;
 
 	/* isometric coords size: cosY * -scale - sinY * scale */
 	/* we need to divide by (2 * cosY), as the calling function expects size to be in pixels. */
@@ -147,7 +147,7 @@ void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y) {
 	/* See comment in GfxCommon_Draw2DTexture() */
 	iso_pos.X -= 0.5f; iso_pos.Y -= 0.5f;
 
-	if (Block_Draw[block] == DrawType_Sprite) {
+	if (Block_Draw[block] == DRAW_SPRITE) {
 		IsometricDrawer_SpriteXQuad(block, true);
 		IsometricDrawer_SpriteZQuad(block, true);
 

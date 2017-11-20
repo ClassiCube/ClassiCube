@@ -180,14 +180,14 @@ bool Entity_TouchesAnyRope(Entity* entity) {
 
 Vector3 entity_liqExpand = { 0.25f / 16.0f, 0.0f / 16.0f, 0.25f / 16.0f };
 
-bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == CollideType_LiquidLava; }
+bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
 bool Entity_TouchesAnyLava(Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsLava);
 }
 
-bool Entity_IsWater(BlockID b) { return Block_ExtendedCollide[b] == CollideType_LiquidWater; }
+bool Entity_IsWater(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
 bool Entity_TouchesAnyWater(Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);

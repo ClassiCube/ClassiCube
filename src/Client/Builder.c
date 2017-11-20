@@ -83,7 +83,7 @@ void Builder_AddSpriteVertices(BlockID block) {
 }
 
 void Builder_AddVertices(BlockID block, Face face) {
-	Int32 baseOffset = (Block_Draw[block] == DrawType_Translucent) * ATLAS1D_MAX_ATLASES_COUNT;
+	Int32 baseOffset = (Block_Draw[block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES_COUNT;
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, face));
 	Builder1DPart* part = &Builder_Parts[baseOffset + i];
 	part->fCount[face] += 4;
@@ -135,12 +135,12 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 			for (x = x1, xx = 0; x < xMax; x++, xx++) {
 				cIndex++;
 				BlockID b = Builder_Chunk[cIndex];
-				if (Block_Draw[b] == DrawType_Gas) continue;
+				if (Block_Draw[b] == DRAW_GAS) continue;
 				Int32 index = ((yy << 8) | (zz << 4) | xx) * Face_Count;
 
 				/* Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 				Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite. */
-				if (Block_Draw[b] == DrawType_Sprite) {
+				if (Block_Draw[b] == DRAW_SPRITE) {
 					index += Face_YMax;
 					if (Builder_Counts[index] != 0) {
 						Builder_X = x; Builder_Y = y; Builder_Z = z;
@@ -257,7 +257,7 @@ bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir) {
 				if (x >= World_Width) break;
 				BlockID rawBlock = World_Blocks[index];
 
-				allAir = allAir && Block_Draw[rawBlock] == DrawType_Gas;
+				allAir = allAir && Block_Draw[rawBlock] == DRAW_GAS;
 				allSolid = allSolid && Block_FullOpaque[rawBlock];
 				Builder_Chunk[chunkIndex] = rawBlock;
 			}
@@ -298,7 +298,7 @@ bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 			Int32 chunkIndex = (yy + 1) * EXTCHUNK_SIZE_2 + (zz + 1) * EXTCHUNK_SIZE + (0 + 1);
 			for (x = x1, xx = 0; x < xMax; x++, xx++) {
 				Builder_Block = chunk[chunkIndex];
-				if (Block_Draw[Builder_Block] != DrawType_Gas) {
+				if (Block_Draw[Builder_Block] != DRAW_GAS) {
 					Int32 index = ((yy << 8) | (zz << 4) | xx) * Face_Count;
 					Builder_X = x; Builder_Y = y; Builder_Z = z;
 					Builder_ChunkIndex = chunkIndex;
@@ -346,10 +346,10 @@ bool Builder_OccludedLiquid(Int32 chunkIndex) {
 	chunkIndex += EXTCHUNK_SIZE_2; /* Checking y above */
 	return
 		Block_FullOpaque[Builder_Chunk[chunkIndex]]
-		&& Block_Draw[Builder_Chunk[chunkIndex - EXTCHUNK_SIZE]] != DrawType_Gas
-		&& Block_Draw[Builder_Chunk[chunkIndex - 1]] != DrawType_Gas
-		&& Block_Draw[Builder_Chunk[chunkIndex + 1]] != DrawType_Gas
-		&& Block_Draw[Builder_Chunk[chunkIndex + EXTCHUNK_SIZE]] != DrawType_Gas;
+		&& Block_Draw[Builder_Chunk[chunkIndex - EXTCHUNK_SIZE]] != DRAW_GAS
+		&& Block_Draw[Builder_Chunk[chunkIndex - 1]] != DRAW_GAS
+		&& Block_Draw[Builder_Chunk[chunkIndex + 1]] != DRAW_GAS
+		&& Block_Draw[Builder_Chunk[chunkIndex + EXTCHUNK_SIZE]] != DRAW_GAS;
 }
 
 void Builder_DefaultPreStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
@@ -384,9 +384,9 @@ void Builder_DrawSprite(Int32 count) {
 	UInt8 offsetType = Block_SpriteOffset[Builder_Block];
 	if (offsetType >= 6 && offsetType <= 7) {
 		Random_SetSeed(&spriteRng, (Builder_X + 1217 * Builder_Y + 4751 * Builder_Z) & 0x7fffffff);
-		Real32 valX = Random_Next(&spriteRng, -3, 3 + 1) / 16.0f;
-		Real32 valY = Random_Next(&spriteRng, 0,  3 + 1) / 16.0f;
-		Real32 valZ = Random_Next(&spriteRng, -3, 3 + 1) / 16.0f;
+		Real32 valX = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
+		Real32 valY = Random_Range(&spriteRng, 0,  3 + 1) / 16.0f;
+		Real32 valZ = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
 
 		x1 += valX - 1.7f; x2 += valX + 1.7f;
 		z1 += valZ - 1.7f; z2 += valZ + 1.7f;
@@ -512,7 +512,7 @@ Int32 NormalBuilder_StretchZ(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 
 }
 
 void NormalBuilder_RenderBlock(Int32 index) {
-	if (Block_Draw[Builder_Block] == DrawType_Sprite) {
+	if (Block_Draw[Builder_Block] == DRAW_SPRITE) {
 		Builder_FullBright = Block_FullBright[Builder_Block];
 		Builder_Tinted = Block_Tinted[Builder_Block];
 
@@ -533,7 +533,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 
 
 	bool fullBright = Block_FullBright[Builder_Block];
-	Int32 partOffset = (Block_Draw[Builder_Block] == DrawType_Translucent) * ATLAS1D_MAX_ATLASES_COUNT;
+	Int32 partOffset = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES_COUNT;
 	Int32 lightFlags = Block_LightOffset[Builder_Block];
 
 	Drawer_MinBB = Block_MinBB[Builder_Block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;

@@ -36,7 +36,7 @@ void MapRenderer_CheckWeather(Real64 deltaTime) {
 
 	BlockID block = World_SafeGetBlock_3I(coords);
 	bool outside = !World_IsValidPos_3I(coords);
-	inTranslucent = Block_Draw[block] == DrawType_Translucent || (pos.Y < WorldEnv_EdgeHeight && outside);
+	inTranslucent = Block_Draw[block] == DRAW_TRANSLUCENT || (pos.Y < WorldEnv_EdgeHeight && outside);
 
 	/* If we are under water, render weather before to blend properly */
 	if (!inTranslucent || WorldEnv_Weather == Weather_Sunny) return;

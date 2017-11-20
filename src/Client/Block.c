@@ -59,22 +59,22 @@ void Block_SetCollide(BlockID block, UInt8 collide) {
 	Block_ExtendedCollide[block] = collide;
 
 	/* Reduce extended collision types to their simpler forms. */
-	if (collide == CollideType_Ice) collide = CollideType_Solid;
-	if (collide == CollideType_SlipperyIce) collide = CollideType_Solid;
+	if (collide == COLLIDE_ICE) collide = COLLIDE_SOLID;
+	if (collide == COLLIDE_SLIPPERY_ICE) collide = COLLIDE_SOLID;
 
-	if (collide == CollideType_LiquidWater) collide = CollideType_Liquid;
-	if (collide == CollideType_LiquidLava) collide = CollideType_Liquid;
+	if (collide == COLLIDE_LIQUID_WATER) collide = COLLIDE_LIQUID;
+	if (collide == COLLIDE_LIQUID_LAVA) collide = COLLIDE_LIQUID;
 	Block_Collide[block] = collide;
 }
 
 void Block_SetDrawType(BlockID block, UInt8 draw) {
-	if (draw == DrawType_Opaque && Block_Collide[block] != CollideType_Solid) {
-		draw = DrawType_Transparent;
+	if (draw == DRAW_OPAQUE && Block_Collide[block] != COLLIDE_SOLID) {
+		draw = DRAW_TRANSPARENT;
 	}
 	Block_Draw[block] = draw;
 
 	Vector3 zero = Vector3_Zero, one = Vector3_One;
-	Block_FullOpaque[block] = draw == DrawType_Opaque
+	Block_FullOpaque[block] = draw == DRAW_OPAQUE
 		&& Vector3_Equals(&Block_MinBB[block], &zero)
 		&& Vector3_Equals(&Block_MaxBB[block], &one);
 }
@@ -133,7 +133,7 @@ void Block_ResetProps(BlockID block) {
 	Block_SpriteOffset[block] = 0;
 
 	Block_Draw[block] = DefaultSet_Draw(block);
-	if (Block_Draw[block] == DrawType_Sprite) {
+	if (Block_Draw[block] == DRAW_SPRITE) {
 		Block_MinBB[block] = Vector3_Create3(2.50f / 16.0f, 0.0f, 2.50f / 16.0f);
 		Block_MaxBB[block] = Vector3_Create3(13.5f / 16.0f, 1.0f, 13.5f / 16.0f);
 	} else {
@@ -173,10 +173,10 @@ Int32 Block_FindID(STRING_PURE String* name) {
 }
 
 bool Block_IsLiquid(BlockID b) {
-	CollideType collide = Block_ExtendedCollide[b];
+	UInt8 collide = Block_ExtendedCollide[b];
 	return
-		(collide == CollideType_LiquidWater && Block_Draw[b] == DrawType_Translucent) ||
-		(collide == CollideType_LiquidLava  && Block_Draw[b] == DrawType_Transparent);
+		(collide == COLLIDE_LIQUID_WATER && Block_Draw[b] == DRAW_TRANSLUCENT) ||
+		(collide == COLLIDE_LIQUID_LAVA  && Block_Draw[b] == DRAW_TRANSPARENT);
 }
 
 
@@ -236,7 +236,7 @@ void Block_CalcRenderBounds(BlockID block) {
 		min.X -= 0.1f / 16.0f; max.X -= 0.1f / 16.0f;
 		min.Z -= 0.1f / 16.0f; max.Z -= 0.1f / 16.0f;
 		min.Y -= 1.5f / 16.0f; max.Y -= 1.5f / 16.0f;
-	} else if (Block_Draw[block] == DrawType_Translucent && Block_Collide[block] != CollideType_Solid) {
+	} else if (Block_Draw[block] == DRAW_TRANSLUCENT && Block_Collide[block] != COLLIDE_SOLID) {
 		min.X += 0.1f / 16.0f; max.X += 0.1f / 16.0f;
 		min.Z += 0.1f / 16.0f; max.Z += 0.1f / 16.0f;
 		min.Y -= 0.1f / 16.0f; max.Y -= 0.1f / 16.0f;
@@ -254,7 +254,7 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 	if (min.Z != 0) flags &= ~(1 << Face_ZMin);
 	if (max.Z != 1) flags &= ~(1 << Face_ZMax);
 
-	if ((min.Y != 0 && max.Y == 1) && Block_Draw[block] != DrawType_Gas) {
+	if ((min.Y != 0 && max.Y == 1) && Block_Draw[block] != DRAW_GAS) {
 		flags &= ~(1 << Face_YMax);
 		flags &= ~(1 << Face_YMin);
 	}
@@ -264,7 +264,7 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 void Block_RecalculateSpriteBB(void) {
 	Int32 block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
-		if (Block_Draw[block] != DrawType_Sprite) continue;
+		if (Block_Draw[block] != DRAW_SPRITE) continue;
 
 		Block_RecalculateBB((BlockID)block);
 	}
@@ -360,7 +360,7 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 	if (Block_IsLiquid(block)) bMax.Y -= 1.5f / 16;
 	if (Block_IsLiquid(other)) oMax.Y -= 1.5f / 16;
 
-	if (Block_Draw[block] == DrawType_Sprite) {
+	if (Block_Draw[block] == DRAW_SPRITE) {
 		Block_SetHidden(block, other, Face_XMin, true);
 		Block_SetHidden(block, other, Face_XMax, true);
 		Block_SetHidden(block, other, Face_ZMin, true);
@@ -408,7 +408,7 @@ void Block_UpdateCulling(BlockID block) {
 
 bool Block_IsHidden(BlockID block, BlockID other) {
 	/* Sprite blocks can never hide faces. */
-	if (Block_Draw[block] == DrawType_Sprite) return false;
+	if (Block_Draw[block] == DRAW_SPRITE) return false;
 
 	/* NOTE: Water is always culled by lava. */
 	if ((block == BLOCK_WATER || block == BLOCK_STILL_WATER)
@@ -416,16 +416,16 @@ bool Block_IsHidden(BlockID block, BlockID other) {
 		return true;
 
 	/* All blocks (except for say leaves) cull with themselves. */
-	if (block == other) return Block_Draw[block] != DrawType_TransparentThick;
+	if (block == other) return Block_Draw[block] != DRAW_TRANSPARENT_THICK;
 
 	/* An opaque neighbour (asides from lava) culls the face. */
-	if (Block_Draw[other] == DrawType_Opaque && !Block_IsLiquid(other)) return true;
-	if (Block_Draw[block] != DrawType_Translucent || Block_Draw[other] != DrawType_Translucent) return false;
+	if (Block_Draw[other] == DRAW_OPAQUE && !Block_IsLiquid(other)) return true;
+	if (Block_Draw[block] != DRAW_TRANSLUCENT || Block_Draw[other] != DRAW_TRANSLUCENT) return false;
 
 	/* e.g. for water / ice, don't need to draw water. */
 	UInt8 bType = Block_Collide[block], oType = Block_Collide[other];
-	bool canSkip = (bType == CollideType_Solid && oType == CollideType_Solid)
-		|| bType != CollideType_Solid;
+	bool canSkip = (bType == COLLIDE_SOLID && oType == COLLIDE_SOLID)
+		|| bType != COLLIDE_SOLID;
 	return canSkip;
 }
 
@@ -587,82 +587,82 @@ PackedCol DefaultSet_FogColour(BlockID b) {
 	return PackedCol_Create4(0, 0, 0, 0);
 }
 
-CollideType DefaultSet_Collide(BlockID b) {
-	if (b == BLOCK_ICE) return CollideType_Ice;
+UInt8 DefaultSet_Collide(BlockID b) {
+	if (b == BLOCK_ICE) return COLLIDE_ICE;
 	if (b == BLOCK_WATER || b == BLOCK_STILL_WATER)
-		return CollideType_LiquidWater;
+		return COLLIDE_LIQUID_WATER;
 	if (b == BLOCK_LAVA || b == BLOCK_STILL_LAVA)
-		return CollideType_LiquidLava;
+		return COLLIDE_LIQUID_LAVA;
 
-	if (b == BLOCK_SNOW || b == BLOCK_AIR || DefaultSet_Draw(b) == DrawType_Sprite)
-		return CollideType_Gas;
-	return CollideType_Solid;
+	if (b == BLOCK_SNOW || b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE)
+		return COLLIDE_GAS;
+	return COLLIDE_SOLID;
 }
 
-CollideType DefaultSet_MapOldCollide(BlockID b, CollideType collide) {
-	if (b == BLOCK_ICE && collide == CollideType_Solid)
-		return CollideType_Ice;
-	if ((b == BLOCK_WATER || b == BLOCK_STILL_WATER) && collide == CollideType_Liquid)
-		return CollideType_LiquidWater;
-	if ((b == BLOCK_LAVA || b == BLOCK_STILL_LAVA) && collide == CollideType_Liquid)
-		return CollideType_LiquidLava;
+UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide) {
+	if (b == BLOCK_ICE && collide == COLLIDE_SOLID)
+		return COLLIDE_ICE;
+	if ((b == BLOCK_WATER || b == BLOCK_STILL_WATER) && collide == COLLIDE_LIQUID)
+		return COLLIDE_LIQUID_WATER;
+	if ((b == BLOCK_LAVA || b == BLOCK_STILL_LAVA) && collide == COLLIDE_LIQUID)
+		return COLLIDE_LIQUID_LAVA;
 	return collide;
 }
 
 bool DefaultSet_BlocksLight(BlockID b) {
 	return !(b == BLOCK_GLASS || b == BLOCK_LEAVES
-		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DrawType_Sprite);
+		|| b == BLOCK_AIR || DefaultSet_Draw(b) == DRAW_SPRITE);
 }
 
-SoundType DefaultSet_StepSound(BlockID b) {
-	if (b == BLOCK_GLASS) return SoundType_Stone;
-	if (b == BLOCK_ROPE) return SoundType_Cloth;
-	if (DefaultSet_Draw(b) == DrawType_Sprite) return SoundType_None;
+UInt8 DefaultSet_StepSound(BlockID b) {
+	if (b == BLOCK_GLASS) return SOUND_STONE;
+	if (b == BLOCK_ROPE) return SOUND_CLOTH;
+	if (DefaultSet_Draw(b) == DRAW_SPRITE) return SOUND_NONE;
 	return DefaultSet_DigSound(b);
 }
 
-DrawType DefaultSet_Draw(BlockID b) {
-	if (b == BLOCK_AIR || b == BLOCK_Invalid) return DrawType_Gas;
-	if (b == BLOCK_LEAVES) return DrawType_TransparentThick;
+UInt8 DefaultSet_Draw(BlockID b) {
+	if (b == BLOCK_AIR || b == BLOCK_Invalid) return DRAW_GAS;
+	if (b == BLOCK_LEAVES) return DRAW_TRANSPARENT_THICK;
 
 	if (b == BLOCK_ICE || b == BLOCK_WATER || b == BLOCK_STILL_WATER)
-		return DrawType_Translucent;
+		return DRAW_TRANSLUCENT;
 	if (b == BLOCK_GLASS || b == BLOCK_LEAVES)
-		return DrawType_Transparent;
+		return DRAW_TRANSPARENT;
 
 	if (b >= BLOCK_DANDELION && b <= BLOCK_RED_SHROOM)
-		return DrawType_Sprite;
+		return DRAW_SPRITE;
 	if (b == BLOCK_SAPLING || b == BLOCK_ROPE || b == BLOCK_FIRE)
-		return DrawType_Sprite;
-	return DrawType_Opaque;
+		return DRAW_SPRITE;
+	return DRAW_OPAQUE;
 }
 
-SoundType DefaultSet_DigSound(BlockID b) {
+UInt8 DefaultSet_DigSound(BlockID b) {
 	if (b >= BLOCK_RED && b <= BLOCK_WHITE)
-		return SoundType_Cloth;
+		return SOUND_CLOTH;
 	if (b >= BLOCK_LIGHT_PINK && b <= BLOCK_TURQUOISE)
-		return SoundType_Cloth;
+		return SOUND_CLOTH;
 	if (b == BLOCK_IRON || b == BLOCK_GOLD)
-		return SoundType_Metal;
+		return SOUND_METAL;
 
 	if (b == BLOCK_BOOKSHELF || b == BLOCK_WOOD || b == BLOCK_LOG || b == BLOCK_CRATE || b == BLOCK_FIRE)
-		return SoundType_Wood;
+		return SOUND_WOOD;
 
-	if (b == BLOCK_ROPE) return SoundType_Cloth;
-	if (b == BLOCK_SAND) return SoundType_Sand;
-	if (b == BLOCK_SNOW) return SoundType_Snow;
-	if (b == BLOCK_GLASS) return SoundType_Glass;
+	if (b == BLOCK_ROPE) return SOUND_CLOTH;
+	if (b == BLOCK_SAND) return SOUND_SAND;
+	if (b == BLOCK_SNOW) return SOUND_SNOW;
+	if (b == BLOCK_GLASS) return SOUND_GLASS;
 	if (b == BLOCK_DIRT || b == BLOCK_GRAVEL)
-		return SoundType_Gravel;
+		return SOUND_GRAVEL;
 
 	if (b == BLOCK_GRASS || b == BLOCK_SAPLING || b == BLOCK_TNT || b == BLOCK_LEAVES || b == BLOCK_SPONGE)
-		return SoundType_Grass;
+		return SOUND_GRASS;
 
 	if (b >= BLOCK_DANDELION && b <= BLOCK_RED_SHROOM)
-		return SoundType_Grass;
+		return SOUND_GRASS;
 	if (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA)
-		return SoundType_None;
+		return SOUND_NONE;
 	if (b >= BLOCK_STONE && b <= BLOCK_STONE_BRICK)
-		return SoundType_Stone;
-	return SoundType_None;
+		return SOUND_STONE;
+	return SOUND_NONE;
 }

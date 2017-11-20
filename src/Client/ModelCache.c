@@ -1114,7 +1114,7 @@ void BlockModel_RecalcProperties(Entity* p) {
 	BlockID block = p->ModelBlock;
 	Real32 height;
 
-	if (Block_Draw[block] == DrawType_Gas) {
+	if (Block_Draw[block] == DRAW_GAS) {
 		BlockModel_minBB = Vector3_Zero;
 		BlockModel_maxBB = Vector3_One;
 		height = 1.0f;
@@ -1235,10 +1235,10 @@ void BlockModel_DrawModel(Entity* p) {
 			IModel_Cols[i] = white;
 		}
 	}
-	if (Block_Draw[BlockModel_block] == DrawType_Gas) return;
+	if (Block_Draw[BlockModel_block] == DRAW_GAS) return;
 
 	BlockModel_lastTexIndex = -1;
-	bool sprite = Block_Draw[BlockModel_block] == DrawType_Sprite;
+	bool sprite = Block_Draw[BlockModel_block] == DRAW_SPRITE;
 	BlockModel_DrawParts(sprite);
 	if (BlockModel.index == 0) return;
 

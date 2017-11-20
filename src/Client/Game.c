@@ -69,7 +69,7 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	/* Refresh the chunk the block was located in. */
 	Int32 cx = x >> 4, cy = y >> 4, cz = z >> 4;
 	ChunkInfo* chunk = MapRenderer_GetChunk(cx, cy, cz);
-	chunk->AllAir &= Block_Draw[block] == DrawType_Gas;
+	chunk->AllAir &= Block_Draw[block] == DRAW_GAS;
 	MapRenderer_RefreshChunk(cx, cy, cz);
 }
 
@@ -88,9 +88,9 @@ void Game_SetViewDistance(Real32 distance, bool userDist) {
 }
 
 bool Game_CanPick(BlockID block) {
-	if (Block_Draw[block] == DrawType_Gas)    return false;
-	if (Block_Draw[block] == DrawType_Sprite) return true;
+	if (Block_Draw[block] == DRAW_GAS)    return false;
+	if (Block_Draw[block] == DRAW_SPRITE) return true;
 
-	if (Block_Collide[block] != CollideType_Liquid) return true;
+	if (Block_Collide[block] != COLLIDE_LIQUID) return true;
 	return Game_ModifiableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
 }
