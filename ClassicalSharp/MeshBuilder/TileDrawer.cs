@@ -131,7 +131,7 @@ namespace ClassicalSharp {
 			
 			byte offsetType = BlockInfo.SpriteOffset[curBlock];
 			if (offsetType >= 6 && offsetType <= 7) {
-				spriteRng.SetSeed((X + 1217 * Y + 4751 * Z) & 0x7fffffff);
+				spriteRng.SetSeed((X + 1217 * Z) & 0x7fffffff);
 				float valX = spriteRng.Next(-3, 3 + 1) / 16.0f;
 				float valY = spriteRng.Next(0,  3 + 1) / 16.0f;
 				float valZ = spriteRng.Next(-3, 3 + 1) / 16.0f;

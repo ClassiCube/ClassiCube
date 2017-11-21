@@ -383,7 +383,7 @@ void Builder_DrawSprite(Int32 count) {
 
 	UInt8 offsetType = Block_SpriteOffset[Builder_Block];
 	if (offsetType >= 6 && offsetType <= 7) {
-		Random_SetSeed(&spriteRng, (Builder_X + 1217 * Builder_Y + 4751 * Builder_Z) & 0x7fffffff);
+		Random_SetSeed(&spriteRng, (Builder_X + 1217 * Builder_Z) & 0x7fffffff);
 		Real32 valX = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
 		Real32 valY = Random_Range(&spriteRng, 0,  3 + 1) / 16.0f;
 		Real32 valZ = Random_Range(&spriteRng, -3, 3 + 1) / 16.0f;
