@@ -43,7 +43,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Render(double delta) {
-			if (game.Camera.IsThirdPerson || !game.ShowBlockInHand) return;
+			if (!game.ShowBlockInHand) return;
 
 			float lastSwingY = swingY; swingY = 0;
 			block = game.Inventory.Selected;
@@ -55,8 +55,16 @@ namespace ClassicalSharp.Renderers {
 			
 			ResetHeldState();
 			DoAnimation(delta, lastSwingY);
-			SetBaseOffset();
+			SetBaseOffset();			
+			if (!game.Camera.IsThirdPerson) RenderModel();
 			
+			game.Graphics.LoadMatrix(ref game.View);
+			game.Graphics.SetMatrixMode(MatrixType.Projection);
+			game.Graphics.LoadMatrix(ref game.Projection);
+			game.Graphics.SetMatrixMode(MatrixType.Modelview);
+		}
+		
+		void RenderModel() {
 			game.Graphics.FaceCulling = true;
 			game.Graphics.Texturing = true;
 			game.Graphics.SetupAlphaState(BlockInfo.Draw[block]);
@@ -76,11 +84,6 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.RestoreAlphaState(BlockInfo.Draw[block]);
 			game.Graphics.DepthTest = true;
 			game.Graphics.FaceCulling = false;
-			
-			game.Graphics.LoadMatrix(ref game.View);
-			game.Graphics.SetMatrixMode(MatrixType.Projection);
-			game.Graphics.LoadMatrix(ref game.Projection);
-			game.Graphics.SetMatrixMode(MatrixType.Modelview);
 		}
 		
 		static Vector3 nOffset = new Vector3(0.56f, -0.72f, -0.72f);
