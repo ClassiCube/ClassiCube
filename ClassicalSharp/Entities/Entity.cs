@@ -217,7 +217,7 @@ namespace ClassicalSharp.Entities {
 			// NOTE: Original classic client uses offset (so you can only climb up
 			// alternating liquid-solid elevators on two sides)
 			AABB bounds = Bounds.Offset(liqExpand);
-			if (bounds.Max.Y - bounds.Min.Y >= 6f/16f || bounds.Min.Y - bounds.Max.Y >= 6f/16f) {
+			if (bounds.Max.Y - bounds.Min.Y >= 10f/16f || bounds.Min.Y - bounds.Max.Y >= 10f/16f) {
 				bounds.Min.Y += 5f/16f;
 				bounds.Max.Y -= 6f/16f;
 			}
@@ -230,7 +230,7 @@ namespace ClassicalSharp.Entities {
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
-			if (bounds.Max.Y - bounds.Min.Y >= 6f/16f || bounds.Min.Y - bounds.Max.Y >= 6f/16f) {
+			if (bounds.Max.Y - bounds.Min.Y >= 10f/16f || bounds.Min.Y - bounds.Max.Y >= 10f/16f) {
 				bounds.Min.Y += 5f/16f;
 				bounds.Max.Y -= 6f/16f;
 			}
