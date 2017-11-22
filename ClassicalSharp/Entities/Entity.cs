@@ -217,8 +217,10 @@ namespace ClassicalSharp.Entities {
 			// NOTE: Original classic client uses offset (so you can only climb up
 			// alternating liquid-solid elevators on two sides)
 			AABB bounds = Bounds.Offset(liqExpand);
-			bounds.Min.Y += 5f/16f;
-			bounds.Max.Y -= 6f/16f;
+			if (bounds.Max.Y - bounds.Min.Y >= 6f/16f || bounds.Min.Y - bounds.Max.Y >= 6f/16f) {
+				bounds.Min.Y += 5f/16f;
+				bounds.Max.Y -= 6f/16f;
+			}
 			return TouchesAny(bounds, touchesAnyLava);
 		}
 		static Predicate<BlockID> touchesAnyLava = IsLava;
@@ -228,8 +230,10 @@ namespace ClassicalSharp.Entities {
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
-			bounds.Min.Y += 5f/16f;
-			bounds.Max.Y -= 6f/16f;
+			if (bounds.Max.Y - bounds.Min.Y >= 6f/16f || bounds.Min.Y - bounds.Max.Y >= 6f/16f) {
+				bounds.Min.Y += 5f/16f;
+				bounds.Max.Y -= 6f/16f;
+			}
 			return TouchesAny(bounds, touchesAnyWater);
 		}
 		static Predicate<BlockID> touchesAnyWater = IsWater;
