@@ -209,7 +209,7 @@ namespace ClassicalSharp.Entities {
 		static bool IsRope(BlockID b) { return b == Block.Rope; }
 	
 		
-		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 0/16f, 0.25f/16f);
+		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 1.5f/16f, 0.25f/16f);
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
@@ -217,6 +217,8 @@ namespace ClassicalSharp.Entities {
 			// NOTE: Original classic client uses offset (so you can only climb up
 			// alternating liquid-solid elevators on two sides)
 			AABB bounds = Bounds.Offset(liqExpand);
+			bounds.Min.Y += 5f/16f;
+			bounds.Max.Y -= 6f/16f;
 			return TouchesAny(bounds, touchesAnyLava);
 		}
 		static Predicate<BlockID> touchesAnyLava = IsLava;
@@ -226,6 +228,8 @@ namespace ClassicalSharp.Entities {
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
+			bounds.Min.Y += 5f/16f;
+			bounds.Max.Y -= 6f/16f;
 			return TouchesAny(bounds, touchesAnyWater);
 		}
 		static Predicate<BlockID> touchesAnyWater = IsWater;
