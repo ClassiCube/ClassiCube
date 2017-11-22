@@ -112,6 +112,8 @@ namespace ClassicalSharp.Renderers {
 			held.ModelBlock = block;
 			held.SkinType = p.SkinType;
 			held.TextureId = p.TextureId;
+			held.uScale = p.uScale;
+			held.vScale = p.vScale;
 		}
 		
 		void SetBaseOffset() {
