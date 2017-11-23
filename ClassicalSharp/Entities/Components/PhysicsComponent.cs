@@ -192,11 +192,9 @@ namespace ClassicalSharp.Entities {
 			entity.Position += entity.Velocity;
 			
 			if (collisions.HorizontalCollision) {
-				entity.Velocity.Y /= yMul;
 				entity.Position += entity.Velocity;
 				bool pastJumpPoint = !entity.touchesAnyLiq();
 				entity.Position -= entity.Velocity;
-				entity.Velocity.Y *= yMul;
 				if (!pastJumpPoint) {
 					didLiquidJump = false;
 				} else if (pastJumpPoint) {
