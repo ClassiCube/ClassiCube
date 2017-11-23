@@ -218,7 +218,7 @@ namespace ClassicalSharp.Entities {
 			// alternating liquid-solid elevators on two sides)
 			AABB bounds = Bounds.Offset(liqExpand);
 			if (this.Model.liquidOffset) {
-				float humanSize = 28.1f/16f; //TODO: Actually get the height of a human.
+				float humanSize = 28.1f/16f;
 				float mAdj = bounds.Height / humanSize;
 				bounds.Min.Y += (5f/16f * mAdj);
 				bounds.Max.Y -= (6f/16f * mAdj);
@@ -233,7 +233,7 @@ namespace ClassicalSharp.Entities {
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
 			if (this.Model.liquidOffset) {
-				float humanSize = 28.1f/16f; //TODO: Actually get the height of a human.
+				float humanSize = 28.1f/16f;
 				float mAdj = bounds.Height / humanSize;
 				bounds.Min.Y += (5f/16f * mAdj);
 				bounds.Max.Y -= (6f/16f * mAdj);
@@ -246,7 +246,7 @@ namespace ClassicalSharp.Entities {
 		public bool touchesAnyLiq() {
 			AABB bounds = this.Bounds.Offset(liqExpand);
 			if (this.Model.liquidOffset) {
-				float humanSize = 28.1f/16f; //TODO: Actually get the height of a human.
+				float humanSize = 28.1f/16f;
 				float mAdj = bounds.Height / humanSize;
 				bounds.Min.Y += (5f/16f * mAdj);
 				bounds.Max.Y -= (6f/16f * mAdj);
