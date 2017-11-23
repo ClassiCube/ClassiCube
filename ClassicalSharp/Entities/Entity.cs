@@ -1,4 +1,4 @@
-﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Model;
 using ClassicalSharp.Physics;
@@ -242,5 +242,21 @@ namespace ClassicalSharp.Entities {
 		}
 		static Predicate<BlockID> touchesAnyWater = IsWater;
 		static bool IsWater(BlockID b) { return BlockInfo.ExtendedCollide[b] == CollideType.LiquidWater; }
+		
+		public bool touchesAnyLiq() {
+			AABB bounds = this.Bounds.Offset(liqExpand);
+			if (this.ModelName != "block" && this.ModelName != "head" && this.ModelName != "arm") {
+				float humanSize = 28.1f/16f; //TODO: Actually get the height of a human.
+				float mAdj = bounds.Height / humanSize;
+				bounds.Min.Y += (5f/16f * mAdj);
+				bounds.Max.Y -= (6f/16f * mAdj);
+			}
+			
+			return TouchesAny(bounds, touchesLiquid);
+		}
+		
+		static Predicate<BlockID> touchesLiquid = IsLiquidCollide;
+		static bool IsLiquidCollide(BlockID block) { return BlockInfo.Collide[block] == CollideType.Liquid; }
+		
 	}
 }
