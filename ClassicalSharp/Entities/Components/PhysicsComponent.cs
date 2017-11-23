@@ -16,7 +16,6 @@ namespace ClassicalSharp.Entities {
 	public sealed class PhysicsComponent {
 		
 		bool useLiquidGravity = false; // used by BlockDefinitions.
-		bool didLiquidJump = false;
 		internal bool jumping;
 		internal int multiJumps;
 		Entity entity;
