@@ -184,8 +184,6 @@ namespace ClassicalSharp.Entities {
 		
 		void MoveLiquid(Vector3 drag, float gravity, float yMul) {
 			entity.Velocity.Y *= yMul;
-			bool touchWater = entity.TouchesAnyWater();
-			bool touchLava = entity.TouchesAnyLava();
 			float addVel = 0;
 			bool didLiquidJump = false;
 			
@@ -193,27 +191,17 @@ namespace ClassicalSharp.Entities {
 				collisions.MoveAndWallSlide();
 			entity.Position += entity.Velocity;
 			
-			if (touchWater || touchLava) {
-				AABB bounds = entity.Bounds;
-				int feetY = Utils.Floor(bounds.Min.Y), bodyY = feetY + 1;
-				int headY = Utils.Floor(bounds.Max.Y);
-				if (bodyY > headY) bodyY = headY;
-				
-				bounds.Max.Y = bounds.Min.Y = feetY;
-				bool liquidFeet = entity.TouchesAny(bounds, touchesLiquid);
-				bounds.Min.Y = Math.Min(bodyY, headY);
-				bounds.Max.Y = Math.Max(bodyY, headY);
-				bool liquidRest = entity.TouchesAny(bounds, touchesLiquid);
-				
-				bool pastJumpPoint = liquidFeet && !liquidRest && ((entity.Position.Y) % 1 >= 0.40);
+			if (collisions.HorizontalCollision) {
+				entity.Velocity.Y /= yMul;
+				entity.Position += entity.Velocity;
+				bool pastJumpPoint = !entity.touchesAnyLiq();
+				entity.Position -= entity.Velocity;
+				entity.Velocity.Y *= yMul;
 				if (!pastJumpPoint) {
 					didLiquidJump = false;
 				} else if (pastJumpPoint) {
-					//TODO: fix pastJumpPoint to work better/more accurately.
-					if (collisions.HorizontalCollision && entity.Velocity.Y >= -0.05) {
-						addVel += 0.30f;
-						didLiquidJump = true;
-					}
+					addVel += 0.3f;
+					didLiquidJump = true;
 				}
 			}
 			
