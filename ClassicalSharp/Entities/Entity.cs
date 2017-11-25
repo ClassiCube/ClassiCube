@@ -90,14 +90,14 @@ namespace ClassicalSharp.Entities {
 		
 		public Matrix4 TransformMatrix(Vector3 scale, Vector3 pos) {
 			Matrix4 m = Matrix4.Identity, tmp;
-
-			Matrix4.Scale(out tmp, scale.X, scale.Y, scale.Z);
-			Matrix4.Mult(out m, ref m, ref tmp);			
+			
 			Matrix4.RotateZ(out tmp, -RotZ * Utils.Deg2Rad); 
 			Matrix4.Mult(out m, ref m, ref tmp);
 			Matrix4.RotateX(out tmp, -RotX * Utils.Deg2Rad);
 			Matrix4.Mult(out m, ref m, ref tmp);		
 			Matrix4.RotateY(out tmp, -RotY * Utils.Deg2Rad);
+			Matrix4.Mult(out m, ref m, ref tmp);
+			Matrix4.Scale(out tmp, scale.X, scale.Y, scale.Z);
 			Matrix4.Mult(out m, ref m, ref tmp);
 			Matrix4.Translate(out tmp, pos.X, pos.Y, pos.Z);
 			Matrix4.Mult(out m, ref m, ref tmp);
@@ -209,7 +209,7 @@ namespace ClassicalSharp.Entities {
 		static bool IsRope(BlockID b) { return b == Block.Rope; }
 	
 		
-		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 0/16f, 0.25f/16f);
+		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 1.5f/16f, 0.25f/16f);
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
@@ -217,6 +217,12 @@ namespace ClassicalSharp.Entities {
 			// NOTE: Original classic client uses offset (so you can only climb up
 			// alternating liquid-solid elevators on two sides)
 			AABB bounds = Bounds.Offset(liqExpand);
+			if (this.Model.liquidOffset) {
+				float humanSize = 28.1f/16f; //TODO: Actually get the height of a human.
+				float mAdj = bounds.Height / humanSize;
+				bounds.Min.Y += (5f/16f * mAdj);
+				bounds.Max.Y -= (6f/16f * mAdj);
+			}
 			return TouchesAny(bounds, touchesAnyLava);
 		}
 		static Predicate<BlockID> touchesAnyLava = IsLava;
@@ -226,9 +232,31 @@ namespace ClassicalSharp.Entities {
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
+			if (this.Model.liquidOffset) {
+				float humanSize = 28.1f/16f; //TODO: Actually get the height of a human.
+				float mAdj = bounds.Height / humanSize;
+				bounds.Min.Y += (5f/16f * mAdj);
+				bounds.Max.Y -= (6f/16f * mAdj);
+			}
 			return TouchesAny(bounds, touchesAnyWater);
 		}
 		static Predicate<BlockID> touchesAnyWater = IsWater;
 		static bool IsWater(BlockID b) { return BlockInfo.ExtendedCollide[b] == CollideType.LiquidWater; }
+		
+		public bool touchesAnyLiq() {
+			AABB bounds = this.Bounds.Offset(liqExpand);
+			if (this.Model.liquidOffset) {
+				float humanSize = 28.1f/16f; //TODO: Actually get the height of a human.
+				float mAdj = bounds.Height / humanSize;
+				bounds.Min.Y += (5f/16f * mAdj);
+				bounds.Max.Y -= (6f/16f * mAdj);
+			}
+			
+			return TouchesAny(bounds, touchesLiquid);
+		}
+		
+		static Predicate<BlockID> touchesLiquid = IsLiquidCollide;
+		static bool IsLiquidCollide(BlockID block) { return BlockInfo.Collide[block] == CollideType.Liquid; }
+		
 	}
 }

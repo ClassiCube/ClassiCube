@@ -1,13 +1,13 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Text;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.Renderers;
-using OpenTK.Input;
 using OpenTK;
-
+using OpenTK.Input;
 #if USE16_BIT
 using BlockID = System.UInt16;
 #else
@@ -15,6 +15,99 @@ using BlockID = System.Byte;
 #endif
 
 namespace ClassicalSharp.Commands {
+	
+	public sealed class HelpCommand : Command {
+		
+		public HelpCommand() {
+			Name = "Help";
+			Help = new string[] {
+				"&a/client help [command name]",
+				"&eDisplays the help for the given command.",
+			};
+		}
+		
+		public override void Execute(string[] args) {
+			if (args.Length == 1) {
+				game.Chat.Add("&eList of client commands:");
+				game.CommandList.PrintDefinedCommands(game);
+				game.Chat.Add("&eTo see a particular command's help, type /client help [cmd name]");
+			} else {
+				Command cmd = game.CommandList.GetMatch(args[1]);
+				if (cmd == null) return;
+				string[] help = cmd.Help;
+				for (int i = 0; i < help.Length; i++)
+					game.Chat.Add(help[i]);
+			}
+		}
+	}
+
+	public sealed class GpuInfoCommand : Command {
+		
+		public GpuInfoCommand() {
+			Name = "GpuInfo";
+			Help = new string[] {
+				"&a/client gpuinfo",
+				"&eDisplays information about your GPU.",
+			};
+		}
+		
+		public override void Execute(string[] args) {
+			string[] lines = game.Graphics.ApiInfo;
+			for (int i = 0; i < lines.Length; i++)
+				game.Chat.Add("&a" + lines[i]);
+		}
+	}
+	
+	public sealed class RenderTypeCommand : Command {
+		
+		public RenderTypeCommand() {
+			Name = "RenderType";
+			Help = new string[] {
+				"&a/client rendertype [normal/legacy/legacyfast]",
+				"&bnormal: &eDefault renderer, with all environmental effects enabled.",
+				"&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.",
+				"&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+				"&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.",
+			};
+		}
+		
+		public override void Execute(string[] args) {
+			if (args.Length == 1) {
+				game.Chat.Add("&e/client: &cYou didn't specify a new render type.");
+			} else if (game.SetRenderType(args[1])) {
+				game.Chat.Add("&e/client: &fRender type is now " + args[1] + ".");
+			} else {
+				game.Chat.Add("&e/client: &cUnrecognised render type &f\"" + args[1] + "\"&c.");
+			}
+		}
+	}
+	
+	public sealed class ResolutionCommand : Command {
+		
+		public ResolutionCommand() {
+			Name = "Resolution";
+			Help = new string[] {
+				"&a/client resolution [width] [height]",
+				"&ePrecisely sets the size of the rendered window.",
+			};
+		}
+		
+		public override void Execute(string[] args) {
+			int width, height;
+			if (args.Length < 3) {
+				game.Chat.Add("&e/client: &cYou didn't specify width and height");
+			} else if (!Int32.TryParse(args[1], out width) || !Int32.TryParse(args[2], out height)) {
+				game.Chat.Add("&e/client: &cWidth and height must be integers.");
+			} else if (width <= 0 || height <= 0) {
+				game.Chat.Add("&e/client: &cWidth and height must be above 0.");
+			} else {
+				game.window.ClientSize = new Size(width, height);
+				Options.Set(OptionsKey.WindowWidth, width);
+				Options.Set(OptionsKey.WindowHeight, height);
+			}
+		}
+	}
+
 	
 	public sealed class ModelCommand : Command {
 		
@@ -25,6 +118,7 @@ namespace ClassicalSharp.Commands {
 				"&bnames: &echibi, chicken, creeper, human, pig, sheep",
 				"&e       skeleton, spider, zombie, sitting, <numerical block id>",
 			};
+			SingleplayerOnly = true;
 		}
 		
 		public override void Execute(string[] args) {
@@ -47,6 +141,7 @@ namespace ClassicalSharp.Commands {
 				"&e  If persist is given and is \"yes\", then the command",
 				"&e  will repeatedly cuboid, without needing to be typed in again.",
 			};
+			SingleplayerOnly = true;
 		}
 		int block = -1;
 		Vector3I mark1, mark2;
@@ -126,11 +221,12 @@ namespace ClassicalSharp.Commands {
 	public sealed class TeleportCommand : Command {
 		
 		public TeleportCommand() {
-			Name = "Teleport";
+			Name = "TP";
 			Help = new string[] {
-				"&a/client teleport [x y z]",
+				"&a/client tp [x y z]",
 				"&eMoves you to the given coordinates.",
 			};
+			SingleplayerOnly = true;
 		}
 		
 		public override void Execute(string[] args) {
