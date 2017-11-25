@@ -4,6 +4,16 @@ using System.Collections.Generic;
 
 namespace ClassicalSharp.Commands {
 	
+	/// <summary> Represents a client side action that optionally accepts arguments. </summary>
+	public abstract class Command {
+		public string Name;
+		public string[] Help;
+		public bool SingleplayerOnly;
+		protected internal Game game;
+		
+		public abstract void Execute(string[] args);
+	}
+	
 	public class CommandList : IGameComponent {
 		
 		const string prefix = "/client";
@@ -19,13 +29,10 @@ namespace ClassicalSharp.Commands {
 		public List<Command> RegisteredCommands = new List<Command>();
 		public void Init(Game game) {
 			this.game = game;
-			Register(new CommandsCommand());
 			Register(new GpuInfoCommand());
 			Register(new HelpCommand());
 			Register(new RenderTypeCommand());
 			Register(new ResolutionCommand());
-			
-			if (!game.Server.IsSinglePlayer) return;
 			Register(new ModelCommand());
 			Register(new CuboidCommand());
 			Register(new TeleportCommand());
@@ -38,11 +45,6 @@ namespace ClassicalSharp.Commands {
 		
 		public void Register(Command command) {
 			command.game = game;
-			for (int i = 0; i < RegisteredCommands.Count; i++) {
-				Command cmd = RegisteredCommands[i];
-				if (Utils.CaselessEquals(cmd.Name, command.Name))
-					throw new InvalidOperationException("Another command already has name : " + command.Name);
-			}
 			RegisteredCommands.Add(command);
 		}
 		
@@ -59,8 +61,15 @@ namespace ClassicalSharp.Commands {
 				match = cmd;
 			}
 			
-			if (match == null)
+			if (match == null) {
 				game.Chat.Add("&e/client: Unrecognised command: \"&f" + cmdName + "&e\".");
+				game.Chat.Add("&e/client: Type &a/client &efor a list of commands.");
+				return null;
+			}
+			if (match.SingleplayerOnly && !game.Server.IsSinglePlayer) {
+				game.Chat.Add("&e/client: \"&f" + cmdName + "&e\" can only be used in singleplayer.");
+				return null;
+			}
 			return match;
 		}
 		
@@ -75,7 +84,7 @@ namespace ClassicalSharp.Commands {
 			if (text.Length == 0) { // only / or /client
 				game.Chat.Add("&eList of client commands:");
 				PrintDefinedCommands(game);
-				game.Chat.Add("&eTo see a particular command's help, type /client help [cmd name]");
+				game.Chat.Add("&eTo see a particular command's help, type &a/client help [cmd name]");
 				return;
 			}
 			
