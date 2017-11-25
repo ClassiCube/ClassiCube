@@ -75,8 +75,6 @@ namespace ClassicalSharp.Model {
 		/// <summary> Scaling factor applied, multiplied by the entity's current model scale. </summary>
 		public float NameScale = 1.0f;
 		
-		public bool liquidOffset = true;
-		
 		
 		/// <summary> The size of the bounding box that is used when
 		/// performing collision detection for this model. </summary>
