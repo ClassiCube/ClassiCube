@@ -36,6 +36,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		public override void Init(Game game) {
+			this.game = game;
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			SetSun(WorldEnv.DefaultSunlight);
 			SetShadow(WorldEnv.DefaultShadowlight);
