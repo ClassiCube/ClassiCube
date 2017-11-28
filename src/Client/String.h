@@ -73,16 +73,18 @@ bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
 bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
 
-#define STRINGSBUFFER_DEF_BUFFER_SIZE 4096
-#define STRINGSBUFFER_DEF_FLAGS_ELEMS 256
+#define STRINGSBUFFER_BUFFER_DEF_SIZE 4096
+#define STRINGSBUFFER_BUFFER_EXPAND_SIZE 8192
+#define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
+#define STRINGSBUFFER_FLAGS_EXPAND_ELEMS 512
 typedef struct StringsBuffer_ {
 	UInt8* TextBuffer;
 	UInt32 TextBufferSize;
 	UInt32* FlagsBuffer;
 	UInt32 FlagsBufferElems;
 	UInt32 Count;
-	UInt8 DefaultBuffer[STRINGSBUFFER_DEF_BUFFER_SIZE];
-	UInt32 DefaultFlags[STRINGSBUFFER_DEF_FLAGS_ELEMS];
+	UInt8 DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
+	UInt32 DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 
 void StringBuffers_Init(StringsBuffer* buffer);
