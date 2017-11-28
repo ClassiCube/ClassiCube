@@ -3,6 +3,10 @@
 #include "Typedefs.h"
 #include "Input.h"
 #include "String.h"
+/* Maintains list of hotkeys defined by the client and SetTextHotkey packets.
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3
+*/
+
 
 extern UInt8 Hotkeys_LWJGL[256];
 typedef struct HotkeyData_ {

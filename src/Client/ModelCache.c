@@ -23,7 +23,7 @@ IModel* ModelCache_Get(STRING_PURE String* name) {
 	Int32 i;
 	for (i = 0; i < ModelCache_modelCount; i++) {
 		CachedModel* m = &ModelCache_Models[i];
-		if (!String_Equals(&m->Name, name)) continue;
+		if (!String_CaselessEquals(&m->Name, name)) continue;
 		
 		if (!m->Instance->initalised) {
 			m->Instance->CreateParts();
@@ -38,7 +38,7 @@ Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName) {
 	Int32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		CachedTexture* tex = &ModelCache_Textures[i];
-		if (String_Equals(&tex->Name, texName)) return 1;
+		if (String_CaselessEquals(&tex->Name, texName)) return 1;
 	}
 	return -1;
 }

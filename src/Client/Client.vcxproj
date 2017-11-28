@@ -295,7 +295,6 @@
     <ClCompile Include="OpenGLApi.c" />
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
-    <ClCompile Include="Funcs.c" />
     <ClCompile Include="GraphicsCommon.c" />
     <ClCompile Include="Matrix.c" />
     <ClCompile Include="Noise.c" />

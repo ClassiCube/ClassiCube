@@ -15,11 +15,6 @@
 /* returns number of elements in given array. */
 #define Array_NumElements(arr) (sizeof(arr) / sizeof(arr[0]))
 
-/* returns whether character is uppercase letter */
-bool Char_IsUpper(UInt8 c);
-/* Converts uppercase letter to lowercase */
-UInt8 Char_ToLower(UInt8 c);
-
 #define QuickSort_Swap_Maybe()\
 if (i <= j) {\
 	key = keys[i]; keys[i] = keys[j]; keys[j] = key;\

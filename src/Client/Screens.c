@@ -3,6 +3,8 @@
 #include "Game.h"
 #include "Event.h"
 #include "GraphicsCommon.h"
+#include "Platform.h"
+#include "Inventory.h"
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -96,5 +98,151 @@ void ClickableScreen_Create(ClickableScreen* screen) {
 	screen->OnWidgetSelected = ClickableScreen_DefaultWidgetSelected;
 }
 
-Screen AA;
-extern Screen* InventoryScreen_Unsafe_RawPointer = &AA;
+typedef struct InventoryScreen_ {
+	Screen Base;
+	FontDesc Font;
+	TableWidget Table;
+	bool ReleasedInv;
+} InventoryScreen;
+InventoryScreen InventoryScreen_Instance;
+
+void InventoryScreen_OnBlockChanged(void) {
+	TableWidget_OnInventoryChanged(&InventoryScreen_Instance.Table);
+}
+
+void InventoryScreen_ContextLost(void) {
+	GuiElement* elem = &InventoryScreen_Instance.Table.Base.Base;
+	elem->Free(elem);
+}
+
+void InventoryScreen_ContextRecreated(void) {
+	GuiElement* elem = &InventoryScreen_Instance.Table.Base.Base;
+	elem->Recreate(elem);
+}
+
+void InventoryScreen_Init(GuiElement* elem) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	screen->Font.Size = 16;
+	Platform_MakeFont(&screen->Font, &Game_FontName);
+	elem = &screen->Table.Base.Base;
+	TableWidget_Create(&screen->Table);
+	screen->Table.Font = screen->Font;
+	screen->Table.ElementsPerRow = Game_PureClassic ? 9 : 10;
+	elem->Init(&elem);
+
+	Key_KeyRepeat = true;
+	Event_RegisterVoid(&BlockEvents_PermissionsChanged, InventoryScreen_OnBlockChanged);
+	Event_RegisterVoid(&BlockEvents_BlockDefChanged, InventoryScreen_OnBlockChanged);	
+	Event_RegisterVoid(&GfxEvents_ContextLost, InventoryScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, InventoryScreen_ContextRecreated);
+}
+
+void InventoryScreen_Render(GuiElement* elem, Real64 delta) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	elem = &screen->Table.Base.Base;
+	elem->Render(elem, delta);
+}
+
+void InventoryScreen_OnResize(Screen* elem) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	Widget* widget = &screen->Table.Base;
+	widget->Reposition(widget);
+}
+
+void InventoryScreen_Free(GuiElement* elem) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	Platform_FreeFont(&screen->Font);
+	elem = &screen->Table.Base.Base;
+	elem->Free(&elem);
+
+	Key_KeyRepeat = false;
+	Event_UnregisterVoid(&BlockEvents_PermissionsChanged, InventoryScreen_OnBlockChanged);
+	Event_UnregisterVoid(&BlockEvents_BlockDefChanged, InventoryScreen_OnBlockChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, InventoryScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, InventoryScreen_ContextRecreated);
+}
+
+bool InventoryScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	TableWidget* table = &screen->Table;
+	GuiElement* elem = &screen->Table.Base.Base;
+	if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
+		gGui_SetNewScreen(NULL);
+	} else if (key == KeyBind_Get(KeyBind_Inventory) && screen->ReleasedInv) {
+		Gui_SetNewScreen(NULL);
+	} else if (key == Key_Enter && table->SelectedIndex != -1) {
+		Inventory_SetSelectedBlock(table->Elements[table->SelectedIndex]);
+		Gui_SetNewScreen(NULL);
+	} else if (elem->HandlesKeyDown(elem, key)) {
+	} else {
+		game.Gui.hudScreen.hotbar.HandlesKeyDown(key);
+	}
+	return true;
+}
+
+bool InventoryScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	if (key == KeyBind_Get(KeyBind_Inventory)) {
+		screen->ReleasedInv = true; return true;
+	}
+	return game.Gui.hudScreen.hotbar.HandlesKeyUp(key);
+}
+
+bool InventoryScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	TableWidget* table = &screen->Table;
+	GuiElement* elem = &screen->Table.Base.Base;
+	if (table->Scroll.DraggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseDown(x, y, btn))
+		return true;
+
+	bool handled = elem->HandlesMouseDown(elem, x, y, btn);
+	if ((!handled || table->PendingClose) && btn == MouseButton_Left) {
+		bool hotbar = Key_IsControlPressed();
+		if (!hotbar) Gui_SetNewScreen(NULL);
+	}
+	return true;
+}
+
+bool InventoryScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	GuiElement* elem = &screen->Table.Base.Base;
+	return elem->HandlesMouseUp(elem, x, y, btn);
+}
+
+bool InventoryScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	GuiElement* elem = &screen->Table.Base.Base;
+	return elem->HandlesMouseMove(elem, x, y);
+}
+
+bool InventoryScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
+	InventoryScreen* screen = (InventoryScreen*)elem;
+	GuiElement* elem = &screen->Table.Base.Base;
+
+	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
+	if (hotbar) return false;
+	return elem->HandlesMouseScroll(elem, delta);
+}
+
+Screen* InventoryScreen_GetInstance(void) {
+	InventoryScreen* screen = &InventoryScreen_Instance;
+	Platform_MemSet(&screen, 0, sizeof(InventoryScreen));
+	Screen_Reset(&screen->Base);
+
+	screen->Base.Base.HandlesKeyDown     = InventoryScreen_HandlesKeyDown;
+	screen->Base.Base.HandlesKeyUp       = InventoryScreen_HandlesKeyUp;
+	screen->Base.Base.HandlesMouseDown   = InventoryScreen_HandlesMouseDown;
+	screen->Base.Base.HandlesMouseUp     = InventoryScreen_HandlesMouseUp;
+	screen->Base.Base.HandlesMouseMove   = InventoryScreen_HandlesMouseMove;
+	screen->Base.Base.HandlesMouseScroll = InventoryScreen_HandlesMouseScroll;
+
+	screen->Base.OnContextLost      = InventoryScreen_ContextLost;
+	screen->Base.OnContextRecreated = InventoryScreen_ContextRecreated;
+	screen->Base.OnResize           = InventoryScreen_OnResize;
+	screen->Base.Base.Init          = InventoryScreen_Init;
+	screen->Base.Base.Render        = InventoryScreen_Render;
+	screen->Base.Base.Free          = InventoryScreen_Free;
+
+	return &screen->Base;
+}
+extern Screen* InventoryScreen_Unsafe_RawPointer = &InventoryScreen_Instance.Base;

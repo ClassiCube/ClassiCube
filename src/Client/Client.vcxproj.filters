@@ -419,9 +419,6 @@
     <ClCompile Include="VertexStructs.c">
       <Filter>Source Files\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Funcs.c">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
     <ClCompile Include="PackedCol.c">
       <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>

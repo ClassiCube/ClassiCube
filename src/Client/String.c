@@ -3,6 +3,12 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 
+bool Char_IsUpper(UInt8 c) { return c >= 'A' && c <= 'Z'; }
+UInt8 Char_ToLower(UInt8 c) {
+	if (!Char_IsUpper(c)) return c;
+	return (UInt8)(c + ' ');
+}
+
 String String_Init(STRING_REF UInt8* buffer, UInt16 length, UInt16 capacity) {
 	String str;
 	str.buffer = buffer;
@@ -81,8 +87,8 @@ bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b) {
 	Int32 i;
 
 	for (i = 0; i < a->length; i++) {
-		UInt8 aCur = Char_ToLower(a->buffer[i]);
-		UInt8 bCur = Char_ToLower(b->buffer[i]);
+		UInt8 aCur = a->buffer[i]; if (aCur >= 'A' && aCur <= 'Z') { aCur += ' '; }
+		UInt8 bCur = b->buffer[i]; if (bCur >= 'A' && bCur <= 'Z') { bCur += ' '; }
 		if (aCur != bCur) return false;
 	}
 	return true;
@@ -131,9 +137,7 @@ bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num) {
 bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits) {
 	UInt8 numBuffer[STRING_INT32CHARS];
 	Int32 i;
-	for (i = 0; i < minDigits; i++) {
-		numBuffer[i] = '0';
-	}
+	for (i = 0; i < minDigits; i++) { numBuffer[i] = '0'; }
 
 	Int32 numLen = String_MakeInt32(num, numBuffer);
 	if (numLen < minDigits) numLen = minDigits;

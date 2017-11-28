@@ -154,7 +154,7 @@ void KeyBind_Save(void) {
 	for (i = 0; i < KeyBind_Count; i++) {
 		KeyBind_MakeName(name);
 		String value = String_FromReadonly(Key_Names[i]);
-		Options_Set(name.buffer, value);
+		Options_Set(name.buffer, &value);
 	}
 }
 

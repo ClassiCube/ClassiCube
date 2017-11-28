@@ -24,6 +24,41 @@ UInt8 Hotkeys_LWJGL[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
+void Hotkeys_QuickSort(Int32 left, Int32 right) {
+	HotkeyData* keys = HotkeysList; HotkeyData key;
+
+	while (left < right) {
+		Int32 i = left, j = right;
+		UInt8 pivot = keys[(i + j) / 2].Flags;
+
+		/* partition the list */
+		while (i <= j) {
+			while (pivot > keys[i].Flags) i++;
+			while (pivot < keys[j].Flags) j--;
+			QuickSort_Swap_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(Hotkeys_QuickSort)
+	}
+}
+
+void Hotkeys_AddNewHotkey(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) {
+	HotkeyData hKey;
+	hKey.BaseKey = baseKey;
+	hKey.Flags = flags;
+	hKey.TextIndex = HotkeysText.Count;
+	hKey.StaysOpen = more;
+
+	if (HotkeysText.Count == HOTKEYS_MAX_COUNT) {
+		ErrorHandler_Fail("Cannot define more than 256 hotkeys");
+	}
+
+	HotkeysList[HotkeysText.Count] = hKey;
+	StringsBuffer_Add(&HotkeysText, text);
+	/* sort so that hotkeys with largest modifiers are first */
+	Hotkeys_QuickSort(0, HotkeysText.Count - 1);
+}
+
 void Hotkeys_Add(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) {
 	UInt32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
@@ -51,41 +86,6 @@ bool Hotkeys_Remove(Key baseKey, UInt8 flags) {
 		}
 	}
 	return false;
-}
-
-void Hotkeys_AddNewHotkey(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more) {
-	HotkeyData hKey;
-	hKey.BaseKey = baseKey;
-	hKey.Flags = flags;
-	hKey.TextIndex = HotkeysText.Count;
-	hKey.StaysOpen = more;
-
-	if (HotkeysText.Count == HOTKEYS_MAX_COUNT) {
-		ErrorHandler_Fail("Cannot define more than 256 hotkeys");
-	}
-
-	HotkeysList[HotkeysText.Count] = hKey;
-	StringsBuffer_Add(&HotkeysText, text);
-	/* sort so that hotkeys with largest modifiers are first */
-	Hotkeys_QuickSort(0, HotkeysText.Count - 1);
-}
-
-void Hotkeys_QuickSort(Int32 left, Int32 right) {
-	HotkeyData* keys = HotkeysList; HotkeyData key;
-
-	while (left < right) {
-		Int32 i = left, j = right;
-		UInt8 pivot = keys[(i + j) / 2].Flags;
-
-		/* partition the list */
-		while (i <= j) {
-			while (pivot > keys[i].Flags) i++;
-			while (pivot < keys[j].Flags) j--;
-			QuickSort_Swap_Maybe();
-		}
-		/* recurse into the smaller subset */
-		QuickSort_Recurse(Hotkeys_QuickSort)
-	}
 }
 
 bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {

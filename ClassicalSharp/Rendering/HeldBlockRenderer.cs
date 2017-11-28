@@ -222,9 +222,8 @@ namespace ClassicalSharp.Renderers {
 		}
 	}
 	
-	/// <summary> Skeleton implementation of a player entity so we can reuse
-	/// block model rendering code. </summary>
-	internal class FakePlayer : Player {
+	/// <summary> Skeleton implementation of player entity so we can reuse block model rendering code. </summary>
+	class FakePlayer : Player {
 		
 		public FakePlayer(Game game) : base(game) {
 			NoShade = true;
