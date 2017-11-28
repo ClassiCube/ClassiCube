@@ -15,11 +15,11 @@ void Options_Free(void) {
 	StringsBuffer_Free(&Options_Values);
 }
 
-UInt32 Options_Find(String key) {
+UInt32 Options_Find(STRING_PURE String* key) {
 	UInt32 i;
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
-		if (String_CaselessEquals(&curKey, &key)) return i;
+		if (String_CaselessEquals(&curKey, key)) return i;
 	}
 	return OPT_NOT_FOUND;
 }
@@ -28,7 +28,7 @@ bool Options_TryGetValue(const UInt8* keyRaw, STRING_TRANSIENT String* value) {
 	String key = String_FromReadonly(keyRaw);
 	*value = String_MakeNull();
 
-	UInt32 i = Options_Find(key);
+	UInt32 i = Options_Find(&key);
 	if (i != OPT_NOT_FOUND) {
 		*value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		return true; 
@@ -38,7 +38,7 @@ bool Options_TryGetValue(const UInt8* keyRaw, STRING_TRANSIENT String* value) {
 	if (sepIndex == -1) return false;
 	key = String_UNSAFE_SubstringAt(&key, sepIndex + 1);
 
-	i = Options_Find(key);
+	i = Options_Find(&key);
 	if (i != OPT_NOT_FOUND) {
 		*value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
 		return true;
@@ -92,7 +92,7 @@ void Options_Remove(UInt32 i) {
 	StringsBuffer_Remove(&Options_Values, i);
 }
 
-Int32 Options_Insert(String key, String value) {
+Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) {
 	UInt32 i = Options_Find(key);
 	if (i != OPT_NOT_FOUND) {
 		Options_Remove(i);
@@ -111,17 +111,17 @@ void Options_SetInt32(const UInt8* keyRaw, Int32 value) {
 	UInt8 numBuffer[String_BufferSize(STRING_INT32CHARS)];
 	String numStr = String_InitAndClear(numBuffer, STRING_INT32CHARS);
 	String_AppendInt32(&numStr, value);
-	Options_Set(keyRaw, numStr);
+	Options_Set(keyRaw, &numStr);
 }
 
-void Options_Set(const UInt8* keyRaw, STRING_PURE String value) {
+void Options_Set(const UInt8* keyRaw, STRING_PURE String* value) {
 	String key = String_FromReadonly(keyRaw);
 	UInt32 i;
-	if (value.buffer == NULL) {
-		i = Options_Find(key);
+	if (value == NULL || value->buffer == NULL) {
+		i = Options_Find(&key);
 		if (i != OPT_NOT_FOUND) Options_Remove(i);
 	} else {
-		i = Options_Insert(key, value);
+		i = Options_Insert(&key, value);
 	}
 	if (i != OPT_NOT_FOUND) Options_Changed[i] = true;
 }

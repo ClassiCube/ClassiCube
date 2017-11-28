@@ -587,7 +587,7 @@ void TableWidget_RecreateDescTex(TableWidget* widget) {
 }
 
 bool TableWidget_Show(BlockID block) {
-	if (block == BLOCK_Invalid) return false;
+	if (block == BLOCK_INVALID) return false;
 
 	if (block < BLOCK_CPE_COUNT) {
 		Int32 count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;

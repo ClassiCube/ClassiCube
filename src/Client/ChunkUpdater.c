@@ -357,31 +357,21 @@ void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
 }
 
 void ChunkUpdater_QuickSort(Int32 left, Int32 right) {
-	ChunkInfo** values = MapRenderer_SortedChunks;
-	Int32* keys = ChunkUpdater_Distances;
+	ChunkInfo** values = MapRenderer_SortedChunks; ChunkInfo* value;
+	Int32* keys = ChunkUpdater_Distances;          Int32 key;
+
 	while (left < right) {
 		Int32 i = left, j = right;
 		Int32 pivot = keys[(i + j) / 2];
+
 		/* partition the list */
 		while (i <= j) {
 			while (pivot > keys[i]) i++;
 			while (pivot < keys[j]) j--;
-
-			if (i <= j) {
-				Int32 key = keys[i]; keys[i] = keys[j]; keys[j] = key;
-				ChunkInfo* value = values[i]; values[i] = values[j]; values[j] = value;
-				i++; j--;
-			}
+			QuickSort_Swap_KV_Maybe();
 		}
-
 		/* recurse into the smaller subset */
-		if (j - left <= right - i) {
-			if (left < j) ChunkUpdater_QuickSort(left, j);
-			left = i;
-		} else {
-			if (i < right) ChunkUpdater_QuickSort(i, right);
-			right = j;
-		}
+		QuickSort_Recurse(ChunkUpdater_QuickSort)
 	}
 }
 

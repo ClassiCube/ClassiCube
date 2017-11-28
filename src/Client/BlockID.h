@@ -96,5 +96,5 @@
 " ForestGreen Brown DeepBlue Turquoise Ice CeramicTile Magma Pillar Crate StoneBrick"
 
 #define BLOCK_COUNT (BLOCK_MAX_DEFINED + 1)
-#define BLOCK_Invalid BLOCK_MAX_DEFINED
+#define BLOCK_INVALID BLOCK_MAX_DEFINED
 #endif

@@ -375,6 +375,9 @@
     <ClInclude Include="Event.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Hotkeys.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -582,6 +585,9 @@
       <Filter>Source Files\Network</Filter>
     </ClCompile>
     <ClCompile Include="Event.c">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Hotkeys.c">
       <Filter>Source Files\Game</Filter>
     </ClCompile>
   </ItemGroup>

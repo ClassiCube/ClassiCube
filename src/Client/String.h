@@ -48,6 +48,7 @@ bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
 bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
 
 bool String_Append(STRING_TRANSIENT String* str, UInt8 c);
+bool String_AppendBool(STRING_TRANSIENT String* str, bool value);
 bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 /* Attempts to append an integer value to the end of a string, padding left with 0. */
 bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits);

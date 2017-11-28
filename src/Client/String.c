@@ -97,6 +97,11 @@ bool String_Append(STRING_TRANSIENT String* str, UInt8 c) {
 	return true;
 }
 
+bool String_AppendBool(STRING_TRANSIENT String* str, bool value) {
+	UInt8* text = value ? "True" : "False";
+	return String_AppendConst(str, text);
+}
+
 Int32 String_MakeInt32(Int32 num, UInt8* numBuffer) {
 	Int32 len = 0;
 
@@ -370,12 +375,12 @@ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {
 }
 
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
-	String trueStr  = String_FromConst("true");
+	String trueStr  = String_FromConst("True");
 	if (String_CaselessEquals(str, &trueStr)) {
 		*value = true; return true;
 	}
 
-	String falseStr = String_FromConst("false");
+	String falseStr = String_FromConst("False");
 	if (String_CaselessEquals(str, &falseStr)) {
 		*value = false; return true;
 	}

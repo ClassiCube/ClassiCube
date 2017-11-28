@@ -86,5 +86,5 @@ Real32 Options_GetFloat(const UInt8* key, Real32 min, Real32 max, Real32 defValu
 UInt32 Options_GetEnum(const UInt8* key, UInt32 defValue, const UInt8** names, UInt32 namesCount);
 
 void Options_SetInt32(const UInt8* keyRaw, Int32 value);
-void Options_Set(const UInt8* keyRaw, STRING_PURE String value);
+void Options_Set(const UInt8* keyRaw, STRING_PURE String* value);
 #endif

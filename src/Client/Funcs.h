@@ -7,7 +7,7 @@
 */
 
 /* returns a bit mask for the nth bit in an integer */
-#define bit(x) (1 << x)
+#define bit(x) (1 << (x))
 /* returns smallest of two numbers */
 #define min(x, y) ((x) < (y) ? (x) : (y))
 /* returns largest of two numbers */
@@ -19,4 +19,26 @@
 bool Char_IsUpper(UInt8 c);
 /* Converts uppercase letter to lowercase */
 UInt8 Char_ToLower(UInt8 c);
+
+#define QuickSort_Swap_Maybe()\
+if (i <= j) {\
+	key = keys[i]; keys[i] = keys[j]; keys[j] = key;\
+	i++; j--;\
+}
+
+#define QuickSort_Swap_KV_Maybe()\
+if (i <= j) {\
+	key = keys[i]; keys[i] = keys[j]; keys[j] = key;\
+	value = values[i]; values[i] = values[j]; values[j] = value;\
+	i++; j--;\
+}
+
+#define QuickSort_Recurse(quickSort)\
+if (j - left <= right - i) {\
+	if (left < j) { quickSort(left, j); }\
+	left = i;\
+} else {\
+	if (i < right) { quickSort(i, right); }\
+	right = j;\
+}
 #endif

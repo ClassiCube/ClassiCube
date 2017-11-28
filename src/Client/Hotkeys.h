@@ -1,0 +1,25 @@
+#ifndef CC_HOTKEYS_H
+#define CC_HOTKEYS_H
+#include "Typedefs.h"
+#include "Input.h"
+#include "String.h"
+
+extern UInt8 Hotkeys_LWJGL[256];
+typedef struct HotkeyData_ {
+	UInt32 TextIndex; /* contents to copy directly into the input bar */
+	UInt8 BaseKey;    /* Member of Key enumeration */
+	UInt8 Flags;      /* ctrl 1, shift 2, alt 4 */
+	bool StaysOpen;   /* whether the user is able to enter further input */
+} HotkeyData;
+
+#define HOTKEYS_MAX_COUNT 256
+HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
+StringsBuffer HotkeysText;
+
+void Hotkeys_Add(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more);
+bool Hotkeys_Remove(Key baseKey, UInt8 flags);
+bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput);
+void Hotkeys_Init(void);
+void Hotkeys_UserRemovedHotkey(Key baseKey, UInt8 flags);
+void Hotkeys_UserAddedHotkey(Key baseKey, UInt8 flags, bool moreInput, STRING_PURE String* text);
+#endif

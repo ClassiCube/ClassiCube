@@ -7,13 +7,9 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Width of the world, in terms of number of chunks. */
 Int32 MapRenderer_ChunksX;
-/* Height of the world, in terms of number of chunks. */
 Int32 MapRenderer_ChunksY;
-/* Length of the world, in terms of number of chunks. */
 Int32 MapRenderer_ChunksZ;
-/* Packs a coordinate into a single integer index. */
 #define MapRenderer_Pack(cx, cy, cz) (((cz) * MapRenderer_ChunksY + (cy)) * MapRenderer_ChunksX + (cx))
 /* TODO: Swap Y and Z? Make sure to update ChunkUpdater's ResetChunkCache and ClearChunkCache methods! */
 
@@ -54,16 +50,9 @@ ChunkPartInfo* MapRenderer_PartsBuffer;
 /* Offset of translucent chunk parts in MapRenderer_PartsBuffer. */
 Int32 MapRenderer_TranslucentBufferOffset;
 
-/* Retrieves the render info for the given chunk. */
 ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz);
-/* Marks the given chunk as needing to be deleted. */
 void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz);
-/* Potentially generates meshes for several pending chunks. */
 void MapRenderer_Update(Real64 deltaTime);
-/* Renders all opaque and transparent blocks.
-Pixels are either treated as fully replacing existing pixel, or skipped. */
 void MapRenderer_RenderNormal(Real64 deltaTime);
-/*Renders all translucent (e.g. water) blocks.
-Pixels drawn blend into existing geometry.*/
 void MapRenderer_RenderTranslucent(Real64 deltaTime);
 #endif
