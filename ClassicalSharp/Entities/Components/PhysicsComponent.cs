@@ -299,7 +299,7 @@ namespace ClassicalSharp.Entities {
 				float dX = other.Position.X - entity.Position.X;
 				float dZ = other.Position.Z - entity.Position.Z;
 				float dist = dX * dX + dZ * dZ;
-				if (dist < 0.0001f || dist > 1f) continue; // TODO: range needs to be lower?
+				if (dist < 0.002f || dist > 1f) continue; // TODO: range needs to be lower?
 				
 				Vector3 dir = Vector3.Normalize(dX, 0, dZ);
 				entity.Velocity -= dir * (1 - dist) / 32f; // TODO: should be 24/25
