@@ -90,7 +90,8 @@ void Gui_FileChanged(Stream* stream) {
 
 void Gui_Init(void) {
 	Event_RegisterStream(&TextureEvents_FileChanged, Gui_FileChanged);
-	/* TODO: Init Gui_Status, Gui_HUD*/
+	statusScreen = new StatusScreen(game); game.Components.Add(statusScreen);
+	hudScreen = new HudScreen(game); game.Components.Add(hudScreen);
 }
 
 void Gui_Reset(void) {

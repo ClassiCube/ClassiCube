@@ -163,7 +163,7 @@ namespace ClassicalSharp.Gui.Screens {
 				if (fly) statusBuffer.Append(ref index, "Fly ON   ");
 				
 				bool speed = (speeding || halfSpeeding) &&
-					(hacks.CanSpeed || hacks.MaxSpeedMultiplier > 1);
+					(hacks.CanSpeed || hacks.BaseHorSpeed > 1);
 				if (speed) statusBuffer.Append(ref index, "Speed ON   ");
 				if (noclip) statusBuffer.Append(ref index, "Noclip ON   ");
 				hackStates.SetText(statusBuffer.ToString());

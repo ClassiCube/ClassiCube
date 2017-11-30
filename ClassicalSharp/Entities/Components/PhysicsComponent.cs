@@ -108,10 +108,13 @@ namespace ClassicalSharp.Entities {
 		public void PhysicsTick(Vector3 vel) {
 			if (hacks.Noclip) entity.onGround = false;
 			float baseSpeed = GetBaseSpeed();
-			float verSpeed = baseSpeed * Math.Max(1, GetSpeed(hacks.CanSpeed, 8f) / 5);
-			float horSpeed = baseSpeed * GetSpeed(true, 8f/5);
+			float verSpeed = baseSpeed * Math.Max(1, GetSpeed(8f) / 5);
+			float horSpeed = baseSpeed * hacks.BaseHorSpeed * GetSpeed(8f/5);
 			// previously horSpeed used to be multiplied by factor of 0.02 in last case
 			// it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same
+			
+			// TODO: this is a temp fix to avoid crashing for high horizontal speed
+			if (horSpeed > 75.0f) horSpeed = 75.0f;
 			
 			bool womSpeedBoost = hacks.CanDoubleJump && hacks.WOMStyleHacks;
 			if (!hacks.Floating && womSpeedBoost) {
@@ -205,11 +208,11 @@ namespace ClassicalSharp.Entities {
 			entity.Velocity.Y -= gravity;
 		}
 
-		float GetSpeed(bool canSpeed, float speedMul) {
+		float GetSpeed(float speedMul) {
 			float factor = hacks.Floating ? speedMul : 1, speed = factor;		
-			if (hacks.Speeding && canSpeed) speed += factor * hacks.SpeedMultiplier;
-			if (hacks.HalfSpeeding && canSpeed) speed += factor * hacks.SpeedMultiplier / 2;
-			return hacks.CanSpeed ? speed : Math.Min(speed, hacks.MaxSpeedMultiplier);
+			if (hacks.Speeding     && hacks.CanSpeed) speed += factor * hacks.SpeedMultiplier;
+			if (hacks.HalfSpeeding && hacks.CanSpeed) speed += factor * hacks.SpeedMultiplier / 2;
+			return hacks.CanSpeed ? speed : Math.Min(speed, 1.0f);
 		}
 		
 		const float inf = float.PositiveInfinity;

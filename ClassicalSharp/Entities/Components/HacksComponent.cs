@@ -49,8 +49,8 @@ namespace ClassicalSharp.Entities {
 		public bool CanDoubleJump = true;
 		/// <summary> Whether the player can be pushed by other players. </summary>
 		public bool CanBePushed = true;
-		/// <summary> Maximum speed the entity can move at horizontally when CanSpeed is false. </summary>
-		public float MaxSpeedMultiplier = 1;
+		/// <summary> Base speed multiplier entity moves at horizontally. </summary>
+		public float BaseHorSpeed = 1;
 		/// <summary> Amount of jumps the player can perform. </summary>
 		public int MaxJumps = 1;
 		
@@ -92,7 +92,7 @@ namespace ClassicalSharp.Entities {
 			
 			float value = 0;
 			if (!Utils.TryParseDecimal(num, out value) || value <= 0) return;
-			MaxSpeedMultiplier = value;
+			BaseHorSpeed = value;
 		}
 		
 		void ParseMultiJumps() {
@@ -160,7 +160,7 @@ namespace ClassicalSharp.Entities {
 			SetAllHacks(true);
 			if (HacksFlags == null) return;
 			
-			MaxSpeedMultiplier = 1;
+			BaseHorSpeed = 1;
 			MaxJumps = 1;
 			CanBePushed = true;
 			

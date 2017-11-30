@@ -98,6 +98,7 @@ void ClickableScreen_Create(ClickableScreen* screen) {
 	screen->OnWidgetSelected = ClickableScreen_DefaultWidgetSelected;
 }
 
+
 typedef struct InventoryScreen_ {
 	Screen Base;
 	FontDesc Font;
