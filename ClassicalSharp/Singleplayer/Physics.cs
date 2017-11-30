@@ -135,13 +135,20 @@ namespace ClassicalSharp.Singleplayer {
 					* width + Math.Min(xMax, x + 15);
 				
 				// Inlined 3 random ticks for this chunk
-				int index = 0;
-				for (int t = 0; t <= 3; t++) {
-					index = rnd.Next(lo, hi);
-					BlockID block = map.blocks[index];
-					PhysicsAction tick = OnRandomTick[block];
-					if (tick != null) tick(index, block);
-				}
+-				int index = rnd.Next(lo, hi);
+-				BlockID block = map.blocks[index];
+-				PhysicsAction tick = OnRandomTick[block];
+-				if (tick != null) tick(index, block);
+-				
+-				index = rnd.Next(lo, hi);
+-				block = map.blocks[index];
+-				tick = OnRandomTick[block];
+-				if (tick != null) tick(index, block);
+-				
+-				index = rnd.Next(lo, hi);
+-				block = map.blocks[index];
+-				tick = OnRandomTick[block];
+-				if (tick != null) tick(index, block);
 			}
 		}
 	}
