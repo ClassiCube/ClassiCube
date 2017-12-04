@@ -132,18 +132,20 @@ namespace ClassicalSharp.Network {
 		
 		void CoreTick() {
 			CheckAsyncResources();
-			wom.Tick();			
-			if (!receivedFirstPosition) return;
+			wom.Tick();
 			
-			LocalPlayer player = game.LocalPlayer;
-			classic.WritePosition(player.Position, player.HeadY, player.HeadX);
-			pingTicks++;
+			if (receivedFirstPosition) {				
+				LocalPlayer player = game.LocalPlayer;
+				classic.WritePosition(player.Position, player.HeadY, player.HeadX);
+			}
 			
+			pingTicks++;		
 			if (pingTicks >= 20 && cpeData.twoWayPing) {
 				cpe.WriteTwoWayPing(false, PingList.NextTwoWayPingData());
 				pingTicks = 0;
 			}
-			SendPacket();
+			
+			if (writer.index > 0) SendPacket();
 		}
 		
 		/// <summary> Sets the incoming packet handler for the given packet id. </summary>
