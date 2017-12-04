@@ -102,8 +102,8 @@ Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) {
 		}
 	}
 
-	StringsBuffer_Add(&Options_Keys, &key);
-	StringsBuffer_Add(&Options_Values, &value);
+	StringsBuffer_Add(&Options_Keys, key);
+	StringsBuffer_Add(&Options_Values, value);
 	return Options_Keys.Count;
 }
 

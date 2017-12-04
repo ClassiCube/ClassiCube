@@ -58,8 +58,6 @@ typedef struct Screen_ {
 	bool RenderHUDOver;
 	/* Called when the game window is resized. */
 	void (*OnResize)(struct Screen_* screen);
-	void (*OnContextLost)(struct Screen_* screen);
-	void (*OnContextRecreated)(struct Screen_* screen);
 } Screen;
 void Screen_Reset(Screen* screen);
 

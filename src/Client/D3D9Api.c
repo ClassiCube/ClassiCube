@@ -352,7 +352,7 @@ void Gfx_SetFogEnd(Real32 value) {
 }
 
 D3DFOGMODE d3d9_fogTableMode = D3DFOG_NONE;
-void Gfx_SetFogMode(Fog fogMode) {
+void Gfx_SetFogMode(Int32 fogMode) {
 	D3DFOGMODE mode = d3d9_modes[fogMode];
 	if (mode == d3d9_fogTableMode) return;
 
@@ -376,7 +376,7 @@ void Gfx_SetAlphaTest(bool enabled) {
 
 D3DCMPFUNC d3d9_alphaTestFunc = 0;
 Int32 d3d9_alphaTestRef = 0;
-void Gfx_SetAlphaTestFunc(CompareFunc compareFunc, Real32 refValue) {
+void Gfx_SetAlphaTestFunc(Int32 compareFunc, Real32 refValue) {
 	d3d9_alphaTestFunc = d3d9_compareFuncs[compareFunc];
 	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ALPHAFUNC, "D3D9_SetAlphaTest_Func");
 	d3d9_alphaTestRef = (Int32)(refValue * 255);
@@ -393,7 +393,7 @@ void Gfx_SetAlphaBlending(bool enabled) {
 
 D3DBLEND d3d9_srcBlendFunc = 0;
 D3DBLEND d3d9_dstBlendFunc = 0;
-void Gfx_SetAlphaBlendFunc(BlendFunc srcBlendFunc, BlendFunc dstBlendFunc) {
+void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc) {
 	d3d9_srcBlendFunc = d3d9_blendFuncs[srcBlendFunc];
 	D3D9_SetRenderState(d3d9_srcBlendFunc, D3DRS_SRCBLEND, "D3D9_SetAlphaBlendFunc_Src");
 	d3d9_dstBlendFunc = d3d9_blendFuncs[dstBlendFunc];
@@ -425,7 +425,7 @@ void Gfx_SetDepthTest(bool enabled) {
 }
 
 D3DCMPFUNC d3d9_depthTestFunc = 0;
-void Gfx_SetDepthTestFunc(CompareFunc compareFunc) {
+void Gfx_SetDepthTestFunc(Int32 compareFunc) {
 	d3d9_depthTestFunc = d3d9_compareFuncs[compareFunc];
 	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ZFUNC, "D3D9_SetDepthTestFunc");
 }
@@ -442,7 +442,7 @@ void Gfx_SetDepthWrite(bool enabled) {
 }
 
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
+GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 	Int32 size = maxVertices * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_DYNAMIC | D3DUSAGE_WRITEONLY, 
@@ -462,7 +462,7 @@ void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, cons
 	ErrorHandler_CheckOrFail(hresult, unlockMsg);
 }
 
-GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count) {
+GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
 	Int32 size = count * Gfx_strideSizes[vertexFormat];
 	IDirect3DVertexBuffer9* vbuffer;
 	ReturnCode hresult = IDirect3DDevice9_CreateVertexBuffer(device, size, D3DUSAGE_WRITEONLY,
@@ -510,8 +510,8 @@ void Gfx_BindIb(GfxResourceID ib) {
 void Gfx_DeleteVb(GfxResourceID* vb) { D3D9_FreeResource(vb); }
 void Gfx_DeleteIb(GfxResourceID* ib) { D3D9_FreeResource(ib); }
 
-VertexFormat d3d9_batchFormat = -1;
-void Gfx_SetBatchFormat(VertexFormat format) {
+Int32 d3d9_batchFormat = -1;
+void Gfx_SetBatchFormat(Int32 format) {
 	if (format == d3d9_batchFormat) return;
 	d3d9_batchFormat = format;
 
@@ -553,7 +553,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
 }
 
 
-void Gfx_SetMatrixMode(MatrixType matrixType) {
+void Gfx_SetMatrixMode(Int32 matrixType) {
 	if (matrixType == MATRIX_TYPE_PROJECTION) {
 		curStack = &projStack;
 	} else if (matrixType == MATRIX_TYPE_MODELVIEW) {

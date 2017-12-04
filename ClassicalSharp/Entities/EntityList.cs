@@ -72,8 +72,9 @@ namespace ClassicalSharp.Entities {
 			
 			for (int i = 0; i < List.Length; i++) {
 				if (List[i] == null) continue;
-				if (i != closestId || i == SelfID)
+				if (i != closestId || i == SelfID) {
 					List[i].RenderName();
+				}
 			}
 			
 			gfx.Texturing = false;
@@ -92,8 +93,9 @@ namespace ClassicalSharp.Entities {
 				&& game.LocalPlayer.Hacks.CanSeeAllNames;
 			for (int i = 0; i < List.Length; i++) {
 				bool hover = (i == closestId || allNames) && i != SelfID;
-				if (List[i] != null && hover)
+				if (List[i] != null && hover) {
 					List[i].RenderName();
+				}
 			}
 			
 			gfx.Texturing = false;
@@ -176,21 +178,18 @@ namespace ClassicalSharp.Entities {
 			
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			ShadowComponent.Draw(game, List[SelfID]);
-			if (ShadowMode == EntityShadow.CircleAll)
-				DrawOtherShadows();
+			if (ShadowMode == EntityShadow.CircleAll) {
+				for (int i = 0; i < SelfID; i++) {
+					if (List[i] == null) continue;
+					Player p = List[i] as Player;
+					if (p != null) ShadowComponent.Draw(game, p);
+				}
+			}
 			
 			gfx.AlphaArgBlend = false;
 			gfx.DepthWrite = true;
 			gfx.AlphaBlending = false;
 			gfx.Texturing = false;
-		}
-		
-		void DrawOtherShadows() {
-			for (int i = 0; i < SelfID; i++) {
-				if (List[i] == null) continue;
-				Player p = List[i] as Player;
-				if (p != null) ShadowComponent.Draw(game, p);
-			}
 		}
 	}
 }

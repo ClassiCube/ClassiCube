@@ -196,8 +196,8 @@ void Gfx_SetFogEnd(Real32 value) {
 	gl_lastFogEnd = value;
 }
 
-Fog gl_lastFogMode = -1;
-void Gfx_SetFogMode(Fog mode) {
+Int32 gl_lastFogMode = -1;
+void Gfx_SetFogMode(Int32 mode) {
 	if (mode == gl_lastFogMode) return;
 	glFogi(GL_FOG_MODE, gl_fogModes[mode]);
 	gl_lastFogMode = mode;
@@ -206,12 +206,12 @@ void Gfx_SetFogMode(Fog mode) {
 
 void Gfx_SetFaceCulling(bool enabled) { GL_TOGGLE(GL_CULL_FACE); }
 void Gfx_SetAlphaTest(bool enabled) { GL_TOGGLE(GL_ALPHA_TEST); }
-void Gfx_SetAlphaTestFunc(CompareFunc func, Real32 value) {
+void Gfx_SetAlphaTestFunc(Int32 func, Real32 value) {
 	glAlphaFunc(gl_compare[func], value);
 }
 
 void Gfx_SetAlphaBlending(bool enabled) { GL_TOGGLE(GL_BLEND); }
-void Gfx_SetAlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
+void Gfx_SetAlphaBlendFunc(Int32 srcFunc, Int32 dstFunc) {
 	glBlendFunc(gl_blend[srcFunc], gl_blend[dstFunc]);
 }
 void Gfx_SetAlphaArgBlend(bool enabled) { }
@@ -237,7 +237,7 @@ void Gfx_SetDepthWrite(bool enabled) {
 }
 
 void Gfx_SetDepthTest(bool enabled) { GL_TOGGLE(GL_DEPTH_TEST); }
-void Gfx_SetDepthTestFunc(CompareFunc compareFunc) {
+void Gfx_SetDepthTestFunc(Int32 compareFunc) {
 	glDepthFunc(gl_compare[compareFunc]);
 }
 
@@ -249,7 +249,7 @@ GfxResourceID GL_GenAndBind(GLenum target) {
 	return id;
 }
 
-GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) {
+GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 	if (gl_lists) return gl_DYNAMICLISTID;
 	Int32 id = GL_GenAndBind(GL_ARRAY_BUFFER);
 	UInt32 sizeInBytes = maxVertices * Gfx_strideSizes[vertexFormat];
@@ -258,7 +258,7 @@ GfxResourceID Gfx_CreateDynamicVb(VertexFormat vertexFormat, Int32 maxVertices) 
 }
 
 #define gl_MAXINDICES ICOUNT(65536)
-GfxResourceID Gfx_CreateVb(void* vertices, VertexFormat vertexFormat, Int32 count) {
+GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
 	if (gl_lists) {
 		Int32 list = glGenLists(1);
 		glNewList(list, GL_COMPILE);
@@ -328,7 +328,7 @@ typedef void (*GL_SetupVBRangeFunc)(Int32 startVertex);
 GL_SetupVBFunc gl_setupVBFunc;
 GL_SetupVBRangeFunc gl_setupVBRangeFunc;
 Int32 gl_batchStride;
-VertexFormat gl_batchFormat = -1;
+Int32 gl_batchFormat = -1;
 
 void GL_SetupVbPos3fCol4b(void) {
 	glVertexPointer(3, GL_FLOAT, VertexP3fC4b_Size, (void*)0);
@@ -354,7 +354,7 @@ void GL_SetupVbPos3fTex2fCol4b_Range(Int32 startVertex) {
 	glTexCoordPointer(2, GL_FLOAT, VertexP3fT2fC4b_Size, (void*)(offset + 16));
 }
 
-void Gfx_SetBatchFormat(VertexFormat vertexFormat) {
+void Gfx_SetBatchFormat(Int32 vertexFormat) {
 	if (vertexFormat == gl_batchFormat) return;
 
 	if (gl_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
@@ -480,8 +480,8 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
 }
 
 
-MatrixType gl_lastMatrixType = 0;
-void Gfx_SetMatrixMode(MatrixType matrixType) {
+Int32 gl_lastMatrixType = 0;
+void Gfx_SetMatrixMode(Int32 matrixType) {
 	if (matrixType == gl_lastMatrixType) return;
 	glMatrixMode(gl_matrixModes[matrixType]);
 	gl_lastMatrixType = matrixType;

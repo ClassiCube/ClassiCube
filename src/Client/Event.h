@@ -104,6 +104,8 @@ Event_Real32 WorldEvents_MapLoading;   /* Portion of world is decompressed/gener
 Event_Void WorldEvents_MapLoaded;      /* New world has finished loading, player can now interact with it. */
 Event_Int32 WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config. */
 
+Event_Void ChatEvents_FontChanged; /* User changes whether system chat font used, and when the bitmapped font texture changes. */
+
 /* Environment variable identifiers*/
 typedef Int32 EnvVar;
 #define EnvVar_EdgeBlock 0

@@ -129,7 +129,7 @@ void InventoryScreen_Init(GuiElement* elem) {
 	TableWidget_Create(&screen->Table);
 	screen->Table.Font = screen->Font;
 	screen->Table.ElementsPerRow = Game_PureClassic ? 9 : 10;
-	elem->Init(&elem);
+	elem->Init(elem);
 
 	Key_KeyRepeat = true;
 	Event_RegisterVoid(&BlockEvents_PermissionsChanged, InventoryScreen_OnBlockChanged);
@@ -154,7 +154,7 @@ void InventoryScreen_Free(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	Platform_FreeFont(&screen->Font);
 	elem = &screen->Table.Base.Base;
-	elem->Free(&elem);
+	elem->Free(elem);
 
 	Key_KeyRepeat = false;
 	Event_UnregisterVoid(&BlockEvents_PermissionsChanged, InventoryScreen_OnBlockChanged);
@@ -166,9 +166,10 @@ void InventoryScreen_Free(GuiElement* elem) {
 bool InventoryScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	TableWidget* table = &screen->Table;
-	GuiElement* elem = &screen->Table.Base.Base;
+	elem = &screen->Table.Base.Base;
+
 	if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
-		gGui_SetNewScreen(NULL);
+		Gui_SetNewScreen(NULL);
 	} else if (key == KeyBind_Get(KeyBind_Inventory) && screen->ReleasedInv) {
 		Gui_SetNewScreen(NULL);
 	} else if (key == Key_Enter && table->SelectedIndex != -1) {
@@ -192,7 +193,7 @@ bool InventoryScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 bool InventoryScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	TableWidget* table = &screen->Table;
-	GuiElement* elem = &screen->Table.Base.Base;
+	elem = &screen->Table.Base.Base;
 	if (table->Scroll.DraggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseDown(x, y, btn))
 		return true;
 
@@ -225,7 +226,7 @@ bool InventoryScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	return elem->HandlesMouseScroll(elem, delta);
 }
 
-Screen* InventoryScreen_GetInstance(void) {
+Screen* InventoryScreen_MakeInstance(void) {
 	InventoryScreen* screen = &InventoryScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(InventoryScreen));
 	Screen_Reset(&screen->Base);
@@ -237,13 +238,10 @@ Screen* InventoryScreen_GetInstance(void) {
 	screen->Base.Base.HandlesMouseMove   = InventoryScreen_HandlesMouseMove;
 	screen->Base.Base.HandlesMouseScroll = InventoryScreen_HandlesMouseScroll;
 
-	screen->Base.OnContextLost      = InventoryScreen_ContextLost;
-	screen->Base.OnContextRecreated = InventoryScreen_ContextRecreated;
 	screen->Base.OnResize           = InventoryScreen_OnResize;
 	screen->Base.Base.Init          = InventoryScreen_Init;
 	screen->Base.Base.Render        = InventoryScreen_Render;
 	screen->Base.Base.Free          = InventoryScreen_Free;
-
 	return &screen->Base;
 }
-extern Screen* InventoryScreen_Unsafe_RawPointer = &InventoryScreen_Instance.Base;
+extern Screen* InventoryScreen_UNSAFE_RawPointer = &InventoryScreen_Instance.Base;

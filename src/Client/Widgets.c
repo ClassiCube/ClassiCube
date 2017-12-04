@@ -440,7 +440,7 @@ bool HotbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButt
 	Widget* w = (Widget*)elem;
 	if (btn != MouseButton_Left || !Gui_Contains(w->X, w->Y, w->Width, w->Height, x, y)) return false;
 	Screen* screen = Gui_GetActiveScreen();
-	if (screen != InventoryScreen_Unsafe_RawPointer) return false;
+	if (screen != InventoryScreen_UNSAFE_RawPointer) return false;
 
 	HotbarWidget* widget = (HotbarWidget*)elem;
 	Int32 width  = (Int32)(widget->ElemSize * widget->BorderSize);

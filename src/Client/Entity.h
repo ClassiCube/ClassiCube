@@ -1,12 +1,14 @@
 #ifndef CC_ENTITY_H
 #define CC_ENTITY_H
+#include "EntityComponents.h"
 #include "IModel.h"
 #include "Typedefs.h"
 #include "Vectors.h"
 #include "AABB.h"
 #include "GraphicsEnums.h"
 #include "Matrix.h"
-/* Represents an in-game entity. Also contains various components for entities.
+#include "GameStructs.h"
+/* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 typedef struct IModel_ IModel; /* Forward declaration */
@@ -17,6 +19,21 @@ typedef struct IModel_ IModel; /* Forward declaration */
 #define LOCATIONUPDATE_EXCLUDED -100000.31415926535f
 /* Maxmimum number of characters in a model name. */
 #define ENTITY_MAX_MODEL_LENGTH 10
+
+#define ENTITIES_MAX_COUNT 256
+#define ENTITIES_SELF_ID 255
+
+UInt32 Entities_NameMode;
+#define NAME_MODE_HOVERED      0
+#define NAME_MODE_ALL          1
+#define NAME_MODE_ALL_HOVERED  2
+#define NAME_MODE_ALL_UNSCALED 3
+
+UInt32 Entities_ShadowMode;
+#define SHADOW_MODE_NONE          0
+#define SHADOW_MODE_SNAP_TO_BLOCK 1
+#define SHADOW_MODE_CIRCLE        2
+#define SHADOW_MODE_CIRCLE_ALL    3
 
 typedef bool (*TouchesAny_Condition)(BlockID block);
 
@@ -38,22 +55,6 @@ void LocationUpdate_Empty(LocationUpdate* update);
 void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX);
 void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel);
 void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel);
-
-
-/* Entity component that performs model animation depending on movement speed and time. */
-typedef struct AnimatedComp_ {
-	Real32 BobbingHor, BobbingVer, BobbingModel;
-	Real32 WalkTime, Swing, BobStrength;
-	Real32 WalkTimeO, WalkTimeN, SwingO, SwingN, BobStrengthO, BobStrengthN;
-
-	Real32 LeftLegX, LeftLegZ, RightLegX, RightLegZ;
-	Real32 LeftArmX, LeftArmZ, RightArmX, RightArmZ;
-} AnimatedComp;
-
-void AnimatedComp_Init(AnimatedComp* anim);
-void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Real64 delta, bool onGround);
-void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims);
-
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 typedef struct Entity_ {
@@ -77,7 +78,13 @@ typedef struct Entity_ {
 	bool NoShade;
 
 	/* TODO: SHOULD THESE BE A SEPARATE VTABLE STRUCT? (only need 1 shared pointer that way) */
+	void (*Tick)(struct Entity_* entity, ScheduledTask* task);
 	void (*SetLocation)(struct Entity_* entity, LocationUpdate* update, bool interpolate);
+	void (*RenderModel)(struct Entity_* entity, Real64 deltaTime, Real32 t);
+	void (*RenderName)(struct Entity_* entity);
+	void (*ContextLost)(struct Entity_* entity);
+	void (*ContextRecreated)(struct Entity_* entity);
+	void (*Despawn)(struct Entity_* entity);
 	PackedCol (*GetCol)(struct Entity_* entity);
 } Entity;
 
@@ -93,85 +100,14 @@ bool Entity_TouchesAnyRope(Entity* entity);
 bool Entity_TouchesAnyLava(Entity* entity);
 bool Entity_TouchesAnyWater(Entity* entity);
 
-
-/* Entity component that performs tilt animation depending on movement speed and time. */
-typedef struct TiltComp_ {
-	Real32 TiltX, TiltY, VelTiltStrength;
-	Real32 VelTiltStrengthO, VelTiltStrengthN;
-} TiltComp;
-
-void TiltComp_Init(TiltComp* anim);
-void TiltComp_Update(TiltComp* anim, Real64 delta);
-void TiltComp_GetCurrent(TiltComp* anim, Real32 t);
-
-/* Entity component that performs management of hack states. */
-typedef struct HacksComponent_ {
-	UInt8 UserType;
-	/* Speed player move at, relative to normal speed, when the 'speeding' key binding is held down. */
-	Real32 SpeedMultiplier;
-	/* Whether blocks that the player places that intersect themselves, should cause the player to
-	be pushed back in the opposite direction of the placed block. */
-	bool PushbackPlacing;
-	/* Whether the player should be able to step up whole blocks, instead of just slabs. */
-	bool FullBlockStep;
-	/* Whether the player has allowed hacks usage as an option. Note 'can use X' set by the server override this. */
-	bool Enabled;
-
-	bool CanAnyHacks, CanUseThirdPersonCamera, CanSpeed, CanFly;
-	bool CanRespawn, CanNoclip, CanPushbackBlocks,CanSeeAllNames;
-	bool CanDoubleJump, CanBePushed;
-	/* Maximum speed the entity can move at horizontally when CanSpeed is false. */
-	Real32 BaseHorSpeed;
-	/* Max amount of jumps the player can perform. */
-	Int32 MaxJumps;
-
-	/* Whether the player should slide after letting go of movement buttons in noclip.  */
-	bool NoclipSlide;
-	/* Whether the player has allowed the usage of fast double jumping abilities. */
-	bool WOMStyleHacks;
-
-	bool Noclip, Flying,FlyingUp, FlyingDown, Speeding, HalfSpeeding;
-	UInt8 HacksFlagsBuffer[String_BufferSize(128)];
-	String HacksFlags;
-} HacksComp;
-
-void HacksComp_Init(HacksComp* hacks);
-bool HacksComp_CanJumpHigher(HacksComp* hacks);
-bool HacksComp_Floating(HacksComp* hacks);
-void HacksComp_SetUserType(HacksComp* hacks, UInt8 value);
-void HacksComp_CheckConsistency(HacksComp* hacks);
-void HacksComp_UpdateState(HacksComp* hacks);
-
-
-/* Represents a position and orientation state. */
-typedef struct InterpState_ {
-	Vector3 Pos;
-	Real32 HeadX, HeadY, RotX, RotZ;
-} InterpState;
-
-/* Base entity component that performs interpolation of position and orientation. */
-typedef struct InterpComp_ {
-	InterpState Prev, Next;
-	Real32 PrevRotY, NextRotY;
-
-	Int32 RotYCount;
-	Real32 RotYStates[15];
-} InterpComp;
-
-void InterpComp_LerpAngles(InterpComp* interp, Entity* entity, Real32 t);
-
-void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, bool interpolate);
-void LocalInterpComp_AdvanceState(InterpComp* interp);
-
-/* Entity component that performs interpolation for network players. */
-typedef struct NetInterpComp_ {
-	InterpComp Base;
-	/* Last known position and orientation sent by the server. */
-	InterpState Cur;
-	Int32 StatesCount;
-	InterpState States[10];
-} NetInterpComp;
-
-void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bool interpolate);
-void NetInterpComp_AdvanceState(NetInterpComp* interp);
+Entity* Entities_List[ENTITIES_MAX_COUNT];
+void Entities_Tick(ScheduledTask* task);
+void Entities_RenderModels(Real64 delta, Real32 t);
+void Entities_RenderNames(Real64 delta);
+void Entities_RenderHoveredNames(Real64 delta);
+void Entities_Init(void);
+void Entities_Free(void);
+void Entities_Remove(EntityID id);
+EntityID Entities_GetCloset(Entity* src);
+void Entities_DrawShadows(void);
 #endif

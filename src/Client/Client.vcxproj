@@ -195,6 +195,7 @@
     <ClInclude Include="Drawer.h" />
     <ClInclude Include="Drawer2D.h" />
     <ClInclude Include="Entity.h" />
+    <ClInclude Include="EntityComponents.h" />
     <ClInclude Include="EnvRenderer.h" />
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="Event.h" />
@@ -270,6 +271,7 @@
     <ClCompile Include="DisplayDevice.c" />
     <ClCompile Include="Drawer.c" />
     <ClCompile Include="Drawer2D.c" />
+    <ClCompile Include="EntityComponents.c" />
     <ClCompile Include="EnvRenderer.c" />
     <ClCompile Include="Event.c" />
     <ClCompile Include="ExtMath.c" />

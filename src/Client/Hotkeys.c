@@ -136,7 +136,7 @@ void Hotkeys_Init(void) {
 		if (hotkey == Key_Unknown || strText.length == 0 || !Convert_TryParseUInt8(&strFlags, &flags) 
 			|| !Convert_TryParseBool(&strMoreInput, &moreInput)) { continue; }
 
-		Hotkeys_AddHotkey(hotkey, flags, &strText, moreInput);
+		Hotkeys_Add(hotkey, flags, &strText, moreInput);
 	}
 }
 
