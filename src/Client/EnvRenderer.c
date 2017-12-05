@@ -140,7 +140,7 @@ void EnvRenderer_Render(Real64 deltaTime) {
 	if (EnvRenderer_Minimal) {
 		EnvRenderer_RenderMinimal(deltaTime);
 	} else {
-		if (env_skyVb == 0 || env_cloudsVb == 0) return;
+		if (env_skyVb == NULL || env_cloudsVb == NULL) return;
 		if (!SkyboxRenderer_ShouldRender()) {
 			EnvRenderer_RenderSky(deltaTime);
 			EnvRenderer_RenderClouds(deltaTime);

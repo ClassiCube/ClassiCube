@@ -119,7 +119,6 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	weather_accumulator += deltaTime;
 	bool particles = weather == Weather_Rainy;
 
-	Int32 vCount = 0;
 	PackedCol col = WorldEnv_SunCol;
 	VertexP3fT2fC4b v;
 	VertexP3fT2fC4b vertices[weather_verticesCount];
@@ -161,21 +160,20 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			          v.Y = y2;                       v.V = v2; *ptr = v; ptr++;
 			v.X = x1;           v.Z = z2; v.U = 0.0f;		    *ptr = v; ptr++;
 			          v.Y = y1;                       v.V = v1; *ptr = v; ptr++;
-
-			vCount += 8;
 		}
 	}
 
 	if (particles && (weather_accumulator >= 0.25f || moved)) {
 		weather_accumulator = 0;
 	}
-	if (vCount == 0) return;
+	if (ptr == vertices) return;
 
 	Gfx_SetAlphaTest(false);
 	Gfx_SetDepthWrite(false);
 	Gfx_SetAlphaArgBlend(true);
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	UInt32 vCount = (UInt32)(ptr - vertices) / VertexP3fT2fC4b_Size;
 	GfxCommon_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
 	Gfx_SetAlphaArgBlend(false);

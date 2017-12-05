@@ -26,8 +26,9 @@ namespace ClassicalSharp.Entities {
 			ShadowComponent.game = game;
 			ShadowComponent.entity = entity;
 			
-			EntityShadow mode = game.Entities.ShadowMode;
 			Vector3 Position = entity.Position;
+			if (Position.Y < 0) return;
+			
 			float posX = Position.X, posZ = Position.Z;
 			int posY = Math.Min((int)Position.Y, game.World.Height - 1);
 			int index = 0, vb = 0;
@@ -39,15 +40,14 @@ namespace ClassicalSharp.Entities {
 			ShadowData* data = stackalloc ShadowData[4];
 			for (int i = 0; i < 4; i++) {
 				coords[i] = new Vector3I(int.MinValue);
-				data[i] = new ShadowData();
 			}
 			
-			if (mode == EntityShadow.SnapToBlock) {
+			if (game.Entities.ShadowMode == EntityShadow.SnapToBlock) {
 				vb = game.Graphics.texVb; verts = game.Graphics.texVerts;
 				if (!GetBlocks(coords, ref posCount, posX, posZ, posY, data, ref dataCount)) return;
 				
 				float x1 = Utils.Floor(posX), z1 = Utils.Floor(posZ);
-				DraqSquareShadow(verts, ref index, data[0].Y, 220, x1, z1);
+				DrawSquareShadow(verts, ref index, data[0].Y, x1, z1);
 			} else {
 				vb = game.ModelCache.vb; verts = game.ModelCache.vertices;
 				
@@ -79,9 +79,9 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		const byte c = 255; // avoids 'ambiguous match' compile errors.
-		static void DraqSquareShadow(VertexP3fT2fC4b[] verts, ref int index,
-		                             float y, byte alpha, float x, float z) {
-			int col = new FastColour(c, c, c, alpha).Pack();
+		static void DrawSquareShadow(VertexP3fT2fC4b[] verts, ref int index,
+		                             float y, float x, float z) {
+			int col = new FastColour(c, c, c, (byte)220).Pack();
 			TextureRec rec = new TextureRec(63/128f, 63/128f, 1/128f, 1/128f);
 			verts[index++] = new VertexP3fT2fC4b(x, y, z, rec.U1, rec.V1, col);
 			verts[index++] = new VertexP3fT2fC4b(x + 1, y, z, rec.U2, rec.V1, col);
@@ -137,7 +137,6 @@ namespace ClassicalSharp.Entities {
 			index = 0;
 			
 			// Check we have not processed this particular block already.
-			if (Position.Y < 0) return false;
 			for (int i = 0; i < 4; i++) {
 				if (coords[i] == p) return false;
 				data[i] = new ShadowData();
@@ -187,16 +186,16 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		static void CalcAlpha(float playerY, ref ShadowData data) {
-			float y = data.Y;
-			if ((playerY - y) <= 6) {
-				data.A = (byte)(160 - 160 * (playerY - y) / 6);
+			float height = playerY - data.Y;
+			if (height <= 6) {
+				data.A = (byte)(160 - 160 * height / 6);
 				data.Y += 1/64f; return;
 			}
 			
 			data.A = 0;
-			if ((playerY - y) <= 16) data.Y += 1/64f;
-			else if ((playerY - y) <= 32) data.Y += 1/16f;
-			else if ((playerY - y) <= 96) data.Y += 1/8f;
+			if (height <= 16) data.Y += 1/64f;
+			else if (height <= 32) data.Y += 1/16f;
+			else if (height <= 96) data.Y += 1/8f;
 			else data.Y += 1/4f;
 		}
 		

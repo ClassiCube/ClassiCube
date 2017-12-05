@@ -314,8 +314,8 @@ void Entities_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, Entities_ContextRecreated);
 	Event_UnregisterVoid(&ChatEvents_FontChanged, Entities_ChatFontChanged);
 
-	if (ShadowComponent.shadowTex > 0) {
-		game.Graphics.DeleteTexture(ref ShadowComponent.shadowTex);
+	if (ShadowComponent_ShadowTex != NULL) {
+		Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 	}
 }
 
@@ -347,7 +347,7 @@ EntityID Entities_GetCloset(Entity* src) {
 
 void Entities_DrawShadows(void) {
 	if (Entities_ShadowMode == SHADOW_MODE_NONE) return;
-	ShadowComponent.boundShadowTex = false;
+	ShadowComponent_BoundShadowTex = false;
 
 	Gfx_SetAlphaArgBlend(true);
 	Gfx_SetDepthWrite(false);
@@ -355,13 +355,13 @@ void Entities_DrawShadows(void) {
 	Gfx_SetTexturing(true);
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	ShadowComponent.Draw(Entities_List[ENTITIES_SELF_ID]);
+	ShadowComponent_Draw(Entities_List[ENTITIES_SELF_ID]);
 	if (Entities_ShadowMode == SHADOW_MODE_CIRCLE_ALL) {
 		UInt32 i;
 		for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 			if (Entities_List[i] == NULL) continue;
 			Player p = List[i] as Player;
-			if (p != null) ShadowComponent.Draw(p);
+			if (p != null) ShadowComponent_Draw(p);
 		}
 	}
 

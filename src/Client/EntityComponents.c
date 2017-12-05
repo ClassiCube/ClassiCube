@@ -8,6 +8,10 @@
 #include "Platform.h"
 #include "Camera.h"
 #include "Funcs.h"
+#include "VertexStructs.h"
+#include "GraphicsAPI.h"
+#include "GraphicsCommon.h"
+#include "ModelCache.h"
 
 #define ANIM_MAX_ANGLE (110 * MATH_DEG2RAD)
 #define ANIM_ARM_MAX (60.0f * MATH_DEG2RAD)
@@ -435,4 +439,224 @@ void LocalInterpComp_AdvanceState(InterpComp* interp) {
 	interp->Prev = interp->Next;
 	entity->Position = interp->Next.Pos;
 	InterpComp_AdvanceRotY(interp);
+}
+
+
+Real32 ShadowComponent_radius = 7.0f;
+typedef struct ShadowData_ { Real32 Y; BlockID Block; UInt8 A; } ShadowData;
+
+bool lequal(Real32 a, Real32 b) { return a < b || Math_AbsF(a - b) < 0.001f; }
+void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, Entity* entity, ShadowData* data, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
+	Vector3 cen = entity->Position;
+	if (lequal(x2, x1) || lequal(z2, z1)) return;
+	Real32 radius = ShadowComponent_radius;
+
+	Real32 u1 = (x1 - cen.X) * 16.0f / (radius * 2) + 0.5f;
+	Real32 v1 = (z1 - cen.Z) * 16.0f / (radius * 2) + 0.5f;
+	Real32 u2 = (x2 - cen.X) * 16.0f / (radius * 2) + 0.5f;
+	Real32 v2 = (z2 - cen.Z) * 16.0f / (radius * 2) + 0.5f;
+	if (u2 <= 0.0f || v2 <= 0.0f || u1 >= 1.0f || v1 >= 1.0f) return;
+
+	radius /= 16.0f;
+	x1 = max(x1, cen.X - radius); u1 = max(u1, 0.0f);
+	z1 = max(z1, cen.Z - radius); v1 = max(v1, 0.0f);
+	x2 = min(x2, cen.X + radius); u2 = min(u2, 1.0f);
+	z2 = min(z2, cen.Z + radius); v2 = min(v2, 1.0f);
+
+	PackedCol col = PACKEDCOL_CONST(255, 255, 255, data->A);
+	VertexP3fT2fC4b* ptr = *vertices;
+	VertexP3fT2fC4b v; v.Y = data->Y; v.Col = col;
+
+	v.X = x1; v.Z = z1; v.U = u1; v.V = v1; *ptr = v; ptr++;
+	v.X = x2;           v.U = u2;           *ptr = v; ptr++;
+	          v.Z = z2;           v.V = v2; *ptr = v; ptr++;
+	v.X = x1;           v.U = u1;           *ptr = v; ptr++;
+
+	*vertices = ptr;
+}
+
+void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, Real32 y, Real32 x, Real32 z) {
+	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 220);
+	TextureRec rec = TextureRec_FromRegion(63.0f / 128.0f, 63.0f / 128.0f, 1.0f / 128.0f, 1.0f / 128.0f);
+	VertexP3fT2fC4b* ptr = *vertices;
+	VertexP3fT2fC4b v; v.Y = y; v.Col = col;
+
+	v.X = x;        v.Z = z;        v.U = rec.U1; v.V = rec.V1; *ptr = v; ptr++;
+	v.X = x + 1.0f;                 v.U = rec.U2;               *ptr = v; ptr++;
+	                v.Z = z + 1.0f;               v.V = rec.V2; *ptr = v; ptr++;
+	v.X = x;                        v.U = rec.U1;               *ptr = v; ptr++;
+
+	*vertices = ptr;
+}
+
+void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, Entity* entity, ShadowData* data, Real32 x, Real32 z) {
+	x = (Real32)Math_Floor(x); z = (Real32)Math_Floor(z);
+	Vector3 min = Block_MinBB[data[0].Block], max = Block_MaxBB[data[0].Block];
+
+	ShadowComponent_DrawCoords(vertices, entity, &data[0], x + min.X, z + min.Z, x + max.X, z + max.Z);
+	UInt32 i;
+	for (i = 1; i < 4; i++) {
+		if (data[i].Block == BLOCK_AIR) return;
+		Vector3 nMin = Block_MinBB[data[i].Block], nMax = Block_MaxBB[data[i].Block];
+		ShadowComponent_DrawCoords(vertices, entity, &data[i], x + min.X, z + nMin.Z, x + max.X, z + min.Z);
+		ShadowComponent_DrawCoords(vertices, entity, &data[i], x + min.X, z + max.Z, x + max.X, z + nMax.Z);
+
+		ShadowComponent_DrawCoords(vertices, entity, &data[i], x + nMin.X, z + nMin.Z, x + min.X, z + nMax.Z);
+		ShadowComponent_DrawCoords(vertices, entity, &data[i], x + max.X, z + nMin.Z, x + nMax.X, z + nMax.Z);
+		min = nMin; max = nMax;
+	}
+}
+
+BlockID ShadowComponent_GetBlock(Int32 x, Int32 y, Int32 z) {
+	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
+		if (y == WorldEnv_EdgeHeight - 1)
+			return Block_Draw[WorldEnv_EdgeBlock] == DRAW_GAS ? BLOCK_AIR : BLOCK_BEDROCK;
+		if (y == WorldEnv_SidesHeight - 1)
+			return Block_Draw[WorldEnv_SidesBlock] == DRAW_GAS ? BLOCK_AIR : BLOCK_BEDROCK;
+		return BLOCK_AIR;
+	}
+	return World_GetBlock(x, y, z);
+}
+
+void ShadowComponent_CalcAlpha(Real32 playerY, ShadowData* data) {
+	Real32 height = playerY - data->Y;
+	if (height <= 6.0f) {
+		data->A = (UInt8)(160 - 160 * height / 6.0f);
+		data->Y += 1.0f / 64.0f; return;
+	}
+
+	data->A = 0;
+	if (height <= 16.0f)      data->Y += 1.0f / 64.0f;
+	else if (height <= 32.0f) data->Y += 1.0f / 16.0f;
+	else if (height <= 96.0f) data->Y += 1.0f / 8.0f;
+	else data->Y += 1.0f / 4.0f;
+}
+
+bool ShadowComponent_GetBlocks(Entity* entity, Vector3I* coords, Real32 x, Real32 z, Int32 posY, ShadowData* data) {
+	Int32 blockX = Math_Floor(x), blockZ = Math_Floor(z);
+	Vector3I p = Vector3I_Create3(blockX, 0, blockZ);	
+
+	/* Check we have not processed this particular block already */
+	UInt32 i, posCount = 0;
+	ShadowData zeroData = { 0.0f, 0, 0 };
+	for (i = 0; i < 4; i++) {
+		if (Vector3I_Equals(&coords[i], &p)) return false;
+		if (coords[i].X != Int32_MinValue) posCount++;
+		data[i] = zeroData;
+	}
+	coords[posCount] = p;
+
+	UInt32 count = 0;
+	ShadowData* cur = data;
+	Vector3 Position = entity->Position;
+
+	while (posY >= 0 && count < 4) {
+		BlockID block = ShadowComponent_GetBlock(blockX, posY, blockZ);
+		posY--;
+
+		UInt8 draw = Block_Draw[block];
+		if (draw == DRAW_GAS || draw == DRAW_SPRITE || Block_IsLiquid(block)) continue;
+		Real32 blockY = posY + 1.0f + Block_MaxBB[block].Y;
+		if (blockY >= Position.Y + 0.01f) continue;
+
+		cur->Block = block; cur->Y = blockY;
+		ShadowComponent_CalcAlpha(Position.Y, cur);
+		count++; cur++;
+
+		/* Check if the casted shadow will continue on further down. */
+		if (Block_MinBB[block].X == 0.0f && Block_MaxBB[block].X == 1.0f &&
+			Block_MinBB[block].Z == 0.0f && Block_MaxBB[block].Z == 1.0f) return true;
+	}
+
+	if (count < 4) {
+		cur->Block = WorldEnv_EdgeBlock; cur->Y = 0.0f;
+		ShadowComponent_CalcAlpha(Position.Y, cur);
+		count++; cur++;
+	}
+	return true;
+}
+
+#define size 128
+#define half (size / 2)
+void ShadowComponent_MakeTex(void) {
+	UInt8 pixels[Bitmap_DataSize(size, size)];
+	Bitmap bmp; Bitmap_Create(&bmp, size, size, pixels);
+
+	UInt32 inPix = PackedCol_ARGB(0, 0, 0, 200);
+	UInt32 outPix = PackedCol_ARGB(0, 0, 0, 0);
+
+	UInt32 x, y;
+	for (y = 0; y < size; y++) {
+		UInt32* row = Bitmap_GetRow(&bmp, y);
+		for (x = 0; x < size; x++) {
+			Real64 dist = 
+				(half - (x + 0.5)) * (half - (x + 0.5)) +
+				(half - (y + 0.5)) * (half - (y + 0.5));
+			row[x] = dist < half * half ? inPix : outPix;
+		}
+	}
+	ShadowComponent_ShadowTex = Gfx_CreateTexture(&bmp, true, false);
+}
+
+void ShadowComponent_Draw(Entity* entity) {
+	Vector3 Position = entity->Position;
+	if (Position.Y < 0.0f) return;
+
+	Real32 posX = Position.X, posZ = Position.Z;
+	Int32 posY = min((Int32)Position.Y, World_MaxY);
+	GfxResourceID vb;
+	ShadowComponent_radius = 7.0f * min(entity->ModelScale.Y, 1.0f) * entity->Model->ShadowScale;
+
+	VertexP3fT2fC4b vertices[128];
+	Vector3I coords[4];
+	ShadowData data[4];
+	for (Int32 i = 0; i < 4; i++) {
+		coords[i] = Vector3I_Create1(Int32_MinValue);
+	}
+
+	/* TODO: Should shadow component use its own VB? */
+	VertexP3fT2fC4b* ptr = vertices;
+	if (Entities_ShadowMode == SHADOW_MODE_SNAP_TO_BLOCK) {
+		vb = GfxCommon_texVb;
+		if (!ShadowComponent_GetBlocks(entity, coords, posX, posZ, posY, data)) return;
+
+		Real32 x1 = (Real32)Math_Floor(posX), z1 = (Real32)Math_Floor(posZ);
+		ShadowComponent_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
+	} else {
+		vb = ModelCache_Vb;
+		Real32 radius = ShadowComponent_radius / 16.0f;
+
+		Real32 x = posX - radius, z = posZ - radius;
+		if (ShadowComponent_GetBlocks(entity, coords, x, z, posY, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, entity, data, x, z);
+		}
+
+		x = max(posX - radius, Math_Floor(posX + radius));
+		if (ShadowComponent_GetBlocks(entity, coords, x, z, posY, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, entity, data, x, z);
+		}
+
+		z = max(posZ - radius, Math_Floor(posZ + radius));
+		if (ShadowComponent_GetBlocks(entity, coords, x, z, posY, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, entity, data, x, z);
+		}
+
+		x = posX - radius;
+		if (ShadowComponent_GetBlocks(entity, coords, x, z, posY, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, entity, data, x, z);
+		}
+	}
+
+	if (ptr == vertices) return;
+	if (ShadowComponent_ShadowTex == NULL) {
+		ShadowComponent_MakeTex();
+	}
+
+	if (!ShadowComponent_BoundShadowTex) {
+		Gfx_BindTexture(ShadowComponent_ShadowTex);
+		ShadowComponent_BoundShadowTex = true;
+	}
+
+	UInt32 vCount = (UInt32)(ptr - vertices) / VertexP3fT2fC4b_Size;
+	GfxCommon_UpdateDynamicVb_IndexedTris(vb, vertices, vCount);
 }

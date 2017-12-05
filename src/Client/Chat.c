@@ -90,7 +90,8 @@ void Chat_OpenLog(DateTime* now) {
 	}
 
 	Chat_LogStream.Data = NULL;
-	ErrorHandler_LogError("creating chat log", "Failed to open chat log file after 20 tries, giving up");
+	String failedMsg = String_FromConst("Failed to open chat log file after 20 tries, giving up");
+	ErrorHandler_Log(&failedMsg);
 }
 
 void Chat_AppendLog(STRING_PURE String* text) {

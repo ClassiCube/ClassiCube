@@ -72,7 +72,6 @@ void HacksComp_SetUserType(HacksComp* hacks, UInt8 value);
 void HacksComp_CheckConsistency(HacksComp* hacks);
 void HacksComp_UpdateState(HacksComp* hacks);
 
-
 /* Represents a position and orientation state. */
 typedef struct InterpState_ {
 	Vector3 Pos;
@@ -104,4 +103,11 @@ typedef struct NetInterpComp_ {
 
 void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bool interpolate);
 void NetInterpComp_AdvanceState(NetInterpComp* interp);
+
+/* Entity component that draws square and circle shadows beneath entities. */
+
+bool ShadowComponent_BoundShadowTex;
+GfxResourceID ShadowComponent_ShadowTex;
+void ShadowComponent_Draw(Entity* entity);
+
 #endif

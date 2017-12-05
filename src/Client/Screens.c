@@ -207,19 +207,19 @@ bool InventoryScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseB
 
 bool InventoryScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	GuiElement* elem = &screen->Table.Base.Base;
+	elem = &screen->Table.Base.Base;
 	return elem->HandlesMouseUp(elem, x, y, btn);
 }
 
 bool InventoryScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	GuiElement* elem = &screen->Table.Base.Base;
+	elem = &screen->Table.Base.Base;
 	return elem->HandlesMouseMove(elem, x, y);
 }
 
 bool InventoryScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	GuiElement* elem = &screen->Table.Base.Base;
+	elem = &screen->Table.Base.Base;
 
 	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (hotbar) return false;

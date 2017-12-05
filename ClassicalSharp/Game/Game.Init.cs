@@ -210,7 +210,7 @@ namespace ClassicalSharp {
 			TabAutocomplete = Options.GetBool(OptionsKey.TabAutocomplete, false);
 			FontName = Options.Get(OptionsKey.FontName) ?? "Arial";
 			if (ClassicMode) FontName = "Arial";
-			
+
 			try {
 				using (Font f = new Font(FontName, 16)) { }
 			} catch (Exception) {
