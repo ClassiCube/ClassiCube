@@ -232,7 +232,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		bool Show(BlockID block) {
-			if (block == Block.Invalid) return false;
+			if (block == Block.Air) return false;
 
 			if (block < Block.CpeCount) {
 				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;

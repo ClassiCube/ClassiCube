@@ -100,16 +100,16 @@ namespace ClassicalSharp {
 			for (int i = 0; i < Map.Length; i++) Map[i] = (BlockID)i;
 			for (int i = 0; i < Map.Length; i++) {
 				BlockID mapping = DefaultMapping(i);
-				if (game.PureClassic && IsHackBlock(mapping)) mapping = Block.Invalid;
+				if (game.PureClassic && IsHackBlock(mapping)) mapping = Block.Air;
 				if (mapping != i) Map[i] = mapping;
 			}
 		}
 		
 		BlockID DefaultMapping(int i) {
 #if USE16_BIT
-			if ((i >= Block.CpeCount && i < 256) || i == Block.Air) return Block.Invalid;
+			if ((i >= Block.CpeCount && i < 256) || i == Block.Air) return Block.Air;
 #else
-			if (i >= Block.CpeCount || i == Block.Air) return Block.Invalid;
+			if (i >= Block.CpeCount || i == Block.Air) return Block.Air;
 #endif
 			if (!game.ClassicMode) return (BlockID)i;
 			
@@ -178,14 +178,14 @@ namespace ClassicalSharp {
 		
 		public void Remove(BlockID block) {
 			for (int i = 0; i < Map.Length; i++) {
-				if (Map[i] == block) Map[i] = Block.Invalid;
+				if (Map[i] == block) Map[i] = Block.Air;
 			}
 		}
 		
 		public void Insert(int i, BlockID block) {
 			if (Map[i] == block) return;		
 			// Need to push the old block to a different slot if different block			
-			if (Map[i] != Block.Invalid) PushToFreeSlots(i);
+			if (Map[i] != Block.Air) PushToFreeSlots(i);
 			
 			Map[i] = block;
 		}
@@ -199,10 +199,10 @@ namespace ClassicalSharp {
 			}
 			
 			for (int j = block; j < Map.Length; j++) {
-				if (Map[j] == Block.Invalid) { Map[j] = block; return; }
+				if (Map[j] == Block.Air) { Map[j] = block; return; }
 			}
 			for (int j = 1; j < block; j++) {
-				if (Map[j] == Block.Invalid) { Map[j] = block; return; }
+				if (Map[j] == Block.Air) { Map[j] = block; return; }
 			}
 		}
 	}

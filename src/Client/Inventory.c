@@ -47,9 +47,9 @@ bool Inventory_IsHackBlock(BlockID b) {
 
 BlockID Inventory_DefaultMapping(Int32 i) {
 #if USE16_BIT
-	if ((i >= Block_CpeCount && i < 256) || i == BLOCK_AIR) return BLOCK_INVALID;
+	if ((i >= Block_CpeCount && i < 256) || i == BLOCK_AIR) return BLOCK_AIR;
 #else
-	if (i >= BLOCK_CPE_COUNT || i == BLOCK_AIR) return BLOCK_INVALID;
+	if (i >= BLOCK_CPE_COUNT || i == BLOCK_AIR) return BLOCK_AIR;
 #endif
 	if (!Game_ClassicMode) return (BlockID)i;
 
@@ -101,7 +101,7 @@ void Inventory_SetDefaultMapping(void) {
 	for (i = 0; i < Array_NumElements(Inventory_Map); i++) {
 		BlockID mapping = Inventory_DefaultMapping(i);
 		if (Game_PureClassic && Inventory_IsHackBlock(mapping)) {
-			mapping = BLOCK_INVALID;
+			mapping = BLOCK_AIR;
 		}
 		if (mapping != i) Inventory_Map[i] = mapping;
 	}
@@ -133,7 +133,7 @@ void Inventory_Remove(BlockID block) {
 	Int32 i;
 	for (i = 0; i < Array_NumElements(Inventory_Map); i++) {
 		if (Inventory_Map[i] != block) continue;
-		Inventory_Map[i] = BLOCK_INVALID;
+		Inventory_Map[i] = BLOCK_AIR;
 	}
 }
 
@@ -147,12 +147,12 @@ void Inventory_PushToFreeSlots(Int32 i) {
 	}
 
 	for (j = block; j < Array_NumElements(Inventory_Map); j++) {
-		if (Inventory_Map[j] == BLOCK_INVALID) {
+		if (Inventory_Map[j] == BLOCK_AIR) {
 			Inventory_Map[j] = block; return;
 		}
 	}
 	for (j = 1; j < block; j++) {
-		if (Inventory_Map[j] == BLOCK_INVALID) {
+		if (Inventory_Map[j] == BLOCK_AIR) {
 			Inventory_Map[j] = block; return;
 		}
 	}
@@ -161,7 +161,7 @@ void Inventory_PushToFreeSlots(Int32 i) {
 void Inventory_Insert(Int32 i, BlockID block) {
 	if (Inventory_Map[i] == block) return;
 	/* Need to push the old block to a different slot if different block. */
-	if (Inventory_Map[i] != BLOCK_INVALID) Inventory_PushToFreeSlots(i);
+	if (Inventory_Map[i] != BLOCK_AIR) Inventory_PushToFreeSlots(i);
 	Inventory_Map[i] = block;
 }
 
