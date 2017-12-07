@@ -155,13 +155,6 @@ namespace ClassicalSharp {
 			info.TopCount =    (ushort)part.vCount[Side.Top];
 			info.SpriteCount = part.spriteCount;
 			
-			info.LeftIndex =   (ushort)(info.SpriteCount);
-			info.RightIndex =  (ushort)(info.LeftIndex   + info.LeftCount);
-			info.FrontIndex =  (ushort)(info.RightIndex  + info.RightCount);
-			info.BackIndex =   (ushort)(info.FrontIndex  + info.FrontCount);
-			info.BottomIndex = (ushort)(info.BackIndex   + info.BackCount);
-			info.TopIndex =    (ushort)(info.BottomIndex + info.BottomCount);
-			
 			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
 			if (parts == null)
 				parts = new ChunkPartInfo[arraysCount];
@@ -312,9 +305,7 @@ namespace ClassicalSharp {
 	}
 	
 	public struct ChunkPartInfo {
-		
 		public int VbId, VerticesCount, SpriteCount;
-		public ushort LeftIndex, RightIndex, FrontIndex, BackIndex, BottomIndex, TopIndex;
 		public ushort LeftCount, RightCount, FrontCount, BackCount, BottomCount, TopCount;
 	}
 }

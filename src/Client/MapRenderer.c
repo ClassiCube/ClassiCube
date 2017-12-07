@@ -101,8 +101,7 @@ void MapRenderer_RenderNormalBatch(UInt32 batch) {
 			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount, offset);
 			Game_Vertices += part.YMinCount;
 		} else if (drawYMax) {
-			offset += part.YMinCount;
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMaxCount, offset);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMaxCount, offset + part.YMinCount);
 			Game_Vertices += part.YMaxCount;
 		}
 
