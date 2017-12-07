@@ -28,12 +28,14 @@ UInt32 Entities_NameMode;
 #define NAME_MODE_ALL          1
 #define NAME_MODE_ALL_HOVERED  2
 #define NAME_MODE_ALL_UNSCALED 3
+extern const UInt8* NameMode_Names[4];
 
 UInt32 Entities_ShadowMode;
 #define SHADOW_MODE_NONE          0
 #define SHADOW_MODE_SNAP_TO_BLOCK 1
 #define SHADOW_MODE_CIRCLE        2
 #define SHADOW_MODE_CIRCLE_ALL    3
+extern const UInt8* ShadowMode_Names[4];
 
 typedef bool (*TouchesAny_Condition)(BlockID block);
 
@@ -62,11 +64,6 @@ typedef struct Entity_ {
 	Real32 HeadX, HeadY, RotX, RotY, RotZ;
 	Vector3 Velocity, OldVelocity;
 
-	GfxResourceID TextureId, MobTextureId;
-	AnimatedComp Anim;
-	UInt8 SkinType;
-	Real32 uScale, vScale;
-
 	IModel* Model;
 	UInt8 ModelNameRaw[String_BufferSize(ENTITY_MAX_MODEL_LENGTH)];
 	BlockID ModelBlock; /* BlockID, if model name was originally a vaid block id. */
@@ -75,7 +72,12 @@ typedef struct Entity_ {
 	Vector3 Size;
 
 	Matrix Transform;
+	UInt8 SkinType;
 	bool NoShade;
+	GfxResourceID TextureId, MobTextureId;
+	Real32 uScale, vScale;
+
+	AnimatedComp Anim;
 
 	/* TODO: SHOULD THESE BE A SEPARATE VTABLE STRUCT? (only need 1 shared pointer that way) */
 	void (*Tick)(struct Entity_* entity, ScheduledTask* task);

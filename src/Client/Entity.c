@@ -12,6 +12,9 @@
 #include "GraphicsAPI.h"
 #include "Intersection.h"
 
+const UInt8* NameMode_Names[4] = { "Hovered", "All", "AllHovered", "AllUnscaled" };
+const UInt8* ShadowMode_Names[4] = { "None", "SnapToBlock", "Circle", "CircleAll" };
+
 Real32 LocationUpdate_Clamp(Real32 degrees) {
 	degrees = Math_Mod(degrees, 360.0f);
 	if (degrees < 0) degrees += 360.0f;
@@ -297,9 +300,12 @@ void Entities_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, Entities_ContextRecreated);
 	Event_RegisterVoid(&ChatEvents_FontChanged, Entities_ChatFontChanged);
 
-	Entities_NameMode = Options_GetEnum(OptionsKey.NamesMode, NameMode.Hovered);
+	Entities_NameMode = Options_GetEnum(OptionsKey_NamesMode, NAME_MODE_HOVERED,
+		NameMode_Names, Array_NumElements(NameMode_Names));
 	if (Game_ClassicMode) Entities_NameMode = NAME_MODE_HOVERED;
-	Entities_ShadowMode = Options_GetEnum(OptionsKey.EntityShadow, EntityShadow.None);
+
+	Entities_ShadowMode = Options_GetEnum(OptionsKey_EntityShadow, SHADOW_MODE_NONE,
+		ShadowMode_Names, Array_NumElements(ShadowMode_Names));
 	if (Game_ClassicMode) Entities_ShadowMode = SHADOW_MODE_NONE;
 }
 
@@ -328,7 +334,7 @@ void Entities_Remove(EntityID id) {
 EntityID Entities_GetCloset(Entity* src) {
 	Vector3 eyePos = Entity_GetEyePosition(src);
 	Vector3 dir = Vector3_GetDirVector(src->HeadY * MATH_DEG2RAD, src->HeadX * MATH_DEG2RAD);
-	float closestDist = float.PositiveInfinity;
+	Real32 closestDist = float.PositiveInfinity;
 	EntityID targetId = ENTITIES_SELF_ID;
 
 	UInt32 i;
