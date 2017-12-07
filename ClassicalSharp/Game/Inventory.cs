@@ -14,18 +14,23 @@ namespace ClassicalSharp {
 		
 		public void Init(Game game) {
 			this.game = game;
-			SetDefaultMapping();
+			Reset(game);
+		}
+		
+		public void Reset(Game game) { 
+			SetDefaultMapping(); 
+			CanChangeHeldBlock = true; 
+			CanPick = true; 
 		}
 
 		public void Ready(Game game) { }
-		public void Reset(Game game) { SetDefaultMapping(); }
 		public void OnNewMap(Game game) { }
 		public void OnNewMapLoaded(Game game) { }
 		public void Dispose() { }
 		
 		int selectedI, offset;
 		Game game;
-		public bool CanChangeHeldBlock = true;
+		public bool CanChangeHeldBlock, CanPick;
 		
 		public const int BlocksPerRow = 9, Rows = 9;
 		public BlockID[] Hotbar = new BlockID[BlocksPerRow * Rows];
@@ -50,6 +55,7 @@ namespace ClassicalSharp {
 			get { return selectedI; }
 			set {
 				if (!CanChangeSelected()) return;
+				CanPick = true;
 				selectedI = value; game.Events.RaiseHeldBlockChanged();
 			}
 		}
@@ -70,6 +76,7 @@ namespace ClassicalSharp {
 			get { return Hotbar[Offset + selectedI]; }
 			set {
 				if (!CanChangeSelected()) return;
+				CanPick = true;
 				
 				// Change the selected index if this block already in hotbar
 				for (int i = 0; i < BlocksPerRow; i++) {
@@ -100,7 +107,7 @@ namespace ClassicalSharp {
 		
 		BlockID DefaultMapping(int i) {
 #if USE16_BIT
-			if ((i >= Block.CpeCount && i < 256) || i == Block.Air) return Block.Invalid;			
+			if ((i >= Block.CpeCount && i < 256) || i == Block.Air) return Block.Invalid;
 #else
 			if (i >= Block.CpeCount || i == Block.Air) return Block.Invalid;
 #endif

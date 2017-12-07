@@ -21,7 +21,7 @@ Int32 Inventory_Offset;
 #define Inventory_Get(idx) (Inventory_Table[Inventory_Offset + (idx)])
 #define Inventory_Set(idx, block) Inventory_Table[Inventory_Offset + (idx)] = block
 #define Inventory_SelectedBlock Inventory_Get(Inventory_SelectedIndex)
-bool Inventory_CanChangeHeldBlock;
+bool Inventory_CanChangeHeldBlock, Inventory_CanPick;
 
 bool Inventory_CanChangeSelected(void);
 void Inventory_SetSelectedIndex(Int32 index);

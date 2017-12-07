@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 				input.ButtonStateChanged(MouseButton.Middle, middle);
 			}
 
-			if (game.Gui.ActiveScreen.HandlesAllInput || inv.Selected == Block.Invalid) return;
+			if (game.Gui.ActiveScreen.HandlesAllInput || !inv.CanPick) return;
 
 			if (left) {
 				if (game.Mode.PickingLeft()) return;

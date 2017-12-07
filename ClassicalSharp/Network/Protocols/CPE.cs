@@ -89,12 +89,12 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleHoldThis() {
 			BlockID block = reader.ReadUInt8();
-			if (block == Block.Air) block = Block.Invalid;
 			bool canChange = reader.ReadUInt8() == 0;
 			
 			game.Inventory.CanChangeHeldBlock = true;
 			game.Inventory.Selected = block;
 			game.Inventory.CanChangeHeldBlock = canChange;
+			game.Inventory.CanPick = block != Block.Air;
 		}
 		
 		void HandleSetTextHotkey() {

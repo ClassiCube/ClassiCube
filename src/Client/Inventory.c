@@ -3,10 +3,12 @@
 #include "Game.h"
 #include "Block.h"
 #include "Event.h"
+#include "Chat.h"
 
 bool Inventory_CanChangeSelected(void) {
 	if (!Inventory_CanChangeHeldBlock) {
-		//game.Chat.Add("&e/client: &cThe server has forbidden you from changing your held block.");
+		String msg = String_FromConst("&e/client: &cThe server has forbidden you from changing your held block.");
+		Chat_Add(&msg);
 		return false;
 	}
 	return true;
@@ -163,10 +165,15 @@ void Inventory_Insert(Int32 i, BlockID block) {
 	Inventory_Map[i] = block;
 }
 
+void Inventory_ResetState(void) {
+	Inventory_SetDefaultMapping();
+	Inventory_CanChangeHeldBlock = true;
+	Inventory_CanPick = true;
+}
 
 IGameComponent Inventory_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init  = Inventory_SetDefaultMapping;
-	comp.Reset = Inventory_SetDefaultMapping;
+	comp.Init  = Inventory_ResetState;
+	comp.Reset = Inventory_ResetState;
 	return comp;
 }
