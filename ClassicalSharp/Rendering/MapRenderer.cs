@@ -190,10 +190,10 @@ namespace ClassicalSharp.Renderers {
 			Vector3I coords = Vector3I.Floor(pos);
 			
 			BlockID block = game.World.SafeGetBlock(coords);
-			bool outside = !game.World.IsValidPos(coords);
+			bool outside = coords.X < 0 || coords.Y < 0 || coords.Z < 0 || coords.X >= game.World.Width || coords.Z >= game.World.Length;
 			inTranslucent = BlockInfo.Draw[block] == DrawType.Translucent
 				|| (pos.Y < env.EdgeHeight && outside);
-			
+
 			// If we are under water, render weather before to blend properly
 			if (!inTranslucent || env.Weather == Weather.Sunny) return;
 			gfx.AlphaBlending = true;
