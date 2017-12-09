@@ -222,9 +222,9 @@ namespace ClassicalSharp {
 			Vector3 camPos = player.EyePosition;
 			camPos.Y += bobbingVer;
 			
-			double adjHeadY = player.HeadYRadians + Math.PI / 2;
-			camPos.X += bobbingHor * (float)Math.Sin(adjHeadY);
-			camPos.Z -= bobbingHor * (float)Math.Cos(adjHeadY);
+			double headY = player.HeadYRadians;
+			camPos.X += bobbingHor * (float)Math.Cos(headY);
+			camPos.Z += bobbingHor * (float)Math.Sin(headY);
 			return camPos;
 		}
 	}
