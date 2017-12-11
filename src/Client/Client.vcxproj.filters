@@ -593,5 +593,8 @@
     <ClCompile Include="EntityComponents.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
+    <ClCompile Include="Player.c">
+      <Filter>Source Files\Entities</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -16,6 +16,12 @@ typedef struct Player_ {
 	bool FetchedSkin;
 } Player;
 
+/* Represents another entity in multiplayer */
+typedef struct NetPlayer_ {
+	Player Base;
+	NetInterpComp Interp;
+	bool ShouldRender;
+} NetPlayer;
 
 /* Represents the user/player's own entity. */
 typedef struct LocalPlayer_ {
@@ -29,8 +35,7 @@ typedef struct LocalPlayer_ {
 } LocalPlayer;
 
 
-/* Singleton instance of the local player. */
 LocalPlayer LocalPlayer_Instance;
-/* Initalises the local player instance. */
 void LocalPlayer_Init(void);
+void NetPlayer_Init(NetPlayer* player);
 #endif

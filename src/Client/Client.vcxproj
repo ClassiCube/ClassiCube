@@ -304,6 +304,7 @@
     <ClCompile Include="Physics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
+    <ClCompile Include="Player.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="Screens.c" />
