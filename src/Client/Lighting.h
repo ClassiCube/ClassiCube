@@ -8,13 +8,11 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-Int16* Lighting_heightmap;
 PackedCol Lighting_Outside;
 PackedCol Lighting_OutsideZSide;
 PackedCol Lighting_OutsideXSide;
 PackedCol Lighting_OutsideYBottom;
 
-/* Creates game component implementation. */
 IGameComponent Lighting_MakeGameComponent(void);
 /* Equivalent to (but far more optimised form of)
 * for x = startX; x < startX + 18; x++
@@ -25,7 +23,6 @@ void Lighting_LightHint(Int32 startX, Int32 startZ);
 /* Called when a block is changed, to update the lighting information.
 NOTE: Implementations ***MUST*** mark all chunks affected by this lighting changeas needing to be refreshed. */
 void Lighting_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock);
-/* Discards all cached lighting information. */
 void Lighting_Refresh(void);
 
 /* Returns whether the block at the given coordinates is fully in sunlight.

@@ -37,6 +37,9 @@ UInt32 Entities_ShadowMode;
 #define SHADOW_MODE_CIRCLE_ALL    3
 extern const UInt8* ShadowMode_Names[4];
 
+#define ENTITY_TYPE_NONE 0
+#define ENTITY_TYPE_PLAYER 1
+
 typedef bool (*TouchesAny_Condition)(BlockID block);
 
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
@@ -58,6 +61,17 @@ void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX);
 void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel);
 void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel);
 
+typedef struct EntityVTABLE_ {
+	void (*Tick)(struct Entity_* entity, ScheduledTask* task);
+	void (*SetLocation)(struct Entity_* entity, LocationUpdate* update, bool interpolate);
+	void (*RenderModel)(struct Entity_* entity, Real64 deltaTime, Real32 t);
+	void (*RenderName)(struct Entity_* entity);
+	void (*ContextLost)(struct Entity_* entity);
+	void (*ContextRecreated)(struct Entity_* entity);
+	void (*Despawn)(struct Entity_* entity);
+	PackedCol (*GetCol)(struct Entity_* entity);
+} EntityVTABLE;
+
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 typedef struct Entity_ {
 	Vector3 Position;
@@ -73,21 +87,13 @@ typedef struct Entity_ {
 
 	Matrix Transform;
 	UInt8 SkinType;
+	UInt8 EntityType;
 	bool NoShade;
 	GfxResourceID TextureId, MobTextureId;
 	Real32 uScale, vScale;
 
 	AnimatedComp Anim;
-
-	/* TODO: SHOULD THESE BE A SEPARATE VTABLE STRUCT? (only need 1 shared pointer that way) */
-	void (*Tick)(struct Entity_* entity, ScheduledTask* task);
-	void (*SetLocation)(struct Entity_* entity, LocationUpdate* update, bool interpolate);
-	void (*RenderModel)(struct Entity_* entity, Real64 deltaTime, Real32 t);
-	void (*RenderName)(struct Entity_* entity);
-	void (*ContextLost)(struct Entity_* entity);
-	void (*ContextRecreated)(struct Entity_* entity);
-	void (*Despawn)(struct Entity_* entity);
-	PackedCol (*GetCol)(struct Entity_* entity);
+	EntityVTABLE* VTABLE;
 } Entity;
 
 void Entity_Init(Entity* entity);

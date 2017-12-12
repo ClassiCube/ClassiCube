@@ -6,6 +6,7 @@
 #include "World.h"
 /* Manages lighting through a simple heightmap, where each block is either in sun or shadow. */
 
+Int16* Lighting_heightmap;
 PackedCol shadow, shadowZSide, shadowXSide, shadowYBottom;
 #define Lighting_Pack(x, z) ((x) + World_Width * (z))
 

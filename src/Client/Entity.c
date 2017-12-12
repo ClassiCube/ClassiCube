@@ -11,6 +11,7 @@
 #include "ModelCache.h"
 #include "GraphicsAPI.h"
 #include "Intersection.h"
+#include "Lighting.h"
 
 const UInt8* NameMode_Names[4] = { "Hovered", "All", "AllHovered", "AllUnscaled" };
 const UInt8* ShadowMode_Names[4] = { "None", "SnapToBlock", "Circle", "CircleAll" };
@@ -50,11 +51,24 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 }
 
 
+EntityVTABLE entityDefaultVTABLE;
+PackedCol Entity_DefaultGetCol(Entity* entity) {
+	Vector3 eyePos = Entity_GetEyePosition(entity);
+	Vector3I P; Vector3I_Floor(&P, &eyePos);
+	return World_IsValidPos_3I(P) ? Lighting_Col(P.X, P.Y, P.Z) : Lighting_Outside;
+}
+void Entity_NullFunc(Entity* entity) {}
+
 void Entity_Init(Entity* entity) {
+	Platform_MemSet(entity, 0, sizeof(Entity));
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->uScale = 1.0f;
 	entity->vScale = 1.0f;
-	Platform_MemSet(entity->ModelNameRaw, NULL, sizeof(entity->ModelNameRaw));
+
+	entityDefaultVTABLE.ContextLost = Entity_NullFunc;
+	entityDefaultVTABLE.ContextRecreated = Entity_NullFunc;
+	entityDefaultVTABLE.GetCol = Entity_DefaultGetCol;
+	entity->VTABLE = &entityDefaultVTABLE;
 }
 
 Vector3 Entity_GetEyePosition(Entity* entity) {
@@ -205,7 +219,7 @@ void Entities_Tick(ScheduledTask* task) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
-		Entities_List[i]->Tick(Entities_List[i], task);
+		Entities_List[i]->VTABLE->Tick(Entities_List[i], task);
 	}
 }
 
@@ -215,7 +229,7 @@ void Entities_RenderModels(Real64 delta, Real32 t) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
-		Entities_List[i]->RenderModel(Entities_List[i], delta, t);
+		Entities_List[i]->VTABLE->RenderModel(Entities_List[i], delta, t);
 	}
 	Gfx_SetTexturing(false);
 	Gfx_SetAlphaTest(false);
@@ -236,7 +250,7 @@ void Entities_RenderNames(Real64 delta) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
 		if (i != closestId || i == ENTITIES_SELF_ID) {
-			Entities_List[i]->RenderName(Entities_List[i]);
+			Entities_List[i]->VTABLE->RenderName(Entities_List[i]);
 		}
 	}
 
@@ -260,7 +274,7 @@ void Entities_RenderHoveredNames(Real64 delta) {
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
 		if ((i == closestId || allNames) && i != ENTITIES_SELF_ID) {
-			Entities_List[i]->RenderName(Entities_List[i]);
+			Entities_List[i]->VTABLE->RenderName(Entities_List[i]);
 		}
 	}
 
@@ -274,7 +288,7 @@ void Entities_ContextLost(void) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
-		Entities_List[i]->ContextLost(Entities_List[i]);
+		Entities_List[i]->VTABLE->ContextLost(Entities_List[i]);
 	}
 }
 
@@ -282,7 +296,7 @@ void Entities_ContextRecreated(void) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
-		Entities_List[i]->ContextRecreated(Entities_List[i]);
+		Entities_List[i]->VTABLE->ContextRecreated(Entities_List[i]);
 	}
 }
 
@@ -290,8 +304,8 @@ void Entities_ChatFontChanged(void) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
-		Player p = List[i] as Player;
-		if (p != null) p.UpdateName();
+		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
+		Player_UpdateName((Player*)Entities_List[i]);
 	}
 }
 
@@ -327,7 +341,7 @@ void Entities_Free(void) {
 
 void Entities_Remove(EntityID id) {
 	Event_RaiseEntityID(&EntityEvents_Removed, id);
-	Entities_List[id]->Despawn(Entities_List[id]);
+	Entities_List[id]->VTABLE->Despawn(Entities_List[id]);
 	Entities_List[id] = NULL;
 }
 
@@ -366,8 +380,8 @@ void Entities_DrawShadows(void) {
 		UInt32 i;
 		for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 			if (Entities_List[i] == NULL) continue;
-			Player p = List[i] as Player;
-			if (p != null) ShadowComponent_Draw(p);
+			if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
+			ShadowComponent_Draw(Entities_List[i]);
 		}
 	}
 
