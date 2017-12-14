@@ -26,9 +26,9 @@ Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 heig
 
 Texture Texture_MakeInvalid(void) {
 	Texture tex;
-	tex.ID = 0;
+	tex.ID = NULL;
 	tex.X = 0; tex.Y = 0; tex.Width = 0; tex.Height = 0;
-	tex.U1 = 0.0f; tex.U2 = 0.0f; tex.V1 = 0.0f; tex.V2 = 0.0f;
+	tex.U1 = 0.0f; tex.V1 = 0.0f; tex.U2 = 0.0f; tex.V2 = 0.0f;
 	return tex;
 }
 

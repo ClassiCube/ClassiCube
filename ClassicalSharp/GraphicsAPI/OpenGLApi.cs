@@ -501,7 +501,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				GL.MultMatrixf(ptr);
 		}
 
-		public override void CalcOrthoMatrix(float width, float height, out Matrix4 result) {
+		public override void CalcOrthoMatrix(float width, float height, out Matrix4 matrix) {
 			Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000, out matrix);
 		}
 		

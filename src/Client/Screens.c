@@ -5,6 +5,7 @@
 #include "GraphicsCommon.h"
 #include "Platform.h"
 #include "Inventory.h"
+#include "Drawer2D.h"
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -123,8 +124,9 @@ void InventoryScreen_ContextRecreated(void) {
 
 void InventoryScreen_Init(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	screen->Font.Size = 16;
+	FontDesc_Make(&screen->Font, 16, FONT_STYLE_NORMAL);
 	Platform_MakeFont(&screen->Font, &Game_FontName);
+
 	elem = &screen->Table.Base.Base;
 	TableWidget_Create(&screen->Table);
 	screen->Table.Font = screen->Font;

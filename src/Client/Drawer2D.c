@@ -16,6 +16,12 @@ void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow) 
 	args->UseShadow = useShadow;
 }
 
+void FontDesc_Make(FontDesc* font, UInt16 size, UInt16 style) {
+	font->Handle = NULL;
+	font->Size = size;
+	font->Style = style;
+}
+
 Bitmap Drawer2D_FontBitmap;
 Bitmap* Drawer2D_Cur;
 Int32 Drawer2D_BoxSize;

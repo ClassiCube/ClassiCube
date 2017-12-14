@@ -775,7 +775,7 @@ void HumanModel_SetupState(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	Gfx_SetAlphaTest(false);
 
-	bool _64x64 = entity->SkinType != SkinType_64x32;
+	bool _64x64 = entity->SkinType != SKIN_TYPE_64x32;
 	IModel_uScale = entity->uScale / 64.0f;
 	IModel_vScale = entity->vScale / (_64x64 ? 64.0f : 32.0f);
 }
@@ -795,7 +795,7 @@ void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
 
 	Gfx_SetAlphaTest(true);
 	IModel_ActiveModel->index = 0;
-	if (skinType != SkinType_64x32) {
+	if (skinType != SKIN_TYPE_64x32) {
 		IModel_DrawPart(model->TorsoLayer);
 		IModel_DrawRotate(entity->Anim.LeftLegX, 0, entity->Anim.LeftLegZ, model->LeftLegLayer, false);
 		IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLegLayer, false);
@@ -851,8 +851,8 @@ void HumanoidModel_DrawModel(Entity* entity) {
 	HumanModel_SetupState(entity);
 	SkinType skinType = entity->SkinType;
 	ModelSet* model =
-		skinType == SkinType_64x64Slim ? &Humanoid_SetSlim :
-		(skinType == SkinType_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
+		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
+		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
 	HumanModel_DrawModel(entity, model);
 }
 
@@ -905,8 +905,8 @@ void ChibiModel_DrawModel(Entity* entity) {
 	HumanModel_SetupState(entity);
 	SkinType skinType = entity->SkinType;
 	ModelSet* model =
-		skinType == SkinType_64x64Slim ? &Chibi_SetSlim :
-		(skinType == SkinType_64x64 ? &Chibi_Set64 : &Chibi_Set);
+		skinType == SKIN_TYPE_64x64_SLIM ? &Chibi_SetSlim :
+		(skinType == SKIN_TYPE_64x64 ? &Chibi_Set64 : &Chibi_Set);
 	HumanModel_DrawModel(entity, model);
 }
 
@@ -1047,8 +1047,8 @@ void ArmModel_DrawModel(Entity* entity) {
 
 	SkinType skinType = entity->SkinType;
 	ModelSet* model =
-		skinType == SkinType_64x64Slim ? &Humanoid_SetSlim :
-		(skinType == SkinType_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
+		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
+		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
 
 	Gfx_PushMatrix();
 	Gfx_MultiplyMatrix(&arm_translate);
@@ -1057,7 +1057,7 @@ void ArmModel_DrawModel(Entity* entity) {
 	ArmModel_DrawPart(model->RightArm);
 	IModel_UpdateVB();
 
-	if (skinType != SkinType_64x32) {
+	if (skinType != SKIN_TYPE_64x32) {
 		ArmModel.index = 0;
 		Gfx_SetAlphaTest(true);
 		ArmModel_DrawPart(model->RightArmLayer);

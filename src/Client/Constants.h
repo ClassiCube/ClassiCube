@@ -45,10 +45,10 @@
 /* Number of faces on a cube. */
 #define Face_Count 6
 
-#define SkinType_64x32 0
-#define SkinType_64x64 1
-#define SkinType_64x64Slim 2
-#define SkinType_Invalid 3
+#define SKIN_TYPE_64x32 0
+#define SKIN_TYPE_64x64 1
+#define SKIN_TYPE_64x64_SLIM 2
+#define SKIN_TYPE_INVALID 3
 
 #define FONT_STYLE_NORMAL    0
 #define FONT_STYLE_BOLD      1

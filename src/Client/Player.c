@@ -2,6 +2,10 @@
 #include "Platform.h"
 #include "GraphicsAPI.h"
 #include "Drawer2D.h"
+#include "Particle.h"
+#include "GraphicsCommon.h"
+#include "AsyncDownloader.h"
+#include "ExtMath.h"
 
 void Player_Init(Player* player) {
 	/* TODO should we just remove the memset from entity_Init and player_init?? */
@@ -20,6 +24,7 @@ void Player_Despawn(Entity* entity) {
 	Player* first = FirstOtherWithSameSkin();
 	if (first == NULL) {
 		Gfx_DeleteTexture(&entity->TextureId);
+		player->NameTex = Texture_MakeInvalid();
 		ResetSkin();
 	}
 	entity->VTABLE->ContextLost(entity);
@@ -28,6 +33,7 @@ void Player_Despawn(Entity* entity) {
 void Player_ContextLost(Entity* entity) {
 	Player* player = (Player*)entity;
 	Gfx_DeleteTexture(&player->NameTex.ID);
+	player->NameTex = Texture_MakeInvalid();
 }
 
 void Player_ContextRecreated(Entity* entity) {
@@ -35,40 +41,47 @@ void Player_ContextRecreated(Entity* entity) {
 	Player_UpdateName(player); 
 }
 
+#define PLAYER_NAME_EMPTY_TEX -30000
 void Player_MakeNameTexture(Player* player) {
-	using (Font font = new Font(game.FontName, 24)) {
-		String displayName = String_FromRaw(player->DisplayNameRaw, STRING_SIZE);
-		DrawTextArgs args = new DrawTextArgs(displayName, font, false);
-		bool bitmapped = Drawer2D_UseBitmappedChat; /* we want names to always be drawn without */
-		Drawer2D_UseBitmappedChat = true;
-		Size2D size = Drawer2D_MeasureSize(&args);
+	FontDesc font; 
+	FontDesc_Make(&font, 24, FONT_STYLE_NORMAL);
+	Platform_MakeFont(&font, &Game_FontName);
 
-		if (size.Width == 0) {
-			nameTex = new Texture(-1, 0, 0, 0, 0, 1, 1);
-		} else {
-			UInt8 buffer[String_BufferSize(STRING_SIZE * 2)];
-			String shadowName = String_InitAndClear(buffer, STRING_SIZE * 2);
+	String displayName = String_FromRaw(player->DisplayNameRaw, STRING_SIZE);
+	DrawTextArgs args; 
+	DrawTextArgs_Make(&args, &displayName, &font, false);
 
-			size.Width += 3; size.Height += 3;
-			Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
-			Drawer2D_Begin(&bmp);
+	/* we want names to always be drawn not using the system font */
+	bool bitmapped = Drawer2D_UseBitmappedChat;
+	Drawer2D_UseBitmappedChat = true;
+	Size2D size = Drawer2D_MeasureText(&args);
 
-			Drawer2D_Cols[0xFF] = PackedCol_Create3(80, 80, 80);
-			String_Append(&shadowName, 0xFF);
-			String_AppendColorless(&shadowName, &displayName);
-			args->Text = shadowName;
-			Drawer2D_DrawText(args, 3, 3);
+	if (size.Width == 0) {
+		player->NameTex = Texture_MakeInvalid();
+		player->NameTex.X = PLAYER_NAME_EMPTY_TEX;
+	} else {
+		UInt8 buffer[String_BufferSize(STRING_SIZE * 2)];
+		String shadowName = String_InitAndClear(buffer, STRING_SIZE * 2);
 
-			Drawer2D_Cols[0xFF] = PackedCol_Create4(0, 0, 0, 0);
-			args->Text = displayName;
-			Drawer2D_DrawText(args, 0, 0);
+		size.Width += 3; size.Height += 3;
+		Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+		Drawer2D_Begin(&bmp);
 
-			Drawer2D_End();
-			nameTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
-		}
+		Drawer2D_Cols[0xFF] = PackedCol_Create3(80, 80, 80);
+		String_Append(&shadowName, 0xFF);
+		String_AppendColorless(&shadowName, &displayName);
+		args.Text = shadowName;
+		Drawer2D_DrawText(&args, 3, 3);
 
-		Drawer2D_UseBitmappedChat = bitmapped;
+		Drawer2D_Cols[0xFF] = PackedCol_Create4(0, 0, 0, 0);
+		args.Text = displayName;
+		Drawer2D_DrawText(&args, 0, 0);
+
+		Drawer2D_End();
+		player->NameTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
 	}
+
+	Drawer2D_UseBitmappedChat = bitmapped;
 }
 
 void Player_UpdateName(Player* player) {
@@ -82,19 +95,19 @@ void Player_UpdateName(Player* player) {
 void Player_DrawName(Player* player) {
 	Entity* entity = &player->Base;
 	IModel* model = entity->Model;
-	if (nameTex.ID == 0) MakeNameTexture();
-	if (nameTex.ID == -1) return;
 
+	if (player->NameTex.X == PLAYER_NAME_EMPTY_TEX) return;
+	if (player->NameTex.ID == NULL) Player_MakeNameTexture(player);
 	Gfx_BindTexture(player->NameTex.ID);
 
 	Vector3 pos;
 	model->RecalcProperties(entity);
 	Vector3_TransformY(&pos, model->NameYOffset, &entity->Transform);
-	Real32 scale = Math.Min(1, Model.NameScale * ModelScale.Y) / 70.0f;
-	Int32 col = FastColour.WhitePacked;
-	Vector2 size = Vector2_Create2(nameTex.Width * scale, nameTex.Height * scale);
+	Real32 scale = Math.Min(1, model->NameScale * entity->ModelScale.Y) / 70.0f;
+	PackedCol col = PACKEDCOL_WHITE;
+	Vector2 size = Vector2_Create2(player->NameTex.Width * scale, player->NameTex.Height * scale);
 
-	if (Entities_NameMode == NAME_MODE_ALL_UNSCALED && game.LocalPlayer.Hacks.CanSeeAllNames) {
+	if (Entities_NameMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {
 		/* Get W component of transformed position */
 		Matrix mat;
 		Matrix_Mul(&mat, &Game_View, &Game_Projection); /* TODO: This mul is slow, avoid it */
@@ -102,23 +115,24 @@ void Player_DrawName(Player* player) {
 		size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
 	}
 
-	Int32 index = 0;
-	TextureRec rec; rec.U1 = 0.0f; rec.V1 = 0.0f; rec.U2 = nameTex.U2; rec.V2 = nameTex.V2;
-	Particle.DoRender(game, ref size, ref pos, ref rec, col, gfx.texVerts, ref index);
+	VertexP3fT2fC4b vertices[4]; 
+	VertexP3fT2fC4b* ptr = vertices;
+	TextureRec rec; rec.U1 = 0.0f; rec.V1 = 0.0f; rec.U2 = player->NameTex.U2; rec.V2 = player->NameTex.V2;
+	Particle_DoRender(&size, &pos, &rec, col, &ptr);
 
-	gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
-	gfx.UpdateDynamicVb_IndexedTris(gfx.texVb, gfx.texVerts, 4);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, ptr, 4);
 }
 
 void Player_CheckSkin(Player* player) {
-	if (!fetchedSkin && Model.UsesSkin) {
-		Player first = FirstOtherWithSameSkinAndFetchedSkin();
-		if (first == null) {
+	if (!player->FetchedSkin && Model.UsesSkin) {
+		Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(player);
+		if (first == NULL) {
 			game.AsyncDownloader.DownloadSkin(SkinName, SkinName);
 		} else {
 			ApplySkin(first);
 		}
-		fetchedSkin = true;
+		player->FetchedSkin = true;
 	}
 
 	Request item;
@@ -132,7 +146,7 @@ void Player_CheckSkin(Player* player) {
 	EnsurePow2(ref bmp);
 	SkinType = Utils.GetSkinType(bmp);
 
-	if (SkinType == SkinType.Invalid) {
+	if (SkinType == SKIN_TYPE_INVALID) {
 		SetSkinAll(true);
 	} else {
 		if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);
@@ -142,72 +156,90 @@ void Player_CheckSkin(Player* player) {
 	bmp.Dispose();
 }
 
-Player* Player_FirstOtherWithSameSkin(Player* player) {
+Player* Player_FirstOtherWithSameSkin(Player* player) {	
+	String skin = String_FromRaw(player->SkinNameRaw, STRING_SIZE);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
-		if (p.SkinName == SkinName) return p;
+		String pSkin = String_FromRaw(p->SkinNameRaw, STRING_SIZE);
+		if (String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
 }
 
 Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
+	String skin = String_FromRaw(player->SkinNameRaw, STRING_SIZE);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
-		if (p.SkinName == SkinName && p->FetchedSkin) return p;
+		String pSkin = String_FromRaw(p->SkinNameRaw, STRING_SIZE);
+		if (p->FetchedSkin && String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
 }
 
 /* Apply or reset skin, for all players with same skin */
 void Player_SetSkinAll(Player* player, bool reset) {
+	String skin = String_FromRaw(player->SkinNameRaw, STRING_SIZE);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
-		if (p.SkinName != SkinName) continue;
+		String pSkin = String_FromRaw(p->SkinNameRaw, STRING_SIZE);
+		if (!String_Equals(&skin, &pSkin)) continue;
 
-		if (reset) { p.ResetSkin(); } else { p.ApplySkin(this); }
+		if (reset) {
+			Player_ResetSkin(p);
+		} else { 
+			Player_ApplySkin(p, player);
+		}
 	}
 }
 
 void Player_ApplySkin(Player* player, Player* from) {
-	TextureId = from.TextureId;
-	MobTextureId = -1;
-	SkinType = from.SkinType;
-	uScale = from.uScale; vScale = from.vScale;
+	Entity* dst = &player->Base;
+	Entity* src = &from->Base;
+
+	dst->TextureId    = src->TextureId;	
+	dst->SkinType     = src->SkinType;
+	dst->uScale       = src->uScale;
+	dst->vScale       = src->vScale;
 
 	/* Custom mob textures */
-	if (Utils.IsUrlPrefix(SkinName, 0)) MobTextureId = TextureId;
+	dst->MobTextureId = NULL;
+	if (Utils.IsUrlPrefix(SkinName, 0)) {
+		dst->MobTextureId = dst->TextureId;
+	}
 }
 
 void Player_ResetSkin(Player* player) {
-	uScale = 1; vScale = 1;
-	MobTextureId = -1;
-	TextureId = -1;
-	SkinType = game.DefaultPlayerSkinType;
+	Entity* entity = &player->Base;
+	entity->uScale = 1; entity->vScale = 1.0f;
+	entity->MobTextureId = NULL;
+	entity->TextureId    = NULL;
+	entity->SkinType = game.DefaultPlayerSkinType;
 }
 
 void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
 	Int32 sizeX = (bmp.Width / 64) * 32;
-	Int32 yScale = skinType == SkinType_64x32 ? 32 : 64;
+	Int32 yScale = skinType == SKIN_TYPE_64x32 ? 32 : 64;
 	Int32 sizeY = (bmp.Height / yScale) * 16;
+	Int32 x, y;
 
 	/* determine if we actually need filtering */
-	for (Int32 y = 0; y < sizeY; y++) {
-		int* row = fastBmp.GetRowPtr(y);
+	for (y = 0; y < sizeY; y++) {
+		UInt32* row = Bitmap_GetRow(&bmp, y);
 		row += sizeX;
-		for (Int32 x = 0; x < sizeX; x++) {
-			byte alpha = (byte)(row[x] >> 24);
+		for (x = 0; x < sizeX; x++) {
+			UInt8 alpha = (UInt8)(row[x] >> 24);
 			if (alpha != 255) return;
 		}
 	}
@@ -215,31 +247,30 @@ void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
 	/* only perform filtering when the entire hat is opaque */
 	UInt32 fullWhite = PackedCol_ARGB(255, 255, 255, 255);
 	UInt32 fullBlack = PackedCol_ARGB(0,   0,   0,   255);
-	for (Int32 y = 0; y < sizeY; y++) {
-		int* row = fastBmp.GetRowPtr(y);
+	for (y = 0; y < sizeY; y++) {
+		UInt32* row = Bitmap_GetRow(&bmp, y);
 		row += sizeX;
-		for (Int32 x = 0; x < sizeX; x++) {
-			Int32 pixel = row[x];
+		for (x = 0; x < sizeX; x++) {
+			UInt32 pixel = row[x];
 			if (pixel == fullWhite || pixel == fullBlack) row[x] = 0;
 		}
 	}
 }
 
-void Player_EnsurePow2(ref Bitmap bmp) {
-	Int32 width = Utils.NextPowerOf2(bmp.Width);
-	Int32 height = Utils.NextPowerOf2(bmp.Height);
-	if (width == bmp.Width && height == bmp.Height) return;
+void Player_EnsurePow2(Player* player, Bitmap* bmp) {
+	Int32 width  = Math_NextPowOf2(bmp->Width);
+	Int32 height = Math_NextPowOf2(bmp->Height);
+	if (width == bmp->Width && height == bmp->Height) return;
 
-	Bitmap scaled = Platform.CreateBmp(width, height);
-	using (FastBitmap src = new FastBitmap(bmp, true, true))
-		using (FastBitmap dst = new FastBitmap(scaled, true, false))
-	{
-		for (Int32 y = 0; y < src.Height; y++)
-			FastBitmap.CopyRow(y, y, src, dst, src.Width);
+	Bitmap scaled; Bitmap_Allocate(&scaled, width, height);	
+	Int32 y;
+	for (y = 0; y < bmp->Height; y++) {
+		FastBitmap.CopyRow(y, y, src, dst, src.Width);
 	}
 
-	uScale = (float)bmp.Width / width;
-	vScale = (float)bmp.Height / height;
+	Entity* entity = &player->Base;
+	entity->uScale = (Real32)bmp->Width  / width;
+	entity->vScale = (Real32)bmp->Height / height;
 	bmp.Dispose();
 	bmp = scaled;
 }
