@@ -42,7 +42,7 @@ namespace Launcher.Gui.Views {
 			
 			Makers.Button(this, "Back", 110, 30, titleFont)
 				.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, -10, 10);
-			Makers.Button(this, "Connect", 110, 30, titleFont)
+			Makers.Button(this, "Connect", 130, 30, titleFont)
 				.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10);
 			
 			MakeTableWidget();
