@@ -8,6 +8,7 @@ namespace Launcher.Gui.Widgets {
 
 	internal struct TableEntry {
 		public string Hash, Name, Players, Uptime, Software, RawUptime;
+        public bool Featured;
 		public int Y, Height;
 	}
 	
@@ -46,6 +47,7 @@ namespace Launcher.Gui.Widgets {
 				tableEntry.Software = e.Software;
 				tableEntry.Uptime = MakeUptime(e.Uptime);
 				tableEntry.RawUptime = e.Uptime;
+                tableEntry.Featured = e.Featured;
 				
 				entries[index] = tableEntry;
 				usedEntries[index] = tableEntry;

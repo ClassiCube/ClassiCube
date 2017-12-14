@@ -135,7 +135,7 @@ namespace Launcher.Web {
 					(string)obj["players"], (string)obj["maxplayers"],
 					(string)obj["uptime"], (string)obj["mppass"],
 					(string)obj["ip"], (string)obj["port"],
-					(string)obj["software"]));
+					(string)obj["software"], (bool)obj["featured"]));
 			}
 			
 			DateTime end = DateTime.UtcNow;
