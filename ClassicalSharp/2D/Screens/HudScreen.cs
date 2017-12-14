@@ -30,10 +30,16 @@ namespace ClassicalSharp.Gui.Screens {
 				gfx.Texturing = false;
 			}
 			if (game.HideGui) return;
-			
 			bool showMinimal = game.Gui.ActiveScreen.BlocksWorld;
-			if (chat.HandlesAllInput && !game.PureClassic)
+			
+			if (playerList == null && !showMinimal) {
+				gfx.Texturing = true;
+				DrawCrosshairs();
+				gfx.Texturing = false;
+			}			
+			if (chat.HandlesAllInput && !game.PureClassic) {
 				chat.RenderBackground();
+			}
 			
 			gfx.Texturing = true;
 			if (!showMinimal) hotbar.Render(delta);
@@ -48,8 +54,6 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 			}
 			
-			if (playerList == null && !showMinimal)
-				DrawCrosshairs();
 			gfx.Texturing = false;
 		}
 		
