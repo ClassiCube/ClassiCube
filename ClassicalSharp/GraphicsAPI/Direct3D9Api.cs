@@ -431,6 +431,13 @@ namespace ClassicalSharp.GraphicsAPI {
 				device.SetTransform(matrixType, ref stack[stackIndex]);
 			}
 		}
+		
+		public override void CalcOrthoMatrix(float width, float height, out Matrix4 matrix) {
+			Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000, out matrix);
+			const float zN = -10000, zF = 10000;
+			matrix.Row2.Z = 1 / (zN - zF);
+			matrix.Row3.Z = zN / (zN - zF);
+		}
 
 		#endregion
 		
@@ -562,16 +569,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			array[id] = null;
 			id = -1;
 		}
-		
-		protected unsafe override void LoadOrthoMatrix(float width, float height) {
-			Matrix4 matrix;
-			Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000, out matrix);
-			const float zN = -10000, zF = 10000;
-			matrix.Row2.Z = 1 / (zN - zF);
-			matrix.Row3.Z = zN / (zN - zF);
-			curStack.SetTop(ref matrix);
-		}
-		
+
 		public override void Dispose() {
 			base.Dispose();
 			device.Dispose();

@@ -57,6 +57,7 @@ bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits);
 bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend);
 bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
+bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
 
 Int32 String_IndexOf(STRING_PURE String* str, UInt8 c, Int32 offset);
 Int32 String_LastIndexOf(STRING_PURE String* str, UInt8 c);

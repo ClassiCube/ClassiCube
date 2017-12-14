@@ -86,9 +86,8 @@ typedef struct Entity_ {
 	Vector3 Size;
 
 	Matrix Transform;
-	UInt8 SkinType;
-	UInt8 EntityType;
-	bool NoShade;
+	UInt8 SkinType, EntityType;
+	bool NoShade, Ground;
 	GfxResourceID TextureId, MobTextureId;
 	Real32 uScale, vScale;
 

@@ -167,6 +167,17 @@ bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toApp
 	return true;
 }
 
+bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* toAppend) {
+	Int32 i;
+
+	for (i = 0; i < toAppend->length; i++) {
+		UInt8 c = toAppend->buffer[i];
+		if (c == '&') { i++; continue; } /* Skip over the following colour code */
+		if (!String_Append(str, c)) return false;
+	}
+	return true;
+}
+
 
 Int32 String_IndexOf(STRING_PURE String* str, UInt8 c, Int32 offset) {
 	Int32 i;

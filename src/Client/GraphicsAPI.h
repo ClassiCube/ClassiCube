@@ -104,7 +104,8 @@ void Gfx_LoadIdentityMatrix(void);
 void Gfx_MultiplyMatrix(Matrix* matrix);
 void Gfx_PushMatrix(void);
 void Gfx_PopMatrix(void);
-void Gfx_LoadOrthoMatrix(Real32 width, Real32 height);
+void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix);
+void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix);
 
 /* Outputs a .png screenshot of the backbuffer to the specified file. */
 void Gfx_TakeScreenshot(STRING_PURE String* output, Int32 width, Int32 height);

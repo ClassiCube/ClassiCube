@@ -113,13 +113,8 @@ void Chat_AppendLog(STRING_PURE String* text) {
 	String_Append(&str, ':'); String_AppendPaddedInt32(&str, now.Minute, 2);
 	String_Append(&str, ':'); String_AppendPaddedInt32(&str, now.Second, 2);
 	String_Append(&str, ']'); String_Append(&str, ' ');
+	String_AppendColorless(&str, text);
 
-	Int32 i;
-	for (i = 0; i < text->length; i++) {
-		UInt8 c = text->buffer[i];
-		if (c == '&') { i++; continue; } /* Skip over the following colour code */
-		String_Append(&str, c);
-	}
 	Stream_WriteLine(&Chat_LogStream, &str);
 }
 

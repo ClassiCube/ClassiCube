@@ -1,5 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using OpenTK;
 
 namespace ClassicalSharp.GraphicsAPI {
 	
@@ -119,7 +120,10 @@ namespace ClassicalSharp.GraphicsAPI {
 		public void Mode2D(int width, int height) {
 			SetMatrixMode(MatrixType.Projection);
 			PushMatrix();
-			LoadOrthoMatrix(width, height);
+			Matrix4 ortho;
+			CalcOrthoMatrix(width, height, out ortho);
+			LoadMatrix(ref ortho);
+			
 			SetMatrixMode(MatrixType.Modelview);
 			PushMatrix();
 			LoadIdentityMatrix();

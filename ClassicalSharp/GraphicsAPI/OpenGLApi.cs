@@ -500,6 +500,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			fixed(Single* ptr = &matrix.Row0.X)
 				GL.MultMatrixf(ptr);
 		}
+
+		public override void CalcOrthoMatrix(float width, float height, out Matrix4 result) {
+			Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000, out matrix);
+		}
 		
 		#endregion
 		

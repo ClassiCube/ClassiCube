@@ -240,10 +240,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		internal abstract void MakeApiInfo();		
 		public string[] ApiInfo;
 		
-		protected virtual void LoadOrthoMatrix(float width, float height) {
-			Matrix4 matrix;
-			Matrix4.CreateOrthographicOffCenter(0, width, height, 0, -10000, 10000, out matrix);
-			LoadMatrix(ref matrix);
+		public abstract void CalcOrthoMatrix(float width, float height, out Matrix4 matrix);
+		public virtual void CalcPerspectiveMatrix(float fov, float aspect, float zNear, float zFar, out Matrix4 matrix) {
+			Matrix4.CreatePerspectiveFieldOfView(fov, aspect, zNear, zFar, out matrix);
 		}
 		
 		/// <summary> Sets the appropriate alpha testing/blending states necessary to render the given block. </summary>

@@ -493,10 +493,11 @@ void Gfx_MultiplyMatrix(Matrix* matrix) { glMultMatrixf((Real32*)matrix); }
 void Gfx_PushMatrix(void) { glPushMatrix(); }
 void Gfx_PopMatrix(void) { glPopMatrix(); }
 
-void Gfx_LoadOrthoMatrix(Real32 width, Real32 height) {
-	Matrix matrix;
-	Matrix_OrthographicOffCenter(&matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
-	Gfx_LoadMatrix(&matrix);
+void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix) {
+	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);
+}
+void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix) {
+	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
 

@@ -619,14 +619,13 @@ void Gfx_PopMatrix(void) {
 
 #define d3d9_zN -10000.0f
 #define d3d9_zF 10000.0f
-void Gfx_LoadOrthoMatrix(Real32 width, Real32 height) {
-	Matrix matrix;
-	Matrix_OrthographicOffCenter(&matrix, 0.0f, width, height, 0.0f, d3d9_zN, d3d9_zF);
-
-	matrix.Row2.Y = 1.0f / (d3d9_zN - d3d9_zF);
-	matrix.Row2.Z = d3d9_zN / (d3d9_zN - d3d9_zF);
-	matrix.Row3.Z = 1.0f;
-	Gfx_LoadMatrix(&matrix);
+void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix) {
+	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, d3d9_zN, d3d9_zF);
+	matrix->Row2.Z = 1.0f / (d3d9_zN - d3d9_zF);
+	matrix->Row3.Z = d3d9_zN / (d3d9_zN - d3d9_zF);
+}
+void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix) {
+	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
 

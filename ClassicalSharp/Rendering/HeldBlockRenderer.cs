@@ -128,10 +128,10 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ProjectionChanged(object sender, EventArgs e) {
+			float fov = 70 * Utils.Deg2Rad;
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
-			Matrix4.CreatePerspectiveFieldOfView(70 * Utils.Deg2Rad,
-			                                     aspectRatio, zNear, game.ViewDistance, out heldBlockProj);
+			game.Graphics.CalcPerspectiveMatrix(fov, aspectRatio, zNear, game.ViewDistance, out heldBlockProj);
 		}
 
 		
