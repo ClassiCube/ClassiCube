@@ -76,32 +76,32 @@ namespace Launcher.Gui.Widgets {
 		static string FilterPlayers(TableEntry e)  { return e.Players; }  static ColumnFilter filterPlayers  = FilterPlayers;
 		static string FilterUptime(TableEntry e)   { return e.Uptime; }   static ColumnFilter filterUptime   = FilterUptime;
 		static string FilterSoftware(TableEntry e) { return e.Software; } static ColumnFilter filterSoftware = FilterSoftware;
-		
+
 		int DrawColumn(IDrawer2D drawer, string header, int columnI, int x, ColumnFilter filter) {
 			int y = table.Y + 3;
 			int maxWidth = table.ColumnWidths[columnI];
 			bool separator = columnI > 0;
-			
+
 			DrawTextArgs args = new DrawTextArgs(header, titleFont, true);
 			TableEntry headerEntry = default(TableEntry);
 			DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref headerEntry);
 			maxIndex = table.Count;
 
-            y += 5;		
+			y += 5;
 			for (int i = table.CurrentIndex; i < table.Count; i++) {
-                foreGridCol = (table.entries[i].Featured ? FastColour.Red : new FastColour(40, 40, 40));
-                args = new DrawTextArgs(filter(table.usedEntries[i]), font, true);
+				args = new DrawTextArgs(filter(table.usedEntries[i]), font, true);
 				if ((i == table.SelectedIndex || table.entries[i].Featured) && !separator) {
 					int startY = y - 3;
 					int height = Math.Min(startY + (entryHeight + 4), table.Y + table.Height) - startY;
-                    drawer.Clear(table.entries[i].Featured ? new FastColour(87, 89, 0) : foreGridCol, table.X, startY, table.Width, height);
-                }
+					drawer.Clear(table.entries[i].Featured ? new FastColour(87, 89, 0) : foreGridCol, table.X, startY, table.Width, height);
+				}
 
-                if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref table.usedEntries[i])) {
-					maxIndex = i; break;
+				if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref table.usedEntries[i])) {
+					maxIndex = i;
+					break;
 				}
 			}
-			
+
 			if (separator && !window.ClassicBackground) {
 				drawer.Clear(LauncherSkin.BackgroundCol, x - 7, table.Y, 2, table.Height);
 			}
