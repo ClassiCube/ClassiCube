@@ -47,7 +47,7 @@ void Player_MakeNameTexture(Player* player) {
 	FontDesc_Make(&font, 24, FONT_STYLE_NORMAL);
 	Platform_MakeFont(&font, &Game_FontName);
 
-	String displayName = String_FromRaw(player->DisplayNameRaw, STRING_SIZE);
+	String displayName = String_FromRawArray(player->DisplayNameRaw);
 	DrawTextArgs args; 
 	DrawTextArgs_Make(&args, &displayName, &font, false);
 
@@ -125,60 +125,65 @@ void Player_DrawName(Player* player) {
 }
 
 void Player_CheckSkin(Player* player) {
-	if (!player->FetchedSkin && Model.UsesSkin) {
+	Entity* entity = &player->Base;
+	String skin = String_FromRawArray(player->SkinNameRaw);
+
+	if (!player->FetchedSkin && entity->Model->UsesSkin) {
 		Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(player);
 		if (first == NULL) {
-			game.AsyncDownloader.DownloadSkin(SkinName, SkinName);
+			AsyncDownloader_DownloadSkin(&skin, &skin);
 		} else {
 			ApplySkin(first);
 		}
 		player->FetchedSkin = true;
 	}
 
-	Request item;
-	if (!game.AsyncDownloader.TryGetItem(SkinName, out item)) return;
-	if (item == null || item.Data == null) { SetSkinAll(true); return; }
+	AsyncRequest item;
+	if (!AsyncDownloader_Get(&skin, &item)) return;
+	if (item == null || item.Data == null) { Player_SetSkinAll(player, true); return; }
 
 	Bitmap bmp = (Bitmap)item.Data;
-	game.Graphics.DeleteTexture(ref TextureId);
+	Gfx_DeleteTexture(&entity->TextureId);
 
-	SetSkinAll(true);
-	EnsurePow2(ref bmp);
-	SkinType = Utils.GetSkinType(bmp);
+	Player_SetSkinAll(player, true);
+	Player_EnsurePow2(player, &bmp);
+	entity->SkinType = Utils.GetSkinType(bmp);
 
-	if (SkinType == SKIN_TYPE_INVALID) {
-		SetSkinAll(true);
+	if (entity->SkinType == SKIN_TYPE_INVALID) {
+		Player_SetSkinAll(player, true);
 	} else {
-		if (Model.UsesHumanSkin) ClearHat(bmp, SkinType);
-		TextureId = game.Graphics.CreateTexture(bmp, true, false);
-		SetSkinAll(false);
+		if (entity->Model->UsesHumanSkin) {
+			Player_ClearHat(bmp, entity->SkinType);
+		}
+		entity->TextureId = Gfx_CreateTexture(&bmp, true, false);
+		Player_SetSkinAll(player, false);
 	}
-	bmp.Dispose();
+	Platform_MemFree(bmp.Scan0);
 }
 
 Player* Player_FirstOtherWithSameSkin(Player* player) {	
-	String skin = String_FromRaw(player->SkinNameRaw, STRING_SIZE);
+	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
-		String pSkin = String_FromRaw(p->SkinNameRaw, STRING_SIZE);
+		String pSkin = String_FromRawArray(p->SkinNameRaw);
 		if (String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
 }
 
 Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
-	String skin = String_FromRaw(player->SkinNameRaw, STRING_SIZE);
+	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
-		String pSkin = String_FromRaw(p->SkinNameRaw, STRING_SIZE);
+		String pSkin = String_FromRawArray(p->SkinNameRaw);
 		if (p->FetchedSkin && String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
@@ -186,14 +191,14 @@ Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
 
 /* Apply or reset skin, for all players with same skin */
 void Player_SetSkinAll(Player* player, bool reset) {
-	String skin = String_FromRaw(player->SkinNameRaw, STRING_SIZE);
+	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
-		String pSkin = String_FromRaw(p->SkinNameRaw, STRING_SIZE);
+		String pSkin = String_FromRawArray(p->SkinNameRaw);
 		if (!String_Equals(&skin, &pSkin)) continue;
 
 		if (reset) {
@@ -215,7 +220,8 @@ void Player_ApplySkin(Player* player, Player* from) {
 
 	/* Custom mob textures */
 	dst->MobTextureId = NULL;
-	if (Utils.IsUrlPrefix(SkinName, 0)) {
+	String skin = String_FromRawArray(player->SkinNameRaw);
+	if (Utils.IsUrlPrefix(&skin, 0)) {
 		dst->MobTextureId = dst->TextureId;
 	}
 }
@@ -225,7 +231,7 @@ void Player_ResetSkin(Player* player) {
 	entity->uScale = 1; entity->vScale = 1.0f;
 	entity->MobTextureId = NULL;
 	entity->TextureId    = NULL;
-	entity->SkinType = game.DefaultPlayerSkinType;
+	entity->SkinType = Game_DefaultPlayerSkinType;
 }
 
 void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
@@ -265,12 +271,13 @@ void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 	Bitmap scaled; Bitmap_Allocate(&scaled, width, height);	
 	Int32 y;
 	for (y = 0; y < bmp->Height; y++) {
-		FastBitmap.CopyRow(y, y, src, dst, src.Width);
+		Bitmap_CopyRow(y, y, &bmp, &scaled, bmp->Width);
 	}
 
 	Entity* entity = &player->Base;
 	entity->uScale = (Real32)bmp->Width  / width;
 	entity->vScale = (Real32)bmp->Height / height;
-	bmp.Dispose();
-	bmp = scaled;
+
+	Platform_MemFree(bmp->Scan0);
+	*bmp = scaled;
 }

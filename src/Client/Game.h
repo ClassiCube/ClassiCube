@@ -19,7 +19,7 @@ Int32 Game_ChunkUpdates;
 bool Game_CameraClipping;
 /* Whether colour clear gfx call should be skipped. */
 bool Game_SkipClear;
-SkinType Game_DefaultPlayerSkinType;
+UInt8 Game_DefaultPlayerSkinType;
 /* Picked pos instance used for block selection. */
 PickedPos Game_SelectedPos;
 /* Picked pos instance used for camera clipping. */

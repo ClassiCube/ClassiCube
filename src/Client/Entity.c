@@ -116,7 +116,7 @@ void Entity_ParseScale(Entity* entity, String scale) {
 void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->ModelBlock = BLOCK_AIR;
-	String entModel = String_FromRaw(entity->ModelNameRaw, ENTITY_MAX_MODEL_LENGTH);
+	String entModel = String_FromRawArray(entity->ModelNameRaw);
 	String_Clear(&entModel);
 
 	Int32 sep = String_IndexOf(model, '|', 0);

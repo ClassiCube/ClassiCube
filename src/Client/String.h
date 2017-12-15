@@ -39,6 +39,8 @@ String String_FromReadonly(STRING_REF const UInt8* buffer);
 #define String_FromConst(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)};
 /* Constructs a new string from a compile time empty string buffer. */
 #define String_EmptyConstArray(buffer) { buffer, 0, (UInt16)(sizeof(buffer) - 1)};
+/* Constructs a new string from a compile time array, that may have arbitary actual length of data at runtime */
+#define String_FromRawArray(buffer) String_FromRaw(buffer, (UInt16)(sizeof(buffer) - 1))
 
 void String_MakeLowercase(STRING_TRANSIENT String* str);
 void String_Clear(STRING_TRANSIENT String* str);

@@ -38,7 +38,7 @@ void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 	}
 
 	Player* player = &LocalPlayer_Instance.Base;
-	String skin = String_FromRaw(player->SkinNameRaw, STRING_SIZE);
+	String skin = String_FromRawArray(player->SkinNameRaw);
 	AsyncDownloader_DownloadSkin(&skin, &skin);
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 	

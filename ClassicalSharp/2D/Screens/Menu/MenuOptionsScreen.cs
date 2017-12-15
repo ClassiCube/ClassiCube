@@ -52,7 +52,7 @@ namespace ClassicalSharp.Gui.Screens {
 				game.Gui.SetNewScreen(null);
 				return true;
 			} else if ((key == Key.Enter || key == Key.KeypadEnter)
-			          && input != null) {
+			           && input != null) {
 				ChangeSetting();
 				return true;
 			}
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextLost() {
 			base.ContextLost();
-			DisposeWidgets();
+			InputClosed();
 			DisposeExtendedHelp();
 		}
 		
@@ -90,7 +90,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void WidgetSelected(Widget widget) {
 			ButtonWidget button = widget as ButtonWidget;
 			if (selectedWidget == button || button == null ||
-			   button == widgets[widgets.Length - 2]) return;
+			    button == widgets[widgets.Length - 2]) return;
 			
 			selectedWidget = button;
 			if (targetWidget != null) return;
@@ -106,7 +106,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected virtual void InputOpened() { }
 		
-		protected virtual void InputClosed() { }
+		protected virtual void InputClosed() {
+			if (input != null) input.Dispose();
+			widgets[widgets.Length - 2] = null;
+			input = null;
+			
+			int okIndex = widgets.Length - 1;
+			if (widgets[okIndex] != null) widgets[okIndex].Dispose();
+			widgets[okIndex] = null;
+		}
 		
 		protected ButtonWidget MakeOpt(int dir, int y, string optName, ClickHandler onClick,
 		                               ButtonValueGetter getter, ButtonValueSetter setter) {
@@ -179,7 +187,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			targetWidget = selectedWidget;
-			if (input != null) input.Dispose();
+			InputClosed();
 			
 			input = MenuInputWidget.Create(game, 400, 30,
 			                               button.GetValue(game), regularFont, validator)
@@ -198,12 +206,12 @@ namespace ClassicalSharp.Gui.Screens {
 		void InputClick(Game game, Widget widget, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;
 			widget.HandlesMouseClick(x, y, btn);
-		}		
+		}
 		
 		void HandleEnumOption(ButtonWidget button, Type type) {
 			string rawName = button.GetValue(game);
 			int value = (int)Enum.Parse(type, rawName, true);
-			value++;		
+			value++;
 			// go back to first value
 			if (!Enum.IsDefined(type, value)) value = 0;
 			
@@ -217,7 +225,6 @@ namespace ClassicalSharp.Gui.Screens {
 				SetButtonValue(targetWidget, text);
 			}
 			
-			DisposeWidgets();
 			UpdateDescription(targetWidget);
 			targetWidget = null;
 			InputClosed();
@@ -228,17 +235,6 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = IndexOfWidget(btn);
 			// e.g. changing FPS invalidates all widgets
 			if (index >= 0) btn.SetText(btn.OptName + ": " + btn.GetValue(game));
-		}
-		
-		void DisposeWidgets() {
-			if (input != null) input.Dispose();
-			widgets[widgets.Length - 2] = null;
-			input = null;
-			
-			int okayIndex = widgets.Length - 1;
-			if (widgets[okayIndex] != null)
-				widgets[okayIndex].Dispose();
-			widgets[okayIndex] = null;
 		}
 		
 		protected static string GetFPS(Game g) { return g.FpsLimit.ToString(); }

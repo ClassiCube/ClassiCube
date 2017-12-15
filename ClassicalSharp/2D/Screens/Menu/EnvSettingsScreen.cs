@@ -106,6 +106,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void InputClosed() {
+			base.InputClosed();
 			if (widgets[defaultIndex] != null)
 				widgets[defaultIndex].Dispose();
 			widgets[defaultIndex] = null;

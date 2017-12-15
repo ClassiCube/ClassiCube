@@ -420,7 +420,7 @@ void SheepModel_DrawModel(Entity* entity) {
 	IModel_DrawRotate(entity->Anim.LeftLegX, 0, 0, Sheep_RightLegBack, false);
 	IModel_UpdateVB();
 
-	String entModel = String_FromRaw(entity->ModelNameRaw, ENTITY_MAX_MODEL_LENGTH);
+	String entModel = String_FromRawArray(entity->ModelNameRaw);
 	String sheep_nofur = String_FromConst("sheep_nofur");
 	if (String_CaselessEquals(&entModel, &sheep_nofur)) return;
 	Gfx_BindTexture(ModelCache_Textures[fur_Index].TexID);
