@@ -49,18 +49,17 @@ namespace ClassicalSharp.Audio {
 			else DisposeMusic();
 		}
 		
-		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
 		void InitMusic() {
 			if (musicThread != null) { musicOut.SetVolume(game.MusicVolume / 100.0f); return; }
 			
 			int musicCount = 0;
 			for (int i = 0; i < files.Length; i++) {
-				if (files[i].EndsWith(".ogg", comp)) musicCount++;
+				if (Utils.CaselessEnds(files[i], ".ogg")) musicCount++;
 			}
 			
 			musicFiles = new string[musicCount];
 			for (int i = 0, j = 0; i < files.Length; i++) {
-				if (!files[i].EndsWith(".ogg", comp)) continue;
+				if (!Utils.CaselessEnds(files[i], ".ogg")) continue;
 				musicFiles[j] = files[i]; j++;
 			}
 

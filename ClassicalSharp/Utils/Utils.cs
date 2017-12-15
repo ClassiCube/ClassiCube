@@ -43,7 +43,6 @@ namespace ClassicalSharp {
 		}
 
 #if !LAUNCHER		
-		/// <summary> Returns a string with a + removed if it is the last character in the string. </summary>
 		public static string RemoveEndPlus(string value) {
 			// Workaround for MCDzienny (and others) use a '+' at the end to distinguish classicube.net accounts
 			// from minecraft.net accounts. Unfortunately they also send this ending + to the client.
@@ -55,11 +54,9 @@ namespace ClassicalSharp {
 #endif
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
-		/// <summary> Returns whether a equals b, ignoring any case differences. </summary>
 		public static bool CaselessEquals(string a, string b) { return a.Equals(b, comp); }
-		
-		/// <summary> Returns whether a starts with b, ignoring any case differences. </summary>
 		public static bool CaselessStarts(string a, string b) { return a.StartsWith(b, comp); }
+		public static bool CaselessEnds(string a, string b) { return a.EndsWith(b, comp); }
 		
 		/// <summary> Converts the given byte array of length N to a hex string of length 2N. </summary>
 		public static string ToHexString(byte[] array) {

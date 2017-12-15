@@ -105,7 +105,7 @@ namespace Launcher.Gui.Widgets {
 			if (String.IsNullOrEmpty(input.Text)) return;
 			Clipboard.SetText(input.Text);
 		}
-		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
+		static char[] trimChars = new char[] {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		
 		/// <summary> Sets the currently entered text to the contents of the system clipboard. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>

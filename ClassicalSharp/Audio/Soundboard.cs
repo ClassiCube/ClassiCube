@@ -20,12 +20,11 @@ namespace ClassicalSharp.Audio {
 		public byte[] Data;
 		List<SoundGroup> groups = new List<SoundGroup>();
 		Random rnd = new Random();
-		
-		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
+
 		public void Init(string sndGroup, string[] files) {
 			for (int i = 0; i < files.Length; i++) {
 				string name = Path.GetFileNameWithoutExtension(files[i]);
-				if (!name.StartsWith(sndGroup, comp)) continue;
+				if (!Utils.CaselessStarts(name, sndGroup)) continue;
 				
 				// Convert dig_grass1.wav to grass
 				name = Utils.ToLower(name.Substring(sndGroup.Length));

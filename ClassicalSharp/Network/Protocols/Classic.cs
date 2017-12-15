@@ -236,8 +236,9 @@ namespace ClassicalSharp.Network.Protocols {
 			string text = reader.ReadChatString(ref type);
 			if (prepend) text = "&e" + text;
 			
-			if (!text.StartsWith("^detail.user", StringComparison.OrdinalIgnoreCase))
+			if (!Utils.CaselessStarts(text, "^detail.user")) {
 				game.Chat.Add(text, (MessageType)type);
+			}
 		}
 		
 		void HandleKick() {

@@ -94,10 +94,9 @@ namespace Launcher.Patcher {
 			return filename.StartsWith("gui")
 				|| filename.StartsWith("mob") || filename.IndexOf('/') < 0;
 		}
-		
-		StringComparison comp = StringComparison.OrdinalIgnoreCase;
+
 		void ProcessZipEntry_Classic(string filename, byte[] data, ZipEntry entry) {
-			if (!filename.EndsWith(".png", comp)) return;
+			if (!Utils.CaselessEnds(filename, ".png")) return;
 			entry.Filename = ResourceList.GetFile(filename);
 			
 			if (entry.Filename != "terrain.png") {

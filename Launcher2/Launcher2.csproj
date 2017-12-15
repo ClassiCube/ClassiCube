@@ -117,7 +117,6 @@
     <Compile Include="Gui\TableWidget\Comparers.cs" />
     <Compile Include="Gui\TableWidget\TableView.cs" />
     <Compile Include="Gui\TableWidget\TableWidget.cs" />
-    <Compile Include="Gui\TableWidget\TableWidget.Input.cs" />
     <Compile Include="Gui\Views\ChooseModeView.cs" />
     <Compile Include="Gui\Views\ColoursView.cs" />
     <Compile Include="Gui\Views\DirectConnectView.cs" />
@@ -154,7 +153,6 @@
     <Compile Include="Utils\Secure.cs" />
     <Compile Include="WebService\ClassiCubeSession.cs" />
     <Compile Include="WebService\IWebTask.cs" />
-    <Compile Include="WebService\ServerListEntry.cs" />
     <Compile Include="WebService\UpdateCheckTask.cs" />
   </ItemGroup>
   <ItemGroup>

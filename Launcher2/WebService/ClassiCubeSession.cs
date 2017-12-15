@@ -6,6 +6,19 @@ using System.Threading;
 using JsonObject = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Launcher.Web {
+
+	public class ServerListEntry {		
+		public string Hash, Name, Players, MaximumPlayers;
+		public string Uptime, IPAddress, Port, Mppass, Software;
+		
+		public ServerListEntry(string hash, string name, string players, string maxPlayers, 
+                       string uptime, string mppass, string ip, string port, string software) {
+			Hash = hash; Name = name; Players = players;
+			MaximumPlayers = maxPlayers; Uptime = uptime;
+			Mppass = mppass; IPAddress = ip; Port = port;
+			Software = software;
+		}
+	}
 	
 	public sealed class ClassicubeSession : IWebTask {
 		

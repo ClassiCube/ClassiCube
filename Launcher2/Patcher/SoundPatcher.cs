@@ -19,7 +19,6 @@ namespace Launcher.Patcher {
 			this.prefix = prefix;
 		}
 		
-		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
 		public void FetchFiles(string baseUrl, string altBaseUrl, 
 		                       ResourceFetcher fetcher, bool allExist) {
 			if (allExist) { Done = true; return; }
