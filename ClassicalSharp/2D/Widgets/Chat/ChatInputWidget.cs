@@ -144,7 +144,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				string rawName = entries[i].PlayerName;
 				string name = Utils.StripColours(rawName);
-				if (Utils.CaselessEquals(name, part)) matches.Add(name);
+				if (Utils.CaselessStarts(name, part)) matches.Add(name);
 			}
 			
 			if (matches.Count == 1) {
