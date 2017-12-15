@@ -10,6 +10,7 @@ namespace Launcher.Gui.Widgets {
 	internal struct TableEntry {
 		public string Hash, Name, Players, Uptime, Software, RawUptime;
 		public int Y, Height;
+		public bool Featured;
 	}
 	
 	public delegate void TableNeedsRedrawHandler();
@@ -43,10 +44,11 @@ namespace Launcher.Gui.Widgets {
 				TableEntry tableEntry = default(TableEntry);
 				tableEntry.Hash = e.Hash;
 				tableEntry.Name = e.Name;
-				tableEntry.Players = e.Players + "/" + e.MaximumPlayers;
+				tableEntry.Players = e.Players + "/" + e.MaxPlayers;
 				tableEntry.Software = e.Software;
 				tableEntry.Uptime = MakeUptime(e.Uptime);
 				tableEntry.RawUptime = e.Uptime;
+				tableEntry.Featured = e.Featured;
 				
 				entries[index] = tableEntry;
 				usedEntries[index] = tableEntry;

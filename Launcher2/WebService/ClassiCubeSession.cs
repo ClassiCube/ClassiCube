@@ -8,16 +8,9 @@ using JsonObject = System.Collections.Generic.Dictionary<string, object>;
 namespace Launcher.Web {
 
 	public class ServerListEntry {		
-		public string Hash, Name, Players, MaximumPlayers;
+		public string Hash, Name, Players, MaxPlayers;
 		public string Uptime, IPAddress, Port, Mppass, Software;
-		
-		public ServerListEntry(string hash, string name, string players, string maxPlayers, 
-                       string uptime, string mppass, string ip, string port, string software) {
-			Hash = hash; Name = name; Players = players;
-			MaximumPlayers = maxPlayers; Uptime = uptime;
-			Mppass = mppass; IPAddress = ip; Port = port;
-			Software = software;
-		}
+		public bool Featured;
 	}
 	
 	public sealed class ClassicubeSession : IWebTask {
@@ -30,23 +23,18 @@ namespace Launcher.Web {
 		public List<ServerListEntry> Servers = new List<ServerListEntry>();
 		
 		public void LoginAsync(string user, string password) {
-			Username = user;
-			Working = true;
-			Done = false;
-			Exception = null;
+			Username = user;			
 			Status = "&eSigning in..";
 			Servers = new List<ServerListEntry>();
 			
+			BeginWorking();			
 			Thread thread = new Thread(LoginWorker, 256 * 1024);
 			thread.Name = "Launcher.CCLoginAsync";
 			thread.Start(password);
 		}
 		
 		public void FetchServersAsync() {
-			Working = true;
-			Done = false;
-			Exception = null;
-			
+			BeginWorking();
 			Thread thread = new Thread(FetchServersWorker, 256 * 1024);
 			thread.Name = "Launcher.CCFetchAsync";
 			thread.Start();
@@ -143,12 +131,21 @@ namespace Launcher.Web {
 			
 			for (int i = 0; i < list.Count; i++) {
 				JsonObject obj = (JsonObject)list[i];
-				servers.Add(new ServerListEntry(
-					(string)obj["hash"], (string)obj["name"],
-					(string)obj["players"], (string)obj["maxplayers"],
-					(string)obj["uptime"], (string)obj["mppass"],
-					(string)obj["ip"], (string)obj["port"],
-					(string)obj["software"]));
+				ServerListEntry entry = new ServerListEntry();
+				entry.Hash       = (string)obj["hash"];
+				entry.Name       = (string)obj["name"];
+				entry.Players    = (string)obj["players"];
+				entry.MaxPlayers = (string)obj["maxplayers"];
+				entry.Uptime     = (string)obj["uptime"];
+				entry.Mppass     = (string)obj["mppass"];
+				entry.IPAddress  = (string)obj["ip"];
+				entry.Port       = (string)obj["port"];
+				entry.Software   = (string)obj["software"];
+				
+				if (obj.ContainsKey("featured")) {
+					entry.Featured = (bool)obj["featured"];
+				}
+				servers.Add(entry);
 			}
 			
 			DateTime end = DateTime.UtcNow;

@@ -34,6 +34,12 @@ namespace Launcher.Web {
 		/// <summary> Username used when performing GET or POST requests, can be left null. </summary>
 		public string Username;
 		
+		public void BeginWorking() {
+			Working = true;
+			Done = false;
+			Exception = null;
+		}
+		
 		protected void Finish(bool success, WebException ex, string status) {
 			if (!success) 
 				Username = null;
