@@ -12,13 +12,14 @@ namespace Launcher.Gui.Widgets {
 		PlayersComparer playerComp = new PlayersComparer();
 		UptimeComparer uptimeComp = new UptimeComparer();
 		SoftwareComparer softwareComp = new SoftwareComparer();
-		internal int DraggingColumn = -1;
+        FeaturedComparer featuredComp = new FeaturedComparer();
+        internal int DraggingColumn = -1;
 		internal bool DraggingScrollbar = false;
 		internal int mouseOffset;
 		
 		public void SortDefault() {
 			SortEntries(defComp, true);
-		}
+        }
 		
 		void SelectHeader(int mouseX, int mouseY) {
 			int x = X;		
@@ -35,34 +36,39 @@ namespace Launcher.Gui.Widgets {
 		void TrySortColumns(int mouseX) {
 			int x = X;
 			if (mouseX >= x && mouseX < x + ColumnWidths[0]) {
-				SortEntries(nameComp, false); return;
+				SortEntries(nameComp, false);
+                return;
 			}
 			
 			x += ColumnWidths[0] + 10;
 			if (mouseX >= x && mouseX < x + ColumnWidths[1]) {
-				SortEntries(playerComp, false); return;
+				SortEntries(playerComp, false);
+                return;
 			}
 			
 			x += ColumnWidths[1] + 10;
 			if (mouseX >= x && mouseX < x + ColumnWidths[2]) {
-				SortEntries(uptimeComp, false); return;
+				SortEntries(uptimeComp, false);
+                return;
 			}
 			
 			x += ColumnWidths[2] + 10;
 			if (mouseX >= x) {
-				SortEntries(softwareComp, false); return;
+				SortEntries(softwareComp, false);
+                return;
 			}
 		}
 		
 		void SortEntries(TableEntryComparer comparer, bool noRedraw) {
-			Array.Sort(usedEntries, 0, Count, comparer);
+            Array.Sort(usedEntries, 0, Count, comparer);
 			Array.Sort(entries, 0, entries.Length, comparer);
-			lastIndex = -10;
-			if (noRedraw) return;
-			
-			comparer.Invert = !comparer.Invert;
-			SetSelected(SelectedHash);
-			NeedRedraw();
+            lastIndex = -10;
+            if (!noRedraw) {
+                comparer.Invert = !comparer.Invert;
+                SetSelected(SelectedHash);
+                NeedRedraw();
+            }
+            if (comparer != featuredComp) SortEntries(featuredComp, true);
 		}
 		
 		void GetSelectedServer(int mouseX, int mouseY) {

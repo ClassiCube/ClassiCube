@@ -61,5 +61,15 @@ namespace Launcher.Gui.Widgets {
 			int value = String.Compare(a.Software, b.Software, comparison);
 			return Invert ? -value : value;
 		}
+    }
+
+	sealed class FeaturedComparer : TableEntryComparer {
+
+		public override int Compare(TableEntry a, TableEntry b) {
+			bool valX = a.Featured;
+			bool valY = b.Featured;
+			int value = valX.CompareTo(valY);
+			return Invert ? -value : value;
+		}
 	}
 }
