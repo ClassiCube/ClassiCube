@@ -159,9 +159,7 @@ namespace ClassicalSharp.Gui.Screens {
 				return true;
 			}
 			
-			if (chat.HandlesKeyDown(key))
-				return true;
-			return hotbar.HandlesKeyDown(key);
+			return chat.HandlesKeyDown(key) || hotbar.HandlesKeyDown(key);
 		}
 		
 		public override bool HandlesKeyUp(Key key) {
@@ -174,8 +172,7 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 			}
 			
-			if (chat.HandlesAllInput) return true;
-			return hotbar.HandlesKeyUp(key);
+			return chat.HandlesKeyUp(key) || hotbar.HandlesKeyUp(key);
 		}
 		
 		public void OpenTextInputBar(string text) {

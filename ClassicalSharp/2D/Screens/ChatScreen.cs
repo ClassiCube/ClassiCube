@@ -363,8 +363,6 @@ namespace ClassicalSharp.Gui.Screens {
 					ScrollHistoryBy(-chatLines);
 				} else if (key == Key.PageDown) {
 					ScrollHistoryBy(chatLines);
-				} else if (game.Server.SupportsFullCP437 && key == game.Input.Keys[KeyBind.ExtInput]) {
-					altText.SetActive(!altText.Active);
 				} else {
 					input.HandlesKeyDown(key);
 					UpdateAltTextY();
@@ -378,6 +376,15 @@ namespace ClassicalSharp.Gui.Screens {
 				OpenTextInputBar("/");
 			} else {
 				return false;
+			}
+			return true;
+		}
+		
+		public override bool HandlesKeyUp(Key key) {
+			if (!HandlesAllInput) return false;
+			
+			if (game.Server.SupportsFullCP437 && key == game.Input.Keys[KeyBind.ExtInput]) {
+				if (game.window.Focused) altText.SetActive(!altText.Active);
 			}
 			return true;
 		}
