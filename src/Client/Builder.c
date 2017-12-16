@@ -94,7 +94,8 @@ void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* h
 	if (vCount == 0) return;
 
 	ChunkPartInfo info;
-	info.VbId = Gfx_CreateVb(part->vertices, VERTEX_FORMAT_P3FT2FC4B, vCount);
+	/* add an extra element to fix crashing on some GPUs */
+	info.VbId = Gfx_CreateVb(part->vertices, VERTEX_FORMAT_P3FT2FC4B, vCount + 1);
 	info.HasVertices = vCount > 0;
 
 	info.XMinCount = (UInt16)part->fCount[Face_XMin];
@@ -111,7 +112,7 @@ void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* h
 
 
 void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
-	Int32 xMax = min(World_Width, x1 + CHUNK_SIZE);
+	Int32 xMax = min(World_Width,  x1 + CHUNK_SIZE);
 	Int32 yMax = min(World_Height, y1 + CHUNK_SIZE);
 	Int32 zMax = min(World_Length, z1 + CHUNK_SIZE);
 #if OCCLUSION

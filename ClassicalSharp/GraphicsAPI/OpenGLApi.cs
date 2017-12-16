@@ -250,7 +250,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override int CreateVb(IntPtr vertices, VertexFormat format, int count) {
 			if (glLists) {
 				int list = GL.GenLists(1);
-				GL.NewList(list, 0x1300);
+				GL.NewList(list, 0x1300);				
+				count &= ~0x01; // Need to get rid of the 1 extra element, see comment in chunk mesh builder for why
 				
 				const int maxIndices = 65536 / 4 * 6;
 				ushort* indicesPtr = stackalloc ushort[maxIndices];

@@ -262,6 +262,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
 	if (gl_lists) {
 		Int32 list = glGenLists(1);
 		glNewList(list, GL_COMPILE);
+		count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
 
 		UInt16 indices[GFX_MAX_INDICES];
 		GfxCommon_MakeIndices(indices, ICOUNT(count));

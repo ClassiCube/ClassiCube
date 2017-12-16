@@ -143,7 +143,8 @@ namespace ClassicalSharp {
 			
 			ChunkPartInfo info;
 			fixed (VertexP3fT2fC4b* ptr = part.vertices) {
-				info.VbId = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, vertCount);
+				// add an extra element to fix crashing on some GPUs
+				info.VbId = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, vertCount + 1);
 			}
 			info.VerticesCount = vertCount;
 			
