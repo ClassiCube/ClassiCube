@@ -260,6 +260,9 @@ GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 #define gl_MAXINDICES ICOUNT(65536)
 GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
 	if (gl_lists) {
+		/* We need to setup client state properly when building the list */
+		Int32 curFormat = gl_batchFormat;
+		Gfx_SetBatchFormat(vertexFormat);
 		Int32 list = glGenLists(1);
 		glNewList(list, GL_COMPILE);
 		count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
@@ -276,6 +279,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
 
 		glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, indices);
 		glEndList();
+		Gfx_SetBatchFormat(curFormat);
 		return list;
 	}
 

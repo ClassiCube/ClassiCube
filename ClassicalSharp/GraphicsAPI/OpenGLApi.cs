@@ -249,8 +249,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override int CreateVb(IntPtr vertices, VertexFormat format, int count) {
 			if (glLists) {
+				// We need to setup client state properly when building the list
+				VertexFormat curFormat = batchFormat;
+				SetBatchFormat(format);
 				int list = GL.GenLists(1);
-				GL.NewList(list, 0x1300);				
+				GL.NewList(list, 0x1300);
 				count &= ~0x01; // Need to get rid of the 1 extra element, see comment in chunk mesh builder for why
 				
 				const int maxIndices = 65536 / 4 * 6;
@@ -266,6 +269,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				
 				GL.DrawElements(BeginMode.Triangles, (count >> 2) * 6, DrawElementsType.UnsignedShort, (IntPtr)indicesPtr);
 				GL.EndList();
+				SetBatchFormat(curFormat);
 				return list;
 			}
 			

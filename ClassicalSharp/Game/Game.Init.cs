@@ -119,7 +119,7 @@ namespace ClassicalSharp {
 			Graphics.DepthTestFunc(CompareFunc.LessEqual);
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc(BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha);
-			Graphics.AlphaTestFunc(CompareFunc.Greater, 0.5f);
+			Graphics.AlphaTestFunc(CompareFunc.Greater, 0.5f);			
 			Culling = new FrustumCulling();
 			Picking = new PickedPosRenderer(); Components.Add(Picking);
 			AudioPlayer = new AudioPlayer(); Components.Add(AudioPlayer);
