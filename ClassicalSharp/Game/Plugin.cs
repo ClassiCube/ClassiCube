@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 		
 		void Load(string path, bool needsInit) {
 			try {
-				Assembly lib = Assembly.LoadFile(path);
+				Assembly lib = Assembly.LoadFrom(path);
 				Type[] types = lib.GetTypes();
 				
 				for (int i = 0; i < types.Length; i++) {
