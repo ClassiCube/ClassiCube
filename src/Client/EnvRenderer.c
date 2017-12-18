@@ -99,13 +99,14 @@ void EnvRenderer_RenderSky(Real64 deltaTime) {
 	if (skyY == normalY) {
 		Gfx_DrawVb_IndexedTris(env_skyVertices);
 	} else {
-		Matrix m = Matrix_Identity;
-		m.Row3.Y = skyY - normalY; /* Y translation matrix */
+		Matrix m = Gfx_View;
+		Real32 dy = skyY - normalY; /* inlined Y translation matrix multiply */
+		m.Row3.X += dy * m.Row1.X; m.Row3.Y += dy * m.Row1.Y;
+		m.Row3.Z += dy * m.Row1.Z; m.Row3.W += dy * m.Row1.W;
 
-		Gfx_PushMatrix();
-		Gfx_MultiplyMatrix(&m);
+		Gfx_LoadMatrix(&m);
 		Gfx_DrawVb_IndexedTris(env_skyVertices);
-		Gfx_PopMatrix();
+		Gfx_LoadMatrix(&Gfx_View);
 	}
 }
 

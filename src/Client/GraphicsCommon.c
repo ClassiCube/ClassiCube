@@ -103,12 +103,10 @@ void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertice
 bool gfx_hadFog;
 void GfxCommon_Mode2D(Int32 width, Int32 height) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Gfx_PushMatrix();
 	Matrix ortho;
 	Gfx_CalcOrthoMatrix((Real32)width, (Real32)height, &ortho);
 	Gfx_LoadMatrix(&ortho);
 	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
-	Gfx_PushMatrix();
 	Gfx_LoadIdentityMatrix();
 
 	Gfx_SetDepthTest(false);
@@ -119,9 +117,9 @@ void GfxCommon_Mode2D(Int32 width, Int32 height) {
 
 void GfxCommon_Mode3D(void) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Gfx_PopMatrix(); /* Get rid of orthographic 2D matrix. */
+	Gfx_LoadMatrix(&Gfx_Projection);
 	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
-	Gfx_PopMatrix();
+	Gfx_LoadMatrix(&Gfx_View);
 
 	Gfx_SetDepthTest(false);
 	Gfx_SetAlphaBlending(false);

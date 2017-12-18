@@ -110,7 +110,7 @@ void Player_DrawName(Player* player) {
 	if (Entities_NameMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {
 		/* Get W component of transformed position */
 		Matrix mat;
-		Matrix_Mul(&mat, &Game_View, &Game_Projection); /* TODO: This mul is slow, avoid it */
+		Matrix_Mul(&mat, &Gfx_View, &Gfx_Projection); /* TODO: This mul is slow, avoid it */
 		Real32 tempW = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
 		size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
 	}

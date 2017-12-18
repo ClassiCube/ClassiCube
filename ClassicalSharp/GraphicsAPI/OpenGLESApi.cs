@@ -294,19 +294,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.LoadIdentity();
 		}
 		
-		public override void PushMatrix() {
-			GL.PushMatrix();
-		}
-		
-		public override void PopMatrix() {
-			GL.PopMatrix();
-		}
-		
-		public override void MultiplyMatrix(ref Matrix4 matrix) {
-			fixed(Single* ptr = &matrix.Row0.X)
-				GL.MultMatrix(ptr);
-		}
-		
 		#endregion
 		
 		public override void BeginFrame(Game game) {

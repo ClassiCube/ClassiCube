@@ -49,10 +49,10 @@ void Game_SetCursorVisible(bool visible) {
 
 void Game_UpdateProjection(void) {
 	Game_DefaultFov = Options_GetInt(OptionsKey_FieldOfView, 1, 150, 70);
-	Camera_ActiveCamera->GetProjection(&Game_Projection);
+	Camera_ActiveCamera->GetProjection(&Gfx_Projection);
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
-	Gfx_LoadMatrix(&Game_Projection);
+	Gfx_LoadMatrix(&Gfx_Projection);
 	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
 	Event_RaiseVoid(&GfxEvents_ProjectionChanged);
 }

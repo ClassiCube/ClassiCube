@@ -19,6 +19,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Sets whether texturing is applied when rasterizing primitives. </summary>
 		public abstract bool Texturing { set; }
 		
+		public Matrix4 Projection, View;
 		internal float MinZNear = 0.1f;
 		readonly FastBitmap bmpBuffer = new FastBitmap();
 		
@@ -205,17 +206,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		/// <summary> Sets the current matrix to the identity matrix. </summary>
 		public abstract void LoadIdentityMatrix();
-		
-		/// <summary> Multplies the current matrix by the given matrix, then
-		/// sets the current matrix to the result of the multiplication. </summary>
-		public abstract void MultiplyMatrix(ref Matrix4 matrix);
-		
-		/// <summary> Gets the top matrix the current matrix stack and pushes it to the stack. </summary>
-		public abstract void PushMatrix();
-		
-		/// <summary> Removes the top matrix from the current matrix stack, then
-		/// sets the current matrix to the new top matrix of the stack. </summary>
-		public abstract void PopMatrix();
 		
 		/// <summary> Outputs a .png screenshot of the backbuffer to the specified file. </summary>
 		public abstract void TakeScreenshot(string output, int width, int height);

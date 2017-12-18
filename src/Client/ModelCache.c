@@ -781,7 +781,7 @@ void HumanModel_SetupState(Entity* entity) {
 }
 
 void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
-	SkinType skinType = entity->SkinType;
+	UInt8 skinType = entity->SkinType;
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
 	IModel_DrawPart(model->Torso);
 	IModel_DrawRotate(entity->Anim.LeftLegX, 0, entity->Anim.LeftLegZ, model->LeftLeg, false);
@@ -849,7 +849,7 @@ void HumanoidModel_GetPickingBounds(AABB* bb) {
 
 void HumanoidModel_DrawModel(Entity* entity) {
 	HumanModel_SetupState(entity);
-	SkinType skinType = entity->SkinType;
+	UInt8 skinType = entity->SkinType;
 	ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
 		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
@@ -903,7 +903,7 @@ void ChibiModel_GetPickingBounds(AABB* bb) {
 
 void ChibiModel_DrawModel(Entity* entity) {
 	HumanModel_SetupState(entity);
-	SkinType skinType = entity->SkinType;
+	UInt8 skinType = entity->SkinType;
 	ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Chibi_SetSlim :
 		(skinType == SKIN_TYPE_64x64 ? &Chibi_Set64 : &Chibi_Set);
@@ -1045,15 +1045,17 @@ void ArmModel_DrawModel(Entity* entity) {
 	/* If user changes option while game is running */
 	if (arm_classic != Game_ClassicArmModel) { ArmModel_CreateParts(); }
 
-	SkinType skinType = entity->SkinType;
+	Matrix m;
+	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
+	Matrix_Mul(&m, &arm_translate, &m);
+	Gfx_LoadMatrix(&m);
+
+	UInt8 skinType = entity->SkinType;
 	ModelSet* model =
 		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
 		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
 
-	Gfx_PushMatrix();
-	Gfx_MultiplyMatrix(&arm_translate);
 	IModel_Rotation = RotateOrder_YZX;
-
 	ArmModel_DrawPart(model->RightArm);
 	IModel_UpdateVB();
 
@@ -1066,7 +1068,6 @@ void ArmModel_DrawModel(Entity* entity) {
 	}
 
 	IModel_Rotation = RotateOrder_ZYX;
-	Gfx_PopMatrix();
 }
 
 IModel* ArmModel_GetInstance(void) {

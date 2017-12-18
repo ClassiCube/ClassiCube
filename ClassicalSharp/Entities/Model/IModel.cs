@@ -122,15 +122,15 @@ namespace ClassicalSharp.Model {
 			Vector3 pos = p.Position;
 			if (Bobbing) pos.Y += p.anim.bobbingModel;
 			SetupState(p);
-
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
-			game.Graphics.PushMatrix();
 			
 			Matrix4 m = TransformMatrix(p, pos);
 			p.transform = m;
-			game.Graphics.MultiplyMatrix(ref m);
+			Matrix4.Mult(out m, ref p.transform, ref game.Graphics.View);
+			
+			game.Graphics.LoadMatrix(ref m);
 			DrawModel(p);
-			game.Graphics.PopMatrix();
+			game.Graphics.LoadMatrix(ref game.Graphics.View);
 		}
 		
 		public void SetupState(Entity p) {

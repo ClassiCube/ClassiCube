@@ -12,15 +12,6 @@
 #include <d3d9caps.h>
 #include <d3d9types.h>
 
-/* Maximum number of matrices that go on a stack. */
-#define MatrixStack_Capacity 4
-typedef struct MatrixStack_ {
-	Matrix Stack[MatrixStack_Capacity];
-	UInt32 Index;
-	D3DTRANSFORMSTATETYPE Type;
-} MatrixStack;
-
-
 D3DFORMAT d3d9_depthFormats[6] = { D3DFMT_D32, D3DFMT_D24X8, D3DFMT_D24S8, D3DFMT_D24X4S4, D3DFMT_D16, D3DFMT_D15S1 };
 D3DFORMAT d3d9_viewFormats[4] = { D3DFMT_X8R8G8B8, D3DFMT_R8G8B8, D3DFMT_R5G6B5, D3DFMT_X1R5G5B5 };
 D3DBLEND d3d9_blendFuncs[6] = { D3DBLEND_ZERO, D3DBLEND_ONE, D3DBLEND_SRCALPHA, D3DBLEND_INVSRCALPHA, D3DBLEND_DESTALPHA, D3DBLEND_INVDESTALPHA };
@@ -31,8 +22,7 @@ UInt32 d3d9_formatMappings[2] = { D3DFVF_XYZ | D3DFVF_DIFFUSE, D3DFVF_XYZ | D3DF
 bool d3d9_vsync;
 IDirect3D9* d3d;
 IDirect3DDevice9* device;
-MatrixStack* curStack;
-MatrixStack viewStack, projStack, texStack;
+D3DTRANSFORMSTATETYPE curMatrix;
 DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
 
@@ -136,11 +126,6 @@ void D3D9_RecreateDevice(void) {
 	GfxCommon_RecreateContext();
 }
 
-void MatrixStack_Init(MatrixStack* stack, UInt32 type) {
-	stack->Type = type;
-	stack->Stack[0] = Matrix_Identity;
-}
-
 
 void Gfx_Init(void) {
 	Gfx_MinZNear = 0.05f;
@@ -170,10 +155,6 @@ void Gfx_Init(void) {
 	Gfx_MaxTextureDimensions = min(caps.MaxTextureWidth, caps.MaxTextureHeight);
 
 	Gfx_CustomMipmapsLevels = true;
-	/* TODO: Can we do this at compile time? */
-	MatrixStack_Init(&viewStack, D3DTS_VIEW);
-	MatrixStack_Init(&projStack, D3DTS_PROJECTION);
-	MatrixStack_Init(&texStack, D3DTS_TEXTURE0);
 	D3D9_SetDefaultRenderStates();
 	GfxCommon_Init();
 }
@@ -555,66 +536,33 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
 
 void Gfx_SetMatrixMode(Int32 matrixType) {
 	if (matrixType == MATRIX_TYPE_PROJECTION) {
-		curStack = &projStack;
+		curMatrix = D3DTS_PROJECTION;
 	} else if (matrixType == MATRIX_TYPE_MODELVIEW) {
-		curStack = &viewStack;
+		curMatrix = D3DTS_VIEW;
 	} else if (matrixType == MATRIX_TYPE_TEXTURE) {
-		curStack = &texStack;
+		curMatrix = D3DTS_TEXTURE0;
 	}
 }
 
 void Gfx_LoadMatrix(Matrix* matrix) {
-	if (curStack == &texStack) {
+	if (curMatrix == D3DTS_TEXTURE0) {
 		matrix->Row2.X = matrix->Row3.X; /* NOTE: this hack fixes the texture movements. */
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
 	}
 
-	Int32 idx = curStack->Index;
-	curStack->Stack[idx] = *matrix;
-	
-	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
+	if (Gfx_LostContext) return;
+	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curMatrix, matrix);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_LoadMatrix");
 }
 
 void Gfx_LoadIdentityMatrix(void) {
-	if (curStack == &texStack) {
+	if (curMatrix == D3DTS_TEXTURE0) {
 		IDirect3DDevice9_SetTextureStageState(device, 0, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 	}
 
-	Int32 idx = curStack->Index;
-	curStack->Stack[idx] = Matrix_Identity;
-
-	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
+	if (Gfx_LostContext) return;
+	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curMatrix, &Matrix_Identity);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_LoadIdentityMatrix");
-}
-
-void Gfx_MultiplyMatrix(Matrix* matrix) {
-	Int32 idx = curStack->Index;
-	Matrix_Mul(&curStack->Stack[idx], matrix, &curStack->Stack[idx]);
-
-	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
-	ErrorHandler_CheckOrFail(hresult, "D3D9_MultiplyMatrix");
-}
-
-void Gfx_PushMatrix(void) {
-	Int32 idx = curStack->Index;
-	if (idx == MatrixStack_Capacity) {
-		ErrorHandler_Fail("Unable to push matrix, at capacity already");
-	}
-
-	curStack->Stack[idx + 1] = curStack->Stack[idx]; /* mimic GL behaviour */
-	curStack->Index++; /* exact same, we don't need to update DirectX state. */
-}
-
-void Gfx_PopMatrix(void) {
-	Int32 idx = curStack->Index;
-	if (idx == 0) {
-		ErrorHandler_Fail("Unable to pop matrix, at 0 already");
-	}
-
-	curStack->Index--; idx--;
-	ReturnCode hresult = IDirect3DDevice9_SetTransform(device, curStack->Type, &curStack->Stack[idx]);
-	ErrorHandler_CheckOrFail(hresult, "D3D9_PopMatrix");
 }
 
 #define d3d9_zN -10000.0f

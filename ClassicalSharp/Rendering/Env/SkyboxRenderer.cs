@@ -91,7 +91,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.DrawVb_IndexedTris(count);
 			
 			game.Graphics.Texturing = false;
-			game.Graphics.LoadMatrix(ref game.View);
+			game.Graphics.LoadMatrix(ref game.Graphics.View);
 			game.Graphics.DepthWrite = true;
 		}
 		

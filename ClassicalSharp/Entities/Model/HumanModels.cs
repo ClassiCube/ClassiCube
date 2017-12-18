@@ -115,7 +115,7 @@ namespace ClassicalSharp.Model {
 
 	public class ArmModel : HumanoidModel {
 		
-		Matrix4 m;
+		Matrix4 translate;
 		bool classicArms;
 		public ArmModel(Game window) : base(window) { Pushes = false; }
 		
@@ -129,9 +129,9 @@ namespace ClassicalSharp.Model {
 				// TODO: Position's not quite right.
 				// Matrix4.Translate(out m, -6 / 16f + 0.2f, -12 / 16f - 0.20f, 0);
 				// is better, but that breaks the dig animation
-				Matrix4.Translate(out m, -6 / 16f,         -12 / 16f - 0.10f, 0);
+				Matrix4.Translate(out translate, -6 / 16f,         -12 / 16f - 0.10f, 0);
 			} else {
-				Matrix4.Translate(out m, -6 / 16f + 0.10f, -12 / 16f - 0.26f, 0);
+				Matrix4.Translate(out translate, -6 / 16f + 0.10f, -12 / 16f - 0.26f, 0);
 			}
 		}
 
@@ -148,27 +148,28 @@ namespace ClassicalSharp.Model {
 				classicArms = game.ClassicArmModel;
 				SetTranslationMatrix();
 			}
+
+			Matrix4 m;
+			Matrix4.Mult(out m, ref p.transform, ref game.Graphics.View);
+			Matrix4.Mult(out m, ref translate, ref m);
+			game.Graphics.LoadMatrix(ref m);
 			
 			SkinType skinType = p.SkinType;
 			ModelSet model = skinType == SkinType.Type64x64Slim ? human.SetSlim :
 				(skinType == SkinType.Type64x64 ? human.Set64 : human.Set);
 			
-			game.Graphics.PushMatrix();
-			game.Graphics.MultiplyMatrix(ref m);			
-			Rotate = RotateOrder.YZX;
-			
+			Rotate = RotateOrder.YZX;		
 			DrawArmPart(model.RightArm);
-			UpdateVB();			
+			UpdateVB();
+			
 			if (skinType != SkinType.Type64x32) {
 				index = 0;
 				game.Graphics.AlphaTest = true;
 				DrawArmPart(model.RightArmLayer);
 				UpdateVB();
 				game.Graphics.AlphaTest = false;
-			}
-			
+			}			
 			Rotate = RotateOrder.ZYX;
-			game.Graphics.PopMatrix();
 		}
 		
 		void DrawArmPart(ModelPart part) {

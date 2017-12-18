@@ -27,7 +27,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void Render(double deltaTime) {
-			if (minimal) { RenderMinimal(deltaTime); return; }			
+			if (minimal) { RenderMinimal(deltaTime); return; }
 			if (skyVb == -1 || cloudsVb == -1) return;
 			
 			if (!game.SkyboxRenderer.ShouldRender) {
@@ -134,13 +134,14 @@ namespace ClassicalSharp.Renderers {
 			if (skyY == normalY) {
 				gfx.DrawVb_IndexedTris(skyVertices);
 			} else {
-				Matrix4 m = Matrix4.Identity;
-				m.Row3.Y = skyY - normalY; // Y translation matrix
+				Matrix4 m = game.Graphics.View;
+				float dy = skyY - normalY; // inlined Y translation matrix multiply
+				m.Row3.X += dy * m.Row1.X; m.Row3.Y += dy * m.Row1.Y;
+				m.Row3.Z += dy * m.Row1.Z; m.Row3.W += dy * m.Row1.W;
 				
-				gfx.PushMatrix();
-				gfx.MultiplyMatrix(ref m);
+				gfx.LoadMatrix(ref m);
 				gfx.DrawVb_IndexedTris(skyVertices);
-				gfx.PopMatrix();
+				gfx.LoadMatrix(ref game.Graphics.View);
 			}
 		}
 		
@@ -249,9 +250,9 @@ namespace ClassicalSharp.Renderers {
 					if (z2 > endZ) z2 = endZ;
 					
 					v.X = x1; v.Z = z1; vertices[i++] = v;
-					          v.Z = z2; vertices[i++] = v;
+					v.Z = z2; vertices[i++] = v;
 					v.X = x2;           vertices[i++] = v;
-					          v.Z = z1; vertices[i++] = v;
+					v.Z = z1; vertices[i++] = v;
 				}
 			}
 		}
@@ -275,9 +276,9 @@ namespace ClassicalSharp.Renderers {
 					float u1 = x1 / 2048f + offset, u2 = x2 / 2048f + offset;
 					float v1 = z1 / 2048f + offset, v2 = z2 / 2048f + offset;
 					v.X = x1; v.Z = z1; v.U = u1; v.V = v1; vertices[i++] = v;
-					          v.Z = z2;           v.V = v2; vertices[i++] = v;
+					v.Z = z2;           v.V = v2; vertices[i++] = v;
 					v.X = x2;           v.U = u2;           vertices[i++] = v;
-					          v.Z = z1;           v.V = v1; vertices[i++] = v;
+					v.Z = z1;           v.V = v1; vertices[i++] = v;
 				}
 			}
 		}

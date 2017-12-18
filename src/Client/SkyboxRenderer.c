@@ -65,7 +65,7 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_DrawVb_IndexedTris(SKYBOX_COUNT);
 
 	Gfx_SetTexturing(false);
-	Gfx_LoadMatrix(&Game_View);
+	Gfx_LoadMatrix(&Gfx_View);
 	Gfx_SetDepthWrite(true);
 }
 

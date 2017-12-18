@@ -17,16 +17,12 @@
 void Gfx_Init(void);
 void Gfx_Free(void);
 
-/* Maximum supported length of a dimension (width and height) of a 2D texture. */
 Int32 Gfx_MaxTextureDimensions;
-/* Minimum near plane value supported by the graphics API. */
 Real32 Gfx_MinZNear;
-/* Returns whether this graphics api had a valid context. */
 bool Gfx_LostContext;
-/* Whether mipmapping of terrain textures is used. */
 bool Gfx_Mipmaps;
-/* Whether the backend supports setting the number of custom mipmaps levels. */
 bool Gfx_CustomMipmapsLevels;
+Matrix Gfx_View, Gfx_Projection;
 
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
@@ -101,9 +97,6 @@ static Int32 Gfx_strideSizes[2] = { 16, 24 };
 void Gfx_SetMatrixMode(Int32 matrixType);
 void Gfx_LoadMatrix(Matrix* matrix);
 void Gfx_LoadIdentityMatrix(void);
-void Gfx_MultiplyMatrix(Matrix* matrix);
-void Gfx_PushMatrix(void);
-void Gfx_PopMatrix(void);
 void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix);
 void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix);
 

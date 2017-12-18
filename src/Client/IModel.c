@@ -86,19 +86,20 @@ void IModel_Render(IModel* model, Entity* entity) {
 	Vector3 pos = entity->Position;
 	if (model->Bobbing) pos.Y += entity->Anim.BobbingModel;
 	IModel_SetupState(model, entity);
-
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	Gfx_PushMatrix();
 
 	model->GetTransform(entity, pos);
-	Gfx_MultiplyMatrix(&entity->Transform);
+	Matrix m;
+	Matrix_Mul(&m, &entity->Transform, &Gfx_View);
+
+	Gfx_LoadMatrix(&m);
 	model->DrawModel(entity);
-	Gfx_PopMatrix();
+	Gfx_LoadMatrix(&Gfx_View);
 }
 
 void IModel_SetupState(IModel* model, Entity* entity) {
 	model->index = 0;
-	PackedCol col = entity->GetCol(entity);
+	PackedCol col = entity->VTABLE->GetCol(entity);
 	IModel_uScale = 1.0f / 64.0f; 
 	IModel_vScale = 1.0f / 32.0f;
 

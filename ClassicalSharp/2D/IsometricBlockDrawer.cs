@@ -30,10 +30,7 @@ namespace ClassicalSharp {
 			index = 0;
 			this.vertices = vertices;
 			this.vb = vb;
-			
-			game.Graphics.PushMatrix();
-			Matrix4 m = transform;
-			game.Graphics.MultiplyMatrix(ref m);
+			game.Graphics.LoadMatrix(ref transform);
 		}
 		
 		static int colNormal = FastColour.WhitePacked, colXSide, colZSide, colYBottom;
@@ -99,7 +96,7 @@ namespace ClassicalSharp {
 		public void EndBatch() {
 			if (index > 0) { lastTexIndex = texIndex; Flush(); }
 			lastTexIndex = -1;
-			game.Graphics.PopMatrix();
+			game.Graphics.LoadIdentityMatrix();
 		}
 		
 		int GetTex(BlockID block, int side) {

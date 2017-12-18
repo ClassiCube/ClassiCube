@@ -24,7 +24,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		DataBuffer[] vBuffers = new DataBuffer[vBufferSize];
 		DataBuffer[] iBuffers = new DataBuffer[iBufferSize];
 		
-		MatrixStack viewStack, projStack, texStack, curStack;
+		TransformState curMatrix;
 		PrimitiveType[] modeMappings;
 		Format[] depthFormats, viewFormats;
 		Format depthFormat, viewFormat;
@@ -53,9 +53,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			CustomMipmapsLevels = true;
 			caps = device.Capabilities;
-			viewStack = new MatrixStack(device, TransformState.View);
-			projStack = new MatrixStack(device, TransformState.Projection);
-			texStack = new MatrixStack(device, TransformState.Texture0);
 			SetDefaultRenderStates();
 			InitDynamicBuffers();
 		}
@@ -361,75 +358,31 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public override void SetMatrixMode(MatrixType mode) {
 			if (mode == MatrixType.Modelview) {
-				curStack = viewStack;
+				curMatrix = TransformState.View;
 			} else if (mode == MatrixType.Projection) {
-				curStack = projStack;
+				curMatrix = TransformState.Projection;
 			} else if (mode == MatrixType.Texture) {
-				curStack = texStack;
+				curMatrix = TransformState.Texture0;
 			}
 		}
 
 		public unsafe override void LoadMatrix(ref Matrix4 matrix) {
-			if (curStack == texStack) {
+			if (curMatrix == TransformState.Texture0) {
 				matrix.Row2.X = matrix.Row3.X; // NOTE: this hack fixes the texture movements.
 				device.SetTextureStageState(0, TextureStage.TextureTransformFlags, (int)TextureTransform.Count2);
 			}
-			curStack.SetTop(ref matrix);
+			
+			if (LostContext) return;
+			device.SetTransform(curMatrix, ref matrix);
 		}
 
-		Matrix4 identity = Matrix4.Identity;
 		public override void LoadIdentityMatrix() {
-			if (curStack == texStack) {
+			if (curMatrix == TransformState.Texture0) {
 				device.SetTextureStageState(0, TextureStage.TextureTransformFlags, (int)TextureTransform.Disable);
 			}
-			curStack.SetTop(ref identity);
-		}
-
-		public override void PushMatrix() {
-			curStack.Push();
-		}
-
-		public override void PopMatrix() {
-			curStack.Pop();
-		}
-
-		public unsafe override void MultiplyMatrix(ref Matrix4 matrix) {
-			curStack.MultiplyTop(ref matrix);
-		}
-
-		class MatrixStack
-		{
-			Matrix4[] stack;
-			int stackIndex;
-			Device device;
-			TransformState matrixType;
-
-			public MatrixStack(Device device, TransformState matrixType) {
-				stack = new Matrix4[4];
-				stack[0] = Matrix4.Identity;
-				this.device = device;
-				this.matrixType = matrixType;
-			}
-
-			public void Push() {
-				stack[stackIndex + 1] = stack[stackIndex]; // mimic GL behaviour
-				stackIndex++; // exact same, we don't need to update DirectX state.
-			}
-
-			public void SetTop(ref Matrix4 matrix) {
-				stack[stackIndex] = matrix;
-				device.SetTransform(matrixType, ref stack[stackIndex]);
-			}
-
-			public void MultiplyTop(ref Matrix4 matrix) {
-				Matrix4.Mult(out stack[stackIndex], ref matrix, ref stack[stackIndex]); // top = matrix * top
-				device.SetTransform(matrixType, ref stack[stackIndex]);
-			}
-
-			public void Pop() {
-				stackIndex--;
-				device.SetTransform(matrixType, ref stack[stackIndex]);
-			}
+			
+			if (LostContext) return;
+			device.SetTransform(curMatrix, ref Matrix4.Identity);
 		}
 		
 		public override void CalcOrthoMatrix(float width, float height, out Matrix4 matrix) {

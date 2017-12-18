@@ -6,6 +6,8 @@
 #include "GraphicsCommon.h"
 #include "Funcs.h"
 #define WIN32_LEAN_AND_MEAN
+#define NOMCX
+#define NOIME
 #include <Windows.h>
 #include <GL/gl.h>
 
@@ -494,9 +496,6 @@ void Gfx_SetMatrixMode(Int32 matrixType) {
 
 void Gfx_LoadMatrix(Matrix* matrix) { glLoadMatrixf((Real32*)matrix); }
 void Gfx_LoadIdentityMatrix(void) { glLoadIdentity(); }
-void Gfx_MultiplyMatrix(Matrix* matrix) { glMultMatrixf((Real32*)matrix); }
-void Gfx_PushMatrix(void) { glPushMatrix(); }
-void Gfx_PopMatrix(void) { glPopMatrix(); }
 
 void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix) {
 	Matrix_OrthographicOffCenter(matrix, 0.0f, width, height, 0.0f, -10000.0f, 10000.0f);

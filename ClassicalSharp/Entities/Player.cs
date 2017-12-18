@@ -95,14 +95,14 @@ namespace ClassicalSharp.Entities {
 			if (game.Entities.NamesMode == NameMode.AllUnscaled && game.LocalPlayer.Hacks.CanSeeAllNames) {
 				// Get W component of transformed position
 				Matrix4 mat;
-				Matrix4.Mult(out mat, ref game.View, ref game.Projection); // TODO: This mul is slow, avoid it
+				Matrix4.Mult(out mat, ref gfx.View, ref gfx.Projection); // TODO: This mul is slow, avoid it
 				float tempW = pos.X * mat.Row0.W + pos.Y * mat.Row1.W + pos.Z * mat.Row2.W + mat.Row3.W;
 				size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
 			}
 			
 			int index = 0;
 			TextureRec rec; rec.U1 = 0; rec.V1 = 0; rec.U2 = nameTex.U2; rec.V2 = nameTex.V2;
-			Particle.DoRender(game, ref size, ref pos, ref rec, col, gfx.texVerts, ref index);
+			Particle.DoRender(ref gfx.View, ref size, ref pos, ref rec, col, gfx.texVerts, ref index);
 			
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.UpdateDynamicVb_IndexedTris(gfx.texVb, gfx.texVerts, 4);

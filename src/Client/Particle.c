@@ -16,7 +16,7 @@ void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol c
 	Vector3 centre = *pos; centre.Y += sY;
 	VertexP3fT2fC4b* ptr = *vertices;
 
-	Matrix* view = &Game_View;
+	Matrix* view = &Gfx_View;
 	Real32 aX, aY, aZ, bX, bY, bZ;
 	aX = view->Row0.X * sX; aY = view->Row1.X * sX; aZ = view->Row2.X * sX; /* right * size.X * 0.5f */
 	bX = view->Row0.Y * sY; bY = view->Row1.Y * sY; bZ = view->Row2.Y * sY; /* up    * size.Y * 0.5f */

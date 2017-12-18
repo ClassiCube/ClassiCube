@@ -21,13 +21,14 @@ namespace ClassicalSharp.Particles {
 		public byte Size;
 		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
-		public static void DoRender(Game g, ref Vector2 size, ref Vector3 pos, ref TextureRec rec,
+		public static void DoRender(ref Matrix4 view, ref Vector2 size, ref Vector3 pos, ref TextureRec rec,
 		                            int col, VertexP3fT2fC4b[] vertices, ref int index) {
 			float sX = size.X * 0.5f, sY = size.Y * 0.5f;
 			Vector3 centre = pos; centre.Y += sY;
 			Vector3 a, b;
-			a.X = g.View.Row0.X * sX; a.Y = g.View.Row1.X * sX; a.Z = g.View.Row2.X * sX; // right * size.X * 0.5f
-			b.X = g.View.Row0.Y * sY; b.Y = g.View.Row1.Y * sY; b.Z = g.View.Row2.Y * sY; // up * size.Y * 0.5f
+			
+			a.X = view.Row0.X * sX; a.Y = view.Row1.X * sX; a.Z = view.Row2.X * sX; // right * size.X * 0.5f
+			b.X = view.Row0.Y * sY; b.Y = view.Row1.Y * sY; b.Z = view.Row2.Y * sY; // up * size.Y * 0.5f
 			VertexP3fT2fC4b v; v.Colour = col;
 			
 			v.X = centre.X - a.X - b.X; v.Y = centre.Y - a.Y - b.Y; v.Z = centre.Z - a.Z - b.Z;
@@ -141,7 +142,7 @@ namespace ClassicalSharp.Particles {
 			
 			int x = Utils.Floor(pos.X), y = Utils.Floor(pos.Y), z = Utils.Floor(pos.Z);
 			int col = game.World.IsValidPos(x, y, z) ? game.Lighting.LightCol(x, y, z) : game.Lighting.Outside;
-			DoRender(game, ref size, ref pos, ref rec, col, vertices, ref index);
+			DoRender(ref game.Graphics.View, ref size, ref pos, ref rec, col, vertices, ref index);
 		}
 	}
 	
@@ -170,7 +171,7 @@ namespace ClassicalSharp.Particles {
 				newCol *= fogCol;
 				col = newCol.Pack();
 			}
-			DoRender(game, ref size, ref pos, ref rec, col, vertices, ref index);
+			DoRender(ref game.Graphics.View, ref size, ref pos, ref rec, col, vertices, ref index);
 		}
 	}
 }

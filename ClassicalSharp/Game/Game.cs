@@ -128,9 +128,9 @@ namespace ClassicalSharp {
 		
 		void UpdateViewMatrix() {
 			Graphics.SetMatrixMode(MatrixType.Modelview);
-			Camera.GetView(out View);
-			Graphics.LoadMatrix(ref View);
-			Culling.CalcFrustumEquations(ref Projection, ref View);
+			Camera.GetView(out Graphics.View);
+			Graphics.LoadMatrix(ref Graphics.View);
+			Culling.CalcFrustumEquations(ref Graphics.Projection, ref Graphics.View);
 		}
 		
 		void Render3D(double delta, float t) {
@@ -216,10 +216,10 @@ namespace ClassicalSharp {
 		
 		public void UpdateProjection() {
 			DefaultFov = Options.GetInt(OptionsKey.FieldOfView, 1, 150, 70);
-			Camera.GetProjection(out Projection);
+			Camera.GetProjection(out Graphics.Projection);
 			
 			Graphics.SetMatrixMode(MatrixType.Projection);
-			Graphics.LoadMatrix(ref Projection);
+			Graphics.LoadMatrix(ref Graphics.Projection);
 			Graphics.SetMatrixMode(MatrixType.Modelview);
 			Events.RaiseProjectionChanged();
 		}

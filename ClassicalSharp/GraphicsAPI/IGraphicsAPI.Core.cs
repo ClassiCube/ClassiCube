@@ -119,13 +119,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// is suitable for rendering 2D quads and other 2D graphics to. </summary>
 		public void Mode2D(int width, int height) {
 			SetMatrixMode(MatrixType.Projection);
-			PushMatrix();
 			Matrix4 ortho;
 			CalcOrthoMatrix(width, height, out ortho);
 			LoadMatrix(ref ortho);
 			
 			SetMatrixMode(MatrixType.Modelview);
-			PushMatrix();
 			LoadIdentityMatrix();
 			
 			DepthTest = false;
@@ -138,9 +136,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// is suitable for rendering 3D vertices. </summary>
 		public void Mode3D() {
 			SetMatrixMode(MatrixType.Projection);
-			PopMatrix(); // Get rid of orthographic 2D matrix.
+			LoadMatrix(ref Projection);
 			SetMatrixMode(MatrixType.Modelview);
-			PopMatrix();
+			LoadMatrix(ref View);
 			
 			DepthTest = true;
 			AlphaBlending = false;

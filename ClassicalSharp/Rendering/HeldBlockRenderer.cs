@@ -51,6 +51,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.SetMatrixMode(MatrixType.Projection);
 			game.Graphics.LoadMatrix(ref heldBlockProj);
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);
+			Matrix4 view = game.Graphics.View;
 			SetMatrix();
 			
 			ResetHeldState();
@@ -58,9 +59,9 @@ namespace ClassicalSharp.Renderers {
 			SetBaseOffset();			
 			if (!game.Camera.IsThirdPerson) RenderModel();
 			
-			game.Graphics.LoadMatrix(ref game.View);
+			game.Graphics.View = view;
 			game.Graphics.SetMatrixMode(MatrixType.Projection);
-			game.Graphics.LoadMatrix(ref game.Projection);
+			game.Graphics.LoadMatrix(ref game.Graphics.Projection);
 			game.Graphics.SetMatrixMode(MatrixType.Modelview);
 		}
 		
@@ -95,7 +96,7 @@ namespace ClassicalSharp.Renderers {
 			Matrix4 m, lookAt;
 			Matrix4.LookAt(eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY, out lookAt);
 			Matrix4.Mult(out m, ref lookAt, ref game.Camera.tiltM);
-			game.Graphics.LoadMatrix(ref m);
+			game.Graphics.View = m;
 		}
 		
 		void ResetHeldState() {
