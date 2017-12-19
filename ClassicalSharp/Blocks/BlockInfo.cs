@@ -210,9 +210,9 @@ namespace ClassicalSharp {
 			// Find start and end of this particular block name
 			int start = 0;
 			for (int i = 0; i < block; i++)
-				start = Block.Names.IndexOf(' ', start) + 1;
-			int end = Block.Names.IndexOf(' ', start);
-			if (end == -1) end = Block.Names.Length;
+				start = Block.RawNames.IndexOf(' ', start) + 1;
+			int end = Block.RawNames.IndexOf(' ', start);
+			if (end == -1) end = Block.RawNames.Length;
 			
 			buffer.Clear();
 			SplitUppercase(buffer, start, end);
@@ -222,9 +222,9 @@ namespace ClassicalSharp {
 		static void SplitUppercase(StringBuffer buffer, int start, int end) {
 			int index = 0;
 			for (int i = start; i < end; i++) {
-				char c = Block.Names[i];
+				char c = Block.RawNames[i];
 				bool upper = Char.IsUpper(c) && i > start;
-				bool nextLower = i < end - 1 && !Char.IsUpper(Block.Names[i + 1]);
+				bool nextLower = i < end - 1 && !Char.IsUpper(Block.RawNames[i + 1]);
 				
 				if (upper && nextLower) {
 					buffer.Append(ref index, ' ');

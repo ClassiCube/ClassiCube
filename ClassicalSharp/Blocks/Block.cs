@@ -82,7 +82,7 @@ namespace ClassicalSharp {
 		public const BlockID StoneBrick = 65;
 #pragma warning restore 1591
 		
-		internal const string Names = "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava" +
+		public const string RawNames = "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava" +
 			" StillLava Sand Gravel GoldOre IronOre CoalOre Log Leaves Sponge Glass Red Orange Yellow Lime Green" +
 			" Teal Aqua Cyan Blue Indigo Violet Magenta Pink Black Gray White Dandelion Rose BrownMushroom RedMushroom" +
 			" Gold Iron DoubleSlab Slab Brick TNT Bookshelf MossyRocks Obsidian CobblestoneSlab Rope Sandstone" +
