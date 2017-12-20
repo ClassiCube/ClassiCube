@@ -192,6 +192,11 @@ namespace Launcher.Gui.Screens {
 			
 			view.RefreshText = game.Session.Exception == null ? "Refresh" : "&cFailed";
 			Resize();
+			
+			// needed to ensure 'highlighted server hash' is over right entry after refresh
+			TableWidget table = (TableWidget)widgets[view.tableIndex];
+			table.SetSelected(widgets[view.hashIndex].Text);
+			MarkPendingRedraw();
 		}
 		
 		void MarkPendingRedraw() {
