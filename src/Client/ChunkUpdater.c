@@ -30,13 +30,12 @@ Int32 cu_chunksTarget = 12;
 #define cu_targetTime ((1.0 / 30) + 0.01)
 Vector3 cu_lastCamPos;
 Real32 cu_lastHeadY, cu_lastHeadX;
-Int32 cu_atlas1DCount;
 Int32 cu_elementsPerBitmap;
 
-void ChunkUpdater_EnvVariableChanged(EnvVar envVar) {
-	if (envVar == EnvVar_SunCol || envVar == EnvVar_ShadowCol) {
+void ChunkUpdater_EnvVariableChanged(Int32 envVar) {
+	if (envVar == ENV_VAR_SUN_COL || envVar == ENV_VAR_SHADOW_COL) {
 		ChunkUpdater_Refresh();
-	} else if (envVar == EnvVar_EdgeHeight || envVar == EnvVar_SidesOffset) {
+	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		Int32 oldClip = Builder_EdgeLevel;
 		Builder_SidesLevel = max(0, WorldEnv_SidesHeight);
 		Builder_EdgeLevel = max(0, WorldEnv_EdgeHeight);
@@ -130,7 +129,7 @@ void ChunkUpdater_PerformAllocations(void) {
 	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(Int32));
 	if (ChunkUpdater_Distances == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
 
-	UInt32 partsSize = MapRenderer_ChunksCount * (sizeof(ChunkPartInfo) * cu_atlas1DCount);
+	UInt32 partsSize = MapRenderer_ChunksCount * (sizeof(ChunkPartInfo) * MapRenderer_1DUsedCount);
 	MapRenderer_PartsBuffer = Platform_MemAlloc(partsSize);
 	if (MapRenderer_PartsBuffer == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
 	Platform_MemSet(MapRenderer_PartsBuffer, 0, partsSize);
@@ -312,7 +311,7 @@ void ChunkUpdater_ClearChunkCache(void) {
 #define ChunkUpdater_DeleteParts(parts, partsCount)\
 if (parts != NULL) {\
 	ChunkPartInfo* ptr = parts;\
-	for (i = 0; i < cu_atlas1DCount; i++) {\
+	for (i = 0; i < MapRenderer_1DUsedCount; i++) {\
 		Gfx_DeleteVb(&ptr->VbId);\
 		if (ptr->HasVertices) { partsCount[i]--; }\
 		ptr += MapRenderer_ChunksCount;\
@@ -334,7 +333,7 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
 #define ChunkUpdater_AddParts(parts, partsCount)\
 if (parts != NULL) {\
 	ChunkPartInfo* ptr = parts;\
-	for (i = 0; i < cu_atlas1DCount; i++) {\
+	for (i = 0; i < MapRenderer_1DUsedCount; i++) {\
 		if (ptr->HasVertices) { partsCount[i]++; }\
 		ptr += MapRenderer_ChunksCount;\
 	}\

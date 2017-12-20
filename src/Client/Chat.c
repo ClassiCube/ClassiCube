@@ -132,7 +132,7 @@ void Chat_AddOf(STRING_PURE String* text, MessageType type) {
 	} else if (type >= MESSAGE_TYPE_CLIENTSTATUS_1 && type <= MESSAGE_TYPE_CLIENTSTATUS_3) {
 		ChatLine_Make(&Chat_ClientStatus[type - MESSAGE_TYPE_CLIENTSTATUS_1], text);
 	}
-	Events_RaiseChatReceived(text, type);
+	Event_RaiseChat(&ChatEvents_ChatReceived, text, type);
 }
 
 void Chat_Reset(void) {

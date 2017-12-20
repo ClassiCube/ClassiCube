@@ -274,18 +274,18 @@ void BordersRenderer_ResetSidesAndEdges(void) {
 	BordersRenderer_ContextRecreated();
 }
 
-void BordersRenderer_EnvVariableChanged(EnvVar envVar) {
-	if (envVar == EnvVar_EdgeBlock) {
+void BordersRenderer_EnvVariableChanged(Int32 envVar) {
+	if (envVar == ENV_VAR_EDGE_BLOCK) {
 		BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);
 		BordersRenderer_ResetEdges();
-	} else if (envVar == EnvVar_SidesBlock) {
+	} else if (envVar == ENV_VAR_SIDES_BLOCK) {
 		BordersRenderer_MakeTexture(&borders_sideTexId, &borders_lastSideTexLoc, WorldEnv_SidesBlock);
 		BordersRenderer_ResetSides();
-	} else if (envVar == EnvVar_EdgeHeight || envVar == EnvVar_SidesOffset) {
+	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
 		BordersRenderer_ResetSidesAndEdges();
-	} else if (envVar == EnvVar_SunCol) {
+	} else if (envVar == ENV_VAR_SUN_COL) {
 		BordersRenderer_ResetEdges();
-	} else if (envVar == EnvVar_ShadowCol) {
+	} else if (envVar == ENV_VAR_SHADOW_COL) {
 		BordersRenderer_ResetSides();
 	}
 }

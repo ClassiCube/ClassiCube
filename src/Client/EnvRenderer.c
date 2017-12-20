@@ -272,16 +272,16 @@ void EnvRenderer_ResetAllEnv(void) {
 	EnvRenderer_ContextRecreated();
 }
 
-void EnvRenderer_EnvVariableChanged(EnvVar envVar) {
+void EnvRenderer_EnvVariableChanged(Int32 envVar) {
 	if (EnvRenderer_Minimal) return;
 
-	if (envVar == EnvVar_SkyCol) {
+	if (envVar == ENV_VAR_SKY_COL) {
 		EnvRenderer_ResetSky();
-	} else if (envVar == EnvVar_FogCol) {
+	} else if (envVar == ENV_VAR_FOG_COL) {
 		EnvRenderer_UpdateFog();
-	} else if (envVar == EnvVar_CloudsCol) {
+	} else if (envVar == ENV_VAR_CLOUDS_COL) {
 		EnvRenderer_ResetClouds();
-	} else if (envVar == EnvVar_CloudsHeight) {
+	} else if (envVar == ENV_VAR_CLOUDS_HEIGHT) {
 		EnvRenderer_ResetSky();
 		EnvRenderer_ResetClouds();
 	}

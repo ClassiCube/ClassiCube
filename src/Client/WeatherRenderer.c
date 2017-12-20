@@ -99,11 +99,11 @@ Real32 WeatherRenderer_AlphaAt(Real32 x) {
 }
 
 void WeatherRenderer_Render(Real64 deltaTime) {
-	Weather weather = WorldEnv_Weather;
-	if (weather == Weather_Sunny) return;
+	Int32 weather = WorldEnv_Weather;
+	if (weather == WEATHER_SUNNY) return;
 	if (Weather_Heightmap == NULL) WeatherRenderer_InitHeightmap();
 
-	Gfx_BindTexture(weather == Weather_Rainy ? weather_rainTex : weather_snowTex);
+	Gfx_BindTexture(weather == WEATHER_RAINY ? weather_rainTex : weather_snowTex);
 	Vector3 camPos = Game_CurrentCameraPos;
 	Vector3I pos;
 	Vector3I_Floor(&pos, &camPos);
@@ -114,10 +114,10 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	pos.Y += 64;
 	pos.Y = max(World_Height, pos.Y);
 
-	Real32 speed = (weather == Weather_Rainy ? 1.0f : 0.2f) * WorldEnv_WeatherSpeed;
+	Real32 speed = (weather == WEATHER_RAINY ? 1.0f : 0.2f) * WorldEnv_WeatherSpeed;
 	Real32 vOffset = (Real32)Game_Accumulator * speed;
 	weather_accumulator += deltaTime;
-	bool particles = weather == Weather_Rainy;
+	bool particles = weather == WEATHER_RAINY;
 
 	PackedCol col = WorldEnv_SunCol;
 	VertexP3fT2fC4b v;

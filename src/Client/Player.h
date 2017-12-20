@@ -15,6 +15,8 @@ typedef struct Player_ {
 	Texture NameTex;
 	bool FetchedSkin;
 } Player;
+void Player_UpdateName(Player* player);
+void Player_ResetSkin(Player* player);
 
 /* Represents another entity in multiplayer */
 typedef struct NetPlayer_ {

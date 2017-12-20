@@ -41,13 +41,9 @@ typedef struct ChunkInfo_ {
 	ChunkPartInfo* TranslucentParts;
 } ChunkInfo;
 
-/* Resets contents of given chunk render info structure. */
 void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z);
-
-/* Centre coordinates of chunk the camera is located in.*/
 Vector3I ChunkUpdater_ChunkPos;
-/* Distance of chunks from the camera. */
-Int32* ChunkUpdater_Distances; /* TODO: Use UInt32s instead of Int32s? */
+UInt32* ChunkUpdater_Distances;
 
 void ChunkUpdater_Init(void);
 void ChunkUpdater_Free(void);

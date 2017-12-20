@@ -39,7 +39,7 @@ void MapRenderer_CheckWeather(Real64 deltaTime) {
 	inTranslucent = Block_Draw[block] == DRAW_TRANSLUCENT || (pos.Y < WorldEnv_EdgeHeight && outside);
 
 	/* If we are under water, render weather before to blend properly */
-	if (!inTranslucent || WorldEnv_Weather == Weather_Sunny) return;
+	if (!inTranslucent || WorldEnv_Weather == WEATHER_SUNNY) return;
 	Gfx_SetAlphaBlending(true);
 	WeatherRenderer_Render(deltaTime);
 	Gfx_SetAlphaBlending(false);
@@ -243,7 +243,7 @@ void MapRenderer_RenderTranslucent(Real64 deltaTime) {
 
 	Gfx_SetDepthWrite(true);
 	/* If we weren't under water, render weather after to blend properly */
-	if (!inTranslucent && WorldEnv_Weather != Weather_Sunny) {
+	if (!inTranslucent && WorldEnv_Weather != WEATHER_SUNNY) {
 		Gfx_SetAlphaTest(true);
 		WeatherRenderer_Render(deltaTime);
 		Gfx_SetAlphaTest(false);

@@ -22,10 +22,10 @@ void Lighting_SetShadow(PackedCol col) {
 		&shadowZSide, &shadowYBottom);
 }
 
-void Lighting_EnvVariableChanged(EnvVar envVar) {
-	if (envVar == EnvVar_SunCol) {
+void Lighting_EnvVariableChanged(Int32 envVar) {
+	if (envVar == ENV_VAR_SUN_COL) {
 		Lighting_SetSun(WorldEnv_SunCol);
-	} else if (envVar == EnvVar_ShadowCol) {
+	} else if (envVar == ENV_VAR_SHADOW_COL) {
 		Lighting_SetShadow(WorldEnv_ShadowCol);
 	}
 }

@@ -46,6 +46,10 @@ typedef struct Event_MouseMove_ {
 	Event_MouseMove_Callback Handlers[EVENT_MAX_CALLBACKS]; UInt32 Count;
 } Event_MouseMove;
 
+typedef void(*Event_Chat_Callback)(String* msg, UInt8 msgType);
+typedef struct Event_Chat_ {
+	Event_Chat_Callback Handlers[EVENT_MAX_CALLBACKS]; UInt32 Count;
+} Event_Chat;
 
 void Event_RaiseVoid(Event_Void* handlers);
 void Event_RegisterVoid(Event_Void* handlers, Event_Void_Callback handler);
@@ -74,6 +78,10 @@ void Event_UnregisterBlock(Event_Block* handlers, Event_Block_Callback handler);
 void Event_RaiseMouseMove(Event_MouseMove* handlers, Int32 xDelta, Int32 yDelta);
 void Event_RegisterMouseMove(Event_MouseMove* handlers, Event_MouseMove_Callback handler);
 void Event_UnregisterMouseMove(Event_MouseMove* handlers, Event_MouseMove_Callback handler);
+
+void Event_RaiseChat(Event_Chat* handlers, String* msg, UInt8 msgType);
+void Event_RegisterChat(Event_Chat* handlers, Event_Chat_Callback handler);
+void Event_UnregisterChat(Event_Chat* handlers, Event_Chat_Callback handler);
 
 
 Event_EntityID EntityEvents_Added;   /* Entity is spawned in the current world. */
@@ -104,27 +112,9 @@ Event_Real32 WorldEvents_MapLoading;   /* Portion of world is decompressed/gener
 Event_Void WorldEvents_MapLoaded;      /* New world has finished loading, player can now interact with it. */
 Event_Int32 WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config. */
 
-Event_Void ChatEvents_FontChanged; /* User changes whether system chat font used, and when the bitmapped font texture changes. */
+Event_Void ChatEvents_FontChanged;  /* User changes whether system chat font used, and when the bitmapped font texture changes. */
+Event_Chat ChatEvents_ChatReceived; /*  Raised when the server or a client-side command sends a message */
 
-/* Environment variable identifiers*/
-typedef Int32 EnvVar;
-#define EnvVar_EdgeBlock 0
-#define EnvVar_SidesBlock 1
-#define EnvVar_EdgeHeight 2
-#define EnvVar_SidesOffset 3
-#define EnvVar_CloudsHeight 4
-#define EnvVar_CloudsSpeed 5
-#define EnvVar_WeatherSpeed 6
-#define EnvVar_WeatherFade 7
-#define EnvVar_Weather 8
-#define EnvVar_ExpFog 9
-#define EnvVar_SkyboxHorSpeed 10
-#define EnvVar_SkyboxVerSpeed 11
-#define EnvVar_SkyCol 12
-#define EnvVar_CloudsCol 13
-#define EnvVar_FogCol 14
-#define EnvVar_SunCol 15
-#define EnvVar_ShadowCol 16
 
 Event_Void WindowEvents_Moved;              /* Window is moved. */
 Event_Void WindowEvents_Resized;            /* Window is resized. */

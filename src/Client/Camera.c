@@ -95,7 +95,7 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 	}
 
 	Entity* e = &player->Base.Base;
-	e->SetLocation(e, &update, false);
+	e->VTABLE->SetLocation(e, &update, false);
 }
 
 void PerspectiveCamera_UpdateMouse(void) {

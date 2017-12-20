@@ -55,4 +55,26 @@
 #define FONT_STYLE_UNDERLINE 2
 
 #define DRAWER2D_MAX_COLS 256
+
+#define WEATHER_SUNNY 0
+#define WEATHER_RAINY 1
+#define WEATHER_SNOWY 2
+
+#define ENV_VAR_EDGE_BLOCK       0
+#define ENV_VAR_SIDES_BLOCK      1
+#define ENV_VAR_EDGE_HEIGHT      2
+#define ENV_VAR_SIDES_OFFSET     3
+#define ENV_VAR_CLOUDS_HEIGHT    4
+#define ENV_VAR_CLOUDS_SPEED     5
+#define ENV_VAR_WEATHER_SPEED    6
+#define ENV_VAR_WEATHER_FADE     7
+#define ENV_VAR_WEATHER          8
+#define ENV_VAR_EXP_FOG          9
+#define ENV_VAR_SKYBOX_HOR_SPEED 10
+#define ENV_VAR_SKYBOX_VER_SPEED 11
+#define ENV_VAR_SKY_COL          12
+#define ENV_VAR_CLOUDS_COL       13
+#define ENV_VAR_FOG_COL          14
+#define ENV_VAR_SUN_COL          15
+#define ENV_VAR_SHADOW_COL       16
 #endif

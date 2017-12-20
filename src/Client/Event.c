@@ -123,3 +123,16 @@ void Event_RegisterMouseMove(Event_MouseMove* handlers, Event_MouseMove_Callback
 void Event_UnregisterMouseMove(Event_MouseMove* handlers, Event_MouseMove_Callback handler) {
 	Event_UnregisterImpl((Event_Void*)handlers, (Event_Void_Callback)handler);
 }
+
+void Event_RaiseChat(Event_Chat* handlers, String* msg, UInt8 msgType) {
+	UInt32 i;
+	for (i = 0; i < handlers->Count; i++) {
+		handlers->Handlers[i](msg, msgType);
+	}
+}
+void Event_RegisterChat(Event_Chat* handlers, Event_Chat_Callback handler) {
+	Event_RegisterImpl((Event_Void*)handlers, (Event_Void_Callback)handler);
+}
+void Event_UnregisterChat(Event_Chat* handlers, Event_Chat_Callback handler) {
+	Event_UnregisterImpl((Event_Void*)handlers, (Event_Void_Callback)handler);
+}

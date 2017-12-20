@@ -7,40 +7,6 @@
 #include "AsyncDownloader.h"
 #include "ExtMath.h"
 
-void Player_Init(Player* player) {
-	/* TODO should we just remove the memset from entity_Init and player_init?? */
-	Platform_MemSet(player + sizeof(Entity), 0, sizeof(Player) - sizeof(Entity));
-	Entity* entity = &player->Base;
-	Entity_Init(entity);
-	entity->StepSize = 0.5f;
-	entity->EntityType = ENTITY_TYPE_PLAYER;
-	String model = String_FromConst("humanoid");
-	Entity_SetModel(&entity, &model);
-	/* TODO: Init vtable */
-}
-
-void Player_Despawn(Entity* entity) {
-	Player* player = (Player*)entity;
-	Player* first = FirstOtherWithSameSkin();
-	if (first == NULL) {
-		Gfx_DeleteTexture(&entity->TextureId);
-		player->NameTex = Texture_MakeInvalid();
-		ResetSkin();
-	}
-	entity->VTABLE->ContextLost(entity);
-}
-
-void Player_ContextLost(Entity* entity) {
-	Player* player = (Player*)entity;
-	Gfx_DeleteTexture(&player->NameTex.ID);
-	player->NameTex = Texture_MakeInvalid();
-}
-
-void Player_ContextRecreated(Entity* entity) {
-	Player* player = (Player*)entity;
-	Player_UpdateName(player); 
-}
-
 #define PLAYER_NAME_EMPTY_TEX -30000
 void Player_MakeNameTexture(Player* player) {
 	FontDesc font; 
@@ -124,48 +90,12 @@ void Player_DrawName(Player* player) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, ptr, 4);
 }
 
-void Player_CheckSkin(Player* player) {
+Player* Player_FirstOtherWithSameSkin(Player* player) {
 	Entity* entity = &player->Base;
-	String skin = String_FromRawArray(player->SkinNameRaw);
-
-	if (!player->FetchedSkin && entity->Model->UsesSkin) {
-		Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(player);
-		if (first == NULL) {
-			AsyncDownloader_DownloadSkin(&skin, &skin);
-		} else {
-			ApplySkin(first);
-		}
-		player->FetchedSkin = true;
-	}
-
-	AsyncRequest item;
-	if (!AsyncDownloader_Get(&skin, &item)) return;
-	if (item == null || item.Data == null) { Player_SetSkinAll(player, true); return; }
-
-	Bitmap bmp = (Bitmap)item.Data;
-	Gfx_DeleteTexture(&entity->TextureId);
-
-	Player_SetSkinAll(player, true);
-	Player_EnsurePow2(player, &bmp);
-	entity->SkinType = Utils.GetSkinType(bmp);
-
-	if (entity->SkinType == SKIN_TYPE_INVALID) {
-		Player_SetSkinAll(player, true);
-	} else {
-		if (entity->Model->UsesHumanSkin) {
-			Player_ClearHat(bmp, entity->SkinType);
-		}
-		entity->TextureId = Gfx_CreateTexture(&bmp, true, false);
-		Player_SetSkinAll(player, false);
-	}
-	Platform_MemFree(bmp.Scan0);
-}
-
-Player* Player_FirstOtherWithSameSkin(Player* player) {	
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
+		if (Entities_List[i] == NULL || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
@@ -176,10 +106,11 @@ Player* Player_FirstOtherWithSameSkin(Player* player) {
 }
 
 Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
+	Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
+		if (Entities_List[i] == NULL || Entities_List[i] == entity) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
@@ -187,26 +118,6 @@ Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
 		if (p->FetchedSkin && String_Equals(&skin, &pSkin)) return p;
 	}
 	return NULL;
-}
-
-/* Apply or reset skin, for all players with same skin */
-void Player_SetSkinAll(Player* player, bool reset) {
-	String skin = String_FromRawArray(player->SkinNameRaw);
-	UInt32 i;
-	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (Entities_List[i] == NULL || Entities_List[i] == player) continue;
-		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
-
-		Player* p = (Player*)Entities_List[i];
-		String pSkin = String_FromRawArray(p->SkinNameRaw);
-		if (!String_Equals(&skin, &pSkin)) continue;
-
-		if (reset) {
-			Player_ResetSkin(p);
-		} else { 
-			Player_ApplySkin(p, player);
-		}
-	}
 }
 
 void Player_ApplySkin(Player* player, Player* from) {
@@ -232,6 +143,27 @@ void Player_ResetSkin(Player* player) {
 	entity->MobTextureId = NULL;
 	entity->TextureId    = NULL;
 	entity->SkinType = Game_DefaultPlayerSkinType;
+}
+
+/* Apply or reset skin, for all players with same skin */
+void Player_SetSkinAll(Player* player, bool reset) {
+	Entity* entity = &player->Base;
+	String skin = String_FromRawArray(player->SkinNameRaw);
+	UInt32 i;
+	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+		if (Entities_List[i] == NULL || Entities_List[i] == entity) continue;
+		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
+
+		Player* p = (Player*)Entities_List[i];
+		String pSkin = String_FromRawArray(p->SkinNameRaw);
+		if (!String_Equals(&skin, &pSkin)) continue;
+
+		if (reset) {
+			Player_ResetSkin(p);
+		} else {
+			Player_ApplySkin(p, player);
+		}
+	}
 }
 
 void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
@@ -271,7 +203,7 @@ void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 	Bitmap scaled; Bitmap_Allocate(&scaled, width, height);	
 	Int32 y;
 	for (y = 0; y < bmp->Height; y++) {
-		Bitmap_CopyRow(y, y, &bmp, &scaled, bmp->Width);
+		Bitmap_CopyRow(y, y, bmp, &scaled, bmp->Width);
 	}
 
 	Entity* entity = &player->Base;
@@ -280,4 +212,75 @@ void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 
 	Platform_MemFree(bmp->Scan0);
 	*bmp = scaled;
+}
+
+void Player_CheckSkin(Player* player) {
+	Entity* entity = &player->Base;
+	String skin = String_FromRawArray(player->SkinNameRaw);
+
+	if (!player->FetchedSkin && entity->Model->UsesSkin) {
+		Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(player);
+		if (first == NULL) {
+			AsyncDownloader_DownloadSkin(&skin, &skin);
+		} else {
+			Player_ApplySkin(player, first);
+		}
+		player->FetchedSkin = true;
+	}
+
+	AsyncRequest item;
+	if (!AsyncDownloader_Get(&skin, &item)) return;
+	if (item.Data == NULL) { Player_SetSkinAll(player, true); return; }
+
+	Bitmap bmp = (Bitmap)item.Data;
+	Gfx_DeleteTexture(&entity->TextureId);
+
+	Player_SetSkinAll(player, true);
+	Player_EnsurePow2(player, &bmp);
+	entity->SkinType = Utils.GetSkinType(bmp);
+
+	if (entity->SkinType == SKIN_TYPE_INVALID) {
+		Player_SetSkinAll(player, true);
+	} else {
+		if (entity->Model->UsesHumanSkin) {
+			Player_ClearHat(bmp, entity->SkinType);
+		}
+		entity->TextureId = Gfx_CreateTexture(&bmp, true, false);
+		Player_SetSkinAll(player, false);
+	}
+	Platform_MemFree(bmp.Scan0);
+}
+
+void Player_Despawn(Entity* entity) {
+	Player* player = (Player*)entity;
+	Player* first = Player_FirstOtherWithSameSkin(player);
+	if (first == NULL) {
+		Gfx_DeleteTexture(&entity->TextureId);
+		player->NameTex = Texture_MakeInvalid();
+		Player_ResetSkin(player);
+	}
+	entity->VTABLE->ContextLost(entity);
+}
+
+void Player_ContextLost(Entity* entity) {
+	Player* player = (Player*)entity;
+	Gfx_DeleteTexture(&player->NameTex.ID);
+	player->NameTex = Texture_MakeInvalid();
+}
+
+void Player_ContextRecreated(Entity* entity) {
+	Player* player = (Player*)entity;
+	Player_UpdateName(player);
+}
+
+void Player_Init(Player* player) {
+	/* TODO should we just remove the memset from entity_Init and player_init?? */
+	Platform_MemSet(player + sizeof(Entity), 0, sizeof(Player) - sizeof(Entity));
+	Entity* entity = &player->Base;
+	Entity_Init(entity);
+	entity->StepSize = 0.5f;
+	entity->EntityType = ENTITY_TYPE_PLAYER;
+	String model = String_FromConst("humanoid");
+	Entity_SetModel(entity, &model);
+	/* TODO: Init vtable */
 }

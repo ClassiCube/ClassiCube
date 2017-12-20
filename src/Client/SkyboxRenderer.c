@@ -124,8 +124,8 @@ void SkyboxRenderer_MakeVb(void) {
 void SkyboxRenderer_ContextLost(void) { Gfx_DeleteVb(&skybox_vb); }
 void SkyboxRenderer_ContextRecreated(void) { SkyboxRenderer_MakeVb(); }
 
-void SkyboxRenderer_EnvVariableChanged(EnvVar envVar) {
-	if (envVar != EnvVar_CloudsCol) return;
+void SkyboxRenderer_EnvVariableChanged(Int32 envVar) {
+	if (envVar != ENV_VAR_CLOUDS_COL) return;
 	SkyboxRenderer_MakeVb();
 }
 
