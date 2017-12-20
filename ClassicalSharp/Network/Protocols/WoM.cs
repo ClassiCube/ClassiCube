@@ -24,6 +24,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		internal void CheckMotd() {
+			if (net.ServerMotd == null) return;
 			int index = net.ServerMotd.IndexOf("cfg=");
 			if (game.PureClassic || index == -1) return;
 			
