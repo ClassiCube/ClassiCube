@@ -22,7 +22,7 @@ namespace ClassicalSharp.Mode {
 				return true;
 			} else if (key == game.Input.Keys[KeyBind.DropBlock] && !game.ClassicMode) {
 				Inventory inv = game.Inventory;
-				if (inv.CanChangeSelected()) {
+				if (inv.CanChangeSelected() && inv.Selected != Block.Air) {
 					// Don't assign Selected directly, because we don't want held block
 					// switching positions if they already have air in their inventory hotbar.
 					inv[inv.SelectedIndex] = Block.Air;

@@ -26,7 +26,7 @@ bool GameMode_HandlesKeyDown(Key key) {
 		Gui_SetNewScreen(screen);
 		return true;
 	} else if (key == KeyBind_Get(KeyBind_DropBlock) && !Game_ClassicMode) {
-		if (Inventory_CanChangeSelected()) {
+		if (Inventory_CanChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {
 			/* Don't assign SelectedIndex directly, because we don't want held block
 			   switching positions if they already have air in their inventory hotbar. */
 			Inventory_Set(Inventory_SelectedIndex, BLOCK_AIR);
