@@ -10,6 +10,7 @@
 #define MATH_DEG2RAD (MATH_PI / 180.0f)
 #define MATH_RAD2DEG (180.0f / MATH_PI)
 #define MATH_LARGENUM 1000000000.0f
+#define MATH_POS_INF ((Real32)(1e+300 * 1e+300))
 
 #define Math_Deg2Packed(x) ((UInt8)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)

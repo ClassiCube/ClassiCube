@@ -154,7 +154,7 @@ void HacksComp_Init(HacksComp* hacks) {
 	hacks->MaxJumps = 1;
 	hacks->NoclipSlide = true;
 	hacks->CanBePushed = true;
-	hacks->HacksFlags = String_InitAndClear(&hacks->HacksFlagsBuffer[0], 128);
+	hacks->HacksFlags = String_InitAndClearArray(hacks->HacksFlagsBuffer);
 }
 
 bool HacksComp_CanJumpHigher(HacksComp* hacks) {
@@ -326,7 +326,7 @@ void InterpComp_SetPos(InterpState* state, LocationUpdate* update) {
 }
 
 Real32 NetInterpComp_Next(Real32 next, Real32 cur) {
-	if (next == LOCATIONUPDATE_EXCLUDED) return cur;
+	if (next == MATH_POS_INF) return cur;
 	return next;
 }
 
@@ -389,7 +389,7 @@ void NetInterpComp_AdvanceState(NetInterpComp* interp) {
 }
 
 Real32 LocalInterpComp_Next(Real32 next, Real32 cur, Real32* last, bool interpolate) {
-	if (next == LOCATIONUPDATE_EXCLUDED) return cur;
+	if (next == MATH_POS_INF) return cur;
 	if (!interpolate) *last = next;
 	return next;
 }
@@ -416,7 +416,7 @@ void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, boo
 	next->HeadX = LocalInterpComp_Next(update->HeadX, next->HeadX, &prev->HeadX, interpolate);
 	next->HeadY = LocalInterpComp_Next(update->RotY, next->HeadY, &prev->HeadY, interpolate);
 
-	if (update->RotY != LOCATIONUPDATE_EXCLUDED) {
+	if (update->RotY != MATH_POS_INF) {
 		if (!interpolate) {
 			interp->NextRotY = update->RotY;
 			entity->RotY = update->RotY;

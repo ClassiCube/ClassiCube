@@ -33,7 +33,7 @@ void LocationUpdate_Construct(LocationUpdate* update, Real32 x, Real32 y, Real32
 	update->RelativePosition = relPos;
 }
 
-#define exc LOCATIONUPDATE_EXCLUDED
+#define exc MATH_POS_INF
 void LocationUpdate_Empty(LocationUpdate* update) {
 	LocationUpdate_Construct(update, 0.0f, 0.0f, 0.0f, exc, exc, exc, exc, false, false);
 }
@@ -348,7 +348,7 @@ void Entities_Remove(EntityID id) {
 EntityID Entities_GetCloset(Entity* src) {
 	Vector3 eyePos = Entity_GetEyePosition(src);
 	Vector3 dir = Vector3_GetDirVector(src->HeadY * MATH_DEG2RAD, src->HeadX * MATH_DEG2RAD);
-	Real32 closestDist = float.PositiveInfinity;
+	Real32 closestDist = MATH_POS_INF;
 	EntityID targetId = ENTITIES_SELF_ID;
 
 	UInt32 i;

@@ -15,8 +15,6 @@ typedef struct IModel_ IModel; /* Forward declaration */
 
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
-/* Special value specifying an angle is not included in an orientation update. */
-#define LOCATIONUPDATE_EXCLUDED -100000.31415926535f
 /* Maxmimum number of characters in a model name. */
 #define ENTITY_MAX_MODEL_LENGTH 10
 
@@ -46,7 +44,7 @@ typedef bool (*TouchesAny_Condition)(BlockID block);
 typedef struct LocationUpdate_ {
 	/* Position of the update (if included). */
 	Vector3 Pos;
-	/* Orientation of the update (if included). If not, has the value of LOCATIONUPDATE_EXCLUDED. */
+	/* Orientation of the update (if included). If not, has the value of MATH_POS_INF. */
 	Real32 RotX, RotY, RotZ, HeadX;
 	bool IncludesPosition, RelativePosition;
 } LocationUpdate;
