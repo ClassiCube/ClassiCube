@@ -55,7 +55,7 @@ void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String* lines, 
 
 	/* Need to make a copy because we mutate the characters. */
 	UInt8 copyBuffer[String_BufferSize(WORDWRAP_MAX_BUFFER_SIZE)];
-	String copy = String_InitAndClear(copyBuffer, WORDWRAP_MAX_BUFFER_SIZE);
+	String copy = String_InitAndClearArray(copyBuffer);
 	String_AppendString(&copy, text);
 
 	Int32 usedLines = 0, totalChars = maxPerLine * numLines;

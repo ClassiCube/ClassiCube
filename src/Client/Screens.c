@@ -6,6 +6,8 @@
 #include "Platform.h"
 #include "Inventory.h"
 #include "Drawer2D.h"
+#include "GraphicsAPI.h"
+#include "Player.h"
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -135,9 +137,9 @@ void InventoryScreen_Init(GuiElement* elem) {
 
 	Key_KeyRepeat = true;
 	Event_RegisterVoid(&BlockEvents_PermissionsChanged, InventoryScreen_OnBlockChanged);
-	Event_RegisterVoid(&BlockEvents_BlockDefChanged, InventoryScreen_OnBlockChanged);	
-	Event_RegisterVoid(&GfxEvents_ContextLost, InventoryScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, InventoryScreen_ContextRecreated);
+	Event_RegisterVoid(&BlockEvents_BlockDefChanged,    InventoryScreen_OnBlockChanged);	
+	Event_RegisterVoid(&GfxEvents_ContextLost,          InventoryScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,     InventoryScreen_ContextRecreated);
 }
 
 void InventoryScreen_Render(GuiElement* elem, Real64 delta) {
@@ -252,168 +254,200 @@ extern Screen* InventoryScreen_UNSAFE_RawPointer = &InventoryScreen_Instance.Bas
 typedef struct StatusScreen_ {
 	Screen Base;
 	FontDesc Font;
-	UInt8 StatusText[String_BufferSize(STRING_SIZE * 2)];
+	TextWidget Status, HackStates;
+	TextAtlas PosAtlas;
+	Real64 Accumulator;
+	Int32 Frames, FPS;
+	bool Speeding, HalfSpeeding, Noclip, Fly;
+	Int32 LastFov;
 } StatusScreen;
+StatusScreen StatusScreen_Instance;
+	
+void StatusScreen_Render(GuiElement* elem, Real64 delta) {
+	StatusScreen* screen = (StatusScreen*)elem;
+	StatusScreen_Update(screen, delta);
+	if (Game_HideGui || !Game_ShowFPS) return;
 
-namespace ClassicalSharp.Gui.Screens{
-	public class StatusScreen : Screen, IGameComponent {
+	Gfx_SetTexturing(true);
+	elem = &screen->Status.Base.Base;
+	elem->Render(elem, delta);
 
-	Font font;
-	StringBuffer statusBuffer;
-
-	public StatusScreen(Game game) : base(game) {
-		statusBuffer = new StringBuffer(128);
+	if (!Game_ClassicMode && Gui_Active == NULL) {
+		StatusScreen_UpdateHackState(screen, false);
+		StatusScreen_DrawPosition(screen);
+		elem = &screen->HackStates.Base.Base;
+		elem->Render(elem, delta);
 	}
+	Gfx_SetTexturing(false);
+}
 
-	public void Init(Game game) { }
-	public void Ready(Game game) { Init(); }
-	public void Reset(Game game) { }
-	public void OnNewMap(Game game) { }
-	public void OnNewMapLoaded(Game game) { }
+void StatusScreen_MakeText(StatusScreen* screen, STRING_TRANSIENT String* status) {
+	screen->FPS = (Int32)(screen->Frames / screen->Accumulator);
+	String_AppendInt32(status, screen->FPS);
+	String_AppendConst(status, " fps, ");
 
-	TextWidget status, hackStates;
-	TextAtlas posAtlas;
-	public override void Render(double delta) {
-		UpdateStatus(delta);
-		if (game.HideGui || !game.ShowFPS) return;
-
-		gfx.Texturing = true;
-		status.Render(delta);
-		if (!game.ClassicMode && game.Gui.activeScreen == null) {
-			UpdateHackState(false);
-			DrawPosition();
-			hackStates.Render(delta);
-		}
-		gfx.Texturing = false;
-	}
-
-	double accumulator;
-	int frames, totalSeconds;
-
-	void UpdateStatus(double delta) {
-		frames++;
-		accumulator += delta;
-		if (accumulator < 1) return;
-
-		int index = 0;
-		totalSeconds++;
-		int fps = (int)(frames / accumulator);
-
-		statusBuffer.Clear()
-			.AppendNum(ref index, fps).Append(ref index, " fps, ");
-		if (game.ClassicMode) {
-			statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunk updates");
-		} else {
-			if (game.ChunkUpdates > 0) {
-				statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunks/s, ");
-			}
-			int indices = (game.Vertices >> 2) * 6;
-			statusBuffer.AppendNum(ref index, indices).Append(ref index, " vertices");
-
-			int ping = PingList.AveragePingMilliseconds();
-			if (ping != 0) {
-				statusBuffer.Append(ref index, ", ping ").AppendNum(ref index, ping).Append(ref index, " ms");
-			}
+	if (Game_ClassicMode) {
+		String_AppendInt32(status, Game_ChunkUpdates);
+		String_AppendConst(status, " chunk updates");
+	} else {
+		if (Game_ChunkUpdates > 0) {
+			String_AppendInt32(status, Game_ChunkUpdates);
+			String_AppendConst(status, " chunks/s, ");
 		}
 
-		status.SetText(statusBuffer.ToString());
-		accumulator = 0;
-		frames = 0;
-		game.ChunkUpdates = 0;
-	}
+		Int32 indices = ICOUNT(Game_Vertices);
+		String_AppendInt32(status, indices);
+		String_AppendConst(status, " vertices");
 
-	public override void Init() {
-		font = new Font(game.FontName, 16);
-		ContextRecreated();
-
-		game.Events.ChatFontChanged += ChatFontChanged;
-		gfx.ContextLost += ContextLost;
-		gfx.ContextRecreated += ContextRecreated;
-	}
-
-	protected override void ContextLost() {
-		status.Dispose();
-		posAtlas.Dispose();
-		hackStates.Dispose();
-	}
-
-	protected override void ContextRecreated() {
-		status = new TextWidget(game, font)
-			.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, 2);
-		status.ReducePadding = true;
-		status.Init();
-		string msg = statusBuffer.Length > 0 ? statusBuffer.ToString() : "FPS: no data yet";
-		status.SetText(msg);
-
-		posAtlas = new TextAtlas(game, 16);
-		posAtlas.Pack("0123456789-, ()", font, "Position: ");
-		posAtlas.tex.Y = (short)(status.Height + 2);
-
-		int yOffset = status.Height + posAtlas.tex.Height + 2;
-		hackStates = new TextWidget(game, font)
-			.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, yOffset);
-		hackStates.ReducePadding = true;
-		hackStates.Init();
-		UpdateHackState(true);
-	}
-
-	public override void Dispose() {
-		font.Dispose();
-		ContextLost();
-
-		game.Events.ChatFontChanged -= ChatFontChanged;
-		gfx.ContextLost -= ContextLost;
-		gfx.ContextRecreated -= ContextRecreated;
-	}
-
-	void ChatFontChanged(object sender, EventArgs e) { Recreate(); }
-
-	public override void OnResize(int width, int height) { }
-
-	void DrawPosition() {
-		int index = 0;
-		Texture tex = posAtlas.tex;
-		tex.X1 = 2; tex.Width = (ushort)posAtlas.offset;
-		IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked,
-			game.ModelCache.vertices, ref index);
-
-		Vector3I pos = Vector3I.Floor(game.LocalPlayer.Position);
-		posAtlas.curX = posAtlas.offset + 2;
-		VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
-
-		posAtlas.Add(13, vertices, ref index);
-		posAtlas.AddInt(pos.X, vertices, ref index);
-		posAtlas.Add(11, vertices, ref index);
-		posAtlas.AddInt(pos.Y, vertices, ref index);
-		posAtlas.Add(11, vertices, ref index);
-		posAtlas.AddInt(pos.Z, vertices, ref index);
-		posAtlas.Add(14, vertices, ref index);
-
-		gfx.BindTexture(posAtlas.tex.ID);
-		gfx.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
-	}
-
-	bool speeding, halfSpeeding, noclip, fly;
-	int lastFov;
-	void UpdateHackState(bool force) {
-		HacksComponent hacks = game.LocalPlayer.Hacks;
-		if (force || hacks.Speeding != speeding || hacks.HalfSpeeding != halfSpeeding || hacks.Noclip != noclip ||
-			hacks.Flying != fly || game.Fov != lastFov) {
-			speeding = hacks.Speeding; halfSpeeding = hacks.HalfSpeeding; noclip = hacks.Noclip; fly = hacks.Flying;
-			lastFov = game.Fov;
-			int index = 0;
-			statusBuffer.Clear();
-
-			if (game.Fov != game.DefaultFov) statusBuffer.Append(ref index, "Zoom fov ")
-				.AppendNum(ref index, lastFov).Append(ref index, "  ");
-			if (fly) statusBuffer.Append(ref index, "Fly ON   ");
-
-			bool speed = (speeding || halfSpeeding) &&
-				(hacks.CanSpeed || hacks.BaseHorSpeed > 1);
-			if (speed) statusBuffer.Append(ref index, "Speed ON   ");
-			if (noclip) statusBuffer.Append(ref index, "Noclip ON   ");
-			hackStates.SetText(statusBuffer.ToString());
+		Int32 ping = PingList.AveragePingMilliseconds();
+		if (ping != 0) {
+			String_AppendConst(status, ", ping ");
+			String_AppendInt32(status, ping);
+			String_AppendConst(status, " ms");
 		}
 	}
 }
+
+void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
+	screen->Frames++;
+	screen->Accumulator += delta;
+	if (screen->Accumulator < 1.0) return;
+
+	UInt8 statusBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String status = String_InitAndClearArray(statusBuffer);
+	StatusScreen_MakeText(screen, &status);
+
+	TextWidget_SetText(&screen->Status, &status);
+	screen->Accumulator = 0.0;
+	screen->Frames = 0;
+	Game_ChunkUpdates = 0;
+}
+
+void StatusScreen_OnResize(void) { }
+void StatusScreen_ChatFontChanged(void) {
+	Recreate();
+}
+
+void StatusScreen_ContextLost(void) {
+	StatusScreen* screen = &StatusScreen_Instance;
+	TextAtlas_Free(&screen->PosAtlas);
+	GuiElement* elem;
+
+	elem = &screen->Status.Base.Base;
+	elem->Free(elem);
+	elem = &screen->HackStates.Base.Base;
+	elem->Free(elem);
+}
+
+void StatusScreen_ContextRecreated(void) {
+	StatusScreen* screen = &StatusScreen_Instance;
+	status = new TextWidget(game, font)
+		.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, 2);
+	status.ReducePadding = true;
+	status.Init();
+	string msg = statusBuffer.Length > 0 ? statusBuffer.ToString() : "FPS: no data yet";
+	status.SetText(msg);
+
+	posAtlas = new TextAtlas(game, 16);
+	posAtlas.Pack("0123456789-, ()", font, "Position: ");
+	posAtlas.tex.Y = (short)(status.Height + 2);
+
+	int yOffset = status.Height + posAtlas.tex.Height + 2;
+	hackStates = new TextWidget(game, font)
+		.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, yOffset);
+	hackStates.ReducePadding = true;
+	hackStates.Init();
+	UpdateHackState(true);
+}
+
+void StatusScreen_Init(GuiElement* elem) {
+	font = new Font(game.FontName, 16);
+	StatusScreen_ContextRecreated();
+
+	Event_RegisterVoid(&ChatEvents_FontChanged,     StatusScreen_ChatFontChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      StatusScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, StatusScreen_ContextRecreated);
+}
+
+void StatusScreen_Free(GuiElement* elem) {
+	StatusScreen* screen = (StatusScreen*)elem;
+	Platform_FreeFont(&screen->Font);
+	StatusScreen_ContextLost();
+
+	Event_UnregisterVoid(&ChatEvents_FontChanged,     StatusScreen_ChatFontChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      StatusScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, StatusScreen_ContextRecreated);
+}
+
+void StatusScreen_DrawPosition(StatusScreen* screen) {
+	TextAtlas* atlas = &screen->PosAtlas;
+	VertexP3fT2fC4b vertices[4 * 8];
+
+	Texture tex = atlas->Tex; tex.X = 2; tex.Width = (UInt16)atlas->Offset;
+	GfxCommon_Make2DQuad(&tex, PACKEDCOL_WHITE, 
+	IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked,
+		game.ModelCache.vertices, ref index);
+
+	Vector3I pos = Vector3I.Floor(game.LocalPlayer.Position);
+	posAtlas.curX = posAtlas.offset + 2;
+	VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
+
+	posAtlas.Add(13, vertices, ref index);
+	posAtlas.AddInt(pos.X, vertices, ref index);
+	posAtlas.Add(11, vertices, ref index);
+	posAtlas.AddInt(pos.Y, vertices, ref index);
+	posAtlas.Add(11, vertices, ref index);
+	posAtlas.AddInt(pos.Z, vertices, ref index);
+	posAtlas.Add(14, vertices, ref index);
+
+	gfx.BindTexture(posAtlas.tex.ID);
+	gfx.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
+}
+
+void StatusScreen_UpdateHackState(StatusScreen* screen, bool force) {
+	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	if (force || hacks->Speeding != screen->Speeding || hacks->HalfSpeeding != screen->HalfSpeeding || hacks->Noclip != screen->Noclip || hacks->Flying != screen->Fly || Game_Fov != screen->LastFov) {
+		screen->Speeding = hacks->Speeding; screen->Noclip = hacks->Noclip;
+		screen->HalfSpeeding = hacks->HalfSpeeding; screen->Fly = hacks->Flying;
+		screen->LastFov = Game_Fov;
+
+		UInt8 statusBuffer[String_BufferSize(STRING_SIZE * 2)];
+		String status = String_InitAndClearArray(statusBuffer);
+
+		if (Game_Fov != Game_DefaultFov) {
+			String_AppendConst(&status, "Zoom fov ");
+			String_AppendInt32(&status, Game_Fov);
+			String_AppendConst(&status, "  ");
+		}
+		if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
+
+		bool speed = (hacks->Speeding || hacks->HalfSpeeding) && (hacks->CanSpeed || hacks->BaseHorSpeed > 1);
+		if (speed) String_AppendConst(&status, "Speed ON   ");
+		if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
+
+		TextWidget_SetText(&screen->HackStates, &status);
+	}
+}
+
+Screen* StatusScreen_MakeInstance(void) {
+	StatusScreen* screen = &StatusScreen_Instance;
+	Platform_MemSet(&screen, 0, sizeof(StatusScreen));
+	Screen_Reset(&screen->Base);
+
+	screen->Base.OnResize    = StatusScreen_OnResize;
+	screen->Base.Base.Init   = StatusScreen_Init;
+	screen->Base.Base.Render = StatusScreen_Render;
+	screen->Base.Base.Free   = StatusScreen_Free;
+	return &screen->Base;
+}
+
+void StatusScreen_Reset(void) {
+	GuiElement* elem = &StatusScreen_Instance.Base.Base;
+	elem->Init(elem);
+}
+
+IGameComponent StatusScreen_MakeComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Reset = StatusScreen_Reset;
+	return comp;
 }

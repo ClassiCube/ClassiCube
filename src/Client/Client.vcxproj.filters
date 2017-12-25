@@ -381,6 +381,9 @@
     <ClInclude Include="EntityComponents.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
+    <ClInclude Include="Searcher.h">
+      <Filter>Header Files\Math</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -595,6 +598,9 @@
     </ClCompile>
     <ClCompile Include="Player.c">
       <Filter>Source Files\Entities</Filter>
+    </ClCompile>
+    <ClCompile Include="Searcher.c">
+      <Filter>Source Files\Math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

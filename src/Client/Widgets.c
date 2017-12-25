@@ -566,7 +566,6 @@ void TableWidget_UpdatePos(TableWidget* widget) {
 	TableWidget_UpdateDescTexPos(widget);
 }
 
-#define TABLE_NAME_LEN 128
 void TableWidget_RecreateDescTex(TableWidget* widget) {
 	if (widget->SelectedIndex == widget->LastCreatedIndex) return;
 	if (widget->ElementsCount == 0) return;
@@ -575,8 +574,8 @@ void TableWidget_RecreateDescTex(TableWidget* widget) {
 	Gfx_DeleteTexture(&widget->DescTex.ID);
 	if (widget->SelectedIndex == -1) return;
 
-	UInt8 descBuffer[String_BufferSize(TABLE_NAME_LEN)];
-	String desc = String_InitAndClear(descBuffer, TABLE_NAME_LEN);
+	UInt8 descBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String desc = String_InitAndClearArray(descBuffer);
 	BlockID block = widget->Elements[widget->SelectedIndex];
 	TableWidget_MakeBlockDesc(&desc, block);
 
@@ -854,7 +853,7 @@ void SpecialInputWidget_UpdateColString(SpecialInputWidget* widget) {
 		if (Drawer2D_Cols[i].A > 0) count++;
 	}
 
-	widget->ColString = String_InitAndClear(widget->ColBuffer, DRAWER2D_MAX_COLS * 4);
+	widget->ColString = String_InitAndClearArray(widget->ColBuffer);
 	String* buffer = &widget->ColString;
 	Int32 index = 0;
 	for (i = ' '; i <= '~'; i++) {
@@ -1195,7 +1194,7 @@ void InputWidget_RemakeTexture(InputWidget* widget) {
 
 		/* Colour code goes to next line */
 		if (!Drawer2D_IsWhiteCol(lastCol)) {
-			String tmp = String_InitAndClear(tmpBuffer, STRING_SIZE + 2);
+			String tmp = String_InitAndClearArray(tmpBuffer);
 			String_Append(&tmp, '&'); String_Append(&tmp, lastCol);
 			String_AppendString(&tmp, &args.Text);
 			args.Text = tmp;
@@ -1383,7 +1382,7 @@ bool InputWidget_OtherKey(InputWidget* widget, Key key) {
 	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
 	if (key == Key_V && widget->Text.length < maxChars) {
 		UInt8 textBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
-		String text = String_InitAndClear(textBuffer, INPUTWIDGET_MAX_LINES * STRING_SIZE);
+		String text = String_InitAndClearArray(textBuffer);
 		Window_GetClipboardText(&text);
 
 		if (text.length == 0) return true;

@@ -358,7 +358,6 @@ void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
 void ChunkUpdater_QuickSort(Int32 left, Int32 right) {
 	ChunkInfo** values = MapRenderer_SortedChunks; ChunkInfo* value;
 	Int32* keys = ChunkUpdater_Distances;          Int32 key;
-
 	while (left < right) {
 		Int32 i = left, j = right;
 		Int32 pivot = keys[(i + j) / 2];

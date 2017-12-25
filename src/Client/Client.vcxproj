@@ -224,6 +224,7 @@
     <ClInclude Include="PickedPosRenderer.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="Screens.h" />
+    <ClInclude Include="Searcher.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="ServerConnection.h" />
     <ClInclude Include="SkyboxRenderer.h" />
@@ -308,6 +309,7 @@
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="Screens.c" />
+    <ClCompile Include="Searcher.c" />
     <ClCompile Include="SelectionBox.c" />
     <ClCompile Include="ServerConnection.c" />
     <ClCompile Include="SkyboxRenderer.c" />

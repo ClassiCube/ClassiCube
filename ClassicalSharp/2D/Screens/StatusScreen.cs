@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		double accumulator;
-		int frames, totalSeconds;
+		int frames;
 		
 		void UpdateStatus(double delta) {
 			frames++;
@@ -50,7 +50,6 @@ namespace ClassicalSharp.Gui.Screens {
 			if (accumulator < 1) return;
 			
 			int index = 0;
-			totalSeconds++;
 			int fps = (int)(frames / accumulator);
 			
 			statusBuffer.Clear()

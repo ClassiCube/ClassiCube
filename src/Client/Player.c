@@ -27,7 +27,7 @@ void Player_MakeNameTexture(Player* player) {
 		player->NameTex.X = PLAYER_NAME_EMPTY_TEX;
 	} else {
 		UInt8 buffer[String_BufferSize(STRING_SIZE * 2)];
-		String shadowName = String_InitAndClear(buffer, STRING_SIZE * 2);
+		String shadowName = String_InitAndClearArray(buffer);
 
 		size.Width += 3; size.Height += 3;
 		Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);

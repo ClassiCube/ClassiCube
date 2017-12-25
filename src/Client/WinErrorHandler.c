@@ -6,7 +6,7 @@
 /* TODO: These might be better off as a function. */
 #define ErrorHandler_WriteLogBody(raw_msg)\
 UInt8 logMsgBuffer[String_BufferSize(2047)];\
-String logMsg = String_InitAndClear(logMsgBuffer, 2047);\
+String logMsg = String_InitAndClearArray(logMsgBuffer);\
 String_AppendConst(&logMsg, "ClassicalSharp crashed.\r\n");\
 String_AppendConst(&logMsg, "Message: ");\
 String_AppendConst(&logMsg, raw_msg);\

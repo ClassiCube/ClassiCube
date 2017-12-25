@@ -31,6 +31,7 @@ typedef struct String_ {
 String String_MakeNull(void);
 String String_Init(STRING_REF UInt8* buffer, UInt16 length, UInt16 capacity);
 String String_InitAndClear(STRING_REF UInt8* buffer, UInt16 capacity);
+#define String_InitAndClearArray(buffer) String_InitAndClear(buffer, (UInt16)(sizeof(buffer) - 1))
 /* Constructs a new string from a (maybe null terminated) buffer. */
 String String_FromRaw(STRING_REF UInt8* buffer, UInt16 capacity);
 /* Constructs a new string from a constant readonly buffer. */
@@ -38,7 +39,7 @@ String String_FromReadonly(STRING_REF const UInt8* buffer);
 /* Constructs a new string from a compile time string constant. */
 #define String_FromConst(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)};
 /* Constructs a new string from a compile time empty string buffer. */
-#define String_EmptyConstArray(buffer) { buffer, 0, (UInt16)(sizeof(buffer) - 1)};
+#define String_FromEmptyArray(buffer) { buffer, 0, (UInt16)(sizeof(buffer) - 1)};
 /* Constructs a new string from a compile time array, that may have arbitary actual length of data at runtime */
 #define String_FromRawArray(buffer) String_FromRaw(buffer, (UInt16)(sizeof(buffer) - 1))
 

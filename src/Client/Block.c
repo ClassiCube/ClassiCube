@@ -450,8 +450,8 @@ bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
 #define AR_EQ2(s, x, y) (s.length >= 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
 
 BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix) {
-	UInt8 buffer[String_BufferSize(128)];
-	String temp = String_InitAndClear(buffer, 128);
+	UInt8 buffer[String_BufferSize(STRING_SIZE * 2)];
+	String temp = String_InitAndClearArray(buffer);
 	String_AppendString(&temp, name);
 	String_AppendConst(&temp, suffix);
 

@@ -77,8 +77,8 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 
 void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	Atlas1D_Count = atlasesCount;
-	UInt8 logBuffer[String_BufferSize(127)];
-	String log = String_InitAndClear(logBuffer, 127);
+	UInt8 logBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String log = String_InitAndClearArray(logBuffer);
 
 	String_AppendConst(&log, "Loaded new atlas: ");
 	String_AppendInt32(&log, atlasesCount);
