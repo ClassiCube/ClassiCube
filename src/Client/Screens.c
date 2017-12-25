@@ -323,9 +323,11 @@ void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
 	Game_ChunkUpdates = 0;
 }
 
-void StatusScreen_OnResize(void) { }
+void StatusScreen_OnResize(Screen* screen) { }
 void StatusScreen_ChatFontChanged(void) {
-	Recreate();
+	StatusScreen* screen = &StatusScreen_Instance;
+	GuiElement* elem = &screen->Base.Base;
+	elem->Recreate(elem);
 }
 
 void StatusScreen_ContextLost(void) {
@@ -352,12 +354,12 @@ void StatusScreen_ContextRecreated(void) {
 	posAtlas.Pack("0123456789-, ()", font, "Position: ");
 	posAtlas.tex.Y = (short)(status.Height + 2);
 
-	int yOffset = status.Height + posAtlas.tex.Height + 2;
+	Int32 yOffset = status.Height + posAtlas.tex.Height + 2;
 	hackStates = new TextWidget(game, font)
 		.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, yOffset);
 	hackStates.ReducePadding = true;
 	hackStates.Init();
-	UpdateHackState(true);
+	StatusScreen_UpdateHackState(screen, true);
 }
 
 void StatusScreen_Init(GuiElement* elem) {
@@ -382,26 +384,26 @@ void StatusScreen_Free(GuiElement* elem) {
 void StatusScreen_DrawPosition(StatusScreen* screen) {
 	TextAtlas* atlas = &screen->PosAtlas;
 	VertexP3fT2fC4b vertices[4 * 8];
+	VertexP3fT2fC4b* ptr = vertices;
 
 	Texture tex = atlas->Tex; tex.X = 2; tex.Width = (UInt16)atlas->Offset;
-	GfxCommon_Make2DQuad(&tex, PACKEDCOL_WHITE, 
-	IGraphicsApi.Make2DQuad(ref tex, FastColour.WhitePacked,
-		game.ModelCache.vertices, ref index);
+	PackedCol col = PACKEDCOL_WHITE;
+	GfxCommon_Make2DQuad(&tex, col, &ptr);
 
-	Vector3I pos = Vector3I.Floor(game.LocalPlayer.Position);
-	posAtlas.curX = posAtlas.offset + 2;
-	VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
+	Vector3I pos; Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Base.Position);
+	atlas->CurX = atlas->Offset + 2;
 
-	posAtlas.Add(13, vertices, ref index);
-	posAtlas.AddInt(pos.X, vertices, ref index);
-	posAtlas.Add(11, vertices, ref index);
-	posAtlas.AddInt(pos.Y, vertices, ref index);
-	posAtlas.Add(11, vertices, ref index);
-	posAtlas.AddInt(pos.Z, vertices, ref index);
-	posAtlas.Add(14, vertices, ref index);
+	TextAtlas_Add(atlas, 13, &ptr);
+	TextAtlas_AddInt(atlas, pos.X, &ptr);
+	TextAtlas_Add(atlas, 11, &ptr);
+	TextAtlas_AddInt(atlas, pos.Y, &ptr);
+	TextAtlas_Add(atlas, 11, &ptr);
+	TextAtlas_AddInt(atlas, pos.Z, &ptr);
+	TextAtlas_Add(atlas, 14, &ptr);
 
-	gfx.BindTexture(posAtlas.tex.ID);
-	gfx.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
+	Gfx_BindTexture(atlas->Tex.ID);
+	/* TODO: Do we need to use a separate VB here? */
+	GfxCommon_UpdateDynamicVb_IndexedTris(game.ModelCache.vb, vertices, index);
 }
 
 void StatusScreen_UpdateHackState(StatusScreen* screen, bool force) {
