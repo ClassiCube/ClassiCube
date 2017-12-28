@@ -363,7 +363,8 @@ void StatusScreen_ContextRecreated(void) {
 }
 
 void StatusScreen_Init(GuiElement* elem) {
-	font = new Font(game.FontName, 16);
+	StatusScreen* screen = (StatusScreen*)elem;
+	FontDesc_Make(&screen->Font, 16, FONT_STYLE_NORMAL);
 	StatusScreen_ContextRecreated();
 
 	Event_RegisterVoid(&ChatEvents_FontChanged,     StatusScreen_ChatFontChanged);

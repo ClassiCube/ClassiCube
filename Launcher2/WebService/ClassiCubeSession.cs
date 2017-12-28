@@ -7,7 +7,7 @@ using JsonObject = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Launcher.Web {
 
-	public class ServerListEntry {		
+	public class ServerListEntry {
 		public string Hash, Name, Players, MaxPlayers;
 		public string Uptime, IPAddress, Port, Mppass, Software;
 		public bool Featured;
@@ -23,11 +23,11 @@ namespace Launcher.Web {
 		public List<ServerListEntry> Servers = new List<ServerListEntry>();
 		
 		public void LoginAsync(string user, string password) {
-			Username = user;			
+			Username = user;
 			Status = "&eSigning in..";
 			Servers = new List<ServerListEntry>();
 			
-			BeginWorking();			
+			BeginWorking();
 			Thread thread = new Thread(LoginWorker, 256 * 1024);
 			thread.Name = "Launcher.CCLoginAsync";
 			thread.Start(password);
@@ -74,7 +74,7 @@ namespace Launcher.Web {
 			string getResponse = Get(loginUri, classicubeNetUri);
 			int index = 0; bool success = true;
 			JsonObject data = (JsonObject)Json.ParseValue(getResponse, ref index, ref success);
-			string token = (string)data["token"];			
+			string token = (string)data["token"];
 			DateTime end = DateTime.UtcNow;
 			Log("cc login took " + (end - start).TotalMilliseconds);
 			
@@ -94,7 +94,7 @@ namespace Launcher.Web {
 			Log("cc login took " + (end - start).TotalMilliseconds);
 			
 			string err = GetLoginError(data);
-			if (err != null) throw new InvalidOperationException(err);			
+			if (err != null) throw new InvalidOperationException(err);
 			Username = (string)data["username"];
 		}
 		
@@ -108,6 +108,24 @@ namespace Launcher.Web {
 			return "Unknown error occurred";
 		}
 		
+		ServerListEntry ParseEntry(JsonObject obj) {
+			ServerListEntry entry = new ServerListEntry();
+			entry.Hash       = (string)obj["hash"];
+			entry.Name       = (string)obj["name"];
+			entry.Players    = (string)obj["players"];
+			entry.MaxPlayers = (string)obj["maxplayers"];
+			entry.Uptime     = (string)obj["uptime"];
+			entry.Mppass     = (string)obj["mppass"];
+			entry.IPAddress  = (string)obj["ip"];
+			entry.Port       = (string)obj["port"];
+			entry.Software   = (string)obj["software"];
+			
+			if (obj.ContainsKey("featured")) {
+				entry.Featured = (bool)obj["featured"];
+			}
+			return entry;
+		}
+		
 		public ClientStartData GetConnectInfo(string hash) {
 			string uri = serverUri + hash;
 			string response = Get(uri, classicubeNetUri);
@@ -117,8 +135,8 @@ namespace Launcher.Web {
 			List<object> list = (List<object>)root["servers"];
 			
 			JsonObject obj = (JsonObject)list[0];
-			return new ClientStartData(Username, (string)obj["mppass"], 
-			                           (string)obj["ip"], (string)obj["port"]);
+			ServerListEntry entry = ParseEntry(obj);
+			return new ClientStartData(Username, entry.Mppass, entry.IPAddress, entry.Port, entry.Name);
 		}
 		
 		public List<ServerListEntry> GetPublicServers() {
@@ -131,20 +149,7 @@ namespace Launcher.Web {
 			
 			for (int i = 0; i < list.Count; i++) {
 				JsonObject obj = (JsonObject)list[i];
-				ServerListEntry entry = new ServerListEntry();
-				entry.Hash       = (string)obj["hash"];
-				entry.Name       = (string)obj["name"];
-				entry.Players    = (string)obj["players"];
-				entry.MaxPlayers = (string)obj["maxplayers"];
-				entry.Uptime     = (string)obj["uptime"];
-				entry.Mppass     = (string)obj["mppass"];
-				entry.IPAddress  = (string)obj["ip"];
-				entry.Port       = (string)obj["port"];
-				entry.Software   = (string)obj["software"];
-				
-				if (obj.ContainsKey("featured")) {
-					entry.Featured = (bool)obj["featured"];
-				}
+				ServerListEntry entry = ParseEntry(obj);
 				servers.Add(entry);
 			}
 			

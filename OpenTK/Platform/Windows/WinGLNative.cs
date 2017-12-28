@@ -403,7 +403,7 @@ namespace OpenTK.Platform.Windows
 				ushort atom = API.RegisterClassEx(ref wc);
 
 				if (atom == 0)
-					throw new PlatformException(String.Format("Failed to register window class. Error: {0}", Marshal.GetLastWin32Error()));
+					throw new PlatformException("Failed to register window class. Error: " + Marshal.GetLastWin32Error());
 
 				class_registered = true;
 			}
@@ -415,7 +415,7 @@ namespace OpenTK.Platform.Windows
 				IntPtr.Zero, IntPtr.Zero, Instance, IntPtr.Zero);
 
 			if (handle == IntPtr.Zero)
-				throw new PlatformException(String.Format("Failed to create window. Error: {0}", Marshal.GetLastWin32Error()));
+				throw new PlatformException("Failed to create window. Error: " + Marshal.GetLastWin32Error());
 
 			return handle;
 		}

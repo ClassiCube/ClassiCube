@@ -11,7 +11,7 @@ void ErrorHandler_Init(void);
 /* Logs a message to the error handler's log file. */
 void ErrorHandler_Log(STRING_PURE String* msg);
 /* Checks that the return code of a method is successful. */
-#define ErrorHandler_Check(returnCode) (returnCode == 0)
+#define ErrorHandler_Check(returnCode) ((returnCode) == 0)
 /* Shows a message box to user, logs message to disc, then fails.
 NOTE: raw pointer is used here for performance reasons, DO NOT apply this style elsewhere.*/
 void ErrorHandler_Fail(const UInt8* raw_msg);

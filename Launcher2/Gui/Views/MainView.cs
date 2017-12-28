@@ -7,7 +7,7 @@ using Launcher.Gui.Widgets;
 namespace Launcher.Gui.Views {
 	public sealed class MainView : IView {
 		
-		internal int loginIndex, resIndex, dcIndex, spIndex, statusIndex;
+		internal int loginIndex, resIndex, dcIndex, spIndex, statusIndex, usernameIndex;
 		internal int sslIndex, settingsIndex;
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
 		
@@ -31,6 +31,7 @@ namespace Launcher.Gui.Views {
 		internal string updateText = "&eChecking..";
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
+			usernameIndex = widgetIndex;
 			MakeInput(Get(0), 280, false, 16, "&gUsername..")
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -120);
 			MakeInput(Get(1), 280, true, 64, "&gPassword..")

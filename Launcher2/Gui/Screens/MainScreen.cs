@@ -47,17 +47,18 @@ namespace Launcher.Gui.Screens {
 		void SwitchToSettings(int x, int y) { game.SetScreen(new SettingsScreen(game)); }
 
 		const int buttonWidth = 220, buttonHeight = 35, sideButtonWidth = 150;
-		string resumeUser, resumeIp, resumePort, resumeMppass;
+		string resumeUser, resumeIp, resumePort, resumeMppass, resumeServer;
 		bool resumeCCSkins, resumeValid;
 		
 		void DoResume(int mouseX, int mouseY) {
 			if (!resumeValid) return;
-			ClientStartData data = new ClientStartData(resumeUser, resumeMppass, resumeIp, resumePort);
+			ClientStartData data = new ClientStartData(resumeUser, resumeMppass, resumeIp, resumePort, resumeServer);
 			Client.Start(data, resumeCCSkins, ref game.ShouldExit);
 		}
 		
 		
 		void LoadResumeInfo() {
+			resumeServer = Options.Get("launcher-server") ?? "";
 			resumeUser = Options.Get("launcher-username");
 			resumeIp = Options.Get("launcher-ip") ?? "";
 			resumePort = Options.Get("launcher-port") ?? "";
@@ -70,8 +71,9 @@ namespace Launcher.Gui.Screens {
 			
 			string mppass = Options.Get("launcher-mppass") ?? null;
 			resumeMppass = Secure.Decode(mppass, resumeUser);
-			resumeValid = !String.IsNullOrEmpty(resumeUser) && !String.IsNullOrEmpty(resumeIp)
-				&& !String.IsNullOrEmpty(resumePort) && !String.IsNullOrEmpty(resumeMppass);
+			resumeValid = 
+				!String.IsNullOrEmpty(resumeUser) && !String.IsNullOrEmpty(resumeIp) &&
+				!String.IsNullOrEmpty(resumePort) && !String.IsNullOrEmpty(resumeMppass);
 		}
 		
 		bool updateDone;
@@ -98,8 +100,16 @@ namespace Launcher.Gui.Screens {
 		protected override void SelectWidget(Widget widget, int mouseX, int mouseY) {
 			base.SelectWidget(widget, mouseX, mouseY);
 			if (signingIn || !resumeValid || widget != widgets[view.resIndex]) return;
-			const string format = "&eResume to {0}:{1}, as {2}";
-			SetStatus(String.Format(format, resumeIp, resumePort, resumeUser));
+			
+			string curUser = ((InputWidget)widgets[view.usernameIndex]).Text;
+			if (resumeServer != "" && resumeUser == curUser) {
+				SetStatus("&eResume to " + resumeServer);
+			} else if (resumeServer != "") {
+				SetStatus("&eResume as " + resumeUser + " to " + resumeServer);
+			} else {
+				SetStatus("&eResume as " + resumeUser + " to " + resumeIp + ":" + resumePort);
+			}
+			
 		}
 		
 		protected override void UnselectWidget(Widget widget) {

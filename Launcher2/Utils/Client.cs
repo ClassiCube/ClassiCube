@@ -97,6 +97,7 @@ namespace Launcher {
 			shouldExit = Options.GetBool(OptionsKey.AutoCloseLauncher, false);
 			if (data == null) return;
 			
+			Options.Set("launcher-server", data.Server);
 			Options.Set("launcher-username", data.Username);
 			Options.Set("launcher-ip", data.Ip);
 			Options.Set("launcher-port", data.Port);
@@ -107,13 +108,14 @@ namespace Launcher {
 	}
 
 	public class ClientStartData {
-		public string Username, Mppass, Ip, Port;
+		public string Username, Mppass, Ip, Port, Server;
 		
-		public ClientStartData(string user, string mppass, string ip, string port) {
+		public ClientStartData(string user, string mppass, string ip, string port, string server) {
 			Username = user;
 			Mppass = mppass;
 			Ip = ip;
 			Port = port;
+			Server = server;
 		}
 	}
 }

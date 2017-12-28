@@ -139,7 +139,7 @@ namespace Launcher {
 				if (entry.Hash != hash) continue;
 				
 				data = new ClientStartData(Session.Username, entry.Mppass,
-				                           entry.IPAddress, entry.Port);
+				                           entry.IPAddress, entry.Port, entry.Name);
 				Client.Start(data, true, ref ShouldExit);
 				return true;
 			}

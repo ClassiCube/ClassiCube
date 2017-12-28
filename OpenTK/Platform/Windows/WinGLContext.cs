@@ -48,9 +48,7 @@ namespace OpenTK.Platform.Windows {
 			if (ContextHandle == IntPtr.Zero)
 				ContextHandle = Wgl.wglCreateContext(window.DeviceContext);
 			if (ContextHandle == IntPtr.Zero)
-				throw new GraphicsContextException(
-					String.Format("Context creation failed. Wgl.CreateContext() error: {0}.",
-					              Marshal.GetLastWin32Error()));
+				throw new GraphicsContextException("Context creation failed. Wgl.CreateContext() error: " + Marshal.GetLastWin32Error());
 			
 			Debug.Print( "success! (id: {0})", ContextHandle );
 		}
