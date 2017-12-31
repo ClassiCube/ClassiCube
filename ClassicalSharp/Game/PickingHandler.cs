@@ -101,6 +101,7 @@ namespace ClassicalSharp {
 		static bool PushbackPlace(Game game, AABB blockBB) {
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 curPos = p.Position, adjPos = p.Position;
+
 			
 			// Offset position by the closest face
 			PickedPos selected = game.SelectedPos;
@@ -117,10 +118,11 @@ namespace ClassicalSharp {
 			} else if (selected.Face == BlockFace.YMin) {
 				adjPos.Y = blockBB.Min.Y - p.Size.Y - Entity.Adjustment;
 			}
-			
-			Vector3I newLoc = Vector3I.Floor(adjPos);
-			bool validPos = newLoc.X >= 0 && newLoc.Y >= 0 && newLoc.Z >= 0 &&
-				newLoc.X < game.World.Width && adjPos.Z < game.World.Length;
+
+			// exclude exact map boundaries, otherwise player can get stuck outside map
+			bool validPos = 
+				adjPos.X > 0 && adjPos.Y >= 0 && adjPos.Z > 0 &&
+				adjPos.X < game.World.Width && adjPos.Z < game.World.Length;
 			if (!validPos) return false;
 			
 			p.Position = adjPos;

@@ -36,8 +36,7 @@ namespace OpenTK {
 
 	/// <summary> Instances of this class implement the <see cref="OpenTK.INativeWindow"/> interface on the current platform. </summary>
 	public class NativeWindow : INativeWindow {
-		
-		private readonly DisplayDevice device;
+
 		private readonly INativeWindow implementation;
 		private bool disposed, events;
 
@@ -79,9 +78,7 @@ namespace OpenTK {
 			if (device == null)
 				throw new ArgumentNullException("device");
 
-			this.device = device;
-
-			implementation = Factory.Default.CreateNativeWindow(x, y, width, height, title, mode, this.device);
+			implementation = Factory.Default.CreateNativeWindow(x, y, width, height, title, mode, device);
 		}
 
 		/// <summary> Closes the NativeWindow. </summary>
