@@ -22,11 +22,12 @@ typedef struct IModel_ IModel; /* Forward declaration */
 #define ENTITIES_SELF_ID 255
 
 UInt32 Entities_NameMode;
-#define NAME_MODE_HOVERED      0
-#define NAME_MODE_ALL          1
-#define NAME_MODE_ALL_HOVERED  2
-#define NAME_MODE_ALL_UNSCALED 3
-extern const UInt8* NameMode_Names[4];
+#define NAME_MODE_NONE         0
+#define NAME_MODE_HOVERED      1
+#define NAME_MODE_ALL          2
+#define NAME_MODE_ALL_HOVERED  3
+#define NAME_MODE_ALL_UNSCALED 4
+extern const UInt8* NameMode_Names[5];
 
 UInt32 Entities_ShadowMode;
 #define SHADOW_MODE_NONE          0

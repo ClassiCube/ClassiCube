@@ -7,7 +7,7 @@ using ClassicalSharp.Physics;
 
 namespace ClassicalSharp.Entities {
 
-	public enum NameMode { Hovered, All, AllHovered, AllUnscaled }
+	public enum NameMode { None, Hovered, All, AllHovered, AllUnscaled }
 	
 	public enum EntityShadow { None, SnapToBlock, Circle, CircleAll, }
 	
@@ -62,6 +62,7 @@ namespace ClassicalSharp.Entities {
 		/// If ShowHoveredNames is false, this method only renders names of entities that are
 		/// not currently being looked at by the user. </summary>
 		public void RenderNames(IGraphicsApi gfx, double delta) {
+			if (NamesMode == NameMode.None) return;
 			closestId = GetClosetPlayer(game.LocalPlayer);
 			if (!game.LocalPlayer.Hacks.CanSeeAllNames || NamesMode != NameMode.All) return;
 
@@ -83,6 +84,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void RenderHoveredNames(IGraphicsApi gfx, double delta) {
+			if (NamesMode == NameMode.None) return;
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
 			gfx.DepthTest = false;

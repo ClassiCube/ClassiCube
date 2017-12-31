@@ -13,7 +13,7 @@
 #include "Intersection.h"
 #include "Lighting.h"
 
-const UInt8* NameMode_Names[4] = { "Hovered", "All", "AllHovered", "AllUnscaled" };
+const UInt8* NameMode_Names[5]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const UInt8* ShadowMode_Names[4] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
 Real32 LocationUpdate_Clamp(Real32 degrees) {
@@ -237,6 +237,7 @@ void Entities_RenderModels(Real64 delta, Real32 t) {
 	
 
 void Entities_RenderNames(Real64 delta) {
+	if (Entities_NameMode == NAME_MODE_NONE) return;
 	LocalPlayer* p = &LocalPlayer_Instance;
 	closestId = Entities_GetCloset(&p->Base.Base);
 	if (!p->Hacks.CanSeeAllNames || Entities_NameMode != NAME_MODE_ALL) return;
@@ -260,6 +261,7 @@ void Entities_RenderNames(Real64 delta) {
 }
 
 void Entities_RenderHoveredNames(Real64 delta) {
+	if (Entities_NameMode == NAME_MODE_NONE) return;
 	LocalPlayer* p = &LocalPlayer_Instance;
 	bool allNames = !(Entities_NameMode == NAME_MODE_HOVERED || Entities_NameMode == NAME_MODE_ALL)
 		&& p->Hacks.CanSeeAllNames;

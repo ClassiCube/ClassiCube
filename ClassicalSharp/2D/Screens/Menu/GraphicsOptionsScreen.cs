@@ -106,6 +106,7 @@ namespace ClassicalSharp.Gui.Screens {
 				"&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.",
 			};
 			descriptions[3] = new string[] {
+				"&eNone: &fNo names of players are drawn.",
 				"&eHovered: &fName of the targeted player is drawn see-through.",
 				"&eAll: &fNames of all other players are drawn normally.",
 				"&eAllHovered: &fAll names of players are drawn see-through.",
