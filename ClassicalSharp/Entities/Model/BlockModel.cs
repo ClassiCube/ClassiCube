@@ -68,12 +68,13 @@ namespace ClassicalSharp.Model {
 		public override void DrawModel(Entity p) {
 			block = p.ModelBlock;
 			RecalcProperties(p);
+			if (BlockInfo.Draw[block] == DrawType.Gas) return;
 			
 			if (BlockInfo.FullBright[block]) {
-				for (int i = 0; i < cols.Length; i++)
+				for (int i = 0; i < cols.Length; i++) {
 					cols[i] = FastColour.WhitePacked;
-			}
-			if (BlockInfo.Draw[block] == DrawType.Gas) return;
+				}
+			}			
 			
 			lastTexIndex = -1;
 			atlas = game.TerrainAtlas1D;
@@ -146,6 +147,10 @@ namespace ClassicalSharp.Model {
 			if (lastTexIndex != texIndex) Flush();
 			
 			int col = cols[0];
+			if (BlockInfo.Tinted[block]) {
+				col = Utils.Tint(col, BlockInfo.FogColour[block]);
+			}
+			
 			float p1 = 0, p2 = 0;
 			if (firstPart) { // Need to break into two quads for when drawing a sprite model in hand.
 				if (mirror) { rec.U1 = 0.5f; p1 = -5.5f/16; }
@@ -167,6 +172,10 @@ namespace ClassicalSharp.Model {
 			if (lastTexIndex != texIndex) Flush();
 
 			int col = cols[0];
+			if (BlockInfo.Tinted[block]) {
+				col = Utils.Tint(col, BlockInfo.FogColour[block]);
+			}
+			
 			float x1 = 0, x2 = 0, z1 = 0, z2 = 0;
 			if (firstPart) {
 				if (mirror) { rec.U2 = 0.5f; x2 = -5.5f/16; z2 = 5.5f/16; }

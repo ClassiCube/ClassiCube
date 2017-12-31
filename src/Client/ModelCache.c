@@ -1145,13 +1145,23 @@ TextureLoc BlockModel_GetTex(Face face) {
 	return texLoc;
 }
 
+#define Block_Tint(col, block)\
+if (Block_Tinted[block]) {\
+	PackedCol tintCol = Block_FogColour[block];\
+	col.R = (UInt8)(col.R * tintCol.R / 255);\
+	col.G = (UInt8)(col.G * tintCol.G / 255);\
+	col.B = (UInt8)(col.B * tintCol.B / 255);\
+}
+
 void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, Face_ZMax);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 
 	PackedCol col = IModel_Cols[0];
-	Real32 p1 = 0, p2 = 0;
+	Block_Tint(col, BlockModel_block);
+
+	Real32 p1 = 0.0f, p2 = 0.0f;
 	if (firstPart) { /* Need to break into two quads for when drawing a sprite model in hand. */
 		if (mirror) { rec.U1 = 0.5f; p1 = -5.5f / 16.0f; }
 		else {        rec.U2 = 0.5f; p2 = -5.5f / 16.0f; }
@@ -1174,7 +1184,9 @@ void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	BlockModel_FlushIfNotSame;
 
 	PackedCol col = IModel_Cols[0];
-	Real32 x1 = 0, x2 = 0, z1 = 0, z2 = 0;
+	Block_Tint(col, BlockModel_block);
+
+	Real32 x1 = 0.0f, x2 = 0.0f, z1 = 0.0f, z2 = 0.0f;
 	if (firstPart) {
 		if (mirror) { rec.U2 = 0.5f; x2 = -5.5f / 16.0f; z2 = 5.5f / 16.0f; }
 		else {        rec.U1 = 0.5f; x1 = -5.5f / 16.0f; z1 = 5.5f / 16.0f; }
@@ -1228,6 +1240,7 @@ void BlockModel_DrawParts(bool sprite) {
 void BlockModel_DrawModel(Entity* p) {
 	BlockModel_block = p->ModelBlock;
 	BlockModel_RecalcProperties(p);
+	if (Block_Draw[BlockModel_block] == DRAW_GAS) return;
 
 	if (Block_FullBright[BlockModel_block]) {
 		Int32 i;
@@ -1236,7 +1249,6 @@ void BlockModel_DrawModel(Entity* p) {
 			IModel_Cols[i] = white;
 		}
 	}
-	if (Block_Draw[BlockModel_block] == DRAW_GAS) return;
 
 	BlockModel_lastTexIndex = -1;
 	bool sprite = Block_Draw[BlockModel_block] == DRAW_SPRITE;
