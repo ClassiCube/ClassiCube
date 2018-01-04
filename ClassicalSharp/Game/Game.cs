@@ -152,7 +152,7 @@ namespace ClassicalSharp {
 				Picking.UpdateState(SelectedPos);
 				Picking.Render(delta);
 			}
-						
+			
 			// Render water over translucent blocks when underwater for proper alpha blending
 			Vector3 pos = LocalPlayer.Position;
 			if (CurrentCameraPos.Y < World.Env.EdgeHeight
@@ -330,7 +330,7 @@ namespace ClassicalSharp {
 			if (BlockInfo.Draw[block] == DrawType.Gas) return false;
 			if (BlockInfo.Draw[block] == DrawType.Sprite) return true;
 			
-			if (BlockInfo.Collide[block] != CollideType.Liquid) return true;		
+			if (BlockInfo.Collide[block] != CollideType.Liquid) return true;
 			return ModifiableLiquids && BlockInfo.CanPlace[block] && BlockInfo.CanDelete[block];
 		}
 		
@@ -362,6 +362,11 @@ namespace ClassicalSharp {
 		}
 		
 		public bool ValidateBitmap(string file, Bitmap bmp) {
+			if (bmp == null) {
+				Chat.Add("&cError loading " + file + " from the texture pack.");
+				return false;
+			}
+			
 			int maxSize = Graphics.MaxTextureDimensions;
 			if (bmp.Width > maxSize || bmp.Height > maxSize) {
 				Chat.Add("&cUnable to use " + file + " from the texture pack.");

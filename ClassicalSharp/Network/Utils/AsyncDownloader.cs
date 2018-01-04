@@ -235,8 +235,6 @@ namespace ClassicalSharp.Network {
 					Utils.LogDebug("Failed to download from: " + url);
 				}
 			}
-			
-			request.Data = CheckIsValidImage(request.Data, url);
 			request.TimeDownloaded = DateTime.UtcNow;
 			
 			lock (processedLocker) {
@@ -259,7 +257,12 @@ namespace ClassicalSharp.Network {
 		object DownloadContent(Request request, HttpWebResponse response) {
 			if (request.Type == RequestType.Bitmap) {
 				MemoryStream data = DownloadBytes(response);
-				return Platform.ReadBmp32Bpp(drawer, data);
+				Bitmap bmp = Platform.ReadBmp32Bpp(drawer, data);
+				
+				if (bmp == null) {
+					Utils.LogDebug("Failed to download from: " + request.Url);
+				}
+				return bmp;
 			} else if (request.Type == RequestType.String) {
 				MemoryStream data = DownloadBytes(response);
 				byte[] rawBuffer = data.GetBuffer();
@@ -271,21 +274,6 @@ namespace ClassicalSharp.Network {
 				return response.ContentLength;
 			}
 			return null;
-		}
-		
-		object CheckIsValidImage(object value, string url) {
-			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
-			// We can detect this as every single property access raises an ArgumentException.
-			try {
-				Bitmap bmp = value as Bitmap;
-				if (bmp != null) {
-					int height = bmp.Height;
-				}
-				return value;
-			} catch (ArgumentException) {
-				Utils.LogDebug("Failed to download from: " + url);
-				return null;
-			}
 		}
 		
 		HttpWebRequest MakeRequest(Request request) {
