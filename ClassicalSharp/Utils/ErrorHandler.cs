@@ -81,9 +81,15 @@ namespace ClassicalSharp {
 		
 		/// <summary> Logs a handled exception that occured at the specified location to the log file. </summary>
 		public static bool LogError(string location, Exception ex) {
-			string error = ex.GetType().FullName + ": " + ex.Message 
-				+ Environment.NewLine + ex.StackTrace;
+			string error = DescribeException(ex);
+			if (ex.InnerException != null) {
+				error += Environment.NewLine + DescribeException(ex.InnerException);
+			}
 			return LogError(location, error);
+		}
+		
+		static string DescribeException(Exception ex) {
+			return ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
 		}
 		
 		/// <summary> Logs an error that occured at the specified location to the log file. </summary>
