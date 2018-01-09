@@ -34,13 +34,13 @@ namespace ClassicalSharp {
 			#endif
 			
 			Options.Load();
-			int width  = Options.GetInt(OptionsKey.WindowWidth,  0, 65536, 0);
-			int height = Options.GetInt(OptionsKey.WindowHeight, 0, 65536, 0);
+			DisplayDevice device = DisplayDevice.Primary;
+			int width  = Options.GetInt(OptionsKey.WindowWidth,  0, device.Width,  0);
+			int height = Options.GetInt(OptionsKey.WindowHeight, 0, device.Height, 0);
 			
 			// No custom resolution has been set
 			if (width == 0 || height == 0) {
-				width = 854; height = 480;
-				DisplayDevice device = DisplayDevice.Primary;
+				width = 854; height = 480;			
 				if (device.Width < 854) width = 640;
 			}
 			
