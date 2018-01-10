@@ -181,4 +181,42 @@ namespace ClassicalSharp.Model {
 			}
 		}
 	}
+    
+	public class CorpseModel : IModel {
+		
+		public CorpseModel(Game window) : base(window) {
+			UsesHumanSkin = true;
+        }
+		
+		public override void CreateParts() { }
+		
+		public override float NameYOffset { get { return 32/16f + 0.5f/16f; } }
+		
+		public override float GetEyeY(Entity entity) { return 26/16f; }
+		
+		public override Vector3 CollisionSize {
+			get { return new Vector3(8/16f + 0.6f/16f, 28.1f/16f, 8/16f + 0.6f/16f); }
+		}
+		
+		public override AABB PickingBounds {
+			get { return new AABB(-8/16f, 0, -4/16f, 8/16f, 32/16f, 4/16f); }
+		}
+		
+		public override void DrawModel(Entity p) {
+		    
+		    float sideLegAngle = 0.15f;
+		    float sideArmAngle = 0.2f;
+		    float downAngle = 0.025f;
+		    
+			p.anim.leftLegX = downAngle; p.anim.rightLegX = downAngle;
+			p.anim.leftLegZ = -sideLegAngle; p.anim.rightLegZ = sideLegAngle;
+			
+			p.anim.leftArmX = downAngle; p.anim.rightArmX = downAngle;
+			p.anim.leftArmZ = -sideArmAngle; p.anim.rightArmZ = sideArmAngle;
+			
+			IModel model = game.ModelCache.Models[0].Instance;
+			model.SetupState(p);
+			model.DrawModel(p);
+		}	
+	}
 }

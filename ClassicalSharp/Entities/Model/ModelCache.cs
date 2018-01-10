@@ -108,6 +108,7 @@ namespace ClassicalSharp.Model {
 			Register("sit", "char.png", new SittingModel(game));
 			Register("sitting", "char.png", new SittingModel(game));
 			Register("arm", "char.png", new ArmModel(game));
+			Register("corpse", "char.png", new CorpseModel(game));
 		}
 
 		void TextureChanged(object sender, TextureEventArgs e) {
