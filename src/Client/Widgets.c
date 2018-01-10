@@ -54,7 +54,7 @@ void TextWidget_Reposition(Widget* elem) {
 	widget->Texture.Y += elem->Y - oldY;
 }
 
-void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* font) {
+void TextWidget_Make(TextWidget* widget, FontDesc* font) {
 	Widget_Init(&widget->Base);
 	PackedCol col = PACKEDCOL_WHITE;
 	widget->Col = col;
@@ -63,7 +63,10 @@ void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* f
 	widget->Base.Base.Init   = TextWidget_Init;
 	widget->Base.Base.Render = TextWidget_Render;
 	widget->Base.Base.Free   = TextWidget_Free;
+}
 
+void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* font) {
+	TextWidget_Make(widget, font);
 	GuiElement* elem = &widget->Base.Base;
 	elem->Init(elem);
 	TextWidget_SetText(widget, text);

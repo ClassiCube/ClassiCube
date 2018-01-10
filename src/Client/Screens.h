@@ -17,6 +17,8 @@ typedef struct ClickableScreen_ {
 void ClickableScreen_Create(ClickableScreen* screen);
 
 Screen* InventoryScreen_MakeInstance(void);
+Screen* StatusScreen_MakeInstance(void);
+IGameComponent StatusScreen_MakeComponent(void);
 
 /* Raw pointer to inventory screen. DO NOT USE THIS. Use InventoryScreen_MakeInstance() */
 extern Screen* InventoryScreen_UNSAFE_RawPointer;

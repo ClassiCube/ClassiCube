@@ -22,6 +22,7 @@ typedef struct TextWidget_ {
 	PackedCol Col;
 } TextWidget;
 
+void TextWidget_Make(TextWidget* widget, FontDesc* font);
 void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* font);
 void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text);
 

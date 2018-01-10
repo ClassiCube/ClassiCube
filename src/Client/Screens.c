@@ -351,8 +351,10 @@ void StatusScreen_ContextRecreated(void) {
 	status.SetText(msg);
 
 	posAtlas = new TextAtlas(game, 16);
-	posAtlas.Pack("0123456789-, ()", font, "Position: ");
-	posAtlas.tex.Y = (short)(status.Height + 2);
+	String chars = String_FromConst("0123456789-, ()");
+	String prefix = String_FromConst("Position: ");
+	TextAtlas_Make(&screen->PosAtlas, &chars, &screen->Font, &prefix);
+	screen->PosAtlas.Tex.Y = (Int16)(status.Height + 2);
 
 	Int32 yOffset = status.Height + posAtlas.tex.Height + 2;
 	hackStates = new TextWidget(game, font)
@@ -444,13 +446,13 @@ Screen* StatusScreen_MakeInstance(void) {
 	return &screen->Base;
 }
 
-void StatusScreen_Reset(void) {
+void StatusScreen_Ready(void) {
 	GuiElement* elem = &StatusScreen_Instance.Base.Base;
 	elem->Init(elem);
 }
 
 IGameComponent StatusScreen_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Reset = StatusScreen_Reset;
+	comp.Ready = StatusScreen_Ready;
 	return comp;
 }
