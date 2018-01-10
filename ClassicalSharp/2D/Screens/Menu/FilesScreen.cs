@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 			HandlesAllInput = true;
 		}
 		
-		protected Font textFont, arrowFont, titleFont;
+		protected Font font;
 		protected string[] entries;
 		protected int currentIndex;
 		protected ButtonWidget[] buttons;
@@ -21,10 +21,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected string titleText;
 		
 		public override void Init() {
-			textFont = new Font(game.FontName, 16, FontStyle.Bold);
-			arrowFont = new Font(game.FontName, 16, FontStyle.Bold);
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			
+			font = new Font(game.FontName, 16, FontStyle.Bold);
 			ContextRecreated();
 			gfx.ContextLost += ContextLost;
 			gfx.ContextRecreated += ContextRecreated;
@@ -36,19 +33,19 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			title = TextWidget.Create(game, titleText, titleFont)
+			title = TextWidget.Create(game, titleText, font)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -155);
 			
 			buttons = new ButtonWidget[] {
 				MakeText(0, -100, Get(0)),
 				MakeText(0, -50, Get(1)),
-				MakeText(0, 0, Get(2)),
+				MakeText(0,   0, Get(2)),
 				MakeText(0, 50, Get(3)),
 				MakeText(0, 100, Get(4)),
 				
 				Make(-220, 0, "<", MoveBackwards),
 				Make(220, 0, ">", MoveForwards),
-				MakeBack(false, titleFont, SwitchPause),
+				MakeBack(false, font, SwitchPause),
 			};
 			UpdateArrows();
 		}
@@ -61,22 +58,19 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Dispose() {
+			font.Dispose();
 			ContextLost();
 			gfx.ContextLost -= ContextLost;
 			gfx.ContextRecreated -= ContextRecreated;
-			
-			textFont.Dispose();
-			arrowFont.Dispose();
-			titleFont.Dispose();
 		}
 		
 		ButtonWidget MakeText(int x, int y, string text) {
-			return ButtonWidget.Create(game, 300, text, textFont, TextButtonClick)
+			return ButtonWidget.Create(game, 300, text, font, TextButtonClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		
 		ButtonWidget Make(int x, int y, string text, SimpleClickHandler onClick) {
-			return ButtonWidget.Create(game, 40, text, arrowFont, LeftOnly(onClick))
+			return ButtonWidget.Create(game, 40, text, font, LeftOnly(onClick))
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		
