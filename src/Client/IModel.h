@@ -44,7 +44,7 @@ typedef struct IModel_ {
 	/* Count of assigned vertices within the raw vertices array. */
 	Int32 index;
 	/* Index within ModelCache's textures of the default texture for this model. */
-	Int32 defaultTexIndex;
+	Int8 defaultTexIndex;
 
 	/* Whether the vertices of this model have actually been filled. */
 	bool initalised;

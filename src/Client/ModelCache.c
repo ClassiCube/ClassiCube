@@ -38,7 +38,7 @@ Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName) {
 	Int32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		CachedTexture* tex = &ModelCache_Textures[i];
-		if (String_CaselessEquals(&tex->Name, texName)) return 1;
+		if (String_CaselessEquals(&tex->Name, texName)) return i;
 	}
 	return -1;
 }
@@ -53,7 +53,7 @@ void ModelCache_Register(STRING_REF const UInt8* name, STRING_PURE const UInt8* 
 
 		if (defaultTexName != NULL) {
 			String defaultTex = String_FromReadonly(defaultTexName);
-			instance->defaultTexIndex = ModelCache_GetTextureIndex(&defaultTex);
+			instance->defaultTexIndex = (Int8)ModelCache_GetTextureIndex(&defaultTex);
 		}		
 	} else {
 		ErrorHandler_Fail("ModelCache_RegisterModel - hit max models");
@@ -962,6 +962,26 @@ IModel* SittingModel_GetInstance(void) {
 }
 
 
+IModel CorpseModel;
+void CorpseModel_CreateParts(void) { }
+void CorpseModel_DrawModel(Entity* entity) {
+	entity->Anim.LeftLegX = 0.025f; entity->Anim.RightLegX = 0.025f;
+	entity->Anim.LeftArmX = 0.025f; entity->Anim.RightArmX = 0.025f;
+	entity->Anim.LeftLegZ = -0.15f; entity->Anim.RightLegZ =  0.15f;
+	entity->Anim.LeftArmZ = -0.20f; entity->Anim.RightArmZ =  0.20f;
+
+	IModel_SetupState(&HumanoidModel, entity);
+	IModel_Render(&HumanoidModel, entity);
+}
+
+IModel* CorpseModel_GetInstance(void) {
+	CorpseModel = HumanoidModel;
+	CorpseModel.CreateParts = CorpseModel_CreateParts;
+	CorpseModel.DrawModel   = CorpseModel_DrawModel;
+	return &CorpseModel;
+}
+
+
 IModel HeadModel;
 void HeadModel_CreateParts(void) { }
 
@@ -1302,6 +1322,7 @@ static void ModelCache_RegisterDefaultModels(void) {
 	ModelCache_Register("sit", "char.png", SittingModel_GetInstance());
 	ModelCache_Register("sitting", "char.png", &SittingModel);
 	ModelCache_Register("arm", "char.png", ArmModel_GetInstance());
+	ModelCache_Register("corpse", "char.png", CorpseModel_GetInstance());
 }
 
 void ModelCache_Init(void) {

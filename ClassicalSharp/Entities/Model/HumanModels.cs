@@ -19,9 +19,9 @@ namespace ClassicalSharp.Model {
 			base.MakeDescriptions();
 			head = MakeBoxBounds(-4, 12, -4, 4, 20, 4).RotOrigin(0, 13, 0);
 			torso = torso.Scale(size);
-			lLeg = lLeg.Scale(size); 
+			lLeg = lLeg.Scale(size);
 			rLeg = rLeg.Scale(size);
-			lArm = lArm.Scale(size); 
+			lArm = lArm.Scale(size);
 			rArm = rArm.Scale(size);
 			offset = 0.5f * size;
 		}
@@ -158,7 +158,7 @@ namespace ClassicalSharp.Model {
 			ModelSet model = skinType == SkinType.Type64x64Slim ? human.SetSlim :
 				(skinType == SkinType.Type64x64 ? human.Set64 : human.Set);
 			
-			Rotate = RotateOrder.YZX;		
+			Rotate = RotateOrder.YZX;
 			DrawArmPart(model.RightArm);
 			UpdateVB();
 			
@@ -168,7 +168,7 @@ namespace ClassicalSharp.Model {
 				DrawArmPart(model.RightArmLayer);
 				UpdateVB();
 				game.Graphics.AlphaTest = false;
-			}			
+			}
 			Rotate = RotateOrder.ZYX;
 		}
 		
@@ -181,12 +181,12 @@ namespace ClassicalSharp.Model {
 			}
 		}
 	}
-    
+	
 	public class CorpseModel : IModel {
 		
 		public CorpseModel(Game window) : base(window) {
 			UsesHumanSkin = true;
-        }
+		}
 		
 		public override void CreateParts() { }
 		
@@ -203,20 +203,14 @@ namespace ClassicalSharp.Model {
 		}
 		
 		public override void DrawModel(Entity p) {
-		    
-		    float sideLegAngle = 0.15f;
-		    float sideArmAngle = 0.2f;
-		    float downAngle = 0.025f;
-		    
-			p.anim.leftLegX = downAngle; p.anim.rightLegX = downAngle;
-			p.anim.leftLegZ = -sideLegAngle; p.anim.rightLegZ = sideLegAngle;
-			
-			p.anim.leftArmX = downAngle; p.anim.rightArmX = downAngle;
-			p.anim.leftArmZ = -sideArmAngle; p.anim.rightArmZ = sideArmAngle;
+			p.anim.leftLegX = 0.025f; p.anim.rightLegX = 0.025f;
+			p.anim.leftArmX = 0.025f; p.anim.rightArmX = 0.025f;
+			p.anim.leftLegZ = -0.15f; p.anim.rightLegZ =  0.15f;
+			p.anim.leftArmZ = -0.20f; p.anim.rightArmZ =  0.20f;
 			
 			IModel model = game.ModelCache.Models[0].Instance;
 			model.SetupState(p);
 			model.DrawModel(p);
-		}	
+		}
 	}
 }
