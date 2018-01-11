@@ -62,7 +62,7 @@ void BordersRenderer_RenderEdges(Real64 delta) {
 
 
 void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, BlockID block) {
-	TextureLoc texLoc = Block_GetTexLoc(block, Face_YMax);
+	TextureLoc texLoc = Block_GetTexLoc(block, FACE_YMAX);
 	if (texLoc == *lastTexLoc || Gfx_LostContext) return;
 	*lastTexLoc = texLoc;
 

@@ -37,7 +37,7 @@ Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	for (y = maxY; y >= 0; y--) {
 		BlockID block = World_Blocks[mapIndex];
 		if (Block_BlocksLight[block]) {
-			Int32 offset = (Block_LightOffset[block] >> Face_YMax) & 1;
+			Int32 offset = (Block_LightOffset[block] >> FACE_YMAX) & 1;
 			Lighting_heightmap[index] = (Int16)(y - offset);
 			return y - offset;
 		}
@@ -97,8 +97,8 @@ void Lighting_Refresh(void) {
 void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock, Int32 index, Int32 lightH) {
 	bool didBlock = Block_BlocksLight[oldBlock];
 	bool nowBlocks = Block_BlocksLight[newBlock];
-	Int32 oldOffset = (Block_LightOffset[oldBlock] >> Face_YMax) & 1;
-	Int32 newOffset = (Block_LightOffset[newBlock] >> Face_YMax) & 1;
+	Int32 oldOffset = (Block_LightOffset[oldBlock] >> FACE_YMAX) & 1;
+	Int32 newOffset = (Block_LightOffset[newBlock] >> FACE_YMAX) & 1;
 
 	/* Two cases we need to handle here: */
 	if (didBlock == nowBlocks) {
@@ -252,7 +252,7 @@ bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32
 				x += curRunCount; mapIndex += curRunCount; index += curRunCount;
 
 				if (x < xCount && Block_BlocksLight[World_Blocks[mapIndex]]) {
-					Int32 lightOffset = (Block_LightOffset[World_Blocks[mapIndex]] >> Face_YMax) & 1;
+					Int32 lightOffset = (Block_LightOffset[World_Blocks[mapIndex]] >> FACE_YMAX) & 1;
 					Lighting_heightmap[heightmapIndex + x] = (short)(y - lightOffset);
 					elemsLeft--;
 					skip[index] = 0;

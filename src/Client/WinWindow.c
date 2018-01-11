@@ -14,7 +14,7 @@
 HINSTANCE win_Instance;
 HWND win_Handle;
 HDC win_DC;
-WindowState win_State = WindowState_Normal;
+UInt8 win_State = WINDOW_STATE_NORMAL;
 bool win_Exists, win_Focused;
 bool mouse_outside_window = true;
 bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
@@ -42,7 +42,7 @@ void Window_Destroy(void) {
 
 void Window_ResetWindowState(void) {
 	suppress_resize++;
-	Window_SetWindowState(WindowState_Normal);
+	Window_SetWindowState(WINDOW_STATE_NORMAL);
 	Window_ProcessEvents();
 	suppress_resize--;
 }
@@ -58,7 +58,7 @@ void Window_DoSetHiddenBorder(bool value) {
 
 	/* To ensure maximized/minimized windows work correctly, reset state to normal,
 	change the border, then go back to maximized/minimized. */
-	WindowState state = win_State;
+	UInt8 state = win_State;
 	Window_ResetWindowState();
 	DWORD style = WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
 	style |= (value ? WS_POPUP : WS_OVERLAPPEDWINDOW);
@@ -180,7 +180,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 	WORD mouse_x, mouse_y;
 	MouseButton btn;
 	WINDOWPOS* pos;
-	WindowState new_state;
+	UInt8 new_state;
 	UInt8 keyChar;
 	bool pressed, extended, lShiftDown, rShiftDown;
 	Key mappedKey;
@@ -247,9 +247,9 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 	case WM_SIZE:
 		new_state = win_State;
 		switch (wParam) {
-		case SIZE_RESTORED: new_state = WindowState_Normal; break;
-		case SIZE_MINIMIZED: new_state = WindowState_Minimized; break;
-		case SIZE_MAXIMIZED: new_state = win_hiddenBorder ? WindowState_Fullscreen : WindowState_Maximized; break;
+		case SIZE_RESTORED: new_state = WINDOW_STATE_NORMAL; break;
+		case SIZE_MINIMIZED: new_state = WINDOW_STATE_MINIMISED; break;
+		case SIZE_MAXIMIZED: new_state = win_hiddenBorder ? WINDOW_STATE_FULLSCREEN : WINDOW_STATE_MAXIMISED; break;
 		}
 
 		if (new_state != win_State) {
@@ -594,33 +594,33 @@ void Window_Close(void) {
 	PostMessageA(win_Handle, WM_CLOSE, NULL, NULL);
 }
 
-WindowState Window_GetWindowState(void) { return win_State; }
-void Window_SetWindowState(WindowState value) {
+UInt8 Window_GetWindowState(void) { return win_State; }
+void Window_SetWindowState(UInt8 value) {
 	if (win_State == value) return;
 
 	DWORD command = 0;
 	bool exiting_fullscreen = false;
 
 	switch (value) {
-	case WindowState_Normal:
+	case WINDOW_STATE_NORMAL:
 		command = SW_RESTORE;
 
 		/* If we are leaving fullscreen mode we need to restore the border. */
-		if (win_State == WindowState_Fullscreen)
+		if (win_State == WINDOW_STATE_FULLSCREEN)
 			exiting_fullscreen = true;
 		break;
 
-	case WindowState_Maximized:
+	case WINDOW_STATE_MAXIMISED:
 		/* Reset state to avoid strange interactions with fullscreen/minimized windows. */
 		Window_ResetWindowState();
 		command = SW_MAXIMIZE;
 		break;
 
-	case WindowState_Minimized:
+	case WINDOW_STATE_MINIMISED:
 		command = SW_MINIMIZE;
 		break;
 
-	case WindowState_Fullscreen:
+	case WINDOW_STATE_FULLSCREEN:
 		/* We achieve fullscreen by hiding the window border and sending the MAXIMIZE command.
 		We cannot use the WindowState.Maximized directly, as that will not send the MAXIMIZE
 		command for windows with hidden borders. */

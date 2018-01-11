@@ -78,7 +78,7 @@ Vector3 Block_MaxBB[BLOCK_COUNT];
 Vector3 Block_RenderMinBB[BLOCK_COUNT];
 Vector3 Block_RenderMaxBB[BLOCK_COUNT];
 
-TextureLoc Block_Textures[BLOCK_COUNT * Face_Count];
+TextureLoc Block_Textures[BLOCK_COUNT * FACE_COUNT];
 bool Block_CanPlace[BLOCK_COUNT];
 bool Block_CanDelete[BLOCK_COUNT];
 
@@ -105,7 +105,7 @@ void Block_RecalculateBB(BlockID block);
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId);
 void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
-#define Block_GetTexLoc(block, face) Block_Textures[(block) * Face_Count + face]
+#define Block_GetTexLoc(block, face) Block_Textures[(block) * FACE_COUNT + face]
 
 void Block_UpdateCullingAll(void);
 void Block_UpdateCulling(BlockID block);

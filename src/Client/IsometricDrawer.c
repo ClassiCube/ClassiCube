@@ -71,7 +71,7 @@ TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 
 #define AddVertex *iso_vertices = v; iso_vertices++;
 void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
-	TextureLoc texLoc = Block_GetTexLoc(block, Face_ZMax);
+	TextureLoc texLoc = Block_GetTexLoc(block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &iso_texIndex);
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
 
@@ -96,7 +96,7 @@ void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 }
 
 void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
-	TextureLoc texLoc = Block_GetTexLoc(block, Face_XMax);
+	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &iso_texIndex);
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
 
@@ -168,11 +168,11 @@ void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y) {
 		Drawer_TintColour = Block_FogColour[block];
 
 		Drawer_XMax(1, bright ? iso_colNormal : iso_colXSide, 
-			IsometricDrawer_GetTexLoc(block, Face_XMax), &iso_vertices);
+			IsometricDrawer_GetTexLoc(block, FACE_XMAX), &iso_vertices);
 		Drawer_ZMin(1, bright ? iso_colNormal : iso_colZSide, 
-			IsometricDrawer_GetTexLoc(block, Face_ZMin), &iso_vertices);
+			IsometricDrawer_GetTexLoc(block, FACE_ZMIN), &iso_vertices);
 		Drawer_YMax(1, iso_colNormal, 
-			IsometricDrawer_GetTexLoc(block, Face_YMax), &iso_vertices);
+			IsometricDrawer_GetTexLoc(block, FACE_YMAX), &iso_vertices);
 		iso_count += 4 * 3;
 	}
 }

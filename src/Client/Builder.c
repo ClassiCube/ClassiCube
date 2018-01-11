@@ -28,7 +28,7 @@ void Builder1DPart_Prepare(Builder1DPart* part) {
 	}
 
 	Int32 offset = part->sCount, i;
-	for (i = 0; i < Face_Count; i++) {
+	for (i = 0; i < FACE_COUNT; i++) {
 		part->fVertices[i] = &part->vertices[offset];
 		offset += part->fCount[i];
 	}
@@ -38,7 +38,7 @@ void Builder1DPart_Reset(Builder1DPart* part) {
 	part->sCount = 0; part->sOffset = 0; part->sAdvance = 0;
 
 	Int32 i;
-	for (i = 0; i < Face_Count; i++) {
+	for (i = 0; i < FACE_COUNT; i++) {
 		part->fVertices[i] = NULL;
 		part->fCount[i] = 0;
 	}
@@ -47,17 +47,17 @@ void Builder1DPart_Reset(Builder1DPart* part) {
 Int32 Builder1DPart_VerticesCount(Builder1DPart* part) {
 	Int32 count = part->sCount;
 	Int32 i;
-	for (i = 0; i < Face_Count; i++) { count += part->fCount[i]; }
+	for (i = 0; i < FACE_COUNT; i++) { count += part->fCount[i]; }
 	return count;
 }
 
 void Builder_Init(void) {
-	Builder_Offsets[Face_XMin] = -1;
-	Builder_Offsets[Face_XMax] = 1;
-	Builder_Offsets[Face_ZMin] = -EXTCHUNK_SIZE;
-	Builder_Offsets[Face_ZMax] = EXTCHUNK_SIZE;
-	Builder_Offsets[Face_YMin] = -EXTCHUNK_SIZE_2;
-	Builder_Offsets[Face_YMax] = EXTCHUNK_SIZE_2;
+	Builder_Offsets[FACE_XMIN] = -1;
+	Builder_Offsets[FACE_XMAX] = 1;
+	Builder_Offsets[FACE_ZMIN] = -EXTCHUNK_SIZE;
+	Builder_Offsets[FACE_ZMAX] = EXTCHUNK_SIZE;
+	Builder_Offsets[FACE_YMIN] = -EXTCHUNK_SIZE_2;
+	Builder_Offsets[FACE_YMAX] = EXTCHUNK_SIZE_2;
 }
 
 void Builder_SetDefault(void) {
@@ -77,7 +77,7 @@ void Builder_OnNewMapLoaded(void) {
 }
 
 void Builder_AddSpriteVertices(BlockID block) {
-	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, Face_XMin));
+	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, FACE_XMIN));
 	Builder1DPart* part = &Builder_Parts[i];
 	part->sCount += 4 * 4;
 }
@@ -98,12 +98,12 @@ void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* h
 	info.VbId = Gfx_CreateVb(part->vertices, VERTEX_FORMAT_P3FT2FC4B, vCount + 1);
 	info.HasVertices = vCount > 0;
 
-	info.XMinCount = (UInt16)part->fCount[Face_XMin];
-	info.XMaxCount = (UInt16)part->fCount[Face_XMax];
-	info.ZMinCount = (UInt16)part->fCount[Face_ZMin];
-	info.ZMaxCount = (UInt16)part->fCount[Face_ZMax];
-	info.YMinCount = (UInt16)part->fCount[Face_YMin];
-	info.YMaxCount = (UInt16)part->fCount[Face_YMax];
+	info.XMinCount = (UInt16)part->fCount[FACE_XMIN];
+	info.XMaxCount = (UInt16)part->fCount[FACE_XMAX];
+	info.ZMinCount = (UInt16)part->fCount[FACE_ZMIN];
+	info.ZMaxCount = (UInt16)part->fCount[FACE_ZMAX];
+	info.YMinCount = (UInt16)part->fCount[FACE_YMIN];
+	info.YMaxCount = (UInt16)part->fCount[FACE_YMAX];
 	info.SpriteCountDiv4 = part->sCount >> 2;
 
 	*hasParts = true;
@@ -137,12 +137,12 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 				cIndex++;
 				BlockID b = Builder_Chunk[cIndex];
 				if (Block_Draw[b] == DRAW_GAS) continue;
-				Int32 index = ((yy << 8) | (zz << 4) | xx) * Face_Count;
+				Int32 index = ((yy << 8) | (zz << 4) | xx) * FACE_COUNT;
 
 				/* Sprites only use one face to indicate stretching count, so we can take a shortcut here.
 				Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite. */
 				if (Block_Draw[b] == DRAW_SPRITE) {
-					index += Face_YMax;
+					index += FACE_YMAX;
 					if (Builder_Counts[index] != 0) {
 						Builder_X = x; Builder_Y = y; Builder_Z = z;
 						Builder_AddSpriteVertices(b);
@@ -162,68 +162,68 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 
 				if (Builder_Counts[index] == 0 ||
 					(x == 0 && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
-					(x != 0 && (Block_Hidden[tileIdx + Builder_Chunk[cIndex - 1]] & (1 << Face_XMin)) != 0)) {
+					(x != 0 && (Block_Hidden[tileIdx + Builder_Chunk[cIndex - 1]] & (1 << FACE_XMIN)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					Int32 count = Builder_StretchZ(index, x, y, z, cIndex, b, Face_XMin);
-					Builder_AddVertices(b, Face_XMin);
+					Int32 count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMIN);
+					Builder_AddVertices(b, FACE_XMIN);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
 					(x == World_MaxX && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
-					(x != World_MaxX && (Block_Hidden[tileIdx + Builder_Chunk[cIndex + 1]] & (1 << Face_XMax)) != 0)) {
+					(x != World_MaxX && (Block_Hidden[tileIdx + Builder_Chunk[cIndex + 1]] & (1 << FACE_XMAX)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					Int32 count = Builder_StretchZ(index, x, y, z, cIndex, b, Face_XMax);
-					Builder_AddVertices(b, Face_XMax);
+					Int32 count = Builder_StretchZ(index, x, y, z, cIndex, b, FACE_XMAX);
+					Builder_AddVertices(b, FACE_XMAX);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
 					(z == 0 && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
-					(z != 0 && (Block_Hidden[tileIdx + Builder_Chunk[cIndex - EXTCHUNK_SIZE]] & (1 << Face_ZMin)) != 0)) {
+					(z != 0 && (Block_Hidden[tileIdx + Builder_Chunk[cIndex - EXTCHUNK_SIZE]] & (1 << FACE_ZMIN)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					Int32 count = Builder_StretchX(index, Builder_X, Builder_Y, Builder_Z, cIndex, b, Face_ZMin);
-					Builder_AddVertices(b, Face_ZMin);
+					Int32 count = Builder_StretchX(index, Builder_X, Builder_Y, Builder_Z, cIndex, b, FACE_ZMIN);
+					Builder_AddVertices(b, FACE_ZMIN);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
 					(z == World_MaxZ && (y < Builder_SidesLevel || (b >= BLOCK_WATER && b <= BLOCK_STILL_LAVA && y < Builder_EdgeLevel))) ||
-					(z != World_MaxZ && (Block_Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE]] & (1 << Face_ZMax)) != 0)) {
+					(z != World_MaxZ && (Block_Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE]] & (1 << FACE_ZMAX)) != 0)) {
 					Builder_Counts[index] = 0;
 				} else {
-					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, Face_ZMax);
-					Builder_AddVertices(b, Face_ZMax);
+					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_ZMAX);
+					Builder_AddVertices(b, FACE_ZMAX);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
 				index++;
 				if (Builder_Counts[index] == 0 || y == 0 ||
-					(Block_Hidden[tileIdx + Builder_Chunk[cIndex - EXTCHUNK_SIZE_2]] & (1 << Face_YMin)) != 0) {
+					(Block_Hidden[tileIdx + Builder_Chunk[cIndex - EXTCHUNK_SIZE_2]] & (1 << FACE_YMIN)) != 0) {
 					Builder_Counts[index] = 0;
 				} else {
-					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, Face_YMin);
-					Builder_AddVertices(b, Face_YMin);
+					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMIN);
+					Builder_AddVertices(b, FACE_YMIN);
 					Builder_Counts[index] = (UInt8)count;
 				}
 
 				index++;
 				if (Builder_Counts[index] == 0 ||
-					(Block_Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE_2]] & (1 << Face_YMax)) != 0) {
+					(Block_Hidden[tileIdx + Builder_Chunk[cIndex + EXTCHUNK_SIZE_2]] & (1 << FACE_YMAX)) != 0) {
 					Builder_Counts[index] = 0;
 				} else if (b < BLOCK_WATER || b > BLOCK_STILL_LAVA) {
-					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, Face_YMax);
-					Builder_AddVertices(b, Face_YMax);
+					Int32 count = Builder_StretchX(index, x, y, z, cIndex, b, FACE_YMAX);
+					Builder_AddVertices(b, FACE_YMAX);
 					Builder_Counts[index] = (UInt8)count;
 				} else {
 					Int32 count = Builder_StretchXLiquid(index, x, y, z, cIndex, b);
-					if (count > 0) Builder_AddVertices(b, Face_YMax);
+					if (count > 0) Builder_AddVertices(b, FACE_YMAX);
 					Builder_Counts[index] = (UInt8)count;
 				}
 			}
@@ -277,12 +277,12 @@ bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir) {
 bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 	Builder_PreStretchTiles(x1, y1, z1);
 	BlockID chunk[EXTCHUNK_SIZE_3]; Builder_Chunk = chunk;
-	UInt8 counts[CHUNK_SIZE_3 * Face_Count]; Builder_Counts = counts;
+	UInt8 counts[CHUNK_SIZE_3 * FACE_COUNT]; Builder_Counts = counts;
 	Int32 bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
 
 	Platform_MemSet(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
 	if (Builder_ReadChunkData(x1, y1, z1, allAir)) return false;
-	Platform_MemSet(counts, 1, CHUNK_SIZE_3 * Face_Count);
+	Platform_MemSet(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
 
 	Int32 xMax = min(World_Width, x1 + CHUNK_SIZE);
 	Int32 yMax = min(World_Height, y1 + CHUNK_SIZE);
@@ -300,7 +300,7 @@ bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 			for (x = x1, xx = 0; x < xMax; x++, xx++) {
 				Builder_Block = chunk[chunkIndex];
 				if (Block_Draw[Builder_Block] != DRAW_GAS) {
-					Int32 index = ((yy << 8) | (zz << 4) | xx) * Face_Count;
+					Int32 index = ((yy << 8) | (zz << 4) | xx) * FACE_COUNT;
 					Builder_X = x; Builder_Y = y; Builder_Z = z;
 					Builder_ChunkIndex = chunkIndex;
 					Builder_RenderBlock(index);
@@ -371,7 +371,7 @@ void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 
 Random spriteRng;
 void Builder_DrawSprite(Int32 count) {
-	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_XMax);
+	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
 	Int32 i = Atlas1D_Index(texLoc);
 	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvElementSize;
 	Real32 X = (Real32)Builder_X, Y = (Real32)Builder_Y, Z = (Real32)Builder_Z;
@@ -436,17 +436,17 @@ void Builder_DrawSprite(Int32 count) {
 PackedCol NormalBuilder_LightCol(Int32 x, Int32 y, Int32 z, Int32 face, BlockID block) {
 	Int32 offset = (Block_LightOffset[block] >> face) & 1;
 	switch (face) {
-	case Face_XMin:
+	case FACE_XMIN:
 		return x < offset ? Lighting_OutsideXSide : Lighting_Col_XSide_Fast(x - offset, y, z);
-	case Face_XMax:
+	case FACE_XMAX:
 		return x >(World_MaxX - offset) ? Lighting_OutsideXSide : Lighting_Col_XSide_Fast(x + offset, y, z);
-	case Face_ZMin:
+	case FACE_ZMIN:
 		return z < offset ? Lighting_OutsideZSide : Lighting_Col_ZSide_Fast(x, y, z - offset);
-	case Face_ZMax:
+	case FACE_ZMAX:
 		return z >(World_MaxZ - offset) ? Lighting_OutsideZSide : Lighting_Col_ZSide_Fast(x, y, z + offset);
-	case Face_YMin:
+	case FACE_YMIN:
 		return y <= 0 ? Lighting_OutsideYBottom : Lighting_Col_YBottom_Fast(x, y - offset, z);
-	case Face_YMax:
+	case FACE_YMAX:
 		return y >= World_MaxY ? Lighting_Outside : Lighting_Col_YTop_Fast(x, (y + 1) - offset, z);
 	}
 
@@ -466,15 +466,15 @@ Int32 NormalBuilder_StretchXLiquid(Int32 countIndex, Int32 x, Int32 y, Int32 z, 
 	Int32 count = 1;
 	x++;
 	chunkIndex++;
-	countIndex += Face_Count;
-	bool stretchTile = (Block_CanStretch[block] & (1 << Face_YMax)) != 0;
+	countIndex += FACE_COUNT;
+	bool stretchTile = (Block_CanStretch[block] & (1 << FACE_YMAX)) != 0;
 
-	while (x < Builder_ChunkEndX && stretchTile && NormalBuilder_CanStretch(block, chunkIndex, x, y, z, Face_YMax) && !Builder_OccludedLiquid(chunkIndex)) {
+	while (x < Builder_ChunkEndX && stretchTile && NormalBuilder_CanStretch(block, chunkIndex, x, y, z, FACE_YMAX) && !Builder_OccludedLiquid(chunkIndex)) {
 		Builder_Counts[countIndex] = 0;
 		count++;
 		x++;
 		chunkIndex++;
-		countIndex += Face_Count;
+		countIndex += FACE_COUNT;
 	}
 	return count;
 }
@@ -483,7 +483,7 @@ Int32 NormalBuilder_StretchX(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 
 	Int32 count = 1;
 	x++;
 	chunkIndex++;
-	countIndex += Face_Count;
+	countIndex += FACE_COUNT;
 	bool stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
 
 	while (x < Builder_ChunkEndX && stretchTile && NormalBuilder_CanStretch(block, chunkIndex, x, y, z, face)) {
@@ -491,7 +491,7 @@ Int32 NormalBuilder_StretchX(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 
 		count++;
 		x++;
 		chunkIndex++;
-		countIndex += Face_Count;
+		countIndex += FACE_COUNT;
 	}
 	return count;
 }
@@ -500,7 +500,7 @@ Int32 NormalBuilder_StretchZ(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 
 	Int32 count = 1;
 	z++;
 	chunkIndex += EXTCHUNK_SIZE;
-	countIndex += CHUNK_SIZE * Face_Count;
+	countIndex += CHUNK_SIZE * FACE_COUNT;
 	bool stretchTile = (Block_CanStretch[block] & (1 << face)) != 0;
 
 	while (z < Builder_ChunkEndZ && stretchTile && NormalBuilder_CanStretch(block, chunkIndex, x, y, z, face)) {
@@ -508,7 +508,7 @@ Int32 NormalBuilder_StretchZ(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 
 		count++;
 		z++;
 		chunkIndex += EXTCHUNK_SIZE;
-		countIndex += CHUNK_SIZE * Face_Count;
+		countIndex += CHUNK_SIZE * FACE_COUNT;
 	}
 	return count;
 }
@@ -518,17 +518,17 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Builder_FullBright = Block_FullBright[Builder_Block];
 		Builder_Tinted = Block_Tinted[Builder_Block];
 
-		Int32 count = Builder_Counts[index + Face_YMax];
+		Int32 count = Builder_Counts[index + FACE_YMAX];
 		if (count != 0) Builder_DrawSprite(count);
 		return;
 	}
 
-	Int32 count_XMin = Builder_Counts[index + Face_XMin];
-	Int32 count_XMax = Builder_Counts[index + Face_XMax];
-	Int32 count_ZMin = Builder_Counts[index + Face_ZMin];
-	Int32 count_ZMax = Builder_Counts[index + Face_ZMax];
-	Int32 count_YMin = Builder_Counts[index + Face_YMin];
-	Int32 count_YMax = Builder_Counts[index + Face_YMax];
+	Int32 count_XMin = Builder_Counts[index + FACE_XMIN];
+	Int32 count_XMax = Builder_Counts[index + FACE_XMAX];
+	Int32 count_ZMin = Builder_Counts[index + FACE_ZMIN];
+	Int32 count_ZMax = Builder_Counts[index + FACE_ZMAX];
+	Int32 count_YMin = Builder_Counts[index + FACE_YMIN];
+	Int32 count_YMax = Builder_Counts[index + FACE_YMAX];
 
 	if (count_XMin == 0 && count_XMax == 0 && count_ZMin == 0 &&
 		count_ZMax == 0 && count_YMin == 0 && count_YMax == 0) return;
@@ -550,61 +550,61 @@ void NormalBuilder_RenderBlock(Int32 index) {
 	PackedCol white = PACKEDCOL_WHITE;
 
 	if (count_XMin != 0) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_XMin);
-		Int32 offset = (lightFlags >> Face_XMin) & 1;
+		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMIN);
+		Int32 offset = (lightFlags >> FACE_XMIN) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_X >= offset ? Lighting_Col_XSide_Fast(Builder_X - offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
-		Drawer_XMin(count_XMin, col, texLoc, &part->fVertices[Face_XMin]);
+		Drawer_XMin(count_XMin, col, texLoc, &part->fVertices[FACE_XMIN]);
 	}
 
 	if (count_XMax != 0) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_XMax);
-		Int32 offset = (lightFlags >> Face_XMax) & 1;
+		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
+		Int32 offset = (lightFlags >> FACE_XMAX) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_X <= (World_MaxX - offset) ? Lighting_Col_XSide_Fast(Builder_X + offset, Builder_Y, Builder_Z) : Lighting_OutsideXSide;
-		Drawer_XMax(count_XMax, col, texLoc, &part->fVertices[Face_XMax]);
+		Drawer_XMax(count_XMax, col, texLoc, &part->fVertices[FACE_XMAX]);
 	}
 
 	if (count_ZMin != 0) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_ZMin);
-		Int32 offset = (lightFlags >> Face_ZMin) & 1;
+		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMIN);
+		Int32 offset = (lightFlags >> FACE_ZMIN) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_Z >= offset ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z - offset) : Lighting_OutsideZSide;
-		Drawer_ZMin(count_ZMin, col, texLoc, &part->fVertices[Face_ZMin]);
+		Drawer_ZMin(count_ZMin, col, texLoc, &part->fVertices[FACE_ZMIN]);
 	}
 
 	if (count_ZMax != 0) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_ZMax);
-		Int32 offset = (lightFlags >> Face_ZMax) & 1;
+		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMAX);
+		Int32 offset = (lightFlags >> FACE_ZMAX) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white :
 			Builder_Z <= (World_MaxZ - offset) ? Lighting_Col_ZSide_Fast(Builder_X, Builder_Y, Builder_Z + offset) : Lighting_OutsideZSide;
-		Drawer_ZMax(count_ZMax, col, texLoc, &part->fVertices[Face_ZMax]);
+		Drawer_ZMax(count_ZMax, col, texLoc, &part->fVertices[FACE_ZMAX]);
 	}
 
 	if (count_YMin != 0) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_YMin);
-		Int32 offset = (lightFlags >> Face_YMin) & 1;
+		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMIN);
+		Int32 offset = (lightFlags >> FACE_YMIN) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white : Lighting_Col_YBottom_Fast(Builder_X, Builder_Y - offset, Builder_Z);
-		Drawer_YMin(count_YMin, col, texLoc, &part->fVertices[Face_YMin]);
+		Drawer_YMin(count_YMin, col, texLoc, &part->fVertices[FACE_YMIN]);
 	}
 
 	if (count_YMax != 0) {
-		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, Face_YMax);
-		Int32 offset = (lightFlags >> Face_YMax) & 1;
+		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMAX);
+		Int32 offset = (lightFlags >> FACE_YMAX) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
 
 		PackedCol col = fullBright ? white : Lighting_Col_YTop_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
-		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[Face_YMax]);
+		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[FACE_YMAX]);
 	}
 }
 

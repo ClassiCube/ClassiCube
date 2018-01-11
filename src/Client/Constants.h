@@ -4,12 +4,13 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define Program_AppName "ClassicalSharp 0.99.9.2"
+#define PROGRAM_APP_NAME "ClassicalSharp 0.99.9.2"
 
 #define USE16_BIT FALSE
 
 /* Max number of characters strings can have. */
 #define STRING_SIZE 64
+/* Max number of characters filenames can have. */
 #define FILENAME_SIZE 260
 
 /* Chunk axis length, in blocks. */
@@ -31,19 +32,19 @@
 #define UV2_Scale (15.99f / 16.0f)
 
 /* Face X = 0. */
-#define Face_XMin 0
+#define FACE_XMIN 0
 /* Face X = 1. */
-#define Face_XMax 1
+#define FACE_XMAX 1
 /* Face Z = 0. */
-#define Face_ZMin 2
+#define FACE_ZMIN 2
 /* Face Z = 1. */
-#define Face_ZMax 3
+#define FACE_ZMAX 3
 /* Face Y = 0. */
-#define Face_YMin 4
+#define FACE_YMIN 4
 /* Face Y = 1. */
-#define Face_YMax 5
+#define FACE_YMAX 5
 /* Number of faces on a cube. */
-#define Face_Count 6
+#define FACE_COUNT 6
 
 #define SKIN_TYPE_64x32 0
 #define SKIN_TYPE_64x64 1

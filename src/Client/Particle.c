@@ -330,7 +330,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block
 
 	Vector3 worldPos;
 	Vector3I_ToVector3(&worldPos, &coords);
-	TextureLoc texLoc = Block_GetTexLoc(block, Face_XMin);
+	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMIN);
 	Int32 texIndex;
 	TextureRec baseRec = Atlas1D_TexRec(texLoc, 1, &texIndex);
 	Real32 uScale = (1.0f / 16.0f), vScale = (1.0f / 16.0f) * Atlas1D_InvElementSize;

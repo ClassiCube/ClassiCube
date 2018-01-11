@@ -149,9 +149,9 @@ void IModel_DrawPart(ModelPart part) {
 	model->index += part.Count;
 }
 
-#define IMODEL_ROTATEX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
-#define IMODEL_ROTATEY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;
-#define IMODEL_ROTATEZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
+#define IModel_RotateX t = cosX * v.Y + sinX * v.Z; v.Z = -sinX * v.Y + cosX * v.Z; v.Y = t;
+#define IModel_RotateY t = cosY * v.X - sinY * v.Z; v.Z = sinY * v.X + cosY * v.Z; v.X = t;
+#define IModel_RotateZ t = cosZ * v.X + sinZ * v.Y; v.Y = -sinZ * v.X + cosZ * v.Y; v.X = t;
 
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head) {
 	IModel* model = IModel_ActiveModel;
@@ -169,18 +169,18 @@ void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart pa
 		Real32 t = 0;
 
 		/* Rotate locally */
-		if (IModel_Rotation == RotateOrder_ZYX) {
-			IMODEL_ROTATEZ
-			IMODEL_ROTATEY
-			IMODEL_ROTATEX
-		} else if (IModel_Rotation == RotateOrder_XZY) {
-			IMODEL_ROTATEX
-			IMODEL_ROTATEZ
-			IMODEL_ROTATEY
-		} else if (IModel_Rotation == RotateOrder_YZX) {
-			IMODEL_ROTATEY
-			IMODEL_ROTATEZ
-			IMODEL_ROTATEX
+		if (IModel_Rotation == ROTATE_ORDER_ZYX) {
+			IModel_RotateZ
+			IModel_RotateY
+			IModel_RotateX
+		} else if (IModel_Rotation == ROTATE_ORDER_XZY) {
+			IModel_RotateX
+			IModel_RotateZ
+			IModel_RotateY
+		} else if (IModel_Rotation == ROTATE_ORDER_YZX) {
+			IModel_RotateY
+			IModel_RotateZ
+			IModel_RotateX
 		}
 
 		/* Rotate globally */
@@ -266,7 +266,7 @@ ModelPart BoxDesc_BuildBox(IModel* m, BoxDesc* desc) {
 	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x1, false); /* right */
 
 	ModelPart part;
-	ModelPart_Init(&part, m->index - IModel_BoxVertices, IModel_BoxVertices,
+	ModelPart_Init(&part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
 		desc->RotX, desc->RotY, desc->RotZ);
 	return part;
 }
@@ -293,7 +293,7 @@ ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
 	}
 
 	ModelPart part;
-	ModelPart_Init(&part, m->index - IModel_BoxVertices, IModel_BoxVertices,
+	ModelPart_Init(&part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
 		desc->RotX, desc->RotY, desc->RotZ);
 	return part;
 }

@@ -23,20 +23,20 @@ void PickedPos_SetAsValid(PickedPos* pos, RayTracer* t, Vector3 intersect) {
 	pos->Intersect = intersect;
 
 	PickedPos_dist = MATH_LARGENUM;
-	PickedPos_TestAxis(pos, intersect.X - t->Min.X, Face_XMin);
-	PickedPos_TestAxis(pos, intersect.X - t->Max.X, Face_XMax);
-	PickedPos_TestAxis(pos, intersect.Y - t->Min.Y, Face_YMin);
-	PickedPos_TestAxis(pos, intersect.Y - t->Max.Y, Face_YMax);
-	PickedPos_TestAxis(pos, intersect.Z - t->Min.Z, Face_ZMin);
-	PickedPos_TestAxis(pos, intersect.Z - t->Max.Z, Face_ZMax);
+	PickedPos_TestAxis(pos, intersect.X - t->Min.X, FACE_XMIN);
+	PickedPos_TestAxis(pos, intersect.X - t->Max.X, FACE_XMAX);
+	PickedPos_TestAxis(pos, intersect.Y - t->Min.Y, FACE_YMIN);
+	PickedPos_TestAxis(pos, intersect.Y - t->Max.Y, FACE_YMAX);
+	PickedPos_TestAxis(pos, intersect.Z - t->Min.Z, FACE_ZMIN);
+	PickedPos_TestAxis(pos, intersect.Z - t->Max.Z, FACE_ZMAX);
 
-	Vector3I offsets[Face_Count];
-	offsets[Face_XMin] = Vector3I_Create3(-1, 0, 0);
-	offsets[Face_XMax] = Vector3I_Create3(+1, 0, 0);
-	offsets[Face_ZMin] = Vector3I_Create3(0, 0, -1);
-	offsets[Face_ZMax] = Vector3I_Create3(0, 0, +1);
-	offsets[Face_YMin] = Vector3I_Create3(0, -1, 0);
-	offsets[Face_YMax] = Vector3I_Create3(0, +1, 0);
+	Vector3I offsets[FACE_COUNT];
+	offsets[FACE_XMIN] = Vector3I_Create3(-1, 0, 0);
+	offsets[FACE_XMAX] = Vector3I_Create3(+1, 0, 0);
+	offsets[FACE_ZMIN] = Vector3I_Create3(0, 0, -1);
+	offsets[FACE_ZMAX] = Vector3I_Create3(0, 0, +1);
+	offsets[FACE_YMIN] = Vector3I_Create3(0, -1, 0);
+	offsets[FACE_YMAX] = Vector3I_Create3(0, +1, 0);
 	Vector3I_Add(&pos->TranslatedPos, &pos->BlockPos, &offsets[pos->ClosestFace]);
 }
 
@@ -44,7 +44,7 @@ void PickedPos_SetAsInvalid(PickedPos* pos) {
 	pos->Valid = false;
 	pos->BlockPos = Vector3I_MinusOne;
 	pos->TranslatedPos = Vector3I_MinusOne;
-	pos->ClosestFace = (Face)Face_Count;
+	pos->ClosestFace = (Face)FACE_COUNT;
 	pos->Block = BLOCK_AIR;
 }
 
@@ -211,12 +211,12 @@ bool Picking_ClipCamera(PickedPos* pos) {
 
 #define PICKING_ADJUST 0.1f
 	switch (pos->ClosestFace) {
-	case Face_XMin: pos->Intersect.X -= PICKING_ADJUST; break;
-	case Face_XMax: pos->Intersect.X += PICKING_ADJUST; break;
-	case Face_YMin: pos->Intersect.Y -= PICKING_ADJUST; break;
-	case Face_YMax: pos->Intersect.Y += PICKING_ADJUST; break;
-	case Face_ZMin: pos->Intersect.Z -= PICKING_ADJUST; break;
-	case Face_ZMax: pos->Intersect.Z += PICKING_ADJUST; break;
+	case FACE_XMIN: pos->Intersect.X -= PICKING_ADJUST; break;
+	case FACE_XMAX: pos->Intersect.X += PICKING_ADJUST; break;
+	case FACE_YMIN: pos->Intersect.Y -= PICKING_ADJUST; break;
+	case FACE_YMAX: pos->Intersect.Y += PICKING_ADJUST; break;
+	case FACE_ZMIN: pos->Intersect.Z -= PICKING_ADJUST; break;
+	case FACE_ZMAX: pos->Intersect.Z += PICKING_ADJUST; break;
 	}
 	return true;
 }

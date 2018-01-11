@@ -88,7 +88,7 @@ static void ModelCache_TextureChanged(Stream* stream) {
 
 ModelPart Chicken_Head, Chicken_Head2, Chicken_Head3, Chicken_Torso;
 ModelPart Chicken_LeftLeg, Chicken_RightLeg, Chicken_LeftWing, Chicken_RightWing;
-ModelVertex ChickenModel_Vertices[IModel_BoxVertices * 6 + (IModel_QuadVertices * 2) * 2];
+ModelVertex ChickenModel_Vertices[IMODEL_BOX_VERTICES * 6 + (IMODEL_QUAD_VERTICES * 2) * 2];
 IModel ChickenModel;
 
 ModelPart ChickenModel_MakeLeg(Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
@@ -104,7 +104,7 @@ ModelPart ChickenModel_MakeLeg(Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
 		legX1 / 16.0f, legX2 / 16.0f, ch_y1, ch_y2, ch_z2, false); /* vertical part of leg */
 
 	ModelPart part;
-	ModelPart_Init(&part, m->index - IModel_QuadVertices * 2, IModel_QuadVertices * 2,
+	ModelPart_Init(&part, m->index - IMODEL_QUAD_VERTICES * 2, IMODEL_QUAD_VERTICES * 2,
 		0.0f / 16.0f, 5.0f / 16.0f, 1.0f / 16.0f);
 	return part;
 }
@@ -167,7 +167,7 @@ void ChickenModel_DrawModel(Entity* entity) {
 
 	PackedCol col = IModel_Cols[0];
 	Int32 i;
-	for (i = 0; i < Face_Count; i++) {
+	for (i = 0; i < FACE_COUNT; i++) {
 		IModel_Cols[i] = PackedCol_Scale(col, 0.7f);
 	}
 
@@ -187,7 +187,7 @@ IModel* ChickenModel_GetInstance(void) {
 
 ModelPart Creeper_Head, Creeper_Torso, Creeper_LeftLegFront;
 ModelPart Creeper_RightLegFront, Creeper_LeftLegBack, Creeper_RightLegBack;
-ModelVertex CreeperModel_Vertices[IModel_BoxVertices * 6];
+ModelVertex CreeperModel_Vertices[IMODEL_BOX_VERTICES * 6];
 IModel CreeperModel;
 
 void CreeperModel_CreateParts(void) {
@@ -257,7 +257,7 @@ IModel* CreeperModel_GetInstance(void) {
 
 ModelPart Pig_Head, Pig_Torso, Pig_LeftLegFront, Pig_RightLegFront;
 ModelPart Pig_LeftLegBack, Pig_RightLegBack;
-ModelVertex PigModel_Vertices[IModel_BoxVertices * 6];
+ModelVertex PigModel_Vertices[IMODEL_BOX_VERTICES * 6];
 IModel PigModel;
 
 void PigModel_CreateParts(void) {
@@ -330,7 +330,7 @@ ModelPart Sheep_Head, Sheep_Torso, Sheep_LeftLegFront;
 ModelPart Sheep_RightLegFront, Sheep_LeftLegBack, Sheep_RightLegBack;
 ModelPart Fur_Head, Fur_Torso, Fur_LeftLegFront, Fur_RightLegFront;
 ModelPart Fur_LeftLegBack, Fur_RightLegBack;
-ModelVertex SheepModel_Vertices[IModel_BoxVertices * 6 * 2];
+ModelVertex SheepModel_Vertices[IMODEL_BOX_VERTICES * 6 * 2];
 IModel SheepModel;
 Int32 fur_Index;
 
@@ -449,7 +449,7 @@ IModel* SheepModel_GetInstance(void) {
 
 ModelPart Skeleton_Head, Skeleton_Torso, Skeleton_LeftLeg;
 ModelPart Skeleton_RightLeg, Skeleton_LeftArm, Skeleton_RightArm;
-ModelVertex SkeletonModel_Vertices[IModel_BoxVertices * 6];
+ModelVertex SkeletonModel_Vertices[IMODEL_BOX_VERTICES * 6];
 IModel SkeletonModel;
 
 void SkeletonModel_CreateParts(void) {
@@ -520,7 +520,7 @@ IModel* SkeletonModel_GetInstance(void) {
 
 ModelPart Spider_Head, Spider_Link, Spider_End;
 ModelPart Spider_LeftLeg, Spider_RightLeg;
-ModelVertex SpiderModel_Vertices[IModel_BoxVertices * 5];
+ModelVertex SpiderModel_Vertices[IMODEL_BOX_VERTICES * 5];
 IModel SpiderModel;
 
 void SpiderModel_CreateParts(void) {
@@ -573,7 +573,7 @@ void SpiderModel_DrawModel(Entity* entity) {
 	Real32 rotX = Math_Sin(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
 	Real32 rotZ = Math_Cos(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
 	Real32 rotY = Math_Sin(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
-	IModel_Rotation = RotateOrder_XZY;
+	IModel_Rotation = ROTATE_ORDER_XZY;
 
 	IModel_DrawRotate(rotX, quarterPi + rotY, eighthPi + rotZ, Spider_LeftLeg, false);
 	IModel_DrawRotate(-rotX, eighthPi + rotY, eighthPi + rotZ, Spider_LeftLeg, false);
@@ -585,7 +585,7 @@ void SpiderModel_DrawModel(Entity* entity) {
 	IModel_DrawRotate(rotX, eighthPi - rotY, -eighthPi - rotZ, Spider_RightLeg, false);
 	IModel_DrawRotate(-rotX, quarterPi - rotY, -eighthPi - rotZ, Spider_RightLeg, false);
 
-	IModel_Rotation = RotateOrder_ZYX;
+	IModel_Rotation = ROTATE_ORDER_ZYX;
 	IModel_UpdateVB();
 }
 
@@ -601,7 +601,7 @@ IModel* SpiderModel_GetInstance(void) {
 
 ModelPart Zombie_Head, Zombie_Hat, Zombie_Torso, Zombie_LeftLeg;
 ModelPart Zombie_RightLeg, Zombie_LeftArm, Zombie_RightArm;
-ModelVertex ZombieModel_Vertices[IModel_BoxVertices * 7];
+ModelVertex ZombieModel_Vertices[IMODEL_BOX_VERTICES * 7];
 IModel ZombieModel;
 
 void ZombieModel_CreateParts(void) {
@@ -787,10 +787,10 @@ void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
 	IModel_DrawRotate(entity->Anim.LeftLegX, 0, entity->Anim.LeftLegZ, model->LeftLeg, false);
 	IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLeg, false);
 
-	IModel_Rotation = RotateOrder_XZY;
+	IModel_Rotation = ROTATE_ORDER_XZY;
 	IModel_DrawRotate(entity->Anim.LeftArmX, 0, entity->Anim.LeftArmZ, model->LeftArm, false);
 	IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, model->RightArm, false);
-	IModel_Rotation = RotateOrder_ZYX;
+	IModel_Rotation = ROTATE_ORDER_ZYX;
 	IModel_UpdateVB();
 
 	Gfx_SetAlphaTest(true);
@@ -800,10 +800,10 @@ void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
 		IModel_DrawRotate(entity->Anim.LeftLegX, 0, entity->Anim.LeftLegZ, model->LeftLegLayer, false);
 		IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLegLayer, false);
 
-		IModel_Rotation = RotateOrder_XZY;
+		IModel_Rotation = ROTATE_ORDER_XZY;
 		IModel_DrawRotate(entity->Anim.LeftArmX, 0, entity->Anim.LeftArmZ, model->LeftArmLayer, false);
 		IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, model->RightArmLayer, false);
-		IModel_Rotation = RotateOrder_ZYX;
+		IModel_Rotation = ROTATE_ORDER_ZYX;
 	}
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Hat, true);
 	IModel_UpdateVB();
@@ -811,7 +811,7 @@ void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
 
 
 ModelSet Humanoid_Set, Humanoid_Set64, Humanoid_SetSlim;
-ModelVertex HumanoidModel_Vertices[IModel_BoxVertices * (7 + 7 + 4)];
+ModelVertex HumanoidModel_Vertices[IMODEL_BOX_VERTICES * (7 + 7 + 4)];
 IModel HumanoidModel;
 
 void HumanoidModel_MakeBoxDescs(void) {
@@ -868,7 +868,7 @@ IModel* HumanoidModel_GetInstance(void) {
 
 
 ModelSet Chibi_Set, Chibi_Set64, Chibi_SetSlim;
-ModelVertex ChibiModel_Vertices[IModel_BoxVertices * (7 + 7 + 4)];
+ModelVertex ChibiModel_Vertices[IMODEL_BOX_VERTICES * (7 + 7 + 4)];
 IModel ChibiModel;
 #define CHIBI_SIZE 0.5f
 
@@ -1075,7 +1075,7 @@ void ArmModel_DrawModel(Entity* entity) {
 		skinType == SKIN_TYPE_64x64_SLIM ? &Humanoid_SetSlim :
 		(skinType == SKIN_TYPE_64x64 ? &Humanoid_Set64 : &Humanoid_Set);
 
-	IModel_Rotation = RotateOrder_YZX;
+	IModel_Rotation = ROTATE_ORDER_YZX;
 	ArmModel_DrawPart(model->RightArm);
 	IModel_UpdateVB();
 
@@ -1087,7 +1087,7 @@ void ArmModel_DrawModel(Entity* entity) {
 		Gfx_SetAlphaTest(false);
 	}
 
-	IModel_Rotation = RotateOrder_ZYX;
+	IModel_Rotation = ROTATE_ORDER_ZYX;
 }
 
 IModel* ArmModel_GetInstance(void) {
@@ -1174,7 +1174,7 @@ if (Block_Tinted[block]) {\
 }
 
 void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
-	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, Face_ZMax);
+	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 
@@ -1199,7 +1199,7 @@ void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 }
 
 void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
-	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, Face_XMax);
+	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
 
@@ -1247,13 +1247,13 @@ void BlockModel_DrawParts(bool sprite) {
 		Drawer_TintColour = Block_FogColour[BlockModel_block];
 
 		VertexP3fT2fC4b* ptr = &ModelCache_Vertices[BlockModel.index];
-		Drawer_YMin(1, IModel_Cols[1], BlockModel_GetTex(Face_YMin), &ptr);
-		Drawer_ZMin(1, IModel_Cols[3], BlockModel_GetTex(Face_ZMin), &ptr);
-		Drawer_XMax(1, IModel_Cols[5], BlockModel_GetTex(Face_XMax), &ptr);
-		Drawer_ZMax(1, IModel_Cols[2], BlockModel_GetTex(Face_ZMax), &ptr);
-		Drawer_XMin(1, IModel_Cols[4], BlockModel_GetTex(Face_XMin), &ptr);
-		Drawer_YMax(1, IModel_Cols[0], BlockModel_GetTex(Face_YMax), &ptr);
-		BlockModel.index += 4 * Face_Count;
+		Drawer_YMin(1, IModel_Cols[1], BlockModel_GetTex(FACE_YMIN), &ptr);
+		Drawer_ZMin(1, IModel_Cols[3], BlockModel_GetTex(FACE_ZMIN), &ptr);
+		Drawer_XMax(1, IModel_Cols[5], BlockModel_GetTex(FACE_XMAX), &ptr);
+		Drawer_ZMax(1, IModel_Cols[2], BlockModel_GetTex(FACE_ZMAX), &ptr);
+		Drawer_XMin(1, IModel_Cols[4], BlockModel_GetTex(FACE_XMIN), &ptr);
+		Drawer_YMax(1, IModel_Cols[0], BlockModel_GetTex(FACE_YMAX), &ptr);
+		BlockModel.index += 4 * FACE_COUNT;
 	}
 }
 
@@ -1265,7 +1265,7 @@ void BlockModel_DrawModel(Entity* p) {
 	if (Block_FullBright[BlockModel_block]) {
 		Int32 i;
 		PackedCol white = PACKEDCOL_WHITE;
-		for (i = 0; i < Face_Count; i++) {
+		for (i = 0; i < FACE_COUNT; i++) {
 			IModel_Cols[i] = white;
 		}
 	}

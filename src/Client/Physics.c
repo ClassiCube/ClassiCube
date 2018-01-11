@@ -493,7 +493,7 @@ void Physics_HandleTnt(Int32 index, BlockID block) {
 void Physics_Init(void) {
 	Event_RegisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
 	Event_RegisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
-	Physics_Enabled = Options_GetBool(OptionsKey_BlockPhysics, true);
+	Physics_Enabled = Options_GetBool(OPTION_BLOCK_PHYSICS, true);
 	TickQueue_Init(&physics_lavaQ);
 	TickQueue_Init(&physics_waterQ);
 

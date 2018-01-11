@@ -23,7 +23,6 @@ typedef void (APIENTRY *FN_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
 typedef void (APIENTRY *FN_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
 typedef void (APIENTRY *FN_GLBUFFERDATA) (GLenum target, const void* size, const void *data, GLenum usage);
 typedef void (APIENTRY *FN_GLBUFFERSUBDATA) (GLenum target, const void* offset, const void* size, const void *data);
-/* TODO: NEED TO ASSIGN THESE TO VALID PROC ADDRESSES */
 FN_GLBINDBUFFER glBindBuffer;
 FN_GLDELETEBUFFERS glDeleteBuffers;
 FN_GLGENBUFFERS glGenBuffers;
@@ -49,20 +48,20 @@ void GL_CheckVboSupport(void) {
 
 	/* Supported in core since 1.5 */
 	if ((major > 1) || (major == 1 && minor >= 5)) {
-		glBindBuffer = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
+		glBindBuffer    = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
 		glDeleteBuffers = (FN_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
-		glGenBuffers = (FN_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
-		glBufferData = (FN_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
+		glGenBuffers    = (FN_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
+		glBufferData    = (FN_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
 		glBufferSubData = (FN_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
 		return;
 	}
 
 	String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
 	if (String_ContainsString(&extensions, &vboExt)) {
-		glBindBuffer = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
+		glBindBuffer    = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
 		glDeleteBuffers = (FN_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
-		glGenBuffers = (FN_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
-		glBufferData = (FN_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
+		glGenBuffers    = (FN_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
+		glBufferData    = (FN_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
 		glBufferSubData = (FN_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
 	} else {
 		gl_lists = true;
@@ -74,7 +73,7 @@ void Gfx_Init(void) {
 	GraphicsMode mode = GraphicsMode_MakeDefault();
 	GLContext_Init(mode);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTextureDimensions);
-	gl_lists = Options_GetBool(OptionsKey_ForceOldOpenGL, false);
+	gl_lists = Options_GetBool(OPTION_FORCE_OLD_OPENGL, false);
 	Gfx_CustomMipmapsLevels = !gl_lists;
 
 	GL_CheckVboSupport();

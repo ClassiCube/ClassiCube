@@ -35,15 +35,14 @@
    OTHER DEALINGS IN THE SOFTWARE.
 */
 
-typedef UInt8 WindowState;
 /* The window is in its normal state. */
-#define WindowState_Normal 0
+#define WINDOW_STATE_NORMAL 0
 /* The window is minimized to the taskbar (also known as 'iconified'). */
-#define WindowState_Minimized 1
+#define WINDOW_STATE_MINIMISED 1
 /* The window covers the whole working area, which includes the desktop but not the taskbar and/or panels. */
-#define WindowState_Maximized 2
+#define WINDOW_STATE_MAXIMISED 2
 /* The window covers the whole screen, including all taskbars and/or panels. */
-#define WindowState_Fullscreen 3
+#define WINDOW_STATE_FULLSCREEN 3
 
 /* Creates a new window. */
 void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF String* title, DisplayDevice* device);
@@ -67,9 +66,9 @@ bool Window_GetExists(void);
 /* Gets the handle of this window. */
 void* Window_GetWindowHandle(void);
 /* Gets the WindowState of this window. */
-WindowState Window_GetWindowState(void);
+UInt8 Window_GetWindowState(void);
 /* Sets the WindowState of this window. */
-void Window_SetWindowState(WindowState value);
+void Window_SetWindowState(UInt8 value);
 
 /* Gets the external bounds of this window, in screen coordinates. 
 External bounds include title bar, borders and drawing area of the window. */

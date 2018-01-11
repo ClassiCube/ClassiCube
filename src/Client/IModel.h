@@ -12,14 +12,12 @@
 */
 typedef struct Entity_ Entity; /* Forward declaration */
 
-#define IModel_QuadVertices 4
-#define IModel_BoxVertices (Face_Count * IModel_QuadVertices)
+#define IMODEL_QUAD_VERTICES 4
+#define IMODEL_BOX_VERTICES (FACE_COUNT * IMODEL_QUAD_VERTICES)
 
-/* Order in which axis rotations are applied to a part. */
-typedef UInt8 RotateOrder;
-#define RotateOrder_ZYX 0
-#define RotateOrder_XZY 1
-#define RotateOrder_YZX 2
+#define ROTATE_ORDER_ZYX 0
+#define ROTATE_ORDER_XZY 1
+#define ROTATE_ORDER_YZX 2
 
 /* Describes a vertex within a model. */
 typedef struct ModelVertex_ {
@@ -97,13 +95,13 @@ typedef struct IModel_ {
 } IModel;
 
 /* Colour tint applied to each face, when rendering a model. */
-PackedCol IModel_Cols[Face_Count];
+PackedCol IModel_Cols[FACE_COUNT];
 /* Scaling applied to UV coordinates when rendering a model. */
 Real32 IModel_uScale, IModel_vScale;
 /* Angle of offset from head to body rotation. */
 Real32 IModel_cosHead, IModel_sinHead;
 /* Specifies order in which axis roations are applied to a part. */
-RotateOrder IModel_Rotation;
+UInt8 IModel_Rotation;
 /* Pointer to model that is currently being rendered/drawn. */
 IModel* IModel_ActiveModel;
 /* Sets default values for fields of a model. */

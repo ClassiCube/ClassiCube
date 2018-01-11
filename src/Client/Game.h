@@ -30,7 +30,7 @@ Real32 Game_MaxViewDistance;
 Real32 Game_UserViewDistance;
 Int32 Game_Fov;
 Int32 Game_DefaultFov, Game_ZoomFov;
-FpsLimitMethod FpsLimit;
+UInt8 FpsLimit;
 bool Game_ShowAxisLines;
 bool Game_SimpleArmsAnim;
 bool Game_ClassicArmModel;

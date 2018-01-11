@@ -149,17 +149,17 @@ void Block_ResetProps(BlockID block) {
 	if (block >= BLOCK_CPE_COUNT) {
 #if USE16_BIT
 		/* give some random texture ids */
-		Block_SetTex((block * 10 + (block % 7) + 20) % 80, Face_YMax, block);
-		Block_SetTex((block * 8 + (block & 5) + 5) % 80, Face_YMin, block);
+		Block_SetTex((block * 10 + (block % 7) + 20) % 80, FACE_YMAX, block);
+		Block_SetTex((block * 8 + (block & 5) + 5) % 80, FACE_YMIN, block);
 		Block_SetSide((block * 4 + (block / 4) + 4) % 80, block);
 #else
-		Block_SetTex(0, Face_YMax, block);
-		Block_SetTex(0, Face_YMin, block);
+		Block_SetTex(0, FACE_YMAX, block);
+		Block_SetTex(0, FACE_YMIN, block);
 		Block_SetSide(0, block);
 #endif
 	} else {
-		Block_SetTex(Block_TopTex[block], Face_YMax, block);
-		Block_SetTex(Block_BottomTex[block], Face_YMin, block);
+		Block_SetTex(Block_TopTex[block], FACE_YMAX, block);
+		Block_SetTex(Block_BottomTex[block], FACE_YMIN, block);
 		Block_SetSide(Block_SideTex[block], block);
 	}
 }
@@ -181,37 +181,37 @@ bool Block_IsLiquid(BlockID b) {
 
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
-	Int32 index = blockId * Face_Count;
-	Block_Textures[index + Face_XMin] = texLoc;
-	Block_Textures[index + Face_XMax] = texLoc;
-	Block_Textures[index + Face_ZMin] = texLoc;
-	Block_Textures[index + Face_ZMax] = texLoc;
+	Int32 index = blockId * FACE_COUNT;
+	Block_Textures[index + FACE_XMIN] = texLoc;
+	Block_Textures[index + FACE_XMAX] = texLoc;
+	Block_Textures[index + FACE_ZMIN] = texLoc;
+	Block_Textures[index + FACE_ZMAX] = texLoc;
 }
 
 void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId) {
-	Block_Textures[blockId * Face_Count + face] = texLoc;
+	Block_Textures[blockId * FACE_COUNT + face] = texLoc;
 }
 
 void Block_GetTextureRegion(BlockID block, Face face, Vector2* min, Vector2* max) {
 	Vector3 bbMin = Block_MinBB[block], bbMax = Block_MaxBB[block];
 
 	switch (face) {
-	case Face_XMin:
-	case Face_XMax:
+	case FACE_XMIN:
+	case FACE_XMAX:
 		min->X = bbMin.Z; min->Y = bbMin.Y;
 		max->X = bbMax.Z; max->Y = bbMax.Y;
 		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
 		break;
 
-	case Face_ZMin:
-	case Face_ZMax:
+	case FACE_ZMIN:
+	case FACE_ZMAX:
 		min->X = bbMin.X; min->Y = bbMin.Y;
 		max->X = bbMax.X; max->Y = bbMax.Y;
 		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
 		break;
 
-	case Face_YMax:
-	case Face_YMin:
+	case FACE_YMAX:
+	case FACE_YMIN:
 		min->X = bbMin.X; min->Y = bbMin.Z;
 		max->X = bbMax.X; max->Y = bbMax.Z;
 		break;
@@ -249,14 +249,14 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 	Int32 flags = 0xFF;
 	Vector3 min = Block_MinBB[block], max = Block_MaxBB[block];
 
-	if (min.X != 0) flags &= ~(1 << Face_XMin);
-	if (max.X != 1) flags &= ~(1 << Face_XMax);
-	if (min.Z != 0) flags &= ~(1 << Face_ZMin);
-	if (max.Z != 1) flags &= ~(1 << Face_ZMax);
+	if (min.X != 0) flags &= ~(1 << FACE_XMIN);
+	if (max.X != 1) flags &= ~(1 << FACE_XMAX);
+	if (min.Z != 0) flags &= ~(1 << FACE_ZMIN);
+	if (max.Z != 1) flags &= ~(1 << FACE_ZMAX);
 
 	if ((min.Y != 0 && max.Y == 1) && Block_Draw[block] != DRAW_GAS) {
-		flags &= ~(1 << Face_YMax);
-		flags &= ~(1 << Face_YMin);
+		flags &= ~(1 << FACE_YMAX);
+		flags &= ~(1 << FACE_YMIN);
 	}
 	return (UInt8)flags;
 }
@@ -325,7 +325,7 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 void Block_RecalculateBB(BlockID block) {
 	Bitmap* bmp = &Atlas2D_Bitmap;
 	Int32 elemSize = Atlas2D_ElementSize;
-	TextureLoc texLoc = Block_GetTexLoc(block, Face_XMax);
+	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
 	Int32 texX = texLoc & 0x0F, texY = texLoc >> 4;
 
 	Real32 topY = Block_GetSpriteBB_TopY(elemSize, texX, texY, bmp);
@@ -361,25 +361,25 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 	if (Block_IsLiquid(other)) oMax.Y -= 1.5f / 16;
 
 	if (Block_Draw[block] == DRAW_SPRITE) {
-		Block_SetHidden(block, other, Face_XMin, true);
-		Block_SetHidden(block, other, Face_XMax, true);
-		Block_SetHidden(block, other, Face_ZMin, true);
-		Block_SetHidden(block, other, Face_ZMax, true);
-		Block_SetHidden(block, other, Face_YMin, oMax.Y == 1);
-		Block_SetHidden(block, other, Face_YMax, bMax.Y == 1);
+		Block_SetHidden(block, other, FACE_XMIN, true);
+		Block_SetHidden(block, other, FACE_XMAX, true);
+		Block_SetHidden(block, other, FACE_ZMIN, true);
+		Block_SetHidden(block, other, FACE_ZMAX, true);
+		Block_SetHidden(block, other, FACE_YMIN, oMax.Y == 1);
+		Block_SetHidden(block, other, FACE_YMAX, bMax.Y == 1);
 	} else {
 		Block_SetXStretch(block, bMin.X == 0 && bMax.X == 1);
 		Block_SetZStretch(block, bMin.Z == 0 && bMax.Z == 1);
 		bool bothLiquid = Block_IsLiquid(block) && Block_IsLiquid(other);
 
-		Block_SetHidden(block, other, Face_XMin, oMax.X == 1 && bMin.X == 0);
-		Block_SetHidden(block, other, Face_XMax, oMin.X == 0 && bMax.X == 1);
-		Block_SetHidden(block, other, Face_ZMin, oMax.Z == 1 && bMin.Z == 0);
-		Block_SetHidden(block, other, Face_ZMax, oMin.Z == 0 && bMax.Z == 1);
+		Block_SetHidden(block, other, FACE_XMIN, oMax.X == 1 && bMin.X == 0);
+		Block_SetHidden(block, other, FACE_XMAX, oMin.X == 0 && bMax.X == 1);
+		Block_SetHidden(block, other, FACE_ZMIN, oMax.Z == 1 && bMin.Z == 0);
+		Block_SetHidden(block, other, FACE_ZMAX, oMin.Z == 0 && bMax.Z == 1);
 
-		Block_SetHidden(block, other, Face_YMin,
+		Block_SetHidden(block, other, FACE_YMIN,
 			bothLiquid || (oMax.Y == 1 && bMin.Y == 0));
-		Block_SetHidden(block, other, Face_YMax,
+		Block_SetHidden(block, other, FACE_YMAX,
 			bothLiquid || (oMin.Y == 0 && bMax.Y == 1));
 	}
 }
@@ -496,11 +496,11 @@ BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
 
 	/* Thin pillar type blocks */
 	Face face = Game_SelectedPos.ClosestFace;
-	if (face == Face_YMax || face == Face_YMin)
+	if (face == FACE_YMAX || face == FACE_YMIN)
 		return AutoRotate_Find(block, name, "-UD");
-	if (face == Face_XMax || face == Face_XMin)
+	if (face == FACE_XMAX || face == FACE_XMIN)
 		return AutoRotate_Find(block, name, "-WE");
-	if (face == Face_ZMax || face == Face_ZMin)
+	if (face == FACE_ZMAX || face == FACE_ZMIN)
 		return AutoRotate_Find(block, name, "-NS");
 	return block;
 }

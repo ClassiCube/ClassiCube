@@ -18,9 +18,9 @@ Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 /* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
 typedef struct Builder1DPart_ {
 	/* Pointers to offset within vertices, indexed by face. */
-	VertexP3fT2fC4b* fVertices[Face_Count];
+	VertexP3fT2fC4b* fVertices[FACE_COUNT];
 	/* Number of indices, indexed by face. */
-	Int32 fCount[Face_Count];
+	Int32 fCount[FACE_COUNT];
 	/* Number of indices, for sprites. */
 	Int32 sCount;
 	/* Current offset within vertices for sprites, delta between each sprite face. */

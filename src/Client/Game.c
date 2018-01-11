@@ -48,7 +48,7 @@ void Game_SetCursorVisible(bool visible) {
 }
 
 void Game_UpdateProjection(void) {
-	Game_DefaultFov = Options_GetInt(OptionsKey_FieldOfView, 1, 150, 70);
+	Game_DefaultFov = Options_GetInt(OPTION_FIELD_OF_VIEW, 1, 150, 70);
 	Camera_ActiveCamera->GetProjection(&Gfx_Projection);
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
@@ -76,7 +76,7 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 void Game_SetViewDistance(Real32 distance, bool userDist) {
 	if (userDist) {
 		Game_UserViewDistance = distance;
-		Options_SetInt32(OptionsKey_ViewDist, (Int32)distance);
+		Options_SetInt32(OPTION_VIEW_DISTANCE, (Int32)distance);
 	}
 
 	distance = min(distance, Game_MaxViewDistance);
