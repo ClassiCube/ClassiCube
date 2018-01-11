@@ -7,18 +7,12 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef struct ClickableScreen_ {
-	Screen Base;
-	Widget** Widgets;
-	UInt32 WidgetsCount;
-	Int32 LastX, LastY;
-	void (*OnWidgetSelected)(GuiElement* elem, Widget* widget);
-} ClickableScreen;
-void ClickableScreen_Create(ClickableScreen* screen);
-
 Screen* InventoryScreen_MakeInstance(void);
 Screen* StatusScreen_MakeInstance(void);
 IGameComponent StatusScreen_MakeComponent(void);
+
+Screen* OptionsGroupScreen_MakeInstance(void);
+Screen* PauseScreen_MakeInstance(void);
 
 /* Raw pointer to inventory screen. DO NOT USE THIS. Use InventoryScreen_MakeInstance() */
 extern Screen* InventoryScreen_UNSAFE_RawPointer;

@@ -6,6 +6,7 @@
 #include "Event.h"
 #include "Drawer2D.h"
 #include "ExtMath.h"
+#include "Screens.h"
 
 Screen* Gui_Status;
 void GuiElement_Recreate(GuiElement* elem) {
@@ -41,8 +42,6 @@ void Screen_Reset(Screen* screen) {
 	screen->HidesHUD           = false;
 	screen->RenderHUDOver      = false;
 	screen->OnResize           = NULL;
-	screen->OnContextLost      = NULL;
-	screen->OnContextRecreated = NULL;
 }
 
 void Widget_DoReposition(Widget* w) {
@@ -90,8 +89,10 @@ void Gui_FileChanged(Stream* stream) {
 
 void Gui_Init(void) {
 	Event_RegisterStream(&TextureEvents_FileChanged, Gui_FileChanged);
-	statusScreen = new StatusScreen(game); game.Components.Add(statusScreen);
-	hudScreen = new HudScreen(game); game.Components.Add(hudScreen);
+	Gui_Status = StatusScreen_MakeInstance();
+	game.Components.Add(statusScreen);
+	hudScreen = new HudScreen(game);
+	game.Components.Add(hudScreen);
 }
 
 void Gui_Reset(void) {

@@ -204,7 +204,7 @@ void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	}
 	bl_count[0] = 0;
 	for (i = 1; i < DEFLATE_MAX_BITS; i++) {
-		if (bl_count[i] >(1 << i)) {
+		if (bl_count[i] > (1 << i)) {
 			ErrorHandler_Fail("Too many huffman codes for bit length");
 		}
 	}
@@ -429,7 +429,7 @@ void Deflate_Process(DeflateState* state) {
 			state->LastBlock = blockHeader & 1;
 
 			switch (blockHeader >> 1) {
-			case 0: { /* Uncompressed block*/
+			case 0: { /* Uncompressed block */
 				DEFLATE_ALIGN_BITS(state);
 				state->State = DeflateState_UncompressedHeader;
 			} break;

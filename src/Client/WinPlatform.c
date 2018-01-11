@@ -192,11 +192,14 @@ void Platform_ThreadSleep(UInt32 milliseconds) {
 }
 
 
-void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName) {
+void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
+	desc->Size    = size; 
+	desc->Style   = style;
 	LOGFONTA font = { 0 };
-	font.lfHeight    = -Math_Ceil(desc->Size * GetDeviceCaps(hdc, LOGPIXELSY) / 72.0f);
-	font.lfUnderline = desc->Style == FONT_STYLE_UNDERLINE;
-	font.lfWeight    = desc->Style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
+
+	font.lfHeight    = -Math_Ceil(size * GetDeviceCaps(hdc, LOGPIXELSY) / 72.0f);
+	font.lfUnderline = style == FONT_STYLE_UNDERLINE;
+	font.lfWeight    = style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
 	font.lfQuality   = ANTIALIASED_QUALITY;
 
 	String dstName = String_Init(font.lfFaceName, 0, LF_FACESIZE);

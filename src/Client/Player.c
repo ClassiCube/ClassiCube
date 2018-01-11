@@ -10,8 +10,7 @@
 #define PLAYER_NAME_EMPTY_TEX -30000
 void Player_MakeNameTexture(Player* player) {
 	FontDesc font; 
-	FontDesc_Make(&font, 24, FONT_STYLE_NORMAL);
-	Platform_MakeFont(&font, &Game_FontName);
+	Platform_MakeFont(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
 
 	String displayName = String_FromRawArray(player->DisplayNameRaw);
 	DrawTextArgs args; 

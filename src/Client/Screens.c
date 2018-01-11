@@ -8,6 +8,7 @@
 #include "Drawer2D.h"
 #include "GraphicsAPI.h"
 #include "Player.h"
+#include "Funcs.h"
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -37,6 +38,28 @@ void Screen_RenderWidgets(Widget** widgets, UInt32 widgetsCount, Real64 delta) {
 	}
 }
 
+void Screen_MakeBack(ButtonWidget* widget, Int32 width, STRING_PURE String* text, Int32 y, FontDesc* font, Gui_MouseHandler onClick) {
+	ButtonWidget_Create(widget, text, width, font, onClick);
+	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_BOTTOM_OR_RIGHT, 0, y);
+}
+
+void Screen_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Gui_MouseHandler onClick) {
+	Int32 width = Game_UseClassicOptions ? 400 : 200;
+	if (toGame) {
+		String msg = String_FromConst("Back to game");
+		Screen_MakeBack(widget, width, &msg, 25, font, onClick);
+	} else {
+		String msg = String_FromConst("Cancel");
+		Screen_MakeBack(widget, width, &msg, 25, font, onClick);
+	}
+}
+
+void Screen_SwitchOptions(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	if (btn == MouseButton_Left) Gui_SetNewScreen(OptionsGroupScreen_MakeInstance());
+}
+void Screen_SwitchPause(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	if (btn == MouseButton_Left) Gui_SetNewScreen(PauseScreen_MakeInstance());
+}
 
 
 /* These were sourced by taking a screenshot of vanilla
@@ -45,21 +68,28 @@ void Screen_RenderWidgets(Widget** widgets, UInt32 widgetsCount, Real64 delta) {
 PackedCol Menu_TopBackCol    = PACKEDCOL_CONST(24, 24, 24, 105);
 PackedCol Menu_BottomBackCol = PACKEDCOL_CONST(51, 51, 98, 162);
 
+typedef struct ClickableScreen_ {
+	GuiElement* Elem;
+	Widget** Widgets;
+	UInt32 WidgetsCount;
+	Int32 LastX, LastY;
+	void (*OnWidgetSelected)(GuiElement* elem, Widget* widget);
+} ClickableScreen;
+
 void ClickableScreen_RenderMenuBounds(void) {
 	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, Menu_TopBackCol, Menu_BottomBackCol);
 }
 
 void ClickableScreen_DefaultWidgetSelected(GuiElement* elem, Widget* widget) { }
 
-bool ClickableScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	ClickableScreen* screen = (ClickableScreen*)elem;
+bool ClickableScreen_HandleMouseDown(ClickableScreen* data, Int32 x, Int32 y, MouseButton btn) {
 	UInt32 i;
 	/* iterate backwards (because last elements rendered are shown over others) */
-	for (i = screen->WidgetsCount; i > 0; i--) {
-		Widget* widget = screen->Widgets[i - 1];
+	for (i = data->WidgetsCount; i > 0; i--) {
+		Widget* widget = data->Widgets[i - 1];
 		if (widget != NULL && Gui_Contains(widget->X, widget->Y, widget->Width, widget->Height, x, y)) {
 			if (!widget->Disabled) {
-				elem = &widget->Base;
+				GuiElement* elem = &widget->Base;
 				elem->HandlesMouseDown(elem, x, y, btn);
 			}
 			return true;
@@ -68,37 +98,35 @@ bool ClickableScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseB
 	return false;
 }
 
-bool ClickableScreens_HandleMouseMove(GuiElement* elem, Int32 x, Int32 y) {
-	ClickableScreen* screen = (ClickableScreen*)elem;
-	if (screen->LastX == x && screen->LastY == y) return true;
+bool ClickableScreen_HandleMouseMove(ClickableScreen* data, Int32 x, Int32 y) {
+	if (data->LastX == x && data->LastY == y) return true;
 	UInt32 i;
-	for (i = 0; i < screen->WidgetsCount; i++) {
-		Widget* widget = screen->Widgets[i];
+	for (i = 0; i < data->WidgetsCount; i++) {
+		Widget* widget = data->Widgets[i];
 		if (widget != NULL) widget->Active = false;
 	}
 
-	for (i = screen->WidgetsCount; i > 0; i--) {
-		Widget* widget = screen->Widgets[i];
+	for (i = data->WidgetsCount; i > 0; i--) {
+		Widget* widget = data->Widgets[i];
 		if (widget != NULL && Gui_Contains(widget->X, widget->Y, widget->Width, widget->Height, x, y)) {
 			widget->Active = true;
-			screen->LastX = x; screen->LastY = y;
-			screen->OnWidgetSelected(elem, widget);
+			data->LastX = x; data->LastY = y;
+			data->OnWidgetSelected(data->Elem, widget);
 			return true;
 		}
 	}
 
-	screen->LastX = x; screen->LastY = y;
-	screen->OnWidgetSelected(elem, NULL);
+	data->LastX = x; data->LastY = y;
+	data->OnWidgetSelected(data->Elem, NULL);
 	return false;
 }
 
-void ClickableScreen_Create(ClickableScreen* screen) {
-	Screen_Reset(&screen->Base);
-	screen->Base.Base.HandlesMouseDown = ClickableScreen_HandlesMouseDown;
-	screen->Base.Base.HandlesMouseMove = ClickableScreens_HandleMouseMove;
-
-	screen->LastX = -1; screen->LastY = -1;
-	screen->OnWidgetSelected = ClickableScreen_DefaultWidgetSelected;
+void ClickableScreen_Init(ClickableScreen* data, GuiElement* elem, Widget** widgets, UInt32 widgetsCount) {
+	data->Elem         = elem;
+	data->Widgets      = widgets;
+	data->WidgetsCount = widgetsCount;
+	data->LastX = -1; data->LastY = -1;
+	data->OnWidgetSelected = ClickableScreen_DefaultWidgetSelected;
 }
 
 
@@ -126,8 +154,7 @@ void InventoryScreen_ContextRecreated(void) {
 
 void InventoryScreen_Init(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	FontDesc_Make(&screen->Font, 16, FONT_STYLE_NORMAL);
-	Platform_MakeFont(&screen->Font, &Game_FontName);
+	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 
 	elem = &screen->Table.Base.Base;
 	TableWidget_Create(&screen->Table);
@@ -262,24 +289,6 @@ typedef struct StatusScreen_ {
 	Int32 LastFov;
 } StatusScreen;
 StatusScreen StatusScreen_Instance;
-	
-void StatusScreen_Render(GuiElement* elem, Real64 delta) {
-	StatusScreen* screen = (StatusScreen*)elem;
-	StatusScreen_Update(screen, delta);
-	if (Game_HideGui || !Game_ShowFPS) return;
-
-	Gfx_SetTexturing(true);
-	elem = &screen->Status.Base.Base;
-	elem->Render(elem, delta);
-
-	if (!Game_ClassicMode && Gui_Active == NULL) {
-		StatusScreen_UpdateHackState(screen, false);
-		StatusScreen_DrawPosition(screen);
-		elem = &screen->HackStates.Base.Base;
-		elem->Render(elem, delta);
-	}
-	Gfx_SetTexturing(false);
-}
 
 void StatusScreen_MakeText(StatusScreen* screen, STRING_TRANSIENT String* status) {
 	screen->FPS = (Int32)(screen->Frames / screen->Accumulator);
@@ -323,6 +332,24 @@ void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
 	Game_ChunkUpdates = 0;
 }
 
+void StatusScreen_Render(GuiElement* elem, Real64 delta) {
+	StatusScreen* screen = (StatusScreen*)elem;
+	StatusScreen_Update(screen, delta);
+	if (Game_HideGui || !Game_ShowFPS) return;
+
+	Gfx_SetTexturing(true);
+	elem = &screen->Status.Base.Base;
+	elem->Render(elem, delta);
+
+	if (!Game_ClassicMode && Gui_Active == NULL) {
+		StatusScreen_UpdateHackState(screen, false);
+		StatusScreen_DrawPosition(screen);
+		elem = &screen->HackStates.Base.Base;
+		elem->Render(elem, delta);
+	}
+	Gfx_SetTexturing(false);
+}
+
 void StatusScreen_OnResize(Screen* screen) { }
 void StatusScreen_ChatFontChanged(void) {
 	StatusScreen* screen = &StatusScreen_Instance;
@@ -343,30 +370,29 @@ void StatusScreen_ContextLost(void) {
 
 void StatusScreen_ContextRecreated(void) {
 	StatusScreen* screen = &StatusScreen_Instance;
-	status = new TextWidget(game, font)
-		.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, 2);
-	status.ReducePadding = true;
-	status.Init();
-	string msg = statusBuffer.Length > 0 ? statusBuffer.ToString() : "FPS: no data yet";
-	status.SetText(msg);
 
-	posAtlas = new TextAtlas(game, 16);
+	TextWidget* status = &screen->Status; TextWidget_Make(status, &screen->Font);
+	Widget_SetLocation(&status->Base, ANCHOR_LEFT_OR_TOP, ANCHOR_LEFT_OR_TOP, 2, 2);
+	status->ReducePadding = true;
+	status->Base.Base.Init(&status->Base.Base);
+	StatusScreen_Update(screen, 1.0);
+
 	String chars = String_FromConst("0123456789-, ()");
 	String prefix = String_FromConst("Position: ");
 	TextAtlas_Make(&screen->PosAtlas, &chars, &screen->Font, &prefix);
-	screen->PosAtlas.Tex.Y = (Int16)(status.Height + 2);
+	screen->PosAtlas.Tex.Y = (Int16)(status->Base.Height + 2);
 
-	Int32 yOffset = status.Height + posAtlas.tex.Height + 2;
-	hackStates = new TextWidget(game, font)
-		.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, yOffset);
-	hackStates.ReducePadding = true;
-	hackStates.Init();
+	Int32 yOffset = status->Base.Height + screen->PosAtlas.Tex.Height + 2;
+	TextWidget* hacks = &screen->HackStates; TextWidget_Make(hacks, &screen->Font);
+	Widget_SetLocation(&hacks->Base, ANCHOR_LEFT_OR_TOP, ANCHOR_LEFT_OR_TOP, 2, yOffset);
+	hacks->ReducePadding = true;
+	hacks->Base.Base.Init(&hacks->Base.Base);
 	StatusScreen_UpdateHackState(screen, true);
 }
 
 void StatusScreen_Init(GuiElement* elem) {
 	StatusScreen* screen = (StatusScreen*)elem;
-	FontDesc_Make(&screen->Font, 16, FONT_STYLE_NORMAL);
+	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	StatusScreen_ContextRecreated();
 
 	Event_RegisterVoid(&ChatEvents_FontChanged,     StatusScreen_ChatFontChanged);
@@ -411,7 +437,8 @@ void StatusScreen_DrawPosition(StatusScreen* screen) {
 
 void StatusScreen_UpdateHackState(StatusScreen* screen, bool force) {
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	if (force || hacks->Speeding != screen->Speeding || hacks->HalfSpeeding != screen->HalfSpeeding || hacks->Noclip != screen->Noclip || hacks->Flying != screen->Fly || Game_Fov != screen->LastFov) {
+	if (force || hacks->Speeding != screen->Speeding || hacks->HalfSpeeding != screen->HalfSpeeding 
+		|| hacks->Noclip != screen->Noclip || hacks->Flying != screen->Fly || Game_Fov != screen->LastFov) {
 		screen->Speeding = hacks->Speeding; screen->Noclip = hacks->Noclip;
 		screen->HalfSpeeding = hacks->HalfSpeeding; screen->Fly = hacks->Flying;
 		screen->LastFov = Game_Fov;
@@ -455,4 +482,179 @@ IGameComponent StatusScreen_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Ready = StatusScreen_Ready;
 	return comp;
+}
+
+
+#define FILES_SCREEN_ITEMS 5
+#define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
+typedef struct FilesScreen_ {
+	Screen Base;
+	FontDesc Font;
+	Int32 CurrentIndex;
+	Gui_MouseHandler TextButtonClick;
+	String TitleText;
+	ButtonWidget Buttons[FILES_SCREEN_BUTTONS];
+	TextWidget Title;
+	Widget* Widgets[FILES_SCREEN_BUTTONS + 1];
+	ClickableScreen Clickable;
+	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
+} FilesScreen;
+FilesScreen FilesScreen_Instance;
+
+String FilesScreen_Get(UInt32 index) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	if (index < screen->Entries.Count) {
+		return StringsBuffer_UNSAFE_Get(&screen->Entries, index);
+	} else {
+		String str = String_FromConst("-----"); return str;
+	}
+}
+
+void FilesScreen_MakeText(ButtonWidget* widget, Int32 x, Int32 y, String* text) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	ButtonWidget_Create(widget, text, 300, &screen->Font, screen->TextButtonClick);
+	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+}
+
+void FilesScreen_Make(ButtonWidget* widget, Int32 x, Int32 y, String* text, Gui_MouseHandler onClick) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	ButtonWidget_Create(widget, text, 40, &screen->Font, onClick);
+	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+}
+
+void FilesScreen_UpdateArrows(void) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	Int32 start = FILES_SCREEN_ITEMS, end = screen->Entries.Count - FILES_SCREEN_ITEMS;
+	screen->Buttons[5].Base.Disabled = screen->CurrentIndex < start;
+	screen->Buttons[6].Base.Disabled = screen->CurrentIndex >= end;
+}
+
+void FilesScreen_SetCurrentIndex(Int32 index) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	if (index >= screen->Entries.Count) index -= FILES_SCREEN_ITEMS;
+	if (index < 0) index = 0;
+
+	UInt32 i;
+	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
+		String str = FilesScreen_Get(index + i);
+		ButtonWidget_SetText(&screen->Buttons[i], &str);
+	}
+
+	screen->CurrentIndex = index;
+	FilesScreen_UpdateArrows();
+}
+
+void FilesScreen_PageClick(bool forward) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	Int32 delta = forward ? FILES_SCREEN_ITEMS : -FILES_SCREEN_ITEMS;
+	FilesScreen_SetCurrentIndex(screen->CurrentIndex + delta);
+}
+
+void FilesScreen_MoveBackwards(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	if (btn == MouseButton_Left) FilesScreen_PageClick(false);
+}
+
+void FilesScreen_MoveForwards(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	if (btn == MouseButton_Left) FilesScreen_PageClick(true);
+}
+
+void FilesScreen_ContextLost(void) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	Screen_FreeWidgets(screen->Widgets, Array_NumElements(screen->Widgets));
+}
+
+void FilesScreen_ContextRecreated(void) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	TextWidget_Create(&screen->Title, &screen->TitleText, &screen->Font);
+	Widget_SetLocation(&screen->Title.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
+
+	UInt32 i;
+	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
+		String str = FilesScreen_Get(i);
+		FilesScreen_MakeText(&screen->Buttons[i], 0, 50 * (Int32)i - 100, &str);
+	}
+
+	String lArrow = String_FromConst("<");
+	FilesScreen_Make(&screen->Buttons[5], -220, 0, &lArrow, FilesScreen_MoveBackwards);
+	String rArrow = String_FromConst(">");
+	FilesScreen_Make(&screen->Buttons[6],  220, 0, &rArrow, FilesScreen_MoveForwards);
+	Screen_MakeDefaultBack(&screen->Buttons[7], false, &screen->Font, Screen_SwitchPause);
+
+	screen->Widgets[0] = &screen->Title.Base;
+	for (i = 0; i < FILES_SCREEN_BUTTONS; i++) {
+		screen->Widgets[i + 1] = &screen->Buttons[i].Base;
+	}
+	ClickableScreen_Init(&screen->Clickable, &screen->Base.Base, screen->Widgets, Array_NumElements(screen->Widgets));
+	FilesScreen_UpdateArrows();
+}
+
+void FilesScreen_Init(GuiElement* elem) {
+	FilesScreen* screen = (FilesScreen*)elem;
+	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
+	FilesScreen_ContextRecreated();
+	Event_RegisterVoid(&GfxEvents_ContextLost,      FilesScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, FilesScreen_ContextRecreated);
+}
+
+void FilesScreen_Render(GuiElement* elem, Real64 delta) {
+	FilesScreen* screen = (FilesScreen*)elem;
+	ClickableScreen_RenderMenuBounds();
+	Gfx_SetTexturing(true);
+	Screen_RenderWidgets(screen->Widgets, Array_NumElements(screen->Widgets), delta);
+	Gfx_SetTexturing(false);
+}
+
+void FilesScreen_Free(GuiElement* elem) {
+	FilesScreen* screen = (FilesScreen*)elem;
+	Platform_FreeFont(&screen->Font);
+	FilesScreen_ContextLost();
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      FilesScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, FilesScreen_ContextRecreated);
+}
+
+bool FilesScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	FilesScreen* screen = (FilesScreen*)elem;
+	if (key == Key_Escape) {
+		Gui_SetNewScreen(NULL);
+	} else if (key == Key_Left) {
+		FilesScreen_PageClick(false);
+	} else if (key == Key_Right) {
+		FilesScreen_PageClick(true);
+	} else {
+		return false;
+	}
+	return true;
+}
+
+bool FilesScreen_HandlesMouseMove(GuiElement* elem, Int32 mouseX, Int32 mouseY) {
+	FilesScreen* screen = (FilesScreen*)elem;
+	return ClickableScreen_HandleMouseMove(&screen->Clickable, mouseX, mouseY);
+}
+
+bool FilesScreen_HandlesMouseDown(GuiElement* elem, Int32 mouseX, Int32 mouseY, MouseButton button) {
+	FilesScreen* screen = (FilesScreen*)elem;
+	return ClickableScreen_HandleMouseDown(&screen->Clickable, mouseX, mouseY, button);
+}
+
+void FilesScreen_OnResize(Screen* elem) {
+	FilesScreen* screen = (FilesScreen*)elem;
+	Screen_RepositionWidgets(screen->Widgets, Array_NumElements(screen->Widgets));
+}
+
+Screen* FilesScreen_MakeInstance(void) {
+	FilesScreen* screen = &FilesScreen_Instance;
+	Platform_MemSet(&screen, 0, sizeof(FilesScreen) - sizeof(StringsBuffer));
+	screen->Entries.Count = 0;
+	Screen_Reset(&screen->Base);
+	
+	screen->Base.Base.HandlesKeyDown     = FilesScreen_HandlesKeyDown;
+	screen->Base.Base.HandlesMouseDown   = FilesScreen_HandlesMouseDown;
+	screen->Base.Base.HandlesMouseMove   = FilesScreen_HandlesMouseMove;
+
+	screen->Base.OnResize    = FilesScreen_OnResize;
+	screen->Base.Base.Init   = FilesScreen_Init;
+	screen->Base.Base.Render = FilesScreen_Render;
+	screen->Base.Base.Free   = FilesScreen_Free;
+	screen->Base.HandlesAllInput = true;
+	return &screen->Base;
 }
