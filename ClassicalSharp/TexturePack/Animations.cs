@@ -144,10 +144,22 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		unsafe void DrawAnimation(AnimationData data, int texId, int size) {
+			if (size <= 128) {
+				byte* temp = stackalloc byte[size * size * 4];
+				DrawAnimationCore(data, texId, size, temp);
+			} else {
+				// cannot allocate memory on the stack for very big animation.png frames
+				byte[] temp = new byte[size * size * 4];
+				fixed (byte* ptr = temp) {
+					DrawAnimationCore(data, texId, size, ptr);
+				}
+			}
+		}
+		
+		unsafe void DrawAnimationCore(AnimationData data, int texId, int size, byte* temp) {
 			TerrainAtlas1D atlas = game.TerrainAtlas1D;			
 			int index = atlas.Get1DIndex(texId);
-			int rowNum = atlas.Get1DRowId(texId);			
-			byte* temp = stackalloc byte[size * size * 4];
+			int rowNum = atlas.Get1DRowId(texId);						
 			animPart.SetData(size, size, size * 4, (IntPtr)temp, false);
 			
 			if (data == null) {
