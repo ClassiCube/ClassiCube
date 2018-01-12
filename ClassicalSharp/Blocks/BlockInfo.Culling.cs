@@ -40,25 +40,25 @@ namespace ClassicalSharp {
 		static void CalcCulling(BlockID block, BlockID other) {
 			Vector3 bMin = MinBB[block], bMax = MaxBB[block];
 			Vector3 oMin = MinBB[other], oMax = MaxBB[other];
-			if (IsLiquid(block)) bMax.Y -= 1.5f/16;
-			if (IsLiquid(other)) oMax.Y -= 1.5f/16;
+			if (IsLiquid[block]) bMax.Y -= 1.5f/16;
+			if (IsLiquid[other]) oMax.Y -= 1.5f/16;
 			
 			if (Draw[block] == DrawType.Sprite) {
-				SetHidden(block, other, Side.Left, true);
+				SetHidden(block, other, Side.Left,  true);
 				SetHidden(block, other, Side.Right, true);
 				SetHidden(block, other, Side.Front, true);
-				SetHidden(block, other, Side.Back, true);
+				SetHidden(block, other, Side.Back,  true);
 				SetHidden(block, other, Side.Bottom, oMax.Y == 1);
-				SetHidden(block, other, Side.Top, bMax.Y == 1);
+				SetHidden(block, other, Side.Top,    bMax.Y == 1);
 			} else {
 				SetXStretch(block, bMin.X == 0 && bMax.X == 1);
 				SetZStretch(block, bMin.Z == 0 && bMax.Z == 1);
-				bool bothLiquid = IsLiquid(block) && IsLiquid(other);
+				bool bothLiquid = IsLiquid[block] && IsLiquid[other];
 				
-				SetHidden(block, other, Side.Left, oMax.X == 1 && bMin.X == 0);
+				SetHidden(block, other, Side.Left,  oMax.X == 1 && bMin.X == 0);
 				SetHidden(block, other, Side.Right, oMin.X == 0 && bMax.X == 1);
 				SetHidden(block, other, Side.Front, oMax.Z == 1 && bMin.Z == 0);
-				SetHidden(block, other, Side.Back, oMin.Z == 0 && bMax.Z == 1);
+				SetHidden(block, other, Side.Back,  oMin.Z == 0 && bMax.Z == 1);
 				SetHidden(block, other, Side.Bottom, 
 				          bothLiquid || (oMax.Y == 1 && bMin.Y == 0));
 				SetHidden(block, other, Side.Top, 
@@ -79,7 +79,7 @@ namespace ClassicalSharp {
 			if (block == other) return Draw[block] != DrawType.TransparentThick;
 			
 			// An opaque neighbour (asides from lava) culls the face.
-			if (Draw[other] == DrawType.Opaque && !IsLiquid(other)) return true;
+			if (Draw[other] == DrawType.Opaque && !IsLiquid[other]) return true;
 			if (Draw[block] != DrawType.Translucent || Draw[other] != DrawType.Translucent) return false;
 			
 			// e.g. for water / ice, don't need to draw water.

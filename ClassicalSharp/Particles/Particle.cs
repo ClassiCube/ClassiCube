@@ -104,7 +104,7 @@ namespace ClassicalSharp.Particles {
 		bool CanPassThrough(Game game, BlockID block, bool throughLiquids) {
 			byte draw = BlockInfo.Draw[block];
 			return draw == DrawType.Gas || draw == DrawType.Sprite
-				|| (throughLiquids && BlockInfo.IsLiquid(block));
+				|| (throughLiquids && BlockInfo.IsLiquid[block]);
 		}
 		
 		bool CollideHor(Game game, BlockID block) {

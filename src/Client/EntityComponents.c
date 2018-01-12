@@ -165,7 +165,7 @@ bool HacksComp_Floating(HacksComp* hacks) {
 	return hacks->Noclip || hacks->Flying;
 }
 
-String HacksComp_GetFlagValue(String* flag, HacksComp* hacks) {
+String HacksComp_UNSAFE_FlagValue(String* flag, HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
 	Int32 start = String_IndexOfString(joined, flag);
 	if (start < 0) return String_MakeNull();
@@ -179,7 +179,7 @@ String HacksComp_GetFlagValue(String* flag, HacksComp* hacks) {
 
 void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
 	String horSpeedFlag = String_FromConst("horspeed=");
-	String speedStr = HacksComp_GetFlagValue(&horSpeedFlag, hacks);
+	String speedStr = HacksComp_UNSAFE_FlagValue(&horSpeedFlag, hacks);
 	if (speedStr.length == 0) return;
 
 	Real32 speed = 0.0f;
@@ -189,7 +189,7 @@ void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
 
 void HacksComp_ParseMultiSpeed(HacksComp* hacks) {
 	String jumpsFlag = String_FromConst("jumps=");
-	String jumpsStr = HacksComp_GetFlagValue(&jumpsFlag, hacks);
+	String jumpsStr = HacksComp_UNSAFE_FlagValue(&jumpsFlag, hacks);
 	if (jumpsStr.length == 0 || Game_ClassicMode) return;
 
 	Int32 jumps = 0;
@@ -555,7 +555,7 @@ bool ShadowComponent_GetBlocks(Entity* entity, Vector3I* coords, Real32 x, Real3
 		posY--;
 
 		UInt8 draw = Block_Draw[block];
-		if (draw == DRAW_GAS || draw == DRAW_SPRITE || Block_IsLiquid(block)) continue;
+		if (draw == DRAW_GAS || draw == DRAW_SPRITE || Block_IsLiquid[block]) continue;
 		Real32 blockY = posY + 1.0f + Block_MaxBB[block].Y;
 		if (blockY >= Position.Y + 0.01f) continue;
 

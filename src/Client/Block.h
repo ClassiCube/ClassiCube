@@ -46,6 +46,7 @@
 UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
 
+bool Block_IsLiquid[BLOCK_COUNT];
 bool Block_BlocksLight[BLOCK_COUNT];
 bool Block_FullBright[BLOCK_COUNT];
 String Block_Name[BLOCK_COUNT];
@@ -96,7 +97,6 @@ void Block_SetDrawType(BlockID block, UInt8 draw);
 void Block_ResetProps(BlockID block);
 
 Int32 Block_FindID(STRING_PURE String* name);
-bool Block_IsLiquid(BlockID b);
 
 void Block_CalcRenderBounds(BlockID block);
 UInt8 Block_CalcLightOffset(BlockID block);

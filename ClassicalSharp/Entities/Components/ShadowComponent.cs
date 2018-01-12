@@ -148,7 +148,7 @@ namespace ClassicalSharp.Entities {
 				posY--;
 				
 				byte draw = BlockInfo.Draw[block];
-				if (draw == DrawType.Gas || draw == DrawType.Sprite || BlockInfo.IsLiquid(block)) continue;
+				if (draw == DrawType.Gas || draw == DrawType.Sprite || BlockInfo.IsLiquid[block]) continue;
 				float blockY = posY + 1 + BlockInfo.MaxBB[block].Y;
 				if (blockY >= Position.Y + 0.01f) continue;
 				

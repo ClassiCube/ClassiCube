@@ -38,13 +38,13 @@ namespace ClassicalSharp {
 				case Side.Right:
 					min.X = bbMin.Z; min.Y = bbMin.Y;
 					max.X = bbMax.Z; max.Y = bbMax.Y;
-					if (IsLiquid(block)) max.Y -= 1.5f/16;
+					if (IsLiquid[block]) max.Y -= 1.5f/16;
 					break;
 				case Side.Front:
 				case Side.Back: 
 					min.X = bbMin.X; min.Y = bbMin.Y;
 					max.X = bbMax.X; max.Y = bbMax.Y;
-					if (IsLiquid(block)) max.Y -= 1.5f/16;
+					if (IsLiquid[block]) max.Y -= 1.5f/16;
 					break;
 				case Side.Top:
 				case Side.Bottom:

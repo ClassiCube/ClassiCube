@@ -67,13 +67,7 @@ namespace ClassicalSharp {
 	/// <remarks> e.g. blocks light, height, texture IDs, etc. </remarks>
 	public static partial class BlockInfo {
 		
-		public static bool IsLiquid(BlockID block) {
-			byte collide = ExtendedCollide[block];
-			return 
-				(collide == CollideType.LiquidWater && Draw[block] == DrawType.Translucent) ||
-				(collide == CollideType.LiquidLava  && Draw[block] == DrawType.Transparent);
-		}
-
+		public static bool[] IsLiquid = new bool[Block.Count];
 		public static bool[] BlocksLight = new bool[Block.Count];
 		public static bool[] FullBright = new bool[Block.Count];
 		public static string[] Name = new string[Block.Count];
@@ -124,10 +118,18 @@ namespace ClassicalSharp {
 			CanPlace[Block.Bedrock]    = false; CanDelete[Block.Bedrock]    = false;
 		}
 		
+		static void RecalcIsLiquid(BlockID block) {
+			byte collide = ExtendedCollide[block];
+			IsLiquid[block] =
+				(collide == CollideType.LiquidWater && Draw[block] == DrawType.Translucent) ||
+				(collide == CollideType.LiquidLava  && Draw[block] == DrawType.Transparent);
+		}
+		
 		public static void SetCollide(BlockID block, byte collide) {
 			// necessary for cases where servers redefined core blocks before extended types were introduced
 			collide = DefaultSet.MapOldCollide(block, collide);
 			ExtendedCollide[block] = collide;
+			RecalcIsLiquid(block);
 			
 			// Reduce extended collision types to their simpler forms
 			if (collide == CollideType.Ice) collide = CollideType.Solid;
@@ -142,6 +144,7 @@ namespace ClassicalSharp {
 			if (draw == DrawType.Opaque && Collide[block] != CollideType.Solid)
 				draw = DrawType.Transparent;
 			Draw[block] = draw;
+			RecalcIsLiquid(block);
 			
 			FullOpaque[block] = draw == DrawType.Opaque
 				&& MinBB[block] == Vector3.Zero && MaxBB[block] == Vector3.One;

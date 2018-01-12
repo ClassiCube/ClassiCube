@@ -155,7 +155,7 @@ namespace ClassicalSharp {
 		
 		static bool IsHackBlock(BlockID b) {
 			return b == Block.DoubleSlab || b == Block.Bedrock ||
-				b == Block.Grass || BlockInfo.IsLiquid(b);
+				b == Block.Grass || BlockInfo.IsLiquid[b];
 		}
 		
 		public void AddDefault(BlockID block) {

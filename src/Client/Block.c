@@ -53,10 +53,18 @@ void Block_SetDefaultPerms(void) {
 	Block_CanPlace[BLOCK_BEDROCK] = false;    Block_CanDelete[BLOCK_BEDROCK] = false;
 }
 
+void Block_RecalcIsLiquid(BlockID b) {
+	UInt8 collide = Block_ExtendedCollide[b];
+	Block_IsLiquid[b] =
+		(collide == COLLIDE_LIQUID_WATER && Block_Draw[b] == DRAW_TRANSLUCENT) ||
+		(collide == COLLIDE_LIQUID_LAVA  && Block_Draw[b] == DRAW_TRANSPARENT);
+}
+
 void Block_SetCollide(BlockID block, UInt8 collide) {
 	/* necessary for cases where servers redefined core blocks before extended types were introduced. */
 	collide = DefaultSet_MapOldCollide(block, collide);
 	Block_ExtendedCollide[block] = collide;
+	Block_RecalcIsLiquid(block);
 
 	/* Reduce extended collision types to their simpler forms. */
 	if (collide == COLLIDE_ICE) collide = COLLIDE_SOLID;
@@ -72,6 +80,7 @@ void Block_SetDrawType(BlockID block, UInt8 draw) {
 		draw = DRAW_TRANSPARENT;
 	}
 	Block_Draw[block] = draw;
+	Block_RecalcIsLiquid(block);
 
 	Vector3 zero = Vector3_Zero, one = Vector3_One;
 	Block_FullOpaque[block] = draw == DRAW_OPAQUE
@@ -172,13 +181,6 @@ Int32 Block_FindID(STRING_PURE String* name) {
 	return -1;
 }
 
-bool Block_IsLiquid(BlockID b) {
-	UInt8 collide = Block_ExtendedCollide[b];
-	return
-		(collide == COLLIDE_LIQUID_WATER && Block_Draw[b] == DRAW_TRANSLUCENT) ||
-		(collide == COLLIDE_LIQUID_LAVA  && Block_Draw[b] == DRAW_TRANSPARENT);
-}
-
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId) {
 	Int32 index = blockId * FACE_COUNT;
@@ -200,14 +202,14 @@ void Block_GetTextureRegion(BlockID block, Face face, Vector2* min, Vector2* max
 	case FACE_XMAX:
 		min->X = bbMin.Z; min->Y = bbMin.Y;
 		max->X = bbMax.Z; max->Y = bbMax.Y;
-		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
+		if (Block_IsLiquid[block]) max->Y -= 1.5f / 16.0f;
 		break;
 
 	case FACE_ZMIN:
 	case FACE_ZMAX:
 		min->X = bbMin.X; min->Y = bbMin.Y;
 		max->X = bbMax.X; max->Y = bbMax.Y;
-		if (Block_IsLiquid(block)) max->Y -= 1.5f / 16.0f;
+		if (Block_IsLiquid[block]) max->Y -= 1.5f / 16.0f;
 		break;
 
 	case FACE_YMAX:
@@ -232,7 +234,7 @@ bool Block_FaceOccluded(BlockID block, BlockID other, Face face) {
 void Block_CalcRenderBounds(BlockID block) {
 	Vector3 min = Block_MinBB[block], max = Block_MaxBB[block];
 
-	if (Block_IsLiquid(block)) {
+	if (Block_IsLiquid[block]) {
 		min.X -= 0.1f / 16.0f; max.X -= 0.1f / 16.0f;
 		min.Z -= 0.1f / 16.0f; max.Z -= 0.1f / 16.0f;
 		min.Y -= 1.5f / 16.0f; max.Y -= 1.5f / 16.0f;
@@ -357,30 +359,30 @@ void Block_SetZStretch(BlockID block, bool stretch) {
 void Block_CalcCulling(BlockID block, BlockID other) {
 	Vector3 bMin = Block_MinBB[block], bMax = Block_MaxBB[block];
 	Vector3 oMin = Block_MinBB[other], oMax = Block_MaxBB[other];
-	if (Block_IsLiquid(block)) bMax.Y -= 1.5f / 16;
-	if (Block_IsLiquid(other)) oMax.Y -= 1.5f / 16;
+	if (Block_IsLiquid[block]) bMax.Y -= 1.5f / 16.0f;
+	if (Block_IsLiquid[other]) oMax.Y -= 1.5f / 16.0f;
 
 	if (Block_Draw[block] == DRAW_SPRITE) {
 		Block_SetHidden(block, other, FACE_XMIN, true);
 		Block_SetHidden(block, other, FACE_XMAX, true);
 		Block_SetHidden(block, other, FACE_ZMIN, true);
 		Block_SetHidden(block, other, FACE_ZMAX, true);
-		Block_SetHidden(block, other, FACE_YMIN, oMax.Y == 1);
-		Block_SetHidden(block, other, FACE_YMAX, bMax.Y == 1);
+		Block_SetHidden(block, other, FACE_YMIN, oMax.Y == 1.0f);
+		Block_SetHidden(block, other, FACE_YMAX, bMax.Y == 1.0f);
 	} else {
-		Block_SetXStretch(block, bMin.X == 0 && bMax.X == 1);
-		Block_SetZStretch(block, bMin.Z == 0 && bMax.Z == 1);
-		bool bothLiquid = Block_IsLiquid(block) && Block_IsLiquid(other);
+		Block_SetXStretch(block, bMin.X == 0 && bMax.X == 1.0f);
+		Block_SetZStretch(block, bMin.Z == 0 && bMax.Z == 1.0f);
+		bool bothLiquid = Block_IsLiquid[block] && Block_IsLiquid[other];
 
-		Block_SetHidden(block, other, FACE_XMIN, oMax.X == 1 && bMin.X == 0);
-		Block_SetHidden(block, other, FACE_XMAX, oMin.X == 0 && bMax.X == 1);
-		Block_SetHidden(block, other, FACE_ZMIN, oMax.Z == 1 && bMin.Z == 0);
-		Block_SetHidden(block, other, FACE_ZMAX, oMin.Z == 0 && bMax.Z == 1);
+		Block_SetHidden(block, other, FACE_XMIN, oMax.X == 1.0f && bMin.X == 0.0f);
+		Block_SetHidden(block, other, FACE_XMAX, oMin.X == 0.0f && bMax.X == 1.0f);
+		Block_SetHidden(block, other, FACE_ZMIN, oMax.Z == 1.0f && bMin.Z == 0.0f);
+		Block_SetHidden(block, other, FACE_ZMAX, oMin.Z == 0.0f && bMax.Z == 1.0f);
 
 		Block_SetHidden(block, other, FACE_YMIN,
-			bothLiquid || (oMax.Y == 1 && bMin.Y == 0));
+			bothLiquid || (oMax.Y == 1.0f && bMin.Y == 0.0f));
 		Block_SetHidden(block, other, FACE_YMAX,
-			bothLiquid || (oMin.Y == 0 && bMax.Y == 1));
+			bothLiquid || (oMin.Y == 0.0f && bMax.Y == 1.0f));
 	}
 }
 
@@ -419,7 +421,7 @@ bool Block_IsHidden(BlockID block, BlockID other) {
 	if (block == other) return Block_Draw[block] != DRAW_TRANSPARENT_THICK;
 
 	/* An opaque neighbour (asides from lava) culls the face. */
-	if (Block_Draw[other] == DRAW_OPAQUE && !Block_IsLiquid(other)) return true;
+	if (Block_Draw[other] == DRAW_OPAQUE && !Block_IsLiquid[other]) return true;
 	if (Block_Draw[block] != DRAW_TRANSLUCENT || Block_Draw[other] != DRAW_TRANSLUCENT) return false;
 
 	/* e.g. for water / ice, don't need to draw water. */

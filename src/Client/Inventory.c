@@ -42,7 +42,7 @@ void Inventory_SetSelectedBlock(BlockID block) {
 }
 
 bool Inventory_IsHackBlock(BlockID b) {
-	return b == BLOCK_DOUBLE_SLAB || b == BLOCK_BEDROCK || b == BLOCK_GRASS || Block_IsLiquid(b);
+	return b == BLOCK_DOUBLE_SLAB || b == BLOCK_BEDROCK || b == BLOCK_GRASS || Block_IsLiquid[b];
 }
 
 BlockID Inventory_DefaultMapping(Int32 i) {
