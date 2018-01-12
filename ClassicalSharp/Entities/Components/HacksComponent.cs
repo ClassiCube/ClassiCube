@@ -97,7 +97,7 @@ namespace ClassicalSharp.Entities {
 		
 		void ParseMultiJumps() {
 			string num = GetFlagValue("jumps=");
-			if (num == null) return;
+			if (num == null || game.ClassicMode) return;
 			
 			int value = 0;
 			if (!int.TryParse(num, out value) || value < 0) return;

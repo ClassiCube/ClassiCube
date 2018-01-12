@@ -190,7 +190,7 @@ void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
 void HacksComp_ParseMultiSpeed(HacksComp* hacks) {
 	String jumpsFlag = String_FromConst("jumps=");
 	String jumpsStr = HacksComp_GetFlagValue(&jumpsFlag, hacks);
-	if (jumpsStr.length == 0) return;
+	if (jumpsStr.length == 0 || Game_ClassicMode) return;
 
 	Int32 jumps = 0;
 	if (!Convert_TryParseInt32(&jumpsStr, &jumps) || jumps < 0) return;

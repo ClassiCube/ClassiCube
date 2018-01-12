@@ -20,7 +20,7 @@ namespace ClassicalSharp.Gui.Widgets {
 
 		const int columnPadding = 5;
 		const int boundsSize = 10;
-		const int namesPerColumn = 20;
+		const int namesPerColumn = 16;
 		const ushort groupNameID = 65535;
 		
 		int elementOffset, namesCount = 0;
