@@ -21,10 +21,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		const int columnPadding = 5;
 		const int boundsSize = 10;
 		const int namesPerColumn = 20;
+		const ushort groupNameID = 65535;
 		
 		int elementOffset, namesCount = 0;
 		Texture[] textures = new Texture[512];
-		short[] IDs = new short[512];
+		ushort[] IDs = new ushort[512];
 		int xMin, xMax, yHeight;
 		
 		static FastColour topCol = new FastColour(0, 0, 0, 180);
@@ -59,10 +60,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			for (int i = 0; i < namesCount; i++) {
 				Texture tex = textures[i];
-				int texY = tex.Y;
-				tex.Y1 -= 10;
 				if (tex.IsValid) tex.Render(gfx);
-				tex.Y1 = texY;
 			}
 		}
 		
@@ -82,7 +80,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		public string GetNameUnder(int mouseX, int mouseY) {
 			for (int i = 0; i < namesCount; i++) {
 				Texture tex = textures[i];
-				if (tex.IsValid && tex.Bounds.Contains(mouseX, mouseY) && IDs[i] >= 0) {
+				if (!tex.IsValid || IDs[i] == groupNameID) continue;
+				
+				if (tex.Bounds.Contains(mouseX, mouseY)) {
 					return TabList.Entries[IDs[i]].PlayerName;
 				}
 			}
@@ -145,11 +145,11 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			for (; i < maxIndex; i++) {
 				Texture tex = textures[i];
-				tex.X1 = x; tex.Y1 = y;
+				tex.X1 = x; tex.Y1 = y - 10;
 				
 				y += tex.Height + 1;
 				// offset player names a bit, compared to group name
-				if (!classic && IDs[i] >= 0) {
+				if (!classic && IDs[i] != groupNameID) {
 					tex.X1 += elementOffset;
 				}
 				textures[i] = tex;
@@ -239,9 +239,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			return tex;
 		}
 		
-		IComparer<short> comparer = new PlayerComparer();
-		class PlayerComparer : IComparer<short> {
-			public int Compare(short x, short y) {
+		IComparer<ushort> comparer = new PlayerComparer();
+		class PlayerComparer : IComparer<ushort> {
+			public int Compare(ushort x, ushort y) {
 				byte xRank = TabList.Entries[x].GroupRank;
 				byte yRank = TabList.Entries[y].GroupRank;
 				int rankOrder = xRank.CompareTo(yRank);
@@ -253,9 +253,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		IComparer<short> grpComparer = new GroupComparer();
-		class GroupComparer : IComparer<short> {
-			public int Compare(short x, short y) {
+		IComparer<ushort> grpComparer = new GroupComparer();
+		class GroupComparer : IComparer<ushort> {
+			public int Compare(ushort x, ushort y) {
 				string xGroup = TabList.Entries[x].Group;
 				string yGroup = TabList.Entries[y].Group;
 				return xGroup.CompareTo(yGroup);
@@ -271,14 +271,14 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			// Sort the list into groups
 			for (int i = 0; i < namesCount; i++) {
-				if (IDs[i] < 0) DeleteGroup(ref i);
+				if (IDs[i] == groupNameID) DeleteGroup(ref i);
 			}
 			Array.Sort(IDs, textures, 0, namesCount, grpComparer);
 			
 			// Sort the entries in each group
 			int index = 0;
 			while (index < namesCount) {
-				short id = IDs[index];
+				ushort id = IDs[index];
 				AddGroup(id, ref index);
 				int count = GetGroupCount(id, index);
 				Array.Sort(IDs, textures, index, count, comparer);
@@ -287,13 +287,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void DeleteGroup(ref int i) { RemoveAt(i); i--; }
-		void AddGroup(short id, ref int index) {
+		void AddGroup(ushort id, ref int index) {
 			for (int i = IDs.Length - 1; i > index; i--) {
 				IDs[i] = IDs[i - 1];
 				textures[i] = textures[i - 1];
 			}
 			
-			IDs[index] = (short)-id;
+			IDs[index] = groupNameID;
 			string group = TabList.Entries[id].Group;
 			textures[index] = DrawName(group, true);
 			
@@ -301,7 +301,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			namesCount++;
 		}
 		
-		int GetGroupCount(short id, int idx) {
+		int GetGroupCount(ushort id, int idx) {
 			string group = TabList.Entries[id].Group;
 			int count = 0;
 			while (idx < namesCount && TabList.Entries[IDs[idx]].Group == group) {
