@@ -70,7 +70,7 @@ namespace ClassicalSharp.Network {
 			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 			"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437",
 			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors",
-			"EnvMapAspect", "EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder",
+			"EnvMapAspect", "EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD",
 		};
 	}
 }
