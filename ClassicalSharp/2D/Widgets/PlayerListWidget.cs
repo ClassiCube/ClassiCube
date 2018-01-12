@@ -173,7 +173,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void AddName(byte id, int index) {
 			string name = TabList.Entries[id].ListName;
-			Texture tex = DrawName(name, false);
+			Texture tex = DrawName(name);
 			
 			// insert at end of list
 			if (index == -1) { index = namesCount; namesCount++; }
@@ -201,13 +201,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		void TabEntryRemoved(object sender, IdEventArgs e) {
 			for (int i = 0; i < namesCount; i++) {
 				if (IDs[i] != e.Id) continue;
-				RemoveAt(i);
+				DeleteAt(i);
 				SortAndReposition();
 				return;
 			}
 		}
 		
-		void RemoveAt(int i) {
+		void DeleteAt(int i) {
 			Texture tex = textures[i];
 			gfx.DeleteTexture(ref tex);
 			
@@ -230,10 +230,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			Reposition();
 		}
 		
-		Texture DrawName(string name, bool shadow) {
+		Texture DrawName(string name) {
 			if (game.PureClassic) name = Utils.StripColours(name);
 			
-			DrawTextArgs args = new DrawTextArgs(name, font, shadow);
+			DrawTextArgs args = new DrawTextArgs(name, font, !classic);
 			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(font.Size), 3);
 			return tex;
@@ -286,7 +286,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		void DeleteGroup(ref int i) { RemoveAt(i); i--; }
+		void DeleteGroup(ref int i) { DeleteAt(i); i--; }
 		void AddGroup(ushort id, ref int index) {
 			for (int i = IDs.Length - 1; i > index; i--) {
 				IDs[i] = IDs[i - 1];
@@ -295,7 +295,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			IDs[index] = groupNameID;
 			string group = TabList.Entries[id].Group;
-			textures[index] = DrawName(group, true);
+			textures[index] = DrawName(group);
 			
 			index++;
 			namesCount++;
