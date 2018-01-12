@@ -127,7 +127,6 @@
     <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputWidget.cs" />
     <Compile Include="2D\Widgets\ButtonWidget.cs" />
-    <Compile Include="2D\Widgets\PlayerList\ClassicPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\PlayerList\ExtPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\PlayerList\NormalPlayerListWidget.cs" />
     <Compile Include="2D\Widgets\PlayerList\PlayerListWidget.cs" />

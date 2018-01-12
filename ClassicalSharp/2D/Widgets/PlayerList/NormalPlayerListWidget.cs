@@ -58,7 +58,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void AddPlayerInfo(PlayerInfo pInfo, int index) {
-			Texture tex = DrawName(pInfo);			
+			Texture tex = DrawName(pInfo);
 			if (index < 0) {
 				info[namesCount] = pInfo;
 				textures[namesCount] = tex;
@@ -69,8 +69,11 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		protected virtual Texture DrawName(PlayerInfo pInfo) {
-			DrawTextArgs args = new DrawTextArgs(pInfo.ColouredName, font, false);
+		Texture DrawName(PlayerInfo pInfo) {
+			string name = pInfo.ColouredName;
+			if (game.PureClassic) name = Utils.StripColours(name);
+			
+			DrawTextArgs args = new DrawTextArgs(name, font, false);
 			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(font.Size), 3);
 			return tex;

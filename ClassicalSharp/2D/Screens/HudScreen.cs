@@ -88,9 +88,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if (!hadPlayerList) return;
 			
-			if (game.UseClassicTabList) {
-				playerList = new ClassicPlayerListWidget(game, playerFont);
-			} else if (game.Server.UsingExtPlayerList) {
+			if (game.Server.UsingExtPlayerList && !game.UseClassicTabList) {
 				playerList = new ExtPlayerListWidget(game, playerFont);
 			} else {
 				playerList = new NormalPlayerListWidget(game, playerFont);

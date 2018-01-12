@@ -10,7 +10,6 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public ExtPlayerListWidget(Game game, Font font) : base(game, font) {
 			textures = new Texture[512];
-			titleFont = new Font(game.FontName, font.Size);
 			elementOffset = 10;
 		}
 		
@@ -57,7 +56,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			return info[i] == null || !info[i].IsGroup;
 		}
 		
-		Font titleFont;
 		public override void Init() {
 			base.Init();
 			game.EntityEvents.TabListEntryAdded += TabEntryAdded;
@@ -70,7 +68,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			game.EntityEvents.TabListEntryAdded -= TabEntryAdded;
 			game.EntityEvents.TabListEntryChanged -= TabEntryChanged;
 			game.EntityEvents.TabListEntryRemoved -= TabEntryRemoved;
-			titleFont.Dispose();
 		}
 		
 		void TabEntryChanged(object sender, IdEventArgs e) {
@@ -112,10 +109,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override string GetNameUnder(int mouseX, int mouseY) {
 			for (int i = 0; i < namesCount; i++) {
-				Texture texture = textures[i];
-				if (texture.IsValid && texture.Bounds.Contains(mouseX, mouseY)
-				   && info[i].PlayerName != null)
+				Texture tex = textures[i];
+				if (tex.IsValid && tex.Bounds.Contains(mouseX, mouseY) && !info[i].IsGroup) {
 					return Utils.StripColours(info[i].PlayerName);
+				}
 			}
 			return null;
 		}
@@ -166,9 +163,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void AddGroup(string group, ref int index) {
-			DrawTextArgs args = new DrawTextArgs(group, titleFont, true);
+			DrawTextArgs args = new DrawTextArgs(group, font, true);
 			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
-			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(titleFont.Size), 3);
+			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(font.Size), 3);
 			
 			for (int i = info.Length - 1; i > index; i--) {
 				info[i] = info[i - 1];

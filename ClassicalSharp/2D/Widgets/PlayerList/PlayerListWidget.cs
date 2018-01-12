@@ -11,19 +11,25 @@ namespace ClassicalSharp.Gui.Widgets {
 			VerticalAnchor = Anchor.Centre;
 			this.font = font;
 		}
-		
-		protected int columnPadding = 5;
-		protected int elementOffset = 0;
-		
+
+		protected const int columnPadding = 5;
 		protected const int boundsSize = 10;
 		protected const int namesPerColumn = 20;
+		
+		protected int elementOffset = 0;
 		protected int namesCount = 0;
 		protected Texture[] textures;
 		protected int columns;
 		protected int xMin, xMax, yHeight;
-		protected static FastColour tableCol = new FastColour(50, 50, 50, 205);
+		
+		static FastColour topCol = new FastColour(0, 0, 0, 180);
+		static FastColour bottomCol = new FastColour(50, 50, 50, 205);
+		TextWidget overview;
 		
 		public override void Init() {
+			overview = TextWidget.Create(game, "Connected players:", font)
+				.SetLocation(Anchor.Centre, Anchor.LeftOrTop, 0, 0);
+			
 			CreateInitialPlayerInfo();
 			SortPlayerInfo();
 		}
@@ -32,12 +38,21 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override void Render(double delta) {
 			gfx.Texturing = false;
-			gfx.Draw2DQuad(X, Y, Width, Height, tableCol);
+			int offset = overview.Height + 10;
+			int height = Math.Max(300, Height + overview.Height);
+			gfx.Draw2DQuad(X, Y - offset, Width, height, topCol, bottomCol);
+			
 			gfx.Texturing = true;
+			overview.YOffset = Y - offset + 5;
+			overview.Reposition();
+			overview.Render(delta);
+			
 			for (int i = 0; i < namesCount; i++) {
-				Texture texture = textures[i];
-				if (texture.IsValid)
-					texture.Render(gfx);
+				Texture tex = textures[i];
+				int texY = tex.Y;
+				tex.Y1 -= 10;
+				if (tex.IsValid) tex.Render(gfx);
+				tex.Y1 = texY;
 			}
 		}
 		
@@ -47,6 +62,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				gfx.DeleteTexture(ref tex);
 				textures[i] = tex;
 			}
+			overview.Dispose();
 		}
 		
 		protected void UpdateTableDimensions() {
@@ -93,7 +109,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				tex.X1 = x; tex.Y1 = y;
 				
 				y += tex.Height + 1;
-				if (ShouldOffset(i)) 
+				if (ShouldOffset(i))
 					tex.X1 += elementOffset;
 				textures[i] = tex;
 			}
@@ -121,7 +137,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		protected void RemoveTextureAt(int i) {
 			Texture tex = textures[i];
-			gfx.DeleteTexture(ref tex);			
+			gfx.DeleteTexture(ref tex);
 			RemoveItemAt(textures, i);
 			namesCount--;
 			SortPlayerInfo();
@@ -166,6 +182,20 @@ namespace ClassicalSharp.Gui.Widgets {
 			Reposition();
 		}
 		
-		protected virtual void OnSort() { }
+		protected virtual void OnSort() {
+			int width = 0, centreX = game.Width / 2;
+			for (int col = 0; col < columns; col++)
+				width += GetColumnWidth(col);
+			if (width < 480) width = 480;
+			
+			xMin = centreX - width / 2;
+			xMax = centreX + width / 2;
+			
+			int x = xMin, y = game.Height / 2 - yHeight / 2;
+			for (int col = 0; col < columns; col++) {
+				SetColumnPos(col, x, y);
+				x += GetColumnWidth(col);
+			}
+		}
 	}
 }
