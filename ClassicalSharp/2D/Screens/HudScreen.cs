@@ -86,14 +86,10 @@ namespace ClassicalSharp.Gui.Screens {
 			hotbar.Dispose();
 			hotbar.Init();
 			
-			if (!hadPlayerList) return;
-			
-			if (game.Server.UsingExtPlayerList && !game.UseClassicTabList) {
-				playerList = new ExtPlayerListWidget(game, playerFont);
-			} else {
-				playerList = new NormalPlayerListWidget(game, playerFont);
-			}
-			
+			if (!hadPlayerList) return;		
+			bool extended = game.Server.UsingExtPlayerList && !game.UseClassicTabList;
+			playerList = new PlayerListWidget(game, playerFont, !extended);
+
 			playerList.Init();
 			playerList.RecalcYOffset();
 			playerList.Reposition();

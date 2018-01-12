@@ -127,9 +127,7 @@
     <Compile Include="2D\Widgets\Menu\MenuInputValidator.cs" />
     <Compile Include="2D\Widgets\Menu\MenuInputWidget.cs" />
     <Compile Include="2D\Widgets\ButtonWidget.cs" />
-    <Compile Include="2D\Widgets\PlayerList\ExtPlayerListWidget.cs" />
-    <Compile Include="2D\Widgets\PlayerList\NormalPlayerListWidget.cs" />
-    <Compile Include="2D\Widgets\PlayerList\PlayerListWidget.cs" />
+    <Compile Include="2D\Widgets\PlayerListWidget.cs" />
     <Compile Include="2D\Widgets\ScrollbarWidget.cs" />
     <Compile Include="2D\Widgets\SurvivalHotbarWidget.cs" />
     <Compile Include="2D\Widgets\TableWidget.cs" />
@@ -330,7 +328,6 @@
     <Folder Include="2D\Widgets" />
     <Folder Include="2D\Widgets\Menu" />
     <Folder Include="2D\Widgets\Chat" />
-    <Folder Include="2D\Widgets\PlayerList" />
     <Folder Include="Blocks" />
     <Folder Include="Entities\Components" />
     <Folder Include="Entities\Mobs" />

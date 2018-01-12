@@ -98,14 +98,14 @@ namespace ClassicalSharp.Network {
 		
 		internal void AddTablistEntry(byte id, string playerName, string listName,
 		                              string groupName, byte groupRank) {
-			TabListEntry oldInfo = game.TabList.Entries[id];
+			TabListEntry oldInfo = TabList.Entries[id];
 			TabListEntry info = new TabListEntry(playerName, listName, groupName, groupRank);
-			game.TabList.Entries[id] = info;
+			TabList.Entries[id] = info;
 			
 			if (oldInfo != null) {
 				// Only redraw the tab list if something changed.
 				if (info.PlayerName != oldInfo.PlayerName || info.ListName != oldInfo.ListName ||
-				    info.GroupName != oldInfo.GroupName || info.GroupRank != oldInfo.GroupRank) {
+				    info.Group != oldInfo.Group || info.GroupRank != oldInfo.GroupRank) {
 					game.EntityEvents.RaiseTabListEntryChanged(id);
 				}
 			} else {
@@ -115,7 +115,7 @@ namespace ClassicalSharp.Network {
 		
 		internal void RemoveTablistEntry(byte id) {
 			game.EntityEvents.RaiseTabEntryRemoved(id);
-			game.TabList.Entries[id] = null;
+			TabList.Entries[id] = null;
 		}
 		
 		internal void DisableAddEntityHack() {

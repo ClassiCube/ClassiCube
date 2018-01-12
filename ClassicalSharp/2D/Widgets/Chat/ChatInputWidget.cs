@@ -138,12 +138,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			List<string> matches = new List<string>();
 			game.Chat.Add(null, MessageType.ClientStatus3);
 			
-			TabListEntry[] entries = game.TabList.Entries;
+			TabListEntry[] entries = TabList.Entries;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (entries[i] == null) continue;
-				
-				string rawName = entries[i].PlayerName;
-				string name = Utils.StripColours(rawName);
+				if (entries[i] == null) continue;				
+				string name = entries[i].PlayerName;
 				if (Utils.CaselessStarts(name, part)) matches.Add(name);
 			}
 			
