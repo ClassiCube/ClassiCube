@@ -33,6 +33,11 @@ UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 2
 void Lvl_ReadCustomBlocks(Stream* stream) {
 	Int32 x, y, z, i;
 	UInt8 chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
+	/* skip bounds checks when we know chunk is entirely inside map */
+	Int32 adjWidth  = World_Width  & ~0x0F;
+	Int32 adjHeight = World_Height & ~0x0F;
+	Int32 adjLength = World_Length & ~0x0F;
+
 	for (y = 0; y < World_Height; y += LVL_CHUNKSIZE) {
 		for (z = 0; z < World_Length; z += LVL_CHUNKSIZE) {
 			for (x = 0; x < World_Width; x += LVL_CHUNKSIZE) {
@@ -40,11 +45,21 @@ void Lvl_ReadCustomBlocks(Stream* stream) {
 				Stream_Read(stream, chunk, sizeof(chunk));
 
 				Int32 baseIndex = World_Pack(x, y, z);
-				for (i = 0; i < sizeof(chunk); i++) {
-					Int32 xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
-					Int32 index = baseIndex + World_Pack(xx, yy, zz);
-					World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
+				if ((x + LVL_CHUNKSIZE) <= adjWidth && (y + LVL_CHUNKSIZE) <= adjHeight && (z + LVL_CHUNKSIZE) <= adjLength) {
+					for (i = 0; i < sizeof(chunk); i++) {
+						Int32 xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
+						Int32 index = baseIndex + World_Pack(xx, yy, zz);
+						World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
+					}
+				} else {
+					for (i = 0; i < sizeof(chunk); i++) {
+						Int32 xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
+						if ((x + xx) >= World_Width || (y + yy) >= World_Height || (z + zz) >= World_Length) continue;
+						Int32 index = baseIndex + World_Pack(xx, yy, zz);
+						World_Blocks[index] = World_Blocks[index] == LVL_CUSTOMTILE ? chunk[i] : World_Blocks[index];
+					}
 				}
+				
 			}
 		}
 	}

@@ -50,25 +50,42 @@ namespace ClassicalSharp.Map {
 			byte[] chunk = new byte[16 * 16 * 16];
 			byte[] data = new byte[1];
 			
+			// skip bounds checks when we know chunk is entirely inside map
+			int adjWidth  = width  & ~0x0F;
+			int adjHeight = height & ~0x0F;
+			int adjLength = length & ~0x0F;
+			
 			for (int y = 0; y < height; y += 16)
 				for (int z = 0; z < length; z += 16)
-					for (int x = 0; x < width; x += 16) 
+					for (int x = 0; x < width; x += 16)
 			{
 				int read = s.Read(data, 0, 1);
 				if (read == 0 || data[0] != 1) continue;
-				s.Read(chunk, 0, chunk.Length);
-				
+				s.Read(chunk, 0, chunk.Length);				
 				int baseIndex = (y * length + z) * width + x;
-				for (int i = 0; i < chunk.Length; i++) {
-					int xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
-					int index = baseIndex + (yy * length + zz) * width + xx;
-					
-					if (blocks[index] != customTile) continue;
-					blocks[index] = chunk[i];
+				
+				if ((x + 16) <= adjWidth && (y + 16) <= adjHeight && (z + 16) <= adjLength) {
+					for (int i = 0; i < chunk.Length; i++) {
+						int xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
+						int index = baseIndex + (yy * length + zz) * width + xx;
+						
+						if (blocks[index] != customTile) continue;
+						blocks[index] = chunk[i];
+					}
+				} else {
+					for (int i = 0; i < chunk.Length; i++) {
+						int xx = i & 0xF, yy = (i >> 8) & 0xF, zz = (i >> 4) & 0xF;
+						if ((x + xx) >= width || (y + yy) >= height || (z + zz) >= length) continue;
+						int index = baseIndex + (yy * length + zz) * width + xx;
+						
+						if (blocks[index] != customTile) continue;
+						blocks[index] = chunk[i];
+					}
 				}
+				
 			}
 		}
-			
+		
 		unsafe void ConvertPhysicsBlocks(byte[] blocks) {
 			byte* conv = stackalloc byte[256];
 			int count = Block.CpeCount;
