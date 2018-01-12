@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			TabListEntry[] entries = TabList.Entries;
 			for (int id = 0; id < entries.Length; id++) {
 				TabListEntry e = entries[id];
-				if (e != null) AddPlayerInfo((byte)id, -1);
+				if (e != null) AddName((byte)id, -1);
 			}
 			SortAndReposition();
 
@@ -171,9 +171,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		
-		void AddPlayerInfo(byte id, int index) {
+		void AddName(byte id, int index) {
 			string name = TabList.Entries[id].ListName;
-			Texture tex = DrawName(name);
+			Texture tex = DrawName(name, false);
 			
 			// insert at end of list
 			if (index == -1) { index = namesCount; namesCount++; }
@@ -182,7 +182,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void TabEntryAdded(object sender, IdEventArgs e) {
-			AddPlayerInfo(e.Id, -1);
+			AddName(e.Id, -1);
 			SortAndReposition();
 		}
 		
@@ -192,7 +192,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				Texture tex = textures[i];
 				gfx.DeleteTexture(ref tex);
-				AddPlayerInfo(e.Id, i);
+				AddName(e.Id, i);
 				SortAndReposition();
 				return;
 			}
@@ -230,10 +230,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			Reposition();
 		}
 		
-		Texture DrawName(string name) {
+		Texture DrawName(string name, bool shadow) {
 			if (game.PureClassic) name = Utils.StripColours(name);
 			
-			DrawTextArgs args = new DrawTextArgs(name, font, false);
+			DrawTextArgs args = new DrawTextArgs(name, font, shadow);
 			Texture tex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			game.Drawer2D.ReducePadding(ref tex, Utils.Floor(font.Size), 3);
 			return tex;
@@ -295,7 +295,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			IDs[index] = (short)-id;
 			string group = TabList.Entries[id].Group;
-			textures[index] = DrawName(group);
+			textures[index] = DrawName(group, true);
 			
 			index++;
 			namesCount++;
