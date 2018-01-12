@@ -207,16 +207,22 @@ namespace ClassicalSharp.Textures {
 			public int Tick, TickDelay;
 		}
 		
-		const string format = "&cOne of the animation frames for tile ({0}, {1}) " +
-			"is at coordinates outside animations.png";
+		const string format = "&cSome of the animation frames for tile ({0}, {1}) are at coordinates outside animations.png";
+		const string terrainFormat = "&cAnimation frames for tile ({0}, {1}) are bigger than the size of a tile in terrain.png";
 		void ValidateAnimations() {
 			validated = true;
+			int tileSize = game.TerrainAtlas.TileSize;
 			for (int i = animations.Count - 1; i >= 0; i--) {
 				AnimationData a = animations[i];
+				if (a.FrameSize > tileSize) {
+					game.Chat.Add(String.Format(terrainFormat, a.TileX, a.TileY));
+					animations.RemoveAt(i);
+					continue;
+				}
+				
 				int maxY = a.FrameY + a.FrameSize;
 				int maxX = a.FrameX + a.FrameSize * a.StatesCount;
-				if (maxX <= animsBuffer.Width && maxY <= animsBuffer.Height)
-					continue;
+				if (maxX <= animsBuffer.Width && maxY <= animsBuffer.Height) continue;
 				
 				game.Chat.Add(String.Format(format, a.TileX, a.TileY));
 				animations.RemoveAt(i);
