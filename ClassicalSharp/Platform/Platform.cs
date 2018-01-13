@@ -15,10 +15,12 @@ namespace ClassicalSharp {
 	
 		public static bool ValidBitmap(Bitmap bmp) {
 			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
-			// We can detect this as every single property access raises an ArgumentException.
+			// We can detect this as property access raises an ArgumentException.
 			try {
 				int height = bmp.Height;
-				return true;
+				PixelFormat format = bmp.PixelFormat;
+				// make sure these are not optimised out
+				return height != -1 && format != PixelFormat.Undefined;
 			} catch (ArgumentException) {
 				return false;
 			}
