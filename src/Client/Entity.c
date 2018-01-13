@@ -392,3 +392,42 @@ void Entities_DrawShadows(void) {
 	Gfx_SetAlphaBlending(false);
 	Gfx_SetTexturing(false);
 }
+
+bool TabList_Remove(EntityID id) {
+	if (TabList_PlayerNames[id] == 0 && TabList_ListNames[id] == 0 && TabList_GroupNames[id] == 0) return false;
+
+	StringsBuffer_Remove(&TabList_Buffer, TabList_PlayerNames[id]); TabList_PlayerNames[id] = 0;
+	StringsBuffer_Remove(&TabList_Buffer, TabList_ListNames[id]);   TabList_ListNames[id]   = 0; 
+	StringsBuffer_Remove(&TabList_Buffer, TabList_GroupNames[id]);  TabList_GroupNames[id]  = 0;
+	TabList_GroupRanks[id] = 0;
+	return true;
+}
+
+void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list, STRING_PURE String* group, UInt8 rank) {
+	UInt8 playerNameBuffer[String_BufferSize(STRING_SIZE)];
+	String playerName = String_InitAndClearArray(playerNameBuffer);
+	String_AppendColorless(&playerName, player);
+
+	TabList_PlayerNames[id] = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, &playerName);
+	TabList_ListNames[id] = TabList_Buffer.Count;   StringsBuffer_Add(&TabList_Buffer, list);
+	TabList_GroupNames[id] = TabList_Buffer.Count;  StringsBuffer_Add(&TabList_Buffer, group);
+	TabList_GroupRanks[id] = rank;
+}
+
+void TabList_Init(void) { StringBuffers_Init(&TabList_Buffer); }
+void TabList_Free(void) { StringsBuffer_Free(&TabList_Buffer); }
+void TabList_Reset(void) {
+	Platform_MemSet(TabList_PlayerNames, 0, sizeof(TabList_PlayerNames));
+	Platform_MemSet(TabList_ListNames,   0, sizeof(TabList_ListNames));
+	Platform_MemSet(TabList_GroupNames,  0, sizeof(TabList_GroupNames));
+	Platform_MemSet(TabList_GroupRanks,  0, sizeof(TabList_GroupRanks));
+	TabList_Buffer.Count = 0; /* TODO: Should we be freeing the buffer here? */
+}
+
+IGameComponent TabList_MakeComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = TabList_Init;
+	comp.Free = TabList_Free;
+	comp.Reset = TabList_Reset;
+	return comp;
+}

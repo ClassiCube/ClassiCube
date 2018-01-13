@@ -116,4 +116,15 @@ void Entities_Free(void);
 void Entities_Remove(EntityID id);
 EntityID Entities_GetCloset(Entity* src);
 void Entities_DrawShadows(void);
+
+#define TABLIST_MAX_NAMES 256
+StringsBuffer TabList_Buffer;
+UInt32 TabList_PlayerNames[TABLIST_MAX_NAMES];
+UInt32 TabList_ListNames[TABLIST_MAX_NAMES];
+UInt32 TabList_GroupNames[TABLIST_MAX_NAMES];
+UInt8 TabList_GroupRanks[TABLIST_MAX_NAMES];
+bool TabList_Remove(EntityID id);
+void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list,  STRING_PURE String* group, UInt8 rank);
+IGameComponent TabList_MakeComponent(void);
+
 #endif
