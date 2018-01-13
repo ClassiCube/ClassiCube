@@ -86,7 +86,7 @@ namespace ClassicalSharp.Model {
 		}
 		
 		void RegisterDefaultModels() {
-			RegisterTextures("char.png", "chicken.png", "creeper.png", "pig.png", "sheep.png",
+			RegisterTextures("char.png", "chicken.png", "cow.png", "creeper.png", "pig.png", "sheep.png",
 			                 "sheep_fur.png", "skeleton.png", "spider.png", "zombie.png");
 			
 			Register("humanoid", "char.png", new HumanoidModel(game));
@@ -94,6 +94,7 @@ namespace ClassicalSharp.Model {
 			SheepModel sheep = new SheepModel(game);
 			
 			Register("chicken", "chicken.png", new ChickenModel(game));
+			Register("cow", "cow.png", new CowModel(game));
 			Register("creeper", "creeper.png", new CreeperModel(game));
 			Register("pig", "pig.png", new PigModel(game));
 			Register("sheep", "sheep.png", sheep);
