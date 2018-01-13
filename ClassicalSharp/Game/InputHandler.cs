@@ -127,8 +127,7 @@ namespace ClassicalSharp {
 		}
 
 		void MouseMove(object sender, MouseMoveEventArgs e) {
-			if (!game.Gui.ActiveScreen.HandlesMouseMove(e.X, e.Y)) {
-			}
+			game.Gui.ActiveScreen.HandlesMouseMove(e.X, e.Y);
 		}
 
 		void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
@@ -144,18 +143,17 @@ namespace ClassicalSharp {
 
 		void KeyPressHandler(object sender, KeyPressEventArgs e) {
 			char key = e.KeyChar;
-			if (!game.Gui.ActiveScreen.HandlesKeyPress(key)) {
-			}
+			game.Gui.ActiveScreen.HandlesKeyPress(key);
 		}
 		
 		void KeyUpHandler(object sender, KeyboardKeyEventArgs e) {
 			Key key = e.Key;
 			if (SimulateMouse(key, false)) return;
 			
-			if (!game.Gui.ActiveScreen.HandlesKeyUp(key)) {
-				if (key == Keys[KeyBind.ZoomScrolling])
-					SetFOV(game.DefaultFov, false);
+			if (key == Keys[KeyBind.ZoomScrolling]) {
+				SetFOV(game.DefaultFov, false);
 			}
+			game.Gui.ActiveScreen.HandlesKeyUp(key);
 		}
 
 		static int[] normViewDists = new int[] { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
@@ -163,7 +161,7 @@ namespace ClassicalSharp {
 		Key lastKey;
 		void KeyDownHandler(object sender, KeyboardKeyEventArgs e) {
 			Key key = e.Key;
-			if (SimulateMouse(key, true)) return;			
+			if (SimulateMouse(key, true)) return;
 			
 			if (IsShutdown(key)) {
 				game.Exit();
@@ -265,7 +263,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		void CycleDistanceForwards(int[] viewDists) {		
+		void CycleDistanceForwards(int[] viewDists) {
 			for (int i = 0; i < viewDists.Length; i++) {
 				int dist = viewDists[i];
 				if (dist > game.UserViewDistance) {
