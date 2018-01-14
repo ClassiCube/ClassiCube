@@ -4,11 +4,8 @@
 #include "BlockID.h"
 #include "String.h"
 #include "PackedCol.h"
-#include "Game.h"
 #include "Vectors.h"
-#include "Bitmap.h"
 #include "Constants.h"
-#include "Compiler.h"
 /* Stores properties and data for blocks.
    Also performs automatic rotation of directional blocks.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -105,7 +102,7 @@ void Block_RecalculateBB(BlockID block);
 
 void Block_SetSide(TextureLoc texLoc, BlockID blockId);
 void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
-#define Block_GetTexLoc(block, face) Block_Textures[(block) * FACE_COUNT + face]
+#define Block_GetTexLoc(block, face) Block_Textures[(block) * FACE_COUNT + (face)]
 
 void Block_UpdateCullingAll(void);
 void Block_UpdateCulling(BlockID block);

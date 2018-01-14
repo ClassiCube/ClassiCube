@@ -1,7 +1,6 @@
 #ifndef CC_STRING_H
 #define CC_STRING_H
 #include "Typedefs.h"
-#include "Compiler.h"
 /* Implements operations for a string.
    Also implements conversions betweens strings and numbers.
    Also implements converting code page 437 indices to/from unicode.

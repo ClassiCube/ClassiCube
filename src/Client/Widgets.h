@@ -6,6 +6,7 @@
 #include "String.h"
 #include "BlockID.h"
 #include "Constants.h"
+#include "Entity.h"
 /* Contains all 2D widget implementations.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -191,4 +192,18 @@ void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE S
 Int32 TextGroupWidget_GetUsedHeight(TextGroupWidget* widget);
 void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 mouseX, Int32 mouseY);
 void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_PURE String* text);
+
+
+typedef struct PlayerListWidget_ {
+	Widget Base;
+	FontDesc Font;
+	UInt16 NamesCount, ElementOffset;
+	Int32 XMin, XMax, YHeight;
+	bool Classic;
+	UInt16 IDs[TABLIST_MAX_NAMES * 2];
+	Texture Textures[TABLIST_MAX_NAMES * 2];
+} PlayerListWidget;
+void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic);
+String* PlayerListWidget_GetNameUnder(Int32 mouseX, Int32 mouseY);
+void PlayerListWidget_RecalcYOffset(void);
 #endif

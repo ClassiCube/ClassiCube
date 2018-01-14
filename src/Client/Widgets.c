@@ -1534,3 +1534,27 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->PrefixWidth  = (UInt16)size.Width;  widget->Base.Width  = size.Width;
 	widget->PrefixHeight = (UInt16)size.Height; widget->Base.Height = size.Height;
 }
+
+
+void PlayerListWidget_Init(void);
+void PlayerListWidget_Render(Real64 delta);
+void PlayerListWidget_Dispose(void);
+String* PlayerListWidget_GetNameUnder(Int32 mouseX, Int32 mouseY);
+void PlayerListWidget_RepositionColumns(void);
+void PlayerListWidget_UpdateTableDimensions(void);
+Int32 PlayerListWidget_GetColumnWidth(Int32 column);
+Int32 PlayerListWidget_GetColumnHeight(Int32 column);
+void PlayerListWidget_SetColumnPos(Int32 column, Int32 x, Int32 y);
+void PlayerListWidget_RecalcYOffset(void);
+void PlayerListWidget_Reposition(void);
+void PlayerListWidget_AddName(UInt8 id, Int32 index);
+void PlayerListWidget_TabEntryAdded(Object* sender, IdEventArgs* e);
+void PlayerListWidget_TabEntryChanged(Object* sender, IdEventArgs* e);
+void PlayerListWidget_TabEntryRemoved(Object* sender, IdEventArgs* e);
+void PlayerListWidget_DeleteAt(Int32 i);
+void PlayerListWidget_SortAndReposition(void);
+Texture* PlayerListWidget_DrawName(String* name);
+void PlayerListWidget_SortEntries(void);
+void PlayerListWidget_DeleteGroup(Int32&* i);
+void PlayerListWidget_AddGroup(UInt16 id, Int32&* index);
+Int32 PlayerListWidget_GetGroupCount(UInt16 id, Int32 idx);

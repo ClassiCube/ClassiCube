@@ -10,6 +10,7 @@
 #include "Options.h"
 #include "TreeGen.h"
 #include "Platform.h"
+#include "Game.h"
 
 /* Data for a resizable queue, used for liquid physic tick entries. */
 typedef struct TickQueue_ {

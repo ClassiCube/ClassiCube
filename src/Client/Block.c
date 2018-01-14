@@ -3,6 +3,7 @@
 #include "ExtMath.h"
 #include "TerrainAtlas.h"
 #include "Player.h"
+#include "Game.h"
 
 TextureLoc Block_TopTex[BLOCK_CPE_COUNT] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
