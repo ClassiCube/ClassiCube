@@ -315,7 +315,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if (!game.UseServerTextures) return;
 			
 			if (url == "") {
-				TexturePack.ExtractDefault(game);
+				if (game.World.TextureUrl != null) TexturePack.ExtractDefault(game);
 			} else if (Utils.IsUrlPrefix(url, 0)) {
 				net.RetrieveTexturePack(url);
 			}
