@@ -182,6 +182,7 @@ namespace ClassicalSharp {
 			ZoomFov = DefaultFov;
 			ModifiableLiquids = !ClassicMode && Options.GetBool(OptionsKey.ModifiableLiquids, false);
 			CameraClipping = Options.GetBool(OptionsKey.CameraClipping, true);
+			MaxChunkUpdates = Options.GetInt(OptionsKey.MaxChunkUpdates, 4, 1024, 30);
 			
 			UseServerTextures = Options.GetBool(OptionsKey.UseServerTextures, true);
 			MouseSensitivity = Options.GetInt(OptionsKey.Sensitivity, 1, 100, 30);

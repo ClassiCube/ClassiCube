@@ -245,7 +245,7 @@ namespace ClassicalSharp.Renderers {
 		public void UpdateChunks(double delta) {
 			int chunkUpdates = 0;
 			chunksTarget += delta < targetTime ? 1 : -1; // build more chunks if 30 FPS or over, otherwise slowdown.
-			Utils.Clamp(ref chunksTarget, 4, 20);
+			Utils.Clamp(ref chunksTarget, 4, game.MaxChunkUpdates);
 			
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 cameraPos = game.CurrentCameraPos;

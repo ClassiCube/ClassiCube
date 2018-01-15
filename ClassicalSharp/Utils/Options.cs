@@ -69,6 +69,7 @@ namespace ClassicalSharp {
 		public const string UseClassicOptions = "nostalgia-classicoptions";
 		public const string AllowClassicHacks = "nostalgia-hacks";
 		public const string ClassicArmModel = "nostalgia-classicarm";
+		public const string MaxChunkUpdates = "gfx-maxchunkupdates";
 	}
 	public enum FpsLimitMethod {
 		LimitVSync, Limit30FPS, Limit60FPS, Limit120FPS, LimitNone,

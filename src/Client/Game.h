@@ -63,6 +63,7 @@ bool Game_ShowBlockInHand;
 Int32 Game_SoundsVolume;
 Int32 Game_MusicVolume;
 bool Game_ModifiableLiquids;
+Int32 Game_MaxChunkUpdates;
 
 Vector3 Game_CurrentCameraPos;
 bool Game_ScreenshotRequested;
