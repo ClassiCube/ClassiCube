@@ -46,12 +46,12 @@ void Block_SetDefaultPerms(void) {
 		Block_CanDelete[block] = true;
 	}
 
-	Block_CanPlace[BLOCK_AIR] = false;        Block_CanDelete[BLOCK_AIR] = false;
-	Block_CanPlace[BLOCK_LAVA] = false;       Block_CanDelete[BLOCK_LAVA] = false;
-	Block_CanPlace[BLOCK_WATER] = false;      Block_CanDelete[BLOCK_WATER] = false;
+	Block_CanPlace[BLOCK_AIR] = false;         Block_CanDelete[BLOCK_AIR] = false;
+	Block_CanPlace[BLOCK_LAVA] = false;        Block_CanDelete[BLOCK_LAVA] = false;
+	Block_CanPlace[BLOCK_WATER] = false;       Block_CanDelete[BLOCK_WATER] = false;
 	Block_CanPlace[BLOCK_STILL_LAVA] = false;  Block_CanDelete[BLOCK_STILL_LAVA] = false;
 	Block_CanPlace[BLOCK_STILL_WATER] = false; Block_CanDelete[BLOCK_STILL_WATER] = false;
-	Block_CanPlace[BLOCK_BEDROCK] = false;    Block_CanDelete[BLOCK_BEDROCK] = false;
+	Block_CanPlace[BLOCK_BEDROCK] = false;     Block_CanDelete[BLOCK_BEDROCK] = false;
 }
 
 void Block_RecalcIsLiquid(BlockID b) {
