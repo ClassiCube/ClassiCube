@@ -163,7 +163,7 @@ namespace ClassicalSharp {
 			parts.Clear();
 			if (EmptyText(value)) {
 			} else if (value.IndexOf('&') == -1) {
-				parts.Add(new TextPart(value, GetCol('f')));
+				parts.Add(new TextPart(value, Cols['f']));
 			} else {
 				SplitText(value);
 			}

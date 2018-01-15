@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 		}
 		
 		void DrawPart(FastBitmap dst, ref DrawTextArgs args, int x, int y, bool shadowCol) {
-			FastColour col = GetCol('f');
+			FastColour col = Cols['f'];
 			if (shadowCol)
 				col = BlackTextShadows ? FastColour.Black : FastColour.Scale(col, 0.25f);
 			FastColour lastCol = col;
