@@ -292,8 +292,9 @@ namespace ClassicalSharp.Network.Protocols {
 			                                reader.ReadUInt8(), reader.ReadUInt8());
 			byte code = reader.ReadUInt8();
 			
-			if (code <= ' ' || code > '~') return; // Control chars, space, extended chars cannot be used
-			if (code == '%' || code == '&') return; // colour code signifiers cannot be used
+			// disallow space, null, and colour code specifiers
+			if (code == '\0' || code == ' ' || code == 0xFF) return;
+			if (code == '%' || code == '&') return;
 			
 			IDrawer2D.Cols[code] = col;
 			game.Events.RaiseColourCodeChanged((char)code);
