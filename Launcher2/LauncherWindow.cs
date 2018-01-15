@@ -123,9 +123,10 @@ namespace Launcher {
 		}
 		
 		public void SetScreen(Screen screen) {
+			Console.WriteLine("CLOSE CASE 1");
 			if (this.Screen != null)
 				this.Screen.Dispose();
-			
+						
 			RedrawBackground();
 			this.Screen = screen;
 			screen.Init();
@@ -183,8 +184,10 @@ namespace Launcher {
 				Window.ProcessEvents();
 				if (!Window.Exists) break;
 				if (ShouldExit) {
-					if (Screen != null)
+					if (Screen != null) {
+						Console.WriteLine("CLOSE CASE 2");
 						Screen.Dispose();
+					}
 					break;
 				}
 				
