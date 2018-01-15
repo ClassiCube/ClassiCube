@@ -4,7 +4,7 @@
     <ProjectGuid>{3E84ACC1-27B4-401B-A359-6AAE4DF6C9B5}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>Launcher</RootNamespace>
     <AssemblyName>Launcher2</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>

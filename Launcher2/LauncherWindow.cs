@@ -110,6 +110,7 @@ namespace Launcher {
 
 		void FocusedChanged(object sender, EventArgs e) {
 			if (Program.ShowingErrorDialog) return;
+			Utils.LogDebug("exists? " + Window.Exists);
 			RedrawBackground();
 			Screen.Resize();
 		}

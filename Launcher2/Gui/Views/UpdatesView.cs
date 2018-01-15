@@ -40,6 +40,7 @@ namespace Launcher.Gui.Views {
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			string exePath = Path.Combine(Program.AppDirectory, "ClassicalSharp.exe");
+			Console.WriteLine("REDRAW UPDATES");
 			
 			Makers.Label(this, "Your build:", textFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -55, -120);
