@@ -325,7 +325,7 @@ void Particles_Tick(ScheduledTask* task) {
 }
 
 void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block) {
-	if (block != BLOCK_AIR) return;
+	if (block != BLOCK_AIR || Block_Draw[oldBlock] == DRAW_GAS) return;
 	block = oldBlock;
 
 	Vector3 worldPos;

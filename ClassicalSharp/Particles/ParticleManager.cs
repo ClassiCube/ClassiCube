@@ -167,7 +167,7 @@ namespace ClassicalSharp.Particles {
 		
 		
 		void BreakBlockEffect(object sender, BlockChangedEventArgs e) {
-			if (e.Block != Block.Air) return;
+			if (e.Block != Block.Air || BlockInfo.Draw[e.OldBlock] == DrawType.Gas) return;
 			Vector3I position = e.Coords;
 			BlockID block = e.OldBlock;
 			
