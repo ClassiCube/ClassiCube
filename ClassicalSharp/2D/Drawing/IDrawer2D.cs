@@ -129,9 +129,9 @@ namespace ClassicalSharp {
 		
 		public static FastColour[] Cols = new FastColour[256];
 		
-		public IDrawer2D() { InitColours(); }
+		public IDrawer2D() { InitCols(); }
 		
-		public void InitColours() {
+		public static void InitCols() {
 			for (int i = 0; i < Cols.Length; i++)
 				Cols[i] = default(FastColour);
 			
@@ -141,6 +141,11 @@ namespace ClassicalSharp {
 				Cols['a' + i - 10] = FastColour.GetHexEncodedCol(i, 191, 64);
 				Cols['A' + i - 10] = Cols['a' + i - 10];
 			}
+		}
+		
+		public static FastColour GetCol(char c) {
+			if (c >= ' ' && c <= '~') return Cols[c];
+			return Cols[Utils.UnicodeToCP437(c)];
 		}
 		
 		protected List<TextPart> parts = new List<TextPart>(64);
@@ -158,7 +163,7 @@ namespace ClassicalSharp {
 			parts.Clear();
 			if (EmptyText(value)) {
 			} else if (value.IndexOf('&') == -1) {
-				parts.Add(new TextPart(value, Cols['f']));
+				parts.Add(new TextPart(value, GetCol('f')));
 			} else {
 				SplitText(value);
 			}
@@ -176,7 +181,7 @@ namespace ClassicalSharp {
 				
 				if (length > 0) {
 					string part = value.Substring(start, length);
-					parts.Add(new TextPart(part, Cols[code]));
+					parts.Add(new TextPart(part, GetCol(code)));
 				}
 				
 				i += 2; // skip over colour code
@@ -186,14 +191,13 @@ namespace ClassicalSharp {
 	
 		/// <summary> Returns whenever the given character is a valid colour code. </summary>
 		public static bool ValidColCode(string text, int i) {
-			if (i >= text.Length) return false;
-			char c = text[i];
-			return c <= '\xFF' && Cols[c].A > 0;
+			return i < text.Length && ValidColCode(text[i]);
 		}
 		
 		/// <summary> Returns whenever the given character is a valid colour code. </summary>
 		public static bool ValidColCode(char c) {
-			return c <= '\xFF' && Cols[c].A > 0;
+			if (c >= '~' && c <= '~') return Cols[c].A > 0;
+			return Cols[Utils.UnicodeToCP437(c)].A > 0;
 		}
 		
 		public static bool EmptyText(string text) {

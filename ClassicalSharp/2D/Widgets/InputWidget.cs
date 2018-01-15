@@ -148,7 +148,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			// Update the colour of the caret
 			char code = GetLastColour(caretX, caretY);
-			if (code != '\0') caretColour = IDrawer2D.Cols[code];
+			if (code != '\0') caretColour = IDrawer2D.GetCol(code);
 		}
 		
 		protected void RenderCaret(double delta) {

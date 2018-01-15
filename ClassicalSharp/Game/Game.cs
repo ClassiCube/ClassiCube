@@ -239,7 +239,7 @@ namespace ClassicalSharp {
 			WorldEvents.RaiseOnNewMap();
 			
 			World.blocks = null;
-			Drawer2D.InitColours();
+			IDrawer2D.InitCols();
 			BlockInfo.Reset(this);
 			TexturePack.ExtractDefault(this);
 			Gui.SetNewScreen(new DisconnectScreen(this, title, reason));

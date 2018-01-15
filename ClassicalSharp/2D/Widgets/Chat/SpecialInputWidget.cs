@@ -146,19 +146,20 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		string GetColourString() {
 			int count = 0;
-			for (int i = ' '; i <= '~'; i++) {
+			for (int i = 0; i < IDrawer2D.Cols.Length; i++) {
 				if (i >= 'A' && i <= 'F') continue;
 				if (IDrawer2D.Cols[i].A > 0) count++;
 			}
 			
 			StringBuffer buffer = new StringBuffer(count * 4);
 			int index = 0;
-			for (int i = ' '; i <= '~'; i++) {
+			for (int i = 0; i < IDrawer2D.Cols.Length; i++) {
 				if (i >= 'A' && i <= 'F') continue;
 				if (IDrawer2D.Cols[i].A == 0) continue;
 				
-				buffer.Append(ref index, '&').Append(ref index, (char)i)
-					.Append(ref index, '%').Append(ref index, (char)i);
+				char code = Utils.CP437ToUnicode((byte)i);
+				buffer.Append(ref index, '&').Append(ref index, code)
+					.Append(ref index, '%').Append(ref index, code);
 			}
 			return buffer.ToString();
 		}

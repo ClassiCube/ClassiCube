@@ -850,16 +850,15 @@ void TableWidget_OnInventoryChanged(TableWidget* widget) {
 
 
 void SpecialInputWidget_UpdateColString(SpecialInputWidget* widget) {
-	Int32 count = 0, i;
-	for (i = ' '; i <= '~'; i++) {
+	UInt32 count = 0, i;
+	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
 		if (i >= 'A' && i <= 'F') continue;
 		if (Drawer2D_Cols[i].A > 0) count++;
 	}
 
 	widget->ColString = String_InitAndClearArray(widget->ColBuffer);
 	String* buffer = &widget->ColString;
-	Int32 index = 0;
-	for (i = ' '; i <= '~'; i++) {
+	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
 		if (i >= 'A' && i <= 'F') continue;
 		if (Drawer2D_Cols[i].A == 0) continue;
 
