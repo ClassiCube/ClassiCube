@@ -110,25 +110,21 @@ namespace Launcher {
 
 		void FocusedChanged(object sender, EventArgs e) {
 			if (Program.ShowingErrorDialog) return;
-			Utils.LogDebug("exists? " + Window.Exists);
 			RedrawBackground();
-			Screen.Resize();
+			if (Screen != null) Screen.Resize();
 		}
 
 		void Resize(object sender, EventArgs e) {
 			platformDrawer.Resize();
 			RedrawBackground();
-			Screen.Resize();
+			if (Screen != null) Screen.Resize();
 			fullRedraw = true;
 		}
 		
 		public void SetScreen(Screen screen) {
-			Console.WriteLine("CLOSE CASE 1");
-			if (this.Screen != null)
-				this.Screen.Dispose();
-						
+			if (Screen != null) Screen.Dispose();
 			RedrawBackground();
-			this.Screen = screen;
+			Screen = screen;
 			screen.Init();
 		}
 		
@@ -185,8 +181,8 @@ namespace Launcher {
 				if (!Window.Exists) break;
 				if (ShouldExit) {
 					if (Screen != null) {
-						Console.WriteLine("CLOSE CASE 2");
 						Screen.Dispose();
+						Screen = null;
 					}
 					break;
 				}

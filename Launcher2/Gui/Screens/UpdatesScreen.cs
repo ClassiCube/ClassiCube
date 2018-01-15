@@ -117,7 +117,6 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		public override void Dispose() {
-			Console.WriteLine("DISPOSE UPDATES");
 			base.Dispose();
 			view.Dispose();
 		}
