@@ -243,6 +243,12 @@ namespace Launcher {
 			Window.FocusedChanged -= FocusedChanged;
 			Window.WindowStateChanged -= Resize;
 			Window.Keyboard.KeyDown -= KeyDown;
+			
+			List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
+			for (int i = 0; i < bitmaps.Count; i++) {
+				bitmaps[i].Dispose();
+				bitmaps[i].Bitmap.Dispose();
+			}
 			logoFont.Dispose();
 		}
 		

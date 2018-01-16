@@ -1,8 +1,10 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using ClassicalSharp;
 using Launcher.Drawing;
+using Launcher.Web;
 
 namespace Launcher.Gui.Widgets {
 	
@@ -11,16 +13,16 @@ namespace Launcher.Gui.Widgets {
 		internal static FastColour backGridCol = new FastColour(20, 20, 10),
 		foreGridCol = new FastColour(40, 40, 40);
 		
-		int entryHeight, headerHeight;		
+		int entryHeight, headerHeight;
 		internal int headerStartY, headerEndY;
 		internal int numEntries, maxIndex;
 		
-		LauncherWindow window;
+		LauncherWindow game;
 		TableWidget table;
 		Font font, titleFont;
 		
-		public void Init(LauncherWindow window, TableWidget table) {
-			this.window = window;
+		public void Init(LauncherWindow game, TableWidget table) {
+			this.game = game;
 			this.table = table;
 		}
 		
@@ -35,9 +37,9 @@ namespace Launcher.Gui.Widgets {
 		public void RecalculateDrawData() {
 			for (int i = 0; i < table.ColumnWidths.Length; i++) {
 				table.ColumnWidths[i] = table.DesiredColumnWidths[i];
-				Utils.Clamp(ref table.ColumnWidths[i], 20, window.Width - 20);
+				Utils.Clamp(ref table.ColumnWidths[i], 20, game.Width - 20);
 			}
-			table.Width = window.Width - table.X;
+			table.Width = game.Width - table.X;
 			ResetEntries();
 			
 			int y = table.Y + 3;
@@ -57,15 +59,16 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		public const int flagPadding = 15;
-		public void RedrawData(IDrawer2D drawer) {		
+		public void RedrawData(IDrawer2D drawer) {
 			DrawGrid(drawer);
 			int x = table.X + flagPadding + 5;
 			x += DrawColumn(drawer, "Name",     0, x, filterName)     + 5;
 			x += DrawColumn(drawer, "Players",  1, x, filterPlayers)  + 5;
 			x += DrawColumn(drawer, "Uptime",   2, x, filterUptime)   + 5;
 			x += DrawColumn(drawer, "Software", 3, x, filterSoftware) + 5;
+			
 			DrawScrollbar(drawer);
-			DrawFlags(drawer, table.X);
+			DrawFlags();
 		}
 		
 		public void Redraw(IDrawer2D drawer) {
@@ -75,15 +78,32 @@ namespace Launcher.Gui.Widgets {
 		
 		delegate string ColumnFilter(TableEntry entry);
 		// cache to avoid allocations every redraw
-		static string FilterName(TableEntry e)     { return e.Name; }     static ColumnFilter filterName     = FilterName; 
+		static string FilterName(TableEntry e)     { return e.Name; }     static ColumnFilter filterName     = FilterName;
 		static string FilterPlayers(TableEntry e)  { return e.Players; }  static ColumnFilter filterPlayers  = FilterPlayers;
 		static string FilterUptime(TableEntry e)   { return e.Uptime; }   static ColumnFilter filterUptime   = FilterUptime;
 		static string FilterSoftware(TableEntry e) { return e.Software; } static ColumnFilter filterSoftware = FilterSoftware;
 		
-		void DrawFlags(IDrawer2D drawer, int x) {
-			for (int i = table.CurrentIndex; i < maxIndex; i++) {
-				int y = table.usedEntries[i].Y;
-				drawer.Clear(FastColour.Red, x + 2, y + 3, 16, 11);
+		static FastBitmap GetFlag(string flag) {
+			List<string> flags = FetchFlagsTask.Flags;
+			List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
+
+			for (int i = 0; i < flags.Count; i++) {
+				if (flags[i] != flag) continue;
+				return i < bitmaps.Count ? bitmaps[i] : null;
+			}
+			return null;
+		}
+		
+		public void DrawFlags() {
+			using (FastBitmap dst = game.LockBits()) {
+				for (int i = table.CurrentIndex; i < maxIndex; i++) {
+					int x = table.X, y = table.usedEntries[i].Y;
+					FastBitmap flag = GetFlag(table.usedEntries[i].Flag);
+					if (flag == null) continue;
+					
+					Rectangle rect = new Rectangle(x + 2, y + 3, 16, 11);
+					BitmapDrawer.Draw(flag, dst, rect);
+				}
 			}
 		}
 		
@@ -97,7 +117,7 @@ namespace Launcher.Gui.Widgets {
 			DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref headerEntry);
 			maxIndex = table.Count;
 			
-			y += 5;		
+			y += 5;
 			for (int i = table.CurrentIndex; i < table.Count; i++) {
 				args = new DrawTextArgs(filter(table.usedEntries[i]), font, true);
 				if (i == table.SelectedIndex && !separator) {
@@ -111,7 +131,7 @@ namespace Launcher.Gui.Widgets {
 				}
 			}
 			
-			if (separator && !window.ClassicBackground) {
+			if (separator && !game.ClassicBackground) {
 				drawer.Clear(LauncherSkin.BackgroundCol, x - 7, table.Y, 2, table.Height);
 			}
 			return maxWidth + 5;
@@ -144,10 +164,10 @@ namespace Launcher.Gui.Widgets {
 				table.entries[i].Y = -10; table.usedEntries[i].Y = -10;
 			}
 		}
-				
+		
 		void DrawGrid(IDrawer2D drawer) {
-			if (!window.ClassicBackground)
-				drawer.Clear(LauncherSkin.BackgroundCol, 
+			if (!game.ClassicBackground)
+				drawer.Clear(LauncherSkin.BackgroundCol,
 				             table.X, table.Y + headerHeight + 5, table.Width, 2);
 			headerStartY = table.Y;
 			
@@ -157,12 +177,12 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		void DrawScrollbar(IDrawer2D drawer) {
-			FastColour col = window.ClassicBackground ? new FastColour(80, 80, 80) : LauncherSkin.ButtonBorderCol;
-			drawer.Clear(col, window.Width - 10, table.Y, 10, table.Height);
-			col = window.ClassicBackground ? new FastColour(160, 160, 160) : LauncherSkin.ButtonForeActiveCol;
+			FastColour col = game.ClassicBackground ? new FastColour(80, 80, 80) : LauncherSkin.ButtonBorderCol;
+			drawer.Clear(col, game.Width - 10, table.Y, 10, table.Height);
+			col = game.ClassicBackground ? new FastColour(160, 160, 160) : LauncherSkin.ButtonForeActiveCol;
 			int yOffset, height;
 			table.GetScrollbarCoords(out yOffset, out height);
-			drawer.Clear(col, window.Width - 10, table.Y + yOffset, 10, height);
+			drawer.Clear(col, game.Width - 10, table.Y + yOffset, 10, height);
 		}
 	}
 }

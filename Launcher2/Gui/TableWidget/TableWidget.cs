@@ -8,7 +8,7 @@ using Launcher.Web;
 namespace Launcher.Gui.Widgets {
 
 	internal struct TableEntry {
-		public string Hash, Name, Players, Uptime, Software, RawUptime;
+		public string Hash, Name, Players, Uptime, Software, RawUptime, Flag;
 		public int Y, Height;
 		public bool Featured;
 	}
@@ -49,6 +49,7 @@ namespace Launcher.Gui.Widgets {
 				tableEntry.Uptime = MakeUptime(e.Uptime);
 				tableEntry.RawUptime = e.Uptime;
 				tableEntry.Featured = e.Featured;
+				tableEntry.Flag = e.Flag;
 				
 				entries[index] = tableEntry;
 				usedEntries[index] = tableEntry;
@@ -136,8 +137,8 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		public void RecalculateDrawData() { view.RecalculateDrawData(); }
-		
 		public void RedrawData(IDrawer2D drawer) { view.RedrawData(drawer); }
+		public void RedrawFlags() { view.DrawFlags(); }
 		
 		public override void Redraw(IDrawer2D drawer) {
 			RecalculateDrawData();

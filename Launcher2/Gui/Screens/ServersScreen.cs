@@ -21,13 +21,18 @@ namespace Launcher.Gui.Screens {
 			widgets = view.widgets;		
 			flagsTask = new FetchFlagsTask();
 			FetchFlags();
-			flagsTask.RunAsync(game);
 		}
 		
 		void FetchFlags() {
+			int oldCount = FetchFlagsTask.DownloadedCount;
+			bool wasFetching = oldCount < FetchFlagsTask.Flags.Count;
 			for (int i = 0; i < game.Servers.Count; i++) {
-				flagsTask.AddFlag(game.Servers[i].Flag);
+				flagsTask.AsyncGetFlag(game.Servers[i].Flag);
 			}
+			
+			int count = FetchFlagsTask.Flags.Count;
+			if (wasFetching || oldCount == count) return;
+			flagsTask.RunAsync(game);
 		}
 		
 		public override void Tick() {
@@ -40,6 +45,12 @@ namespace Launcher.Gui.Screens {
 				table.DraggingColumn = -1;
 				table.DraggingScrollbar = false;
 				table.mouseOffset = 0;
+			}
+			
+			if (flagsTask.PendingRedraw) {
+				table.RedrawFlags();
+				game.Dirty = true;
+				flagsTask.PendingRedraw = false;
 			}
 		}
 		

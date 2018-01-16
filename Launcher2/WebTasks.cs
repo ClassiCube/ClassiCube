@@ -227,9 +227,12 @@ namespace Launcher.Web {
 			identifier = "CC get flag";
 		}
 		
-		public List<string> Flags = new List<string>();
+		public bool PendingRedraw;
+		public static int DownloadedCount;
+		public static List<string> Flags = new List<string>();
+		public static List<FastBitmap> Bitmaps = new List<FastBitmap>();
 		
-		public void AddFlag(string flag) {
+		public void AsyncGetFlag(string flag) {
 			for (int i = 0; i < Flags.Count; i++) {
 				if (Flags[i] == flag) return;
 			}
@@ -237,16 +240,17 @@ namespace Launcher.Web {
 		}
 		
 		protected override void Begin() {
-			if (Flags.Count == 0) return;
-			uri = "http://static.classicube.net/img/flags/" + Flags[0] + ".png";
+			if (Flags.Count == DownloadedCount) return;
+			uri = "http://static.classicube.net/img/flags/" + Flags[DownloadedCount] + ".png";
 			Game.Downloader.AsyncGetImage(uri, false, identifier);
 		}
 		
 		protected override void Handle(Request req) {
 			Bitmap bmp = (Bitmap)req.Data;
-			Console.WriteLine("GOTEM: " + req.Url);
-			bmp.Dispose();
-			Flags.RemoveAt(0);
+			FastBitmap fast = new FastBitmap(bmp, true, true);
+			Bitmaps.Add(fast);
+			DownloadedCount++;
+			PendingRedraw = true;
 			
 			Reset();
 			Begin();
