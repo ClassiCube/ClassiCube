@@ -171,12 +171,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			if (managedPool) {
 				texture = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Managed);
-				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
-				
+				texture.SetData(0, LockFlags.None, scan0, width * height * 4);				
 				if (mipmaps) DoMipmaps(texture, 0, 0, width, height, scan0, false);
 			} else {
 				D3D.Texture sys = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
 				sys.SetData(0, LockFlags.None, scan0, width * height * 4);
+				if (mipmaps) DoMipmaps(sys, 0, 0, width, height, scan0, false);
 				
 				texture = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Default);
 				device.UpdateTexture(sys, texture);				

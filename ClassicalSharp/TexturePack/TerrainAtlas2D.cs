@@ -35,7 +35,7 @@ namespace ClassicalSharp {
 			{
 				int x = index % TilesPerRow, y = index / TilesPerRow;
 				FastBitmap.MovePortion(x * size, y * size, 0, 0, atlas, dst, size);
-				return game.Graphics.CreateTexture(dst, true, game.Graphics.Mipmaps);
+				return game.Graphics.CreateTexture(dst, false, game.Graphics.Mipmaps);
 			}
 		}
 		

@@ -236,7 +236,6 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 			D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &texture, NULL);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture");
 		D3D9_SetTextureData(texture, bmp, 0);
-
 		if (mipmaps) D3D9_DoMipmaps(texture, 0, 0, bmp, false);
 	} else {
 		IDirect3DTexture9* sys;
@@ -244,6 +243,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 			D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM, &sys, NULL);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture - SystemMem");
 		D3D9_SetTextureData(sys, bmp, 0);
+		if (mipmaps) D3D9_DoMipmaps(sys, 0, 0, bmp, false);
 
 		hresult = IDirect3DDevice9_CreateTexture(device, bmp->Width, bmp->Height, levels, 0,
 			D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &texture, NULL);

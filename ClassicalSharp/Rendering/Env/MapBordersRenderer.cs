@@ -124,7 +124,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetTextures(object sender, EventArgs e) {
-			lastEdgeTexLoc = lastSideTexLoc = -1;
+			lastEdgeTexLoc = -1; lastSideTexLoc = -1;
 			MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
 			MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
 		}

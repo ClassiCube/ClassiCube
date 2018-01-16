@@ -18,7 +18,7 @@ GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element)
 	Bitmap_CopyBlock(x * size, y * size, 0, 0,
 		&Atlas2D_Bitmap, element, size);
 
-	return Gfx_CreateTexture(element, true, Gfx_Mipmaps);
+	return Gfx_CreateTexture(element, false, Gfx_Mipmaps);
 }
 
 GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc) {
