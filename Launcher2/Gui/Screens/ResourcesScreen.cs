@@ -74,10 +74,6 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void DownloadResources(int mouseX, int mouseY) {
-			if (game.Downloader == null) {
-				game.Downloader = new AsyncDownloader(drawer);
-				game.Downloader.Init("");
-			}
 			if (fetcher != null) return;
 			
 			fetcher = game.fetcher;

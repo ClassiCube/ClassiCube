@@ -11,7 +11,7 @@ namespace Launcher.Gui.Screens {
 		
 		public override void Tick() {
 			base.Tick();
-			if (game.checkTask != null && game.checkTask.Done && !updateDone) {
+			if (game.checkTask != null && game.checkTask.Completed && !updateDone) {
 				bool success = game.checkTask.Success;
 				if (success) SuccessfulUpdateCheck(game.checkTask);
 				else FailedUpdateCheck(game.checkTask);

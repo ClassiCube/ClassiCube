@@ -1,10 +1,9 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using ClassicalSharp;
+using ClassicalSharp.Network;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Net;
-using System.Threading;
 using JsonObject = System.Collections.Generic.Dictionary<string, object>;
 
 namespace Launcher.Web {
@@ -16,38 +15,34 @@ namespace Launcher.Web {
 		public string Version;
 	}
 	
-	public sealed class UpdateCheckTask : IWebTask {
+	public sealed class UpdateCheckTask {
 		
+		public const string UpdatesIdentifier = "cc-update";
 		public const string UpdatesUri = "http://cs.classicube.net/";
 		public const string BuildsUri = "http://cs.classicube.net/builds.json";
 		public Build LatestDev, LatestStable;
+		public LauncherWindow Game;
+		public bool Completed = false, Success = false;
 		
-		public void CheckForUpdatesAsync() {
-			Working = true;
-			Done = false;
-			Exception = null;
-			LatestDev = null;
-			LatestStable = null;
+		public void Init(LauncherWindow game) {
+			Game = game;
+			Completed = false;
+			Success = false;
+			Game.Downloader.DownloadPage(BuildsUri, false, UpdatesIdentifier);
+		}
+		
+		public void Tick() {
+			if (Completed) return;		
+			Request req;
+			if (!Game.Downloader.TryGetItem(UpdatesIdentifier, out req)) return;
 			
-			Thread thread = new Thread(UpdateWorker, 256 * 1024);
-			thread.Name = "Launcher.UpdateCheck";
-			thread.Start();
+			Completed = true;
+			Success = req != null && req.Data != null;
+			if (!Success) return;
+			ProcessUpdate((string)req.Data);
 		}
 		
-		void UpdateWorker() {
-			try {
-				CheckUpdates();
-			} catch (WebException ex) {
-				Finish(false, ex, null); return;
-			} catch (Exception ex) {
-				ErrorHandler.LogError("UpdateCheckTask.CheckUpdates", ex);
-				Finish(false, null, "&cUpdate check failed"); return;
-			}
-			Finish(true, null, null);
-		}
-		
-		void CheckUpdates() {
-			string response = Get(BuildsUri, UpdatesUri);
+		void ProcessUpdate(string response) {
 			int index = 0; bool success = true;
 			JsonObject data = (JsonObject)Json.ParseValue(response, ref index, ref success);
 			

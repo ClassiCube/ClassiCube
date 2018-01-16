@@ -167,8 +167,10 @@ namespace Launcher {
 			
 			fetcher = new ResourceFetcher();
 			fetcher.CheckResourceExistence();
+			Downloader = new AsyncDownloader(Drawer);
+			Downloader.Init("");
 			checkTask = new UpdateCheckTask();
-			checkTask.CheckForUpdatesAsync();
+			checkTask.Init(this);
 			
 			if (!fetcher.AllResourcesExist) {
 				SetScreen(new ResourcesScreen(this));
@@ -187,6 +189,7 @@ namespace Launcher {
 					break;
 				}
 				
+				checkTask.Tick();
 				Screen.Tick();
 				if (Dirty) Display();
 				Thread.Sleep(10);

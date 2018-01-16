@@ -31,7 +31,8 @@ namespace ClassicalSharp.Network {
 		
 		public Request CurrentItem;
 		public int CurrentItemProgress = -3;
-		public IDrawer2D Drawer;	
+		public IDrawer2D Drawer;
+		public CookieContainer Cookies;
 		public AsyncDownloader(IDrawer2D drawer) { this.drawer = drawer; }
 		
 #if !LAUNCHER
@@ -283,6 +284,7 @@ namespace ClassicalSharp.Network {
 			req.Timeout = 90 * 1000;
 			req.Proxy = null;
 			req.UserAgent = Program.AppName;
+			req.CookieContainer = Cookies;
 			
 			if (request.LastModified != DateTime.MinValue)
 				req.IfModifiedSince = request.LastModified;
