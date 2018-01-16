@@ -6,8 +6,13 @@ using ClassicalSharp;
 using Launcher.Gui.Widgets;
 using Launcher.Web;
 
-namespace Launcher.Gui.Screens {	
+namespace Launcher.Gui.Screens {
 	public sealed partial class MainScreen : InputScreen {
+		
+		GetCSRFTokenTask getTask;
+		SignInTask postTask;
+		FetchServersTask fetchTask;
+		bool signingIn = false;
 		
 		public override void Tick() {
 			base.Tick();
@@ -17,24 +22,70 @@ namespace Launcher.Gui.Screens {
 				else FailedUpdateCheck(game.checkTask);
 				updateDone = true;
 			}
-			
 			if (!signingIn) return;
-			ClassicubeSession session = game.Session;
-			string status = session.Status;
-			if (status != lastStatus)
-				SetStatus(status);
 			
-			if (session.Working) return;
-			if (session.Exception != null) {
-				DisplayWebException(session.Exception, session.Status);
-			} else if (HasServers) {
-				game.SetScreen(new ServersScreen(game));
-				return;
+			if (getTask != null) {
+				LoginGetTick();
+			} else if (postTask != null) {
+				LoginPostTick();
+			} else if (fetchTask != null) {
+				FetchTick();
+			}
+		}
+		
+		void LoginGetTick() {
+			getTask.Tick();
+			if (!getTask.Completed) return;
+			
+			if (getTask.Success) {
+				postTask = new SignInTask();
+				postTask.Username = Get(0);
+				postTask.Password = Get(1);
+				postTask.Token = getTask.Token;
+				postTask.RunAsync(game);
+			} else {
+				DisplayWebException(getTask.WebEx, "sign in");
 			}
 			
-			signingIn = false;
+			getTask = null;
 			game.RedrawBackground();
 			Resize();
+		}
+		
+		void LoginPostTick() {
+			postTask.Tick();
+			if (!postTask.Completed) return;
+			
+			if (postTask.Error != null) {
+				SetStatus("&c" + postTask.Error);
+			} else if (postTask.Success) {
+				game.Username = postTask.Username;
+				fetchTask = new FetchServersTask();
+				fetchTask.RunAsync(game);
+				SetStatus("&eRetrieving servers list..");
+			} else {
+				DisplayWebException(postTask.WebEx, "sign in");
+			}
+			
+			postTask = null;
+			game.RedrawBackground();
+			Resize();
+		}
+		
+		void FetchTick() {
+			fetchTask.Tick();
+			if (!fetchTask.Completed) return;
+			
+			if (fetchTask.Success) {
+				game.Servers = fetchTask.Servers;
+				game.SetScreen(new ServersScreen(game));
+			} else {
+				DisplayWebException(fetchTask.WebEx, "retrieving servers list");
+				game.RedrawBackground();
+				Resize();
+			}
+			
+			fetchTask = null;
 		}
 
 		string lastStatus;
@@ -47,12 +98,7 @@ namespace Launcher.Gui.Screens {
 			RedrawWidget(widget);
 			game.Dirty = true;
 		}
-		
-		bool HasServers {
-			get { return game.Session.Servers != null && game.Session.Servers.Count != 0; }
-		}
-		
-		bool signingIn;
+
 		void LoginAsync(int mouseX, int mouseY) {
 			if (String.IsNullOrEmpty(Get(0))) {
 				SetStatus("&eUsername required"); return;
@@ -60,7 +106,9 @@ namespace Launcher.Gui.Screens {
 			if (String.IsNullOrEmpty(Get(1))) {
 				SetStatus("&ePassword required"); return;
 			}
-			if (signingIn) return;
+			if (getTask != null) return;
+			
+			game.Username = Get(0);
 			UpdateSignInInfo(Get(0), Get(1));
 			
 			CheckboxWidget skip = widgets[view.sslIndex] as CheckboxWidget;
@@ -71,9 +119,11 @@ namespace Launcher.Gui.Screens {
 				ServicePointManager.ServerCertificateValidationCallback = null;
 			}
 			
-			game.Session.LoginAsync(Get(0), Get(1));
+			getTask = new GetCSRFTokenTask();
+			getTask.RunAsync(game);
 			game.RedrawBackground();
 			Resize();
+			
 			SetStatus("&eSigning in..");
 			signingIn = true;
 		}
@@ -82,6 +132,8 @@ namespace Launcher.Gui.Screens {
 			ErrorHandler.LogError(action, ex);
 			bool sslCertError = ex.Status == WebExceptionStatus.TrustFailure ||
 				(ex.Status == WebExceptionStatus.SendFailure && OpenTK.Configuration.RunningOnMono);
+			signingIn = false;
+			
 			if (ex.Status == WebExceptionStatus.Timeout) {
 				string text = "&cTimed out when connecting to classicube.net.";
 				SetStatus(text);
@@ -162,8 +214,7 @@ namespace Launcher.Gui.Screens {
 		
 		void UpdateSignInInfo(string user, string password) {
 			// If the client has changed some settings in the meantime, make sure we keep the changes
-			if (!Options.Load())
-				return;
+			if (!Options.Load()) return;
 			
 			Options.Set("launcher-cc-username", user);
 			Options.Set("launcher-cc-password", Secure.Encode(password, user));

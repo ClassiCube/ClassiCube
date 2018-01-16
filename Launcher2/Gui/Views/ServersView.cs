@@ -79,7 +79,7 @@ namespace Launcher.Gui.Views {
 			TableWidget widget;
 			if (widgets[tableIndex] != null) {
 				widget = (TableWidget)widgets[tableIndex];
-				if (widget.servers != game.Session.Servers) ResetTable(widget);
+				if (widget.servers != game.Servers) ResetTable(widget);
 			} else {
 				widget = new TableWidget(game);
 				ResetTable(widget);
@@ -91,7 +91,7 @@ namespace Launcher.Gui.Views {
 		}
 		
 		void ResetTable(TableWidget widget) {
-			widget.SetEntries(game.Session.Servers);
+			widget.SetEntries(game.Servers);
 			widget.SetDrawData(drawer, tableFont, textFont,
 			                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY);
 			widget.SortDefault();

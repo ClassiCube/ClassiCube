@@ -37,7 +37,7 @@ namespace Launcher {
 		public Rectangle DirtyArea;
 		
 		/// <summary> Currently active logged in session with classicube.net. </summary>
-		public ClassicubeSession Session = new ClassicubeSession();
+		public string Username;
 		
 		/// <summary> Queue used to download resources asynchronously. </summary>
 		public AsyncDownloader Downloader;
@@ -54,6 +54,8 @@ namespace Launcher {
 		/// <summary> Whether at the next tick, the launcher window should proceed to stop displaying frames and subsequently exit. </summary>
 		public bool ShouldExit;
 		public bool ShouldUpdate;
+		
+		public List<ServerListEntry> Servers = new List<ServerListEntry>();
 		
 		public string FontName = "Arial";
 		
@@ -136,7 +138,7 @@ namespace Launcher {
 				ServerListEntry entry = publicServers[i];
 				if (entry.Hash != hash) continue;
 				
-				data = new ClientStartData(Session.Username, entry.Mppass,
+				data = new ClientStartData(Username, entry.Mppass,
 				                           entry.IPAddress, entry.Port, entry.Name);
 				Client.Start(data, true, ref ShouldExit);
 				return true;
@@ -144,7 +146,14 @@ namespace Launcher {
 			
 			// Fallback to private server handling
 			try {
-				data = Session.GetConnectInfo(hash);
+				// TODO: Rewrite to be async
+				FetchServerTask task = new FetchServerTask(Username, hash);
+				task.RunAsync(this);
+				
+				while (!task.Completed) { task.Tick(); Thread.Sleep(10); }
+				if (task.WebEx != null) throw task.WebEx;
+				
+				data = task.Info;
 			} catch (WebException ex) {
 				ErrorHandler.LogError("retrieving server information", ex);
 				return false;
@@ -165,12 +174,15 @@ namespace Launcher {
 			platformDrawer.info = Window.WindowInfo;
 			platformDrawer.Init();
 			
-			fetcher = new ResourceFetcher();
-			fetcher.CheckResourceExistence();
 			Downloader = new AsyncDownloader(Drawer);
 			Downloader.Init("");
+			Downloader.Cookies = new CookieContainer();
+			Downloader.KeepAlive = true;
+			
+			fetcher = new ResourceFetcher();
+			fetcher.CheckResourceExistence();
 			checkTask = new UpdateCheckTask();
-			checkTask.Init(this);
+			checkTask.RunAsync(this);
 			
 			if (!fetcher.AllResourcesExist) {
 				SetScreen(new ResourcesScreen(this));

@@ -112,7 +112,7 @@ namespace ClassicalSharp.Entities {
 			if (!fetchedSkin && Model.UsesSkin) {
 				Player first = FirstOtherWithSameSkinAndFetchedSkin();
 				if (first == null) {
-					game.AsyncDownloader.DownloadSkin(SkinName, SkinName);
+					game.Downloader.AsyncGetSkin(SkinName, SkinName);
 				} else {
 					ApplySkin(first);
 				}
@@ -120,7 +120,7 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			Request item;
-			if (!game.AsyncDownloader.TryGetItem(SkinName, out item)) return;
+			if (!game.Downloader.TryGetItem(SkinName, out item)) return;
 			if (item == null || item.Data == null) { SetSkinAll(true); return; }
 			
 			Bitmap bmp = (Bitmap)item.Data;

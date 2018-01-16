@@ -34,7 +34,7 @@ namespace Launcher.Gui.Screens {
 				SuccessfulUpdateCheck(game.checkTask);
 			}			
 			checkTask = new UpdateCheckTask();
-			checkTask.Init(game);
+			checkTask.RunAsync(game);
 		}
 
 		Build dev, stable;

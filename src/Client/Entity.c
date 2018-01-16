@@ -292,6 +292,7 @@ void Entities_ContextLost(void) {
 		if (Entities_List[i] == NULL) continue;
 		Entities_List[i]->VTABLE->ContextLost(Entities_List[i]);
 	}
+	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 }
 
 void Entities_ContextRecreated(void) {

@@ -65,7 +65,7 @@ namespace ClassicalSharp {
 		protected void WarningScreenTick(Overlay warning) {
 			string identifier = warning.Metadata;
 			Request item;
-			if (!game.AsyncDownloader.TryGetItem(identifier, out item) || item.Data == null) return;
+			if (!game.Downloader.TryGetItem(identifier, out item) || item.Data == null) return;
 			
 			long contentLength = (long)item.Data;
 			if (contentLength <= 0) return;
@@ -78,7 +78,7 @@ namespace ClassicalSharp {
 		
 		protected internal void RetrieveTexturePack(string url) {
 			if (!game.AcceptedUrls.HasEntry(url) && !game.DeniedUrls.HasEntry(url)) {
-				game.AsyncDownloader.RetrieveContentLength(url, true, "CL_" + url);
+				game.Downloader.AsyncGetContentLength(url, true, "CL_" + url);
 				string address = url;
 				if (url.StartsWith("https://")) address = url.Substring(8);
 				if (url.StartsWith("http://")) address = url.Substring(7);
@@ -120,20 +120,18 @@ namespace ClassicalSharp {
 
 			TexturePack.ExtractCurrent(game, url);
 			if (url.Contains(".zip")) {
-				game.AsyncDownloader.DownloadData(url, true, "texturePack",
-				                                  lastModified, etag);
+				game.Downloader.AsyncGetData(url, true, "texturePack", lastModified, etag);
 			} else {
-				game.AsyncDownloader.DownloadImage(url, true, "terrain",
-				                                   lastModified, etag);
+				game.Downloader.AsyncGetImage(url, true, "terrain", lastModified, etag);
 			}
 		}
 		
 		protected void CheckAsyncResources() {
 			Request item;
-			if (game.AsyncDownloader.TryGetItem("terrain", out item)) {
+			if (game.Downloader.TryGetItem("terrain", out item)) {
 				TexturePack.ExtractTerrainPng(game, item);
 			}
-			if (game.AsyncDownloader.TryGetItem("texturePack", out item)) {
+			if (game.Downloader.TryGetItem("texturePack", out item)) {
 				TexturePack.ExtractTexturePack(game, item);
 			}
 		}

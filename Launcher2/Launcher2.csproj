@@ -145,15 +145,13 @@
     <Compile Include="Patcher\ZipWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WebTasks.cs" />
     <Compile Include="Updater\Scripts.cs" />
     <Compile Include="Updater\Applier.cs" />
     <Compile Include="Utils\Client.cs" />
     <Compile Include="Utils\JSON.cs" />
     <Compile Include="Utils\LauncherSkin.cs" />
     <Compile Include="Utils\Secure.cs" />
-    <Compile Include="WebService\ClassiCubeSession.cs" />
-    <Compile Include="WebService\IWebTask.cs" />
-    <Compile Include="WebService\UpdateCheckTask.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\OpenTK\OpenTK.csproj">
@@ -173,7 +171,6 @@
     <Folder Include="Updater" />
     <Folder Include="Utils" />
     <Folder Include="Patcher" />
-    <Folder Include="WebService" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
 </Project>

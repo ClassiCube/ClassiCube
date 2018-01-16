@@ -33,6 +33,7 @@ namespace ClassicalSharp.Network {
 		public int CurrentItemProgress = -3;
 		public IDrawer2D Drawer;
 		public CookieContainer Cookies;
+		public bool KeepAlive;
 		public AsyncDownloader(IDrawer2D drawer) { this.drawer = drawer; }
 		
 #if !LAUNCHER
@@ -63,59 +64,73 @@ namespace ClassicalSharp.Network {
 		/// <summary> Asynchronously downloads a skin. If 'skinName' points to the url then the skin is
 		/// downloaded from that url, otherwise it is downloaded from the url 'defaultSkinServer'/'skinName'.png </summary>
 		/// <remarks> Identifier is skin_'skinName'.</remarks>
-		public void DownloadSkin(string identifier, string skinName) {
-			string strippedSkinName = Utils.StripColours(skinName);
-			string url = Utils.IsUrlPrefix(skinName, 0) ? skinName :
-				skinServer + strippedSkinName + ".png";
+		public void AsyncGetSkin(string identifier, string skinName) {
+			string url = Utils.IsUrlPrefix(skinName, 0) ? skinName 
+				: skinServer + Utils.StripColours(skinName) + ".png";
+			
 			AddRequest(url, false, identifier, RequestType.Bitmap,
-			           DateTime.MinValue , null);
+			           DateTime.MinValue, null, null);
 		}
 #endif
 		
 		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>
-		public void DownloadImage(string url, bool priority, string identifier) {
+		public void AsyncGetImage(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.Bitmap,
-			           DateTime.MinValue, null);
+			           DateTime.MinValue, null, null);
 		}
 		
 		/// <summary> Asynchronously downloads a string from the specified url.  </summary>
-		public void DownloadPage(string url, bool priority, string identifier) {
+		public void AsyncGetString(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.String,
-			           DateTime.MinValue, null);
+			           DateTime.MinValue, null, null);
 		}
 		
 		/// <summary> Asynchronously downloads a byte array. </summary>
-		public void DownloadData(string url, bool priority, string identifier) {
+		public void AsyncGetData(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.ByteArray,
-			           DateTime.MinValue, null);
+			           DateTime.MinValue, null, null);
 		}
 		
 		/// <summary> Asynchronously downloads a bitmap image. </summary>
-		public void DownloadImage(string url, bool priority, string identifier,
+		public void AsyncGetImage(string url, bool priority, string identifier,
 		                          DateTime lastModified, string etag) {
 			AddRequest(url, priority, identifier, RequestType.Bitmap,
-			           lastModified, etag);
+			           lastModified, etag, null);
 		}
 		
 		/// <summary> Asynchronously downloads a byte array. </summary>
-		public void DownloadData(string url, bool priority, string identifier,
+		public void AsyncGetData(string url, bool priority, string identifier,
 		                         DateTime lastModified, string etag) {
 			AddRequest(url, priority, identifier, RequestType.ByteArray,
-			           lastModified, etag);
+			           lastModified, etag, null);
 		}
 
 #if !LAUNCHER		
 		/// <summary> Asynchronously retrieves the content length of the body response. </summary>
-		public void RetrieveContentLength(string url, bool priority, string identifier) {
+		public void AsyncGetContentLength(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.ContentLength,
-			           DateTime.MinValue, null);
+			           DateTime.MinValue, null, null);
+		}
+#else
+		/// <summary> Asynchronously retrieves the content length of the body response. </summary>
+		public void AsyncPostString(string url, bool priority, string identifier, string contents) {
+			AddRequest(url, priority, identifier, RequestType.String,
+			           DateTime.MinValue, null, contents);
 		}
 #endif
 		
 		void AddRequest(string url, bool priority, string identifier,
-		                RequestType type, DateTime lastModified, string etag) {
+		                RequestType type, DateTime lastModified, string etag, object data) {
 			lock (pendingLocker) {
-				Request request = new Request(url, identifier, type, lastModified, etag);
+				Request request = new Request();
+				request.Url = url;
+				request.Identifier = identifier;
+				request.Type = type;
+				request.LastModified = lastModified;
+				request.ETag = etag;
+				request.Data = data;
+				
+				request.TimeAdded = DateTime.UtcNow;
 				if (priority) {
 					pending.Insert(0, request);
 				} else {
@@ -208,7 +223,6 @@ namespace ClassicalSharp.Network {
 			string url = request.Url;
 			Utils.LogDebug("Downloading {0} from: {1}", request.Type, url);
 			HttpStatusCode status = HttpStatusCode.OK;
-			request.Data = null;
 			
 			try {
 				HttpWebRequest req = MakeRequest(request);
@@ -228,6 +242,7 @@ namespace ClassicalSharp.Network {
 						status = ((HttpWebResponse)webEx.Response).StatusCode;
 						webEx.Response.Close();
 					}
+					request.WebEx = webEx;
 				}
 				
 				if (status != HttpStatusCode.OK) {
@@ -285,19 +300,31 @@ namespace ClassicalSharp.Network {
 			req.Proxy = null;
 			req.UserAgent = Program.AppName;
 			req.CookieContainer = Cookies;
+			req.KeepAlive = KeepAlive;
 			
-			if (request.LastModified != DateTime.MinValue)
+			if (request.LastModified != DateTime.MinValue) {
 				req.IfModifiedSince = request.LastModified;
-			if (request.ETag != null)
+			}
+			if (request.ETag != null) {
 				req.Headers["If-None-Match"] = request.ETag;
+			}
+			
+			if (request.Data != null) {
+				req.Method = "POST";
+				req.ContentType = "application/x-www-form-urlencoded; charset=UTF-8;";
+				byte[] encodedData = Encoding.UTF8.GetBytes((string)request.Data);
+				req.ContentLength = encodedData.Length;
+				using (Stream stream = req.GetRequestStream()) {
+					stream.Write(encodedData, 0, encodedData.Length);
+				}
+			}
 			return req;
 		}
 		
 		static byte[] buffer = new byte[4096 * 8];
 		MemoryStream DownloadBytes(HttpWebResponse response) {
 			int length = (int)response.ContentLength;
-			MemoryStream dst = length > 0 ?
-				new MemoryStream(length) : new MemoryStream();
+			MemoryStream dst = length > 0 ? new MemoryStream(length) : new MemoryStream();
 			CurrentItemProgress = length > 0 ? 0 : -1;
 			
 			using (Stream src = response.GetResponseStream()) {
@@ -335,14 +362,7 @@ namespace ClassicalSharp.Network {
 		/// <summary> ETag of the item most recently cached. (if any) </summary>
 		public string ETag;
 		
-		public Request(string url, string identifier, RequestType type, DateTime lastModified, string etag) {
-			Url = url;
-			Identifier = identifier;
-			Type = type;
-			TimeAdded = DateTime.UtcNow;
-			LastModified = lastModified;
-			ETag = etag;
-		}
+		public WebException WebEx;
 		
 		public void Dispose() {
 			Bitmap bmp = Data as Bitmap;

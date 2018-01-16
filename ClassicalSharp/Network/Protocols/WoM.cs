@@ -17,7 +17,7 @@ namespace ClassicalSharp.Network.Protocols {
 
 		public override void Tick() {
 			Request item;
-			game.AsyncDownloader.TryGetItem(womEnvIdentifier, out item);
+			game.Downloader.TryGetItem(womEnvIdentifier, out item);
 			if (item != null && item.Data != null) {
 				ParseWomConfig((string)item.Data);
 			}
@@ -37,7 +37,7 @@ namespace ClassicalSharp.Network.Protocols {
 			// new world if the async 'get request' didn't complete before the new world was loaded.
 			womCounter++;
 			womEnvIdentifier = "womenv_" + womCounter;
-			game.AsyncDownloader.DownloadPage(url, true, womEnvIdentifier);
+			game.Downloader.AsyncGetString(url, true, womEnvIdentifier);
 			sendWomId = true;
 		}
 		

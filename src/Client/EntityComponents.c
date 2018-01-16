@@ -595,7 +595,7 @@ void ShadowComponent_MakeTex(void) {
 			row[x] = dist < half * half ? inPix : outPix;
 		}
 	}
-	ShadowComponent_ShadowTex = Gfx_CreateTexture(&bmp, true, false);
+	ShadowComponent_ShadowTex = Gfx_CreateTexture(&bmp, false, false);
 }
 
 void ShadowComponent_Draw(Entity* entity) {

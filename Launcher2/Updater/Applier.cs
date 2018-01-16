@@ -4,21 +4,21 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
-using System.Threading;
 using ClassicalSharp;
 using ClassicalSharp.Textures;
-using Launcher.Web;
 
 namespace Launcher.Updater {
 	
 	public static class Applier {
 		
 		public static DateTime PatchTime;
+		public const string UpdatesUri = "http://cs.classicube.net/";
 		
 		public static void FetchUpdate(string dir) {
 			WebRequest.DefaultWebProxy = null;
+			// TODO: Rewrite to be async
 			using (WebClient client = new WebClient()) {
-				byte[] zipData = client.DownloadData(UpdateCheckTask.UpdatesUri + dir);
+				byte[] zipData = client.DownloadData(UpdatesUri + dir);
 				MakeUpdatesFolder(zipData);
 			}
 		}

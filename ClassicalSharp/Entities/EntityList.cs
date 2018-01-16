@@ -111,6 +111,7 @@ namespace ClassicalSharp.Entities {
 				if (List[i] == null) continue;
 				List[i].ContextLost();
 			}
+			game.Graphics.DeleteTexture(ref ShadowComponent.shadowTex);
 		}
 		
 		void ContextRecreated() {

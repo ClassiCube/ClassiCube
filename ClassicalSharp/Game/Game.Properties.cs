@@ -164,7 +164,7 @@ namespace ClassicalSharp {
 		
 		public int Vertices;
 		public FrustumCulling Culling;
-		public AsyncDownloader AsyncDownloader;
+		public AsyncDownloader Downloader;
 		
 		/// <summary> How sensitive the client is to changes in the player's mouse position. </summary>
 		public int MouseSensitivity = 30;

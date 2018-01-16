@@ -127,14 +127,14 @@ namespace ClassicalSharp.Gui.Screens {
 		int lastDownloadStatus = int.MinValue;
 		StringBuffer lastDownload = new StringBuffer(48);
 		void CheckOtherStatuses() {
-			Request item = game.AsyncDownloader.CurrentItem;
+			Request item = game.Downloader.CurrentItem;
 			if (item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack")) {
 				if (status.Textures[1].IsValid) status.SetText(1, null);
 				lastDownloadStatus = int.MinValue;
 				return;
 			}
 			
-			int progress = game.AsyncDownloader.CurrentItemProgress;
+			int progress = game.Downloader.CurrentItemProgress;
 			if (progress == lastDownloadStatus) return;
 			lastDownloadStatus = progress;
 			SetFetchStatus(progress);

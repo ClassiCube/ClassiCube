@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 			BlockInfo.Init();
 			ModelCache = new ModelCache(this);
 			ModelCache.InitCache();
-			AsyncDownloader = new AsyncDownloader(Drawer2D); Components.Add(AsyncDownloader);
+			Downloader = new AsyncDownloader(Drawer2D); Components.Add(Downloader);
 			Lighting = new BasicLighting(); Components.Add(Lighting);
 			
 			Drawer2D.UseBitmappedChat = ClassicMode || !Options.GetBool(OptionsKey.UseChatFont, false);
@@ -225,7 +225,7 @@ namespace ClassicalSharp {
 			const double defTicks = 1.0 / 20;
 			const double netTicks = 1.0 / 60;
 			
-			AddScheduledTask(30, AsyncDownloader.PurgeOldEntriesTask);
+			AddScheduledTask(30, Downloader.PurgeOldEntriesTask);
 			AddScheduledTask(netTicks, Server.Tick);
 			entTask = AddScheduledTask(defTicks, Entities.Tick);
 			

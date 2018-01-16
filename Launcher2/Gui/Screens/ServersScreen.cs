@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Web;
 using Launcher.Gui.Views;
 using Launcher.Gui.Widgets;
 using OpenTK.Input;
@@ -11,6 +12,7 @@ namespace Launcher.Gui.Screens {
 		
 		const int tableX = 10, tableY = 50;
 		ServersView view;
+		FetchServersTask fetchTask;
 		
 		public ServersScreen(LauncherWindow game) : base(game) {
 			enterIndex = 3;
@@ -20,7 +22,7 @@ namespace Launcher.Gui.Screens {
 		
 		public override void Tick() {
 			base.Tick();
-			if (fetchingList) CheckFetchStatus();
+			if (fetchTask != null) CheckFetchStatus();
 			
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			if (!game.Window.Mouse[MouseButton.Left]) {
@@ -134,12 +136,10 @@ namespace Launcher.Gui.Screens {
 			game.ConnectToServer(table.servers, Get(view.hashIndex));
 		}
 		
-		bool fetchingList = false;
 		void RefreshList(int mouseX, int mouseY) {
-			if (fetchingList) return;
-			fetchingList = true;
-			game.Session.FetchServersAsync();
-
+			if (fetchTask != null) return;
+			fetchTask = new FetchServersTask();
+			fetchTask.RunAsync(game);
 			view.RefreshText = "&eWorking..";
 			Resize();
 		}
@@ -187,10 +187,12 @@ namespace Launcher.Gui.Screens {
 		}
 		
 		void CheckFetchStatus() {
-			if (!game.Session.Done) return;
-			fetchingList = false;
-			
-			view.RefreshText = game.Session.Exception == null ? "Refresh" : "&cFailed";
+			fetchTask.Tick();
+			if (!fetchTask.Completed) return;
+			if (fetchTask.Success) game.Servers = fetchTask.Servers;
+						
+			view.RefreshText = fetchTask.Success ? "Refresh" : "&cFailed";
+			fetchTask = null;
 			Resize();
 			
 			// needed to ensure 'highlighted server hash' is over right entry after refresh

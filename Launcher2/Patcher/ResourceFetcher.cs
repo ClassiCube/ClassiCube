@@ -15,7 +15,7 @@ namespace Launcher.Patcher {
 		public List<string> FilesToDownload = new List<string>();
 		
 		public void QueueItem(string url, string identifier) {
-			downloader.DownloadData(url, false, identifier);
+			downloader.AsyncGetData(url, false, identifier);
 			FilesToDownload.Add(identifier);
 		}
 		
@@ -63,7 +63,7 @@ namespace Launcher.Patcher {
 		}
 		
 		public void AddDownload(string url, string identifier) {
-			downloader.DownloadData(url, false, identifier);
+			downloader.AsyncGetData(url, false, identifier);
 		}
 		
 		
