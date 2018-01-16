@@ -13,16 +13,27 @@ namespace Launcher.Gui.Screens {
 		const int tableX = 10, tableY = 50;
 		ServersView view;
 		FetchServersTask fetchTask;
+		FetchFlagsTask flagsTask;
 		
 		public ServersScreen(LauncherWindow game) : base(game) {
 			enterIndex = 3;
 			view = new ServersView(game);
-			widgets = view.widgets;
+			widgets = view.widgets;		
+			flagsTask = new FetchFlagsTask();
+			FetchFlags();
+			flagsTask.RunAsync(game);
+		}
+		
+		void FetchFlags() {
+			for (int i = 0; i < game.Servers.Count; i++) {
+				flagsTask.AddFlag(game.Servers[i].Flag);
+			}
 		}
 		
 		public override void Tick() {
 			base.Tick();
 			if (fetchTask != null) CheckFetchStatus();
+			flagsTask.Tick();
 			
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			if (!game.Window.Mouse[MouseButton.Left]) {
@@ -189,7 +200,11 @@ namespace Launcher.Gui.Screens {
 		void CheckFetchStatus() {
 			fetchTask.Tick();
 			if (!fetchTask.Completed) return;
-			if (fetchTask.Success) game.Servers = fetchTask.Servers;
+			
+			if (fetchTask.Success) {
+				game.Servers = fetchTask.Servers;
+				FetchFlags();
+			}
 						
 			view.RefreshText = fetchTask.Success ? "Refresh" : "&cFailed";
 			fetchTask = null;

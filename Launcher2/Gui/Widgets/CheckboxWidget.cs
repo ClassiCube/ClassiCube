@@ -53,21 +53,21 @@ namespace Launcher.Gui.Widgets {
 		};
 
 		static FastColour[] palette = new FastColour[] {
-			new FastColour(0, 0, 0, 0), new FastColour(144, 144, 144),
-			new FastColour(61, 61, 61), new FastColour(94, 94, 94),
+			new FastColour(0, 0, 0, 0),    new FastColour(144, 144, 144),
+			new FastColour(61, 61, 61),    new FastColour(94, 94, 94),
 			new FastColour(197, 196, 197), new FastColour(57, 57, 57),
-			new FastColour(33, 33, 33), new FastColour(177, 177, 177),
+			new FastColour(33, 33, 33),    new FastColour(177, 177, 177),
 			new FastColour(189, 189, 189), new FastColour(67, 67, 67),
 			new FastColour(108, 108, 108), new FastColour(171, 171, 171),
 			new FastColour(220, 220, 220), new FastColour(43, 43, 43),
-			new FastColour(63, 63, 63), new FastColour(100, 100, 100),
+			new FastColour(63, 63, 63),    new FastColour(100, 100, 100),
 			new FastColour(192, 192, 192), new FastColour(132, 132, 132),
 			new FastColour(175, 175, 175), new FastColour(217, 217, 217),
-			new FastColour(42, 42, 42), new FastColour(86, 86, 86),
-			new FastColour(56, 56, 56), new FastColour(76, 76, 76),
+			new FastColour(42, 42, 42),    new FastColour(86, 86, 86),
+			new FastColour(56, 56, 56),    new FastColour(76, 76, 76),
 			new FastColour(139, 139, 139), new FastColour(130, 130, 130),
 			new FastColour(181, 181, 181), new FastColour(62, 62, 62),
-			new FastColour(75, 75, 75), new FastColour(184, 184, 184),
+			new FastColour(75, 75, 75),    new FastColour(184, 184, 184),
 		};
 	}
 }

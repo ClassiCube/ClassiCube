@@ -2,6 +2,7 @@
 using ClassicalSharp;
 using ClassicalSharp.Network;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Globalization;
 using System;
 using System.Net;
@@ -18,12 +19,11 @@ namespace Launcher.Web {
 		protected string identifier, uri, section;
 		
 		public void RunAsync(LauncherWindow game) {
-			Game = game; Completed = false; Success = false;
-			start = DateTime.UtcNow;
-			Init();
+			Game = game;
+			Reset();
 			Begin();
 		}
-		
+
 		public void Tick() {
 			if (Completed) return;
 			Request req;
@@ -34,12 +34,17 @@ namespace Launcher.Web {
 			Completed = true;
 			Success = req != null && req.Data != null;
 			if (Success) Handle(req);
-		}		
+		}
 		
-		protected abstract void Init();
+		protected virtual void Reset() {
+			Completed = false; Success = false;
+			start = DateTime.UtcNow;
+		}		
+
 		protected virtual void Begin() {
 			Game.Downloader.AsyncGetString(uri, false, identifier);
 		}
+		
 		protected abstract void Handle(Request req);
 	}
 	
@@ -48,9 +53,7 @@ namespace Launcher.Web {
 			identifier = "CC get login";
 			uri = "https://www.classicube.net/api/login/";
 		}
-
 		public string Token;
-		protected override void Init() { }
 		
 		protected override void Handle(Request req) {
 			int index = 0; bool success = true;
@@ -64,9 +67,8 @@ namespace Launcher.Web {
 			identifier = "CC post login";
 			uri = "https://www.classicube.net/api/login/";
 		}
-
 		public string Username, Password, Token, Error;
-		protected override void Init() { }
+
 		protected override void Begin() {
 			string data = String.Format(
 				"username={0}&password={1}&token={2}",
@@ -98,7 +100,7 @@ namespace Launcher.Web {
 	
 	
 	public class ServerListEntry {
-		public string Hash, Name, Players, MaxPlayers;
+		public string Hash, Name, Players, MaxPlayers, Flag;
 		public string Uptime, IPAddress, Port, Mppass, Software;
 		public bool Featured;
 	}
@@ -125,12 +127,14 @@ namespace Launcher.Web {
 			if (obj.ContainsKey("featured")) {
 				entry.Featured = (bool)obj["featured"];
 			}
+			if (obj.ContainsKey("country_abbr")) {
+				entry.Flag = Utils.ToLower((string)obj["country_abbr"]);
+			}
 			return entry;
 		}
 	
 		public string Username;
 		public ClientStartData Info;
-		protected override void Init() { }
 		
 		protected override void Handle(Request req) {
 			int index = 0; bool success = true;
@@ -150,7 +154,8 @@ namespace Launcher.Web {
 		}
 		
 		public List<ServerListEntry> Servers;		
-		protected override void Init() {
+		protected override void Reset() {
+			base.Reset();
 			Servers = new List<ServerListEntry>();
 		}
 		
@@ -182,7 +187,6 @@ namespace Launcher.Web {
 		}		
 
 		public Build LatestDev, LatestStable;
-		protected override void Init() { }
 		
 		protected override void Handle(Request req) {
 			int index = 0; bool success = true;
@@ -214,6 +218,38 @@ namespace Launcher.Web {
 			if (obj.ContainsKey("version"))
 				build.Version = (string)obj["version"];
 			return build;
+		}
+	}
+	
+	
+	public sealed class FetchFlagsTask : WebTask {
+		public FetchFlagsTask() {
+			identifier = "CC get flag";
+		}
+		
+		public List<string> Flags = new List<string>();
+		
+		public void AddFlag(string flag) {
+			for (int i = 0; i < Flags.Count; i++) {
+				if (Flags[i] == flag) return;
+			}
+			Flags.Add(flag);
+		}
+		
+		protected override void Begin() {
+			if (Flags.Count == 0) return;
+			uri = "http://static.classicube.net/img/flags/" + Flags[0] + ".png";
+			Game.Downloader.AsyncGetImage(uri, false, identifier);
+		}
+		
+		protected override void Handle(Request req) {
+			Bitmap bmp = (Bitmap)req.Data;
+			Console.WriteLine("GOTEM: " + req.Url);
+			bmp.Dispose();
+			Flags.RemoveAt(0);
+			
+			Reset();
+			Begin();
 		}
 	}	
 }
