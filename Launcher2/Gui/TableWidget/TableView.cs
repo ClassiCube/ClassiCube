@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using ClassicalSharp;
+using Launcher.Drawing;
 
 namespace Launcher.Gui.Widgets {
 	
@@ -55,14 +56,16 @@ namespace Launcher.Gui.Widgets {
 			}
 		}
 		
-		public void RedrawData(IDrawer2D drawer) {
-			int x = table.X + 5;
+		public const int flagPadding = 15;
+		public void RedrawData(IDrawer2D drawer) {		
 			DrawGrid(drawer);
+			int x = table.X + flagPadding + 5;
 			x += DrawColumn(drawer, "Name",     0, x, filterName)     + 5;
 			x += DrawColumn(drawer, "Players",  1, x, filterPlayers)  + 5;
 			x += DrawColumn(drawer, "Uptime",   2, x, filterUptime)   + 5;
 			x += DrawColumn(drawer, "Software", 3, x, filterSoftware) + 5;
 			DrawScrollbar(drawer);
+			DrawFlags(drawer, table.X);
 		}
 		
 		public void Redraw(IDrawer2D drawer) {
@@ -76,6 +79,13 @@ namespace Launcher.Gui.Widgets {
 		static string FilterPlayers(TableEntry e)  { return e.Players; }  static ColumnFilter filterPlayers  = FilterPlayers;
 		static string FilterUptime(TableEntry e)   { return e.Uptime; }   static ColumnFilter filterUptime   = FilterUptime;
 		static string FilterSoftware(TableEntry e) { return e.Software; } static ColumnFilter filterSoftware = FilterSoftware;
+		
+		void DrawFlags(IDrawer2D drawer, int x) {
+			for (int i = table.CurrentIndex; i < maxIndex; i++) {
+				int y = table.usedEntries[i].Y;
+				drawer.Clear(FastColour.Red, x + 2, y + 3, 16, 11);
+			}
+		}
 		
 		int DrawColumn(IDrawer2D drawer, string header, int columnI, int x, ColumnFilter filter) {
 			int y = table.Y + 3;

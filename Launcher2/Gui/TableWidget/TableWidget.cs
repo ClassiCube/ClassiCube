@@ -126,8 +126,8 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		
-		public int[] ColumnWidths = new int[] { 340, 65, 65, 140 };
-		public int[] DesiredColumnWidths = new int[] { 340, 65, 65, 140 };
+		public int[] ColumnWidths = new int[] { 320, 65, 65, 140 };
+		public int[] DesiredColumnWidths = new int[] { 320, 65, 65, 140 };
 
 		public void SetDrawData(IDrawer2D drawer, Font font, Font titleFont,
 		                        Anchor horAnchor, Anchor verAnchor, int x, int y) {
@@ -159,7 +159,7 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		void SelectHeader(int mouseX, int mouseY) {
-			int x = X;		
+			int x = X + 15;	
 			for (int i = 0; i < ColumnWidths.Length; i++) {
 				x += ColumnWidths[i] + 10;
 				if (mouseX >= x - 8 && mouseX < x + 8) {
@@ -171,7 +171,7 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		void TrySortColumns(int mouseX) {
-			int x = X;
+			int x = X + TableView.flagPadding;
 			if (mouseX >= x && mouseX < x + ColumnWidths[0]) {
 				SortEntries(nameComp, false); return;
 			}
