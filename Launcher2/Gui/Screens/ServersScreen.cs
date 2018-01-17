@@ -31,6 +31,7 @@ namespace Launcher.Gui.Screens {
 			}
 			
 			int count = FetchFlagsTask.Flags.Count;
+			flagsTask.Game = game;
 			if (wasFetching || oldCount == count) return;
 			flagsTask.RunAsync(game);
 		}
