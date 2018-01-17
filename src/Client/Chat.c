@@ -44,10 +44,14 @@ void Chat_SetLogName(STRING_PURE String* name) {
 	if (Chat_LogName.length > 0) return;
 	String_Clear(&Chat_LogName);
 
-	Int32 i;
-	for (i = 0; i < name->length; i++) {
-		if (Chat_AllowedLogChar(name->buffer[i])) {
-			String_Append(&Chat_LogName, name->buffer[i]);
+	UInt8 noColsBuffer[String_BufferSize(STRING_SIZE)];
+	String noColsName = String_InitAndClearArray(noColsBuffer);
+	String_AppendColorless(&noColsName, name);
+
+	UInt32 i;
+	for (i = 0; i < noColsName.length; i++) {
+		if (Chat_AllowedLogChar(noColsName.buffer[i])) {
+			String_Append(&Chat_LogName, noColsName.buffer[i]);
 		}
 	}
 }

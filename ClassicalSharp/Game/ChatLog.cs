@@ -80,12 +80,13 @@ namespace ClassicalSharp {
 		
 		public void SetLogName(string name) {
 			if (logName != null) return;
+			
+			name = Utils.StripColours(name);
 			StringBuffer buffer = new StringBuffer(name.Length);
 			int len = 0;
 			
 			for (int i = 0; i < name.Length; i++) {
-				if (Allowed(name[i]))
-					buffer.Append(ref len, name[i]);
+				if (Allowed(name[i])) buffer.Append(ref len, name[i]);
 			}
 			logName = buffer.ToString();
 		}
