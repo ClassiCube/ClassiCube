@@ -20,10 +20,10 @@ namespace Launcher.Gui.Screens {
 			view = new ServersView(game);
 			widgets = view.widgets;		
 			flagsTask = new FetchFlagsTask();
-			FetchFlags();
+			FetchFlags(game);
 		}
 		
-		void FetchFlags() {
+		void FetchFlags(LauncherWindow game) {
 			int oldCount = FetchFlagsTask.DownloadedCount;
 			bool wasFetching = oldCount < FetchFlagsTask.Flags.Count;
 			for (int i = 0; i < game.Servers.Count; i++) {
@@ -214,7 +214,7 @@ namespace Launcher.Gui.Screens {
 			
 			if (fetchTask.Success) {
 				game.Servers = fetchTask.Servers;
-				FetchFlags();
+				FetchFlags(game);
 			}
 						
 			view.RefreshText = fetchTask.Success ? "Refresh" : "&cFailed";
