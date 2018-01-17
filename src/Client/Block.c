@@ -363,6 +363,7 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 	if (Block_IsLiquid[block]) bMax.Y -= 1.5f / 16.0f;
 	if (Block_IsLiquid[other]) oMax.Y -= 1.5f / 16.0f;
 
+	Block_Hidden[block * BLOCK_COUNT + other] = 0; /* set all faces 'not hidden' */
 	if (Block_Draw[block] == DRAW_SPRITE) {
 		Block_SetHidden(block, other, FACE_XMIN, true);
 		Block_SetHidden(block, other, FACE_XMAX, true);
@@ -434,9 +435,7 @@ bool Block_IsHidden(BlockID block, BlockID other) {
 
 void Block_SetHidden(BlockID block, BlockID other, Face face, bool value) {
 	value = Block_IsHidden(block, other) && Block_FaceOccluded(block, other, face) && value;
-	Int32 bit = value ? 1 : 0;
-	Block_Hidden[block * BLOCK_COUNT + other] &= (UInt8)~(1 << face);
-	Block_Hidden[block * BLOCK_COUNT + other] |= (UInt8)(bit << face);
+	Block_Hidden[block * BLOCK_COUNT + other] |= (UInt8)(value << face);
 }
 
 bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {

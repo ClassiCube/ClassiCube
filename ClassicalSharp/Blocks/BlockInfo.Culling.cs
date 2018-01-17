@@ -43,6 +43,7 @@ namespace ClassicalSharp {
 			if (IsLiquid[block]) bMax.Y -= 1.5f/16;
 			if (IsLiquid[other]) oMax.Y -= 1.5f/16;
 			
+			hidden[block * Block.Count + other] = 0; // set all faces 'not hidden'
 			if (Draw[block] == DrawType.Sprite) {
 				SetHidden(block, other, Side.Left,  true);
 				SetHidden(block, other, Side.Right, true);
@@ -92,7 +93,6 @@ namespace ClassicalSharp {
 		static void SetHidden(BlockID block, BlockID other, int side, bool value) {
 			value = IsHidden(block, other) && FaceOccluded(block, other, side) && value;
 			int bit = value ? 1 : 0;
-			hidden[block * Block.Count + other] &= (byte)~(1 << side);
 			hidden[block * Block.Count + other] |= (byte)(bit << side);
 		}
 		
