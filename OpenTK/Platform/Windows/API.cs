@@ -65,7 +65,7 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr GetForegroundWindow();
 
-		[DllImport("User32.dll"), SuppressUnmanagedCodeSecurity]
+		[DllImport("User32.dll", CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern bool PeekMessage(ref MSG msg, IntPtr hWnd, int messageFilterMin, int messageFilterMax, int flags);
 
 		[DllImport("user32.dll", CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
@@ -74,10 +74,10 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("User32.dll", CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern bool PostMessage(IntPtr hWnd, WindowMessage Msg, IntPtr wParam, IntPtr lParam);
 		
-		[DllImport("User32.dll"), SuppressUnmanagedCodeSecurity]
+		[DllImport("User32.dll", CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr DispatchMessage(ref MSG msg);
 
-		[DllImport("User32.dll"), SuppressUnmanagedCodeSecurity]
+		[DllImport("User32.dll", CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern bool TranslateMessage(ref MSG lpMsg);
 
 		[DllImport("User32.dll", CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
