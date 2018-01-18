@@ -49,23 +49,21 @@ namespace ClassicalSharp.Gui.Screens {
 			accumulator += delta;
 			if (accumulator < 1) return;
 			
-			int index = 0;
-			int fps = (int)(frames / accumulator);
+			int fps = (int)(frames / accumulator);			
+			statusBuffer.Clear().AppendNum(fps).Append(" fps, ");
 			
-			statusBuffer.Clear()
-				.AppendNum(ref index, fps).Append(ref index, " fps, ");
 			if (game.ClassicMode) {
-				statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunk updates");
+				statusBuffer.AppendNum(game.ChunkUpdates).Append(" chunk updates");
 			} else {
 				if (game.ChunkUpdates > 0) {
-					statusBuffer.AppendNum(ref index, game.ChunkUpdates).Append(ref index, " chunks/s, ");
+					statusBuffer.AppendNum(game.ChunkUpdates).Append(" chunks/s, ");
 				}
 				int indices = (game.Vertices >> 2) * 6;
-				statusBuffer.AppendNum(ref index, indices).Append(ref index, " vertices");
+				statusBuffer.AppendNum(indices).Append(" vertices");
 				
 				int ping = PingList.AveragePingMilliseconds();
 				if (ping != 0) {
-					statusBuffer.Append(ref index, ", ping ").AppendNum(ref index, ping).Append(ref index, " ms");
+					statusBuffer.Append(", ping ").AppendNum(ping).Append(" ms");
 				}
 			}
 			
@@ -154,17 +152,14 @@ namespace ClassicalSharp.Gui.Screens {
 			    hacks.Flying != fly || game.Fov != lastFov) {
 				speeding = hacks.Speeding; halfSpeeding = hacks.HalfSpeeding; noclip = hacks.Noclip; fly = hacks.Flying;
 				lastFov = game.Fov;
-				int index = 0;
 				statusBuffer.Clear();
 				
-				if (game.Fov != game.DefaultFov) statusBuffer.Append(ref index, "Zoom fov ")
-					.AppendNum(ref index, lastFov).Append(ref index, "  ");
-				if (fly) statusBuffer.Append(ref index, "Fly ON   ");
+				if (game.Fov != game.DefaultFov) statusBuffer.Append("Zoom fov ").AppendNum(lastFov).Append("  ");
+				if (fly) statusBuffer.Append("Fly ON   ");
 				
-				bool speed = (speeding || halfSpeeding) &&
-					(hacks.CanSpeed || hacks.BaseHorSpeed > 1);
-				if (speed) statusBuffer.Append(ref index, "Speed ON   ");
-				if (noclip) statusBuffer.Append(ref index, "Noclip ON   ");
+				bool speed = (speeding || halfSpeeding) && (hacks.CanSpeed || hacks.BaseHorSpeed > 1);
+				if (speed) statusBuffer.Append("Speed ON   ");
+				if (noclip) statusBuffer.Append("Noclip ON   ");
 				hackStates.SetText(statusBuffer.ToString());
 			}
 		}

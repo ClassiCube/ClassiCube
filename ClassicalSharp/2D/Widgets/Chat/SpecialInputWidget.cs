@@ -152,14 +152,12 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			
 			StringBuffer buffer = new StringBuffer(count * 4);
-			int index = 0;
 			for (int i = 0; i < IDrawer2D.Cols.Length; i++) {
 				if (i >= 'A' && i <= 'F') continue;
 				if (IDrawer2D.Cols[i].A == 0) continue;
 				
 				char code = Utils.CP437ToUnicode((byte)i);
-				buffer.Append(ref index, '&').Append(ref index, code)
-					.Append(ref index, '%').Append(ref index, code);
+				buffer.Append('&').Append(code).Append('%').Append(code);
 			}
 			return buffer.ToString();
 		}

@@ -3,11 +3,67 @@ using System;
 
 namespace ClassicalSharp {
 	
-	public unsafe sealed class WrappableStringBuffer : StringBuffer {
+	public unsafe sealed class WrappableStringBuffer {
 		
-		char[] wrap;		
-		public WrappableStringBuffer(int capacity) : base(capacity) {
+		public int Capacity;
+		public char[] value;
+		char[] wrap;	
+		
+		public WrappableStringBuffer(int capacity) {
+			this.Capacity = capacity;
+			value = new char[capacity];
 			wrap = new char[capacity];
+		}
+		
+		public void DeleteAt(int index) {
+			for (int i = index; i < Capacity - 1; i++)
+				value[i] = value[i + 1];
+			value[Capacity - 1] = '\0';
+		}
+		
+		public void InsertAt(int index, char c) {
+			for (int i = Capacity - 1; i > index; i--)
+				value[i] = value[i - 1];
+			value[index] = c;
+		}
+		
+		public void Set(string s) {
+			for (int i = 0; i < s.Length; i++) value[i] = s[i];
+		}
+		
+		public void Clear() {
+			for (int i = 0; i < Capacity; i++) value[i] = '\0';
+		}
+		
+		public bool Empty {
+			get {
+				for (int i = 0; i < Capacity; i++) {
+					if (value[i] != '\0') return false;
+				}
+				return true;
+			}
+		}
+		
+		public int Length {
+			get {
+				int len = Capacity;
+				for (int i = Capacity - 1; i >= 0; i--) {
+					if (value[i] != '\0') break;
+					len--;
+				}
+				return len;
+			}
+		}
+		
+		public int TextLength {
+			get {
+				int len = Capacity;
+				for (int i = Capacity - 1; i >= 0; i--) {
+					if (value[i] != '\0' && value[i] != ' ') break;
+					len--;
+				}
+				return len;
+			}
 		}
 		
 		public void WordWrap(IDrawer2D drawer, string[] lines, int maxLines, int maxPerLine) {

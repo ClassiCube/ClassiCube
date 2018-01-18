@@ -142,14 +142,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void SetFetchStatus(int progress) {
 			lastDownload.Clear();
-			int index = 0;
 			if (progress == -2) {
-				lastDownload.Append(ref index, "&eRetrieving texture pack..");
+				lastDownload.Append("&eRetrieving texture pack..");
 			} else if (progress == -1) {
-				lastDownload.Append(ref index, "&eDownloading texture pack");
+				lastDownload.Append("&eDownloading texture pack");
 			} else if (progress >= 0 && progress <= 100) {
-				lastDownload.Append(ref index, "&eDownloading texture pack (&7")
-					.AppendNum(ref index, progress).Append(ref index, "&e%)");
+				lastDownload.Append("&eDownloading texture pack (&7")
+					.AppendNum(progress).Append("&e%)");
 			}
 			status.SetText(1, lastDownload.ToString());
 		}
@@ -330,7 +329,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Keyboard.KeyRepeat = true;
 			
 			input.Text.Clear();
-			input.Text.Append(0, initialText);
+			input.Text.Set(initialText);
 			input.Recreate();
 		}
 		

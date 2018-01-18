@@ -88,17 +88,19 @@ namespace ClassicalSharp.Gui.Widgets {
 				return;
 			}
 			
-			if (typingLogPos == game.Chat.InputLog.Count)
+			if (typingLogPos == game.Chat.InputLog.Count) {
 				originalText = Text.ToString();
-			if (game.Chat.InputLog.Count > 0) {
-				typingLogPos--;
-				if (typingLogPos < 0) typingLogPos = 0;
-				
-				Text.Clear();
-				Text.Append(0, game.Chat.InputLog[typingLogPos]);
-				caret = -1;
-				Recreate();
 			}
+			
+			if (game.Chat.InputLog.Count == 0) return;
+			typingLogPos--;					
+			Text.Clear();
+			
+			if (typingLogPos < 0) typingLogPos = 0;	
+			Text.Set(game.Chat.InputLog[typingLogPos]);
+			
+			caret = -1;
+			Recreate();
 		}
 		
 		void DownKey(bool controlDown) {
@@ -109,19 +111,19 @@ namespace ClassicalSharp.Gui.Widgets {
 				return;
 			}
 			
-			if (game.Chat.InputLog.Count > 0) {
-				typingLogPos++;
-				Text.Clear();
-				if (typingLogPos >= game.Chat.InputLog.Count) {
-					typingLogPos = game.Chat.InputLog.Count;
-					if (originalText != null)
-						Text.Append(0, originalText);
-				} else {
-					Text.Append(0, game.Chat.InputLog[typingLogPos]);
-				}
-				caret = -1;
-				Recreate();
+			if (game.Chat.InputLog.Count == 0) return;
+			typingLogPos++;
+			Text.Clear();
+				
+			if (typingLogPos >= game.Chat.InputLog.Count) {
+				typingLogPos = game.Chat.InputLog.Count;
+				if (originalText != null) Text.Set(originalText);
+			} else {
+				Text.Set(game.Chat.InputLog[typingLogPos]);
 			}
+			
+			caret = -1;
+			Recreate();
 		}
 		
 		void TabKey() {
@@ -154,16 +156,15 @@ namespace ClassicalSharp.Gui.Widgets {
 				Append(matches[0]);
 			} else if (matches.Count > 1) {
 				StringBuffer sb = new StringBuffer(Utils.StringLength);
-				int index = 0;
-				sb.Append(ref index, "&e");
-				sb.AppendNum(ref index, matches.Count);
-				sb.Append(ref index, " matching names: ");
+				sb.Append("&e");
+				sb.AppendNum(matches.Count);
+				sb.Append(" matching names: ");
 				
 				for (int i = 0; i < matches.Count; i++) {
 					string match = matches[i];
 					if ((sb.Length + match.Length + 1) > sb.Capacity) break;
-					sb.Append(ref index, match);
-					sb.Append(ref index, ' ');
+					sb.Append(match);
+					sb.Append(' ');
 				}
 				game.Chat.Add(sb.ToString(), MessageType.ClientStatus3);
 			}

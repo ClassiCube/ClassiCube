@@ -178,20 +178,19 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		void UpdateBlockInfoString(BlockID block) {
-			int index = 0;
 			buffer.Clear();
-			if (game.PureClassic) { buffer.Append(ref index, "Select block"); return; }
+			if (game.PureClassic) { buffer.Append("Select block"); return; }
 			
-			buffer.Append(ref index, BlockInfo.Name[block]);
+			buffer.Append(BlockInfo.Name[block]);
 			if (game.ClassicMode) return;
 			
-			buffer.Append(ref index, " (ID ");
-			buffer.AppendNum(ref index, block);
-			buffer.Append(ref index, "&f, place ");
-			buffer.Append(ref index, BlockInfo.CanPlace[block] ? "&aYes" : "&cNo");
-			buffer.Append(ref index, "&f, delete ");
-			buffer.Append(ref index, BlockInfo.CanDelete[block] ? "&aYes" : "&cNo");
-			buffer.Append(ref index, "&f)");
+			buffer.Append(" (ID ");
+			buffer.AppendNum(block);
+			buffer.Append("&f, place ");
+			buffer.Append(BlockInfo.CanPlace[block] ? "&aYes" : "&cNo");
+			buffer.Append("&f, delete ");
+			buffer.Append(BlockInfo.CanDelete[block] ? "&aYes" : "&cNo");
+			buffer.Append("&f)");
 		}
 		
 		int lastCreatedIndex = -1000;

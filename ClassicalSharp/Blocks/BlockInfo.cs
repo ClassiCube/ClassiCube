@@ -224,17 +224,16 @@ namespace ClassicalSharp {
 		}
 		
 		static void SplitUppercase(StringBuffer buffer, int start, int end) {
-			int index = 0;
 			for (int i = start; i < end; i++) {
 				char c = Block.RawNames[i];
 				bool upper = Char.IsUpper(c) && i > start;
 				bool nextLower = i < end - 1 && !Char.IsUpper(Block.RawNames[i + 1]);
 				
 				if (upper && nextLower) {
-					buffer.Append(ref index, ' ');
-					buffer.Append(ref index, Char.ToLower(c));
+					buffer.Append(' ');
+					buffer.Append(Char.ToLower(c));
 				} else {
-					buffer.Append(ref index, c);
+					buffer.Append(c);
 				}
 			}
 		}

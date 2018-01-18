@@ -96,7 +96,6 @@ namespace ClassicalSharp.Commands {
 		
 		public void PrintDefinedCommands(Game game) {
 			StringBuffer sb = new StringBuffer(Utils.StringLength);
-			int index = 0;
 			
 			for (int i = 0; i < RegisteredCommands.Count; i++) {
 				Command cmd = RegisteredCommands[i];
@@ -105,10 +104,9 @@ namespace ClassicalSharp.Commands {
 				if ((sb.Length + name.Length + 2) > sb.Capacity) {
 					game.Chat.Add(sb.ToString());
 					sb.Clear();
-					index = 0;
 				}
-				sb.Append(ref index, name);
-				sb.Append(ref index, ", ");
+				sb.Append(name);
+				sb.Append(", ");
 			}
 			
 			if (sb.Length > 0)
