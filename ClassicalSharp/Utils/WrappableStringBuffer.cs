@@ -66,6 +66,11 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public override string ToString() {
+			return new String(value, 0, Length);
+		}
+
+		
 		public void WordWrap(IDrawer2D drawer, string[] lines, int maxLines, int maxPerLine) {
 			int len = Length;
 			int* lineLens = stackalloc int[lines.Length];
