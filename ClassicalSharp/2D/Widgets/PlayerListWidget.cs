@@ -58,9 +58,13 @@ namespace ClassicalSharp.Gui.Widgets {
 			overview.Reposition();
 			overview.Render(delta);
 			
+			int highlightedI = HighlightedName(game.Mouse.X, game.Mouse.Y);			
 			for (int i = 0; i < namesCount; i++) {
+				if (!textures[i].IsValid) continue;
+				
 				Texture tex = textures[i];
-				if (tex.IsValid) tex.Render(gfx);
+				if (i == highlightedI) tex.X += 4;
+				tex.Render(gfx);
 			}
 		}
 		
@@ -77,16 +81,20 @@ namespace ClassicalSharp.Gui.Widgets {
 			game.EntityEvents.TabListEntryRemoved -= TabEntryRemoved;
 		}
 		
-		public string GetNameUnder(int mouseX, int mouseY) {
+		int HighlightedName(int mouseX, int mouseY) {
 			for (int i = 0; i < namesCount; i++) {
-				Texture tex = textures[i];
-				if (!tex.IsValid || IDs[i] == groupNameID) continue;
+				if (!textures[i].IsValid || IDs[i] == groupNameID) continue;
 				
-				if (tex.Bounds.Contains(mouseX, mouseY)) {
-					return TabList.Entries[IDs[i]].PlayerName;
-				}
+				Texture t = textures[i];
+				if (GuiElement.Contains(t.X, t.Y, t.Width, t.Height, mouseX, mouseY)) return i;
 			}
-			return null;
+			return -1;
+		}
+		
+		public string GetNameUnder(int mouseX, int mouseY) {
+			int i = HighlightedName(mouseX, mouseY);
+			if (i == -1) return null;
+			return TabList.Entries[IDs[i]].PlayerName;
 		}
 		
 		

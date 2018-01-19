@@ -33,7 +33,6 @@ namespace ClassicalSharp {
 			U2 = u2; V2 = v2;
 		}
 		
-		public Rectangle Bounds { get { return new Rectangle(X, Y, Width, Height); } }
 		public bool IsValid { get { return ID > 0; } }
 		public int X1 { get { return X; } set { X = (short)value; } }
 		public int Y1 { get { return Y; } set { Y = (short)value; } }

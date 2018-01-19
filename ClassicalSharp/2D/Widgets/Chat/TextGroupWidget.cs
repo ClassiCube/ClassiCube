@@ -139,7 +139,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public string GetSelected(int mouseX, int mouseY) {
 			for (int i = 0; i < Textures.Length; i++) {
 				Texture tex = Textures[i];
-				if (tex.IsValid && tex.Bounds.Contains(mouseX, mouseY))
+				if (tex.IsValid && GuiElement.Contains(tex.X, tex.Y, tex.Width, tex.Height, mouseX, mouseY))
 					return GetUrl(i, mouseX) ?? lines[i];
 			}
 			return null;

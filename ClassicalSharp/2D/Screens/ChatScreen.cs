@@ -411,7 +411,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			int height = normalChat.GetUsedHeight();
 			int y = normalChat.Y + normalChat.Height - height;
-			if (new Rectangle(normalChat.X, y, normalChat.Width, height).Contains(mouseX, mouseY))
+			if (GuiElement.Contains(normalChat.X, y, normalChat.Width, height, mouseX, mouseY))
 				return HandlesChatClick(mouseX, mouseY);
 			return false;
 		}
