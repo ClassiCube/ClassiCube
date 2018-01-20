@@ -84,11 +84,11 @@ void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 	}
 }
 
-void WeatherRenderer_ContextLost(void) {
+void WeatherRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&weather_vb);
 }
 
-void WeatherRenderer_ContextRecreated(void) {
+void WeatherRenderer_ContextRecreated(void* obj) {
 	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, weather_verticesCount);
 }
 
@@ -181,7 +181,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Gfx_SetAlphaTest(false);
 }
 
-void WeatherRenderer_FileChanged(Stream* stream) {
+void WeatherRenderer_FileChanged(void* obj, Stream* stream) {
 	String snow = String_FromConst("snow.png");
 	String rain = String_FromConst("rain.png");
 
@@ -193,12 +193,12 @@ void WeatherRenderer_FileChanged(Stream* stream) {
 }
 
 void WeatherRenderer_Init(void) {
-	Event_RegisterStream(&TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
 	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
+	WeatherRenderer_ContextRecreated(NULL);
 
-	WeatherRenderer_ContextRecreated();
-	Event_RegisterVoid(&GfxEvents_ContextLost, &WeatherRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, &WeatherRenderer_ContextRecreated);
+	Event_RegisterStream(&TextureEvents_FileChanged, NULL, &WeatherRenderer_FileChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, &WeatherRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, &WeatherRenderer_ContextRecreated);
 }
 
 void WeatherRenderer_Reset(void) {
@@ -210,12 +210,12 @@ void WeatherRenderer_Reset(void) {
 void WeatherRenderer_Free(void) {
 	Gfx_DeleteTexture(&weather_rainTex);
 	Gfx_DeleteTexture(&weather_snowTex);
-	WeatherRenderer_ContextLost();
+	WeatherRenderer_ContextLost(NULL);
 	WeatherRenderer_Reset();
 
-	Event_UnregisterStream(&TextureEvents_FileChanged, &WeatherRenderer_FileChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, &WeatherRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, &WeatherRenderer_ContextRecreated);
+	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, &WeatherRenderer_FileChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, &WeatherRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, &WeatherRenderer_ContextRecreated);
 }
 
 IGameComponent WeatherRenderer_MakeGameComponent(void) {

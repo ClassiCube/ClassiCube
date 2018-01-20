@@ -13,25 +13,25 @@ PackedCol pickedPos_col;
 VertexP3fC4b pickedPos_vertices[pickedPos_numVertices];
 VertexP3fC4b* pickedPos_ptr;
 
-void PickedPosRenderer_ContextLost(void) {
+void PickedPosRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&pickedPos_vb);
 }
 
-void PickedPosRenderer_ContextRecreated(void) {
+void PickedPosRenderer_ContextRecreated(void* obj) {
 	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, pickedPos_numVertices);
 }
 
 void PickedPosRenderer_Init(void) {
 	pickedPos_col = PackedCol_Create4(0, 0, 0, 102);
-	PickedPosRenderer_ContextRecreated();
-	Event_RegisterVoid(&GfxEvents_ContextLost, PickedPosRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, PickedPosRenderer_ContextRecreated);
+	PickedPosRenderer_ContextRecreated(NULL);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
 }
 
 void PickedPosRenderer_Free(void) {
-	PickedPosRenderer_ContextLost();
-	Event_UnregisterVoid(&GfxEvents_ContextLost, PickedPosRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, PickedPosRenderer_ContextRecreated);
+	PickedPosRenderer_ContextLost(NULL);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
 }
 
 void PickedPosRenderer_Render(Real64 delta) {

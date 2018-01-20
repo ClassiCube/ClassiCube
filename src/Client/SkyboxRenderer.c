@@ -18,12 +18,12 @@ bool SkyboxRenderer_ShouldRender(void) {
 	return skybox_tex > 0 && !EnvRenderer_Minimal;
 }
 
-void SkyboxRenderer_TexturePackChanged(void) {
+void SkyboxRenderer_TexturePackChanged(void* obj) {
 	Gfx_DeleteTexture(&skybox_tex);
 	WorldEnv_SkyboxClouds = false;
 }
 
-void SkyboxRenderer_FileChanged(Stream* src) {
+void SkyboxRenderer_FileChanged(void* obj, Stream* src) {
 	String skybox = String_FromConst("skybox.png");
 	String useclouds = String_FromConst("useclouds");
 
@@ -121,33 +121,33 @@ void SkyboxRenderer_MakeVb(void) {
 	skybox_vb = Gfx_CreateVb(vertices, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
 }
 
-void SkyboxRenderer_ContextLost(void) { Gfx_DeleteVb(&skybox_vb); }
-void SkyboxRenderer_ContextRecreated(void) { SkyboxRenderer_MakeVb(); }
+void SkyboxRenderer_ContextLost(void* obj) { Gfx_DeleteVb(&skybox_vb); }
+void SkyboxRenderer_ContextRecreated(void* obj) { SkyboxRenderer_MakeVb(); }
 
-void SkyboxRenderer_EnvVariableChanged(Int32 envVar) {
+void SkyboxRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (envVar != ENV_VAR_CLOUDS_COL) return;
 	SkyboxRenderer_MakeVb();
 }
 
 void SkyboxRenderer_Init(void) {
-	Event_RegisterStream(&TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
-	Event_RegisterVoid(&TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost, &SkyboxRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, &SkyboxRenderer_ContextRecreated);
+	Event_RegisterStream(&TextureEvents_FileChanged, NULL, &SkyboxRenderer_FileChanged);
+	Event_RegisterVoid(&TextureEvents_PackChanged,   NULL, &SkyboxRenderer_TexturePackChanged);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged,  NULL, &SkyboxRenderer_EnvVariableChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, &SkyboxRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, &SkyboxRenderer_ContextRecreated);
 }
 
 void SkyboxRenderer_Reset(void) { Gfx_DeleteTexture(&skybox_tex); }
 
 void SkyboxRenderer_Free(void) {
 	Gfx_DeleteTexture(&skybox_tex);
-	SkyboxRenderer_ContextLost();
+	SkyboxRenderer_ContextLost(NULL);
 
-	Event_UnregisterStream(&TextureEvents_FileChanged, &SkyboxRenderer_FileChanged);
-	Event_UnregisterVoid(&TextureEvents_PackChanged, &SkyboxRenderer_TexturePackChanged);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, &SkyboxRenderer_EnvVariableChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, &SkyboxRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, &SkyboxRenderer_ContextRecreated);
+	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, &SkyboxRenderer_FileChanged);
+	Event_UnregisterVoid(&TextureEvents_PackChanged,   NULL, &SkyboxRenderer_TexturePackChanged);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged,  NULL, &SkyboxRenderer_EnvVariableChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, &SkyboxRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, &SkyboxRenderer_ContextRecreated);
 }
 
 IGameComponent SkyboxRenderer_MakeGameComponent(void) {

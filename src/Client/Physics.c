@@ -93,7 +93,7 @@ TickQueue physics_lavaQ, physics_waterQ;
 #define physics_defLavaTick (30UL << physics_tickShift)
 #define physics_defWaterTick (5UL << physics_tickShift)
 
-void Physics_OnNewMapLoaded(void) {
+void Physics_OnNewMapLoaded(void* obj) {
 	TickQueue_Clear(&physics_lavaQ);
 	TickQueue_Clear(&physics_waterQ);
 
@@ -109,7 +109,7 @@ void Physics_OnNewMapLoaded(void) {
 
 void Physics_SetEnabled(bool enabled) {
 	Physics_Enabled = enabled;
-	Physics_OnNewMapLoaded();
+	Physics_OnNewMapLoaded(NULL);
 }
 
 void Physics_ActivateNeighbours(Int32 x, Int32 y, Int32 z, Int32 index) {
@@ -136,7 +136,7 @@ bool Physics_IsEdgeWater(Int32 x, Int32 y, Int32 z) {
 }
 
 
-void Physics_BlockChanged(Vector3I p, BlockID oldBlock, BlockID block) {
+void Physics_BlockChanged(void* obj, Vector3I p, BlockID oldBlock, BlockID block) {
 	if (!Physics_Enabled) return;
 	Int32 index = World_Pack(p.X, p.Y, p.Z);
 
@@ -492,8 +492,8 @@ void Physics_HandleTnt(Int32 index, BlockID block) {
 }
 
 void Physics_Init(void) {
-	Event_RegisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
-	Event_RegisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
+	Event_RegisterVoid(&WorldEvents_MapLoaded,    NULL, Physics_OnNewMapLoaded);
+	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, Physics_BlockChanged);
 	Physics_Enabled = Options_GetBool(OPTION_BLOCK_PHYSICS, true);
 	TickQueue_Init(&physics_lavaQ);
 	TickQueue_Init(&physics_waterQ);
@@ -536,8 +536,8 @@ void Physics_Init(void) {
 }
 
 void Physics_Free(void) {
-	Event_UnregisterVoid(&WorldEvents_MapLoaded, Physics_OnNewMapLoaded);
-	Event_UnregisterBlock(&UserEvents_BlockChanged, Physics_BlockChanged);
+	Event_UnregisterVoid(&WorldEvents_MapLoaded,    NULL, Physics_OnNewMapLoaded);
+	Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, Physics_BlockChanged);
 }
 
 void Physics_Tick(void) {

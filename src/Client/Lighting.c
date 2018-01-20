@@ -22,7 +22,7 @@ void Lighting_SetShadow(PackedCol col) {
 		&shadowZSide, &shadowYBottom);
 }
 
-void Lighting_EnvVariableChanged(Int32 envVar) {
+void Lighting_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (envVar == ENV_VAR_SUN_COL) {
 		Lighting_SetSun(WorldEnv_SunCol);
 	} else if (envVar == ENV_VAR_SHADOW_COL) {
@@ -311,7 +311,7 @@ void Lighting_LightHint(Int32 startX, Int32 startZ) {
 
 
 void Lighting_Init(void) {
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
 	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
 }
@@ -339,7 +339,7 @@ void Lighting_OnNewMapLoaded(void) {
 }
 
 void Lighting_Free(void) {
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, &Lighting_EnvVariableChanged);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
 	Lighting_Reset();
 }
 

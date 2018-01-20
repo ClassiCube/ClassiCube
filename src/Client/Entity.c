@@ -286,7 +286,7 @@ void Entities_RenderHoveredNames(Real64 delta) {
 	if (hadFog) Gfx_SetFog(true);
 }
 
-void Entities_ContextLost(void) {
+void Entities_ContextLost(void* obj) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
@@ -295,7 +295,7 @@ void Entities_ContextLost(void) {
 	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 }
 
-void Entities_ContextRecreated(void) {
+void Entities_ContextRecreated(void* obj) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
@@ -303,7 +303,7 @@ void Entities_ContextRecreated(void) {
 	}
 }
 
-void Entities_ChatFontChanged(void) {
+void Entities_ChatFontChanged(void* obj) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
@@ -313,9 +313,9 @@ void Entities_ChatFontChanged(void) {
 }
 
 void Entities_Init(void) {
-	Event_RegisterVoid(&GfxEvents_ContextLost, Entities_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, Entities_ContextRecreated);
-	Event_RegisterVoid(&ChatEvents_FontChanged, Entities_ChatFontChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Entities_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
+	Event_RegisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
 
 	Entities_NameMode = Options_GetEnum(OPTION_NAMES_MODE, NAME_MODE_HOVERED,
 		NameMode_Names, Array_NumElements(NameMode_Names));
@@ -333,9 +333,9 @@ void Entities_Free(void) {
 		Entities_Remove((EntityID)i);
 	}
 
-	Event_UnregisterVoid(&GfxEvents_ContextLost, Entities_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, Entities_ContextRecreated);
-	Event_UnregisterVoid(&ChatEvents_FontChanged, Entities_ChatFontChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Entities_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Entities_ContextRecreated);
+	Event_UnregisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
 
 	if (ShadowComponent_ShadowTex != NULL) {
 		Gfx_DeleteTexture(&ShadowComponent_ShadowTex);

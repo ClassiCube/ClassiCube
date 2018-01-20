@@ -249,13 +249,13 @@ void EnvRenderer_ResetSky(void) {
 	EnvRenderer_RebuildSky((Int32)Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
 }
 
-void EnvRenderer_ContextLost(void) {
+void EnvRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&env_skyVb);
 	Gfx_DeleteVb(&env_cloudsVb);
 }
 
-void EnvRenderer_ContextRecreated(void) {
-	EnvRenderer_ContextLost();
+void EnvRenderer_ContextRecreated(void* obj) {
+	EnvRenderer_ContextLost(NULL);
 	Gfx_SetFog(!EnvRenderer_Minimal);
 
 	if (EnvRenderer_Minimal) {
@@ -267,12 +267,12 @@ void EnvRenderer_ContextRecreated(void) {
 	}
 }
 
-void EnvRenderer_ResetAllEnv(void) {
+void EnvRenderer_ResetAllEnv(void* obj) {
 	EnvRenderer_UpdateFog();
-	EnvRenderer_ContextRecreated();
+	EnvRenderer_ContextRecreated(NULL);
 }
 
-void EnvRenderer_EnvVariableChanged(Int32 envVar) {
+void EnvRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (EnvRenderer_Minimal) return;
 
 	if (envVar == ENV_VAR_SKY_COL) {
@@ -290,39 +290,39 @@ void EnvRenderer_EnvVariableChanged(Int32 envVar) {
 
 void EnvRenderer_UseLegacyMode(bool legacy) {
 	EnvRenderer_Legacy = legacy;
-	EnvRenderer_ContextRecreated();
+	EnvRenderer_ContextRecreated(NULL);
 }
 
 void EnvRenderer_UseMinimalMode(bool minimal) {
 	EnvRenderer_Minimal = minimal;
-	EnvRenderer_ContextRecreated();
+	EnvRenderer_ContextRecreated(NULL);
 }
 
 void EnvRenderer_Init(void) {
-	EnvRenderer_ResetAllEnv();
-	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
-	Event_RegisterVoid(&GfxEvents_ContextLost, EnvRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, EnvRenderer_ContextRecreated);
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
+	EnvRenderer_ResetAllEnv(NULL);
+	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ResetAllEnv);
+	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged,    NULL, EnvRenderer_EnvVariableChanged);
 	Game_SetViewDistance(Game_UserViewDistance, false);
 }
 
 void EnvRenderer_OnNewMap(void) {
 	Gfx_SetFog(false);
-	EnvRenderer_ContextLost();
+	EnvRenderer_ContextLost(NULL);
 }
 
 void EnvRenderer_OnNewMapLoaded(void) {
 	Gfx_SetFog(!EnvRenderer_Minimal);
-	EnvRenderer_ResetAllEnv();
+	EnvRenderer_ResetAllEnv(NULL);
 }
 
 void EnvRenderer_Free(void) {
-	EnvRenderer_ContextLost();
-	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, EnvRenderer_ResetAllEnv);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, EnvRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, EnvRenderer_ContextRecreated);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, EnvRenderer_EnvVariableChanged);
+	EnvRenderer_ContextLost(NULL);
+	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ResetAllEnv);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged,    NULL, EnvRenderer_EnvVariableChanged);
 }
 
 IGameComponent EnvRenderer_MakeGameComponent(void) {

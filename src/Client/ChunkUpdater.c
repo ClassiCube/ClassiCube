@@ -32,7 +32,7 @@ Vector3 cu_lastCamPos;
 Real32 cu_lastHeadY, cu_lastHeadX;
 Int32 cu_elementsPerBitmap;
 
-void ChunkUpdater_EnvVariableChanged(Int32 envVar) {
+void ChunkUpdater_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (envVar == ENV_VAR_SUN_COL || envVar == ENV_VAR_SHADOW_COL) {
 		ChunkUpdater_Refresh();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
@@ -45,7 +45,7 @@ void ChunkUpdater_EnvVariableChanged(Int32 envVar) {
 	}
 }
 
-void ChunkUpdater_TerrainAtlasChanged(void) {
+void ChunkUpdater_TerrainAtlasChanged(void* obj) {
 	if (MapRenderer_1DUsedCount != 0) {
 		bool refreshRequired = cu_elementsPerBitmap != Atlas1D_ElementsPerBitmap;
 		if (refreshRequired) ChunkUpdater_Refresh();
@@ -56,17 +56,17 @@ void ChunkUpdater_TerrainAtlasChanged(void) {
 	ChunkUpdater_ResetPartFlags();
 }
 
-void ChunkUpdater_BlockDefinitionChanged(void) {
+void ChunkUpdater_BlockDefinitionChanged(void* obj) {
 	MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
 	ChunkUpdater_ResetPartFlags();
 	ChunkUpdater_Refresh();
 }
 
-void ChunkUpdater_ProjectionChanged(void) {
+void ChunkUpdater_ProjectionChanged(void* obj) {
 	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
 }
 
-void ChunkUpdater_ViewDistanceChanged(void) {
+void ChunkUpdater_ViewDistanceChanged(void* obj) {
 	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
 }
 
@@ -77,6 +77,9 @@ void ChunkUpdater_Refresh(void) {
 		ChunkUpdater_ResetChunkCache();
 	}
 	ChunkUpdater_ResetPartCounts();
+}
+void ChunkUpdater_Refresh_Handler(void* obj) {
+	ChunkUpdater_Refresh();
 }
 
 void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
@@ -135,7 +138,7 @@ void ChunkUpdater_PerformAllocations(void) {
 	Platform_MemSet(MapRenderer_PartsBuffer, 0, partsSize);
 }
 
-void ChunkUpdater_OnNewMap(void) {
+void ChunkUpdater_OnNewMap(void* obj) {
 	Game_ChunkUpdates = 0;
 	ChunkUpdater_ClearChunkCache();
 	ChunkUpdater_ResetPartCounts();
@@ -143,7 +146,7 @@ void ChunkUpdater_OnNewMap(void) {
 	ChunkUpdater_FreeAllocations();
 }
 
-void ChunkUpdater_OnNewMapLoaded(void) {
+void ChunkUpdater_OnNewMapLoaded(void* obj) {
 	MapRenderer_ChunksX = (World_Width + CHUNK_MAX) >> CHUNK_SHIFT;
 	MapRenderer_ChunksY = (World_Height + CHUNK_MAX) >> CHUNK_SHIFT;
 	MapRenderer_ChunksZ = (World_Length + CHUNK_MAX) >> CHUNK_SHIFT;
@@ -306,6 +309,9 @@ void ChunkUpdater_ClearChunkCache(void) {
 	}
 	ChunkUpdater_ResetPartCounts();
 }
+void ChunkUpdater_ClearChunkCache_Handler(void* obj) {
+	ChunkUpdater_ClearChunkCache();
+}
 
 
 #define ChunkUpdater_DeleteParts(parts, partsCount)\
@@ -416,32 +422,32 @@ void ChunkUpdater_UpdateSortOrder(void) {
 }
 
 void ChunkUpdater_Init(void) {
-	Event_RegisterVoid(&TextureEvents_AtlasChanged, ChunkUpdater_TerrainAtlasChanged);
-	Event_RegisterVoid(&WorldEvents_NewMap, ChunkUpdater_OnNewMap);
-	Event_RegisterVoid(&WorldEvents_MapLoaded, ChunkUpdater_OnNewMapLoaded);
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged, ChunkUpdater_EnvVariableChanged);
+	Event_RegisterVoid(&TextureEvents_AtlasChanged,    NULL, ChunkUpdater_TerrainAtlasChanged);
+	Event_RegisterVoid(&WorldEvents_NewMap,            NULL, ChunkUpdater_OnNewMap);
+	Event_RegisterVoid(&WorldEvents_MapLoaded,         NULL, ChunkUpdater_OnNewMapLoaded);
+	Event_RegisterInt32(&WorldEvents_EnvVarChanged,    NULL, ChunkUpdater_EnvVariableChanged);
 
-	Event_RegisterVoid(&BlockEvents_BlockDefChanged, ChunkUpdater_BlockDefinitionChanged);
-	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, ChunkUpdater_ViewDistanceChanged);
-	Event_RegisterVoid(&GfxEvents_ProjectionChanged, ChunkUpdater_ProjectionChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost, ChunkUpdater_ClearChunkCache);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, ChunkUpdater_Refresh);
+	Event_RegisterVoid(&BlockEvents_BlockDefChanged,   NULL, ChunkUpdater_BlockDefinitionChanged);
+	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, ChunkUpdater_ViewDistanceChanged);
+	Event_RegisterVoid(&GfxEvents_ProjectionChanged,   NULL, ChunkUpdater_ProjectionChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, ChunkUpdater_ClearChunkCache_Handler);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, ChunkUpdater_Refresh_Handler);
 
 	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
 	ChunkUpdater_ApplyMeshBuilder();
 }
 
 void ChunkUpdater_Free(void) {
-	Event_UnregisterVoid(&TextureEvents_AtlasChanged, ChunkUpdater_TerrainAtlasChanged);
-	Event_UnregisterVoid(&WorldEvents_NewMap, ChunkUpdater_OnNewMap);
-	Event_UnregisterVoid(&WorldEvents_MapLoaded, ChunkUpdater_OnNewMapLoaded);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, ChunkUpdater_EnvVariableChanged);
+	Event_UnregisterVoid(&TextureEvents_AtlasChanged,    NULL, ChunkUpdater_TerrainAtlasChanged);
+	Event_UnregisterVoid(&WorldEvents_NewMap,            NULL, ChunkUpdater_OnNewMap);
+	Event_UnregisterVoid(&WorldEvents_MapLoaded,         NULL, ChunkUpdater_OnNewMapLoaded);
+	Event_UnregisterInt32(&WorldEvents_EnvVarChanged,    NULL, ChunkUpdater_EnvVariableChanged);
 
-	Event_UnregisterVoid(&BlockEvents_BlockDefChanged, ChunkUpdater_BlockDefinitionChanged);
-	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, ChunkUpdater_ViewDistanceChanged);
-	Event_UnregisterVoid(&GfxEvents_ProjectionChanged, ChunkUpdater_ProjectionChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, ChunkUpdater_ClearChunkCache);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, ChunkUpdater_Refresh);
+	Event_UnregisterVoid(&BlockEvents_BlockDefChanged,   NULL, ChunkUpdater_BlockDefinitionChanged);
+	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, ChunkUpdater_ViewDistanceChanged);
+	Event_UnregisterVoid(&GfxEvents_ProjectionChanged,   NULL, ChunkUpdater_ProjectionChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,         NULL, ChunkUpdater_ClearChunkCache_Handler);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, ChunkUpdater_Refresh_Handler);
 
-	ChunkUpdater_OnNewMap();
+	ChunkUpdater_OnNewMap(NULL);
 }

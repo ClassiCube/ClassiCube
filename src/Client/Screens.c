@@ -138,17 +138,20 @@ typedef struct InventoryScreen_ {
 } InventoryScreen;
 InventoryScreen InventoryScreen_Instance;
 
-void InventoryScreen_OnBlockChanged(void) {
-	TableWidget_OnInventoryChanged(&InventoryScreen_Instance.Table);
+void InventoryScreen_OnBlockChanged(void* obj) {
+	InventoryScreen* screen = (InventoryScreen*)obj;
+	TableWidget_OnInventoryChanged(&screen->Table);
 }
 
-void InventoryScreen_ContextLost(void) {
-	GuiElement* elem = &InventoryScreen_Instance.Table.Base.Base;
+void InventoryScreen_ContextLost(void* obj) {
+	InventoryScreen* screen = (InventoryScreen*)obj;
+	GuiElement* elem = &screen->Table.Base.Base;
 	elem->Free(elem);
 }
 
-void InventoryScreen_ContextRecreated(void) {
-	GuiElement* elem = &InventoryScreen_Instance.Table.Base.Base;
+void InventoryScreen_ContextRecreated(void* obj) {
+	InventoryScreen* screen = (InventoryScreen*)obj;
+	GuiElement* elem = &screen->Table.Base.Base;
 	elem->Recreate(elem);
 }
 
@@ -163,10 +166,10 @@ void InventoryScreen_Init(GuiElement* elem) {
 	elem->Init(elem);
 
 	Key_KeyRepeat = true;
-	Event_RegisterVoid(&BlockEvents_PermissionsChanged, InventoryScreen_OnBlockChanged);
-	Event_RegisterVoid(&BlockEvents_BlockDefChanged,    InventoryScreen_OnBlockChanged);	
-	Event_RegisterVoid(&GfxEvents_ContextLost,          InventoryScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated,     InventoryScreen_ContextRecreated);
+	Event_RegisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
+	Event_RegisterVoid(&BlockEvents_BlockDefChanged,    screen, InventoryScreen_OnBlockChanged);	
+	Event_RegisterVoid(&GfxEvents_ContextLost,          screen, InventoryScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,     screen, InventoryScreen_ContextRecreated);
 }
 
 void InventoryScreen_Render(GuiElement* elem, Real64 delta) {
@@ -188,10 +191,10 @@ void InventoryScreen_Free(GuiElement* elem) {
 	elem->Free(elem);
 
 	Key_KeyRepeat = false;
-	Event_UnregisterVoid(&BlockEvents_PermissionsChanged, InventoryScreen_OnBlockChanged);
-	Event_UnregisterVoid(&BlockEvents_BlockDefChanged,    InventoryScreen_OnBlockChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,          InventoryScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated,     InventoryScreen_ContextRecreated);
+	Event_UnregisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
+	Event_UnregisterVoid(&BlockEvents_BlockDefChanged,    screen, InventoryScreen_OnBlockChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,          screen, InventoryScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated,     screen, InventoryScreen_ContextRecreated);
 }
 
 bool InventoryScreen_HandlesKeyDown(GuiElement* elem, Key key) {
@@ -351,14 +354,14 @@ void StatusScreen_Render(GuiElement* elem, Real64 delta) {
 }
 
 void StatusScreen_OnResize(Screen* screen) { }
-void StatusScreen_ChatFontChanged(void) {
-	StatusScreen* screen = &StatusScreen_Instance;
+void StatusScreen_ChatFontChanged(void* obj) {
+	StatusScreen* screen = (StatusScreen*)obj;
 	GuiElement* elem = &screen->Base.Base;
 	elem->Recreate(elem);
 }
 
-void StatusScreen_ContextLost(void) {
-	StatusScreen* screen = &StatusScreen_Instance;
+void StatusScreen_ContextLost(void* obj) {
+	StatusScreen* screen = (StatusScreen*)obj;
 	TextAtlas_Free(&screen->PosAtlas);
 	GuiElement* elem;
 
@@ -368,8 +371,8 @@ void StatusScreen_ContextLost(void) {
 	elem->Free(elem);
 }
 
-void StatusScreen_ContextRecreated(void) {
-	StatusScreen* screen = &StatusScreen_Instance;
+void StatusScreen_ContextRecreated(void* obj) {
+	StatusScreen* screen = (StatusScreen*)obj;
 
 	TextWidget* status = &screen->Status; TextWidget_Make(status, &screen->Font);
 	Widget_SetLocation(&status->Base, ANCHOR_LEFT_OR_TOP, ANCHOR_LEFT_OR_TOP, 2, 2);
@@ -393,21 +396,21 @@ void StatusScreen_ContextRecreated(void) {
 void StatusScreen_Init(GuiElement* elem) {
 	StatusScreen* screen = (StatusScreen*)elem;
 	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
-	StatusScreen_ContextRecreated();
+	StatusScreen_ContextRecreated(screen);
 
-	Event_RegisterVoid(&ChatEvents_FontChanged,     StatusScreen_ChatFontChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      StatusScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, StatusScreen_ContextRecreated);
+	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_ChatFontChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, StatusScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
 }
 
 void StatusScreen_Free(GuiElement* elem) {
 	StatusScreen* screen = (StatusScreen*)elem;
 	Platform_FreeFont(&screen->Font);
-	StatusScreen_ContextLost();
+	StatusScreen_ContextLost(screen);
 
-	Event_UnregisterVoid(&ChatEvents_FontChanged,     StatusScreen_ChatFontChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      StatusScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, StatusScreen_ContextRecreated);
+	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_ChatFontChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, StatusScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
 }
 
 void StatusScreen_DrawPosition(StatusScreen* screen) {
@@ -558,13 +561,13 @@ void FilesScreen_MoveForwards(GuiElement* elem, Int32 x, Int32 y, MouseButton bt
 	if (btn == MouseButton_Left) FilesScreen_PageClick(true);
 }
 
-void FilesScreen_ContextLost(void) {
-	FilesScreen* screen = &FilesScreen_Instance;
+void FilesScreen_ContextLost(void* obj) {
+	FilesScreen* screen = (FilesScreen*)obj;
 	Screen_FreeWidgets(screen->Widgets, Array_NumElements(screen->Widgets));
 }
 
-void FilesScreen_ContextRecreated(void) {
-	FilesScreen* screen = &FilesScreen_Instance;
+void FilesScreen_ContextRecreated(void* obj) {
+	FilesScreen* screen = (FilesScreen*)obj;
 	TextWidget_Create(&screen->Title, &screen->TitleText, &screen->Font);
 	Widget_SetLocation(&screen->Title.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
 
@@ -591,9 +594,9 @@ void FilesScreen_ContextRecreated(void) {
 void FilesScreen_Init(GuiElement* elem) {
 	FilesScreen* screen = (FilesScreen*)elem;
 	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
-	FilesScreen_ContextRecreated();
-	Event_RegisterVoid(&GfxEvents_ContextLost,      FilesScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, FilesScreen_ContextRecreated);
+	FilesScreen_ContextRecreated(screen);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, FilesScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, FilesScreen_ContextRecreated);
 }
 
 void FilesScreen_Render(GuiElement* elem, Real64 delta) {
@@ -607,9 +610,9 @@ void FilesScreen_Render(GuiElement* elem, Real64 delta) {
 void FilesScreen_Free(GuiElement* elem) {
 	FilesScreen* screen = (FilesScreen*)elem;
 	Platform_FreeFont(&screen->Font);
-	FilesScreen_ContextLost();
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      FilesScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, FilesScreen_ContextRecreated);
+	FilesScreen_ContextLost(screen);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, FilesScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, FilesScreen_ContextRecreated);
 }
 
 bool FilesScreen_HandlesKeyDown(GuiElement* elem, Key key) {

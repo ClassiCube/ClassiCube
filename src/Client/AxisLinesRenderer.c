@@ -14,17 +14,17 @@ GfxResourceID axisLines_vb;
 #define axisLines_size (1.0f / 32.0f)
 #define axisLines_length 3.0f
 
-void AxisLinesRenderer_ContextLost(void) {
+void AxisLinesRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&axisLines_vb);
 }
 
 void AxisLinesRenderer_Init(void) {
-	Event_RegisterVoid(&GfxEvents_ContextLost, AxisLinesRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
 }
 
 void AxisLinesRenderer_Free(void) {
-	AxisLinesRenderer_ContextLost();
-	Event_UnregisterVoid(&GfxEvents_ContextLost, AxisLinesRenderer_ContextLost);
+	AxisLinesRenderer_ContextLost(NULL);
+	Event_UnregisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
 }
 
 IGameComponent AxisLinesRenderer_MakeGameComponent(void) {

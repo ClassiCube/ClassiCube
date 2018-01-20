@@ -11,11 +11,11 @@
 String ModelCache_charPngString = String_FromConst("char.png");
 Int32 ModelCache_texCount, ModelCache_modelCount;
 
-void ModelCache_ContextLost(void) {
+void ModelCache_ContextLost(void* obj) {
 	Gfx_DeleteVb(&ModelCache_Vb);
 }
 
-void ModelCache_ContextRecreated(void) {
+void ModelCache_ContextRecreated(void* obj) {
 	ModelCache_Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, MODELCACHE_MAX_VERTICES);
 }
 
@@ -73,7 +73,7 @@ void ModelCache_RegisterTexture(STRING_REF const UInt8* texName) {
 }
 
 
-static void ModelCache_TextureChanged(Stream* stream) {
+static void ModelCache_TextureChanged(void* obj, Stream* stream) {
 	Int32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		CachedTexture* tex = &ModelCache_Textures[i];
@@ -1327,11 +1327,11 @@ static void ModelCache_RegisterDefaultModels(void) {
 
 void ModelCache_Init(void) {
 	ModelCache_RegisterDefaultModels();
-	ModelCache_ContextRecreated();
+	ModelCache_ContextRecreated(NULL);
 
-	Event_RegisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost, ModelCache_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, ModelCache_ContextRecreated);
+	Event_RegisterStream(&TextureEvents_FileChanged, NULL, ModelCache_TextureChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, ModelCache_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, ModelCache_ContextRecreated);
 }
 
 void ModelCache_Free(void) {
@@ -1340,9 +1340,9 @@ void ModelCache_Free(void) {
 		CachedTexture* tex = &ModelCache_Textures[i];
 		Gfx_DeleteTexture(&tex->TexID);
 	}
-	ModelCache_ContextLost();
+	ModelCache_ContextLost(NULL);
 
-	Event_UnregisterStream(&TextureEvents_FileChanged, ModelCache_TextureChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost, ModelCache_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, ModelCache_ContextRecreated);
+	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, ModelCache_TextureChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, ModelCache_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, ModelCache_ContextRecreated);
 }

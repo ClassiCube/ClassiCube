@@ -73,7 +73,7 @@ bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, In
 	return x >= recX && y >= recY && x < recX + width && y < recY + height;
 }
 
-void Gui_FileChanged(Stream* stream) {
+void Gui_FileChanged(void* obj, Stream* stream) {
 	String gui        = String_FromConst("gui.png");
 	String guiClassic = String_FromConst("gui_classic.png");
 	String icons      = String_FromConst("icons.png");
@@ -88,7 +88,7 @@ void Gui_FileChanged(Stream* stream) {
 }
 
 void Gui_Init(void) {
-	Event_RegisterStream(&TextureEvents_FileChanged, Gui_FileChanged);
+	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_Status = StatusScreen_MakeInstance();
 	game.Components.Add(statusScreen);
 	hudScreen = new HudScreen(game);
@@ -104,7 +104,7 @@ void Gui_Reset(void) {
 }
 
 void Gui_Free(void) {
-	Event_UnregisterStream(&TextureEvents_FileChanged, Gui_FileChanged);
+	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_SetNewScreen(NULL);
 	Gui_Status->Base.Free(&Gui_Status->Base);
 

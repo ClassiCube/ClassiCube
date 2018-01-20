@@ -170,38 +170,44 @@ UInt16 Terrain_1DCount[ATLAS1D_MAX_ATLASES_COUNT];
 UInt16 Terrain_1DIndices[ATLAS1D_MAX_ATLASES_COUNT];
 Random rnd;
 
-void Particles_FileChanged(Stream* stream) {
+void Particles_FileChanged(void* obj, Stream* stream) {
 	String particlesPng = String_FromConst("particles.png");
 	if (String_Equals(&stream->Name, &particlesPng)) {
 		//Game_UpdateTexture(&Particles_TexId, stream, false);
 	}
 }
 
-void Particles_ContextLost(void) { Gfx_DeleteVb(&Particles_VB); }
-void Particles_ContextRecreated(void) {
+void Particles_ContextLost(void* obj) { 
+	Gfx_DeleteVb(&Particles_VB); 
+}
+void Particles_ContextRecreated(void* obj) {
 	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
+}
+
+void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+	Particles_BreakBlockEffect(coords, oldBlock, block);
 }
 
 void Particles_Init(void) {
 	Random_InitFromCurrentTime(&rnd);
-	Event_RegisterBlock(&UserEvents_BlockChanged, Particles_BreakBlockEffect);
-	Event_RegisterStream(&TextureEvents_FileChanged, Particles_FileChanged);
+	Particles_ContextRecreated(NULL);
 
-	Particles_ContextRecreated();
-	Event_RegisterVoid(&GfxEvents_ContextLost, Particles_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, Particles_ContextRecreated);
+	Event_RegisterBlock(&UserEvents_BlockChanged,    NULL, Particles_BreakBlockEffect_Handler);
+	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, Particles_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, Particles_ContextRecreated);
 }
 
 void Particles_Reset(void) { Rain_Count = 0; Terrain_Count = 0; }
 
 void Particles_Free(void) {
 	Gfx_DeleteTexture(&Particles_TexId);
-	Event_UnregisterBlock(&UserEvents_BlockChanged, Particles_BreakBlockEffect);
-	Event_UnregisterStream(&TextureEvents_FileChanged, Particles_FileChanged);
+	Particles_ContextLost(NULL);
 
-	Particles_ContextLost();
-	Event_UnregisterVoid(&GfxEvents_ContextLost, Particles_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, Particles_ContextRecreated);
+	Event_UnregisterBlock(&UserEvents_BlockChanged,    NULL, Particles_BreakBlockEffect_Handler);
+	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Particles_FileChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, Particles_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, Particles_ContextRecreated);
 }
 
 

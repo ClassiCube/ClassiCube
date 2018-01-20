@@ -4,6 +4,7 @@
 #include "Platform.h"
 #include "ExtMath.h"
 #include "Funcs.h"
+#include "ErrorHandler.h"
 
 void SearcherState_Init(SearcherState* state, Int32 x, Int32 y, Int32 z, BlockID block, Real32 tSquared) {
 	state->X = (x << 3) | (block & 0x07);
