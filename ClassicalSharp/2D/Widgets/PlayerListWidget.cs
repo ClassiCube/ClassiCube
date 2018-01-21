@@ -41,7 +41,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			SortAndReposition();
 
 			overview = TextWidget.Create(game, "Connected players:", font)
-				.SetLocation(Anchor.Centre, Anchor.LeftOrTop, 0, 0);			
+				.SetLocation(Anchor.Centre, Anchor.LeftOrTop, 0, 0);
 			game.EntityEvents.TabListEntryAdded += TabEntryAdded;
 			game.EntityEvents.TabListEntryRemoved += TabEntryRemoved;
 			game.EntityEvents.TabListEntryChanged += TabEntryChanged;
@@ -273,7 +273,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		void SortEntries() {
 			if (namesCount == 0) return;
 			if (classic) {
-				Array.Sort(IDs, textures, 0, namesCount, grpComparer);
+				Array.Sort(IDs, textures, 0, namesCount, comparer);
 				return;
 			}
 			

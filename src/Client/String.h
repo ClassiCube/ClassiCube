@@ -70,6 +70,7 @@ void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
 #define String_StartsWith(str, sub) (String_IndexOfString(str, sub) == 0)
+Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);
 
 UInt16 Convert_CP437ToUnicode(UInt8 c);
 UInt8 Convert_UnicodeToCP437(UInt16 c);

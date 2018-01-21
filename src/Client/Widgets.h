@@ -200,10 +200,12 @@ typedef struct PlayerListWidget_ {
 	UInt16 NamesCount, ElementOffset;
 	Int32 XMin, XMax, YHeight;
 	bool Classic;
+	TextWidget Overview;
 	UInt16 IDs[TABLIST_MAX_NAMES * 2];
 	Texture Textures[TABLIST_MAX_NAMES * 2];
 } PlayerListWidget;
+
 void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic);
-String* PlayerListWidget_GetNameUnder(Int32 mouseX, Int32 mouseY);
-void PlayerListWidget_RecalcYOffset(void);
+void PlayerListWidget_GetNameUnder(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
+void PlayerListWidget_RecalcYOffset(PlayerListWidget* widget);
 #endif

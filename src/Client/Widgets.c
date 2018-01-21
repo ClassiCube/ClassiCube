@@ -13,6 +13,7 @@
 #include "Platform.h"
 #include "WordWrap.h"
 #include "ServerConnection.h"
+#include "Event.h"
 
 void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
@@ -1532,4 +1533,384 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	Size2D size = Drawer2D_MeasureText(&args);
 	widget->PrefixWidth  = (UInt16)size.Width;  widget->Base.Width  = size.Width;
 	widget->PrefixHeight = (UInt16)size.Height; widget->Base.Height = size.Height;
+}
+
+
+#define GROUP_NAME_ID UInt16_MaxValue
+#define LIST_COLUMN_PADDING 5
+#define LIST_BOUNDS_SIZE 10
+#define LIST_NAMES_PER_COLUMN 16
+PackedCol list_topCol    = PACKEDCOL_CONST(0, 0, 0, 180);
+PackedCol list_bottomCol = PACKEDCOL_CONST(50, 50, 50, 205);
+
+Texture PlayerListWidget_DrawName(PlayerListWidget* widget, STRING_PURE String* name) {
+	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE)];
+	String tmp;
+	if (Game_PureClassic) {
+		tmp = String_InitAndClearArray(tmpBuffer);
+		String_AppendColorless(&tmp, name);
+	} else {
+		tmp = *name;
+	}
+
+	DrawTextArgs args; DrawTextArgs_Make(&args, &tmp, &widget->Font, !widget->Classic);
+	Texture tex = Drawer2D_MakeTextTexture(&args, 0, 0);
+	Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
+	return tex;
+}
+
+
+Int32 PlayerListWidget_HighlightedName(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY) {
+	Int32 i;
+	for (i = 0; i < widget->NamesCount; i++) {
+		if (!Texture_IsValid(&widget->Textures[i]) || widget->IDs[i] == GROUP_NAME_ID) continue;
+
+		Texture t = widget->Textures[i];
+		if (Gui_Contains(t.X, t.Y, t.Width, t.Height, mouseX, mouseY)) return i;
+	}
+	return -1;
+}
+
+void PlayerListWidget_GetNameUnder(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name) {
+	String_Clear(name);
+	Int32 i = PlayerListWidget_HighlightedName(widget, mouseX, mouseY);
+	if (i == -1) return;
+
+	String player = TabList_UNSAFE_GetPlayer(widget->IDs[i]);
+	String_AppendString(name, &player);
+}
+
+void PlayerListWidget_UpdateTableDimensions(PlayerListWidget* widget) {
+	Int32 width = widget->XMax - widget->XMin, height = widget->YHeight;
+	widget->Base.X = (widget->XMin                ) - LIST_BOUNDS_SIZE;
+	widget->Base.Y = (Game_Height / 2 - height / 2) - LIST_BOUNDS_SIZE;
+	widget->Base.Width  = width  + LIST_BOUNDS_SIZE * 2;
+	widget->Base.Height = height + LIST_BOUNDS_SIZE * 2;
+}
+
+Int32 PlayerListWidget_GetColumnWidth(PlayerListWidget* widget, Int32 column) {
+	Int32 i = column * LIST_NAMES_PER_COLUMN;
+	Int32 maxWidth = 0;
+	Int32 maxIndex = min(widget->NamesCount, i + LIST_NAMES_PER_COLUMN);
+
+	for (; i < maxIndex; i++) {
+		maxWidth = max(maxWidth, widget->Textures[i].Width);
+	}
+	return maxWidth + LIST_COLUMN_PADDING + widget->ElementOffset;
+}
+
+Int32 PlayerListWidget_GetColumnHeight(PlayerListWidget* widget, Int32 column) {
+	Int32 i = column * LIST_NAMES_PER_COLUMN;
+	Int32 total = 0;
+	Int32 maxIndex = min(widget->NamesCount, i + LIST_NAMES_PER_COLUMN);
+
+	for (; i < maxIndex; i++) {
+		total += widget->Textures[i].Height + 1;
+	}
+	return total;
+}
+
+void PlayerListWidget_SetColumnPos(PlayerListWidget* widget, Int32 column, Int32 x, Int32 y) {
+	Int32 i = column * LIST_NAMES_PER_COLUMN;
+	Int32 maxIndex = min(widget->NamesCount, i + LIST_NAMES_PER_COLUMN);
+
+	for (; i < maxIndex; i++) {
+		Texture tex = widget->Textures[i];
+		tex.X = (Int16)x; tex.Y = (Int16)(y - 10);
+
+		y += tex.Height + 1;
+		/* offset player names a bit, compared to group name */
+		if (!widget->Classic && widget->IDs[i] != GROUP_NAME_ID) {
+			tex.X += (Int16)widget->ElementOffset;
+		}
+		widget->Textures[i] = tex;
+	}
+}
+
+void PlayerListWidget_RepositionColumns(PlayerListWidget* widget) {
+	Int32 width = 0, centreX = Game_Width / 2;
+	widget->YHeight = 0;
+
+	Int32 col, columns = Math_CeilDiv(widget->NamesCount, LIST_NAMES_PER_COLUMN);
+	for (col = 0; col < columns; col++) {
+		width += PlayerListWidget_GetColumnWidth(widget, col);
+		Int32 colHeight = PlayerListWidget_GetColumnHeight(widget, col);
+		widget->YHeight = nax(colHeight, widget->YHeight);
+	}
+
+	if (width < 480) width = 480;
+	widget->XMin = centreX - width / 2;
+	widget->XMax = centreX + width / 2;
+
+	Int32 x = widget->XMin, y = Game_Height / 2 - widget->YHeight / 2;
+	for (col = 0; col < columns; col++) {
+		PlayerListWidget_SetColumnPos(widget, col, x, y);
+		x += PlayerListWidget_GetColumnWidth(widget, col);
+	}
+}
+
+void PlayerListWidget_RecalcYOffset(PlayerListWidget* widget) {
+	Int32 yPosition = Game_Height / 4 - widget->Base.Height / 2;
+	widget->Base.YOffset = -max(0, yPosition);
+}
+
+void PlayerListWidget_Reposition(Widget* elem) {
+	Int32 oldX = elem->X, oldY = elem->Y;
+	Widget_DoReposition(elem);
+	PlayerListWidget* widget = (PlayerListWidget*)elem;
+
+	Int32 i;
+	for (i = 0; i < widget->NamesCount; i++) {
+		widget->Textures[i].X += elem->X - oldX;
+		widget->Textures[i].Y += elem->Y - oldY;
+	}
+}
+
+void PlayerListWidget_AddName(PlayerListWidget* widget, EntityID id, Int32 index) {
+	/* insert at end of list */
+	if (index == -1) { index = widget->NamesCount; widget->NamesCount++; }
+
+	String name = TabList_UNSAFE_GetList(id);
+	widget->IDs[index]      = id;
+	widget->Textures[index] = PlayerListWidget_DrawName(widget, &name);
+}
+
+void PlayerListWidget_DeleteAt(PlayerListWidget* widget, Int32 i) {
+	Texture tex = widget->Textures[i];
+	Gfx_DeleteTexture(&tex.ID);
+
+	for (; i < widget->NamesCount - 1; i++) {
+		widget->IDs[i]      = widget->IDs[i + 1];
+		widget->Textures[i] = widget->Textures[i + 1];
+	}
+
+	widget->IDs[widget->NamesCount] = 0;
+	widget->Textures[widget->NamesCount] = Texture_MakeInvalid();
+	widget->NamesCount--;
+}
+
+void PlayerListWidget_DeleteGroup(PlayerListWidget* widget, Int32* i) {
+	PlayerListWidget_DeleteAt(widget, *i);
+	(*i)--;
+}
+
+void PlayerListWidget_AddGroup(PlayerListWidget* widget, UInt16 id, Int32* index) {
+	Int32 i;
+	for (i = Array_NumElements(widget->IDs) - 1; i > (*index); i--) {
+		widget->IDs[i] = widget->IDs[i - 1];
+		widget->Textures[i] = widget->Textures[i - 1];
+	}
+
+	String group = TabList_UNSAFE_GetGroup(id);
+	widget->IDs[*index] = GROUP_NAME_ID;
+	widget->Textures[*index] = PlayerListWidget_DrawName(widget, &group);
+
+	(*index)++;
+	widget->NamesCount++;
+}
+
+Int32 PlayerListWidget_GetGroupCount(PlayerListWidget* widget, UInt16 id, Int32 idx) {
+	String group = TabList_UNSAFE_GetGroup(id);
+	Int32 count = 0;
+
+	while (idx < widget->NamesCount) {
+		String curGroup = TabList_UNSAFE_GetGroup(widget->IDs[idx]);
+		if (!String_CaselessEquals(&group, &curGroup)) return count;
+		idx++; count++;
+	}
+	return count;
+}
+
+Int32 PlayerListWidget_PlayerCompare(UInt16 x, UInt16 y) {
+	UInt8 xRank = TabList_GroupRanks[x];
+	UInt8 yRank = TabList_GroupRanks[y];
+	if (xRank != yRank) return (xRank < yRank ? 1 : -1);
+
+	UInt8 xNameBuffer[String_BufferSize(STRING_SIZE)];
+	String xName    = String_InitAndClearArray(xNameBuffer);
+	String xNameRaw = TabList_UNSAFE_GetList(x);
+	String_AppendColorless(&xName, &xNameRaw);
+
+	UInt8 yNameBuffer[String_BufferSize(STRING_SIZE)];
+	String yName    = String_InitAndClearArray(yNameBuffer);
+	String yNameRaw = TabList_UNSAFE_GetList(y);
+	String_AppendColorless(&yName, &yNameRaw);
+
+	return String_Compare(&xName, &yName);
+}
+
+Int32 PlayerListWidget_GroupCompare(UInt16 x, UInt16 y) {
+	UInt8 xGroupBuffer[String_BufferSize(STRING_SIZE)];
+	String xGroup    = String_InitAndClearArray(xGroupBuffer);
+	String xGroupRaw = TabList_UNSAFE_GetGroup(x);
+	String_AppendColorless(&xGroup, &xGroupRaw);
+
+	UInt8 yGroupBuffer[String_BufferSize(STRING_SIZE)];
+	String yGroup    = String_InitAndClearArray(yGroupBuffer);
+	String yGroupRaw = TabList_UNSAFE_GetGroup(y);
+	String_AppendColorless(&yGroup, &yGroupRaw);
+
+	return String_Compare(&xGroup, &yGroup);
+}
+
+PlayerListWidget* List_SortObj;
+Int32 (*List_SortCompare)(UInt16 x, UInt16 y);
+void PlayerListWidget_QuickSort(Int32 left, Int32 right) {
+	Texture* values = List_SortObj->Textures; Texture value;
+	UInt16* keys = List_SortObj->IDs;         UInt16 key;
+	while (left < right) {
+		Int32 i = left, j = right;
+		UInt16 pivot = keys[(i + j) / 2];
+
+		/* partition the list */
+		while (i <= j) {
+			while (List_SortCompare(pivot, keys[i]) > 0) i++;
+			while (List_SortCompare(pivot, keys[j]) < 0) j--;
+			QuickSort_Swap_KV_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(PlayerListWidget_QuickSort)
+	}
+}
+
+void PlayerListWidget_SortEntries(PlayerListWidget* widget) {
+	if (widget->NamesCount == 0) return;
+	List_SortObj = widget;
+	if (widget->Classic) {
+		List_SortCompare = PlayerListWidget_PlayerCompare;
+		PlayerListWidget_QuickSort(0, widget->NamesCount - 1);
+		return;
+	}
+
+	/* Sort the list into groups */
+	Int32 i;
+	for (i = 0; i < widget->NamesCount; i++) {
+		if (widget->IDs[i] != GROUP_NAME_ID) continue;
+		PlayerListWidget_DeleteGroup(widget, &i);
+	}
+	List_SortCompare = PlayerListWidget_GroupCompare;
+	PlayerListWidget_QuickSort(0, widget->NamesCount - 1);
+
+	/* Sort the entries in each group */
+	i = 0;
+	List_SortCompare = PlayerListWidget_PlayerCompare;
+	while (i < widget->NamesCount) {
+		UInt16 id = widget->IDs[i];
+		PlayerListWidget_AddGroup(widget, id, &i);
+		Int32 count = PlayerListWidget_GetGroupCount(widget, id, i);
+		PlayerListWidget_QuickSort(i, i + (count - 1));
+		i += count;
+	}
+}
+
+void PlayerListWidget_SortAndReposition(PlayerListWidget* widget) {
+	PlayerListWidget_SortEntries(widget);
+	PlayerListWidget_RepositionColumns(widget);
+	PlayerListWidget_UpdateTableDimensions(widget);
+	PlayerListWidget_RecalcYOffset(widget);
+	PlayerListWidget_Reposition(widget);
+}
+
+void PlayerListWidget_TabEntryAdded(void* obj, EntityID id) {
+	PlayerListWidget* widget = (PlayerListWidget*)obj;
+	PlayerListWidget_AddName(widget, id, -1);
+	PlayerListWidget_SortAndReposition(widget);
+}
+
+void PlayerListWidget_TabEntryChanged(void* obj, EntityID id) {
+	PlayerListWidget* widget = (PlayerListWidget*)obj;
+	Int32 i;
+	for (i = 0; i < widget->NamesCount; i++) {
+		if (widget->IDs[i] != id) continue;
+
+		Texture tex = widget->Textures[i];
+		Gfx_DeleteTexture(&tex.ID);
+		PlayerListWidget_AddName(widget, id, i);
+		PlayerListWidget_SortAndReposition(widget);
+		return;
+	}
+}
+
+void PlayerListWidget_TabEntryRemoved(void* obj, EntityID id) {
+	PlayerListWidget* widget = (PlayerListWidget*)obj;
+	Int32 i;
+	for (i = 0; i < widget->NamesCount; i++) {
+		if (widget->IDs[i] != id) continue;
+		PlayerListWidget_DeleteAt(widget, i);
+		PlayerListWidget_SortAndReposition(widget);
+		return;
+	}
+}
+
+void PlayerListWidget_Init(GuiElement* elem) {
+	PlayerListWidget* widget = (PlayerListWidget*)elem;
+	Int32 id;
+	for (id = 0; id < TABLIST_MAX_NAMES; id++) {
+		if (!TabList_Valid((EntityID)id)) continue;
+		PlayerListWidget_AddName(widget, (EntityID)id, -1);
+	}
+	PlayerListWidget_SortAndReposition(widget);
+
+	String msg = String_FromConst("Connected players:");
+	TextWidget_Create(&widget->Overview, &msg, &widget->Font);
+	Widget_SetLocation(&widget->Overview.Base, ANCHOR_CENTRE, ANCHOR_LEFT_OR_TOP, 0, 0);
+
+	Event_RegisterEntityID(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
+	Event_RegisterEntityID(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
+	Event_RegisterEntityID(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
+}
+
+void PlayerListWidget_Render(GuiElement* elem, Real64 delta) {
+	PlayerListWidget* widget = (PlayerListWidget*)elem;
+	Widget* elemW = &widget->Base;
+	TextWidget* overview = &widget->Overview;
+
+	Gfx_SetTexturing(false);
+	Int32 offset = overview->Base.Height + 10;
+	Int32 height = max(300, elemW->Height + overview->Base.Height);
+	GfxCommon_Draw2DGradient(elemW->X, elemW->Y - offset, elemW->Width, elemW->Height, list_topCol, list_bottomCol);
+
+	Gfx_SetTexturing(true);
+	overview->Base.YOffset = elemW->Y - offset + 5;
+	overview->Base.Reposition(&overview->Base);
+	overview->Base.Base.Render(&overview->Base.Base, delta);
+
+	Int32 i, highlightedI = PlayerListWidget_HighlightedName(widget, Mouse_X, Mouse_Y);
+	for (i = 0; i < widget->NamesCount; i++) {
+		if (!Texture_IsValid(&widget->Textures[i])) continue;
+
+		Texture tex = widget->Textures[i];
+		if (i == highlightedI) tex.X += 4;
+		Texture_Render(&tex);
+	}
+}
+
+void PlayerListWidget_Free(GuiElement* elem) {
+	PlayerListWidget* widget = (PlayerListWidget*)elem;
+	Int32 i;
+	for (i = 0; i < widget->NamesCount; i++) {
+		Gfx_DeleteTexture(&widget->Textures[i].ID);
+	}
+
+	elem = &widget->Overview.Base.Base;
+	elem->Free(elem);
+
+	Event_UnregisterEntityID(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
+	Event_UnregisterEntityID(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
+	Event_UnregisterEntityID(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
+}
+
+void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic) {
+	Widget_Init(&widget->Base);
+	widget->NamesCount = 0;
+
+	widget->Base.Base.Init     = PlayerListWidget_Init;
+	widget->Base.Base.Free     = PlayerListWidget_Free;
+	widget->Base.Reposition    = PlayerListWidget_Reposition;
+
+	widget->Base.HorAnchor = ANCHOR_CENTRE;
+	widget->Base.VerAnchor = ANCHOR_CENTRE;
+	widget->Font = *font;
+	widget->Classic = classic;
+	widget->ElementOffset = classic ? 0 : 10;
 }

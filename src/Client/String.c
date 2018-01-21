@@ -246,6 +246,19 @@ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 	return -1;
 }
 
+Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
+	Int32 minLen = min(a->length, b->length);
+	Int32 i;
+	for (i = 0; i < minLen; i++) {
+		if (a->buffer[i] == b->buffer[i]) continue;
+		return a->buffer[i] < b->buffer[i] ? 1 : -1;
+	}
+
+	/* all chars are equal here - same string, or a substring */
+	if (a->length == b->length) return 0;
+	return a->length < b->length ? 1 : -1;
+}
+
 
 #define Convert_ControlCharsCount 32
 UInt16 Convert_ControlChars[Convert_ControlCharsCount] = {

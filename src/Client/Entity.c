@@ -394,8 +394,12 @@ void Entities_DrawShadows(void) {
 	Gfx_SetTexturing(false);
 }
 
+bool TabList_Valid(EntityID id) {
+	return TabList_PlayerNames[id] > 0 || TabList_ListNames[id] > 0 || TabList_GroupNames[id] > 0;
+}
+
 bool TabList_Remove(EntityID id) {
-	if (TabList_PlayerNames[id] == 0 && TabList_ListNames[id] == 0 && TabList_GroupNames[id] == 0) return false;
+	if (!TabList_Valid(id)) return false;
 
 	StringsBuffer_Remove(&TabList_Buffer, TabList_PlayerNames[id]); TabList_PlayerNames[id] = 0;
 	StringsBuffer_Remove(&TabList_Buffer, TabList_ListNames[id]);   TabList_ListNames[id]   = 0; 

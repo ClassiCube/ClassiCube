@@ -86,7 +86,7 @@ namespace ClassicalSharp.Renderers {
 				v.X = x2;           v.Z = z2; v.U = 1; 	         vertices[vCount++] = v;
 				          v.Y = y1;                    v.V = v1; vertices[vCount++] = v;
 				
-				                    v.Z = z1;				  	vertices[vCount++] = v;
+				                    v.Z = z1;				  	 vertices[vCount++] = v;
 				          v.Y = y2;                    v.V = v2; vertices[vCount++] = v;
 				v.X = x1;           v.Z = z2; v.U = 0;		     vertices[vCount++] = v;
 				          v.Y = y1;                    v.V = v1; vertices[vCount++] = v;

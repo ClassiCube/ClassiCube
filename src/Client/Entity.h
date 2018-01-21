@@ -123,8 +123,12 @@ UInt32 TabList_PlayerNames[TABLIST_MAX_NAMES];
 UInt32 TabList_ListNames[TABLIST_MAX_NAMES];
 UInt32 TabList_GroupNames[TABLIST_MAX_NAMES];
 UInt8 TabList_GroupRanks[TABLIST_MAX_NAMES];
+bool TabList_Valid(EntityID id);
 bool TabList_Remove(EntityID id);
 void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list,  STRING_PURE String* group, UInt8 rank);
 IGameComponent TabList_MakeComponent(void);
 
+#define TabList_UNSAFE_GetPlayer(id) StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_PlayerNames[id]);
+#define TabList_UNSAFE_GetList(id)   StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_ListNames[id]);
+#define TabList_UNSAFE_GetGroup(id)  StringsBuffer_UNSAFE_Get(&TabList_Buffer, TabList_GroupNames[id]);
 #endif
