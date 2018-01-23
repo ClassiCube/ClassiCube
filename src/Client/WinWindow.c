@@ -481,7 +481,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 			}
 		} else {
 			UInt8* text = (UInt8*)src;
-			while (*text != 0) {
+			while (*text != NULL) {
 				String_Append(value, *text); text++;
 			}
 		}

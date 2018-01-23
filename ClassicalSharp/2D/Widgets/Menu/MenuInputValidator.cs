@@ -10,9 +10,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public abstract bool IsValidString(string s);
 		
-		public virtual bool IsValidValue(string s) {
-			return IsValidString(s);
-		}
+		public abstract bool IsValidValue(string s);
 		
 		protected void MakeRange(string min, string max) {
 			Range = "&7(" + min + " - " + max + ")";
@@ -119,6 +117,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool IsValidString(string s) { return true; }
+		public override bool IsValidValue(string s) { return true; }
 	}
 	
 	public sealed class BooleanValidator : MenuInputValidator {
@@ -159,6 +158,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool IsValidString(string s) {
+			return s.Length <= Utils.StringLength;
+		}
+		
+		public override bool IsValidValue(string s) {
 			return s.Length <= Utils.StringLength;
 		}
 	}

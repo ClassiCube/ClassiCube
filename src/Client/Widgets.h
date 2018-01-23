@@ -129,6 +129,7 @@ typedef struct InputWidget_ {
 	Int32 Padding, MaxCharsPerLine;
 	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(GuiElement* elem); /* Invoked when the user presses enter. */
+	bool (*AllowedChar)(GuiElement* elem, UInt8 c);
 
 	String Text;
 	String Lines[INPUTWIDGET_MAX_LINES];     /* raw text of each line */
@@ -158,6 +159,22 @@ void InputWidget_Clear(InputWidget* widget);
 void InputWidget_AppendString(InputWidget* widget, STRING_PURE String* text);
 /* Appends a single character to current text buffer. May recreate the native texture. */
 void InputWidget_Append(InputWidget* widget, UInt8 c);
+
+
+typedef struct MenuInputValidator_ {
+	void (*GetRange)(STRING_TRANSIENT String* range);
+	bool (*IsValidChar)(UInt8 c);
+	bool (*IsValidString)(STRING_PURE String* s);
+	bool (*IsValidValue)(STRING_PURE String* s);
+} MenuInputValidator;
+typedef struct MenuInputWidget_ {
+	InputWidget Base;
+	Int32 MinWidth, MinHeight;
+	MenuInputValidator Validator;
+	UInt8 TextBuffer[String_BufferSize(STRING_SIZE)];
+} MenuInputWidget;
+
+void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, MenuInputValidator* validator);
 
 
 /* "part1" "> part2" type urls */

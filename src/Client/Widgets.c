@@ -503,13 +503,6 @@ Int32 Table_Height(TableWidget* widget) {
 	return min(widget->RowsCount, TABLE_MAX_ROWS_DISPLAYED) * widget->BlockSize + 10 + 40;
 }
 
-/* These were sourced by taking a screenshot of vanilla
-   Then using paint to extract the colour components
-   Then using wolfram alpha to solve the glblendfunc equation */
-PackedCol Table_TopBackCol    = PACKEDCOL_CONST( 34,  34,  34, 168);
-PackedCol Table_BottomBackCol = PACKEDCOL_CONST( 57,  57, 104, 202);
-PackedCol Table_TopSelCol     = PACKEDCOL_CONST(255, 255, 255, 142);
-PackedCol Table_BottomSelCol  = PACKEDCOL_CONST(255, 255, 255, 192);
 #define TABLE_MAX_VERTICES (8 * 10 * ISOMETRICDRAWER_MAXVERTICES)
 
 bool TableWidget_GetCoords(TableWidget* widget, Int32 i, Int32* winX, Int32* winY) {
@@ -631,10 +624,19 @@ void TableWidget_Init(GuiElement* elem) {
 	elem->Recreate(elem);
 }
 
-void TableWidget_Render(GuiElement* elem, Real64 delta) {
+void TableWidget_Render(GuiElement* elem, Real64 delta) {	
+	/* These were sourced by taking a screenshot of vanilla
+	Then using paint to extract the colour components
+	Then using wolfram alpha to solve the glblendfunc equation */
+	PackedCol topBackCol    = PACKEDCOL_CONST( 34,  34,  34, 168);
+	PackedCol bottomBackCol = PACKEDCOL_CONST( 57,  57, 104, 202);
+	PackedCol topSelCol     = PACKEDCOL_CONST(255, 255, 255, 142);
+	PackedCol bottomSelCol  = PACKEDCOL_CONST(255, 255, 255, 192);
+
 	TableWidget* widget = (TableWidget*)elem;
 	GfxCommon_Draw2DGradient(Table_X(widget), Table_Y(widget),
-		Table_Width(widget), Table_Height(widget), Table_TopBackCol, Table_BottomBackCol);
+		Table_Width(widget), Table_Height(widget), topBackCol, bottomBackCol);
+
 	if (widget->RowsCount > TABLE_MAX_ROWS_DISPLAYED) {
 		GuiElement* scroll = &widget->Scroll.Base.Base;
 		scroll->Render(scroll, delta);
@@ -647,7 +649,7 @@ void TableWidget_Render(GuiElement* elem, Real64 delta) {
 		Real32 off = blockSize * 0.1f;
 		Int32 size = (Int32)(blockSize + off * 2);
 		GfxCommon_Draw2DGradient((Int32)(x - off), (Int32)(y - off), 
-			size, size, Table_TopSelCol, Table_BottomSelCol);
+			size, size, topSelCol, bottomSelCol);
 	}
 	Gfx_SetTexturing(true);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
@@ -1236,7 +1238,7 @@ void InputWidget_Clear(InputWidget* widget) {
 	Gfx_DeleteTexture(&widget->InputTex.ID);
 }
 
-bool InputWidget_AllowedChar(InputWidget* widget, UInt8 c) {
+bool InputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
 	return Utils_IsValidInputChar(c, ServerConnection_SupportsFullCP437);
 }
 
@@ -1253,7 +1255,7 @@ void InputWidget_AppendChar(InputWidget* widget, UInt8 c) {
 bool InputWidget_TryAppendChar(InputWidget* widget, UInt8 c) {
 	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
 	if (widget->Text.length >= maxChars) return false;
-	if (!InputWidget_AllowedChar(widget, c)) return false;
+	if (!widget->AllowedChar(&widget->Base.Base, c)) return false;
 
 	InputWidget_AppendChar(widget, c);
 	return true;
@@ -1510,6 +1512,7 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->Prefix = *prefix;
 	widget->CaretPos = -1;
 	widget->MaxCharsPerLine = STRING_SIZE;
+	widget->AllowedChar = InputWidget_AllowedChar;
 
 	widget->Base.Base.Init     = InputWidget_Init;
 	widget->Base.Base.Free     = InputWidget_Free;
@@ -1535,13 +1538,104 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->PrefixHeight = (UInt16)size.Height; widget->Base.Height = size.Height;
 }
 
+void MenuInputWidget_Render(GuiElement* elem, Real64 delta) {
+	Widget* elemW = (Widget*)elem;
+	PackedCol backCol = PACKEDCOL_CONST(30, 30, 30, 200);
+	Gfx_SetTexturing(false);
+	GfxCommon_Draw2DFlat(elemW->X, elemW->Y, elemW->Width, elemW->Height, backCol);
+	Gfx_SetTexturing(true);
+
+	InputWidget* widget = (InputWidget*)elem;
+	Texture_Render(&widget->InputTex);
+	InputWidget_RenderCaret(&widget, delta);
+}
+
+void MenuInputWidget_RemakeTexture(GuiElement* elem) {
+	Widget* elemW = (Widget*)elem;
+	MenuInputWidget* widget = (MenuInputWidget*)elem;
+
+	DrawTextArgs args;
+	DrawTextArgs_Make(&args, &widget->Base.Lines[0], &widget->Base.Font, false);
+	Size2D size = Drawer2D_MeasureText(&args);
+	widget->Base.CaretAccumulator = 0.0;
+
+	UInt8 rangeBuffer[String_BufferSize(STRING_SIZE)];
+	String range = String_InitAndClearArray(rangeBuffer);
+	widget->Validator.GetRange(&range);
+
+	/* Ensure we don't have 0 text height */
+	if (size.Height == 0) {
+		args.Text = range;
+		size.Height = Drawer2D_MeasureText(&args).Height;
+		args.Text = widget->Base.Lines[0];
+	}
+
+	elemW->Width  = max(size.Width,  widget->MinWidth);
+	elemW->Height = max(size.Height, widget->MinHeight);
+	Size2D adjSize = size; adjSize.Width = elemW->Width;
+
+	Bitmap bmp; Bitmap_AllocatePow2(&bmp, adjSize.Width, adjSize.Height);
+	Drawer2D_Begin(&bmp);
+	Drawer2D_DrawText(&args, widget->Base.Padding, 0);
+
+	args.Text = range;
+	Size2D hintSize = Drawer2D_MeasureText(&args);
+	Int32 hintX = adjSize.Width - hintSize.Width;
+	if (size.Width + 3 < hintX) {
+		Drawer2D_DrawText(&args, hintX, 0);
+	}
+
+	Drawer2D_End();
+	Texture* tex = &widget->Base.InputTex;
+	*tex = Drawer2D_Make2DTexture(&bmp, adjSize, 0, 0);
+
+	Reposition();
+	tex->X = elemW->X; tex->Y = elemW->Y;
+	if (size.Height < widget->MinHeight) {
+		tex->Y += widget->MinHeight / 2 - size.Height / 2;
+	}
+}
+
+bool MenuInputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
+	if (c == '&' || !Utils_IsValidInputChar(c, true)) return false;
+	MenuInputWidget* widget = (MenuInputWidget*)elem;
+	InputWidget* elemW = (InputWidget*)elem;
+
+	if (!widget->Validator.IsValidChar(c)) return false;
+	Int32 maxChars = elemW->GetMaxLines() * elemW->MaxCharsPerLine;
+	if (elemW->Text.length == maxChars) return false;
+
+	/* See if the new string is in valid format */
+	InputWidget_AppendChar(elemW, c);
+	bool valid = widget->Validator.IsValidString(&elemW->Text);
+	InputWidget_DeleteChar(elemW);
+	return valid;
+}
+
+Int32 MenuInputWidget_GetMaxLines(void) { return 1; }
+void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, MenuInputValidator* validator) {
+	InputWidget_Create(&widget->Base, font, NULL);
+	widget->MinWidth = width;
+	widget->MinHeight = height;
+	widget->Validator = *validator;
+
+	widget->Base.Padding = 3;	
+	widget->Base.Text = String_InitAndClearArray(widget->TextBuffer);
+	widget->Base.GetMaxLines   = MenuInputWidget_GetMaxLines;
+	widget->Base.AllowedChar   = MenuInputWidget_AllowedChar;
+	widget->Base.RemakeTexture = MenuInputWidget_RemakeTexture;
+
+	GuiElement* elem = &widget->Base.Base.Base;
+	elem->Render = MenuInputWidget_Render;
+	elem->Init(elem);
+	InputWidget_AppendString(&widget->Base, text);
+}
+
 
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
 #define LIST_BOUNDS_SIZE 10
 #define LIST_NAMES_PER_COLUMN 16
-PackedCol list_topCol    = PACKEDCOL_CONST(0, 0, 0, 180);
-PackedCol list_bottomCol = PACKEDCOL_CONST(50, 50, 50, 205);
 
 Texture PlayerListWidget_DrawName(PlayerListWidget* widget, STRING_PURE String* name) {
 	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE)];
@@ -1864,11 +1958,13 @@ void PlayerListWidget_Render(GuiElement* elem, Real64 delta) {
 	PlayerListWidget* widget = (PlayerListWidget*)elem;
 	Widget* elemW = &widget->Base;
 	TextWidget* overview = &widget->Overview;
+	PackedCol topCol = PACKEDCOL_CONST(0, 0, 0, 180);
+	PackedCol bottomCol = PACKEDCOL_CONST(50, 50, 50, 205);
 
 	Gfx_SetTexturing(false);
 	Int32 offset = overview->Base.Height + 10;
 	Int32 height = max(300, elemW->Height + overview->Base.Height);
-	GfxCommon_Draw2DGradient(elemW->X, elemW->Y - offset, elemW->Width, elemW->Height, list_topCol, list_bottomCol);
+	GfxCommon_Draw2DGradient(elemW->X, elemW->Y - offset, elemW->Width, elemW->Height, topCol, bottomCol);
 
 	Gfx_SetTexturing(true);
 	overview->Base.YOffset = elemW->Y - offset + 5;
