@@ -1,6 +1,7 @@
 #ifndef CC_PACKEDCOL_H
 #define CC_PACKEDCOL_H
 #include "Typedefs.h"
+#include "String.h"
 /* Manipulates an ARGB colour, in a format suitable for the native 3d graphics api.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -23,21 +24,14 @@ typedef struct PackedCol_ {
 #define PACKEDCOL_CONST(r, g, b, a) { r, g, b, a };
 #endif
 
-
-/* Constructs a new ARGB colour. */
 PackedCol PackedCol_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
-/* Constructs a new ARGB colour. */
 PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
-/* Returns whether two packed colours are equal. */
 #define PackedCol_Equals(a, b) ((a).Packed == (b).Packed)
-/* Converts a colour to ARGB form. */
 #define PackedCol_ARGB(r, g, b, a) (((UInt32)(r) << 16) | ((UInt32)(g) << 8) | ((UInt32)(b)) | ((UInt32)(a) << 24))
-/* Converts a colour to ARGB form. */
 UInt32 PackedCol_ToARGB(PackedCol col);
-/* Multiplies the RGB components by t, where t is in [0, 1] */
 PackedCol PackedCol_Scale(PackedCol value, Real32 t);
-/* Linearly interpolates the RGB components of both colours by t, where t is in [0, 1] */
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, Real32 t);
+bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value);
 
 #define PACKEDCOL_SHADE_X 0.6f
 #define PACKEDCOL_SHADE_Z 0.8f

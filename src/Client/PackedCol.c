@@ -36,3 +36,38 @@ void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, P
 	*zSide = PackedCol_Scale(normal, PACKEDCOL_SHADE_Z);
 	*yMin  = PackedCol_Scale(normal, PACKEDCOL_SHADE_YMIN);
 }
+
+bool PackedCol_Unhex(UInt8 hex, Int32* value) {
+	*value = 0;
+	if (hex >= '0' && hex <= '9') {
+		*value = (Int32)(hex - '0');
+	} else if (hex >= 'a' && hex <= 'f') {
+		*value = (Int32)(hex - 'a') + 10;
+	} else if (hex >= 'A' && hex <= 'F') {
+		*value = (Int32)(hex - 'A') + 10;
+	} else {
+		return false;
+	}
+	return true;
+}
+
+bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value) {
+	PackedCol empty = PACKEDCOL_CONST(0, 0, 0, 0); *value = empty;
+	/* accept XXYYZZ or #XXYYZZ forms */
+	if (str->length < 6) return false;
+	if (str->length > 6 && (str->buffer[0] != '#' || str->length > 7)) return false;
+
+	Int32 rH, rL, gH, gL, bH, bL;
+	UInt8* buffer = str->buffer;
+	if (buffer[0] == '#') buffer++;
+
+	if (!PackedCol_Unhex(buffer[0], &rH) || !PackedCol_Unhex(buffer[1], &rL)) return false;
+	if (!PackedCol_Unhex(buffer[2], &gH) || !PackedCol_Unhex(buffer[3], &gL)) return false;
+	if (!PackedCol_Unhex(buffer[4], &bH) || !PackedCol_Unhex(buffer[5], &bL)) return false;
+
+	value->R = (UInt8)(rH * 16 + rL);
+	value->G = (UInt8)(gH * 16 + gL);
+	value->B = (UInt8)(bH * 16 + bL);
+	value->A = UInt8_MaxValue;
+	return true;
+}

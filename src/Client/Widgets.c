@@ -1538,6 +1538,179 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->PrefixHeight = (UInt16)size.Height; widget->Base.Height = size.Height;
 }
 
+
+bool MenuInputValidator_AlwaysValidChar(MenuInputValidator* validator, UInt8 c) { return true; }
+bool MenuInputValidator_AlwaysValidString(MenuInputValidator* validator, STRING_PURE String* s) { return true; }
+
+void HexColourValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+	String_AppendConst(range, "&7(#000000 - #FFFFFF)");
+}
+
+bool HexColourValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
+}
+
+bool HexColourValidator_IsValidString(MenuInputValidator* validator, STRING_PURE String* s) {
+	return s->length <= 6;
+}
+
+bool HexColourValidator_IsValidValue(MenuInputValidator* validator, STRING_PURE String* s) {
+	PackedCol col;
+	return PackedCol_TryParseHex(s, &col);
+}
+
+MenuInputValidator MenuInputValidator_Hex(void) {
+	MenuInputValidator validator;
+	validator.GetRange      = HexColourValidator_GetRange;
+	validator.IsValidChar   = HexColourValidator_IsValidChar;
+	validator.IsValidString = HexColourValidator_IsValidString;
+	validator.IsValidValue  = HexColourValidator_IsValidValue;
+	return validator;
+}
+
+void IntegerValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+	String_AppendConst(range, "&7(");
+	String_AppendInt32(range, (Int32)validator->Meta1);
+	String_AppendConst(range, " - ");
+	String_AppendInt32(range, (Int32)validator->Meta2);
+	String_AppendConst(range, ")");
+}
+
+bool IntegerValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+	return (c >= '0' && c <= '9') || c == '-';
+}
+
+bool IntegerValidator_IsValidString(MenuInputValidator* validator, STRING_PURE String* s) {
+	Int32 value;
+	if (s->length == 1 && s->buffer[0] == '-') return true; /* input is just a minus sign */
+	return Convert_TryParseInt32(s, &value);
+}
+
+bool IntegerValidator_IsValidValue(MenuInputValidator* validator, STRING_PURE String* s) {
+	Int32 value;
+	if (!Convert_TryParseInt32(s, &value)) return false;
+
+	Int32 min = (Int32)validator->Meta1, max = (Int32)validator->Meta2;
+	return min <= value && value <= max;
+}
+
+MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max) {
+	MenuInputValidator validator;
+	validator.GetRange      = IntegerValidator_GetRange;
+	validator.IsValidChar   = IntegerValidator_IsValidChar;
+	validator.IsValidString = IntegerValidator_IsValidString;
+	validator.IsValidValue  = IntegerValidator_IsValidValue;
+	validator.Meta1 = (void*)min;
+	validator.Meta2 = (void*)max;
+	return validator;
+}
+
+void SeedValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+	String_AppendConst(range, "&7(an integer)");
+}
+
+MenuInputValidator MenuInputValidator_Seed(void) {
+	MenuInputValidator validator = MenuInputValidator_Integer(Int32_MinValue, Int32_MaxValue);
+	validator.GetRange = SeedValidator_GetRange;
+	return validator;
+}
+
+void RealValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+	String_AppendConst(range, "&7(");
+	String_AppendReal32(range, (Real32)validator->Meta1);
+	String_AppendConst(range, " - ");
+	String_AppendReal32(range, (Real32)validator->Meta2);
+	String_AppendConst(range, ")");
+}
+
+bool RealValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+	return (c >= '0' && c <= '9') || c == '-' || c == '.' || c == ',';
+}
+
+bool RealValidator_IsValidString(MenuInputValidator* validator, STRING_PURE String* s) {
+	Real32 value;
+	if (s->length == 1 && RealValidator_IsValidChar(validator, s->buffer[0])) return true;
+	return Convert_TryParseReal32(s, &value);
+}
+
+bool RealValidator_IsValidValue(MenuInputValidator* validator, STRING_PURE String* s) {
+	Real32 value;
+	if (!Convert_TryParseReal32(s, &value)) return false;
+	Real32 min = (Real32)validator->Meta1, max = (Real32)validator->Meta2;
+	return min <= value && value <= max;
+}
+
+MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max) {
+	MenuInputValidator validator;
+	validator.GetRange      = RealValidator_GetRange;
+	validator.IsValidChar   = RealValidator_IsValidChar;
+	validator.IsValidString = RealValidator_IsValidString;
+	validator.IsValidValue  = RealValidator_IsValidValue;
+	validator.Meta1 = (void*)min;
+	validator.Meta2 = (void*)max;
+	return validator;
+}
+
+void PathValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+	String_AppendConst(range, "&7(Enter name)");
+}
+
+bool PathValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+	return !(c == '/' || c == '\\' || c == '?' || c == '*' || c == ':'
+		|| c == '<' || c == '>' || c == '|' || c == '"' || c == '.');
+}
+
+MenuInputValidator MenuInputValidator_Path(void) {
+	MenuInputValidator validator;
+	validator.GetRange      = PathValidator_GetRange;
+	validator.IsValidChar   = PathValidator_IsValidChar;
+	validator.IsValidString = MenuInputValidator_AlwaysValidString;
+	validator.IsValidValue  = MenuInputValidator_AlwaysValidString;
+	return validator;
+}
+
+void BooleanInputValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+	String_AppendConst(range, "&7(yes or no)");
+}
+
+MenuInputValidator MenuInputValidator_Boolean(void) {
+	MenuInputValidator validator;
+	validator.GetRange      = BooleanInputValidator_GetRange;
+	validator.IsValidChar   = MenuInputValidator_AlwaysValidChar;
+	validator.IsValidString = MenuInputValidator_AlwaysValidString;
+	validator.IsValidValue  = MenuInputValidator_AlwaysValidString;
+	return validator;
+}
+
+MenuInputValidator MenuInputValidator_Enum(const UInt8** names, UInt32 namesCount) {
+	MenuInputValidator validator = MenuInputValidator_Boolean();
+	validator.Meta1 = names;
+	validator.Meta2 = (void*)namesCount;
+	return validator;
+}
+
+void StringValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
+	String_AppendConst(range, "&7(Enter text)");
+}
+
+bool StringValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+	return c != '&' && Utils_IsValidInputChar(c, true);
+}
+
+bool StringValidator_IsValidString(MenuInputValidator* validator, STRING_PURE String* s) {
+	return s->length <= STRING_SIZE;
+}
+
+MenuInputValidator MenuInputValidator_String(void) {
+	MenuInputValidator validator;
+	validator.GetRange       = StringValidator_GetRange;
+	validator.IsValidChar    = StringValidator_IsValidChar;
+	validator.IsValidString  = StringValidator_IsValidString;
+	validator.IsValidValue   = StringValidator_IsValidString;
+	return validator;
+}
+
+
 void MenuInputWidget_Render(GuiElement* elem, Real64 delta) {
 	Widget* elemW = (Widget*)elem;
 	PackedCol backCol = PACKEDCOL_CONST(30, 30, 30, 200);
@@ -1561,7 +1734,8 @@ void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 
 	UInt8 rangeBuffer[String_BufferSize(STRING_SIZE)];
 	String range = String_InitAndClearArray(rangeBuffer);
-	widget->Validator.GetRange(&range);
+	MenuInputValidator* validator = &widget->Validator;
+	validator->GetRange(validator, &range);
 
 	/* Ensure we don't have 0 text height */
 	if (size.Height == 0) {
@@ -1600,14 +1774,15 @@ bool MenuInputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
 	if (c == '&' || !Utils_IsValidInputChar(c, true)) return false;
 	MenuInputWidget* widget = (MenuInputWidget*)elem;
 	InputWidget* elemW = (InputWidget*)elem;
+	MenuInputValidator* validator = &widget->Validator;
 
-	if (!widget->Validator.IsValidChar(c)) return false;
+	if (!validator->IsValidChar(validator, c)) return false;
 	Int32 maxChars = elemW->GetMaxLines() * elemW->MaxCharsPerLine;
 	if (elemW->Text.length == maxChars) return false;
 
 	/* See if the new string is in valid format */
 	InputWidget_AppendChar(elemW, c);
-	bool valid = widget->Validator.IsValidString(&elemW->Text);
+	bool valid = validator->IsValidString(validator, &elemW->Text);
 	InputWidget_DeleteChar(elemW);
 	return valid;
 }

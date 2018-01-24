@@ -162,11 +162,23 @@ void InputWidget_Append(InputWidget* widget, UInt8 c);
 
 
 typedef struct MenuInputValidator_ {
-	void (*GetRange)(STRING_TRANSIENT String* range);
-	bool (*IsValidChar)(UInt8 c);
-	bool (*IsValidString)(STRING_PURE String* s);
-	bool (*IsValidValue)(STRING_PURE String* s);
+	void (*GetRange)(struct MenuInputValidator_* validator, STRING_TRANSIENT String* range);
+	bool (*IsValidChar)(struct MenuInputValidator_* validator, UInt8 c);
+	bool (*IsValidString)(struct MenuInputValidator_* validator, STRING_PURE String* s);
+	bool (*IsValidValue)(struct MenuInputValidator_* validator, STRING_PURE String* s);
+	void* Meta1; /* TODO: do we need to handle when sizeof(void*) is < 32 bits? */
+	void* Meta2; /* TODO: do we need to handle when sizeof(void*) is < 32 bits? */
 } MenuInputValidator;
+
+MenuInputValidator MenuInputValidator_Hex(void);
+MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max);
+MenuInputValidator MenuInputValidator_Seed(void);
+MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max);
+MenuInputValidator MenuInputValidator_Path(void);
+MenuInputValidator MenuInputValidator_Boolean(void);
+MenuInputValidator MenuInputValidator_Enum(const UInt8** names, UInt32 namesCount);
+MenuInputValidator MenuInputValidator_String(void);
+
 typedef struct MenuInputWidget_ {
 	InputWidget Base;
 	Int32 MinWidth, MinHeight;
