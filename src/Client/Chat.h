@@ -2,8 +2,7 @@
 #define CC_CHAT_H
 #include "Typedefs.h"
 #include "Constants.h"
-#include "DateTime.h"
-#include "String.h"
+#include "Utils.h"
 #include "NetworkEnums.h"
 #include "GameStructs.h"
 /* Manages sending and logging chat.

@@ -91,7 +91,7 @@ time.Day = (UInt8)sysTime.wDay;\
 time.Hour = (UInt8)sysTime.wHour;\
 time.Minute = (UInt8)sysTime.wMinute;\
 time.Second = (UInt8)sysTime.wSecond;\
-time.Milliseconds = sysTime.wMilliseconds;\
+time.Milli = sysTime.wMilliseconds;\
 return time;\
 
 DateTime Platform_CurrentUTCTime(void) {

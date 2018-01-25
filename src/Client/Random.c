@@ -1,5 +1,6 @@
 #include "Random.h"
 #include "Platform.h"
+#include "Utils.h"
 #define RND_VALUE (0x5DEECE66DLL)
 #define RND_MASK ((1LL << 48) - 1)
 

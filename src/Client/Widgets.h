@@ -189,6 +189,16 @@ typedef struct MenuInputWidget_ {
 void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, MenuInputValidator* validator);
 
 
+typedef struct ChatInputWidget_ {
+	InputWidget Base;
+	Int32 TypingLogPos;
+	UInt8 TextBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
+	UInt8 OrigBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
+} ChatInputWidget;
+
+void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font);
+
+
 /* "part1" "> part2" type urls */
 #define LINK_FLAG_CONTINUE 2
 /* used for internally combining "part1" and "part2" */

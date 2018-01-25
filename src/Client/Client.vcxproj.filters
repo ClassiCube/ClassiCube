@@ -255,9 +255,6 @@
     <ClInclude Include="WeatherRenderer.h">
       <Filter>Header Files\Rendering\Env</Filter>
     </ClInclude>
-    <ClInclude Include="DateTime.h">
-      <Filter>Header Files\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="MapRenderer.h">
       <Filter>Header Files\Rendering\Map</Filter>
     </ClInclude>
@@ -531,9 +528,6 @@
       <Filter>Source Files\Game</Filter>
     </ClCompile>
     <ClCompile Include="Options.c">
-      <Filter>Source Files\Utils</Filter>
-    </ClCompile>
-    <ClCompile Include="DateTime.c">
       <Filter>Source Files\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Deflate.c">

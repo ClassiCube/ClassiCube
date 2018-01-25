@@ -189,7 +189,6 @@
     <ClInclude Include="ChunkUpdater.h" />
     <ClInclude Include="Compiler.h" />
     <ClInclude Include="Constants.h" />
-    <ClInclude Include="DateTime.h" />
     <ClInclude Include="Bitmap.h" />
     <ClInclude Include="DisplayDevice.h" />
     <ClInclude Include="Drawer.h" />
@@ -267,7 +266,6 @@
     <ClCompile Include="Chat.c" />
     <ClCompile Include="ChunkUpdater.c" />
     <ClCompile Include="D3D9Api.c" />
-    <ClCompile Include="DateTime.c" />
     <ClCompile Include="Bitmap.c" />
     <ClCompile Include="DisplayDevice.c" />
     <ClCompile Include="Drawer.c" />

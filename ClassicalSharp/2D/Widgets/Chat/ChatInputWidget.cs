@@ -64,10 +64,6 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		#region Input handling
 		
-		public override bool HandlesKeyPress(char key) {
-			Append(key); return true;
-		}
-		
 		public override bool HandlesKeyDown(Key key) {
 			bool controlDown = ControlDown();
 			
@@ -142,7 +138,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			TabListEntry[] entries = TabList.Entries;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (entries[i] == null) continue;				
+				if (entries[i] == null) continue;
 				string name = entries[i].PlayerName;
 				if (Utils.CaselessStarts(name, part)) matches.Add(name);
 			}

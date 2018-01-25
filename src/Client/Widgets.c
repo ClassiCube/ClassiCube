@@ -1720,7 +1720,7 @@ void MenuInputWidget_Render(GuiElement* elem, Real64 delta) {
 
 	InputWidget* widget = (InputWidget*)elem;
 	Texture_Render(&widget->InputTex);
-	InputWidget_RenderCaret(&widget, delta);
+	InputWidget_RenderCaret(widget, delta);
 }
 
 void MenuInputWidget_RemakeTexture(GuiElement* elem) {
@@ -1763,7 +1763,7 @@ void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 	Texture* tex = &widget->Base.InputTex;
 	*tex = Drawer2D_Make2DTexture(&bmp, adjSize, 0, 0);
 
-	Reposition();
+	elemW->Reposition(elemW);
 	tex->X = elemW->X; tex->Y = elemW->Y;
 	if (size.Height < widget->MinHeight) {
 		tex->Y += widget->MinHeight / 2 - size.Height / 2;
@@ -1904,7 +1904,7 @@ void PlayerListWidget_RepositionColumns(PlayerListWidget* widget) {
 	for (col = 0; col < columns; col++) {
 		width += PlayerListWidget_GetColumnWidth(widget, col);
 		Int32 colHeight = PlayerListWidget_GetColumnHeight(widget, col);
-		widget->YHeight = nax(colHeight, widget->YHeight);
+		widget->YHeight = max(colHeight, widget->YHeight);
 	}
 
 	if (width < 480) width = 480;
@@ -2077,7 +2077,7 @@ void PlayerListWidget_SortAndReposition(PlayerListWidget* widget) {
 	PlayerListWidget_RepositionColumns(widget);
 	PlayerListWidget_UpdateTableDimensions(widget);
 	PlayerListWidget_RecalcYOffset(widget);
-	PlayerListWidget_Reposition(widget);
+	PlayerListWidget_Reposition(&widget->Base);
 }
 
 void PlayerListWidget_TabEntryAdded(void* obj, EntityID id) {
