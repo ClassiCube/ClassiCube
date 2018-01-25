@@ -37,11 +37,11 @@ void GuiElement_Reset(GuiElement* elem) {
 
 void Screen_Reset(Screen* screen) {
 	GuiElement_Reset(&screen->Base);
-	screen->HandlesAllInput    = false;
-	screen->BlocksWorld        = false;
-	screen->HidesHUD           = false;
-	screen->RenderHUDOver      = false;
-	screen->OnResize           = NULL;
+	screen->HandlesAllInput = false;
+	screen->BlocksWorld     = false;
+	screen->HidesHUD        = false;
+	screen->RenderHUDOver   = false;
+	screen->OnResize        = NULL;
 }
 
 void Widget_DoReposition(Widget* w) {

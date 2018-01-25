@@ -1,7 +1,10 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
-#include <Windows.h>
 #define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#include <Windows.h>
 
 /* TODO: These might be better off as a function. */
 #define ErrorHandler_WriteLogBody(raw_msg)\
@@ -42,7 +45,7 @@ void ErrorHandler_FailWithCode(ReturnCode code, const UInt8* raw_msg) {
 	String_AppendConst(&logMsg, "\r\n");
 	ErrorHandler_WriteLogEnd();
 
-	HWND win = GetActiveWindow();
+	HWND win = GetActiveWindow(); /* TODO: It's probably wrong to use GetActiveWindow() here */
 	MessageBoxA(win, logMsg.buffer, "We're sorry", 0);
 	ExitProcess(code);
 }

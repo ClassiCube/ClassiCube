@@ -166,8 +166,12 @@ typedef struct MenuInputValidator_ {
 	bool (*IsValidChar)(struct MenuInputValidator_* validator, UInt8 c);
 	bool (*IsValidString)(struct MenuInputValidator_* validator, STRING_PURE String* s);
 	bool (*IsValidValue)(struct MenuInputValidator_* validator, STRING_PURE String* s);
-	void* Meta1; /* TODO: do we need to handle when sizeof(void*) is < 32 bits? */
-	void* Meta2; /* TODO: do we need to handle when sizeof(void*) is < 32 bits? */
+
+	union {
+		void* Meta_Ptr[2];
+		Int32 Meta_Int[2];
+		Real32 Meta_Real[2];
+	};
 } MenuInputValidator;
 
 MenuInputValidator MenuInputValidator_Hex(void);

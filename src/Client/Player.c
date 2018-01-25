@@ -68,7 +68,7 @@ void Player_DrawName(Player* player) {
 	Vector3 pos;
 	model->RecalcProperties(entity);
 	Vector3_TransformY(&pos, model->NameYOffset, &entity->Transform);
-	Real32 scale = Math.Min(1, model->NameScale * entity->ModelScale.Y) / 70.0f;
+	Real32 scale = Math.Min(1.0f, model->NameScale * entity->ModelScale.Y) / 70.0f;
 	PackedCol col = PACKEDCOL_WHITE;
 	Vector2 size = Vector2_Create2(player->NameTex.Width * scale, player->NameTex.Height * scale);
 

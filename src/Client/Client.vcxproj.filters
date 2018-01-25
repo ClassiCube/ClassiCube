@@ -142,11 +142,11 @@
     <Filter Include="Source Files\Network">
       <UniqueIdentifier>{9e70549b-2798-4372-b887-876f8403a7ff}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Blocks">
-      <UniqueIdentifier>{f693e3de-8aee-440f-9edc-61544d2f7f79}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Math">
       <UniqueIdentifier>{7a7adf1b-3c7f-4c3b-833b-656e2e61a2a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Blocks">
+      <UniqueIdentifier>{f693e3de-8aee-440f-9edc-61544d2f7f79}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

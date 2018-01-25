@@ -94,20 +94,14 @@ typedef struct IModel_ {
 	Real32 NameScale;
 } IModel;
 
-/* Colour tint applied to each face, when rendering a model. */
 PackedCol IModel_Cols[FACE_COUNT];
-/* Scaling applied to UV coordinates when rendering a model. */
 Real32 IModel_uScale, IModel_vScale;
 /* Angle of offset from head to body rotation. */
 Real32 IModel_cosHead, IModel_sinHead;
-/* Specifies order in which axis roations are applied to a part. */
 UInt8 IModel_Rotation;
-/* Pointer to model that is currently being rendered/drawn. */
 IModel* IModel_ActiveModel;
-/* Sets default values for fields of a model. */
 void IModel_Init(IModel* model);
 
-/* Sets the data and function pointers for a model instance assuming typeName_XYZ naming. */
 #define IModel_SetPointers(typeName)\
 typeName.GetEyeY = typeName ## _GetEyeY;\
 typeName.GetCollisionSize = typeName ## _GetCollisionSize; \
@@ -115,16 +109,11 @@ typeName.GetPickingBounds = typeName ## _GetPickingBounds;\
 typeName.CreateParts = typeName ## _CreateParts;\
 typeName.DrawModel = typeName ## _DrawModel;
 
-/* Returns whether the model should be rendered based on the given entity's position. */
 bool IModel_ShouldRender(Entity* entity);
-/* Returns the closest distance of the given entity to the camera. */
 Real32 IModel_RenderDistance(Entity* entity);
-/*Sets up the state for, then renders an entity model, based on the entity's position and orientation. */
 void IModel_Render(IModel* model, Entity* entity);
 void IModel_SetupState(IModel* model, Entity* entity);
-/* Sends the updated vertex data to the GPU. */
 void IModel_UpdateVB(void);
-/* Gets the appropriate native texture ID for the given entity and current model. */
 GfxResourceID IModel_GetTexture(Entity* entity);
 void IModel_DrawPart(ModelPart part);
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head);

@@ -661,3 +661,214 @@ Screen* FilesScreen_MakeInstance(void) {
 	screen->Base.HandlesAllInput = true;
 	return &screen->Base;
 }
+
+typedef struct LoadingScreen_ {
+	Screen Base;
+	FontDesc Font;
+
+	String Title, Message;
+	Real32 Progress;
+	TextWidget TitleWidget;
+	TextWidget MessageWidget;
+
+	UInt8 TitleBuffer[String_BufferSize(STRING_SIZE)];
+	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
+} LoadingScreen;
+LoadingScreen LoadingScreen_Instance;
+
+void LoadingScreen_SetTitle(LoadingScreen* screen, STRING_PURE String* title) {
+	GuiElement* elem = &screen->TitleWidget.Base.Base;
+	elem->Free(elem);
+
+	TextWidget_Create(&screen->TitleWidget, title, &screen->Font);
+	Widget_SetLocation(&screen->TitleWidget.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -80);
+	String_Clear(&screen->Title);
+	String_AppendString(&screen->Title, title);
+}
+
+void LoadingScreen_SetMessage(LoadingScreen* screen, STRING_PURE String* message) {
+	GuiElement* elem = &screen->MessageWidget.Base.Base;
+	elem->Free(elem);
+
+	TextWidget_Create(&screen->MessageWidget, message, &screen->Font);
+	Widget_SetLocation(&screen->MessageWidget.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	String_Clear(&screen->Message);
+	String_AppendString(&screen->Message, message);
+}
+
+void LoadingScreen_MapLoading(void* obj, Real32 progress) {
+	LoadingScreen* screen = (LoadingScreen*)obj;
+	screen->Progress = progress;
+}
+
+void LoadingScreen_OnResize(Screen* elem) {
+	LoadingScreen* screen = (LoadingScreen*)elem;
+	Widget* widget = &screen->TitleWidget.Base;
+	widget->Reposition(widget);
+	widget = &screen->MessageWidget.Base;
+	widget->Reposition(widget);
+}
+
+void LoadingScreen_ContextLost(void* obj) {
+	LoadingScreen* screen = (LoadingScreen*)obj;
+	GuiElement* elem = &screen->TitleWidget.Base.Base;
+	elem->Free(elem);
+	GuiElement* elem = &screen->MessageWidget.Base.Base;
+	elem->Free(elem);
+}
+
+void LoadingScreen_ContextRecreated(void* obj) {
+	LoadingScreen* screen = (LoadingScreen*)obj;
+	if (Gfx_LostContext) return;
+	LoadingScreen_SetTitle(screen, &screen->Title);
+	LoadingScreen_SetMessage(screen, &screen->Message);
+}
+
+bool LoadingScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	if (key == Key_Tab) return true;
+	elem = &Gui_HUD->Base;
+	return elem->HandlesKeyDown(elem, key);
+}
+
+bool LoadingScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	elem = &Gui_HUD->Base;
+	return elem->HandlesKeyPress(elem, key);
+}
+
+bool LoadingScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+	if (key == Key_Tab) return true;
+	elem = &Gui_HUD->Base;
+	return elem->HandlesKeyUp(elem, key);
+}
+
+bool LoadingScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+bool LoadingScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+bool LoadingScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) { return true; }
+bool LoadingScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
+
+void DrawBackground() {
+	VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
+	int index = 0, atlasIndex = 0;
+	Int32 drawnY = 0;
+	PackedCol col = PACKEDCOL_CONST(64, 64, 64, 255);
+
+	TextureLoc texLoc = Block_GetTexLoc(BLOCK_DIRT, FACE_YMAX);
+	TerrainAtlas1D atlas = game.TerrainAtlas1D;
+	Texture tex = new Texture(0, 0, 0, game.Width, 64,
+		atlas.GetTexRec(texLoc, 1, out atlasIndex));
+	tex.U2 = (float)game.Width / 64;
+	bool bound = false;
+
+	while (drawnY < Game_Height) {
+		tex.Y1 = drawnY;
+		IGraphicsApi.Make2DQuad(ref tex, col, vertices, ref index);
+		if (index >= vertices.Length) {
+			DrawBackgroundVertices(ref index, atlasIndex, ref bound);
+		}
+		drawnY += 64;
+	}
+	DrawBackgroundVertices(ref index, atlasIndex, ref bound);
+}
+
+void DrawBackgroundVertices(ref int index, int atlasIndex, ref bool bound) {
+	if (index == 0) return;
+	if (!bound) {
+		bound = true;
+		gfx.BindTexture(game.TerrainAtlas1D.TexIds[atlasIndex]);
+	}
+
+	ModelCache cache = game.ModelCache;
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	gfx.UpdateDynamicVb_IndexedTris(cache.vb, cache.vertices, index);
+	index = 0;
+}
+
+void LoadingScreen_Init(GuiElement* elem) {
+	LoadingScreen* screen = (LoadingScreen*)elem;
+	Gfx_SetFog(false);
+	LoadingScreen_ContextRecreated(screen);
+
+	Event_RegisterReal32(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, LoadingScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
+}
+
+#define PROG_BAR_WIDTH 220
+#define PROG_BAR_HEIGHT 10
+void LoadingScreen_Render(GuiElement* elem, Real64 delta) {
+	LoadingScreen* screen = (LoadingScreen*)elem;
+	Gfx_SetTexturing(true);
+	LoadingMapScreen_DrawBackground();
+	elem = &screen->TitleWidget.Base.Base;   elem->Render(elem, delta);
+	elem = &screen->MessageWidget.Base.Base; elem->Render(elem, delta);
+	Gfx_SetTexturing(false);
+
+	Int32 x = Game_Width  / 2 - PROG_BAR_WIDTH  / 2;
+	Int32 y = Game_Height / 2 - PROG_BAR_HEIGHT / 2;
+	Int32 progWidth = (Int32)(PROG_BAR_WIDTH * screen->Progress);
+
+	PackedCol backCol = PACKEDCOL_CONST(128, 128, 128, 255);
+	PackedCol progCol = PACKEDCOL_CONST(128, 255, 128, 255);
+	GfxCommon_Draw2DQuadFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
+	GfxCommon_Draw2DQuadFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
+}
+
+void LoadingScreen_Free(GuiElement* elem) {
+	LoadingScreen* screen = (LoadingScreen*)elem;
+	Platform_FreeFont(&screen->Font);
+	LoadingScreen_ContextLost(screen);
+
+	Event_UnregisterReal32(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, LoadingScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
+}
+
+Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
+	LoadingScreen* screen = &LoadingScreen_Instance;
+	Platform_MemSet(&screen, 0, sizeof(LoadingScreen));
+	Screen_Reset(&screen->Base);
+
+	screen->Base.Base.HandlesKeyDown     = LoadingScreen_HandlesKeyDown;
+	screen->Base.Base.HandlesKeyUp       = LoadingScreen_HandlesKeyUp;
+	screen->Base.Base.HandlesMouseDown   = LoadingScreen_HandlesMouseDown;
+	screen->Base.Base.HandlesMouseUp     = LoadingScreen_HandlesMouseUp;
+	screen->Base.Base.HandlesMouseMove   = LoadingScreen_HandlesMouseMove;
+	screen->Base.Base.HandlesMouseScroll = LoadingScreen_HandlesMouseScroll;
+
+	screen->Base.OnResize           = LoadingScreen_OnResize;
+	screen->Base.Base.Init          = LoadingScreen_Init;
+	screen->Base.Base.Render        = LoadingScreen_Render;
+	screen->Base.Base.Free          = LoadingScreen_Free;
+
+	screen->Title = String_InitAndClearArray(screen->TitleBuffer);
+	String_AppendString(&screen->Title, title);
+	screen->Message = String_InitAndClearArray(screen->MessageBuffer);
+	String_AppendString(&screen->Message, message);
+
+	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	screen->Base.BlocksWorld     = true;
+	screen->Base.RenderHUDOver   = true;
+	screen->Base.HandlesAllInput = true;
+	return &screen->Base;
+}
+
+public class GeneratingMapScreen : LoadingScreen {
+
+	string lastState;
+	IMapGenerator gen;
+	public GeneratingMapScreen(Game game, IMapGenerator gen) : base(game, "Generating level", "Generating..") {
+		this.gen = gen;
+	}
+
+	public override void Render(double delta) {
+		base.Render(delta);
+		if (gen.Done) { game.Server.EndGeneration(); return; }
+
+		string state = gen.CurrentState;
+		SetProgress(gen.CurrentProgress);
+		if (state == lastState) return;
+
+		lastState = state;
+		SetMessage(state);
+	}
+}

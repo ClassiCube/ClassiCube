@@ -163,7 +163,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public class GeneratingMapScreen : LoadingMapScreen{
+	public class GeneratingMapScreen : LoadingMapScreen {
 		
 		string lastState;
 		IMapGenerator gen;

@@ -1570,9 +1570,9 @@ MenuInputValidator MenuInputValidator_Hex(void) {
 
 void IntegerValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
 	String_AppendConst(range, "&7(");
-	String_AppendInt32(range, (Int32)validator->Meta1);
+	String_AppendInt32(range, validator->Meta_Int[0]);
 	String_AppendConst(range, " - ");
-	String_AppendInt32(range, (Int32)validator->Meta2);
+	String_AppendInt32(range, validator->Meta_Int[1]);
 	String_AppendConst(range, ")");
 }
 
@@ -1590,7 +1590,7 @@ bool IntegerValidator_IsValidValue(MenuInputValidator* validator, STRING_PURE St
 	Int32 value;
 	if (!Convert_TryParseInt32(s, &value)) return false;
 
-	Int32 min = (Int32)validator->Meta1, max = (Int32)validator->Meta2;
+	Int32 min = validator->Meta_Int[0], max = validator->Meta_Int[1];
 	return min <= value && value <= max;
 }
 
@@ -1600,8 +1600,9 @@ MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max) {
 	validator.IsValidChar   = IntegerValidator_IsValidChar;
 	validator.IsValidString = IntegerValidator_IsValidString;
 	validator.IsValidValue  = IntegerValidator_IsValidValue;
-	validator.Meta1 = (void*)min;
-	validator.Meta2 = (void*)max;
+
+	validator.Meta_Int[0] = min;
+	validator.Meta_Int[1] = max;
 	return validator;
 }
 
@@ -1617,9 +1618,9 @@ MenuInputValidator MenuInputValidator_Seed(void) {
 
 void RealValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
 	String_AppendConst(range, "&7(");
-	String_AppendReal32(range, (Real32)validator->Meta1);
+	String_AppendReal32(range, validator->Meta_Real[0]);
 	String_AppendConst(range, " - ");
-	String_AppendReal32(range, (Real32)validator->Meta2);
+	String_AppendReal32(range, validator->Meta_Real[1]);
 	String_AppendConst(range, ")");
 }
 
@@ -1636,7 +1637,7 @@ bool RealValidator_IsValidString(MenuInputValidator* validator, STRING_PURE Stri
 bool RealValidator_IsValidValue(MenuInputValidator* validator, STRING_PURE String* s) {
 	Real32 value;
 	if (!Convert_TryParseReal32(s, &value)) return false;
-	Real32 min = (Real32)validator->Meta1, max = (Real32)validator->Meta2;
+	Real32 min = validator->Meta_Real[0], max = validator->Meta_Real[1];
 	return min <= value && value <= max;
 }
 
@@ -1646,8 +1647,8 @@ MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max) {
 	validator.IsValidChar   = RealValidator_IsValidChar;
 	validator.IsValidString = RealValidator_IsValidString;
 	validator.IsValidValue  = RealValidator_IsValidValue;
-	validator.Meta1 = (void*)min;
-	validator.Meta2 = (void*)max;
+	validator.Meta_Real[0] = min;
+	validator.Meta_Real[1] = max;
 	return validator;
 }
 
@@ -1684,8 +1685,8 @@ MenuInputValidator MenuInputValidator_Boolean(void) {
 
 MenuInputValidator MenuInputValidator_Enum(const UInt8** names, UInt32 namesCount) {
 	MenuInputValidator validator = MenuInputValidator_Boolean();
-	validator.Meta1 = names;
-	validator.Meta2 = (void*)namesCount;
+	validator.Meta_Ptr[0] = names;
+	validator.Meta_Ptr[1] = (void*)namesCount; /* TODO: Need to handle void* size < 32 bits?? */
 	return validator;
 }
 
