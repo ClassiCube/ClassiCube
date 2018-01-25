@@ -9,6 +9,10 @@
 #include "GraphicsAPI.h"
 #include "Player.h"
 #include "Funcs.h"
+#include "TerrainAtlas.h"
+#include "ModelCache.h"
+#include "MapGenerator.h"
+#include "ServerConnection.h"
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -320,6 +324,58 @@ void StatusScreen_MakeText(StatusScreen* screen, STRING_TRANSIENT String* status
 	}
 }
 
+
+void StatusScreen_DrawPosition(StatusScreen* screen) {
+	TextAtlas* atlas = &screen->PosAtlas;
+	VertexP3fT2fC4b vertices[4 * 8];
+	VertexP3fT2fC4b* ptr = vertices;
+
+	Texture tex = atlas->Tex; tex.X = 2; tex.Width = (UInt16)atlas->Offset;
+	PackedCol col = PACKEDCOL_WHITE;
+	GfxCommon_Make2DQuad(&tex, col, &ptr);
+
+	Vector3I pos; Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Base.Position);
+	atlas->CurX = atlas->Offset + 2;
+
+	TextAtlas_Add(atlas, 13, &ptr);
+	TextAtlas_AddInt(atlas, pos.X, &ptr);
+	TextAtlas_Add(atlas, 11, &ptr);
+	TextAtlas_AddInt(atlas, pos.Y, &ptr);
+	TextAtlas_Add(atlas, 11, &ptr);
+	TextAtlas_AddInt(atlas, pos.Z, &ptr);
+	TextAtlas_Add(atlas, 14, &ptr);
+
+	Gfx_BindTexture(atlas->Tex.ID);
+	/* TODO: Do we need to use a separate VB here? */
+	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, index);
+}
+
+void StatusScreen_UpdateHackState(StatusScreen* screen, bool force) {
+	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	if (force || hacks->Speeding != screen->Speeding || hacks->HalfSpeeding != screen->HalfSpeeding 
+		|| hacks->Noclip != screen->Noclip || hacks->Flying != screen->Fly || Game_Fov != screen->LastFov) {
+		screen->Speeding = hacks->Speeding; screen->Noclip = hacks->Noclip;
+		screen->HalfSpeeding = hacks->HalfSpeeding; screen->Fly = hacks->Flying;
+		screen->LastFov = Game_Fov;
+
+		UInt8 statusBuffer[String_BufferSize(STRING_SIZE * 2)];
+		String status = String_InitAndClearArray(statusBuffer);
+
+		if (Game_Fov != Game_DefaultFov) {
+			String_AppendConst(&status, "Zoom fov ");
+			String_AppendInt32(&status, Game_Fov);
+			String_AppendConst(&status, "  ");
+		}
+		if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
+
+		bool speed = (hacks->Speeding || hacks->HalfSpeeding) && (hacks->CanSpeed || hacks->BaseHorSpeed > 1);
+		if (speed) String_AppendConst(&status, "Speed ON   ");
+		if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
+
+		TextWidget_SetText(&screen->HackStates, &status);
+	}
+}
+
 void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
 	screen->Frames++;
 	screen->Accumulator += delta;
@@ -333,24 +389,6 @@ void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
 	screen->Accumulator = 0.0;
 	screen->Frames = 0;
 	Game_ChunkUpdates = 0;
-}
-
-void StatusScreen_Render(GuiElement* elem, Real64 delta) {
-	StatusScreen* screen = (StatusScreen*)elem;
-	StatusScreen_Update(screen, delta);
-	if (Game_HideGui || !Game_ShowFPS) return;
-
-	Gfx_SetTexturing(true);
-	elem = &screen->Status.Base.Base;
-	elem->Render(elem, delta);
-
-	if (!Game_ClassicMode && Gui_Active == NULL) {
-		StatusScreen_UpdateHackState(screen, false);
-		StatusScreen_DrawPosition(screen);
-		elem = &screen->HackStates.Base.Base;
-		elem->Render(elem, delta);
-	}
-	Gfx_SetTexturing(false);
 }
 
 void StatusScreen_OnResize(Screen* screen) { }
@@ -403,6 +441,24 @@ void StatusScreen_Init(GuiElement* elem) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
 }
 
+void StatusScreen_Render(GuiElement* elem, Real64 delta) {
+	StatusScreen* screen = (StatusScreen*)elem;
+	StatusScreen_Update(screen, delta);
+	if (Game_HideGui || !Game_ShowFPS) return;
+
+	Gfx_SetTexturing(true);
+	elem = &screen->Status.Base.Base;
+	elem->Render(elem, delta);
+
+	if (!Game_ClassicMode && Gui_Active == NULL) {
+		StatusScreen_UpdateHackState(screen, false);
+		StatusScreen_DrawPosition(screen);
+		elem = &screen->HackStates.Base.Base;
+		elem->Render(elem, delta);
+	}
+	Gfx_SetTexturing(false);
+}
+
 void StatusScreen_Free(GuiElement* elem) {
 	StatusScreen* screen = (StatusScreen*)elem;
 	Platform_FreeFont(&screen->Font);
@@ -411,57 +467,6 @@ void StatusScreen_Free(GuiElement* elem) {
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_ChatFontChanged);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, StatusScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
-}
-
-void StatusScreen_DrawPosition(StatusScreen* screen) {
-	TextAtlas* atlas = &screen->PosAtlas;
-	VertexP3fT2fC4b vertices[4 * 8];
-	VertexP3fT2fC4b* ptr = vertices;
-
-	Texture tex = atlas->Tex; tex.X = 2; tex.Width = (UInt16)atlas->Offset;
-	PackedCol col = PACKEDCOL_WHITE;
-	GfxCommon_Make2DQuad(&tex, col, &ptr);
-
-	Vector3I pos; Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Base.Position);
-	atlas->CurX = atlas->Offset + 2;
-
-	TextAtlas_Add(atlas, 13, &ptr);
-	TextAtlas_AddInt(atlas, pos.X, &ptr);
-	TextAtlas_Add(atlas, 11, &ptr);
-	TextAtlas_AddInt(atlas, pos.Y, &ptr);
-	TextAtlas_Add(atlas, 11, &ptr);
-	TextAtlas_AddInt(atlas, pos.Z, &ptr);
-	TextAtlas_Add(atlas, 14, &ptr);
-
-	Gfx_BindTexture(atlas->Tex.ID);
-	/* TODO: Do we need to use a separate VB here? */
-	GfxCommon_UpdateDynamicVb_IndexedTris(game.ModelCache.vb, vertices, index);
-}
-
-void StatusScreen_UpdateHackState(StatusScreen* screen, bool force) {
-	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	if (force || hacks->Speeding != screen->Speeding || hacks->HalfSpeeding != screen->HalfSpeeding 
-		|| hacks->Noclip != screen->Noclip || hacks->Flying != screen->Fly || Game_Fov != screen->LastFov) {
-		screen->Speeding = hacks->Speeding; screen->Noclip = hacks->Noclip;
-		screen->HalfSpeeding = hacks->HalfSpeeding; screen->Fly = hacks->Flying;
-		screen->LastFov = Game_Fov;
-
-		UInt8 statusBuffer[String_BufferSize(STRING_SIZE * 2)];
-		String status = String_InitAndClearArray(statusBuffer);
-
-		if (Game_Fov != Game_DefaultFov) {
-			String_AppendConst(&status, "Zoom fov ");
-			String_AppendInt32(&status, Game_Fov);
-			String_AppendConst(&status, "  ");
-		}
-		if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
-
-		bool speed = (hacks->Speeding || hacks->HalfSpeeding) && (hacks->CanSpeed || hacks->BaseHorSpeed > 1);
-		if (speed) String_AppendConst(&status, "Speed ON   ");
-		if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
-
-		TextWidget_SetText(&screen->HackStates, &status);
-	}
 }
 
 Screen* StatusScreen_MakeInstance(void) {
@@ -746,41 +751,44 @@ bool LoadingScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButto
 bool LoadingScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) { return true; }
 bool LoadingScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
 
-void DrawBackground() {
-	VertexP3fT2fC4b[] vertices = game.ModelCache.vertices;
-	int index = 0, atlasIndex = 0;
-	Int32 drawnY = 0;
+void LoadingScreen_UpdateBackgroundVB(VertexP3fT2fC4b* vertices, Int32 count, Int32 atlasIndex, bool* bound) {
+	if (!(*bound)) {
+		*bound = true;
+		Gfx_BindTexture(Atlas1D_TexIds[atlasIndex]);
+	}
+
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	/* TODO: Do we need to use a separate VB here? */
+	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, count);
+}
+
+#define LOADING_TILE_SIZE 64
+void LoadingScreen_DrawBackground(void) {
+	VertexP3fT2fC4b vertices[144];
+	VertexP3fT2fC4b* ptr = vertices;
+	Int32 count = 0, atlasIndex = 0, y = 0;
 	PackedCol col = PACKEDCOL_CONST(64, 64, 64, 255);
 
 	TextureLoc texLoc = Block_GetTexLoc(BLOCK_DIRT, FACE_YMAX);
-	TerrainAtlas1D atlas = game.TerrainAtlas1D;
-	Texture tex = new Texture(0, 0, 0, game.Width, 64,
-		atlas.GetTexRec(texLoc, 1, out atlasIndex));
-	tex.U2 = (float)game.Width / 64;
+	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &atlasIndex);
+	Texture tex = Texture_FromRec(0, 0, 0, Game_Width, LOADING_TILE_SIZE, rec);		
+	tex.U2 = (Real32)Game_Width / (Real32)LOADING_TILE_SIZE;
+
 	bool bound = false;
+	while (y < Game_Height) {
+		tex.Y = (Int16)y;
+		y += LOADING_TILE_SIZE;		
+		GfxCommon_Make2DQuad(&tex, col, &ptr);
+		count += 4;
 
-	while (drawnY < Game_Height) {
-		tex.Y1 = drawnY;
-		IGraphicsApi.Make2DQuad(ref tex, col, vertices, ref index);
-		if (index >= vertices.Length) {
-			DrawBackgroundVertices(ref index, atlasIndex, ref bound);
-		}
-		drawnY += 64;
-	}
-	DrawBackgroundVertices(ref index, atlasIndex, ref bound);
-}
-
-void DrawBackgroundVertices(ref int index, int atlasIndex, ref bool bound) {
-	if (index == 0) return;
-	if (!bound) {
-		bound = true;
-		gfx.BindTexture(game.TerrainAtlas1D.TexIds[atlasIndex]);
+		if (count < Array_NumElements(vertices)) continue;
+		LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
+		count = 0;
+		ptr = vertices;
 	}
 
-	ModelCache cache = game.ModelCache;
-	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	gfx.UpdateDynamicVb_IndexedTris(cache.vb, cache.vertices, index);
-	index = 0;
+	if (count == 0) return;
+	LoadingScreen_UpdateBackgroundVB(vertices, count, atlasIndex, &bound);
 }
 
 void LoadingScreen_Init(GuiElement* elem) {
@@ -798,7 +806,7 @@ void LoadingScreen_Init(GuiElement* elem) {
 void LoadingScreen_Render(GuiElement* elem, Real64 delta) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
 	Gfx_SetTexturing(true);
-	LoadingMapScreen_DrawBackground();
+	LoadingScreen_DrawBackground();
 	elem = &screen->TitleWidget.Base.Base;   elem->Render(elem, delta);
 	elem = &screen->MessageWidget.Base.Base; elem->Render(elem, delta);
 	Gfx_SetTexturing(false);
@@ -809,8 +817,8 @@ void LoadingScreen_Render(GuiElement* elem, Real64 delta) {
 
 	PackedCol backCol = PACKEDCOL_CONST(128, 128, 128, 255);
 	PackedCol progCol = PACKEDCOL_CONST(128, 255, 128, 255);
-	GfxCommon_Draw2DQuadFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
-	GfxCommon_Draw2DQuadFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
+	GfxCommon_Draw2DFlat(x, y, PROG_BAR_WIDTH, PROG_BAR_HEIGHT, backCol);
+	GfxCommon_Draw2DFlat(x, y, progWidth,      PROG_BAR_HEIGHT, progCol);
 }
 
 void LoadingScreen_Free(GuiElement* elem) {
@@ -823,7 +831,7 @@ void LoadingScreen_Free(GuiElement* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
 }
 
-Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
+void LoadingScreen_Make(LoadingScreen* screen, STRING_PURE String* title, STRING_PURE String* message) {
 	LoadingScreen* screen = &LoadingScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(LoadingScreen));
 	Screen_Reset(&screen->Base);
@@ -849,26 +857,43 @@ Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String
 	screen->Base.BlocksWorld     = true;
 	screen->Base.RenderHUDOver   = true;
 	screen->Base.HandlesAllInput = true;
+}
+
+Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
+	LoadingScreen* screen = &LoadingScreen_Instance;
+	LoadingScreen_Make(screen, title, message);
 	return &screen->Base;
 }
 
-public class GeneratingMapScreen : LoadingScreen {
 
-	string lastState;
-	IMapGenerator gen;
-	public GeneratingMapScreen(Game game, IMapGenerator gen) : base(game, "Generating level", "Generating..") {
-		this.gen = gen;
-	}
+typedef struct GeneratingMapScreen_ {
+	LoadingScreen Base;
+	String LastState;
+	UInt8 LastStateBuffer[String_BufferSize(STRING_SIZE)];
+} GeneratingMapScreen;
+GeneratingMapScreen GeneratingMapScreen_Instance;
 
-	public override void Render(double delta) {
-		base.Render(delta);
-		if (gen.Done) { game.Server.EndGeneration(); return; }
+void GeneratingScreen_Render(GuiElement* elem, Real64 delta) {
+	GeneratingMapScreen* screen = (GeneratingMapScreen*)elem;
+	LoadingScreen_Render(elem, delta);
+	if (Gen_Done) { ServerConnection_EndGeneration(); return; }
 
-		string state = gen.CurrentState;
-		SetProgress(gen.CurrentProgress);
-		if (state == lastState) return;
+	String state = Gen_CurrentState;
+	screen->Base.Progress = Gen_CurrentProgress;
+	if (String_Equals(&state, &screen->LastState)) return;
 
-		lastState = state;
-		SetMessage(state);
-	}
+	String_Clear(&screen->LastState);
+	String_AppendString(&screen->LastState, &state);
+	LoadingScreen_SetMessage(&screen->Base, &state);
+}
+
+Screen* GeneratingScreen_MakeInstance(void) {
+	GeneratingMapScreen* screen = &GeneratingMapScreen_Instance;
+	String title   = String_FromConst("Generating level");
+	String message = String_FromConst("Generating..");
+	LoadingScreen_Make(&screen->Base, &title, &message);
+
+	screen->Base.Base.Base.Render = GeneratingScreen_Render;
+	screen->LastState = String_InitAndClearArray(screen->LastStateBuffer);
+	return &screen->Base.Base;
 }

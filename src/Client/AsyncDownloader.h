@@ -2,7 +2,7 @@
 #define CC_ASYNCDOWNLOADER_H
 #include "Typedefs.h"
 #include "Constants.h"
-#include "Utils.h
+#include "Utils.h"
 #include "GameStructs.h"
 /* Downloads images, texture packs, skins, etc in async manner.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
