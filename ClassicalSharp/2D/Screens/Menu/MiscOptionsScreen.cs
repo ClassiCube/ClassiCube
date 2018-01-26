@@ -14,14 +14,13 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Init();
 			ContextRecreated();
 			MakeValidators();
-			MakeDescriptions();
 		}
 		
 		protected override void ContextRecreated() {
 			bool multi = !game.Server.IsSinglePlayer;
 			ClickHandler onClick = OnWidgetClick;
 			widgets = new Widget[] {
-				multi ? null : MakeOpt(-1, -100, "Click distance", onClick, GetReach,       SetReach),
+				multi ? null : MakeOpt(-1, -100, "Reach distance", onClick, GetReach,       SetReach),
 				MakeOpt(-1, -50, "Music volume",                   onClick, GetMusic,       SetMusic),
 				MakeOpt(-1, 0, "Sounds volume",                    onClick, GetSounds,      SetSounds),
 				MakeOpt(-1, 50, "View bobbing",                    onClick, GetViewBob,     SetViewBob),
@@ -85,14 +84,6 @@ namespace ClassicalSharp.Gui.Screens {
 				new BooleanValidator(),
 				new BooleanValidator(),
 				new IntegerValidator(1, 200),
-			};
-		}
-		
-		void MakeDescriptions() {
-			descriptions = new string[widgets.Length][];
-			descriptions[0] = new string[] {
-				"&eSets how far away you can place/delete blocks",
-				"&fThe default click distance is 5 blocks.",
 			};
 		}
 	}

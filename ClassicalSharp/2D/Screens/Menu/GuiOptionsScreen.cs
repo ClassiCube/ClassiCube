@@ -12,7 +12,6 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Init();
 			ContextRecreated();
 			MakeValidators();
-			MakeDescriptions();
 		}
 		
 		protected override void ContextRecreated() {
@@ -27,7 +26,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, -150, "Clickable chat",      onClick, GetClickable, SetClickable),
 				MakeOpt(1, -100, "Chat scale",          onClick, GetChatScale, SetChatScale),
 				MakeOpt(1, -50, "Chat lines",           onClick, GetChatlines, SetChatlines),
-				MakeOpt(1, 0, "Use font",               onClick, GetUseFont,   SetUseFont),
+				MakeOpt(1, 0, "Use system font",        onClick, GetUseFont,   SetUseFont),
 				MakeOpt(1, 50, "Font",                  onClick, GetFont,      SetFont),
 				
 				MakeBack(false, titleFont, SwitchOptions),
@@ -119,14 +118,6 @@ namespace ClassicalSharp.Gui.Screens {
 				new IntegerValidator(0, 30),
 				new BooleanValidator(),
 				new StringValidator(),
-			};
-		}
-		
-		void MakeDescriptions() {
-			descriptions = new string[widgets.Length][];
-			descriptions[8] = new string[] {
-				"&eWhether a system font is used instead of default.png for drawing text",
-				"&fThe default system font used is Arial.",
 			};
 		}
 	}

@@ -30,7 +30,7 @@ void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text);
 
 typedef void (*ButtonWidget_SetValue)(STRING_TRANSIENT String* raw);
 typedef void (*ButtonWidget_GetValue)(STRING_TRANSIENT String* raw);
-typedef void (*Gui_MouseHandler)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
+typedef bool (*Gui_MouseHandler)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
 typedef struct ButtonWidget_ {
 	Widget Base;
 	Texture Texture;
