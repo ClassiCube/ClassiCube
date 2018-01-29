@@ -72,23 +72,22 @@ namespace ClassicalSharp {
 		// defer getting the targeted entity as it's a costly operation
 		internal int pickingId = -1;
 		internal void ButtonStateChanged(MouseButton button, bool pressed) {
-			if (buttonsDown[(int)button]) {
-				if (pickingId == -1) {
-					pickingId = game.Entities.GetClosetPlayer(game.LocalPlayer);
-				}
-				
-				game.Server.SendPlayerClick(button, false, (byte)pickingId, game.SelectedPos);
-				buttonsDown[(int)button] = false;
+			if (pressed) {
+				// Can send multiple Pressed events
+				ButtonStateUpdate(button, true);
+			} else {
+				if (!buttonsDown[(int)button]) return;
+				ButtonStateUpdate(button, false);
+			}
+		}
+		
+		void ButtonStateUpdate(MouseButton button, bool pressed) {
+			if (pickingId == -1) {
+				pickingId = game.Entities.GetClosetPlayer(game.LocalPlayer);
 			}
 			
-			if (pressed) {
-				if (pickingId == -1) {
-					pickingId = game.Entities.GetClosetPlayer(game.LocalPlayer);
-				}
-				
-				game.Server.SendPlayerClick(button, true, (byte)pickingId, game.SelectedPos);
-				buttonsDown[(int)button] = true;
-			}
+			game.Server.SendPlayerClick(button, pressed, (byte)pickingId, game.SelectedPos);
+			buttonsDown[(int)button] = pressed;
 		}
 		
 		internal void ScreenChanged(Screen oldScreen, Screen newScreen) {
