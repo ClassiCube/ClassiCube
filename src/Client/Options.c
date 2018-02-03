@@ -6,8 +6,8 @@
 #define OPT_NOT_FOUND UInt32_MaxValue
 
 void Options_Init(void) {
-	StringBuffers_Init(&Options_Keys);
-	StringBuffers_Init(&Options_Values);
+	StringsBuffer_Init(&Options_Keys);
+	StringsBuffer_Init(&Options_Values);
 }
 
 void Options_Free(void) {

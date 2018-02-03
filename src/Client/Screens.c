@@ -652,7 +652,7 @@ void FilesScreen_OnResize(Screen* elem) {
 Screen* FilesScreen_MakeInstance(void) {
 	FilesScreen* screen = &FilesScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(FilesScreen) - sizeof(StringsBuffer));
-	screen->Entries.Count = 0;
+	StringsBuffer_UNSAFE_Reset(&screen->Entries);
 	Screen_Reset(&screen->Base);
 	
 	screen->Base.Base.HandlesKeyDown     = FilesScreen_HandlesKeyDown;

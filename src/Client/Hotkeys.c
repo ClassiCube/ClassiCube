@@ -111,7 +111,7 @@ bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
 }
 
 void Hotkeys_Init(void) {
-	StringBuffers_Init(&HotkeysText);
+	StringsBuffer_Init(&HotkeysText);
 	String prefix = String_FromConst("hotkey-");
 	UInt32 i;
 	for (i = 0; i < Options_Keys.Count; i++) {

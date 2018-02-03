@@ -87,22 +87,13 @@ namespace ClassicalSharp.Gui.Screens {
 		void HandleFontChange() {
 			int selIndex = IndexOfWidget(selectedButton);
 			game.Events.RaiseChatFontChanged();
-			base.Dispose();
-			base.Init();
+			Recreate();
 			game.Gui.RefreshHud();
 			
-			for (int i = 0; i < widgets.Length; i++) {
-				if (widgets[i] == null || !(widgets[i] is ButtonWidget)) {
-					widgets[i] = null; continue;
-				}
-				
-				ButtonWidget btn = widgets[i] as ButtonWidget;
-				btn.font = titleFont;
-				btn.SetText(btn.Text);
-			}
-			
-			if (selIndex >= 0)
+			if (selIndex >= 0) {
 				selectedButton = (ButtonWidget)widgets[selIndex];
+				if (selectedButton != null) selectedButton.Active = true;
+			}
 		}
 		
 		void MakeValidators() {

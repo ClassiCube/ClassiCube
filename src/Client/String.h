@@ -85,17 +85,17 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
 #define STRINGSBUFFER_FLAGS_EXPAND_ELEMS 512
 typedef struct StringsBuffer_ {
-	UInt8* TextBuffer;
-	UInt32 TextBufferSize;
+	UInt8* TextBuffer; 
 	UInt32* FlagsBuffer;
-	UInt32 FlagsBufferElems;
-	UInt32 Count;
+	UInt32 TextBufferElems, FlagsBufferElems;
+	UInt32 Count, UsedElems;
 	UInt8 DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
 	UInt32 DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 
-void StringBuffers_Init(StringsBuffer* buffer);
+void StringsBuffer_Init(StringsBuffer* buffer);
 void StringsBuffer_Free(StringsBuffer* buffer);
+void StringsBuffer_UNSAFE_Reset(StringsBuffer* buffer);
 void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text);
 STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index);
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);

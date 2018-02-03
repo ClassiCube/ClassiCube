@@ -419,14 +419,15 @@ void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* li
 	TabList_GroupRanks[id] = rank;
 }
 
-void TabList_Init(void) { StringBuffers_Init(&TabList_Buffer); }
+void TabList_Init(void) { StringsBuffer_Init(&TabList_Buffer); }
 void TabList_Free(void) { StringsBuffer_Free(&TabList_Buffer); }
 void TabList_Reset(void) {
 	Platform_MemSet(TabList_PlayerNames, 0, sizeof(TabList_PlayerNames));
 	Platform_MemSet(TabList_ListNames,   0, sizeof(TabList_ListNames));
 	Platform_MemSet(TabList_GroupNames,  0, sizeof(TabList_GroupNames));
 	Platform_MemSet(TabList_GroupRanks,  0, sizeof(TabList_GroupRanks));
-	TabList_Buffer.Count = 0; /* TODO: Should we be freeing the buffer here? */
+	/* TODO: Should we be trying to free the buffer here? */
+	StringsBuffer_UNSAFE_Reset(&TabList_Buffer);
 }
 
 IGameComponent TabList_MakeComponent(void) {
