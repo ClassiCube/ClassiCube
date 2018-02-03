@@ -86,15 +86,15 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		protected ButtonWidget selectedWidget, targetWidget;
+		protected ButtonWidget selectedButton, activeButton;
 		protected override void WidgetSelected(Widget widget) {
 			ButtonWidget button = widget as ButtonWidget;
-			if (selectedWidget == button || button == null ||
+			if (selectedButton == button || button == null ||
 			    button == widgets[widgets.Length - 2]) return;
 			
-			selectedWidget = button;
-			if (targetWidget != null) return;
-			UpdateDescription(selectedWidget);
+			selectedButton = button;
+			if (activeButton != null) return;
+			UpdateDescription(selectedButton);
 		}
 		
 		protected void UpdateDescription(ButtonWidget widget) {
@@ -133,10 +133,10 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void ShowExtendedHelp() {
-			bool canShow = input == null && selectedWidget != null && descriptions != null;
+			bool canShow = input == null && selectedButton != null && descriptions != null;
 			if (!canShow) return;
 			
-			int index = IndexOfWidget(selectedWidget);
+			int index = IndexOfWidget(selectedButton);
 			if (index < 0 || index >= descriptions.Length) return;
 			string[] desc = descriptions[index];
 			if (desc == null) return;
@@ -186,7 +186,7 @@ namespace ClassicalSharp.Gui.Screens {
 				return;
 			}
 			
-			targetWidget = selectedWidget;
+			activeButton = button;
 			InputClosed();
 			
 			input = MenuInputWidget.Create(game, 400, 30,
@@ -200,7 +200,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 240, 110);
 
 			InputOpened();
-			UpdateDescription(targetWidget);
+			UpdateDescription(activeButton);
 		}
 		
 		void InputClick(Game game, Widget widget, MouseButton btn, int x, int y) {
@@ -222,11 +222,11 @@ namespace ClassicalSharp.Gui.Screens {
 		void ChangeSetting() {
 			string text = input.Text.ToString();
 			if (((MenuInputWidget)input).Validator.IsValidValue(text)) {
-				SetButtonValue(targetWidget, text);
+				SetButtonValue(activeButton, text);
 			}
 			
-			UpdateDescription(targetWidget);
-			targetWidget = null;
+			UpdateDescription(activeButton);
+			activeButton = null;
 			InputClosed();
 		}
 		

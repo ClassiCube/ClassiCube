@@ -85,7 +85,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void HandleFontChange() {
-			int selIndex = IndexOfWidget(selectedWidget);
+			int selIndex = IndexOfWidget(selectedButton);
 			game.Events.RaiseChatFontChanged();
 			base.Dispose();
 			base.Init();
@@ -102,7 +102,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			if (selIndex >= 0)
-				selectedWidget = (ButtonWidget)widgets[selIndex];
+				selectedButton = (ButtonWidget)widgets[selIndex];
 		}
 		
 		void MakeValidators() {
