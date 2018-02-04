@@ -20,9 +20,9 @@ typedef struct IGameComponent_ {
 	/* Called to update the component's state when the user has finished loading a new map. */
 	void (*OnNewMapLoaded)(void);
 } IGameComponent;
+
 /* Makes an empty game component with all its function pointers initalised to null. */
 IGameComponent IGameComponent_MakeEmpty(void);
-
 
 /* Represents a task that periodically runs on the main thread every specified interval. */
 typedef struct ScheduledTask_ {

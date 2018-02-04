@@ -35,15 +35,6 @@ Int64 DateTime_MillisecondsBetween(DateTime* start, DateTime* end) {
 	return msEnd - msStart;
 }
 
-Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta) {
-	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
-	/* We must use rounding at final step, not at every intermediate step. */
-	*accmulator += delta;
-	Int32 steps = (Int32)*accmulator;
-	*accmulator -= steps;
-	return steps;
-}
-
 UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount) {
 	UInt32 i;
 	for (i = 0; i < namesCount; i++) {
@@ -55,4 +46,32 @@ UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** 
 
 bool Utils_IsValidInputChar(UInt8 c, bool supportsCP437) {
 	return supportsCP437 || (Convert_CP437ToUnicode(c) == c);
+}
+
+bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index) {
+	String httpStr  = String_FromConst("http://");
+	String httpsStr = String_FromConst("https://");
+	Int32 http  = String_IndexOfString(value, &httpStr);
+	Int32 https = String_IndexOfString(value, &httpsStr);
+	return http == index || https == index;
+}
+
+Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta) {
+	/* Some mice may use deltas of say (0.2, 0.2, 0.2, 0.2, 0.2) */
+	/* We must use rounding at final step, not at every intermediate step. */
+	*accmulator += delta;
+	Int32 steps = (Int32)(*accmulator);
+	*accmulator -= steps;
+	return steps;
+}
+
+UInt8 Utils_GetSkinType(Bitmap* bmp) {
+	if (bmp->Width == bmp->Height * 2) return SKIN_TYPE_64x32;
+	if (bmp->Width != bmp->Height)     return SKIN_TYPE_INVALID;
+
+	/* Minecraft alex skins have this particular pixel with alpha of 0 */
+	Int32 scale = bmp->Width / 64;
+	UInt32 pixel = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
+	UInt8 alpha = (UInt8)(pixel >> 24);
+	return alpha >= 127 ? SKIN_TYPE_64x64 : SKIN_TYPE_64x64_SLIM;
 }

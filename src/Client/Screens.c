@@ -709,18 +709,16 @@ void LoadingScreen_MapLoading(void* obj, Real32 progress) {
 
 void LoadingScreen_OnResize(Screen* elem) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
-	Widget* widget = &screen->TitleWidget.Base;
-	widget->Reposition(widget);
-	widget = &screen->MessageWidget.Base;
-	widget->Reposition(widget);
+	Widget* widget;
+	widget = &screen->TitleWidget.Base;   widget->Reposition(widget);
+	widget = &screen->MessageWidget.Base; widget->Reposition(widget);
 }
 
 void LoadingScreen_ContextLost(void* obj) {
 	LoadingScreen* screen = (LoadingScreen*)obj;
-	GuiElement* elem = &screen->TitleWidget.Base.Base;
-	elem->Free(elem);
-	GuiElement* elem = &screen->MessageWidget.Base.Base;
-	elem->Free(elem);
+	GuiElement* elem;
+	elem = &screen->TitleWidget.Base.Base;   elem->Free(elem);
+	elem = &screen->MessageWidget.Base.Base; elem->Free(elem);
 }
 
 void LoadingScreen_ContextRecreated(void* obj) {
