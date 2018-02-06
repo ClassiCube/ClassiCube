@@ -99,6 +99,8 @@ namespace ClassicalSharp.Gui.Screens {
 		static string GetFOV(Game g) { return g.Fov.ToString(); }
 		static void SetFOV(Game g, string v) {
 			g.Fov = Int32.Parse(v);
+			if (g.ZoomFov > g.Fov) g.ZoomFov = g.Fov;
+			
 			Options.Set(OptionsKey.FieldOfView, v);
 			g.UpdateProjection();
 		}

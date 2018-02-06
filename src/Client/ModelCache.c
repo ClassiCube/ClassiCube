@@ -487,7 +487,7 @@ void SkeletonModel_CreateParts(void) {
 
 Real32 SkeletonModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
 Vector3 SkeletonModel_GetCollisionSize(void) {
-	return Vector3_Create3(8.0f / 16.0f, 30.0f / 16.0f, 8.0f / 16.0f);
+	return Vector3_Create3(8.0f / 16.0f, 28.1f / 16.0f, 8.0f / 16.0f);
 }
 
 void SkeletonModel_GetPickingBounds(AABB* bb) {
