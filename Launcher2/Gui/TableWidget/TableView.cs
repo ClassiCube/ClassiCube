@@ -123,19 +123,25 @@ namespace Launcher.Gui.Widgets {
 				if ((i == table.SelectedIndex || table.entries[i].Featured) && !separator) {
 					int startY = y - 3;
 					int height = Math.Min(startY + (entryHeight + 4), table.Y + table.Height) - startY;
-					drawer.Clear(table.entries[i].Featured ? new FastColour(87, 89, 0) : foreGridCol, table.X, startY, table.Width, height);
-				}
-				
+					drawer.Clear(GetGridCol(table.entries[i].Featured, i == table.SelectedIndex), table.X, startY, table.Width, height);
+				}				
 				if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref table.usedEntries[i])) {
 					maxIndex = i; break;
 				}
-			}
-			
+			}			
 			if (separator && !game.ClassicBackground) {
 				drawer.Clear(LauncherSkin.BackgroundCol, x - 7, table.Y, 2, table.Height);
 			}
 			return maxWidth + 5;
 		}
+
+		FastColour GetGridCol(bool featured, bool selected) {
+			if (featured) {
+				if (selected) return new FastColour(50, 53, 0);
+				return new FastColour(101, 107, 0);
+			}
+			return foreGridCol;
+		} 
 		
 		bool DrawColumnEntry(IDrawer2D drawer, ref DrawTextArgs args,
 		                     int maxWidth, int x, ref int y, ref TableEntry entry) {
