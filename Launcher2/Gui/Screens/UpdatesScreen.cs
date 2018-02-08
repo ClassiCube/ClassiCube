@@ -77,7 +77,7 @@ namespace Launcher.Gui.Screens {
 		void UpdateStableOpenGL(int x, int y) { UpdateBuild(true, false); }
 		void UpdateDevD3D9(int x, int y) { UpdateBuild(false, true); }
 		void UpdateDevOpenGL(int x, int y) { UpdateBuild(false, false); }
-		void SwitchToSettings(int x, int y) { game.SetScreen(new MainScreen(game)); }
+		void SwitchToSettings(int x, int y) { game.SetScreen(new SettingsScreen(game)); }
 		
 		void UpdateBuild(bool release, bool dx) {
 			DateTime last = release ? view.LastStable : view.LastDev;
