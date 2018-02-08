@@ -227,8 +227,8 @@ namespace ClassicalSharp.Network {
 			try {
 				HttpWebRequest req = MakeRequest(request);
 				using (HttpWebResponse response = (HttpWebResponse)req.GetResponse()) {
-					request.ETag = response.Headers[HttpResponseHeader.ETag];
-					if (response.Headers[HttpResponseHeader.LastModified] != null) {
+					request.ETag = response.Headers.Get("ETag");
+					if (response.Headers.Get("Last-Modified") != null) {
 						request.LastModified = response.LastModified;					
 					}
 					request.Data = DownloadContent(request, response);
