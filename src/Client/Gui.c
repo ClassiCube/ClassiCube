@@ -7,6 +7,7 @@
 #include "Drawer2D.h"
 #include "ExtMath.h"
 #include "Screens.h"
+#include "Camera.h"
 
 Screen* Gui_Status;
 void GuiElement_Recreate(GuiElement* elem) {
@@ -91,7 +92,7 @@ void Gui_Init(void) {
 	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_Status = StatusScreen_MakeInstance();
 	game.Components.Add(statusScreen);
-	hudScreen = new HudScreen(game);
+	Gui_HUD = HUDScreen_MakeInstance();
 	game.Components.Add(hudScreen);
 }
 
@@ -119,9 +120,9 @@ void Gui_Free(void) {
 
 IGameComponent Gui_MakeGameComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = Gui_Init;
+	comp.Init  = Gui_Init;
 	comp.Reset = Gui_Reset;
-	comp.Free = Gui_Free;
+	comp.Free  = Gui_Free;
 	return comp;
 }
 
@@ -140,9 +141,10 @@ void Gui_SetScreen(Screen* screen, bool freeOld) {
 	}
 
 	if (screen == NULL) {
-		hudScreen.GainFocus();
+		Window_SetCursorVisible(false);
+		if (Window_GetFocused()) { Camera_ActiveCamera->RegrabMouse(); }
 	} else if (Gui_Active == NULL) {
-		hudScreen.LoseFocus();
+		Window_SetCursorVisible(true);
 	}
 
 	if (screen != NULL) {

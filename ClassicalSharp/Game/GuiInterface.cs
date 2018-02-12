@@ -85,9 +85,10 @@ namespace ClassicalSharp {
 				activeScreen.Dispose();
 			
 			if (screen == null) {
-				hudScreen.GainFocus();
+				game.CursorVisible = false;
+				if (game.Focused) game.Camera.RegrabMouse();
 			} else if (activeScreen == null) {
-				hudScreen.LoseFocus();
+				game.CursorVisible = true;
 			}
 			
 			if (screen != null)

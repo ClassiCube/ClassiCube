@@ -91,7 +91,6 @@ namespace ClassicalSharp.Gui.Screens {
 			playerList = new PlayerListWidget(game, playerFont, !extended);
 
 			playerList.Init();
-			playerList.RecalcYOffset();
 			playerList.Reposition();
 		}
 		
@@ -105,22 +104,11 @@ namespace ClassicalSharp.Gui.Screens {
 			gfx.ContextRecreated -= ContextRecreated;
 		}
 		
-		public void GainFocus() {
-			game.CursorVisible = false;
-			if (game.Focused)
-				game.Camera.RegrabMouse();
-		}
-		
-		public void LoseFocus() {
-			game.CursorVisible = true;
-		}
-		
 		public override void OnResize(int width, int height) {
 			chat.OnResize(width, height);
 			hotbar.Reposition();
 			
 			if (playerList != null) {
-				playerList.RecalcYOffset();
 				playerList.Reposition();
 			}
 		}

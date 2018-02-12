@@ -164,11 +164,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		public void RecalcYOffset() {
-			YOffset = -Math.Max(0, game.Height / 4 - Height / 2);
-		}
-		
 		public override void Reposition() {
+			YOffset = -Math.Max(0, game.Height / 4 - Height / 2);
 			int oldX = X, oldY = Y;
 			base.Reposition();
 			
@@ -234,7 +231,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			SortEntries();
 			RepositionColumns();
 			UpdateTableDimensions();
-			RecalcYOffset();
 			Reposition();
 		}
 		

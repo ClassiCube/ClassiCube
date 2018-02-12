@@ -13,7 +13,12 @@
 #include "ModelCache.h"
 #include "MapGenerator.h"
 #include "ServerConnection.h"
+
 #define LeftOnly(func) { if (btn == MouseButton_Left) { func; } return true; }
+#define Widget_Init(widget) (widget)->Base.Base.Init(&((widget)->Base.Base))
+#define Widget_Render(widget, delta) (widget)->Base.Base.Render(&((widget)->Base.Base), delta)
+#define Widget_Free(widget) (widget)->Base.Base.Free(&((widget)->Base.Base))
+#define Widget_Reposition(widget) (widget)->Base.Reposition(&((widget)->Base))
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -149,8 +154,7 @@ void InventoryScreen_OnBlockChanged(void* obj) {
 
 void InventoryScreen_ContextLost(void* obj) {
 	InventoryScreen* screen = (InventoryScreen*)obj;
-	GuiElement* elem = &screen->Table.Base.Base;
-	elem->Free(elem);
+	Widget_Free(&screen->Table);
 }
 
 void InventoryScreen_ContextRecreated(void* obj) {
@@ -163,11 +167,10 @@ void InventoryScreen_Init(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 
-	elem = &screen->Table.Base.Base;
 	TableWidget_Create(&screen->Table);
 	screen->Table.Font = screen->Font;
 	screen->Table.ElementsPerRow = Game_PureClassic ? 9 : 10;
-	elem->Init(elem);
+	Widget_Init(&screen->Table);
 
 	Key_KeyRepeat = true;
 	Event_RegisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
@@ -178,21 +181,18 @@ void InventoryScreen_Init(GuiElement* elem) {
 
 void InventoryScreen_Render(GuiElement* elem, Real64 delta) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	elem = &screen->Table.Base.Base;
-	elem->Render(elem, delta);
+	Widget_Render(&screen->Table, delta);
 }
 
 void InventoryScreen_OnResize(Screen* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	Widget* widget = &screen->Table.Base;
-	widget->Reposition(widget);
+	Widget_Reposition(&screen->Table);
 }
 
 void InventoryScreen_Free(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	Platform_FreeFont(&screen->Font);
-	elem = &screen->Table.Base.Base;
-	elem->Free(elem);
+	Widget_Free(&screen->Table);
 
 	Key_KeyRepeat = false;
 	Event_UnregisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
@@ -401,12 +401,8 @@ void StatusScreen_ChatFontChanged(void* obj) {
 void StatusScreen_ContextLost(void* obj) {
 	StatusScreen* screen = (StatusScreen*)obj;
 	TextAtlas_Free(&screen->PosAtlas);
-	GuiElement* elem;
-
-	elem = &screen->Status.Base.Base;
-	elem->Free(elem);
-	elem = &screen->HackStates.Base.Base;
-	elem->Free(elem);
+	Widget_Free(&screen->Status);
+	Widget_Free(&screen->HackStates);
 }
 
 void StatusScreen_ContextRecreated(void* obj) {
@@ -415,7 +411,7 @@ void StatusScreen_ContextRecreated(void* obj) {
 	TextWidget* status = &screen->Status; TextWidget_Make(status, &screen->Font);
 	Widget_SetLocation(&status->Base, ANCHOR_LEFT_OR_TOP, ANCHOR_LEFT_OR_TOP, 2, 2);
 	status->ReducePadding = true;
-	status->Base.Base.Init(&status->Base.Base);
+	Widget_Init(status);
 	StatusScreen_Update(screen, 1.0);
 
 	String chars = String_FromConst("0123456789-, ()");
@@ -427,7 +423,7 @@ void StatusScreen_ContextRecreated(void* obj) {
 	TextWidget* hacks = &screen->HackStates; TextWidget_Make(hacks, &screen->Font);
 	Widget_SetLocation(&hacks->Base, ANCHOR_LEFT_OR_TOP, ANCHOR_LEFT_OR_TOP, 2, yOffset);
 	hacks->ReducePadding = true;
-	hacks->Base.Base.Init(&hacks->Base.Base);
+	Widget_Init(hacks);
 	StatusScreen_UpdateHackState(screen, true);
 }
 
@@ -447,14 +443,12 @@ void StatusScreen_Render(GuiElement* elem, Real64 delta) {
 	if (Game_HideGui || !Game_ShowFPS) return;
 
 	Gfx_SetTexturing(true);
-	elem = &screen->Status.Base.Base;
-	elem->Render(elem, delta);
+	Widget_Render(&screen->Status, delta);
 
 	if (!Game_ClassicMode && Gui_Active == NULL) {
 		StatusScreen_UpdateHackState(screen, false);
 		StatusScreen_DrawPosition(screen);
-		elem = &screen->HackStates.Base.Base;
-		elem->Render(elem, delta);
+		Widget_Render(&screen->HackStates, delta);
 	}
 	Gfx_SetTexturing(false);
 }
@@ -683,9 +677,7 @@ typedef struct LoadingScreen_ {
 LoadingScreen LoadingScreen_Instance;
 
 void LoadingScreen_SetTitle(LoadingScreen* screen, STRING_PURE String* title) {
-	GuiElement* elem = &screen->TitleWidget.Base.Base;
-	elem->Free(elem);
-
+	Widget_Free(&screen->TitleWidget);
 	TextWidget_Create(&screen->TitleWidget, title, &screen->Font);
 	Widget_SetLocation(&screen->TitleWidget.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -80);
 	String_Clear(&screen->Title);
@@ -693,9 +685,7 @@ void LoadingScreen_SetTitle(LoadingScreen* screen, STRING_PURE String* title) {
 }
 
 void LoadingScreen_SetMessage(LoadingScreen* screen, STRING_PURE String* message) {
-	GuiElement* elem = &screen->MessageWidget.Base.Base;
-	elem->Free(elem);
-
+	Widget_Free(&screen->MessageWidget);
 	TextWidget_Create(&screen->MessageWidget, message, &screen->Font);
 	Widget_SetLocation(&screen->MessageWidget.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	String_Clear(&screen->Message);
@@ -709,16 +699,14 @@ void LoadingScreen_MapLoading(void* obj, Real32 progress) {
 
 void LoadingScreen_OnResize(Screen* elem) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
-	Widget* widget;
-	widget = &screen->TitleWidget.Base;   widget->Reposition(widget);
-	widget = &screen->MessageWidget.Base; widget->Reposition(widget);
+	Widget_Reposition(&screen->TitleWidget);
+	Widget_Reposition(&screen->MessageWidget);
 }
 
 void LoadingScreen_ContextLost(void* obj) {
 	LoadingScreen* screen = (LoadingScreen*)obj;
-	GuiElement* elem;
-	elem = &screen->TitleWidget.Base.Base;   elem->Free(elem);
-	elem = &screen->MessageWidget.Base.Base; elem->Free(elem);
+	Widget_Free(&screen->TitleWidget);
+	Widget_Free(&screen->MessageWidget);
 }
 
 void LoadingScreen_ContextRecreated(void* obj) {
@@ -806,8 +794,9 @@ void LoadingScreen_Render(GuiElement* elem, Real64 delta) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
 	Gfx_SetTexturing(true);
 	LoadingScreen_DrawBackground();
-	elem = &screen->TitleWidget.Base.Base;   elem->Render(elem, delta);
-	elem = &screen->MessageWidget.Base.Base; elem->Render(elem, delta);
+	Widget_Render(&screen->TitleWidget, delta);
+	Widget_Render(&screen->MessageWidget, delta);
+
 	Gfx_SetTexturing(false);
 
 	Int32 x = Game_Width  / 2 - PROG_BAR_WIDTH  / 2;
@@ -831,7 +820,6 @@ void LoadingScreen_Free(GuiElement* elem) {
 }
 
 void LoadingScreen_Make(LoadingScreen* screen, STRING_PURE String* title, STRING_PURE String* message) {
-	LoadingScreen* screen = &LoadingScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(LoadingScreen));
 	Screen_Reset(&screen->Base);
 
@@ -895,4 +883,197 @@ Screen* GeneratingScreen_MakeInstance(void) {
 	screen->Base.Base.Base.Render = GeneratingScreen_Render;
 	screen->LastState = String_InitAndClearArray(screen->LastStateBuffer);
 	return &screen->Base.Base;
+}
+
+
+typedef struct HUDScreen_ {
+	Screen Base;
+	Screen* Chat;
+	HotbarWidget Hotbar;
+	PlayerListWidget PlayerList;
+	FontDesc PlayerFont;
+	bool ShowingList, WasShowingList;
+} HUDScreen;
+HUDScreen HUDScreen_Instance;
+
+
+#define CH_EXTENT 16
+#define CH_WEIGHT 2
+void HUDScreen_DrawCrosshairs(void) {
+	if (Gui_IconsTex == NULL) return;
+	TextureRec chRec = { 0.0f, 0.0f, 15.0f / 256.0f, 15 / 256.0f };
+
+	Int32 extent = (Int32)(CH_EXTENT * Game_Scale(Game_Height / 480.0f));
+	Int32 chX = (Game_Width / 2) - extent, chY = (Game_Height / 2) - extent;
+	Texture chTex = Texture_FromRec(Gui_IconsTex, chX, chY, extent * 2, extent * 2, chRec);
+	Texture_Render(&chTex);
+}
+
+void HUDScreen_FreePlayerList(HUDScreen* screen) {
+	screen->WasShowingList = screen->ShowingList;
+	if (screen->ShowingList) {
+		Widget_Free(&screen->PlayerList);
+	}
+	screen->ShowingList = false;
+}
+
+void HUDScreen_ContextLost(void* obj) {
+	HUDScreen* screen = (HUDScreen*)obj;
+	HUDScreen_FreePlayerList(screen);
+	Widget_Free(&screen->Hotbar);
+}
+
+void HUDScreen_ContextRecreated(void* obj) {
+	HUDScreen* screen = (HUDScreen*)obj;
+	Widget_Free(&screen->Hotbar);
+	Widget_Init(&screen->Hotbar);
+
+	if (!screen->WasShowingList) return;
+	bool extended = ServerConnection_SupportsExtPlayerList && !Game_UseClassicTabList;
+	PlayerListWidget_Create(&screen->PlayerList, &screen->PlayerFont, !extended);
+
+	Widget_Init(&screen->PlayerList);
+	Widget_Reposition(&screen->PlayerList);
+}
+
+
+void HUDScreen_OnResize(Screen* elem) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	chat.OnResize(width, height);
+	Widget_Reposition(&screen->Hotbar);
+
+	if (screen->ShowingList) {
+		Widget_Reposition(&screen->PlayerList);
+	}
+}
+
+void HUDScreen_OnNewMap(void* obj) { 
+	DisposePlayerList(); 
+}
+
+bool HUDScreen_HandlesKeyPress(char key) { 
+	return chat.HandlesKeyPress(key); 
+}
+
+bool HUDScreen_HandlesKeyDown(Key key) {
+	Key playerListKey = game.Mapping(KeyBind.PlayerList);
+	bool handles = playerListKey != Key.Tab || !Game_TabAutocomplete || !chat.HandlesAllInput;
+	if (key == playerListKey && handles) {
+		if (playerList == null && !ServerConnection_IsSinglePlayer) {
+			hadPlayerList = true;
+			ContextRecreated();
+		}
+		return true;
+	}
+
+	return chat.HandlesKeyDown(key) || hotbar.HandlesKeyDown(key);
+}
+
+bool HUDScreen_HandlesKeyUp(Key key) {
+	if (key == game.Mapping(KeyBind.PlayerList)) {
+		if (playerList != null) {
+			hadPlayerList = false;
+			playerList.Dispose();
+			playerList = null;
+			return true;
+		}
+	}
+
+	return chat.HandlesKeyUp(key) || hotbar.HandlesKeyUp(key);
+}
+
+bool HUDScreen_HandlesMouseScroll(float delta) {
+	return chat.HandlesMouseScroll(delta);
+}
+
+bool HUDScreen_HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+	if (button != MouseButton_Left || !HandlesAllInput) return false;
+
+	string name;
+	if (playerList == null || (name = playerList.GetNameUnder(mouseX, mouseY)) == null)
+		return chat.HandlesMouseClick(mouseX, mouseY, button);
+	chat.AppendTextToInput(name + " ");
+	return true;
+}
+
+void HUDScreen_Init(GuiElement* elem) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	Int32 size = Drawer2D_UseBitmappedChat ? 16 : 11;
+	playerFont = new Font(game.FontName, size);
+	hotbar = game.Mode.MakeHotbar();
+	hotbar.Init();
+	chat = new ChatScreen(game, this);
+	chat.Init();
+
+	Event_RegisterVoid(&WorldEvents_NewMap,         screen, HUDScreen_OnNewMap);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, HUDScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, HUDScreen_ContextRecreated);
+}
+
+void HUDScreen_Render(GuiElement* elem, Real64 delta) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	if (Game_HideGui && chat->HandlesAllInput) {
+		Gfx_SetTexturing(true);
+		chat.input.Render(delta);
+		Gfx_SetTexturing(false);
+	}
+	if (Game_HideGui) return;
+	bool showMinimal = Gui_GetActiveScreen()->BlocksWorld;
+
+	if (!screen->ShowingList && !showMinimal) {
+		Gfx_SetTexturing(true);
+		DrawCrosshairs();
+		Gfx_SetTexturing(false);
+	}
+	if (chat->HandlesAllInput && !Game_PureClassic) {
+		chat.RenderBackground();
+	}
+
+	Gfx_SetTexturing(true);
+	if (!showMinimal) { Widget_Render(&screen->Hotbar, delta); }
+	chat.Render(delta);
+
+	if (screen->ShowingList && Gui_GetActiveScreen() == screen) {
+		Widget_Render(&screen->PlayerList, delta);
+		/* NOTE: Should usually be caught by KeyUp, but just in case. */
+		if (!KeyBind_IsPressed(KeyBind_PlayerList)) {
+			Widget_Free(&screen->PlayerList);
+			screen->ShowingList = false;
+		}
+	}
+	Gfx_SetTexturing(false);
+}
+
+void HUDScreen_Free(GuiElement* elem) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	Platform_FreeFont(&screen->PlayerFont);
+	chat.Dispose();
+	HUDScreen_ContextLost(screen);
+
+	Event_UnregisterVoid(&WorldEvents_NewMap,         screen, HUDScreen_OnNewMap);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, HUDScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, HUDScreen_ContextRecreated);
+}
+
+Screen* HUDScreen_MakeInstance(void) {
+	HUDScreen* screen = &HUDScreen_Instance;
+	Platform_MemSet(&screen, 0, sizeof(HUDScreen));
+	Screen_Reset(&screen->Base);
+
+	screen->Base.OnResize    = HUDScreen_OnResize;
+	screen->Base.Base.Init   = HUDScreen_Init;
+	screen->Base.Base.Render = HUDScreen_Render;
+	screen->Base.Base.Free   = HUDScreen_Free;
+	return &screen->Base;
+}
+
+void HUDScreen_Ready(void) {
+	GuiElement* elem = &HUDScreen_Instance.Base.Base;
+	elem->Init(elem);
+}
+
+IGameComponent HUDScreen_MakeComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Ready = HUDScreen_Ready;
+	return comp;
 }

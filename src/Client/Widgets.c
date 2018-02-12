@@ -1919,12 +1919,10 @@ void PlayerListWidget_RepositionColumns(PlayerListWidget* widget) {
 	}
 }
 
-void PlayerListWidget_RecalcYOffset(PlayerListWidget* widget) {
-	Int32 yPosition = Game_Height / 4 - widget->Base.Height / 2;
-	widget->Base.YOffset = -max(0, yPosition);
-}
-
 void PlayerListWidget_Reposition(Widget* elem) {
+	Int32 yPosition = Game_Height / 4 - elem->Height / 2;
+	elem->YOffset = -max(0, yPosition);
+
 	Int32 oldX = elem->X, oldY = elem->Y;
 	Widget_DoReposition(elem);
 	PlayerListWidget* widget = (PlayerListWidget*)elem;
@@ -2077,7 +2075,6 @@ void PlayerListWidget_SortAndReposition(PlayerListWidget* widget) {
 	PlayerListWidget_SortEntries(widget);
 	PlayerListWidget_RepositionColumns(widget);
 	PlayerListWidget_UpdateTableDimensions(widget);
-	PlayerListWidget_RecalcYOffset(widget);
 	PlayerListWidget_Reposition(&widget->Base);
 }
 
