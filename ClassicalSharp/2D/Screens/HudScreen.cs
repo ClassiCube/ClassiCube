@@ -46,6 +46,7 @@ namespace ClassicalSharp.Gui.Screens {
 			chat.Render(delta);
 			
 			if (playerList != null && game.Gui.ActiveScreen == this) {
+				playerList.Active = chat.HandlesAllInput;
 				playerList.Render(delta);
 				// NOTE: Should usually be caught by KeyUp, but just in case.
 				if (!game.IsKeyDown(KeyBind.PlayerList)) {

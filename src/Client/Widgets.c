@@ -1831,6 +1831,7 @@ Texture PlayerListWidget_DrawName(PlayerListWidget* widget, STRING_PURE String* 
 
 
 Int32 PlayerListWidget_HighlightedName(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY) {
+	if (!widget->Base.Active) return -1;
 	Int32 i;
 	for (i = 0; i < widget->NamesCount; i++) {
 		if (!Texture_IsValid(&widget->Textures[i]) || widget->IDs[i] == GROUP_NAME_ID) continue;

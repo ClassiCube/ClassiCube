@@ -250,5 +250,4 @@ typedef struct PlayerListWidget_ {
 
 void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic);
 void PlayerListWidget_GetNameUnder(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
-void PlayerListWidget_RecalcYOffset(PlayerListWidget* widget);
 #endif

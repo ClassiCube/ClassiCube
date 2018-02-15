@@ -1034,6 +1034,7 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 	chat.Render(delta);
 
 	if (screen->ShowingList && Gui_GetActiveScreen() == screen) {
+		screen->PlayerList.Base.Active = screen->Chat->HandlesAllInput;
 		Widget_Render(&screen->PlayerList, delta);
 		/* NOTE: Should usually be caught by KeyUp, but just in case. */
 		if (!KeyBind_IsPressed(KeyBind_PlayerList)) {

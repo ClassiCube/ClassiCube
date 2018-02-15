@@ -82,6 +82,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		int HighlightedName(int mouseX, int mouseY) {
+			if (!Active) return -1;
 			for (int i = 0; i < namesCount; i++) {
 				if (!textures[i].IsValid || IDs[i] == groupNameID) continue;
 				
