@@ -59,6 +59,9 @@ namespace ClassicalSharp {
 					block = AutoRotate.RotateBlock(game, block);
 				
 				if (game.CanPick(old) || !BlockInfo.CanPlace[block]) return;
+				// air-ish blocks can only replace over other air-ish blocks
+				if (BlockInfo.Draw[block] == DrawType.Gas && BlockInfo.Draw[old] != DrawType.Gas) return;
+				
 				if (!PickingHandler.CheckIsFree(game, block)) return;
 				game.Mode.PickRight(old, block);
 			} else if (middle) {
