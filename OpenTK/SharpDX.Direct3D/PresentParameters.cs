@@ -49,8 +49,8 @@ namespace SharpDX.Direct3D9 {
 			EnableAutoDepthStencil = true;
 			PresentFlags = PresentFlags.None;
 			PresentationInterval = PresentInterval.Immediate;
-			SwapEffect = SwapEffect.Discard;		
-			Windowed = true;			
+			SwapEffect = SwapEffect.Discard;
+			Windowed = true;
 		}
 	}
 }
