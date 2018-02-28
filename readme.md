@@ -43,7 +43,7 @@ If you are using Mono, you just need to type `mono Launcher.exe` into the termin
 *If you are stuck using the built-in OpenGL 1.1 software renderer, you can use the MESA software renderer from either [here](http://download.qt.io/development_releases/prebuilt/llvmpipe/windows/) or [here](https://wiki.qt.io/Cross_compiling_Mesa_for_Windows) for slightly better performance. Typically though, this occurs because you have not installed GPU drivers.*
 
 #### Tips
-* Press escape (after joining a world) to switch to the pause menu.
+* Press escape (after joining a world) or pause to switch to the pause menu.
 * Pause menu -> Key bindings lists all of the key combinations used by the client. 
 * Note that toggling 'vsync' to on will minimise CPU usage, while off will maximimise chunk loading speed.
 * Press F to cycle view distance. A smaller number of visible chunks can improve performance.
