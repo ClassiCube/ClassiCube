@@ -320,11 +320,11 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			switch (type) {
 				case 0:
-					Utils.Clamp(ref value, byte.MinValue, byte.MaxValue);
-					env.SetSidesBlock((byte)value); break;
+					Utils.Clamp(ref value, 0, Block.MaxDefinedBlock);
+					env.SetSidesBlock((BlockID)value); break;
 				case 1:
-					Utils.Clamp(ref value, byte.MinValue, byte.MaxValue);
-					env.SetEdgeBlock((byte)value); break;
+					Utils.Clamp(ref value, 0, Block.MaxDefinedBlock);
+					env.SetEdgeBlock((BlockID)value); break;
 				case 2:
 					env.SetEdgeLevel(value); break;
 				case 3:
