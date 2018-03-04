@@ -52,24 +52,27 @@ namespace ClassicalSharp.Selections {
 		
 		internal static void VerQuad(VertexP3fC4b[] vertices, ref int index, int col,
 		                           float x1, float y1, float z1, float x2, float y2, float z2) {
-			vertices[index++] = new VertexP3fC4b(x1, y1, z1, col);
-			vertices[index++] = new VertexP3fC4b(x1, y2, z1, col);
-			vertices[index++] = new VertexP3fC4b(x2, y2, z2, col);
-			vertices[index++] = new VertexP3fC4b(x2, y1, z2, col);
+			VertexP3fC4b v; v.Colour = col;
+			v.X = x1; v.Y = y1; v.Z = z1; vertices[index++] = v;
+			          v.Y = y2;           vertices[index++] = v;
+			v.X = x2;           v.Z = z2; vertices[index++] = v;
+			          v.Y = y1;           vertices[index++] = v;
 		}
 		
 		internal static void HorQuad(VertexP3fC4b[] vertices, ref int index, int col, 
 		                           float x1, float z1, float x2, float z2, float y) {
-			vertices[index++] = new VertexP3fC4b(x1, y, z1, col);
-			vertices[index++] = new VertexP3fC4b(x1, y, z2, col);
-			vertices[index++] = new VertexP3fC4b(x2, y, z2, col);
-			vertices[index++] = new VertexP3fC4b(x2, y, z1, col);
+			VertexP3fC4b v; v.Y = y; v.Colour = col;
+			v.X = x1; v.Z = z1; vertices[index++] = v;
+			          v.Z = z2; vertices[index++] = v;
+			v.X = x2;           vertices[index++] = v;
+			          v.Z = z1; vertices[index++] = v;
 		}
 		
 		static void Line(VertexP3fC4b[] vertices, ref int index, float x1, float y1, float z1, 
 		          float x2, float y2, float z2, int col) {
-			vertices[index++] = new VertexP3fC4b(x1, y1, z1, col);
-			vertices[index++] = new VertexP3fC4b(x2, y2, z2, col);
+			VertexP3fC4b v; v.Colour = col;
+			v.X = x1; v.Y = y1; v.Z = z1; vertices[index++] = v;
+			v.X = x2; v.Y = y2; v.Z = z2; vertices[index++] = v;
 		}
 	}
 }
