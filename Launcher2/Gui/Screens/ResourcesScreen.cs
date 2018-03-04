@@ -90,10 +90,11 @@ namespace Launcher.Gui.Screens {
 		
 		void GotoNextMenu(int x, int y) {
 			if (File.Exists("options.txt")) {
+				game.Downloader.Clear();
 				game.SetScreen(new MainScreen(game));
 			} else {
 				game.SetScreen(new ChooseModeScreen(game, true));
-			}
+			}			
 		}
 		
 		void SetStatus(string text) {

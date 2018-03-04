@@ -140,6 +140,13 @@ namespace ClassicalSharp.Network {
 			handle.Set();
 		}
 		
+		public void Clear() {
+			lock (pendingLocker)  {
+				pending.Clear();
+			}			
+			handle.Set();
+		}
+		
 		/// <summary> Informs the asynchronous thread that it should stop processing further requests
 		/// and can consequentially exit the for loop.<br/>
 		/// Note that this will *block** the calling thread as the method waits until the asynchronous
