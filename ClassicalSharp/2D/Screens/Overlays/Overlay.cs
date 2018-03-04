@@ -27,10 +27,10 @@ namespace ClassicalSharp.Gui.Screens {
 
 		public override void Render(double delta) {
 			RenderMenuBounds();
-			gfx.Texturing = true;
+			game.Graphics.Texturing = true;
 			RenderWidgets(widgets, delta);
 			RenderWidgets(labels, delta);
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 			
 			if (OnRenderFrame != null) OnRenderFrame(this);
 		}

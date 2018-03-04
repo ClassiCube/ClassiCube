@@ -9,10 +9,8 @@ namespace ClassicalSharp.Model {
 	public class ModelCache : IDisposable {
 		
 		Game game;
-		IGraphicsApi gfx;
 		public ModelCache(Game window) {
 			this.game = window;
-			gfx = game.Graphics;
 		}
 		
 		#if FALSE
@@ -70,7 +68,7 @@ namespace ClassicalSharp.Model {
 		public void Dispose() {			
 			for (int i = 0; i < Textures.Count; i++) {
 				CachedTexture tex = Textures[i];
-				gfx.DeleteTexture(ref tex.TexID);
+				game.Graphics.DeleteTexture(ref tex.TexID);
 				Textures[i] = tex;
 			}			
 			ContextLost();
@@ -124,7 +122,7 @@ namespace ClassicalSharp.Model {
 		void ContextLost() { game.Graphics.DeleteVb(ref vb); }
 		
 		void ContextRecreated() {
-			vb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
+			vb = game.Graphics.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
 		}
 	}
 	

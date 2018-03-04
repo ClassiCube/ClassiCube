@@ -9,13 +9,11 @@ namespace ClassicalSharp.Selections {
 	public class SelectionManager : IGameComponent {
 		
 		protected Game game;
-		IGraphicsApi gfx;
 		VertexP3fC4b[] vertices, lineVertices;
 		int vb, lineVb;
 		
 		public void Init(Game game) {
 			this.game = game;
-			gfx = game.Graphics;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -66,6 +64,7 @@ namespace ClassicalSharp.Selections {
 				box.Render(delta, vertices, lineVertices, ref index, ref lineIndex);
 			}
 			
+			IGraphicsApi gfx = game.Graphics;
 			gfx.SetBatchFormat(VertexFormat.P3fC4b);
 			gfx.UpdateDynamicVb_Lines(lineVb, lineVertices,
 			                    selections.Count * LineVerticesCount);
@@ -92,8 +91,8 @@ namespace ClassicalSharp.Selections {
 		
 		void ContextRecreated() {
 			if (vertices == null) return;
-			vb = gfx.CreateDynamicVb(VertexFormat.P3fC4b, vertices.Length);
-			lineVb = gfx.CreateDynamicVb(VertexFormat.P3fC4b, lineVertices.Length);
+			vb = game.Graphics.CreateDynamicVb(VertexFormat.P3fC4b, vertices.Length);
+			lineVb = game.Graphics.CreateDynamicVb(VertexFormat.P3fC4b, lineVertices.Length);
 		}
 	}
 }

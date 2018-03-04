@@ -12,7 +12,6 @@ namespace ClassicalSharp {
 		
 		public int GuiTex, GuiClassicTex, IconsTex;
 		Game game;
-		IGraphicsApi gfx;
 		StatusScreen statusScreen;
 		internal HudScreen hudScreen;
 		internal Screen activeScreen;
@@ -42,13 +41,13 @@ namespace ClassicalSharp {
 		
 		public void Init(Game game) {
 			this.game = game;
-			gfx = game.Graphics;
 			game.Events.TextureChanged += TextureChanged;
 		}
 		
 		public void Reset(Game game) {
-			for (int i = 0; i < overlays.Count; i++)
+			for (int i = 0; i < overlays.Count; i++) {
 				overlays[i].Dispose();
+			}
 			overlays.Clear();
 		}
 		
@@ -59,9 +58,9 @@ namespace ClassicalSharp {
 			
 			if (activeScreen != null)
 				activeScreen.Dispose();
-			gfx.DeleteTexture(ref GuiTex);
-			gfx.DeleteTexture(ref GuiClassicTex);
-			gfx.DeleteTexture(ref IconsTex);
+			game.Graphics.DeleteTexture(ref GuiTex);
+			game.Graphics.DeleteTexture(ref GuiClassicTex);
+			game.Graphics.DeleteTexture(ref IconsTex);
 			
 			Reset(game);
 		}
@@ -109,7 +108,7 @@ namespace ClassicalSharp {
 		
 		
 		public void Render(double delta) {
-			gfx.Mode2D(game.Width, game.Height);
+			game.Graphics.Mode2D(game.Width, game.Height);
 			if (activeScreen == null || !activeScreen.HidesHud)
 				statusScreen.Render(delta);
 			
@@ -122,7 +121,7 @@ namespace ClassicalSharp {
 			
 			if (overlays.Count > 0)
 				overlays[0].Render(delta);
-			gfx.Mode3D();
+			game.Graphics.Mode3D();
 		}
 		
 		internal void OnResize() {
@@ -130,8 +129,9 @@ namespace ClassicalSharp {
 				activeScreen.OnResize(game.Width, game.Height);
 			hudScreen.OnResize(game.Width, game.Height);
 			
-			for (int i = 0; i < overlays.Count; i++)
+			for (int i = 0; i < overlays.Count; i++) {
 				overlays[i].OnResize(game.Width, game.Height);
+			}
 		}
 	}
 }

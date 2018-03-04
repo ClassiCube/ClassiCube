@@ -44,7 +44,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public void SetText(string text) {
-			gfx.DeleteTexture(ref texture);
+			game.Graphics.DeleteTexture(ref texture);
 			if (IDrawer2D.EmptyText(text)) {
 				texture = new Texture();
 				Width = 0; Height = defaultHeight;
@@ -61,12 +61,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Render(double delta) {
-			if (texture.IsValid)
-				texture.Render(gfx, Colour);
+			if (texture.IsValid) {
+				texture.Render(game.Graphics, Colour);
+			}
 		}
 		
 		public override void Dispose() {
-			gfx.DeleteTexture(ref texture);
+			game.Graphics.DeleteTexture(ref texture);
 		}
 		
 		public override void Reposition() {

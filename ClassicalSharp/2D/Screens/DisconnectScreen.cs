@@ -38,8 +38,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			game.SkipClear = true;
-			gfx.ContextLost += ContextLost;
-			gfx.ContextRecreated += ContextRecreated;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 			
 			ContextRecreated();
 			initTime = DateTime.UtcNow;
@@ -48,8 +48,8 @@ namespace ClassicalSharp.Gui.Screens {
 
 		public override void Dispose() {
 			game.SkipClear = false;
-			gfx.ContextLost -= ContextLost;
-			gfx.ContextRecreated -= ContextRecreated;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 			
 			ContextLost();
 			titleFont.Dispose();
@@ -101,10 +101,10 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		readonly FastColour top = new FastColour(64, 32, 32), bottom = new FastColour(80, 16, 16);
 		void Redraw(double delta) {
-			gfx.Draw2DQuad(0, 0, game.Width, game.Height, top, bottom);
-			gfx.Texturing = true;
+			game.Graphics.Draw2DQuad(0, 0, game.Width, game.Height, top, bottom);
+			game.Graphics.Texturing = true;
 			RenderWidgets(widgets, delta);
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 		}
 		
 		void ReconnectClick(Game g, Widget w, MouseButton btn, int x, int y) {
@@ -129,7 +129,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextLost() { DisposeWidgets(widgets); }
 		
 		protected override void ContextRecreated() {
-			if (gfx.LostContext) return;
+			if (game.Graphics.LostContext) return;
 			clearTime = DateTime.UtcNow.AddSeconds(0.5);
 			widgets = new Widget[canReconnect ? 3 : 2];
 			

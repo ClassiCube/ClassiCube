@@ -16,11 +16,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();
-			gfx.Texturing = true;
+			game.Graphics.Texturing = true;
 			RenderWidgets(widgets, delta);
 			if (descWidget != null)
 				descWidget.Render(delta);
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 		}
 		
 		public override void Init() {

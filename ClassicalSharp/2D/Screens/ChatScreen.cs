@@ -163,7 +163,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				DateTime received = game.Chat.Log[logIdx].Received;
 				if ((now - received).TotalSeconds <= 10) {
-					texture.Render(gfx);
+					texture.Render(game.Graphics);
 				}
 			}
 		}
@@ -176,7 +176,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				y -= texture.Height;
 				texture.Y1 = y;
-				texture.Render(gfx);
+				texture.Render(game.Graphics);
 			}
 		}
 		
@@ -190,8 +190,9 @@ namespace ClassicalSharp.Gui.Screens {
 			int width = Math.Max(clientStatus.Width, normalChat.Width) + 10;
 			
 			int boxHeight = height + clientStatus.GetUsedHeight();
-			if (boxHeight > 0)
-				gfx.Draw2DQuad(x, y, width, boxHeight + 10, backColour);
+			if (boxHeight > 0) {
+				game.Graphics.Draw2DQuad(x, y, width, boxHeight + 10, backColour);
+			}
 		}
 		
 		int inputOldHeight = -1;
@@ -208,7 +209,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 
 		void ColourCodeChanged(object sender, ColourCodeEventArgs e) {
-			if (gfx.LostContext) return;
+			if (game.Graphics.LostContext) return;
 			
 			altText.UpdateColours();
 			Recreate(normalChat, e.Code); Recreate(status, e.Code);
@@ -231,7 +232,7 @@ namespace ClassicalSharp.Gui.Screens {
 
 		void ChatReceived(object sender, ChatEventArgs e) {
 			MessageType type = e.Type;
-			if (gfx.LostContext) return;
+			if (game.Graphics.LostContext) return;
 			
 			if (type == MessageType.Normal) {
 				chatIndex++;

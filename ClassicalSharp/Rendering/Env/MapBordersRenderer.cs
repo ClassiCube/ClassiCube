@@ -19,7 +19,6 @@ namespace ClassicalSharp.Renderers {
 		
 		World map;
 		Game game;
-		IGraphicsApi gfx;
 		
 		int sidesVb = -1, edgesVb = -1;
 		int edgeTexId, sideTexId;
@@ -35,7 +34,6 @@ namespace ClassicalSharp.Renderers {
 		public void Init(Game game) {
 			this.game = game;
 			map = game.World;
-			gfx = game.Graphics;
 			
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.ViewDistanceChanged += ResetSidesAndEdges;
@@ -47,7 +45,8 @@ namespace ClassicalSharp.Renderers {
 		public void RenderSides(double delta) {
 			if (sidesVb == -1) return;
 			BlockID block = game.World.Env.SidesBlock;
-						
+			IGraphicsApi gfx = game.Graphics;
+			
 			gfx.Texturing = true;
 			gfx.SetupAlphaState(BlockInfo.Draw[block]);
 			gfx.EnableMipmaps();
@@ -64,9 +63,10 @@ namespace ClassicalSharp.Renderers {
 		
 		public void RenderEdges(double delta) {
 			if (edgesVb == -1) return;
-			BlockID block = game.World.Env.EdgeBlock;		
+			BlockID block = game.World.Env.EdgeBlock;
+			IGraphicsApi gfx = game.Graphics;
 			
-			Vector3 camPos = game.CurrentCameraPos;			
+			Vector3 camPos = game.CurrentCameraPos;
 			gfx.Texturing = true;
 			gfx.SetupAlphaState(BlockInfo.Draw[block]);
 			gfx.EnableMipmaps();
@@ -99,8 +99,8 @@ namespace ClassicalSharp.Renderers {
 		public void Reset(Game game) { OnNewMap(game); }
 		
 		public void OnNewMap(Game game) {
-			gfx.DeleteVb(ref sidesVb);
-			gfx.DeleteVb(ref edgesVb);
+			game.Graphics.DeleteVb(ref sidesVb);
+			game.Graphics.DeleteVb(ref edgesVb);
 			MakeTexture(ref edgeTexId, ref lastEdgeTexLoc, map.Env.EdgeBlock);
 			MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
 		}
@@ -135,22 +135,22 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void ResetSides() {
-			if (game.World.blocks == null || gfx.LostContext) return;
-			gfx.DeleteVb(ref sidesVb);
+			if (game.World.blocks == null || game.Graphics.LostContext) return;
+			game.Graphics.DeleteVb(ref sidesVb);
 			RebuildSides(map.Env.SidesHeight, legacy ? 128 : 65536);
 		}
 		
 		void ResetEdges() {
-			if (game.World.blocks == null || gfx.LostContext) return;
-			gfx.DeleteVb(ref edgesVb);
+			if (game.World.blocks == null || game.Graphics.LostContext) return;
+			game.Graphics.DeleteVb(ref edgesVb);
 			RebuildEdges(map.Env.EdgeHeight, legacy ? 128 : 65536);
 		}
 		
 		void ContextLost() {
-			gfx.DeleteVb(ref sidesVb);
-			gfx.DeleteVb(ref edgesVb);
-			gfx.DeleteTexture(ref edgeTexId);
-			gfx.DeleteTexture(ref sideTexId);
+			game.Graphics.DeleteVb(ref sidesVb);
+			game.Graphics.DeleteVb(ref edgesVb);
+			game.Graphics.DeleteTexture(ref edgeTexId);
+			game.Graphics.DeleteTexture(ref sideTexId);
 		}
 		
 		void ContextRecreated() {
@@ -197,7 +197,7 @@ namespace ClassicalSharp.Renderers {
 			DrawX(map.Width, 0, map.Length, y1, y2, axisSize, col, v, ref index);
 			
 			fixed (VertexP3fT2fC4b* ptr = v) {
-				sidesVb = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, sidesVertices);
+				sidesVb = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, sidesVertices);
 			}
 		}
 		
@@ -226,7 +226,7 @@ namespace ClassicalSharp.Renderers {
 			}
 
 			fixed (VertexP3fT2fC4b* ptr = v) {
-				edgesVb = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, edgesVertices);
+				edgesVb = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, edgesVertices);
 			}
 		}
 
@@ -255,7 +255,7 @@ namespace ClassicalSharp.Renderers {
 					float u2 = z2 - z1, v2 = y2 - y1;
 					v.Y = y1; v.Z = z1; v.U = 0f; v.V = v2; vertices[i++] = v;
 					v.Y = y2;                     v.V = 0f; vertices[i++] = v;
-					          v.Z = z2; v.U = u2;           vertices[i++] = v;
+					v.Z = z2; v.U = u2;           vertices[i++] = v;
 					v.Y = y1;                     v.V = v2; vertices[i++] = v;
 				}
 			}
@@ -277,9 +277,9 @@ namespace ClassicalSharp.Renderers {
 					
 					float u2 = x2 - x1, v2 = y2 - y1;
 					v.X = x1; v.Y = y1; v.U = 0f; v.V = v2; vertices[i++] = v;
-					          v.Y = y2;           v.V = 0f; vertices[i++] = v;
+					v.Y = y2;           v.V = 0f; vertices[i++] = v;
 					v.X = x2;           v.U = u2;           vertices[i++] = v;
-					          v.Y = y1;           v.V = v2; vertices[i++] = v;
+					v.Y = y1;           v.V = v2; vertices[i++] = v;
 				}
 			}
 		}
@@ -300,9 +300,9 @@ namespace ClassicalSharp.Renderers {
 					
 					float u2 = x2 - x1, v2 = z2 - z1;
 					v.X = x1 + offset; v.Z = z1 + offset; v.U = 0f; v.V = 0f; vertices[i++] = v;
-					                   v.Z = z2 + offset;           v.V = v2; vertices[i++] = v;
+					v.Z = z2 + offset;           v.V = v2; vertices[i++] = v;
 					v.X = x2 + offset;                    v.U = u2;           vertices[i++] = v;
-					                   v.Z = z1 + offset;           v.V = 0f; vertices[i++] = v;
+					v.Z = z1 + offset;           v.V = 0f; vertices[i++] = v;
 				}
 			}
 		}
@@ -320,7 +320,7 @@ namespace ClassicalSharp.Renderers {
 		int lastEdgeTexLoc, lastSideTexLoc;
 		void MakeTexture(ref int id, ref int lastTexLoc, BlockID block) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Top);
-			if (texLoc == lastTexLoc || gfx.LostContext) return;
+			if (texLoc == lastTexLoc || game.Graphics.LostContext) return;
 			lastTexLoc = texLoc;
 			
 			game.Graphics.DeleteTexture(ref id);

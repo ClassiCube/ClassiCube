@@ -22,14 +22,14 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();
-			gfx.Texturing = true;
+			game.Graphics.Texturing = true;
 			RenderWidgets(widgets, delta);
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 		}
 		
 		public override void Init() {
-			gfx.ContextLost += ContextLost;
-			gfx.ContextRecreated += ContextRecreated;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
 		public override void Dispose() {
@@ -37,8 +37,8 @@ namespace ClassicalSharp.Gui.Screens {
 			if (titleFont != null) titleFont.Dispose();
 			if (regularFont != null) regularFont.Dispose();
 			
-			gfx.ContextLost -= ContextLost;
-			gfx.ContextRecreated -= ContextRecreated;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		protected override void ContextLost() { DisposeWidgets(widgets); }

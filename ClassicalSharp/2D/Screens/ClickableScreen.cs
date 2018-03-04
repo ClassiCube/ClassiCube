@@ -17,7 +17,7 @@ namespace ClassicalSharp.Gui.Screens {
 		static FastColour bottomBackCol = new FastColour(51, 51, 98, 162);
 
 		protected void RenderMenuBounds() {
-			gfx.Draw2DQuad(0, 0, game.Width, game.Height, topBackCol, bottomBackCol);
+			game.Graphics.Draw2DQuad(0, 0, game.Width, game.Height, topBackCol, bottomBackCol);
 		}
 		
 		protected bool HandleMouseClick(Widget[] widgets, int mouseX, int mouseY, MouseButton button) {

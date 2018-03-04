@@ -24,15 +24,16 @@ namespace ClassicalSharp.Gui.Screens {
 				int tableWidth = extendedHelp.Width, tableHeight = extendedHelp.Height;
 				int x = game.Width / 2 - tableWidth / 2 - 5;
 				int y = game.Height / 2 + extHelpY - 5;
-				gfx.Draw2DQuad(x, y, tableWidth + 10, tableHeight + 10, tableCol);
+				game.Graphics.Draw2DQuad(x, y, tableWidth + 10, tableHeight + 10, tableCol);
 			}
 			
-			gfx.Texturing = true;
+			game.Graphics.Texturing = true;
 			RenderWidgets(widgets, delta);
 			
-			if (extendedHelp != null && extEndY <= extClipY)
+			if (extendedHelp != null && extEndY <= extClipY) {
 				extendedHelp.Render(delta);
-			gfx.Texturing = false;
+			}
+			game.Graphics.Texturing = false;
 		}
 		
 		public override void Init() {

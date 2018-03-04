@@ -54,7 +54,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public void PushUpAndReplaceLast(string text) {
 			int y = Y;
-			gfx.DeleteTexture(ref Textures[0]);
+			game.Graphics.DeleteTexture(ref Textures[0]);
 			for (int i = 0; i < Textures.Length - 1; i++) {
 				Textures[i] = Textures[i + 1];
 				lines[i] = lines[i + 1];
@@ -115,14 +115,16 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override void Render(double delta) {
 			for (int i = 0; i < Textures.Length; i++) {
 				Texture texture = Textures[i];
-				if (texture.IsValid)
-					texture.Render(gfx);
+				if (texture.IsValid) {
+					texture.Render(game.Graphics);
+				}
 			}
 		}
 		
 		public override void Dispose() {
-			for (int i = 0; i < Textures.Length; i++)
-				gfx.DeleteTexture(ref Textures[i]);
+			for (int i = 0; i < Textures.Length; i++) {
+				game.Graphics.DeleteTexture(ref Textures[i]);
+			}
 		}
 		
 		public override void Reposition() {
@@ -174,7 +176,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public void SetText(int index, string text) {
-			gfx.DeleteTexture(ref Textures[index]);
+			game.Graphics.DeleteTexture(ref Textures[index]);
 			linkData[index] = default(LinkData);
 			Texture tex;
 			

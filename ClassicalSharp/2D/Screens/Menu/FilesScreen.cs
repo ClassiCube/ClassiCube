@@ -23,8 +23,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			font = new Font(game.FontName, 16, FontStyle.Bold);
 			ContextRecreated();
-			gfx.ContextLost += ContextLost;
-			gfx.ContextRecreated += ContextRecreated;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
 		protected override void ContextLost() {
@@ -60,8 +60,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Dispose() {
 			font.Dispose();
 			ContextLost();
-			gfx.ContextLost -= ContextLost;
-			gfx.ContextRecreated -= ContextRecreated;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		ButtonWidget MakeText(int x, int y, string text) {
@@ -127,10 +127,10 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();
-			gfx.Texturing = true;
+			game.Graphics.Texturing = true;
 			title.Render(delta);
 			RenderWidgets(buttons, delta);
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 		}
 	}
 }

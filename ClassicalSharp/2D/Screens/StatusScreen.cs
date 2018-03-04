@@ -31,14 +31,14 @@ namespace ClassicalSharp.Gui.Screens {
 			UpdateStatus(delta);
 			if (game.HideGui || !game.ShowFPS) return;
 			
-			gfx.Texturing = true;
+			game.Graphics.Texturing = true;
 			status.Render(delta);
 			if (!game.ClassicMode && game.Gui.activeScreen == null) {
 				UpdateHackState(false);
 				DrawPosition();
 				hackStates.Render(delta);
 			}
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 		}
 		
 		double accumulator;
@@ -78,8 +78,8 @@ namespace ClassicalSharp.Gui.Screens {
 			ContextRecreated();
 			
 			game.Events.ChatFontChanged += ChatFontChanged;
-			gfx.ContextLost += ContextLost;
-			gfx.ContextRecreated += ContextRecreated;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
 		protected override void ContextLost() {
@@ -113,8 +113,8 @@ namespace ClassicalSharp.Gui.Screens {
 			ContextLost();
 			
 			game.Events.ChatFontChanged -= ChatFontChanged;
-			gfx.ContextLost -= ContextLost;
-			gfx.ContextRecreated -= ContextRecreated;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		void ChatFontChanged(object sender, EventArgs e) { Recreate(); }
@@ -140,8 +140,8 @@ namespace ClassicalSharp.Gui.Screens {
 			posAtlas.AddInt(pos.Z, vertices, ref index);
 			posAtlas.Add(14, vertices, ref index);
 			
-			gfx.BindTexture(posAtlas.tex.ID);
-			gfx.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
+			game.Graphics.BindTexture(posAtlas.tex.ID);
+			game.Graphics.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
 		}
 		
 		bool speeding, halfSpeeding, noclip, fly;

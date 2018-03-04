@@ -48,12 +48,12 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Render(double delta) {
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 			int offset = overview.Height + 10;
 			int height = Math.Max(300, Height + overview.Height);
-			gfx.Draw2DQuad(X, Y - offset, Width, height, topCol, bottomCol);
+			game.Graphics.Draw2DQuad(X, Y - offset, Width, height, topCol, bottomCol);
 			
-			gfx.Texturing = true;
+			game.Graphics.Texturing = true;
 			overview.YOffset = Y - offset + 5;
 			overview.Reposition();
 			overview.Render(delta);
@@ -64,14 +64,14 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				Texture tex = textures[i];
 				if (i == highlightedI) tex.X += 4;
-				tex.Render(gfx);
+				tex.Render(game.Graphics);
 			}
 		}
 		
 		public override void Dispose() {
 			for (int i = 0; i < namesCount; i++) {
 				Texture tex = textures[i];
-				gfx.DeleteTexture(ref tex);
+				game.Graphics.DeleteTexture(ref tex);
 				textures[i] = tex;
 			}
 			
@@ -197,7 +197,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (IDs[i] != e.Id) continue;
 				
 				Texture tex = textures[i];
-				gfx.DeleteTexture(ref tex);
+				game.Graphics.DeleteTexture(ref tex);
 				AddName(e.Id, i);
 				SortAndReposition();
 				return;
@@ -215,7 +215,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void DeleteAt(int i) {
 			Texture tex = textures[i];
-			gfx.DeleteTexture(ref tex);
+			game.Graphics.DeleteTexture(ref tex);
 			
 			for (; i < namesCount - 1; i++) {
 				IDs[i] = IDs[i + 1];

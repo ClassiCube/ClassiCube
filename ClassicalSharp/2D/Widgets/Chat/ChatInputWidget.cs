@@ -26,7 +26,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Render(double delta) {
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 			int y = Y, x = X;
 			
 			for (int i = 0; i < lineSizes.Length; i++) {
@@ -37,12 +37,12 @@ namespace ClassicalSharp.Gui.Widgets {
 				if (game.PureClassic)
 					drawWidth = Math.Max(drawWidth, game.Width - X * 4);
 				
-				gfx.Draw2DQuad(x, y, drawWidth + Padding * 2, prefixHeight, backColour);
+				game.Graphics.Draw2DQuad(x, y, drawWidth + Padding * 2, prefixHeight, backColour);
 				y += lineSizes[i].Height;
 			}
 			
-			gfx.Texturing = true;
-			inputTex.Render(gfx);
+			game.Graphics.Texturing = true;
+			inputTex.Render(game.Graphics);
 			RenderCaret(delta);
 		}
 

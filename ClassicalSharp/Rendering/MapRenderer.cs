@@ -44,7 +44,6 @@ namespace ClassicalSharp.Renderers {
 	public partial class MapRenderer : IDisposable {
 		
 		Game game;
-		IGraphicsApi gfx;
 		
 		internal int _1DUsed = -1, chunksX, chunksY, chunksZ;
 		internal int renderCount = 0;
@@ -57,7 +56,6 @@ namespace ClassicalSharp.Renderers {
 		
 		public MapRenderer(Game game) {
 			this.game = game;
-			gfx = game.Graphics;
 			updater = new ChunkUpdater(game, this);
 			SetMeshBuilder(DefaultMeshBuilder());
 		}
@@ -111,6 +109,7 @@ namespace ClassicalSharp.Renderers {
 		/// <remarks> Pixels are either treated as fully replacing existing pixel, or skipped. </remarks>
 		public void RenderNormal(double deltaTime) {
 			if (chunks == null) return;
+			IGraphicsApi gfx = game.Graphics;
 			
 			int[] texIds = game.TerrainAtlas1D.TexIds;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
@@ -140,6 +139,7 @@ namespace ClassicalSharp.Renderers {
 		/// <remarks> Pixels drawn blend into existing geometry. </remarks>
 		public void RenderTranslucent(double deltaTime) {
 			if (chunks == null) return;
+			IGraphicsApi gfx = game.Graphics;
 			
 			// First fill depth buffer
 			int vertices = game.Vertices;
@@ -196,12 +196,13 @@ namespace ClassicalSharp.Renderers {
 
 			// If we are under water, render weather before to blend properly
 			if (!inTranslucent || env.Weather == Weather.Sunny) return;
-			gfx.AlphaBlending = true;
+			game.Graphics.AlphaBlending = true;
 			game.WeatherRenderer.Render(deltaTime);
-			gfx.AlphaBlending = false;
+			game.Graphics.AlphaBlending = false;
 		}
 		
 		void RenderNormalBatch(int batch) {
+			IGraphicsApi gfx = game.Graphics;
 			for (int i = 0; i < renderCount; i++) {
 				ChunkInfo info = renderChunks[i];
 				if (info.NormalParts == null) continue;
@@ -280,6 +281,7 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void RenderTranslucentBatch(int batch) {
+			IGraphicsApi gfx = game.Graphics;
 			for (int i = 0; i < renderCount; i++) {
 				ChunkInfo info = renderChunks[i];
 				if (info.TranslucentParts == null) continue;

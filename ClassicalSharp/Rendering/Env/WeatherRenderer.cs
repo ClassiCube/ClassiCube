@@ -16,7 +16,7 @@ namespace ClassicalSharp.Renderers {
 	public class WeatherRenderer : IGameComponent {
 		Game game;
 		World map;
-		IGraphicsApi gfx;
+		
 		
 		public int RainTexId, SnowTexId;
 		int vb;
@@ -30,7 +30,6 @@ namespace ClassicalSharp.Renderers {
 		public void Init(Game game) {
 			this.game = game;
 			map = game.World;
-			gfx = game.Graphics;
 			game.Events.TextureChanged += TextureChanged;
 			
 			ContextRecreated();
@@ -42,6 +41,7 @@ namespace ClassicalSharp.Renderers {
 			Weather weather = map.Env.Weather;
 			if (weather == Weather.Sunny) return;
 			if (heightmap == null) InitHeightmap();
+			IGraphicsApi gfx = game.Graphics;
 			
 			gfx.BindTexture(weather == Weather.Rainy ? RainTexId : SnowTexId);
 			Vector3 camPos = game.CurrentCameraPos;
@@ -201,7 +201,7 @@ namespace ClassicalSharp.Renderers {
 		void ContextLost() { game.Graphics.DeleteVb(ref vb); }
 		
 		void ContextRecreated() {
-			vb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
+			vb = game.Graphics.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
 		}
 	}
 }

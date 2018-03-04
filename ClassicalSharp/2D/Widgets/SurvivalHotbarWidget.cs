@@ -53,8 +53,8 @@ namespace ClassicalSharp.Gui.Widgets {
 					posAtlas.AddInt(surv.invCount[offset + i], vertices, ref index);
 			}
 
-			gfx.BindTexture(posAtlas.tex.ID);
-			gfx.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
+			game.Graphics.BindTexture(posAtlas.tex.ID);
+			game.Graphics.UpdateDynamicVb_IndexedTris(game.ModelCache.vb, game.ModelCache.vertices, index);
 		}
 		
 		void DrawHearts() {
@@ -79,8 +79,8 @@ namespace ClassicalSharp.Gui.Widgets {
 				health -= 2;
 			}
 			
-			gfx.BindTexture(game.Gui.IconsTex);
-			gfx.UpdateDynamicVb_IndexedTris(cache.vb, cache.vertices, index);
+			game.Graphics.BindTexture(game.Gui.IconsTex);
+			game.Graphics.UpdateDynamicVb_IndexedTris(cache.vb, cache.vertices, index);
 		}
 		
 		static TextureRec backRec = new TextureRec(16 / 256f, 0 / 256f, 9 / 256f, 9 / 256f);

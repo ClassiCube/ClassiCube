@@ -24,8 +24,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Render(double delta) {
 			base.Render(delta);
 			int cX = game.Width / 2, cY = game.Height / 2;
-			gfx.Draw2DQuad(cX - 250, cY - 65, 500, 2, grey);
-			gfx.Draw2DQuad(cX - 250, cY + 45, 500, 2, grey);
+			game.Graphics.Draw2DQuad(cX - 250, cY - 65, 500, 2, grey);
+			game.Graphics.Draw2DQuad(cX - 250, cY + 45, 500, 2, grey);
 		}
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {

@@ -81,13 +81,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Dispose() {
-			gfx.DeleteTexture(ref inputTex);
-			gfx.DeleteTexture(ref caretTex);
-			gfx.DeleteTexture(ref prefixTex);
+			game.Graphics.DeleteTexture(ref inputTex);
+			game.Graphics.DeleteTexture(ref caretTex);
+			game.Graphics.DeleteTexture(ref prefixTex);
 		}
 		
 		public override void Recreate() {
-			gfx.DeleteTexture(ref inputTex);
+			game.Graphics.DeleteTexture(ref inputTex);
 			Init();
 		}
 
@@ -155,8 +155,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (!ShowCaret) return;
 			
 			caretAccumulator += delta;
-			if ((caretAccumulator % 1) < 0.5)
-				caretTex.Render(gfx, caretColour);
+			if ((caretAccumulator % 1) < 0.5) {
+				caretTex.Render(game.Graphics, caretColour);
+			}
 		}
 		
 		/// <summary> Remakes the raw texture containg all the chat lines. </summary>
@@ -228,7 +229,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				lines[i] = null;
 			
 			caret = -1;
-			gfx.DeleteTexture(ref inputTex);
+			game.Graphics.DeleteTexture(ref inputTex);
 		}
 
 		/// <summary> Appends a sequence of characters to current text buffer. </summary>

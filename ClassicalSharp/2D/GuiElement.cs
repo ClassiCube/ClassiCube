@@ -12,11 +12,9 @@ namespace ClassicalSharp.Gui {
 	public abstract class GuiElement : IDisposable {
 		
 		protected Game game;
-		protected IGraphicsApi gfx;
 		
 		public GuiElement(Game game) {
 			this.game = game;
-			gfx = game.Graphics;
 		}
 		
 		public abstract void Init();

@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK.Input;
+using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Gui.Widgets {
 	public sealed class ScrollbarWidget : Widget {
@@ -27,6 +28,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		float ScrollbarScale { get { return (Height - scrollBorder * 2) / (float)TotalRows; } }
 		
 		public override void Render(double delta) {
+			IGraphicsApi gfx = game.Graphics;
 			int x = X, width = Width;
 			gfx.Draw2DQuad(x, Y, width, Height, scrollBackCol);
 			

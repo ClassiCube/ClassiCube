@@ -65,12 +65,12 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public override void OnNewMap(Game game) {
-			gfx.Fog = false;
+			game.Graphics.Fog = false;
 			ContextLost();
 		}
 		
 		public override void OnNewMapLoaded(Game game) {
-			gfx.Fog = !minimal;
+			game.Graphics.Fog = !minimal;
 			ResetAllEnv(null, null);
 		}
 		
@@ -95,12 +95,12 @@ namespace ClassicalSharp.Renderers {
 		
 		void ContextRecreated() {
 			ContextLost();
-			gfx.Fog = !minimal;
+			game.Graphics.Fog = !minimal;
 			
 			if (minimal) {
-				gfx.ClearColour(map.Env.SkyCol);
+				game.Graphics.ClearColour(map.Env.SkyCol);
 			} else {
-				gfx.SetFogStart(0);
+				game.Graphics.SetFogStart(0);
 				ResetClouds();
 				ResetSky();
 			}
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Renderers {
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
 			BlockOn(out fogDensity, out fogCol);
-			gfx.ClearColour(fogCol);
+			game.Graphics.ClearColour(fogCol);
 			
 			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often
 			if (fogDensity != 0) {
@@ -128,6 +128,7 @@ namespace ClassicalSharp.Renderers {
 			Vector3 pos = game.CurrentCameraPos;
 			float normalY = map.Height + 8;
 			float skyY = Math.Max(pos.Y + 8, normalY);
+			IGraphicsApi gfx = game.Graphics;
 			
 			gfx.SetBatchFormat(VertexFormat.P3fC4b);
 			gfx.BindVb(skyVb);
@@ -149,6 +150,8 @@ namespace ClassicalSharp.Renderers {
 			if (game.World.Env.CloudHeight < -2000) return;
 			double time = game.accumulator;
 			float offset = (float)(time / 2048f * 0.6f * map.Env.CloudsSpeed);
+			IGraphicsApi gfx = game.Graphics;
+			
 			gfx.SetMatrixMode(MatrixType.Texture);
 			Matrix4 matrix = Matrix4.Identity; matrix.Row3.X = offset; // translate X axis
 			gfx.LoadMatrix(ref matrix);
@@ -173,6 +176,7 @@ namespace ClassicalSharp.Renderers {
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
 			BlockOn(out fogDensity, out fogCol);
+			IGraphicsApi gfx = game.Graphics;
 			
 			if (fogDensity != 0) {
 				gfx.SetFogMode(Fog.Exp);
@@ -197,13 +201,13 @@ namespace ClassicalSharp.Renderers {
 		
 		void ResetClouds() {
 			if (map.blocks == null || game.Graphics.LostContext) return;
-			gfx.DeleteVb(ref cloudsVb);
+			game.Graphics.DeleteVb(ref cloudsVb);
 			RebuildClouds((int)game.ViewDistance, legacy ? 128 : 65536);
 		}
 		
 		void ResetSky() {
 			if (map.blocks == null || game.Graphics.LostContext) return;
-			gfx.DeleteVb(ref skyVb);
+			game.Graphics.DeleteVb(ref skyVb);
 			RebuildSky((int)game.ViewDistance, legacy ? 128 : 65536);
 		}
 		
@@ -216,7 +220,7 @@ namespace ClassicalSharp.Renderers {
 			VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[cloudVertices];
 			DrawCloudsY(x1, z1, x2, z2, map.Env.CloudHeight, axisSize, map.Env.CloudsCol.Pack(), vertices);
 			fixed (VertexP3fT2fC4b* ptr = vertices) {
-				cloudsVb = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, cloudVertices);
+				cloudsVb = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, cloudVertices);
 			}
 		}
 		
@@ -231,7 +235,7 @@ namespace ClassicalSharp.Renderers {
 			
 			DrawSkyY(x1, z1, x2, z2, height, axisSize, map.Env.SkyCol.Pack(), vertices);
 			fixed (VertexP3fC4b* ptr = vertices) {
-				skyVb = gfx.CreateVb((IntPtr)ptr, VertexFormat.P3fC4b, skyVertices);
+				skyVb = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fC4b, skyVertices);
 			}
 		}
 		

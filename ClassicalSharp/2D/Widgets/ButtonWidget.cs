@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using OpenTK.Input;
+using ClassicalSharp.GraphicsAPI;
 #if ANDROID
 using Android.Graphics;
 #endif
@@ -55,7 +56,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		                                         new TextureRec(0, 46/256f, uWidth, 20/256f));
 		public string Text;
 		public void SetText(string text) {
-			gfx.DeleteTexture(ref texture);
+			game.Graphics.DeleteTexture(ref texture);
 			Text = text;
 			if (IDrawer2D.EmptyText(text)) {
 				texture = default(Texture);
@@ -77,6 +78,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		disabledCol = new FastColour(160, 160, 160);
 		
 		public override void Render(double delta) {
+			IGraphicsApi gfx = game.Graphics;
 			if (!texture.IsValid) return;
 			Texture back = Active ? selectedTex : shadowTex;
 			if (Disabled) back = disabledTex;
@@ -108,7 +110,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Dispose() {
-			gfx.DeleteTexture(ref texture);
+			game.Graphics.DeleteTexture(ref texture);
 		}
 		
 		public override void Reposition() {

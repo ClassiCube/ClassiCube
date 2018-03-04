@@ -31,11 +31,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override int UsedLines { get { return 1; } }
 		
 		public override void Render(double delta) {
-			gfx.Texturing = false;
-			gfx.Draw2DQuad(X, Y, Width, Height, backCol);
-			gfx.Texturing = true;
+			game.Graphics.Texturing = false;
+			game.Graphics.Draw2DQuad(X, Y, Width, Height, backCol);
+			game.Graphics.Texturing = true;
 			
-			inputTex.Render(gfx);
+			inputTex.Render(game.Graphics);
 			RenderCaret(delta);
 		}
 		

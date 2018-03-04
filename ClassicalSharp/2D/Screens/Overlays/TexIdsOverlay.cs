@@ -36,23 +36,23 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();
-			gfx.Texturing = true;
-			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
+			game.Graphics.Texturing = true;
+			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			RenderWidgets(widgets, delta);
 			RenderTerrain();
 			RenderTextOverlay();
-			gfx.Texturing = false;
+			game.Graphics.Texturing = false;
 		}
 		
 		protected override void ContextLost() {
 			base.ContextLost();
-			gfx.DeleteVb(ref dynamicVb);
+			game.Graphics.DeleteVb(ref dynamicVb);
 			idAtlas.Dispose();
 		}
 		
 		protected override void ContextRecreated() {
 			base.ContextRecreated();
-			dynamicVb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, verticesCount);
+			dynamicVb = game.Graphics.CreateDynamicVb(VertexFormat.P3fT2fC4b, verticesCount);
 			idAtlas = new TextAtlas(game, 16);
 			idAtlas.Pack("0123456789", regularFont, "f");
 			UpdateTileSize();
@@ -74,8 +74,8 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 				i += elementsPerAtlas;
 				
-				gfx.BindTexture(game.TerrainAtlas1D.TexIds[texIdx]);
-				gfx.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
+				game.Graphics.BindTexture(game.TerrainAtlas1D.TexIds[texIdx]);
+				game.Graphics.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
 			}
 		}
 		
@@ -92,8 +92,8 @@ namespace ClassicalSharp.Gui.Screens {
 				idAtlas.tex.Y += (short)tileSize;
 				
 				if ((y % 4) != 0) continue;				
-				gfx.BindTexture(idAtlas.tex.ID);
-				gfx.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
+				game.Graphics.BindTexture(idAtlas.tex.ID);
+				game.Graphics.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
 				index = 0;
 			}
 		}

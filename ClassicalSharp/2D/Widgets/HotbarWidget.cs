@@ -51,14 +51,14 @@ namespace ClassicalSharp.Gui.Widgets {
 		void RenderHotbarOutline() {
 			int texId = game.UseClassicGui ? game.Gui.GuiClassicTex : game.Gui.GuiTex;
 			backTex.ID = texId;
-			backTex.Render(gfx);
+			backTex.Render(game.Graphics);
 			
 			int i = game.Inventory.SelectedIndex;
 			int x = (int)(X + barXOffset + (elemSize + borderSize) * i + elemSize / 2);
 			
 			selTex.ID = texId;
 			selTex.X1 = (int)(x - selBlockSize / 2);
-			gfx.Draw2DTexture(ref selTex, FastColour.White);
+			game.Graphics.Draw2DTexture(ref selTex, FastColour.White);
 		}
 		
 		void RenderHotbarBlocks() {

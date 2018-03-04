@@ -45,6 +45,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		static VertexP3fT2fC4b[] vertices = new VertexP3fT2fC4b[8 * 10 * (4 * 4)];
 		int vb;
 		public override void Render(double delta) {
+			IGraphicsApi gfx = game.Graphics;
 			gfx.Draw2DQuad(TableX, TableY, TableWidth, TableHeight, topBackCol, bottomBackCol);
 			if (totalRows > MaxRowsDisplayed) scroll.Render(delta);
 			
@@ -78,8 +79,9 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 			drawer.EndBatch();
 			
-			if (descTex.IsValid)
+			if (descTex.IsValid) {
 				descTex.Render(gfx);
+			}
 			gfx.Texturing = false;
 		}
 		
@@ -111,14 +113,14 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override void Dispose() {
-			gfx.DeleteVb(ref vb);
-			gfx.DeleteTexture(ref descTex);
+			game.Graphics.DeleteVb(ref vb);
+			game.Graphics.DeleteTexture(ref descTex);
 			lastCreatedIndex = -1000;
 		}
 		
 		public override void Recreate() {
 			Dispose();
-			vb = gfx.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
+			vb = game.Graphics.CreateDynamicVb(VertexFormat.P3fT2fC4b, vertices.Length);
 			RecreateDescTex();
 		}
 		
@@ -198,7 +200,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (SelectedIndex == lastCreatedIndex || Elements == null) return;
 			lastCreatedIndex = SelectedIndex;
 			
-			gfx.DeleteTexture(ref descTex);
+			game.Graphics.DeleteTexture(ref descTex);
 			if (SelectedIndex == -1) return;
 			
 			BlockID block = Elements[SelectedIndex];
