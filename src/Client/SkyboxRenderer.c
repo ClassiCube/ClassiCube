@@ -76,44 +76,38 @@ void SkyboxRenderer_MakeVb(void) {
 	#define pos 1.0f
 	VertexP3fT2fC4b v; v.Col = WorldEnv_CloudsCol;
 
-	/* Render the front quad */
-	                        v.Z = -pos;
-	v.X =  pos; v.Y = -pos;             v.U = 0.25f; v.V = 1.00f; vertices[ 0] = v;
+	/* Render the front quad */	                       
+	v.X =  pos; v.Y = -pos; v.Z = -pos; v.U = 0.25f; v.V = 1.00f; vertices[ 0] = v;
 	v.X = -pos;                         v.U = 0.50f;              vertices[ 1] = v;
 	            v.Y =  pos;                          v.V = 0.50f; vertices[ 2] = v;
 	v.X =  pos;                         v.U = 0.25f;              vertices[ 3] = v;
 	
-	/* Render the left quad */
-	v.X =  pos;
-	            v.Y = -pos; v.Z =  pos; v.U = 0.00f; v.V = 1.00f; vertices[ 4] = v;
+	/* Render the left quad */	
+	v.X =  pos; v.Y = -pos; v.Z =  pos; v.U = 0.00f; v.V = 1.00f; vertices[ 4] = v;
 	                        v.Z = -pos; v.U = 0.25f;              vertices[ 5] = v;
 	            v.Y =  pos;                          v.V = 0.50f; vertices[ 6] = v;
 	                        v.Z =  pos; v.U = 0.00f;              vertices[ 7] = v;
 	
-	/* Render the back quad */
-	                        v.Z =  pos;
-	v.X = -pos; v.Y = -pos;             v.U = 0.75f; v.V = 1.00f; vertices[ 8] = v;
+	/* Render the back quad */                        
+	v.X = -pos; v.Y = -pos; v.Z =  pos; v.U = 0.75f; v.V = 1.00f; vertices[ 8] = v;
 	v.X =  pos;                         v.U = 1.00f;              vertices[ 9] = v;
 	            v.Y =  pos;                          v.V = 0.50f; vertices[10] = v;
 	v.X = -pos;                         v.U = 0.75f;              vertices[11] = v;
 	
-	/* Render the right quad */
-	v.X = -pos;
-	            v.Y = -pos; v.Z = -pos; v.U = 0.50f; v.V = 1.00f; vertices[12] = v;
+	/* Render the right quad */	
+	v.X = -pos; v.Y = -pos; v.Z = -pos; v.U = 0.50f; v.V = 1.00f; vertices[12] = v;
 	                        v.Z =  pos; v.U = 0.75f;              vertices[13] = v;
 	            v.Y =  pos;                          v.V = 0.50f; vertices[14] = v;
 	                        v.Z = -pos; v.U = 0.50f;              vertices[15] = v;
 	
-	/* Render the top quad */
-	            v.Y =  pos;
-	v.X = -pos;             v.Z = -pos;                           vertices[16] = v;
+	/* Render the top quad */	            
+	v.X = -pos; v.Y =  pos; v.Z = -pos;                           vertices[16] = v;
 	                        v.Z =  pos;              v.V = 0.00f; vertices[17] = v;
 	v.X =  pos;                         v.U = 0.25f;              vertices[18] = v;
 	                        v.Z = -pos;              v.V = 0.50f; vertices[19] = v;
 	
-	/* Render the bottom quad */
-	            v.Y = -pos;
-	v.X = -pos;             v.Z = -pos; v.U = 0.75f;              vertices[20] = v;
+	/* Render the bottom quad */	            
+	v.X = -pos; v.Y = -pos; v.Z = -pos; v.U = 0.75f;              vertices[20] = v;
 	                        v.Z =  pos;              v.V = 0.00f; vertices[21] = v;
 	v.X =  pos;                         v.U = 0.50f;              vertices[22] = v;
 	                        v.Z = -pos;              v.V = 0.50f; vertices[23] = v;
