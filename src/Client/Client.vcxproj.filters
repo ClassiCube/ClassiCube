@@ -404,9 +404,6 @@
     <ClCompile Include="Vectors.c">
       <Filter>Source Files\Math</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.c">
-      <Filter>Source Files\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="GraphicsCommon.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
@@ -595,6 +592,9 @@
     </ClCompile>
     <ClCompile Include="Searcher.c">
       <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Texture.c">
+      <Filter>Source Files\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

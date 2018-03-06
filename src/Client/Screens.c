@@ -511,8 +511,7 @@ typedef struct FilesScreen_ {
 } FilesScreen;
 FilesScreen FilesScreen_Instance;
 
-String FilesScreen_Get(UInt32 index) {
-	FilesScreen* screen = &FilesScreen_Instance;
+String FilesScreen_Get(FilesScreen* screen, UInt32 index) {
 	if (index < screen->Entries.Count) {
 		return StringsBuffer_UNSAFE_Get(&screen->Entries, index);
 	} else {
@@ -520,52 +519,51 @@ String FilesScreen_Get(UInt32 index) {
 	}
 }
 
-void FilesScreen_MakeText(ButtonWidget* widget, Int32 x, Int32 y, String* text) {
-	FilesScreen* screen = &FilesScreen_Instance;
+void FilesScreen_MakeText(FilesScreen* screen, Int32 idx, Int32 x, Int32 y, String* text) {
+	ButtonWidget* widget = &screen->Buttons[idx];
 	ButtonWidget_Create(widget, text, 300, &screen->Font, screen->TextButtonClick);
 	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
-void FilesScreen_Make(ButtonWidget* widget, Int32 x, Int32 y, String* text, Gui_MouseHandler onClick) {
-	FilesScreen* screen = &FilesScreen_Instance;
+void FilesScreen_Make(FilesScreen* screen, Int32 idx, Int32 x, Int32 y, String* text, Gui_MouseHandler onClick) {
+	ButtonWidget* widget = &screen->Buttons[idx];
 	ButtonWidget_Create(widget, text, 40, &screen->Font, onClick);
 	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
-void FilesScreen_UpdateArrows(void) {
-	FilesScreen* screen = &FilesScreen_Instance;
+void FilesScreen_UpdateArrows(FilesScreen* screen) {
 	Int32 start = FILES_SCREEN_ITEMS, end = screen->Entries.Count - FILES_SCREEN_ITEMS;
 	screen->Buttons[5].Base.Disabled = screen->CurrentIndex < start;
 	screen->Buttons[6].Base.Disabled = screen->CurrentIndex >= end;
 }
 
-void FilesScreen_SetCurrentIndex(Int32 index) {
-	FilesScreen* screen = &FilesScreen_Instance;
+void FilesScreen_SetCurrentIndex(FilesScreen* screen, Int32 index) {
 	if (index >= screen->Entries.Count) index -= FILES_SCREEN_ITEMS;
 	if (index < 0) index = 0;
 
 	UInt32 i;
 	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
-		String str = FilesScreen_Get(index + i);
+		String str = FilesScreen_Get(screen, index + i);
 		ButtonWidget_SetText(&screen->Buttons[i], &str);
 	}
 
 	screen->CurrentIndex = index;
-	FilesScreen_UpdateArrows();
+	FilesScreen_UpdateArrows(screen);
 }
 
-void FilesScreen_PageClick(bool forward) {
-	FilesScreen* screen = &FilesScreen_Instance;
+void FilesScreen_PageClick(FilesScreen* screen, bool forward) {
 	Int32 delta = forward ? FILES_SCREEN_ITEMS : -FILES_SCREEN_ITEMS;
-	FilesScreen_SetCurrentIndex(screen->CurrentIndex + delta);
+	FilesScreen_SetCurrentIndex(screen, screen->CurrentIndex + delta);
 }
 
 bool FilesScreen_MoveBackwards(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	LeftOnly(FilesScreen_PageClick(false));
+	FilesScreen* screen = (FilesScreen*)elem;
+	LeftOnly(FilesScreen_PageClick(screen, false));
 }
 
 bool FilesScreen_MoveForwards(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	LeftOnly(FilesScreen_PageClick(true));
+	FilesScreen* screen = (FilesScreen*)elem;
+	LeftOnly(FilesScreen_PageClick(screen, true));
 }
 
 void FilesScreen_ContextLost(void* obj) {
@@ -580,14 +578,14 @@ void FilesScreen_ContextRecreated(void* obj) {
 
 	UInt32 i;
 	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
-		String str = FilesScreen_Get(i);
-		FilesScreen_MakeText(&screen->Buttons[i], 0, 50 * (Int32)i - 100, &str);
+		String str = FilesScreen_Get(screen, i);
+		FilesScreen_MakeText(screen, i, 0, 50 * (Int32)i - 100, &str);
 	}
 
 	String lArrow = String_FromConst("<");
-	FilesScreen_Make(&screen->Buttons[5], -220, 0, &lArrow, FilesScreen_MoveBackwards);
+	FilesScreen_Make(screen, 5, -220, 0, &lArrow, FilesScreen_MoveBackwards);
 	String rArrow = String_FromConst(">");
-	FilesScreen_Make(&screen->Buttons[6],  220, 0, &rArrow, FilesScreen_MoveForwards);
+	FilesScreen_Make(screen, 6,  220, 0, &rArrow, FilesScreen_MoveForwards);
 	Screen_MakeDefaultBack(&screen->Buttons[7], false, &screen->Font, Screen_SwitchPause);
 
 	screen->Widgets[0] = &screen->Title.Base;
@@ -595,7 +593,7 @@ void FilesScreen_ContextRecreated(void* obj) {
 		screen->Widgets[i + 1] = &screen->Buttons[i].Base;
 	}
 	ClickableScreen_Init(&screen->Clickable, &screen->Base.Base, screen->Widgets, Array_NumElements(screen->Widgets));
-	FilesScreen_UpdateArrows();
+	FilesScreen_UpdateArrows(screen);
 }
 
 void FilesScreen_Init(GuiElement* elem) {
@@ -627,9 +625,9 @@ bool FilesScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key == Key_Escape) {
 		Gui_SetNewScreen(NULL);
 	} else if (key == Key_Left) {
-		FilesScreen_PageClick(false);
+		FilesScreen_PageClick(screen, false);
 	} else if (key == Key_Right) {
-		FilesScreen_PageClick(true);
+		FilesScreen_PageClick(screen, true);
 	} else {
 		return false;
 	}

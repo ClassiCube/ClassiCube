@@ -27,6 +27,8 @@ DateTime Platform_CurrentLocalTime(void);
 bool Platform_DirectoryExists(STRING_PURE String* path);
 ReturnCode Platform_DirectoryCreate(STRING_PURE String* path);
 bool Platform_FileExists(STRING_PURE String* path);
+typedef void Platform_EnumFilesCallback(STRING_PURE String* path, void* obj);
+ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback);
 
 ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path);
 ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path, bool readOnly);

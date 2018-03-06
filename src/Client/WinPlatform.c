@@ -125,6 +125,30 @@ ReturnCode Platform_DirectoryCreate(STRING_PURE String* path) {
 	return success ? 0 : GetLastError();
 }
 
+ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback) {
+	/* Need to do directory\* to search for files in directory */
+	UInt8 searchPatternBuffer[FILENAME_SIZE + 10];
+	String searchPattern = String_InitAndClearArray(searchPatternBuffer);
+	String_AppendString(&searchPattern, path);
+	String_AppendConst(&searchPattern, "\\*");
+
+	WIN32_FIND_DATAA data;
+	HANDLE find = FindFirstFileA(searchPattern.buffer, &data);
+	if (find == INVALID_HANDLE_VALUE) return GetLastError();
+
+	do {
+		String filePath = String_FromRawArray(data.cFileName);
+		if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+			callback(&filePath, obj);
+		}
+	} while (FindNextFileA(find, &data));
+
+	/* get return code from FindNextFile before closing find handle */
+	ReturnCode code = GetLastError();
+	FindClose(find);
+	return code == ERROR_NO_MORE_FILES ? 0 : code;
+}
+
 
 ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path, bool readOnly) {
 	UINT32 access = GENERIC_READ;
