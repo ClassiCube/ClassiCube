@@ -20,6 +20,13 @@
 #define Widget_Free(widget) (widget)->Base.Base.Free(&((widget)->Base.Base))
 #define Widget_Reposition(widget) (widget)->Base.Reposition(&((widget)->Base))
 
+#define Widget_HandlesKeyDown(widget, key) (widget)->Base.Base.HandlesKeyDown(&((widget)->Base.Base), key)
+#define Widget_HandlesKeyUp(widget, key)   (widget)->Base.Base.HandlesKeyUp(&((widget)->Base.Base), key)
+#define Widget_HandlesMouseDown(widget, x, y, btn) (widget)->Base.Base.HandlesMouseDown(&((widget)->Base.Base), x, y, btn)
+#define Widget_HandlesMouseUp(widget, x, y, btn)   (widget)->Base.Base.HandlesMouseUp(&((widget)->Base.Base), x, y, btn)
+#define Widget_HandlesMouseMove(widget, x, y)      (widget)->Base.Base.HandlesMouseMove(&((widget)->Base.Base), x, y)
+#define Widget_HandlesMouseScroll(widget, delta)   (widget)->Base.Base.HandlesMouseScroll(&((widget)->Base.Base), delta)
+
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
 	UInt32 i;
@@ -204,7 +211,6 @@ void InventoryScreen_Free(GuiElement* elem) {
 bool InventoryScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	TableWidget* table = &screen->Table;
-	elem = &screen->Table.Base.Base;
 
 	if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
 		Gui_SetNewScreen(NULL);
@@ -213,9 +219,10 @@ bool InventoryScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	} else if (key == Key_Enter && table->SelectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->Elements[table->SelectedIndex]);
 		Gui_SetNewScreen(NULL);
-	} else if (elem->HandlesKeyDown(elem, key)) {
+	} else if (Widget_HandlesKeyDown(table, key)) {
 	} else {
-		game.Gui.hudScreen.hotbar.HandlesKeyDown(key);
+		HUDScreen* hud = (HUDScreen*)Gui_HUD;
+		return Widget_HandlesKeyDown(&hud->Hotbar, key);
 	}
 	return true;
 }
@@ -225,17 +232,18 @@ bool InventoryScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 	if (key == KeyBind_Get(KeyBind_Inventory)) {
 		screen->ReleasedInv = true; return true;
 	}
-	return game.Gui.hudScreen.hotbar.HandlesKeyUp(key);
+
+	HUDScreen* hud = (HUDScreen*)Gui_HUD;
+	return Widget_HandlesKeyUp(&hud->Hotbar, key);
 }
 
 bool InventoryScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	TableWidget* table = &screen->Table;
-	elem = &screen->Table.Base.Base;
-	if (table->Scroll.DraggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseDown(x, y, btn))
-		return true;
+	HUDScreen* hud = (HUDScreen*)Gui_HUD;
+	if (table->Scroll.DraggingMouse || Widget_HandlesMouseDown(&hud->Hotbar, x, y, btn)) return true;
 
-	bool handled = elem->HandlesMouseDown(elem, x, y, btn);
+	bool handled = Widget_HandlesMouseDown(table, x, y, btn);
 	if ((!handled || table->PendingClose) && btn == MouseButton_Left) {
 		bool hotbar = Key_IsControlPressed();
 		if (!hotbar) Gui_SetNewScreen(NULL);
@@ -245,23 +253,23 @@ bool InventoryScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseB
 
 bool InventoryScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	elem = &screen->Table.Base.Base;
-	return elem->HandlesMouseUp(elem, x, y, btn);
+	TableWidget* table = &screen->Table;
+	return Widget_HandlesMouseUp(table, x, y, btn);
 }
 
 bool InventoryScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	elem = &screen->Table.Base.Base;
-	return elem->HandlesMouseMove(elem, x, y);
+	TableWidget* table = &screen->Table;
+	return Widget_HandlesMouseMove(table, x, y);
 }
 
 bool InventoryScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	elem = &screen->Table.Base.Base;
+	TableWidget* table = &screen->Table;
 
 	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (hotbar) return false;
-	return elem->HandlesMouseScroll(elem, delta);
+	return Widget_HandlesMouseScroll(table, delta);
 }
 
 Screen* InventoryScreen_MakeInstance(void) {
@@ -939,69 +947,86 @@ void HUDScreen_ContextRecreated(void* obj) {
 
 void HUDScreen_OnResize(Screen* elem) {
 	HUDScreen* screen = (HUDScreen*)elem;
-	chat.OnResize(width, height);
-	Widget_Reposition(&screen->Hotbar);
+	elem = screen->Chat; elem->OnResize(elem);
 
+	Widget_Reposition(&screen->Hotbar);
 	if (screen->ShowingList) {
 		Widget_Reposition(&screen->PlayerList);
 	}
 }
 
-void HUDScreen_OnNewMap(void* obj) { 
-	DisposePlayerList(); 
+void HUDScreen_OnNewMap(void* obj) {
+	HUDScreen* screen = (HUDScreen*)obj;
+	HUDScreen_FreePlayerList(screen);
 }
 
-bool HUDScreen_HandlesKeyPress(char key) { 
-	return chat.HandlesKeyPress(key); 
+bool HUDScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	elem = &screen->Chat->Base;
+	return elem->HandlesKeyPress(elem, key); 
 }
 
-bool HUDScreen_HandlesKeyDown(Key key) {
-	Key playerListKey = game.Mapping(KeyBind.PlayerList);
-	bool handles = playerListKey != Key.Tab || !Game_TabAutocomplete || !chat.HandlesAllInput;
+bool HUDScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	Key playerListKey = KeyBind_Get(KeyBind_PlayerList);
+	bool handles = playerListKey != Key_Tab || !Game_TabAutocomplete || !screen->Chat->HandlesAllInput;
+
 	if (key == playerListKey && handles) {
-		if (playerList == null && !ServerConnection_IsSinglePlayer) {
-			hadPlayerList = true;
+		if (!screen->ShowingList && !ServerConnection_IsSinglePlayer) {
+			screen->WasShowingList = true;
 			ContextRecreated();
 		}
 		return true;
 	}
 
-	return chat.HandlesKeyDown(key) || hotbar.HandlesKeyDown(key);
+	elem = &screen->Chat->Base;
+	return elem->HandlesKeyDown(elem, key) || Widget_HandlesKeyDown(&screen->Hotbar, key);
 }
 
-bool HUDScreen_HandlesKeyUp(Key key) {
-	if (key == game.Mapping(KeyBind.PlayerList)) {
-		if (playerList != null) {
-			hadPlayerList = false;
-			playerList.Dispose();
-			playerList = null;
+bool HUDScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	if (key == KeyBind_Get(KeyBind_PlayerList)) {
+		if (screen->ShowingList) {
+			screen->ShowingList = false;
+			screen->WasShowingList = false;
+			Widget_Free(&screen->PlayerList);
 			return true;
 		}
 	}
 
-	return chat.HandlesKeyUp(key) || hotbar.HandlesKeyUp(key);
+	elem = &screen->Chat->Base;
+	return elem->HandlesKeyUp(elem, key) || Widget_HandlesKeyUp(&screen->Hotbar, key);
 }
 
-bool HUDScreen_HandlesMouseScroll(float delta) {
-	return chat.HandlesMouseScroll(delta);
+bool HUDScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	elem = &screen->Chat->Base;
+	return elem->HandlesMouseScroll(elem, delta);
 }
 
-bool HUDScreen_HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
-	if (button != MouseButton_Left || !HandlesAllInput) return false;
+bool HUDScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	HUDScreen* screen = (HUDScreen*)elem;
+	if (btn != MouseButton_Left || !screen->Base.HandlesAllInput) return false;
 
-	string name;
-	if (playerList == null || (name = playerList.GetNameUnder(mouseX, mouseY)) == null)
-		return chat.HandlesMouseClick(mouseX, mouseY, button);
+	elem = &screen->Chat->Base;
+	if (!screen->ShowingList) { return elem->HandlesMouseDown(elem, x, y, btn); }
+
+	UInt8 nameBuffer[String_BufferSize(STRING_SIZE)];
+	String name = String_InitAndClearArray(nameBuffer);
+	PlayerListWidget_GetNameUnder(&screen->PlayerList, x, y, &name);
+	if (name.length == 0) { return elem->HandlesMouseDown(elem, x, y, btn); }
+
 	chat.AppendTextToInput(name + " ");
 	return true;
 }
 
 void HUDScreen_Init(GuiElement* elem) {
 	HUDScreen* screen = (HUDScreen*)elem;
-	Int32 size = Drawer2D_UseBitmappedChat ? 16 : 11;
-	playerFont = new Font(game.FontName, size);
-	hotbar = game.Mode.MakeHotbar();
-	hotbar.Init();
+	UInt16 size = Drawer2D_UseBitmappedChat ? 16 : 11;
+	Platform_MakeFont(&screen->PlayerFont, &Game_FontName, size, FONT_STYLE_NORMAL);
+
+	HotbarWidget_Create(&screen->Hotbar);
+	Widget_Init(&screen->Hotbar);
 	chat = new ChatScreen(game, this);
 	chat.Init();
 
@@ -1012,6 +1037,7 @@ void HUDScreen_Init(GuiElement* elem) {
 
 void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 	HUDScreen* screen = (HUDScreen*)elem;
+	Screen* chat = screen->Chat;
 	if (Game_HideGui && chat->HandlesAllInput) {
 		Gfx_SetTexturing(true);
 		chat.input.Render(delta);
@@ -1031,7 +1057,8 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 
 	Gfx_SetTexturing(true);
 	if (!showMinimal) { Widget_Render(&screen->Hotbar, delta); }
-	chat.Render(delta);
+	elem = &screen->Chat->Base;
+	elem->Render(elem, delta);
 
 	if (screen->ShowingList && Gui_GetActiveScreen() == screen) {
 		screen->PlayerList.Base.Active = screen->Chat->HandlesAllInput;
@@ -1048,7 +1075,7 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 void HUDScreen_Free(GuiElement* elem) {
 	HUDScreen* screen = (HUDScreen*)elem;
 	Platform_FreeFont(&screen->PlayerFont);
-	chat.Dispose();
+	elem = &screen->Chat->Base; elem->Free(elem);
 	HUDScreen_ContextLost(screen);
 
 	Event_UnregisterVoid(&WorldEvents_NewMap,         screen, HUDScreen_OnNewMap);
