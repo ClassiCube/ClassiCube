@@ -34,18 +34,17 @@ namespace ClassicalSharp.Textures {
 		
 		/// <summary> Gets the time the data associated with the url from the cache was last modified,
 		/// returning DateTime.MinValue if data for the url was not found in the cache. </summary>
-		public static DateTime GetLastModified(string url, EntryList tags) {
+		public static DateTime GetLastModified(string url, string path, EntryList tags) {
 			string entry = GetFromTags(url, tags);
 			long ticks = 0;
-			if (entry != null && long.TryParse(entry, out ticks))
+			if (entry != null && long.TryParse(entry, out ticks)) {
 				return new DateTime(ticks, DateTimeKind.Utc);
-			
-			string path = MakePath(url);
-			if (!File.Exists(path)) return DateTime.MinValue;			
-			return File.GetLastWriteTimeUtc(path);
+			} else {
+				return File.GetLastWriteTimeUtc(path);
+			}
 		}
 
-		public static string GetETag(string url, EntryList tags) {
+		public static string GetETag(string url, string path, EntryList tags) {
 			return GetFromTags(url, tags);
 		}
 		
@@ -116,7 +115,7 @@ namespace ClassicalSharp.Textures {
 		
 		const string Folder = "texturecache";
 		
-		static string MakePath(string url) {
+		public static string MakePath(string url) {
 			string crc32 = CRC32(url);
 			string basePath = PathIO.Combine(Program.AppDirectory, Folder);
 			return PathIO.Combine(basePath, crc32);
