@@ -64,8 +64,9 @@ namespace ClassicalSharp.Network {
 				twoWayPing = true;
 			}
 			#if USE16_BIT
-			 else if (ext == "ExtBlocks") {
+			else if (ext == "ExtBlocks") {
 				net.packetSizes[Opcode.SetBlock] += 1;
+				net.packetSizes[Opcode.CpeHoldThis] += 1;
 				net.packetSizes[Opcode.CpeDefineBlock] += 1;
 				net.packetSizes[Opcode.CpeUndefineBlock] += 1;
 				net.packetSizes[Opcode.CpeDefineBlockExt] += 1;

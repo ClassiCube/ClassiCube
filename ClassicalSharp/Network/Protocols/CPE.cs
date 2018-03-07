@@ -88,7 +88,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleHoldThis() {
-			BlockID block = reader.ReadUInt8();
+			BlockID block = reader.ReadBlock();
 			bool canChange = reader.ReadUInt8() == 0;
 			
 			game.Inventory.CanChangeHeldBlock = true;
