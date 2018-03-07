@@ -198,9 +198,9 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleSetBlockPermission() {
-			byte blockId = reader.ReadUInt8();
-			BlockInfo.CanPlace[blockId]  = reader.ReadUInt8() != 0;
-			BlockInfo.CanDelete[blockId] = reader.ReadUInt8() != 0;
+			BlockID block = reader.ReadBlock();
+			BlockInfo.CanPlace[block]  = reader.ReadUInt8() != 0;
+			BlockInfo.CanDelete[block] = reader.ReadUInt8() != 0;
 			game.Events.RaiseBlockPermissionsChanged();
 		}
 		

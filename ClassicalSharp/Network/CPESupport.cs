@@ -68,6 +68,7 @@ namespace ClassicalSharp.Network {
 				net.packetSizes[Opcode.SetBlock] += 1;
 				net.packetSizes[Opcode.CpeHoldThis] += 1;
 				net.packetSizes[Opcode.CpeDefineBlock] += 1;
+				net.packetSizes[Opcode.CpeSetBlockPermission] += 1;
 				net.packetSizes[Opcode.CpeUndefineBlock] += 1;
 				net.packetSizes[Opcode.CpeDefineBlockExt] += 1;
 				net.packetSizes[Opcode.CpeSetInventoryOrder] += 1;
