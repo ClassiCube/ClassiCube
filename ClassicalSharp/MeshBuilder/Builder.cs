@@ -203,7 +203,7 @@ namespace ClassicalSharp {
 						X = x; Y = y; Z = z;
 						fullBright = BlockInfo.FullBright[b];
 						#if USE16_BIT
-						int tileIdx = b << 12;
+						int tileIdx = b << 10;
 						#else
 						int tileIdx = b << 8;
 						#endif

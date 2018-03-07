@@ -18,9 +18,13 @@ namespace ClassicalSharp.Physics {
 		
 		public State(int x, int y, int z, BlockID block, float tSquared) {
 			X = x << 3; Y = y << 3; Z = z << 3;
-			X |= (block & 0x07);
-			Y |= (block & 0x38) >> 3;
-			Z |= (block & 0xC0) >> 6;
+			X |= (block & 0x007);
+			Y |= (block & 0x038) >> 3;
+			#if !USE16_BIT
+			Z |= (block & 0x0C0) >> 6;
+			#else
+			Z |= (block & 0x1C0) >> 6;
+			#endif
 			this.tSquared = tSquared;
 		}
 	}

@@ -107,7 +107,7 @@ namespace ClassicalSharp {
 		
 		BlockID DefaultMapping(int i) {
 #if USE16_BIT
-			if ((i >= Block.CpeCount && i < 256) || i == Block.Air) return Block.Air;
+			if ((i >= Block.CpeCount) || i == Block.Air) return Block.Air;
 #else
 			if (i >= Block.CpeCount || i == Block.Air) return Block.Air;
 #endif

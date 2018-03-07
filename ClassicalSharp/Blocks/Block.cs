@@ -101,7 +101,7 @@ namespace ClassicalSharp {
 		public const int CpeCount = MaxCpeBlock + 1;
 		
 		#if USE16_BIT
-		public const BlockID MaxDefinedBlock = 0xFFF;
+		public const BlockID MaxDefinedBlock = 0x3FF;
 		#else
 		public const BlockID MaxDefinedBlock =  0xFF;
 		#endif
