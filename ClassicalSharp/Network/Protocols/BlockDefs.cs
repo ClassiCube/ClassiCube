@@ -19,7 +19,7 @@ namespace ClassicalSharp.Network.Protocols {
 		public override void Reset() {
 			if (!game.UseCPE || !game.UseCustomBlocks) return;
 			net.Set(Opcode.CpeDefineBlock, HandleDefineBlock, 80);
-			net.Set(Opcode.CpeRemoveBlockDefinition, HandleRemoveBlockDefinition, 2);
+			net.Set(Opcode.CpeUndefineBlock, HandleRemoveBlockDefinition, 2);
 			net.Set(Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85);
 		}
 		

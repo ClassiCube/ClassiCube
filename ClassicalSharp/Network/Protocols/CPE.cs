@@ -397,7 +397,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleSetInventoryOrder() {
-			byte block = reader.ReadUInt8();
+			BlockID block = reader.ReadBlock();
 			byte order = reader.ReadUInt8();
 			
 			game.Inventory.Remove(block);

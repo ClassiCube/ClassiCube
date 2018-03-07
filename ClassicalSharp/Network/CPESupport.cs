@@ -63,6 +63,20 @@ namespace ClassicalSharp.Network {
 			} else if (ext == "TwoWayPing") {
 				twoWayPing = true;
 			}
+			#if USE16_BIT
+			 else if (ext == "ExtBlocks") {
+				net.packetSizes[Opcode.SetBlock] += 1;
+				net.packetSizes[Opcode.CpeDefineBlock] += 1;
+				net.packetSizes[Opcode.CpeUndefineBlock] += 1;
+				net.packetSizes[Opcode.CpeDefineBlockExt] += 1;
+				net.packetSizes[Opcode.CpeSetInventoryOrder] += 1;
+				// TODO: do this one more efficiently
+				net.packetSizes[Opcode.CpeBulkBlockUpdate] += 256;
+				
+				net.reader.ExtendedBlocks = true;
+				net.writer.ExtendedBlocks = true;
+			}
+			#endif
 		}
 		
 		public static string[] ClientExtensions = {
@@ -71,6 +85,9 @@ namespace ClassicalSharp.Network {
 			"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437",
 			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors",
 			"EnvMapAspect", "EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD",
+			#if USE16_BIT
+			"ExtBlocks",
+			#endif
 		};
 	}
 }

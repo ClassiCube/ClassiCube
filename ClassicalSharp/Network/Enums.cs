@@ -41,7 +41,7 @@ namespace ClassicalSharp.Network {
 		public const byte CpeExtAddEntity2 = 33;
 		public const byte CpePlayerClick = 34;
 		public const byte CpeDefineBlock = 35;
-		public const byte CpeRemoveBlockDefinition = 36;
+		public const byte CpeUndefineBlock = 36;
 		public const byte CpeDefineBlockExt = 37;
 		public const byte CpeBulkBlockUpdate = 38;
 		public const byte CpeSetTextColor = 39;
