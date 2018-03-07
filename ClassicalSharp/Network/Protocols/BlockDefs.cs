@@ -56,7 +56,7 @@ namespace ClassicalSharp.Network.Protocols {
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
-		void OnBlockUpdated(byte block, bool didBlockLight) {
+		void OnBlockUpdated(BlockID block, bool didBlockLight) {
 			if (game.World.blocks == null) return;
 			
 			// Need to refresh lighting when a block's light blocking state changes
@@ -69,7 +69,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if (!game.UseCustomBlocks) {
 				net.SkipPacketData(Opcode.CpeDefineBlockExt); return;
 			}
-			byte block = HandleDefineBlockCommonStart(reader, net.cpeData.blockDefsExtVer >= 2);
+			BlockID block = HandleDefineBlockCommonStart(reader, net.cpeData.blockDefsExtVer >= 2);
 			Vector3 min, max;
 			
 			min.X = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.X, 0, 15/16f);
