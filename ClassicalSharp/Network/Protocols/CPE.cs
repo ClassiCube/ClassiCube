@@ -273,7 +273,7 @@ namespace ClassicalSharp.Network.Protocols {
 			reader.Skip((bulkCount - count) * sizeof(int));
 			
 			for (int i = 0; i < count; i++) {
-				BlockID block = reader.ReadUInt8();
+				BlockID block = reader.ReadBlock();
 				Vector3I coords = game.World.GetCoords(indices[i]);
 				
 				if (coords.X < 0) {
@@ -284,7 +284,9 @@ namespace ClassicalSharp.Network.Protocols {
 				}
 				game.UpdateBlock(coords.X, coords.Y, coords.Z, block);
 			}
-			reader.Skip(bulkCount - count);
+			
+			int elemSize = reader.ExtendedBlocks ? 2 : 1;
+			reader.Skip((bulkCount - count) * elemSize);
 		}
 		
 		void HandleSetTextColor() {

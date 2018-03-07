@@ -201,8 +201,8 @@ namespace ClassicalSharp.Network {
 			cpe.Reset();
 			cpeBlockDefs.Reset();
 			
-			reader.ExtendedPositions = false;
-			writer.ExtendedPositions = false;
+			reader.ExtendedPositions = false; reader.ExtendedBlocks = false;
+			writer.ExtendedPositions = false; writer.ExtendedBlocks = false;
 		}
 		
 		internal Action[] handlers = new Action[256];

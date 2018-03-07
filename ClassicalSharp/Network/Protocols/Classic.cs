@@ -164,7 +164,7 @@ namespace ClassicalSharp.Network.Protocols {
 			int x = reader.ReadUInt16();
 			int y = reader.ReadUInt16();
 			int z = reader.ReadUInt16();
-			byte block = reader.ReadUInt8();
+			BlockID block = reader.ReadBlock();
 			if (game.World.blocks != null && game.World.IsValidPos(x, y, z)) {
 				game.UpdateBlock(x, y, z, block);
 			}
@@ -276,7 +276,7 @@ namespace ClassicalSharp.Network.Protocols {
 			int payload = net.cpeData.sendHeldBlock ? game.Inventory.Selected : EntityList.SelfID;
 			writer.WriteUInt8((byte)Opcode.EntityTeleport);
 			
-			writer.WriteUInt8((byte)payload); // held block when using HeldBlock, otherwise just 255
+			writer.WriteBlock((BlockID)payload); // held block when using HeldBlock, otherwise just 255
 			writer.WritePosition(pos);
 			writer.WriteUInt8(Utils.DegreesToPacked(rotY));
 			writer.WriteUInt8(Utils.DegreesToPacked(headX));
@@ -284,17 +284,11 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		internal void WriteSetBlock(int x, int y, int z, bool place, BlockID block) {
 			writer.WriteUInt8((byte)Opcode.SetBlockClient);
-			
 			writer.WriteInt16((short)x);
 			writer.WriteInt16((short)y);
 			writer.WriteInt16((short)z);
 			writer.WriteUInt8(place ? (byte)1 : (byte)0);
-			
-			#if USE16_BIT
-			writer.WriteUInt8((byte)block);
-			#else
-			writer.WriteUInt8(block);
-			#endif
+			writer.WriteBlock(block);
 		}
 		
 		internal void WriteLogin(string username, string verKey) {

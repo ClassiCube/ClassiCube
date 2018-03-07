@@ -1,6 +1,11 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
+#if USE16_BIT
+using BlockID = System.UInt16;
+#else
+using BlockID = System.Byte;
+#endif
 
 namespace ClassicalSharp.Network.Protocols {
 
@@ -19,22 +24,23 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		internal void HandleDefineBlock() {
-			byte id = HandleDefineBlockCommonStart(reader, false);
+			BlockID block = HandleDefineBlockCommonStart(reader, false);
 			
 			byte shape = reader.ReadUInt8();
-			if (shape > 0 && shape <= 16)
-				BlockInfo.MaxBB[id].Y = shape / 16f;
+			if (shape > 0 && shape <= 16) {
+				BlockInfo.MaxBB[block].Y = shape / 16f;
+			}
 			
-			HandleDefineBlockCommonEnd(reader, shape, id);
+			HandleDefineBlockCommonEnd(reader, shape, block);
 			// Update sprite BoundingBox if necessary
-			if (BlockInfo.Draw[id] == DrawType.Sprite) {
+			if (BlockInfo.Draw[block] == DrawType.Sprite) {
 				using (FastBitmap dst = new FastBitmap(game.TerrainAtlas.AtlasBitmap, true, true))
-					BlockInfo.RecalculateBB(id, dst);
+					BlockInfo.RecalculateBB(block, dst);
 			}
 		}
 		
 		void HandleRemoveBlockDefinition() {
-			byte block = reader.ReadUInt8();
+			BlockID block = reader.ReadBlock();
 			bool didBlockLight = BlockInfo.BlocksLight[block];
 			
 			BlockInfo.ResetBlockProps(block);
@@ -78,8 +84,8 @@ namespace ClassicalSharp.Network.Protocols {
 			HandleDefineBlockCommonEnd(reader, 1, block);
 		}
 		
-		byte HandleDefineBlockCommonStart(NetReader reader, bool uniqueSideTexs) {
-			byte block = reader.ReadUInt8();
+		BlockID HandleDefineBlockCommonStart(NetReader reader, bool uniqueSideTexs) {
+			BlockID block = reader.ReadBlock();
 			bool didBlockLight = BlockInfo.BlocksLight[block];
 			BlockInfo.ResetBlockProps(block);
 			
@@ -110,7 +116,7 @@ namespace ClassicalSharp.Network.Protocols {
 			return block;
 		}
 		
-		void HandleDefineBlockCommonEnd(NetReader reader, byte shape, byte block) {
+		void HandleDefineBlockCommonEnd(NetReader reader, byte shape, BlockID block) {
 			byte blockDraw = reader.ReadUInt8();
 			if (shape == 0) {
 				BlockInfo.SpriteOffset[block] = blockDraw;
