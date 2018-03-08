@@ -23,10 +23,6 @@ namespace Launcher.Patcher {
 		const string jar162Uri = "http://s3.amazonaws.com/Minecraft.Download/versions/1.6.2/1.6.2.jar";
 		const string pngTerrainPatchUri = "http://static.classicube.net/terrain-patch2.png";
 		const string pngGuiPatchUri = "http://static.classicube.net/gui.png";
-		const string digSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/dig/";
-		const string altDigSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/random/";
-		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/newsound/step/";
-		const string altStepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/step/";
 		public const string assetsUri = "http://resources.download.minecraft.net/";
 		
 		public void DownloadItems(AsyncDownloader downloader, Action<string> setStatus) {

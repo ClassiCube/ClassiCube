@@ -71,7 +71,7 @@ namespace ClassicalSharp.Network {
 				net.packetSizes[Opcode.CpeSetBlockPermission] += 1;
 				net.packetSizes[Opcode.CpeUndefineBlock] += 1;
 				net.packetSizes[Opcode.CpeDefineBlockExt] += 1;
-				net.packetSizes[Opcode.CpeSetInventoryOrder] += 1;
+				net.packetSizes[Opcode.CpeSetInventoryOrder] += 2;
 				// TODO: do this one more efficiently
 				net.packetSizes[Opcode.CpeBulkBlockUpdate] += 256;
 				

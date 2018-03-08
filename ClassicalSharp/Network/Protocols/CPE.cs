@@ -398,10 +398,10 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleSetInventoryOrder() {
 			BlockID block = reader.ReadBlock();
-			byte order = reader.ReadUInt8();
+			BlockID order = reader.ReadBlock();
 			
 			game.Inventory.Remove(block);
-			if (order != Block.Invalid) {
+			if (order != 255) {
 				game.Inventory.Insert(order, block);
 			}
 		}					
