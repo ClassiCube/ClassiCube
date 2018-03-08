@@ -10,26 +10,26 @@ namespace Launcher.Patcher {
 	
 	public sealed class SoundPatcher {
 
-		string[] files, identifiers;
+		string[] files, hashes, identifiers;
 		string prefix;
 		public bool Done;
 		
-		public SoundPatcher(string[] files, string prefix) {
+		public SoundPatcher(string[] files, string[] hashes, string prefix) {
 			this.files = files;
+			this.hashes = hashes;
 			this.prefix = prefix;
 		}
 		
-		public void FetchFiles(string baseUrl, string altBaseUrl, 
-		                       ResourceFetcher fetcher, bool allExist) {
+		public void FetchFiles(ResourceFetcher fetcher, bool allExist) {
 			if (allExist) { Done = true; return; }
 			
 			identifiers = new string[files.Length];
-			for (int i = 0; i < files.Length; i++)
-				identifiers[i] = prefix + files[i].Substring(1);
+			for (int i = 0; i < files.Length; i++) {
+				identifiers[i] = prefix + files[i];
+			}
 			
 			for (int i = 0; i < files.Length; i++) {
-				string loc = files[i][0] == 'A' ? baseUrl : altBaseUrl;
-				string url = loc + files[i].Substring(1) + ".ogg";
+				string url = ResourceFetcher.assetsUri + hashes[i];
 				fetcher.QueueItem(url, identifiers[i]);
 			}
 		}
@@ -45,7 +45,7 @@ namespace Launcher.Patcher {
 					if (item.Data == null) {
 						setStatus("&cFailed to download " + identifiers[i]);
 					} else {
-						DecodeSound(files[i].Substring(1), (byte[])item.Data);
+						DecodeSound(files[i], (byte[])item.Data);
 					}
 					
 					if (i == identifiers.Length - 1)

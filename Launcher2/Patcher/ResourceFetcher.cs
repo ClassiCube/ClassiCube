@@ -27,8 +27,7 @@ namespace Launcher.Patcher {
 		const string altDigSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/random/";
 		const string stepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/newsound/step/";
 		const string altStepSoundsUri = "http://s3.amazonaws.com/MinecraftResources/sound3/step/";
-		const string musicUri = "http://s3.amazonaws.com/MinecraftResources/music/";
-		const string newMusicUri = "http://s3.amazonaws.com/MinecraftResources/newmusic/";
+		public const string assetsUri = "http://resources.download.minecraft.net/";
 		
 		public void DownloadItems(AsyncDownloader downloader, Action<string> setStatus) {
 			this.downloader = downloader;		
@@ -44,21 +43,21 @@ namespace Launcher.Patcher {
 				QueueItem(pngTerrainPatchUri, "terrain.png patch");
 			
 			DownloadMusicFiles();
-			digPatcher = new SoundPatcher(ResourceList.DigSounds, "dig_");
-			digPatcher.FetchFiles(digSoundsUri, altDigSoundsUri, this, DigSoundsExist);
-			stepPatcher = new SoundPatcher(ResourceList.StepSounds, "step_");
-			stepPatcher.FetchFiles(stepSoundsUri, altStepSoundsUri, this, StepSoundsExist);
+			digPatcher = new SoundPatcher(ResourceList.DigSounds, ResourceList.DigHashes, "dig_");
+			digPatcher.FetchFiles(this, DigSoundsExist);
+			// seems step sounds are just dig sounds
+			stepPatcher = new SoundPatcher(ResourceList.StepSounds, ResourceList.DigHashes, "step_");
+			stepPatcher.FetchFiles(this, StepSoundsExist);
 			
 			setStatus(MakeNext());
 		}
 		
 		void DownloadMusicFiles() {
 			string[] files = ResourceList.MusicFiles;
+			string[] hashes = ResourceList.MusicHashes;
 			for (int i = 0; i < files.Length; i++) {
 				if (musicExists[i]) continue;
-				string baseUri = i < 3 ? musicUri : newMusicUri;
-				string url = baseUri + files[i] + ".ogg";
-				QueueItem(url, files[i]);
+				QueueItem(assetsUri + hashes[i], files[i]);
 			}
 		}
 		
@@ -123,14 +122,14 @@ namespace Launcher.Patcher {
 		bool CheckMusicFiles(Action<string> setStatus) {
 			string[] files = ResourceList.MusicFiles;
 			for (int i = 0; i < files.Length; i++) {
-				string name = files[i];
+				string file = files[i];
 				byte[] data = null;
-				if (!Download(name, ref data, setStatus))
+				if (!Download(file, ref data, setStatus))
 					return false;
 				
 				if (data == null) continue;
 				string path = Path.Combine(Program.AppDirectory, "audio");
-				path = Path.Combine(path, name + ".ogg");
+				path = Path.Combine(path, file);
 				File.WriteAllBytes(path, data);
 			}
 			return true;

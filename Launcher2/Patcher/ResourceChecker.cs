@@ -47,13 +47,13 @@ namespace Launcher.Patcher {
 		void CheckMusic(string audioPath) {
 			string[] files = ResourceList.MusicFiles;
 			for (int i = 0; i < files.Length; i++) {
-				string file = Path.Combine(audioPath, files[i] + ".ogg");
+				string file = Path.Combine(audioPath, files[i]);
 				musicExists[i] = File.Exists(file);
-				if (!musicExists[i]) {
-					DownloadSize += musicSizes[i] / 1024f;
-					ResourcesCount++;
-					AllResourcesExist = false;
-				}
+				if (musicExists[i]) continue;
+				
+				DownloadSize += musicSizes[i] / 1024f;
+				ResourcesCount++;
+				AllResourcesExist = false;
 			}
 		}
 		
@@ -100,7 +100,7 @@ namespace Launcher.Patcher {
 			string[] files = ResourceList.DigSounds;
 			string path = Path.Combine(Program.AppDirectory, "audio");
 			for (int i = 0; i < files.Length; i++) {
-				string file = "dig_" + files[i].Substring(1) + ".wav";
+				string file = "dig_" + files[i] + ".wav";
 				if (!File.Exists(Path.Combine(path, file))) return false;
 			}
 			return true;
@@ -110,7 +110,7 @@ namespace Launcher.Patcher {
 			string[] files = ResourceList.StepSounds;
 			string path = Path.Combine(Program.AppDirectory, "audio");
 			for (int i = 0; i < files.Length; i++) {
-				string file = "step_" + files[i].Substring(1) + ".wav";
+				string file = "step_" + files[i] + ".wav";
 				if (!File.Exists(Path.Combine(path, file))) return false;
 			}
 			return true;
