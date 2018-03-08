@@ -176,7 +176,7 @@ namespace ClassicalSharp.Map {
 			BlockInfo.LightOffset[id] = BlockInfo.CalcLightOffset(id);
 			game.Events.RaiseBlockDefinitionChanged();
 			game.Inventory.AddDefault(id);
-			BlockInfo.DefinedCustomBlocks[id >> 5] |= (1u << (id & 0x1F));
+			BlockInfo.SetCustomDefined(id, true);
 			
 			BlockInfo.CanPlace[id] = true;
 			BlockInfo.CanDelete[id] = true;

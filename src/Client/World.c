@@ -142,12 +142,14 @@ void WorldEnv_ResetLight(void) {
 
 
 void WorldEnv_SetEdgeBlock(BlockID block) {
-	if (block == BLOCK_INVALID) block = BLOCK_STILL_WATER; /* some server software wrongly uses this value */
+	/* some server software wrongly uses this value */
+	if (block == 255 && !Block_IsCustomDefined(255)) block = BLOCK_STILL_WATER; 
 	WorldEnv_Set(block, WorldEnv_EdgeBlock, ENV_VAR_EDGE_BLOCK);
 }
 
 void WorldEnv_SetSidesBlock(BlockID block) {
-	if (block == BLOCK_INVALID) block = BLOCK_BEDROCK; /* some server software wrongly uses this value */
+	/* some server software wrongly uses this value */
+	if (block == 255 && !Block_IsCustomDefined(255)) block = BLOCK_BEDROCK;
 	WorldEnv_Set(block, WorldEnv_SidesBlock, ENV_VAR_SIDES_BLOCK);
 }
 

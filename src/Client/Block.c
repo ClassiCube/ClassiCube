@@ -5,6 +5,8 @@
 #include "Player.h"
 #include "Game.h"
 
+UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
+
 TextureLoc Block_TopTex[BLOCK_CPE_COUNT] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
 30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
 72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  4,
@@ -26,10 +28,10 @@ void Block_Reset(void) {
 }
 
 void Block_Init(void) {
-	Int32 count = Array_NumElements(DefinedCustomBlocks);
+	Int32 count = Array_NumElements(Block_DefinedCustomBlocks);
 	Int32 i;
 	for (i = 0; i < count; i++) {
-		DefinedCustomBlocks[i] = 0;
+		Block_DefinedCustomBlocks[i] = 0;
 	}
 
 	Int32 block;
@@ -52,6 +54,18 @@ void Block_SetDefaultPerms(void) {
 	Block_CanPlace[BLOCK_STILL_LAVA] = false;  Block_CanDelete[BLOCK_STILL_LAVA] = false;
 	Block_CanPlace[BLOCK_STILL_WATER] = false; Block_CanDelete[BLOCK_STILL_WATER] = false;
 	Block_CanPlace[BLOCK_BEDROCK] = false;     Block_CanDelete[BLOCK_BEDROCK] = false;
+}
+
+bool Block_IsCustomDefined(BlockID block) {
+	return (Block_DefinedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
+}
+
+void Block_SetCustomDefined(BlockID block, bool defined) {
+	if (defined) {
+		Block_DefinedCustomBlocks[block >> 5] |=  (1u << (block & 0x1F));
+	} else {
+		Block_DefinedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
+	}
 }
 
 void Block_RecalcIsLiquid(BlockID b) {

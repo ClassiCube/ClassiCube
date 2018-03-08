@@ -54,7 +54,6 @@ UInt8 Block_ExtendedCollide[BLOCK_COUNT];
 Real32 Block_SpeedMultiplier[BLOCK_COUNT];
 UInt8 Block_LightOffset[BLOCK_COUNT];
 UInt8 Block_Draw[BLOCK_COUNT];
-UInt32 DefinedCustomBlocks[BLOCK_COUNT >> 5];
 UInt8 Block_DigSounds[BLOCK_COUNT];
 UInt8 Block_StepSounds[BLOCK_COUNT];
 bool Block_Tinted[BLOCK_COUNT];
@@ -88,6 +87,8 @@ UInt8 Block_CanStretch[BLOCK_COUNT];
 void Block_Reset(void);
 void Block_Init(void);
 void Block_SetDefaultPerms(void);
+bool Block_IsCustomDefined(BlockID block);
+void Block_SetCustomDefined(BlockID block, bool defined);
 
 void Block_SetCollide(BlockID block, UInt8 collide);
 void Block_SetDrawType(BlockID block, UInt8 draw);

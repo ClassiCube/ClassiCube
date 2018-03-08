@@ -117,7 +117,7 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets sides block to the given block, and raises
 		/// EnvVariableChanged event with variable 'SidesBlock'. </summary>
 		public void SetSidesBlock(BlockID block) {
-			if (block == Block.Invalid) block = Block.Bedrock; // some server software wrongly uses this value
+			if (block == 255 && !BlockInfo.IsCustomDefined(255)) block = Block.Bedrock; // some server software wrongly uses this value
 			if (block == SidesBlock) return;
 			SidesBlock = block;
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.SidesBlock);
@@ -126,7 +126,7 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets edge block to the given block, and raises
 		/// EnvVariableChanged event with variable 'EdgeBlock'. </summary>
 		public void SetEdgeBlock(BlockID block) {
-			if (block == Block.Invalid) block = Block.StillWater; // some server software wrongly uses this value
+			if (block == 255 && !BlockInfo.IsCustomDefined(255)) block = Block.StillWater; // some server software wrongly uses this value
 			if (block == EdgeBlock) return;
 			EdgeBlock = block;
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.EdgeBlock);

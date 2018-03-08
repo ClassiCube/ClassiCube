@@ -116,10 +116,10 @@ namespace ClassicalSharp.Map {
 			nbt.Write(NbtTagType.End);
 			
 			nbt.WriteCpeExtCompound("BlockDefinitions", 1);
-			uint[] flags = BlockInfo.DefinedCustomBlocks;
 			for (int block = 1; block < 256; block++) {
-				if ((flags[block >> 5] & (1u << (block & 0x1F))) != 0)
+				if (BlockInfo.IsCustomDefined((byte)block)) {
 					WriteBlockDefinitionCompound((byte)block);
+				}
 			}
 			nbt.Write(NbtTagType.End);
 			

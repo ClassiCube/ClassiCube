@@ -52,7 +52,7 @@ namespace ClassicalSharp.Network.Protocols {
 				game.Inventory.AddDefault(block);
 			}
 			
-			BlockInfo.DefinedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
+			BlockInfo.SetCustomDefined(block, false);
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockInfo.UpdateCulling(block);
 			
 			game.Inventory.AddDefault(block);
-			BlockInfo.DefinedCustomBlocks[block >> 5] |= (1u << (block & 0x1F));
+			BlockInfo.SetCustomDefined(block, true);
 			game.Events.RaiseBlockDefinitionChanged();
 		}
 		

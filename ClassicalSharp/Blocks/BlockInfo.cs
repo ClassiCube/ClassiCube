@@ -53,13 +53,13 @@ namespace ClassicalSharp {
 		/// <summary> Block is solid and partially slidable on. </summary>
 		public const byte Ice = 3;
 
-		/// <summary> Block is solid and fully slidable on. </summary>		
+		/// <summary> Block is solid and fully slidable on. </summary>
 		public const byte SlipperyIce = 4;
 
-		/// <summary> Water style 'swimming'/'bobbing' interaction when player collides. </summary>		
+		/// <summary> Water style 'swimming'/'bobbing' interaction when player collides. </summary>
 		public const byte LiquidWater = 5;
 
-		/// <summary> Lava style 'swimming'/'bobbing' interaction when player collides. </summary>		
+		/// <summary> Lava style 'swimming'/'bobbing' interaction when player collides. </summary>
 		public const byte LiquidLava = 6;
 	}
 	
@@ -78,13 +78,13 @@ namespace ClassicalSharp {
 		public static float[] SpeedMultiplier = new float[Block.Count];
 		public static byte[] LightOffset = new byte[Block.Count];
 		public static byte[] Draw = new byte[Block.Count];
-		public static uint[] DefinedCustomBlocks = new uint[Block.Count >> 5];
 		public static SoundType[] DigSounds = new SoundType[Block.Count];
 		public static SoundType[] StepSounds = new SoundType[Block.Count];
 		public static bool[] CanPlace = new bool[Block.Count];
 		public static bool[] CanDelete = new bool[Block.Count];
 		public static bool[] Tinted = new bool[Block.Count];
 		public static byte[] SpriteOffset = new byte[Block.Count];
+		static uint[] DefinedCustomBlocks = new uint[Block.Count >> 5];
 		
 		/// <summary> Gets whether the given block has an opaque draw type and is also a full tile block. </summary>
 		/// <remarks> Full tile block means Min of (0, 0, 0) and max of (1, 1, 1). </remarks>
@@ -98,10 +98,12 @@ namespace ClassicalSharp {
 		}
 		
 		public static void Init() {
-			for (int i = 0; i < DefinedCustomBlocks.Length; i++)
+			for (int i = 0; i < DefinedCustomBlocks.Length; i++) {
 				DefinedCustomBlocks[i] = 0;
-			for (int block = 0; block < Block.Count; block++)
+			}
+			for (int block = 0; block < Block.Count; block++) {
 				ResetBlockProps((BlockID)block);
+			}
 			UpdateCulling();
 		}
 
@@ -117,6 +119,18 @@ namespace ClassicalSharp {
 			CanPlace[Block.StillLava]  = false; CanDelete[Block.StillLava]  = false;
 			CanPlace[Block.StillWater] = false; CanDelete[Block.StillWater] = false;
 			CanPlace[Block.Bedrock]    = false; CanDelete[Block.Bedrock]    = false;
+		}
+		
+		public static bool IsCustomDefined(BlockID block) {
+			return (DefinedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
+		}
+		
+		public static void SetCustomDefined(BlockID block, bool defined) {		
+			if (defined) {
+				DefinedCustomBlocks[block >> 5] |= (1u << (block & 0x1F));
+			} else {
+				DefinedCustomBlocks[block >> 5] &= ~(1u << (block & 0x1F));
+			}
 		}
 		
 		static void RecalcIsLiquid(BlockID block) {
@@ -175,7 +189,7 @@ namespace ClassicalSharp {
 			}
 			
 			SetBlockDraw(block, Draw[block]);
-			CalcRenderBounds(block);			
+			CalcRenderBounds(block);
 			LightOffset[block] = CalcLightOffset(block);
 			
 			if (block >= Block.CpeCount) {
