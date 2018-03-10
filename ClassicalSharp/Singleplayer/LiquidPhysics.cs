@@ -138,7 +138,7 @@ namespace ClassicalSharp.Singleplayer {
 			BlockID block = map.blocks[posIndex];
 			if (block == Block.Lava || block == Block.StillLava) {
 				game.UpdateBlock(x, y, z, Block.Stone);
-			} else if (BlockInfo.Collide[block] == CollideType.Gas && block != Block.Rope) {
+			} else if (BlockInfo.ExtendedCollide[block] == CollideType.Gas) {
 				// Sponge check
 				for (int yy = (y < 2 ? 0 : y - 2); yy <= (y > maxWaterY ? maxY : y + 2); yy++)
 					for (int zz = (z < 2 ? 0 : z - 2); zz <= (z > maxWaterZ ? maxZ : z + 2); zz++)

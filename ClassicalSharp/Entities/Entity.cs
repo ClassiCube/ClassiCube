@@ -214,7 +214,7 @@ namespace ClassicalSharp.Entities {
 			return TouchesAny(bounds, touchesRope);
 		}
 		static Predicate<BlockID> touchesRope = IsRope;
-		static bool IsRope(BlockID b) { return b == Block.Rope; }
+		static bool IsRope(BlockID b) { return BlockInfo.ExtendedCollide[b] == CollideType.ClimbRope; }
 	
 		
 		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 0/16f, 0.25f/16f);

@@ -190,7 +190,7 @@ bool Entity_TouchesAny(AABB* bounds, TouchesAny_Condition condition) {
 	return false;
 }
 
-bool Entity_IsRope(BlockID b) { return b == BLOCK_ROPE; }
+bool Entity_IsRope(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
 bool Entity_TouchesAnyRope(Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;

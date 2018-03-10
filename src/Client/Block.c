@@ -616,6 +616,8 @@ UInt8 DefaultSet_Collide(BlockID b) {
 }
 
 UInt8 DefaultSet_MapOldCollide(BlockID b, UInt8 collide) {
+	if (b == BLOCK_ROPE && collide == COLLIDE_GAS)
+		return COLLIDE_CLIMB_ROPE;
 	if (b == BLOCK_ICE && collide == COLLIDE_SOLID)
 		return COLLIDE_ICE;
 	if ((b == BLOCK_WATER || b == BLOCK_STILL_WATER) && collide == COLLIDE_LIQUID)

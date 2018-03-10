@@ -54,6 +54,8 @@ namespace ClassicalSharp.Blocks {
 		}
 		
 		public static byte MapOldCollide(BlockID b, byte collide) {
+			if (b == Block.Rope && collide == CollideType.Gas)
+				return CollideType.ClimbRope;
 			if (b == Block.Ice && collide == CollideType.Solid) 
 				return CollideType.Ice;
 			if ((b == Block.Water || b == Block.StillWater) && collide == CollideType.Liquid)
