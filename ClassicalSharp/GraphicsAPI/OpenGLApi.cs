@@ -138,7 +138,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 		}
 		
-		public override bool ColourWrite { set { GL.ColorMask(value, value, value, value); } }
+		public override void ColourWriteMask(bool r, bool g, bool b, bool a) {
+			GL.ColorMask(r, g, b, a);
+		}
 		
 		public override void DepthTestFunc(CompareFunc func) {
 			GL.DepthFunc(compareFuncs[(int)func]);

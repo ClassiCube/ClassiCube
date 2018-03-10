@@ -144,7 +144,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract void DepthTestFunc(CompareFunc func);
 		
 		/// <summary> Whether writing to the colour buffer is enabled. </summary>
-		public abstract bool ColourWrite { set; }
+		public abstract void ColourWriteMask(bool r, bool g, bool b, bool a);
 		
 		/// <summary> Whether writing to the depth buffer is enabled. </summary>
 		public abstract bool DepthWrite { set; }

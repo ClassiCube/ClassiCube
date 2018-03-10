@@ -411,8 +411,8 @@ void Gfx_SetDepthTestFunc(Int32 compareFunc) {
 	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ZFUNC, "D3D9_SetDepthTestFunc");
 }
 
-void Gfx_SetColourWrite(bool enabled) {
-	UInt32 channels = enabled ? 0xF : 0x0;
+void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a) {
+	UInt32 channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
 	D3D9_SetRenderState(channels, D3DRS_COLORWRITEENABLE, "D3D9_SetColourWrite");
 }
 

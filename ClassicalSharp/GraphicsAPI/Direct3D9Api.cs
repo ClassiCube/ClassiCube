@@ -247,8 +247,9 @@ namespace ClassicalSharp.GraphicsAPI {
 			lastClearCol = col.Pack();
 		}
 
-		public override bool ColourWrite {
-			set { device.SetRenderState(RenderState.ColorWriteEnable, value ? 0xF : 0x0); }
+		public override void ColourWriteMask(bool r, bool g, bool b, bool a) {
+			int flags = (r ? 1 : 0) | (g ? 2 : 0) | (b ? 4 : 0) | (a ? 8 : 0);
+			device.SetRenderState(RenderState.ColorWriteEnable, flags);
 		}
 
 		Compare depthTestFunc;

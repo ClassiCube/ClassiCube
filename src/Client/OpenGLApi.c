@@ -230,8 +230,8 @@ void Gfx_ClearColour(PackedCol col) {
 	gl_lastClearCol = col;
 }
 
-void Gfx_SetColourWrite(bool enabled) {
-	glColorMask(enabled, enabled, enabled, enabled);
+void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a) {
+	glColorMask(r, g, b, a);
 }
 
 void Gfx_SetDepthWrite(bool enabled) {
