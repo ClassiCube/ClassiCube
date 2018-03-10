@@ -127,7 +127,7 @@ namespace OpenTK.Graphics.OpenGL {
 		
 		public static void GenBuffers( int n, int* buffers ) {
 			Interop.Calli( n, buffers, GenBuffersAddress );
-		} static IntPtr GenBuffersAddress, GenBuffersARBAddress;		
+		} static IntPtr GenBuffersAddress, GenBuffersARBAddress;
 		
 		public static int GenLists( int n ) {
 			return Interop.Calli_Int32( n, GenListsAddress );

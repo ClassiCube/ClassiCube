@@ -300,7 +300,7 @@ typedef struct StatusScreen_ {
 	TextAtlas PosAtlas;
 	Real64 Accumulator;
 	Int32 Frames, FPS;
-	bool Speeding, HalfSpeeding, Noclip, Fly;
+	bool Speed, HalfSpeed, Noclip, Fly, CanSpeed;
 	Int32 LastFov;
 } StatusScreen;
 StatusScreen StatusScreen_Instance;
@@ -358,30 +358,32 @@ void StatusScreen_DrawPosition(StatusScreen* screen) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, index);
 }
 
-void StatusScreen_UpdateHackState(StatusScreen* screen, bool force) {
+bool StatusScreen_HacksChanged(StatusScreen* screen) {
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
-	if (force || hacks->Speeding != screen->Speeding || hacks->HalfSpeeding != screen->HalfSpeeding 
-		|| hacks->Noclip != screen->Noclip || hacks->Flying != screen->Fly || Game_Fov != screen->LastFov) {
-		screen->Speeding = hacks->Speeding; screen->Noclip = hacks->Noclip;
-		screen->HalfSpeeding = hacks->HalfSpeeding; screen->Fly = hacks->Flying;
-		screen->LastFov = Game_Fov;
+	return hacks->Speeding != screen->Speed || hacks->HalfSpeeding != screen->HalfSpeed || hacks->Flying != screen->Fly
+		|| hacks->Noclip != screen->Noclip  || Game_Fov != screen->LastFov || hacks->CanSpeed != screen->CanSpeed;
+}
 
-		UInt8 statusBuffer[String_BufferSize(STRING_SIZE * 2)];
-		String status = String_InitAndClearArray(statusBuffer);
+void StatusScreen_UpdateHackState(StatusScreen* screen) {
+	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
+	screen->Speed = hacks->Speeding; screen->HalfSpeed = hacks->HalfSpeeding; screen->Fly = hacks->Flying;
+	screen->Noclip = hacks->Noclip; screen->LastFov = Game_Fov; screen->CanSpeed = hacks->CanSpeed;
 
-		if (Game_Fov != Game_DefaultFov) {
-			String_AppendConst(&status, "Zoom fov ");
-			String_AppendInt32(&status, Game_Fov);
-			String_AppendConst(&status, "  ");
-		}
-		if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
+	UInt8 statusBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String status = String_InitAndClearArray(statusBuffer);
 
-		bool speed = (hacks->Speeding || hacks->HalfSpeeding) && (hacks->CanSpeed || hacks->BaseHorSpeed > 1);
-		if (speed) String_AppendConst(&status, "Speed ON   ");
-		if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
-
-		TextWidget_SetText(&screen->HackStates, &status);
+	if (Game_Fov != Game_DefaultFov) {
+		String_AppendConst(&status, "Zoom fov ");
+		String_AppendInt32(&status, Game_Fov);
+		String_AppendConst(&status, "  ");
 	}
+	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
+
+	bool speeding = (hacks->Speeding || hacks->HalfSpeeding) && (hacks->CanSpeed || hacks->BaseHorSpeed > 1);
+	if (speeding) String_AppendConst(&status, "Speed ON   ");
+	if (hacks->Noclip) String_AppendConst(&status, "Noclip ON   ");
+
+	TextWidget_SetText(&screen->HackStates, &status);
 }
 
 void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
@@ -432,7 +434,7 @@ void StatusScreen_ContextRecreated(void* obj) {
 	Widget_SetLocation(&hacks->Base, ANCHOR_LEFT_OR_TOP, ANCHOR_LEFT_OR_TOP, 2, yOffset);
 	hacks->ReducePadding = true;
 	Widget_Init(hacks);
-	StatusScreen_UpdateHackState(screen, true);
+	StatusScreen_UpdateHackState(screen);
 }
 
 void StatusScreen_Init(GuiElement* elem) {
@@ -454,7 +456,7 @@ void StatusScreen_Render(GuiElement* elem, Real64 delta) {
 	Widget_Render(&screen->Status, delta);
 
 	if (!Game_ClassicMode && Gui_Active == NULL) {
-		StatusScreen_UpdateHackState(screen, false);
+		if (StatusScreen_HacksChanged(screen)) { StatusScreen_UpdateHackState(screen, false); }
 		StatusScreen_DrawPosition(screen);
 		Widget_Render(&screen->HackStates, delta);
 	}
