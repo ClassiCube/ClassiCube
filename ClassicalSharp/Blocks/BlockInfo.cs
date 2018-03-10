@@ -62,6 +62,7 @@ namespace ClassicalSharp {
 		/// <summary> Lava style 'swimming'/'bobbing' interaction when player collides. </summary>
 		public const byte LiquidLava = 6;
 		
+		/// <summary> Rope/Ladder style climbing interaction when player collides. </summary>
 		public const byte ClimbRope = 7;
 	}
 	

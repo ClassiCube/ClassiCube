@@ -355,7 +355,7 @@ void Gfx_SetAlphaTest(bool enabled) {
 	D3D9_SetRenderState((UInt32)enabled, D3DRS_ALPHATESTENABLE, "D3D9_SetAlphaTest");
 }
 
-D3DCMPFUNC d3d9_alphaTestFunc = 0;
+D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
 Int32 d3d9_alphaTestRef = 0;
 void Gfx_SetAlphaTestFunc(Int32 compareFunc, Real32 refValue) {
 	d3d9_alphaTestFunc = d3d9_compareFuncs[compareFunc];
@@ -372,8 +372,8 @@ void Gfx_SetAlphaBlending(bool enabled) {
 	D3D9_SetRenderState((UInt32)enabled, D3DRS_ALPHABLENDENABLE, "D3D9_SetAlphaBlending");
 }
 
-D3DBLEND d3d9_srcBlendFunc = 0;
-D3DBLEND d3d9_dstBlendFunc = 0;
+D3DBLEND d3d9_srcBlendFunc = D3DBLEND_ONE;
+D3DBLEND d3d9_dstBlendFunc = D3DBLEND_ZERO;
 void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc) {
 	d3d9_srcBlendFunc = d3d9_blendFuncs[srcBlendFunc];
 	D3D9_SetRenderState(d3d9_srcBlendFunc, D3DRS_SRCBLEND, "D3D9_SetAlphaBlendFunc_Src");
@@ -405,7 +405,7 @@ void Gfx_SetDepthTest(bool enabled) {
 	D3D9_SetRenderState((UInt32)enabled, D3DRS_ZENABLE, "D3D9_SetDepthTest");
 }
 
-D3DCMPFUNC d3d9_depthTestFunc = 0;
+D3DCMPFUNC d3d9_depthTestFunc = D3DCMP_LESSEQUAL;
 void Gfx_SetDepthTestFunc(Int32 compareFunc) {
 	d3d9_depthTestFunc = d3d9_compareFuncs[compareFunc];
 	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ZFUNC, "D3D9_SetDepthTestFunc");
@@ -528,7 +528,7 @@ void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex) {
 }
 
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
-	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST, 
+	ReturnCode hresult = IDirect3DDevice9_DrawIndexedPrimitive(device, D3DPT_TRIANGLELIST,
 		startVertex, 0, verticesCount, 0, verticesCount >> 1);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_DrawIndexedVb_TrisT2fC4b");
 }

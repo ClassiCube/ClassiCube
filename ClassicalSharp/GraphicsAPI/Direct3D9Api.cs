@@ -89,7 +89,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		Compare[] compareFuncs;
-		Compare alphaTestFunc;
+		Compare alphaTestFunc = Compare.Always;
 		int alphaTestRef;
 		public override void AlphaTestFunc(CompareFunc func, float value) {
 			alphaTestFunc = compareFuncs[(int)func];
@@ -99,7 +99,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		Blend[] blendFuncs;
-		Blend srcBlendFunc, dstBlendFunc;
+		Blend srcBlendFunc = Blend.One;
+		Blend dstBlendFunc = Blend.Zero;
 		public override void AlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
 			srcBlendFunc = blendFuncs[(int)srcFunc];
 			dstBlendFunc = blendFuncs[(int)dstFunc];
@@ -252,7 +253,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			device.SetRenderState(RenderState.ColorWriteEnable, flags);
 		}
 
-		Compare depthTestFunc;
+		Compare depthTestFunc = Compare.LessEqual;
 		public override void DepthTestFunc(CompareFunc func) {
 			depthTestFunc = compareFuncs[(int)func];
 			device.SetRenderState(RenderState.ZFunc, (int)depthTestFunc);
