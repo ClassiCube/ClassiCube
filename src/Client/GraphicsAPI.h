@@ -62,7 +62,7 @@ void Gfx_Clear(void);
 void Gfx_ClearColour(PackedCol col);
 void Gfx_SetDepthTest(bool enabled);
 void Gfx_SetDepthTestFunc(Int32 compareFunc);
-void Gfx_SetColourWrite(bool enabled);
+void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a);
 void Gfx_SetDepthWrite(bool enabled);
 
 /* Creates a vertex buffer that can have its data dynamically updated. */

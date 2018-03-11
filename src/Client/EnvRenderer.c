@@ -165,10 +165,10 @@ void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32
 			z2 = z1 + axisSize;
 			if (z2 > endZ) z2 = endZ;
 
-			v.X = (Real32)x1; v.Z = (Real32)z1; *vertices = v; vertices++;
-			                  v.Z = (Real32)z2; *vertices = v; vertices++;
-			v.X = (Real32)x2;                   *vertices = v; vertices++;
-			                  v.Z = (Real32)z1; *vertices = v; vertices++;
+			v.X = (Real32)x1; v.Z = (Real32)z1; *vertices++ = v;
+			                  v.Z = (Real32)z2; *vertices++ = v;
+			v.X = (Real32)x2;                   *vertices++ = v;
+			                  v.Z = (Real32)z1; *vertices++ = v;
 		}
 	}
 }
@@ -190,10 +190,10 @@ void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, In
 
 			Real32 u1 = (Real32)x1 / 2048.0f + offset, u2 = (Real32)x2 / 2048.0f + offset;
 			Real32 v1 = (Real32)z1 / 2048.0f + offset, v2 = (Real32)z2 / 2048.0f + offset;
-			v.X = (Real32)x1; v.Z = (Real32)z1; v.U = u1; v.V = v1; *vertices = v; vertices++;
-			                  v.Z = (Real32)z2;           v.V = v2; *vertices = v; vertices++;
-			v.X = (Real32)x2;                   v.U = u2;           *vertices = v; vertices++;
-			                  v.Z = (Real32)z1;           v.V = v1; *vertices = v; vertices++;
+			v.X = (Real32)x1; v.Z = (Real32)z1; v.U = u1; v.V = v1; *vertices++ = v;
+			                  v.Z = (Real32)z2;           v.V = v2; *vertices++ = v;
+			v.X = (Real32)x2;                   v.U = u2;           *vertices++ = v;
+			                  v.Z = (Real32)z1;           v.V = v1; *vertices++ = v;
 		}
 	}
 }

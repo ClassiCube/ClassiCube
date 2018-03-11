@@ -456,7 +456,7 @@ void StatusScreen_Render(GuiElement* elem, Real64 delta) {
 	Widget_Render(&screen->Status, delta);
 
 	if (!Game_ClassicMode && Gui_Active == NULL) {
-		if (StatusScreen_HacksChanged(screen)) { StatusScreen_UpdateHackState(screen, false); }
+		if (StatusScreen_HacksChanged(screen)) { StatusScreen_UpdateHackState(screen); }
 		StatusScreen_DrawPosition(screen);
 		Widget_Render(&screen->HackStates, delta);
 	}
@@ -974,7 +974,7 @@ bool HUDScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key == playerListKey && handles) {
 		if (!screen->ShowingList && !ServerConnection_IsSinglePlayer) {
 			screen->WasShowingList = true;
-			ContextRecreated();
+			HUDScreen_ContextRecreated(screen);
 		}
 		return true;
 	}

@@ -47,24 +47,27 @@ void PickedPosRenderer_Render(Real64 delta) {
 }
 
 void PickedPosRenderer_XQuad(Real32 x, Real32 z1, Real32 y1, Real32 z2, Real32 y2) {
-	VertexP3fC4b_Set(pickedPos_ptr, x, y1, z1, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x, y2, z1, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x, y2, z2, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x, y1, z2, pickedPos_col); pickedPos_ptr++;
-}
-
-void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y2) {
-	VertexP3fC4b_Set(pickedPos_ptr, x1, y1, z, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x1, y2, z, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x2, y2, z, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x2, y1, z, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b v; v.X = x; v.Col = pickedPos_col;
+	v.Y = y1; v.Z = z1; *pickedPos_ptr++ = v;
+	v.Y = y2;           *pickedPos_ptr++ = v;
+	          v.Z = z2; *pickedPos_ptr++ = v;
+	v.Y = y1;           *pickedPos_ptr++ = v;
 }
 
 void PickedPosRenderer_YQuad(Real32 y, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
-	VertexP3fC4b_Set(pickedPos_ptr, x1, y, z1, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x1, y, z2, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x2, y, z2, pickedPos_col); pickedPos_ptr++;
-	VertexP3fC4b_Set(pickedPos_ptr, x2, y, z1, pickedPos_col); pickedPos_ptr++;
+	VertexP3fC4b v; v.Y = y; v.Col = pickedPos_col;
+	v.X = x1; v.Z = z1; *pickedPos_ptr++ = v;
+	          v.Z = z2; *pickedPos_ptr++ = v;
+	v.X = x2;           *pickedPos_ptr++ = v;
+	          v.Z = z1; *pickedPos_ptr++ = v;
+}
+
+void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y2) {
+	VertexP3fC4b v; v.Z = z; v.Col = pickedPos_col;
+	v.X = x1; v.Y = y1; *pickedPos_ptr++ = v;
+	          v.Y = y2; *pickedPos_ptr++ = v;
+	v.X = x2;           *pickedPos_ptr++ = v;
+	          v.Y = y1; *pickedPos_ptr++ = v;
 }
 
 void PickedPosRenderer_UpdateState(PickedPos* selected) {

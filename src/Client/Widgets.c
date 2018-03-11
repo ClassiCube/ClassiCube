@@ -1993,7 +1993,7 @@ Int32 PlayerListWidget_GetGroupCount(PlayerListWidget* widget, UInt16 id, Int32 
 Int32 PlayerListWidget_PlayerCompare(UInt16 x, UInt16 y) {
 	UInt8 xRank = TabList_GroupRanks[x];
 	UInt8 yRank = TabList_GroupRanks[y];
-	if (xRank != yRank) return (xRank < yRank ? 1 : -1);
+	if (xRank != yRank) return (xRank < yRank ? -1 : 1);
 
 	UInt8 xNameBuffer[String_BufferSize(STRING_SIZE)];
 	String xName    = String_InitAndClearArray(xNameBuffer);

@@ -2,8 +2,6 @@
 #include "TerrainAtlas.h"
 #include "Constants.h"
 
-#define AddVertex *ptr = v; ptr++
-
 /* Performance critical, use macro to ensure always inlined. */
 #define ApplyTint \
 if (Drawer_Tinted) {\
@@ -23,10 +21,10 @@ void Drawer_XMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.X = Drawer_X1; v.Col = col;
-	v.Y = Drawer_Y2; v.Z = Drawer_Z2 + (count - 1); v.U = u2; v.V = v1; AddVertex;
-	v.Z = Drawer_Z1;							    v.U = u1;           AddVertex;
-	v.Y = Drawer_Y1;										  v.V = v2; AddVertex;
-	v.Z = Drawer_Z2 + (count - 1);                  v.U = u2;           AddVertex;
+	v.Y = Drawer_Y2; v.Z = Drawer_Z2 + (count - 1); v.U = u2; v.V = v1; *ptr++ = v;
+	v.Z = Drawer_Z1;							    v.U = u1;           *ptr++ = v;
+	v.Y = Drawer_Y1;										  v.V = v2; *ptr++ = v;
+	v.Z = Drawer_Z2 + (count - 1);                  v.U = u2;           *ptr++ = v;
 	*vertices = ptr;
 }
 
@@ -40,10 +38,10 @@ void Drawer_XMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.X = Drawer_X2; v.Col = col;
-	v.Y = Drawer_Y2; v.Z = Drawer_Z1; v.U = u1; v.V = v1;  AddVertex;
-	v.Z = Drawer_Z2 + (count - 1);    v.U = u2;            AddVertex;
-	v.Y = Drawer_Y1;                            v.V = v2;  AddVertex;
-	v.Z = Drawer_Z1;                  v.U = u1;            AddVertex;
+	v.Y = Drawer_Y2; v.Z = Drawer_Z1; v.U = u1; v.V = v1; *ptr++ = v;
+	v.Z = Drawer_Z2 + (count - 1);    v.U = u2;           *ptr++ = v;
+	v.Y = Drawer_Y1;                            v.V = v2; *ptr++ = v;
+	v.Z = Drawer_Z1;                  v.U = u1;           *ptr++ = v;
 	*vertices = ptr;
 }
 
@@ -57,10 +55,10 @@ void Drawer_ZMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Z = Drawer_Z1; v.Col = col;
-	v.X = Drawer_X2 + (count - 1); v.Y = Drawer_Y1; v.U = u2; v.V = v2; AddVertex;
-	v.X = Drawer_X1;                                v.U = u1;           AddVertex;
-	v.Y = Drawer_Y2;                                          v.V = v1; AddVertex;
-	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           AddVertex;
+	v.X = Drawer_X2 + (count - 1); v.Y = Drawer_Y1; v.U = u2; v.V = v2; *ptr++ = v;
+	v.X = Drawer_X1;                                v.U = u1;           *ptr++ = v;
+	v.Y = Drawer_Y2;                                          v.V = v1; *ptr++ = v;
+	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           *ptr++ = v;
 	*vertices = ptr;
 }
 
@@ -74,10 +72,10 @@ void Drawer_ZMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Z = Drawer_Z2; v.Col = col;
-	v.X = Drawer_X2 + (count - 1); v.Y = Drawer_Y2; v.U = u2; v.V = v1; AddVertex;
-	v.X = Drawer_X1;                                v.U = u1;           AddVertex;
-	v.Y = Drawer_Y1;                                          v.V = v2; AddVertex;
-	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           AddVertex;
+	v.X = Drawer_X2 + (count - 1); v.Y = Drawer_Y2; v.U = u2; v.V = v1; *ptr++ = v;
+	v.X = Drawer_X1;                                v.U = u1;           *ptr++ = v;
+	v.Y = Drawer_Y1;                                          v.V = v2; *ptr++ = v;
+	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           *ptr++ = v;
 	*vertices = ptr;
 }
 
@@ -91,10 +89,10 @@ void Drawer_YMin(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Y = Drawer_Y1; v.Col = col;
-	v.X = Drawer_X2 + (count - 1); v.Z = Drawer_Z2; v.U = u2; v.V = v2; AddVertex;
-	v.X = Drawer_X1;                                v.U = u1;           AddVertex;
-	v.Z = Drawer_Z1;                                          v.V = v1; AddVertex;
-	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           AddVertex;
+	v.X = Drawer_X2 + (count - 1); v.Z = Drawer_Z2; v.U = u2; v.V = v2; *ptr++ = v;
+	v.X = Drawer_X1;                                v.U = u1;           *ptr++ = v;
+	v.Z = Drawer_Z1;                                          v.V = v1; *ptr++ = v;
+	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           *ptr++ = v;
 	*vertices = ptr;
 }
 
@@ -108,9 +106,9 @@ void Drawer_YMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Y = Drawer_Y2; v.Col = col;
-	v.X = Drawer_X2 + (count - 1); v.Z = Drawer_Z1; v.U = u2; v.V = v1; AddVertex;
-	v.X = Drawer_X1;                                v.U = u1;           AddVertex;
-	v.Z = Drawer_Z2;                                          v.V = v2; AddVertex;
-	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           AddVertex;
+	v.X = Drawer_X2 + (count - 1); v.Z = Drawer_Z1; v.U = u2; v.V = v1; *ptr++ = v;
+	v.X = Drawer_X1;                                v.U = u1;           *ptr++ = v;
+	v.Z = Drawer_Z2;                                          v.V = v2; *ptr++ = v;
+	v.X = Drawer_X2 + (count - 1);                  v.U = u2;           *ptr++ = v;
 	*vertices = ptr;
 }

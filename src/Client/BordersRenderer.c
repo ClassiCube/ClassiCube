@@ -106,10 +106,10 @@ void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int3
 			if (y2 > endY) y2 = endY;
 
 			Real32 u2 = (Real32)z2 - (Real32)z1, v2 = (Real32)y2 - (Real32)y1;
-			v.Y = (Real32)y1; v.Z = (Real32)z1; v.U = 0.0f; v.V = v2;   *ptr = v; ptr++;
-			v.Y = (Real32)y2;                               v.V = 0.0f; *ptr = v; ptr++;
-			                  v.Z = (Real32)z2; v.U = u2;               *ptr = v; ptr++;
-			v.Y = (Real32)y1;                               v.V = v2;   *ptr = v; ptr++;
+			v.Y = (Real32)y1; v.Z = (Real32)z1; v.U = 0.0f; v.V = v2;   *ptr++ = v;
+			v.Y = (Real32)y2;                               v.V = 0.0f; *ptr++ = v;
+			                  v.Z = (Real32)z2; v.U = u2;               *ptr++ = v;
+			v.Y = (Real32)y1;                               v.V = v2;   *ptr++ = v;
 		}
 	}
 	*vertices = ptr;
@@ -130,10 +130,10 @@ void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int3
 			if (y2 > endY) y2 = endY;
 
 			Real32 u2 = (Real32)x2 - (Real32)x1, v2 = (Real32)y2 - (Real32)y1;
-			v.X = (Real32)x1; v.Y = (Real32)y1; v.U = 0.0f; v.V = v2;   *ptr = v; ptr++;
-			                  v.Y = (Real32)y2;             v.V = 0.0f; *ptr = v; ptr++;
-			v.X = (Real32)x2;                   v.U = u2;               *ptr = v; ptr++;
-			                  v.Y = (Real32)y1;             v.V = v2;   *ptr = v; ptr++;
+			v.X = (Real32)x1; v.Y = (Real32)y1; v.U = 0.0f; v.V = v2;   *ptr++ = v;
+			                  v.Y = (Real32)y2;             v.V = 0.0f; *ptr++ = v;
+			v.X = (Real32)x2;                   v.U = u2;               *ptr++ = v;
+			                  v.Y = (Real32)y1;             v.V = v2;   *ptr++ = v;
 		}
 	}
 	*vertices = ptr;
@@ -154,10 +154,10 @@ void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int
 			if (z2 > endZ) z2 = endZ;
 
 			Real32 u2 = (Real32)x2 - (Real32)x1, v2 = (Real32)z2 - (Real32)z1;
-			v.X = (Real32)x1 + offset; v.Z = (Real32)z1 + offset; v.U = 0.0f; v.V = 0.0f; *ptr = v; ptr++;
-			                           v.Z = (Real32)z2 + offset;             v.V = v2;   *ptr = v; ptr++;
-			v.X = (Real32)x2 + offset;                            v.U = u2;               *ptr = v; ptr++;
-			                           v.Z = (Real32)z1 + offset;             v.V = 0.0f; *ptr = v; ptr++;
+			v.X = (Real32)x1 + offset; v.Z = (Real32)z1 + offset; v.U = 0.0f; v.V = 0.0f; *ptr++ = v;
+			                           v.Z = (Real32)z2 + offset;             v.V = v2;   *ptr++ = v;
+			v.X = (Real32)x2 + offset;                            v.U = u2;               *ptr++ = v;
+			                           v.Z = (Real32)z1 + offset;             v.V = 0.0f; *ptr++ = v;
 		}
 	}
 	*vertices = ptr;

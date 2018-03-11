@@ -81,14 +81,7 @@ namespace ClassicalSharp {
 			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
 			return new Vector3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);
 		}
-		
-		/// <summary> Returns the square of the euclidean distance between two points. </summary>
-		public static float DistanceSquared(float x1, float y1, float z1, float x2, float y2, float z2) {
-			float dx = x2 - x1, dy = y2 - y1, dz = z2 - z1;
-			return dx * dx + dy * dy + dz * dz;
-		}
 
-		
 		/// <summary> Returns a normalised vector that faces in the direction
 		/// described by the given yaw and pitch. </summary>
 		public static Vector3 GetDirVector(double yawRad, double pitchRad) {

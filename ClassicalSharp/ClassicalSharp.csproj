@@ -276,7 +276,6 @@
     <Compile Include="Selections\AxisLinesRenderer.cs" />
     <Compile Include="Selections\PickedPosRenderer.cs" />
     <Compile Include="Selections\SelectionBox.cs" />
-    <Compile Include="Selections\SelectionBoxComparer.cs" />
     <Compile Include="Selections\SelectionManager.cs" />
     <Compile Include="Singleplayer\FallingPhysics.cs" />
     <Compile Include="Singleplayer\FoliagePhysics.cs" />
