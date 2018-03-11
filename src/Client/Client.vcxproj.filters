@@ -381,6 +381,9 @@
     <ClInclude Include="Searcher.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
+    <ClInclude Include="HeldBlockRenderer.h">
+      <Filter>Header Files\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -595,6 +598,9 @@
     </ClCompile>
     <ClCompile Include="Texture.c">
       <Filter>Source Files\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="HeldBlockRenderer.c">
+      <Filter>Source Files\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

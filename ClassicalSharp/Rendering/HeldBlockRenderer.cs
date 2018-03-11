@@ -18,12 +18,12 @@ namespace ClassicalSharp.Renderers {
 		
 		BlockID block;
 		Game game;
-		FakePlayer held;
+		Entity held;
 		Matrix4 heldBlockProj;
 		
 		public void Init(Game game) {
 			this.game = game;
-			held = new FakePlayer(game);
+			held = new FakeHeldEntity(game);
 			lastBlock = game.Inventory.Selected;
 			
 			game.Events.ProjectionChanged += ProjectionChanged;
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Renderers {
 			
 			ResetHeldState();
 			DoAnimation(delta, lastSwingY);
-			SetBaseOffset();			
+			SetBaseOffset();
 			if (!game.Camera.IsThirdPerson) RenderModel();
 			
 			game.Graphics.View = view;
@@ -224,19 +224,17 @@ namespace ClassicalSharp.Renderers {
 	}
 	
 	/// <summary> Skeleton implementation of player entity so we can reuse block model rendering code. </summary>
-	class FakePlayer : Player {
+	class FakeHeldEntity : Entity {
 		
-		public FakePlayer(Game game) : base(game) {
+		public FakeHeldEntity(Game game) : base(game) {
 			NoShade = true;
 		}
 		
-		public override void SetLocation(LocationUpdate update, bool interpolate) { }
-		
+		public override void SetLocation(LocationUpdate update, bool interpolate) { }		
 		public override void Tick(double delta) { }
-
-		public override void RenderModel(double deltaTime, float t) { }
-		
+		public override void RenderModel(double deltaTime, float t) { }		
 		public override void RenderName() { }
+		public override void Despawn() { }
 		
 		public override int Colour() {
 			Player realP = game.LocalPlayer;

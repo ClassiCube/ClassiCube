@@ -20,6 +20,7 @@ Vector3I Vector3I_Create3(Int32 x, Int32 y, Int32 z);
 Real32 Vector3_Length(Vector3* v);
 Real32 Vector3_LengthSquared(Vector3* v);
 
+#define VECTOR3_CONST(x, y, z) { x, y, z };
 #define Vector2_UnitX Vector2_Create2(1.0f, 0.0f)
 #define Vector2_UnitY Vector2_Create2(0.0f, 1.0f)
 #define Vector2_Zero Vector2_Create2(0.0f, 0.0f)
