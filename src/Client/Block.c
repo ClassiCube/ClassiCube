@@ -522,31 +522,17 @@ BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
 }
 
 BlockID AutoRotate_RotateDirection(BlockID block, String* name, Vector3 offset) {
-	Vector3 SE = Vector3_Create3(+1.0f, 0.0f, 1.0f);
-	Vector3 SW = Vector3_Create3(-1.0f, 0.0f, 1.0f);
+	Real32 headY = LocalPlayer_Instance.Base.Base.HeadY;
+	headY = LocationUpdate_Clamp(headY);
 
-	Vector3I pos = Game_SelectedPos.TranslatedPos;
-	Vector3 exact = Game_SelectedPos.Intersect;
-	Vector3 exactFlat = exact; exactFlat.Y = 0.0f;
-
-	Vector3 SEToPoint = exactFlat; SEToPoint.X -= pos.X; SEToPoint.Z -= pos.Z;
-	Vector3 SWToPoint = exactFlat; SWToPoint.X -= (pos.X + 1); SWToPoint.Z -= pos.Z;
-
-	Real32 dotSE = Vector3_Dot(&SEToPoint, &SW);
-	Real32 dotSW = Vector3_Dot(&SWToPoint, &SE);
-
-	if (dotSE <= 0.0f) { /* NorthEast */
-		if (dotSW <= 0.0f) { /* NorthWest */
-			return AutoRotate_Find(block, name, "-N");
-		} else { /* SouthEast */
-			return AutoRotate_Find(block, name, "-E");
-		}
-	} else { /* SouthWest */
-		if (dotSW <= 0.0f) { /* NorthWest */
-			return AutoRotate_Find(block, name, "-W");
-		} else { /* SouthEast */
-			return AutoRotate_Find(block, name, "-S");
-		}
+	if (headY >= 45.0f && headY < 135.0f) {
+		return AutoRotate_Find(block, name, "-E");
+	} else if (headY >= 135.0f && headY < 225.0f) {
+		return AutoRotate_Find(block, name, "-S");
+	} else if (headY >= 225.0f && headY < 315.0f) {
+		return AutoRotate_Find(block, name, "-W");
+	} else {
+		return AutoRotate_Find(block, name, "-N");
 	}
 }
 

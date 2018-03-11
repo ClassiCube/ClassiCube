@@ -59,7 +59,7 @@ namespace ClassicalSharp {
 		static BlockID RotateOther(Game game, BlockID block, string name, Vector3 offset) {
 			// Fence type blocks
 			if (BlockInfo.FindID(name + "-UD") == -1) {
-				float headY = LocationUpdate.Clamp(game.LocalPlayer.HeadY);				
+				float headY = LocationUpdate.Clamp(game.LocalPlayer.HeadY);
 				if (headY < 45 || (headY >= 135 && headY < 225) || headY > 315)
 					return Find(game, block, name + "-WE");
 				return Find(game, block, name + "-NS");
@@ -77,30 +77,14 @@ namespace ClassicalSharp {
 		}
 		
 		static BlockID RotateDirection(Game game, BlockID block, string name, Vector3 offset) {
-			Vector3 southEast = new Vector3 (1, 0, 1);
-			Vector3 southWest = new Vector3 (-1, 0, 1);
-			
-			Vector3I pos = game.SelectedPos.TranslatedPos;
-			Vector3 posExact = game.SelectedPos.Intersect;
-			Vector3 posExactFlat = posExact; posExactFlat.Y = 0;
-			Vector3 southEastToPoint = posExactFlat - new Vector3 (pos.X, 0, pos.Z);
-			Vector3 southWestToPoint = posExactFlat - new Vector3 (pos.X +1, 0, pos.Z);
-			
-			float dotSouthEast = Vector3.Dot(southEastToPoint, southWest);
-			float dotSouthWest= Vector3.Dot(southWestToPoint, southEast);
-			if (dotSouthEast <= 0) { // NorthEast
-				if (dotSouthWest <= 0) { //NorthWest
-					return Find(game, block, name + "-N");
-				} else { //SouthEast
-					return Find(game, block, name + "-E");
-				}
-			} else { //SouthWest
-				if (dotSouthWest <= 0) { //NorthWest
-					return Find(game, block, name + "-W");
-				} else { //SouthEast
-					return Find(game, block, name + "-S");
-				}
-			}
+			float headY = LocationUpdate.Clamp(game.LocalPlayer.HeadY);
+			if (headY >= 45  && headY < 135)
+				return Find(game, block, name + "-E");
+			if (headY >= 135 && headY < 225)
+				return Find(game, block, name + "-S");
+			if (headY >= 225 && headY < 315)
+				return Find(game, block, name + "-W");
+			return Find(game, block, name + "-N");
 		}
 		
 		static BlockID Find(Game game, BlockID block, string name) {
