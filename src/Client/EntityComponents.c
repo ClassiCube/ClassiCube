@@ -534,7 +534,7 @@ void ShadowComponent_CalcAlpha(Real32 playerY, ShadowData* data) {
 
 bool ShadowComponent_GetBlocks(Entity* entity, Vector3I* coords, Real32 x, Real32 z, Int32 posY, ShadowData* data) {
 	Int32 blockX = Math_Floor(x), blockZ = Math_Floor(z);
-	Vector3I p = Vector3I_Create3(blockX, 0, blockZ);	
+	Vector3I p = VECTOR3I_CONST(blockX, 0, blockZ);
 
 	/* Check we have not processed this particular block already */
 	UInt32 i, posCount = 0;

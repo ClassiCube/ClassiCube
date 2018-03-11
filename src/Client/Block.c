@@ -97,7 +97,7 @@ void Block_SetDrawType(BlockID block, UInt8 draw) {
 	Block_Draw[block] = draw;
 	Block_RecalcIsLiquid(block);
 
-	Vector3 zero = Vector3_Zero, one = Vector3_One;
+	Vector3 zero = Vector3_Zero; Vector3 one = Vector3_One;
 	Block_FullOpaque[block] = draw == DRAW_OPAQUE
 		&& Vector3_Equals(&Block_MinBB[block], &zero)
 		&& Vector3_Equals(&Block_MaxBB[block], &one);
@@ -160,9 +160,9 @@ void Block_ResetProps(BlockID block) {
 	if (Block_Draw[block] == DRAW_SPRITE) {
 		Block_MinBB[block] = Vector3_Create3(2.50f / 16.0f, 0.0f, 2.50f / 16.0f);
 		Block_MaxBB[block] = Vector3_Create3(13.5f / 16.0f, 1.0f, 13.5f / 16.0f);
-	} else {
-		Block_MinBB[block] = Vector3_Zero;
-		Block_MaxBB[block] = Vector3_One;
+	} else {		
+		Vector3 zero = Vector3_Zero; Block_MinBB[block] = zero;
+		Vector3 one  = Vector3_One;  Block_MaxBB[block] = one;
 		Block_MaxBB[block].Y = DefaultSet_Height(block);
 	}
 

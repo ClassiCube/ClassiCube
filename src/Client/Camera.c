@@ -134,10 +134,10 @@ void PerspectiveCamera_Init(Camera* cam) {
 void FirstPersonCamera_GetView(Matrix* mat) {
 	Vector3 camPos = Game_CurrentCameraPos;
 	Vector3 dir = PerspectiveCamera_GetDirVector();
-	Vector3 targetPos;
-	Vector3_Add(&targetPos, &camPos, &dir);
+	Vector3 targetPos; Vector3_Add(&targetPos, &camPos, &dir);
 
-	Matrix_LookAt(mat, camPos, targetPos, Vector3_UnitY);
+	Vector3 up = Vector3_UnitY;
+	Matrix_LookAt(mat, camPos, targetPos, up);
 	Matrix_MulBy(mat, &Camera_TiltM);
 }
 
@@ -177,7 +177,8 @@ void ThirdPersonCamera_GetView(Matrix* mat) {
 	Vector3 targetPos = Entity_GetEyePosition(p);
 	targetPos.Y += Camera_BobbingVer;
 
-	Matrix_LookAt(mat, cameraPos, targetPos, Vector3_UnitY);
+	Vector3 up = Vector3_UnitY;
+	Matrix_LookAt(mat, cameraPos, targetPos, up);
 	Matrix_MulBy(mat, &Camera_TiltM);
 }
 

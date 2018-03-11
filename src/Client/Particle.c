@@ -66,7 +66,7 @@ BlockID Particle_GetBlock(Int32 x, Int32 y, Int32 z) {
 bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiquids) {
 	if (y < 0) {
 		p->NextPos.Y = ENTITY_ADJUSTMENT; p->LastPos.Y = ENTITY_ADJUSTMENT;
-		p->Velocity = Vector3_Zero;
+		Vector3 zero = Vector3_Zero; p->Velocity = zero;
 		p->HitTerrain = true;
 		return false;
 	}
@@ -82,7 +82,7 @@ bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiquids) {
 		Real32 adjust = topFace ? ENTITY_ADJUSTMENT : -ENTITY_ADJUSTMENT;
 		p->LastPos.Y = collideY + adjust;
 		p->NextPos.Y = p->LastPos.Y;
-		p->Velocity = Vector3_Zero;
+		Vector3 zero = Vector3_Zero; p->Velocity = zero;
 		p->HitTerrain = true;
 		return false;
 	}

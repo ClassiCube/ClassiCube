@@ -21,23 +21,12 @@ Real32 Vector3_Length(Vector3* v);
 Real32 Vector3_LengthSquared(Vector3* v);
 
 #define VECTOR3_CONST(x, y, z) { x, y, z };
-#define Vector2_UnitX Vector2_Create2(1.0f, 0.0f)
-#define Vector2_UnitY Vector2_Create2(0.0f, 1.0f)
-#define Vector2_Zero Vector2_Create2(0.0f, 0.0f)
-#define Vector2_One Vector2_Create2(1.0f, 1.0f)
-
-#define Vector3_UnitX Vector3_Create3(1.0f, 0.0f, 0.0f)
-#define Vector3_UnitY Vector3_Create3(0.0f, 1.0f, 0.0f)
-#define Vector3_UnitZ Vector3_Create3(0.0f, 0.0f, 1.0f)
-#define Vector3_Zero Vector3_Create3(0.0f, 0.0f, 0.0f)
-#define Vector3_One Vector3_Create3(1.0f, 1.0f, 1.0f)
-
-#define Vector3I_UnitX Vector3I_Create3(1, 0, 0)
-#define Vector3I_UnitY Vector3I_Create3(0, 1, 0)
-#define Vector3I_UnitZ Vector3I_Create3(0, 0, 1)
-#define Vector3I_Zero Vector3I_Create3(0, 0, 0)
-#define Vector3I_One Vector3I_Create3(1, 1, 1)
-#define Vector3I_MinusOne Vector3I_Create3(-1, -1, -1)
+#define VECTOR3I_CONST(x, y, z) { x, y, z };
+#define Vector3_UnitX VECTOR3_CONST(1.0f, 0.0f, 0.0f)
+#define Vector3_UnitY VECTOR3_CONST(0.0f, 1.0f, 0.0f)
+#define Vector3_UnitZ VECTOR3_CONST(0.0f, 0.0f, 1.0f)
+#define Vector3_Zero  VECTOR3_CONST(0.0f, 0.0f, 0.0f)
+#define Vector3_One   VECTOR3_CONST(1.0f, 1.0f, 1.0f)
 
 void Vector3_Add(Vector3* result, Vector3* a, Vector3* b);
 void Vector3I_Add(Vector3I* result, Vector3I* a, Vector3I* b);

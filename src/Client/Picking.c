@@ -5,6 +5,7 @@
 #include "Player.h"
 #include "World.h"
 #include "Funcs.h"
+#include "Platform.h"
 
 Real32 PickedPos_dist;
 void PickedPos_TestAxis(PickedPos* pos, Real32 dAxis, Face fAxis) {
@@ -16,11 +17,12 @@ void PickedPos_TestAxis(PickedPos* pos, Real32 dAxis, Face fAxis) {
 }
 
 void PickedPos_SetAsValid(PickedPos* pos, RayTracer* t, Vector3 intersect) {
+	Vector3I blockPos = VECTOR3I_CONST(t->X, t->Y, t->Z);
+	pos->Valid         = true;
+	pos->BlockPos      = blockPos;
+	pos->Block         = t->Block;	
+	pos->Intersect     = intersect;
 	pos->Min = t->Min; pos->Max = t->Max;
-	pos->BlockPos = Vector3I_Create3(t->X, t->Y, t->Z);
-	pos->Valid = true;
-	pos->Block = t->Block;
-	pos->Intersect = intersect;
 
 	PickedPos_dist = MATH_LARGENUM;
 	PickedPos_TestAxis(pos, intersect.X - t->Min.X, FACE_XMIN);
@@ -30,22 +32,24 @@ void PickedPos_SetAsValid(PickedPos* pos, RayTracer* t, Vector3 intersect) {
 	PickedPos_TestAxis(pos, intersect.Z - t->Min.Z, FACE_ZMIN);
 	PickedPos_TestAxis(pos, intersect.Z - t->Max.Z, FACE_ZMAX);
 
-	Vector3I offsets[FACE_COUNT];
-	offsets[FACE_XMIN] = Vector3I_Create3(-1, 0, 0);
-	offsets[FACE_XMAX] = Vector3I_Create3(+1, 0, 0);
-	offsets[FACE_ZMIN] = Vector3I_Create3(0, 0, -1);
-	offsets[FACE_ZMAX] = Vector3I_Create3(0, 0, +1);
-	offsets[FACE_YMIN] = Vector3I_Create3(0, -1, 0);
-	offsets[FACE_YMAX] = Vector3I_Create3(0, +1, 0);
-	Vector3I_Add(&pos->TranslatedPos, &pos->BlockPos, &offsets[pos->ClosestFace]);
+	switch (pos->ClosestFace) {
+	case FACE_XMIN: blockPos.X--; break;
+	case FACE_XMAX: blockPos.X++; break;
+	case FACE_ZMIN: blockPos.Z--; break;
+	case FACE_ZMAX: blockPos.Z++; break;
+	case FACE_YMIN: blockPos.Y--; break;
+	case FACE_YMAX: blockPos.Y++; break;
+	}
+	pos->TranslatedPos = blockPos;
 }
 
 void PickedPos_SetAsInvalid(PickedPos* pos) {
-	pos->Valid = false;
-	pos->BlockPos = Vector3I_MinusOne;
-	pos->TranslatedPos = Vector3I_MinusOne;
-	pos->ClosestFace = (Face)FACE_COUNT;
-	pos->Block = BLOCK_AIR;
+	Vector3I blockPos = VECTOR3I_CONST(-1, -1, -1);
+	pos->Valid         = false;
+	pos->BlockPos      = blockPos;
+	pos->Block         = BLOCK_AIR;
+	pos->ClosestFace   = (Face)FACE_COUNT;
+	pos->TranslatedPos = blockPos;
 }
 
 Real32 RayTracer_Div(Real32 a, Real32 b) {

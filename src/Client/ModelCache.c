@@ -1136,8 +1136,8 @@ void BlockModel_RecalcProperties(Entity* p) {
 	Real32 height;
 
 	if (Block_Draw[block] == DRAW_GAS) {
-		BlockModel_minBB = Vector3_Zero;
-		BlockModel_maxBB = Vector3_One;
+		Vector3 zero = Vector3_Zero; BlockModel_minBB = zero;
+		Vector3 one  = Vector3_One;  BlockModel_maxBB = one;
 		height = 1.0f;
 	} else {
 		BlockModel_minBB = Block_MinBB[block];
