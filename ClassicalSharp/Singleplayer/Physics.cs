@@ -55,10 +55,10 @@ namespace ClassicalSharp.Singleplayer {
 		public void Tick() {
 			if (!Enabled || game.World.blocks == null) return;
 			
-			//if ((tickCount % 5) == 0) {
-			liquid.TickLava();
-			liquid.TickWater();
-			//}
+			if ((tickCount % 5) == 0) {
+				liquid.TickWater();
+				liquid.TickLava();
+			}
 			tickCount++;
 			TickRandomBlocks();
 		}
