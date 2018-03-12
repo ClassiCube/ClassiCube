@@ -9,21 +9,21 @@ namespace ClassicalSharp.Selections {
 	internal class SelectionBox {
 		
 		public byte ID;
-		public Vector3I Min, Max;
+		public Vector3 Min, Max;
 		public FastColour Colour;
 		public float MinDist, MaxDist;
 		
 		public SelectionBox(Vector3I p1, Vector3I p2, FastColour col) {	
-			Min = Vector3I.Min(p1, p2);
-			Max = Vector3I.Max(p1, p2);
+			Min = (Vector3)Vector3I.Min(p1, p2);
+			Max = (Vector3)Vector3I.Max(p1, p2);
 			Colour = col;
 		}
 		
 		public void Render(double delta, VertexP3fC4b[] vertices, VertexP3fC4b[] lineVertices,
 		                  ref int index, ref int lineIndex) {
 			float offset = MinDist < 32 * 32 ? 1/32f : 1/16f;
-			Vector3 p1 = (Vector3)Min - new Vector3(offset, offset, offset);
-			Vector3 p2 = (Vector3)Max + new Vector3(offset, offset, offset);
+			Vector3 offsetV = new Vector3(offset, offset, offset);
+			Vector3 p1 = Min - offsetV, p2 = Max + offsetV;
 			int col = Colour.Pack();
 			
 			HorQuad(vertices, ref index, col, p1.X, p1.Z, p2.X, p2.Z, p1.Y); // bottom
@@ -80,14 +80,21 @@ namespace ClassicalSharp.Selections {
 	internal class SelectionBoxComparer : IComparer<SelectionBox> {
 		
 		public int Compare(SelectionBox a, SelectionBox b) {
-			// Reversed comparison order because we need to render back to front for alpha blending.
-			return a.MinDist == b.MinDist 
-				? b.MaxDist.CompareTo(a.MaxDist)
-				: b.MinDist.CompareTo(a.MinDist);
+			float aDist, bDist;
+			if (a.MinDist == b.MinDist) {
+				aDist = a.MaxDist; bDist = b.MaxDist;
+			} else {
+				aDist = a.MinDist; bDist = b.MinDist;
+			}
+
+			// Reversed comparison order result, because we need to render back to front for alpha blending
+			if (aDist < bDist) return 1;
+			if (aDist > bDist) return -1;
+			return 0;
 		}
 		
 		internal void Intersect(SelectionBox box, Vector3 origin) {
-			Vector3I min = box.Min, max = box.Max;
+			Vector3 min = box.Min, max = box.Max;
 			float closest = float.PositiveInfinity, furthest = float.NegativeInfinity;
 			// Bottom corners
 			UpdateDist(origin, min.X, min.Y, min.Z, ref closest, ref furthest);

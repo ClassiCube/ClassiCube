@@ -67,12 +67,12 @@ namespace ClassicalSharp.Selections {
 			IGraphicsApi gfx = game.Graphics;
 			gfx.SetBatchFormat(VertexFormat.P3fC4b);
 			gfx.UpdateDynamicVb_Lines(lineVb, lineVertices,
-			                    selections.Count * LineVerticesCount);
+			                          selections.Count * LineVerticesCount);
 			
 			gfx.DepthWrite = false;
 			gfx.AlphaBlending = true;
 			gfx.UpdateDynamicVb_IndexedTris(vb, vertices,
-			                           selections.Count * VerticesCount);
+			                                selections.Count * VerticesCount);
 			gfx.DepthWrite = true;
 			gfx.AlphaBlending = false;
 		}

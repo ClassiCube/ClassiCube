@@ -1048,7 +1048,7 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 
 	if (!screen->ShowingList && !showMinimal) {
 		Gfx_SetTexturing(true);
-		DrawCrosshairs();
+		HUDScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
 	}
 	if (chat->HandlesAllInput && !Game_PureClassic) {

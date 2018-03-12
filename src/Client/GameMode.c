@@ -5,6 +5,7 @@
 #include "Screens.h"
 #include "Block.h"
 #include "Event.h"
+#include "HeldBlockRenderer.h"
 
 void GameMode_Init(void) {
 	BlockID* inv = Inventory_Table;
@@ -39,7 +40,7 @@ bool GameMode_HandlesKeyDown(Key key) {
 
 bool GameMode_PickingLeft(void) {
 	/* always play delete animations, even if we aren't picking a block */
-	game.HeldBlockRenderer.ClickAnim(true);
+	HeldBlockRenderer_ClickAnim(true);
 	return false;
 }
 bool GameMode_PickingRight(void) { return false; }

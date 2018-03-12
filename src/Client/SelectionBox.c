@@ -7,20 +7,17 @@
 
 /* Data for a selection box. */
 typedef struct SelectionBox_ {
-	Vector3I Min, Max;
+	Vector3 Min, Max;
 	PackedCol Col;
 	Real32 MinDist, MaxDist;
 } SelectionBox;
 
 void SelectionBox_Render(SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4b** lineVertices) {
 	Real32 offset = box->MinDist < 32.0f * 32.0f ? (1.0f / 32.0f) : (1.0f / 16.0f);
-	Vector3 p1, p2;
-	PackedCol col = box->Col;
-
-	Vector3I_ToVector3(&p1, &box->Min);
-	Vector3I_ToVector3(&p2, &box->Max);
+	Vector3 p1 = box->Min, p2 = box->Max;
 	Vector3_Add1(&p1, &p1, -offset);
 	Vector3_Add1(&p2, &p2,  offset);
+	PackedCol col = box->Col;
 
 	SelectionBox_HorQuad(vertices, col, p1.X, p1.Z, p2.X, p2.Z, p1.Y);       /* bottom */
 	SelectionBox_HorQuad(vertices, col, p1.X, p1.Z, p2.X, p2.Z, p2.Y);       /* top */
@@ -105,7 +102,7 @@ void SelectionBox_UpdateDist(Vector3 p, Real32 x2, Real32 y2, Real32 z2, Real32*
 }
 
 void SelectionBox_Intersect(SelectionBox* box, Vector3 origin) {
-	Vector3I min = box->Min, max = box->Max;
+	Vector3 min = box->Min, max = box->Max;
 	Real32 closest = MATH_POS_INF, furthest = -MATH_POS_INF;
 	/* Bottom corners */
 	SelectionBox_UpdateDist(origin, min.X, min.Y, min.Z, &closest, &furthest);
@@ -133,8 +130,9 @@ bool selections_allocated;
 
 void Selections_Add(UInt8 id, Vector3I p1, Vector3I p2, PackedCol col) {	
 	SelectionBox sel;
-	Vector3I_Min(&sel.Min, &p1, &p2);
-	Vector3I_Max(&sel.Max, &p1, &p2);
+	Vector3I min, max;
+	Vector3I_Min(&min, &p1, &p2); Vector3I_ToVector3(&sel.Min, &min);
+	Vector3I_Max(&max, &p1, &p2); Vector3I_ToVector3(&sel.Max, &max);
 	sel.Col = col;
 
 	Selections_Remove(id);
@@ -158,12 +156,12 @@ void Selections_Remove(UInt8 id) {
 	}
 }
 
-void Selections_ContextLost(void) {
+void Selections_ContextLost(void* obj) {
 	Gfx_DeleteVb(&selections_VB);
 	Gfx_DeleteVb(&selections_LineVB);
 }
 
-void Selections_ContextRecreated(void) {
+void Selections_ContextRecreated(void* obj) {
 	if (!selections_allocated) return;
 	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
 	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
@@ -199,7 +197,7 @@ void Selections_Render(Real64 delta) {
 	Selections_QuickSort(0, selections_count - 1);
 
 	if (!selections_allocated) { /* lazy init as most servers don't use this */
-		Selections_ContextRecreated();
+		Selections_ContextRecreated(NULL);
 		selections_allocated = true;
 	}
 
@@ -231,7 +229,7 @@ void Selections_Reset(void) {
 }
 
 void Selections_Free(void) {
-	Selections_ContextLost();
+	Selections_ContextLost(NULL);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Selections_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Selections_ContextRecreated);
 }
