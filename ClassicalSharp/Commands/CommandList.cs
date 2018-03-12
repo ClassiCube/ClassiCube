@@ -84,7 +84,7 @@ namespace ClassicalSharp.Commands {
 			if (text.Length == 0) { // only / or /client
 				game.Chat.Add("&eList of client commands:");
 				PrintDefinedCommands(game);
-				game.Chat.Add("&eTo see a particular command's help, type &a/client help [cmd name]");
+				game.Chat.Add("&eTo see help for a command, type &a/client help [cmd name]");
 				return;
 			}
 			

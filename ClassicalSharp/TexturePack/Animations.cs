@@ -80,7 +80,7 @@ namespace ClassicalSharp.Textures {
 		/// 1) the target tile in the terrain atlas  2) the start location of animation frames<br/>
 		/// 3) the size of each animation frame      4) the number of animation frames<br/>
 		/// 5) the delay between advancing animation frames. </summary>
-		public void ReadAnimationsDescription(StreamReader reader) {
+		void ReadAnimationsDescription(StreamReader reader) {
 			string line;
 			while ((line = reader.ReadLine()) != null) {
 				if (line.Length == 0 || line[0] == '#') continue;
@@ -182,7 +182,7 @@ namespace ClassicalSharp.Textures {
 		
 		/// <summary> Disposes the atlas bitmap that contains animation frames, and clears
 		/// the list of defined animations. </summary>
-		public void Clear() {
+		void Clear() {
 			animations.Clear();
 			
 			if (animBmp == null) return;

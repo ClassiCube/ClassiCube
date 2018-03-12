@@ -3,10 +3,11 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 
+#define Char_MakeLower(ch) if ((ch) >= 'A' && (ch) <= 'Z') { (ch) += ' '; }
 bool Char_IsUpper(UInt8 c) { return c >= 'A' && c <= 'Z'; }
 UInt8 Char_ToLower(UInt8 c) {
-	if (!Char_IsUpper(c)) return c;
-	return (UInt8)(c + ' ');
+	Char_MakeLower(c);
+	return c;
 }
 
 String String_Init(STRING_REF UInt8* buffer, UInt16 length, UInt16 capacity) {
@@ -103,8 +104,8 @@ bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b) {
 	Int32 i;
 
 	for (i = 0; i < a->length; i++) {
-		UInt8 aCur = a->buffer[i]; if (aCur >= 'A' && aCur <= 'Z') { aCur += ' '; }
-		UInt8 bCur = b->buffer[i]; if (bCur >= 'A' && bCur <= 'Z') { bCur += ' '; }
+		UInt8 aCur = a->buffer[i]; Char_MakeLower(aCur);
+		UInt8 bCur = b->buffer[i]; Char_MakeLower(bCur);
 		if (aCur != bCur) return false;
 	}
 	return true;
@@ -228,6 +229,7 @@ void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UInt8 c) {
 	for (i = str->length; i > offset; i--) {
 		str->buffer[i] = str->buffer[i - 1];
 	}
+
 	str->buffer[offset] = c;
 	str->length++;
 }
@@ -241,6 +243,7 @@ void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset) {
 	for (i = offset; i < str->length - 1; i++) {
 		str->buffer[i] = str->buffer[i + 1];
 	}
+
 	str->buffer[str->length - 1] = NULL;
 	str->length--;
 }
@@ -264,10 +267,22 @@ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 
 bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub) {
 	if (str->length < sub->length) return false;
-
 	Int32 i;
+
 	for (i = 0; i < sub->length; i++) {
 		if (str->buffer[i] != sub->buffer[i]) return false;
+	}
+	return true;
+}
+
+bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub) {
+	if (str->length < sub->length) return false;
+	Int32 i;
+
+	for (i = 0; i < sub->length; i++) {
+		UInt8 strCur = str->buffer[i]; Char_MakeLower(strCur);
+		UInt8 subCur = sub->buffer[i]; Char_MakeLower(subCur);
+		if (strCur != subCur) return false;
 	}
 	return true;
 }
@@ -275,6 +290,7 @@ bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub) {
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 	Int32 minLen = min(a->length, b->length);
 	Int32 i;
+
 	for (i = 0; i < minLen; i++) {
 		if (a->buffer[i] == b->buffer[i]) continue;
 		return a->buffer[i] < b->buffer[i] ? 1 : -1;

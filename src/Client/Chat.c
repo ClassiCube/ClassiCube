@@ -21,8 +21,8 @@ void Chat_Send(STRING_PURE String* text) {
 	if (text->length == 0) return;
 	StringsBuffer_Add(&InputLog, text);
 
-	if (game.CommandList.IsCommandPrefix(text)) {
-		game.CommandList.Execute(text);
+	if (Commands_IsCommandPrefix(text)) {
+		Commands_Execute(text);
 	} else {
 		ServerConnection_SendChat(text);
 	}
@@ -148,4 +148,329 @@ IGameComponent Chat_MakeGameComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Reset = Chat_Reset;
 	return comp;
+}
+
+typedef struct ChatCommand_ {
+	String Name;
+	String Help[6];
+	void (*Execute)(STRING_PURE String* args, UInt32 argsCount);
+	bool SingleplayerOnly;
+} ChatCommand;
+typedef void (*ChatCommandConstructor)(ChatCommand* cmd);
+
+#define COMMANDS_PREFIX "/client"
+#define COMMANDS_PREFIX_STARTS "/client "
+bool Commands_IsCommandPrefix(STRING_PURE String* input) {
+	if (input->length == 0) return false;
+	if (ServerConnection_IsSinglePlayer && input->buffer[0] == '/')
+		return true;
+
+	String starts = String_FromConst(COMMANDS_PREFIX_STARTS);
+	String prefix = String_FromConst(COMMANDS_PREFIX);
+	return String_CaselessStarts(input, &starts)
+		|| String_CaselessEquals(input, &prefix);
+}
+
+
+void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+	if (argsCount == 1) {
+		game.Chat.Add("&eList of client commands:");
+		Commands_PrintDefined();
+		game.Chat.Add("&eTo see help for a command, type /client help [cmd name]");
+	} else {
+		ChatCommand* cmd = Commands_GetMatch(&args[1]);
+		if (cmd == NULL) return;
+
+		UInt32 i;
+		for (i = 0; i < Array_NumElements(cmd->Help); i++) {
+			String* help = &cmd->Help[i];
+			if (help->length == 0) continue;
+			Chat_Add(help);
+		}
+	}
+}
+
+void HelpCommand_Make(ChatCommand* cmd) {
+	String name  = String_FromConst("Help");                                       cmd->Name    = name;
+	String help0 = String_FromConst("&a/client help [command name]");              cmd->Help[0] = help0;
+	String help1 = String_FromConst("&eDisplays the help for the given command."); cmd->Help[1] = help1;
+	cmd->Execute = HelpCommand_Execute;
+}
+
+void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+	string[] lines = game.Graphics.ApiInfo;
+	for (int i = 0; i < lines.Length; i++) {
+		game.Chat.Add("&a" + lines[i]);
+	}
+}
+
+void GpuInfoCommand_Make(ChatCommand* cmd) {
+	String name  = String_FromConst("GpuInfo");                                cmd->Name    = name;
+	String help0 = String_FromConst("&a/client gpuinfo");                      cmd->Help[0] = help0;
+	String help1 = String_FromConst("&eDisplays information about your GPU."); cmd->Help[1] = help1;
+}
+
+void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+	if (argsCount == 1) {
+		game.Chat.Add("&e/client: &cYou didn't specify a new render type.");
+	} else if (game.SetRenderType(args[1])) {
+		game.Chat.Add("&e/client: &fRender type is now " + args[1] + ".");
+	} else {
+		game.Chat.Add("&e/client: &cUnrecognised render type &f\"" + args[1] + "\"&c.");
+	}
+}
+
+void RenderTypeCommand_Make(ChatCommand* cmd) {
+	String name  = String_FromConst("RenderType");                                                                                   cmd->Name    = name;
+	String help0 = String_FromConst("&a/client rendertype [normal/legacy/legacyfast]");                                              cmd->Help[0] = help0;
+	String help1 = String_FromConst("&bnormal: &eDefault renderer, with all environmental effects enabled.");                        cmd->Help[1] = help1;
+	String help2 = String_FromConst("&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects."); cmd->Help[2] = help2;
+	String help3 = String_FromConst("&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.");              cmd->Help[3] = help3;
+	String help4 = String_FromConst("&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.");              cmd->Help[4] = help4;
+}
+
+void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+	Int32 width, height;
+	if (argsCount < 3) {
+		game.Chat.Add("&e/client: &cYou didn't specify width and height");
+	} else if (!Convert_TryParseInt32(&args[1], &width) || !Convert_TryParseInt32(&args[2], &height)) {
+		game.Chat.Add("&e/client: &cWidth and height must be integers.");
+	} else if (width <= 0 || height <= 0) {
+		game.Chat.Add("&e/client: &cWidth and height must be above 0.");
+	} else {
+		game.window.ClientSize = new Size(width, height);
+		Options_SetInt32(OPTION_WINDOW_WIDTH,  width);
+		Options_SetInt32(OPTION_WINDOW_HEIGHT, height);
+	}
+}
+
+void ResolutionCommand_Make(ChatCommand* cmd) {
+	String name  = String_FromConst("Resolution");                                        cmd->Name    = name;
+	String help0 = String_FromConst("&a/client resolution [width] [height]");             cmd->Help[0] = help0;
+	String help1 = String_FromConst("&ePrecisely sets the size of the rendered window."); cmd->Help[1] = help1;
+}
+
+void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+	if (argsCount == 1) {
+		game.Chat.Add("&e/client model: &cYou didn't specify a model name.");
+	} else {
+		game.LocalPlayer.SetModel(Utils.ToLower(args[1]));
+	}
+}
+
+void ModelCommand_Make(ChatCommand* cmd) {
+	String name  = String_FromConst("Model");                                                            cmd->Name    = name;
+	String help0 = String_FromConst("&a/client model [name]");                                           cmd->Help[0] = help0;
+	String help1 = String_FromConst("&bnames: &echibi, chicken, creeper, human, pig, sheep");            cmd->Help[1] = help1;
+	String help2 = String_FromConst("&e       skeleton, spider, zombie, sitting, <numerical block id>"); cmd->Help[2] = help2;
+	cmd->SingleplayerOnly = true;
+}
+
+void CuboidCommand_Make(ChatCommand* cmd) {
+	String name = String_FromConst("Cuboid");
+	Help = new string[]{
+		"&a/client cuboid [block] [persist]",
+		"&eFills the 3D rectangle between two points with [block].",
+		"&eIf no block is given, uses your currently held block.",
+		"&e  If persist is given and is \"yes\", then the command",
+		"&e  will repeatedly cuboid, without needing to be typed in again.",
+	};
+	cmd->SingleplayerOnly = true;
+}
+	int block = -1;
+	Vector3I mark1, mark2;
+	bool persist = false;
+
+	void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+		game.UserEvents.BlockChanged -= BlockChanged;
+		block = -1;
+		mark1 = new Vector3I(int.MaxValue);
+		mark2 = new Vector3I(int.MaxValue);
+		persist = false;
+
+		if (!ParseBlock(args)) return;
+		if (args.Length > 2 && Utils.CaselessEquals(args[2], "yes"))
+			persist = true;
+
+		game.Chat.Add("&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3);
+		game.UserEvents.BlockChanged += BlockChanged;
+	}
+
+	bool ParseBlock(string[] args) {
+		if (args.Length == 1) return true;
+		if (Utils.CaselessEquals(args[1], "yes")) { persist = true; return true; }
+
+		int temp = -1;
+		BlockID block = 0;
+		if ((temp = BlockInfo.FindID(args[1])) != -1) {
+			block = (BlockID)temp;
+		}
+		else if (!BlockID.TryParse(args[1], out block)) {
+			game.Chat.Add("&eCuboid: &c\"" + args[1] + "\" is not a valid block name or id."); return false;
+		}
+
+		if (block >= Block.CpeCount && BlockInfo.Name[block] == "Invalid") {
+			game.Chat.Add("&eCuboid: &cThere is no block with id \"" + args[1] + "\"."); return false;
+		}
+		this.block = block;
+		return true;
+	}
+
+	void BlockChanged(object sender, BlockChangedEventArgs e) {
+		if (mark1.X == int.MaxValue) {
+			mark1 = e.Coords;
+			game.UpdateBlock(mark1.X, mark1.Y, mark1.Z, e.OldBlock);
+			game.Chat.Add("&eCuboid: &fMark 1 placed at (" + e.Coords + "), place mark 2.",
+				MessageType.ClientStatus3);
+		}
+		else {
+			mark2 = e.Coords;
+			DoCuboid();
+			game.Chat.Add(null, MessageType.ClientStatus3);
+
+			if (!persist) {
+				game.UserEvents.BlockChanged -= BlockChanged;
+			}
+			else {
+				mark1 = new Vector3I(int.MaxValue);
+				game.Chat.Add("&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3);
+			}
+		}
+	}
+
+	void DoCuboid() {
+		Vector3I min = Vector3I.Min(mark1, mark2);
+		Vector3I max = Vector3I.Max(mark1, mark2);
+		if (!game.World.IsValidPos(min) || !game.World.IsValidPos(max)) return;
+
+		BlockID toPlace = (BlockID)block;
+		if (block == -1) toPlace = game.Inventory.Selected;
+
+		for (int y = min.Y; y <= max.Y; y++)
+			for (int z = min.Z; z <= max.Z; z++)
+				for (int x = min.X; x <= max.X; x++)
+				{
+					game.UpdateBlock(x, y, z, toPlace);
+				}
+	}
+}
+
+void TeleportCommand_Make(ChatCommand* cmd) {
+	String name  = String_FromConst("TP");                                    cmd->Name    = name;
+	String help0 = String_FromConst("&a/client tp [x y z]");                  cmd->Help[0] = help0;
+	String help1 = String_FromConst("&eMoves you to the given coordinates."); cmd->Help[1] = help1;
+	cmd->SingleplayerOnly = true;
+}
+
+	void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+		if (args.Length != 4) {
+			game.Chat.Add("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
+		} else {
+			float x = 0, y = 0, z = 0;
+			if (!Utils.TryParseDecimal(args[1], out x) ||
+				!Utils.TryParseDecimal(args[2], out y) ||
+				!Utils.TryParseDecimal(args[3], out z)) {
+				game.Chat.Add("&e/client teleport: &cCoordinates must be decimals");
+				return;
+			}
+
+			Vector3 v = new Vector3(x, y, z);
+			LocationUpdate update = LocationUpdate.MakePos(v, false);
+			game.LocalPlayer.SetLocation(update, false);
+		}
+	}
+}
+}
+
+ChatCommand commands_List[10];
+UInt32 commands_Count;
+void Init() {
+	Register(new GpuInfoCommand());
+	Register(new HelpCommand());
+	Register(new RenderTypeCommand());
+	Register(new ResolutionCommand());
+	Register(new ModelCommand());
+	Register(new CuboidCommand());
+	Register(new TeleportCommand());
+}
+
+void Register(Command command) {
+	RegisteredCommands.Add(command);
+}
+
+ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
+	ChatCommand* match = NULL;
+	UInt32 i;
+	for (i = 0; i < commands_Count; i++) {
+		ChatCommand* cmd = &commands_List[i];
+		if (!String_CaselessStarts(&cmd->Name, cmdName)) continue;
+
+		if (match != NULL) {
+			game.Chat.Add("&e/client: Multiple commands found that start with: \"&f" + cmdName + "&e\".");
+			return NULL;
+		}
+		match = cmd;
+	}
+
+	if (match == NULL) {
+		game.Chat.Add("&e/client: Unrecognised command: \"&f" + cmdName + "&e\".");
+		game.Chat.Add("&e/client: Type &a/client &efor a list of commands.");
+		return NULL;
+	}
+	if (match->SingleplayerOnly && !ServerConnection_IsSinglePlayer) {
+		game.Chat.Add("&e/client: \"&f" + cmdName + "&e\" can only be used in singleplayer.");
+		return NULL;
+	}
+	return match;
+}
+
+void Commands_Execute(STRING_PURE String* input) {
+	String text = *input;
+	String prefix = String_FromConst(COMMANDS_PREFIX);
+
+	if (String_CaselessStarts(&text, &prefix)) { /* /client command args */
+		text = String_UNSAFE_SubstringAt(&text, prefix.length);
+		text = text.TrimStart(splitChar);
+	} else { /* /command args */
+		text = String_UNSAFE_SubstringAt(&text, 1);
+	}
+
+	if (text.length == 0) { /* only / or /client */
+		String m1 = String_FromConst("&eList of client commands:"); Chat_Add(&m1);
+		Commands_PrintDefined();
+		String m2 = String_FromConst("&eTo see help for a command, type &a/client help [cmd name]"); Chat_Add(&m2);
+		return;
+	}
+
+	String args[10];
+	UInt32 argsCount = Array_NumElements(args);
+	String_UNSAFE_Split(&text, ' ', args, &argsCount);
+
+	ChatCommand* cmd = Commands_GetMatch(&args[0]);
+	if (cmd == NULL) return;
+	cmd->Execute(args, argsCount);
+}
+
+void Commands_PrintDefined(void) {
+	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
+	String str = String_InitAndClearArray(strBuffer);
+	UInt32 i;
+
+	for (i = 0; i < commands_Count; i++) {
+		ChatCommand* cmd = &commands_List[i];
+		String name = cmd->Name;
+
+		if ((str.length + name.length + 2) > str.capacity) {
+			Chat_Add(&str);
+			String_Clear(&str);
+		}
+		String_Append(&str, &name);
+		String_AppendConst(&str, ", ");
+	}
+
+	if (str.length > 0) { Chat_Add(&str); }
+}
+
+void Dispose() {
+	RegisteredCommands.Clear();
 }

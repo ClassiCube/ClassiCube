@@ -30,13 +30,14 @@ namespace ClassicalSharp.Commands {
 			if (args.Length == 1) {
 				game.Chat.Add("&eList of client commands:");
 				game.CommandList.PrintDefinedCommands(game);
-				game.Chat.Add("&eTo see a particular command's help, type /client help [cmd name]");
+				game.Chat.Add("&eTo see help for a command, type /client help [cmd name]");
 			} else {
 				Command cmd = game.CommandList.GetMatch(args[1]);
 				if (cmd == null) return;
 				string[] help = cmd.Help;
-				for (int i = 0; i < help.Length; i++)
+				for (int i = 0; i < help.Length; i++) {
 					game.Chat.Add(help[i]);
+				}
 			}
 		}
 	}
@@ -53,8 +54,9 @@ namespace ClassicalSharp.Commands {
 		
 		public override void Execute(string[] args) {
 			string[] lines = game.Graphics.ApiInfo;
-			for (int i = 0; i < lines.Length; i++)
+			for (int i = 0; i < lines.Length; i++) {
 				game.Chat.Add("&a" + lines[i]);
+			}
 		}
 	}
 	

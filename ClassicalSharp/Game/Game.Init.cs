@@ -204,7 +204,7 @@ namespace ClassicalSharp {
 			ChatScale = Options.GetFloat(OptionsKey.ChatScale, 0.35f, 5f, 1f);
 			ShowFPS = Options.GetBool(OptionsKey.ShowFPS, true);
 
-			UseClassicGui = Options.GetBool(OptionsKey.UseClassicGui, true)          || ClassicMode;
+			UseClassicGui     = Options.GetBool(OptionsKey.UseClassicGui, true)      || ClassicMode;
 			UseClassicTabList = Options.GetBool(OptionsKey.UseClassicTabList, false) || ClassicMode;
 			UseClassicOptions = Options.GetBool(OptionsKey.UseClassicOptions, false) || ClassicMode;
 			
