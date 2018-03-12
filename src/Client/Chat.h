@@ -17,5 +17,5 @@ IGameComponent Chat_MakeGameComponent(void);
 void Chat_SetLogName(STRING_PURE String* name);
 void Chat_Send(STRING_PURE String* text);
 void Chat_Add(STRING_PURE String* text);
-void Chat_AddOf(STRING_PURE String* text, MessageType type);
+void Chat_AddOf(STRING_PURE String* text, Int32 messageType);
 #endif

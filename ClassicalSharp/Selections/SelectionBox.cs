@@ -13,9 +13,9 @@ namespace ClassicalSharp.Selections {
 		public FastColour Colour;
 		public float MinDist, MaxDist;
 		
-		public SelectionBox(Vector3I start, Vector3I end, FastColour col) {	
-			Min = Vector3I.Min(start, end);
-			Max = Vector3I.Max(start, end);
+		public SelectionBox(Vector3I p1, Vector3I p2, FastColour col) {	
+			Min = Vector3I.Min(p1, p2);
+			Max = Vector3I.Max(p1, p2);
 			Colour = col;
 		}
 		

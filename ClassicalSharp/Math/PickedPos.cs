@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 		public Vector3I BlockPos;
 		
 		/// <summary> Integer world coordinates of the neighbouring block that is closest to the player. </summary>
-		public Vector3I TranslatedPos { get { return BlockPos + offsets[(byte)Face]; } }
+		public Vector3I TranslatedPos;
 		
 		/// <summary> Whether this instance actually has a selected block currently. </summary>
 		public bool Valid = true;
@@ -41,11 +41,11 @@ namespace ClassicalSharp {
 		/// calculates the closest face of the selected block's position. </summary>
 		public void SetAsValid(int x, int y, int z, Vector3 min, Vector3 max,
 		                       BlockID block, Vector3 intersect) {
-			Min = min;
-			Max = max;
-			BlockPos = new Vector3I(x, y, z);
+			Vector3I pos = new Vector3I(x, y, z);
 			Valid = true;
+			BlockPos = pos;
 			Block = block;
+			Min = min; Max = max;
 			Intersect = intersect;
 			
 			float dist = float.PositiveInfinity;
@@ -55,26 +55,31 @@ namespace ClassicalSharp {
 			TestAxis(intersect.Y - Max.Y, ref dist, BlockFace.YMax);
 			TestAxis(intersect.Z - Min.Z, ref dist, BlockFace.ZMin);
 			TestAxis(intersect.Z - Max.Z, ref dist, BlockFace.ZMax);
+			
+			switch (Face) {
+				case BlockFace.XMin: pos.X--; break;
+				case BlockFace.XMax: pos.X++; break;
+				case BlockFace.YMin: pos.Y--; break;
+				case BlockFace.YMax: pos.Y++; break;
+				case BlockFace.ZMin: pos.Z--; break;
+				case BlockFace.ZMax: pos.Z++; break;
+			}
+			TranslatedPos = pos;
 		}
 		
 		/// <summary> Mark this as not having a selected block. </summary>
 		public void SetAsInvalid() {
 			Valid = false;
 			BlockPos = Vector3I.MinusOne;
-			Face = (BlockFace)6;
 			Block = 0;
+			TranslatedPos = Vector3I.MinusOne;
+			Face = (BlockFace)6;
 		}
 		
 		void TestAxis(float dAxis, ref float dist, BlockFace fAxis) {
 			dAxis = Math.Abs(dAxis);
-			if (dAxis >= dist) return;			
+			if (dAxis >= dist) return;
 			dist = dAxis; Face = fAxis;
 		}
-		
-		static Vector3I[] offsets = new Vector3I[] {
-		    Vector3I.UnitX, -Vector3I.UnitX, Vector3I.UnitY, 
-		    -Vector3I.UnitY, Vector3I.UnitZ, -Vector3I.UnitZ,
-		    Vector3I.Zero,
-		};
 	}
 }

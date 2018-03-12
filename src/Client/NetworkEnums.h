@@ -55,8 +55,7 @@ typedef UInt8 Opcode;
 #define Opcode_CPE_SET_INVENTORY_ORDER        44
 
 
-/* Chat message types.*/
-typedef UInt8 MessageType;
+/* === Chat message types === */
 /* CPE message types */
 
 #define MESSAGE_TYPE_NORMAL         0

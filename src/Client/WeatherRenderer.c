@@ -185,9 +185,9 @@ void WeatherRenderer_FileChanged(void* obj, Stream* stream) {
 	String snow = String_FromConst("snow.png");
 	String rain = String_FromConst("rain.png");
 
-	if (String_Equals(&stream->Name, &snow)) {
+	if (String_CaselessEquals(&stream->Name, &snow)) {
 		Game_UpdateTexture(&weather_snowTex, stream, false);
-	} else if (String_Equals(&stream->Name, &rain)) {
+	} else if (String_CaselessEquals(&stream->Name, &rain)) {
 		Game_UpdateTexture(&weather_rainTex, stream, false);
 	}
 }

@@ -399,7 +399,8 @@ void Physics_PlaceSponge(Int32 index, BlockID block) {
 	for (yy = y - 2; yy <= y + 2; yy++) {
 		for (zz = z - 2; zz <= z + 2; zz++) {
 			for (xx = x - 2; xx <= x + 2; xx++) {
-				block = World_SafeGetBlock(xx, yy, zz);
+				if (!World_IsValidPos(xx, yy, zz)) continue;
+				block = World_GetBlock(xx, yy, zz);
 				if (block == BLOCK_WATER || block == BLOCK_STILL_WATER) {
 					Game_UpdateBlock(xx, yy, zz, BLOCK_AIR);
 				}

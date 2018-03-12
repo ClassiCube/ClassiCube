@@ -27,9 +27,9 @@ void SkyboxRenderer_FileChanged(void* obj, Stream* src) {
 	String skybox = String_FromConst("skybox.png");
 	String useclouds = String_FromConst("useclouds");
 
-	if (String_Equals(&src->Name, &skybox)) {
+	if (String_CaselessEquals(&src->Name, &skybox)) {
 		Game_UpdateTexture(&skybox_tex, src, false);
-	} else if (String_Equals(&src->Name, &useclouds)) {
+	} else if (String_CaselessEquals(&src->Name, &useclouds)) {
 		WorldEnv_SkyboxClouds = true;
 	}
 }

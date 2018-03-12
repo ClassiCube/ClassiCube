@@ -34,7 +34,6 @@ BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z);
 #define World_SetBlock_3I(p, blockId) World_Blocks[World_Pack(p.X, p.Y, p.Z)] = blockId
 #define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]
 #define World_GetBlock_3I(p) World_Blocks[World_Pack(p.X, p.Y, p.Z)]
-BlockID World_SafeGetBlock(Int32 x, Int32 y, Int32 z);
 BlockID World_SafeGetBlock_3I(Vector3I p);
 
 bool World_IsValidPos(Int32 x, Int32 y, Int32 z);

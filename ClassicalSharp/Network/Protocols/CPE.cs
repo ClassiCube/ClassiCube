@@ -151,22 +151,22 @@ namespace ClassicalSharp.Network.Protocols {
 		void HandleMakeSelection() {
 			byte selectionId = reader.ReadUInt8();
 			string label = reader.ReadString();
-			Vector3I start, end;
 			
-			start.X = reader.ReadInt16();
-			start.Y = reader.ReadInt16();
-			start.Z = reader.ReadInt16();
+			Vector3I p1;			
+			p1.X = reader.ReadInt16();
+			p1.Y = reader.ReadInt16();
+			p1.Z = reader.ReadInt16();
 			
-			end.X = reader.ReadInt16();
-			end.Y = reader.ReadInt16();
-			end.Z = reader.ReadInt16();
+			Vector3I p2;
+			p2.X = reader.ReadInt16();
+			p2.Y = reader.ReadInt16();
+			p2.Z = reader.ReadInt16();
 			
 			byte r = (byte)reader.ReadInt16();
 			byte g = (byte)reader.ReadInt16();
 			byte b = (byte)reader.ReadInt16();
 			byte a = (byte)reader.ReadInt16();
 			
-			Vector3I p1 = Vector3I.Min(start, end), p2 = Vector3I.Max(start, end);
 			FastColour col = new FastColour(r, g, b, a);
 			game.SelectionManager.AddSelection(selectionId, p1, p2, col);
 		}

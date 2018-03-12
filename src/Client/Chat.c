@@ -5,6 +5,12 @@
 #include "Game.h"
 #include "ErrorHandler.h"
 #include "ServerConnection.h"
+#include "World.h"
+#include "Inventory.h"
+#include "Player.h"
+#include "Window.h"
+#include "GraphicsAPI.h"
+#include "Funcs.h"
 
 void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 	String dst = String_InitAndClearArray(line->Buffer);
@@ -16,17 +22,6 @@ UInt8 Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
 String Chat_LogName = String_FromEmptyArray(Chat_LogNameBuffer);
 Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
-
-void Chat_Send(STRING_PURE String* text) {
-	if (text->length == 0) return;
-	StringsBuffer_Add(&InputLog, text);
-
-	if (Commands_IsCommandPrefix(text)) {
-		Commands_Execute(text);
-	} else {
-		ServerConnection_SendChat(text);
-	}
-}
 
 void Chat_CloseLog(void) {
 	if (Chat_LogStream.Data == NULL) return;
@@ -123,32 +118,22 @@ void Chat_AppendLog(STRING_PURE String* text) {
 }
 
 void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MESSAGE_TYPE_NORMAL); }
-void Chat_AddOf(STRING_PURE String* text, MessageType type) {
-	if (type == MESSAGE_TYPE_NORMAL) {
+void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
+	if (msgType == MESSAGE_TYPE_NORMAL) {
 		StringsBuffer_Add(&ChatLog, text);
 		Chat_AppendLog(text);
-	} else if (type >= MESSAGE_TYPE_STATUS_1 && type <= MESSAGE_TYPE_STATUS_3) {
-		ChatLine_Make(&Chat_Status[type - MESSAGE_TYPE_STATUS_1], text);
-	} else if (type >= MESSAGE_TYPE_BOTTOMRIGHT_1 && type <= MESSAGE_TYPE_BOTTOMRIGHT_3) {
-		ChatLine_Make(&Chat_BottomRight[type - MESSAGE_TYPE_BOTTOMRIGHT_1], text);
-	} else if (type == MESSAGE_TYPE_ANNOUNCEMENT) {
+	} else if (msgType >= MESSAGE_TYPE_STATUS_1 && msgType <= MESSAGE_TYPE_STATUS_3) {
+		ChatLine_Make(&Chat_Status[msgType - MESSAGE_TYPE_STATUS_1], text);
+	} else if (msgType >= MESSAGE_TYPE_BOTTOMRIGHT_1 && msgType <= MESSAGE_TYPE_BOTTOMRIGHT_3) {
+		ChatLine_Make(&Chat_BottomRight[msgType - MESSAGE_TYPE_BOTTOMRIGHT_1], text);
+	} else if (msgType == MESSAGE_TYPE_ANNOUNCEMENT) {
 		ChatLine_Make(&Chat_Announcement, text);
-	} else if (type >= MESSAGE_TYPE_CLIENTSTATUS_1 && type <= MESSAGE_TYPE_CLIENTSTATUS_3) {
-		ChatLine_Make(&Chat_ClientStatus[type - MESSAGE_TYPE_CLIENTSTATUS_1], text);
+	} else if (msgType >= MESSAGE_TYPE_CLIENTSTATUS_1 && msgType <= MESSAGE_TYPE_CLIENTSTATUS_3) {
+		ChatLine_Make(&Chat_ClientStatus[msgType - MESSAGE_TYPE_CLIENTSTATUS_1], text);
 	}
-	Event_RaiseChat(&ChatEvents_ChatReceived, text, type);
+	Event_RaiseChat(&ChatEvents_ChatReceived, text, msgType);
 }
 
-void Chat_Reset(void) {
-	Chat_CloseLog();
-	String_Clear(&Chat_LogName);
-}
-
-IGameComponent Chat_MakeGameComponent(void) {
-	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Reset = Chat_Reset;
-	return comp;
-}
 
 typedef struct ChatCommand_ {
 	String Name;
@@ -159,24 +144,124 @@ typedef struct ChatCommand_ {
 typedef void (*ChatCommandConstructor)(ChatCommand* cmd);
 
 #define COMMANDS_PREFIX "/client"
-#define COMMANDS_PREFIX_STARTS "/client "
+#define COMMANDS_PREFIX_SPACE "/client "
+#define Chat_AddRaw(str, raw) String str = String_FromConst(raw); Chat_Add(&str);
+
+ChatCommand commands_list[8];
+UInt32 commands_count;
+
 bool Commands_IsCommandPrefix(STRING_PURE String* input) {
 	if (input->length == 0) return false;
 	if (ServerConnection_IsSinglePlayer && input->buffer[0] == '/')
 		return true;
 
-	String starts = String_FromConst(COMMANDS_PREFIX_STARTS);
-	String prefix = String_FromConst(COMMANDS_PREFIX);
-	return String_CaselessStarts(input, &starts)
+	String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
+	String prefix      = String_FromConst(COMMANDS_PREFIX);
+	return String_CaselessStarts(input, &prefixSpace)
 		|| String_CaselessEquals(input, &prefix);
+}
+
+void Commands_Register(ChatCommandConstructor constructor) {
+	if (commands_count == Array_NumElements(commands_list)) {
+		ErrorHandler_Fail("Commands_Register - hit max client commands");
+	}
+
+	ChatCommand command;
+	Platform_MemSet(&command, 0, sizeof(ChatCommand));
+	constructor(&command);
+	commands_list[commands_count++] = command;
+}
+
+void Commands_Log(const UInt8* raw1, String* str2, const UInt8* raw3) {
+	UInt8 strBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String str = String_InitAndClearArray(strBuffer);
+	String_AppendConst(&str, raw1);
+	String_AppendString(&str, str2);
+	String_AppendConst(&str, raw3);
+	Chat_Add(&str);
+}
+
+ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
+	ChatCommand* match = NULL;
+	UInt32 i;
+	for (i = 0; i < commands_count; i++) {
+		ChatCommand* cmd = &commands_list[i];
+		if (!String_CaselessStarts(&cmd->Name, cmdName)) continue;
+
+		if (match != NULL) {
+			Commands_Log("&e/client: Multiple commands found that start with: \"&f", cmdName, "&e\".");
+			return NULL;
+		}
+		match = cmd;
+	}
+
+	if (match == NULL) {
+		Commands_Log("&e/client: Unrecognised command: \"&f", cmdName, "&e\".");
+		Chat_AddRaw(tmp, "&e/client: Type &a/client &efor a list of commands.");
+		return NULL;
+	}
+	if (match->SingleplayerOnly && !ServerConnection_IsSinglePlayer) {
+		Commands_Log("&e/client: \"&f", cmdName, "&e\" can only be used in singleplayer.");
+		return NULL;
+	}
+	return match;
+}
+
+void Commands_PrintDefined(void) {
+	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
+	String str = String_InitAndClearArray(strBuffer);
+	UInt32 i;
+
+	for (i = 0; i < commands_count; i++) {
+		ChatCommand* cmd = &commands_list[i];
+		String name = cmd->Name;
+
+		if ((str.length + name.length + 2) > str.capacity) {
+			Chat_Add(&str);
+			String_Clear(&str);
+		}
+		String_AppendString(&str, &name);
+		String_AppendConst(&str, ", ");
+	}
+
+	if (str.length > 0) { Chat_Add(&str); }
+}
+
+void Commands_Execute(STRING_PURE String* input) {
+	String text        = *input;
+	String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
+	String prefix      = String_FromConst(COMMANDS_PREFIX);
+
+	if (String_CaselessStarts(&text, &prefixSpace)) { /* /clientcommand args */
+		text = String_UNSAFE_SubstringAt(&text, prefixSpace.length);
+	} else if (String_CaselessStarts(&text, &prefix)) { /* /client command args */
+		text = String_UNSAFE_SubstringAt(&text, prefix.length);
+	} else { /* /command args */
+		text = String_UNSAFE_SubstringAt(&text, 1);
+	}
+
+	if (text.length == 0) { /* only / or /client */
+		Chat_AddRaw(tmp1, "&eList of client commands:");
+		Commands_PrintDefined();
+		Chat_AddRaw(tmp2, "&eTo see help for a command, type &a/client help [cmd name]");
+		return;
+	}
+
+	String args[10];
+	UInt32 argsCount = Array_NumElements(args);
+	String_UNSAFE_Split(&text, ' ', args, &argsCount);
+
+	ChatCommand* cmd = Commands_GetMatch(&args[0]);
+	if (cmd == NULL) return;
+	cmd->Execute(args, argsCount);
 }
 
 
 void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
-		game.Chat.Add("&eList of client commands:");
+		Chat_AddRaw(tmp1, "&eList of client commands:");
 		Commands_PrintDefined();
-		game.Chat.Add("&eTo see help for a command, type /client help [cmd name]");
+		Chat_AddRaw(tmp2, "&eTo see help for a command, type /client help [cmd name]");
 	} else {
 		ChatCommand* cmd = Commands_GetMatch(&args[1]);
 		if (cmd == NULL) return;
@@ -198,9 +283,15 @@ void HelpCommand_Make(ChatCommand* cmd) {
 }
 
 void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
-	string[] lines = game.Graphics.ApiInfo;
-	for (int i = 0; i < lines.Length; i++) {
-		game.Chat.Add("&a" + lines[i]);
+	UInt32 i;
+	for (i = 0; i < Array_NumElements(Gfx_ApiInfo); i++) {
+		if (Gfx_ApiInfo[i].length == 0) continue;
+		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+		String msg = String_InitAndClearArray(msgBuffer);
+
+		String_AppendConst(&msg, "&a");
+		String_AppendString(&msg, &Gfx_ApiInfo[i]);
+		Chat_Add(&msg);
 	}
 }
 
@@ -208,38 +299,40 @@ void GpuInfoCommand_Make(ChatCommand* cmd) {
 	String name  = String_FromConst("GpuInfo");                                cmd->Name    = name;
 	String help0 = String_FromConst("&a/client gpuinfo");                      cmd->Help[0] = help0;
 	String help1 = String_FromConst("&eDisplays information about your GPU."); cmd->Help[1] = help1;
+	cmd->Execute = GpuInfoCommand_Execute;
 }
 
 void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
-		game.Chat.Add("&e/client: &cYou didn't specify a new render type.");
-	} else if (game.SetRenderType(args[1])) {
-		game.Chat.Add("&e/client: &fRender type is now " + args[1] + ".");
+		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify a new render type.");
+	} else if (Game_SetRenderType(&args[1])) {
+		Commands_Log("&e/client: &fRender type is now ", &args[1], ".");
 	} else {
-		game.Chat.Add("&e/client: &cUnrecognised render type &f\"" + args[1] + "\"&c.");
+		Commands_Log("&e/client: &cUnrecognised render type &f\"", &args[1], "\"&c.");
 	}
 }
 
 void RenderTypeCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("RenderType");                                                                                   cmd->Name    = name;
+	String name  = String_FromConst("RenderType");                                                                                   cmd->Name = name;
 	String help0 = String_FromConst("&a/client rendertype [normal/legacy/legacyfast]");                                              cmd->Help[0] = help0;
 	String help1 = String_FromConst("&bnormal: &eDefault renderer, with all environmental effects enabled.");                        cmd->Help[1] = help1;
 	String help2 = String_FromConst("&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects."); cmd->Help[2] = help2;
 	String help3 = String_FromConst("&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.");              cmd->Help[3] = help3;
 	String help4 = String_FromConst("&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.");              cmd->Help[4] = help4;
+	cmd->Execute = RenderTypeCommand_Execute;
 }
 
 void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	Int32 width, height;
 	if (argsCount < 3) {
-		game.Chat.Add("&e/client: &cYou didn't specify width and height");
+		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify width and height");
 	} else if (!Convert_TryParseInt32(&args[1], &width) || !Convert_TryParseInt32(&args[2], &height)) {
-		game.Chat.Add("&e/client: &cWidth and height must be integers.");
+		Chat_AddRaw(tmp, "&e/client: &cWidth and height must be integers.");
 	} else if (width <= 0 || height <= 0) {
-		game.Chat.Add("&e/client: &cWidth and height must be above 0.");
+		Chat_AddRaw(tmp, "&e/client: &cWidth and height must be above 0.");
 	} else {
-		game.window.ClientSize = new Size(width, height);
-		Options_SetInt32(OPTION_WINDOW_WIDTH,  width);
+		Window_SetClientSize(Size2D_Make(width, height));
+		Options_SetInt32(OPTION_WINDOW_WIDTH, width);
 		Options_SetInt32(OPTION_WINDOW_HEIGHT, height);
 	}
 }
@@ -248,13 +341,18 @@ void ResolutionCommand_Make(ChatCommand* cmd) {
 	String name  = String_FromConst("Resolution");                                        cmd->Name    = name;
 	String help0 = String_FromConst("&a/client resolution [width] [height]");             cmd->Help[0] = help0;
 	String help1 = String_FromConst("&ePrecisely sets the size of the rendered window."); cmd->Help[1] = help1;
+	cmd->Execute = ResolutionCommand_Execute;
 }
 
 void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
-		game.Chat.Add("&e/client model: &cYou didn't specify a model name.");
+		Chat_AddRaw(tmp, "&e/client model: &cYou didn't specify a model name.");
 	} else {
-		game.LocalPlayer.SetModel(Utils.ToLower(args[1]));
+		UInt8 modelBuffer[String_BufferSize(STRING_SIZE)];
+		String model = String_InitAndClearArray(modelBuffer);
+		String_AppendString(&model, &args[1]);
+		String_MakeLowercase(&model);
+		Entity_SetModel(&LocalPlayer_Instance.Base.Base, &model);
 	}
 }
 
@@ -264,213 +362,176 @@ void ModelCommand_Make(ChatCommand* cmd) {
 	String help1 = String_FromConst("&bnames: &echibi, chicken, creeper, human, pig, sheep");            cmd->Help[1] = help1;
 	String help2 = String_FromConst("&e       skeleton, spider, zombie, sitting, <numerical block id>"); cmd->Help[2] = help2;
 	cmd->SingleplayerOnly = true;
+	cmd->Execute = ModelCommand_Execute;
+}
+
+Int32 cuboid_block = -1;
+Vector3I cuboid_mark1, cuboid_mark2;
+bool cuboid_persist = false;
+
+bool CuboidCommand_ParseBlock(STRING_PURE String* args, UInt32 argsCount) {
+	if (argsCount == 1) return true;
+	String yes = String_FromConst("yes");
+	if (String_CaselessEquals(&args[1], &yes)) { cuboid_persist = true; return true; }
+
+	Int32 temp = Block_FindID(&args[1]);
+	BlockID block = 0;
+
+	if (temp != -1) {
+		block = (BlockID)temp;
+	} else {
+		#if USE16_BIT
+		if (!Convert_TryParseUInt16(&args[1], &block)) {
+		#else
+		if (!Convert_TryParseUInt8(&args[1], &block)) {
+		#endif		
+			Commands_Log("&eCuboid: &c\"", &args[1], "\" is not a valid block name or id."); return false;
+		}
+	}
+
+	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
+		Commands_Log("&eCuboid: &cThere is no block with id \"", &args[1], "\"."); return false;
+	}
+
+	cuboid_block = block;
+	return true;
+}
+
+void CuboidCommand_DoCuboid(void) {
+	Vector3I min, max;
+	Vector3I_Min(&min, &cuboid_mark1, &cuboid_mark2);
+	Vector3I_Max(&max, &cuboid_mark1, &cuboid_mark2);
+	if (!World_IsValidPos_3I(min) || !World_IsValidPos_3I(max)) return;
+
+	BlockID toPlace = (BlockID)cuboid_block;
+	if (cuboid_block == -1) toPlace = Inventory_SelectedBlock;
+
+	for (Int32 y = min.Y; y <= max.Y; y++) {
+		for (Int32 z = min.Z; z <= max.Z; z++) {
+			for (Int32 x = min.X; x <= max.X; x++) {
+				Game_UpdateBlock(x, y, z, toPlace);
+			}
+		}
+	}
+}
+
+void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+	if (cuboid_mark1.X == Int32_MaxValue) {
+		cuboid_mark1 = coords;
+		Game_UpdateBlock(coords.X, coords.Y, coords.Z, oldBlock);
+		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+		String msg = String_InitAndClearArray(msgBuffer);
+
+		String_AppendConst(&msg, "&eCuboid: &fMark 1 placed at (");
+		String_AppendInt32(&msg, coords.X); String_AppendConst(&msg, ", ");
+		String_AppendInt32(&msg, coords.Y); String_AppendConst(&msg, ", ");
+		String_AppendInt32(&msg, coords.Z);
+		String_AppendConst(&msg, "), place mark 2.");
+		Chat_AddOf(&msg, MESSAGE_TYPE_CLIENTSTATUS_3);
+	} else {
+		cuboid_mark2 = coords;
+		CuboidCommand_DoCuboid();
+		String empty = String_MakeNull(); Chat_AddOf(&empty, MESSAGE_TYPE_CLIENTSTATUS_3);
+
+		if (!cuboid_persist) {
+			Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+		} else {
+			cuboid_mark1 = Vector3I_Create1(Int32_MaxValue);
+			String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
+			Chat_AddOf(&msg, MESSAGE_TYPE_CLIENTSTATUS_3);
+		}
+	}
+}
+
+void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+	Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+	cuboid_block = -1;
+	cuboid_mark1 = Vector3I_Create1(Int32_MaxValue);
+	cuboid_mark2 = Vector3I_Create1(Int32_MaxValue);
+	cuboid_persist = false;
+
+	if (!CuboidCommand_ParseBlock(args, argsCount)) return;
+	String yes = String_FromConst("yes");
+	if (argsCount > 2 && String_CaselessEquals(&args[2], &yes)) {
+		cuboid_persist = true;
+	}
+
+	String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
+	Chat_AddOf(&msg, MESSAGE_TYPE_CLIENTSTATUS_3);
+	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 }
 
 void CuboidCommand_Make(ChatCommand* cmd) {
-	String name = String_FromConst("Cuboid");
-	Help = new string[]{
-		"&a/client cuboid [block] [persist]",
-		"&eFills the 3D rectangle between two points with [block].",
-		"&eIf no block is given, uses your currently held block.",
-		"&e  If persist is given and is \"yes\", then the command",
-		"&e  will repeatedly cuboid, without needing to be typed in again.",
-	};
+	String name  = String_FromConst("Cuboid");                                                            cmd->Name    = name;
+	String help0 = String_FromConst("&a/client cuboid [block] [persist]");                                cmd->Help[0] = help0;
+	String help1 = String_FromConst("&eFills the 3D rectangle between two points with [block].");         cmd->Help[1] = help1;
+	String help2 = String_FromConst("&eIf no block is given, uses your currently held block.");           cmd->Help[2] = help2;
+	String help3 = String_FromConst("&e  If persist is given and is \"yes\", then the command");          cmd->Help[3] = help3;
+	String help4 = String_FromConst("&e  will repeatedly cuboid, without needing to be typed in again."); cmd->Help[4] = help4;
 	cmd->SingleplayerOnly = true;
+	cmd->Execute = CuboidCommand_Execute;
 }
-	int block = -1;
-	Vector3I mark1, mark2;
-	bool persist = false;
 
-	void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
-		game.UserEvents.BlockChanged -= BlockChanged;
-		block = -1;
-		mark1 = new Vector3I(int.MaxValue);
-		mark2 = new Vector3I(int.MaxValue);
-		persist = false;
-
-		if (!ParseBlock(args)) return;
-		if (args.Length > 2 && Utils.CaselessEquals(args[2], "yes"))
-			persist = true;
-
-		game.Chat.Add("&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3);
-		game.UserEvents.BlockChanged += BlockChanged;
-	}
-
-	bool ParseBlock(string[] args) {
-		if (args.Length == 1) return true;
-		if (Utils.CaselessEquals(args[1], "yes")) { persist = true; return true; }
-
-		int temp = -1;
-		BlockID block = 0;
-		if ((temp = BlockInfo.FindID(args[1])) != -1) {
-			block = (BlockID)temp;
-		}
-		else if (!BlockID.TryParse(args[1], out block)) {
-			game.Chat.Add("&eCuboid: &c\"" + args[1] + "\" is not a valid block name or id."); return false;
+void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+	if (argsCount != 4) {
+		Chat_AddRaw(tmp, "&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
+	} else {
+		Real32 x, y, z;
+		if (!Convert_TryParseReal32(&args[1], &x) || !Convert_TryParseReal32(&args[2], &y) || !Convert_TryParseReal32(&args[3], &z)) {
+			Chat_AddRaw(tmp, "&e/client teleport: &cCoordinates must be decimals");
+			return;
 		}
 
-		if (block >= Block.CpeCount && BlockInfo.Name[block] == "Invalid") {
-			game.Chat.Add("&eCuboid: &cThere is no block with id \"" + args[1] + "\"."); return false;
-		}
-		this.block = block;
-		return true;
-	}
-
-	void BlockChanged(object sender, BlockChangedEventArgs e) {
-		if (mark1.X == int.MaxValue) {
-			mark1 = e.Coords;
-			game.UpdateBlock(mark1.X, mark1.Y, mark1.Z, e.OldBlock);
-			game.Chat.Add("&eCuboid: &fMark 1 placed at (" + e.Coords + "), place mark 2.",
-				MessageType.ClientStatus3);
-		}
-		else {
-			mark2 = e.Coords;
-			DoCuboid();
-			game.Chat.Add(null, MessageType.ClientStatus3);
-
-			if (!persist) {
-				game.UserEvents.BlockChanged -= BlockChanged;
-			}
-			else {
-				mark1 = new Vector3I(int.MaxValue);
-				game.Chat.Add("&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus3);
-			}
-		}
-	}
-
-	void DoCuboid() {
-		Vector3I min = Vector3I.Min(mark1, mark2);
-		Vector3I max = Vector3I.Max(mark1, mark2);
-		if (!game.World.IsValidPos(min) || !game.World.IsValidPos(max)) return;
-
-		BlockID toPlace = (BlockID)block;
-		if (block == -1) toPlace = game.Inventory.Selected;
-
-		for (int y = min.Y; y <= max.Y; y++)
-			for (int z = min.Z; z <= max.Z; z++)
-				for (int x = min.X; x <= max.X; x++)
-				{
-					game.UpdateBlock(x, y, z, toPlace);
-				}
+		Vector3 v = VECTOR3_CONST(x, y, z);
+		LocationUpdate update; LocationUpdate_MakePos(&update, v, false);
+		Entity* entity = &LocalPlayer_Instance.Base.Base;
+		entity->VTABLE->SetLocation(entity, &update, false);
 	}
 }
 
 void TeleportCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("TP");                                    cmd->Name    = name;
+	String name  = String_FromConst("TP");                                    cmd->Name = name;
 	String help0 = String_FromConst("&a/client tp [x y z]");                  cmd->Help[0] = help0;
 	String help1 = String_FromConst("&eMoves you to the given coordinates."); cmd->Help[1] = help1;
 	cmd->SingleplayerOnly = true;
+	cmd->Execute = TeleportCommand_Execute;
 }
 
-	void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
-		if (args.Length != 4) {
-			game.Chat.Add("&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
-		} else {
-			float x = 0, y = 0, z = 0;
-			if (!Utils.TryParseDecimal(args[1], out x) ||
-				!Utils.TryParseDecimal(args[2], out y) ||
-				!Utils.TryParseDecimal(args[3], out z)) {
-				game.Chat.Add("&e/client teleport: &cCoordinates must be decimals");
-				return;
-			}
 
-			Vector3 v = new Vector3(x, y, z);
-			LocationUpdate update = LocationUpdate.MakePos(v, false);
-			game.LocalPlayer.SetLocation(update, false);
-		}
+void Chat_Send(STRING_PURE String* text) {
+	if (text->length == 0) return;
+	StringsBuffer_Add(&InputLog, text);
+
+	if (Commands_IsCommandPrefix(text)) {
+		Commands_Execute(text);
+	} else {
+		ServerConnection_SendChat(text);
 	}
 }
+
+void Commands_Init(void) {
+	Commands_Register(GpuInfoCommand_Make);
+	Commands_Register(HelpCommand_Make);
+	Commands_Register(RenderTypeCommand_Make);
+	Commands_Register(ResolutionCommand_Make);
+	Commands_Register(ModelCommand_Make);
+	Commands_Register(CuboidCommand_Make);
+	Commands_Register(TeleportCommand_Make);
 }
 
-ChatCommand commands_List[10];
-UInt32 commands_Count;
-void Init() {
-	Register(new GpuInfoCommand());
-	Register(new HelpCommand());
-	Register(new RenderTypeCommand());
-	Register(new ResolutionCommand());
-	Register(new ModelCommand());
-	Register(new CuboidCommand());
-	Register(new TeleportCommand());
+void Chat_Reset(void) {
+	Chat_CloseLog();
+	String_Clear(&Chat_LogName);
 }
 
-void Register(Command command) {
-	RegisteredCommands.Add(command);
+void Commands_Free(void) {
+	commands_count = 0;
 }
 
-ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
-	ChatCommand* match = NULL;
-	UInt32 i;
-	for (i = 0; i < commands_Count; i++) {
-		ChatCommand* cmd = &commands_List[i];
-		if (!String_CaselessStarts(&cmd->Name, cmdName)) continue;
-
-		if (match != NULL) {
-			game.Chat.Add("&e/client: Multiple commands found that start with: \"&f" + cmdName + "&e\".");
-			return NULL;
-		}
-		match = cmd;
-	}
-
-	if (match == NULL) {
-		game.Chat.Add("&e/client: Unrecognised command: \"&f" + cmdName + "&e\".");
-		game.Chat.Add("&e/client: Type &a/client &efor a list of commands.");
-		return NULL;
-	}
-	if (match->SingleplayerOnly && !ServerConnection_IsSinglePlayer) {
-		game.Chat.Add("&e/client: \"&f" + cmdName + "&e\" can only be used in singleplayer.");
-		return NULL;
-	}
-	return match;
-}
-
-void Commands_Execute(STRING_PURE String* input) {
-	String text = *input;
-	String prefix = String_FromConst(COMMANDS_PREFIX);
-
-	if (String_CaselessStarts(&text, &prefix)) { /* /client command args */
-		text = String_UNSAFE_SubstringAt(&text, prefix.length);
-		text = text.TrimStart(splitChar);
-	} else { /* /command args */
-		text = String_UNSAFE_SubstringAt(&text, 1);
-	}
-
-	if (text.length == 0) { /* only / or /client */
-		String m1 = String_FromConst("&eList of client commands:"); Chat_Add(&m1);
-		Commands_PrintDefined();
-		String m2 = String_FromConst("&eTo see help for a command, type &a/client help [cmd name]"); Chat_Add(&m2);
-		return;
-	}
-
-	String args[10];
-	UInt32 argsCount = Array_NumElements(args);
-	String_UNSAFE_Split(&text, ' ', args, &argsCount);
-
-	ChatCommand* cmd = Commands_GetMatch(&args[0]);
-	if (cmd == NULL) return;
-	cmd->Execute(args, argsCount);
-}
-
-void Commands_PrintDefined(void) {
-	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
-	String str = String_InitAndClearArray(strBuffer);
-	UInt32 i;
-
-	for (i = 0; i < commands_Count; i++) {
-		ChatCommand* cmd = &commands_List[i];
-		String name = cmd->Name;
-
-		if ((str.length + name.length + 2) > str.capacity) {
-			Chat_Add(&str);
-			String_Clear(&str);
-		}
-		String_Append(&str, &name);
-		String_AppendConst(&str, ", ");
-	}
-
-	if (str.length > 0) { Chat_Add(&str); }
-}
-
-void Dispose() {
-	RegisteredCommands.Clear();
+IGameComponent Chat_MakeGameComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init = Commands_Init;
+	comp.Reset = Chat_Reset;
+	comp.Free = Commands_Free;
+	return comp;
 }

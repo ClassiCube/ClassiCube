@@ -163,9 +163,12 @@ namespace ClassicalSharp.Singleplayer {
 				for (int zz = z - 2; zz <= z + 2; zz++)
 					for (int xx = x - 2; xx <= x + 2; xx++)
 			{
-				block = map.SafeGetBlock(xx, yy, zz);
-				if (block == Block.Water || block == Block.StillWater)
+				if (!map.IsValidPos(xx, yy, zz)) continue;
+				
+				block = map.blocks[xx + width * (zz + yy * length)];
+				if (block == Block.Water || block == Block.StillWater) {
 					game.UpdateBlock(xx, yy, zz, Block.Air);
+				}
 			}
 		}
 		
@@ -184,8 +187,9 @@ namespace ClassicalSharp.Singleplayer {
 					
 					index = xx + width * (zz + yy * length);
 					block = map.blocks[index];
-					if (block == Block.Water || block == Block.StillWater)
+					if (block == Block.Water || block == Block.StillWater) {
 						Water.Enqueue((1u << tickShift) | (uint)index);
+					}
 				}
 			}
 		}

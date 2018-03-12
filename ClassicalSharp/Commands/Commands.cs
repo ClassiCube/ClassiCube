@@ -168,15 +168,16 @@ namespace ClassicalSharp.Commands {
 			if (args.Length == 1) return true;
 			if (Utils.CaselessEquals(args[1], "yes")) { persist = true; return true; }
 			
-			int temp = -1;
+			int temp = BlockInfo.FindID(args[1]);
 			BlockID block = 0;
-			if ((temp = BlockInfo.FindID(args[1])) != -1) {
+			
+			if (temp != -1) {
 				block = (BlockID)temp;
 			} else if (!BlockID.TryParse(args[1], out block)) {
 				game.Chat.Add("&eCuboid: &c\"" + args[1] + "\" is not a valid block name or id."); return false;
 			}
 			
-			if (block >= Block.CpeCount && BlockInfo.Name[block] == "Invalid") {
+			if (block >= Block.CpeCount && !BlockInfo.IsCustomDefined(block)) {
 				game.Chat.Add("&eCuboid: &cThere is no block with id \"" + args[1] + "\"."); return false;
 			}
 			this.block = block;

@@ -16,12 +16,12 @@ namespace ClassicalSharp.Commands {
 	
 	public class CommandList : IGameComponent {
 		
-		const string prefix = "/client";
+		const string prefix = "/client", prefixSpace = "/client ";
 		public bool IsCommandPrefix(string input) {
 			if (game.Server.IsSinglePlayer && Utils.CaselessStarts(input, "/"))
 				return true;
 			
-			return Utils.CaselessStarts(input, prefix + " ")
+			return Utils.CaselessStarts(input, prefixSpace)
 				|| Utils.CaselessEquals(input, prefix);
 		}
 		
@@ -75,8 +75,10 @@ namespace ClassicalSharp.Commands {
 		
 		static char[] splitChar = { ' ' };
 		public void Execute(string text) {
-			if (Utils.CaselessStarts(text, prefix)) { // /client command args
-				text = text.Substring(prefix.Length).TrimStart(splitChar);
+			if (Utils.CaselessStarts(text, prefixSpace)) { // /client command args
+				text = text.Substring(prefixSpace.Length);
+			} else if (Utils.CaselessStarts(text, prefix)) { // /clientcommand args
+				text = text.Substring(prefix.Length);
 			} else { // /command args
 				text = text.Substring(1);
 			}

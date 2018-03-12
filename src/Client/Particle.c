@@ -172,8 +172,8 @@ Random rnd;
 
 void Particles_FileChanged(void* obj, Stream* stream) {
 	String particlesPng = String_FromConst("particles.png");
-	if (String_Equals(&stream->Name, &particlesPng)) {
-		//Game_UpdateTexture(&Particles_TexId, stream, false);
+	if (String_CaselessEquals(&stream->Name, &particlesPng)) {
+		Game_UpdateTexture(&Particles_TexId, stream, false);
 	}
 }
 

@@ -8,8 +8,7 @@
 #include "TerrainAtlas.h"
 #include "Drawer.h"
 
-String ModelCache_charPngString = String_FromConst("char.png");
-Int32 ModelCache_texCount, ModelCache_modelCount;
+UInt32 ModelCache_texCount, ModelCache_modelCount;
 
 void ModelCache_ContextLost(void* obj) {
 	Gfx_DeleteVb(&ModelCache_Vb);
@@ -20,7 +19,7 @@ void ModelCache_ContextRecreated(void* obj) {
 }
 
 IModel* ModelCache_Get(STRING_PURE String* name) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < ModelCache_modelCount; i++) {
 		CachedModel* m = &ModelCache_Models[i];
 		if (!String_CaselessEquals(&m->Name, name)) continue;
@@ -35,7 +34,7 @@ IModel* ModelCache_Get(STRING_PURE String* name) {
 }
 
 Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		CachedTexture* tex = &ModelCache_Textures[i];
 		if (String_CaselessEquals(&tex->Name, texName)) return i;
@@ -48,8 +47,7 @@ void ModelCache_Register(STRING_REF const UInt8* name, STRING_PURE const UInt8* 
 		CachedModel model;
 		model.Name = String_FromReadonly(name);
 		model.Instance = instance;
-		ModelCache_Models[ModelCache_modelCount] = model;
-		ModelCache_modelCount++;
+		ModelCache_Models[ModelCache_modelCount++] = model;
 
 		if (defaultTexName != NULL) {
 			String defaultTex = String_FromReadonly(defaultTexName);
@@ -65,21 +63,20 @@ void ModelCache_RegisterTexture(STRING_REF const UInt8* texName) {
 		CachedTexture tex;
 		tex.Name = String_FromReadonly(texName);
 		tex.TexID = NULL;
-		ModelCache_Textures[ModelCache_texCount] = tex;
-		ModelCache_texCount++;
+		ModelCache_Textures[ModelCache_texCount++] = tex;
 	} else {
 		ErrorHandler_Fail("ModelCache_RegisterTexture - hit max textures");
 	}
 }
 
-
-static void ModelCache_TextureChanged(void* obj, Stream* stream) {
-	Int32 i;
+void ModelCache_TextureChanged(void* obj, Stream* stream) {
+	UInt32 i;
+	String charPng = String_FromConst("char.png");
 	for (i = 0; i < ModelCache_texCount; i++) {
 		CachedTexture* tex = &ModelCache_Textures[i];
-		if (!String_Equals(&tex->Name, &stream->Name)) continue;
+		if (!String_CaselessEquals(&tex->Name, &stream->Name)) continue;
 
-		bool isCharPng = String_Equals(&stream->Name, &ModelCache_charPngString);
+		bool isCharPng = String_CaselessEquals(&stream->Name, &charPng);
 		Game_UpdateTexture(&tex->TexID, stream, isCharPng);
 		return;
 	}
@@ -166,7 +163,7 @@ void ChickenModel_DrawModel(Entity* entity) {
 	IModel_DrawRotate(0, 0, Math_AbsF(entity->Anim.LeftArmX), Chicken_RightWing, false);
 
 	PackedCol col = IModel_Cols[0];
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < FACE_COUNT; i++) {
 		IModel_Cols[i] = PackedCol_Scale(col, 0.7f);
 	}
@@ -1263,7 +1260,7 @@ void BlockModel_DrawModel(Entity* p) {
 	if (Block_Draw[BlockModel_block] == DRAW_GAS) return;
 
 	if (Block_FullBright[BlockModel_block]) {
-		Int32 i;
+		UInt32 i;
 		PackedCol white = PACKEDCOL_WHITE;
 		for (i = 0; i < FACE_COUNT; i++) {
 			IModel_Cols[i] = white;
@@ -1335,7 +1332,7 @@ void ModelCache_Init(void) {
 }
 
 void ModelCache_Free(void) {
-	Int32 i;
+	UInt32 i;
 	for (i = 0; i < ModelCache_texCount; i++) {
 		CachedTexture* tex = &ModelCache_Textures[i];
 		Gfx_DeleteTexture(&tex->TexID);

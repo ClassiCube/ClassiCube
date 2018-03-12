@@ -37,7 +37,11 @@ typedef UInt8 bool;
 #define false 0
 #define NULL 0
 
+#if USE16_BIT
+typedef UInt16 BlockID;
+#else
 typedef UInt8 BlockID;
+#endif
 typedef UInt8 EntityID;
 typedef UInt8 TextureLoc;
 /* Sides of a block. TODO: Map this to CPE PlayerClicked blockface enums. */

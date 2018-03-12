@@ -6,11 +6,6 @@ namespace ClassicalSharp {
 	
 	/// <summary> Represents a 3D integer vector. </summary>
 	public struct Vector3I {
-		
-		public static Vector3I Zero = new Vector3I(0, 0, 0);
-		public static Vector3I UnitX = new Vector3I(1, 0, 0);
-		public static Vector3I UnitY = new Vector3I(0, 1, 0);
-		public static Vector3I UnitZ = new Vector3I(0, 0, 1);
 		public static Vector3I MinusOne = new Vector3I(-1, -1, -1);
 		
 		public int X, Y, Z;
@@ -21,22 +16,6 @@ namespace ClassicalSharp {
 		
 		public Vector3I(int value) {
 			X = value; Y = value; Z = value;
-		}
-		
-		public static Vector3I operator * (Vector3I left, int right) {
-			return new Vector3I(left.X * right, left.Y * right, left.Z * right);
-		}
-		
-		public static Vector3I operator + (Vector3I left, Vector3I right) {
-			return new Vector3I(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
-		}
-		
-		public static Vector3I operator - (Vector3I left, Vector3I right) {
-			return new Vector3I(left.X - right.X, left.Y - right.Y, left.Z - right.Z);
-		}
-		
-		public static Vector3I operator - (Vector3I left) {
-			return new Vector3I(-left.X, -left.Y, -left.Z);
 		}
 		
 		public static explicit operator Vector3(Vector3I value) {
