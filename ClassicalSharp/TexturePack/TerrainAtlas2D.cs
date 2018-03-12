@@ -45,8 +45,6 @@ namespace ClassicalSharp {
 			}
 		}
 
-
-
 		/// <summary> Disposes of the underlying atlas bitmap and texture. </summary>
 		public void Dispose() {
 			if (AtlasBitmap != null)
