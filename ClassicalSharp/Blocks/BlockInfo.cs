@@ -95,9 +95,7 @@ namespace ClassicalSharp {
 		
 		public static void Reset(Game game) {
 			Init();
-			// TODO: Make this part of TerrainAtlas2D maybe?
-			using (FastBitmap fastBmp = new FastBitmap(game.TerrainAtlas.AtlasBitmap, true, true))
-				RecalculateSpriteBB(fastBmp);
+		    game.TerrainAtlas.UpdateState();
 		}
 		
 		public static void Init() {
