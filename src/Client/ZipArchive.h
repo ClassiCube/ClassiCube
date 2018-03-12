@@ -3,6 +3,9 @@
 #include "Typedefs.h"
 #include "String.h"
 #include "Stream.h"
+/* Extracts entries from a .zip archive stream.
+   Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+*/
 
 typedef struct ZipEntry_ {
 	Int32 CompressedDataSize;

@@ -46,10 +46,11 @@ bool Options_TryGetValue(const UInt8* keyRaw, STRING_TRANSIENT String* value) {
 	return false;
 }
 
-String Options_Get(const UInt8* key) {
-	String value;
-	Options_TryGetValue(key, &value);
-	return value;
+void Options_Get(const UInt8* key, STRING_TRANSIENT String* value) {
+	String str;
+	Options_TryGetValue(key, &str);
+	String_Clear(value);
+	String_AppendString(value, &str);
 }
 
 Int32 Options_GetInt(const UInt8* key, Int32 min, Int32 max, Int32 defValue) {

@@ -93,8 +93,8 @@ void Stream_WriteUInt32_BE(Stream* stream, UInt32 value);
 /* Writes a big endian signed 32 bit integer to the given stream. */
 #define Stream_WriteInt32_BE(stream, value) Stream_WriteUInt32_BE(stream, (UInt32)(value))
 
-/* Reads a line of UTF8 encoding text from the given stream. */
-void Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text);
+/* Reads a line of UTF8 encoding text from the given stream. Returns false if end of stream. */
+bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text);
 /* Writes a line of UTF8 encoded text to the given stream. */
 void Stream_WriteLine(Stream* stream, STRING_TRANSIENT String* text);
 #endif

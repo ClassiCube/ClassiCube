@@ -71,6 +71,22 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 	return String_Init(str->buffer + offset, (UInt16)length, (UInt16)length);
 }
 
+String String_UNSAFE_Split(STRING_REF String* str, UInt8 c, STRING_TRANSIENT String* subs, UInt32* subsCount) {
+	UInt32 maxSubs = *subsCount, i = 0;
+	Int32 start = 0;
+	for (; i < maxSubs && start <= str->length; i++) {
+		Int32 end = String_IndexOf(str, c, start);
+		if (end == -1) end = str->length;
+
+		subs[i] = String_UNSAFE_Substring(str, start, end - start);
+		start = end + 1;
+	}
+
+	*subsCount = i;
+	/* If not enough split substrings, make remaining null */
+	for (; i < maxSubs; i++) { subs[i] = String_MakeNull(); }
+}
+
 
 bool String_Equals(STRING_PURE String* a, STRING_PURE String* b) {
 	if (a->length != b->length) return false;
@@ -246,6 +262,16 @@ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 	return -1;
 }
 
+bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub) {
+	if (str->length < sub->length) return false;
+
+	Int32 i;
+	for (i = 0; i < sub->length; i++) {
+		if (str->buffer[i] != sub->buffer[i]) return false;
+	}
+	return true;
+}
+
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 	Int32 minLen = min(a->length, b->length);
 	Int32 i;
@@ -307,6 +333,24 @@ UInt8 Convert_UnicodeToCP437(UInt16 c) {
 	return (UInt8)'?';
 }
 
+bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value) {
+	*value = 0; Int32 tmp;
+	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
+	*value = (UInt8)tmp; return true;
+}
+
+bool Convert_TryParseInt16(STRING_PURE String* str, Int16* value) {
+	*value = 0; Int32 tmp;
+	if (!Convert_TryParseInt32(str, &tmp) || tmp < Int16_MinValue || tmp > Int16_MaxValue) return false;
+	*value = (Int16)tmp; return true;
+}
+
+bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value) {
+	*value = 0; Int32 tmp;
+	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
+	*value = (UInt16)tmp; return true;
+}
+
 bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value) {
 	Int32 sum = 0, i = 0;
 	*value = 0;
@@ -351,18 +395,6 @@ bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value) {
 	if (negate) sum = -sum;
 	*value = sum;
 	return true;
-}
-
-bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value) {
-	*value = 0; Int32 tmp;
-	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt8_MaxValue) return false;
-	*value = (UInt8)tmp; return true;
-}
-
-bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value) {
-	*value = 0; Int32 tmp;
-	if (!Convert_TryParseInt32(str, &tmp) || tmp < 0 || tmp > UInt16_MaxValue) return false;
-	*value = (UInt16)tmp; return true;
 }
 
 bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {

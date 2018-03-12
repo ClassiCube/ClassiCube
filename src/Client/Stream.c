@@ -182,13 +182,14 @@ void Stream_WriteUInt32_BE(Stream* stream, UInt32 value) {
 }
 
 
-void Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
+bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
+	String_Clear(text);
 	for (;;) {
 		UInt32 byteCount = 0, read = 0;
 		UInt8 header;
 
 		ReturnCode code = stream->Read(stream, &header, 1, &read);
-		if (read == 0) break;
+		if (read == 0) return false; /* end of stream */
 		if (!ErrorHandler_Check(code)) { Stream_Fail(stream, code, "reading line from "); }
 
 		/* Header byte encodes variable number of following bytes */
@@ -218,7 +219,7 @@ void Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
 
 		/* Handle \r\n or \n line endings */
 		if (codeword == '\r') continue;
-		if (codeword == '\n') break;
+		if (codeword == '\n') return true;
 		String_Append(text, Convert_UnicodeToCP437(codeword));
 	}
 }
