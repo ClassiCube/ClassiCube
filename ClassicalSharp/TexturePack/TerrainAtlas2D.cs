@@ -15,17 +15,23 @@ namespace ClassicalSharp {
 		public Bitmap AtlasBitmap;
 		public int TileSize;
 		
-		Game game;		
+		Game game;
 		public TerrainAtlas2D(Game game) { this.game = game; }
 		
 		/// <summary> Updates the underlying atlas bitmap, fields, and texture. </summary>
 		public void UpdateState(Bitmap bmp) {
 			AtlasBitmap = bmp;
 			TileSize = bmp.Width / TilesPerRow;
-			using (FastBitmap fastBmp = new FastBitmap(bmp, true, true))
+			UpdateState();
+		}
+
+		/// <summary> Updates the underlying atlas bitmap </summary>
+		public void UpdateState()
+		{
+			using (FastBitmap fastBmp = new FastBitmap(AtlasBitmap, true, true))
 				BlockInfo.RecalculateSpriteBB(fastBmp);
 		}
-		
+
 		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>
 		public int LoadTextureElement(int index) {
 			int size = TileSize;
@@ -38,7 +44,7 @@ namespace ClassicalSharp {
 				return game.Graphics.CreateTexture(dst, false, game.Graphics.Mipmaps);
 			}
 		}
-		
+
 		/// <summary> Disposes of the underlying atlas bitmap and texture. </summary>
 		public void Dispose() {
 			if (AtlasBitmap != null)
