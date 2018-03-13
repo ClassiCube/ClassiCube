@@ -17,6 +17,7 @@ HANDLE heap;
 UInt8* Platform_NewLine = "\r\n";
 UInt8 Platform_DirectorySeparator = '\\';
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
+ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
 
 void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */

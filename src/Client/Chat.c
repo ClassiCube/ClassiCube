@@ -145,8 +145,8 @@ typedef void (*ChatCommandConstructor)(ChatCommand* cmd);
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
-#define Chat_AddRaw(str, raw) String str = String_FromConst(raw); Chat_Add(&str);
-
+#define Command_SetName(raw) String name = String_FromConst(raw); cmd->Name = name;
+#define Command_SetHelp(Num, raw) String helpNum = String_FromConst(raw); cmd->Help[Num] = helpNum;
 ChatCommand commands_list[8];
 UInt32 commands_count;
 
@@ -276,9 +276,9 @@ void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void HelpCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("Help");                                       cmd->Name    = name;
-	String help0 = String_FromConst("&a/client help [command name]");              cmd->Help[0] = help0;
-	String help1 = String_FromConst("&eDisplays the help for the given command."); cmd->Help[1] = help1;
+	Command_SetName("Help");
+	Command_SetHelp(0, "&a/client help [command name]");
+	Command_SetHelp(1, "&eDisplays the help for the given command.");
 	cmd->Execute = HelpCommand_Execute;
 }
 
@@ -296,9 +296,9 @@ void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void GpuInfoCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("GpuInfo");                                cmd->Name    = name;
-	String help0 = String_FromConst("&a/client gpuinfo");                      cmd->Help[0] = help0;
-	String help1 = String_FromConst("&eDisplays information about your GPU."); cmd->Help[1] = help1;
+	Command_SetName("GpuInfo");
+	Command_SetHelp(0, "&a/client gpuinfo");
+	Command_SetHelp(1, "&eDisplays information about your GPU.");
 	cmd->Execute = GpuInfoCommand_Execute;
 }
 
@@ -313,12 +313,12 @@ void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void RenderTypeCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("RenderType");                                                                                   cmd->Name = name;
-	String help0 = String_FromConst("&a/client rendertype [normal/legacy/legacyfast]");                                              cmd->Help[0] = help0;
-	String help1 = String_FromConst("&bnormal: &eDefault renderer, with all environmental effects enabled.");                        cmd->Help[1] = help1;
-	String help2 = String_FromConst("&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects."); cmd->Help[2] = help2;
-	String help3 = String_FromConst("&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.");              cmd->Help[3] = help3;
-	String help4 = String_FromConst("&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.");              cmd->Help[4] = help4;
+	Command_SetName("RenderType");
+	Command_SetHelp(0, "&a/client rendertype [normal/legacy/legacyfast]");
+	Command_SetHelp(1, "&bnormal: &eDefault renderer, with all environmental effects enabled.");
+	Command_SetHelp(2, "&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.");
+	Command_SetHelp(3, "&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.");
+	Command_SetHelp(4, "&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.");
 	cmd->Execute = RenderTypeCommand_Execute;
 }
 
@@ -338,9 +338,9 @@ void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void ResolutionCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("Resolution");                                        cmd->Name    = name;
-	String help0 = String_FromConst("&a/client resolution [width] [height]");             cmd->Help[0] = help0;
-	String help1 = String_FromConst("&ePrecisely sets the size of the rendered window."); cmd->Help[1] = help1;
+	Command_SetName("Resolution");
+	Command_SetHelp(0, "&a/client resolution [width] [height]");
+	Command_SetHelp(1, "&ePrecisely sets the size of the rendered window.");
 	cmd->Execute = ResolutionCommand_Execute;
 }
 
@@ -357,10 +357,10 @@ void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void ModelCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("Model");                                                            cmd->Name    = name;
-	String help0 = String_FromConst("&a/client model [name]");                                           cmd->Help[0] = help0;
-	String help1 = String_FromConst("&bnames: &echibi, chicken, creeper, human, pig, sheep");            cmd->Help[1] = help1;
-	String help2 = String_FromConst("&e       skeleton, spider, zombie, sitting, <numerical block id>"); cmd->Help[2] = help2;
+	Command_SetName("Model");
+	Command_SetHelp(0, "&a/client model [name]");
+	Command_SetHelp(1, "&bnames: &echibi, chicken, creeper, human, pig, sheep");
+	Command_SetHelp(2, "&e       skeleton, spider, zombie, sitting, <numerical block id>")
 	cmd->SingleplayerOnly = true;
 	cmd->Execute = ModelCommand_Execute;
 }
@@ -462,12 +462,12 @@ void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void CuboidCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("Cuboid");                                                            cmd->Name    = name;
-	String help0 = String_FromConst("&a/client cuboid [block] [persist]");                                cmd->Help[0] = help0;
-	String help1 = String_FromConst("&eFills the 3D rectangle between two points with [block].");         cmd->Help[1] = help1;
-	String help2 = String_FromConst("&eIf no block is given, uses your currently held block.");           cmd->Help[2] = help2;
-	String help3 = String_FromConst("&e  If persist is given and is \"yes\", then the command");          cmd->Help[3] = help3;
-	String help4 = String_FromConst("&e  will repeatedly cuboid, without needing to be typed in again."); cmd->Help[4] = help4;
+	Command_SetName("Cuboid");
+	Command_SetHelp(0, "&a/client cuboid [block] [persist]");
+	Command_SetHelp(1, "&eFills the 3D rectangle between two points with [block].");
+	Command_SetHelp(2, "&eIf no block is given, uses your currently held block.");
+	Command_SetHelp(3, "&e  If persist is given and is \"yes\", then the command");
+	Command_SetHelp(4, "&e  will repeatedly cuboid, without needing to be typed in again.");
 	cmd->SingleplayerOnly = true;
 	cmd->Execute = CuboidCommand_Execute;
 }
@@ -490,9 +490,9 @@ void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void TeleportCommand_Make(ChatCommand* cmd) {
-	String name  = String_FromConst("TP");                                    cmd->Name = name;
-	String help0 = String_FromConst("&a/client tp [x y z]");                  cmd->Help[0] = help0;
-	String help1 = String_FromConst("&eMoves you to the given coordinates."); cmd->Help[1] = help1;
+	Command_SetName("TP");
+	Command_SetHelp(0, "&a/client tp [x y z]");
+	Command_SetHelp(1, "&eMoves you to the given coordinates.");
 	cmd->SingleplayerOnly = true;
 	cmd->Execute = TeleportCommand_Execute;
 }

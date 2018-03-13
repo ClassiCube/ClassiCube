@@ -71,13 +71,13 @@ ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
 
 void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 	Stream_SetName(stream, name);
-	stream->Data = file;
+	stream->Data  = file;
 	stream->Data2 = 0;
 
-	stream->Read = Stream_FileRead;
+	stream->Read  = Stream_FileRead;
 	stream->Write = Stream_FileWrite;
 	stream->Close = Stream_FileClose;
-	stream->Seek = Stream_FileSeek;
+	stream->Seek  = Stream_FileSeek;
 }
 
 ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
@@ -95,13 +95,13 @@ ReturnCode Stream_PortionSeek(Stream* stream, Int32 offset, Int32 seekType) { re
 
 void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 	Stream_SetName(stream, &underlying->Name);
-	stream->Data = underlying;
+	stream->Data  = underlying;
 	stream->Data2 = len;
 
-	stream->Read = Stream_PortionRead;
+	stream->Read  = Stream_PortionRead;
 	stream->Write = Stream_PortionWrite;
 	stream->Close = Stream_PortionClose;
-	stream->Seek = Stream_PortionSeek;
+	stream->Seek  = Stream_PortionSeek;
 }
 
 

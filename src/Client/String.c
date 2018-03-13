@@ -481,6 +481,7 @@ void StringsBuffer_Free(StringsBuffer* buffer) {
 	if (buffer->FlagsBufferElems > STRINGSBUFFER_FLAGS_DEF_ELEMS) {
 		Platform_MemFree(buffer->FlagsBuffer);
 	}
+	StringsBuffer_UNSAFE_Reset(buffer);
 }
 
 void StringsBuffer_UNSAFE_Reset(StringsBuffer* buffer) {

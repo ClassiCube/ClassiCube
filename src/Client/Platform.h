@@ -10,6 +10,7 @@
 extern UInt8* Platform_NewLine; /* Newline for text */
 extern UInt8 Platform_DirectorySeparator;
 extern ReturnCode ReturnCode_FileShareViolation;
+extern ReturnCode ReturnCode_FileNotFound;
 
 void Platform_Init(void);
 void Platform_Free(void);

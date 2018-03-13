@@ -54,7 +54,7 @@ typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
 #define Int16_MinValue   ((Int16)-32768)
 #define Int16_MaxValue   ((Int16)32767)
 #define UInt16_MaxValue  ((UInt16)65535)
-#define Int32_MinValue   ((Int32)-2147483648L)
+#define Int32_MinValue   ((Int32)-2147483647L - (Int32)1L)
 #define Int32_MaxValue   ((Int32)2147483647L)
 #define UInt32_MaxValue  ((UInt32)4294967295UL)
 

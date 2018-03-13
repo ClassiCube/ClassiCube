@@ -72,7 +72,6 @@
 
 StringsBuffer Options_Keys;
 StringsBuffer Options_Values;
-bool Options_Changed[256];
 
 void Options_Init(void);
 void Options_Free(void);
@@ -85,4 +84,6 @@ UInt32 Options_GetEnum(const UInt8* key, UInt32 defValue, const UInt8** names, U
 
 void Options_SetInt32(const UInt8* keyRaw, Int32 value);
 void Options_Set(const UInt8* keyRaw, STRING_PURE String* value);
+void Options_Load(void);
+void Options_Save(void);
 #endif

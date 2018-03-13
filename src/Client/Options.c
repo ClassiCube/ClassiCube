@@ -3,16 +3,30 @@
 #include "ErrorHandler.h"
 #include "Utils.h"
 #include "Funcs.h"
+#include "Platform.h"
+
 #define OPT_NOT_FOUND UInt32_MaxValue
+StringsBuffer Options_Changed;
 
 void Options_Init(void) {
 	StringsBuffer_Init(&Options_Keys);
 	StringsBuffer_Init(&Options_Values);
+	StringsBuffer_Init(&Options_Changed);
 }
 
 void Options_Free(void) {
 	StringsBuffer_Free(&Options_Keys);
 	StringsBuffer_Free(&Options_Values);
+	StringsBuffer_Free(&Options_Changed);
+}
+
+bool Options_HasChanged(STRING_PURE String* key) {
+	UInt32 i;
+	for (i = 0; i < Options_Keys.Count; i++) {
+		String curKey = StringsBuffer_UNSAFE_Get(&Options_Changed, i);
+		if (String_CaselessEquals(&curKey, key)) return true;
+	}
+	return false;
 }
 
 UInt32 Options_Find(STRING_PURE String* key) {
@@ -95,13 +109,7 @@ void Options_Remove(UInt32 i) {
 
 Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) {
 	UInt32 i = Options_Find(key);
-	if (i != OPT_NOT_FOUND) {
-		Options_Remove(i);
-		/* Reset Changed state for this option */
-		for (; i < Array_NumElements(Options_Changed) - 1; i++) {
-			Options_Changed[i] = Options_Changed[i + 1];
-		}
-	}
+	if (i != OPT_NOT_FOUND) Options_Remove(i);
 
 	StringsBuffer_Add(&Options_Keys, key);
 	StringsBuffer_Add(&Options_Values, value);
@@ -124,5 +132,81 @@ void Options_Set(const UInt8* keyRaw, STRING_PURE String* value) {
 	} else {
 		i = Options_Insert(&key, value);
 	}
-	if (i != OPT_NOT_FOUND) Options_Changed[i] = true;
+
+	if (i == OPT_NOT_FOUND || Options_HasChanged(&key)) return;
+	StringsBuffer_Add(&Options_Changed, &key);
+}
+
+void Options_Load(void) {
+	/* Both of these are from when running from the launcher */
+	Program.CleanupMainDirectory();
+
+	void* file = NULL;
+	String path = String_FromConst("options.txt");
+	ReturnCode result = Platform_FileOpen(&file, &path, true);
+
+	if (result == ReturnCode_FileNotFound) return;
+	/* TODO: Should we just log failure to open? */
+	ErrorHandler_CheckOrFail(result, "Options - Loading");
+
+	UInt8 lineBuffer[String_BufferSize(2048)];
+	String line = String_InitAndClearArray(lineBuffer);
+	Stream stream; Stream_FromFile(&stream, &file, &path);
+
+	/* Remove all the unchanged options */
+	UInt32 i;
+	for (i = Options_Keys.Count; i > 0; i--) {
+		String key = StringsBuffer_UNSAFE_Get(&Options_Keys, i - 1);
+		if (Options_HasChanged(&key)) continue;
+		Options_Remove(i - 1);
+	}
+
+	while (Stream_ReadLine(&stream, &line)) {
+		if (line.length == 0 || line.buffer[0] == '#') continue;
+
+		Int32 sepIndex = String_IndexOf(&line, '=', 0);
+		if (sepIndex <= 0) continue;
+		String key = String_UNSAFE_Substring(&line, 0, sepIndex);
+
+		sepIndex++;
+		if (sepIndex == line.length) continue;
+		String value = String_UNSAFE_SubstringAt(&line, sepIndex);
+
+		if (!IsChangedOption(key)) {
+			SetOption(key, value);
+		}
+	}
+
+	result = stream.Close(&stream);
+	ErrorHandler_CheckOrFail(result, "Options load - close file");
+}
+
+void Options_Save(void) {
+	void* file = NULL;
+	String path = String_FromConst("options.txt");
+	ReturnCode result = Platform_FileOpen(&file, &path, true);
+
+	/* TODO: Should we just log failure to save? */
+	ErrorHandler_CheckOrFail(result, "Options - Saving");
+
+	UInt8 lineBuffer[String_BufferSize(2048)];
+	String line = String_InitAndClearArray(lineBuffer);
+	Stream stream; Stream_FromFile(&stream, &file, &path);
+	UInt32 i;
+
+	for (i = 0; i < Options_Keys.Count; i++) {
+		String key   = StringsBuffer_UNSAFE_Get(&Options_Keys,   i);
+		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
+
+		String_AppendString(&line, &key);
+		String_Append(&line, '=');
+		String_AppendString(&line, &value);
+
+		Stream_WriteLine(&stream, &line);
+		String_Clear(&line);
+	}
+
+	result = stream.Close(&stream);
+	ErrorHandler_CheckOrFail(result, "Options save - close file");
+	StringsBuffer_Free(&Options_Changed);
 }
