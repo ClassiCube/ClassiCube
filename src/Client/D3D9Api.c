@@ -577,6 +577,8 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 }
 
 
+bool Gfx_WarnIfNecessary(void) { return false; }
+
 void Gfx_BeginFrame(void) {
 	IDirect3DDevice9_BeginScene(device);
 }

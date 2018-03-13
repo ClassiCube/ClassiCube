@@ -172,8 +172,8 @@ void Options_Load(void) {
 		if (sepIndex == line.length) continue;
 		String value = String_UNSAFE_SubstringAt(&line, sepIndex);
 
-		if (!IsChangedOption(key)) {
-			SetOption(key, value);
+		if (!Options_HasChanged(&key)) {
+			Options_Insert(&key, &value);
 		}
 	}
 

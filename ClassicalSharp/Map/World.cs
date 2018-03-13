@@ -60,12 +60,6 @@ namespace ClassicalSharp.Map {
 			blocks[(y * Length + z) * Width + x] = blockId;
 		}
 		
-		/// <summary> Sets the block at the given world coordinates without bounds checking,
-		/// and also recalculates the heightmap for the given (x,z) column.	</summary>
-		public void SetBlock(Vector3I p, BlockID blockId) {
-			blocks[(p.Y * Length + p.Z) * Width + p.X] = blockId;
-		}
-		
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public BlockID GetBlock(int x, int y, int z) {
 			return blocks[(y * Length + z) * Width + x];

@@ -5,6 +5,7 @@
 #include "Window.h"
 #include "GraphicsCommon.h"
 #include "Funcs.h"
+#include "Chat.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -504,6 +505,24 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
+
+bool Gfx_WarnIfNecessary(void) {
+	if (gl_lists) {
+		Chat_AddRaw(tmp1, "&cYou are using the very outdated OpenGL backend.");
+		Chat_AddRaw(tmp2, "&cAs such you may experience poor performance.");
+		Chat_AddRaw(tmp3, "&cIt is likely you need to install video card drivers.");
+	}
+
+	UInt8* rendererRaw = glGetString(GL_RENDERER);
+	String renderer = String_FromRaw(rendererRaw, UInt16_MaxValue);
+	String intel = String_FromConst("Intel");
+	if (!String_ContainsString(&renderer, &intel)) return false;
+
+	Chat_AddRaw(tmp4, "&cIntel graphics cards are known to have issues with the OpenGL build.");
+	Chat_AddRaw(tmp5, "&cVSync may not work, and you may see disappearing clouds and map edges.");
+	Chat_AddRaw(tmp6, "&cFor Windows, try downloading the Direct3D 9 build instead.");
+	return true;
+}
 
 void Gfx_BeginFrame(void) { }
 void Gfx_EndFrame(void) {

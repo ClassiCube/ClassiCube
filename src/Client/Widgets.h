@@ -203,30 +203,16 @@ typedef struct ChatInputWidget_ {
 void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font);
 
 
-/* "part1" "> part2" type urls */
-#define LINK_FLAG_CONTINUE 2
-/* used for internally combining "part1" and "part2" */
-#define LINK_FLAG_APPEND 4
-/* used to signify that part2 is a separate url from part1 */
-#define LINK_FLAG_NEWLINK 8
-/* min size of link is 'http:// ' */
-#define LINK_MAX_PER_LINE (STRING_SIZE / 8)
-typedef struct LinkData_ {
-	Rectangle2D Bounds[LINK_MAX_PER_LINE];
-	String Parts[LINK_MAX_PER_LINE];
-	String Urls[LINK_MAX_PER_LINE];
-	UInt8 LinkFlags, LinksCount;
-} LinkData;
-
 #define TEXTGROUPWIDGET_MAX_LINES 30
+#define TEXTGROUPWIDGET_LEN (STRING_SIZE * 2)
 typedef struct TextGroupWidget_ {
 	Widget Base;
 	Int32 LinesCount, DefaultHeight;
-	FontDesc Font, UnderlineFont;	
+	FontDesc Font, UnderlineFont;
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
-	String Lines[TEXTGROUPWIDGET_MAX_LINES];
-	LinkData LinkDatas[TEXTGROUPWIDGET_MAX_LINES];
+	UInt8 LineLengths[TEXTGROUPWIDGET_MAX_LINES];
 	Texture Textures[TEXTGROUPWIDGET_MAX_LINES];
+	UInt8 Buffer[String_BufferSize(TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN)];
 } TextGroupWidget;
 
 void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont);

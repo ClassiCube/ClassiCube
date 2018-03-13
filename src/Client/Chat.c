@@ -146,7 +146,7 @@ typedef void (*ChatCommandConstructor)(ChatCommand* cmd);
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
 #define Command_SetName(raw) String name = String_FromConst(raw); cmd->Name = name;
-#define Command_SetHelp(Num, raw) String helpNum = String_FromConst(raw); cmd->Help[Num] = helpNum;
+#define Command_SetHelp(Num, raw) String help ## Num = String_FromConst(raw); cmd->Help[Num] = help ## Num;
 ChatCommand commands_list[8];
 UInt32 commands_count;
 

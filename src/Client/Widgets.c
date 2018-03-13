@@ -37,7 +37,7 @@ void TextWidget_Init(GuiElement* elem) {
 
 void TextWidget_Render(GuiElement* elem, Real64 delta) {
 	TextWidget* widget = (TextWidget*)elem;	
-	if (Texture_IsValid(&widget->Texture)) {
+	if (widget->Texture.ID != NULL) {
 		Texture_RenderShaded(&widget->Texture, widget->Col);
 	}
 }
@@ -124,7 +124,7 @@ void ButtonWidget_Reposition(Widget* elem) {
 void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 	ButtonWidget* widget = (ButtonWidget*)elem;
 	Widget* elemW = &widget->Base;
-	if (!Texture_IsValid(&widget->Texture)) return;
+	if (widget->Texture.ID == NULL) return;
 	Texture back = elemW->Active ? Button_SelectedTex : Button_ShadowTex;
 	if (elemW->Disabled) back = Button_DisabledTex;
 
@@ -677,7 +677,7 @@ void TableWidget_Render(GuiElement* elem, Real64 delta) {
 	}
 	IsometricDrawer_EndBatch();
 
-	if (Texture_IsValid(&widget->DescTex)) {
+	if (widget->DescTex.ID != NULL) {
 		Texture_Render(&widget->DescTex);
 	}
 	Gfx_SetTexturing(false);
@@ -1807,7 +1807,6 @@ void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, 
 	InputWidget_AppendString(&widget->Base, text);
 }
 
-
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
 #define LIST_BOUNDS_SIZE 10
@@ -1834,7 +1833,7 @@ Int32 PlayerListWidget_HighlightedName(PlayerListWidget* widget, Int32 mouseX, I
 	if (!widget->Base.Active) return -1;
 	Int32 i;
 	for (i = 0; i < widget->NamesCount; i++) {
-		if (!Texture_IsValid(&widget->Textures[i]) || widget->IDs[i] == GROUP_NAME_ID) continue;
+		if (widget->Textures[i].ID == NULL || widget->IDs[i] == GROUP_NAME_ID) continue;
 
 		Texture t = widget->Textures[i];
 		if (Gui_Contains(t.X, t.Y, t.Width, t.Height, mouseX, mouseY)) return i;
@@ -2147,7 +2146,7 @@ void PlayerListWidget_Render(GuiElement* elem, Real64 delta) {
 
 	Int32 i, highlightedI = PlayerListWidget_HighlightedName(widget, Mouse_X, Mouse_Y);
 	for (i = 0; i < widget->NamesCount; i++) {
-		if (!Texture_IsValid(&widget->Textures[i])) continue;
+		if (widget->Textures[i].ID == NULL) continue;
 
 		Texture tex = widget->Textures[i];
 		if (i == highlightedI) tex.X += 4;
@@ -2172,15 +2171,208 @@ void PlayerListWidget_Free(GuiElement* elem) {
 
 void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic) {
 	Widget_Init(&widget->Base);
+	widget->Base.Base.Init  = PlayerListWidget_Init;
+	widget->Base.Base.Free  = PlayerListWidget_Free;
+	widget->Base.Reposition = PlayerListWidget_Reposition;
+	widget->Base.HorAnchor  = ANCHOR_CENTRE;
+	widget->Base.VerAnchor  = ANCHOR_CENTRE;
+
 	widget->NamesCount = 0;
-
-	widget->Base.Base.Init     = PlayerListWidget_Init;
-	widget->Base.Base.Free     = PlayerListWidget_Free;
-	widget->Base.Reposition    = PlayerListWidget_Reposition;
-
-	widget->Base.HorAnchor = ANCHOR_CENTRE;
-	widget->Base.VerAnchor = ANCHOR_CENTRE;
 	widget->Font = *font;
 	widget->Classic = classic;
 	widget->ElementOffset = classic ? 0 : 10;
+}
+
+
+void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE String* text) {
+	Int32 y = widget->Base.Y;
+	Gfx_DeleteTexture(&widget->Textures[0].ID);
+	UInt32 i;
+#define tgw_max_idx (Array_NumElements(widget->Textures) - 1)
+
+	/* Move contents of X line to X - 1 line */
+	for (i = 0; i < tgw_max_idx; i++) {
+		UInt8* dst = widget->Buffer + i       * TEXTGROUPWIDGET_LEN;
+		UInt8* src = widget->Buffer + (i + 1) * TEXTGROUPWIDGET_LEN;
+		UInt8 lineLen = widget->LineLengths[i + 1];
+
+		if (lineLen > 0) Platform_MemCpy(dst, src, lineLen);
+		widget->Textures[i]    = widget->Textures[i + 1];
+		widget->LineLengths[i] = lineLen;
+
+		widget->Textures[i].Y = y;
+		y += widget->Textures[i].Height;
+	}
+
+	widget->Textures[tgw_max_idx].ID = NULL; /* Delete() is called by SetText otherwise */
+	TextGroupWidget_SetText(widget, tgw_max_idx, text);
+}
+
+Int32 TextGroupWidget_CalcY(TextGroupWidget* widget, Int32 index, Int32 newHeight) {
+	Int32 y = 0, i;
+	Texture* textures = widget->Textures;
+	Int32 deltaY = newHeight - textures[index].Height;
+
+	if (widget->Base.VerAnchor == ANCHOR_LEFT_OR_TOP) {
+		y = widget->Base.Y;
+		for (i = 0; i < index; i++) {
+			y += textures[i].Height;
+		}
+		for (i = index + 1; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+			textures[i].Y += deltaY;
+		}
+	} else {
+		y = Game_Height - widget->Base.YOffset;
+		for (i = index + 1; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+			y -= textures[i].Height;
+		}
+
+		y -= newHeight;
+		for (i = 0; i < index; i++) {
+			textures[i].Y -= deltaY;
+		}
+	}
+	return y;
+}
+
+void TextGroupWidget_SetUsePlaceHolder(TextGroupWidget* widget, Int32 index, bool placeHolder) {
+	widget->PlaceholderHeight[index] = placeHolder;
+	if (widget->Textures[index].ID != NULL) return;
+
+	Int32 newHeight = placeHolder ? widget->DefaultHeight : 0;
+	widget->Textures[index].Y = TextGroupWidget_CalcY(widget, index, newHeight);
+	widget->Textures[index].Height = (UInt16)newHeight;
+}
+
+Int32 TextGroupWidget_GetUsedHeight(TextGroupWidget* widget) {
+	Int32 height = 0, i;
+	Texture* textures = widget->Textures;
+
+	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		if (textures[i].ID != NULL) break;
+	}
+	for (; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		height += textures[i].Height;
+	}
+	return height;
+}
+
+void TextGroupWidget_Reposition(Widget* elem) {
+	TextGroupWidget* widget = (TextGroupWidget*)elem;
+	UInt32 i;
+	Texture* textures = widget->Textures;
+
+	Int32 oldY = elem->Y;
+	Widget_DoReposition(elem);
+	if (widget->LinesCount == 0) return;
+
+	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		textures[i].X = Gui_CalcPos(elem->HorAnchor, elem->XOffset, textures[i].Width, Game_Width);
+		textures[i].Y += elem->Y - oldY;
+	}
+}
+
+void TextGroupWidget_UpdateDimensions(TextGroupWidget* widget) {
+	Int32 i, width = 0, height = 0;
+	Texture* textures = widget->Textures;
+
+	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		width = max(width, textures[i].Width);
+		height += textures[i].Height;
+	}
+
+	widget->Base.Width  = width;
+	widget->Base.Height = height;
+	TextGroupWidget_Reposition(&widget->Base);
+}
+
+String TextGroupWidget_UNSAFE_Get(TextGroupWidget* widget, Int32 i) {
+	UInt8* buffer = widget->Buffer + i * TEXTGROUPWIDGET_LEN;
+	UInt16 length = widget->LineLengths[i];
+	return String_Init(widget->Buffer, length, length);
+}
+
+void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 x, Int32 y) {
+	Int32 i;
+	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		if (widget->Textures[i].ID == NULL) continue;
+		Texture tex = widget->Textures[i];
+		/* TODO: Add support for URLS */
+		if (!Gui_Contains(tex.X, tex.Y, tex.Width, tex.Height, x, y)) continue;
+
+		String line = TextGroupWidget_UNSAFE_Get(widget, i);
+		String_AppendString(text, &line);
+		return;
+	}
+}
+
+void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_PURE String* text) {
+	if (text->length > TEXTGROUPWIDGET_LEN) ErrorHandler_Fail("TextGroupWidget - too big text");
+	Gfx_DeleteTexture(&widget->Textures[index].ID);
+	Platform_MemCpy(widget->Buffer + index * TEXTGROUPWIDGET_LEN, text->buffer, text->length);
+	widget->LineLengths[index] = (UInt8)text->length;
+
+	Texture tex;
+	if (!Drawer2D_IsEmptyText(text)) {
+		/* TODO: Add support for URLs */
+		DrawTextArgs args; DrawTextArgs_Make(&args, text, &widget->Font, true);
+		tex = Drawer2D_MakeTextTexture(&args, 0, 0);
+		Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
+	} else {
+		tex = Texture_MakeInvalid();
+		tex.Height = (UInt16)(widget->PlaceholderHeight[index] ? widget->DefaultHeight : 0);
+	}
+
+	Widget* elem = &widget->Base;
+	tex.X = Gui_CalcPos(elem->HorAnchor, elem->XOffset, tex.Width, Game_Width);
+	tex.Y = TextGroupWidget_CalcY(widget, index, tex.Height);
+	widget->Textures[index] = tex;
+	TextGroupWidget_UpdateDimensions(widget);
+}
+
+
+void TextGroupWidget_Init(GuiElement* elem) {
+	TextGroupWidget* widget = (TextGroupWidget*)elem;
+	Int32 height = Drawer2D_FontHeight(&widget->Font, true);
+	Drawer2D_ReducePadding_Height(&height, widget->Font.Size, 3);
+	widget->DefaultHeight = height;
+
+	UInt32 i;
+	for (i = 0; i < Array_NumElements(widget->Textures); i++) {
+		widget->Textures[i].Height = (UInt16)height;
+		widget->PlaceholderHeight[i] = true;
+	}
+	TextGroupWidget_UpdateDimensions(widget);
+}
+
+void TextGroupWidget_Render(GuiElement* elem, Real64 delta) {
+	TextGroupWidget* widget = (TextGroupWidget*)elem;
+	UInt32 i;
+	Texture* textures = widget->Textures;
+
+	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		if (textures[i].ID == NULL) continue;
+		Texture_Render(&textures[i]);
+	}
+}
+
+void TextGroupWidget_Free(GuiElement* elem) {
+	TextGroupWidget* widget = (TextGroupWidget*)elem;
+	UInt32 i;
+
+	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		Gfx_DeleteTexture(&widget->Textures[i].ID);
+	}
+}
+
+void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont) {
+	Widget_Init(&widget->Base);
+	widget->Base.Base.Init   = TextGroupWidget_Init;
+	widget->Base.Base.Render = TextGroupWidget_Render;
+	widget->Base.Base.Free   = TextGroupWidget_Free;
+	widget->Base.Reposition  = TextGroupWidget_Reposition;
+
+	widget->LinesCount = linesCount;
+	widget->Font = *font;
+	widget->UnderlineFont = *underlineFont;
 }
