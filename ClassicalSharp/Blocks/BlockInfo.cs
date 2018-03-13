@@ -95,7 +95,7 @@ namespace ClassicalSharp {
 		
 		public static void Reset(Game game) {
 			Init();
-		    game.TerrainAtlas.UpdateState();
+			game.TerrainAtlas.UpdateState();
 		}
 		
 		public static void Init() {
