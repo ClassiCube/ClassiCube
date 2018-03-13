@@ -120,7 +120,7 @@ void Chat_AppendLog(STRING_PURE String* text) {
 void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MESSAGE_TYPE_NORMAL); }
 void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 	if (msgType == MESSAGE_TYPE_NORMAL) {
-		StringsBuffer_Add(&ChatLog, text);
+		StringsBuffer_Add(&Chat_Log, text);
 		Chat_AppendLog(text);
 	} else if (msgType >= MESSAGE_TYPE_STATUS_1 && msgType <= MESSAGE_TYPE_STATUS_3) {
 		ChatLine_Make(&Chat_Status[msgType - MESSAGE_TYPE_STATUS_1], text);
@@ -500,7 +500,7 @@ void TeleportCommand_Make(ChatCommand* cmd) {
 
 void Chat_Send(STRING_PURE String* text) {
 	if (text->length == 0) return;
-	StringsBuffer_Add(&InputLog, text);
+	StringsBuffer_Add(&Chat_InputLog, text);
 
 	if (Commands_IsCommandPrefix(text)) {
 		Commands_Execute(text);

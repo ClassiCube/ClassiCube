@@ -124,9 +124,9 @@ void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
 struct InputWidget_;
 typedef struct InputWidget_ {
 	Widget Base;
-	FontDesc Font;	
-	Int32 (*GetMaxLines)(void);
+	FontDesc Font;		
 	Int32 Padding, MaxCharsPerLine;
+	Int32 (*GetMaxLines)(void);
 	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(GuiElement* elem); /* Invoked when the user presses enter. */
 	bool (*AllowedChar)(GuiElement* elem, UInt8 c);

@@ -48,7 +48,7 @@ void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 }
 
 UInt8 SPConnection_LastCol = NULL;
-void SPConnection_AddChat(STRING_PURE String* text) {
+void SPConnection_AddPortion(STRING_PURE String* text) {
 	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
 	/* Prepend colour codes for subsequent lines of multi-line chat */
@@ -81,10 +81,10 @@ void SPConnection_SendChat(STRING_PURE String* text) {
 	String part = *text;
 	while (part.length > STRING_SIZE) {
 		String portion = String_UNSAFE_Substring(&part, 0, STRING_SIZE);
-		SPConnection_AddChat(&portion);
+		SPConnection_AddPortion(&portion);
 		part = String_UNSAFE_SubstringAt(&part, STRING_SIZE);
 	}
-	SPConnection_AddChat(text);
+	SPConnection_AddPortion(&part);
 }
 
 void SPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) { }

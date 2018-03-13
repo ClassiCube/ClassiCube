@@ -14,6 +14,7 @@
 #include "WordWrap.h"
 #include "ServerConnection.h"
 #include "Event.h"
+#include "Chat.h"
 
 void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
@@ -1222,7 +1223,7 @@ void InputWidget_RemakeTexture(InputWidget* widget) {
 	widget->InputTex.Y = elem->Y;
 }
 
-void InputWidget_EnterInput(InputWidget* widget) {
+void InputWidget_OnPressedEnter(InputWidget* widget) {
 	InputWidget_Clear(widget);
 	widget->Base.Height = widget->PrefixHeight;
 }
@@ -1508,11 +1509,13 @@ bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButto
 
 void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* prefix) {
 	Widget_Init(&widget->Base);
-	widget->Font = *font;
-	widget->Prefix = *prefix;
-	widget->CaretPos = -1;
+	widget->Font            = *font;
+	widget->Prefix          = *prefix;
+	widget->CaretPos        = -1;
 	widget->MaxCharsPerLine = STRING_SIZE;
-	widget->AllowedChar = InputWidget_AllowedChar;
+	widget->RemakeTexture   = InputWidget_RemakeTexture;
+	widget->OnPressedEnter  = InputWidget_OnPressedEnter;
+	widget->AllowedChar     = InputWidget_AllowedChar;	
 
 	widget->Base.Base.Init     = InputWidget_Init;
 	widget->Base.Base.Free     = InputWidget_Free;
@@ -1791,21 +1794,187 @@ bool MenuInputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
 Int32 MenuInputWidget_GetMaxLines(void) { return 1; }
 void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, MenuInputValidator* validator) {
 	InputWidget_Create(&widget->Base, font, NULL);
-	widget->MinWidth = width;
+	widget->MinWidth  = width;
 	widget->MinHeight = height;
 	widget->Validator = *validator;
 
 	widget->Base.Padding = 3;	
-	widget->Base.Text = String_InitAndClearArray(widget->TextBuffer);
+	widget->Base.Text    = String_InitAndClearArray(widget->TextBuffer);
 	widget->Base.GetMaxLines   = MenuInputWidget_GetMaxLines;
-	widget->Base.AllowedChar   = MenuInputWidget_AllowedChar;
 	widget->Base.RemakeTexture = MenuInputWidget_RemakeTexture;
+	widget->Base.AllowedChar   = MenuInputWidget_AllowedChar;	
 
 	GuiElement* elem = &widget->Base.Base.Base;
 	elem->Render = MenuInputWidget_Render;
 	elem->Init(elem);
 	InputWidget_AppendString(&widget->Base, text);
 }
+
+
+void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
+	String prefix = String_FromConst("> ");
+	InputWidget_Create(&widget->Base, font, &prefix);
+	widget->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
+
+	widget->Base.ShowCaret = true;
+	widget->Base.Padding   = 5;
+	widget->Base.GetMaxLines    = ChatInputWidget_GetMaxLines;
+	widget->Base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
+
+	widget->Base.Base.Base.Render         = ChatInputWidget_Render;
+	widget->Base.Base.Base.HandlesKeyDown = ChatInputWidget_HandlesKeyDown;
+}
+
+Int32 ChatInputWidget_GetMaxLines(void) {
+	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
+}
+
+void ChatInputWidget_Render(GuiElement* elem, Real64 delta) {
+	Gfx_SetTexturing(false);
+	int y = Y, x = X;
+
+	for (int i = 0; i < lineSizes.Length; i++) {
+		if (i > 0 && lineSizes[i].Height == 0) break;
+		bool caretAtEnd = (caretY == i) && (caretX == MaxCharsPerLine || caret == -1);
+		int drawWidth = lineSizes[i].Width + (caretAtEnd ? (int)caretTex.Width : 0);
+		/* Cover whole window width to match original classic behaviour */
+		if (Game_PureClassic) {
+			drawWidth = Math.Max(drawWidth, Game_Width - X * 4);
+		}
+
+		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
+		GfxCommon_Draw2DQuad(x, y, drawWidth + Padding * 2, prefixHeight, backCol);
+		y += lineSizes[i].Height;
+	}
+
+	Gfx_SetTexturing(true);
+	inputTex.Render(game.Graphics);
+	RenderCaret(delta);
+}
+
+void ChatInputWidget_OnPressedEnter(GuiElement* elem) {
+	ChatInputWidget* widget = (ChatInputWidget*)elem;
+	if (!Text.Empty) {
+		// Don't want trailing spaces in output message
+		string text = new String(Text.value, 0, Text.TextLength);
+		game.Chat.Send(text);
+	}
+
+	originalText = null;
+	widget->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
+
+	game.Chat.Add(null, MessageType.ClientStatus2);
+	game.Chat.Add(null, MessageType.ClientStatus3);
+	InputWidget_OnPressedEnter(elem);
+}
+
+bool ChatInputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+	bool controlDown = ControlDown();
+
+	if (key == Key_Tab) { TabKey(); return true; }
+	if (key == Key_Up) { UpKey(controlDown); return true; }
+	if (key == Key_Down) { DownKey(controlDown); return true; }
+
+	return InputWidget_HandlesKeyDown(elem, key);
+}
+
+void ChatInputWidget_UpKey(bool controlDown) {
+	if (controlDown) {
+		int pos = caret == -1 ? Text.Length : caret;
+		if (pos < MaxCharsPerLine) return;
+
+		caret = pos - MaxCharsPerLine;
+		UpdateCaret();
+		return;
+	}
+
+	if (typingLogPos == Chat_InputLog.Count) {
+		originalText = Text.ToString();
+	}
+
+	if (Chat_InputLog.Count == 0) return;
+	typingLogPos--;
+	Text.Clear();
+
+	if (typingLogPos < 0) typingLogPos = 0;
+	Text.Set(game.Chat.InputLog[typingLogPos]);
+
+	caret = -1;
+	Recreate();
+}
+
+void ChatInputWidget_DownKey(bool controlDown) {
+	if (controlDown) {
+		if (caret == -1 || caret >= (UsedLines - 1) * MaxCharsPerLine) return;
+		caret += MaxCharsPerLine;
+		UpdateCaret();
+		return;
+	}
+
+	if (Chat_InputLog.Count == 0) return;
+	typingLogPos++;
+	Text.Clear();
+
+	if (typingLogPos >= Chat_InputLog.Count) {
+		typingLogPos = Chat_InputLog.Count;
+		if (originalText != null) Text.Set(originalText);
+	} else {
+		Text.Set(game.Chat.InputLog[typingLogPos]);
+	}
+
+	caret = -1;
+	Recreate();
+}
+
+void ChatInputWidget_TabKey() {
+	int pos = caret == -1 ? Text.Length - 1 : caret;
+	int start = pos;
+	char[] value = Text.value;
+
+	while (start >= 0 && IsNameChar(value[start]))
+		start--;
+	start++;
+	if (pos < 0 || start > pos) return;
+
+	string part = new String(value, start, pos + 1 - start);
+	List<string> matches = new List<string>();
+	game.Chat.Add(null, MessageType.ClientStatus3);
+
+	TabListEntry[] entries = TabList.Entries;
+	for (int i = 0; i < EntityList.MaxCount; i++) {
+		if (entries[i] == null) continue;
+		string name = entries[i].PlayerName;
+		if (Utils.CaselessStarts(name, part)) matches.Add(name);
+	}
+
+	if (matches.Count == 1) {
+		if (caret == -1) pos++;
+		int len = pos - start;
+		for (int i = 0; i < len; i++)
+			Text.DeleteAt(start);
+		if (caret != -1) caret -= len;
+		Append(matches[0]);
+	} else if (matches.Count > 1) {
+		StringBuffer sb = new StringBuffer(Utils.StringLength);
+		sb.Append("&e");
+		sb.AppendNum(matches.Count);
+		sb.Append(" matching names: ");
+
+		for (int i = 0; i < matches.Count; i++) {
+			string match = matches[i];
+			if ((sb.Length + match.Length + 1) > sb.Capacity) break;
+			sb.Append(match);
+			sb.Append(' ');
+		}
+		game.Chat.Add(sb.ToString(), MessageType.ClientStatus3);
+	}
+}
+
+bool ChatInputWidget_IsNameChar(char c) {
+	return c == '_' || c == '.' || (c >= '0' && c <= '9')
+		|| (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
 
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
@@ -2361,6 +2530,7 @@ void TextGroupWidget_Free(GuiElement* elem) {
 	UInt32 i;
 
 	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		widget->LineLengths[i] = 0;
 		Gfx_DeleteTexture(&widget->Textures[i].ID);
 	}
 }
