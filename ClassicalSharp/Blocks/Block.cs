@@ -102,8 +102,10 @@ namespace ClassicalSharp {
 		
 		#if USE16_BIT
 		public const BlockID MaxDefinedBlock = 0x3FF;
+		public const int Shift = 10;
 		#else
 		public const BlockID MaxDefinedBlock =  0xFF;
+		public const int Shift = 8;
 		#endif
 		
 		public const int Count = MaxDefinedBlock + 1;

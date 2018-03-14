@@ -18,10 +18,8 @@ namespace ClassicalSharp {
 		public static byte[] CanStretch = new byte[Block.Count];
 
 		internal static void UpdateCulling() {
-			for (int block = 0; block < Block.Count; block++)
-				CanStretch[block] = 0x3F;
-			
 			for (int block = 0; block < Block.Count; block++) {
+				CalcStretch((BlockID)block);
 				for (int neighbour = 0; neighbour < Block.Count; neighbour++) {
 					CalcCulling((BlockID)block, (BlockID)neighbour);
 				}
@@ -29,11 +27,26 @@ namespace ClassicalSharp {
 		}
 		
 		internal static void UpdateCulling(BlockID block) {
-			CanStretch[block] = 0x3F;
-			
+			CalcStretch(block);
 			for (int other = 0; other < Block.Count; other++) {
 				CalcCulling(block, (BlockID)other);
 				CalcCulling((BlockID)other, block);
+			}
+		}
+		
+		static void CalcStretch(BlockID block) {
+			// faces which can be stretched on X axis
+			if (MinBB[block].X == 0 && MaxBB[block].X == 1) {
+				CanStretch[block] |= 0x3C;
+			} else {
+				CanStretch[block] &= 0xC3; // ~0x3C
+			}
+			
+			// faces which can be stretched on Z axis
+			if (MinBB[block].Z == 0 && MaxBB[block].Z == 1) {
+				CanStretch[block] |= 0x03;
+			} else {
+				CanStretch[block] &= 0xFC; // ~0x03
 			}
 		}
 		
@@ -43,7 +56,7 @@ namespace ClassicalSharp {
 			if (IsLiquid[block]) bMax.Y -= 1.5f/16;
 			if (IsLiquid[other]) oMax.Y -= 1.5f/16;
 			
-			hidden[block * Block.Count + other] = 0; // set all faces 'not hidden'
+			hidden[(block << Block.Shift) | other] = 0; // set all faces 'not hidden'
 			if (Draw[block] == DrawType.Sprite) {
 				SetHidden(block, other, Side.Left,  true);
 				SetHidden(block, other, Side.Right, true);
@@ -52,8 +65,6 @@ namespace ClassicalSharp {
 				SetHidden(block, other, Side.Bottom, oMax.Y == 1);
 				SetHidden(block, other, Side.Top,    bMax.Y == 1);
 			} else {
-				SetXStretch(block, bMin.X == 0 && bMax.X == 1);
-				SetZStretch(block, bMin.Z == 0 && bMax.Z == 1);
 				bool bothLiquid = IsLiquid[block] && IsLiquid[other];
 				
 				SetHidden(block, other, Side.Left,  oMax.X == 1 && bMin.X == 0);
@@ -85,37 +96,20 @@ namespace ClassicalSharp {
 			
 			// e.g. for water / ice, don't need to draw water.
 			byte bType = Collide[block], oType = Collide[other];
-			bool canSkip = (bType == CollideType.Solid && oType == CollideType.Solid) 
-				|| bType != CollideType.Solid;
+			bool canSkip = (bType == CollideType.Solid && oType == CollideType.Solid) || bType != CollideType.Solid;
 			return canSkip;
 		}
 		
 		static void SetHidden(BlockID block, BlockID other, int side, bool value) {
 			value = IsHidden(block, other) && FaceOccluded(block, other, side) && value;
 			int bit = value ? 1 : 0;
-			hidden[block * Block.Count + other] |= (byte)(bit << side);
+			hidden[(block << Block.Shift) | other] |= (byte)(bit << side);
 		}
 		
 		/// <summary> Returns whether the face at the given face of the block
 		/// should be drawn with the neighbour 'other' present on the other side of the face. </summary>
 		public static bool IsFaceHidden(BlockID block, BlockID other, int tileSide) {
-			#if USE16_BIT
-			return (hidden[(block << 10) | other] & (1 << tileSide)) != 0;
-			#else
-			return (hidden[(block << 8) | other] & (1 << tileSide)) != 0;
-			#endif
-		}
-		
-		static void SetXStretch(BlockID block, bool stretch) {
-			const byte mask = 0x3C;
-			CanStretch[block] &= 0xC3; // ~0x3C
-			CanStretch[block] |= (stretch ? mask : (byte)0);
-		}
-		
-		static void SetZStretch(BlockID block, bool stretch) {
-			const byte mask = 0x03;
-			CanStretch[block] &= 0xFC; // ~0x03
-			CanStretch[block] |= (stretch ? mask : (byte)0);
+			return (hidden[(block << Block.Shift) | other] & (1 << tileSide)) != 0;
 		}
 	}
 }

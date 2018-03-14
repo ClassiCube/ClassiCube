@@ -345,10 +345,10 @@ void Block_RecalculateBB(BlockID block) {
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
 	Int32 texX = texLoc & 0x0F, texY = texLoc >> 4;
 
-	Real32 topY    = Block_GetSpriteBB_TopY(elemSize, texX, texY, bmp);
+	Real32 topY    = Block_GetSpriteBB_TopY(elemSize,    texX, texY, bmp);
 	Real32 bottomY = Block_GetSpriteBB_BottomY(elemSize, texX, texY, bmp);
-	Real32 leftX   = Block_GetSpriteBB_LeftX(elemSize, texX, texY, bmp);
-	Real32 rightX  = Block_GetSpriteBB_RightX(elemSize, texX, texY, bmp);
+	Real32 leftX   = Block_GetSpriteBB_LeftX(elemSize,   texX, texY, bmp);
+	Real32 rightX  = Block_GetSpriteBB_RightX(elemSize,  texX, texY, bmp);
 
 	Vector3 centre = Vector3_Create3(0.5f, 0, 0.5f);
 	Vector3 minRaw = Vector3_RotateY3(leftX  - 0.5f, bottomY, 0, 45.0f * MATH_DEG2RAD);
@@ -360,15 +360,20 @@ void Block_RecalculateBB(BlockID block) {
 }
 
 
+void Block_CalcStretch(BlockID block) {
+	/* faces which can be stretched on X axis */
+	if (Block_MinBB[block].X == 0.0f && Block_MaxBB[block].X == 1.0f) {
+		Block_CanStretch[block] |= 0x3C;
+	} else {
+		Block_CanStretch[block] &= 0xC3; /* ~0x3C */
+	}
 
-void Block_SetXStretch(BlockID block, bool stretch) {
-	Block_CanStretch[block] &= 0xC3; /* ~0x3C */
-	Block_CanStretch[block] |= (stretch ? 0x3C : (UInt8)0);
-}
-
-void Block_SetZStretch(BlockID block, bool stretch) {
-	Block_CanStretch[block] &= 0xFC; /* ~0x03 */
-	Block_CanStretch[block] |= (stretch ? 0x03 : (UInt8)0);
+	/* faces which can be stretched on Z axis */
+	if (Block_MinBB[block].Z == 0.0f && Block_MaxBB[block].Z == 1.0f) {
+		Block_CanStretch[block] |= 0x03;
+	} else {
+		Block_CanStretch[block] &= 0xFC; /* ~0x03 */
+	}
 }
 
 void Block_CalcCulling(BlockID block, BlockID other) {
@@ -377,7 +382,7 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 	if (Block_IsLiquid[block]) bMax.Y -= 1.5f / 16.0f;
 	if (Block_IsLiquid[other]) oMax.Y -= 1.5f / 16.0f;
 
-	Block_Hidden[block * BLOCK_COUNT + other] = 0; /* set all faces 'not hidden' */
+	Block_Hidden[(block << BLOCK_SHIFT) | other] = 0; /* set all faces 'not hidden' */
 	if (Block_Draw[block] == DRAW_SPRITE) {
 		Block_SetHidden(block, other, FACE_XMIN, true);
 		Block_SetHidden(block, other, FACE_XMAX, true);
@@ -386,8 +391,6 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 		Block_SetHidden(block, other, FACE_YMIN, oMax.Y == 1.0f);
 		Block_SetHidden(block, other, FACE_YMAX, bMax.Y == 1.0f);
 	} else {
-		Block_SetXStretch(block, bMin.X == 0 && bMax.X == 1.0f);
-		Block_SetZStretch(block, bMin.Z == 0 && bMax.Z == 1.0f);
 		bool bothLiquid = Block_IsLiquid[block] && Block_IsLiquid[other];
 
 		Block_SetHidden(block, other, FACE_XMIN, oMax.X == 1.0f && bMin.X == 0.0f);
@@ -404,10 +407,8 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 
 void Block_UpdateCullingAll(void) {
 	Int32 block, neighbour;
-	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++)
-		Block_CanStretch[block] = 0x3F;
-
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
+		Block_CalcStretch((BlockID)block);
 		for (neighbour = BLOCK_AIR; neighbour < BLOCK_COUNT; neighbour++) {
 			Block_CalcCulling((BlockID)block, (BlockID)neighbour);
 		}
@@ -415,8 +416,7 @@ void Block_UpdateCullingAll(void) {
 }
 
 void Block_UpdateCulling(BlockID block) {
-	Block_CanStretch[block] = 0x3F;
-
+	Block_CalcStretch(block);
 	Int32 other;
 	for (other = BLOCK_AIR; other < BLOCK_COUNT; other++) {
 		Block_CalcCulling(block, (BlockID)other);
@@ -442,22 +442,17 @@ bool Block_IsHidden(BlockID block, BlockID other) {
 
 	/* e.g. for water / ice, don't need to draw water. */
 	UInt8 bType = Block_Collide[block], oType = Block_Collide[other];
-	bool canSkip = (bType == COLLIDE_SOLID && oType == COLLIDE_SOLID)
-		|| bType != COLLIDE_SOLID;
+	bool canSkip = (bType == COLLIDE_SOLID && oType == COLLIDE_SOLID) || bType != COLLIDE_SOLID;
 	return canSkip;
 }
 
 void Block_SetHidden(BlockID block, BlockID other, Face face, bool value) {
 	value = Block_IsHidden(block, other) && Block_FaceOccluded(block, other, face) && value;
-	Block_Hidden[block * BLOCK_COUNT + other] |= (UInt8)(value << face);
+	Block_Hidden[(block << BLOCK_SHIFT) | other] |= (UInt8)(value << face);
 }
 
 bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
-#if USE16_BIT
-	return (hidden[(block << 12) | other] & (1 << face)) != 0;
-#else
-	return (Block_Hidden[(block << 8) | other] & (1 << face)) != 0;
-#endif
+	return (Block_Hidden[(block << BLOCK_SHIFT) | other] & (1 << face)) != 0;
 }
 
 
