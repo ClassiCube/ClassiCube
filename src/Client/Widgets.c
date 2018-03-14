@@ -1095,6 +1095,14 @@ void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, Speci
 }
 
 
+bool InputWidget_ControlDown(void) {
+#if CC_BUILD_OSX
+	return Key_IsWinPressed();
+#else
+	return Key_IsControlPressed();
+#endif
+}
+
 void InputWidget_CalculateLineSizes(InputWidget* widget) {
 	Int32 y;
 	for (y = 0; y < INPUTWIDGET_MAX_LINES; y++) {
@@ -1126,7 +1134,7 @@ UInt8 InputWidget_GetLastCol(InputWidget* widget, Int32 indexX, Int32 indexY) {
 }
 
 void InputWidget_UpdateCaret(InputWidget* widget) {
-	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
+	Int32 maxChars = widget->GetMaxLines() * INPUTWIDGET_LEN;
 	if (widget->CaretPos >= maxChars) widget->CaretPos = -1;
 	WordWrap_GetCoords(widget->CaretPos, widget->Lines, widget->GetMaxLines(), &widget->CaretX, &widget->CaretY);
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
@@ -1134,7 +1142,7 @@ void InputWidget_UpdateCaret(InputWidget* widget) {
 
 	/* Caret is at last character on line */
 	Widget* elem = &widget->Base;
-	if (widget->CaretX == widget->MaxCharsPerLine) {
+	if (widget->CaretX == INPUTWIDGET_LEN) {
 		widget->CaretTex.X = elem->X + widget->Padding + widget->LineSizes[widget->CaretY].Width;
 		PackedCol yellow = PACKEDCOL_YELLOW; widget->CaretCol = yellow;
 		widget->CaretTex.Width = widget->CaretWidth;
@@ -1173,7 +1181,8 @@ void InputWidget_RenderCaret(InputWidget* widget, Real64 delta) {
 	}
 }
 
-void InputWidget_RemakeTexture(InputWidget* widget) {
+void InputWidget_RemakeTexture(GuiElement* elem) {
+	InputWidget* widget = (InputWidget*)elem;
 	Int32 totalHeight = 0, maxWidth = 0, i;
 	for (i = 0; i < widget->GetMaxLines(); i++) {
 		totalHeight += widget->LineSizes[i].Height;
@@ -1215,15 +1224,16 @@ void InputWidget_RemakeTexture(InputWidget* widget) {
 	Drawer2D_End();
 	Platform_MemFree(bmp.Scan0);
 
-	Widget* elem = &widget->Base;
-	elem->Width = size.Width;
-	elem->Height = realHeight == 0 ? widget->PrefixHeight : realHeight;
-	elem->Reposition(elem);
-	widget->InputTex.X = elem->X + widget->Padding;
-	widget->InputTex.Y = elem->Y;
+	Widget* elemW = &widget->Base;
+	elemW->Width = size.Width;
+	elemW->Height = realHeight == 0 ? widget->PrefixHeight : realHeight;
+	elemW->Reposition(elemW);
+	widget->InputTex.X = elemW->X + widget->Padding;
+	widget->InputTex.Y = elemW->Y;
 }
 
-void InputWidget_OnPressedEnter(InputWidget* widget) {
+void InputWidget_OnPressedEnter(GuiElement* elem) {
+	InputWidget* widget = (InputWidget*)elem;
 	InputWidget_Clear(widget);
 	widget->Base.Height = widget->PrefixHeight;
 }
@@ -1254,7 +1264,7 @@ void InputWidget_AppendChar(InputWidget* widget, UInt8 c) {
 }
 
 bool InputWidget_TryAppendChar(InputWidget* widget, UInt8 c) {
-	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
+	Int32 maxChars = widget->GetMaxLines() * INPUTWIDGET_LEN;
 	if (widget->Text.length >= maxChars) return false;
 	if (!widget->AllowedChar(&widget->Base.Base, c)) return false;
 
@@ -1297,8 +1307,8 @@ bool InputWidget_CheckCol(InputWidget* widget, Int32 index) {
 	return (code == '%' || code == '&') && Drawer2D_ValidColCode(col);
 }
 
-void InputWidget_BackspaceKey(InputWidget* widget, bool controlDown) {
-	if (controlDown) {
+void InputWidget_BackspaceKey(InputWidget* widget) {
+	if (InputWidget_ControlDown()) {
 		if (widget->CaretPos == -1) { widget->CaretPos = widget->Text.length - 1; }
 		Int32 len = WordWrap_GetBackLength(&widget->Text, widget->CaretPos);
 		if (len == 0) return;
@@ -1342,8 +1352,8 @@ void InputWidget_DeleteKey(InputWidget* widget) {
 	}
 }
 
-void InputWidget_LeftKey(InputWidget* widget, bool controlDown) {
-	if (controlDown) {
+void InputWidget_LeftKey(InputWidget* widget) {
+	if (InputWidget_ControlDown()) {
 		if (widget->CaretPos == -1) { widget->CaretPos = widget->Text.length - 1; }
 		widget->CaretPos -= WordWrap_GetBackLength(&widget->Text, widget->CaretPos);
 		InputWidget_UpdateCaret(widget);
@@ -1358,8 +1368,8 @@ void InputWidget_LeftKey(InputWidget* widget, bool controlDown) {
 	}
 }
 
-void InputWidget_RightKey(InputWidget* widget, bool controlDown) {
-	if (controlDown) {
+void InputWidget_RightKey(InputWidget* widget) {
+	if (InputWidget_ControlDown()) {
 		widget->CaretPos += WordWrap_GetForwardLength(&widget->Text, widget->CaretPos);
 		if (widget->CaretPos >= widget->Text.length) { widget->CaretPos = -1; }
 		InputWidget_UpdateCaret(widget);
@@ -1385,7 +1395,7 @@ void InputWidget_EndKey(InputWidget* widget) {
 }
 
 bool InputWidget_OtherKey(InputWidget* widget, Key key) {
-	Int32 maxChars = widget->GetMaxLines() * widget->MaxCharsPerLine;
+	Int32 maxChars = widget->GetMaxLines() * INPUTWIDGET_LEN;
 	if (key == Key_V && widget->Text.length < maxChars) {
 		UInt8 textBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
 		String text = String_InitAndClearArray(textBuffer);
@@ -1406,14 +1416,15 @@ void InputWidget_Init(GuiElement* elem) {
 	InputWidget* widget = (InputWidget*)elem;
 	Int32 lines = widget->GetMaxLines();
 	if (lines > 1) {
-		WordWrap_Do(&widget->Text, widget->Lines, lines, widget->MaxCharsPerLine);
+		/* TODO: Actually make this work */
+		WordWrap_Do(&widget->Text, widget->Lines, lines, INPUTWIDGET_LEN);
 	} else {
 		String_Clear(&widget->Lines[0]);
 		String_AppendString(&widget->Lines[0], &widget->Text);
 	}
 
 	InputWidget_CalculateLineSizes(widget);
-	InputWidget_RemakeTexture(widget);
+	InputWidget_RemakeTexture(elem);
 	InputWidget_UpdateCaret(widget);
 }
 
@@ -1421,7 +1432,6 @@ void InputWidget_Free(GuiElement* elem) {
 	InputWidget* widget = (InputWidget*)elem;
 	Gfx_DeleteTexture(&widget->InputTex.ID);
 	Gfx_DeleteTexture(&widget->CaretTex.ID);
-	Gfx_DeleteTexture(&widget->PrefixTex.ID);
 }
 
 void InputWidget_Recreate(GuiElement* elem) {
@@ -1440,26 +1450,21 @@ void InputWidget_Reposition(Widget* elem) {
 }
 
 bool InputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
-#if CC_BUILD_OSX
-	bool clipboardDown = Key_IsWinPressed();
-#else
-	bool clipboardDown = Key_IsControlPressed();
-#endif
 	InputWidget* widget = (InputWidget*)elem;
 
 	if (key == Key_Left) {
-		InputWidget_LeftKey(widget, clipboardDown);
+		InputWidget_LeftKey(widget);
 	} else if (key == Key_Right) {
-		InputWidget_RightKey(widget, clipboardDown);
+		InputWidget_RightKey(widget);
 	} else if (key == Key_BackSpace) {
-		InputWidget_BackspaceKey(widget, clipboardDown);
+		InputWidget_BackspaceKey(widget);
 	} else if (key == Key_Delete) {
 		InputWidget_DeleteKey(widget);
 	} else if (key == Key_Home) {
 		InputWidget_HomeKey(widget);
 	} else if (key == Key_End) {
 		InputWidget_EndKey(widget);
-	} else if (clipboardDown && !InputWidget_OtherKey(widget, key)) {
+	} else if (InputWidget_ControlDown() && !InputWidget_OtherKey(widget, key)) {
 		return false;
 	}
 	return true;
@@ -1478,7 +1483,7 @@ bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButto
 	if (button == MouseButton_Left) {
 		x -= widget->InputTex.X; y -= widget->InputTex.Y;
 		DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
-		Int32 offset = 0, charHeight = widget->CaretHeight;
+		Int32 offset = 0, charHeight = widget->CaretTex.Height;
 
 		Int32 charX, i;
 		for (i = 0; i < widget->GetMaxLines(); i++) {
@@ -1512,7 +1517,6 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->Font            = *font;
 	widget->Prefix          = *prefix;
 	widget->CaretPos        = -1;
-	widget->MaxCharsPerLine = STRING_SIZE;
 	widget->RemakeTexture   = InputWidget_RemakeTexture;
 	widget->OnPressedEnter  = InputWidget_OnPressedEnter;
 	widget->AllowedChar     = InputWidget_AllowedChar;	
@@ -1531,8 +1535,7 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
 	widget->CaretTex = Drawer2D_MakeTextTexture(&args, 0, 0);
 	widget->CaretTex.Width = (UInt16)((widget->CaretTex.Width * 3) / 4);
-	widget->CaretWidth  = (UInt16)widget->CaretTex.Width;
-	widget->CaretHeight = (UInt16)widget->CaretTex.Height;
+	widget->CaretWidth     = (UInt16)widget->CaretTex.Width;
 
 	if (prefix->length == 0) return;
 	DrawTextArgs_Make(&args, prefix, font, true);
@@ -1781,7 +1784,7 @@ bool MenuInputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
 	MenuInputValidator* validator = &widget->Validator;
 
 	if (!validator->IsValidChar(validator, c)) return false;
-	Int32 maxChars = elemW->GetMaxLines() * elemW->MaxCharsPerLine;
+	Int32 maxChars = elemW->GetMaxLines() * INPUTWIDGET_LEN;
 	if (elemW->Text.length == maxChars) return false;
 
 	/* See if the new string is in valid format */
@@ -1811,13 +1814,190 @@ void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, 
 }
 
 
+void ChatInputWidget_Render(GuiElement* elem, Real64 delta) {
+	ChatInputWidget* widget = (ChatInputWidget*)elem;
+	InputWidget* input = (InputWidget*)elem;
+	Gfx_SetTexturing(false);
+	Int32 x = input->Base.X, y = input->Base.Y;
+
+	UInt32 i;
+	for (i = 0; i < INPUTWIDGET_MAX_LINES; i++) {
+		if (i > 0 && input->LineSizes[i].Height == 0) break;
+		bool caretAtEnd = (input->CaretY == i) && (input->CaretX == INPUTWIDGET_LEN || input->CaretPos == -1);
+		Int32 drawWidth = input->LineSizes[i].Width + (caretAtEnd ? input->CaretTex.Width : 0);
+		/* Cover whole window width to match original classic behaviour */
+		if (Game_PureClassic) {
+			drawWidth = max(drawWidth, Game_Width - x * 4);
+		}
+
+		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
+		GfxCommon_Draw2DFlat(x, y, drawWidth + input->Padding * 2, input->PrefixHeight, backCol);
+		y += input->LineSizes[i].Height;
+	}
+
+	Gfx_SetTexturing(true);
+	Texture_Render(&input->InputTex);
+	InputWidget_RenderCaret(input, delta);
+}
+
+void ChatInputWidget_OnPressedEnter(GuiElement* elem) {
+	ChatInputWidget* widget = (ChatInputWidget*)elem;
+
+	/* Don't want trailing spaces in output message */
+	String text = widget->Base.Text;
+	while (text.length > 0 && text.buffer[text.length - 1] == ' ') { text.length--; }
+	if (text.length > 0) { Chat_Send(&text); }
+
+	String orig = String_FromRawArray(widget->OrigBuffer);
+	String_Clear(&orig);
+	widget->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
+
+	String empty = String_MakeNull();
+	Chat_AddOf(&empty, MESSAGE_TYPE_CLIENTSTATUS_2);
+	Chat_AddOf(&empty, MESSAGE_TYPE_CLIENTSTATUS_3);
+	InputWidget_OnPressedEnter(elem);
+}
+
+void ChatInputWidget_UpKey(GuiElement* elem) {
+	ChatInputWidget* widget = (ChatInputWidget*)elem;
+	InputWidget* input = (InputWidget*)elem;
+
+	if (InputWidget_ControlDown()) {
+		Int32 pos = input->CaretPos == -1 ? input->Text.length : input->CaretPos;
+		if (pos < INPUTWIDGET_LEN) return;
+
+		input->CaretPos = pos - INPUTWIDGET_LEN;
+		InputWidget_UpdateCaret(input);
+		return;
+	}
+
+	if (widget->TypingLogPos == Chat_InputLog.Count) {
+		String orig = String_FromRawArray(widget->OrigBuffer);
+		String_Clear(&orig);
+		String_AppendString(&orig, &input->Text);
+	}
+
+	if (Chat_InputLog.Count == 0) return;
+	widget->TypingLogPos--;
+	String_Clear(&input->Text);
+
+	if (widget->TypingLogPos < 0) widget->TypingLogPos = 0;
+	String prevInput = StringsBuffer_UNSAFE_Get(&Chat_InputLog, widget->TypingLogPos);
+	String_AppendString(&input->Text, &prevInput);
+
+	input->CaretPos = -1;
+	elem->Recreate(elem);
+}
+
+void ChatInputWidget_DownKey(GuiElement* elem) {
+	ChatInputWidget* widget = (ChatInputWidget*)elem;
+	InputWidget* input = (InputWidget*)elem;
+
+	if (InputWidget_ControlDown()) {
+		Int32 lines = input->GetMaxLines();
+		if (input->CaretPos == -1 || input->CaretPos >= (lines - 1) * INPUTWIDGET_LEN) return;
+
+		input->CaretPos += INPUTWIDGET_LEN;
+		InputWidget_UpdateCaret(input);
+		return;
+	}
+
+	if (Chat_InputLog.Count == 0) return;
+	widget->TypingLogPos++;
+	String_Clear(&input->Text);
+
+	if (widget->TypingLogPos >= Chat_InputLog.Count) {
+		widget->TypingLogPos = Chat_InputLog.Count;
+		String orig = String_FromRawArray(widget->OrigBuffer);
+		if (orig.length > 0) { String_AppendString(&input->Text, &orig); }
+	} else {
+		String prevInput = StringsBuffer_UNSAFE_Get(&Chat_InputLog, widget->TypingLogPos);
+		String_AppendString(&input->Text, &prevInput);
+	}
+
+	input->CaretPos = -1;
+	elem->Recreate(elem);
+}
+
+bool ChatInputWidget_IsNameChar(char c) {
+	return c == '_' || c == '.' || (c >= '0' && c <= '9')
+		|| (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+}
+
+void ChatInputWidget_TabKey(GuiElement* elem) {
+	ChatInputWidget* widget = (ChatInputWidget*)elem;
+	InputWidget* input = (InputWidget*)elem;
+
+	Int32 end = input->CaretPos == -1 ? input->Text.length - 1 : input->CaretPos;
+	Int32 start = end;
+	UInt8* buffer = input->Text.buffer;
+
+	while (start >= 0 && ChatInputWidget_IsNameChar(buffer[start])) { start--; }
+	start++;
+	if (end < 0 || start > end) return;
+
+	String part = String_UNSAFE_Substring(&input->Text, start, (end + 1) - start);
+	String empty = String_MakeNull();
+	Chat_AddOf(&empty, MESSAGE_TYPE_CLIENTSTATUS_3);
+
+	EntityID matches[TABLIST_MAX_NAMES];
+	UInt32 i, matchesCount = 0;
+
+	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
+		EntityID id = (EntityID)i;
+		if (!TabList_Valid(id)) continue;
+
+		String name = TabList_UNSAFE_GetPlayer(i);
+		if (!String_CaselessStarts(&name, &part)) continue;
+		matches[matchesCount++] = id;
+	}
+
+	if (matchesCount == 1) {
+		if (input->CaretPos == -1) end++;
+		Int32 len = end - start, j;
+		for (j = 0; j < len; j++) {
+			String_DeleteAt(&input->Text, start);
+		}
+
+		if (input->CaretPos != -1) input->CaretPos -= len;
+		String match = TabList_UNSAFE_GetPlayer(matches[0]);
+		InputWidget_AppendString(input, &match);
+	} else if (matchesCount > 1) {
+		UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
+		String str = String_InitAndClearArray(strBuffer);
+		String_AppendConst(&str, "&e");
+		String_AppendInt32(&str, matchesCount);
+		String_AppendConst(&str, " matching names: ");
+
+		for (i = 0; i < matchesCount; i++) {
+			String match = TabList_UNSAFE_GetPlayer(matches[i]);
+			if ((str.length + match.length + 1) > STRING_SIZE) break;
+
+			String_AppendString(&str, &match);
+			String_Append(&str, ' ');
+		}
+		Chat_AddOf(&str, MESSAGE_TYPE_CLIENTSTATUS_3);
+	}
+}
+
+bool ChatInputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
+	if (key == Key_Tab)  { ChatInputWidget_TabKey(elem);  return true; }
+	if (key == Key_Up)   { ChatInputWidget_UpKey(elem);   return true; }
+	if (key == Key_Down) { ChatInputWidget_DownKey(elem); return true; }
+	return InputWidget_HandlesKeyDown(elem, key);
+}
+
+Int32 ChatInputWidget_GetMaxLines(void) {
+	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
+}
+
 void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 	String prefix = String_FromConst("> ");
 	InputWidget_Create(&widget->Base, font, &prefix);
 	widget->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
 
-	widget->Base.ShowCaret = true;
-	widget->Base.Padding   = 5;
+	widget->Base.ShowCaret      = true;
+	widget->Base.Padding        = 5;
 	widget->Base.GetMaxLines    = ChatInputWidget_GetMaxLines;
 	widget->Base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
 
@@ -1825,155 +2005,6 @@ void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 	widget->Base.Base.Base.HandlesKeyDown = ChatInputWidget_HandlesKeyDown;
 }
 
-Int32 ChatInputWidget_GetMaxLines(void) {
-	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
-}
-
-void ChatInputWidget_Render(GuiElement* elem, Real64 delta) {
-	Gfx_SetTexturing(false);
-	int y = Y, x = X;
-
-	for (int i = 0; i < lineSizes.Length; i++) {
-		if (i > 0 && lineSizes[i].Height == 0) break;
-		bool caretAtEnd = (caretY == i) && (caretX == MaxCharsPerLine || caret == -1);
-		int drawWidth = lineSizes[i].Width + (caretAtEnd ? (int)caretTex.Width : 0);
-		/* Cover whole window width to match original classic behaviour */
-		if (Game_PureClassic) {
-			drawWidth = Math.Max(drawWidth, Game_Width - X * 4);
-		}
-
-		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
-		GfxCommon_Draw2DQuad(x, y, drawWidth + Padding * 2, prefixHeight, backCol);
-		y += lineSizes[i].Height;
-	}
-
-	Gfx_SetTexturing(true);
-	inputTex.Render(game.Graphics);
-	RenderCaret(delta);
-}
-
-void ChatInputWidget_OnPressedEnter(GuiElement* elem) {
-	ChatInputWidget* widget = (ChatInputWidget*)elem;
-	if (!Text.Empty) {
-		// Don't want trailing spaces in output message
-		string text = new String(Text.value, 0, Text.TextLength);
-		game.Chat.Send(text);
-	}
-
-	originalText = null;
-	widget->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
-
-	game.Chat.Add(null, MessageType.ClientStatus2);
-	game.Chat.Add(null, MessageType.ClientStatus3);
-	InputWidget_OnPressedEnter(elem);
-}
-
-bool ChatInputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
-	bool controlDown = ControlDown();
-
-	if (key == Key_Tab) { TabKey(); return true; }
-	if (key == Key_Up) { UpKey(controlDown); return true; }
-	if (key == Key_Down) { DownKey(controlDown); return true; }
-
-	return InputWidget_HandlesKeyDown(elem, key);
-}
-
-void ChatInputWidget_UpKey(bool controlDown) {
-	if (controlDown) {
-		int pos = caret == -1 ? Text.Length : caret;
-		if (pos < MaxCharsPerLine) return;
-
-		caret = pos - MaxCharsPerLine;
-		UpdateCaret();
-		return;
-	}
-
-	if (typingLogPos == Chat_InputLog.Count) {
-		originalText = Text.ToString();
-	}
-
-	if (Chat_InputLog.Count == 0) return;
-	typingLogPos--;
-	Text.Clear();
-
-	if (typingLogPos < 0) typingLogPos = 0;
-	Text.Set(game.Chat.InputLog[typingLogPos]);
-
-	caret = -1;
-	Recreate();
-}
-
-void ChatInputWidget_DownKey(bool controlDown) {
-	if (controlDown) {
-		if (caret == -1 || caret >= (UsedLines - 1) * MaxCharsPerLine) return;
-		caret += MaxCharsPerLine;
-		UpdateCaret();
-		return;
-	}
-
-	if (Chat_InputLog.Count == 0) return;
-	typingLogPos++;
-	Text.Clear();
-
-	if (typingLogPos >= Chat_InputLog.Count) {
-		typingLogPos = Chat_InputLog.Count;
-		if (originalText != null) Text.Set(originalText);
-	} else {
-		Text.Set(game.Chat.InputLog[typingLogPos]);
-	}
-
-	caret = -1;
-	Recreate();
-}
-
-void ChatInputWidget_TabKey() {
-	int pos = caret == -1 ? Text.Length - 1 : caret;
-	int start = pos;
-	char[] value = Text.value;
-
-	while (start >= 0 && IsNameChar(value[start]))
-		start--;
-	start++;
-	if (pos < 0 || start > pos) return;
-
-	string part = new String(value, start, pos + 1 - start);
-	List<string> matches = new List<string>();
-	game.Chat.Add(null, MessageType.ClientStatus3);
-
-	TabListEntry[] entries = TabList.Entries;
-	for (int i = 0; i < EntityList.MaxCount; i++) {
-		if (entries[i] == null) continue;
-		string name = entries[i].PlayerName;
-		if (Utils.CaselessStarts(name, part)) matches.Add(name);
-	}
-
-	if (matches.Count == 1) {
-		if (caret == -1) pos++;
-		int len = pos - start;
-		for (int i = 0; i < len; i++)
-			Text.DeleteAt(start);
-		if (caret != -1) caret -= len;
-		Append(matches[0]);
-	} else if (matches.Count > 1) {
-		StringBuffer sb = new StringBuffer(Utils.StringLength);
-		sb.Append("&e");
-		sb.AppendNum(matches.Count);
-		sb.Append(" matching names: ");
-
-		for (int i = 0; i < matches.Count; i++) {
-			string match = matches[i];
-			if ((sb.Length + match.Length + 1) > sb.Capacity) break;
-			sb.Append(match);
-			sb.Append(' ');
-		}
-		game.Chat.Add(sb.ToString(), MessageType.ClientStatus3);
-	}
-}
-
-bool ChatInputWidget_IsNameChar(char c) {
-	return c == '_' || c == '.' || (c >= '0' && c <= '9')
-		|| (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
-}
 
 
 #define GROUP_NAME_ID UInt16_MaxValue

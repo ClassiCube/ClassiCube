@@ -121,11 +121,10 @@ void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
 
 
 #define INPUTWIDGET_MAX_LINES 3
-struct InputWidget_;
+#define INPUTWIDGET_LEN STRING_SIZE
 typedef struct InputWidget_ {
 	Widget Base;
 	FontDesc Font;		
-	Int32 Padding, MaxCharsPerLine;
 	Int32 (*GetMaxLines)(void);
 	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(GuiElement* elem); /* Invoked when the user presses enter. */
@@ -137,12 +136,12 @@ typedef struct InputWidget_ {
 	Texture InputTex;
 	String Prefix;
 	UInt16 PrefixWidth, PrefixHeight;
-	Texture PrefixTex;
-
-	Int32 CaretX, CaretY;          /* Coordinates of caret in lines */
-	UInt16 CaretWidth, CaretHeight;	
-	Int32 CaretPos;                /* Position of caret, -1 for at end of string. */
+	
+	UInt8 Padding;
 	bool ShowCaret;
+	UInt16 CaretWidth;
+	Int32 CaretX, CaretY;          /* Coordinates of caret in lines */
+	Int32 CaretPos;                /* Position of caret, -1 for at end of string. */
 	PackedCol CaretCol;
 	Texture CaretTex;
 	Real64 CaretAccumulator;
@@ -187,7 +186,7 @@ typedef struct MenuInputWidget_ {
 	InputWidget Base;
 	Int32 MinWidth, MinHeight;
 	MenuInputValidator Validator;
-	UInt8 TextBuffer[String_BufferSize(STRING_SIZE)];
+	UInt8 TextBuffer[String_BufferSize(INPUTWIDGET_LEN)];
 } MenuInputWidget;
 
 void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, MenuInputValidator* validator);
@@ -196,8 +195,8 @@ void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, 
 typedef struct ChatInputWidget_ {
 	InputWidget Base;
 	Int32 TypingLogPos;
-	UInt8 TextBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
-	UInt8 OrigBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
+	UInt8 TextBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
+	UInt8 OrigBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
 } ChatInputWidget;
 
 void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font);

@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs("_", font, true);
 			caretTex = game.Drawer2D.MakeTextTexture(ref args, 0, 0);
 			caretTex.Width = (ushort)((caretTex.Width * 3) / 4);
-			caretWidth = caretTex.Width; caretHeight = caretTex.Height;
+			caretWidth = caretTex.Width;
 			
 			if (Prefix == null) return;
 			args = new DrawTextArgs(Prefix, font, true);
@@ -38,7 +38,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		protected int caret = -1;
 		protected Texture inputTex, caretTex, prefixTex;
 		protected readonly Font font;
-		protected int caretWidth, caretHeight, prefixWidth, prefixHeight;
+		protected int caretWidth, prefixWidth, prefixHeight;
 		protected FastColour caretColour;
 		
 		/// <summary> The raw text entered. </summary>
@@ -447,7 +447,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			mouseX -= inputTex.X1; mouseY -= inputTex.Y1;
 			DrawTextArgs args = new DrawTextArgs(null, font, true);
 			IDrawer2D drawer = game.Drawer2D;
-			int offset = 0, elemHeight = caretHeight;
+			int offset = 0, elemHeight = caretTex.Height;
 			string oneChar = new String('A', 1);
 			
 			for (int y = 0; y < lines.Length; y++) {
