@@ -23,11 +23,11 @@ namespace ClassicalSharp {
 			Vector3 min = MinBB[block], max = MaxBB[block];
 			
 			if (IsLiquid[block]) {
-				min.X -= 0.1f/16f; max.X -= 0.1f/16f; 
+				min.X -= 0.1f/16f; max.X -= 0.1f/16f;
 				min.Z -= 0.1f/16f; max.Z -= 0.1f/16f;
 				min.Y -= 1.5f/16f; max.Y -= 1.5f/16f;
 			} else if (Draw[block] == DrawType.Translucent && Collide[block] != CollideType.Solid) {
-				min.X += 0.1f/16f; max.X += 0.1f/16f; 
+				min.X += 0.1f/16f; max.X += 0.1f/16f;
 				min.Z += 0.1f/16f; max.Z += 0.1f/16f;
 				min.Y -= 0.1f/16f; max.Y -= 0.1f/16f;
 			}
@@ -51,10 +51,12 @@ namespace ClassicalSharp {
 			return (byte)flags;
 		}
 		
-		public static void RecalculateSpriteBB(FastBitmap fastBmp) {
-			for (int i = 0; i < Block.Count; i++) {
-				if (Draw[i] != DrawType.Sprite) continue;
-				RecalculateBB((BlockID)i, fastBmp);
+		internal static void RecalculateSpriteBB() {
+			using (FastBitmap fastBmp = new FastBitmap(TerrainAtlas2D.Atlas, true, true)) {
+				for (int i = 0; i < Block.Count; i++) {
+					if (Draw[i] != DrawType.Sprite) continue;
+					RecalculateBB((BlockID)i, fastBmp);
+				}
 			}
 		}
 		

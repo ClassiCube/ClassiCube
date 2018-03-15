@@ -112,7 +112,7 @@ namespace ClassicalSharp.Gui.Screens {
 			string connectString = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
 			for (int i = 0; i < game.Components.Count; i++)
 				game.Components[i].Reset(game);
-			BlockInfo.Reset(game);
+			BlockInfo.Reset();
 			
 			game.Gui.SetNewScreen(new LoadingMapScreen(game, connectString, ""));
 			game.Server.Connect(game.IPAddress, game.Port);

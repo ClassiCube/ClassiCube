@@ -16,7 +16,6 @@ namespace ClassicalSharp {
 	public sealed class IsometricBlockDrawer {
 		
 		Game game;
-		TerrainAtlas1D atlas;
 		int index;
 		float scale;
 		VertexP3fT2fC4b[] vertices;
@@ -51,9 +50,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void DrawBatch(BlockID block, float size, float x, float y) {
-			atlas = game.TerrainAtlas1D;
-			drawer.elementsPerAtlas1D = atlas.elementsPerAtlas1D;
-			drawer.invVerElementSize = atlas.invElementSize;
+			drawer.elementsPerAtlas1D = TerrainAtlas1D.elementsPerAtlas1D;
+			drawer.invVerElementSize  = TerrainAtlas1D.invElementSize;
 			
 			bool bright = BlockInfo.FullBright[block];
 			if (BlockInfo.Draw[block] == DrawType.Gas) return;
@@ -101,7 +99,7 @@ namespace ClassicalSharp {
 		
 		int GetTex(BlockID block, int side) {
 			int texLoc = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texLoc / atlas.elementsPerAtlas1D;
+			texIndex = texLoc / TerrainAtlas1D.elementsPerAtlas1D;
 			
 			if (lastTexIndex != texIndex) Flush();
 			return texLoc;
@@ -110,7 +108,7 @@ namespace ClassicalSharp {
 		static Vector3 pos = Vector3.Zero;
 		void SpriteZQuad(BlockID block, bool firstPart) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Right);
-			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
+			TextureRec rec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
@@ -134,7 +132,7 @@ namespace ClassicalSharp {
 
 		void SpriteXQuad(BlockID block, bool firstPart) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Right);
-			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
+			TextureRec rec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
@@ -159,7 +157,7 @@ namespace ClassicalSharp {
 		int lastTexIndex, texIndex;
 		void Flush() {
 			if (lastTexIndex != -1) {
-				game.Graphics.BindTexture(atlas.TexIds[lastTexIndex]);
+				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[lastTexIndex]);
 				game.Graphics.UpdateDynamicVb_IndexedTris(vb, vertices, index);
 			}
 			

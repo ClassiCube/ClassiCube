@@ -93,9 +93,9 @@ namespace ClassicalSharp {
 		/// <remarks> Full tile block means Min of (0, 0, 0) and max of (1, 1, 1). </remarks>
 		public static bool[] FullOpaque = new bool[Block.Count];
 		
-		public static void Reset(Game game) {
+		public static void Reset() {
 			Init();
-			game.TerrainAtlas.UpdateState();
+			RecalculateSpriteBB();
 		}
 		
 		public static void Init() {

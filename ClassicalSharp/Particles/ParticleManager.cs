@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Textures;
 using OpenTK;
 
 #if USE16_BIT
@@ -42,8 +43,8 @@ namespace ClassicalSharp.Particles {
 		public void OnNewMapLoaded(Game game) { }
 
 		void TerrainAtlasChanged(object sender, EventArgs e) {
-			terrain1DCount = new int[game.TerrainAtlas1D.TexIds.Length];
-			terrain1DIndices = new int[game.TerrainAtlas1D.TexIds.Length];
+			terrain1DCount = new int[TerrainAtlas1D.TexIds.Length];
+			terrain1DIndices = new int[TerrainAtlas1D.TexIds.Length];
 		}
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
@@ -76,7 +77,7 @@ namespace ClassicalSharp.Particles {
 
 			Update1DCounts(particles, elems);
 			for (int i = 0; i < elems; i++) {
-				int index = game.TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
+				int index = TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
 				particles[i].Render(game, t, vertices, ref terrain1DIndices[index]);
 			}
 			int drawCount = Math.Min(count, maxParticles * 4);
@@ -89,7 +90,7 @@ namespace ClassicalSharp.Particles {
 					int partCount = terrain1DCount[i];
 					if (partCount == 0) continue;
 					
-					gfx.BindTexture(game.TerrainAtlas1D.TexIds[i]);
+					gfx.BindTexture(TerrainAtlas1D.TexIds[i]);
 					gfx.DrawVb_IndexedTris(partCount, offset);
 					offset += partCount;
 				}
@@ -102,7 +103,7 @@ namespace ClassicalSharp.Particles {
 				terrain1DIndices[i] = 0;
 			}
 			for (int i = 0; i < elems; i++) {
-				int index = game.TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
+				int index = TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
 				terrain1DCount[index] += 4;
 			}
 			for (int i = 1; i < terrain1DCount.Length; i++) {
@@ -173,8 +174,8 @@ namespace ClassicalSharp.Particles {
 			
 			Vector3 worldPos = new Vector3(position.X, position.Y, position.Z);
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Left), texIndex = 0;
-			TextureRec baseRec = game.TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
-			float uScale = (1/16f), vScale = (1/16f) * game.TerrainAtlas1D.invElementSize;
+			TextureRec baseRec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
+			float uScale = (1/16f), vScale = (1/16f) * TerrainAtlas1D.invElementSize;
 			
 			Vector3 minBB = BlockInfo.MinBB[block];
 			Vector3 maxBB = BlockInfo.MaxBB[block];

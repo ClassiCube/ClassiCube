@@ -34,7 +34,7 @@ namespace ClassicalSharp.Network.Protocols {
 			HandleDefineBlockCommonEnd(reader, shape, block);
 			// Update sprite BoundingBox if necessary
 			if (BlockInfo.Draw[block] == DrawType.Sprite) {
-				using (FastBitmap dst = new FastBitmap(game.TerrainAtlas.AtlasBitmap, true, true))
+				using (FastBitmap dst = new FastBitmap(TerrainAtlas2D.Atlas, true, true))
 					BlockInfo.RecalculateBB(block, dst);
 			}
 		}

@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 		
 		protected override void PreStretchTiles(int x1, int y1, int z1) {
 			base.PreStretchTiles(x1, y1, z1);
-			drawer.invVerElementSize = invVerElementSize;
+			drawer.invVerElementSize  = invVerElementSize;
 			drawer.elementsPerAtlas1D = elementsPerAtlas1D;
 		}
 		

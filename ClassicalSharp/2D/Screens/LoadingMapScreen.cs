@@ -134,9 +134,8 @@ namespace ClassicalSharp.Gui.Screens {
 			int col = new FastColour(64, 64, 64).Pack();
 			
 			int texLoc = BlockInfo.GetTextureLoc(Block.Dirt, Side.Top);
-			TerrainAtlas1D atlas = game.TerrainAtlas1D;
 			Texture tex = new Texture(0, 0, 0, game.Width, 64, 
-			                          atlas.GetTexRec(texLoc, 1, out atlasIndex));
+			                          TerrainAtlas1D.GetTexRec(texLoc, 1, out atlasIndex));
 			tex.U2 = (float)game.Width / 64;
 			bool bound = false;
 			
@@ -154,7 +153,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (index == 0) return;
 			if (!bound) {
 				bound = true;
-				game.Graphics.BindTexture(game.TerrainAtlas1D.TexIds[atlasIndex]);
+				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[atlasIndex]);
 			}
 					
 			ModelCache cache = game.ModelCache;

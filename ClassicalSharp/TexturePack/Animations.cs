@@ -55,11 +55,11 @@ namespace ClassicalSharp.Textures {
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public void Tick(ScheduledTask task) {
 			if (useLavaAnim) {
-				int size = Math.Min(game.TerrainAtlas.TileSize, 64);
+				int size = Math.Min(TerrainAtlas2D.ElemSize, 64);
 				DrawAnimation(null, 30, size);
 			}			
 			if (useWaterAnim) {
-				int size = Math.Min(game.TerrainAtlas.TileSize, 64);
+				int size = Math.Min(TerrainAtlas2D.ElemSize, 64);
 				DrawAnimation(null, 14, size);
 			}
 			
@@ -153,10 +153,9 @@ namespace ClassicalSharp.Textures {
 			}
 		}
 		
-		unsafe void DrawAnimationCore(AnimationData data, int texId, int size, byte* temp) {
-			TerrainAtlas1D atlas = game.TerrainAtlas1D;			
-			int index = atlas.Get1DIndex(texId);
-			int rowNum = atlas.Get1DRowId(texId);						
+		unsafe void DrawAnimationCore(AnimationData data, int texId, int size, byte* temp) {	
+			int index  = TerrainAtlas1D.Get1DIndex(texId);
+			int rowNum = TerrainAtlas1D.Get1DRowId(texId);						
 			animPart.SetData(size, size, size * 4, (IntPtr)temp, false);
 			
 			if (data == null) {
@@ -170,8 +169,8 @@ namespace ClassicalSharp.Textures {
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size);
 			}
 			
-			int y = rowNum * game.TerrainAtlas.TileSize;
-			game.Graphics.UpdateTexturePart(atlas.TexIds[index], 0, y, animPart, game.Graphics.Mipmaps);
+			int y = rowNum * TerrainAtlas2D.ElemSize;
+			game.Graphics.UpdateTexturePart(TerrainAtlas1D.TexIds[index], 0, y, animPart, game.Graphics.Mipmaps);
 		}
 		
 		bool IsDefaultZip() {
@@ -210,10 +209,10 @@ namespace ClassicalSharp.Textures {
 		const string terrainFormat = "&cAnimation frames for tile ({0}, {1}) are bigger than the size of a tile in terrain.png";
 		void ValidateAnimations() {
 			validated = true;
-			int tileSize = game.TerrainAtlas.TileSize;
+			int elemSize = TerrainAtlas2D.ElemSize;
 			for (int i = animations.Count - 1; i >= 0; i--) {
 				AnimationData a = animations[i];
-				if (a.FrameSize > tileSize) {
+				if (a.FrameSize > elemSize) {
 					game.Chat.Add(String.Format(terrainFormat, a.TileX, a.TileY));
 					animations.RemoveAt(i);
 					continue;

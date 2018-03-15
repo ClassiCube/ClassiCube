@@ -80,8 +80,6 @@ namespace ClassicalSharp {
 		
 		/// <summary> Total rendering time(in seconds) elapsed since the client was started. </summary>
 		public double accumulator;
-		public TerrainAtlas2D TerrainAtlas;
-		public TerrainAtlas1D TerrainAtlas1D;
 		public SkinType DefaultPlayerSkinType;
 		
 		/// <summary> Accumulator for the number of chunk updates performed. Reset every second. </summary>

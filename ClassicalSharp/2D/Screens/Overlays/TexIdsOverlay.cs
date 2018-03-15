@@ -3,6 +3,7 @@ using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Widgets;
+using ClassicalSharp.Textures;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
@@ -59,12 +60,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void RenderTerrain() {
-			int elementsPerAtlas = game.TerrainAtlas1D.elementsPerAtlas1D;
+			int elementsPerAtlas = TerrainAtlas1D.elementsPerAtlas1D;
 			for (int i = 0; i < TerrainAtlas2D.TilesPerRow * TerrainAtlas2D.RowsCount;) {
 				int index = 0, texIdx = i / elementsPerAtlas, ignored;
 				
 				for (int j = 0; j < elementsPerAtlas; j++) {
-					TextureRec rec = game.TerrainAtlas1D.GetTexRec(i + j, 1, out ignored);
+					TextureRec rec = TerrainAtlas1D.GetTexRec(i + j, 1, out ignored);
 					int x = (i + j) % TerrainAtlas2D.TilesPerRow;
 					int y = (i + j) / TerrainAtlas2D.TilesPerRow;
 					
@@ -74,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 				i += elementsPerAtlas;
 				
-				game.Graphics.BindTexture(game.TerrainAtlas1D.TexIds[texIdx]);
+				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[texIdx]);
 				game.Graphics.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
 			}
 		}

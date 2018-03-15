@@ -19,7 +19,6 @@ namespace ClassicalSharp.Model {
 		
 		BlockID block = Block.Air;
 		float height;
-		TerrainAtlas1D atlas;
 		Vector3 minBB, maxBB;
 		ModelCache cache;
 		int lastTexIndex = -1;
@@ -77,7 +76,6 @@ namespace ClassicalSharp.Model {
 			}			
 			
 			lastTexIndex = -1;
-			atlas = game.TerrainAtlas1D;
 			bool sprite = BlockInfo.Draw[block] == DrawType.Sprite;
 			DrawParts(sprite);
 			if (index == 0) return;
@@ -89,7 +87,7 @@ namespace ClassicalSharp.Model {
 		
 		void Flush() {
 			if (lastTexIndex != -1) {
-				game.Graphics.BindTexture(atlas.TexIds[lastTexIndex]);
+				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[lastTexIndex]);
 				UpdateVB();
 			}
 			
@@ -110,8 +108,8 @@ namespace ClassicalSharp.Model {
 				SpriteXQuad(true, false);
 				SpriteXQuad(true, true);
 			} else {
-				drawer.elementsPerAtlas1D = atlas.elementsPerAtlas1D;
-				drawer.invVerElementSize = atlas.invElementSize;
+				drawer.elementsPerAtlas1D = TerrainAtlas1D.elementsPerAtlas1D;
+				drawer.invVerElementSize  = TerrainAtlas1D.invElementSize;
 				
 				drawer.minBB = BlockInfo.MinBB[block]; drawer.minBB.Y = 1 - drawer.minBB.Y;
 				drawer.maxBB = BlockInfo.MaxBB[block]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
@@ -135,7 +133,7 @@ namespace ClassicalSharp.Model {
 		
 		int GetTex(int side) {
 			int texLoc = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texLoc / atlas.elementsPerAtlas1D;
+			texIndex = texLoc / TerrainAtlas1D.elementsPerAtlas1D;
 			
 			if (lastTexIndex != texIndex) Flush();
 			return texLoc;
@@ -143,7 +141,7 @@ namespace ClassicalSharp.Model {
 		
 		void SpriteZQuad(bool firstPart, bool mirror) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Back);
-			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
+			TextureRec rec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 			
 			int col = cols[0];
@@ -168,7 +166,7 @@ namespace ClassicalSharp.Model {
 
 		void SpriteXQuad(bool firstPart, bool mirror) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Right);
-			TextureRec rec = atlas.GetTexRec(texLoc, 1, out texIndex);
+			TextureRec rec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 
 			int col = cols[0];

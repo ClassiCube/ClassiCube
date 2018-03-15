@@ -4,6 +4,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.Map;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Textures;
 using OpenTK;
 
 #if USE16_BIT
@@ -111,7 +112,7 @@ namespace ClassicalSharp.Renderers {
 			if (chunks == null) return;
 			IGraphicsApi gfx = game.Graphics;
 			
-			int[] texIds = game.TerrainAtlas1D.TexIds;
+			int[] texIds = TerrainAtlas1D.TexIds;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
@@ -162,7 +163,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.ColourWriteMask(true, true, true, true);
 			gfx.DepthWrite = false; // we already calculated depth values in depth pass
 			
-			int[] texIds = game.TerrainAtlas1D.TexIds;
+			int[] texIds = TerrainAtlas1D.TexIds;
 			gfx.EnableMipmaps();
 			for (int batch = 0; batch < _1DUsed; batch++) {
 				if (translucentPartsCount[batch] <= 0) continue;
