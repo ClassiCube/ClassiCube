@@ -93,6 +93,10 @@ namespace Launcher.Patcher {
 				Utils.LogDebug("got resource " + identifier);
 				
 				if (item.Data == null) {
+					if (item.WebEx != null) {
+						ErrorHandler.LogError("ResourceFetcher.Download " + identifier, item.WebEx);
+					}
+					
 					setStatus("&cFailed to download " + identifier);
 					return false;
 				}
