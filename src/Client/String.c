@@ -72,7 +72,7 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 	return String_Init(str->buffer + offset, (UInt16)length, (UInt16)length);
 }
 
-String String_UNSAFE_Split(STRING_REF String* str, UInt8 c, STRING_TRANSIENT String* subs, UInt32* subsCount) {
+void String_UNSAFE_Split(STRING_REF String* str, UInt8 c, STRING_TRANSIENT String* subs, UInt32* subsCount) {
 	UInt32 maxSubs = *subsCount, i = 0;
 	Int32 start = 0;
 	for (; i < maxSubs && start <= str->length; i++) {

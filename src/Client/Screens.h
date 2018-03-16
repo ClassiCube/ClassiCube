@@ -14,6 +14,7 @@ IGameComponent StatusScreen_MakeComponent(void);
 Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message);
 Screen* GeneratingScreen_MakeInstance(void);
 Screen* HUDScreen_MakeInstance(void);
+IGameComponent HUDScreen_MakeComponent(void);
 
 Screen* OptionsGroupScreen_MakeInstance(void);
 Screen* PauseScreen_MakeInstance(void);

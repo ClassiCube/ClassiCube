@@ -27,6 +27,77 @@
 #define Widget_HandlesMouseMove(widget, x, y)      (widget)->Base.Base.HandlesMouseMove(&((widget)->Base.Base), x, y)
 #define Widget_HandlesMouseScroll(widget, delta)   (widget)->Base.Base.HandlesMouseScroll(&((widget)->Base.Base), delta)
 
+
+typedef struct ClickableScreen_ {
+	GuiElement* Elem;
+	Widget** Widgets;
+	UInt32 WidgetsCount;
+	Int32 LastX, LastY;
+	void (*OnWidgetSelected)(GuiElement* elem, Widget* widget);
+} ClickableScreen;
+
+typedef struct InventoryScreen_ {
+	Screen Base;
+	FontDesc Font;
+	TableWidget Table;
+	bool ReleasedInv;
+} InventoryScreen;
+
+typedef struct StatusScreen_ {
+	Screen Base;
+	FontDesc Font;
+	TextWidget Status, HackStates;
+	TextAtlas PosAtlas;
+	Real64 Accumulator;
+	Int32 Frames, FPS;
+	bool Speed, HalfSpeed, Noclip, Fly, CanSpeed;
+	Int32 LastFov;
+} StatusScreen;
+
+typedef struct HUDScreen_ {
+	Screen Base;
+	Screen* Chat;
+	HotbarWidget Hotbar;
+	PlayerListWidget PlayerList;
+	FontDesc PlayerFont;
+	bool ShowingList, WasShowingList;
+} HUDScreen;
+
+#define FILES_SCREEN_ITEMS 5
+#define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
+typedef struct FilesScreen_ {
+	Screen Base;
+	FontDesc Font;
+	Int32 CurrentIndex;
+	Gui_MouseHandler TextButtonClick;
+	String TitleText;
+	ButtonWidget Buttons[FILES_SCREEN_BUTTONS];
+	TextWidget Title;
+	Widget* Widgets[FILES_SCREEN_BUTTONS + 1];
+	ClickableScreen Clickable;
+	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
+} FilesScreen;
+
+typedef struct LoadingScreen_ {
+	Screen Base;
+	FontDesc Font;
+
+	String Title, Message;
+	Real32 Progress;
+	TextWidget TitleWidget;
+	TextWidget MessageWidget;
+
+	UInt8 TitleBuffer[String_BufferSize(STRING_SIZE)];
+	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
+} LoadingScreen;
+
+typedef struct GeneratingMapScreen_ {
+	LoadingScreen Base;
+	String LastState;
+	UInt8 LastStateBuffer[String_BufferSize(STRING_SIZE)];
+} GeneratingMapScreen;
+
+
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
 	if (widgets == NULL) return;
 	UInt32 i;
@@ -78,14 +149,6 @@ bool Screen_SwitchPause(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	LeftOnly(Gui_SetNewScreen(PauseScreen_MakeInstance()));
 }
 
-
-typedef struct ClickableScreen_ {
-	GuiElement* Elem;
-	Widget** Widgets;
-	UInt32 WidgetsCount;
-	Int32 LastX, LastY;
-	void (*OnWidgetSelected)(GuiElement* elem, Widget* widget);
-} ClickableScreen;
 
 void ClickableScreen_RenderMenuBounds(void) {
 	/* These were sourced by taking a screenshot of vanilla
@@ -146,14 +209,7 @@ void ClickableScreen_Init(ClickableScreen* data, GuiElement* elem, Widget** widg
 }
 
 
-typedef struct InventoryScreen_ {
-	Screen Base;
-	FontDesc Font;
-	TableWidget Table;
-	bool ReleasedInv;
-} InventoryScreen;
 InventoryScreen InventoryScreen_Instance;
-
 void InventoryScreen_OnBlockChanged(void* obj) {
 	InventoryScreen* screen = (InventoryScreen*)obj;
 	TableWidget_OnInventoryChanged(&screen->Table);
@@ -293,16 +349,6 @@ Screen* InventoryScreen_MakeInstance(void) {
 extern Screen* InventoryScreen_UNSAFE_RawPointer = &InventoryScreen_Instance.Base;
 
 
-typedef struct StatusScreen_ {
-	Screen Base;
-	FontDesc Font;
-	TextWidget Status, HackStates;
-	TextAtlas PosAtlas;
-	Real64 Accumulator;
-	Int32 Frames, FPS;
-	bool Speed, HalfSpeed, Noclip, Fly, CanSpeed;
-	Int32 LastFov;
-} StatusScreen;
 StatusScreen StatusScreen_Instance;
 
 void StatusScreen_MakeText(StatusScreen* screen, STRING_TRANSIENT String* status) {
@@ -323,7 +369,7 @@ void StatusScreen_MakeText(StatusScreen* screen, STRING_TRANSIENT String* status
 		String_AppendInt32(status, indices);
 		String_AppendConst(status, " vertices");
 
-		Int32 ping = PingList.AveragePingMilliseconds();
+		Int32 ping = PingList_AveragePingMilliseconds();
 		if (ping != 0) {
 			String_AppendConst(status, ", ping ");
 			String_AppendInt32(status, ping);
@@ -355,7 +401,8 @@ void StatusScreen_DrawPosition(StatusScreen* screen) {
 
 	Gfx_BindTexture(atlas->Tex.ID);
 	/* TODO: Do we need to use a separate VB here? */
-	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, index);
+	Int32 count = (Int32)(ptr - vertices) / sizeof(VertexP3fT2fC4b);
+	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, count);
 }
 
 bool StatusScreen_HacksChanged(StatusScreen* screen) {
@@ -497,22 +544,7 @@ IGameComponent StatusScreen_MakeComponent(void) {
 }
 
 
-#define FILES_SCREEN_ITEMS 5
-#define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
-typedef struct FilesScreen_ {
-	Screen Base;
-	FontDesc Font;
-	Int32 CurrentIndex;
-	Gui_MouseHandler TextButtonClick;
-	String TitleText;
-	ButtonWidget Buttons[FILES_SCREEN_BUTTONS];
-	TextWidget Title;
-	Widget* Widgets[FILES_SCREEN_BUTTONS + 1];
-	ClickableScreen Clickable;
-	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
-} FilesScreen;
 FilesScreen FilesScreen_Instance;
-
 String FilesScreen_Get(FilesScreen* screen, UInt32 index) {
 	if (index < screen->Entries.Count) {
 		return StringsBuffer_UNSAFE_Get(&screen->Entries, index);
@@ -670,20 +702,7 @@ Screen* FilesScreen_MakeInstance(void) {
 }
 
 
-typedef struct LoadingScreen_ {
-	Screen Base;
-	FontDesc Font;
-
-	String Title, Message;
-	Real32 Progress;
-	TextWidget TitleWidget;
-	TextWidget MessageWidget;
-
-	UInt8 TitleBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
-} LoadingScreen;
 LoadingScreen LoadingScreen_Instance;
-
 void LoadingScreen_SetTitle(LoadingScreen* screen, STRING_PURE String* title) {
 	Widget_Free(&screen->TitleWidget);
 	TextWidget_Create(&screen->TitleWidget, title, &screen->Font);
@@ -861,13 +880,7 @@ Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String
 }
 
 
-typedef struct GeneratingMapScreen_ {
-	LoadingScreen Base;
-	String LastState;
-	UInt8 LastStateBuffer[String_BufferSize(STRING_SIZE)];
-} GeneratingMapScreen;
 GeneratingMapScreen GeneratingMapScreen_Instance;
-
 void GeneratingScreen_Render(GuiElement* elem, Real64 delta) {
 	GeneratingMapScreen* screen = (GeneratingMapScreen*)elem;
 	LoadingScreen_Render(elem, delta);
@@ -894,17 +907,7 @@ Screen* GeneratingScreen_MakeInstance(void) {
 }
 
 
-typedef struct HUDScreen_ {
-	Screen Base;
-	Screen* Chat;
-	HotbarWidget Hotbar;
-	PlayerListWidget PlayerList;
-	FontDesc PlayerFont;
-	bool ShowingList, WasShowingList;
-} HUDScreen;
 HUDScreen HUDScreen_Instance;
-
-
 #define CH_EXTENT 16
 #define CH_WEIGHT 2
 void HUDScreen_DrawCrosshairs(void) {

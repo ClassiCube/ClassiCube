@@ -91,9 +91,11 @@ void Gui_FileChanged(void* obj, Stream* stream) {
 void Gui_Init(void) {
 	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_Status = StatusScreen_MakeInstance();
-	game.Components.Add(statusScreen);
 	Gui_HUD = HUDScreen_MakeInstance();
-	game.Components.Add(hudScreen);
+
+	IGameComponent comp;
+	comp = StatusScreen_MakeComponent(); Game_AddComponent(&comp);
+	comp = HUDScreen_MakeComponent();    Game_AddComponent(&comp);
 }
 
 void Gui_Reset(void) {

@@ -73,6 +73,8 @@ typedef struct EntityVTABLE_ {
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
 typedef struct Entity_ {
+	EntityVTABLE* VTABLE;
+
 	Vector3 Position;
 	Real32 HeadX, HeadY, RotX, RotY, RotZ;
 	Vector3 Velocity, OldVelocity;
@@ -83,15 +85,15 @@ typedef struct Entity_ {
 	AABB ModelAABB;
 	Vector3 ModelScale;
 	Vector3 Size;
-
-	Matrix Transform;
+	Real32 StepSize;
+	
 	UInt8 SkinType, EntityType;
-	bool NoShade, Ground;
+	bool NoShade, OnGround;
 	GfxResourceID TextureId, MobTextureId;
 	Real32 uScale, vScale;
+	Matrix Transform;
 
-	AnimatedComp Anim;
-	EntityVTABLE* VTABLE;
+	AnimatedComp Anim;	
 } Entity;
 
 void Entity_Init(Entity* entity);
