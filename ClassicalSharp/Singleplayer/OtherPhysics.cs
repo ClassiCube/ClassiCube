@@ -1,12 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Map;
-
-#if USE16_BIT
-using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -21,9 +16,9 @@ namespace ClassicalSharp.Singleplayer {
 			physics.OnPlace[Block.CobblestoneSlab] = HandleCobblestoneSlab;
 		}
 		
-		void HandleSlab(int index, BlockID block) {
+		void HandleSlab(int index, BlockRaw block) {
 			if (index < map.Width * map.Length) return; // y < 1
-			if (map.blocks[index - map.Width * map.Length] != Block.Slab) return;
+			if (map.blocks1[index - map.Width * map.Length] != Block.Slab) return;
 			
 			int x = index % map.Width;
 			int z = (index / map.Width) % map.Length;
@@ -32,9 +27,9 @@ namespace ClassicalSharp.Singleplayer {
 			game.UpdateBlock(x, y - 1, z, Block.DoubleSlab);
 		}
 		
-		void HandleCobblestoneSlab(int index, BlockID block) {
+		void HandleCobblestoneSlab(int index, BlockRaw block) {
 			if (index < map.Width * map.Length) return; // y < 1
-			if (map.blocks[index - map.Width * map.Length] != Block.CobblestoneSlab) return;
+			if (map.blocks1[index - map.Width * map.Length] != Block.CobblestoneSlab) return;
 			
 			int x = index % map.Width;
 			int z = (index / map.Width) % map.Length;

@@ -100,15 +100,13 @@ namespace ClassicalSharp {
 		/// <summary> Number of blocks in original classic plus CPE blocks. </summary>		
 		public const int CpeCount = MaxCpeBlock + 1;
 		
-		#if USE16_BIT
-		public const BlockID MaxDefinedBlock = 0x3FF;
-		public const int Shift = 10;
-		#else
-		public const BlockID MaxDefinedBlock =  0xFF;
-		public const int Shift = 8;
-		#endif
+		/// <summary> Number of blocks in original classic plus CPE blocks plus block definitions. </summary>
+		public const int DefaultCount = 256;
 		
-		public const int Count = MaxDefinedBlock + 1;
-		public const BlockID Invalid = MaxDefinedBlock;
+		#if USE16_BIT
+		public const int Shift = 10, Count = 1024;
+		#else
+		public const int Shift = 8, Count = 256;
+		#endif
 	}
 }

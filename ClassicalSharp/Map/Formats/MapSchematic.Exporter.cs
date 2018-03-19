@@ -30,9 +30,9 @@ namespace ClassicalSharp.Map {
 				#if USE16_BIT
 				WriteBlocks(nbt, Utils.UInt16sToUInt8s(map.blocks));
 				#else
-				WriteBlocks(nbt, map.blocks);
+				WriteBlocks(nbt, map.blocks1);
 				#endif
-				WriteBlockData(nbt, map.blocks.Length);
+				WriteBlockData(nbt, map.blocks1.Length);
 				
 				nbt.Write(NbtTagType.List);
 				nbt.Write("Entities");

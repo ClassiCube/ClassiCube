@@ -54,10 +54,10 @@ namespace ClassicalSharp.Audio {
 			return null;
 		}
 		
-		public Sound PickRandomSound(SoundType type) {
+		public Sound PickRandomSound(byte type) {
 			if (type == SoundType.None)  return null;
 			if (type == SoundType.Metal) type = SoundType.Stone;
-			string name = soundNames[(int)type];
+			string name = SoundType.Names[type];
 			
 			SoundGroup group = Find(name);
 			if (group == null) return null;
@@ -111,13 +111,6 @@ namespace ClassicalSharp.Audio {
 			fourCC[0] = r.ReadSByte(); fourCC[1] = r.ReadSByte();
 			fourCC[2] = r.ReadSByte(); fourCC[3] = r.ReadSByte();
 			return new string(fourCC, 0, 4);
-		}
-		
-		static string[] soundNames;
-		static Soundboard() {
-			soundNames = Enum.GetNames(typeof(SoundType));
-			for (int i = 0; i < soundNames.Length; i++)
-				soundNames[i] = soundNames[i].ToLower();
 		}
 	}
 }

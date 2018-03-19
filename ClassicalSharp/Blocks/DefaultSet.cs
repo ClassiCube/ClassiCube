@@ -70,7 +70,7 @@ namespace ClassicalSharp.Blocks {
 			         || b == Block.Air || Draw(b) == DrawType.Sprite);
 		}
 
-		public static SoundType StepSound(BlockID b) {
+		public static byte StepSound(BlockID b) {
 			if (b == Block.Glass) return SoundType.Stone;
 			if (b == Block.Rope) return SoundType.Cloth;
 			if (Draw(b) == DrawType.Sprite) return SoundType.None;
@@ -79,7 +79,7 @@ namespace ClassicalSharp.Blocks {
 		
 		
 		public static byte Draw(BlockID b) {
-			if (b == Block.Air || b == Block.Invalid) return DrawType.Gas;
+			if (b == Block.Air) return DrawType.Gas;
 			if (b == Block.Leaves) return DrawType.TransparentThick;
 
 			if (b == Block.Ice || b == Block.Water || b == Block.StillWater) 
@@ -94,7 +94,7 @@ namespace ClassicalSharp.Blocks {
 			return DrawType.Opaque;
 		}		
 
-		public static SoundType DigSound(BlockID b) {
+		public static byte DigSound(BlockID b) {
 			if (b >= Block.Red && b <= Block.White) 
 				return SoundType.Cloth;
 			if (b >= Block.LightPink && b <= Block.Turquoise) 

@@ -165,7 +165,7 @@ namespace ClassicalSharp.Renderers {
 		int CalcHeightAt(int x, int maxY, int z, int index) {
 			int mapIndex = (maxY * length + z) * width + x;
 			for (int y = maxY; y >= 0; y--) {
-				byte draw = BlockInfo.Draw[map.blocks[mapIndex]];
+				byte draw = BlockInfo.Draw[map.blocks1[mapIndex]];
 				if (!(draw == DrawType.Gas || draw == DrawType.Sprite)) {
 					heightmap[index] = (short)y;
 					return y;

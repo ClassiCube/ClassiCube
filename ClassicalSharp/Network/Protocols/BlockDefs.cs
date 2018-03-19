@@ -57,7 +57,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void OnBlockUpdated(BlockID block, bool didBlockLight) {
-			if (game.World.blocks == null) return;
+			if (!game.World.HasBlocks) return;
 			
 			// Need to refresh lighting when a block's light blocking state changes
 			if (BlockInfo.BlocksLight[block] != didBlockLight) {
@@ -169,20 +169,18 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		#endif
 		
-		internal static SoundType[] stepSnds, breakSnds;
-		static CPEProtocolBlockDefs() {
-			stepSnds = new SoundType[10];
-			breakSnds = new SoundType[10];
-			stepSnds[0] = SoundType.None; breakSnds[0] = SoundType.None;
-			stepSnds[1] = SoundType.Wood; breakSnds[1] = SoundType.Wood;
-			stepSnds[2] = SoundType.Gravel; breakSnds[2] = SoundType.Gravel;
-			stepSnds[3] = SoundType.Grass; breakSnds[3] = SoundType.Grass;
-			stepSnds[4] = SoundType.Stone; breakSnds[4] = SoundType.Stone;
-			stepSnds[5] = SoundType.Metal; breakSnds[5] = SoundType.Metal;
-			stepSnds[6] = SoundType.Stone; breakSnds[6] = SoundType.Glass;
-			stepSnds[7] = SoundType.Cloth; breakSnds[7] = SoundType.Cloth;
-			stepSnds[8] = SoundType.Sand; breakSnds[8] = SoundType.Sand;
-			stepSnds[9] = SoundType.Snow; breakSnds[9] = SoundType.Snow;
-		}
+		internal static byte[] stepSnds = new byte[10] {
+			SoundType.None, SoundType.Wood, SoundType.Gravel,
+			SoundType.Grass, SoundType.Stone, SoundType.Metal,
+			SoundType.Stone, SoundType.Cloth, SoundType.Sand,
+			SoundType.Snow,
+		};
+		
+		internal static byte[] breakSnds = new byte[10] {
+			SoundType.None, SoundType.Wood, SoundType.Gravel,
+			SoundType.Grass, SoundType.Stone, SoundType.Metal,
+			SoundType.Glass, SoundType.Cloth, SoundType.Sand,
+			SoundType.Snow,
+		};
 	}
 }

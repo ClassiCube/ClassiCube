@@ -9,6 +9,7 @@ using BlockID = System.UInt16;
 #else
 using BlockID = System.Byte;
 #endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 	
@@ -32,10 +33,10 @@ namespace ClassicalSharp.Singleplayer {
 			set { enabled = value; liquid.Clear(); }
 		}
 		
-		public PhysicsAction[] OnActivate = new PhysicsAction[Block.Count];
-		public PhysicsAction[] OnRandomTick = new PhysicsAction[Block.Count];
-		public PhysicsAction[] OnPlace = new PhysicsAction[Block.Count];
-		public PhysicsAction[] OnDelete = new PhysicsAction[Block.Count];
+		public PhysicsAction[] OnActivate = new PhysicsAction[Block.DefaultCount];
+		public PhysicsAction[] OnRandomTick = new PhysicsAction[Block.DefaultCount];
+		public PhysicsAction[] OnPlace = new PhysicsAction[Block.DefaultCount];
+		public PhysicsAction[] OnDelete = new PhysicsAction[Block.DefaultCount];
 		
 		public PhysicsBase(Game game) {
 			this.game = game;
@@ -53,7 +54,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		int tickCount = 0;
 		public void Tick() {
-			if (!Enabled || game.World.blocks == null) return;
+			if (!Enabled || game.World.blocks1 == null) return;
 			
 			//if ((tickCount % 5) == 0) {
 			liquid.TickLava();
@@ -96,7 +97,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		/// <summary> Activates the block at the particular packed coordinates. </summary>
 		public void Activate(int index) {
-			BlockID block = map.blocks[index];
+			BlockRaw block = map.blocks1[index];
 			PhysicsAction activate = OnActivate[block];
 			if (activate != null) activate(index, block);
 		}
@@ -136,17 +137,17 @@ namespace ClassicalSharp.Singleplayer {
 				
 				// Inlined 3 random ticks for this chunk
 				int index = rnd.Next(lo, hi);
-				BlockID block = map.blocks[index];
+				BlockRaw block = map.blocks1[index];
 				PhysicsAction tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 				
 				index = rnd.Next(lo, hi);
-				block = map.blocks[index];
+				block = map.blocks1[index];
 				tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 				
 				index = rnd.Next(lo, hi);
-				block = map.blocks[index];
+				block = map.blocks1[index];
 				tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 			}

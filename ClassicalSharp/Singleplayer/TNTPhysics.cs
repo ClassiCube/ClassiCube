@@ -2,12 +2,7 @@
 using System;
 using ClassicalSharp.Map;
 using OpenTK;
-
-#if USE16_BIT
-using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -26,7 +21,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		bool[] blocksTnt;
 		
-		void HandleTnt(int index, BlockID block) {
+		void HandleTnt(int index, BlockRaw block) {
 			int x = index % map.Width;
 			int z = (index / map.Width) % map.Length;
 			int y = (index / map.Width) / map.Length;
@@ -52,7 +47,7 @@ namespace ClassicalSharp.Singleplayer {
 				if (!map.IsValidPos(xx, yy, zz)) continue;
 				index = (yy * map.Length + zz) * map.Width + xx;
 				
-				BlockID block = map.blocks[index];
+				BlockRaw block = map.blocks1[index];
 				if (block < Block.CpeCount && blocksTnt[block]) continue;		
 				
 				game.UpdateBlock(xx, yy, zz, Block.Air);				

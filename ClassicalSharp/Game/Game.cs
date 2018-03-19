@@ -110,7 +110,7 @@ namespace ClassicalSharp {
 			UpdateViewMatrix();
 			
 			bool visible = Gui.activeScreen == null || !Gui.activeScreen.BlocksWorld;
-			if (World.blocks == null) visible = false;
+			if (!World.HasBlocks) visible = false;
 			if (visible) {
 				Render3D(delta, t);
 			} else {
@@ -242,8 +242,7 @@ namespace ClassicalSharp {
 			Gui.Reset(this);
 			World.Reset();
 			WorldEvents.RaiseOnNewMap();
-			
-			World.blocks = null;
+
 			IDrawer2D.InitCols();
 			BlockInfo.Reset();
 			TexturePack.ExtractDefault(this);

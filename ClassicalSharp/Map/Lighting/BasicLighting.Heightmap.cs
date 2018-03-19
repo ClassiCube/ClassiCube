@@ -14,7 +14,7 @@ namespace ClassicalSharp.Map {
 		
 		int CalcHeightAt(int x, int maxY, int z, int index) {
 			int mapIndex = (maxY * length + z) * width + x;
-			BlockID[] blocks = game.World.blocks;
+			BlockID[] blocks = game.World.blocks1;
 			
 			for (int y = maxY; y >= 0; y--) {
 				BlockID block = blocks[mapIndex];

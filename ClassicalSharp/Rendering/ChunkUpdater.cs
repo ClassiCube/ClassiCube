@@ -62,7 +62,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Refresh() {
 			chunkPos = new Vector3I(int.MaxValue);
-			if (renderer.chunks != null && game.World.blocks != null) {
+			if (renderer.chunks != null && game.World.HasBlocks) {
 				ClearChunkCache();
 				ResetChunkCache();
 			}
@@ -73,7 +73,7 @@ namespace ClassicalSharp.Renderers {
 		
 		void RefreshBorders(int clipLevel) {
 			chunkPos = new Vector3I(int.MaxValue);
-			if (renderer.chunks == null || game.World.blocks == null) return;
+			if (renderer.chunks == null || game.World.HasBlocks) return;
 			
 			int index = 0;
 			for (int z = 0; z < chunksZ; z++)

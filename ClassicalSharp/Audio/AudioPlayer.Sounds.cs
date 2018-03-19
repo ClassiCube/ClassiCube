@@ -38,14 +38,13 @@ namespace ClassicalSharp.Audio {
 			}
 		}
 		
-		public void PlayDigSound(SoundType type) { PlaySound(type, digBoard); }
+		public void PlayDigSound(byte type) { PlaySound(type, digBoard); }
 		
-		public void PlayStepSound(SoundType type) { PlaySound(type, stepBoard); }
+		public void PlayStepSound(byte type) { PlaySound(type, stepBoard); }
 		
 		AudioChunk chunk = new AudioChunk();
-		void PlaySound(SoundType type, Soundboard board) {
-			if (type == SoundType.None || monoOutputs == null)
-				return;
+		void PlaySound(byte type, Soundboard board) {
+			if (type == SoundType.None || monoOutputs == null) return;
 			Sound snd = board.PickRandomSound(type);
 			if (snd == null) return;
 			

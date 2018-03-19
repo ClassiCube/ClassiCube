@@ -81,7 +81,7 @@ namespace ClassicalSharp {
 		
 		bool ReadChunkData(int x1, int y1, int z1, ref bool outAllAir) { // only assign this variable once
 			bool allAir = true, allSolid = true;
-			fixed(BlockID* mapPtr = map.blocks) {
+			fixed(BlockID* mapPtr = map.blocks1) {
 				
 				for (int yy = -1; yy < 17; yy++) {
 					int y = yy + y1;

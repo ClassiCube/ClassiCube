@@ -12,29 +12,31 @@ using BlockID = System.Byte;
 
 namespace ClassicalSharp {
 
-	public enum SoundType : byte {
-		None, Wood, Gravel, Grass, Stone,
-		Metal, Glass, Cloth, Sand, Snow,
+	public static class SoundType {
+		public const byte None = 0;   public const byte Wood = 1;
+		public const byte Gravel = 2; public const byte Grass = 3; 
+		public const byte Stone = 4;  public const byte Metal = 5;
+		public const byte Glass = 6;  public const byte Cloth = 7;
+		public const byte Sand = 8;   public const byte Snow = 9;
+		
+		public static string[] Names = new string[10] {
+			"none", "wood", "gravel", "grass", "stone",
+			"metal", "glass", "cloth", "sand", "snow",
+		};
 	}
 
 	/// <summary> Describes how a block is rendered in the world. </summary>
-	public static class DrawType {
-		
+	public static class DrawType {		
 		/// <summary> Completely covers blocks behind (e.g. dirt). </summary>
-		public const byte Opaque = 0;
-		
+		public const byte Opaque = 0;		
 		/// <summary> Blocks behind show (e.g. glass). Pixels are either fully visible or invisible. </summary>
-		public const byte Transparent = 1;
-		
+		public const byte Transparent = 1;		
 		/// <summary> Same as Transparent, but all neighbour faces show. (e.g. leaves) </summary>
-		public const byte TransparentThick = 2;
-		
+		public const byte TransparentThick = 2;		
 		/// <summary> Blocks behind show (e.g. water). Pixels blend with other blocks behind. </summary>
-		public const byte Translucent = 3;
-		
+		public const byte Translucent = 3;		
 		/// <summary> Does not show (e.g. air). Can still be collided with. </summary>
-		public const byte Gas = 4;
-		
+		public const byte Gas = 4;		
 		/// <summary> Block renders as an X sprite (e.g. sapling). Pixels are either fully visible or invisible. </summary>
 		public const byte Sprite = 5;
 	}
@@ -42,26 +44,19 @@ namespace ClassicalSharp {
 	/// <summary> Describes the interaction a block has with a player when they collide with it. </summary>
 	public static class CollideType {
 		/// <summary> No interaction when player collides. </summary>
-		public const byte Gas = 0;
-		
+		public const byte Gas = 0;		
 		/// <summary> 'swimming'/'bobbing' interaction when player collides. </summary>
-		public const byte Liquid = 1;
-		
+		public const byte Liquid = 1;		
 		/// <summary> Block completely stops the player when they are moving. </summary>
-		public const byte Solid = 2;
-		
+		public const byte Solid = 2;		
 		/// <summary> Block is solid and partially slidable on. </summary>
 		public const byte Ice = 3;
-
 		/// <summary> Block is solid and fully slidable on. </summary>
 		public const byte SlipperyIce = 4;
-
 		/// <summary> Water style 'swimming'/'bobbing' interaction when player collides. </summary>
 		public const byte LiquidWater = 5;
-
 		/// <summary> Lava style 'swimming'/'bobbing' interaction when player collides. </summary>
-		public const byte LiquidLava = 6;
-		
+		public const byte LiquidLava = 6;		
 		/// <summary> Rope/Ladder style climbing interaction when player collides. </summary>
 		public const byte ClimbRope = 7;
 	}
@@ -70,28 +65,47 @@ namespace ClassicalSharp {
 	/// <remarks> e.g. blocks light, height, texture IDs, etc. </remarks>
 	public static partial class BlockInfo {
 		
-		public static bool[] IsLiquid = new bool[Block.Count];
-		public static bool[] BlocksLight = new bool[Block.Count];
-		public static bool[] FullBright = new bool[Block.Count];
-		public static string[] Name = new string[Block.Count];
-		public static FastColour[] FogColour = new FastColour[Block.Count];
-		public static float[] FogDensity = new float[Block.Count];
-		public static byte[] Collide = new byte[Block.Count];
-		public static byte[] ExtendedCollide = new byte[Block.Count];
-		public static float[] SpeedMultiplier = new float[Block.Count];
-		public static byte[] LightOffset = new byte[Block.Count];
-		public static byte[] Draw = new byte[Block.Count];
-		public static SoundType[] DigSounds = new SoundType[Block.Count];
-		public static SoundType[] StepSounds = new SoundType[Block.Count];
-		public static bool[] CanPlace = new bool[Block.Count];
-		public static bool[] CanDelete = new bool[Block.Count];
-		public static bool[] Tinted = new bool[Block.Count];
-		public static byte[] SpriteOffset = new byte[Block.Count];
-		static uint[] DefinedCustomBlocks = new uint[Block.Count >> 5];
+		public static bool[] IsLiquid, BlocksLight, FullBright;
+		public static bool[] CanPlace, CanDelete, Tinted, FullOpaque;		
+		public static byte[] Collide, ExtendedCollide, textures, hidden;
+		public static byte[] LightOffset, Draw, SpriteOffset, CanStretch;
+		public static byte[] DigSounds, StepSounds;		
+		public static string[] Name;
+		public static float[] FogDensity, SpeedMultiplier;
+		public static FastColour[] FogColour;
+		public static Vector3[] MinBB, MaxBB, RenderMinBB, RenderMaxBB;
+		static uint[] DefinedCustomBlocks;
+		public static int MaxDefined;
 		
-		/// <summary> Gets whether the given block has an opaque draw type and is also a full tile block. </summary>
-		/// <remarks> Full tile block means Min of (0, 0, 0) and max of (1, 1, 1). </remarks>
-		public static bool[] FullOpaque = new bool[Block.Count];
+		public static void Allocate(int count) {
+			IsLiquid = new bool[count];
+			BlocksLight = new bool[count];
+			FullBright = new bool[count];
+			CanPlace = new bool[count];
+			CanDelete = new bool[count];
+			Tinted = new bool[count];
+			FullOpaque = new bool[count];
+			Collide = new byte[count];
+			ExtendedCollide = new byte[count];
+			textures = new byte[count * Side.Sides];
+			hidden = new byte[count * count];
+			LightOffset = new byte[count];
+			Draw = new byte[count];
+			SpriteOffset = new byte[count];
+			CanStretch = new byte[count];
+			DigSounds = new byte[count];
+			StepSounds = new byte[count];			
+			Name = new string[count];
+			FogDensity = new float[count];
+			SpeedMultiplier = new float[count];
+			FogColour = new FastColour[count];			
+			MinBB = new Vector3[count];
+			MaxBB = new Vector3[count];
+			RenderMinBB = new Vector3[count];
+			RenderMaxBB = new Vector3[count];
+			DefinedCustomBlocks = new uint[count >> 5];
+			MaxDefined = count - 1;
+		}
 		
 		public static void Reset() {
 			Init();
@@ -102,16 +116,16 @@ namespace ClassicalSharp {
 			for (int i = 0; i < DefinedCustomBlocks.Length; i++) {
 				DefinedCustomBlocks[i] = 0;
 			}
-			for (int block = 0; block < Block.Count; block++) {
-				ResetBlockProps((BlockID)block);
+			for (int b = 0; b <= MaxDefined; b++) {
+				ResetBlockProps((BlockID)b);
 			}
 			UpdateCulling();
 		}
 
 		public static void SetDefaultPerms() {
-			for (int block = Block.Air; block <= Block.MaxDefinedBlock; block++) {
-				CanPlace[block] = true;
-				CanDelete[block] = true;
+			for (int b = Block.Air; b <= MaxDefined; b++) {
+				CanPlace[b] = true;
+				CanDelete[b] = true;
 			}
 			
 			CanPlace[Block.Air]        = false; CanDelete[Block.Air]        = false;
@@ -126,7 +140,7 @@ namespace ClassicalSharp {
 			return (DefinedCustomBlocks[block >> 5] & (1u << (block & 0x1F))) != 0;
 		}
 		
-		public static void SetCustomDefined(BlockID block, bool defined) {		
+		public static void SetCustomDefined(BlockID block, bool defined) {
 			if (defined) {
 				DefinedCustomBlocks[block >> 5] |= (1u << (block & 0x1F));
 			} else {
@@ -212,8 +226,8 @@ namespace ClassicalSharp {
 		}
 
 		public static int FindID(string name) {
-			for (int i = 0; i < Block.Count; i++) {
-				if (Utils.CaselessEquals(Name[i], name)) return i;
+			for (int b = 0; b <= MaxDefined; b++) {
+				if (Utils.CaselessEquals(Name[b], name)) return b;
 			}
 			return -1;
 		}

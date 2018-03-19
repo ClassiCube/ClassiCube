@@ -260,7 +260,7 @@ namespace ClassicalSharp.Network.Protocols {
 		const int bulkCount = 256;
 		unsafe void HandleBulkBlockUpdate() {
 			int count = reader.ReadUInt8() + 1;
-			if (game.World.blocks == null) {
+			if (!game.World.HasBlocks) {
 				#if DEBUG_BLOCKS
 				Utils.LogDebug("Server tried to update a block while still sending us the map!");
 				#endif
@@ -322,10 +322,10 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			switch (type) {
 				case 0:
-					Utils.Clamp(ref value, 0, Block.MaxDefinedBlock);
+					Utils.Clamp(ref value, 0, BlockInfo.MaxDefined);
 					env.SetSidesBlock((BlockID)value); break;
 				case 1:
-					Utils.Clamp(ref value, 0, Block.MaxDefinedBlock);
+					Utils.Clamp(ref value, 0, BlockInfo.MaxDefined);
 					env.SetEdgeBlock((BlockID)value); break;
 				case 2:
 					env.SetEdgeLevel(value); break;

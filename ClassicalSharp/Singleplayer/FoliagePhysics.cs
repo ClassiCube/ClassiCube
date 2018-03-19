@@ -1,12 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Map;
-
-#if USE16_BIT
-using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 
@@ -32,17 +27,17 @@ namespace ClassicalSharp.Singleplayer {
 			physics.OnRandomTick[Block.BrownMushroom] = HandleMushroom;
 		}
 		
-		void HandleSapling(int index, BlockID block) {
+		void HandleSapling(int index, BlockRaw block) {
 			int x = index % map.Width;
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
 			
-			BlockID below = Block.Air;
-			if (y > 0) below = map.blocks[index - map.Width * map.Length];
+			BlockRaw below = Block.Air;
+			if (y > 0) below = map.blocks1[index - map.Width * map.Length];
 			if (below == Block.Grass) GrowTree(x, y, z);
 		}
 		
-		void HandleDirt(int index, BlockID block) {
+		void HandleDirt(int index, BlockRaw block) {
 			int x = index % map.Width;
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
@@ -51,7 +46,7 @@ namespace ClassicalSharp.Singleplayer {
 				game.UpdateBlock(x, y, z, Block.Grass);
 		}
 		
-		void HandleGrass(int index, BlockID block) {
+		void HandleGrass(int index, BlockRaw block) {
 			int x = index % map.Width;
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
@@ -60,7 +55,7 @@ namespace ClassicalSharp.Singleplayer {
 				game.UpdateBlock(x, y, z, Block.Dirt);
 		}
 		
-		void HandleFlower(int index, BlockID block) {
+		void HandleFlower(int index, BlockRaw block) {
 			int x = index % map.Width;
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
@@ -71,15 +66,15 @@ namespace ClassicalSharp.Singleplayer {
 				return;
 			}
 			
-			BlockID below = Block.Dirt;
-			if (y > 0) below = map.blocks[index - map.Width * map.Length];
+			BlockRaw below = Block.Dirt;
+			if (y > 0) below = map.blocks1[index - map.Width * map.Length];
 			if (!(below == Block.Dirt || below == Block.Grass)) {
 				game.UpdateBlock(x, y, z, Block.Air);
 				physics.ActivateNeighbours(x, y, z, index);
 			}
 		}
 		
-		void HandleMushroom(int index, BlockID block) {
+		void HandleMushroom(int index, BlockRaw block) {
 			int x = index % map.Width;
 			int y = (index / map.Width) / map.Length;
 			int z = (index / map.Width) % map.Length;
@@ -90,8 +85,8 @@ namespace ClassicalSharp.Singleplayer {
 				return;
 			}
 			
-			BlockID below = Block.Stone;
-			if (y > 0) below = map.blocks[index - map.Width * map.Length];
+			BlockRaw below = Block.Stone;
+			if (y > 0) below = map.blocks1[index - map.Width * map.Length];
 			if (!(below == Block.Stone || below == Block.Cobblestone)) {
 				game.UpdateBlock(x, y, z, Block.Air);
 				physics.ActivateNeighbours(x, y, z, index);
@@ -152,7 +147,7 @@ namespace ClassicalSharp.Singleplayer {
 			{
 				if (!map.IsValidPos(x, y, z)) return false;
 				
-				BlockID block = map.GetBlock(x, y, z);
+				BlockRaw block = map.GetBlock(x, y, z);
 				if (!(block == 0 || block == Block.Leaves)) return false;
 			}
 			return true;

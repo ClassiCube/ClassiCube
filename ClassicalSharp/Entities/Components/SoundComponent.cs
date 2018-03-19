@@ -57,7 +57,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool anyNonAir = false;
-		SoundType sndType = SoundType.None;
+		byte sndType = SoundType.None;
 		void GetSound() {
 			Vector3 pos = p.interp.next.Pos;
 			AABB bounds = p.Bounds;
@@ -74,7 +74,7 @@ namespace ClassicalSharp.Entities {
 			BlockID blockUnder = game.World.SafeGetBlock(feetPos);
 			float maxY = feetPos.Y + BlockInfo.MaxBB[blockUnder].Y;
 			
-			SoundType typeUnder = BlockInfo.StepSounds[blockUnder];
+			byte typeUnder = BlockInfo.StepSounds[blockUnder];
 			byte collideUnder = BlockInfo.Collide[blockUnder];
 			if (maxY >= pos.Y && collideUnder == CollideType.Solid && typeUnder != SoundType.None) {
 				anyNonAir = true; sndType = typeUnder; return;
@@ -86,7 +86,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool CheckSoundNonSolid(BlockID b) {
-			SoundType newType = BlockInfo.StepSounds[b];
+			byte newType = BlockInfo.StepSounds[b];
 			byte collide = BlockInfo.Collide[b];
 			if (newType != SoundType.None && collide != CollideType.Solid)
 				sndType = newType;
@@ -97,7 +97,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		bool CheckSoundSolid(BlockID b) {
-			SoundType newType = BlockInfo.StepSounds[b];
+			byte newType = BlockInfo.StepSounds[b];
 			if (newType != SoundType.None) sndType = newType;
 			
 			if (BlockInfo.Draw[b] != DrawType.Gas)

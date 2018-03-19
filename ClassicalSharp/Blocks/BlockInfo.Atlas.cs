@@ -13,8 +13,6 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public static partial class BlockInfo {
 		
-		public static byte[] textures = new byte[Block.Count * Side.Sides];
-		
 		internal static void SetSide(int textureId, BlockID blockId) {
 			int index = blockId * Side.Sides;
 			for (int i = index; i < index + Side.Bottom; i++)

@@ -42,12 +42,8 @@ namespace ClassicalSharp.Map {
 				WriteSpawnCompoundTag();
 				
 				nbt.Write(NbtTagType.Int8Array);
-				nbt.Write("BlockArray"); nbt.WriteInt32(map.blocks.Length);
-				#if USE16_BIT
-				nbt.WriteBytes(Utils.UInt16sToUInt8s(map.blocks));
-				#else
-				nbt.WriteBytes(map.blocks);
-				#endif
+				nbt.Write("BlockArray"); nbt.WriteInt32(map.blocks1.Length);
+				nbt.WriteBytes(map.blocks1);
 				
 				WriteMetadata();
 				

@@ -12,15 +12,11 @@ namespace ClassicalSharp {
 	
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public static partial class BlockInfo {
-		
-		public static byte[] hidden = new byte[Block.Count * Block.Count];
-		
-		public static byte[] CanStretch = new byte[Block.Count];
 
 		internal static void UpdateCulling() {
-			for (int block = 0; block < Block.Count; block++) {
+			for (int block = 0; block <= MaxDefined; block++) {
 				CalcStretch((BlockID)block);
-				for (int neighbour = 0; neighbour < Block.Count; neighbour++) {
+				for (int neighbour = 0; neighbour <= MaxDefined; neighbour++) {
 					CalcCulling((BlockID)block, (BlockID)neighbour);
 				}
 			}
@@ -28,7 +24,7 @@ namespace ClassicalSharp {
 		
 		internal static void UpdateCulling(BlockID block) {
 			CalcStretch(block);
-			for (int other = 0; other < Block.Count; other++) {
+			for (int other = 0; other <= MaxDefined; other++) {
 				CalcCulling(block, (BlockID)other);
 				CalcCulling((BlockID)other, block);
 			}

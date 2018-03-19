@@ -14,11 +14,6 @@ namespace ClassicalSharp {
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public static partial class BlockInfo {
 		
-		public static Vector3[] MinBB = new Vector3[Block.Count];
-		public static Vector3[] MaxBB = new Vector3[Block.Count];
-		public static Vector3[] RenderMinBB = new Vector3[Block.Count];
-		public static Vector3[] RenderMaxBB = new Vector3[Block.Count];
-		
 		internal static void CalcRenderBounds(BlockID block) {
 			Vector3 min = MinBB[block], max = MaxBB[block];
 			
@@ -53,9 +48,9 @@ namespace ClassicalSharp {
 		
 		internal static void RecalculateSpriteBB() {
 			using (FastBitmap fastBmp = new FastBitmap(TerrainAtlas2D.Atlas, true, true)) {
-				for (int i = 0; i < Block.Count; i++) {
-					if (Draw[i] != DrawType.Sprite) continue;
-					RecalculateBB((BlockID)i, fastBmp);
+				for (int b = 0; b <= MaxDefined; b++) {
+					if (Draw[b] != DrawType.Sprite) continue;
+					RecalculateBB((BlockID)b, fastBmp);
 				}
 			}
 		}
