@@ -5,12 +5,8 @@ using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using ClassicalSharp.Renderers;
 using OpenTK;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp {
 	
@@ -36,7 +32,7 @@ namespace ClassicalSharp {
 		protected internal int width, length, height, sidesLevel, edgeLevel;
 		protected int maxX, maxY, maxZ, chunkEndX, chunkEndZ;
 		protected int cIndex;
-		protected BlockID* chunk;
+		protected BlockRaw* chunk;
 		protected byte* counts;
 		protected int* bitFlags;
 		protected bool useBitFlags;
@@ -44,11 +40,11 @@ namespace ClassicalSharp {
 		bool BuildChunk(int x1, int y1, int z1, ref bool allAir) {
 			light = game.Lighting;
 			PreStretchTiles(x1, y1, z1);
-			BlockID* chunkPtr = stackalloc BlockID[extChunkSize3]; chunk = chunkPtr;
+			BlockRaw* chunkPtr = stackalloc BlockRaw[extChunkSize3]; chunk = chunkPtr;
 			byte* countsPtr = stackalloc byte[chunkSize3 * Side.Sides]; counts = countsPtr;
 			int* bitsPtr = stackalloc int[extChunkSize3]; bitFlags = bitsPtr;
 			
-			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockID));
+			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockRaw));
 			if (ReadChunkData(x1, y1, z1, ref allAir)) return false;
 			MemUtils.memset((IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides);
 			
@@ -81,7 +77,7 @@ namespace ClassicalSharp {
 		
 		bool ReadChunkData(int x1, int y1, int z1, ref bool outAllAir) { // only assign this variable once
 			bool allAir = true, allSolid = true;
-			fixed(BlockID* mapPtr = map.blocks1) {
+			fixed (BlockRaw* mapPtr = map.blocks1) {
 				
 				for (int yy = -1; yy < 17; yy++) {
 					int y = yy + y1;
@@ -101,7 +97,7 @@ namespace ClassicalSharp {
 							chunkIndex++;
 							if (x < 0) continue;
 							if (x >= width) break;
-							BlockID rawBlock = mapPtr[index];
+							BlockRaw rawBlock = mapPtr[index];
 							
 							allAir = allAir && BlockInfo.Draw[rawBlock] == DrawType.Gas;
 							allSolid = allSolid && BlockInfo.FullOpaque[rawBlock];

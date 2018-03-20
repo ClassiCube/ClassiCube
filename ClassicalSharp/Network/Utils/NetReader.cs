@@ -3,11 +3,7 @@ using System;
 using System.Net.Sockets;
 using ClassicalSharp.Entities;
 using OpenTK;
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
 
 namespace ClassicalSharp.Network {
 
@@ -91,9 +87,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		public BlockID ReadBlock() {
-			#if USE16_BIT
 			if (ExtendedBlocks) return ReadUInt16();
-			#endif
 			return buffer[index++];			
 		}
 		

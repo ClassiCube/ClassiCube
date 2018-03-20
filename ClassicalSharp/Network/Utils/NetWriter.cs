@@ -2,11 +2,7 @@
 using System;
 using System.Net.Sockets;
 using OpenTK;
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
 
 namespace ClassicalSharp.Network {
 	
@@ -69,12 +65,8 @@ namespace ClassicalSharp.Network {
 		}
 		
 		public void WriteBlock(BlockID value) {
-			#if USE16_BIT
 			if (ExtendedBlocks) { buffer[index++] = (byte)(value >> 8); }
 			buffer[index++] = (byte)value;
-			#else
-			buffer[index++] = value;
-			#endif
 		}
 	}
 }

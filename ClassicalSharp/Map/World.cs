@@ -3,12 +3,7 @@ using System;
 using ClassicalSharp.Events;
 using ClassicalSharp.Renderers;
 using OpenTK;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
 using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Map {
@@ -45,12 +40,14 @@ namespace ClassicalSharp.Map {
 		}
 		
 		/// <summary> Updates the underlying block array, and dimensions of this map. </summary>
-		public void SetNewMap(BlockID[] blocks, int width, int height, int length) {
-			this.blocks1 = blocks;
-			this.Width  = width;  MaxX = width  - 1;
-			this.Height = height; MaxY = height - 1;
-			this.Length = length; MaxZ = length - 1;
-			if (blocks.Length == 0) this.blocks1 = null;
+		public void SetNewMap(BlockRaw[] blocks, int width, int height, int length) {
+			Width  = width;  MaxX = width  - 1;
+			Height = height; MaxY = height - 1;
+			Length = length; MaxZ = length - 1;
+			
+			blocks1 = blocks;
+			if (blocks.Length == 0) blocks1 = null;
+			blocks2 = blocks1;
 			HasBlocks = blocks1 != null;
 			
 			if (blocks.Length != (width * height * length))
@@ -62,7 +59,7 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking. </summary>
 		public void SetBlock(int x, int y, int z, BlockID blockId) {
-			blocks1[(y * Length + z) * Width + x] = blockId;
+			blocks1[(y * Length + z) * Width + x] = (BlockRaw)blockId;
 		}
 		
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>

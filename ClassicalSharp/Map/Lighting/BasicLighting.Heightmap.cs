@@ -1,11 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Map {
 	
@@ -14,7 +10,7 @@ namespace ClassicalSharp.Map {
 		
 		int CalcHeightAt(int x, int maxY, int z, int index) {
 			int mapIndex = (maxY * length + z) * width + x;
-			BlockID[] blocks = game.World.blocks1;
+			BlockRaw[] blocks = game.World.blocks1;
 			
 			for (int y = maxY; y >= 0; y--) {
 				BlockID block = blocks[mapIndex];
@@ -50,7 +46,7 @@ namespace ClassicalSharp.Map {
 			return elemsLeft;
 		}
 		
-		unsafe bool CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, int* skip, BlockID* mapPtr) {
+		unsafe bool CalculateHeightmapCoverage(int x1, int z1, int xCount, int zCount, int elemsLeft, int* skip, BlockRaw* mapPtr) {
 			int prevRunCount = 0;
 			for (int y = height - 1; y >= 0; y--) {
 				if (elemsLeft <= 0) return true;

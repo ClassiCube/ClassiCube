@@ -3,17 +3,12 @@ using System;
 using System.Collections.Generic;
 using ClassicalSharp.Map;
 using ClassicalSharp.Events;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
 using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
 	
-	public delegate void PhysicsAction(int index, BlockID block);
+	public delegate void PhysicsAction(int index, BlockRaw block);
 
 	public class PhysicsBase {
 		Game game;
@@ -68,19 +63,19 @@ namespace ClassicalSharp.Singleplayer {
 			if (!Enabled) return;
 			Vector3I p = e.Coords;
 			int index = (p.Y * length + p.Z) * width + p.X;
-			BlockID block = e.Block;
+			BlockRaw newB = (BlockRaw)e.Block, oldB = (BlockRaw)e.OldBlock;
 			
-			if (block == Block.Air && IsEdgeWater(p.X, p.Y, p.Z)) { 
-				block = Block.StillWater; 
+			if (newB == Block.Air && IsEdgeWater(p.X, p.Y, p.Z)) { 
+				newB = Block.StillWater; 
 				game.UpdateBlock(p.X, p.Y, p.Z, Block.StillWater);
 			}
 			
-			if (e.Block == 0) {
-				PhysicsAction delete = OnDelete[e.OldBlock];
-				if (delete != null) delete(index, e.OldBlock);
+			if (newB == Block.Air) {
+				PhysicsAction delete = OnDelete[oldB];
+				if (delete != null) delete(index, oldB);
 			} else {
-				PhysicsAction place = OnPlace[block];
-				if (place != null) place(index, block);
+				PhysicsAction place = OnPlace[newB];
+				if (place != null) place(index, newB);
 			}
 			ActivateNeighbours(p.X, p.Y, p.Z, index);
 		}

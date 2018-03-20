@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Map;
+using BlockID = System.UInt16;
 using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Singleplayer {
@@ -147,7 +148,7 @@ namespace ClassicalSharp.Singleplayer {
 			{
 				if (!map.IsValidPos(x, y, z)) return false;
 				
-				BlockRaw block = map.GetBlock(x, y, z);
+				BlockID block = map.GetBlock(x, y, z);
 				if (!(block == 0 || block == Block.Leaves)) return false;
 			}
 			return true;

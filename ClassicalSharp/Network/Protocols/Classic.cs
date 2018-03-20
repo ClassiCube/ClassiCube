@@ -8,12 +8,7 @@ using Ionic.Zlib;
 #else
 using System.IO.Compression;
 #endif
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
 
 namespace ClassicalSharp.Network.Protocols {
 
@@ -135,10 +130,13 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		#if USE16_BIT
-		static ushort[] UInt8sToUInt16s(byte[] src) {
-			ushort[] dst = new ushort[src.Length / 2];
-			Buffer.BlockCopy(src, 0, dst, 0, src.Length);
-			return dst;
+		static void DecomposeArray(byte[] src, out byte[] b1, out byte[] b2) {
+			b1 = new byte[src.Length / 2];
+			b2 = new byte[src.Length / 2];
+			
+			for (int i = 0, j = 0; i < src.Length; j++) {
+				b1[j] = src[i++]; b2[j] = src[i++];
+			}
 		}
 		#endif
 		
@@ -159,9 +157,12 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			#if USE16_BIT
 			if (reader.ExtendedBlocks) {
-				game.World.SetNewMap(UInt8sToUInt16s(map), mapWidth, mapHeight, mapLength);
+				byte[] b1, b2;
+				DecomposeArray(map, out b1, out b2);
+				game.World.SetNewMap(b1, mapWidth, mapHeight, mapLength);
+				game.World.blocks2 = b2;
 			} else{
-				game.World.SetNewMap(Utils.UInt8sToUInt16s(map), mapWidth, mapHeight, mapLength);
+				game.World.SetNewMap(map, mapWidth, mapHeight, mapLength);
 			}
 			#else
 			game.World.SetNewMap(map, mapWidth, mapHeight, mapLength);

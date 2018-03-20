@@ -237,14 +237,5 @@ namespace ClassicalSharp {
 			| NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 		
 #endif
-
-		#if USE16_BIT
-		public static ushort[] UInt8sToUInt16s(byte[] src) {
-			ushort[] dst = new ushort[src.Length];
-			for (int i = 0; i < dst.Length; i++)
-				dst[i] = src[i];
-			return dst;
-		}
-		#endif
 	}
 }

@@ -3,12 +3,7 @@ using System;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using OpenTK;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
 
 namespace ClassicalSharp.Renderers {
 
@@ -172,7 +167,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void UpdateFog() {
-			if (map.blocks1 == null || minimal) return;
+			if (!map.HasBlocks || minimal) return;
 			FastColour fogCol = FastColour.White;
 			float fogDensity = 0;
 			BlockOn(out fogDensity, out fogCol);

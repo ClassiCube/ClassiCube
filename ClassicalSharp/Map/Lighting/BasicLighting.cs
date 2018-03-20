@@ -1,12 +1,8 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Events;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Map {
 	
@@ -67,7 +63,7 @@ namespace ClassicalSharp.Map {
 		}
 		
 		
-		public unsafe override void LightHint(int startX, int startZ, BlockID* mapPtr) {
+		public unsafe override void LightHint(int startX, int startZ, BlockRaw* mapPtr) {
 			int x1 = Math.Max(startX, 0), x2 = Math.Min(width, startX + 18);
 			int z1 = Math.Max(startZ, 0), z2 = Math.Min(length, startZ + 18);
 			int xCount = x2 - x1, zCount = z2 - z1;

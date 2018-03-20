@@ -3,12 +3,7 @@ using ClassicalSharp.Entities;
 using ClassicalSharp.Map;
 using System;
 using OpenTK;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
 
 namespace ClassicalSharp.Physics {
 	
@@ -20,11 +15,7 @@ namespace ClassicalSharp.Physics {
 			X = x << 3; Y = y << 3; Z = z << 3;
 			X |= (block & 0x007);
 			Y |= (block & 0x038) >> 3;
-			#if !USE16_BIT
-			Z |= (block & 0x0C0) >> 6;
-			#else
 			Z |= (block & 0x1C0) >> 6;
-			#endif
 			this.tSquared = tSquared;
 		}
 	}

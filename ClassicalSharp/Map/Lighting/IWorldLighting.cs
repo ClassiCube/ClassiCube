@@ -1,12 +1,8 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using OpenTK;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Map {
 	
@@ -22,7 +18,7 @@ namespace ClassicalSharp.Map {
 		//    for z = startZ; z < startZ + 18; z++
 		//       CalcHeightAt(x, maxY, z) if height == short.MaxValue
 		// Except this function is a lot more optimised and minimises cache misses.
-		public unsafe abstract void LightHint(int startX, int startZ, BlockID* mapPtr);
+		public unsafe abstract void LightHint(int startX, int startZ, BlockRaw* mapPtr);
 		
 		/// <summary> Called when a block is changed, to update the lighting information. </summary>
 		/// <remarks> Derived classes ***MUST*** mark all chunks affected by this lighting change
