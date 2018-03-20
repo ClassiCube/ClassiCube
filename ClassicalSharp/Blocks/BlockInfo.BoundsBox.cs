@@ -43,7 +43,7 @@ namespace ClassicalSharp {
 		
 		internal static void RecalculateSpriteBB() {
 			using (FastBitmap fastBmp = new FastBitmap(TerrainAtlas2D.Atlas, true, true)) {
-				for (int b = 0; b <= MaxDefined; b++) {
+				for (int b = 0; b < Count; b++) {
 					if (Draw[b] != DrawType.Sprite) continue;
 					RecalculateBB((BlockID)b, fastBmp);
 				}
@@ -57,10 +57,10 @@ namespace ClassicalSharp {
 			int texId = GetTextureLoc(block, Side.Right);
 			int texX = texId & 0x0F, texY = texId >> 4;
 			
-			float topY = GetSpriteBB_TopY(elemSize, texX, texY, fastBmp);
+			float topY    = GetSpriteBB_TopY(elemSize,    texX, texY, fastBmp);
 			float bottomY = GetSpriteBB_BottomY(elemSize, texX, texY, fastBmp);
-			float leftX = GetSpriteBB_LeftX(elemSize, texX, texY, fastBmp);
-			float rightX = GetSpriteBB_RightX(elemSize, texX, texY, fastBmp);
+			float leftX   = GetSpriteBB_LeftX(elemSize,   texX, texY, fastBmp);
+			float rightX  = GetSpriteBB_RightX(elemSize,  texX, texY, fastBmp);
 			
 			MinBB[block] = Utils.RotateY(leftX - 0.5f, bottomY, 0, angle) + centre;
 			MaxBB[block] = Utils.RotateY(rightX - 0.5f, topY, 0, angle) + centre;

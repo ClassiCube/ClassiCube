@@ -140,8 +140,6 @@
     <Compile Include="Blocks\Block.cs" />
     <Compile Include="Blocks\BlockInfo.BoundsBox.cs" />
     <Compile Include="Blocks\BlockInfo.cs" />
-    <Compile Include="Blocks\BlockInfo.Culling.cs" />
-    <Compile Include="Blocks\BlockInfo.Atlas.cs" />
     <Compile Include="Blocks\DefaultSet.cs" />
     <Compile Include="Commands\Commands.cs" />
     <Compile Include="Entities\Components\IInterpComponent.cs" />

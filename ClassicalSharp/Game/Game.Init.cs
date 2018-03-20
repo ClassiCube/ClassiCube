@@ -20,6 +20,7 @@ using ClassicalSharp.Textures;
 using Android.Graphics;
 #endif
 using PathIO = System.IO.Path; // Android.Graphics.Path clash otherwise
+using BlockID = System.UInt16;
 
 namespace ClassicalSharp {
 
@@ -61,7 +62,7 @@ namespace ClassicalSharp {
 			Input = new InputHandler(this);
 			defaultIb = Graphics.MakeDefaultIb();
 			ParticleManager = new ParticleManager(); Components.Add(ParticleManager);
-			TabList = new TabList(); Components.Add(TabList);			
+			TabList = new TabList(); Components.Add(TabList);
 			LoadOptions();
 			LoadGuiOptions();
 			Chat = new Chat(); Components.Add(Chat);
@@ -70,8 +71,13 @@ namespace ClassicalSharp {
 			WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
 			Events.TextureChanged += TextureChangedCore;
 			
-			BlockInfo.Allocate(Block.Count);
+			#if USE16_BIT
+			BlockInfo.Allocate(768);
+			#else
+			BlockInfo.Allocate(256);
+			#endif
 			BlockInfo.Init();
+			
 			ModelCache = new ModelCache(this);
 			ModelCache.InitCache();
 			Downloader = new AsyncDownloader(Drawer2D); Components.Add(Downloader);
@@ -85,6 +91,7 @@ namespace ClassicalSharp {
 			TerrainAtlas2D.game = this;
 			Animations = new Animations(); Components.Add(Animations);
 			Inventory = new Inventory(); Components.Add(Inventory);
+			Inventory.Map = new BlockID[BlockInfo.Count];
 			
 			BlockInfo.SetDefaultPerms();
 			World = new World(this);
@@ -120,7 +127,7 @@ namespace ClassicalSharp {
 			Graphics.DepthTestFunc(CompareFunc.LessEqual);
 			//Graphics.DepthWrite = true;
 			Graphics.AlphaBlendFunc(BlendFunc.SourceAlpha, BlendFunc.InvSourceAlpha);
-			Graphics.AlphaTestFunc(CompareFunc.Greater, 0.5f);			
+			Graphics.AlphaTestFunc(CompareFunc.Greater, 0.5f);
 			Culling = new FrustumCulling();
 			Picking = new PickedPosRenderer(); Components.Add(Picking);
 			AudioPlayer = new AudioPlayer(); Components.Add(AudioPlayer);

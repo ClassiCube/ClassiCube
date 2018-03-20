@@ -97,11 +97,5 @@ namespace ClassicalSharp {
 		
 		/// <summary> Number of blocks in original classic plus CPE blocks plus block definitions. </summary>
 		public const int DefaultCount = 256;
-		
-		#if USE16_BIT
-		public const int Shift = 10, Count = 1024;
-		#else
-		public const int Shift = 8, Count = 256;
-		#endif
 	}
 }

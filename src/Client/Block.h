@@ -108,10 +108,6 @@ void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
 
 void Block_UpdateCullingAll(void);
 void Block_UpdateCulling(BlockID block);
-/* Returns whether the face at the given face of the block
-should be drawn with the neighbour 'other' present on the other side of the face. */
-bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
-void Block_SetHidden(BlockID block, BlockID other, Face face, bool value);
 
 /* Attempts to find the rotated block based on the user's orientation and offset on selected block. */
 BlockID AutoRotate_RotateBlock(BlockID block);

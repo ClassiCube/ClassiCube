@@ -198,7 +198,7 @@ namespace ClassicalSharp {
 						
 						X = x; Y = y; Z = z;
 						fullBright = BlockInfo.FullBright[b];
-						int tileIdx = b << Block.Shift;
+						int tileIdx = b * BlockInfo.Count;
 						// All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times.
 						
 						if (counts[index] == 0 ||
