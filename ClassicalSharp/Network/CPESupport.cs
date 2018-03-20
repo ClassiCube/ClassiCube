@@ -21,7 +21,7 @@ namespace ClassicalSharp.Network {
 			sendHeldBlock = false; useMessageTypes = false;
 			envMapVer = 2; blockDefsExtVer = 2;
 			needD3Fix = false; extEntityPos = false; twoWayPing = false;
-			game.UseCPEBlocks = false;
+			game.SupportsCPEBlocks = false;
 			
 			NetworkProcessor net = (NetworkProcessor)game.Server;
 			net.Reset();

@@ -5,29 +5,24 @@
 // I believe this process adheres to clean room reverse engineering.
 using System;
 using System.Collections.Generic;
-
-#if USE16_BIT
-using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Generator {
 	
 	public sealed partial class NotchyGenerator : IMapGenerator {
 		
 		int waterLevel, oneY;
-		BlockID[] blocks;
+		BlockRaw[] blocks;
 		short[] heightmap;
 		JavaRandom rnd;
 		int minHeight;
 		
 		public override string GeneratorName { get { return "Vanilla classic"; } }
 		
-		public override BlockID[] Generate() {
+		public override BlockRaw[] Generate() {
 			oneY = Width * Length;
 			waterLevel = Height / 2;
-			blocks = new BlockID[Width * Height * Length];
+			blocks = new BlockRaw[Width * Height * Length];
 			rnd = new JavaRandom(Seed);
 			minHeight = Height;
 			
@@ -172,7 +167,7 @@ namespace ClassicalSharp.Generator {
 			}
 		}
 		
-		void CarveOreVeins(float abundance, string blockName, BlockID block) {
+		void CarveOreVeins(float abundance, string blockName, BlockRaw block) {
 			int numVeins = (int)(blocks.Length * abundance / 16384);
 			CurrentState = "Carving " + blockName;
 			
@@ -262,7 +257,7 @@ namespace ClassicalSharp.Generator {
 					if (y < 0 || y >= Height) continue;
 					
 					int index = (y * Length + z) * Width + x;
-					BlockID blockAbove = y >= (Height - 1) ? Block.Air : blocks[index + oneY];
+					BlockRaw blockAbove = y >= (Height - 1) ? Block.Air : blocks[index + oneY];
 					if (blockAbove == Block.Water && (n2.Compute(x, z) > 12)) {
 						blocks[index] = Block.Gravel;
 					} else if (blockAbove == Block.Air) {
@@ -278,7 +273,7 @@ namespace ClassicalSharp.Generator {
 			
 			for (int i = 0; i < numPatches; i++) {
 				CurrentProgress = (float)i / numPatches;
-				BlockID type = (BlockID)(Block.Dandelion + rnd.Next(2));
+				BlockRaw type = (BlockRaw)(Block.Dandelion + rnd.Next(2));
 				int patchX = rnd.Next(Width), patchZ = rnd.Next(Length);
 				for (int j = 0; j < 10; j++) {
 					int flowerX = patchX, flowerZ = patchZ;
@@ -305,7 +300,7 @@ namespace ClassicalSharp.Generator {
 			
 			for (int i = 0; i < numPatches; i++) {
 				CurrentProgress = (float)i / numPatches;
-				BlockID type = (BlockID)(Block.BrownMushroom + rnd.Next(2));
+				BlockRaw type = (BlockRaw)(Block.BrownMushroom + rnd.Next(2));
 				int patchX = rnd.Next(Width);
 				int patchY = rnd.Next(Height);
 				int patchZ = rnd.Next(Length);
@@ -351,7 +346,7 @@ namespace ClassicalSharp.Generator {
 						int treeHeight = 5 + rnd.Next(3);
 						
 						int index = (treeY * Length + treeZ) * Width + treeX;
-						BlockID blockUnder = treeY > 0 ? blocks[index - oneY] : Block.Air;
+						BlockRaw blockUnder = treeY > 0 ? blocks[index - oneY] : Block.Air;
 						
 						if (blockUnder == Block.Grass && CanGrowTree(treeX, treeY, treeZ, treeHeight)) {
 							GrowTree(treeX, treeY, treeZ, treeHeight);

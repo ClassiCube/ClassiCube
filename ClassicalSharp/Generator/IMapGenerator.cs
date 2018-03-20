@@ -3,12 +3,7 @@ using System;
 using System.Threading;
 using ClassicalSharp.Map;
 using ClassicalSharp.Singleplayer;
-
-#if USE16_BIT
-using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
+using BlockRaw = System.Byte;
 
 namespace ClassicalSharp.Generator {
 	
@@ -17,7 +12,7 @@ namespace ClassicalSharp.Generator {
 		public abstract string GeneratorName { get; }
 		
 		/// <summary> Generates the raw blocks within the map, using the given seed. </summary>
-		public abstract BlockID[] Generate();
+		public abstract BlockRaw[] Generate();
 		
 		/// <summary> Applies environment settings (if required) to the newly generated world. </summary>
 		public virtual void ApplyEnv(World world) { }
@@ -32,7 +27,7 @@ namespace ClassicalSharp.Generator {
 		public bool Done = false;
 		
 		/// <summary> Blocks of the map generated. </summary>
-		public volatile BlockID[] Blocks;
+		public volatile BlockRaw[] Blocks;
 		
 		public int Width, Height, Length, Seed;
 		

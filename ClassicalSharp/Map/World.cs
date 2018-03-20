@@ -56,7 +56,7 @@ namespace ClassicalSharp.Map {
 			if (blocks.Length != (width * height * length))
 				throw new InvalidOperationException("Blocks array length does not match volume of map.");
 			
-			if (Env.EdgeHeight == -1) Env.EdgeHeight = height / 2;
+			if (Env.EdgeHeight == -1)  Env.EdgeHeight  = height / 2;
 			if (Env.CloudHeight == -1) Env.CloudHeight = height + 2;
 		}
 		

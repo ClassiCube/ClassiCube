@@ -245,13 +245,6 @@ namespace ClassicalSharp {
 				dst[i] = src[i];
 			return dst;
 		}
-		
-		public static byte[] UInt16sToUInt8s(ushort[] src) {
-			byte[] dst = new byte[src.Length];
-			for (int i = 0; i < dst.Length; i++)
-				dst[i] = (byte)src[i];
-			return dst;
-		}
 		#endif
 	}
 }

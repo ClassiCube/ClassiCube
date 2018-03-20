@@ -214,10 +214,10 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void RecreateElements() {
 			int totalElements = 0;
-			int count = game.UseCPE ? Block.Count : Block.OriginalCount;
-			for (int i = 0; i < count; i++) {
-				BlockID block = game.Inventory.Map[i];
-				if (Show(block)) totalElements++;
+			BlockID[] map = game.Inventory.Map;
+			
+			for (int i = 0; i < map.Length; i++) {
+				if (Show(map[i])) { totalElements++; }
 			}
 			
 			totalRows = Utils.CeilDiv(totalElements, ElementsPerRow);
@@ -226,9 +226,8 @@ namespace ClassicalSharp.Gui.Widgets {
 
 			Elements = new BlockID[totalElements];
 			int index = 0;
-			for (int i = 0; i < count; i++) {
-				BlockID block = game.Inventory.Map[i];
-				if (Show(block)) Elements[index++] = block;
+			for (int i = 0; i < map.Length; i++) {
+				if (Show(map[i])) { Elements[index++] = map[i]; }
 			}
 		}
 		
@@ -236,10 +235,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (block == Block.Air) return false;
 
 			if (block < Block.CpeCount) {
-				int count = game.UseCPEBlocks ? Block.CpeCount : Block.OriginalCount;
+				int count = game.SupportsCPEBlocks ? Block.CpeCount : Block.OriginalCount;
 				return block < count;
 			}
-			return true;
+			return game.UseCPE;
 		}
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {

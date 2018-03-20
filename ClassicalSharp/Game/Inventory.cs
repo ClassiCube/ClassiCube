@@ -18,7 +18,7 @@ namespace ClassicalSharp {
 		}
 		
 		public void Reset(Game game) { 
-			SetDefaultMapping(); 
+			SetDefaultMapping();
 			CanChangeHeldBlock = true; 
 			CanPick = true; 
 		}

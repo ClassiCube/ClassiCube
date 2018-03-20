@@ -83,7 +83,7 @@ namespace ClassicalSharp.Network.Protocols {
 			byte supportLevel = reader.ReadUInt8();
 			WriteCustomBlockSupportLevel(1);
 			net.SendPacket();
-			game.UseCPEBlocks = true;
+			game.SupportsCPEBlocks = true;
 			game.Events.RaiseBlockPermissionsChanged();
 		}
 		

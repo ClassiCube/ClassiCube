@@ -25,8 +25,8 @@ namespace ClassicalSharp.Singleplayer {
 		
 		public override void Connect(IPAddress address, int port) {
 			game.Chat.SetLogName("Singleplayer");
-			game.UseCPEBlocks = game.UseCPE;
-			int max = game.UseCPEBlocks ? Block.MaxCpeBlock : Block.MaxOriginalBlock;
+			game.SupportsCPEBlocks = game.UseCPE;
+			int max = game.SupportsCPEBlocks ? Block.MaxCpeBlock : Block.MaxOriginalBlock;
 			for (int i = 1; i <= max; i++) {
 				BlockInfo.CanPlace[i] = true;
 				BlockInfo.CanDelete[i] = true;
