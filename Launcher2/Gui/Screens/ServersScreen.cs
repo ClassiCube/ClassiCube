@@ -79,7 +79,7 @@ namespace Launcher.Gui.Screens {
 			if (e.Key == Key.Enter) {
 				string curServer = Get(view.hashIndex) ?? "";
 				if (table.Count >= 1 && curServer == "") {
-					widgets[view.hashIndex].Text = table.usedEntries[0].Hash;
+					widgets[view.hashIndex].Text = table.Get(0).Hash;
 					ConnectToServer(0, 0);
 				} else if (curServer != "" &&
 				          (selectedWidget == null || selectedWidget == widgets[view.tableIndex])) {
@@ -139,10 +139,11 @@ namespace Launcher.Gui.Screens {
 		void SwitchToMain(int x, int y) { game.SetScreen(new MainScreen(game)); }
 		
 		void FilterList() {
-			if (curInput != widgets[view.searchIndex])
-				return;
+			if (curInput != widgets[view.searchIndex]) return;
+			
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			table.FilterEntries(curInput.Text);
+			table.SetSelected(table.SelectedHash);
 			MarkPendingRedraw();
 		}
 

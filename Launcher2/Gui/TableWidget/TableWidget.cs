@@ -30,14 +30,15 @@ namespace Launcher.Gui.Widgets {
 		public string SelectedHash = "";
 		public int CurrentIndex, Count;
 		
-		internal TableEntry[] entries, usedEntries;
-		internal List<ServerListEntry> servers;
+		internal TableEntry[] entries;
+		internal int[] order;
+		internal List<ServerListEntry> servers;	
+		internal TableEntry Get(int i) { return entries[order[i]]; }
 		
 		public void SetEntries(List<ServerListEntry> servers) {
 			entries = new TableEntry[servers.Count];
-			usedEntries = new TableEntry[servers.Count];
+			order = new int[servers.Count];
 			this.servers = servers;
-			int index = 0;
 			
 			for (int i = 0; i < servers.Count; i++) {
 				ServerListEntry e = servers[i];
@@ -51,25 +52,25 @@ namespace Launcher.Gui.Widgets {
 				tableEntry.Featured = e.Featured;
 				tableEntry.Flag = e.Flag;
 				
-				entries[index] = tableEntry;
-				usedEntries[index] = tableEntry;
-				index++;
+				entries[i] = tableEntry;
+				order[i] = i;
 			}
 			Count = entries.Length;
 		}
 		
+		string curFilter;
 		public void FilterEntries(string filter) {
+			curFilter = filter;
 			Count = 0;
-			int index = 0;
-			
 			for (int i = 0; i < entries.Length; i++) {
 				TableEntry entry = entries[i];
 				if (entry.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0) {
-					Count++;
-					usedEntries[index++] = entry;
+					order[Count++] = i;
 				}
 			}
-			SetSelected(SelectedHash);
+			for (int i = Count; i < entries.Length; i++) {
+				order[i] = -100000;
+			}
 		}		
 		
 		internal void GetScrollbarCoords(out int y, out int height) {
@@ -93,18 +94,18 @@ namespace Launcher.Gui.Widgets {
 			ClampIndex();
 			
 			if (Count > 0) {
-				SelectedChanged(usedEntries[index].Hash);
-				SelectedHash = usedEntries[index].Hash;
+				TableEntry entry = Get(index);
+				SelectedChanged(entry.Hash);
+				SelectedHash = entry.Hash;
 			}
 		}
 		
 		public void SetSelected(string hash) {
 			SelectedIndex = -1;
 			for (int i = 0; i < Count; i++) {
-				if (usedEntries[i].Hash == hash) {
-					SetSelected(i);
-					return;
-				}
+				if (Get(i).Hash != hash) continue;
+				SetSelected(i);
+				return;
 			}
 		}
 		
@@ -194,11 +195,13 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		void SortEntries(TableEntryComparer comparer, bool noRedraw) {
-			Array.Sort(usedEntries, 0, Count, comparer);
 			Array.Sort(entries, 0, entries.Length, comparer);
-			lastIndex = -10;
-			if (noRedraw) return;
+			lastIndex = -10;			
+			if (curFilter != null && curFilter.Length > 0) {
+				FilterEntries(curFilter);
+			}
 			
+			if (noRedraw) return;			
 			comparer.Invert = !comparer.Invert;
 			SetSelected(SelectedHash);
 			NeedRedraw();
@@ -206,7 +209,7 @@ namespace Launcher.Gui.Widgets {
 		
 		void GetSelectedServer(int mouseX, int mouseY) {
 			for (int i = 0; i < Count; i++) {
-				TableEntry entry = usedEntries[i];
+				TableEntry entry = Get(i);
 				if (mouseY < entry.Y || mouseY >= entry.Y + entry.Height + 2) continue;
 				
 				if (lastIndex == i && (DateTime.UtcNow - lastPress).TotalSeconds < 1) {

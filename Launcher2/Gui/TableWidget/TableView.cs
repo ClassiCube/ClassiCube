@@ -52,8 +52,8 @@ namespace Launcher.Gui.Widgets {
 					maxIndex = i; return;
 				}
 				
-				table.usedEntries[i].Y = y;
-				table.usedEntries[i].Height = entryHeight;
+				table.entries[table.order[i]].Y = y;
+				table.entries[table.order[i]].Height = entryHeight;
 				y += entryHeight + 2;
 			}
 		}
@@ -97,10 +97,11 @@ namespace Launcher.Gui.Widgets {
 		public void DrawFlags() {
 			using (FastBitmap dst = game.LockBits()) {
 				for (int i = table.CurrentIndex; i < maxIndex; i++) {
-					int x = table.X, y = table.usedEntries[i].Y;
-					FastBitmap flag = GetFlag(table.usedEntries[i].Flag);
+					TableEntry entry = table.Get(i);					
+					FastBitmap flag = GetFlag(entry.Flag);
 					if (flag == null) continue;
 					
+					int x = table.X, y = entry.Y;
 					Rectangle rect = new Rectangle(x + 2, y + 3, 16, 11);
 					BitmapDrawer.Draw(flag, dst, rect);
 				}
@@ -119,13 +120,14 @@ namespace Launcher.Gui.Widgets {
 			
 			y += 5;
 			for (int i = table.CurrentIndex; i < table.Count; i++) {
-				args = new DrawTextArgs(filter(table.usedEntries[i]), font, true);
-				if ((i == table.SelectedIndex || table.entries[i].Featured) && !separator) {
+				TableEntry entry = table.Get(i);
+				args = new DrawTextArgs(filter(entry), font, true);
+				if ((i == table.SelectedIndex || entry.Featured) && !separator) {
 					int startY = y - 3;
 					int height = Math.Min(startY + (entryHeight + 4), table.Y + table.Height) - startY;
-					drawer.Clear(GetGridCol(table.entries[i].Featured, i == table.SelectedIndex), table.X, startY, table.Width, height);
+					drawer.Clear(GetGridCol(entry.Featured, i == table.SelectedIndex), table.X, startY, table.Width, height);
 				}				
-				if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref table.usedEntries[i])) {
+				if (!DrawColumnEntry(drawer, ref args, maxWidth, x, ref y, ref entry)) {
 					maxIndex = i; break;
 				}
 			}			
@@ -166,8 +168,8 @@ namespace Launcher.Gui.Widgets {
 		
 		void ResetEntries() {
 			for (int i = 0; i < table.Count; i++) {
-				table.entries[i].Height = 0; table.usedEntries[i].Height = 0;
-				table.entries[i].Y = -10; table.usedEntries[i].Y = -10;
+				table.entries[i].Height = 0;
+				table.entries[i].Y = -10;
 			}
 		}
 		
