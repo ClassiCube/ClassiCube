@@ -1188,7 +1188,7 @@ void InputWidget_RemakeTexture(GuiElement* elem) {
 		totalHeight += widget->LineSizes[i].Height;
 		maxWidth = max(maxWidth, widget->LineSizes[i].Width);
 	}
-	Size2D size = Size2D_Make(maxWidth, totalHeight);
+	Size2D size = { maxWidth, totalHeight };
 	widget->CaretAccumulator = 0;
 
 	Int32 realHeight = 0;

@@ -22,10 +22,7 @@ bool Rectangle2D_Contains(Rectangle2D a, Int32 x, Int32 y);
 bool Rectangle2D_Equals(Rectangle2D a, Rectangle2D b);
 
 Size2D Size2D_Make(Int32 width, Int32 height);
-bool Size2D_Equals(Size2D a, Size2D b);
-
 Point2D Point2D_Make(Int32 x, Int32 y);
-bool Point2D_Equals(Point2D a, Point2D b);
 
 /* Stores the four texture coordinates that describe a textured quad.  */
 typedef struct TextureRec_ { Real32 U1, V1, U2, V2; } TextureRec;

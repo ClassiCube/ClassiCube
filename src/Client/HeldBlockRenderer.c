@@ -75,8 +75,8 @@ void HeldBlockRenderer_ResetHeldState(void) {
 
 void HeldBlockRenderer_SetBaseOffset(void) {
 	bool sprite = Block_Draw[held_block] == DRAW_SPRITE;
-	Vector3 normalOffset = VECTOR3_CONST(0.56f, -0.72f, -0.72f);
-	Vector3 spriteOffset = VECTOR3_CONST(0.46f, -0.52f, -0.72f);
+	Vector3 normalOffset = { 0.56f, -0.72f, -0.72f };
+	Vector3 spriteOffset = { 0.46f, -0.52f, -0.72f };
 	Vector3 offset = sprite ? spriteOffset : normalOffset;
 
 	Vector3_Add(&held_entity.Position, &held_entity.Position, &offset);

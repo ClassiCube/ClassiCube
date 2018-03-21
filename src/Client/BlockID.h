@@ -85,10 +85,8 @@
 
 #if USE16_BIT
 #define BLOCK_MAX_DEFINED 0x3FF
-#define BLOCK_SHIFT 10
 #else
 #define BLOCK_MAX_DEFINED 0xFF
-#define BLOCK_SHIFT 8
 #endif
 
 #define BLOCK_RAW_NAMES "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava"\

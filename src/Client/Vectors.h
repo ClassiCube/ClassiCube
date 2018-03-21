@@ -21,7 +21,6 @@ Real32 Vector3_Length(Vector3* v);
 Real32 Vector3_LengthSquared(Vector3* v);
 
 #define VECTOR3_CONST(x, y, z) { x, y, z };
-#define VECTOR3I_CONST(x, y, z) { x, y, z };
 #define Vector3_UnitX VECTOR3_CONST(1.0f, 0.0f, 0.0f)
 #define Vector3_UnitY VECTOR3_CONST(0.0f, 1.0f, 0.0f)
 #define Vector3_UnitZ VECTOR3_CONST(0.0f, 0.0f, 1.0f)

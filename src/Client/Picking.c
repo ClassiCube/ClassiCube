@@ -17,7 +17,7 @@ void PickedPos_TestAxis(PickedPos* pos, Real32 dAxis, Face fAxis) {
 }
 
 void PickedPos_SetAsValid(PickedPos* pos, RayTracer* t, Vector3 intersect) {
-	Vector3I blockPos = VECTOR3I_CONST(t->X, t->Y, t->Z);
+	Vector3I blockPos  = { t->X, t->Y, t->Z };
 	pos->Valid         = true;
 	pos->BlockPos      = blockPos;
 	pos->Block         = t->Block;	
@@ -44,7 +44,7 @@ void PickedPos_SetAsValid(PickedPos* pos, RayTracer* t, Vector3 intersect) {
 }
 
 void PickedPos_SetAsInvalid(PickedPos* pos) {
-	Vector3I blockPos = VECTOR3I_CONST(-1, -1, -1);
+	Vector3I blockPos  = { -1, -1, -1 };
 	pos->Valid         = false;
 	pos->BlockPos      = blockPos;
 	pos->Block         = BLOCK_AIR;

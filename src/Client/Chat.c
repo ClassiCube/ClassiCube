@@ -482,7 +482,7 @@ void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 			return;
 		}
 
-		Vector3 v = VECTOR3_CONST(x, y, z);
+		Vector3 v = { x, y, z };
 		LocationUpdate update; LocationUpdate_MakePos(&update, v, false);
 		Entity* entity = &LocalPlayer_Instance.Base.Base;
 		entity->VTABLE->SetLocation(entity, &update, false);

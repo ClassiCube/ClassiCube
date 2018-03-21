@@ -58,7 +58,7 @@ void PerspectiveCamera_RegrabMouse(void) {
 	Int32 cenX = topLeft.X + Game_Width  / 2;
 	Int32 cenY = topLeft.Y + Game_Height / 2;
 
-	Point2D point = Point2D_Make(cenX, cenY);
+	Point2D point = { cenX, cenY };
 	Window_SetDesktopCursorPos(point);
 	previous = point;
 	delta = Point2D_Empty;

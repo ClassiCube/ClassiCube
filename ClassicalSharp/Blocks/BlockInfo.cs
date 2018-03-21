@@ -232,9 +232,6 @@ namespace ClassicalSharp {
 		
 		static StringBuffer buffer = new StringBuffer(64);
 		static string DefaultName(BlockID block) {
-			#if USE16_BIT
-			if (block >= 256) return "ID " + block;
-			#endif
 			if (block >= Block.CpeCount) return "Invalid";
 			
 			// Find start and end of this particular block name
@@ -353,7 +350,6 @@ namespace ClassicalSharp {
 				f |= occludedY && (bothLiquid || (oMin.Y == 0 && bMax.Y == 1)) ? (1 << Side.Top)    : 0;
 				BlockInfo.hidden[(block * Count) | other] = (byte)f;
 			}
-			
 		}
 		
 		static bool IsHidden(BlockID block, BlockID other) {

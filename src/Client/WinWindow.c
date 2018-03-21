@@ -208,14 +208,14 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 	case WM_WINDOWPOSCHANGED:
 		pos = (WINDOWPOS*)lParam;
 		if (pos->hwnd == win_Handle) {
-			Point2D new_location = Point2D_Make(pos->x, pos->y);
-			if (!Point2D_Equals(Window_GetLocation(), new_location)) {
+			Point2D loc = Window_GetLocation();
+			if (loc.X != pos->x || loc.Y != pos->y) {
 				win_Bounds.X = pos->x; win_Bounds.Y = pos->y;
 				Event_RaiseVoid(&WindowEvents_Moved);
 			}
 
-			Size2D new_size = Size2D_Make(pos->cx, pos->cy);
-			if (!Size2D_Equals(Window_GetSize(), new_size)) {
+			Size2D size = Window_GetSize();
+			if (size.Width != pos->cx || size.Height != pos->cy) {
 				win_Bounds.Width = pos->cx; win_Bounds.Height = pos->cy;
 
 				RECT rect;
@@ -539,7 +539,7 @@ void Window_SetSize(Size2D size) {
 
 Rectangle2D Window_GetClientRectangle(void) { return win_ClientRect; }
 void Window_SetClientRectangle(Rectangle2D rect) {
-	Size2D size = Size2D_Make(rect.Width, rect.Height);
+	Size2D size = { rect.Width, rect.Height };
 	Window_SetClientSize(size);
 }
 
@@ -659,8 +659,8 @@ Point2D Window_PointToScreen(Point2D p) {
 	ErrorHandler_Fail("PointToScreen NOT IMPLEMENTED");
 }
 
-MSG msg;
 void Window_ProcessEvents(void) {
+	MSG msg;
 	while (PeekMessageA(&msg, NULL, 0, 0, 1)) {
 		TranslateMessage(&msg);
 		DispatchMessageA(&msg);

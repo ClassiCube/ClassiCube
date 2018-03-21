@@ -153,7 +153,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 
 				Builder_X = x; Builder_Y = y; Builder_Z = z;
 				Builder_FullBright = Block_FullBright[b];
-				Int32 tileIdx = b << BLOCK_SHIFT;
+				UInt32 tileIdx = b * BLOCK_COUNT;
 				/* All of these function calls are inlined as they can be called tens of millions to hundreds of millions of times. */
 
 				if (Builder_Counts[index] == 0 ||

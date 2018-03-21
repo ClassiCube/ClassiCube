@@ -130,7 +130,7 @@ Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow) {
 
 Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 windowY) {
 	Size2D size = Drawer2D_MeasureText(args);
-	if (Size2D_Equals(size, Size2D_Empty)) {
+	if (size.Width == 0.0f && size.Height == 0.0f) {
 		return Texture_FromOrigin(NULL, windowX, windowY, 0, 0, 1.0f, 1.0f);
 	}
 
@@ -343,7 +343,7 @@ void Drawer2D_DrawBitmapText(DrawTextArgs* args, Int32 x, Int32 y) {
 Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
 	if (Drawer2D_IsEmptyText(&args->Text)) return Size2D_Empty;
 	Int32 textHeight = Drawer2D_AdjTextSize(args->Font.Size);
-	Size2D total = Size2D_Make(0, Drawer2D_CellSize(textHeight));
+	Size2D total = { 0, Drawer2D_CellSize(textHeight) };
 	Int32 point = Math_Floor(args->Font.Size);
 
 	String text = args->Text;
