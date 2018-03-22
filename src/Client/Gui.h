@@ -11,7 +11,6 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-typedef UInt8 Anchor;
 #define ANCHOR_LEFT_OR_TOP 0
 #define ANCHOR_CENTRE 1
 #define ANCHOR_BOTTOM_OR_RIGHT 2
@@ -72,7 +71,7 @@ typedef struct Widget_ {
 	/* Whether widget is prevented from being interacted with. */
 	bool Disabled;
 	/* Specifies the reference point for when this widget is resized */
-	Anchor HorAnchor, VerAnchor;
+	UInt8 HorAnchor, VerAnchor;
 	/* Offset from the reference point */
 	Int32 XOffset, YOffset;
 	void (*Reposition)(struct Widget_* widget);

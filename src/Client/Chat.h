@@ -3,11 +3,22 @@
 #include "Typedefs.h"
 #include "Constants.h"
 #include "Utils.h"
-#include "NetworkEnums.h"
 #include "GameStructs.h"
 /* Manages sending and logging chat.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+
+#define MESSAGE_TYPE_NORMAL         0
+#define MESSAGE_TYPE_STATUS_1       1
+#define MESSAGE_TYPE_STATUS_2       2
+#define MESSAGE_TYPE_STATUS_3       3
+#define MESSAGE_TYPE_BOTTOMRIGHT_1  11
+#define MESSAGE_TYPE_BOTTOMRIGHT_2  12
+#define MESSAGE_TYPE_BOTTOMRIGHT_3  13
+#define MESSAGE_TYPE_ANNOUNCEMENT   100
+#define MESSAGE_TYPE_CLIENTSTATUS_1 256 /* Cuboid messages*/
+#define MESSAGE_TYPE_CLIENTSTATUS_2 257 /* Clipboard invalid character */
+#define MESSAGE_TYPE_CLIENTSTATUS_3 258 /* Tab list matching names*/
 
 typedef struct ChatLine_ { UInt8 Buffer[String_BufferSize(STRING_SIZE)]; DateTime Received; } ChatLine;
 ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
