@@ -64,19 +64,28 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public BlockID GetBlock(int x, int y, int z) {
-			return blocks1[(y * Length + z) * Width + x];
+			int i = (y * Length + z) * Width + x;
+			#if USE16_BIT
+			return (BlockID)((blocks1[i] | (blocks2[i] << 8) & BlockInfo.MaxDefined);
+			#else
+			return blocks1[i];
+			#endif
 		}
 		
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public BlockID GetBlock(Vector3I p) {
-			return blocks1[(p.Y * Length + p.Z) * Width + p.X];
+			int i = (p.Y * Length + p.Z) * Width + p.X;
+			#if USE16_BIT
+			return (BlockID)((blocks1[i] | (blocks2[i] << 8) & BlockInfo.MaxDefined);
+			#else
+			return blocks1[i];
+			#endif
 		}
 		
 		/// <summary> Returns the block at the given world coordinates with bounds checking,
 		/// returning 0 is the coordinates were outside the map. </summary>
 		public BlockID SafeGetBlock(Vector3I p) {
-			return IsValidPos(p.X, p.Y, p.Z) ?
-				blocks1[(p.Y * Length + p.Z) * Width + p.X] : Block.Air;
+			return IsValidPos(p.X, p.Y, p.Z) ? GetBlock(p) : Block.Air;
 		}
 		
 		/// <summary> Returns whether the given world coordinates are contained
@@ -107,7 +116,13 @@ namespace ClassicalSharp.Map {
 		public BlockID GetPhysicsBlock(int x, int y, int z) {
 			if (x < 0 || x >= Width || z < 0 || z >= Length || y < 0) return Block.Bedrock;			
 			if (y >= Height) return Block.Air;
-			return blocks1[(y * Length + z) * Width + x];
+			
+			int i = (y * Length + z) * Width + x;
+			#if USE16_BIT
+			return (BlockID)((blocks1[i] | (blocks2[i] << 8) & BlockInfo.MaxDefined);
+			#else
+			return blocks1[i];
+			#endif
 		}
 	}
 }

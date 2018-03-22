@@ -1172,7 +1172,7 @@ void ChatScreen_ConstructWidgets(ChatScreen* screen) {
 	Widget_SetLocation(&screen->Announcement.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Game_Height / 4);
 }
 
-void SetInitialMessages() {
+void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 	Chat chat = game.Chat;
 	chatIndex = chat.Log.Count - Game_ChatLines;
 	ResetChat();
@@ -1194,7 +1194,7 @@ void SetInitialMessages() {
 	}
 }
 
-void Render(double delta) {
+void ChatScreen_Render(GuiElement* elem, Real64 delta) {
 	if (!Game_PureClassic) {
 		status.Render(delta);
 	}
@@ -1213,8 +1213,9 @@ void Render(double delta) {
 
 	if (HandlesAllInput) {
 		input.Render(delta);
-		if (altText.Active)
+		if (altText.Active) {
 			altText.Render(delta);
+		}
 	}
 
 	if (announcement.IsValid && (now - game.Chat.Announcement.Received).TotalSeconds > 5)
@@ -1222,8 +1223,7 @@ void Render(double delta) {
 }
 
 int lastDownloadStatus = int.MinValue;
-StringBuffer lastDownload = new StringBuffer(48);
-void CheckOtherStatuses() {
+void ChatScreen_CheckOtherStatuses() {
 	Request item = game.Downloader.CurrentItem;
 	if (item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack")) {
 		if (status.Textures[1].IsValid) status.SetText(1, null);
@@ -1237,26 +1237,29 @@ void CheckOtherStatuses() {
 	SetFetchStatus(progress);
 }
 
-void SetFetchStatus(int progress) {
-	lastDownload.Clear();
+void ChatScreen_SetFetchStatus(Int32 progress) {
+	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
+	String str = String_InitAndClearArray(strBuffer);
+
 	if (progress == -2) {
-		lastDownload.Append("&eRetrieving texture pack..");
+		String_AppendConst(&str, "&eRetrieving texture pack..");
 	} else if (progress == -1) {
-		lastDownload.Append("&eDownloading texture pack");
+		String_AppendConst(&str, "&eDownloading texture pack");
 	} else if (progress >= 0 && progress <= 100) {
-		lastDownload.Append("&eDownloading texture pack (&7")
-			.AppendNum(progress).Append("&e%)");
+		String_AppendConst(&str, "&eDownloading texture pack (&7");
+		String_AppendInt32(&str, progress);
+		String_AppendConst(&str, "&e%)");
 	}
-	status.SetText(1, lastDownload.ToString());
+	status.SetText(1, &str);
 }
 
-void RenderRecentChat(DateTime now, double delta) {
+void ChatScreen_RenderRecentChat(DateTime now, double delta) {
 	for (int i = 0; i < normalChat.Textures.Length; i++) {
 		Texture texture = normalChat.Textures[i];
 		int logIdx = chatIndex + i;
 
-		if (!texture.IsValid) continue;
-		if (logIdx < 0 || logIdx >= game.Chat.Log.Count) continue;
+		if (texture.ID == NULL) continue;
+		if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
 
 		DateTime received = game.Chat.Log[logIdx].Received;
 		if ((now - received).TotalSeconds <= 10) {
@@ -1265,19 +1268,19 @@ void RenderRecentChat(DateTime now, double delta) {
 	}
 }
 
-void RenderClientStatus() {
+void ChatScreen_RenderClientStatus() {
 	int y = clientStatus.Y + clientStatus.Height;
 	for (int i = 0; i < clientStatus.Textures.Length; i++) {
 		Texture texture = clientStatus.Textures[i];
-		if (!texture.IsValid) continue;
+		if (texture.ID == NULL) continue;
 
 		y -= texture.Height;
-		texture.Y1 = y;
-		texture.Render(game.Graphics);
+		texture.Y = y;
+		Texture_Render(&texture);
 	}
 }
 
-void RenderBackground() {
+void ChatScreen_RenderBackground() {
 	int minIndex = Math.Min(0, game.Chat.Log.Count - chatLines);
 	int height = chatIndex == minIndex ? normalChat.GetUsedHeight() : normalChat.Height;
 
@@ -1293,7 +1296,7 @@ void RenderBackground() {
 }
 
 int inputOldHeight = -1;
-void UpdateChatYOffset(bool force) {
+void ChatScreen_UpdateChatYOffset(bool force) {
 	int height = InputUsedHeight;
 	if (force || height != inputOldHeight) {
 		clientStatus.YOffset = Math.Max(hud.BottomOffset + 15, height);
@@ -1314,7 +1317,7 @@ void ColourCodeChanged(void* obj, UInt8 code) {
 	input.Recreate();
 }
 
-void Recreate(TextGroupWidget* group, UInt8 code) {
+void ChatScreen_Recreate(TextGroupWidget* group, UInt8 code) {
 	for (int i = 0; i < group->LinesCount; i++) {
 		string line = group.lines[i];
 		if (line == null) continue;
@@ -1327,7 +1330,7 @@ void Recreate(TextGroupWidget* group, UInt8 code) {
 	}
 }
 
-void ChatReceived(void* obj, UInt8 msgType) {
+void ChatScreen_ChatReceived(void* obj, UInt8 msgType) {
 	MessageType type = e.Type;
 	if (Gfx_LostContext) return;
 
@@ -1349,7 +1352,7 @@ void ChatReceived(void* obj, UInt8 msgType) {
 	}
 }
 
-void Dispose() {
+void ChatScreen_Dispose() {
 	ContextLost();
 	chatFont.Dispose();
 	chatUrlFont.Dispose();
@@ -1362,7 +1365,7 @@ void Dispose() {
 	game.Graphics.ContextRecreated -= ContextRecreated;
 }
 
-void ContextLost() {
+void ChatScreen_ContextLost() {
 	if (HandlesAllInput) {
 		chatInInputBuffer = input.Text.ToString();
 		game.CursorVisible = false;
@@ -1379,18 +1382,18 @@ void ContextLost() {
 	announcement.Dispose();
 }
 
-void ContextRecreated() {
+void ChatScreen_ContextRecreated() {
 	ConstructWidgets();
 	SetInitialMessages();
 }
 
-void ChatFontChanged(void* obj) {
+void ChatScreen_ChatFontChanged(void* obj) {
 	if (!game.Drawer2D.UseBitmappedChat) return;
 	Recreate();
 	UpdateChatYOffset(true);
 }
 
-void OnResize(int width, int height) {
+void ChatScreen_OnResize(int width, int height) {
 	bool active = altText != null && altText.Active;
 	Recreate();
 	altText.SetActive(active);
@@ -1407,7 +1410,7 @@ void ResetChat() {
 	}
 }
 
-bool HandlesKeyPress(char key) {
+bool ChatScreen_HandlesKeyPress(char key) {
 	if (!HandlesAllInput) return false;
 	if (suppressNextPress) {
 		suppressNextPress = false;
@@ -1430,12 +1433,12 @@ void OpenTextInputBar(string initialText) {
 	input.Recreate();
 }
 
-void AppendTextToInput(string text) {
+void ChatScreen_AppendTextToInput(string text) {
 	if (!HandlesAllInput) return;
 	input.Append(text);
 }
 
-bool HandlesKeyDown(Key key) {
+bool ChatScreen_HandlesKeyDown(Key key) {
 	suppressNextPress = false;
 	if (HandlesAllInput) { // text input bar
 		if (key == game.Mapping(KeyBind.SendChat) || key == Key_KeypadEnter || key == game.Mapping(KeyBind.PauseOrExit)) {
@@ -1476,7 +1479,7 @@ bool HandlesKeyDown(Key key) {
 	return true;
 }
 
-bool HandlesKeyUp(Key key) {
+bool ChatScreen_HandlesKeyUp(Key key) {
 	if (!HandlesAllInput) return false;
 
 	if (game.Server.SupportsFullCP437 && key == game.Input.Keys[KeyBind.ExtInput]) {
@@ -1486,14 +1489,14 @@ bool HandlesKeyUp(Key key) {
 }
 
 float chatAcc;
-bool HandlesMouseScroll(float delta) {
+bool ChatScreen_HandlesMouseScroll(float delta) {
 	if (!HandlesAllInput) return false;
 	int steps = Utils.AccumulateWheelDelta(ref chatAcc, delta);
 	ScrollHistoryBy(-steps);
 	return true;
 }
 
-bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
+bool ChatScreen_HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 	if (!HandlesAllInput || game.HideGui) return false;
 
 	if (!normalChat.Bounds.Contains(mouseX, mouseY)) {
@@ -1513,7 +1516,7 @@ bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 	return false;
 }
 
-bool HandlesChatClick(int mouseX, int mouseY) {
+bool ChatScreen_HandlesChatDown(int mouseX, int mouseY) {
 	string text = normalChat.GetSelected(mouseX, mouseY);
 	if (text == null) return false;
 	string url = Utils.StripColours(text);
@@ -1534,27 +1537,23 @@ bool HandlesChatClick(int mouseX, int mouseY) {
 	return true;
 }
 
-void OpenUrl(Overlay urlOverlay, bool always) {
-	try {
-		Process.Start(urlOverlay.Metadata);
-	} catch (Exception ex) {
-		ErrorHandler.LogError("ChatScreen.OpenUrl", ex);
-	}
+void ChatScreen_OpenUrl(Overlay urlOverlay, bool always) {
+	Platform_StartShell(urlOverlay.Metadata);
 }
 
-void AppendUrl(Overlay urlOverlay, bool always) {
-	if (!game.ClickableChat) return;
+void ChatScreen_AppendUrl(Overlay urlOverlay, bool always) {
+	if (!Game_ClickableChat) return;
 	input.Append(urlOverlay.Metadata);
 }
 
-int ClampIndex(int index) {
+int ChatScreen_ClampIndex(int index) {
 	int maxIndex = game.Chat.Log.Count - chatLines;
 	int minIndex = Math.Min(0, maxIndex);
 	Utils.Clamp(ref index, minIndex, maxIndex);
 	return index;
 }
 
-void ScrollHistoryBy(int delta) {
+void ChatScreen_ScrollHistoryBy(int delta) {
 	int newIndex = ClampIndex(chatIndex + delta);
 	if (newIndex == chatIndex) return;
 
@@ -1562,18 +1561,18 @@ void ScrollHistoryBy(int delta) {
 	ResetChat();
 }
 
-int InputUsedHeight {
+int ChatScreen_InputUsedHeight {
 	get{ return altText.Height == 0 ? input.Height + 20 : (game.Height - altText.Y + 5); }
 }
 
-void UpdateAltTextY() {
+void ChatScreen_UpdateAltTextY() {
 	int height = Math.Max(input.Height + input.YOffset, hud.BottomOffset);
 	height += input.YOffset;
 	altText.texture.Y1 = game.Height - (height + altText.texture.Height);
 	altText.Y = altText.texture.Y;
 }
 
-void SetHandlesAllInput(bool handles) {
+void ChatScreen_SetHandlesAllInput(bool handles) {
 	HandlesAllInput = handles;
 	game.Gui.hudScreen.HandlesAllInput = handles;
 }

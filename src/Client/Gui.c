@@ -64,7 +64,7 @@ void Widget_Init(Widget* widget) {
 }
 
 
-Int32 Gui_CalcPos(Anchor anchor, Int32 offset, Int32 size, Int32 axisLen) {
+Int32 Gui_CalcPos(UInt8 anchor, Int32 offset, Int32 size, Int32 axisLen) {
 	if (anchor == ANCHOR_LEFT_OR_TOP)     return offset;
 	if (anchor == ANCHOR_BOTTOM_OR_RIGHT) return axisLen - size - offset;
 	return (axisLen - size) / 2 + offset;

@@ -2,22 +2,12 @@
 using System;
 using OpenTK;
 using ClassicalSharp;
-
-#if USE16_BIT
 using BlockID = System.UInt16;
-#else
-using BlockID = System.Byte;
-#endif
 
 namespace ClassicalSharp {
 	
 	/// <summary> Stores various properties about the blocks in Minecraft Classic. </summary>
 	public static partial class BlockInfo {
-		
-		public static Vector3[] MinBB = new Vector3[Block.Count];
-		public static Vector3[] MaxBB = new Vector3[Block.Count];
-		public static Vector3[] RenderMinBB = new Vector3[Block.Count];
-		public static Vector3[] RenderMaxBB = new Vector3[Block.Count];
 		
 		internal static void CalcRenderBounds(BlockID block) {
 			Vector3 min = MinBB[block], max = MaxBB[block];
@@ -53,7 +43,7 @@ namespace ClassicalSharp {
 		
 		internal static void RecalculateSpriteBB() {
 			using (FastBitmap fastBmp = new FastBitmap(TerrainAtlas2D.Atlas, true, true)) {
-				for (int i = 0; i < Block.Count; i++) {
+				for (int i = 0; i < Count; i++) {
 					if (Draw[i] != DrawType.Sprite) continue;
 					RecalculateBB((BlockID)i, fastBmp);
 				}

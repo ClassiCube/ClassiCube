@@ -464,8 +464,8 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 	*value = false; return false;
 }
 
-#define STRINGSBUFFER_LEN_SHIFT 10
-#define STRINGSBUFFER_LEN_MASK  0x3FFUL
+#define STRINGSBUFFER_LEN_SHIFT 9
+#define STRINGSBUFFER_LEN_MASK  0x1FFUL
 void StringsBuffer_Init(StringsBuffer* buffer) {
 	StringsBuffer_UNSAFE_Reset(buffer);
 	buffer->TextBuffer  = buffer->DefaultBuffer;
