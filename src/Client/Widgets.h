@@ -91,35 +91,6 @@ void TableWidget_SetBlockTo(TableWidget* widget, BlockID block);
 void TableWidget_OnInventoryChanged(TableWidget* widget);
 
 
-typedef void (*SpecialInputAppendFunc)(void* userData, UInt8 c);
-typedef struct SpecialInputTab_ {
-	String Title;
-	Size2D TitleSize;
-	String Contents;
-	Int32 ItemsPerRow;
-	Int32 CharsPerItem;
-} SpecialInputTab;
-void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title, 
-	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String* contents);
-
-typedef struct SpecialInputWidget_ {
-	Widget Base;
-	Size2D ElementSize;
-	Int32 SelectedIndex;
-	SpecialInputAppendFunc AppendFunc;
-	void* AppendObj;
-	Texture Tex;
-	FontDesc Font;
-	SpecialInputTab Tabs[5];
-	String ColString;
-	UInt8 ColBuffer[String_BufferSize(DRAWER2D_MAX_COLS * 4)];
-} SpecialInputWidget;
-
-void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, SpecialInputAppendFunc appendFunc, void* appendObj);
-void SpecialInputWidget_UpdateCols(SpecialInputWidget* widget);
-void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
-
-
 #define INPUTWIDGET_MAX_LINES 3
 #define INPUTWIDGET_LEN STRING_SIZE
 typedef struct InputWidget_ {
@@ -235,4 +206,34 @@ typedef struct PlayerListWidget_ {
 
 void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic);
 void PlayerListWidget_GetNameUnder(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
+
+
+
+
+typedef void (*SpecialInputAppendFunc)(void* userData, UInt8 c);
+typedef struct SpecialInputTab_ {
+	String Title;
+	Size2D TitleSize;
+	String Contents;
+	Int32 ItemsPerRow;
+	Int32 CharsPerItem;
+} SpecialInputTab;
+void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title, 
+	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String* contents);
+
+typedef struct SpecialInputWidget_ {
+	Widget Base;
+	Size2D ElementSize;
+	Int32 SelectedIndex;
+	InputWidget* AppendObj;
+	Texture Tex;
+	FontDesc Font;
+	SpecialInputTab Tabs[5];
+	String ColString;
+	UInt8 ColBuffer[String_BufferSize(DRAWER2D_MAX_COLS * 4)];
+} SpecialInputWidget;
+
+void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, InputWidget* appendObj);
+void SpecialInputWidget_UpdateCols(SpecialInputWidget* widget);
+void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active);
 #endif

@@ -853,248 +853,6 @@ void TableWidget_OnInventoryChanged(TableWidget* widget) {
 }
 
 
-void SpecialInputWidget_UpdateColString(SpecialInputWidget* widget) {
-	UInt32 count = 0, i;
-	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		if (i >= 'A' && i <= 'F') continue;
-		if (Drawer2D_Cols[i].A > 0) count++;
-	}
-
-	widget->ColString = String_InitAndClearArray(widget->ColBuffer);
-	String* buffer = &widget->ColString;
-	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
-		if (i >= 'A' && i <= 'F') continue;
-		if (Drawer2D_Cols[i].A == 0) continue;
-
-		String_Append(buffer, '&'); String_Append(buffer, (UInt8)i);
-		String_Append(buffer, '%'); String_Append(buffer, (UInt8)i);
-	}
-}
-
-bool SpecialInputWidget_IntersectsHeader(SpecialInputWidget* widget, Int32 x, Int32 y) {
-	Int32 titleX = 0, i;
-	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
-		Size2D size = widget->Tabs[i].TitleSize;
-		if (Gui_Contains(titleX, 0, size.Width, size.Height, x, y)) {
-			widget->SelectedIndex = i;
-			return true;
-		}
-		titleX += size.Width;
-	}
-	return false;
-}
-
-void SpecialInputWidget_IntersectsBody(SpecialInputWidget* widget, Int32 x, Int32 y) {
-	y -= widget->Tabs[0].TitleSize.Height;
-	x /= widget->ElementSize.Width; y /= widget->ElementSize.Height;
-	SpecialInputTab e = widget->Tabs[widget->SelectedIndex];
-	Int32 index = y * e.ItemsPerRow + x;
-	if (index * e.CharsPerItem >= e.Contents.length) return;
-
-	SpecialInputAppendFunc append = widget->AppendFunc;
-	if (widget->SelectedIndex == 0) {
-		/* TODO: need to insert characters that don't affect widget->CaretPos index, adjust widget->CaretPos colour */
-		append(widget->AppendObj, e.Contents.buffer[index * e.CharsPerItem]);
-		append(widget->AppendObj, e.Contents.buffer[index * e.CharsPerItem + 1]);
-	} else {
-		append(widget->AppendObj, e.Contents.buffer[index]);
-	}
-}
-
-void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title,
-	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String* contents) {
-	tab->Title = *title;
-	tab->TitleSize = Size2D_Empty;
-	tab->Contents = *contents;
-	tab->ItemsPerRow = itemsPerRow;
-	tab->CharsPerItem = charsPerItem;
-}
-
-void SpecialInputWidget_InitTabs(SpecialInputWidget* widget) {
-	String title_cols = String_FromConst("Colours");
-	SpecialInputWidget_UpdateColString(widget);
-	SpecialInputTab_Init(&widget->Tabs[0], &title_cols, 10, 4, &widget->ColString);
-
-	String title_math = String_FromConst("Math");
-	String tab_math = String_FromConst("\x9F\xAB\xAC\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xFB\xFC\xFD");
-	SpecialInputTab_Init(&widget->Tabs[1], &title_math, 16, 1, &tab_math);
-
-	String title_line = String_FromConst("Line/Box");
-	String tab_line = String_FromConst("\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\xBA\xBB\xBC\xBD\xBE\xBF\xC0\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1\xD2\xD3\xD4\xD5\xD6\xD7\xD8\xD9\xDA\xDB\xDC\xDD\xDE\xDF\xFE");
-	SpecialInputTab_Init(&widget->Tabs[2], &title_line, 17, 1, &tab_line);
-
-	String title_letters = String_FromConst("Letters");
-	String tab_letters = String_FromConst("\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\xA0\xA1\xA2\xA3\xA4\xA5");
-	SpecialInputTab_Init(&widget->Tabs[3], &title_letters, 17, 1, &tab_letters);
-
-	String title_other = String_FromConst("Other");
-	String tab_other = String_FromConst("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F\x9B\x9C\x9D\x9E\xA6\xA7\xA8\xA9\xAA\xAD\xAE\xAF\xF9\xFA");
-	SpecialInputTab_Init(&widget->Tabs[4], &title_other, 16, 1, &tab_other);
-}
-
-#define SPECIAL_TITLE_SPACING 10
-#define SPECIAL_CONTENT_SPACING 5
-Int32 SpecialInputWidget_MeasureTitles(SpecialInputWidget* widget) {
-	Int32 totalWidth = 0;
-	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
-
-	Int32 i;
-	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
-		args.Text = widget->Tabs[i].Title;
-		widget->Tabs[i].TitleSize = Drawer2D_MeasureText(&args);
-		widget->Tabs[i].TitleSize.Width += SPECIAL_TITLE_SPACING;
-		totalWidth += widget->Tabs[i].TitleSize.Width;
-	}
-	return totalWidth;
-}
-
-void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget, Bitmap* bmp) {
-	Int32 x = 0;
-	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
-
-	Int32 i;
-	PackedCol col_selected = PACKEDCOL_CONST(30, 30, 30, 200);
-	PackedCol col_inactive = PACKEDCOL_CONST( 0,  0,  0, 127);
-	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
-		args.Text = widget->Tabs[i].Title;
-		PackedCol col = i == widget->SelectedIndex ? col_selected : col_inactive;
-		Size2D size = widget->Tabs[i].TitleSize;
-
-		Drawer2D_Clear(bmp, col, x, 0, size.Width, size.Height);
-		Drawer2D_DrawText(&args, x + SPECIAL_TITLE_SPACING / 2, 0);
-		x += size.Width;
-	}
-}
-
-Size2D SpecialInputWidget_CalculateContentSize(SpecialInputTab* e, Size2D* sizes, Size2D* elemSize) {
-	*elemSize = Size2D_Empty;
-	Int32 i;
-	for (i = 0; i < e->Contents.length; i += e->CharsPerItem) {
-		elemSize->Width = max(elemSize->Width, sizes[i / e->CharsPerItem].Width);
-	}
-
-	elemSize->Width += SPECIAL_CONTENT_SPACING;
-	elemSize->Height = sizes[0].Height + SPECIAL_CONTENT_SPACING;
-	Int32 rows = Math_CeilDiv(e->Contents.length / e->CharsPerItem, e->ItemsPerRow);
-	return Size2D_Make(elemSize->Width * e->ItemsPerRow, elemSize->Height * rows);
-}
-
-void SpecialInputWidget_MeasureContentSizes(SpecialInputWidget* widget, SpecialInputTab* e, Size2D* sizes) {
-	UInt8 buffer[String_BufferSize(STRING_SIZE)];
-	String s = String_InitAndClear(buffer, e->CharsPerItem);
-	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
-
-	Int32 i, j;
-	for (i = 0; i < e->Contents.length; i += e->CharsPerItem) {
-		for (j = 0; j < e->CharsPerItem; j++) {
-			s.buffer[j] = e->Contents.buffer[i + j];
-		}
-		sizes[i / e->CharsPerItem] = Drawer2D_MeasureText(&args);
-	}
-}
-
-void SpecialInputWidget_DrawContent(SpecialInputWidget* widget, SpecialInputTab* e, Int32 yOffset) {
-	UInt8 buffer[String_BufferSize(STRING_SIZE)];
-	String s = String_InitAndClear(buffer, e->CharsPerItem);
-	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
-
-	Int32 i, j, wrap = e->ItemsPerRow;
-	for (i = 0; i < e->Contents.length; i += e->CharsPerItem) {
-		for (j = 0; j < e->CharsPerItem; j++) {
-			s.buffer[j] = e->Contents.buffer[i + j];
-		}
-
-		Int32 item = i / e->CharsPerItem;
-		Int32 x = (item % wrap) * widget->ElementSize.Width;
-		Int32 y = (item / wrap) * widget->ElementSize.Height + yOffset;
-		Drawer2D_DrawText(&args, x, y);
-	}
-}
-
-void SpecialInputWidget_Make(SpecialInputWidget* widget, SpecialInputTab* e) {
-	Size2D sizes[DRAWER2D_MAX_COLS];
-	SpecialInputWidget_MeasureContentSizes(widget, e, sizes);
-	Size2D bodySize = SpecialInputWidget_CalculateContentSize(e, sizes, &widget->ElementSize);
-	Int32 titleWidth = SpecialInputWidget_MeasureTitles(widget);
-	Int32 titleHeight = widget->Tabs[0].TitleSize.Height;
-	Size2D size = Size2D_Make(max(bodySize.Width, titleWidth), bodySize.Height + titleHeight);
-	Gfx_DeleteTexture(&widget->Tex.ID);
-
-	Bitmap bmp;
-	Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
-	Drawer2D_Begin(&bmp);
-
-	SpecialInputWidget_DrawTitles(widget, &bmp);
-	PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
-	Drawer2D_Clear(&bmp, col, 0, titleHeight, size.Width, bodySize.Height);
-	SpecialInputWidget_DrawContent(widget, e, titleHeight);
-	widget->Tex = Drawer2D_Make2DTexture(&bmp, size, widget->Base.X, widget->Base.Y);
-
-	Drawer2D_End();
-}
-
-void SpecialInputWidget_Redraw(SpecialInputWidget* widget) {
-	SpecialInputWidget_Make(widget, &widget->Tabs[widget->SelectedIndex]);
-	widget->Base.Width = widget->Tex.Width;
-	widget->Base.Height = widget->Tex.Height;
-}
-
-void SpecialInputWidget_Init(GuiElement* elem) {
-	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
-	widget->Base.X = 5; widget->Base.Y = 5;
-	SpecialInputWidget_InitTabs(widget);
-	SpecialInputWidget_Redraw(widget);
-	SpecialInputWidget_SetActive(widget, widget->Base.Active);
-}
-
-void SpecialInputWidget_Render(GuiElement* elem, Real64 delta) {
-	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
-	Texture_Render(&widget->Tex);
-}
-
-void SpecialInputWidget_Free(GuiElement* elem) {
-	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
-	Gfx_DeleteTexture(&widget->Tex.ID);
-}
-
-bool SpecialInputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
-	x -= widget->Base.X; y -= widget->Base.Y;
-
-	if (SpecialInputWidget_IntersectsHeader(widget, x, y)) {
-		SpecialInputWidget_Redraw(widget);
-	} else {
-		SpecialInputWidget_IntersectsBody(widget, x, y);
-	}
-	return true;
-}
-
-void SpecialInputWidget_UpdateCols(SpecialInputWidget* widget) {
-	SpecialInputWidget_UpdateColString(widget);
-	widget->Tabs[0].Contents = widget->ColString;
-	SpecialInputWidget_Redraw(widget);
-	SpecialInputWidget_SetActive(widget, widget->Base.Active);
-}
-
-void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active) {
-	widget->Base.Active = active;
-	widget->Base.Height = active ? widget->Tex.Height : 0;
-}
-
-void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, SpecialInputAppendFunc appendFunc, void* appendObj) {
-	Widget_Init(&widget->Base);
-	widget->Base.VerAnchor = ANCHOR_MAX;
-	widget->Font = *font;
-	widget->AppendFunc = appendFunc;
-	widget->AppendObj = appendObj;
-
-	widget->Base.Base.Init   = SpecialInputWidget_Init;
-	widget->Base.Base.Render = SpecialInputWidget_Render;
-	widget->Base.Base.Free   = SpecialInputWidget_Free;
-	widget->Base.Base.HandlesMouseDown   = SpecialInputWidget_HandlesMouseDown;
-}
-
-
 bool InputWidget_ControlDown(void) {
 #if CC_BUILD_OSX
 	return Key_IsWinPressed();
@@ -2576,4 +2334,246 @@ void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc*
 	widget->LinesCount = linesCount;
 	widget->Font = *font;
 	widget->UnderlineFont = *underlineFont;
+}
+
+
+
+
+void SpecialInputWidget_UpdateColString(SpecialInputWidget* widget) {
+	UInt32 count = 0, i;
+	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
+		if (i >= 'A' && i <= 'F') continue;
+		if (Drawer2D_Cols[i].A > 0) count++;
+	}
+
+	widget->ColString = String_InitAndClearArray(widget->ColBuffer);
+	String* buffer = &widget->ColString;
+	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {
+		if (i >= 'A' && i <= 'F') continue;
+		if (Drawer2D_Cols[i].A == 0) continue;
+
+		String_Append(buffer, '&'); String_Append(buffer, (UInt8)i);
+		String_Append(buffer, '%'); String_Append(buffer, (UInt8)i);
+	}
+}
+
+bool SpecialInputWidget_IntersectsHeader(SpecialInputWidget* widget, Int32 x, Int32 y) {
+	Int32 titleX = 0, i;
+	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
+		Size2D size = widget->Tabs[i].TitleSize;
+		if (Gui_Contains(titleX, 0, size.Width, size.Height, x, y)) {
+			widget->SelectedIndex = i;
+			return true;
+		}
+		titleX += size.Width;
+	}
+	return false;
+}
+
+void SpecialInputWidget_IntersectsBody(SpecialInputWidget* widget, Int32 x, Int32 y) {
+	y -= widget->Tabs[0].TitleSize.Height;
+	x /= widget->ElementSize.Width; y /= widget->ElementSize.Height;
+	SpecialInputTab e = widget->Tabs[widget->SelectedIndex];
+	Int32 index = y * e.ItemsPerRow + x;
+	if (index * e.CharsPerItem >= e.Contents.length) return;
+
+	if (widget->SelectedIndex == 0) {
+		/* TODO: need to insert characters that don't affect widget->CaretPos index, adjust widget->CaretPos colour */
+		InputWidget_Append(widget->AppendObj, e.Contents.buffer[index * e.CharsPerItem]);
+		InputWidget_Append(widget->AppendObj, e.Contents.buffer[index * e.CharsPerItem + 1]);
+	} else {
+		InputWidget_Append(widget->AppendObj, e.Contents.buffer[index]);
+	}
+}
+
+void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title,
+	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String* contents) {
+	tab->Title = *title;
+	tab->TitleSize = Size2D_Empty;
+	tab->Contents = *contents;
+	tab->ItemsPerRow = itemsPerRow;
+	tab->CharsPerItem = charsPerItem;
+}
+
+void SpecialInputWidget_InitTabs(SpecialInputWidget* widget) {
+	String title_cols = String_FromConst("Colours");
+	SpecialInputWidget_UpdateColString(widget);
+	SpecialInputTab_Init(&widget->Tabs[0], &title_cols, 10, 4, &widget->ColString);
+
+	String title_math = String_FromConst("Math");
+	String tab_math = String_FromConst("\x9F\xAB\xAC\xE0\xE1\xE2\xE3\xE4\xE5\xE6\xE7\xE8\xE9\xEA\xEB\xEC\xED\xEE\xEF\xF0\xF1\xF2\xF3\xF4\xF5\xF6\xF7\xF8\xFB\xFC\xFD");
+	SpecialInputTab_Init(&widget->Tabs[1], &title_math, 16, 1, &tab_math);
+
+	String title_line = String_FromConst("Line/Box");
+	String tab_line = String_FromConst("\xB0\xB1\xB2\xB3\xB4\xB5\xB6\xB7\xB8\xB9\xBA\xBB\xBC\xBD\xBE\xBF\xC0\xC1\xC2\xC3\xC4\xC5\xC6\xC7\xC8\xC9\xCA\xCB\xCC\xCD\xCE\xCF\xD0\xD1\xD2\xD3\xD4\xD5\xD6\xD7\xD8\xD9\xDA\xDB\xDC\xDD\xDE\xDF\xFE");
+	SpecialInputTab_Init(&widget->Tabs[2], &title_line, 17, 1, &tab_line);
+
+	String title_letters = String_FromConst("Letters");
+	String tab_letters = String_FromConst("\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8A\x8B\x8C\x8D\x8E\x8F\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9A\xA0\xA1\xA2\xA3\xA4\xA5");
+	SpecialInputTab_Init(&widget->Tabs[3], &title_letters, 17, 1, &tab_letters);
+
+	String title_other = String_FromConst("Other");
+	String tab_other = String_FromConst("\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F\x7F\x9B\x9C\x9D\x9E\xA6\xA7\xA8\xA9\xAA\xAD\xAE\xAF\xF9\xFA");
+	SpecialInputTab_Init(&widget->Tabs[4], &title_other, 16, 1, &tab_other);
+}
+
+#define SPECIAL_TITLE_SPACING 10
+#define SPECIAL_CONTENT_SPACING 5
+Int32 SpecialInputWidget_MeasureTitles(SpecialInputWidget* widget) {
+	Int32 totalWidth = 0;
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
+
+	Int32 i;
+	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
+		args.Text = widget->Tabs[i].Title;
+		widget->Tabs[i].TitleSize = Drawer2D_MeasureText(&args);
+		widget->Tabs[i].TitleSize.Width += SPECIAL_TITLE_SPACING;
+		totalWidth += widget->Tabs[i].TitleSize.Width;
+	}
+	return totalWidth;
+}
+
+void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget, Bitmap* bmp) {
+	Int32 x = 0;
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
+
+	Int32 i;
+	PackedCol col_selected = PACKEDCOL_CONST(30, 30, 30, 200);
+	PackedCol col_inactive = PACKEDCOL_CONST( 0,  0,  0, 127);
+	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
+		args.Text = widget->Tabs[i].Title;
+		PackedCol col = i == widget->SelectedIndex ? col_selected : col_inactive;
+		Size2D size = widget->Tabs[i].TitleSize;
+
+		Drawer2D_Clear(bmp, col, x, 0, size.Width, size.Height);
+		Drawer2D_DrawText(&args, x + SPECIAL_TITLE_SPACING / 2, 0);
+		x += size.Width;
+	}
+}
+
+Size2D SpecialInputWidget_CalculateContentSize(SpecialInputTab* e, Size2D* sizes, Size2D* elemSize) {
+	*elemSize = Size2D_Empty;
+	Int32 i;
+	for (i = 0; i < e->Contents.length; i += e->CharsPerItem) {
+		elemSize->Width = max(elemSize->Width, sizes[i / e->CharsPerItem].Width);
+	}
+
+	elemSize->Width += SPECIAL_CONTENT_SPACING;
+	elemSize->Height = sizes[0].Height + SPECIAL_CONTENT_SPACING;
+	Int32 rows = Math_CeilDiv(e->Contents.length / e->CharsPerItem, e->ItemsPerRow);
+	return Size2D_Make(elemSize->Width * e->ItemsPerRow, elemSize->Height * rows);
+}
+
+void SpecialInputWidget_MeasureContentSizes(SpecialInputWidget* widget, SpecialInputTab* e, Size2D* sizes) {
+	UInt8 buffer[String_BufferSize(STRING_SIZE)];
+	String s = String_InitAndClear(buffer, e->CharsPerItem);
+	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
+
+	Int32 i, j;
+	for (i = 0; i < e->Contents.length; i += e->CharsPerItem) {
+		for (j = 0; j < e->CharsPerItem; j++) {
+			s.buffer[j] = e->Contents.buffer[i + j];
+		}
+		sizes[i / e->CharsPerItem] = Drawer2D_MeasureText(&args);
+	}
+}
+
+void SpecialInputWidget_DrawContent(SpecialInputWidget* widget, SpecialInputTab* e, Int32 yOffset) {
+	UInt8 buffer[String_BufferSize(STRING_SIZE)];
+	String s = String_InitAndClear(buffer, e->CharsPerItem);
+	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
+
+	Int32 i, j, wrap = e->ItemsPerRow;
+	for (i = 0; i < e->Contents.length; i += e->CharsPerItem) {
+		for (j = 0; j < e->CharsPerItem; j++) {
+			s.buffer[j] = e->Contents.buffer[i + j];
+		}
+
+		Int32 item = i / e->CharsPerItem;
+		Int32 x = (item % wrap) * widget->ElementSize.Width;
+		Int32 y = (item / wrap) * widget->ElementSize.Height + yOffset;
+		Drawer2D_DrawText(&args, x, y);
+	}
+}
+
+void SpecialInputWidget_Make(SpecialInputWidget* widget, SpecialInputTab* e) {
+	Size2D sizes[DRAWER2D_MAX_COLS];
+	SpecialInputWidget_MeasureContentSizes(widget, e, sizes);
+	Size2D bodySize = SpecialInputWidget_CalculateContentSize(e, sizes, &widget->ElementSize);
+	Int32 titleWidth = SpecialInputWidget_MeasureTitles(widget);
+	Int32 titleHeight = widget->Tabs[0].TitleSize.Height;
+	Size2D size = Size2D_Make(max(bodySize.Width, titleWidth), bodySize.Height + titleHeight);
+	Gfx_DeleteTexture(&widget->Tex.ID);
+
+	Bitmap bmp;
+	Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+	Drawer2D_Begin(&bmp);
+
+	SpecialInputWidget_DrawTitles(widget, &bmp);
+	PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
+	Drawer2D_Clear(&bmp, col, 0, titleHeight, size.Width, bodySize.Height);
+	SpecialInputWidget_DrawContent(widget, e, titleHeight);
+	widget->Tex = Drawer2D_Make2DTexture(&bmp, size, widget->Base.X, widget->Base.Y);
+
+	Drawer2D_End();
+}
+
+void SpecialInputWidget_Redraw(SpecialInputWidget* widget) {
+	SpecialInputWidget_Make(widget, &widget->Tabs[widget->SelectedIndex]);
+	widget->Base.Width = widget->Tex.Width;
+	widget->Base.Height = widget->Tex.Height;
+}
+
+void SpecialInputWidget_Init(GuiElement* elem) {
+	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
+	widget->Base.X = 5; widget->Base.Y = 5;
+	SpecialInputWidget_InitTabs(widget);
+	SpecialInputWidget_Redraw(widget);
+	SpecialInputWidget_SetActive(widget, widget->Base.Active);
+}
+
+void SpecialInputWidget_Render(GuiElement* elem, Real64 delta) {
+	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
+	Texture_Render(&widget->Tex);
+}
+
+void SpecialInputWidget_Free(GuiElement* elem) {
+	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
+	Gfx_DeleteTexture(&widget->Tex.ID);
+}
+
+bool SpecialInputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	SpecialInputWidget* widget = (SpecialInputWidget*)elem;
+	x -= widget->Base.X; y -= widget->Base.Y;
+
+	if (SpecialInputWidget_IntersectsHeader(widget, x, y)) {
+		SpecialInputWidget_Redraw(widget);
+	} else {
+		SpecialInputWidget_IntersectsBody(widget, x, y);
+	}
+	return true;
+}
+
+void SpecialInputWidget_UpdateCols(SpecialInputWidget* widget) {
+	SpecialInputWidget_UpdateColString(widget);
+	widget->Tabs[0].Contents = widget->ColString;
+	SpecialInputWidget_Redraw(widget);
+	SpecialInputWidget_SetActive(widget, widget->Base.Active);
+}
+
+void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active) {
+	widget->Base.Active = active;
+	widget->Base.Height = active ? widget->Tex.Height : 0;
+}
+
+void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, InputWidget* appendObj) {
+	Widget_Init(&widget->Base);
+	widget->Base.VerAnchor = ANCHOR_MAX;
+	widget->Font = *font;
+	widget->AppendObj = appendObj;
+
+	widget->Base.Base.Init   = SpecialInputWidget_Init;
+	widget->Base.Base.Render = SpecialInputWidget_Render;
+	widget->Base.Base.Free   = SpecialInputWidget_Free;
+	widget->Base.Base.HandlesMouseDown   = SpecialInputWidget_HandlesMouseDown;
 }

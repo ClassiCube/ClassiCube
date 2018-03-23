@@ -106,6 +106,7 @@ void Block_SetSide(TextureLoc texLoc, BlockID blockId);
 void Block_SetTex(TextureLoc texLoc, Face face, BlockID blockId);
 #define Block_GetTexLoc(block, face) Block_Textures[(block) * FACE_COUNT + (face)]
 
+bool Block_IsFaceHidden(BlockID block, BlockID other, Face face);
 void Block_UpdateCullingAll(void);
 void Block_UpdateCulling(BlockID block);
 
