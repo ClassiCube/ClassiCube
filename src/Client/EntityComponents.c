@@ -467,10 +467,10 @@ void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, Entity* entity, Shad
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Y = data->Y; v.Col = col;
 
-	v.X = x1; v.Z = z1; v.U = u1; v.V = v1; *ptr = v; ptr++;
-	v.X = x2;           v.U = u2;           *ptr = v; ptr++;
-	          v.Z = z2;           v.V = v2; *ptr = v; ptr++;
-	v.X = x1;           v.U = u1;           *ptr = v; ptr++;
+	v.X = x1; v.Z = z1; v.U = u1; v.V = v1; *ptr++ = v;
+	v.X = x2;           v.U = u2;           *ptr++ = v;
+	          v.Z = z2;           v.V = v2; *ptr++ = v;
+	v.X = x1;           v.U = u1;           *ptr++ = v;
 
 	*vertices = ptr;
 }

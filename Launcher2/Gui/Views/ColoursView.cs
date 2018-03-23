@@ -60,11 +60,11 @@ namespace Launcher.Gui.Views {
 			
 			sliderIndex = widgetIndex;
 			Makers.Slider(this, 100, 10, 30, 255, FastColour.Red)
-				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 5);
+				.SetLocation(Anchor.Min, Anchor.Min, 5, 5);
 			Makers.Slider(this, 100, 10, 30, 255, FastColour.Green)
-				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 25);
+				.SetLocation(Anchor.Min, Anchor.Min, 5, 25);
 			Makers.Slider(this, 100, 10, 30, 255, FastColour.Blue)
-				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 5, 45);
+				.SetLocation(Anchor.Min, Anchor.Min, 5, 45);
 		}
 		
 		public void MakeAllRGBTriplets(bool force) {

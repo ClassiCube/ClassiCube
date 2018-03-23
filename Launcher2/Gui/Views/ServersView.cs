@@ -36,18 +36,18 @@ namespace Launcher.Gui.Views {
 		protected override void MakeWidgets() {
 			widgetIndex = 0;
 			MakeInput(Get(0), 370, false, 32, "&gSearch servers..")
-				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 10, 10);
+				.SetLocation(Anchor.Min, Anchor.Min, 10, 10);
 			MakeInput(Get(1), 475, false, 32, "&gclassicube.net/server/play/...")
-				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, -10);
+				.SetLocation(Anchor.Min, Anchor.Max, 10, -10);
 			
 			Makers.Button(this, "Back", 110, 30, titleFont)
-				.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, -10, 10);
+				.SetLocation(Anchor.Max, Anchor.Min, -10, 10);
 			Makers.Button(this, "Connect", 130, 30, titleFont)
-				.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -10);
+				.SetLocation(Anchor.Max, Anchor.Max, -10, -10);
 			
 			MakeTableWidget();
 			Makers.Button(this, RefreshText, 110, 30, titleFont)
-				.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, -135, 10);
+				.SetLocation(Anchor.Max, Anchor.Min, -135, 10);
 		}
 		
 		string Get(int index) {
@@ -93,7 +93,7 @@ namespace Launcher.Gui.Views {
 		void ResetTable(TableWidget widget) {
 			widget.SetEntries(game.Servers);
 			widget.SetDrawData(drawer, tableFont, textFont,
-			                   Anchor.LeftOrTop, Anchor.LeftOrTop, tableX, tableY);
+			                   Anchor.Min, Anchor.Min, tableX, tableY);
 			widget.SortDefault();
 		}
 		

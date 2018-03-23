@@ -53,8 +53,11 @@ namespace ClassicalSharp.Entities {
 				State state = Searcher.stateCache[i];
 				bPos.X = state.X >> 3; bPos.Y = state.Y >> 3; bPos.Z = state.Z >> 3;				
 				int block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
-				blockBB.Min = bPos + BlockInfo.MinBB[block];
-				blockBB.Max = bPos + BlockInfo.MaxBB[block];
+				
+				blockBB.Min = BlockInfo.MinBB[block];
+				blockBB.Min.X += bPos.X; blockBB.Min.Y += bPos.Y; blockBB.Min.Z += bPos.Z;
+				blockBB.Max = BlockInfo.MaxBB[block];
+				blockBB.Max.X += bPos.X; blockBB.Max.Y += bPos.Y; blockBB.Max.Z += bPos.Z;
 				if (!entityExtentBB.Intersects(blockBB)) continue;
 				
 				// Recheck time to collide with block (as colliding with blocks modifies this)

@@ -65,11 +65,11 @@ namespace Launcher.Gui.Views {
 			widgets[sslIndex + 1].Visible = sslVisible;
 			
 			Makers.Label(this, updateText, inputHintFont)
-				.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, -10, -45);
+				.SetLocation(Anchor.Max, Anchor.Max, -10, -45);
 			
 			settingsIndex = widgetIndex;
 			Makers.Button(this, "Options", 100, buttonHeight, titleFont)
-				.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, -6, -6);
+				.SetLocation(Anchor.Max, Anchor.Max, -6, -6);
 		}
 	}
 }

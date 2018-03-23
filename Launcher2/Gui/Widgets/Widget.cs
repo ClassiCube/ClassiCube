@@ -63,8 +63,8 @@ namespace Launcher.Gui.Widgets {
 		}
 		
 		static int CalcPos(Anchor anchor, int offset, int size, int axisLen) {
-			if (anchor == Anchor.LeftOrTop) return offset;
-			if (anchor == Anchor.BottomOrRight) return offset + axisLen - size;
+			if (anchor == Anchor.Min) return offset;
+			if (anchor == Anchor.Max) return offset + axisLen - size;
 			return offset + axisLen / 2 - size / 2;
 		}
 	}
