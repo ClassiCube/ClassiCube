@@ -45,7 +45,8 @@ void Screen_Reset(Screen* screen) {
 	screen->OnResize        = NULL;
 }
 
-void Widget_DoReposition(Widget* w) {
+void Widget_DoReposition(GuiElement* elem) {
+	Widget* w = (Widget*)elem;
 	w->X = Gui_CalcPos(w->HorAnchor, w->XOffset, w->Width , Game_Width );
 	w->Y = Gui_CalcPos(w->VerAnchor, w->YOffset, w->Height, Game_Height);
 }
@@ -61,6 +62,10 @@ void Widget_Init(Widget* widget) {
 	widget->VerAnchor = ANCHOR_MIN;
 	widget->XOffset = 0; widget->YOffset = 0;
 	widget->Reposition = Widget_DoReposition;
+}
+
+bool Widget_Contains(Widget* widget, Int32 x, Int32 y) {
+	return Gui_Contains(widget->X, widget->Y, widget->Width, widget->Height, x, y);
 }
 
 
@@ -197,13 +202,13 @@ void Gui_RenderGui(Real64 delta) {
 
 void Gui_OnResize(void) {
 	if (Gui_Active != NULL) {
-		Gui_Active->OnResize(Gui_Active);
+		Gui_Active->OnResize(&Gui_Active->Base);
 	}
-	Gui_HUD->OnResize(Gui_HUD);
+	Gui_HUD->OnResize(&Gui_HUD->Base);
 
 	UInt32 i;
 	for (i = 0; i < Gui_OverlayCount; i++) {
-		Gui_Overlays[i]->OnResize(Gui_Overlays[i]);
+		Gui_Overlays[i]->OnResize(&Gui_Overlays[i]->Base);
 	}
 }
 

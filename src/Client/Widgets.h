@@ -14,7 +14,7 @@
 void Widget_SetLocation(Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset);
 
 typedef struct TextWidget_ {
-	Widget Base;
+	Widget_Layout
 	Texture Texture;
 	Int32 DefaultHeight;
 	FontDesc Font;
@@ -32,7 +32,7 @@ typedef void (*ButtonWidget_SetValue)(STRING_TRANSIENT String* raw);
 typedef void (*ButtonWidget_GetValue)(STRING_TRANSIENT String* raw);
 typedef bool (*Gui_MouseHandler)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
 typedef struct ButtonWidget_ {
-	Widget Base;
+	Widget_Layout
 	Texture Texture;
 	Int32 DefaultHeight;
 	FontDesc Font;
@@ -48,7 +48,7 @@ void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text);
 
 
 typedef struct ScrollbarWidget_ {
-	Widget Base;
+	Widget_Layout
 	Int32 TotalRows, ScrollY;
 	Real32 ScrollingAcc;
 	Int32 MouseOffset;
@@ -60,7 +60,7 @@ void ScrollbarWidget_ClampScrollY(ScrollbarWidget* widget);
 
 
 typedef struct HotbarWidget_ {
-	Widget Base;
+	Widget_Layout
 	Texture SelTex, BackTex;
 	Real32 BarHeight, SelBlockSize, ElemSize;
 	Real32 BarXOffset, BorderSize;
@@ -72,7 +72,7 @@ void HotbarWidget_Create(HotbarWidget* widget);
 
 
 typedef struct TableWidget_ {
-	Widget Base;
+	Widget_Layout
 	Int32 ElementsCount, ElementsPerRow, RowsCount;
 	Int32 LastCreatedIndex;
 	FontDesc Font;
@@ -94,7 +94,7 @@ void TableWidget_OnInventoryChanged(TableWidget* widget);
 #define INPUTWIDGET_MAX_LINES 3
 #define INPUTWIDGET_LEN STRING_SIZE
 typedef struct InputWidget_ {
-	Widget Base;
+	Widget_Layout
 	FontDesc Font;		
 	Int32 (*GetMaxLines)(void);
 	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
@@ -176,7 +176,7 @@ void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font);
 #define TEXTGROUPWIDGET_MAX_LINES 30
 #define TEXTGROUPWIDGET_LEN (STRING_SIZE * 2)
 typedef struct TextGroupWidget_ {
-	Widget Base;
+	Widget_Layout
 	Int32 LinesCount, DefaultHeight;
 	FontDesc Font, UnderlineFont;
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
@@ -188,13 +188,13 @@ typedef struct TextGroupWidget_ {
 void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont);
 void TextGroupWidget_SetUsePlaceHolder(TextGroupWidget* widget, Int32 index, bool placeHolder);
 void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE String* text);
-Int32 TextGroupWidget_GetUsedHeight(TextGroupWidget* widget);
+Int32 TextGroupWidget_UsedHeight(TextGroupWidget* widget);
 void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 mouseX, Int32 mouseY);
 void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_PURE String* text);
 
 
 typedef struct PlayerListWidget_ {
-	Widget Base;
+	Widget_Layout
 	FontDesc Font;
 	UInt16 NamesCount, ElementOffset;
 	Int32 XMin, XMax, YHeight;
@@ -206,8 +206,6 @@ typedef struct PlayerListWidget_ {
 
 void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic);
 void PlayerListWidget_GetNameUnder(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
-
-
 
 
 typedef void (*SpecialInputAppendFunc)(void* userData, UInt8 c);
@@ -222,7 +220,7 @@ void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title,
 	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String* contents);
 
 typedef struct SpecialInputWidget_ {
-	Widget Base;
+	Widget_Layout
 	Size2D ElementSize;
 	Int32 SelectedIndex;
 	InputWidget* AppendObj;

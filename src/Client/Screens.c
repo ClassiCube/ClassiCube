@@ -19,19 +19,21 @@
 #include "Camera.h"
 
 #define LeftOnly(func) { if (btn == MouseButton_Left) { func; } return true; }
-#define Widget_Init(widget) (widget)->Base.Base.Init(&((widget)->Base.Base))
-#define Widget_Render(widget, delta) (widget)->Base.Base.Render(&((widget)->Base.Base), delta)
-#define Widget_Free(widget) (widget)->Base.Base.Free(&((widget)->Base.Base))
-#define Widget_Reposition(widget) (widget)->Base.Reposition(&((widget)->Base))
-#define Widget_Recreate(widget) (widget)->Base.Base.Recreate(&((widget)->Base.Base))
+#define Screen_Recreate(screen) (screen)->Base.Recreate(&((screen)->Base))
 
-#define Widget_HandlesKeyPress(widget, key) (widget)->Base.Base.HandlesKeyPress(&((widget)->Base.Base), key)
-#define Widget_HandlesKeyDown(widget, key)  (widget)->Base.Base.HandlesKeyDown(&((widget)->Base.Base), key)
-#define Widget_HandlesKeyUp(widget, key)    (widget)->Base.Base.HandlesKeyUp(&((widget)->Base.Base), key)
-#define Widget_HandlesMouseDown(widget, x, y, btn) (widget)->Base.Base.HandlesMouseDown(&((widget)->Base.Base), x, y, btn)
-#define Widget_HandlesMouseUp(widget, x, y, btn)   (widget)->Base.Base.HandlesMouseUp(&((widget)->Base.Base), x, y, btn)
-#define Widget_HandlesMouseMove(widget, x, y)      (widget)->Base.Base.HandlesMouseMove(&((widget)->Base.Base), x, y)
-#define Widget_HandlesMouseScroll(widget, delta)   (widget)->Base.Base.HandlesMouseScroll(&((widget)->Base.Base), delta)
+#define Widget_Init(widget)          (widget)->Base.Init(&((widget)->Base))
+#define Widget_Render(widget, delta) (widget)->Base.Render(&((widget)->Base), delta)
+#define Widget_Free(widget)          (widget)->Base.Free(&((widget)->Base))
+#define Widget_Reposition(widget)    (widget)->Reposition(&((widget)->Base))
+#define Widget_Recreate(widget)      (widget)->Base.Recreate(&((widget)->Base))
+
+#define Widget_HandlesKeyPress(widget, key) (widget)->Base.HandlesKeyPress(&((widget)->Base), key)
+#define Widget_HandlesKeyDown(widget, key)  (widget)->Base.HandlesKeyDown(&((widget)->Base), key)
+#define Widget_HandlesKeyUp(widget, key)    (widget)->Base.HandlesKeyUp(&((widget)->Base), key)
+#define Widget_HandlesMouseDown(widget, x, y, btn) (widget)->Base.HandlesMouseDown(&((widget)->Base), x, y, btn)
+#define Widget_HandlesMouseUp(widget, x, y, btn)   (widget)->Base.HandlesMouseUp(&((widget)->Base), x, y, btn)
+#define Widget_HandlesMouseMove(widget, x, y)      (widget)->Base.HandlesMouseMove(&((widget)->Base), x, y)
+#define Widget_HandlesMouseScroll(widget, delta)   (widget)->Base.HandlesMouseScroll(&((widget)->Base), delta)
 
 
 typedef struct ClickableScreen_ {
@@ -43,14 +45,14 @@ typedef struct ClickableScreen_ {
 } ClickableScreen;
 
 typedef struct InventoryScreen_ {
-	Screen Base;
+	Screen_Layout
 	FontDesc Font;
 	TableWidget Table;
 	bool ReleasedInv;
 } InventoryScreen;
 
 typedef struct StatusScreen_ {
-	Screen Base;
+	Screen_Layout
 	FontDesc Font;
 	TextWidget Status, HackStates;
 	TextAtlas PosAtlas;
@@ -61,7 +63,7 @@ typedef struct StatusScreen_ {
 } StatusScreen;
 
 typedef struct HUDScreen_ {
-	Screen Base;
+	Screen_Layout
 	Screen* Chat;
 	HotbarWidget Hotbar;
 	PlayerListWidget PlayerList;
@@ -72,7 +74,7 @@ typedef struct HUDScreen_ {
 #define FILES_SCREEN_ITEMS 5
 #define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
 typedef struct FilesScreen_ {
-	Screen Base;
+	Screen_Layout
 	FontDesc Font;
 	Int32 CurrentIndex;
 	Gui_MouseHandler TextButtonClick;
@@ -85,7 +87,7 @@ typedef struct FilesScreen_ {
 } FilesScreen;
 
 typedef struct LoadingScreen_ {
-	Screen Base;
+	Screen_Layout
 	FontDesc Font;
 
 	String Title, Message;
@@ -104,7 +106,7 @@ typedef struct GeneratingMapScreen_ {
 } GeneratingMapScreen;
 
 typedef struct ChatScreen_ {
-	Screen Base;
+	Screen_Layout
 	Screen* HUD;
 	Int32 InputOldHeight;
 	Real32 ChatAcc;
@@ -113,8 +115,8 @@ typedef struct ChatScreen_ {
 	Int32 LastDownloadStatus;
 	FontDesc ChatFont, ChatUrlFont, AnnouncementFont;
 	TextWidget Announcement;
-	InputWidget Input;
-	TextGroupWidget Status, BottomRight, NormalChat, ClientStatus;
+	ChatInputWidget Input;
+	TextGroupWidget Status, BottomRight, Chat, ClientStatus;
 	SpecialInputWidget AltText;
 	UInt8 ChatInInputBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
 	String ChatInInput; /* needed for lost contexts, to restore chat typed in */
@@ -135,7 +137,7 @@ void Screen_RepositionWidgets(Widget** widgets, UInt32 widgetsCount) {
 	UInt32 i;
 	for (i = 0; i < widgetsCount; i++) {
 		if (widgets[i] == NULL) continue;
-		widgets[i]->Reposition(widgets[i]);
+		widgets[i]->Reposition(&widgets[i]->Base);
 	}
 }
 
@@ -151,7 +153,7 @@ void Screen_RenderWidgets(Widget** widgets, UInt32 widgetsCount, Real64 delta) {
 
 void Screen_MakeBack(ButtonWidget* widget, Int32 width, STRING_PURE String* text, Int32 y, FontDesc* font, Gui_MouseHandler onClick) {
 	ButtonWidget_Create(widget, text, width, font, onClick);
-	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
+	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
 }
 
 void Screen_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Gui_MouseHandler onClick) {
@@ -245,8 +247,7 @@ void InventoryScreen_ContextLost(void* obj) {
 
 void InventoryScreen_ContextRecreated(void* obj) {
 	InventoryScreen* screen = (InventoryScreen*)obj;
-	GuiElement* elem = &screen->Table.Base.Base;
-	elem->Recreate(elem);
+	Widget_Recreate(&screen->Table);
 }
 
 void InventoryScreen_Init(GuiElement* elem) {
@@ -270,7 +271,7 @@ void InventoryScreen_Render(GuiElement* elem, Real64 delta) {
 	Widget_Render(&screen->Table, delta);
 }
 
-void InventoryScreen_OnResize(Screen* elem) {
+void InventoryScreen_OnResize(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	Widget_Reposition(&screen->Table);
 }
@@ -354,22 +355,22 @@ bool InventoryScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 Screen* InventoryScreen_MakeInstance(void) {
 	InventoryScreen* screen = &InventoryScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(InventoryScreen));
-	Screen_Reset(&screen->Base);
+	Screen_Reset((Screen*)screen);
 
-	screen->Base.Base.HandlesKeyDown     = InventoryScreen_HandlesKeyDown;
-	screen->Base.Base.HandlesKeyUp       = InventoryScreen_HandlesKeyUp;
-	screen->Base.Base.HandlesMouseDown   = InventoryScreen_HandlesMouseDown;
-	screen->Base.Base.HandlesMouseUp     = InventoryScreen_HandlesMouseUp;
-	screen->Base.Base.HandlesMouseMove   = InventoryScreen_HandlesMouseMove;
-	screen->Base.Base.HandlesMouseScroll = InventoryScreen_HandlesMouseScroll;
+	screen->Base.HandlesKeyDown     = InventoryScreen_HandlesKeyDown;
+	screen->Base.HandlesKeyUp       = InventoryScreen_HandlesKeyUp;
+	screen->Base.HandlesMouseDown   = InventoryScreen_HandlesMouseDown;
+	screen->Base.HandlesMouseUp     = InventoryScreen_HandlesMouseUp;
+	screen->Base.HandlesMouseMove   = InventoryScreen_HandlesMouseMove;
+	screen->Base.HandlesMouseScroll = InventoryScreen_HandlesMouseScroll;
 
-	screen->Base.OnResize           = InventoryScreen_OnResize;
-	screen->Base.Base.Init          = InventoryScreen_Init;
-	screen->Base.Base.Render        = InventoryScreen_Render;
-	screen->Base.Base.Free          = InventoryScreen_Free;
-	return &screen->Base;
+	screen->OnResize           = InventoryScreen_OnResize;
+	screen->Base.Init          = InventoryScreen_Init;
+	screen->Base.Render        = InventoryScreen_Render;
+	screen->Base.Free          = InventoryScreen_Free;
+	return (Screen*)screen;
 }
-extern Screen* InventoryScreen_UNSAFE_RawPointer = &InventoryScreen_Instance.Base;
+extern Screen* InventoryScreen_UNSAFE_RawPointer = (Screen*)&InventoryScreen_Instance;
 
 
 StatusScreen StatusScreen_Instance;
@@ -471,11 +472,10 @@ void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
 	Game_ChunkUpdates = 0;
 }
 
-void StatusScreen_OnResize(Screen* screen) { }
+void StatusScreen_OnResize(GuiElement* elem) { }
 void StatusScreen_FontChanged(void* obj) {
 	StatusScreen* screen = (StatusScreen*)obj;
-	GuiElement* elem = &screen->Base.Base;
-	elem->Recreate(elem);
+	Screen_Recreate(screen);
 }
 
 void StatusScreen_ContextLost(void* obj) {
@@ -489,7 +489,7 @@ void StatusScreen_ContextRecreated(void* obj) {
 	StatusScreen* screen = (StatusScreen*)obj;
 
 	TextWidget* status = &screen->Status; TextWidget_Make(status, &screen->Font);
-	Widget_SetLocation(&status->Base, ANCHOR_MIN, ANCHOR_MIN, 2, 2);
+	Widget_SetLocation((Widget*)status, ANCHOR_MIN, ANCHOR_MIN, 2, 2);
 	status->ReducePadding = true;
 	Widget_Init(status);
 	StatusScreen_Update(screen, 1.0);
@@ -497,11 +497,11 @@ void StatusScreen_ContextRecreated(void* obj) {
 	String chars = String_FromConst("0123456789-, ()");
 	String prefix = String_FromConst("Position: ");
 	TextAtlas_Make(&screen->PosAtlas, &chars, &screen->Font, &prefix);
-	screen->PosAtlas.Tex.Y = (Int16)(status->Base.Height + 2);
+	screen->PosAtlas.Tex.Y = (Int16)(status->Height + 2);
 
-	Int32 yOffset = status->Base.Height + screen->PosAtlas.Tex.Height + 2;
+	Int32 yOffset = status->Height + screen->PosAtlas.Tex.Height + 2;
 	TextWidget* hacks = &screen->HackStates; TextWidget_Make(hacks, &screen->Font);
-	Widget_SetLocation(&hacks->Base, ANCHOR_MIN, ANCHOR_MIN, 2, yOffset);
+	Widget_SetLocation((Widget*)hacks, ANCHOR_MIN, ANCHOR_MIN, 2, yOffset);
 	hacks->ReducePadding = true;
 	Widget_Init(hacks);
 	StatusScreen_UpdateHackState(screen);
@@ -546,17 +546,17 @@ void StatusScreen_Free(GuiElement* elem) {
 Screen* StatusScreen_MakeInstance(void) {
 	StatusScreen* screen = &StatusScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(StatusScreen));
-	Screen_Reset(&screen->Base);
+	Screen_Reset((Screen*)screen);
 
-	screen->Base.OnResize    = StatusScreen_OnResize;
-	screen->Base.Base.Init   = StatusScreen_Init;
-	screen->Base.Base.Render = StatusScreen_Render;
-	screen->Base.Base.Free   = StatusScreen_Free;
-	return &screen->Base;
+	screen->OnResize    = StatusScreen_OnResize;
+	screen->Base.Init   = StatusScreen_Init;
+	screen->Base.Render = StatusScreen_Render;
+	screen->Base.Free   = StatusScreen_Free;
+	return (Screen*)screen;
 }
 
 void StatusScreen_Ready(void) {
-	GuiElement* elem = &StatusScreen_Instance.Base.Base;
+	GuiElement* elem = &StatusScreen_Instance.Base;
 	elem->Init(elem);
 }
 
@@ -579,19 +579,19 @@ String FilesScreen_Get(FilesScreen* screen, UInt32 index) {
 void FilesScreen_MakeText(FilesScreen* screen, Int32 idx, Int32 x, Int32 y, String* text) {
 	ButtonWidget* widget = &screen->Buttons[idx];
 	ButtonWidget_Create(widget, text, 300, &screen->Font, screen->TextButtonClick);
-	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
 void FilesScreen_Make(FilesScreen* screen, Int32 idx, Int32 x, Int32 y, String* text, Gui_MouseHandler onClick) {
 	ButtonWidget* widget = &screen->Buttons[idx];
 	ButtonWidget_Create(widget, text, 40, &screen->Font, onClick);
-	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
 void FilesScreen_UpdateArrows(FilesScreen* screen) {
 	Int32 start = FILES_SCREEN_ITEMS, end = screen->Entries.Count - FILES_SCREEN_ITEMS;
-	screen->Buttons[5].Base.Disabled = screen->CurrentIndex < start;
-	screen->Buttons[6].Base.Disabled = screen->CurrentIndex >= end;
+	screen->Buttons[5].Disabled = screen->CurrentIndex < start;
+	screen->Buttons[6].Disabled = screen->CurrentIndex >= end;
 }
 
 void FilesScreen_SetCurrentIndex(FilesScreen* screen, Int32 index) {
@@ -631,7 +631,7 @@ void FilesScreen_ContextLost(void* obj) {
 void FilesScreen_ContextRecreated(void* obj) {
 	FilesScreen* screen = (FilesScreen*)obj;
 	TextWidget_Create(&screen->Title, &screen->TitleText, &screen->Font);
-	Widget_SetLocation(&screen->Title.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
+	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
 
 	UInt32 i;
 	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
@@ -645,11 +645,11 @@ void FilesScreen_ContextRecreated(void* obj) {
 	FilesScreen_Make(screen, 6,  220, 0, &rArrow, FilesScreen_MoveForwards);
 	Screen_MakeDefaultBack(&screen->Buttons[7], false, &screen->Font, Screen_SwitchPause);
 
-	screen->Widgets[0] = &screen->Title.Base;
+	screen->Widgets[0] = (Widget*)(&screen->Title);
 	for (i = 0; i < FILES_SCREEN_BUTTONS; i++) {
-		screen->Widgets[i + 1] = &screen->Buttons[i].Base;
+		screen->Widgets[i + 1] = (Widget*)(&screen->Buttons[i]);
 	}
-	ClickableScreen_Init(&screen->Clickable, &screen->Base.Base, screen->Widgets, Array_NumElements(screen->Widgets));
+	ClickableScreen_Init(&screen->Clickable, &screen->Base, screen->Widgets, Array_NumElements(screen->Widgets));
 	FilesScreen_UpdateArrows(screen);
 }
 
@@ -701,7 +701,7 @@ bool FilesScreen_HandlesMouseDown(GuiElement* elem, Int32 mouseX, Int32 mouseY, 
 	return ClickableScreen_HandleMouseDown(&screen->Clickable, mouseX, mouseY, button);
 }
 
-void FilesScreen_OnResize(Screen* elem) {
+void FilesScreen_OnResize(GuiElement* elem) {
 	FilesScreen* screen = (FilesScreen*)elem;
 	Screen_RepositionWidgets(screen->Widgets, Array_NumElements(screen->Widgets));
 }
@@ -710,18 +710,18 @@ Screen* FilesScreen_MakeInstance(void) {
 	FilesScreen* screen = &FilesScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(FilesScreen) - sizeof(StringsBuffer));
 	StringsBuffer_UNSAFE_Reset(&screen->Entries);
-	Screen_Reset(&screen->Base);
+	Screen_Reset((Screen*)screen);
 	
-	screen->Base.Base.HandlesKeyDown     = FilesScreen_HandlesKeyDown;
-	screen->Base.Base.HandlesMouseDown   = FilesScreen_HandlesMouseDown;
-	screen->Base.Base.HandlesMouseMove   = FilesScreen_HandlesMouseMove;
+	screen->Base.HandlesKeyDown     = FilesScreen_HandlesKeyDown;
+	screen->Base.HandlesMouseDown   = FilesScreen_HandlesMouseDown;
+	screen->Base.HandlesMouseMove   = FilesScreen_HandlesMouseMove;
 
-	screen->Base.OnResize    = FilesScreen_OnResize;
-	screen->Base.Base.Init   = FilesScreen_Init;
-	screen->Base.Base.Render = FilesScreen_Render;
-	screen->Base.Base.Free   = FilesScreen_Free;
-	screen->Base.HandlesAllInput = true;
-	return &screen->Base;
+	screen->OnResize    = FilesScreen_OnResize;
+	screen->Base.Init   = FilesScreen_Init;
+	screen->Base.Render = FilesScreen_Render;
+	screen->Base.Free   = FilesScreen_Free;
+	screen->HandlesAllInput = true;
+	return (Screen*)screen;
 }
 
 
@@ -729,7 +729,7 @@ LoadingScreen LoadingScreen_Instance;
 void LoadingScreen_SetTitle(LoadingScreen* screen, STRING_PURE String* title) {
 	Widget_Free(&screen->TitleWidget);
 	TextWidget_Create(&screen->TitleWidget, title, &screen->Font);
-	Widget_SetLocation(&screen->TitleWidget.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -80);
+	Widget_SetLocation((Widget*)(&screen->TitleWidget), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -80);
 	String_Clear(&screen->Title);
 	String_AppendString(&screen->Title, title);
 }
@@ -737,7 +737,7 @@ void LoadingScreen_SetTitle(LoadingScreen* screen, STRING_PURE String* title) {
 void LoadingScreen_SetMessage(LoadingScreen* screen, STRING_PURE String* message) {
 	Widget_Free(&screen->MessageWidget);
 	TextWidget_Create(&screen->MessageWidget, message, &screen->Font);
-	Widget_SetLocation(&screen->MessageWidget.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	Widget_SetLocation((Widget*)(&screen->MessageWidget), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 	String_Clear(&screen->Message);
 	String_AppendString(&screen->Message, message);
 }
@@ -747,7 +747,7 @@ void LoadingScreen_MapLoading(void* obj, Real32 progress) {
 	screen->Progress = progress;
 }
 
-void LoadingScreen_OnResize(Screen* elem) {
+void LoadingScreen_OnResize(GuiElement* elem) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
 	Widget_Reposition(&screen->TitleWidget);
 	Widget_Reposition(&screen->MessageWidget);
@@ -871,19 +871,19 @@ void LoadingScreen_Free(GuiElement* elem) {
 
 void LoadingScreen_Make(LoadingScreen* screen, STRING_PURE String* title, STRING_PURE String* message) {
 	Platform_MemSet(&screen, 0, sizeof(LoadingScreen));
-	Screen_Reset(&screen->Base);
+	Screen_Reset((Screen*)screen);
 
-	screen->Base.Base.HandlesKeyDown     = LoadingScreen_HandlesKeyDown;
-	screen->Base.Base.HandlesKeyUp       = LoadingScreen_HandlesKeyUp;
-	screen->Base.Base.HandlesMouseDown   = LoadingScreen_HandlesMouseDown;
-	screen->Base.Base.HandlesMouseUp     = LoadingScreen_HandlesMouseUp;
-	screen->Base.Base.HandlesMouseMove   = LoadingScreen_HandlesMouseMove;
-	screen->Base.Base.HandlesMouseScroll = LoadingScreen_HandlesMouseScroll;
+	screen->Base.HandlesKeyDown     = LoadingScreen_HandlesKeyDown;
+	screen->Base.HandlesKeyUp       = LoadingScreen_HandlesKeyUp;
+	screen->Base.HandlesMouseDown   = LoadingScreen_HandlesMouseDown;
+	screen->Base.HandlesMouseUp     = LoadingScreen_HandlesMouseUp;
+	screen->Base.HandlesMouseMove   = LoadingScreen_HandlesMouseMove;
+	screen->Base.HandlesMouseScroll = LoadingScreen_HandlesMouseScroll;
 
-	screen->Base.OnResize           = LoadingScreen_OnResize;
-	screen->Base.Base.Init          = LoadingScreen_Init;
-	screen->Base.Base.Render        = LoadingScreen_Render;
-	screen->Base.Base.Free          = LoadingScreen_Free;
+	screen->OnResize    = LoadingScreen_OnResize;
+	screen->Base.Init   = LoadingScreen_Init;
+	screen->Base.Render = LoadingScreen_Render;
+	screen->Base.Free   = LoadingScreen_Free;
 
 	screen->Title = String_InitAndClearArray(screen->TitleBuffer);
 	String_AppendString(&screen->Title, title);
@@ -891,15 +891,15 @@ void LoadingScreen_Make(LoadingScreen* screen, STRING_PURE String* title, STRING
 	String_AppendString(&screen->Message, message);
 
 	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
-	screen->Base.BlocksWorld     = true;
-	screen->Base.RenderHUDOver   = true;
-	screen->Base.HandlesAllInput = true;
+	screen->BlocksWorld     = true;
+	screen->RenderHUDOver   = true;
+	screen->HandlesAllInput = true;
 }
 
 Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
 	LoadingScreen* screen = &LoadingScreen_Instance;
 	LoadingScreen_Make(screen, title, message);
-	return &screen->Base;
+	return (Screen*)screen;
 }
 
 
@@ -924,9 +924,9 @@ Screen* GeneratingScreen_MakeInstance(void) {
 	String message = String_FromConst("Generating..");
 	LoadingScreen_Make(&screen->Base, &title, &message);
 
-	screen->Base.Base.Base.Render = GeneratingScreen_Render;
+	screen->Base.Base.Render = GeneratingScreen_Render;
 	screen->LastState = String_InitAndClearArray(screen->LastStateBuffer);
-	return &screen->Base.Base;
+	return (Screen*)screen;
 }
 
 
@@ -971,9 +971,9 @@ void HUDScreen_ContextRecreated(void* obj) {
 }
 
 
-void HUDScreen_OnResize(Screen* elem) {
+void HUDScreen_OnResize(GuiElement* elem) {
 	HUDScreen* screen = (HUDScreen*)elem;
-	elem = screen->Chat; elem->OnResize(elem);
+	elem = &screen->Chat->Base; screen->Chat->OnResize(elem);
 
 	Widget_Reposition(&screen->Hotbar);
 	if (screen->ShowingList) {
@@ -1032,7 +1032,7 @@ bool HUDScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 
 bool HUDScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	HUDScreen* screen = (HUDScreen*)elem;
-	if (btn != MouseButton_Left || !screen->Base.HandlesAllInput) return false;
+	if (btn != MouseButton_Left || !screen->HandlesAllInput) return false;
 
 	elem = &screen->Chat->Base;
 	if (!screen->ShowingList) { return elem->HandlesMouseDown(elem, x, y, btn); }
@@ -1043,7 +1043,8 @@ bool HUDScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton 
 	if (name.length == 0) { return elem->HandlesMouseDown(elem, x, y, btn); }
 
 	String_Append(&name, ' ');
-	ChatScreen_AppendTextToInput((ChatScreen*)screen->Chat, &name);
+	ChatScreen* chat = (ChatScreen*)screen->Chat;
+	if (chat->HandlesAllInput) { InputWidget_AppendString(&chat->Input.Base, &name); }
 	return true;
 }
 
@@ -1067,9 +1068,9 @@ void HUDScreen_Init(GuiElement* elem) {
 void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 	HUDScreen* screen = (HUDScreen*)elem;
 	ChatScreen* chat = (ChatScreen*)screen->Chat;
-	if (Game_HideGui && chat->Base.HandlesAllInput) {
+	if (Game_HideGui && chat->HandlesAllInput) {
 		Gfx_SetTexturing(true);
-		Widget_Render(&chat->Input, delta);
+		Widget_Render(&chat->Input.Base, delta);
 		Gfx_SetTexturing(false);
 	}
 	if (Game_HideGui) return;
@@ -1080,7 +1081,7 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 		HUDScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
 	}
-	if (chat->Base.HandlesAllInput && !Game_PureClassic) {
+	if (chat->HandlesAllInput && !Game_PureClassic) {
 		ChatScreen_RenderBackground(chat);
 	}
 
@@ -1089,8 +1090,8 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 	elem = &screen->Chat->Base;
 	elem->Render(elem, delta);
 
-	if (screen->ShowingList && Gui_GetActiveScreen() == screen) {
-		screen->PlayerList.Base.Active = screen->Chat->HandlesAllInput;
+	if (screen->ShowingList && Gui_GetActiveScreen() == (Screen*)screen) {
+		screen->PlayerList.Active = screen->Chat->HandlesAllInput;
 		Widget_Render(&screen->PlayerList, delta);
 		/* NOTE: Should usually be caught by KeyUp, but just in case. */
 		if (!KeyBind_IsPressed(KeyBind_PlayerList)) {
@@ -1115,23 +1116,23 @@ void HUDScreen_Free(GuiElement* elem) {
 Screen* HUDScreen_MakeInstance(void) {
 	HUDScreen* screen = &HUDScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(HUDScreen));
-	Screen_Reset(&screen->Base);
+	Screen_Reset((Screen*)screen);
 
-	screen->Base.OnResize    = HUDScreen_OnResize;
-	screen->Base.Base.Init   = HUDScreen_Init;
-	screen->Base.Base.Render = HUDScreen_Render;
-	screen->Base.Base.Free   = HUDScreen_Free;
+	screen->OnResize    = HUDScreen_OnResize;
+	screen->Base.Init   = HUDScreen_Init;
+	screen->Base.Render = HUDScreen_Render;
+	screen->Base.Free   = HUDScreen_Free;
 
-	screen->Base.Base.HandlesKeyDown     = HUDScreen_HandlesKeyDown;
-	screen->Base.Base.HandlesKeyUp       = HUDScreen_HandlesKeyUp;
-	screen->Base.Base.HandlesKeyPress    = HUDScreen_HandlesKeyPress;
-	screen->Base.Base.HandlesMouseDown   = HUDScreen_HandlesMouseDown;
-	screen->Base.Base.HandlesMouseScroll = HUDScreen_HandlesMouseScroll;
-	return &screen->Base;
+	screen->Base.HandlesKeyDown     = HUDScreen_HandlesKeyDown;
+	screen->Base.HandlesKeyUp       = HUDScreen_HandlesKeyUp;
+	screen->Base.HandlesKeyPress    = HUDScreen_HandlesKeyPress;
+	screen->Base.HandlesMouseDown   = HUDScreen_HandlesMouseDown;
+	screen->Base.HandlesMouseScroll = HUDScreen_HandlesMouseScroll;
+	return (Screen*)screen;
 }
 
 void HUDScreen_Ready(void) {
-	GuiElement* elem = &HUDScreen_Instance.Base.Base;
+	GuiElement* elem = &HUDScreen_Instance.Base;
 	elem->Init(elem);
 }
 
@@ -1143,55 +1144,83 @@ IGameComponent HUDScreen_MakeComponent(void) {
 
 
 ChatScreen ChatScreen_Instance;
-void ChatScreen_Init(GuiElement* elem) {
-	ChatScreen* screen = (ChatScreen*)elem;
+Int32 ChatScreen_BottomOffset(void) { return ((HUDScreen*)Gui_HUD)->Hotbar.Height; }
+Int32 ChatScreen_InputUsedHeight(ChatScreen* screen) {
+	if (screen->AltText.Height == 0) {
+		return screen->Input.Base.Height + 20;
+	} else {
+		return (Game_Height - screen->AltText.Y) + 5;
+	}
+}
 
-	Int32 fontSize = (Int32)(8 * Game_GetChatScale());
-	Math_Clamp(fontSize, 8, 60);
-	Platform_MakeFont(&screen->ChatFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
-	Platform_MakeFont(&screen->ChatUrlFont, &Game_FontName, fontSize, FONT_STYLE_UNDERLINE);
+void ChatScreen_UpdateAltTextY(ChatScreen* screen) {
+	InputWidget* input = &screen->Input.Base;
+	Int32 height = max(input->Height + input->YOffset, ChatScreen_BottomOffset());
+	height += input->YOffset;
 
-	fontSize = (Int32)(16 * Game_GetChatScale());
-	Math_Clamp(fontSize, 8, 60);
-	Platform_MakeFont(&screen->AnnouncementFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
-	ChatScreen_ContextRecreated(elem);
+	screen->AltText.Tex.Y = Game_Height - (height + screen->AltText.Tex.Height);
+	screen->AltText.Y = screen->AltText.Tex.Y;
+}
 
-	Event_RegisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
-	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
-	Event_RegisterInt32(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
+void ChatScreen_SetHandlesAllInput(ChatScreen* screen, bool handles) {
+	screen->HandlesAllInput  = handles;
+	Gui_HUD->HandlesAllInput = handles;
+}
+
+void ChatScreen_OpenInput(ChatScreen* screen, STRING_PURE String* initialText) {
+	Game_SetCursorVisible(true);
+	screen->SuppressNextPress = true;
+	ChatScreen_SetHandlesAllInput(screen, true);
+	Key_KeyRepeat = true;
+
+	String_Clear(&screen->Input.Base.Text);
+	String_AppendString(&screen->Input.Base.Text, initialText);
+	Widget_Recreate(&screen->Input.Base);
+}
+
+void ChatScreen_ResetChat(ChatScreen* screen) {
+	Widget_Free(&screen->Chat);
+	Int32 i;
+	for (i = screen->ChatIndex; i < screen->ChatIndex + Game_ChatLines; i++) {
+		if (i >= 0 && i < Chat_Log.Count) {
+			String msg = StringsBuffer_UNSAFE_Get(&Chat_Log, i);
+			TextGroupWidget_PushUpAndReplaceLast(&screen->Chat, &msg);
+		}
+	}
 }
 
 void ChatScreen_ConstructWidgets(ChatScreen* screen) {
-	ChatInputWidget_Create(&screen->Input, &screen->ChatFont);
-	Widget_SetLocation(&screen->Input.Base, ANCHOR_MIN, ANCHOR_MAX, 5, 5);
+#define ChatScreen_MakeGroup(widget, lines) TextGroupWidget_Create(widget, lines, &screen->ChatFont, &screen->ChatUrlFont);
+	Int32 yOffset = ChatScreen_BottomOffset() + 15;
 
-	SpecialInputWidget_Create(&screen->AltText, &screen->ChatFont, &screen->Input);
+	ChatInputWidget_Create(&screen->Input, &screen->ChatFont);
+	Widget_SetLocation((Widget*)(&screen->Input.Base), ANCHOR_MIN, ANCHOR_MAX, 5, 5);
+
+	SpecialInputWidget_Create(&screen->AltText, &screen->ChatFont, &screen->Input.Base);
 	Widget_Init(&screen->AltText);
 	ChatScreen_UpdateAltTextY(screen);
 
-	status = new TextGroupWidget(game, 5, chatFont, chatUrlFont);
-	Widget_SetLocation(&screen->Status.Base, ANCHOR_MAX, ANCHOR_MIN, 0, 0);
+	ChatScreen_MakeGroup(&screen->Status, 5);
+	Widget_SetLocation((Widget*)(&screen->Status), ANCHOR_MAX, ANCHOR_MIN, 0, 0);
 	Widget_Init(&screen->Status);
-	status.SetUsePlaceHolder(0, false);
-	status.SetUsePlaceHolder(1, false);
+	TextGroupWidget_SetUsePlaceHolder(&screen->Status, 0, false);
+	TextGroupWidget_SetUsePlaceHolder(&screen->Status, 1, false);
 
-	bottomRight = new TextGroupWidget(game, 3, chatFont, chatUrlFont)
-		.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, 0, hud.BottomOffset + 15);
+	ChatScreen_MakeGroup(&screen->BottomRight, 3);
+	Widget_SetLocation((Widget*)(&screen->BottomRight), ANCHOR_MAX, ANCHOR_MAX, 0, yOffset);
 	Widget_Init(&screen->BottomRight);
 
-	normalChat = new TextGroupWidget(game, chatLines, chatFont, chatUrlFont)
-		.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15);
-	Widget_Init(&screen->NormalChat);
+	ChatScreen_MakeGroup(&screen->Chat, Game_ChatLines);
+	Widget_SetLocation((Widget*)(&screen->Chat), ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
+	Widget_Init(&screen->Chat);
 
-	clientStatus = new TextGroupWidget(game, game.Chat.ClientStatus.Length, chatFont, chatUrlFont)
-		.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15);
+	ChatScreen_MakeGroup(&screen->ClientStatus, 3);
+	Widget_SetLocation((Widget*)(&screen->ClientStatus), ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Widget_Init(&screen->ClientStatus);
 
 	String empty = String_MakeNull();
 	TextWidget_Create(&screen->Announcement, &empty, &screen->AnnouncementFont);
-	Widget_SetLocation(&screen->Announcement.Base, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Game_Height / 4);
+	Widget_SetLocation((Widget*)(&screen->Announcement), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -Game_Height / 4);
 }
 
 void ChatScreen_SetInitialMessages(ChatScreen* screen) {
@@ -1212,7 +1241,7 @@ void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 	TextWidget_SetText(&screen->Announcement, &msg);
 
 	Int32 i;
-	for (i = 0; i < Array_NumElements(Chat_ClientStatus); i++) {
+	for (i = 0; i < screen->ClientStatus.LinesCount; i++) {
 		ChatScreen_Set(&screen->ClientStatus, i, Chat_ClientStatus[i]);
 	}
 
@@ -1222,56 +1251,13 @@ void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 	}
 }
 
-void ChatScreen_Render(GuiElement* elem, Real64 delta) {
-	ChatScreen* screen = (ChatScreen*)elem;
-	if (!Game_PureClassic) { Widget_Render(&screen->Status, delta); }
-	Widget_Render(&screen->BottomRight, delta);
-	CheckOtherStatuses();
-
-	UpdateChatYOffset(false);
-	Int32 i, y = clientStatus.Y + clientStatus.Height;
-	for (i = 0; i < clientStatus.Textures.Length; i++) {
-		Texture tex = clientStatus.Textures[i];
-		if (tex.ID == NULL) continue;
-
-		y -= tex.Height; tex.Y = y;
-		Texture_Render(&tex);
-	}
-
-	DateTime now = Platform_CurrentUTCTime();
-	if (screen->Base.HandlesAllInput) {
-		Widget_Render(&screen->NormalChat, delta);
-	} else {
-		for (i = 0; i < normalChat.Textures.Length; i++) {
-			Texture tex = screen->NormalChat.Textures[i];
-			Int32 logIdx = screen->ChatIndex + i;
-			if (tex.ID == NULL) continue;
-			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
-
-			DateTime received = game.Chat.Log[logIdx].Received;
-			if (DateTime_MsBetween(&received, &now) <= 10000) {
-				Texture_Render(&tex);
-			}
-		}
-	}
-
-	Widget_Render(&screen->Announcement, delta);
-	if (screen->Base.HandlesAllInput) {
-		Widget_Render(&screen->Input, delta);
-		if (screen->AltText.Base.Active) {
-			Widget_Render(&screen->AltText, delta);
-		}
-	}
-
-	if (screen->Announcement.Texture.ID != NULL && DateTime_MsBetween(&Chat_Announcement.Received, &now) > 5000) {
-		Widget_Free(&screen->Announcement);
-	}
-}
-
 void ChatScreen_CheckOtherStatuses(ChatScreen* screen) {
 	Request item = game.Downloader.CurrentItem;
 	if (item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack")) {
-		if (status.Textures[1].IsValid) status.SetText(1, null);
+		if (screen->Status.Textures[1].ID != NULL) {
+			String empty = String_MakeNull();
+			TextGroupWidget_SetText(&screen->Status, 1, &empty);
+		}
 		screen->LastDownloadStatus = Int32_MinValue;
 		return;
 	}
@@ -1297,13 +1283,13 @@ void ChatScreen_CheckOtherStatuses(ChatScreen* screen) {
 
 void ChatScreen_RenderBackground(ChatScreen* screen) {
 	Int32 minIndex = min(0, Chat_Log.Count - Game_ChatLines);
-	Int32 height = screen->ChatIndex == minIndex ? normalChat.GetUsedHeight() : normalChat.Height;
+	Int32 height = screen->ChatIndex == minIndex ? TextGroupWidget_UsedHeight(&screen->Chat) : screen->Chat.Height;
 
-	Int32 y = normalChat.Y + normalChat.Height - height - 5;
-	Int32 x = normalChat.X - 5;
-	Int32 width = max(clientStatus.Width, normalChat.Width) + 10;
+	Int32 y = screen->Chat.Y + screen->Chat.Height - height - 5;
+	Int32 x = screen->Chat.X - 5;
+	Int32 width = max(screen->ClientStatus.Width, screen->Chat.Width) + 10;
 
-	Int32 boxHeight = height + clientStatus.GetUsedHeight();
+	Int32 boxHeight = height + TextGroupWidget_UsedHeight(&screen->ClientStatus);
 	if (boxHeight > 0) {
 		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
 		GfxCommon_Draw2DFlat(x, y, width, boxHeight + 10, backCol);
@@ -1313,25 +1299,13 @@ void ChatScreen_RenderBackground(ChatScreen* screen) {
 void ChatScreen_UpdateChatYOffset(ChatScreen* screen, bool force) {
 	Int32 height = ChatScreen_InputUsedHeight(screen);
 	if (force || height != screen->InputOldHeight) {
-		clientStatus.YOffset = max(hud.BottomOffset + 15, height);
-		clientStatus.Reposition();
+		screen->ClientStatus.YOffset = max(hud.BottomOffset + 15, height);
+		Widget_Reposition(&screen->ClientStatus);
 
-		normalChat.YOffset = clientStatus.YOffset + clientStatus.GetUsedHeight();
-		normalChat.Reposition();
+		screen->Chat.YOffset = screen->ClientStatus.YOffset + TextGroupWidget_UsedHeight(&screen->ClientStatus);
+		Widget_Reposition(&screen->Chat);
 		screen->InputOldHeight = height;
 	}
-}
-
-void ChatScreen_ColCodeChanged(void* obj, Int32 code) {
-	ChatScreen* screen = (ChatScreen*)obj;
-	if (Gfx_LostContext) return;
-
-	SpecialInputWidget_UpdateCols(&screen->AltText);
-	ChatScreen_Recreate(&screen->NormalChat, code);
-	ChatScreen_Recreate(&screen->Status, code);
-	ChatScreen_Recreate(&screen->BottomRight, code);
-	ChatScreen_Recreate(&screen->ClientStatus, code);
-	Widget_Recreate(&screen->Input);
 }
 
 void ChatScreen_Recreate(TextGroupWidget* group, UInt8 code) {
@@ -1347,227 +1321,6 @@ void ChatScreen_Recreate(TextGroupWidget* group, UInt8 code) {
 			}
 		}
 	}
-}
-
-void ChatScreen_ChatReceived(void* obj, String* msg, UInt8 type) {
-	if (Gfx_LostContext) return;
-	ChatScreen* screen = (ChatScreen*)obj;
-
-	if (type == MSG_TYPE_NORMAL) {
-		screen->ChatIndex++;
-		if (Game_ChatLines == 0) return;
-
-		Int32 index = screen->ChatIndex + (Game_ChatLines - 1);
-		String msg = StringsBuffer_UNSAFE_Get(&Chat_Log, index);
-		TextGroupWidget_PushUpAndReplaceLast(&screen->NormalChat, &msg);
-	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
-		TextGroupWidget_SetText(&screen->Status, 2 + (type - MSG_TYPE_STATUS_1), msg);
-	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
-		TextGroupWidget_SetText(&screen->BottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1), msg);
-	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
-		TextWidget_SetText(&screen->Announcement, msg);
-	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_3) {
-		TextGroupWidget_SetText(&screen->ClientStatus, type - MSG_TYPE_CLIENTSTATUS_1, msg);
-		ChatScreen_UpdateChatYOffset(screen, true);
-	}
-}
-
-void ChatScreen_Free(GuiElement* elem) {
-	ChatScreen* screen = (ChatScreen*)elem;
-	ChatScreen_ContextLost(elem);
-	Platform_FreeFont(&screen->ChatFont);
-	Platform_FreeFont(&screen->ChatUrlFont);
-	Platform_FreeFont(&screen->AnnouncementFont);
-
-	Event_UnregisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
-	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
-	Event_UnregisterInt32(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
-}
-
-void ChatScreen_ContextLost(void* obj) {
-	ChatScreen* screen = (ChatScreen*)obj;
-	String_Clear(&screen->ChatInInput);
-	if (screen->Base.HandlesAllInput) {
-		String_AppendString(&screen->ChatInInput, &screen->Input.Text);
-		Game_SetCursorVisible(false);
-	}
-
-	Widget_Free(&screen->NormalChat);
-	Widget_Free(&screen->Input);
-	Widget_Free(&screen->AltText);
-	Widget_Free(&screen->Status);
-	Widget_Free(&screen->BottomRight);
-	Widget_Free(&screen->ClientStatus);
-	Widget_Free(&screen->Announcement);
-}
-
-void ChatScreen_ContextRecreated(void* obj) {
-	ChatScreen* screen = (ChatScreen*)obj;
-	ChatScreen_ConstructWidgets(screen);
-	ChatScreen_SetInitialMessages(screen);
-}
-
-void ChatScreen_FontChanged(void* obj) {
-	ChatScreen* screen = (ChatScreen*)obj;
-	if (!Drawer2D_UseBitmappedChat) return;
-	Recreate();
-	ChatScreen_UpdateChatYOffset(screen, true);
-}
-
-void ChatScreen_OnResize(void* obj) {
-	ChatScreen* screen = (ChatScreen*)obj;
-	bool active = screen->AltText.Base.Active;
-	Recreate();
-	SpecialInputWidget_SetActive(&screen->AltText, active);
-}
-
-void ChatScreen_ResetChat(ChatScreen* screen) {
-	Widget_Free(&screen->NormalChat);
-	Int32 i;
-	for (i = screen->ChatIndex; i < screen->ChatIndex + Game_ChatLines; i++) {
-		if (i >= 0 && i < Chat_Log.Count) {
-			String msg = StringsBuffer_UNSAFE_Get(&Chat_Log, i);
-			TextGroupWidget_PushUpAndReplaceLast(&screen->NormalChat, &msg);
-		}
-	}
-}
-
-bool ChatScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
-	ChatScreen* screen = (ChatScreen*)elem;
-	if (!screen->Base.HandlesAllInput) return false;
-	if (screen->SuppressNextPress) {
-		screen->SuppressNextPress = false;
-		return false;
-	}
-
-	bool handled = Widget_HandlesKeyPress(&screen->Input, key);
-	UpdateAltTextY();
-	return handled;
-}
-
-void ChatScreen_OpenInput(ChatScreen* screen, STRING_PURE String* initialText) {
-	Game_SetCursorVisible(true);
-	screen->SuppressNextPress = true;
-	ChatScreen_SetHandlesAllInput(screen, true);
-	Key_KeyRepeat = true;
-
-	String_Clear(&screen->Input.Text);
-	String_AppendString(&screen->Input.Text, initialText);
-	Widget_Recreate(&screen->Input);
-}
-
-void ChatScreen_AppendTextToInput(ChatScreen* screen, STRING_PURE String* text) {
-	if (!screen->Base.HandlesAllInput) return;
-	InputWidget_Append(&screen->Input, text);
-}
-
-bool ChatScreen_HandlesKeyDown(GuiElement* elem, Key key) {
-	ChatScreen* screen = (ChatScreen*)elem;
-	screen->SuppressNextPress = false;
-	if (screen->Base.HandlesAllInput) { /* text input bar */
-		if (key == KeyBind_Get(KeyBind_SendChat) || key == Key_KeypadEnter || key == KeyBind_Get(KeyBind_PauseOrExit)) {
-			SetHandlesAllInput(false);
-			Game_SetCursorVisible(false);
-			Camera_ActiveCamera->RegrabMouse();
-			Key_KeyRepeat = false;
-
-			if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
-				InputWidget_Clear(&screen->Input);
-			}
-			elem = &screen->Input.Base.Base;
-			screen->Input.OnPressedEnter(elem);
-			SpecialInputWidget_SetActive(&screen->AltText, false);
-
-			/* Do we need to move all chat down? */
-			Int32 resetIndex = Chat_Log.Count - Game_ChatLines;
-			if (screen->ChatIndex != resetIndex) {
-				screen->ChatIndex = ClampIndex(resetIndex);
-				ChatScreen_ResetChat(screen);
-			}
-		} else if (key == Key_PageUp) {
-			ChatScreen_ScrollHistoryBy(screen, -Game_ChatLines);
-		} else if (key == Key_PageDown) {
-			ChatScreen_ScrollHistoryBy(screen, +Game_ChatLines);
-		} else {
-			Widget_HandlesKeyDown(&screen->Input, key);
-			UpdateAltTextY();
-		}
-		return key < Key_F1 || key > Key_F35;
-	}
-
-	if (key == KeyBind_Get(KeyBind_Chat)) {
-		OpenInput("");
-	} else if (key == Key_Slash) {
-		OpenInput("/");
-	} else {
-		return false;
-	}
-	return true;
-}
-
-bool ChatScreen_HandlesKeyUp(GuiElement* elem, Key key) {
-	ChatScreen* screen = (ChatScreen*)elem;
-	if (!screen->Base.HandlesAllInput) return false;
-
-	if (ServerConnection_SupportsFullCP437 && key == KeyBind_Get(KeyBind_ExtInput)) {
-		if (Window_GetFocused()) {
-			bool active = !screen->AltText.Base.Active;
-			SpecialInputWidget_SetActive(&screen->AltText, active);
-		}
-	}
-	return true;
-}
-
-bool ChatScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
-	ChatScreen* screen = (ChatScreen*)elem;
-	if (!screen->Base.HandlesAllInput) return false;
-
-	Int32 steps = Utils_AccumulateWheelDelta(&screen->ChatAcc, delta);
-	ChatScreen_ScrollHistoryBy(screen, -steps);
-	return true;
-}
-
-bool ChatScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	ChatScreen* screen = (ChatScreen*)elem;
-	if (!screen->Base.HandlesAllInput || Game_HideGui) return false;
-
-	if (!normalChat.Bounds.Contains(x, y)) {
-		if (altText.Active && altText.Bounds.Contains(x, y)) {
-			Widget_HandlesMouseDown(&screen->AltText, x, y, btn);
-			UpdateAltTextY();
-			return true;
-		}
-		Widget_HandlesMouseDown(&screen->Input, x, y, btn);
-		return true;
-	}
-
-	Int32 height = normalChat.GetUsedHeight();
-	Int32 chatY = normalChat.Y + normalChat.Height - height;
-	if (!Gui_Contains(normalChat.X, chatY, normalChat.Width, height, x, y)) return false;
-
-	UInt8 textBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
-	String text = String_InitAndClearArray(textBuffer);
-	normalChat.GetSelected(&text, x, y);
-	if (text.length == 0) return false;
-
-	string url = Utils.StripColours(text);
-
-	if (Utils.IsUrlPrefix(url, 0)) {
-		WarningOverlay overlay = new WarningOverlay(game, false, false);
-		overlay.Metadata = url;
-		overlay.SetHandlers(OpenUrl, AppendUrl);
-		overlay.lines[0] = "&eAre you sure you want to open this link?";
-
-		overlay.lines[1] = url;
-		overlay.lines[2] = "Be careful - links from strangers may be websites that";
-		overlay.lines[3] = " have viruses, or things you may not want to open/see.";
-		game.Gui.ShowOverlay(overlay);
-	} else if (Game_ClickableChat) {
-		InputWidget_AppendString(&screen->Input, &text);
-	}
-	return true;
 }
 
 void ChatScreen_OpenUrl(Overlay urlOverlay, bool always) {
@@ -1594,43 +1347,300 @@ void ChatScreen_ScrollHistoryBy(ChatScreen* screen, Int32 delta) {
 	ChatScreen_ResetChat(screen);
 }
 
-Int32 ChatScreen_InputUsedHeight(ChatScreen* screen) {
-	if (screen->AltText.Base.Height == 0) {
-		return screen->Input.Base.Height + 20;
+bool ChatScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	screen->SuppressNextPress = false;
+	if (screen->HandlesAllInput) { /* text input bar */
+		if (key == KeyBind_Get(KeyBind_SendChat) || key == Key_KeypadEnter || key == KeyBind_Get(KeyBind_PauseOrExit)) {
+			ChatScreen_SetHandlesAllInput(screen, false);
+			Game_SetCursorVisible(false);
+			Camera_ActiveCamera->RegrabMouse();
+			Key_KeyRepeat = false;
+
+			if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
+				InputWidget_Clear(&screen->Input.Base);
+			}
+			elem = &screen->Input.Base.Base;
+			screen->Input.Base.OnPressedEnter(elem);
+			SpecialInputWidget_SetActive(&screen->AltText, false);
+
+			/* Do we need to move all chat down? */
+			Int32 resetIndex = Chat_Log.Count - Game_ChatLines;
+			if (screen->ChatIndex != resetIndex) {
+				screen->ChatIndex = ChatScreen_ClampIndex(resetIndex);
+				ChatScreen_ResetChat(screen);
+			}
+		} else if (key == Key_PageUp) {
+			ChatScreen_ScrollHistoryBy(screen, -Game_ChatLines);
+		} else if (key == Key_PageDown) {
+			ChatScreen_ScrollHistoryBy(screen, +Game_ChatLines);
+		} else {
+			Widget_HandlesKeyDown(&screen->Input.Base, key);
+			ChatScreen_UpdateAltTextY(screen);
+		}
+		return key < Key_F1 || key > Key_F35;
+	}
+
+	if (key == KeyBind_Get(KeyBind_Chat)) {
+		String empty = String_MakeNull();
+		ChatScreen_OpenInput(screen, &empty);
+	} else if (key == Key_Slash) {
+		String slash = String_FromConst("/");
+		ChatScreen_OpenInput(screen, &slash);
 	} else {
-		return (Game_Height - screen->AltText.Base.Y) + 5;
+		return false;
+	}
+	return true;
+}
+
+bool ChatScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	if (!screen->HandlesAllInput) return false;
+
+	if (ServerConnection_SupportsFullCP437 && key == KeyBind_Get(KeyBind_ExtInput)) {
+		if (Window_GetFocused()) {
+			bool active = !screen->AltText.Active;
+			SpecialInputWidget_SetActive(&screen->AltText, active);
+		}
+	}
+	return true;
+}
+
+bool ChatScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	if (!screen->HandlesAllInput) return false;
+	if (screen->SuppressNextPress) {
+		screen->SuppressNextPress = false;
+		return false;
+	}
+
+	bool handled = Widget_HandlesKeyPress(&screen->Input.Base, key);
+	ChatScreen_UpdateAltTextY(screen);
+	return handled;
+}
+
+bool ChatScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	if (!screen->HandlesAllInput) return false;
+
+	Int32 steps = Utils_AccumulateWheelDelta(&screen->ChatAcc, delta);
+	ChatScreen_ScrollHistoryBy(screen, -steps);
+	return true;
+}
+
+bool ChatScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	if (!screen->HandlesAllInput || Game_HideGui) return false;
+
+	if (!Widget_Contains((Widget*)(&screen->Chat), x, y)) {
+		if (screen->AltText.Active && Widget_Contains((Widget*)(&screen->AltText), x, y)) {
+			Widget_HandlesMouseDown(&screen->AltText, x, y, btn);
+			ChatScreen_UpdateAltTextY(screen);
+			return true;
+		}
+		Widget_HandlesMouseDown(&screen->Input.Base, x, y, btn);
+		return true;
+	}
+
+	Int32 height = TextGroupWidget_UsedHeight(&screen->Chat);
+	Int32 chatY = screen->Chat.Y + screen->Chat.Height - height;
+	if (!Gui_Contains(screen->Chat.X, chatY, screen->Chat.Width, height, x, y)) return false;
+
+	UInt8 textBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
+	String text = String_InitAndClearArray(textBuffer);
+	TextGroupWidget_GetSelected(&screen->Chat, &text, x, y);
+	if (text.length == 0) return false;
+
+	UInt8 urlBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
+	String url = String_InitAndClearArray(urlBuffer);
+	String_AppendColorless(&url, &text);
+
+	if (Utils.IsUrlPrefix(url, 0)) {
+		WarningOverlay overlay = new WarningOverlay(game, false, false);
+		overlay.Metadata = url;
+		overlay.SetHandlers(OpenUrl, AppendUrl);
+		overlay.lines[0] = "&eAre you sure you want to open this link?";
+
+		overlay.lines[1] = url;
+		overlay.lines[2] = "Be careful - links from strangers may be websites that";
+		overlay.lines[3] = " have viruses, or things you may not want to open/see.";
+		game.Gui.ShowOverlay(overlay);
+	} else if (Game_ClickableChat) {
+		InputWidget_AppendString(&screen->Input.Base, &text);
+	}
+	return true;
+}
+
+
+void ChatScreen_ColCodeChanged(void* obj, Int32 code) {
+	ChatScreen* screen = (ChatScreen*)obj;
+	if (Gfx_LostContext) return;
+
+	SpecialInputWidget_UpdateCols(&screen->AltText);
+	ChatScreen_Recreate(&screen->Chat, code);
+	ChatScreen_Recreate(&screen->Status, code);
+	ChatScreen_Recreate(&screen->BottomRight, code);
+	ChatScreen_Recreate(&screen->ClientStatus, code);
+	Widget_Recreate(&screen->Input.Base);
+}
+
+void ChatScreen_ChatReceived(void* obj, String* msg, UInt8 type) {
+	if (Gfx_LostContext) return;
+	ChatScreen* screen = (ChatScreen*)obj;
+
+	if (type == MSG_TYPE_NORMAL) {
+		screen->ChatIndex++;
+		if (Game_ChatLines == 0) return;
+
+		Int32 index = screen->ChatIndex + (Game_ChatLines - 1);
+		String msg = StringsBuffer_UNSAFE_Get(&Chat_Log, index);
+		TextGroupWidget_PushUpAndReplaceLast(&screen->Chat, &msg);
+	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
+		TextGroupWidget_SetText(&screen->Status, 2 + (type - MSG_TYPE_STATUS_1), msg);
+	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
+		TextGroupWidget_SetText(&screen->BottomRight, 2 - (type - MSG_TYPE_BOTTOMRIGHT_1), msg);
+	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
+		TextWidget_SetText(&screen->Announcement, msg);
+	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_3) {
+		TextGroupWidget_SetText(&screen->ClientStatus, type - MSG_TYPE_CLIENTSTATUS_1, msg);
+		ChatScreen_UpdateChatYOffset(screen, true);
 	}
 }
 
-void ChatScreen_UpdateAltTextY(ChatScreen* screen) {
-	Int32 height = Math.Max(input.Height + input.YOffset, hud.BottomOffset);
-	height += input.YOffset;
-	altText.texture.Y1 = Game_Height - (height + altText.texture.Height);
-	altText.Y = altText.texture.Y;
+void ChatScreen_ContextLost(void* obj) {
+	ChatScreen* screen = (ChatScreen*)obj;
+	String_Clear(&screen->ChatInInput);
+	if (screen->HandlesAllInput) {
+		String_AppendString(&screen->ChatInInput, &screen->Input.Base.Text);
+		Game_SetCursorVisible(false);
+	}
+
+	Widget_Free(&screen->Chat);
+	Widget_Free(&screen->Input.Base);
+	Widget_Free(&screen->AltText);
+	Widget_Free(&screen->Status);
+	Widget_Free(&screen->BottomRight);
+	Widget_Free(&screen->ClientStatus);
+	Widget_Free(&screen->Announcement);
 }
 
-void ChatScreen_SetHandlesAllInput(ChatScreen* screen, bool handles) {
-	screen->Base.HandlesAllInput = handles;
-	Gui_HUD->HandlesAllInput     = handles;
+void ChatScreen_ContextRecreated(void* obj) {
+	ChatScreen* screen = (ChatScreen*)obj;
+	ChatScreen_ConstructWidgets(screen);
+	ChatScreen_SetInitialMessages(screen);
+}
+
+void ChatScreen_FontChanged(void* obj) {
+	ChatScreen* screen = (ChatScreen*)obj;
+	if (!Drawer2D_UseBitmappedChat) return;
+	Screen_Recreate(screen);
+	ChatScreen_UpdateChatYOffset(screen, true);
+}
+
+void ChatScreen_OnResize(GuiElement* elem) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	bool active = screen->AltText.Active;
+	Screen_Recreate(screen);
+	SpecialInputWidget_SetActive(&screen->AltText, active);
+}
+
+void ChatScreen_Init(GuiElement* elem) {
+	ChatScreen* screen = (ChatScreen*)elem;
+
+	Int32 fontSize = (Int32)(8 * Game_GetChatScale());
+	Math_Clamp(fontSize, 8, 60);
+	Platform_MakeFont(&screen->ChatFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
+	Platform_MakeFont(&screen->ChatUrlFont, &Game_FontName, fontSize, FONT_STYLE_UNDERLINE);
+
+	fontSize = (Int32)(16 * Game_GetChatScale());
+	Math_Clamp(fontSize, 8, 60);
+	Platform_MakeFont(&screen->AnnouncementFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
+	ChatScreen_ContextRecreated(elem);
+
+	Event_RegisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
+	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
+	Event_RegisterInt32(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
+}
+
+void ChatScreen_Render(GuiElement* elem, Real64 delta) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	if (!Game_PureClassic) { Widget_Render(&screen->Status, delta); }
+	Widget_Render(&screen->BottomRight, delta);
+	CheckOtherStatuses();
+
+	ChatScreen_UpdateChatYOffset(screen, false);
+	Int32 i, y = screen->ClientStatus.Y + screen->ClientStatus.Height;
+	for (i = 0; i < screen->ClientStatus.LinesCount; i++) {
+		Texture tex = screen->ClientStatus.Textures[i];
+		if (tex.ID == NULL) continue;
+
+		y -= tex.Height; tex.Y = y;
+		Texture_Render(&tex);
+	}
+
+	DateTime now = Platform_CurrentUTCTime();
+	if (screen->HandlesAllInput) {
+		Widget_Render(&screen->Chat, delta);
+	} else {
+		for (i = 0; i < screen->Chat.LinesCount; i++) {
+			Texture tex = screen->Chat.Textures[i];
+			Int32 logIdx = screen->ChatIndex + i;
+			if (tex.ID == NULL) continue;
+			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
+
+			DateTime received = game.Chat.Log[logIdx].Received;
+			if (DateTime_MsBetween(&received, &now) <= 10000) {
+				Texture_Render(&tex);
+			}
+		}
+	}
+
+	Widget_Render(&screen->Announcement, delta);
+	if (screen->HandlesAllInput) {
+		Widget_Render(&screen->Input.Base, delta);
+		if (screen->AltText.Active) {
+			Widget_Render(&screen->AltText, delta);
+		}
+	}
+
+	if (screen->Announcement.Texture.ID != NULL && DateTime_MsBetween(&Chat_Announcement.Received, &now) > 5000) {
+		Widget_Free(&screen->Announcement);
+	}
+}
+
+void ChatScreen_Free(GuiElement* elem) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	ChatScreen_ContextLost(elem);
+	Platform_FreeFont(&screen->ChatFont);
+	Platform_FreeFont(&screen->ChatUrlFont);
+	Platform_FreeFont(&screen->AnnouncementFont);
+
+	Event_UnregisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
+	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
+	Event_UnregisterInt32(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }
 
 Screen* ChatScreen_MakeInstance(void) {
 	ChatScreen* screen = &ChatScreen_Instance;
 	Platform_MemSet(&screen, 0, sizeof(ChatScreen));
-	Screen_Reset(&screen->Base);
+	Screen_Reset((Screen*)screen);
 	screen->InputOldHeight = -1;
 	screen->LastDownloadStatus = Int32_MinValue;
 	screen->HUD = Gui_HUD;
 
-	screen->Base.OnResize    = ChatScreen_OnResize;
-	screen->Base.Base.Init   = ChatScreen_Init;
-	screen->Base.Base.Render = ChatScreen_Render;
-	screen->Base.Base.Free   = ChatScreen_Free;
+	screen->OnResize    = ChatScreen_OnResize;
+	screen->Base.Init   = ChatScreen_Init;
+	screen->Base.Render = ChatScreen_Render;
+	screen->Base.Free   = ChatScreen_Free;
 
-	screen->Base.Base.HandlesKeyDown     = ChatScreen_HandlesKeyDown;
-	screen->Base.Base.HandlesKeyUp       = ChatScreen_HandlesKeyUp;
-	screen->Base.Base.HandlesKeyPress    = ChatScreen_HandlesKeyPress;
-	screen->Base.Base.HandlesMouseDown   = ChatScreen_HandlesMouseDown;
-	screen->Base.Base.HandlesMouseScroll = ChatScreen_HandlesMouseScroll;
-	return &screen->Base;
+	screen->Base.HandlesKeyDown     = ChatScreen_HandlesKeyDown;
+	screen->Base.HandlesKeyUp       = ChatScreen_HandlesKeyUp;
+	screen->Base.HandlesKeyPress    = ChatScreen_HandlesKeyPress;
+	screen->Base.HandlesMouseDown   = ChatScreen_HandlesMouseDown;
+	screen->Base.HandlesMouseScroll = ChatScreen_HandlesMouseScroll;
+	return (Screen*)screen;
 }

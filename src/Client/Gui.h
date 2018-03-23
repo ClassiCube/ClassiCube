@@ -42,42 +42,34 @@ typedef struct GuiElement_ {
 } GuiElement;
 void GuiElement_Reset(GuiElement* elem);
 
-struct Screen_;
+
+/*
+	HandlesAllInput; / Whether this screen handles all input. Prevents user interacting with the world
+	BlocksWorld;     / Whether this screen completely and opaquely covers the game world behind it
+	HidesHUD;        / Whether this screen hides the normal in-game HUD
+	RenderHUDOver;   / Whether the normal in-game HUD should be drawn over the top of this screen */
+#define Screen_Layout GuiElement Base; bool HandlesAllInput, BlocksWorld; \
+bool HidesHUD, RenderHUDOver; void (*OnResize)(GuiElement* elem);
+
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
-typedef struct Screen_ {
-	GuiElement Base;
-	/* Whether this screen handles all mouse and keyboard input.
-	This prevents the user from interacting with the world. */
-	bool HandlesAllInput;
-	/* Whether this screen completely and opaquely covers the game world behind it. */
-	bool BlocksWorld;
-	/* Whether this screen hides the normal in-game HUD. */
-	bool HidesHUD;
-	/* Whether the normal in-game HUD should be drawn over the top of this screen. */
-	bool RenderHUDOver;
-	/* Called when the game window is resized. */
-	void (*OnResize)(struct Screen_* screen);
-} Screen;
+typedef struct Screen_ { Screen_Layout } Screen;
 void Screen_Reset(Screen* screen);
 
-struct Widget_;
+
+/*
+	X, Y, Width, Height;  / Top left corner, and dimensions, of this widget 
+	Active;               / Whether this widget is currently being moused over
+	Disabled;             / Whether widget is prevented from being interacted with
+	HorAnchor, VerAnchor; / Specifies the reference point for when this widget is resized
+	XOffset, YOffset;     / Offset from the reference point */
+#define Widget_Layout GuiElement Base; Int32 X, Y, Width, Height; bool Active, Disabled; \
+UInt8 HorAnchor, VerAnchor; Int32 XOffset, YOffset; void (*Reposition)(GuiElement* elem);
+
 /* Represents an individual 2D gui component. */
-typedef struct Widget_ {
-	GuiElement Base;
-	/* Top left corner, and dimensions, of this widget */
-	Int32 X, Y, Width, Height;
-	/* Whether this widget is currently being moused over. */
-	bool Active;
-	/* Whether widget is prevented from being interacted with. */
-	bool Disabled;
-	/* Specifies the reference point for when this widget is resized */
-	UInt8 HorAnchor, VerAnchor;
-	/* Offset from the reference point */
-	Int32 XOffset, YOffset;
-	void (*Reposition)(struct Widget_* widget);
-} Widget;
-void Widget_DoReposition(Widget* w);
+typedef struct Widget_ { Widget_Layout } Widget;
+void Widget_DoReposition(GuiElement* elem);
 void Widget_Init(Widget* widget);
+bool Widget_Contains(Widget* widget, Int32 x, Int32 y);
 
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 Screen* Gui_HUD;
@@ -102,6 +94,7 @@ void Gui_RefreshHud(void);
 void Gui_ShowOverlay(Screen* overlay);
 void Gui_RenderGui(Real64 delta);
 void Gui_OnResize(void);
+
 
 #define TEXTATLAS_MAX_WIDTHS 16
 typedef struct TextAtlas_ {

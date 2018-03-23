@@ -557,8 +557,8 @@ void Window_SetClientSize(Size2D size) {
 	rect.right = size.Width; rect.bottom = size.Height;
 
 	AdjustWindowRect(&rect, style, false);
-	Size2D size = { RECT_WIDTH(rect), RECT_HEIGHT(rect) };
-	Window_SetSize(size);
+	Size2D adjSize = { RECT_WIDTH(rect), RECT_HEIGHT(rect) };
+	Window_SetSize(adjSize);
 }
 
 /* TODO: Set window icon
