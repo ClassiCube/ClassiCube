@@ -5,6 +5,16 @@ using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp {
 	
+	/// <summary> Stores the four texture coordinates that describe a textured quad. </summary>
+	public struct TextureRec {
+		public float U1, V1, U2, V2;
+		
+		public TextureRec(float u, float v, float uWidth, float vHeight) {
+			U1 = u; V1 = v;
+			U2 = u + uWidth; V2 = v + vHeight;
+		}
+	}
+	
 	/// <summary> Contains the information necessary to describe a 2D textured quad. </summary>
 	public struct Texture {
 		

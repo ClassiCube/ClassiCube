@@ -527,12 +527,16 @@ void Window_SetBounds(Rectangle2D rect) {
 	SetWindowPos(win_Handle, NULL, rect.X, rect.Y, rect.Width, rect.Height, 0);
 }
 
-Point2D Window_GetLocation(void) { return Point2D_Make(win_Bounds.X, win_Bounds.Y); }
+Point2D Window_GetLocation(void) { 
+	Point2D point = { win_Bounds.X, win_Bounds.Y }; return point;
+}
 void Window_SetLocation(Point2D point) {
 	SetWindowPos(win_Handle, NULL, point.X, point.Y, 0, 0, SWP_NOSIZE);
 }
 
-Size2D Window_GetSize(void) { return Size2D_Make(win_Bounds.Width, win_Bounds.Height); }
+Size2D Window_GetSize(void) {
+	Size2D size = { win_Bounds.Width, win_Bounds.Height }; return size;
+}
 void Window_SetSize(Size2D size) {
 	SetWindowPos(win_Handle, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE);
 }
@@ -544,7 +548,7 @@ void Window_SetClientRectangle(Rectangle2D rect) {
 }
 
 Size2D Window_GetClientSize(void) {
-	return Size2D_Make(win_ClientRect.Width, win_ClientRect.Height);
+	Size2D size = { win_ClientRect.Width, win_ClientRect.Height }; return size;
 }
 void Window_SetClientSize(Size2D size) {
 	DWORD style = GetWindowLongA(win_Handle, GWL_STYLE);
@@ -553,7 +557,8 @@ void Window_SetClientSize(Size2D size) {
 	rect.right = size.Width; rect.bottom = size.Height;
 
 	AdjustWindowRect(&rect, style, false);
-	Window_SetSize(Size2D_Make(RECT_WIDTH(rect), RECT_HEIGHT(rect)));
+	Size2D size = { RECT_WIDTH(rect), RECT_HEIGHT(rect) };
+	Window_SetSize(size);
 }
 
 /* TODO: Set window icon

@@ -477,7 +477,7 @@ void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, Entity* entity, Shad
 
 void ShadowComponent_DrawSquareShadow(VertexP3fT2fC4b** vertices, Real32 y, Real32 x, Real32 z) {
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, 220);
-	TextureRec rec = TextureRec_FromRegion(63.0f / 128.0f, 63.0f / 128.0f, 1.0f / 128.0f, 1.0f / 128.0f);
+	TextureRec rec = { 63.0f / 128.0f, 63.0f / 128.0f, 64.0f / 128.0f, 64.0f / 128.0f };
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v; v.Y = y; v.Col = col;
 

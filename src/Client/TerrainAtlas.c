@@ -50,10 +50,12 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 	Int32 y = texLoc % Atlas1D_ElementsPerAtlas;
 
 	/* Adjust coords to be slightly inside - fixes issues with AMD/ATI cards. */
-	return TextureRec_FromRegion(
-		0.0f, y * Atlas1D_InvElementSize,
-		(uCount - 1) + UV2_Scale,
-		UV2_Scale * Atlas1D_InvElementSize);
+	TextureRec rec;
+	rec.U1 = 0.0f; 
+	rec.V1 = y * Atlas1D_InvElementSize;
+	rec.U2 = (uCount - 1) + UV2_Scale;
+	rec.V2 = rec.V1 + UV2_Scale * Atlas1D_InvElementSize;
+	return rec;
 }
 
 void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {

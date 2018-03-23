@@ -98,9 +98,6 @@ void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text) {
 Texture Button_ShadowTex   = { 0, 0, 0, 0, 0,  0.0f, 66.0f / 256.0f, 200.0f / 256.0f,  86.0f / 256.0f };
 Texture Button_SelectedTex = { 0, 0, 0, 0, 0,  0.0f, 86.0f / 256.0f, 200.0f / 256.0f, 106.0f / 256.0f };
 Texture Button_DisabledTex = { 0, 0, 0, 0, 0,  0.0f, 46.0f / 256.0f, 200.0f / 256.0f,  66.0f / 256.0f };
-PackedCol Button_NormCol     = PACKEDCOL_CONST(224, 224, 244, 255);
-PackedCol Button_ActiveCol   = PACKEDCOL_CONST(255, 255, 160, 255);
-PackedCol Button_DisabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
 
 void ButtonWidget_Init(GuiElement* elem) {
 	ButtonWidget* widget = (ButtonWidget*)elem;
@@ -152,7 +149,10 @@ void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 		GfxCommon_Draw2DTexture(&back, white);
 	}
 
-	PackedCol col = elemW->Disabled ? Button_DisabledCol : (elemW->Active ? Button_ActiveCol : Button_NormCol);
+	PackedCol normCol     = PACKEDCOL_CONST(224, 224, 244, 255);
+	PackedCol activeCol   = PACKEDCOL_CONST(255, 255, 160, 255);
+	PackedCol disabledCol = PACKEDCOL_CONST(160, 160, 160, 255);
+	PackedCol col = elemW->Disabled ? disabledCol : (elemW->Active ? activeCol : normCol);
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
@@ -350,7 +350,7 @@ void HotbarWidget_RenderHotbarBlocks(HotbarWidget* widget) {
 
 void HotbarWidget_RepositonBackgroundTexture(HotbarWidget* widget) {
 	Widget* w = &widget->Base;
-	TextureRec rec = TextureRec_FromPoints(0.0f, 0.0f, 182.0f / 256.0f, 22.0f / 256.0f);
+	TextureRec rec = { 0.0f, 0.0f, 182.0f / 256.0f, 22.0f / 256.0f };
 	widget->BackTex = Texture_FromRec(0, w->X, w->Y, w->Width, w->Height, rec);
 }
 
@@ -362,7 +362,7 @@ void HotbarWidget_RepositionSelectionTexture(HotbarWidget* widget) {
 	Int32 vSize = (Int32)(22.0f * scale);
 	Int32 y = w->Y + (w->Height - (Int32)(23.0f * scale));
 
-	TextureRec rec = TextureRec_FromPoints(0.0f, 22.0f / 256.0f, 24.0f / 256.0f, 22.0f / 256.0f);
+	TextureRec rec = { 0.0f, 22.0f / 256.0f, 24.0f / 256.0f, 44.0f / 256.0f };
 	widget->SelTex = Texture_FromRec(0, 0, y, hSize, vSize, rec);
 }
 
