@@ -46,7 +46,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				// Other
 				ButtonWidget.Create(game, 120, "Quit game", titleFont, LeftOnly(QuitGame))
-					.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, 5, 5),
+					.SetLocation(Anchor.Max, Anchor.Max, 5, 5),
 				MakeBack(true, titleFont, SwitchGame),
 			};
 		}

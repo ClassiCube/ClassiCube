@@ -66,7 +66,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected ButtonWidget MakeBack(int width, string text, int y, Font font, SimpleClickHandler onClick) {
 			return ButtonWidget.Create(game, width, text, font, LeftOnly(onClick))
-				.SetLocation(Anchor.Centre, Anchor.BottomOrRight, 0, y);
+				.SetLocation(Anchor.Centre, Anchor.Max, 0, y);
 		}
 		
 		protected static void SwitchOptions(Game g, Widget w) { g.Gui.SetNewScreen(new OptionsGroupScreen(g)); }

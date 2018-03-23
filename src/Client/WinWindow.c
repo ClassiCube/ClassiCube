@@ -583,8 +583,7 @@ void Window_SetVisible(bool visible) {
 			BringWindowToTop(win_Handle);
 			SetForegroundWindow(win_Handle);
 		}
-	}
-	else {
+	} else {
 		ShowWindow(win_Handle, SW_HIDE);
 	}
 }

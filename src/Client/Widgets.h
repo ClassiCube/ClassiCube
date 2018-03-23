@@ -11,7 +11,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset);
+void Widget_SetLocation(Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset);
 
 typedef struct TextWidget_ {
 	Widget Base;

@@ -59,14 +59,17 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Sets the block at the given world coordinates without bounds checking. </summary>
 		public void SetBlock(int x, int y, int z, BlockID blockId) {
-			blocks1[(y * Length + z) * Width + x] = (BlockRaw)blockId;
+			int i = (y * Length + z) * Width + x;
+			blocks1[i] = (BlockRaw)blockId;			
+			if (blocks1 == blocks2) return;
+			blocks2[i] = (BlockRaw)(blockId >> 8);
 		}
 		
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public BlockID GetBlock(int x, int y, int z) {
 			int i = (y * Length + z) * Width + x;
 			#if USE16_BIT
-			return (BlockID)((blocks1[i] | (blocks2[i] << 8) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks1[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
 			return blocks1[i];
 			#endif
@@ -76,7 +79,7 @@ namespace ClassicalSharp.Map {
 		public BlockID GetBlock(Vector3I p) {
 			int i = (p.Y * Length + p.Z) * Width + p.X;
 			#if USE16_BIT
-			return (BlockID)((blocks1[i] | (blocks2[i] << 8) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks1[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
 			return blocks1[i];
 			#endif
@@ -119,7 +122,7 @@ namespace ClassicalSharp.Map {
 			
 			int i = (y * Length + z) * Width + x;
 			#if USE16_BIT
-			return (BlockID)((blocks1[i] | (blocks2[i] << 8) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks1[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
 			return blocks1[i];
 			#endif

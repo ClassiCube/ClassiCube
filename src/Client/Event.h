@@ -120,9 +120,9 @@ Event_Real32 WorldEvents_MapLoading;   /* Portion of world is decompressed/gener
 Event_Void WorldEvents_MapLoaded;      /* New world has finished loading, player can now interact with it. */
 Event_Int32 WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config. */
 
-Event_Void ChatEvents_FontChanged;  /* User changes whether system chat font used, and when the bitmapped font texture changes. */
-Event_Chat ChatEvents_ChatReceived; /*  Raised when the server or a client-side command sends a message */
-
+Event_Void ChatEvents_FontChanged;     /* User changes whether system chat font used, and when the bitmapped font texture changes. */
+Event_Chat ChatEvents_ChatReceived;    /* Raised when the server or a client-side command sends a message */
+Event_Int32 ChatEvents_ColCodeChanged; /* Raised when a colour code changes */
 
 Event_Void WindowEvents_Moved;              /* Window is moved. */
 Event_Void WindowEvents_Resized;            /* Window is resized. */

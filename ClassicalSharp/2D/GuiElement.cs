@@ -42,8 +42,8 @@ namespace ClassicalSharp.Gui {
 		public virtual bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return false; }
 		
 		protected static int CalcPos(Anchor anchor, int offset, int size, int axisLen) {
-			if (anchor == Anchor.LeftOrTop) return offset;
-			if (anchor == Anchor.BottomOrRight) return axisLen - size - offset;
+			if (anchor == Anchor.Min) return offset;
+			if (anchor == Anchor.Max) return axisLen - size - offset;
 			return (axisLen - size) / 2 + offset;
 		}
 		

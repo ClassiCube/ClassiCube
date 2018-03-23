@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public HotbarWidget(Game game) : base(game) {
 			HorizontalAnchor = Anchor.Centre;
-			VerticalAnchor = Anchor.BottomOrRight;
+			VerticalAnchor = Anchor.Max;
 		}
 		
 		Texture selTex, backTex;

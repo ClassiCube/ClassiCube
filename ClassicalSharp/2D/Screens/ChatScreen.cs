@@ -49,27 +49,27 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void ConstructWidgets() {
 			input = new ChatInputWidget(game, chatFont)
-				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 5, 5);
+				.SetLocation(Anchor.Min, Anchor.Max, 5, 5);
 			altText = new SpecialInputWidget(game, chatFont, input);
 			altText.Init();
 			UpdateAltTextY();
 			
 			status = new TextGroupWidget(game, 5, chatFont, chatUrlFont)
-				.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, 0, 0);
+				.SetLocation(Anchor.Max, Anchor.Min, 0, 0);
 			status.Init();
 			status.SetUsePlaceHolder(0, false);
 			status.SetUsePlaceHolder(1, false);
 			
 			bottomRight = new TextGroupWidget(game, 3, chatFont, chatUrlFont)
-				.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, 0, hud.BottomOffset + 15);
+				.SetLocation(Anchor.Max, Anchor.Max, 0, hud.BottomOffset + 15);
 			bottomRight.Init();
 			
 			normalChat = new TextGroupWidget(game, chatLines, chatFont, chatUrlFont)
-				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15);
+				.SetLocation(Anchor.Min, Anchor.Max, 10, hud.BottomOffset + 15);
 			normalChat.Init();
 			
 			clientStatus = new TextGroupWidget(game, game.Chat.ClientStatus.Length, chatFont, chatUrlFont)
-				.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15);
+				.SetLocation(Anchor.Min, Anchor.Max, 10, hud.BottomOffset + 15);
 			clientStatus.Init();
 			
 			announcement = TextWidget.Create(game ,null, announcementFont)

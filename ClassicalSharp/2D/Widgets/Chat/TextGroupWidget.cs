@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			int y = 0;
 			int deltaY = newHeight - Textures[index].Height;
 			
-			if (VerticalAnchor == Anchor.LeftOrTop) {
+			if (VerticalAnchor == Anchor.Min) {
 				y = Y;
 				for (int i = 0; i < index; i++)
 					y += Textures[i].Height;

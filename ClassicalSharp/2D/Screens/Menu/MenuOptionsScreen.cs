@@ -149,7 +149,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeExtendedHelp(string[] desc) {
 			extendedHelp = new TextGroupWidget(game, desc.Length, regularFont, null)
-				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 0, 0);
+				.SetLocation(Anchor.Min, Anchor.Min, 0, 0);
 			extendedHelp.Init();
 			for (int i = 0; i < desc.Length; i++)
 				extendedHelp.SetText(i, desc[i]);

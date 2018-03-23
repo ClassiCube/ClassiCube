@@ -57,16 +57,16 @@ void Widget_Init(Widget* widget) {
 	widget->Base.HandlesMouseDown = NULL;
 	widget->X = 0; widget->Y = 0;
 	widget->Width = 0; widget->Height = 0;
-	widget->HorAnchor = ANCHOR_LEFT_OR_TOP;
-	widget->VerAnchor = ANCHOR_LEFT_OR_TOP;
+	widget->HorAnchor = ANCHOR_MIN;
+	widget->VerAnchor = ANCHOR_MIN;
 	widget->XOffset = 0; widget->YOffset = 0;
 	widget->Reposition = Widget_DoReposition;
 }
 
 
 Int32 Gui_CalcPos(UInt8 anchor, Int32 offset, Int32 size, Int32 axisLen) {
-	if (anchor == ANCHOR_LEFT_OR_TOP)     return offset;
-	if (anchor == ANCHOR_BOTTOM_OR_RIGHT) return axisLen - size - offset;
+	if (anchor == ANCHOR_MIN)     return offset;
+	if (anchor == ANCHOR_MAX) return axisLen - size - offset;
 	return (axisLen - size) / 2 + offset;
 }
 

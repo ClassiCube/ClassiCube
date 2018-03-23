@@ -16,7 +16,7 @@
 #include "Event.h"
 #include "Chat.h"
 
-void Widget_SetLocation(Widget* widget, Anchor horAnchor, Anchor verAnchor, Int32 xOffset, Int32 yOffset) {
+void Widget_SetLocation(Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
 	widget->XOffset = xOffset; widget->YOffset = yOffset;
 	widget->Reposition(widget);
@@ -481,7 +481,7 @@ bool HotbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 void HotbarWidget_Create(HotbarWidget* widget) {
 	Widget_Init(&widget->Base);
 	widget->Base.HorAnchor = ANCHOR_CENTRE;
-	widget->Base.VerAnchor = ANCHOR_BOTTOM_OR_RIGHT;
+	widget->Base.VerAnchor = ANCHOR_MAX;
 
 	widget->Base.Base.Init   = HotbarWidget_Init;
 	widget->Base.Base.Render = HotbarWidget_Render;
@@ -1083,7 +1083,7 @@ void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active) {
 
 void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, SpecialInputAppendFunc appendFunc, void* appendObj) {
 	Widget_Init(&widget->Base);
-	widget->Base.VerAnchor = ANCHOR_BOTTOM_OR_RIGHT;
+	widget->Base.VerAnchor = ANCHOR_MAX;
 	widget->Font = *font;
 	widget->AppendFunc = appendFunc;
 	widget->AppendObj = appendObj;
@@ -1853,8 +1853,8 @@ void ChatInputWidget_OnPressedEnter(GuiElement* elem) {
 	widget->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
 
 	String empty = String_MakeNull();
-	Chat_AddOf(&empty, MESSAGE_TYPE_CLIENTSTATUS_2);
-	Chat_AddOf(&empty, MESSAGE_TYPE_CLIENTSTATUS_3);
+	Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_2);
+	Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_3);
 	InputWidget_OnPressedEnter(elem);
 }
 
@@ -1938,7 +1938,7 @@ void ChatInputWidget_TabKey(GuiElement* elem) {
 
 	String part = String_UNSAFE_Substring(&input->Text, start, (end + 1) - start);
 	String empty = String_MakeNull();
-	Chat_AddOf(&empty, MESSAGE_TYPE_CLIENTSTATUS_3);
+	Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_3);
 
 	EntityID matches[TABLIST_MAX_NAMES];
 	UInt32 i, matchesCount = 0;
@@ -1976,7 +1976,7 @@ void ChatInputWidget_TabKey(GuiElement* elem) {
 			String_AppendString(&str, &match);
 			String_Append(&str, ' ');
 		}
-		Chat_AddOf(&str, MESSAGE_TYPE_CLIENTSTATUS_3);
+		Chat_AddOf(&str, MSG_TYPE_CLIENTSTATUS_3);
 	}
 }
 
@@ -2320,7 +2320,7 @@ void PlayerListWidget_Init(GuiElement* elem) {
 
 	String msg = String_FromConst("Connected players:");
 	TextWidget_Create(&widget->Overview, &msg, &widget->Font);
-	Widget_SetLocation(&widget->Overview.Base, ANCHOR_CENTRE, ANCHOR_LEFT_OR_TOP, 0, 0);
+	Widget_SetLocation(&widget->Overview.Base, ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 
 	Event_RegisterEntityID(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
 	Event_RegisterEntityID(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
@@ -2413,7 +2413,7 @@ Int32 TextGroupWidget_CalcY(TextGroupWidget* widget, Int32 index, Int32 newHeigh
 	Texture* textures = widget->Textures;
 	Int32 deltaY = newHeight - textures[index].Height;
 
-	if (widget->Base.VerAnchor == ANCHOR_LEFT_OR_TOP) {
+	if (widget->Base.VerAnchor == ANCHOR_MIN) {
 		y = widget->Base.Y;
 		for (i = 0; i < index; i++) {
 			y += textures[i].Height;

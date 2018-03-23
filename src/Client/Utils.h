@@ -23,8 +23,8 @@ typedef struct DateTime_ {
 #define DATETIME_SECONDS_PER_HOUR (60 * 60)
 #define DATETIME_SECONDS_PER_DAY (60 * 60 * 24)
 
-Int64 DateTime_TotalMilliseconds(DateTime* time);
-Int64 DateTime_MillisecondsBetween(DateTime* start, DateTime* end);
+Int64 DateTime_TotalMs(DateTime* time);
+Int64 DateTime_MsBetween(DateTime* start, DateTime* end);
 
 UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount);
 bool Utils_IsValidInputChar(UInt8 c, bool supportsCP437);

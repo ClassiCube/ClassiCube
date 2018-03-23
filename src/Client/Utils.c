@@ -7,7 +7,7 @@ bool DateTime_IsLeapYear(Int32 year) {
 }
 
 UInt16 DateTime_TotalDays[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-Int64 DateTime_TotalMilliseconds(DateTime* time) {
+Int64 DateTime_TotalMs(DateTime* time) {
 	/* Days from before this year */
 	Int32 days = 365 * (time->Year - 1), i;
 	/* Only need to check leap years for whether days need adding */
@@ -29,9 +29,9 @@ Int64 DateTime_TotalMilliseconds(DateTime* time) {
 	return seconds * DATETIME_MILLISECS_PER_SECOND + time->Milli;
 }
 
-Int64 DateTime_MillisecondsBetween(DateTime* start, DateTime* end) {
-	Int64 msStart = DateTime_TotalMilliseconds(start);
-	Int64 msEnd = DateTime_TotalMilliseconds(end);
+Int64 DateTime_MsBetween(DateTime* start, DateTime* end) {
+	Int64 msStart = DateTime_TotalMs(start);
+	Int64 msEnd   = DateTime_TotalMs(end);
 	return msEnd - msStart;
 }
 

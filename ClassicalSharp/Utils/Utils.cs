@@ -19,7 +19,11 @@ namespace ClassicalSharp {
 	public delegate void Action();
 	// ################################################################
 	
-	public enum Anchor { LeftOrTop, Centre, BottomOrRight, }
+	public enum Anchor { 
+		Min,    // left or top
+		Centre, // middle
+		Max,    // right or bottom
+	}
 	
 	public static partial class Utils {
 		

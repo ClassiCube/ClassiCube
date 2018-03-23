@@ -11,9 +11,9 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define ANCHOR_LEFT_OR_TOP 0
-#define ANCHOR_CENTRE 1
-#define ANCHOR_BOTTOM_OR_RIGHT 2
+#define ANCHOR_MIN 0    /* Left or top */
+#define ANCHOR_CENTRE 1 /* Middle */
+#define ANCHOR_MAX 2    /* Bottom or right */
 
 struct GuiElement_;
 typedef struct GuiElement_ {

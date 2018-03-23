@@ -8,8 +8,8 @@ namespace ClassicalSharp.Gui.Widgets {
 	public abstract class Widget : GuiElement {
 		
 		public Widget(Game game) : base(game) {
-			HorizontalAnchor = Anchor.LeftOrTop;
-			VerticalAnchor = Anchor.LeftOrTop;
+			HorizontalAnchor = Anchor.Min;
+			VerticalAnchor = Anchor.Min;
 		}
 		
 		/// <summary> Whether this widget is currently being moused over. </summary>

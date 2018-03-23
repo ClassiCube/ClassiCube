@@ -10,8 +10,8 @@ namespace ClassicalSharp.Gui.Widgets {
 	public sealed class SpecialInputWidget : Widget {
 
 		public SpecialInputWidget(Game game, Font font, InputWidget input) : base(game) {
-			HorizontalAnchor = Anchor.LeftOrTop;
-			VerticalAnchor = Anchor.BottomOrRight;
+			HorizontalAnchor = Anchor.Min;
+			VerticalAnchor = Anchor.Max;
 			this.font = font;
 			this.input = input;
 			Active = false;

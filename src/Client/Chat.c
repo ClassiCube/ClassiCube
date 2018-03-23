@@ -117,19 +117,19 @@ void Chat_AppendLog(STRING_PURE String* text) {
 	Stream_WriteLine(&Chat_LogStream, &str);
 }
 
-void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MESSAGE_TYPE_NORMAL); }
+void Chat_Add(STRING_PURE String* text) { Chat_AddOf(text, MSG_TYPE_NORMAL); }
 void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
-	if (msgType == MESSAGE_TYPE_NORMAL) {
+	if (msgType == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
 		Chat_AppendLog(text);
-	} else if (msgType >= MESSAGE_TYPE_STATUS_1 && msgType <= MESSAGE_TYPE_STATUS_3) {
-		ChatLine_Make(&Chat_Status[msgType - MESSAGE_TYPE_STATUS_1], text);
-	} else if (msgType >= MESSAGE_TYPE_BOTTOMRIGHT_1 && msgType <= MESSAGE_TYPE_BOTTOMRIGHT_3) {
-		ChatLine_Make(&Chat_BottomRight[msgType - MESSAGE_TYPE_BOTTOMRIGHT_1], text);
-	} else if (msgType == MESSAGE_TYPE_ANNOUNCEMENT) {
+	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
+		ChatLine_Make(&Chat_Status[msgType - MSG_TYPE_STATUS_1], text);
+	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_3) {
+		ChatLine_Make(&Chat_BottomRight[msgType - MSG_TYPE_BOTTOMRIGHT_1], text);
+	} else if (msgType == MSG_TYPE_ANNOUNCEMENT) {
 		ChatLine_Make(&Chat_Announcement, text);
-	} else if (msgType >= MESSAGE_TYPE_CLIENTSTATUS_1 && msgType <= MESSAGE_TYPE_CLIENTSTATUS_3) {
-		ChatLine_Make(&Chat_ClientStatus[msgType - MESSAGE_TYPE_CLIENTSTATUS_1], text);
+	} else if (msgType >= MSG_TYPE_CLIENTSTATUS_1 && msgType <= MSG_TYPE_CLIENTSTATUS_3) {
+		ChatLine_Make(&Chat_ClientStatus[msgType - MSG_TYPE_CLIENTSTATUS_1], text);
 	}
 	Event_RaiseChat(&ChatEvents_ChatReceived, text, msgType);
 }
@@ -427,18 +427,18 @@ void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, Bl
 		String_AppendInt32(&msg, coords.Y); String_AppendConst(&msg, ", ");
 		String_AppendInt32(&msg, coords.Z);
 		String_AppendConst(&msg, "), place mark 2.");
-		Chat_AddOf(&msg, MESSAGE_TYPE_CLIENTSTATUS_3);
+		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_3);
 	} else {
 		cuboid_mark2 = coords;
 		CuboidCommand_DoCuboid();
-		String empty = String_MakeNull(); Chat_AddOf(&empty, MESSAGE_TYPE_CLIENTSTATUS_3);
+		String empty = String_MakeNull(); Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_3);
 
 		if (!cuboid_persist) {
 			Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 		} else {
 			cuboid_mark1 = Vector3I_Create1(Int32_MaxValue);
 			String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-			Chat_AddOf(&msg, MESSAGE_TYPE_CLIENTSTATUS_3);
+			Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_3);
 		}
 	}
 }
@@ -457,7 +457,7 @@ void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 
 	String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-	Chat_AddOf(&msg, MESSAGE_TYPE_CLIENTSTATUS_3);
+	Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_3);
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 }
 

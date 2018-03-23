@@ -90,7 +90,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			status = new TextWidget(game, font)
-				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, 2);
+				.SetLocation(Anchor.Min, Anchor.Min, 2, 2);
 			status.ReducePadding = true;
 			status.Init();
 			string msg = statusBuffer.Length > 0 ? statusBuffer.ToString() : "FPS: no data yet";
@@ -102,7 +102,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			int yOffset = status.Height + posAtlas.tex.Height + 2;
 			hackStates = new TextWidget(game, font)
-				.SetLocation(Anchor.LeftOrTop, Anchor.LeftOrTop, 2, yOffset);
+				.SetLocation(Anchor.Min, Anchor.Min, 2, yOffset);
 			hackStates.ReducePadding = true;
 			hackStates.Init();
 			UpdateHackState();

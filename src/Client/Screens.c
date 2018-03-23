@@ -14,6 +14,8 @@
 #include "MapGenerator.h"
 #include "ServerConnection.h"
 #include "Chat.h"
+#include "ExtMath.h"
+#include "Window.h"
 
 #define LeftOnly(func) { if (btn == MouseButton_Left) { func; } return true; }
 #define Widget_Init(widget) (widget)->Base.Base.Init(&((widget)->Base.Base))
@@ -129,7 +131,7 @@ void Screen_RenderWidgets(Widget** widgets, UInt32 widgetsCount, Real64 delta) {
 
 void Screen_MakeBack(ButtonWidget* widget, Int32 width, STRING_PURE String* text, Int32 y, FontDesc* font, Gui_MouseHandler onClick) {
 	ButtonWidget_Create(widget, text, width, font, onClick);
-	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_BOTTOM_OR_RIGHT, 0, y);
+	Widget_SetLocation(&widget->Base, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
 }
 
 void Screen_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Gui_MouseHandler onClick) {
@@ -450,7 +452,7 @@ void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
 }
 
 void StatusScreen_OnResize(Screen* screen) { }
-void StatusScreen_ChatFontChanged(void* obj) {
+void StatusScreen_FontChanged(void* obj) {
 	StatusScreen* screen = (StatusScreen*)obj;
 	GuiElement* elem = &screen->Base.Base;
 	elem->Recreate(elem);
@@ -467,7 +469,7 @@ void StatusScreen_ContextRecreated(void* obj) {
 	StatusScreen* screen = (StatusScreen*)obj;
 
 	TextWidget* status = &screen->Status; TextWidget_Make(status, &screen->Font);
-	Widget_SetLocation(&status->Base, ANCHOR_LEFT_OR_TOP, ANCHOR_LEFT_OR_TOP, 2, 2);
+	Widget_SetLocation(&status->Base, ANCHOR_MIN, ANCHOR_MIN, 2, 2);
 	status->ReducePadding = true;
 	Widget_Init(status);
 	StatusScreen_Update(screen, 1.0);
@@ -479,7 +481,7 @@ void StatusScreen_ContextRecreated(void* obj) {
 
 	Int32 yOffset = status->Base.Height + screen->PosAtlas.Tex.Height + 2;
 	TextWidget* hacks = &screen->HackStates; TextWidget_Make(hacks, &screen->Font);
-	Widget_SetLocation(&hacks->Base, ANCHOR_LEFT_OR_TOP, ANCHOR_LEFT_OR_TOP, 2, yOffset);
+	Widget_SetLocation(&hacks->Base, ANCHOR_MIN, ANCHOR_MIN, 2, yOffset);
 	hacks->ReducePadding = true;
 	Widget_Init(hacks);
 	StatusScreen_UpdateHackState(screen);
@@ -490,7 +492,7 @@ void StatusScreen_Init(GuiElement* elem) {
 	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	StatusScreen_ContextRecreated(screen);
 
-	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_ChatFontChanged);
+	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_FontChanged);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, StatusScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
 }
@@ -516,7 +518,7 @@ void StatusScreen_Free(GuiElement* elem) {
 	Platform_FreeFont(&screen->Font);
 	StatusScreen_ContextLost(screen);
 
-	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_ChatFontChanged);
+	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_FontChanged);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, StatusScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, StatusScreen_ContextRecreated);
 }
@@ -1041,10 +1043,10 @@ void HUDScreen_Init(GuiElement* elem) {
 
 void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 	HUDScreen* screen = (HUDScreen*)elem;
-	Screen* chat = screen->Chat;
-	if (Game_HideGui && chat->HandlesAllInput) {
+	ChatScreen* chat = (ChatScreen*)screen->Chat;
+	if (Game_HideGui && chat->Base.HandlesAllInput) {
 		Gfx_SetTexturing(true);
-		chat.input.Render(delta);
+		Widget_Render(&chat->Input, delta);
 		Gfx_SetTexturing(false);
 	}
 	if (Game_HideGui) return;
@@ -1055,8 +1057,8 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 		HUDScreen_DrawCrosshairs();
 		Gfx_SetTexturing(false);
 	}
-	if (chat->HandlesAllInput && !Game_PureClassic) {
-		chat.RenderBackground();
+	if (chat->Base.HandlesAllInput && !Game_PureClassic) {
+		ChatScreen_RenderBackground(chat);
 	}
 
 	Gfx_SetTexturing(true);
@@ -1121,51 +1123,56 @@ typedef struct ChatScreen_ {
 	Int32 ChatIndex;
 	SpecialInputWidget AltText;
 	FontDesc ChatFont, ChatUrlFont, AnnouncementFont;
-	string chatInInputBuffer; /* needed for lost contexts, to restore chat typed in */
-}
+	UInt8 ChatInInputBuffer[INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN];
+	String ChatInInput; /* needed for lost contexts, to restore chat typed in */
+	Int32 inputOldHeight = -1;
+} ChatScreen;
 
 void ChatScreen_Init(GuiElement* elem) {
-	int fontSize = (int)(8 * game.GuiChatScale);
-	Utils.Clamp(ref fontSize, 8, 60);
-	chatFont = new Font(game.FontName, fontSize);
-	chatUrlFont = new Font(game.FontName, fontSize, FontStyle.Underline);
+	ChatScreen* screen = (ChatScreen*)elem;
 
-	fontSize = (int)(16 * game.GuiChatScale);
-	Utils.Clamp(ref fontSize, 8, 60);
-	announcementFont = new Font(game.FontName, fontSize);
-	ContextRecreated();
+	Int32 fontSize = (Int32)(8 * Game_GetChatScale());
+	Math_Clamp(fontSize, 8, 60);
+	Platform_MakeFont(&screen->ChatFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
+	Platform_MakeFont(&screen->ChatUrlFont, &Game_FontName, fontSize, FONT_STYLE_UNDERLINE);
 
-	game.Events.ChatReceived += ChatReceived;
-	game.Events.ChatFontChanged += ChatFontChanged;
-	game.Events.ColourCodeChanged += ColourCodeChanged;
-	game.Graphics.ContextLost += ContextLost;
-	game.Graphics.ContextRecreated += ContextRecreated;
+	fontSize = (Int32)(16 * Game_GetChatScale());
+	Math_Clamp(fontSize, 8, 60);
+	Platform_MakeFont(&screen->AnnouncementFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
+	ChatScreen_ContextRecreated(elem);
+
+	Event_RegisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
+	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
+	Event_RegisterInt32(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }
 
 void ChatScreen_ConstructWidgets(ChatScreen* screen) {
 	ChatInputWidget_Create(&screen->Input, &screen->ChatFont);
-	Widget_SetLocation(&screen->Input.Base, ANCHOR_LEFT_OR_TOP, ANCHOR_BOTTOM_OR_RIGHT, 5, 5);
+	Widget_SetLocation(&screen->Input.Base, ANCHOR_MIN, ANCHOR_MAX, 5, 5);
+
 	altText = new SpecialInputWidget(game, chatFont, input);
 	altText.Init();
 	UpdateAltTextY();
 
-	status = new TextGroupWidget(game, 5, chatFont, chatUrlFont)
-		.SetLocation(Anchor.BottomOrRight, Anchor.LeftOrTop, 0, 0);
-	status.Init();
+	status = new TextGroupWidget(game, 5, chatFont, chatUrlFont);
+	Widget_SetLocation(&screen->Status.Base, ANCHOR_MAX, ANCHOR_MIN, 0, 0);
+	Widget_Init(&screen->Status);
 	status.SetUsePlaceHolder(0, false);
 	status.SetUsePlaceHolder(1, false);
 
 	bottomRight = new TextGroupWidget(game, 3, chatFont, chatUrlFont)
 		.SetLocation(Anchor.BottomOrRight, Anchor.BottomOrRight, 0, hud.BottomOffset + 15);
-	bottomRight.Init();
+	Widget_Init(&screen->BottomRight);
 
 	normalChat = new TextGroupWidget(game, chatLines, chatFont, chatUrlFont)
 		.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15);
-	normalChat.Init();
+	Widget_Init(&screen->NormalChat);
 
 	clientStatus = new TextGroupWidget(game, game.Chat.ClientStatus.Length, chatFont, chatUrlFont)
 		.SetLocation(Anchor.LeftOrTop, Anchor.BottomOrRight, 10, hud.BottomOffset + 15);
-	clientStatus.Init();
+	Widget_Init(&screen->ClientStatus);
 
 	String empty = String_MakeNull();
 	TextWidget_Create(&screen->Announcement, &empty, &screen->AnnouncementFont);
@@ -1173,7 +1180,6 @@ void ChatScreen_ConstructWidgets(ChatScreen* screen) {
 }
 
 void ChatScreen_SetInitialMessages(ChatScreen* screen) {
-	Chat chat = game.Chat;
 	chatIndex = chat.Log.Count - Game_ChatLines;
 	ResetChat();
 	status.SetText(2, chat.Status1.Text);
@@ -1184,45 +1190,65 @@ void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 	bottomRight.SetText(1, chat.BottomRight2.Text);
 	bottomRight.SetText(0, chat.BottomRight3.Text);
 	announcement.SetText(chat.Announcement.Text);
-	for (int i = 0; i < chat.ClientStatus.Length; i++) {
+
+	Int32 i;
+	for (i = 0; i < Array_NumElements(Chat_ClientStatus); i++) {
 		clientStatus.SetText(i, chat.ClientStatus[i].Text);
 	}
 
-	if (chatInInputBuffer != null) {
+	if (screen->ChatInInput.length > 0) {
 		OpenTextInputBar(chatInInputBuffer);
-		chatInInputBuffer = null;
+		String_Clear(&screen->ChatInInput);
 	}
 }
 
 void ChatScreen_Render(GuiElement* elem, Real64 delta) {
-	if (!Game_PureClassic) {
-		status.Render(delta);
-	}
-	bottomRight.Render(delta);
+	ChatScreen* screen = (ChatScreen*)elem;
+	if (!Game_PureClassic) { Widget_Render(&screen->Status, delta); }
+	Widget_Render(&screen->BottomRight, delta);
 	CheckOtherStatuses();
 
 	UpdateChatYOffset(false);
-	RenderClientStatus();
-	DateTime now = Platform_CurrentUTCTime();
-	if (HandlesAllInput) {
-		normalChat.Render(delta);
-	} else {
-		RenderRecentChat(now, delta);
-	}
-	announcement.Render(delta);
+	Int32 i, y = clientStatus.Y + clientStatus.Height;
+	for (i = 0; i < clientStatus.Textures.Length; i++) {
+		Texture tex = clientStatus.Textures[i];
+		if (tex.ID == NULL) continue;
 
-	if (HandlesAllInput) {
-		input.Render(delta);
-		if (altText.Active) {
-			altText.Render(delta);
+		y -= tex.Height; tex.Y = y;
+		Texture_Render(&tex);
+	}
+
+	DateTime now = Platform_CurrentUTCTime();
+	if (screen->Base.HandlesAllInput) {
+		Widget_Render(&screen->NormalChat, delta);
+	} else {
+		for (i = 0; i < normalChat.Textures.Length; i++) {
+			Texture tex = normalChat.Textures[i];
+			Int32 logIdx = screen->ChatIndex + i;
+			if (tex.ID == NULL) continue;
+			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
+
+			DateTime received = game.Chat.Log[logIdx].Received;
+			if ((now - received).TotalSeconds <= 10) {
+				Texture_Render(&tex);
+			}
 		}
 	}
 
-	if (announcement.IsValid && (now - game.Chat.Announcement.Received).TotalSeconds > 5)
-		announcement.Dispose();
+	Widget_Render(&screen->Announcement, delta);
+	if (screen->Base.HandlesAllInput) {
+		Widget_Render(&screen->Input, delta);
+		if (screen->AltText.Base.Active) {
+			Widget_Render(&screen->AltText, delta);
+		}
+	}
+
+	if (screen->Announcement.Texture.ID != NULL && DateTime_MsBetween(&now, &Chat_Announcement.Received) > 5000) {
+		Widget_Free(&screen->Announcement);
+	}
 }
 
-int lastDownloadStatus = int.MinValue;
+Int32 lastDownloadStatus = int.MinValue;
 void ChatScreen_CheckOtherStatuses() {
 	Request item = game.Downloader.CurrentItem;
 	if (item == null || !(item.Identifier == "terrain" || item.Identifier == "texturePack")) {
@@ -1231,7 +1257,7 @@ void ChatScreen_CheckOtherStatuses() {
 		return;
 	}
 
-	int progress = game.Downloader.CurrentItemProgress;
+	Int32 progress = game.Downloader.CurrentItemProgress;
 	if (progress == lastDownloadStatus) return;
 	lastDownloadStatus = progress;
 	SetFetchStatus(progress);
@@ -1253,51 +1279,23 @@ void ChatScreen_SetFetchStatus(Int32 progress) {
 	status.SetText(1, &str);
 }
 
-void ChatScreen_RenderRecentChat(DateTime now, double delta) {
-	for (int i = 0; i < normalChat.Textures.Length; i++) {
-		Texture texture = normalChat.Textures[i];
-		int logIdx = chatIndex + i;
+void ChatScreen_RenderBackground(ChatScreen* screen) {
+	Int32 minIndex = Math.Min(0, game.Chat.Log.Count - chatLines);
+	Int32 height = chatIndex == minIndex ? normalChat.GetUsedHeight() : normalChat.Height;
 
-		if (texture.ID == NULL) continue;
-		if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
+	Int32 y = normalChat.Y + normalChat.Height - height - 5;
+	Int32 x = normalChat.X - 5;
+	Int32 width = max(clientStatus.Width, normalChat.Width) + 10;
 
-		DateTime received = game.Chat.Log[logIdx].Received;
-		if ((now - received).TotalSeconds <= 10) {
-			texture.Render(game.Graphics);
-		}
-	}
-}
-
-void ChatScreen_RenderClientStatus() {
-	int y = clientStatus.Y + clientStatus.Height;
-	for (int i = 0; i < clientStatus.Textures.Length; i++) {
-		Texture texture = clientStatus.Textures[i];
-		if (texture.ID == NULL) continue;
-
-		y -= texture.Height;
-		texture.Y = y;
-		Texture_Render(&texture);
-	}
-}
-
-void ChatScreen_RenderBackground() {
-	int minIndex = Math.Min(0, game.Chat.Log.Count - chatLines);
-	int height = chatIndex == minIndex ? normalChat.GetUsedHeight() : normalChat.Height;
-
-	int y = normalChat.Y + normalChat.Height - height - 5;
-	int x = normalChat.X - 5;
-	int width = Math.Max(clientStatus.Width, normalChat.Width) + 10;
-
-	int boxHeight = height + clientStatus.GetUsedHeight();
+	Int32 boxHeight = height + clientStatus.GetUsedHeight();
 	if (boxHeight > 0) {
 		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
 		game.Graphics.Draw2DQuad(x, y, width, boxHeight + 10, backCol);
 	}
 }
 
-int inputOldHeight = -1;
-void ChatScreen_UpdateChatYOffset(bool force) {
-	int height = InputUsedHeight;
+void ChatScreen_UpdateChatYOffset(ChatScreen* screen, bool force) {
+	Int32 height = InputUsedHeight;
 	if (force || height != inputOldHeight) {
 		clientStatus.YOffset = Math.Max(hud.BottomOffset + 15, height);
 		clientStatus.Reposition();
@@ -1308,104 +1306,112 @@ void ChatScreen_UpdateChatYOffset(bool force) {
 	}
 }
 
-void ColourCodeChanged(void* obj, UInt8 code) {
+void ChatScreen_ColCodeChanged(void* obj, Int32 code) {
+	ChatScreen* screen = (ChatScreen*)obj;
 	if (Gfx_LostContext) return;
 
-	altText.UpdateColours();
-	Recreate(normalChat, code); Recreate(status, code);
-	Recreate(bottomRight, code); Recreate(clientStatus, code);
+	SpecialInputWidget_UpdateCols(&screen->AltText);
+	ChatScreen_Recreate(normalChat, code);
+	ChatScreen_Recreate(status, code);
+	ChatScreen_Recreate(bottomRight, code);
+	ChatScreen_Recreate(clientStatus, code);
 	input.Recreate();
 }
 
 void ChatScreen_Recreate(TextGroupWidget* group, UInt8 code) {
-	for (int i = 0; i < group->LinesCount; i++) {
-		string line = group.lines[i];
-		if (line == null) continue;
+	Int32 i, j;
+	for (i = 0; i < group->LinesCount; i++) {
+		String line = group.lines[i]; /* TODO: Can't use UNSAFE_GET here because SetText later*/
+		if (line.length == 0) continue;
 
-		for (int j = 0; j < line.Length - 1; j++) {
-			if (line[j] == '&' && line[j + 1] == code) {
-				group.SetText(i, line); break;
+		for (j = 0; j < line.length - 1; j++) {
+			if (line.buffer[j] == '&' && line.buffer[j + 1] == code) {
+				TextGroupWidget_SetText(group, i, &line); 
+				break;
 			}
 		}
 	}
 }
 
-void ChatScreen_ChatReceived(void* obj, UInt8 msgType) {
-	MessageType type = e.Type;
+void ChatScreen_ChatReceived(void* obj, String* msg, UInt8 type) {
 	if (Gfx_LostContext) return;
+	ChatScreen* screen = (ChatScreen*)obj;
 
-	if (type == MessageType.Normal) {
-		chatIndex++;
+	if (type == MSG_TYPE_NORMAL) {
+		screen->ChatIndex++;
 		if (Game_ChatLines == 0) return;
 
-		List<ChatLine> chat = game.Chat.Log;
-		normalChat.PushUpAndReplaceLast(chat[chatIndex + chatLines - 1].Text);
-	} else if (type >= MessageType.Status1 && type <= MessageType.Status3) {
-		status.SetText(2 + (int)(type - MessageType.Status1), e.Text);
-	} else if (type >= MessageType.BottomRight1 && type <= MessageType.BottomRight3) {
-		bottomRight.SetText(2 - (int)(type - MessageType.BottomRight1), e.Text);
-	} else if (type == MessageType.Announcement) {
-		announcement.SetText(e.Text);
-	} else if (type >= MessageType.ClientStatus1 && type <= MessageType.ClientStatus3) {
-		clientStatus.SetText((int)(type - MessageType.ClientStatus1), e.Text);
-		UpdateChatYOffset(true);
+		Int32 index = screen->ChatIndex + (Game_ChatLines - 1);
+		String msg = StringsBuffer_UNSAFE_Get(&Chat_Log, index);
+		normalChat.PushUpAndReplaceLast(&msg);
+	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
+		status.SetText(2 + (type - MSG_TYPE_STATUS_1), msg);
+	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
+		bottomRight.SetText(2 - (type - MSG_TYPE_BOTTOMRIGHT_1), msg);
+	} else if (type == MSG_TYPE_ANNOUNCEMENT) {
+		TextWidget_SetText(&screen->Announcement, msg);
+	} else if (type >= MSG_TYPE_CLIENTSTATUS_1 && type <= MSG_TYPE_CLIENTSTATUS_3) {
+		clientStatus.SetText((type - MSG_TYPE_CLIENTSTATUS_1), msg);
+		ChatScreen_UpdateChatYOffset(screen, true);
 	}
 }
 
-void ChatScreen_Dispose() {
-	ContextLost();
-	chatFont.Dispose();
-	chatUrlFont.Dispose();
-	announcementFont.Dispose();
+void ChatScreen_Free(GuiElement* elem) {
+	ChatScreen* screen = (ChatScreen*)elem;
+	ChatScreen_ContextLost(elem);
+	Platform_FreeFont(&screen->ChatFont);
+	Platform_FreeFont(&screen->ChatUrlFont);
+	Platform_FreeFont(&screen->AnnouncementFont);
 
-	game.Events.ChatReceived -= ChatReceived;
-	game.Events.ChatFontChanged -= ChatFontChanged;
-	game.Events.ColourCodeChanged -= ColourCodeChanged;
-	game.Graphics.ContextLost -= ContextLost;
-	game.Graphics.ContextRecreated -= ContextRecreated;
+	Event_UnregisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
+	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
+	Event_UnregisterInt32(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }
 
-void ChatScreen_ContextLost() {
-	if (HandlesAllInput) {
-		chatInInputBuffer = input.Text.ToString();
-		game.CursorVisible = false;
-	} else {
-		chatInInputBuffer = null;
+void ChatScreen_ContextLost(void* obj) {
+	ChatScreen* screen = (ChatScreen*)obj;
+	String_Clear(&screen->ChatInInput);
+	if (screen->Base.HandlesAllInput) {
+		String_AppendString(&screen->ChatInInput, &screen->Input.Text);
+		Game_SetCursorVisible(false);
 	}
 
-	normalChat.Dispose();
-	input.Dispose();
-	altText.Dispose();
-	status.Dispose();
-	bottomRight.Dispose();
-	clientStatus.Dispose();
-	announcement.Dispose();
+	Widget_Free(&screen->NormalChat);
+	Widget_Free(&screen->Input);
+	Widget_Free(&screen->AltText);
+	Widget_Free(&screen->Status);
+	Widget_Free(&screen->BottomRight);
+	Widget_Free(&screen->ClientStatus);
+	Widget_Free(&screen->Announcement);
 }
 
-void ChatScreen_ContextRecreated() {
-	ConstructWidgets();
-	SetInitialMessages();
+void ChatScreen_ContextRecreated(void* obj) {
+	ChatScreen* screen = (ChatScreen*)obj;
+	ChatScreen_ConstructWidgets(screen);
+	ChatScreen_SetInitialMessages(screen);
 }
 
-void ChatScreen_ChatFontChanged(void* obj) {
-	if (!game.Drawer2D.UseBitmappedChat) return;
+void ChatScreen_FontChanged(void* obj) {
+	if (!Drawer2D_UseBitmappedChat) return;
 	Recreate();
-	UpdateChatYOffset(true);
+	ChatScreen_UpdateChatYOffset(true);
 }
 
-void ChatScreen_OnResize(int width, int height) {
+void ChatScreen_OnResize(void* obj) {
 	bool active = altText != null && altText.Active;
 	Recreate();
 	altText.SetActive(active);
 }
 
-void ResetChat() {
-	normalChat.Dispose();
-	List<ChatLine> chat = game.Chat.Log;
-
-	for (int i = chatIndex; i < chatIndex + chatLines; i++) {
-		if (i >= 0 && i < chat.Count) {
-			normalChat.PushUpAndReplaceLast(chat[i].Text);
+void ResetChat(ChatScreen* screen) {
+	Widget_Free(&screen->NormalChat);
+	Int32 i;
+	for (i = screen->ChatIndex; i < screen->ChatIndex + Game_ChatLines; i++) {
+		if (i >= 0 && i < Chat_Log.Count) {
+			String msg = StringsBuffer_UNSAFE_Get(&Chat_Log, i);
+			normalChat.PushUpAndReplaceLast(&msg);
 		}
 	}
 }
@@ -1440,7 +1446,7 @@ void ChatScreen_AppendTextToInput(string text) {
 
 bool ChatScreen_HandlesKeyDown(Key key) {
 	suppressNextPress = false;
-	if (HandlesAllInput) { // text input bar
+	if (HandlesAllInput) { /* text input bar */
 		if (key == game.Mapping(KeyBind.SendChat) || key == Key_KeypadEnter || key == game.Mapping(KeyBind.PauseOrExit)) {
 			SetHandlesAllInput(false);
 			game.CursorVisible = false;
@@ -1452,16 +1458,16 @@ bool ChatScreen_HandlesKeyDown(Key key) {
 			input.EnterInput();
 			altText.SetActive(false);
 
-			// Do we need to move all chat down?
-			int resetIndex = game.Chat.Log.Count - chatLines;
+			/* Do we need to move all chat down? */
+			Int32 resetIndex = game.Chat.Log.Count - chatLines;
 			if (chatIndex != resetIndex) {
 				chatIndex = ClampIndex(resetIndex);
 				ResetChat();
 			}
 		} else if (key == Key_PageUp) {
-			ScrollHistoryBy(-chatLines);
+			ScrollHistoryBy(-Game_ChatLines);
 		} else if (key == Key_PageDown) {
-			ScrollHistoryBy(chatLines);
+			ScrollHistoryBy(+Game_ChatLines);
 		} else {
 			input.HandlesKeyDown(key);
 			UpdateAltTextY();
@@ -1469,7 +1475,7 @@ bool ChatScreen_HandlesKeyDown(Key key) {
 		return key < Key_F1 || key > Key_F35;
 	}
 
-	if (key == game.Mapping(KeyBind.Chat)) {
+	if (key == KeyBind_Get(KeyBind_Chat)) {
 		OpenTextInputBar("");
 	} else if (key == Key_Slash) {
 		OpenTextInputBar("/");
@@ -1482,8 +1488,10 @@ bool ChatScreen_HandlesKeyDown(Key key) {
 bool ChatScreen_HandlesKeyUp(Key key) {
 	if (!HandlesAllInput) return false;
 
-	if (game.Server.SupportsFullCP437 && key == game.Input.Keys[KeyBind.ExtInput]) {
-		if (game.window.Focused) altText.SetActive(!altText.Active);
+	if (ServerConnection_SupportsFullCP437 && key == KeyBind_Get(KeyBind_ExtInput)) {
+		if (Window_GetFocused()) {
+			altText.SetActive(!altText.Active);
+		}
 	}
 	return true;
 }
@@ -1491,13 +1499,13 @@ bool ChatScreen_HandlesKeyUp(Key key) {
 float chatAcc;
 bool ChatScreen_HandlesMouseScroll(float delta) {
 	if (!HandlesAllInput) return false;
-	int steps = Utils.AccumulateWheelDelta(ref chatAcc, delta);
+	Int32 steps = Utils.AccumulateWheelDelta(ref chatAcc, delta);
 	ScrollHistoryBy(-steps);
 	return true;
 }
 
-bool ChatScreen_HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
-	if (!HandlesAllInput || game.HideGui) return false;
+bool ChatScreen_HandlesMouseDown(Int32 mouseX, Int32 mouseY, MouseButton button) {
+	if (!HandlesAllInput || Game_HideGui) return false;
 
 	if (!normalChat.Bounds.Contains(mouseX, mouseY)) {
 		if (altText.Active && altText.Bounds.Contains(mouseX, mouseY)) {
@@ -1509,14 +1517,15 @@ bool ChatScreen_HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 		return true;
 	}
 
-	int height = normalChat.GetUsedHeight();
-	int y = normalChat.Y + normalChat.Height - height;
-	if (GuiElement.Contains(normalChat.X, y, normalChat.Width, height, mouseX, mouseY))
+	Int32 height = normalChat.GetUsedHeight();
+	Int32 y = normalChat.Y + normalChat.Height - height;
+	if (Gui_Contains(normalChat.X, y, normalChat.Width, height, mouseX, mouseY)) {
 		return HandlesChatClick(mouseX, mouseY);
+	}
 	return false;
 }
 
-bool ChatScreen_HandlesChatDown(int mouseX, int mouseY) {
+bool ChatScreen_HandlesChatDown(Int32 mouseX, Int32 mouseY) {
 	string text = normalChat.GetSelected(mouseX, mouseY);
 	if (text == null) return false;
 	string url = Utils.StripColours(text);
@@ -1546,33 +1555,33 @@ void ChatScreen_AppendUrl(Overlay urlOverlay, bool always) {
 	input.Append(urlOverlay.Metadata);
 }
 
-int ChatScreen_ClampIndex(int index) {
-	int maxIndex = game.Chat.Log.Count - chatLines;
-	int minIndex = Math.Min(0, maxIndex);
+Int32 ChatScreen_ClampIndex(Int32 index) {
+	Int32 maxIndex = game.Chat.Log.Count - chatLines;
+	Int32 minIndex = min(0, maxIndex);
 	Utils.Clamp(ref index, minIndex, maxIndex);
 	return index;
 }
 
-void ChatScreen_ScrollHistoryBy(int delta) {
-	int newIndex = ClampIndex(chatIndex + delta);
-	if (newIndex == chatIndex) return;
+void ChatScreen_ScrollHistoryBy(ChatScreen* screen, Int32 delta) {
+	Int32 newIndex = ChatScreen_ClampIndex(screen->ChatIndex + delta);
+	if (newIndex == screen->ChatIndex) return;
 
-	chatIndex = newIndex;
+	screen->ChatIndex = newIndex;
 	ResetChat();
 }
 
-int ChatScreen_InputUsedHeight {
-	get{ return altText.Height == 0 ? input.Height + 20 : (game.Height - altText.Y + 5); }
+Int32 ChatScreen_InputUsedHeight(ChatScreen* screen) {
+	return altText.Height == 0 ? input.Height + 20 : (game.Height - altText.Y + 5);
 }
 
-void ChatScreen_UpdateAltTextY() {
-	int height = Math.Max(input.Height + input.YOffset, hud.BottomOffset);
+void ChatScreen_UpdateAltTextY(ChatScreen* screen) {
+	Int32 height = Math.Max(input.Height + input.YOffset, hud.BottomOffset);
 	height += input.YOffset;
 	altText.texture.Y1 = game.Height - (height + altText.texture.Height);
 	altText.Y = altText.texture.Y;
 }
 
-void ChatScreen_SetHandlesAllInput(bool handles) {
-	HandlesAllInput = handles;
-	game.Gui.hudScreen.HandlesAllInput = handles;
+void ChatScreen_SetHandlesAllInput(ChatScreen* screen, bool handles) {
+	screen->Base.HandlesAllInput = handles;
+	Gui_HUD->HandlesAllInput     = handles;
 }

@@ -126,7 +126,7 @@ namespace ClassicalSharp.Gui.Screens {
 			DisposeWidgets(widgets);
 			widgets = new Widget[1];
 			widgets[0] = TextWidget.Create(game, "Texture ID reference sheet", titleFont)
-				.SetLocation(Anchor.Centre, Anchor.LeftOrTop, 0, yOffset - 30);
+				.SetLocation(Anchor.Centre, Anchor.Min, 0, yOffset - 30);
 		}
 	}
 }
