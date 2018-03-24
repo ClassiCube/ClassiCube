@@ -14,7 +14,7 @@ namespace ClassicalSharp.Network {
 		internal int ServerExtensionsCount;
 		internal bool sendHeldBlock, useMessageTypes;
 		internal int envMapVer = 2, blockDefsExtVer = 2;
-		internal bool needD3Fix, extEntityPos, twoWayPing;
+		internal bool needD3Fix, extEntityPos, twoWayPing, blockPerms;
 		
 		public void Reset(Game game) {
 			ServerExtensionsCount = 0;
@@ -38,6 +38,8 @@ namespace ClassicalSharp.Network {
 				useMessageTypes = true;
 			} else if (ext == "ExtPlayerList") {
 				net.UsingExtPlayerList = true;
+			} else if (ext == "BlockPermissions") {
+				blockPerms = true;
 			} else if (ext == "PlayerClick") {
 				net.UsingPlayerClick = true;
 			} else if (ext == "EnvMapAppearance") {

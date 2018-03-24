@@ -221,10 +221,11 @@ void HacksComp_ParseAllFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8*
 	}
 }
 
-void HacksComp_SetUserType(HacksComp* hacks, UInt8 value) {
+void HacksComp_SetUserType(HacksComp* hacks, UInt8 value, bool setBlockPerms) {
 	bool isOp = value >= 100 && value <= 127;
 	hacks->UserType = value;
 	hacks->CanSeeAllNames = isOp;
+	if (!setBlockPerms) return;
 
 	Block_CanPlace[BLOCK_BEDROCK] = isOp;
 	Block_CanDelete[BLOCK_BEDROCK] = isOp;
