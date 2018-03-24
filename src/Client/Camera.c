@@ -258,7 +258,7 @@ void Camera_CycleActive(void) {
 	if (Game_ClassicMode) return;
 
 	Int32 i = Camera_ActiveIndex;
-	i = (i + 1) % Array_NumElements(Camera_Cameras);
+	i = (i + 1) % Array_Elems(Camera_Cameras);
 
 	LocalPlayer* player = &LocalPlayer_Instance;
 	if (!player->Hacks.CanUseThirdPersonCamera || !player->Hacks.Enabled) { i = 0; }

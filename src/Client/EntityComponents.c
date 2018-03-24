@@ -286,14 +286,14 @@ void HacksComp_UpdateState(HacksComp* hacks) {
 
 void InterpComp_RemoveOldestRotY(InterpComp* interp) {
 	Int32 i;
-	for (i = 0; i < Array_NumElements(interp->RotYStates); i++) {
+	for (i = 0; i < Array_Elems(interp->RotYStates); i++) {
 		interp->RotYStates[i] = interp->RotYStates[i + 1];
 	}
 	interp->RotYCount--;
 }
 
 void InterpComp_AddRotY(InterpComp* interp, Real32 state) {
-	if (interp->RotYCount == Array_NumElements(interp->RotYStates)) {
+	if (interp->RotYCount == Array_Elems(interp->RotYStates)) {
 		InterpComp_RemoveOldestRotY(interp);
 	}
 	interp->RotYStates[interp->RotYCount] = state; interp->RotYCount++;
@@ -332,14 +332,14 @@ Real32 NetInterpComp_Next(Real32 next, Real32 cur) {
 
 void NetInterpComp_RemoveOldestState(NetInterpComp* interp) {
 	Int32 i;
-	for (i = 0; i < Array_NumElements(interp->States); i++) {
+	for (i = 0; i < Array_Elems(interp->States); i++) {
 		interp->States[i] = interp->States[i + 1];
 	}
 	interp->StatesCount--;
 }
 
 void NetInterpComp_AddState(NetInterpComp* interp, InterpState state) {
-	if (interp->StatesCount == Array_NumElements(interp->States)) {
+	if (interp->StatesCount == Array_Elems(interp->States)) {
 		NetInterpComp_RemoveOldestState(interp);
 	}
 	interp->States[interp->StatesCount] = state; interp->StatesCount++;

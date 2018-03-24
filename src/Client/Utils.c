@@ -75,3 +75,10 @@ UInt8 Utils_GetSkinType(Bitmap* bmp) {
 	UInt8 alpha = (UInt8)(pixel >> 24);
 	return alpha >= 127 ? SKIN_TYPE_64x64 : SKIN_TYPE_64x64_SLIM;
 }
+
+bool Utils_IsUrlPrefix(STRING_PURE String* str, Int32 index) {
+	String http  = String_FromConst("http://");
+	String https = String_FromConst("https://");
+	return String_IndexOfString(str, &http)  == index 
+		|| String_IndexOfString(str, &https) == index;
+}

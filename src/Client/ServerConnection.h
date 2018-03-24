@@ -57,6 +57,10 @@
 #define OPCODE_CPE_TWO_WAY_PING               43
 #define Opcode_CPE_SET_INVENTORY_ORDER        44
 
+UInt16 PingList_NextPingData(void);
+void PingList_Update(UInt16 data);
+Int32 PingList_AveragePingMs(void);
+
 bool ServerConnection_IsSinglePlayer;
 extern String ServerConnection_ServerName;
 extern String ServerConnection_ServerMOTD;

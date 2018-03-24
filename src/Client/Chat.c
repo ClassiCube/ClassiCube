@@ -162,7 +162,7 @@ bool Commands_IsCommandPrefix(STRING_PURE String* input) {
 }
 
 void Commands_Register(ChatCommandConstructor constructor) {
-	if (commands_count == Array_NumElements(commands_list)) {
+	if (commands_count == Array_Elems(commands_list)) {
 		ErrorHandler_Fail("Commands_Register - hit max client commands");
 	}
 
@@ -248,7 +248,7 @@ void Commands_Execute(STRING_PURE String* input) {
 	}
 
 	String args[10];
-	UInt32 argsCount = Array_NumElements(args);
+	UInt32 argsCount = Array_Elems(args);
 	String_UNSAFE_Split(&text, ' ', args, &argsCount);
 
 	ChatCommand* cmd = Commands_GetMatch(&args[0]);
@@ -267,7 +267,7 @@ void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 		if (cmd == NULL) return;
 
 		UInt32 i;
-		for (i = 0; i < Array_NumElements(cmd->Help); i++) {
+		for (i = 0; i < Array_Elems(cmd->Help); i++) {
 			String* help = &cmd->Help[i];
 			if (help->length == 0) continue;
 			Chat_Add(help);
@@ -284,7 +284,7 @@ void HelpCommand_Make(ChatCommand* cmd) {
 
 void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	UInt32 i;
-	for (i = 0; i < Array_NumElements(Gfx_ApiInfo); i++) {
+	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (Gfx_ApiInfo[i].length == 0) continue;
 		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
 		String msg = String_InitAndClearArray(msgBuffer);

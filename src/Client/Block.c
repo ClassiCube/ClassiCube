@@ -28,7 +28,7 @@ void Block_Reset(void) {
 }
 
 void Block_Init(void) {
-	Int32 count = Array_NumElements(Block_DefinedCustomBlocks);
+	Int32 count = Array_Elems(Block_DefinedCustomBlocks);
 	Int32 i;
 	for (i = 0; i < count; i++) {
 		Block_DefinedCustomBlocks[i] = 0;

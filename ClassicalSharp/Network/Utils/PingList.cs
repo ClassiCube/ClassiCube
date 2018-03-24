@@ -4,7 +4,7 @@ using System;
 namespace ClassicalSharp.Network {
 	public static class PingList {
 		
-		public struct PingEntry {
+		struct PingEntry {
 			public DateTime TimeSent, TimeReceived;
 			public ushort Data;
 			public double Latency { get {
@@ -12,8 +12,7 @@ namespace ClassicalSharp.Network {
 					return (TimeReceived - TimeSent).TotalMilliseconds * 0.5;
 				} }
 		}
-		
-		public static PingEntry[] Entries = new PingEntry[10];
+		static PingEntry[] Entries = new PingEntry[10];
 		
 		
 		public static ushort NextTwoWayPingData() {

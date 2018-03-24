@@ -951,7 +951,7 @@ void InputWidget_RemakeTexture(GuiElement* elem) {
 	}
 
 	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE + 2)];
-	for (i = 0; i < Array_NumElements(widget->Lines); i++) {
+	for (i = 0; i < Array_Elems(widget->Lines); i++) {
 		if (widget->Lines[i].length == 0) break;
 		args.Text = widget->Lines[i];
 		UInt8 lastCol = InputWidget_GetLastCol(widget, 0, i);
@@ -989,7 +989,7 @@ void InputWidget_OnPressedEnter(GuiElement* elem) {
 void InputWidget_Clear(InputWidget* widget) {
 	String_Clear(&widget->Text);
 	Int32 i;
-	for (i = 0; i < Array_NumElements(widget->Lines); i++) {
+	for (i = 0; i < Array_Elems(widget->Lines); i++) {
 		String_Clear(&widget->Lines[i]);
 	}
 
@@ -1911,7 +1911,7 @@ void PlayerListWidget_DeleteGroup(PlayerListWidget* widget, Int32* i) {
 
 void PlayerListWidget_AddGroup(PlayerListWidget* widget, UInt16 id, Int32* index) {
 	Int32 i;
-	for (i = Array_NumElements(widget->IDs) - 1; i > (*index); i--) {
+	for (i = Array_Elems(widget->IDs) - 1; i > (*index); i--) {
 		widget->IDs[i] = widget->IDs[i - 1];
 		widget->Textures[i] = widget->Textures[i - 1];
 	}
@@ -2134,7 +2134,7 @@ void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE S
 	Int32 y = widget->Y;
 	Gfx_DeleteTexture(&widget->Textures[0].ID);
 	UInt32 i;
-#define tgw_max_idx (Array_NumElements(widget->Textures) - 1)
+#define tgw_max_idx (Array_Elems(widget->Textures) - 1)
 
 	/* Move contents of X line to X - 1 line */
 	for (i = 0; i < tgw_max_idx; i++) {
@@ -2283,7 +2283,7 @@ void TextGroupWidget_Init(GuiElement* elem) {
 	widget->DefaultHeight = height;
 
 	UInt32 i;
-	for (i = 0; i < Array_NumElements(widget->Textures); i++) {
+	for (i = 0; i < Array_Elems(widget->Textures); i++) {
 		widget->Textures[i].Height = (UInt16)height;
 		widget->PlaceholderHeight[i] = true;
 	}
@@ -2346,7 +2346,7 @@ void SpecialInputWidget_UpdateColString(SpecialInputWidget* widget) {
 
 bool SpecialInputWidget_IntersectsHeader(SpecialInputWidget* widget, Int32 x, Int32 y) {
 	Int32 titleX = 0, i;
-	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
+	for (i = 0; i < Array_Elems(widget->Tabs); i++) {
 		Size2D size = widget->Tabs[i].TitleSize;
 		if (Gui_Contains(titleX, 0, size.Width, size.Height, x, y)) {
 			widget->SelectedIndex = i;
@@ -2411,7 +2411,7 @@ Int32 SpecialInputWidget_MeasureTitles(SpecialInputWidget* widget) {
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, false);
 
 	Int32 i;
-	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
+	for (i = 0; i < Array_Elems(widget->Tabs); i++) {
 		args.Text = widget->Tabs[i].Title;
 		widget->Tabs[i].TitleSize = Drawer2D_MeasureText(&args);
 		widget->Tabs[i].TitleSize.Width += SPECIAL_TITLE_SPACING;
@@ -2427,7 +2427,7 @@ void SpecialInputWidget_DrawTitles(SpecialInputWidget* widget, Bitmap* bmp) {
 	Int32 i;
 	PackedCol col_selected = PACKEDCOL_CONST(30, 30, 30, 200);
 	PackedCol col_inactive = PACKEDCOL_CONST( 0,  0,  0, 127);
-	for (i = 0; i < Array_NumElements(widget->Tabs); i++) {
+	for (i = 0; i < Array_Elems(widget->Tabs); i++) {
 		args.Text = widget->Tabs[i].Title;
 		PackedCol col = i == widget->SelectedIndex ? col_selected : col_inactive;
 		Size2D size = widget->Tabs[i].TitleSize;

@@ -318,11 +318,11 @@ void Entities_Init(void) {
 	Event_RegisterVoid(&ChatEvents_FontChanged,     NULL, Entities_ChatFontChanged);
 
 	Entities_NameMode = Options_GetEnum(OPTION_NAMES_MODE, NAME_MODE_HOVERED,
-		NameMode_Names, Array_NumElements(NameMode_Names));
+		NameMode_Names, Array_Elems(NameMode_Names));
 	if (Game_ClassicMode) Entities_NameMode = NAME_MODE_HOVERED;
 
 	Entities_ShadowMode = Options_GetEnum(OPTION_ENTITY_SHADOW, SHADOW_MODE_NONE,
-		ShadowMode_Names, Array_NumElements(ShadowMode_Names));
+		ShadowMode_Names, Array_Elems(ShadowMode_Names));
 	if (Game_ClassicMode) Entities_ShadowMode = SHADOW_MODE_NONE;
 }
 

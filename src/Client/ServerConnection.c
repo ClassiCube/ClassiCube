@@ -8,6 +8,7 @@
 #include "Event.h"
 #include "AsyncDownloader.h"
 #include "Player.h"
+#include "Funcs.h"
 
 UInt8 ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerName = String_FromEmptyArray(ServerConnection_ServerNameBuffer);
@@ -23,6 +24,62 @@ void ServerConnection_ResetState(void) {
 	ServerConnection_SupportsPlayerClick = false;
 	ServerConnection_SupportsPartialMessages = false;
 	ServerConnection_SupportsFullCP437 = false;
+}
+
+typedef struct PingEntry_ {
+	Int64 TimeSent, TimeReceived;
+	UInt16 Data;
+} PingEntry;
+PingEntry PingList_Entries[10];
+
+UInt16 PingList_Set(Int32 i, UInt16 prev) {
+	DateTime now = Platform_CurrentUTCTime();
+	PingList_Entries[i].Data = (UInt16)(prev + 1);
+	PingList_Entries[i].TimeSent = DateTime_TotalMs(&now);
+	PingList_Entries[i].TimeReceived = 0;
+	return (UInt16)(prev + 1);
+}
+
+UInt16 PingList_NextPingData(void) {
+	/* Find free ping slot */
+	Int32 i;
+	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
+		if (PingList_Entries[i].TimeSent != 0) continue;
+		UInt16 prev = i > 0 ? PingList_Entries[i - 1].Data : 0;
+		return PingList_Set(i, prev);
+	}
+
+	/* Remove oldest ping slot */
+	for (i = 0; i < Array_Elems(PingList_Entries) - 1; i++) {
+		PingList_Entries[i] = PingList_Entries[i + 1];
+	}
+	Int32 j = Array_Elems(PingList_Entries) - 1;
+	return PingList_SetTwoWayPing(j, PingList_Entries[j].Data);
+}
+
+void PingList_Update(UInt16 data) {
+	Int32 i;
+	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
+		if (PingList_Entries[i].Data != data) continue;
+		DateTime now = Platform_CurrentUTCTime();
+		PingList_Entries[i].TimeReceived = DateTime_TotalMs(&now);
+		return;
+	}
+}
+
+Int32 PingList_AveragePingMs(void) {
+	Real64 totalMs = 0.0;
+	Int32 measures = 0;
+	Int32 i;
+	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
+		PingEntry entry = PingList_Entries[i];
+		if (entry.TimeSent == 0 || entry.TimeReceived == 0) continue;
+
+		/* Half, because received->reply time is actually twice time it takes to send data */
+		totalMs += (entry.TimeReceived - entry.TimeSent) * 0.5;
+		measures++;
+	}
+	return measures == 0 ? 0 : (Int32)(totalMs / measures);
 }
 
 

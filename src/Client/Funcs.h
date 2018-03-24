@@ -8,7 +8,7 @@
 
 #define min(x, y) ((x) < (y) ? (x) : (y))
 #define max(x, y) ((x) > (y) ? (x) : (y))
-#define Array_NumElements(arr) (sizeof(arr) / sizeof(arr[0]))
+#define Array_Elems(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define QuickSort_Swap_Maybe()\
 if (i <= j) {\

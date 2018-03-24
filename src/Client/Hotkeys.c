@@ -131,7 +131,7 @@ void Hotkeys_Init(void) {
 		String strText      = String_UNSAFE_SubstringAt(&value, valueSplit + 1);
 
 		/* Then try to parse the key and value */
-		Key hotkey = Utils_ParseEnum(&strKey, Key_Unknown, Key_Names, Array_NumElements(Key_Names));
+		Key hotkey = Utils_ParseEnum(&strKey, Key_Unknown, Key_Names, Array_Elems(Key_Names));
 		UInt8 flags; bool moreInput;
 		if (hotkey == Key_Unknown || strText.length == 0 || !Convert_TryParseUInt8(&strFlags, &flags) 
 			|| !Convert_TryParseBool(&strMoreInput, &moreInput)) { continue; }

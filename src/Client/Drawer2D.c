@@ -26,7 +26,7 @@ Int32 Drawer2D_Widths[256];
 void Drawer2D_CalculateTextWidths(void) {
 	Int32 width = Drawer2D_FontBitmap.Width, height = Drawer2D_FontBitmap.Height;
 	Int32 i;
-	for (i = 0; i < Array_NumElements(Drawer2D_Widths); i++) {
+	for (i = 0; i < Array_Elems(Drawer2D_Widths); i++) {
 		Drawer2D_Widths[i] = 0;
 	}
 

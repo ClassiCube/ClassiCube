@@ -154,7 +154,7 @@ void Animations_ReadDescription(Stream* stream) {
 	while (Stream_ReadLine(stream, &line)) {
 		if (line.length == 0 || line.buffer[0] == '#') continue;
 		AnimationData data;
-		UInt32 partsCount = Array_NumElements(parts);	
+		UInt32 partsCount = Array_Elems(parts);	
 		String_UNSAFE_Split(&line, ' ', parts, &partsCount);
 
 		if (partsCount < 7) {
@@ -182,7 +182,7 @@ void Animations_ReadDescription(Stream* stream) {
 			Animations_LogFail(&line, "Invalid anim tick delay"); continue;
 		}
 
-		if (anims_count == Array_NumElements(anims_list)) {
+		if (anims_count == Array_Elems(anims_list)) {
 			ErrorHandler_Fail("Too many animations in animations.txt");
 		}
 		anims_list[anims_count++] = data;

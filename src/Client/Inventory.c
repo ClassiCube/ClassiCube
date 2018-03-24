@@ -95,10 +95,10 @@ BlockID Inventory_DefaultMapping(Int32 i) {
 
 void Inventory_SetDefaultMapping(void) {
 	Int32 i;
-	for (i = 0; i < Array_NumElements(Inventory_Map); i++) {
+	for (i = 0; i < Array_Elems(Inventory_Map); i++) {
 		Inventory_Map[i] = (BlockID)i;
 	}
-	for (i = 0; i < Array_NumElements(Inventory_Map); i++) {
+	for (i = 0; i < Array_Elems(Inventory_Map); i++) {
 		BlockID mapping = Inventory_DefaultMapping(i);
 		if (Game_PureClassic && Inventory_IsHackBlock(mapping)) {
 			mapping = BLOCK_AIR;
@@ -123,7 +123,7 @@ void Inventory_AddDefault(BlockID block) {
 
 void Inventory_Reset(BlockID block) {
 	Int32 i;
-	for (i = 0; i < Array_NumElements(Inventory_Map); i++) {
+	for (i = 0; i < Array_Elems(Inventory_Map); i++) {
 		if (Inventory_Map[i] != block) continue;
 		Inventory_Map[i] = Inventory_DefaultMapping(i);
 	}
@@ -131,7 +131,7 @@ void Inventory_Reset(BlockID block) {
 
 void Inventory_Remove(BlockID block) {
 	Int32 i;
-	for (i = 0; i < Array_NumElements(Inventory_Map); i++) {
+	for (i = 0; i < Array_Elems(Inventory_Map); i++) {
 		if (Inventory_Map[i] != block) continue;
 		Inventory_Map[i] = BLOCK_AIR;
 	}
@@ -142,11 +142,11 @@ void Inventory_PushToFreeSlots(Int32 i) {
 	Int32 j;
 	/* The slot was already pushed out in the past
 	TODO: find a better way of fixing this */
-	for (j = 1; j < Array_NumElements(Inventory_Map); j++) {
+	for (j = 1; j < Array_Elems(Inventory_Map); j++) {
 		if (j != i && Inventory_Map[j] == block) return;
 	}
 
-	for (j = block; j < Array_NumElements(Inventory_Map); j++) {
+	for (j = block; j < Array_Elems(Inventory_Map); j++) {
 		if (Inventory_Map[j] == BLOCK_AIR) {
 			Inventory_Map[j] = block; return;
 		}

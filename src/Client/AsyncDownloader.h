@@ -15,14 +15,14 @@
 
 typedef struct AsyncRequest_ {
 	UInt8 URL[String_BufferSize(STRING_SIZE)];
-	UInt8 Identifier[String_BufferSize(STRING_SIZE)];
+	UInt8 ID[String_BufferSize(STRING_SIZE)];
 
 	DateTime TimeAdded;
 	DateTime TimeDownloaded;
 	UInt8 RequestType;
 	void* Data;
 
-	DateTime LastModified;   /* Time item ached at (if at all) */
+	DateTime LastModified;   /* Time item cached at (if at all) */
 	UInt8 Etag[String_BufferSize(STRING_SIZE)]; /* ETag of cached item (if any) */
 } AsyncRequest;
 
@@ -35,4 +35,5 @@ void AsyncDownloader_Download(STRING_PURE  String* url, bool priority, UInt8 typ
 void AsyncDownloader_Download2(STRING_PURE String* url, bool priority, UInt8 type, STRING_PURE String* identifier, DateTime* lastModified, STRING_PURE String* etag);
 void AsyncDownloader_Free(void);
 bool AsyncDownloader_Get(STRING_PURE String* identifier, AsyncRequest* item);
+void AsyncDownloader_GetInProgress(AsyncRequest* request, Int32* progress);
 #endif
