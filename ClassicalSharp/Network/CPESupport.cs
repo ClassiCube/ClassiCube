@@ -79,6 +79,10 @@ namespace ClassicalSharp.Network {
 				
 				net.reader.ExtendedBlocks = true;
 				net.writer.ExtendedBlocks = true;
+				if (BlockInfo.Count < 768) {
+					BlockInfo.Allocate(768);
+					BlockInfo.Reset();
+				}
 			}
 			#endif
 		}

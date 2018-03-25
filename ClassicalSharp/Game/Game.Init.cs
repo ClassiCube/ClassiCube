@@ -71,11 +71,7 @@ namespace ClassicalSharp {
 			WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
 			Events.TextureChanged += TextureChangedCore;
 			
-			#if USE16_BIT
-			BlockInfo.Allocate(768);
-			#else
 			BlockInfo.Allocate(256);
-			#endif
 			BlockInfo.Init();
 			
 			ModelCache = new ModelCache(this);
