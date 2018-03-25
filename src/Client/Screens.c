@@ -1652,3 +1652,8 @@ IGameComponent HUDScreen_MakeComponent(void) {
 	comp.Ready = HUDScreen_Ready;
 	return comp;
 }
+
+void HUDScreen_OpenInput(Screen* hud, STRING_PURE String* text) {
+	Screen* chat = ((HUDScreen*)hud)->Chat;
+	ChatScreen_OpenInput((ChatScreen*)chat, text);
+}

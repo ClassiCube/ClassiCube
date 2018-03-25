@@ -104,11 +104,11 @@ void Gui_Init(void) {
 }
 
 void Gui_Reset(void) {
-	UInt32 i;
-	for (i = 0; i < Gui_OverlayCount; i++) {
+	Int32 i;
+	for (i = 0; i < Gui_OverlaysCount; i++) {
 		Gui_Overlays[i]->Base.Free(&Gui_Overlays[i]->Base);
 	}
-	Gui_OverlayCount = 0;
+	Gui_OverlaysCount = 0;
 }
 
 void Gui_Free(void) {
@@ -134,7 +134,7 @@ IGameComponent Gui_MakeGameComponent(void) {
 }
 
 Screen* Gui_GetActiveScreen(void) {
-	return Gui_OverlayCount > 0 ? Gui_Overlays[0] : Gui_GetUnderlyingScreen();
+	return Gui_OverlaysCount > 0 ? Gui_Overlays[0] : Gui_GetUnderlyingScreen();
 }
 
 Screen* Gui_GetUnderlyingScreen(void) {
@@ -167,14 +167,14 @@ void Gui_RefreshHud(void) {
 }
 
 void Gui_ShowOverlay(Screen* overlay) {
-	if (Gui_OverlayCount == GUI_MAX_OVERLAYS) {
+	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		ErrorHandler_Fail("Cannot have more than 40 overlays");
 	}
 	bool visible = Game_GetCursorVisible();
-	if (Gui_OverlayCount == 0) Game_SetCursorVisible(true);
+	if (Gui_OverlaysCount == 0) Game_SetCursorVisible(true);
 
-	Gui_Overlays[Gui_OverlayCount++] = overlay;
-	if (Gui_OverlayCount == 1) Game_SetCursorVisible(visible); /* Save cursor visibility state */
+	Gui_Overlays[Gui_OverlaysCount++] = overlay;
+	if (Gui_OverlaysCount == 1) Game_SetCursorVisible(visible); /* Save cursor visibility state */
 	overlay->Base.Init(&overlay->Base);
 }
 
@@ -194,7 +194,7 @@ void Gui_RenderGui(Real64 delta) {
 		Gui_HUD->Base.Render(&Gui_HUD->Base, delta);
 	}
 
-	if (Gui_OverlayCount > 0) {
+	if (Gui_OverlaysCount > 0) {
 		Gui_Overlays[0]->Base.Render(&Gui_Overlays[0]->Base, delta);
 	}
 	GfxCommon_Mode3D();
@@ -206,8 +206,8 @@ void Gui_OnResize(void) {
 	}
 	Gui_HUD->OnResize(&Gui_HUD->Base);
 
-	UInt32 i;
-	for (i = 0; i < Gui_OverlayCount; i++) {
+	Int32 i;
+	for (i = 0; i < Gui_OverlaysCount; i++) {
 		Gui_Overlays[i]->OnResize(&Gui_Overlays[i]->Base);
 	}
 }

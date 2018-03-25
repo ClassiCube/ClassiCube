@@ -207,6 +207,7 @@
     <ClInclude Include="Hotkeys.h" />
     <ClInclude Include="IModel.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Intersection.h" />
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="IsometricDrawer.h" />
@@ -280,6 +281,7 @@
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
     <ClCompile Include="Hotkeys.c" />
+    <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="MapGenerator.c" />
     <ClCompile Include="FrustumCulling.c" />

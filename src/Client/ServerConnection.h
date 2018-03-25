@@ -2,10 +2,9 @@
 #define CC_SERVERCONNECTION_H
 #include "Typedefs.h"
 #include "String.h"
-#include "Vectors.h"
 #include "Input.h"
 #include "GameStructs.h"
-#include "PickedPosRenderer.h"
+#include "Picking.h"
 /* Represents a connection to either a singleplayer or multiplayer server.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

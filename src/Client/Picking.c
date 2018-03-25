@@ -6,6 +6,7 @@
 #include "World.h"
 #include "Funcs.h"
 #include "Platform.h"
+#include "BlockID.h"
 
 Real32 PickedPos_dist;
 void PickedPos_TestAxis(PickedPos* pos, Real32 dAxis, Face fAxis) {

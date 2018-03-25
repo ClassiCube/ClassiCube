@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static bool CheckIsFree(Game game, BlockID block) {
+		static bool CheckIsFree(Game game, BlockID block) {
 			Vector3 pos = (Vector3)game.SelectedPos.TranslatedPos;
 			LocalPlayer p = game.LocalPlayer;
 			
@@ -99,21 +99,20 @@ namespace ClassicalSharp {
 		static bool PushbackPlace(Game game, AABB blockBB) {
 			LocalPlayer p = game.LocalPlayer;
 			Vector3 curPos = p.Position, adjPos = p.Position;
-
 			
 			// Offset position by the closest face
-			PickedPos selected = game.SelectedPos;
-			if (selected.Face == BlockFace.XMax) {
+			BlockFace closestFace = game.SelectedPos.Face;
+			if (closestFace == BlockFace.XMax) {
 				adjPos.X = blockBB.Max.X + 0.5f;
-			} else if (selected.Face == BlockFace.ZMax) {
+			} else if (closestFace == BlockFace.ZMax) {
 				adjPos.Z = blockBB.Max.Z + 0.5f;
-			} else if (selected.Face == BlockFace.XMin) {
+			} else if (closestFace == BlockFace.XMin) {
 				adjPos.X = blockBB.Min.X - 0.5f;
-			} else if (selected.Face == BlockFace.ZMin) {
+			} else if (closestFace == BlockFace.ZMin) {
 				adjPos.Z = blockBB.Min.Z - 0.5f;
-			} else if (selected.Face == BlockFace.YMax) {
+			} else if (closestFace == BlockFace.YMax) {
 				adjPos.Y = blockBB.Min.Y + 1 + Entity.Adjustment;
-			} else if (selected.Face == BlockFace.YMin) {
+			} else if (closestFace == BlockFace.YMin) {
 				adjPos.Y = blockBB.Min.Y - p.Size.Y - Entity.Adjustment;
 			}
 

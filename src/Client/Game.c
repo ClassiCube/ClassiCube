@@ -39,7 +39,7 @@ bool Game_GetCursorVisible(void) { return Game_CursorVisible; }
 void Game_SetCursorVisible(bool visible) {
 	/* Defer mouse visibility changes */
 	Game_realCursorVisible = visible;
-	if (Gui_OverlayCount > 0) return;
+	if (Gui_OverlaysCount > 0) return;
 
 	/* Only set the value when it has changed */
 	if (Game_CursorVisible == visible) return;

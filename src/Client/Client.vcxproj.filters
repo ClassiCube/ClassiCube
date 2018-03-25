@@ -381,6 +381,9 @@
     <ClInclude Include="HeldBlockRenderer.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="InputHandler.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -598,6 +601,9 @@
     </ClCompile>
     <ClCompile Include="HeldBlockRenderer.c">
       <Filter>Source Files\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="InputHandler.c">
+      <Filter>Source Files\Game</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
