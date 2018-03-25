@@ -68,7 +68,7 @@ typedef struct HacksComponent_ {
 void HacksComp_Init(HacksComp* hacks);
 bool HacksComp_CanJumpHigher(HacksComp* hacks);
 bool HacksComp_Floating(HacksComp* hacks);
-void HacksComp_SetUserType(HacksComp* hacks, UInt8 value);
+void HacksComp_SetUserType(HacksComp* hacks, UInt8 value, bool setBlockPerms);
 void HacksComp_CheckConsistency(HacksComp* hacks);
 void HacksComp_UpdateState(HacksComp* hacks);
 

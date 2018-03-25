@@ -227,12 +227,12 @@ void HacksComp_SetUserType(HacksComp* hacks, UInt8 value, bool setBlockPerms) {
 	hacks->CanSeeAllNames = isOp;
 	if (!setBlockPerms) return;
 
-	Block_CanPlace[BLOCK_BEDROCK] = isOp;
-	Block_CanDelete[BLOCK_BEDROCK] = isOp;
-	Block_CanPlace[BLOCK_WATER] = isOp;
+	Block_CanPlace[BLOCK_BEDROCK]     = isOp;
+	Block_CanDelete[BLOCK_BEDROCK]    = isOp;
+	Block_CanPlace[BLOCK_WATER]       = isOp;
 	Block_CanPlace[BLOCK_STILL_WATER] = isOp;
-	Block_CanPlace[BLOCK_LAVA] = isOp;
-	Block_CanPlace[BLOCK_STILL_LAVA] = isOp;
+	Block_CanPlace[BLOCK_LAVA]        = isOp;
+	Block_CanPlace[BLOCK_STILL_LAVA]  = isOp;
 }
 
 void HacksComp_CheckConsistency(HacksComp* hacks) {

@@ -32,7 +32,7 @@ namespace ClassicalSharp {
 		protected internal int width, length, height, sidesLevel, edgeLevel;
 		protected int maxX, maxY, maxZ, chunkEndX, chunkEndZ;
 		protected int cIndex;
-		protected BlockRaw* chunk;
+		protected BlockID* chunk;
 		protected byte* counts;
 		protected int* bitFlags;
 		protected bool useBitFlags;
@@ -40,14 +40,31 @@ namespace ClassicalSharp {
 		bool BuildChunk(int x1, int y1, int z1, ref bool allAir) {
 			light = game.Lighting;
 			PreStretchTiles(x1, y1, z1);
-			BlockRaw* chunkPtr = stackalloc BlockRaw[extChunkSize3]; chunk = chunkPtr;
+			BlockID* chunkPtr = stackalloc BlockID[extChunkSize3]; chunk = chunkPtr;
 			byte* countsPtr = stackalloc byte[chunkSize3 * Side.Sides]; counts = countsPtr;
 			int* bitsPtr = stackalloc int[extChunkSize3]; bitFlags = bitsPtr;
+			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockID));
 			
-			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockRaw));
-			if (ReadChunkData(x1, y1, z1, ref allAir)) return false;
+			bool allSolid = false;
+			fixed (BlockRaw* mapPtr = map.blocks1) {
+				#if USE_16_BIT
+				if (BlockInfo.MaxDefined >= 256) {
+					ReadChunkData_16Bit(x1, y1, z1, mapPtr, ref allAir, ref allSolid);
+				} else {
+					ReadChunkData_8Bit(x1, y1, z1, mapPtr, ref allAir, ref allSolid);
+				}
+				#else
+				ReadChunkData_8Bit(x1, y1, z1, mapPtr, ref allAir, ref allSolid);
+				#endif
+				
+				if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + chunkSize >= width ||
+				    y1 + chunkSize >= height || z1 + chunkSize >= length) allSolid = false;
+				
+				if (allAir || allSolid) return false;
+				light.LightHint(x1 - 1, z1 - 1, mapPtr);
+			}
+			
 			MemUtils.memset((IntPtr)countsPtr, 1, 0, chunkSize3 * Side.Sides);
-			
 			int xMax = Math.Min(width, x1 + chunkSize);
 			int yMax = Math.Min(height, y1 + chunkSize);
 			int zMax = Math.Min(length, z1 + chunkSize);
@@ -75,10 +92,41 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		bool ReadChunkData(int x1, int y1, int z1, ref bool outAllAir) { // only assign this variable once
+		void ReadChunkData_8Bit(int x1, int y1, int z1, BlockRaw* mapPtr, ref bool outAllAir, ref bool outAllSolid) { // only assign this variable once
 			bool allAir = true, allSolid = true;
-			fixed (BlockRaw* mapPtr = map.blocks1) {
-				
+			for (int yy = -1; yy < 17; yy++) {
+				int y = yy + y1;
+				if (y < 0) continue;
+				if (y >= height) break;
+				for (int zz = -1; zz < 17; zz++) {
+					int z = zz + z1;
+					if (z < 0) continue;
+					if (z >= length) break;
+					
+					int index = (y * length + z) * width + (x1 - 1 - 1);
+					int chunkIndex = (yy + 1) * extChunkSize2 + (zz + 1) * extChunkSize + (-1 + 1) - 1;
+					
+					for (int xx = -1; xx < 17; xx++) {
+						int x = xx + x1;
+						index++;
+						chunkIndex++;
+						if (x < 0) continue;
+						if (x >= width) break;
+						BlockID rawBlock = mapPtr[index];
+						
+						allAir = allAir && BlockInfo.Draw[rawBlock] == DrawType.Gas;
+						allSolid = allSolid && BlockInfo.FullOpaque[rawBlock];
+						chunk[chunkIndex] = rawBlock;
+					}
+				}
+				outAllAir = allAir; outAllSolid = allSolid;
+			}
+		}
+		
+		#if USE_16_BIT
+		void ReadChunkData_16Bit(int x1, int y1, int z1, BlockRaw* mapPtr, ref bool outAllAir, ref bool outAllSolid) { // only assign this variable once
+			bool allAir = true, allSolid = true;
+			fixed (BlockRaw* mapPtr2 = map.blocks2) {
 				for (int yy = -1; yy < 17; yy++) {
 					int y = yy + y1;
 					if (y < 0) continue;
@@ -97,24 +145,18 @@ namespace ClassicalSharp {
 							chunkIndex++;
 							if (x < 0) continue;
 							if (x >= width) break;
-							BlockRaw rawBlock = mapPtr[index];
+							BlockID rawBlock = (BlockID)(mapPtr[index] | (mapPtr2[index] << 8));
 							
 							allAir = allAir && BlockInfo.Draw[rawBlock] == DrawType.Gas;
 							allSolid = allSolid && BlockInfo.FullOpaque[rawBlock];
 							chunk[chunkIndex] = rawBlock;
 						}
 					}
+					outAllAir = allAir; outAllSolid = allSolid;
 				}
-				outAllAir = allAir;
-				
-				if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + chunkSize >= width ||
-				    y1 + chunkSize >= height || z1 + chunkSize >= length) allSolid = false;
-				
-				if (allAir || allSolid) return true;
-				light.LightHint(x1 - 1, z1 - 1, mapPtr);
-				return false;
 			}
 		}
+		#endif
 		
 		public void MakeChunk(ChunkInfo info) {
 			int x = info.CentreX - 8, y = info.CentreY - 8, z = info.CentreZ - 8;

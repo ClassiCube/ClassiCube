@@ -326,7 +326,7 @@ namespace ClassicalSharp {
 		static void CalcCulling(BlockID block, BlockID other) {
 			if (!IsHidden(block, other)) {
 				// Block is not hidden at all, so we can just entirely skip per-face check
-				BlockInfo.hidden[(block * Count) | other] = 0;
+				BlockInfo.hidden[(block * Count) + other] = 0;
 			} else {
 				Vector3 bMin = MinBB[block], bMax = MaxBB[block];
 				Vector3 oMin = MinBB[other], oMax = MaxBB[other];
@@ -348,7 +348,7 @@ namespace ClassicalSharp {
 				f |= occludedZ && oMin.Z == 0 && bMax.Z == 1 ? (1 << Side.Back)   : 0;
 				f |= occludedY && (bothLiquid || (oMax.Y == 1 && bMin.Y == 0)) ? (1 << Side.Bottom) : 0;
 				f |= occludedY && (bothLiquid || (oMin.Y == 0 && bMax.Y == 1)) ? (1 << Side.Top)    : 0;
-				BlockInfo.hidden[(block * Count) | other] = (byte)f;
+				BlockInfo.hidden[(block * Count) + other] = (byte)f;
 			}
 		}
 		
@@ -376,7 +376,7 @@ namespace ClassicalSharp {
 		/// <summary> Returns whether the face at the given face of the block
 		/// should be drawn with the neighbour 'other' present on the other side of the face. </summary>
 		public static bool IsFaceHidden(BlockID block, BlockID other, int tileSide) {
-			return (hidden[(block * Count) | other] & (1 << tileSide)) != 0;
+			return (hidden[(block * Count) + other] & (1 << tileSide)) != 0;
 		}
 	}
 }
