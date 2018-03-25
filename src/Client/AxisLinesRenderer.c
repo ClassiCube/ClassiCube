@@ -42,7 +42,7 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	}
 
 	Gfx_SetTexturing(false);
-	Vector3 P = LocalPlayer_Instance.Base.Base.Position; P.Y += 0.05f;
+	Vector3 P = LocalPlayer_Instance.Base.Position; P.Y += 0.05f;
 	VertexP3fC4b vertices[axisLines_numVertices];
 	VertexP3fC4b* ptr = vertices;
 

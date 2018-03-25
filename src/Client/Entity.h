@@ -21,7 +21,7 @@ typedef struct IModel_ IModel; /* Forward declaration */
 #define ENTITIES_MAX_COUNT 256
 #define ENTITIES_SELF_ID 255
 
-UInt32 Entities_NameMode;
+Int32 Entities_NameMode;
 #define NAME_MODE_NONE         0
 #define NAME_MODE_HOVERED      1
 #define NAME_MODE_ALL          2
@@ -29,7 +29,7 @@ UInt32 Entities_NameMode;
 #define NAME_MODE_ALL_UNSCALED 4
 extern const UInt8* NameMode_Names[5];
 
-UInt32 Entities_ShadowMode;
+Int32 Entities_ShadowMode;
 #define SHADOW_MODE_NONE          0
 #define SHADOW_MODE_SNAP_TO_BLOCK 1
 #define SHADOW_MODE_CIRCLE        2

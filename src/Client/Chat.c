@@ -353,7 +353,7 @@ void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 		String model = String_InitAndClearArray(modelBuffer);
 		String_AppendString(&model, &args[1]);
 		String_MakeLowercase(&model);
-		Entity_SetModel(&LocalPlayer_Instance.Base.Base, &model);
+		Entity_SetModel(&LocalPlayer_Instance.Base, &model);
 	}
 }
 
@@ -485,7 +485,7 @@ void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 
 		Vector3 v = { x, y, z };
 		LocationUpdate update; LocationUpdate_MakePos(&update, v, false);
-		Entity* entity = &LocalPlayer_Instance.Base.Base;
+		Entity* entity = &LocalPlayer_Instance.Base;
 		entity->VTABLE->SetLocation(entity, &update, false);
 	}
 }

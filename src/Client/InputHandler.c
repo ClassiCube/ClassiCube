@@ -37,7 +37,7 @@ bool InputHandler_IsMousePressed(MouseButton button) {
 void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
 	/* defer getting the targeted entity as it's a costly operation */
 	if (input_pickingId == -1) {
-		Entity* p = &LocalPlayer_Instance.Base.Base;
+		Entity* p = &LocalPlayer_Instance.Base;
 		input_pickingId = Entities_GetCloset(p);
 	}
 
@@ -127,7 +127,7 @@ bool InputHandler_SetFOV(Int32 fov, bool setZoom) {
 
 bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
 	if (!KeyBind_IsPressed(KeyBind_ZoomScrolling)) return false;
-	HacksComp* h = &LocalPlayer_Instance.Hacks;
+	HacksComp* h = &LocalPlayer_Instance;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
 
 	if (input_fovIndex == -1.0f) input_fovIndex = Game_ZoomFov;
@@ -186,7 +186,7 @@ bool InputHandler_HandleCoreKey(Key key) {
 
 bool InputHandler_TouchesSolid(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
 bool InputHandler_PushbackPlace(AABB* blockBB) {
-	Entity* p = &LocalPlayer_Instance.Base.Base;
+	Entity* p = &LocalPlayer_Instance.Base;
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	Vector3 curPos = p->Position, adjPos = p->Position;
 
@@ -244,7 +244,7 @@ bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 
 bool InputHandler_CheckIsFree(BlockID block) {
 	Vector3 pos; Vector3I_ToVector3(&pos, &Game_SelectedPos.TranslatedPos);
-	Entity* p = &LocalPlayer_Instance.Base.Base;
+	Entity* p = &LocalPlayer_Instance.Base;
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 
 	if (Block_Collide[block] != COLLIDE_SOLID) return true;

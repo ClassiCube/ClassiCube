@@ -366,7 +366,7 @@ bool Block_IsHidden(BlockID block, BlockID other) {
 void Block_CalcCulling(BlockID block, BlockID other) {
 	if (!Block_IsHidden(block, other)) {
 		/* Block is not hidden at all, so we can just entirely skip per-face check */
-		Block_Hidden[(block * BLOCK_COUNT) | other] = 0;
+		Block_Hidden[(block * BLOCK_COUNT) + other] = 0;
 	} else {
 		Vector3 bMin = Block_MinBB[block], bMax = Block_MaxBB[block];
 		Vector3 oMin = Block_MinBB[other], oMax = Block_MaxBB[other];
@@ -388,12 +388,12 @@ void Block_CalcCulling(BlockID block, BlockID other) {
 		f |= occludedZ && oMin.Z == 0.0f && bMax.Z == 1.0f ? (1 << FACE_ZMAX) : 0;
 		f |= occludedY && (bothLiquid || (oMax.Y == 1.0f && bMin.Y == 0.0f)) ? (1 << FACE_YMIN) : 0;
 		f |= occludedY && (bothLiquid || (oMin.Y == 0.0f && bMax.Y == 1.0f)) ? (1 << FACE_YMAX) : 0;
-		Block_Hidden[(block * BLOCK_COUNT) | other] = (UInt8)f;
+		Block_Hidden[(block * BLOCK_COUNT) + other] = (UInt8)f;
 	}
 }
 
 bool Block_IsFaceHidden(BlockID block, BlockID other, Face face) {
-	return (Block_Hidden[(block * BLOCK_COUNT) | other] & (1 << face)) != 0;
+	return (Block_Hidden[(block * BLOCK_COUNT) + other] & (1 << face)) != 0;
 }
 
 void Block_UpdateCullingAll(void) {
@@ -454,7 +454,7 @@ BlockID AutoRotate_RotateVertical(BlockID block, String* name, Vector3 offset) {
 BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
 	/* Fence type blocks */
 	if (AutoRotate_Find(BLOCK_INVALID, name, "-UD") == BLOCK_INVALID) {
-		Real32 headY = LocalPlayer_Instance.Base.Base.HeadY;
+		Real32 headY = LocalPlayer_Instance.Base.HeadY;
 		headY = LocationUpdate_Clamp(headY);
 
 		if (headY < 45.0f || (headY >= 135.0f && headY < 225.0f) || headY > 315.0f) {
@@ -476,7 +476,7 @@ BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
 }
 
 BlockID AutoRotate_RotateDirection(BlockID block, String* name, Vector3 offset) {
-	Real32 headY = LocalPlayer_Instance.Base.Base.HeadY;
+	Real32 headY = LocalPlayer_Instance.Base.HeadY;
 	headY = LocationUpdate_Clamp(headY);
 
 	if (headY >= 45.0f && headY < 135.0f) {

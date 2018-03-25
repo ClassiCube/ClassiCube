@@ -239,7 +239,7 @@ void Entities_RenderModels(Real64 delta, Real32 t) {
 void Entities_RenderNames(Real64 delta) {
 	if (Entities_NameMode == NAME_MODE_NONE) return;
 	LocalPlayer* p = &LocalPlayer_Instance;
-	closestId = Entities_GetCloset(&p->Base.Base);
+	closestId = Entities_GetCloset(&p->Base);
 	if (!p->Hacks.CanSeeAllNames || Entities_NameMode != NAME_MODE_ALL) return;
 
 	Gfx_SetTexturing(true);

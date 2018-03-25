@@ -6,6 +6,7 @@
 #include "GraphicsCommon.h"
 #include "AsyncDownloader.h"
 #include "ExtMath.h"
+#include "Funcs.h"
 
 #define PLAYER_NAME_EMPTY_TEX -30000
 void Player_MakeNameTexture(Player* player) {
@@ -68,9 +69,10 @@ void Player_DrawName(Player* player) {
 	Vector3 pos;
 	model->RecalcProperties(entity);
 	Vector3_TransformY(&pos, model->NameYOffset, &entity->Transform);
-	Real32 scale = Math.Min(1.0f, model->NameScale * entity->ModelScale.Y) / 70.0f;
-	PackedCol col = PACKEDCOL_WHITE;
-	Vector2 size = Vector2_Create2(player->NameTex.Width * scale, player->NameTex.Height * scale);
+
+	Real32 scale = model->NameScale * entity->ModelScale.Y;
+	scale = scale > 1.0f ? (1.0f / 70.0f) : (scale / 70.0f);
+	Vector2 size = { player->NameTex.Width * scale, player->NameTex.Height * scale };
 
 	if (Entities_NameMode == NAME_MODE_ALL_UNSCALED && LocalPlayer_Instance.Hacks.CanSeeAllNames) {
 		/* Get W component of transformed position */
@@ -80,9 +82,9 @@ void Player_DrawName(Player* player) {
 		size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
 	}
 
-	VertexP3fT2fC4b vertices[4]; 
-	VertexP3fT2fC4b* ptr = vertices;
-	TextureRec rec; rec.U1 = 0.0f; rec.V1 = 0.0f; rec.U2 = player->NameTex.U2; rec.V2 = player->NameTex.V2;
+	VertexP3fT2fC4b vertices[4]; VertexP3fT2fC4b* ptr = vertices;
+	TextureRec rec = { 0.0f, 0.0f, player->NameTex.U2, player->NameTex.V2 };
+	PackedCol col = PACKEDCOL_WHITE;
 	Particle_DoRender(&size, &pos, &rec, col, &ptr);
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);

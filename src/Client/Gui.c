@@ -8,6 +8,7 @@
 #include "ExtMath.h"
 #include "Screens.h"
 #include "Camera.h"
+#include "InputHandler.h"
 
 Screen* Gui_Status;
 void GuiElement_Recreate(GuiElement* elem) {
@@ -142,7 +143,7 @@ Screen* Gui_GetUnderlyingScreen(void) {
 }
 
 void Gui_SetScreen(Screen* screen, bool freeOld) {
-	game.Input.ScreenChanged(Gui_Active, screen);
+	InputHandler_ScreenChanged(Gui_Active, screen);
 	if (Gui_Active != NULL && freeOld) {
 		Gui_Active->Base.Free(&Gui_Active->Base);
 	}

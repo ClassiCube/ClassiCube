@@ -130,7 +130,7 @@ void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
 	LocalPlayer* p = &LocalPlayer_Instance;
 	anim->VelTiltStrength = Math_Lerp(anim->VelTiltStrengthO, anim->VelTiltStrengthN, t);
 
-	AnimatedComp* pAnim = &p->Base.Base.Anim;
+	AnimatedComp* pAnim = &p->Base.Anim;
 	anim->TiltX = Math_Cos(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 	anim->TiltY = Math_Sin(pAnim->WalkTime) * pAnim->Swing * (0.15f * MATH_DEG2RAD);
 }
@@ -396,7 +396,7 @@ Real32 LocalInterpComp_Next(Real32 next, Real32 cur, Real32* last, bool interpol
 }
 
 void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, bool interpolate) {
-	Entity* entity = &LocalPlayer_Instance.Base.Base;
+	Entity* entity = &LocalPlayer_Instance.Base;
 	InterpState* prev = &interp->Prev;
 	InterpState* next = &interp->Next;
 
@@ -436,7 +436,7 @@ void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, boo
 }
 
 void LocalInterpComp_AdvanceState(InterpComp* interp) {
-	Entity* entity = &LocalPlayer_Instance.Base.Base;
+	Entity* entity = &LocalPlayer_Instance.Base;
 	interp->Prev = interp->Next;
 	entity->Position = interp->Next.Pos;
 	InterpComp_AdvanceRotY(interp);

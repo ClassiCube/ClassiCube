@@ -173,7 +173,7 @@ namespace ClassicalSharp.Renderers {
 		
 		internal void OnBlockChanged(int x, int y, int z, BlockID oldBlock, BlockID newBlock) {
 			bool didBlock = !(BlockInfo.Draw[oldBlock] == DrawType.Gas || BlockInfo.Draw[oldBlock] == DrawType.Sprite);
-			bool nowBlock =  !(BlockInfo.Draw[newBlock] == DrawType.Gas || BlockInfo.Draw[newBlock] == DrawType.Sprite);
+			bool nowBlock = !(BlockInfo.Draw[newBlock] == DrawType.Gas || BlockInfo.Draw[newBlock] == DrawType.Sprite);
 			if (didBlock == nowBlock) return;
 			
 			int index = (x * length) + z;

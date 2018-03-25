@@ -413,7 +413,7 @@ void StatusScreen_DrawPosition(StatusScreen* screen) {
 	PackedCol col = PACKEDCOL_WHITE;
 	GfxCommon_Make2DQuad(&tex, col, &ptr);
 
-	Vector3I pos; Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Base.Position);
+	Vector3I pos; Vector3I_Floor(&pos, &LocalPlayer_Instance.Base.Position);
 	atlas->CurX = atlas->Offset + 2;
 
 	TextAtlas_Add(atlas, 13, &ptr);

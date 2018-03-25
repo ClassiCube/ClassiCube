@@ -5,6 +5,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+void InputHandler_ScreenChanged(Screen* oldScreen, Screen* newScreen);
 bool InputHandler_SetFOV(Int32 fov, bool setZoom);
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right);
 void InputHandler_Init(void);

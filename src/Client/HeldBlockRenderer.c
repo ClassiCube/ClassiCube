@@ -44,7 +44,7 @@ void HeldBlockRenderer_RenderModel(void) {
 }
 
 void HeldBlockRenderer_SetMatrix(void) {
-	Entity* player = &LocalPlayer_Instance.Base.Base;	
+	Entity* player = &LocalPlayer_Instance.Base;	
 	Vector3 eyePos = Entity_GetEyePosition(player);
 	Vector3 up = Vector3_UnitY;
 	Vector3 target = eyePos; target.Z -= 1.0f; /* Look straight down*/	
@@ -57,7 +57,7 @@ void HeldBlockRenderer_SetMatrix(void) {
 
 void HeldBlockRenderer_ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
-	Entity* player = &LocalPlayer_Instance.Base.Base;
+	Entity* player = &LocalPlayer_Instance.Base;
 	held_entity.Position = Entity_GetEyePosition(player);
 
 	held_entity.Position.X -= Camera_BobbingHor;
@@ -124,7 +124,7 @@ void HeldBlockRenderer_ResetAnim(bool setLastHeld, Real64 period) {
 }
 
 PackedCol HeldBlockRenderer_GetCol(Entity* entity) {
-	Entity* player = &LocalPlayer_Instance.Base.Base;
+	Entity* player = &LocalPlayer_Instance.Base;
 	PackedCol col = player->VTABLE->GetCol(player);
 
 	/* Adjust pitch so angle when looking straight down is 0. */

@@ -238,8 +238,8 @@ void ChunkUpdater_UpdateChunks(Real64 delta) {
 
 	LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 camPos = Game_CurrentCameraPos;
-	Real32 headX = p->Base.Base.HeadX;
-	Real32 headY = p->Base.Base.HeadY;
+	Real32 headX = p->Base.HeadX;
+	Real32 headY = p->Base.HeadY;
 
 	bool samePos = Vector3_Equals(&camPos, &cu_lastCamPos) && headX == cu_lastHeadX && headY == cu_lastHeadY;
 	MapRenderer_RenderChunksCount = samePos ?
