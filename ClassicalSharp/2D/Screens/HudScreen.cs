@@ -159,9 +159,9 @@ namespace ClassicalSharp.Gui.Screens {
 			return chat.HandlesKeyUp(key) || hotbar.HandlesKeyUp(key);
 		}
 		
-		public void OpenTextInputBar(string text) {
-			chat.OpenTextInputBar(text);
-		}
+		public void OpenInput(string text) { chat.OpenInput(text); }
+		
+		public void AppendInput(string text) { chat.input.Append(text); }
 		
 		public override bool HandlesMouseScroll(float delta) {
 			return chat.HandlesMouseScroll(delta);

@@ -51,6 +51,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected void CloseOverlay() {
+			Dispose();
+			
 			if (game.Gui.overlays.Count > 0)
 				game.Gui.overlays.RemoveAt(0);
 			if (game.Gui.overlays.Count == 0)

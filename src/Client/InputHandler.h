@@ -1,6 +1,7 @@
 #ifndef CC_INPUTHANDLER_H
 #define CC_INPUTHANDLER_H
 #include "Typedefs.h"
+#include "Gui.h"
 /* Implements base handlers for mouse and keyboard input.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

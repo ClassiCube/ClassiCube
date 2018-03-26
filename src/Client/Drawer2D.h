@@ -1,8 +1,5 @@
 #ifndef CC_DRAWER2D_H
 #define CC_DRAWER2D_H
-/*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
-Copyright 2017 ClassicalSharp | Licensed under BSD-3
-*/
 #include "Typedefs.h"
 #include "Platform.h"
 #include "Bitmap.h"
@@ -10,6 +7,9 @@ Copyright 2017 ClassicalSharp | Licensed under BSD-3
 #include "2DStructs.h"
 #include "Texture.h"
 #include "Constants.h"
+/*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
+	Copyright 2017 ClassicalSharp | Licensed under BSD-3
+*/
 
 typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);

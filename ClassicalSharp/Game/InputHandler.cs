@@ -189,7 +189,7 @@ namespace ClassicalSharp {
 			if (!more) {
 				game.Server.SendChat(text);
 			} else if (game.Gui.activeScreen == null) {
-				game.Gui.hudScreen.OpenTextInputBar(text);
+				game.Gui.hudScreen.OpenInput(text);
 			}
 		}
 		

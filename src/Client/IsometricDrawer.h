@@ -10,10 +10,7 @@
 
 /* Maximum number of vertices used to draw a block in isometric way. */
 #define ISOMETRICDRAWER_MAXVERTICES 16
-/* Sets up state for drawing a batch of isometric blocks. */
 void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb);
-/* Adds a block to the current batch. */
 void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y);
-/* Finishes drawing a batch of isometric blocks. */
 void IsometricDrawer_EndBatch(void);
 #endif

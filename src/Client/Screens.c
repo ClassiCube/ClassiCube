@@ -1669,6 +1669,12 @@ void HUDScreen_OpenInput(Screen* hud, STRING_PURE String* text) {
 	ChatScreen_OpenInput((ChatScreen*)chat, text);
 }
 
+void HUDScreen_AppendInput(Screen* hud, STRING_PURE String* text) {
+	Screen* chat = ((HUDScreen*)hud)->Chat;
+	ChatInputWidget* widget = &((ChatScreen*)chat)->Input;
+	InputWidget_AppendString(&widget->Base, text);
+}
+
 
 DisconnectScreen DisconnectScreen_Instance;
 #define DISCONNECT_DELAY_MS 5000
@@ -1695,7 +1701,7 @@ void DisconnectScreen_Redraw(DisconnectScreen* screen, Real64 delta) {
 	Gfx_SetTexturing(true);
 	Widget_Render(&screen->Title, delta);
 	Widget_Render(&screen->Message, delta);
-	Widget_Render(&screen->Reconnect, delta);
+	if (screen->CanReconnect) { Widget_Render(&screen->Reconnect, delta); }
 	Gfx_SetTexturing(false);
 }
 
@@ -1716,29 +1722,6 @@ void DisconnectScreen_UpdateDelayLeft(DisconnectScreen* screen, Real64 delta) {
 	screen->LastSecsLeft = secsLeft;
 	screen->LastActive   = screen->Reconnect.Active;
 	screen->ClearTime = DateTime_TotalMs(&now) + 500;
-}
-
-bool DisconnectScreen_ReconnectClick(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	if (btn != MouseButton_Left) return false;
-	Int32 i;
-	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].Reset();
-	}
-	Block_Reset();
-
-	UInt8 connectBuffer[String_BufferSize(STRING_SIZE)];
-	String connect = String_FromConst(connectBuffer);
-	String empty = String_MakeNull();
-	String_AppendConst(&connect, "Connecting to ");
-	String_AppendString(&connect, &Game_IPAddress);
-	String_Append(&connect, ':');
-	String_AppendInt32(&connect, Game_Port);
-	String_AppendConst(&connect, "..");
-
-	Screen* screen = LoadingScreen_MakeInstance(&connect, &empty);
-	Gui_SetNewScreen(screen);
-	ServerConnection_Connect(&Game_IPAddress, Game_Port);
-	return true;
 }
 
 void DisconnectScreen_ContextLost(void* obj) {
@@ -1765,8 +1748,10 @@ void DisconnectScreen_ContextRecreated(void* obj) {
 	UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	DisconnectScreen_ReconnectMessage(screen, &msg);
-	ButtonWidget_Create(&screen->Reconnect, &msg, 300, &screen->TitleFont, DisconnectScreen_ReconnectClick);
+
+	ButtonWidget_Create(&screen->Reconnect, &msg, 300, &screen->TitleFont, NULL);
 	Widget_SetLocation((Widget*)(&screen->Reconnect), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 80);
+	screen->Reconnect.Disabled = !screen->CanReconnect;
 }
 
 void DisconnectScreen_Init(GuiElement* elem) {
@@ -1821,21 +1806,37 @@ bool DisconnectScreen_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
 
 bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	DisconnectScreen* screen = (DisconnectScreen*)elem;
-	ButtonWidget* w = &screen->Reconnect;
+	ButtonWidget* widget = &screen->Reconnect;
+	if (btn != MouseButton_Left) return true;
 
-	if (screen->CanReconnect && !w->Disabled && Widget_Contains((Widget*)w, x, y)) {
-		elem = &w->Base; elem->HandlesMouseDown(elem, x, y, btn);
+	if (!widget->Disabled && Widget_Contains((Widget*)widget, x, y)) {		
+		Int32 i;
+		for (i = 0; i < Game_ComponentsCount; i++) {
+			Game_Components[i].Reset();
+		}
+		Block_Reset();
+
+		UInt8 connectBuffer[String_BufferSize(STRING_SIZE)];
+		String connect = String_FromConst(connectBuffer);
+		String empty = String_MakeNull();
+
+		String_AppendConst(&connect, "Connecting to ");
+		String_AppendString(&connect, &Game_IPAddress);
+		String_Append(&connect, ':');
+		String_AppendInt32(&connect, Game_Port);
+		String_AppendConst(&connect, "..");
+
+		Screen* loadScreen = LoadingScreen_MakeInstance(&connect, &empty);
+		Gui_SetNewScreen(loadScreen);
+		ServerConnection_Connect(&Game_IPAddress, Game_Port);
 	}
 	return true;
 }
 
 bool DisconnectScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	DisconnectScreen* screen = (DisconnectScreen*)elem;
-	ButtonWidget* w = &screen->Reconnect;
-
-	if (screen->CanReconnect && !w->Disabled && Widget_Contains((Widget*)w, x, y)) {
-		elem = &w->Base; elem->HandlesMouseMove(elem, x, y);
-	}
+	ButtonWidget* widget = &screen->Reconnect;
+	widget->Active = !widget->Disabled && Widget_Contains((Widget*)widget, x, y);
 	return true;
 }
 

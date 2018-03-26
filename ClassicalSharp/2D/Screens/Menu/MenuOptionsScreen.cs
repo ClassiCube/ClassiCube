@@ -52,8 +52,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (key == Key.Escape) {
 				game.Gui.SetNewScreen(null);
 				return true;
-			} else if ((key == Key.Enter || key == Key.KeypadEnter)
-			           && input != null) {
+			} else if ((key == Key.Enter || key == Key.KeypadEnter) && input != null) {
 				ChangeSetting();
 				return true;
 			}

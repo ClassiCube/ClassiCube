@@ -93,7 +93,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			if (chatInInputBuffer != null) {
-				OpenTextInputBar(chatInInputBuffer);
+				OpenInput(chatInInputBuffer);
 				chatInInputBuffer = null;
 			}
 		}
@@ -323,7 +323,7 @@ namespace ClassicalSharp.Gui.Screens {
 			return handled;
 		}
 		
-		public void OpenTextInputBar(string initialText) {
+		public void OpenInput(string initialText) {
 			game.CursorVisible = true;
 			suppressNextPress = true;
 			SetHandlesAllInput(true);
@@ -371,9 +371,9 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 
 			if (key == game.Mapping(KeyBind.Chat)) {
-				OpenTextInputBar("");
+				OpenInput("");
 			} else if (key == Key.Slash) {
-				OpenTextInputBar("/");
+				OpenInput("/");
 			} else {
 				return false;
 			}
@@ -423,14 +423,7 @@ namespace ClassicalSharp.Gui.Screens {
 			string url = Utils.StripColours(text);
 			
 			if (Utils.IsUrlPrefix(url, 0)) {
-				WarningOverlay overlay = new WarningOverlay(game, false, false);
-				overlay.Metadata = url;
-				overlay.SetHandlers(OpenUrl, AppendUrl);
-				overlay.lines[0] = "&eAre you sure you want to open this link?";
-				
-				overlay.lines[1] = url;
-				overlay.lines[2] = "Be careful - links from strangers may be websites that";
-				overlay.lines[3] = " have viruses, or things you may not want to open/see.";
+				Overlay overlay = new UrlWarningOverlay(game, url);
 				game.Gui.ShowOverlay(overlay);
 			} else if (game.ClickableChat) {
 				input.Append(text);

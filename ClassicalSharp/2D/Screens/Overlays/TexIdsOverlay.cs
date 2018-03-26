@@ -100,8 +100,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.F10 || key == game.Input.Keys[KeyBind.PauseOrExit]) {
-				Dispose();
+			if (key == game.Input.Keys[KeyBind.IDOverlay] || key == game.Input.Keys[KeyBind.PauseOrExit]) {
 				CloseOverlay();
 				return true;
 			}
