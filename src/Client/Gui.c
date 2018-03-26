@@ -167,14 +167,25 @@ void Gui_RefreshHud(void) {
 	Gui_HUD->Base.Recreate(&Gui_HUD->Base);
 }
 
-void Gui_ShowOverlay(Screen* overlay) {
+void Gui_ShowOverlay(Screen* overlay, bool atFront) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		ErrorHandler_Fail("Cannot have more than 40 overlays");
 	}
 	bool visible = Game_GetCursorVisible();
 	if (Gui_OverlaysCount == 0) Game_SetCursorVisible(true);
 
-	Gui_Overlays[Gui_OverlaysCount++] = overlay;
+	if (atFront) {
+		Int32 i;
+		/* Insert overlay at start of list */
+		for (i = Gui_OverlaysCount - 1; i > 0; i--) {
+			Gui_Overlays[i] = Gui_Overlays[i - 1];
+		}
+		Gui_Overlays[0] = overlay;
+	} else {
+		Gui_Overlays[Gui_OverlaysCount] = overlay;
+	}
+	Gui_OverlaysCount++;
+
 	if (Gui_OverlaysCount == 1) Game_SetCursorVisible(visible); /* Save cursor visibility state */
 	overlay->Base.Init(&overlay->Base);
 }
@@ -260,7 +271,7 @@ void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices) {
 void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices) {
 	if (value < 0) TextAtlas_Add(atlas, 10, vertices); /* - sign */
 
-	UInt32 i, count = 0;
+	Int32 i, count = 0;
 	UInt8 digits[STRING_SIZE];
 	/* use a do while loop here, as we still want a '0' digit if input is 0 */
 	do {

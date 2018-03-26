@@ -90,7 +90,7 @@ Screen* Gui_GetUnderlyingScreen(void);
 void Gui_SetScreen(Screen* screen, bool freeOld);
 void Gui_SetNewScreen(Screen* screen);
 void Gui_RefreshHud(void);
-void Gui_ShowOverlay(Screen* overlay);
+void Gui_ShowOverlay(Screen* overlay, bool atFront);
 void Gui_RenderGui(Real64 delta);
 void Gui_OnResize(void);
 

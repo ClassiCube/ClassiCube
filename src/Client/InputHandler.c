@@ -1,6 +1,5 @@
 #include "InputHandler.h"
 #include "Utils.h"
-#include "Hotkeys.h"
 #include "ServerConnection.h"
 #include "Game.h"
 #include "Platform.h"
@@ -177,7 +176,7 @@ bool InputHandler_HandleCoreKey(Key key) {
 	} else if (GameMode_HandlesKeyDown(key)) {
 	} else if (key == KeyBind_Get(KeyBind_IDOverlay)) {
 		if (Gui_OverlaysCount > 0) return true;
-		Gui_ShowOverlay(new TexIdsOverlay());
+		Gui_ShowOverlay(new TexIdsOverlay(), false);
 	} else {
 		return false;
 	}

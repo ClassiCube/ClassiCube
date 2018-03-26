@@ -1129,15 +1129,6 @@ void ChatScreen_Recreate(TextGroupWidget* group, UInt8 code) {
 	}
 }
 
-void ChatScreen_OpenUrl(Overlay urlOverlay, bool always) {
-	Platform_StartShell(urlOverlay.Metadata);
-}
-
-void ChatScreen_AppendUrl(Overlay urlOverlay, bool always) {
-	if (!Game_ClickableChat) return;
-	input.Append(urlOverlay.Metadata);
-}
-
 Int32 ChatScreen_ClampIndex(Int32 index) {
 	Int32 maxIndex = Chat_Log.Count - Game_ChatLines;
 	Int32 minIndex = min(0, maxIndex);
@@ -1262,15 +1253,8 @@ bool ChatScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton
 	String_AppendColorless(&url, &text);
 
 	if (Utils_IsUrlPrefix(&url, 0)) {
-		WarningOverlay overlay = new WarningOverlay(game, false, false);
-		overlay.Metadata = url;
-		overlay.SetHandlers(OpenUrl, AppendUrl);
-		overlay.lines[0] = "&eAre you sure you want to open this link?";
-
-		overlay.lines[1] = url;
-		overlay.lines[2] = "Be careful - links from strangers may be websites that";
-		overlay.lines[3] = " have viruses, or things you may not want to open/see.";
-		game.Gui.ShowOverlay(overlay);
+		Overlay overlay = new UrlWarningOverlay(url);
+		Gui_ShowOverlay(overlay, false);
 	} else if (Game_ClickableChat) {
 		InputWidget_AppendString(&screen->Input.Base, &text);
 	}
