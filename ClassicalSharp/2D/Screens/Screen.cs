@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui.Screens {
 		/// <summary> Called when the game window is resized. </summary>
 		public abstract void OnResize(int width, int height);
 		
-		protected ClickHandler LeftOnly(SimpleClickHandler action) {
+		protected static ClickHandler LeftOnly(SimpleClickHandler action) {
 			return delegate(Game g, Widget w, MouseButton btn, int x, int y) {
 				if (btn != MouseButton.Left) return;
 				if (action != null) action(g, w);

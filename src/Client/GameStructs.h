@@ -21,8 +21,11 @@ typedef struct IGameComponent_ {
 	void (*OnNewMapLoaded)(void);
 } IGameComponent;
 
-/* Makes an empty game component with all its function pointers initalised to null. */
 IGameComponent IGameComponent_MakeEmpty(void);
+#define GAME_MAX_COMPONENTS 26
+IGameComponent Game_Components[GAME_MAX_COMPONENTS];
+Int32 Game_ComponentsCount;
+void Game_AddComponent(IGameComponent* comp);
 
 /* Represents a task that periodically runs on the main thread every specified interval. */
 typedef struct ScheduledTask_ {

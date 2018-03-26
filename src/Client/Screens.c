@@ -90,12 +90,9 @@ typedef struct FilesScreen_ {
 typedef struct LoadingScreen_ {
 	Screen_Layout
 	FontDesc Font;
-
-	String Title, Message;
 	Real32 Progress;
-	TextWidget TitleWidget;
-	TextWidget MessageWidget;
-
+	
+	TextWidget Title, Message;
 	UInt8 TitleBuffer[String_BufferSize(STRING_SIZE)];
 	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
 } LoadingScreen;
@@ -122,6 +119,19 @@ typedef struct ChatScreen_ {
 	UInt8 ChatInInputBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
 	String ChatInInput; /* needed for lost contexts, to restore chat typed in */
 } ChatScreen;
+
+typedef struct DisconnectScreen_ {
+	Screen_Layout
+	Int64 InitTime, ClearTime;
+	bool CanReconnect, LastActive;
+	Int32 LastSecsLeft;
+	ButtonWidget Reconnect;
+
+	FontDesc TitleFont, MessageFont;
+	TextWidget Title, Message;
+	UInt8 TitleBuffer[String_BufferSize(STRING_SIZE)];
+	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
+} DisconnectScreen;
 
 
 void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
@@ -192,7 +202,7 @@ bool ClickableScreen_HandleMouseDown(ClickableScreen* data, Int32 x, Int32 y, Mo
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = data->WidgetsCount; i > 0; i--) {
 		Widget* widget = data->Widgets[i - 1];
-		if (widget != NULL && Gui_Contains(widget->X, widget->Y, widget->Width, widget->Height, x, y)) {
+		if (widget != NULL && Widget_Contains(widget, x, y)) {
 			if (!widget->Disabled) {
 				GuiElement* elem = &widget->Base;
 				elem->HandlesMouseDown(elem, x, y, btn);
@@ -213,7 +223,7 @@ bool ClickableScreen_HandleMouseMove(ClickableScreen* data, Int32 x, Int32 y) {
 
 	for (i = data->WidgetsCount; i > 0; i--) {
 		Widget* widget = data->Widgets[i];
-		if (widget != NULL && Gui_Contains(widget->X, widget->Y, widget->Width, widget->Height, x, y)) {
+		if (widget != NULL && Widget_Contains(widget, x, y)) {
 			widget->Active = true;
 			data->LastX = x; data->LastY = y;
 			data->OnWidgetSelected(data->Elem, widget);
@@ -727,20 +737,18 @@ Screen* FilesScreen_MakeInstance(void) {
 
 
 LoadingScreen LoadingScreen_Instance;
-void LoadingScreen_SetTitle(LoadingScreen* screen, STRING_PURE String* title) {
-	Widget_Free(&screen->TitleWidget);
-	TextWidget_Create(&screen->TitleWidget, title, &screen->Font);
-	Widget_SetLocation((Widget*)(&screen->TitleWidget), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -80);
-	String_Clear(&screen->Title);
-	String_AppendString(&screen->Title, title);
+void LoadingScreen_SetTitle(LoadingScreen* screen) {
+	String title = String_FromRawArray(screen->TitleBuffer);
+	Widget_Free(&screen->Title);
+	TextWidget_Create(&screen->Title, &title, &screen->Font);
+	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -80);
 }
 
-void LoadingScreen_SetMessage(LoadingScreen* screen, STRING_PURE String* message) {
-	Widget_Free(&screen->MessageWidget);
-	TextWidget_Create(&screen->MessageWidget, message, &screen->Font);
-	Widget_SetLocation((Widget*)(&screen->MessageWidget), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
-	String_Clear(&screen->Message);
-	String_AppendString(&screen->Message, message);
+void LoadingScreen_SetMessage(LoadingScreen* screen) {
+	String message = String_FromRawArray(screen->MessageBuffer);
+	Widget_Free(&screen->Message);
+	TextWidget_Create(&screen->Message, &message, &screen->Font);
+	Widget_SetLocation((Widget*)(&screen->Message), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 }
 
 void LoadingScreen_MapLoading(void* obj, Real32 progress) {
@@ -750,21 +758,21 @@ void LoadingScreen_MapLoading(void* obj, Real32 progress) {
 
 void LoadingScreen_OnResize(GuiElement* elem) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
-	Widget_Reposition(&screen->TitleWidget);
-	Widget_Reposition(&screen->MessageWidget);
+	Widget_Reposition(&screen->Title);
+	Widget_Reposition(&screen->Message);
 }
 
 void LoadingScreen_ContextLost(void* obj) {
 	LoadingScreen* screen = (LoadingScreen*)obj;
-	Widget_Free(&screen->TitleWidget);
-	Widget_Free(&screen->MessageWidget);
+	Widget_Free(&screen->Title);
+	Widget_Free(&screen->Message);
 }
 
 void LoadingScreen_ContextRecreated(void* obj) {
 	LoadingScreen* screen = (LoadingScreen*)obj;
 	if (Gfx_LostContext) return;
-	LoadingScreen_SetTitle(screen, &screen->Title);
-	LoadingScreen_SetMessage(screen, &screen->Message);
+	LoadingScreen_SetTitle(screen);
+	LoadingScreen_SetMessage(screen);
 }
 
 bool LoadingScreen_HandlesKeyDown(GuiElement* elem, Key key) {
@@ -845,8 +853,8 @@ void LoadingScreen_Render(GuiElement* elem, Real64 delta) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
 	Gfx_SetTexturing(true);
 	LoadingScreen_DrawBackground();
-	Widget_Render(&screen->TitleWidget, delta);
-	Widget_Render(&screen->MessageWidget, delta);
+	Widget_Render(&screen->Title, delta);
+	Widget_Render(&screen->Message, delta);
 
 	Gfx_SetTexturing(false);
 
@@ -886,10 +894,10 @@ void LoadingScreen_Make(LoadingScreen* screen, STRING_PURE String* title, STRING
 	screen->Base.Render = LoadingScreen_Render;
 	screen->Base.Free   = LoadingScreen_Free;
 
-	screen->Title = String_InitAndClearArray(screen->TitleBuffer);
-	String_AppendString(&screen->Title, title);
-	screen->Message = String_InitAndClearArray(screen->MessageBuffer);
-	String_AppendString(&screen->Message, message);
+	String titleScreen = String_InitAndClearArray(screen->TitleBuffer);
+	String_AppendString(&titleScreen, title);
+	String messageScreen = String_InitAndClearArray(screen->MessageBuffer);
+	String_AppendString(&messageScreen, message);
 
 	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	screen->BlocksWorld     = true;
@@ -916,7 +924,10 @@ void GeneratingScreen_Render(GuiElement* elem, Real64 delta) {
 
 	String_Clear(&screen->LastState);
 	String_AppendString(&screen->LastState, &state);
-	LoadingScreen_SetMessage(&screen->Base, &state);
+
+	String message = String_InitAndClearArray(screen->Base.MessageBuffer);
+	String_AppendString(&message, &screen->LastState);
+	LoadingScreen_SetMessage(&screen->Base);
 }
 
 Screen* GeneratingScreen_MakeInstance(void) {
@@ -1656,4 +1667,212 @@ IGameComponent HUDScreen_MakeComponent(void) {
 void HUDScreen_OpenInput(Screen* hud, STRING_PURE String* text) {
 	Screen* chat = ((HUDScreen*)hud)->Chat;
 	ChatScreen_OpenInput((ChatScreen*)chat, text);
+}
+
+
+DisconnectScreen DisconnectScreen_Instance;
+#define DISCONNECT_DELAY_MS 5000
+void DisconnectScreen_ReconnectMessage(DisconnectScreen* screen, STRING_TRANSIENT String* msg) {
+	if (screen->CanReconnect) {
+		DateTime now = Platform_CurrentUTCTime();
+		Int32 elapsedMS = (Int32)(DateTime_TotalMs(&now) - screen->InitTime);
+		Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
+
+		if (secsLeft > 0) {
+			String_AppendConst(msg, "Reconnect in ");
+			String_AppendInt32(msg, secsLeft);
+			return;
+		}
+	}
+	String_AppendConst(msg, "Reconnect");
+}
+
+void DisconnectScreen_Redraw(DisconnectScreen* screen, Real64 delta) {
+	PackedCol top    = PACKEDCOL_CONST(64, 32, 32, 255);
+	PackedCol bottom = PACKEDCOL_CONST(80, 16, 16, 255);
+	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, top, bottom);
+
+	Gfx_SetTexturing(true);
+	Widget_Render(&screen->Title, delta);
+	Widget_Render(&screen->Message, delta);
+	Widget_Render(&screen->Reconnect, delta);
+	Gfx_SetTexturing(false);
+}
+
+void DisconnectScreen_UpdateDelayLeft(DisconnectScreen* screen, Real64 delta) {
+	DateTime now = Platform_CurrentUTCTime();
+	Int32 elapsedMS = (Int32)(DateTime_TotalMs(&now) - screen->InitTime);
+	Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
+	if (secsLeft < 0) secsLeft = 0;
+	if (screen->LastSecsLeft == secsLeft && screen->Reconnect.Active == screen->LastActive) return;
+
+	UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+	String msg = String_InitAndClearArray(msgBuffer);
+	DisconnectScreen_ReconnectMessage(screen, &msg);
+	ButtonWidget_SetText(&screen->Reconnect, &msg);
+	screen->Reconnect.Disabled = secsLeft != 0;
+
+	DisconnectScreen_Redraw(screen, delta);
+	screen->LastSecsLeft = secsLeft;
+	screen->LastActive   = screen->Reconnect.Active;
+	screen->ClearTime = DateTime_TotalMs(&now) + 500;
+}
+
+bool DisconnectScreen_ReconnectClick(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	if (btn != MouseButton_Left) return false;
+	Int32 i;
+	for (i = 0; i < Game_ComponentsCount; i++) {
+		Game_Components[i].Reset();
+	}
+	Block_Reset();
+
+	UInt8 connectBuffer[String_BufferSize(STRING_SIZE)];
+	String connect = String_FromConst(connectBuffer);
+	String empty = String_MakeNull();
+	String_AppendConst(&connect, "Connecting to ");
+	String_AppendString(&connect, &Game_IPAddress);
+	String_Append(&connect, ':');
+	String_AppendInt32(&connect, Game_Port);
+	String_AppendConst(&connect, "..");
+
+	Screen* screen = LoadingScreen_MakeInstance(&connect, &empty);
+	Gui_SetNewScreen(screen);
+	ServerConnection_Connect(&Game_IPAddress, Game_Port);
+	return true;
+}
+
+void DisconnectScreen_ContextLost(void* obj) {
+	DisconnectScreen* screen = (DisconnectScreen*)obj;
+	Widget_Free(&screen->Title);
+	Widget_Free(&screen->Message);
+	Widget_Free(&screen->Reconnect);
+}
+
+void DisconnectScreen_ContextRecreated(void* obj) {
+	DisconnectScreen* screen = (DisconnectScreen*)obj;
+	if (Gfx_LostContext) return;
+	DateTime now = Platform_CurrentUTCTime();
+	screen->ClearTime = DateTime_TotalMs(&now) + 500;
+
+	String title = String_FromRawArray(screen->TitleBuffer);
+	TextWidget_Create(&screen->Title, &title, &screen->TitleFont);
+	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+
+	String message = String_FromRawArray(screen->MessageBuffer);
+	TextWidget_Create(&screen->Message, &message, &screen->MessageFont);
+	Widget_SetLocation((Widget*)(&screen->Message), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 10);
+
+	UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+	String msg = String_InitAndClearArray(msgBuffer);
+	DisconnectScreen_ReconnectMessage(screen, &msg);
+	ButtonWidget_Create(&screen->Reconnect, &msg, 300, &screen->TitleFont, DisconnectScreen_ReconnectClick);
+	Widget_SetLocation((Widget*)(&screen->Reconnect), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 80);
+}
+
+void DisconnectScreen_Init(GuiElement* elem) {
+	DisconnectScreen* screen = (DisconnectScreen*)elem;
+	Game_SkipClear = true;
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, DisconnectScreen_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
+
+	DisconnectScreen_ContextRecreated(screen);
+	DateTime now = Platform_CurrentUTCTime();
+	screen->InitTime = DateTime_TotalMs(&now);
+	screen->LastSecsLeft = DISCONNECT_DELAY_MS / DATETIME_MILLISECS_PER_SECOND;
+}
+
+void DisconnectScreen_Render(GuiElement* elem, Real64 delta) {
+	DisconnectScreen* screen = (DisconnectScreen*)elem;
+	if (!screen->CanReconnect) {
+		DisconnectScreen_UpdateDelayLeft(screen, delta);
+	}
+
+	/* NOTE: We need to make sure that both the front and back buffers have
+	definitely been drawn over, so we redraw the background multiple times. */
+	DateTime now = Platform_CurrentUTCTime();
+	if (DateTime_TotalMs(&now) < screen->ClearTime) {
+		DisconnectScreen_Redraw(screen, delta);
+	}
+}
+
+void DisconnectScreen_Free(GuiElement* elem) {
+	DisconnectScreen* screen = (DisconnectScreen*)elem;
+	Game_SkipClear = false;
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, DisconnectScreen_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
+
+	DisconnectScreen_ContextLost(screen);
+	Platform_FreeFont(&screen->TitleFont);
+	Platform_FreeFont(&screen->MessageFont);
+}
+
+void DisconnectScreen_OnResize(GuiElement* elem) {
+	DisconnectScreen* screen = (DisconnectScreen*)elem;
+	Widget_Reposition(&screen->Title);
+	Widget_Reposition(&screen->Message);
+	Widget_Reposition(&screen->Reconnect);
+	DateTime now = Platform_CurrentUTCTime();
+	screen->ClearTime = DateTime_TotalMs(&now) + 500;
+}
+
+bool DisconnectScreen_HandlesKeyDown(GuiElement* elem, Key key) { return key < Key_F1 || key > Key_F35; }
+bool DisconnectScreen_HandlesKeyPress(GuiElement* elem, UInt8 keyChar) { return true; }
+bool DisconnectScreen_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
+
+bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	DisconnectScreen* screen = (DisconnectScreen*)elem;
+	ButtonWidget* w = &screen->Reconnect;
+
+	if (screen->CanReconnect && !w->Disabled && Widget_Contains((Widget*)w, x, y)) {
+		elem = &w->Base; elem->HandlesMouseDown(elem, x, y, btn);
+	}
+	return true;
+}
+
+bool DisconnectScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+	DisconnectScreen* screen = (DisconnectScreen*)elem;
+	ButtonWidget* w = &screen->Reconnect;
+
+	if (screen->CanReconnect && !w->Disabled && Widget_Contains((Widget*)w, x, y)) {
+		elem = &w->Base; elem->HandlesMouseMove(elem, x, y);
+	}
+	return true;
+}
+
+bool DisconnectScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
+bool DisconnectScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+
+Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
+	DisconnectScreen* screen = &DisconnectScreen_Instance;
+	Platform_MemSet(&screen, 0, sizeof(DisconnectScreen));
+	Screen_Reset((Screen*)screen);
+
+	String titleScreen = String_InitAndClearArray(screen->TitleBuffer);
+	String_AppendString(&titleScreen, title);
+	String messageScreen = String_InitAndClearArray(screen->MessageBuffer);
+	String_AppendString(&messageScreen, message);
+
+	UInt8 reasonBuffer[String_BufferSize(STRING_SIZE)];
+	String reason = String_InitAndClearArray(reasonBuffer);
+	String_AppendColorless(&reason, message);
+	String kick = String_FromConst("Kicked ");
+	String ban  = String_FromConst("Banned ");
+	screen->CanReconnect = String_StartsWith(&reason, &kick) || String_StartsWith(&reason, &ban);
+
+	Platform_MakeFont(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
+	Platform_MakeFont(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	screen->BlocksWorld     = true;
+	screen->HidesHUD        = true;
+	screen->HandlesAllInput = true;
+
+	screen->OnResize    = DisconnectScreen_OnResize;
+	screen->Base.Init   = DisconnectScreen_Init;
+	screen->Base.Render = DisconnectScreen_Render;
+	screen->Base.Free   = DisconnectScreen_Free;
+
+	screen->Base.HandlesKeyDown     = DisconnectScreen_HandlesKeyDown;
+	screen->Base.HandlesKeyUp       = DisconnectScreen_HandlesKeyUp;
+	screen->Base.HandlesKeyPress    = DisconnectScreen_HandlesKeyPress;
+	screen->Base.HandlesMouseDown   = DisconnectScreen_HandlesMouseDown;
+	screen->Base.HandlesMouseScroll = DisconnectScreen_HandlesMouseScroll;
 }

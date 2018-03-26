@@ -127,7 +127,7 @@ bool InputHandler_SetFOV(Int32 fov, bool setZoom) {
 
 bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
 	if (!KeyBind_IsPressed(KeyBind_ZoomScrolling)) return false;
-	HacksComp* h = &LocalPlayer_Instance;
+	HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
 
 	if (input_fovIndex == -1.0f) input_fovIndex = Game_ZoomFov;

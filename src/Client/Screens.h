@@ -16,6 +16,7 @@ Screen* GeneratingScreen_MakeInstance(void);
 Screen* HUDScreen_MakeInstance(void);
 IGameComponent HUDScreen_MakeComponent(void);
 void HUDScreen_OpenInput(Screen* hud, STRING_PURE String* text);
+Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message);
 
 Screen* OptionsGroupScreen_MakeInstance(void);
 Screen* PauseScreen_MakeInstance(void);

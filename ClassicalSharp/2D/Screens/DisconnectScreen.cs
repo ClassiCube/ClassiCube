@@ -122,8 +122,8 @@ namespace ClassicalSharp.Gui.Screens {
 			if (!canReconnect) return "Reconnect";
 			
 			double elapsed = (DateTime.UtcNow - initTime).TotalSeconds;
-			int secsLeft = Math.Max(0, (int)(delay - elapsed));
-			return secsLeft == 0 ? "Reconnect" : "Reconnect in " + secsLeft;
+			int secsLeft = (int)(delay - elapsed);
+			return secsLeft > 0 ? "Reconnect in " + secsLeft : "Reconnect";
 		}
 		
 		protected override void ContextLost() { DisposeWidgets(widgets); }
