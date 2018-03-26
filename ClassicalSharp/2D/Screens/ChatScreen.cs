@@ -424,7 +424,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if (Utils.IsUrlPrefix(url, 0)) {
 				Overlay overlay = new UrlWarningOverlay(game, url);
-				game.Gui.ShowOverlay(overlay);
+				game.Gui.ShowOverlay(overlay, false);
 			} else if (game.ClickableChat) {
 				input.Append(text);
 			}

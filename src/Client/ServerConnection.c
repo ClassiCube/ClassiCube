@@ -54,7 +54,7 @@ UInt16 PingList_NextPingData(void) {
 		PingList_Entries[i] = PingList_Entries[i + 1];
 	}
 	Int32 j = Array_Elems(PingList_Entries) - 1;
-	return PingList_SetTwoWayPing(j, PingList_Entries[j].Data);
+	return PingList_Set(j, PingList_Entries[j].Data);
 }
 
 void PingList_Update(UInt16 data) {

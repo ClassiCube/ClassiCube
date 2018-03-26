@@ -205,8 +205,6 @@ namespace ClassicalSharp {
 		internal EntryList ETags = new EntryList("texturecache", "etags.txt");
 		internal EntryList LastModified = new EntryList("texturecache", "lastmodified.txt");
 		
-		PluginLoader plugins;
-		
 		/// <summary> Calculates the amount that the hotbar widget should be scaled by when rendered. </summary>
 		/// <remarks> Affected by both the current resolution of the window, as well as the
 		/// scaling specified by the user (field HotbarScale). </remarks>

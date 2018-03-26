@@ -90,7 +90,7 @@
     <Compile Include="2D\Screens\InventoryScreen.cs" />
     <Compile Include="2D\Screens\Overlays\Overlay.cs" />
     <Compile Include="2D\Screens\Overlays\TexIdsOverlay.cs" />
-    <Compile Include="2D\Screens\Overlays\WarningOverlay.cs" />
+    <Compile Include="2D\Screens\Overlays\WarningOverlays.cs" />
     <Compile Include="2D\Screens\StatusScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
     <Compile Include="2D\Screens\MenuScreen.cs" />

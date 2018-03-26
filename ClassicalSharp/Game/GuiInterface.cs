@@ -97,10 +97,15 @@ namespace ClassicalSharp {
 		
 		public void RefreshHud() { hudScreen.Recreate(); }
 		
-		public void ShowOverlay(Overlay overlay) {
+		public void ShowOverlay(Overlay overlay, bool inFront) {
 			bool cursorVis = game.CursorVisible;
 			if (overlays.Count == 0) game.CursorVisible = true;
-			overlays.Add(overlay);
+			
+			if (inFront) {
+				overlays.Insert(0, overlay);
+			} else {
+				overlays.Add(overlay);
+			}
 			if (overlays.Count == 1) game.CursorVisible = cursorVis;
 			// Save cursor visibility state
 			overlay.Init();

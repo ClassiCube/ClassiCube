@@ -246,7 +246,7 @@ namespace ClassicalSharp {
 			} else if (game.Mode.HandlesKeyDown(key)) {
 			} else if (key == Keys[KeyBind.IDOverlay]) {
 				if (game.Gui.overlays.Count > 0) return true;
-				game.Gui.ShowOverlay(new TexIdsOverlay(game));
+				game.Gui.ShowOverlay(new TexIdsOverlay(game), false);
 			} else {
 				return false;
 			}

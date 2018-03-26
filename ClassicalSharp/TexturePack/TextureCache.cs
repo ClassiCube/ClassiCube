@@ -109,7 +109,7 @@ namespace ClassicalSharp.Textures {
 				tags.Entries[i] = crc32 + " " + data;
 				tags.Save(); return;
 			}
-			tags.AddEntry(crc32 + " " + data);
+			tags.Add(crc32 + " " + data);
 		}
 		
 		

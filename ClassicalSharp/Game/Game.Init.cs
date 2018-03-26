@@ -130,8 +130,8 @@ namespace ClassicalSharp {
 			AxisLinesRenderer = new AxisLinesRenderer(); Components.Add(AxisLinesRenderer);
 			SkyboxRenderer = new SkyboxRenderer(); Components.Add(SkyboxRenderer);
 			
-			plugins = new PluginLoader(this);
-			List<string> nonLoaded = plugins.LoadAll();
+			PluginLoader.game = this;
+			List<string> nonLoaded = PluginLoader.LoadAll();
 			
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].Init(this);
@@ -142,7 +142,8 @@ namespace ClassicalSharp {
 			
 			if (nonLoaded != null) {
 				for (int i = 0; i < nonLoaded.Count; i++) {
-					plugins.MakeWarning(this, nonLoaded[i]);
+					Overlay warning = new PluginOverlay(this, nonLoaded[i]);
+					Gui.ShowOverlay(warning, false);
 				}
 			}
 			

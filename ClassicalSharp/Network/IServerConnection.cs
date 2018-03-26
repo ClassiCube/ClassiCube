@@ -62,59 +62,18 @@ namespace ClassicalSharp {
 		protected Game game;
 		protected int netTicks;
 		
-		protected void WarningScreenTick(Overlay warning) {
-			string identifier = warning.Metadata;
-			Request item;
-			if (!game.Downloader.TryGetItem(identifier, out item) || item.Data == null) return;
-			
-			long contentLength = (long)item.Data;
-			if (contentLength <= 0) return;
-			string url = identifier.Substring(3);
-			
-			float contentLengthMB = (contentLength / 1024f / 1024f);
-			warning.lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";
-			warning.RedrawText();
-		}
-		
 		protected internal void RetrieveTexturePack(string url) {
-			if (!game.AcceptedUrls.HasEntry(url) && !game.DeniedUrls.HasEntry(url)) {
+			if (!game.AcceptedUrls.Has(url) && !game.DeniedUrls.Has(url)) {
 				game.Downloader.AsyncGetContentLength(url, true, "CL_" + url);
-				string address = url;
-				if (url.StartsWith("https://")) address = url.Substring(8);
-				if (url.StartsWith("http://")) address = url.Substring(7);
-				
-				WarningOverlay warning = new WarningOverlay(game, true, true);
-				warning.Metadata = "CL_" + url;
-				warning.SetHandlers(DownloadTexturePack, SkipTexturePack);
-				warning.OnRenderFrame = WarningScreenTick;
-				warning.lines[0] = "Do you want to download the server's texture pack?";
-				
-				warning.lines[1] = "Texture pack url:";
-				warning.lines[2] = address;
-				warning.lines[3] = "Download size: Determining...";
-				game.Gui.ShowOverlay(warning);
+				Overlay warning = new TexPackOverlay(game, url);
+				game.Gui.ShowOverlay(warning, false);
 			} else {
 				DownloadTexturePack(url);
 			}
 		}
 		
-		void DownloadTexturePack(Overlay texPackOverlay, bool always) {
-			string url = texPackOverlay.Metadata.Substring(3);
-			DownloadTexturePack(url);
-			if (always && !game.AcceptedUrls.HasEntry(url)) {
-				game.AcceptedUrls.AddEntry(url);
-			}
-		}
-
-		void SkipTexturePack(Overlay texPackOverlay, bool always) {
-			string url = texPackOverlay.Metadata.Substring(3);
-			if (always && !game.DeniedUrls.HasEntry(url)) {
-				game.DeniedUrls.AddEntry(url);
-			}
-		}
-		
-		void DownloadTexturePack(string url) {
-			if (game.DeniedUrls.HasEntry(url)) return;
+		internal void DownloadTexturePack(string url) {
+			if (game.DeniedUrls.Has(url)) return;
 			string path = TextureCache.MakePath(url), etag = null;
 			DateTime lastModified = DateTime.MinValue;
 			

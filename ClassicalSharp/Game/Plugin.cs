@@ -15,65 +15,34 @@ namespace ClassicalSharp {
 		string ClientVersion { get; }
 	}
 	
-	internal class PluginLoader {
+	internal static class PluginLoader {
 
-		EntryList accepted, denied;
-		Game game;
+		public static EntryList Accepted, Denied;
+		internal static Game game;
 		
-		public PluginLoader(Game game) { this.game = game; }
-		
-		internal List<string> LoadAll() {
+		internal static List<string> LoadAll() {
 			string dir = Path.Combine(Program.AppDirectory, "plugins");
 			if (!Directory.Exists(dir))
 				Directory.CreateDirectory(dir);
 			
-			accepted = new EntryList("plugins", "accepted.txt");
-			denied = new EntryList("plugins", "denied.txt");
-			accepted.Load();
-			denied.Load();
+			Accepted = new EntryList("plugins", "accepted.txt");
+			Denied = new EntryList("plugins", "denied.txt");
+			Accepted.Load();
+			Denied.Load();
 			
 			return LoadPlugins(dir);
 		}
 		
-		internal void MakeWarning(Game game, string plugin) {
-			WarningOverlay warning = new WarningOverlay(game, true, false);
-			warning.Metadata = plugin;
-			warning.SetHandlers(Accept, Deny);
-			
-			warning.lines[0] = "&eAre you sure you want to load plugin " + plugin + " ?";
-			warning.lines[1] = "Be careful - plugins from strangers may have viruses";
-			warning.lines[2] = " or other malicious behaviour.";
-			game.Gui.ShowOverlay(warning);
-		}
-		
-		
-		void Accept(Overlay overlay, bool always) {
-			string plugin = overlay.Metadata;
-			if (always && !accepted.HasEntry(plugin)) {
-				accepted.AddEntry(plugin);
-			}
-			
-			string dir = Path.Combine(Program.AppDirectory, "plugins");
-			Load(Path.Combine(dir, plugin + ".dll"), true);
-		}
-
-		void Deny(Overlay overlay, bool always) {
-			string plugin = overlay.Metadata;
-			if (always && !denied.HasEntry(plugin)) {
-				denied.AddEntry(plugin);
-			}
-		}
-		
-		List<string> LoadPlugins(string dir) {
+		static List<string> LoadPlugins(string dir) {
 			string[] dlls = Directory.GetFiles(dir, "*.dll");
 			List<string> nonLoaded = null;
 			
 			for (int i = 0; i < dlls.Length; i++) {
 				string plugin = Path.GetFileNameWithoutExtension(dlls[i]);
-				if (denied.HasEntry(plugin)) continue;
+				if (Denied.Has(plugin)) continue;
 				
-				if (accepted.HasEntry(plugin)) {
-					Load(dlls[i], false);
+				if (Accepted.Has(plugin)) {
+					Load(plugin, false);
 				} else if (nonLoaded == null) {
 					nonLoaded = new List<string>();
 					nonLoaded.Add(plugin);
@@ -84,8 +53,10 @@ namespace ClassicalSharp {
 			return nonLoaded;
 		}
 		
-		void Load(string path, bool needsInit) {
+		public static void Load(string pluginName, bool needsInit) {
 			try {
+				string dir = Path.Combine(Program.AppDirectory, "plugins");
+				string path = Path.Combine(dir, pluginName + ".dll");
 				Assembly lib = Assembly.LoadFrom(path);
 				Type[] types = lib.GetTypes();
 				
@@ -103,8 +74,7 @@ namespace ClassicalSharp {
 					game.Components.Add(plugin);
 				}
 			} catch (Exception ex) {
-				path = Path.GetFileNameWithoutExtension(path);
-				ErrorHandler.LogError("PluginLoader.Load() - " + path, ex);
+				ErrorHandler.LogError("PluginLoader.Load() - " + pluginName, ex);
 			}
 		}
 		

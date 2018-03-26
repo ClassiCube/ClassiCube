@@ -204,7 +204,6 @@
     <ClInclude Include="GameMode.h" />
     <ClInclude Include="Gui.h" />
     <ClInclude Include="HeldBlockRenderer.h" />
-    <ClInclude Include="Hotkeys.h" />
     <ClInclude Include="IModel.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputHandler.h" />
@@ -280,7 +279,6 @@
     <ClCompile Include="GameMode.c" />
     <ClCompile Include="Gui.c" />
     <ClCompile Include="HeldBlockRenderer.c" />
-    <ClCompile Include="Hotkeys.c" />
     <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="MapGenerator.c" />

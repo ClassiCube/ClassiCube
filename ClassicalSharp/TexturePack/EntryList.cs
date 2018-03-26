@@ -15,12 +15,12 @@ namespace ClassicalSharp.Textures {
 			this.file = file;
 		}
 		
-		public void AddEntry(string entry) {
+		public void Add(string entry) {
 			Entries.Add(entry);
 			Save();
 		}
 		
-		public bool HasEntry(string entry) {
+		public bool Has(string entry) {
 			return Entries.Contains(entry);
 		}
 		

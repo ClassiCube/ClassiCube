@@ -9,7 +9,7 @@ namespace ClassicalSharp.Gui.Screens {
 	public abstract class Overlay : MenuScreen {
 		
 		public Action<Overlay> OnRenderFrame;
-		protected TextWidget[] labels;
+		protected TextWidget[] labels = new TextWidget[4];
 		public string[] lines = new string[4];
 		public string Metadata;
 		
@@ -53,37 +53,30 @@ namespace ClassicalSharp.Gui.Screens {
 		protected void CloseOverlay() {
 			Dispose();
 			
-			if (game.Gui.overlays.Count > 0)
-				game.Gui.overlays.RemoveAt(0);
+			game.Gui.overlays.Remove(this);
 			if (game.Gui.overlays.Count == 0)
 				game.CursorVisible = game.realVisible;
 			game.Camera.RegrabMouse();
 		}
 		
-		public abstract void RedrawText();
-		
-		public abstract void MakeButtons();
-				
-		protected void SetTextWidgets(string[] lines) {
-			if (labels != null) {
-				for (int i = 0; i < labels.Length; i++)
-					labels[i].Dispose();
+		public virtual void RedrawText() {
+			for (int i = 0; i < labels.Length; i++) {
+				if (labels[i] == null) continue;				
+				labels[i].Dispose();
+				labels[i] = null;
 			}
-			
-			int count = 0;
-			for (int i = 0; i < lines.Length; i++) {
-				if (lines[i] != null) count++;
-			}
-			
-			labels = new TextWidget[count];
+
 			labels[0] = TextWidget.Create(game, lines[0], titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -120);
-					
-			for (int i = 1; i < count; i++) {
+			
+			for (int i = 1; i < 4; i++) {
+				if (lines[i] == null) continue;
 				labels[i] = TextWidget.Create(game, lines[i], regularFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -70 + 20 * i);
 				labels[i].Colour = new FastColour(224, 224, 224);
 			}
 		}
+		
+		public abstract void MakeButtons();
 	}
 }
