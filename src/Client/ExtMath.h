@@ -30,25 +30,17 @@
 #define Math_Sqrt(x) sqrtf(x)
 #define Math_Mod(x, y) fmodf(x, y)
 
-/* Integer floor of a floating-point value. */
 Int32 Math_Floor(Real32 value);
-/* Integer ceiling of a floating-point value. */
 Int32 Math_Ceil(Real32 value);
-/* Log base 2 of given value. */
 Int32 Math_Log2(Int32 value);
-/* Performs rounding upwards integer division.*/
 Int32 Math_CeilDiv(Int32 a, Int32 b);
-/* Returns sign of the given value. */
 Int32 Math_Sign(Real32 value);
 
-/* Performs linear interpolation between two values. */
 Real32 Math_Lerp(Real32 a, Real32 b, Real32 t);
 /* Linearly interpolates between a given angle range, adjusting if necessary. */
 Real32 Math_LerpAngle(Real32 leftAngle, Real32 rightAngle, Real32 t);
 
-/* Returns the next highest power of 2 that is greater or equal to the given value. */
 Int32 Math_NextPowOf2(Int32 value);
-/* Returns whether the given value is a power of 2. */
 bool Math_IsPowOf2(Int32 value);
 
 /* Returns the number of vertices needed to subdivide a quad. */

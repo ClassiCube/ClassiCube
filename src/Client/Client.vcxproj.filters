@@ -171,9 +171,6 @@
     <ClInclude Include="Block.h">
       <Filter>Header Files\Blocks</Filter>
     </ClInclude>
-    <ClInclude Include="Matrix.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
     <ClInclude Include="Bitmap.h">
       <Filter>Header Files\2D\Utils</Filter>
     </ClInclude>
@@ -394,9 +391,6 @@
     </ClCompile>
     <ClCompile Include="Block.c">
       <Filter>Source Files\Blocks</Filter>
-    </ClCompile>
-    <ClCompile Include="Matrix.c">
-      <Filter>Source Files\Math</Filter>
     </ClCompile>
     <ClCompile Include="Bitmap.c">
       <Filter>Source Files\2D\Utils</Filter>

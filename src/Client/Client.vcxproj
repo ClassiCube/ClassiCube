@@ -240,7 +240,6 @@
     <ClInclude Include="GraphicsAPI.h" />
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="GraphicsEnums.h" />
-    <ClInclude Include="Matrix.h" />
     <ClInclude Include="Noise.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="Random.h" />
@@ -298,7 +297,6 @@
     <ClCompile Include="Options.c" />
     <ClCompile Include="PackedCol.c" />
     <ClCompile Include="GraphicsCommon.c" />
-    <ClCompile Include="Matrix.c" />
     <ClCompile Include="Noise.c" />
     <ClCompile Include="Particle.c" />
     <ClCompile Include="Physics.c" />

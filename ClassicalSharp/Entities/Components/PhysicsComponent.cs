@@ -300,7 +300,8 @@ namespace ClassicalSharp.Entities {
 				if (dist < 0.002f || dist > 1f) continue; // TODO: range needs to be lower?
 				
 				Vector3 dir = Vector3.Normalize(dX, 0, dZ);
-				entity.Velocity -= dir * (1 - dist) / 32f; // TODO: should be 24/25
+				float pushStrength = (1 - dist) / 32f; // TODO: should be 24/25
+				entity.Velocity -= dir * pushStrength;
 			}
 		}
 	}

@@ -12,6 +12,7 @@
 #include "GraphicsAPI.h"
 #include "GraphicsCommon.h"
 #include "ModelCache.h"
+#include "Searcher.h"
 
 #define ANIM_MAX_ANGLE (110 * MATH_DEG2RAD)
 #define ANIM_ARM_MAX (60.0f * MATH_DEG2RAD)
@@ -577,23 +578,23 @@ bool ShadowComponent_GetBlocks(Entity* entity, Vector3I* coords, Real32 x, Real3
 	return true;
 }
 
-#define size 128
-#define half (size / 2)
+#define sh_size 128
+#define sh_half (sh_size / 2)
 void ShadowComponent_MakeTex(void) {
-	UInt8 pixels[Bitmap_DataSize(size, size)];
-	Bitmap bmp; Bitmap_Create(&bmp, size, size, pixels);
+	UInt8 pixels[Bitmap_DataSize(sh_size, sh_size)];
+	Bitmap bmp; Bitmap_Create(&bmp, sh_size, sh_size, pixels);
 
-	UInt32 inPix = PackedCol_ARGB(0, 0, 0, 200);
+	UInt32 inPix  = PackedCol_ARGB(0, 0, 0, 200);
 	UInt32 outPix = PackedCol_ARGB(0, 0, 0, 0);
 
 	UInt32 x, y;
-	for (y = 0; y < size; y++) {
+	for (y = 0; y < sh_size; y++) {
 		UInt32* row = Bitmap_GetRow(&bmp, y);
-		for (x = 0; x < size; x++) {
+		for (x = 0; x < sh_size; x++) {
 			Real64 dist = 
-				(half - (x + 0.5)) * (half - (x + 0.5)) +
-				(half - (y + 0.5)) * (half - (y + 0.5));
-			row[x] = dist < half * half ? inPix : outPix;
+				(sh_half - (x + 0.5)) * (sh_half - (x + 0.5)) +
+				(sh_half - (y + 0.5)) * (sh_half - (y + 0.5));
+			row[x] = dist < sh_half * sh_half ? inPix : outPix;
 		}
 	}
 	ShadowComponent_ShadowTex = Gfx_CreateTexture(&bmp, false, false);

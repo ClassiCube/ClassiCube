@@ -1,6 +1,6 @@
 #ifndef CC_FRUSTUMCULLING_H
 #define CC_FRUSTUMCULLING_H
-#include "Matrix.h"
+#include "Vectors.h"
 #include "Typedefs.h"
 /* Implements frustum culling of bounding spheres.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
