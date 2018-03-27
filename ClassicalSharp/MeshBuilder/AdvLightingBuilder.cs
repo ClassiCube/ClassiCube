@@ -454,7 +454,7 @@ namespace ClassicalSharp {
 			return flags;
 		}
 		
-		static int[] masks = {
+		static int[] masks = new int[] {
 			// Left face
 			(1 << xM1_yM1_zM1) | (1 << xM1_yM1_zCC) | (1 << xM1_yM1_zP1) |
 				(1 << xM1_yCC_zM1) | (1 << xM1_yCC_zCC) | (1 << xM1_yCC_zP1) |

@@ -210,9 +210,6 @@
     <ClInclude Include="Drawer.h">
       <Filter>Header Files\MeshBuilder</Filter>
     </ClInclude>
-    <ClInclude Include="FrustumCulling.h">
-      <Filter>Header Files\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="Stream.h">
       <Filter>Header Files\IO</Filter>
     </ClInclude>
@@ -421,9 +418,6 @@
     </ClCompile>
     <ClCompile Include="Drawer.c">
       <Filter>Source Files\MeshBuilder</Filter>
-    </ClCompile>
-    <ClCompile Include="FrustumCulling.c">
-      <Filter>Source Files\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="Stream.c">
       <Filter>Source Files\IO</Filter>

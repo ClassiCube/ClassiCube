@@ -107,7 +107,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
 		}
 		
-		static string[] descriptions = {
+		static string[] descriptions = new string[] {
 			"&eMusic/Sound, view bobbing, and more",
 			"&eChat options, gui scale, font settings, and more",
 			"&eFPS limit, view distance, entity names/shadows",

@@ -199,7 +199,6 @@
     <ClInclude Include="ErrorHandler.h" />
     <ClInclude Include="Event.h" />
     <ClInclude Include="Formats.h" />
-    <ClInclude Include="FrustumCulling.h" />
     <ClInclude Include="Deflate.h" />
     <ClInclude Include="GameMode.h" />
     <ClInclude Include="Gui.h" />
@@ -281,7 +280,6 @@
     <ClCompile Include="InputHandler.c" />
     <ClCompile Include="Inventory.c" />
     <ClCompile Include="MapGenerator.c" />
-    <ClCompile Include="FrustumCulling.c" />
     <ClCompile Include="GameStructs.c" />
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="IModel.c" />

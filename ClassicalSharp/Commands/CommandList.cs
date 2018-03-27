@@ -73,7 +73,7 @@ namespace ClassicalSharp.Commands {
 			return match;
 		}
 		
-		static char[] splitChar = { ' ' };
+		static char[] splitChar = new char[] { ' ' };
 		public void Execute(string text) {
 			if (Utils.CaselessStarts(text, prefixSpace)) { // /client command args
 				text = text.Substring(prefixSpace.Length);

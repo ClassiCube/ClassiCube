@@ -411,7 +411,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			UpdateCaret();
 		}
 		
-		static char[] trimChars = {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
+		static char[] trimChars = new char[] {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		bool OtherKey(Key key) {
 			int maxChars = UsedLines * MaxCharsPerLine;
 			if (key == Key.V && Text.Length < maxChars) {

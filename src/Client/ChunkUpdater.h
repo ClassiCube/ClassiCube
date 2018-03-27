@@ -2,7 +2,6 @@
 #define CC_CHUNKUPDATER_H
 #include "Typedefs.h"
 #include "Vectors.h"
-#include "Event.h"
 /* Manages the process of building/deleting chunk meshes.
    Also sorts chunks so nearest chunks are ordered first, and calculates chunk visibility.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

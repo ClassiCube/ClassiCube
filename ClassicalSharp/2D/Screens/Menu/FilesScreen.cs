@@ -38,10 +38,10 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			buttons = new ButtonWidget[] {
 				MakeText(0, -100, Get(0)),
-				MakeText(0, -50, Get(1)),
-				MakeText(0,   0, Get(2)),
-				MakeText(0, 50, Get(3)),
-				MakeText(0, 100, Get(4)),
+				MakeText(0, -50,  Get(1)),
+				MakeText(0,   0,  Get(2)),
+				MakeText(0, 50,   Get(3)),
+				MakeText(0, 100,  Get(4)),
 				
 				Make(-220, 0, "<", MoveBackwards),
 				Make(220, 0, ">", MoveForwards),

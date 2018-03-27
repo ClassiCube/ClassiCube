@@ -87,7 +87,7 @@ namespace ClassicalSharp.Network {
 			#endif
 		}
 		
-		public static string[] ClientExtensions = {
+		public static string[] ClientExtensions = new string[] {
 			"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 			"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437",

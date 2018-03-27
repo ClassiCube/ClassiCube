@@ -195,7 +195,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Optimised version of DrawIndexedVb for VertexFormat.Pos3fTex2fCol4b </summary>
 		internal abstract void DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex);
 		
-		protected static int[] strideSizes = { 16, 24 };
+		protected static int[] strideSizes = new int[] { 16, 24 };
 		
 		
 		/// <summary> Sets the matrix type that load/push/pop operations should be applied to. </summary>

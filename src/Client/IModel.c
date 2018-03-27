@@ -4,7 +4,6 @@
 #include "Game.h"
 #include "ModelCache.h"
 #include "GraphicsCommon.h"
-#include "FrustumCulling.h"
 #include "GraphicsAPI.h"
 
 #define UV_POS_MASK ((UInt16)0x7FFF)

@@ -17,20 +17,17 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();
-			int extClipY = extendedHelp == null ? 0 : widgets[widgets.Length - 3].Y;
-			int extEndY = extendedHelp == null ? 0 : extendedHelp.Y + extendedHelp.Height;
-			
-			if (extendedHelp != null && extEndY <= extClipY) {
-				int tableWidth = extendedHelp.Width, tableHeight = extendedHelp.Height;
-				int x = game.Width / 2 - tableWidth / 2 - 5;
-				int y = game.Height / 2 + extHelpY - 5;
-				game.Graphics.Draw2DQuad(x, y, tableWidth + 10, tableHeight + 10, tableCol);
-			}
-			
 			game.Graphics.Texturing = true;
 			RenderWidgets(widgets, delta);
 			
-			if (extendedHelp != null && extEndY <= extClipY) {
+			if (extendedHelp != null) {
+				game.Graphics.Texturing = false;
+				int tableWidth = extendedHelp.Width, tableHeight = extendedHelp.Height;
+				int x = game.Width  / 2 - tableWidth / 2 - 5;
+				int y = game.Height / 2 + extHelpY - 5;
+				
+				game.Graphics.Draw2DQuad(x, y, tableWidth + 10, tableHeight + 10, tableCol);
+				game.Graphics.Texturing = true;
 				extendedHelp.Render(delta);
 			}
 			game.Graphics.Texturing = false;

@@ -2,6 +2,7 @@
 #define CC_VECTORS_H
 #include "Typedefs.h"
 /* Represents 2, 3 dimensional vectors, and 4 x 4 matrix.
+   Frustum culling sourced from http://www.crownandcutlass.com/features/technicaldetails/frustum.html
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -81,4 +82,7 @@ void Matrix_OrthographicOffCenter(Matrix* result, Real32 left, Real32 right, Rea
 void Matrix_PerspectiveFieldOfView(Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar);
 void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar);
 void Matrix_LookAt(Matrix* result, Vector3 eye, Vector3 target, Vector3 up);
+
+bool FrustumCulling_SphereInFrustum(Real32 x, Real32 y, Real32 z, Real32 radius);
+void FrustumCulling_CalcFrustumEquations(Matrix* projection, Matrix* modelView);
 #endif
