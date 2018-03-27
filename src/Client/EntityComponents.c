@@ -460,10 +460,10 @@ void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, Entity* entity, Shad
 	if (u2 <= 0.0f || v2 <= 0.0f || u1 >= 1.0f || v1 >= 1.0f) return;
 
 	radius /= 16.0f;
-	x1 = max(x1, cen.X - radius); u1 = max(u1, 0.0f);
-	z1 = max(z1, cen.Z - radius); v1 = max(v1, 0.0f);
-	x2 = min(x2, cen.X + radius); u2 = min(u2, 1.0f);
-	z2 = min(z2, cen.Z + radius); v2 = min(v2, 1.0f);
+	x1 = max(x1, cen.X - radius); u1 = u1 >= 0.0f ? u1 : 0.0f;
+	z1 = max(z1, cen.Z - radius); v1 = v1 >= 0.0f ? v1 : 0.0f;
+	x2 = min(x2, cen.X + radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
+	z2 = min(z2, cen.Z + radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
 
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, data->A);
 	VertexP3fT2fC4b* ptr = *vertices;
@@ -509,17 +509,6 @@ void ShadowComponent_DrawCircle(VertexP3fT2fC4b** vertices, Entity* entity, Shad
 	}
 }
 
-BlockID ShadowComponent_GetBlock(Int32 x, Int32 y, Int32 z) {
-	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
-		if (y == WorldEnv_EdgeHeight - 1)
-			return Block_Draw[WorldEnv_EdgeBlock] == DRAW_GAS ? BLOCK_AIR : BLOCK_BEDROCK;
-		if (y == WorldEnv_SidesHeight - 1)
-			return Block_Draw[WorldEnv_SidesBlock] == DRAW_GAS ? BLOCK_AIR : BLOCK_BEDROCK;
-		return BLOCK_AIR;
-	}
-	return World_GetBlock(x, y, z);
-}
-
 void ShadowComponent_CalcAlpha(Real32 playerY, ShadowData* data) {
 	Real32 height = playerY - data->Y;
 	if (height <= 6.0f) {
@@ -534,35 +523,36 @@ void ShadowComponent_CalcAlpha(Real32 playerY, ShadowData* data) {
 	else data->Y += 1.0f / 4.0f;
 }
 
-bool ShadowComponent_GetBlocks(Entity* entity, Vector3I* coords, Real32 x, Real32 z, Int32 posY, ShadowData* data) {
-	Int32 blockX = Math_Floor(x), blockZ = Math_Floor(z);
-	Vector3I p = { blockX, 0, blockZ };
-
-	/* Check we have not processed this particular block already */
-	UInt32 i, posCount = 0;
+bool ShadowComponent_GetBlocks(Entity* entity, Int32 x, Int32 y, Int32 z, ShadowData* data) {
+	Int32 count;
 	ShadowData zeroData = { 0.0f, 0, 0 };
-	for (i = 0; i < 4; i++) {
-		if (Vector3I_Equals(&coords[i], &p)) return false;
-		if (coords[i].X != Int32_MinValue) posCount++;
-		data[i] = zeroData;
-	}
-	coords[posCount] = p;
+	for (count = 0; count < 4; count++) { data[count] = zeroData; }
+	count = 0;
 
-	UInt32 count = 0;
 	ShadowData* cur = data;
-	Vector3 Position = entity->Position;
+	Real32 posY = entity->Position.Y;
+	bool outside = x < 0 || z < 0 || x >= World_Width || z >= World_Length;
 
-	while (posY >= 0 && count < 4) {
-		BlockID block = ShadowComponent_GetBlock(blockX, posY, blockZ);
-		posY--;
+	while (y >= 0 && count < 4) {
+		BlockID block;
+		if (!outside) {
+			block = World_GetBlock(x, y, z);
+		} else if (y == WorldEnv_EdgeHeight - 1) {
+			block = Block_Draw[WorldEnv_EdgeBlock] == DRAW_GAS  ? BLOCK_AIR : BLOCK_BEDROCK;
+		} else if (y == WorldEnv_SidesHeight - 1) {
+			block = Block_Draw[WorldEnv_SidesBlock] == DRAW_GAS ? BLOCK_AIR : BLOCK_BEDROCK;
+		} else {
+			block = BLOCK_AIR;
+		}
+		y--;
 
 		UInt8 draw = Block_Draw[block];
 		if (draw == DRAW_GAS || draw == DRAW_SPRITE || Block_IsLiquid[block]) continue;
-		Real32 blockY = posY + 1.0f + Block_MaxBB[block].Y;
-		if (blockY >= Position.Y + 0.01f) continue;
+		Real32 blockY = (y + 1.0f) + Block_MaxBB[block].Y;
+		if (blockY >= posY + 0.01f) continue;
 
 		cur->Block = block; cur->Y = blockY;
-		ShadowComponent_CalcAlpha(Position.Y, cur);
+		ShadowComponent_CalcAlpha(posY, cur);
 		count++; cur++;
 
 		/* Check if the casted shadow will continue on further down. */
@@ -572,7 +562,7 @@ bool ShadowComponent_GetBlocks(Entity* entity, Vector3I* coords, Real32 x, Real3
 
 	if (count < 4) {
 		cur->Block = WorldEnv_EdgeBlock; cur->Y = 0.0f;
-		ShadowComponent_CalcAlpha(Position.Y, cur);
+		ShadowComponent_CalcAlpha(posY, cur);
 		count++; cur++;
 	}
 	return true;
@@ -610,42 +600,33 @@ void ShadowComponent_Draw(Entity* entity) {
 	ShadowComponent_radius = 7.0f * min(entity->ModelScale.Y, 1.0f) * entity->Model->ShadowScale;
 
 	VertexP3fT2fC4b vertices[128];
-	Vector3I coords[4];
 	ShadowData data[4];
-	for (Int32 i = 0; i < 4; i++) {
-		coords[i] = Vector3I_Create1(Int32_MinValue);
-	}
 
 	/* TODO: Should shadow component use its own VB? */
 	VertexP3fT2fC4b* ptr = vertices;
 	if (Entities_ShadowMode == SHADOW_MODE_SNAP_TO_BLOCK) {
 		vb = GfxCommon_texVb;
-		if (!ShadowComponent_GetBlocks(entity, coords, posX, posZ, posY, data)) return;
+		Int32 x1 = Math_Floor(posX), z1 = Math_Floor(posZ);
+		if (!ShadowComponent_GetBlocks(entity, x1, posY, z1, data)) return;
 
-		Real32 x1 = (Real32)Math_Floor(posX), z1 = (Real32)Math_Floor(posZ);
 		ShadowComponent_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
 	} else {
 		vb = ModelCache_Vb;
 		Real32 radius = ShadowComponent_radius / 16.0f;
+		Int32 x1 = Math_Floor(posX - radius), z1 = Math_Floor(posZ - radius);
+		Int32 x2 = Math_Floor(posX + radius), z2 = Math_Floor(posZ + radius);
 
-		Real32 x = posX - radius, z = posZ - radius;
-		if (ShadowComponent_GetBlocks(entity, coords, x, z, posY, data) && data[0].A > 0) {
-			ShadowComponent_DrawCircle(&ptr, entity, data, x, z);
+		if (ShadowComponent_GetBlocks(entity, x1, posY, z1, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, entity, data, (Real32)x1, (Real32)z1);
 		}
-
-		x = max(posX - radius, Math_Floor(posX + radius));
-		if (ShadowComponent_GetBlocks(entity, coords, x, z, posY, data) && data[0].A > 0) {
-			ShadowComponent_DrawCircle(&ptr, entity, data, x, z);
+		if (x1 != x2 && ShadowComponent_GetBlocks(entity, x2, posY, z1, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, entity, data, (Real32)x2, (Real32)z1);
 		}
-
-		z = max(posZ - radius, Math_Floor(posZ + radius));
-		if (ShadowComponent_GetBlocks(entity, coords, x, z, posY, data) && data[0].A > 0) {
-			ShadowComponent_DrawCircle(&ptr, entity, data, x, z);
+		if (z1 != z2 && ShadowComponent_GetBlocks(entity, x1, posY, z2, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, entity, data, (Real32)x1, (Real32)z2);
 		}
-
-		x = posX - radius;
-		if (ShadowComponent_GetBlocks(entity, coords, x, z, posY, data) && data[0].A > 0) {
-			ShadowComponent_DrawCircle(&ptr, entity, data, x, z);
+		if (x1 != x2 && z1 != z2 && ShadowComponent_GetBlocks(entity, x2, posY, z2, data) && data[0].A > 0) {
+			ShadowComponent_DrawCircle(&ptr, entity, data, (Real32)x2, (Real32)z2);
 		}
 	}
 

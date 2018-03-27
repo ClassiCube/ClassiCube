@@ -199,7 +199,7 @@ namespace ClassicalSharp {
 		}
 		
 		void Stretch(int x1, int y1, int z1) {
-			int xMax = Math.Min(width, x1 + chunkSize);
+			int xMax = Math.Min(width,  x1 + chunkSize);
 			int yMax = Math.Min(height, y1 + chunkSize);
 			int zMax = Math.Min(length, z1 + chunkSize);
 			#if OCCLUSION
