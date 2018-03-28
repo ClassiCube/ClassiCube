@@ -13,7 +13,6 @@ typedef struct Vector4_ { Real32 X, Y, Z, W; } Vector4;
 typedef struct Matrix_ { Vector4 Row0, Row1, Row2, Row3; } Matrix;
 extern Matrix Matrix_Identity;
 
-Vector2 Vector2_Create2(Real32 x, Real32 y);
 Vector3 Vector3_Create1(Real32 value);
 Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z);
 Vector3I Vector3I_Create1(Int32 value);

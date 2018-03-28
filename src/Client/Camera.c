@@ -155,7 +155,8 @@ Vector3 FirstPersonCamera_GetCameraPos(Real32 t) {
 
 Vector2 FirstPersonCamera_GetCameraOrientation(void) {
 	Entity* p = &LocalPlayer_Instance.Base;
-	return Vector2_Create2(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
+	Vector2 ori = { p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD };
+	return ori;
 }
 
 bool FirstPersonCamera_Zoom(Real32 amount) { return false; }
@@ -206,12 +207,14 @@ Vector3 ForwardThirdPersonCamera_GetCameraPos(Real32 t) {
 
 Vector2 ThirdPersonCamera_GetCameraOrientation(void) {
 	Entity* p = &LocalPlayer_Instance.Base;
-	return Vector2_Create2(p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD);
+	Vector2 ori = { p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD };
+	return ori;
 }
 
 Vector2 ForwardThirdPersonCamera_GetCameraOrientation(void) {
 	Entity* p = &LocalPlayer_Instance.Base;
-	return Vector2_Create2(p->HeadY * MATH_DEG2RAD + MATH_PI, -p->HeadX * MATH_DEG2RAD);
+	Vector2 ori = { p->HeadY * MATH_DEG2RAD + MATH_PI, -p->HeadX * MATH_DEG2RAD };
+	return ori;
 }
 
 bool ThirdPersonCamera_Zoom(Real32 amount) {

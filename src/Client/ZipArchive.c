@@ -1,7 +1,6 @@
 #include "ZipArchive.h"
 #include "ErrorHandler.h"
 #include "Platform.h"
-#include "Stream.h"
 #include "Deflate.h"
 
 String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {

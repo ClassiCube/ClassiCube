@@ -14,40 +14,41 @@
 #define ANCHOR_CENTRE 1 /* Middle */
 #define ANCHOR_MAX 2    /* Bottom or right */
 
-struct GuiElement_;
-typedef struct GuiElement_ {
+typedef struct GuiElement_ GuiElement;
+typedef struct GuiElementVTABLE_ {
 	/* Initalises state of this GUI element */
-	void (*Init)(struct GuiElement_* elem);
+	void (*Init)(GuiElement* elem);
 	/* Draws this gui element on screen */
-	void (*Render)(struct GuiElement_* elem, Real64 delta);
+	void (*Render)(GuiElement* elem, Real64 delta);
 	/* Frees the state of this GUI element */
-	void (*Free)(struct GuiElement_* elem);
+	void (*Free)(GuiElement* elem);
 	/* Recreates all sub-elements and/or textures. (e.g. for when bitmap font changes) */
-	void (*Recreate)(struct GuiElement_* elem);
+	void (*Recreate)(GuiElement* elem);
 	/* Returns whether this GUI element handles a key being pressed. */
-	bool (*HandlesKeyDown)(struct GuiElement_* elem, Key key);
+	bool (*HandlesKeyDown)(GuiElement* elem, Key key);
 	/* Returns whether this GUI element handles a key being released. */
-	bool (*HandlesKeyUp)(struct GuiElement_* elem, Key key);
+	bool (*HandlesKeyUp)(GuiElement* elem, Key key);
 	/* Returns whether this GUI element handles a character being input */
-	bool (*HandlesKeyPress)(struct GuiElement_* elem, UInt8 keyChar);
+	bool (*HandlesKeyPress)(GuiElement* elem, UInt8 keyChar);
 	/* Returns whether this GUI element handles a mouse button being pressed. */
-	bool (*HandlesMouseDown)(struct GuiElement_* elem, Int32 x, Int32 y, MouseButton btn);
+	bool (*HandlesMouseDown)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
 	/* Returns whether this GUI element handles a mouse button being released. */
-	bool (*HandlesMouseUp)(struct GuiElement_* elem, Int32 x, Int32 y, MouseButton btn);
+	bool (*HandlesMouseUp)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
 	/* Returns whether this GUI element handles the mouse being moved. */
-	bool (*HandlesMouseMove)(struct GuiElement_* elem, Int32 x, Int32 y);
+	bool (*HandlesMouseMove)(GuiElement* elem, Int32 x, Int32 y);
 	/* Returns whether this GUI element handles the mouse being scrolled. */
-	bool (*HandlesMouseScroll)(struct GuiElement_* elem, Real32 delta);
-} GuiElement;
-void GuiElement_Reset(GuiElement* elem);
+	bool(*HandlesMouseScroll)(GuiElement* elem, Real32 delta);
+} GuiElementVTABLE;
 
+typedef struct GuiElement_ { GuiElementVTABLE* VTABLE; } GuiElement;
+void GuiElement_Reset(GuiElement* elem);
 
 /*
 	HandlesAllInput; / Whether this screen handles all input. Prevents user interacting with the world
 	BlocksWorld;     / Whether this screen completely and opaquely covers the game world behind it
 	HidesHUD;        / Whether this screen hides the normal in-game HUD
 	RenderHUDOver;   / Whether the normal in-game HUD should be drawn over the top of this screen */
-#define Screen_Layout GuiElement Base; bool HandlesAllInput, BlocksWorld; \
+#define Screen_Layout GuiElementVTABLE* VTABLE; bool HandlesAllInput, BlocksWorld; \
 bool HidesHUD, RenderHUDOver; void (*OnResize)(GuiElement* elem);
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
@@ -61,7 +62,7 @@ void Screen_Reset(Screen* screen);
 	Disabled;             / Whether widget is prevented from being interacted with
 	HorAnchor, VerAnchor; / Specifies the reference point for when this widget is resized
 	XOffset, YOffset;     / Offset from the reference point */
-#define Widget_Layout GuiElement Base; Int32 X, Y, Width, Height; bool Active, Disabled; \
+#define Widget_Layout GuiElementVTABLE* VTABLE; Int32 X, Y, Width, Height; bool Active, Disabled; \
 UInt8 HorAnchor, VerAnchor; Int32 XOffset, YOffset; void (*Reposition)(GuiElement* elem);
 
 /* Represents an individual 2D gui component. */

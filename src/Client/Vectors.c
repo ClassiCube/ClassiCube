@@ -2,10 +2,6 @@
 #include "ExtMath.h"
 #include "Funcs.h"
 
-Vector2 Vector2_Create2(Real32 x, Real32 y) {
-	Vector2 v; v.X = x; v.Y = y; return v;
-}
-
 Vector3 Vector3_Create1(Real32 value) {
 	Vector3 v; v.X = value; v.Y = value; v.Z = value; return v;
 }

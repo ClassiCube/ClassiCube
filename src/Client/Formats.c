@@ -1,10 +1,11 @@
-#include "Typedefs.h"
+#include "Formats.h"
 #include "World.h"
 #include "Deflate.h"
 #include "Block.h"
 #include "Player.h"
 #include "Platform.h"
 #include "ExtMath.h"
+#include "ErrorHandler.h"
 
 void Map_ReadBlocks(Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;

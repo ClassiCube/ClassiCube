@@ -323,8 +323,8 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 }
 
 void InputHandler_MouseWheel(void* obj, Real32 delta) {
-	GuiElement* active = &Gui_GetActiveScreen()->Base;
-	if (active->HandlesMouseScroll(active, delta)) return;
+	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	if (active->VTABLE->HandlesMouseScroll(active, delta)) return;
 
 	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
 	if (!hotbar && Camera_ActiveCamera->Zoom(delta)) return;
@@ -334,13 +334,13 @@ void InputHandler_MouseWheel(void* obj, Real32 delta) {
 }
 
 void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {
-	GuiElement* active = &Gui_GetActiveScreen()->Base;
-	active->HandlesMouseMove(active, Mouse_X, Mouse_Y);
+	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	active->VTABLE->HandlesMouseMove(active, Mouse_X, Mouse_Y);
 }
 
 void InputHandler_MouseDown(void* obj, MouseButton button) {
-	GuiElement* active = &Gui_GetActiveScreen()->Base;
-	if (!active->HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
+	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	if (!active->VTABLE->HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
 		bool left   = button == MouseButton_Left;
 		bool middle = button == MouseButton_Middle;
 		bool right  = button == MouseButton_Right;
@@ -351,8 +351,8 @@ void InputHandler_MouseDown(void* obj, MouseButton button) {
 }
 
 void InputHandler_MouseUp(void* obj, MouseButton button) {
-	GuiElement* active = &Gui_GetActiveScreen()->Base;
-	if (!active->HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
+	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	if (!active->VTABLE->HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
 		if (ServerConnection_SupportsPlayerClick && button <= MouseButton_Middle) {
 			input_pickingId = -1;
 			InputHandler_ButtonStateChanged(button, false);
@@ -374,7 +374,7 @@ bool InputHandler_SimulateMouse(Key key, bool pressed) {
 
 void InputHandler_KeyDown(void* obj, Key key) {
 	if (InputHandler_SimulateMouse(key, true)) return;
-	GuiElement* active = &Gui_GetActiveScreen()->Base;
+	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 
 	Key last = input_lastKey; input_lastKey = key;
 	if (InputHandler_IsShutdown(key, last)) {
@@ -382,7 +382,7 @@ void InputHandler_KeyDown(void* obj, Key key) {
 		Window_Close();
 	} else if (key == KeyBind_Get(KeyBind_Screenshot)) {
 		Game_ScreenshotRequested = true;
-	} else if (active->HandlesKeyDown(active, key)) {
+	} else if (active->VTABLE->HandlesKeyDown(active, key)) {
 	} else if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_Instance.Input.Handles(key)) {
 	} else {
@@ -406,13 +406,13 @@ void InputHandler_KeyUp(void* obj, Key key) {
 		InputHandler_SetFOV(Game_DefaultFov, false);
 	}
 
-	GuiElement* active = &Gui_GetActiveScreen()->Base;
-	active->HandlesKeyUp(active, key);
+	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	active->VTABLE->HandlesKeyUp(active, key);
 }
 
 void InputHandler_KeyPress(void* obj, Int32 keyChar) {
-	GuiElement* active = &Gui_GetActiveScreen()->Base;
-	active->HandlesKeyPress(active, (UInt8)keyChar);
+	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
+	active->VTABLE->HandlesKeyPress(active, (UInt8)keyChar);
 }
 
 void InputHandler_Init(void) {

@@ -9,7 +9,7 @@ namespace ClassicalSharp.Physics {
 		public Vector3 Min;
 		public Vector3 Max;
 		
-		public float Width { get { return Max.X - Min.X; } }
+		public float Width  { get { return Max.X - Min.X; } }
 		public float Height { get { return Max.Y - Min.Y; } }
 		public float Length { get { return Max.Z - Min.Z; } }
 		

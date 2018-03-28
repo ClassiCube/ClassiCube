@@ -20,10 +20,23 @@
 
 #define Widget_Reposition(widget) (widget)->Reposition((GuiElement*)(widget));
 
+#define Elem_Init(elem)           (elem)->VTABLE->Init((GuiElement*)(elem))
+#define Elem_Render(elem, delta)  (elem)->VTABLE->Render((GuiElement*)(elem), delta)
+#define Elem_Free(elem)           (elem)->VTABLE->Free((GuiElement*)(elem))
+#define Elem_Recreate(elem)       (elem)->VTABLE->Recreate((GuiElement*)(elem))
+
+#define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress((GuiElement*)(elem), key)
+#define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown((GuiElement*)(elem), key)
+#define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp((GuiElement*)(elem), key)
+#define Elem_HandlesMouseDown(elem, x, y, btn) (elem)->VTABLE->HandlesMouseDown((GuiElement*)(elem), x, y, btn)
+#define Elem_HandlesMouseUp(elem, x, y, btn)   (elem)->VTABLE->HandlesMouseUp((GuiElement*)(elem), x, y, btn)
+#define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove((GuiElement*)(elem), x, y)
+#define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((GuiElement*)(elem), delta)
+
 void Widget_SetLocation(Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
 	widget->XOffset = xOffset; widget->YOffset = yOffset;
-	widget->Reposition(&widget->Base);
+	widget->Reposition((GuiElement*)widget);
 }
 
 void TextWidget_SetHeight(TextWidget* widget, Int32 height) {
@@ -60,21 +73,22 @@ void TextWidget_Reposition(GuiElement* elem) {
 	widget->Texture.Y += widget->Y - oldY;
 }
 
+GuiElementVTABLE TextWidget_VTABLE;
 void TextWidget_Make(TextWidget* widget, FontDesc* font) {
+	widget->VTABLE = &TextWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	PackedCol col = PACKEDCOL_WHITE;
 	widget->Col = col;
 	widget->Font = *font;
-	widget->Reposition  = TextWidget_Reposition;
-	widget->Base.Init   = TextWidget_Init;
-	widget->Base.Render = TextWidget_Render;
-	widget->Base.Free   = TextWidget_Free;
+	widget->Reposition     = TextWidget_Reposition;
+	widget->VTABLE->Init   = TextWidget_Init;
+	widget->VTABLE->Render = TextWidget_Render;
+	widget->VTABLE->Free   = TextWidget_Free;
 }
 
 void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* font) {
 	TextWidget_Make(widget, font);
-	GuiElement* elem = &widget->Base;
-	elem->Init(elem);
+	Elem_Init(widget);
 	TextWidget_SetText(widget, text);
 }
 
@@ -158,19 +172,20 @@ void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
+GuiElementVTABLE ButtonWidget_VTABLE;
 void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick) {
+	widget->VTABLE = &ButtonWidget_VTABLE;
 	Widget_Init((Widget*)widget);
-	widget->Base.Init   = ButtonWidget_Init;
-	widget->Base.Render = ButtonWidget_Render;
-	widget->Base.Free   = ButtonWidget_Free;
-	widget->Reposition  = ButtonWidget_Reposition;
+	widget->VTABLE->Init   = ButtonWidget_Init;
+	widget->VTABLE->Render = ButtonWidget_Render;
+	widget->VTABLE->Free   = ButtonWidget_Free;
+	widget->Reposition     = ButtonWidget_Reposition;
 
 	widget->Font = *font;
-	GuiElement* elem = &widget->Base;
-	elem->Init(elem);
+	Elem_Init(widget);
 	widget->MinWidth = minWidth; widget->MinHeight = 40;
 	ButtonWidget_SetText(widget, text);
-	widget->Base.HandlesMouseDown = onClick;
+	widget->VTABLE->HandlesMouseDown = onClick;
 }
 
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text) {
@@ -287,16 +302,18 @@ bool ScrollbarWidget_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	return false;
 }
 
+GuiElementVTABLE ScrollbarWidget_VTABLE;
 void ScrollbarWidget_Create(ScrollbarWidget* widget) {
+	widget->VTABLE = &ScrollbarWidget_VTABLE;
 	Widget_Init((Widget*)widget);
-	widget->Base.Init   = ScrollbarWidget_Init;
-	widget->Base.Render = ScrollbarWidget_Render;
-	widget->Base.Free   = ScrollbarWidget_Free;
+	widget->VTABLE->Init   = ScrollbarWidget_Init;
+	widget->VTABLE->Render = ScrollbarWidget_Render;
+	widget->VTABLE->Free   = ScrollbarWidget_Free;
 
-	widget->Base.HandlesMouseDown   = ScrollbarWidget_HandlesMouseDown;
-	widget->Base.HandlesMouseUp     = ScrollbarWidget_HandlesMouseUp;
-	widget->Base.HandlesMouseScroll = ScrollbarWidget_HandlesMouseScroll;
-	widget->Base.HandlesMouseMove   = ScrollbarWidget_HandlesMouseMove;	
+	widget->VTABLE->HandlesMouseDown   = ScrollbarWidget_HandlesMouseDown;
+	widget->VTABLE->HandlesMouseUp     = ScrollbarWidget_HandlesMouseUp;
+	widget->VTABLE->HandlesMouseScroll = ScrollbarWidget_HandlesMouseScroll;
+	widget->VTABLE->HandlesMouseMove   = ScrollbarWidget_HandlesMouseMove;	
 
 	widget->Width = SCROLL_WIDTH;
 	widget->TotalRows = 0;
@@ -438,8 +455,8 @@ bool HotbarWidget_HandlesKeyUp(GuiElement* elem, Key key) {
 }
 
 bool HotbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	HotbarWidget* widget = (Widget*)elem;
-	if (btn != MouseButton_Left || !Widget_Contains(widget, x, y)) return false;
+	HotbarWidget* widget = (HotbarWidget*)elem;
+	if (btn != MouseButton_Left || !Widget_Contains((Widget*)widget, x, y)) return false;
 	Screen* screen = Gui_GetActiveScreen();
 	if (screen != InventoryScreen_UNSAFE_RawPointer) return false;
 
@@ -473,20 +490,22 @@ bool HotbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	return true;
 }
 
+GuiElementVTABLE HotbarWidget_VTABLE;
 void HotbarWidget_Create(HotbarWidget* widget) {
+	widget->VTABLE = &HotbarWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->HorAnchor = ANCHOR_CENTRE;
 	widget->VerAnchor = ANCHOR_MAX;
 
-	widget->Base.Init   = HotbarWidget_Init;
-	widget->Base.Render = HotbarWidget_Render;
-	widget->Base.Free   = HotbarWidget_Free;
-	widget->Reposition  = HotbarWidget_Reposition;
+	widget->VTABLE->Init   = HotbarWidget_Init;
+	widget->VTABLE->Render = HotbarWidget_Render;
+	widget->VTABLE->Free   = HotbarWidget_Free;
+	widget->Reposition     = HotbarWidget_Reposition;
 
-	widget->Base.HandlesKeyDown     = HotbarWidget_HandlesKeyDown;
-	widget->Base.HandlesKeyUp       = HotbarWidget_HandlesKeyUp;
-	widget->Base.HandlesMouseDown   = HotbarWidget_HandlesMouseDown;
-	widget->Base.HandlesMouseScroll = HotbarWidget_HandlesMouseScroll;
+	widget->VTABLE->HandlesKeyDown     = HotbarWidget_HandlesKeyDown;
+	widget->VTABLE->HandlesKeyUp       = HotbarWidget_HandlesKeyUp;
+	widget->VTABLE->HandlesMouseDown   = HotbarWidget_HandlesMouseDown;
+	widget->VTABLE->HandlesMouseScroll = HotbarWidget_HandlesMouseScroll;
 }
 
 
@@ -617,7 +636,7 @@ void TableWidget_Init(GuiElement* elem) {
 	TableWidget_RecreateElements(widget);
 	Widget_Reposition(widget);
 	TableWidget_SetBlockTo(widget, Inventory_SelectedBlock);
-	elem->Recreate(elem);
+	Elem_Recreate(widget);
 }
 
 void TableWidget_Render(GuiElement* elem, Real64 delta) {	
@@ -634,8 +653,7 @@ void TableWidget_Render(GuiElement* elem, Real64 delta) {
 		Table_Width(widget), Table_Height(widget), topBackCol, bottomBackCol);
 
 	if (widget->RowsCount > TABLE_MAX_ROWS_DISPLAYED) {
-		GuiElement* scroll = &widget->Scroll.Base;
-		scroll->Render(scroll, delta);
+		Elem_Render(&widget->Scroll, delta);
 	}
 
 	Int32 blockSize = widget->BlockSize;
@@ -688,7 +706,7 @@ void TableWidget_Free(GuiElement* elem) {
 
 void TableWidget_Recreate(GuiElement* elem) {
 	TableWidget* widget = (TableWidget*)elem;
-	elem->Free(elem);
+	Elem_Free(widget);
 	widget->VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(widget);
 }
@@ -721,8 +739,7 @@ bool TableWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButto
 	widget->PendingClose = false;
 	if (btn != MouseButton_Left) return false;
 
-	GuiElement* scroll = &widget->Scroll.Base;
-	if (scroll->HandlesMouseDown(scroll, x, y, btn)) {
+	if (Elem_HandlesMouseDown(&widget->Scroll, x, y, btn)) {
 		return true;
 	} else if (widget->SelectedIndex != -1) {
 		Inventory_SetSelectedBlock(widget->Elements[widget->SelectedIndex]);
@@ -736,8 +753,7 @@ bool TableWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButto
 
 bool TableWidget_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	TableWidget* widget = (TableWidget*)elem;
-	GuiElement* scroll = &widget->Scroll.Base;
-	return scroll->HandlesMouseUp(scroll, x, y, btn);
+	return Elem_HandlesMouseUp(&widget->Scroll, x, y, btn);
 }
 
 bool TableWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
@@ -748,8 +764,7 @@ bool TableWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	if (!bounds) return false;
 
 	Int32 startScrollY = widget->Scroll.ScrollY;
-	GuiElement* scroll = &widget->Scroll.Base;
-	scroll->HandlesMouseScroll(scroll, delta);
+	Elem_HandlesMouseScroll(&widget->Scroll, delta);
 	if (widget->SelectedIndex == -1) return true;
 
 	Int32 index = widget->SelectedIndex;
@@ -763,8 +778,7 @@ bool TableWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 
 bool TableWidget_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	TableWidget* widget = (TableWidget*)elem;
-	GuiElement* scroll = &widget->Scroll.Base;
-	if (scroll->HandlesMouseMove(scroll, x, y)) return true;
+	if (Elem_HandlesMouseMove(&widget->Scroll, x, y)) return true;
 
 	widget->SelectedIndex = -1;
 	Int32 blockSize = widget->BlockSize;
@@ -804,21 +818,23 @@ bool TableWidget_HandlesKeyDown(GuiElement* elem, Key key) {
 	return true;
 }
 
+GuiElementVTABLE TableWidget_VTABLE;
 void TableWidget_Create(TableWidget* widget) {
+	widget->VTABLE = &TableWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->LastCreatedIndex = -1000;
 
-	widget->Base.Init     = TableWidget_Init;
-	widget->Base.Render   = TableWidget_Render;
-	widget->Base.Free     = TableWidget_Free;
-	widget->Base.Recreate = TableWidget_Recreate;
-	widget->Reposition    = TableWidget_Reposition;
+	widget->VTABLE->Init     = TableWidget_Init;
+	widget->VTABLE->Render   = TableWidget_Render;
+	widget->VTABLE->Free     = TableWidget_Free;
+	widget->VTABLE->Recreate = TableWidget_Recreate;
+	widget->Reposition       = TableWidget_Reposition;
 	
-	widget->Base.HandlesMouseDown   = TableWidget_HandlesMouseDown;
-	widget->Base.HandlesMouseUp     = TableWidget_HandlesMouseUp;
-	widget->Base.HandlesMouseScroll = TableWidget_HandlesMouseScroll;
-	widget->Base.HandlesMouseMove   = TableWidget_HandlesMouseMove;
-	widget->Base.HandlesKeyDown     = TableWidget_HandlesKeyDown;
+	widget->VTABLE->HandlesMouseDown   = TableWidget_HandlesMouseDown;
+	widget->VTABLE->HandlesMouseUp     = TableWidget_HandlesMouseUp;
+	widget->VTABLE->HandlesMouseScroll = TableWidget_HandlesMouseScroll;
+	widget->VTABLE->HandlesMouseMove   = TableWidget_HandlesMouseMove;
+	widget->VTABLE->HandlesKeyDown     = TableWidget_HandlesKeyDown;
 }
 
 void TableWidget_SetBlockTo(TableWidget* widget, BlockID block) {
@@ -1016,7 +1032,7 @@ void InputWidget_AppendChar(InputWidget* widget, UInt8 c) {
 bool InputWidget_TryAppendChar(InputWidget* widget, UInt8 c) {
 	Int32 maxChars = widget->GetMaxLines() * INPUTWIDGET_LEN;
 	if (widget->Text.length >= maxChars) return false;
-	if (!widget->AllowedChar(&widget->Base, c)) return false;
+	if (!widget->AllowedChar((GuiElement*)widget, c)) return false;
 
 	InputWidget_AppendChar(widget, c);
 	return true;
@@ -1029,14 +1045,12 @@ void InputWidget_AppendString(InputWidget* widget, STRING_PURE String* text) {
 	}
 
 	if (appended == 0) return;
-	GuiElement* elem = &widget->Base;
-	elem->Recreate(elem);
+	Elem_Recreate(widget);
 }
 
 void InputWidget_Append(InputWidget* widget, UInt8 c) {
 	if (!InputWidget_TryAppendChar(widget, c)) return;
-	GuiElement* elem = &widget->Base;
-	elem->Recreate(elem);
+	Elem_Recreate(widget);
 }
 
 void InputWidget_DeleteChar(InputWidget* widget) {
@@ -1076,8 +1090,7 @@ void InputWidget_BackspaceKey(InputWidget* widget) {
 		} else if (widget->CaretPos >= 0 && widget->Text.buffer[widget->CaretPos] != ' ') {
 			String_InsertAt(&widget->Text, widget->CaretPos, ' ');
 		}
-		GuiElement* elem = &widget->Base;
-		elem->Recreate(elem);
+		Elem_Recreate(widget);
 	} else if (widget->Text.length > 0 && widget->CaretPos != 0) {
 		Int32 index = widget->CaretPos == -1 ? widget->Text.length - 1 : widget->CaretPos;
 		if (InputWidget_CheckCol(widget, index - 1)) {
@@ -1088,8 +1101,7 @@ void InputWidget_BackspaceKey(InputWidget* widget) {
 		}
 
 		InputWidget_DeleteChar(widget);
-		GuiElement* elem = &widget->Base;
-		elem->Recreate(elem);
+		Elem_Recreate(widget);
 	}
 }
 
@@ -1097,8 +1109,7 @@ void InputWidget_DeleteKey(InputWidget* widget) {
 	if (widget->Text.length > 0 && widget->CaretPos != -1) {
 		String_DeleteAt(&widget->Text, widget->CaretPos);
 		if (widget->CaretPos >= widget->Text.length) { widget->CaretPos = -1; }
-		GuiElement* elem = &widget->Base;
-		elem->Recreate(elem);
+		Elem_Recreate(widget);
 	}
 }
 
@@ -1262,7 +1273,9 @@ bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButto
 	return true;
 }
 
+GuiElementVTABLE InputWidget_VTABLE;
 void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* prefix) {
+	widget->VTABLE = &InputWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->Font            = *font;
 	widget->Prefix          = *prefix;
@@ -1271,15 +1284,15 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->OnPressedEnter  = InputWidget_OnPressedEnter;
 	widget->AllowedChar     = InputWidget_AllowedChar;	
 
-	widget->Base.Init     = InputWidget_Init;
-	widget->Base.Free     = InputWidget_Free;
-	widget->Base.Recreate = InputWidget_Recreate;
-	widget->Reposition    = InputWidget_Reposition;
+	widget->VTABLE->Init     = InputWidget_Init;
+	widget->VTABLE->Free     = InputWidget_Free;
+	widget->VTABLE->Recreate = InputWidget_Recreate;
+	widget->Reposition       = InputWidget_Reposition;
 
-	widget->Base.HandlesKeyDown   = InputWidget_HandlesKeyDown;
-	widget->Base.HandlesKeyUp     = InputWidget_HandlesKeyUp;
-	widget->Base.HandlesKeyPress  = InputWidget_HandlesKeyPress;
-	widget->Base.HandlesMouseDown = InputWidget_HandlesMouseDown;
+	widget->VTABLE->HandlesKeyDown   = InputWidget_HandlesKeyDown;
+	widget->VTABLE->HandlesKeyUp     = InputWidget_HandlesKeyUp;
+	widget->VTABLE->HandlesKeyPress  = InputWidget_HandlesKeyPress;
+	widget->VTABLE->HandlesMouseDown = InputWidget_HandlesMouseDown;
 
 	String caret = String_FromConst("_");
 	DrawTextArgs args; DrawTextArgs_Make(&args, &caret, font, true);
@@ -1544,6 +1557,7 @@ bool MenuInputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
 }
 
 Int32 MenuInputWidget_GetMaxLines(void) { return 1; }
+GuiElementVTABLE MenuInputWidget_VTABLE;
 void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, MenuInputValidator* validator) {
 	InputWidget_Create(&widget->Base, font, NULL);
 	widget->MinWidth  = width;
@@ -1556,9 +1570,10 @@ void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, 
 	widget->Base.RemakeTexture = MenuInputWidget_RemakeTexture;
 	widget->Base.AllowedChar   = MenuInputWidget_AllowedChar;
 
-	GuiElement* elem = &widget->Base.Base;
-	elem->Render = MenuInputWidget_Render;
-	elem->Init(elem);
+	MenuInputWidget_VTABLE = *widget->Base.VTABLE;
+	widget->Base.VTABLE = &MenuInputWidget_VTABLE;
+	widget->Base.VTABLE->Render = MenuInputWidget_Render;
+	Elem_Init(&widget->Base);
 	InputWidget_AppendString(&widget->Base, text);
 }
 
@@ -1635,7 +1650,7 @@ void ChatInputWidget_UpKey(GuiElement* elem) {
 	String_AppendString(&input->Text, &prevInput);
 
 	input->CaretPos = -1;
-	elem->Recreate(elem);
+	Elem_Recreate(&widget->Base);
 }
 
 void ChatInputWidget_DownKey(GuiElement* elem) {
@@ -1665,7 +1680,7 @@ void ChatInputWidget_DownKey(GuiElement* elem) {
 	}
 
 	input->CaretPos = -1;
-	elem->Recreate(elem);
+	Elem_Recreate(input);
 }
 
 bool ChatInputWidget_IsNameChar(char c) {
@@ -1740,6 +1755,7 @@ Int32 ChatInputWidget_GetMaxLines(void) {
 	return !Game_ClassicMode && ServerConnection_SupportsPartialMessages ? 3 : 1;
 }
 
+GuiElementVTABLE ChatInputWidget_VTABLE;
 void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 	String prefix = String_FromConst("> ");
 	InputWidget_Create(&widget->Base, font, &prefix);
@@ -1750,10 +1766,11 @@ void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 	widget->Base.GetMaxLines    = ChatInputWidget_GetMaxLines;
 	widget->Base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
 
-	widget->Base.Base.Render         = ChatInputWidget_Render;
-	widget->Base.Base.HandlesKeyDown = ChatInputWidget_HandlesKeyDown;
+	ChatInputWidget_VTABLE = *widget->Base.VTABLE;
+	widget->Base.VTABLE = &ChatInputWidget_VTABLE;
+	widget->Base.VTABLE->Render         = ChatInputWidget_Render;
+	widget->Base.VTABLE->HandlesKeyDown = ChatInputWidget_HandlesKeyDown;
 }
-
 
 
 #define GROUP_NAME_ID UInt16_MaxValue
@@ -1776,7 +1793,6 @@ Texture PlayerListWidget_DrawName(PlayerListWidget* widget, STRING_PURE String* 
 	Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
 	return tex;
 }
-
 
 Int32 PlayerListWidget_HighlightedName(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY) {
 	if (!widget->Active) return -1;
@@ -2090,7 +2106,7 @@ void PlayerListWidget_Render(GuiElement* elem, Real64 delta) {
 	Gfx_SetTexturing(true);
 	overview->YOffset = widget->Y - offset + 5;
 	Widget_Reposition(overview);
-	overview->Base.Render(&overview->Base, delta);
+	Elem_Render(overview, delta);
 
 	Int32 i, highlightedI = PlayerListWidget_HighlightedName(widget, Mouse_X, Mouse_Y);
 	for (i = 0; i < widget->NamesCount; i++) {
@@ -2108,22 +2124,22 @@ void PlayerListWidget_Free(GuiElement* elem) {
 	for (i = 0; i < widget->NamesCount; i++) {
 		Gfx_DeleteTexture(&widget->Textures[i].ID);
 	}
-
-	elem = &widget->Overview.Base;
-	elem->Free(elem);
+	Elem_Free(&widget->Overview);
 
 	Event_UnregisterEntityID(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
 	Event_UnregisterEntityID(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
 	Event_UnregisterEntityID(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
 }
 
+GuiElementVTABLE PlayerListWidgetVTABLE;
 void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic) {
+	widget->VTABLE = &PlayerListWidgetVTABLE;
 	Widget_Init((Widget*)widget);
-	widget->Base.Init  = PlayerListWidget_Init;
-	widget->Base.Free  = PlayerListWidget_Free;
-	widget->Reposition = PlayerListWidget_Reposition;
-	widget->HorAnchor  = ANCHOR_CENTRE;
-	widget->VerAnchor  = ANCHOR_CENTRE;
+	widget->VTABLE->Init = PlayerListWidget_Init;
+	widget->VTABLE->Free = PlayerListWidget_Free;
+	widget->Reposition   = PlayerListWidget_Reposition;
+	widget->HorAnchor    = ANCHOR_CENTRE;
+	widget->VerAnchor    = ANCHOR_CENTRE;
 
 	widget->NamesCount = 0;
 	widget->Font = *font;
@@ -2313,12 +2329,14 @@ void TextGroupWidget_Free(GuiElement* elem) {
 	}
 }
 
+GuiElementVTABLE TextGroupWidget_VTABLE;
 void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont) {
+	widget->VTABLE = &TextGroupWidget_VTABLE;
 	Widget_Init((Widget*)widget);
-	widget->Base.Init   = TextGroupWidget_Init;
-	widget->Base.Render = TextGroupWidget_Render;
-	widget->Base.Free   = TextGroupWidget_Free;
-	widget->Reposition  = TextGroupWidget_Reposition;
+	widget->VTABLE->Init   = TextGroupWidget_Init;
+	widget->VTABLE->Render = TextGroupWidget_Render;
+	widget->VTABLE->Free   = TextGroupWidget_Free;
+	widget->Reposition     = TextGroupWidget_Reposition;
 
 	widget->LinesCount = linesCount;
 	widget->Font = *font;
@@ -2555,14 +2573,16 @@ void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active) {
 	widget->Height = active ? widget->Tex.Height : 0;
 }
 
+GuiElementVTABLE SpecialInputWidget_VTABLE;
 void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, InputWidget* appendObj) {
+	widget->VTABLE = &SpecialInputWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->VerAnchor = ANCHOR_MAX;
 	widget->Font = *font;
 	widget->AppendObj = appendObj;
 
-	widget->Base.Init   = SpecialInputWidget_Init;
-	widget->Base.Render = SpecialInputWidget_Render;
-	widget->Base.Free   = SpecialInputWidget_Free;
-	widget->Base.HandlesMouseDown   = SpecialInputWidget_HandlesMouseDown;
+	widget->VTABLE->Init   = SpecialInputWidget_Init;
+	widget->VTABLE->Render = SpecialInputWidget_Render;
+	widget->VTABLE->Free   = SpecialInputWidget_Free;
+	widget->VTABLE->HandlesMouseDown = SpecialInputWidget_HandlesMouseDown;
 }

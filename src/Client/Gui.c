@@ -9,11 +9,12 @@
 #include "Screens.h"
 #include "Camera.h"
 #include "InputHandler.h"
+#include "ErrorHandler.h"
 
 Screen* Gui_Status;
 void GuiElement_Recreate(GuiElement* elem) {
-	elem->Free(elem);
-	elem->Init(elem);
+	elem->VTABLE->Free(elem);
+	elem->VTABLE->Init(elem);
 }
 
 bool Gui_FalseKey(GuiElement* elem, Key key) { return false; }
@@ -23,22 +24,23 @@ bool Gui_FalseMouseMove(GuiElement* elem, Int32 x, Int32 y) { return false; }
 bool Gui_FalseMouseScroll(GuiElement* elem, Real32 delta) { return false; }
 
 void GuiElement_Reset(GuiElement* elem) {
-	elem->Init     = NULL;
-	elem->Render   = NULL;
-	elem->Free     = NULL;
-	elem->Recreate = GuiElement_Recreate;
+	elem->VTABLE->Init     = NULL;
+	elem->VTABLE->Render   = NULL;
+	elem->VTABLE->Free     = NULL;
+	elem->VTABLE->Recreate = GuiElement_Recreate;
 
-	elem->HandlesKeyDown     = Gui_FalseKey;
-	elem->HandlesKeyUp       = Gui_FalseKey;
-	elem->HandlesKeyPress    = Gui_FalseKeyPress;
-	elem->HandlesMouseDown   = Gui_FalseMouse;
-	elem->HandlesMouseUp     = Gui_FalseMouse;
-	elem->HandlesMouseMove   = Gui_FalseMouseMove;
-	elem->HandlesMouseScroll = Gui_FalseMouseScroll;
+	elem->VTABLE->HandlesKeyDown     = Gui_FalseKey;
+	elem->VTABLE->HandlesKeyUp       = Gui_FalseKey;
+	elem->VTABLE->HandlesKeyPress    = Gui_FalseKeyPress;
+
+	elem->VTABLE->HandlesMouseDown   = Gui_FalseMouse;
+	elem->VTABLE->HandlesMouseUp     = Gui_FalseMouse;
+	elem->VTABLE->HandlesMouseMove   = Gui_FalseMouseMove;
+	elem->VTABLE->HandlesMouseScroll = Gui_FalseMouseScroll;
 }
 
 void Screen_Reset(Screen* screen) {
-	GuiElement_Reset(&screen->Base);
+	GuiElement_Reset((GuiElement*)screen);
 	screen->HandlesAllInput = false;
 	screen->BlocksWorld     = false;
 	screen->HidesHUD        = false;
@@ -53,10 +55,9 @@ void Widget_DoReposition(GuiElement* elem) {
 }
 
 void Widget_Init(Widget* widget) {
-	GuiElement_Reset(&widget->Base);
+	GuiElement_Reset((GuiElement*)widget);
 	widget->Active = false;
 	widget->Disabled = false;
-	widget->Base.HandlesMouseDown = NULL;
 	widget->X = 0; widget->Y = 0;
 	widget->Width = 0; widget->Height = 0;
 	widget->HorAnchor = ANCHOR_MIN;
@@ -107,7 +108,7 @@ void Gui_Init(void) {
 void Gui_Reset(void) {
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		Gui_Overlays[i]->Base.Free(&Gui_Overlays[i]->Base);
+		Gui_Overlays[i]->VTABLE->Free((GuiElement*)Gui_Overlays[i]);
 	}
 	Gui_OverlaysCount = 0;
 }
@@ -115,10 +116,10 @@ void Gui_Reset(void) {
 void Gui_Free(void) {
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_SetNewScreen(NULL);
-	Gui_Status->Base.Free(&Gui_Status->Base);
+	Gui_Status->VTABLE->Free((GuiElement*)Gui_Status);
 
 	if (Gui_Active != NULL) {
-		Gui_Active->Base.Free(&Gui_Active->Base);
+		Gui_Active->VTABLE->Free((GuiElement*)Gui_Active);
 	}
 	Gfx_DeleteTexture(&Gui_GuiTex);
 	Gfx_DeleteTexture(&Gui_GuiClassicTex);
@@ -145,7 +146,7 @@ Screen* Gui_GetUnderlyingScreen(void) {
 void Gui_SetScreen(Screen* screen, bool freeOld) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
 	if (Gui_Active != NULL && freeOld) {
-		Gui_Active->Base.Free(&Gui_Active->Base);
+		Gui_Active->VTABLE->Free((GuiElement*)Gui_Active);
 	}
 
 	if (screen == NULL) {
@@ -156,7 +157,7 @@ void Gui_SetScreen(Screen* screen, bool freeOld) {
 	}
 
 	if (screen != NULL) {
-		screen->Base.Init(&screen->Base);
+		screen->VTABLE->Init((GuiElement*)screen);
 	}
 	Gui_Active = screen;
 }
@@ -164,7 +165,7 @@ void Gui_SetScreen(Screen* screen, bool freeOld) {
 void Gui_SetNewScreen(Screen* screen) { Gui_SetScreen(screen, true); }
 
 void Gui_RefreshHud(void) {
-	Gui_HUD->Base.Recreate(&Gui_HUD->Base);
+	Gui_HUD->VTABLE->Recreate((GuiElement*)Gui_HUD);
 }
 
 void Gui_ShowOverlay(Screen* overlay, bool atFront) {
@@ -187,40 +188,40 @@ void Gui_ShowOverlay(Screen* overlay, bool atFront) {
 	Gui_OverlaysCount++;
 
 	if (Gui_OverlaysCount == 1) Game_SetCursorVisible(visible); /* Save cursor visibility state */
-	overlay->Base.Init(&overlay->Base);
+	overlay->VTABLE->Init((GuiElement*)overlay);
 }
 
 void Gui_RenderGui(Real64 delta) {
 	GfxCommon_Mode2D(Game_Width, Game_Height);
 	if (Gui_Active == NULL || !Gui_Active->HidesHUD) {
-		Gui_Status->Base.Render(&Gui_Status->Base, delta);
+		Gui_Status->VTABLE->Render((GuiElement*)Gui_Status, delta);
 	}
 
 	if (Gui_Active == NULL || !Gui_Active->HidesHUD && !Gui_Active->RenderHUDOver) {
-		Gui_HUD->Base.Render(&Gui_HUD->Base, delta);
+		Gui_HUD->VTABLE->Render((GuiElement*)Gui_HUD, delta);
 	}
 	if (Gui_Active != NULL) {
-		Gui_Active->Base.Render(&Gui_Active->Base, delta);
+		Gui_Active->VTABLE->Render((GuiElement*)Gui_Active, delta);
 	}
 	if (Gui_Active != NULL && !Gui_Active->HidesHUD && Gui_Active->RenderHUDOver) {
-		Gui_HUD->Base.Render(&Gui_HUD->Base, delta);
+		Gui_HUD->VTABLE->Render((GuiElement*)Gui_HUD, delta);
 	}
 
 	if (Gui_OverlaysCount > 0) {
-		Gui_Overlays[0]->Base.Render(&Gui_Overlays[0]->Base, delta);
+		Gui_Overlays[0]->VTABLE->Render((GuiElement*)Gui_Overlays[0], delta);
 	}
 	GfxCommon_Mode3D();
 }
 
 void Gui_OnResize(void) {
 	if (Gui_Active != NULL) {
-		Gui_Active->OnResize(&Gui_Active->Base);
+		Gui_Active->OnResize((GuiElement*)Gui_Active);
 	}
-	Gui_HUD->OnResize(&Gui_HUD->Base);
+	Gui_HUD->OnResize((GuiElement*)Gui_HUD);
 
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		Gui_Overlays[i]->OnResize(&Gui_Overlays[i]->Base);
+		Gui_Overlays[i]->OnResize((GuiElement*)Gui_Overlays[i]);
 	}
 }
 
