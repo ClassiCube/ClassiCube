@@ -8,6 +8,7 @@
 #include "Block.h"
 #include "Entity.h"
 #include "ExtMath.h"
+#include "Physics.h"
 
 void World_Reset(void) {
 	World_Width = 0; World_Height = 0; World_Length = 0;

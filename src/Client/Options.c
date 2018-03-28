@@ -4,6 +4,7 @@
 #include "Utils.h"
 #include "Funcs.h"
 #include "Platform.h"
+#include "Stream.h"
 
 #define OPT_NOT_FOUND UInt32_MaxValue
 StringsBuffer Options_Changed;

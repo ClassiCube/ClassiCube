@@ -1,8 +1,6 @@
 #ifndef CC_BLOCK_H
 #define CC_BLOCK_H
-#include "Typedefs.h"
 #include "BlockID.h"
-#include "String.h"
 #include "PackedCol.h"
 #include "Vectors.h"
 #include "Constants.h"

@@ -12,7 +12,7 @@
 #include "GraphicsAPI.h"
 #include "GraphicsCommon.h"
 #include "ModelCache.h"
-#include "Searcher.h"
+#include "Physics.h"
 
 #define ANIM_MAX_ANGLE (110 * MATH_DEG2RAD)
 #define ANIM_ARM_MAX (60.0f * MATH_DEG2RAD)

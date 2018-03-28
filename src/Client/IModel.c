@@ -9,6 +9,9 @@
 #define UV_POS_MASK ((UInt16)0x7FFF)
 #define UV_MAX ((UInt16)0x8000)
 #define UV_MAX_SHIFT 15
+#define AABB_Width(bb)  (bb->Max.X - bb->Min.X)
+#define AABB_Height(bb) (bb->Max.Y - bb->Min.Y)
+#define AABB_Length(bb) (bb->Max.Z - bb->Min.Z)
 
 void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u, Int32 v) {
 	vertex->X = x; vertex->Y = y; vertex->Z = z;
@@ -51,7 +54,7 @@ bool IModel_ShouldRender(Entity* entity) {
 	AABB bb; Entity_GetPickingBounds(entity, &bb);
 
 	AABB* bbPtr = &bb;
-	Real32 bbWidth = AABB_Width(bbPtr);
+	Real32 bbWidth  = AABB_Width(bbPtr);
 	Real32 bbHeight = AABB_Height(bbPtr);
 	Real32 bbLength = AABB_Length(bbPtr);
 
@@ -283,7 +286,7 @@ ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
 	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, y2, y1, z2, z1, x2, false); /* left */
 	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, y1, y2, z2, z1, x1, false); /* right */
 
-																								/* rotate left and right 90 degrees	*/
+	/* rotate left and right 90 degrees	*/
 	Int32 i;
 	for (i = m->index - 8; i < m->index; i++) {
 		ModelVertex vertex = m->vertices[i];

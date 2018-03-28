@@ -4,6 +4,7 @@
 #include "GraphicsCommon.h"
 #include "Event.h"
 #include "Funcs.h"
+#include "Game.h"
 
 /* Data for a selection box. */
 typedef struct SelectionBox_ {

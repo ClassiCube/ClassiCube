@@ -15,6 +15,8 @@
 #include "ServerConnection.h"
 #include "Event.h"
 #include "Chat.h"
+#include "Game.h"
+#include "ErrorHandler.h"
 
 #define Widget_Reposition(widget) (widget)->Reposition((GuiElement*)(widget));
 
@@ -384,7 +386,7 @@ void HotbarWidget_Reposition(GuiElement* elem) {
 	widget->BarXOffset   = 3.1f * scale;
 	widget->BorderSize   = 4.0f * scale;
 
-	Widget_DoReposition(widget);
+	Widget_DoReposition(elem);
 	HotbarWidget_RepositonBackgroundTexture(widget);
 	HotbarWidget_RepositionSelectionTexture(widget);
 }

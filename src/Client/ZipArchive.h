@@ -2,24 +2,20 @@
 #define CC_ZIPARCHIVE_H
 #include "Typedefs.h"
 #include "String.h"
-#include "Stream.h"
 /* Extracts entries from a .zip archive stream.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
 typedef struct ZipEntry_ {
-	Int32 CompressedDataSize;
-	Int32 UncompressedDataSize;
-	Int32 LocalHeaderOffset;
+	Int32 CompressedDataSize, UncompressedDataSize, LocalHeaderOffset;
 	UInt32 Crc32;
 } ZipEntry;
+typedef struct Stream_ Stream; /* Forward declaration */
 
 #define ZIP_MAX_ENTRIES 2048
 typedef struct ZipState_ {
 	Stream* Input;
-	/* Processes the data of a .ZIP entry */
 	void (*ProcessEntry)(STRING_TRANSIENT String* path, Stream* data, ZipEntry* entry);
-	/* Selects which .ZIP entries are actually processed */
 	bool (*SelectEntry)(STRING_TRANSIENT String* path);
 	Int32 EntriesCount;
 	ZipEntry Entries[ZIP_MAX_ENTRIES];

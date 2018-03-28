@@ -2,7 +2,6 @@
 #define CC_WINDOW_H
 #include "Typedefs.h"
 #include "String.h"
-#include "Compiler.h"
 #include "Bitmap.h"
 #include "2DStructs.h"
 #include "DisplayDevice.h"

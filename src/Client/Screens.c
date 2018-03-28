@@ -18,6 +18,7 @@
 #include "Window.h"
 #include "Camera.h"
 #include "AsyncDownloader.h"
+#include "Block.h"
 
 #define LeftOnly(func) { if (btn == MouseButton_Left) { func; } return true; }
 #define Screen_Recreate(screen) (screen)->Base.Recreate(&((screen)->Base))

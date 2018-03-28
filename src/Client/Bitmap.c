@@ -3,6 +3,8 @@
 #include "PackedCol.h"
 #include "ExtMath.h"
 #include "Deflate.h"
+#include "ErrorHandler.h"
+#include "Stream.h"
 
 void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
 	bmp->Width = width; bmp->Height = height;

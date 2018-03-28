@@ -3,10 +3,9 @@
 #include "Typedefs.h"
 #include "Vectors.h"
 #include "PackedCol.h"
-#include "Block.h"
+#include "Physics.h"
 #include "Entity.h"
-#include "AABB.h"
-#include "GraphicsEnums.h"
+#include "Constants.h"
 /* Contains various structs and methods for an entity model.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -20,18 +19,12 @@ typedef struct Entity_ Entity; /* Forward declaration */
 #define ROTATE_ORDER_YZX 2
 
 /* Describes a vertex within a model. */
-typedef struct ModelVertex_ {
-	Real32 X, Y, Z;
-	UInt16 U, V;
-} ModelVertex;
+typedef struct ModelVertex_ { Real32 X, Y, Z; UInt16 U, V; } ModelVertex;
 void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u, Int32 v);
 
 /* Describes the starting index of this part within a model's array of vertices,
 and the number of vertices following the starting index that this part uses. */
-typedef struct ModelPart_ {
-	UInt16 Offset, Count;
-	Real32 RotX, RotY, RotZ;
-} ModelPart;
+typedef struct ModelPart_ { UInt16 Offset, Count; Real32 RotX, RotY, RotZ; } ModelPart;
 void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ);
 
 /* Contains a set of quads and/or boxes that describe a 3D object as well as
@@ -49,49 +42,22 @@ typedef struct IModel_ {
 	/* Whether the entity should be slightly bobbed up and down when rendering.
 	e.g. for players when their legs are at the peak of their swing, the whole model will be moved slightly down. */
 	bool Bobbing;
-	/* Whether this model uses a skin texture at all.
-	If false, no attempt is made to download the skin of an entity which has this model. */
-	bool UsesSkin;
-	/* Whether humanoid animations should be calculated, instead of normal animations.*/
-	bool CalcHumanAnims;
-	/* Whether the model uses humanoid skin texture, instead of mob skin texture. */
-	bool UsesHumanSkin;
-	/* Score earned by killing an entity with this model in survival mode. */
+	bool UsesSkin, CalcHumanAnims, UsesHumanSkin, Pushes;
 	UInt8 SurvivalScore;
-	/* Whether this model pushes other models when collided with. */
-	bool Pushes;
 
-	/* Gravity applied to this entity.*/
-	Real32 Gravity;
-	/* Drag applied to the entity.*/
-	Vector3 Drag;
-	/* Friction applied to the entity when is on the ground.*/
-	Vector3 GroundFriction;
+	Real32 Gravity; Vector3 Drag, GroundFriction;
 
-	/* Vertical offset from the model's feet/base that the model's eye is located. */
 	Real32 (*GetEyeY)(Entity* entity);
-	/* The size of the bounding box that is used when performing collision detection for this model. */
 	Vector3 (*GetCollisionSize)(void);
-	/* Bounding box that contains this model, assuming that the model is not rotated at all. */
 	void (*GetPickingBounds)(AABB* bb);
-	/* Fills out the vertices of this model. */
 	void (*CreateParts)(void);
-	/* Performs the actual rendering of an entity model. */
 	void (*DrawModel)(Entity* entity);
-	/* Gets the transformation matrix of this entity. */
 	void (*GetTransform)(Entity* entity, Vector3 pos);
 	/* Recalculates properties such as name Y offset, collision size. 
 	Not used by majority of models. (BlockModel is the exception).*/
 	void (*RecalcProperties)(Entity* entity);
 
-	/* Vertical offset from the model's feet/base that the name texture should be drawn at. */
-	Real32 NameYOffset;
-	/* The maximum scale the entity can have (for collisions and rendering).*/
-	Real32 MaxScale;
-	/* Scaling factor applied, multiplied by the entity's current model scale.*/
-	Real32 ShadowScale;
-	/* Scaling factor applied, multiplied by the entity's current model scale.*/
-	Real32 NameScale;
+	Real32 NameYOffset, MaxScale, ShadowScale, NameScale;
 } IModel;
 
 PackedCol IModel_Cols[FACE_COUNT];

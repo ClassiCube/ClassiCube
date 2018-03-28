@@ -1,11 +1,11 @@
 #include "GraphicsAPI.h"
 #include "ErrorHandler.h"
-#include "GraphicsEnums.h"
 #include "Platform.h"
 #include "Window.h"
 #include "GraphicsCommon.h"
 #include "Funcs.h"
 #include "Chat.h"
+#include "Game.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX

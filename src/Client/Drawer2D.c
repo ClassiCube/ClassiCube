@@ -3,6 +3,7 @@
 #include "Funcs.h"
 #include "Platform.h"
 #include "ExtMath.h"
+#include "ErrorHandler.h"
 
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow) {
 	args->Text = *text;

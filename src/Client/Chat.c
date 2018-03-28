@@ -11,6 +11,7 @@
 #include "Window.h"
 #include "GraphicsAPI.h"
 #include "Funcs.h"
+#include "Block.h"
 
 void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 	String dst = String_InitAndClearArray(line->Buffer);

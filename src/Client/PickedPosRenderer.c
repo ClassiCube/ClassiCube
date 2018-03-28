@@ -2,7 +2,6 @@
 #include "PackedCol.h"
 #include "VertexStructs.h"
 #include "GraphicsAPI.h"
-#include "GraphicsEnums.h"
 #include "GraphicsCommon.h"
 #include "Game.h"
 #include "Event.h"

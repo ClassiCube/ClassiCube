@@ -2,6 +2,7 @@
 #include "Drawer2D.h"
 #include "Funcs.h"
 #include "Platform.h"
+#include "ErrorHandler.h"
 
 void WordWrap_OutputLines(String* text, String* lines, Int32* lineLens, Int32 numLines, Int32 usedLines, Int32 charsPerLine) {
 	Int32 totalChars = charsPerLine * numLines, i, j;

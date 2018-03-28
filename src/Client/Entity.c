@@ -10,7 +10,6 @@
 #include "Funcs.h"
 #include "ModelCache.h"
 #include "GraphicsAPI.h"
-#include "Intersection.h"
 #include "Lighting.h"
 
 const UInt8* NameMode_Names[5]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };

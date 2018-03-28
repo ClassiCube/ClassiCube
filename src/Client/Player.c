@@ -7,6 +7,7 @@
 #include "AsyncDownloader.h"
 #include "ExtMath.h"
 #include "Funcs.h"
+#include "Game.h"
 
 #define PLAYER_NAME_EMPTY_TEX -30000
 void Player_MakeNameTexture(Player* player) {

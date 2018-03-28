@@ -9,6 +9,7 @@
 #include "GraphicsAPI.h"
 #include "GraphicsCommon.h"
 #include "Funcs.h"
+#include "Game.h"
 
 void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b** vertices) {
 	Real32 sX = size->X * 0.5f, sY = size->Y * 0.5f;

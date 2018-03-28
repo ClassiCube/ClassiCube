@@ -1,10 +1,10 @@
 #include "GraphicsAPI.h"
 #include "ErrorHandler.h"
-#include "GraphicsEnums.h"
 #include "Platform.h"
 #include "Window.h"
 #include "GraphicsCommon.h"
 #include "Funcs.h"
+#include "Game.h"
 
 #if USE_DX
 //#define D3D_DISABLE_9EX causes compile errors

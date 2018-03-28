@@ -3,7 +3,6 @@
 #include "Typedefs.h"
 #include "PackedCol.h"
 #include "2DStructs.h"
-#include "GraphicsEnums.h"
 
 /* Represents a simple 2D textured quad.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

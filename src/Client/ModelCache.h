@@ -3,9 +3,6 @@
 #include "Typedefs.h"
 #include "String.h"
 #include "IModel.h"
-#include "GraphicsEnums.h"
-#include "Compiler.h"
-#include "Stream.h"
 #include "VertexStructs.h"
 /* Contains a cache of model instances and default textures for models.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

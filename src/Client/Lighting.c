@@ -4,6 +4,7 @@
 #include "MapRenderer.h"
 #include "Platform.h"
 #include "World.h"
+#include "ErrorHandler.h"
 /* Manages lighting through a simple heightmap, where each block is either in sun or shadow. */
 
 Int16* Lighting_heightmap;

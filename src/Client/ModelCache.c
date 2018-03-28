@@ -7,6 +7,9 @@
 #include "String.h"
 #include "TerrainAtlas.h"
 #include "Drawer.h"
+#include "Block.h"
+#include "Stream.h"
+#include "ErrorHandler.h"
 
 UInt32 ModelCache_texCount, ModelCache_modelCount;
 
@@ -1124,7 +1127,7 @@ Vector3 BlockModel_GetCollisionSize(void) {
 
 void BlockModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords(bb, &BlockModel_minBB, &BlockModel_maxBB);
-	Vector3 offset = Vector3_Create3(-0.5f, 0.0f, -0.5f);
+	Vector3 offset = { -0.5f, 0.0f, -0.5f };
 	AABB_Offset(bb, bb, &offset);
 }
 

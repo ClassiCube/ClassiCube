@@ -183,9 +183,6 @@
     <ClInclude Include="GraphicsAPI.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsEnums.h">
-      <Filter>Header Files\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="GraphicsCommon.h">
       <Filter>Header Files\Graphics</Filter>
     </ClInclude>
@@ -219,14 +216,8 @@
     <ClInclude Include="GameStructs.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
-    <ClInclude Include="Intersection.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="AABB.h">
-      <Filter>Header Files\Math</Filter>
     </ClInclude>
     <ClInclude Include="SelectionBox.h">
       <Filter>Header Files\SelectionBox</Filter>
@@ -275,9 +266,6 @@
     </ClInclude>
     <ClInclude Include="Player.h">
       <Filter>Header Files\Entities</Filter>
-    </ClInclude>
-    <ClInclude Include="Physics.h">
-      <Filter>Header Files\Singleplayer</Filter>
     </ClInclude>
     <ClInclude Include="TreeGen.h">
       <Filter>Header Files\Generator</Filter>
@@ -366,14 +354,17 @@
     <ClInclude Include="EntityComponents.h">
       <Filter>Header Files\Entities</Filter>
     </ClInclude>
-    <ClInclude Include="Searcher.h">
-      <Filter>Header Files\Math</Filter>
-    </ClInclude>
     <ClInclude Include="HeldBlockRenderer.h">
       <Filter>Header Files\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="InputHandler.h">
       <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="BlockPhysics.h">
+      <Filter>Header Files\Singleplayer</Filter>
+    </ClInclude>
+    <ClInclude Include="Physics.h">
+      <Filter>Header Files\Math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -425,9 +416,6 @@
     <ClCompile Include="GameStructs.c">
       <Filter>Source Files\Game</Filter>
     </ClCompile>
-    <ClCompile Include="Intersection.c">
-      <Filter>Source Files\Math</Filter>
-    </ClCompile>
     <ClCompile Include="SelectionBox.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
@@ -461,9 +449,6 @@
     <ClCompile Include="PickedPosRenderer.c">
       <Filter>Source Files\SelectionBox</Filter>
     </ClCompile>
-    <ClCompile Include="Physics.c">
-      <Filter>Source Files\Singleplayer</Filter>
-    </ClCompile>
     <ClCompile Include="TreeGen.c">
       <Filter>Source Files\Generator</Filter>
     </ClCompile>
@@ -475,9 +460,6 @@
     </ClCompile>
     <ClCompile Include="ChunkUpdater.c">
       <Filter>Source Files\Rendering\Map</Filter>
-    </ClCompile>
-    <ClCompile Include="AABB.c">
-      <Filter>Source Files\Math</Filter>
     </ClCompile>
     <ClCompile Include="IModel.c">
       <Filter>Source Files\Entities\Model</Filter>
@@ -575,9 +557,6 @@
     <ClCompile Include="Player.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
-    <ClCompile Include="Searcher.c">
-      <Filter>Source Files\Math</Filter>
-    </ClCompile>
     <ClCompile Include="Texture.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
@@ -586,6 +565,12 @@
     </ClCompile>
     <ClCompile Include="InputHandler.c">
       <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="BlockPhysics.c">
+      <Filter>Source Files\Singleplayer</Filter>
+    </ClCompile>
+    <ClCompile Include="Physics.c">
+      <Filter>Source Files\Math</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

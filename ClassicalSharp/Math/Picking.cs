@@ -78,12 +78,17 @@ namespace ClassicalSharp {
 			t.SetVectors(origin, dir);
 			float reachSq = reach * reach;
 			Vector3I pOrigin = Vector3I.Floor(origin);
+			bool insideMap = game.World.IsValidPos(pOrigin);
 
+			Vector3 coords;
 			for (int i = 0; i < 10000; i++) {
 				int x = t.X, y = t.Y, z = t.Z;
-				t.Block = GetBlock(game.World, x, y, z, pOrigin);
-				Vector3 min = new Vector3(x, y, z) + BlockInfo.RenderMinBB[t.Block];
-				Vector3 max = new Vector3(x, y, z) + BlockInfo.RenderMaxBB[t.Block];
+				coords.X = x; coords.Y = y; coords.Z = z;
+				t.Block = insideMap ?
+					InsideGetBlock(game.World, x, y, z) : OutsideGetBlock(game.World, x, y, z, pOrigin);
+				
+				Vector3 min = coords + BlockInfo.RenderMinBB[t.Block];
+				Vector3 max = coords + BlockInfo.RenderMaxBB[t.Block];
 				
 				float dx = Math.Min(Math.Abs(origin.X - min.X), Math.Abs(origin.X - max.X));
 				float dy = Math.Min(Math.Abs(origin.Y - min.Y), Math.Abs(origin.Y - max.Y));
@@ -101,32 +106,34 @@ namespace ClassicalSharp {
 		}
 
 		const BlockID border = Block.Bedrock;
-		static BlockID GetBlock(World map, int x, int y, int z, Vector3I origin) {
-			bool sides = map.Env.SidesBlock != Block.Air;
-			int height = Math.Max(1, map.Env.SidesHeight);
-			bool insideMap = map.IsValidPos(origin);
-			
-			// handling of blocks inside the map, above, and on borders
+		static BlockID InsideGetBlock(World map, int x, int y, int z) {
 			if (x >= 0 && z >= 0 && x < map.Width && z < map.Length) {
 				if (y >= map.Height) return Block.Air;
-				if (sides && y == -1 && origin.Y > 0) return border;
-				if (sides && y == 0  && origin.Y < 0) return border;
-				
-				if (sides && x == 0 && y >= 0 && y < height && origin.X < 0) return border;
-				if (sides && z == 0 && y >= 0 && y < height && origin.Z < 0) return border;
-				if (sides && x == (map.Width - 1) && y >= 0 && y < height && origin.X >= map.Width)
-					return border;
-				if (sides && z == (map.Length - 1) && y >= 0 && y < height && origin.Z >= map.Length)
-					return border;
 				if (y >= 0) return map.GetBlock(x, y, z);
 			}
 			
-			// pick blocks on the map boundaries (when inside the map)
-			if (!sides || !insideMap) return Block.Air;
-			if (y == 0 && origin.Y < 0) return border;
-			bool validX = (x == -1 || x == map.Width) && (z >= 0 && z < map.Length);
-			bool validZ = (z == -1 || z == map.Length) && (x >= 0 && x < map.Width);
-			if (y >= 0 && y < height && (validX || validZ)) return border;
+			// bedrock on bottom or outside map
+			bool sides = map.Env.SidesBlock != Block.Air;
+			int height = map.Env.SidesHeight; if (height < 1) height = 1;
+			return sides && y < height ? border : Block.Air;
+		}
+		
+		static BlockID OutsideGetBlock(World map, int x, int y, int z, Vector3I origin) {
+			if (x < 0 || z < 0 || x >= map.Width || z >= map.Length) return Block.Air;
+			bool sides = map.Env.SidesBlock != Block.Air;
+			// handling of blocks inside the map, above, and on borders
+			
+			if (y >= map.Height) return Block.Air;
+			if (sides && y == -1 && origin.Y > 0) return border;
+			if (sides && y == 0  && origin.Y < 0) return border;
+			int height = map.Env.SidesHeight; if (height < 1) height = 1;
+			
+			if (sides && x == 0        && y >= 0 && y < height && origin.X < 0)           return border;
+			if (sides && z == 0        && y >= 0 && y < height && origin.Z < 0)           return border;
+			if (sides && x == map.MaxX && y >= 0 && y < height && origin.X >= map.Width)  return border;
+			if (sides && z == map.MaxZ && y >= 0 && y < height && origin.Z >= map.Length) return border;
+			
+			if (y >= 0) return map.GetBlock(x, y, z);
 			return Block.Air;
 		}
 	}

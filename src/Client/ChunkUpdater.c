@@ -13,6 +13,7 @@
 #include "World.h"
 #include "Builder.h"
 #include "Utils.h"
+#include "ErrorHandler.h"
 
 void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 	chunk->CentreX = (UInt16)(x + 8);

@@ -3,16 +3,39 @@
 #include "Typedefs.h"
 #include "Bitmap.h"
 #include "PackedCol.h"
-#include "String.h"
 #include "Vectors.h"
-#include "Game.h"
-#include "GraphicsEnums.h"
 #include "GameStructs.h"
 
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
+#define VERTEX_FORMAT_P3FC4B 0
+#define VERTEX_FORMAT_P3FT2FC4B 1
+
+#define COMPARE_FUNC_ALWAYS 0
+#define COMPARE_FUNC_NOTEQUAL 1
+#define COMPARE_FUNC_NEVER 2
+#define COMPARE_FUNC_LESS 3
+#define COMPARE_FUNC_LESSEQUAL 4
+#define COMPARE_FUNC_EQUAL 5
+#define COMPARE_FUNC_GREATEREQUAL 6
+#define COMPARE_FUNC_GREATER 7
+
+#define BLEND_FUNC_ZERO 0
+#define BLEND_FUNC_ONE 1
+#define BLEND_FUNC_SRC_ALPHA 2
+#define BLEND_FUNC_INV_SRC_ALPHA 3
+#define BLEND_FUNC_DST_ALPHA 4
+#define BLEND_FUNC_INV_DST_ALPHA 5
+
+#define FOG_LINEAR 0
+#define FOG_EXP 1
+#define FOG_EXP2 2
+
+#define MATRIX_TYPE_PROJECTION 0
+#define MATRIX_TYPE_MODELVIEW 1
+#define MATRIX_TYPE_TEXTURE 2
 
 void Gfx_Init(void);
 void Gfx_Free(void);
@@ -30,11 +53,7 @@ Matrix Gfx_View, Gfx_Projection;
 /* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
 ScheduledTaskCallback LostContextFunction;
 
-/* Creates a new native texture from the given bitmap.
-NOTE: only power of two dimension textures are supported. */
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
-/* Updates the sub-rectangle (x, y) -> (x + part.Width, y + part.Height)
-of the native texture associated with the given ID, with the pixels encapsulated in the 'part' instance. */
 void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps);
 void Gfx_BindTexture(GfxResourceID texId);
 void Gfx_DeleteTexture(GfxResourceID* texId);
@@ -65,32 +84,19 @@ void Gfx_SetDepthTestFunc(Int32 compareFunc);
 void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a);
 void Gfx_SetDepthWrite(bool enabled);
 
-/* Creates a vertex buffer that can have its data dynamically updated. */
 GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices);
-/* Creates a static vertex buffer that has its data set at creation,
-but the vertex buffer's data cannot be updated after creation.*/
 GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count);
-/* Creates a static index buffer that has its data set at creation,
-but the index buffer's data cannot be updated after creation. */
 GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount);
 void Gfx_BindVb(GfxResourceID vb);
 void Gfx_BindIb(GfxResourceID ib);
 void Gfx_DeleteVb(GfxResourceID* vb);
 void Gfx_DeleteIb(GfxResourceID* ib);
 
-/* Informs the graphics API that the format of the vertex data used in subsequent
-draw calls will be in the given format. */
 void Gfx_SetBatchFormat(Int32 vertexFormat);
-/* Binds and updates the data of the current dynamic vertex buffer's data.
-This method also replaces the dynamic vertex buffer's data first with the given vertices before drawing. */
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount);
-/* Draws the specified subset of the vertices in the current vertex buffer as lines. */
 void Gfx_DrawVb_Lines(Int32 verticesCount);
-/* Draws the specified subset of the vertices in the current vertex buffer as triangles. */
 void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex);
-/* Draws the specified subset of the vertices in the current vertex buffer as triangles. */
 void Gfx_DrawVb_IndexedTris(Int32 verticesCount);
-/* Optimised version of DrawIndexedVb for VertexFormat_Pos3fTex2fCol4b */
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex);
 static Int32 Gfx_strideSizes[2] = { 16, 24 };
 

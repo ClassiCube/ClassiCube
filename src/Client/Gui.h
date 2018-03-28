@@ -2,11 +2,10 @@
 #define CC_GUI_H
 #include "Typedefs.h"
 #include "Input.h"
-#include "GameStructs.h"
-#include "GraphicsEnums.h"
 #include "String.h"
 #include "VertexStructs.h"
 #include "Texture.h"
+#include "GameStructs.h"
 /* Describes and manages 2D GUI elements on screen.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

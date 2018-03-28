@@ -3,13 +3,13 @@
 #include "Event.h"
 #include "Game.h"
 #include "GraphicsAPI.h"
-#include "GraphicsEnums.h"
 #include "PackedCol.h"
 #include "2DStructs.h"
 #include "VertexStructs.h"
 #include "World.h"
 #include "EnvRenderer.h"
 #include "ExtMath.h"
+#include "Stream.h"
 
 GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)

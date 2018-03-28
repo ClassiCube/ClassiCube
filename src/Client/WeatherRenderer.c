@@ -5,7 +5,6 @@
 #include "Event.h"
 #include "Game.h"
 #include "GraphicsAPI.h"
-#include "GraphicsEnums.h"
 #include "GraphicsCommon.h"
 #include "PackedCol.h"
 #include "Platform.h"
@@ -13,6 +12,7 @@
 #include "VertexStructs.h"
 #include "World.h"
 #include "Particle.h"
+#include "ErrorHandler.h"
 
 GfxResourceID weather_rainTex;
 GfxResourceID weather_snowTex;

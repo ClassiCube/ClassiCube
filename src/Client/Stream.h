@@ -2,7 +2,6 @@
 #define CC_STREAM_H
 #include "Typedefs.h"
 #include "String.h"
-#include "ErrorHandler.h"
 #include "Constants.h"
 /* Defines an abstract way of reading and writing data in a streaming manner.
    Also provides common helper methods for reading/writing data to/from streams.
@@ -15,33 +14,19 @@
 
 /* Represents a stream that can be written to and/or read from. */
 typedef struct Stream_ {
-	/* Performs a read. Result is a ReturnCode, number of read bytes is output via pointer. */
 	ReturnCode (*Read)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
-	/* Performs a write. Result is a ReturnCode, number of written bytes is output via pointer. */
 	ReturnCode (*Write)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
-	/* Closes the stream. Result is a ReturnCode. */
 	ReturnCode (*Close)(struct Stream_* stream);
-	/* Moves backwards or forwards by given number of bytes from seek offset in the stream. Result is a ReturnCode. */
 	ReturnCode (*Seek)(struct Stream_* stream, Int32 offset, Int32 seekType);
-	/* General purpose pointer metadata for the stream. */
-	void* Data;
-	/* General purpose numerical metadata for the stream. */
-	UInt32 Data2;
-	/* Raw name buffer */
+	void* Data; UInt32 Data2;
 	UInt8 NameBuffer[String_BufferSize(FILENAME_SIZE)];
-	/* The name of the stream. */
 	String Name;
 } Stream;
 
-/* Fully reads up to count bytes or fails. */
 void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count);
-/* Fully writes up to count bytes or fails. */
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
-/* Attempts to read a byte (returning -1 if could not read) */
 Int32 Stream_TryReadByte(Stream* stream);
-/* Sets the name of the given stream. */
 void Stream_SetName(Stream* stream, STRING_PURE String* name);
-/* Constructs a Stream wrapping a file. */
 void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name);
 /* Constructs a readonly Stream wrapping another Stream, 
 but only allowing reading up to 'len' bytes from the wrapped stream. */

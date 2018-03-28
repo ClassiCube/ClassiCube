@@ -1,7 +1,6 @@
 #ifndef CC_ISOMETRICDRAWER_H
 #define CC_ISOMETRICDRAWER_H
 #include "Typedefs.h"
-#include "GraphicsEnums.h"
 #include "VertexStructs.h"
 #include "Block.h"
 /* Draws 2D isometric blocks for the hotbar and inventory UIs.

@@ -2,10 +2,7 @@
 #define CC_ENTITY_H
 #include "EntityComponents.h"
 #include "IModel.h"
-#include "Typedefs.h"
-#include "Vectors.h"
-#include "AABB.h"
-#include "GraphicsEnums.h"
+#include "Physics.h"
 #include "GameStructs.h"
 /* Represents an in-game entity.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

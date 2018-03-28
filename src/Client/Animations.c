@@ -8,6 +8,8 @@
 #include "GraphicsAPI.h"
 #include "Chat.h"
 #include "World.h"
+#include "Options.h"
+#include "ErrorHandler.h"
 #define LIQUID_ANIM_MAX 64
 
 Real32 L_soupHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];

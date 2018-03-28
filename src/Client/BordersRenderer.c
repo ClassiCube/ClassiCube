@@ -5,13 +5,14 @@
 #include "Block.h"
 #include "GraphicsAPI.h"
 #include "GraphicsCommon.h"
-#include "GraphicsEnums.h"
 #include "Event.h"
 #include "TerrainAtlas.h"
 #include "ExtMath.h"
 #include "Platform.h"
 #include "Funcs.h"
 #include "Utils.h"
+#include "VertexStructs.h"
+#include "ErrorHandler.h"
 
 GfxResourceID borders_sidesVb, borders_edgesVb;
 GfxResourceID borders_edgeTexId, borders_sideTexId;

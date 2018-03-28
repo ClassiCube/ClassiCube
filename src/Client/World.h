@@ -4,7 +4,6 @@
 #include "String.h"
 #include "Vectors.h"
 #include "PackedCol.h"
-#include "AABB.h"
 /* Represents a fixed size 3D array of blocks.
    Also contains associated environment metadata.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -91,6 +90,7 @@ void WorldEnv_SetCloudsCol(PackedCol col);
 void WorldEnv_SetSunCol(PackedCol col);
 void WorldEnv_SetShadowCol(PackedCol col);
 
+typedef struct AABB_ AABB; /* Forward declaration */
 /* Finds the highest free Y coordinate in the given bounding box.*/
 Real32 Respawn_HighestFreeY(AABB* bb);
 /* Finds a suitable spawn position for the entity, by iterating downards from top of

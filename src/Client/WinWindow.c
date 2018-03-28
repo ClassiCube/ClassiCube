@@ -1,9 +1,14 @@
 #include "Window.h"
-#include <Windows.h>
 #include "Platform.h"
 #include "Input.h"
 #include "Event.h"
 #include "String.h"
+#include "ErrorHandler.h"
+#define WIN32_LEAN_AND_MEAN
+#define NOSERVICE
+#define NOMCX
+#define NOIME
+#include <Windows.h>
 
 #define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
 #define win_StyleEx WS_EX_WINDOWEDGE | WS_EX_APPWINDOW

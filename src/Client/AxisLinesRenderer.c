@@ -1,7 +1,6 @@
 #include "AxisLinesRenderer.h"
 #include "GraphicsAPI.h"
 #include "Game.h"
-#include "GraphicsEnums.h"
 #include "GraphicsCommon.h"
 #include "SelectionBox.h"
 #include "PackedCol.h"

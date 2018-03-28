@@ -1,7 +1,6 @@
 #ifndef CC_BITMAP_H
 #define CC_BITMAP_H
 #include "Typedefs.h"
-#include "Stream.h"
 /* Represents a 2D array of pixels.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -25,11 +24,12 @@ void Bitmap_CopyRow(Int32 srcY, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 widt
 void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height);
 /* Allocates a power-of-2 sized bitmap larger or equal to to the given size. You are responsible for freeing its memory! */
 void Bitmap_AllocatePow2(Bitmap* bmp, Int32 width, Int32 height);
+
+typedef struct Stream_ Stream; /* Forward declaration */
 /*
   Partially based off information from
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way
      https://github.com/nothings/stb/blob/master/stb_image.h
 */
-/* Decodes a PNG bitmap from the given stream. */
 void Bitmap_DecodePng(Bitmap* bmp, Stream* stream);
 #endif

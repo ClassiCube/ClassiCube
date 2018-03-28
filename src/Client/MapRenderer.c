@@ -2,7 +2,6 @@
 #include "Block.h"
 #include "Game.h"
 #include "GraphicsAPI.h"
-#include "GraphicsEnums.h"
 #include "WeatherRenderer.h"
 #include "World.h"
 #include "Vectors.h"

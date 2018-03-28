@@ -1,6 +1,5 @@
 #include "GraphicsCommon.h"
 #include "GraphicsAPI.h"
-#include "GraphicsEnums.h"
 #include "Platform.h"
 #include "Block.h"
 #include "Event.h"
@@ -60,14 +59,14 @@ void GfxCommon_Draw2DFlat(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, quadVerts, 4);
 }
 
-void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol topCol, PackedCol bottomCol) {
+void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol top, PackedCol bottom) {
 	VertexP3fC4b quadVerts[4];
 	VertexP3fC4b v; v.Z = 0.0f;
 
-	v.X = (Real32)x;           v.Y = (Real32)y;            v.Col = topCol;    quadVerts[0] = v;
-	v.X = (Real32)(x + width);                                                quadVerts[1] = v;
-	                           v.Y = (Real32)(y + height); v.Col = bottomCol; quadVerts[2] = v;
-	v.X = (Real32)x;                                                          quadVerts[3] = v;
+	v.X = (Real32)x;           v.Y = (Real32)y;            v.Col = top;    quadVerts[0] = v;
+	v.X = (Real32)(x + width);                                             quadVerts[1] = v;
+	                           v.Y = (Real32)(y + height); v.Col = bottom; quadVerts[2] = v;
+	v.X = (Real32)x;                                                       quadVerts[3] = v;
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, quadVerts, 4);

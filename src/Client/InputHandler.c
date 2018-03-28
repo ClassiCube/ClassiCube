@@ -14,6 +14,7 @@
 #include "Chat.h"
 #include "Funcs.h"
 #include "Screens.h"
+#include "Block.h"
 
 bool input_buttonsDown[3];
 Int32 input_pickingId = -1;
