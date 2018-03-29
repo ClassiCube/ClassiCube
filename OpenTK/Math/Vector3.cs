@@ -143,8 +143,8 @@ namespace OpenTK {
 		}
 		
 		public static Vector3 Normalize(float x, float y, float z) {
-			float scale = 1f / (float)Math.Sqrt( x * x + y * y + z * z );
-			return new Vector3( x * scale, y * scale, z * scale );
+			float scale = 1f / (float)Math.Sqrt(x * x + y * y + z * z);
+			return new Vector3(x * scale, y * scale, z * scale);
 		}
 
 		public static void Normalize(ref Vector3 vec, out Vector3 result) {
