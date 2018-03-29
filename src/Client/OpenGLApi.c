@@ -31,7 +31,6 @@ FN_GLGENBUFFERS glGenBuffers;
 FN_GLBUFFERDATA glBufferData;
 FN_GLBUFFERSUBDATA glBufferSubData;
 
-
 bool gl_lists = false;
 Int32 gl_activeList = -1;
 #define gl_DYNAMICLISTID 1234567891
@@ -95,12 +94,7 @@ void Gfx_Free(void) {
 	GLContext_Free();
 }
 
-#define GL_TOGGLE(cap)\
-if (enabled) {\
-glEnable(cap);\
-} else {\
-glDisable(cap);\
-}
+#define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
 
 void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, Bitmap* bmp, bool partial) {
 	UInt8* prev = bmp->Scan0;
@@ -168,7 +162,7 @@ void Gfx_DeleteTexture(GfxResourceID* texId) {
 	*texId = NULL;
 }
 
-void Gfx_SetTexturing(bool enabled) { GL_TOGGLE(GL_TEXTURE_2D); }
+void Gfx_SetTexturing(bool enabled) { gl_Toggle(GL_TEXTURE_2D); }
 void Gfx_EnableMipmaps(void) { }
 void Gfx_DisableMipmaps(void) { }
 
@@ -177,7 +171,7 @@ bool gl_fogEnable;
 bool Gfx_GetFog(void) { return gl_fogEnable; }
 void Gfx_SetFog(bool enabled) {
 	gl_fogEnable = enabled;
-	GL_TOGGLE(GL_FOG);
+	gl_Toggle(GL_FOG);
 }
 
 PackedCol gl_lastFogCol;
@@ -213,13 +207,13 @@ void Gfx_SetFogMode(Int32 mode) {
 }
 
 
-void Gfx_SetFaceCulling(bool enabled) { GL_TOGGLE(GL_CULL_FACE); }
-void Gfx_SetAlphaTest(bool enabled) { GL_TOGGLE(GL_ALPHA_TEST); }
+void Gfx_SetFaceCulling(bool enabled) { gl_Toggle(GL_CULL_FACE); }
+void Gfx_SetAlphaTest(bool enabled) { gl_Toggle(GL_ALPHA_TEST); }
 void Gfx_SetAlphaTestFunc(Int32 func, Real32 value) {
 	glAlphaFunc(gl_compare[func], value);
 }
 
-void Gfx_SetAlphaBlending(bool enabled) { GL_TOGGLE(GL_BLEND); }
+void Gfx_SetAlphaBlending(bool enabled) { gl_Toggle(GL_BLEND); }
 void Gfx_SetAlphaBlendFunc(Int32 srcFunc, Int32 dstFunc) {
 	glBlendFunc(gl_blend[srcFunc], gl_blend[dstFunc]);
 }
@@ -245,7 +239,7 @@ void Gfx_SetDepthWrite(bool enabled) {
 	glDepthMask(enabled);
 }
 
-void Gfx_SetDepthTest(bool enabled) { GL_TOGGLE(GL_DEPTH_TEST); }
+void Gfx_SetDepthTest(bool enabled) { gl_Toggle(GL_DEPTH_TEST); }
 void Gfx_SetDepthTestFunc(Int32 compareFunc) {
 	glDepthFunc(gl_compare[compareFunc]);
 }

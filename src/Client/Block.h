@@ -39,9 +39,6 @@
 #define COLLIDE_LIQUID_LAVA  6 /* Lava style 'swimming'/'bobbing' interaction when player collides. */
 #define COLLIDE_CLIMB_ROPE   7 /* Rope/Ladder style climbing interaction when player collides */
 
-UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
-#define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
-
 bool Block_IsLiquid[BLOCK_COUNT];
 bool Block_BlocksLight[BLOCK_COUNT];
 bool Block_FullBright[BLOCK_COUNT];

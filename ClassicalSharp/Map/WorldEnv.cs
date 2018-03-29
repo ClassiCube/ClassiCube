@@ -187,7 +187,7 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets sunlight colour, and raises
 		/// EnvVariableChanged event with variable 'SunlightColour'. </summary>
 		public void SetSunlight(FastColour col) {
-			if (!Set(col, ref Sunlight, EnvVar.SunlightColour)) return;
+			if (col == Sunlight) return;
 			
 			FastColour.GetShaded(Sunlight, out SunXSide,
 			                     out SunZSide, out SunYBottom);
@@ -198,7 +198,7 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets current shadowlight colour, and raises
 		/// EnvVariableChanged event with variable 'ShadowlightColour'. </summary>
 		public void SetShadowlight(FastColour col) {
-			if (!Set(col, ref Shadowlight, EnvVar.ShadowlightColour)) return;
+			if (col == Shadowlight) return;
 			
 			FastColour.GetShaded(Shadowlight, out ShadowXSide,
 			                     out ShadowZSide, out ShadowYBottom);

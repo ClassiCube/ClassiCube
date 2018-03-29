@@ -210,11 +210,9 @@ void PlayerListWidget_GetNameUnder(PlayerListWidget* widget, Int32 mouseX, Int32
 
 typedef void (*SpecialInputAppendFunc)(void* userData, UInt8 c);
 typedef struct SpecialInputTab_ {
-	String Title;
+	Int32 ItemsPerRow, CharsPerItem;
 	Size2D TitleSize;
-	String Contents;
-	Int32 ItemsPerRow;
-	Int32 CharsPerItem;
+	String Title, Contents;	
 } SpecialInputTab;
 void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title, 
 	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String* contents);

@@ -2,7 +2,7 @@
 #define CC_2DSTRUCTS_H
 #include "Typedefs.h"
 /* Represents simple structures useful for 2D operations.
-   Copyright 22017 ClassicalSharp | Licensed under BSD-3
+   Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
 /* Stores location and dimensions of a 2D rectangle. */
