@@ -9,7 +9,7 @@ namespace ClassicalSharp {
 
 	public static class SoundType {
 		public const byte None = 0;   public const byte Wood = 1;
-		public const byte Gravel = 2; public const byte Grass = 3; 
+		public const byte Gravel = 2; public const byte Grass = 3;
 		public const byte Stone = 4;  public const byte Metal = 5;
 		public const byte Glass = 6;  public const byte Cloth = 7;
 		public const byte Sand = 8;   public const byte Snow = 9;
@@ -21,17 +21,17 @@ namespace ClassicalSharp {
 	}
 
 	/// <summary> Describes how a block is rendered in the world. </summary>
-	public static class DrawType {		
+	public static class DrawType {
 		/// <summary> Completely covers blocks behind (e.g. dirt). </summary>
-		public const byte Opaque = 0;		
+		public const byte Opaque = 0;
 		/// <summary> Blocks behind show (e.g. glass). Pixels are either fully visible or invisible. </summary>
-		public const byte Transparent = 1;		
+		public const byte Transparent = 1;
 		/// <summary> Same as Transparent, but all neighbour faces show. (e.g. leaves) </summary>
-		public const byte TransparentThick = 2;		
+		public const byte TransparentThick = 2;
 		/// <summary> Blocks behind show (e.g. water). Pixels blend with other blocks behind. </summary>
-		public const byte Translucent = 3;		
+		public const byte Translucent = 3;
 		/// <summary> Does not show (e.g. air). Can still be collided with. </summary>
-		public const byte Gas = 4;		
+		public const byte Gas = 4;
 		/// <summary> Block renders as an X sprite (e.g. sapling). Pixels are either fully visible or invisible. </summary>
 		public const byte Sprite = 5;
 	}
@@ -39,11 +39,11 @@ namespace ClassicalSharp {
 	/// <summary> Describes the interaction a block has with a player when they collide with it. </summary>
 	public static class CollideType {
 		/// <summary> No interaction when player collides. </summary>
-		public const byte Gas = 0;		
+		public const byte Gas = 0;
 		/// <summary> 'swimming'/'bobbing' interaction when player collides. </summary>
-		public const byte Liquid = 1;		
+		public const byte Liquid = 1;
 		/// <summary> Block completely stops the player when they are moving. </summary>
-		public const byte Solid = 2;		
+		public const byte Solid = 2;
 		/// <summary> Block is solid and partially slidable on. </summary>
 		public const byte Ice = 3;
 		/// <summary> Block is solid and fully slidable on. </summary>
@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 		/// <summary> Water style 'swimming'/'bobbing' interaction when player collides. </summary>
 		public const byte LiquidWater = 5;
 		/// <summary> Lava style 'swimming'/'bobbing' interaction when player collides. </summary>
-		public const byte LiquidLava = 6;		
+		public const byte LiquidLava = 6;
 		/// <summary> Rope/Ladder style climbing interaction when player collides. </summary>
 		public const byte ClimbRope = 7;
 	}
@@ -61,10 +61,10 @@ namespace ClassicalSharp {
 	public static partial class BlockInfo {
 		
 		public static bool[] IsLiquid, BlocksLight, FullBright;
-		public static bool[] CanPlace, CanDelete, Tinted, FullOpaque;		
+		public static bool[] CanPlace, CanDelete, Tinted, FullOpaque;
 		public static byte[] Collide, ExtendedCollide, textures, hidden;
 		public static byte[] LightOffset, Draw, SpriteOffset, CanStretch;
-		public static byte[] DigSounds, StepSounds;		
+		public static byte[] DigSounds, StepSounds;
 		public static string[] Name;
 		public static float[] FogDensity, SpeedMultiplier;
 		public static FastColour[] FogColour;
@@ -89,11 +89,11 @@ namespace ClassicalSharp {
 			SpriteOffset = new byte[count];
 			CanStretch = new byte[count];
 			DigSounds = new byte[count];
-			StepSounds = new byte[count];			
+			StepSounds = new byte[count];
 			Name = new string[count];
 			FogDensity = new float[count];
 			SpeedMultiplier = new float[count];
-			FogColour = new FastColour[count];			
+			FogColour = new FastColour[count];
 			MinBB = new Vector3[count];
 			MaxBB = new Vector3[count];
 			RenderMinBB = new Vector3[count];
@@ -207,9 +207,9 @@ namespace ClassicalSharp {
 			if (block >= Block.CpeCount) {
 				#if USE16_BIT
 				// give some random texture ids
-				SetTex((block * 10 + (block % 7) + 20) % 80, Side.Top, block);
-				SetTex((block * 8  + (block & 5) + 5 ) % 80, Side.Bottom, block);
-				SetSide((block * 4 + (block / 4) + 4 ) % 80, block);
+				SetTex((byte)((block * 10 + (block % 7) + 20) % 80), Side.Top, block);
+				SetTex((byte)((block * 8  + (block & 5) + 5 ) % 80), Side.Bottom, block);
+				SetSide((byte)((block * 4 + (block / 4) + 4 ) % 80), block);
 				#else
 				SetTex(0, Side.Top, block);
 				SetTex(0, Side.Bottom, block);
@@ -262,32 +262,33 @@ namespace ClassicalSharp {
 		}
 		
 		
-		internal static void SetSide(int textureId, BlockID blockId) {
-			int index = blockId * Side.Sides;
-			for (int i = index; i < index + Side.Bottom; i++)
-				textures[i] = (byte)textureId;
+		internal static void SetSide(byte textureId, BlockID blockId) {
+			textures[blockId * Side.Sides + Side.Left]  = textureId;
+			textures[blockId * Side.Sides + Side.Right] = textureId;
+			textures[blockId * Side.Sides + Side.Front] = textureId;
+			textures[blockId * Side.Sides + Side.Back]  = textureId;
 		}
 		
-		internal static void SetTex(int textureId, int face, BlockID blockId) {
-			textures[blockId * Side.Sides + face] = (byte)textureId;
+		internal static void SetTex(byte textureId, int face, BlockID blockId) {
+			textures[blockId * Side.Sides + face] = textureId;
 		}
 
 		public static int GetTextureLoc(BlockID block, int face) {
 			return textures[block * Side.Sides + face];
 		}
 		
-		static byte[] topTex = new byte[] { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14, 
-			30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71, 
-			72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  4, 
+		static byte[] topTex = new byte[] { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
+			30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
+			72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 24, 23,  6,  6,  7,  9,  4,
 			36, 37, 16, 11, 25, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 26, 53, 52, };
-		static byte[] sideTex = new byte[] { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14, 
-			30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71, 
-			72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 35, 
+		static byte[] sideTex = new byte[] { 0,  1,  3,  2, 16,  4, 15, 17, 14, 14,
+			30, 30, 18, 19, 32, 33, 34, 20, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
+			72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 40, 39,  5,  5,  7,  8, 35,
 			36, 37, 16, 11, 41, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 42, 53, 52, };
-		static byte[] bottomTex = new byte[] { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14, 
-			30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71, 
-			72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4, 
-			36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };	
+		static byte[] bottomTex = new byte[] { 0,  1,  2,  2, 16,  4, 15, 17, 14, 14,
+			30, 30, 18, 19, 32, 33, 34, 21, 22, 48, 49, 64, 65, 66, 67, 68, 69, 70, 71,
+			72, 73, 74, 75, 76, 77, 78, 79, 13, 12, 29, 28, 56, 55,  6,  6,  7, 10,  4,
+			36, 37, 16, 11, 57, 50, 38, 80, 81, 82, 83, 84, 51, 54, 86, 58, 53, 52 };
 		
 
 		internal static void UpdateCulling() {

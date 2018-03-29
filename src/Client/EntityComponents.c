@@ -50,13 +50,8 @@ void AnimatedComp_CalcHumanAnim(AnimatedComp* anim, Real32 idleXRot, Real32 idle
 }
 
 void AnimatedComp_Init(AnimatedComp* anim) {
-	anim->BobbingHor = 0.0f; anim->BobbingVer = 0.0f; anim->BobbingModel = 0.0f;
-	anim->WalkTime   = 0.0f; anim->Swing      = 0.0f; anim->BobStrength  = 1.0f;
-	anim->WalkTimeO  = 0.0f; anim->SwingO     = 0.0f; anim->BobStrengthO = 1.0f;
-	anim->WalkTimeN  = 0.0f; anim->SwingN     = 0.0f; anim->BobStrengthN = 1.0f;
-
-	anim->LeftLegX = 0.0f; anim->LeftLegZ = 0.0f; anim->RightLegX = 0.0f; anim->RightLegZ = 0.0f;
-	anim->LeftArmX = 0.0f; anim->LeftArmZ = 0.0f; anim->RightArmX = 0.0f; anim->RightArmZ = 0.0f;
+	Platform_MemSet(anim, 0, sizeof(AnimatedComp));
+	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
 void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Real64 delta, bool onGround) {

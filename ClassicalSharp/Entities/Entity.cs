@@ -122,8 +122,10 @@ namespace ClassicalSharp.Entities {
 			}
 			
 			ModelBlock = Block.Air;
-			if (BlockID.TryParse(ModelName, out ModelBlock)) {
+			BlockID block;
+			if (BlockID.TryParse(ModelName, out block) && block <= BlockInfo.MaxDefined) {
 				ModelName = "block";
+				ModelBlock = block;
 			}
 			
 			Model = game.ModelCache.Get(ModelName);

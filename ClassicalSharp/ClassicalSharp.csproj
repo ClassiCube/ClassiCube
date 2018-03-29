@@ -63,7 +63,7 @@
     <DebugType>None</DebugType>
     <Optimize>True</Optimize>
     <CheckForOverflowUnderflow>False</CheckForOverflowUnderflow>
-    <DefineConstants>TRACE;USE_DX;</DefineConstants>
+    <DefineConstants>TRACE;USE_DX;USE16_BIT</DefineConstants>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <StartAction>Project</StartAction>
   </PropertyGroup>
@@ -263,10 +263,9 @@
     <Compile Include="Rendering\HeldBlockRenderer.cs" />
     <Compile Include="Rendering\ChunkSorter.cs" />
     <Compile Include="Rendering\ChunkUpdater.cs" />
-    <Compile Include="Rendering\Env\EnvRenderer.cs" />
     <Compile Include="Rendering\Env\MapBordersRenderer.cs" />
     <Compile Include="Rendering\Env\SkyboxRenderer.cs" />
-    <Compile Include="Rendering\Env\StandardEnvRenderer.cs" />
+    <Compile Include="Rendering\Env\EnvRenderer.cs" />
     <Compile Include="Rendering\Env\WeatherRenderer.cs" />
     <Compile Include="Rendering\MapRenderer.Occlusion.cs" />
     <Compile Include="Rendering\FrustumCulling.cs" />

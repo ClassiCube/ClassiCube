@@ -1,11 +1,12 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Network {
 
 	public sealed class CPESupport : IGameComponent {
 		
-		public void Init(Game game) { }
+		public void Init(Game game) { this.game = game; }
 		public void Ready(Game game) { }
 		public void OnNewMap(Game game) { }
 		public void OnNewMapLoaded(Game game) { }
@@ -15,6 +16,7 @@ namespace ClassicalSharp.Network {
 		internal bool sendHeldBlock, useMessageTypes;
 		internal int envMapVer = 2, blockDefsExtVer = 2;
 		internal bool needD3Fix, extEntityPos, twoWayPing, blockPerms;
+		Game game;
 		
 		public void Reset(Game game) {
 			ServerExtensionsCount = 0;
@@ -22,7 +24,6 @@ namespace ClassicalSharp.Network {
 			envMapVer = 2; blockDefsExtVer = 2;
 			needD3Fix = false; extEntityPos = false; twoWayPing = false;
 			game.SupportsCPEBlocks = false;
-			
 			NetworkProcessor net = (NetworkProcessor)game.Server;
 			net.Reset();
 		}
@@ -82,6 +83,8 @@ namespace ClassicalSharp.Network {
 				if (BlockInfo.Count < 768) {
 					BlockInfo.Allocate(768);
 					BlockInfo.Reset();
+					game.Inventory.Map = new BlockID[768];
+					game.Inventory.SetDefaultMapping();
 				}
 			}
 			#endif

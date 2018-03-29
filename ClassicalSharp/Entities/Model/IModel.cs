@@ -86,7 +86,7 @@ namespace ClassicalSharp.Model {
 		
 		protected static float cosHead, sinHead;
 		protected static float uScale, vScale;
-		protected static int[] cols = new int[6];
+		protected static int[] cols = new int[Side.Sides];
 		
 		/// <summary> Returns whether the model should be rendered based on the given entity's position. </summary>
 		public static bool ShouldRender(Entity p, FrustumCulling culling) {

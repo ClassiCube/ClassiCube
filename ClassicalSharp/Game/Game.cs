@@ -408,7 +408,7 @@ namespace ClassicalSharp {
 			}
 			
 			if (EnvRenderer == null) {
-				EnvRenderer = new StandardEnvRenderer(); Components.Add(EnvRenderer);
+				EnvRenderer = new EnvRenderer(); Components.Add(EnvRenderer);
 				EnvRenderer.legacy = legacy;
 				EnvRenderer.minimal = minimal;
 			} else {

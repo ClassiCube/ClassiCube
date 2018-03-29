@@ -8,7 +8,7 @@ using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Renderers {
 
-	public class WeatherRenderer : IGameComponent {
+	public sealed class WeatherRenderer : IGameComponent {
 		Game game;
 		World map;
 		

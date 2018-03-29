@@ -156,7 +156,7 @@ namespace ClassicalSharp.Entities {
 			float closestDist = float.PositiveInfinity;
 			byte targetId = SelfID;
 			
-			for (int i = 0; i < List.Length - 1; i++) { // -1 because we don't want to pick against local player
+			for (int i = 0; i < SelfID; i++) { // because we don't want to pick against local player
 				Entity p = List[i];
 				if (p == null) continue;
 				

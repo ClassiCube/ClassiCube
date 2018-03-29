@@ -354,7 +354,7 @@ EntityID Entities_GetCloset(Entity* src) {
 	EntityID targetId = ENTITIES_SELF_ID;
 
 	UInt32 i;
-	for (i = 0; i < ENTITIES_SELF_ID; i++) { /* -1 because we don't want to pick against local player */
+	for (i = 0; i < ENTITIES_SELF_ID; i++) { /* because we don't want to pick against local player */
 		Entity* entity = Entities_List[i];
 		if (entity == NULL) continue;
 
