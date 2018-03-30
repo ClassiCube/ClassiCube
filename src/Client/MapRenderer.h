@@ -1,6 +1,5 @@
 #ifndef CC_MAPRENDERER_H
 #define CC_MAPRENDERER_H
-#include "Typedefs.h"
 #include "TerrainAtlas.h"
 #include "ChunkUpdater.h"
 /* Renders the blocks of the world by subdividing it into chunks.

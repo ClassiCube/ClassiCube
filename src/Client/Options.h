@@ -1,6 +1,5 @@
 #ifndef CC_OPTIONS_H
 #define CC_OPTIONS_H
-#include "Typedefs.h"
 #include "String.h"
 /* Manages loading and saving options.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

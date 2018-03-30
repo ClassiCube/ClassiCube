@@ -1,6 +1,5 @@
 #ifndef CC_SELECTIONBOX_H
 #define CC_SELECTIONBOX_H
-#include "Typedefs.h"
 #include "VertexStructs.h"
 #include "GameStructs.h"
 #include "Vectors.h"

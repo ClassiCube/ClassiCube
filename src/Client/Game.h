@@ -1,6 +1,5 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
-#include "Typedefs.h"
 #include "Stream.h"
 #include "Picking.h"
 #include "Options.h"

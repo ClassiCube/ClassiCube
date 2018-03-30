@@ -9,6 +9,43 @@
 #include "ErrorHandler.h"
 #include "Drawer.h"
 #include "Random.h"
+#include "ChunkUpdater.h"
+#include "BlockID.h"
+#include "Block.h"
+#include "PackedCol.h"
+#include "TerrainAtlas.h"
+#include "VertexStructs.h"
+
+BlockID* Builder_Chunk;
+UInt8* Builder_Counts;
+Int32* Builder_BitFlags;
+bool Builder_UseBitFlags;
+Int32 Builder_X, Builder_Y, Builder_Z;
+BlockID Builder_Block;
+Int32 Builder_ChunkIndex;
+bool Builder_FullBright;
+bool Builder_Tinted;
+Int32 Builder_ChunkEndX, Builder_ChunkEndZ;
+Int32 Builder_Offsets[6];
+
+Int32 (*Builder_StretchXLiquid)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block);
+Int32 (*Builder_StretchX)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face);
+Int32 (*Builder_StretchZ)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face);
+void (*Builder_RenderBlock)(Int32 countsIndex);
+void (*Builder_PreStretchTiles)(Int32 x1, Int32 y1, Int32 z1);
+void (*Builder_PostStretchTiles)(Int32 x1, Int32 y1, Int32 z1);
+
+/* Contains state for vertices for a portion of a chunk mesh (vertices that are in a 1D atlas) */
+typedef struct Builder1DPart_ {
+	VertexP3fT2fC4b* fVertices[FACE_COUNT];
+	Int32 fCount[FACE_COUNT];
+	Int32 sCount, sOffset, sAdvance;
+	VertexP3fT2fC4b* vertices;
+	Int32 verticesBufferCount;
+} Builder1DPart;
+/* Part builder data, for both normal and translucent parts.
+The first ATLAS1D_MAX_ATLASES_COUNT parts are for normal parts, remainder are for translucent parts. */
+Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES_COUNT * 2];
 
 void Builder1DPart_Prepare(Builder1DPart* part) {
 	part->sOffset = 0;
@@ -51,30 +88,6 @@ Int32 Builder1DPart_VerticesCount(Builder1DPart* part) {
 	return count;
 }
 
-void Builder_Init(void) {
-	Builder_Offsets[FACE_XMIN] = -1;
-	Builder_Offsets[FACE_XMAX] = 1;
-	Builder_Offsets[FACE_ZMIN] = -EXTCHUNK_SIZE;
-	Builder_Offsets[FACE_ZMAX] = EXTCHUNK_SIZE;
-	Builder_Offsets[FACE_YMIN] = -EXTCHUNK_SIZE_2;
-	Builder_Offsets[FACE_YMAX] = EXTCHUNK_SIZE_2;
-}
-
-void Builder_SetDefault(void) {
-	Builder_StretchXLiquid = NULL;
-	Builder_StretchX = NULL;
-	Builder_StretchZ = NULL;
-	Builder_RenderBlock = NULL;
-
-	Builder_UseBitFlags = false;
-	Builder_PreStretchTiles = Builder_DefaultPreStretchTiles;
-	Builder_PostStretchTiles = Builder_DefaultPostStretchTiles;
-}
-
-void Builder_OnNewMapLoaded(void) {
-	Builder_SidesLevel = max(0, WorldEnv_SidesHeight);
-	Builder_EdgeLevel = max(0, WorldEnv_EdgeHeight);
-}
 
 void Builder_AddSpriteVertices(BlockID block) {
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, FACE_XMIN));
@@ -426,6 +439,31 @@ void Builder_DrawSprite(Int32 count) {
 	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
 
 	part->sOffset += 4;
+}
+
+void Builder_Init(void) {
+	Builder_Offsets[FACE_XMIN] = -1;
+	Builder_Offsets[FACE_XMAX] = 1;
+	Builder_Offsets[FACE_ZMIN] = -EXTCHUNK_SIZE;
+	Builder_Offsets[FACE_ZMAX] = EXTCHUNK_SIZE;
+	Builder_Offsets[FACE_YMIN] = -EXTCHUNK_SIZE_2;
+	Builder_Offsets[FACE_YMAX] = EXTCHUNK_SIZE_2;
+}
+
+void Builder_SetDefault(void) {
+	Builder_StretchXLiquid = NULL;
+	Builder_StretchX       = NULL;
+	Builder_StretchZ       = NULL;
+	Builder_RenderBlock    = NULL;
+
+	Builder_UseBitFlags = false;
+	Builder_PreStretchTiles  = Builder_DefaultPreStretchTiles;
+	Builder_PostStretchTiles = Builder_DefaultPostStretchTiles;
+}
+
+void Builder_OnNewMapLoaded(void) {
+	Builder_SidesLevel = max(0, WorldEnv_SidesHeight);
+	Builder_EdgeLevel  = max(0, WorldEnv_EdgeHeight);
 }
 
 

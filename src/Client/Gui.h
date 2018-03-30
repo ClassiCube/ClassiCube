@@ -1,6 +1,5 @@
 #ifndef CC_GUI_H
 #define CC_GUI_H
-#include "Typedefs.h"
 #include "Input.h"
 #include "VertexStructs.h"
 #include "Texture.h"

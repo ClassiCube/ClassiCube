@@ -1,6 +1,5 @@
 #ifndef CC_PICKING_H
 #define CC_PICKING_H
-#include "Typedefs.h"
 #include "Constants.h"
 #include "Vectors.h"
 /* Data for picking/selecting block by the user, and clipping the camera.

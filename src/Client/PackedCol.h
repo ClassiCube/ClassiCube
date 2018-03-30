@@ -1,6 +1,5 @@
 #ifndef CC_PACKEDCOL_H
 #define CC_PACKEDCOL_H
-#include "Typedefs.h"
 #include "String.h"
 /* Manipulates an ARGB colour, in a format suitable for the native 3d graphics api.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

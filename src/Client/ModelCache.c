@@ -10,6 +10,8 @@
 #include "Block.h"
 #include "Stream.h"
 #include "ErrorHandler.h"
+#include "Entity.h"
+#include "IModel.h"
 
 UInt32 ModelCache_texCount, ModelCache_modelCount;
 
@@ -157,13 +159,13 @@ void ChickenModel_GetPickingBounds(AABB* bb) {
 
 void ChickenModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
-	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head, true);
+	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head,  true);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head2, true);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head3, true);
 
 	IModel_DrawPart(Chicken_Torso);
-	IModel_DrawRotate(0, 0, -Math_AbsF(entity->Anim.LeftArmX), Chicken_LeftWing, false);
-	IModel_DrawRotate(0, 0, Math_AbsF(entity->Anim.LeftArmX), Chicken_RightWing, false);
+	IModel_DrawRotate(0, 0, -Math_AbsF(entity->Anim.LeftArmX), Chicken_LeftWing,  false);
+	IModel_DrawRotate(0, 0,  Math_AbsF(entity->Anim.LeftArmX), Chicken_RightWing, false);
 
 	PackedCol col = IModel_Cols[0];
 	UInt32 i;
@@ -744,10 +746,10 @@ void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet*
 	BoxDesc_Expand(&rArm, offset);
 	set64->RightArmLayer = BoxDesc_BuildBox(m, &rArm);
 
-	setSlim->Head = set64->Head;
-	setSlim->Torso = set64->Torso;
-	setSlim->Hat = set64->Hat;
-	setSlim->LeftLeg = set64->LeftLeg;
+	setSlim->Head     = set64->Head;
+	setSlim->Torso    = set64->Torso;
+	setSlim->Hat      = set64->Hat;
+	setSlim->LeftLeg  = set64->LeftLeg;
 	setSlim->RightLeg = set64->RightLeg;
 
 	lArm.BodyW -= 1; lArm.X1 += (offset * 2.0f) / 16.0f;
@@ -758,8 +760,8 @@ void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet*
 	BoxDesc_TexOrigin(&rArm, 40, 16);
 	setSlim->RightArm = BoxDesc_BuildBox(m, &rArm);
 
-	setSlim->TorsoLayer = set64->TorsoLayer;
-	setSlim->LeftLegLayer = set64->LeftLegLayer;
+	setSlim->TorsoLayer    = set64->TorsoLayer;
+	setSlim->LeftLegLayer  = set64->LeftLegLayer;
 	setSlim->RightLegLayer = set64->RightLegLayer;
 
 	BoxDesc_TexOrigin(&lArm, 48, 48);
@@ -784,11 +786,11 @@ void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
 	UInt8 skinType = entity->SkinType;
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
 	IModel_DrawPart(model->Torso);
-	IModel_DrawRotate(entity->Anim.LeftLegX, 0, entity->Anim.LeftLegZ, model->LeftLeg, false);
+	IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  model->LeftLeg,  false);
 	IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLeg, false);
 
 	IModel_Rotation = ROTATE_ORDER_XZY;
-	IModel_DrawRotate(entity->Anim.LeftArmX, 0, entity->Anim.LeftArmZ, model->LeftArm, false);
+	IModel_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  model->LeftArm,  false);
 	IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, model->RightArm, false);
 	IModel_Rotation = ROTATE_ORDER_ZYX;
 	IModel_UpdateVB();
@@ -797,11 +799,11 @@ void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
 	IModel_ActiveModel->index = 0;
 	if (skinType != SKIN_TYPE_64x32) {
 		IModel_DrawPart(model->TorsoLayer);
-		IModel_DrawRotate(entity->Anim.LeftLegX, 0, entity->Anim.LeftLegZ, model->LeftLegLayer, false);
+		IModel_DrawRotate(entity->Anim.LeftLegX,  0, entity->Anim.LeftLegZ,  model->LeftLegLayer,  false);
 		IModel_DrawRotate(entity->Anim.RightLegX, 0, entity->Anim.RightLegZ, model->RightLegLayer, false);
 
 		IModel_Rotation = ROTATE_ORDER_XZY;
-		IModel_DrawRotate(entity->Anim.LeftArmX, 0, entity->Anim.LeftArmZ, model->LeftArmLayer, false);
+		IModel_DrawRotate(entity->Anim.LeftArmX,  0, entity->Anim.LeftArmZ,  model->LeftArmLayer,  false);
 		IModel_DrawRotate(entity->Anim.RightArmX, 0, entity->Anim.RightArmZ, model->RightArmLayer, false);
 		IModel_Rotation = ROTATE_ORDER_ZYX;
 	}

@@ -1,6 +1,5 @@
 #ifndef CC_STREAM_H
 #define CC_STREAM_H
-#include "Typedefs.h"
 #include "String.h"
 #include "Constants.h"
 /* Defines an abstract way of reading and writing data in a streaming manner.

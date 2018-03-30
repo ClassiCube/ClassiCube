@@ -1,10 +1,9 @@
 #ifndef CC_WORLDLIGHTING_H
 #define CC_WORLDLIGHTING_H
-#include "Typedefs.h"
 #include "PackedCol.h"
-#include "Event.h"
 #include "GameStructs.h"
 /* Manages lighting of blocks in the world.
+BasicLighting: Uses a simple heightmap, where each block is either in sun or shadow.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 

@@ -1,6 +1,5 @@
 #ifndef CC_ENTITY_COMPONENTS_H
 #define CC_ENTITY_COMPONENTS_H
-#include "Typedefs.h"
 #include "Vectors.h"
 #include "String.h"
 /* Various components for entities.

@@ -1,6 +1,5 @@
 #ifndef CC_CHAT_H
 #define CC_CHAT_H
-#include "Typedefs.h"
 #include "Constants.h"
 #include "Utils.h"
 #include "GameStructs.h"

@@ -11,6 +11,7 @@
 #include "ExtMath.h"
 #include "Gui.h"
 #include "Window.h"
+#include "Event.h"
 
 Int32 Game_GetWindowScale(void) {
 	Real32 windowScale = min(Game_Width / 640.0f, Game_Height / 480.0f);

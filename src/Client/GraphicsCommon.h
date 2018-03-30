@@ -1,7 +1,5 @@
 #ifndef CC_GFXCOMMON_H
 #define CC_GFXCOMMON_H
-#include "Typedefs.h"
-#include "PackedCol.h"
 #include "String.h"
 #include "Texture.h"
 #include "VertexStructs.h"

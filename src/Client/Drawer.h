@@ -1,8 +1,6 @@
 #ifndef CC_DRAWER_H
 #define CC_DRAWER_H
 #include "VertexStructs.h"
-#include "PackedCol.h"
-#include "Typedefs.h"
 #include "Vectors.h"
 /* Draws the vertices for a cuboid region.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

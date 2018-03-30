@@ -1,7 +1,5 @@
 #ifndef CC_CAMERA_H
 #define CC_CAMERA_H
-#include "Typedefs.h"
-#include "Vectors.h"
 #include "Picking.h"
 
 /* Represents a camera, may be first or third person.

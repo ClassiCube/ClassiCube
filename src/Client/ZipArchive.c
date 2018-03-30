@@ -2,6 +2,7 @@
 #include "ErrorHandler.h"
 #include "Platform.h"
 #include "Deflate.h"
+#include "Stream.h"
 
 String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
 	String fileName;

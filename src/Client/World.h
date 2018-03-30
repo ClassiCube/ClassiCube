@@ -1,6 +1,5 @@
 #ifndef CC_WORLD_H
 #define CC_WORLD_H
-#include "Typedefs.h"
 #include "String.h"
 #include "Vectors.h"
 #include "PackedCol.h"
@@ -8,6 +7,7 @@
    Also contains associated environment metadata.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct AABB_ AABB;
 
 #define World_Unpack(index, x, y, z)\
 x = index % World_Width;\
@@ -22,8 +22,7 @@ Int32 World_Width, World_Height, World_Length;
 Int32 World_MaxX, World_MaxY, World_MaxZ;
 Int32 World_OneY;
 UInt8 World_Uuid[16];
-String World_TextureUrl;
-/* TODO: how to initalise World_TextureUrl string */
+extern String World_TextureUrl;
 
 void World_Reset(void);
 void World_SetNewMap(BlockID* blocks, Int32 blocksSize, Int32 width, Int32 height, Int32 length);
@@ -88,7 +87,6 @@ void WorldEnv_SetCloudsCol(PackedCol col);
 void WorldEnv_SetSunCol(PackedCol col);
 void WorldEnv_SetShadowCol(PackedCol col);
 
-typedef struct AABB_ AABB; /* Forward declaration */
 /* Finds the highest free Y coordinate in the given bounding box.*/
 Real32 Respawn_HighestFreeY(AABB* bb);
 /* Finds a suitable spawn position for the entity, by iterating 

@@ -1,6 +1,5 @@
 #ifndef CC_UTILS_H
 #define CC_UTILS_H
-#include "Typedefs.h"
 #include "String.h"
 #include "Bitmap.h"
 /* Implements various utility functions.

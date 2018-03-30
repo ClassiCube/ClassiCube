@@ -85,24 +85,26 @@ extern PackedCol WorldEnv_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0
 extern PackedCol WorldEnv_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 extern PackedCol WorldEnv_DefaultSunCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 extern PackedCol WorldEnv_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
+UInt8 World_TextureUrlBuffer[String_BufferSize(STRING_SIZE)];
+extern String World_TextureUrl = String_FromEmptyArray(World_TextureUrlBuffer);
 
 void WorldEnv_Reset(void) {
-	WorldEnv_EdgeHeight = -1;
-	WorldEnv_SidesOffset = -2;
+	WorldEnv_EdgeHeight   = -1;
+	WorldEnv_SidesOffset  = -2;
 	WorldEnv_CloudsHeight = -1;
 
-	WorldEnv_EdgeBlock = BLOCK_STILL_WATER;
+	WorldEnv_EdgeBlock  = BLOCK_STILL_WATER;
 	WorldEnv_SidesBlock = BLOCK_BEDROCK;
 
-	WorldEnv_CloudsSpeed = 1.0f;
-	WorldEnv_WeatherSpeed = 1.0f;
-	WorldEnv_WeatherFade = 1.0f;
+	WorldEnv_CloudsSpeed    = 1.0f;
+	WorldEnv_WeatherSpeed   = 1.0f;
+	WorldEnv_WeatherFade    = 1.0f;
 	WorldEnv_SkyboxHorSpeed = 0.0f;
 	WorldEnv_SkyboxVerSpeed = 0.0f;
 
 	WorldEnv_ResetLight();
-	WorldEnv_SkyCol = WorldEnv_DefaultSkyCol;
-	WorldEnv_FogCol = WorldEnv_DefaultFogCol;
+	WorldEnv_SkyCol    = WorldEnv_DefaultSkyCol;
+	WorldEnv_FogCol    = WorldEnv_DefaultFogCol;
 	WorldEnv_CloudsCol = WorldEnv_DefaultCloudsCol;
 	WorldEnv_Weather = WEATHER_SUNNY;
 	WorldEnv_ExpFog = false;

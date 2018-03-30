@@ -1,6 +1,5 @@
 #ifndef CC_TERRAINATLAS_H
 #define CC_TERRAINATLAS_H
-#include "Typedefs.h"
 #include "Bitmap.h"
 #include "2DStructs.h"
 /* Represents the 2D texture atlas of terrain.png, and converted into an array of 1D textures.

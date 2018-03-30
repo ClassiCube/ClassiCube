@@ -1,6 +1,5 @@
 #ifndef CC_GAMEMODE_H
 #define CC_GAMEMODE_H
-#include "Typedefs.h"
 #include "GameStructs.h"
 #include "Input.h"
 #include "Widgets.h"

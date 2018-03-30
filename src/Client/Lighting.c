@@ -5,7 +5,7 @@
 #include "Platform.h"
 #include "World.h"
 #include "ErrorHandler.h"
-/* Manages lighting through a simple heightmap, where each block is either in sun or shadow. */
+#include "Event.h"
 
 Int16* Lighting_heightmap;
 PackedCol shadow, shadowZSide, shadowXSide, shadowYBottom;

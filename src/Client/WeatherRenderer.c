@@ -13,6 +13,7 @@
 #include "World.h"
 #include "Particle.h"
 #include "ErrorHandler.h"
+#include "Stream.h"
 
 GfxResourceID weather_rainTex;
 GfxResourceID weather_snowTex;
@@ -173,7 +174,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Gfx_SetAlphaArgBlend(true);
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	UInt32 vCount = (UInt32)(ptr - vertices) / VertexP3fT2fC4b_Size;
+	UInt32 vCount = (UInt32)(ptr - vertices) / (UInt32)sizeof(VertexP3fT2fC4b);
 	GfxCommon_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
 	Gfx_SetAlphaArgBlend(false);

@@ -1,6 +1,5 @@
 #ifndef CC_PHYSICS_H
 #define CC_PHYSICS_H
-#include "Typedefs.h"
 #include "Vectors.h"
 /* Contains:
    - An axis aligned bounding box, and various methods related to them.

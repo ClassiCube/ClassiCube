@@ -1,15 +1,13 @@
 #ifndef CC_MODEL_H
 #define CC_MODEL_H
-#include "Typedefs.h"
 #include "Vectors.h"
 #include "PackedCol.h"
-#include "Physics.h"
-#include "Entity.h"
 #include "Constants.h"
 /* Contains various structs and methods for an entity model.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 typedef struct Entity_ Entity;
+typedef struct AABB_ AABB;
 
 #define IMODEL_QUAD_VERTICES 4
 #define IMODEL_BOX_VERTICES (FACE_COUNT * IMODEL_QUAD_VERTICES)

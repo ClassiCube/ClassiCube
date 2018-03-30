@@ -1,6 +1,5 @@
 #ifndef CC_ASYNCDOWNLOADER_H
 #define CC_ASYNCDOWNLOADER_H
-#include "Typedefs.h"
 #include "Constants.h"
 #include "Utils.h"
 #include "GameStructs.h"

@@ -13,6 +13,7 @@
 #include "GraphicsCommon.h"
 #include "ModelCache.h"
 #include "Physics.h"
+#include "IModel.h"
 
 #define ANIM_MAX_ANGLE (110 * MATH_DEG2RAD)
 #define ANIM_ARM_MAX (60.0f * MATH_DEG2RAD)
@@ -635,6 +636,6 @@ void ShadowComponent_Draw(Entity* entity) {
 		ShadowComponent_BoundShadowTex = true;
 	}
 
-	UInt32 vCount = (UInt32)(ptr - vertices) / VertexP3fT2fC4b_Size;
+	UInt32 vCount = (UInt32)(ptr - vertices) / (UInt32)sizeof(VertexP3fT2fC4b);
 	GfxCommon_UpdateDynamicVb_IndexedTris(vb, vertices, vCount);
 }

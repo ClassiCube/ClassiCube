@@ -1,6 +1,5 @@
 #ifndef CC_TREE_GEN_H
 #define CC_TREE_GEN_H
-#include "Typedefs.h"
 #include "Random.h"
 #include "Vectors.h"
 /* Implements original classic vanilla map generation

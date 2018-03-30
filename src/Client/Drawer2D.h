@@ -1,10 +1,7 @@
 #ifndef CC_DRAWER2D_H
 #define CC_DRAWER2D_H
-#include "Typedefs.h"
 #include "Platform.h"
 #include "Bitmap.h"
-#include "PackedCol.h"
-#include "2DStructs.h"
 #include "Texture.h"
 #include "Constants.h"
 /*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.

@@ -1,6 +1,5 @@
 #ifndef CC_HELDBLOCKRENDERER_H
 #define CC_HELDBLOCKRENDERER_H
-#include "Typedefs.h"
 #include "GameStructs.h"
 /* Implements rendering of held block/arm at bottom right of game.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

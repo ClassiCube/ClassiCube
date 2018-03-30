@@ -5,6 +5,7 @@
 #include "ModelCache.h"
 #include "GraphicsCommon.h"
 #include "GraphicsAPI.h"
+#include "Entity.h"
 
 #define UV_POS_MASK ((UInt16)0x7FFF)
 #define UV_MAX ((UInt16)0x8000)

@@ -1,6 +1,5 @@
 #ifndef CC_PLATFORM_H
 #define CC_PLATFORM_H
-#include "Typedefs.h"
 #include "Utils.h"
 #include "2DStructs.h"
 /* Abstracts platform specific memory management, I/O, etc.

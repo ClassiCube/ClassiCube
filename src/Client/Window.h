@@ -1,6 +1,5 @@
 #ifndef CC_WINDOW_H
 #define CC_WINDOW_H
-#include "Typedefs.h"
 #include "String.h"
 #include "Bitmap.h"
 #include "2DStructs.h"

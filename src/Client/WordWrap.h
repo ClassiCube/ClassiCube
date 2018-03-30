@@ -1,6 +1,5 @@
 #ifndef CC_WORDWRAP_H
 #define CC_WORDWRAP_H
-#include "Typedefs.h"
 #include "String.h"
 /* Allows wrapping a single line of text into multiple lines.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

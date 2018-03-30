@@ -15,6 +15,7 @@
 #include "GraphicsCommon.h"
 #include "AsyncDownloader.h"
 #include "ErrorHandler.h"
+#include "IModel.h"
 
 const UInt8* NameMode_Names[5]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const UInt8* ShadowMode_Names[4] = { "None", "SnapToBlock", "Circle", "CircleAll" };

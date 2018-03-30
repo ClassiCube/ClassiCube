@@ -1,8 +1,6 @@
 #ifndef CC_PARTICLE_H
 #define CC_PARTICLE_H
-#include "Typedefs.h"
 #include "Vectors.h"
-#include "PackedCol.h"
 #include "VertexStructs.h"
 #include "2DStructs.h"
 #include "GameStructs.h"
