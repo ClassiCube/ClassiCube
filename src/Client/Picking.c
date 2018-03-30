@@ -83,7 +83,7 @@ void RayTracer_SetVectors(RayTracer* t, Vector3 origin, Vector3 dir) {
 	t->tMax.Y = RayTracer_Div(cellBoundary.Y - origin.Y, dir.Y); /* Boundary is a plane on the XZ axis. */
 	t->tMax.Z = RayTracer_Div(cellBoundary.Z - origin.Z, dir.Z); /* Boundary is a plane on the XY axis. */
 
-																 // Determine how far we must travel along the ray before we have crossed a gridcell.
+	/* Determine how far we must travel along the ray before we have crossed a gridcell. */
 	t->tDelta.X = RayTracer_Div((Real32)t->step.X, dir.X);
 	t->tDelta.Y = RayTracer_Div((Real32)t->step.Y, dir.Y);
 	t->tDelta.Z = RayTracer_Div((Real32)t->step.Z, dir.Z);

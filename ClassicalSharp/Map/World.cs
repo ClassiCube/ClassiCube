@@ -105,17 +105,6 @@ namespace ClassicalSharp.Map {
 				p.X < Width && p.Y < Height && p.Z < Length;
 		}
 		
-		/// <summary> Unpacks the given index into the map's block array into its original world coordinates. </summary>
-		public Vector3I GetCoords(int index) {
-			if (index < 0 || index >= blocks1.Length)
-				return new Vector3I(-1);
-			
-			int x = index % Width;
-			int y = index / (Width * Length);
-			int z = (index / Width) % Length;
-			return new Vector3I(x, y, z);
-		}
-		
 		public BlockID GetPhysicsBlock(int x, int y, int z) {
 			if (x < 0 || x >= Width || z < 0 || z >= Length || y < 0) return Block.Bedrock;			
 			if (y >= Height) return Block.Air;

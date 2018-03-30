@@ -17,6 +17,7 @@ namespace ClassicalSharp {
 		[STAThread]
 		static void Main(string[] args) {
 			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			CleanupMainDirectory();
 			
 			string path = Path.Combine(Program.AppDirectory, "texpacks");
 			if (!File.Exists(Path.Combine(path, "default.zip"))) {
@@ -38,7 +39,6 @@ namespace ClassicalSharp {
 			string logPath = Path.Combine(AppDirectory, "client.log");
 			ErrorHandler.InstallHandler(logPath);
 			OpenTK.Configuration.SkipPerfCountersHack();
-			CleanupMainDirectory();
 			Utils.LogDebug("Starting " + AppName + "..");
 			
 			bool nullContext = true;

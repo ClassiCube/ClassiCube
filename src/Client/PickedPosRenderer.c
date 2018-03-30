@@ -7,7 +7,7 @@
 #include "Event.h"
 
 GfxResourceID pickedPos_vb;
-PackedCol pickedPos_col;
+PackedCol pickedPos_col = PACKEDCOL_CONST(0, 0, 0, 102);
 #define pickedPos_numVertices (16 * 6)
 VertexP3fC4b pickedPos_vertices[pickedPos_numVertices];
 VertexP3fC4b* pickedPos_ptr;
@@ -21,7 +21,6 @@ void PickedPosRenderer_ContextRecreated(void* obj) {
 }
 
 void PickedPosRenderer_Init(void) {
-	pickedPos_col = PackedCol_Create4(0, 0, 0, 102);
 	PickedPosRenderer_ContextRecreated(NULL);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);

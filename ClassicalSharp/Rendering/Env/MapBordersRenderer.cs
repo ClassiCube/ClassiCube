@@ -250,7 +250,7 @@ namespace ClassicalSharp.Renderers {
 					float u2 = z2 - z1, v2 = y2 - y1;
 					v.Y = y1; v.Z = z1; v.U = 0f; v.V = v2; vertices[i++] = v;
 					v.Y = y2;                     v.V = 0f; vertices[i++] = v;
-					v.Z = z2; v.U = u2;           vertices[i++] = v;
+					          v.Z = z2; v.U = u2;           vertices[i++] = v;
 					v.Y = y1;                     v.V = v2; vertices[i++] = v;
 				}
 			}
@@ -272,9 +272,9 @@ namespace ClassicalSharp.Renderers {
 					
 					float u2 = x2 - x1, v2 = y2 - y1;
 					v.X = x1; v.Y = y1; v.U = 0f; v.V = v2; vertices[i++] = v;
-					v.Y = y2;           v.V = 0f; vertices[i++] = v;
+					          v.Y = y2;           v.V = 0f; vertices[i++] = v;
 					v.X = x2;           v.U = u2;           vertices[i++] = v;
-					v.Y = y1;           v.V = v2; vertices[i++] = v;
+					          v.Y = y1;           v.V = v2; vertices[i++] = v;
 				}
 			}
 		}
@@ -295,9 +295,9 @@ namespace ClassicalSharp.Renderers {
 					
 					float u2 = x2 - x1, v2 = z2 - z1;
 					v.X = x1 + offset; v.Z = z1 + offset; v.U = 0f; v.V = 0f; vertices[i++] = v;
-					v.Z = z2 + offset;           v.V = v2; vertices[i++] = v;
+					                   v.Z = z2 + offset;           v.V = v2; vertices[i++] = v;
 					v.X = x2 + offset;                    v.U = u2;           vertices[i++] = v;
-					v.Z = z1 + offset;           v.V = 0f; vertices[i++] = v;
+					                   v.Z = z1 + offset;           v.V = 0f; vertices[i++] = v;
 				}
 			}
 		}

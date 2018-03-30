@@ -21,7 +21,7 @@ namespace ClassicalSharp.Map {
 		
 		/// <summary> Colour applied to the clouds. </summary>
 		public FastColour CloudsCol = DefaultCloudsColour;
-		public static readonly FastColour DefaultCloudsColour =  new FastColour(0xFF, 0xFF, 0xFF);
+		public static readonly FastColour DefaultCloudsColour = new FastColour(0xFF, 0xFF, 0xFF);
 		
 		/// <summary> Height of the clouds in world space. </summary>
 		public int CloudHeight;

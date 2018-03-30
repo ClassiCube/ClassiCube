@@ -12,11 +12,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public GenLevelScreen(Game game) : base(game) { }
 
 		MenuInputWidget selected;
-		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
-			return HandleMouseClick(widgets, mouseX, mouseY, button);
-		}
-		
+
 		public override bool HandlesKeyPress(char key) {
 			return selected == null ? true :
 				selected.HandlesKeyPress(key);
@@ -144,10 +140,6 @@ namespace ClassicalSharp.Gui.Screens {
 	
 	public sealed class ClassicGenLevelScreen : MenuScreen {	
 		public ClassicGenLevelScreen(Game game) : base(game) { }
-		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
-			return HandleMouseClick(widgets, mouseX, mouseY, button);
-		}
 		
 		public override bool HandlesKeyDown(Key key) {
 			if (key == Key.Escape) {

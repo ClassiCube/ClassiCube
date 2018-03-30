@@ -44,8 +44,8 @@ namespace ClassicalSharp {
 			// NOTE: we want it so if dir.x = 0, tmax.x = positive infinity
 			// Determine how far we can travel along the ray before we hit a voxel boundary.
 			tMax = new Vector3(
-				(cellBoundary.X - origin.X) / dir.X,    // Boundary is a plane on the YZ axis.
-				(cellBoundary.Y - origin.Y) / dir.Y,    // Boundary is a plane on the XZ axis.
+				(cellBoundary.X - origin.X) / dir.X,   // Boundary is a plane on the YZ axis.
+				(cellBoundary.Y - origin.Y) / dir.Y,   // Boundary is a plane on the XZ axis.
 				(cellBoundary.Z - origin.Z) / dir.Z);  // Boundary is a plane on the XY axis.
 			if (Single.IsNaN(tMax.X) || Single.IsInfinity(tMax.X)) tMax.X = Single.PositiveInfinity;
 			if (Single.IsNaN(tMax.Y) || Single.IsInfinity(tMax.Y)) tMax.Y = Single.PositiveInfinity;

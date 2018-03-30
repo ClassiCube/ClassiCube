@@ -147,7 +147,7 @@ namespace ClassicalSharp.Network.Protocols {
 			byte selectionId = reader.ReadUInt8();
 			string label = reader.ReadString();
 			
-			Vector3I p1;			
+			Vector3I p1;
 			p1.X = reader.ReadInt16();
 			p1.Y = reader.ReadInt16();
 			p1.Z = reader.ReadInt16();
@@ -213,7 +213,7 @@ namespace ClassicalSharp.Network.Protocols {
 			game.World.Env.SetEdgeLevel(reader.ReadInt16());
 			if (net.cpeData.envMapVer == 1) return;
 			
-			// Version 2			
+			// Version 2
 			game.World.Env.SetCloudsLevel(reader.ReadInt16());
 			short maxViewDist = reader.ReadInt16();
 			game.MaxViewDistance = maxViewDist <= 0 ? 32768 : maxViewDist;
@@ -256,28 +256,27 @@ namespace ClassicalSharp.Network.Protocols {
 		unsafe void HandleBulkBlockUpdate() {
 			int count = reader.ReadUInt8() + 1;
 			if (!game.World.HasBlocks) {
-				#if DEBUG_BLOCKS
-				Utils.LogDebug("Server tried to update a block while still sending us the map!");
-				#endif
-				reader.Skip(bulkCount * (sizeof(int) + 1));
-				return;
+				reader.Skip(bulkCount * (sizeof(int) + 1)); return;
 			}
+			
 			int* indices = stackalloc int[bulkCount];
-			for (int i = 0; i < count; i++)
+			for (int i = 0; i < count; i++) {
 				indices[i] = reader.ReadInt32();
+			}
 			reader.Skip((bulkCount - count) * sizeof(int));
+			World map = game.World;
 			
 			for (int i = 0; i < count; i++) {
 				BlockID block = reader.ReadBlock();
-				Vector3I coords = game.World.GetCoords(indices[i]);
+				int index = indices[i];
+				if (index < 0 || index >= map.blocks1.Length) continue;
 				
-				if (coords.X < 0) {
-					#if DEBUG_BLOCKS
-					Utils.LogDebug("Server tried to update a block at an invalid position!");
-					#endif
-					continue;
+				int x = index % map.Width;
+				int y = index / (map.Width * map.Length);
+				int z = (index / map.Width) % map.Length;
+				if (map.IsValidPos(x, y, z)) {
+					game.UpdateBlock(x, y, z, block);
 				}
-				game.UpdateBlock(coords.X, coords.Y, coords.Z, block);
 			}
 			
 			int elemSize = reader.ExtendedBlocks ? 2 : 1;
@@ -399,14 +398,14 @@ namespace ClassicalSharp.Network.Protocols {
 			if (order != 255) {
 				game.Inventory.Insert(order, block);
 			}
-		}					
+		}
 		
 		#endregion
 		
 		#region Write
 		
 		internal void WritePlayerClick(MouseButton button, bool buttonDown,
-		                              byte targetId, PickedPos pos) {
+		                               byte targetId, PickedPos pos) {
 			Player p = game.LocalPlayer;
 			writer.WriteUInt8((byte)Opcode.CpePlayerClick);
 			writer.WriteUInt8((byte)button);
@@ -441,7 +440,7 @@ namespace ClassicalSharp.Network.Protocols {
 		internal void WriteTwoWayPing(bool serverToClient, ushort data) {
 			writer.WriteUInt8((byte)Opcode.CpeTwoWayPing);
 			writer.WriteUInt8((byte)(serverToClient ? 1 : 0));
-			writer.WriteInt16((short)data);			
+			writer.WriteInt16((short)data);
 		}
 		
 		void SendCpeExtInfoReply() {

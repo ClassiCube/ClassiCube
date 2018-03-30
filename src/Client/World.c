@@ -73,34 +73,20 @@ bool World_IsValidPos_3I(Vector3I p) {
 		p.X < World_Width && p.Y < World_Height && p.Z < World_Length;
 }
 
-Vector3I World_GetCoords(Int32 index) {
-	if (index < 0 || index >= World_BlocksSize)
-		return Vector3I_Create1(-1);
 
-	Vector3I v;
-	World_Unpack(index, v.X, v.Y, v.Z);
-	return v;
-}
+#define WorldEnv_Set(src, dst, var) \
+if (src != dst) { dst = src; Event_RaiseInt32(&WorldEvents_EnvVarChanged, var); }
 
+#define WorldEnv_SetCol(src, dst, var)\
+if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt32(&WorldEvents_EnvVarChanged, var); }
 
-/* Sets a value and potentially raises event. */
-#define WorldEnv_Set(value, dst, envVar)\
-if (value == dst) return;\
-dst = value;\
-Event_RaiseInt32(&WorldEvents_EnvVarChanged, envVar);
-
-/* Sets a colour and potentially raises event. */
-#define WorldEnv_SetCol(value, dst, envVar)\
-if (PackedCol_Equals(value, dst)) return;\
-dst = value;\
-Event_RaiseInt32(&WorldEvents_EnvVarChanged, envVar);
-
+extern PackedCol WorldEnv_DefaultSkyCol    = PACKEDCOL_CONST(0x99, 0xCC, 0xFF, 0xFF);
+extern PackedCol WorldEnv_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
+extern PackedCol WorldEnv_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
+extern PackedCol WorldEnv_DefaultSunCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
+extern PackedCol WorldEnv_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
 
 void WorldEnv_Reset(void) {
-	WorldEnv_DefaultSkyCol = PackedCol_Create3(0x99, 0xCC, 0xFF);
-	WorldEnv_DefaultFogCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
-	WorldEnv_DefaultCloudsCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
-
 	WorldEnv_EdgeHeight = -1;
 	WorldEnv_SidesOffset = -2;
 	WorldEnv_CloudsHeight = -1;
@@ -123,9 +109,6 @@ void WorldEnv_Reset(void) {
 }
 
 void WorldEnv_ResetLight(void) {
-	WorldEnv_DefaultShadowCol = PackedCol_Create3(0x9B, 0x9B, 0x9B);
-	WorldEnv_DefaultSunCol = PackedCol_Create3(0xFF, 0xFF, 0xFF);
-
 	WorldEnv_ShadowCol = WorldEnv_DefaultShadowCol;
 	PackedCol_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide,
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
@@ -206,7 +189,7 @@ void WorldEnv_SetSunCol(PackedCol col) {
 	if (PackedCol_Equals(col, WorldEnv_SunCol)) return;
 
 	WorldEnv_SunCol = col;
-	PackedCol_GetShaded(WorldEnv_SunCol, &WorldEnv_SunXSide,
+	PackedCol_GetShaded(col, &WorldEnv_SunXSide, 
 		&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
 	Event_RaiseInt32(&WorldEvents_EnvVarChanged, ENV_VAR_SUN_COL);
 }
@@ -215,7 +198,7 @@ void WorldEnv_SetShadowCol(PackedCol col) {
 	if (PackedCol_Equals(col, WorldEnv_ShadowCol)) return;
 
 	WorldEnv_ShadowCol = col;
-	PackedCol_GetShaded(WorldEnv_ShadowCol, &WorldEnv_ShadowXSide,
+	PackedCol_GetShaded(col, &WorldEnv_ShadowXSide,
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
 	Event_RaiseInt32(&WorldEvents_EnvVarChanged, ENV_VAR_SHADOW_COL);
 }

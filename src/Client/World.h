@@ -34,10 +34,8 @@ BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z);
 #define World_GetBlock(x, y, z) World_Blocks[World_Pack(x, y, z)]
 #define World_GetBlock_3I(p) World_Blocks[World_Pack(p.X, p.Y, p.Z)]
 BlockID World_SafeGetBlock_3I(Vector3I p);
-
 bool World_IsValidPos(Int32 x, Int32 y, Int32 z);
 bool World_IsValidPos_3I(Vector3I p);
-Vector3I World_GetCoords(Int32 index);
 
 BlockID WorldEnv_EdgeBlock;
 BlockID WorldEnv_SidesBlock;
@@ -56,17 +54,17 @@ Real32 WorldEnv_SkyboxVerSpeed;
 bool WorldEnv_SkyboxClouds;
 
 PackedCol WorldEnv_SkyCol;
-PackedCol WorldEnv_DefaultSkyCol;
+extern PackedCol WorldEnv_DefaultSkyCol;
 PackedCol WorldEnv_FogCol;
-PackedCol WorldEnv_DefaultFogCol;
+extern PackedCol WorldEnv_DefaultFogCol;
 PackedCol WorldEnv_CloudsCol;
-PackedCol WorldEnv_DefaultCloudsCol;
+extern PackedCol WorldEnv_DefaultCloudsCol;
 PackedCol WorldEnv_SunCol;
 PackedCol WorldEnv_SunXSide, WorldEnv_SunZSide, WorldEnv_SunYBottom;
-PackedCol WorldEnv_DefaultSunCol;
+extern PackedCol WorldEnv_DefaultSunCol;
 PackedCol WorldEnv_ShadowCol;
 PackedCol WorldEnv_ShadowXSide, WorldEnv_ShadowZSide, WorldEnv_ShadowYBottom;
-PackedCol WorldEnv_DefaultShadowCol;
+extern PackedCol WorldEnv_DefaultShadowCol;
 
 void WorldEnv_Reset(void);
 void WorldEnv_ResetLight(void);
@@ -93,7 +91,7 @@ void WorldEnv_SetShadowCol(PackedCol col);
 typedef struct AABB_ AABB; /* Forward declaration */
 /* Finds the highest free Y coordinate in the given bounding box.*/
 Real32 Respawn_HighestFreeY(AABB* bb);
-/* Finds a suitable spawn position for the entity, by iterating downards from top of
-the world until the ground is found. */
+/* Finds a suitable spawn position for the entity, by iterating 
+downwards from top of the world until the ground is found. */
 Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize);
 #endif
