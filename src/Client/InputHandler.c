@@ -10,7 +10,7 @@
 #include "Event.h"
 #include "GameMode.h"
 #include "Window.h"
-#include "Player.h"
+#include "Entity.h"
 #include "Chat.h"
 #include "Funcs.h"
 #include "Screens.h"

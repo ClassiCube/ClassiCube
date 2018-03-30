@@ -7,7 +7,6 @@
 #include "Camera.h"
 #include "ModelCache.h"
 #include "ExtMath.h"
-#include "Player.h"
 #include "Event.h"
 
 BlockID held_block;

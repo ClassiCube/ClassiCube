@@ -3,9 +3,9 @@
 #include "Game.h"
 #include "Window.h"
 #include "GraphicsAPI.h"
-#include "Player.h"
 #include "Funcs.h"
 #include "Gui.h"
+#include "Entity.h"
 
 Real32 Camera_AdjustHeadX(Real32 value) {
 	if (value >= 90.00f && value <= 90.10f) return 90.10f * MATH_DEG2RAD;

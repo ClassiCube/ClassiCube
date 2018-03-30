@@ -4,7 +4,7 @@
 #include "Block.h"
 #include "Event.h"
 #include "Game.h"
-#include "Player.h"
+#include "Entity.h"
 #include "Platform.h"
 #include "Camera.h"
 #include "Funcs.h"

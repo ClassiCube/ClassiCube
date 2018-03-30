@@ -9,7 +9,7 @@
 /* Contains various structs and methods for an entity model.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-typedef struct Entity_ Entity; /* Forward declaration */
+typedef struct Entity_ Entity;
 
 #define IMODEL_QUAD_VERTICES 4
 #define IMODEL_BOX_VERTICES (FACE_COUNT * IMODEL_QUAD_VERTICES)

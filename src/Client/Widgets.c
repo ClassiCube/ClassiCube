@@ -2270,6 +2270,12 @@ void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT Strin
 	}
 }
 
+void TextGroupWidget_GetText(TextGroupWidget* widget, Int32 index, STRING_TRANSIENT String* text) {
+	String_Clear(text);
+	String line = TextGroupWidget_UNSAFE_Get(widget, index);
+	String_AppendString(text, &line);
+}
+
 void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_PURE String* text) {
 	if (text->length > TEXTGROUPWIDGET_LEN) ErrorHandler_Fail("TextGroupWidget - too big text");
 	Gfx_DeleteTexture(&widget->Textures[index].ID);

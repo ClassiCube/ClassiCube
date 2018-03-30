@@ -7,8 +7,8 @@
 #include "Random.h"
 #include "Event.h"
 #include "AsyncDownloader.h"
-#include "Player.h"
 #include "Funcs.h"
+#include "Entity.h"
 
 UInt8 ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerName = String_FromEmptyArray(ServerConnection_ServerNameBuffer);

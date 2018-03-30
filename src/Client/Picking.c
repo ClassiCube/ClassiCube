@@ -2,7 +2,7 @@
 #include "ExtMath.h"
 #include "Game.h"
 #include "Physics.h"
-#include "Player.h"
+#include "Entity.h"
 #include "World.h"
 #include "Funcs.h"
 #include "BlockID.h"

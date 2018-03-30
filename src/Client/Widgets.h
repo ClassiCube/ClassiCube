@@ -190,6 +190,7 @@ void TextGroupWidget_SetUsePlaceHolder(TextGroupWidget* widget, Int32 index, boo
 void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE String* text);
 Int32 TextGroupWidget_UsedHeight(TextGroupWidget* widget);
 void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 mouseX, Int32 mouseY);
+void TextGroupWidget_GetText(TextGroupWidget* widget, Int32 index, STRING_TRANSIENT String* text);
 void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_PURE String* text);
 
 

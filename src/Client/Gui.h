@@ -2,7 +2,6 @@
 #define CC_GUI_H
 #include "Typedefs.h"
 #include "Input.h"
-#include "String.h"
 #include "VertexStructs.h"
 #include "Texture.h"
 #include "GameStructs.h"

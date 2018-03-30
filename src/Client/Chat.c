@@ -7,7 +7,7 @@
 #include "ServerConnection.h"
 #include "World.h"
 #include "Inventory.h"
-#include "Player.h"
+#include "Entity.h"
 #include "Window.h"
 #include "GraphicsAPI.h"
 #include "Funcs.h"

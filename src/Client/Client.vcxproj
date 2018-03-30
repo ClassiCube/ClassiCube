@@ -219,7 +219,6 @@
     <ClInclude Include="BlockPhysics.h" />
     <ClInclude Include="Picking.h" />
     <ClInclude Include="PickedPosRenderer.h" />
-    <ClInclude Include="Player.h" />
     <ClInclude Include="Screens.h" />
     <ClInclude Include="SelectionBox.h" />
     <ClInclude Include="ServerConnection.h" />
@@ -296,7 +295,6 @@
     <ClCompile Include="BlockPhysics.c" />
     <ClCompile Include="PickedPosRenderer.c" />
     <ClCompile Include="Picking.c" />
-    <ClCompile Include="Player.c" />
     <ClCompile Include="Program.c" />
     <ClCompile Include="Random.c" />
     <ClCompile Include="Screens.c" />

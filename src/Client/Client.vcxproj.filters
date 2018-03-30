@@ -264,9 +264,6 @@
     <ClInclude Include="PickedPosRenderer.h">
       <Filter>Header Files\SelectionBox</Filter>
     </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Header Files\Entities</Filter>
-    </ClInclude>
     <ClInclude Include="TreeGen.h">
       <Filter>Header Files\Generator</Filter>
     </ClInclude>
@@ -552,9 +549,6 @@
       <Filter>Source Files\Game</Filter>
     </ClCompile>
     <ClCompile Include="EntityComponents.c">
-      <Filter>Source Files\Entities</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.c">
       <Filter>Source Files\Entities</Filter>
     </ClCompile>
     <ClCompile Include="Texture.c">

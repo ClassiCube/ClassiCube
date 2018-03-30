@@ -13,6 +13,15 @@ int main(int argc, char* argv[]) {
 	ErrorHandler_Init();
 	Platform_Init();
 
+	String maps = String_FromConst("maps");
+	if (!Platform_DirectoryExists(&maps)) {
+		Platform_DirectoryCreate(&maps);
+	}
+	String texPacks = String_FromConst("texpacks");
+	if (!Platform_DirectoryExists(&texPacks)) {
+		Platform_DirectoryCreate(&texPacks);
+	}
+
 	/*void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\output\\release\\texpacks\\skybox.png");
 	ReturnCode openCode = Platform_FileOpen(&file, &path, true);

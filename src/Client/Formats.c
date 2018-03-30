@@ -2,7 +2,7 @@
 #include "World.h"
 #include "Deflate.h"
 #include "Block.h"
-#include "Player.h"
+#include "Entity.h"
 #include "Platform.h"
 #include "ExtMath.h"
 #include "ErrorHandler.h"

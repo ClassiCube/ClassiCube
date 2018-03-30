@@ -2,8 +2,8 @@
 #include "Funcs.h"
 #include "ExtMath.h"
 #include "TerrainAtlas.h"
-#include "Player.h"
 #include "Game.h"
+#include "Entity.h"
 
 UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];

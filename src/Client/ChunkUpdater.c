@@ -5,7 +5,7 @@
 #include "Funcs.h"
 #include "Game.h"
 #include "GraphicsAPI.h"
-#include "Player.h"
+#include "Entity.h"
 #include "MapRenderer.h"
 #include "Platform.h"
 #include "TerrainAtlas.h"

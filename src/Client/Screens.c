@@ -7,7 +7,6 @@
 #include "Inventory.h"
 #include "Drawer2D.h"
 #include "GraphicsAPI.h"
-#include "Player.h"
 #include "Funcs.h"
 #include "TerrainAtlas.h"
 #include "ModelCache.h"
@@ -186,7 +185,7 @@ bool Screen_SwitchPause(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 }
 
 
-void ClickableScreen_RenderMenuBounds(void) {
+void MenuScreen_RenderBounds(void) {
 	/* These were sourced by taking a screenshot of vanilla
 	Then using paint to extract the colour components
 	Then using wolfram alpha to solve the glblendfunc equation */
@@ -197,11 +196,11 @@ void ClickableScreen_RenderMenuBounds(void) {
 
 void ClickableScreen_DefaultWidgetSelected(GuiElement* elem, Widget* widget) { }
 
-bool ClickableScreen_HandleMouseDown(ClickableScreen* data, Int32 x, Int32 y, MouseButton btn) {
-	UInt32 i;
+bool Clickable_HandleMouseDown(Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
+	Int32 i;
 	/* iterate backwards (because last elements rendered are shown over others) */
-	for (i = data->WidgetsCount; i > 0; i--) {
-		Widget* widget = data->Widgets[i - 1];
+	for (i = count - 1; i >= 0; i--) {
+		Widget* widget = widgets[i];
 		if (widget != NULL && Widget_Contains(widget, x, y)) {
 			if (!widget->Disabled) {
 				widget->VTABLE->HandlesMouseDown((GuiElement*)widget, x, y, btn);
@@ -673,7 +672,7 @@ void FilesScreen_Init(GuiElement* elem) {
 
 void FilesScreen_Render(GuiElement* elem, Real64 delta) {
 	FilesScreen* screen = (FilesScreen*)elem;
-	ClickableScreen_RenderMenuBounds();
+	MenuScreen_RenderBounds();
 	Gfx_SetTexturing(true);
 	Screen_RenderWidgets(screen->Widgets, Array_Elems(screen->Widgets), delta);
 	Gfx_SetTexturing(false);
@@ -701,14 +700,14 @@ bool FilesScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	return true;
 }
 
-bool FilesScreen_HandlesMouseMove(GuiElement* elem, Int32 mouseX, Int32 mouseY) {
+bool FilesScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	FilesScreen* screen = (FilesScreen*)elem;
-	return ClickableScreen_HandleMouseMove(&screen->Clickable, mouseX, mouseY);
+	return ClickableScreen_HandleMouseMove(&screen->Clickable, x, y);
 }
 
-bool FilesScreen_HandlesMouseDown(GuiElement* elem, Int32 mouseX, Int32 mouseY, MouseButton button) {
+bool FilesScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	FilesScreen* screen = (FilesScreen*)elem;
-	return ClickableScreen_HandleMouseDown(&screen->Clickable, mouseX, mouseY, button);
+	return Clickable_HandleMouseDown(screen->Widgets, Array_Elems(screen->Widgets), x, y, btn);
 }
 
 void FilesScreen_OnResize(GuiElement* elem) {
@@ -1054,14 +1053,14 @@ void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 void ChatScreen_CheckOtherStatuses(ChatScreen* screen) {
 	AsyncRequest request;
 	Int32 progress;
-	AsyncDownloader_GetInProgress(&request, &progress);
+	bool hasRequest = AsyncDownloader_GetInProgress(&request, &progress);
 
 	String id = String_FromRawArray(request.ID);
 	String terrain = String_FromConst("terrain");
 	String texPack = String_FromConst("texturePack");
 
 	/* Is terrain / texture pack currently being downloaded? */
-	if (request.Data == NULL || !(String_Equals(&id, &terrain) || String_Equals(&id, &texPack))) {
+	if (!hasRequest || !(String_Equals(&id, &terrain) || String_Equals(&id, &texPack))) {
 		if (screen->Status.Textures[1].ID != NULL) {
 			String empty = String_MakeNull();
 			TextGroupWidget_SetText(&screen->Status, 1, &empty);
@@ -1117,8 +1116,11 @@ void ChatScreen_UpdateChatYOffset(ChatScreen* screen, bool force) {
 
 void ChatElem_Recreate(TextGroupWidget* group, UInt8 code) {
 	Int32 i, j;
+	UInt8 lineBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
+	String line = String_InitAndClearArray(lineBuffer);
+
 	for (i = 0; i < group->LinesCount; i++) {
-		String line = group.lines[i]; /* TODO: Can't use UNSAFE_GET here because SetText later*/
+		TextGroupWidget_GetText(group, i, &line);
 		if (line.length == 0) continue;
 
 		for (j = 0; j < line.length - 1; j++) {

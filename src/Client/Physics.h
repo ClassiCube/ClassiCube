@@ -8,6 +8,7 @@
    - Calculates all possible blocks that a moving entity can intersect with.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct Entity_ Entity;
 
 /* Descibes an axis aligned bounding box. */
 typedef struct AABB_ { Vector3 Min, Max; } AABB;
@@ -19,7 +20,6 @@ bool AABB_Intersects(AABB* bb, AABB* other);
 bool AABB_Contains(AABB* parent, AABB* child);
 bool AABB_ContainsPoint(AABB* parent, Vector3* P);
 
-typedef struct Entity_ Entity; /* Forward declaration */
 /* Calculates the intersection points of a ray and a rotated bounding box. */
 bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* target, Real32* tMin, Real32* tMax);
 /* Calculates the intersection points of a ray and a bounding box.
