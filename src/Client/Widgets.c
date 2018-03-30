@@ -483,7 +483,7 @@ bool HotbarWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButt
 
 bool HotbarWidget_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 	HotbarWidget* widget = (HotbarWidget*)elem;
-	if (Key_IsAltPressed()) {
+	if (KeyBind_IsPressed(KeyBind_HotbarSwitching)) {
 		Int32 index = Inventory_Offset / INVENTORY_BLOCKS_PER_HOTBAR;
 		index = HotbarWidget_ScrolledIndex(widget, delta, index, 1);
 		Inventory_SetOffset(index * INVENTORY_BLOCKS_PER_HOTBAR);

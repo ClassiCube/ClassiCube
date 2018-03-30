@@ -335,7 +335,7 @@ bool InventoryScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseB
 
 	bool handled = Elem_HandlesMouseDown(table, x, y, btn);
 	if ((!handled || table->PendingClose) && btn == MouseButton_Left) {
-		bool hotbar = Key_IsControlPressed();
+		bool hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
 		if (!hotbar) Gui_SetNewScreen(NULL);
 	}
 	return true;

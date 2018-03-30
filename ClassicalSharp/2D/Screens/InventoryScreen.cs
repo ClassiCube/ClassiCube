@@ -63,7 +63,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			bool handled = table.HandlesMouseClick(mouseX, mouseY, button);
 			if ((!handled || table.PendingClose) && button == MouseButton.Left) {
-				bool hotbar = game.Input.ControlDown;
+				bool hotbar = game.Input.ControlDown || game.Input.ShiftDown;
 				if (!hotbar) game.Gui.SetNewScreen(null);
 			}
 			return true;
