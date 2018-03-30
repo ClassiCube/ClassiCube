@@ -11,15 +11,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		TextWidget descWidget;
-		string descText;
-		ButtonWidget selectedWidget;
+		int selectedI = -1;
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();
 			game.Graphics.Texturing = true;
 			RenderWidgets(widgets, delta);
-			if (descWidget != null)
-				descWidget.Render(delta);
+			if (descWidget != null) descWidget.Render(delta);
 			game.Graphics.Texturing = false;
 		}
 		
@@ -43,7 +41,9 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeBack(false, titleFont, SwitchPause),
 			};
 			
-			if (descWidget != null) MakeDescWidget(descText);		
+			if (selectedI >= 0) {
+				MakeDescWidget(descriptions[selectedI]);
+			}
 			CheckHacksAllowed(null, null);
 		}
 		
@@ -60,23 +60,9 @@ namespace ClassicalSharp.Gui.Screens {
 			widgets[5].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // env settings
 		}
 		
-		protected override void WidgetSelected(Widget widget) {
-			ButtonWidget button = widget as ButtonWidget;
-			if (selectedWidget == widget || button == null ||
-			   button == widgets[widgets.Length - 1]) return;
-			
-			selectedWidget = button;
-			if (descWidget != null) descWidget.Dispose();
-			if (button == null) return;
-			
-			string text = descriptions[IndexOfWidget(button)];
-			MakeDescWidget(text);
-		}
-		
 		void MakeDescWidget(string text) {
 			descWidget = TextWidget.Create(game, text, regularFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
-			descText = text;
 		}
 		
 		ButtonWidget Make(int dir, int y, string text, SimpleClickHandler onClick) {
@@ -86,14 +72,25 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		
 		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.Escape)
+			if (key == Key.Escape) {
 				game.Gui.SetNewScreen(null);
+			}
 			return key < Key.F1 || key > Key.F35;
+		}		
+		
+		public override bool HandlesMouseMove(int mouseX, int mouseY) {
+			int i = HandleMouseMove(widgets, mouseX, mouseY);
+			if (i == -1 || i == selectedI) return true;
+			if (i >= descriptions.Length)  return true;
+			
+			selectedI = i;
+			if (descWidget != null) descWidget.Dispose();
+			MakeDescWidget(descriptions[i]);
+			return true;
 		}
 		
 		public override void OnResize(int width, int height) {
-			if (descWidget != null)
-				descWidget.Reposition();
+			if (descWidget != null) descWidget.Reposition();
 			base.OnResize(width, height);
 		}
 		

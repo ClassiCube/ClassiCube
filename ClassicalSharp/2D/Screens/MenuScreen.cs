@@ -53,7 +53,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
-			return HandleMouseMove(widgets, mouseX, mouseY);
+			return HandleMouseMove(widgets, mouseX, mouseY) >= 0;
 		}
 		
 		public override bool HandlesMouseScroll(float delta) { return true; }

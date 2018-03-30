@@ -33,10 +33,7 @@ namespace ClassicalSharp.Gui.Screens {
 			return false;
 		}
 		
-		int lastX = -1, lastY = -1;
-		protected bool HandleMouseMove(Widget[] widgets, int mouseX, int mouseY) {
-			if (lastX == mouseX && lastY == mouseY)
-				return true;
+		protected int HandleMouseMove(Widget[] widgets, int mouseX, int mouseY) {
 			for (int i = 0; i < widgets.Length; i++) {
 				if (widgets[i] == null || !widgets[i].Active) continue;
 				widgets[i].Active = false;
@@ -46,17 +43,10 @@ namespace ClassicalSharp.Gui.Screens {
 				Widget widget = widgets[i];
 				if (widget != null && widget.Bounds.Contains(mouseX, mouseY)) {
 					widget.Active = true;
-					lastX = mouseX; lastY = mouseY;
-					WidgetSelected(widget);
-					return true;
+					return i;
 				}
 			}
-			lastX = mouseX; lastY = mouseY;
-			WidgetSelected(null);
-			return false;
-		}
-		
-		protected virtual void WidgetSelected(Widget widget) {
+			return -1;
 		}
 		
 		protected ButtonWidget MakeBack(bool toGame, Font font, SimpleClickHandler onClick) {

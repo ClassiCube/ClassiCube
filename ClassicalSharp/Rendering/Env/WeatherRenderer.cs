@@ -12,8 +12,7 @@ namespace ClassicalSharp.Renderers {
 		Game game;
 		World map;
 		
-		
-		public int RainTexId, SnowTexId;
+		int rainTexId, snowTexId;
 		int vb;
 		public short[] heightmap;
 		
@@ -38,7 +37,7 @@ namespace ClassicalSharp.Renderers {
 			if (heightmap == null) InitHeightmap();
 			IGraphicsApi gfx = game.Graphics;
 			
-			gfx.BindTexture(weather == Weather.Rainy ? RainTexId : SnowTexId);
+			gfx.BindTexture(weather == Weather.Rainy ? rainTexId : snowTexId);
 			Vector3 camPos = game.CurrentCameraPos;
 			Vector3I pos = Vector3I.Floor(camPos);
 			bool moved = pos != lastPos;
@@ -127,14 +126,14 @@ namespace ClassicalSharp.Renderers {
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name == "snow.png")
-				game.UpdateTexture(ref SnowTexId, e.Name, e.Data, false);
+				game.UpdateTexture(ref snowTexId, e.Name, e.Data, false);
 			else if (e.Name == "rain.png")
-				game.UpdateTexture(ref RainTexId, e.Name, e.Data, false);
+				game.UpdateTexture(ref rainTexId, e.Name, e.Data, false);
 		}
 		
 		public void Dispose() {
-			game.Graphics.DeleteTexture(ref RainTexId);
-			game.Graphics.DeleteTexture(ref SnowTexId);
+			game.Graphics.DeleteTexture(ref rainTexId);
+			game.Graphics.DeleteTexture(ref snowTexId);
 			ContextLost();
 			
 			game.Events.TextureChanged -= TextureChanged;

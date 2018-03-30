@@ -55,12 +55,11 @@ BlockID World_GetPhysicsBlock(Int32 x, Int32 y, Int32 z) {
 	if (x < 0 || x >= World_Width || z < 0 || z >= World_Length || y < 0) return BLOCK_BEDROCK;
 	if (y >= World_Height) return BLOCK_AIR;
 
-	return World_Blocks[World_Pack(x, y, z)];
+	return World_GetBlock(x, y, z);
 }
 
 BlockID World_SafeGetBlock_3I(Vector3I p) {
-	return World_IsValidPos(p.X, p.Y, p.Z) ? 
-		World_Blocks[World_Pack(p.X, p.Y, p.Z)] : BLOCK_AIR;
+	return World_IsValidPos(p.X, p.Y, p.Z) ? World_GetBlock(p.X, p.Y, p.Z) : BLOCK_AIR;
 }
 
 bool World_IsValidPos(Int32 x, Int32 y, Int32 z) {

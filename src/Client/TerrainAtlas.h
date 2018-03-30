@@ -6,7 +6,6 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-
 /* Number of elements in each row of 2D atlas. */
 #define ATLAS2D_ELEMENTS_PER_ROW 16
 /* Number of rows in 2D atlas. */

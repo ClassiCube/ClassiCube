@@ -255,10 +255,6 @@ namespace ClassicalSharp.Network.Protocols {
 		const int bulkCount = 256;
 		unsafe void HandleBulkBlockUpdate() {
 			int count = reader.ReadUInt8() + 1;
-			if (!game.World.HasBlocks) {
-				reader.Skip(bulkCount * (sizeof(int) + 1)); return;
-			}
-			
 			int* indices = stackalloc int[bulkCount];
 			for (int i = 0; i < count; i++) {
 				indices[i] = reader.ReadInt32();

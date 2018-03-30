@@ -181,7 +181,7 @@ namespace ClassicalSharp.Network.Protocols {
 			int y = reader.ReadUInt16();
 			int z = reader.ReadUInt16();
 			BlockID block = reader.ReadBlock();
-			if (game.World.HasBlocks && game.World.IsValidPos(x, y, z)) {
+			if (game.World.IsValidPos(x, y, z)) {
 				game.UpdateBlock(x, y, z, block);
 			}
 		}

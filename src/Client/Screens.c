@@ -36,14 +36,6 @@
 #define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((GuiElement*)(elem), delta)
 
 
-typedef struct ClickableScreen_ {
-	GuiElement* Elem;
-	Widget** Widgets;
-	UInt32 WidgetsCount;
-	Int32 LastX, LastY;
-	void (*OnWidgetSelected)(GuiElement* elem, Widget* widget);
-} ClickableScreen;
-
 typedef struct InventoryScreen_ {
 	Screen_Layout
 	FontDesc Font;
@@ -82,7 +74,6 @@ typedef struct FilesScreen_ {
 	ButtonWidget Buttons[FILES_SCREEN_BUTTONS];
 	TextWidget Title;
 	Widget* Widgets[FILES_SCREEN_BUTTONS + 1];
-	ClickableScreen Clickable;
 	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
 } FilesScreen;
 
@@ -194,8 +185,6 @@ void MenuScreen_RenderBounds(void) {
 	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
 }
 
-void ClickableScreen_DefaultWidgetSelected(GuiElement* elem, Widget* widget) { }
-
 bool Clickable_HandleMouseDown(Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
 	Int32 i;
 	/* iterate backwards (because last elements rendered are shown over others) */
@@ -211,35 +200,21 @@ bool Clickable_HandleMouseDown(Widget** widgets, Int32 count, Int32 x, Int32 y, 
 	return false;
 }
 
-bool ClickableScreen_HandleMouseMove(ClickableScreen* data, Int32 x, Int32 y) {
-	if (data->LastX == x && data->LastY == y) return true;
-	UInt32 i;
-	for (i = 0; i < data->WidgetsCount; i++) {
-		Widget* widget = data->Widgets[i];
+Int32 Clickable_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
+	Int32 i;
+	for (i = 0; i < count; i++) {
+		Widget* widget = widgets[i];
 		if (widget != NULL) widget->Active = false;
 	}
 
-	for (i = data->WidgetsCount; i > 0; i--) {
-		Widget* widget = data->Widgets[i];
+	for (i = count - 1; i >= 0; i--) {
+		Widget* widget = widgets[i];
 		if (widget != NULL && Widget_Contains(widget, x, y)) {
 			widget->Active = true;
-			data->LastX = x; data->LastY = y;
-			data->OnWidgetSelected(data->Elem, widget);
-			return true;
+			return i;
 		}
 	}
-
-	data->LastX = x; data->LastY = y;
-	data->OnWidgetSelected(data->Elem, NULL);
-	return false;
-}
-
-void ClickableScreen_Init(ClickableScreen* data, GuiElement* elem, Widget** widgets, UInt32 widgetsCount) {
-	data->Elem         = elem;
-	data->Widgets      = widgets;
-	data->WidgetsCount = widgetsCount;
-	data->LastX = -1; data->LastY = -1;
-	data->OnWidgetSelected = ClickableScreen_DefaultWidgetSelected;
+	return -1;
 }
 
 
@@ -658,7 +633,6 @@ void FilesScreen_ContextRecreated(void* obj) {
 	for (i = 0; i < FILES_SCREEN_BUTTONS; i++) {
 		screen->Widgets[i + 1] = (Widget*)(&screen->Buttons[i]);
 	}
-	ClickableScreen_Init(&screen->Clickable, (GuiElement*)screen, screen->Widgets, Array_Elems(screen->Widgets));
 	FilesScreen_UpdateArrows(screen);
 }
 
@@ -702,7 +676,7 @@ bool FilesScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 
 bool FilesScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	FilesScreen* screen = (FilesScreen*)elem;
-	return ClickableScreen_HandleMouseMove(&screen->Clickable, x, y);
+	return Clickable_HandleMouseMove(screen->Widgets, Array_Elems(screen->Widgets), x, y) >= 0;
 }
 
 bool FilesScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {

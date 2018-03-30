@@ -83,15 +83,19 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		protected ButtonWidget selectedButton, activeButton;
-		protected override void WidgetSelected(Widget widget) {
-			ButtonWidget button = widget as ButtonWidget;
-			if (selectedButton == button || button == null ||
-			    button == widgets[widgets.Length - 2]) return;
+		protected ButtonWidget activeButton;
+		protected int selectedI = -1;
+		
+		public override bool HandlesMouseMove(int mouseX, int mouseY) {
+			int i = HandleMouseMove(widgets, mouseX, mouseY);
+			if (i == -1 || i == selectedI) return true;
+			if (descriptions == null || i >= descriptions.Length) return true;
 			
-			selectedButton = button;
-			if (activeButton != null) return;
-			UpdateDescription(selectedButton);
+			selectedI = i;
+			if (activeButton == null) {
+				UpdateDescription((ButtonWidget)widgets[i]);
+			}
+			return true;
 		}
 		
 		protected void UpdateDescription(ButtonWidget widget) {
@@ -130,12 +134,10 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void ShowExtendedHelp() {
-			bool canShow = input == null && selectedButton != null && descriptions != null;
-			if (!canShow) return;
+			if (input != null || descriptions == null) return;
+			if (selectedI < 0 || selectedI >= descriptions.Length) return;
 			
-			int index = IndexOfWidget(selectedButton);
-			if (index < 0 || index >= descriptions.Length) return;
-			string[] desc = descriptions[index];
+			string[] desc = descriptions[selectedI];
 			if (desc == null) return;
 			MakeExtendedHelp(desc);
 		}

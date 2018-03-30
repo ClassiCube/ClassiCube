@@ -1,6 +1,5 @@
 #ifndef CC_SERVERCONNECTION_H
 #define CC_SERVERCONNECTION_H
-#include "String.h"
 #include "Input.h"
 #include "GameStructs.h"
 #include "Picking.h"
