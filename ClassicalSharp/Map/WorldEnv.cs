@@ -189,7 +189,8 @@ namespace ClassicalSharp.Map {
 		public void SetSunlight(FastColour col) {
 			if (col == Sunlight) return;
 			
-			FastColour.GetShaded(Sunlight, out SunXSide,
+			Sunlight = col;
+			FastColour.GetShaded(col, out SunXSide,
 			                     out SunZSide, out SunYBottom);
 			Sun = Sunlight.Pack();
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.SunlightColour);
@@ -200,7 +201,8 @@ namespace ClassicalSharp.Map {
 		public void SetShadowlight(FastColour col) {
 			if (col == Shadowlight) return;
 			
-			FastColour.GetShaded(Shadowlight, out ShadowXSide,
+			Shadowlight = col;
+			FastColour.GetShaded(col, out ShadowXSide,
 			                     out ShadowZSide, out ShadowYBottom);
 			Shadow = Shadowlight.Pack();
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.ShadowlightColour);
