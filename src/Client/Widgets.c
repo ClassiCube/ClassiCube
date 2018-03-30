@@ -172,6 +172,10 @@ void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
+bool ButtonWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	return ((ButtonWidget*)elem)->OnClick(x, y, btn);
+}
+
 GuiElementVTABLE ButtonWidget_VTABLE;
 void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick) {
 	widget->VTABLE = &ButtonWidget_VTABLE;
@@ -185,7 +189,8 @@ void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 m
 	Elem_Init(widget);
 	widget->MinWidth = minWidth; widget->MinHeight = 40;
 	ButtonWidget_SetText(widget, text);
-	widget->VTABLE->HandlesMouseDown = onClick;
+	widget->OnClick = onClick;
+	widget->VTABLE->HandlesMouseDown = ButtonWidget_HandlesMouseDown;
 }
 
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text) {

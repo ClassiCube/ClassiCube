@@ -142,7 +142,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		float deltaAcc;
 		public override bool HandlesMouseScroll(float delta) {
-			if (game.Input.AltDown) {
+			if (game.Input.IsKeyDown(KeyBind.HotbarSwitching)) {
 				int index = game.Inventory.Offset / Inventory.BlocksPerRow;
 				game.Inventory.Offset = ScrolledIndex(delta, index, 1) * Inventory.BlocksPerRow;
 				altHandled = true;

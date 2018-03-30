@@ -38,9 +38,10 @@ typedef struct ButtonWidget_ {
 	FontDesc Font;
 
 	String OptName;
+	Gui_MouseHandler OnClick;
 	ButtonWidget_GetValue GetValue;
 	ButtonWidget_SetValue SetValue;
-	Int32 MinWidth, MinHeight, Metadata;
+	Int32 MinWidth, MinHeight;
 } ButtonWidget;
 
 void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick);

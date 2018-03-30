@@ -60,7 +60,7 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets the block at the given world coordinates without bounds checking. </summary>
 		public void SetBlock(int x, int y, int z, BlockID blockId) {
 			int i = (y * Length + z) * Width + x;
-			blocks1[i] = (BlockRaw)blockId;			
+			blocks1[i] = (BlockRaw)blockId;
 			if (blocks1 == blocks2) return;
 			blocks2[i] = (BlockRaw)(blockId >> 8);
 		}
