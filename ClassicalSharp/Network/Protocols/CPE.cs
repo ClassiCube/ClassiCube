@@ -262,10 +262,11 @@ namespace ClassicalSharp.Network.Protocols {
 			reader.Skip((bulkCount - count) * sizeof(int));
 			World map = game.World;
 			
+			int mapSize = map.HasBlocks ? map.blocks.Length : 0;
 			for (int i = 0; i < count; i++) {
 				BlockID block = reader.ReadBlock();
 				int index = indices[i];
-				if (index < 0 || index >= map.blocks1.Length) continue;
+				if (index < 0 || index >= mapSize) continue;
 				
 				int x = index % map.Width;
 				int y = index / (map.Width * map.Length);

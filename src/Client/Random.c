@@ -22,14 +22,14 @@ Int32 Random_Range(Random* seed, Int32 min, Int32 max) {
 Int32 Random_Next(Random* seed, Int32 n) {
 	if ((n & -n) == n) { /* i.e., n is a power of 2 */
 		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-		Int64 raw = (Int64)((UInt64)*seed >> (48 - 31));
+		Int64 raw = (Int64)((UInt64)(*seed) >> (48 - 31));
 		return (Int32)((n * raw) >> 31);
 	}
 
 	Int32 bits, val;
 	do {
 		*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-		bits = (Int32)((UInt64)*seed >> (48 - 31));
+		bits = (Int32)((UInt64)(*seed) >> (48 - 31));
 		val = bits % n;
 	} while (bits - val + (n - 1) < 0);
 	return val;
@@ -37,6 +37,6 @@ Int32 Random_Next(Random* seed, Int32 n) {
 
 Real32 Random_Float(Random* seed) {
 	*seed = (*seed * RND_VALUE + 0xBLL) & RND_MASK;
-	Int32 raw = (Int32)((UInt64)*seed >> (48 - 24));
+	Int32 raw = (Int32)((UInt64)(*seed) >> (48 - 24));
 	return raw / ((Real32)(1 << 24));
 }

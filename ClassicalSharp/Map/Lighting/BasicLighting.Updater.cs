@@ -97,7 +97,7 @@ namespace ClassicalSharp.Map {
 				ResetNeighourChunk(cx, cy, cz, block, y, index, y);
 			} else {
 				for (cy = maxCy; cy >= minCy; cy--) {
-					int maxY = Math.Min(world.Height - 1, (cy << 4) + 15);
+					int maxY = Math.Min(world.MaxY, (cy << 4) + 15);
 					int index = x + world.Width * (z + maxY * world.Length);
 					ResetNeighourChunk(cx, cy, cz, block, maxY, index, y);
 				}
@@ -111,7 +111,7 @@ namespace ClassicalSharp.Map {
 			
 			// Update if any blocks in the chunk are affected by light change
 			for (; y >= minY; y--) {
-				BlockID other = world.blocks1[index];
+				BlockID other = world.blocks[index];
 				bool affected = y == nY ? Needs(block, other) : BlockInfo.Draw[other] != DrawType.Gas;
 				if (affected) { renderer.RefreshChunk(cx, cy, cz); return; }
 				index -= world.Width * world.Length;

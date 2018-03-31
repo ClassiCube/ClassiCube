@@ -18,7 +18,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			bool multi = !game.Server.IsSinglePlayer;
-			ClickHandler onClick = OnWidgetClick;
+			ClickHandler onClick = OnButtonClick;
 			widgets = new Widget[] {
 				multi ? null : MakeOpt(-1, -100, "Reach distance", onClick, GetReach,       SetReach),
 				MakeOpt(-1, -50, "Music volume",                   onClick, GetMusic,       SetMusic),

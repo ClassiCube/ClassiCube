@@ -1238,7 +1238,6 @@ bool ChatScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton
 	return true;
 }
 
-
 void ChatScreen_ColCodeChanged(void* obj, Int32 code) {
 	ChatScreen* screen = (ChatScreen*)obj;
 	if (Gfx_LostContext) return;

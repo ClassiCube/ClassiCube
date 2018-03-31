@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			ClickHandler onClick = OnWidgetClick;
+			ClickHandler onClick = OnButtonClick;
 			widgets = new Widget[] {
 				MakeOpt(-1, -50, "FPS mode",         onClick, GetFPS,      SetFPS),
 				MakeOpt(-1, 0, "View distance",      onClick, GetViewDist, SetViewDist),

@@ -15,7 +15,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			ClickHandler onClick = OnWidgetClick;
+			ClickHandler onClick = OnButtonClick;
 			widgets = new Widget[] {
 				MakeOpt(-1, -150, "Black text shadows", onClick, GetShadows,   SetShadows),
 				MakeOpt(-1, -100, "Show FPS",           onClick, GetShowFPS,   SetShowFPS),

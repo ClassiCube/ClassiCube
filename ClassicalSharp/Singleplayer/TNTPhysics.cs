@@ -47,7 +47,7 @@ namespace ClassicalSharp.Singleplayer {
 				if (!map.IsValidPos(xx, yy, zz)) continue;
 				index = (yy * map.Length + zz) * map.Width + xx;
 				
-				BlockRaw block = map.blocks1[index];
+				BlockRaw block = map.blocks[index];
 				if (block < Block.CpeCount && blocksTnt[block]) continue;		
 				
 				game.UpdateBlock(xx, yy, zz, Block.Air);				

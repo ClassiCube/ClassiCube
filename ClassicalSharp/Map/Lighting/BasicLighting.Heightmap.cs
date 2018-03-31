@@ -9,18 +9,30 @@ namespace ClassicalSharp.Map {
 	public sealed partial class BasicLighting : IWorldLighting {
 		
 		int CalcHeightAt(int x, int maxY, int z, int index) {
-			int mapIndex = (maxY * length + z) * width + x;
-			BlockRaw[] blocks = game.World.blocks1;
+			int i = (maxY * length + z) * width + x;
+			BlockRaw[] blocks = game.World.blocks;
 			
-			for (int y = maxY; y >= 0; y--) {
-				BlockID block = blocks[mapIndex];
-				if (BlockInfo.BlocksLight[block]) {
-					int offset = (BlockInfo.LightOffset[block] >> Side.Top) & 1;
-					heightmap[index] = (short)(y - offset);
-					return y - offset;
+			if (BlockInfo.MaxDefined < 256) {
+				for (int y = maxY; y >= 0; y--, i -= oneY) {
+					int block = blocks[i];
+					if (BlockInfo.BlocksLight[block]) {
+						int offset = (BlockInfo.LightOffset[block] >> Side.Top) & 1;
+						heightmap[index] = (short)(y - offset);
+						return y - offset;
+					}
 				}
-				mapIndex -= oneY;
-			}			
+			} else {
+				BlockRaw[] blocks2 = game.World.blocks2;
+				for (int y = maxY; y >= 0; y--, i -= oneY) {
+					int block = blocks[i] | (blocks2[i] << 8);
+					if (BlockInfo.BlocksLight[block]) {
+						int offset = (BlockInfo.LightOffset[block] >> Side.Top) & 1;
+						heightmap[index] = (short)(y - offset);
+						return y - offset;
+					}
+				}
+			}
+			
 			heightmap[index] = -10;
 			return -10;
 		}

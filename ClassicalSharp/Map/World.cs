@@ -12,7 +12,7 @@ namespace ClassicalSharp.Map {
 	/// heightmap, dimensions and various metadata such as environment settings. </summary>
 	public sealed class World {
 
-		public BlockRaw[] blocks1, blocks2;
+		public BlockRaw[] blocks, blocks2;
 		public int Width, Height, Length, MaxX, MaxY, MaxZ;
 		public bool HasBlocks;
 		
@@ -32,23 +32,24 @@ namespace ClassicalSharp.Map {
 		/// <summary> Resets all of the properties to their defaults and raises the 'OnNewMap' event. </summary>
 		public void Reset() {
 			Env.Reset();
-			Width = Height = Length = 0;
-			blocks1 = null;
+			Width = 0; Height = 0; Length = 0;
+			MaxX = 0;  MaxY = 0;   MaxZ = 0;
+			blocks = null;
 			blocks2 = null;
 			Uuid = Guid.NewGuid();
 			HasBlocks = false;
 		}
 		
 		/// <summary> Updates the underlying block array, and dimensions of this map. </summary>
-		public void SetNewMap(BlockRaw[] blocks, int width, int height, int length) {
+		public void SetNewMap(BlockRaw[] blocksRaw, int width, int height, int length) {
 			Width  = width;  MaxX = width  - 1;
 			Height = height; MaxY = height - 1;
 			Length = length; MaxZ = length - 1;
 			
-			blocks1 = blocks;
-			if (blocks.Length == 0) blocks1 = null;
-			blocks2 = blocks1;
-			HasBlocks = blocks1 != null;
+			blocks = blocksRaw;
+			if (blocks.Length == 0) blocks = null;
+			blocks2 = blocks;
+			HasBlocks = blocks != null;
 			
 			if (blocks.Length != (width * height * length))
 				throw new InvalidOperationException("Blocks array length does not match volume of map.");
@@ -60,8 +61,8 @@ namespace ClassicalSharp.Map {
 		/// <summary> Sets the block at the given world coordinates without bounds checking. </summary>
 		public void SetBlock(int x, int y, int z, BlockID blockId) {
 			int i = (y * Length + z) * Width + x;
-			blocks1[i] = (BlockRaw)blockId;
-			if (blocks1 == blocks2) return;
+			blocks[i] = (BlockRaw)blockId;
+			if (blocks == blocks2) return;
 			blocks2[i] = (BlockRaw)(blockId >> 8);
 		}
 		
@@ -69,9 +70,9 @@ namespace ClassicalSharp.Map {
 		public BlockID GetBlock(int x, int y, int z) {
 			int i = (y * Length + z) * Width + x;
 			#if USE16_BIT
-			return (BlockID)((blocks1[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
-			return blocks1[i];
+			return blocks[i];
 			#endif
 		}
 		
@@ -79,9 +80,9 @@ namespace ClassicalSharp.Map {
 		public BlockID GetBlock(Vector3I p) {
 			int i = (p.Y * Length + p.Z) * Width + p.X;
 			#if USE16_BIT
-			return (BlockID)((blocks1[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
-			return blocks1[i];
+			return blocks[i];
 			#endif
 		}
 		
@@ -111,9 +112,9 @@ namespace ClassicalSharp.Map {
 			
 			int i = (y * Length + z) * Width + x;
 			#if USE16_BIT
-			return (BlockID)((blocks1[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
-			return blocks1[i];
+			return blocks[i];
 			#endif
 		}
 	}

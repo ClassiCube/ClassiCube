@@ -32,17 +32,15 @@ void Lighting_EnvVariableChanged(void* obj, Int32 envVar) {
 }
 
 Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
-	Int32 mapIndex = World_Pack(x, maxY, z);
-	Int32 y;
+	Int32 y, i = World_Pack(x, maxY, z);
 
-	for (y = maxY; y >= 0; y--) {
-		BlockID block = World_Blocks[mapIndex];
+	for (y = maxY; y >= 0; y--, i -= World_OneY) {
+		BlockID block = World_Blocks[i];
 		if (Block_BlocksLight[block]) {
 			Int32 offset = (Block_LightOffset[block] >> FACE_YMAX) & 1;
 			Lighting_heightmap[index] = (Int16)(y - offset);
 			return y - offset;
 		}
-		mapIndex -= World_OneY;
 	}
 	Lighting_heightmap[index] = (Int16)-10;
 	return -10;

@@ -23,7 +23,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			ClickHandler onClick = OnWidgetClick;
+			ClickHandler onClick = OnButtonClick;
 			widgets = new Widget[] {
 				MakeOpt(-1, -150, "Clouds col",  onClick, GetCloudsCol,    SetCloudsCol),
 				MakeOpt(-1, -100, "Sky col",     onClick, GetSkyCol,       SetSkyCol),

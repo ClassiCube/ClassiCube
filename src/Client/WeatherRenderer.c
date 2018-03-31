@@ -38,15 +38,14 @@ void WeatherRenderer_InitHeightmap(void) {
 }
 
 Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
-	Int32 mapIndex = (maxY * World_Length + z) * World_Width + x;
-	Int32 y = maxY;
-	for (y = maxY; y >= 0; y--) {
-		UInt8 draw = Block_Draw[World_Blocks[mapIndex]];
+	Int32 i = (maxY * World_Length + z) * World_Width + x, y;
+
+	for (y = maxY; y >= 0; y--, i -= World_OneY) {
+		UInt8 draw = Block_Draw[World_Blocks[i]];
 		if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {
 			Weather_Heightmap[index] = (Int16)y;
 			return y;
 		}
-		mapIndex -= World_OneY;
 	}
 	Weather_Heightmap[index] = -1;
 	return -1;

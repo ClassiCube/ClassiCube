@@ -20,7 +20,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			bool multi = !game.Server.IsSinglePlayer, hacks = game.ClassicHacks;
-			ClickHandler onClick = OnWidgetClick;
+			ClickHandler onClick = OnButtonClick;
 			widgets = new Widget[] {
 				MakeOpt(-1, -150, "Music",                      onClick, GetMusic,    SetMusic),
 				MakeOpt(-1, -100, "Invert mouse",               onClick, GetInvert,   SetInvert),

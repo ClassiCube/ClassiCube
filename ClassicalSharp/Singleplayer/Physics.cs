@@ -49,7 +49,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		int tickCount = 0;
 		public void Tick() {
-			if (!Enabled || game.World.blocks1 == null) return;
+			if (!Enabled || game.World.blocks == null) return;
 			
 			//if ((tickCount % 5) == 0) {
 			liquid.TickLava();
@@ -92,7 +92,7 @@ namespace ClassicalSharp.Singleplayer {
 		
 		/// <summary> Activates the block at the particular packed coordinates. </summary>
 		public void Activate(int index) {
-			BlockRaw block = map.blocks1[index];
+			BlockRaw block = map.blocks[index];
 			PhysicsAction activate = OnActivate[block];
 			if (activate != null) activate(index, block);
 		}
@@ -132,17 +132,17 @@ namespace ClassicalSharp.Singleplayer {
 				
 				// Inlined 3 random ticks for this chunk
 				int index = rnd.Next(lo, hi);
-				BlockRaw block = map.blocks1[index];
+				BlockRaw block = map.blocks[index];
 				PhysicsAction tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 				
 				index = rnd.Next(lo, hi);
-				block = map.blocks1[index];
+				block = map.blocks[index];
 				tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 				
 				index = rnd.Next(lo, hi);
-				block = map.blocks1[index];
+				block = map.blocks[index];
 				tick = OnRandomTick[block];
 				if (tick != null) tick(index, block);
 			}

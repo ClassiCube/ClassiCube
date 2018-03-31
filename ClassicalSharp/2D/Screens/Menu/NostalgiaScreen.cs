@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			ClickHandler onClick = OnWidgetClick;
+			ClickHandler onClick = OnButtonClick;
 			widgets = new Widget[] {
 				MakeOpt(-1, -150, "Classic hand model",  onClick, GetHand,   SetHand),
 				MakeOpt(-1, -100, "Classic walk anim",   onClick, GetAnim,   SetAnim),

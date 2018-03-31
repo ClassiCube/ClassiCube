@@ -26,7 +26,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			ClickHandler onClick = OnWidgetClick;
+			ClickHandler onClick = OnButtonClick;
 			widgets = new Widget[] {
 				MakeOpt(-1, -150, "Hacks enabled",      onClick, GetHacks,    SetHacks),
 				MakeOpt(-1, -100, "Speed multiplier",   onClick, GetSpeed,    SetSpeed),

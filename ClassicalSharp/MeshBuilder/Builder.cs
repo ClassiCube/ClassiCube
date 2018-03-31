@@ -46,7 +46,7 @@ namespace ClassicalSharp {
 			MemUtils.memset((IntPtr)chunkPtr, 0, 0, extChunkSize3 * sizeof(BlockID));
 			
 			bool allSolid = false;
-			fixed (BlockRaw* mapPtr = map.blocks1) {
+			fixed (BlockRaw* mapPtr = map.blocks) {
 				#if USE_16_BIT
 				if (BlockInfo.MaxDefined >= 256) {
 					ReadChunkData_16Bit(x1, y1, z1, mapPtr, ref allAir, ref allSolid);
