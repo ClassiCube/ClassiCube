@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 			
 			bool allSolid = false;
 			fixed (BlockRaw* mapPtr = map.blocks) {
-				#if USE_16_BIT
+				#if !ONLY_8BIT
 				if (BlockInfo.MaxDefined >= 256) {
 					ReadChunkData_16Bit(x1, y1, z1, mapPtr, ref allAir, ref allSolid);
 				} else {
@@ -123,7 +123,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		#if USE_16_BIT
+		#if !ONLY_8BIT
 		void ReadChunkData_16Bit(int x1, int y1, int z1, BlockRaw* mapPtr, ref bool outAllAir, ref bool outAllSolid) { // only assign this variable once
 			bool allAir = true, allSolid = true;
 			fixed (BlockRaw* mapPtr2 = map.blocks2) {

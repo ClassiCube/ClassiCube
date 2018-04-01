@@ -72,7 +72,7 @@ namespace ClassicalSharp.Map {
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public BlockID GetBlock(int x, int y, int z) {
 			int i = (y * Length + z) * Width + x;
-			#if USE16_BIT
+			#if !ONLY_8BIT
 			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
 			return blocks[i];
@@ -82,7 +82,7 @@ namespace ClassicalSharp.Map {
 		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public BlockID GetBlock(Vector3I p) {
 			int i = (p.Y * Length + p.Z) * Width + p.X;
-			#if USE16_BIT
+			#if !ONLY_8BIT
 			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
 			return blocks[i];
@@ -114,7 +114,7 @@ namespace ClassicalSharp.Map {
 			if (y >= Height) return Block.Air;
 			
 			int i = (y * Length + z) * Width + x;
-			#if USE16_BIT
+			#if !ONLY_8BIT
 			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
 			#else
 			return blocks[i];

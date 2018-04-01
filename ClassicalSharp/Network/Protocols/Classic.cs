@@ -18,7 +18,7 @@ namespace ClassicalSharp.Network.Protocols {
 		public ClassicProtocol(Game game) : base(game) { }
 		
 		public override void Init() {
-			gzippedMap = new FixedBufferStream(net.reader.buffer);
+			mapPartStream = new FixedBufferStream(net.reader.buffer);
 			Reset();
 		}
 		
@@ -47,12 +47,15 @@ namespace ClassicalSharp.Network.Protocols {
 		GZipHeaderReader gzipHeader;
 		int mapSizeIndex, mapIndex;
 		byte[] mapSize = new byte[4], map;
-		#if USE16_BIT
-		byte[] map2;
-		#endif
-		FixedBufferStream gzippedMap;
+		FixedBufferStream mapPartStream;
 		Screen prevScreen;
 		bool prevCursorVisible;
+		
+		#if !ONLY_8BIT
+		DeflateStream gzipStream2;
+		byte[] map2;
+		int mapIndex2;
+		#endif
 		
 		#region Read
 
@@ -78,7 +81,7 @@ namespace ClassicalSharp.Network.Protocols {
 				gzipHeader.done = true;
 				mapSizeIndex = 4;
 				map = new byte[size];
-				#if USE16_BIT
+				#if !ONLY_8BIT
 				if (reader.ExtendedBlocks) map2 = new byte[size];
 				#endif
 			}
@@ -101,17 +104,28 @@ namespace ClassicalSharp.Network.Protocols {
 			// Workaround because built in mono stream assumes that the end of stream
 			// has been reached the first time a read call returns 0. (MS.NET doesn't)
 			#if __MonoCS__
-			gzipStream = new DeflateStream(gzippedMap, true);
+			gzipStream = new DeflateStream(mapPartStream, true);
 			#else
-			gzipStream = new DeflateStream(gzippedMap, CompressionMode.Decompress);
+			gzipStream = new DeflateStream(mapPartStream, CompressionMode.Decompress);
 			if (OpenTK.Configuration.RunningOnMono) {
 				throw new InvalidOperationException("You must compile ClassicalSharp with __MonoCS__ defined " +
 				                                    "to run on Mono, due to a limitation in Mono.");
 			}
 			#endif
 			
+			#if !ONLY_8BIT
+			#if __MonoCS__
+			gzipStream2 = new DeflateStream(mapPartStream, true);
+			#else
+			gzipStream2 = new DeflateStream(mapPartStream, CompressionMode.Decompress);
+			#endif
+			#endif
+			
 			mapSizeIndex = 0;
 			mapIndex = 0;
+			#if !ONLY_8BIT
+			mapIndex2 = 0;
+			#endif
 			mapReceiveStart = DateTime.UtcNow;
 		}
 		
@@ -121,11 +135,14 @@ namespace ClassicalSharp.Network.Protocols {
 			if (gzipStream == null) StartLoadingState();
 			
 			int usedLength = reader.ReadUInt16();
-			gzippedMap.pos = 0;
-			gzippedMap.bufferPos = reader.index;
-			gzippedMap.len = usedLength;
+			mapPartStream.pos = 0;
+			mapPartStream.bufferPos = reader.index;
+			mapPartStream.len = usedLength;
 			
-			if (gzipHeader.done || gzipHeader.ReadHeader(gzippedMap)) {
+			reader.Skip(1024);
+			byte value = reader.ReadUInt8(); // progress in original classic, but we ignore it
+			
+			if (gzipHeader.done || gzipHeader.ReadHeader(mapPartStream)) {
 				if (mapSizeIndex < 4) {
 					mapSizeIndex += gzipStream.Read(mapSize, mapSizeIndex, 4 - mapSizeIndex);
 				}
@@ -134,15 +151,23 @@ namespace ClassicalSharp.Network.Protocols {
 					if (map == null) {
 						int size = mapSize[0] << 24 | mapSize[1] << 16 | mapSize[2] << 8 | mapSize[3];
 						map = new byte[size];
-						#if USE16_BIT
+						#if !ONLY_8BIT
 						if (reader.ExtendedBlocks) map2 = new byte[size];
 						#endif
 					}
+					
+					#if !ONLY_8BIT
+					if (reader.ExtendedBlocks && value != 0) {
+						mapIndex2 += gzipStream2.Read(map2, mapIndex2, map2.Length - mapIndex2);
+					} else {
+						mapIndex += gzipStream.Read(map, mapIndex, map.Length - mapIndex);
+					}
+					#else
 					mapIndex += gzipStream.Read(map, mapIndex, map.Length - mapIndex);
+					#endif
 				}
 			}
 			
-			reader.Skip(1025); // also skip progress since we calculate client side
 			float progress = map == null ? 0 : (float)mapIndex / map.Length;
 			game.WorldEvents.RaiseMapLoading(progress);
 		}
@@ -163,15 +188,20 @@ namespace ClassicalSharp.Network.Protocols {
 			Utils.LogDebug("map loading took: " + loadingMs);
 			
 			game.World.SetNewMap(map, mapWidth, mapHeight, mapLength);
-			#if USE16_BIT
+			#if !ONLY_8BIT
 			if (reader.ExtendedBlocks) game.World.blocks2 = map2;
 			#endif
 			game.WorldEvents.RaiseOnNewMapLoaded();
-			
-			map = null;
-			gzipStream.Dispose();
 			net.wom.CheckSendWomID();
+			
+			map = null;			
+			gzipStream.Dispose();
 			gzipStream = null;
+			#if !ONLY_8BIT
+			map2 = null;
+			gzipStream2.Dispose();
+			gzipStream2 = null;
+			#endif
 			GC.Collect();
 		}
 		

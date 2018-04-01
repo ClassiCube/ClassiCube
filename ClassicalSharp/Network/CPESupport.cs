@@ -69,8 +69,8 @@ namespace ClassicalSharp.Network {
 				net.packetSizes[Opcode.LevelInit] += 4;
 				fastMap = true;
 			}
-			#if USE16_BIT
-			else if (ext == "ExtBlocks") {
+			#if !ONLY_8BIT
+			else if (ext == "ExtendedBlocks") {
 				net.packetSizes[Opcode.SetBlock] += 1;
 				net.packetSizes[Opcode.CpeHoldThis] += 1;
 				net.packetSizes[Opcode.CpeDefineBlock] += 1;
@@ -78,8 +78,7 @@ namespace ClassicalSharp.Network {
 				net.packetSizes[Opcode.CpeUndefineBlock] += 1;
 				net.packetSizes[Opcode.CpeDefineBlockExt] += 1;
 				net.packetSizes[Opcode.CpeSetInventoryOrder] += 2;
-				// TODO: do this one more efficiently
-				net.packetSizes[Opcode.CpeBulkBlockUpdate] += 256;
+				net.packetSizes[Opcode.CpeBulkBlockUpdate] += 256 / 4;
 				
 				net.reader.ExtendedBlocks = true;
 				net.writer.ExtendedBlocks = true;
@@ -99,8 +98,8 @@ namespace ClassicalSharp.Network {
 			"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages", 
 			"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect", 
 			"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap",
-			#if USE16_BIT
-			"ExtBlocks",
+			#if !ONLY_8BIT
+			"ExtendedBlocks",
 			#endif
 		};
 	}
