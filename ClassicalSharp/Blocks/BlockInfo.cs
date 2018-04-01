@@ -70,7 +70,7 @@ namespace ClassicalSharp {
 		public static FastColour[] FogColour;
 		public static Vector3[] MinBB, MaxBB, RenderMinBB, RenderMaxBB;
 		static uint[] DefinedCustomBlocks;
-		public static int MaxDefined, Count;
+		public static int MaxDefined, Count, IDMask;
 		
 		public static void Allocate(int count) {
 			IsLiquid = new bool[count];
@@ -102,6 +102,7 @@ namespace ClassicalSharp {
 			DefinedCustomBlocks = new uint[count >> 5];
 			MaxDefined = count - 1;
 			Count = count;
+			IDMask = Utils.NextPowerOf2(Count) - 1;
 		}
 		
 		public static void Reset() {

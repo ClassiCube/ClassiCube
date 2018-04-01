@@ -73,7 +73,7 @@ namespace ClassicalSharp.Map {
 		public BlockID GetBlock(int x, int y, int z) {
 			int i = (y * Length + z) * Width + x;
 			#if !ONLY_8BIT
-			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.IDMask);
 			#else
 			return blocks[i];
 			#endif
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Map {
 		public BlockID GetBlock(Vector3I p) {
 			int i = (p.Y * Length + p.Z) * Width + p.X;
 			#if !ONLY_8BIT
-			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.IDMask);
 			#else
 			return blocks[i];
 			#endif
@@ -115,7 +115,7 @@ namespace ClassicalSharp.Map {
 			
 			int i = (y * Length + z) * Width + x;
 			#if !ONLY_8BIT
-			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.MaxDefined);
+			return (BlockID)((blocks[i] | (blocks2[i] << 8)) & BlockInfo.IDMask);
 			#else
 			return blocks[i];
 			#endif
