@@ -70,7 +70,17 @@ namespace ClassicalSharp.Map {
 			int* skip = stackalloc int[xCount * zCount];
 			
 			int elemsLeft = InitialHeightmapCoverage(x1, z1, xCount, zCount, skip);
-			if (!CalculateHeightmapCoverage(x1, z1, xCount, zCount, elemsLeft, skip, mapPtr)) {
+			#if !ONLY_8BIT
+			if (BlockInfo.MaxDefined >= 256) {
+				fixed (BlockRaw* mapPtr2 = game.World.blocks2) {
+					if (!CalculateHeightmapCoverage_16Bit(x1, z1, xCount, zCount, elemsLeft, skip, mapPtr, mapPtr2)) {
+						FinishHeightmapCoverage(x1, z1, xCount, zCount, skip);
+					}
+				}
+				return;
+			}
+			#endif
+			if (!CalculateHeightmapCoverage_8Bit(x1, z1, xCount, zCount, elemsLeft, skip, mapPtr)) {
 				FinishHeightmapCoverage(x1, z1, xCount, zCount, skip);
 			}
 		}

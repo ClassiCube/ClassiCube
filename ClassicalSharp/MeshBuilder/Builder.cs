@@ -36,7 +36,7 @@ namespace ClassicalSharp {
 		protected byte* counts;
 		protected int* bitFlags;
 		protected bool useBitFlags;
-		
+
 		bool BuildChunk(int x1, int y1, int z1, ref bool allAir) {
 			light = game.Lighting;
 			PreStretchTiles(x1, y1, z1);
