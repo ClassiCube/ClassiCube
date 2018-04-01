@@ -17,8 +17,8 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void HandleSlab(int index, BlockRaw block) {
-			if (index < map.Width * map.Length) return; // y < 1
-			if (map.blocks[index - map.Width * map.Length] != Block.Slab) return;
+			if (index < map.OneY) return;
+			if (map.blocks[index - map.OneY] != Block.Slab) return;
 			
 			int x = index % map.Width;
 			int z = (index / map.Width) % map.Length;
@@ -28,8 +28,8 @@ namespace ClassicalSharp.Singleplayer {
 		}
 		
 		void HandleCobblestoneSlab(int index, BlockRaw block) {
-			if (index < map.Width * map.Length) return; // y < 1
-			if (map.blocks[index - map.Width * map.Length] != Block.CobblestoneSlab) return;
+			if (index < map.OneY) return;
+			if (map.blocks[index - map.OneY] != Block.CobblestoneSlab) return;
 			
 			int x = index % map.Width;
 			int z = (index / map.Width) % map.Length;

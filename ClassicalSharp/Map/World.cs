@@ -13,7 +13,7 @@ namespace ClassicalSharp.Map {
 	public sealed class World {
 
 		public BlockRaw[] blocks, blocks2;
-		public int Width, Height, Length, MaxX, MaxY, MaxZ;
+		public int Width, Height, Length, MaxX, MaxY, MaxZ, OneY;
 		public bool HasBlocks;
 		
 		/// <summary> Contains the environment metadata for this world. </summary>
@@ -34,6 +34,8 @@ namespace ClassicalSharp.Map {
 			Env.Reset();
 			Width = 0; Height = 0; Length = 0;
 			MaxX = 0;  MaxY = 0;   MaxZ = 0;
+			OneY = 0;
+			
 			blocks = null;
 			blocks2 = null;
 			Uuid = Guid.NewGuid();
@@ -45,6 +47,7 @@ namespace ClassicalSharp.Map {
 			Width  = width;  MaxX = width  - 1;
 			Height = height; MaxY = height - 1;
 			Length = length; MaxZ = length - 1;
+			OneY = width * length;
 			
 			blocks = blocksRaw;
 			if (blocks.Length == 0) blocks = null;

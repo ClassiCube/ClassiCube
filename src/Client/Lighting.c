@@ -132,27 +132,32 @@ bool Lighting_Needs(BlockID block, BlockID other) {
 	return Block_Draw[block] != DRAW_OPAQUE || Block_Draw[other] != DRAW_GAS;
 }
 
-void Lighting_ResetNeighourChunk(Int32 cx, Int32 cy, Int32 cz, BlockID block, Int32 y, Int32 index, Int32 nY) {
-	Int32 minY = cy << 4;
-
+bool Lighting_NeedsNeighour(BlockID block, Int32 index, Int32 minY, Int32 y, Int32 nY) {
 	/* Update if any blocks in the chunk are affected by light change. */
-	for (; y >= minY; y--) {
+	for (; y >= minY; y--, index -= World_OneY) {
 		BlockID other = World_Blocks[index];
 		bool affected = y == nY ? Lighting_Needs(block, other) : Block_Draw[other] != DRAW_GAS;
-		if (affected) { MapRenderer_RefreshChunk(cx, cy, cz); return; }
-		index -= World_OneY;
+		if (affected) return true;
 	}
+	return false;
 }
 
 void Lighting_ResetNeighbour(Int32 x, Int32 y, Int32 z, BlockID block,
 	Int32 cx, Int32 cy, Int32 cz, Int32 minCy, Int32 maxCy) {
 	if (minCy == maxCy) {
-		Lighting_ResetNeighourChunk(cx, cy, cz, block, y, World_Pack(x, y, z), y);
+		Int32 minY = cy << 4;
+
+		if (Lighting_NeedsNeighour(block, World_Pack(x, y, z), minY, y, y)) {
+			MapRenderer_RefreshChunk(cx, cy, cz);
+		}
 	} else {
 		for (cy = maxCy; cy >= minCy; cy--) {
-			Int32 maxY = (cy << 4) + 15;
+			Int32 minY = cy << 4, maxY = (cy << 4) + 15;
 			if (maxY > World_MaxY) maxY = World_MaxY;
-			Lighting_ResetNeighourChunk(cx, cy, cz, block, maxY, World_Pack(x, maxY, z), y);
+
+			if (Lighting_NeedsNeighour(block, World_Pack(x, maxY, z), minY, maxY, y)) {
+				MapRenderer_RefreshChunk(cx, cy, cz);
+			}
 		}
 	}
 }

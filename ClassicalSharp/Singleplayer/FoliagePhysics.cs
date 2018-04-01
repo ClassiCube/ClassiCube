@@ -87,7 +87,7 @@ namespace ClassicalSharp.Singleplayer {
 			}
 			
 			BlockRaw below = Block.Stone;
-			if (y > 0) below = map.blocks[index - map.Width * map.Length];
+			if (y > 0) below = map.blocks[index - map.OneY];
 			if (!(below == Block.Stone || below == Block.Cobblestone)) {
 				game.UpdateBlock(x, y, z, Block.Air);
 				physics.ActivateNeighbours(x, y, z, index);

@@ -103,7 +103,7 @@ namespace ClassicalSharp.Singleplayer {
 				return false;
 			
 			return y >= env.SidesHeight && y < env.EdgeHeight 
-				&& (x == 0 || z == 0 || x == (map.Width - 1) || z == (map.Length - 1));
+				&& (x == 0 || z == 0 || x == map.MaxX || z == map.MaxZ);
 		}
 		
 		void ResetMap(object sender, EventArgs e) {

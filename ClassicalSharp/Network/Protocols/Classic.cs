@@ -47,6 +47,9 @@ namespace ClassicalSharp.Network.Protocols {
 		GZipHeaderReader gzipHeader;
 		int mapSizeIndex, mapIndex;
 		byte[] mapSize = new byte[4], map;
+		#if USE16_BIT
+		byte[] map2;
+		#endif
 		FixedBufferStream gzippedMap;
 		Screen prevScreen;
 		bool prevCursorVisible;
@@ -74,10 +77,10 @@ namespace ClassicalSharp.Network.Protocols {
 				int size = reader.ReadInt32();
 				gzipHeader.done = true;
 				mapSizeIndex = 4;
-				#if USE16_BIT
-				if (reader.ExtendedBlocks) size *= 2;
-				#endif
 				map = new byte[size];
+				#if USE16_BIT
+				if (reader.ExtendedBlocks) map2 = new byte[size];
+				#endif
 			}
 		}
 		
@@ -130,10 +133,10 @@ namespace ClassicalSharp.Network.Protocols {
 				if (mapSizeIndex == 4) {
 					if (map == null) {
 						int size = mapSize[0] << 24 | mapSize[1] << 16 | mapSize[2] << 8 | mapSize[3];
-						#if USE16_BIT
-						if (reader.ExtendedBlocks) size *= 2;
-						#endif
 						map = new byte[size];
+						#if USE16_BIT
+						if (reader.ExtendedBlocks) map2 = new byte[size];
+						#endif
 					}
 					mapIndex += gzipStream.Read(map, mapIndex, map.Length - mapIndex);
 				}
@@ -143,17 +146,6 @@ namespace ClassicalSharp.Network.Protocols {
 			float progress = map == null ? 0 : (float)mapIndex / map.Length;
 			game.WorldEvents.RaiseMapLoading(progress);
 		}
-		
-		#if USE16_BIT
-		static void DecomposeArray(byte[] src, out byte[] b1, out byte[] b2) {
-			b1 = new byte[src.Length / 2];
-			b2 = new byte[src.Length / 2];
-			
-			for (int i = 0, j = 0; i < src.Length; j++) {
-				b1[j] = src[i++]; b2[j] = src[i++];
-			}
-		}
-		#endif
 		
 		void HandleLevelFinalise() {
 			game.Gui.SetNewScreen(null);
@@ -170,17 +162,9 @@ namespace ClassicalSharp.Network.Protocols {
 			double loadingMs = (DateTime.UtcNow - mapReceiveStart).TotalMilliseconds;
 			Utils.LogDebug("map loading took: " + loadingMs);
 			
-			#if USE16_BIT
-			if (reader.ExtendedBlocks) {
-				byte[] b1, b2;
-				DecomposeArray(map, out b1, out b2);
-				game.World.SetNewMap(b1, mapWidth, mapHeight, mapLength);
-				game.World.blocks2 = b2;
-			} else{
-				game.World.SetNewMap(map, mapWidth, mapHeight, mapLength);
-			}
-			#else
 			game.World.SetNewMap(map, mapWidth, mapHeight, mapLength);
+			#if USE16_BIT
+			if (reader.ExtendedBlocks) game.World.blocks2 = map2;
 			#endif
 			game.WorldEvents.RaiseOnNewMapLoaded();
 			
