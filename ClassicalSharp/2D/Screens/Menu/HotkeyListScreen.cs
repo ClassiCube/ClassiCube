@@ -8,7 +8,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {	
 	// TODO: Hotkey added event for CPE
-	public sealed class HotkeyListScreen : FilesScreen {
+	public sealed class HotkeyListScreen : ListScreen {
 		
 		public HotkeyListScreen(Game game) : base(game) {
 			titleText = "Modify hotkeys";

@@ -15,14 +15,14 @@ namespace ClassicalSharp.Network {
 		internal int ServerExtensionsCount;
 		internal bool sendHeldBlock, useMessageTypes;
 		internal int envMapVer = 2, blockDefsExtVer = 2;
-		internal bool needD3Fix, extEntityPos, twoWayPing, blockPerms;
+		internal bool needD3Fix, extEntityPos, twoWayPing, blockPerms, fastMap;
 		Game game;
 		
 		public void Reset(Game game) {
 			ServerExtensionsCount = 0;
 			sendHeldBlock = false; useMessageTypes = false;
 			envMapVer = 2; blockDefsExtVer = 2;
-			needD3Fix = false; extEntityPos = false; twoWayPing = false;
+			needD3Fix = false; extEntityPos = false; twoWayPing = false; fastMap = false;
 			game.SupportsCPEBlocks = false;
 			NetworkProcessor net = (NetworkProcessor)game.Server;
 			net.Reset();
@@ -65,6 +65,9 @@ namespace ClassicalSharp.Network {
 				net.writer.ExtendedPositions = true;
 			} else if (ext == "TwoWayPing") {
 				twoWayPing = true;
+			} else if (ext == "FastMap") {
+				net.packetSizes[Opcode.LevelInit] += 4;
+				fastMap = true;
 			}
 			#if USE16_BIT
 			else if (ext == "ExtBlocks") {
@@ -93,9 +96,9 @@ namespace ClassicalSharp.Network {
 		public static string[] ClientExtensions = new string[] {
 			"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 			"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
-			"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437",
-			"LongerMessages", "BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors",
-			"EnvMapAspect", "EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD",
+			"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages", 
+			"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect", 
+			"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap",
 			#if USE16_BIT
 			"ExtBlocks",
 			#endif

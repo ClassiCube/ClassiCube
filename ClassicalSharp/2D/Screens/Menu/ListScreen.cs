@@ -5,9 +5,9 @@ using ClassicalSharp.Gui.Widgets;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public abstract class FilesScreen : ClickableScreen {
+	public abstract class ListScreen : ClickableScreen {
 		
-		public FilesScreen(Game game) : base(game) {
+		public ListScreen(Game game) : base(game) {
 			HandlesAllInput = true;
 		}
 		

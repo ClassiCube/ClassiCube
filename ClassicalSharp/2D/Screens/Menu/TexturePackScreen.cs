@@ -6,7 +6,7 @@ using ClassicalSharp.Textures;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public sealed class TexturePackScreen : FilesScreen {
+	public sealed class TexturePackScreen : ListScreen {
 		
 		public TexturePackScreen(Game game) : base(game) {
 			titleText = "Select a texture pack zip";

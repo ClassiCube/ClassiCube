@@ -4,7 +4,7 @@
     <ProjectGuid>{BEB1C785-5CAD-48FF-A886-876BF0A318D4}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>ClassicalSharp</RootNamespace>
     <AssemblyName>ClassicalSharp</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
@@ -84,10 +84,10 @@
     <Compile Include="2D\Drawing\GdiPlusDrawer2D.cs" />
     <Compile Include="2D\Drawing\IDrawer2D.cs" />
     <Compile Include="2D\Screens\ChatScreen.cs" />
-    <Compile Include="2D\Screens\ClickableScreen.cs" />
     <Compile Include="2D\Screens\DeathScreen.cs" />
     <Compile Include="2D\Screens\DisconnectScreen.cs" />
     <Compile Include="2D\Screens\InventoryScreen.cs" />
+    <Compile Include="2D\Screens\Menu\ClickableScreen.cs" />
     <Compile Include="2D\Screens\Overlays\Overlay.cs" />
     <Compile Include="2D\Screens\Overlays\TexIdsOverlay.cs" />
     <Compile Include="2D\Screens\Overlays\WarningOverlays.cs" />
@@ -97,7 +97,7 @@
     <Compile Include="2D\Screens\Menu\ClassicOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\EditHotkeyScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
-    <Compile Include="2D\Screens\Menu\FilesScreen.cs" />
+    <Compile Include="2D\Screens\Menu\ListScreen.cs" />
     <Compile Include="2D\Screens\Menu\GenLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\GraphicsOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\GuiOptionsScreen.cs" />

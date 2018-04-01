@@ -67,7 +67,21 @@ namespace ClassicalSharp.Network.Protocols {
 		void HandlePing() { }
 		
 		void HandleLevelInit() {
-			if (gzipStream != null) return;
+			if (gzipStream == null) StartLoadingState();
+			
+			// Fast map puts volume in header, doesn't bother with gzip
+			if (net.cpeData.fastMap) {
+				int size = reader.ReadInt32();
+				gzipHeader.done = true;
+				mapSizeIndex = 4;
+				#if USE16_BIT
+				if (reader.ExtendedBlocks) size *= 2;
+				#endif
+				map = new byte[size];
+			}
+		}
+		
+		void StartLoadingState() {
 			game.World.Reset();
 			game.WorldEvents.RaiseOnNewMap();
 			
@@ -101,7 +115,8 @@ namespace ClassicalSharp.Network.Protocols {
 		void HandleLevelDataChunk() {
 			// Workaround for some servers that send LevelDataChunk before LevelInit
 			// due to their async packet sending behaviour.
-			if (gzipStream == null) HandleLevelInit();
+			if (gzipStream == null) StartLoadingState();
+			
 			int usedLength = reader.ReadUInt16();
 			gzippedMap.pos = 0;
 			gzippedMap.bufferPos = reader.index;
