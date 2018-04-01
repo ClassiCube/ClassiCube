@@ -12,6 +12,7 @@
 #include "VertexStructs.h"
 #include "Game.h"
 #include "ErrorHandler.h"
+#include "Stream.h"
 
 GfxResourceID env_cloudsVb, env_skyVb, env_cloudsTex;
 Int32 env_cloudVertices, env_skyVertices;
@@ -273,6 +274,15 @@ void EnvRenderer_ResetAllEnv(void* obj) {
 	EnvRenderer_ContextRecreated(NULL);
 }
 
+void EnvRenderer_FileChanged(void* obj, Stream* src) {
+	String cloud  = String_FromConst("cloud.png");
+	String clouds = String_FromConst("clouds.png");
+
+	if (String_CaselessEquals(&src->Name, &cloud) || String_CaselessEquals(&src->Name, &clouds)) {
+		Game_UpdateTexture(&env_cloudsTex, src, false);
+	}
+}
+
 void EnvRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (EnvRenderer_Minimal) return;
 
@@ -301,6 +311,8 @@ void EnvRenderer_UseMinimalMode(bool minimal) {
 
 void EnvRenderer_Init(void) {
 	EnvRenderer_ResetAllEnv(NULL);
+
+	Event_RegisterStream(&TextureEvents_FileChanged,   NULL, EnvRenderer_FileChanged);
 	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ResetAllEnv);
 	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
@@ -319,7 +331,10 @@ void EnvRenderer_OnNewMapLoaded(void) {
 }
 
 void EnvRenderer_Free(void) {
+	Gfx_DeleteTexture(&env_cloudsTex);
 	EnvRenderer_ContextLost(NULL);
+
+	Event_UnregisterStream(&TextureEvents_FileChanged,   NULL, EnvRenderer_FileChanged);
 	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ResetAllEnv);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);

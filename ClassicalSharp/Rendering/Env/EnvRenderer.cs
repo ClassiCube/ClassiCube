@@ -11,7 +11,7 @@ namespace ClassicalSharp.Renderers {
 
 	public unsafe sealed class EnvRenderer : IGameComponent {
 		
-		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices;
+		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices, cloudsTex;
 		World map;
 		Game game;
 		internal bool legacy, minimal;
@@ -90,6 +90,7 @@ namespace ClassicalSharp.Renderers {
 			map = game.World;
 			ResetAllEnv(null, null);
 			
+			game.Events.TextureChanged += TextureChanged;
 			game.WorldEvents.EnvVariableChanged += EnvVariableChanged;
 			game.Events.ViewDistanceChanged += ResetAllEnv;
 			game.Graphics.ContextLost += ContextLost;
@@ -109,14 +110,22 @@ namespace ClassicalSharp.Renderers {
 			ResetAllEnv(null, null);
 		}
 		
+		void TextureChanged(object sender, TextureEventArgs e) {
+			if (e.Name == "cloud.png" || e.Name == "clouds.png") {
+				game.UpdateTexture(ref cloudsTex, e.Name, e.Data, false);
+			}
+		}
+		
 		void ResetAllEnv(object sender, EventArgs e) {
 			UpdateFog();
 			ContextRecreated();
 		}
 		
 		public void Dispose() {
+			game.Graphics.DeleteTexture(ref cloudsTex);
 			ContextLost();
 			
+			game.Events.TextureChanged -= TextureChanged;
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
 			game.Events.ViewDistanceChanged -= ResetAllEnv;
 			game.Graphics.ContextLost -= ContextLost;
@@ -194,7 +203,7 @@ namespace ClassicalSharp.Renderers {
 			
 			gfx.AlphaTest = true;
 			gfx.Texturing = true;
-			gfx.BindTexture(game.CloudsTex);
+			gfx.BindTexture(cloudsTex);
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.BindVb(cloudsVb);
 			gfx.DrawVb_IndexedTris(cloudVertices);

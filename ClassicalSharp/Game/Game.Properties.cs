@@ -197,7 +197,6 @@ namespace ClassicalSharp {
 		public Vector3 CurrentCameraPos;
 		
 		public Animations Animations;
-		internal int CloudsTex;
 		internal bool screenshotRequested;
 		
 		internal EntryList AcceptedUrls = new EntryList("texturecache", "acceptedurls.txt"); 

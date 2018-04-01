@@ -317,7 +317,6 @@ namespace ClassicalSharp {
 			
 			Graphics.DeleteIb(ref defaultIb);
 			Drawer2D.DisposeInstance();
-			Graphics.DeleteTexture(ref CloudsTex);
 			Graphics.Dispose();
 			
 			if (Options.OptionsChanged.Count == 0) return;
@@ -418,15 +417,12 @@ namespace ClassicalSharp {
 		}
 		
 		void TextureChangedCore(object sender, TextureEventArgs e) {
-			byte[] data = e.Data;
 			if (e.Name == "terrain.png") {
-				Bitmap atlas = Platform.ReadBmp32Bpp(Drawer2D, data);
+				Bitmap atlas = Platform.ReadBmp32Bpp(Drawer2D, e.Data);
 				if (ChangeTerrainAtlas(atlas)) return;
 				atlas.Dispose();
-			} else if (e.Name == "cloud.png" || e.Name == "clouds.png") {
-				UpdateTexture(ref CloudsTex, e.Name, data, false);
 			} else if (e.Name == "default.png") {
-				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer2D, data);
+				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer2D, e.Data);
 				Drawer2D.SetFontBitmap(bmp);
 				Events.RaiseChatFontChanged();
 			}

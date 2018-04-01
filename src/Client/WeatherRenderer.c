@@ -196,9 +196,9 @@ void WeatherRenderer_Init(void) {
 	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
 	WeatherRenderer_ContextRecreated(NULL);
 
-	Event_RegisterStream(&TextureEvents_FileChanged, NULL, &WeatherRenderer_FileChanged);
-	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, &WeatherRenderer_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, &WeatherRenderer_ContextRecreated);
+	Event_RegisterStream(&TextureEvents_FileChanged, NULL, WeatherRenderer_FileChanged);
+	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, WeatherRenderer_ContextLost);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, WeatherRenderer_ContextRecreated);
 }
 
 void WeatherRenderer_Reset(void) {
@@ -213,9 +213,9 @@ void WeatherRenderer_Free(void) {
 	WeatherRenderer_ContextLost(NULL);
 	WeatherRenderer_Reset();
 
-	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, &WeatherRenderer_FileChanged);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, &WeatherRenderer_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, &WeatherRenderer_ContextRecreated);
+	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, WeatherRenderer_FileChanged);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, WeatherRenderer_ContextLost);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, WeatherRenderer_ContextRecreated);
 }
 
 IGameComponent WeatherRenderer_MakeGameComponent(void) {
