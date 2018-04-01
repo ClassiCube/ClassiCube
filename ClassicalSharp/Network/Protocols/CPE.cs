@@ -255,16 +255,33 @@ namespace ClassicalSharp.Network.Protocols {
 		const int bulkCount = 256;
 		unsafe void HandleBulkBlockUpdate() {
 			int count = reader.ReadUInt8() + 1;
+			World map = game.World;
+			int mapSize = map.HasBlocks ? map.blocks.Length : 0;
+			
 			int* indices = stackalloc int[bulkCount];
 			for (int i = 0; i < count; i++) {
 				indices[i] = reader.ReadInt32();
 			}
 			reader.Skip((bulkCount - count) * sizeof(int));
-			World map = game.World;
 			
-			int mapSize = map.HasBlocks ? map.blocks.Length : 0;
+			BlockID* blocks = stackalloc BlockID[bulkCount];
 			for (int i = 0; i < count; i++) {
-				BlockID block = reader.ReadBlock();
+				blocks[i] = reader.buffer[reader.index + i];
+			}
+			reader.Skip(bulkCount);
+			
+			if (reader.ExtendedBlocks) {
+				for (int i = 0; i < count; i += 4) {
+					byte flags = reader.buffer[reader.index + (i >> 2)];
+					blocks[i + 0] |= (BlockID)((flags & 0x03) << 8);
+					blocks[i + 1] |= (BlockID)((flags & 0x0C) << 6);
+					blocks[i + 2] |= (BlockID)((flags & 0x30) << 4);
+					blocks[i + 3] |= (BlockID)((flags & 0xC0) << 2);
+				}
+				reader.Skip(bulkCount / 4);
+			}
+			
+			for (int i = 0; i < count; i++) {
 				int index = indices[i];
 				if (index < 0 || index >= mapSize) continue;
 				
@@ -272,12 +289,9 @@ namespace ClassicalSharp.Network.Protocols {
 				int y = index / (map.Width * map.Length);
 				int z = (index / map.Width) % map.Length;
 				if (map.IsValidPos(x, y, z)) {
-					game.UpdateBlock(x, y, z, block);
+					game.UpdateBlock(x, y, z, blocks[i]);
 				}
 			}
-			
-			int elemSize = reader.ExtendedBlocks ? 2 : 1;
-			reader.Skip((bulkCount - count) * elemSize);
 		}
 		
 		void HandleSetTextColor() {

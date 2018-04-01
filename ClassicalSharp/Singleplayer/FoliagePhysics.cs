@@ -34,7 +34,7 @@ namespace ClassicalSharp.Singleplayer {
 			int z = (index / map.Width) % map.Length;
 			
 			BlockRaw below = Block.Air;
-			if (y > 0) below = map.blocks[index - map.Width * map.Length];
+			if (y > 0) below = map.blocks[index - map.OneY];
 			if (below == Block.Grass) GrowTree(x, y, z);
 		}
 		
