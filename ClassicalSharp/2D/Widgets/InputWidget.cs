@@ -316,7 +316,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override bool HandlesKeyUp(Key key) { return true; }
 		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			if (button == MouseButton.Left)
 				SetCaretToCursor(mouseX, mouseY);
 			return true;

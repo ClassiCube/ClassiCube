@@ -2,6 +2,7 @@
 #include "ErrorHandler.h"
 #include "Funcs.h"
 #include "Platform.h"
+#include "Stream.h"
 
 bool Header_ReadByte(Stream* s, UInt8* state, Int32* value) {
 	*value = Stream_TryReadByte(s);
@@ -447,6 +448,7 @@ void Deflate_Process(DeflateState* state) {
 			case 3: {
 				ErrorHandler_Fail("DEFLATE - Invalid block type");
 			} break;
+
 			}
 			break;
 		}
@@ -685,8 +687,8 @@ void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying)
 	stream->Data = state;
 	stream->Data2 = 0;
 
-	stream->Read = Deflate_StreamRead;
+	stream->Read  = Deflate_StreamRead;
 	stream->Write = Deflate_StreamWrite;
 	stream->Close = Deflate_StreamClose;
-	stream->Seek = Deflate_StreamSeek;
+	stream->Seek  = Deflate_StreamSeek;
 }

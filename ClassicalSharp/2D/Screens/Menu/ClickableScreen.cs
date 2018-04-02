@@ -20,7 +20,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.Draw2DQuad(0, 0, game.Width, game.Height, topBackCol, bottomBackCol);
 		}
 		
-		protected bool HandleMouseClick(Widget[] widgets, int mouseX, int mouseY, MouseButton button) {
+		protected bool HandleMouseDown(Widget[] widgets, int mouseX, int mouseY, MouseButton button) {
 			// iterate backwards (because last elements rendered are shown over others)
 			for (int i = widgets.Length - 1; i >= 0; i--) {
 				Widget widget = widgets[i];

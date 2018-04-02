@@ -397,16 +397,16 @@ namespace ClassicalSharp.Gui.Screens {
 			return true;
 		}
 		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			if (!HandlesAllInput || game.HideGui) return false;
 			
 			if (!normalChat.Bounds.Contains(mouseX, mouseY)) {
 				if (altText.Active && altText.Bounds.Contains(mouseX, mouseY)) {
-					altText.HandlesMouseClick(mouseX, mouseY, button);
+					altText.HandlesMouseDown(mouseX, mouseY, button);
 					UpdateAltTextY();
 					return true;
 				}
-				input.HandlesMouseClick(mouseX, mouseY, button);
+				input.HandlesMouseDown(mouseX, mouseY, button);
 				return true;
 			}
 			

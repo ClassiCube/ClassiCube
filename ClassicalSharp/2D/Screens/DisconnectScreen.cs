@@ -69,7 +69,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesKeyUp(Key key) { return true; }
 		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			if (button != MouseButton.Left) return true;
 			
 			if (!reconnect.Disabled && reconnect.Bounds.Contains(mouseX, mouseY)) {

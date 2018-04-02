@@ -205,7 +205,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void InputClick(Game game, Widget widget, MouseButton btn, int x, int y) {
 			if (btn != MouseButton.Left) return;
-			widget.HandlesMouseClick(x, y, btn);
+			widget.HandlesMouseDown(x, y, btn);
 		}
 		
 		void HandleEnumOption(ButtonWidget button, Type type) {

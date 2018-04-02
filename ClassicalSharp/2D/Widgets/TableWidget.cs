@@ -255,11 +255,11 @@ namespace ClassicalSharp.Gui.Widgets {
 			return true;
 		}
 		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			PendingClose = false;
 			if (button != MouseButton.Left) return false;
 
-			if (scroll.HandlesMouseClick(mouseX, mouseY, button)) {
+			if (scroll.HandlesMouseDown(mouseX, mouseY, button)) {
 				return true;
 			} else if (SelectedIndex != -1) {
 				game.Inventory.Selected = Elements[SelectedIndex];

@@ -91,7 +91,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (selected != null) selected.ShowCaret = false;
 			
 			selected = (MenuInputWidget)widget;
-			selected.HandlesMouseClick(x, y, btn);
+			selected.HandlesMouseDown(x, y, btn);
 			selected.ShowCaret = true;
 		}
 		

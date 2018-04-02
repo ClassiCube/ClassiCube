@@ -17,11 +17,11 @@ void GuiElement_Recreate(GuiElement* elem) {
 	elem->VTABLE->Init(elem);
 }
 
-bool Gui_FalseKey(GuiElement* elem, Key key) { return false; }
-bool Gui_FalseKeyPress(GuiElement* elem, UInt8 keyChar) { return false; }
 bool Gui_FalseMouse(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return false; }
+bool Gui_FalseKey(GuiElement* elem, Key key)                { return false; }
+bool Gui_FalseKeyPress(GuiElement* elem, UInt8 keyChar)     { return false; }
 bool Gui_FalseMouseMove(GuiElement* elem, Int32 x, Int32 y) { return false; }
-bool Gui_FalseMouseScroll(GuiElement* elem, Real32 delta) { return false; }
+bool Gui_FalseMouseScroll(GuiElement* elem, Real32 delta)   { return false; }
 
 void GuiElement_Reset(GuiElement* elem) {
 	elem->VTABLE->Init     = NULL;

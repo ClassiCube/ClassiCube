@@ -363,6 +363,9 @@
     <ClInclude Include="Physics.h">
       <Filter>Header Files\Math</Filter>
     </ClInclude>
+    <ClInclude Include="Menus.h">
+      <Filter>Header Files\2D</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">
@@ -565,6 +568,9 @@
     </ClCompile>
     <ClCompile Include="Physics.c">
       <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Menus.c">
+      <Filter>Source Files\2D</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

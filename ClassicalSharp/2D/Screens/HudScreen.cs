@@ -167,12 +167,12 @@ namespace ClassicalSharp.Gui.Screens {
 			return chat.HandlesMouseScroll(delta);
 		}
 		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			if (button != MouseButton.Left || !HandlesAllInput) return false;
 			
 			string name;
 			if (playerList == null || (name = playerList.GetNameUnder(mouseX, mouseY)) == null)
-				return chat.HandlesMouseClick(mouseX, mouseY, button);
+				return chat.HandlesMouseDown(mouseX, mouseY, button);
 			chat.AppendTextToInput(name + " ");
 			return true;
 		}

@@ -18,21 +18,6 @@
 #include "Game.h"
 #include "ErrorHandler.h"
 
-#define Widget_Reposition(widget) (widget)->Reposition((GuiElement*)(widget));
-
-#define Elem_Init(elem)           (elem)->VTABLE->Init((GuiElement*)(elem))
-#define Elem_Render(elem, delta)  (elem)->VTABLE->Render((GuiElement*)(elem), delta)
-#define Elem_Free(elem)           (elem)->VTABLE->Free((GuiElement*)(elem))
-#define Elem_Recreate(elem)       (elem)->VTABLE->Recreate((GuiElement*)(elem))
-
-#define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress((GuiElement*)(elem), key)
-#define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown((GuiElement*)(elem), key)
-#define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp((GuiElement*)(elem), key)
-#define Elem_HandlesMouseDown(elem, x, y, btn) (elem)->VTABLE->HandlesMouseDown((GuiElement*)(elem), x, y, btn)
-#define Elem_HandlesMouseUp(elem, x, y, btn)   (elem)->VTABLE->HandlesMouseUp((GuiElement*)(elem), x, y, btn)
-#define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove((GuiElement*)(elem), x, y)
-#define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((GuiElement*)(elem), delta)
-
 void Widget_SetLocation(Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 xOffset, Int32 yOffset) {
 	widget->HorAnchor = horAnchor; widget->VerAnchor = verAnchor;
 	widget->XOffset = xOffset; widget->YOffset = yOffset;
@@ -172,12 +157,8 @@ void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 	Texture_RenderShaded(&widget->Texture, col);
 }
 
-bool ButtonWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	return ((ButtonWidget*)elem)->OnClick(x, y, btn);
-}
-
 GuiElementVTABLE ButtonWidget_VTABLE;
-void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick) {
+void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, ButtonWidget_Click onClick) {
 	widget->VTABLE = &ButtonWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->VTABLE->Init   = ButtonWidget_Init;
@@ -190,7 +171,6 @@ void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 m
 	widget->MinWidth = minWidth; widget->MinHeight = 40;
 	ButtonWidget_SetText(widget, text);
 	widget->OnClick = onClick;
-	widget->VTABLE->HandlesMouseDown = ButtonWidget_HandlesMouseDown;
 }
 
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text) {

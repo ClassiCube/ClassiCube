@@ -4,6 +4,7 @@
 /* Represents a 2D array of pixels.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct Stream_ Stream;
 
 typedef struct Bitmap_ {
 	UInt8* Scan0;  /* Pointer to first scaneline. */
@@ -25,7 +26,6 @@ void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height);
 /* Allocates a power-of-2 sized bitmap larger or equal to to the given size. You are responsible for freeing its memory! */
 void Bitmap_AllocatePow2(Bitmap* bmp, Int32 width, Int32 height);
 
-typedef struct Stream_ Stream; /* Forward declaration */
 /*
   Partially based off information from
      https://handmade.network/forums/wip/t/2363-implementing_a_basic_png_reader_the_handmade_way

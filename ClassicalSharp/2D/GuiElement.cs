@@ -33,7 +33,7 @@ namespace ClassicalSharp.Gui {
 		
 		public virtual bool HandlesKeyUp(Key key) { return false; }
 		
-		public virtual bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) { return false; }
+		public virtual bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) { return false; }
 		
 		public virtual bool HandlesMouseMove(int mouseX, int mouseY) { return false; }
 		

@@ -19,22 +19,6 @@
 #include "AsyncDownloader.h"
 #include "Block.h"
 
-#define LeftOnly(func) { if (btn == MouseButton_Left) { func; } return true; }
-#define Widget_Reposition(widget) (widget)->Reposition((GuiElement*)widget)
-
-#define Elem_Init(elem)           (elem)->VTABLE->Init((GuiElement*)(elem))
-#define Elem_Render(elem, delta)  (elem)->VTABLE->Render((GuiElement*)(elem), delta)
-#define Elem_Free(elem)           (elem)->VTABLE->Free((GuiElement*)(elem))
-#define Elem_Recreate(elem)       (elem)->VTABLE->Recreate((GuiElement*)(elem))
-
-#define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress((GuiElement*)(elem), key)
-#define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown((GuiElement*)(elem), key)
-#define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp((GuiElement*)(elem), key)
-#define Elem_HandlesMouseDown(elem, x, y, btn) (elem)->VTABLE->HandlesMouseDown((GuiElement*)(elem), x, y, btn)
-#define Elem_HandlesMouseUp(elem, x, y, btn)   (elem)->VTABLE->HandlesMouseUp((GuiElement*)(elem), x, y, btn)
-#define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove((GuiElement*)(elem), x, y)
-#define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((GuiElement*)(elem), delta)
-
 
 typedef struct InventoryScreen_ {
 	Screen_Layout
@@ -62,20 +46,6 @@ typedef struct HUDScreen_ {
 	FontDesc PlayerFont;
 	bool ShowingList, WasShowingList;
 } HUDScreen;
-
-#define FILES_SCREEN_ITEMS 5
-#define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
-typedef struct FilesScreen_ {
-	Screen_Layout
-	FontDesc Font;
-	Int32 CurrentIndex;
-	Gui_MouseHandler TextButtonClick;
-	String TitleText;
-	ButtonWidget Buttons[FILES_SCREEN_BUTTONS];
-	TextWidget Title;
-	Widget* Widgets[FILES_SCREEN_BUTTONS + 1];
-	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
-} FilesScreen;
 
 typedef struct LoadingScreen_ {
 	Screen_Layout
@@ -122,100 +92,6 @@ typedef struct DisconnectScreen_ {
 	UInt8 TitleBuffer[String_BufferSize(STRING_SIZE)];
 	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
 } DisconnectScreen;
-
-
-void Screen_FreeWidgets(Widget** widgets, UInt32 widgetsCount) {
-	if (widgets == NULL) return;
-	UInt32 i;
-	for (i = 0; i < widgetsCount; i++) {
-		if (widgets[i] == NULL) continue;
-		widgets[i]->VTABLE->Free((GuiElement*)widgets[i]);
-	}
-}
-
-void Screen_RepositionWidgets(Widget** widgets, UInt32 widgetsCount) {
-	if (widgets == NULL) return;
-	UInt32 i;
-	for (i = 0; i < widgetsCount; i++) {
-		if (widgets[i] == NULL) continue;
-		widgets[i]->Reposition((GuiElement*)widgets[i]);
-	}
-}
-
-void Screen_RenderWidgets(Widget** widgets, UInt32 widgetsCount, Real64 delta) {
-	if (widgets == NULL) return;
-
-	UInt32 i;
-	for (i = 0; i < widgetsCount; i++) {
-		if (widgets[i] == NULL) continue;
-		widgets[i]->VTABLE->Render((GuiElement*)widgets[i], delta);
-	}
-}
-
-void Screen_MakeBack(ButtonWidget* widget, Int32 width, STRING_PURE String* text, Int32 y, FontDesc* font, Gui_MouseHandler onClick) {
-	ButtonWidget_Create(widget, text, width, font, onClick);
-	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
-}
-
-void Screen_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Gui_MouseHandler onClick) {
-	Int32 width = Game_UseClassicOptions ? 400 : 200;
-	if (toGame) {
-		String msg = String_FromConst("Back to game");
-		Screen_MakeBack(widget, width, &msg, 25, font, onClick);
-	} else {
-		String msg = String_FromConst("Cancel");
-		Screen_MakeBack(widget, width, &msg, 25, font, onClick);
-	}
-}
-
-bool Screen_SwitchOptions(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	LeftOnly(Gui_SetNewScreen(OptionsGroupScreen_MakeInstance()));
-}
-bool Screen_SwitchPause(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	LeftOnly(Gui_SetNewScreen(PauseScreen_MakeInstance()));
-}
-
-
-void MenuScreen_RenderBounds(void) {
-	/* These were sourced by taking a screenshot of vanilla
-	Then using paint to extract the colour components
-	Then using wolfram alpha to solve the glblendfunc equation */
-	PackedCol topCol    = PACKEDCOL_CONST(24, 24, 24, 105);
-	PackedCol bottomCol = PACKEDCOL_CONST(51, 51, 98, 162);
-	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
-}
-
-bool Clickable_HandleMouseDown(Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
-	Int32 i;
-	/* iterate backwards (because last elements rendered are shown over others) */
-	for (i = count - 1; i >= 0; i--) {
-		Widget* widget = widgets[i];
-		if (widget != NULL && Widget_Contains(widget, x, y)) {
-			if (!widget->Disabled) {
-				widget->VTABLE->HandlesMouseDown((GuiElement*)widget, x, y, btn);
-			}
-			return true;
-		}
-	}
-	return false;
-}
-
-Int32 Clickable_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
-	Int32 i;
-	for (i = 0; i < count; i++) {
-		Widget* widget = widgets[i];
-		if (widget != NULL) widget->Active = false;
-	}
-
-	for (i = count - 1; i >= 0; i--) {
-		Widget* widget = widgets[i];
-		if (widget != NULL && Widget_Contains(widget, x, y)) {
-			widget->Active = true;
-			return i;
-		}
-	}
-	return -1;
-}
 
 
 GuiElementVTABLE InventoryScreen_VTABLE;
@@ -339,7 +215,7 @@ bool InventoryScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) {
 
 Screen* InventoryScreen_MakeInstance(void) {
 	InventoryScreen* screen = &InventoryScreen_Instance;
-	Platform_MemSet(&screen, 0, sizeof(InventoryScreen));
+	Platform_MemSet(screen, 0, sizeof(InventoryScreen));
 	screen->VTABLE = &InventoryScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
 
@@ -531,7 +407,7 @@ void StatusScreen_Free(GuiElement* elem) {
 
 Screen* StatusScreen_MakeInstance(void) {
 	StatusScreen* screen = &StatusScreen_Instance;
-	Platform_MemSet(&screen, 0, sizeof(StatusScreen));
+	Platform_MemSet(screen, 0, sizeof(StatusScreen));
 	screen->VTABLE = &StatusScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
 
@@ -547,165 +423,6 @@ IGameComponent StatusScreen_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Ready = StatusScreen_Ready;
 	return comp;
-}
-
-
-GuiElementVTABLE FilesScreen_VTABLE;
-FilesScreen FilesScreen_Instance;
-String FilesScreen_Get(FilesScreen* screen, UInt32 index) {
-	if (index < screen->Entries.Count) {
-		return StringsBuffer_UNSAFE_Get(&screen->Entries, index);
-	} else {
-		String str = String_FromConst("-----"); return str;
-	}
-}
-
-void FilesScreen_MakeText(FilesScreen* screen, Int32 idx, Int32 x, Int32 y, String* text) {
-	ButtonWidget* widget = &screen->Buttons[idx];
-	ButtonWidget_Create(widget, text, 300, &screen->Font, screen->TextButtonClick);
-	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
-}
-
-void FilesScreen_Make(FilesScreen* screen, Int32 idx, Int32 x, Int32 y, String* text, Gui_MouseHandler onClick) {
-	ButtonWidget* widget = &screen->Buttons[idx];
-	ButtonWidget_Create(widget, text, 40, &screen->Font, onClick);
-	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
-}
-
-void FilesScreen_UpdateArrows(FilesScreen* screen) {
-	Int32 start = FILES_SCREEN_ITEMS, end = screen->Entries.Count - FILES_SCREEN_ITEMS;
-	screen->Buttons[5].Disabled = screen->CurrentIndex < start;
-	screen->Buttons[6].Disabled = screen->CurrentIndex >= end;
-}
-
-void FilesScreen_SetCurrentIndex(FilesScreen* screen, Int32 index) {
-	if (index >= screen->Entries.Count) index -= FILES_SCREEN_ITEMS;
-	if (index < 0) index = 0;
-
-	UInt32 i;
-	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
-		String str = FilesScreen_Get(screen, index + i);
-		ButtonWidget_SetText(&screen->Buttons[i], &str);
-	}
-
-	screen->CurrentIndex = index;
-	FilesScreen_UpdateArrows(screen);
-}
-
-void FilesScreen_PageClick(FilesScreen* screen, bool forward) {
-	Int32 delta = forward ? FILES_SCREEN_ITEMS : -FILES_SCREEN_ITEMS;
-	FilesScreen_SetCurrentIndex(screen, screen->CurrentIndex + delta);
-}
-
-bool FilesScreen_MoveBackwards(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	LeftOnly(FilesScreen_PageClick(screen, false));
-}
-
-bool FilesScreen_MoveForwards(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	LeftOnly(FilesScreen_PageClick(screen, true));
-}
-
-void FilesScreen_ContextLost(void* obj) {
-	FilesScreen* screen = (FilesScreen*)obj;
-	Screen_FreeWidgets(screen->Widgets, Array_Elems(screen->Widgets));
-}
-
-void FilesScreen_ContextRecreated(void* obj) {
-	FilesScreen* screen = (FilesScreen*)obj;
-	TextWidget_Create(&screen->Title, &screen->TitleText, &screen->Font);
-	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
-
-	UInt32 i;
-	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
-		String str = FilesScreen_Get(screen, i);
-		FilesScreen_MakeText(screen, i, 0, 50 * (Int32)i - 100, &str);
-	}
-
-	String lArrow = String_FromConst("<");
-	FilesScreen_Make(screen, 5, -220, 0, &lArrow, FilesScreen_MoveBackwards);
-	String rArrow = String_FromConst(">");
-	FilesScreen_Make(screen, 6,  220, 0, &rArrow, FilesScreen_MoveForwards);
-	Screen_MakeDefaultBack(&screen->Buttons[7], false, &screen->Font, Screen_SwitchPause);
-
-	screen->Widgets[0] = (Widget*)(&screen->Title);
-	for (i = 0; i < FILES_SCREEN_BUTTONS; i++) {
-		screen->Widgets[i + 1] = (Widget*)(&screen->Buttons[i]);
-	}
-	FilesScreen_UpdateArrows(screen);
-}
-
-void FilesScreen_Init(GuiElement* elem) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
-	FilesScreen_ContextRecreated(screen);
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, FilesScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, FilesScreen_ContextRecreated);
-}
-
-void FilesScreen_Render(GuiElement* elem, Real64 delta) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	MenuScreen_RenderBounds();
-	Gfx_SetTexturing(true);
-	Screen_RenderWidgets(screen->Widgets, Array_Elems(screen->Widgets), delta);
-	Gfx_SetTexturing(false);
-}
-
-void FilesScreen_Free(GuiElement* elem) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	Platform_FreeFont(&screen->Font);
-	FilesScreen_ContextLost(screen);
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, FilesScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, FilesScreen_ContextRecreated);
-}
-
-bool FilesScreen_HandlesKeyDown(GuiElement* elem, Key key) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	if (key == Key_Escape) {
-		Gui_SetNewScreen(NULL);
-	} else if (key == Key_Left) {
-		FilesScreen_PageClick(screen, false);
-	} else if (key == Key_Right) {
-		FilesScreen_PageClick(screen, true);
-	} else {
-		return false;
-	}
-	return true;
-}
-
-bool FilesScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	return Clickable_HandleMouseMove(screen->Widgets, Array_Elems(screen->Widgets), x, y) >= 0;
-}
-
-bool FilesScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	return Clickable_HandleMouseDown(screen->Widgets, Array_Elems(screen->Widgets), x, y, btn);
-}
-
-void FilesScreen_OnResize(GuiElement* elem) {
-	FilesScreen* screen = (FilesScreen*)elem;
-	Screen_RepositionWidgets(screen->Widgets, Array_Elems(screen->Widgets));
-}
-
-Screen* FilesScreen_MakeInstance(void) {
-	FilesScreen* screen = &FilesScreen_Instance;
-	Platform_MemSet(&screen, 0, sizeof(FilesScreen) - sizeof(StringsBuffer));
-	StringsBuffer_UNSAFE_Reset(&screen->Entries);
-	screen->VTABLE = &FilesScreen_VTABLE;
-	Screen_Reset((Screen*)screen);
-	
-	screen->VTABLE->HandlesKeyDown   = FilesScreen_HandlesKeyDown;
-	screen->VTABLE->HandlesMouseDown = FilesScreen_HandlesMouseDown;
-	screen->VTABLE->HandlesMouseMove = FilesScreen_HandlesMouseMove;
-
-	screen->OnResize       = FilesScreen_OnResize;
-	screen->VTABLE->Init   = FilesScreen_Init;
-	screen->VTABLE->Render = FilesScreen_Render;
-	screen->VTABLE->Free   = FilesScreen_Free;
-	screen->HandlesAllInput = true;
-	return (Screen*)screen;
 }
 
 
@@ -850,7 +567,7 @@ void LoadingScreen_Free(GuiElement* elem) {
 }
 
 void LoadingScreen_Make(LoadingScreen* screen, GuiElementVTABLE* vtable, STRING_PURE String* title, STRING_PURE String* message) {
-	Platform_MemSet(&screen, 0, sizeof(LoadingScreen));
+	Platform_MemSet(screen, 0, sizeof(LoadingScreen));
 	screen->VTABLE = vtable;
 	Screen_Reset((Screen*)screen);
 
@@ -1392,7 +1109,7 @@ void ChatScreen_Free(GuiElement* elem) {
 
 Screen* ChatScreen_MakeInstance(void) {
 	ChatScreen* screen = &ChatScreen_Instance;
-	Platform_MemSet(&screen, 0, sizeof(ChatScreen));
+	Platform_MemSet(screen, 0, sizeof(ChatScreen));
 	screen->VTABLE = &ChatScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
 
@@ -1595,7 +1312,7 @@ void HUDScreen_Free(GuiElement* elem) {
 
 Screen* HUDScreen_MakeInstance(void) {
 	HUDScreen* screen = &HUDScreen_Instance;
-	Platform_MemSet(&screen, 0, sizeof(HUDScreen));
+	Platform_MemSet(screen, 0, sizeof(HUDScreen));
 	screen->VTABLE = &HUDScreenVTABLE;
 	Screen_Reset((Screen*)screen);
 
@@ -1801,7 +1518,7 @@ bool DisconnectScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseBu
 
 Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
 	DisconnectScreen* screen = &DisconnectScreen_Instance;
-	Platform_MemSet(&screen, 0, sizeof(DisconnectScreen));
+	Platform_MemSet(screen, 0, sizeof(DisconnectScreen));
 	screen->VTABLE = &DisconnectScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
 

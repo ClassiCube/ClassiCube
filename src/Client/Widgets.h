@@ -1,9 +1,6 @@
 #ifndef CC_WIDGETS_H
 #define CC_WIDGETS_H
 #include "Gui.h"
-#include "Texture.h"
-#include "PackedCol.h"
-#include "String.h"
 #include "BlockID.h"
 #include "Constants.h"
 #include "Entity.h"
@@ -28,9 +25,10 @@ void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* f
 void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text);
 
 
-typedef void (*ButtonWidget_SetValue)(STRING_TRANSIENT String* raw);
-typedef void (*ButtonWidget_GetValue)(STRING_TRANSIENT String* raw);
-typedef bool (*Gui_MouseHandler)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
+typedef void (*ButtonWidget_Set)(STRING_TRANSIENT String* raw);
+typedef void (*ButtonWidget_Get)(STRING_TRANSIENT String* raw);
+typedef void (*ButtonWidget_Click)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
+
 typedef struct ButtonWidget_ {
 	Widget_Layout
 	Texture Texture;
@@ -38,13 +36,13 @@ typedef struct ButtonWidget_ {
 	FontDesc Font;
 
 	String OptName;
-	Gui_MouseHandler OnClick;
-	ButtonWidget_GetValue GetValue;
-	ButtonWidget_SetValue SetValue;
+	ButtonWidget_Click OnClick;
+	ButtonWidget_Get GetValue;
+	ButtonWidget_Set SetValue;
 	Int32 MinWidth, MinHeight;
 } ButtonWidget;
 
-void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Gui_MouseHandler onClick);
+void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Button_WidgetClick onClick);
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text);
 
 

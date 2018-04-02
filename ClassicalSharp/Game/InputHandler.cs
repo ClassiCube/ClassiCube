@@ -115,7 +115,7 @@ namespace ClassicalSharp {
 		}
 
 		void MouseButtonDown(object sender, MouseButtonEventArgs e) {
-			if (!game.Gui.ActiveScreen.HandlesMouseClick(e.X, e.Y, e.Button)) {
+			if (!game.Gui.ActiveScreen.HandlesMouseDown(e.X, e.Y, e.Button)) {
 				bool left   = e.Button == MouseButton.Left;
 				bool middle = e.Button == MouseButton.Middle;
 				bool right  = e.Button == MouseButton.Right;

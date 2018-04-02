@@ -1,12 +1,12 @@
 #ifndef CC_GUI_H
 #define CC_GUI_H
 #include "Input.h"
-#include "VertexStructs.h"
 #include "Texture.h"
 #include "GameStructs.h"
 /* Describes and manages 2D GUI elements on screen.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct VertexP3fT2fC4b_ VertexP3fT2fC4b;
 
 #define ANCHOR_MIN 0    /* Left or top */
 #define ANCHOR_CENTRE 1 /* Middle */
@@ -14,28 +14,18 @@
 
 typedef struct GuiElement_ GuiElement;
 typedef struct GuiElementVTABLE_ {
-	/* Initalises state of this GUI element */
 	void (*Init)(GuiElement* elem);
-	/* Draws this gui element on screen */
 	void (*Render)(GuiElement* elem, Real64 delta);
-	/* Frees the state of this GUI element */
 	void (*Free)(GuiElement* elem);
 	/* Recreates all sub-elements and/or textures. (e.g. for when bitmap font changes) */
 	void (*Recreate)(GuiElement* elem);
-	/* Returns whether this GUI element handles a key being pressed. */
 	bool (*HandlesKeyDown)(GuiElement* elem, Key key);
-	/* Returns whether this GUI element handles a key being released. */
 	bool (*HandlesKeyUp)(GuiElement* elem, Key key);
-	/* Returns whether this GUI element handles a character being input */
 	bool (*HandlesKeyPress)(GuiElement* elem, UInt8 keyChar);
-	/* Returns whether this GUI element handles a mouse button being pressed. */
 	bool (*HandlesMouseDown)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
-	/* Returns whether this GUI element handles a mouse button being released. */
 	bool (*HandlesMouseUp)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
-	/* Returns whether this GUI element handles the mouse being moved. */
 	bool (*HandlesMouseMove)(GuiElement* elem, Int32 x, Int32 y);
-	/* Returns whether this GUI element handles the mouse being scrolled. */
-	bool(*HandlesMouseScroll)(GuiElement* elem, Real32 delta);
+	bool (*HandlesMouseScroll)(GuiElement* elem, Real32 delta);
 } GuiElementVTABLE;
 
 typedef struct GuiElement_ { GuiElementVTABLE* VTABLE; } GuiElement;
@@ -103,4 +93,18 @@ void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font,
 void TextAtlas_Free(TextAtlas* atlas);
 void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices);
 void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices);
+
+
+#define Widget_Reposition(widget) (widget)->Reposition((GuiElement*)(widget));
+#define Elem_Init(elem)           (elem)->VTABLE->Init((GuiElement*)(elem))
+#define Elem_Render(elem, delta)  (elem)->VTABLE->Render((GuiElement*)(elem), delta)
+#define Elem_Free(elem)           (elem)->VTABLE->Free((GuiElement*)(elem))
+#define Elem_Recreate(elem)       (elem)->VTABLE->Recreate((GuiElement*)(elem))
+#define Elem_HandlesKeyPress(elem, key) (elem)->VTABLE->HandlesKeyPress((GuiElement*)(elem), key)
+#define Elem_HandlesKeyDown(elem, key)  (elem)->VTABLE->HandlesKeyDown((GuiElement*)(elem), key)
+#define Elem_HandlesKeyUp(elem, key)    (elem)->VTABLE->HandlesKeyUp((GuiElement*)(elem), key)
+#define Elem_HandlesMouseDown(elem, x, y, btn) (elem)->VTABLE->HandlesMouseDown((GuiElement*)(elem), x, y, btn)
+#define Elem_HandlesMouseUp(elem, x, y, btn)   (elem)->VTABLE->HandlesMouseUp((GuiElement*)(elem), x, y, btn)
+#define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove((GuiElement*)(elem), x, y)
+#define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((GuiElement*)(elem), delta)
 #endif

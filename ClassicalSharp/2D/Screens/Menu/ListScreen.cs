@@ -116,8 +116,8 @@ namespace ClassicalSharp.Gui.Screens {
 			return HandleMouseMove(buttons, mouseX, mouseY) >= 0;
 		}
 		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
-			return HandleMouseClick(buttons, mouseX, mouseY, button);
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
+			return HandleMouseDown(buttons, mouseX, mouseY, button);
 		}
 		
 		public override void OnResize(int width, int height) {

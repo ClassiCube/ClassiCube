@@ -1,9 +1,8 @@
-#ifndef CC_SCREEN_H
-#define CC_SCREEN_H
+#ifndef CC_SCREENS_H
+#define CC_SCREENS_H
 #include "Gui.h"
-#include "String.h"
 
-/* Contains all 2D screen implementations.
+/* Contains all 2D non-menu screen implementations.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 

@@ -57,11 +57,11 @@ namespace ClassicalSharp.Gui.Screens {
 			return table.HandlesMouseMove(mouseX, mouseY);
 		}
 		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
-			if (table.scroll.draggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseClick(mouseX, mouseY, button))
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
+			if (table.scroll.draggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseDown(mouseX, mouseY, button))
 				return true;
 			
-			bool handled = table.HandlesMouseClick(mouseX, mouseY, button);
+			bool handled = table.HandlesMouseDown(mouseX, mouseY, button);
 			if ((!handled || table.PendingClose) && button == MouseButton.Left) {
 				bool hotbar = game.Input.ControlDown || game.Input.ShiftDown;
 				if (!hotbar) game.Gui.SetNewScreen(null);

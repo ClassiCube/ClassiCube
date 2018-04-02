@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		int selectedIndex = 0;
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) {
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			mouseX -= X; mouseY -= Y;
 			if (IntersectsHeader(mouseX, mouseY)) {
 				Redraw();

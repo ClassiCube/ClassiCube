@@ -104,7 +104,7 @@ namespace ClassicalSharp.Gui.Screens {
 			return game.Gui.hudScreen.HandlesKeyUp(key);
 		}
 		
-		public override bool HandlesMouseClick(int mouseX, int mouseY, MouseButton button) { return true; }
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) { return true; }
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) { return true; }
 		

@@ -93,7 +93,7 @@
     <Compile Include="2D\Screens\Overlays\WarningOverlays.cs" />
     <Compile Include="2D\Screens\StatusScreen.cs" />
     <Compile Include="2D\Screens\LoadingMapScreen.cs" />
-    <Compile Include="2D\Screens\MenuScreen.cs" />
+    <Compile Include="2D\Screens\Menu\MenuScreen.cs" />
     <Compile Include="2D\Screens\Menu\ClassicOptionsScreen.cs" />
     <Compile Include="2D\Screens\Menu\EditHotkeyScreen.cs" />
     <Compile Include="2D\Screens\Menu\EnvSettingsScreen.cs" />
