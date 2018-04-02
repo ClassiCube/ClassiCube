@@ -71,6 +71,7 @@ namespace ClassicalSharp.Network {
 			}
 			#if !ONLY_8BIT
 			else if (ext == "ExtendedBlocks") {
+				if (!game.UseCustomBlocks) return;
 				net.packetSizes[Opcode.SetBlock] += 1;
 				net.packetSizes[Opcode.CpeHoldThis] += 1;
 				net.packetSizes[Opcode.CpeDefineBlock] += 1;

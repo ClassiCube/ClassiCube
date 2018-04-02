@@ -459,6 +459,9 @@ namespace ClassicalSharp.Network.Protocols {
 			string[] clientExts = CPESupport.ClientExtensions;
 			int count = clientExts.Length;
 			if (!game.UseCustomBlocks) count -= 2;
+			#if !ONLY_8BIT
+			if (!game.UseCustomBlocks) count -= 1;
+			#endif
 			
 			WriteExtInfo(net.AppName, count);
 			net.SendPacket();
@@ -469,7 +472,11 @@ namespace ClassicalSharp.Network.Protocols {
 				if (name == "EnvMapAppearance") ver = net.cpeData.envMapVer;
 				if (name == "BlockDefinitionsExt") ver = net.cpeData.blockDefsExtVer;
 				
-				if (!game.UseCustomBlocks && name.StartsWith("BlockDefinitions")) continue;
+				if (!game.UseCustomBlocks && name == "BlockDefinitionsExt") continue;
+				if (!game.UseCustomBlocks && name == "BlockDefinitions")    continue;
+				#if !ONLY_8BIT
+				if (!game.UseCustomBlocks && name == "ExtendedBlocks")      continue;
+				#endif
 				
 				WriteExtEntry(name, ver);
 				net.SendPacket();
