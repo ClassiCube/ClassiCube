@@ -206,16 +206,9 @@ namespace ClassicalSharp {
 			LightOffset[block] = CalcLightOffset(block);
 			
 			if (block >= Block.CpeCount) {
-				#if !ONLY_8BIT
-				// give some random texture ids
-				SetTex((byte)((block * 10 + (block % 7) + 20) % 80), Side.Top, block);
-				SetTex((byte)((block * 8  + (block & 5) + 5 ) % 80), Side.Bottom, block);
-				SetSide((byte)((block * 4 + (block / 4) + 4 ) % 80), block);
-				#else
 				SetTex(0, Side.Top, block);
 				SetTex(0, Side.Bottom, block);
 				SetSide(0, block);
-				#endif
 			} else {
 				SetTex(topTex[block], Side.Top, block);
 				SetTex(bottomTex[block], Side.Bottom, block);

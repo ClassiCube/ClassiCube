@@ -173,16 +173,9 @@ void Block_ResetProps(BlockID block) {
 	Block_LightOffset[block] = Block_CalcLightOffset(block);
 
 	if (block >= BLOCK_CPE_COUNT) {
-#if USE16_BIT
-		/* give some random texture ids */
-		Block_SetTex((block * 10 + (block % 7) + 20) % 80, FACE_YMAX, block);
-		Block_SetTex((block * 8 + (block & 5) + 5) % 80, FACE_YMIN, block);
-		Block_SetSide((block * 4 + (block / 4) + 4) % 80, block);
-#else
 		Block_SetTex(0, FACE_YMAX, block);
 		Block_SetTex(0, FACE_YMIN, block);
 		Block_SetSide(0, block);
-#endif
 	} else {
 		Block_SetTex(Block_TopTex[block], FACE_YMAX, block);
 		Block_SetTex(Block_BottomTex[block], FACE_YMIN, block);
