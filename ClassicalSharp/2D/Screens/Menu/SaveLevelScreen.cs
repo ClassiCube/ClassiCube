@@ -92,11 +92,11 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		void SaveClassic(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void SaveClassic(Game game, Widget widget, MouseButton btn) {
 			DoSave(widget, btn, ".cw");
 		}
 		
-		void SaveSchematic(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void SaveSchematic(Game game, Widget widget, MouseButton btn) {
 			DoSave(widget, btn, ".schematic");
 		}
 		

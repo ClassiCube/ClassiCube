@@ -80,7 +80,6 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 			
 			((InputWidget)widgets[actionI]).ShowCaret = true;
-			widgets[actionI].OnClick = InputClick;
 		}
 		
 		public override void Dispose() {
@@ -95,9 +94,8 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		
-		void InputClick(Game game, Widget widget, MouseButton btn, int x, int y) {
-			if (btn != MouseButton.Left) return;
-			widget.HandlesMouseDown(x, y, btn);
+		void InputClick(Game game, Widget widget, MouseButton btn) {
+			widget.HandlesMouseDown(game.Mouse.X, game.Mouse.Y, btn);
 		}
 		
 		void LeaveOpenClick(Game game, Widget widget) {

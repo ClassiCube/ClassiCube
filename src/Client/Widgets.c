@@ -158,7 +158,7 @@ void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 }
 
 GuiElementVTABLE ButtonWidget_VTABLE;
-void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, ButtonWidget_Click onClick) {
+void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Widget_LeftClick onClick) {
 	widget->VTABLE = &ButtonWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->VTABLE->Init   = ButtonWidget_Init;
@@ -170,7 +170,7 @@ void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 m
 	Elem_Init(widget);
 	widget->MinWidth = minWidth; widget->MinHeight = 40;
 	ButtonWidget_SetText(widget, text);
-	widget->OnClick = onClick;
+	widget->MenuClick = onClick;
 }
 
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text) {
@@ -1226,35 +1226,36 @@ bool InputWidget_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 
 bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton button) {
 	InputWidget* widget = (InputWidget*)elem;
-	if (button == MouseButton_Left) {
-		x -= widget->InputTex.X; y -= widget->InputTex.Y;
-		DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
-		Int32 offset = 0, charHeight = widget->CaretTex.Height;
+	if (button != MouseButton_Left) return true;
 
-		Int32 charX, i;
-		for (i = 0; i < widget->GetMaxLines(); i++) {
-			String* line = &widget->Lines[i];
-			Int32 xOffset = i == 0 ? widget->PrefixWidth : 0;
-			if (line->length == 0) continue;
+	x -= widget->InputTex.X; y -= widget->InputTex.Y;
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
+	Int32 offset = 0, charHeight = widget->CaretTex.Height;
 
-			for (charX = 0; charX < line->length; charX++) {
-				args.Text = String_UNSAFE_Substring(line, 0, charX);
-				Int32 charOffset = Drawer2D_MeasureText(&args).Width + xOffset;
+	Int32 charX, i;
+	for (i = 0; i < widget->GetMaxLines(); i++) {
+		String* line = &widget->Lines[i];
+		Int32 xOffset = i == 0 ? widget->PrefixWidth : 0;
+		if (line->length == 0) continue;
 
-				args.Text = String_UNSAFE_Substring(line, charX, 1);
-				Int32 charWidth = Drawer2D_MeasureText(&args).Width;
+		for (charX = 0; charX < line->length; charX++) {
+			args.Text = String_UNSAFE_Substring(line, 0, charX);
+			Int32 charOffset = Drawer2D_MeasureText(&args).Width + xOffset;
 
-				if (Gui_Contains(charOffset, i * charHeight, charWidth, charHeight, x, y)) {
-					widget->CaretPos = offset + charX;
-					InputWidget_UpdateCaret(widget);
-					return true;
-				}
+			args.Text = String_UNSAFE_Substring(line, charX, 1);
+			Int32 charWidth = Drawer2D_MeasureText(&args).Width;
+
+			if (Gui_Contains(charOffset, i * charHeight, charWidth, charHeight, x, y)) {
+				widget->CaretPos = offset + charX;
+				InputWidget_UpdateCaret(widget);
+				return true;
 			}
-			offset += line->length;
 		}
-		widget->CaretPos = -1;
-		InputWidget_UpdateCaret(widget);
+		offset += line->length;
 	}
+
+	widget->CaretPos = -1;
+	InputWidget_UpdateCaret(widget);
 	return true;
 }
 

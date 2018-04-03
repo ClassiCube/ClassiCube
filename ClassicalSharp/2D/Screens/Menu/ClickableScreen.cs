@@ -24,11 +24,15 @@ namespace ClassicalSharp.Gui.Screens {
 			// iterate backwards (because last elements rendered are shown over others)
 			for (int i = widgets.Length - 1; i >= 0; i--) {
 				Widget widget = widgets[i];
-				if (widget != null && widget.Bounds.Contains(mouseX, mouseY)) {
-					if (widget.OnClick != null && !widget.Disabled)
-						widget.OnClick(game, widget, button, mouseX, mouseY);
-					return true;
+				if (widget == null || !widget.Bounds.Contains(mouseX, mouseY)) continue;
+				if (widget.Disabled) return true;
+				
+				if (widget.MenuClick != null) {
+					widget.MenuClick(game, widget, button);
+				} else {
+					widget.HandlesMouseDown(mouseX, mouseY, button);
 				}
+				return true;
 			}
 			return false;
 		}
@@ -41,10 +45,10 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			for (int i = widgets.Length - 1; i >= 0; i--) {
 				Widget widget = widgets[i];
-				if (widget != null && widget.Bounds.Contains(mouseX, mouseY)) {
-					widget.Active = true;
-					return i;
-				}
+				if (widget == null || !widget.Bounds.Contains(mouseX, mouseY)) continue;
+				
+				widget.Active = true;
+				return i;
 			}
 			return -1;
 		}

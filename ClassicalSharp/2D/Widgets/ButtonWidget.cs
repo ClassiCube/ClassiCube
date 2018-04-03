@@ -26,7 +26,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			widget.Init();
 			widget.MinWidth = width; widget.MinHeight = 40;
 			widget.SetText(text);
-			widget.OnClick = onClick;
+			widget.MenuClick = onClick;
 			return widget;
 		}
 		

@@ -67,7 +67,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, y);
 			
 			input.Active = false;
-			input.OnClick = InputClick;
+			input.MenuClick = InputClick;
 			return input;
 		}
 		
@@ -86,21 +86,21 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		void InputClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void InputClick(Game game, Widget widget, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			if (selected != null) selected.ShowCaret = false;
 			
 			selected = (MenuInputWidget)widget;
-			selected.HandlesMouseDown(x, y, btn);
+			selected.HandlesMouseDown(game.Mouse.X, game.Mouse.Y, btn);
 			selected.ShowCaret = true;
 		}
 		
-		void GenFlatgrassClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void GenFlatgrassClick(Game game, Widget widget, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			GenerateMap(new FlatGrassGenerator());
 		}
 		
-		void GenNotchyClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void GenNotchyClick(Game game, Widget widget, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			GenerateMap(new NotchyGenerator());
 		}
@@ -168,15 +168,15 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 		}
 		
-		void GenSmallClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void GenSmallClick(Game game, Widget widget, MouseButton btn) {
 			if (btn == MouseButton.Left) DoGen(128);
 		}
 		
-		void GenMediumClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void GenMediumClick(Game game, Widget widget, MouseButton btn) {
 			if (btn == MouseButton.Left) DoGen(256);
 		}
 		
-		void GenHugeClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void GenHugeClick(Game game, Widget widget, MouseButton btn) {
 			if (btn == MouseButton.Left) DoGen(512);
 		}
 		

@@ -32,7 +32,7 @@ namespace ClassicalSharp.Gui.Screens {
 				((flags & 4) == 0 ? "" : " Alt");
 		}
 		
-		protected override void TextButtonClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		protected override void TextButtonClick(Game game, Widget widget, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			string text = ((ButtonWidget)widget).Text;
 			Hotkey original = default(Hotkey);

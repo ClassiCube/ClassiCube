@@ -50,8 +50,9 @@ void Screen_Reset(Screen* screen);
 	Disabled;             / Whether widget is prevented from being interacted with
 	HorAnchor, VerAnchor; / Specifies the reference point for when this widget is resized
 	XOffset, YOffset;     / Offset from the reference point */
+typedef void (*Widget_LeftClick)(GuiElement* screen, GuiElement* widget);
 #define Widget_Layout GuiElementVTABLE* VTABLE; Int32 X, Y, Width, Height; bool Active, Disabled; \
-UInt8 HorAnchor, VerAnchor; Int32 XOffset, YOffset; void (*Reposition)(GuiElement* elem);
+UInt8 HorAnchor, VerAnchor; Int32 XOffset, YOffset; void (*Reposition)(GuiElement* elem); Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
 typedef struct Widget_ { Widget_Layout } Widget;

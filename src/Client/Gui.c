@@ -64,6 +64,7 @@ void Widget_Init(Widget* widget) {
 	widget->VerAnchor = ANCHOR_MIN;
 	widget->XOffset = 0; widget->YOffset = 0;
 	widget->Reposition = Widget_DoReposition;
+	widget->MenuClick = NULL;
 }
 
 bool Widget_Contains(Widget* widget, Int32 x, Int32 y) {

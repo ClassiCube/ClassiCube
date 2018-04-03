@@ -27,7 +27,6 @@ void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text);
 
 typedef void (*ButtonWidget_Set)(STRING_TRANSIENT String* raw);
 typedef void (*ButtonWidget_Get)(STRING_TRANSIENT String* raw);
-typedef void (*ButtonWidget_Click)(GuiElement* elem, Int32 x, Int32 y, MouseButton btn);
 
 typedef struct ButtonWidget_ {
 	Widget_Layout
@@ -36,13 +35,12 @@ typedef struct ButtonWidget_ {
 	FontDesc Font;
 
 	String OptName;
-	ButtonWidget_Click OnClick;
 	ButtonWidget_Get GetValue;
 	ButtonWidget_Set SetValue;
 	Int32 MinWidth, MinHeight;
 } ButtonWidget;
 
-void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Button_WidgetClick onClick);
+void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Widget_LeftClick onClick);
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text);
 
 

@@ -31,12 +31,12 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 		}
 
-		void GenLevelClick(Game g, Widget w, MouseButton btn, int x, int y) {
+		void GenLevelClick(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			game.Gui.SetNewScreen(new GenLevelScreen(game));
 		}
 		
-		void LoadLevelClick(Game g, Widget w, MouseButton btn, int x, int y) {
+		void LoadLevelClick(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			game.Gui.SetNewScreen(new LoadLevelScreen(game));
 		}

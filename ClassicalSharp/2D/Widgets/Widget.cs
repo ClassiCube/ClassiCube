@@ -19,7 +19,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public bool Disabled;
 		
 		/// <summary> Invoked when this widget is clicked on. Can be null. </summary>
-		public ClickHandler OnClick;
+		public ClickHandler MenuClick;
 		
 		/// <summary> Horizontal coordinate of top left corner in pixels. </summary>
 		public int X;

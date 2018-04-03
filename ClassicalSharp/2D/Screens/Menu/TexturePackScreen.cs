@@ -18,7 +18,7 @@ namespace ClassicalSharp.Gui.Screens {
 			Array.Sort(entries);
 		}
 		
-		protected override void TextButtonClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		protected override void TextButtonClick(Game game, Widget widget, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			string file = ((ButtonWidget)widget).Text;
 			string dir = Path.Combine(Program.AppDirectory, "texpacks");

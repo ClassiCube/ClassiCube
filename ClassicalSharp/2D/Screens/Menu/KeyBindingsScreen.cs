@@ -88,7 +88,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		
 		ButtonWidget curWidget;
-		void OnBindingClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void OnBindingClick(Game game, Widget widget, MouseButton btn) {
 			int index = 0;
 			if (btn == MouseButton.Right && (curWidget == null || curWidget == widget)) {
 				curWidget = (ButtonWidget)widget;

@@ -163,12 +163,12 @@ namespace ClassicalSharp.Gui.Screens {
 			extendedHelp = null;
 		}
 		
-		void OnOKButtonClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		void OnOKButtonClick(Game game, Widget widget, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			ChangeSetting();
 		}
 		
-		protected void OnButtonClick(Game game, Widget widget, MouseButton btn, int x, int y) {
+		protected void OnButtonClick(Game game, Widget widget, MouseButton btn) {
 			ButtonWidget button = widget as ButtonWidget;
 			if (btn != MouseButton.Left) return;
 			if (button == null) return;
@@ -193,7 +193,6 @@ namespace ClassicalSharp.Gui.Screens {
 			input = MenuInputWidget.Create(game, 400, 30, button.GetValue(game), regularFont, validator)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 110);
 			input.ShowCaret = true;
-			input.OnClick = InputClick;
 			
 			widgets[widgets.Length - 2] = input;
 			widgets[widgets.Length - 1] = ButtonWidget.Create(game, 40, "OK", titleFont, OnOKButtonClick)
@@ -201,11 +200,6 @@ namespace ClassicalSharp.Gui.Screens {
 
 			InputOpened();
 			UpdateDescription(activeButton);
-		}
-		
-		void InputClick(Game game, Widget widget, MouseButton btn, int x, int y) {
-			if (btn != MouseButton.Left) return;
-			widget.HandlesMouseDown(x, y, btn);
 		}
 		
 		void HandleEnumOption(ButtonWidget button, Type type) {

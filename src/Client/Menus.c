@@ -27,7 +27,7 @@ typedef struct ListScreen_ {
 	Screen_Layout
 	FontDesc Font;
 	Int32 CurrentIndex;
-	ButtonWidget_Click TextButtonClick;
+	Widget_LeftClick TextButtonClick;
 	String TitleText;
 	ButtonWidget Buttons[FILES_SCREEN_BUTTONS];
 	TextWidget Title;
@@ -73,12 +73,12 @@ void Menu_RenderWidgets(Widget** widgets, Int32 widgetsCount, Real64 delta) {
 	}
 }
 
-void Menu_MakeBack(ButtonWidget* widget, Int32 width, STRING_PURE String* text, Int32 y, FontDesc* font, ButtonWidget_Click onClick) {
+void Menu_MakeBack(ButtonWidget* widget, Int32 width, STRING_PURE String* text, Int32 y, FontDesc* font, Widget_LeftClick onClick) {
 	ButtonWidget_Create(widget, text, width, font, onClick);
 	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
 }
 
-void Menu_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, ButtonWidget_Click onClick) {
+void Menu_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Widget_LeftClick onClick) {
 	Int32 width = Game_UseClassicOptions ? 400 : 200;
 	if (toGame) {
 		String msg = String_FromConst("Back to game");
@@ -105,17 +105,20 @@ void Menu_RenderBounds(void) {
 	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
 }
 
-bool Menu_HandleMouseDown(Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
+bool Menu_HandleMouseDown(GuiElement* screen, Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
 	Int32 i;
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) {
 		Widget* widget = widgets[i];
-		if (widget != NULL && Widget_Contains(widget, x, y)) {
-			if (!widget->Disabled) {
-				widget->VTABLE->HandlesMouseDown((GuiElement*)widget, x, y, btn);
-			}
-			return true;
+		if (widget == NULL || !Widget_Contains(widget, x, y)) continue;
+		if (widget->Disabled) return true;
+
+		if (widget->MenuClick != NULL) {
+			widget->MenuClick(screen, (GuiElement*)widget);
+		} else {
+			widget->VTABLE->HandlesMouseDown((GuiElement*)widget, x, y, btn);
 		}
+		return true;
 	}
 	return false;
 }
@@ -129,10 +132,10 @@ Int32 Menu_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
 
 	for (i = count - 1; i >= 0; i--) {
 		Widget* widget = widgets[i];
-		if (widget != NULL && Widget_Contains(widget, x, y)) {
-			widget->Active = true;
-			return i;
-		}
+		if (widget == NULL || !Widget_Contains(widget, x, y)) continue;
+
+		widget->Active = true;
+		return i;
 	}
 	return -1;
 }
@@ -154,7 +157,7 @@ void ListScreen_MakeText(ListScreen* screen, Int32 idx, Int32 x, Int32 y, String
 	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
-void ListScreen_Make(ListScreen* screen, Int32 idx, Int32 x, Int32 y, String* text, ButtonWidget_Click onClick) {
+void ListScreen_Make(ListScreen* screen, Int32 idx, Int32 x, Int32 y, String* text, Widget_LeftClick onClick) {
 	ButtonWidget* widget = &screen->Buttons[idx];
 	ButtonWidget_Create(widget, text, 40, &screen->Font, onClick);
 	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
@@ -269,7 +272,7 @@ bool ListScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 
 bool ListScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	ListScreen* screen = (ListScreen*)elem;
-	return Menu_HandleMouseDown(screen->Widgets, Array_Elems(screen->Widgets), x, y, btn);
+	return Menu_HandleMouseDown(elem, screen->Widgets, Array_Elems(screen->Widgets), x, y, btn);
 }
 
 void ListScreen_OnResize(GuiElement* elem) {
@@ -308,7 +311,7 @@ Int32 MenuScreen_Index(MenuScreen* screen, Widget* w) {
 
 bool MenuScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	MenuScreen* screen = (MenuScreen*)elem;
-	return Menu_HandleMouseDown(screen->WidgetsPtr, screen->WidgetsCount, x, y, btn);
+	return Menu_HandleMouseDown(elem, screen->WidgetsPtr, screen->WidgetsCount, x, y, btn);
 }
 
 bool MenuScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {

@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
 		}
 		
-		void OpenUrl(Game g, Widget w, MouseButton btn, int x, int y) {
+		void OpenUrl(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			CloseOverlay();
 			
@@ -38,7 +38,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		void AppendUrl(Game g, Widget w, MouseButton btn, int x, int y) {
+		void AppendUrl(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			CloseOverlay();
 			
@@ -63,8 +63,8 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 85);
 		}
 		
-		protected abstract void OnYesClick(Game g, Widget w, MouseButton btn, int x, int y);
-		protected abstract void OnNoClick(Game g, Widget w, MouseButton btn, int x, int y);
+		protected abstract void OnYesClick(Game g, Widget w, MouseButton btn);
+		protected abstract void OnNoClick(Game g, Widget w, MouseButton btn);
 	}
 	
 	public sealed class PluginOverlay : WarningOverlay {
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Gui.Screens {
 			lines[2] = " or other malicious behaviour.";
 		}
 		
-		protected override void OnYesClick(Game g, Widget w, MouseButton btn, int x, int y) {
+		protected override void OnYesClick(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			CloseOverlay();
 			
@@ -86,7 +86,7 @@ namespace ClassicalSharp.Gui.Screens {
 			PluginLoader.Load(Metadata, true);
 		}
 		
-		protected override void OnNoClick(Game g, Widget w, MouseButton btn, int x, int y) {
+		protected override void OnNoClick(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			CloseOverlay();
 			
@@ -115,7 +115,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
 		}
 		
-		void ConfirmNoClick(Game g, Widget w, MouseButton btn, int x, int y) {
+		void ConfirmNoClick(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			CloseOverlay();
 			
@@ -125,7 +125,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		void GoBackClick(Game g, Widget w, MouseButton btn, int x, int y) {
+		void GoBackClick(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			CloseOverlay();
 			
@@ -150,7 +150,7 @@ namespace ClassicalSharp.Gui.Screens {
 			lines[3] = "Download size: Determining...";
 		}
 		
-		protected override void OnYesClick(Game g, Widget w, MouseButton btn, int x, int y) {
+		protected override void OnYesClick(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			CloseOverlay();			
 			string url = Metadata.Substring(3);
@@ -161,7 +161,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		protected override void OnNoClick(Game g, Widget w, MouseButton btn, int x, int y) {
+		protected override void OnNoClick(Game g, Widget w, MouseButton btn) {
 			if (btn != MouseButton.Left) return;
 			CloseOverlay();
 			string url = Metadata.Substring(3);
