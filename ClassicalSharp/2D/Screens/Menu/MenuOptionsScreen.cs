@@ -163,14 +163,12 @@ namespace ClassicalSharp.Gui.Screens {
 			extendedHelp = null;
 		}
 		
-		void OnOKButtonClick(Game game, Widget widget, MouseButton btn) {
-			if (btn != MouseButton.Left) return;
+		void OnOKButtonClick(Game game, Widget widget) { 
 			ChangeSetting();
 		}
 		
-		protected void OnButtonClick(Game game, Widget widget, MouseButton btn) {
+		protected void OnButtonClick(Game game, Widget widget) {
 			ButtonWidget button = widget as ButtonWidget;
-			if (btn != MouseButton.Left) return;
 			if (button == null) return;
 			DisposeExtendedHelp();
 			

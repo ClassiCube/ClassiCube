@@ -92,17 +92,10 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		void SaveClassic(Game game, Widget widget, MouseButton btn) {
-			DoSave(widget, btn, ".cw");
-		}
+		void SaveClassic(Game game, Widget widget) { DoSave(widget, ".cw"); }	
+		void SaveSchematic(Game game, Widget widget) { DoSave(widget, ".schematic"); }
 		
-		void SaveSchematic(Game game, Widget widget, MouseButton btn) {
-			DoSave(widget, btn, ".schematic");
-		}
-		
-		void DoSave(Widget widget, MouseButton mouseBtn, string ext) {
-			if (mouseBtn != MouseButton.Left) return;
-			
+		void DoSave(Widget widget, string ext) {
 			string text = input.Text.ToString();
 			if (text.Length == 0) {
 				MakeDescWidget("&ePlease enter a filename"); return;

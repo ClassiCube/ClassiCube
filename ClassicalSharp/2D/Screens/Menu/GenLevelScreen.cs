@@ -86,22 +86,19 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		void InputClick(Game game, Widget widget, MouseButton btn) {
-			if (btn != MouseButton.Left) return;
+		void InputClick(Game game, Widget widget) {
 			if (selected != null) selected.ShowCaret = false;
 			
 			selected = (MenuInputWidget)widget;
-			selected.HandlesMouseDown(game.Mouse.X, game.Mouse.Y, btn);
+			selected.HandlesMouseDown(game.Mouse.X, game.Mouse.Y, MouseButton.Left);
 			selected.ShowCaret = true;
 		}
 		
-		void GenFlatgrassClick(Game game, Widget widget, MouseButton btn) {
-			if (btn != MouseButton.Left) return;
+		void GenFlatgrassClick(Game game, Widget widget) {
 			GenerateMap(new FlatGrassGenerator());
 		}
 		
-		void GenNotchyClick(Game game, Widget widget, MouseButton btn) {
-			if (btn != MouseButton.Left) return;
+		void GenNotchyClick(Game game, Widget widget) {
 			GenerateMap(new NotchyGenerator());
 		}
 		
@@ -168,17 +165,9 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 		}
 		
-		void GenSmallClick(Game game, Widget widget, MouseButton btn) {
-			if (btn == MouseButton.Left) DoGen(128);
-		}
-		
-		void GenMediumClick(Game game, Widget widget, MouseButton btn) {
-			if (btn == MouseButton.Left) DoGen(256);
-		}
-		
-		void GenHugeClick(Game game, Widget widget, MouseButton btn) {
-			if (btn == MouseButton.Left) DoGen(512);
-		}
+		void GenSmallClick(Game game, Widget widget) { DoGen(128); }		
+		void GenMediumClick(Game game, Widget widget) { DoGen(256); }
+		void GenHugeClick(Game game, Widget widget) { DoGen(512); }
 		
 		void DoGen(int size) {
 			int seed = new Random().Next();

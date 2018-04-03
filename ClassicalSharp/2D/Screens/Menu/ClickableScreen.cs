@@ -20,21 +20,21 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.Draw2DQuad(0, 0, game.Width, game.Height, topBackCol, bottomBackCol);
 		}
 		
-		protected bool HandleMouseDown(Widget[] widgets, int mouseX, int mouseY, MouseButton button) {
+		protected int HandleMouseDown(Widget[] widgets, int mouseX, int mouseY, MouseButton button) {
 			// iterate backwards (because last elements rendered are shown over others)
 			for (int i = widgets.Length - 1; i >= 0; i--) {
 				Widget widget = widgets[i];
 				if (widget == null || !widget.Bounds.Contains(mouseX, mouseY)) continue;
-				if (widget.Disabled) return true;
+				if (widget.Disabled) return i;
 				
-				if (widget.MenuClick != null) {
-					widget.MenuClick(game, widget, button);
+				if (widget.MenuClick != null && button == MouseButton.Left) {
+					widget.MenuClick(game, widget);
 				} else {
 					widget.HandlesMouseDown(mouseX, mouseY, button);
 				}
-				return true;
+				return i;
 			}
-			return false;
+			return -1;
 		}
 		
 		protected int HandleMouseMove(Widget[] widgets, int mouseX, int mouseY) {
@@ -53,13 +53,13 @@ namespace ClassicalSharp.Gui.Screens {
 			return -1;
 		}
 		
-		protected ButtonWidget MakeBack(bool toGame, Font font, SimpleClickHandler onClick) {
+		protected ButtonWidget MakeBack(bool toGame, Font font, ClickHandler onClick) {
 			int width = game.UseClassicOptions ? 400 : 200;
 			return MakeBack(width, toGame ? "Back to game" : "Cancel", 25, font, onClick);
 		}
 		
-		protected ButtonWidget MakeBack(int width, string text, int y, Font font, SimpleClickHandler onClick) {
-			return ButtonWidget.Create(game, width, text, font, LeftOnly(onClick))
+		protected ButtonWidget MakeBack(int width, string text, int y, Font font, ClickHandler onClick) {
+			return ButtonWidget.Create(game, width, text, font, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Max, 0, y);
 		}
 		

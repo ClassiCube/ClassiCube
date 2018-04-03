@@ -88,14 +88,9 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		ButtonWidget Make(int x, int y, string text, int width,
-		                  Font font, SimpleClickHandler onClick) {
-			return ButtonWidget.Create(game, width, text, font, LeftOnly(onClick))
+		ButtonWidget Make(int x, int y, string text, int width, Font font, ClickHandler onClick) {
+			return ButtonWidget.Create(game, width, text, font, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
-		}
-		
-		void InputClick(Game game, Widget widget, MouseButton btn) {
-			widget.HandlesMouseDown(game.Mouse.X, game.Mouse.Y, btn);
 		}
 		
 		void LeaveOpenClick(Game game, Widget widget) {

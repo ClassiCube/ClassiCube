@@ -65,8 +65,8 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
 		}
 		
-		ButtonWidget Make(int dir, int y, string text, SimpleClickHandler onClick) {
-			return ButtonWidget.Create(game, 300, text, titleFont, LeftOnly(onClick))
+		ButtonWidget Make(int dir, int y, string text, ClickHandler onClick) {
+			return ButtonWidget.Create(game, 300, text, titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
 		}
 		

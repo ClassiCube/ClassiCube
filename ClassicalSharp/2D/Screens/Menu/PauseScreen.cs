@@ -45,7 +45,7 @@ namespace ClassicalSharp.Gui.Screens {
 				#endif
 				
 				// Other
-				ButtonWidget.Create(game, 120, "Quit game", titleFont, LeftOnly(QuitGame))
+				ButtonWidget.Create(game, 120, "Quit game", titleFont, QuitGame)
 					.SetLocation(Anchor.Max, Anchor.Max, 5, 5),
 				MakeBack(true, titleFont, SwitchGame),
 			};
@@ -80,13 +80,13 @@ namespace ClassicalSharp.Gui.Screens {
 			widgets[4].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // select texture pack
 		}
 		
-		ButtonWidget Make(int dir, int y, string text, SimpleClickHandler onClick) {
-			return ButtonWidget.Create(game, 300, text, titleFont, LeftOnly(onClick))
+		ButtonWidget Make(int dir, int y, string text, ClickHandler onClick) {
+			return ButtonWidget.Create(game, 300, text, titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
 		}
 		
-		ButtonWidget MakeClassic(int x, int y, string text, SimpleClickHandler onClick) {
-			return ButtonWidget.Create(game, 400, text, titleFont, LeftOnly(onClick))
+		ButtonWidget MakeClassic(int x, int y, string text, ClickHandler onClick) {
+			return ButtonWidget.Create(game, 400, text, titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		

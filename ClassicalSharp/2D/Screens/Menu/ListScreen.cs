@@ -69,12 +69,12 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		
-		ButtonWidget Make(int x, int y, string text, SimpleClickHandler onClick) {
-			return ButtonWidget.Create(game, 40, text, font, LeftOnly(onClick))
+		ButtonWidget Make(int x, int y, string text, ClickHandler onClick) {
+			return ButtonWidget.Create(game, 40, text, font, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		
-		protected abstract void TextButtonClick(Game game, Widget widget, MouseButton btn);
+		protected abstract void TextButtonClick(Game game, Widget widget);
 		
 		protected void PageClick(bool forward) {
 			SetCurrentIndex(currentIndex + (forward ? items : -items));
@@ -117,7 +117,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
-			return HandleMouseDown(buttons, mouseX, mouseY, button);
+			return HandleMouseDown(buttons, mouseX, mouseY, button) >= 0;
 		}
 		
 		public override void OnResize(int width, int height) {

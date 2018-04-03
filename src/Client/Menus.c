@@ -19,7 +19,6 @@
 #include "AsyncDownloader.h"
 #include "Block.h"
 
-#define LeftOnly(func) { if (btn == MouseButton_Left) { func; } return true; }
 #define FILES_SCREEN_ITEMS 5
 #define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
 
@@ -89,11 +88,11 @@ void Menu_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Wid
 	}
 }
 
-bool Menu_SwitchOptions(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	LeftOnly(Gui_SetNewScreen(OptionsGroupScreen_MakeInstance()));
+void Menu_SwitchOptions(GuiElement* screenElem, GuiElement* widget) {
+	Gui_SetNewScreen(OptionsGroupScreen_MakeInstance());
 }
-bool Menu_SwitchPause(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	LeftOnly(Gui_SetNewScreen(PauseScreen_MakeInstance()));
+void Menu_SwitchPause(GuiElement* screenElem, GuiElement* widget) {
+	Gui_SetNewScreen(PauseScreen_MakeInstance());
 }
 
 void Menu_RenderBounds(void) {
@@ -105,22 +104,22 @@ void Menu_RenderBounds(void) {
 	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
 }
 
-bool Menu_HandleMouseDown(GuiElement* screen, Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
+Int32 Menu_HandleMouseDown(GuiElement* screen, Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
 	Int32 i;
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) {
 		Widget* widget = widgets[i];
 		if (widget == NULL || !Widget_Contains(widget, x, y)) continue;
-		if (widget->Disabled) return true;
+		if (widget->Disabled) return i;
 
-		if (widget->MenuClick != NULL) {
+		if (widget->MenuClick != NULL && btn == MouseButton_Left) {
 			widget->MenuClick(screen, (GuiElement*)widget);
 		} else {
 			widget->VTABLE->HandlesMouseDown((GuiElement*)widget, x, y, btn);
 		}
-		return true;
+		return i;
 	}
-	return false;
+	return -1;
 }
 
 Int32 Menu_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
@@ -188,14 +187,14 @@ void ListScreen_PageClick(ListScreen* screen, bool forward) {
 	ListScreen_SetCurrentIndex(screen, screen->CurrentIndex + delta);
 }
 
-bool ListScreen_MoveBackwards(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	ListScreen* screen = (ListScreen*)elem;
-	LeftOnly(ListScreen_PageClick(screen, false));
+void ListScreen_MoveBackwards(GuiElement* screenElem, GuiElement* widget) {
+	ListScreen* screen = (ListScreen*)screenElem;
+	ListScreen_PageClick(screen, false);
 }
 
-bool ListScreen_MoveForwards(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
-	ListScreen* screen = (ListScreen*)elem;
-	LeftOnly(ListScreen_PageClick(screen, true));
+void ListScreen_MoveForwards(GuiElement* screenElem, GuiElement* widget) {
+	ListScreen* screen = (ListScreen*)screenElem;
+	ListScreen_PageClick(screen, true);
 }
 
 void ListScreen_ContextLost(void* obj) {
@@ -272,7 +271,7 @@ bool ListScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 
 bool ListScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	ListScreen* screen = (ListScreen*)elem;
-	return Menu_HandleMouseDown(elem, screen->Widgets, Array_Elems(screen->Widgets), x, y, btn);
+	return Menu_HandleMouseDown(elem, screen->Widgets, Array_Elems(screen->Widgets), x, y, btn) >= 0;
 }
 
 void ListScreen_OnResize(GuiElement* elem) {
@@ -311,7 +310,7 @@ Int32 MenuScreen_Index(MenuScreen* screen, Widget* w) {
 
 bool MenuScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	MenuScreen* screen = (MenuScreen*)elem;
-	return Menu_HandleMouseDown(elem, screen->WidgetsPtr, screen->WidgetsCount, x, y, btn);
+	return Menu_HandleMouseDown(elem, screen->WidgetsPtr, screen->WidgetsCount, x, y, btn) >= 0;
 }
 
 bool MenuScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {

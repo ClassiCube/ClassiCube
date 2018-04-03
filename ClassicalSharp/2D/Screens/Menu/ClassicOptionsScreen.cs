@@ -33,7 +33,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, 0, "FPS mode",                       onClick, GetFPS,      SetFPS),
 				!hacks ? null : MakeOpt(0, 60, "Hacks enabled", onClick, GetHacks,    SetHacks),
 				
-				ButtonWidget.Create(game, 400, "Controls...", titleFont, LeftOnly(SwitchClassic))
+				ButtonWidget.Create(game, 400, "Controls...", titleFont, SwitchClassic)
 					.SetLocation(Anchor.Centre, Anchor.Max, 0, 95),
 				MakeBack(400, "Done", 25, titleFont, SwitchPause),
 				null, null,
