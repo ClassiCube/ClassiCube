@@ -81,11 +81,13 @@ typedef struct TableWidget_ {
 	BlockID Elements[BLOCK_COUNT];
 	ScrollbarWidget Scroll;
 	Texture DescTex;
+	Int32 LastX, LastY;
 } TableWidget;
 
 void TableWidget_Create(TableWidget* widget);
 void TableWidget_SetBlockTo(TableWidget* widget, BlockID block);
 void TableWidget_OnInventoryChanged(TableWidget* widget);
+void TableWidget_MakeDescTex(TableWidget* widget, BlockID block);
 
 
 #define INPUTWIDGET_MAX_LINES 3

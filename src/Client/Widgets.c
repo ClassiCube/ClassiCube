@@ -570,10 +570,15 @@ void TableWidget_RecreateDescTex(TableWidget* widget) {
 
 	Gfx_DeleteTexture(&widget->DescTex.ID);
 	if (widget->SelectedIndex == -1) return;
+	BlockID block = widget->Elements[widget->SelectedIndex];
+	TableWidget_MakeDescTex(widget, block);
+}
+
+void TableWidget_MakeDescTex(TableWidget* widget, BlockID block) {
+	Gfx_DeleteTexture(&widget->DescTex.ID);
 
 	UInt8 descBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String desc = String_InitAndClearArray(descBuffer);
-	BlockID block = widget->Elements[widget->SelectedIndex];
 	TableWidget_MakeBlockDesc(&desc, block);
 
 	DrawTextArgs args;
@@ -617,6 +622,8 @@ void TableWidget_RecreateElements(TableWidget* widget) {
 
 void TableWidget_Init(GuiElement* elem) {
 	TableWidget* widget = (TableWidget*)elem;
+	widget->LastX = Mouse_X; widget->LastY = Mouse_Y;
+
 	ScrollbarWidget_Create(&widget->Scroll);
 	TableWidget_RecreateElements(widget);
 	Widget_Reposition(widget);
@@ -765,6 +772,9 @@ bool TableWidget_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	TableWidget* widget = (TableWidget*)elem;
 	if (Elem_HandlesMouseMove(&widget->Scroll, x, y)) return true;
 
+	if (widget->LastX == x && widget->LastY == y) return true;
+	widget->LastX = x; widget->LastY = y;
+
 	widget->SelectedIndex = -1;
 	Int32 blockSize = widget->BlockSize;
 	Int32 maxHeight = blockSize * TABLE_MAX_ROWS_DISPLAYED;
@@ -841,6 +851,7 @@ void TableWidget_OnInventoryChanged(TableWidget* widget) {
 	if (widget->SelectedIndex >= widget->ElementsCount) {
 		widget->SelectedIndex = widget->ElementsCount - 1;
 	}
+	widget->LastX = -1; widget->LastY = -1;
 
 	widget->Scroll.ScrollY = widget->SelectedIndex / widget->ElementsPerRow;
 	ScrollbarWidget_ClampScrollY(&widget->Scroll);

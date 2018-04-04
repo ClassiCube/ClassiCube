@@ -120,6 +120,11 @@ void InventoryScreen_Init(GuiElement* elem) {
 	screen->Table.ElementsPerRow = Game_PureClassic ? 9 : 10;
 	Elem_Init(&screen->Table);
 
+	/* User is holding invalid block */
+	if (screen->Table.SelectedIndex == -1) {
+		TableWidget_MakeDescTex(&screen->Table, Inventory_SelectedBlock);
+	}
+
 	Key_KeyRepeat = true;
 	Event_RegisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
 	Event_RegisterVoid(&BlockEvents_BlockDefChanged,    screen, InventoryScreen_OnBlockChanged);	

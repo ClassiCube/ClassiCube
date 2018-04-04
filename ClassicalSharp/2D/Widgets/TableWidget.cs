@@ -99,7 +99,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			return new Point(x, y);
 		}
 		
+		int lastX, lastY;
 		public override void Init() {
+			lastX = game.Mouse.X; lastY = game.Mouse.Y;
+			
 			scroll = new ScrollbarWidget(game);
 			RecreateElements();
 			Reposition();
@@ -164,6 +167,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (SelectedIndex >= Elements.Length)
 				SelectedIndex = Elements.Length - 1;
 			
+			lastX = -1; lastY = -1;
 			scroll.ScrollY = SelectedIndex / ElementsPerRow;
 			scroll.ClampScrollY();
 			RecreateDescTex();
@@ -197,8 +201,11 @@ namespace ClassicalSharp.Gui.Widgets {
 			
 			game.Graphics.DeleteTexture(ref descTex);
 			if (SelectedIndex == -1) return;
-			
-			BlockID block = Elements[SelectedIndex];
+			MakeDescTex(Elements[SelectedIndex]);
+		}
+		
+		public void MakeDescTex(BlockID block) {
+			game.Graphics.DeleteTexture(ref descTex);
 			UpdateBlockInfoString(block);
 			string value = buffer.ToString();
 			
@@ -238,6 +245,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
 			if (scroll.HandlesMouseMove(mouseX, mouseY)) return true;
+			
+			if (lastX == mouseX && lastY == mouseY) return true;
+			lastX = mouseX; lastY = mouseY;
 			
 			SelectedIndex = -1;
 			if (Contains(X, Y + 3, Width, MaxRowsDisplayed * blockSize - 3 * 2, mouseX, mouseY)) {

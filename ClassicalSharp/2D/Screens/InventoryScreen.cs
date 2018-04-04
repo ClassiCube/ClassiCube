@@ -15,19 +15,21 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 
 		public override void Init() {
-			InitTableWidget();
+			table = new TableWidget(game);
+			table.font = font;
+			table.ElementsPerRow = game.PureClassic ? 9 : 10;
+			table.Init();
+			
+			// User is holding invalid block
+			if (table.SelectedIndex == -1) {
+				table.MakeDescTex(game.Inventory.Selected);
+			}
+			
 			game.Events.BlockPermissionsChanged += OnBlockChanged;
 			game.Events.BlockDefinitionChanged += OnBlockChanged;
 			game.Keyboard.KeyRepeat = true;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
-		}
-		
-		void InitTableWidget() {
-			table = new TableWidget(game);
-			table.font = font;
-			table.ElementsPerRow = game.PureClassic ? 9 : 10;
-			table.Init();
 		}
 		
 		public override void Render(double delta) { table.Render(delta); }
@@ -46,7 +48,7 @@ namespace ClassicalSharp.Gui.Screens {
 
 		void OnBlockChanged(object sender, EventArgs e) {
 			table.OnInventoryChanged();
-		}		
+		}
 		
 		protected override void ContextLost() { table.Dispose(); }
 		
