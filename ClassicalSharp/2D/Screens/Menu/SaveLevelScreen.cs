@@ -21,7 +21,6 @@ namespace ClassicalSharp.Gui.Screens {
 			RenderMenuBounds();
 			game.Graphics.Texturing = true;
 			RenderWidgets(widgets, delta);
-			input.Render(delta);
 			if (desc != null) desc.Render(delta);
 			game.Graphics.Texturing = false;
 			
@@ -75,16 +74,11 @@ namespace ClassicalSharp.Gui.Screens {
 				ButtonWidget.Create(game, 200, "Save schematic", titleFont, SaveSchematic)
 					.SetLocation(Anchor.Centre, Anchor.Centre, -150, 120),
 				TextWidget.Create(game, "&eCan be imported into MCEdit", regularFont)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 120),
-				null,
+					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 120),				
 				MakeBack(false, titleFont, SwitchPause),
+				input,
+				null, // description widget placeholder				
 			};
-		}
-		
-		
-		public override void OnResize(int width, int height) {
-			input.Reposition();
-			base.OnResize(width, height);
 		}
 		
 		public override void Dispose() {

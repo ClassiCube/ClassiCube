@@ -47,6 +47,13 @@ typedef struct Builder1DPart_ {
 The first ATLAS1D_MAX_ATLASES_COUNT parts are for normal parts, remainder are for translucent parts. */
 Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES_COUNT * 2];
 
+Int32 Builder1DPart_VerticesCount(Builder1DPart* part) {
+	Int32 count = part->sCount;
+	Int32 i;
+	for (i = 0; i < FACE_COUNT; i++) { count += part->fCount[i]; }
+	return count;
+}
+
 void Builder1DPart_Prepare(Builder1DPart* part) {
 	part->sOffset = 0;
 	part->sAdvance = (part->sCount / 4);
@@ -79,13 +86,6 @@ void Builder1DPart_Reset(Builder1DPart* part) {
 		part->fVertices[i] = NULL;
 		part->fCount[i] = 0;
 	}
-}
-
-Int32 Builder1DPart_VerticesCount(Builder1DPart* part) {
-	Int32 count = part->sCount;
-	Int32 i;
-	for (i = 0; i < FACE_COUNT; i++) { count += part->fCount[i]; }
-	return count;
 }
 
 

@@ -9,6 +9,7 @@
 #include "ExtMath.h"
 #include "Event.h"
 #include "Entity.h"
+#include "IModel.h"
 
 BlockID held_block;
 Entity held_entity;

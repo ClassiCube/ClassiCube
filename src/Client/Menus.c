@@ -97,7 +97,7 @@ void Menu_SwitchPause(GuiElement* screenElem, GuiElement* widget) {
 
 void Menu_RenderBounds(void) {
 	/* These were sourced by taking a screenshot of vanilla
-	Then using paint to extract the colour components
+	Then using paInt32 to extract the colour components
 	Then using wolfram alpha to solve the glblendfunc equation */
 	PackedCol topCol    = PACKEDCOL_CONST(24, 24, 24, 105);
 	PackedCol bottomCol = PACKEDCOL_CONST(51, 51, 98, 162);
@@ -142,7 +142,7 @@ Int32 Menu_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
 
 GuiElementVTABLE ListScreen_VTABLE;
 ListScreen ListScreen_Instance;
-String ListScreen_Get(ListScreen* screen, UInt32 index) {
+STRING_REF String ListScreen_UNSAFE_Get(ListScreen* screen, UInt32 index) {
 	if (index < screen->Entries.Count) {
 		return StringsBuffer_UNSAFE_Get(&screen->Entries, index);
 	} else {
@@ -172,9 +172,9 @@ void ListScreen_SetCurrentIndex(ListScreen* screen, Int32 index) {
 	if (index >= screen->Entries.Count) index -= FILES_SCREEN_ITEMS;
 	if (index < 0) index = 0;
 
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
-		String str = ListScreen_Get(screen, index + i);
+		String str = ListScreen_UNSAFE_Get(screen, index + i);
 		ButtonWidget_SetText(&screen->Buttons[i], &str);
 	}
 
@@ -209,7 +209,7 @@ void ListScreen_ContextRecreated(void* obj) {
 
 	UInt32 i;
 	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
-		String str = ListScreen_Get(screen, i);
+		String str = ListScreen_UNSAFE_Get(screen, i);
 		ListScreen_MakeText(screen, i, 0, 50 * (Int32)i - 100, &str);
 	}
 
@@ -368,7 +368,6 @@ void MenuScreen_OnResize(GuiElement* elem) {
 }
 
 void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, Menu_ContextRecreated contextRecreated) {
-	ListScreen* screen = &ListScreen_Instance;
 	Platform_MemSet(screen, 0, sizeof(MenuScreen));
 	screen->VTABLE = &MenuScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
@@ -390,4 +389,118 @@ void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, 
 	screen->WidgetsPtr       = widgets;
 	screen->WidgetsCount     = count;
 	screen->ContextRecreated = contextRecreated;
+}
+
+typedef struct PauseScreen_ {
+	MenuScreen Base;
+	Widget* Widgets[8];
+	ButtonWidget Buttons[8];
+} PauseScreen;
+
+GuiElementVTABLE PauseScreen_VTABLE;
+PauseScreen PauseScreen_Instance;
+
+void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
+	String text = String_FromRaw(title, UInt16_MaxValue);
+	ButtonWidget* btn = &screen->Buttons[i];
+	ButtonWidget_Create(btn, &text, 300, &screen->Base.TitleFont, onClick);
+	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
+}
+
+void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
+	String text = String_FromRaw(title, UInt16_MaxValue);
+	ButtonWidget* btn = &screen->Buttons[i];
+	ButtonWidget_Create(btn, &text, 400, &screen->Base.TitleFont, onClick);
+	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
+}
+
+void PauseScreen_GenLevel(GuiElement* a, GuiElement* b)         { Gui_SetNewScreen(GenLevelScree_MakeInstance()); }
+void PauseScreen_ClassicGenLevel(GuiElement* a, GuiElement* b)  { Gui_SetNewScreen(ClassicGenLevelScreen_MakeInstance()); }
+void PauseScreen_LoadLevel(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(LoadLevelScreen_MakeInstance()); }
+void PauseScreen_SaveLevel(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(SaveLevelScreen_MakeInstance()); }
+void PauseScreen_TexPack(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(TexturePackScreen_MakeInstance()); }
+void PauseScreen_Hotkeys(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(HotkeyListScreen_MakeInstance()); }
+void PauseScreen_NostalgiaOptions(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(NostalgiaScreen_MakeInstance()); }
+void PauseScreen_Game(GuiElement* a, GuiElement* b)             { Gui_SetNewScreen(NULL); }
+void PauseScreen_ClassicOptions(GuiElement* a, GuiElement* b)   { Gui_SetNewScreen(ClassicOptionsScreen_MakeInstance()); }
+void PauseScreen_QuitGame(GuiElement* a, GuiElement* b) { Window_Close(); }
+
+void PauseScreen_CheckHacksAllowed(void* obj) {
+	if (Game_UseClassicOptions) return;
+	PauseScreen* screen = (PauseScreen*)obj;
+	screen->Buttons[4].Disabled = LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
+}
+
+void PauseScreen_ContextRecreated(void* obj) {
+	PauseScreen* screen = (PauseScreen*)obj;
+	Int32 i;
+	for (i = 0; i < Array_Elems(screen->Buttons); i++) {
+		screen->Widgets[i] = &screen->Buttons[i];
+	}
+	FontDesc* font = &screen->Base.TitleFont;
+
+	if (Game_UseClassicOptions) {
+		PauseScreen_MakeClassic(screen, 0, -100, "Options...",            PauseScreen_ClassicOptions);
+		PauseScreen_MakeClassic(screen, 1,  -50, "Generate new level...", PauseScreen_ClassicGenLevel);
+		PauseScreen_MakeClassic(screen, 2,    0, "Load level...",         PauseScreen_LoadLevel);
+		PauseScreen_MakeClassic(screen, 3,   50, "Save level...",         PauseScreen_SaveLevel);
+		PauseScreen_MakeClassic(screen, 4,  150, "Nostalgia options...",  PauseScreen_NostalgiaOptions);
+
+		String back = String_FromConst("Back to game");
+		Menu_MakeBack(&screen->Buttons[5], 400, &back, 25, font, PauseScreen_QuitGame);
+
+		/* Disable nostalgia options in classic mode*/
+		if (Game_ClassicMode) { screen->Widgets[4] = NULL; }
+		screen->Widgets[6] = NULL;
+		screen->Widgets[7] = NULL;
+	} else {
+		PauseScreen_Make(screen, 0, -1, -50, "Options...",             Menu_SwitchOptions);
+		PauseScreen_Make(screen, 1,  1, -50, "Generate new level...",  PauseScreen_GenLevel);
+		PauseScreen_Make(screen, 2,  1,   0, "Load level...",          PauseScreen_LoadLevel);
+		PauseScreen_Make(screen, 3,  1,  50, "Save level...",          PauseScreen_SaveLevel);
+		PauseScreen_Make(screen, 4, -1,   0, "Change texture pack...", PauseScreen_TexPack);
+		PauseScreen_Make(screen, 5, -1,  50, "Hotkeys...",             PauseScreen_Hotkeys);
+
+		String quitMsg = String_FromConst("Quit game");
+		ButtonWidget_Create(&screen->Buttons[6], &quitMsg, 120, font, PauseScreen_QuitGame);
+		Widget_SetLocation((Widget*)(&screen->Buttons[6]), ANCHOR_MAX, ANCHOR_MAX, 5, 5);
+		Menu_MakeDefaultBack(&screen->Buttons[7], true, font, PauseScreen_QuitGame);
+	}
+
+	if (!ServerConnection_IsSinglePlayer) {
+		screen->Buttons[1].Disabled = true;
+		screen->Buttons[2].Disabled = true;
+	}
+	PauseScreen_CheckHacksAllowed(obj);
+}
+
+void PauseScreen_Init(GuiElement* elem) {
+	PauseScreen* screen = (PauseScreen*)elem;
+	MenuScreen_Init(elem);
+	Platform_MakeFont(&screen->Base.TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
+	PauseScreen_ContextRecreated(screen);
+}
+
+void PauseScreen_Free(GuiElement* elem) {
+	PauseScreen* screen = (PauseScreen*)elem;
+	MenuScreen_Free(elem);
+	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
+}
+
+bool PauseScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	if (key == Key_Escape) { Gui_SetNewScreen(NULL); }
+	return key < Key_F1 || key > Key_F35;
+}
+
+Screen* PauseScreen_MakeInstance(void) {
+	PauseScreen* screen = &PauseScreen_Instance;
+	MenuScreen_MakeInstance(&screen->Base, screen->Widgets, Array_Elems(screen->Buttons), PauseScreen_ContextRecreated);
+	PauseScreen_VTABLE = *screen->Base.VTABLE;
+	screen->Base.VTABLE = &PauseScreen_VTABLE;
+
+	screen->Base.VTABLE->Init           = PauseScreen_Init;
+	screen->Base.VTABLE->Free           = PauseScreen_Free;
+	screen->Base.VTABLE->HandlesKeyDown = PauseScreen_HandlesKeyDown;
+	return screen;
 }
