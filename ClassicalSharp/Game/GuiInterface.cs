@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
+using ClassicalSharp.Gui;
 using ClassicalSharp.Gui.Screens;
 using ClassicalSharp.Renderers;
 

@@ -99,6 +99,7 @@ namespace ClassicalSharp {
 		
 		internal static void CleanupMainDirectory() {
 			string mapPath = Path.Combine(Program.AppDirectory, "maps");
+			Console.WriteLine(mapPath);
 			if (!Directory.Exists(mapPath))
 				Directory.CreateDirectory(mapPath);
 			

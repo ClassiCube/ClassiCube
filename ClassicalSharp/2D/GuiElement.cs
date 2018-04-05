@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using ClassicalSharp.Gui.Widgets;
-using ClassicalSharp.GraphicsAPI;
+using System.Drawing;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui {
@@ -10,10 +9,7 @@ namespace ClassicalSharp.Gui {
 	public abstract class GuiElement : IDisposable {
 		
 		protected Game game;
-		
-		public GuiElement(Game game) {
-			this.game = game;
-		}
+		public GuiElement(Game game) { this.game = game; }
 		
 		public abstract void Init();
 		
@@ -47,6 +43,40 @@ namespace ClassicalSharp.Gui {
 		
 		public static bool Contains(int recX, int recY, int width, int height, int x, int y) {
 			return x >= recX && y >= recY && x < recX + width && y < recY + height;
+		}
+	}
+	
+	/// <summary> Represents a container of widgets and other 2D elements. </summary>
+	/// <remarks> May cover the entire game window. </remarks>
+	public abstract class Screen : GuiElement {
+		
+		public Screen(Game game) : base(game) { }
+
+		public bool HandlesAllInput, BlocksWorld, HidesHud, RenderHudOver;
+
+		public abstract void OnResize(int width, int height);
+		
+		protected abstract void ContextLost();
+		
+		protected abstract void ContextRecreated();
+	}
+	
+	/// <summary> Represents an individual 2D gui component. </summary>
+	public abstract class Widget : GuiElement {
+		
+		public Widget(Game game) : base(game) { }
+		
+		public ClickHandler MenuClick;		
+		public bool Active, Disabled;
+		public int X, Y, Width, Height;
+		public Anchor HorizontalAnchor, VerticalAnchor;
+		public int XOffset, YOffset;
+		
+		public Rectangle Bounds { get { return new Rectangle(X, Y, Width, Height); } }
+		
+		public virtual void Reposition() {
+			X = CalcPos(HorizontalAnchor, XOffset, Width, game.Width);
+			Y = CalcPos(VerticalAnchor, YOffset, Height, game.Height);
 		}
 	}
 }

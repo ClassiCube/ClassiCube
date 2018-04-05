@@ -58,7 +58,6 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextLost() {
-			input.Dispose();
 			DisposeDescWidget();
 			base.ContextLost();
 		}

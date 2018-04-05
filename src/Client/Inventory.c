@@ -41,128 +41,57 @@ void Inventory_SetSelectedBlock(BlockID block) {
 	Event_RaiseVoid(&UserEvents_HeldBlockChanged);
 }
 
-bool Inventory_IsHackBlock(BlockID b) {
-	return b == BLOCK_DOUBLE_SLAB || b == BLOCK_BEDROCK || b == BLOCK_GRASS || Block_IsLiquid[b];
-}
+BlockID inv_classicTable[] = {
+	BLOCK_STONE, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB,
+	BLOCK_MOSSY_ROCKS, BLOCK_SAPLING, BLOCK_DANDELION, BLOCK_ROSE, BLOCK_BROWN_SHROOM, BLOCK_RED_SHROOM, BLOCK_SAND, BLOCK_GRAVEL, BLOCK_SPONGE,
+	BLOCK_RED, BLOCK_ORANGE, BLOCK_YELLOW, BLOCK_LIME, BLOCK_GREEN, BLOCK_TEAL, BLOCK_AQUA, BLOCK_CYAN, BLOCK_BLUE,
+	BLOCK_INDIGO, BLOCK_VIOLET, BLOCK_MAGENTA, BLOCK_PINK, BLOCK_BLACK, BLOCK_GRAY, BLOCK_WHITE, BLOCK_COAL_ORE, BLOCK_IRON_ORE,
+	BLOCK_GOLD_ORE, BLOCK_IRON, BLOCK_GOLD, BLOCK_BOOKSHELF, BLOCK_TNT, BLOCK_OBSIDIAN,
+};
+BlockID inv_classicHacksTable[] = {
+	BLOCK_STONE, BLOCK_GRASS, BLOCK_COBBLE, BLOCK_BRICK, BLOCK_DIRT, BLOCK_WOOD, BLOCK_BEDROCK, BLOCK_WATER, BLOCK_STILL_WATER, BLOCK_LAVA,
+	BLOCK_STILL_LAVA, BLOCK_LOG, BLOCK_LEAVES, BLOCK_GLASS, BLOCK_SLAB, BLOCK_MOSSY_ROCKS, BLOCK_SAPLING, BLOCK_DANDELION, BLOCK_ROSE, BLOCK_BROWN_SHROOM,
+	BLOCK_RED_SHROOM, BLOCK_SAND, BLOCK_GRAVEL, BLOCK_SPONGE, BLOCK_RED, BLOCK_ORANGE, BLOCK_YELLOW, BLOCK_LIME, BLOCK_GREEN, BLOCK_TEAL,
+	BLOCK_AQUA, BLOCK_CYAN, BLOCK_BLUE, BLOCK_INDIGO, BLOCK_VIOLET, BLOCK_MAGENTA, BLOCK_PINK, BLOCK_BLACK, BLOCK_GRAY, BLOCK_WHITE,
+	BLOCK_COAL_ORE, BLOCK_IRON_ORE, BLOCK_GOLD_ORE, BLOCK_DOUBLE_SLAB, BLOCK_IRON, BLOCK_GOLD, BLOCK_BOOKSHELF, BLOCK_TNT, BLOCK_OBSIDIAN,
+};
 
-BlockID Inventory_DefaultMapping(Int32 i) {
-#if USE16_BIT
-	if ((i >= Block_CpeCount && i < 256) || i == BLOCK_AIR) return BLOCK_AIR;
-#else
-	if (i >= BLOCK_CPE_COUNT || i == BLOCK_AIR) return BLOCK_AIR;
-#endif
-	if (!Game_ClassicMode) return (BlockID)i;
-
-	if (i >= 25 && i <= 40) {
-		return (BlockID)(BLOCK_RED + (i - 25));
+BlockID Inventory_DefaultMapping(int slot) {
+	if (Game_PureClassic) {
+		if (slot < 9 * 4 + 6)  return inv_classicTable[slot];
+	} else if (Game_ClassicMode) {
+		if (slot < 10 * 4 + 9) return inv_classicHacksTable[slot];
+	} else if (slot < BLOCK_MAX_CPE) {
+		return (BlockID)(slot + 1);
 	}
-	if (i >= 18 && i <= 21) {
-		return (BlockID)(BLOCK_DANDELION + (i - 18));
-	}
-
-	switch (i) {
-		/* First row */
-	case 3: return BLOCK_COBBLE;
-	case 4: return BLOCK_BRICK;
-	case 5: return BLOCK_DIRT;
-	case 6: return BLOCK_WOOD;
-
-		/* Second row */
-	case 12: return BLOCK_LOG;
-	case 13: return BLOCK_LEAVES;
-	case 14: return BLOCK_GLASS;
-	case 15: return BLOCK_SLAB;
-	case 16: return BLOCK_MOSSY_ROCKS;
-	case 17: return BLOCK_SAPLING;
-
-		/* Third row */
-	case 22: return BLOCK_SAND;
-	case 23: return BLOCK_GRAVEL;
-	case 24: return BLOCK_SPONGE;
-
-		/* Fifth row */
-	case 41: return BLOCK_COAL_ORE;
-	case 42: return BLOCK_IRON_ORE;
-	case 43: return BLOCK_GOLD_ORE;
-	case 44: return BLOCK_DOUBLE_SLAB;
-	case 45: return BLOCK_IRON;
-	case 46: return BLOCK_GOLD;
-	case 47: return BLOCK_BOOKSHELF;
-	case 48: return BLOCK_TNT;
-	}
-	return (BlockID)i;
+	return BLOCK_AIR;
 }
 
 void Inventory_SetDefaultMapping(void) {
-	Int32 i;
-	for (i = 0; i < Array_Elems(Inventory_Map); i++) {
-		Inventory_Map[i] = (BlockID)i;
-	}
-	for (i = 0; i < Array_Elems(Inventory_Map); i++) {
-		BlockID mapping = Inventory_DefaultMapping(i);
-		if (Game_PureClassic && Inventory_IsHackBlock(mapping)) {
-			mapping = BLOCK_AIR;
-		}
-		if (mapping != i) Inventory_Map[i] = mapping;
+	Int32 slot;
+	for (slot = 0; slot < Array_Elems(Inventory_Map); slot++) {
+		Inventory_Map[slot] = Inventory_DefaultMapping(slot);
 	}
 }
 
 void Inventory_AddDefault(BlockID block) {
-	if (block >= BLOCK_CPE_COUNT || Inventory_DefaultMapping(block) == block) {
-		Inventory_Map[block] = block;
-		return;
+	if (block >= BLOCK_CPE_COUNT) {
+		Inventory_Map[block - 1] = block; return;
 	}
 
-	Int32 i;
-	for (i = 0; i < BLOCK_CPE_COUNT; i++) {
-		if (Inventory_DefaultMapping(i) != block) continue;
-		Inventory_Map[i] = block;
+	Int32 slot;
+	for (slot = 0; slot < BLOCK_MAX_CPE; slot++) {
+		if (Inventory_DefaultMapping(slot) != block) continue;
+		Inventory_Map[slot] = block;
 		return;
-	}
-}
-
-void Inventory_Reset(BlockID block) {
-	Int32 i;
-	for (i = 0; i < Array_Elems(Inventory_Map); i++) {
-		if (Inventory_Map[i] != block) continue;
-		Inventory_Map[i] = Inventory_DefaultMapping(i);
 	}
 }
 
 void Inventory_Remove(BlockID block) {
-	Int32 i;
-	for (i = 0; i < Array_Elems(Inventory_Map); i++) {
-		if (Inventory_Map[i] != block) continue;
-		Inventory_Map[i] = BLOCK_AIR;
+	Int32 slot;
+	for (slot = 0; slot < Array_Elems(Inventory_Map); slot++) {
+		if (Inventory_Map[slot] == block) Inventory_Map[slot] = BLOCK_AIR;
 	}
-}
-
-void Inventory_PushToFreeSlots(Int32 i) {
-	BlockID block = Inventory_Map[i];
-	Int32 j;
-	/* The slot was already pushed out in the past
-	TODO: find a better way of fixing this */
-	for (j = 1; j < Array_Elems(Inventory_Map); j++) {
-		if (j != i && Inventory_Map[j] == block) return;
-	}
-
-	for (j = block; j < Array_Elems(Inventory_Map); j++) {
-		if (Inventory_Map[j] == BLOCK_AIR) {
-			Inventory_Map[j] = block; return;
-		}
-	}
-	for (j = 1; j < block; j++) {
-		if (Inventory_Map[j] == BLOCK_AIR) {
-			Inventory_Map[j] = block; return;
-		}
-	}
-}
-
-void Inventory_Insert(Int32 i, BlockID block) {
-	if (Inventory_Map[i] == block) return;
-	/* Need to push the old block to a different slot if different block. */
-	if (Inventory_Map[i] != BLOCK_AIR) Inventory_PushToFreeSlots(i);
-	Inventory_Map[i] = block;
 }
 
 void Inventory_ResetState(void) {

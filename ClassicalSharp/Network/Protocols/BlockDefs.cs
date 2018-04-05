@@ -43,7 +43,7 @@ namespace ClassicalSharp.Network.Protocols {
 			OnBlockUpdated(block, didBlockLight);
 			BlockInfo.UpdateCulling(block);
 			
-			game.Inventory.Reset(block);
+			game.Inventory.Remove(block);
 			if (block < Block.CpeCount) {
 				game.Inventory.AddDefault(block);
 			}

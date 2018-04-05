@@ -52,7 +52,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			return -1;
 		}
-		
+
 		protected ButtonWidget MakeBack(bool toGame, Font font, ClickHandler onClick) {
 			int width = game.UseClassicOptions ? 400 : 200;
 			return MakeBack(width, toGame ? "Back to game" : "Cancel", 25, font, onClick);
@@ -65,5 +65,30 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected static void SwitchOptions(Game g, Widget w) { g.Gui.SetNewScreen(new OptionsGroupScreen(g)); }
 		protected static void SwitchPause(Game g, Widget w) { g.Gui.SetNewScreen(new PauseScreen(g)); }
+		
+				
+		protected static void DisposeWidgets<T>(T[] widgets) where T : Widget {
+			if (widgets == null) return;
+			
+			for (int i = 0; i < widgets.Length; i++) {
+				if (widgets[i] != null) widgets[i].Dispose();
+			}
+		}
+		
+		protected static void RepositionWidgets<T>(T[] widgets) where T : Widget {
+			if (widgets == null) return;
+			
+			for (int i = 0; i < widgets.Length; i++) {
+				if (widgets[i] != null) widgets[i].Reposition();
+			}
+		}
+		
+		protected static void RenderWidgets<T>(T[] widgets, double delta) where T : Widget {
+			if (widgets == null) return;
+			
+			for (int i = 0; i < widgets.Length; i++) {
+				if (widgets[i] != null) widgets[i].Render(delta);
+			}
+		}
 	}
 }

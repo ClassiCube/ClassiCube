@@ -92,108 +92,52 @@ namespace ClassicalSharp {
 		
 		public BlockID[] Map;
 		public void SetDefaultMapping() {
-			for (int i = 0; i < Map.Length; i++) Map[i] = (BlockID)i;
 			for (int i = 0; i < Map.Length; i++) {
-				BlockID mapping = DefaultMapping(i);
-				if (game.PureClassic && IsHackBlock(mapping)) mapping = Block.Air;
-				if (mapping != i) Map[i] = mapping;
+				Map[i] = DefaultMapping(i);
 			}
 		}
 		
-		BlockID DefaultMapping(int i) {
-			if (i >= Block.CpeCount || i == Block.Air) return Block.Air;
-			if (!game.ClassicMode) return (BlockID)i;
-			
-			if (i >= 25 && i <= 40) {
-				return (BlockID)(Block.Red + (i - 25));
-			}
-			if (i >= 18 && i <= 21) {
-				return (BlockID)(Block.Dandelion + (i - 18));
-			}
-			
-			switch (i) {
-				// First row
-				case 3: return Block.Cobblestone;
-				case 4: return Block.Brick;
-				case 5: return Block.Dirt;
-				case 6: return Block.Wood;
-				
-				// Second row
-				case 12: return Block.Log;
-				case 13: return Block.Leaves;
-				case 14: return Block.Glass;
-				case 15: return Block.Slab;
-				case 16: return Block.MossyRocks;
-				case 17: return Block.Sapling;
-					
-				// Third row
-				case 22: return Block.Sand;
-				case 23: return Block.Gravel;
-				case 24: return Block.Sponge;
-					
-				// Fifth row
-				case 41: return Block.CoalOre;
-				case 42: return Block.IronOre;
-				case 43: return Block.GoldOre;
-				case 44: return Block.DoubleSlab;
-				case 45: return Block.Iron;
-				case 46: return Block.Gold;
-				case 47: return Block.Bookshelf;
-				case 48: return Block.TNT;
-			}
-			return (BlockID)i;
-		}
+		static BlockID[] classicTable = new BlockID[] {
+			Block.Stone, Block.Cobblestone, Block.Brick, Block.Dirt, Block.Wood, Block.Log, Block.Leaves, Block.Glass, Block.Slab,
+			Block.MossyRocks, Block.Sapling, Block.Dandelion, Block.Rose, Block.BrownMushroom, Block.RedMushroom, Block.Sand, Block.Gravel, Block.Sponge,
+			Block.Red, Block.Orange, Block.Yellow, Block.Lime, Block.Green, Block.Teal, Block.Aqua, Block.Cyan, Block.Blue, 
+			Block.Indigo, Block.Violet, Block.Magenta, Block.Pink, Block.Black, Block.Gray, Block.White, Block.CoalOre, Block.IronOre, 
+			Block.GoldOre, Block.Iron, Block.Gold, Block.Bookshelf, Block.TNT, Block.Obsidian,
+		};		
+		static BlockID[] classicHacksTable = new BlockID[] {
+			Block.Stone, Block.Grass, Block.Cobblestone, Block.Brick, Block.Dirt, Block.Wood, Block.Bedrock, Block.Water, Block.StillWater, Block.Lava,
+			Block.StillLava, Block.Log, Block.Leaves, Block.Glass, Block.Slab, Block.MossyRocks, Block.Sapling, Block.Dandelion, Block.Rose, Block.BrownMushroom, 
+			Block.RedMushroom, Block.Sand, Block.Gravel, Block.Sponge, Block.Red, Block.Orange, Block.Yellow, Block.Lime, Block.Green, Block.Teal, 
+			Block.Aqua, Block.Cyan, Block.Blue, Block.Indigo, Block.Violet, Block.Magenta, Block.Pink, Block.Black, Block.Gray, Block.White,
+			Block.CoalOre, Block.IronOre, Block.GoldOre, Block.DoubleSlab, Block.Iron, Block.Gold, Block.Bookshelf, Block.TNT, Block.Obsidian,			
+		};
 		
-		static bool IsHackBlock(BlockID b) {
-			return b == Block.DoubleSlab || b == Block.Bedrock ||
-				b == Block.Grass || BlockInfo.IsLiquid[b];
+		BlockID DefaultMapping(int slot) {
+			if (game.PureClassic) {
+				if (slot < 9 * 4 + 6) return classicTable[slot];
+			} else if (game.ClassicMode) {
+				if (slot < 10 * 4 + 9) return classicHacksTable[slot];
+			} else if (slot < Block.MaxCpeBlock) {
+				return (BlockID)(slot + 1);
+			}
+			return Block.Air;
 		}
 		
 		public void AddDefault(BlockID block) {
-			if (block >= Block.CpeCount || DefaultMapping(block) == block) {
-				Map[block] = block;
-				return;
+			if (block >= Block.CpeCount) {
+				Map[block - 1] = block; return;
 			}
 			
-			for (int i = 0; i < Block.CpeCount; i++) {
-				if (DefaultMapping(i) != block) continue;
-				Map[i] = block; return;
-			}
-		}
-		
-		public void Reset(BlockID block) {
-			for (int i = 0; i < Map.Length; i++) {
-				if (Map[i] == block) Map[i] = DefaultMapping(i);
+			for (int slot = 0; slot < Block.MaxCpeBlock; slot++) {
+				if (DefaultMapping(slot) != block) continue;
+				Map[slot] = block;  
+				return;
 			}
 		}
 		
 		public void Remove(BlockID block) {
 			for (int i = 0; i < Map.Length; i++) {
 				if (Map[i] == block) Map[i] = Block.Air;
-			}
-		}
-		
-		public void Insert(int i, BlockID block) {
-			if (Map[i] == block) return;		
-			// Need to push the old block to a different slot if different block			
-			if (Map[i] != Block.Air) PushToFreeSlots(i);
-			
-			Map[i] = block;
-		}
-		
-		void PushToFreeSlots(int i) {
-			BlockID block = Map[i];
-			// The slot was already pushed out in the past
-			// TODO: find a better way of fixing this
-			for (int j = 1; j < Map.Length; j++) {
-				if (j != i && Map[j] == block) return;
-			}
-			
-			for (int j = block; j < Map.Length; j++) {
-				if (Map[j] == Block.Air) { Map[j] = block; return; }
-			}
-			for (int j = 1; j < block; j++) {
-				if (Map[j] == Block.Air) { Map[j] = block; return; }
 			}
 		}
 	}

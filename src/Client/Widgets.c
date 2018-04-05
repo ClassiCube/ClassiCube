@@ -576,6 +576,7 @@ void TableWidget_RecreateDescTex(TableWidget* widget) {
 
 void TableWidget_MakeDescTex(TableWidget* widget, BlockID block) {
 	Gfx_DeleteTexture(&widget->DescTex.ID);
+	if (block == BLOCK_AIR) return;
 
 	UInt8 descBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String desc = String_InitAndClearArray(descBuffer);

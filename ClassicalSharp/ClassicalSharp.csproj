@@ -4,7 +4,7 @@
     <ProjectGuid>{BEB1C785-5CAD-48FF-A886-876BF0A318D4}</ProjectGuid>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <OutputType>WinExe</OutputType>
+    <OutputType>Exe</OutputType>
     <RootNamespace>ClassicalSharp</RootNamespace>
     <AssemblyName>ClassicalSharp</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
@@ -114,7 +114,6 @@
     <Compile Include="2D\Screens\Menu\SaveLevelScreen.cs" />
     <Compile Include="2D\Screens\Menu\TexturePackScreen.cs" />
     <Compile Include="2D\Screens\HudScreen.cs" />
-    <Compile Include="2D\Screens\Screen.cs" />
     <Compile Include="2D\Texture.cs" />
     <Compile Include="2D\Utils\FastBitmap.cs" />
     <Compile Include="2D\Utils\FastColour.cs" />
@@ -132,7 +131,6 @@
     <Compile Include="2D\Widgets\SurvivalHotbarWidget.cs" />
     <Compile Include="2D\Widgets\TableWidget.cs" />
     <Compile Include="2D\Widgets\TextWidget.cs" />
-    <Compile Include="2D\Widgets\Widget.cs" />
     <Compile Include="Audio\AudioPlayer.cs" />
     <Compile Include="Audio\AudioPlayer.Sounds.cs" />
     <Compile Include="Audio\Soundboard.cs" />

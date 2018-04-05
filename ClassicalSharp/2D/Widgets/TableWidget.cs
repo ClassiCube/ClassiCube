@@ -206,6 +206,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public void MakeDescTex(BlockID block) {
 			game.Graphics.DeleteTexture(ref descTex);
+			if (block == Block.Air) return;
 			UpdateBlockInfoString(block);
 			string value = buffer.ToString();
 			
@@ -218,8 +219,13 @@ namespace ClassicalSharp.Gui.Widgets {
 			int totalElements = 0;
 			BlockID[] map = game.Inventory.Map;
 			
-			for (int i = 0; i < map.Length; i++) {
+			for (int i = 0; i < map.Length;) {
+				if ((i % ElementsPerRow) == 0 && RowEmpty(i)) {
+					i += ElementsPerRow; continue;
+				}
+				
 				if (Show(map[i])) { totalElements++; }
+				i++;
 			}
 			
 			totalRows = Utils.CeilDiv(totalElements, ElementsPerRow);
@@ -228,13 +234,28 @@ namespace ClassicalSharp.Gui.Widgets {
 
 			Elements = new BlockID[totalElements];
 			int index = 0;
-			for (int i = 0; i < map.Length; i++) {
+			for (int i = 0; i < map.Length;) {
+				if ((i % ElementsPerRow) == 0 && RowEmpty(i)) {
+					i += ElementsPerRow; continue;
+				}
+				
 				if (Show(map[i])) { Elements[index++] = map[i]; }
+				i++;
 			}
 		}
 		
+		bool RowEmpty(int i) {
+			BlockID[] map = game.Inventory.Map;
+			int max = Math.Min(i + ElementsPerRow, map.Length);
+			
+			for (int j = i; j < max; j++) {
+				if (map[j] != Block.Air) return false;
+			}
+			return true;
+		}
+		
 		bool Show(BlockID block) {
-			if (block == Block.Air) return false;
+			//if (block == Block.Air) return false;
 
 			if (block < Block.CpeCount) {
 				int count = game.SupportsCPEBlocks ? Block.CpeCount : Block.OriginalCount;
@@ -271,7 +292,7 @@ namespace ClassicalSharp.Gui.Widgets {
 
 			if (scroll.HandlesMouseDown(mouseX, mouseY, button)) {
 				return true;
-			} else if (SelectedIndex != -1) {
+			} else if (SelectedIndex != -1 && Elements[SelectedIndex] != Block.Air) {
 				game.Inventory.Selected = Elements[SelectedIndex];
 				PendingClose = true;
 				return true;
@@ -300,6 +321,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		void ScrollRelative(int delta) {
 			int startIndex = SelectedIndex;
+			
 			SelectedIndex += delta;
 			if (SelectedIndex < 0) SelectedIndex -= delta;
 			if (SelectedIndex >= Elements.Length) SelectedIndex -= delta;

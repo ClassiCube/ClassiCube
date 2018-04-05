@@ -406,8 +406,8 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockID order = reader.ReadBlock();
 			
 			game.Inventory.Remove(block);
-			if (order != 255) {
-				game.Inventory.Insert(order, block);
+			if (order != 255 && order != 0) {
+				game.Inventory.Map[order - 1] = block;
 			}
 		}
 		
