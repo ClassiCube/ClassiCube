@@ -588,9 +588,18 @@ void TableWidget_MakeDescTex(TableWidget* widget, BlockID block) {
 	TableWidget_UpdateDescTexPos(widget);
 }
 
-bool TableWidget_Show(BlockID block) {
-	if (block == BLOCK_AIR) return false;
+bool TableWidget_RowEmpty(Int32 i) {
+	BlockID[] map = game.Inventory.Map;
+	int max = Math.Min(i + ElementsPerRow, map.Length);
 
+	Int32 j;
+	for (j = i; j < max; j++) {
+		if (Inventory_Map[j] != BLOCK_AIR) return false;
+	}
+	return true;
+}
+
+bool TableWidget_Show(BlockID block) {
 	if (block < BLOCK_CPE_COUNT) {
 		Int32 count = Game_UseCPEBlocks ? BLOCK_CPE_COUNT : BLOCK_ORIGINAL_COUNT;
 		return block < count;
@@ -601,11 +610,14 @@ bool TableWidget_Show(BlockID block) {
 void TableWidget_RecreateElements(TableWidget* widget) {
 	widget->ElementsCount = 0;
 	Int32 count = Game_UseCPE ? BLOCK_COUNT : BLOCK_ORIGINAL_COUNT, i;
-	for (i = 0; i < count; i++) {
-		BlockID block = Inventory_Map[i];
-		if (TableWidget_Show(block)) {
-			widget->ElementsCount++;
+	for (i = 0; i < count;) {
+		if ((i % widget->ElementsPerRow) == 0 && TableWidget_RowEmpty(i)) {
+			i += widget->ElementsPerRow; continue;
 		}
+
+		BlockID block = Inventory_Map[i];
+		if (TableWidget_Show(block)) { widget->ElementsCount++; }
+		i++;
 	}
 
 	widget->RowsCount = Math_CeilDiv(widget->ElementsCount, widget->ElementsPerRow);
@@ -614,10 +626,13 @@ void TableWidget_RecreateElements(TableWidget* widget) {
 
 	Int32 index = 0;
 	for (i = 0; i < count; i++) {
-		BlockID block = Inventory_Map[i];
-		if (TableWidget_Show(block)) {
-			widget->Elements[index++] = block;
+		if ((i % widget->ElementsPerRow) == 0 && TableWidget_RowEmpty(i)) {
+			i += widget->ElementsPerRow; continue;
 		}
+
+		BlockID block = Inventory_Map[i];
+		if (TableWidget_Show(block)) { widget->Elements[index++] = block; }
+		i++;
 	}
 }
 
@@ -734,7 +749,7 @@ bool TableWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButto
 
 	if (Elem_HandlesMouseDown(&widget->Scroll, x, y, btn)) {
 		return true;
-	} else if (widget->SelectedIndex != -1) {
+	} else if (widget->SelectedIndex != -1 && widget->Elements[widget->SelectedIndex] != BLOCK_AIR) {
 		Inventory_SetSelectedBlock(widget->Elements[widget->SelectedIndex]);
 		widget->PendingClose = true;
 		return true;
