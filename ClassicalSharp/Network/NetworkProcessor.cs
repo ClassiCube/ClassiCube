@@ -198,6 +198,7 @@ namespace ClassicalSharp.Network {
 			
 			reader.ExtendedPositions = false; reader.ExtendedBlocks = false;
 			writer.ExtendedPositions = false; writer.ExtendedBlocks = false;
+			BlockInfo.SetMaxUsed(255);
 		}
 		
 		internal Action[] handlers = new Action[256];

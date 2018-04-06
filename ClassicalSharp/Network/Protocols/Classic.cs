@@ -46,7 +46,7 @@ namespace ClassicalSharp.Network.Protocols {
 		DateTime mapReceiveStart;
 		DeflateStream gzipStream;
 		GZipHeaderReader gzipHeader;
-		int mapSizeIndex, mapIndex;
+		int mapSizeIndex, mapIndex, mapVolume;
 		byte[] mapSize = new byte[4], map;
 		FixedBufferStream mapPartStream;
 		Screen prevScreen;
@@ -78,13 +78,10 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			// Fast map puts volume in header, doesn't bother with gzip
 			if (net.cpeData.fastMap) {
-				int size = reader.ReadInt32();
+				mapVolume = reader.ReadInt32();
 				gzipHeader.done = true;
 				mapSizeIndex = 4;
-				map = new byte[size];
-				#if !ONLY_8BIT
-				if (reader.ExtendedBlocks) map2 = new byte[size];
-				#endif
+				map = new byte[mapVolume];
 			}
 		}
 		
@@ -150,15 +147,14 @@ namespace ClassicalSharp.Network.Protocols {
 
 				if (mapSizeIndex == 4) {
 					if (map == null) {
-						int size = mapSize[0] << 24 | mapSize[1] << 16 | mapSize[2] << 8 | mapSize[3];
-						map = new byte[size];
-						#if !ONLY_8BIT
-						if (reader.ExtendedBlocks) map2 = new byte[size];
-						#endif
+						mapVolume = mapSize[0] << 24 | mapSize[1] << 16 | mapSize[2] << 8 | mapSize[3];
+						map = new byte[mapVolume];
 					}
 					
 					#if !ONLY_8BIT
 					if (reader.ExtendedBlocks && value != 0) {
+						// Only allocate map2 when needed
+						if (map2 == null) map2 = new byte[mapVolume];
 						mapIndex2 += gzipStream2.Read(map2, mapIndex2, map2.Length - mapIndex2);
 					} else {
 						mapIndex += gzipStream.Read(map, mapIndex, map.Length - mapIndex);
@@ -181,7 +177,7 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			prevScreen = null;
 			
-			int mapWidth = reader.ReadUInt16();
+			int mapWidth  = reader.ReadUInt16();
 			int mapHeight = reader.ReadUInt16();
 			int mapLength = reader.ReadUInt16();
 			
@@ -190,7 +186,11 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			game.World.SetNewMap(map, mapWidth, mapHeight, mapLength);
 			#if !ONLY_8BIT
-			if (reader.ExtendedBlocks) game.World.blocks2 = map2;
+			if (reader.ExtendedBlocks) {
+				// defer allocation of scond map array if possible
+				game.World.blocks2 = map2 == null ? map : map2;				
+				BlockInfo.SetMaxUsed(map2 == null ? 255 : 767);
+			}
 			#endif
 			game.WorldEvents.RaiseOnNewMapLoaded();
 			net.wom.CheckSendWomID();

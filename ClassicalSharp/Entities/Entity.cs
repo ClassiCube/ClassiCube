@@ -123,7 +123,7 @@ namespace ClassicalSharp.Entities {
 			
 			ModelBlock = Block.Air;
 			BlockID block;
-			if (BlockID.TryParse(ModelName, out block) && block <= BlockInfo.MaxDefined) {
+			if (BlockID.TryParse(ModelName, out block) && block < BlockInfo.Count) {
 				ModelName = "block";
 				ModelBlock = block;
 			}

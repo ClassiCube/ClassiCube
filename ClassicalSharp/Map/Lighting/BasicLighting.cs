@@ -71,7 +71,7 @@ namespace ClassicalSharp.Map {
 			
 			int elemsLeft = InitialHeightmapCoverage(x1, z1, xCount, zCount, skip);
 			#if !ONLY_8BIT
-			if (BlockInfo.MaxDefined >= 256) {
+			if (BlockInfo.MaxUsed >= 256) {
 				fixed (BlockRaw* mapPtr2 = game.World.blocks2) {
 					if (!CalculateHeightmapCoverage_16Bit(x1, z1, xCount, zCount, elemsLeft, skip, mapPtr, mapPtr2)) {
 						FinishHeightmapCoverage(x1, z1, xCount, zCount, skip);

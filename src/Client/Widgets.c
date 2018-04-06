@@ -588,9 +588,8 @@ void TableWidget_MakeDescTex(TableWidget* widget, BlockID block) {
 	TableWidget_UpdateDescTexPos(widget);
 }
 
-bool TableWidget_RowEmpty(Int32 i) {
-	BlockID[] map = game.Inventory.Map;
-	int max = Math.Min(i + ElementsPerRow, map.Length);
+bool TableWidget_RowEmpty(TableWidget* widget, Int32 i) {
+	Int32 max = min(i + widget->ElementsPerRow, (Int32)Array_Elems(Inventory_Map));
 
 	Int32 j;
 	for (j = i; j < max; j++) {

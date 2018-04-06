@@ -117,7 +117,7 @@ namespace ClassicalSharp.Map {
 			BlockRaw[] blocks = world.blocks;
 			
 			// Update if any blocks in the chunk are affected by light change
-			if (BlockInfo.MaxDefined < 256) {
+			if (BlockInfo.MaxUsed < 256) {
 				for (; y >= minY; y--, i -= world.OneY) {
 					BlockID other = blocks[i];
 					bool affected = y == nY ? Needs(block, other) : BlockInfo.Draw[other] != DrawType.Gas;

@@ -66,7 +66,13 @@ namespace ClassicalSharp.Map {
 		public void SetBlock(int x, int y, int z, BlockID blockId) {
 			int i = (y * Length + z) * Width + x;
 			blocks[i] = (BlockRaw)blockId;
-			if (blocks == blocks2) return;
+
+			// defer allocation of second map array if possible
+			if (blocks == blocks2) {			
+				if (blockId < 256) return;
+				blocks2 = new BlockRaw[blocks.Length];
+				BlockInfo.SetMaxUsed(767);
+			}
 			blocks2[i] = (BlockRaw)(blockId >> 8);
 		}
 		

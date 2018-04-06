@@ -31,34 +31,35 @@ typedef struct GuiElementVTABLE_ {
 typedef struct GuiElement_ { GuiElementVTABLE* VTABLE; } GuiElement;
 void GuiElement_Reset(GuiElement* elem);
 
-/*
-	HandlesAllInput; / Whether this screen handles all input. Prevents user interacting with the world
-	BlocksWorld;     / Whether this screen completely and opaquely covers the game world behind it
-	HidesHUD;        / Whether this screen hides the normal in-game HUD
-	RenderHUDOver;   / Whether the normal in-game HUD should be drawn over the top of this screen */
-#define Screen_Layout GuiElementVTABLE* VTABLE; bool HandlesAllInput, BlocksWorld; \
-bool HidesHUD, RenderHUDOver; void (*OnResize)(GuiElement* elem);
+
+#define Screen_Layout GuiElementVTABLE* VTABLE; \
+bool HandlesAllInput; /* Whether this screen handles all input. Prevents user interacting with the world */ \
+bool BlocksWorld;     /* Whether this screen completely and opaquely covers the game world behind it */ \
+bool HidesHUD;        /* Whether this screen hides the normal in-game HUD */ \
+bool RenderHUDOver;   /* Whether the normal in-game HUD should be drawn over the top of this screen */ \
+void (*OnResize)(GuiElement* elem);
 
 /* Represents a container of widgets and other 2D elements. May cover entire window. */
 typedef struct Screen_ { Screen_Layout } Screen;
 void Screen_Reset(Screen* screen);
 
 
-/*
-	X, Y, Width, Height;  / Top left corner, and dimensions, of this widget 
-	Active;               / Whether this widget is currently being moused over
-	Disabled;             / Whether widget is prevented from being interacted with
-	HorAnchor, VerAnchor; / Specifies the reference point for when this widget is resized
-	XOffset, YOffset;     / Offset from the reference point */
 typedef void (*Widget_LeftClick)(GuiElement* screenElem, GuiElement* widget);
-#define Widget_Layout GuiElementVTABLE* VTABLE; Int32 X, Y, Width, Height; bool Active, Disabled; \
-UInt8 HorAnchor, VerAnchor; Int32 XOffset, YOffset; void (*Reposition)(GuiElement* elem); Widget_LeftClick MenuClick;
+#define Widget_Layout GuiElementVTABLE* VTABLE; \
+Int32 X, Y, Width, Height;  /* Top left corner, and dimensions, of this widget */ \
+bool Active;                /* Whether this widget is currently being moused over*/ \
+bool Disabled;              /* Whether widget is prevented from being interacted with */ \
+UInt8 HorAnchor, VerAnchor; /* Specifies the reference point for when this widget is resized */ \
+Int32 XOffset, YOffset;     /* Offset from the reference point */ \
+void (*Reposition)(GuiElement* elem); \
+Widget_LeftClick MenuClick;
 
 /* Represents an individual 2D gui component. */
 typedef struct Widget_ { Widget_Layout } Widget;
 void Widget_DoReposition(GuiElement* elem);
 void Widget_Init(Widget* widget);
 bool Widget_Contains(Widget* widget, Int32 x, Int32 y);
+
 
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 Screen* Gui_HUD;

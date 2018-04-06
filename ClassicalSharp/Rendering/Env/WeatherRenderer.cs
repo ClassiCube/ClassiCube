@@ -161,7 +161,7 @@ namespace ClassicalSharp.Renderers {
 			int i = (maxY * length + z) * width + x;
 			BlockRaw[] blocks = map.blocks;
 			
-			if (BlockInfo.MaxDefined < 256) {
+			if (BlockInfo.MaxUsed < 256) {
 				for (int y = maxY; y >= 0; y--, i -= oneY) {
 					byte draw = BlockInfo.Draw[blocks[i]];
 					if (!(draw == DrawType.Gas || draw == DrawType.Sprite)) {

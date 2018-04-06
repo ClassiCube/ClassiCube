@@ -12,7 +12,7 @@ namespace ClassicalSharp.Map {
 			int i = (maxY * length + z) * width + x;
 			BlockRaw[] blocks = game.World.blocks;
 			
-			if (BlockInfo.MaxDefined < 256) {
+			if (BlockInfo.MaxUsed < 256) {
 				for (int y = maxY; y >= 0; y--, i -= oneY) {
 					int block = blocks[i];
 					if (BlockInfo.BlocksLight[block]) {

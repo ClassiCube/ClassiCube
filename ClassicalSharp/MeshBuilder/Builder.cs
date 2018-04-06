@@ -48,7 +48,7 @@ namespace ClassicalSharp {
 			bool allSolid = false;
 			fixed (BlockRaw* mapPtr = map.blocks) {
 				#if !ONLY_8BIT
-				if (BlockInfo.MaxDefined >= 256) {
+				if (BlockInfo.MaxUsed >= 256) {
 					ReadChunkData_16Bit(x1, y1, z1, mapPtr, ref allAir, ref allSolid);
 				} else {
 					ReadChunkData_8Bit(x1, y1, z1, mapPtr, ref allAir, ref allSolid);
