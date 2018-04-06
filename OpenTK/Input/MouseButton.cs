@@ -36,11 +36,7 @@ namespace OpenTK.Input {
         /// <summary> The right mouse button. </summary>
         Right,
         /// <summary> The middle mouse button. </summary>
-        Middle,        
-        /// <summary> The first extra mouse button. </summary>
-        Button1,
-        /// <summary> The second extra mouse button. </summary>
-        Button2,
+        Middle,
         /// <summary> Indicates the last available mouse button. </summary>
         LastButton
     }

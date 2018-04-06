@@ -363,21 +363,21 @@ namespace OpenTK.Platform.X11 {
 						break;
 						
 					case XEventName.ButtonPress:
-						if      (e.ButtonEvent.button == 1) mouse[OpenTK.Input.MouseButton.Left] = true;
-						else if (e.ButtonEvent.button == 2) mouse[OpenTK.Input.MouseButton.Middle] = true;
-						else if (e.ButtonEvent.button == 3) mouse[OpenTK.Input.MouseButton.Right] = true;
+						if      (e.ButtonEvent.button == 1) mouse[MouseButton.Left] = true;
+						else if (e.ButtonEvent.button == 2) mouse[MouseButton.Middle] = true;
+						else if (e.ButtonEvent.button == 3) mouse[MouseButton.Right] = true;
 						else if (e.ButtonEvent.button == 4) mouse.Wheel++;
 						else if (e.ButtonEvent.button == 5) mouse.Wheel--;
-						else if (e.ButtonEvent.button == 6) mouse[OpenTK.Input.MouseButton.Button1] = true;
-						else if (e.ButtonEvent.button == 7) mouse[OpenTK.Input.MouseButton.Button2] = true;
+						else if (e.ButtonEvent.button == 6) keyboard[Key.XButton1] = true;
+						else if (e.ButtonEvent.button == 7) keyboard[Key.XButton2] = true;
 						break;
 
 					case XEventName.ButtonRelease:
-						if      (e.ButtonEvent.button == 1) mouse[OpenTK.Input.MouseButton.Left] = false;
-						else if (e.ButtonEvent.button == 2) mouse[OpenTK.Input.MouseButton.Middle] = false;
-						else if (e.ButtonEvent.button == 3) mouse[OpenTK.Input.MouseButton.Right] = false;
-						else if (e.ButtonEvent.button == 6) mouse[OpenTK.Input.MouseButton.Button1] = false;
-						else if (e.ButtonEvent.button == 7) mouse[OpenTK.Input.MouseButton.Button2] = false;
+						if      (e.ButtonEvent.button == 1) mouse[MouseButton.Left] = false;
+						else if (e.ButtonEvent.button == 2) mouse[MouseButton.Middle] = false;
+						else if (e.ButtonEvent.button == 3) mouse[MouseButton.Right] = false;
+						else if (e.ButtonEvent.button == 6) keyboard[Key.XButton1] = false;
+						else if (e.ButtonEvent.button == 7) keyboard[Key.XButton2] = false;
 						break;
 
 					case XEventName.MotionNotify:

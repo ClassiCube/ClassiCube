@@ -69,6 +69,9 @@ namespace OpenTK.Input {
         Tilde, Minus, Plus, BracketLeft, BracketRight,
         Semicolon, Quote, Comma, Period, Slash, BackSlash,
         
+        // Extended mouse buttons
+        XButton1, XButton2,
+        
         // Last available keyboard key
         LastKey
     }

@@ -62,6 +62,7 @@ typedef enum Key_ {
 	Key_Tilde, Key_Minus, Key_Plus, Key_BracketLeft, Key_BracketRight,
 	Key_Semicolon, Key_Quote, Key_Comma, Key_Period, Key_Slash, Key_BackSlash,
 
+	Key_XButton1, Key_XButton2,
 	Key_Count,
 } Key;
 
@@ -81,7 +82,6 @@ void Key_Clear(void);
 
 typedef enum MouseButton_ {
 	MouseButton_Left, MouseButton_Right, MouseButton_Middle,
-	MouseButton_Button1, MouseButton_Button2,
 	MouseButton_Count,
 } MouseButton;
 

@@ -33,6 +33,7 @@ const UInt8* Key_Names[Key_Count] = {
 	"Number5", "Number6", "Number7", "Number8", "Number9",
 	"Tilde", "Minus", "Plus", "BracketLeft", "BracketRight",
 	"Semicolon", "Quote", "Comma", "Period", "Slash", "BackSlash",
+	"XButton1", "XButton2",
 };
 
 /* TODO: Should this only be shown in GUI? not saved to disc? */
@@ -54,6 +55,7 @@ const UInt8* Key_Names[Key_Count] = {
 	"5", "6", "7", "8", "9",
 	"GRAVE", "MINUS", "PLUS", "LBRACKET", "RBRACKET",
 	"SEMICOLON", "APOSTROPHE", "COMMA", "PERIOD", "SLASH", "BACKSLASH",
+	"XBUTTON1", "XBUTTON2",
 };*/
 
 bool Key_States[Key_Count];

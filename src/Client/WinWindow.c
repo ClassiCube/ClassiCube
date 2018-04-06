@@ -308,7 +308,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 		Mouse_SetPressed(MouseButton_Right, true);
 		break;
 	case WM_XBUTTONDOWN:
-		Mouse_SetPressed(HIWORD(wParam) == 1 ? MouseButton_Button1 : MouseButton_Button2, true);
+		Key_SetPressed(HIWORD(wParam) == 1 ? Key_XButton1 : Key_XButton2, true);
 		break;
 	case WM_LBUTTONUP:
 		Mouse_SetPressed(MouseButton_Left, false);
@@ -320,7 +320,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 		Mouse_SetPressed(MouseButton_Right, false);
 		break;
 	case WM_XBUTTONUP:
-		Mouse_SetPressed(HIWORD(wParam) == 1 ? MouseButton_Button1 : MouseButton_Button2, false);
+		Key_SetPressed(HIWORD(wParam) == 1 ? Key_XButton1 : Key_XButton2, false);
 		break;
 
 	case WM_KEYDOWN:

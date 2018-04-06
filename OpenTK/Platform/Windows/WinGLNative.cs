@@ -222,7 +222,7 @@ namespace OpenTK.Platform.Windows
 					break;
 
 				case WindowMessage.XBUTTONDOWN:
-					mouse[(((ulong)wParam.ToInt64() >> 16) & 0xFFFF) != (int)MouseKeys.XButton1 ? MouseButton.Button1 : MouseButton.Button2] = true;
+					keyboard[(((ulong)wParam.ToInt64() >> 16) & 0xFFFF) == 1 ? Key.XButton1 : Key.XButton2] = true;
 					break;
 
 				case WindowMessage.LBUTTONUP:
@@ -238,7 +238,7 @@ namespace OpenTK.Platform.Windows
 					break;
 
 				case WindowMessage.XBUTTONUP:
-					mouse[(((ulong)wParam.ToInt64() >> 16) & 0xFFFF) != (int)MouseKeys.XButton1 ? MouseButton.Button1 : MouseButton.Button2] = false;
+					keyboard[(((ulong)wParam.ToInt64() >> 16) & 0xFFFF) == 1 ? Key.XButton1 : Key.XButton2] = false;
 					break;
 
 					// Keyboard events:
