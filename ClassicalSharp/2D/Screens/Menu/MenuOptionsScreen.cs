@@ -46,16 +46,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.Escape) {
-				game.Gui.SetNewScreen(null);
-				return true;
-			} else if ((key == Key.Enter || key == Key.KeypadEnter) && input != null) {
-				ChangeSetting();
-				return true;
+			if (input != null) {
+				if (input.HandlesKeyDown(key)) return true;
+				if (key == Key.Enter || key == Key.KeypadEnter) {
+					ChangeSetting(); return true;
+				}
 			}
-			if (input == null)
-				return key < Key.F1 || key > Key.F35;
-			return input.HandlesKeyDown(key);
+			return base.HandlesKeyDown(key);
 		}
 		
 		public override bool HandlesKeyUp(Key key) {
@@ -163,7 +160,7 @@ namespace ClassicalSharp.Gui.Screens {
 			extendedHelp = null;
 		}
 		
-		void OnOKButtonClick(Game game, Widget widget) { 
+		void OnOKButtonClick(Game game, Widget widget) {
 			ChangeSetting();
 		}
 		

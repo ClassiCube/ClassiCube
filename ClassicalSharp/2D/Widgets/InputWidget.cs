@@ -301,15 +301,13 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
-			bool clipboardDown = ControlDown();
-			
-			if (key == Key.Left) LeftKey(clipboardDown);
-			else if (key == Key.Right) RightKey(clipboardDown);
-			else if (key == Key.BackSpace) BackspaceKey(clipboardDown);
+			if (key == Key.Left) LeftKey();
+			else if (key == Key.Right) RightKey();
+			else if (key == Key.BackSpace) BackspaceKey();
 			else if (key == Key.Delete) DeleteKey();
 			else if (key == Key.Home) HomeKey();
 			else if (key == Key.End) EndKey();
-			else if (clipboardDown && !OtherKey(key)) return false;
+			else if (!OtherKey(key)) return false;
 			
 			return true;
 		}
@@ -320,11 +318,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (button == MouseButton.Left)
 				SetCaretToCursor(mouseX, mouseY);
 			return true;
-		}
+		}		
 		
-		
-		void BackspaceKey(bool controlDown) {
-			if (controlDown) {
+		void BackspaceKey() {
+			if (ControlDown()) {
 				if (caret == -1) caret = Text.Length - 1;
 				int len = Text.GetBackLength(caret);
 				if (len == 0) return;
@@ -368,8 +365,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		void LeftKey(bool controlDown) {
-			if (controlDown) {
+		void LeftKey() {
+			if (ControlDown()) {
 				if (caret == -1)
 					caret = Text.Length - 1;
 				caret -= Text.GetBackLength(caret);
@@ -385,8 +382,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		void RightKey(bool controlDown) {
-			if (controlDown) {
+		void RightKey() {
+			if (ControlDown()) {
 				caret += Text.GetForwardLength(caret);
 				if (caret >= Text.Length) caret = -1;
 				UpdateCaret();
@@ -414,6 +411,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		static char[] trimChars = new char[] {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		bool OtherKey(Key key) {
 			int maxChars = UsedLines * MaxCharsPerLine;
+			if (!ControlDown()) return false;
+			
 			if (key == Key.V && Text.Length < maxChars) {
 				string text = null;
 				try {

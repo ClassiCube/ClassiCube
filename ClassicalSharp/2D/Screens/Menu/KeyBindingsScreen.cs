@@ -110,15 +110,14 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.Escape) {
-				game.Gui.SetNewScreen(null);
-			} else if (curWidget != null) {
+			if (curWidget != null) {
 				int index = IndexOfWidget(curWidget) - 2;
 				game.Input.Keys[binds[index]] = key;
 				curWidget.SetText(ButtonText(index));
 				curWidget = null;
+				return true;
 			}
-			return true;
+			return base.HandlesKeyDown(key);
 		}
 		
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {

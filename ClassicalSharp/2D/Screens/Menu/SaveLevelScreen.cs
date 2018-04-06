@@ -38,11 +38,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesKeyDown(Key key) {
 			RemoveOverwrites();
-			if (key == Key.Escape) {
-				game.Gui.SetNewScreen(null);
-				return true;
-			}
-			return input.HandlesKeyDown(key);
+			if (input.HandlesKeyDown(key)) return true;
+			return base.HandlesKeyDown(key);
 		}
 		
 		public override bool HandlesKeyUp(Key key) {
@@ -97,9 +94,10 @@ namespace ClassicalSharp.Gui.Screens {
 			text = Path.Combine(Program.AppDirectory, "maps");
 			text = Path.Combine(text, file);
 			
-			if (File.Exists(text) && ((ButtonWidget)widget).OptName == null) {
-				((ButtonWidget)widget).SetText("&cOverwrite existing?");
-				((ButtonWidget)widget).OptName = "O";
+			ButtonWidget btn = (ButtonWidget)widget;
+			if (File.Exists(text) && btn.OptName == null) {
+				btn.SetText("&cOverwrite existing?");
+				btn.OptName = "O";
 			} else {
 				// NOTE: We don't immediately save here, because otherwise the 'saving...'
 				// will not be rendered in time because saving is done on the main thread.

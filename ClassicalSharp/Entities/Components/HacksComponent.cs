@@ -9,9 +9,7 @@ namespace ClassicalSharp.Entities {
 	public sealed class HacksComponent {
 		
 		Game game;
-		public HacksComponent(Game game, Entity entity) {
-			this.game = game;
-		}
+		public HacksComponent(Game game) { this.game = game; }
 		
 		public byte UserType;
 		
@@ -31,23 +29,14 @@ namespace ClassicalSharp.Entities {
 		public bool Enabled = true;
 		/// <summary> Whether the player is allowed to use any type of hacks. </summary>
 		public bool CanAnyHacks = true;
-		/// <summary> Whether the player is allowed to use the types of cameras that use third person. </summary>
 		public bool CanUseThirdPersonCamera = true;
-		/// <summary> Whether the player is allowed to increase its speed beyond the normal walking speed. </summary>
 		public bool CanSpeed = true;
-		/// <summary> Whether the player is allowed to fly in the world. </summary>
 		public bool CanFly = true;
-		/// <summary> Whether the player is allowed to teleport to their respawn coordinates. </summary>
 		public bool CanRespawn = true;
-		/// <summary> Whether the player is allowed to pass through all blocks. </summary>
 		public bool CanNoclip = true;
-		/// <summary> Whether the player is allowed to use pushback block placing. </summary>
 		public bool CanPushbackBlocks = true;
-		/// <summary> Whether the player is allowed to see all entity name tags. </summary>
 		public bool CanSeeAllNames = true;
-		/// <summary> Whether the player is allowed to double jump. </summary>
 		public bool CanDoubleJump = true;
-		/// <summary> Whether the player can be pushed by other players. </summary>
 		public bool CanBePushed = true;
 		/// <summary> Base speed multiplier entity moves at horizontally. </summary>
 		public float BaseHorSpeed = 1;
@@ -59,18 +48,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Whether the player has allowed the usage of fast double jumping abilities. </summary>
 		public bool WOMStyleHacks;
 		
-		/// <summary> Whether the player currently has noclip on. </summary>
-		public bool Noclip;
-		/// <summary> Whether the player currently has fly mode active. </summary>
-		public bool Flying;
-		/// <summary> Whether the player is currently flying upwards. </summary>
-		public bool FlyingUp;
-		/// <summary> Whether the player is currently flying downwards. </summary>
-		public bool FlyingDown;
-		/// <summary> Whether the player is currently walking at base speed * speed multiplier. </summary>
-		public bool Speeding;
-		/// <summary> Whether the player is currently walking at base speed * 0.5 * speed multiplier. </summary>
-		public bool HalfSpeeding;
+		public bool Noclip, Flying, FlyingUp, FlyingDown, Speeding, HalfSpeeding;
 		
 		public bool CanJumpHigher { get { return Enabled && CanAnyHacks && CanSpeed; } }
 		public bool Floating { get { return Noclip || Flying; } }

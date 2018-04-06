@@ -37,7 +37,7 @@ namespace ClassicalSharp.Entities {
 			SkinName = game.Username;
 			
 			collisions = new CollisionsComponent(game, this);
-			Hacks = new HacksComponent(game, this);
+			Hacks = new HacksComponent(game);
 			physics = new PhysicsComponent(game, this);
 			input = new InputComponent(game, this);
 			sound = new SoundComponent(game, this);

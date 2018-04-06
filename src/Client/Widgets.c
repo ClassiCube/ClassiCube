@@ -24,6 +24,10 @@ void Widget_SetLocation(Widget* widget, UInt8 horAnchor, UInt8 verAnchor, Int32 
 	widget->Reposition((GuiElement*)widget);
 }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------TextWidget--------------------------------------------------------*
+*#########################################################################################################################*/
 void TextWidget_SetHeight(TextWidget* widget, Int32 height) {
 	if (widget->ReducePadding) {
 		Drawer2D_ReducePadding_Height(&height, widget->Font.Size, 4);
@@ -96,6 +100,10 @@ void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text) {
 	}
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------ButtonWidget-------------------------------------------------------*
+*#########################################################################################################################*/
 #define BUTTON_uWIDTH (200.0f / 256.0f)
 Texture Button_ShadowTex   = { 0, 0, 0, 0, 0,  0.0f, 66.0f / 256.0f, 200.0f / 256.0f,  86.0f / 256.0f };
 Texture Button_SelectedTex = { 0, 0, 0, 0, 0,  0.0f, 86.0f / 256.0f, 200.0f / 256.0f, 106.0f / 256.0f };
@@ -192,6 +200,9 @@ void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text) {
 }
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------ScrollbarWidget-----------------------------------------------------*
+*#########################################################################################################################*/
 #define TABLE_MAX_ROWS_DISPLAYED 8
 #define SCROLL_WIDTH 22
 #define SCROLL_BORDER 2
@@ -315,6 +326,9 @@ void ScrollbarWidget_ClampScrollY(ScrollbarWidget* widget) {
 }
 
 
+/*########################################################################################################################*
+*------------------------------------------------------HotbarWidget-------------------------------------------------------*
+*#########################################################################################################################*/
 void HotbarWidget_RenderHotbarOutline(HotbarWidget* widget) {
 	GfxResourceID texId = Game_UseClassicGui ? Gui_GuiClassicTex : Gui_GuiTex;
 	widget->BackTex.ID = texId;
@@ -494,6 +508,9 @@ void HotbarWidget_Create(HotbarWidget* widget) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------TableWidget-------------------------------------------------------*
+*#########################################################################################################################*/
 Int32 Table_X(TableWidget* widget) { return widget->X - 5 - 10; }
 Int32 Table_Y(TableWidget* widget) { return widget->Y - 5 - 30; }
 Int32 Table_Width(TableWidget* widget) { 
@@ -610,7 +627,7 @@ void TableWidget_RecreateElements(TableWidget* widget) {
 	widget->ElementsCount = 0;
 	Int32 count = Game_UseCPE ? BLOCK_COUNT : BLOCK_ORIGINAL_COUNT, i;
 	for (i = 0; i < count;) {
-		if ((i % widget->ElementsPerRow) == 0 && TableWidget_RowEmpty(i)) {
+		if ((i % widget->ElementsPerRow) == 0 && TableWidget_RowEmpty(widget, i)) {
 			i += widget->ElementsPerRow; continue;
 		}
 
@@ -625,7 +642,7 @@ void TableWidget_RecreateElements(TableWidget* widget) {
 
 	Int32 index = 0;
 	for (i = 0; i < count; i++) {
-		if ((i % widget->ElementsPerRow) == 0 && TableWidget_RowEmpty(i)) {
+		if ((i % widget->ElementsPerRow) == 0 && TableWidget_RowEmpty(widget, i)) {
 			i += widget->ElementsPerRow; continue;
 		}
 
@@ -874,6 +891,9 @@ void TableWidget_OnInventoryChanged(TableWidget* widget) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------InputWidget-------------------------------------------------------*
+*#########################################################################################################################*/
 bool InputWidget_ControlDown(void) {
 #if CC_BUILD_OSX
 	return Key_IsWinPressed();
@@ -1168,6 +1188,8 @@ void InputWidget_EndKey(InputWidget* widget) {
 
 bool InputWidget_OtherKey(InputWidget* widget, Key key) {
 	Int32 maxChars = widget->GetMaxLines() * INPUTWIDGET_LEN;
+	if (!InputWidget_ControlDown()) return false;
+
 	if (key == Key_V && widget->Text.length < maxChars) {
 		UInt8 textBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
 		String text = String_InitAndClearArray(textBuffer);
@@ -1236,7 +1258,7 @@ bool InputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
 		InputWidget_HomeKey(widget);
 	} else if (key == Key_End) {
 		InputWidget_EndKey(widget);
-	} else if (InputWidget_ControlDown() && !InputWidget_OtherKey(widget, key)) {
+	} else if (!InputWidget_OtherKey(widget, key)) {
 		return false;
 	}
 	return true;
@@ -1320,6 +1342,9 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------MenuInputValidator----------------------------------------------------*
+*#########################################################################################################################*/
 bool MenuInputValidator_AlwaysValidChar(MenuInputValidator* validator, UInt8 c) { return true; }
 bool MenuInputValidator_AlwaysValidString(MenuInputValidator* validator, STRING_PURE String* s) { return true; }
 
@@ -1493,6 +1518,9 @@ MenuInputValidator MenuInputValidator_String(void) {
 }
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------MenuInputWidget-----------------------------------------------------*
+*#########################################################################################################################*/
 void MenuInputWidget_Render(GuiElement* elem, Real64 delta) {
 	InputWidget* widget = (InputWidget*)elem;
 	PackedCol backCol = PACKEDCOL_CONST(30, 30, 30, 200);
@@ -1590,6 +1618,9 @@ void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, 
 }
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------ChatInputWidget-----------------------------------------------------*
+*#########################################################################################################################*/
 void ChatInputWidget_Render(GuiElement* elem, Real64 delta) {
 	ChatInputWidget* widget = (ChatInputWidget*)elem;
 	InputWidget* input = (InputWidget*)elem;
@@ -1785,6 +1816,9 @@ void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 }
 
 
+/*########################################################################################################################*
+*----------------------------------------------------PlayerListWidget-----------------------------------------------------*
+*#########################################################################################################################*/
 #define GROUP_NAME_ID UInt16_MaxValue
 #define LIST_COLUMN_PADDING 5
 #define LIST_BOUNDS_SIZE 10
@@ -2160,6 +2194,9 @@ void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool clas
 }
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------TextGroupWidget-----------------------------------------------------*
+*#########################################################################################################################*/
 void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE String* text) {
 	Int32 y = widget->Y;
 	Gfx_DeleteTexture(&widget->Textures[0].ID);
@@ -2362,8 +2399,9 @@ void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc*
 }
 
 
-
-
+/*########################################################################################################################*
+*---------------------------------------------------SpecialInputWidget----------------------------------------------------*
+*#########################################################################################################################*/
 void SpecialInputWidget_UpdateColString(SpecialInputWidget* widget) {
 	UInt32 count = 0, i;
 	for (i = 0; i < DRAWER2D_MAX_COLS; i++) {

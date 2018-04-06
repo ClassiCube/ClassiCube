@@ -89,12 +89,6 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, y);
 		}
 		
-		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.Escape)
-				game.Gui.SetNewScreen(null);
-			return key < Key.F1 || key > Key.F35;
-		}
-		
 		public override void Dispose() {
 			base.Dispose();
 			game.Events.HackPermissionsChanged -= CheckHacksAllowed;

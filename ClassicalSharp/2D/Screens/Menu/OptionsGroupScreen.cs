@@ -58,14 +58,7 @@ namespace ClassicalSharp.Gui.Screens {
 		ButtonWidget Make(int dir, int y, string text, ClickHandler onClick) {
 			return ButtonWidget.Create(game, 300, text, titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
-		}		
-		
-		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.Escape) {
-				game.Gui.SetNewScreen(null);
-			}
-			return key < Key.F1 || key > Key.F35;
-		}		
+		}	
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
 			int i = HandleMouseMove(widgets, mouseX, mouseY);

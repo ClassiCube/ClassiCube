@@ -65,17 +65,14 @@ namespace ClassicalSharp.Gui.Widgets {
 		#region Input handling
 		
 		public override bool HandlesKeyDown(Key key) {
-			bool controlDown = ControlDown();
-			
 			if (key == Key.Tab) { TabKey(); return true; }
-			if (key == Key.Up) { UpKey(controlDown); return true; }
-			if (key == Key.Down) { DownKey(controlDown); return true; }
-			
+			if (key == Key.Up) { UpKey(); return true; }
+			if (key == Key.Down) { DownKey(); return true; }			
 			return base.HandlesKeyDown(key);
 		}
 		
-		void UpKey(bool controlDown) {
-			if (controlDown) {
+		void UpKey() {
+			if (ControlDown()) {
 				int pos = caret == -1 ? Text.Length : caret;
 				if (pos < MaxCharsPerLine) return;
 				
@@ -99,8 +96,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			Recreate();
 		}
 		
-		void DownKey(bool controlDown) {
-			if (controlDown) {
+		void DownKey() {
+			if (ControlDown()) {
 				if (caret == -1 || caret >= (UsedLines - 1) * MaxCharsPerLine) return;
 				caret += MaxCharsPerLine;
 				UpdateCaret();

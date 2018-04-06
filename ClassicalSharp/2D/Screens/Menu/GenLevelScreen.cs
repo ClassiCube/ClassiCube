@@ -19,17 +19,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.Escape) {
-				game.Gui.SetNewScreen(null);
-				return true;
-			}
-			return selected == null ? (key < Key.F1 || key > Key.F35) :
-				selected.HandlesKeyDown(key);
+			if (selected != null && selected.HandlesKeyDown(key)) return true;
+			return base.HandlesKeyDown(key);
 		}
 		
 		public override bool HandlesKeyUp(Key key) {
-			return selected == null ? true :
-				selected.HandlesKeyUp(key);
+			return selected == null ? true : selected.HandlesKeyUp(key);
 		}
 		
 		public override void Init() {
@@ -137,14 +132,6 @@ namespace ClassicalSharp.Gui.Screens {
 	
 	public sealed class ClassicGenLevelScreen : MenuScreen {	
 		public ClassicGenLevelScreen(Game game) : base(game) { }
-		
-		public override bool HandlesKeyDown(Key key) {
-			if (key == Key.Escape) {
-				game.Gui.SetNewScreen(null);
-				return true;
-			}
-			return true;
-		}
 		
 		public override void Init() {
 			base.Init();

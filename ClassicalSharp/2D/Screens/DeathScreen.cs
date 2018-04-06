@@ -30,6 +30,8 @@ namespace ClassicalSharp.Gui.Screens {
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 75),
 			};
 		}
+		
+		public override bool HandlesKeyDown(Key key) { return true; }
 
 		void GenLevelClick(Game g, Widget w) {
 			game.Gui.SetNewScreen(new GenLevelScreen(game));

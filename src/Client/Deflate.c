@@ -13,20 +13,20 @@ bool Header_ReadByte(Stream* s, UInt8* state, Int32* value) {
 }
 
 
-#define GZipState_Header1           0
-#define GZipState_Header2           1
-#define GZipState_CompressionMethod 2
-#define GZipState_Flags             3
-#define GZipState_LastModifiedTime  4
-#define GZipState_CompressionFlags  5
-#define GZipState_OperatingSystem   6
-#define GZipState_HeaderChecksum    7
-#define GZipState_Filename          8
-#define GZipState_Comment           9
-#define GZipState_Done              10
+#define GZIP_STATE_HEADER1           0
+#define GZIP_STATE_HEADER2           1
+#define GZIP_STATE_COMPRESSIONMETHOD 2
+#define GZIP_STATE_FLAGS             3
+#define GZIP_STATE_LASTMODIFIEDTIME  4
+#define GZIP_STATE_COMPRESSIONFLAGS  5
+#define GZIP_STATE_OPERATINGSYSTEM   6
+#define GZIP_STATE_HEADERCHECKSUM    7
+#define GZIP_STATE_FILENAME          8
+#define GZIP_STATE_COMMENT           9
+#define GZIP_STATE_DONE              10
 
 void GZipHeader_Init(GZipHeader* header) {
-	header->State = GZipState_Header1;
+	header->State = GZIP_STATE_HEADER1;
 	header->Done = false;
 	header->Flags = 0;
 	header->PartsRead = 0;
@@ -36,31 +36,31 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 	Int32 temp;
 	switch (header->State) {
 
-	case GZipState_Header1:
+	case GZIP_STATE_HEADER1:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
 		if (temp != 0x1F) {
 			ErrorHandler_Fail("Byte 1 of GZIP header must be 1F");
 		}
 
-	case GZipState_Header2:
+	case GZIP_STATE_HEADER2:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
 		if (temp != 0x8B) {
 			ErrorHandler_Fail("Byte 2 of GZIP header must be 8B");
 		}
 
-	case GZipState_CompressionMethod:
+	case GZIP_STATE_COMPRESSIONMETHOD:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
 		if (temp != 0x08) {
 			ErrorHandler_Fail("Only DEFLATE compression supported");
 		}
 
-	case GZipState_Flags:
+	case GZIP_STATE_FLAGS:
 		if (!Header_ReadByte(s, &header->State, &header->Flags)) return;
 		if ((header->Flags & 0x04) != 0) {
 			ErrorHandler_Fail("Unsupported GZIP header flags");
 		}
 
-	case GZipState_LastModifiedTime:
+	case GZIP_STATE_LASTMODIFIEDTIME:
 		for (; header->PartsRead < 4; header->PartsRead++) {
 			temp = Stream_TryReadByte(s);
 			if (temp == -1) return;
@@ -68,13 +68,13 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 		header->State++;
 		header->PartsRead = 0;
 
-	case GZipState_CompressionFlags:
+	case GZIP_STATE_COMPRESSIONFLAGS:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
 
-	case GZipState_OperatingSystem:
+	case GZIP_STATE_OPERATINGSYSTEM:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
 
-	case GZipState_Filename:
+	case GZIP_STATE_FILENAME:
 		if ((header->Flags & 0x08) != 0) {
 			for (; ;) {
 				temp = Stream_TryReadByte(s);
@@ -84,7 +84,7 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 		}
 		header->State++;
 
-	case GZipState_Comment:
+	case GZIP_STATE_COMMENT:
 		if ((header->Flags & 0x10) != 0) {
 			for (; ;) {
 				temp = Stream_TryReadByte(s);
@@ -94,7 +94,7 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 		}
 		header->State++;
 
-	case GZipState_HeaderChecksum:
+	case GZIP_STATE_HEADERCHECKSUM:
 		if ((header->Flags & 0x02) != 0) {
 			for (; header->PartsRead < 2; header->PartsRead++) {
 				temp = Stream_TryReadByte(s);
@@ -109,12 +109,12 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 }
 
 
-#define ZLibState_CompressionMethod 0
-#define ZLibState_Flags             1
-#define ZLibState_Done              2
+#define ZLIB_STATE_COMPRESSIONMETHOD 0
+#define ZLIB_STATE_FLAGS             1
+#define ZLIB_STATE_DONE              2
 
 void ZLibHeader_Init(ZLibHeader* header) {
-	header->State = ZLibState_CompressionMethod;
+	header->State = ZLIB_STATE_COMPRESSIONMETHOD;
 	header->Done = false;
 	header->LZ77WindowSize = 0;
 }
@@ -123,7 +123,7 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 	Int32 temp;
 	switch (header->State) {
 
-	case ZLibState_CompressionMethod:
+	case ZLIB_STATE_COMPRESSIONMETHOD:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
 		if ((temp & 0x0F) != 0x08) {
 			ErrorHandler_Fail("Only DEFLATE compression supported");
@@ -135,7 +135,7 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 			ErrorHandler_Fail("LZ77 window size must be 32KB or less");
 		}
 
-	case ZLibState_Flags:
+	case ZLIB_STATE_FLAGS:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
 		if ((temp & 0x20) != 0) {
 			ErrorHandler_Fail("Unsupported ZLIB header flags");
@@ -145,44 +145,44 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 }
 
 
-#define DeflateState_Header 0
-#define DeflateState_UncompressedHeader 1
-#define DeflateState_UncompressedData 2
-#define DeflateState_DynamicHeader 3
-#define DeflateState_DynamicCodeLens 4
-#define DeflateState_DynamicLitsDists 5
-#define DeflateState_DynamicLitsDistsRepeat 6
-#define DeflateState_CompressedLit 7
-#define DeflateState_CompressedLitRepeat 8
-#define DeflateState_CompressedDist 9
-#define DeflateState_CompressedDistRepeat 10
-#define DeflateState_CompressedData 11
-#define DeflateState_FastCompressed 12
-#define DeflateState_Done 13
+#define DEFLATE_STATE_HEADER 0
+#define DEFLATE_STATE_UNCOMPRESSED_HEADER 1
+#define DEFLATE_STATE_UNCOMPRESSED_DATA 2
+#define DEFLATE_STATE_DYNAMIC_HEADER 3
+#define DEFLATE_STATE_DYNAMIC_CODELENS 4
+#define DEFLATE_STATE_DYNAMIC_LITSDISTS 5
+#define DEFLATE_STATE_DYNAMIC_LITSDISTSREPEAT 6
+#define DEFLATE_STATE_COMPRESSED_LIT 7
+#define DEFLATE_STATE_COMPRESSED_LITREPEAT 8
+#define DEFLATE_STATE_COMPRESSED_DIST 9
+#define DEFLATE_STATE_COMPRESSED_DISTREPEAT 10
+#define DEFLATE_STATE_COMPRESSED_DATA 11
+#define DEFLATE_STATE_FASTCOMPRESSED 12
+#define DEFLATE_STATE_DONE 13
 
 /* Insert this byte into the bit buffer */
-#define DEFLATE_GET_BYTE(state) state->AvailIn--; state->Bits |= (UInt32)(state->Input[state->NextIn]) << state->NumBits; state->NextIn++; state->NumBits += 8;
+#define Deflate_GetByte(state) state->AvailIn--; state->Bits |= (UInt32)(state->Input[state->NextIn]) << state->NumBits; state->NextIn++; state->NumBits += 8;
 /* Retrieves bits from the bit buffer */
-#define DEFLATE_PEEK_BITS(state, bits) (state->Bits & ((1UL << (bits)) - 1UL))
+#define Deflate_PeekBits(state, bits) (state->Bits & ((1UL << (bits)) - 1UL))
 /* Consumes/eats up bits from the bit buffer */
-#define DEFLATE_CONSUME_BITS(state, bits) state->Bits >>= (bits); state->NumBits -= (bits);
+#define Deflate_ConsumeBits(state, bits) state->Bits >>= (bits); state->NumBits -= (bits);
 /* Aligns bit buffer to be on a byte boundary*/
-#define DEFLATE_ALIGN_BITS(state) UInt32 alignSkip = state->NumBits & 7; DEFLATE_CONSUME_BITS(state, alignSkip);
+#define Deflate_AlignBits(state) UInt32 alignSkip = state->NumBits & 7; Deflate_ConsumeBits(state, alignSkip);
 /* Ensures there are 'bitsCount' bits, or returns false if not.  */
-#define DEFLATE_ENSURE_BITS(state, bitsCount) while (state->NumBits < bitsCount) { if (state->AvailIn == 0) return; DEFLATE_GET_BYTE(state); }
+#define Deflate_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { if (state->AvailIn == 0) return; Deflate_GetByte(state); }
 /* Ensures there are 'bitsCount' bits.  */
-#define DEFLATE_UNSAFE_ENSURE_BITS(state, bitsCount) while (state->NumBits < bitsCount) { DEFLATE_GET_BYTE(state); }
+#define Deflate_UNSAFE_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { Deflate_GetByte(state); }
 /* Peeks then consumes given bits. */
-#define DEFLATE_READ_BITS(state, bitsCount) DEFLATE_PEEK_BITS(state, bitsCount); DEFLATE_CONSUME_BITS(state, bitsCount);
+#define Deflate_ReadBits(state, bitsCount) Deflate_PeekBits(state, bitsCount); Deflate_ConsumeBits(state, bitsCount);
 
 /* Goes to the next state, after having read data of a block. */
-#define DEFLATE_NEXTBLOCK_STATE(state) (state->LastBlock ? DeflateState_Done : DeflateState_Header)
+#define Deflate_NextBlockState(state) (state->LastBlock ? DEFLATE_STATE_DONE : DEFLATE_STATE_HEADER)
 /* Goes to the next state, after having finished reading a compressed entry. */
 /* The maximum amount of bytes that can be output is 258. */
 /* The most input bytes required for huffman codes and extra data is 16 + 5 + 16 + 13 bits. Add 3 extra bytes to account for putting data into the bit buffer. */
 #define DEFLATE_FASTINF_OUT 258
 #define DEFLATE_FASTINF_IN 10
-#define DEFLATE_NEXTCOMPRESS_STATE(state) ((state->AvailIn >= DEFLATE_FASTINF_IN && state->AvailOut >= DEFLATE_FASTINF_OUT) ? DeflateState_FastCompressed : DeflateState_CompressedLit)
+#define Deflate_NextCompressState(state) ((state->AvailIn >= DEFLATE_FASTINF_IN && state->AvailOut >= DEFLATE_FASTINF_OUT) ? DEFLATE_STATE_FASTCOMPRESSED : DEFLATE_STATE_COMPRESSED_LIT)
 
 UInt32 Huffman_ReverseBits(UInt32 n, UInt8 bits) {
 	n = ((n & 0xAAAA) >> 1) | ((n & 0x5555) << 1);
@@ -260,15 +260,15 @@ Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
 	/* Buffer as many bits as possible */
 	while (state->NumBits <= DEFLATE_MAX_BITS) {
 		if (state->AvailIn == 0) break;
-		DEFLATE_GET_BYTE(state);
+		Deflate_GetByte(state);
 	}
 
 	/* Try fast accelerated table lookup */
 	if (state->NumBits >= 9) {
-		Int32 packed = table->Fast[DEFLATE_PEEK_BITS(state, DEFLATE_ZFAST_BITS)];
+		Int32 packed = table->Fast[Deflate_PeekBits(state, DEFLATE_ZFAST_BITS)];
 		if (packed >= 0) {
 			Int32 bits = packed >> 9;
-			DEFLATE_CONSUME_BITS(state, bits);
+			Deflate_ConsumeBits(state, bits);
 			return packed & 0x1FF;
 		}
 	}
@@ -282,7 +282,7 @@ Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
 
 		if (codeword < table->EndCodewords[i]) {
 			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
-			DEFLATE_CONSUME_BITS(state, i);
+			Deflate_ConsumeBits(state, i);
 			return table->Values[offset];
 		}
 	}
@@ -292,12 +292,12 @@ Int32 Huffman_Decode(DeflateState* state, HuffmanTable* table) {
 }
 
 Int32 Huffman_Unsafe_Decode(DeflateState* state, HuffmanTable* table) {
-	DEFLATE_UNSAFE_ENSURE_BITS(state, DEFLATE_MAX_BITS);
-	UInt32 codeword = DEFLATE_PEEK_BITS(state, DEFLATE_ZFAST_BITS);
+	Deflate_UNSAFE_EnsureBits(state, DEFLATE_MAX_BITS);
+	UInt32 codeword = Deflate_PeekBits(state, DEFLATE_ZFAST_BITS);
 	Int32 packed = table->Fast[codeword];
 	if (packed >= 0) {
 		Int32 bits = packed >> 9;
-		DEFLATE_CONSUME_BITS(state, bits);
+		Deflate_ConsumeBits(state, bits);
 		return packed & 0x1FF;
 	}
 
@@ -309,7 +309,7 @@ Int32 Huffman_Unsafe_Decode(DeflateState* state, HuffmanTable* table) {
 
 		if (codeword < table->EndCodewords[i]) {
 			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
-			DEFLATE_CONSUME_BITS(state, i);
+			Deflate_ConsumeBits(state, i);
 			return table->Values[offset];
 		}
 	}
@@ -319,7 +319,7 @@ Int32 Huffman_Unsafe_Decode(DeflateState* state, HuffmanTable* table) {
 }
 
 void Deflate_Init(DeflateState* state, Stream* source) {
-	state->State = DeflateState_Header;
+	state->State = DEFLATE_STATE_HEADER;
 	state->Source = source;
 	state->Bits = 0;
 	state->NumBits = 0;
@@ -374,19 +374,19 @@ void Deflate_InflateFast(DeflateState* state) {
 				state->AvailOut--; copyLen++;
 				curIdx = (curIdx + 1) & DEFLATE_WINDOW_MASK;
 			} else {
-				state->State = DEFLATE_NEXTBLOCK_STATE(state);
+				state->State = Deflate_NextBlockState(state);
 				break;
 			}
 		} else {
 			UInt32 lenIdx = lit - 257;
 			UInt32 bits = len_bits[lenIdx];
-			DEFLATE_UNSAFE_ENSURE_BITS(state, bits);
-			UInt32 len = len_base[lenIdx] + DEFLATE_READ_BITS(state, bits);
+			Deflate_UNSAFE_EnsureBits(state, bits);
+			UInt32 len = len_base[lenIdx] + Deflate_ReadBits(state, bits);
 
 			UInt32 distIdx = Huffman_Unsafe_Decode(state, &state->DistsTable);
 			bits = dist_bits[distIdx];
-			DEFLATE_UNSAFE_ENSURE_BITS(state, bits);
-			UInt32 dist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
+			Deflate_UNSAFE_EnsureBits(state, bits);
+			UInt32 dist = dist_base[distIdx] + Deflate_ReadBits(state, bits);
 
 			UInt32 startIdx = (curIdx - dist) & DEFLATE_WINDOW_MASK;
 			UInt32 i;
@@ -424,25 +424,25 @@ void Deflate_InflateFast(DeflateState* state) {
 void Deflate_Process(DeflateState* state) {
 	for (;;) {
 		switch (state->State) {
-		case DeflateState_Header: {
-			DEFLATE_ENSURE_BITS(state, 3);
-			UInt32 blockHeader = DEFLATE_READ_BITS(state, 3);
+		case DEFLATE_STATE_HEADER: {
+			Deflate_EnsureBits(state, 3);
+			UInt32 blockHeader = Deflate_ReadBits(state, 3);
 			state->LastBlock = blockHeader & 1;
 
 			switch (blockHeader >> 1) {
 			case 0: { /* Uncompressed block */
-				DEFLATE_ALIGN_BITS(state);
-				state->State = DeflateState_UncompressedHeader;
+				Deflate_AlignBits(state);
+				state->State = DEFLATE_STATE_UNCOMPRESSED_HEADER;
 			} break;
 
 			case 1: { /* Fixed/static huffman compressed */
 				Huffman_Build(&state->LitsTable, fixed_lits, DEFLATE_MAX_LITS);
 				Huffman_Build(&state->DistsTable, fixed_dists, DEFLATE_MAX_DISTS);
-				state->State = DEFLATE_NEXTCOMPRESS_STATE(state);
+				state->State = Deflate_NextCompressState(state);
 			} break;
 
 			case 2: { /* Dynamic huffman compressed */
-				state->State = DeflateState_DynamicHeader;
+				state->State = DEFLATE_STATE_DYNAMIC_HEADER;
 			} break;
 
 			case 3: {
@@ -453,21 +453,21 @@ void Deflate_Process(DeflateState* state) {
 			break;
 		}
 
-		case DeflateState_UncompressedHeader: {
-			DEFLATE_ENSURE_BITS(state, 32);
-			UInt32 len = DEFLATE_READ_BITS(state, 16);
-			UInt32 nlen = DEFLATE_READ_BITS(state, 16);
+		case DEFLATE_STATE_UNCOMPRESSED_HEADER: {
+			Deflate_EnsureBits(state, 32);
+			UInt32 len = Deflate_ReadBits(state, 16);
+			UInt32 nlen = Deflate_ReadBits(state, 16);
 
 			if (len != (nlen ^ 0xFFFFUL)) {
 				ErrorHandler_Fail("DEFLATE - Uncompressed block LEN check failed");
 			}
 			state->Index = len; /* Reuse for 'uncompressed length' */
-			state->State = DeflateState_UncompressedData;
+			state->State = DEFLATE_STATE_UNCOMPRESSED_DATA;
 		}
 
-		case DeflateState_UncompressedData: {
+		case DEFLATE_STATE_UNCOMPRESSED_DATA: {
 			while (state->NumBits > 0 && state->AvailOut > 0 && state->Index > 0) {
-				*state->Output = DEFLATE_READ_BITS(state, 8);
+				*state->Output = Deflate_ReadBits(state, 8);
 				state->AvailOut--;
 				state->Index--;
 			}
@@ -484,26 +484,26 @@ void Deflate_Process(DeflateState* state) {
 			}
 
 			if (state->Index == 0) {
-				state->State = DEFLATE_NEXTBLOCK_STATE(state);
+				state->State = Deflate_NextBlockState(state);
 			}
 			break;
 		}
 
-		case DeflateState_DynamicHeader: {
-			DEFLATE_ENSURE_BITS(state, 14);
-			state->NumLits = 257 + DEFLATE_READ_BITS(state, 5);
-			state->NumDists = 1 + DEFLATE_READ_BITS(state, 5);
-			state->NumCodeLens = 4 + DEFLATE_READ_BITS(state, 4);
+		case DEFLATE_STATE_DYNAMIC_HEADER: {
+			Deflate_EnsureBits(state, 14);
+			state->NumLits = 257 + Deflate_ReadBits(state, 5);
+			state->NumDists = 1 + Deflate_ReadBits(state, 5);
+			state->NumCodeLens = 4 + Deflate_ReadBits(state, 4);
 			state->Index = 0;
-			state->State = DeflateState_DynamicCodeLens;
+			state->State = DEFLATE_STATE_DYNAMIC_CODELENS;
 		}
 
-		case DeflateState_DynamicCodeLens: {
+		case DEFLATE_STATE_DYNAMIC_CODELENS: {
 			Int32 i;
 			while (state->Index < state->NumCodeLens) {
-				DEFLATE_ENSURE_BITS(state, 3);
+				Deflate_EnsureBits(state, 3);
 				i = codelens_order[state->Index];
-				state->Buffer[i] = DEFLATE_READ_BITS(state, 3);
+				state->Buffer[i] = Deflate_ReadBits(state, 3);
 				state->Index++;
 			}
 			for (i = state->NumCodeLens; i < DEFLATE_MAX_CODELENS; i++) {
@@ -511,11 +511,11 @@ void Deflate_Process(DeflateState* state) {
 			}
 
 			state->Index = 0;
-			state->State = DeflateState_DynamicLitsDists;
+			state->State = DEFLATE_STATE_DYNAMIC_LITSDISTS;
 			Huffman_Build(&state->CodeLensTable, state->Buffer, DEFLATE_MAX_CODELENS);
 		}
 
-		case DeflateState_DynamicLitsDists: {
+		case DEFLATE_STATE_DYNAMIC_LITSDISTS: {
 			UInt32 count = state->NumLits + state->NumDists;
 			while (state->Index < count) {
 				Int32 bits = Huffman_Decode(state, &state->CodeLensTable);
@@ -525,28 +525,28 @@ void Deflate_Process(DeflateState* state) {
 					state->Index++;
 				} else {
 					state->TmpCodeLens = bits;
-					state->State = DeflateState_DynamicLitsDistsRepeat;
+					state->State = DEFLATE_STATE_DYNAMIC_LITSDISTSREPEAT;
 					break;
 				}
 			}
 
 			if (state->Index == count) {
 				state->Index = 0;
-				state->State = DEFLATE_NEXTCOMPRESS_STATE(state);
+				state->State = Deflate_NextCompressState(state);
 				Huffman_Build(&state->LitsTable, state->Buffer, state->NumLits);
 				Huffman_Build(&state->DistsTable, &state->Buffer[state->NumLits], state->NumDists);
 			}
 			break;
 		}
 
-		case DeflateState_DynamicLitsDistsRepeat: {
+		case DEFLATE_STATE_DYNAMIC_LITSDISTSREPEAT: {
 			UInt32 repeatCount;
 			UInt8 repeatValue;
 
 			switch (state->TmpCodeLens) {
 			case 16:
-				DEFLATE_ENSURE_BITS(state, 2);
-				repeatCount = DEFLATE_READ_BITS(state, 2);
+				Deflate_EnsureBits(state, 2);
+				repeatCount = Deflate_ReadBits(state, 2);
 				if (state->Index == 0) {
 					ErrorHandler_Fail("DEFLATE - Tried to repeat invalid byte");
 				}
@@ -554,14 +554,14 @@ void Deflate_Process(DeflateState* state) {
 				break;
 
 			case 17:
-				DEFLATE_ENSURE_BITS(state, 3);
-				repeatCount = DEFLATE_READ_BITS(state, 3);
+				Deflate_EnsureBits(state, 3);
+				repeatCount = Deflate_ReadBits(state, 3);
 				repeatCount += 3; repeatValue = 0;
 				break;
 
 			case 18:
-				DEFLATE_ENSURE_BITS(state, 7);
-				repeatCount = DEFLATE_READ_BITS(state, 7);
+				Deflate_EnsureBits(state, 7);
+				repeatCount = Deflate_ReadBits(state, 7);
 				repeatCount += 11; repeatValue = 0;
 				break;
 			}
@@ -573,11 +573,11 @@ void Deflate_Process(DeflateState* state) {
 
 			Platform_MemSet(&state->Buffer[state->Index], repeatValue, repeatCount);
 			state->Index += repeatCount;
-			state->State = DeflateState_DynamicLitsDists;
+			state->State = DEFLATE_STATE_DYNAMIC_LITSDISTS;
 			break;
 		}
 
-		case DeflateState_CompressedLit: {
+		case DEFLATE_STATE_COMPRESSED_LIT: {
 			if (state->AvailOut == 0) return;
 
 			Int32 lit = Huffman_Decode(state, &state->LitsTable);
@@ -589,37 +589,37 @@ void Deflate_Process(DeflateState* state) {
 				state->WindowIndex = (state->WindowIndex + 1) & DEFLATE_WINDOW_MASK;
 				break;
 			} else if (lit == 256) {
-				state->State = DEFLATE_NEXTBLOCK_STATE(state);
+				state->State = Deflate_NextBlockState(state);
 				break;
 			} else {
 				state->TmpLit = lit - 257;
-				state->State = DeflateState_CompressedLitRepeat;
+				state->State = DEFLATE_STATE_COMPRESSED_LITREPEAT;
 			}
 		}
 
-		case DeflateState_CompressedLitRepeat: {
+		case DEFLATE_STATE_COMPRESSED_LITREPEAT: {
 			UInt32 lenIdx = (UInt32)state->TmpLit;
 			UInt32 bits = len_bits[lenIdx];
-			DEFLATE_ENSURE_BITS(state, bits);
-			state->TmpLit = len_base[lenIdx] + DEFLATE_READ_BITS(state, bits);
-			state->State = DeflateState_CompressedDist;
+			Deflate_EnsureBits(state, bits);
+			state->TmpLit = len_base[lenIdx] + Deflate_ReadBits(state, bits);
+			state->State = DEFLATE_STATE_COMPRESSED_DIST;
 		}
 
-		case DeflateState_CompressedDist: {
+		case DEFLATE_STATE_COMPRESSED_DIST: {
 			state->TmpDist = Huffman_Decode(state, &state->DistsTable);
 			if (state->TmpDist == -1) return;
-			state->State = DeflateState_CompressedDistRepeat;
+			state->State = DEFLATE_STATE_COMPRESSED_DISTREPEAT;
 		}
 
-		case DeflateState_CompressedDistRepeat: {
+		case DEFLATE_STATE_COMPRESSED_DISTREPEAT: {
 			UInt32 distIdx = (UInt32)state->TmpDist;
 			UInt32 bits = dist_bits[distIdx];
-			DEFLATE_ENSURE_BITS(state, bits);
-			state->TmpDist = dist_base[distIdx] + DEFLATE_READ_BITS(state, bits);
-			state->State = DeflateState_CompressedData;
+			Deflate_EnsureBits(state, bits);
+			state->TmpDist = dist_base[distIdx] + Deflate_ReadBits(state, bits);
+			state->State = DEFLATE_STATE_COMPRESSED_DATA;
 		}
 
-		case DeflateState_CompressedData: {
+		case DEFLATE_STATE_COMPRESSED_DATA: {
 			if (state->AvailOut == 0) return;
 			UInt32 len = (UInt32)state->TmpLit, dist = (UInt32)state->TmpDist;
 			len = min(len, state->AvailOut);
@@ -637,19 +637,19 @@ void Deflate_Process(DeflateState* state) {
 			state->WindowIndex = (curIdx + len) & DEFLATE_WINDOW_MASK;
 			state->TmpLit -= len;
 			state->AvailOut -= len;
-			if (state->TmpLit == 0) { state->State = DEFLATE_NEXTCOMPRESS_STATE(state); }
+			if (state->TmpLit == 0) { state->State = Deflate_NextCompressState(state); }
 			break;
 		}
 
-		case DeflateState_FastCompressed: {
+		case DEFLATE_STATE_FASTCOMPRESSED: {
 			Deflate_InflateFast(state);
-			if (state->State == DeflateState_FastCompressed) {
-				state->State = DEFLATE_NEXTCOMPRESS_STATE(state);
+			if (state->State == DEFLATE_STATE_FASTCOMPRESSED) {
+				state->State = Deflate_NextCompressState(state);
 			}
 			break;
 		}
 
-		case DeflateState_Done:
+		case DEFLATE_STATE_DONE:
 			return;
 		}
 	}

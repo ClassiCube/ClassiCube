@@ -54,14 +54,17 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
 			return HandleMouseMove(widgets, mouseX, mouseY) >= 0;
+		}		
+		public override bool HandlesMouseScroll(float delta) { return true; }	
+		
+		public override bool HandlesKeyDown(Key key) { 
+			if (key == Key.Escape) {
+				game.Gui.SetNewScreen(null);
+				return true;
+			}
+			return key < Key.F1 || key > Key.F35;
 		}
-		
-		public override bool HandlesMouseScroll(float delta) { return true; }
-		
 		public override bool HandlesKeyPress(char key) { return true; }
-		
-		public override bool HandlesKeyDown(Key key) { return true; }
-		
 		public override bool HandlesKeyUp(Key key) { return true; }
 	}
 }

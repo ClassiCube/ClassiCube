@@ -50,6 +50,8 @@ namespace ClassicalSharp.Gui.Screens {
 			RedrawText();
 		}
 		
+		public override bool HandlesKeyDown(Key key) { return true; }
+		
 		protected void CloseOverlay() {
 			Dispose();
 			

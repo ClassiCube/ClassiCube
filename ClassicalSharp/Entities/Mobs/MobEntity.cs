@@ -9,7 +9,7 @@ namespace ClassicalSharp.Entities.Mobs {
 		LocalInterpComponent interp;
 		CollisionsComponent collisions;
 		PhysicsComponent physics;
-		static HacksComponent hacks = new HacksComponent(null, null);
+		static HacksComponent hacks = new HacksComponent(null);
 		
 		AI ai;
 		int climbCooldown;

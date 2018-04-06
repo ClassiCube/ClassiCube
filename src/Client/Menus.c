@@ -155,6 +155,9 @@ Int32 Menu_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------ListScreen-------------------------------------------------------*
+*#########################################################################################################################*/
 GuiElementVTABLE ListScreen_VTABLE;
 ListScreen ListScreen_Instance;
 STRING_REF String ListScreen_UNSAFE_Get(ListScreen* screen, UInt32 index) {
@@ -314,6 +317,9 @@ Screen* ListScreen_MakeInstance(void) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------MenuScreen-------------------------------------------------------*
+*#########################################################################################################################*/
 GuiElementVTABLE MenuScreen_VTABLE;
 Int32 MenuScreen_Index(MenuScreen* screen, Widget* w) {
 	Int32 i;
@@ -332,11 +338,15 @@ bool MenuScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	return Menu_HandleMouseMove(screen->WidgetsPtr, screen->WidgetsCount, x, y) >= 0;
 }
+bool MenuScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+bool MenuScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
 
-bool MenuScreen_TrueMouse(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
-bool MenuScreen_TrueMouseScroll(GuiElement* elem, Real32 delta) { return true; }
-bool MenuScreen_TrueKeyPress(GuiElement* elem, UInt8 key)       { return true; }
-bool MenuScreen_TrueKey(GuiElement* elem, Key key)              { return true; }
+bool MenuScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	if (key == Key_Escape) { Gui_SetNewScreen(NULL); }
+	return key < Key_F1 || key > Key_F35;
+}
+bool MenuScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) { return true; }
+bool MenuScreen_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
 
 void MenuScreen_ContextLost(void* obj) {
 	MenuScreen* screen = (MenuScreen*)obj;
@@ -387,18 +397,18 @@ void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, 
 	screen->VTABLE = &MenuScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
 
-	screen->VTABLE->HandlesKeyDown     = MenuScreen_TrueKey;
-	screen->VTABLE->HandlesKeyUp       = MenuScreen_TrueKey;
-	screen->VTABLE->HandlesKeyPress    = MenuScreen_TrueKeyPress;
+	screen->VTABLE->HandlesKeyDown     = MenuScreen_HandlesKeyDown;
+	screen->VTABLE->HandlesKeyUp       = MenuScreen_HandlesKeyUp;
+	screen->VTABLE->HandlesKeyPress    = MenuScreen_HandlesKeyPress;
 	screen->VTABLE->HandlesMouseDown   = MenuScreen_HandlesMouseDown;
-	screen->VTABLE->HandlesMouseUp     = MenuScreen_TrueMouse;
+	screen->VTABLE->HandlesMouseUp     = MenuScreen_HandlesMouseMove;
 	screen->VTABLE->HandlesMouseMove   = MenuScreen_HandlesMouseMove;
-	screen->VTABLE->HandlesMouseScroll = MenuScreen_TrueMouseScroll;
+	screen->VTABLE->HandlesMouseScroll = MenuScreen_HandlesMouseScroll;
 
-	screen->OnResize        = MenuScreen_OnResize;
-	screen->VTABLE->Init    = MenuScreen_Init;
-	screen->VTABLE->Render  = MenuScreen_Render;
-	screen->VTABLE->Free    = MenuScreen_Free;
+	screen->OnResize       = MenuScreen_OnResize;
+	screen->VTABLE->Init   = MenuScreen_Init;
+	screen->VTABLE->Render = MenuScreen_Render;
+	screen->VTABLE->Free   = MenuScreen_Free;
 
 	screen->HandlesAllInput  = true;
 	screen->WidgetsPtr       = widgets;
@@ -407,9 +417,11 @@ void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, 
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------PauseScreen-------------------------------------------------------*
+*#########################################################################################################################*/
 GuiElementVTABLE PauseScreen_VTABLE;
 PauseScreen PauseScreen_Instance;
-
 void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
 	String text = String_FromRaw(title, UInt16_MaxValue);
 	ButtonWidget* btn = &screen->Buttons[i];
@@ -498,11 +510,6 @@ void PauseScreen_Free(GuiElement* elem) {
 	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
 }
 
-bool PauseScreen_HandlesKeyDown(GuiElement* elem, Key key) {
-	if (key == Key_Escape) { Gui_SetNewScreen(NULL); }
-	return key < Key_F1 || key > Key_F35;
-}
-
 Screen* PauseScreen_MakeInstance(void) {
 	PauseScreen* screen = &PauseScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), PauseScreen_ContextRecreated);
@@ -511,11 +518,13 @@ Screen* PauseScreen_MakeInstance(void) {
 
 	screen->VTABLE->Init           = PauseScreen_Init;
 	screen->VTABLE->Free           = PauseScreen_Free;
-	screen->VTABLE->HandlesKeyDown = PauseScreen_HandlesKeyDown;
 	return screen;
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------OptionsGroupScreen-----------------------------------------------------*
+*#########################################################################################################################*/
 GuiElementVTABLE OptionsGroupScreen_VTABLE;
 OptionsGroupScreen OptionsGroupScreen_Instance;
 const UInt8* optsGroup_descs[7] = {
@@ -612,9 +621,38 @@ Screen* OptionsGroupScreen_MakeInstance(void) {
 	screen->VTABLE->Init = OptionsGroupScreen_Init;
 	screen->VTABLE->Free = OptionsGroupScreen_Free;
 	screen->VTABLE->HandlesMouseMove = OptionsGroupScreen_HandlesMouseMove;
-	/* Pause screen key down behaviour is same for options group screen*/
-	screen->VTABLE->HandlesKeyDown = PauseScreen_HandlesKeyDown;
 
 	screen->SelectedI = -1;
 	return screen;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------DeathScreen--------------------------------------------------------*
+*#########################################################################################################################*/
+
+void DeathScreen_Gen(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(GenLevelScreen_MakeInstance()); }
+void DeathScreen_Load(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(LoadLevelScreen_MakeInstance()); }
+
+void DeathScreen_Init(GuiElement* elem) {
+	base.Init();
+	titleFont = new Font(game.FontName, 16, FontStyle.Bold);
+	regularFont = new Font(game.FontName, 40);
+	ContextRecreated();
+}
+
+public override bool HandlesKeyDown(Key key) { return true; }
+
+void DeathScreen_ContextRecreated(void* obj) {
+	string score = game.Chat.Status1.Text;
+	widgets = new Widget[]{
+		TextWidget.Create(game, "Game over!", regularFont)
+		.SetLocation(Anchor.Centre, Anchor.Centre, 0, -150),
+		TextWidget.Create(game, score, titleFont)
+		.SetLocation(Anchor.Centre, Anchor.Centre, 0, -75),
+		ButtonWidget.Create(game, 400, "Generate new level...", titleFont, GenLevelClick)
+		.SetLocation(Anchor.Centre, Anchor.Centre, 0, 25),
+		ButtonWidget.Create(game, 400, "Load level...", titleFont, LoadLevelClick)
+		.SetLocation(Anchor.Centre, Anchor.Centre, 0, 75),
+	};
 }

@@ -18,7 +18,7 @@ namespace ClassicalSharp.Map {
 		const byte TC_STRING = 0x74, TC_ARRAY = 0x75;
 		const byte TC_ENDBLOCKDATA = 0x78;
 		
-		BinaryReader reader;		
+		BinaryReader reader;
 		public byte[] Load(Stream stream, Game game, out int width, out int height, out int length) {
 			byte[] map = null;
 			width = 0;
@@ -31,10 +31,14 @@ namespace ClassicalSharp.Map {
 			
 			using (DeflateStream gs = new DeflateStream(stream, CompressionMode.Decompress)) {
 				reader = new BinaryReader(gs);
+				if (ReadInt32() != 0x271BB788 || reader.ReadByte() != 0x02) {
+					throw new InvalidDataException("Unexpected constant in .dat file");
+				}
+				
 				ClassDescription obj = ReadData();
 				for (int i = 0; i < obj.Fields.Length; i++) {
 					FieldDescription field = obj.Fields[i];
-					if (field.FieldName == "width") 
+					if (field.FieldName == "width")
 						width = (int)field.Value;
 					else if (field.FieldName == "height")
 						length = (int)field.Value;
@@ -54,11 +58,6 @@ namespace ClassicalSharp.Map {
 		}
 		
 		ClassDescription ReadData() {
-			if (ReadInt32() != 0x271BB788 || reader.ReadByte() != 0x02) {
-				throw new InvalidDataException("Unexpected constant in .lvl file");
-			}
-			
-			// Java serialization constants
 			if ((ushort)ReadInt16() != 0xACED || ReadInt16() != 0x0005) {
 				throw new InvalidDataException("Unexpected java serialisation constant(s).");
 			}
@@ -68,7 +67,7 @@ namespace ClassicalSharp.Map {
 			ClassDescription desc = ReadClassDescription();
 			ReadClassData(desc.Fields);
 			return desc;
-		}	
+		}
 		
 		void ReadClassData(FieldDescription[] fields) {
 			for (int i = 0; i < fields.Length; i++) {
@@ -103,7 +102,7 @@ namespace ClassicalSharp.Map {
 						ReadArray(ref fields[i]); break;
 				}
 			}
-		}	
+		}
 		
 		void ReadArray(ref FieldDescription field) {
 			byte typeCode = reader.ReadByte();
@@ -117,7 +116,7 @@ namespace ClassicalSharp.Map {
 		ClassDescription ReadClassDescription() {
 			ClassDescription desc = default(ClassDescription);
 			byte typeCode = reader.ReadByte();
-			if (typeCode == TC_NULL) return desc;			
+			if (typeCode == TC_NULL) return desc;
 			if (typeCode != TC_CLASSDESC) ParseError(TC_CLASSDESC, typeCode);
 			
 			desc.ClassName = ReadString();
