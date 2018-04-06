@@ -35,13 +35,28 @@ typedef struct ListScreen_ {
 } ListScreen;
 
 typedef void (*Menu_ContextRecreated)(GuiElement* elem);
-typedef struct MenuScreen_ {
-	Screen_Layout
-	Widget** WidgetsPtr;
-	Int32 WidgetsCount;
-	FontDesc TitleFont, RegularFont;
-	Menu_ContextRecreated ContextRecreated;
-} MenuScreen;
+#define MenuScreen_Layout \
+Screen_Layout \
+Widget** WidgetsPtr; \
+Int32 WidgetsCount; \
+FontDesc TitleFont, RegularFont; \
+Menu_ContextRecreated ContextRecreated;
+
+typedef struct MenuScreen_ { MenuScreen_Layout } MenuScreen;
+
+typedef struct PauseScreen_ {
+	MenuScreen_Layout
+	Widget* Widgets[8];
+	ButtonWidget Buttons[8];
+} PauseScreen;
+
+typedef struct OptionsGroupScreen_ {
+	MenuScreen_Layout
+	Widget* Widgets[9];
+	ButtonWidget Buttons[8];
+	TextWidget Desc;
+	Int32 SelectedI;
+} OptionsGroupScreen;
 
 
 void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
@@ -391,11 +406,6 @@ void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, 
 	screen->ContextRecreated = contextRecreated;
 }
 
-typedef struct PauseScreen_ {
-	MenuScreen Base;
-	Widget* Widgets[8];
-	ButtonWidget Buttons[8];
-} PauseScreen;
 
 GuiElementVTABLE PauseScreen_VTABLE;
 PauseScreen PauseScreen_Instance;
@@ -403,14 +413,14 @@ PauseScreen PauseScreen_Instance;
 void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
 	String text = String_FromRaw(title, UInt16_MaxValue);
 	ButtonWidget* btn = &screen->Buttons[i];
-	ButtonWidget_Create(btn, &text, 300, &screen->Base.TitleFont, onClick);
+	ButtonWidget_Create(btn, &text, 300, &screen->TitleFont, onClick);
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
 void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
 	String text = String_FromRaw(title, UInt16_MaxValue);
 	ButtonWidget* btn = &screen->Buttons[i];
-	ButtonWidget_Create(btn, &text, 400, &screen->Base.TitleFont, onClick);
+	ButtonWidget_Create(btn, &text, 400, &screen->TitleFont, onClick);
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
@@ -437,7 +447,7 @@ void PauseScreen_ContextRecreated(void* obj) {
 	for (i = 0; i < Array_Elems(screen->Buttons); i++) {
 		screen->Widgets[i] = &screen->Buttons[i];
 	}
-	FontDesc* font = &screen->Base.TitleFont;
+	FontDesc* font = &screen->TitleFont;
 
 	if (Game_UseClassicOptions) {
 		PauseScreen_MakeClassic(screen, 0, -100, "Options...",            PauseScreen_ClassicOptions);
@@ -477,9 +487,9 @@ void PauseScreen_ContextRecreated(void* obj) {
 void PauseScreen_Init(GuiElement* elem) {
 	PauseScreen* screen = (PauseScreen*)elem;
 	MenuScreen_Init(elem);
-	Platform_MakeFont(&screen->Base.TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+	Platform_MakeFont(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
 	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
-	PauseScreen_ContextRecreated(screen);
+	screen->ContextRecreated(elem);
 }
 
 void PauseScreen_Free(GuiElement* elem) {
@@ -495,112 +505,20 @@ bool PauseScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 
 Screen* PauseScreen_MakeInstance(void) {
 	PauseScreen* screen = &PauseScreen_Instance;
-	MenuScreen_MakeInstance(&screen->Base, screen->Widgets, Array_Elems(screen->Widgets), PauseScreen_ContextRecreated);
-	PauseScreen_VTABLE = *screen->Base.VTABLE;
-	screen->Base.VTABLE = &PauseScreen_VTABLE;
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), PauseScreen_ContextRecreated);
+	PauseScreen_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &PauseScreen_VTABLE;
 
-	screen->Base.VTABLE->Init           = PauseScreen_Init;
-	screen->Base.VTABLE->Free           = PauseScreen_Free;
-	screen->Base.VTABLE->HandlesKeyDown = PauseScreen_HandlesKeyDown;
+	screen->VTABLE->Init           = PauseScreen_Init;
+	screen->VTABLE->Free           = PauseScreen_Free;
+	screen->VTABLE->HandlesKeyDown = PauseScreen_HandlesKeyDown;
 	return screen;
 }
 
-
-typedef struct OptionsGroupScreen_ {
-	MenuScreen Base;
-	Widget* Widgets[9];
-	ButtonWidget Buttons[8];
-	TextWidget Desc;
-	Int32 SelectedI;
-} OptionsGroupScreen;
 
 GuiElementVTABLE OptionsGroupScreen_VTABLE;
 OptionsGroupScreen OptionsGroupScreen_Instance;
-Screen* OptionsGroupScreen_MakeInstance(void) {
-	OptionsGroupScreen* screen = &OptionsGroupScreen_Instance;
-	MenuScreen_MakeInstance(&screen->Base, screen->Widgets, Array_Elems(screen->Widgets), OptionsGroupScreen_ContextRecreated);
-	OptionsGroupScreen_VTABLE = *screen->Base.VTABLE;
-	screen->Base.VTABLE = &OptionsGroupScreen_VTABLE;
-
-	screen->Base.VTABLE->Init = OptionsGroupScreen_Init;
-	screen->Base.VTABLE->Free = OptionsGroupScreen_Free;
-	screen->Base.VTABLE->HandlesMouseMove = OptionsGroupScreen_HandlesMouseMove;
-	/* Pause screen key down behaviour is same for options group screen*/
-	screen->Base.VTABLE->HandlesKeyDown = PauseScreen_HandlesKeyDown;
-
-	screen->SelectedI = -1;
-	return screen;
-}
-
-
-void OptionsGroupScreen_Init(GuiElement* elem) {
-	MenuScreen_Init(elem);
-	game.Events.HackPermissionsChanged += CheckHacksAllowed;
-	titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-	regularFont = new Font(game.FontName, 16);
-	ContextRecreated();
-}
-
-void OptionsGroupScreen_ContextRecreated(void* obj) {
-	OptionsGroupScreen* screen = (OptionsGroupScreen*)obj;
-	widgets = new Widget[]{
-		Make(-1, -100, "Misc options...",      SwitchMiscOptions),
-		Make(-1,  -50, "Gui options...",       SwitchGuiOptions),
-		Make(-1,    0, "Graphics options...",  SwitchGfxOptions),
-		Make(-1,   50, "Controls...",          SwitchControls),
-		Make(1,  -50, "Hacks settings...",    SwitchHacksOptions),
-		Make(1,    0, "Env settings...",      SwitchEnvOptions),
-		Make(1,   50, "Nostalgia options...", SwitchNostalgiaOptions),
-		MakeBack(false, titleFont, SwitchPause),
-		null, // description text widget placeholder
-	};
-
-	if (screen->SelectedI >= 0) {
-		MakeDescWidget(descriptions[selectedI]);
-	}
-	CheckHacksAllowed(null, null);
-}
-
-	static void SwitchMiscOptions(Game g, Widget w) { g.Gui.SetNewScreen(new MiscOptionsScreen(g)); }
-	static void SwitchGuiOptions(Game g, Widget w) { g.Gui.SetNewScreen(new GuiOptionsScreen(g)); }
-	static void SwitchGfxOptions(Game g, Widget w) { g.Gui.SetNewScreen(new GraphicsOptionsScreen(g)); }
-	static void SwitchControls(Game g, Widget w) { g.Gui.SetNewScreen(new NormalKeyBindingsScreen(g)); }
-	static void SwitchHacksOptions(Game g, Widget w) { g.Gui.SetNewScreen(new HacksSettingsScreen(g)); }
-	static void SwitchEnvOptions(Game g, Widget w) { g.Gui.SetNewScreen(new EnvSettingsScreen(g)); }
-	static void SwitchNostalgiaOptions(Game g, Widget w) { g.Gui.SetNewScreen(new NostalgiaScreen(g)); }
-
-	void CheckHacksAllowed(object sender, EventArgs e) {
-		widgets[5].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // env settings
-	}
-
-	void MakeDescWidget(string text) {
-		widgets[widgets.Length - 1] = TextWidget.Create(game, text, regularFont)
-			.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
-	}
-
-	ButtonWidget Make(int dir, int y, string text, ClickHandler onClick) {
-		return ButtonWidget.Create(game, 300, text, titleFont, onClick)
-			.SetLocation(Anchor.Centre, Anchor.Centre, dir * 160, y);
-	}
-
-	bool OptionsGroupScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
-		int i = HandleMouseMove(widgets, mouseX, mouseY);
-		if (i == -1 || i == selectedI) return true;
-		if (i >= Array_Elems(OptionsGroupScreen_descs))  return true;
-
-		selectedI = i;
-		Widget desc = widgets[widgets.Length - 1];
-		if (desc != null) desc.Dispose();
-		MakeDescWidget(descriptions[i]);
-		return true;
-	}
-
-void OptionsGroupScreen_Free(GuiElement* elem) {
-	MenuScreen_Free(elem);
-	game.Events.HackPermissionsChanged -= CheckHacksAllowed;
-}
-
-const UInt8* OptionsGroupScreen_descs[7] = {
+const UInt8* optsGroup_descs[7] = {
 	"&eMusic/Sound, view bobbing, and more",
 	"&eChat options, gui scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
@@ -609,3 +527,94 @@ const UInt8* OptionsGroupScreen_descs[7] = {
 	"&eEnv colours, water level, weather, and more",
 	"&eSettings for resembling the original classic",
 };
+
+void OptionsGroupScreen_CheckHacksAllowed(void* obj) {
+	OptionsGroupScreen* screen = (OptionsGroupScreen*)obj;
+	screen->Buttons[5].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
+}
+
+void OptionsGroupScreen_Make(OptionsGroupScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
+	String text = String_FromRaw(title, UInt16_MaxValue);
+	ButtonWidget* btn = &screen->Buttons[i];
+	ButtonWidget_Create(btn, &text, 300, &screen->TitleFont, onClick);
+	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
+}
+
+void OptionsGroupScreen_MakeDesc(OptionsGroupScreen* screen) {
+	String text = String_FromRaw(optsGroup_descs[screen->SelectedI], UInt16_MaxValue);
+	screen->Widgets[8] = &screen->Desc;
+	TextWidget_Create(&screen->Desc, &text, &screen->RegularFont);
+	Widget_SetLocation((Widget*)(&screen->Desc), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+}
+
+void OptionsGroupScreen_Misc(GuiElement* a, GuiElement* b)      { Gui_SetNewScreen(MiscOptionsScreen_MakeInstance()); }
+void OptionsGroupScreen_Gui(GuiElement* a, GuiElement* b)       { Gui_SetNewScreen(GuiOptionsScreen_MakeInstance()); }
+void OptionsGroupScreen_Gfx(GuiElement* a, GuiElement* b)       { Gui_SetNewScreen(GraphicsOptionsScreen_MakeInstance()); }
+void OptionsGroupScreen_Controls(GuiElement* a, GuiElement* b)  { Gui_SetNewScreen(NormalKeyBindingsScreen_MakeInstance()); }
+void OptionsGroupScreen_Hacks(GuiElement* a, GuiElement* b)     { Gui_SetNewScreen(HacksSettingsScreen_MakeInstance()); }
+void OptionsGroupScreen_Env(GuiElement* a, GuiElement* b)       { Gui_SetNewScreen(EnvSettingsScreen_MakeInstance()); }
+void OptionsGroupScreen_Nostalgia(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(NostalgiaScreen_MakeInstance()); }
+
+void OptionsGroupScreen_ContextRecreated(void* obj) {
+	OptionsGroupScreen* screen = (OptionsGroupScreen*)obj;
+	Int32 i;
+	for (i = 0; i < Array_Elems(screen->Buttons); i++) {
+		screen->Widgets[i] = &screen->Buttons[i];
+	}
+	screen->Widgets[8] = NULL;  /* Description text widget placeholder */
+
+	OptionsGroupScreen_Make(screen, 0, -1, -100, "Misc options...",      OptionsGroupScreen_Misc);
+	OptionsGroupScreen_Make(screen, 1, -1,  -50, "Gui options...",       OptionsGroupScreen_Gui);
+	OptionsGroupScreen_Make(screen, 2, -1,    0, "Graphics options...",  OptionsGroupScreen_Gfx);
+	OptionsGroupScreen_Make(screen, 3, -1,   50, "Controls...",          OptionsGroupScreen_Controls);
+	OptionsGroupScreen_Make(screen, 4,  1,  -50, "Hacks settings...",    OptionsGroupScreen_Hacks);
+	OptionsGroupScreen_Make(screen, 5,  1,    0, "Env settings...",      OptionsGroupScreen_Env);
+	OptionsGroupScreen_Make(screen, 6,  1,   50, "Nostalgia options...", OptionsGroupScreen_Nostalgia);
+	Menu_MakeDefaultBack(&screen->Buttons[7], false, &screen->TitleFont, Menu_SwitchPause);
+
+	if (screen->SelectedI >= 0) { OptionsGroupScreen_MakeDesc(screen); }
+	OptionsGroupScreen_CheckHacksAllowed(obj);
+}
+
+void OptionsGroupScreen_Init(GuiElement* elem) {
+	OptionsGroupScreen* screen = (OptionsGroupScreen*)elem;
+	MenuScreen_Init(elem);
+	Platform_MakeFont(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+	Platform_MakeFont(&screen->RegularFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, OptionsGroupScreen_CheckHacksAllowed);
+	screen->ContextRecreated(elem);
+}
+
+void OptionsGroupScreen_Free(GuiElement* elem) {
+	OptionsGroupScreen* screen = (OptionsGroupScreen*)elem;
+	MenuScreen_Free(elem);
+	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, screen, OptionsGroupScreen_CheckHacksAllowed);
+}
+
+bool OptionsGroupScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+	OptionsGroupScreen* screen = (OptionsGroupScreen*)elem;
+	Int32 i = Menu_HandleMouseMove(screen->WidgetsPtr, screen->WidgetsCount, x, y);
+	if (i == -1 || i == screen->SelectedI) return true;
+	if (i >= Array_Elems(optsGroup_descs)) return true;
+
+	screen->SelectedI = i;
+	Elem_Free(&screen->Desc);
+	OptionsGroupScreen_MakeDesc(screen);
+	return true;
+}
+
+Screen* OptionsGroupScreen_MakeInstance(void) {
+	OptionsGroupScreen* screen = &OptionsGroupScreen_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), OptionsGroupScreen_ContextRecreated);
+	OptionsGroupScreen_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &OptionsGroupScreen_VTABLE;
+
+	screen->VTABLE->Init = OptionsGroupScreen_Init;
+	screen->VTABLE->Free = OptionsGroupScreen_Free;
+	screen->VTABLE->HandlesMouseMove = OptionsGroupScreen_HandlesMouseMove;
+	/* Pause screen key down behaviour is same for options group screen*/
+	screen->VTABLE->HandlesKeyDown = PauseScreen_HandlesKeyDown;
+
+	screen->SelectedI = -1;
+	return screen;
+}

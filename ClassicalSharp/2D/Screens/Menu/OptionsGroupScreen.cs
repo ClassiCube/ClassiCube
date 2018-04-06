@@ -33,9 +33,7 @@ namespace ClassicalSharp.Gui.Screens {
 				null, // description text widget placeholder
 			};
 			
-			if (selectedI >= 0) {
-				MakeDescWidget(descriptions[selectedI]);
-			}
+			if (selectedI >= 0) MakeDesc();
 			CheckHacksAllowed(null, null);
 		}
 		
@@ -51,7 +49,8 @@ namespace ClassicalSharp.Gui.Screens {
 			widgets[5].Disabled = !game.LocalPlayer.Hacks.CanAnyHacks; // env settings
 		}
 		
-		void MakeDescWidget(string text) {
+		void MakeDesc() {
+			string text = descriptions[selectedI];
 			widgets[widgets.Length - 1] = TextWidget.Create(game, text, regularFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
 		}
@@ -76,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 			selectedI = i;
 			Widget desc = widgets[widgets.Length - 1];
 			if (desc != null) desc.Dispose();
-			MakeDescWidget(descriptions[i]);
+			MakeDesc();
 			return true;
 		}
 		

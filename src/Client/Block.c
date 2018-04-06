@@ -448,7 +448,7 @@ BlockID AutoRotate_RotateVertical(BlockID block, String* name, Vector3 offset) {
 
 BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
 	/* Fence type blocks */
-	if (AutoRotate_Find(BLOCK_INVALID, name, "-UD") == BLOCK_INVALID) {
+	if (AutoRotate_Find(BLOCK_AIR, name, "-UD") == BLOCK_AIR) {
 		Real32 headY = LocalPlayer_Instance.Base.HeadY;
 		headY = LocationUpdate_Clamp(headY);
 
@@ -575,7 +575,7 @@ UInt8 DefaultSet_StepSound(BlockID b) {
 }
 
 UInt8 DefaultSet_Draw(BlockID b) {
-	if (b == BLOCK_AIR || b == BLOCK_INVALID) return DRAW_GAS;
+	if (b == BLOCK_AIR) return DRAW_GAS;
 	if (b == BLOCK_LEAVES) return DRAW_TRANSPARENT_THICK;
 
 	if (b == BLOCK_ICE || b == BLOCK_WATER || b == BLOCK_STILL_WATER)
