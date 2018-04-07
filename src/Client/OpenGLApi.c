@@ -506,8 +506,7 @@ bool Gfx_WarnIfNecessary(void) {
 		Chat_AddRaw(tmp3, "&cIt is likely you need to install video card drivers.");
 	}
 
-	UInt8* rendererRaw = glGetString(GL_RENDERER);
-	String renderer = String_FromRaw(rendererRaw, UInt16_MaxValue);
+	String renderer = String_FromReadonly(glGetString(GL_RENDERER));
 	String intel = String_FromConst("Intel");
 	if (!String_ContainsString(&renderer, &intel)) return false;
 

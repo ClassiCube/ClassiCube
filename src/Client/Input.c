@@ -263,7 +263,7 @@ bool Hotkeys_IsHotkey(Key key, STRING_TRANSIENT String* text, bool* moreInput) {
 	UInt8 flags = 0;
 	if (Key_IsControlPressed()) flags |= HOTKEYS_FLAG_CTRL;
 	if (Key_IsShiftPressed())   flags |= HOTKEYS_FLAG_SHIFT;
-	if (Key_IsAltPressed())     flags |= HOTKEYS_FLAT_ALT;
+	if (Key_IsAltPressed())     flags |= HOTKEYS_FLAG_ALT;
 
 	String_Clear(text);
 	*moreInput = false;

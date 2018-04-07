@@ -20,12 +20,10 @@ namespace ClassicalSharp.Gui.Screens {
 		protected ClickHandler leftPage, rightPage;
 		
 		public override void Init() {
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16);
-			base.Init();
-			
-			if (keyNames == null)
+			base.Init();			
+			if (keyNames == null) {
 				keyNames = Enum.GetNames(typeof(Key));
+			}
 		}
 
 		protected void MakeWidgets(int y, int arrowsY) {

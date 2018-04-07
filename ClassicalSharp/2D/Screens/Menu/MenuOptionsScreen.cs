@@ -35,8 +35,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16);
 			game.Keyboard.KeyRepeat = true;
 		}
 		
@@ -143,7 +141,7 @@ namespace ClassicalSharp.Gui.Screens {
 		const int extHelpY = 100;
 		
 		void MakeExtendedHelp(string[] desc) {
-			extendedHelp = new TextGroupWidget(game, desc.Length, regularFont, null)
+			extendedHelp = new TextGroupWidget(game, desc.Length, textFont, null)
 				.SetLocation(Anchor.Min, Anchor.Min, 0, 0);
 			extendedHelp.Init();
 			for (int i = 0; i < desc.Length; i++)
@@ -185,7 +183,7 @@ namespace ClassicalSharp.Gui.Screens {
 			activeButton = button;
 			InputClosed();
 			
-			input = MenuInputWidget.Create(game, 400, 30, button.GetValue(game), regularFont, validator)
+			input = MenuInputWidget.Create(game, 400, 30, button.GetValue(game), textFont, validator)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 110);
 			input.ShowCaret = true;
 			

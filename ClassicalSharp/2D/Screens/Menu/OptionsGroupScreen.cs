@@ -15,8 +15,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16);
 			ContextRecreated();
 		}
 		
@@ -51,7 +49,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDesc() {
 			string text = descriptions[selectedI];
-			widgets[widgets.Length - 1] = TextWidget.Create(game, text, regularFont)
+			widgets[widgets.Length - 1] = TextWidget.Create(game, text, textFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
 		}
 		

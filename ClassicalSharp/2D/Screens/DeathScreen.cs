@@ -11,16 +11,15 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
+			textFont = new Font(game.FontName, 40);
 			base.Init();
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 40);
 			ContextRecreated();
 		}
 		
 		protected override void ContextRecreated() {
 			string score = game.Chat.Status1.Text;
 			widgets = new Widget[] {
-				TextWidget.Create(game, "Game over!", regularFont)
+				TextWidget.Create(game, "Game over!", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -150),
 				TextWidget.Create(game, score, titleFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -75),

@@ -40,7 +40,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, -100, "Use CPE",              onClick, GetCPE,    SetCPE),
 				MakeOpt(1, -50, "Use server textures",   onClick, GetTexs,   SetTexs),
 
-				TextWidget.Create(game, "&eButtons on the right require restarting game", regularFont)
+				TextWidget.Create(game, "&eButtons on the right require restarting game", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100),
 				MakeBack(false, titleFont, SwitchBack),
 				null, null,

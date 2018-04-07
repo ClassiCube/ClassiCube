@@ -30,8 +30,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			game.Keyboard.KeyRepeat = true;
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16);
 			ContextRecreated();
 		}
 		
@@ -44,7 +42,7 @@ namespace ClassicalSharp.Gui.Screens {
 				
 				MakeLabel(-150, -80, "Width:"), MakeLabel(-150, -40, "Height:"),
 				MakeLabel(-150, 0, "Length:"), MakeLabel(-140, 40, "Seed:"),
-				TextWidget.Create(game, "Generate new level", regularFont)
+				TextWidget.Create(game, "Generate new level", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -130),
 				
 				ButtonWidget.Create(game, 200, "Flatgrass", titleFont, GenFlatgrassClick)
@@ -58,7 +56,7 @@ namespace ClassicalSharp.Gui.Screens {
 		InputWidget MakeInput(int y, bool seed, string value) {
 			MenuInputValidator validator = seed ? new SeedValidator() : new IntegerValidator(1, 8192);
 			InputWidget input = MenuInputWidget.Create(game, 200, 30, value,
-			                                                regularFont, validator)
+			                                                textFont, validator)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, y);
 			
 			input.Active = false;
@@ -67,7 +65,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		TextWidget MakeLabel(int x, int y, string text) {
-			TextWidget label = TextWidget.Create(game, text, regularFont)
+			TextWidget label = TextWidget.Create(game, text, textFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 			
 			label.XOffset = -110 - label.Width / 2;
@@ -135,21 +133,21 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16);
 			ContextRecreated();
 		}
 		
 		protected override void ContextRecreated() {
 			widgets = new Widget[] {
-				ButtonWidget.Create(game, 400, "Small", titleFont, GenSmallClick)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -100),
-				ButtonWidget.Create(game, 400, "Normal", titleFont, GenMediumClick)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -50),
-				ButtonWidget.Create(game, 400, "Huge", titleFont, GenHugeClick)
-					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 0),
+				Make(-100, "Small",  GenSmallClick),
+				Make( -50, "Normal", GenMediumClick),
+				Make(   0, "Huge",   GenHugeClick),
 				MakeBack(false, titleFont, SwitchPause),
 			};
+		}
+		
+		ButtonWidget Make(int y, string text, ClickHandler onClick) {
+			return ButtonWidget.Create(game, 400, text, titleFont, onClick)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, y);
 		}
 		
 		void GenSmallClick(Game game, Widget widget) { DoGen(128); }		

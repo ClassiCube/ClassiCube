@@ -17,12 +17,11 @@ namespace ClassicalSharp.Gui.Screens {
 		int dynamicVb;
 		
 		public override void Init() {
+			textFont = new Font(game.FontName, 8);
 			base.Init();
 			if (vertices == null) {
 				vertices = new VertexP3fT2fC4b[verticesCount];
 			}
-			regularFont.Dispose();
-			regularFont = new Font(game.FontName, 8);
 			ContextRecreated();
 		}
 		
@@ -55,7 +54,7 @@ namespace ClassicalSharp.Gui.Screens {
 			base.ContextRecreated();
 			dynamicVb = game.Graphics.CreateDynamicVb(VertexFormat.P3fT2fC4b, verticesCount);
 			idAtlas = new TextAtlas(game, 16);
-			idAtlas.Pack("0123456789", regularFont, "f");
+			idAtlas.Pack("0123456789", textFont, "f");
 			UpdateTileSize();
 		}
 		

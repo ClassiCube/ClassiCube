@@ -51,8 +51,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			game.Keyboard.KeyRepeat = true;
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16);
 			ContextRecreated();
 		}
 		
@@ -63,18 +61,18 @@ namespace ClassicalSharp.Gui.Screens {
 			bool existed = origHotkey.BaseKey != Key.Unknown;
 			
 			InputWidget input;
-			input = MenuInputWidget.Create(game, 500, 30, curHotkey.Text, regularFont, new StringValidator())
+			input = MenuInputWidget.Create(game, 500, 30, curHotkey.Text, textFont, new StringValidator())
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -35);
 			input.ShowCaret = true;
 			
 			widgets = new Widget[] {
-				Make(0, -150, "Key: " + curHotkey.BaseKey, 300, titleFont, BaseKeyClick),
-				Make(0, -100, "Modifiers:" + flags, 300, titleFont, ModifiersClick),			
+				Make(0, -150, "Key: " + curHotkey.BaseKey, BaseKeyClick),
+				Make(0, -100, "Modifiers:" + flags, ModifiersClick),
 				input,
-				Make(-100, 10, "Input stays open: " + staysOpen, 300, titleFont, LeaveOpenClick),
+				Make(-100, 10, "Input stays open: " + staysOpen, LeaveOpenClick),
 				
-				Make(0, 80, existed ? "Save changes" : "Add hotkey", 300, titleFont, SaveChangesClick),
-				Make(0, 130, existed ? "Remove hotkey" : "Cancel", 300, titleFont, RemoveHotkeyClick),				
+				Make(0, 80, existed ? "Save changes" : "Add hotkey", SaveChangesClick),
+				Make(0, 130, existed ? "Remove hotkey" : "Cancel", RemoveHotkeyClick),
 				MakeBack(false, titleFont, SwitchPause),
 			};
 		}
@@ -85,8 +83,8 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		ButtonWidget Make(int x, int y, string text, int width, Font font, ClickHandler onClick) {
-			return ButtonWidget.Create(game, width, text, font, onClick)
+		ButtonWidget Make(int x, int y, string text, ClickHandler onClick) {
+			return ButtonWidget.Create(game, 300, text, titleFont, onClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
 		}
 		

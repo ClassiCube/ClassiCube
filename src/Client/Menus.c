@@ -39,7 +39,7 @@ typedef void (*Menu_ContextRecreated)(GuiElement* elem);
 Screen_Layout \
 Widget** WidgetsPtr; \
 Int32 WidgetsCount; \
-FontDesc TitleFont, RegularFont; \
+FontDesc TitleFont, TextFont; \
 Menu_ContextRecreated ContextRecreated;
 
 typedef struct MenuScreen_ { MenuScreen_Layout } MenuScreen;
@@ -57,6 +57,23 @@ typedef struct OptionsGroupScreen_ {
 	TextWidget Desc;
 	Int32 SelectedI;
 } OptionsGroupScreen;
+
+typedef struct DeathScreen_ {
+	MenuScreen_Layout
+	Widget* Widgets[4];
+	TextWidget Title, Score;
+	ButtonWidget Gen, Load;
+} DeathScreen;
+
+typedef struct EditHotkeyScreen_ {
+	MenuScreen_Layout
+	HotkeyData CurHotkey, OrigHotkey;
+	Int32 SelectedI;
+	bool SupressNextPress;
+	MenuInputWidget Input;
+	ButtonWidget Buttons[6];
+	Widget* Widgets[7];
+} EditHotkeyScreen;
 
 
 void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
@@ -338,7 +355,7 @@ bool MenuScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	return Menu_HandleMouseMove(screen->WidgetsPtr, screen->WidgetsCount, x, y) >= 0;
 }
-bool MenuScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+bool MenuScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
 bool MenuScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
 
 bool MenuScreen_HandlesKeyDown(GuiElement* elem, Key key) {
@@ -360,6 +377,14 @@ void MenuScreen_ContextRecreated(void* obj) {
 
 void MenuScreen_Init(GuiElement* elem) {
 	MenuScreen* screen = (MenuScreen*)elem;
+
+	if (screen->TitleFont.Handle == NULL) {
+		Platform_MakeFont(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+	}
+	if (screen->TextFont.Handle == NULL) {
+		Platform_MakeFont(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	}
+
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated);
 }
@@ -379,8 +404,8 @@ void MenuScreen_Free(GuiElement* elem) {
 	if (screen->TitleFont.Handle != NULL) {
 		Platform_FreeFont(&screen->TitleFont);
 	}
-	if (screen->RegularFont.Handle != NULL) {
-		Platform_FreeFont(&screen->RegularFont);
+	if (screen->TextFont.Handle != NULL) {
+		Platform_FreeFont(&screen->TextFont);
 	}
 
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost);
@@ -401,7 +426,7 @@ void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, 
 	screen->VTABLE->HandlesKeyUp       = MenuScreen_HandlesKeyUp;
 	screen->VTABLE->HandlesKeyPress    = MenuScreen_HandlesKeyPress;
 	screen->VTABLE->HandlesMouseDown   = MenuScreen_HandlesMouseDown;
-	screen->VTABLE->HandlesMouseUp     = MenuScreen_HandlesMouseMove;
+	screen->VTABLE->HandlesMouseUp     = MenuScreen_HandlesMouseUp;
 	screen->VTABLE->HandlesMouseMove   = MenuScreen_HandlesMouseMove;
 	screen->VTABLE->HandlesMouseScroll = MenuScreen_HandlesMouseScroll;
 
@@ -422,16 +447,20 @@ void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, 
 *#########################################################################################################################*/
 GuiElementVTABLE PauseScreen_VTABLE;
 PauseScreen PauseScreen_Instance;
-void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
-	String text = String_FromRaw(title, UInt16_MaxValue);
+void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
+	screen->Widgets[i] = (Widget*)btn;
+
+	String text = String_FromReadonly(title);
 	ButtonWidget_Create(btn, &text, 300, &screen->TitleFont, onClick);
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
-void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
-	String text = String_FromRaw(title, UInt16_MaxValue);
+void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
+	screen->Widgets[i] = (Widget*)btn;
+
+	String text = String_FromReadonly(title);
 	ButtonWidget_Create(btn, &text, 400, &screen->TitleFont, onClick);
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
@@ -445,7 +474,7 @@ void PauseScreen_Hotkeys(GuiElement* a, GuiElement* b)          { Gui_SetNewScre
 void PauseScreen_NostalgiaOptions(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(NostalgiaScreen_MakeInstance()); }
 void PauseScreen_Game(GuiElement* a, GuiElement* b)             { Gui_SetNewScreen(NULL); }
 void PauseScreen_ClassicOptions(GuiElement* a, GuiElement* b)   { Gui_SetNewScreen(ClassicOptionsScreen_MakeInstance()); }
-void PauseScreen_QuitGame(GuiElement* a, GuiElement* b) { Window_Close(); }
+void PauseScreen_Quit(GuiElement* a, GuiElement* b) { Window_Close(); }
 
 void PauseScreen_CheckHacksAllowed(void* obj) {
 	if (Game_UseClassicOptions) return;
@@ -455,10 +484,6 @@ void PauseScreen_CheckHacksAllowed(void* obj) {
 
 void PauseScreen_ContextRecreated(void* obj) {
 	PauseScreen* screen = (PauseScreen*)obj;
-	Int32 i;
-	for (i = 0; i < Array_Elems(screen->Buttons); i++) {
-		screen->Widgets[i] = &screen->Buttons[i];
-	}
 	FontDesc* font = &screen->TitleFont;
 
 	if (Game_UseClassicOptions) {
@@ -469,7 +494,8 @@ void PauseScreen_ContextRecreated(void* obj) {
 		PauseScreen_MakeClassic(screen, 4,  150, "Nostalgia options...",  PauseScreen_NostalgiaOptions);
 
 		String back = String_FromConst("Back to game");
-		Menu_MakeBack(&screen->Buttons[5], 400, &back, 25, font, PauseScreen_QuitGame);
+		screen->Widgets[5] = (Widget*)(&screen->Buttons[5]);
+		Menu_MakeBack(&screen->Buttons[5], 400, &back, 25, font, PauseScreen_Game);	
 
 		/* Disable nostalgia options in classic mode*/
 		if (Game_ClassicMode) { screen->Widgets[4] = NULL; }
@@ -484,9 +510,12 @@ void PauseScreen_ContextRecreated(void* obj) {
 		PauseScreen_Make(screen, 5, -1,  50, "Hotkeys...",             PauseScreen_Hotkeys);
 
 		String quitMsg = String_FromConst("Quit game");
-		ButtonWidget_Create(&screen->Buttons[6], &quitMsg, 120, font, PauseScreen_QuitGame);
-		Widget_SetLocation((Widget*)(&screen->Buttons[6]), ANCHOR_MAX, ANCHOR_MAX, 5, 5);
-		Menu_MakeDefaultBack(&screen->Buttons[7], true, font, PauseScreen_QuitGame);
+		screen->Widgets[6] = (Widget*)(&screen->Buttons[6]);
+		ButtonWidget_Create(&screen->Buttons[6], &quitMsg, 120, font, PauseScreen_Quit);		
+		Widget_SetLocation(screen->Widgets[6], ANCHOR_MAX, ANCHOR_MAX, 5, 5);
+
+		screen->Widgets[7] = (Widget*)(&screen->Buttons[7]);
+		Menu_MakeDefaultBack(&screen->Buttons[7], true, font, PauseScreen_Game);
 	}
 
 	if (!ServerConnection_IsSinglePlayer) {
@@ -499,7 +528,6 @@ void PauseScreen_ContextRecreated(void* obj) {
 void PauseScreen_Init(GuiElement* elem) {
 	PauseScreen* screen = (PauseScreen*)elem;
 	MenuScreen_Init(elem);
-	Platform_MakeFont(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
 	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
 	screen->ContextRecreated(elem);
 }
@@ -518,7 +546,7 @@ Screen* PauseScreen_MakeInstance(void) {
 
 	screen->VTABLE->Init           = PauseScreen_Init;
 	screen->VTABLE->Free           = PauseScreen_Free;
-	return screen;
+	return (Screen*)screen;
 }
 
 
@@ -542,17 +570,19 @@ void OptionsGroupScreen_CheckHacksAllowed(void* obj) {
 	screen->Buttons[5].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
 }
 
-void OptionsGroupScreen_Make(OptionsGroupScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
-	String text = String_FromRaw(title, UInt16_MaxValue);
+void OptionsGroupScreen_Make(OptionsGroupScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
+	screen->Widgets[i] = (Widget*)btn;
+
+	String text = String_FromReadonly(title);
 	ButtonWidget_Create(btn, &text, 300, &screen->TitleFont, onClick);
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
 void OptionsGroupScreen_MakeDesc(OptionsGroupScreen* screen) {
-	String text = String_FromRaw(optsGroup_descs[screen->SelectedI], UInt16_MaxValue);
-	screen->Widgets[8] = &screen->Desc;
-	TextWidget_Create(&screen->Desc, &text, &screen->RegularFont);
+	screen->Widgets[8] = (Widget*)(&screen->Desc);
+	String text = String_FromReadonly(optsGroup_descs[screen->SelectedI]);
+	TextWidget_Create(&screen->Desc, &text, &screen->TextFont);
 	Widget_SetLocation((Widget*)(&screen->Desc), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
@@ -566,11 +596,6 @@ void OptionsGroupScreen_Nostalgia(GuiElement* a, GuiElement* b) { Gui_SetNewScre
 
 void OptionsGroupScreen_ContextRecreated(void* obj) {
 	OptionsGroupScreen* screen = (OptionsGroupScreen*)obj;
-	Int32 i;
-	for (i = 0; i < Array_Elems(screen->Buttons); i++) {
-		screen->Widgets[i] = &screen->Buttons[i];
-	}
-	screen->Widgets[8] = NULL;  /* Description text widget placeholder */
 
 	OptionsGroupScreen_Make(screen, 0, -1, -100, "Misc options...",      OptionsGroupScreen_Misc);
 	OptionsGroupScreen_Make(screen, 1, -1,  -50, "Gui options...",       OptionsGroupScreen_Gui);
@@ -579,7 +604,10 @@ void OptionsGroupScreen_ContextRecreated(void* obj) {
 	OptionsGroupScreen_Make(screen, 4,  1,  -50, "Hacks settings...",    OptionsGroupScreen_Hacks);
 	OptionsGroupScreen_Make(screen, 5,  1,    0, "Env settings...",      OptionsGroupScreen_Env);
 	OptionsGroupScreen_Make(screen, 6,  1,   50, "Nostalgia options...", OptionsGroupScreen_Nostalgia);
-	Menu_MakeDefaultBack(&screen->Buttons[7], false, &screen->TitleFont, Menu_SwitchPause);
+
+	screen->Widgets[7] = (Widget*)(&screen->Buttons[7]);
+	Menu_MakeDefaultBack(&screen->Buttons[7], false, &screen->TitleFont, Menu_SwitchPause);	
+	screen->Widgets[8] = NULL; /* Description text widget placeholder */
 
 	if (screen->SelectedI >= 0) { OptionsGroupScreen_MakeDesc(screen); }
 	OptionsGroupScreen_CheckHacksAllowed(obj);
@@ -588,8 +616,6 @@ void OptionsGroupScreen_ContextRecreated(void* obj) {
 void OptionsGroupScreen_Init(GuiElement* elem) {
 	OptionsGroupScreen* screen = (OptionsGroupScreen*)elem;
 	MenuScreen_Init(elem);
-	Platform_MakeFont(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
-	Platform_MakeFont(&screen->RegularFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, OptionsGroupScreen_CheckHacksAllowed);
 	screen->ContextRecreated(elem);
 }
@@ -623,36 +649,271 @@ Screen* OptionsGroupScreen_MakeInstance(void) {
 	screen->VTABLE->HandlesMouseMove = OptionsGroupScreen_HandlesMouseMove;
 
 	screen->SelectedI = -1;
-	return screen;
+	return (Screen*)screen;
 }
 
 
 /*########################################################################################################################*
 *------------------------------------------------------DeathScreen--------------------------------------------------------*
 *#########################################################################################################################*/
-
-void DeathScreen_Gen(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(GenLevelScreen_MakeInstance()); }
+GuiElementVTABLE DeathScreen_VTABLE;
+DeathScreen DeathScreen_Instance;
+void DeathScreen_Gen(GuiElement* a, GuiElement* b)  { Gui_SetNewScreen(GenLevelScreen_MakeInstance()); }
 void DeathScreen_Load(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(LoadLevelScreen_MakeInstance()); }
 
 void DeathScreen_Init(GuiElement* elem) {
-	base.Init();
-	titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-	regularFont = new Font(game.FontName, 40);
-	ContextRecreated();
+	DeathScreen* screen = (DeathScreen*)elem;
+	Platform_MakeFont(&screen->TextFont, &Game_FontName, 40, FONT_STYLE_NORMAL);
+	MenuScreen_Init(elem);
+	screen->ContextRecreated(elem);
 }
 
-public override bool HandlesKeyDown(Key key) { return true; }
+bool DeathScreen_HandlesKeyDown(GuiElement* elem, Key key) { return true; }
 
 void DeathScreen_ContextRecreated(void* obj) {
-	string score = game.Chat.Status1.Text;
-	widgets = new Widget[]{
-		TextWidget.Create(game, "Game over!", regularFont)
-		.SetLocation(Anchor.Centre, Anchor.Centre, 0, -150),
-		TextWidget.Create(game, score, titleFont)
-		.SetLocation(Anchor.Centre, Anchor.Centre, 0, -75),
-		ButtonWidget.Create(game, 400, "Generate new level...", titleFont, GenLevelClick)
-		.SetLocation(Anchor.Centre, Anchor.Centre, 0, 25),
-		ButtonWidget.Create(game, 400, "Load level...", titleFont, LoadLevelClick)
-		.SetLocation(Anchor.Centre, Anchor.Centre, 0, 75),
-	};
+	DeathScreen* screen = (DeathScreen*)obj;
+
+	String title = String_FromConst("Game over!");
+	screen->Widgets[0] = (Widget*)(&screen->Title);
+	TextWidget_Create(&screen->Title, &title, &screen->TextFont);
+	Widget_SetLocation(screen->Widgets[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -150);
+
+	String score = String_FromRawArray(Chat_Status[1].Buffer);
+	screen->Widgets[1] = (Widget*)(&screen->Score);
+	TextWidget_Create(&screen->Score, &score, &screen->TitleFont);
+	Widget_SetLocation(screen->Widgets[1], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -75);
+
+	String gen = String_FromConst("Generate new level...")
+	screen->Widgets[2] = (Widget*)(&screen->Gen);
+	ButtonWidget_Create(&screen->Gen, &gen, 400, &screen->TitleFont, DeathScreen_Gen);
+	Widget_SetLocation(screen->Widgets[2], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 25);
+
+	String load = String_FromConst("Load level...");
+	screen->Widgets[3] = (Widget*)(&screen->Load);
+	ButtonWidget_Create(&screen->Load, &load, 400, &screen->TitleFont, DeathScreen_Load);
+	Widget_SetLocation(screen->Widgets[3], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 75);
+}
+
+Screen* DeathScreen_MakeInstance(void) {
+	DeathScreen* screen = &DeathScreen_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), DeathScreen_ContextRecreated);
+	DeathScreen_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &DeathScreen_VTABLE;
+
+	screen->VTABLE->Init           = DeathScreen_Init;
+	screen->VTABLE->HandlesKeyDown = DeathScreen_HandlesKeyDown;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------EditHotkeyScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+GuiElementVTABLE EditHotkeyScreen_VTABLE;
+EditHotkeyScreen EditHotkeyScreen_Instance;
+void EditHotkeyScreen_Make(EditHotkeyScreen* screen, Int32 i, Int32 x, Int32 y, STRING_PURE String* text, Widget_LeftClick onClick) {
+	ButtonWidget* btn = &screen->Buttons[i];
+	screen->Widgets[i] = (Widget*)btn;
+
+	ButtonWidget_Create(btn, text, 300, &screen->TitleFont, onClick);
+	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
+}
+
+void EditHotkeyScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str) {
+	if (flags == 0) String_AppendConst(str, " None");
+	if (flags & HOTKEYS_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
+	if (flags & HOTKEYS_FLAG_SHIFT) String_AppendConst(str, " Shift");
+	if (flags & HOTKEYS_FLAG_ALT)   String_AppendConst(str, " Alt");
+}
+
+void EditHotkeyScreen_MakeBaseKey(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	String text = String_InitAndClearArray(textBuffer);
+
+	String_AppendConst(&text, "Key: ");
+	String_AppendConst(&text, Key_Names[screen->CurHotkey.BaseKey]);
+	EditHotkeyScreen_Make(screen, 0, 0, -150, &text, onClick);
+}
+
+void EditHotkeyScreen_MakeModifiers(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	String text = String_InitAndClearArray(textBuffer);
+
+	String_AppendConst(&text, "Modifiers:");
+	EditHotkeyScreen_MakeFlags(screen->CurHotkey.Flags, &text);
+	EditHotkeyScreen_Make(screen, 1, 0, -100, &text, onClick);
+}
+
+void EditHotkeyScreen_MakeLeaveOpen(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	String text = String_InitAndClearArray(textBuffer);
+
+	String_AppendConst(&text, "Input stays open: ");
+	String_AppendConst(&text, screen->CurHotkey.StaysOpen ? "ON" : "OFF");
+	EditHotkeyScreen_Make(screen, 2, -100, 10, &text, onClick);
+}
+
+void EditHotkeyScreen_LeaveOpen(GuiElement* elem, GuiElement* widget) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
+	/* Reset 'waiting for key..' state of two other buttons */
+	if (screen->SelectedI == 0) {
+		EditHotkeyScreen_MakeBaseKey(screen, EditHotkeyScreen_BaseKey);
+		screen->SupressNextPress = false;
+	} else if (screen->SelectedI == 1) {
+		EditHotkeyScreen_MakeModifiers(screen, EditHotkeyScreen_Modifiers);
+		screen->SupressNextPress = false;
+	}
+
+	screen->SelectedI = -1;
+	screen->CurHotkey.StaysOpen = !screen->CurHotkey.StaysOpen;
+	EditHotkeyScreen_MakeLeaveOpen(screen, EditHotkeyScreen_LeaveOpen);
+}
+
+void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
+	HotkeyData hotkey = screen->OrigHotkey;
+	if (hotkey.BaseKey != Key_Unknown) {
+		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
+		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
+	}
+
+	hotkey = screen->CurHotkey;
+	if (hotkey.BaseKey != Key_Unknown) {
+		String text = screen->Input.Base.Text;
+		Hotkeys_Add(hotkey.BaseKey, hotkey.Flags, &text, hotkey.StaysOpen);
+		Hotkeys_UserAddedHotkey(hotkey.BaseKey, hotkey.Flags, hotkey.StaysOpen, &text);
+	}
+	Gui_SetNewScreen(HotkeyListScreen_MakeInstance());
+}
+
+void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
+	HotkeyData hotkey = screen->OrigHotkey;
+	if (hotkey.BaseKey != Key_Unknown) {
+		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
+		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
+	}
+	Gui_SetNewScreen(HotkeyListScreen_MakeInstance());
+}
+
+void EditHotkeyScreen_BaseKey(GuiElement* elem, GuiElement* widget) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
+	screen->SelectedI = 0;
+	screen->SupressNextPress = true;
+	String msg = String_FromConst("Key: press a key..");
+	ButtonWidget_SetText(&screen->Buttons[0], &msg);
+}
+
+void EditHotkeyScreen_Modifiers(GuiElement* elem, GuiElement* widget) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
+	screen->SelectedI = 1;
+	screen->SupressNextPress = true;
+	String msg = String_FromConst("Modifiers: press a key..");
+	ButtonWidget_SetText(&screen->Buttons[1], &msg);
+}
+
+void EditHotkeyScreen_Init(GuiElement* elem) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)screen;
+	MenuScreen_Init(elem);
+	Key_KeyRepeat = true;
+	screen->ContextRecreated(elem);
+}
+
+void EditHotkeyScreen_Render(GuiElement* elem, Real64 delta) {
+	MenuScreen_Render(elem, delta);
+	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
+	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
+	GfxCommon_Draw2DFlat(cX - 250, cY - 65, 500, 2, grey);
+	GfxCommon_Draw2DFlat(cX - 250, cY + 45, 500, 2, grey);
+}
+
+void EditHotkeyScreen_Free(GuiElement* elem) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
+	Key_KeyRepeat = false;
+	screen->SelectedI = -1;
+	MenuScreen_Free(elem);
+}
+
+bool EditHotkeyScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)screen;
+	if (screen->SupressNextPress) {
+		screen->SupressNextPress = false;
+		return true;
+	}
+	return Elem_HandlesKeyPress(&screen->Input.Base, key);
+}
+
+bool EditHotkeyScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)screen;
+	if (screen->SelectedI >= 0) {
+		if (screen->SelectedI == 0) {
+			screen->CurHotkey.BaseKey = key;
+			EditHotkeyScreen_MakeBaseKey(screen, EditHotkeyScreen_BaseKey);
+		} else if (screen->SelectedI == 1) {
+			if      (key == Key_ControlLeft || key == Key_ControlRight) screen->CurHotkey.Flags |= HOTKEYS_FLAG_CTRL;
+			else if (key == Key_ShiftLeft   || key == Key_ShiftRight)   screen->CurHotkey.Flags |= HOTKEYS_FLAG_SHIFT;
+			else if (key == Key_AltLeft     || key == Key_AltRight)     screen->CurHotkey.Flags |= HOTKEYS_FLAG_ALT;
+			else screen->CurHotkey.Flags = 0;
+
+			EditHotkeyScreen_MakeModifiers(screen, EditHotkeyScreen_Modifiers);
+		}
+
+		screen->SupressNextPress = true;
+		screen->SelectedI = -1;
+		return true;
+	}
+	return Elem_HandlesKeyDown(&screen->Input.Base, key) || MenuScreen_HandlesKeyDown(elem, key);
+}
+
+bool EditHotkeyScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)screen;
+	return Elem_HandlesKeyUp(&screen->Input.Base, key);
+}
+
+void EditHotkeyScreen_ContextRecreated(void* obj) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)obj;
+	MenuInputValidator validator = MenuInputValidator_String();
+	String text = String_MakeNull();
+
+	bool existed = screen->OrigHotkey.BaseKey != Key_Unknown;
+	if (existed) {
+		text = StringsBuffer_UNSAFE_Get(&HotkeysText, screen->OrigHotkey.TextIndex);
+	}
+
+	EditHotkeyScreen_MakeBaseKey(screen, EditHotkeyScreen_BaseKey);
+	EditHotkeyScreen_MakeModifiers(screen, EditHotkeyScreen_Modifiers);
+	EditHotkeyScreen_MakeLeaveOpen(screen, EditHotkeyScreen_LeaveOpen);
+
+	String addText = String_FromReadonly(existed ? "Save changes" : "Add hotkey");
+	EditHotkeyScreen_Make(screen, 3, 0, 80, &addText, EditHotkeyScreen_SaveChanges);
+	String remText = String_FromReadonly(existed ? "Remove hotkey" : "Cancel");
+	EditHotkeyScreen_Make(screen, 4, 0, 130, &remText, EditHotkeyScreen_RemoveHotkey);
+
+	screen->Widgets[5] = (Widget*)(&screen->Buttons[5]);
+	Menu_MakeDefaultBack(&screen->Buttons[5], false, &screen->TitleFont, Menu_SwitchPause);
+
+	screen->Widgets[6] = (Widget*)(&screen->Input);
+	MenuInputWidget_Create(&screen->Input, 500, 30, &text, &screen->TextFont, &validator);
+	Widget_SetLocation(screen->Widgets[6], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -35);
+	screen->Input.Base.ShowCaret = true;
+}
+
+Screen* EditHotkeyScreen_MakeInstance(HotkeyData original) {
+	EditHotkeyScreen* screen = &EditHotkeyScreen_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), DeathScreen_ContextRecreated);
+	EditHotkeyScreen_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &EditHotkeyScreen_VTABLE;
+
+	screen->VTABLE->Init   = EditHotkeyScreen_Init;
+	screen->VTABLE->Render = EditHotkeyScreen_Render;
+	screen->VTABLE->Free   = EditHotkeyScreen_Free;
+
+	screen->VTABLE->HandlesKeyPress = EditHotkeyScreen_HandlesKeyPress;
+	screen->VTABLE->HandlesKeyDown  = EditHotkeyScreen_HandlesKeyDown;
+	screen->VTABLE->HandlesKeyUp    = EditHotkeyScreen_HandlesKeyUp;
+	
+	screen->SelectedI  = -1;
+	screen->OrigHotkey = original;
+	screen->CurHotkey  = original;
+	return (Screen*)screen;
 }

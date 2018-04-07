@@ -16,10 +16,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public Overlay(Game game) : base(game) { }
 		
 		public override void Init() {
-			base.Init();
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16);
-			
+			base.Init();		
 			if (game.Graphics.LostContext) return;
 			MakeButtons();
 			RedrawText();
@@ -73,7 +70,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			for (int i = 1; i < 4; i++) {
 				if (lines[i] == null) continue;
-				labels[i] = TextWidget.Create(game, lines[i], regularFont)
+				labels[i] = TextWidget.Create(game, lines[i], textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -70 + 20 * i);
 				labels[i].Colour = new FastColour(224, 224, 224);
 			}

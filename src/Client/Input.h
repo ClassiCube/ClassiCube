@@ -129,7 +129,7 @@ HotkeyData HotkeysList[HOTKEYS_MAX_COUNT];
 StringsBuffer HotkeysText;
 #define HOTKEYS_FLAG_CTRL  1
 #define HOTKEYS_FLAG_SHIFT 2
-#define HOTKEYS_FLAT_ALT   4
+#define HOTKEYS_FLAG_ALT   4
 
 void Hotkeys_Add(Key baseKey, UInt8 flags, STRING_PURE String* text, bool more);
 bool Hotkeys_Remove(Key baseKey, UInt8 flags);

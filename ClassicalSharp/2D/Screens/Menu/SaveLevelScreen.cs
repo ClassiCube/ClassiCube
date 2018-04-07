@@ -49,8 +49,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			game.Keyboard.KeyRepeat = true;
-			titleFont = new Font(game.FontName, 16, FontStyle.Bold);
-			regularFont = new Font(game.FontName, 16);
 			ContextRecreated();
 		}
 		
@@ -60,7 +58,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			input = MenuInputWidget.Create(game, 500, 30, "", regularFont, new PathValidator())
+			input = MenuInputWidget.Create(game, 500, 30, "", textFont, new PathValidator())
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);
 			input.ShowCaret = true;
 			
@@ -69,7 +67,7 @@ namespace ClassicalSharp.Gui.Screens {
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 20),
 				ButtonWidget.Create(game, 200, "Save schematic", titleFont, SaveSchematic)
 					.SetLocation(Anchor.Centre, Anchor.Centre, -150, 120),
-				TextWidget.Create(game, "&eCan be imported into MCEdit", regularFont)
+				TextWidget.Create(game, "&eCan be imported into MCEdit", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 110, 120),				
 				MakeBack(false, titleFont, SwitchPause),
 				input,
@@ -143,7 +141,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescWidget(string text) {
 			DisposeDescWidget();
-			desc = TextWidget.Create(game, text, regularFont)
+			desc = TextWidget.Create(game, text, textFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 65);
 		}
 		

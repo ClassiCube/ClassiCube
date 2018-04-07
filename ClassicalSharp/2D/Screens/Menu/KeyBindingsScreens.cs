@@ -163,7 +163,7 @@ namespace ClassicalSharp.Gui.Screens {
 			widgets = new Widget[binds.Length + 5];
 			MakeWidgets(-40, 10);
 			
-			widgets[index++] = TextWidget.Create(game, "&eRight click to remove the key binding", regularFont)
+			widgets[index++] = TextWidget.Create(game, "&eRight click to remove the key binding", textFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100);
 		}
 	}

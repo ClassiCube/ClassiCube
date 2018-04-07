@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 			HandlesAllInput = true;
 		}
 		protected Widget[] widgets;
-		protected Font titleFont, regularFont;
+		protected Font titleFont, textFont;
 
 		protected int IndexOfWidget(Widget w) {
 			for (int i = 0; i < widgets.Length; i++) {
@@ -28,6 +28,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Init() {
+			if (titleFont == null) titleFont = new Font(game.FontName, 16, FontStyle.Bold);
+			if (textFont == null) textFont = new Font(game.FontName, 16);
+			
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -35,7 +38,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Dispose() {
 			ContextLost();
 			if (titleFont != null) titleFont.Dispose();
-			if (regularFont != null) regularFont.Dispose();
+			if (textFont != null) textFont.Dispose();
 			
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
