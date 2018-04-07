@@ -1,4 +1,4 @@
-﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Model;
 using ClassicalSharp.Physics;
@@ -164,6 +164,9 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Constant offset used to avoid floating point roundoff errors. </summary>
 		public const float Adjustment = 0.001f;
 		
+		/// <summary> The height of a human, used for physics adjustment. </summary>
+		const float humanHeight = 28.1f/16f;
+		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// given bounding box satisfy the given condition. </summary>
 		public bool TouchesAny(AABB bounds, Predicate<BlockID> condition) {
@@ -212,7 +215,7 @@ namespace ClassicalSharp.Entities {
 		static bool IsRope(BlockID b) { return BlockInfo.ExtendedCollide[b] == CollideType.ClimbRope; }
 	
 		
-		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 0/16f, 0.25f/16f);
+		static readonly Vector3 liqExpand = new Vector3(0.25f/16f, 1.5f/16f, 0.25f/16f);
 		
 		/// <summary> Determines whether any of the blocks that intersect the
 		/// bounding box of this entity are lava or still lava. </summary>
@@ -220,6 +223,11 @@ namespace ClassicalSharp.Entities {
 			// NOTE: Original classic client uses offset (so you can only climb up
 			// alternating liquid-solid elevators on two sides)
 			AABB bounds = Bounds.Offset(liqExpand);
+			if (this.Model.liquidOffset) {
+				float mAdj = bounds.Height / humanHeight;
+				bounds.Min.Y += (5f/16f * mAdj);
+				bounds.Max.Y -= (6f/16f * mAdj);
+			}
 			return TouchesAny(bounds, touchesAnyLava);
 		}
 		static Predicate<BlockID> touchesAnyLava = IsLava;
@@ -229,9 +237,31 @@ namespace ClassicalSharp.Entities {
 		/// bounding box of this entity are water or still water. </summary>
 		public bool TouchesAnyWater() {
 			AABB bounds = Bounds.Offset(liqExpand);
+			if (this.Model.liquidOffset) {
+				float mAdj = bounds.Height / humanHeight;
+				bounds.Min.Y += (5f/16f * mAdj);
+				bounds.Max.Y -= (6f/16f * mAdj);
+			}
 			return TouchesAny(bounds, touchesAnyWater);
 		}
 		static Predicate<BlockID> touchesAnyWater = IsWater;
 		static bool IsWater(BlockID b) { return BlockInfo.ExtendedCollide[b] == CollideType.LiquidWater; }
+		
+		/// <summary> Determines whether any of the blocks that intersect the
+		/// bounding box of this entity are liquid. </summary>
+		public bool touchesAnyLiq() {
+			AABB bounds = this.Bounds.Offset(liqExpand);
+			if (this.Model.liquidOffset) {
+				float mAdj = bounds.Height / humanHeight;
+				bounds.Min.Y += (5f/16f * mAdj);
+				bounds.Max.Y -= (6f/16f * mAdj);
+			}
+			
+			return TouchesAny(bounds, touchesLiquid);
+		}
+		
+		static Predicate<BlockID> touchesLiquid = IsLiquidCollide;
+		static bool IsLiquidCollide(BlockID block) { return BlockInfo.Collide[block] == CollideType.Liquid; }
+		
 	}
 }

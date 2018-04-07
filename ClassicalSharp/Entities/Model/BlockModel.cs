@@ -23,6 +23,7 @@ namespace ClassicalSharp.Model {
 			Bobbing = false;
 			UsesSkin = false;
 			Pushes = false;
+			liquidOffset = false;
 		}
 		
 		public override void CreateParts() { }

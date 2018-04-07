@@ -19,6 +19,7 @@ namespace ClassicalSharp.Model {
 		protected const int boxVertices = 6 * quadVertices;
 		protected RotateOrder Rotate = RotateOrder.ZYX;
 		internal bool initalised;
+		public bool liquidOffset = true;
 		
 		public const ushort UVMask   = 0x7FFF;
 		public const ushort UVMaxBit = 0x8000;
