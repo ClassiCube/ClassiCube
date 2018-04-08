@@ -37,8 +37,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Dispose() {
 			ContextLost();
-			if (titleFont != null) titleFont.Dispose();
-			if (textFont != null) textFont.Dispose();
+			if (titleFont != null) { titleFont.Dispose(); titleFont = null; }
+			if (textFont != null)  { textFont.Dispose(); textFont = null; }
 			
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;

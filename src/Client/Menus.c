@@ -482,7 +482,7 @@ void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8*
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
-void PauseScreen_GenLevel(GuiElement* a, GuiElement* b)         { Gui_SetNewScreen(GenLevelScree_MakeInstance()); }
+void PauseScreen_GenLevel(GuiElement* a, GuiElement* b)         { Gui_SetNewScreen(GenLevelScreen_MakeInstance()); }
 void PauseScreen_ClassicGenLevel(GuiElement* a, GuiElement* b)  { Gui_SetNewScreen(ClassicGenScreen_MakeInstance()); }
 void PauseScreen_LoadLevel(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(LoadLevelScreen_MakeInstance()); }
 void PauseScreen_SaveLevel(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(SaveLevelScreen_MakeInstance()); }
@@ -1080,12 +1080,12 @@ void GenLevelScreen_ContextRecreated(void* obj) {
 
 	String flatgrass = String_FromConst("Flatgrass");
 	screen->Widgets[9] = (Widget*)(&screen->Buttons[0]);
-	ButtonWidget_Create(&screen->Buttons[0], 200, &flatgrass, &screen->TitleFont, GenLevelScreen_Flatgrass);
+	ButtonWidget_Create(&screen->Buttons[0], &flatgrass, 200, &screen->TitleFont, GenLevelScreen_Flatgrass);
 	Widget_SetLocation(screen->Widgets[9], ANCHOR_CENTRE, ANCHOR_CENTRE, -120, 100);
 
 	String vanilla = String_FromConst("Vanilla");
 	screen->Widgets[10] = (Widget*)(&screen->Buttons[1]);
-	ButtonWidget_Create(&screen->Buttons[1], 200, &vanilla, &screen->TitleFont, GenLevelScreen_Notchy);
+	ButtonWidget_Create(&screen->Buttons[1], &vanilla, 200, &screen->TitleFont, GenLevelScreen_Notchy);
 	Widget_SetLocation(screen->Widgets[10], ANCHOR_CENTRE, ANCHOR_CENTRE, 120, 100);
 
 	screen->Widgets[11] = (Widget*)(&screen->Buttons[2]);
@@ -1148,7 +1148,7 @@ void ClassicGenScreen_ContextRecreated(void* obj) {
 }
 
 Screen* ClassicGenScreen_MakeInstance(void) {
-	ClassicGenScreen* screen = &EditHotkeyScreen_Instance;
+	ClassicGenScreen* screen = &ClassicGenScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, 
 		Array_Elems(screen->Widgets), ClassicGenScreen_ContextRecreated);
 	ClassicGenScreen_VTABLE = *screen->VTABLE;

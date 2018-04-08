@@ -302,16 +302,14 @@ Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 }
 
 
-#define Convert_ControlCharsCount 32
-UInt16 Convert_ControlChars[Convert_ControlCharsCount] = {
+UInt16 Convert_ControlChars[32] = {
 	0x0000, 0x263A, 0x263B, 0x2665, 0x2666, 0x2663, 0x2660, 0x2022,
 	0x25D8, 0x25CB, 0x25D9, 0x2642, 0x2640, 0x266A, 0x266B, 0x263C,
 	0x25BA, 0x25C4, 0x2195, 0x203C, 0x00B6, 0x00A7, 0x25AC, 0x21A8,
 	0x2191, 0x2193, 0x2192, 0x2190, 0x221F, 0x2194, 0x25B2, 0x25BC
 };
 
-#define Convert_ExtendedCharsCount 129
-UInt16 Convert_ExtendedChars[Convert_ExtendedCharsCount] = { 0x2302,
+UInt16 Convert_ExtendedChars[129] = { 0x2302,
 0x00C7, 0x00FC, 0x00E9, 0x00E2, 0x00E4, 0x00E0, 0x00E5, 0x00E7,
 0x00EA, 0x00EB, 0x00E8, 0x00EF, 0x00EE, 0x00EC, 0x00C4, 0x00C5,
 0x00C9, 0x00E6, 0x00C6, 0x00F4, 0x00F6, 0x00F2, 0x00FB, 0x00F9,
@@ -340,10 +338,10 @@ UInt8 Convert_UnicodeToCP437(UInt16 c) {
 	if (c >= 0x20 && c < 0x7F) return (UInt8)c;
 	UInt32 i;
 
-	for (i = 0; i < Convert_ControlCharsCount; i++) {
+	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
 		if (Convert_ControlChars[i] == c) return (UInt8)i;
 	}
-	for (i = 0; i < Convert_ExtendedCharsCount; i++) {
+	for (i = 0; i < Array_Elems(Convert_ExtendedChars); i++) {
 		if (Convert_ExtendedChars[i] == c) return (UInt8)(i + 0x7F);
 	}
 	return (UInt8)'?';
