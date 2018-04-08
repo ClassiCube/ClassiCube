@@ -66,7 +66,7 @@ namespace ClassicalSharp.Gui {
 		
 		public Widget(Game game) : base(game) { }
 		
-		public ClickHandler MenuClick;		
+		public ClickHandler MenuClick;
 		public bool Active, Disabled;
 		public int X, Y, Width, Height;
 		public Anchor HorizontalAnchor, VerticalAnchor;

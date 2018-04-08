@@ -98,8 +98,7 @@ void Window_SetHiddenBorder(bool hidden) {
 }
 
 void Window_EnableMouseTracking(void) {
-	TRACKMOUSEEVENT me;
-	Platform_MemSet(&me, 0, sizeof(TRACKMOUSEEVENT));
+	TRACKMOUSEEVENT me = { 0 };
 	me.cbSize = sizeof(TRACKMOUSEEVENT);
 	me.hwndTrack = win_Handle;
 	me.dwFlags = TME_LEAVE;

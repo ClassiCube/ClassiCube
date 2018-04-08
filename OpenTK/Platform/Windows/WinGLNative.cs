@@ -86,10 +86,7 @@ namespace OpenTK.Platform.Windows
 					// See http://msdn.microsoft.com/en-us/library/ms646274(VS.85).aspx (WM_ACTIVATE notification):
 					// wParam: The low-order word specifies whether the window is being activated or deactivated.
 					bool new_focused_state = Focused;
-					if (IntPtr.Size == 4)
-						focused = (wParam.ToInt32() & 0xFFFF) != 0;
-					else
-						focused = (wParam.ToInt64() & 0xFFFF) != 0;
+					focused = (wParam.ToInt64() & 0xFFFF) != 0;
 
 					if (new_focused_state != Focused && FocusedChanged != null)
 						FocusedChanged(this, EventArgs.Empty);
@@ -166,10 +163,7 @@ namespace OpenTK.Platform.Windows
 					#region Input events
 
 				case WindowMessage.CHAR:
-					if (IntPtr.Size == 4)
-						key_press.KeyChar = (char)wParam.ToInt32();
-					else
-						key_press.KeyChar = (char)wParam.ToInt64();
+					key_press.KeyChar = (char)wParam.ToInt64();
 
 					if (KeyPress != null)
 						KeyPress(this, key_press);
@@ -541,7 +535,7 @@ namespace OpenTK.Platform.Windows
 		public Size ClientSize {
 			get { return ClientRectangle.Size; }
 			set {
-				WindowStyle style = (WindowStyle)API.GetWindowLong_N(window.handle, GetWindowLongOffsets.STYLE);
+				WindowStyle style = (WindowStyle)API.GetWindowLong(window.handle, GetWindowLongOffsets.STYLE);
 				Win32Rectangle rect = Win32Rectangle.From(value);
 				API.AdjustWindowRect(ref rect, style, false);
 				Size = new Size(rect.Width, rect.Height);
@@ -670,7 +664,7 @@ namespace OpenTK.Platform.Windows
 				if( was_visible )
 					Visible = false;
 
-				API.SetWindowLong_N(window.handle, GetWindowLongOffsets.STYLE, (IntPtr)(int)style);
+				API.SetWindowLong(window.handle, GetWindowLongOffsets.STYLE, (int)style);
 				API.SetWindowPos(window.handle, IntPtr.Zero, 0, 0, rect.Width, rect.Height,
 				                 SetWindowPosFlags.NOMOVE | SetWindowPosFlags.NOZORDER |
 				                 SetWindowPosFlags.FRAMECHANGED);

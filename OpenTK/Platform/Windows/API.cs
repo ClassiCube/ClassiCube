@@ -40,27 +40,12 @@ namespace OpenTK.Platform.Windows {
 
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto), SuppressUnmanagedCodeSecurity]
 		internal static extern short UnregisterClass(IntPtr className, IntPtr instance);
-		
-		internal static IntPtr SetWindowLong_N(IntPtr handle, GetWindowLongOffsets item, IntPtr newValue) {
-			return IntPtr.Size == 4 ? (IntPtr)SetWindowLong(handle, item, newValue.ToInt32()) :
-				SetWindowLongPtr(handle, item, newValue);
-		}
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		static extern int SetWindowLong(IntPtr hWnd, GetWindowLongOffsets nIndex, int dwNewLong);
+		internal static extern int SetWindowLong(IntPtr hWnd, GetWindowLongOffsets nIndex, int dwNewLong);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		static extern IntPtr SetWindowLongPtr(IntPtr hWnd, GetWindowLongOffsets nIndex, IntPtr dwNewLong);
-
-		internal static UIntPtr GetWindowLong_N(IntPtr handle, GetWindowLongOffsets index) {
-			return IntPtr.Size == 4 ? (UIntPtr)GetWindowLong(handle, index) : GetWindowLongPtr(handle, index);
-		}
-
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		static extern uint GetWindowLong(IntPtr hWnd, GetWindowLongOffsets nIndex);
-
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		static extern UIntPtr GetWindowLongPtr(IntPtr hWnd, GetWindowLongOffsets nIndex);
+		internal static extern uint GetWindowLong(IntPtr hWnd, GetWindowLongOffsets nIndex);
 		
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern IntPtr GetForegroundWindow();

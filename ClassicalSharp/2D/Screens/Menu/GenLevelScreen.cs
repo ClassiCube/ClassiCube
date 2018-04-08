@@ -14,8 +14,7 @@ namespace ClassicalSharp.Gui.Screens {
 		MenuInputWidget selected;
 
 		public override bool HandlesKeyPress(char key) {
-			return selected == null ? true :
-				selected.HandlesKeyPress(key);
+			return selected == null || selected.HandlesKeyPress(key);
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
@@ -24,7 +23,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesKeyUp(Key key) {
-			return selected == null ? true : selected.HandlesKeyUp(key);
+			return selected == null || selected.HandlesKeyUp(key);
 		}
 		
 		public override void Init() {
@@ -40,8 +39,10 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeInput(0, false, game.World.Length.ToString()),
 				MakeInput(40, true, ""),
 				
-				MakeLabel(-150, -80, "Width:"), MakeLabel(-150, -40, "Height:"),
-				MakeLabel(-150, 0, "Length:"), MakeLabel(-140, 40, "Seed:"),
+				MakeLabel(-150, -80, "Width:"), 
+				MakeLabel(-150, -40, "Height:"),
+				MakeLabel(-150, 0, "Length:"), 
+				MakeLabel(-140, 40, "Seed:"),
 				TextWidget.Create(game, "Generate new level", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -130),
 				
@@ -55,11 +56,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		InputWidget MakeInput(int y, bool seed, string value) {
 			MenuInputValidator validator = seed ? new SeedValidator() : new IntegerValidator(1, 8192);
-			InputWidget input = MenuInputWidget.Create(game, 200, 30, value,
-			                                                textFont, validator)
+			InputWidget input = MenuInputWidget.Create(game, 200, 30, value, textFont, validator)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, y);
 			
-			input.Active = false;
 			input.MenuClick = InputClick;
 			return input;
 		}
@@ -112,9 +111,9 @@ namespace ClassicalSharp.Gui.Screens {
 		int GetInt(int index) {
 			MenuInputWidget input = (MenuInputWidget)widgets[index];
 			string text = input.Text.ToString();
-			if (!input.Validator.IsValidValue(text))
-				return 0;
-			return text == "" ? 0 : Int32.Parse(text);
+			
+			if (!input.Validator.IsValidValue(text)) return 0;
+			return Int32.Parse(text);
 		}
 		
 		int GetSeedInt(int index) {
@@ -122,9 +121,8 @@ namespace ClassicalSharp.Gui.Screens {
 			string text = input.Text.ToString();
 			if (text == "") return new Random().Next();
 			
-			if (!input.Validator.IsValidValue(text))
-				return 0;
-			return text == "" ? 0 : Int32.Parse(text);
+			if (!input.Validator.IsValidValue(text)) return 0;
+			return Int32.Parse(text);
 		}
 	}
 	

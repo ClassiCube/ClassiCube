@@ -753,6 +753,22 @@ void EditHotkeyScreen_MakeLeaveOpen(EditHotkeyScreen* screen, Widget_LeftClick o
 	EditHotkeyScreen_Make(screen, 2, -100, 10, &text, onClick);
 }
 
+void EditHotkeyScreen_BaseKey(GuiElement* elem, GuiElement* widget) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
+	screen->SelectedI = 0;
+	screen->SupressNextPress = true;
+	String msg = String_FromConst("Key: press a key..");
+	ButtonWidget_SetText(&screen->Buttons[0], &msg);
+}
+
+void EditHotkeyScreen_Modifiers(GuiElement* elem, GuiElement* widget) {
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
+	screen->SelectedI = 1;
+	screen->SupressNextPress = true;
+	String msg = String_FromConst("Modifiers: press a key..");
+	ButtonWidget_SetText(&screen->Buttons[1], &msg);
+}
+
 void EditHotkeyScreen_LeaveOpen(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	/* Reset 'waiting for key..' state of two other buttons */
@@ -796,24 +812,8 @@ void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
 	Gui_SetNewScreen(HotkeyListScreen_MakeInstance());
 }
 
-void EditHotkeyScreen_BaseKey(GuiElement* elem, GuiElement* widget) {
-	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
-	screen->SelectedI = 0;
-	screen->SupressNextPress = true;
-	String msg = String_FromConst("Key: press a key..");
-	ButtonWidget_SetText(&screen->Buttons[0], &msg);
-}
-
-void EditHotkeyScreen_Modifiers(GuiElement* elem, GuiElement* widget) {
-	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
-	screen->SelectedI = 1;
-	screen->SupressNextPress = true;
-	String msg = String_FromConst("Modifiers: press a key..");
-	ButtonWidget_SetText(&screen->Buttons[1], &msg);
-}
-
 void EditHotkeyScreen_Init(GuiElement* elem) {
-	EditHotkeyScreen* screen = (EditHotkeyScreen*)screen;
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
 	screen->ContextRecreated(elem);
@@ -835,7 +835,7 @@ void EditHotkeyScreen_Free(GuiElement* elem) {
 }
 
 bool EditHotkeyScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
-	EditHotkeyScreen* screen = (EditHotkeyScreen*)screen;
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	if (screen->SupressNextPress) {
 		screen->SupressNextPress = false;
 		return true;
@@ -844,7 +844,7 @@ bool EditHotkeyScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 }
 
 bool EditHotkeyScreen_HandlesKeyDown(GuiElement* elem, Key key) {
-	EditHotkeyScreen* screen = (EditHotkeyScreen*)screen;
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	if (screen->SelectedI >= 0) {
 		if (screen->SelectedI == 0) {
 			screen->CurHotkey.BaseKey = key;
@@ -866,7 +866,7 @@ bool EditHotkeyScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 }
 
 bool EditHotkeyScreen_HandlesKeyUp(GuiElement* elem, Key key) {
-	EditHotkeyScreen* screen = (EditHotkeyScreen*)screen;
+	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	return Elem_HandlesKeyUp(&screen->Input.Base, key);
 }
 
