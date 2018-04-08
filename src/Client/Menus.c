@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "AsyncDownloader.h"
 #include "Block.h"
+#include "Random.h"
 
 #define FILES_SCREEN_ITEMS 5
 #define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
@@ -67,13 +68,19 @@ typedef struct DeathScreen_ {
 
 typedef struct EditHotkeyScreen_ {
 	MenuScreen_Layout
+	Widget* Widgets[7];
 	HotkeyData CurHotkey, OrigHotkey;
 	Int32 SelectedI;
 	bool SupressNextPress;
 	MenuInputWidget Input;
 	ButtonWidget Buttons[6];
-	Widget* Widgets[7];
 } EditHotkeyScreen;
+
+typedef struct ClassicGenScreen_ {
+	MenuScreen_Layout
+	Widget* Widgets[4];
+	ButtonWidget Buttons[4];
+} ClassicGenScreen;
 
 
 void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
@@ -466,7 +473,7 @@ void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8*
 }
 
 void PauseScreen_GenLevel(GuiElement* a, GuiElement* b)         { Gui_SetNewScreen(GenLevelScree_MakeInstance()); }
-void PauseScreen_ClassicGenLevel(GuiElement* a, GuiElement* b)  { Gui_SetNewScreen(ClassicGenLevelScreen_MakeInstance()); }
+void PauseScreen_ClassicGenLevel(GuiElement* a, GuiElement* b)  { Gui_SetNewScreen(ClassicGenScreen_MakeInstance()); }
 void PauseScreen_LoadLevel(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(LoadLevelScreen_MakeInstance()); }
 void PauseScreen_SaveLevel(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(SaveLevelScreen_MakeInstance()); }
 void PauseScreen_TexPack(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(TexturePackScreen_MakeInstance()); }
@@ -540,7 +547,8 @@ void PauseScreen_Free(GuiElement* elem) {
 
 Screen* PauseScreen_MakeInstance(void) {
 	PauseScreen* screen = &PauseScreen_Instance;
-	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), PauseScreen_ContextRecreated);
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, 
+		Array_Elems(screen->Widgets), PauseScreen_ContextRecreated);
 	PauseScreen_VTABLE = *screen->VTABLE;
 	screen->VTABLE = &PauseScreen_VTABLE;
 
@@ -640,7 +648,8 @@ bool OptionsGroupScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 
 Screen* OptionsGroupScreen_MakeInstance(void) {
 	OptionsGroupScreen* screen = &OptionsGroupScreen_Instance;
-	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), OptionsGroupScreen_ContextRecreated);
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, 
+		Array_Elems(screen->Widgets), OptionsGroupScreen_ContextRecreated);
 	OptionsGroupScreen_VTABLE = *screen->VTABLE;
 	screen->VTABLE = &OptionsGroupScreen_VTABLE;
 
@@ -696,7 +705,8 @@ void DeathScreen_ContextRecreated(void* obj) {
 
 Screen* DeathScreen_MakeInstance(void) {
 	DeathScreen* screen = &DeathScreen_Instance;
-	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), DeathScreen_ContextRecreated);
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, 
+		Array_Elems(screen->Widgets), DeathScreen_ContextRecreated);
 	DeathScreen_VTABLE = *screen->VTABLE;
 	screen->VTABLE = &DeathScreen_VTABLE;
 
@@ -900,7 +910,8 @@ void EditHotkeyScreen_ContextRecreated(void* obj) {
 
 Screen* EditHotkeyScreen_MakeInstance(HotkeyData original) {
 	EditHotkeyScreen* screen = &EditHotkeyScreen_Instance;
-	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), DeathScreen_ContextRecreated);
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, 
+		Array_Elems(screen->Widgets), EditHotkeyScreen_ContextRecreated);
 	EditHotkeyScreen_VTABLE = *screen->VTABLE;
 	screen->VTABLE = &EditHotkeyScreen_VTABLE;
 
@@ -915,5 +926,186 @@ Screen* EditHotkeyScreen_MakeInstance(HotkeyData original) {
 	screen->SelectedI  = -1;
 	screen->OrigHotkey = original;
 	screen->CurHotkey  = original;
+	return (Screen*)screen;
+}
+
+typedef struct GenLevelScreen_ {
+	MenuScreen_Layout
+	Widget* Widgets[12];
+	MenuInputWidget* Selected;
+
+	MenuInputWidget Inputs[4];
+	TextWidget Labels[5];
+	ButtonWidget Buttons[3];
+} GenLevelScreen;
+
+bool GenLevelScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	GenLevelScreen* screen = (GenLevelScreen*)elem;
+	return screen->Selected == NULL || Elem_HandlesKeyPress(&screen->Selected->Base, key);
+}
+
+bool GenLevelScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	GenLevelScreen* screen = (GenLevelScreen*)elem;
+	if (screen->Selected != NULL && Elem_HandlesKeyDown(&screen->Selected->Base, key)) return true;
+	return MenuScreen_HandlesKeyDown(elem, key);
+}
+
+bool GenLevelScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+	GenLevelScreen* screen = (GenLevelScreen*)elem;
+	return screen->Selected == NULL || Elem_HandlesKeyUp(&screen->Selected->Base, key);
+}
+
+void GenLevelScreen_Init(GuiElement* elem) {
+	GenLevelScreen* screen = (GenLevelScreen*)elem;
+	MenuScreen_Init(elem);
+	Key_KeyRepeat = true;
+	screen->ContextRecreated(elem);
+}
+
+void GenLevelScreen_ContextRecreated() {
+	widgets = new Widget[]{
+		MakeInput(-80, false, game.World.Width.ToString()),
+		MakeInput(-40, false, game.World.Height.ToString()),
+		MakeInput(0, false, game.World.Length.ToString()),
+		MakeInput(40, true, ""),
+
+		MakeLabel(-150, -80, "Width:"),
+		MakeLabel(-150, -40, "Height:"),
+		MakeLabel(-150, 0, "Length:"),
+		MakeLabel(-140, 40, "Seed:"),
+
+		TextWidget.Create(game, "Generate new level", textFont)
+		.SetLocation(Anchor.Centre, Anchor.Centre, 0, -130),
+		ButtonWidget.Create(game, 200, "Flatgrass", titleFont, GenFlatgrassClick)
+		.SetLocation(Anchor.Centre, Anchor.Centre, -120, 100),
+		ButtonWidget.Create(game, 200, "Vanilla", titleFont, GenNotchyClick)
+		.SetLocation(Anchor.Centre, Anchor.Centre, 120, 100),
+		MakeBack(false, titleFont, SwitchPause),
+	};
+}
+
+InputWidget MakeInput(int y, bool seed, string value) {
+	MenuInputValidator validator = seed ? new SeedValidator() : new IntegerValidator(1, 8192);
+	InputWidget input = MenuInputWidget.Create(game, 200, 30, value, textFont, validator)
+		.SetLocation(Anchor.Centre, Anchor.Centre, 0, y);
+
+	input.MenuClick = InputClick;
+	return input;
+}
+
+TextWidget MakeLabel(int x, int y, string text) {
+	TextWidget label = TextWidget.Create(game, text, textFont)
+		.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
+
+	label.XOffset = -110 - label.Width / 2;
+	label.Reposition();
+	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255);
+	label.Col = col;
+	return label;
+}
+
+void GenLevelScreen_Free(GuiElement* elem) {
+	Key_KeyRepeat = false;
+	MenuScreen_Free(elem);
+}
+
+	void InputClick(Game game, Widget widget) {
+		if (selected != null) selected.ShowCaret = false;
+
+		selected = (MenuInputWidget)widget;
+		selected.HandlesMouseDown(Mouse_X, Mouse_Y, MouseButton_Left);
+		selected.ShowCaret = true;
+	}
+
+	void GenFlatgrassClick(Game game, Widget widget) {
+		GenerateMap(false);
+	}
+
+	void GenNotchyClick(Game game, Widget widget) {
+		GenerateMap(true);
+	}
+
+	void GenerateMap(bool vanilla) {
+		int width = GetInt(0), height = GetInt(1);
+		int length = GetInt(2), seed = GetSeedInt(3);
+
+		Int64 volume = (Int64)width * height * length;
+		if (volume > Int32_MaxValue) {
+			String msg = String_FromConst("&cThe generated map's volume is too big.");
+			Chat_Add(&msg);
+		} else if (width == 0 || height == 0 || length == 0) {
+			String msg = String_FromConst("&cOne of the map dimensions is invalid.")
+			Chat_Add(&msg);
+		} else {
+			ServerConnection_BeginGeneration(width, height, length, seed, vanilla);
+		}
+	}
+
+	int GetInt(int index) {
+		MenuInputWidget input = (MenuInputWidget)widgets[index];
+		string text = input.Text.ToString();
+
+		if (!input.Validator.IsValidValue(text)) return 0;
+		return Int32.Parse(text);
+	}
+
+	int GetSeedInt(int index) {
+		MenuInputWidget input = (MenuInputWidget)widgets[index];
+		string text = input.Text.ToString();
+		if (text == "") return new Random().Next();
+
+		if (!input.Validator.IsValidValue(text)) return 0;
+		return Int32.Parse(text);
+	}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------ClassicGenScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+GuiElementVTABLE ClassicGenScreen_VTABLE;
+ClassicGenScreen ClassicGenScreen_Instance;
+void ClassicGenScreen_Gen(Int32 size) {
+	Random rnd; Random_InitFromCurrentTime(&rnd);
+	Int32 seed = Random_Next(&rnd, Int32_MaxValue);
+	ServerConnection_BeginGeneration(size, 64, size, seed, true);
+}
+
+void ClassicGenScreen_Small(GuiElement* a, GuiElement* b)  { ClassicGenScreen_Gen(128); }
+void ClassicGenScreen_Medium(GuiElement* a, GuiElement* b) { ClassicGenScreen_Gen(256); }
+void ClassicGenScreen_Huge(GuiElement* a, GuiElement* b)   { ClassicGenScreen_Gen(512); }
+
+void ClassicGenScreen_Make(ClassicGenScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
+	ButtonWidget* btn = &screen->Buttons[i];
+	screen->Widgets[i] = (Widget*)btn;
+
+	String text = String_FromReadonly(title);
+	ButtonWidget_Create(btn, &text, 400, &screen->TitleFont, onClick);
+	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
+}
+
+void ClassicGenScreen_Init(GuiElement* elem) {
+	ClassicGenScreen* screen = (ClassicGenScreen*)elem;
+	MenuScreen_Init(elem);
+	screen->ContextRecreated(elem);
+}
+
+void ClassicGenScreen_ContextRecreated(void* obj) {
+	ClassicGenScreen* screen = (ClassicGenScreen*)obj;
+	ClassicGenScreen_Make(screen, 0, -100, "Small",  ClassicGenScreen_Small);
+	ClassicGenScreen_Make(screen, 1,  -50, "Normal", ClassicGenScreen_Medium);
+	ClassicGenScreen_Make(screen, 2,    0, "Huge",   ClassicGenScreen_Huge);
+
+	screen->Widgets[3] = (Widget*)(&screen->Buttons[3]);
+	Menu_MakeDefaultBack(&screen->Buttons[3], false, &screen->TitleFont, Menu_SwitchPause);
+}
+
+Screen* ClassicGenScreen_MakeInstance(void) {
+	ClassicGenScreen* screen = &EditHotkeyScreen_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, 
+		Array_Elems(screen->Widgets), ClassicGenScreen_ContextRecreated);
+	ClassicGenScreen_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &ClassicGenScreen_VTABLE;
+
+	screen->VTABLE->Init = ClassicGenScreen_Init;
 	return (Screen*)screen;
 }

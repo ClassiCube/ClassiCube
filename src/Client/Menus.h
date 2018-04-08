@@ -8,8 +8,8 @@
 
 Screen* PauseScreen_MakeInstance(void);
 Screen* OptionsGroupScreen_MakeInstance(void);
-Screen* GenLevelScree_MakeInstance(void);
-Screen* ClassicGenLevelScreen_MakeInstance(void);
+Screen* GenLevelScreen_MakeInstance(void);
+Screen* ClassicGenScreen_MakeInstance(void);
 Screen* LoadLevelScreen_MakeInstance(void);
 Screen* SaveLevelScreen_MakeInstance(void);
 Screen* TexturePackScreen_MakeInstance(void);
