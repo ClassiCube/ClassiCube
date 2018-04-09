@@ -26,6 +26,7 @@ namespace ClassicalSharp.Gui.Screens {
 				title = "Normal controls";
 				rightPage = SwitchClassicHacks;
 			} else {
+				title = "Controls";
 				btnWidth = 300;
 			}
 			ContextRecreated();
