@@ -18,7 +18,6 @@
 Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define STRING_REF
 
-bool Char_IsUpper(UInt8 c);
 UInt8 Char_ToLower(UInt8 c);
 
 typedef struct String_ {	

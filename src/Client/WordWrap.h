@@ -4,8 +4,6 @@
 /* Allows wrapping a single line of text into multiple lines.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
-#define WORDWRAP_MAX_LINES_TO_WRAP 128
-#define WORDWRAP_MAX_BUFFER_SIZE 2048
 
 void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 maxPerLine);
 /* Calculates where the given raw index is located in the wrapped lines. */

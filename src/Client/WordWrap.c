@@ -4,6 +4,9 @@
 #include "Platform.h"
 #include "ErrorHandler.h"
 
+#define WORDWRAP_MAX_LINES_TO_WRAP 128
+#define WORDWRAP_MAX_BUFFER_SIZE 2048
+
 void WordWrap_OutputLines(String* text, String* lines, Int32* lineLens, Int32 numLines, Int32 usedLines, Int32 charsPerLine) {
 	Int32 totalChars = charsPerLine * numLines, i, j;
 	for (i = 0; i < totalChars; i++) {
@@ -31,12 +34,12 @@ bool WordWrap_IsWrapper(UInt8 c) {
 }
 
 Int32 WordWrap_WrapLine(String* text, Int32 index, Int32 lineSize) {
-	Int32 lineEnd = index + (lineSize - 1), i;
+	Int32 lineEnd = index + (lineSize - 1), i, j;
 	/* wrap - but we don't want to wrap if the entire line is filled. */
 	for (i = lineEnd; i >= index + 1; i--) {
 		if (!WordWrap_IsWrapper(text->buffer[i])) continue;
 
-		for (Int32 j = lineEnd; j >= i + 1; j--) {
+		for (j = lineEnd; j >= i + 1; j--) {
 			UInt8 c = text->buffer[j];
 			String_InsertAt(text, index + lineSize, c);
 			text->buffer[j] = ' ';
@@ -59,8 +62,8 @@ void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String* lines, 
 	String copy = String_InitAndClearArray(copyBuffer);
 	String_AppendString(&copy, text);
 
-	Int32 usedLines = 0, totalChars = maxPerLine * numLines;
-	for (Int32 index = 0; index < totalChars; index += maxPerLine) {
+	Int32 usedLines = 0, index, totalChars = maxPerLine * numLines;
+	for (index = 0; index < totalChars; index += maxPerLine) {
 		if (copy.buffer[index] == NULL) break;
 		usedLines++;
 		Int32 lineEnd = index + (maxPerLine - 1), nextStart = lineEnd + 1;		
@@ -71,8 +74,8 @@ void WordWrap_Do(STRING_TRANSIENT String* text, STRING_TRANSIENT String* lines, 
 		Int32 wrappedLen = needWrap ? WordWrap_WrapLine(&copy, index, maxPerLine) : maxPerLine;
 
 		/* Calculate the maximum size of this line */
-		Int32 lineLen = maxPerLine;
-		for (Int32 i = lineEnd; i >= index; i--) {
+		Int32 lineLen = maxPerLine, i;
+		for (i = lineEnd; i >= index; i--) {
 			if (copy.buffer[i] != NULL) break;
 			lineLen--;
 		}

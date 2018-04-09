@@ -106,6 +106,7 @@ void Block_SetDrawType(BlockID block, UInt8 draw) {
 }
 
 
+bool Char_IsUpper(UInt8 c) { return c >= 'A' && c <= 'Z'; }
 void Block_SplitUppercase(STRING_TRANSIENT String* buffer, STRING_PURE String* blockNames, Int32 start, Int32 end) {
 	Int32 i;
 	for (i = start; i < end; i++) {

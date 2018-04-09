@@ -4,7 +4,6 @@
 #include "Platform.h"
 
 #define Char_MakeLower(ch) if ((ch) >= 'A' && (ch) <= 'Z') { (ch) += ' '; }
-bool Char_IsUpper(UInt8 c) { return c >= 'A' && c <= 'Z'; }
 UInt8 Char_ToLower(UInt8 c) {
 	Char_MakeLower(c);
 	return c;

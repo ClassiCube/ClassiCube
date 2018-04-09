@@ -28,8 +28,12 @@ namespace ClassicalSharp {
 		public static string[] AdditionalInfo;
 		
 		static string Format(Exception ex) {
-			return ex.GetType().FullName + ": " + ex.Message
-				+ Environment.NewLine + ex.StackTrace;
+			try {
+				return ex.GetType().FullName + ": " + ex.Message
+					+ Environment.NewLine + ex.StackTrace;
+			} catch {
+				return "";
+			}
 		}
 
 		static void UnhandledException(object sender, UnhandledExceptionEventArgs e) {
@@ -50,10 +54,11 @@ namespace ClassicalSharp {
 					platform += Environment.OSVersion.Version.ToString();
 					w.WriteLine("Running on: " + platform);
 					
-					while (ex != null) {
-						w.WriteLine(Format(ex));
+					Exception ex2 = ex;
+					while (ex2 != null) {
+						w.WriteLine(Format(ex2));
 						w.WriteLine();
-						ex = ex.InnerException;
+						ex2 = ex2.InnerException;
 					}
 					
 					if (AdditionalInfo != null) {
@@ -68,12 +73,10 @@ namespace ClassicalSharp {
 			
 			string line1 = "ClassicalSharp crashed.";
 			if (wroteToCrashLog) {
-				line1 += " The cause has been logged to \"" + fileName + "\" in " + Program.AppDirectory;
+				line1 += " The cause has also been logged to \"" + fileName + "\" in " + Program.AppDirectory;
 			}
 			string line2 = "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.";
-			if (!wroteToCrashLog) {
-				line2 += Environment.NewLine + Environment.NewLine + Format(ex);
-			}
+			line2 += Environment.NewLine + Environment.NewLine + Format(ex);
 
 			MessageBox.Show(line1 + Environment.NewLine + Environment.NewLine + line2, "We're sorry");
 			Environment.Exit(1);
