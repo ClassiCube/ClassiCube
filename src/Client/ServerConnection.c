@@ -94,8 +94,6 @@ void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 		Block_CanDelete[i] = true;
 	}
 
-	String skin = String_FromRawArray(LocalPlayer_Instance.SkinNameRaw);
-	AsyncDownloader_DownloadSkin(&skin, &skin);
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 	
 	Random rnd; Random_InitFromCurrentTime(&rnd);

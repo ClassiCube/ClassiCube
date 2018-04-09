@@ -31,7 +31,6 @@ namespace ClassicalSharp.Singleplayer {
 				BlockInfo.CanPlace[i] = true;
 				BlockInfo.CanDelete[i] = true;
 			}
-			game.Downloader.AsyncGetSkin(game.LocalPlayer.SkinName, game.LocalPlayer.SkinName);
 			
 			game.Events.RaiseBlockPermissionsChanged();
 			int seed = new Random().Next();
