@@ -228,6 +228,12 @@ namespace ClassicalSharp {
 		}
 		
 		
+		const string RawNames = "Air_Stone_Grass_Dirt_Cobblestone_Wood_Sapling_Bedrock_Water_Still water_Lava" +
+			"_Still lava_Sand_Gravel_Gold ore_Iron ore_Coal ore_Log_Leaves_Sponge_Glass_Red_Orange_Yellow_Lime_Green" +
+			"_Teal_Aqua_Cyan_Blue_Indigo_Violet_Magenta_Pink_Black_Gray_White_Dandelion_Rose_Brown mushroom_Red mushroom" +
+			"_Gold_Iron_Double slab_Slab_Brick_TNT_Bookshelf_Mossy rocks_Obsidian_Cobblestone slab_Rope_Sandstone" +
+			"_Snow_Fire_Light pink_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick";	
+		
 		static StringBuffer buffer = new StringBuffer(64);
 		static string DefaultName(BlockID block) {
 			if (block >= Block.CpeCount) return "Invalid";
@@ -235,28 +241,15 @@ namespace ClassicalSharp {
 			// Find start and end of this particular block name
 			int start = 0;
 			for (int i = 0; i < block; i++)
-				start = Block.RawNames.IndexOf(' ', start) + 1;
-			int end = Block.RawNames.IndexOf(' ', start);
-			if (end == -1) end = Block.RawNames.Length;
+				start = RawNames.IndexOf('_', start) + 1;
+			int end = RawNames.IndexOf('_', start);
+			if (end == -1) end = RawNames.Length;
 			
 			buffer.Clear();
-			SplitUppercase(buffer, start, end);
-			return buffer.ToString();
-		}
-		
-		static void SplitUppercase(StringBuffer buffer, int start, int end) {
 			for (int i = start; i < end; i++) {
-				char c = Block.RawNames[i];
-				bool upper = Char.IsUpper(c) && i > start;
-				bool nextLower = i < end - 1 && !Char.IsUpper(Block.RawNames[i + 1]);
-				
-				if (upper && nextLower) {
-					buffer.Append(' ');
-					buffer.Append(Char.ToLower(c));
-				} else {
-					buffer.Append(c);
-				}
+				buffer.Append(RawNames[i]);
 			}
+			return buffer.ToString();
 		}
 		
 		

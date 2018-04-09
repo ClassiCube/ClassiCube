@@ -75,13 +75,7 @@ namespace ClassicalSharp {
 		public const BlockRaw Pillar = 63;
 		public const BlockRaw Crate = 64;
 		public const BlockRaw StoneBrick = 65;
-#pragma warning restore 1591
-		
-		public const string RawNames = "Air Stone Grass Dirt Cobblestone Wood Sapling Bedrock Water StillWater Lava" +
-			" StillLava Sand Gravel GoldOre IronOre CoalOre Log Leaves Sponge Glass Red Orange Yellow Lime Green" +
-			" Teal Aqua Cyan Blue Indigo Violet Magenta Pink Black Gray White Dandelion Rose BrownMushroom RedMushroom" +
-			" Gold Iron DoubleSlab Slab Brick TNT Bookshelf MossyRocks Obsidian CobblestoneSlab Rope Sandstone" +
-			" Snow Fire LightPink ForestGreen Brown DeepBlue Turquoise Ice CeramicTile Magma Pillar Crate StoneBrick";		
+#pragma warning restore 1591	
 		
 		/// <summary> Max block ID used in original classic. </summary>
 		public const BlockRaw MaxOriginalBlock = Block.Obsidian;

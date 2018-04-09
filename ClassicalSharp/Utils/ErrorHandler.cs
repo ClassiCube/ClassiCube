@@ -29,13 +29,12 @@ namespace ClassicalSharp {
 		
 		static string Format(Exception ex) {
 			try {
-				return ex.GetType().FullName + ": " + ex.Message
-					+ Environment.NewLine + ex.StackTrace;
-			} catch {
+				return ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
+			} catch (Exception) {
 				return "";
 			}
 		}
-
+		
 		static void UnhandledException(object sender, UnhandledExceptionEventArgs e) {
 			// So we don't get the normal unhelpful crash dialog on Windows.
 			Exception ex = (Exception)e.ExceptionObject;
@@ -84,15 +83,11 @@ namespace ClassicalSharp {
 		
 		/// <summary> Logs a handled exception that occured at the specified location to the log file. </summary>
 		public static bool LogError(string location, Exception ex) {
-			string error = DescribeException(ex);
+			string error = Format(ex);
 			if (ex.InnerException != null) {
-				error += Environment.NewLine + DescribeException(ex.InnerException);
+				error += Environment.NewLine + Format(ex.InnerException);
 			}
 			return LogError(location, error);
-		}
-		
-		static string DescribeException(Exception ex) {
-			return ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
 		}
 		
 		/// <summary> Logs an error that occured at the specified location to the log file. </summary>

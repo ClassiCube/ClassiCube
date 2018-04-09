@@ -106,22 +106,11 @@ void Block_SetDrawType(BlockID block, UInt8 draw) {
 }
 
 
-bool Char_IsUpper(UInt8 c) { return c >= 'A' && c <= 'Z'; }
-void Block_SplitUppercase(STRING_TRANSIENT String* buffer, STRING_PURE String* blockNames, Int32 start, Int32 end) {
-	Int32 i;
-	for (i = start; i < end; i++) {
-		UInt8 c = String_CharAt(blockNames, i);
-		bool upper = Char_IsUpper(c) && i > start;
-		bool nextLower = i < end - 1 && !Char_IsUpper(String_CharAt(blockNames, i + 1));
-
-		if (upper && nextLower) {
-			String_Append(buffer, ' ');
-			String_Append(buffer, Char_ToLower(c));
-		} else {
-			String_Append(buffer, c);
-		}
-	}
-}
+#define BLOCK_RAW_NAMES "Air_Stone_Grass_Dirt_Cobblestone_Wood_Sapling_Bedrock_Water_Still water_Lava"\
+"_Still lava_Sand_Gravel_Gold ore_Iron ore_Coal ore_Log_Leaves_Sponge_Glass_Red_Orange_Yellow_Lime_Green_Teal"\
+"_Aqua_Cyan_Blue_Indigo_Violet_Magenta_Pink_Black_Gray_White_Dandelion_Rose_Brown mushroom_Red mushroom_Gold"\
+"_Iron_Double slab_Slab_Brick_TNT_Bookshelf_Mossy rocks_Obsidian_Cobblestone slab_Rope_Sandstone_Snow_Fire_Light pink"\
+"_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick"
 
 String Block_DefaultName(BlockID block) {
 #if USE16_BIT
@@ -136,13 +125,16 @@ String Block_DefaultName(BlockID block) {
 	/* Find start and end of this particular block name. */
 	Int32 start = 0, i;
 	for (i = 0; i < block; i++) {
-		start = String_IndexOf(&blockNames, ' ', start) + 1;
+		start = String_IndexOf(&blockNames, '_', start) + 1;
 	}
-	Int32 end = String_IndexOf(&blockNames, ' ', start);
+	Int32 end = String_IndexOf(&blockNames, '_', start);
 	if (end == -1) end = blockNames.length;
 
 	String buffer = String_InitAndClear(Block_NamePtr(block), STRING_SIZE);
-	Block_SplitUppercase(&buffer, &blockNames, start, end);
+	Int32 i;
+	for (i = start; i < end; i++) {
+		String_Append(&buffer, blockNames.buffer[i]);
+	}
 	return buffer;
 }
 
