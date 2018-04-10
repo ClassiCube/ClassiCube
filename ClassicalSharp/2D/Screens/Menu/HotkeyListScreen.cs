@@ -21,7 +21,7 @@ namespace ClassicalSharp.Gui.Screens {
 				entries[i] = hKey.BaseKey + " |" + MakeFlagsString(hKey.Flags);
 			}
 			for (int i = 0; i < items; i++)
-				entries[count + i] = "-----";
+				entries[count + i] = empty;
 		}
 		
 		internal static string MakeFlagsString(byte flags) {
@@ -35,7 +35,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void TextButtonClick(Game game, Widget widget) {
 			string text = ((ButtonWidget)widget).Text;
 			Hotkey original = default(Hotkey);
-			if (text != "-----") 
+			if (text != empty) 
 				original = Parse(text);
 			game.Gui.SetNewScreen(new EditHotkeyScreen(game, original));
 		}

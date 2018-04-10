@@ -24,11 +24,11 @@ namespace ClassicalSharp.Gui.Screens {
 			string path = Path.Combine(dir, file);
 			if (!File.Exists(path)) return;
 			
-			int index = currentIndex;
+			int curPage = currentIndex;
 			game.DefaultTexturePack = file;
 			TexturePack.ExtractDefault(game);
 			Recreate();
-			SetCurrentIndex(index);
+			SetCurrentIndex(curPage);
 		}
 	}
 }

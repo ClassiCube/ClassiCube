@@ -65,7 +65,6 @@ bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* to
 
 Int32 String_IndexOf(STRING_PURE String* str, UInt8 c, Int32 offset);
 Int32 String_LastIndexOf(STRING_PURE String* str, UInt8 c);
-UInt8 String_CharAt(STRING_PURE String* str, Int32 offset);
 void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UInt8 c);
 void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
 
@@ -104,4 +103,5 @@ void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT Str
 STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index);
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
 void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index);
+Int32 StringsBuffer_Compare(StringsBuffer* buffer, UInt32 idxA, UInt32 idxB);
 #endif

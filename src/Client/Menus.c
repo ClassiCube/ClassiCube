@@ -28,7 +28,7 @@ typedef struct ListScreen_ {
 	Screen_Layout
 	FontDesc Font;
 	Int32 CurrentIndex;
-	Widget_LeftClick TextButtonClick;
+	Widget_LeftClick EntryClick;
 	String TitleText;
 	ButtonWidget Buttons[FILES_SCREEN_BUTTONS];
 	TextWidget Title;
@@ -188,23 +188,32 @@ Int32 Menu_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
 	return -1;
 }
 
+Int32 Menu_Index(Widget** widgets, Int32 widgetsCount, Widget* w) {
+	Int32 i;
+	for (i = 0; i < widgetsCount; i++) {
+		if (widgets[i] == w) return i;
+	}
+	return -1;
+}
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------ListScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 GuiElementVTABLE ListScreen_VTABLE;
 ListScreen ListScreen_Instance;
+#define LIST_SCREEN_EMPTY "-----"
 STRING_REF String ListScreen_UNSAFE_Get(ListScreen* screen, UInt32 index) {
 	if (index < screen->Entries.Count) {
 		return StringsBuffer_UNSAFE_Get(&screen->Entries, index);
 	} else {
-		String str = String_FromConst("-----"); return str;
+		String str = String_FromConst(LIST_SCREEN_EMPTY); return str;
 	}
 }
 
 void ListScreen_MakeText(ListScreen* screen, Int32 idx, Int32 x, Int32 y, String* text) {
 	ButtonWidget* widget = &screen->Buttons[idx];
-	ButtonWidget_Create(widget, text, 300, &screen->Font, screen->TextButtonClick);
+	ButtonWidget_Create(widget, text, 300, &screen->Font, screen->EntryClick);
 	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
@@ -278,6 +287,24 @@ void ListScreen_ContextRecreated(void* obj) {
 	ListScreen_UpdateArrows(screen);
 }
 
+void ListScreen_Sort(Int32 left, Int32 right) {
+	StringsBuffer* buffer = &ListScreen_Instance.Entries; 
+	UInt32* keys = buffer->FlagsBuffer; UInt32 key;
+	while (left < right) {
+		Int32 i = left, j = right;
+		Int32 pivot = (i + j) / 2;
+
+		/* partition the list */
+		while (i <= j) {
+			while (StringsBuffer_Compare(buffer, pivot, i) > 0) i++;
+			while (StringsBuffer_Compare(buffer, pivot, j) < 0) j--;
+			QuickSort_Swap_Maybe();
+		}
+		/* recurse into the smaller subset */
+		QuickSort_Recurse(ListScreen_QuickSort)
+	}
+}
+
 void ListScreen_Init(GuiElement* elem) {
 	ListScreen* screen = (ListScreen*)elem;
 	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
@@ -331,7 +358,7 @@ void ListScreen_OnResize(GuiElement* elem) {
 	Menu_RepositionWidgets(screen->Widgets, Array_Elems(screen->Widgets));
 }
 
-Screen* ListScreen_MakeInstance(void) {
+ListScreen* ListScreen_MakeInstance(void) {
 	ListScreen* screen = &ListScreen_Instance;
 	Platform_MemSet(screen, 0, sizeof(ListScreen) - sizeof(StringsBuffer));
 	StringsBuffer_UNSAFE_Reset(&screen->Entries);
@@ -347,7 +374,7 @@ Screen* ListScreen_MakeInstance(void) {
 	screen->VTABLE->Render = ListScreen_Render;
 	screen->VTABLE->Free   = ListScreen_Free;
 	screen->HandlesAllInput = true;
-	return (Screen*)screen;
+	return screen;
 }
 
 
@@ -356,11 +383,7 @@ Screen* ListScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 GuiElementVTABLE MenuScreen_VTABLE;
 Int32 MenuScreen_Index(MenuScreen* screen, Widget* w) {
-	Int32 i;
-	for (i = 0; i < screen->WidgetsCount; i++) {
-		if (screen->WidgetsPtr[i] == w) return i;
-	}
-	return -1;
+	return Menu_Index(screen->WidgetsPtr, screen->WidgetsCount, w);
 }
 
 bool MenuScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
@@ -1107,6 +1130,7 @@ Screen* GenLevelScreen_MakeInstance(void) {
 	return (Screen*)screen;
 }
 
+
 /*########################################################################################################################*
 *----------------------------------------------------ClassicGenScreen-----------------------------------------------------*
 *#########################################################################################################################*/
@@ -1155,5 +1179,59 @@ Screen* ClassicGenScreen_MakeInstance(void) {
 	screen->VTABLE = &ClassicGenScreen_VTABLE;
 
 	screen->VTABLE->Init = ClassicGenScreen_Init;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------TexturePackScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+void TexturePackScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
+	ListScreen* screen = (ListScreen*)screenElem;
+	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	String path = String_InitAndClearArray(pathBuffer);
+
+	Int32 curPage = screen->CurrentIndex;
+	Int32 idx = Menu_Index(screen->Widgets, Array_Elems(screen->Widgets), (Widget*)w);
+	String filename = StringsBuffer_UNSAFE_Get(&screen->Entries, curPage + idx);
+
+	String_AppendConst(&path, "texpacks");
+	String_Append(&path, Platform_DirectorySeparator);
+	String_Append(&path, &filename);
+	if (!Platform_FileExists(&path)) return;
+	
+	game.DefaultTexturePack = filename;
+	TexturePack_ExtractDefault();
+	Elem_Recreate(screen);
+	ListScreen_SetCurrentIndex(screen, curPage);
+}
+
+void TexturePackScreen_SelectEntry(STRING_PURE String* path, void* obj) {
+	String zip = String_FromConst(".zip");
+	if (!String_CaselessEnds(path, &zip)) return;
+	
+	/* folder1/folder2/entry.zip --> entry.zip */
+	String filename = *path;
+	Int32 lastDir = String_LastIndexOf(&filename, Platform_DirectorySeparator);
+	if (lastDir >= 0) {
+		filename = String_UNSAFE_SubstringAt(&filename, lastDir + 1);
+	}
+
+	StringsBuffer* entries = (StringsBuffer*)obj;
+	StringsBuffer_Add(entries, &filename);
+}
+
+Screen* TexturePackScreen_MakeInstance(void) {
+	ListScreen* screen = ListScreen_MakeInstance();
+	String title = String_FromConst("Select a texture pack zip");
+	screen->TitleText = title;
+	screen->EntryClick = TexturePackScreen_EntryClick;
+
+	String path = String_FromConst("texpacks");
+	Platform_EnumFiles(&path, &screen->Entries, TexturePackScreen_SelectEntry);
+	if (screen->Entries.Count > 0) {
+		ListScreen_Sort(0, screen->Entries.Count - 1);
+	}
+
 	return (Screen*)screen;
 }

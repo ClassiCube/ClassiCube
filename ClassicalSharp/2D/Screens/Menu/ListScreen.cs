@@ -16,6 +16,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected int currentIndex;
 		protected ButtonWidget[] buttons;
 		protected const int items = 5;
+		protected const string empty = "-----";
 		
 		TextWidget title;
 		protected string titleText;
@@ -54,7 +55,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void MoveForwards(Game g, Widget w) { PageClick(true); }
 		
 		string Get(int index) {
-			return index < entries.Length ? entries[index] : "-----";
+			return index < entries.Length ? entries[index] : empty;
 		}
 		
 		public override void Dispose() {

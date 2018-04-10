@@ -211,11 +211,6 @@ Int32 String_LastIndexOf(STRING_PURE String* str, UInt8 c) {
 	return -1;
 }
 
-UInt8 String_CharAt(STRING_PURE String* str, Int32 offset) {
-	if (offset < 0 || offset >= str->length) return NULL;
-	return str->buffer[offset];
-}
-
 void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UInt8 c) {
 	if (offset < 0 || offset > str->length) {
 		ErrorHandler_Fail("Offset for InsertAt out of range");
@@ -571,4 +566,10 @@ void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index) {
 
 	buffer->Count--;
 	buffer->UsedElems -= len;
+}
+
+Int32 StringsBuffer_Compare(StringsBuffer* buffer, UInt32 idxA, UInt32 idxB) {
+	String strA = StringsBuffer_UNSAFE_Get(buffer, idxA);
+	String strB = StringsBuffer_UNSAFE_Get(buffer, idxB);
+	return String_Compare(&strA, &strB);
 }
