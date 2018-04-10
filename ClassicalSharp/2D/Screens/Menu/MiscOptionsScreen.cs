@@ -19,15 +19,17 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void ContextRecreated() {
 			bool multi = !game.Server.IsSinglePlayer;
 			ClickHandler onClick = OnButtonClick;
+			ClickHandler onBool = OnBoolClick;
+			
 			widgets = new Widget[] {
 				multi ? null : MakeOpt(-1, -100, "Reach distance", onClick, GetReach,       SetReach),
 				MakeOpt(-1, -50, "Music volume",                   onClick, GetMusic,       SetMusic),
 				MakeOpt(-1, 0, "Sounds volume",                    onClick, GetSounds,      SetSounds),
-				MakeOpt(-1, 50, "View bobbing",                    onClick, GetViewBob,     SetViewBob),
+				MakeOpt(-1, 50, "View bobbing",                    onBool,  GetViewBob,     SetViewBob),
 
-				multi ? null : MakeOpt(1, -100, "Block physics",  onClick, GetPhysics,     SetPhysics),
-				MakeOpt(1, -50, "Auto close launcher",            onClick, GetAutoClose,   SetAutoClose),
-				MakeOpt(1, 0, "Invert mouse",                     onClick, GetInvert,      SetInvert),
+				multi ? null : MakeOpt(1, -100, "Block physics",  onBool,  GetPhysics,     SetPhysics),
+				MakeOpt(1, -50, "Auto close launcher",            onBool,  GetAutoClose,   SetAutoClose),
+				MakeOpt(1, 0, "Invert mouse",                     onBool,  GetInvert,      SetInvert),
 				MakeOpt(1, 50, "Mouse sensitivity",               onClick, GetSensitivity, SetSensitivity),
 
 				MakeBack(false, titleFont, SwitchOptions),
@@ -78,11 +80,11 @@ namespace ClassicalSharp.Gui.Screens {
 				network.IsSinglePlayer ? new RealValidator(1, 1024) : null,
 				new IntegerValidator(0, 100),
 				new IntegerValidator(0, 100),
-				new BooleanValidator(),
+				null,
 				
-				network.IsSinglePlayer ? new BooleanValidator() : null,
-				new BooleanValidator(),
-				new BooleanValidator(),
+				null,
+				null,
+				null,
 				new IntegerValidator(1, 200),
 			};
 		}

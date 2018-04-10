@@ -20,18 +20,20 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			bool multi = !game.Server.IsSinglePlayer, hacks = game.ClassicHacks;
-			ClickHandler onClick = OnButtonClick;
+			ClickHandler onEnum = OnEnumClick;
+			ClickHandler onBool = OnBoolClick;
+			
 			widgets = new Widget[] {
-				MakeOpt(-1, -150, "Music",                      onClick, GetMusic,    SetMusic),
-				MakeOpt(-1, -100, "Invert mouse",               onClick, GetInvert,   SetInvert),
-				MakeOpt(-1, -50, "Render distance",             onClick, GetViewDist, SetViewDist),
-				multi ? null : MakeOpt(-1, 0, "Block physics",  onClick, GetPhysics,  SetPhysics),
+				MakeOpt(-1, -150, "Music",                      onBool, GetMusic,    SetMusic),
+				MakeOpt(-1, -100, "Invert mouse",               onBool, GetInvert,   SetInvert),
+				MakeOpt(-1, -50, "Render distance",             onEnum, GetViewDist, SetViewDist),
+				multi ? null : MakeOpt(-1, 0, "Block physics",  onBool, GetPhysics,  SetPhysics),
 				
-				MakeOpt(1, -150, "Sound",                       onClick, GetSounds,   SetSounds),
-				MakeOpt(1, -100, "Show FPS",                    onClick, GetShowFPS,  SetShowFPS),
-				MakeOpt(1, -50, "View bobbing",                 onClick, GetViewBob,  SetViewBob),
-				MakeOpt(1, 0, "FPS mode",                       onClick, GetFPS,      SetFPS),
-				!hacks ? null : MakeOpt(0, 60, "Hacks enabled", onClick, GetHacks,    SetHacks),
+				MakeOpt(1, -150, "Sound",                       onBool, GetSounds,   SetSounds),
+				MakeOpt(1, -100, "Show FPS",                    onBool, GetShowFPS,  SetShowFPS),
+				MakeOpt(1, -50, "View bobbing",                 onBool, GetViewBob,  SetViewBob),
+				MakeOpt(1, 0, "FPS mode",                       onEnum, GetFPS,      SetFPS),
+				!hacks ? null : MakeOpt(0, 60, "Hacks enabled", onBool, GetHacks,    SetHacks),
 				
 				ButtonWidget.Create(game, 400, "Controls...", titleFont, SwitchClassic)
 					.SetLocation(Anchor.Centre, Anchor.Max, 0, 95),
@@ -92,16 +94,16 @@ namespace ClassicalSharp.Gui.Screens {
 		void MakeValidators() {
 			IServerConnection network = game.Server;
 			validators = new MenuInputValidator[] {
-				new BooleanValidator(),
-				new BooleanValidator(),
+				null,
+				null,
 				new EnumValidator(typeof(ViewDist)),
-				network.IsSinglePlayer ? new BooleanValidator() : null,
+				null,
 				
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
+				null,
+				null,
+				null,
 				new EnumValidator(typeof(FpsLimitMethod)),
-				game.ClassicHacks ? new BooleanValidator() : null,
+				null,
 			};
 		}
 	}

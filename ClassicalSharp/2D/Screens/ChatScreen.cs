@@ -400,8 +400,8 @@ namespace ClassicalSharp.Gui.Screens {
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			if (!HandlesAllInput || game.HideGui) return false;
 			
-			if (!normalChat.Bounds.Contains(mouseX, mouseY)) {
-				if (altText.Active && altText.Bounds.Contains(mouseX, mouseY)) {
+			if (!normalChat.Contains(mouseX, mouseY)) {
+				if (altText.Active && altText.Contains(mouseX, mouseY)) {
 					altText.HandlesMouseDown(mouseX, mouseY, button);
 					UpdateAltTextY();
 					return true;

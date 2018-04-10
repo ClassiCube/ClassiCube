@@ -24,7 +24,7 @@ namespace ClassicalSharp.Gui.Screens {
 			// iterate backwards (because last elements rendered are shown over others)
 			for (int i = widgets.Length - 1; i >= 0; i--) {
 				Widget widget = widgets[i];
-				if (widget == null || !widget.Bounds.Contains(mouseX, mouseY)) continue;
+				if (widget == null || !widget.Contains(mouseX, mouseY)) continue;
 				if (widget.Disabled) return i;
 				
 				if (widget.MenuClick != null && button == MouseButton.Left) {
@@ -45,7 +45,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			for (int i = widgets.Length - 1; i >= 0; i--) {
 				Widget widget = widgets[i];
-				if (widget == null || !widget.Bounds.Contains(mouseX, mouseY)) continue;
+				if (widget == null || !widget.Contains(mouseX, mouseY)) continue;
 				
 				widget.Active = true;
 				return i;

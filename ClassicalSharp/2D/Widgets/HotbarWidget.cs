@@ -122,7 +122,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
-			if (button != MouseButton.Left || !Bounds.Contains(mouseX, mouseY))
+			if (button != MouseButton.Left || !Contains(mouseX, mouseY))
 				return false;
 			InventoryScreen screen = game.Gui.ActiveScreen as InventoryScreen;
 			if (screen == null) return false;

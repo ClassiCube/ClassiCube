@@ -20,14 +20,17 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			ClickHandler onClick = OnButtonClick;
+			ClickHandler onEnum = OnEnumClick;
+			ClickHandler onBool = OnBoolClick;
+			
 			widgets = new Widget[] {
-				MakeOpt(-1, -50, "FPS mode",         onClick, GetFPS,      SetFPS),
+				MakeOpt(-1, -50, "FPS mode",         onEnum,  GetFPS,      SetFPS),
 				MakeOpt(-1, 0, "View distance",      onClick, GetViewDist, SetViewDist),
-				MakeOpt(-1, 50, "Advanced lighting", onClick, GetSmooth,   SetSmooth),
+				MakeOpt(-1, 50, "Advanced lighting", onBool,  GetSmooth,   SetSmooth),
 				
-				MakeOpt(1, -50, "Names",             onClick, GetNames,    SetNames),
-				MakeOpt(1, 0, "Shadows",             onClick, GetShadows,  SetShadows),
-				MakeOpt(1, 50, "Mipmaps",            onClick, GetMipmaps,  SetMipmaps),
+				MakeOpt(1, -50, "Names",             onEnum,  GetNames,    SetNames),
+				MakeOpt(1, 0, "Shadows",             onEnum,  GetShadows,  SetShadows),
+				MakeOpt(1, 50, "Mipmaps",            onBool,  GetMipmaps,  SetMipmaps),
 				
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
@@ -86,11 +89,11 @@ namespace ClassicalSharp.Gui.Screens {
 			validators = new MenuInputValidator[] {
 				new EnumValidator(typeof(FpsLimitMethod)),
 				new IntegerValidator(8, 4096),
-				new BooleanValidator(),
+				null,
 				
 				new EnumValidator(typeof(NameMode)),
 				new EnumValidator(typeof(EntityShadow)),
-				new BooleanValidator(),
+				null,
 			};
 		}
 		

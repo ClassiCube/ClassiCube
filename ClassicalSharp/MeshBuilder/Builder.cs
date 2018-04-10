@@ -283,7 +283,7 @@ namespace ClassicalSharp {
 						}
 						
 						index++;
-						if (counts[index] == 0 ||
+						if (counts[index] == 0 || y == 0 ||
 						    (hidden[tileIdx + chunk[cIndex - 324]] & (1 << Side.Bottom)) != 0) {
 							counts[index] = 0;
 						} else {

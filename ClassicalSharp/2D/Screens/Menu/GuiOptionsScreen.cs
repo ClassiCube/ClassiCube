@@ -16,18 +16,20 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			ClickHandler onClick = OnButtonClick;
+			ClickHandler onBool = OnBoolClick;
+				
 			widgets = new Widget[] {
-				MakeOpt(-1, -150, "Black text shadows", onClick, GetShadows,   SetShadows),
-				MakeOpt(-1, -100, "Show FPS",           onClick, GetShowFPS,   SetShowFPS),
-				MakeOpt(-1, -50, "Hotbar scale",        onClick, GetHotbar,    SetHotbar),
-				MakeOpt(-1, 0, "Inventory scale",       onClick, GetInventory, SetInventory),
-				MakeOpt(-1, 50, "Tab auto-complete",    onClick, GetTabAuto,   SetTabAuto),
+				MakeOpt(-1, -150, "Black text shadows", onBool,  GetShadows,   SetShadows),
+				MakeOpt(-1, -100, "Show FPS",           onBool,  GetShowFPS,   SetShowFPS),
+				MakeOpt(-1,  -50, "Hotbar scale",       onClick, GetHotbar,    SetHotbar),
+				MakeOpt(-1,    0, "Inventory scale",    onClick, GetInventory, SetInventory),
+				MakeOpt(-1,   50, "Tab auto-complete",  onBool,  GetTabAuto,   SetTabAuto),
 
-				MakeOpt(1, -150, "Clickable chat",      onClick, GetClickable, SetClickable),
+				MakeOpt(1, -150, "Clickable chat",      onBool,  GetClickable, SetClickable),
 				MakeOpt(1, -100, "Chat scale",          onClick, GetChatScale, SetChatScale),
-				MakeOpt(1, -50, "Chat lines",           onClick, GetChatlines, SetChatlines),
-				MakeOpt(1, 0, "Use system font",        onClick, GetUseFont,   SetUseFont),
-				MakeOpt(1, 50, "Font",                  onClick, GetFont,      SetFont),
+				MakeOpt(1,  -50, "Chat lines",          onClick, GetChatlines, SetChatlines),
+				MakeOpt(1,    0, "Use system font",     onBool,  GetUseFont,   SetUseFont),
+				MakeOpt(1,   50, "Font",                onClick, GetFont,      SetFont),
 				
 				MakeBack(false, titleFont, SwitchOptions),
 				null, null,
@@ -94,16 +96,16 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeValidators() {
 			validators = new MenuInputValidator[] {
-				new BooleanValidator(),
-				new BooleanValidator(),
+				null,
+				null,
 				new RealValidator(0.25f, 4f),
 				new RealValidator(0.25f, 4f),
-				new BooleanValidator(),
+				null,
 				
-				new BooleanValidator(),
+				null,
 				new RealValidator(0.25f, 4f),
 				new IntegerValidator(0, 30),
-				new BooleanValidator(),
+				null,
 				new StringValidator(),
 			};
 		}

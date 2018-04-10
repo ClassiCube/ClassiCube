@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			if (button != MouseButton.Left) return true;
 			
-			if (!reconnect.Disabled && reconnect.Bounds.Contains(mouseX, mouseY)) {
+			if (!reconnect.Disabled && reconnect.Contains(mouseX, mouseY)) {
 				string connect = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
 				for (int i = 0; i < game.Components.Count; i++)
 					game.Components[i].Reset(game);
@@ -85,7 +85,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
-			reconnect.Active = !reconnect.Disabled && reconnect.Bounds.Contains(mouseX, mouseY);
+			reconnect.Active = !reconnect.Disabled && reconnect.Contains(mouseX, mouseY);
 			return true;
 		}
 		

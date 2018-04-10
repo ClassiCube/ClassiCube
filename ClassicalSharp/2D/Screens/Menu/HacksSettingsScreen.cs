@@ -27,17 +27,19 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextRecreated() {
 			ClickHandler onClick = OnButtonClick;
+			ClickHandler onBool = OnBoolClick;
+			
 			widgets = new Widget[] {
-				MakeOpt(-1, -150, "Hacks enabled",      onClick, GetHacks,    SetHacks),
+				MakeOpt(-1, -150, "Hacks enabled",      onBool,  GetHacks,    SetHacks),
 				MakeOpt(-1, -100, "Speed multiplier",   onClick, GetSpeed,    SetSpeed),
-				MakeOpt(-1, -50, "Camera clipping",     onClick, GetClipping, SetClipping),
+				MakeOpt(-1, -50, "Camera clipping",     onBool,  GetClipping, SetClipping),
 				MakeOpt(-1, 0, "Jump height",           onClick, GetJump,     SetJump),
-				MakeOpt(-1, 50, "WOM style hacks",      onClick, GetWOMHacks, SetWOMHacks),
+				MakeOpt(-1, 50, "WOM style hacks",      onBool,  GetWOMHacks, SetWOMHacks),
 
-				MakeOpt(1, -150, "Full block stepping", onClick, GetFullStep, SetFullStep),
-				MakeOpt(1, -100, "Modifiable liquids",  onClick, GetLiquids,  SetLiquids),
-				MakeOpt(1, -50, "Pushback placing",     onClick, GetPushback, SetPushback),
-				MakeOpt(1, 0, "Noclip slide",           onClick, GetSlide,    SetSlide),
+				MakeOpt(1, -150, "Full block stepping", onBool,  GetFullStep, SetFullStep),
+				MakeOpt(1, -100, "Modifiable liquids",  onBool,  GetLiquids,  SetLiquids),
+				MakeOpt(1, -50, "Pushback placing",     onBool,  GetPushback, SetPushback),
+				MakeOpt(1, 0, "Noclip slide",           onBool,  GetSlide,    SetSlide),
 				MakeOpt(1, 50, "Field of view",         onClick, GetFOV,      SetFOV),
 				
 				null,
@@ -134,16 +136,16 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeValidators() {
 			validators = new MenuInputValidator[] {
-				new BooleanValidator(),
+				null,
 				new RealValidator(0.1f, 50),
-				new BooleanValidator(),
+				null,
 				new RealValidator(0.1f, 2048f),
-				new BooleanValidator(),
+				null,
 				
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
+				null,
+				null,
+				null,
+				null,
 				new IntegerValidator(1, 150),
 			};
 		}

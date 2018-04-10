@@ -13,32 +13,21 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			ContextRecreated();
-			
-			validators = new MenuInputValidator[] {
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
-				
-				new BooleanValidator(),
-				new BooleanValidator(),
-				new BooleanValidator(),
-			};
 		}
 		
 		protected override void ContextRecreated() {
-			ClickHandler onClick = OnButtonClick;
+			ClickHandler onBool = OnBoolClick;
+			
 			widgets = new Widget[] {
-				MakeOpt(-1, -150, "Classic hand model",  onClick, GetHand,   SetHand),
-				MakeOpt(-1, -100, "Classic walk anim",   onClick, GetAnim,   SetAnim),
-				MakeOpt(-1, -50, "Classic gui textures", onClick, GetGui,    SetGui),
-				MakeOpt(-1, 0, "Classic player list",    onClick, GetList,   SetList),
-				MakeOpt(-1, 50, "Classic options",       onClick, GetOpts,   SetOpts),
+				MakeOpt(-1, -150, "Classic hand model",  onBool, GetHand,   SetHand),
+				MakeOpt(-1, -100, "Classic walk anim",   onBool, GetAnim,   SetAnim),
+				MakeOpt(-1, -50, "Classic gui textures", onBool, GetGui,    SetGui),
+				MakeOpt(-1, 0, "Classic player list",    onBool, GetList,   SetList),
+				MakeOpt(-1, 50, "Classic options",       onBool, GetOpts,   SetOpts),
 
-				MakeOpt(1, -150, "Allow custom blocks",  onClick, GetCustom, SetCustom),
-				MakeOpt(1, -100, "Use CPE",              onClick, GetCPE,    SetCPE),
-				MakeOpt(1, -50, "Use server textures",   onClick, GetTexs,   SetTexs),
+				MakeOpt(1, -150, "Allow custom blocks",  onBool, GetCustom, SetCustom),
+				MakeOpt(1, -100, "Use CPE",              onBool, GetCPE,    SetCPE),
+				MakeOpt(1, -50, "Use server textures",   onBool, GetTexs,   SetTexs),
 
 				TextWidget.Create(game, "&eButtons on the right require restarting game", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100),

@@ -162,24 +162,31 @@ namespace ClassicalSharp.Gui.Screens {
 			ChangeSetting();
 		}
 		
-		protected void OnButtonClick(Game game, Widget widget) {
-			ButtonWidget button = widget as ButtonWidget;
-			if (button == null) return;
+		protected void OnBoolClick(Game game, Widget widget) {
+			ButtonWidget button = (ButtonWidget)widget;
+			DisposeExtendedHelp();
+
+			string value = button.GetValue(game);
+			SetButtonValue(button, value == "ON" ? "OFF" : "ON");
+			UpdateDescription(button);
+		}
+		
+		protected void OnEnumClick(Game game, Widget widget) {
+			ButtonWidget button = (ButtonWidget)widget;
 			DisposeExtendedHelp();
 			
 			int index = IndexOfWidget(button);
 			MenuInputValidator validator = validators[index];
-			if (validator is BooleanValidator) {
-				string value = button.GetValue(game);
-				SetButtonValue(button, value == "ON" ? "OFF" : "ON");
-				UpdateDescription(button);
-				return;
-			} else if (validator is EnumValidator) {
-				Type type = ((EnumValidator)validator).EnumType;
-				HandleEnumOption(button, type);
-				return;
-			}
+			Type type = ((EnumValidator)validator).EnumType;
+			HandleEnumOption(button, type);
+		}
+		
+		protected void OnButtonClick(Game game, Widget widget) {
+			ButtonWidget button = (ButtonWidget)widget;
+			DisposeExtendedHelp();
 			
+			int index = IndexOfWidget(button);
+			MenuInputValidator validator = validators[index];
 			activeButton = button;
 			InputClosed();
 			
