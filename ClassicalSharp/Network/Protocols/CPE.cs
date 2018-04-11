@@ -309,7 +309,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleSetMapEnvUrl() {
 			string url = reader.ReadString();
-			if (!game.UseServerTextures) return;
+			if (!game.AllowServerTextures) return;
 			
 			if (url == "") {
 				if (game.World.TextureUrl != null) TexturePack.ExtractDefault(game);
@@ -459,9 +459,9 @@ namespace ClassicalSharp.Network.Protocols {
 			if (net.cpeData.ServerExtensionsCount != 0) return;
 			string[] clientExts = CPESupport.ClientExtensions;
 			int count = clientExts.Length;
-			if (!game.UseCustomBlocks) count -= 2;
+			if (!game.AllowCustomBlocks) count -= 2;
 			#if !ONLY_8BIT
-			if (!game.UseCustomBlocks) count -= 1;
+			if (!game.AllowCustomBlocks) count -= 1;
 			#endif
 			
 			WriteExtInfo(net.AppName, count);
@@ -473,10 +473,10 @@ namespace ClassicalSharp.Network.Protocols {
 				if (name == "EnvMapAppearance") ver = net.cpeData.envMapVer;
 				if (name == "BlockDefinitionsExt") ver = net.cpeData.blockDefsExtVer;
 				
-				if (!game.UseCustomBlocks && name == "BlockDefinitionsExt") continue;
-				if (!game.UseCustomBlocks && name == "BlockDefinitions")    continue;
+				if (!game.AllowCustomBlocks && name == "BlockDefinitionsExt") continue;
+				if (!game.AllowCustomBlocks && name == "BlockDefinitions")    continue;
 				#if !ONLY_8BIT
-				if (!game.UseCustomBlocks && name == "ExtendedBlocks")      continue;
+				if (!game.AllowCustomBlocks && name == "ExtendedBlocks")      continue;
 				#endif
 				
 				WriteExtEntry(name, ver);

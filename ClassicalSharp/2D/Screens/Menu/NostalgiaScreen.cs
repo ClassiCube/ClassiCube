@@ -54,14 +54,14 @@ namespace ClassicalSharp.Gui.Screens {
 		static string GetOpts(Game g) { return GetBool(g.UseClassicOptions); }
 		static void SetOpts(Game g, string v) { g.UseClassicOptions = SetBool(v, OptionsKey.UseClassicOptions); }
 		
-		static string GetCustom(Game g) { return GetBool(g.UseCustomBlocks); }
-		static void SetCustom(Game g, string v) { g.UseCustomBlocks = SetBool(v, OptionsKey.UseCustomBlocks); }
+		static string GetCustom(Game g) { return GetBool(g.AllowCustomBlocks); }
+		static void SetCustom(Game g, string v) { g.AllowCustomBlocks = SetBool(v, OptionsKey.UseCustomBlocks); }
 		
 		static string GetCPE(Game g) { return GetBool(g.UseCPE); }
 		static void SetCPE(Game g, string v) { g.UseCPE = SetBool(v, OptionsKey.UseCPE); }
 		
-		static string GetTexs(Game g) { return GetBool(g.UseServerTextures); }
-		static void SetTexs(Game g, string v) { g.UseServerTextures = SetBool(v, OptionsKey.UseServerTextures); }
+		static string GetTexs(Game g) { return GetBool(g.AllowServerTextures); }
+		static void SetTexs(Game g, string v) { g.AllowServerTextures = SetBool(v, OptionsKey.UseServerTextures); }
 		
 		static void SwitchBack(Game g, Widget w) {
 			if (g.UseClassicOptions) {

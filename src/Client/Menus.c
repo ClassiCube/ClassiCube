@@ -20,6 +20,8 @@
 #include "Block.h"
 #include "Random.h"
 #include "World.h"
+#include "Formats.h"
+#include "ErrorHandler.h"
 
 #define FILES_SCREEN_ITEMS 5
 #define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
@@ -287,7 +289,7 @@ void ListScreen_ContextRecreated(void* obj) {
 	ListScreen_UpdateArrows(screen);
 }
 
-void ListScreen_Sort(Int32 left, Int32 right) {
+void ListScreen_QuickSort(Int32 left, Int32 right) {
 	StringsBuffer* buffer = &ListScreen_Instance.Entries; 
 	UInt32* keys = buffer->FlagsBuffer; UInt32 key;
 	while (left < right) {
@@ -303,6 +305,27 @@ void ListScreen_Sort(Int32 left, Int32 right) {
 		/* recurse into the smaller subset */
 		QuickSort_Recurse(ListScreen_QuickSort)
 	}
+}
+
+void ListScreen_AddFilename(void* obj, STRING_PURE String* path) {
+	/* folder1/folder2/entry.zip --> entry.zip */
+	Int32 lastDir = String_LastIndexOf(path, Platform_DirectorySeparator);
+	String filename = *path;
+	if (lastDir >= 0) {
+		filename = String_UNSAFE_SubstringAt(&filename, lastDir + 1);
+	}
+
+	StringsBuffer* entries = (StringsBuffer*)obj;
+	StringsBuffer_Add(entries, &filename);
+}
+
+void ListScreen_MakePath(ListScreen* screen, GuiElement* w, STRING_PURE String* path, const UInt8* dir, STRING_REF String* filename) {
+	Int32 idx = Menu_Index(screen->Widgets, Array_Elems(screen->Widgets), (Widget*)w);
+	*filename = StringsBuffer_UNSAFE_Get(&screen->Entries, screen->CurrentIndex + idx);
+
+	String_AppendConst(path, dir);
+	String_Append(path, Platform_DirectorySeparator);
+	String_AppendString(path, filename);
 }
 
 void ListScreen_Init(GuiElement* elem) {
@@ -1189,18 +1212,12 @@ Screen* ClassicGenScreen_MakeInstance(void) {
 void TexturePackScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)screenElem;
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
-	String path = String_InitAndClearArray(pathBuffer);
-
-	Int32 curPage = screen->CurrentIndex;
-	Int32 idx = Menu_Index(screen->Widgets, Array_Elems(screen->Widgets), (Widget*)w);
-	String filename = StringsBuffer_UNSAFE_Get(&screen->Entries, curPage + idx);
-
-	String_AppendConst(&path, "texpacks");
-	String_Append(&path, Platform_DirectorySeparator);
-	String_Append(&path, &filename);
+	String path = String_InitAndClearArray(pathBuffer), filename;
+	ListScreen_MakePath(screen, w, &path, "texpacks", &filename);
 	if (!Platform_FileExists(&path)) return;
 	
-	game.DefaultTexturePack = filename;
+	Int32 curPage = screen->CurrentIndex;
+	Game_SetDefaultTexturePack(&filename);
 	TexturePack_ExtractDefault();
 	Elem_Recreate(screen);
 	ListScreen_SetCurrentIndex(screen, curPage);
@@ -1209,16 +1226,7 @@ void TexturePackScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 void TexturePackScreen_SelectEntry(STRING_PURE String* path, void* obj) {
 	String zip = String_FromConst(".zip");
 	if (!String_CaselessEnds(path, &zip)) return;
-	
-	/* folder1/folder2/entry.zip --> entry.zip */
-	String filename = *path;
-	Int32 lastDir = String_LastIndexOf(&filename, Platform_DirectorySeparator);
-	if (lastDir >= 0) {
-		filename = String_UNSAFE_SubstringAt(&filename, lastDir + 1);
-	}
-
-	StringsBuffer* entries = (StringsBuffer*)obj;
-	StringsBuffer_Add(entries, &filename);
+	ListScreen_AddFilename(obj, path);
 }
 
 Screen* TexturePackScreen_MakeInstance(void) {
@@ -1230,8 +1238,79 @@ Screen* TexturePackScreen_MakeInstance(void) {
 	String path = String_FromConst("texpacks");
 	Platform_EnumFiles(&path, &screen->Entries, TexturePackScreen_SelectEntry);
 	if (screen->Entries.Count > 0) {
-		ListScreen_Sort(0, screen->Entries.Count - 1);
+		ListScreen_QuickSort(0, screen->Entries.Count - 1);
+	}
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------LoadLevelScreen------------------------------------------------------*
+*#########################################################################################################################*/
+void LoadLevelScreen_SelectEntry(STRING_PURE String* path, void* obj) {
+	String cw  = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
+	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
+
+	if (!(String_CaselessEnds(path, &cw) || String_CaselessEnds(path, &lvl) 
+		|| String_CaselessEnds(path, &fcm) || String_CaselessEnds(path, &dat))) return;
+	ListScreen_AddFilename(obj, path);
+}
+
+void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
+	ListScreen* screen = (ListScreen*)screenElem;
+	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	String path = String_InitAndClearArray(pathBuffer), filename;
+	ListScreen_MakePath(screen, w, &path, "maps", &filename);
+	if (!Platform_FileExists(&path)) return;
+
+	void* file;
+	ReturnCode code = Platform_FileOpen(&file, &path, true);
+	ErrorHandler_CheckOrFail(code, "Failed to open map file");
+	Stream stream; Stream_FromFile(&stream, file, &path);
+
+	World_Reset();
+	Event_RaiseVoid(&WorldEvents_NewMap);
+
+	if (World_TextureUrl.length > 0) {
+		TexturePack_ExtractDefault();
+		String_Clear(&World_TextureUrl);
+	}
+	Block_Reset();
+	Inventory_SetDefaultMapping();
+
+	String cw  = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
+	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
+	if (String_CaselessEnds(&path, &dat)) {
+		Dat_Load(&stream);
+	} else if (String_CaselessEnds(&path, &fcm)) {
+		Fcm_Load(&stream);
+	} else if (String_CaselessEnds(&path, &cw)) {
+		Cw_Load(&stream);
+	} else if (String_CaselessEnds(&path, &lvl)) {
+		Lvl_Load(&stream);
+	}
+	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
+
+	Event_RaiseVoid(&WorldEvents_MapLoaded);
+	if (Game_AllowServerTextures && World_TextureUrl.length > 0) {
+		ServerConnection_RetrieveTexturePack(&World_TextureUrl);
 	}
 
+	LocalPlayer* p = &LocalPlayer_Instance;
+	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+}
+
+Screen* LoadLevelScreen_MakeInstance(void) {
+	ListScreen* screen = ListScreen_MakeInstance();
+	String title = String_FromConst("Select a level");
+	screen->TitleText = title;
+	screen->EntryClick = LoadLevelScreen_EntryClick;
+
+	String path = String_FromConst("maps");
+	Platform_EnumFiles(&path, &screen->Entries, LoadLevelScreen_SelectEntry);
+	if (screen->Entries.Count > 0) {
+		ListScreen_QuickSort(0, screen->Entries.Count - 1);
+	}
 	return (Screen*)screen;
 }

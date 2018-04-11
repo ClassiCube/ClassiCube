@@ -169,7 +169,7 @@ namespace ClassicalSharp {
 		void LoadOptions() {
 			ClassicMode = Options.GetBool("mode-classic", false);
 			ClassicHacks = Options.GetBool(OptionsKey.AllowClassicHacks, false);
-			UseCustomBlocks = Options.GetBool(OptionsKey.UseCustomBlocks, true);
+			AllowCustomBlocks = Options.GetBool(OptionsKey.UseCustomBlocks, true);
 			UseCPE = Options.GetBool(OptionsKey.UseCPE, true);
 			SimpleArmsAnim = Options.GetBool(OptionsKey.SimpleArmsAnim, false);
 			ChatLogging = Options.GetBool(OptionsKey.ChatLogging, true);
@@ -189,7 +189,7 @@ namespace ClassicalSharp {
 			CameraClipping = Options.GetBool(OptionsKey.CameraClipping, true);
 			MaxChunkUpdates = Options.GetInt(OptionsKey.MaxChunkUpdates, 4, 1024, 30);
 			
-			UseServerTextures = Options.GetBool(OptionsKey.UseServerTextures, true);
+			AllowServerTextures = Options.GetBool(OptionsKey.UseServerTextures, true);
 			MouseSensitivity = Options.GetInt(OptionsKey.Sensitivity, 1, 100, 30);
 			ShowBlockInHand = Options.GetBool(OptionsKey.ShowBlockInHand, true);
 			InvertMouse = Options.GetBool(OptionsKey.InvertMouse, false);

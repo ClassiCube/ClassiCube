@@ -13,7 +13,7 @@ namespace ClassicalSharp.Network.Protocols {
 		public override void Init() { Reset(); }
 		
 		public override void Reset() {
-			if (!game.UseCPE || !game.UseCustomBlocks) return;
+			if (!game.UseCPE || !game.AllowCustomBlocks) return;
 			net.Set(Opcode.CpeDefineBlock, HandleDefineBlock, 80);
 			net.Set(Opcode.CpeUndefineBlock, HandleRemoveBlockDefinition, 2);
 			net.Set(Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85);
@@ -62,7 +62,7 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleDefineBlockExt() {
-			if (!game.UseCustomBlocks) {
+			if (!game.AllowCustomBlocks) {
 				net.SkipPacketData(Opcode.CpeDefineBlockExt); return;
 			}
 			BlockID block = HandleDefineBlockCommonStart(reader, net.cpeData.blockDefsExtVer >= 2);

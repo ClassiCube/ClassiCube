@@ -131,7 +131,6 @@ String Block_DefaultName(BlockID block) {
 	if (end == -1) end = blockNames.length;
 
 	String buffer = String_InitAndClear(Block_NamePtr(block), STRING_SIZE);
-	Int32 i;
 	for (i = start; i < end; i++) {
 		String_Append(&buffer, blockNames.buffer[i]);
 	}

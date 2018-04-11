@@ -81,7 +81,7 @@ namespace ClassicalSharp.Map {
 				if (curCpeExt.ContainsKey("TextureURL"))
 					url = (string)curCpeExt["TextureURL"].Value;
 				if (url.Length == 0) url = null;
-				if (game.UseServerTextures && url != null)
+				if (game.AllowServerTextures && url != null)
 					game.Server.RetrieveTexturePack(url);
 				
 				byte sidesBlock = (byte)curCpeExt["SideBlock"].Value;
@@ -95,7 +95,7 @@ namespace ClassicalSharp.Map {
 				map.Env.SetWeather((Weather)weather);
 			}
 			
-			if (game.UseCustomBlocks && CheckKey("BlockDefinitions", 1, metadata)) {
+			if (game.AllowCustomBlocks && CheckKey("BlockDefinitions", 1, metadata)) {
 				foreach (KeyValuePair<string, NbtTag> pair in curCpeExt) {
 					if (pair.Value.TagId != NbtTagType.Compound) continue;
 					if (!Utils.CaselessStarts(pair.Key, "Block")) continue;
