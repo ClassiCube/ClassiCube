@@ -84,11 +84,11 @@ void Block_SetCollide(BlockID block, UInt8 collide) {
 	Block_RecalcIsLiquid(block);
 
 	/* Reduce extended collision types to their simpler forms. */
-	if (collide == COLLIDE_ICE) collide = COLLIDE_SOLID;
+	if (collide == COLLIDE_ICE)          collide = COLLIDE_SOLID;
 	if (collide == COLLIDE_SLIPPERY_ICE) collide = COLLIDE_SOLID;
 
 	if (collide == COLLIDE_LIQUID_WATER) collide = COLLIDE_LIQUID;
-	if (collide == COLLIDE_LIQUID_LAVA) collide = COLLIDE_LIQUID;
+	if (collide == COLLIDE_LIQUID_LAVA)  collide = COLLIDE_LIQUID;
 	Block_Collide[block] = collide;
 }
 

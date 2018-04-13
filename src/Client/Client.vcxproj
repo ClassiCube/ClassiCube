@@ -310,7 +310,6 @@
     <ClCompile Include="TreeGen.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />
-    <ClCompile Include="VertexStructs.c" />
     <ClCompile Include="WeatherRenderer.c" />
     <ClCompile Include="Widgets.c" />
     <ClCompile Include="WinErrorHandler.c" />

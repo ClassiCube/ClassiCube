@@ -1476,21 +1476,8 @@ MenuInputValidator MenuInputValidator_Path(void) {
 	return validator;
 }
 
-void BooleanInputValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
-	String_AppendConst(range, "&7(yes or no)");
-}
-
-MenuInputValidator MenuInputValidator_Boolean(void) {
-	MenuInputValidator validator;
-	validator.GetRange      = BooleanInputValidator_GetRange;
-	validator.IsValidChar   = MenuInputValidator_AlwaysValidChar;
-	validator.IsValidString = MenuInputValidator_AlwaysValidString;
-	validator.IsValidValue  = MenuInputValidator_AlwaysValidString;
-	return validator;
-}
-
 MenuInputValidator MenuInputValidator_Enum(const UInt8** names, UInt32 namesCount) {
-	MenuInputValidator validator = MenuInputValidator_Boolean();
+	MenuInputValidator validator = { 0 };
 	validator.Meta_Ptr[0] = names;
 	validator.Meta_Ptr[1] = (void*)namesCount; /* TODO: Need to handle void* size < 32 bits?? */
 	return validator;
@@ -2385,7 +2372,7 @@ void TextGroupWidget_Free(GuiElement* elem) {
 }
 
 GuiElementVTABLE TextGroupWidget_VTABLE;
-void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont) {
+void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF Texture* textures, STRING_REF UInt8* buffer) {
 	widget->VTABLE = &TextGroupWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->VTABLE->Init   = TextGroupWidget_Init;
@@ -2396,6 +2383,8 @@ void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc*
 	widget->LinesCount = linesCount;
 	widget->Font = *font;
 	widget->UnderlineFont = *underlineFont;
+	widget->Textures = textures;
+	widget->Buffer = buffer;
 }
 
 

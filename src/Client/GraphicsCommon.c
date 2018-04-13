@@ -47,29 +47,29 @@ void GfxCommon_UpdateDynamicVb_IndexedTris(GfxResourceID vb, void* vertices, Int
 }
 
 void GfxCommon_Draw2DFlat(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol col) {
-	VertexP3fC4b quadVerts[4];
+	VertexP3fC4b verts[4];
 	VertexP3fC4b v; v.Z = 0.0f; v.Col = col;
 
-	v.X = (Real32)x;           v.Y = (Real32)y;            quadVerts[0] = v;
-	v.X = (Real32)(x + width);                             quadVerts[1] = v;
-	                           v.Y = (Real32)(y + height); quadVerts[2] = v;
-	v.X = (Real32)x;                                       quadVerts[3] = v;
+	v.X = (Real32)x;           v.Y = (Real32)y;            verts[0] = v;
+	v.X = (Real32)(x + width);                             verts[1] = v;
+	                           v.Y = (Real32)(y + height); verts[2] = v;
+	v.X = (Real32)x;                                       verts[3] = v;
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
-	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, quadVerts, 4);
+	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
 }
 
 void GfxCommon_Draw2DGradient(Int32 x, Int32 y, Int32 width, Int32 height, PackedCol top, PackedCol bottom) {
-	VertexP3fC4b quadVerts[4];
+	VertexP3fC4b verts[4];
 	VertexP3fC4b v; v.Z = 0.0f;
 
-	v.X = (Real32)x;           v.Y = (Real32)y;            v.Col = top;    quadVerts[0] = v;
-	v.X = (Real32)(x + width);                                             quadVerts[1] = v;
-	                           v.Y = (Real32)(y + height); v.Col = bottom; quadVerts[2] = v;
-	v.X = (Real32)x;                                                       quadVerts[3] = v;
+	v.X = (Real32)x;           v.Y = (Real32)y;            v.Col = top;    verts[0] = v;
+	v.X = (Real32)(x + width);                                             verts[1] = v;
+	                           v.Y = (Real32)(y + height); v.Col = bottom; verts[2] = v;
+	v.X = (Real32)x;                                                       verts[3] = v;
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
-	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, quadVerts, 4);
+	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_quadVb, verts, 4);
 }
 
 void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {

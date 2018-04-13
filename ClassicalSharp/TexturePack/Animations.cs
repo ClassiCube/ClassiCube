@@ -63,7 +63,7 @@ namespace ClassicalSharp.Textures {
 				DrawAnimation(null, 14, size);
 			}
 			
-			if (animations.Count == 0) return;			
+			if (animations.Count == 0) return;
 			if (animsBuffer == null) {
 				game.Chat.Add("&cCurrent texture pack specifies it uses animations,");
 				game.Chat.Add("&cbut is missing animations.png");
@@ -153,9 +153,9 @@ namespace ClassicalSharp.Textures {
 			}
 		}
 		
-		unsafe void DrawAnimationCore(AnimationData data, int texId, int size, byte* temp) {	
+		unsafe void DrawAnimationCore(AnimationData data, int texId, int size, byte* temp) {
 			int index  = TerrainAtlas1D.Get1DIndex(texId);
-			int rowNum = TerrainAtlas1D.Get1DRowId(texId);						
+			int rowNum = TerrainAtlas1D.Get1DRowId(texId);
 			animPart.SetData(size, size, size * 4, (IntPtr)temp, false);
 			
 			if (data == null) {

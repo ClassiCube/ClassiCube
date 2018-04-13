@@ -63,6 +63,8 @@ typedef struct GeneratingMapScreen_ {
 	UInt8 LastStateBuffer[String_BufferSize(STRING_SIZE)];
 } GeneratingMapScreen;
 
+#define CHATSCREEN_MAX_STATUS 5
+#define CHATSCREEN_MAX_GROUP 3
 typedef struct ChatScreen_ {
 	Screen_Layout
 	Screen* HUD;
@@ -76,8 +78,18 @@ typedef struct ChatScreen_ {
 	ChatInputWidget Input;
 	TextGroupWidget Status, BottomRight, Chat, ClientStatus;
 	SpecialInputWidget AltText;
+
 	UInt8 ChatInInputBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
 	String ChatInInput; /* needed for lost contexts, to restore chat typed in */
+
+	Texture Status_Textures[CHATSCREEN_MAX_STATUS];
+	Texture BottomRight_Textures[CHATSCREEN_MAX_GROUP];
+	Texture ClientStatus_Textures[CHATSCREEN_MAX_GROUP];
+	Texture Chat_Textures[TEXTGROUPWIDGET_MAX_LINES];
+	UInt8 Status_Buffer[String_BufferSize(CHATSCREEN_MAX_STATUS * TEXTGROUPWIDGET_LEN)];
+	UInt8 BottomRight_Buffer[String_BufferSize(CHATSCREEN_MAX_GROUP * TEXTGROUPWIDGET_LEN)];
+	UInt8 ClientStatus_Buffer[String_BufferSize(CHATSCREEN_MAX_GROUP * TEXTGROUPWIDGET_LEN)];
+	UInt8 Chat_Buffer[String_BufferSize(TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN)];
 } ChatScreen;
 
 typedef struct DisconnectScreen_ {
@@ -699,7 +711,7 @@ void ChatScreen_ResetChat(ChatScreen* screen) {
 }
 
 void ChatScreen_ConstructWidgets(ChatScreen* screen) {
-#define ChatScreen_MakeGroup(widget, lines) TextGroupWidget_Create(widget, lines, &screen->ChatFont, &screen->ChatUrlFont);
+#define ChatScreen_MakeGroup(widget, lines, textures, buffer) TextGroupWidget_Create(widget, lines, &screen->ChatFont, &screen->ChatUrlFont, textures, buffer);
 	Int32 yOffset = ChatScreen_BottomOffset() + 15;
 
 	ChatInputWidget_Create(&screen->Input, &screen->ChatFont);
@@ -709,21 +721,21 @@ void ChatScreen_ConstructWidgets(ChatScreen* screen) {
 	Elem_Init(&screen->AltText);
 	ChatScreen_UpdateAltTextY(screen);
 
-	ChatScreen_MakeGroup(&screen->Status, 5);
+	ChatScreen_MakeGroup(&screen->Status, CHATSCREEN_MAX_STATUS, screen->Status_Textures, screen->Status_Buffer);
 	Widget_SetLocation((Widget*)(&screen->Status), ANCHOR_MAX, ANCHOR_MIN, 0, 0);
 	Elem_Init(&screen->Status);
 	TextGroupWidget_SetUsePlaceHolder(&screen->Status, 0, false);
 	TextGroupWidget_SetUsePlaceHolder(&screen->Status, 1, false);
 
-	ChatScreen_MakeGroup(&screen->BottomRight, 3);
+	ChatScreen_MakeGroup(&screen->BottomRight, CHATSCREEN_MAX_GROUP, screen->BottomRight_Textures, screen->BottomRight_Buffer);
 	Widget_SetLocation((Widget*)(&screen->BottomRight), ANCHOR_MAX, ANCHOR_MAX, 0, yOffset);
 	Elem_Init(&screen->BottomRight);
 
-	ChatScreen_MakeGroup(&screen->Chat, Game_ChatLines);
+	ChatScreen_MakeGroup(&screen->Chat, Game_ChatLines, screen->Chat_Textures, screen->Chat_Buffer);
 	Widget_SetLocation((Widget*)(&screen->Chat), ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Elem_Init(&screen->Chat);
 
-	ChatScreen_MakeGroup(&screen->ClientStatus, 3);
+	ChatScreen_MakeGroup(&screen->ClientStatus, CHATSCREEN_MAX_GROUP, screen->ClientStatus_Textures, screen->ClientStatus_Buffer);
 	Widget_SetLocation((Widget*)(&screen->ClientStatus), ANCHOR_MIN, ANCHOR_MAX, 10, yOffset);
 	Elem_Init(&screen->ClientStatus);
 

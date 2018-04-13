@@ -19,8 +19,8 @@ GfxResourceID weather_rainTex;
 GfxResourceID weather_snowTex;
 GfxResourceID weather_vb;
 
-#define weather_extent 4
-#define weather_verticesCount 8 * (weather_extent * 2 + 1) * (weather_extent * 2 + 1)
+#define WEATHER_EXTENT 4
+#define WEATHER_VERTS_COUNT 8 * (WEATHER_EXTENT * 2 + 1) * (WEATHER_EXTENT * 2 + 1)
 
 Real64 weather_accumulator;
 Vector3I weather_lastPos;
@@ -38,7 +38,7 @@ void WeatherRenderer_InitHeightmap(void) {
 }
 
 Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
-	Int32 i = (maxY * World_Length + z) * World_Width + x, y;
+	Int32 i = World_Pack(x, maxY, z), y;
 
 	for (y = maxY; y >= 0; y--, i -= World_OneY) {
 		UInt8 draw = Block_Draw[World_Blocks[i]];
@@ -89,7 +89,7 @@ void WeatherRenderer_ContextLost(void* obj) {
 }
 
 void WeatherRenderer_ContextRecreated(void* obj) {
-	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, weather_verticesCount);
+	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, WEATHER_VERTS_COUNT);
 }
 
 Real32 WeatherRenderer_AlphaAt(Real32 x) {
@@ -121,12 +121,12 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 
 	PackedCol col = WorldEnv_SunCol;
 	VertexP3fT2fC4b v;
-	VertexP3fT2fC4b vertices[weather_verticesCount];
+	VertexP3fT2fC4b vertices[WEATHER_VERTS_COUNT];
 	VertexP3fT2fC4b* ptr = vertices;
 
 	Int32 dx, dz;
-	for (dx = -weather_extent; dx <= weather_extent; dx++) {
-		for (dz = -weather_extent; dz <= weather_extent; dz++) {
+	for (dx = -WEATHER_EXTENT; dx <= WEATHER_EXTENT; dx++) {
+		for (dz = -WEATHER_EXTENT; dz <= WEATHER_EXTENT; dz++) {
 			Int32 x = pos.X + dx, z = pos.Z + dz;
 			Real32 y = WeatherRenderer_RainHeight(x, z);
 			Real32 height = pos.Y - y;
@@ -152,7 +152,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 			Real32 x2 = (Real32)(x + 1), y2 = (Real32)(y + height), z2 = (Real32)(z + 1);
 
 			v.X = x1; v.Y = y1; v.Z = z1; v.U = 0.0f; v.V = v1; *ptr++ = v;
-			          v.Y = y2;                      v.V = v2;  *ptr++ = v;
+			          v.Y = y2;                       v.V = v2; *ptr++ = v;
 			v.X = x2;           v.Z = z2; v.U = 1.0f; 	        *ptr++ = v;
 			          v.Y = y1;                      v.V = v1;  *ptr++ = v;
 

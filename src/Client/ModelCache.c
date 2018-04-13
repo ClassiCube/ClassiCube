@@ -1192,11 +1192,13 @@ void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 		else {        rec.U1 = 0.5f; p1 = 5.5f / 16.0f; }
 	}
 
-	Int32 index = BlockModel.index;
-	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 0], p1, 0.0f, p1, rec.U2, rec.V2, col);
-	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 1], p1, 1.0f, p1, rec.U2, rec.V1, col);
-	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 2], p2, 1.0f, p2, rec.U1, rec.V1, col);
-	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 3], p2, 0.0f, p2, rec.U1, rec.V2, col);
+	VertexP3fT2fC4b* ptr = &ModelCache_Vertices[BlockModel.index];
+	VertexP3fT2fC4b v; v.Col = col;
+
+	v.X = p1; v.Y = 0.0f; v.Z = p1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
+	          v.Y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
+	v.X = p2;             v.Z = p2; v.U = rec.U1;               *ptr++ = v;
+	          v.Y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
 	BlockModel.index += 4;
 }
 
@@ -1217,11 +1219,13 @@ void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 		else {        rec.U2 = 0.5f; x2 = 5.5f / 16.0f; z2 = -5.5f / 16.0f; }
 	}
 
-	Int32 index = BlockModel.index;
-	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 0], x1, 0.0f, z1, rec.U2, rec.V2, col);
-	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 1], x1, 1.0f, z1, rec.U2, rec.V1, col);
-	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 2], x2, 1.0f, z2, rec.U1, rec.V1, col);
-	VertexP3fT2fC4b_Set(&ModelCache_Vertices[index + 3], x2, 0.0f, z2, rec.U1, rec.V2, col);
+	VertexP3fT2fC4b* ptr = &ModelCache_Vertices[BlockModel.index];
+	VertexP3fT2fC4b v; v.Col = col;
+
+	v.X = x1; v.Y = 0.0f; v.Z = z1; v.U = rec.U2; v.V = rec.V2; *ptr++ = v;
+	          v.Y = 1.0f;                         v.V = rec.V1; *ptr++ = v;
+	v.X = x2;             v.Z = z2; v.U = rec.U1;               *ptr++ = v;
+	          v.Y = 0.0f;                         v.V = rec.V2; *ptr++ = v;
 	BlockModel.index += 4;
 }
 

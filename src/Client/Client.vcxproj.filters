@@ -398,9 +398,6 @@
     <ClCompile Include="D3D9Api.c">
       <Filter>Source Files\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="VertexStructs.c">
-      <Filter>Source Files\Math</Filter>
-    </ClCompile>
     <ClCompile Include="PackedCol.c">
       <Filter>Source Files\2D\Utils</Filter>
     </ClCompile>
