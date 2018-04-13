@@ -94,6 +94,17 @@ typedef struct ClassicGenScreen_ {
 	ButtonWidget Buttons[4];
 } ClassicGenScreen;
 
+typedef struct KeyBindingsScreen_ {
+	MenuScreen_Layout
+	Int32 CurI, BindsCount;
+	const UInt8** Descs;
+	KeyBind* Binds;
+	Widget_LeftClick LeftPage, RightPage;
+	ButtonWidget* Buttons;
+	TextWidget Title;
+	ButtonWidget Back, Left, Right;
+} KeyBindingsScreen;
+
 
 void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -1312,5 +1323,136 @@ Screen* LoadLevelScreen_MakeInstance(void) {
 	if (screen->Entries.Count > 0) {
 		ListScreen_QuickSort(0, screen->Entries.Count - 1);
 	}
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------KeyBindingsScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+KeyBindingsScreen KeyBindingsScreen_Instance;
+GuiElementVTABLE KeyBindingsScreen_VTABLE;
+void KeyBindingsScreen_ClassicOptions(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(ClassicOptionsScreen_MakeInstance()); }
+void KeyBindingsScreen_Classic(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(ClassicKeyBindingsScreen_MakeInstance()); }
+void KeyBindingsScreen_ClassicHacks(GuiElement* a, GuiElement* b)   { Gui_SetNewScreen(ClassicHacksKeyBindingsScreen_MakeInstance()); }
+void KeyBindingsScreen_Normal(GuiElement* a, GuiElement* b)         { Gui_SetNewScreen(NormalKeyBindingsScreen_MakeInstance()); }
+void KeyBindingsScreen_Hacks(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(HacksKeyBindingsScreen_MakeInstance()); }
+void KeyBindingsScreen_Other(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(OtherKeyBindingsScreen_MakeInstance()); }
+void KeyBindingsScreen_Mouse(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(MouseKeyBindingsScreen_MakeInstance()); }
+
+void KeyBindingsScreen_OnBindingClick(GuiElement* screenElem, GuiElement* widget) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)screenElem;
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	String text = String_InitAndClearArray(textBuffer);
+
+	if (screen->CurI >= 0) {
+		KeyBindingsScreen_ButtonText(screen, screen->CurI, &text);
+		ButtonWidget* curButton = (ButtonWidget*)screen->WidgetsPtr[screen->CurI];
+		ButtonWidget_SetText(curButton, &text);
+	}
+	screen->CurI = Menu_Index(screen->WidgetsPtr, screen->WidgetsCount, (Widget*)widget);
+
+	String_Clear(&text);
+	String_AppendConst(&text, "> ");
+	KeyBindingsScreen_ButtonText(screen, screen->CurI, &text);
+	String_AppendConst(&text, " <");
+	ButtonWidget_SetText((ButtonWidget*)widget, &text);
+}
+
+void KeyBindingsScreen_ButtonText(KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
+	Key key = KeyBind_Get(screen->Binds[i]);
+	String_AppendConst(text, screen->Descs[i]);
+	String_AppendConst(text, ": ");
+	String_AppendConst(text, Key_Names[key]);
+}
+
+bool KeyBindingsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
+	if (screen->CurI == -1) return MenuScreen_HandlesKeyDown(elem, key);
+	KeyBind_Set(screen->Binds[screen->CurI], key);
+
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	String text = String_InitAndClearArray(textBuffer);
+	KeyBindingsScreen_ButtonText(screen, screen->CurI, &text);
+
+	ButtonWidget* curButton = (ButtonWidget*)screen->WidgetsPtr[screen->CurI];
+	ButtonWidget_SetText(curButton, &text);
+	screen->CurI = -1;
+	return true;
+}
+
+bool KeyBindingsScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	if (btn != MouseButton_Right) {
+		return MenuScreen_HandlesMouseDown(elem, x, y, btn);
+	}
+
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
+	Int32 i = Menu_HandleMouseDown(elem, screen->WidgetsPtr, screen->WidgetsCount, x, y, btn);
+	if (i == -1) return false;
+
+	/* Reset a key binding */
+	if ((screen->CurI == -1 || screen->CurI == i) && i < screen->BindsCount) {
+		screen->CurI = i;
+		Elem_HandlesKeyDown(elem, KeyBind_GetDefault(screen->Binds[i]));
+	}
+	return true;
+}
+
+Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const UInt8* title, Int32 btnWidth) {
+	Int32 i, origin = y, xOffset = btnWidth / 2 + 5;
+	screen->CurI = -1;
+
+	Widget** widgets = screen->WidgetsPtr;
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	String text = String_InitAndClearArray(textBuffer);
+
+	for (i = 0; i < screen->BindsCount; i++) {
+		if (i == leftLength) y = origin; /* reset y for next column */
+		Int32 xDir = leftLength == -1 ? 0 : (i < leftLength ? -1 : 1);
+
+		String_Clear(&text);
+		KeyBindingsScreen_ButtonText(screen, i, &text);
+
+		ButtonWidget_Create(&screen->Buttons[i], btnWidth, &text, &screen->TitleFont, KeyBindingsScreen_OnBindingClick);
+		widgets[i] = (Widget*)(&screen->Buttons[i]);
+		Widget_SetLocation(widgets[i], ANCHOR_CENTRE, ANCHOR_CENTRE, xDir * xOffset, y);
+		y += 50; /* distance between buttons */
+	}
+
+	String titleText = String_FromReadonly(title);
+	TextWidget_Create(&screen->Title, &titleText, &screen->TitleFont);
+	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -180);
+	widgets[i++] = (Widget*)(&screen->Title);
+
+	Widget_LeftClick backClick = Game_UseClassicOptions ? KeyBindingsScreen_ClassicOptions : Menu_SwitchOptions;
+	Menu_MakeDefaultBack(&screen->Back, false, &screen->TitleFont, backClick);
+	widgets[i++] = (Widget*)(&screen->Back);
+	if (screen->LeftPage == NULL && screen->RightPage == NULL) return i;
+
+	String lArrow = String_FromConst("<");
+	ButtonWidget_Create(&screen->Left, &lArrow, 40, &screen->TitleFont, screen->LeftPage);
+	Widget_SetLocation((Widget*)(&screen->Left), ANCHOR_CENTRE, ANCHOR_CENTRE, -btnWidth - 35, arrowsY);
+	screen->Left.Disabled = screen->LeftPage == NULL;
+	widgets[i++] = (Widget*)(&screen->Left);
+
+	String rArrow = String_FromConst("<");
+	ButtonWidget_Create(&screen->Right, &rArrow, 40, &screen->TitleFont, screen->LeftPage);
+	Widget_SetLocation((Widget*)(&screen->Right), ANCHOR_CENTRE, ANCHOR_CENTRE, btnWidth + 35, arrowsY);
+	screen->Right.Disabled = screen->RightPage == NULL;
+	widgets[i++] = (Widget*)(&screen->Right);
+	return i;
+}
+
+Screen* KeyBindingsScreen_MakeInstance(Int32 CurI, BindsCount, const UInt8** Descs, KeyBind* Binds, Widget_LeftClick LeftPage, RightPage, ButtonWidget* Buttons) {
+ButtonWidget Back, Left, Right;
+	KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets,
+		Array_Elems(screen->Widgets), ClassicGenScreen_ContextRecreated);
+	KeyBindingsScreen_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &KeyBindingsScreen_VTABLE;
+
+	screen->VTABLE->Init = KeyBindingsScreen_Init;
+	screen->VTABLE->HandlesKeyDown = KeyBindingsScreen_HandlesKeyDown;
+	screen->VTABLE->HandlesMouseDown = KeyBindingsScreen_HandlesMouseDown;
 	return (Screen*)screen;
 }

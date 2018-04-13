@@ -13,19 +13,14 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		InputWidget input;
-		TextWidget desc;
 		const int overwriteIndex = 2;
 		static FastColour grey = new FastColour(150, 150, 150);
 		
 		public override void Render(double delta) {
-			RenderMenuBounds();
-			game.Graphics.Texturing = true;
-			RenderWidgets(widgets, delta);
-			if (desc != null) desc.Render(delta);
-			game.Graphics.Texturing = false;
-			
+			base.Render(delta);			
 			int cX = game.Width / 2, cY = game.Height / 2;
 			game.Graphics.Draw2DQuad(cX - 250, cY + 90, 500, 2, grey);
+			
 			if (textPath == null) return;
 			SaveMap(textPath);
 			textPath = null;
@@ -141,14 +136,14 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void MakeDescWidget(string text) {
 			DisposeDescWidget();
-			desc = TextWidget.Create(game, text, textFont)
+			widgets[widgets.Length - 1] = TextWidget.Create(game, text, textFont)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 65);
 		}
 		
 		void DisposeDescWidget() {
-			if (desc != null) {
-				desc.Dispose();
-				desc = null;
+			if (widgets[widgets.Length - 1] != null) {
+				widgets[widgets.Length - 1].Dispose();
+				widgets[widgets.Length - 1] = null;
 			}
 		}
 	}

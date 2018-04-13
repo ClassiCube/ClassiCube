@@ -1,12 +1,12 @@
 #ifndef CC_GFXCOMMON_H
 #define CC_GFXCOMMON_H
 #include "String.h"
-#include "Texture.h"
 #include "VertexStructs.h"
 
 /* Provides common/shared methods for a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct Texture_ Texture;
 
 void GfxCommon_Init(void);
 void GfxCommon_Free(void);

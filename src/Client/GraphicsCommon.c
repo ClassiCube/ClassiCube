@@ -5,6 +5,7 @@
 #include "Event.h"
 #include "Funcs.h"
 #include "ExtMath.h"
+#include "Texture.h"
 
 void GfxCommon_Init(void) {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
