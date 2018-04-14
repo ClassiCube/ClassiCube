@@ -161,9 +161,12 @@ namespace ClassicalSharp {
 			defTexturePack = Options.Get(OptionsKey.DefaultTexturePack) ?? "default.zip";
 			TexturePack extractor = new TexturePack();
 			extractor.Extract("default.zip", this);
+			
 			// in case the user's default texture pack doesn't have all required textures
-			if (DefaultTexturePack != "default.zip")
-				extractor.Extract(DefaultTexturePack, this);
+			string defTexPack = DefaultTexturePack;
+			if (defTexPack != "default.zip") {
+				extractor.Extract(defTexPack, this);
+			}
 		}
 		
 		void LoadOptions() {

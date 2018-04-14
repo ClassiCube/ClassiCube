@@ -15,14 +15,30 @@ namespace ClassicalSharp.Gui.Screens {
 		InputWidget input;
 		const int overwriteIndex = 2;
 		static FastColour grey = new FastColour(150, 150, 150);
+		string textPath;
 		
 		public override void Render(double delta) {
 			base.Render(delta);			
 			int cX = game.Width / 2, cY = game.Height / 2;
-			game.Graphics.Draw2DQuad(cX - 250, cY + 90, 500, 2, grey);
-			
+			game.Graphics.Draw2DQuad(cX - 250, cY + 90, 500, 2, grey);			
 			if (textPath == null) return;
-			SaveMap(textPath);
+			
+			bool classic = textPath.EndsWith(".cw");
+			try {
+				using (Stream fs = Platform.FileCreate(textPath)) {
+					IMapFormatExporter exporter = null;
+					if (classic) exporter = new MapCwExporter();
+					else exporter = new MapSchematicExporter();
+					exporter.Save(fs, game);
+				}
+			} catch (Exception ex) {
+				ErrorHandler.LogError("saving map", ex);
+				MakeDescWidget("&cError while trying to save map");
+				return;
+			}
+			
+			game.Chat.Add("&eSaved map to: " + textPath);
+			game.Gui.SetNewScreen(new PauseScreen(game));
 			textPath = null;
 		}
 		
@@ -79,23 +95,23 @@ namespace ClassicalSharp.Gui.Screens {
 		void SaveSchematic(Game game, Widget widget) { DoSave(widget, ".schematic"); }
 		
 		void DoSave(Widget widget, string ext) {
-			string text = input.Text.ToString();
-			if (text.Length == 0) {
+			string file = input.Text.ToString();
+			if (file.Length == 0) {
 				MakeDescWidget("&ePlease enter a filename"); return;
 			}
-			string file = Path.ChangeExtension(text, ext);
-			text = Path.Combine(Program.AppDirectory, "maps");
-			text = Path.Combine(text, file);
 			
+			file = Path.ChangeExtension(file, ext);
+			string path = Path.Combine("maps", file);
 			ButtonWidget btn = (ButtonWidget)widget;
-			if (File.Exists(text) && btn.OptName == null) {
+			
+			if (Platform.FileExists(path) && btn.OptName == null) {
 				btn.SetText("&cOverwrite existing?");
 				btn.OptName = "O";
 			} else {
 				// NOTE: We don't immediately save here, because otherwise the 'saving...'
 				// will not be rendered in time because saving is done on the main thread.
 				MakeDescWidget("Saving..");
-				textPath = text;
+				textPath = path;
 				RemoveOverwrites();
 			}
 		}
@@ -111,27 +127,6 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			button.OptName = null;
 			button.SetText(defaultText);
-		}
-		
-		string textPath;
-		void SaveMap(string path) {
-			bool classic = path.EndsWith(".cw");
-			try {
-				if (File.Exists(path))
-					File.Delete(path);
-				using (FileStream fs = new FileStream(path, FileMode.CreateNew, FileAccess.Write)) {
-					IMapFormatExporter exporter = null;
-					if (classic) exporter = new MapCwExporter();
-					else exporter = new MapSchematicExporter();
-					exporter.Save(fs, game);
-				}
-			} catch (Exception ex) {
-				ErrorHandler.LogError("saving map", ex);
-				MakeDescWidget("&cError while trying to save map");
-				return;
-			}
-			game.Chat.Add("&eSaved map to: " + Path.GetFileName(path));
-			game.Gui.SetNewScreen(new PauseScreen(game));
 		}
 		
 		void MakeDescWidget(string text) {

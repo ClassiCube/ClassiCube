@@ -342,8 +342,9 @@ namespace ClassicalSharp.GraphicsAPI {
 						}
 					}
 				}
-				using (FileStream fs = File.Create(output))
+				using (Stream fs = Platform.FileCreate(output)) {
 					Platform.WriteBmp(bmp, fs);
+				}
 			}
 		}
 		

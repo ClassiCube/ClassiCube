@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
 	/*void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\output\\release\\texpacks\\skybox.png");
-	ReturnCode openCode = Platform_FileOpen(&file, &path, true);
+	ReturnCode openCode = Platform_FileOpen(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 	Bitmap bmp;
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
 
 	/*void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\output\\release\\texpacks\\default.zip");
-	ReturnCode openCode = Platform_FileOpen(&file, &path, true);
+	ReturnCode openCode = Platform_FileOpen(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 	ZipState state;
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
 
 	void* file;
 	String path = String_FromConst("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\src\\x64\\Release\\canyon.lvl");
-	ReturnCode openCode = Platform_FileOpen(&file, &path, true);
+	ReturnCode openCode = Platform_FileOpen(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 	Lvl_Load(&fileStream);
@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
 
 	/*void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\\ClassicalSharp\\src\\Debug\\gunzip.c.gz");
-	ReturnCode openCode = Platform_FileOpen(&file, &path, true);
+	ReturnCode openCode = Platform_FileOpen(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 

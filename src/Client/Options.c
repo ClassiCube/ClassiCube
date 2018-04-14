@@ -141,7 +141,7 @@ void Options_Set(const UInt8* keyRaw, STRING_PURE String* value) {
 void Options_Load(void) {
 	void* file = NULL;
 	String path = String_FromConst("options.txt");
-	ReturnCode result = Platform_FileOpen(&file, &path, true);
+	ReturnCode result = Platform_FileOpen(&file, &path);
 
 	if (result == ReturnCode_FileNotFound) return;
 	/* TODO: Should we just log failure to open? */
@@ -182,7 +182,7 @@ void Options_Load(void) {
 void Options_Save(void) {
 	void* file = NULL;
 	String path = String_FromConst("options.txt");
-	ReturnCode result = Platform_FileOpen(&file, &path, true);
+	ReturnCode result = Platform_FileOpen(&file, &path);
 
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "Options - Saving");

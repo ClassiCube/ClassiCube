@@ -17,11 +17,11 @@ namespace ClassicalSharp.Audio {
 		
 		public void Init(Game game) {
 			this.game = game;
-			string path = Path.Combine(Program.AppDirectory, "audio");
-			if (Directory.Exists(path))
-				files = Directory.GetFiles(path);
-			else
+			if (Platform.DirectoryExists("audio")) {
+				files = Platform.DirectoryFiles("audio");
+			} else {
 				files = new string[0];
+			}
 						
 			game.MusicVolume = GetVolume(OptionsKey.MusicVolume, OptionsKey.UseMusic);
 			SetMusic(game.MusicVolume);
@@ -60,7 +60,8 @@ namespace ClassicalSharp.Audio {
 			musicFiles = new string[musicCount];
 			for (int i = 0, j = 0; i < files.Length; i++) {
 				if (!Utils.CaselessEnds(files[i], ".ogg")) continue;
-				musicFiles[j] = files[i]; j++;
+				musicFiles[j] = Path.GetFileName(files[i]);
+				j++;
 			}
 
 			disposingMusic = false;
@@ -75,10 +76,9 @@ namespace ClassicalSharp.Audio {
 			Random rnd = new Random();
 			while (!disposingMusic) {
 				string file = musicFiles[rnd.Next(0, musicFiles.Length)];
-				string path = Path.Combine(Program.AppDirectory, file);
 				Utils.LogDebug("playing music file: " + file);
 				
-				using (FileStream fs = File.OpenRead(path)) {
+				using (Stream fs = Platform.FileOpen(file)) {
 					OggContainer container = new OggContainer(fs);
 					try {
 						musicOut.SetVolume(game.MusicVolume / 100.0f);

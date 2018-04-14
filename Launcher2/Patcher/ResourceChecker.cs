@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.IO;
+using ClassicalSharp;
 using ClassicalSharp.Textures;
 
 namespace Launcher.Patcher {
@@ -8,21 +9,21 @@ namespace Launcher.Patcher {
 	public sealed class ResourceChecker {
 
 		public void CheckResourceExistence() {
-			string audioPath = Path.Combine(Program.AppDirectory, "audio");
-			if (!Directory.Exists(audioPath))
-				Directory.CreateDirectory(audioPath);
+			if (!Platform.DirectoryExists("audio")) {
+				Platform.DirectoryCreate("audio");
+			}
+			
 			DigSoundsExist = CheckDigSoundsExist();
 			StepSoundsExist = CheckStepSoundsExist();
 			AllResourcesExist = DigSoundsExist && StepSoundsExist;
 			
-			string texDir = Path.Combine(Program.AppDirectory, "texpacks");
-			string zipPath = Path.Combine(texDir, "default.zip");
-			bool defaultZipExists = File.Exists(zipPath);
-			if (File.Exists(zipPath))
-				CheckDefaultZip(zipPath);
+			string defPath = Path.Combine("texpacks", "default.zip");
+			if (Platform.FileExists(defPath)) {
+				CheckDefaultZip(defPath);
+			}
 			
 			CheckTexturePack();
-			CheckMusic(audioPath);
+			CheckMusic();
 			CheckSounds();
 		}
 		
@@ -44,11 +45,11 @@ namespace Launcher.Patcher {
 			}
 		}
 		
-		void CheckMusic(string audioPath) {
+		void CheckMusic() {
 			string[] files = ResourceList.MusicFiles;
 			for (int i = 0; i < files.Length; i++) {
-				string file = Path.Combine(audioPath, files[i]);
-				musicExists[i] = File.Exists(file);
+				string path = Path.Combine("audio", files[i]);
+				musicExists[i] = Platform.FileExists(path);
 				if (musicExists[i]) continue;
 				
 				DownloadSize += musicSizes[i] / 1024f;
@@ -73,13 +74,14 @@ namespace Launcher.Patcher {
 		public int ResourcesCount;
 		internal bool[] musicExists = new bool[7];
 		
-		void CheckDefaultZip(string path) {
+		void CheckDefaultZip(string relPath) {
 			ZipReader reader = new ZipReader();
 			reader.SelectZipEntry = SelectZipEntry;
 			reader.ProcessZipEntry = ProcessZipEntry;
 			
-			using (Stream src = new FileStream(path, FileMode.Open, FileAccess.Read))
+			using (Stream src = Platform.FileOpen(relPath)) {
 				reader.Extract(src);
+			}
 		}
 
 		bool SelectZipEntry(string filename) {
@@ -98,20 +100,18 @@ namespace Launcher.Patcher {
 		
 		bool CheckDigSoundsExist() {
 			string[] files = ResourceList.DigSounds;
-			string path = Path.Combine(Program.AppDirectory, "audio");
 			for (int i = 0; i < files.Length; i++) {
-				string file = "dig_" + files[i] + ".wav";
-				if (!File.Exists(Path.Combine(path, file))) return false;
+				string path = Path.Combine("audio", "dig_" + files[i] + ".wav");
+				if (!Platform.FileExists(path)) return false;
 			}
 			return true;
 		}
 		
 		bool CheckStepSoundsExist() {
 			string[] files = ResourceList.StepSounds;
-			string path = Path.Combine(Program.AppDirectory, "audio");
 			for (int i = 0; i < files.Length; i++) {
-				string file = "step_" + files[i] + ".wav";
-				if (!File.Exists(Path.Combine(path, file))) return false;
+				string path = Path.Combine("audio", "step_" + files[i] + ".wav");
+				if (!Platform.FileExists(path)) return false;
 			}
 			return true;
 		}

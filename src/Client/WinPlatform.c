@@ -151,21 +151,26 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 }
 
 
-ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path, bool readOnly) {
-	UINT32 access = GENERIC_READ;
-	if (!readOnly) access |= GENERIC_WRITE;
-	HANDLE handle = CreateFileA(path->buffer, access, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path) {
+	HANDLE handle = CreateFileA(path->buffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	*file = (void*)handle;
 
 	return handle != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
 ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path) {
-	UINT32 access = GENERIC_READ | GENERIC_WRITE;
-	HANDLE handle = CreateFileA(path->buffer, access, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE handle = CreateFileA(path->buffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 	*file = (void*)handle;
 
 	return handle != INVALID_HANDLE_VALUE ? 0 : GetLastError();
+}
+
+ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path) {
+	HANDLE handle = CreateFileA(path->buffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	*file = (void*)handle;
+
+	if (handle == INVALID_HANDLE_VALUE) return GetLastError();
+	return Platform_FileSeek(*file, 0, STREAM_SEEKFROM_END);
 }
 
 ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
@@ -187,11 +192,11 @@ ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
 	DWORD pos;
 	switch (seekType) {
 	case STREAM_SEEKFROM_BEGIN:
-		pos = SetFilePointer(file, offset, NULL, 0); break;
+		pos = SetFilePointer(file, offset, NULL, FILE_BEGIN); break;
 	case STREAM_SEEKFROM_CURRENT:
-		pos = SetFilePointer(file, offset, NULL, 1); break;
+		pos = SetFilePointer(file, offset, NULL, FILE_CURRENT); break;
 	case STREAM_SEEKFROM_END:
-		pos = SetFilePointer(file, offset, NULL, 2); break;
+		pos = SetFilePointer(file, offset, NULL, FILE_END); break;
 	default:
 		ErrorHandler_Fail("Invalid SeekType provided when seeking file");
 	}

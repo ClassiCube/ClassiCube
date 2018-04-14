@@ -31,7 +31,8 @@ typedef void Platform_EnumFilesCallback(STRING_PURE String* path, void* obj);
 ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback);
 
 ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path);
-ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path, bool readOnly);
+ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path);
+ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path);
 ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead);
 ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten);
 ReturnCode Platform_FileClose(void* file);

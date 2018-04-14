@@ -126,20 +126,19 @@ namespace ClassicalSharp {
 		}
 		
 		void OpenChatFile(DateTime now) {
-			string basePath = Path.Combine(Program.AppDirectory, "logs");
-			if (!Directory.Exists(basePath))
-				Directory.CreateDirectory(basePath);
+			if (!Platform.DirectoryExists("logs")) {
+				Platform.DirectoryCreate("logs");
+			}
 
 			string date = now.ToString("yyyy-MM-dd");
 			// Ensure multiple instances do not end up overwriting each other's log entries.
 			for (int i = 0; i < 20; i++) {
 				string id = i == 0 ? "" : " _" + i;
-				string fileName = date + " " + logName + id + ".log";
-				string path = Path.Combine(basePath, fileName);
+				string path = Path.Combine("logs", date + " " + logName + id + ".log");
 				
-				FileStream stream = null;
+				Stream stream = null;
 				try {
-					stream = File.Open(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+					stream = Platform.FileAppend(path);
 				} catch (IOException ex) {
 					int hresult = Marshal.GetHRForException(ex);
 					uint errorCode = (uint)hresult & 0xFFFF;

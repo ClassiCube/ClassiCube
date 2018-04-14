@@ -27,16 +27,16 @@ namespace Launcher.Updater {
 			ProcessStartInfo info = new ProcessStartInfo();
 			info.CreateNoWindow = false;
 			info.UseShellExecute = true;
-			info.WorkingDirectory = Program.AppDirectory;
+			info.WorkingDirectory = Platform.AppDirectory;
 			
 			if (OpenTK.Configuration.RunningOnWindows) {
-				string path = Path.Combine(Program.AppDirectory, "update.bat");
-				File.WriteAllText(path, Scripts.BatchFile);
+				Platform.WriteAllText("update.bat", Scripts.BatchFile);
 				info.FileName = "cmd"; info.Arguments = "/C start cmd /C update.bat";
 				Process.Start(info);
  			} else {
-				string path = Path.Combine(Program.AppDirectory, "update.sh");
-				File.WriteAllText(path, Scripts.BashFile.Replace("\r\n", "\n"));
+				string path = Path.Combine(Platform.AppDirectory, "update.sh");
+				Platform.WriteAllText("update.sh", Scripts.BashFile.Replace("\r\n", "\n"));
+				
 				const int flags = 0x7;// read | write | executable
 				int code = chmod(path, (flags << 6) | (flags << 3) | 4);
 				if (code != 0)
@@ -55,23 +55,20 @@ namespace Launcher.Updater {
 		internal static extern int chmod(string path, int mode);
 		
 		static void MakeUpdatesFolder(byte[] zipData) {
+			Platform.DirectoryCreate("CS_Update");
 			using (MemoryStream stream = new MemoryStream(zipData)) {
-				ZipReader reader = new ZipReader();
-				string path = Path.Combine(Program.AppDirectory, "CS_Update");
-				Directory.CreateDirectory(path);
-				
+				ZipReader reader = new ZipReader();				
 				reader.ProcessZipEntry = ProcessZipEntry;
 				reader.Extract(stream);
 			}
 		}
 		
 		static void ProcessZipEntry(string filename, byte[] data, ZipEntry entry) {
-			string path = Path.Combine(Program.AppDirectory, "CS_Update");
-			path = Path.Combine(path, Path.GetFileName(filename));
-			File.WriteAllBytes(path, data);
+			string path = Path.Combine("CS_Update", Path.GetFileName(filename));
+			Platform.WriteAllBytes(path, data);
 			
 			try {
-				File.SetLastWriteTimeUtc(path, PatchTime);
+				Platform.FileSetWriteTime(path, PatchTime);
 			} catch (IOException ex) {
 				ErrorHandler.LogError("I/O exception when trying to set modified time for: " + filename, ex);
 			} catch (UnauthorizedAccessException ex) {

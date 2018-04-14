@@ -80,7 +80,7 @@ void Chat_OpenLog(DateTime* now) {
 		String_AppendConst(&path, ".log");
 
 		void* file;
-		ReturnCode code = Platform_FileOpen(&file, &path, false);
+		ReturnCode code = Platform_FileAppend(&file, &path);
 		if (code != 0 && code != ReturnCode_FileShareViolation) {
 			ErrorHandler_FailWithCode(code, "Chat - opening log file");
 		}

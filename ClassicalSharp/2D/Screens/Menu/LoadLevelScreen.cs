@@ -13,15 +13,13 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public LoadLevelScreen(Game game) : base(game) {
 			titleText = "Select a level";
-			string dir = Path.Combine(Program.AppDirectory, "maps");
-			string[] rawFiles = Directory.GetFiles(dir);
+			string[] rawFiles = Platform.DirectoryFiles("maps");
 			int count = 0;
 			
 			// Only add map files
 			for (int i = 0; i < rawFiles.Length; i++) {
 				string file = rawFiles[i];
-				if (file.EndsWith(".cw") || file.EndsWith(".dat")
-				    || file.EndsWith(".fcm") || file.EndsWith(".lvl")) {
+				if (file.EndsWith(".cw") || file.EndsWith(".dat") || file.EndsWith(".fcm") || file.EndsWith(".lvl")) {
 					count++;
 				} else {
 					rawFiles[i] = null;
@@ -38,13 +36,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void TextButtonClick(Game game, Widget widget) {
-			string path = Path.Combine(Program.AppDirectory, "maps");
-			path = Path.Combine(path, ((ButtonWidget)widget).Text);
-			if (File.Exists(path))
-				LoadMap(path);
-		}
-		
-		void LoadMap(string path) {
+			string path = Path.Combine("maps", ((ButtonWidget)widget).Text);
+			if (!Platform.FileExists(path)) return;
+			
 			IMapFormatImporter importer = null;
 			if (path.EndsWith(".dat")) {
 				importer = new MapDatImporter();
@@ -57,7 +51,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			
 			try {
-				using (FileStream fs = File.OpenRead(path)) {
+				using (Stream fs = Platform.FileOpen(path)) {
 					int width, height, length;
 					game.World.Reset();
 					game.WorldEvents.RaiseOnNewMap();

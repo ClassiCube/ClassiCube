@@ -1,6 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.IO;
+using ClassicalSharp;
 using ClassicalSharp.Network;
 using Launcher.Gui.Views;
 using Launcher.Patcher;
@@ -90,7 +90,7 @@ namespace Launcher.Gui.Screens {
 		
 		void GotoNextMenu(int x, int y) {
 			game.Downloader.Clear();
-			if (File.Exists("options.txt")) {				
+			if (Platform.FileExists("options.txt")) {
 				game.SetScreen(new MainScreen(game));
 			} else {
 				game.SetScreen(new ChooseModeScreen(game, true));

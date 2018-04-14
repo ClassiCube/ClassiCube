@@ -43,7 +43,7 @@ namespace ClassicalSharp.Textures {
 				animsBuffer = new FastBitmap(animBmp, true, true);
 			} else if (e.Name == "animations.txt" || e.Name == "animation.txt") {
 				MemoryStream stream = new MemoryStream(e.Data);
-				StreamReader reader = new StreamReader(stream);
+				StreamReader reader = new StreamReader(stream, false);
 				ReadAnimationsDescription(reader);
 			} else if (e.Name == "uselavaanim") {
 				useLavaAnim = true;

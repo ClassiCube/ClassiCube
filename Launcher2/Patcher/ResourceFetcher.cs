@@ -128,9 +128,8 @@ namespace Launcher.Patcher {
 					return false;
 				
 				if (data == null) continue;
-				string path = Path.Combine(Program.AppDirectory, "audio");
-				path = Path.Combine(path, file);
-				File.WriteAllBytes(path, data);
+				string path = Path.Combine("audio", file);
+				Platform.WriteAllBytes(path, data);
 			}
 			return true;
 		}

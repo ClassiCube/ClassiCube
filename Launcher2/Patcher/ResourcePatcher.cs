@@ -32,11 +32,16 @@ namespace Launcher.Patcher {
 			reader = new ZipReader();
 			reader.SelectZipEntry = SelectZipEntry_Classic;
 			reader.ProcessZipEntry = ProcessZipEntry_Classic;
-			string texDir = Path.Combine(Program.AppDirectory, "texpacks");
-			string path = Path.Combine(texDir, "default.zip");
-			ExtractExisting(path);
+			string defPath = Path.Combine("texpacks", "default.zip");
 			
-			using (Stream dst = new FileStream(path, FileMode.Create, FileAccess.Write)) {
+			if (Platform.FileExists(defPath)) {			
+				using (Stream src = Platform.FileOpen(defPath)) {
+					reader.ProcessZipEntry = ExtractExisting;
+					reader.Extract(src);
+				}
+			}
+			
+			using (Stream dst = Platform.FileCreate(defPath)) {
 				writer = new ZipWriter(dst);
 				writer.entries = new ZipEntry[100];
 				for (int i = 0; i < entries.Count; i++)
@@ -60,14 +65,6 @@ namespace Launcher.Patcher {
 		
 		List<ZipEntry> entries = new List<ZipEntry>();
 		List<byte[]> datas = new List<byte[]>();
-		void ExtractExisting(string path) {
-			if (!File.Exists(path)) return;
-			
-			using (Stream src = new FileStream(path, FileMode.Open, FileAccess.Read)) {
-				reader.ProcessZipEntry = ExtractExisting;
-				reader.Extract(src);
-			}
-		}
 		
 		void ExtractExisting(string filename, byte[] data, ZipEntry entry) {
 			filename = ResourceList.GetFile(filename);
@@ -114,7 +111,7 @@ namespace Launcher.Patcher {
 					
 					CopyTile( 0, 16,  5 * 16, 3 * 16, mask, terrainBmp);
 					CopyTile(16, 16,  6 * 16, 5 * 16, mask, terrainBmp);
-					CopyTile(32, 16, 11 * 16, 0 * 16, mask, terrainBmp);				
+					CopyTile(32, 16, 11 * 16, 0 * 16, mask, terrainBmp);
 					patchedTerrain = true;
 				}
 			}

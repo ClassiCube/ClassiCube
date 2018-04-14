@@ -74,6 +74,8 @@ namespace Launcher {
 			Window.FocusedChanged += FocusedChanged;
 			Window.WindowStateChanged += Resize;
 			Window.Keyboard.KeyDown += KeyDown;
+			
+			ClassicalSharp.Program.CleanupMainDirectory();
 			LoadFont();
 			logoFont = new Font(FontName, 32, FontStyle.Regular);
 			

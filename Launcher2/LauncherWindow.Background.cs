@@ -17,28 +17,31 @@ namespace Launcher {
 			fontPng = false; terrainPng = false;
 			Options.Load();
 			LauncherSkin.LoadFromOptions();
-			if (Options.Get("nostalgia-classicbg") != null)
+			
+			if (Options.Get("nostalgia-classicbg") != null) {
 				ClassicBackground = Options.GetBool("nostalgia-classicbg", false);
-			else
+			} else {
 				ClassicBackground = Options.GetBool("mode-classic", false);
+			}
 			
-			string texDir = Path.Combine(Program.AppDirectory, "texpacks");
 			string texPack = Options.Get(OptionsKey.DefaultTexturePack) ?? "default.zip";
-			texPack = Path.Combine(texDir, texPack);
+			string texPath = Path.Combine("texpacks", texPack);
 			
-			if (!File.Exists(texPack))
-				texPack = Path.Combine(texDir, "default.zip");
-			if (!File.Exists(texPack)) return;
+			if (!Platform.FileExists(texPath)) {
+				texPath = Path.Combine("texpacks", "default.zip");
+			}
+			if (!Platform.FileExists(texPath)) return;
 			
-			ExtractTexturePack(texPack);
+			ExtractTexturePack(texPath);
+			// user selected texture pack is missing some required .png files
 			if (!fontPng || !terrainPng) {
-				texPack = Path.Combine(texDir, "default.zip");
-				ExtractTexturePack(texPack);
+				texPath = Path.Combine("texpacks", "default.zip");
+				ExtractTexturePack(texPath);
 			}
 		}
 		
-		void ExtractTexturePack(string texPack) {
-			using (Stream fs = new FileStream(texPack, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+		void ExtractTexturePack(string relPath) {
+			using (Stream fs = Platform.FileOpen(relPath)) {
 				ZipReader reader = new ZipReader();
 				reader.SelectZipEntry = SelectZipEntry;
 				reader.ProcessZipEntry = ProcessZipEntry;

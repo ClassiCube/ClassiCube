@@ -32,8 +32,7 @@ void ErrorHandler_Fail(const UInt8* raw_msg) {
 	ErrorHandler_WriteLogBody(raw_msg);
 	ErrorHandler_WriteLogEnd();
 
-	HWND win = GetActiveWindow();
-	MessageBoxA(win, logMsg.buffer, "We're sorry", 0);
+	ErrorHandler_ShowDialog("We're sorry", logMsg.buffer);
 	ExitProcess(1);
 }
 
@@ -45,7 +44,11 @@ void ErrorHandler_FailWithCode(ReturnCode code, const UInt8* raw_msg) {
 	String_AppendConst(&logMsg, "\r\n");
 	ErrorHandler_WriteLogEnd();
 
-	HWND win = GetActiveWindow(); /* TODO: It's probably wrong to use GetActiveWindow() here */
-	MessageBoxA(win, logMsg.buffer, "We're sorry", 0);
+	ErrorHandler_ShowDialog("We're sorry", logMsg.buffer);
 	ExitProcess(code);
+}
+
+void ErrorHandler_ShowDialog(const UInt8* title, const UInt8* msg) {
+	HWND win = GetActiveWindow(); /* TODO: It's probably wrong to use GetActiveWindow() here */
+	MessageBoxA(win, msg, title, 0);
 }

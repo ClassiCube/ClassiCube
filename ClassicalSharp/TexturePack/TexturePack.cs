@@ -17,11 +17,11 @@ namespace ClassicalSharp.Textures {
 		
 		Game game;
 		
-		public void Extract(string path, Game game) {
-			path = PathIO.Combine("texpacks", path);
-			path = PathIO.Combine(Program.AppDirectory, path);
-			using (Stream fs = File.OpenRead(path))
+		public void Extract(string file, Game game) {
+			string path = PathIO.Combine("texpacks", file);
+			using (Stream fs = Platform.FileOpen(path)) {
 				Extract(fs, game);
+			}
 		}
 		
 		public void Extract(Stream stream, Game game) {

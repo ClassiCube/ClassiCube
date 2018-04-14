@@ -74,12 +74,12 @@ namespace ClassicalSharp {
 		
 		internal void DownloadTexturePack(string url) {
 			if (game.DeniedUrls.Has(url)) return;
-			string path = TextureCache.MakePath(url), etag = null;
+			string etag = null;
 			DateTime lastModified = DateTime.MinValue;
 			
-			if (File.Exists(path)) {
-				lastModified = TextureCache.GetLastModified(url, path, game.LastModified);
-				etag = TextureCache.GetETag(url, path, game.ETags);
+			if (TextureCache.HasUrl(url)) {
+				lastModified = TextureCache.GetLastModified(url, game.LastModified);
+				etag = TextureCache.GetETag(url, game.ETags);
 			}
 
 			TexturePack.ExtractCurrent(game, url);

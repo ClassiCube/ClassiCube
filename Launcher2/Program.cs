@@ -10,22 +10,20 @@ namespace Launcher {
 		
 		public const string AppName = "ClassicalSharp Launcher 0.99.9.94";
 		
-		public static string AppDirectory;
-		
 		public static bool ShowingErrorDialog = false;
 		
 		[STAThread]
 		static void Main(string[] args) {
-			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
-			
-			string path = Path.Combine(AppDirectory, "ClassicalSharp.exe");
-			if (!File.Exists(path)) { 
-				Message("ClassicalSharp.exe needs to be in the same folder as the launcher."); return; 
+			Platform.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
+			if (!Platform.FileExists("ClassicalSharp.exe")) { 
+				ErrorHandler.ShowDialog("Missing file", "ClassicalSharp.exe needs to be in the same folder as the launcher."); 
+				return;
 			}
-			
-			path = Path.Combine(AppDirectory, "OpenTK.dll");
-			if (!File.Exists(path)) { 
-				Message("OpenTK.dll needs to be in the same folder as the launcher."); return;
+
+			if (!Platform.FileExists("OpenTK.dll")) { 
+				ErrorHandler.ShowDialog("Missing file", "OpenTK.dll needs to be in the same folder as the launcher."); 
+				return;
 			}
 			
 			// NOTE: we purposely put this in another method, as we need to ensure
@@ -34,13 +32,9 @@ namespace Launcher {
 			RunLauncher();
 		}
 		
-		// put in separate function, because we don't want to load winforms assembly if possible
-		static void Message(string message) { MessageBox.Show(message, "Missing file"); }
-		
 		static void RunLauncher() {
-			string logPath = Path.Combine(AppDirectory, "launcher.log");
 			AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionHandler;
-			ErrorHandler.InstallHandler(logPath);
+			ErrorHandler.InstallHandler("launcher.log");
 			OpenTK.Configuration.SkipPerfCountersHack();
 			LauncherWindow window = new LauncherWindow();
 			window.Run();

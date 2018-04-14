@@ -28,15 +28,12 @@ namespace Launcher {
 			return StartImpl(null, true, args, ref shouldExit);
 		}
 		
-		static bool StartImpl(ClientStartData data, bool classicubeSkins,
-		                      string args, ref bool shouldExit) {
-			string path = Path.Combine(Program.AppDirectory, "ClassicalSharp.exe");
-			if (!File.Exists(path))
-				return false;
+		static bool StartImpl(ClientStartData data, bool ccSkins, string args, ref bool shouldExit) {
+			if (!Platform.FileExists("ClassicalSharp.exe")) return false;
 			
-			CheckSettings(data, classicubeSkins, out shouldExit);
+			CheckSettings(data, ccSkins, out shouldExit);
 			try {
-				StartProcess(path, args);
+				StartProcess(args);
 			} catch (Win32Exception ex) {
 				if ((uint)ex.ErrorCode != 0x80004005)
 					throw; // HRESULT when user clicks 'cancel' to 'are you sure you want to run ClassicalSharp.exe'
@@ -46,7 +43,8 @@ namespace Launcher {
 			return true;
 		}
 		
-		static void StartProcess(string path, string args) {
+		static void StartProcess(string args) {
+			string path = Path.Combine(Platform.AppDirectory, "ClassicalSharp.exe");
 			if (Configuration.RunningOnMono) {
 				// We also need to handle the case of running Mono through wine
 				if (Configuration.RunningOnWindows) {

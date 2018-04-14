@@ -13,6 +13,8 @@ namespace ClassicalSharp {
 	/// <summary> Abstracts away platform specific operations. </summary>
 	public static class Platform {
 	
+		public static string AppDirectory;
+		
 		public static bool ValidBitmap(Bitmap bmp) {
 			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
 			// We can detect this as property access raises an ArgumentException.
@@ -69,6 +71,66 @@ namespace ClassicalSharp {
 			Bitmap.Config config = bmp.GetConfig();
 			return config != null && config == Bitmap.Config.Argb8888;
 			#endif
+		}
+		
+		public static FileStream FileOpen(string relPath) {
+			string path = Path.Combine(AppDirectory, relPath);
+			return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+		}
+		
+		public static FileStream FileCreate(string relPath) {
+			string path = Path.Combine(AppDirectory, relPath);
+			return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
+		}
+		
+		public static FileStream FileAppend(string relPath) {
+			string path = Path.Combine(AppDirectory, relPath);
+			return new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+		}
+		
+		public static bool FileExists(string relPath) {
+			string path = Path.Combine(AppDirectory, relPath);
+			return File.Exists(path);
+		}
+		
+		public static DateTime FileGetWriteTime(string relPath) {
+			string path = Path.Combine(AppDirectory, relPath);
+			return File.GetLastWriteTimeUtc(path);
+		}
+		
+		public static void FileSetWriteTime(string relPath, DateTime time) {
+			string path = Path.Combine(AppDirectory, relPath);
+			File.SetLastWriteTimeUtc(path, time);
+		}
+		
+		public static bool DirectoryExists(string relPath) {
+			string path = Path.Combine(AppDirectory, relPath);
+			return Directory.Exists(path);
+		}
+		
+		public static void DirectoryCreate(string relPath) {
+			string path = Path.Combine(AppDirectory, relPath);
+			Directory.CreateDirectory(path);
+		}
+		
+		public static string[] DirectoryFiles(string relPath) {
+			string path = Path.Combine(AppDirectory, relPath);
+			return Directory.GetFiles(relPath);
+		}
+		
+		public static string[] DirectoryFiles(string relPath, string filter) {
+			string path = Path.Combine(AppDirectory, relPath);
+			return Directory.GetFiles(relPath, filter);
+		}
+		
+		public static void WriteAllText(string relPath, string text) {
+			string path = Path.Combine(AppDirectory, relPath);
+			File.WriteAllText(path, text);
+		}
+		
+		public static void WriteAllBytes(string relPath, byte[] data) {
+			string path = Path.Combine(AppDirectory, relPath);
+			File.WriteAllBytes(path, data);
 		}
 	}
 }

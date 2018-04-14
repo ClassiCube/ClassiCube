@@ -3,7 +3,6 @@ using System;
 using System.IO;
 using System.Net;
 using System.Windows.Forms;
-using ClassicalSharp.Textures;
 using OpenTK;
 
 namespace ClassicalSharp {
@@ -12,21 +11,21 @@ namespace ClassicalSharp {
 		
 		public const string AppName = "ClassicalSharp 0.99.9.94";
 		
-		public static string AppDirectory;
 		#if !LAUNCHER
 		[STAThread]
 		static void Main(string[] args) {
-			AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			Platform.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
 			CleanupMainDirectory();
 			
-			string path = Path.Combine(Program.AppDirectory, "texpacks");
-			if (!File.Exists(Path.Combine(path, "default.zip"))) {
-				Message("default.zip not found, try running the launcher first."); return;
+			string defPath = Path.Combine("texpacks", "default.zip");
+			if (!Platform.FileExists(defPath)) {
+				ErrorHandler.ShowDialog("Missing file", "default.zip not found, try running the launcher first."); 
+				return;
 			}
 			
-			path = Path.Combine(AppDirectory, "OpenTK.dll");
-			if (!File.Exists(path)) { 
-				Message("OpenTK.dll needs to be in the same folder as the game"); return;
+			if (!Platform.FileExists("OpenTK.dll")) { 
+				ErrorHandler.ShowDialog("Missing file", "OpenTK.dll needs to be in the same folder as the game"); 
+				return;
 			}
 			
 			// NOTE: we purposely put this in another method, as we need to ensure
@@ -36,8 +35,7 @@ namespace ClassicalSharp {
 		}
 		
 		static void RunGame(string[] args) {
-			string logPath = Path.Combine(AppDirectory, "client.log");
-			ErrorHandler.InstallHandler(logPath);
+			ErrorHandler.InstallHandler("client.log");
 			OpenTK.Configuration.SkipPerfCountersHack();
 			Utils.LogDebug("Starting " + AppName + "..");
 			
@@ -70,9 +68,6 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		// put in separate function, because we don't want to load winforms assembly if possible
-		static void Message(string message) { MessageBox.Show(message, "Missing file"); }
-		
 		static void RunMultiplayer(string[] args, bool nullContext, int width, int height) {
 			IPAddress ip = null;
 			if (!IPAddress.TryParse(args[2], out ip)) {
@@ -97,14 +92,14 @@ namespace ClassicalSharp {
 		}
 		#endif
 		
-		internal static void CleanupMainDirectory() {
-			string mapPath = Path.Combine(Program.AppDirectory, "maps");
-			if (!Directory.Exists(mapPath))
-				Directory.CreateDirectory(mapPath);
-			
-			string texPath = Path.Combine(Program.AppDirectory, "texpacks");
-			if (!Directory.Exists(texPath))
-				Directory.CreateDirectory(texPath);
+		public static void CleanupMainDirectory() {
+			if (!Platform.DirectoryExists("maps")) {
+				Platform.DirectoryCreate("maps");
+			}
+
+			if (!Platform.DirectoryExists("texpacks")) {
+				Platform.DirectoryCreate("texpacks");
+			}
 		}
 	}
 }

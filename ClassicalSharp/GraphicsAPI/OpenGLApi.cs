@@ -3,6 +3,7 @@
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 using System.Runtime.InteropServices;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
@@ -551,7 +552,10 @@ namespace ClassicalSharp.GraphicsAPI {
 				using (FastBitmap fastBmp = new FastBitmap(bmp, true, false))
 					GL.ReadPixels(0, 0, width, height, GlPixelFormat.Bgra, PixelType.UnsignedByte, fastBmp.Scan0);
 				bmp.RotateFlip(RotateFlipType.RotateNoneFlipY);
-				bmp.Save(output, ImageFormat.Png);
+				
+				using (Stream fs = Platform.FileCreate(output)) {
+					Platform.WriteBmp(bmp, fs);
+				}
 			}
 		}
 		

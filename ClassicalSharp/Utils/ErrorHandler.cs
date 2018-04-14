@@ -11,14 +11,12 @@ namespace ClassicalSharp {
 	/// and also logs it to a specified log file. </summary>
 	public static class ErrorHandler {
 
-		static string logFile = "crash.log";
 		static string fileName = "crash.log";
 		
 		/// <summary> Adds a handler for when a unhandled exception occurs, unless
 		/// a debugger is attached to the process in which case this does nothing. </summary>
 		public static void InstallHandler(string logFile) {
-			ErrorHandler.logFile = logFile;
-			fileName = Path.GetFileName(logFile);
+			fileName = logFile;
 			if (!Debugger.IsAttached)
 				AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 		}
@@ -40,7 +38,9 @@ namespace ClassicalSharp {
 			Exception ex = (Exception)e.ExceptionObject;
 			bool wroteToCrashLog = true;
 			try {
-				using (StreamWriter w = new StreamWriter(logFile, true)) {
+				using (Stream fs = Platform.FileAppend(fileName))
+					using (StreamWriter w = new StreamWriter(fs))
+				{
 					w.WriteLine("=== crash occurred ===");
 					w.WriteLine("Time: " + DateTime.Now);
 					
@@ -72,12 +72,12 @@ namespace ClassicalSharp {
 			
 			string line1 = "ClassicalSharp crashed.";
 			if (wroteToCrashLog) {
-				line1 += " The cause has also been logged to \"" + fileName + "\" in " + Program.AppDirectory;
+				line1 += " The cause has also been logged to \"" + fileName + "\" in " + Platform.AppDirectory;
 			}
 			string line2 = "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.";
 			line2 += Environment.NewLine + Environment.NewLine + Format(ex);
 
-			MessageBox.Show(line1 + Environment.NewLine + Environment.NewLine + line2, "We're sorry");
+			ShowDialog("We're sorry", line1 + Environment.NewLine + Environment.NewLine + line2);
 			Environment.Exit(1);
 		}
 		
@@ -93,16 +93,23 @@ namespace ClassicalSharp {
 		/// <summary> Logs an error that occured at the specified location to the log file. </summary>
 		public static bool LogError(string location, string text) {
 			try {
-				using (StreamWriter writer = new StreamWriter(logFile, true)) {
-					writer.WriteLine("=== handled error ===");
-					writer.WriteLine("Occured when: " + location);
-					writer.WriteLine(text);
-					writer.WriteLine();
+				using (Stream fs = Platform.FileAppend(fileName))
+					using (StreamWriter w = new StreamWriter(fs))
+				{
+					w.WriteLine("=== handled error ===");
+					w.WriteLine("Occured when: " + location);
+					w.WriteLine(text);
+					w.WriteLine();
 				}
 			} catch (Exception) {
 				return false;
 			}
 			return true;
+		}
+		
+		// put in separate function, because we don't want to load winforms assembly if possible
+		public static void ShowDialog(string title, string msg) {
+			MessageBox.Show(msg, title);
 		}
 	}
 }

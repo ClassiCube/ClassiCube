@@ -202,13 +202,14 @@ namespace ClassicalSharp {
 		}
 		
 		void TakeScreenshot() {
-			string path = PathIO.Combine(Program.AppDirectory, "screenshots");
-			if (!Directory.Exists(path))
-				Directory.CreateDirectory(path);
+			if (!Platform.DirectoryExists("screenshots")) {
+				Platform.DirectoryCreate("screenshots");
+			}
 			
 			string timestamp = DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss");
 			string file = "screenshot_" + timestamp + ".png";
-			path = PathIO.Combine(path, file);
+			string path = PathIO.Combine("screenshots", file);
+			
 			Graphics.TakeScreenshot(path, Width, Height);
 			Chat.Add("&eTaken screenshot as: " + file);
 			screenshotRequested = false;

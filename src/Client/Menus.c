@@ -1275,7 +1275,7 @@ void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	if (!Platform_FileExists(&path)) return;
 
 	void* file;
-	ReturnCode code = Platform_FileOpen(&file, &path, true);
+	ReturnCode code = Platform_FileOpen(&file, &path);
 	ErrorHandler_CheckOrFail(code, "Failed to open map file");
 	Stream stream; Stream_FromFile(&stream, file, &path);
 
@@ -1504,7 +1504,7 @@ void ClassicHacksKeyBindingsScreen_ContextRecreated(void* obj) {
 	KeyBindingsScreen_MakeWidgets(screen, -90, -40, 3, "Hacks controls", 260);
 }
 
-Screen* ClassicHackKeyBindingsScreen_MakeInstance(void) {
+Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
 	static KeyBind binds[6] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown };
 	static const UInt8* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 	static ButtonWidget buttons[6];

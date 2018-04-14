@@ -21,20 +21,20 @@ namespace ClassicalSharp {
 		internal static Game game;
 		
 		internal static List<string> LoadAll() {
-			string dir = Path.Combine(Program.AppDirectory, "plugins");
-			if (!Directory.Exists(dir))
-				Directory.CreateDirectory(dir);
+			if (!Platform.DirectoryExists("plugins")) {
+				Platform.DirectoryCreate("plugins");
+			}
 			
 			Accepted = new EntryList("plugins", "accepted.txt");
 			Denied = new EntryList("plugins", "denied.txt");
 			Accepted.Load();
 			Denied.Load();
 			
-			return LoadPlugins(dir);
+			return LoadPlugins();
 		}
 		
-		static List<string> LoadPlugins(string dir) {
-			string[] dlls = Directory.GetFiles(dir, "*.dll");
+		static List<string> LoadPlugins() {
+			string[] dlls = Platform.DirectoryFiles("plugins", "*.dll");
 			List<string> nonLoaded = null;
 			
 			for (int i = 0; i < dlls.Length; i++) {
@@ -55,8 +55,7 @@ namespace ClassicalSharp {
 		
 		public static void Load(string pluginName, bool needsInit) {
 			try {
-				string dir = Path.Combine(Program.AppDirectory, "plugins");
-				string path = Path.Combine(dir, pluginName + ".dll");
+				string path = Path.Combine("plguins", pluginName + ".dll");
 				Assembly lib = Assembly.LoadFrom(path);
 				Type[] types = lib.GetTypes();
 				

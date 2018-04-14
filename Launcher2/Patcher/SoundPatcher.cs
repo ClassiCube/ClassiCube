@@ -57,10 +57,9 @@ namespace Launcher.Patcher {
 		}
 		
 		void DecodeSound(string name, byte[] rawData) {
-			string path = Path.Combine(Program.AppDirectory, "audio");
-			path = Path.Combine(path, prefix + name + ".wav");
+			string path = Path.Combine("audio", prefix + name + ".wav");
 			
-			using (FileStream dst = File.Create(path))
+			using (FileStream dst = Platform.FileCreate(path))
 				using (MemoryStream src = new MemoryStream(rawData)) 
 			{
 				dst.SetLength(44);

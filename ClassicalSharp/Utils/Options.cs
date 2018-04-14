@@ -190,14 +190,8 @@ namespace ClassicalSharp {
 		
 		
 		public static bool Load() {
-			// Both of these are from when running from the launcher
-			if (Program.AppDirectory == null)
-				Program.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
-			Program.CleanupMainDirectory();
-			
 			try {
-				string path = Path.Combine(Program.AppDirectory, Filename);
-				using (Stream fs = File.OpenRead(path))
+				using (Stream fs = Platform.FileOpen(Filename))
 					using (StreamReader reader = new StreamReader(fs, false))
 				{
 						LoadFrom(reader);
@@ -239,8 +233,7 @@ namespace ClassicalSharp {
 		
 		public static bool Save() {
 			try {
-				string path = Path.Combine(Program.AppDirectory, Filename);
-				using (Stream fs = File.Create(path))
+				using (Stream fs = Platform.FileCreate(Filename))
 					using (StreamWriter writer = new StreamWriter(fs))
 				{
 					SaveTo(writer);
