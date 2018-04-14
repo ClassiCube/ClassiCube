@@ -115,12 +115,22 @@ namespace ClassicalSharp {
 		
 		public static string[] DirectoryFiles(string relPath) {
 			string path = Path.Combine(AppDirectory, relPath);
-			return Directory.GetFiles(relPath);
+			string[] files = Directory.GetFiles(relPath);
+			
+			for (int i = 0; i < files.Length; i++) {
+				files[i] = Path.GetFileName(files[i]);
+			}
+			return files;
 		}
 		
 		public static string[] DirectoryFiles(string relPath, string filter) {
 			string path = Path.Combine(AppDirectory, relPath);
-			return Directory.GetFiles(relPath, filter);
+			string[] files = Directory.GetFiles(relPath, filter);
+			
+			for (int i = 0; i < files.Length; i++) {
+				files[i] = Path.GetFileName(files[i]);
+			}
+			return files;
 		}
 		
 		public static void WriteAllText(string relPath, string text) {

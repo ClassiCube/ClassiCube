@@ -60,8 +60,7 @@ namespace ClassicalSharp.Audio {
 			musicFiles = new string[musicCount];
 			for (int i = 0, j = 0; i < files.Length; i++) {
 				if (!Utils.CaselessEnds(files[i], ".ogg")) continue;
-				musicFiles[j] = Path.GetFileName(files[i]);
-				j++;
+				musicFiles[j] = files[i]; j++;
 			}
 
 			disposingMusic = false;
@@ -78,7 +77,8 @@ namespace ClassicalSharp.Audio {
 				string file = musicFiles[rnd.Next(0, musicFiles.Length)];
 				Utils.LogDebug("playing music file: " + file);
 				
-				using (Stream fs = Platform.FileOpen(file)) {
+				string path = Path.Combine("audio", file);
+				using (Stream fs = Platform.FileOpen(path)) {
 					OggContainer container = new OggContainer(fs);
 					try {
 						musicOut.SetVolume(game.MusicVolume / 100.0f);
@@ -88,7 +88,7 @@ namespace ClassicalSharp.Audio {
 						return;
 					} catch (Exception ex) {
 						ErrorHandler.LogError("AudioPlayer.DoMusicThread()", ex);
-						game.Chat.Add("&cError while trying to play music file " + Path.GetFileName(file));
+						game.Chat.Add("&cError while trying to play music file " + file);
 					}
 				}
 				if (disposingMusic) break;

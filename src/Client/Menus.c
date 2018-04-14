@@ -318,18 +318,6 @@ void ListScreen_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-void ListScreen_AddFilename(void* obj, STRING_PURE String* path) {
-	/* folder1/folder2/entry.zip --> entry.zip */
-	Int32 lastDir = String_LastIndexOf(path, Platform_DirectorySeparator);
-	String filename = *path;
-	if (lastDir >= 0) {
-		filename = String_UNSAFE_SubstringAt(&filename, lastDir + 1);
-	}
-
-	StringsBuffer* entries = (StringsBuffer*)obj;
-	StringsBuffer_Add(entries, &filename);
-}
-
 void ListScreen_MakePath(ListScreen* screen, GuiElement* w, STRING_PURE String* path, const UInt8* dir, STRING_REF String* filename) {
 	Int32 idx = Menu_Index(screen->Widgets, Array_Elems(screen->Widgets), (Widget*)w);
 	*filename = StringsBuffer_UNSAFE_Get(&screen->Entries, screen->CurrentIndex + idx);
@@ -1234,10 +1222,12 @@ void TexturePackScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	ListScreen_SetCurrentIndex(screen, curPage);
 }
 
-void TexturePackScreen_SelectEntry(STRING_PURE String* path, void* obj) {
+void TexturePackScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
 	String zip = String_FromConst(".zip");
-	if (!String_CaselessEnds(path, &zip)) return;
-	ListScreen_AddFilename(obj, path);
+	if (!String_CaselessEnds(filename, &zip)) return;
+
+	StringsBuffer* entries = (StringsBuffer*)obj;
+	StringsBuffer_Add(entries, filename);
 }
 
 Screen* TexturePackScreen_MakeInstance(void) {
@@ -1258,13 +1248,15 @@ Screen* TexturePackScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------LoadLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
-void LoadLevelScreen_SelectEntry(STRING_PURE String* path, void* obj) {
+void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
 	String cw  = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
 	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
-	if (!(String_CaselessEnds(path, &cw) || String_CaselessEnds(path, &lvl) 
-		|| String_CaselessEnds(path, &fcm) || String_CaselessEnds(path, &dat))) return;
-	ListScreen_AddFilename(obj, path);
+	if (!(String_CaselessEnds(filename, &cw) || String_CaselessEnds(filename, &lvl) 
+		|| String_CaselessEnds(filename, &fcm) || String_CaselessEnds(filename, &dat))) return;
+
+	StringsBuffer* entries = (StringsBuffer*)obj;
+	StringsBuffer_Add(entries, filename);
 }
 
 void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {

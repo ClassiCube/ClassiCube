@@ -28,9 +28,8 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			entries = new string[count];
 			for (int i = 0, j = 0; i < rawFiles.Length; i++) {
-				string file = rawFiles[i];
-				if (file == null) continue;
-				entries[j] = Path.GetFileName(file); j++;
+				if (rawFiles[i] == null) continue;
+				entries[j] = rawFiles[i]; j++;
 			}
 			Array.Sort(entries);
 		}

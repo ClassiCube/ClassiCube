@@ -138,9 +138,15 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
-		String filePath = String_FromRawArray(data.cFileName);
+		String path = String_FromRawArray(data.cFileName);
 		if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			callback(&filePath, obj);
+			/* folder1/folder2/entry.zip --> entry.zip */
+			Int32 lastDir = String_LastIndexOf(&path, Platform_DirectorySeparator);
+			String filename = path;
+			if (lastDir >= 0) {
+				filename = String_UNSAFE_SubstringAt(&filename, lastDir + 1);
+			}
+			callback(&filename, obj);
 		}
 	} while (FindNextFileA(find, &data));
 

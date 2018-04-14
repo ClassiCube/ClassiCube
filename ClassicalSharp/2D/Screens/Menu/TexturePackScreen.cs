@@ -11,10 +11,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public TexturePackScreen(Game game) : base(game) {
 			titleText = "Select a texture pack zip";
 			entries = Platform.DirectoryFiles("texpacks", "*.zip");
-			
-			for (int i = 0; i < entries.Length; i++) {
-				entries[i] = Path.GetFileName(entries[i]);
-			}
 			Array.Sort(entries);
 		}
 		
