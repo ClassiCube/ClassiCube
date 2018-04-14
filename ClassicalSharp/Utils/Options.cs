@@ -92,7 +92,7 @@ namespace ClassicalSharp {
 		}
 		
 		static bool TryGetValue(string key, out string value) {
-			value = null;		
+			value = null;
 			int i = FindOption(key);
 			if (i >= 0) { value = OptionsValues[i]; return true; }
 			
@@ -194,7 +194,7 @@ namespace ClassicalSharp {
 				using (Stream fs = Platform.FileOpen(Filename))
 					using (StreamReader reader = new StreamReader(fs, false))
 				{
-						LoadFrom(reader);
+					LoadFrom(reader);
 				}
 				return true;
 			} catch (FileNotFoundException) {
@@ -236,7 +236,12 @@ namespace ClassicalSharp {
 				using (Stream fs = Platform.FileCreate(Filename))
 					using (StreamWriter writer = new StreamWriter(fs))
 				{
-					SaveTo(writer);
+					for (int i = 0; i < OptionsKeys.Count; i++) {
+						writer.Write(OptionsKeys[i]);
+						writer.Write('=');
+						writer.Write(OptionsValues[i]);
+						writer.WriteLine();
+					}
 				}
 				
 				OptionsChanged.Clear();
@@ -244,15 +249,6 @@ namespace ClassicalSharp {
 			} catch (IOException ex) {
 				ErrorHandler.LogError("saving options", ex);
 				return false;
-			}
-		}
-		
-		static void SaveTo(StreamWriter writer) {
-			for (int i = 0; i < OptionsKeys.Count; i++) {
-				writer.Write(OptionsKeys[i]);
-				writer.Write('=');
-				writer.Write(OptionsValues[i]);
-				writer.WriteLine();
 			}
 		}
 	}

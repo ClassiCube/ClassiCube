@@ -55,7 +55,7 @@ namespace ClassicalSharp {
 		
 		public static void Load(string pluginName, bool needsInit) {
 			try {
-				string path = Path.Combine("plguins", pluginName + ".dll");
+				string path = Path.Combine("plugins", pluginName + ".dll");
 				Assembly lib = Assembly.LoadFrom(path);
 				Type[] types = lib.GetTypes();
 				
