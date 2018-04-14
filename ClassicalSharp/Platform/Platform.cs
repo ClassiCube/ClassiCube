@@ -73,50 +73,42 @@ namespace ClassicalSharp {
 			#endif
 		}
 		
+		static string FullPath(string relPath) { return Path.Combine(AppDirectory, relPath); }
+		
 		public static FileStream FileOpen(string relPath) {
-			string path = Path.Combine(AppDirectory, relPath);
-			return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+			return new FileStream(FullPath(relPath), FileMode.Open, FileAccess.Read, FileShare.Read);
 		}
 		
 		public static FileStream FileCreate(string relPath) {
-			string path = Path.Combine(AppDirectory, relPath);
-			return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
+			return new FileStream(FullPath(relPath), FileMode.Create, FileAccess.Write, FileShare.Read);
 		}
 		
 		public static FileStream FileAppend(string relPath) {
-			string path = Path.Combine(AppDirectory, relPath);
-			return new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
+			return new FileStream(FullPath(relPath), FileMode.Append, FileAccess.Write, FileShare.Read);
 		}
 		
 		public static bool FileExists(string relPath) {
-			string path = Path.Combine(AppDirectory, relPath);
-			return File.Exists(path);
+			return File.Exists(FullPath(relPath));
 		}
 		
 		public static DateTime FileGetWriteTime(string relPath) {
-			string path = Path.Combine(AppDirectory, relPath);
-			return File.GetLastWriteTimeUtc(path);
+			return File.GetLastWriteTimeUtc(FullPath(relPath));
 		}
 		
 		public static void FileSetWriteTime(string relPath, DateTime time) {
-			string path = Path.Combine(AppDirectory, relPath);
-			File.SetLastWriteTimeUtc(path, time);
+			File.SetLastWriteTimeUtc(FullPath(relPath), time);
 		}
 		
 		public static bool DirectoryExists(string relPath) {
-			string path = Path.Combine(AppDirectory, relPath);
-			return Directory.Exists(path);
+			return Directory.Exists(FullPath(relPath));
 		}
 		
 		public static void DirectoryCreate(string relPath) {
-			string path = Path.Combine(AppDirectory, relPath);
-			Directory.CreateDirectory(path);
+			Directory.CreateDirectory(FullPath(relPath));
 		}
 		
 		public static string[] DirectoryFiles(string relPath) {
-			string path = Path.Combine(AppDirectory, relPath);
-			string[] files = Directory.GetFiles(relPath);
-			
+			string[] files = Directory.GetFiles(FullPath(relPath));		
 			for (int i = 0; i < files.Length; i++) {
 				files[i] = Path.GetFileName(files[i]);
 			}
@@ -124,9 +116,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static string[] DirectoryFiles(string relPath, string filter) {
-			string path = Path.Combine(AppDirectory, relPath);
-			string[] files = Directory.GetFiles(relPath, filter);
-			
+			string[] files = Directory.GetFiles(FullPath(relPath), filter);			
 			for (int i = 0; i < files.Length; i++) {
 				files[i] = Path.GetFileName(files[i]);
 			}
@@ -134,13 +124,11 @@ namespace ClassicalSharp {
 		}
 		
 		public static void WriteAllText(string relPath, string text) {
-			string path = Path.Combine(AppDirectory, relPath);
-			File.WriteAllText(path, text);
+			File.WriteAllText(FullPath(relPath), text);
 		}
 		
 		public static void WriteAllBytes(string relPath, byte[] data) {
-			string path = Path.Combine(AppDirectory, relPath);
-			File.WriteAllBytes(path, data);
+			File.WriteAllBytes(FullPath(relPath), data);
 		}
 	}
 }

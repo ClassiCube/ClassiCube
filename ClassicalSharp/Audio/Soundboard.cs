@@ -65,7 +65,8 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		Sound ReadWave(string file) {
-			using (Stream fs = File.OpenRead(file))
+			string path = Path.Combine("audio", file);
+			using (Stream fs = Platform.FileOpen(path))
 				using (BinaryReader r = new BinaryReader(fs))
 			{
 				string fourCC = GetFourCC(r);
