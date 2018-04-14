@@ -16,4 +16,11 @@ Screen* TexturePackScreen_MakeInstance(void);
 Screen* HotkeyListScreen_MakeInstance(void);
 Screen* NostalgiaScreen_MakeInstance(void);
 Screen* ClassicOptionsScreen_MakeInstance(void);
+Screen* ClassicOptionsScreen_MakeInstance(void);
+Screen* ClassicKeyBindingsScreen_MakeInstance(void);
+Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void);
+Screen* NormalKeyBindingsScreen_MakeInstance(void);
+Screen* HacksKeyBindingsScreen_MakeInstance(void);
+Screen* OtherKeyBindingsScreen_MakeInstance(void);
+Screen* MouseKeyBindingsScreen_MakeInstance(void);
 #endif

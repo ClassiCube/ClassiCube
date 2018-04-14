@@ -1340,6 +1340,13 @@ void KeyBindingsScreen_Hacks(GuiElement* a, GuiElement* b)          { Gui_SetNew
 void KeyBindingsScreen_Other(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(OtherKeyBindingsScreen_MakeInstance()); }
 void KeyBindingsScreen_Mouse(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(MouseKeyBindingsScreen_MakeInstance()); }
 
+void KeyBindingsScreen_ButtonText(KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
+	Key key = KeyBind_Get(screen->Binds[i]);
+	String_AppendConst(text, screen->Descs[i]);
+	String_AppendConst(text, ": ");
+	String_AppendConst(text, Key_Names[key]);
+}
+
 void KeyBindingsScreen_OnBindingClick(GuiElement* screenElem, GuiElement* widget) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)screenElem;
 	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
@@ -1359,11 +1366,55 @@ void KeyBindingsScreen_OnBindingClick(GuiElement* screenElem, GuiElement* widget
 	ButtonWidget_SetText((ButtonWidget*)widget, &text);
 }
 
-void KeyBindingsScreen_ButtonText(KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
-	Key key = KeyBind_Get(screen->Binds[i]);
-	String_AppendConst(text, screen->Descs[i]);
-	String_AppendConst(text, ": ");
-	String_AppendConst(text, Key_Names[key]);
+Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const UInt8* title, Int32 btnWidth) {
+	Int32 i, origin = y, xOffset = btnWidth / 2 + 5;
+	screen->CurI = -1;
+
+	Widget** widgets = screen->WidgetsPtr;
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	String text = String_InitAndClearArray(textBuffer);
+
+	for (i = 0; i < screen->BindsCount; i++) {
+		if (i == leftLength) y = origin; /* reset y for next column */
+		Int32 xDir = leftLength == -1 ? 0 : (i < leftLength ? -1 : 1);
+
+		String_Clear(&text);
+		KeyBindingsScreen_ButtonText(screen, i, &text);
+
+		ButtonWidget_Create(&screen->Buttons[i], &text, btnWidth, &screen->TitleFont, KeyBindingsScreen_OnBindingClick);
+		widgets[i] = (Widget*)(&screen->Buttons[i]);
+		Widget_SetLocation(widgets[i], ANCHOR_CENTRE, ANCHOR_CENTRE, xDir * xOffset, y);
+		y += 50; /* distance between buttons */
+	}
+
+	String titleText = String_FromReadonly(title);
+	TextWidget_Create(&screen->Title, &titleText, &screen->TitleFont);
+	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -180);
+	widgets[i++] = (Widget*)(&screen->Title);
+
+	Widget_LeftClick backClick = Game_UseClassicOptions ? KeyBindingsScreen_ClassicOptions : Menu_SwitchOptions;
+	Menu_MakeDefaultBack(&screen->Back, false, &screen->TitleFont, backClick);
+	widgets[i++] = (Widget*)(&screen->Back);
+	if (screen->LeftPage == NULL && screen->RightPage == NULL) return i;
+
+	String lArrow = String_FromConst("<");
+	ButtonWidget_Create(&screen->Left, &lArrow, 40, &screen->TitleFont, screen->LeftPage);
+	Widget_SetLocation((Widget*)(&screen->Left), ANCHOR_CENTRE, ANCHOR_CENTRE, -btnWidth - 35, arrowsY);
+	screen->Left.Disabled = screen->LeftPage == NULL;
+	widgets[i++] = (Widget*)(&screen->Left);
+
+	String rArrow = String_FromConst("<");
+	ButtonWidget_Create(&screen->Right, &rArrow, 40, &screen->TitleFont, screen->RightPage);
+	Widget_SetLocation((Widget*)(&screen->Right), ANCHOR_CENTRE, ANCHOR_CENTRE, btnWidth + 35, arrowsY);
+	screen->Right.Disabled = screen->RightPage == NULL;
+	widgets[i++] = (Widget*)(&screen->Right);
+	return i;
+}
+
+void KeyBindingsScreen_Init(GuiElement* elem) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
+	MenuScreen_Init(elem);
+	screen->ContextRecreated(elem);
 }
 
 bool KeyBindingsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
@@ -1398,61 +1449,157 @@ bool KeyBindingsScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mous
 	return true;
 }
 
-Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const UInt8* title, Int32 btnWidth) {
-	Int32 i, origin = y, xOffset = btnWidth / 2 + 5;
-	screen->CurI = -1;
-
-	Widget** widgets = screen->WidgetsPtr;
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
-	String text = String_InitAndClearArray(textBuffer);
-
-	for (i = 0; i < screen->BindsCount; i++) {
-		if (i == leftLength) y = origin; /* reset y for next column */
-		Int32 xDir = leftLength == -1 ? 0 : (i < leftLength ? -1 : 1);
-
-		String_Clear(&text);
-		KeyBindingsScreen_ButtonText(screen, i, &text);
-
-		ButtonWidget_Create(&screen->Buttons[i], btnWidth, &text, &screen->TitleFont, KeyBindingsScreen_OnBindingClick);
-		widgets[i] = (Widget*)(&screen->Buttons[i]);
-		Widget_SetLocation(widgets[i], ANCHOR_CENTRE, ANCHOR_CENTRE, xDir * xOffset, y);
-		y += 50; /* distance between buttons */
-	}
-
-	String titleText = String_FromReadonly(title);
-	TextWidget_Create(&screen->Title, &titleText, &screen->TitleFont);
-	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -180);
-	widgets[i++] = (Widget*)(&screen->Title);
-
-	Widget_LeftClick backClick = Game_UseClassicOptions ? KeyBindingsScreen_ClassicOptions : Menu_SwitchOptions;
-	Menu_MakeDefaultBack(&screen->Back, false, &screen->TitleFont, backClick);
-	widgets[i++] = (Widget*)(&screen->Back);
-	if (screen->LeftPage == NULL && screen->RightPage == NULL) return i;
-
-	String lArrow = String_FromConst("<");
-	ButtonWidget_Create(&screen->Left, &lArrow, 40, &screen->TitleFont, screen->LeftPage);
-	Widget_SetLocation((Widget*)(&screen->Left), ANCHOR_CENTRE, ANCHOR_CENTRE, -btnWidth - 35, arrowsY);
-	screen->Left.Disabled = screen->LeftPage == NULL;
-	widgets[i++] = (Widget*)(&screen->Left);
-
-	String rArrow = String_FromConst("<");
-	ButtonWidget_Create(&screen->Right, &rArrow, 40, &screen->TitleFont, screen->LeftPage);
-	Widget_SetLocation((Widget*)(&screen->Right), ANCHOR_CENTRE, ANCHOR_CENTRE, btnWidth + 35, arrowsY);
-	screen->Right.Disabled = screen->RightPage == NULL;
-	widgets[i++] = (Widget*)(&screen->Right);
-	return i;
-}
-
-Screen* KeyBindingsScreen_MakeInstance(Int32 CurI, BindsCount, const UInt8** Descs, KeyBind* Binds, Widget_LeftClick LeftPage, RightPage, ButtonWidget* Buttons) {
-ButtonWidget Back, Left, Right;
+KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, KeyBind* binds, const UInt8** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextRecreated contextRecreated) {
 	KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
-	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets,
-		Array_Elems(screen->Widgets), ClassicGenScreen_ContextRecreated);
+	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, bindsCount + 4, contextRecreated);
 	KeyBindingsScreen_VTABLE = *screen->VTABLE;
 	screen->VTABLE = &KeyBindingsScreen_VTABLE;
 
-	screen->VTABLE->Init = KeyBindingsScreen_Init;
-	screen->VTABLE->HandlesKeyDown = KeyBindingsScreen_HandlesKeyDown;
+	screen->VTABLE->Init             = KeyBindingsScreen_Init;
+	screen->VTABLE->HandlesKeyDown   = KeyBindingsScreen_HandlesKeyDown;
 	screen->VTABLE->HandlesMouseDown = KeyBindingsScreen_HandlesMouseDown;
+
+	screen->BindsCount       = bindsCount;
+	screen->Binds            = binds;
+	screen->Descs            = descs;
+	screen->Buttons          = buttons;
+	screen->ContextRecreated = contextRecreated;
+
+	screen->CurI      = -1;
+	screen->LeftPage  = NULL;
+	screen->RightPage = NULL;
+	return screen;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------ClassicKeyBindingsScreen--------------------------------------------------*
+*#########################################################################################################################*/
+void ClassicKeyBindingsScreen_ContextRecreated(void* obj) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
+	if (Game_ClassicHacks) {
+		KeyBindingsScreen_MakeWidgets(screen, -140, -40, 5, "Normal controls", 260);
+	} else {
+		KeyBindingsScreen_MakeWidgets(screen, -140, -40, 5, "Controls", 300);
+	}
+}
+
+Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
+	static KeyBind binds[10] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn };
+	static const UInt8* descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
+	static ButtonWidget buttons[10];
+	static Widget* widgets[10 + 4];
+
+	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, ClassicKeyBindingsScreen_ContextRecreated);
+	if (Game_ClassicHacks) screen->RightPage = KeyBindingsScreen_ClassicHacks;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------ClassicHacksKeyBindingsScreen------------------------------------------------*
+*#########################################################################################################################*/
+void ClassicHacksKeyBindingsScreen_ContextRecreated(void* obj) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
+	KeyBindingsScreen_MakeWidgets(screen, -90, -40, 3, "Hacks controls", 260);
+}
+
+Screen* ClassicHackKeyBindingsScreen_MakeInstance(void) {
+	static KeyBind binds[6] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown };
+	static const UInt8* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
+	static ButtonWidget buttons[6];
+	static Widget* widgets[6 + 4];
+
+	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, ClassicHacksKeyBindingsScreen_ContextRecreated);
+	screen->LeftPage = KeyBindingsScreen_Classic;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------NormalKeyBindingsScreen---------------------------------------------------*
+*#########################################################################################################################*/
+void NormalKeyBindingsScreen_ContextRecreated(void* obj) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
+	KeyBindingsScreen_MakeWidgets(screen, -140, 10, 6, "Normal controls", 260);
+}
+
+Screen* NormalKeyBindingsScreen_MakeInstance(void) {
+	static KeyBind binds[12] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_PlayerList, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn, KeyBind_SendChat };
+	static const UInt8* descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
+	static ButtonWidget buttons[12];
+	static Widget* widgets[12 + 4];
+
+	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, NormalKeyBindingsScreen_ContextRecreated);
+	screen->RightPage = KeyBindingsScreen_Hacks;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------HacksKeyBindingsScreen---------------------------------------------------*
+*#########################################################################################################################*/
+void HacksKeyBindingsScreen_ContextRecreated(void* obj) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
+	KeyBindingsScreen_MakeWidgets(screen, -40, 10, 4, "Hacks controls", 260);
+}
+
+Screen* HacksKeyBindingsScreen_MakeInstance(void) {
+	static KeyBind binds[8] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_ZoomScrolling, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown, KeyBind_ThirdPerson };
+	static const UInt8* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
+	static ButtonWidget buttons[8];
+	static Widget* widgets[8 + 4];
+
+	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, HacksKeyBindingsScreen_ContextRecreated);
+	screen->LeftPage  = KeyBindingsScreen_Normal;
+	screen->RightPage = KeyBindingsScreen_Other;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------OtherKeyBindingsScreen---------------------------------------------------*
+*#########################################################################################################################*/
+void OtherKeyBindingsScreen_ContextRecreated(void* obj) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
+	KeyBindingsScreen_MakeWidgets(screen, -140, 10, 6, "Other controls", 260);
+}
+
+Screen* OtherKeyBindingsScreen_MakeInstance(void) {
+	static KeyBind binds[11] = { KeyBind_ExtInput, KeyBind_HideFps, KeyBind_HideGui, KeyBind_HotbarSwitching, KeyBind_DropBlock,KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_AxisLines, KeyBind_Autorotate, KeyBind_SmoothCamera, KeyBind_IDOverlay };
+	static const UInt8* descs[11] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay" };
+	static ButtonWidget buttons[11];
+	static Widget* widgets[11 + 4];
+
+	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, OtherKeyBindingsScreen_ContextRecreated);
+	screen->LeftPage  = KeyBindingsScreen_Hacks;
+	screen->RightPage = KeyBindingsScreen_Mouse;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------MouseKeyBindingsScreen---------------------------------------------------*
+*#########################################################################################################################*/
+void MouseKeyBindingsScreen_ContextRecreated(void* obj) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
+	Int32 i = KeyBindingsScreen_MakeWidgets(screen, -40, 10, -1, "Mouse key bindings", 260);
+
+	static TextWidget text;
+	String msg = String_FromConst("&eRight click to remove the key binding");
+	TextWidget_Create(&text, &msg, &screen->TextFont);
+	Widget_SetLocation((Widget*)(&text), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	screen->WidgetsPtr[i] = (Widget*)(&text);
+}
+
+Screen* MouseKeyBindingsScreen_MakeInstance(void) {
+	static KeyBind binds[3] = { KeyBind_MouseLeft, KeyBind_MouseMiddle, KeyBind_MouseRight };
+	static const UInt8* descs[3] = { "Left", "Middle", "Right" };
+	static ButtonWidget buttons[3];
+	static Widget* widgets[3 + 4 + 1];
+
+	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, OtherKeyBindingsScreen_ContextRecreated);
+	screen->LeftPage = KeyBindingsScreen_Other;
+	screen->WidgetsCount++; /* Extra text widget for 'right click' message */
 	return (Screen*)screen;
 }
