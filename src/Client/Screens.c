@@ -1582,4 +1582,5 @@ Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE Str
 	screen->VTABLE->HandlesKeyPress    = DisconnectScreen_HandlesKeyPress;
 	screen->VTABLE->HandlesMouseDown   = DisconnectScreen_HandlesMouseDown;
 	screen->VTABLE->HandlesMouseScroll = DisconnectScreen_HandlesMouseScroll;
+	return (Screen*)screen;
 }

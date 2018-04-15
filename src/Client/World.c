@@ -11,6 +11,7 @@
 #include "Physics.h"
 
 void World_Reset(void) {
+	if (World_Blocks != NULL) Platform_MemFree(World_Blocks);
 	World_Width = 0; World_Height = 0; World_Length = 0;
 	World_MaxX = 0;  World_MaxY = 0;   World_MaxZ = 0;
 	World_Blocks = NULL; World_BlocksSize = 0;

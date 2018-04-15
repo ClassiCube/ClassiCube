@@ -23,8 +23,7 @@ namespace ClassicalSharp {
 		
 		public override void SetBitmap(Bitmap bmp) {
 			if (c != null) {
-				Utils.LogDebug("Previous IDrawer2D.SetBitmap() call was not properly disposed");
-				c.Dispose();
+				throw new InvalidOperationException("Previous IDrawer2D.SetBitmap() call was not properly disposed");
 			}
 			
 			c = new Canvas(bmp);

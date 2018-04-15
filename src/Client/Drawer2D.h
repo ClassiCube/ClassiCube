@@ -12,14 +12,13 @@ typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } Dra
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow);
 
-const float Offset = 1.3f;
-
 /* Whether chat text should be drawn and measuring using the currently bitmapped font, 
  false uses the font supplied as the DrawTextArgs argument supplied to the function. */
 bool Drawer2D_UseBitmappedChat;
 /* Whether the shadows behind text (that uses shadows) is fully black. */
 bool Drawer2D_BlackTextShadows;
 PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
+#define DRAWER2D_OFFSET 1.3f
 
 void Drawer2D_Init(void);
 void Drawer2D_Free(void);

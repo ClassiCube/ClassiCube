@@ -281,6 +281,18 @@ bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub) {
 	return true;
 }
 
+bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub) {
+	if (str->length < sub->length) return false;
+	Int32 i, j = str->length - sub->length;
+
+	for (i = 0; i < sub->length; i++) {
+		UInt8 strCur = str->buffer[j + i]; Char_MakeLower(strCur);
+		UInt8 subCur = sub->buffer[i];     Char_MakeLower(subCur);
+		if (strCur != subCur) return false;
+	}
+	return true;
+}
+
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 	Int32 minLen = min(a->length, b->length);
 	Int32 i;

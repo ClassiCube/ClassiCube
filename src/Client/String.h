@@ -72,6 +72,7 @@ Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
 bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
+bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);
 
 void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, void* a1);

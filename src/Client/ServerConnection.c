@@ -9,6 +9,11 @@
 #include "AsyncDownloader.h"
 #include "Funcs.h"
 #include "Entity.h"
+#include "Gui.h"
+#include "Screens.h"
+#include "MapGenerator.h"
+#include "World.h"
+#include "Camera.h"
 
 UInt8 ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerName = String_FromEmptyArray(ServerConnection_ServerNameBuffer);
@@ -25,6 +30,52 @@ void ServerConnection_ResetState(void) {
 	ServerConnection_SupportsPartialMessages = false;
 	ServerConnection_SupportsFullCP437 = false;
 }
+
+void ServerConnection_CheckAsyncResources(void) {
+	AsyncRequest item;
+
+	String terrain = String_FromConst("terrain");
+	if (AsyncDownloader_Get(&terrain, &item)) {
+		TexturePack_ExtractTerrainPng_Req(&item);
+	}
+
+	String texPack = String_FromConst("texturePack");
+	if (AsyncDownloader_Get(&texPack, &item)) {
+		TexturePack_ExtractTexturePack_Req(&item);
+	}
+}
+
+void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, Int32 seed, bool vanilla) {
+	World_Reset();
+	Event_RaiseVoid(&WorldEvents_NewMap);
+	Gen_Done = false;
+
+	Gui_SetNewScreen(GeneratingScreen_MakeInstance());
+	Gen_Width = width; Gen_Height = height; Gen_Length = length; Gen_Seed = seed;
+	gen.GenerateAsync(game);
+}
+
+void ServerConnection_EndGeneration(void) {
+	Gui_SetNewScreen(NULL);
+	Gen_Done = false;
+
+	if (Gen_Blocks == NULL) {
+		String m = String_FromConst("&cFailed to generate the map."); Chat_Add(&m);
+	} else {
+		World_SetNewMap(Gen_Blocks, Gen_Width, Gen_Height, Gen_Length);
+		Gen_Blocks = NULL;
+
+		LocalPlayer* p = &LocalPlayer_Instance;
+		Real32 x = (World_Width / 2) + 0.5f, z = (World_Length / 2) + 0.5f;
+		p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
+
+		LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
+		p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+		Game_CurrentCameraPos = Camera_ActiveCamera->GetCameraPos(0.0f);
+		Event_RaiseVoid(&WorldEvents_MapLoaded);
+	}
+}
+
 
 typedef struct PingEntry_ {
 	Int64 TimeSent, TimeReceived;

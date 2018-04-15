@@ -251,6 +251,7 @@ void Platform_FreeFont(FontDesc* desc) {
 }
 
 /* TODO: Associate Font with device */
+/* TODO: Add shadow offset for drawing */
 Size2D Platform_MeasureText(DrawTextArgs* args) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };
