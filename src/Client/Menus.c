@@ -321,10 +321,7 @@ void ListScreen_QuickSort(Int32 left, Int32 right) {
 void ListScreen_MakePath(ListScreen* screen, GuiElement* w, STRING_PURE String* path, const UInt8* dir, STRING_REF String* filename) {
 	Int32 idx = Menu_Index(screen->Widgets, Array_Elems(screen->Widgets), (Widget*)w);
 	*filename = StringsBuffer_UNSAFE_Get(&screen->Entries, screen->CurrentIndex + idx);
-
-	String_AppendConst(path, dir);
-	String_Append(path, Platform_DirectorySeparator);
-	String_AppendString(path, filename);
+	String_Format3(path, "%c%b%s", dir, &Platform_DirectorySeparator, filename);
 }
 
 void ListScreen_Init(GuiElement* elem) {
@@ -1334,9 +1331,7 @@ void KeyBindingsScreen_Mouse(GuiElement* a, GuiElement* b)          { Gui_SetNew
 
 void KeyBindingsScreen_ButtonText(KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
 	Key key = KeyBind_Get(screen->Binds[i]);
-	String_AppendConst(text, screen->Descs[i]);
-	String_AppendConst(text, ": ");
-	String_AppendConst(text, Key_Names[key]);
+	String_Format2(text, "%c: %c", screen->Descs[i], Key_Names[key]);
 }
 
 void KeyBindingsScreen_OnBindingClick(GuiElement* screenElem, GuiElement* widget) {

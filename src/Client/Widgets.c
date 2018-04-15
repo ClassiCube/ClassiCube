@@ -557,13 +557,9 @@ void TableWidget_MakeBlockDesc(STRING_TRANSIENT String* desc, BlockID block) {
 	String_AppendString(desc, &Block_Name[block]);
 	if (Game_ClassicMode) return;
 
-	String_AppendConst(desc, " (ID ");
-	String_AppendInt32(desc, block);
-	String_AppendConst(desc, "&f, place ");
-	String_AppendConst(desc, Block_CanPlace[block] ? "&aYes" : "&cNo");
-	String_AppendConst(desc, "&f, delete ");
-	String_AppendConst(desc, Block_CanDelete[block] ? "&aYes" : "&cNo");
-	String_AppendConst(desc, "&f)");
+	const UInt8* place = Block_CanPlace[block] ? "&aYes" : "&cNo";
+	const UInt8* del = Block_CanDelete[block] ? "&aYes" : "&cNo";
+	String_Format3(desc, " (ID %b&f, place %c&f, delete %c&f)", &block, place, del);
 }
 
 void TableWidget_UpdateDescTexPos(TableWidget* widget) {
@@ -1375,11 +1371,7 @@ MenuInputValidator MenuInputValidator_Hex(void) {
 }
 
 void IntegerValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
-	String_AppendConst(range, "&7(");
-	String_AppendInt32(range, validator->Meta_Int[0]);
-	String_AppendConst(range, " - ");
-	String_AppendInt32(range, validator->Meta_Int[1]);
-	String_AppendConst(range, ")");
+	String_Format2(range, "&7(%i - %i)", &validator->Meta_Int[0], &validator->Meta_Int[1]);
 }
 
 bool IntegerValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
@@ -1423,11 +1415,7 @@ MenuInputValidator MenuInputValidator_Seed(void) {
 }
 
 void RealValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
-	String_AppendConst(range, "&7(");
-	String_AppendReal32(range, validator->Meta_Real[0]);
-	String_AppendConst(range, " - ");
-	String_AppendReal32(range, validator->Meta_Real[1]);
-	String_AppendConst(range, ")");
+	String_Format2(range, "&7(%f - %f)", &validator->Meta_Real[0], &validator->Meta_Real[1]);
 }
 
 bool RealValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {

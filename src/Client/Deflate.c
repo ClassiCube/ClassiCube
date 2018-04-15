@@ -38,27 +38,19 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 
 	case GZIP_STATE_HEADER1:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
-		if (temp != 0x1F) {
-			ErrorHandler_Fail("Byte 1 of GZIP header must be 1F");
-		}
+		if (temp != 0x1F) { ErrorHandler_Fail("Byte 1 of GZIP header must be 1F"); }
 
 	case GZIP_STATE_HEADER2:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
-		if (temp != 0x8B) {
-			ErrorHandler_Fail("Byte 2 of GZIP header must be 8B");
-		}
+		if (temp != 0x8B) { ErrorHandler_Fail("Byte 2 of GZIP header must be 8B"); }
 
 	case GZIP_STATE_COMPRESSIONMETHOD:
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
-		if (temp != 0x08) {
-			ErrorHandler_Fail("Only DEFLATE compression supported");
-		}
+		if (temp != 0x08) { ErrorHandler_Fail("Only DEFLATE compression supported"); }
 
 	case GZIP_STATE_FLAGS:
 		if (!Header_ReadByte(s, &header->State, &header->Flags)) return;
-		if ((header->Flags & 0x04) != 0) {
-			ErrorHandler_Fail("Unsupported GZIP header flags");
-		}
+		if (header->Flags & 0x04) { ErrorHandler_Fail("Unsupported GZIP header flags"); }
 
 	case GZIP_STATE_LASTMODIFIEDTIME:
 		for (; header->PartsRead < 4; header->PartsRead++) {
@@ -75,27 +67,27 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 		if (!Header_ReadByte(s, &header->State, &temp)) return;
 
 	case GZIP_STATE_FILENAME:
-		if ((header->Flags & 0x08) != 0) {
+		if (header->Flags & 0x08) {
 			for (; ;) {
 				temp = Stream_TryReadByte(s);
 				if (temp == -1) return;
-				if (temp == 0) break;
+				if (temp == NULL) break;
 			}
 		}
 		header->State++;
 
 	case GZIP_STATE_COMMENT:
-		if ((header->Flags & 0x10) != 0) {
+		if (header->Flags & 0x10) {
 			for (; ;) {
 				temp = Stream_TryReadByte(s);
 				if (temp == -1) return;
-				if (temp == 0) break;
+				if (temp == NULL) break;
 			}
 		}
 		header->State++;
 
 	case GZIP_STATE_HEADERCHECKSUM:
-		if ((header->Flags & 0x02) != 0) {
+		if (header->Flags & 0x02) {
 			for (; header->PartsRead < 2; header->PartsRead++) {
 				temp = Stream_TryReadByte(s);
 				if (temp == -1) return;

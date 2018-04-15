@@ -315,8 +315,7 @@ void Hotkeys_UserRemovedHotkey(Key baseKey, UInt8 flags) {
 	UInt8 keyBuffer[String_BufferSize(STRING_SIZE)];
 	String key = String_InitAndClearArray(keyBuffer);
 
-	String_AppendConst(&key, "hotkey-"); String_AppendConst(&key, Key_Names[baseKey]);
-	String_Append(&key, '&');            String_AppendInt32(&key, flags);
+	String_Format2(&key, "hotkey-%c&%b", Key_Names[baseKey], &flags);
 	Options_Set(key.buffer, NULL);
 }
 
@@ -326,10 +325,7 @@ void Hotkeys_UserAddedHotkey(Key baseKey, UInt8 flags, bool moreInput, STRING_PU
 	UInt8 valueBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String value = String_InitAndClearArray(valueBuffer);
 
-	String_AppendConst(&key, "hotkey-"); String_AppendConst(&key, Key_Names[baseKey]);
-	String_Append(&key, '&');            String_AppendInt32(&key, flags);
-
-	String_AppendBool(&value, moreInput); String_Append(&value, '&');
-	String_AppendString(&value, text);
+	String_Format2(&key, "hotkey-%c&%b", Key_Names[baseKey], &flags);
+	String_Format2(&value, "%p&%s", &moreInput, text);
 	Options_Set(key.buffer, &value);
 }

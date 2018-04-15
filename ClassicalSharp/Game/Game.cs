@@ -30,14 +30,6 @@ namespace ClassicalSharp {
 
 	public partial class Game : IDisposable {
 		
-		void LoadAtlas(Bitmap bmp) {
-			TerrainAtlas1D.Dispose();
-			TerrainAtlas2D.Dispose();
-			
-			TerrainAtlas2D.UpdateState(bmp);
-			TerrainAtlas1D.UpdateState();
-		}
-		
 		public bool ChangeTerrainAtlas(Bitmap atlas) {
 			if (!ValidateBitmap("terrain.png", atlas)) return false;
 			if (atlas.Width != atlas.Height) {
@@ -47,7 +39,11 @@ namespace ClassicalSharp {
 			}
 			if (Graphics.LostContext) return false;
 			
-			LoadAtlas(atlas);
+			TerrainAtlas1D.Dispose();
+			TerrainAtlas2D.Dispose();
+			TerrainAtlas2D.UpdateState(atlas);
+			TerrainAtlas1D.UpdateState();
+			
 			Events.RaiseTerrainAtlasChanged();
 			return true;
 		}

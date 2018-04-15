@@ -6,20 +6,14 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Number of elements in each row of 2D atlas. */
 #define ATLAS2D_ELEMENTS_PER_ROW 16
-/* Number of rows in 2D atlas. */
 #define ATLAS2D_ROWS_COUNT 16
 
-/* The actual bitmap of the 2D atlas. */
 Bitmap Atlas2D_Bitmap;
-/* Size in pixels of each element in the 2D atlas. */
 Int32 Atlas2D_ElementSize;
-/* Updates the underlying atlas bitmap, fields, and texture. */
-void Atlas2D_UpdateState(Bitmap bmp);
+void Atlas2D_UpdateState(Bitmap* bmp);
 /* Creates a native texture that contains the tile at the specified index. */
 GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc);
-/* Disposes of the underlying atlas bitmap. */
 void Atlas2D_Free(void);
 
 /* The theoretical largest number of 1D atlases that a 2D atlas can be broken down into. */

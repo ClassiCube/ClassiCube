@@ -18,28 +18,27 @@ namespace ClassicalSharp.Network {
 		int partsRead;
 		
 		public bool ReadHeader(Stream s) {
+			int temp;
 			switch (state) {
 					
 				case State.Header1:
-					if (!ReadAndCheckHeaderByte(s, 0x1F))
-						return false;
+					if (!ReadHeaderByte(s, out temp)) return false;
+					if (temp != 0x1F) { throw new NotSupportedException("Byte 1 of GZIP header must be 1F"); }
 					goto case State.Header2;
 					
 				case State.Header2:
-					if (!ReadAndCheckHeaderByte(s, 0x8B))
-						return false;
+					if (!ReadHeaderByte(s, out temp)) return false;
+					if (temp != 0x8B) { throw new NotSupportedException("Byte 2 of GZIP header must be 8B"); }
 					goto case State.CompressionMethod;
 					
 				case State.CompressionMethod:
-					if (!ReadAndCheckHeaderByte(s, 0x08))
-						return false;
+					if (!ReadHeaderByte(s, out temp)) return false;
+					if (temp != 0x08) { throw new NotSupportedException("Only DEFLATE compression supported"); }
 					goto case State.Flags;
 					
 				case State.Flags:
-					if (!ReadHeaderByte(s, out flags))
-						return false;
-					if ((flags & 0x04) != 0)
-						throw new NotSupportedException("Unsupported gzip flags: " + flags);
+					if (!ReadHeaderByte(s, out flags)) return false;
+					if ((flags & 0x04) != 0) { throw new NotSupportedException("Unsupported gzip flags"); }
 					goto case State.LastModifiedTime;
 					
 				case State.LastModifiedTime:
@@ -53,15 +52,11 @@ namespace ClassicalSharp.Network {
 					goto case State.CompressionFlags;
 					
 				case State.CompressionFlags:
-					int comFlags;
-					if (!ReadHeaderByte(s, out comFlags))
-						return false;
+					if (!ReadHeaderByte(s, out temp)) return false;
 					goto case State.OperatingSystem;
 					
 				case State.OperatingSystem:
-					int os;
-					if (!ReadHeaderByte(s, out os))
-						return false;
+					if (!ReadHeaderByte(s, out temp)) return false;
 					goto case State.Filename;
 					
 				case State.Filename:
@@ -102,20 +97,9 @@ namespace ClassicalSharp.Network {
 			return true;
 		}
 		
-		bool ReadAndCheckHeaderByte(Stream s, byte expected) {
-			int value;
-			if (!ReadHeaderByte(s, out value))
-				return false;
-			
-			if (value != expected)
-				throw new InvalidDataException("Unepxected constant in GZip header. (" + expected + "-" + value + ")");
-			return true;
-		}
-		
 		bool ReadHeaderByte(Stream s, out int value) {
 			value = s.ReadByte();
-			if (value == -1)
-				return false;
+			if (value == -1) return false;
 			
 			state++;
 			return true;

@@ -255,7 +255,7 @@ void Animations_Clear(void) {
 
 void Animations_Validate(void) {
 	anims_validated = true;
-	UInt8 msgBuffer[String_BufferSize(128)];
+	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	UInt32 i, j;
 
@@ -265,14 +265,10 @@ void Animations_Validate(void) {
 		Int32 maxX = data.FrameX + data.FrameSize * data.StatesCount;
 		String_Clear(&msg);
 
-		if (data.FrameSize > Atlas2D_ElementSize) {		
-			String_AppendConst(&msg, "&cAnimation frames for tile (");
-			String_AppendInt32(&msg, data.TileX); String_AppendConst(&msg, ", "); String_AppendInt32(&msg, data.TileY);
-			String_AppendConst(&msg, ") are bigger than the size of a tile in terrain.png");
+		if (data.FrameSize > Atlas2D_ElementSize) {
+			String_Format2(&msg, "&cAnimation frames for tile (%b, %b) are bigger than the size of a tile in terrain.png", &data.TileX, &data.TileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
-			String_AppendConst(&msg, "&cSome of the animation frames for tile (");
-			String_AppendInt32(&msg, data.TileX); String_AppendConst(&msg, ", "); String_AppendInt32(&msg, data.TileY);
-			String_AppendConst(&msg, ") are at coordinates outside animations.png");
+			String_Format2(&msg, "&cSome of the animation frames for tile (%b, %b) are at coordinates outside animations.png", &data.TileX, &data.TileY);
 		} else {
 			continue;
 		}

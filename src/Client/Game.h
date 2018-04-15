@@ -7,6 +7,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
+typedef struct Bitmap_ Bitmap;
 Int32 Game_Width, Game_Height;
 /* Total rendering time(in seconds) elapsed since the client was started. */
 Real64 Game_Accumulator;
@@ -77,9 +78,11 @@ void Game_SetDefaultTexturePack(STRING_PURE String* texPack);
 bool Game_GetCursorVisible(void);
 void Game_SetCursorVisible(bool visible);
 
+bool Game_ChangeTerrainAtlas(Bitmap* atlas);
 void Game_UpdateProjection(void);
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType);
+bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp);
 void Game_SetViewDistance(Real32 distance, bool userDist);
 bool Game_CanPick(BlockID block);
 

@@ -85,10 +85,11 @@ void InputHandler_Toggle(Key key, bool* target, const UInt8* enableMsg, const UI
 	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 
-	String_AppendConst(&msg, (*target) ? enableMsg : disableMsg);
-	String_AppendConst(&msg, ". &ePress &a");
-	String_AppendConst(&msg, Key_Names[key]);
-	String_AppendConst(&msg, (*target) ? " &eto disable." : " &eto re-enable.");
+	if (*target) {
+		String_Format2(&msg, "%c. &ePress &a %c&eto disable.",   enableMsg,  Key_Names[key]);
+	} else {
+		String_Format2(&msg, "%c. &ePress &a %c&eto re-enable.", disableMsg, Key_Names[key]);
+	}
 	Chat_Add(&msg);
 }
 

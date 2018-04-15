@@ -6,22 +6,19 @@
 #define Stream_SafeReadBlock(stream, buffer, count, read)\
 ReturnCode result = stream->Read(stream, buffer, count, &read);\
 if (read == 0 || !ErrorHandler_Check(result)) {\
-	Stream_Fail(stream, result, "reading from ");\
+	Stream_Fail(stream, result, "reading from");\
 }
 
 #define Stream_SafeWriteBlock(stream, buffer, count, write)\
 ReturnCode result = stream->Write(stream, buffer, count, &write);\
 if (write == 0 || !ErrorHandler_Check(result)) {\
-	Stream_Fail(stream, result, "writing to ");\
+	Stream_Fail(stream, result, "writing to");\
 }
 
 void Stream_Fail(Stream* stream, ReturnCode result, const UInt8* operation) {
 	UInt8 tmpBuffer[String_BufferSize(400)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
-
-	String_AppendConst(&tmp, "Failed ");
-	String_AppendConst(&tmp, operation);
-	String_AppendString(&tmp, &stream->Name);
+	String_Format2(&tmp, "Failed %c %s", operation, &stream->Name);
 	ErrorHandler_FailWithCode(result, tmpBuffer);
 }
 
@@ -191,7 +188,7 @@ bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
 
 		ReturnCode code = stream->Read(stream, &header, 1, &read);
 		if (read == 0) return false; /* end of stream */
-		if (!ErrorHandler_Check(code)) { Stream_Fail(stream, code, "reading line from "); }
+		if (!ErrorHandler_Check(code)) { Stream_Fail(stream, code, "reading line from"); }
 
 		/* Header byte encodes variable number of following bytes */
 		/* The remaining bits of the header form first part of the character */

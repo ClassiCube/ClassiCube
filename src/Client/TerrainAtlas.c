@@ -6,9 +6,9 @@
 #include "GraphicsAPI.h"
 #include "Platform.h"
 
-void Atlas2D_UpdateState(Bitmap bmp) {
-	Atlas2D_Bitmap = bmp;
-	Atlas2D_ElementSize = bmp.Width / ATLAS2D_ELEMENTS_PER_ROW;
+void Atlas2D_UpdateState(Bitmap* bmp) {
+	Atlas2D_Bitmap = *bmp;
+	Atlas2D_ElementSize = bmp->Width / ATLAS2D_ELEMENTS_PER_ROW;
 	Block_RecalculateSpriteBB();
 }
 
@@ -82,11 +82,7 @@ void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	UInt8 logBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String log = String_InitAndClearArray(logBuffer);
 
-	String_AppendConst(&log, "Loaded new atlas: ");
-	String_AppendInt32(&log, atlasesCount);
-	String_AppendConst(&log, " bmps, ");
-	String_AppendInt32(&log, Atlas1D_ElementsPerBitmap);
-	String_AppendConst(&log, " per bmp");
+	String_Format2(&log, "Loaded new atlas: %i bmps, %i per bmp", &atlasesCount, &Atlas1D_ElementsPerBitmap);
 	Platform_Log(&log);
 
 	Int32 index = 0, i;

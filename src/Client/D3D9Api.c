@@ -149,8 +149,7 @@ void Gfx_Init(void) {
 	}
 	ErrorHandler_CheckOrFail(res, "Creating Direct3D9 device");
 
-	D3DCAPS9 caps;
-	Platform_MemSet(&caps, 0, sizeof(D3DCAPS9));
+	D3DCAPS9 caps = { 0 };
 	IDirect3DDevice9_GetDeviceCaps(device, &caps);
 	Gfx_MaxTextureDimensions = min(caps.MaxTextureWidth, caps.MaxTextureHeight);
 

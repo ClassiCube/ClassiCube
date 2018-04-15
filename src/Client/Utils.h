@@ -1,7 +1,6 @@
 #ifndef CC_UTILS_H
 #define CC_UTILS_H
 #include "String.h"
-#include "Bitmap.h"
 /* Implements various utility functions.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -16,6 +15,7 @@ typedef struct DateTime_ {
 	UInt8 Second; /* Second of this point in time, ranges from 0 to 59. */
 	UInt16 Milli; /* Milliseconds of this point in time, ranges from 0 to 999. */
 } DateTime;
+typedef struct Bitmap_ Bitmap;
 
 #define DATETIME_MILLISECS_PER_SECOND 1000
 #define DATETIME_SECONDS_PER_MINUTE 60

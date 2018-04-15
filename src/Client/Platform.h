@@ -5,6 +5,8 @@
 /* Abstracts platform specific memory management, I/O, etc.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct DrawTextArgs_ DrawTextArgs;
+typedef struct Bitmap_ Bitmap;
 
 extern UInt8* Platform_NewLine; /* Newline for text */
 extern UInt8 Platform_DirectorySeparator;
@@ -42,12 +44,10 @@ UInt32 Platform_FileLength(void* file);
 
 void Platform_ThreadSleep(UInt32 milliseconds);
 
-struct DrawTextArgs_;
-struct Bitmap_;
 void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Platform_FreeFont(FontDesc* desc);
-Size2D Platform_MeasureText(struct DrawTextArgs_* args);
-void Platform_DrawText(struct DrawTextArgs_* args, Int32 x, Int32 y);
-void Platform_SetBitmap(struct Bitmap_* bmp);
+Size2D Platform_MeasureText(DrawTextArgs* args);
+void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
+void Platform_SetBitmap(Bitmap* bmp);
 void Platform_ReleaseBitmap(void);
 #endif

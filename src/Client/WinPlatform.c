@@ -26,8 +26,7 @@ void Platform_Init(void) {
 
 	UInt32 deviceNum = 0;
 	/* Get available video adapters and enumerate all monitors */
-	DISPLAY_DEVICEA device;
-	Platform_MemSet(&device, 0, sizeof(DISPLAY_DEVICEA));
+	DISPLAY_DEVICEA device = { 0 };
 	device.cb = sizeof(DISPLAY_DEVICEA);
 
 	while (EnumDisplayDevicesA(NULL, deviceNum, &device, 0)) {
@@ -35,8 +34,7 @@ void Platform_Init(void) {
 		if ((device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) == 0) continue;
 		bool devPrimary = false;
 		DisplayResolution resolution = DisplayResolution_Make(0, 0, 0, 0.0f);
-		DEVMODEA mode;
-		Platform_MemSet(&mode, 0, sizeof(DEVMODEA));
+		DEVMODEA mode = { 0 };
 		mode.dmSize = sizeof(DEVMODEA);
 
 		/* The second function should only be executed when the first one fails (e.g. when the monitor is disabled) */
@@ -253,7 +251,7 @@ void Platform_FreeFont(FontDesc* desc) {
 }
 
 /* TODO: Associate Font with device */
-Size2D Platform_MeasureText(struct DrawTextArgs_* args) {
+Size2D Platform_MeasureText(DrawTextArgs* args) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
@@ -261,14 +259,14 @@ Size2D Platform_MeasureText(struct DrawTextArgs_* args) {
 	return Size2D_Make(r.right, r.bottom);
 }
 
-void Platform_DrawText(struct DrawTextArgs_* args, Int32 x, Int32 y) {
+void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
 		&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
 }
 
-void Platform_SetBitmap(struct Bitmap_* bmp) {
+void Platform_SetBitmap(Bitmap* bmp) {
 	hbmp = CreateBitmap(bmp->Width, bmp->Height, 1, 32, bmp->Scan0);
 	if (hbmp == NULL) ErrorHandler_Fail("Creating bitmap handle failed");
 	/* TODO: Should we be using CreateDIBitmap here? */

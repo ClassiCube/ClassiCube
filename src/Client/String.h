@@ -74,6 +74,11 @@ bool String_StartsWith(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);
 
+void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, void* a1);
+void String_Format2(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2);
+void String_Format3(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2, void* a3);
+void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2, void* a3, void* a4);
+
 UInt16 Convert_CP437ToUnicode(UInt8 c);
 UInt8 Convert_UnicodeToCP437(UInt16 c);
 bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value);

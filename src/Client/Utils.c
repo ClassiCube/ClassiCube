@@ -1,5 +1,6 @@
 #include "Utils.h"
 #include "Constants.h"
+#include "Bitmap.h"
 
 bool DateTime_IsLeapYear(Int32 year) {
 	if ((year % 4) != 0) return false;

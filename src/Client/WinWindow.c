@@ -429,8 +429,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	RECT rect; rect.left = x; rect.top = y; rect.right = x + width; rect.bottom = y + height;
 	AdjustWindowRectEx(&rect, win_Style, false, win_StyleEx);
 
-	WNDCLASSEXA wc;
-	Platform_MemSet(&wc, 0, sizeof(WNDCLASSEXA));
+	WNDCLASSEXA wc = { 0 };
 	wc.cbSize = sizeof(WNDCLASSEXA);
 	wc.style = CS_OWNDC;
 	wc.hInstance = win_Instance;
@@ -700,8 +699,7 @@ void Window_SetCursorVisible(bool visible) {
 void GLContext_SelectGraphicsMode(GraphicsMode mode) {
 	ColorFormat color = mode.Format;
 
-	PIXELFORMATDESCRIPTOR pfd;
-	Platform_MemSet(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+	PIXELFORMATDESCRIPTOR pfd = { 0 };
 	pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 	pfd.nVersion = 1;
 	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;

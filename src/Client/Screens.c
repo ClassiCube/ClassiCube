@@ -1529,12 +1529,7 @@ bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mouse
 		UInt8 connectBuffer[String_BufferSize(STRING_SIZE)];
 		String connect = String_FromConst(connectBuffer);
 		String empty = String_MakeNull();
-
-		String_AppendConst(&connect, "Connecting to ");
-		String_AppendString(&connect, &Game_IPAddress);
-		String_Append(&connect, ':');
-		String_AppendInt32(&connect, Game_Port);
-		String_AppendConst(&connect, "..");
+		String_Format2(&connect, "Connecting to %s: %i..", &Game_IPAddress, &Game_Port);
 
 		Screen* loadScreen = LoadingScreen_MakeInstance(&connect, &empty);
 		Gui_SetNewScreen(loadScreen);

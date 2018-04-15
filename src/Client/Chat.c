@@ -424,11 +424,7 @@ void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, Bl
 		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
 		String msg = String_InitAndClearArray(msgBuffer);
 
-		String_AppendConst(&msg, "&eCuboid: &fMark 1 placed at (");
-		String_AppendInt32(&msg, coords.X); String_AppendConst(&msg, ", ");
-		String_AppendInt32(&msg, coords.Y); String_AppendConst(&msg, ", ");
-		String_AppendInt32(&msg, coords.Z);
-		String_AppendConst(&msg, "), place mark 2.");
+		String_Format3(&msg, "&eCuboid: &fMark 1 placed at (%i, %i, %i), place mark 2.", &coords.X, &coords.Y, &coords.Z);
 		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_3);
 	} else {
 		cuboid_mark2 = coords;
