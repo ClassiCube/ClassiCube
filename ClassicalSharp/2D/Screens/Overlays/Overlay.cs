@@ -9,7 +9,6 @@ namespace ClassicalSharp.Gui.Screens {
 	public abstract class Overlay : MenuScreen {
 		
 		public Action<Overlay> OnRenderFrame;
-		protected TextWidget[] labels = new TextWidget[4];
 		public string[] lines = new string[4];
 		public string Metadata;
 		
@@ -18,33 +17,12 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();		
 			if (game.Graphics.LostContext) return;
-			MakeButtons();
-			RedrawText();
+			ContextRecreated();
 		}
 
 		public override void Render(double delta) {
-			RenderMenuBounds();
-			game.Graphics.Texturing = true;
-			RenderWidgets(widgets, delta);
-			RenderWidgets(labels, delta);
-			game.Graphics.Texturing = false;
-			
+			base.Render(delta);
 			if (OnRenderFrame != null) OnRenderFrame(this);
-		}
-		
-		public override void OnResize(int width, int height) {
-			base.OnResize(width, height);
-			RepositionWidgets(labels);
-		}
-
-		protected override void ContextLost() {
-			base.ContextLost();
-			DisposeWidgets(labels);
-		}
-		
-		protected override void ContextRecreated() {
-			MakeButtons();
-			RedrawText();
 		}
 		
 		public override bool HandlesKeyDown(Key key) { return true; }
@@ -58,24 +36,17 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Camera.RegrabMouse();
 		}
 		
-		public virtual void RedrawText() {
-			for (int i = 0; i < labels.Length; i++) {
-				if (labels[i] == null) continue;				
-				labels[i].Dispose();
-				labels[i] = null;
-			}
-
-			labels[0] = TextWidget.Create(game, lines[0], titleFont)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -120);
-			
+		public void MakeLabels() {
+			widgets[0] = TextWidget.Create(game, lines[0], titleFont)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -120);			
 			for (int i = 1; i < 4; i++) {
 				if (lines[i] == null) continue;
-				labels[i] = TextWidget.Create(game, lines[i], textFont)
+				
+				TextWidget label = TextWidget.Create(game, lines[i], textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -70 + 20 * i);
-				labels[i].Colour = new FastColour(224, 224, 224);
+				label.Colour = new FastColour(224, 224, 224);
+				widgets[i] = label;
 			}
 		}
-		
-		public abstract void MakeButtons();
 	}
 }

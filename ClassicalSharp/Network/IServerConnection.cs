@@ -64,7 +64,6 @@ namespace ClassicalSharp {
 		
 		protected internal void RetrieveTexturePack(string url) {
 			if (!game.AcceptedUrls.Has(url) && !game.DeniedUrls.Has(url)) {
-				game.Downloader.AsyncGetContentLength(url, true, "CL_" + url);
 				Overlay warning = new TexPackOverlay(game, url);
 				game.Gui.ShowOverlay(warning, false);
 			} else {

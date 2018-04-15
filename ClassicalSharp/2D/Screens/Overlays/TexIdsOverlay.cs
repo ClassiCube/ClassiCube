@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 	public sealed class TexIdsOverlay : Overlay {
 		
 		TextAtlas idAtlas;
-		public TexIdsOverlay(Game game) : base(game) { }
+		public TexIdsOverlay(Game game) : base(game) { widgets = new Widget[1]; }
 		const int verticesCount = TerrainAtlas2D.TilesPerRow * TerrainAtlas2D.RowsCount * 4;
 		static VertexP3fT2fC4b[] vertices;
 		int dynamicVb;
@@ -22,7 +22,6 @@ namespace ClassicalSharp.Gui.Screens {
 			if (vertices == null) {
 				vertices = new VertexP3fT2fC4b[verticesCount];
 			}
-			ContextRecreated();
 		}
 		
 		const int textOffset = 3;
@@ -51,11 +50,16 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			base.ContextRecreated();
 			dynamicVb = game.Graphics.CreateDynamicVb(VertexFormat.P3fT2fC4b, verticesCount);
 			idAtlas = new TextAtlas(game, 16);
 			idAtlas.Pack("0123456789", textFont, "f");
+			
 			UpdateTileSize();
+			xOffset = (game.Width / 2)  - (tileSize * TerrainAtlas2D.TilesPerRow) / 2;
+			yOffset = (game.Height / 2) - (tileSize * TerrainAtlas2D.RowsCount)   / 2;
+
+			widgets[0] = TextWidget.Create(game, "Texture ID reference sheet", titleFont)
+				.SetLocation(Anchor.Centre, Anchor.Min, 0, yOffset - 30);
 		}
 		
 		void RenderTerrain() {
@@ -112,19 +116,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesKeyUp(Key key) {
 			return game.Gui.UnderlyingScreen.HandlesKeyUp(key);
-		}
-
-		public override void RedrawText() { }
-		
-		public override void MakeButtons() {
-			UpdateTileSize();
-			xOffset = (game.Width / 2)  - (tileSize * TerrainAtlas2D.TilesPerRow) / 2;
-			yOffset = (game.Height / 2) - (tileSize * TerrainAtlas2D.RowsCount)   / 2;
-			
-			DisposeWidgets(widgets);
-			widgets = new Widget[1];
-			widgets[0] = TextWidget.Create(game, "Texture ID reference sheet", titleFont)
-				.SetLocation(Anchor.Centre, Anchor.Min, 0, yOffset - 30);
 		}
 	}
 }

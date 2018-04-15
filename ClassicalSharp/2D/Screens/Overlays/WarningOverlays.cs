@@ -11,7 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 	public sealed class UrlWarningOverlay : Overlay {
 		
 		public UrlWarningOverlay(Game game, string url) : base(game) {
-			widgets = new ButtonWidget[2];
+			widgets = new Widget[6];
 			Metadata = url;
 			lines[0] = "&eAre you sure you want to open this link?";
 			lines[1] = url;
@@ -19,11 +19,11 @@ namespace ClassicalSharp.Gui.Screens {
 			lines[3] = " have viruses, or things you may not want to open/see.";
 		}
 		
-		public override void MakeButtons() {
-			DisposeWidgets(widgets);
-			widgets[0] = ButtonWidget.Create(game, 160, "Yes", titleFont, OpenUrl)
+		protected override void ContextRecreated() {
+			MakeLabels();
+			widgets[4] = ButtonWidget.Create(game, 160, "Yes", titleFont, OpenUrl)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30);
-			widgets[1] = ButtonWidget.Create(game, 160, "No", titleFont, AppendUrl)
+			widgets[5] = ButtonWidget.Create(game, 160, "No", titleFont, AppendUrl)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
 		}
 		
@@ -47,17 +47,19 @@ namespace ClassicalSharp.Gui.Screens {
 	public abstract class WarningOverlay : Overlay {
 		public WarningOverlay(Game game) : base(game) { }
 		
-		public override void MakeButtons() {
-			DisposeWidgets(widgets);
-			widgets[0] = ButtonWidget.Create(game, 160, "Yes", titleFont, OnYesClick)
+		protected override void ContextRecreated() {
+			MakeLabels();
+			widgets[4] = ButtonWidget.Create(game, 160, "Yes", titleFont, OnYesClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30);
-			widgets[1] = ButtonWidget.Create(game, 160, "No", titleFont, OnNoClick)
+			widgets[5] = ButtonWidget.Create(game, 160, "No", titleFont, OnNoClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
-			widgets[2] = ButtonWidget.Create(game, 160, "Always yes", titleFont, OnYesClick)
+			widgets[6] = ButtonWidget.Create(game, 160, "Always yes", titleFont, OnYesClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 85);
-			widgets[3] = ButtonWidget.Create(game, 160, "Always no", titleFont, OnNoClick)
+			widgets[7] = ButtonWidget.Create(game, 160, "Always no", titleFont, OnNoClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 85);
 		}
+		
+		protected bool IsAlways(Widget w) { return IndexOfWidget(w) >= 6; }
 		
 		protected abstract void OnYesClick(Game g, Widget w);
 		protected abstract void OnNoClick(Game g, Widget w);
@@ -67,7 +69,7 @@ namespace ClassicalSharp.Gui.Screens {
 
 		public PluginOverlay(Game game, string plugin) : base(game) {
 			Metadata = plugin;
-			widgets = new ButtonWidget[4];
+			widgets = new Widget[8];
 			lines[0] = "&eAre you sure you want to load plugin " + plugin + " ?";
 			lines[1] = "Be careful - plugins from strangers may have viruses";
 			lines[2] = " or other malicious behaviour.";
@@ -76,14 +78,14 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void OnYesClick(Game g, Widget w) {
 			CloseOverlay();			
 			EntryList accepted = PluginLoader.Accepted;
-			if (IndexOfWidget(w) >= 2 && !accepted.Has(Metadata)) accepted.Add(Metadata);
+			if (IsAlways(w) && !accepted.Has(Metadata)) accepted.Add(Metadata);
 			PluginLoader.Load(Metadata, true);
 		}
 		
 		protected override void OnNoClick(Game g, Widget w) {
 			CloseOverlay();			
 			EntryList denied = PluginLoader.Denied;
-			if (IndexOfWidget(w) >= 2 && !denied.Has(Metadata)) denied.Add(Metadata);
+			if (IsAlways(w) && !denied.Has(Metadata)) denied.Add(Metadata);
 		}
 	}
 	
@@ -92,18 +94,18 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public ConfirmDenyOverlay(Game game, bool always) : base(game) {
 			alwaysDeny = always;
-			widgets = new ButtonWidget[2];
+			widgets = new Widget[6];
 			lines[0] = "&eYou might be missing out.";
 			lines[1] = "Texture packs can play a vital role in the look and feel of maps.";
 			lines[2] = "";
 			lines[3] = "Sure you don't want to download the texture pack?";
 		}
 
-		public override void MakeButtons() {
-			DisposeWidgets(widgets);
-			widgets[0] = ButtonWidget.Create(game, 160, "I'm sure", titleFont, ConfirmNoClick)
+		protected override void ContextRecreated() {
+			MakeLabels();
+			widgets[4] = ButtonWidget.Create(game, 160, "I'm sure", titleFont, ConfirmNoClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, -110, 30);
-			widgets[1] = ButtonWidget.Create(game, 160, "Go back", titleFont, GoBackClick)
+			widgets[5] = ButtonWidget.Create(game, 160, "Go back", titleFont, GoBackClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 30);
 		}
 		
@@ -130,8 +132,9 @@ namespace ClassicalSharp.Gui.Screens {
 			if (url.StartsWith("http://"))  address = url.Substring(7);
 			Metadata = "CL_" + url;
 			OnRenderFrame = TexPackTick;
+			game.Downloader.AsyncGetContentLength(url, true, Metadata);
 			
-			widgets = new ButtonWidget[4];
+			widgets = new Widget[8];
 			lines[0] = "Do you want to download the server's texture pack?";
 			lines[1] = "Texture pack url:";
 			lines[2] = address;
@@ -143,7 +146,7 @@ namespace ClassicalSharp.Gui.Screens {
 			string url = Metadata.Substring(3);
 			
 			game.Server.DownloadTexturePack(url);
-			if (IndexOfWidget(w) >= 2 && !game.AcceptedUrls.Has(url)) {
+			if (IsAlways(w) && !game.AcceptedUrls.Has(url)) {
 				game.AcceptedUrls.Add(url);
 			}
 		}
@@ -152,7 +155,7 @@ namespace ClassicalSharp.Gui.Screens {
 			CloseOverlay();
 			string url = Metadata.Substring(3);
 			
-			ConfirmDenyOverlay overlay = new ConfirmDenyOverlay(game, IndexOfWidget(w) >= 2);
+			ConfirmDenyOverlay overlay = new ConfirmDenyOverlay(game, IsAlways(w));
 			overlay.Metadata = Metadata;
 			game.Gui.ShowOverlay(overlay, true);
 		}
@@ -167,8 +170,9 @@ namespace ClassicalSharp.Gui.Screens {
 			string url = identifier.Substring(3);
 			
 			float contentLengthMB = (contentLength / 1024f / 1024f);
-			warning.lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";
-			warning.RedrawText();
+			warning.lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";			
+			ContextLost();
+			ContextRecreated();
 		}
 	}
 }
