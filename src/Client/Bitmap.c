@@ -457,9 +457,10 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			if (dataSize != 0) ErrorHandler_Fail("PNG end chunk must be empty");
 		} break;
 
-		default:
-			stream->Seek(stream, dataSize, STREAM_SEEKFROM_CURRENT);
-			break;
+		default: {
+			ReturnCode code = Stream_Skip(stream, dataSize);
+			ErrorHandler_CheckOrFail(code, "PNG - skipping chunk");
+		} break;
 		}
 
 		Stream_ReadUInt32_BE(stream); /* Skip CRC32 */

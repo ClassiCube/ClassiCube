@@ -34,7 +34,8 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
 	if (!state->SelectEntry(&filename)) return;
 
-	stream->Seek(stream, extraFieldLen, STREAM_SEEKFROM_CURRENT);
+	ReturnCode code = Stream_Skip(stream, extraFieldLen);
+	ErrorHandler_CheckOrFail(code, "Zip - skipping local header extra");
 	if (versionNeeded > 20) {
 		String warnMsg = String_FromConst("May not be able to properly extract a .zip enty with a version later than 2.0");
 		Platform_Log(&warnMsg);
@@ -49,6 +50,9 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
 		Deflate_MakeStream(&compStream, &deflate, &portion);
 		state->ProcessEntry(&filename, &compStream, entry);
+	} else {
+		String warnMsg = String_FromConst("Unsupported .zip entry compression method");
+		Platform_Log(&warnMsg);
 	}
 }
 
@@ -71,8 +75,9 @@ void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
 	UInt32 externalAttributes = Stream_ReadUInt32_LE(stream);
 	entry->LocalHeaderOffset = Stream_ReadInt32_LE(stream);
 
-	Int32 extraDataLen = fileNameLen + extraFieldLen + fileCommentLen;
-	stream->Seek(stream, extraDataLen, STREAM_SEEKFROM_CURRENT);
+	UInt32 extraDataLen = fileNameLen + extraFieldLen + fileCommentLen;
+	ReturnCode code = Stream_Skip(stream, extraDataLen);
+	ErrorHandler_CheckOrFail(code, "Zip - skipping central header extra");
 }
 
 void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirectoryOffset) {

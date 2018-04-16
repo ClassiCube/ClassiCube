@@ -3,6 +3,9 @@
 #include "Funcs.h"
 #include "ErrorHandler.h"
 
+/*########################################################################################################################*
+*---------------------------------------------------------Stream----------------------------------------------------------*
+*#########################################################################################################################*/
 #define Stream_SafeReadBlock(stream, buffer, count, read)\
 ReturnCode result = stream->Read(stream, buffer, count, &read);\
 if (read == 0 || !ErrorHandler_Check(result)) {\
@@ -46,12 +49,31 @@ Int32 Stream_TryReadByte(Stream* stream) {
 	return read == 0 ? -1 : buffer;
 }
 
-
 void Stream_SetName(Stream* stream, STRING_PURE String* name) {
 	stream->Name = String_InitAndClearArray(stream->NameBuffer);
 	String_AppendString(&stream->Name, name);
 }
 
+ReturnCode Stream_Skip(Stream* stream, UInt32 count) {
+	ReturnCode code = stream->Seek(stream, count, STREAM_SEEKFROM_CURRENT);
+	if (code == 0) return 0;
+	UInt8 tmp[4096];
+
+	while (count > 0) {
+		UInt32 toRead = min(count, sizeof(tmp)), read;
+		code = stream->Read(stream, tmp, toRead, &read);
+
+		if (code != 0) return code;
+		if (read == 0) break; /* end of stream */
+		count -= read;
+	}
+	return count > 0;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------FileStream--------------------------------------------------------*
+*#########################################################################################################################*/
 ReturnCode Stream_FileRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	return Platform_FileRead(stream->Data, data, count, modified);
 }
@@ -78,6 +100,10 @@ void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 	stream->Seek  = Stream_FileSeek;
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------------PortionStream-------------------------------------------------------*
+*#########################################################################################################################*/
 ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Data2);
 	Stream* underlying = (Stream*)stream->Data;
@@ -103,6 +129,34 @@ void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 }
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------MemoryStream--------------------------------------------------------*
+*#########################################################################################################################*/
+ReturnCode Stream_MemoryRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	count = min(count, stream->Data2);
+	if (count > 0) { Platform_MemCpy(data, stream->Data, count); }
+	
+	stream->Data = (UInt8*)stream->Data + count;
+	stream->Data2 -= count;
+	*modified = count;
+	return 0;
+}
+
+void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
+	Stream_SetName(stream, name);
+	stream->Data = data;
+	stream->Data2 = len;
+
+	stream->Read  = Stream_MemoryRead;
+	stream->Write = Stream_PortionWrite;
+	stream->Close = Stream_PortionClose;
+	stream->Seek  = Stream_PortionSeek;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------Read/Write primitives---------------------------------------------------*
+*#########################################################################################################################*/
 UInt8 Stream_ReadUInt8(Stream* stream) {
 	UInt8 buffer;
 	UInt32 read;
@@ -146,7 +200,6 @@ UInt64 Stream_ReadUInt64_BE(Stream* stream) {
 	return (UInt64)(((UInt64)hi) << 32) | ((UInt64)lo);
 }
 
-
 void Stream_WriteUInt8(Stream* stream, UInt8 value) {
 	UInt32 write;
 	/* Inline 8 bit writing, because it is very frequently used. */
@@ -180,6 +233,9 @@ void Stream_WriteUInt32_BE(Stream* stream, UInt32 value) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------Read/Write strings-----------------------------------------------------*
+*#########################################################################################################################*/
 bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
 	String_Clear(text);
 	for (;;) {

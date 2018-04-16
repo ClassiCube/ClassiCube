@@ -26,10 +26,12 @@ void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
 Int32 Stream_TryReadByte(Stream* stream);
 void Stream_SetName(Stream* stream, STRING_PURE String* name);
+ReturnCode Stream_Skip(Stream* stream, UInt32 count);
+
 void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name);
-/* Constructs a readonly Stream wrapping another Stream, 
-but only allowing reading up to 'len' bytes from the wrapped stream. */
+/* Readonly Stream wrapping another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
 void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len);
+void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
 
 UInt8 Stream_ReadUInt8(Stream* stream);
 #define Stream_ReadInt8(stream) ((Int8)Stream_ReadUInt8(stream))

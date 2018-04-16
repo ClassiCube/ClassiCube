@@ -62,7 +62,8 @@ void ServerConnection_EndGeneration(void) {
 	if (Gen_Blocks == NULL) {
 		String m = String_FromConst("&cFailed to generate the map."); Chat_Add(&m);
 	} else {
-		World_SetNewMap(Gen_Blocks, Gen_Width, Gen_Height, Gen_Length);
+		World_BlocksSize = Gen_Width * Gen_Height * Gen_Length;
+		World_SetNewMap(Gen_Blocks, World_BlocksSize, Gen_Width, Gen_Height, Gen_Length);
 		Gen_Blocks = NULL;
 
 		LocalPlayer* p = &LocalPlayer_Instance;
