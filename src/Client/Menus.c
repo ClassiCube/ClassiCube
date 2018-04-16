@@ -23,8 +23,8 @@
 #include "Formats.h"
 #include "ErrorHandler.h"
 
-#define FILES_SCREEN_ITEMS 5
-#define FILES_SCREEN_BUTTONS (FILES_SCREEN_ITEMS + 3)
+#define LIST_SCREEN_ITEMS 5
+#define LIST_SCREEN_BUTTONS (LIST_SCREEN_ITEMS + 3)
 
 typedef struct ListScreen_ {
 	Screen_Layout
@@ -32,9 +32,9 @@ typedef struct ListScreen_ {
 	Int32 CurrentIndex;
 	Widget_LeftClick EntryClick;
 	String TitleText;
-	ButtonWidget Buttons[FILES_SCREEN_BUTTONS];
+	ButtonWidget Buttons[LIST_SCREEN_BUTTONS];
 	TextWidget Title;
-	Widget* Widgets[FILES_SCREEN_BUTTONS + 1];
+	Widget* Widgets[LIST_SCREEN_BUTTONS + 1];
 	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
 } ListScreen;
 
@@ -247,17 +247,17 @@ void ListScreen_Make(ListScreen* screen, Int32 idx, Int32 x, Int32 y, String* te
 }
 
 void ListScreen_UpdateArrows(ListScreen* screen) {
-	Int32 start = FILES_SCREEN_ITEMS, end = screen->Entries.Count - FILES_SCREEN_ITEMS;
+	Int32 start = LIST_SCREEN_ITEMS, end = screen->Entries.Count - LIST_SCREEN_ITEMS;
 	screen->Buttons[5].Disabled = screen->CurrentIndex < start;
 	screen->Buttons[6].Disabled = screen->CurrentIndex >= end;
 }
 
 void ListScreen_SetCurrentIndex(ListScreen* screen, Int32 index) {
-	if (index >= screen->Entries.Count) index -= FILES_SCREEN_ITEMS;
+	if (index >= screen->Entries.Count) index -= LIST_SCREEN_ITEMS;
 	if (index < 0) index = 0;
 
 	Int32 i;
-	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
+	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		String str = ListScreen_UNSAFE_Get(screen, index + i);
 		ButtonWidget_SetText(&screen->Buttons[i], &str);
 	}
@@ -267,7 +267,7 @@ void ListScreen_SetCurrentIndex(ListScreen* screen, Int32 index) {
 }
 
 void ListScreen_PageClick(ListScreen* screen, bool forward) {
-	Int32 delta = forward ? FILES_SCREEN_ITEMS : -FILES_SCREEN_ITEMS;
+	Int32 delta = forward ? LIST_SCREEN_ITEMS : -LIST_SCREEN_ITEMS;
 	ListScreen_SetCurrentIndex(screen, screen->CurrentIndex + delta);
 }
 
@@ -292,7 +292,7 @@ void ListScreen_ContextRecreated(void* obj) {
 	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
 
 	UInt32 i;
-	for (i = 0; i < FILES_SCREEN_ITEMS; i++) {
+	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
 		String str = ListScreen_UNSAFE_Get(screen, i);
 		ListScreen_MakeText(screen, i, 0, 50 * (Int32)i - 100, &str);
 	}
@@ -304,7 +304,7 @@ void ListScreen_ContextRecreated(void* obj) {
 	Menu_MakeDefaultBack(&screen->Buttons[7], false, &screen->Font, Menu_SwitchPause);
 
 	screen->Widgets[0] = (Widget*)(&screen->Title);
-	for (i = 0; i < FILES_SCREEN_BUTTONS; i++) {
+	for (i = 0; i < LIST_SCREEN_BUTTONS; i++) {
 		screen->Widgets[i + 1] = (Widget*)(&screen->Buttons[i]);
 	}
 	ListScreen_UpdateArrows(screen);
@@ -328,10 +328,9 @@ void ListScreen_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-void ListScreen_MakePath(ListScreen* screen, GuiElement* w, STRING_PURE String* path, const UInt8* dir, STRING_REF String* filename) {
+String ListScreen_UNSAFE_GetCur(ListScreen* screen, GuiElement* w) {
 	Int32 idx = Menu_Index(screen->Widgets, Array_Elems(screen->Widgets), (Widget*)w);
-	*filename = StringsBuffer_UNSAFE_Get(&screen->Entries, screen->CurrentIndex + idx);
-	String_Format3(path, "%c%b%s", dir, &Platform_DirectorySeparator, filename);
+	return StringsBuffer_UNSAFE_Get(&screen->Entries, screen->CurrentIndex + idx);
 }
 
 void ListScreen_Init(GuiElement* elem) {
@@ -1243,7 +1242,8 @@ void SaveLevelScreen_DoSave(GuiElement* screenElem, GuiElement* widget, const UI
 	SaveLevelScreen* screen = (SaveLevelScreen*)screenElem;
 	String file = screen->Input.Base.Text;
 	if (file.length == 0) {
-		MakeDescWidget("&ePlease enter a filename"); return;
+		String msg = String_FromConst("&ePlease enter a filename")
+		SaveLevelScreen_MakeDesc(screen, &msg); return;
 	}
 
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
@@ -1259,7 +1259,7 @@ void SaveLevelScreen_DoSave(GuiElement* screenElem, GuiElement* widget, const UI
 		/* NOTE: We don't immediately save here, because otherwise the 'saving...'
 		will not be rendered in time because saving is done on the main thread. */
 		String warnMsg = String_FromConst("Saving..");
-		SaveLevelScreen_MakeDescWidget(&warnMsg);
+		SaveLevelScreen_MakeDesc(screen, &warnMsg);
 		String_Clear(&screen->TextPath);
 		String_AppendString(&screen->TextPath, &path);
 		SaveLevelScreen_RemoveOverwrites(screen);
@@ -1275,9 +1275,10 @@ void SaveLevelScreen_Schematic(GuiElement* screenElem, GuiElement* widget) {
 }
 
 void SaveLevelScreen_Init(GuiElement* elem) {
+	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
-	ContextRecreated();
+	screen->ContextRecreated(elem);
 }
 
 void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
@@ -1367,7 +1368,7 @@ void SaveLevelScreen_ContextRecreated(void* obj) {
 	screen->Widgets[5] = NULL; /* description widget placeholder */
 }
 
-Screen* KeyBindingsScreen_Make(void) {
+Screen* SaveLevelScreen_Make(void) {
 	SaveLevelScreen* screen = &SaveLevelScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), SaveLevelScreen_ContextRecreated);
 	SaveLevelScreen_VTABLE = *screen->VTABLE;
@@ -1390,8 +1391,10 @@ Screen* KeyBindingsScreen_Make(void) {
 void TexturePackScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)screenElem;
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
-	String path = String_InitAndClearArray(pathBuffer), filename;
-	ListScreen_MakePath(screen, w, &path, "texpacks", &filename);
+	String path = String_InitAndClearArray(pathBuffer);
+
+	String filename = ListScreen_UNSAFE_GetCur(screen, w);
+	String_Format2(&path, "texpacks%b%s", &Platform_DirectorySeparator, &filename);
 	if (!Platform_FileExists(&path)) return;
 	
 	Int32 curPage = screen->CurrentIndex;
@@ -1411,14 +1414,76 @@ void TexturePackScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
 
 Screen* TexturePackScreen_MakeInstance(void) {
 	ListScreen* screen = ListScreen_MakeInstance();
-	String title = String_FromConst("Select a texture pack zip");
-	screen->TitleText = title;
+	String title = String_FromConst("Select a texture pack zip"); screen->TitleText = title;
 	screen->EntryClick = TexturePackScreen_EntryClick;
 
 	String path = String_FromConst("texpacks");
 	Platform_EnumFiles(&path, &screen->Entries, TexturePackScreen_SelectEntry);
 	if (screen->Entries.Count > 0) {
 		ListScreen_QuickSort(0, screen->Entries.Count - 1);
+	}
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------HotkeyListScreen------------------------------------------------------*
+*#########################################################################################################################*/
+/* TODO: Hotkey added event for CPE */
+void HotkeyListScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
+	ListScreen* screen = (ListScreen*)screenElem;
+	String text = ListScreen_UNSAFE_GetCur(screen, w);
+	HotkeyData original = { 0 };
+
+	String empty = String_FromConst(LIST_SCREEN_EMPTY);
+	if (String_CaselessEquals(&text, &empty)) {
+		Gui_SetNewScreen(EditHotkeyScreen_MakeInstance(original)); return;
+	}
+
+	Int32 sepIndex = String_IndexOf(&text, '|', 0);
+	String key = String_UNSAFE_Substring(&text, 0, sepIndex - 1);
+	String value = String_UNSAFE_SubstringAt(&text, sepIndex + 1);
+	
+	String ctrl  = String_FromConst("Ctrl");
+	String shift = String_FromConst("Shift");
+	String alt   = String_FromConst("Alt");
+
+	UInt8 flags = 0;
+	if (String_ContainsString(&text, &ctrl))  flags |= HOTKEYS_FLAG_CTRL;
+	if (String_ContainsString(&text, &shift)) flags |= HOTKEYS_FLAG_SHIFT;
+	if (String_ContainsString(&text, &alt))   flags |= HOTKEYS_FLAG_ALT;
+
+	Key hKey = Utils_ParseEnum(&key, Key_Unknown, Key_Names, Array_Elems(Key_Names));
+	Int32 i;
+	for (i = 0; i < HotkeysText.Count; i++) {
+		HotkeyData h = HotkeysList[i];
+		if (h.BaseKey == hKey && h.Flags == flags) { original = h; break; }
+	}
+	Gui_SetNewScreen(EditHotkeyScreen_MakeInstance(original));
+}
+
+Screen* HotkeyListScreen_MakeInstance(void) {
+	ListScreen* screen = ListScreen_MakeInstance();
+	String title = String_FromConst("Modify hotkeys"); screen->TitleText = title;
+	screen->EntryClick = HotkeyListScreen_EntryClick;
+
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	String text = String_InitAndClearArray(textBuffer);
+	Int32 i;
+
+	for (i = 0; i < HotkeysText.Count; i++) {
+		HotkeyData hKey = HotkeysList[i];
+		String_Clear(&text);
+
+		String_AppendConst(&text, Key_Names[hKey.BaseKey]);
+		String_AppendConst(&text, " |");
+		EditHotkeyScreen_MakeFlags(hKey.Flags, &text);
+		StringsBuffer_Add(&screen->Entries, &text);
+	}
+
+	String empty = String_FromConst(LIST_SCREEN_EMPTY);
+	for (i = 0; i < LIST_SCREEN_ITEMS; i++) {
+		StringsBuffer_Add(&screen->Entries, &empty);
 	}
 	return (Screen*)screen;
 }
@@ -1441,8 +1506,10 @@ void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
 void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)screenElem;
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
-	String path = String_InitAndClearArray(pathBuffer), filename;
-	ListScreen_MakePath(screen, w, &path, "maps", &filename);
+	String path = String_InitAndClearArray(pathBuffer);
+	
+	String filename = ListScreen_UNSAFE_GetCur(screen, w);
+	String_Format2(&path, "maps%b%s", &Platform_DirectorySeparator, &filename);
 	if (!Platform_FileExists(&path)) return;
 
 	void* file;
@@ -1485,8 +1552,7 @@ void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 
 Screen* LoadLevelScreen_MakeInstance(void) {
 	ListScreen* screen = ListScreen_MakeInstance();
-	String title = String_FromConst("Select a level");
-	screen->TitleText = title;
+	String title = String_FromConst("Select a level"); screen->TitleText = title;
 	screen->EntryClick = LoadLevelScreen_EntryClick;
 
 	String path = String_FromConst("maps");
