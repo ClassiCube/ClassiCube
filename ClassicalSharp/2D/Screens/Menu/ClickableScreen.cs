@@ -53,6 +53,13 @@ namespace ClassicalSharp.Gui.Screens {
 			return -1;
 		}
 
+		protected static int IndexWidget(Widget[] widgets, Widget w) {
+			for (int i = 0; i < widgets.Length; i++) {
+				if (widgets[i] == w) return i;
+			}
+			return -1;
+		}
+		
 		protected ButtonWidget MakeBack(bool toGame, Font font, ClickHandler onClick) {
 			int width = game.UseClassicOptions ? 400 : 200;
 			return MakeBack(width, toGame ? "Back to game" : "Cancel", 25, font, onClick);

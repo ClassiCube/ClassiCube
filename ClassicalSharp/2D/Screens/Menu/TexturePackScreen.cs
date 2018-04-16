@@ -15,7 +15,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void TextButtonClick(Game game, Widget widget) {
-			string file = ((ButtonWidget)widget).Text;
+			string file = GetCur(widget);
 			string path = Path.Combine("texpacks", file);
 			if (!Platform.FileExists(path)) return;
 			

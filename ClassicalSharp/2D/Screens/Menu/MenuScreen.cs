@@ -9,15 +9,10 @@ namespace ClassicalSharp.Gui.Screens {
 		public MenuScreen(Game game) : base(game) {
 			HandlesAllInput = true;
 		}
+		
 		protected Widget[] widgets;
 		protected Font titleFont, textFont;
-
-		protected int IndexOfWidget(Widget w) {
-			for (int i = 0; i < widgets.Length; i++) {
-				if (widgets[i] == w) return i;
-			}
-			return -1;
-		}
+		protected int IndexWidget(Widget w) { return IndexWidget(widgets, w); }
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();

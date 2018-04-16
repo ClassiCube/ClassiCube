@@ -16,8 +16,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected int currentIndex;
 		protected Widget[] widgets;
 		protected const int items = 5;
-		protected const string empty = "-----";
-		
+		protected const string empty = "-----";		
 		protected string titleText;
 		
 		public override void Init() {
@@ -25,6 +24,20 @@ namespace ClassicalSharp.Gui.Screens {
 			ContextRecreated();
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
+		}
+		
+		public override void Render(double delta) {
+			RenderMenuBounds();
+			game.Graphics.Texturing = true;
+			RenderWidgets(widgets, delta);
+			game.Graphics.Texturing = false;
+		}
+		
+		public override void Dispose() {
+			font.Dispose();
+			ContextLost();
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
 		protected override void ContextLost() {
@@ -48,11 +61,9 @@ namespace ClassicalSharp.Gui.Screens {
 		void MoveForwards(Game g, Widget w) { PageClick(true); }
 		string Get(int i) { return i < entries.Length ? entries[i] : empty; }
 		
-		public override void Dispose() {
-			font.Dispose();
-			ContextLost();
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
+		protected string GetCur(Widget w) {
+			int idx = IndexWidget(widgets, w);
+			return Get(currentIndex + idx);
 		}
 		
 		ButtonWidget MakeText(int i) {
@@ -68,7 +79,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected abstract void TextButtonClick(Game game, Widget widget);
 		
-		protected void PageClick(bool forward) {
+		void PageClick(bool forward) {
 			SetCurrentIndex(currentIndex + (forward ? items : -items));
 		}
 		
@@ -83,7 +94,7 @@ namespace ClassicalSharp.Gui.Screens {
 			UpdateArrows();
 		}
 		
-		protected void UpdateArrows() {
+		void UpdateArrows() {
 			widgets[5].Disabled = false;
 			widgets[6].Disabled = false;
 			if (currentIndex < items)
@@ -115,13 +126,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize(int width, int height) {
 			RepositionWidgets(widgets);
-		}
-		
-		public override void Render(double delta) {
-			RenderMenuBounds();
-			game.Graphics.Texturing = true;
-			RenderWidgets(widgets, delta);
-			game.Graphics.Texturing = false;
 		}
 	}
 }

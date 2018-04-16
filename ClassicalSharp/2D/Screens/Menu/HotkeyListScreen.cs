@@ -33,10 +33,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void TextButtonClick(Game game, Widget widget) {
-			string text = ((ButtonWidget)widget).Text;
+			string text = GetCur(widget);
 			Hotkey original = default(Hotkey);
-			if (text != empty) 
-				original = Parse(text);
+			if (text != empty) original = Parse(text);
 			game.Gui.SetNewScreen(new EditHotkeyScreen(game, original));
 		}
 		

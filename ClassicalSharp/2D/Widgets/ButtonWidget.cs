@@ -54,10 +54,9 @@ namespace ClassicalSharp.Gui.Widgets {
 		                                         new TextureRec(0, 86/256f, uWidth, 20/256f));
 		static Texture disabledTex = new Texture(0, 0, 0, 0, 0,
 		                                         new TextureRec(0, 46/256f, uWidth, 20/256f));
-		public string Text;
+
 		public void SetText(string text) {
 			game.Graphics.DeleteTexture(ref texture);
-			Text = text;
 			if (IDrawer2D.EmptyText(text)) {
 				texture = default(Texture);
 				Width = 0; Height = defaultHeight;

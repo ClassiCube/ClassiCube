@@ -14,14 +14,14 @@ namespace ClassicalSharp.Gui.Screens {
 		protected TextGroupWidget extendedHelp;
 		protected InputWidget input;
 		protected string[] defaultValues;
-		protected ButtonWidget activeButton;
-		protected int selectedI = -1;
+		protected int activeI = -1, selectedI = -1;
 		
 		public override void Init() {
 			base.Init();
 			game.Keyboard.KeyRepeat = true;
 		}
 		
+		static FastColour tableCol = new FastColour(20, 20, 20, 200);
 		public override void Render(double delta) {
 			base.Render(delta);
 			if (extendedHelp == null) return;
@@ -43,16 +43,13 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void OnResize(int width, int height) {
 			base.OnResize(width, height);
 			if (extendedHelp == null) return;
-			
-			extendedHelp.XOffset = game.Width / 2 - extendedHelp.Width / 2;
-			extendedHelp.YOffset = game.Height / 2 + extHelpY;
-			extendedHelp.Reposition();
+			RepositionExtendedHelp();
 		}
 		
 		protected override void ContextLost() {
 			base.ContextLost();
-			DisposeExtendedHelp();
 			input = null;
+			DisposeExtendedHelp();
 		}
 
 		public override bool HandlesKeyPress(char key) {
@@ -81,17 +78,8 @@ namespace ClassicalSharp.Gui.Screens {
 			if (descriptions == null || i >= descriptions.Length) return true;
 			
 			selectedI = i;
-			if (activeButton == null) {
-				UpdateDescription((ButtonWidget)widgets[i]);
-			}
+			if (activeI == -1) SelectExtendedHelp(i);
 			return true;
-		}
-		
-		protected void UpdateDescription(ButtonWidget widget) {
-			DisposeExtendedHelp();
-			if (widget == null || widget.GetValue == null) return;
-			
-			ShowExtendedHelp();
 		}
 		
 		protected ButtonWidget MakeOpt(int dir, int y, string optName, ClickHandler onClick,
@@ -110,27 +98,32 @@ namespace ClassicalSharp.Gui.Screens {
 			return v == "ON";
 		}
 		
-		static FastColour tableCol = new FastColour(20, 20, 20, 200);
-		const int extHelpY = 100;
-		
-		void ShowExtendedHelp() {
-			if (descriptions == null || input != null) return;
-			if (selectedI < 0 || selectedI >= descriptions.Length) return;
-			
-			string[] desc = descriptions[selectedI];
-			if (desc == null) return;
-			MakeExtendedHelp(desc);
+		protected static string GetFPS(Game g) { return g.FpsLimit.ToString(); }
+		protected void SetFPS(Game g, string v) {
+			object raw = Enum.Parse(typeof(FpsLimitMethod), v);
+			g.SetFpsLimitMethod((FpsLimitMethod)raw);
+			Options.Set(OptionsKey.FpsLimit, v);
 		}
 		
-		void MakeExtendedHelp(string[] desc) {
+		void SelectExtendedHelp(int idx) {
+			DisposeExtendedHelp();
+			if (descriptions == null || input != null) return;		
+			string[] desc = descriptions[idx];
+			if (desc == null) return;
+			
 			extendedHelp = new TextGroupWidget(game, desc.Length, textFont, null)
 				.SetLocation(Anchor.Min, Anchor.Min, 0, 0);
 			extendedHelp.Init();
-			for (int i = 0; i < desc.Length; i++)
-				extendedHelp.SetText(i, desc[i]);
 			
+			for (int i = 0; i < desc.Length; i++) {
+				extendedHelp.SetText(i, desc[i]);
+			}
+			RepositionExtendedHelp();
+		}
+		
+		void RepositionExtendedHelp() {
 			extendedHelp.XOffset = game.Width / 2 - extendedHelp.Width / 2;
-			extendedHelp.YOffset = game.Height / 2 + extHelpY;
+			extendedHelp.YOffset = game.Height / 2 + 100;
 			extendedHelp.Reposition();
 		}
 		
@@ -140,18 +133,75 @@ namespace ClassicalSharp.Gui.Screens {
 			extendedHelp = null;
 		}
 		
-		protected void SetButtonValue(ButtonWidget btn, string text) {
+		void SetButtonValue(int index, string text) {
+			ButtonWidget btn = (ButtonWidget)widgets[index];
 			btn.SetValue(game, text);
-			int index = IndexOfWidget(btn);
-			// e.g. changing FPS invalidates all widgets
-			if (index >= 0) btn.SetText(btn.OptName + ": " + btn.GetValue(game));
+			
+			// need to get btn again here (e.g. changing FPS invalidates all widgets)
+			btn = (ButtonWidget)widgets[index];
+			btn.SetText(btn.OptName + ": " + btn.GetValue(game));
 		}
 		
-		protected static string GetFPS(Game g) { return g.FpsLimit.ToString(); }
-		protected void SetFPS(Game g, string v) {
-			object raw = Enum.Parse(typeof(FpsLimitMethod), v);
-			g.SetFpsLimitMethod((FpsLimitMethod)raw);
-			Options.Set(OptionsKey.FpsLimit, v);
+		protected void OnBoolClick(Game game, Widget widget) {
+			ButtonWidget button = (ButtonWidget)widget;
+			int index = IndexWidget(widget);
+			SelectExtendedHelp(index);
+
+			string value = button.GetValue(game);
+			SetButtonValue(index, value == "ON" ? "OFF" : "ON");			
+		}
+		
+		protected void OnEnumClick(Game game, Widget widget) {
+			ButtonWidget button = (ButtonWidget)widget;	
+			int index = IndexWidget(widget);
+			SelectExtendedHelp(index);
+			
+			MenuInputValidator validator = validators[index];
+			Type type = ((EnumValidator)validator).EnumType;
+			
+			string rawName = button.GetValue(game);
+			int value = (int)Enum.Parse(type, rawName, true) + 1;
+			// go back to first value
+			if (!Enum.IsDefined(type, value)) value = 0;
+			
+			SetButtonValue(index, Enum.GetName(type, value));
+		}
+		
+		protected void OnButtonClick(Game game, Widget widget) {
+			ButtonWidget button = (ButtonWidget)widget;	
+			activeI = IndexWidget(button);
+			SelectExtendedHelp(activeI);
+			
+			DisposeInput();
+			MenuInputValidator validator = validators[activeI];					
+			input = MenuInputWidget.Create(game, 400, 30, button.GetValue(game), textFont, validator)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 110);
+			input.ShowCaret = true;
+			
+			widgets[widgets.Length - 1] = input;			
+			widgets[widgets.Length - 2] = ButtonWidget.Create(game, 40, "OK", titleFont, OKButtonClick)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 240, 110);
+			widgets[widgets.Length - 3] = ButtonWidget.Create(game, 200, "Default value", titleFont, DefaultButtonClick)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 150);
+		}
+		
+		void OKButtonClick(Game game, Widget widget) { EnterInput(); }
+		
+		void DefaultButtonClick(Game game, Widget widget) {
+			string defValue = defaultValues[activeI];			
+			input.Clear();
+			input.Append(defValue);
+		}
+		
+		void EnterInput() {
+			string text = input.Text.ToString();
+			if (((MenuInputWidget)input).Validator.IsValidValue(text)) {
+				SetButtonValue(activeI, text);
+			}
+			
+			SelectExtendedHelp(activeI);
+			activeI = -1;
+			DisposeInput();
 		}
 		
 		void DisposeInput() {
@@ -162,75 +212,6 @@ namespace ClassicalSharp.Gui.Screens {
 				widgets[i].Dispose();
 				widgets[i] = null;
 			}
-		}
-		
-		protected void OnBoolClick(Game game, Widget widget) {
-			ButtonWidget button = (ButtonWidget)widget;
-			DisposeExtendedHelp();
-
-			string value = button.GetValue(game);
-			SetButtonValue(button, value == "ON" ? "OFF" : "ON");
-			UpdateDescription(button);
-		}
-		
-		protected void OnEnumClick(Game game, Widget widget) {
-			ButtonWidget button = (ButtonWidget)widget;
-			DisposeExtendedHelp();
-			
-			int index = IndexOfWidget(button);
-			MenuInputValidator validator = validators[index];
-			Type type = ((EnumValidator)validator).EnumType;
-			
-			string rawName = button.GetValue(game);
-			int value = (int)Enum.Parse(type, rawName, true) + 1;
-			// go back to first value
-			if (!Enum.IsDefined(type, value)) value = 0;
-			
-			SetButtonValue(button, Enum.GetName(type, value));
-			UpdateDescription(button);
-		}
-		
-		protected void OnButtonClick(Game game, Widget widget) {
-			ButtonWidget button = (ButtonWidget)widget;
-			DisposeExtendedHelp();
-			
-			int index = IndexOfWidget(button);
-			MenuInputValidator validator = validators[index];
-			activeButton = button;
-			DisposeInput();
-			
-			input = MenuInputWidget.Create(game, 400, 30, button.GetValue(game), textFont, validator)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 110);
-			input.ShowCaret = true;
-			widgets[widgets.Length - 2] = input;
-			
-			widgets[widgets.Length - 1] = ButtonWidget.Create(game, 40, "OK", titleFont, OKButtonClick)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 240, 110);
-			widgets[widgets.Length - 3] = ButtonWidget.Create(game, 200, "Default value", titleFont, DefaultButtonClick)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 150);
-
-			UpdateDescription(activeButton);
-		}
-		
-		void OKButtonClick(Game game, Widget widget) { EnterInput(); }
-		
-		void DefaultButtonClick(Game game, Widget widget) {
-			int index = IndexOfWidget(activeButton);
-			string defValue = defaultValues[index];
-			
-			input.Clear();
-			input.Append(defValue);
-		}
-		
-		void EnterInput() {
-			string text = input.Text.ToString();
-			if (((MenuInputWidget)input).Validator.IsValidValue(text)) {
-				SetButtonValue(activeButton, text);
-			}
-			
-			UpdateDescription(activeButton);
-			activeButton = null;
-			DisposeInput();
 		}
 	}
 }

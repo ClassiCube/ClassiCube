@@ -35,7 +35,8 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void TextButtonClick(Game game, Widget widget) {
-			string path = Path.Combine("maps", ((ButtonWidget)widget).Text);
+			string file = GetCur(widget);
+			string path = Path.Combine("maps", file);
 			if (!Platform.FileExists(path)) return;
 			
 			IMapFormatImporter importer = null;
@@ -75,7 +76,6 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 			} catch (Exception ex) {
 				ErrorHandler.LogError("loading map", ex);
-				string file = Path.GetFileName(path);
 				game.Chat.Add("&eFailed to load map \"" + file + "\"");
 			}
 		}

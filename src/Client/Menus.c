@@ -235,16 +235,20 @@ STRING_REF String ListScreen_UNSAFE_Get(ListScreen* screen, UInt32 index) {
 }
 
 void ListScreen_MakeText(ListScreen* screen, Int32 i) {
-	ButtonWidget* widget = &screen->Buttons[i];
+	ButtonWidget* btn = &screen->Buttons[i];
+	screen->Widgets[i] = (Widget*)btn;
+
 	String text = ListScreen_UNSAFE_Get(screen, screen->CurrentIndex + i);
-	ButtonWidget_Create(widget, &text, 300, &screen->Font, screen->EntryClick);
-	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
+	ButtonWidget_Create(btn, &text, 300, &screen->Font, screen->EntryClick);
+	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 }
 
-void ListScreen_Make(ListScreen* screen, Int32 idx, Int32 x, String* text, Widget_LeftClick onClick) {
-	ButtonWidget* widget = &screen->Buttons[idx];
-	ButtonWidget_Create(widget, text, 40, &screen->Font, onClick);
-	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_CENTRE, x, 0);
+void ListScreen_Make(ListScreen* screen, Int32 i, Int32 x, String* text, Widget_LeftClick onClick) {
+	ButtonWidget* btn = &screen->Buttons[i];
+	screen->Widgets[i] = (Widget*)btn;
+
+	ButtonWidget_Create(btn, text, 40, &screen->Font, onClick);
+	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, x, 0);
 }
 
 void ListScreen_UpdateArrows(ListScreen* screen) {
@@ -289,7 +293,6 @@ void ListScreen_ContextLost(void* obj) {
 
 void ListScreen_ContextRecreated(void* obj) {
 	ListScreen* screen = (ListScreen*)obj;
-
 	Int32 i;
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { ListScreen_MakeText(screen, i); }
 
@@ -297,16 +300,14 @@ void ListScreen_ContextRecreated(void* obj) {
 	ListScreen_Make(screen, 5, -220, &lArrow, ListScreen_MoveBackwards);
 	String rArrow = String_FromConst(">");
 	ListScreen_Make(screen, 6,  220, &rArrow, ListScreen_MoveForwards);
-	Menu_MakeDefaultBack(&screen->Buttons[7], false, &screen->Font, Menu_SwitchPause);
 
-	for (i = 0; i < LIST_SCREEN_BUTTONS; i++) {
-		screen->Widgets[i] = (Widget*)(&screen->Buttons[i]);
-	}
+	Menu_MakeDefaultBack(&screen->Buttons[7], false, &screen->Font, Menu_SwitchPause);
+	screen->Widgets[7] = (Widget*)(&screen->Buttons[7]);
 	ListScreen_UpdateArrows(screen);
 
 	TextWidget_Create(&screen->Title, &screen->TitleText, &screen->Font);
 	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -155);
-	screen->Widgets[LIST_SCREEN_BUTTONS] = (Widget*)(&screen->Title);
+	screen->Widgets[8] = (Widget*)(&screen->Title);
 }
 
 void ListScreen_QuickSort(Int32 left, Int32 right) {
@@ -329,7 +330,7 @@ void ListScreen_QuickSort(Int32 left, Int32 right) {
 
 String ListScreen_UNSAFE_GetCur(ListScreen* screen, GuiElement* w) {
 	Int32 idx = Menu_Index(screen->Widgets, Array_Elems(screen->Widgets), (Widget*)w);
-	return StringsBuffer_UNSAFE_Get(&screen->Entries, screen->CurrentIndex + idx);
+	return ListScreen_UNSAFE_Get(screen, screen->CurrentIndex + idx);
 }
 
 void ListScreen_Init(GuiElement* elem) {
@@ -1591,7 +1592,7 @@ void KeyBindingsScreen_OnBindingClick(GuiElement* screenElem, GuiElement* widget
 		ButtonWidget* curButton = (ButtonWidget*)screen->WidgetsPtr[screen->CurI];
 		ButtonWidget_SetText(curButton, &text);
 	}
-	screen->CurI = Menu_Index(screen->WidgetsPtr, screen->WidgetsCount, (Widget*)widget);
+	screen->CurI = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
 
 	String_Clear(&text);
 	String_AppendConst(&text, "> ");

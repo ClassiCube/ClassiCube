@@ -59,7 +59,7 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 110, 85);
 		}
 		
-		protected bool IsAlways(Widget w) { return IndexOfWidget(w) >= 6; }
+		protected bool IsAlways(Widget w) { return IndexWidget(w) >= 6; }
 		
 		protected abstract void OnYesClick(Game g, Widget w);
 		protected abstract void OnNoClick(Game g, Widget w);

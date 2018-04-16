@@ -61,7 +61,7 @@ namespace ClassicalSharp.Gui.Screens {
 				curButton.SetText(ButtonText(curI));
 			}
 			
-			curI = IndexOfWidget(widget);
+			curI = IndexWidget(widget);
 			string text = ButtonText(curI);
 			((ButtonWidget)widget).SetText("> " + text + " <");
 		}
