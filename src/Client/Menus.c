@@ -105,6 +105,16 @@ typedef struct KeyBindingsScreen_ {
 	ButtonWidget Back, Left, Right;
 } KeyBindingsScreen;
 
+typedef struct SaveLevelScreen_ {
+	MenuScreen_Layout
+	Widget* Widgets[6];
+	MenuInputWidget Input;
+	ButtonWidget Buttons[3];
+	TextWidget MCEdit, Desc;
+	String TextPath;
+	UInt8 TextPathBuffer[String_BufferSize(FILENAME_SIZE)];
+} SaveLevelScreen;
+
 
 void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -1198,6 +1208,178 @@ Screen* ClassicGenScreen_MakeInstance(void) {
 	screen->VTABLE = &ClassicGenScreen_VTABLE;
 
 	screen->VTABLE->Init = ClassicGenScreen_Init;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------SaveLevelScreen------------------------------------------------------*
+*#########################################################################################################################*/
+SaveLevelScreen SaveLevelScreen_Instance;
+GuiElementVTABLE SaveLevelScreen_VTABLE;
+void SaveLevelScreen_RemoveOverwrites(SaveLevelScreen* screen) {
+	ButtonWidget* btn = &screen->Buttons[0];
+	if (btn->OptName != NULL) {
+		btn->OptName = NULL; String save = String_FromConst("Save"); 
+		ButtonWidget_SetText(btn, &save);
+	}
+
+	btn = &screen->Buttons[1];
+	if (btn->OptName != NULL) {
+		btn->OptName = NULL; String save = String_FromConst("Save schematic");
+		ButtonWidget_SetText(btn, &save);
+	}
+}
+
+void SaveLevelScreen_MakeDesc(SaveLevelScreen* screen, STRING_PURE String* text) {
+	if (screen->Widgets[5] != NULL) { Elem_Free(screen->Widgets[5]); }
+
+	TextWidget_Create(&screen->Desc, text, &screen->TextFont);
+	Widget_SetLocation((Widget*)(&screen->Desc), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 65);
+	screen->Widgets[5] = (Widget*)(&screen->Desc);
+}
+
+void SaveLevelScreen_DoSave(GuiElement* screenElem, GuiElement* widget, const UInt8* ext) {
+	SaveLevelScreen* screen = (SaveLevelScreen*)screenElem;
+	String file = screen->Input.Base.Text;
+	if (file.length == 0) {
+		MakeDescWidget("&ePlease enter a filename"); return;
+	}
+
+	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	String path = String_InitAndClearArray(pathBuffer);
+	String_Format2(&path, "maps/%s%c", &file, ext);
+
+	ButtonWidget* btn = (ButtonWidget*)widget;
+	if (Platform_FileExists(&path) && btn->OptName == NULL) {
+		String warnMsg = String_FromConst("&cOverwrite existing?");
+		ButtonWidget_SetText(btn, &warnMsg);
+		btn->OptName = "O";
+	} else {
+		/* NOTE: We don't immediately save here, because otherwise the 'saving...'
+		will not be rendered in time because saving is done on the main thread. */
+		String warnMsg = String_FromConst("Saving..");
+		SaveLevelScreen_MakeDescWidget(&warnMsg);
+		String_Clear(&screen->TextPath);
+		String_AppendString(&screen->TextPath, &path);
+		SaveLevelScreen_RemoveOverwrites(screen);
+	}
+}
+
+void SaveLevelScreen_Classic(GuiElement* screenElem, GuiElement* widget) {
+	SaveLevelScreen_DoSave(screenElem, widget, ".cw");
+}
+
+void SaveLevelScreen_Schematic(GuiElement* screenElem, GuiElement* widget) {
+	SaveLevelScreen_DoSave(screenElem, widget, ".schematic");
+}
+
+void SaveLevelScreen_Init(GuiElement* elem) {
+	MenuScreen_Init(elem);
+	Key_KeyRepeat = true;
+	ContextRecreated();
+}
+
+void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
+	MenuScreen_Render(elem, delta);
+	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
+	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
+	GfxCommon_Draw2DFlat(cX - 250, cY + 90, 500, 2, grey);
+
+	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
+	if (screen->TextPath.length == 0) return;
+	String path = screen->TextPath;
+
+	void* file;
+	ReturnCode code = Platform_FileCreate(&file, &path);
+	ErrorHandler_CheckOrFail(code, "Saving map");
+	Stream stream; Stream_FromFile(&stream, file, &path);
+
+	String cw = String_FromConst(".cw");
+	if (String_CaselessEnds(&path, &cw)) {
+		Cw_Save(&stream);
+	} else {
+		Schematic_Save(&stream);
+	}
+
+	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 128)];
+	String msg = String_InitAndClearArray(msgBuffer);
+	String_Format1(&msg, "&eSaved map to: %s", &path);
+	Chat_Add(&msg);
+
+	Gui_SetNewScreen(PauseScreen_MakeInstance());
+	String_Clear(&path);
+}
+
+void SaveLevelScreen_Free(GuiElement* elem) {
+	Key_KeyRepeat = false;
+	MenuScreen_Free(elem);
+}
+
+bool SaveLevelScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
+	SaveLevelScreen_RemoveOverwrites(screen);
+
+	return Elem_HandlesKeyPress(&screen->Input.Base, key);
+}
+
+bool SaveLevelScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
+	SaveLevelScreen_RemoveOverwrites(screen);
+
+	if (Elem_HandlesKeyDown(&screen->Input.Base, key)) return true;
+	return MenuScreen_HandlesKeyDown(elem, key);
+}
+
+bool SaveLevelScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
+	return Elem_HandlesKeyUp(&screen->Input.Base, key);
+}
+
+void SaveLevelScreen_ContextRecreated(void* obj) {
+	SaveLevelScreen* screen = (SaveLevelScreen*)obj;
+
+	String save = String_FromConst("Save");
+	ButtonWidget_Create(&screen->Buttons[0], &save, 300, &screen->TitleFont, SaveLevelScreen_Classic);
+	Widget_SetLocation((Widget*)(&screen->Buttons[0]), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 20);
+	screen->Widgets[0] = (Widget*)(&screen->Buttons[0]);
+
+	String schematic = String_FromConst("Save schematic");
+	ButtonWidget_Create(&screen->Buttons[1], &schematic, 200, &screen->TitleFont, SaveLevelScreen_Schematic);
+	Widget_SetLocation((Widget*)(&screen->Buttons[1]), ANCHOR_CENTRE, ANCHOR_CENTRE, -150, 120);
+	screen->Widgets[1] = (Widget*)(&screen->Buttons[1]);
+
+	String mcEdit = String_FromConst("&eCan be imported into MCEdit");
+	TextWidget_Create(&screen->MCEdit, &mcEdit, &screen->TextFont);
+	Widget_SetLocation((Widget*)(&screen->MCEdit), ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 120);
+	screen->Widgets[2] = (Widget*)(&screen->MCEdit);
+
+	Menu_MakeDefaultBack(&screen->Buttons[2], false, &screen->TitleFont, Menu_SwitchPause);
+	screen->Widgets[3] = (Widget*)(&screen->Buttons[2]);
+
+	MenuInputValidator validator = MenuInputValidator_Path();
+	String inputText = String_MakeNull();
+	MenuInputWidget_Create(&screen->Input, 500, 30, &inputText, &screen->TextFont, &validator);
+	Widget_SetLocation((Widget*)(&screen->Input), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	screen->Input.Base.ShowCaret = true;
+	screen->Widgets[4] = (Widget*)(&screen->Input);
+
+	screen->Widgets[5] = NULL; /* description widget placeholder */
+}
+
+Screen* KeyBindingsScreen_Make(void) {
+	SaveLevelScreen* screen = &SaveLevelScreen_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), SaveLevelScreen_ContextRecreated);
+	SaveLevelScreen_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &SaveLevelScreen_VTABLE;
+
+	screen->VTABLE->Init   = SaveLevelScreen_Init;
+	screen->VTABLE->Render = SaveLevelScreen_Render;
+	screen->VTABLE->Free   = SaveLevelScreen_Free;
+
+	screen->VTABLE->HandlesKeyDown  = SaveLevelScreen_HandlesKeyDown;
+	screen->VTABLE->HandlesKeyPress = SaveLevelScreen_HandlesKeyPress;
+	screen->VTABLE->HandlesKeyUp    = SaveLevelScreen_HandlesKeyUp;
 	return (Screen*)screen;
 }
 

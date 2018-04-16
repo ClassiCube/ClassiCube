@@ -23,11 +23,11 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.Draw2DQuad(cX - 250, cY + 90, 500, 2, grey);			
 			if (textPath == null) return;
 			
-			bool classic = textPath.EndsWith(".cw");
+			bool cw = textPath.EndsWith(".cw");
 			try {
 				using (Stream fs = Platform.FileCreate(textPath)) {
 					IMapFormatExporter exporter = null;
-					if (classic) exporter = new MapCwExporter();
+					if (cw) exporter = new MapCwExporter();
 					else exporter = new MapSchematicExporter();
 					exporter.Save(fs, game);
 				}
@@ -63,11 +63,6 @@ namespace ClassicalSharp.Gui.Screens {
 			ContextRecreated();
 		}
 		
-		protected override void ContextLost() {
-			DisposeDescWidget();
-			base.ContextLost();
-		}
-		
 		protected override void ContextRecreated() {
 			input = MenuInputWidget.Create(game, 500, 30, "", textFont, new PathValidator())
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);
@@ -100,8 +95,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeDescWidget("&ePlease enter a filename"); return;
 			}
 			
-			file = Path.ChangeExtension(file, ext);
-			string path = Path.Combine("maps", file);
+			string path = Path.Combine("maps", file + ext);
 			ButtonWidget btn = (ButtonWidget)widget;
 			
 			if (Platform.FileExists(path) && btn.OptName == null) {
@@ -130,16 +124,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void MakeDescWidget(string text) {
-			DisposeDescWidget();
-			widgets[widgets.Length - 1] = TextWidget.Create(game, text, textFont)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 65);
-		}
-		
-		void DisposeDescWidget() {
 			if (widgets[widgets.Length - 1] != null) {
 				widgets[widgets.Length - 1].Dispose();
-				widgets[widgets.Length - 1] = null;
 			}
+			
+			widgets[widgets.Length - 1] = TextWidget.Create(game, text, textFont)
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 65);
 		}
 	}
 }

@@ -34,7 +34,7 @@ typedef struct ButtonWidget_ {
 	Int32 DefaultHeight;
 	FontDesc Font;
 
-	String OptName;
+	const UInt8* OptName;
 	ButtonWidget_Get GetValue;
 	ButtonWidget_Set SetValue;
 	Int32 MinWidth, MinHeight;

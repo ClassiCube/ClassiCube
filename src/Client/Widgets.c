@@ -174,6 +174,7 @@ void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 m
 	widget->VTABLE->Free   = ButtonWidget_Free;
 	widget->Reposition     = ButtonWidget_Reposition;
 
+	widget->OptName = NULL;
 	widget->Font = *font;
 	Elem_Init(widget);
 	widget->MinWidth = minWidth; widget->MinHeight = 40;

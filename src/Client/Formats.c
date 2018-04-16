@@ -16,10 +16,10 @@ void Map_ReadBlocks(Stream* stream) {
 	Stream_Read(stream, World_Blocks, World_BlocksSize);
 }
 
+
 #define LVL_VERSION 1874
 #define LVL_CUSTOMTILE ((BlockID)163)
 #define LVL_CHUNKSIZE 16
-
 UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 22,
 22, 22, 22, 4, 0, 22, 21, 0, 22, 23, 24, 22, 26, 27, 28, 30, 31, 32, 33,
 34, 35, 36, 22, 20, 49, 45, 1, 4, 0, 9, 11, 4, 19, 5, 17, 10, 49, 20, 1,
@@ -125,7 +125,6 @@ void Lvl_Load(Stream* stream) {
 
 #define FCM_IDENTIFIER 0x0FC2AF40UL
 #define FCM_REVISION 13
-
 void Fcm_ReadString(Stream* stream) {
 	UInt16 length = Stream_ReadUInt16_LE(stream);
 	UInt8 buffer[UInt16_MaxValue];
@@ -140,7 +139,7 @@ void Fcm_Load(Stream* stream) {
 		ErrorHandler_Fail("Invalid revision in .fcm file");
 	}
 
-	World_Width = Stream_ReadUInt16_LE(stream);
+	World_Width  = Stream_ReadUInt16_LE(stream);
 	World_Length = Stream_ReadUInt16_LE(stream);
 	World_Height = Stream_ReadUInt16_LE(stream);
 
@@ -169,4 +168,133 @@ void Fcm_Load(Stream* stream) {
 		Fcm_ReadString(&compStream); /* Value */
 	}
 	Map_ReadBlocks(&compStream);
+}
+
+
+#define NBT_TAG_END         0
+#define NBT_TAG_INT8        1
+#define NBT_TAG_INT16       2
+#define NBT_TAG_INT32       3
+#define NBT_TAG_INT64       4
+#define NBT_TAG_REAL32      5
+#define NBT_TAG_REAL64      6
+#define NBT_TAG_INT8_ARRAY  7
+#define NBT_TAG_STRING      8
+#define NBT_TAG_LIST        9
+#define NBT_TAG_COMPOUND    10
+#define NBT_TAG_INT32_ARRAY 11
+#define NBT_TAG_INVALID     255
+
+struct NbtTag_;
+typedef struct NbtTag_ {
+	struct NbtTag_* Parent;
+	UInt8 TagID;
+	UInt8 NameBuffer[String_BufferSize(STRING_SIZE)];
+
+	UInt32 DataSize; /* size of data for arrays */
+	union {
+		UInt8 Value_U8;
+		Int16 Value_I16;
+		Int32 Value_I32;
+		Int64 Value_I64;
+		Real32 Value_R32;
+		Real64 Value_R64;
+		UInt8 DataSmall[String_BufferSize(STRING_SIZE)];
+		UInt8* DataBig; /* malloc for big byte arrays */
+	};
+} NbtTag;
+
+UInt8 NbtTag_U8(NbtTag* tag) {
+	if (tag->TagID != NBT_TAG_INT8) { ErrorHandler_Fail("Expected I8 NBT tag"); }
+	return tag->Value_U8;
+}
+
+Int16 NbtTag_I16(NbtTag* tag) {
+	if (tag->TagID != NBT_TAG_INT16) { ErrorHandler_Fail("Expected I16 NBT tag"); }
+	return tag->Value_I16;
+}
+
+Int32 NbtTag_I32(NbtTag* tag) {
+	if (tag->TagID != NBT_TAG_INT32) { ErrorHandler_Fail("Expected I32 NBT tag"); }
+	return tag->Value_I32;
+}
+
+Int64 NbtTag_I64(NbtTag* tag) {
+	if (tag->TagID != NBT_TAG_INT64) { ErrorHandler_Fail("Expected I64 NBT tag"); }
+	return tag->Value_I64;
+}
+
+Real32 NbtTag_R32(NbtTag* tag) {
+	if (tag->TagID != NBT_TAG_REAL32) { ErrorHandler_Fail("Expected R32 NBT tag"); }
+	return tag->Value_R32;
+}
+
+Real64 NbtTag_R64(NbtTag* tag) {
+	if (tag->TagID != NBT_TAG_REAL64) { ErrorHandler_Fail("Expected R64 NBT tag"); }
+	return tag->Value_R64;
+}
+
+UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
+	if (tag->TagID != NBT_TAG_INT8_ARRAY) { ErrorHandler_Fail("Expected I8_Array NBT tag"); }
+	if (i >= tag->DataSize) { ErrorHandler_Fail("Tried to access past bounds of I8_Array tag"); }
+
+	if (tag->DataSize < STRING_SIZE) return tag->DataSmall[i];
+	return tag->DataBig[i];
+}
+
+void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent) {
+	NbtTag tag; 
+	tag.TagID = NBT_TAG_INVALID;
+	tag.NameBuffer[0] = NULL;
+	if (typeId == 0) return tag;
+
+	tag.Name = readTagName ? ReadString() : null;
+	tag.TagID = typeId;
+	tag.Parent = parent;
+	UInt8 childTagId;
+	UInt32 i, count;
+
+	switch (typeId) {
+	case NBT_TAG_INT8:
+		tag.Value_U8 = Stream_ReadUInt8(stream); break;
+	case NBT_TAG_INT16:
+		tag.Value_I16 = Stream_ReadInt16_BE(stream); break;
+	case NBT_TAG_INT32:
+		tag.Value_I32 = Stream_ReadInt32_BE(stream); break;
+	case NBT_TAG_INT64:
+		tag.Value_I64 = Stream_ReadInt64_BE(stream); break;
+	case NBT_TAG_REAL32:
+		/* TODO: Is this union abuse even legal */
+		tag.Value_I32 = Stream_ReadInt32_BE(stream); break;
+	case NBT_TAG_REAL64:
+		/* TODO: Is this union abuse even legal */
+		tag.Value_I64 = Stream_ReadInt64_BE(stream); break;
+	case NBT_TAG_INT8_ARRAY:
+		count = Stream_ReadUInt32_BE(stream);
+		tag.Value = reader.ReadBytes(count); break;
+	case NBT_TAG_STRING:
+		tag.Value = ReadString(); break;
+
+	case NBT_TAG_LIST:
+		childTagId = Stream_ReadUInt8(stream);
+		count = Stream_ReadUInt32_BE(stream);
+		for (i = 0; i < count; i++) {
+			Nbt_ReadTag(childTagId, false, stream, &tag);
+		}
+		break;
+
+	case NBT_TAG_COMPOUND:
+		while ((childTagId = Stream_ReadUInt8(stream)) != NBT_TAG_INVALID) {
+			Nbt_ReadTag(childTagId, true, stream, &tag);
+		} 
+		break;
+
+	case NBT_TAG_INT32_ARRAY:
+		ErrorHandler_Fail("Nbt Tag Int32_Array not supported");
+		break;
+
+	default:
+		ErrorHandler_Fail("Unrecognised NBT tag");
+	}
+	return tag;
 }
