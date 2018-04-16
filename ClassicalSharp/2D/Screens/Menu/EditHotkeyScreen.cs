@@ -1,7 +1,6 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 #if !ANDROID
 using System;
-using System.Drawing;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Hotkeys;
 using OpenTK.Input;

@@ -1,11 +1,10 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using System.Drawing;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Singleplayer;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class MiscOptionsScreen : ExtMenuOptionsScreen {
+	public class MiscOptionsScreen : MenuOptionsScreen {
 		
 		public MiscOptionsScreen(Game game) : base(game) {
 		}

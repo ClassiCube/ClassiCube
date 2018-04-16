@@ -6,7 +6,7 @@ using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Textures;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class GraphicsOptionsScreen : ExtMenuOptionsScreen {
+	public class GraphicsOptionsScreen : MenuOptionsScreen {
 		
 		public GraphicsOptionsScreen(Game game) : base(game) {
 		}

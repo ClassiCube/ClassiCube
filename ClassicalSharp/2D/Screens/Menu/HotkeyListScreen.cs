@@ -25,9 +25,9 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		internal static string MakeFlagsString(byte flags) {
-			if (flags == 0) return " None";
-			
-			return ((flags & 1) == 0 ? "" : " Ctrl") +
+			if (flags == 0) return " None";			
+			return 
+				((flags & 1) == 0 ? "" : " Ctrl")  +
 				((flags & 2) == 0 ? "" : " Shift") +
 				((flags & 4) == 0 ? "" : " Alt");
 		}

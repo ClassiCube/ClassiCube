@@ -271,17 +271,13 @@ void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices) {
 }
 
 void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices) {
-	if (value < 0) TextAtlas_Add(atlas, 10, vertices); /* - sign */
+	if (value < 0) {
+		TextAtlas_Add(atlas, 10, vertices); value = -value; /* - sign */
+	}
 
-	Int32 i, count = 0;
 	UInt8 digits[STRING_SIZE];
-	/* use a do while loop here, as we still want a '0' digit if input is 0 */
-	do {
-		digits[count] = (UInt8)Math_AbsI(value % 10);
-		value /= 10; count++;
-	} while (value != 0);
-
-	for (i = 0; i < count; i++) {
-		TextAtlas_Add(atlas, digits[count - 1 - i], vertices);
+	Int32 i, count = String_MakeInt32(value, digits);
+	for (i = count - 1; i >= 0; i--) {
+		TextAtlas_Add(atlas, digits[i], vertices);
 	}
 }

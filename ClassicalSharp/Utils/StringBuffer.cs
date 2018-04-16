@@ -35,7 +35,16 @@ namespace ClassicalSharp {
 			return this;
 		}
 		
-		static char[] numBuffer = new char[20];
+		internal static char[] numBuffer = new char[20];
+		internal static int MakeNum(int num) {
+			int len = 0;
+			do {
+				numBuffer[len] = (char)('0' + (num % 10)); 
+				num /= 10; len++;
+			} while (num > 0);
+			return len;
+		}
+		
 		public StringBuffer AppendNum(int num) {
 			int numLen = MakeNum(num);
 			for (int i = numLen - 1; i >= 0; i--)
@@ -50,15 +59,6 @@ namespace ClassicalSharp {
 			for (int i = numLen - 1; i >= 0; i--)
 				value[Length++] = numBuffer[i];
 			return this;
-		}
-		
-		int MakeNum(int num) {
-			int len = 0;
-			do {
-				numBuffer[len] = (char)('0' + (num % 10)); 
-				num /= 10; len++;
-			} while (num > 0);
-			return len;
 		}
 		
 		public StringBuffer Clear() {

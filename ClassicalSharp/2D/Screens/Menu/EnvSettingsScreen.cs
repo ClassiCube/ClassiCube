@@ -1,13 +1,10 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
-using System.Drawing;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Map;
-using ClassicalSharp.Renderers;
-using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class EnvSettingsScreen : ExtMenuOptionsScreen {
+	public class EnvSettingsScreen : MenuOptionsScreen {
 		
 		public EnvSettingsScreen(Game game) : base(game) {
 		}

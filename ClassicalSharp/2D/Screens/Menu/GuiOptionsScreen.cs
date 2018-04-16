@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Gui.Widgets;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class GuiOptionsScreen : ExtMenuOptionsScreen {
+	public class GuiOptionsScreen : MenuOptionsScreen {
 		
 		public GuiOptionsScreen(Game game) : base(game) {
 		}

@@ -173,12 +173,10 @@ void Commands_Register(ChatCommandConstructor constructor) {
 	commands_list[commands_count++] = command;
 }
 
-void Commands_Log(const UInt8* raw1, String* str2, const UInt8* raw3) {
+void Commands_Log(const UInt8* format, void* a1) {
 	UInt8 strBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String str = String_InitAndClearArray(strBuffer);
-	String_AppendConst(&str, raw1);
-	String_AppendString(&str, str2);
-	String_AppendConst(&str, raw3);
+	String_Format1(&str, format, a1);
 	Chat_Add(&str);
 }
 
@@ -190,19 +188,19 @@ ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 		if (!String_CaselessStarts(&cmd->Name, cmdName)) continue;
 
 		if (match != NULL) {
-			Commands_Log("&e/client: Multiple commands found that start with: \"&f", cmdName, "&e\".");
+			Commands_Log("&e/client: Multiple commands found that start with: \"&f%s&e\".", cmdName);
 			return NULL;
 		}
 		match = cmd;
 	}
 
 	if (match == NULL) {
-		Commands_Log("&e/client: Unrecognised command: \"&f", cmdName, "&e\".");
+		Commands_Log("&e/client: Unrecognised command: \"&f%s&e\".", cmdName);
 		Chat_AddRaw(tmp, "&e/client: Type &a/client &efor a list of commands.");
 		return NULL;
 	}
 	if (match->SingleplayerOnly && !ServerConnection_IsSinglePlayer) {
-		Commands_Log("&e/client: \"&f", cmdName, "&e\" can only be used in singleplayer.");
+		Commands_Log("&e/client: \"&f%s&e\" can only be used in singleplayer.", cmdName);
 		return NULL;
 	}
 	return match;
@@ -307,9 +305,9 @@ void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify a new render type.");
 	} else if (Game_SetRenderType(&args[1])) {
-		Commands_Log("&e/client: &fRender type is now ", &args[1], ".");
+		Commands_Log("&e/client: &fRender type is now %s.", &args[1]);
 	} else {
-		Commands_Log("&e/client: &cUnrecognised render type &f\"", &args[1], "\"&c.");
+		Commands_Log("&e/client: &cUnrecognised render type &f\"%s\"&c.", &args[1]);
 	}
 }
 
@@ -387,12 +385,12 @@ bool CuboidCommand_ParseBlock(STRING_PURE String* args, UInt32 argsCount) {
 		#else
 		if (!Convert_TryParseUInt8(&args[1], &block)) {
 		#endif		
-			Commands_Log("&eCuboid: &c\"", &args[1], "\" is not a valid block name or id."); return false;
+			Commands_Log("&eCuboid: &c\"%s\" is not a valid block name or id.", &args[1]); return false;
 		}
 	}
 
 	if (block >= BLOCK_CPE_COUNT && !Block_IsCustomDefined(block)) {
-		Commands_Log("&eCuboid: &cThere is no block with id \"", &args[1], "\"."); return false;
+		Commands_Log("&eCuboid: &cThere is no block with id \"%s\".", &args[1]); return false;
 	}
 
 	cuboid_block = block;

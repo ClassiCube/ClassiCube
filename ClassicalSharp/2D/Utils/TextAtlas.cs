@@ -50,7 +50,7 @@ namespace ClassicalSharp {
 		
 		
 		public void Add(int charIndex, VertexP3fT2fC4b[] vertices, ref int index) {
-			int width = widths[charIndex];			
+			int width = widths[charIndex];
 			Texture part = tex;
 			part.X1 = curX; part.Width = (ushort)width;
 			part.U1 = (offset + charIndex * fontSize) / (float)totalWidth;
@@ -62,25 +62,15 @@ namespace ClassicalSharp {
 		}
 		
 		public unsafe void AddInt(int value, VertexP3fT2fC4b[] vertices, ref int index) {
-			if (value < 0) Add(10, vertices, ref index); // - sign
-
-			byte* digits = stackalloc byte[32];
-			int count = MakeDigits(value, digits);
-			
-			for (int i = 0; i < count; i++) {
-				Add(digits[count - 1 - i], vertices, ref index);
+			if (value < 0) {
+				Add(10, vertices, ref index); value = -value; // - sign
 			}
-		}
-		
-		unsafe static int MakeDigits(int value, byte* digits) {
-			int count = 0;
-			// use a do while loop here, as we still want a '0' digit if input is 0.
-			do {
-				digits[count] = (byte)Math.Abs(value % 10);
-				value /= 10; count++;
-			} while (value != 0);
-			
-			return count;
+
+			char[] digits = StringBuffer.numBuffer;
+			int count = StringBuffer.MakeNum(value);
+			for (int i = count - 1; i >= 0; i--) {
+				Add(digits[i] - '0', vertices, ref index);
+			}
 		}
 	}
 }
