@@ -7,22 +7,44 @@ using ClassicalSharp.Singleplayer;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class HacksSettingsScreen : MenuOptionsScreen {
+	public class HacksSettingsScreen : ExtMenuOptionsScreen {
 		
 		public HacksSettingsScreen(Game game) : base(game) {
 		}
 		
-		string[] defaultValues;
-		int defaultIndex;
-		
 		public override void Init() {
 			base.Init();
 			ContextRecreated();
-			
-			MakeDefaultValues();
-			MakeValidators();
-			MakeDescriptions();
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
+			MakeDescriptions();		
+			validators = new MenuInputValidator[widgets.Length];
+			defaultValues = new string[widgets.Length];
+			
+			validators[1]    = new RealValidator(0.1f, 50);
+			defaultValues[1] = "10";
+			validators[3]    = new RealValidator(0.1f, 2048f);
+			defaultValues[3] = (1.233f).ToString();
+			validators[9]    = new IntegerValidator(1, 150);
+			defaultValues[9] = "70";
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
+		}
+		
+		void CheckHacksAllowed(object sender, EventArgs e) {
+			for (int i = 0; i < widgets.Length; i++) {
+				if (widgets[i] == null) continue;
+				widgets[i].Disabled = false;
+			}
+			
+			LocalPlayer p = game.LocalPlayer;
+			bool noGlobalHacks = !p.Hacks.CanAnyHacks || !p.Hacks.Enabled;
+			widgets[3].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
+			widgets[4].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
+			widgets[5].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
+			widgets[7].Disabled = noGlobalHacks || !p.Hacks.CanPushbackBlocks;
 		}
 		
 		protected override void ContextRecreated() {
@@ -41,10 +63,9 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, -50, "Pushback placing",     onBool,  GetPushback, SetPushback),
 				MakeOpt(1, 0, "Noclip slide",           onBool,  GetSlide,    SetSlide),
 				MakeOpt(1, 50, "Field of view",         onClick, GetFOV,      SetFOV),
-				
-				null,
+								
 				MakeBack(false, titleFont, SwitchOptions),
-				null, null,
+				null, null, null,
 			};
 			CheckHacksAllowed(null, null);
 		}
@@ -107,92 +128,30 @@ namespace ClassicalSharp.Gui.Screens {
 			g.UpdateProjection();
 		}
 		
-		void CheckHacksAllowed(object sender, EventArgs e) {
-			for (int i = 0; i < widgets.Length; i++) {
-				if (widgets[i] == null) continue;
-				widgets[i].Disabled = false;
-			}
-			
-			LocalPlayer p = game.LocalPlayer;
-			bool noGlobalHacks = !p.Hacks.CanAnyHacks || !p.Hacks.Enabled;
-			widgets[3].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
-			widgets[4].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
-			widgets[5].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
-			widgets[7].Disabled = noGlobalHacks || !p.Hacks.CanPushbackBlocks;
-		}
-		
-		public override void Dispose() {
-			base.Dispose();
-			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
-		}
-		
-		void MakeDefaultValues() {
-			defaultIndex = widgets.Length - 4;
-			defaultValues = new string[widgets.Length];
-			defaultValues[1] = "10";
-			defaultValues[3] = (1.233f).ToString();
-			defaultValues[9] = "70";
-		}
-		
-		void MakeValidators() {
-			validators = new MenuInputValidator[] {
-				null,
-				new RealValidator(0.1f, 50),
-				null,
-				new RealValidator(0.1f, 2048f),
-				null,
-				
-				null,
-				null,
-				null,
-				null,
-				new IntegerValidator(1, 150),
-			};
-		}
-		
 		void MakeDescriptions() {
-			descriptions = new string[widgets.Length][];
-			descriptions[2] = new string[] {
+			string[][] descs = new string[widgets.Length][];
+			descs[2] = new string[] {
 				"&eIf &fON&e, then the third person cameras will limit",
 				"&etheir zoom distance if they hit a solid block.",
 			};
-			descriptions[3] = new string[] {
+			descs[3] = new string[] {
 				"&eSets how many blocks high you can jump up.",
 				"&eNote: You jump much higher when holding down the Speed key binding.",
 			};
-			descriptions[6] = new string[] {
+			descs[6] = new string[] {
 				"&eIf &fON&e, then water/lava can be placed and",
 				"&edeleted the same way as any other block.",
 			};
-			descriptions[7] = new string[] {
+			descs[7] = new string[] {
 				"&eIf &fON&e, placing blocks that intersect your own position cause",
 				"&ethe block to be placed, and you to be moved out of the way.",
 				"&fThis is mainly useful for quick pillaring/towering.",
 			};
-			descriptions[8] = new string[] {
+			descs[8] = new string[] {
 				"&eIf &fOFF&e, you will immediately stop when in noclip",
 				"&emode and no movement keys are held down.",
 			};
-		}
-		
-		protected override void InputClosed() {
-			base.InputClosed();
-			if (widgets[defaultIndex] != null)
-				widgets[defaultIndex].Dispose();
-			widgets[defaultIndex] = null;
-		}
-		
-		protected override void InputOpened() {
-			widgets[defaultIndex] = ButtonWidget.Create(game, 200, "Default value", titleFont, DefaultButtonClick)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 150);
-		}
-		
-		void DefaultButtonClick(Game game, Widget widget) {
-			int index = IndexOfWidget(activeButton);
-			string defValue = defaultValues[index];
-			
-			input.Clear();
-			input.Append(defValue);
+			descriptions = descs;
 		}
 	}
 }

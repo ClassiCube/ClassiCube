@@ -6,7 +6,7 @@ using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Textures;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class GraphicsOptionsScreen : MenuOptionsScreen {
+	public class GraphicsOptionsScreen : ExtMenuOptionsScreen {
 		
 		public GraphicsOptionsScreen(Game game) : base(game) {
 		}
@@ -14,7 +14,14 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			ContextRecreated();
-			MakeValidators();
+			
+			validators = new MenuInputValidator[widgets.Length];
+			defaultValues = new string[widgets.Length];
+			validators[0]    = new EnumValidator(typeof(FpsLimitMethod));
+			validators[1]    = new IntegerValidator(8, 4096);
+			defaultValues[1] = "512";
+			validators[3]    = new EnumValidator(typeof(NameMode));
+			validators[4]    = new EnumValidator(typeof(EntityShadow));
 			MakeDescriptions();
 		}
 		
@@ -33,7 +40,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, 50, "Mipmaps",            onBool,  GetMipmaps,  SetMipmaps),
 				
 				MakeBack(false, titleFont, SwitchOptions),
-				null, null,
+				null, null, null,
 			};
 		}
 
@@ -83,18 +90,6 @@ namespace ClassicalSharp.Gui.Screens {
 					TexturePack.ExtractTerrainPng(g, data, url);
 				}
 			}
-		}
-		
-		void MakeValidators() {
-			validators = new MenuInputValidator[] {
-				new EnumValidator(typeof(FpsLimitMethod)),
-				new IntegerValidator(8, 4096),
-				null,
-				
-				new EnumValidator(typeof(NameMode)),
-				new EnumValidator(typeof(EntityShadow)),
-				null,
-			};
 		}
 		
 		void MakeDescriptions() {

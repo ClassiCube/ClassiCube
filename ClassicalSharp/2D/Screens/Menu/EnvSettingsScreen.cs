@@ -7,25 +7,44 @@ using ClassicalSharp.Renderers;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class EnvSettingsScreen : MenuOptionsScreen {
+	public class EnvSettingsScreen : ExtMenuOptionsScreen {
 		
 		public EnvSettingsScreen(Game game) : base(game) {
 		}
-
-		string[] defaultValues;
-		int defaultIndex;
 		
 		public override void Init() {
 			base.Init();
 			ContextRecreated();
-			MakeDefaultValues();
-			MakeValidators();
+			validators = new MenuInputValidator[widgets.Length];
+			defaultValues = new string[widgets.Length];
+			
+			validators = new MenuInputValidator[widgets.Length];
+			validators[0]    = new HexColourValidator();
+			defaultValues[0] = WorldEnv.DefaultCloudsColour.ToRGBHexString();
+			validators[1]    = new HexColourValidator();
+			defaultValues[1] = WorldEnv.DefaultSkyColour.ToRGBHexString();
+			validators[2]    = new HexColourValidator();
+			defaultValues[2] = WorldEnv.DefaultFogColour.ToRGBHexString();
+			validators[3]    = new RealValidator(0, 1000);
+			defaultValues[3] = "1";
+			validators[4]    = new IntegerValidator(-10000, 10000);
+			defaultValues[4] = (game.World.Height + 2).ToString();
+			
+			validators[5]    = new HexColourValidator();
+			defaultValues[5] = WorldEnv.DefaultSunlight.ToRGBHexString();
+			validators[6]    = new HexColourValidator();
+			defaultValues[6] = WorldEnv.DefaultShadowlight.ToRGBHexString();
+			validators[7]    = new EnumValidator(typeof(Weather));
+			validators[8]    = new RealValidator(-100, 100);
+			defaultValues[8] = "1";
+			validators[9]    = new IntegerValidator(-2048, 2048);
+			defaultValues[9] = (game.World.Height / 2).ToString();
 		}
 		
 		protected override void ContextRecreated() {
 			ClickHandler onClick = OnButtonClick;
 			ClickHandler onEnum = OnEnumClick;
-			
+
 			widgets = new Widget[] {
 				MakeOpt(-1, -150, "Clouds col",  onClick, GetCloudsCol,    SetCloudsCol),
 				MakeOpt(-1, -100, "Sky col",     onClick, GetSkyCol,       SetSkyCol),
@@ -55,7 +74,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		static string GetCloudsSpeed(Game g) { return  g.World.Env.CloudsSpeed.ToString("F2"); }
 		static void SetCloudsSpeed(Game g, string v) { g.World.Env.SetCloudsSpeed(Utils.ParseDecimal(v)); }
-				
+		
 		static string GetCloudsHeight(Game g) { return  g.World.Env.CloudHeight.ToString(); }
 		static void SetCloudsHeight(Game g, string v) { g.World.Env.SetCloudsLevel(Int32.Parse(v)); }
 		
@@ -73,58 +92,5 @@ namespace ClassicalSharp.Gui.Screens {
 
 		static string GetEdgeHeight(Game g) { return  g.World.Env.EdgeHeight.ToString(); }
 		static void SetEdgeHeight(Game g, string v) { g.World.Env.SetEdgeLevel(Int32.Parse(v)); }
-		
-		void MakeDefaultValues() {
-			defaultIndex = widgets.Length - 3;			
-			defaultValues = new string[] {
-				WorldEnv.DefaultCloudsColour.ToRGBHexString(),
-				WorldEnv.DefaultSkyColour.ToRGBHexString(),
-				WorldEnv.DefaultFogColour.ToRGBHexString(),
-				(1).ToString(),
-				(game.World.Height + 2).ToString(),
-				
-				WorldEnv.DefaultSunlight.ToRGBHexString(),
-				WorldEnv.DefaultShadowlight.ToRGBHexString(),
-				null,
-				(1).ToString(),
-				(game.World.Height / 2).ToString(),
-			};
-		}
-		
-		void MakeValidators() {
-			validators = new MenuInputValidator[] {
-				new HexColourValidator(),
-				new HexColourValidator(),
-				new HexColourValidator(),
-				new RealValidator(0, 1000),
-				new IntegerValidator(-10000, 10000),
-				
-				new HexColourValidator(),
-				new HexColourValidator(),
-				new EnumValidator(typeof(Weather)),
-				new RealValidator(-100, 100),
-				new IntegerValidator(-2048, 2048),
-			};
-		}
-		
-		protected override void InputClosed() {
-			base.InputClosed();
-			if (widgets[defaultIndex] != null)
-				widgets[defaultIndex].Dispose();
-			widgets[defaultIndex] = null;
-		}
-		
-		protected override void InputOpened() {
-			widgets[defaultIndex] = ButtonWidget.Create(game, 200, "Default value", titleFont, DefaultButtonClick)				
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 150);
-		}
-		
-		void DefaultButtonClick(Game game, Widget widget) {
-			int index = IndexOfWidget(activeButton);
-			string defValue = defaultValues[index];
-			
-			input.Clear();
-			input.Append(defValue);
-		}
 	}
 }

@@ -32,7 +32,6 @@ namespace ClassicalSharp.Gui.Screens {
 				TextWidget.Create(game, "&eButtons on the right require restarting game", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100),
 				MakeBack(false, titleFont, SwitchBack),
-				null, null,
 			};
 		}
 		

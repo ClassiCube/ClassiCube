@@ -5,7 +5,7 @@ using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Singleplayer;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class MiscOptionsScreen : MenuOptionsScreen {
+	public class MiscOptionsScreen : ExtMenuOptionsScreen {
 		
 		public MiscOptionsScreen(Game game) : base(game) {
 		}
@@ -13,7 +13,17 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			ContextRecreated();
-			MakeValidators();
+			validators = new MenuInputValidator[widgets.Length];
+			defaultValues = new string[widgets.Length];
+			
+			validators[0]    = new RealValidator(1, 1024);
+			defaultValues[0] = "5";
+			validators[1]    = new IntegerValidator(0, 100);
+			defaultValues[1] = "0";
+			validators[2]    = new IntegerValidator(0, 100);
+			defaultValues[2] = "0";
+			validators[7]    = new IntegerValidator(1, 200);
+			defaultValues[7] = "30";
 		}
 		
 		protected override void ContextRecreated() {
@@ -33,7 +43,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1, 50, "Mouse sensitivity",               onClick, GetSensitivity, SetSensitivity),
 
 				MakeBack(false, titleFont, SwitchOptions),
-				null, null,
+				null, null, null,
 			};
 		}
 		
@@ -72,21 +82,6 @@ namespace ClassicalSharp.Gui.Screens {
 		static void SetSensitivity(Game g, string v) {
 			g.MouseSensitivity = Int32.Parse(v);
 			Options.Set(OptionsKey.Sensitivity, v);
-		}
-		
-		void MakeValidators() {
-			IServerConnection network = game.Server;
-			validators = new MenuInputValidator[] {
-				network.IsSinglePlayer ? new RealValidator(1, 1024) : null,
-				new IntegerValidator(0, 100),
-				new IntegerValidator(0, 100),
-				null,
-				
-				null,
-				null,
-				null,
-				new IntegerValidator(1, 200),
-			};
 		}
 	}
 }

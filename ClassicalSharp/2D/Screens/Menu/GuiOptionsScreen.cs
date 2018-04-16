@@ -3,15 +3,27 @@ using System;
 using ClassicalSharp.Gui.Widgets;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class GuiOptionsScreen : MenuOptionsScreen {
+	public class GuiOptionsScreen : ExtMenuOptionsScreen {
 		
 		public GuiOptionsScreen(Game game) : base(game) {
 		}
 		
 		public override void Init() {
 			base.Init();
-			ContextRecreated();
-			MakeValidators();
+			ContextRecreated();		
+			validators = new MenuInputValidator[widgets.Length];
+			defaultValues = new string[widgets.Length];
+			
+			validators[2]    = new RealValidator(0.25f, 4f);
+			defaultValues[2] = "1";
+			validators[3]    = new RealValidator(0.25f, 4f);
+			defaultValues[3] = "1";
+			validators[6]    = new RealValidator(0.25f, 4f);
+			defaultValues[6] = "1";
+			validators[7]    = new IntegerValidator(0, 30);
+			defaultValues[7] = "10";
+			validators[9]    = new StringValidator();
+			defaultValues[9] = "Arial";
 		}
 		
 		protected override void ContextRecreated() {
@@ -32,7 +44,7 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeOpt(1,   50, "Font",                onClick, GetFont,      SetFont),
 				
 				MakeBack(false, titleFont, SwitchOptions),
-				null, null,
+				null, null, null,
 			};
 		}
 		
@@ -92,22 +104,6 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Gui.RefreshHud();
 			selectedI = -1;
 			HandlesMouseMove(game.Mouse.X, game.Mouse.Y);
-		}
-		
-		void MakeValidators() {
-			validators = new MenuInputValidator[] {
-				null,
-				null,
-				new RealValidator(0.25f, 4f),
-				new RealValidator(0.25f, 4f),
-				null,
-				
-				null,
-				new RealValidator(0.25f, 4f),
-				new IntegerValidator(0, 30),
-				null,
-				new StringValidator(),
-			};
 		}
 	}
 }

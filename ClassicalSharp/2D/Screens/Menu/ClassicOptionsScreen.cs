@@ -15,7 +15,10 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			ContextRecreated();
-			MakeValidators();
+			
+			validators = new MenuInputValidator[widgets.Length];
+			validators[2] = new EnumValidator(typeof(ViewDist));
+			validators[7] = new EnumValidator(typeof(FpsLimitMethod));
 		}
 		
 		protected override void ContextRecreated() {
@@ -38,7 +41,6 @@ namespace ClassicalSharp.Gui.Screens {
 				ButtonWidget.Create(game, 400, "Controls...", titleFont, SwitchClassic)
 					.SetLocation(Anchor.Centre, Anchor.Max, 0, 95),
 				MakeBack(400, "Done", 25, titleFont, SwitchPause),
-				null, null,
 			};
 		}
 		
@@ -90,21 +92,5 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		static void SwitchClassic(Game g, Widget w) { g.Gui.SetNewScreen(new ClassicKeyBindingsScreen(g)); }
-		
-		void MakeValidators() {
-			IServerConnection network = game.Server;
-			validators = new MenuInputValidator[] {
-				null,
-				null,
-				new EnumValidator(typeof(ViewDist)),
-				null,
-				
-				null,
-				null,
-				null,
-				new EnumValidator(typeof(FpsLimitMethod)),
-				null,
-			};
-		}
 	}
 }
