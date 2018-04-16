@@ -67,7 +67,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected static void SwitchPause(Game g, Widget w) { g.Gui.SetNewScreen(new PauseScreen(g)); }
 		
 				
-		protected static void DisposeWidgets<T>(T[] widgets) where T : Widget {
+		protected static void DisposeWidgets(Widget[] widgets) {
 			if (widgets == null) return;
 			
 			for (int i = 0; i < widgets.Length; i++) {
@@ -75,7 +75,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		protected static void RepositionWidgets<T>(T[] widgets) where T : Widget {
+		protected static void RepositionWidgets(Widget[] widgets) {
 			if (widgets == null) return;
 			
 			for (int i = 0; i < widgets.Length; i++) {
@@ -83,7 +83,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
-		protected static void RenderWidgets<T>(T[] widgets, double delta) where T : Widget {
+		protected static void RenderWidgets(Widget[] widgets, double delta) {
 			if (widgets == null) return;
 			
 			for (int i = 0; i < widgets.Length; i++) {

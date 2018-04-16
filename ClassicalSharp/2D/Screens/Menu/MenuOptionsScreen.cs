@@ -23,20 +23,15 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Render(double delta) {
-			RenderMenuBounds();
-			game.Graphics.Texturing = true;
-			RenderWidgets(widgets, delta);
+			base.Render(delta);
+			if (extendedHelp == null) return;
+					
+			int x = extendedHelp.X - 5, y = extendedHelp.Y - 5;
+			int width = extendedHelp.Width, height = extendedHelp.Height;
+			game.Graphics.Draw2DQuad(x, y, width + 10, height + 10, tableCol);
 			
-			if (extendedHelp != null) {
-				game.Graphics.Texturing = false;
-				int tableWidth = extendedHelp.Width, tableHeight = extendedHelp.Height;
-				int x = game.Width  / 2 - tableWidth / 2 - 5;
-				int y = game.Height / 2 + extHelpY - 5;
-				
-				game.Graphics.Draw2DQuad(x, y, tableWidth + 10, tableHeight + 10, tableCol);
-				game.Graphics.Texturing = true;
-				extendedHelp.Render(delta);
-			}
+			game.Graphics.Texturing = true;
+			extendedHelp.Render(delta);
 			game.Graphics.Texturing = false;
 		}
 		
@@ -206,7 +201,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			input = MenuInputWidget.Create(game, 400, 30, button.GetValue(game), textFont, validator)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 110);
-			input.ShowCaret = true;		
+			input.ShowCaret = true;
 			widgets[widgets.Length - 2] = input;
 			
 			widgets[widgets.Length - 1] = ButtonWidget.Create(game, 40, "OK", titleFont, OKButtonClick)

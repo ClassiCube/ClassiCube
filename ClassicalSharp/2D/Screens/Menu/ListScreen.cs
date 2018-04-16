@@ -14,11 +14,10 @@ namespace ClassicalSharp.Gui.Screens {
 		protected Font font;
 		protected string[] entries;
 		protected int currentIndex;
-		protected ButtonWidget[] buttons;
+		protected Widget[] widgets;
 		protected const int items = 5;
 		protected const string empty = "-----";
 		
-		TextWidget title;
 		protected string titleText;
 		
 		public override void Init() {
@@ -29,34 +28,25 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextLost() {
-			DisposeWidgets(buttons);
-			title.Dispose();
+			DisposeWidgets(widgets);
 		}
 		
 		protected override void ContextRecreated() {
-			title = TextWidget.Create(game, titleText, font)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -155);
-			
-			buttons = new ButtonWidget[] {
-				MakeText(0, -100, Get(0)),
-				MakeText(0, -50,  Get(1)),
-				MakeText(0,   0,  Get(2)),
-				MakeText(0, 50,   Get(3)),
-				MakeText(0, 100,  Get(4)),
+			widgets = new Widget[] {
+				MakeText(0), MakeText(1), MakeText(2), MakeText(3), MakeText(4),
 				
-				Make(-220, 0, "<", MoveBackwards),
-				Make(220, 0, ">", MoveForwards),
+				Make(-220, "<", MoveBackwards),
+				Make(220,  ">", MoveForwards),
 				MakeBack(false, font, SwitchPause),
+				TextWidget.Create(game, titleText, font)
+					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -155),
 			};
 			UpdateArrows();
 		}
 		
 		void MoveBackwards(Game g, Widget w) { PageClick(false); }
 		void MoveForwards(Game g, Widget w) { PageClick(true); }
-		
-		string Get(int index) {
-			return index < entries.Length ? entries[index] : empty;
-		}
+		string Get(int i) { return i < entries.Length ? entries[i] : empty; }
 		
 		public override void Dispose() {
 			font.Dispose();
@@ -65,14 +55,15 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
-		ButtonWidget MakeText(int x, int y, string text) {
+		ButtonWidget MakeText(int i) {
+			string text = Get(currentIndex + i);
 			return ButtonWidget.Create(game, 300, text, font, TextButtonClick)
-				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, (i - 2) * 50);
 		}
 		
-		ButtonWidget Make(int x, int y, string text, ClickHandler onClick) {
+		ButtonWidget Make(int x, string text, ClickHandler onClick) {
 			return ButtonWidget.Create(game, 40, text, font, onClick)
-				.SetLocation(Anchor.Centre, Anchor.Centre, x, y);
+				.SetLocation(Anchor.Centre, Anchor.Centre, x, 0);
 		}
 		
 		protected abstract void TextButtonClick(Game game, Widget widget);
@@ -86,18 +77,19 @@ namespace ClassicalSharp.Gui.Screens {
 			if (index < 0) index = 0;
 			currentIndex = index;
 			
-			for (int i = 0; i < items; i++)
-				buttons[i].SetText(Get(currentIndex + i));
+			for (int i = 0; i < items; i++) {
+				((ButtonWidget)widgets[i]).SetText(Get(currentIndex + i));
+			}
 			UpdateArrows();
 		}
 		
 		protected void UpdateArrows() {
-			buttons[5].Disabled = false;
-			buttons[6].Disabled = false;
+			widgets[5].Disabled = false;
+			widgets[6].Disabled = false;
 			if (currentIndex < items)
-				buttons[5].Disabled = true;
+				widgets[5].Disabled = true;
 			if (currentIndex >= entries.Length - items)
-				buttons[6].Disabled = true;
+				widgets[6].Disabled = true;
 		}
 		
 		public override bool HandlesKeyDown(Key key) {
@@ -114,23 +106,21 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
-			return HandleMouseMove(buttons, mouseX, mouseY) >= 0;
+			return HandleMouseMove(widgets, mouseX, mouseY) >= 0;
 		}
 		
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
-			return HandleMouseDown(buttons, mouseX, mouseY, button) >= 0;
+			return HandleMouseDown(widgets, mouseX, mouseY, button) >= 0;
 		}
 		
 		public override void OnResize(int width, int height) {
-			RepositionWidgets(buttons);
-			title.Reposition();
+			RepositionWidgets(widgets);
 		}
 		
 		public override void Render(double delta) {
 			RenderMenuBounds();
 			game.Graphics.Texturing = true;
-			title.Render(delta);
-			RenderWidgets(buttons, delta);
+			RenderWidgets(widgets, delta);
 			game.Graphics.Texturing = false;
 		}
 	}

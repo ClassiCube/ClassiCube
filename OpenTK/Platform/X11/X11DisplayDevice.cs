@@ -58,9 +58,12 @@ namespace OpenTK.Platform.X11 {
 			    NativeMethods.XineramaIsActive(API.DefaultDisplay)) {
 				XineramaScreenInfo[] screens = NativeMethods.XineramaQueryScreens(API.DefaultDisplay);
 				bool first = true;
-				foreach (XineramaScreenInfo screen in screens) {
+				
+				for (int i = 0; i < screens.Length; i++) {
+					XineramaScreenInfo screen = screens[i];
 					DisplayDevice dev = new DisplayDevice();
 					dev.Bounds = new Rectangle(screen.X, screen.Y, screen.Width, screen.Height);
+					
 					if (first) {
 						// We consider the first device returned by Xinerama as the primary one.
 						// Makes sense conceptually, but is there a way to verify this?

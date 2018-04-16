@@ -51,7 +51,8 @@ namespace ClassicalSharp.Network {
 		public static int AveragePingMilliseconds() {
 			double totalMs = 0;
 			int measures = 0;
-			foreach (PingEntry ping in Entries) {
+			for (int i = 0; i < Entries.Length; i++) {
+				PingEntry ping = Entries[i];
 				if (ping.TimeSent.Ticks == 0 || ping.TimeReceived.Ticks == 0) continue;
 				totalMs += ping.Latency; measures++;
 			}
