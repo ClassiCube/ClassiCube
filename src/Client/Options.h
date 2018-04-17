@@ -5,11 +5,10 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define FPS_LIMIT_VSYNC  0
-#define FPS_LIMIT_30FPS  1
-#define FPS_LIMIT_60FPS  2
-#define FPS_LIMIT_120FPS 3
-#define FPS_LIMIT_NONE   4
+typedef enum FpsLimit_ {
+	FpsLimit_VSync, FpsLimit_30FPS, FpsLimit_60FPS, FpsLimit_120FPS, FpsLimit_None, FpsLimit_Count,
+} FpsLimit;
+extern const UInt8* FpsLimit_Names[FpsLimit_Count];
 
 #define OPTION_USE_MUSIC "usemusic"
 #define OPTION_USE_SOUND "usesound"
@@ -81,6 +80,7 @@ bool Options_GetBool(const UInt8* key, bool defValue);
 Real32 Options_GetFloat(const UInt8* key, Real32 min, Real32 max, Real32 defValue);
 UInt32 Options_GetEnum(const UInt8* key, UInt32 defValue, const UInt8** names, UInt32 namesCount);
 
+void Options_SetBool(const UInt8* keyRaw, bool value);
 void Options_SetInt32(const UInt8* keyRaw, Int32 value);
 void Options_Set(const UInt8* keyRaw, STRING_PURE String* value);
 void Options_Load(void);

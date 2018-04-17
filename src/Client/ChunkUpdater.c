@@ -9,7 +9,6 @@
 #include "MapRenderer.h"
 #include "Platform.h"
 #include "TerrainAtlas.h"
-#include "Vectors.h"
 #include "World.h"
 #include "Builder.h"
 #include "Utils.h"

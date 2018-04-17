@@ -371,8 +371,7 @@ bool cuboid_persist = false;
 
 bool CuboidCommand_ParseBlock(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) return true;
-	String yes = String_FromConst("yes");
-	if (String_CaselessEquals(&args[1], &yes)) { cuboid_persist = true; return true; }
+	if (String_CaselessEqualsConst(&args[1], "yes")) { cuboid_persist = true; return true; }
 
 	Int32 temp = Block_FindID(&args[1]);
 	BlockID block = 0;
@@ -447,8 +446,7 @@ void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	cuboid_persist = false;
 
 	if (!CuboidCommand_ParseBlock(args, argsCount)) return;
-	String yes = String_FromConst("yes");
-	if (argsCount > 2 && String_CaselessEquals(&args[2], &yes)) {
+	if (argsCount > 2 && String_CaselessEqualsConst(&args[2], "yes")) {
 		cuboid_persist = true;
 	}
 

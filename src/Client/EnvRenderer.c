@@ -275,10 +275,7 @@ void EnvRenderer_ResetAllEnv(void* obj) {
 }
 
 void EnvRenderer_FileChanged(void* obj, Stream* src) {
-	String cloud  = String_FromConst("cloud.png");
-	String clouds = String_FromConst("clouds.png");
-
-	if (String_CaselessEquals(&src->Name, &cloud) || String_CaselessEquals(&src->Name, &clouds)) {
+	if (String_CaselessEqualsConst(&src->Name, "cloud.png") || String_CaselessEqualsConst(&src->Name, "clouds.png")) {
 		Game_UpdateTexture(&env_cloudsTex, src, false);
 	}
 }

@@ -31,6 +31,7 @@ FN_GLGENBUFFERS glGenBuffers;
 FN_GLBUFFERDATA glBufferData;
 FN_GLBUFFERSUBDATA glBufferSubData;
 
+Int32 Gfx_strideSizes[2] = GFX_STRIDE_SIZES;
 bool gl_lists = false;
 Int32 gl_activeList = -1;
 #define gl_DYNAMICLISTID 1234567891

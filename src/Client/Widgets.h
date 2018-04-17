@@ -25,9 +25,8 @@ void TextWidget_Create(TextWidget* widget, STRING_PURE String* text, FontDesc* f
 void TextWidget_SetText(TextWidget* widget, STRING_PURE String* text);
 
 
-typedef void (*ButtonWidget_Set)(STRING_TRANSIENT String* raw);
 typedef void (*ButtonWidget_Get)(STRING_TRANSIENT String* raw);
-
+typedef void (*ButtonWidget_Set)(STRING_PURE String* raw);
 typedef struct ButtonWidget_ {
 	Widget_Layout
 	Texture Texture;

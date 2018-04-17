@@ -53,6 +53,7 @@ void String_UNSAFE_Split(STRING_REF String* str, UInt8 c, STRING_TRANSIENT Strin
 
 bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
 bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
+bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const UInt8* b);
 Int32 String_MakeInt32(Int32 num, UInt8* numBuffer);
 
 bool String_Append(STRING_TRANSIENT String* str, UInt8 c);

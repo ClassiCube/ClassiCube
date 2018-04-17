@@ -110,6 +110,18 @@ bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b) {
 	return true;
 }
 
+bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const UInt8* b) {
+	Int32 i;
+
+	for (i = 0; i < a->length; i++) {
+		UInt8 aCur = a->buffer[i]; Char_MakeLower(aCur);
+		UInt8 bCur = b[i];         Char_MakeLower(bCur);
+		if (aCur != bCur || bCur == NULL) return false;
+	}
+	/* ensure at end of string */
+	return b[a->length] == NULL;
+}
+
 
 bool String_Append(STRING_TRANSIENT String* str, UInt8 c) {
 	if (str->length == str->capacity) return false;
@@ -502,16 +514,12 @@ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {
 }
 
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
-	String trueStr  = String_FromConst("True");
-	if (String_CaselessEquals(str, &trueStr)) {
+	if (String_CaselessEqualsConst(str, "True")) {
 		*value = true; return true;
 	}
-
-	String falseStr = String_FromConst("False");
-	if (String_CaselessEquals(str, &falseStr)) {
+	if (String_CaselessEqualsConst(str, "False")) {
 		*value = false; return true;
 	}
-
 	*value = false; return false;
 }
 

@@ -134,8 +134,7 @@ void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 	}
 
 	/* 'giant' model kept for backwards compatibility */
-	String giant = String_FromConst("giant");
-	if (String_CaselessEquals(model, &giant)) {
+	if (String_CaselessEqualsConst(model, "giant")) {
 		String_AppendConst(&entModel, "humanoid");
 		entity->ModelScale = Vector3_Create1(2.0f);
 	} else if (Convert_TryParseUInt8(model, &entity->ModelBlock)) {

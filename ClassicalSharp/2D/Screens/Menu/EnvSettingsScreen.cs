@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			ClickHandler onClick = OnButtonClick;
+			ClickHandler onClick = OnInputClick;
 			ClickHandler onEnum = OnEnumClick;
 
 			widgets = new Widget[] {

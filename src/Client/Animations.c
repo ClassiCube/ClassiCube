@@ -241,8 +241,7 @@ bool Animations_IsDefaultZip(void) {
 	String texPack = String_InitAndClearArray(texPackBuffer);
 
 	Options_Get(OPTION_DEFAULT_TEX_PACK, &texPack);
-	String defaultZip = String_FromConst("default.zip");
-	return texPack.length == 0 || String_CaselessEquals(&texPack, &defaultZip);
+	return texPack.length == 0 || String_CaselessEqualsConst(&texPack, "default.zip");
 }
 
 void Animations_Clear(void) {
@@ -316,21 +315,14 @@ void Animations_PackChanged(void* obj) {
 }
 
 void Animations_FileChanged(void* obj, Stream* stream) {
-	String animPng = String_FromConst("animation.png");
-	String animsPng = String_FromConst("animations.png");
-	String animTxt = String_FromConst("animation.txt");
-	String animsTxt = String_FromConst("animations.txt");
-	String lavaAnim = String_FromConst("uselavaanim");
-	String waterAnim = String_FromConst("usewateranim");
-
 	String* name = &stream->Name;
-	if (String_CaselessEquals(name, &animPng) || String_CaselessEquals(name, &animsPng)) {
+	if (String_CaselessEqualsConst(name, "animation.png") || String_CaselessEqualsConst(name, "animations.png")) {
 		Bitmap_DecodePng(&anims_bmp, stream);
-	} else if (String_CaselessEquals(name, &animTxt) || String_CaselessEquals(name, &animsTxt)) {
+	} else if (String_CaselessEqualsConst(name, "animation.txt") || String_CaselessEqualsConst(name, "animations.txt")) {
 		Animations_ReadDescription(stream);
-	} else if (String_CaselessEquals(name, &lavaAnim)) {
+	} else if (String_CaselessEqualsConst(name, "uselavaanim")) {
 		anims_useLavaAnim = true;
-	} else if (String_CaselessEquals(name, &waterAnim)) {
+	} else if (String_CaselessEqualsConst(name, "usewateranim")) {
 		anims_useWaterAnim = true;
 	}
 }

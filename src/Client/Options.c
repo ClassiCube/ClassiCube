@@ -6,6 +6,9 @@
 #include "Platform.h"
 #include "Stream.h"
 
+const UInt8* FpsLimit_Names[FpsLimit_Count] = {
+	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
+};
 #define OPT_NOT_FOUND UInt32_MaxValue
 StringsBuffer Options_Changed;
 
@@ -115,6 +118,14 @@ Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) {
 	StringsBuffer_Add(&Options_Keys, key);
 	StringsBuffer_Add(&Options_Values, value);
 	return Options_Keys.Count;
+}
+
+void Options_SetBool(const UInt8* keyRaw, bool value) {
+	if (value) {
+		String str = String_FromConst("True");  Options_Set(keyRaw, &str);
+	} else {
+		String str = String_FromConst("False"); Options_Set(keyRaw, &str);
+	}
 }
 
 void Options_SetInt32(const UInt8* keyRaw, Int32 value) {

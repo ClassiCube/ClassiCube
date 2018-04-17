@@ -182,12 +182,9 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 }
 
 void WeatherRenderer_FileChanged(void* obj, Stream* stream) {
-	String snow = String_FromConst("snow.png");
-	String rain = String_FromConst("rain.png");
-
-	if (String_CaselessEquals(&stream->Name, &snow)) {
+	if (String_CaselessEqualsConst(&stream->Name, "snow.png")) {
 		Game_UpdateTexture(&weather_snowTex, stream, false);
-	} else if (String_CaselessEquals(&stream->Name, &rain)) {
+	} else if (String_CaselessEqualsConst(&stream->Name, "rain.png")) {
 		Game_UpdateTexture(&weather_rainTex, stream, false);
 	}
 }

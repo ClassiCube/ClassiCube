@@ -115,6 +115,21 @@ typedef struct SaveLevelScreen_ {
 	UInt8 TextPathBuffer[String_BufferSize(FILENAME_SIZE)];
 } SaveLevelScreen;
 
+#define MENUOPTIONS_MAX_DESC 5
+typedef struct MenuOptionsScreen_ {
+	MenuScreen_Layout
+	MenuInputValidator* Validators;
+	const UInt8** Descriptions;
+	const UInt8** DefaultValues;
+	ButtonWidget* Buttons;
+	Int32 ActiveI, SelectedI, DescriptionsCount;
+	ButtonWidget OK, Default;
+	MenuInputWidget Input;
+	TextGroupWidget ExtHelp;
+	Texture ExtHelp_Textures[MENUOPTIONS_MAX_DESC];
+	UInt8 ExtHelp_Buffer[String_BufferSize(MENUOPTIONS_MAX_DESC * TEXTGROUPWIDGET_LEN)];
+} MenuOptionsScreen;
+
 
 void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
 	if (widgets == NULL) return;
@@ -1435,8 +1450,7 @@ void HotkeyListScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	String text = ListScreen_UNSAFE_GetCur(screen, w);
 	HotkeyData original = { 0 };
 
-	String empty = String_FromConst(LIST_SCREEN_EMPTY);
-	if (String_CaselessEquals(&text, &empty)) {
+	if (String_CaselessEqualsConst(&text, LIST_SCREEN_EMPTY)) {
 		Gui_SetNewScreen(EditHotkeyScreen_MakeInstance(original)); return;
 	}
 
@@ -1837,4 +1851,262 @@ Screen* MouseKeyBindingsScreen_MakeInstance(void) {
 	screen->LeftPage = KeyBindingsScreen_Other;
 	screen->WidgetsCount++; /* Extra text widget for 'right click' message */
 	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------MenuOptionsScreen------------------------------------------------------*
+*#########################################################################################################################*/
+void MenuOptionsScreen_Init(GuiElement* elem) {
+	MenuScreen_Init(elem);
+	Key_KeyRepeat = true;
+}
+	
+void MenuOptionsScreen_Render(GuiElement* elem, Real64 delta) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
+	MenuScreen_Render(elem, delta);
+	if (screen->ExtHelp.LinesCount == 0) return;
+
+	TextGroupWidget* extHelp = &screen->ExtHelp;
+	Int32 x = extHelp->X - 5, y = extHelp->Y - 5;
+	Int32 width = extHelp->Width, height = extHelp->Height;
+	PackedCol tableCol = PACKEDCOL_CONST(20, 20, 20, 200);
+	GfxCommon_Draw2DFlat(x, y, width + 10, height + 10, tableCol);
+
+	Gfx_SetTexturing(true);
+	Elem_Render(&screen->ExtHelp, delta);
+	Gfx_SetTexturing(false);
+}
+
+void MenuOptionsScreen_Free(GuiElement* elem) {
+	MenuScreen_Free(elem);
+	Key_KeyRepeat = false;
+}
+
+void MenuOptionsScreen_OnResize(GuiElement* elem) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
+	MenuScreen_OnResize(elem);
+	if (screen->ExtHelp.LinesCount == 0) return;
+	RepositionExtendedHelp();
+}
+
+void MenuOptionsScreen_ContextLost(void* obj) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
+	MenuScreen_ContextLost(obj);
+	screen->ActiveI = -1;
+	MenuOptionsScreen_FreeExtHelp(screen);
+}
+
+bool MenuOptionsScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
+	if (screen->ActiveI == -1) return true;
+	return Elem_HandlesKeyPress(&screen->Input.Base, key);
+}
+
+bool MenuOptionsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
+	if (screen->ActiveI >= 0) {
+		if (Elem_HandlesKeyDown(&screen->Input.Base, key)) return true;
+		if (key == Key_Enter || key == Key_KeypadEnter) {
+			EnterInput(); return true;
+		}
+	}
+	return MenuScreen_HandlesKeyDown(elem, key);
+}
+
+bool MenuOptionsScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
+	if (screen->ActiveI == -1) return true;
+	return Elem_HandlesKeyUp(&screen->Input.Base, key);
+}
+
+bool MenuOptionsScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
+	Int32 i = Menu_HandleMouseMove(screen->WidgetsPtr, screen->WidgetsCount, x, y);
+	if (i == -1 || i == screen->SelectedI) return true;
+	if (screen->Descriptions == NULL || i >= screen->DescriptionsCount) return true;
+
+	screen->SelectedI = i;
+	if (screen->ActiveI == -1) SelectExtendedHelp(i);
+	return true;
+}
+
+void MenuOptionsScreen_Make(MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* optName, Widget_LeftClick onClick, ButtonWidget_Get getter, ButtonWidget_Set setter) {
+	UInt8 titleBuffer[String_BufferSize(STRING_SIZE)];
+	String title = String_InitAndClearArray(titleBuffer);
+	String_AppendConst(&title, optName);
+	String_AppendConst(&title, ": ");
+	getter(&title);
+
+	ButtonWidget* btn = &screen->Buttons[i];
+	screen->WidgetsPtr[i] = (Widget*)btn;
+	ButtonWidget_Create(btn, 300, &title, &screen->TitleFont, onClick);
+	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 160 * dir, y);
+
+	btn->OptName  = optName;
+	btn->GetValue = getter;
+	btn->SetValue = setter;
+	return btn;
+}
+
+void Menu_GetBool(bool v, STRING_TRANSIENT String* raw) { 
+	String_AppendConst(raw, v ? "ON" : "OFF"); 
+}
+bool Menu_SetBool(STRING_PURE String* raw, const UInt8* key) {
+	bool isOn = String_CaselessEqualsConst(raw, "ON");
+	Options_SetBool(key, isOn); return isOn;
+}
+
+void MenuOptionsScreen_GetFPS(STRING_TRANSIENT String* raw) { 
+	String_AppendConst(raw, FpsLimit_Names[Game_FpsLimit]);
+}
+void MenuOptionsScreen_SetFPS(STRING_PURE String* raw) {
+	UInt32 method = Utils_ParseEnum(raw, FpsLimit_VSync, FpsLimit_Names, Array_Elems(FpsLimit_Names));
+	Game_SetFpsLimitMethod(method);
+	Options_Set(OPTION_FPS_LIMIT, FpsLimit_Names[method]);
+}
+
+void MenuOptionsScreen_SelectExtHelp(MenuOptionsScreen* screen, Int32 idx) {
+	MenuOptionsScreen_FreeExtHelp(screen);
+	if (screen->Descriptions == NULL || screen->ActiveI >= 0) return;
+	const UInt8* desc = screen->Descriptions[idx];
+	if (desc == NULL) return;
+
+	String descRaw = String_FromReadonly(desc);
+	String descLines[5];
+	UInt32 descLinesCount = Array_Elems(descLines);
+	String_UNSAFE_Split(&descRaw, '%', &descLines, &descLinesCount);
+
+	TextGroupWidget_Create(&screen->ExtHelp, descLinesCount, &screen->TextFont, NULL, &screen->ExtHelp_Textures, &screen->ExtHelp_Buffer);
+	Widget_SetLocation((Widget*)(&screen->ExtHelp), ANCHOR_MIN, ANCHOR_MIN, 0, 0);
+	Elem_Init(&screen->ExtHelp);
+
+	Int32 i;
+	for (i = 0; i < descLinesCount; i++) {
+		TextGroupWidget_SetText(&screen->ExtHelp, i, &descLines[i]);
+	}
+	MenuOptionsScreen_RepositionExtHelp(screen);
+}
+
+void MenuOptionsScreen_RepositionExtHelp(MenuOptionsScreen* screen) {
+	screen->ExtHelp.XOffset = Game_Width  / 2 - screen->ExtHelp.Width / 2;
+	screen->ExtHelp.YOffset = Game_Height / 2 + 100;
+	Widget_Reposition(&screen->ExtHelp);
+}
+
+void MenuOptionsScreen_FreeExtHelp(MenuOptionsScreen* screen) {
+	if (screen->ExtHelp.LinesCount == 0) return;
+	Elem_Free(&screen->ExtHelp);
+	screen->ExtHelp.LinesCount = 0;
+}
+
+void MenuOptionsScreen_Set(MenuOptionsScreen* screen, Int32 i, STRING_PURE String* text) {
+	screen->Buttons[i].SetValue(text);
+	/* need to get btn again here (e.g. changing FPS invalidates all widgets) */
+
+	UInt8 titleBuffer[String_BufferSize(STRING_SIZE)];
+	String title = String_InitAndClearArray(titleBuffer);
+	String_AppendConst(&title, screen->Buttons[i].OptName);
+	String_AppendConst(&title, ": ");
+	screen->Buttons[i].GetValue(&title);
+	ButtonWidget_SetText(&screen->Buttons[i], &title);
+}
+
+void MenuOptionsScreen_Bool(GuiElement* screenElem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem;
+	ButtonWidget* button = (ButtonWidget*)widget;
+	Int32 index = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
+	SelectExtendedHelp(index);
+
+	UInt8 valueBuffer[String_BufferSize(STRING_SIZE)];
+	String value = String_InitAndClearArray(valueBuffer);
+	button->GetValue(&value);
+
+	bool isOn = String_CaselessEqualsConst(&value, "ON");
+	String newValue = String_FromReadonly(isOn ? "ON" : "OFF");
+	MenuOptionsScreen_Set(screen, index, &newValue);
+}
+
+void MenuOptionsScreen_Enum(GuiElement* screenElem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem;
+	ButtonWidget* button = (ButtonWidget*)widget;
+	Int32 index = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
+	SelectExtendedHelp(index);
+
+	MenuInputValidator* validator = &screen->Validators[index];
+	const UInt8** names = (const UInt8**)validator->Meta_Ptr[0];
+	UInt32 count = (UInt32)validator->Meta_Ptr[1];
+
+	UInt8 valueBuffer[String_BufferSize(STRING_SIZE)];
+	String value = String_InitAndClearArray(valueBuffer);
+	button->GetValue(&value);
+
+	UInt32 raw = (Utils_ParseEnum(&value, 0, names, count) + 1) % count;
+	String newValue = String_FromReadonly(names[raw]);
+	MenuOptionsScreen_Set(screen, index, &newValue);
+}
+
+void MenuOptionsScreen_Input(GuiElement* screenElem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem;
+	ButtonWidget* button = (ButtonWidget*)widget;
+	screen->ActiveI = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
+	SelectExtendedHelp(screen->ActiveI);
+
+	MenuOptionsScreen_FreeInput(screen);
+	UInt8 valueBuffer[String_BufferSize(STRING_SIZE)];
+	String value = String_InitAndClearArray(valueBuffer);
+	button->GetValue(&value);
+
+	MenuInputValidator* validator = &screen->Validators[screen->ActiveI];
+	MenuInputWidget_Create(&screen->Input, 400, 30, &value, &screen->TextFont, validator);
+	Widget_SettLocation((Widget*)(&screen->Input), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 110);
+	screen->Input.Base.ShowCaret = true;
+
+	String okMsg = String_FromConst("OK");
+	ButtonWidget_Create(&screen->OK, 40, &okMsg, &screen->TitleFont, MenuOptionsScreen_OK);
+	Widget_SetLocation((Widget*)(&screen->OK), ANCHOR_CENTRE, ANCHOR_CENTRE, 240, 110);
+
+	String defMsg = String_FromConst("Default value")
+	ButtonWidget_Create(&screen->Default, 200, &defMsg, &screen->TitleFont, MenuOptionsScreen_Default);
+	Widget_SetLocation((Widget*)(&screen->Default), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 150);
+
+	Widget** widgets = screen->WidgetsPtr;
+	widgets[screen->WidgetsCount - 1] = (Widget*)(&screen->Input);
+	widgets[screen->WidgetsCount - 2] = (Widget*)(&screen->OK);
+	widgets[screen->WidgetsCount - 3] = (Widget*)(&screen->Default);
+}
+
+void MenuOptionsScreen_OK(GuiElement* screenElem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem; 
+	MenuOptionsScreen_EnterInput(screen);
+}
+
+void MenuOptionsScreen_Default(GuiElement* screenElem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem;
+	String text = String_FromReadonly(screen->DefaultValues[screen->ActiveI]);
+	InputWidget_Clear(&screen->Input.Base);
+	InputWidget_AppendString(&screen->Input.Base, &text);
+}
+
+void MenuOptionsScreen_EnterInput(MenuOptionsScreen* screen) {
+	String text = screen->Input.Base.Text;
+	MenuInputValidator* validator = &screen->Input.Validator;
+
+	if (validator->IsValidValue(validator, &text)) {
+		MenuOptionsScreen_Set(screen, screen->ActiveI, &text);
+	}
+
+	MenuOptionsScreen_SelectExtHelp(screen, screen->ActiveI);
+	screen->ActiveI = -1;
+	MenuOptionsScreen_FreeInput(screen);
+}
+
+void MenuOptionsScreen_FreeInput(MenuOptionsScreen* screen) {
+	if (screen->ActiveI == -1) return;
+
+	Int32 i;
+	for (i = screen->WidgetsCount - 3; i < screen->WidgetsCount; i++) {
+		Elem_Free(screen->WidgetsPtr[i]);
+		screen->WidgetsPtr[i] = NULL;
+	}
 }

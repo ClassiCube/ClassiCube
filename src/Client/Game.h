@@ -29,7 +29,7 @@ Real32 Game_MaxViewDistance;
 Real32 Game_UserViewDistance;
 Int32 Game_Fov;
 Int32 Game_DefaultFov, Game_ZoomFov;
-UInt8 FpsLimit;
+FpsLimit Game_FpsLimit;
 bool Game_ShowAxisLines;
 bool Game_SimpleArmsAnim;
 bool Game_ClassicArmModel;
@@ -81,11 +81,11 @@ void Game_SetCursorVisible(bool visible);
 bool Game_ChangeTerrainAtlas(Bitmap* atlas);
 void Game_UpdateProjection(void);
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
+void Game_SetFpsLimitMethod(FpsLimit method);
 bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType);
 bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp);
 void Game_SetViewDistance(Real32 distance, bool userDist);
 bool Game_CanPick(BlockID block);
 
-static void Game_LimitFPS(void);
 void Game_Free(void);
 #endif

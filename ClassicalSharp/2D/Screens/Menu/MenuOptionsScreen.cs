@@ -11,10 +11,10 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected MenuInputValidator[] validators;
 		protected string[][] descriptions;
-		protected TextGroupWidget extendedHelp;
-		protected InputWidget input;
 		protected string[] defaultValues;
 		protected int activeI = -1, selectedI = -1;
+		TextGroupWidget extHelp;
+		InputWidget input;				
 		
 		public override void Init() {
 			base.Init();
@@ -24,14 +24,14 @@ namespace ClassicalSharp.Gui.Screens {
 		static FastColour tableCol = new FastColour(20, 20, 20, 200);
 		public override void Render(double delta) {
 			base.Render(delta);
-			if (extendedHelp == null) return;
+			if (extHelp == null) return;
 					
-			int x = extendedHelp.X - 5, y = extendedHelp.Y - 5;
-			int width = extendedHelp.Width, height = extendedHelp.Height;
+			int x = extHelp.X - 5, y = extHelp.Y - 5;
+			int width = extHelp.Width, height = extHelp.Height;
 			game.Graphics.Draw2DQuad(x, y, width + 10, height + 10, tableCol);
 			
 			game.Graphics.Texturing = true;
-			extendedHelp.Render(delta);
+			extHelp.Render(delta);
 			game.Graphics.Texturing = false;
 		}
 		
@@ -42,7 +42,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void OnResize(int width, int height) {
 			base.OnResize(width, height);
-			if (extendedHelp == null) return;
+			if (extHelp == null) return;
 			RepositionExtendedHelp();
 		}
 		
@@ -111,26 +111,26 @@ namespace ClassicalSharp.Gui.Screens {
 			string[] desc = descriptions[idx];
 			if (desc == null) return;
 			
-			extendedHelp = new TextGroupWidget(game, desc.Length, textFont, null)
+			extHelp = new TextGroupWidget(game, desc.Length, textFont, null)
 				.SetLocation(Anchor.Min, Anchor.Min, 0, 0);
-			extendedHelp.Init();
+			extHelp.Init();
 			
 			for (int i = 0; i < desc.Length; i++) {
-				extendedHelp.SetText(i, desc[i]);
+				extHelp.SetText(i, desc[i]);
 			}
 			RepositionExtendedHelp();
 		}
 		
 		void RepositionExtendedHelp() {
-			extendedHelp.XOffset = game.Width / 2 - extendedHelp.Width / 2;
-			extendedHelp.YOffset = game.Height / 2 + 100;
-			extendedHelp.Reposition();
+			extHelp.XOffset = game.Width / 2 - extHelp.Width / 2;
+			extHelp.YOffset = game.Height / 2 + 100;
+			extHelp.Reposition();
 		}
 		
 		void DisposeExtendedHelp() {
-			if (extendedHelp == null) return;
-			extendedHelp.Dispose();
-			extendedHelp = null;
+			if (extHelp == null) return;
+			extHelp.Dispose();
+			extHelp = null;
 		}
 		
 		void SetButtonValue(int index, string text) {
@@ -159,26 +159,25 @@ namespace ClassicalSharp.Gui.Screens {
 			MenuInputValidator validator = validators[index];
 			Type type = ((EnumValidator)validator).EnumType;
 			
-			string rawName = button.GetValue(game);
-			int value = (int)Enum.Parse(type, rawName, true) + 1;
-			// go back to first value
-			if (!Enum.IsDefined(type, value)) value = 0;
+			string value = button.GetValue(game);
+			int raw = (int)Enum.Parse(type, value, true) + 1;		
+			if (!Enum.IsDefined(type, raw)) raw = 0; // go back to first value
 			
-			SetButtonValue(index, Enum.GetName(type, value));
+			SetButtonValue(index, Enum.GetName(type, raw));
 		}
 		
-		protected void OnButtonClick(Game game, Widget widget) {
+		protected void OnInputClick(Game game, Widget widget) {
 			ButtonWidget button = (ButtonWidget)widget;	
 			activeI = IndexWidget(button);
 			SelectExtendedHelp(activeI);
 			
 			DisposeInput();
-			MenuInputValidator validator = validators[activeI];					
+			MenuInputValidator validator = validators[activeI];
 			input = MenuInputWidget.Create(game, 400, 30, button.GetValue(game), textFont, validator)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 110);
 			input.ShowCaret = true;
 			
-			widgets[widgets.Length - 1] = input;			
+			widgets[widgets.Length - 1] = input;
 			widgets[widgets.Length - 2] = ButtonWidget.Create(game, 40, "OK", titleFont, OKButtonClick)
 				.SetLocation(Anchor.Centre, Anchor.Centre, 240, 110);
 			widgets[widgets.Length - 3] = ButtonWidget.Create(game, 200, "Default value", titleFont, DefaultButtonClick)
@@ -188,7 +187,7 @@ namespace ClassicalSharp.Gui.Screens {
 		void OKButtonClick(Game game, Widget widget) { EnterInput(); }
 		
 		void DefaultButtonClick(Game game, Widget widget) {
-			string defValue = defaultValues[activeI];			
+			string defValue = defaultValues[activeI];
 			input.Clear();
 			input.Append(defValue);
 		}

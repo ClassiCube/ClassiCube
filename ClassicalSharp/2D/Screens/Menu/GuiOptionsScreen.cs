@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void ContextRecreated() {
-			ClickHandler onClick = OnButtonClick;
+			ClickHandler onClick = OnInputClick;
 			ClickHandler onBool = OnBoolClick;
 				
 			widgets = new Widget[] {

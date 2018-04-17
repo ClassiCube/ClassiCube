@@ -15,7 +15,7 @@ GfxResourceID skybox_tex, skybox_vb;
 #define SKYBOX_COUNT (6 * 4)
 
 bool SkyboxRenderer_ShouldRender(void) {
-	return skybox_tex > 0 && !EnvRenderer_Minimal;
+	return skybox_tex != NULL && !EnvRenderer_Minimal;
 }
 
 void SkyboxRenderer_TexturePackChanged(void* obj) {
@@ -24,12 +24,9 @@ void SkyboxRenderer_TexturePackChanged(void* obj) {
 }
 
 void SkyboxRenderer_FileChanged(void* obj, Stream* src) {
-	String skybox = String_FromConst("skybox.png");
-	String useclouds = String_FromConst("useclouds");
-
-	if (String_CaselessEquals(&src->Name, &skybox)) {
+	if (String_CaselessEqualsConst(&src->Name, "skybox.png")) {
 		Game_UpdateTexture(&skybox_tex, src, false);
-	} else if (String_CaselessEquals(&src->Name, &useclouds)) {
+	} else if (String_CaselessEqualsConst(&src->Name, "useclouds")) {
 		WorldEnv_SkyboxClouds = true;
 	}
 }

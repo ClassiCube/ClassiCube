@@ -48,6 +48,7 @@ Matrix Gfx_View, Gfx_Projection;
 
 #define GFX_MAX_INDICES (65536 / 4 * 6)
 #define GFX_MAX_VERTICES 65536
+#define GFX_STRIDE_SIZES { 16, 24 }
 
 /* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
 ScheduledTaskCallback LostContextFunction;
@@ -97,7 +98,6 @@ void Gfx_DrawVb_Lines(Int32 verticesCount);
 void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex);
 void Gfx_DrawVb_IndexedTris(Int32 verticesCount);
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex);
-static Int32 Gfx_strideSizes[2] = { 16, 24 };
 
 void Gfx_SetMatrixMode(Int32 matrixType);
 void Gfx_LoadMatrix(Matrix* matrix);

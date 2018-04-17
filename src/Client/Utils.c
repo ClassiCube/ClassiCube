@@ -40,8 +40,7 @@ Int64 DateTime_MsBetween(DateTime* start, DateTime* end) {
 UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount) {
 	UInt32 i;
 	for (i = 0; i < namesCount; i++) {
-		String name = String_FromReadonly(names[i]);
-		if (String_CaselessEquals(text, &name)) return i;
+		if (String_CaselessEqualsConst(text, names[i])) return i;
 	}
 	return defValue;
 }
