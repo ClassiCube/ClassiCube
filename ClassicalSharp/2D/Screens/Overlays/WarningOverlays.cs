@@ -112,8 +112,8 @@ namespace ClassicalSharp.Gui.Screens {
 		void ConfirmNoClick(Game g, Widget w) {
 			CloseOverlay();			
 			string url = Metadata.Substring(3);
-			if (alwaysDeny && !game.DeniedUrls.Has(url)) {
-				game.DeniedUrls.Add(url);
+			if (alwaysDeny && !TextureCache.HasDenied(url)) { 
+				TextureCache.Deny(url); 
 			}
 		}
 		
@@ -142,12 +142,12 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void OnYesClick(Game g, Widget w) {
-			CloseOverlay();			
+			CloseOverlay();
 			string url = Metadata.Substring(3);
 			
 			game.Server.DownloadTexturePack(url);
-			if (IsAlways(w) && !game.AcceptedUrls.Has(url)) {
-				game.AcceptedUrls.Add(url);
+			if (IsAlways(w) && !TextureCache.HasAccepted(url)) { 
+				TextureCache.Accept(url); 
 			}
 		}
 		

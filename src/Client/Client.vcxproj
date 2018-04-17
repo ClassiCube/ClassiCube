@@ -307,6 +307,7 @@
     <ClCompile Include="String.c" />
     <ClCompile Include="TerrainAtlas.c" />
     <ClCompile Include="Texture.c" />
+    <ClCompile Include="TexturePack.c" />
     <ClCompile Include="TreeGen.c" />
     <ClCompile Include="Utils.c" />
     <ClCompile Include="Vectors.c" />

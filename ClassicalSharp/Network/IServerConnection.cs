@@ -63,7 +63,7 @@ namespace ClassicalSharp {
 		protected int netTicks;
 		
 		protected internal void RetrieveTexturePack(string url) {
-			if (!game.AcceptedUrls.Has(url) && !game.DeniedUrls.Has(url)) {
+			if (!TextureCache.HasAccepted(url) && !TextureCache.HasDenied(url)) {
 				Overlay warning = new TexPackOverlay(game, url);
 				game.Gui.ShowOverlay(warning, false);
 			} else {
@@ -72,13 +72,13 @@ namespace ClassicalSharp {
 		}
 		
 		internal void DownloadTexturePack(string url) {
-			if (game.DeniedUrls.Has(url)) return;
+			if (TextureCache.HasDenied(url)) return;
 			string etag = null;
 			DateTime lastModified = DateTime.MinValue;
 			
 			if (TextureCache.HasUrl(url)) {
-				lastModified = TextureCache.GetLastModified(url, game.LastModified);
-				etag = TextureCache.GetETag(url, game.ETags);
+				lastModified = TextureCache.GetLastModified(url);
+				etag = TextureCache.GetETag(url);
 			}
 
 			TexturePack.ExtractCurrent(game, url);

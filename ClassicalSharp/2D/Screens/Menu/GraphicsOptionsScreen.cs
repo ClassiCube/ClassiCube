@@ -74,22 +74,10 @@ namespace ClassicalSharp.Gui.Screens {
 			g.Graphics.Mipmaps = SetBool(v, OptionsKey.Mipmaps);
 			
 			string url = g.World.TextureUrl;
-			if (url == null) {
-				TexturePack.ExtractDefault(g); return;
-			}
-			
-			using (Stream data = TextureCache.GetStream(url)) {
-				if (data == null) {
-					TexturePack.ExtractDefault(g); return;
-				}
-				
-				if (url.Contains(".zip")) {
-					TexturePack extractor = new TexturePack();
-					extractor.Extract(data, g);
-				} else {
-					TexturePack.ExtractTerrainPng(g, data, url);
-				}
-			}
+			// always force a reload from cache
+			g.World.TextureUrl = "~`#$_^*()@";
+			TexturePack.ExtractCurrent(g, url);
+			g.World.TextureUrl = url;
 		}
 		
 		void MakeDescriptions() {

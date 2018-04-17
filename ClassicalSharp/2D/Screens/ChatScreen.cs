@@ -431,19 +431,6 @@ namespace ClassicalSharp.Gui.Screens {
 			return true;
 		}
 		
-		void OpenUrl(Overlay urlOverlay, bool always) {
-			try {
-				Process.Start(urlOverlay.Metadata);
-			} catch (Exception ex) {
-				ErrorHandler.LogError("ChatScreen.OpenUrl", ex);
-			}
-		}
-		
-		void AppendUrl(Overlay urlOverlay, bool always) {
-			if (!game.ClickableChat) return;
-			input.Append(urlOverlay.Metadata);
-		}
-		
 		int ClampIndex(int index) {
 			int maxIndex = game.Chat.Log.Count - chatLines;
 			int minIndex = Math.Min(0, maxIndex);

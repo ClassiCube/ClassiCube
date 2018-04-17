@@ -569,5 +569,8 @@
     <ClCompile Include="Menus.c">
       <Filter>Source Files\2D</Filter>
     </ClCompile>
+    <ClCompile Include="TexturePack.c">
+      <Filter>Source Files\TexturePack</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

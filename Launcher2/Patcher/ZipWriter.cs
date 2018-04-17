@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
+using ClassicalSharp;
 using ClassicalSharp.Textures;
 
 namespace Launcher.Patcher {
@@ -45,7 +46,7 @@ namespace Launcher.Patcher {
 		public void WriteNewEntry(string filename, byte[] data, int dataLength) {
 			ZipEntry entry = new ZipEntry();
 			entry.UncompressedDataSize = dataLength;
-			entry.Crc32 = CRC32(data, dataLength);
+			entry.Crc32 = Utils.CRC32(data, dataLength);
 			entry.CompressedDataSize = dataLength;
 			entry.LocalHeaderOffset = (int)stream.Position;
 			
@@ -119,16 +120,6 @@ namespace Launcher.Patcher {
 			writer.Write(centralDirSize);
 			writer.Write(centralDirOffset);
 			writer.Write((ushort)0);  // comment length
-		}
-		
-		static uint CRC32(byte[] data, int length) {
-			uint crc = 0xffffffffU;
-			for (int i = 0; i < length; i++) {
-				crc ^= data[i];
-				for (int j = 0; j < 8; j++)
-					crc = (crc >> 1) ^ (crc & 1) * 0xEDB88320;
-			}
-			return crc ^ 0xffffffffU;
 		}
 	}
 }

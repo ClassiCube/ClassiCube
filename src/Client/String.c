@@ -242,6 +242,22 @@ void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset) {
 	str->length--;
 }
 
+void String_TrimStart(STRING_TRANSIENT String* str) {
+	Int32 i;
+	for (i = 0; i < str->length; i++) {
+		if (str->buffer[i] != ' ') break;
+		String_DeleteAt(str, i);
+	}
+}
+
+void String_TrimEnd(STRING_TRANSIENT String* str) {
+	Int32 i;
+	for (i = str->length - 1; i >= 0; i--) {
+		if (str->buffer[i] != ' ') break;
+		String_DeleteAt(str, i);
+	}
+}
+
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub) {
 	Int32 i, j;
 	/* Special case, sub is an empty string*/

@@ -169,11 +169,7 @@ void SPConnection_AddPortion(STRING_PURE String* text) {
 	for (i = 0; i < tmp.length; i++) {
 		if (tmp.buffer[i] == '%') tmp.buffer[i] = '&';
 	}
-	/* Trim the end of the string of trailing spaces */
-	for (i = tmp.length - 1; i >= 0; i--) {
-		if (tmp.buffer[i] != ' ') break;
-		String_DeleteAt(&tmp, i);
-	}
+	String_TrimEnd(&tmp);
 
 	UInt8 col = Drawer2D_LastCol(text, text->length);
 	if (col != NULL) SPConnection_LastCol = col;

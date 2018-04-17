@@ -47,10 +47,7 @@ namespace ClassicalSharp {
 			#endif
 			
 			Entities = new EntityList(this);
-			AcceptedUrls.Load();
-			DeniedUrls.Load();
-			ETags.Load();
-			LastModified.Load();
+			TextureCache.Init();
 			
 			if (Options.GetBool(OptionsKey.SurvivalMode, false)) {
 				Mode = new SurvivalGameMode();
@@ -159,13 +156,12 @@ namespace ClassicalSharp {
 		
 		void ExtractInitialTexturePack() {
 			defTexturePack = Options.Get(OptionsKey.DefaultTexturePack) ?? "default.zip";
-			TexturePack extractor = new TexturePack();
-			extractor.Extract("default.zip", this);
+			TexturePack.ExtractZip("default.zip", this);
 			
 			// in case the user's default texture pack doesn't have all required textures
 			string defTexPack = DefaultTexturePack;
 			if (defTexPack != "default.zip") {
-				extractor.Extract(defTexPack, this);
+				TexturePack.ExtractZip(defTexPack, this);
 			}
 		}
 		

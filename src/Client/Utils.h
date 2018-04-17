@@ -33,4 +33,5 @@ Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta);
 #define Utils_AdjViewDist(value) ((Int32)(1.4142135f * (value)))
 
 UInt8 Utils_GetSkinType(Bitmap* bmp);
+UInt32 Utils_CRC32(UInt8* data, UInt32 length);
 #endif

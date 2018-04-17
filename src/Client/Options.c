@@ -139,7 +139,7 @@ void Options_Set(const UInt8* keyRaw, STRING_PURE String* value) {
 }
 
 void Options_Load(void) {
-	void* file = NULL;
+	void* file;
 	String path = String_FromConst("options.txt");
 	ReturnCode result = Platform_FileOpen(&file, &path);
 
@@ -180,7 +180,7 @@ void Options_Load(void) {
 }
 
 void Options_Save(void) {
-	void* file = NULL;
+	void* file;
 	String path = String_FromConst("options.txt");
 	ReturnCode result = Platform_FileOpen(&file, &path);
 

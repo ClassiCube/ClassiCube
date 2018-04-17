@@ -76,3 +76,16 @@ UInt8 Utils_GetSkinType(Bitmap* bmp) {
 	UInt8 alpha = (UInt8)(pixel >> 24);
 	return alpha >= 127 ? SKIN_TYPE_64x64 : SKIN_TYPE_64x64_SLIM;
 }
+
+UInt32 Utils_CRC32(UInt8* data, UInt32 length) {
+	UInt32 crc = 0xffffffffUL;
+	Int32 i, j;
+
+	for (i = 0; i < length; i++) {
+		crc ^= data[i];
+		for (j = 0; j < 8; j++) {
+			crc = (crc >> 1) ^ (crc & 1) * 0xEDB88320;
+		}
+	}
+	return crc ^ 0xffffffffUL;
+}

@@ -216,6 +216,16 @@ namespace ClassicalSharp {
 			}
 			return value;
 		}
+		
+		public static uint CRC32(byte[] data, int length) {
+			uint crc = 0xffffffffU;
+			for (int i = 0; i < length; i++) {
+				crc ^= data[i];
+				for (int j = 0; j < 8; j++)
+					crc = (crc >> 1) ^ (crc & 1) * 0xEDB88320;
+			}
+			return crc ^ 0xffffffffU;
+		}
 
 #if !LAUNCHER
 		// Not all languages use . as their decimal point separator

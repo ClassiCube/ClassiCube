@@ -68,6 +68,9 @@ Int32 String_IndexOf(STRING_PURE String* str, UInt8 c, Int32 offset);
 Int32 String_LastIndexOf(STRING_PURE String* str, UInt8 c);
 void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UInt8 c);
 void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
+void String_TrimStart(STRING_TRANSIENT String* str);
+void String_TrimEnd(STRING_TRANSIENT String* str);
+
 
 Int32 String_IndexOfString(STRING_PURE String* str, STRING_PURE String* sub);
 #define String_ContainsString(str, sub) (String_IndexOfString(str, sub) >= 0)
