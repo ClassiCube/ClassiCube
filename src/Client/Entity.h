@@ -18,20 +18,17 @@ typedef struct IModel_ IModel;
 #define ENTITIES_MAX_COUNT 256
 #define ENTITIES_SELF_ID 255
 
-Int32 Entities_NameMode;
-#define NAME_MODE_NONE         0
-#define NAME_MODE_HOVERED      1
-#define NAME_MODE_ALL          2
-#define NAME_MODE_ALL_HOVERED  3
-#define NAME_MODE_ALL_UNSCALED 4
-extern const UInt8* NameMode_Names[5];
+typedef enum NameMode_ {
+	NAME_MODE_NONE, NAME_MODE_HOVERED, NAME_MODE_ALL, NAME_MODE_ALL_HOVERED, NAME_MODE_ALL_UNSCALED, NAME_MODE_COUNT
+} NameMode;
+NameMode Entities_NameMode;
+extern const UInt8* NameMode_Names[NAME_MODE_COUNT];
 
-Int32 Entities_ShadowMode;
-#define SHADOW_MODE_NONE          0
-#define SHADOW_MODE_SNAP_TO_BLOCK 1
-#define SHADOW_MODE_CIRCLE        2
-#define SHADOW_MODE_CIRCLE_ALL    3
-extern const UInt8* ShadowMode_Names[4];
+typedef enum ShadowMode_ {
+	SHADOW_MODE_NONE, SHADOW_MODE_SNAP_TO_BLOCK, SHADOW_MODE_CIRCLE, SHADOW_MODE_CIRCLE_ALL, SHADOW_MODE_COUNT
+} ShadowMode;
+ShadowMode Entities_ShadowMode;
+extern const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT];
 
 #define ENTITY_TYPE_NONE 0
 #define ENTITY_TYPE_PLAYER 1

@@ -25,7 +25,7 @@ Vector3 PerspectiveCamera_GetDirVector(void) {
 void PerspectiveCamera_GetProjection(Matrix* proj) {
 	Real32 fovy = Game_Fov * MATH_DEG2RAD;
 	Real32 aspectRatio = (Real32)Game_Width / (Real32)Game_Height;
-	Matrix_PerspectiveFieldOfView(proj, fovy, aspectRatio, Gfx_MinZNear, Game_ViewDistance);
+	Matrix_PerspectiveFieldOfView(proj, fovy, aspectRatio, Gfx_MinZNear, (Real32)Game_ViewDistance);
 }
 
 void PerspectiveCamera_GetPickedBlock(PickedPos* pos) {

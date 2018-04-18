@@ -11,17 +11,20 @@ namespace ClassicalSharp.Map {
 	public sealed class WorldEnv {
 		
 		/// <summary> Colour of the sky located behind/above clouds. </summary>
-		public FastColour SkyCol = DefaultSkyColour;
-		public static readonly FastColour DefaultSkyColour = new FastColour(0x99, 0xCC, 0xFF);
+		public FastColour SkyCol = DefaultSkyCol;
+		public static readonly FastColour DefaultSkyCol = new FastColour(0x99, 0xCC, 0xFF);
+		public const string DefaultSkyColHex = "99CCFF";
 		
 		/// <summary> Colour applied to the fog/horizon looking out horizontally.
 		/// Note the true horizon colour is a blend of this and sky colour. </summary>
-		public FastColour FogCol = DefaultFogColour;
-		public static readonly FastColour DefaultFogColour = new FastColour(0xFF, 0xFF, 0xFF);
+		public FastColour FogCol = DefaultFogCol;
+		public static readonly FastColour DefaultFogCol = new FastColour(0xFF, 0xFF, 0xFF);
+		public const string DefaultFogColHex = "FFFFFF";
 		
 		/// <summary> Colour applied to the clouds. </summary>
-		public FastColour CloudsCol = DefaultCloudsColour;
-		public static readonly FastColour DefaultCloudsColour = new FastColour(0xFF, 0xFF, 0xFF);
+		public FastColour CloudsCol = DefaultCloudsCol;
+		public static readonly FastColour DefaultCloudsCol = new FastColour(0xFF, 0xFF, 0xFF);
+		public const string DefaultCloudsColHex = "FFFFFF";
 		
 		/// <summary> Height of the clouds in world space. </summary>
 		public int CloudHeight;
@@ -39,11 +42,13 @@ namespace ClassicalSharp.Map {
 		public FastColour Sunlight;
 		public int Sun, SunXSide, SunZSide, SunYBottom;
 		public static readonly FastColour DefaultSunlight = new FastColour(0xFF, 0xFF, 0xFF);
+		public const string DefaultSunlightHex = "FFFFFF";
 		
 		/// <summary> Colour applied to blocks located in shadow / hidden from direct sunlight. </summary>
 		public FastColour Shadowlight;
 		public int Shadow, ShadowXSide, ShadowZSide, ShadowYBottom;
 		public static readonly FastColour DefaultShadowlight = new FastColour(0x9B, 0x9B, 0x9B);
+		public const string DefaultShadowlightHex = "9B9B9B";
 		
 		/// <summary> Current weather for this particular map. </summary>
 		public Weather Weather = Weather.Sunny;
@@ -90,9 +95,9 @@ namespace ClassicalSharp.Map {
 			SkyboxHorSpeed = 0; SkyboxVerSpeed = 0;
 			
 			ResetLight();
-			SkyCol = DefaultSkyColour;
-			FogCol = DefaultFogColour;
-			CloudsCol = DefaultCloudsColour;
+			SkyCol = DefaultSkyCol;
+			FogCol = DefaultFogCol;
+			CloudsCol = DefaultCloudsCol;
 			Weather = Weather.Sunny;
 			ExpFog = false;
 		}

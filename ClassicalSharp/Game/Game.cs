@@ -62,10 +62,10 @@ namespace ClassicalSharp {
 				Components[i].OnNewMapLoaded(this);
 		}
 		
-		public void SetViewDistance(float distance, bool userDist) {
+		public void SetViewDistance(int distance, bool userDist) {
 			if (userDist) {
 				UserViewDistance = distance;
-				Options.Set(OptionsKey.ViewDist, (int)distance);
+				Options.Set(OptionsKey.ViewDist, distance);
 			}
 			
 			distance = Math.Min(distance, MaxViewDistance);

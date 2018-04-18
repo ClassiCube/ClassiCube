@@ -90,7 +90,7 @@ void HeldBlockRenderer_ProjectionChanged(void* obj) {
 	Real32 fov = 70.0f * MATH_DEG2RAD;
 	Real32 aspectRatio = (Real32)Game_Width / (Real32)Game_Height;
 	Real32 zNear = Gfx_MinZNear;
-	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, zNear, Game_ViewDistance, &held_blockProjection);
+	Gfx_CalcPerspectiveMatrix(fov, aspectRatio, zNear, (Real32)Game_ViewDistance, &held_blockProjection);
 }
 
 /* Based off incredible gifs from (Thanks goodlyay!)

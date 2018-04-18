@@ -42,7 +42,7 @@ void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 	} else {
 		*fogDensity = 0.0f;
 		/* Blend fog and sky together */
-		Real32 blend = EnvRenderer_BlendFactor(Game_ViewDistance);
+		Real32 blend = EnvRenderer_BlendFactor((Real32)Game_ViewDistance);
 		*fogCol = PackedCol_Lerp(WorldEnv_FogCol, WorldEnv_SkyCol, blend);
 	}
 }
@@ -61,7 +61,7 @@ void EnvRenderer_RenderMinimal(Real64 deltaTime) {
 		/* Exp fog mode: f = e^(-density*coord) */
 		/* Solve for f = 0.05 to figure out coord (good approx for fog end) */
 		Real32 dist = (Real32)Math_LogE(0.05f) / -fogDensity;
-		Game_SetViewDistance(dist, false);
+		Game_SetViewDistance((Int32)dist, false);
 	} else {
 		Game_SetViewDistance(Game_UserViewDistance, false);
 	}
@@ -242,13 +242,13 @@ void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
 void EnvRenderer_ResetClouds(void) {
 	if (World_Blocks == NULL || Gfx_LostContext) return;
 	Gfx_DeleteVb(&env_cloudsVb);
-	EnvRenderer_RebuildClouds((Int32)Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
+	EnvRenderer_RebuildClouds(Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
 }
 
 void EnvRenderer_ResetSky(void) {
 	if (World_Blocks == NULL || Gfx_LostContext) return;
 	Gfx_DeleteVb(&env_skyVb);
-	EnvRenderer_RebuildSky((Int32)Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
+	EnvRenderer_RebuildSky(Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
 }
 
 void EnvRenderer_ContextLost(void* obj) {

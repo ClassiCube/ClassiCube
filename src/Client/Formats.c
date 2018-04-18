@@ -184,7 +184,8 @@ void Fcm_Load(Stream* stream) {
 #define NBT_TAG_COMPOUND    10
 #define NBT_TAG_INT32_ARRAY 11
 
-#define NBT_SMALL_SIZE (STRING_SIZE * 2)
+/* supported utf8 codepoint can be up to 3 bytes big */
+#define NBT_SMALL_SIZE (STRING_SIZE * 3)
 struct NbtTag_;
 typedef struct NbtTag_ {
 	struct NbtTag_* Parent;

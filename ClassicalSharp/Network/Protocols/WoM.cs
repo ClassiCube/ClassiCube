@@ -59,13 +59,13 @@ namespace ClassicalSharp.Network.Protocols {
 				string value = line.Substring(sepIndex + 1).TrimStart();
 				
 				if (key == "environment.cloud") {
-					FastColour col = ParseWomColour(value, WorldEnv.DefaultCloudsColour);
+					FastColour col = ParseWomColour(value, WorldEnv.DefaultCloudsCol);
 					game.World.Env.SetCloudsColour(col);
 				} else if (key == "environment.sky") {
-					FastColour col = ParseWomColour(value, WorldEnv.DefaultSkyColour);
+					FastColour col = ParseWomColour(value, WorldEnv.DefaultSkyCol);
 					game.World.Env.SetSkyColour(col);
 				} else if (key == "environment.fog") {
-					FastColour col = ParseWomColour(value, WorldEnv.DefaultFogColour);
+					FastColour col = ParseWomColour(value, WorldEnv.DefaultFogCol);
 					game.World.Env.SetFogColour(col);
 				} else if (key == "environment.level") {
 					int waterLevel = 0;

@@ -162,11 +162,13 @@ bool HacksComp_Floating(HacksComp* hacks) {
 	return hacks->Noclip || hacks->Flying;
 }
 
-String HacksComp_UNSAFE_FlagValue(String* flag, HacksComp* hacks) {
+String HacksComp_UNSAFE_FlagValue(const UInt8* flagRaw, HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
-	Int32 start = String_IndexOfString(joined, flag);
+	String flag = String_FromReadonly(flagRaw);
+
+	Int32 start = String_IndexOfString(joined, &flag);
 	if (start < 0) return String_MakeNull();
-	start += flag->length;
+	start += flag.length;
 
 	Int32 end = String_IndexOf(joined, ' ', start);
 	if (end < 0) end = joined->length;
@@ -175,8 +177,7 @@ String HacksComp_UNSAFE_FlagValue(String* flag, HacksComp* hacks) {
 }
 
 void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
-	String horSpeedFlag = String_FromConst("horspeed=");
-	String speedStr = HacksComp_UNSAFE_FlagValue(&horSpeedFlag, hacks);
+	String speedStr = HacksComp_UNSAFE_FlagValue("horspeed=", hacks);
 	if (speedStr.length == 0) return;
 
 	Real32 speed = 0.0f;
@@ -185,8 +186,7 @@ void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
 }
 
 void HacksComp_ParseMultiSpeed(HacksComp* hacks) {
-	String jumpsFlag = String_FromConst("jumps=");
-	String jumpsStr = HacksComp_UNSAFE_FlagValue(&jumpsFlag, hacks);
+	String jumpsStr = HacksComp_UNSAFE_FlagValue("jumps=", hacks);
 	if (jumpsStr.length == 0 || Game_ClassicMode) return;
 
 	Int32 jumps = 0;

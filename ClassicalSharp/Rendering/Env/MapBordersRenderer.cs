@@ -125,7 +125,7 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void ResetSidesAndEdges(object sender, EventArgs e) {
-			CalculateRects((int)game.ViewDistance);
+			CalculateRects(game.ViewDistance);
 			ContextRecreated();
 		}
 		

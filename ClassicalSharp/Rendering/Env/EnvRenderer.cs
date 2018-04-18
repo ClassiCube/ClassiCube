@@ -162,7 +162,7 @@ namespace ClassicalSharp.Renderers {
 				// Exp fog mode: f = e^(-density*coord)
 				// Solve for f = 0.05 to figure out coord (good approx for fog end)
 				float dist = (float)Math.Log(0.05) / -fogDensity;
-				game.SetViewDistance(dist, false);
+				game.SetViewDistance((int)dist, false);
 			} else {
 				game.SetViewDistance(game.UserViewDistance, false);
 			}
@@ -246,13 +246,13 @@ namespace ClassicalSharp.Renderers {
 		void ResetClouds() {
 			if (!map.HasBlocks || game.Graphics.LostContext) return;
 			game.Graphics.DeleteVb(ref cloudsVb);
-			RebuildClouds((int)game.ViewDistance, legacy ? 128 : 65536);
+			RebuildClouds(game.ViewDistance, legacy ? 128 : 65536);
 		}
 		
 		void ResetSky() {
 			if (!map.HasBlocks || game.Graphics.LostContext) return;
 			game.Graphics.DeleteVb(ref skyVb);
-			RebuildSky((int)game.ViewDistance, legacy ? 128 : 65536);
+			RebuildSky(game.ViewDistance, legacy ? 128 : 65536);
 		}
 		
 		void RebuildClouds(int extent, int axisSize) {

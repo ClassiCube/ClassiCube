@@ -271,7 +271,7 @@ void BordersRenderer_ContextRecreated(void* obj) {
 }
 
 void BordersRenderer_ResetSidesAndEdges(void) {
-	BordersRenderer_CalculateRects((Int32)Game_ViewDistance);
+	BordersRenderer_CalculateRects(Game_ViewDistance);
 	BordersRenderer_ContextRecreated(NULL);
 }
 void BordersRenderer_ResetSidesAndEdges_Handler(void* obj) {

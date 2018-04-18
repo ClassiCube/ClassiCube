@@ -16,20 +16,20 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			validators = new MenuInputValidator[widgets.Length];
 			validators[0]    = new HexColourValidator();
-			defaultValues[0] = WorldEnv.DefaultCloudsColour.ToHex();
+			defaultValues[0] = WorldEnv.DefaultCloudsColHex;
 			validators[1]    = new HexColourValidator();
-			defaultValues[1] = WorldEnv.DefaultSkyColour.ToHex();
+			defaultValues[1] = WorldEnv.DefaultSkyColHex;
 			validators[2]    = new HexColourValidator();
-			defaultValues[2] = WorldEnv.DefaultFogColour.ToHex();
+			defaultValues[2] = WorldEnv.DefaultFogColHex;
 			validators[3]    = new RealValidator(0, 1000);
 			defaultValues[3] = "1";
 			validators[4]    = new IntegerValidator(-10000, 10000);
 			defaultValues[4] = (game.World.Height + 2).ToString();
 			
 			validators[5]    = new HexColourValidator();
-			defaultValues[5] = WorldEnv.DefaultSunlight.ToHex();
+			defaultValues[5] = WorldEnv.DefaultSunlightHex;
 			validators[6]    = new HexColourValidator();
-			defaultValues[6] = WorldEnv.DefaultShadowlight.ToHex();
+			defaultValues[6] = WorldEnv.DefaultShadowlightHex;
 			validators[7]    = new EnumValidator(typeof(Weather));
 			validators[8]    = new RealValidator(-100, 100);
 			defaultValues[8] = "1";

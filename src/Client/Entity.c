@@ -17,8 +17,8 @@
 #include "ErrorHandler.h"
 #include "IModel.h"
 
-const UInt8* NameMode_Names[5]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
-const UInt8* ShadowMode_Names[4] = { "None", "SnapToBlock", "Circle", "CircleAll" };
+const UInt8* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
+const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
 Real32 LocationUpdate_Clamp(Real32 degrees) {
 	degrees = Math_Mod(degrees, 360.0f);

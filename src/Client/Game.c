@@ -120,10 +120,10 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	MapRenderer_RefreshChunk(cx, cy, cz);
 }
 
-void Game_SetViewDistance(Real32 distance, bool userDist) {
+void Game_SetViewDistance(Int32 distance, bool userDist) {
 	if (userDist) {
 		Game_UserViewDistance = distance;
-		Options_SetInt32(OPT_VIEW_DISTANCE, (Int32)distance);
+		Options_SetInt32(OPT_VIEW_DISTANCE, distance);
 	}
 
 	distance = min(distance, Game_MaxViewDistance);

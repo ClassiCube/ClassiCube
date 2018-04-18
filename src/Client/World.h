@@ -8,11 +8,7 @@
 */
 typedef struct AABB_ AABB;
 
-#define World_Unpack(index, x, y, z)\
-x = index % World_Width;\
-z = (index / World_Width) % World_Length;\
-y = (index / World_Width) / World_Length;
-
+#define World_Unpack(idx, x, y, z) x = idx % World_Width; z = (idx / World_Width) % World_Length; y = (idx / World_Width) / World_Length;
 #define World_Pack(x, y, z) (((y) * World_Length + (z)) * World_Width + (x))
 
 BlockID* World_Blocks;
@@ -43,9 +39,11 @@ Int32 WorldEnv_SidesOffset;
 Int32 WorldEnv_CloudsHeight;
 Real32 WorldEnv_CloudsSpeed;
 
+typedef enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY } Weather;
+extern const UInt8* Weather_Names[3];
 Real32 WorldEnv_WeatherSpeed;
 Real32 WorldEnv_WeatherFade;
-Int32 WorldEnv_Weather;
+Weather WorldEnv_Weather;
 bool WorldEnv_ExpFog;
 Real32 WorldEnv_SkyboxHorSpeed;
 Real32 WorldEnv_SkyboxVerSpeed;
@@ -53,16 +51,19 @@ bool WorldEnv_SkyboxClouds;
 
 PackedCol WorldEnv_SkyCol;
 extern PackedCol WorldEnv_DefaultSkyCol;
+#define WORLDENV_DEFAULT_SKYCOL_HEX "99CCFF"
 PackedCol WorldEnv_FogCol;
 extern PackedCol WorldEnv_DefaultFogCol;
+#define WORLDENV_DEFAULT_FOGCOL_HEX "FFFFFF"
 PackedCol WorldEnv_CloudsCol;
 extern PackedCol WorldEnv_DefaultCloudsCol;
-PackedCol WorldEnv_SunCol;
-PackedCol WorldEnv_SunXSide, WorldEnv_SunZSide, WorldEnv_SunYBottom;
+#define WORLDENV_DEFAULT_CLOUDSCOL_HEX "FFFFFF"
+PackedCol WorldEnv_SunCol, WorldEnv_SunXSide, WorldEnv_SunZSide, WorldEnv_SunYBottom;
 extern PackedCol WorldEnv_DefaultSunCol;
-PackedCol WorldEnv_ShadowCol;
-PackedCol WorldEnv_ShadowXSide, WorldEnv_ShadowZSide, WorldEnv_ShadowYBottom;
+#define WORLDENV_DEFAULT_SUNCOL_HEX "FFFFFF"
+PackedCol WorldEnv_ShadowCol, WorldEnv_ShadowXSide, WorldEnv_ShadowZSide, WorldEnv_ShadowYBottom;
 extern PackedCol WorldEnv_DefaultShadowCol;
+#define WORLDENV_DEFAULT_SHADOWCOL_HEX "9B9B9B"
 
 void WorldEnv_Reset(void);
 void WorldEnv_ResetLight(void);

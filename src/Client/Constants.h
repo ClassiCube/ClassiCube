@@ -57,10 +57,6 @@
 
 #define DRAWER2D_MAX_COLS 256
 
-#define WEATHER_SUNNY 0
-#define WEATHER_RAINY 1
-#define WEATHER_SNOWY 2
-
 #define ENV_VAR_EDGE_BLOCK       0
 #define ENV_VAR_SIDES_BLOCK      1
 #define ENV_VAR_EDGE_HEIGHT      2

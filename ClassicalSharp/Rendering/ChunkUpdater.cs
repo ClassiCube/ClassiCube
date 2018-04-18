@@ -319,7 +319,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		
-		static int AdjustViewDist(float dist) {
+		static int AdjustViewDist(int dist) {
 			int viewDist = Utils.AdjViewDist(Math.Max(16, dist));
 			return (viewDist + 24) * (viewDist + 24);
 		}

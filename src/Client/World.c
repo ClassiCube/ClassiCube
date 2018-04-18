@@ -81,6 +81,8 @@ if (src != dst) { dst = src; Event_RaiseInt32(&WorldEvents_EnvVarChanged, var); 
 #define WorldEnv_SetCol(src, dst, var)\
 if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt32(&WorldEvents_EnvVarChanged, var); }
 
+const UInt8* Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
+
 extern PackedCol WorldEnv_DefaultSkyCol    = PACKEDCOL_CONST(0x99, 0xCC, 0xFF, 0xFF);
 extern PackedCol WorldEnv_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 extern PackedCol WorldEnv_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);

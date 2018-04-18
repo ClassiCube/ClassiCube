@@ -102,7 +102,7 @@ void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
 void ChunkUpdater_ApplyMeshBuilder(void) {
 	if (Game_SmoothLighting) {
 		 /* TODO: Implement advanced lighting builder.*/
-		NormalBuilder_SetActive();
+		AdvLightingBuilder_SetActive();
 	} else {
 		NormalBuilder_SetActive();
 	}
@@ -163,7 +163,7 @@ void ChunkUpdater_OnNewMapLoaded(void* obj) {
 }
 
 
-Int32 ChunkUpdater_AdjustViewDist(Real32 dist) {
+Int32 ChunkUpdater_AdjustViewDist(Int32 dist) {
 	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
 	Int32 viewDist = Utils_AdjViewDist(dist);
 	return (viewDist + 24) * (viewDist + 24);
