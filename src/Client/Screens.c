@@ -978,7 +978,7 @@ bool ChatScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton
 	String_AppendColorless(&url, &text);
 
 	if (Utils_IsUrlPrefix(&url, 0)) {
-		Overlay overlay = new UrlWarningOverlay(url);
+		Screen* overlay = UrlWarningOverlay_MakeInstance(&url);
 		Gui_ShowOverlay(overlay, false);
 	} else if (Game_ClickableChat) {
 		InputWidget_AppendString(&screen->Input.Base, &text);

@@ -184,11 +184,13 @@ void Fcm_Load(Stream* stream) {
 #define NBT_TAG_COMPOUND    10
 #define NBT_TAG_INT32_ARRAY 11
 
+#define NBT_SMALL_SIZE (STRING_SIZE * 2)
 struct NbtTag_;
 typedef struct NbtTag_ {
 	struct NbtTag_* Parent;
 	UInt8 TagID;
-	UInt8 NameBuffer[String_BufferSize(STRING_SIZE)];
+	UInt8 NameBuffer[String_BufferSize(NBT_SMALL_SIZE)];
+	UInt32 NameSize;
 
 	UInt32 DataSize; /* size of data for arrays */
 	union {
@@ -198,7 +200,7 @@ typedef struct NbtTag_ {
 		Int64 Value_I64;
 		Real32 Value_R32;
 		Real64 Value_R64;
-		UInt8 DataSmall[String_BufferSize(STRING_SIZE)];
+		UInt8 DataSmall[String_BufferSize(NBT_SMALL_SIZE)];
 		UInt8* DataBig; /* malloc for big byte arrays */
 	};
 } NbtTag;
@@ -237,18 +239,29 @@ UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
 	if (tag->TagID != NBT_TAG_INT8_ARRAY) { ErrorHandler_Fail("Expected I8_Array NBT tag"); }
 	if (i >= tag->DataSize) { ErrorHandler_Fail("Tried to access past bounds of I8_Array tag"); }
 
-	if (tag->DataSize < STRING_SIZE) return tag->DataSmall[i];
+	if (tag->DataSize < NBT_SMALL_SIZE) return tag->DataSmall[i];
 	return tag->DataBig[i];
+}
+
+UInt32 Nbt_ReadString(Stream* stream, UInt8* buffer) {
+	UInt16 nameLen = Stream_ReadUInt16_BE(stream);
+	if (nameLen > NBT_SMALL_SIZE) ErrorHandler_Fail("NBT String too long");
+
+	/* TODO: this is wrong, we need to UTF8 decode here*/
+	encoding.utf8.decode(buffer, nameLen);
+	Stream_Read(stream, buffer, nameLen);
+	return nameLen;
 }
 
 void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent) {
 	if (typeId == NBT_TAG_END) return;
 
 	NbtTag tag;
-	tag.NameBuffer[0] = NULL;
-	tag.Name = readTagName ? ReadString() : null;
 	tag.TagID = typeId;
 	tag.Parent = parent;
+	tag.NameSize = readTagName ? Nbt_ReadString(stream, tag.NameBuffer) : 0;
+	tag.DataSize = 0;
+	
 	UInt8 childTagId;
 	UInt32 i, count;
 
@@ -267,11 +280,23 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent)
 	case NBT_TAG_REAL64:
 		/* TODO: Is this union abuse even legal */
 		tag.Value_I64 = Stream_ReadInt64_BE(stream); break;
+
 	case NBT_TAG_INT8_ARRAY:
-		count = Stream_ReadUInt32_BE(stream);
-		tag.Value = reader.ReadBytes(count); break;
+		count = Stream_ReadUInt32_BE(stream); 
+		tag.DataSize = count;
+
+		if (count < NBT_SMALL_SIZE) {
+			Stream_Read(stream, tag.DataSmall, count);
+		} else {
+			tag.DataBig = Platform_MemAlloc(count);
+			if (tag.DataBig == NULL) ErrorHandler_Fail("Nbt_ReadTag - allocating memory");
+			Stream_Read(stream, tag.DataBig, count);
+		}
+		break;
+
 	case NBT_TAG_STRING:
-		tag.Value = ReadString(); break;
+		tag.DataSize = Nbt_ReadString(stream, tag.DataSmall);
+		break;
 
 	case NBT_TAG_LIST:
 		childTagId = Stream_ReadUInt8(stream);
@@ -294,5 +319,4 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent)
 	default:
 		ErrorHandler_Fail("Unrecognised NBT tag");
 	}
-	return tag;
 }

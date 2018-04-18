@@ -52,7 +52,7 @@ void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, I
 
 	Gui_SetNewScreen(GeneratingScreen_MakeInstance());
 	Gen_Width = width; Gen_Height = height; Gen_Length = length; Gen_Seed = seed;
-	gen.GenerateAsync(game);
+	gen.GenerateAsync();
 }
 
 void ServerConnection_EndGeneration(void) {

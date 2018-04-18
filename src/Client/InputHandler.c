@@ -178,7 +178,8 @@ bool InputHandler_HandleCoreKey(Key key) {
 	} else if (GameMode_HandlesKeyDown(key)) {
 	} else if (key == KeyBind_Get(KeyBind_IDOverlay)) {
 		if (Gui_OverlaysCount > 0) return true;
-		Gui_ShowOverlay(new TexIdsOverlay(), false);
+		Screen* overlay = TexIdsOverlay_MakeInstance();
+		Gui_ShowOverlay(overlay, false);
 	} else {
 		return false;
 	}
@@ -331,7 +332,7 @@ void InputHandler_MouseWheel(void* obj, Real32 delta) {
 	if (!hotbar && Camera_ActiveCamera->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeHeldBlock) return;
 
-	game.Gui.hudScreen.hotbar.HandlesMouseScroll(delta);
+	Gui.hudScreen.hotbar.HandlesMouseScroll(delta);
 }
 
 void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {

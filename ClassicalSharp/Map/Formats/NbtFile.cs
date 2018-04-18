@@ -40,6 +40,8 @@ namespace ClassicalSharp.Map {
 		
 		public void Write(NbtTagType v) { writer.Write((byte)v); }
 		
+		public void Write(NbtTagType v, string name) { writer.Write((byte)v); Write(name); }
+		
 		public void WriteInt32(int v) { writer.Write(IPAddress.HostToNetworkOrder(v)); }
 		
 		public void WriteInt16(short v) { writer.Write(IPAddress.HostToNetworkOrder(v)); }
@@ -60,10 +62,9 @@ namespace ClassicalSharp.Map {
 		}
 		
 		public void WriteCpeExtCompound(string name, int version) {
-			Write(NbtTagType.Compound); Write(name);
-			
-			Write(NbtTagType.Int32);
-			Write("ExtensionVersion"); WriteInt32(version);
+			Write(NbtTagType.Compound, name);		
+			Write(NbtTagType.Int32, "ExtensionVersion"); 
+			WriteInt32(version);
 		}
 		
 		

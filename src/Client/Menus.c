@@ -38,13 +38,14 @@ typedef struct ListScreen_ {
 	StringsBuffer Entries; /* NOTE: this is the last member so we can avoid memsetting it to 0 */
 } ListScreen;
 
-typedef void (*Menu_ContextRecreated)(GuiElement* elem);
+typedef void (*Menu_ContextFunc)(void* obj);
 #define MenuScreen_Layout \
 Screen_Layout \
 Widget** WidgetsPtr; \
 Int32 WidgetsCount; \
 FontDesc TitleFont, TextFont; \
-Menu_ContextRecreated ContextRecreated;
+Menu_ContextFunc ContextLost; \
+Menu_ContextFunc ContextRecreated;
 
 typedef struct MenuScreen_ { MenuScreen_Layout } MenuScreen;
 
@@ -453,9 +454,12 @@ void MenuScreen_ContextLost(void* obj) {
 	Menu_FreeWidgets(screen->WidgetsPtr, screen->WidgetsCount);
 }
 
-void MenuScreen_ContextRecreated(void* obj) {
-	MenuScreen* screen = (MenuScreen*)obj;
-	screen->ContextRecreated((GuiElement*)screen);
+void MenuScreen_ContextLost_Callback(void* obj) {
+	((MenuScreen*)obj)->ContextLost(obj);
+}
+
+void MenuScreen_ContextRecreated_Callback(void* obj) {
+	((MenuScreen*)obj)->ContextRecreated(obj);
 }
 
 void MenuScreen_Init(GuiElement* elem) {
@@ -468,8 +472,8 @@ void MenuScreen_Init(GuiElement* elem) {
 		Platform_MakeFont(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	}
 
-	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost);
-	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated);
+	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost_Callback);
+	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated_Callback);
 }
 
 void MenuScreen_Render(GuiElement* elem, Real64 delta) {
@@ -491,8 +495,8 @@ void MenuScreen_Free(GuiElement* elem) {
 		Platform_FreeFont(&screen->TextFont);
 	}
 
-	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost);
-	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated);
+	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost_Callback);
+	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated_Callback);
 }
 
 void MenuScreen_OnResize(GuiElement* elem) {
@@ -500,7 +504,7 @@ void MenuScreen_OnResize(GuiElement* elem) {
 	Menu_RepositionWidgets(screen->WidgetsPtr, screen->WidgetsCount);
 }
 
-void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, Menu_ContextRecreated contextRecreated) {
+void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, Menu_ContextFunc contextRecreated) {
 	Platform_MemSet(screen, 0, sizeof(MenuScreen));
 	screen->VTABLE = &MenuScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
@@ -521,6 +525,7 @@ void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, 
 	screen->HandlesAllInput  = true;
 	screen->WidgetsPtr       = widgets;
 	screen->WidgetsCount     = count;
+	screen->ContextLost      = MenuScreen_ContextLost;
 	screen->ContextRecreated = contextRecreated;
 }
 
@@ -1698,7 +1703,7 @@ bool KeyBindingsScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mous
 	return true;
 }
 
-KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, KeyBind* binds, const UInt8** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextRecreated contextRecreated) {
+KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, KeyBind* binds, const UInt8** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextFunc contextRecreated) {
 	KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, bindsCount + 4, contextRecreated);
 	KeyBindingsScreen_VTABLE = *screen->VTABLE;
@@ -2115,8 +2120,7 @@ void MenuOptionsScreen_Input(GuiElement* screenElem, GuiElement* widget) {
 	widgets[screen->WidgetsCount - 3] = (Widget*)(&screen->Default);
 }
 
-MenuOptionsScreen* MenuOptionsScreen_MakeInstance(Widget** widgets, Int32 count, Menu_ContextRecreated contextRecreated, MenuInputValidator* validators, 
-	const UInt8** descriptions, const UInt8** defaultValues, ButtonWidget* buttons, Int32 descsCount) {
+MenuOptionsScreen* MenuOptionsScreen_MakeInstance(Widget** widgets, Int32 count, Menu_ContextFunc contextRecreated, MenuInputValidator* validators, const UInt8** descriptions, const UInt8** defaultValues, ButtonWidget* buttons, Int32 descsCount) {
 	MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
 	Platform_MemSet(screen, 0, sizeof(MenuOptionsScreen));
 	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, count, contextRecreated);
@@ -2132,6 +2136,7 @@ MenuOptionsScreen* MenuOptionsScreen_MakeInstance(Widget** widgets, Int32 count,
 	screen->VTABLE->Render = MenuOptionsScreen_Render;
 	screen->VTABLE->Free   = MenuOptionsScreen_Free;
 
+	screen->ContextLost       = MenuOptionsScreen_ContextLost;
 	screen->Validators        = validators;
 	screen->Descriptions      = descriptions;
 	screen->DefaultValues     = defaultValues;

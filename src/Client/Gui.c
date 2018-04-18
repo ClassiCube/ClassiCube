@@ -105,7 +105,7 @@ void Gui_Init(void) {
 void Gui_Reset(void) {
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		Gui_Overlays[i]->VTABLE->Free((GuiElement*)Gui_Overlays[i]);
+		Elem_Free(Gui_Overlays[i]);
 	}
 	Gui_OverlaysCount = 0;
 }
@@ -113,11 +113,9 @@ void Gui_Reset(void) {
 void Gui_Free(void) {
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_SetNewScreen(NULL);
-	Gui_Status->VTABLE->Free((GuiElement*)Gui_Status);
+	Elem_Free(Gui_Status);
 
-	if (Gui_Active != NULL) {
-		Gui_Active->VTABLE->Free((GuiElement*)Gui_Active);
-	}
+	if (Gui_Active != NULL) { Elem_Free(Gui_Active); }
 	Gfx_DeleteTexture(&Gui_GuiTex);
 	Gfx_DeleteTexture(&Gui_GuiClassicTex);
 	Gfx_DeleteTexture(&Gui_IconsTex);
@@ -142,9 +140,7 @@ Screen* Gui_GetUnderlyingScreen(void) {
 
 void Gui_SetScreen(Screen* screen, bool freeOld) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
-	if (Gui_Active != NULL && freeOld) {
-		Gui_Active->VTABLE->Free((GuiElement*)Gui_Active);
-	}
+	if (Gui_Active != NULL && freeOld) { Elem_Free(Gui_Active); }
 
 	if (screen == NULL) {
 		Window_SetCursorVisible(false);
@@ -153,17 +149,12 @@ void Gui_SetScreen(Screen* screen, bool freeOld) {
 		Window_SetCursorVisible(true);
 	}
 
-	if (screen != NULL) {
-		screen->VTABLE->Init((GuiElement*)screen);
-	}
+	if (screen != NULL) { Elem_Init(screen); }
 	Gui_Active = screen;
 }
 
 void Gui_SetNewScreen(Screen* screen) { Gui_SetScreen(screen, true); }
-
-void Gui_RefreshHud(void) {
-	Gui_HUD->VTABLE->Recreate((GuiElement*)Gui_HUD);
-}
+void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
 void Gui_ShowOverlay(Screen* overlay, bool atFront) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
@@ -185,27 +176,27 @@ void Gui_ShowOverlay(Screen* overlay, bool atFront) {
 	Gui_OverlaysCount++;
 
 	if (Gui_OverlaysCount == 1) Game_SetCursorVisible(visible); /* Save cursor visibility state */
-	overlay->VTABLE->Init((GuiElement*)overlay);
+	Elem_Init(overlay);
 }
 
 void Gui_RenderGui(Real64 delta) {
 	GfxCommon_Mode2D(Game_Width, Game_Height);
 	if (Gui_Active == NULL || !Gui_Active->HidesHUD) {
-		Gui_Status->VTABLE->Render((GuiElement*)Gui_Status, delta);
+		Elem_Render(Gui_Status, delta);
 	}
 
 	if (Gui_Active == NULL || !Gui_Active->HidesHUD && !Gui_Active->RenderHUDOver) {
-		Gui_HUD->VTABLE->Render((GuiElement*)Gui_HUD, delta);
+		Elem_Render(Gui_HUD, delta);
 	}
 	if (Gui_Active != NULL) {
-		Gui_Active->VTABLE->Render((GuiElement*)Gui_Active, delta);
+		Elem_Render(Gui_Active, delta);
 	}
 	if (Gui_Active != NULL && !Gui_Active->HidesHUD && Gui_Active->RenderHUDOver) {
-		Gui_HUD->VTABLE->Render((GuiElement*)Gui_HUD, delta);
+		Elem_Render(Gui_HUD, delta);
 	}
 
 	if (Gui_OverlaysCount > 0) {
-		Gui_Overlays[0]->VTABLE->Render((GuiElement*)Gui_Overlays[0], delta);
+		Elem_Render(Gui_Overlays[0], delta);
 	}
 	GfxCommon_Mode3D();
 }
