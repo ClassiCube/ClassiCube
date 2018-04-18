@@ -59,25 +59,17 @@ void Chat_OpenLog(DateTime* now) {
 	}
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
-	Int32 i;
+	Int32 i, year = now->Year, month = now->Month, day = now->Day;
 	for (i = 0; i < 20; i++) {
 		UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 		String path = String_InitAndClearArray(pathBuffer);
-		String_AppendConst(&path, "logs");
-		String_Append(&path, Platform_DirectorySeparator);
+		String_Format4(&path, "logs%b%p4-%p2-%p2", &Platform_DirectorySeparator, &year, &month, &day);
 
-		String_AppendPaddedInt32(&path, 4, now->Year);
-		String_Append(&path, '-');
-		String_AppendPaddedInt32(&path, 2, now->Month);
-		String_Append(&path, '-');
-		String_AppendPaddedInt32(&path, 2, now->Day);
-
-		String_AppendString(&path, &Chat_LogName);
 		if (i > 0) {
-			String_AppendConst(&path, " _");
-			String_AppendInt32(&path, i);
+			String_Format2(&path, "%s _%i.log", &Chat_LogName, &i);
+		} else {
+			String_Format1(&path, "%s.log", &Chat_LogName);
 		}
-		String_AppendConst(&path, ".log");
 
 		void* file;
 		ReturnCode code = Platform_FileAppend(&file, &path);
@@ -109,10 +101,8 @@ void Chat_AppendLog(STRING_PURE String* text) {
 	String str = String_InitAndClearArray(logBuffer);
 
 	/* [HH:mm:ss] text */
-	String_Append(&str, '['); String_AppendPaddedInt32(&str, now.Hour,   2);
-	String_Append(&str, ':'); String_AppendPaddedInt32(&str, now.Minute, 2);
-	String_Append(&str, ':'); String_AppendPaddedInt32(&str, now.Second, 2);
-	String_Append(&str, ']'); String_Append(&str, ' ');
+	Int32 hour = now.Hour, minute = now.Minute, second = now.Second;
+	String_Format3(&str, "[%p2:%p2:%p2] ", &hour, &minute, &second);
 	String_AppendColorless(&str, text);
 
 	Stream_WriteLine(&Chat_LogStream, &str);
@@ -330,8 +320,8 @@ void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	} else {
 		Size2D size = { width, height };
 		Window_SetClientSize(size);
-		Options_SetInt32(OPTION_WINDOW_WIDTH, width);
-		Options_SetInt32(OPTION_WINDOW_HEIGHT, height);
+		Options_SetInt32(OPT_WINDOW_WIDTH, width);
+		Options_SetInt32(OPT_WINDOW_HEIGHT, height);
 	}
 }
 

@@ -13,9 +13,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			ContextRecreated();
-			
 			validators = new MenuInputValidator[widgets.Length];
+			
 			validators[2] = new EnumValidator(typeof(ViewDist));
 			validators[7] = new EnumValidator(typeof(FpsLimitMethod));
 		}

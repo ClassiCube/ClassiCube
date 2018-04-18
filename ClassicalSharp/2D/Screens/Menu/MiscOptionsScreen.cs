@@ -11,7 +11,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			ContextRecreated();
 			validators = new MenuInputValidator[widgets.Length];
 			defaultValues = new string[widgets.Length];
 			

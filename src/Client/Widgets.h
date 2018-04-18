@@ -39,7 +39,7 @@ typedef struct ButtonWidget_ {
 	Int32 MinWidth, MinHeight;
 } ButtonWidget;
 
-void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Widget_LeftClick onClick);
+void ButtonWidget_Create(ButtonWidget* widget, Int32 minWidth, STRING_PURE String* text, FontDesc* font, Widget_LeftClick onClick);
 void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text);
 
 

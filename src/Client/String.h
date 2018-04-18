@@ -8,7 +8,7 @@
 */
 
 #define String_BufferSize(n) (n + 1)
-#define STRING_INT32CHARS 20
+#define STRING_INT_CHARS 24
 
 /* Indicates that a string argument is discarded after the function has completed, and is not modified. */
 #define STRING_PURE
@@ -60,8 +60,8 @@ bool String_Append(STRING_TRANSIENT String* str, UInt8 c);
 bool String_AppendBool(STRING_TRANSIENT String* str, bool value);
 bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num);
-/* Attempts to append an integer value to the end of a string, padding left with 0. */
-bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits);
+bool String_AppendInt64(STRING_TRANSIENT String* str, Int64 num);
+bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits);
 bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend);
 bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
 bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);

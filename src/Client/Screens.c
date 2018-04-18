@@ -1459,7 +1459,7 @@ void DisconnectScreen_ContextRecreated(void* obj) {
 	String msg = String_InitAndClearArray(msgBuffer);
 	DisconnectScreen_ReconnectMessage(screen, &msg);
 
-	ButtonWidget_Create(&screen->Reconnect, &msg, 300, &screen->TitleFont, NULL);
+	ButtonWidget_Create(&screen->Reconnect, 300, &msg, &screen->TitleFont, NULL);
 	Widget_SetLocation((Widget*)(&screen->Reconnect), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 80);
 	screen->Reconnect.Disabled = !screen->CanReconnect;
 }

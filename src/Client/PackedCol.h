@@ -30,6 +30,7 @@ PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
 UInt32 PackedCol_ToARGB(PackedCol col);
 PackedCol PackedCol_Scale(PackedCol value, Real32 t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, Real32 t);
+void PackedCol_ToHex(STRING_TRANSIENT String* str, PackedCol value);
 bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value);
 
 #define PACKEDCOL_SHADE_X 0.6f

@@ -1,6 +1,5 @@
 #ifndef CC_WORLD_H
 #define CC_WORLD_H
-#include "String.h"
 #include "Vectors.h"
 #include "PackedCol.h"
 /* Represents a fixed size 3D array of blocks.

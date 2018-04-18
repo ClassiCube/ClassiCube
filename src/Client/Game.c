@@ -57,7 +57,7 @@ void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack) {
 void Game_SetDefaultTexturePack(STRING_PURE String* texPack) {
 	String_Clear(&game_defTexPack);
 	String_AppendString(&game_defTexPack, texPack);
-	Options_Set(OPTION_DEFAULT_TEX_PACK, texPack);
+	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
 
 
@@ -95,7 +95,7 @@ bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 }
 
 void Game_UpdateProjection(void) {
-	Game_DefaultFov = Options_GetInt(OPTION_FIELD_OF_VIEW, 1, 150, 70);
+	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 150, 70);
 	Camera_ActiveCamera->GetProjection(&Gfx_Projection);
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
@@ -123,7 +123,7 @@ void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 void Game_SetViewDistance(Real32 distance, bool userDist) {
 	if (userDist) {
 		Game_UserViewDistance = distance;
-		Options_SetInt32(OPTION_VIEW_DISTANCE, (Int32)distance);
+		Options_SetInt32(OPT_VIEW_DISTANCE, (Int32)distance);
 	}
 
 	distance = min(distance, Game_MaxViewDistance);

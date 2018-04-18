@@ -27,10 +27,7 @@ namespace ClassicalSharp {
 		
 		public FastColour(int r, int g, int b) {
 			A = 255; R = (byte)r; G = (byte)g; B = (byte)b;
-		}
-
-		public FastColour(Color c) { A = c.A; R = c.R; G = c.G; B = c.B; }
-		
+		}		
 	
 		/// <summary> Multiplies the RGB components of this instance by the
 		/// specified t parameter, where 0 ≤ t ≤ 1 </summary>
@@ -124,19 +121,12 @@ namespace ClassicalSharp {
 			return (obj is FastColour) && Equals((FastColour)obj);
 		}
 		
-		/// <summary> Returns whether all of the colour components of this instance
-		/// equal that of the other instance. </summary>
 		public bool Equals(FastColour other) {
 			return A == other.A && R == other.R && G == other.G && B == other.B;
 		}
 		
 		public override int GetHashCode() {
 			return A << 24 | R << 16 | G << 8 | B;
-		}
-		
-		/// <summary> Convers this instance into a hex colour code of the form RRGGBB. </summary>
-		public string ToRGBHexString() {
-			return Utils.ToHexString(new byte[] { R, G, B });
 		}
 		
 		public override string ToString() {
@@ -157,10 +147,6 @@ namespace ClassicalSharp {
 			left.G = (byte)((left.G * right.G) / 255);
 			left.B = (byte)((left.B * right.B) / 255);
 			return left;
-		}
-		
-		public static implicit operator FastColour(Color col) {
-			return new FastColour(col);
 		}
 		
 		public static implicit operator Color(FastColour col) {
@@ -185,7 +171,20 @@ namespace ClassicalSharp {
 		public static FastColour Yellow = new FastColour(255, 255, 0);
 		public static FastColour Magenta = new FastColour(255, 0, 255);
 		public static FastColour Cyan = new FastColour(0, 255, 255);
-		
+			
+		public string ToHex() {
+			byte[] array = new byte[] { R, G, B };
+			int len = array.Length;
+			char[] hex = new char[len * 2];
+			
+			for (int i = 0; i < array.Length; i++) {
+				int value = array[i], hi = value >> 4, lo = value & 0x0F;			
+				// 48 = index of 0, 55 = index of (A - 10)
+				hex[i * 2 + 0] = hi < 10 ? (char)(hi + 48) : (char)(hi + 55);
+				hex[i * 2 + 1] = lo < 10 ? (char)(lo + 48) : (char)(lo + 55);
+			}
+			return new String(hex);
+		}
 		
 		public static bool TryParse(string input, out FastColour value) {
 			value = default(FastColour);
@@ -204,10 +203,22 @@ namespace ClassicalSharp {
 		public static FastColour Parse(string input) {
 			int i = input.Length > 6 ? 1 : 0;
 			
-			int r = Utils.ParseHex(input[i + 0]) * 16 + Utils.ParseHex(input[i + 1]);
-			int g = Utils.ParseHex(input[i + 2]) * 16 + Utils.ParseHex(input[i + 3]);
-			int b = Utils.ParseHex(input[i + 4]) * 16 + Utils.ParseHex(input[i + 5]);
+			int r = ParseHex(input[i + 0]) * 16 + ParseHex(input[i + 1]);
+			int g = ParseHex(input[i + 2]) * 16 + ParseHex(input[i + 3]);
+			int b = ParseHex(input[i + 4]) * 16 + ParseHex(input[i + 5]);
 			return new FastColour(r, g, b);
+		}
+		
+		static int ParseHex(char value) {
+			if (value >= '0' && value <= '9') {
+				return (value - '0');
+			} else if (value >= 'a' && value <= 'f') {
+				return (value - 'a') + 10;
+			} else if (value >= 'A' && value <= 'F') {
+				return (value - 'A') + 10;
+			} else {
+				throw new FormatException("Invalid hex code given: " + value);
+			}
 		}
 	}
 }

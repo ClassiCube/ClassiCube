@@ -166,7 +166,7 @@ void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 }
 
 GuiElementVTABLE ButtonWidget_VTABLE;
-void ButtonWidget_Create(ButtonWidget* widget, STRING_PURE String* text, Int32 minWidth, FontDesc* font, Widget_LeftClick onClick) {
+void ButtonWidget_Create(ButtonWidget* widget, Int32 minWidth, STRING_PURE String* text, FontDesc* font, Widget_LeftClick onClick) {
 	widget->VTABLE = &ButtonWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->VTABLE->Init   = ButtonWidget_Init;
@@ -1416,7 +1416,7 @@ MenuInputValidator MenuInputValidator_Seed(void) {
 }
 
 void RealValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
-	String_Format2(range, "&7(%f - %f)", &validator->Meta_Real[0], &validator->Meta_Real[1]);
+	String_Format2(range, "&7(%f2 - %f2)", &validator->Meta_Real[0], &validator->Meta_Real[1]);
 }
 
 bool RealValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {

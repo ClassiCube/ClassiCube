@@ -129,7 +129,7 @@ void Options_SetBool(const UInt8* keyRaw, bool value) {
 }
 
 void Options_SetInt32(const UInt8* keyRaw, Int32 value) {
-	UInt8 numBuffer[String_BufferSize(STRING_INT32CHARS)];
+	UInt8 numBuffer[String_BufferSize(STRING_INT_CHARS)];
 	String numStr = String_InitAndClearArray(numBuffer);
 	String_AppendInt32(&numStr, value);
 	Options_Set(keyRaw, &numStr);

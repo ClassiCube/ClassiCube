@@ -51,6 +51,22 @@ bool PackedCol_Unhex(UInt8 hex, Int32* value) {
 	return true;
 }
 
+void PackedCol_ToHex(STRING_TRANSIENT String* str, PackedCol value) {
+	UInt8 input[3] = { value.R, value.G, value.B };
+	UInt8 hex[7];
+	Int32 i;
+
+	for (i = 0; i < 3; i++) {
+		Int32 value = input[i], hi = value >> 4, lo = value & 0x0F;
+		/* 48 = index of 0, 55 = index of (A - 10) */
+		hex[i * 2 + 0] = hi < 10 ? (UInt8)(hi + 48) : (UInt8)(hi + 55);
+		hex[i * 2 + 1] = lo < 10 ? (UInt8)(lo + 48) : (UInt8)(lo + 55);
+	}
+
+	hex[6] = NULL; /* Null terminate hex characters */
+	String_AppendConst(str, hex);
+}
+
 bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value) {
 	PackedCol empty = PACKEDCOL_CONST(0, 0, 0, 0); *value = empty;
 	/* accept XXYYZZ or #XXYYZZ forms */
@@ -65,9 +81,9 @@ bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value) {
 	if (!PackedCol_Unhex(buffer[2], &gH) || !PackedCol_Unhex(buffer[3], &gL)) return false;
 	if (!PackedCol_Unhex(buffer[4], &bH) || !PackedCol_Unhex(buffer[5], &bL)) return false;
 
-	value->R = (UInt8)(rH * 16 + rL);
-	value->G = (UInt8)(gH * 16 + gL);
-	value->B = (UInt8)(bH * 16 + bL);
+	value->R = (UInt8)((rH << 4) | rL);
+	value->G = (UInt8)((gH << 4) | gL);
+	value->B = (UInt8)((bH << 4) | bL);
 	value->A = UInt8_MaxValue;
 	return true;
 }

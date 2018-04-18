@@ -11,9 +11,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			ContextRecreated();
 			game.Events.HackPermissionsChanged += CheckHacksAllowed;
-			MakeDescriptions();		
 			validators = new MenuInputValidator[widgets.Length];
 			defaultValues = new string[widgets.Length];
 			
@@ -23,11 +21,13 @@ namespace ClassicalSharp.Gui.Screens {
 			defaultValues[3] = (1.233f).ToString();
 			validators[9]    = new IntegerValidator(1, 150);
 			defaultValues[9] = "70";
+			
+			MakeDescriptions();
 		}
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.Events.HackPermissionsChanged -= CheckHacksAllowed;
+			game.Events.HackPermissionsChanged -= CheckHacksAllowed;	
 		}
 		
 		void CheckHacksAllowed(object sender, EventArgs e) {

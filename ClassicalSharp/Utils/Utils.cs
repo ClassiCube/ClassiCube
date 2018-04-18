@@ -60,46 +60,7 @@ namespace ClassicalSharp {
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
 		public static bool CaselessEquals(string a, string b) { return a.Equals(b, comp); }
 		public static bool CaselessStarts(string a, string b) { return a.StartsWith(b, comp); }
-		public static bool CaselessEnds(string a, string b) { return a.EndsWith(b, comp); }
-		
-		/// <summary> Converts the given byte array of length N to a hex string of length 2N. </summary>
-		public static string ToHexString(byte[] array) {
-			int len = array.Length;
-			char[] hex = new char[len * 2];
-			for (int i = 0; i < array.Length; i++) {
-				int value = array[i];
-				int hi = value >> 4, lo = value & 0x0F;
-				
-				// 48 = index of 0, 55 = index of (A - 10).
-				hex[i * 2 + 0] = hi < 10 ? (char)(hi + 48) : (char)(hi + 55);
-				hex[i * 2 + 1] = lo < 10 ? (char)(lo + 48) : (char)(lo + 55);
-			}
-			return new String(hex);
-		}
-		
-		/// <summary> Returns the hex code represented by the given character.
-		/// Throws FormatException if the input character isn't a hex code. </summary>
-		public static int ParseHex(char value) {
-			int hex;
-			if (!TryParseHex(value, out hex))
-				throw new FormatException("Invalid hex code given: " + value);
-			return hex;
-		}
-		
-		/// <summary> Attempts to return the hex code represented by the given character. </summary>
-		public static bool TryParseHex(char value, out int hex) {
-			hex = 0;
-			if (value >= '0' && value <= '9') {
-				hex = (int)(value - '0');
-			} else if (value >= 'a' && value <= 'f') {
-				hex = (int)(value - 'a') + 10;
-			} else if (value >= 'A' && value <= 'F') {
-				hex = (int)(value - 'A') + 10;
-			} else {
-				return false;
-			}
-			return true;
-		}		
+		public static bool CaselessEnds(string a, string b) { return a.EndsWith(b, comp); }		
 				
 		public static void LogDebug(string text) {
 			try { Console.WriteLine(text); } catch { }

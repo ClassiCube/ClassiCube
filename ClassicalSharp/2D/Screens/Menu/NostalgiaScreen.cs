@@ -8,11 +8,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public NostalgiaScreen(Game game) : base(game) {
 		}
 		
-		public override void Init() {
-			base.Init();
-			ContextRecreated();
-		}
-		
 		protected override void ContextRecreated() {
 			ClickHandler onBool = OnBoolClick;
 			

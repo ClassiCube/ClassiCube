@@ -11,26 +11,25 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			ContextRecreated();
 			validators = new MenuInputValidator[widgets.Length];
 			defaultValues = new string[widgets.Length];
 			
 			validators = new MenuInputValidator[widgets.Length];
 			validators[0]    = new HexColourValidator();
-			defaultValues[0] = WorldEnv.DefaultCloudsColour.ToRGBHexString();
+			defaultValues[0] = WorldEnv.DefaultCloudsColour.ToHex();
 			validators[1]    = new HexColourValidator();
-			defaultValues[1] = WorldEnv.DefaultSkyColour.ToRGBHexString();
+			defaultValues[1] = WorldEnv.DefaultSkyColour.ToHex();
 			validators[2]    = new HexColourValidator();
-			defaultValues[2] = WorldEnv.DefaultFogColour.ToRGBHexString();
+			defaultValues[2] = WorldEnv.DefaultFogColour.ToHex();
 			validators[3]    = new RealValidator(0, 1000);
 			defaultValues[3] = "1";
 			validators[4]    = new IntegerValidator(-10000, 10000);
 			defaultValues[4] = (game.World.Height + 2).ToString();
 			
 			validators[5]    = new HexColourValidator();
-			defaultValues[5] = WorldEnv.DefaultSunlight.ToRGBHexString();
+			defaultValues[5] = WorldEnv.DefaultSunlight.ToHex();
 			validators[6]    = new HexColourValidator();
-			defaultValues[6] = WorldEnv.DefaultShadowlight.ToRGBHexString();
+			defaultValues[6] = WorldEnv.DefaultShadowlight.ToHex();
 			validators[7]    = new EnumValidator(typeof(Weather));
 			validators[8]    = new RealValidator(-100, 100);
 			defaultValues[8] = "1";
@@ -60,13 +59,13 @@ namespace ClassicalSharp.Gui.Screens {
 			};
 		}
 		
-		static string GetCloudsCol(Game g) { return  g.World.Env.CloudsCol.ToRGBHexString(); }
+		static string GetCloudsCol(Game g) { return  g.World.Env.CloudsCol.ToHex(); }
 		static void SetCloudsCol(Game g, string v) { g.World.Env.SetCloudsColour(FastColour.Parse(v)); }
 		
-		static string GetSkyCol(Game g) { return  g.World.Env.SkyCol.ToRGBHexString(); }
+		static string GetSkyCol(Game g) { return  g.World.Env.SkyCol.ToHex(); }
 		static void SetSkyCol(Game g, string v) { g.World.Env.SetSkyColour(FastColour.Parse(v)); }
 		
-		static string GetFogCol(Game g) { return  g.World.Env.FogCol.ToRGBHexString(); }
+		static string GetFogCol(Game g) { return  g.World.Env.FogCol.ToHex(); }
 		static void SetFogCol(Game g, string v) { g.World.Env.SetFogColour(FastColour.Parse(v)); }
 		
 		static string GetCloudsSpeed(Game g) { return  g.World.Env.CloudsSpeed.ToString("F2"); }
@@ -75,10 +74,10 @@ namespace ClassicalSharp.Gui.Screens {
 		static string GetCloudsHeight(Game g) { return  g.World.Env.CloudHeight.ToString(); }
 		static void SetCloudsHeight(Game g, string v) { g.World.Env.SetCloudsLevel(Int32.Parse(v)); }
 		
-		static string GetSunCol(Game g) { return  g.World.Env.Sunlight.ToRGBHexString(); }
+		static string GetSunCol(Game g) { return  g.World.Env.Sunlight.ToHex(); }
 		static void SetSunCol(Game g, string v) { g.World.Env.SetSunlight(FastColour.Parse(v)); }
 
-		static string GetShadowCol(Game g) { return  g.World.Env.Shadowlight.ToRGBHexString(); }
+		static string GetShadowCol(Game g) { return  g.World.Env.Shadowlight.ToHex(); }
 		static void SetShadowCol(Game g, string v) { g.World.Env.SetShadowlight(FastColour.Parse(v)); }
 
 		static string GetWeather(Game g) { return  g.World.Env.Weather.ToString(); }

@@ -19,6 +19,7 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void Init() {
 			base.Init();
 			game.Keyboard.KeyRepeat = true;
+			ContextRecreated();
 		}
 		
 		static FastColour tableCol = new FastColour(20, 20, 20, 200);
@@ -169,7 +170,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected void OnInputClick(Game game, Widget widget) {
 			ButtonWidget button = (ButtonWidget)widget;	
 			activeI = IndexWidget(button);
-			SelectExtendedHelp(activeI);
+			DisposeExtendedHelp();
 			
 			DisposeInput();
 			MenuInputValidator validator = validators[activeI];

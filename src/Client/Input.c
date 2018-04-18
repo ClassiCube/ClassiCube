@@ -326,6 +326,6 @@ void Hotkeys_UserAddedHotkey(Key baseKey, UInt8 flags, bool moreInput, STRING_PU
 	String value = String_InitAndClearArray(valueBuffer);
 
 	String_Format2(&key, "hotkey-%c&%b", Key_Names[baseKey], &flags);
-	String_Format2(&value, "%p&%s", &moreInput, text);
+	String_Format2(&value, "%t&%s", &moreInput, text);
 	Options_Set(key.buffer, &value);
 }

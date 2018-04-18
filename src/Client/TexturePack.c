@@ -101,7 +101,7 @@ path = String_InitAndClearArray(pathBuffer); \
 TextureCache_MakePath(&path, url);
 
 #define TexCache_Crc32(url) \
-UInt8 crc32Buffer[STRING_INT32CHARS];\
+UInt8 crc32Buffer[STRING_INT_CHARS];\
 crc32 = String_InitAndClearArray(crc32Buffer);\
 String_AppendUInt32(&crc32, Utils_CRC32(url->buffer, url->length));
 

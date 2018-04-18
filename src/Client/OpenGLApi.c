@@ -81,7 +81,7 @@ void Gfx_Init(void) {
 	GraphicsMode mode = GraphicsMode_MakeDefault();
 	GLContext_Init(mode);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTextureDimensions);
-	gl_lists = Options_GetBool(OPTION_FORCE_OLD_OPENGL, false);
+	gl_lists = Options_GetBool(OPT_FORCE_OLD_OPENGL, false);
 	Gfx_CustomMipmapsLevels = !gl_lists;
 
 	GL_CheckVboSupport();
