@@ -54,11 +54,12 @@ void String_UNSAFE_Split(STRING_REF String* str, UInt8 c, STRING_TRANSIENT Strin
 bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
 bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
 bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const UInt8* b);
-Int32 String_MakeInt32(Int32 num, UInt8* numBuffer);
+Int32 String_MakeUInt32(UInt32 num, UInt8* numBuffer);
 
 bool String_Append(STRING_TRANSIENT String* str, UInt8 c);
 bool String_AppendBool(STRING_TRANSIENT String* str, bool value);
 bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
+bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num);
 /* Attempts to append an integer value to the end of a string, padding left with 0. */
 bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 minDigits);
 bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend);
@@ -80,10 +81,10 @@ bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);
 
-void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, void* a1);
-void String_Format2(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2);
-void String_Format3(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2, void* a3);
-void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2, void* a3, void* a4);
+void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, const void* a1);
+void String_Format2(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2);
+void String_Format3(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2, const void* a3);
+void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
 UInt16 Convert_CP437ToUnicode(UInt8 c);
 UInt8 Convert_UnicodeToCP437(UInt16 c);

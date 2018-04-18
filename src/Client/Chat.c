@@ -44,7 +44,7 @@ void Chat_SetLogName(STRING_PURE String* name) {
 	String noColsName = String_InitAndClearArray(noColsBuffer);
 	String_AppendColorless(&noColsName, name);
 
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < noColsName.length; i++) {
 		if (Chat_AllowedLogChar(noColsName.buffer[i])) {
 			String_Append(&Chat_LogName, noColsName.buffer[i]);
@@ -59,7 +59,7 @@ void Chat_OpenLog(DateTime* now) {
 	}
 
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < 20; i++) {
 		UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 		String path = String_InitAndClearArray(pathBuffer);
@@ -137,8 +137,8 @@ void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 
 
 typedef struct ChatCommand_ {
-	String Name;
-	String Help[6];
+	const UInt8* Name;
+	const UInt8* Help[5];
 	void (*Execute)(STRING_PURE String* args, UInt32 argsCount);
 	bool SingleplayerOnly;
 } ChatCommand;
@@ -146,10 +146,8 @@ typedef void (*ChatCommandConstructor)(ChatCommand* cmd);
 
 #define COMMANDS_PREFIX "/client"
 #define COMMANDS_PREFIX_SPACE "/client "
-#define Command_SetName(raw) String name = String_FromConst(raw); cmd->Name = name;
-#define Command_SetHelp(Num, raw) String help ## Num = String_FromConst(raw); cmd->Help[Num] = help ## Num;
 ChatCommand commands_list[8];
-UInt32 commands_count;
+Int32 commands_count;
 
 bool Commands_IsCommandPrefix(STRING_PURE String* input) {
 	if (input->length == 0) return false;
@@ -167,8 +165,7 @@ void Commands_Register(ChatCommandConstructor constructor) {
 		ErrorHandler_Fail("Commands_Register - hit max client commands");
 	}
 
-	ChatCommand command;
-	Platform_MemSet(&command, 0, sizeof(ChatCommand));
+	ChatCommand command = { 0 };
 	constructor(&command);
 	commands_list[commands_count++] = command;
 }
@@ -182,10 +179,11 @@ void Commands_Log(const UInt8* format, void* a1) {
 
 ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 	ChatCommand* match = NULL;
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < commands_count; i++) {
 		ChatCommand* cmd = &commands_list[i];
-		if (!String_CaselessStarts(&cmd->Name, cmdName)) continue;
+		String name = String_FromReadonly(cmd->Name);
+		if (!String_CaselessStarts(&name, cmdName)) continue;
 
 		if (match != NULL) {
 			Commands_Log("&e/client: Multiple commands found that start with: \"&f%s&e\".", cmdName);
@@ -209,11 +207,11 @@ ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 void Commands_PrintDefined(void) {
 	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
 	String str = String_InitAndClearArray(strBuffer);
-	UInt32 i;
+	Int32 i;
 
 	for (i = 0; i < commands_count; i++) {
 		ChatCommand* cmd = &commands_list[i];
-		String name = cmd->Name;
+		String name = String_FromReadonly(cmd->Name);
 
 		if ((str.length + name.length + 2) > str.capacity) {
 			Chat_Add(&str);
@@ -265,24 +263,24 @@ void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 		ChatCommand* cmd = Commands_GetMatch(&args[1]);
 		if (cmd == NULL) return;
 
-		UInt32 i;
+		Int32 i;
 		for (i = 0; i < Array_Elems(cmd->Help); i++) {
-			String* help = &cmd->Help[i];
-			if (help->length == 0) continue;
-			Chat_Add(help);
+			if (cmd->Help[i] == NULL) continue;
+			String help = String_FromReadonly(cmd->Help[i]);
+			Chat_Add(&help);
 		}
 	}
 }
 
 void HelpCommand_Make(ChatCommand* cmd) {
-	Command_SetName("Help");
-	Command_SetHelp(0, "&a/client help [command name]");
-	Command_SetHelp(1, "&eDisplays the help for the given command.");
+	cmd->Name    = "Help";
+	cmd->Help[0] = "&a/client help [command name]";
+	cmd->Help[1] = "&eDisplays the help for the given command.";
 	cmd->Execute = HelpCommand_Execute;
 }
 
 void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (Gfx_ApiInfo[i].length == 0) continue;
 		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
@@ -295,9 +293,9 @@ void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void GpuInfoCommand_Make(ChatCommand* cmd) {
-	Command_SetName("GpuInfo");
-	Command_SetHelp(0, "&a/client gpuinfo");
-	Command_SetHelp(1, "&eDisplays information about your GPU.");
+	cmd->Name    = "GpuInfo";
+	cmd->Help[0] = "&a/client gpuinfo";
+	cmd->Help[1] = "&eDisplays information about your GPU.";
 	cmd->Execute = GpuInfoCommand_Execute;
 }
 
@@ -312,12 +310,12 @@ void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void RenderTypeCommand_Make(ChatCommand* cmd) {
-	Command_SetName("RenderType");
-	Command_SetHelp(0, "&a/client rendertype [normal/legacy/legacyfast]");
-	Command_SetHelp(1, "&bnormal: &eDefault renderer, with all environmental effects enabled.");
-	Command_SetHelp(2, "&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.");
-	Command_SetHelp(3, "&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.");
-	Command_SetHelp(4, "&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.");
+	cmd->Name    = "RenderType";
+	cmd->Help[0] = "&a/client rendertype [normal/legacy/legacyfast]";
+	cmd->Help[1] = "&bnormal: &eDefault renderer, with all environmental effects enabled.";
+	cmd->Help[2] = "&blegacy: &eMay be slightly slower than normal, but produces the same environmental effects.";
+	cmd->Help[3] = "&blegacyfast: &eSacrifices clouds, fog and overhead sky for faster performance.";
+	cmd->Help[4] = "&bnormalfast: &eSacrifices clouds, fog and overhead sky for faster performance.";
 	cmd->Execute = RenderTypeCommand_Execute;
 }
 
@@ -338,9 +336,9 @@ void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void ResolutionCommand_Make(ChatCommand* cmd) {
-	Command_SetName("Resolution");
-	Command_SetHelp(0, "&a/client resolution [width] [height]");
-	Command_SetHelp(1, "&ePrecisely sets the size of the rendered window.");
+	cmd->Name    = "Resolution";
+	cmd->Help[0] = "&a/client resolution [width] [height]";
+	cmd->Help[1] = "&ePrecisely sets the size of the rendered window.";
 	cmd->Execute = ResolutionCommand_Execute;
 }
 
@@ -357,10 +355,10 @@ void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void ModelCommand_Make(ChatCommand* cmd) {
-	Command_SetName("Model");
-	Command_SetHelp(0, "&a/client model [name]");
-	Command_SetHelp(1, "&bnames: &echibi, chicken, creeper, human, pig, sheep");
-	Command_SetHelp(2, "&e       skeleton, spider, zombie, sitting, <numerical block id>")
+	cmd->Name    = "Model";
+	cmd->Help[0] = "&a/client model [name]";
+	cmd->Help[1] = "&bnames: &echibi, chicken, creeper, human, pig, sheep";
+	cmd->Help[2] = "&e       skeleton, spider, zombie, sitting, <numerical block id>";
 	cmd->SingleplayerOnly = true;
 	cmd->Execute = ModelCommand_Execute;
 }
@@ -456,12 +454,12 @@ void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void CuboidCommand_Make(ChatCommand* cmd) {
-	Command_SetName("Cuboid");
-	Command_SetHelp(0, "&a/client cuboid [block] [persist]");
-	Command_SetHelp(1, "&eFills the 3D rectangle between two points with [block].");
-	Command_SetHelp(2, "&eIf no block is given, uses your currently held block.");
-	Command_SetHelp(3, "&e  If persist is given and is \"yes\", then the command");
-	Command_SetHelp(4, "&e  will repeatedly cuboid, without needing to be typed in again.");
+	cmd->Name    = "Cuboid";
+	cmd->Help[0] = "&a/client cuboid [block] [persist]";
+	cmd->Help[1] = "&eFills the 3D rectangle between two points with [block].";
+	cmd->Help[2] = "&eIf no block is given, uses your currently held block.";
+	cmd->Help[3] = "&e  If persist is given and is \"yes\", then the command";
+	cmd->Help[4] = "&e  will repeatedly cuboid, without needing to be typed in again.";
 	cmd->SingleplayerOnly = true;
 	cmd->Execute = CuboidCommand_Execute;
 }
@@ -484,9 +482,9 @@ void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 }
 
 void TeleportCommand_Make(ChatCommand* cmd) {
-	Command_SetName("TP");
-	Command_SetHelp(0, "&a/client tp [x y z]");
-	Command_SetHelp(1, "&eMoves you to the given coordinates.");
+	cmd->Name    = "TP";
+	cmd->Help[0] = "&a/client tp [x y z]";
+	cmd->Help[1] = "&eMoves you to the given coordinates.";
 	cmd->SingleplayerOnly = true;
 	cmd->Execute = TeleportCommand_Execute;
 }
@@ -503,7 +501,7 @@ void Chat_Send(STRING_PURE String* text) {
 	}
 }
 
-void Commands_Init(void) {
+void Chat_Init(void) {
 	Commands_Register(GpuInfoCommand_Make);
 	Commands_Register(HelpCommand_Make);
 	Commands_Register(RenderTypeCommand_Make);
@@ -511,6 +509,9 @@ void Commands_Init(void) {
 	Commands_Register(ModelCommand_Make);
 	Commands_Register(CuboidCommand_Make);
 	Commands_Register(TeleportCommand_Make);
+
+	StringsBuffer_Init(&Chat_Log);
+	StringsBuffer_Init(&Chat_InputLog);
 }
 
 void Chat_Reset(void) {
@@ -518,14 +519,17 @@ void Chat_Reset(void) {
 	String_Clear(&Chat_LogName);
 }
 
-void Commands_Free(void) {
+void Chat_Free(void) {
 	commands_count = 0;
+
+	StringsBuffer_Free(&Chat_Log);
+	StringsBuffer_Free(&Chat_InputLog);
 }
 
 IGameComponent Chat_MakeGameComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = Commands_Init;
+	comp.Init  = Chat_Init;
 	comp.Reset = Chat_Reset;
-	comp.Free = Commands_Free;
+	comp.Free  = Chat_Free;
 	return comp;
 }

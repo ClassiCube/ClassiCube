@@ -9,13 +9,11 @@ namespace ClassicalSharp.Gui.Screens {
 	public sealed class EditHotkeyScreen : MenuScreen {
 		
 		const int keyI = 0, modifyI = 1, actionI = 2;
-		HotkeyList hotkeys;
 		Hotkey curHotkey, origHotkey;
 		int selectedI = -1;
 		static FastColour grey = new FastColour(150, 150, 150);
 		
 		public EditHotkeyScreen(Game game, Hotkey original) : base(game) {
-			hotkeys = game.Input.Hotkeys;
 			origHotkey = original;
 			curHotkey = original;
 		}
@@ -97,15 +95,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void SaveChangesClick(Game game, Widget widget) {
 			if (origHotkey.BaseKey != Key.Unknown) {
-				hotkeys.RemoveHotkey(origHotkey.BaseKey, origHotkey.Flags);
-				hotkeys.UserRemovedHotkey(origHotkey.BaseKey, origHotkey.Flags);
+				HotkeyList.Remove(origHotkey.BaseKey, origHotkey.Flags);
+				HotkeyList.UserRemovedHotkey(origHotkey.BaseKey, origHotkey.Flags);
 			}
 			MenuInputWidget input = (MenuInputWidget)widgets[actionI];
 			
 			if (curHotkey.BaseKey != Key.Unknown) {
-				hotkeys.AddHotkey(curHotkey.BaseKey, curHotkey.Flags,
+				HotkeyList.Add(curHotkey.BaseKey, curHotkey.Flags,
 				                  input.Text.ToString(), curHotkey.StaysOpen);
-				hotkeys.UserAddedHotkey(curHotkey.BaseKey, curHotkey.Flags,
+				HotkeyList.UserAddedHotkey(curHotkey.BaseKey, curHotkey.Flags,
 				                        curHotkey.StaysOpen, input.Text.ToString());
 			}
 			game.Gui.SetNewScreen(new HotkeyListScreen(game));
@@ -113,8 +111,8 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void RemoveHotkeyClick(Game game, Widget widget) {
 			if (origHotkey.BaseKey != Key.Unknown) {
-				hotkeys.RemoveHotkey(origHotkey.BaseKey, origHotkey.Flags);
-				hotkeys.UserRemovedHotkey(origHotkey.BaseKey, origHotkey.Flags);
+				HotkeyList.Remove(origHotkey.BaseKey, origHotkey.Flags);
+				HotkeyList.UserRemovedHotkey(origHotkey.BaseKey, origHotkey.Flags);
 			}
 			game.Gui.SetNewScreen(new HotkeyListScreen(game));
 		}

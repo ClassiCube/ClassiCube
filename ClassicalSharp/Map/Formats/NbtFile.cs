@@ -22,7 +22,6 @@ namespace ClassicalSharp.Map {
 		End, Int8, Int16, Int32, Int64,
 		Real32, Real64, Int8Array, String,
 		List, Compound, Int32Array,
-		Invalid = 255,
 	}
 
 	public sealed class NbtFile {
@@ -82,9 +81,7 @@ namespace ClassicalSharp.Map {
 		
 		public unsafe NbtTag ReadTag(byte typeId, bool readTagName) {
 			NbtTag tag = default(NbtTag);
-			if (typeId == 0) {
-				tag.TagId = NbtTagType.Invalid; return tag;
-			}
+			if (typeId == 0) return tag;
 			
 			tag.Name = readTagName ? ReadString() : null;
 			tag.TagId = (NbtTagType)typeId;			
@@ -118,10 +115,10 @@ namespace ClassicalSharp.Map {
 					tag.Value = list; break;
 					
 				case NbtTagType.Compound:
+					byte childTagId;
 					Dictionary<string, NbtTag> children = new Dictionary<string, NbtTag>();
-					NbtTag child;
-					while ((child = ReadTag(reader.ReadByte(), true)).TagId != NbtTagType.Invalid) {
-						children[child.Name] = child;
+					while ((childTagId = reader.ReadByte()) != (byte)NbtTagType.End) {
+						NbtTag child = ReadTag(childTagId, true); children[child.Name] = child;
 					}
 					tag.Value = children; break;
 					

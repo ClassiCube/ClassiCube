@@ -12,20 +12,6 @@ typedef struct EntryList_ {
 	StringsBuffer Entries;
 } EntryList;
 
-void EntryList_Add(EntryList* list, STRING_PURE String* entry) {
-	StringsBuffer_Add(&list->Entries, entry);
-	EntryList_Save(list);
-}
-
-bool EntryList_Has(EntryList* list, STRING_PURE String* entry) {
-	Int32 i;
-	for (i = 0; i < list->Entries.Count; i++) {
-		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		if (String_Equals(&curEntry, entry)) return true;
-	}
-	return false;
-}
-
 void EntryList_Load(EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
@@ -80,6 +66,20 @@ void EntryList_Save(EntryList* list) {
 	ErrorHandler_CheckOrFail(result, "EntryList_Save - close file");
 }
 
+void EntryList_Add(EntryList* list, STRING_PURE String* entry) {
+	StringsBuffer_Add(&list->Entries, entry);
+	EntryList_Save(list);
+}
+
+bool EntryList_Has(EntryList* list, STRING_PURE String* entry) {
+	Int32 i;
+	for (i = 0; i < list->Entries.Count; i++) {
+		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+		if (String_Equals(&curEntry, entry)) return true;
+	}
+	return false;
+}
+
 void EntryList_Make(EntryList* list, STRING_PURE const UInt8* folder, STRING_PURE const UInt8* file) {
 	String dstFolder = String_InitAndClearArray(list->FolderBuffer);
 	String_AppendConst(&dstFolder, folder);
@@ -91,10 +91,19 @@ void EntryList_Make(EntryList* list, STRING_PURE const UInt8* folder, STRING_PUR
 }
 
 #define TEXCACHE_FOLDER "texturecache"
+/* Because I didn't store milliseconds in original C# client */
+#define TEXCACHE_TICKS_PER_MS 10000LL
 EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
 
-#define TexCache_InitAndMakePath(url) UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)]; \
-path = String_InitAndClearArray(pathBuffer); TextureCache_MakePath(&path, url);
+#define TexCache_InitAndMakePath(url) \
+UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)]; \
+path = String_InitAndClearArray(pathBuffer); \
+TextureCache_MakePath(&path, url);
+
+#define TexCache_Crc32(url) \
+UInt8 crc32Buffer[STRING_INT32CHARS];\
+crc32 = String_InitAndClearArray(crc32Buffer);\
+String_AppendUInt32(&crc32, Utils_CRC32(url->buffer, url->length));
 
 void TextureCache_Init(void) {
 	EntryList_Make(&cache_accepted,     TEXCACHE_FOLDER, "acceptedurls.txt");
@@ -107,6 +116,11 @@ bool TextureCache_HasAccepted(STRING_PURE String* url) { return EntryList_Has(&c
 bool TextureCache_HasDenied(STRING_PURE String* url)   { return EntryList_Has(&cache_denied,   url); }
 void TextureCache_Accept(STRING_PURE String* url) { EntryList_Add(&cache_accepted, url); }
 void TextureCache_Deny(STRING_PURE String* url)   { EntryList_Add(&cache_denied,   url); }
+
+void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
+	String crc32; TexCache_Crc32(url);
+	String_Format3(path, "%c%b%s", TEXCACHE_FOLDER, &Platform_DirectorySeparator, &crc32);
+}
 
 bool TextureCache_HasUrl(STRING_PURE String* url) {
 	String path; TexCache_InitAndMakePath(url);
@@ -128,11 +142,29 @@ bool TextureCache_GetStream(STRING_PURE String* url, Stream* stream) {
 	return true;
 }
 
+void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* result, EntryList* list) {
+	String crc32; TexCache_Crc32(url);
+	Int32 i;
+	for (i = 0; i < list->Entries.Count; i++) {
+		String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+		if (!String_CaselessStarts(&entry, &crc32)) continue;
+
+		Int32 sepIndex = String_IndexOf(&entry, ' ', 0);
+		if (sepIndex == -1) continue;
+		
+		String value = String_UNSAFE_SubstringAt(&entry, sepIndex + 1);
+		String_AppendString(result, &value);
+	}
+}
+
 void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
-	string entry = GetFromTags(url, LastModified);
-	long ticks = 0;
-	if (entry != null && long.TryParse(entry, out ticks)) {
-		return new DateTime(ticks, DateTimeKind.Utc);
+	UInt8 entryBuffer[String_BufferSize(STRING_SIZE)];
+	String entry = String_InitAndClearArray(entryBuffer);
+	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
+
+	Int64 ticks;
+	if (entry.length > 0 && Convert_TryParseInt64(&entry, &ticks)) {
+		*time = DateTime_FromTotalMs(ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
 		String path; TexCache_InitAndMakePath(url);
 		return Platform_FileGetWriteTime(path);
@@ -140,23 +172,7 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 }
 
 void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag) {
-	TexturePack_GetFromTags(url, etag, ETags);
-}
-
-void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* result, EntryList* list) {
-	string crc32 = CRC32(url);
-
-	Int32 i;
-	for (i = 0; i < list->Entries.Count; i++) {
-		String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		if (!String_CaselessStarts(&entry, &crc32)) continue;
-
-		Int32 sepIndex = String_IndexOf(&entry, ' ');
-		if (sepIndex == -1) continue;
-		
-		String value = String_UNSAFE_SubstringAt(&entry, sepIndex + 1);
-		String_AppendString(result, &value);
-	}
+	TexturePack_GetFromTags(url, etag, &cache_eTags);
 }
 
 void* TextureCache_CreateFile(STRING_PURE String* path) {
@@ -167,7 +183,7 @@ void* TextureCache_CreateFile(STRING_PURE String* path) {
 	}
 
 	void* file;
-	ReturnCode result = Platform_FileCreate(&file, &path);
+	ReturnCode result = Platform_FileCreate(&file, path);
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "TextureCache_CreateFile - open file");
 	return file;
@@ -193,19 +209,8 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	ErrorHandler_CheckOrFail(result, "TextureCache_AddData - close file");
 }
 
-void TextureCache_AddETag(STRING_PURE String* url, STRING_PURE String* etag) {
-	if (etag->length == 0) return;
-	TextureCache_AddToTags(url, etag, ETags);
-}
-
-void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModified) {
-	if (lastModified->Year == 0 && lastModified->Month == 0) return;
-	String data = lastModified.ToUniversalTime().Ticks.ToString();
-	TextureCache_AddToTags(url, data, LastModified);
-}
-
 void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, EntryList* list) {
-	String crc32 = CRC32(url);
+	String crc32; TexCache_Crc32(url);
 	UInt8 entryBuffer[String_BufferSize(2048)];
 	String entry = String_InitAndClearArray(entryBuffer);
 	String_Format2(&entry, "%s %s", &crc32, data);
@@ -221,11 +226,17 @@ void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, E
 	EntryList_Add(list, &entry);
 }
 
-void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
-	return PathIO.Combine(folder, CRC32(url));
+void TextureCache_AddETag(STRING_PURE String* url, STRING_PURE String* etag) {
+	if (etag->length == 0) return;
+	TextureCache_AddToTags(url, etag, &cache_eTags);
 }
 
-void TextureCache_CRC32(STRING_PURE String* url) {
-	UInt32 crc32 = Utils_CRC32(url->buffer, url->length);
-	return crc32.ToString();
+void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModified) {
+	if (lastModified->Year == 0 && lastModified->Month == 0) return;
+	Int64 ticks = DateTime_TotalMs(lastModified) * TEXCACHE_TICKS_PER_MS;
+
+	UInt8 dataBuffer[String_BufferSize(STRING_SIZE)];
+	String data = String_InitAndClearArray(dataBuffer);
+	String_AppendInt64(&data, ticks);
+	TextureCache_AddToTags(url, &data, &cache_lastModified);
 }

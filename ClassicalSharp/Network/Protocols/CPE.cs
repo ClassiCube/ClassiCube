@@ -105,12 +105,12 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			Utils.LogDebug("CPE Hotkey added: " + key + "," + keyMods + " : " + action);
 			if (action == "") {
-				game.Input.Hotkeys.RemoveHotkey(key, keyMods);
+				HotkeyList.Remove(key, keyMods);
 			} else if (action[action.Length - 1] == '◙') { // graphical form of \n
 				action = action.Substring(0, action.Length - 1);
-				game.Input.Hotkeys.AddHotkey(key, keyMods, action, false);
+				HotkeyList.Add(key, keyMods, action, false);
 			} else { // more input needed by user
-				game.Input.Hotkeys.AddHotkey(key, keyMods, action, true);
+				HotkeyList.Add(key, keyMods, action, true);
 			}
 			#endif
 		}

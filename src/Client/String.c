@@ -136,8 +136,8 @@ bool String_AppendBool(STRING_TRANSIENT String* str, bool value) {
 	return String_AppendConst(str, text);
 }
 
-Int32 String_MakeInt32(Int32 num, UInt8* numBuffer) {
-	Int32 len = 0;
+Int32 String_MakeUInt32(UInt32 num, UInt8* numBuffer) {
+	UInt32 len = 0;
 
 	do {
 		numBuffer[len] = (UInt8)('0' + (num % 10));
@@ -149,13 +149,16 @@ Int32 String_MakeInt32(Int32 num, UInt8* numBuffer) {
 bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num) {
 	if (num < 0) {
 		num = -num;
-		if (!String_Append(str, (UInt8)'-')) return false;
+		if (!String_Append(str, '-')) return false;
 	}
+	return String_AppendUInt32(str, (UInt32)num);
+}
 
+bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num) {
 	UInt8 numBuffer[STRING_INT32CHARS];
-	Int32 numLen = String_MakeInt32(num, numBuffer);
+	Int32 numLen = String_MakeUInt32(num, numBuffer);
 	Int32 i;
-	
+
 	for (i = numLen - 1; i >= 0; i--) {
 		if (!String_Append(str, numBuffer[i])) return false;
 	}
@@ -167,7 +170,7 @@ bool String_AppendPaddedInt32(STRING_TRANSIENT String* str, Int32 num, Int32 min
 	Int32 i;
 	for (i = 0; i < minDigits; i++) { numBuffer[i] = '0'; }
 
-	Int32 numLen = String_MakeInt32(num, numBuffer);
+	Int32 numLen = String_MakeUInt32(num, numBuffer);
 	if (numLen < minDigits) numLen = minDigits;
 
 	for (i = numLen - 1; i >= 0; i--) {
@@ -335,34 +338,40 @@ Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 	return a->length < b->length ? 1 : -1;
 }
 
-void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, void* a1) {
+void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, const void* a1) {
 	String_Format4(str, format, a1, NULL, NULL, NULL);
 }
-void String_Format2(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2) {
+void String_Format2(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2) {
 	String_Format4(str, format, a1, a2, NULL, NULL);
 }
-void String_Format3(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2, void* a3) {
+void String_Format3(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2, const void* a3) {
 	String_Format4(str, format, a1, a2, a3, NULL);
 }
-void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, void* a1, void* a2, void* a3, void* a4) {
+void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2, const void* a3, const void* a4) {
 	String formatStr = String_FromReadonly(format);
-	void* args[4] = { a1, a2, a3, a4 };
+	const void* args[4] = { a1, a2, a3, a4 };
 	Int32 i, j = 0;
 
 	for (i = 0; i < formatStr.length; i++) {
 		if (formatStr.buffer[i] != '%') { String_Append(str, formatStr.buffer[i]); continue; }
 
-		switch (formatStr.buffer[i + 1]) {
-		case 'b': String_AppendInt32(str,   *((UInt8*)args[j])); break;
-		case 'i': String_AppendInt32(str,   *((Int32*)args[j])); break;
-		case 'f': String_AppendReal32(str, *((Real32*)args[j])); break;
-		case 'p': String_AppendBool(str,     *((bool*)args[j])); break;
-		case 'c': String_AppendConst(str,     (UInt8*)args[j]);  break;
-		case 's': String_AppendString(str,   (String*)args[j]);  break;
-		default: ErrorHandler_Fail("Invalid type for string format");
+		const void* arg = args[j++];
+		switch (formatStr.buffer[i++]) {
+		case 'b': 
+			String_AppendInt32(str,   *((UInt8*)arg)); break;
+		case 'i': 
+			String_AppendInt32(str,   *((Int32*)arg)); break;
+		case 'f': 
+			String_AppendReal32(str, *((Real32*)arg)); break;
+		case 'p': 
+			String_AppendBool(str,     *((bool*)arg)); break;
+		case 'c': 
+			String_AppendConst(str,     (UInt8*)arg);  break;
+		case 's': 
+			String_AppendString(str,   (String*)arg);  break;
+		default: 
+			ErrorHandler_Fail("Invalid type for string format");
 		}
-
-		i++; j++; /* skip over type following % */
 	}
 }
 

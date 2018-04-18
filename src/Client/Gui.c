@@ -272,7 +272,7 @@ void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices)
 	}
 
 	UInt8 digits[STRING_SIZE];
-	Int32 i, count = String_MakeInt32(value, digits);
+	Int32 i, count = String_MakeUInt32((UInt32)value, digits);
 	for (i = count - 1; i >= 0; i--) {
 		TextAtlas_Add(atlas, digits[i] - '0' , vertices);
 	}

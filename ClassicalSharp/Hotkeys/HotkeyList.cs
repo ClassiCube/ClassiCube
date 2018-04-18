@@ -7,12 +7,12 @@ using OpenTK.Input;
 namespace ClassicalSharp.Hotkeys {
 
 	/// <summary> Maintains the list of hotkeys defined by the client and by SetTextHotkey packets. </summary>
-	public sealed class HotkeyList {
+	public static class HotkeyList {
 		
-		public List<Hotkey> Hotkeys = new List<Hotkey>();
+		public static List<Hotkey> Hotkeys = new List<Hotkey>();
 		
 		/// <summary> Creates or updates an existing hotkey with the given baseKey and modifier flags. </summary>
-		public void AddHotkey(Key baseKey, byte flags, string text, bool more) {
+		public static void Add(Key baseKey, byte flags, string text, bool more) {
 			if (!UpdateExistingHotkey(baseKey, flags, text, more))
 				AddNewHotkey(baseKey, flags, text, more);
 		}
@@ -20,7 +20,7 @@ namespace ClassicalSharp.Hotkeys {
 		/// <summary> Removes an existing hotkey with the given baseKey and modifier flags. </summary>
 		/// <returns> Whether a hotkey with the given baseKey and modifier flags was found
 		/// and subsequently removed. </returns>
-		public bool RemoveHotkey(Key baseKey, byte flags) {
+		public static bool Remove(Key baseKey, byte flags) {
 			for (int i = 0; i < Hotkeys.Count; i++) {
 				Hotkey hKey = Hotkeys[i];
 				if (hKey.BaseKey == baseKey && hKey.Flags == flags) {
@@ -31,7 +31,7 @@ namespace ClassicalSharp.Hotkeys {
 			return false;
 		}
 		
-		bool UpdateExistingHotkey(Key baseKey, byte flags, string text, bool more) {
+		static bool UpdateExistingHotkey(Key baseKey, byte flags, string text, bool more) {
 			for (int i = 0; i < Hotkeys.Count; i++) {
 				Hotkey hKey = Hotkeys[i];
 				if (hKey.BaseKey == baseKey && hKey.Flags == flags) {
@@ -44,7 +44,7 @@ namespace ClassicalSharp.Hotkeys {
 			return false;
 		}
 		
-		void AddNewHotkey(Key baseKey, byte flags, string text, bool more) {
+		static void AddNewHotkey(Key baseKey, byte flags, string text, bool more) {
 			Hotkey hotkey;
 			hotkey.BaseKey = baseKey;
 			hotkey.Flags = flags;
@@ -60,8 +60,7 @@ namespace ClassicalSharp.Hotkeys {
 		
 		/// <summary> Determines whether a hotkey is active based on the given key,
 		/// and the currently active control, alt, and shift modifiers </summary>
-		public bool IsHotkey(Key key, InputHandler input,
-		                     out string text, out bool moreInput) {
+		public static bool IsHotkey(Key key, InputHandler input, out string text, out bool moreInput) {
 			byte flags = 0;
 			if (input.ControlDown) flags |= 1;
 			if (input.ShiftDown) flags |= 2;
@@ -82,7 +81,7 @@ namespace ClassicalSharp.Hotkeys {
 		}
 		
 		const string prefix = "hotkey-";
-		public void LoadSavedHotkeys() {
+		public static void LoadSavedHotkeys() {
 			for (int i = 0; i < Options.OptionsKeys.Count; i++) {
 				string key = Options.OptionsKeys[i];
 				if (!Utils.CaselessStarts(key, prefix)) continue;			
@@ -108,16 +107,16 @@ namespace ClassicalSharp.Hotkeys {
 					Utils.LogDebug("Hotkey {0} has invalid arguments", key);
 					continue;
 				}
-				AddHotkey(hotkey, flags, strText, moreInput);
+				Add(hotkey, flags, strText, moreInput);
 			}
 		}
 		
-		public void UserRemovedHotkey(Key baseKey, byte flags) {
+		public static void UserRemovedHotkey(Key baseKey, byte flags) {
 			string key = "hotkey-" + baseKey + "&" + flags;
 			Options.Set(key, null);
 		}
 		
-		public void UserAddedHotkey(Key baseKey, byte flags, bool moreInput, string text) {
+		public static void UserAddedHotkey(Key baseKey, byte flags, bool moreInput, string text) {
 			string key = "hotkey-" + baseKey + "&" + flags;
 			string value = moreInput + "&" + text;
 			Options.Set(key, value);

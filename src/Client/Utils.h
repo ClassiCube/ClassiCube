@@ -22,6 +22,7 @@ typedef struct Bitmap_ Bitmap;
 #define DATETIME_SECONDS_PER_HOUR (60 * 60)
 #define DATETIME_SECONDS_PER_DAY (60 * 60 * 24)
 
+DateTime DateTime_FromTotalMs(Int64 ms);
 Int64 DateTime_TotalMs(DateTime* time);
 Int64 DateTime_MsBetween(DateTime* start, DateTime* end);
 

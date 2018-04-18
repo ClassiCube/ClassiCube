@@ -183,7 +183,6 @@ void Fcm_Load(Stream* stream) {
 #define NBT_TAG_LIST        9
 #define NBT_TAG_COMPOUND    10
 #define NBT_TAG_INT32_ARRAY 11
-#define NBT_TAG_INVALID     255
 
 struct NbtTag_;
 typedef struct NbtTag_ {
@@ -243,11 +242,10 @@ UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
 }
 
 void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent) {
-	NbtTag tag; 
-	tag.TagID = NBT_TAG_INVALID;
-	tag.NameBuffer[0] = NULL;
-	if (typeId == 0) return tag;
+	if (typeId == NBT_TAG_END) return;
 
+	NbtTag tag;
+	tag.NameBuffer[0] = NULL;
 	tag.Name = readTagName ? ReadString() : null;
 	tag.TagID = typeId;
 	tag.Parent = parent;
@@ -284,7 +282,7 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent)
 		break;
 
 	case NBT_TAG_COMPOUND:
-		while ((childTagId = Stream_ReadUInt8(stream)) != NBT_TAG_INVALID) {
+		while ((childTagId = Stream_ReadUInt8(stream)) != NBT_TAG_END) {
 			Nbt_ReadTag(childTagId, true, stream, &tag);
 		} 
 		break;

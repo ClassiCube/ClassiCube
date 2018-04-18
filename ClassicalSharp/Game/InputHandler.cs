@@ -11,10 +11,6 @@ namespace ClassicalSharp {
 
 	public sealed class InputHandler {
 		
-		#if !ANDROID
-		public HotkeyList Hotkeys;
-		#endif
-		
 		Game game;
 		bool[] buttonsDown = new bool[3];
 		PickingHandler picking;
@@ -23,11 +19,7 @@ namespace ClassicalSharp {
 			RegisterInputHandlers();
 			Keys = new KeyMap();
 			picking = new PickingHandler(game, this);
-			
-			#if !ANDROID
-			Hotkeys = new HotkeyList();
-			Hotkeys.LoadSavedHotkeys();
-			#endif
+			HotkeyList.LoadSavedHotkeys();
 		}
 		
 		void RegisterInputHandlers() {
@@ -185,7 +177,7 @@ namespace ClassicalSharp {
 		void HandleHotkey(Key key) {
 			string text;
 			bool more;
-			if (!Hotkeys.IsHotkey(key, game.Input, out text, out more)) return;
+			if (!HotkeyList.IsHotkey(key, game.Input, out text, out more)) return;
 			
 			if (!more) {
 				game.Server.SendChat(text);
