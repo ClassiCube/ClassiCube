@@ -55,8 +55,7 @@ void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack) {
 }
 
 void Game_SetDefaultTexturePack(STRING_PURE String* texPack) {
-	String_Clear(&game_defTexPack);
-	String_AppendString(&game_defTexPack, texPack);
+	String_Set(&game_defTexPack, texPack);
 	Options_Set(OPT_DEFAULT_TEX_PACK, texPack);
 }
 

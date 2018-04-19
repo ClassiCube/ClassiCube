@@ -43,6 +43,7 @@ String String_FromReadonly(STRING_REF const UInt8* buffer);
 
 void String_MakeLowercase(STRING_TRANSIENT String* str);
 void String_Clear(STRING_TRANSIENT String* str);
+void String_Set(STRING_TRANSIENT String* str, STRING_PURE String* value);
 /* Returns a string that points directly to a substring of the given string.
 NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE SUBSTRING IS NOT NULL TERMINATED */
 String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length);
@@ -61,7 +62,7 @@ bool String_AppendBool(STRING_TRANSIENT String* str, bool value);
 bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num);
 bool String_AppendInt64(STRING_TRANSIENT String* str, Int64 num);
-bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits);
+bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
 bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend);
 bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
 bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);

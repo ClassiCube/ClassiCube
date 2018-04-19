@@ -206,10 +206,7 @@ void Options_Save(void) {
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String key   = StringsBuffer_UNSAFE_Get(&Options_Keys,   i);
 		String value = StringsBuffer_UNSAFE_Get(&Options_Values, i);
-
-		String_AppendString(&line, &key);
-		String_Append(&line, '=');
-		String_AppendString(&line, &value);
+		String_Format2(&line, "%s=%s", &key, &value);
 
 		Stream_WriteLine(&stream, &line);
 		String_Clear(&line);

@@ -1656,8 +1656,7 @@ void ChatInputWidget_UpKey(GuiElement* elem) {
 
 	if (widget->TypingLogPos == Chat_InputLog.Count) {
 		String orig = String_FromRawArray(widget->OrigBuffer);
-		String_Clear(&orig);
-		String_AppendString(&orig, &input->Text);
+		String_Set(&orig, &input->Text);
 	}
 
 	if (Chat_InputLog.Count == 0) return;

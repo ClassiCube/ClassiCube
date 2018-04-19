@@ -694,8 +694,7 @@ void ChatScreen_OpenInput(ChatScreen* screen, STRING_PURE String* initialText) {
 	ChatScreen_SetHandlesAllInput(screen, true);
 	Key_KeyRepeat = true;
 
-	String_Clear(&screen->Input.Base.Text);
-	String_AppendString(&screen->Input.Base.Text, initialText);
+	String_Set(&screen->Input.Base.Text, initialText);
 	Elem_Recreate(&screen->Input.Base);
 }
 

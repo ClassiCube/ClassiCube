@@ -58,6 +58,11 @@ void String_Clear(STRING_TRANSIENT String* str) {
 	str->length = 0;
 }
 
+void String_Set(STRING_TRANSIENT String* str, STRING_PURE String* value) {
+	String_Clear(str);
+	String_AppendString(str, value);
+}
+
 String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 length) {
 	if (offset < 0 || offset > str->length) {
 		ErrorHandler_Fail("Offset for substring out of range");
@@ -515,7 +520,7 @@ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {
 	Int32 i = 0;
 	*value = 0.0f;
 	bool foundDecimalPoint = false;
-	Real32 whole = 0.0f, fract = 0.0f, divide = 10.0f;
+	Real64 whole = 0.0f, fract = 0.0f, divide = 10.0f;
 
 	/* Handle number signs */
 	bool negate = false;
@@ -542,9 +547,9 @@ bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value) {
 		}
 	}
 
-	Real32 sum = whole + fract;
+	Real64 sum = whole + fract;
 	if (negate) sum = -sum;
-	*value = sum;
+	*value = (Real32)sum;
 	return true;
 }
 

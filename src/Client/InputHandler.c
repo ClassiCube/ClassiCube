@@ -131,7 +131,7 @@ bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
 	HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
 
-	if (input_fovIndex == -1.0f) input_fovIndex = Game_ZoomFov;
+	if (input_fovIndex == -1.0f) input_fovIndex = (Real32)Game_ZoomFov;
 	input_fovIndex -= deltaPrecise * 5.0f;
 
 	Math_Clamp(input_fovIndex, 1.0f, Game_DefaultFov);
@@ -340,7 +340,7 @@ void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {
 	active->VTABLE->HandlesMouseMove(active, Mouse_X, Mouse_Y);
 }
 
-void InputHandler_MouseDown(void* obj, MouseButton button) {
+void InputHandler_MouseDown(void* obj, Int32 button) {
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 	if (!active->VTABLE->HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
 		bool left   = button == MouseButton_Left;
@@ -352,7 +352,7 @@ void InputHandler_MouseDown(void* obj, MouseButton button) {
 	}
 }
 
-void InputHandler_MouseUp(void* obj, MouseButton button) {
+void InputHandler_MouseUp(void* obj, Int32 button) {
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 	if (!active->VTABLE->HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
 		if (ServerConnection_SupportsPlayerClick && button <= MouseButton_Middle) {
@@ -374,7 +374,7 @@ bool InputHandler_SimulateMouse(Key key, bool pressed) {
 	return true;
 }
 
-void InputHandler_KeyDown(void* obj, Key key) {
+void InputHandler_KeyDown(void* obj, Int32 key) {
 	if (InputHandler_SimulateMouse(key, true)) return;
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 
@@ -401,7 +401,7 @@ void InputHandler_KeyDown(void* obj, Key key) {
 	}
 }
 
-void InputHandler_KeyUp(void* obj, Key key) {
+void InputHandler_KeyUp(void* obj, Int32 key) {
 	if (InputHandler_SimulateMouse(key, false)) return;
 
 	if (key == KeyBind_Get(KeyBind_ZoomScrolling)) {

@@ -141,10 +141,7 @@ bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 void Animations_LogFail(STRING_TRANSIENT String* line, const UInt8* raw) {
 	UInt8 msgBuffer[String_BufferSize(128)];
 	String msg = String_InitAndClearArray(msgBuffer);
-
-	String_AppendConst(&msg, raw);
-	String_Append(&msg, ':'); String_Append(&msg, ' ');
-	String_AppendString(&msg, line);
+	String_Format2(&msg, "%c: %s", raw, line);
 	Chat_Add(&msg);
 }
 

@@ -139,6 +139,7 @@ typedef struct NetPlayer_ {
 	NetInterpComp Interp;
 	bool ShouldRender;
 } NetPlayer;
+void NetPlayer_Init(NetPlayer* player);
 
 /* Represents the user/player's own entity. */
 typedef struct LocalPlayer_ {
@@ -152,5 +153,6 @@ typedef struct LocalPlayer_ {
 
 LocalPlayer LocalPlayer_Instance;
 void LocalPlayer_Init(void);
-void NetPlayer_Init(NetPlayer* player);
+Real32 LocalPlayer_JumpHeight(void);
+void LocalPlayer_ChecksHackConsistency();
 #endif

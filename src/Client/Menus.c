@@ -460,6 +460,12 @@ Int32 MenuScreen_Index(MenuScreen* screen, Widget* w) {
 	return Menu_Index(screen->WidgetsPtr, screen->WidgetsCount, w);
 }
 
+void MenuScreen_Remove(MenuScreen* screen, Int32 i) {
+	Widget** widgets = screen->WidgetsPtr;
+	if (widgets[i] != NULL) { Elem_Free(widgets[i]); }
+	widgets[i] = NULL;
+}
+
 bool MenuScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	return Menu_HandleMouseDown(elem, screen->WidgetsPtr, screen->WidgetsCount, x, y, btn) >= 0;
@@ -608,7 +614,7 @@ void PauseScreen_ContextRecreated(void* obj) {
 		Menu_MakeBack(&screen->Buttons[5], 400, &back, 25, font, PauseScreen_Game);	
 
 		/* Disable nostalgia options in classic mode*/
-		if (Game_ClassicMode) { screen->Widgets[4] = NULL; }
+		if (Game_ClassicMode) MenuScreen_Remove((MenuScreen*)screen, 4);
 		screen->Widgets[6] = NULL;
 		screen->Widgets[7] = NULL;
 	} else {
@@ -1399,7 +1405,7 @@ void SaveLevelScreen_ContextRecreated(void* obj) {
 	screen->Widgets[5] = NULL; /* description widget placeholder */
 }
 
-Screen* SaveLevelScreen_Make(void) {
+Screen* SaveLevelScreen_MakeInstance(void) {
 	SaveLevelScreen* screen = &SaveLevelScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, screen->Widgets, Array_Elems(screen->Widgets), SaveLevelScreen_ContextRecreated);
 	SaveLevelScreen_VTABLE = *screen->VTABLE;
@@ -1867,7 +1873,7 @@ Screen* MouseKeyBindingsScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 MenuOptionsScreen MenuOptionsScreen_Instance;
 GuiElementVTABLE MenuOptionsScreen_VTABLE;
-void Menu_GetBool(bool v, STRING_TRANSIENT String* raw) {
+void Menu_GetBool(STRING_TRANSIENT String* raw, bool v) {
 	String_AppendConst(raw, v ? "ON" : "OFF");
 }
 
@@ -2160,14 +2166,14 @@ typedef enum ViewDist_ {
 } ViewDist;
 const UInt8* ViewDist_Names[ViewDist_Count] = { "TINY", "SHORT", "NORMAL", "FAR" };
 
-void ClassicOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { Menu_GetBool(Game_MusicVolume > 0, v); }
+void ClassicOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_MusicVolume > 0); }
 void ClassicOptionsScreen_SetMusic(STRING_PURE String* v) {
 	Game_MusicVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
 	AudioPlayer_SetMusic(Game_MusicVolume);
 	Options_SetInt32(OPT_MUSIC_VOLUME, Game_MusicVolume);
 }
 
-void ClassicOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(Game_InvertMouse, v); }
+void ClassicOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_InvertMouse); }
 void ClassicOptionsScreen_SetInvert(STRING_PURE String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
 void ClassicOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) {
@@ -2187,25 +2193,25 @@ void ClassicOptionsScreen_SetViewDist(STRING_PURE String* v) {
 	Game_SetViewDistance(dist, true);
 }
 
-void ClassicOptionsScreen_GetPhysics(STRING_TRANSIENT String* v) { Menu_GetBool(Physics_Enabled, v); }
+void ClassicOptionsScreen_GetPhysics(STRING_TRANSIENT String* v) { Menu_GetBool(v, Physics_Enabled); }
 void ClassicOptionsScreen_SetPhysics(STRING_PURE String* v) {
 	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
 }
 
-void ClassicOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { Menu_GetBool(Game_SoundsVolume > 0, v); }
+void ClassicOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_SoundsVolume > 0); }
 void ClassicOptionsScreen_SetSounds(STRING_PURE String* v) {
 	Game_SoundsVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
 	AudioPlayer_SetSounds(Game_SoundsVolume);
 	Options_SetInt32(OPT_SOUND_VOLUME, Game_SoundsVolume);
 }
 
-void ClassicOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(Game_ShowFPS, v); }
+void ClassicOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
 void ClassicOptionsScreen_SetShowFPS(STRING_PURE String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-void ClassicOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(Game_ViewBobbing, v); }
+void ClassicOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ViewBobbing); }
 void ClassicOptionsScreen_SetViewBob(STRING_PURE String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
 
-void ClassicOptionsScreen_GetHacks(STRING_TRANSIENT String* v) { Menu_GetBool(LocalPlayer_Instance.Hacks.Enabled, v); }
+void ClassicOptionsScreen_GetHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
 void ClassicOptionsScreen_SetHacks(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.Enabled = Menu_SetBool(v, OPT_HACKS_ENABLED);
 	LocalPlayer_CheckHacksConsistency();
@@ -2214,7 +2220,6 @@ void ClassicOptionsScreen_SetHacks(STRING_PURE String* v) {
 void ClassicOptionsScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->WidgetsPtr;
-	bool multi = !ServerConnection_IsSinglePlayer, hacks = Game_ClassicHacks;
 
 	MenuOptionsScreen_Make(screen, 0, -1, -150, "Music",           MenuOptionsScreen_Bool, 
 		ClassicOptionsScreen_GetMusic,    ClassicOptionsScreen_SetMusic);
@@ -2244,12 +2249,16 @@ void ClassicOptionsScreen_ContextRecreated(void* obj) {
 	String done = String_FromConst("Done");
 	Menu_MakeBack(&screen->Buttons[10], 400, &done, 25, &screen->TitleFont, Menu_SwitchPause);
 	widgets[10] = (Widget*)(&screen->Buttons[10]);
+
+	/* Disable certain options */
+	if (!ServerConnection_IsSinglePlayer) MenuScreen_Remove((MenuScreen*)screen, 3);
+	if (!Game_ClassicHacks)               MenuScreen_Remove((MenuScreen*)screen, 8);
 }
 
 Screen* ClassicOptionsScreen_MakeInstance(void) {
 	static ButtonWidget buttons[11];
-	static Widget* widgets[Array_Elems(buttons)];
 	static MenuInputValidator validators[Array_Elems(buttons)];
+	static Widget* widgets[Array_Elems(buttons)];	
 
 	validators[2] = MenuInputValidator_Enum(ViewDist_Names, ViewDist_Count);
 	validators[7] = MenuInputValidator_Enum(FpsLimit_Names, FpsLimit_Count);
@@ -2262,68 +2271,6 @@ Screen* ClassicOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------EnvSettingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-Screen* EnvSettingsScreen_GetInstance(void) {
-	static ButtonWidget buttons[11];
-	static Widget* widgets[Array_Elems(buttons) + 3];
-	static MenuInputValidator validators[Array_Elems(buttons)];
-	const UInt8* defaultValues[Array_Elems(buttons)];
-
-	validators[0]    = MenuInputValidator_Hex();
-	defaultValues[0] = WORLDENV_DEFAULT_CLOUDSCOL_HEX;
-	validators[1]    = MenuInputValidator_Hex();
-	defaultValues[1] = WORLDENV_DEFAULT_SKYCOL_HEX;
-	validators[2]    = MenuInputValidator_Hex();
-	defaultValues[2] = WORLDENV_DEFAULT_FOGCOL_HEX;
-	validators[3]    = MenuInputValidator_Real(0.00f, 1000.00f);
-	defaultValues[3] = "1";
-	validators[4]    = MenuInputValidator_Integer(-10000, 10000);
-	defaultValues[4] = (game.World.Height + 2).ToString();
-
-	validators[5]    = MenuInputValidator_Hex();
-	defaultValues[5] = WORLDENV_DEFAULT_SUNCOL_HEX;
-	validators[6]    = MenuInputValidator_Hex();
-	defaultValues[6] = WORLDENV_DEFAULT_SHADOWCOL_HEX;
-	validators[7]    = MenuInputValidator_Enum(Weather_Names, Array_Elems(Weather_Names));
-	validators[8]    = MenuInputValidator_Real(-100.00f, 100.00f);
-	defaultValues[8] = "1";
-	validators[9]    = MenuInputValidator_Integer(-2048, 2048);
-	defaultValues[9] = (game.World.Height / 2).ToString();
-
-	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
-		EnvSettingsScreen_ContextRecreated, validators, defaultValues, NULL, 0);
-}
-
-void EnvSettingsScreen_ContextRecreated(void* obj) {
-	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
-	Widget** widgets = screen->WidgetsPtr;
-
-	MenuOptionsScreen_Make(screen, 0, -1, -150, "Clouds col",    MenuOptionsScreen_Input, 
-		EnvSettingsScreen_GetCloudsCol,    EnvSettingsScreen_SetCloudsCol);
-	MenuOptionsScreen_Make(screen, 1, -1, -100, "Sky col",       MenuOptionsScreen_Input,
-		EnvSettingsScreen_GetSkyCol,       EnvSettingsScreen_SetSkyCol);
-	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Fog col",       MenuOptionsScreen_Input,
-		EnvSettingsScreen_GetFogCol,       EnvSettingsScreen_SetFogCol);
-	MenuOptionsScreen_Make(screen, 3, -1,    0, "Clouds speed",  MenuOptionsScreen_Input,
-		EnvSettingsScreen_GetCloudsSpeed,  EnvSettingsScreen_SetCloudsSpeed);
-	MenuOptionsScreen_Make(screen, 4, -1,   50, "Clouds height", MenuOptionsScreen_Input,
-		EnvSettingsScreen_GetCloudsHeight, EnvSettingsScreen_SetCloudsHeight);
-
-	MenuOptionsScreen_Make(screen, 5, 1, -150, "Sunlight col",    MenuOptionsScreen_Input,
-		EnvSettingsScreen_GetSunCol,       EnvSettingsScreen_SetSunCol);
-	MenuOptionsScreen_Make(screen, 6, 1, -100, "Shadow col",      MenuOptionsScreen_Input,
-		EnvSettingsScreen_GetShadowCol,    EnvSettingsScreen_SetShadowCol);
-	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Weather",         MenuOptionsScreen_Enum,
-		EnvSettingsScreen_GetWeather,      EnvSettingsScreen_SetWeather);
-	MenuOptionsScreen_Make(screen, 8, 1,    0, "Rain/Snow speed", MenuOptionsScreen_Input,
-		EnvSettingsScreen_GetWeatherSpeed, EnvSettingsScreen_SetWeatherSpeed);
-	MenuOptionsScreen_Make(screen, 9, 1, 50, "Water level",       MenuOptionsScreen_Input,
-		EnvSettingsScreen_GetEdgeHeight,   EnvSettingsScreen_SetEdgeHeight);
-
-	Menu_MakeDefaultBack(&screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
-	widgets[10] = (Widget*)(&screen->Buttons[10]);
-	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
-}
-
 void EnvSettingsScreen_GetCloudsCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_CloudsCol); }
 void EnvSettingsScreen_SetCloudsCol(STRING_PURE String* v) { WorldEnv_SetCloudsCol(Menu_HexCol(v)); }
 
@@ -2357,43 +2304,84 @@ void EnvSettingsScreen_SetWeatherSpeed(STRING_PURE String* v) { WorldEnv_SetWeat
 void EnvSettingsScreen_GetEdgeHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, WorldEnv_EdgeHeight); }
 void EnvSettingsScreen_SetEdgeHeight(STRING_PURE String* v) { WorldEnv_SetEdgeHeight(Menu_Int32(v)); }
 
+void EnvSettingsScreen_ContextRecreated(void* obj) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
+	Widget** widgets = screen->WidgetsPtr;
 
+	MenuOptionsScreen_Make(screen, 0, -1, -150, "Clouds col",    MenuOptionsScreen_Input, 
+		EnvSettingsScreen_GetCloudsCol,    EnvSettingsScreen_SetCloudsCol);
+	MenuOptionsScreen_Make(screen, 1, -1, -100, "Sky col",       MenuOptionsScreen_Input,
+		EnvSettingsScreen_GetSkyCol,       EnvSettingsScreen_SetSkyCol);
+	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Fog col",       MenuOptionsScreen_Input,
+		EnvSettingsScreen_GetFogCol,       EnvSettingsScreen_SetFogCol);
+	MenuOptionsScreen_Make(screen, 3, -1,    0, "Clouds speed",  MenuOptionsScreen_Input,
+		EnvSettingsScreen_GetCloudsSpeed,  EnvSettingsScreen_SetCloudsSpeed);
+	MenuOptionsScreen_Make(screen, 4, -1,   50, "Clouds height", MenuOptionsScreen_Input,
+		EnvSettingsScreen_GetCloudsHeight, EnvSettingsScreen_SetCloudsHeight);
 
-Screen* GraphicsOptionsScreen_MakeInstance(void) {
-	validators = new MenuInputValidator[widgets.Length];
-	defaultValues = new string[widgets.Length];
+	MenuOptionsScreen_Make(screen, 5, 1, -150, "Sunlight col",    MenuOptionsScreen_Input,
+		EnvSettingsScreen_GetSunCol,       EnvSettingsScreen_SetSunCol);
+	MenuOptionsScreen_Make(screen, 6, 1, -100, "Shadow col",      MenuOptionsScreen_Input,
+		EnvSettingsScreen_GetShadowCol,    EnvSettingsScreen_SetShadowCol);
+	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Weather",         MenuOptionsScreen_Enum,
+		EnvSettingsScreen_GetWeather,      EnvSettingsScreen_SetWeather);
+	MenuOptionsScreen_Make(screen, 8, 1,    0, "Rain/Snow speed", MenuOptionsScreen_Input,
+		EnvSettingsScreen_GetWeatherSpeed, EnvSettingsScreen_SetWeatherSpeed);
+	MenuOptionsScreen_Make(screen, 9, 1, 50, "Water level",       MenuOptionsScreen_Input,
+		EnvSettingsScreen_GetEdgeHeight,   EnvSettingsScreen_SetEdgeHeight);
 
-	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FpsLimit_Count);
-	validators[1]    = MenuInputValidator_Integer(8, 4096);
-	defaultValues[1] = "512";
-	validators[3]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);
-	validators[4]    = MenuInputValidator_Enum(ShadowMode_Names, SHADOW_MODE_COUNT);
-	MakeDescriptions();
+	Menu_MakeDefaultBack(&screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
+	widgets[10] = (Widget*)(&screen->Buttons[10]);
+	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
 }
 
-void GraphicsOptionsScreen_ContextRecreated(void* obj) {
-	ClickHandler onClick = OnInputClick;
-	ClickHandler onEnum = OnEnumClick;
-	ClickHandler onBool = OnBoolClick;
+Screen* EnvSettingsScreen_MakeInstance(void) {
+	static ButtonWidget buttons[11];
+	static MenuInputValidator validators[Array_Elems(buttons)];
+	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static Widget* widgets[Array_Elems(buttons) + 3];
 
-	widgets = new Widget[]{
-		MakeOpt(-1, -50, "FPS mode",         onEnum,  GetFPS,      SetFPS),
-		MakeOpt(-1, 0, "View distance",      onClick, GetViewDist, SetViewDist),
-		MakeOpt(-1, 50, "Advanced lighting", onBool,  GetSmooth,   SetSmooth),
+	static UInt8 cloudHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
+	String cloudHeight = String_InitAndClearArray(cloudHeightBuffer);
+	String_AppendInt32(&cloudHeight, World_Height + 2);
 
-		MakeOpt(1, -50, "Names",             onEnum,  GetNames,    SetNames),
-		MakeOpt(1, 0, "Shadows",             onEnum,  GetShadows,  SetShadows),
-		MakeOpt(1, 50, "Mipmaps",            onBool,  GetMipmaps,  SetMipmaps),
+	static UInt8 edgeHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
+	String edgeHeight = String_InitAndClearArray(edgeHeightBuffer);
+	String_AppendInt32(&edgeHeight, World_Height / 2);
 
-		MakeBack(false, titleFont, SwitchOptions),
-		null, null, null,
-	};
+	validators[0]    = MenuInputValidator_Hex();
+	defaultValues[0] = WORLDENV_DEFAULT_CLOUDSCOL_HEX;
+	validators[1]    = MenuInputValidator_Hex();
+	defaultValues[1] = WORLDENV_DEFAULT_SKYCOL_HEX;
+	validators[2]    = MenuInputValidator_Hex();
+	defaultValues[2] = WORLDENV_DEFAULT_FOGCOL_HEX;
+	validators[3]    = MenuInputValidator_Real(0.00f, 1000.00f);
+	defaultValues[3] = "1";
+	validators[4]    = MenuInputValidator_Integer(-10000, 10000);
+	defaultValues[4] = cloudHeightBuffer;
+
+	validators[5]    = MenuInputValidator_Hex();
+	defaultValues[5] = WORLDENV_DEFAULT_SUNCOL_HEX;
+	validators[6]    = MenuInputValidator_Hex();
+	defaultValues[6] = WORLDENV_DEFAULT_SHADOWCOL_HEX;
+	validators[7]    = MenuInputValidator_Enum(Weather_Names, Array_Elems(Weather_Names));
+	validators[8]    = MenuInputValidator_Real(-100.00f, 100.00f);
+	defaultValues[8] = "1";
+	validators[9]    = MenuInputValidator_Integer(-2048, 2048);
+	defaultValues[9] = edgeHeightBuffer;
+
+	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+		EnvSettingsScreen_ContextRecreated, validators, defaultValues, NULL, 0);
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
+*#########################################################################################################################*/
 void GraphicsOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_ViewDistance); }
 void GraphicsOptionsScreen_SetViewDist(STRING_PURE String* v) { Game_SetViewDistance(Menu_Int32(v), true); }
 
-void GraphicsOptionsScreen_GetSmooth(STRING_TRANSIENT String* v) { Menu_GetBool(Game_SmoothLighting, v); }
+void GraphicsOptionsScreen_GetSmooth(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_SmoothLighting); }
 void GraphicsOptionsScreen_SetSmooth(STRING_PURE String* v) {
 	Game_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
 	ChunkUpdater_ApplyMeshBuilder();
@@ -2412,92 +2400,90 @@ void GraphicsOptionsScreen_SetShadows(STRING_PURE String* v) {
 	Options_Set(OPT_ENTITY_SHADOW, v);
 }
 
-void GraphicsOptionsScreen_GetMipmaps(STRING_TRANSIENT String* v) { Menu_GetBool(Gfx_Mipmaps, v); }
+void GraphicsOptionsScreen_GetMipmaps(STRING_TRANSIENT String* v) { Menu_GetBool(v, Gfx_Mipmaps); }
 void GraphicsOptionsScreen_SetMipmaps(STRING_PURE String* v) {
 	Gfx_Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
+	UInt8 urlBuffer[String_BufferSize(STRING_SIZE)];
+	String url = String_InitAndClearArray(urlBuffer);
+	String_Set(&url, &World_TextureUrl);
 
-	string url = Game_World.TextureUrl;
 	/* always force a reload from cache */
-	Game_World.TextureUrl = "~`#$_^*()@";
-	TexturePack_ExtractCurrent(url);
-	Game_World.TextureUrl = url;
+	String_Clear(&World_TextureUrl);
+	String_AppendConst(&World_TextureUrl, "~`#$_^*()@");
+	TexturePack_ExtractCurrent(&url);
+
+	String_Set(&World_TextureUrl, &url);
 }
 
-void MakeDescriptions() {
-	string[][] descs = new string[widgets.Length][];
-	descs[0] = new string[]{
-		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.",
-		"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.",
-		"&eNoLimit: &fRenders as many frames as possible each second.",
-		"&cUsing NoLimit mode is discouraged.",
-	};
-	descs[2] = new string[]{
-		"&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.",
-	};
-	descs[3] = new string[]{
-		"&eNone: &fNo names of players are drawn.",
-		"&eHovered: &fName of the targeted player is drawn see-through.",
-		"&eAll: &fNames of all other players are drawn normally.",
-		"&eAllHovered: &fAll names of players are drawn see-through.",
-		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.",
-	};
-	descs[4] = new string[]{
-		"&eNone: &fNo entity shadows are drawn.",
-		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.",
-		"&eCircle: &fA circular shadow is shown across the blocks you are above.",
-		"&eCircleAll: &fA circular shadow is shown underneath all entities.",
-	};
-	descriptions = descs;
+void GraphicsOptionsScreen_ContextRecreated(void* obj) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
+	Widget** widgets = screen->WidgetsPtr;
+
+	MenuOptionsScreen_Make(screen, 0, -1, -50, "FPS mode",          MenuOptionsScreen_Enum, 
+		MenuOptionsScreen_GetFPS,          MenuOptionsScreen_SetFPS);
+	MenuOptionsScreen_Make(screen, 1, -1,   0, "View distance",     MenuOptionsScreen_Input, 
+		GraphicsOptionsScreen_GetViewDist, GraphicsOptionsScreen_SetViewDist);
+	MenuOptionsScreen_Make(screen, 2, -1,  50, "Advanced lighting", MenuOptionsScreen_Bool,
+		GraphicsOptionsScreen_GetSmooth,   GraphicsOptionsScreen_SetSmooth);
+
+	MenuOptionsScreen_Make(screen, 3, 1, -50, "Names",   MenuOptionsScreen_Enum, 
+		GraphicsOptionsScreen_GetNames,    GraphicsOptionsScreen_SetNames);
+	MenuOptionsScreen_Make(screen, 4, 1,   0, "Shadows", MenuOptionsScreen_Enum, 
+		GraphicsOptionsScreen_GetShadows, GraphicsOptionsScreen_SetShadows);
+	MenuOptionsScreen_Make(screen, 5, 1,  50, "Mipmaps", MenuOptionsScreen_Bool,
+		GraphicsOptionsScreen_GetMipmaps, GraphicsOptionsScreen_SetMipmaps);
+
+	Menu_MakeDefaultBack(&screen->Buttons[6], false, &screen->TitleFont, Menu_SwitchOptions);
+	widgets[6] = (Widget*)(&screen->Buttons[6]);
+	widgets[7] = NULL; widgets[8] = NULL; widgets[9] = NULL;
+}
+
+Screen* GraphicsOptionsScreen_MakeInstance(void) {
+	static ButtonWidget buttons[7];
+	static MenuInputValidator validators[Array_Elems(buttons)];
+	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static Widget* widgets[Array_Elems(buttons) + 3];
+
+	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FpsLimit_Count);
+	validators[1]    = MenuInputValidator_Integer(8, 4096);
+	defaultValues[1] = "512";
+	validators[3]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);
+	validators[4]    = MenuInputValidator_Enum(ShadowMode_Names, SHADOW_MODE_COUNT);
+	
+	static const UInt8* descs[Array_Elems(buttons)];
+	descs[0] = \
+		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.%" \
+		"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.%" \
+		"&eNoLimit: &fRenders as many frames as possible each second.%" \
+		"&cUsing NoLimit mode is discouraged.";
+	descs[2] = "&cNote: &eSmooth lighting is still experimental and can heavily reduce performance.";
+	descs[3] = \
+		"&eNone: &fNo names of players are drawn.%" \
+		"&eHovered: &fName of the targeted player is drawn see-through.%" \
+		"&eAll: &fNames of all other players are drawn normally.%" \
+		"&eAllHovered: &fAll names of players are drawn see-through.%" \
+		"&eAllUnscaled: &fAll names of players are drawn see-through without scaling.";
+	descs[4] = \
+		"&eNone: &fNo entity shadows are drawn.%" \
+		"&eSnapToBlock: &fA square shadow is shown on block you are directly above.%" \
+		"&eCircle: &fA circular shadow is shown across the blocks you are above.%" \
+		"&eCircleAll: &fA circular shadow is shown underneath all entities.";
+
+	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+		GraphicsOptionsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(descs));
 }
 
 
-
-
-Screen* GuiOptionsScreen_MakeInstance(void) {
-	validators = new MenuInputValidator[widgets.Length];
-	defaultValues = new string[widgets.Length];
-
-	validators[2]    = MenuInputValidator_Real(0.25f, 4.00f);
-	defaultValues[2] = "1";
-	validators[3]    = MenuInputValidator_Real(0.25f, 4.00f);
-	defaultValues[3] = "1";
-	validators[6]    = MenuInputValidator_Real(0.25f, 4.00f);
-	defaultValues[6] = "1";
-	validators[7]    = MenuInputValidator_Integer(0, 30);
-	defaultValues[7] = "10";
-	validators[9]    = MenuInputValidator_String();
-	defaultValues[9] = "Arial";
-}
-
-void GuiOptionsScreen_ContextRecreated(void* obj) {
-	ClickHandler onClick = OnInputClick;
-	ClickHandler onBool = OnBoolClick;
-
-	widgets = new Widget[]{
-		MakeOpt(-1, -150, "Black text shadows", onBool,  GetShadows,   SetShadows),
-		MakeOpt(-1, -100, "Show FPS",           onBool,  GetShowFPS,   SetShowFPS),
-		MakeOpt(-1,  -50, "Hotbar scale",       onClick, GetHotbar,    SetHotbar),
-		MakeOpt(-1,    0, "Inventory scale",    onClick, GetInventory, SetInventory),
-		MakeOpt(-1,   50, "Tab auto-complete",  onBool,  GetTabAuto,   SetTabAuto),
-
-		MakeOpt(1, -150, "Clickable chat",      onBool,  GetClickable, SetClickable),
-		MakeOpt(1, -100, "Chat scale",          onClick, GetChatScale, SetChatScale),
-		MakeOpt(1,  -50, "Chat lines",          onClick, GetChatlines, SetChatlines),
-		MakeOpt(1,    0, "Use system font",     onBool,  GetUseFont,   SetUseFont),
-		MakeOpt(1,   50, "Font",                onClick, GetFont,      SetFont),
-
-		MakeBack(false, titleFont, SwitchOptions),
-		null, null, null,
-	};
-}
-
-void GuiOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { Menu_GetBool(Drawer2D_BlackTextShadows, v); }
+/*########################################################################################################################*
+*----------------------------------------------------GuiOptionsScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+void GuiOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
 void GuiOptionsScreen_SetShadows(STRING_PURE String* v) {
 	Drawer2D_BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
 	HandleFontChange();
 }
 
-void GuiOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(Game_ShowFPS, v); }
+void GuiOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
 void GuiOptionsScreen_SetShowFPS(STRING_PURE String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
 void GuiOptionsScreen_SetScale(STRING_PURE String* v, Real32* target, const UInt8* optKey) {
@@ -2512,10 +2498,10 @@ void GuiOptionsScreen_SetHotbar(STRING_PURE String* v) { GuiOptionsScreen_SetSca
 void GuiOptionsScreen_GetInventory(STRING_TRANSIENT String* v) { String_AppendReal32(v, Game_RawInventoryScale, 1); }
 void GuiOptionsScreen_SetInventory(STRING_PURE String* v) { GuiOptionsScreen_SetScale(v, &Game_RawInventoryScale, OPT_INVENTORY_SCALE); }
 
-void GuiOptionsScreen_GetTabAuto(STRING_TRANSIENT String* v) { Menu_GetBool(Game_TabAutocomplete, v); }
+void GuiOptionsScreen_GetTabAuto(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_TabAutocomplete); }
 void GuiOptionsScreen_SetTabAuto(STRING_PURE String* v) { Game_TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
 
-void GuiOptionsScreen_GetClickable(STRING_TRANSIENT String* v) { Menu_GetBool(Game_ClickableChat, v); }
+void GuiOptionsScreen_GetClickable(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ClickableChat); }
 void GuiOptionsScreen_SetClickable(STRING_PURE String* v) { Game_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
 
 void GuiOptionsScreen_GetChatScale(STRING_TRANSIENT String* v) { String_AppendReal32(v, Game_RawChatScale, 1); }
@@ -2528,91 +2514,88 @@ void GuiOptionsScreen_SetChatlines(STRING_PURE String* v) {
 	Gui_RefreshHud();
 }
 
-void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(!Drawer2D_UseBitmappedChat, v); }
-void SetUseFont(STRING_PURE String* v) {
+void GuiOptionsScreen_HandleFontChange(void) {
+	MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
+	Event_RaiseVoid(&ChatEvents_FontChanged);
+	Elem_Recreate(screen);
+	Gui_RefreshHud();
+	screen->SelectedI = -1;
+	Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
+}
+
+void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Drawer2D_UseBitmappedChat); }
+void GuiOptionsScreen_SetUseFont(STRING_PURE String* v) {
 	Drawer2D_UseBitmappedChat = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
-	HandleFontChange();
+	GuiOptionsScreen_HandleFontChange();
 }
 
 void GuiOptionsScreen_GetFont(STRING_TRANSIENT String* v) { String_AppendString(v, &Game_FontName); }
-void SetFont(STRING_PURE String* v) {
-	Game_FontName = v;
+void GuiOptionsScreen_SetFont(STRING_PURE String* v) {
+	String_Set(&Game_FontName, v);
 	Options_Set(OPT_FONT_NAME, v);
-	HandleFontChange();
+	GuiOptionsScreen_HandleFontChange();
 }
 
-void HandleFontChange() {
-	Event_RaiseVoid(&ChatEvents_FontChanged);
-	Recreate();
-	Gui_RefreshHud();
-	selectedI = -1;
-	HandlesMouseMove(game.Mouse.X, game.Mouse.Y);
+void GuiOptionsScreen_ContextRecreated(void* obj) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
+	Widget** widgets = screen->WidgetsPtr;
+
+	MenuOptionsScreen_Make(screen, 0, -1, -150, "Black text shadows", MenuOptionsScreen_Bool,
+		GuiOptionsScreen_GetShadows,   GuiOptionsScreen_SetShadows);
+	MenuOptionsScreen_Make(screen, 1, -1, -100, "Show FPS",           MenuOptionsScreen_Bool,
+		GuiOptionsScreen_GetShowFPS,   GuiOptionsScreen_SetShowFPS);
+	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Hotbar scale",       MenuOptionsScreen_Input,
+		GuiOptionsScreen_GetHotbar,    GuiOptionsScreen_SetHotbar);
+	MenuOptionsScreen_Make(screen, 3, -1,    0, "Inventory scale",    MenuOptionsScreen_Input,
+		GuiOptionsScreen_GetInventory, GuiOptionsScreen_SetInventory);
+	MenuOptionsScreen_Make(screen, 4, -1,   50, "Tab auto-complete",  MenuOptionsScreen_Bool,
+		GuiOptionsScreen_GetTabAuto,   GuiOptionsScreen_SetTabAuto);
+
+	MenuOptionsScreen_Make(screen, 5, 1, -150, "Clickable chat",  MenuOptionsScreen_Bool,
+		GuiOptionsScreen_GetClickable, GuiOptionsScreen_SetClickable);
+	MenuOptionsScreen_Make(screen, 6, 1, -100, "Chat scale",      MenuOptionsScreen_Input,
+		GuiOptionsScreen_GetChatScale, GuiOptionsScreen_SetChatScale);
+	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Chat lines",      MenuOptionsScreen_Input,
+		GuiOptionsScreen_GetChatlines, GuiOptionsScreen_SetChatlines);
+	MenuOptionsScreen_Make(screen, 8, 1,    0, "Use system font", MenuOptionsScreen_Bool,
+		GuiOptionsScreen_GetUseFont,   GuiOptionsScreen_SetUseFont);
+	MenuOptionsScreen_Make(screen, 9, 1,   50, "Font",            MenuOptionsScreen_Input,
+		GuiOptionsScreen_GetFont,      GuiOptionsScreen_SetFont);
+
+	Menu_MakeDefaultBack(&screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
+	widgets[10] = (Widget*)(&screen->Buttons[10]);
+	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
+}
+
+Screen* GuiOptionsScreen_MakeInstance(void) {
+	static ButtonWidget buttons[11];
+	static MenuInputValidator validators[Array_Elems(buttons)];
+	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static Widget* widgets[Array_Elems(buttons) + 3];
+
+	validators[2]    = MenuInputValidator_Real(0.25f, 4.00f);
+	defaultValues[2] = "1";
+	validators[3]    = MenuInputValidator_Real(0.25f, 4.00f);
+	defaultValues[3] = "1";
+	validators[6]    = MenuInputValidator_Real(0.25f, 4.00f);
+	defaultValues[6] = "1";
+	validators[7]    = MenuInputValidator_Integer(0, 30);
+	defaultValues[7] = "10";
+	validators[9]    = MenuInputValidator_String();
+	defaultValues[9] = "Arial";
+
+	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+		GuiOptionsScreen_ContextRecreated, validators, defaultValues, NULL, 0);
 }
 
 
-
-
-
-Screen* HacksSettingsScreen_MakeInstance(void) {
-	game.Events.HackPermissionsChanged += CheckHacksAllowed;
-	MakeDescriptions();
-	validators = new MenuInputValidator[widgets.Length];
-	defaultValues = new string[widgets.Length];
-
-	validators[1]    = MenuInputValidator_Real(0.10f, 50.00f);
-	defaultValues[1] = "10";
-	validators[3]    = MenuInputValidator_Real(0.10f, 2048.00f);
-	defaultValues[3] = (1.233f).ToString();
-	validators[9]    = MenuInputValidator_Integer(1, 150);
-	defaultValues[9] = "70";
-}
-
-void HacksSettingsScreen_Free(GuiElement* elem) {
-	base.Dispose();
-	game.Events.HackPermissionsChanged -= CheckHacksAllowed;
-}
-
-void HacksSettingsScreen_CheckHacksAllowed(object sender, EventArgs e) {
-	for (int i = 0; i < widgets.Length; i++) {
-		if (widgets[i] == null) continue;
-		widgets[i].Disabled = false;
-	}
-
-	LocalPlayer p = game.LocalPlayer;
-	bool noGlobalHacks = !p.Hacks.CanAnyHacks || !p.Hacks.Enabled;
-	widgets[3].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
-	widgets[4].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
-	widgets[5].Disabled = noGlobalHacks || !p.Hacks.CanSpeed;
-	widgets[7].Disabled = noGlobalHacks || !p.Hacks.CanPushbackBlocks;
-}
-
-void HacksSettingsScreen_ContextRecreated(void* obj) {
-	ClickHandler onClick = OnInputClick;
-	ClickHandler onBool = OnBoolClick;
-
-	widgets = new Widget[]{
-		MakeOpt(-1, -150, "Hacks enabled",      onBool,  GetHacks,    SetHacks),
-		MakeOpt(-1, -100, "Speed multiplier",   onClick, GetSpeed,    SetSpeed),
-		MakeOpt(-1, -50, "Camera clipping",     onBool,  GetClipping, SetClipping),
-		MakeOpt(-1, 0, "Jump height",           onClick, GetJump,     SetJump),
-		MakeOpt(-1, 50, "WOM style hacks",      onBool,  GetWOMHacks, SetWOMHacks),
-
-		MakeOpt(1, -150, "Full block stepping", onBool,  GetFullStep, SetFullStep),
-		MakeOpt(1, -100, "Modifiable liquids",  onBool,  GetLiquids,  SetLiquids),
-		MakeOpt(1, -50, "Pushback placing",     onBool,  GetPushback, SetPushback),
-		MakeOpt(1, 0, "Noclip slide",           onBool,  GetSlide,    SetSlide),
-		MakeOpt(1, 50, "Field of view",         onClick, GetFOV,      SetFOV),
-
-		MakeBack(false, titleFont, SwitchOptions),
-		null, null, null,
-	};
-	CheckHacksAllowed(null, null);
-}
-
-void HacksSettingsScreen_GetHacks(STRING_TRANSIENT String* v) { Menu_GetBool(LocalPlayer_Instance.Hacks.Enabled, v); }
+/*########################################################################################################################*
+*---------------------------------------------------HacksSettingsScreen---------------------------------------------------*
+*#########################################################################################################################*/
+void HacksSettingsScreen_GetHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
 void HacksSettingsScreen_SetHacks(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.Enabled = Menu_SetBool(v,OPT_HACKS_ENABLED);
-	LocalPlayer_Instance.CheckHacksConsistency();
+	LocalPlayer_CheckHacksConsistency();
 }
 
 void HacksSettingsScreen_GetSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_Instance.Hacks.SpeedMultiplier, 2); }
@@ -2621,39 +2604,39 @@ void HacksSettingsScreen_SetSpeed(STRING_PURE String* v) {
 	Options_Set(OPT_SPEED_FACTOR, v);
 }
 
-void HacksSettingsScreen_GetClipping(STRING_TRANSIENT String* v) { Menu_GetBool(Game_CameraClipping, v); }
+void HacksSettingsScreen_GetClipping(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_CameraClipping); }
 void HacksSettingsScreen_SetClipping(STRING_PURE String* v) {
 	Game_CameraClipping = Menu_SetBool(v, OPT_CAMERA_CLIPPING);
 }
 
-void HacksSettingsScreen_GetJump(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_Instance.JumpHeight, 3); }
+void HacksSettingsScreen_GetJump(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_JumpHeight(), 3); }
 void HacksSettingsScreen_SetJump(STRING_PURE String* v) {
 	LocalPlayer_Instance.physics.CalculateJumpVelocity(true, Menu_Real32(v));
 	Real32 jumpVel = LocalPlayer_Instance.physics.jumpVel;
 	Options_Set(OPT_JUMP_VELOCITY, jumpVel.ToString());
 }
 
-void HacksSettingsScreen_GetWOMHacks(STRING_TRANSIENT String* v) { Menu_GetBool(LocalPlayer_Instance.Hacks.WOMStyleHacks, v); }
+void HacksSettingsScreen_GetWOMHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.WOMStyleHacks); }
 void HacksSettingsScreen_SetWOMHacks(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.WOMStyleHacks = Menu_SetBool(v, OPT_WOM_STYLE_HACKS);
 }
 
-void HacksSettingsScreen_GetFullStep(STRING_TRANSIENT String* v) { Menu_GetBool(LocalPlayer_Instance.Hacks.FullBlockStep, v); }
+void HacksSettingsScreen_GetFullStep(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.FullBlockStep); }
 void HacksSettingsScreen_SetFullStep(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.FullBlockStep = Menu_SetBool(v, OPT_FULL_BLOCK_STEP);
 }
 
-void HacksSettingsScreen_GetPushback(STRING_TRANSIENT String* v) { Menu_GetBool(LocalPlayer_Instance.Hacks.PushbackPlacing, v); }
+void HacksSettingsScreen_GetPushback(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.PushbackPlacing); }
 void HacksSettingsScreen_SetPushback(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.PushbackPlacing = Menu_SetBool(v, OPT_PUSHBACK_PLACING);
 }
 
-void HacksSettingsScreen_GetLiquids(STRING_TRANSIENT String* v) { Menu_GetBool(Game_ModifiableLiquids, v); }
+void HacksSettingsScreen_GetLiquids(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ModifiableLiquids); }
 void HacksSettingsScreen_SetLiquids(STRING_PURE String* v) {
 	Game_ModifiableLiquids = Menu_SetBool(v, OPT_MODIFIABLE_LIQUIDS);
 }
 
-void HacksSettingsScreen_GetSlide(STRING_TRANSIENT String* v) { Menu_GetBool(LocalPlayer_Instance.Hacks.NoclipSlide, v); }
+void HacksSettingsScreen_GetSlide(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.NoclipSlide); }
 void HacksSettingsScreen_SetSlide(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.NoclipSlide = Menu_SetBool(v, OPT_NOCLIP_SLIDE);
 }
@@ -2667,73 +2650,100 @@ void HacksSettingsScreen_SetFOV(STRING_PURE String* v) {
 	Game_UpdateProjection();
 }
 
-void MakeDescriptions() {
-	string[][] descs = new string[widgets.Length][];
-	descs[2] = new string[]{
-		"&eIf &fON&e, then the third person cameras will limit",
-		"&etheir zoom distance if they hit a solid block.",
-	};
-	descs[3] = new string[]{
-		"&eSets how many blocks high you can jump up.",
-		"&eNote: You jump much higher when holding down the Speed key binding.",
-	};
-	descs[6] = new string[]{
-		"&eIf &fON&e, then water/lava can be placed and",
-		"&edeleted the same way as any other block.",
-	};
-	descs[7] = new string[]{
-		"&eIf &fON&e, placing blocks that intersect your own position cause",
-		"&ethe block to be placed, and you to be moved out of the way.",
-		"&fThis is mainly useful for quick pillaring/towering.",
-	};
-	descs[8] = new string[]{
-		"&eIf &fOFF&e, you will immediately stop when in noclip",
-		"&emode and no movement keys are held down.",
-	};
-	descriptions = descs;
+void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
+	Widget** widgets = screen->WidgetsPtr;
+	Int32 i;
+
+	for (i = 0; i < screen->WidgetsCount; i++) {
+		if (widgets[i] == NULL) continue;
+		widgets[i]->Disabled = false;
+	}
+
+	LocalPlayer* p = &LocalPlayer_Instance;
+	bool noGlobalHacks = !p->Hacks.CanAnyHacks || !p->Hacks.Enabled;
+	widgets[3]->Disabled = noGlobalHacks || !p->Hacks.CanSpeed;
+	widgets[4]->Disabled = noGlobalHacks || !p->Hacks.CanSpeed;
+	widgets[5]->Disabled = noGlobalHacks || !p->Hacks.CanSpeed;
+	widgets[7]->Disabled = noGlobalHacks || !p->Hacks.CanPushbackBlocks;
+}
+
+void HacksSettingsScreen_ContextLost(void* obj) {
+	MenuScreen_ContextLost(obj);
+	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, obj, HacksSettingsScreen_CheckHacksAllowed);
+}
+
+void HacksSettingsScreen_ContextRecreated(void* obj) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
+	Widget** widgets = screen->WidgetsPtr;
+	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, obj, HacksSettingsScreen_CheckHacksAllowed);
+
+	MenuOptionsScreen_Make(screen, 0, -1, -150, "Hacks enabled",    MenuOptionsScreen_Bool,
+		HacksSettingsScreen_GetHacks,    HacksSettingsScreen_SetHacks);
+	MenuOptionsScreen_Make(screen, 1, -1, -100, "Speed multiplier", MenuOptionsScreen_Input,
+		HacksSettingsScreen_GetSpeed,    HacksSettingsScreen_SetSpeed);
+	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Camera clipping",  MenuOptionsScreen_Bool,
+		HacksSettingsScreen_GetClipping, HacksSettingsScreen_SetClipping);
+	MenuOptionsScreen_Make(screen, 3, -1,    0, "Jump height",      MenuOptionsScreen_Input,
+		HacksSettingsScreen_GetJump,     HacksSettingsScreen_SetJump);
+	MenuOptionsScreen_Make(screen, 4, -1,   50, "WOM style hacks",  MenuOptionsScreen_Bool,
+		HacksSettingsScreen_GetWOMHacks, HacksSettingsScreen_SetWOMHacks);
+
+	MenuOptionsScreen_Make(screen, 5, 1, -150, "Full block stepping", MenuOptionsScreen_Bool,
+		HacksSettingsScreen_GetFullStep, HacksSettingsScreen_SetFullStep);
+	MenuOptionsScreen_Make(screen, 6, 1, -100, "Modifiable liquids",  MenuOptionsScreen_Bool,
+		HacksSettingsScreen_GetLiquids,  HacksSettingsScreen_SetLiquids);
+	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Pushback placing",    MenuOptionsScreen_Bool,
+		HacksSettingsScreen_GetPushback, HacksSettingsScreen_SetPushback);
+	MenuOptionsScreen_Make(screen, 8, 1,    0, "Noclip slide",        MenuOptionsScreen_Bool,
+		HacksSettingsScreen_GetSlide,    HacksSettingsScreen_SetSlide);
+	MenuOptionsScreen_Make(screen, 9, 1,   50, "Field of view",       MenuOptionsScreen_Input,
+		HacksSettingsScreen_GetFOV,      HacksSettingsScreen_SetFOV);
+
+	Menu_MakeDefaultBack(&screen->Buttons[10], false, &screen->TitleFont, Menu_SwitchOptions);
+	widgets[10] = (Widget*)(&screen->Buttons[10]);
+	widgets[11] = NULL; widgets[12] = NULL; widgets[13] = NULL;
+}
+
+Screen* HacksSettingsScreen_MakeInstance(void) {
+	static ButtonWidget buttons[11];
+	static MenuInputValidator validators[Array_Elems(buttons)];
+	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static Widget* widgets[Array_Elems(buttons) + 3];
+
+	/* TODO: Is this needed because user may not always use . for decimal point? */
+	static UInt8 jumpHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
+	String jumpHeight = String_InitAndClearArray(jumpHeightBuffer);
+	String_AppendReal32(&jumpHeight, 1.233f, 3);
+
+	validators[1]    = MenuInputValidator_Real(0.10f, 50.00f);
+	defaultValues[1] = "10";
+	validators[3]    = MenuInputValidator_Real(0.10f, 2048.00f);
+	defaultValues[3] = jumpHeightBuffer;
+	validators[9]    = MenuInputValidator_Integer(1, 150);
+	defaultValues[9] = "70";
+
+	static const UInt8* descs[Array_Elems(buttons)];
+	descs[2] = "&eIf &fON&e, then the third person cameras will limit%"   "&etheir zoom distance if they hit a solid block.";
+	descs[3] = "&eSets how many blocks high you can jump up.%"   "&eNote: You jump much higher when holding down the Speed key binding.";
+	descs[6] = "&eIf &fON&e, then water/lava can be placed and%"   "&edeleted the same way as any other block.";
+	descs[7] = \
+		"&eIf &fON&e, placing blocks that intersect your own position cause%" \
+		"&ethe block to be placed, and you to be moved out of the way.%" \
+		"&fThis is mainly useful for quick pillaring/towering.";
+	descs[8] = "&eIf &fOFF&e, you will immediately stop when in noclip%"   "&emode and no movement keys are held down.";
+
+	Screen* screen = MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+		HacksSettingsScreen_ContextRecreated, validators, defaultValues, descs, Array_Elems(buttons));
+	((MenuOptionsScreen*)screen)->ContextLost = HacksSettingsScreen_ContextLost;
+	return screen;
 }
 
 
-
-
-
-
-Screen* MiscOptionsScreen_GetInstance(void) {
-	validators = new MenuInputValidator[widgets.Length];
-	defaultValues = new string[widgets.Length];
-
-	validators[0]    = MenuInputValidator_Real(1.00f, 1024.00f);
-	defaultValues[0] = "5";
-	validators[1]    = MenuInputValidator_Integer(0, 100);
-	defaultValues[1] = "0";
-	validators[2]    = MenuInputValidator_Integer(0, 100);
-	defaultValues[2] = "0";
-	validators[7]    = MenuInputValidator_Integer(1, 200);
-	defaultValues[7] = "30";
-}
-
-void MiscOptionsScreen_ContextRecreated(void* obj) {
-	bool multi = !game.Server.IsSinglePlayer;
-	ClickHandler onClick = OnInputClick;
-	ClickHandler onBool = OnBoolClick;
-
-	widgets = new Widget[]{
-		multi ? null : MakeOpt(-1, -100, "Reach distance", onClick, GetReach,       SetReach),
-		MakeOpt(-1, -50, "Music volume",                   onClick, GetMusic,       SetMusic),
-		MakeOpt(-1, 0, "Sounds volume",                    onClick, GetSounds,      SetSounds),
-		MakeOpt(-1, 50, "View bobbing",                    onBool,  GetViewBob,     SetViewBob),
-
-		multi ? null : MakeOpt(1, -100, "Block physics",  onBool,  GetPhysics,     SetPhysics),
-		MakeOpt(1, -50, "Auto close launcher",            onBool,  GetAutoClose,   SetAutoClose),
-		MakeOpt(1, 0, "Invert mouse",                     onBool,  GetInvert,      SetInvert),
-		MakeOpt(1, 50, "Mouse sensitivity",               onClick, GetSensitivity, SetSensitivity),
-
-		MakeBack(false, titleFont, SwitchOptions),
-		null, null, null,
-	};
-}
-
-void MiscOptionsScreen_GetReach(STRING_TRANSIENT String* v) { return LocalPlayer_Instance.ReachDistance.ToString(); }
+/*########################################################################################################################*
+*----------------------------------------------------MiscOptionsScreen----------------------------------------------------*
+*#########################################################################################################################*/
+void MiscOptionsScreen_GetReach(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_Instance.ReachDistance, 2); }
 void MiscOptionsScreen_SetReach(STRING_PURE String* v) { LocalPlayer_Instance.ReachDistance = Menu_Real32(v); }
 
 void MiscOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_MusicVolume); }
@@ -2750,7 +2760,7 @@ void MiscOptionsScreen_SetSounds(STRING_PURE String* v) {
 	AudioPlayer_SetSounds(Game_SoundsVolume);
 }
 
-void MiscOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(Game_ViewBobbing, v); }
+void MiscOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ViewBobbing); }
 void MiscOptionsScreen_SetViewBob(STRING_PURE String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
 
 void MiscOptionsScreen_GetPhysics(STRING_TRANSIENT String* v) { Menu_GetBool(v, Physics_Enabled); }
@@ -2761,76 +2771,137 @@ void MiscOptionsScreen_SetPhysics(STRING_PURE String* v) {
 void MiscOptionsScreen_GetAutoClose(STRING_TRANSIENT String* v) { Menu_GetBool(v, Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false)); }
 void MiscOptionsScreen_SetAutoClose(STRING_PURE String* v) { Menu_SetBool(v, OPT_AUTO_CLOSE_LAUNCHER); }
 
-void MiscOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(Game_InvertMouse, v); }
+void MiscOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_InvertMouse); }
 void MiscOptionsScreen_SetInvert(STRING_PURE String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
-void MiscOptionsScreen_GetSensitivity(STRING_TRANSIENT String* v) { return Game_MouseSensitivity.ToString(); }
+void MiscOptionsScreen_GetSensitivity(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_MouseSensitivity); }
 void MiscOptionsScreen_SetSensitivity(STRING_PURE String* v) {
 	Game_MouseSensitivity = Menu_Int32(v);
 	Options_Set(OPT_SENSITIVITY, v);
 }
 
+void MiscOptionsScreen_ContextRecreated(void* obj) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
+	Widget** widgets = screen->WidgetsPtr;
 
+	MenuOptionsScreen_Make(screen, 0, -1, -100, "Reach distance", MenuOptionsScreen_Input,
+		MiscOptionsScreen_GetReach,       MiscOptionsScreen_SetReach);
+	MenuOptionsScreen_Make(screen, 1, -1,  -50, "Music volume",   MenuOptionsScreen_Input,
+		MiscOptionsScreen_GetMusic,       MiscOptionsScreen_SetMusic);
+	MenuOptionsScreen_Make(screen, 2, -1,    0, "Sounds volume",  MenuOptionsScreen_Input,
+		MiscOptionsScreen_GetSounds,      MiscOptionsScreen_SetSounds);
+	MenuOptionsScreen_Make(screen, 3, -1,   50, "View bobbing",   MenuOptionsScreen_Bool,
+		MiscOptionsScreen_GetViewBob,     MiscOptionsScreen_SetViewBob);
 
+	MenuOptionsScreen_Make(screen, 4, 1, -100, "Block physics",       MenuOptionsScreen_Bool,
+		MiscOptionsScreen_GetPhysics,     MiscOptionsScreen_SetPhysics);
+	MenuOptionsScreen_Make(screen, 5, 1,  -50, "Auto close launcher", MenuOptionsScreen_Bool,
+		MiscOptionsScreen_GetAutoClose,   MiscOptionsScreen_SetAutoClose);
+	MenuOptionsScreen_Make(screen, 6, 1,    0, "Invert mouse",        MenuOptionsScreen_Bool,
+		MiscOptionsScreen_GetInvert,      MiscOptionsScreen_SetInvert);
+	MenuOptionsScreen_Make(screen, 7, 1,   50, "Mouse sensitivity",   MenuOptionsScreen_Input,
+		MiscOptionsScreen_GetSensitivity, MiscOptionsScreen_SetSensitivity);
 
+	Menu_MakeDefaultBack(&screen->Buttons[8], false, &screen->TitleFont, Menu_SwitchOptions);
+	widgets[8] = (Widget*)(&screen->Buttons[8]);
+	widgets[9] = NULL; widgets[10] = NULL; widgets[11] = NULL;
 
-Screen* NostalgiaScreen_MakeInstance(void) {
-	base.Init();
-	ContextRecreated();
+	/* Disable certain options */
+	if (!ServerConnection_IsSinglePlayer) MenuScreen_Remove((MenuScreen*)screen, 0);
+	if (!ServerConnection_IsSinglePlayer) MenuScreen_Remove((MenuScreen*)screen, 4);
 }
 
-void NostalgiaScreenContextRecreated(void* obj) {
-	ClickHandler onBool = OnBoolClick;
+Screen* MiscOptionsScreen_MakeInstance(void) {
+	static ButtonWidget buttons[9];
+	static MenuInputValidator validators[Array_Elems(buttons)];
+	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static Widget* widgets[Array_Elems(buttons) + 3];
 
-	widgets = new Widget[]{
-		MakeOpt(-1, -150, "Classic hand model",  onBool, GetHand,   SetHand),
-		MakeOpt(-1, -100, "Classic walk anim",   onBool, GetAnim,   SetAnim),
-		MakeOpt(-1, -50, "Classic gui textures", onBool, GetGui,    SetGui),
-		MakeOpt(-1, 0, "Classic player list",    onBool, GetList,   SetList),
-		MakeOpt(-1, 50, "Classic options",       onBool, GetOpts,   SetOpts),
+	validators[0]    = MenuInputValidator_Real(1.00f, 1024.00f);
+	defaultValues[0] = "5";
+	validators[1]    = MenuInputValidator_Integer(0, 100);
+	defaultValues[1] = "0";
+	validators[2]    = MenuInputValidator_Integer(0, 100);
+	defaultValues[2] = "0";
+	validators[7]    = MenuInputValidator_Integer(1, 200);
+	defaultValues[7] = "30";
 
-		MakeOpt(1, -150, "Allow custom blocks",  onBool, GetCustom, SetCustom),
-		MakeOpt(1, -100, "Use CPE",              onBool, GetCPE,    SetCPE),
-		MakeOpt(1, -50, "Use server textures",   onBool, GetTexs,   SetTexs),
-
-		TextWidget.Create(game, "&eButtons on the right require restarting game", textFont)
-		.SetLocation(Anchor.Centre, Anchor.Centre, 0, 100),
-		MakeBack(false, titleFont, SwitchBack),
-	};
+	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+		MiscOptionsScreen_ContextRecreated, validators, defaultValues, NULL, 0);
 }
 
-void NostalgiaScreen_GetHand(STRING_TRANSIENT String* v) { Menu_GetBool(Game_ClassicArmModel, v); }
+
+/*########################################################################################################################*
+*-----------------------------------------------------NostalgiaScreen-----------------------------------------------------*
+*#########################################################################################################################*/
+void NostalgiaScreen_GetHand(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ClassicArmModel); }
 void NostalgiaScreen_SetHand(STRING_PURE String* v) { Game_ClassicArmModel = Menu_SetBool(v, OPT_CLASSIC_ARM_MODEL); }
 
-void NostalgiaScreen_GetAnim(STRING_TRANSIENT String* v) { Menu_GetBool(!Game_SimpleArmsAnim, v); }
+void NostalgiaScreen_GetAnim(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Game_SimpleArmsAnim); }
 void NostalgiaScreen_SetAnim(STRING_PURE String* v) {
-	Game_SimpleArmsAnim = v == "OFF";
+	Game_SimpleArmsAnim = String_CaselessEqualsConst(v, "OFF");
 	Options_SetBool(OPT_SIMPLE_ARMS_ANIM, Game_SimpleArmsAnim);
 }
 
-void NostalgiaScreen_GetGui(STRING_TRANSIENT String* v) { Menu_GetBool(Game_UseClassicGui, v); }
+void NostalgiaScreen_GetGui(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicGui); }
 void NostalgiaScreen_SetGui(STRING_PURE String* v) { Game_UseClassicGui = Menu_SetBool(v, OPT_USE_CLASSIC_GUI); }
 
-void NostalgiaScreen_GetList(STRING_TRANSIENT String* v) { Menu_GetBool(Game_UseClassicTabList, v); }
+void NostalgiaScreen_GetList(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicTabList); }
 void NostalgiaScreen_SetList(STRING_PURE String* v) { Game_UseClassicTabList = Menu_SetBool(v, OPT_USE_CLASSIC_TABLIST); }
 
-void NostalgiaScreen_GetOpts(STRING_TRANSIENT String* v) { Menu_GetBool(Game_UseClassicOptions, v); }
+void NostalgiaScreen_GetOpts(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicOptions); }
 void NostalgiaScreen_SetOpts(STRING_PURE String* v) { Game_UseClassicOptions = Menu_SetBool(v, OPT_USE_CLASSIC_OPTIONS); }
 
-void NostalgiaScreen_GetCustom(STRING_TRANSIENT String* v) { Menu_GetBool(Game_AllowCustomBlocks, v); }
+void NostalgiaScreen_GetCustom(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
 void NostalgiaScreen_SetCustom(STRING_PURE String* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_USE_CUSTOM_BLOCKS); }
 
-void NostalgiaScreen_GetCPE(STRING_TRANSIENT String* v) { Menu_GetBool(Game_UseCPE, v); }
+void NostalgiaScreen_GetCPE(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseCPE); }
 void NostalgiaScreen_SetCPE(STRING_PURE String* v) { Game_UseCPE = Menu_SetBool(v, OPT_USE_CPE); }
 
-void NostalgiaScreen_GetTexs(STRING_TRANSIENT String* v) { Menu_GetBool(Game_AllowServerTextures, v); }
+void NostalgiaScreen_GetTexs(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowServerTextures); }
 void NostalgiaScreen_SetTexs(STRING_PURE String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_USE_SERVER_TEXTURES); }
 
-static void SwitchBack(Game g, Widget w) {
-	if (Game_UseClassicOptions) {
-		SwitchPause(g, w);
-	} else {
-		SwitchOptions(g, w);
-	}
+void NostalgiaScreen_SwitchBack(GuiElement* a, GuiElement* b) {
+	if (Game_UseClassicOptions) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
 }
 
+void NostalgiaScreen_ContextRecreated(void* obj) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
+	Widget** widgets = screen->WidgetsPtr;
+	static TextWidget desc;
+
+	MenuOptionsScreen_Make(screen, 0, -1, -150, "Classic hand model",   MenuOptionsScreen_Bool,
+		NostalgiaScreen_GetHand,   NostalgiaScreen_SetHand);
+	MenuOptionsScreen_Make(screen, 1, -1, -100, "Classic walk anim",    MenuOptionsScreen_Bool, 
+		NostalgiaScreen_GetAnim,   NostalgiaScreen_SetAnim);
+	MenuOptionsScreen_Make(screen, 2, -1,  -50, "Classic gui textures", MenuOptionsScreen_Bool,
+		NostalgiaScreen_GetGui,    NostalgiaScreen_SetGui);
+	MenuOptionsScreen_Make(screen, 3, -1,    0, "Classic player list",  MenuOptionsScreen_Bool, 
+		NostalgiaScreen_GetList,   NostalgiaScreen_SetList);
+	MenuOptionsScreen_Make(screen, 4, -1,   50, "Classic options",      MenuOptionsScreen_Bool, 
+		NostalgiaScreen_GetOpts,   NostalgiaScreen_SetOpts);
+
+	MenuOptionsScreen_Make(screen, 5, 1, -150, "Allow custom blocks", MenuOptionsScreen_Bool, 
+		NostalgiaScreen_GetCustom, NostalgiaScreen_SetCustom);
+	MenuOptionsScreen_Make(screen, 6, 1, -100, "Use CPE",             MenuOptionsScreen_Bool, 
+		NostalgiaScreen_GetCPE,    NostalgiaScreen_SetCPE);
+	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Use server textures", MenuOptionsScreen_Bool, 
+		NostalgiaScreen_GetTexs,   NostalgiaScreen_SetTexs);
+
+
+	Menu_MakeDefaultBack(&screen->Buttons[8], false, &screen->TitleFont, NostalgiaScreen_SwitchBack);
+	widgets[8] = (Widget*)(&screen->Buttons[8]);
+
+	String descText = String_FromConst("&eButtons on the right require restarting game");
+	TextWidget_Create(&desc, &descText, &screen->TextFont);
+	Widget_SetLocation((Widget*)(&desc), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
+	widgets[9] = (Widget*)(&desc);
+}
+
+Screen* NostalgiaScreen_MakeInstance(void) {
+	static ButtonWidget buttons[9];
+	static Widget* widgets[Array_Elems(buttons) + 1];
+
+	return MenuOptionsScreen_MakeInstance(widgets, Array_Elems(widgets), buttons,
+		NostalgiaScreen_ContextRecreated, NULL, NULL, NULL, 0);
+}

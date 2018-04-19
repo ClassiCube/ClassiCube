@@ -73,32 +73,27 @@ namespace ClassicalSharp.Network {
 		}
 #endif
 		
-		/// <summary> Asynchronously downloads a bitmap image from the specified url.  </summary>
 		public void AsyncGetImage(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.Bitmap,
 			           DateTime.MinValue, null, null);
 		}
 		
-		/// <summary> Asynchronously downloads a string from the specified url.  </summary>
 		public void AsyncGetString(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.String,
 			           DateTime.MinValue, null, null);
 		}
 		
-		/// <summary> Asynchronously downloads a byte array. </summary>
 		public void AsyncGetData(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.ByteArray,
 			           DateTime.MinValue, null, null);
 		}
 		
-		/// <summary> Asynchronously downloads a bitmap image. </summary>
 		public void AsyncGetImage(string url, bool priority, string identifier,
 		                          DateTime lastModified, string etag) {
 			AddRequest(url, priority, identifier, RequestType.Bitmap,
 			           lastModified, etag, null);
 		}
 		
-		/// <summary> Asynchronously downloads a byte array. </summary>
 		public void AsyncGetData(string url, bool priority, string identifier,
 		                         DateTime lastModified, string etag) {
 			AddRequest(url, priority, identifier, RequestType.ByteArray,
@@ -106,13 +101,11 @@ namespace ClassicalSharp.Network {
 		}
 
 #if !LAUNCHER		
-		/// <summary> Asynchronously retrieves the content length of the body response. </summary>
 		public void AsyncGetContentLength(string url, bool priority, string identifier) {
 			AddRequest(url, priority, identifier, RequestType.ContentLength,
 			           DateTime.MinValue, null, null);
 		}
 #else
-		/// <summary> Asynchronously retrieves the content length of the body response. </summary>
 		public void AsyncPostString(string url, bool priority, string identifier, string contents) {
 			AddRequest(url, priority, identifier, RequestType.String,
 			           DateTime.MinValue, null, contents);
