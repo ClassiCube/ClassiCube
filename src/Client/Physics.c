@@ -123,14 +123,6 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 }
 
 
-
-void SearcherState_Init(SearcherState* state, Int32 x, Int32 y, Int32 z, BlockID block, Real32 tSquared) {
-	state->X = (x << 3) | (block & 0x07);
-	state->Y = (y << 3) | (block & 0x38) >> 3;
-	state->Z = (z << 3) | (block & 0xC0) >> 6;
-	state->tSquared = tSquared;
-}
-
 #define SEARCHER_STATES_MIN 64
 SearcherState Searcher_StatesInitial[SEARCHER_STATES_MIN];
 extern SearcherState* Searcher_States = Searcher_StatesInitial;
@@ -206,9 +198,11 @@ UInt32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entity
 				Real32 tx, ty, tz;
 				Searcher_CalcTime(&vel, entityBB, &blockBB, &tx, &ty, &tz);
 				if (tx > 1.0f || ty > 1.0f || tz > 1.0f) continue;
-				Real32 tSquared = tx * tx + ty * ty + tz * tz;
 
-				SearcherState_Init(curState, x, y, z, block, tSquared);
+				curState->X = (x << 3) | (block  & 0x07);
+				curState->Y = (y << 3) | ((block & 0x38) >> 3);
+				curState->Z = (z << 3) | ((block & 0xC0) >> 6);
+				curState->tSquared = tx * tx + ty * ty + tz * tz;
 				curState++;
 			}
 		}

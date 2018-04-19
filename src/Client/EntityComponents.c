@@ -15,6 +15,10 @@
 #include "Physics.h"
 #include "IModel.h"
 
+
+/*########################################################################################################################*
+*----------------------------------------------------AnimatedComponent----------------------------------------------------*
+*#########################################################################################################################*/
 #define ANIM_MAX_ANGLE (110 * MATH_DEG2RAD)
 #define ANIM_ARM_MAX (60.0f * MATH_DEG2RAD)
 #define ANIM_LEG_MAX (80.0f * MATH_DEG2RAD)
@@ -107,6 +111,9 @@ void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims) 
 }
 
 
+/*########################################################################################################################*
+*------------------------------------------------------TiltComponent------------------------------------------------------*
+*#########################################################################################################################*/
 void TiltComp_Init(TiltComp* anim) {
 	anim->TiltX = 0.0f; anim->TiltY = 0.0f; anim->VelTiltStrength = 1.0f;
 	anim->VelTiltStrengthO = 1.0f; anim->VelTiltStrengthN = 1.0f;
@@ -133,6 +140,9 @@ void TiltComp_GetCurrent(TiltComp* anim, Real32 t) {
 }
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------HacksComponent------------------------------------------------------*
+*#########################################################################################################################*/
 void HacksComp_SetAll(HacksComp* hacks, bool allowed) {
 	hacks->CanAnyHacks = allowed; hacks->CanFly = allowed;
 	hacks->CanNoclip = allowed; hacks->CanRespawn = allowed;
@@ -282,6 +292,9 @@ void HacksComp_UpdateState(HacksComp* hacks) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------InterpolationComponent-------------------------------------------------*
+*#########################################################################################################################*/
 void InterpComp_RemoveOldestRotY(InterpComp* interp) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(interp->RotYStates); i++) {
@@ -323,6 +336,10 @@ void InterpComp_SetPos(InterpState* state, LocationUpdate* update) {
 	}
 }
 
+
+/*########################################################################################################################*
+*----------------------------------------------NetworkInterpolationComponent----------------------------------------------*
+*#########################################################################################################################*/
 Real32 NetInterpComp_Next(Real32 next, Real32 cur) {
 	if (next == MATH_POS_INF) return cur;
 	return next;
@@ -386,6 +403,10 @@ void NetInterpComp_AdvanceState(NetInterpComp* interp) {
 	InterpComp_AdvanceRotY(&interp->Base);
 }
 
+
+/*########################################################################################################################*
+*-----------------------------------------------LocalInterpolationComponent-----------------------------------------------*
+*#########################################################################################################################*/
 Real32 LocalInterpComp_Next(Real32 next, Real32 cur, Real32* last, bool interpolate) {
 	if (next == MATH_POS_INF) return cur;
 	if (!interpolate) *last = next;
@@ -440,6 +461,9 @@ void LocalInterpComp_AdvanceState(InterpComp* interp) {
 }
 
 
+/*########################################################################################################################*
+*-----------------------------------------------------ShadowComponent-----------------------------------------------------*
+*#########################################################################################################################*/
 Real32 ShadowComponent_radius = 7.0f;
 typedef struct ShadowData_ { Real32 Y; BlockID Block; UInt8 A; } ShadowData;
 
@@ -638,4 +662,208 @@ void ShadowComponent_Draw(Entity* entity) {
 
 	UInt32 vCount = (UInt32)(ptr - vertices) / (UInt32)sizeof(VertexP3fT2fC4b);
 	GfxCommon_UpdateDynamicVb_IndexedTris(vb, vertices, vCount);
+}
+
+
+typedef struct CollisionsComponent_ {
+	Entity* Entity;
+	bool HitXMin, HitYMin, HitZMin, HitXMax, HitYMax, HitZMax, WasOn;
+} CollisionsComponent;
+
+/* Whether a collision occurred with any horizontal sides of any blocks */
+bool Collisions_HitHorizontal(CollisionsComponent* comp) {
+	return comp->HitXMin || comp->HitXMax || comp->HitZMin || comp->HitZMax;
+}
+
+
+/* TODO: test for corner cases, and refactor this */	
+void Collisions_MoveAndWallSlide(CollisionsComponent* comp) {
+	Vector3 zero = Vector3_Zero;
+	Entity* entity = comp->Entity;
+	if (Vector3_Equals(&entity->Velocity, &zero)) return;
+
+	AABB entityBB, entityExtentBB;
+	UInt32 count = Searcher_FindReachableBlocks(entity, &entityBB, &entityExtentBB);
+	CollideWithReachableBlocks(comp, count, &entityBB, &entityExtentBB);
+}
+
+void Collisions_CollideWithReachableBlocks(CollisionsComponent* comp, UInt32 count, AABB* entityBB, AABB* extentBB) {
+	Entity* entity = comp->Entity;
+	/* Reset collision detection states */
+	bool wasOn = entity->OnGround;
+	entity->OnGround = false;
+	comp->HitXMin = false; comp->HitYMin = false; comp->HitZMin = false;
+	comp->HitXMax = false; comp->HitYMax = false; comp->HitZMax = false;
+
+	AABB blockBB;
+	Vector3 bPos, size = entity->Size;
+	UInt32 i;
+	for (i = 0; i < count; i++) {
+		/* Unpack the block and coordinate data */
+		SearcherState state = Searcher_States[i];
+		bPos.X = state.X >> 3; bPos.Y = state.Y >> 3; bPos.Z = state.Z >> 3;
+		Int32 block = (state.X & 0x7) | (state.Y & 0x7) << 3 | (state.Z & 0x7) << 6;
+
+		Vector3_Add(&blockBB.Min, &Block_MinBB[block], &bPos);
+		Vector3_Add(&blockBB.Max, &Block_MaxBB[block], &bPos);
+		if (!AABB_Intersects(extentBB, &blockBB)) continue;
+
+		/* Recheck time to collide with block (as colliding with blocks modifies this) */
+		Real32 tx, ty, tz;
+		Searcher_CalcTime(&entity->Velocity, entityBB, &blockBB, &tx, &ty, &tz);
+		if (tx > 1.0f || ty > 1.0f || tz > 1.0f) {
+			Utils.LogDebug("t > 1 in physics calculation.. this shouldn't have happened.");
+		}
+
+		/* Calculate the location of the entity when it collides with this block */
+		Vector3 v = entity->Velocity; 
+		v.X *= tx; v.Y *= ty; v.Z *= tz;
+		AABB finalBB; /* Inlined ABBB_Offset */
+		Vector3_Add(&finalBB.Min, &entityBB->Min, &v);
+		Vector3_Add(&finalBB.Min, &entityBB->Max, &v);
+
+											// if we have hit the bottom of a block, we need to change the axis we test first.
+		if (!hitYMin) {
+			if (finalBB.Min.Y + Adjustment >= blockBB.Max.Y) {
+				ClipYMax(&blockBB, entityBB, extentBB, size);
+			} else if (finalBB.Max.Y - Adjustment <= blockBB.Min.Y) {
+				ClipYMin(&blockBB, entityBB, extentBB, size);
+			} else if (finalBB.Min.X + Adjustment >= blockBB.Max.X) {
+				ClipXMax(&blockBB, entityBB, wasOn, finalBB, extentBB, size);
+			} else if (finalBB.Max.X - Adjustment <= blockBB.Min.X) {
+				ClipXMin(&blockBB, entityBB, wasOn, finalBB, extentBB, size);
+			} else if (finalBB.Min.Z + Adjustment >= blockBB.Max.Z) {
+				ClipZMax(&blockBB, entityBB, wasOn, finalBB, extentBB, size);
+			} else if (finalBB.Max.Z - Adjustment <= blockBB.Min.Z) {
+				ClipZMin(&blockBB, entityBB, wasOn, finalBB, extentBB, size);
+			}
+			continue;
+		}
+
+		// if flying or falling, test the horizontal axes first.
+		if (finalBB.Min.X + Adjustment >= blockBB.Max.X) {
+			ClipXMax(&blockBB, entityBB, wasOn, finalBB, extentBB, size);
+		} else if (finalBB.Max.X - Adjustment <= blockBB.Min.X) {
+			ClipXMin(&blockBB, entityBB, wasOn, finalBB, extentBB, size);
+		} else if (finalBB.Min.Z + Adjustment >= blockBB.Max.Z) {
+			ClipZMax(&blockBB, entityBB, wasOn, finalBB, extentBB, size);
+		} else if (finalBB.Max.Z - Adjustment <= blockBB.Min.Z) {
+			ClipZMin(&blockBB, entityBB, wasOn, finalBB, extentBB, size);
+		} else if (finalBB.Min.Y + Adjustment >= blockBB.Max.Y) {
+			ClipYMax(&blockBB, entityBB, extentBB, size);
+		} else if (finalBB.Max.Y - Adjustment <= blockBB.Min.Y) {
+			ClipYMin(&blockBB, entityBB, extentBB, size);
+		}
+	}
+}
+
+void Collisions_ClipXMin(AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
+	if (!wasOn || !DidSlide(blockBB, size, finalBB, entityBB, extentBB)) {
+		entity.Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
+		ClipX(size, entityBB, extentBB);
+		hitXMin = true;
+	}
+}
+
+void Collisions_ClipXMax(AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
+	if (!wasOn || !DidSlide(blockBB, size, finalBB, entityBB, extentBB)) {
+		entity.Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
+		ClipX(size, entityBB, extentBB);
+		hitXMax = true;
+	}
+}
+
+void Collisions_ClipZMax(AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
+	if (!wasOn || !DidSlide(blockBB, size, finalBB, entityBB, extentBB)) {
+		entity.Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
+		ClipZ(size, entityBB, extentBB);
+		hitZMax = true;
+	}
+}
+
+void Collisions_ClipZMin(AABB* blockBB, AABB* entityBB, bool wasOn, AABB* finalBB, AABB* extentBB, Vector3* size) {
+	if (!wasOn || !DidSlide(blockBB, size, finalBB, entityBB, extentBB)) {
+		entity.Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
+		ClipZ(size, entityBB, extentBB);
+		hitZMin = true;
+	}
+}
+
+void Collisions_ClipYMin(AABB* blockBB, AABB* entityBB, AABB* extentBB, Vector3* size) {
+	entity.Position.Y = blockBB.Min.Y - size.Y - Adjustment;
+	ClipY(size, entityBB, ref extentBB);
+	hitYMin = true;
+}
+
+void Collisions_ClipYMax(AABB* blockBB, AABB* entityBB, AABB* extentBB, Vector3* size) {
+	entity.Position.Y = blockBB.Max.Y + Adjustment;
+	entity.onGround = true;
+	ClipY(size, entityBB, ref extentBB);
+	hitYMax = true;
+}
+
+bool Collisions_DidSlide(AABB blockBB, Vector3* size, AABB* finalBB, AABB* entityBB, AABB* extentBB) {
+	Real32 yDist = blockBB.Max.Y - entityBB.Min.Y;
+	if (yDist > 0 && yDist <= entity.StepSize + 0.01f) {
+		float blockXMin = blockBB.Min.X, blockZMin = blockBB.Min.Z;
+		blockBB.Min.X = Math.Max(blockBB.Min.X, blockBB.Max.X - size.X / 2);
+		blockBB.Max.X = Math.Min(blockBB.Max.X, blockXMin + size.X / 2);
+		blockBB.Min.Z = Math.Max(blockBB.Min.Z, blockBB.Max.Z - size.Z / 2);
+		blockBB.Max.Z = Math.Min(blockBB.Max.Z, blockZMin + size.Z / 2);
+
+		AABB adjBB;
+		adjBB.Min.X = min(finalBB->Min.X, blockBB.Min.X + Adjustment);
+		adjBB.Max.X = max(finalBB->Max.X, blockBB.Max.X - Adjustment);
+		adjBB.Min.Y = blockBB.Max.Y + Adjustment;
+		adjBB.Max.Y = adjBB.Min.Y   + size->Y;
+		adjBB.Min.Z = min(finalBB->Min.Z, blockBB.Min.Z + Adjustment);
+		adjBB.Max.Z = max(finalBB->Max.Z, blockBB.Max.Z - Adjustment);
+
+		if (!Collisions_CanSlideThrough(&adjBB)) return false;
+
+		entity.Position.Y = blockBB.Max.Y + Adjustment;
+		entity.onGround = true;
+		ClipY(size, entityBB, extentBB);
+		return true;
+	}
+	return false;
+}
+
+bool Collisions_CanSlideThrough(AABB* adjFinalBB) {
+	Vector3I bbMin; Vector3I_Floor(&bbMin, &adjFinalBB->Min);
+	Vector3I bbMax; Vector3I_Floor(&bbMax, &adjFinalBB->Max);
+	AABB blockBB;
+	Int32 x, y, z;
+
+	for (y = bbMin.Y; y <= bbMax.Y; y++) {
+		for (z = bbMin.Z; z <= bbMax.Z; z++) {
+			for (x = bbMin.X; x <= bbMax.X; x++) {
+				BlockID block = World_GetPhysicsBlock(x, y, z);
+				blockBB.Min = new Vector3(x, y, z) + Block_MinBB[block];
+				blockBB.Max = new Vector3(x, y, z) + Block_MaxBB[block];
+
+				if (!AABB_Intersects(&blockBB, adjFinalBB)) continue;
+				if (Block_Collide[block] == COLLIDE_SOLID) return false;
+			}
+		}
+	}
+	return true;
+}
+
+void Collisions_ClipX(Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
+	entity->Velocity.X = 0.0f;
+	entityBB->Min.X = entity->Position.X - size->X / 2; extentBB->Min.X = entityBB->Min.X;
+	entityBB->Max.X = entity->Position.X + size->X / 2; extentBB->Max.X = entityBB->Max.X;
+}
+
+void Collisions_ClipY(Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
+	entity->Velocity.Y = 0.0f;
+	entityBB->Min.Y = entity->Position.Y;               extentBB->Min.Y = entityBB->Min.Y;
+	entityBB->Max.Y = entity->Position.Y + size->Y;     extentBB->Max.Y = entityBB->Max.Y;
+}
+
+void Collisions_ClipZ(Entity* entity, Vector3* size, AABB* entityBB, AABB* extentBB) {
+	entity->Velocity.Z = 0.0f;
+	entityBB->Min.Z = entity->Position.Z - size->Z / 2; extentBB->Min.Z = entityBB->Min.Z;
+	entityBB->Max.Z = entity->Position.Z + size->Z / 2; extentBB->Max.Z = entityBB->Max.Z;
 }

@@ -7,25 +7,7 @@ using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Physics {
 	
-	public struct State {
-		public int X, Y, Z;
-		public float tSquared;
-		
-		public State(int x, int y, int z, BlockID block, float tSquared) {
-			#if !ONLY_8BIT
-			X = x << 3; Y = y << 4; Z = z << 3;
-			X |= (block & 0x007);
-			Y |= (block & 0x078) >> 3;
-			Z |= (block & 0x380) >> 7;
-			#else
-			X = x << 3; Y = y << 3; Z = z << 3;
-			X |= (block & 0x007);
-			Y |= (block & 0x038) >> 3;
-			Z |= (block & 0x1C0) >> 6;
-			#endif
-			this.tSquared = tSquared;
-		}
-	}
+	public struct State { public int X, Y, Z; public float tSquared; }
 	
 	/// <summary> Calculates all possible blocks that a moving entity can intersect with. </summary>
 	public sealed class Searcher {
@@ -52,9 +34,10 @@ namespace ClassicalSharp.Physics {
 			int elements = (max.X + 1 - min.X) * (max.Y + 1 - min.Y) * (max.Z + 1 - min.Z);
 			if (elements > stateCache.Length) {
 				stateCache = new State[elements];
-			}			
+			}
 			
-			AABB blockBB = default(AABB);
+			AABB blockBB;
+			State state;
 			int count = 0;
 			
 			// Order loops so that we minimise cache misses
@@ -72,11 +55,22 @@ namespace ClassicalSharp.Physics {
 				
 				if (!entityExtentBB.Intersects(blockBB)) continue; // necessary for non whole blocks. (slabs)
 				
-				float tx = 0, ty = 0, tz = 0;
+				float tx, ty, tz;
 				CalcTime(ref vel, ref entityBB, ref blockBB, out tx, out ty, out tz);
 				if (tx > 1 || ty > 1 || tz > 1) continue;
-				float tSquared = tx * tx + ty * ty + tz * tz;
-				stateCache[count++] = new State(x, y, z, block, tSquared);
+				
+				#if !ONLY_8BIT
+				state.X = (x << 3) | (block  & 0x007);
+				state.Y = (y << 4) | ((block & 0x078) >> 3);
+				state.Z = (z << 3) | ((block & 0x380) >> 7);
+				#else
+				state.X = (x << 3) | (block  & 0x007);
+				state.Y = (y << 3) | ((block & 0x038) >> 3);
+				state.Z = (z << 3) | ((block & 0x1C0) >> 6);
+				#endif
+				state.tSquared = tx * tx + ty * ty + tz * tz;
+				
+				stateCache[count++] = state;
 			}
 			
 			if (count > 0)
