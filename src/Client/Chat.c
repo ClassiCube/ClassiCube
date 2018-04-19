@@ -419,7 +419,7 @@ void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, Bl
 		if (!cuboid_persist) {
 			Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 		} else {
-			cuboid_mark1 = Vector3I_Create1(Int32_MaxValue);
+			cuboid_mark1 = Vector3I_MaxValue();
 			String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
 			Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_3);
 		}
@@ -429,8 +429,8 @@ void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, Bl
 void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 	cuboid_block = -1;
-	cuboid_mark1 = Vector3I_Create1(Int32_MaxValue);
-	cuboid_mark2 = Vector3I_Create1(Int32_MaxValue);
+	cuboid_mark1 = Vector3I_MaxValue();
+	cuboid_mark2 = Vector3I_MaxValue();
 	cuboid_persist = false;
 
 	if (!CuboidCommand_ParseBlock(args, argsCount)) return;

@@ -2477,10 +2477,19 @@ Screen* GraphicsOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------GuiOptionsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
+void GuiOptionsScreen_HandleFontChange(void) {
+	MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
+	Event_RaiseVoid(&ChatEvents_FontChanged);
+	Elem_Recreate(screen);
+	Gui_RefreshHud();
+	screen->SelectedI = -1;
+	Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
+}
+
 void GuiOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
 void GuiOptionsScreen_SetShadows(STRING_PURE String* v) {
 	Drawer2D_BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
-	HandleFontChange();
+	GuiOptionsScreen_HandleFontChange();
 }
 
 void GuiOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
@@ -2512,15 +2521,6 @@ void GuiOptionsScreen_SetChatlines(STRING_PURE String* v) {
 	Game_ChatLines = Menu_Int32(v);
 	Options_Set(OPT_CHATLINES, v);
 	Gui_RefreshHud();
-}
-
-void GuiOptionsScreen_HandleFontChange(void) {
-	MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
-	Event_RaiseVoid(&ChatEvents_FontChanged);
-	Elem_Recreate(screen);
-	Gui_RefreshHud();
-	screen->SelectedI = -1;
-	Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
 }
 
 void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Drawer2D_UseBitmappedChat); }

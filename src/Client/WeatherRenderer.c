@@ -190,7 +190,7 @@ void WeatherRenderer_FileChanged(void* obj, Stream* stream) {
 }
 
 void WeatherRenderer_Init(void) {
-	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
+	weather_lastPos = Vector3I_MaxValue();
 	WeatherRenderer_ContextRecreated(NULL);
 
 	Event_RegisterStream(&TextureEvents_FileChanged, NULL, WeatherRenderer_FileChanged);
@@ -201,7 +201,7 @@ void WeatherRenderer_Init(void) {
 void WeatherRenderer_Reset(void) {
 	if (Weather_Heightmap != NULL) Platform_MemFree(Weather_Heightmap);
 	Weather_Heightmap = NULL;
-	weather_lastPos = Vector3I_Create1(Int32_MaxValue);
+	weather_lastPos = Vector3I_MaxValue();
 }
 
 void WeatherRenderer_Free(void) {

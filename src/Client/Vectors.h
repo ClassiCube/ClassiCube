@@ -15,8 +15,8 @@ extern Matrix Matrix_Identity;
 
 Vector3 Vector3_Create1(Real32 value);
 Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z);
-Vector3I Vector3I_Create1(Int32 value);
-Vector3I Vector3I_Create3(Int32 x, Int32 y, Int32 z);
+Vector3I Vector3I_MaxValue(void);
+Vector3 Vector3_BigPos(void);
 Real32 Vector3_LengthSquared(Vector3* v);
 
 #define VECTOR3_CONST1(val) { val, val, val };

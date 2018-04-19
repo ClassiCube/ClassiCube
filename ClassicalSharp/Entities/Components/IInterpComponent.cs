@@ -89,13 +89,14 @@ namespace ClassicalSharp.Entities {
 				State mid;
 				mid.Pos   = Vector3.Lerp(last.Pos,      cur.Pos,   0.5f);
 				mid.RotX  = Utils.LerpAngle(last.RotX,  cur.RotX,  0.5f);
-				mid.RotZ  = Utils.LerpAngle(last.RotZ,  cur.RotZ,  0.5f);				
+				mid.RotZ  = Utils.LerpAngle(last.RotZ,  cur.RotZ,  0.5f);
 				mid.HeadX = Utils.LerpAngle(last.HeadX, cur.HeadX, 0.5f);
-				mid.HeadY = Utils.LerpAngle(last.HeadY, cur.HeadY, 0.5f);				
+				mid.HeadY = Utils.LerpAngle(last.HeadY, cur.HeadY, 0.5f);
 				AddState(mid); AddState(cur);
 				
-				for (int i = 0; i < 3; i++)
+				for (int i = 0; i < 3; i++) {
 					AddRotY(Utils.LerpAngle(last.HeadY, cur.HeadY, (i + 1) / 3f));
+				}
 			}
 		}
 

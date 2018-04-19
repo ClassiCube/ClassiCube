@@ -117,23 +117,10 @@ namespace ClassicalSharp.Renderers {
 			lastCamPos = Utils.MaxPos();
 		}
 		
-		void OnNewMap(object sender, EventArgs e) {
-			game.ChunkUpdates = 0;
-			ClearChunkCache();
-			for (int i = 0; i < renderer.normalPartsCount.Length; i++) {
-				renderer.normalPartsCount[i] = 0;
-				renderer.translucentPartsCount[i] = 0;
-			}
-			
-			renderer.chunks = null;
-			renderer.unsortedChunks = null;
-			chunkPos = new Vector3I(int.MaxValue, int.MaxValue, int.MaxValue);
-		}
-		
 		void ViewDistanceChanged(object sender, EventArgs e) {
 			lastCamPos = Utils.MaxPos();
 		}
-		
+
 		internal void ResetUsedFlags() {
 			int count = renderer._1DUsed;
 			bool[] used = renderer.usedTranslucent;
@@ -152,6 +139,19 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
+		void OnNewMap(object sender, EventArgs e) {
+			game.ChunkUpdates = 0;
+			ClearChunkCache();
+			for (int i = 0; i < renderer.normalPartsCount.Length; i++) {
+				renderer.normalPartsCount[i] = 0;
+				renderer.translucentPartsCount[i] = 0;
+			}
+			
+			renderer.chunks = null;
+			renderer.unsortedChunks = null;
+			chunkPos = new Vector3I(int.MaxValue, int.MaxValue, int.MaxValue);
+		}
+				
 		int chunksX, chunksY, chunksZ;
 		void OnNewMapLoaded(object sender, EventArgs e) {
 			chunksX = Utils.CeilDiv(game.World.Width, 16); renderer.chunksX = chunksX;

@@ -62,15 +62,15 @@ void ChunkUpdater_BlockDefinitionChanged(void* obj) {
 }
 
 void ChunkUpdater_ProjectionChanged(void* obj) {
-	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+	cu_lastCamPos = Vector3_BigPos();
 }
 
 void ChunkUpdater_ViewDistanceChanged(void* obj) {
-	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+	cu_lastCamPos = Vector3_BigPos();
 }
 
 void ChunkUpdater_Refresh(void) {
-	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
 	if (MapRenderer_Chunks != NULL && World_Blocks != NULL) {
 		ChunkUpdater_ClearChunkCache();
 		ChunkUpdater_ResetChunkCache();
@@ -82,7 +82,7 @@ void ChunkUpdater_Refresh_Handler(void* obj) {
 }
 
 void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
-	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
 	if (MapRenderer_Chunks == NULL || World_Blocks == NULL) return;
 
 	Int32 x, y, z, index = 0;
@@ -141,8 +141,8 @@ void ChunkUpdater_OnNewMap(void* obj) {
 	Game_ChunkUpdates = 0;
 	ChunkUpdater_ClearChunkCache();
 	ChunkUpdater_ResetPartCounts();
-	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
 	ChunkUpdater_FreeAllocations();
+	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
 }
 
 void ChunkUpdater_OnNewMapLoaded(void* obj) {
@@ -159,7 +159,7 @@ void ChunkUpdater_OnNewMapLoaded(void* obj) {
 
 	ChunkUpdater_CreateChunkCache();
 	Builder_OnNewMapLoaded();
-	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+	cu_lastCamPos = Vector3_BigPos();
 }
 
 
@@ -432,7 +432,7 @@ void ChunkUpdater_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, ChunkUpdater_ClearChunkCache_Handler);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, ChunkUpdater_Refresh_Handler);
 
-	ChunkUpdater_ChunkPos = Vector3I_Create1(Int32_MaxValue);
+	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
 	ChunkUpdater_ApplyMeshBuilder();
 }
 

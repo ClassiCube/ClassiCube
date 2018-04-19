@@ -832,8 +832,7 @@ void LocalPlayer_Tick(Entity* entity, Real64 delta) {
 	TiltComp_Update(&p->Tilt, delta);
 
 	Player_CheckSkin((Player*)p);
-	/* TODO: sound */
-	/* sound.Tick(wasOnGround); */
+	SoundComp_Tick(wasOnGround);
 }
 
 void LocalPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {

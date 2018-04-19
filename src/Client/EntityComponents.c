@@ -1182,3 +1182,86 @@ void PhysicsComp_DoEntityPush(Entity* entity) {
 		Vector3_SubBy(&entity->Velocity, &dir);
 	}
 }
+
+
+/*########################################################################################################################*
+*----------------------------------------------------SoundsComponent------------------------------------------------------*
+*#########################################################################################################################*/
+Vector3 sounds_LastPos = { -1e25f, -1e25f, -1e25f };
+bool sounds_AnyNonAir;
+UInt8 sounds_Type;
+
+bool Sounds_CheckNonSolid(BlockID b) {
+	UInt8 type = Block_StepSounds[b];
+	UInt8 collide = Block_Collide[b];
+	if (type != SOUND_NONE && collide != COLLIDE_SOLID) sounds_Type = type;
+
+	if (Block_Draw[b] != DRAW_GAS) sounds_AnyNonAir = true;
+	return false;
+}
+
+bool Sounds_CheckSolid(BlockID b) {
+	UInt8 type = Block_StepSounds[b];
+	if (type != SOUND_NONE) sounds_Type = type;
+
+	if (Block_Draw[b] != DRAW_GAS) sounds_AnyNonAir = true;
+	return false;
+}
+
+void SoundComp_GetSound(LocalPlayer* p) {
+	Vector3 pos = p->Interp.Next.Pos;
+	AABB bounds; Entity_GetBounds(&p->Base, &bounds);
+	sounds_Type = SOUND_NONE;
+	sounds_AnyNonAir = false;
+
+	/* first check surrounding liquids/gas for sounds */
+	Entity_TouchesAny(&bounds, Sounds_CheckNonSolid);
+	if (sounds_Type != SOUND_NONE) return;
+
+	/* then check block standing on */
+	pos.Y -= 0.01f;
+	Vector3I feetPos; Vector3I_Floor(&feetPos, &pos);
+	BlockID blockUnder = World_SafeGetBlock_3I(feetPos);
+	Real32 maxY = feetPos.Y + Block_MaxBB[blockUnder].Y;
+
+	UInt8 typeUnder = Block_StepSounds[blockUnder];
+	UInt8 collideUnder = Block_Collide[blockUnder];
+	if (maxY >= pos.Y && collideUnder == COLLIDE_SOLID && typeUnder != SOUND_NONE) {
+		sounds_AnyNonAir = true; sounds_Type = typeUnder; return;
+	}
+
+	/* then check all solid blocks at feet */
+	bounds.Max.Y = bounds.Min.Y = pos.Y;
+	Entity_TouchesAny(&bounds, Sounds_CheckSolid);
+}
+
+bool SoundComp_DoPlaySound(LocalPlayer* p, Vector3 soundPos) {
+	Vector3 delta; Vector3_Sub(&delta, &sounds_LastPos, &soundPos);
+	Real32 distSq = Vector3_LengthSquared(&delta);
+	bool enoughDist = distSq > 1.75f * 1.75f;
+	/* just play every certain block interval when not animating */
+	if (p->Base.Anim.Swing < 0.999f) return enoughDist;
+
+	/* have our legs just crossed over the '0' point? */
+	Real32 oldLegRot, newLegRot;
+	if (Camera_Active->IsThirdPerson) {
+		oldLegRot = Math_CosF(p->Base.Anim.WalkTimeO);
+		newLegRot = Math_CosF(p->Base.Anim.WalkTimeN);
+	} else {
+		oldLegRot = Math_SinF(p->Base.Anim.WalkTimeO);
+		newLegRot = Math_SinF(p->Base.Anim.WalkTimeN);
+	}
+	return Math_Sign(oldLegRot) != Math_Sign(newLegRot);
+}
+
+void SoundComp_Tick(bool wasOnGround) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	Vector3 soundPos = p->Interp.Next.Pos;
+	SoundComp_GetSound(p);
+	if (!sounds_AnyNonAir) soundPos = Vector3_BigPos();
+
+	if (p->Base.OnGround && (SoundComp_DoPlaySound(p, soundPos) || !wasOnGround)) {
+		AudioPlayer_PlayStepSound(sounds_Type);
+		sounds_LastPos = soundPos;
+	}
+}
