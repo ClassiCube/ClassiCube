@@ -16,7 +16,7 @@ namespace ClassicalSharp {
 			int minZ = Utils.Floor(bb.Min.Z), maxZ = Utils.Floor(bb.Max.Z);
 			
 			float spawnY = float.NegativeInfinity;
-			AABB blockBB = default(AABB);
+			AABB blockBB;
 			
 			for (int y = minY; y <= maxY; y++)
 				for (int z = minZ; z <= maxZ; z++)

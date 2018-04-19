@@ -160,7 +160,7 @@ namespace ClassicalSharp {
 			} else if (key == Keys[KeyBind.Screenshot]) {
 				game.screenshotRequested = true;
 			} else if (!game.Gui.ActiveScreen.HandlesKeyDown(key)) {
-				if (!HandleBuiltinKey(key) && !game.LocalPlayer.input.Handles(key))
+				if (!HandleBuiltinKey(key) && !game.LocalPlayer.HandlesKey(key))
 					HandleHotkey(key);
 			}
 			lastKey = key;

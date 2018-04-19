@@ -117,7 +117,7 @@ namespace ClassicalSharp.Entities {
 			
 			// TODO: the Tilt code was designed for 60 ticks/second, fix it up for 20 ticks/second
 			for (int i = 0; i < 3; i++) {
-				AnimatedComponent.DoTilt(ref velTiltStrengthN, p.Hacks.Noclip || p.Hacks.Flying);
+				AnimatedComponent.DoTilt(ref velTiltStrengthN, p.Hacks.Floating);
 			}
 		}
 		

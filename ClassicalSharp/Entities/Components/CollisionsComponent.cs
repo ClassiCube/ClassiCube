@@ -111,7 +111,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void ClipXMin(ref AABB blockBB, ref AABB entityBB, bool wasOn, ref AABB finalBB, ref AABB extentBB, ref Vector3 size) {
-			if (!wasOn || !DidSlide(blockBB, ref size, ref finalBB, ref entityBB, ref extentBB)) {
+			if (!wasOn || !DidSlide(ref blockBB, ref size, ref finalBB, ref entityBB, ref extentBB)) {
 				entity.Position.X = blockBB.Min.X - size.X / 2 - Adjustment;
 				ClipX(ref size, ref entityBB, ref extentBB);
 				hitXMin = true;
@@ -119,7 +119,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void ClipXMax(ref AABB blockBB, ref AABB entityBB, bool wasOn, ref AABB finalBB, ref AABB extentBB, ref Vector3 size) {
-			if (!wasOn || !DidSlide(blockBB, ref size, ref finalBB, ref entityBB, ref extentBB)) {
+			if (!wasOn || !DidSlide(ref blockBB, ref size, ref finalBB, ref entityBB, ref extentBB)) {
 				entity.Position.X = blockBB.Max.X + size.X / 2 + Adjustment;
 				ClipX(ref size, ref entityBB, ref extentBB);
 				hitXMax = true;
@@ -127,7 +127,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void ClipZMax(ref AABB blockBB, ref AABB entityBB, bool wasOn, ref AABB finalBB, ref AABB extentBB, ref Vector3 size) {
-			if (!wasOn || !DidSlide(blockBB, ref size, ref finalBB, ref entityBB, ref extentBB)) {
+			if (!wasOn || !DidSlide(ref blockBB, ref size, ref finalBB, ref entityBB, ref extentBB)) {
 				entity.Position.Z = blockBB.Max.Z + size.Z / 2 + Adjustment;
 				ClipZ(ref size, ref entityBB, ref extentBB);
 				hitZMax = true;
@@ -135,7 +135,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		void ClipZMin(ref AABB blockBB, ref AABB entityBB, bool wasOn, ref AABB finalBB, ref AABB extentBB, ref Vector3 size) {
-			if (!wasOn || !DidSlide(blockBB, ref size, ref finalBB, ref entityBB, ref extentBB)) {
+			if (!wasOn || !DidSlide(ref blockBB, ref size, ref finalBB, ref entityBB, ref extentBB)) {
 				entity.Position.Z = blockBB.Min.Z - size.Z / 2 - Adjustment;
 				ClipZ(ref size, ref entityBB, ref extentBB);
 				hitZMin = true;
@@ -155,26 +155,24 @@ namespace ClassicalSharp.Entities {
 			hitYMax = true;
 		}
 		
-		bool DidSlide(AABB blockBB, ref Vector3 size, ref AABB finalBB, ref AABB entityBB, ref AABB extentBB) {
+		bool DidSlide(ref AABB blockBB, ref Vector3 size, ref AABB finalBB, ref AABB entityBB, ref AABB extentBB) {
 			float yDist = blockBB.Max.Y - entityBB.Min.Y;
 			if (yDist > 0 && yDist <= entity.StepSize + 0.01f) {
-				float blockXMin = blockBB.Min.X, blockZMin = blockBB.Min.Z;
-				blockBB.Min.X = Math.Max(blockBB.Min.X, blockBB.Max.X - size.X / 2);
-				blockBB.Max.X = Math.Min(blockBB.Max.X, blockXMin + size.X / 2);
-				blockBB.Min.Z = Math.Max(blockBB.Min.Z, blockBB.Max.Z - size.Z / 2);
-				blockBB.Max.Z = Math.Min(blockBB.Max.Z, blockZMin + size.Z / 2);
+				float blockBB_MinX = Math.Max(blockBB.Min.X, blockBB.Max.X - size.X / 2);
+				float blockBB_MaxX = Math.Min(blockBB.Max.X, blockBB.Min.X + size.X / 2);
+				float blockBB_MinZ = Math.Max(blockBB.Min.Z, blockBB.Max.Z - size.Z / 2);
+				float blockBB_MaxZ = Math.Min(blockBB.Max.Z, blockBB.Min.Z + size.Z / 2);
 				
 				AABB adjBB;
-				adjBB.Min.X = Math.Min(finalBB.Min.X, blockBB.Min.X + Adjustment);
-				adjBB.Max.X = Math.Max(finalBB.Max.X, blockBB.Max.X - Adjustment);
+				adjBB.Min.X = Math.Min(finalBB.Min.X, blockBB_MinX + Adjustment);
+				adjBB.Max.X = Math.Max(finalBB.Max.X, blockBB_MaxX - Adjustment);
 				adjBB.Min.Y = blockBB.Max.Y + Adjustment;
 				adjBB.Max.Y = adjBB.Min.Y + size.Y;
-				adjBB.Min.Z = Math.Min(finalBB.Min.Z, blockBB.Min.Z + Adjustment);
-				adjBB.Max.Z = Math.Max(finalBB.Max.Z, blockBB.Max.Z - Adjustment);
+				adjBB.Min.Z = Math.Min(finalBB.Min.Z, blockBB_MinZ + Adjustment);
+				adjBB.Max.Z = Math.Max(finalBB.Max.Z, blockBB_MaxZ - Adjustment);
 				
-				if (!CanSlideThrough(ref adjBB)) return false;
-				
-				entity.Position.Y = blockBB.Max.Y + Adjustment;
+				if (!CanSlideThrough(ref adjBB)) return false;				
+				entity.Position.Y = adjBB.Min.Y;
 				entity.onGround = true;
 				ClipY(ref size, ref entityBB, ref extentBB);
 				return true;
@@ -187,13 +185,15 @@ namespace ClassicalSharp.Entities {
 			Vector3I bbMax = Vector3I.Floor(adjFinalBB.Max);
 			AABB blockBB;
 			
+			Vector3 pos;
 			for (int y = bbMin.Y; y <= bbMax.Y; y++)
 				for (int z = bbMin.Z; z <= bbMax.Z; z++)
 					for (int x = bbMin.X; x <= bbMax.X; x++)
 			{
+				pos.X = x; pos.Y = y; pos.Z = z;
 				BlockID block = game.World.GetPhysicsBlock(x, y, z);
-				blockBB.Min = new Vector3(x, y, z) + BlockInfo.MinBB[block];
-				blockBB.Max = new Vector3(x, y, z) + BlockInfo.MaxBB[block];
+				blockBB.Min = pos + BlockInfo.MinBB[block];
+				blockBB.Max = pos + BlockInfo.MaxBB[block];
 				
 				if (!blockBB.Intersects(adjFinalBB)) continue;
 				if (BlockInfo.Collide[block] == CollideType.Solid) return false;

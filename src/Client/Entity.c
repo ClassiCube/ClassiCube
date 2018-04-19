@@ -16,12 +16,13 @@
 #include "AsyncDownloader.h"
 #include "ErrorHandler.h"
 #include "IModel.h"
+#include "Input.h"
 
 const UInt8* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
 Real32 LocationUpdate_Clamp(Real32 degrees) {
-	degrees = Math_Mod(degrees, 360.0f);
+	degrees = Math_ModF(degrees, 360.0f);
 	if (degrees < 0) degrees += 360.0f;
 	return degrees;
 }
@@ -154,33 +155,29 @@ void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 void Entity_UpdateModelBounds(Entity* entity) {
 	IModel* model = entity->Model;
 	Vector3 baseSize = model->GetCollisionSize();
-	Vector3_Multiply3(&entity->Size, &baseSize, &entity->ModelScale);
+	Vector3_Mul3(&entity->Size, &baseSize, &entity->ModelScale);
 
 	AABB* bb = &entity->ModelAABB;
 	model->GetPickingBounds(bb);
-	Vector3_Multiply3(&bb->Min, &bb->Min, &entity->ModelScale);
-	Vector3_Multiply3(&bb->Max, &bb->Max, &entity->ModelScale);
+	Vector3_Mul3By(&bb->Min, &entity->ModelScale);
+	Vector3_Mul3By(&bb->Max, &entity->ModelScale);
 }
 
 bool Entity_TouchesAny(AABB* bounds, bool (*touches_condition)(BlockID block__)) {
 	Vector3I bbMin, bbMax;
 	Vector3I_Floor(&bbMin, &bounds->Min);
 	Vector3I_Floor(&bbMax, &bounds->Max);
-	AABB blockBB;
-	Vector3 v;
 
 	bbMin.X = max(bbMin.X, 0); bbMax.X = min(bbMax.X, World_MaxX);
 	bbMin.Y = max(bbMin.Y, 0); bbMax.Y = min(bbMax.Y, World_MaxY);
 	bbMin.Z = max(bbMin.Z, 0); bbMax.Z = min(bbMax.Z, World_MaxZ);
 
+	AABB blockBB;
+	Vector3 v;
 	Int32 x, y, z;
-	for (y = bbMin.Y; y <= bbMax.Y; y++) {
-		v.Y = (Real32)y;
-		for (z = bbMin.Z; z <= bbMax.Z; z++) {
-			v.Z = (Real32)z;
-			for (x = bbMin.X; x <= bbMax.X; x++) {
-				v.X = (Real32)x;
-
+	for (y = bbMin.Y; y <= bbMax.Y; y++) { v.Y = (Real32)y;
+		for (z = bbMin.Z; z <= bbMax.Z; z++) { v.Z = (Real32)z;
+			for (x = bbMin.X; x <= bbMax.X; x++) { v.X = (Real32)x;
 				BlockID block = World_GetBlock(x, y, z);
 				Vector3_Add(&blockBB.Min, &v, &Block_MinBB[block]);
 				Vector3_Add(&blockBB.Max, &v, &Block_MaxBB[block]);
@@ -727,4 +724,85 @@ void Player_Init(Player* player) {
 	entity->VTABLE->ContextLost      = Player_ContextLost;
 	entity->VTABLE->ContextRecreated = Player_ContextRecreated;
 	entity->VTABLE->Despawn          = Player_Despawn;
+}
+
+Real32 LocalPlayer_JumpHeight(void) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	return (Real32)PhysicsComp_GetMaxHeight(p->Physics.JumpVel);
+}
+
+void LocalPlayer_CheckHacksConsistency(void) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	HacksComp_CheckConsistency(&p->Hacks);
+	if (!HacksComp_CanJumpHigher(&p->Hacks)) {
+		p->Physics.JumpVel = p->Physics.ServerJumpVel;
+	}
+}
+
+bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
+void LocalPlayer_DoRespawn(void) {
+	if (World_Blocks == NULL) return;
+	LocalPlayer* p = &LocalPlayer_Instance;
+	Vector3 spawn = p->Spawn;
+	Vector3I P; Vector3I_Floor(&P, &spawn);
+	AABB bb;
+
+	/* Spawn player at highest valid position */
+	if (World_IsValidPos_3I(P)) {
+		AAABB_Make(&bb, &spawn, &p->Base.Size);
+		Int32 y;
+		for (y = P.Y; y <= World_Height; y++) {
+			Real32 spawnY = Respawn_HighestFreeY(&bb);
+			if (spawnY == RESPAWN_NOT_FOUND) {
+				BlockID block = World_GetPhysicsBlock(P.X, y, P.Z);
+				Real32 height = Block_Collide[block] == COLLIDE_SOLID ? Block_MaxBB[block].Y : 0.0f;
+				spawn.Y = y + height + ENTITY_ADJUSTMENT;
+				break;
+			}
+			bb.Min.Y += 1.0f; bb.Max.Y += 1.0f;
+		}
+	}
+
+	spawn.Y += 2.0f / 16.0f;
+	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, spawn, p->SpawnRotY, p->SpawnHeadX, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+	Vector3 zero = Vector3_Zero; p->Base.Velocity = zero;
+
+	/* Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before */
+	Entity_GetBounds(&p->Base, &bb);
+	bb.Min.Y -= 0.01f; bb.Max.Y = bb.Min.Y;
+	p->Base.OnGround = Entity_TouchesAny(&bb, LocalPlayer_IsSolidCollide);
+}
+
+bool LocalPlayer_HandlesKey(Int32 key) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	HacksComp* hacks = &p->Hacks;
+	PhysicsComp* physics = &p->Physics;
+
+	if (key == KeyBind_Get(KeyBind_Respawn) && hacks->CanRespawn) {
+		DoRespawn();
+	} else if (key == KeyBind_Get(KeyBind_SetSpawn) && hacks->CanRespawn) {
+		p->Spawn = p->Base.Position;
+		p->Spawn.X = Math_Floor(p->Spawn.X) + 0.5f;
+		p->Spawn.Z = Math_Floor(p->Spawn.Z) + 0.5f;
+		p->SpawnRotY = p->Base.RotY;
+		p->SpawnHeadX = p->Base.HeadX;
+		DoRespawn();
+	} else if (key == KeyBind_Get(KeyBind_Fly) && hacks->CanFly && hacks->Enabled) {
+		hacks->Flying = !hacks->Flying;
+	} else if (key == KeyBind_Get(KeyBind_NoClip) && hacks->CanNoclip && hacks->Enabled && !hacks->WOMStyleHacks) {
+		if (hacks->Noclip) p->Base.Velocity.Y = 0;
+		hacks->Noclip = !hacks->Noclip;
+	} else if (key == KeyBind_Get(KeyBind_Jump) && !p->Base.OnGround && !(hacks->Flying || hacks->Noclip)) {
+		Int32 maxJumps = hacks->CanDoubleJump && hacks->WOMStyleHacks ? 2 : 0;
+		maxJumps = max(maxJumps, hacks->MaxJumps - 1);
+
+		if (physics->MultiJumps < maxJumps) {
+			PhysicsComp_DoNormalJump(physics);
+			physics->MultiJumps++;
+		}
+	} else {
+		return false;
+	}
+	return true;
 }

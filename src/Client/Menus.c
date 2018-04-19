@@ -2611,9 +2611,13 @@ void HacksSettingsScreen_SetClipping(STRING_PURE String* v) {
 
 void HacksSettingsScreen_GetJump(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_JumpHeight(), 3); }
 void HacksSettingsScreen_SetJump(STRING_PURE String* v) {
-	LocalPlayer_Instance.physics.CalculateJumpVelocity(true, Menu_Real32(v));
-	Real32 jumpVel = LocalPlayer_Instance.physics.jumpVel;
-	Options_Set(OPT_JUMP_VELOCITY, jumpVel.ToString());
+	PhysicsComp* physics = &LocalPlayer_Instance.Physics;
+	PhysicsComp_CalculateJumpVelocity(physics, true, Menu_Real32(v));
+
+	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
+	String str = String_InitAndClearArray(strBuffer);
+	String_AppendReal32(&str, physics->JumpVel, 8);
+	Options_Set(OPT_JUMP_VELOCITY, &str);
 }
 
 void HacksSettingsScreen_GetWOMHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.WOMStyleHacks); }

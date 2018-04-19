@@ -30,8 +30,8 @@ void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
-			Int32 xx = x + (Int32)(1.2f * Math_Sin(y * 22.5f * MATH_DEG2RAD));
-			Int32 yy = y + (Int32)(1.2f * Math_Sin(x * 22.5f * MATH_DEG2RAD));
+			Int32 xx = x + (Int32)(1.2f * Math_SinF(y * 22.5f * MATH_DEG2RAD));
+			Int32 yy = y + (Int32)(1.2f * Math_SinF(x * 22.5f * MATH_DEG2RAD));
 			Real32 lSoupHeat =
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx - 1) & mask)] +
 				L_soupHeat[((yy - 1) & mask) << shift | (xx & mask)] +

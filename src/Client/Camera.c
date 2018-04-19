@@ -148,8 +148,8 @@ Vector3 FirstPersonCamera_GetCameraPos(Real32 t) {
 	camPos.Y += Camera_BobbingVer;
 
 	Real32 headY = (p->HeadY * MATH_DEG2RAD);
-	camPos.X += Camera_BobbingHor * Math_Cos(headY);
-	camPos.Z += Camera_BobbingHor * Math_Sin(headY);
+	camPos.X += Camera_BobbingHor * Math_CosF(headY);
+	camPos.Z += Camera_BobbingHor * Math_SinF(headY);
 	return camPos;
 }
 

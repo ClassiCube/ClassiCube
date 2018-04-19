@@ -1,6 +1,5 @@
 #ifndef CC_MATH_H
 #define CC_MATH_H
-#include <math.h>
 #include "Typedefs.h"
 /* Simple math functions and constants.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
@@ -15,21 +14,19 @@
 #define Math_Deg2Packed(x) ((UInt8)((x) * 256.0f / 360.0f))
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
-#define Math_AbsF(x) fabsf(x)
-#define Math_AbsI(x) abs(x)
+Real32 Math_AbsF(Real32 x);
+Real32 Math_SinF(Real32 x);
+Real32 Math_CosF(Real32 x);
+Real32 Math_TanF(Real32 x);
+Real32 Math_SqrtF(Real32 x);
+Real32 Math_ModF(Real32 x, Real32 y);
 
-#define Math_LogE(x) logf(x)
-#define Math_PowE(x) expf(x)
+Real64 Math_Log(Real64 x);
+Real64 Math_Exp(Real64 x);
+Real64 Math_Asin(Real64 x);
+Real64 Math_Atan2(Real64 y, Real64 x);
 
-#define Math_Sin(x) sinf(x)
-#define Math_Cos(x) cosf(x)
-#define Math_Tan(x) tanf(x)
-#define Math_Asin(x) asinf(x)
-#define Math_Atan2(y, x) atan2f(y, x)
-
-#define Math_Sqrt(x) sqrtf(x)
-#define Math_Mod(x, y) fmodf(x, y)
-
+Int32 Math_AbsI(Int32 x);
 Int32 Math_Floor(Real32 value);
 Int32 Math_Ceil(Real32 value);
 Int32 Math_Log2(Int32 value);

@@ -1,9 +1,11 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Drawing;
+using ClassicalSharp.Physics;
 using ClassicalSharp.Renderers;
 using OpenTK;
 using OpenTK.Input;
+using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Entities {
 	
@@ -27,7 +29,6 @@ namespace ClassicalSharp.Entities {
 		internal CollisionsComponent collisions;
 		public HacksComponent Hacks;
 		internal PhysicsComponent physics;
-		internal InputComponent input;
 		internal SoundComponent sound;
 		internal LocalInterpComponent interp;
 		internal TiltComponent tilt;
@@ -39,31 +40,28 @@ namespace ClassicalSharp.Entities {
 			collisions = new CollisionsComponent(game, this);
 			Hacks = new HacksComponent(game);
 			physics = new PhysicsComponent(game, this);
-			input = new InputComponent(game, this);
 			sound = new SoundComponent(game, this);
 			interp = new LocalInterpComponent(game, this);
-			tilt = new TiltComponent(game);
-			
-			physics.hacks = Hacks; input.Hacks = Hacks;
-			physics.collisions = collisions;
-			input.physics = physics;
+			tilt = new TiltComponent(game);		
+			physics.hacks = Hacks; physics.collisions = collisions;
 		}
 		
 		public override void Tick(double delta) {
 			if (!game.World.HasBlocks) return;
-			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks
-				&& Hacks.CanSpeed ? 1 : 0.5f;
+			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks && Hacks.CanSpeed ? 1 : 0.5f;
 			OldVelocity = Velocity;
 			float xMoving = 0, zMoving = 0;
 			interp.AdvanceState();
 			bool wasOnGround = onGround;
 			
 			HandleInput(ref xMoving, ref zMoving);
+			Hacks.Floating = Hacks.Noclip || Hacks.Flying;
 			if (!Hacks.Floating && Hacks.CanBePushed) physics.DoEntityPush();
 			
 			// Immediate stop in noclip mode
-			if (!Hacks.NoclipSlide && (Hacks.Noclip && xMoving == 0 && zMoving == 0))
+			if (!Hacks.NoclipSlide && (Hacks.Noclip && xMoving == 0 && zMoving == 0)) {
 				Velocity = Vector3.Zero;
+			}
 			physics.UpdateVelocityState();
 			physics.PhysicsTick(GetHeadingVelocity(zMoving, xMoving));
 			
@@ -160,6 +158,71 @@ namespace ClassicalSharp.Entities {
 			physics.jumpVel = 0.42f;
 			physics.serverJumpVel = 0.42f;
 			Health = 20;
+		}
+		
+		
+		static Predicate<BlockID> touchesAnySolid = IsSolidCollide;
+		static bool IsSolidCollide(BlockID b) { return BlockInfo.Collide[b] == CollideType.Solid; }		
+		void DoRespawn() {
+			if (!game.World.HasBlocks) return;
+			Vector3 spawn = Spawn;
+			Vector3I P = Vector3I.Floor(spawn);
+			AABB bb;
+			
+			// Spawn player at highest valid position
+			if (game.World.IsValidPos(P)) {
+				bb = AABB.Make(spawn, Size);
+				for (int y = P.Y; y <= game.World.Height; y++) {
+					float spawnY = Respawn.HighestFreeY(game, ref bb);
+					if (spawnY == float.NegativeInfinity) {
+						BlockID block = game.World.GetPhysicsBlock(P.X, y, P.Z);
+						float height = BlockInfo.Collide[block] == CollideType.Solid ? BlockInfo.MaxBB[block].Y : 0;
+						spawn.Y = y + height + Entity.Adjustment;
+						break;
+					}
+					bb.Min.Y += 1; bb.Max.Y += 1;
+				}
+			}
+			
+			spawn.Y += 2/16f;
+			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, SpawnRotY, SpawnHeadX, false);
+			SetLocation(update, false);
+			Velocity = Vector3.Zero;
+			
+			// Update onGround, otherwise if 'respawn' then 'space' is pressed, you still jump into the air if onGround was true before
+			bb = Bounds;
+			bb.Min.Y -= 0.01f; bb.Max.Y = bb.Min.Y;
+			onGround = TouchesAny(bb, touchesAnySolid);
+		}
+		
+		public bool HandlesKey(Key key) {
+			KeyMap keys = game.Input.Keys;		
+			if (key == keys[KeyBind.Respawn] && Hacks.CanRespawn) {
+				DoRespawn();
+			} else if (key == keys[KeyBind.SetSpawn] && Hacks.CanRespawn) {
+				Spawn   = Position;
+				Spawn.X = Utils.Floor(Spawn.X) + 0.5f;
+				Spawn.Z = Utils.Floor(Spawn.Z) + 0.5f;
+				SpawnRotY  = RotY;
+				SpawnHeadX = HeadX;
+				DoRespawn();
+			} else if (key == keys[KeyBind.Fly] && Hacks.CanFly && Hacks.Enabled) {
+				Hacks.Flying = !Hacks.Flying;
+			} else if (key == keys[KeyBind.NoClip] && Hacks.CanNoclip && Hacks.Enabled && !Hacks.WOMStyleHacks) {
+				if (Hacks.Noclip) Velocity.Y = 0;
+				Hacks.Noclip = !Hacks.Noclip;
+			} else if (key == keys[KeyBind.Jump] && !onGround && !(Hacks.Flying || Hacks.Noclip)) {
+				int maxJumps = Hacks.CanDoubleJump && Hacks.WOMStyleHacks ? 2 : 0;
+				maxJumps = Math.Max(maxJumps, Hacks.MaxJumps - 1);
+				
+				if (physics.multiJumps < maxJumps) {
+					physics.DoNormalJump();
+					physics.multiJumps++;
+				}
+			} else {
+				return false;
+			}
+			return true;
 		}
 	}
 }

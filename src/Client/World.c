@@ -208,13 +208,12 @@ void WorldEnv_SetShadowCol(PackedCol col) {
 	Event_RaiseInt32(&WorldEvents_EnvVarChanged, ENV_VAR_SHADOW_COL);
 }
 
-#define Respawn_NotFound -10000.0f
 Real32 Respawn_HighestFreeY(AABB* bb) {
 	Int32 minX = Math_Floor(bb->Min.X), maxX = Math_Floor(bb->Max.X);
 	Int32 minY = Math_Floor(bb->Min.Y), maxY = Math_Floor(bb->Max.Y);
 	Int32 minZ = Math_Floor(bb->Min.Z), maxZ = Math_Floor(bb->Max.Z);
 
-	Real32 spawnY = Respawn_NotFound;
+	Real32 spawnY = RESPAWN_NOT_FOUND;
 	AABB blockBB;
 	Int32 x, y, z;
 	Vector3 pos;
@@ -248,7 +247,7 @@ Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize) {
 	Int32 y;
 	for (y = World_Height; y >= 0; y--) {
 		Real32 highestY = Respawn_HighestFreeY(&bb);
-		if (highestY != Respawn_NotFound) {
+		if (highestY != RESPAWN_NOT_FOUND) {
 			spawn.Y = highestY; break;
 		}
 		bb.Min.Y -= 1.0f; bb.Max.Y -= 1.0f;

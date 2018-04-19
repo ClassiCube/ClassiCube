@@ -487,7 +487,7 @@ BlockID AutoRotate_RotateBlock(BlockID block) {
 
 	Vector3 translated, offset;
 	Vector3I_ToVector3(&translated, &Game_SelectedPos.TranslatedPos);
-	Vector3_Subtract(&offset, &Game_SelectedPos.Intersect, &translated);
+	Vector3_Sub(&offset, &Game_SelectedPos.Intersect, &translated);
 
 	if (AR_EQ2(dir, 'n', 'w') || AR_EQ2(dir, 'n', 'e') || AR_EQ2(dir, 's', 'w') || AR_EQ2(dir, 's', 'e')) {
 		return AutoRotate_RotateCorner(block, &baseName, offset);

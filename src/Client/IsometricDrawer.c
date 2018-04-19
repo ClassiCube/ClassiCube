@@ -44,10 +44,10 @@ void IsometricDrawer_InitCache(void) {
 	Matrix_RotateX(&rotX, -30.0f * MATH_DEG2RAD);
 	Matrix_Mul(&iso_transform, &rotY, &rotX);
 
-	iso_cosX = Math_Cos(30.0f * MATH_DEG2RAD);
-	iso_sinX = Math_Sin(30.0f * MATH_DEG2RAD);
-	iso_cosY = Math_Cos(-45.0f * MATH_DEG2RAD);
-	iso_sinY = Math_Sin(-45.0f * MATH_DEG2RAD);
+	iso_cosX = Math_CosF(30.0f * MATH_DEG2RAD);
+	iso_sinX = Math_SinF(30.0f * MATH_DEG2RAD);
+	iso_cosY = Math_CosF(-45.0f * MATH_DEG2RAD);
+	iso_sinY = Math_SinF(-45.0f * MATH_DEG2RAD);
 }
 
 void IsometricDrawer_Flush(void) {

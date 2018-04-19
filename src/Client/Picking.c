@@ -185,7 +185,7 @@ bool Picking_ClipBlock(PickedPos* pos) {
 	}
 
 	Vector3 scaledDir, intersect;
-	Vector3_Multiply1(&scaledDir, &tracer.Dir, t0);      /* scaledDir = dir * t0 */
+	Vector3_Mul1(&scaledDir, &tracer.Dir, t0);      /* scaledDir = dir * t0 */
 	Vector3_Add(&intersect, &tracer.Origin, &scaledDir); /* intersect = origin + scaledDir */
 														 /* Only pick the block if the block is precisely within reach distance. */
 	Real32 lenSq = Vector3_LengthSquared(&scaledDir);
@@ -210,7 +210,7 @@ bool Picking_ClipCamera(PickedPos* pos) {
 	}
 
 	Vector3 intersect;
-	Vector3_Multiply1(&intersect, &tracer.Dir, t0);      /* intersect = dir * t0 */
+	Vector3_Mul1(&intersect, &tracer.Dir, t0);      /* intersect = dir * t0 */
 	Vector3_Add(&intersect, &tracer.Origin, &intersect); /* intersect = origin + dir * t0 */
 	PickedPos_SetAsValid(pos, &tracer, intersect);
 
@@ -236,7 +236,7 @@ void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, PickedPos*
 	bool noClip = !Game_CameraClipping || LocalPlayer_Instance.Hacks.Noclip;
 	if (noClip || !Picking_RayTrace(origin, dir, reach, pos, Picking_ClipCamera)) {
 		PickedPos_SetAsInvalid(pos);
-		Vector3_Multiply1(&pos->Intersect, &tracer.Dir, reach);        /* intersect = dir * reach */
+		Vector3_Mul1(&pos->Intersect, &tracer.Dir, reach);        /* intersect = dir * reach */
 		Vector3_Add(&pos->Intersect, &tracer.Origin, &pos->Intersect); /* intersect = origin + dir * reach */
 	}
 }

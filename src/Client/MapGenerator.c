@@ -212,13 +212,13 @@ void NotchyGen_CarveCaves(void) {
 
 		Int32 caveLen = (Int32)(Random_Float(&rnd) * Random_Float(&rnd) * 200.0f);
 		Real32 theta = Random_Float(&rnd) * 2.0f * MATH_PI, deltaTheta = 0.0f;
-		Real32 phi = Random_Float(&rnd) * 2.0f * MATH_PI, deltaPhi = 0.0f;
+		Real32 phi   = Random_Float(&rnd) * 2.0f * MATH_PI, deltaPhi = 0.0f;
 		Real32 caveRadius = Random_Float(&rnd) * Random_Float(&rnd);
 
 		for (j = 0; j < caveLen; j++) {
-			caveX += Math_Sin(theta) * Math_Cos(phi);
-			caveZ += Math_Cos(theta) * Math_Cos(phi);
-			caveY += Math_Sin(phi);
+			caveX += Math_SinF(theta) * Math_CosF(phi);
+			caveZ += Math_CosF(theta) * Math_CosF(phi);
+			caveY += Math_SinF(phi);
 
 			theta = theta + deltaTheta * 0.2f;
 			deltaTheta = deltaTheta * 0.9f + Random_Float(&rnd) - Random_Float(&rnd);
@@ -232,7 +232,7 @@ void NotchyGen_CarveCaves(void) {
 
 			Real32 radius = (Gen_Height - cenY) / (Real32)Gen_Height;
 			radius = 1.2f + (radius * 3.5f + 1.0f) * caveRadius;
-			radius = radius * Math_Sin(j * MATH_PI / caveLen);
+			radius = radius * Math_SinF(j * MATH_PI / caveLen);
 			NotchyGen_FillOblateSpheroid(cenX, cenY, cenZ, radius, BLOCK_AIR);
 		}
 	}
@@ -254,16 +254,16 @@ void NotchyGen_CarveOreVeins(Real32 abundance, const UInt8* state, BlockID block
 		Real32 phi = Random_Float(&rnd) * 2.0f * MATH_PI, deltaPhi = 0.0f;
 
 		for (j = 0; j < veinLen; j++) {
-			veinX += Math_Sin(theta) * Math_Cos(phi);
-			veinZ += Math_Cos(theta) * Math_Cos(phi);
-			veinY += Math_Sin(phi);
+			veinX += Math_SinF(theta) * Math_CosF(phi);
+			veinZ += Math_CosF(theta) * Math_CosF(phi);
+			veinY += Math_SinF(phi);
 
 			theta = deltaTheta * 0.2f;
 			deltaTheta = deltaTheta * 0.9f + Random_Float(&rnd) - Random_Float(&rnd);
 			phi = phi * 0.5f + deltaPhi * 0.25f;
 			deltaPhi = deltaPhi * 0.9f + Random_Float(&rnd) - Random_Float(&rnd);
 
-			Real32 radius = abundance * Math_Sin(j * MATH_PI / veinLen) + 1.0f;
+			Real32 radius = abundance * Math_SinF(j * MATH_PI / veinLen) + 1.0f;
 			NotchyGen_FillOblateSpheroid((Int32)veinX, (Int32)veinY, (Int32)veinZ, radius, block);
 		}
 	}

@@ -51,7 +51,7 @@ namespace ClassicalSharp.Entities {
 		public bool Noclip, Flying, FlyingUp, FlyingDown, Speeding, HalfSpeeding;
 		
 		public bool CanJumpHigher { get { return Enabled && CanAnyHacks && CanSpeed; } }
-		public bool Floating { get { return Noclip || Flying; } }
+		public bool Floating; // true if Noclip or Flying
 		public string HacksFlags;
 		
 		string GetFlagValue(string flag) {

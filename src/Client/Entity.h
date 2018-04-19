@@ -52,15 +52,16 @@ void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX);
 void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel);
 void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel);
 
+typedef struct Entity_ Entity;
 typedef struct EntityVTABLE_ {
-	void (*Tick)(struct Entity_* entity, ScheduledTask* task);
-	void (*SetLocation)(struct Entity_* entity, LocationUpdate* update, bool interpolate);
-	void (*RenderModel)(struct Entity_* entity, Real64 deltaTime, Real32 t);
-	void (*RenderName)(struct Entity_* entity);
-	void (*ContextLost)(struct Entity_* entity);
-	void (*ContextRecreated)(struct Entity_* entity);
-	void (*Despawn)(struct Entity_* entity);
-	PackedCol (*GetCol)(struct Entity_* entity);
+	void (*Tick)(Entity* entity, ScheduledTask* task);
+	void (*SetLocation)(Entity* entity, LocationUpdate* update, bool interpolate);
+	void (*RenderModel)(Entity* entity, Real64 deltaTime, Real32 t);
+	void (*RenderName)(Entity* entity);
+	void (*ContextLost)(Entity* entity);
+	void (*ContextRecreated)(Entity* entity);
+	void (*Despawn)(Entity* entity);
+	PackedCol (*GetCol)(Entity* entity);
 } EntityVTABLE;
 
 /* Contains a model, along with position, velocity, and rotation. May also contain other fields and properties. */
@@ -149,10 +150,13 @@ typedef struct LocalPlayer_ {
 	HacksComp Hacks;
 	TiltComp Tilt;
 	InterpComp Interp;
+	CollisionsComp Collisions;
+	PhysicsComp Physics;
 } LocalPlayer;
 
 LocalPlayer LocalPlayer_Instance;
 void LocalPlayer_Init(void);
 Real32 LocalPlayer_JumpHeight(void);
-void LocalPlayer_ChecksHackConsistency();
+void LocalPlayer_CheckHacksConsistency(void);
+bool LocalPlayer_HandlesKey(Int32 key);
 #endif

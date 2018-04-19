@@ -25,7 +25,7 @@ bool Intersection_RayIntersectsRotatedBox(Vector3 origin, Vector3 dir, Entity* t
 Source: http://www.cs.utah.edu/~awilliam/box/box.pdf */
 bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vector3 max, Real32* t0, Real32* t1);
 
-typedef struct SearcherState_ { Int32 X, Y, Z;  Real32 tSquared; } SearcherState;
+typedef struct SearcherState_ { Int32 X, Y, Z; Real32 tSquared; } SearcherState;
 extern SearcherState* Searcher_States;
 UInt32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entityExtentBB);
 void Searcher_CalcTime(Vector3* vel, AABB *entityBB, AABB* blockBB, Real32* tx, Real32* ty, Real32* tz);

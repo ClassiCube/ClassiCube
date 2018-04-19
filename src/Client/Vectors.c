@@ -18,11 +18,6 @@ Vector3I Vector3I_Create3(Int32 x, Int32 y, Int32 z) {
 	Vector3I v; v.X = x; v.Y = y; v.Z = z; return v;
 }
 
-Real32 Vector3_Length(Vector3* v) {
-	Real32 lenSquared = v->X * v->X + v->Y * v->Y + v->Z * v->Z;
-	return Math_Sqrt(lenSquared);
-}
-
 Real32 Vector3_LengthSquared(Vector3* v) {
 	return v->X * v->X + v->Y * v->Y + v->Z * v->Z;
 }
@@ -35,15 +30,15 @@ void Vector3_Add1(Vector3* result, Vector3* a, Real32 b) {
 	result->X = a->X + b; result->Y = a->Y + b; result->Z = a->Z + b;
 }
 
-void Vector3_Subtract(Vector3* result, Vector3* a, Vector3* b) {
+void Vector3_Sub(Vector3* result, Vector3* a, Vector3* b) {
 	result->X = a->X - b->X; result->Y = a->Y - b->Y; result->Z = a->Z - b->Z;
 }
 
-void Vector3_Multiply1(Vector3* result, Vector3* a, Real32 scale) {
+void Vector3_Mul1(Vector3* result, Vector3* a, Real32 scale) {
 	result->X = a->X * scale; result->Y = a->Y * scale; result->Z = a->Z * scale;
 }
 
-void Vector3_Multiply3(Vector3* result, Vector3* a, Vector3* scale) {
+void Vector3_Mul3(Vector3* result, Vector3* a, Vector3* scale) {
 	result->X = a->X * scale->X; result->Y = a->Y * scale->Y; result->Z = a->Z * scale->Z;
 }
 
@@ -70,7 +65,8 @@ void Vector3_Cross(Vector3* result, Vector3* a, Vector3* b) {
 }
 
 void Vector3_Normalize(Vector3* result, Vector3* a) {
-	Real32 scale = 1.0f / Vector3_Length(a);
+	Real32 lenSquared = a->X * a->X + a->Y * a->Y + a->Z * a->Z;
+	Real32 scale = 1.0f / Math_SqrtF(lenSquared);
 	result->X = a->X * scale;
 	result->Y = a->Y * scale;
 	result->Z = a->Z * scale;
@@ -103,22 +99,22 @@ void Vector3_TransformZ(Vector3* result, Real32 z, Matrix* mat) {
 }
 
 Vector3 Vector3_RotateX(Vector3 v, Real32 angle) {
-	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	return Vector3_Create3(v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z);
 }
 
 Vector3 Vector3_RotateY(Vector3 v, Real32 angle) {
-	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	return Vector3_Create3(cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z);
 }
 
 Vector3 Vector3_RotateY3(Real32 x, Real32 y, Real32 z, Real32 angle) {
-	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	return Vector3_Create3(cosA * x - sinA * z, y, sinA * x + cosA * z);
 }
 
 Vector3 Vector3_RotateZ(Vector3 v, Real32 angle) {
-	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	return Vector3_Create3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);
 }
 
@@ -150,15 +146,15 @@ void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b) {
 
 
 Vector3 Vector3_GetDirVector(Real32 yawRad, Real32 pitchRad) {
-	Real32 x = -Math_Cos(pitchRad) * -Math_Sin(yawRad);
-	Real32 y = -Math_Sin(pitchRad);
-	Real32 z = -Math_Cos(pitchRad) * Math_Cos(yawRad);
+	Real32 x = -Math_CosF(pitchRad) * -Math_SinF(yawRad);
+	Real32 y = -Math_SinF(pitchRad);
+	Real32 z = -Math_CosF(pitchRad) * Math_CosF(yawRad);
 	return Vector3_Create3(x, y, z);
 }
 
 void Vector3_GetHeading(Vector3 dir, Real32* yaw, Real32* pitch) {
-	*pitch = Math_Asin(-dir.Y);
-	*yaw = Math_Atan2(dir.X, -dir.Z);
+	*pitch = (Real32)Math_Asin(-dir.Y);
+	*yaw =   (Real32)Math_Atan2(dir.X, -dir.Z);
 }
 
 
@@ -172,23 +168,23 @@ Matrix Matrix_Identity = {
 /* Transposed, source https://open.gl/transformations */
 
 void Matrix_RotateX(Matrix* result, Real32 angle) {
-	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
-	result->Row1.Y = cosA; result->Row1.Z = sinA;
+	result->Row1.Y = cosA;  result->Row1.Z = sinA;
 	result->Row2.Y = -sinA; result->Row2.Z = cosA;
 }
 
 void Matrix_RotateY(Matrix* result, Real32 angle) {
-	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
 	result->Row1.X = cosA; result->Row1.Z = -sinA;
 	result->Row2.X = sinA; result->Row2.Z = cosA;
 }
 
 void Matrix_RotateZ(Matrix* result, Real32 angle) {
-	Real32 cosA = Math_Cos(angle), sinA = Math_Sin(angle);
+	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
-	result->Row1.X = cosA; result->Row1.Y = sinA;
+	result->Row1.X = cosA;  result->Row1.Y = sinA;
 	result->Row2.X = -sinA; result->Row2.Y = cosA;
 }
 
@@ -254,7 +250,7 @@ void Matrix_OrthographicOffCenter(Matrix* result, Real32 left, Real32 right, Rea
 }
 
 void Matrix_PerspectiveFieldOfView(Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar) {
-	Real32 c = zNear * Math_Tan(0.5f * fovy);
+	Real32 c = zNear * Math_TanF(0.5 * fovy);
 	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
 }
 
@@ -275,9 +271,9 @@ void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real
 void Matrix_LookAt(Matrix* result, Vector3 eye, Vector3 target, Vector3 up) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/windows/desktop/bb281711(v=vs.85).aspx */
 	Vector3 x, y, z;
-	Vector3_Subtract(&z, &eye, &target); Vector3_Normalize(&z, &z);
-	Vector3_Cross(&x, &up, &z);          Vector3_Normalize(&x, &x);
-	Vector3_Cross(&y, &z, &x);           Vector3_Normalize(&y, &y);
+	Vector3_Sub(&z, &eye, &target); Vector3_Normalize(&z, &z);
+	Vector3_Cross(&x, &up, &z);     Vector3_Normalize(&x, &x);
+	Vector3_Cross(&y, &z, &x);      Vector3_Normalize(&y, &y);
 
 	result->Row0.X = x.X; result->Row0.Y = y.X; result->Row0.Z = z.X; result->Row0.W = 0.0f;
 	result->Row1.X = x.Y; result->Row1.Y = y.Y; result->Row1.Z = z.Y; result->Row1.W = 0.0f;
@@ -298,7 +294,7 @@ frustum40, frustum41, frustum42, frustum43;
 
 void FrustumCulling_Normalise(Real32* plane0, Real32* plane1, Real32* plane2, Real32* plane3) {
 	Real32 val1 = *plane0, val2 = *plane1, val3 = *plane2;
-	Real32 t = Math_Sqrt(val1 * val1 + val2 * val2 + val3 * val3);
+	Real32 t = Math_SqrtF(val1 * val1 + val2 * val2 + val3 * val3);
 	*plane0 /= t; *plane1 /= t; *plane2 /= t; *plane3 /= t;
 }
 

@@ -103,16 +103,16 @@ void HeldBlockRenderer_ProjectionChanged(void* obj) {
 */
 void HeldBlockRenderer_DigAnimation(void) {
 	Real32 t = held_time / held_period;
-	Real32 sinHalfCircle = Math_Sin(t * MATH_PI);
-	Real32 sqrtLerpPI = Math_Sqrt(t) * MATH_PI;
+	Real32 sinHalfCircle = Math_SinF(t * MATH_PI);
+	Real32 sqrtLerpPI = Math_SqrtF(t) * MATH_PI;
 
-	held_entity.Position.X -= Math_Sin(sqrtLerpPI)       * 0.4f;
-	held_entity.Position.Y += Math_Sin((sqrtLerpPI * 2)) * 0.2f;
+	held_entity.Position.X -= Math_SinF(sqrtLerpPI)       * 0.4f;
+	held_entity.Position.Y += Math_SinF((sqrtLerpPI * 2)) * 0.2f;
 	held_entity.Position.Z -= sinHalfCircle              * 0.2f;
 
-	Real32 sinHalfCircleWeird = Math_Sin(t * t * MATH_PI);
-	held_entity.RotY -= Math_Sin(sqrtLerpPI)  * 80.0f;
-	held_entity.HeadY -= Math_Sin(sqrtLerpPI) * 80.0f;
+	Real32 sinHalfCircleWeird = Math_SinF(t * t * MATH_PI);
+	held_entity.RotY -= Math_SinF(sqrtLerpPI)  * 80.0f;
+	held_entity.HeadY -= Math_SinF(sqrtLerpPI) * 80.0f;
 	held_entity.RotX += sinHalfCircleWeird    * 20.0f;
 }
 
@@ -172,7 +172,7 @@ void HeldBlockRenderer_DoAnimation(Real64 delta, Real32 lastSwingY) {
 
 	if (held_swinging || !held_breaking) {
 		Real32 t = held_time / held_period;
-		held_swingY = -0.4f * Math_Sin(t * MATH_PI);
+		held_swingY = -0.4f * Math_SinF(t * MATH_PI);
 		held_entity.Position.Y += held_swingY;
 
 		if (held_swinging) {

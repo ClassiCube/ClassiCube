@@ -7,7 +7,7 @@ using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Entities {
 	
-	/// <summary> Entity component that performs collision detection. </summary>
+	/// <summary> Entity component that performs collisions. </summary>
 	public sealed class PhysicsComponent {
 		
 		bool useLiquidGravity = false; // used by BlockDefinitions.
@@ -32,7 +32,7 @@ namespace ClassicalSharp.Entities {
 				int dir = (hacks.FlyingUp || jumping) ? 1 : (hacks.FlyingDown ? -1 : 0);
 				
 				entity.Velocity.Y += 0.12f * dir;
-				if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += 0.12f * dir;
+				if (hacks.Speeding     && hacks.CanSpeed) entity.Velocity.Y += 0.12f * dir;
 				if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.06f * dir;
 			} else if (jumping && entity.TouchesAnyRope() && entity.Velocity.Y > 0.02f) {
 				entity.Velocity.Y = 0.02f;
@@ -60,19 +60,20 @@ namespace ClassicalSharp.Entities {
 				if (!pastJumpPoint) {
 					canLiquidJump = true;
 					entity.Velocity.Y += 0.04f;
-					if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += 0.04f;
+					if (hacks.Speeding     && hacks.CanSpeed) entity.Velocity.Y += 0.04f;
 					if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.02f;
 				} else if (pastJumpPoint) {
-					// either A) jump bob in water B) climb up solid on side
-					if (collisions.HorizontalCollision)
+					// either A) climb up solid on side B) jump bob in water
+					if (collisions.HorizontalCollision) {
 						entity.Velocity.Y += touchLava ? 0.30f : 0.13f;
-					else if (canLiquidJump)
+					} else if (canLiquidJump) {
 						entity.Velocity.Y += touchLava ? 0.20f : 0.10f;
+					}
 					canLiquidJump = false;
 				}
 			} else if (useLiquidGravity) {
 				entity.Velocity.Y += 0.04f;
-				if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += 0.04f;
+				if (hacks.Speeding     && hacks.CanSpeed) entity.Velocity.Y += 0.04f;
 				if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += 0.02f;
 				canLiquidJump = false;
 			} else if (entity.TouchesAnyRope()) {
@@ -87,7 +88,7 @@ namespace ClassicalSharp.Entities {
 			if (jumpVel == 0 || hacks.MaxJumps == 0) return;
 			
 			entity.Velocity.Y = jumpVel;
-			if (hacks.Speeding && hacks.CanSpeed) entity.Velocity.Y += jumpVel;
+			if (hacks.Speeding     && hacks.CanSpeed) entity.Velocity.Y += jumpVel;
 			if (hacks.HalfSpeeding && hacks.CanSpeed) entity.Velocity.Y += jumpVel / 2;
 			canLiquidJump = false;
 		}
@@ -152,15 +153,12 @@ namespace ClassicalSharp.Entities {
 		
 		bool OnIce(Entity entity) {
 			Vector3 under = entity.Position; under.Y -= 0.01f;
-			if (BlockInfo.ExtendedCollide[GetBlock(under)] == CollideType.Ice) return true;
+			BlockID blockUnder = game.World.SafeGetBlock(Vector3I.Floor(under));
+			if (BlockInfo.ExtendedCollide[blockUnder] == CollideType.Ice) return true;
 			
 			AABB bounds = entity.Bounds;
 			bounds.Min.Y -= 0.01f; bounds.Max.Y = bounds.Min.Y;
 			return entity.TouchesAny(bounds, touchesSlipperyIce);
-		}
-		
-		BlockID GetBlock(Vector3 coords) {
-			return game.World.SafeGetBlock(Vector3I.Floor(coords));
 		}
 		
 		static Predicate<BlockID> touchesSlipperyIce = IsSlipperyIce;
@@ -227,7 +225,7 @@ namespace ClassicalSharp.Entities {
 			Vector3I max = Vector3I.Floor(bounds.Max);
 			float modifier = inf;
 			
-			AABB blockBB = default(AABB);
+			AABB blockBB;
 			min.X = min.X < 0 ? 0 : min.X; max.X = max.X > game.World.MaxX ? game.World.MaxX : max.X;
 			min.Y = min.Y < 0 ? 0 : min.Y; max.Y = max.Y > game.World.MaxY ? game.World.MaxY : max.Y;
 			min.Z = min.Z < 0 ? 0 : min.Z; max.Z = max.Z > game.World.MaxZ ? game.World.MaxZ : max.Z;
@@ -237,7 +235,7 @@ namespace ClassicalSharp.Entities {
 					for (int x = min.X; x <= max.X; x++)
 			{
 				BlockID block = game.World.GetBlock(x, y, z);
-				if (block == 0) continue;
+				if (block == Block.Air) continue;
 				byte collide = BlockInfo.Collide[block];
 				if (collide == CollideType.Solid && !checkSolid) continue;
 				

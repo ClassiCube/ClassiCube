@@ -17,10 +17,9 @@ Vector3 Vector3_Create1(Real32 value);
 Vector3 Vector3_Create3(Real32 x, Real32 y, Real32 z);
 Vector3I Vector3I_Create1(Int32 value);
 Vector3I Vector3I_Create3(Int32 x, Int32 y, Int32 z);
-
-Real32 Vector3_Length(Vector3* v);
 Real32 Vector3_LengthSquared(Vector3* v);
 
+#define VECTOR3_CONST1(val) { val, val, val };
 #define VECTOR3_CONST(x, y, z) { x, y, z };
 #define Vector3_UnitX VECTOR3_CONST(1.0f, 0.0f, 0.0f)
 #define Vector3_UnitY VECTOR3_CONST(0.0f, 1.0f, 0.0f)
@@ -30,10 +29,15 @@ Real32 Vector3_LengthSquared(Vector3* v);
 
 void Vector3_Add(Vector3* result, Vector3* a, Vector3* b);
 void Vector3_Add1(Vector3* result, Vector3* a, Real32 b);
-void Vector3_Subtract(Vector3* result, Vector3* a, Vector3* b);
-void Vector3_Multiply1(Vector3* result, Vector3* a, Real32 scale);
-void Vector3_Multiply3(Vector3* result, Vector3* a, Vector3* scale);
+void Vector3_Sub(Vector3* result, Vector3* a, Vector3* b);
+void Vector3_Mul1(Vector3* result, Vector3* a, Real32 scale);
+void Vector3_Mul3(Vector3* result, Vector3* a, Vector3* scale);
 void Vector3_Negate(Vector3* result, Vector3* a);
+
+#define Vector3_AddBy(dst, value) Vector3_Add(dst, dst, value)
+#define Vector3_SubBy(dst, value) Vector3_Sub(dst, dst, value)
+#define Vector3_Mul1By(dst, value) Vector3_Mul1(dst, dst, value)
+#define Vector3_Mul3By(dst, value) Vector3_Mul3(dst, dst, value)
 
 void Vector3_Lerp(Vector3* result, Vector3* a, Vector3* b, Real32 blend);
 Real32 Vector3_Dot(Vector3* left, Vector3* right);

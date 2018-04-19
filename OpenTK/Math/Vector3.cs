@@ -74,8 +74,6 @@ namespace OpenTK {
 
 		public static readonly Vector3 One = new Vector3(1, 1, 1);
 
-		public static readonly int SizeInBytes = 3 * sizeof( float );
-
 		public static void Add(ref Vector3 a, ref Vector3 b, out Vector3 result) {
 			result = new Vector3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
 		}

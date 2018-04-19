@@ -170,7 +170,7 @@ namespace ClassicalSharp.Entities {
 			Vector3I min = Vector3I.Floor(bounds.Min);
 			Vector3I max = Vector3I.Floor(bounds.Max);
 
-			AABB blockBB = default(AABB);
+			AABB blockBB;
 			Vector3 v;		
 			min.X = min.X < 0 ? 0 : min.X; max.X = max.X > game.World.MaxX ? game.World.MaxX : max.X;
 			min.Y = min.Y < 0 ? 0 : min.Y; max.Y = max.Y > game.World.MaxY ? game.World.MaxY : max.Y;

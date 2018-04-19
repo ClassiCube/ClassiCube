@@ -386,7 +386,7 @@ void InputHandler_KeyDown(void* obj, Int32 key) {
 		Game_ScreenshotRequested = true;
 	} else if (active->VTABLE->HandlesKeyDown(active, key)) {
 	} else if (InputHandler_HandleCoreKey(key)) {
-	} else if (LocalPlayer_Instance.Input.Handles(key)) {
+	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
 		UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
 		String text = String_InitAndClearArray(textBuffer);

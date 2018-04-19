@@ -735,8 +735,8 @@ void TableWidget_Recreate(GuiElement* elem) {
 void TableWidget_Reposition(GuiElement* elem) {
 	TableWidget* widget = (TableWidget*)elem;
 	Real32 scale = Game_GetInventoryScale();
-	widget->BlockSize = (Int32)(50 * Math_Sqrt(scale));
-	widget->SelBlockExpand = 25.0f * Math_Sqrt(scale);
+	widget->BlockSize = (Int32)(50 * Math_SqrtF(scale));
+	widget->SelBlockExpand = 25.0f * Math_SqrtF(scale);
 	TableWidget_UpdatePos(widget);
 	TableWidget_UpdateScrollbarPos(widget);
 }

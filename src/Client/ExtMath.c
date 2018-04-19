@@ -1,5 +1,21 @@
 #include "ExtMath.h"
+#include <math.h>
 
+/* TODO: Replace with own functions that don't rely on stdlib */
+
+Real32 Math_AbsF(Real32 x) { return fabsf(x); }
+Real32 Math_SinF(Real32 x) { return sinf(x); }
+Real32 Math_CosF(Real32 x) { return cosf(x); }
+Real32 Math_TanF(Real32 x) { return tanf(x); }
+Real32 Math_SqrtF(Real32 x) { return sqrtf(x); }
+Real32 Math_ModF(Real32 x, Real32 y) { return fmodf(x, y); }
+
+Real64 Math_Log(Real64 x) { return log(x); }
+Real64 Math_Exp(Real64 x) { return exp(x); }
+Real64 Math_Asin(Real64 x) { return asin(x); }
+Real64 Math_Atan2(Real64 y, Real64 x) { return atan2(y, x); }
+
+Int32 Math_AbsI(Int32 x) { return abs(x); }
 Int32 Math_Floor(Real32 value) {
 	Int32 valueI = (Int32)value;
 	return valueI > value ? valueI - 1 : valueI;

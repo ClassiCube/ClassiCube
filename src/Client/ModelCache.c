@@ -572,9 +572,9 @@ void SpiderModel_DrawModel(Entity* entity) {
 	IModel_DrawPart(Spider_Link);
 	IModel_DrawPart(Spider_End);
 
-	Real32 rotX = Math_Sin(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
-	Real32 rotZ = Math_Cos(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
-	Real32 rotY = Math_Sin(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
+	Real32 rotX = Math_SinF(entity->Anim.WalkTime)     * entity->Anim.Swing * MATH_PI;
+	Real32 rotZ = Math_CosF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 16.0f;
+	Real32 rotY = Math_SinF(entity->Anim.WalkTime * 2) * entity->Anim.Swing * MATH_PI / 32.0f;
 	IModel_Rotation = ROTATE_ORDER_XZY;
 
 	IModel_DrawRotate(rotX, quarterPi + rotY, eighthPi + rotZ, Spider_LeftLeg, false);
@@ -1120,10 +1120,10 @@ Real32 BlockModel_GetEyeY(Entity* entity) {
 
 Vector3 BlockModel_GetCollisionSize(void) {
 	Vector3 size;
-	Vector3_Subtract(&size, &BlockModel_maxBB, &BlockModel_minBB);
+	Vector3_Sub(&size, &BlockModel_maxBB, &BlockModel_minBB);
 	/* to fit slightly inside */
-	Vector3 sizeShrink = Vector3_Create1(0.75f / 16.0f);
-	Vector3_Subtract(&size, &size, &sizeShrink);
+	Vector3 sizeShrink = VECTOR3_CONST1(0.75f / 16.0f);
+	Vector3_SubBy(&size, &sizeShrink);
 	return size;
 }
 

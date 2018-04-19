@@ -160,8 +160,11 @@ namespace ClassicalSharp.Renderers {
 			// TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often
 			if (fogDensity != 0) {
 				// Exp fog mode: f = e^(-density*coord)
-				// Solve for f = 0.05 to figure out coord (good approx for fog end)
-				float dist = (float)Math.Log(0.05) / -fogDensity;
+				// Solve coord for f = 0.05 (good approx for fog end)
+				//   i.e. log(0.05) = -density * coord
+				
+				const double log005 = -2.99573227355399;
+				double dist = log005 / -fogDensity;
 				game.SetViewDistance((int)dist, false);
 			} else {
 				game.SetViewDistance(game.UserViewDistance, false);
@@ -233,7 +236,9 @@ namespace ClassicalSharp.Renderers {
 				// 0.99=z/end   --> z=end*0.99
 				//   therefore
 				// d = -ln(0.01)/(end*0.99)
-				double density = -Math.Log(0.01) / (game.ViewDistance * 0.99);
+				
+				const double log001 = -4.60517018598809;
+				double density = -log001 / (game.ViewDistance * 0.99);
 				gfx.SetFogDensity((float)density);
 			} else {
 				gfx.SetFogMode(Fog.Linear);

@@ -18,11 +18,11 @@ GfxResourceID env_cloudsVb, env_skyVb, env_cloudsTex;
 Int32 env_cloudVertices, env_skyVertices;
 
 Real32 EnvRenderer_BlendFactor(Real32 x) {
-	/* return -0.05 + 0.22 * (Math_LogE(x) * 0.25f); */
-	Real32 blend = -0.13f + 0.28f * (Math_LogE(x) * 0.25f);
-	if (blend < 0.0f) blend = 0.0f;
-	if (blend > 1.0f) blend = 1.0f;
-	return blend;
+	/* return -0.05 + 0.22 * (Math_Log(x) * 0.25f); */
+	Real64 blend = -0.13 + 0.28 * (Math_Log(x) * 0.25);
+	if (blend < 0.0) blend = 0.0;
+	if (blend > 1.0) blend = 1.0;
+	return (Real32)blend;
 }
 
 void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
@@ -59,8 +59,11 @@ void EnvRenderer_RenderMinimal(Real64 deltaTime) {
 	/* TODO: rewrite this to avoid raising the event? want to avoid recreating vbos too many times often */
 	if (fogDensity != 0.0f) {
 		/* Exp fog mode: f = e^(-density*coord) */
-		/* Solve for f = 0.05 to figure out coord (good approx for fog end) */
-		Real32 dist = (Real32)Math_LogE(0.05f) / -fogDensity;
+		/* Solve coord for f = 0.05 (good approx for fog end) */
+		/*   i.e. log(0.05) = -density * coord */
+
+		#define LOG_005 -2.99573227355399
+		Real64 dist = LOG_005 / -fogDensity;
 		Game_SetViewDistance((Int32)dist, false);
 	} else {
 		Game_SetViewDistance(Game_UserViewDistance, false);
@@ -129,8 +132,10 @@ void EnvRenderer_UpdateFog(void) {
 		   0.99=z/end   --> z=end*0.99
 		     therefore
 		  d = -ln(0.01)/(end*0.99) */
-		Real32 density = -Math_LogE(0.01f) / (Game_ViewDistance * 0.99f);
-		Gfx_SetFogDensity(density);
+
+		#define LOG_001 -4.60517018598809
+		Real64 density = -(LOG_001) / (Game_ViewDistance * 0.99);
+		Gfx_SetFogDensity((Real32)density);
 	} else {
 		Gfx_SetFogMode(FOG_LINEAR);
 		Gfx_SetFogEnd(Game_ViewDistance);

@@ -144,7 +144,6 @@
     <Compile Include="Entities\Mobs\AI.cs" />
     <Compile Include="Entities\Components\AnimatedComponent.cs" />
     <Compile Include="Entities\Components\HacksComponent.cs" />
-    <Compile Include="Entities\Components\InputComponent.cs" />
     <Compile Include="Entities\Components\CollisionsComponent.cs" />
     <Compile Include="Entities\Components\NewCollisionsComponent.cs" />
     <Compile Include="Entities\Components\PhysicsComponent.cs" />

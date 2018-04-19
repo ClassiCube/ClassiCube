@@ -82,7 +82,7 @@ namespace ClassicalSharp {
 		public int ToArgb() { return A << 24 | R << 16 | G << 8 | B; }		
 				
 		public static FastColour Argb(int c) {
-			FastColour col = default(FastColour);
+			FastColour col;
 			col.A = (byte)(c >> 24);
 			col.R = (byte)(c >> 16);
 			col.G = (byte)(c >> 8);
@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static FastColour Unpack(int c) {
-			FastColour col = default(FastColour);
+			FastColour col;
 			col.A = (byte)(c >> 24);
 			col.G = (byte)(c >> 8);
 			#if USE_DX			

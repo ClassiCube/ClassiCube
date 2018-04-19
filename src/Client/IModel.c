@@ -118,8 +118,8 @@ void IModel_SetupState(IModel* model, Entity* entity) {
 	IModel_Cols[5] = IModel_Cols[4];
 
 	Real32 yawDelta = entity->HeadY - entity->RotY;
-	IModel_cosHead = Math_Cos(yawDelta * MATH_DEG2RAD);
-	IModel_sinHead = Math_Sin(yawDelta * MATH_DEG2RAD);
+	IModel_cosHead = Math_CosF(yawDelta * MATH_DEG2RAD);
+	IModel_sinHead = Math_SinF(yawDelta * MATH_DEG2RAD);
 }
 
 void IModel_UpdateVB(void) {
@@ -158,9 +158,9 @@ void IModel_DrawPart(ModelPart part) {
 
 void IModel_DrawRotate(Real32 angleX, Real32 angleY, Real32 angleZ, ModelPart part, bool head) {
 	IModel* model = IModel_ActiveModel;
-	Real32 cosX = Math_Cos(-angleX), sinX = Math_Sin(-angleX);
-	Real32 cosY = Math_Cos(-angleY), sinY = Math_Sin(-angleY);
-	Real32 cosZ = Math_Cos(-angleZ), sinZ = Math_Sin(-angleZ);
+	Real32 cosX = Math_CosF(-angleX), sinX = Math_SinF(-angleX);
+	Real32 cosY = Math_CosF(-angleY), sinY = Math_SinF(-angleY);
+	Real32 cosZ = Math_CosF(-angleZ), sinZ = Math_SinF(-angleZ);
 	Real32 x = part.RotX, y = part.RotY, z = part.RotZ;
 
 	ModelVertex* src = &model->vertices[part.Offset];

@@ -87,9 +87,10 @@ void WorldEnv_SetCloudsCol(PackedCol col);
 void WorldEnv_SetSunCol(PackedCol col);
 void WorldEnv_SetShadowCol(PackedCol col);
 
-/* Finds the highest free Y coordinate in the given bounding box.*/
+#define RESPAWN_NOT_FOUND -100000.0f
+/* Finds the highest free Y coordinate in the given bounding box */
 Real32 Respawn_HighestFreeY(AABB* bb);
 /* Finds a suitable spawn position for the entity, by iterating 
-downwards from top of the world until the ground is found. */
+downwards from top of the world until the ground is found */
 Vector3 Respawn_FindSpawnPosition(Real32 x, Real32 z, Vector3 modelSize);
 #endif

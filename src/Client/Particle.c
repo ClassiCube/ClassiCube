@@ -105,7 +105,7 @@ bool Particle_PhysicsTick(Particle* p, Real32 gravity, bool throughLiquids, Real
 	p->Velocity.Y -= gravity * (Real32)delta;
 	Int32 startY = Math_Floor(p->NextPos.Y);
 	Vector3 velocity;
-	Vector3_Multiply1(&velocity, &p->Velocity, (Real32)delta * 3.0f);
+	Vector3_Mul1(&velocity, &p->Velocity, (Real32)delta * 3.0f);
 	Vector3_Add(&p->NextPos, &p->NextPos, &velocity);
 	Int32 endY = Math_Floor(p->NextPos.Y);
 
