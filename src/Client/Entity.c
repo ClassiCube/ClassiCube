@@ -17,10 +17,14 @@
 #include "ErrorHandler.h"
 #include "IModel.h"
 #include "Input.h"
+#include "Gui.h"
 
 const UInt8* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
 const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
+/*########################################################################################################################*
+*-----------------------------------------------------LocationUpdate------------------------------------------------------*
+*#########################################################################################################################*/
 Real32 LocationUpdate_Clamp(Real32 degrees) {
 	degrees = Math_ModF(degrees, 360.0f);
 	if (degrees < 0) degrees += 360.0f;
@@ -56,7 +60,10 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 }
 
 
-EntityVTABLE entityDefaultVTABLE;
+/*########################################################################################################################*
+*---------------------------------------------------------Entity----------------------------------------------------------*
+*#########################################################################################################################*/
+EntityVTABLE entity_VTABLE;
 PackedCol Entity_DefaultGetCol(Entity* entity) {
 	Vector3 eyePos = Entity_GetEyePosition(entity);
 	Vector3I P; Vector3I_Floor(&P, &eyePos);
@@ -65,15 +72,14 @@ PackedCol Entity_DefaultGetCol(Entity* entity) {
 void Entity_NullFunc(Entity* entity) {}
 
 void Entity_Init(Entity* entity) {
-	Platform_MemSet(entity, 0, sizeof(Entity));
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->uScale = 1.0f;
 	entity->vScale = 1.0f;
 
-	entityDefaultVTABLE.ContextLost      = Entity_NullFunc;
-	entityDefaultVTABLE.ContextRecreated = Entity_NullFunc;
-	entityDefaultVTABLE.GetCol           = Entity_DefaultGetCol;
-	entity->VTABLE = &entityDefaultVTABLE;
+	entity->VTABLE = &entity_VTABLE;
+	entity->VTABLE->ContextLost      = Entity_NullFunc;
+	entity->VTABLE->ContextRecreated = Entity_NullFunc;
+	entity->VTABLE->GetCol           = Entity_DefaultGetCol;
 }
 
 Vector3 Entity_GetEyePosition(Entity* entity) {
@@ -214,12 +220,15 @@ bool Entity_TouchesAnyWater(Entity* entity) {
 }
 
 
-EntityID closestId;
+/*########################################################################################################################*
+*--------------------------------------------------------Entities---------------------------------------------------------*
+*#########################################################################################################################*/
+EntityID entities_closestId;
 void Entities_Tick(ScheduledTask* task) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
-		Entities_List[i]->VTABLE->Tick(Entities_List[i], task);
+		Entities_List[i]->VTABLE->Tick(Entities_List[i], task->Interval);
 	}
 }
 
@@ -239,7 +248,7 @@ void Entities_RenderModels(Real64 delta, Real32 t) {
 void Entities_RenderNames(Real64 delta) {
 	if (Entities_NameMode == NAME_MODE_NONE) return;
 	LocalPlayer* p = &LocalPlayer_Instance;
-	closestId = Entities_GetCloset(&p->Base);
+	entities_closestId = Entities_GetCloset(&p->Base);
 	if (!p->Hacks.CanSeeAllNames || Entities_NameMode != NAME_MODE_ALL) return;
 
 	Gfx_SetTexturing(true);
@@ -250,7 +259,7 @@ void Entities_RenderNames(Real64 delta) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
-		if (i != closestId || i == ENTITIES_SELF_ID) {
+		if (i != entities_closestId || i == ENTITIES_SELF_ID) {
 			Entities_List[i]->VTABLE->RenderName(Entities_List[i]);
 		}
 	}
@@ -275,7 +284,7 @@ void Entities_RenderHoveredNames(Real64 delta) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
-		if ((i == closestId || allNames) && i != ENTITIES_SELF_ID) {
+		if ((i == entities_closestId || allNames) && i != ENTITIES_SELF_ID) {
 			Entities_List[i]->VTABLE->RenderName(Entities_List[i]);
 		}
 	}
@@ -394,6 +403,10 @@ void Entities_DrawShadows(void) {
 	Gfx_SetTexturing(false);
 }
 
+
+/*########################################################################################################################*
+*--------------------------------------------------------TabList----------------------------------------------------------*
+*#########################################################################################################################*/
 bool TabList_Valid(EntityID id) {
 	return TabList_PlayerNames[id] > 0 || TabList_ListNames[id] > 0 || TabList_GroupNames[id] > 0;
 }
@@ -439,6 +452,9 @@ IGameComponent TabList_MakeComponent(void) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------Player----------------------------------------------------------*
+*#########################################################################################################################*/
 #define PLAYER_NAME_EMPTY_TEX -30000
 void Player_MakeNameTexture(Player* player) {
 	FontDesc font; 
@@ -708,10 +724,15 @@ void Player_ContextRecreated(Entity* entity) {
 	Player_UpdateName(player);
 }
 
-EntityVTABLE playerDefaultVTABLE;
+void Player_SetName(Player* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
+	String dstDisplayName = String_FromEmptyArray(player->DisplayNameRaw);
+	String_AppendString(&dstDisplayName, displayName);
+	String dstSkinName = String_FromEmptyArray(player->SkinNameRaw);
+	String_AppendString(&dstSkinName, skinName);
+}
+
+EntityVTABLE player_VTABLE;
 void Player_Init(Player* player) {
-	/* TODO should we just remove the memset from entity_Init and player_init?? */
-	Platform_MemSet(player + sizeof(Entity), 0, sizeof(Player) - sizeof(Entity));
 	Entity* entity = &player->Base;
 	Entity_Init(entity);
 	entity->StepSize = 0.5f;
@@ -719,13 +740,17 @@ void Player_Init(Player* player) {
 	String model = String_FromConst("humanoid");
 	Entity_SetModel(entity, &model);
 
-	playerDefaultVTABLE = *entity->VTABLE;
-	entity->VTABLE = &playerDefaultVTABLE;
+	player_VTABLE  = *entity->VTABLE;
+	entity->VTABLE = &player_VTABLE;
 	entity->VTABLE->ContextLost      = Player_ContextLost;
 	entity->VTABLE->ContextRecreated = Player_ContextRecreated;
 	entity->VTABLE->Despawn          = Player_Despawn;
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------LocalPlayer--------------------------------------------------------*
+*#########################################################################################################################*/
 Real32 LocalPlayer_JumpHeight(void) {
 	LocalPlayer* p = &LocalPlayer_Instance;
 	return (Real32)PhysicsComp_GetMaxHeight(p->Physics.JumpVel);
@@ -739,6 +764,150 @@ void LocalPlayer_CheckHacksConsistency(void) {
 	}
 }
 
+void LocalPlayer_SetInterpPosition(Real32 t) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	if (!(p->Hacks.WOMStyleHacks && p->Hacks.Noclip)) {
+		Vector3_Lerp(&p->Base.Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
+	}
+	InterpComp_LerpAngles((InterpComp*)(&p->Interp), &p->Base, t);
+}
+
+void LocalPlayer_HandleInput(Real32* xMoving, Real32* zMoving) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	HacksComp* hacks = &p->Hacks;
+
+	if (Gui_GetActiveScreen()->HandlesAllInput) {
+		p->Physics.Jumping = false; hacks->Speeding = false;
+		hacks->FlyingUp    = false; hacks->FlyingDown = false;
+	} else {
+		if (KeyBind_IsPressed(KeyBind_Forward)) *zMoving -= 0.98f;
+		if (KeyBind_IsPressed(KeyBind_Back))    *zMoving += 0.98f;
+		if (KeyBind_IsPressed(KeyBind_Left))    *xMoving -= 0.98f;
+		if (KeyBind_IsPressed(KeyBind_Right))   *xMoving += 0.98f;
+
+		p->Physics.Jumping  = KeyBind_IsPressed(KeyBind_Jump);
+		hacks->Speeding     = hacks->Enabled && KeyBind_IsPressed(KeyBind_Speed);
+		hacks->HalfSpeeding = hacks->Enabled && KeyBind_IsPressed(KeyBind_HalfSpeed);
+		hacks->FlyingUp     = KeyBind_IsPressed(KeyBind_FlyUp);
+		hacks->FlyingDown   = KeyBind_IsPressed(KeyBind_FlyDown);
+
+		if (hacks->WOMStyleHacks && hacks->Enabled && hacks->CanNoclip) {
+			if (hacks->Noclip) { Vector3 zero = Vector3_Zero; p->Base.Velocity = zero; }
+			hacks->Noclip = KeyBind_IsPressed(KeyBind_NoClip);
+		}
+	}
+}
+
+void LocalPlayer_SetLocation(Entity* entity, LocationUpdate* update, bool interpolate) {
+	LocalPlayer* p = (LocalPlayer*)entity;
+	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
+}
+
+void LocalPlayer_Tick(Entity* entity, Real64 delta) {
+	if (World_Blocks == NULL) return;
+	LocalPlayer* p = (LocalPlayer*)entity;
+	HacksComp* hacks = &p->Hacks;
+
+	entity->StepSize = hacks->FullBlockStep && hacks->Enabled && hacks->CanAnyHacks && hacks->CanSpeed ? 1.0f : 0.5f;
+	entity->OldVelocity = entity->Velocity;
+	Real32 xMoving = 0.0f, zMoving = 0.0f;
+	LocalInterpComp_AdvanceState(&p->Interp);
+	bool wasOnGround = entity->OnGround;
+
+	LocalPlayer_HandleInput(&xMoving, &zMoving);
+	hacks->Floating = hacks->Noclip || hacks->Flying;
+	if (!hacks->Floating && hacks->CanBePushed) PhysicsComp_DoEntityPush(entity);
+
+	/* Immediate stop in noclip mode */
+	if (!hacks->NoclipSlide && (hacks->Noclip && xMoving == 0.0f && zMoving == 0.0f)) {
+		Vector3 zero = Vector3_Zero; entity->Velocity = zero;
+	}
+
+	PhysicsComp_UpdateVelocityState(&p->Physics);
+	Vector3 headingVelocity = Vector3_RotateY3(xMoving, 0, zMoving, entity->HeadY * MATH_DEG2RAD);
+	PhysicsComp_PhysicsTick(&p->Physics, headingVelocity);
+
+	p->Interp.Next.Pos = entity->Position; entity->Position = p->Interp.Prev.Pos;
+	AnimatedComp_Update(entity, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
+	TiltComp_Update(&p->Tilt, delta);
+
+	Player_CheckSkin((Player*)p);
+	/* TODO: sound */
+	/* sound.Tick(wasOnGround); */
+}
+
+void LocalPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
+	LocalPlayer* p = (LocalPlayer*)entity;
+	AnimatedComp_GetCurrent(entity, t);
+	TiltComp_GetCurrent(&p->Tilt, t);
+
+	if (!Camera_Active->IsThirdPerson) return;
+	IModel_Render(entity->Model, entity);
+}
+
+void LocalPlayer_RenderName(Entity* entity) {
+	if (!Camera_Active->IsThirdPerson) return;
+	Player_DrawName((Player*)entity);
+}
+
+void LocalPlayer_Init_(void) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	HacksComp* hacks = &p->Hacks;
+
+	hacks->Enabled = !Game_PureClassic && Options_GetBool(OPT_HACKS_ENABLED, true);
+	/* p->Base.Health = 20; TODO: survival mode stuff */
+	if (Game_ClassicMode) return;
+
+	hacks->SpeedMultiplier = Options_GetFloat(OPT_SPEED_FACTOR, 0.1f, 50.0f, 10.0f);
+	hacks->PushbackPlacing = Options_GetBool(OPT_PUSHBACK_PLACING, false);
+	hacks->NoclipSlide     = Options_GetBool(OPT_NOCLIP_SLIDE, false);
+	hacks->WOMStyleHacks   = Options_GetBool(OPT_WOM_STYLE_HACKS, false);
+	hacks->FullBlockStep   = Options_GetBool(OPT_FULL_BLOCK_STEP, false);
+	p->Physics.UserJumpVel = Options_GetFloat(OPT_JUMP_VELOCITY, 0.0f, 52.0f, 0.42f);
+	p->Physics.JumpVel     = p->Physics.UserJumpVel;
+}
+
+void LocalPlayer_Reset(void) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	p->ReachDistance = 5.0f;
+	Vector3 zero = Vector3_Zero; p->Base.Velocity = zero;
+	p->Physics.JumpVel       = 0.42f;
+	p->Physics.ServerJumpVel = 0.42f;
+	/* p->Base.Health = 20; TODO: survival mode stuff */
+}
+
+IGameComponent LocalPlayer_MakeComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Init  = LocalPlayer_Init_;
+	comp.Ready = LocalPlayer_Reset;
+	return comp;
+}
+
+EntityVTABLE localplayer_VTABLE;
+void LocalPlayer_Init(void) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	Platform_MemSet(p, 0, sizeof(LocalPlayer));
+	Player_Init((Player*)p);
+	Player_SetName((Player*)p, &Game_Username, &Game_Username);
+
+	HacksComp_Init(&p->Hacks);
+	PhysicsComp_Init(&p->Physics, &p->Base);
+	TiltComp_Init(&p->Tilt);
+
+	p->ReachDistance = 5.0f;
+	p->Physics.Hacks = &p->Hacks;
+	p->Physics.Collisions = &p->Collisions;
+
+	Entity* entity = &p->Base;
+	localplayer_VTABLE = *entity->VTABLE;
+	entity->VTABLE     = &localplayer_VTABLE;
+
+	entity->VTABLE->SetLocation = LocalPlayer_SetLocation;
+	entity->VTABLE->Tick        = LocalPlayer_Tick;
+	entity->VTABLE->RenderModel = LocalPlayer_RenderModel;
+	entity->VTABLE->RenderName  = LocalPlayer_RenderName;
+}
+
 bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
 void LocalPlayer_DoRespawn(void) {
 	if (World_Blocks == NULL) return;
@@ -749,7 +918,7 @@ void LocalPlayer_DoRespawn(void) {
 
 	/* Spawn player at highest valid position */
 	if (World_IsValidPos_3I(P)) {
-		AAABB_Make(&bb, &spawn, &p->Base.Size);
+		AABB_Make(&bb, &spawn, &p->Base.Size);
 		Int32 y;
 		for (y = P.Y; y <= World_Height; y++) {
 			Real32 spawnY = Respawn_HighestFreeY(&bb);
@@ -780,14 +949,14 @@ bool LocalPlayer_HandlesKey(Int32 key) {
 	PhysicsComp* physics = &p->Physics;
 
 	if (key == KeyBind_Get(KeyBind_Respawn) && hacks->CanRespawn) {
-		DoRespawn();
+		LocalPlayer_DoRespawn();
 	} else if (key == KeyBind_Get(KeyBind_SetSpawn) && hacks->CanRespawn) {
 		p->Spawn = p->Base.Position;
 		p->Spawn.X = Math_Floor(p->Spawn.X) + 0.5f;
 		p->Spawn.Z = Math_Floor(p->Spawn.Z) + 0.5f;
 		p->SpawnRotY = p->Base.RotY;
 		p->SpawnHeadX = p->Base.HeadX;
-		DoRespawn();
+		LocalPlayer_DoRespawn();
 	} else if (key == KeyBind_Get(KeyBind_Fly) && hacks->CanFly && hacks->Enabled) {
 		hacks->Flying = !hacks->Flying;
 	} else if (key == KeyBind_Get(KeyBind_NoClip) && hacks->CanNoclip && hacks->Enabled && !hacks->WOMStyleHacks) {
@@ -805,4 +974,55 @@ bool LocalPlayer_HandlesKey(Int32 key) {
 		return false;
 	}
 	return true;
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------NetPlayer---------------------------------------------------------*
+*#########################################################################################################################*/
+void NetPlayer_SetLocation(Entity* entity, LocationUpdate* update, bool interpolate) {
+	NetPlayer* p = (NetPlayer*)entity;
+	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
+}
+
+void NetPlayer_Tick(Entity* entity, Real64 delta) {
+	NetPlayer* p = (NetPlayer*)entity;
+	Player_CheckSkin((Player*)p);
+	NetInterpComp_AdvanceState(&p->Interp);
+	AnimatedComp_Update(entity, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
+}
+
+void NetPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
+	NetPlayer* p = (NetPlayer*)entity;
+	Vector3_Lerp(&entity->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
+	InterpComp_LerpAngles((InterpComp*)(&p->Interp), entity, t);
+
+	AnimatedComp_GetCurrent(entity, t);
+	p->ShouldRender = IModel_ShouldRender(entity);
+	if (p->ShouldRender) IModel_Render(entity->Model, entity);
+}
+
+void NetPlayer_RenderName(Entity* entity) {
+	NetPlayer* p = (NetPlayer*)entity;
+	if (!p->ShouldRender) return;
+
+	Real32 dist = IModel_RenderDistance(entity);
+	Int32 threshold = Entities_NameMode == NAME_MODE_ALL_UNSCALED ? 8192 * 8192 : 32 * 32;
+	if (dist <= (Real32)threshold) Player_DrawName((Player*)p);
+}
+
+EntityVTABLE netplayer_VTABLE;
+void NetPlayer_Init(NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
+	Platform_MemSet(player, 0, sizeof(NetPlayer));	
+	Player_Init((Player*)player);
+	Player_SetName((Player*)player, displayName, skinName);
+
+	Entity* entity = &player->Base;
+	netplayer_VTABLE = *entity->VTABLE;
+	entity->VTABLE   = &netplayer_VTABLE;
+
+	entity->VTABLE->SetLocation = NetPlayer_SetLocation;
+	entity->VTABLE->Tick        = NetPlayer_Tick;
+	entity->VTABLE->RenderModel = NetPlayer_RenderModel;
+	entity->VTABLE->RenderName  = NetPlayer_RenderName;
 }

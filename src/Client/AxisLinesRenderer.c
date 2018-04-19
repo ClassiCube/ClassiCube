@@ -57,7 +57,7 @@ void AxisLinesRenderer_Render(Real64 delta) {
 		P.X + axisLines_size, P.Z + axisLines_length, 
 		P.Y);
 
-	if (Camera_ActiveCamera->IsThirdPerson) {
+	if (Camera_Active->IsThirdPerson) {
 		PackedCol green = PACKEDCOL_GREEN;
 		SelectionBox_VerQuad(&ptr, green,
 			P.X - axisLines_size, P.Y,                    P.Z + axisLines_size, 

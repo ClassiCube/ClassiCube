@@ -59,8 +59,7 @@ typedef struct LoadingScreen_ {
 
 typedef struct GeneratingMapScreen_ {
 	LoadingScreen Base;
-	String LastState;
-	UInt8 LastStateBuffer[String_BufferSize(STRING_SIZE)];
+	const UInt8* LastState;
 } GeneratingMapScreen;
 
 #define CHATSCREEN_MAX_STATUS 5
@@ -636,15 +635,12 @@ void GeneratingScreen_Render(GuiElement* elem, Real64 delta) {
 	LoadingScreen_Render(elem, delta);
 	if (Gen_Done) { ServerConnection_EndGeneration(); return; }
 
-	String state = Gen_CurrentState;
+	const volatile UInt8* state = Gen_CurrentState;
 	screen->Base.Progress = Gen_CurrentProgress;
-	if (String_Equals(&state, &screen->LastState)) return;
-
-	String_Clear(&screen->LastState);
-	String_AppendString(&screen->LastState, &state);
+	if (state == screen->LastState) return;
 
 	String message = String_InitAndClearArray(screen->Base.MessageBuffer);
-	String_AppendString(&message, &screen->LastState);
+	String_AppendConst(&message, state);
 	LoadingScreen_SetMessage(&screen->Base);
 }
 
@@ -655,7 +651,7 @@ Screen* GeneratingScreen_MakeInstance(void) {
 	LoadingScreen_Make(&screen->Base, &GeneratingMapScreen_VTABLE, &title, &message);
 
 	screen->Base.VTABLE->Render = GeneratingScreen_Render;
-	screen->LastState = String_InitAndClearArray(screen->LastStateBuffer);
+	screen->LastState = NULL;
 	return (Screen*)screen;
 }
 
@@ -875,7 +871,7 @@ bool ChatScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 		if (key == KeyBind_Get(KeyBind_SendChat) || key == Key_KeypadEnter || key == KeyBind_Get(KeyBind_PauseOrExit)) {
 			ChatScreen_SetHandlesAllInput(screen, false);
 			Game_SetCursorVisible(false);
-			Camera_ActiveCamera->RegrabMouse();
+			Camera_Active->RegrabMouse();
 			Key_KeyRepeat = false;
 
 			if (key == KeyBind_Get(KeyBind_PauseOrExit)) {

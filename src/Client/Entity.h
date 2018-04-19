@@ -54,7 +54,7 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 
 typedef struct Entity_ Entity;
 typedef struct EntityVTABLE_ {
-	void (*Tick)(Entity* entity, ScheduledTask* task);
+	void (*Tick)(Entity* entity, Real64 delta);
 	void (*SetLocation)(Entity* entity, LocationUpdate* update, bool interpolate);
 	void (*RenderModel)(Entity* entity, Real64 deltaTime, Real32 t);
 	void (*RenderName)(Entity* entity);
@@ -140,7 +140,7 @@ typedef struct NetPlayer_ {
 	NetInterpComp Interp;
 	bool ShouldRender;
 } NetPlayer;
-void NetPlayer_Init(NetPlayer* player);
+void NetPlayer_Init(NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName);
 
 /* Represents the user/player's own entity. */
 typedef struct LocalPlayer_ {
@@ -155,8 +155,10 @@ typedef struct LocalPlayer_ {
 } LocalPlayer;
 
 LocalPlayer LocalPlayer_Instance;
+IGameComponent LocalPlayer_MakeComponent(void);
 void LocalPlayer_Init(void);
 Real32 LocalPlayer_JumpHeight(void);
 void LocalPlayer_CheckHacksConsistency(void);
+void LocalPlayer_SetInterpPosition(Real32 t);
 bool LocalPlayer_HandlesKey(Int32 key);
 #endif

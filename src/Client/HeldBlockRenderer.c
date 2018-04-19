@@ -208,7 +208,7 @@ void HeldBlockRenderer_Render(Real64 delta) {
 	HeldBlockRenderer_ResetHeldState();
 	HeldBlockRenderer_DoAnimation(delta, lastSwingY);
 	HeldBlockRenderer_SetBaseOffset();
-	if (!Camera_ActiveCamera->IsThirdPerson) HeldBlockRenderer_RenderModel();
+	if (!Camera_Active->IsThirdPerson) HeldBlockRenderer_RenderModel();
 
 	Gfx_View = view;
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);

@@ -144,7 +144,7 @@ void Gui_SetScreen(Screen* screen, bool freeOld) {
 
 	if (screen == NULL) {
 		Window_SetCursorVisible(false);
-		if (Window_GetFocused()) { Camera_ActiveCamera->RegrabMouse(); }
+		if (Window_GetFocused()) { Camera_Active->RegrabMouse(); }
 	} else if (Gui_Active == NULL) {
 		Window_SetCursorVisible(true);
 	}

@@ -1,6 +1,7 @@
 #include "TreeGen.h"
 #include "BlockID.h"
 #include "ExtMath.h"
+#include "Vectors.h"
 
 bool TreeGen_CanGrow(Int32 treeX, Int32 treeY, Int32 treeZ, Int32 treeHeight) {
 	/* check tree base */

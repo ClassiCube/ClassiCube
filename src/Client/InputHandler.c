@@ -329,7 +329,7 @@ void InputHandler_MouseWheel(void* obj, Real32 delta) {
 	if (active->VTABLE->HandlesMouseScroll(active, delta)) return;
 
 	bool hotbar = Key_IsAltPressed() || Key_IsControlPressed() || Key_IsShiftPressed();
-	if (!hotbar && Camera_ActiveCamera->Zoom(delta)) return;
+	if (!hotbar && Camera_Active->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeHeldBlock) return;
 
 	Gui.hudScreen.hotbar.HandlesMouseScroll(delta);

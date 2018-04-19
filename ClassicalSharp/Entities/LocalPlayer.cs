@@ -46,6 +46,11 @@ namespace ClassicalSharp.Entities {
 			physics.hacks = Hacks; physics.collisions = collisions;
 		}
 		
+		
+		public override void SetLocation(LocationUpdate update, bool interpolate) {
+			interp.SetLocation(update, interpolate);
+		}
+		
 		public override void Tick(double delta) {
 			if (!game.World.HasBlocks) return;
 			StepSize = Hacks.FullBlockStep && Hacks.Enabled && Hacks.CanAnyHacks && Hacks.CanSpeed ? 1 : 0.5f;
@@ -62,8 +67,10 @@ namespace ClassicalSharp.Entities {
 			if (!Hacks.NoclipSlide && (Hacks.Noclip && xMoving == 0 && zMoving == 0)) {
 				Velocity = Vector3.Zero;
 			}
+			
 			physics.UpdateVelocityState();
-			physics.PhysicsTick(GetHeadingVelocity(zMoving, xMoving));
+			Vector3 headingVelocity = Utils.RotateY(xMoving, 0, zMoving, HeadYRadians);
+			physics.PhysicsTick(headingVelocity);
 			
 			interp.next.Pos = Position; Position = interp.prev.Pos;
 			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);
@@ -72,11 +79,6 @@ namespace ClassicalSharp.Entities {
 			CheckSkin();
 			sound.Tick(wasOnGround);
 		}
-		
-		Vector3 GetHeadingVelocity(float xMoving, float zMoving) {
-			return Utils.RotateY(xMoving, 0, zMoving, HeadYRadians);
-		}
-		
 
 		public override void RenderModel(double deltaTime, float t) {
 			anim.GetCurrentAnimState(t);
@@ -90,15 +92,32 @@ namespace ClassicalSharp.Entities {
 			if (!game.Camera.IsThirdPerson) return;
 			DrawName();
 		}
+
+		
+		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
+		public void CheckHacksConsistency() {
+			Hacks.CheckHacksConsistency();
+			if (!Hacks.CanJumpHigher) {
+				physics.jumpVel = physics.serverJumpVel;
+			}
+		}
+		
+		/// <summary> Linearly interpolates position and rotation between the previous and next state. </summary>
+		public void SetInterpPosition(float t) {
+			if (!(Hacks.WOMStyleHacks && Hacks.Noclip)) {
+				Position = Vector3.Lerp(interp.prev.Pos, interp.next.Pos, t);
+			}
+			interp.LerpAngles(t);
+		}
 		
 		void HandleInput(ref float xMoving, ref float zMoving) {
 			if (game.Gui.ActiveScreen.HandlesAllInput) {
 				physics.jumping = Hacks.Speeding = Hacks.FlyingUp = Hacks.FlyingDown = false;
 			} else {
-				if (game.IsKeyDown(KeyBind.Forward)) xMoving -= 0.98f;
-				if (game.IsKeyDown(KeyBind.Back)) xMoving += 0.98f;
-				if (game.IsKeyDown(KeyBind.Left)) zMoving -= 0.98f;
-				if (game.IsKeyDown(KeyBind.Right)) zMoving += 0.98f;
+				if (game.IsKeyDown(KeyBind.Forward)) zMoving -= 0.98f;
+				if (game.IsKeyDown(KeyBind.Back))    zMoving += 0.98f;
+				if (game.IsKeyDown(KeyBind.Left))    xMoving -= 0.98f;
+				if (game.IsKeyDown(KeyBind.Right))   xMoving += 0.98f;
 
 				physics.jumping = game.IsKeyDown(KeyBind.Jump);
 				Hacks.Speeding = Hacks.Enabled && game.IsKeyDown(KeyBind.Speed);
@@ -112,25 +131,7 @@ namespace ClassicalSharp.Entities {
 				}
 			}
 		}
-		
-		/// <summary> Disables any hacks if their respective CanHackX value is set to false. </summary>
-		public void CheckHacksConsistency() {
-			Hacks.CheckHacksConsistency();
-			if (!Hacks.CanJumpHigher) {
-				physics.jumpVel = physics.serverJumpVel;
-			}
-		}
-		
-		public override void SetLocation(LocationUpdate update, bool interpolate) {
-			interp.SetLocation(update, interpolate);
-		}
-		
-		/// <summary> Linearly interpolates position and rotation between the previous and next state. </summary>
-		public void SetInterpPosition(float t) {
-			if (!Hacks.WOMStyleHacks || !Hacks.Noclip)
-				Position = Vector3.Lerp(interp.prev.Pos, interp.next.Pos, t);
-			interp.LerpAngles(t);
-		}
+
 		
 		public void Init(Game game) {
 			Hacks.Enabled = !game.PureClassic && Options.GetBool(OptionsKey.HacksOn, true);
@@ -143,8 +144,7 @@ namespace ClassicalSharp.Entities {
 			Hacks.WOMStyleHacks   = Options.GetBool(OptionsKey.WOMStyleHacks, false);			
 			Hacks.FullBlockStep   = Options.GetBool(OptionsKey.FullBlockStep, false);			
 			physics.userJumpVel   = Options.GetFloat(OptionsKey.JumpVelocity, 0.0f, 52.0f, 0.42f);
-			physics.jumpVel = physics.userJumpVel;
-			
+			physics.jumpVel = physics.userJumpVel;			
 		}
 		
 		public void Ready(Game game) { }

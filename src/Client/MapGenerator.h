@@ -7,9 +7,9 @@
    Copyright 2014 - 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-Real32 Gen_CurrentProgress;
-String Gen_CurrentState;
-bool Gen_Done;
+volatile Real32 Gen_CurrentProgress;
+volatile const UInt8* Gen_CurrentState;
+volatile bool Gen_Done;
 Int32 Gen_Width, Gen_Height, Gen_Length;
 Int32 Gen_MaxX, Gen_MaxY, Gen_MaxZ;
 Int32 Gen_Seed;

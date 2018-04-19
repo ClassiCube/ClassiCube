@@ -20,8 +20,8 @@ typedef struct AnimatedComp_ {
 } AnimatedComp;
 
 void AnimatedComp_Init(AnimatedComp* anim);
-void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Real64 delta, bool onGround);
-void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims);
+void AnimatedComp_Update(Entity* entity, Vector3 oldPos, Vector3 newPos, Real64 delta);
+void AnimatedComp_GetCurrent(Entity* entity, Real32 t);
 
 /* Entity component that performs tilt animation depending on movement speed and time */
 typedef struct TiltComp_ {
@@ -73,19 +73,14 @@ void HacksComp_CheckConsistency(HacksComp* hacks);
 void HacksComp_UpdateState(HacksComp* hacks);
 
 /* Represents a position and orientation state */
-typedef struct InterpState_ {
-	Vector3 Pos;
-	Real32 HeadX, HeadY, RotX, RotZ;
-} InterpState;
+typedef struct InterpState_ { Vector3 Pos; Real32 HeadX, HeadY, RotX, RotZ; } InterpState;
+
+#define InterpComp_Layout \
+InterpState Prev, Next; Real32 PrevRotY, NextRotY; \
+Int32 RotYCount; Real32 RotYStates[15];
 
 /* Base entity component that performs interpolation of position and orientation */
-typedef struct InterpComp_ {
-	InterpState Prev, Next;
-	Real32 PrevRotY, NextRotY;
-
-	Int32 RotYCount;
-	Real32 RotYStates[15];
-} InterpComp;
+typedef struct InterpComp_ { InterpComp_Layout } InterpComp;
 
 void InterpComp_LerpAngles(InterpComp* interp, Entity* entity, Real32 t);
 
@@ -94,7 +89,7 @@ void LocalInterpComp_AdvanceState(InterpComp* interp);
 
 /* Entity component that performs interpolation for network players */
 typedef struct NetInterpComp_ {
-	InterpComp Base;
+	InterpComp_Layout
 	/* Last known position and orientation sent by the server */
 	InterpState Cur;
 	Int32 StatesCount;

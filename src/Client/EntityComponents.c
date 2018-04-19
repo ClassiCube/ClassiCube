@@ -59,7 +59,8 @@ void AnimatedComp_Init(AnimatedComp* anim) {
 	anim->BobStrength = 1.0f; anim->BobStrengthO = 1.0f; anim->BobStrengthN = 1.0f;
 }
 
-void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Real64 delta, bool onGround) {
+void AnimatedComp_Update(Entity* entity, Vector3 oldPos, Vector3 newPos, Real64 delta) {
+	AnimatedComp* anim = &entity->Anim;
 	anim->WalkTimeO = anim->WalkTimeN;
 	anim->SwingO    = anim->SwingN;
 	Real32 dx = newPos.X - oldPos.X;
@@ -79,12 +80,12 @@ void AnimatedComp_Update(AnimatedComp* anim, Vector3 oldPos, Vector3 newPos, Rea
 	anim->BobStrengthO = anim->BobStrengthN;
 	Int32 i;
 	for (i = 0; i < 3; i++) {
-		AnimatedComp_DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !onGround);
+		AnimatedComp_DoTilt(&anim->BobStrengthN, !Game_ViewBobbing || !entity->OnGround);
 	}
 }
 
-
-void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims) {
+void AnimatedComp_GetCurrent(Entity* entity, Real32 t) {
+	AnimatedComp* anim = &entity->Anim;
 	anim->Swing = Math_Lerp(anim->SwingO, anim->SwingN, t);
 	anim->WalkTime = Math_Lerp(anim->WalkTimeO, anim->WalkTimeN, t);
 	anim->BobStrength = Math_Lerp(anim->BobStrengthO, anim->BobStrengthN, t);
@@ -105,7 +106,7 @@ void AnimatedComp_GetCurrent(AnimatedComp* anim, Real32 t, bool calcHumanAnims) 
 	anim->BobbingVer   = Math_AbsF(Math_SinF(anim->WalkTime)) * anim->Swing * (2.5f / 16.0f);
 	anim->BobbingModel = Math_AbsF(Math_CosF(anim->WalkTime)) * anim->Swing * (4.0f / 16.0f);
 
-	if (calcHumanAnims && !Game_SimpleArmsAnim) {
+	if (entity->Model->CalcHumanAnims && !Game_SimpleArmsAnim) {
 		AnimatedComp_CalcHumanAnim(anim, idleXRot, idleZRot);
 	}
 }
@@ -373,9 +374,9 @@ void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bo
 	cur->HeadY = NetInterpComp_Next(update->RotY, cur->HeadY);
 
 	if (!interpolate) {
-		interp->Base.Prev = *cur; interp->Base.PrevRotY = cur->HeadY;
-		interp->Base.Next = *cur; interp->Base.NextRotY = cur->HeadY;
-		interp->Base.RotYCount = 0; interp->StatesCount = 0;
+		interp->Prev = *cur; interp->PrevRotY = cur->HeadY;
+		interp->Next = *cur; interp->NextRotY = cur->HeadY;
+		interp->RotYCount = 0; interp->StatesCount = 0;
 	} else {
 		/* Smoother interpolation by also adding midpoint. */
 		InterpState mid;
@@ -388,19 +389,19 @@ void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bo
 		NetInterpComp_AddState(interp, *cur);
 
 		/* Head rotation lags behind body a tiny bit */
-		InterpComp_AddRotY(&interp->Base, Math_LerpAngle(last.HeadY, cur->HeadY, 0.33333333f));
-		InterpComp_AddRotY(&interp->Base, Math_LerpAngle(last.HeadY, cur->HeadY, 0.66666667f));
-		InterpComp_AddRotY(&interp->Base, Math_LerpAngle(last.HeadY, cur->HeadY, 1.00000000f));
+		InterpComp_AddRotY((InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 0.33333333f));
+		InterpComp_AddRotY((InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 0.66666667f));
+		InterpComp_AddRotY((InterpComp*)interp, Math_LerpAngle(last.HeadY, cur->HeadY, 1.00000000f));
 	}
 }
 
 void NetInterpComp_AdvanceState(NetInterpComp* interp) {
-	interp->Base.Prev = interp->Base.Next;
+	interp->Prev = interp->Next;
 	if (interp->StatesCount > 0) {
-		interp->Base.Next = interp->States[0];
+		interp->Next = interp->States[0];
 		NetInterpComp_RemoveOldestState(interp);
 	}
-	InterpComp_AdvanceRotY(&interp->Base);
+	InterpComp_AdvanceRotY((InterpComp*)interp);
 }
 
 

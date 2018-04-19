@@ -1,6 +1,5 @@
 #ifndef CC_IMPROVED_NOISE_H
 #define CC_IMPROVED_NOISE_H
-#include "Typedefs.h"
 #include "Random.h"
 /* Implements perlin noise generation.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3

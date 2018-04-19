@@ -41,7 +41,7 @@ typedef struct Camera_ {
 NOTE: looking straight up or down (parallel to camera up vector) can otherwise cause rendering issues. */
 Real32 Camera_AdjustHeadX(Real32 degrees);
 
-Camera* Camera_ActiveCamera;
+Camera* Camera_Active;
 void Camera_Init(void);
 void Camera_CycleActive(void);
 #endif

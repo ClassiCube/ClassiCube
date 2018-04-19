@@ -95,7 +95,7 @@ bool Game_ChangeTerrainAtlas(Bitmap* atlas) {
 
 void Game_UpdateProjection(void) {
 	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 150, 70);
-	Camera_ActiveCamera->GetProjection(&Gfx_Projection);
+	Camera_Active->GetProjection(&Gfx_Projection);
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&Gfx_Projection);

@@ -20,10 +20,10 @@ namespace ClassicalSharp.Generator {
 		public override string GeneratorName { get { return "Vanilla classic"; } }
 		
 		public override BlockRaw[] Generate() {
+			blocks = new BlockRaw[Width * Height * Length];			
+			rnd = new JavaRandom(Seed);
 			oneY = Width * Length;
 			waterLevel = Height / 2;
-			blocks = new BlockRaw[Width * Height * Length];
-			rnd = new JavaRandom(Seed);
 			minHeight = Height;
 			
 			CreateHeightmap();
