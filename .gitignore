@@ -23,6 +23,10 @@ bld/
 [Oo]bj/
 [Oo]utput/
 [Pp]rofilingSessions/
+[sS]rc/Client/texpacks
+[sS]rc/Client/maps
+[sS]rc/Client/texturecache
+[sS]rc/Client/logs
 
 # Roslyn cache directories
 *.ide/

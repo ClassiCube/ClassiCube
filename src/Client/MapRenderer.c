@@ -18,7 +18,7 @@ void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz) {
 
 	ChunkInfo* info = &MapRenderer_Chunks[MapRenderer_Pack(cx, cy, cz)];
 	if (info->AllAir) return; /* do not recreate chunks completely air */
-	info->Empty = false;
+	info->Empty         = false;
 	info->PendingDelete = true;
 }
 

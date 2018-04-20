@@ -597,7 +597,7 @@ void PauseScreen_Game(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(NULL); }
 void PauseScreen_CheckHacksAllowed(void* obj) {
 	if (Game_UseClassicOptions) return;
 	PauseScreen* screen = (PauseScreen*)obj;
-	screen->Buttons[4].Disabled = LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
+	screen->Buttons[4].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
 }
 
 void PauseScreen_ContextRecreated(void* obj) {
@@ -1946,6 +1946,7 @@ void MenuOptionsScreen_FreeInput(MenuOptionsScreen* screen) {
 
 	Int32 i;
 	for (i = screen->WidgetsCount - 3; i < screen->WidgetsCount; i++) {
+		if (screen->WidgetsPtr[i] == NULL) continue;
 		Elem_TryFree(screen->WidgetsPtr[i]);
 		screen->WidgetsPtr[i] = NULL;
 	}
@@ -2080,7 +2081,7 @@ void MenuOptionsScreen_Bool(GuiElement* screenElem, GuiElement* widget) {
 	button->GetValue(&value);
 
 	bool isOn = String_CaselessEqualsConst(&value, "ON");
-	String newValue = String_FromReadonly(isOn ? "ON" : "OFF");
+	String newValue = String_FromReadonly(isOn ? "OFF" : "ON");
 	MenuOptionsScreen_Set(screen, index, &newValue);
 }
 
@@ -2138,6 +2139,7 @@ Screen* MenuOptionsScreen_MakeInstance(Widget** widgets, Int32 count, ButtonWidg
 	MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
 	Platform_MemSet(screen, 0, sizeof(MenuOptionsScreen));
 	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, count, contextRecreated);
+	MenuOptionsScreen_VTABLE = *screen->VTABLE;
 	screen->VTABLE = &MenuOptionsScreen_VTABLE;
 
 	screen->VTABLE->HandlesKeyDown   = MenuOptionsScreen_HandlesKeyDown;

@@ -1575,7 +1575,8 @@ bool MenuInputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
 Int32 MenuInputWidget_GetMaxLines(void) { return 1; }
 GuiElementVTABLE MenuInputWidget_VTABLE;
 void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, MenuInputValidator* validator) {
-	InputWidget_Create(&widget->Base, font, NULL);
+	String empty = String_MakeNull();
+	InputWidget_Create(&widget->Base, font, &empty);
 	widget->MinWidth  = width;
 	widget->MinHeight = height;
 	widget->Validator = *validator;
@@ -1783,6 +1784,7 @@ void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 	widget->Base.Padding        = 5;
 	widget->Base.GetMaxLines    = ChatInputWidget_GetMaxLines;
 	widget->Base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
+	widget->Base.Text = String_InitAndClearArray(widget->TextBuffer);
 
 	ChatInputWidget_VTABLE = *widget->Base.VTABLE;
 	widget->Base.VTABLE = &ChatInputWidget_VTABLE;

@@ -23,6 +23,9 @@ void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 	chunk->PendingDelete = false; chunk->AllAir = false;
 	chunk->DrawXMin = false; chunk->DrawXMax = false; chunk->DrawZMin = false;
 	chunk->DrawZMax = false; chunk->DrawYMin = false; chunk->DrawYMax = false;
+
+	chunk->NormalParts      = NULL;
+	chunk->TranslucentParts = NULL;
 }
 
 Int32 cu_chunksTarget = 12;
@@ -321,6 +324,7 @@ if (parts != NULL) {\
 		if (ptr->HasVertices) { partsCount[i]--; }\
 		ptr += MapRenderer_ChunksCount;\
 	}\
+	parts = NULL;\
 }
 
 void ChunkUpdater_DeleteChunk(ChunkInfo* info) {

@@ -28,7 +28,7 @@ void Options_Free(void) {
 
 bool Options_HasChanged(STRING_PURE String* key) {
 	UInt32 i;
-	for (i = 0; i < Options_Keys.Count; i++) {
+	for (i = 0; i < Options_Changed.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Changed, i);
 		if (String_CaselessEquals(&curKey, key)) return true;
 	}
