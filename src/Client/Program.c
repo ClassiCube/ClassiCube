@@ -7,21 +7,75 @@
 #include "Formats.h"
 #include "TexturePack.h"
 #include "Bitmap.h"
-#include <Windows.h>
+#include "Constants.h"
+#include "Game.h"
 
 int main(int argc, char* argv[]) {
-	ErrorHandler_Init();
+	ErrorHandler_Init("client.log");
 	Platform_Init();
 
 	String maps = String_FromConst("maps");
 	if (!Platform_DirectoryExists(&maps)) {
-		Platform_DirectoryCreate(&maps);
-	}
-	String texPacks = String_FromConst("texpacks");
-	if (!Platform_DirectoryExists(&texPacks)) {
-		Platform_DirectoryCreate(&texPacks);
+		ReturnCode result = Platform_DirectoryCreate(&maps);
+		ErrorHandler_CheckOrFail(result, "Program - creating maps directory");
 	}
 
+	String texPacks = String_FromConst("texpacks");
+	if (!Platform_DirectoryExists(&texPacks)) {
+		ReturnCode result = Platform_DirectoryCreate(&texPacks);
+		ErrorHandler_CheckOrFail(result, "Program - creating texpacks directory");
+	}
+
+	Platform_LogConst("Starting " PROGRAM_APP_NAME " ..");
+	Options_Load();
+	DisplayDevice device = DisplayDevice_Default;
+	Int32 width  = Options_GetInt(OPT_WINDOW_WIDTH,  0, device.Bounds.Width,  0);
+	Int32 height = Options_GetInt(OPT_WINDOW_HEIGHT, 0, device.Bounds.Height, 0);
+
+	/* No custom resolution has been set */
+	if (width == 0 || height == 0) {
+		width = 854; height = 480;
+		if (device.Bounds.Width < 854) width = 640;
+	}
+
+	String title = String_FromConst(PROGRAM_APP_NAME);
+	if (argc == 1 || argc == 2) {
+		String_AppendConst(&Game_Username, argc > 1 ? argv[1] : "Singleplayer");	
+	} else if (argc < 5) {
+		Platform_LogConst("ClassicalSharp.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
+		return;
+	} else {
+		String_AppendConst(&Game_Username, argv[1]);
+		String_AppendConst(&Game_Mppass,   argv[2]);
+		String ipRaw   = String_FromReadonly(argv[3]);
+		String portRaw = String_FromReadonly(argv[4]);
+
+		String bits[4]; UInt32 bitsCount = 4;
+		String_UNSAFE_Split(&ipRaw, '.', bits, &bitsCount);
+		if (bitsCount != 4) {
+			Platform_LogConst("Invalid IP"); return;
+		}
+
+		UInt8 ipTmp;
+		if (!Convert_TryParseUInt8(&bits[0], &ipTmp) || !Convert_TryParseUInt8(&bits[1], &ipTmp) ||
+			!Convert_TryParseUInt8(&bits[2], &ipTmp) || !Convert_TryParseUInt8(&bits[3], &ipTmp)) {
+			Platform_LogConst("Invalid IP"); return;
+		}
+		
+		UInt16 portTmp;
+		if (!Convert_TryParseUInt16(&portRaw, &portTmp)) {
+			Platform_LogConst("Invalid port"); return;
+		}
+
+		String_Set(&Game_IPAddress, &ipRaw);
+		Game_Port = portTmp;
+	}
+	Game_Run(width, height, &title, &device);
+}
+
+//#include <Windows.h>
+int main_test(int argc, char* argv[]) {
+	return 0;
 	/*void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\output\\release\\texpacks\\skybox.png");
 	ReturnCode openCode = Platform_FileOpen(&file, &path);
@@ -69,13 +123,13 @@ int main(int argc, char* argv[]) {
 	Zip_Extract(&state);
 	return 0;*/
 
-	void* file;
+	/*void* file;
 	String path = String_FromConst("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\src\\x64\\Release\\canyon.lvl");
 	ReturnCode openCode = Platform_FileOpen(&file, &path);
 	Stream fileStream;
 	Stream_FromFile(&fileStream, file, &path);
 	Lvl_Load(&fileStream);
-	return 0;
+	return 0;*/
 
 	/*void* file;
 	String path = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\\ClassicalSharp\\src\\Debug\\gunzip.c.gz");

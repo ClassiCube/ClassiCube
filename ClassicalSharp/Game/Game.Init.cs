@@ -93,9 +93,16 @@ namespace ClassicalSharp {
 			
 			MapRenderer = new MapRenderer(this);
 			ChunkUpdater = new ChunkUpdater(this);
+			EnvRenderer = new EnvRenderer(); Components.Add(EnvRenderer);
+			MapBordersRenderer = new MapBordersRenderer(); Components.Add(MapBordersRenderer);
+			
 			string renType = Options.Get(OptionsKey.RenderType, "normal");
-			if (!SetRenderType(renType))
-				SetRenderType("normal");
+			int flags = CalcRenderType(renType);
+			if (flags == -1) flags = 0;
+			
+			MapBordersRenderer.legacy = (flags & 1) != 0;
+			EnvRenderer.legacy        = (flags & 1) != 0;
+			EnvRenderer.minimal       = (flags & 2) != 0;
 			
 			if (IPAddress == null) {
 				Server = new Singleplayer.SinglePlayerServer(this);

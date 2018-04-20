@@ -1,6 +1,6 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
-#include "Stream.h"
+#include "String.h"
 #include "Picking.h"
 #include "Options.h"
 /* Represents the game.
@@ -8,6 +8,9 @@
 */
 
 typedef struct Bitmap_ Bitmap;
+typedef struct DisplayDevice_ DisplayDevice;
+typedef struct Stream_ Stream;
+
 Int32 Game_Width, Game_Height;
 /* Total rendering time(in seconds) elapsed since the client was started. */
 Real64 Game_Accumulator;
@@ -79,13 +82,15 @@ bool Game_GetCursorVisible(void);
 void Game_SetCursorVisible(bool visible);
 
 bool Game_ChangeTerrainAtlas(Bitmap* atlas);
+void Game_SetViewDistance(Int32 distance, bool userDist);
 void Game_UpdateProjection(void);
+void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason);
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block);
-void Game_SetFpsLimitMethod(FpsLimit method);
+bool Game_CanPick(BlockID block);
 bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType);
 bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp);
-void Game_SetViewDistance(Int32 distance, bool userDist);
-bool Game_CanPick(BlockID block);
+Int32 Game_CalcRenderType(STRING_PURE String* type);
+void Game_SetFpsLimitMethod(FpsLimit method);
 
-void Game_Free(void);
+void Game_Run(Int32 width, Int32 height, STRING_REF String* title, DisplayDevice* device);
 #endif

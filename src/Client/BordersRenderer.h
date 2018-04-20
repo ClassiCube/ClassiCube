@@ -5,7 +5,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-IGameComponent BordersRenderer_MakeGameComponent(void);
+IGameComponent BordersRenderer_MakeComponent(void);
 bool BordersRenderer_Legacy;
 void BordersRenderer_UseLegacyMode(bool legacy);
 void BordersRenderer_RenderSides(Real64 delta);

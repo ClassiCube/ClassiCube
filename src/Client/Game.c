@@ -267,7 +267,20 @@ bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp) {
 	return true;
 }
 
-void Game_OnResize(void) {
+Int32 Game_CalcRenderType(STRING_PURE String* type) {
+	if (String_CaselessEqualsConst(type, "legacyfast")) {
+		return 0x03;
+	} else if (String_CaselessEqualsConst(type, "legacy")) {
+		return 0x01;
+	} else if (String_CaselessEqualsConst(type, "normal")) {
+		return 0x00;
+	} else if (String_CaselessEqualsConst(type, "normalfast")) {
+		return 0x02;
+	}
+	return -1;
+}
+
+void Game_OnResize(void* obj) {
 	Size2D size = Window_GetClientSize();
 	Game_Width = size.Width; Game_Height = size.Height;
 
@@ -390,6 +403,7 @@ void Game_InitScheduledTasks(void) {
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
 }
 
+void Game_Free(void* obj);
 void Game_Load(void) {
 	IGameComponent comp;
 	Gfx_Init();
@@ -413,6 +427,7 @@ void Game_Load(void) {
 	Event_RegisterVoid(&WorldEvents_MapLoaded,       NULL, Game_OnNewMapLoadedCore);
 	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
 	Event_RegisterVoid(&WindowEvents_Resized,        NULL, Game_OnResize);
+	Event_RegisterVoid(&WindowEvents_Closed,         NULL, Game_Free);
 
 	Block_Init();
 	ModelCache_Init();
@@ -434,17 +449,20 @@ void Game_Load(void) {
 
 	Size2D size = Window_GetClientSize();
 	Game_Width = size.Width; Game_Height = size.Height;
+
 	ChunkUpdater_Init();
+	comp = EnvRenderer_MakeComponent();     Game_AddComponent(&comp);
+	comp = BordersRenderer_MakeComponent(); Game_AddComponent(&comp);
 
 	UInt8 renderTypeBuffer[String_BufferSize(STRING_SIZE)];
 	String renderType = String_InitAndClearArray(renderTypeBuffer);
 	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
+	Int32 flags = Game_CalcRenderType(&renderType);
 
-	if (!Game_SetRenderType(&renderType)) {
-		String_Clear(&renderType);
-		String_AppendConst(&renderType, "normal");
-		Game_SetRenderType("normal");
-	}
+	if (flags == -1) flags = 0;
+	BordersRenderer_Legacy  = (flags & 1);
+	EnvRenderer_Legacy      = (flags & 1);
+	EnvRenderer_Minimal     = (flags & 2);
 
 	if (Game_IPAddress.length == 0) {
 		ServerConnection_InitSingleplayer();
@@ -522,8 +540,8 @@ void Game_SetFpsLimitMethod(FpsLimit method) {
 
 void Game_LimitFPS(void) {
 	if (Game_FpsLimit == FpsLimit_VSync) return;
-	Int32 elapsed = Stopwatch_ElapsedMs(&game_frameTimer);
-	Real32 leftOver = game_limitMs - elapsed;
+	Int32 elapsedMs = Stopwatch_ElapsedMicroseconds(&game_frameTimer) / 1000;
+	Real32 leftOver = game_limitMs - elapsedMs;
 
 	/* going faster than limit */
 	if (leftOver > 0.001f) {
@@ -671,7 +689,7 @@ void Game_RenderFrame(Real64 delta) {
 	Game_LimitFPS();
 }
 
-void Game_Free(void) {
+void Game_Free(void* obj) {
 	ChunkUpdater_Free();
 	Atlas2D_Free();
 	Atlas1D_Free();
@@ -682,6 +700,7 @@ void Game_Free(void) {
 	Event_UnregisterVoid(&WorldEvents_MapLoaded,       NULL, Game_OnNewMapLoadedCore);
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
 	Event_UnregisterVoid(&WindowEvents_Resized,        NULL, Game_OnResize);
+	Event_UnregisterVoid(&WindowEvents_Closed,         NULL, Game_Free);
 
 	Int32 i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
@@ -694,4 +713,28 @@ void Game_Free(void) {
 	if (!Options_HasAnyChanged()) return;
 	Options_Load();
 	Options_Save();
+}
+
+Stopwatch game_renderTimer;
+void Game_Run(Int32 width, Int32 height, STRING_REF String* title, DisplayDevice* device) {
+	Int32 x = device->Bounds.X + (device->Bounds.Width  - width)  / 2;
+	Int32 y = device->Bounds.Y + (device->Bounds.Height - height) / 2;
+
+	Window_Create(x, y, width, height, title, device);
+	Window_SetVisible(true);
+	Game_Load();
+	Event_RaiseVoid(&WindowEvents_Resized);
+
+	Stopwatch_Start(&game_renderTimer);
+	for (;;) {
+		Window_ProcessEvents();
+		if (!Window_GetExists()) break;
+
+		/* Limit maximum render to 1 second (for suspended process) */
+		Real64 time = Stopwatch_ElapsedMicroseconds(&game_renderTimer) / (1000.0 * 1000.0);
+		if (time > 1.0) time = 1.0;
+		if (time <= 0.0) continue;
+
+		Game_RenderFrame(time);
+	}
 }

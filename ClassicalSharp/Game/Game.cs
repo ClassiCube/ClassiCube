@@ -198,40 +198,17 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		public bool SetRenderType(string type) {
+		public int CalcRenderType(string type) {
 			if (Utils.CaselessEquals(type, "legacyfast")) {
-				SetNewRenderType(true, true);
+				return 0x03;
 			} else if (Utils.CaselessEquals(type, "legacy")) {
-				SetNewRenderType(true, false);
+				return 0x01;
 			} else if (Utils.CaselessEquals(type, "normal")) {
-				SetNewRenderType(false, false);
+				return 0x00;
 			} else if (Utils.CaselessEquals(type, "normalfast")) {
-				SetNewRenderType(false, true);
-			} else {
-				return false;
+				return 0x02;
 			}
-			Options.Set(OptionsKey.RenderType, type);
-			return true;
-		}
-		
-		void SetNewRenderType(bool legacy, bool minimal) {
-			if (MapBordersRenderer == null) {
-				MapBordersRenderer = new MapBordersRenderer(); Components.Add(MapBordersRenderer);
-				MapBordersRenderer.legacy = legacy;
-			} else {
-				MapBordersRenderer.UseLegacyMode(legacy);
-			}
-			
-			
-			if (EnvRenderer == null) {
-				EnvRenderer = new EnvRenderer(); Components.Add(EnvRenderer);
-				EnvRenderer.legacy = legacy;
-				EnvRenderer.minimal = minimal;
-			} else {
-				EnvRenderer.UseLegacyMode(legacy);
-				EnvRenderer.UseMinimalMode(minimal);
-			}
-			
+			return -1;
 		}
 		
 		internal void OnResize() {

@@ -421,7 +421,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			while (curY < bmp->Height) {
 				UInt32 bufferRemaining = bufferLen - bufferIdx, read;
 				ReturnCode code = compStream.Read(&compStream, &buffer[bufferIdx], bufferRemaining, &read);
-				if (code != 0) ErrorHandler_FailWithCode(code, "PNG - reading image bulk data");
+				ErrorHandler_CheckOrFail(code, "PNG - reading image bulk data");
 				if (read == 0) break;			
 
 				/* buffer is arranged like this */

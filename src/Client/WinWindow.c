@@ -240,9 +240,9 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 	case WM_STYLECHANGED:
 		if (wParam == GWL_STYLE) {
 			DWORD style = ((STYLESTRUCT*)lParam)->styleNew;
-			if ((style & WS_POPUP) != 0) {
+			if (style & WS_POPUP) {
 				win_hiddenBorder = true;
-			} else if ((style & WS_THICKFRAME) != 0) {
+			} else if (style & WS_THICKFRAME) {
 				win_hiddenBorder = false;
 			}
 		}

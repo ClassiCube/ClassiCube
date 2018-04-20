@@ -132,9 +132,9 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 #endif
 #if DEBUG_OCCLUSION
 	FastColour col = new FastColour(60, 60, 60, 255);
-	if ((flags & 1) != 0) col.R = 255; // x
-	if ((flags & 4) != 0) col.G = 255; // y
-	if ((flags & 2) != 0) col.B = 255; // z
+	if (flags & 1) col.R = 255; // x
+	if (flags & 4) col.G = 255; // y
+	if (flags & 2) col.B = 255; // z
 	map.Sunlight = map.Shadowlight = col;
 	map.SunlightXSide = map.ShadowlightXSide = col;
 	map.SunlightZSide = map.ShadowlightZSide = col;
@@ -155,7 +155,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 				Note that sprites are not drawn with any of the DrawXFace, they are drawn using DrawSprite. */
 				if (Block_Draw[b] == DRAW_SPRITE) {
 					index += FACE_YMAX;
-					if (Builder_Counts[index] != 0) {
+					if (Builder_Counts[index]) {
 						Builder_X = x; Builder_Y = y; Builder_Z = z;
 						Builder_AddSpriteVertices(b);
 						Builder_Counts[index] = 1;
@@ -552,7 +552,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Builder_Tinted = Block_Tinted[Builder_Block];
 
 		Int32 count = Builder_Counts[index + FACE_YMAX];
-		if (count != 0) Builder_DrawSprite(count);
+		if (count) Builder_DrawSprite(count);
 		return;
 	}
 
@@ -582,7 +582,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 	Drawer_TintColour = Block_FogColour[Builder_Block];
 	PackedCol white = PACKEDCOL_WHITE;
 
-	if (count_XMin != 0) {
+	if (count_XMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMIN);
 		Int32 offset = (lightFlags >> FACE_XMIN) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
@@ -592,7 +592,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Drawer_XMin(count_XMin, col, texLoc, &part->fVertices[FACE_XMIN]);
 	}
 
-	if (count_XMax != 0) {
+	if (count_XMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
 		Int32 offset = (lightFlags >> FACE_XMAX) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
@@ -602,7 +602,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Drawer_XMax(count_XMax, col, texLoc, &part->fVertices[FACE_XMAX]);
 	}
 
-	if (count_ZMin != 0) {
+	if (count_ZMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMIN);
 		Int32 offset = (lightFlags >> FACE_ZMIN) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
@@ -612,7 +612,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Drawer_ZMin(count_ZMin, col, texLoc, &part->fVertices[FACE_ZMIN]);
 	}
 
-	if (count_ZMax != 0) {
+	if (count_ZMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_ZMAX);
 		Int32 offset = (lightFlags >> FACE_ZMAX) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
@@ -622,7 +622,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Drawer_ZMax(count_ZMax, col, texLoc, &part->fVertices[FACE_ZMAX]);
 	}
 
-	if (count_YMin != 0) {
+	if (count_YMin) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMIN);
 		Int32 offset = (lightFlags >> FACE_YMIN) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];
@@ -631,7 +631,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 		Drawer_YMin(count_YMin, col, texLoc, &part->fVertices[FACE_YMIN]);
 	}
 
-	if (count_YMax != 0) {
+	if (count_YMax) {
 		TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_YMAX);
 		Int32 offset = (lightFlags >> FACE_YMAX) & 1;
 		Builder1DPart* part = &Builder_Parts[partOffset + Atlas1D_Index(texLoc)];

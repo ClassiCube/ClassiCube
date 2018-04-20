@@ -343,7 +343,7 @@ void EnvRenderer_Free(void) {
 	Event_UnregisterInt32(&WorldEvents_EnvVarChanged,    NULL, EnvRenderer_EnvVariableChanged);
 }
 
-IGameComponent EnvRenderer_MakeGameComponent(void) {
+IGameComponent EnvRenderer_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = EnvRenderer_Init;
 	comp.Reset = EnvRenderer_OnNewMap;

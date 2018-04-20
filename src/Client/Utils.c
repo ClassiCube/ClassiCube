@@ -3,8 +3,8 @@
 #include "Bitmap.h"
 
 bool DateTime_IsLeapYear(Int32 year) {
-	if ((year % 4) != 0) return false;
-	if ((year % 100) != 0) return true;
+	if (year % 4) return false;
+	if (year % 100) return true;
 	return (year % 400) == 0;
 }
 

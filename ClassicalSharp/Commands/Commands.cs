@@ -71,8 +71,16 @@ namespace ClassicalSharp.Commands {
 		
 		public override void Execute(string[] args) {
 			if (args.Length == 1) {
-				game.Chat.Add("&e/client: &cYou didn't specify a new render type.");
-			} else if (game.SetRenderType(args[1])) {
+				game.Chat.Add("&e/client: &cYou didn't specify a new render type."); return;
+			}
+			
+			int flags = game.CalcRenderType(args[1]);
+			if (flags >= 0) {
+				game.MapBordersRenderer.UseLegacyMode((flags & 1) != 0);
+				game.EnvRenderer.UseLegacyMode(      (flags & 1)  != 0);
+				game.EnvRenderer.UseMinimalMode(     (flags & 2)  != 0);
+			
+				Options.Set(OptionsKey.RenderType, args[1]);
 				game.Chat.Add("&e/client: &fRender type is now " + args[1] + ".");
 			} else {
 				game.Chat.Add("&e/client: &cUnrecognised render type &f\"" + args[1] + "\"&c.");

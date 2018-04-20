@@ -23,6 +23,7 @@ void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes);
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
 
 void Platform_Log(STRING_PURE String* message);
+void Platform_LogConst(const UInt8* message);
 DateTime Platform_CurrentUTCTime(void);
 DateTime Platform_CurrentLocalTime(void);
 
@@ -50,7 +51,7 @@ void Platform_ThreadFreeHandle(void* handle);
 
 typedef Int64 Stopwatch;
 void Stopwatch_Start(Stopwatch* timer);
-Int32 Stopwatch_ElapsedMs(Stopwatch* timer);
+Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer);
 
 void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Platform_FreeFont(FontDesc* desc);

@@ -90,6 +90,10 @@ void Platform_Log(STRING_PURE String* message) {
 	/* TODO: log to console */
 }
 
+void Platform_LogConst(const UInt8* message) {
+	/* TODO: log to console */
+}
+
 /* Not worth making this an actual function, just use an inline macro. */
 #define Platform_ReturnDateTime(sysTime)\
 DateTime time;\
@@ -263,14 +267,14 @@ void Stopwatch_Start(Stopwatch* timer) {
 }
 
 /* TODO: check this is actually accurate */
-Int32 Stopwatch_ElapsedMs(Stopwatch* timer) {
+Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer) {
 	Int64 start = *timer, end;
 	if (stopwatch_highResolution) {
 		QueryPerformanceCounter(&end);
-		return (Int32)((end - start) * 1000 / stopwatch_freq.QuadPart);
+		return (Int32)(((end - start) * 1000 * 1000) / stopwatch_freq.QuadPart);
 	} else {
 		GetSystemTimeAsFileTime(&end);
-		return (Int32)((end - start) / 10000);
+		return (Int32)((end - start) / 10);
 	}
 }
 

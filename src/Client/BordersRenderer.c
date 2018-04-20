@@ -324,7 +324,7 @@ void BordersRenderer_Reset(void) {
 }
 
 
-IGameComponent BordersRenderer_MakeGameComponent(void) {
+IGameComponent BordersRenderer_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = BordersRenderer_Init;
 	comp.Free = BordersRenderer_Free;

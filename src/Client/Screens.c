@@ -278,7 +278,7 @@ void StatusScreen_MakeText(StatusScreen* screen, STRING_TRANSIENT String* status
 		String_AppendConst(status, " vertices");
 
 		Int32 ping = PingList_AveragePingMs();
-		if (ping != 0) {
+		if (ping) {
 			String_AppendConst(status, ", ping ");
 			String_AppendInt32(status, ping);
 			String_AppendConst(status, " ms");

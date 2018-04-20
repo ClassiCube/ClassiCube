@@ -45,7 +45,7 @@ void ChunkUpdater_EnvVariableChanged(void* obj, Int32 envVar) {
 }
 
 void ChunkUpdater_TerrainAtlasChanged(void* obj) {
-	if (MapRenderer_1DUsedCount != 0) {
+	if (MapRenderer_1DUsedCount) {
 		bool refreshRequired = cu_elementsPerBitmap != Atlas1D_ElementsPerBitmap;
 		if (refreshRequired) ChunkUpdater_Refresh();
 	}

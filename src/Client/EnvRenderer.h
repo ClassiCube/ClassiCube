@@ -5,7 +5,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-IGameComponent EnvRenderer_MakeGameComponent(void);
+IGameComponent EnvRenderer_MakeComponent(void);
 bool EnvRenderer_Legacy;
 bool EnvRenderer_Minimal;
 void EnvRenderer_UseLegacyMode(bool legacy);

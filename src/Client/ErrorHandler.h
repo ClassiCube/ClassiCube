@@ -6,7 +6,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-void ErrorHandler_Init(void);
+void ErrorHandler_Init(const UInt8* logFile);
 void ErrorHandler_Log(STRING_PURE String* msg);
 #define ErrorHandler_Check(returnCode) ((returnCode) == 0)
 void ErrorHandler_Fail(const UInt8* raw_msg);

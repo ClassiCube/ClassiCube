@@ -12,6 +12,8 @@
 #include "GraphicsAPI.h"
 #include "Funcs.h"
 #include "Block.h"
+#include "EnvRenderer.h"
+#include "BordersRenderer.h"
 
 #define CHAT_LOGTIMES_DEF_ELEMS 256
 #define CHAT_LOGTIMES_EXPAND_ELEMS 512
@@ -314,8 +316,16 @@ void GpuInfoCommand_Make(ChatCommand* cmd) {
 
 void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
-		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify a new render type.");
-	} else if (Game_SetRenderType(&args[1])) {
+		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify a new render type."); return;
+	}
+
+	Int32 flags = Game_CalcRenderType(&args[1]);
+	if (flags >= 0) {
+		BordersRenderer_UseLegacyMode((flags & 1));
+		EnvRenderer_UseLegacyMode(    (flags & 1));
+		EnvRenderer_UseMinimalMode(   (flags & 2));
+
+		Options_Set(OPT_RENDER_TYPE, &args[1]);
 		Commands_Log("&e/client: &fRender type is now %s.", &args[1]);
 	} else {
 		Commands_Log("&e/client: &cUnrecognised render type &f\"%s\"&c.", &args[1]);
