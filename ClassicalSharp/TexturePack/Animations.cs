@@ -175,8 +175,8 @@ namespace ClassicalSharp.Textures {
 		
 		bool IsDefaultZip() {
 			if (game.World.TextureUrl != null) return false;
-			string texPack = Options.Get(OptionsKey.DefaultTexturePack);
-			return texPack == null || texPack == "default.zip";
+			string texPack = Options.Get(OptionsKey.DefaultTexturePack, "default.zip");
+			return texPack == "default.zip";
 		}
 		
 		/// <summary> Disposes the atlas bitmap that contains animation frames, and clears

@@ -58,10 +58,10 @@ namespace Launcher.Gui.Screens {
 		
 		
 		void LoadResumeInfo() {
-			resumeServer = Options.Get("launcher-server") ?? "";
-			resumeUser = Options.Get("launcher-username");
-			resumeIp = Options.Get("launcher-ip") ?? "";
-			resumePort = Options.Get("launcher-port") ?? "";
+			resumeServer = Options.Get("launcher-server", "");
+			resumeUser = Options.Get("launcher-username", "");
+			resumeIp = Options.Get("launcher-ip", "");
+			resumePort = Options.Get("launcher-port", "");
 			resumeCCSkins = Options.GetBool("launcher-ccskins", true);
 			
 			IPAddress address;
@@ -69,7 +69,7 @@ namespace Launcher.Gui.Screens {
 			ushort portNum;
 			if (!UInt16.TryParse(resumePort, out portNum)) resumePort = "";
 			
-			string mppass = Options.Get("launcher-mppass") ?? null;
+			string mppass = Options.Get("launcher-mppass", null);
 			resumeMppass = Secure.Decode(mppass, resumeUser);
 			resumeValid = 
 				!String.IsNullOrEmpty(resumeUser) && !String.IsNullOrEmpty(resumeIp) &&

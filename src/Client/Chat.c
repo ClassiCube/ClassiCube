@@ -540,7 +540,7 @@ void Chat_Free(void) {
 	StringsBuffer_Free(&Chat_InputLog);
 }
 
-IGameComponent Chat_MakeGameComponent(void) {
+IGameComponent Chat_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init  = Chat_Init;
 	comp.Reset = Chat_Reset;

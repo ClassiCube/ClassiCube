@@ -348,7 +348,7 @@ void Lighting_Free(void) {
 }
 
 
-IGameComponent Lighting_MakeGameComponent(void) {
+IGameComponent Lighting_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = Lighting_Init;
 	comp.Free = Lighting_Free;

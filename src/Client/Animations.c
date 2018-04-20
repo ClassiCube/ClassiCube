@@ -237,8 +237,8 @@ bool Animations_IsDefaultZip(void) {
 	UInt8 texPackBuffer[String_BufferSize(STRING_SIZE)];
 	String texPack = String_InitAndClearArray(texPackBuffer);
 
-	Options_Get(OPT_DEFAULT_TEX_PACK, &texPack);
-	return texPack.length == 0 || String_CaselessEqualsConst(&texPack, "default.zip");
+	Options_Get(OPT_DEFAULT_TEX_PACK, &texPack, "default.zip");
+	return String_CaselessEqualsConst(&texPack, "default.zip");
 }
 
 void Animations_Clear(void) {

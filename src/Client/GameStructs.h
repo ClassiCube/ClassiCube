@@ -22,9 +22,6 @@ typedef struct IGameComponent_ {
 } IGameComponent;
 
 IGameComponent IGameComponent_MakeEmpty(void);
-#define GAME_MAX_COMPONENTS 26
-IGameComponent Game_Components[GAME_MAX_COMPONENTS];
-Int32 Game_ComponentsCount;
 void Game_AddComponent(IGameComponent* comp);
 
 /* Represents a task that periodically runs on the main thread every specified interval. */
@@ -38,4 +35,5 @@ typedef struct ScheduledTask_ {
 } ScheduledTask;
 
 typedef void (*ScheduledTaskCallback)(ScheduledTask* task);
+ScheduledTask ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback);
 #endif

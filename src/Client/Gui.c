@@ -122,7 +122,7 @@ void Gui_Free(void) {
 	Gui_Reset();
 }
 
-IGameComponent Gui_MakeGameComponent(void) {
+IGameComponent Gui_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init  = Gui_Init;
 	comp.Reset = Gui_Reset;

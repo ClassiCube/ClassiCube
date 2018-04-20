@@ -204,8 +204,8 @@ namespace Launcher.Gui.Screens {
 			if (!Options.Load())
 				return;
 			
-			string user = Options.Get("launcher-cc-username") ?? "";
-			string pass = Options.Get("launcher-cc-password") ?? "";
+			string user = Options.Get("launcher-cc-username", "");
+			string pass = Options.Get("launcher-cc-password", "");
 			pass = Secure.Decode(pass, user);
 			
 			Set(0, user);

@@ -67,6 +67,7 @@ extern const UInt8* FpsLimit_Names[FpsLimit_Count];
 #define OPT_USE_CLASSIC_OPTIONS "nostalgia-classicoptions"
 #define OPT_ALLOW_CLASSIC_HACKS "nostalgia-hacks"
 #define OPT_CLASSIC_ARM_MODEL "nostalgia-classicarm"
+#define OPT_MAX_CHUNK_UPDATES "gfx-maxchunkupdates"
 
 StringsBuffer Options_Keys;
 StringsBuffer Options_Values;
@@ -74,7 +75,7 @@ StringsBuffer Options_Values;
 void Options_Init(void);
 void Options_Free(void);
 
-void Options_Get(const UInt8* key, STRING_TRANSIENT String* value);
+void Options_Get(const UInt8* key, STRING_TRANSIENT String* value, const UInt8* defValue);
 Int32 Options_GetInt(const UInt8* key, Int32 min, Int32 max, Int32 defValue);
 bool Options_GetBool(const UInt8* key, bool defValue);
 Real32 Options_GetFloat(const UInt8* key, Real32 min, Real32 max, Real32 defValue);

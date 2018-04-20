@@ -26,7 +26,7 @@ void AxisLinesRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextLost, NULL, AxisLinesRenderer_ContextLost);
 }
 
-IGameComponent AxisLinesRenderer_MakeGameComponent(void) {
+IGameComponent AxisLinesRenderer_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = AxisLinesRenderer_Init;
 	comp.Free = AxisLinesRenderer_Free;

@@ -70,7 +70,7 @@ Int32 Gui_OverlaysCount;
 
 Int32 Gui_CalcPos(UInt8 anchor, Int32 offset, Int32 size, Int32 axisLen);
 bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, Int32 y);
-IGameComponent Gui_MakeGameComponent(void);
+IGameComponent Gui_MakeComponent(void);
 /* Gets the screen that the user is currently interacting with.
 This means if an overlay is active, it will be over the top of other screens. */
 Screen* Gui_GetActiveScreen(void);

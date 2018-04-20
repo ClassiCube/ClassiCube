@@ -38,7 +38,7 @@ typedef struct TerrainParticle_ {
 bool TerrainParticle_Tick(TerrainParticle* p, Real64 delta);
 void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b** vertices);
 
-IGameComponent Particles_MakeGameComponent(void);
+IGameComponent Particles_MakeComponent(void);
 void Particles_Render(Real64 delta, Real32 t);
 void Particles_Tick(ScheduledTask* task);
 void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block);

@@ -77,12 +77,13 @@ namespace Launcher.Gui.Screens {
 		protected override void KeyDown(object sender, KeyboardKeyEventArgs e) {
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
 			if (e.Key == Key.Enter) {
-				string curServer = Get(view.hashIndex) ?? "";
+				string curServer = Get(view.hashIndex);
+				if (curServer == null) curServer = "";
+				
 				if (table.Count >= 1 && curServer == "") {
 					widgets[view.hashIndex].Text = table.Get(0).Hash;
 					ConnectToServer(0, 0);
-				} else if (curServer != "" &&
-				          (selectedWidget == null || selectedWidget == widgets[view.tableIndex])) {
+				} else if (curServer != "" && (selectedWidget == null || selectedWidget == widgets[view.tableIndex])) {
 					ConnectToServer(0, 0);
 				}
 			} else if (e.Key == Key.Up) {

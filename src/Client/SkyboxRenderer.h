@@ -5,7 +5,7 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-IGameComponent SkyboxRenderer_MakeGameComponent(void);
+IGameComponent SkyboxRenderer_MakeComponent(void);
 void SkyboxRenderer_Render(Real64 deltaTime);
 bool SkyboxRenderer_ShouldRender(void);
 #endif

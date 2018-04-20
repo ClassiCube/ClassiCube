@@ -105,9 +105,9 @@ namespace ClassicalSharp {
 			return false;
 		}
 		
-		public static string Get(string key) {
+		public static string Get(string key, string defValue) {
 			string value;
-			return TryGetValue(key, out value) ? value : null;
+			return TryGetValue(key, out value) ? value : defValue;
 		}
 		
 		public static int GetInt(string key, int min, int max, int defValue) {
@@ -139,7 +139,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static T GetEnum<T>(string key, T defValue) {
-			string value = Get(key);
+			string value = Get(key, null);
 			if (value == null) return defValue;
 			
 			T mapping;

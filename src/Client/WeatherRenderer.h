@@ -6,7 +6,7 @@
 */
 
 Int16* Weather_Heightmap;
-IGameComponent WeatherRenderer_MakeGameComponent(void);
+IGameComponent WeatherRenderer_MakeComponent(void);
 void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock);
 void WeatherRenderer_Render(Real64 deltaTime);
 #endif

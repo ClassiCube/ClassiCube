@@ -18,13 +18,13 @@ namespace Launcher {
 			Options.Load();
 			LauncherSkin.LoadFromOptions();
 			
-			if (Options.Get("nostalgia-classicbg") != null) {
+			if (Options.Get("nostalgia-classicbg", null) != null) {
 				ClassicBackground = Options.GetBool("nostalgia-classicbg", false);
 			} else {
 				ClassicBackground = Options.GetBool("mode-classic", false);
 			}
 			
-			string texPack = Options.Get(OptionsKey.DefaultTexturePack) ?? "default.zip";
+			string texPack = Options.Get(OptionsKey.DefaultTexturePack, "default.zip");
 			string texPath = Path.Combine("texpacks", texPack);
 			
 			if (!Platform.FileExists(texPath)) {

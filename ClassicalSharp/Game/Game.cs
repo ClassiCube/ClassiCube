@@ -189,8 +189,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public ScheduledTask AddScheduledTask(double interval,
-		                                      ScheduledTaskCallback callback) {
+		public ScheduledTask AddScheduledTask(double interval, ScheduledTaskCallback callback) {
 			ScheduledTask task = new ScheduledTask();
 			task.Interval = interval; task.Callback = callback;
 			Tasks.Add(task);

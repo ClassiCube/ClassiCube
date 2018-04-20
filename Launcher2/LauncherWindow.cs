@@ -103,7 +103,7 @@ namespace Launcher {
 		
 		void LoadFont() {
 			Options.Load();
-			FontName = Options.Get("gui-fontname") ?? "Arial";
+			FontName = Options.Get("gui-fontname", "Arial");;
 			try {
 				using (Font f = new Font(FontName, 16)) { }
 			} catch (Exception) {

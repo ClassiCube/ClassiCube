@@ -12,7 +12,7 @@ PackedCol Lighting_OutsideZSide;
 PackedCol Lighting_OutsideXSide;
 PackedCol Lighting_OutsideYBottom;
 
-IGameComponent Lighting_MakeGameComponent(void);
+IGameComponent Lighting_MakeComponent(void);
 /* Equivalent to (but far more optimised form of)
 * for x = startX; x < startX + 18; x++
 *   for z = startZ; z < startZ + 18; z++

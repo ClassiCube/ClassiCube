@@ -141,7 +141,7 @@ void SkyboxRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, SkyboxRenderer_ContextRecreated);
 }
 
-IGameComponent SkyboxRenderer_MakeGameComponent(void) {
+IGameComponent SkyboxRenderer_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = SkyboxRenderer_Init;
 	comp.Free = SkyboxRenderer_Free;

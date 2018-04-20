@@ -39,7 +39,7 @@ namespace Launcher {
 		
 		static void Get(string key, ref FastColour col) {
 			FastColour defaultCol = col;
-			string value = Options.Get(key);
+			string value = Options.Get(key, null);
 			if (String.IsNullOrEmpty(value)) return;
 			
 			if (!FastColour.TryParse(value, out col))

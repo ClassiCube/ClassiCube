@@ -215,7 +215,7 @@ void WeatherRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, WeatherRenderer_ContextRecreated);
 }
 
-IGameComponent WeatherRenderer_MakeGameComponent(void) {
+IGameComponent WeatherRenderer_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = WeatherRenderer_Init;
 	comp.Free = WeatherRenderer_Free;

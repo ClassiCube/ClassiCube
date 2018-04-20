@@ -6,7 +6,7 @@
 */
 
 /* Creates game component implementation. */
-IGameComponent AxisLinesRenderer_MakeGameComponent(void);
+IGameComponent AxisLinesRenderer_MakeComponent(void);
 /* Renders axis lines, if ShowAxisLines is enabled. */
 void AxisLinesRenderer_Render(Real64 delta);
 #endif

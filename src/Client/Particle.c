@@ -211,7 +211,7 @@ void Particles_Free(void) {
 }
 
 
-IGameComponent Particles_MakeGameComponent(void) {
+IGameComponent Particles_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
 	comp.Init = Particles_Init;
 	comp.Reset = Particles_Reset;

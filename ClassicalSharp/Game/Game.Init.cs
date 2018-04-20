@@ -93,7 +93,7 @@ namespace ClassicalSharp {
 			Width = window.Width; Height = window.Height;
 			
 			MapRenderer = new MapRenderer(this);
-			string renType = Options.Get(OptionsKey.RenderType) ?? "normal";
+			string renType = Options.Get(OptionsKey.RenderType, "normal");
 			if (!SetRenderType(renType))
 				SetRenderType("normal");
 			
@@ -155,7 +155,7 @@ namespace ClassicalSharp {
 		}
 		
 		void ExtractInitialTexturePack() {
-			defTexturePack = Options.Get(OptionsKey.DefaultTexturePack) ?? "default.zip";
+			defTexturePack = Options.Get(OptionsKey.DefaultTexturePack, "default.zip");
 			TexturePack.ExtractZip("default.zip", this);
 			
 			// in case the user's default texture pack doesn't have all required textures
@@ -213,7 +213,7 @@ namespace ClassicalSharp {
 			UseClassicOptions = Options.GetBool(OptionsKey.UseClassicOptions, false) || ClassicMode;
 			
 			TabAutocomplete = Options.GetBool(OptionsKey.TabAutocomplete, false);
-			FontName = Options.Get(OptionsKey.FontName) ?? "Arial";
+			FontName = Options.Get(OptionsKey.FontName, "Arial");
 			if (ClassicMode) FontName = "Arial";
 
 			try {

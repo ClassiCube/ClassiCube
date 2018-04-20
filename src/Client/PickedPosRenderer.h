@@ -8,7 +8,7 @@
 */
 
 /* Creates game component implementation. */
-IGameComponent PickedPosRenderer_MakeGameComponent(void);
+IGameComponent PickedPosRenderer_MakeComponent(void);
 /* Renders outline around block player is looking at, if they are looking at a block. */
 void PickedPosRenderer_Render(Real64 delta);
 /* Updates state for the outlined block. */

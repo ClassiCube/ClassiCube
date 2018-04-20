@@ -24,7 +24,7 @@ ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announc
 StringsBuffer Chat_Log, Chat_InputLog;
 void Chat_GetLogTime(UInt32 index, Int64* timeMS);
 
-IGameComponent Chat_MakeGameComponent(void);
+IGameComponent Chat_MakeComponent(void);
 void Chat_SetLogName(STRING_PURE String* name);
 void Chat_Send(STRING_PURE String* text);
 void Chat_Add(STRING_PURE String* text);

@@ -82,9 +82,9 @@ namespace Launcher.Gui.Screens {
 		void LoadFromOptions() {
 			if (!Options.Load()) return;
 			
-			string user = Options.Get("launcher-dc-username") ?? "";
-			string ip = Options.Get("launcher-dc-ip") ?? "127.0.0.1";
-			string port = Options.Get("launcher-dc-port") ?? "25565";
+			string user = Options.Get("launcher-dc-username", "");
+			string ip = Options.Get("launcher-dc-ip", "127.0.0.1");
+			string port = Options.Get("launcher-dc-port", "25565");
 			bool ccSkins = Options.GetBool("launcher-dc-ccskins", true);
 
 			IPAddress address;
@@ -92,7 +92,7 @@ namespace Launcher.Gui.Screens {
 			ushort portNum;
 			if (!UInt16.TryParse(port, out portNum)) port = "25565";
 			
-			string mppass = Options.Get("launcher-dc-mppass");
+			string mppass = Options.Get("launcher-dc-mppass", null);
 			mppass = Secure.Decode(mppass, user);
 			
 			SetText(0, user);
