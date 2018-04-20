@@ -57,7 +57,6 @@ namespace ClassicalSharp {
 			Components.Add(Mode);
 			
 			Input = new InputHandler(this);
-			defaultIb = Graphics.MakeDefaultIb();
 			ParticleManager = new ParticleManager(); Components.Add(ParticleManager);
 			TabList = new TabList(); Components.Add(TabList);
 			LoadOptions();

@@ -292,7 +292,7 @@ namespace ClassicalSharp {
 			frameTimer.Start();
 			
 			Graphics.BeginFrame(this);
-			Graphics.BindIb(defaultIb);
+			Graphics.BindIb(Graphics.defaultIb);
 			accumulator += delta;
 			Vertices = 0;
 			Mode.BeginFrame(delta);
@@ -424,7 +424,6 @@ namespace ClassicalSharp {
 			for (int i = 0; i < Components.Count; i++)
 				Components[i].Dispose();
 			
-			Graphics.DeleteIb(ref defaultIb);
 			Drawer2D.DisposeInstance();
 			Graphics.Dispose();
 			

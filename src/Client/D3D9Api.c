@@ -56,7 +56,7 @@ void D3D9_FreeResource(GfxResourceID* resource) {
 	UInt8 logMsgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String logMsg = String_InitAndClearArray(logMsgBuffer);
 	String_AppendConst(&logMsg, "D3D9 Resource has outstanding references! ID: ");
-	String_AppendInt32(&logMsg, id);
+	String_AppendInt64(&logMsg, (Int64)(*resource));
 	Platform_Log(&logMsg);
 }
 
@@ -158,7 +158,12 @@ void Gfx_Init(void) {
 	D3D9_SetDefaultRenderStates();
 	GfxCommon_Init();
 }
-void Gfx_Free(void) { GfxCommon_Free(); }
+
+void Gfx_Free(void) { 
+	GfxCommon_Free();
+	D3D9_FreeResource(&device);
+	D3D9_FreeResource(&d3d);
+}
 
 void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 lvl) {
 	D3DLOCKED_RECT rect;
@@ -468,7 +473,7 @@ GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
 	Int32 size = indicesCount * sizeof(UInt16);
 	IDirect3DIndexBuffer9* ibuffer;
 	ReturnCode hresult = IDirect3DDevice9_CreateIndexBuffer(device, size, D3DUSAGE_WRITEONLY,
-		D3DFMT_INDEX16, D3DPOOL_MANAGED, &ibuffer, NULL);
+		D3DFMT_INDEX16, D3DPOOL_DEFAULT, &ibuffer, NULL);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_CreateIb");
 
 	D3D9_SetIbData(ibuffer, indices, size, "D3D9_CreateIb - Lock", "D3D9_CreateIb - Unlock");

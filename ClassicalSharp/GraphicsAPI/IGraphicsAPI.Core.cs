@@ -7,31 +7,42 @@ namespace ClassicalSharp.GraphicsAPI {
 	/// <summary> Abstracts a 3D graphics rendering API. </summary>
 	public abstract unsafe partial class IGraphicsApi {
 		
-		protected void InitDynamicBuffers() {
+		public int defaultIb;
+		
+		protected void InitCommon() {
 			quadVb = CreateDynamicVb(VertexFormat.P3fC4b, 4);
 			texVb = CreateDynamicVb(VertexFormat.P3fT2fC4b, 4);
+			
+			const int maxIndices = 65536 / 4 * 6;
+			ushort* indices = stackalloc ushort[maxIndices];
+			MakeIndices(indices, maxIndices);
+			defaultIb = CreateIb((IntPtr)indices, maxIndices);
+		}
+		
+		protected void DisposeCommon() {
+			DeleteVb(ref quadVb);
+			DeleteVb(ref texVb);
+			DeleteIb(ref defaultIb);
 		}
 		
 		public virtual void Dispose() {
-			DeleteVb(ref quadVb);
-			DeleteVb(ref texVb);
+			DisposeCommon();
 		}
 		
 		public void LoseContext(string reason) {
 			LostContext = true;
 			Utils.LogDebug("Lost graphics context" + reason);
-			if (ContextLost != null) ContextLost();
 			
-			DeleteVb(ref quadVb);
-			DeleteVb(ref texVb);
+			if (ContextLost != null) ContextLost();
+			DisposeCommon();
 		}
 		
 		public void RecreateContext() {
 			LostContext = false;
 			Utils.LogDebug("Recreating graphics context");
-			if (ContextRecreated != null) ContextRecreated();
 			
-			InitDynamicBuffers();
+			if (ContextRecreated != null) ContextRecreated();		
+			InitCommon();
 		}
 		
 		
@@ -147,13 +158,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			DepthTest = true;
 			AlphaBlending = false;
 			if (hadFog) Fog = true;
-		}
-		
-		internal unsafe int MakeDefaultIb() {
-			const int maxIndices = 65536 / 4 * 6;
-			ushort* indices = stackalloc ushort[maxIndices];
-			MakeIndices(indices, maxIndices);
-			return CreateIb((IntPtr)indices, maxIndices);
 		}
 		
 		internal unsafe void MakeIndices(ushort* indices, int iCount) {

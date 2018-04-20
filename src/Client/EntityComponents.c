@@ -14,7 +14,7 @@
 #include "ModelCache.h"
 #include "Physics.h"
 #include "IModel.h"
-
+#include "Audio.h"
 
 /*########################################################################################################################*
 *----------------------------------------------------AnimatedComponent----------------------------------------------------*
@@ -1261,7 +1261,7 @@ void SoundComp_Tick(bool wasOnGround) {
 	if (!sounds_AnyNonAir) soundPos = Vector3_BigPos();
 
 	if (p->Base.OnGround && (SoundComp_DoPlaySound(p, soundPos) || !wasOnGround)) {
-		AudioPlayer_PlayStepSound(sounds_Type);
+		Audio_PlayStepSound(sounds_Type);
 		sounds_LastPos = soundPos;
 	}
 }

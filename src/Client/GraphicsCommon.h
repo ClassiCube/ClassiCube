@@ -8,6 +8,7 @@
 */
 typedef struct Texture_ Texture;
 
+GfxResourceID GfxCommon_defaultIb;
 void GfxCommon_Init(void);
 void GfxCommon_Free(void);
 void GfxCommon_LoseContext(STRING_PURE String* reason);
@@ -29,9 +30,7 @@ void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertice
 void GfxCommon_Mode2D(Int32 width, Int32 height);
 void GfxCommon_Mode3D(void);
 
-GfxResourceID GfxCommon_MakeDefaultIb(void);
 void GfxCommon_MakeIndices(UInt16* indices, Int32 iCount);
-
 void GfxCommon_SetupAlphaState(UInt8 draw);
 void GfxCommon_RestoreAlphaState(UInt8 draw);
 

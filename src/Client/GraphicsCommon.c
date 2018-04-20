@@ -10,11 +10,16 @@
 void GfxCommon_Init(void) {
 	GfxCommon_quadVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, 4);
 	GfxCommon_texVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, 4);
+
+	UInt16 indices[GFX_MAX_INDICES];
+	GfxCommon_MakeIndices(indices, GFX_MAX_INDICES);
+	GfxCommon_defaultIb = Gfx_CreateIb(indices, GFX_MAX_INDICES);
 }
 
 void GfxCommon_Free(void) {
 	Gfx_DeleteVb(&GfxCommon_quadVb);
 	Gfx_DeleteVb(&GfxCommon_texVb);
+	Gfx_DeleteIb(&GfxCommon_defaultIb);
 }
 
 void GfxCommon_LoseContext(STRING_PURE String* reason) {
@@ -124,12 +129,6 @@ void GfxCommon_Mode3D(void) {
 	Gfx_SetDepthTest(false);
 	Gfx_SetAlphaBlending(false);
 	if (gfx_hadFog) Gfx_SetFog(true);
-}
-
-GfxResourceID GfxCommon_MakeDefaultIb(void) {
-	UInt16 indices[GFX_MAX_INDICES];
-	GfxCommon_MakeIndices(indices, GFX_MAX_INDICES);
-	return Gfx_CreateIb(indices, GFX_MAX_INDICES);
 }
 
 void GfxCommon_MakeIndices(UInt16* indices, Int32 iCount) {

@@ -181,6 +181,7 @@
   <ItemGroup>
     <ClInclude Include="2DStructs.h" />
     <ClInclude Include="AsyncDownloader.h" />
+    <ClInclude Include="Audio.h" />
     <ClInclude Include="AxisLinesRenderer.h" />
     <ClInclude Include="BlockID.h" />
     <ClInclude Include="Block.h" />

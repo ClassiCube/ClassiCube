@@ -366,6 +366,9 @@
     <ClInclude Include="TexturePack.h">
       <Filter>Header Files\TexturePack</Filter>
     </ClInclude>
+    <ClInclude Include="Audio.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">

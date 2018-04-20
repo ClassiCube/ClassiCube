@@ -37,6 +37,7 @@
 #include "PickedPosRenderer.h"
 #include "GraphicsCommon.h"
 #include "Menus.h"
+#include "Audio.h"
 
 IGameComponent Game_Components[26];
 Int32 Game_ComponentsCount;
@@ -401,7 +402,6 @@ void Game_Load(void) {
 	comp = GameMode_MakeComponent(); Game_AddComponent(&comp);
 
 	InputHandler_Init();
-	defaultIb = Graphics.MakeDefaultIb();
 	comp = Particles_MakeComponent(); Game_AddComponent(&comp);
 	comp = TabList_MakeComponent();   Game_AddComponent(&comp);
 
@@ -468,7 +468,7 @@ void Game_Load(void) {
 	Gfx_SetAlphaTestFunc(COMPARE_FUNC_GREATER, 0.5f);
 
 	comp = PickedPosRenderer_MakeComponent(); Game_AddComponent(&comp);
-	comp = AudioPlayer_MakeComponent();       Game_AddComponent(&comp);
+	comp = Audio_MakeComponent();             Game_AddComponent(&comp);
 	comp = AxisLinesRenderer_MakeComponent(); Game_AddComponent(&comp);
 	comp = SkyboxRenderer_MakeComponent();    Game_AddComponent(&comp);
 
@@ -632,7 +632,7 @@ void Game_RenderFrame(Real64 delta) {
 	Stopwatch_Start(&game_frameTimer);
 
 	Gfx_BeginFrame();
-	Graphics.BindIb(defaultIb);
+	Gfx_BindIb(GfxCommon_defaultIb);
 	Game_Accumulator += delta;
 	Game_Vertices = 0;
 	GameMode_BeginFrame(delta);
@@ -688,7 +688,6 @@ void Game_Free(void) {
 		Game_Components[i].Free();
 	}
 
-	Graphics.DeleteIb(&defaultIb);
 	Drawer2D_Free();
 	Gfx_Free();
 

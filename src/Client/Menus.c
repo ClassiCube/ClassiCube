@@ -25,6 +25,7 @@
 #include "BlockPhysics.h"
 #include "MapRenderer.h"
 #include "TexturePack.h"
+#include "Audio.h"
 
 #define LIST_SCREEN_ITEMS 5
 #define LIST_SCREEN_BUTTONS (LIST_SCREEN_ITEMS + 3)
@@ -2170,7 +2171,7 @@ const UInt8* ViewDist_Names[ViewDist_Count] = { "TINY", "SHORT", "NORMAL", "FAR"
 void ClassicOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_MusicVolume > 0); }
 void ClassicOptionsScreen_SetMusic(STRING_PURE String* v) {
 	Game_MusicVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
-	AudioPlayer_SetMusic(Game_MusicVolume);
+	Audio_SetMusic(Game_MusicVolume);
 	Options_SetInt32(OPT_MUSIC_VOLUME, Game_MusicVolume);
 }
 
@@ -2202,7 +2203,7 @@ void ClassicOptionsScreen_SetPhysics(STRING_PURE String* v) {
 void ClassicOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_SoundsVolume > 0); }
 void ClassicOptionsScreen_SetSounds(STRING_PURE String* v) {
 	Game_SoundsVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
-	AudioPlayer_SetSounds(Game_SoundsVolume);
+	Audio_SetSounds(Game_SoundsVolume);
 	Options_SetInt32(OPT_SOUND_VOLUME, Game_SoundsVolume);
 }
 
@@ -2755,14 +2756,14 @@ void MiscOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { String_AppendInt32
 void MiscOptionsScreen_SetMusic(STRING_PURE String* v) {
 	Game_MusicVolume = Menu_Int32(v);
 	Options_Set(OPT_MUSIC_VOLUME, v);
-	AudioPlayer_SetMusic(Game_MusicVolume);
+	Audio_SetMusic(Game_MusicVolume);
 }
 
 void MiscOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_SoundsVolume); }
 void MiscOptionsScreen_SetSounds(STRING_PURE String* v) {
 	Game_SoundsVolume = Menu_Int32(v);
 	Options_Set(OPT_SOUND_VOLUME, v);
-	AudioPlayer_SetSounds(Game_SoundsVolume);
+	Audio_SetSounds(Game_SoundsVolume);
 }
 
 void MiscOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ViewBobbing); }

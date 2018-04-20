@@ -55,7 +55,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			CustomMipmapsLevels = true;
 			caps = device.Capabilities;
 			SetDefaultRenderStates();
-			InitDynamicBuffers();
+			InitCommon();
 		}
 		
 		void FindCompatibleFormat(int adapter) {
@@ -305,7 +305,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override int CreateIb(IntPtr indices, int indicesCount) {
 			int size = indicesCount * sizeof(ushort);
 			DataBuffer buffer = device.CreateIndexBuffer(size, Usage.WriteOnly,
-			                                             Format.Index16, Pool.Managed);
+			                                             Format.Index16, Pool.Default);
 			buffer.SetData(indices, size, LockFlags.None);
 			return GetOrExpand(ref iBuffers, buffer, iBufferSize);
 		}

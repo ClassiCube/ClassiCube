@@ -30,7 +30,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			glLists = Options.GetBool(OptionsKey.ForceOldOpenGL, false);
 			CustomMipmapsLevels = !glLists;
 			CheckVboSupport();
-			base.InitDynamicBuffers();
+			base.InitCommon();
 			
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
 			setupBatchFuncTex2fCol4b = SetupVbPos3fTex2fCol4b;
