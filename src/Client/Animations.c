@@ -216,7 +216,7 @@ void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
 
 	Int32 y = rowNum * Atlas2D_ElementSize;
 	Gfx_UpdateTexturePart(Atlas1D_TexIds[index], 0, y, &animPart, Gfx_Mipmaps);
-	if (size > ANIMS_FAST_SIZE) Platform_MemFree(ptr);
+	if (size > ANIMS_FAST_SIZE) Platform_MemFree(&ptr);
 }
 
 void Animations_Apply(AnimationData* data) {
@@ -243,9 +243,7 @@ bool Animations_IsDefaultZip(void) {
 
 void Animations_Clear(void) {
 	anims_count = 0;
-	if (anims_bmp.Scan0 == NULL) return;
-	Platform_MemFree(anims_bmp.Scan0);
-	anims_bmp.Scan0 = NULL;
+	Platform_MemFree(&anims_bmp.Scan0);
 	anims_validated = false;
 }
 

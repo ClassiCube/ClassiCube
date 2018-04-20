@@ -29,7 +29,7 @@ GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 	if (size > 64) {
 		Bitmap_Allocate(&element, size, size);
 		GfxResourceID texId = Atlas2D_LoadTextureElement_Raw(texLoc, &element);
-		Platform_MemFree(element.Scan0);
+		Platform_MemFree(&element.Scan0);
 		return texId;
 	} else {
 		// TODO: does this even work??
@@ -40,8 +40,7 @@ GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 }
 
 void Atlas2D_Free(void) {
-	if (Atlas2D_Bitmap.Scan0 == NULL) return;
-	Platform_MemFree(Atlas2D_Bitmap.Scan0);
+	Platform_MemFree(&Atlas2D_Bitmap.Scan0);
 }
 
 
@@ -74,7 +73,7 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	}
 
 	Atlas1D_TexIds[i] = Gfx_CreateTexture(&atlas1D, true, Gfx_Mipmaps);
-	Platform_MemFree(atlas1D.Scan0);
+	Platform_MemFree(&atlas1D.Scan0);
 }
 
 void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {

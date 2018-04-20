@@ -199,8 +199,7 @@ void WeatherRenderer_Init(void) {
 }
 
 void WeatherRenderer_Reset(void) {
-	if (Weather_Heightmap != NULL) Platform_MemFree(Weather_Heightmap);
-	Weather_Heightmap = NULL;
+	Platform_MemFree(&Weather_Heightmap);
 	weather_lastPos = Vector3I_MaxValue();
 }
 

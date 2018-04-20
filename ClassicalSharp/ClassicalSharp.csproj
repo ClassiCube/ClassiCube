@@ -258,7 +258,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rendering\HeldBlockRenderer.cs" />
-    <Compile Include="Rendering\ChunkSorter.cs" />
     <Compile Include="Rendering\ChunkUpdater.cs" />
     <Compile Include="Rendering\Env\MapBordersRenderer.cs" />
     <Compile Include="Rendering\Env\SkyboxRenderer.cs" />

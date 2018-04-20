@@ -445,7 +445,7 @@ void TexturePack_ExtractZip(Stream* stream) {
 void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format2(&path, "texpacks%b%s", TEXCACHE_FOLDER, &Platform_DirectorySeparator, filename);
+	String_Format2(&path, "texpacks%b%s", &Platform_DirectorySeparator, filename);
 
 	void* file;
 	ReturnCode result = Platform_FileOpen(&file, &path);

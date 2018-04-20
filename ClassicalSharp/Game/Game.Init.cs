@@ -93,6 +93,7 @@ namespace ClassicalSharp {
 			Width = window.Width; Height = window.Height;
 			
 			MapRenderer = new MapRenderer(this);
+			ChunkUpdater = new ChunkUpdater(this);
 			string renType = Options.Get(OptionsKey.RenderType, "normal");
 			if (!SetRenderType(renType))
 				SetRenderType("normal");

@@ -35,7 +35,7 @@ void TickQueue_Init(TickQueue* queue) {
 
 void TickQueue_Clear(TickQueue* queue) {
 	if (queue->Buffer == NULL) return;
-	Platform_MemFree(queue->Buffer);
+	Platform_MemFree(&queue->Buffer);
 	TickQueue_Init(queue);
 }
 
@@ -56,9 +56,7 @@ void TickQueue_Resize(TickQueue* queue) {
 		idx = (queue->Head + i) & queue->BufferMask;
 		newBuffer[i] = queue->Buffer[idx];
 	}
-	if (queue->Buffer != NULL) {
-		Platform_MemFree(queue->Buffer);
-	}
+	Platform_MemFree(&queue->Buffer);
 
 	queue->Buffer = newBuffer;
 	queue->BufferSize = capacity;

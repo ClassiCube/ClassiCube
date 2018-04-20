@@ -321,10 +321,7 @@ void Lighting_Init(void) {
 }
 
 void Lighting_Reset(void) {
-	if (Lighting_heightmap != NULL) {
-		Platform_MemFree(Lighting_heightmap);
-		Lighting_heightmap = NULL;
-	}
+	Platform_MemFree(&Lighting_heightmap);
 }
 
 void Lighting_OnNewMap(void) {

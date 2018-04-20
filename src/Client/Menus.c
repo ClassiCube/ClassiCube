@@ -1298,8 +1298,8 @@ void SaveLevelScreen_DoSave(GuiElement* screenElem, GuiElement* widget, const UI
 		will not be rendered in time because saving is done on the main thread. */
 		String warnMsg = String_FromConst("Saving..");
 		SaveLevelScreen_MakeDesc(screen, &warnMsg);
-		String_Clear(&screen->TextPath);
-		String_AppendString(&screen->TextPath, &path);
+
+		String_Set(&screen->TextPath, &path);
 		SaveLevelScreen_RemoveOverwrites(screen);
 	}
 }

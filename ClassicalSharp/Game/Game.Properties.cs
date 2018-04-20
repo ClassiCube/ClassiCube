@@ -92,6 +92,7 @@ namespace ClassicalSharp {
 		public IWorldLighting Lighting;
 		
 		public MapRenderer MapRenderer;
+		public ChunkUpdater ChunkUpdater;
 		public MapBordersRenderer MapBordersRenderer;
 		public EnvRenderer EnvRenderer;
 		public WeatherRenderer WeatherRenderer;

@@ -235,7 +235,7 @@ void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font,
 
 	Drawer2D_End();
 	atlas->Tex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
-	Platform_MemFree(bmp.Scan0);
+	Platform_MemFree(&bmp.Scan0);
 
 	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);
 	atlas->Tex.U2 = (Real32)atlas->Offset / (Real32)bmp.Width;

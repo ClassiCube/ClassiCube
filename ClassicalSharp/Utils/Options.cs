@@ -81,8 +81,10 @@ namespace ClassicalSharp {
 		
 		public static List<string> OptionsKeys = new List<string>();
 		public static List<string> OptionsValues = new List<string>();
-		public static List<string> OptionsChanged = new List<string>();
+		static List<string> OptionsChanged = new List<string>();
 		const string Filename = "options.txt";
+		
+		public static bool HasChanged() { return OptionsChanged.Count > 0; }
 		
 		static bool IsChangedOption(string key) {
 			for (int i = 0; i < OptionsChanged.Count; i++) {

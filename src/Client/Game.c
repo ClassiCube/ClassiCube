@@ -35,6 +35,13 @@
 #include "BordersRenderer.h"
 #include "HeldBlockRenderer.h"
 #include "PickedPosRenderer.h"
+#include "GraphicsCommon.h"
+#include "Menus.h"
+
+IGameComponent Game_Components[26];
+Int32 Game_ComponentsCount;
+ScheduledTask Game_Tasks[6];
+Int32 Game_TasksCount;
 
 UInt8 Game_UsernameBuffer[String_BufferSize(STRING_SIZE)];
 extern String Game_Username = String_FromEmptyArray(Game_UsernameBuffer);
@@ -45,12 +52,6 @@ UInt8 Game_IPAddressBuffer[String_BufferSize(STRING_SIZE)];
 extern String Game_IPAddress = String_FromEmptyArray(Game_IPAddressBuffer);
 UInt8 Game_FontNameBuffer[String_BufferSize(STRING_SIZE)];
 extern String Game_FontName = String_FromEmptyArray(Game_FontNameBuffer);
-
-
-IGameComponent Game_Components[26];
-Int32 Game_ComponentsCount;
-ScheduledTask Game_Tasks[6];
-Int32 Game_TasksCount;
 
 void Game_AddComponent(IGameComponent* comp) {
 	if (Game_ComponentsCount == Array_Elems(Game_Components)) {
@@ -66,20 +67,6 @@ ScheduledTask ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback)
 	}
 	Game_Tasks[Game_TasksCount++] = task;
 	return task;
-}
-
-void ScheduledTask_TickAll(Real64 time) {
-	Int32 i;
-	for (i = 0; i < Game_TasksCount; i++) {
-		ScheduledTask task = Game_Tasks[i];
-		task.Accumulator += time;
-
-		while (task.Accumulator >= task.Interval) {
-			task.Callback(&task);
-			task.Accumulator -= task.Interval;
-		}
-		Game_Tasks[i] = task;
-	}
 }
 
 
@@ -182,6 +169,21 @@ void Game_UpdateProjection(void) {
 	Event_RaiseVoid(&GfxEvents_ProjectionChanged);
 }
 
+void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason) {
+	World_Reset();
+	Event_RaiseVoid(&WorldEvents_NewMap);
+	Gui_SetNewScreen(DisconnectScreen_MakeInstance(title, reason));
+
+	Drawer2D_Init();
+	Block_Reset();
+	TexturePack_ExtractDefault();
+
+	Int32 i;
+	for (i = 0; i < Game_ComponentsCount; i++) {
+		Game_Components[i].Reset();
+	}
+}
+
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
 	BlockID oldBlock = World_GetBlock(x, y, z);
 	World_SetBlock(x, y, z, block);
@@ -230,7 +232,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType) {
 		*texId = Gfx_CreateTexture(&bmp, true, false);
 	}
 
-	Platform_MemFree(bmp.Scan0);
+	Platform_MemFree(&bmp.Scan0);
 	return success;
 }
 
@@ -264,117 +266,39 @@ bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp) {
 	return true;
 }
 
-
-void Game_Load(void) {
-	IGameComponent comp;
-	Gfx_Init();
-	Gfx_MakeApiInfo();
-	Drawer2D_Init();
-
-	Entities_Init();
-	TextureCache_Init();
-	/* TODO: Survival vs Creative game mode */
-	comp = GameMode_MakeComponent(); Game_AddComponent(&comp);
-
-	InputHandler_Init();
-	defaultIb = Graphics.MakeDefaultIb();
-	comp = Particles_MakeComponent(); Game_AddComponent(&comp);
-	comp = TabList_MakeComponent();   Game_AddComponent(&comp);
-
-	Game_LoadOptions();
-	Game_LoadGuiOptions();
-	comp = Chat_MakeComponent(); Game_AddComponent(&comp);
-
-	WorldEvents.OnNewMap += OnNewMapCore;
-	WorldEvents.OnNewMapLoaded += OnNewMapLoadedCore;
-	Events.TextureChanged += TextureChangedCore;
-
-	Block_Init();
-	ModelCache_Init();
-	comp = AsyncDownloader_MakeComponent(); Game_AddComponent(&comp);
-	comp = Lighting_MakeComponent();        Game_AddComponent(&comp);
-
-	Drawer2D_UseBitmappedChat = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
-	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
-	Gfx_Mipmaps               = Options_GetBool(OPT_MIPMAPS, false);
-
-	comp = Animations_MakeComponent(); Game_AddComponent(&comp);
-	comp = Inventory_MakeComponent();  Game_AddComponent(&comp);
-	Block_SetDefaultPerms();
-	WorldEnv_Reset();
-
-	LocalPlayer_Init(); 
-	comp = LocalPlayer_MakeComponent(); Game_AddComponent(&comp);
-	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
+void Game_OnResize(void) {
 	Size2D size = Window_GetClientSize();
 	Game_Width = size.Width; Game_Height = size.Height;
 
-	MapRenderer = new MapRenderer();
-	string renType = Options_Get(OptionsKey.RenderType, "normal");
-	if (!SetRenderType(renType)) {
-		SetRenderType("normal");
-	}
-
-	if (Game_IPAddress.length == 0) {
-		ServerConnection_InitSingleplayer();
-	} else {
-		ServerConnection_InitMultiplayer();
-	}
-
-	Graphics.LostContextFunction = ServerConnection_Tick;
-	Camera_Init();
+	Gfx_OnWindowResize();
 	Game_UpdateProjection();
+	Gui_OnResize();
+}
 
-	comp = Gui_MakeComponent();               Game_AddComponent(&comp);
-	comp = Selections_MakeComponent();        Game_AddComponent(&comp);
-	comp = WeatherRenderer_MakeComponent();   Game_AddComponent(&comp);
-	comp = HeldBlockRenderer_MakeComponent(); Game_AddComponent(&comp);
-
-	Gfx_SetDepthTest(true);
-	Gfx_SetDepthTestFunc(COMPARE_FUNC_LESSEQUAL);
-	/* Gfx_SetDepthWrite(true) */
-	Gfx_SetAlphaBlendFunc(BLEND_FUNC_SRC_ALPHA, BLEND_FUNC_INV_SRC_ALPHA);
-	Gfx_SetAlphaTestFunc(COMPARE_FUNC_GREATER, 0.5f);
-
-	comp = PickedPosRenderer_MakeComponent(); Game_AddComponent(&comp);
-	comp = AudioPlayer_MakeComponent();       Game_AddComponent(&comp);
-	comp = AxisLinesRenderer_MakeComponent(); Game_AddComponent(&comp);
-	comp = SkyboxRenderer_MakeComponent();    Game_AddComponent(&comp);
-
-	/* TODO: plugin dll support */
-	/* List<string> nonLoaded = PluginLoader.LoadAll(); */
-
+void Game_OnNewMapCore(void* obj) {
 	Int32 i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].Init();
+		Game_Components[i].OnNewMap();
 	}
-	Game_ExtractInitialTexturePack();
+}
 
+void Game_OnNewMapLoadedCore(void* obj) {
+	Int32 i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
-		Game_Components[i].Ready();
+		Game_Components[i].OnNewMapLoaded();
 	}
-	Game_InitScheduledTasks();
+}
 
-	/* TODO: plugin dll support * /
-	/* if (nonLoaded != null) {
-		for (int i = 0; i < nonLoaded.Count; i++) {
-			Overlay warning = new PluginOverlay(this, nonLoaded[i]);
-			Gui_ShowOverlay(warning, false);
-		}
-	}*/
-
-	if (Gfx_WarnIfNecessary()) {
-		BordersRenderer_UseLegacyMode(true);
-		EnvRenderer_UseLegacyMode(true);
+void Game_TextureChangedCore(void* obj, Stream* src) {
+	if (String_CaselessEqualsConst(&src->Name, "terrain.png")) {
+		Bitmap atlas; Bitmap_DecodePng(&atlas, src);
+		if (Game_ChangeTerrainAtlas(&atlas)) return;
+		Platform_MemFree(&atlas.Scan0);
+	} else if (String_CaselessEqualsConst(&src->Name, "default.png")) {
+		Bitmap bmp; Bitmap_DecodePng(&bmp, src);
+		Drawer2D_SetFontBitmap(bmp);
+		Event_RaiseVoid(&ChatEvents_FontChanged);
 	}
-
-	UInt8 loadTitleBuffer[String_BufferSize(STRING_SIZE)];
-	String loadTitle = String_InitAndClearArray(loadTitleBuffer);
-	String_Format2(&loadTitle, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
-	String loadMsg = String_MakeNull();
-
-	Gui_SetNewScreen(LoadingScreen_MakeInstance(&loadTitle, &loadMsg));
-	ServerConnection_Connect(&Game_IPAddress, Game_Port);
 }
 
 void Game_ExtractInitialTexturePack(void) {
@@ -389,7 +313,7 @@ void Game_ExtractInitialTexturePack(void) {
 	/* in case the user's default texture pack doesn't have all required textures */
 	Game_GetDefaultTexturePack(&texPack);
 	if (!String_CaselessEqualsConst(&texPack, "default.zip")) {
-		exturePack_ExtractZip_File(&texPack);
+		TexturePack_ExtractZip_File(&texPack);
 	}
 }
 
@@ -463,4 +387,312 @@ void Game_InitScheduledTasks(void) {
 
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
+}
+
+void Game_Load(void) {
+	IGameComponent comp;
+	Gfx_Init();
+	Gfx_MakeApiInfo();
+	Drawer2D_Init();
+
+	Entities_Init();
+	TextureCache_Init();
+	/* TODO: Survival vs Creative game mode */
+	comp = GameMode_MakeComponent(); Game_AddComponent(&comp);
+
+	InputHandler_Init();
+	defaultIb = Graphics.MakeDefaultIb();
+	comp = Particles_MakeComponent(); Game_AddComponent(&comp);
+	comp = TabList_MakeComponent();   Game_AddComponent(&comp);
+
+	Game_LoadOptions();
+	Game_LoadGuiOptions();
+	comp = Chat_MakeComponent(); Game_AddComponent(&comp);
+
+	Event_RegisterVoid(&WorldEvents_NewMap,          NULL, Game_OnNewMapCore);
+	Event_RegisterVoid(&WorldEvents_MapLoaded,       NULL, Game_OnNewMapLoadedCore);
+	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
+	Event_RegisterVoid(&WindowEvents_Resized,        NULL, Game_OnResize);
+
+	Block_Init();
+	ModelCache_Init();
+	comp = AsyncDownloader_MakeComponent(); Game_AddComponent(&comp);
+	comp = Lighting_MakeComponent();        Game_AddComponent(&comp);
+
+	Drawer2D_UseBitmappedChat = Game_ClassicMode || !Options_GetBool(OPT_USE_CHAT_FONT, false);
+	Drawer2D_BlackTextShadows = Options_GetBool(OPT_BLACK_TEXT, false);
+	Gfx_Mipmaps               = Options_GetBool(OPT_MIPMAPS, false);
+
+	comp = Animations_MakeComponent(); Game_AddComponent(&comp);
+	comp = Inventory_MakeComponent();  Game_AddComponent(&comp);
+	Block_SetDefaultPerms();
+	WorldEnv_Reset();
+
+	LocalPlayer_Init(); 
+	comp = LocalPlayer_MakeComponent(); Game_AddComponent(&comp);
+	Entities_List[ENTITIES_SELF_ID] = &LocalPlayer_Instance.Base;
+
+	Size2D size = Window_GetClientSize();
+	Game_Width = size.Width; Game_Height = size.Height;
+	ChunkUpdater_Init();
+
+	UInt8 renderTypeBuffer[String_BufferSize(STRING_SIZE)];
+	String renderType = String_InitAndClearArray(renderTypeBuffer);
+	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
+
+	if (!Game_SetRenderType(&renderType)) {
+		String_Clear(&renderType);
+		String_AppendConst(&renderType, "normal");
+		Game_SetRenderType("normal");
+	}
+
+	if (Game_IPAddress.length == 0) {
+		ServerConnection_InitSingleplayer();
+	} else {
+		ServerConnection_InitMultiplayer();
+	}
+
+	Gfx_LostContextFunction = ServerConnection_Tick;
+	Camera_Init();
+	Game_UpdateProjection();
+
+	comp = Gui_MakeComponent();               Game_AddComponent(&comp);
+	comp = Selections_MakeComponent();        Game_AddComponent(&comp);
+	comp = WeatherRenderer_MakeComponent();   Game_AddComponent(&comp);
+	comp = HeldBlockRenderer_MakeComponent(); Game_AddComponent(&comp);
+
+	Gfx_SetDepthTest(true);
+	Gfx_SetDepthTestFunc(COMPARE_FUNC_LESSEQUAL);
+	/* Gfx_SetDepthWrite(true) */
+	Gfx_SetAlphaBlendFunc(BLEND_FUNC_SRC_ALPHA, BLEND_FUNC_INV_SRC_ALPHA);
+	Gfx_SetAlphaTestFunc(COMPARE_FUNC_GREATER, 0.5f);
+
+	comp = PickedPosRenderer_MakeComponent(); Game_AddComponent(&comp);
+	comp = AudioPlayer_MakeComponent();       Game_AddComponent(&comp);
+	comp = AxisLinesRenderer_MakeComponent(); Game_AddComponent(&comp);
+	comp = SkyboxRenderer_MakeComponent();    Game_AddComponent(&comp);
+
+	/* TODO: plugin dll support */
+	/* List<string> nonLoaded = PluginLoader.LoadAll(); */
+
+	Int32 i;
+	for (i = 0; i < Game_ComponentsCount; i++) {
+		Game_Components[i].Init();
+	}
+	Game_ExtractInitialTexturePack();
+
+	for (i = 0; i < Game_ComponentsCount; i++) {
+		Game_Components[i].Ready();
+	}
+	Game_InitScheduledTasks();
+
+	/* TODO: plugin dll support * /
+	/* if (nonLoaded != null) {
+		for (int i = 0; i < nonLoaded.Count; i++) {
+			Overlay warning = new PluginOverlay(this, nonLoaded[i]);
+			Gui_ShowOverlay(warning, false);
+		}
+	}*/
+
+	if (Gfx_WarnIfNecessary()) {
+		BordersRenderer_UseLegacyMode(true);
+		EnvRenderer_UseLegacyMode(true);
+	}
+
+	UInt8 loadTitleBuffer[String_BufferSize(STRING_SIZE)];
+	String loadTitle = String_InitAndClearArray(loadTitleBuffer);
+	String_Format2(&loadTitle, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
+	String loadMsg = String_MakeNull();
+
+	Gui_SetNewScreen(LoadingScreen_MakeInstance(&loadTitle, &loadMsg));
+	ServerConnection_Connect(&Game_IPAddress, Game_Port);
+}
+
+Stopwatch game_frameTimer;
+Real32 game_limitMs;
+void Game_SetFpsLimitMethod(FpsLimit method) {
+	Game_FpsLimit = method;
+	game_limitMs = 0.0f;
+	Gfx_SetVSync(method == FpsLimit_VSync);
+
+	if (method == FpsLimit_120FPS) game_limitMs = 1000.0f / 120.0f;
+	if (method == FpsLimit_60FPS)  game_limitMs = 1000.0f / 60.0f;
+	if (method == FpsLimit_30FPS)  game_limitMs = 1000.0f / 30.0f;
+}
+
+void Game_LimitFPS(void) {
+	if (Game_FpsLimit == FpsLimit_VSync) return;
+	Int32 elapsed = Stopwatch_ElapsedMs(&game_frameTimer);
+	Real32 leftOver = game_limitMs - elapsed;
+
+	/* going faster than limit */
+	if (leftOver > 0.001f) {
+		Platform_ThreadSleep((Int32)(leftOver + 0.5f));
+	}
+}
+
+void Game_UpdateViewMatrix(void) {
+	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Camera_Active->GetView(&Gfx_View);
+	Gfx_LoadMatrix(&Gfx_View);
+	FrustumCulling_CalcFrustumEquations(&Gfx_Projection, &Gfx_View);
+}
+
+void Game_Render3D(Real64 delta, Real32 t) {
+	if (SkyboxRenderer_ShouldRender) {
+		SkyboxRenderer_Render(delta);
+	}
+	AxisLinesRenderer_Render(delta);
+	Entities_RenderModels(delta, t);
+	Entities_RenderNames(delta);
+
+	Particles_Render(delta, t);
+	Camera_Active->GetPickedBlock(&Game_SelectedPos); /* TODO: only pick when necessary */
+	EnvRenderer_Render(delta);
+	ChunkUpdater_Update(delta);
+	MapRenderer_RenderNormal(delta);
+	BordersRenderer_RenderSides(delta);
+
+	Entities_DrawShadows();
+	if (Game_SelectedPos.Valid && !Game_HideGui) {
+		PickedPosRenderer_Update(&Game_SelectedPos);
+		PickedPosRenderer_Render(delta);
+	}
+
+	/* Render water over translucent blocks when underwater for proper alpha blending */
+	Vector3 pos = LocalPlayer_Instance.Base.Position;
+	if (Game_CurrentCameraPos.Y < WorldEnv_EdgeHeight
+		&& (pos.X < 0 || pos.Z < 0 || pos.X > World_Width || pos.Z > World_Length)) {
+		MapRenderer_RenderTranslucent(delta);
+		BordersRenderer_RenderEdges(delta);
+	} else {
+		BordersRenderer_RenderEdges(delta);
+		MapRenderer_RenderTranslucent(delta);
+	}
+
+	/* Need to render again over top of translucent block, as the selection outline */
+	/* is drawn without writing to the depth buffer */
+	if (Game_SelectedPos.Valid && !Game_HideGui && Block_Draw[Game_SelectedPos.Block] == DRAW_TRANSLUCENT) {
+		PickedPosRenderer_Render(delta);
+	}
+
+	Selections_Render(delta);
+	Entities_RenderHoveredNames(delta);
+
+	bool left   = Mouse_IsPressed(MouseButton_Left);
+	bool middle = Mouse_IsPressed(MouseButton_Middle);
+	bool right  = Mouse_IsPressed(MouseButton_Right);
+	InputHandler_PickBlocks(true, left, middle, right);
+	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
+}
+
+void Game_DoScheduledTasks(Real64 time) {
+	Int32 i;
+	for (i = 0; i < Game_TasksCount; i++) {
+		ScheduledTask task = Game_Tasks[i];
+		task.Accumulator += time;
+
+		while (task.Accumulator >= task.Interval) {
+			task.Callback(&task);
+			task.Accumulator -= task.Interval;
+		}
+		Game_Tasks[i] = task;
+	}
+}
+
+void Game_TakeScreenshot(void) {
+	String dir = String_FromConst("screenshots");
+	if (!Platform_DirectoryExists(&dir)) {
+		ReturnCode result = Platform_DirectoryCreate(&dir);
+		ErrorHandler_CheckOrFail(result, "Creating screenshots directory");
+	}
+
+	DateTime now = Platform_CurrentLocalTime();
+	Int32 year = now.Year, month = now.Month, day = now.Minute;
+	Int32 hour = now.Hour, min = now.Minute, sec = now.Second;
+
+	UInt8 fileBuffer[String_BufferSize(STRING_SIZE)];
+	String file = String_InitAndClearArray(fileBuffer);
+	String_Format3(&file, "screenshot_%p2-%p2-%p4", &day, &month, &year);
+	String_Format3(&file, "-%p2-%p2-%p2.png", &hour, &min, &sec);
+
+	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	String path = String_InitAndClearArray(pathBuffer);
+	String_Format2(&path, "screenshots/%b%s", &Platform_DirectorySeparator, &file);
+
+	Gfx_TakeScreenshot(&path, Game_Width, Game_Height);
+	Game_ScreenshotRequested = false;
+
+	String_Clear(&path);
+	String_Format1(&path, "&eTaken screenshot as: %s", &file);
+	Chat_Add(&path);
+}
+
+void Game_RenderFrame(Real64 delta) {
+	Stopwatch_Start(&game_frameTimer);
+
+	Gfx_BeginFrame();
+	Graphics.BindIb(defaultIb);
+	Game_Accumulator += delta;
+	Game_Vertices = 0;
+	GameMode_BeginFrame(delta);
+
+	Camera_Active->UpdateMouse();
+	if (!Window_GetFocused() && !Gui_GetActiveScreen()->HandlesAllInput) {
+		Gui_SetNewScreen(PauseScreen_MakeInstance());
+	}
+
+	bool allowZoom = Gui_Active == NULL && !Gui_HUD->HandlesAllInput;
+	if (allowZoom && KeyBind_IsPressed(KeyBind_ZoomScrolling)) {
+		InputHandler_SetFOV(Game_ZoomFov, false);
+	}
+
+	Game_DoScheduledTasks(delta);
+	Real32 t = (Real32)(entTask.Accumulator / entTask.Interval);
+	LocalPlayer_SetInterpPosition(t);
+
+	if (!Game_SkipClear) Gfx_Clear();
+	Game_CurrentCameraPos = Camera_Active->GetCameraPos(t);
+	Game_UpdateViewMatrix();
+
+	bool visible = Gui_Active == NULL || !Gui_Active->BlocksWorld;
+	if (World_Blocks == NULL) visible = false;
+	if (visible) {
+		Game_Render3D(delta, t);
+	} else {
+		PickedPos_SetAsInvalid(&Game_SelectedPos);
+	}
+
+	Gui_RenderGui(delta);
+	if (Game_ScreenshotRequested) Game_TakeScreenshot();
+
+	GameMode_EndFrame(delta);
+	Gfx_EndFrame();
+	Game_LimitFPS();
+}
+
+void Game_Free(void) {
+	ChunkUpdater_Free();
+	Atlas2D_Free();
+	Atlas1D_Free();
+	ModelCache_Free();
+	Entities_Free();
+
+	Event_UnregisterVoid(&WorldEvents_NewMap,          NULL, Game_OnNewMapCore);
+	Event_UnregisterVoid(&WorldEvents_MapLoaded,       NULL, Game_OnNewMapLoadedCore);
+	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Game_TextureChangedCore);
+	Event_UnregisterVoid(&WindowEvents_Resized,        NULL, Game_OnResize);
+
+	Int32 i;
+	for (i = 0; i < Game_ComponentsCount; i++) {
+		Game_Components[i].Free();
+	}
+
+	Graphics.DeleteIb(&defaultIb);
+	Drawer2D_Free();
+	Gfx_Free();
+
+	if (!Options_HasAnyChanged()) return;
+	Options_Load();
+	Options_Save();
 }

@@ -575,10 +575,10 @@ void StringsBuffer_Init(StringsBuffer* buffer) {
 
 void StringsBuffer_Free(StringsBuffer* buffer) {
 	if (buffer->TextBuffer != buffer->DefaultBuffer) {
-		Platform_MemFree(buffer->TextBuffer);
+		Platform_MemFree(&buffer->TextBuffer);
 	}
 	if (buffer->FlagsBuffer != buffer->DefaultFlags) {
-		Platform_MemFree(buffer->FlagsBuffer);
+		Platform_MemFree(&buffer->FlagsBuffer);
 	}
 	StringsBuffer_UNSAFE_Reset(buffer);
 }

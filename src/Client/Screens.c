@@ -1519,13 +1519,7 @@ bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mouse
 	ButtonWidget* widget = &screen->Reconnect;
 	if (btn != MouseButton_Left) return true;
 
-	if (!widget->Disabled && Widget_Contains((Widget*)widget, x, y)) {		
-		Int32 i;
-		for (i = 0; i < Game_ComponentsCount; i++) {
-			Game_Components[i].Reset();
-		}
-		Block_Reset();
-
+	if (!widget->Disabled && Widget_Contains((Widget*)widget, x, y)) {
 		UInt8 connectBuffer[String_BufferSize(STRING_SIZE)];
 		String connect = String_FromConst(connectBuffer);
 		String empty = String_MakeNull();

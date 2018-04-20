@@ -12,6 +12,8 @@ const UInt8* FpsLimit_Names[FpsLimit_Count] = {
 #define OPT_NOT_FOUND UInt32_MaxValue
 StringsBuffer Options_Changed;
 
+bool Options_HasAnyChanged(void) { return Options_Changed.Count > 0;  }
+
 void Options_Init(void) {
 	StringsBuffer_Init(&Options_Keys);
 	StringsBuffer_Init(&Options_Values);

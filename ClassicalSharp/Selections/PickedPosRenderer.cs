@@ -34,7 +34,7 @@ namespace ClassicalSharp.Renderers {
 		const int verticesCount = 16 * 6;
 		VertexP3fC4b[] vertices = new VertexP3fC4b[verticesCount];
 		
-		public void UpdateState(PickedPos selected) {
+		public void Update(PickedPos selected) {
 			index = 0;
 			Vector3 camPos = game.CurrentCameraPos;
 			float dist = (camPos - selected.Min).LengthSquared;

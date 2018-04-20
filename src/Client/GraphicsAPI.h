@@ -51,7 +51,7 @@ Matrix Gfx_View, Gfx_Projection;
 #define GFX_STRIDE_SIZES { 16, 24 }
 
 /* Callback invoked when the current context is lost, and is repeatedly invoked until the context can be retrieved. */
-ScheduledTaskCallback LostContextFunction;
+ScheduledTaskCallback Gfx_LostContextFunction;
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps);
 void Gfx_UpdateTexturePart(GfxResourceID texId, Int32 x, Int32 y, Bitmap* part, bool mipmaps);

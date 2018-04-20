@@ -68,7 +68,7 @@ void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y
 	          v.Y = y1; *pickedPos_ptr++ = v;
 }
 
-void PickedPosRenderer_UpdateState(PickedPos* selected) {
+void PickedPosRenderer_Update(PickedPos* selected) {
 	pickedPos_ptr = pickedPos_vertices;
 	Vector3 delta;
 	Vector3_Sub(&delta, &Game_CurrentCameraPos, &selected->Min);

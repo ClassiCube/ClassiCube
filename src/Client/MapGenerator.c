@@ -488,5 +488,5 @@ void NotchyGen_Generate(void) {
 	NotchyGen_PlantMushrooms();
 	NotchyGen_PlantTrees();
 
-	Platform_MemFree(Heightmap);
+	Platform_MemFree(&Heightmap);
 }

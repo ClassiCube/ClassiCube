@@ -63,7 +63,7 @@ void D3D9_FreeResource(GfxResourceID* resource) {
 void D3D9_LoopUntilRetrieved(void) {
 	ScheduledTask task;
 	task.Interval = 1.0f / 60.0f;
-	task.Callback = LostContextFunction;
+	task.Callback = Gfx_LostContextFunction;
 
 	while (true) {
 		Platform_ThreadSleep(16);
@@ -219,10 +219,10 @@ void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, b
 			D3D9_SetTextureData(texture, &mipmap, lvl);
 		}
 
-		if (prev != bmp->Scan0) Platform_MemFree(prev);
+		if (prev != bmp->Scan0) Platform_MemFree(&prev);
 		prev = cur;
 	}
-	if (prev != bmp->Scan0) Platform_MemFree(prev);
+	if (prev != bmp->Scan0) Platform_MemFree(&prev);
 }
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {

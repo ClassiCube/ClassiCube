@@ -37,8 +37,7 @@ namespace ClassicalSharp.Renderers {
 		}
 	}
 	
-	public partial class MapRenderer : IDisposable {
-		
+	public partial class MapRenderer {	
 		Game game;
 		
 		internal int _1DUsed = -1, chunksX, chunksY, chunksZ;
@@ -47,19 +46,11 @@ namespace ClassicalSharp.Renderers {
 		internal bool[] usedTranslucent, usedNormal;
 		internal bool[] pendingTranslucent, pendingNormal;
 		internal int[] normalPartsCount, translucentPartsCount;
-		internal ChunkUpdater updater;
 		bool inTranslucent = false;
 		
 		public MapRenderer(Game game) {
 			this.game = game;
-			updater = new ChunkUpdater(game, this);
-			SetMeshBuilder(DefaultMeshBuilder());
 		}
-		
-		public void Dispose() { updater.Dispose(); }
-		
-		/// <summary> Discards any built meshes for all chunks in the map.</summary>
-		public void Refresh() { updater.Refresh(); }
 		
 		/// <summary> Retrieves the information for the given chunk. </summary>
 		public ChunkInfo GetChunk(int cx, int cy, int cz) {
@@ -75,29 +66,6 @@ namespace ClassicalSharp.Renderers {
 			if (info.AllAir) return; // do not recreate chunks completely air
 			info.Empty = false;
 			info.PendingDelete = true;
-		}
-		
-		/// <summary> Potentially generates meshes for several pending chunks. </summary>
-		public void Update(double deltaTime) {
-			if (chunks == null) return;
-			ChunkSorter.UpdateSortOrder(game, updater);
-			updater.UpdateChunks(deltaTime);
-		}
-		
-		/// <summary> Sets the mesh builder that is used to generate meshes for chunks. </summary>
-		public void SetMeshBuilder(ChunkMeshBuilder newBuilder) {
-			if (updater.builder != null) updater.builder.Dispose();
-			
-			updater.builder = newBuilder;
-			updater.builder.Init(game);
-			updater.builder.OnNewMapLoaded();
-		}
-
-		/// <summary> Creates a new instance of the default mesh builder implementation. </summary>
-		public ChunkMeshBuilder DefaultMeshBuilder() {
-			if (game.SmoothLighting)
-				return new AdvLightingMeshBuilder();
-			return new NormalMeshBuilder();
 		}
 		
 		

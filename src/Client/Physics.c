@@ -165,7 +165,7 @@ UInt32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entity
 	UInt32 elements = (max.X - min.X + 1) * (max.Y - min.Y + 1) * (max.Z - min.Z + 1);
 	if (elements > Searcher_StatesCount) {
 		if (Searcher_StatesCount > SEARCHER_STATES_MIN) {
-			Platform_MemFree(Searcher_States);
+			Platform_MemFree(&Searcher_States);
 		}
 		Searcher_StatesCount = elements;
 
@@ -228,6 +228,6 @@ void Searcher_CalcTime(Vector3* vel, AABB *entityBB, AABB* blockBB, Real32* tx, 
 
 void Searcher_Free(void) {
 	if (Searcher_StatesCount > SEARCHER_STATES_MIN) {
-		Platform_MemFree(Searcher_States);
+		Platform_MemFree(&Searcher_States);
 	}
 }

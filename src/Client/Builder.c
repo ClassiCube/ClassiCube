@@ -61,8 +61,7 @@ void Builder1DPart_Prepare(Builder1DPart* part) {
 	/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
 	Int32 vCount = Builder1DPart_VerticesCount(part);
 	if (vCount > part->verticesBufferCount) {
-		if (part->vertices != NULL)
-			Platform_MemFree(part->vertices);
+		Platform_MemFree(&part->vertices);
 
 		part->vertices = Platform_MemAlloc((vCount + 2) * sizeof(VertexP3fT2fC4b));
 		part->verticesBufferCount = vCount;

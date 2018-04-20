@@ -119,10 +119,10 @@ void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, Bitmap* bmp, bool parti
 			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
 		}
 
-		if (prev != bmp->Scan0) Platform_MemFree(prev);
+		if (prev != bmp->Scan0) Platform_MemFree(&prev);
 		prev = cur;
 	}
-	if (prev != bmp->Scan0) Platform_MemFree(prev);
+	if (prev != bmp->Scan0) Platform_MemFree(&prev);
 }
 
 GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {

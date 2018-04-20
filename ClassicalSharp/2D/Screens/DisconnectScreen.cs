@@ -74,10 +74,6 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if (!reconnect.Disabled && reconnect.Contains(mouseX, mouseY)) {
 				string connect = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
-				for (int i = 0; i < game.Components.Count; i++)
-					game.Components[i].Reset(game);
-				BlockInfo.Reset();
-				
 				game.Gui.SetNewScreen(new LoadingMapScreen(game, connect, ""));
 				game.Server.Connect(game.IPAddress, game.Port);
 			}

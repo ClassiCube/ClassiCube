@@ -111,11 +111,11 @@ void ChunkUpdater_ApplyMeshBuilder(void) {
 
 void ChunkUpdater_FreeAllocations(void) {
 	if (MapRenderer_Chunks == NULL) return;
-	Platform_MemFree(MapRenderer_Chunks); MapRenderer_Chunks = NULL;
-	Platform_MemFree(MapRenderer_SortedChunks); MapRenderer_SortedChunks = NULL;
-	Platform_MemFree(MapRenderer_RenderChunks); MapRenderer_RenderChunks = NULL;
-	Platform_MemFree(ChunkUpdater_Distances); ChunkUpdater_Distances = NULL;
-	Platform_MemFree(MapRenderer_PartsBuffer); MapRenderer_PartsBuffer = NULL;
+	Platform_MemFree(&MapRenderer_Chunks);
+	Platform_MemFree(&MapRenderer_SortedChunks);
+	Platform_MemFree(&MapRenderer_RenderChunks);
+	Platform_MemFree(&ChunkUpdater_Distances);
+	Platform_MemFree(&MapRenderer_PartsBuffer);
 }
 
 void ChunkUpdater_PerformAllocations(void) {
@@ -418,6 +418,12 @@ void ChunkUpdater_UpdateSortOrder(void) {
 	ChunkUpdater_QuickSort(0, MapRenderer_ChunksCount - 1);
 	ChunkUpdater_ResetPartFlags();
 	/*SimpleOcclusionCulling();*/
+}
+
+void ChunkUpdater_Update(Real64 deltaTime) {
+	if (MapRenderer_Chunks == NULL) return;
+	ChunkUpdater_UpdateSortOrder();
+	ChunkUpdater_UpdateChunks(deltaTime);
 }
 
 void ChunkUpdater_Init(void) {

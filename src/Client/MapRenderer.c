@@ -22,12 +22,6 @@ void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz) {
 	info->PendingDelete = true;
 }
 
-void MapRenderer_Update(Real64 deltaTime) {
-	if (MapRenderer_Chunks == NULL) return;
-	ChunkUpdater_UpdateSortOrder();
-	ChunkUpdater_UpdateChunks(deltaTime);
-}
-
 void MapRenderer_CheckWeather(Real64 deltaTime) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;

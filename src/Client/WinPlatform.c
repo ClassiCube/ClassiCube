@@ -13,6 +13,8 @@
 HDC hdc;
 HBITMAP hbmp;
 HANDLE heap;
+bool stopwatch_highResolution;
+LARGE_INTEGER stopwatch_freq;
 
 UInt8* Platform_NewLine = "\r\n";
 UInt8 Platform_DirectorySeparator = '\\';
@@ -23,6 +25,8 @@ void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
 	hdc = CreateCompatibleDC(NULL);
 	if (hdc == NULL) ErrorHandler_Fail("Failed to get screen DC");
+
+	stopwatch_highResolution = QueryPerformanceFrequency(&stopwatch_freq);
 
 	UInt32 deviceNum = 0;
 	/* Get available video adapters and enumerate all monitors */
@@ -67,8 +71,10 @@ void* Platform_MemRealloc(void* mem, UInt32 numBytes) {
 	return HeapReAlloc(heap, 0, mem, numBytes);
 }
 
-void Platform_MemFree(void* mem) {
-	HeapFree(heap, 0, mem);
+void Platform_MemFree(void** mem) {
+	if (mem == NULL || *mem == NULL) return;
+	HeapFree(heap, 0, *mem);
+	*mem = NULL;
 }
 
 void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes) {
@@ -245,6 +251,26 @@ void* Platform_ThreadStart(Platform_ThreadFunc* func) {
 void Platform_ThreadFreeHandle(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Freeing thread handle");
+	}
+}
+
+void Stopwatch_Start(Stopwatch* timer) {
+	if (stopwatch_highResolution) {
+		QueryPerformanceCounter(timer);
+	} else {
+		GetSystemTimeAsFileTime(timer);
+	}
+}
+
+/* TODO: check this is actually accurate */
+Int32 Stopwatch_ElapsedMs(Stopwatch* timer) {
+	Int64 start = *timer, end;
+	if (stopwatch_highResolution) {
+		QueryPerformanceCounter(&end);
+		return (Int32)((end - start) * 1000 / stopwatch_freq.QuadPart);
+	} else {
+		GetSystemTimeAsFileTime(&end);
+		return (Int32)((end - start) / 10000);
 	}
 }
 

@@ -18,7 +18,7 @@ void Platform_Free(void);
 
 void* Platform_MemAlloc(UInt32 numBytes);
 void* Platform_MemRealloc(void* mem, UInt32 numBytes);
-void Platform_MemFree(void* mem);
+void Platform_MemFree(void** mem);
 void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes);
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
 
@@ -47,6 +47,10 @@ typedef void Platform_ThreadFunc(void);
 void* Platform_ThreadStart(Platform_ThreadFunc* func);
 /* Frees handle to thread - NOT THE THREAD ITSELF */
 void Platform_ThreadFreeHandle(void* handle);
+
+typedef Int64 Stopwatch;
+void Stopwatch_Start(Stopwatch* timer);
+Int32 Stopwatch_ElapsedMs(Stopwatch* timer);
 
 void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Platform_FreeFont(FontDesc* desc);

@@ -70,16 +70,10 @@ namespace ClassicalSharp.Events {
 		/// <summary> Raised when the projection matrix changes. </summary>
 		public event EventHandler ProjectionChanged;
 		public void RaiseProjectionChanged() { Raise(ProjectionChanged); }
-		
-		/// <summary> Raised when the user is disconnected from the server. </summary>
-		public event EventHandler<DisconnectedEventArgs> Disconnected;
-		public void RaiseDisconnected(string title, string reason) {
-			discArgs.Title = title; discArgs.Reason = reason; Raise(Disconnected, discArgs); }
 	
 		ChatEventArgs chatArgs = new ChatEventArgs();
 		TextureEventArgs texArgs = new TextureEventArgs();
 		ColourCodeEventArgs colArgs = new ColourCodeEventArgs();
-		DisconnectedEventArgs discArgs = new DisconnectedEventArgs();
 	}
 	
 	public sealed class ChatEventArgs : EventArgs {
@@ -105,14 +99,5 @@ namespace ClassicalSharp.Events {
 		
 		/// <summary> Raw data of the file. </summary>
 		public byte[] Data;
-	}
-	
-	public sealed class DisconnectedEventArgs : EventArgs {
-		
-		/// <summary> General type of the disconnection. </summary>
-		public string Title;
-		
-		/// <summary> The specific reason for the disconnection. </summary>
-		public string Reason;
 	}	
 }

@@ -55,9 +55,7 @@ void Drawer2D_CalculateTextWidths(void) {
 }
 
 void Drawer2D_FreeFontBitmap(void) {
-	if (Drawer2D_FontBitmap.Scan0 == NULL) return;
-	Platform_MemFree(Drawer2D_FontBitmap.Scan0);
-	Drawer2D_FontBitmap.Scan0 = NULL;
+	Platform_MemFree(&Drawer2D_FontBitmap.Scan0);
 }
 
 void Drawer2D_SetFontBitmap(Bitmap bmp) {

@@ -1017,7 +1017,7 @@ void InputWidget_RemakeTexture(GuiElement* elem) {
 	widget->InputTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
 
 	Drawer2D_End();
-	Platform_MemFree(bmp.Scan0);
+	Platform_MemFree(&bmp.Scan0);
 
 	widget->Width = size.Width;
 	widget->Height = realHeight == 0 ? widget->PrefixHeight : realHeight;

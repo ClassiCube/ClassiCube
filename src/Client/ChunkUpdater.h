@@ -48,7 +48,7 @@ void ChunkUpdater_Free(void);
 void ChunkUpdater_Refresh(void);
 void ChunkUpdater_RefreshBorders(Int32 clipLevel);
 void ChunkUpdater_ApplyMeshBuilder(void);
-void ChunkUpdater_UpdateChunks(Real64 delta);
+void ChunkUpdater_Update(Real64 deltaTime);
 
 void ChunkUpdater_ResetPartFlags(void);
 void ChunkUpdater_ResetPartCounts(void);
@@ -58,5 +58,4 @@ void ChunkUpdater_ClearChunkCache(void);
 
 void ChunkUpdater_DeleteChunk(ChunkInfo* info);
 void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates);
-void ChunkUpdater_UpdateSortOrder(void);
 #endif

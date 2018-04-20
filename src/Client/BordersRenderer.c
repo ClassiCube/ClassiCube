@@ -207,7 +207,7 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	BordersRenderer_DrawX(World_Width, 0, World_Length, y1, y2, axisSize, col, &temp);
 
 	borders_sidesVb = Gfx_CreateVb(v, VERTEX_FORMAT_P3FT2FC4B, borders_sidesVertices);
-	if (borders_sidesVertices > 4096) Platform_MemFree(ptr);
+	if (borders_sidesVertices > 4096) Platform_MemFree(&ptr);
 }
 
 void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
@@ -241,7 +241,7 @@ void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	}
 
 	borders_edgesVb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, borders_edgesVertices);
-	if (borders_edgesVertices > 4096) Platform_MemFree(ptr);
+	if (borders_edgesVertices > 4096) Platform_MemFree(&ptr);
 }
 
 

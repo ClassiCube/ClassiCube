@@ -534,7 +534,7 @@ void Chat_Reset(void) {
 
 void Chat_Free(void) {
 	commands_count = 0;
-	if (Chat_LogTimes != Chat_DefaultLogTimes) Platform_MemFree(Chat_LogTimes);
+	if (Chat_LogTimes != Chat_DefaultLogTimes) Platform_MemFree(&Chat_LogTimes);
 
 	StringsBuffer_Free(&Chat_Log);
 	StringsBuffer_Free(&Chat_InputLog);

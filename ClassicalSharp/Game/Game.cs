@@ -30,6 +30,14 @@ namespace ClassicalSharp {
 
 	public partial class Game : IDisposable {
 		
+		public Game(string username, string mppass, string skinServer,
+		            bool nullContext, int width, int height) {
+			window = new DesktopWindow(this, username, nullContext, width, height);
+			Username = username;
+			Mppass = mppass;
+			this.skinServer = skinServer;
+		}
+		
 		public bool ChangeTerrainAtlas(Bitmap atlas) {
 			if (!ValidateBitmap("terrain.png", atlas)) return false;
 			if (atlas.Width != atlas.Height) {
@@ -52,16 +60,6 @@ namespace ClassicalSharp {
 		
 		public void Exit() { window.Exit(); }
 		
-		void OnNewMapCore(object sender, EventArgs e) {
-			for (int i = 0; i < Components.Count; i++)
-				Components[i].OnNewMap(this);
-		}
-		
-		void OnNewMapLoadedCore(object sender, EventArgs e) {
-			for (int i = 0; i < Components.Count; i++)
-				Components[i].OnNewMapLoaded(this);
-		}
-		
 		public void SetViewDistance(int distance, bool userDist) {
 			if (userDist) {
 				UserViewDistance = distance;
@@ -76,138 +74,11 @@ namespace ClassicalSharp {
 			UpdateProjection();
 		}
 		
-		Stopwatch frameTimer = new Stopwatch();
-		internal void RenderFrame(double delta) {
-			frameTimer.Reset();
-			frameTimer.Start();
-			
-			Graphics.BeginFrame(this);
-			Graphics.BindIb(defaultIb);
-			accumulator += delta;
-			Vertices = 0;
-			Mode.BeginFrame(delta);
-			
-			Camera.UpdateMouse();
-			if (!Focused && !Gui.ActiveScreen.HandlesAllInput)
-				Gui.SetNewScreen(new PauseScreen(this));
-			CheckZoomFov();
-			
-			DoScheduledTasks(delta);
-			float t = (float)(entTask.Accumulator / entTask.Interval);
-			LocalPlayer.SetInterpPosition(t);
-			
-			if (!SkipClear) Graphics.Clear();
-			CurrentCameraPos = Camera.GetCameraPos(t);
-			UpdateViewMatrix();
-			
-			bool visible = Gui.activeScreen == null || !Gui.activeScreen.BlocksWorld;
-			if (!World.HasBlocks) visible = false;
-			if (visible) {
-				Render3D(delta, t);
-			} else {
-				SelectedPos.SetAsInvalid();
-			}
-			
-			Gui.Render(delta);
-			if (screenshotRequested) TakeScreenshot();
-			
-			Mode.EndFrame(delta);
-			Graphics.EndFrame(this);
-			LimitFPS();
-		}
-		
-		void CheckZoomFov() {
-			bool allowZoom = Gui.activeScreen == null && !Gui.hudScreen.HandlesAllInput;
-			if (allowZoom && IsKeyDown(KeyBind.ZoomScrolling))
-				Input.SetFOV(ZoomFov, false);
-		}
-		
-		void UpdateViewMatrix() {
-			Graphics.SetMatrixMode(MatrixType.Modelview);
-			Camera.GetView(out Graphics.View);
-			Graphics.LoadMatrix(ref Graphics.View);
-			Culling.CalcFrustumEquations(ref Graphics.Projection, ref Graphics.View);
-		}
-		
-		void Render3D(double delta, float t) {
-			if (SkyboxRenderer.ShouldRender)
-				SkyboxRenderer.Render(delta);
-			AxisLinesRenderer.Render(delta);
-			Entities.RenderModels(Graphics, delta, t);
-			Entities.RenderNames(Graphics, delta);
-			
-			ParticleManager.Render(delta, t);
-			Camera.GetPickedBlock(SelectedPos); // TODO: only pick when necessary
-			EnvRenderer.Render(delta);
-			MapRenderer.Update(delta);
-			MapRenderer.RenderNormal(delta);
-			MapBordersRenderer.RenderSides(delta);
-			
-			Entities.DrawShadows();
-			if (SelectedPos.Valid && !HideGui) {
-				Picking.UpdateState(SelectedPos);
-				Picking.Render(delta);
-			}
-			
-			// Render water over translucent blocks when underwater for proper alpha blending
-			Vector3 pos = LocalPlayer.Position;
-			if (CurrentCameraPos.Y < World.Env.EdgeHeight
-			    && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length)) {
-				MapRenderer.RenderTranslucent(delta);
-				MapBordersRenderer.RenderEdges(delta);
-			} else {
-				MapBordersRenderer.RenderEdges(delta);
-				MapRenderer.RenderTranslucent(delta);
-			}
-			
-			// Need to render again over top of translucent block, as the selection outline
-			// is drawn without writing to the depth buffer
-			if (SelectedPos.Valid && !HideGui && BlockInfo.Draw[SelectedPos.Block] == DrawType.Translucent) {
-				Picking.Render(delta);
-			}
-			
-			SelectionManager.Render(delta);
-			Entities.RenderHoveredNames(Graphics, delta);
-			
-			bool left = IsMousePressed(MouseButton.Left);
-			bool middle = IsMousePressed(MouseButton.Middle);
-			bool right = IsMousePressed(MouseButton.Right);
-			Input.PickBlocks(true, left, middle, right);
-			if (!HideGui)
-				HeldBlockRenderer.Render(delta);
-		}
-		
-		void DoScheduledTasks(double time) {
-			for (int i = 0; i < Tasks.Count; i++) {
-				ScheduledTask task = Tasks[i];
-				task.Accumulator += time;
-				
-				while (task.Accumulator >= task.Interval) {
-					task.Callback(task);
-					task.Accumulator -= task.Interval;
-				}
-			}
-		}
-		
 		public ScheduledTask AddScheduledTask(double interval, ScheduledTaskCallback callback) {
 			ScheduledTask task = new ScheduledTask();
 			task.Interval = interval; task.Callback = callback;
 			Tasks.Add(task);
 			return task;
-		}
-		
-		void TakeScreenshot() {
-			if (!Platform.DirectoryExists("screenshots")) {
-				Platform.DirectoryCreate("screenshots");
-			}
-			
-			string timestamp = DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss");
-			string file = "screenshot_" + timestamp + ".png";
-			string path = PathIO.Combine("screenshots", file);
-			
-			Graphics.TakeScreenshot(path, Width, Height);
-			Chat.Add("&eTaken screenshot as: " + file);
-			screenshotRequested = false;
 		}
 		
 		public void UpdateProjection() {
@@ -220,24 +91,18 @@ namespace ClassicalSharp {
 			Events.RaiseProjectionChanged();
 		}
 		
-		internal void OnResize() {
-			Width = window.Width; Height = window.Height;
-			Graphics.OnWindowResize(this);
-			UpdateProjection();
-			Gui.OnResize();
-		}
-		
 		public void Disconnect(string title, string reason) {
-			Events.RaiseDisconnected(title, reason);
-			
-			Gui.Reset(this);
 			World.Reset();
-			WorldEvents.RaiseOnNewMap();
-
+			WorldEvents.RaiseOnNewMap();		
+			Gui.SetNewScreen(new DisconnectScreen(this, title, reason));
+			
 			IDrawer2D.InitCols();
 			BlockInfo.Reset();
 			TexturePack.ExtractDefault(this);
-			Gui.SetNewScreen(new DisconnectScreen(this, title, reason));
+
+			for (int i = 0; i < Components.Count; i++) {
+				Components[i].Reset(this);
+			}		
 			GC.Collect();
 		}
 		
@@ -267,29 +132,6 @@ namespace ClassicalSharp {
 			MapRenderer.RefreshChunk(cx, cy, cz);
 		}
 		
-		float limitMilliseconds;
-		public void SetFpsLimitMethod(FpsLimitMethod method) {
-			FpsLimit = method;
-			limitMilliseconds = 0;
-			Graphics.SetVSync(this, method == FpsLimitMethod.LimitVSync);
-			
-			if (method == FpsLimitMethod.Limit120FPS)
-				limitMilliseconds = 1000f / 120;
-			if (method == FpsLimitMethod.Limit60FPS)
-				limitMilliseconds = 1000f / 60;
-			if (method == FpsLimitMethod.Limit30FPS)
-				limitMilliseconds = 1000f / 30;
-		}
-		
-		void LimitFPS() {
-			if (FpsLimit == FpsLimitMethod.LimitVSync) return;
-			
-			double elapsed = frameTimer.Elapsed.TotalMilliseconds;
-			double leftOver = limitMilliseconds - elapsed;
-			if (leftOver > 0.001) // going faster than limit
-				Thread.Sleep((int)Math.Round(leftOver, MidpointRounding.AwayFromZero));
-		}
-		
 		public bool IsKeyDown(Key key) { return Input.IsKeyDown(key); }
 		
 		public bool IsKeyDown(KeyBind binding) { return Input.IsKeyDown(binding); }
@@ -297,28 +139,6 @@ namespace ClassicalSharp {
 		public bool IsMousePressed(MouseButton button) { return Input.IsMousePressed(button); }
 		
 		public Key Mapping(KeyBind mapping) { return Input.Keys[mapping]; }
-		
-		public void Dispose() {
-			MapRenderer.Dispose();
-			TerrainAtlas2D.Dispose();
-			TerrainAtlas1D.Dispose();
-			ModelCache.Dispose();
-			Entities.Dispose();
-			WorldEvents.OnNewMap -= OnNewMapCore;
-			WorldEvents.OnNewMapLoaded -= OnNewMapLoadedCore;
-			Events.TextureChanged -= TextureChangedCore;
-			
-			for (int i = 0; i < Components.Count; i++)
-				Components[i].Dispose();
-			
-			Graphics.DeleteIb(ref defaultIb);
-			Drawer2D.DisposeInstance();
-			Graphics.Dispose();
-			
-			if (Options.OptionsChanged.Count == 0) return;
-			Options.Load();
-			Options.Save();
-		}
 		
 		public bool CanPick(BlockID block) {
 			if (BlockInfo.Draw[block] == DrawType.Gas) return false;
@@ -402,6 +222,7 @@ namespace ClassicalSharp {
 				MapBordersRenderer.UseLegacyMode(legacy);
 			}
 			
+			
 			if (EnvRenderer == null) {
 				EnvRenderer = new EnvRenderer(); Components.Add(EnvRenderer);
 				EnvRenderer.legacy = legacy;
@@ -410,6 +231,24 @@ namespace ClassicalSharp {
 				EnvRenderer.UseLegacyMode(legacy);
 				EnvRenderer.UseMinimalMode(minimal);
 			}
+			
+		}
+		
+		internal void OnResize() {
+			Width = window.Width; Height = window.Height;
+			Graphics.OnWindowResize(this);
+			UpdateProjection();
+			Gui.OnResize();
+		}
+		
+		void OnNewMapCore(object sender, EventArgs e) {
+			for (int i = 0; i < Components.Count; i++)
+				Components[i].OnNewMap(this);
+		}
+		
+		void OnNewMapLoadedCore(object sender, EventArgs e) {
+			for (int i = 0; i < Components.Count; i++)
+				Components[i].OnNewMapLoaded(this);
 		}
 		
 		void TextureChangedCore(object sender, TextureEventArgs e) {
@@ -423,14 +262,175 @@ namespace ClassicalSharp {
 				Events.RaiseChatFontChanged();
 			}
 		}
+
+		Stopwatch frameTimer = new Stopwatch();
+		float limitMilliseconds;
+		public void SetFpsLimitMethod(FpsLimitMethod method) {
+			FpsLimit = method;
+			limitMilliseconds = 0;
+			Graphics.SetVSync(this, method == FpsLimitMethod.LimitVSync);
+			
+			if (method == FpsLimitMethod.Limit120FPS)
+				limitMilliseconds = 1000f / 120;
+			if (method == FpsLimitMethod.Limit60FPS)
+				limitMilliseconds = 1000f / 60;
+			if (method == FpsLimitMethod.Limit30FPS)
+				limitMilliseconds = 1000f / 30;
+		}
 		
+		void LimitFPS() {
+			if (FpsLimit == FpsLimitMethod.LimitVSync) return;
+			
+			double elapsed = frameTimer.Elapsed.TotalMilliseconds;
+			double leftOver = limitMilliseconds - elapsed;
+			if (leftOver > 0.001) // going faster than limit
+				Thread.Sleep((int)Math.Round(leftOver, MidpointRounding.AwayFromZero));
+		}
 		
-		public Game(string username, string mppass, string skinServer,
-		            bool nullContext, int width, int height) {
-			window = new DesktopWindow(this, username, nullContext, width, height);
-			Username = username;
-			Mppass = mppass;
-			this.skinServer = skinServer;
+		internal void RenderFrame(double delta) {
+			frameTimer.Reset();
+			frameTimer.Start();
+			
+			Graphics.BeginFrame(this);
+			Graphics.BindIb(defaultIb);
+			accumulator += delta;
+			Vertices = 0;
+			Mode.BeginFrame(delta);
+			
+			Camera.UpdateMouse();
+			if (!Focused && !Gui.ActiveScreen.HandlesAllInput) {
+				Gui.SetNewScreen(new PauseScreen(this));
+			}
+			
+			bool allowZoom = Gui.activeScreen == null && !Gui.hudScreen.HandlesAllInput;
+			if (allowZoom && IsKeyDown(KeyBind.ZoomScrolling)) {
+				Input.SetFOV(ZoomFov, false);
+			}
+			
+			DoScheduledTasks(delta);
+			float t = (float)(entTask.Accumulator / entTask.Interval);
+			LocalPlayer.SetInterpPosition(t);
+			
+			if (!SkipClear) Graphics.Clear();
+			CurrentCameraPos = Camera.GetCameraPos(t);
+			UpdateViewMatrix();
+			
+			bool visible = Gui.activeScreen == null || !Gui.activeScreen.BlocksWorld;
+			if (!World.HasBlocks) visible = false;
+			if (visible) {
+				Render3D(delta, t);
+			} else {
+				SelectedPos.SetAsInvalid();
+			}
+			
+			Gui.Render(delta);
+			if (screenshotRequested) TakeScreenshot();
+			
+			Mode.EndFrame(delta);
+			Graphics.EndFrame(this);
+			LimitFPS();
+		}
+		
+		void UpdateViewMatrix() {
+			Graphics.SetMatrixMode(MatrixType.Modelview);
+			Camera.GetView(out Graphics.View);
+			Graphics.LoadMatrix(ref Graphics.View);
+			Culling.CalcFrustumEquations(ref Graphics.Projection, ref Graphics.View);
+		}
+		
+		void Render3D(double delta, float t) {
+			if (SkyboxRenderer.ShouldRender)
+				SkyboxRenderer.Render(delta);
+			AxisLinesRenderer.Render(delta);
+			Entities.RenderModels(Graphics, delta, t);
+			Entities.RenderNames(Graphics, delta);
+			
+			ParticleManager.Render(delta, t);
+			Camera.GetPickedBlock(SelectedPos); // TODO: only pick when necessary
+			EnvRenderer.Render(delta);
+			ChunkUpdater.Update(delta);
+			MapRenderer.RenderNormal(delta);
+			MapBordersRenderer.RenderSides(delta);
+			
+			Entities.DrawShadows();
+			if (SelectedPos.Valid && !HideGui) {
+				Picking.Update(SelectedPos);
+				Picking.Render(delta);
+			}
+			
+			// Render water over translucent blocks when underwater for proper alpha blending
+			Vector3 pos = LocalPlayer.Position;
+			if (CurrentCameraPos.Y < World.Env.EdgeHeight
+			    && (pos.X < 0 || pos.Z < 0 || pos.X > World.Width || pos.Z > World.Length)) {
+				MapRenderer.RenderTranslucent(delta);
+				MapBordersRenderer.RenderEdges(delta);
+			} else {
+				MapBordersRenderer.RenderEdges(delta);
+				MapRenderer.RenderTranslucent(delta);
+			}
+			
+			// Need to render again over top of translucent block, as the selection outline
+			// is drawn without writing to the depth buffer
+			if (SelectedPos.Valid && !HideGui && BlockInfo.Draw[SelectedPos.Block] == DrawType.Translucent) {
+				Picking.Render(delta);
+			}
+			
+			SelectionManager.Render(delta);
+			Entities.RenderHoveredNames(Graphics, delta);
+			
+			bool left   = IsMousePressed(MouseButton.Left);
+			bool middle = IsMousePressed(MouseButton.Middle);
+			bool right  = IsMousePressed(MouseButton.Right);
+			Input.PickBlocks(true, left, middle, right);
+			if (!HideGui) HeldBlockRenderer.Render(delta);
+		}
+		
+		void DoScheduledTasks(double time) {
+			for (int i = 0; i < Tasks.Count; i++) {
+				ScheduledTask task = Tasks[i];
+				task.Accumulator += time;
+				
+				while (task.Accumulator >= task.Interval) {
+					task.Callback(task);
+					task.Accumulator -= task.Interval;
+				}
+			}
+		}
+		
+		void TakeScreenshot() {
+			if (!Platform.DirectoryExists("screenshots")) {
+				Platform.DirectoryCreate("screenshots");
+			}
+			
+			string timestamp = DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss");
+			string file = "screenshot_" + timestamp + ".png";
+			string path = PathIO.Combine("screenshots", file);
+			
+			Graphics.TakeScreenshot(path, Width, Height);
+			screenshotRequested = false;
+			Chat.Add("&eTaken screenshot as: " + file);			
+		}
+		
+		public void Dispose() {
+			ChunkUpdater.Dispose();
+			TerrainAtlas2D.Dispose();
+			TerrainAtlas1D.Dispose();
+			ModelCache.Dispose();
+			Entities.Dispose();
+			WorldEvents.OnNewMap -= OnNewMapCore;
+			WorldEvents.OnNewMapLoaded -= OnNewMapLoadedCore;
+			Events.TextureChanged -= TextureChangedCore;
+			
+			for (int i = 0; i < Components.Count; i++)
+				Components[i].Dispose();
+			
+			Graphics.DeleteIb(ref defaultIb);
+			Drawer2D.DisposeInstance();
+			Graphics.Dispose();
+			
+			if (!Options.HasChanged()) return;
+			Options.Load();
+			Options.Save();
 		}
 	}
 }

@@ -49,7 +49,6 @@ Int32 MapRenderer_TranslucentBufferOffset;
 
 ChunkInfo* MapRenderer_GetChunk(Int32 cx, Int32 cy, Int32 cz);
 void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz);
-void MapRenderer_Update(Real64 deltaTime);
 void MapRenderer_RenderNormal(Real64 deltaTime);
 void MapRenderer_RenderTranslucent(Real64 deltaTime);
 #endif

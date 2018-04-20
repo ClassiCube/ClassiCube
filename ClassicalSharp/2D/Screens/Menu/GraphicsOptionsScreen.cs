@@ -50,9 +50,9 @@ namespace ClassicalSharp.Gui.Screens {
 		static string GetSmooth(Game g) { return GetBool(g.SmoothLighting); }
 		static void SetSmooth(Game g, string v) {
 			g.SmoothLighting = SetBool(v, OptionsKey.SmoothLighting);
-			ChunkMeshBuilder builder = g.MapRenderer.DefaultMeshBuilder();
-			g.MapRenderer.SetMeshBuilder(builder);
-			g.MapRenderer.Refresh();
+			ChunkMeshBuilder builder = g.ChunkUpdater.DefaultMeshBuilder();
+			g.ChunkUpdater.SetMeshBuilder(builder);
+			g.ChunkUpdater.Refresh();
 		}
 		
 		static string GetNames(Game g) { return g.Entities.NamesMode.ToString(); }

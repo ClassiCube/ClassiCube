@@ -221,7 +221,7 @@ void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
 	EnvRenderer_DrawCloudsY(x1, z1, x2, z2, WorldEnv_CloudsHeight, axisSize, WorldEnv_CloudsCol, ptr);
 	env_cloudsVb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FT2FC4B, env_cloudVertices);
 
-	if (env_cloudVertices > 4096) Platform_MemFree(ptr);
+	if (env_cloudVertices > 4096) Platform_MemFree(&ptr);
 }
 
 void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
@@ -241,7 +241,7 @@ void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
 	EnvRenderer_DrawSkyY(x1, z1, x2, z2, height, axisSize, WorldEnv_SkyCol, ptr);
 	env_skyVb = Gfx_CreateVb(ptr, VERTEX_FORMAT_P3FC4B, env_skyVertices);
 
-	if (env_skyVertices > 4096) Platform_MemFree(ptr);
+	if (env_skyVertices > 4096) Platform_MemFree(&ptr);
 }
 
 void EnvRenderer_ResetClouds(void) {

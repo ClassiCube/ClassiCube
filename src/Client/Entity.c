@@ -127,8 +127,7 @@ void Entity_ParseScale(Entity* entity, String scale) {
 void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->ModelBlock = BLOCK_AIR;
-	String entModel = String_FromRawArray(entity->ModelNameRaw);
-	String_Clear(&entModel);
+	String entModel = String_InitAndClearArray(entity->ModelNameRaw);
 
 	Int32 sep = String_IndexOf(model, '|', 0);
 	String name, scale;
@@ -662,7 +661,7 @@ void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 	entity->uScale = (Real32)bmp->Width  / width;
 	entity->vScale = (Real32)bmp->Height / height;
 
-	Platform_MemFree(bmp->Scan0);
+	Platform_MemFree(&bmp->Scan0);
 	*bmp = scaled;
 }
 
@@ -699,7 +698,7 @@ void Player_CheckSkin(Player* player) {
 		entity->TextureId = Gfx_CreateTexture(&bmp, true, false);
 		Player_SetSkinAll(player, false);
 	}
-	Platform_MemFree(bmp.Scan0);
+	Platform_MemFree(&bmp.Scan0);
 }
 
 void Player_Despawn(Entity* entity) {
