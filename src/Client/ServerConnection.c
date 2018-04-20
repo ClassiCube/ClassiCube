@@ -14,6 +14,7 @@
 #include "MapGenerator.h"
 #include "World.h"
 #include "Camera.h"
+#include "TexturePack.h"
 
 UInt8 ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerName = String_FromEmptyArray(ServerConnection_ServerNameBuffer);

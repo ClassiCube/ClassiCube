@@ -24,6 +24,7 @@
 #include "ErrorHandler.h"
 #include "BlockPhysics.h"
 #include "MapRenderer.h"
+#include "TexturePack.h"
 
 #define LIST_SCREEN_ITEMS 5
 #define LIST_SCREEN_BUTTONS (LIST_SCREEN_ITEMS + 3)

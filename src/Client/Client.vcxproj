@@ -229,6 +229,7 @@
     <ClInclude Include="Stream.h" />
     <ClInclude Include="GameStructs.h" />
     <ClInclude Include="TerrainAtlas.h" />
+    <ClInclude Include="TexturePack.h" />
     <ClInclude Include="TreeGen.h" />
     <ClInclude Include="Utils.h" />
     <ClInclude Include="WeatherRenderer.h" />
@@ -250,7 +251,6 @@
     <ClInclude Include="Window.h" />
     <ClInclude Include="WordWrap.h" />
     <ClInclude Include="World.h" />
-    <ClInclude Include="ZipArchive.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="2DStructs.c" />
@@ -320,7 +320,6 @@
     <ClCompile Include="WinWindow.c" />
     <ClCompile Include="WordWrap.c" />
     <ClCompile Include="World.c" />
-    <ClCompile Include="ZipArchive.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

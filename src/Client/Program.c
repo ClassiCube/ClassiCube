@@ -5,7 +5,7 @@
 #include "GraphicsAPI.h"
 #include "Deflate.h"
 #include "Formats.h"
-#include "ZipArchive.h"
+#include "TexturePack.h"
 #include "Bitmap.h"
 #include <Windows.h>
 

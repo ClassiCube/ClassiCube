@@ -1378,7 +1378,7 @@ void HUDScreen_AppendInput(Screen* hud, STRING_PURE String* text) {
 
 Widget* HUDScreen_GetHotbar(Screen* hud) {
 	HUDScreen* screen = (HUDScreen*)hud;
-	return &screen->Hotbar;
+	return (Widget*)(&screen->Hotbar);
 }
 
 

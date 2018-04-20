@@ -45,7 +45,7 @@ namespace ClassicalSharp.Textures {
 			}
 		}
 		
-		public static void ExtractZip(Stream stream, Game game) {
+		static void ExtractZip(Stream stream, Game game) {
 			TexturePack.game = game;
 			game.Events.RaiseTexturePackChanged();
 			if (game.Graphics.LostContext) return;

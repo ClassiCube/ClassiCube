@@ -16,7 +16,7 @@
 #define CHAT_LOGTIMES_DEF_ELEMS 256
 #define CHAT_LOGTIMES_EXPAND_ELEMS 512
 Int64 Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
-Int64* Chat_LogTimes = &Chat_DefaultLogTimes;
+Int64* Chat_LogTimes = Chat_DefaultLogTimes;
 UInt32 Chat_LogTimesCount = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesUsed;
 
 void Chat_GetLogTime(UInt32 index, Int64* timeMs) {

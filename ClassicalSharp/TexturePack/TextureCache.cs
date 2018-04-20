@@ -130,7 +130,7 @@ namespace ClassicalSharp.Textures {
 			tags.Add(entry);
 		}
 		
-		public static string MakePath(string url) { return PathIO.Combine(folder, CRC32(url)); }
+		static string MakePath(string url) { return PathIO.Combine(folder, CRC32(url)); }
 		
 		static string CRC32(string url) {
 			byte[] data = Encoding.UTF8.GetBytes(url);

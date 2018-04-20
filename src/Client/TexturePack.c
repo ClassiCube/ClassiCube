@@ -1,11 +1,179 @@
-#include "Typedefs.h"
-#include "String.h"
+#include "TexturePack.h"
 #include "Constants.h"
 #include "Platform.h"
 #include "ErrorHandler.h"
 #include "Stream.h"
 #include "Bitmap.h"
+#include "World.h"
+#include "GraphicsAPI.h"
+#include "Event.h"
+#include "Game.h"
+#include "AsyncDownloader.h"
+#include "ErrorHandler.h"
+#include "Platform.h"
+#include "Deflate.h"
+#include "Stream.h"
 
+/*########################################################################################################################*
+*--------------------------------------------------------ZipEntry---------------------------------------------------------*
+*#########################################################################################################################*/
+String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
+	String fileName;
+	fileName.buffer = buffer;
+	fileName.length = length;
+	fileName.capacity = length;
+
+	Stream_Read(stream, buffer, length);
+	buffer[length] = NULL; /* Ensure null terminated */
+	return fileName;
+}
+
+void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
+	Stream* stream = state->Input;
+	UInt16 versionNeeded = Stream_ReadUInt16_LE(stream);
+	UInt16 flags = Stream_ReadUInt16_LE(stream);
+	UInt16 compressionMethod = Stream_ReadUInt16_LE(stream);
+	Stream_ReadUInt32_LE(stream); /* last modified */
+	Stream_ReadUInt32_LE(stream); /* CRC32 */
+
+	Int32 compressedSize = Stream_ReadInt32_LE(stream);
+	if (compressedSize == 0) compressedSize = entry->CompressedDataSize;
+	Int32 uncompressedSize = Stream_ReadInt32_LE(stream);
+	if (uncompressedSize == 0) uncompressedSize = entry->UncompressedDataSize;
+
+	UInt16 fileNameLen = Stream_ReadUInt16_LE(stream);
+	UInt16 extraFieldLen = Stream_ReadUInt16_LE(stream);
+	UInt8 filenameBuffer[String_BufferSize(UInt16_MaxValue)];
+	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
+	if (!state->SelectEntry(&filename)) return;
+
+	ReturnCode code = Stream_Skip(stream, extraFieldLen);
+	ErrorHandler_CheckOrFail(code, "Zip - skipping local header extra");
+	if (versionNeeded > 20) {
+		String warnMsg = String_FromConst("May not be able to properly extract a .zip enty with a version later than 2.0");
+		Platform_Log(&warnMsg);
+	}
+
+	Stream portion, compStream;
+	if (compressionMethod == 0) {
+		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
+		state->ProcessEntry(&filename, &portion, entry);
+	} else if (compressionMethod == 8) {
+		DeflateState deflate;
+		Stream_ReadonlyPortion(&portion, stream, compressedSize);
+		Deflate_MakeStream(&compStream, &deflate, &portion);
+		state->ProcessEntry(&filename, &compStream, entry);
+	} else {
+		String warnMsg = String_FromConst("Unsupported .zip entry compression method");
+		Platform_Log(&warnMsg);
+	}
+}
+
+void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
+	Stream* stream = state->Input;
+	Stream_ReadUInt16_LE(stream); /* OS */
+	UInt16 versionNeeded = Stream_ReadUInt16_LE(stream);
+	UInt16 flags = Stream_ReadUInt16_LE(stream);
+	UInt16 compressionMethod = Stream_ReadUInt16_LE(stream);
+	Stream_ReadUInt32_LE(stream); /* last modified */
+	entry->Crc32 = Stream_ReadUInt32_LE(stream);
+	entry->CompressedDataSize = Stream_ReadInt32_LE(stream);
+	entry->UncompressedDataSize = Stream_ReadInt32_LE(stream);
+
+	UInt16 fileNameLen = Stream_ReadUInt16_LE(stream);
+	UInt16 extraFieldLen = Stream_ReadUInt16_LE(stream);
+	UInt16 fileCommentLen = Stream_ReadUInt16_LE(stream);
+	UInt16 diskNum = Stream_ReadUInt16_LE(stream);
+	UInt16 internalAttributes = Stream_ReadUInt16_LE(stream);
+	UInt32 externalAttributes = Stream_ReadUInt32_LE(stream);
+	entry->LocalHeaderOffset = Stream_ReadInt32_LE(stream);
+
+	UInt32 extraDataLen = fileNameLen + extraFieldLen + fileCommentLen;
+	ReturnCode code = Stream_Skip(stream, extraDataLen);
+	ErrorHandler_CheckOrFail(code, "Zip - skipping central header extra");
+}
+
+void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirectoryOffset) {
+	Stream* stream = state->Input;
+	UInt16 diskNum = Stream_ReadUInt16_LE(stream);
+	UInt16 diskNumStart = Stream_ReadUInt16_LE(stream);
+	UInt16 diskEntries = Stream_ReadUInt16_LE(stream);
+	state->EntriesCount = Stream_ReadUInt16_LE(stream);
+	Int32 centralDirectorySize = Stream_ReadInt32_LE(stream);
+	*centralDirectoryOffset = Stream_ReadInt32_LE(stream);
+	UInt16 commentLength = Stream_ReadUInt16_LE(stream);
+}
+
+#define ZIP_ENDOFCENTRALDIR 0x06054b50UL
+#define ZIP_CENTRALDIR      0x02014b50UL
+#define ZIP_LOCALFILEHEADER 0x04034b50UL
+
+void Zip_DefaultProcessor(STRING_TRANSIENT String* path, Stream* data, ZipEntry* entry) { }
+bool Zip_DefaultSelector(STRING_TRANSIENT String* path) { return true; }
+void Zip_Init(ZipState* state, Stream* input) {
+	state->Input = input;
+	state->EntriesCount = 0;
+	state->ProcessEntry = Zip_DefaultProcessor;
+	state->SelectEntry  = Zip_DefaultSelector;
+}
+
+void Zip_Extract(ZipState* state) {
+	state->EntriesCount = 0;
+	Stream* stream = state->Input;
+	ReturnCode result = stream->Seek(stream, -22, STREAM_SEEKFROM_END);
+	ErrorHandler_CheckOrFail(result, "ZIP - Seek to end of central directory");
+
+	UInt32 sig = Stream_ReadUInt32_LE(stream);
+	if (sig != ZIP_ENDOFCENTRALDIR) {
+		ErrorHandler_Fail("ZIP - Comment in .zip file not supported");
+		return;
+	}
+
+	Int32 centralDirectoryOffset;
+	Zip_ReadEndOfCentralDirectory(state, &centralDirectoryOffset);
+	result = stream->Seek(stream, centralDirectoryOffset, STREAM_SEEKFROM_BEGIN);
+	ErrorHandler_CheckOrFail(result, "ZIP - Seek to central directory");
+	if (state->EntriesCount > ZIP_MAX_ENTRIES) {
+		ErrorHandler_Fail("ZIP - Max of 2048 entries supported");
+	}
+
+	/* Read all the central directory entries */
+	Int32 count = 0;
+	while (count < state->EntriesCount) {
+		sig = Stream_ReadUInt32_LE(stream);
+		if (sig == ZIP_CENTRALDIR) {
+			Zip_ReadCentralDirectory(state, &state->Entries[count]);
+			count++;
+		} else if (sig == ZIP_ENDOFCENTRALDIR) {
+			break;
+		} else {
+			String sigMsg = String_FromConst("ZIP - Unsupported signature found, aborting");
+			ErrorHandler_Log(&sigMsg);
+			return;
+		}
+	}
+
+	/* Now read the local file header entries */
+	Int32 i;
+	for (i = 0; i < count; i++) {
+		ZipEntry* entry = &state->Entries[i];
+		result = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
+		ErrorHandler_CheckOrFail(result, "ZIP - Seek to local file header");
+
+		sig = Stream_ReadUInt32_LE(stream);
+		if (sig != ZIP_LOCALFILEHEADER) {
+			String sigMsg = String_FromConst("ZIP - Invalid entry found, skipping");
+			ErrorHandler_Log(&sigMsg);
+			continue;
+		}
+		Zip_ReadLocalFileHeader(state, entry);
+	}
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------EntryList--------------------------------------------------------*
+*#########################################################################################################################*/
 typedef struct EntryList_ {
 	UInt8 FolderBuffer[String_BufferSize(STRING_SIZE)];
 	UInt8 FileBuffer[String_BufferSize(STRING_SIZE)];
@@ -90,6 +258,10 @@ void EntryList_Make(EntryList* list, STRING_PURE const UInt8* folder, STRING_PUR
 	EntryList_Load(list);
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------TextureCache-------------------------------------------------------*
+*#########################################################################################################################*/
 #define TEXCACHE_FOLDER "texturecache"
 /* Because I didn't store milliseconds in original C# client */
 #define TEXCACHE_TICKS_PER_MS 10000LL
@@ -239,4 +411,125 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 	String data = String_InitAndClearArray(dataBuffer);
 	String_AppendInt64(&data, ticks);
 	TextureCache_AddToTags(url, &data, &cache_lastModified);
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------------TexturePack-------------------------------------------------------*
+*#########################################################################################################################*/
+void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, Stream* stream, ZipEntry* entry) {
+	/* Ignore directories: convert x/name to name and x\name to name. */
+	String_MakeLowercase(path);
+	String name = *path;
+	Int32 i;
+
+	i = String_LastIndexOf(&name, '\\');
+	if (i >= 0) { name = String_UNSAFE_SubstringAt(&name, i + 1); }
+	i = String_LastIndexOf(&name, '/');
+	if (i >= 0) { name = String_UNSAFE_SubstringAt(&name, i + 1); }
+
+	String_Set(&stream->Name, &name);
+	Event_RaiseStream(&TextureEvents_FileChanged, stream);
+}
+
+void TexturePack_ExtractZip(Stream* stream) {
+	Event_RaiseVoid(&TextureEvents_PackChanged);
+	if (Gfx_LostContext) return;
+
+	ZipState state;
+	Zip_Init(&state, stream);
+	state.ProcessEntry = TexturePack_ProcessZipEntry;
+	Zip_Extract(&state);
+}
+
+void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
+	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	String path = String_InitAndClearArray(pathBuffer);
+	String_Format2(&path, "texpacks%b%s", TEXCACHE_FOLDER, &Platform_DirectorySeparator, filename);
+
+	void* file;
+	ReturnCode result = Platform_FileOpen(&file, &path);
+	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - opening file");
+
+	Stream stream; 
+	Stream_FromFile(&stream, &file, &path);
+	TexturePack_ExtractZip(&stream);
+
+	result = stream.Close(&stream);
+	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - closing file");
+}
+
+void TexturePack_ExtractTerrainPng(Stream* stream) {
+	Bitmap bmp; Bitmap_DecodePng(&bmp, stream);
+	Event_RaiseVoid(&TextureEvents_PackChanged);
+
+	if (Game_ChangeTerrainAtlas(&bmp)) return;
+	Platform_MemFree(&bmp.Scan0);
+}
+
+void TexturePack_ExtractDefault(void) {
+	UInt8 texPackBuffer[String_BufferSize(STRING_SIZE)];
+	String texPack = String_InitAndClearArray(texPackBuffer);
+	Game_GetDefaultTexturePack(&texPack);
+
+	TexturePack_ExtractZip_File(&texPack);
+	String_Clear(&World_TextureUrl);
+}
+
+void TexturePack_ExtractCurrent(STRING_PURE String* url) {
+	if (url->length == 0) { TexturePack_ExtractDefault(); return; }
+
+	Stream stream;
+	if (!TextureCache_GetStream(url, &stream)) {
+		/* e.g. 404 errors */
+		if (World_TextureUrl.length > 0) TexturePack_ExtractDefault();
+	} else {
+		String zip = String_FromConst(".zip");
+		if (String_Equals(url, &World_TextureUrl)) {
+		} else if (String_ContainsString(url, &zip)) {
+			String_Set(&World_TextureUrl, url);
+			TexturePack_ExtractZip(&stream);
+		} else {
+			String_Set(&World_TextureUrl, url);
+			TexturePack_ExtractTerrainPng(&stream);
+		}
+
+		ReturnCode result = stream.Close(&stream);
+		ErrorHandler_CheckOrFail(result, "TexturePack_ExtractCurrent - slow stream");
+	}
+}
+
+void TexturePack_ExtractTerrainPng_Req(AsyncRequest* item) {
+	if (item->ResultBitmap.Scan0 == NULL) return;
+	String url = String_FromRawArray(item->URL);
+	String_Set(&World_TextureUrl, &url);
+	Bitmap bmp = item->ResultBitmap;
+
+	String etag = String_FromRawArray(item->Etag);
+	TextureCache_AddImage(&url, &bmp);
+	TextureCache_AddETag(&url, &etag);
+	TextureCache_AddLastModified(&url, &item->LastModified);
+
+	Event_RaiseVoid(&TextureEvents_PackChanged);
+	if (!Game_ChangeTerrainAtlas(&bmp)) {
+		Platform_MemFree(&bmp.Scan0);
+	}
+}
+
+void TexturePack_ExtractTexturePack_Req(AsyncRequest* item) {
+	if (item->ResultData.Ptr == NULL) return;
+	String url = String_FromRawArray(item->URL);
+	String_Set(&World_TextureUrl, &url);
+	void* data = item->ResultData.Ptr;
+	UInt32 len = item->ResultData.Size;
+
+	String etag = String_FromRawArray(item->Etag);
+	TextureCache_AddData(&url, data, len);
+	TextureCache_AddETag(&url, &etag);
+	TextureCache_AddLastModified(&url, &item->LastModified);
+
+	String id = String_FromRawArray(item->ID);
+	Stream stream; Stream_ReadonlyMemory(&stream, data, len, &id);
+	TexturePack_ExtractZip(&stream);
+	stream.Close(&stream);
 }
