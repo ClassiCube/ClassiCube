@@ -98,7 +98,7 @@ String game_defTexPack = String_FromEmptyArray(game_defTexPackBuffer);
 void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack) {
 	UInt8 texPathBuffer[String_BufferSize(STRING_SIZE)];
 	String texPath = String_InitAndClearArray(texPathBuffer);
-	String_Format2(&texPath, "texpacks%b%s", &Platform_DirectorySeparator, &game_defTexPack);
+	String_Format2(&texPath, "texpacks%r%s", &Platform_DirectorySeparator, &game_defTexPack);
 
 	if (Platform_FileExists(&texPath) && !Game_ClassicMode) {
 		String_AppendString(texPack, &game_defTexPack);
@@ -636,7 +636,7 @@ void Game_TakeScreenshot(void) {
 
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format2(&path, "screenshots/%b%s", &Platform_DirectorySeparator, &file);
+	String_Format2(&path, "screenshots%r%s", &Platform_DirectorySeparator, &file);
 
 	Gfx_TakeScreenshot(&path, Game_Width, Game_Height);
 	Game_ScreenshotRequested = false;

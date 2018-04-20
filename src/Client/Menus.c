@@ -1433,7 +1433,7 @@ void TexturePackScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	String path = String_InitAndClearArray(pathBuffer);
 
 	String filename = ListScreen_UNSAFE_GetCur(screen, w);
-	String_Format2(&path, "texpacks%b%s", &Platform_DirectorySeparator, &filename);
+	String_Format2(&path, "texpacks%r%s", &Platform_DirectorySeparator, &filename);
 	if (!Platform_FileExists(&path)) return;
 	
 	Int32 curPage = screen->CurrentIndex;
@@ -1547,7 +1547,7 @@ void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	String path = String_InitAndClearArray(pathBuffer);
 	
 	String filename = ListScreen_UNSAFE_GetCur(screen, w);
-	String_Format2(&path, "maps%b%s", &Platform_DirectorySeparator, &filename);
+	String_Format2(&path, "maps%r%s", &Platform_DirectorySeparator, &filename);
 	if (!Platform_FileExists(&path)) return;
 
 	void* file;

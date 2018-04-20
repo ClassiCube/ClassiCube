@@ -167,7 +167,7 @@ void Options_Load(void) {
 
 	UInt8 lineBuffer[String_BufferSize(2048)];
 	String line = String_InitAndClearArray(lineBuffer);
-	Stream stream; Stream_FromFile(&stream, &file, &path);
+	Stream stream; Stream_FromFile(&stream, file, &path);
 
 	/* Remove all the unchanged options */
 	UInt32 i;
@@ -207,7 +207,7 @@ void Options_Save(void) {
 
 	UInt8 lineBuffer[String_BufferSize(2048)];
 	String line = String_InitAndClearArray(lineBuffer);
-	Stream stream; Stream_FromFile(&stream, &file, &path);
+	Stream stream; Stream_FromFile(&stream, file, &path);
 	UInt32 i;
 
 	for (i = 0; i < Options_Keys.Count; i++) {

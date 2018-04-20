@@ -185,7 +185,7 @@ void EntryList_Load(EntryList* list) {
 	String filename = String_FromRawArray(list->FileBuffer);
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format3(&path, "%s%b%s", &folder, &Platform_DirectorySeparator, &filename);
+	String_Format3(&path, "%s%r%s", &folder, &Platform_DirectorySeparator, &filename);
 
 	void* file;
 	ReturnCode result = Platform_FileOpen(&file, &path);
@@ -211,7 +211,7 @@ void EntryList_Save(EntryList* list) {
 	String filename = String_FromRawArray(list->FileBuffer);
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format3(&path, "%s%b%s", &folder, &Platform_DirectorySeparator, &filename);
+	String_Format3(&path, "%s%r%s", &folder, &Platform_DirectorySeparator, &filename);
 
 	if (!Platform_DirectoryExists(&folder)) {
 		ReturnCode dirResult = Platform_DirectoryCreate(&folder);
@@ -291,7 +291,7 @@ void TextureCache_Deny(STRING_PURE String* url)   { EntryList_Add(&cache_denied,
 
 void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
 	String crc32; TexCache_Crc32(url);
-	String_Format3(path, "%c%b%s", TEXCACHE_FOLDER, &Platform_DirectorySeparator, &crc32);
+	String_Format3(path, "%c%r%s", TEXCACHE_FOLDER, &Platform_DirectorySeparator, &crc32);
 }
 
 bool TextureCache_HasUrl(STRING_PURE String* url) {
@@ -445,14 +445,14 @@ void TexturePack_ExtractZip(Stream* stream) {
 void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format2(&path, "texpacks%b%s", &Platform_DirectorySeparator, filename);
+	String_Format2(&path, "texpacks%r%s", &Platform_DirectorySeparator, filename);
 
 	void* file;
 	ReturnCode result = Platform_FileOpen(&file, &path);
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - opening file");
 
 	Stream stream; 
-	Stream_FromFile(&stream, &file, &path);
+	Stream_FromFile(&stream, file, &path);
 	TexturePack_ExtractZip(&stream);
 
 	result = stream.Close(&stream);

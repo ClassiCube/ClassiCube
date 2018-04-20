@@ -87,7 +87,7 @@ void Chat_OpenLog(DateTime* now) {
 	for (i = 0; i < 20; i++) {
 		UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 		String path = String_InitAndClearArray(pathBuffer);
-		String_Format4(&path, "logs%b%p4-%p2-%p2", &Platform_DirectorySeparator, &year, &month, &day);
+		String_Format4(&path, "logs%r%p4-%p2-%p2", &Platform_DirectorySeparator, &year, &month, &day);
 
 		if (i > 0) {
 			String_Format2(&path, "%s _%i.log", &Chat_LogName, &i);
