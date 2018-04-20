@@ -41,6 +41,8 @@ void FlatgrassGen_Generate(void) {
 
 	Gen_CurrentState = "Setting grass blocks";
 	FlatgrassGen_MapSet(Gen_Height / 2 - 1, Gen_Height / 2 - 1, BLOCK_GRASS);
+
+	Gen_Done = true;
 }
 
 
@@ -489,4 +491,5 @@ void NotchyGen_Generate(void) {
 	NotchyGen_PlantTrees();
 
 	Platform_MemFree(&Heightmap);
+	Gen_Done = true;
 }

@@ -19,12 +19,12 @@ namespace ClassicalSharp {
 			
 			string defPath = Path.Combine("texpacks", "default.zip");
 			if (!Platform.FileExists(defPath)) {
-				ErrorHandler.ShowDialog("Missing file", "default.zip not found, try running the launcher first."); 
+				ErrorHandler.ShowDialog("Missing file", "default.zip not found, try running the launcher first.");
 				return;
 			}
 			
-			if (!Platform.FileExists("OpenTK.dll")) { 
-				ErrorHandler.ShowDialog("Missing file", "OpenTK.dll needs to be in the same folder as the game"); 
+			if (!Platform.FileExists("OpenTK.dll")) {
+				ErrorHandler.ShowDialog("Missing file", "OpenTK.dll needs to be in the same folder as the game");
 				return;
 			}
 			
@@ -51,7 +51,7 @@ namespace ClassicalSharp {
 			
 			// No custom resolution has been set
 			if (width == 0 || height == 0) {
-				width = 854; height = 480;			
+				width = 854; height = 480;
 				if (device.Width < 854) width = 640;
 			}
 			
@@ -99,6 +99,10 @@ namespace ClassicalSharp {
 
 			if (!Platform.DirectoryExists("texpacks")) {
 				Platform.DirectoryCreate("texpacks");
+			}
+			
+			if (!Platform.DirectoryExists("texturecache")) {
+				Platform.DirectoryCreate("texturecache");
 			}
 		}
 	}

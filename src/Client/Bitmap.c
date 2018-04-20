@@ -294,6 +294,7 @@ void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
 #define PNG_MAX_DIMS 0x8000L
 /* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
+
 void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 	Png_CheckHeader(stream);
 	Bitmap_Create(bmp, 0, 0, NULL);
@@ -339,7 +340,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			bitsPerSample = Stream_ReadUInt8(stream);
 			if (bitsPerSample > 16 || !Math_IsPowOf2(bitsPerSample)) ErrorHandler_Fail("PNG has invalid bits per pixel");
 			col = Stream_ReadUInt8(stream);
-			if (col == 1 || col == 3 || col > 6) ErrorHandler_Fail("PNG has invalid colour type");
+			if (col == 1 || col == 5 || col > 6) ErrorHandler_Fail("PNG has invalid colour type");
 			if (bitsPerSample < 8 && (col >= PNG_COL_RGB && col != PNG_COL_INDEXED)) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
 			if (bitsPerSample == 16 && col == PNG_COL_INDEXED) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
 

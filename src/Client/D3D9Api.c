@@ -256,7 +256,7 @@ GfxResourceID Gfx_CreateTexture(Bitmap* bmp, bool managedPool, bool mipmaps) {
 
 		hresult = IDirect3DDevice9_UpdateTexture(device, (IDirect3DBaseTexture9*)sys, (IDirect3DBaseTexture9*)texture);
 		ErrorHandler_CheckOrFail(hresult, "D3D9_CreateTexture - Update");
-		D3D9_FreeResource((GfxResourceID*)sys);
+		D3D9_FreeResource(&sys);
 	}
 	return texture;
 }

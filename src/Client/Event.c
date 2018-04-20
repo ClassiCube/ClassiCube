@@ -13,6 +13,7 @@ void Event_RegisterImpl(Event_Void* handlers, void* obj, Event_Void_Callback han
 		ErrorHandler_Fail("Unable to register another event handler");
 	} else {
 		handlers->Handlers[handlers->Count] = handler;
+		handlers->Objs[handlers->Count]     = obj;
 		handlers->Count++;
 	}
 }

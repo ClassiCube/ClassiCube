@@ -18,4 +18,5 @@ void Builder_OnNewMapLoaded(void);
 void Builder_MakeChunk(ChunkInfo* info);
 
 void NormalBuilder_SetActive(void);
+void AdvLightingBuilder_SetActive(void);
 #endif

@@ -105,7 +105,7 @@ void Gui_Init(void) {
 void Gui_Reset(void) {
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		Elem_Free(Gui_Overlays[i]);
+		Elem_TryFree(Gui_Overlays[i]);
 	}
 	Gui_OverlaysCount = 0;
 }
@@ -113,9 +113,9 @@ void Gui_Reset(void) {
 void Gui_Free(void) {
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_SetNewScreen(NULL);
-	Elem_Free(Gui_Status);
+	Elem_TryFree(Gui_Status);
 
-	if (Gui_Active != NULL) { Elem_Free(Gui_Active); }
+	if (Gui_Active != NULL) { Elem_TryFree(Gui_Active); }
 	Gfx_DeleteTexture(&Gui_GuiTex);
 	Gfx_DeleteTexture(&Gui_GuiClassicTex);
 	Gfx_DeleteTexture(&Gui_IconsTex);
@@ -140,7 +140,7 @@ Screen* Gui_GetUnderlyingScreen(void) {
 
 void Gui_SetScreen(Screen* screen, bool freeOld) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
-	if (Gui_Active != NULL && freeOld) { Elem_Free(Gui_Active); }
+	if (Gui_Active != NULL && freeOld) { Elem_TryFree(Gui_Active); }
 
 	if (screen == NULL) {
 		Window_SetCursorVisible(false);

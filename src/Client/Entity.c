@@ -888,6 +888,7 @@ void LocalPlayer_Init(void) {
 	Player_Init((Player*)p);
 	Player_SetName((Player*)p, &Game_Username, &Game_Username);
 
+	p->Collisions.Entity = &p->Base;
 	HacksComp_Init(&p->Hacks);
 	PhysicsComp_Init(&p->Physics, &p->Base);
 	TiltComp_Init(&p->Tilt);

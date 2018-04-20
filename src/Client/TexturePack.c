@@ -291,7 +291,7 @@ void TextureCache_Deny(STRING_PURE String* url)   { EntryList_Add(&cache_denied,
 
 void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
 	String crc32; TexCache_Crc32(url);
-	String_Format3(path, "%c%r%s", TEXCACHE_FOLDER, &Platform_DirectorySeparator, &crc32);
+	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Platform_DirectorySeparator, &crc32);
 }
 
 bool TextureCache_HasUrl(STRING_PURE String* url) {
@@ -339,7 +339,8 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 		*time = DateTime_FromTotalMs(ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
 		String path; TexCache_InitAndMakePath(url);
-		return Platform_FileGetWriteTime(path);
+		ReturnCode result = Platform_FileGetWriteTime(&path, time);
+		ErrorHandler_CheckOrFail(result, "TextureCache - get file last modified time")
 	}
 }
 

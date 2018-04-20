@@ -18,6 +18,7 @@
 #include "Camera.h"
 #include "AsyncDownloader.h"
 #include "Block.h"
+#include "Menus.h"
 
 
 typedef struct InventoryScreen_ {
@@ -117,7 +118,7 @@ void InventoryScreen_OnBlockChanged(void* obj) {
 
 void InventoryScreen_ContextLost(void* obj) {
 	InventoryScreen* screen = (InventoryScreen*)obj;
-	Elem_Free(&screen->Table);
+	Elem_TryFree(&screen->Table);
 }
 
 void InventoryScreen_ContextRecreated(void* obj) {
@@ -159,7 +160,7 @@ void InventoryScreen_OnResize(GuiElement* elem) {
 void InventoryScreen_Free(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
 	Platform_FreeFont(&screen->Font);
-	Elem_Free(&screen->Table);
+	Elem_TryFree(&screen->Table);
 
 	Key_KeyRepeat = false;
 	Event_UnregisterVoid(&BlockEvents_PermissionsChanged, screen, InventoryScreen_OnBlockChanged);
@@ -364,8 +365,8 @@ void StatusScreen_FontChanged(void* obj) {
 void StatusScreen_ContextLost(void* obj) {
 	StatusScreen* screen = (StatusScreen*)obj;
 	TextAtlas_Free(&screen->PosAtlas);
-	Elem_Free(&screen->Status);
-	Elem_Free(&screen->HackStates);
+	Elem_TryFree(&screen->Status);
+	Elem_TryFree(&screen->HackStates);
 }
 
 void StatusScreen_ContextRecreated(void* obj) {
@@ -454,14 +455,16 @@ GuiElementVTABLE LoadingScreen_VTABLE;
 LoadingScreen LoadingScreen_Instance;
 void LoadingScreen_SetTitle(LoadingScreen* screen) {
 	String title = String_FromRawArray(screen->TitleBuffer);
-	Elem_Free(&screen->Title);
+	Elem_TryFree(&screen->Title);
+
 	TextWidget_Create(&screen->Title, &title, &screen->Font);
 	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -80);
 }
 
 void LoadingScreen_SetMessage(LoadingScreen* screen) {
 	String message = String_FromRawArray(screen->MessageBuffer);
-	Elem_Free(&screen->Message);
+	Elem_TryFree(&screen->Message);
+
 	TextWidget_Create(&screen->Message, &message, &screen->Font);
 	Widget_SetLocation((Widget*)(&screen->Message), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
 }
@@ -479,8 +482,8 @@ void LoadingScreen_OnResize(GuiElement* elem) {
 
 void LoadingScreen_ContextLost(void* obj) {
 	LoadingScreen* screen = (LoadingScreen*)obj;
-	Elem_Free(&screen->Title);
-	Elem_Free(&screen->Message);
+	Elem_TryFree(&screen->Title);
+	Elem_TryFree(&screen->Message);
 }
 
 void LoadingScreen_ContextRecreated(void* obj) {
@@ -695,7 +698,7 @@ void ChatScreen_OpenInput(ChatScreen* screen, STRING_PURE String* initialText) {
 }
 
 void ChatScreen_ResetChat(ChatScreen* screen) {
-	Elem_Free(&screen->Chat);
+	Elem_TryFree(&screen->Chat);
 	Int32 i;
 	for (i = screen->ChatIndex; i < screen->ChatIndex + Game_ChatLines; i++) {
 		if (i >= 0 && i < Chat_Log.Count) {
@@ -1024,13 +1027,13 @@ void ChatScreen_ContextLost(void* obj) {
 		Game_SetCursorVisible(false);
 	}
 
-	Elem_Free(&screen->Chat);
-	Elem_Free(&screen->Input.Base);
-	Elem_Free(&screen->AltText);
-	Elem_Free(&screen->Status);
-	Elem_Free(&screen->BottomRight);
-	Elem_Free(&screen->ClientStatus);
-	Elem_Free(&screen->Announcement);
+	Elem_TryFree(&screen->Chat);
+	Elem_TryFree(&screen->Input.Base);
+	Elem_TryFree(&screen->AltText);
+	Elem_TryFree(&screen->Status);
+	Elem_TryFree(&screen->BottomRight);
+	Elem_TryFree(&screen->ClientStatus);
+	Elem_TryFree(&screen->Announcement);
 }
 
 void ChatScreen_ContextRecreated(void* obj) {
@@ -1115,7 +1118,7 @@ void ChatScreen_Render(GuiElement* elem, Real64 delta) {
 	}
 
 	if (screen->Announcement.Texture.ID != NULL && DateTime_MsBetween(&Chat_Announcement.Received, &now) > 5 * 1000) {
-		Elem_Free(&screen->Announcement);
+		Elem_TryFree(&screen->Announcement);
 	}
 }
 
@@ -1177,7 +1180,7 @@ void HUDScreen_DrawCrosshairs(void) {
 void HUDScreen_FreePlayerList(HUDScreen* screen) {
 	screen->WasShowingList = screen->ShowingList;
 	if (screen->ShowingList) {
-		Elem_Free(&screen->PlayerList);
+		Elem_TryFree(&screen->PlayerList);
 	}
 	screen->ShowingList = false;
 }
@@ -1185,12 +1188,12 @@ void HUDScreen_FreePlayerList(HUDScreen* screen) {
 void HUDScreen_ContextLost(void* obj) {
 	HUDScreen* screen = (HUDScreen*)obj;
 	HUDScreen_FreePlayerList(screen);
-	Elem_Free(&screen->Hotbar);
+	Elem_TryFree(&screen->Hotbar);
 }
 
 void HUDScreen_ContextRecreated(void* obj) {
 	HUDScreen* screen = (HUDScreen*)obj;
-	Elem_Free(&screen->Hotbar);
+	Elem_TryFree(&screen->Hotbar);
 	Elem_Init(&screen->Hotbar);
 
 	if (!screen->WasShowingList) return;
@@ -1244,7 +1247,7 @@ bool HUDScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 		if (screen->ShowingList) {
 			screen->ShowingList = false;
 			screen->WasShowingList = false;
-			Elem_Free(&screen->PlayerList);
+			Elem_TryFree(&screen->PlayerList);
 			return true;
 		}
 	}
@@ -1321,7 +1324,7 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 		Elem_Render(&screen->PlayerList, delta);
 		/* NOTE: Should usually be caught by KeyUp, but just in case. */
 		if (!KeyBind_IsPressed(KeyBind_PlayerList)) {
-			Elem_Free(&screen->PlayerList);
+			Elem_TryFree(&screen->PlayerList);
 			screen->ShowingList = false;
 		}
 	}
@@ -1331,7 +1334,7 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 void HUDScreen_Free(GuiElement* elem) {
 	HUDScreen* screen = (HUDScreen*)elem;
 	Platform_FreeFont(&screen->PlayerFont);
-	Elem_Free(screen->Chat);
+	Elem_TryFree(screen->Chat);
 	HUDScreen_ContextLost(screen);
 
 	Event_UnregisterVoid(&WorldEvents_NewMap,         screen, HUDScreen_OnNewMap);
@@ -1436,9 +1439,9 @@ void DisconnectScreen_UpdateDelayLeft(DisconnectScreen* screen, Real64 delta) {
 
 void DisconnectScreen_ContextLost(void* obj) {
 	DisconnectScreen* screen = (DisconnectScreen*)obj;
-	Elem_Free(&screen->Title);
-	Elem_Free(&screen->Message);
-	Elem_Free(&screen->Reconnect);
+	Elem_TryFree(&screen->Title);
+	Elem_TryFree(&screen->Message);
+	Elem_TryFree(&screen->Reconnect);
 }
 
 void DisconnectScreen_ContextRecreated(void* obj) {

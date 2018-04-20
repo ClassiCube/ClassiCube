@@ -662,8 +662,12 @@ Point2D Window_PointToClient(Point2D point) {
 	return Point2D_Make(p.x, p.y);
 }
 
-Point2D Window_PointToScreen(Point2D p) {
-	ErrorHandler_Fail("PointToScreen NOT IMPLEMENTED");
+Point2D Window_PointToScreen(Point2D point) {
+	POINT p; p.x = point.X; p.y = point.Y;
+	if (!ClientToScreen(win_Handle, &p)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Converting point from screen to client coordinates");
+	}
+	return Point2D_Make(p.x, p.y);
 }
 
 void Window_ProcessEvents(void) {

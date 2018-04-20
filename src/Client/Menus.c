@@ -464,7 +464,7 @@ Int32 MenuScreen_Index(MenuScreen* screen, Widget* w) {
 
 void MenuScreen_Remove(MenuScreen* screen, Int32 i) {
 	Widget** widgets = screen->WidgetsPtr;
-	if (widgets[i] != NULL) { Elem_Free(widgets[i]); }
+	if (widgets[i] != NULL) { Elem_TryFree(widgets[i]); }
 	widgets[i] = NULL;
 }
 
@@ -744,7 +744,7 @@ bool OptionsGroupScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	if (i >= Array_Elems(optsGroup_descs)) return true;
 
 	screen->SelectedI = i;
-	Elem_Free(&screen->Desc);
+	Elem_TryFree(&screen->Desc);
 	OptionsGroupScreen_MakeDesc(screen);
 	return true;
 }
@@ -1270,7 +1270,7 @@ void SaveLevelScreen_RemoveOverwrites(SaveLevelScreen* screen) {
 }
 
 void SaveLevelScreen_MakeDesc(SaveLevelScreen* screen, STRING_PURE String* text) {
-	if (screen->Widgets[5] != NULL) { Elem_Free(screen->Widgets[5]); }
+	if (screen->Widgets[5] != NULL) { Elem_TryFree(screen->Widgets[5]); }
 
 	TextWidget_Create(&screen->Desc, text, &screen->TextFont);
 	Widget_SetLocation((Widget*)(&screen->Desc), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 65);
@@ -1909,7 +1909,7 @@ void MenuOptionsScreen_Set(MenuOptionsScreen* screen, Int32 i, STRING_PURE Strin
 
 void MenuOptionsScreen_FreeExtHelp(MenuOptionsScreen* screen) {
 	if (screen->ExtHelp.LinesCount == 0) return;
-	Elem_Free(&screen->ExtHelp);
+	Elem_TryFree(&screen->ExtHelp);
 	screen->ExtHelp.LinesCount = 0;
 }
 
@@ -1946,7 +1946,7 @@ void MenuOptionsScreen_FreeInput(MenuOptionsScreen* screen) {
 
 	Int32 i;
 	for (i = screen->WidgetsCount - 3; i < screen->WidgetsCount; i++) {
-		Elem_Free(screen->WidgetsPtr[i]);
+		Elem_TryFree(screen->WidgetsPtr[i]);
 		screen->WidgetsPtr[i] = NULL;
 	}
 }

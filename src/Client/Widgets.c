@@ -727,7 +727,7 @@ void TableWidget_Free(GuiElement* elem) {
 
 void TableWidget_Recreate(GuiElement* elem) {
 	TableWidget* widget = (TableWidget*)elem;
-	Elem_Free(widget);
+	Elem_TryFree(widget);
 	widget->VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TABLE_MAX_VERTICES);
 	TableWidget_RecreateDescTex(widget);
 }
@@ -2145,7 +2145,7 @@ void PlayerListWidget_Free(GuiElement* elem) {
 	for (i = 0; i < widget->NamesCount; i++) {
 		Gfx_DeleteTexture(&widget->Textures[i].ID);
 	}
-	Elem_Free(&widget->Overview);
+	Elem_TryFree(&widget->Overview);
 
 	Event_UnregisterEntityID(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
 	Event_UnregisterEntityID(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);

@@ -81,10 +81,6 @@ namespace ClassicalSharp.Textures {
 		public static void Add(string url, Bitmap bmp) {
 			string path = MakePath(url);
 			try {
-				if (!Platform.DirectoryExists(folder)) {
-					Platform.DirectoryCreate(folder);
-				}
-				
 				using (Stream fs = Platform.FileCreate(path)) {
 					Platform.WriteBmp(bmp, fs);
 				}
@@ -97,10 +93,6 @@ namespace ClassicalSharp.Textures {
 		public static void Add(string url, byte[] data) {
 			string path = MakePath(url);
 			try {
-				if (!Platform.DirectoryExists(folder)) {
-					Platform.DirectoryCreate(folder);
-				}
-				
 				Platform.WriteAllBytes(path, data);
 			} catch (IOException ex) {
 				ErrorHandler.LogError("Cache.AddToCache", ex);

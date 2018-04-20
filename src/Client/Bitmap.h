@@ -32,4 +32,5 @@ void Bitmap_AllocatePow2(Bitmap* bmp, Int32 width, Int32 height);
      https://github.com/nothings/stb/blob/master/stb_image.h
 */
 void Bitmap_DecodePng(Bitmap* bmp, Stream* stream);
+void Bitmap_EncodePng(Bitmap* bmp, Stream* stream);
 #endif

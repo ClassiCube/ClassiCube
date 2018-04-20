@@ -735,6 +735,41 @@ void Game_Run(Int32 width, Int32 height, STRING_REF String* title, DisplayDevice
 		if (time > 1.0) time = 1.0;
 		if (time <= 0.0) continue;
 
+		Stopwatch_Start(&game_renderTimer);
 		Game_RenderFrame(time);
 	}
 }
+
+/* TODO: fix all these stubs.... */
+IGameComponent Audio_MakeComponent(void) { return IGameComponent_MakeEmpty(); }
+void Audio_SetMusic(Int32 volume) { }
+void Audio_SetSounds(Int32 volume) { }
+void Audio_PlayDigSound(UInt8 type) { }
+void Audio_PlayStepSound(UInt8 type) { }
+void ASyncRequest_Free(AsyncRequest* request) { }
+IGameComponent AsyncDownloader_MakeComponent(void) { return IGameComponent_MakeEmpty(); }
+void AsyncDownloader_Init(STRING_PURE String* skinServer) { }
+void AsyncDownloader_DownloadSkin(STRING_PURE String* identifier, STRING_PURE String* skinName) { }
+void AsyncDownloader_Download(STRING_PURE  String* url, bool priority, UInt8 type, STRING_PURE String* identifier) { }
+void AsyncDownloader_Download2(STRING_PURE String* url, bool priority, UInt8 type, STRING_PURE String* identifier, DateTime* lastModified, STRING_PURE String* etag) { }
+void AsyncDownloader_Free(void) { }
+bool AsyncDownloader_Get(STRING_PURE String* identifier, AsyncRequest* item) { return false; }
+bool AsyncDownloader_GetInProgress(AsyncRequest* request, Int32* progress) { return false; }
+void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) { }
+bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits) { return true; }
+void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }
+void AdvLightingBuilder_SetActive(void) { }
+void Cw_Save(Stream* stream) { }
+void Cw_Load(Stream* stream) { }
+void Dat_Load(Stream* stream) { }
+void Schematic_Save(Stream* stream) { }
+void Gfx_MakeApiInfo(void) { }
+void ServerConnection_InitMultiplayer(void) { }
+void Gfx_TakeScreenshot(STRING_PURE String* output, Int32 width, Int32 height) { }
+void Gfx_SetVSync(bool value) { }
+void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) { }
+bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value) { return true; }
+DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
+ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time) { return 0; }
+Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
+Screen* TexIdsOverlay_MakeInstance(void) { return NULL; }

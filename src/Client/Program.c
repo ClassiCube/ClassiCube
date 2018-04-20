@@ -26,6 +26,12 @@ int main(int argc, char* argv[]) {
 		ErrorHandler_CheckOrFail(result, "Program - creating texpacks directory");
 	}
 
+	String texCache = String_FromConst("texturecache");
+	if (!Platform_DirectoryExists(&texCache)) {
+		ReturnCode result = Platform_DirectoryCreate(&texCache);
+		ErrorHandler_CheckOrFail(result, "Program - creating texturecache directory");
+	}
+
 	Platform_LogConst("Starting " PROGRAM_APP_NAME " ..");
 	Options_Load();
 	DisplayDevice device = DisplayDevice_Default;
@@ -39,8 +45,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	String title = String_FromConst(PROGRAM_APP_NAME);
-	if (argc == 1 || argc == 2) {
-		String_AppendConst(&Game_Username, argc > 1 ? argv[1] : "Singleplayer");	
+	// if (argc == 1 || arc == 2) {
+	if (true) {
+		String_AppendConst(&Game_Username, "Singleplayer");	
 	} else if (argc < 5) {
 		Platform_LogConst("ClassicalSharp.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
 		return;

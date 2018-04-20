@@ -32,6 +32,7 @@ ReturnCode Platform_DirectoryCreate(STRING_PURE String* path);
 bool Platform_FileExists(STRING_PURE String* path);
 typedef void Platform_EnumFilesCallback(STRING_PURE String* filename, void* obj);
 ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback);
+ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time);
 
 ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path);
 ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path);

@@ -97,7 +97,6 @@ void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices);
 void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices);
 
 
-#define Widget_Reposition(widget) (widget)->Reposition((GuiElement*)(widget));
 #define Elem_Init(elem)           (elem)->VTABLE->Init((GuiElement*)(elem))
 #define Elem_Render(elem, delta)  (elem)->VTABLE->Render((GuiElement*)(elem), delta)
 #define Elem_Free(elem)           (elem)->VTABLE->Free((GuiElement*)(elem))
@@ -109,4 +108,7 @@ void TextAtlas_AddInt(TextAtlas* atlas, Int32 value, VertexP3fT2fC4b** vertices)
 #define Elem_HandlesMouseUp(elem, x, y, btn)   (elem)->VTABLE->HandlesMouseUp((GuiElement*)(elem), x, y, btn)
 #define Elem_HandlesMouseMove(elem, x, y)      (elem)->VTABLE->HandlesMouseMove((GuiElement*)(elem), x, y)
 #define Elem_HandlesMouseScroll(elem, delta)   (elem)->VTABLE->HandlesMouseScroll((GuiElement*)(elem), delta)
+
+#define Widget_Reposition(widget) (widget)->Reposition((GuiElement*)(widget));
+#define Elem_TryFree(elem)        if ((elem)->VTABLE != NULL) { Elem_Free(elem); }
 #endif

@@ -30,4 +30,7 @@ Screen* GraphicsOptionsScreen_MakeInstance(void);
 Screen* HacksSettingsScreen_MakeInstance(void);
 Screen* EnvSettingsScreen_MakeInstance(void);
 Screen* NostalgiaScreen_MakeInstance(void);
+
+Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url);
+Screen* TexIdsOverlay_MakeInstance(void);
 #endif

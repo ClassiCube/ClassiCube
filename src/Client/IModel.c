@@ -120,6 +120,7 @@ void IModel_SetupState(IModel* model, Entity* entity) {
 	Real32 yawDelta = entity->HeadY - entity->RotY;
 	IModel_cosHead = Math_CosF(yawDelta * MATH_DEG2RAD);
 	IModel_sinHead = Math_SinF(yawDelta * MATH_DEG2RAD);
+	IModel_ActiveModel = model;
 }
 
 void IModel_UpdateVB(void) {

@@ -4,7 +4,7 @@
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define PROGRAM_APP_NAME "ClassicalSharp 0.99.9.2"
+#define PROGRAM_APP_NAME "ClassiCube 0.99.9.2"
 
 #define USE16_BIT FALSE
 

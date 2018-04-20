@@ -93,6 +93,7 @@ bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value);
 bool Convert_TryParseInt16(STRING_PURE String* str, Int16* value);
 bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
 bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value);
+bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value);
 bool Convert_TryParseReal32(STRING_PURE String* str, Real32* value);
 bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
 
