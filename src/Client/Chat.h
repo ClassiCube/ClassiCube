@@ -22,6 +22,7 @@
 typedef struct ChatLine_ { UInt8 Buffer[String_BufferSize(STRING_SIZE)]; DateTime Received; } ChatLine;
 ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 StringsBuffer Chat_Log, Chat_InputLog;
+void Chat_GetLogTime(UInt32 index, Int64* timeMS);
 
 IGameComponent Chat_MakeGameComponent(void);
 void Chat_SetLogName(STRING_PURE String* name);

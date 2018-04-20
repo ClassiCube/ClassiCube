@@ -18,6 +18,16 @@
 #include "Chat.h"
 #include "Platform.h"
 
+UInt8 Game_UsernameBuffer[String_BufferSize(STRING_SIZE)];
+extern String Game_Username = String_FromEmptyArray(Game_UsernameBuffer);
+UInt8 Game_MppassBuffer[String_BufferSize(STRING_SIZE)];
+extern String Game_Mppass = String_FromEmptyArray(Game_MppassBuffer);
+
+UInt8 Game_IPAddressBuffer[String_BufferSize(STRING_SIZE)];
+extern String Game_IPAddress = String_FromEmptyArray(Game_IPAddressBuffer);
+UInt8 Game_FontNameBuffer[String_BufferSize(STRING_SIZE)];
+extern String Game_FontName = String_FromEmptyArray(Game_FontNameBuffer);
+
 Int32 Game_GetWindowScale(void) {
 	Real32 windowScale = min(Game_Width / 640.0f, Game_Height / 480.0f);
 	return 1 + (Int32)windowScale;

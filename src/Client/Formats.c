@@ -184,8 +184,7 @@ void Fcm_Load(Stream* stream) {
 #define NBT_TAG_COMPOUND    10
 #define NBT_TAG_INT32_ARRAY 11
 
-/* supported utf8 codepoint can be up to 3 bytes big */
-#define NBT_SMALL_SIZE (STRING_SIZE * 3)
+#define NBT_SMALL_SIZE STRING_SIZE
 struct NbtTag_;
 typedef struct NbtTag_ {
 	struct NbtTag_* Parent;
@@ -244,14 +243,23 @@ UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
 	return tag->DataBig[i];
 }
 
-UInt32 Nbt_ReadString(Stream* stream, UInt8* buffer) {
+UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
 	UInt16 nameLen = Stream_ReadUInt16_BE(stream);
-	if (nameLen > NBT_SMALL_SIZE) ErrorHandler_Fail("NBT String too long");
+	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
+	UInt8 nameBuffer[NBT_SMALL_SIZE * 4];
+	Stream_Read(stream, nameBuffer, nameLen);
 
-	/* TODO: this is wrong, we need to UTF8 decode here*/
-	encoding.utf8.decode(buffer, nameLen);
-	Stream_Read(stream, buffer, nameLen);
-	return nameLen;
+	/* TODO: Check how slow reading strings this way is */
+	Stream memStream; 
+	Stream_ReadonlyMemory(&memStream, nameBuffer, nameLen, &stream->Name);
+	UInt16 codepoint;
+
+	UInt32 i;
+	for (i = 0; i < NBT_SMALL_SIZE; i++) {
+		if (!Stream_ReadUtf8Char(&memStream, &codepoint)) break;
+		strBuffer[i] = Convert_UnicodeToCP437(codepoint);
+	}
+	return i;
 }
 
 void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent) {

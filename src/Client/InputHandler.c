@@ -332,7 +332,8 @@ void InputHandler_MouseWheel(void* obj, Real32 delta) {
 	if (!hotbar && Camera_Active->Zoom(delta)) return;
 	if (InputHandler_DoFovZoom(delta) || !Inventory_CanChangeHeldBlock) return;
 
-	Gui.hudScreen.hotbar.HandlesMouseScroll(delta);
+	Widget* hotbarW = HUDScreen_GetHotbar(Gui_HUD);
+	Elem_HandlesMouseScroll(hotbarW, delta);
 }
 
 void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {

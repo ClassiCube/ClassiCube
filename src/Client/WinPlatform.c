@@ -228,6 +228,26 @@ void Platform_ThreadSleep(UInt32 milliseconds) {
 	Sleep(milliseconds);
 }
 
+DWORD WINAPI Platform_ThreadStartCallback(LPVOID lpParam) {
+	Platform_ThreadFunc* func = (Platform_ThreadFunc*)lpParam;
+	(*func)();
+	return 0;
+}
+
+void* Platform_ThreadStart(Platform_ThreadFunc* func) {
+	void* handle = CreateThread(NULL, 0, Platform_ThreadStartCallback, func, 0, NULL);
+	if (handle == NULL) {
+		ErrorHandler_FailWithCode(GetLastError(), "Creating thread");
+	}
+	return handle;
+}
+
+void Platform_ThreadFreeHandle(void* handle) {
+	if (!CloseHandle((HANDLE)handle)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Freeing thread handle");
+	}
+}
+
 
 void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
 	desc->Size    = size; 

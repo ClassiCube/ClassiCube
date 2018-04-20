@@ -236,45 +236,47 @@ void Stream_WriteUInt32_BE(Stream* stream, UInt32 value) {
 /*########################################################################################################################*
 *--------------------------------------------------Read/Write strings-----------------------------------------------------*
 *#########################################################################################################################*/
+bool Stream_ReadUtf8Char(Stream* stream, UInt16* codepoint) {
+	UInt32 read = 0;
+	UInt8 header;
+	ReturnCode code = stream->Read(stream, &header, 1, &read);
+
+	if (read == 0) return false; /* end of stream */
+	if (!ErrorHandler_Check(code)) { Stream_Fail(stream, code, "reading utf8 from"); }
+	/* Header byte is just the raw codepoint (common case) */
+	if (header <= 0x7F) { *codepoint = header; return true; }
+
+	/* Header byte encodes variable number of following bytes */
+	/* The remaining bits of the header form first part of the character */
+	Int32 byteCount = 0, i;
+	for (i = 7; i >= 0; i--) {
+		if ((header & (1 << i)) != 0) {
+			byteCount++;
+			header &= (UInt8)~(1 << i);
+		} else {
+			break;
+		}
+	}
+
+	*codepoint = header;
+	for (i = 0; i < byteCount - 1; i++) {
+		*codepoint <<= 6;
+		/* Top two bits of each are always 10 */
+		*codepoint |= (UInt16)(Stream_ReadUInt8(stream) & 0x3F);
+	}
+	return true;
+}
+
 bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
 	String_Clear(text);
 	for (;;) {
-		UInt32 byteCount = 0, read = 0;
-		UInt8 header;
-
-		ReturnCode code = stream->Read(stream, &header, 1, &read);
-		if (read == 0) return false; /* end of stream */
-		if (!ErrorHandler_Check(code)) { Stream_Fail(stream, code, "reading line from"); }
-
-		/* Header byte encodes variable number of following bytes */
-		/* The remaining bits of the header form first part of the character */
-		Int32 bit;
-		for (bit = 7; bit >= 0; bit--) {
-			if ((header & (1 << bit)) != 0) {
-				byteCount++;
-				header &= (UInt8)~(1 << bit);
-			} else {
-				break;
-			}
-		}
-
-		UInt16 codeword;
-		if (byteCount == 0) {
-			codeword = (UInt8)header;
-		} else {
-			codeword = header;
-			Int32 i;
-			for (i = 0; i < byteCount - 1; i++) {
-				codeword <<= 6;
-				/* Top two bits of each are always 10 */
-				codeword |= (UInt16)(Stream_ReadUInt8(stream) & 0x3F);
-			}
-		}
+		UInt16 codepoint;
+		if (!Stream_ReadUtf8Char(stream, &codepoint)) return false;
 
 		/* Handle \r\n or \n line endings */
-		if (codeword == '\r') continue;
-		if (codeword == '\n') return true;
-		String_Append(text, Convert_UnicodeToCP437(codeword));
+		if (codepoint == '\r') continue;
+		if (codepoint == '\n') return true;
+		String_Append(text, Convert_UnicodeToCP437(codepoint));
 	}
 }
 

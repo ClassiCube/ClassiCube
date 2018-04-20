@@ -114,6 +114,7 @@ void StringsBuffer_Free(StringsBuffer* buffer);
 void StringsBuffer_UNSAFE_Reset(StringsBuffer* buffer);
 void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text);
 STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index);
+void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems);
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
 void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index);
 Int32 StringsBuffer_Compare(StringsBuffer* buffer, UInt32 idxA, UInt32 idxB);

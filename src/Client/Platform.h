@@ -43,6 +43,10 @@ UInt32 Platform_FilePosition(void* file);
 UInt32 Platform_FileLength(void* file);
 
 void Platform_ThreadSleep(UInt32 milliseconds);
+typedef void Platform_ThreadFunc(void);
+void* Platform_ThreadStart(Platform_ThreadFunc* func);
+/* Frees handle to thread - NOT THE THREAD ITSELF */
+void Platform_ThreadFreeHandle(void* handle);
 
 void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Platform_FreeFont(FontDesc* desc);

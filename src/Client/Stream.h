@@ -57,6 +57,8 @@ void Stream_WriteUInt32_LE(Stream* stream, UInt32 value);
 void Stream_WriteUInt32_BE(Stream* stream, UInt32 value);
 #define Stream_WriteInt32_BE(stream, value) Stream_WriteUInt32_BE(stream, (UInt32)(value))
 
+/* Reads a UTF8 encoded character from the given stream. Returns false if end of stream. */
+bool Stream_ReadUtf8Char(Stream* stream, UInt16* codepoint);
 /* Reads a line of UTF8 encoding text from the given stream. Returns false if end of stream. */
 bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text);
 /* Writes a line of UTF8 encoded text to the given stream. */

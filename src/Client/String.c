@@ -574,10 +574,10 @@ void StringsBuffer_Init(StringsBuffer* buffer) {
 }
 
 void StringsBuffer_Free(StringsBuffer* buffer) {
-	if (buffer->TextBufferElems > STRINGSBUFFER_BUFFER_DEF_SIZE) {
+	if (buffer->TextBuffer != buffer->DefaultBuffer) {
 		Platform_MemFree(buffer->TextBuffer);
 	}
-	if (buffer->FlagsBufferElems > STRINGSBUFFER_FLAGS_DEF_ELEMS) {
+	if (buffer->FlagsBuffer != buffer->DefaultFlags) {
 		Platform_MemFree(buffer->FlagsBuffer);
 	}
 	StringsBuffer_UNSAFE_Reset(buffer);
@@ -603,20 +603,23 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index) {
 	return String_Init(&buffer->TextBuffer[offset], (UInt16)len, (UInt16)len);
 }
 
-void StringsBuffer_ResizeArray(void** buffer, UInt32 curSize, UInt32 newSize, bool reallocing) {
+void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems) {
 	/* We use a statically allocated buffer initally, so can't realloc first time */
 	void* dst;
 	void* cur = *buffer;
 
-	if (!reallocing) {
+	UInt32 curElems = *elems, newSize = (curElems + expandElems) * elemSize;
+	if (curElems <= defElems) {
 		dst = Platform_MemAlloc(newSize);
 		if (dst == NULL) ErrorHandler_Fail("Failed allocating memory for StringsBuffer");
-		Platform_MemCpy(dst, cur, curSize);
+		Platform_MemCpy(dst, cur, curElems * elemSize);
 	} else {
 		dst = Platform_MemRealloc(cur, newSize);
 		if (dst == NULL) ErrorHandler_Fail("Failed allocating memory for resizing StringsBuffer");
 	}
+
 	*buffer = dst;
+	*elems  = curElems + expandElems;
 }
 
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
@@ -625,11 +628,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 		if (buffer->FlagsBufferElems == 0) {
 			ErrorHandler_Fail("StringsBuffer not properly initalised");
 		}
-		
-		UInt32 curElemSize   = buffer->FlagsBufferElems * sizeof(UInt32);
-		UInt32 newElemsSize  = (buffer->FlagsBufferElems + STRINGSBUFFER_FLAGS_EXPAND_ELEMS) * sizeof(UInt32);
-		bool reallocingElems = buffer->FlagsBufferElems > STRINGSBUFFER_FLAGS_DEF_ELEMS;
-		StringsBuffer_ResizeArray(&buffer->FlagsBuffer, curElemSize, newElemsSize, reallocingElems);
+		StringsBuffer_Resize(&buffer->FlagsBuffer, &buffer->FlagsBufferElems, sizeof(UInt32),
+			STRINGSBUFFER_FLAGS_DEF_ELEMS, STRINGSBUFFER_FLAGS_EXPAND_ELEMS);
 	}
 
 	if (text->length > STRINGSBUFFER_LEN_MASK) {
@@ -638,10 +638,8 @@ void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text) {
 
 	UInt32 textOffset = buffer->UsedElems;
 	if (textOffset + text->length >= buffer->TextBufferElems) {
-		UInt32 curTextSize  = buffer->TextBufferElems;
-		UInt32 newTextSize  = buffer->TextBufferElems + STRINGSBUFFER_BUFFER_EXPAND_SIZE;
-		bool reallocingText = buffer->TextBufferElems > STRINGSBUFFER_BUFFER_DEF_SIZE;
-		StringsBuffer_ResizeArray(&buffer->FlagsBuffer, curTextSize, newTextSize, reallocingText);
+		StringsBuffer_Resize(&buffer->TextBuffer, &buffer->TextBufferElems, sizeof(UInt8),
+			STRINGSBUFFER_BUFFER_DEF_SIZE, STRINGSBUFFER_BUFFER_EXPAND_SIZE);
 	}
 
 	if (text->length > 0) {

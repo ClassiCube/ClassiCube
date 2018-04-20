@@ -52,7 +52,15 @@ void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, I
 
 	Gui_SetNewScreen(GeneratingScreen_MakeInstance());
 	Gen_Width = width; Gen_Height = height; Gen_Length = length; Gen_Seed = seed;
-	gen.GenerateAsync();
+
+	void* threadHandle;
+	if (vanilla) {
+		threadHandle = Platform_ThreadStart(&NotchyGen_Generate);
+	} else {
+		threadHandle = Platform_ThreadStart(&FlatgrassGen_Generate);
+	}
+	/* don't leak thread handle here */
+	Platform_ThreadFreeHandle(threadHandle);
 }
 
 void ServerConnection_EndGeneration(void) {

@@ -1093,16 +1093,16 @@ void ChatScreen_Render(GuiElement* elem, Real64 delta) {
 	if (screen->HandlesAllInput) {
 		Elem_Render(&screen->Chat, delta);
 	} else {
+		Int64 nowMS = DateTime_TotalMs(&now);
+		/* Only render recent chat */
 		for (i = 0; i < screen->Chat.LinesCount; i++) {
 			Texture tex = screen->Chat.Textures[i];
 			Int32 logIdx = screen->ChatIndex + i;
 			if (tex.ID == NULL) continue;
 			if (logIdx < 0 || logIdx >= Chat_Log.Count) continue;
 
-			DateTime received = game.Chat.Log[logIdx].Received;
-			if (DateTime_MsBetween(&received, &now) <= 10000) {
-				Texture_Render(&tex);
-			}
+			Int64 received; Chat_GetLogTime(logIdx, &received);
+			if ((nowMS - received) <= 10 * 1000) Texture_Render(&tex);
 		}
 	}
 
@@ -1114,7 +1114,7 @@ void ChatScreen_Render(GuiElement* elem, Real64 delta) {
 		}
 	}
 
-	if (screen->Announcement.Texture.ID != NULL && DateTime_MsBetween(&Chat_Announcement.Received, &now) > 5000) {
+	if (screen->Announcement.Texture.ID != NULL && DateTime_MsBetween(&Chat_Announcement.Received, &now) > 5 * 1000) {
 		Elem_Free(&screen->Announcement);
 	}
 }
@@ -1374,6 +1374,11 @@ void HUDScreen_AppendInput(Screen* hud, STRING_PURE String* text) {
 	Screen* chat = ((HUDScreen*)hud)->Chat;
 	ChatInputWidget* widget = &((ChatScreen*)chat)->Input;
 	InputWidget_AppendString(&widget->Base, text);
+}
+
+Widget* HUDScreen_GetHotbar(Screen* hud) {
+	HUDScreen* screen = (HUDScreen*)hud;
+	return &screen->Hotbar;
 }
 
 

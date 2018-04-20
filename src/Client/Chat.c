@@ -13,6 +13,28 @@
 #include "Funcs.h"
 #include "Block.h"
 
+#define CHAT_LOGTIMES_DEF_ELEMS 256
+#define CHAT_LOGTIMES_EXPAND_ELEMS 512
+Int64 Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
+Int64* Chat_LogTimes = &Chat_DefaultLogTimes;
+UInt32 Chat_LogTimesCount = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesUsed;
+
+void Chat_GetLogTime(UInt32 index, Int64* timeMs) {
+	if (index >= Chat_LogTimesUsed) ErrorHandler_Fail("Tries to get time past LogTime end");
+	*timeMs = Chat_LogTimes[index];
+}
+
+void Chat_AppendLogTime(void) {
+	DateTime now = Platform_CurrentUTCTime();	
+	UInt32 count = Chat_LogTimesUsed;
+
+	if (count == Chat_LogTimesCount) {
+		StringsBuffer_Resize(&Chat_LogTimes, &Chat_LogTimesCount, sizeof(Int64),
+			CHAT_LOGTIMES_DEF_ELEMS, CHAT_LOGTIMES_EXPAND_ELEMS);
+	}
+	Chat_LogTimes[Chat_LogTimesUsed++] = DateTime_TotalMs(&now);
+}
+
 void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 	String dst = String_InitAndClearArray(line->Buffer);
 	String_AppendString(&dst, text);
@@ -113,6 +135,7 @@ void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 	if (msgType == MSG_TYPE_NORMAL) {
 		StringsBuffer_Add(&Chat_Log, text);
 		Chat_AppendLog(text);
+		Chat_AppendLogTime();
 	} else if (msgType >= MSG_TYPE_STATUS_1 && msgType <= MSG_TYPE_STATUS_3) {
 		ChatLine_Make(&Chat_Status[msgType - MSG_TYPE_STATUS_1], text);
 	} else if (msgType >= MSG_TYPE_BOTTOMRIGHT_1 && msgType <= MSG_TYPE_BOTTOMRIGHT_3) {
@@ -511,6 +534,7 @@ void Chat_Reset(void) {
 
 void Chat_Free(void) {
 	commands_count = 0;
+	if (Chat_LogTimes != Chat_DefaultLogTimes) Platform_MemFree(Chat_LogTimes);
 
 	StringsBuffer_Free(&Chat_Log);
 	StringsBuffer_Free(&Chat_InputLog);
