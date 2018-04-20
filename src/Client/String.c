@@ -383,16 +383,16 @@ void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, const voi
 		if (formatStr.buffer[i] != '%') { String_Append(str, formatStr.buffer[i]); continue; }
 
 		const void* arg = args[j++];
-		switch (formatStr.buffer[i++]) {
+		switch (formatStr.buffer[++i]) {
 		case 'b': 
 			String_AppendInt32(str, *((UInt8*)arg)); break;
 		case 'i': 
 			String_AppendInt32(str, *((Int32*)arg)); break;
 		case 'f': 
-			digits = formatStr.buffer[i++] - '0';
+			digits = formatStr.buffer[++i] - '0';
 			String_AppendReal32(str, *((Real32*)arg), digits); break;
 		case 'p':
-			digits = formatStr.buffer[i++] - '0';
+			digits = formatStr.buffer[++i] - '0';
 			String_AppendPaddedInt32(str, *((Int32*)arg), digits); break;
 		case 't': 
 			String_AppendBool(str, *((bool*)arg)); break;
@@ -400,6 +400,8 @@ void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, const voi
 			String_AppendConst(str, (UInt8*)arg);  break;
 		case 's': 
 			String_AppendString(str, (String*)arg);  break;
+		case 'r':
+			String_Append(str, *((UInt8*)arg)); break;
 		default: 
 			ErrorHandler_Fail("Invalid type for string format");
 		}
