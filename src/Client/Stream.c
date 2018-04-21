@@ -29,6 +29,7 @@ void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 read;
 	while (count > 0) {
 		Stream_SafeReadBlock(stream, buffer, count, read);
+		buffer += read;
 		count -= read;
 	}
 }
@@ -37,6 +38,7 @@ void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count) {
 	UInt32 write;
 	while (count > 0) {
 		Stream_SafeWriteBlock(stream, buffer, count, write);
+		buffer += write;
 		count -= write;
 	}
 }
