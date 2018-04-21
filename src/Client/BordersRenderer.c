@@ -47,9 +47,8 @@ void BordersRenderer_RenderSides(Real64 delta) {
 }
 
 void BordersRenderer_RenderEdges(Real64 delta) {
-	if (borders_edgesVb == NULL) return;
 	BlockID block = WorldEnv_EdgeBlock;
-	BordersRenderer_SetupState(block, borders_sideTexId, borders_sidesVb);
+	BordersRenderer_SetupState(block, borders_edgeTexId, borders_edgesVb);
 
 	/* Do not draw water when we cannot see it. */
 	/* Fixes some 'depth bleeding through' issues with 16 bit depth buffers on large maps. */

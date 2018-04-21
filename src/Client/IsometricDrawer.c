@@ -7,7 +7,6 @@
 #include "Block.h"
 #include "TerrainAtlas.h"
 
-Int32 iso_count;
 Real32 iso_scale;
 VertexP3fT2fC4b* iso_vertices;
 VertexP3fT2fC4b* iso_base_vertices;
@@ -54,11 +53,11 @@ void IsometricDrawer_InitCache(void) {
 void IsometricDrawer_Flush(void) {
 	if (iso_lastTexIndex != -1) {
 		Gfx_BindTexture(Atlas1D_TexIds[iso_lastTexIndex]);
-		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_base_vertices, iso_count);
+		Int32 count = (Int32)(iso_vertices - iso_base_vertices);
+		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_base_vertices, count);
 	}
 
 	iso_lastTexIndex = iso_texIndex;
-	iso_count = 0;
 	iso_vertices = iso_base_vertices;
 }
 
@@ -124,7 +123,6 @@ void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
 void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
 	IsometricDrawer_InitCache();
 	iso_lastTexIndex = -1;
-	iso_count = 0;
 	iso_vertices = vertices;
 	iso_base_vertices = vertices;
 	iso_vb = vb;
@@ -175,12 +173,15 @@ void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y) {
 			IsometricDrawer_GetTexLoc(block, FACE_ZMIN), &iso_vertices);
 		Drawer_YMax(1, iso_colNormal, 
 			IsometricDrawer_GetTexLoc(block, FACE_YMAX), &iso_vertices);
-		iso_count += 4 * 3;
 	}
 }
 
 void IsometricDrawer_EndBatch(void) {
-	if (iso_count > 0) { iso_lastTexIndex = iso_texIndex; IsometricDrawer_Flush(); }
+	if (iso_vertices != iso_base_vertices) { 
+		iso_lastTexIndex = iso_texIndex; 
+		IsometricDrawer_Flush(); 
+	}
+
 	iso_lastTexIndex = -1;
 	Gfx_LoadIdentityMatrix();
 }

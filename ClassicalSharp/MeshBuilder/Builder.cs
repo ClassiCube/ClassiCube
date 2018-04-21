@@ -119,8 +119,8 @@ namespace ClassicalSharp {
 						chunk[chunkIndex] = rawBlock;
 					}
 				}
-				outAllAir = allAir; outAllSolid = allSolid;
 			}
+			outAllAir = allAir; outAllSolid = allSolid;
 		}
 		
 		#if !ONLY_8BIT
@@ -152,8 +152,8 @@ namespace ClassicalSharp {
 							chunk[chunkIndex] = rawBlock;
 						}
 					}
-					outAllAir = allAir; outAllSolid = allSolid;
 				}
+				outAllAir = allAir; outAllSolid = allSolid;
 			}
 		}
 		#endif

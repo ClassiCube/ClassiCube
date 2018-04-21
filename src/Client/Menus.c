@@ -1935,7 +1935,7 @@ void MenuOptionsScreen_SelectExtHelp(MenuOptionsScreen* screen, Int32 idx) {
 	UInt32 descLinesCount = Array_Elems(descLines);
 	String_UNSAFE_Split(&descRaw, '%', descLines, &descLinesCount);
 
-	TextGroupWidget_Create(&screen->ExtHelp, descLinesCount, &screen->TextFont, NULL, screen->ExtHelp_Textures, screen->ExtHelp_Buffer);
+	TextGroupWidget_Create(&screen->ExtHelp, descLinesCount, &screen->TextFont, &screen->TextFont, screen->ExtHelp_Textures, screen->ExtHelp_Buffer);
 	Widget_SetLocation((Widget*)(&screen->ExtHelp), ANCHOR_MIN, ANCHOR_MIN, 0, 0);
 	Elem_Init(&screen->ExtHelp);
 
@@ -2163,6 +2163,8 @@ Screen* MenuOptionsScreen_MakeInstance(Widget** widgets, Int32 count, ButtonWidg
 	screen->DefaultValues     = defaultValues;
 	screen->Descriptions      = descriptions;
 	screen->DescriptionsCount = descsCount;
+
+	screen->ActiveI = -1;
 	return (Screen*)screen;
 }
 

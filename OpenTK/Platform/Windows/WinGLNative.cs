@@ -240,8 +240,7 @@ namespace OpenTK.Platform.Windows
 				case WindowMessage.KEYUP:
 				case WindowMessage.SYSKEYDOWN:
 				case WindowMessage.SYSKEYUP:
-					bool pressed = message == WindowMessage.KEYDOWN ||
-						message == WindowMessage.SYSKEYDOWN;
+					bool pressed = message == WindowMessage.KEYDOWN || message == WindowMessage.SYSKEYDOWN;
 
 					// Shift/Control/Alt behave strangely when e.g. ShiftRight is held down and ShiftLeft is pressed
 					// and released. It looks like neither key is released in this case, or that the wrong key is

@@ -27,12 +27,12 @@ D3DTRANSFORMSTATETYPE curMatrix;
 DWORD createFlags = D3DCREATE_HARDWARE_VERTEXPROCESSING;
 D3DFORMAT d3d9_viewFormat, d3d9_depthFormat;
 
-#define D3D9_SetRenderState(raw, state, name) \
-ReturnCode hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
+#define D3D9_SetRenderState(state, value, name) \
+ReturnCode hresult = IDirect3DDevice9_SetRenderState(device, state, value); \
 ErrorHandler_CheckOrFail(hresult, name)
 
-#define D3D9_SetRenderState2(raw, state, name) \
-hresult = IDirect3DDevice9_SetRenderState(device, state, raw); \
+#define D3D9_SetRenderState2(state, value, name) \
+hresult = IDirect3DDevice9_SetRenderState(device, state, value); \
 ErrorHandler_CheckOrFail(hresult, name)
 
 #define D3D9_LogLeakedResource(msg, i) \
@@ -301,7 +301,7 @@ void Gfx_SetFog(bool enabled) {
 	if (d3d9_fogEnable == enabled) return;
 
 	d3d9_fogEnable = enabled;
-	D3D9_SetRenderState((UInt32)enabled, D3DRS_FOGENABLE, "D3D9_SetFog");
+	D3D9_SetRenderState(D3DRS_FOGENABLE, (UInt32)enabled, "D3D9_SetFog");
 }
 
 UInt32 d3d9_fogCol = 0xFF000000; /* black */
@@ -309,7 +309,7 @@ void Gfx_SetFogColour(PackedCol col) {
 	if (col.Packed == d3d9_fogCol) return;
 
 	d3d9_fogCol = col.Packed;
-	D3D9_SetRenderState(col.Packed, D3DRS_FOGCOLOR, "D3D9_SetFogColour");
+	D3D9_SetRenderState(D3DRS_FOGCOLOR, col.Packed, "D3D9_SetFogColour");
 }
 
 Real32 d3d9_fogDensity = -1.0f;
@@ -318,14 +318,14 @@ void Gfx_SetFogDensity(Real32 value) {
 
 	d3d9_fogDensity = value;
 	UInt32 raw = *(UInt32*)&value;
-	D3D9_SetRenderState(raw, D3DRS_FOGDENSITY, "D3D9_SetFogDensity");
+	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw, "D3D9_SetFogDensity");
 }
 
 Real32 d3d9_fogStart = -1.0f;
 void Gfx_SetFogStart(Real32 value) {
 	d3d9_fogStart = value;
 	UInt32 raw = *(UInt32*)&value;
-	D3D9_SetRenderState(raw, D3DRS_FOGSTART, "D3D9_SetFogStart");
+	D3D9_SetRenderState(D3DRS_FOGSTART, raw, "D3D9_SetFogStart");
 }
 
 Real32 d3d9_fogEnd = -1.0f;
@@ -334,7 +334,7 @@ void Gfx_SetFogEnd(Real32 value) {
 
 	d3d9_fogEnd = value;
 	UInt32 raw = *(UInt32*)&value;
-	D3D9_SetRenderState(raw, D3DRS_FOGEND, "D3D9_SetFogEnd");
+	D3D9_SetRenderState(D3DRS_FOGEND, raw, "D3D9_SetFogEnd");
 }
 
 D3DFOGMODE d3d9_fogTableMode = D3DFOG_NONE;
@@ -343,13 +343,13 @@ void Gfx_SetFogMode(Int32 fogMode) {
 	if (mode == d3d9_fogTableMode) return;
 
 	d3d9_fogTableMode = mode;
-	D3D9_SetRenderState(mode, D3DRS_FOGTABLEMODE, "D3D9_SetFogMode");
+	D3D9_SetRenderState(D3DRS_FOGTABLEMODE, mode, "D3D9_SetFogMode");
 }
 
 
 void Gfx_SetFaceCulling(bool enabled) {
 	D3DCULL mode = enabled ? D3DCULL_CW : D3DCULL_NONE;
-	D3D9_SetRenderState(mode, D3DRS_CULLMODE, "D3D9_SetFaceCulling");
+	D3D9_SetRenderState(D3DRS_CULLMODE, mode, "D3D9_SetFaceCulling");
 }
 
 bool d3d9_alphaTest = false;
@@ -357,16 +357,16 @@ void Gfx_SetAlphaTest(bool enabled) {
 	if (d3d9_alphaTest == enabled) return;
 
 	d3d9_alphaTest = enabled;
-	D3D9_SetRenderState((UInt32)enabled, D3DRS_ALPHATESTENABLE, "D3D9_SetAlphaTest");
+	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, (UInt32)enabled, "D3D9_SetAlphaTest");
 }
 
 D3DCMPFUNC d3d9_alphaTestFunc = D3DCMP_ALWAYS;
 Int32 d3d9_alphaTestRef = 0;
 void Gfx_SetAlphaTestFunc(Int32 compareFunc, Real32 refValue) {
 	d3d9_alphaTestFunc = d3d9_compareFuncs[compareFunc];
-	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ALPHAFUNC, "D3D9_SetAlphaTest_Func");
+	D3D9_SetRenderState(D3DRS_ALPHAFUNC, d3d9_alphaTestFunc, "D3D9_SetAlphaTest_Func");
 	d3d9_alphaTestRef = (Int32)(refValue * 255);
-	D3D9_SetRenderState2(d3d9_alphaTestRef, D3DRS_ALPHAREF, "D3D9_SetAlphaTest_Ref");
+	D3D9_SetRenderState2(D3DRS_ALPHAREF, d3d9_alphaTestRef, "D3D9_SetAlphaTest_Ref");
 }
 
 bool d3d9_alphaBlend = false;
@@ -374,16 +374,16 @@ void Gfx_SetAlphaBlending(bool enabled) {
 	if (d3d9_alphaBlend == enabled) return;
 
 	d3d9_alphaBlend = enabled;
-	D3D9_SetRenderState((UInt32)enabled, D3DRS_ALPHABLENDENABLE, "D3D9_SetAlphaBlending");
+	D3D9_SetRenderState(D3DRS_ALPHABLENDENABLE, (UInt32)enabled, "D3D9_SetAlphaBlending");
 }
 
 D3DBLEND d3d9_srcBlendFunc = D3DBLEND_ONE;
 D3DBLEND d3d9_dstBlendFunc = D3DBLEND_ZERO;
 void Gfx_SetAlphaBlendFunc(Int32 srcBlendFunc, Int32 dstBlendFunc) {
 	d3d9_srcBlendFunc = d3d9_blendFuncs[srcBlendFunc];
-	D3D9_SetRenderState(d3d9_srcBlendFunc, D3DRS_SRCBLEND, "D3D9_SetAlphaBlendFunc_Src");
+	D3D9_SetRenderState(D3DRS_SRCBLEND, d3d9_srcBlendFunc, "D3D9_SetAlphaBlendFunc_Src");
 	d3d9_dstBlendFunc = d3d9_blendFuncs[dstBlendFunc];
-	D3D9_SetRenderState2(d3d9_dstBlendFunc, D3DRS_DESTBLEND, "D3D9_SetAlphaBlendFunc_Dst");
+	D3D9_SetRenderState2(D3DRS_DESTBLEND, d3d9_dstBlendFunc, "D3D9_SetAlphaBlendFunc_Dst");
 }
 
 void Gfx_SetAlphaArgBlend(bool enabled) {
@@ -407,24 +407,24 @@ void Gfx_ClearColour(PackedCol col) {
 bool d3d9_depthTest = false;
 void Gfx_SetDepthTest(bool enabled) {
 	d3d9_depthTest = enabled;
-	D3D9_SetRenderState((UInt32)enabled, D3DRS_ZENABLE, "D3D9_SetDepthTest");
+	D3D9_SetRenderState(D3DRS_ZENABLE, (UInt32)enabled, "D3D9_SetDepthTest");
 }
 
 D3DCMPFUNC d3d9_depthTestFunc = D3DCMP_LESSEQUAL;
 void Gfx_SetDepthTestFunc(Int32 compareFunc) {
 	d3d9_depthTestFunc = d3d9_compareFuncs[compareFunc];
-	D3D9_SetRenderState(d3d9_alphaTestFunc, D3DRS_ZFUNC, "D3D9_SetDepthTestFunc");
+	D3D9_SetRenderState(D3DRS_ZFUNC, d3d9_alphaTestFunc, "D3D9_SetDepthTestFunc");
 }
 
 void Gfx_SetColourWriteMask(bool r, bool g, bool b, bool a) {
 	UInt32 channels = (r ? 1u : 0u) | (g ? 2u : 0u) | (b ? 4u : 0u) | (a ? 8u : 0u);
-	D3D9_SetRenderState(channels, D3DRS_COLORWRITEENABLE, "D3D9_SetColourWrite");
+	D3D9_SetRenderState(D3DRS_COLORWRITEENABLE, channels, "D3D9_SetColourWrite");
 }
 
 bool d3d9_depthWrite = false;
 void Gfx_SetDepthWrite(bool enabled) {
 	d3d9_depthWrite = enabled;
-	D3D9_SetRenderState((UInt32)enabled, D3DRS_ZWRITEENABLE, "D3D9_SetDepthWrite");
+	D3D9_SetRenderState(D3DRS_ZWRITEENABLE, (UInt32)enabled, "D3D9_SetDepthWrite");
 }
 
 
@@ -584,6 +584,14 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 
 bool Gfx_WarnIfNecessary(void) { return false; }
 
+void Gfx_SetVSync(bool value) {
+	if (d3d9_vsync == value) return;
+	d3d9_vsync = value;
+
+	GfxCommon_LoseContext(" (toggling VSync)");
+	D3D9_RecreateDevice();
+}
+
 void Gfx_BeginFrame(void) {
 	IDirect3DDevice9_BeginScene(device);
 }
@@ -598,15 +606,13 @@ void Gfx_EndFrame(void) {
 	}
 
 	/* TODO: Make sure this actually works on all graphics cards.*/
-	String reason = String_FromConst(" (Direct3D9 device lost)");
-	GfxCommon_LoseContext(&reason);
+	GfxCommon_LoseContext(" (Direct3D9 device lost)");
 	D3D9_LoopUntilRetrieved();
 	D3D9_RecreateDevice();
 }
 
 void Gfx_OnWindowResize(void) {
-	String reason = String_FromConst(" (resizing window)");
-	GfxCommon_LoseContext(&reason);
+	GfxCommon_LoseContext(" (resizing window)");
 	D3D9_RecreateDevice();
 }
 

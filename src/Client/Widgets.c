@@ -569,7 +569,7 @@ void TableWidget_UpdateDescTexPos(TableWidget* widget) {
 }
 
 void TableWidget_UpdatePos(TableWidget* widget) {
-	Int32 rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, widget->ElementsCount);
+	Int32 rowsDisplayed = min(TABLE_MAX_ROWS_DISPLAYED, widget->RowsCount);
 	widget->Width = widget->BlockSize * widget->ElementsPerRow;
 	widget->Height = widget->BlockSize * rowsDisplayed;
 	widget->X = Game_Width  / 2 - widget->Width  / 2;
@@ -638,7 +638,7 @@ void TableWidget_RecreateElements(TableWidget* widget) {
 	TableWidget_UpdatePos(widget);
 
 	Int32 index = 0;
-	for (i = 0; i < count; i++) {
+	for (i = 0; i < count;) {
 		if ((i % widget->ElementsPerRow) == 0 && TableWidget_RowEmpty(widget, i)) {
 			i += widget->ElementsPerRow; continue;
 		}
@@ -2177,11 +2177,10 @@ void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool clas
 void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE String* text) {
 	Int32 y = widget->Y;
 	Gfx_DeleteTexture(&widget->Textures[0].ID);
-	UInt32 i;
-#define tgw_max_idx (Array_Elems(widget->Textures) - 1)
+	Int32 i, max_index = widget->LinesCount - 1;
 
 	/* Move contents of X line to X - 1 line */
-	for (i = 0; i < tgw_max_idx; i++) {
+	for (i = 0; i < max_index; i++) {
 		UInt8* dst = widget->Buffer + i       * TEXTGROUPWIDGET_LEN;
 		UInt8* src = widget->Buffer + (i + 1) * TEXTGROUPWIDGET_LEN;
 		UInt8 lineLen = widget->LineLengths[i + 1];
@@ -2194,8 +2193,8 @@ void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE S
 		y += widget->Textures[i].Height;
 	}
 
-	widget->Textures[tgw_max_idx].ID = NULL; /* Delete() is called by SetText otherwise */
-	TextGroupWidget_SetText(widget, tgw_max_idx, text);
+	widget->Textures[max_index].ID = NULL; /* Delete() is called by SetText otherwise */
+	TextGroupWidget_SetText(widget, max_index, text);
 }
 
 Int32 TextGroupWidget_CalcY(TextGroupWidget* widget, Int32 index, Int32 newHeight) {

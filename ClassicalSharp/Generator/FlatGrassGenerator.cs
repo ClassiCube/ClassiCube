@@ -24,15 +24,12 @@ namespace ClassicalSharp.Generator {
 		
 		unsafe void MapSet(BlockRaw* ptr, int yStart, int yEnd, BlockRaw block) {
 			yStart = Math.Max(yStart, 0); yEnd = Math.Max(yEnd, 0);
-			int startIndex = yStart * Length * Width;
-			int endIndex = (yEnd * Length + (Length - 1)) * Width + (Width - 1);
-			int count = (endIndex - startIndex) + 1, offset = 0;
+			int oneY = Width * Length, yHeight = (yEnd - yStart) + 1;
 			
-			while (offset < count) {
-				int bytes = Math.Min(count - offset, Width * Length);
-				MemUtils.memset((IntPtr)ptr, block, startIndex + offset, bytes);				
-				offset += bytes;
-				CurrentProgress = (float)offset / count;
+			CurrentProgress = 0;
+			for (int y = yStart; y <= yEnd; y++) {
+				MemUtils.memset((IntPtr)ptr, block, y * oneY, oneY);
+				CurrentProgress = (float)(y - yStart) / yHeight;
 			}
 		}
 	}

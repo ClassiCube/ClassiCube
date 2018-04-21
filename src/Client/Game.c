@@ -772,7 +772,6 @@ void Schematic_Save(Stream* stream) { }
 void Gfx_MakeApiInfo(void) { }
 void ServerConnection_InitMultiplayer(void) { }
 void Gfx_TakeScreenshot(STRING_PURE String* output, Int32 width, Int32 height) { }
-void Gfx_SetVSync(bool value) { }
 void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) { }
 bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value) { return true; }
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }

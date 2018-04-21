@@ -32,10 +32,10 @@ FN_GLBUFFERDATA glBufferData;
 FN_GLBUFFERSUBDATA glBufferSubData;
 
 Int32 Gfx_strideSizes[2] = GFX_STRIDE_SIZES;
-bool gl_lists = false;
 Int32 gl_activeList = -1;
 #define gl_DYNAMICLISTID 1234567891
 void* gl_dynamicListData;
+bool gl_lists, gl_vsync;
 
 Int32 gl_blend[6] = { GL_ZERO, GL_ONE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA };
 Int32 gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER };
@@ -78,6 +78,7 @@ void GL_CheckVboSupport(void) {
 }
 
 void Gfx_Init(void) {
+	Gfx_MinZNear = 0.1f;
 	GraphicsMode mode = GraphicsMode_MakeDefault();
 	GLContext_Init(mode);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTextureDimensions);
@@ -515,6 +516,13 @@ bool Gfx_WarnIfNecessary(void) {
 	Chat_AddRaw(tmp5, "&cVSync may not work, and you may see disappearing clouds and map edges.");
 	Chat_AddRaw(tmp6, "&cFor Windows, try downloading the Direct3D 9 build instead.");
 	return true;
+}
+
+
+void Gfx_SetVSync(bool value) {
+	if (gl_vsync == value) return;
+	gl_vsync = value;
+	GLContext_SetVSync(value);
 }
 
 void Gfx_BeginFrame(void) { }

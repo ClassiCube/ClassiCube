@@ -80,5 +80,9 @@ namespace OpenTK {
 		public bool Equals(Vector4 other) {
 			return X == other.X && Y == other.Y && Z == other.Z && W == other.W;
 		}
+		
+		public override string ToString() {
+			return X + " : " + Y + " : " + Z + " : " + W;
+		}
 	}
 }

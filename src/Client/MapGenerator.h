@@ -11,7 +11,6 @@ volatile Real32 Gen_CurrentProgress;
 volatile const UInt8* Gen_CurrentState;
 volatile bool Gen_Done;
 Int32 Gen_Width, Gen_Height, Gen_Length;
-Int32 Gen_MaxX, Gen_MaxY, Gen_MaxZ;
 Int32 Gen_Seed;
 BlockID* Gen_Blocks;
 #define Gen_Pack(x, y, z) (((y) * Gen_Length + (z)) * Gen_Width + (x))

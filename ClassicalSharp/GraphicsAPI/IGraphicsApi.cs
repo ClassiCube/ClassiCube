@@ -20,7 +20,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		public abstract bool Texturing { set; }
 		
 		public Matrix4 Projection, View;
-		internal float MinZNear = 0.1f;
+		internal float MinZNear; // MinZNear = 0.1f;
 		readonly FastBitmap bmpBuffer = new FastBitmap();
 		
 		/// <summary> Returns whether this graphics api had a valid context. </summary>

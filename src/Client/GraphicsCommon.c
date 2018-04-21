@@ -22,11 +22,11 @@ void GfxCommon_Free(void) {
 	Gfx_DeleteIb(&GfxCommon_defaultIb);
 }
 
-void GfxCommon_LoseContext(STRING_PURE String* reason) {
+void GfxCommon_LoseContext(const UInt8* reason) {
 	Gfx_LostContext = true;
 	String logMsg = String_FromConst("Lost graphics context:");
 	Platform_Log(&logMsg);
-	Platform_Log(reason);
+	Platform_LogConst(reason);
 
 	Event_RaiseVoid(&GfxEvents_ContextLost);
 	GfxCommon_Free();
@@ -126,7 +126,7 @@ void GfxCommon_Mode3D(void) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
 	Gfx_LoadMatrix(&Gfx_View);
 
-	Gfx_SetDepthTest(false);
+	Gfx_SetDepthTest(true);
 	Gfx_SetAlphaBlending(false);
 	if (gfx_hadFog) Gfx_SetFog(true);
 }
@@ -148,17 +148,17 @@ void GfxCommon_MakeIndices(UInt16* indices, Int32 iCount) {
 }
 
 void GfxCommon_SetupAlphaState(UInt8 draw) {
-	if (draw == DRAW_TRANSLUCENT)      Gfx_SetAlphaBlending(true);
-	if (draw == DRAW_TRANSPARENT)      Gfx_SetAlphaTest(true);
+	if (draw == DRAW_TRANSLUCENT)       Gfx_SetAlphaBlending(true);
+	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(true);
 	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(true);
-	if (draw == DRAW_SPRITE)           Gfx_SetAlphaTest(true);
+	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(true);
 }
 
 void GfxCommon_RestoreAlphaState(UInt8 draw) {
-	if (draw == DRAW_TRANSLUCENT)      Gfx_SetAlphaBlending(false);
-	if (draw == DRAW_TRANSPARENT)      Gfx_SetAlphaTest(false);
+	if (draw == DRAW_TRANSLUCENT)       Gfx_SetAlphaBlending(false);
+	if (draw == DRAW_TRANSPARENT)       Gfx_SetAlphaTest(false);
 	if (draw == DRAW_TRANSPARENT_THICK) Gfx_SetAlphaTest(false);
-	if (draw == DRAW_SPRITE)           Gfx_SetAlphaTest(false);
+	if (draw == DRAW_SPRITE)            Gfx_SetAlphaTest(false);
 }
 
 

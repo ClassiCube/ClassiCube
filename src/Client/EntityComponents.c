@@ -785,7 +785,7 @@ void Collisions_ClipYMax(CollisionsComp* comp, AABB* blockBB, AABB* entityBB, AA
 	comp->HitYMax = true;
 }
 
-void Collisions_CollideWithReachableBlocks(CollisionsComp* comp, UInt32 count, AABB* entityBB, AABB* extentBB) {
+void Collisions_CollideWithReachableBlocks(CollisionsComp* comp, Int32 count, AABB* entityBB, AABB* extentBB) {
 	Entity* entity = comp->Entity;
 	/* Reset collision detection states */
 	bool wasOn = entity->OnGround;
@@ -795,7 +795,7 @@ void Collisions_CollideWithReachableBlocks(CollisionsComp* comp, UInt32 count, A
 
 	AABB blockBB;
 	Vector3 bPos, size = entity->Size;
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < count; i++) {
 		/* Unpack the block and coordinate data */
 		SearcherState state = Searcher_States[i];
@@ -863,7 +863,7 @@ void Collisions_MoveAndWallSlide(CollisionsComp* comp) {
 	if (Vector3_Equals(&entity->Velocity, &zero)) return;
 
 	AABB entityBB, entityExtentBB;
-	UInt32 count = Searcher_FindReachableBlocks(entity, &entityBB, &entityExtentBB);
+	Int32 count = Searcher_FindReachableBlocks(entity, &entityBB, &entityExtentBB);
 	Collisions_CollideWithReachableBlocks(comp, count, &entityBB, &entityExtentBB);
 }
 

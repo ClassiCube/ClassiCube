@@ -65,12 +65,12 @@ BlockID World_SafeGetBlock_3I(Vector3I p) {
 }
 
 bool World_IsValidPos(Int32 x, Int32 y, Int32 z) {
-	return x >= 0 && y >= 0 && z >= 0 &&
+	return x >= 0 && y >= 0 && z >= 0 && 
 		x < World_Width && y < World_Height && z < World_Length;
 }
 
 bool World_IsValidPos_3I(Vector3I p) {
-	return p.X >= 0 && p.Y >= 0 && p.Z <= 0 &&
+	return p.X >= 0 && p.Y >= 0 && p.Z >= 0 &&
 		p.X < World_Width && p.Y < World_Height && p.Z < World_Length;
 }
 
@@ -230,7 +230,7 @@ Real32 Respawn_HighestFreeY(AABB* bb) {
 
 				if (Block_Collide[block] != COLLIDE_SOLID) continue;
 				if (!AABB_Intersects(bb, &blockBB)) continue;
-				if (blockBB.Max.Y > spawnY) blockBB.Max.Y = spawnY;
+				if (blockBB.Max.Y > spawnY) spawnY = blockBB.Max.Y;
 			}
 		}
 	}

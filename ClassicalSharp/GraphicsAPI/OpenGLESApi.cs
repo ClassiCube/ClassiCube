@@ -13,6 +13,7 @@ namespace ClassicalSharp.GraphicsAPI {
 	public unsafe class OpenGLESApi : IGraphicsApi {
 		
 		public OpenGLESApi() {
+			MinZNear = 0.1f;
 			InitFields();
 			int texDims;
 			GL.GetInteger(All.MaxTextureSize, &texDims);

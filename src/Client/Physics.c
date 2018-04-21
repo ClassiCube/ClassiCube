@@ -145,7 +145,7 @@ void Searcher_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-UInt32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entityExtentBB) {
+Int32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entityExtentBB) {
 	Vector3 vel = entity->Velocity;
 	Entity_GetBounds(entity, entityBB);
 
@@ -177,7 +177,6 @@ UInt32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entity
 
 	/* Order loops so that we minimise cache misses */
 	AABB blockBB;
-	UInt32 count = 0;
 	Int32 x, y, z;
 	SearcherState* curState = Searcher_States;
 
@@ -208,6 +207,7 @@ UInt32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entity
 		}
 	}
 
+	Int32 count = (Int32)(curState - Searcher_States);
 	if (count > 0) Searcher_QuickSort(0, count - 1);
 	return count;
 }

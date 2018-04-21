@@ -382,8 +382,7 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block
 				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
 
 				if (Terrain_Count == PARTICLES_MAX) Terrain_RemoveAt(0);
-				TerrainParticle* p = &Terrain_Particles[Terrain_Count - 1];
-				Terrain_Count++; 
+				TerrainParticle* p = &Terrain_Particles[Terrain_Count++];
 				Real32 life = 0.3f + Random_Float(&rnd) * 1.2f;
 
 				Vector3 pos;
@@ -412,8 +411,7 @@ void Particles_RainSnowEffect(Vector3 pos) {
 		offset.Z = Random_Float(&rnd);
 
 		if (Rain_Count == PARTICLES_MAX) Rain_RemoveAt(0);
-		RainParticle* p = &Rain_Particles[Rain_Count - 1];
-		Rain_Count++;
+		RainParticle* p = &Rain_Particles[Rain_Count++];
 
 		Vector3_Add(&pos, &startPos, &offset);
 		Particle_Reset(&p->Base, pos, velocity, 40.0f);

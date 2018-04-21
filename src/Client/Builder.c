@@ -101,25 +101,22 @@ void Builder_AddVertices(BlockID block, Face face) {
 	part->fCount[face] += 4;
 }
 
-void Builder_SetPartInfo(Builder1DPart* part, Int32 i, Int32 partsIndex, bool* hasParts) {
+void Builder_SetPartInfo(Builder1DPart* part, ChunkPartInfo* info, bool* hasParts) {
 	Int32 vCount = Builder1DPart_VerticesCount(part);
 	if (vCount == 0) return;
 
-	ChunkPartInfo info;
 	/* add an extra element to fix crashing on some GPUs */
-	info.VbId = Gfx_CreateVb(part->vertices, VERTEX_FORMAT_P3FT2FC4B, vCount + 1);
-	info.HasVertices = vCount > 0;
-
-	info.XMinCount = (UInt16)part->fCount[FACE_XMIN];
-	info.XMaxCount = (UInt16)part->fCount[FACE_XMAX];
-	info.ZMinCount = (UInt16)part->fCount[FACE_ZMIN];
-	info.ZMaxCount = (UInt16)part->fCount[FACE_ZMAX];
-	info.YMinCount = (UInt16)part->fCount[FACE_YMIN];
-	info.YMaxCount = (UInt16)part->fCount[FACE_YMAX];
-	info.SpriteCountDiv4 = part->sCount >> 2;
-
+	info->VbId = Gfx_CreateVb(part->vertices, VERTEX_FORMAT_P3FT2FC4B, vCount + 1);
+	info->HasVertices = true;
 	*hasParts = true;
-	MapRenderer_PartsBuffer[partsIndex] = info;
+
+	info->XMinCount = (UInt16)part->fCount[FACE_XMIN];
+	info->XMaxCount = (UInt16)part->fCount[FACE_XMAX];
+	info->ZMinCount = (UInt16)part->fCount[FACE_ZMIN];
+	info->ZMaxCount = (UInt16)part->fCount[FACE_ZMAX];
+	info->YMinCount = (UInt16)part->fCount[FACE_YMIN];
+	info->YMaxCount = (UInt16)part->fCount[FACE_YMAX];
+	info->SpriteCountDiv4 = part->sCount >> 2;
 }
 
 
@@ -239,7 +236,7 @@ void Builder_Stretch(Int32 x1, Int32 y1, Int32 z1) {
 	}
 }
 
-bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir) {
+void Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir, bool* outAllSolid) {
 	bool allAir = true, allSolid = true;
 	Int32 xx, yy, zz;
 
@@ -272,14 +269,9 @@ bool Builder_ReadChunkData(Int32 x1, Int32 y1, Int32 z1, bool* outAllAir) {
 			}
 		}
 	}
+
 	*outAllAir = allAir;
-
-	if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + CHUNK_SIZE >= World_Width ||
-		y1 + CHUNK_SIZE >= World_Height || z1 + CHUNK_SIZE >= World_Length) allSolid = false;
-
-	if (allAir || allSolid) return true;
-	Lighting_LightHint(x1 - 1, z1 - 1);
-	return false;
+	*outAllSolid = allSolid;
 }
 
 bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
@@ -289,9 +281,16 @@ bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 	Int32 bitFlags[EXTCHUNK_SIZE_3]; Builder_BitFlags = bitFlags;
 
 	Platform_MemSet(chunk, BLOCK_AIR, EXTCHUNK_SIZE_3 * sizeof(BlockID));
-	if (Builder_ReadChunkData(x1, y1, z1, allAir)) return false;
-	Platform_MemSet(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
+	bool allSolid;
+	Builder_ReadChunkData(x1, y1, z1, allAir, &allSolid);
 
+	if (x1 == 0 || y1 == 0 || z1 == 0 || x1 + CHUNK_SIZE >= World_Width ||
+		y1 + CHUNK_SIZE >= World_Height || z1 + CHUNK_SIZE >= World_Length) allSolid = false;
+
+	if (*allAir || allSolid) return false;
+	Lighting_LightHint(x1 - 1, z1 - 1);
+
+	Platform_MemSet(counts, 1, CHUNK_SIZE_3 * FACE_COUNT);
 	Int32 xMax = min(World_Width, x1 + CHUNK_SIZE);
 	Int32 yMax = min(World_Height, y1 + CHUNK_SIZE);
 	Int32 zMax = min(World_Length, z1 + CHUNK_SIZE);
@@ -323,7 +322,7 @@ bool Builder_BuildChunk(Int32 x1, Int32 y1, Int32 z1, bool* allAir) {
 void Builder_MakeChunk(ChunkInfo* info) {
 	Int32 x = info->CentreX - 8, y = info->CentreY - 8, z = info->CentreZ - 8;
 	bool allAir = false, hasMesh;
-	hasMesh = Builder_BuildChunk(Builder_X, Builder_Y, Builder_Z, &allAir);
+	hasMesh = Builder_BuildChunk(x, y, z, &allAir);
 	info->AllAir = allAir;
 	if (!hasMesh) return;
 
@@ -331,18 +330,18 @@ void Builder_MakeChunk(ChunkInfo* info) {
 	bool hasNormal = false, hasTranslucent = false;
 
 	for (i = 0; i < Atlas1D_Count; i++) {
-		Int32 idx = partsIndex + i * MapRenderer_ChunksCount;
-		Builder_SetPartInfo(&Builder_Parts[i], i, 
-			idx, &hasNormal);
-		Builder_SetPartInfo(&Builder_Parts[i + ATLAS1D_MAX_ATLASES_COUNT], i,
-			idx + MapRenderer_TranslucentBufferOffset, &hasTranslucent);
+		Int32 j = i + ATLAS1D_MAX_ATLASES_COUNT;
+		Int32 curIdx = partsIndex + i * MapRenderer_ChunksCount;
+
+		Builder_SetPartInfo(&Builder_Parts[i], &MapRenderer_PartsNormal[curIdx], &hasNormal);
+		Builder_SetPartInfo(&Builder_Parts[j], &MapRenderer_PartsTranslucent[curIdx], &hasTranslucent);
 	}
 
 	if (hasNormal) {
-		info->NormalParts = &MapRenderer_PartsBuffer[partsIndex];
+		info->NormalParts = &MapRenderer_PartsNormal[partsIndex];
 	}
 	if (hasTranslucent) {
-		info->NormalParts = &MapRenderer_PartsBuffer[partsIndex + MapRenderer_TranslucentBufferOffset];
+		info->TranslucentParts = &MapRenderer_PartsTranslucent[partsIndex];
 	}
 
 #if OCCLUSION

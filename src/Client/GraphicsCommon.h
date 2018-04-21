@@ -11,7 +11,7 @@ typedef struct Texture_ Texture;
 GfxResourceID GfxCommon_defaultIb;
 void GfxCommon_Init(void);
 void GfxCommon_Free(void);
-void GfxCommon_LoseContext(STRING_PURE String* reason);
+void GfxCommon_LoseContext(const UInt8* reason);
 void GfxCommon_RecreateContext(void);
 
 /* Binds and draws the specified subset of the vertices in the current dynamic vertex buffer

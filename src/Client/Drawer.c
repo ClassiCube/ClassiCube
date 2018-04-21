@@ -33,7 +33,7 @@ void Drawer_XMax(Int32 count, PackedCol col, TextureLoc texLoc, VertexP3fT2fC4b*
 	Real32 u1 = (count - Drawer_MinBB.Z);
 	Real32 u2 = (1 - Drawer_MaxBB.Z) * UV2_Scale;
 	Real32 v1 = vOrigin + Drawer_MaxBB.Y * Atlas1D_InvElementSize;
-	Real32 v2 = vOrigin + Drawer_MaxBB.Y * Atlas1D_InvElementSize * UV2_Scale;
+	Real32 v2 = vOrigin + Drawer_MinBB.Y * Atlas1D_InvElementSize * UV2_Scale;
 	ApplyTint;
 
 	VertexP3fT2fC4b* ptr = *vertices;

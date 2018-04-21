@@ -9,32 +9,36 @@
 #include "TreeGen.h"
 #include "Vectors.h"
 
-void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
-	yStart = max(yStart, 0); yEnd = max(yEnd, 0);
-	Int32 startIndex = yStart * Gen_Length * Gen_Width;
-	Int32 endIndex = (yEnd * Gen_Length + (Gen_Length - 1)) * Gen_Width + (Gen_Width - 1);
-	Int32 count = (endIndex - startIndex) + 1, offset = 0;
-
-	Gen_CurrentProgress = 0.0f;
-	BlockID* ptr = Gen_Blocks;
-
-	while (offset < count) {
-		Int32 bytes = min(count - offset, Gen_Width * Gen_Length) * sizeof(BlockID);
-		Platform_MemSet(ptr, block, bytes);
-
-		ptr += bytes; offset += bytes;
-		Gen_CurrentProgress = (Real32)offset / count;
-	}
-}
-
-void FlatgrassGen_Generate(void) {
+Int32 Gen_MaxX, Gen_MaxY, Gen_MaxZ;
+void Gen_Init(void) {
+	Gen_MaxX = Gen_Width - 1; Gen_MaxY = Gen_Height - 1; Gen_MaxZ = Gen_Length - 1;
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState = "";
 
 	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length * sizeof(BlockID));
 	if (Gen_Blocks == NULL) {
-		ErrorHandler_Fail("FlatgrassGen - failed to allocate Blocks array");
+		ErrorHandler_Fail("MapGen - failed to allocate Blocks array");
 	}
+	Gen_Done = false;
+}
+
+void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
+	yStart = max(yStart, 0); yEnd = max(yEnd, 0);
+	Int32 y, oneY = Gen_Width * Gen_Length, yHeight = (yEnd - yStart) + 1;
+	BlockID* ptr = Gen_Blocks;
+
+	Gen_CurrentProgress = 0.0f;
+	for (y = yStart; y <= yEnd; y++) {
+		Platform_MemSet(ptr + y * oneY, block, oneY);
+		Gen_CurrentProgress = (Real32)(y - yStart) / yHeight;
+	}
+}
+
+void FlatgrassGen_Generate(void) {
+	Gen_Init();
+
+	Gen_CurrentState = "Setting air blocks";
+	FlatgrassGen_MapSet(Gen_Height / 2, Gen_MaxY, BLOCK_AIR);
 
 	Gen_CurrentState = "Setting dirt blocks";
 	FlatgrassGen_MapSet(0, Gen_Height / 2 - 2, BLOCK_DIRT);
@@ -455,17 +459,10 @@ void NotchyGen_PlantTrees(void) {
 }
 
 void NotchyGen_Generate(void) {
-	Gen_CurrentProgress = 0.0f;
-	Gen_CurrentState = "";
-
+	Gen_Init();
 	Heightmap = Platform_MemAlloc(Gen_Width * Gen_Length * sizeof(Int16));
 	if (Heightmap == NULL) {
 		ErrorHandler_Fail("NotchyGen - Failed to allocate Heightmap array");
-	}
-
-	Gen_Blocks = Platform_MemAlloc(Gen_Width * Gen_Height * Gen_Length * sizeof(BlockID));
-	if (Gen_Blocks == NULL) {
-		ErrorHandler_Fail("NotchyGen - Failed to allocate Blocks array");
 	}
 
 	Random_Init(&rnd, Gen_Seed);

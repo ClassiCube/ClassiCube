@@ -65,5 +65,6 @@ void AxisLinesRenderer_Render(Real64 delta) {
 	}
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FC4B);
-	GfxCommon_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, axisLines_numVertices);
+	Int32 count = (Int32)(ptr - vertices);
+	GfxCommon_UpdateDynamicVb_IndexedTris(axisLines_vb, vertices, count);
 }

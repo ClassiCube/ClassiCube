@@ -22,6 +22,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		IntPtr dynamicListData;
 		
 		public OpenGLApi() {
+			MinZNear = 0.1f;
 			InitFields();
 			int texDims;
 			GL.GetIntegerv(GetPName.MaxTextureSize, &texDims);

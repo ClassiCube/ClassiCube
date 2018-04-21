@@ -100,7 +100,7 @@ void Drawer2D_Begin(Bitmap* bmp) {
 }
 
 void Drawer2D_End(void) {	
-	Platform_SetBitmap(Drawer2D_Cur);
+	Platform_ReleaseBitmap();
 	Drawer2D_Cur = NULL;
 }
 

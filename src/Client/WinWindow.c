@@ -342,8 +342,8 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 			/* The behavior of this key is very strange. Unlike Control and Alt, there is no extended bit
 			to distinguish between left and right keys. Moreover, pressing both keys and releasing one
 			may result in both keys being held down (but not always).*/
-			lShiftDown = (GetKeyState(VK_LSHIFT) >> 15) == 1;
-			rShiftDown = (GetKeyState(VK_RSHIFT) >> 15) == 1;
+			lShiftDown = ((USHORT)GetKeyState(VK_LSHIFT)) >> 15;
+			rShiftDown = ((USHORT)GetKeyState(VK_RSHIFT)) >> 15;
 
 			if (!pressed || lShiftDown != rShiftDown) {
 				Key_SetPressed(Key_ShiftLeft, lShiftDown);
@@ -742,7 +742,7 @@ typedef BOOL (WINAPI *FN_WGLSWAPINTERVAL)(int interval);
 typedef int (WINAPI *FN_WGLGETSWAPINTERVAL)(void);
 FN_WGLSWAPINTERVAL wglSwapIntervalEXT;
 FN_WGLGETSWAPINTERVAL wglGetSwapIntervalEXT;
-bool GLContext_vSync;
+bool GLContext_supports_vSync;
 
 void GLContext_Init(GraphicsMode mode) {
 	GLContext_SelectGraphicsMode(mode);
@@ -761,7 +761,7 @@ void GLContext_Init(GraphicsMode mode) {
 
 	wglGetSwapIntervalEXT = (FN_WGLGETSWAPINTERVAL)GLContext_GetAddress("wglGetSwapIntervalEXT");
 	wglSwapIntervalEXT = (FN_WGLSWAPINTERVAL)GLContext_GetAddress("wglSwapIntervalEXT");
-	GLContext_vSync = wglGetSwapIntervalEXT != NULL && wglSwapIntervalEXT != NULL;
+	GLContext_supports_vSync = wglGetSwapIntervalEXT != NULL && wglSwapIntervalEXT != NULL;
 }
 
 void GLContext_Update(void) { }
@@ -784,10 +784,10 @@ void GLContext_SwapBuffers(void) {
 }
 
 bool GLContext_GetVSync(void) {
-	return GLContext_vSync && wglGetSwapIntervalEXT();
+	return GLContext_supports_vSync && wglGetSwapIntervalEXT();
 }
 
 void GLContext_SetVSync(bool enabled) {
-	if (GLContext_vSync) wglSwapIntervalEXT(enabled ? 1 : 0);
+	if (GLContext_supports_vSync) wglSwapIntervalEXT(enabled ? 1 : 0);
 }
 #endif
