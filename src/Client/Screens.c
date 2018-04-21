@@ -238,6 +238,7 @@ Screen* InventoryScreen_MakeInstance(void) {
 	Platform_MemSet(screen, 0, sizeof(InventoryScreen));
 	screen->VTABLE = &InventoryScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
+	screen->HandlesAllInput = true;
 
 	screen->VTABLE->HandlesKeyDown     = InventoryScreen_HandlesKeyDown;
 	screen->VTABLE->HandlesKeyUp       = InventoryScreen_HandlesKeyUp;
@@ -289,7 +290,7 @@ void StatusScreen_MakeText(StatusScreen* screen, STRING_TRANSIENT String* status
 
 void StatusScreen_DrawPosition(StatusScreen* screen) {
 	TextAtlas* atlas = &screen->PosAtlas;
-	VertexP3fT2fC4b vertices[4 * 8];
+	VertexP3fT2fC4b vertices[4 * 64];
 	VertexP3fT2fC4b* ptr = vertices;
 
 	Texture tex = atlas->Tex; tex.X = 2; tex.Width = (UInt16)atlas->Offset;
@@ -309,7 +310,7 @@ void StatusScreen_DrawPosition(StatusScreen* screen) {
 
 	Gfx_BindTexture(atlas->Tex.ID);
 	/* TODO: Do we need to use a separate VB here? */
-	Int32 count = (Int32)(ptr - vertices) / sizeof(VertexP3fT2fC4b);
+	Int32 count = (Int32)(ptr - vertices);
 	GfxCommon_UpdateDynamicVb_IndexedTris(ModelCache_Vb, vertices, count);
 }
 
@@ -597,6 +598,7 @@ void LoadingScreen_Make(LoadingScreen* screen, GuiElementVTABLE* vtable, STRING_
 	Platform_MemSet(screen, 0, sizeof(LoadingScreen));
 	screen->VTABLE = vtable;
 	Screen_Reset((Screen*)screen);
+	screen->HandlesAllInput = true;
 
 	screen->VTABLE->HandlesKeyDown     = LoadingScreen_HandlesKeyDown;
 	screen->VTABLE->HandlesKeyUp       = LoadingScreen_HandlesKeyUp;
@@ -618,7 +620,6 @@ void LoadingScreen_Make(LoadingScreen* screen, GuiElementVTABLE* vtable, STRING_
 	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	screen->BlocksWorld     = true;
 	screen->RenderHUDOver   = true;
-	screen->HandlesAllInput = true;
 }
 
 Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String* message) {
@@ -1550,6 +1551,7 @@ Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE Str
 	Platform_MemSet(screen, 0, sizeof(DisconnectScreen));
 	screen->VTABLE = &DisconnectScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
+	screen->HandlesAllInput = true;
 
 	String titleScreen = String_InitAndClearArray(screen->TitleBuffer);
 	String_AppendString(&titleScreen, title);
@@ -1567,7 +1569,6 @@ Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE Str
 	Platform_MakeFont(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	screen->BlocksWorld     = true;
 	screen->HidesHUD        = true;
-	screen->HandlesAllInput = true;
 
 	screen->OnResize       = DisconnectScreen_OnResize;
 	screen->VTABLE->Init   = DisconnectScreen_Init;

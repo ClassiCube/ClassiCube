@@ -222,7 +222,7 @@ void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font,
 	size.Width += 16 * chars->length;
 
 	Platform_MemSet(atlas->Widths, 0, sizeof(atlas->Widths));
-	Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 		
 	Drawer2D_DrawText(&args, 0, 0);

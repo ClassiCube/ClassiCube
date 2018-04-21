@@ -29,7 +29,7 @@ namespace ClassicalSharp.Gui.Screens {
 		TextAtlas posAtlas;
 		public override void Render(double delta) {
 			UpdateStatus(delta);
-			if (game.HideGui || !game.ShowFPS) return;			
+			if (game.HideGui || !game.ShowFPS) return;
 			game.Graphics.Texturing = true;
 			status.Render(delta);
 			

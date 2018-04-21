@@ -177,15 +177,15 @@ void Matrix_RotateX(Matrix* result, Real32 angle) {
 void Matrix_RotateY(Matrix* result, Real32 angle) {
 	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
-	result->Row1.X = cosA; result->Row1.Z = -sinA;
+	result->Row0.X = cosA; result->Row0.Z = -sinA;
 	result->Row2.X = sinA; result->Row2.Z = cosA;
 }
 
 void Matrix_RotateZ(Matrix* result, Real32 angle) {
 	Real32 cosA = Math_CosF(angle), sinA = Math_SinF(angle);
 	*result = Matrix_Identity;
-	result->Row1.X = cosA;  result->Row1.Y = sinA;
-	result->Row2.X = -sinA; result->Row2.Y = cosA;
+	result->Row0.X = cosA;  result->Row0.Y = sinA;
+	result->Row1.X = -sinA; result->Row1.Y = cosA;
 }
 
 void Matrix_Translate(Matrix* result, Real32 x, Real32 y, Real32 z) {

@@ -154,11 +154,12 @@ void ChunkUpdater_OnNewMapLoaded(void* obj) {
 	MapRenderer_ChunksZ = (World_Length + CHUNK_MAX) >> CHUNK_SHIFT;
 
 	Int32 count = MapRenderer_ChunksX * MapRenderer_ChunksY * MapRenderer_ChunksZ;
-	if (MapRenderer_ChunksCount != count) {
+	/* TODO: Only perform reallocation when map volume has changed */
+	/*if (MapRenderer_ChunksCount != count) { */
 		MapRenderer_ChunksCount = count;
 		ChunkUpdater_FreeAllocations();
 		ChunkUpdater_PerformAllocations();
-	}
+	/*}*/
 
 	ChunkUpdater_CreateChunkCache();
 	Builder_OnNewMapLoaded();

@@ -476,7 +476,7 @@ void Player_MakeNameTexture(Player* player) {
 		String shadowName = String_InitAndClearArray(buffer);
 
 		size.Width += 3; size.Height += 3;
-		Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+		Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 		Drawer2D_Begin(&bmp);
 
 		Drawer2D_Cols[0xFF] = PackedCol_Create3(80, 80, 80);
@@ -491,6 +491,7 @@ void Player_MakeNameTexture(Player* player) {
 
 		Drawer2D_End();
 		player->NameTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
+		Platform_MemFree(&bmp.Scan0);
 	}
 
 	Drawer2D_UseBitmappedChat = bitmapped;

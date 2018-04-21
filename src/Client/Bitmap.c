@@ -41,10 +41,11 @@ void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
 	}
 }
 
-void Bitmap_AllocatePow2(Bitmap* bmp, Int32 width, Int32 height) {
+void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
 	width = Math_NextPowOf2(width);
 	height = Math_NextPowOf2(height);
 	Bitmap_Allocate(bmp, width, height);
+	Platform_MemSet(bmp->Scan0, 0, Bitmap_DataSize(width, height));
 }
 
 

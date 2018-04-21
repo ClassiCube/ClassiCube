@@ -102,7 +102,7 @@ void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertice
 	v.X = x2;           v.U = tex->U2;                ptr[1] = v;
 	v.Y = y2;                         v.V = tex->V2;  ptr[2] = v;
 	v.X = x1;           v.U = tex->U1;                ptr[3] = v;
-	vertices += 4;
+	*vertices += 4;
 }
 
 bool gfx_hadFog;

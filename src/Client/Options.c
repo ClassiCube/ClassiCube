@@ -200,7 +200,7 @@ void Options_Load(void) {
 void Options_Save(void) {
 	void* file;
 	String path = String_FromConst("options.txt");
-	ReturnCode result = Platform_FileOpen(&file, &path);
+	ReturnCode result = Platform_FileCreate(&file, &path);
 
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "Options - Saving");

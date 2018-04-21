@@ -405,6 +405,12 @@ void Game_InitScheduledTasks(void) {
 
 void Game_Free(void* obj);
 void Game_Load(void) {
+	Game_ViewDistance     = 512;
+	Game_MaxViewDistance  = 32768;
+	Game_UserViewDistance = 512;
+	Game_Fov = 70;
+	Game_AutoRotate = true;
+
 	IGameComponent comp;
 	Gfx_Init();
 	Gfx_MakeApiInfo();

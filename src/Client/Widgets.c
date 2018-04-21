@@ -987,7 +987,7 @@ void InputWidget_RemakeTexture(GuiElement* elem) {
 	widget->CaretAccumulator = 0;
 
 	Int32 realHeight = 0;
-	Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
@@ -1014,9 +1014,9 @@ void InputWidget_RemakeTexture(GuiElement* elem) {
 		Drawer2D_DrawText(&args, offset, realHeight);
 		realHeight += widget->LineSizes[i].Height;
 	}
-	widget->InputTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
 
 	Drawer2D_End();
+	widget->InputTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
 	Platform_MemFree(&bmp.Scan0);
 
 	widget->Width = size.Width;
@@ -1210,12 +1210,11 @@ void InputWidget_Init(GuiElement* elem) {
 		/* TODO: Actually make this work */
 		WordWrap_Do(&widget->Text, widget->Lines, lines, INPUTWIDGET_LEN);
 	} else {
-		String_Clear(&widget->Lines[0]);
-		String_AppendString(&widget->Lines[0], &widget->Text);
+		widget->Lines[0] = widget->Text;
 	}
 
 	InputWidget_CalculateLineSizes(widget);
-	InputWidget_RemakeTexture(elem);
+	widget->RemakeTexture(elem);
 	InputWidget_UpdateCaret(widget);
 }
 
@@ -1265,7 +1264,7 @@ bool InputWidget_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
 
 bool InputWidget_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 	InputWidget* widget = (InputWidget*)elem;
-	InputWidget_AppendChar(widget, key);
+	InputWidget_Append(widget, key);
 	return true;
 }
 
@@ -1533,7 +1532,7 @@ void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 	widget->Base.Height = max(size.Height, widget->MinHeight);
 	Size2D adjSize = size; adjSize.Width = widget->Base.Width;
 
-	Bitmap bmp; Bitmap_AllocatePow2(&bmp, adjSize.Width, adjSize.Height);
+	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, adjSize.Width, adjSize.Height);
 	Drawer2D_Begin(&bmp);
 	Drawer2D_DrawText(&args, widget->Base.Padding, 0);
 
@@ -1547,6 +1546,7 @@ void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 	Drawer2D_End();
 	Texture* tex = &widget->Base.InputTex;
 	*tex = Drawer2D_Make2DTexture(&bmp, adjSize, 0, 0);
+	Platform_MemFree(&bmp.Scan0);
 
 	Widget_Reposition(&widget->Base);
 	tex->X = widget->Base.X; tex->Y = widget->Base.Y;
@@ -2509,6 +2509,7 @@ Size2D SpecialInputWidget_CalculateContentSize(SpecialInputTab* e, Size2D* sizes
 void SpecialInputWidget_MeasureContentSizes(SpecialInputWidget* widget, SpecialInputTab* e, Size2D* sizes) {
 	UInt8 buffer[String_BufferSize(STRING_SIZE)];
 	String s = String_InitAndClear(buffer, e->CharsPerItem);
+	s.length = e->CharsPerItem;
 	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
 
 	Int32 i, j;
@@ -2523,6 +2524,7 @@ void SpecialInputWidget_MeasureContentSizes(SpecialInputWidget* widget, SpecialI
 void SpecialInputWidget_DrawContent(SpecialInputWidget* widget, SpecialInputTab* e, Int32 yOffset) {
 	UInt8 buffer[String_BufferSize(STRING_SIZE)];
 	String s = String_InitAndClear(buffer, e->CharsPerItem);
+	s.length = e->CharsPerItem;
 	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
 
 	Int32 i, j, wrap = e->ItemsPerRow;
@@ -2547,17 +2549,17 @@ void SpecialInputWidget_Make(SpecialInputWidget* widget, SpecialInputTab* e) {
 	Size2D size = Size2D_Make(max(bodySize.Width, titleWidth), bodySize.Height + titleHeight);
 	Gfx_DeleteTexture(&widget->Tex.ID);
 
-	Bitmap bmp;
-	Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 
 	SpecialInputWidget_DrawTitles(widget, &bmp);
 	PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
 	Drawer2D_Clear(&bmp, col, 0, titleHeight, size.Width, bodySize.Height);
 	SpecialInputWidget_DrawContent(widget, e, titleHeight);
-	widget->Tex = Drawer2D_Make2DTexture(&bmp, size, widget->X, widget->Y);
-
+	
 	Drawer2D_End();
+	widget->Tex = Drawer2D_Make2DTexture(&bmp, size, widget->X, widget->Y);
+	Platform_MemFree(&bmp.Scan0);
 }
 
 void SpecialInputWidget_Redraw(SpecialInputWidget* widget) {

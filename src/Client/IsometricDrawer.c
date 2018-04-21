@@ -10,6 +10,7 @@
 Int32 iso_count;
 Real32 iso_scale;
 VertexP3fT2fC4b* iso_vertices;
+VertexP3fT2fC4b* iso_base_vertices;
 GfxResourceID iso_vb;
 
 bool iso_cacheInitalisesd;
@@ -21,13 +22,13 @@ Vector3 iso_pos;
 Int32 iso_lastTexIndex, iso_texIndex;
 
 void IsometricDrawer_RotateX(Real32 cosA, Real32 sinA) {
-	Real32 y = cosA * iso_pos.Y + sinA * iso_pos.Z;
+	Real32 y  = cosA  * iso_pos.Y + sinA * iso_pos.Z;
 	iso_pos.Z = -sinA * iso_pos.Y + cosA * iso_pos.Z;
 	iso_pos.Y = y;
 }
 
 void IsometricDrawer_RotateY(Real32 cosA, Real32 sinA) {
-	Real32 x = cosA * iso_pos.X - sinA * iso_pos.Z;
+	Real32 x  = cosA * iso_pos.X - sinA * iso_pos.Z;
 	iso_pos.Z = sinA * iso_pos.X + cosA * iso_pos.Z;
 	iso_pos.X = x;
 }
@@ -53,11 +54,12 @@ void IsometricDrawer_InitCache(void) {
 void IsometricDrawer_Flush(void) {
 	if (iso_lastTexIndex != -1) {
 		Gfx_BindTexture(Atlas1D_TexIds[iso_lastTexIndex]);
-		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_vertices, iso_count);
+		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_base_vertices, iso_count);
 	}
 
 	iso_lastTexIndex = iso_texIndex;
 	iso_count = 0;
+	iso_vertices = iso_base_vertices;
 }
 
 TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
@@ -124,6 +126,7 @@ void IsometricDrawer_BeginBatch(VertexP3fT2fC4b* vertices, GfxResourceID vb) {
 	iso_lastTexIndex = -1;
 	iso_count = 0;
 	iso_vertices = vertices;
+	iso_base_vertices = vertices;
 	iso_vb = vb;
 
 	Gfx_LoadMatrix(&iso_transform);
@@ -177,12 +180,7 @@ void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y) {
 }
 
 void IsometricDrawer_EndBatch(void) {
-	if (iso_count > 0) {
-		if (iso_texIndex != iso_lastTexIndex) Gfx_BindTexture(Atlas1D_TexIds[iso_texIndex]);
-		GfxCommon_UpdateDynamicVb_IndexedTris(iso_vb, iso_vertices, iso_count);
-
-		iso_count = 0;
-		iso_lastTexIndex = -1;
-	}
+	if (iso_count > 0) { iso_lastTexIndex = iso_texIndex; IsometricDrawer_Flush(); }
+	iso_lastTexIndex = -1;
 	Gfx_LoadIdentityMatrix();
 }

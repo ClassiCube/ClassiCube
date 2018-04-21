@@ -133,11 +133,14 @@ Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 window
 		return Texture_FromOrigin(NULL, windowX, windowY, 0, 0, 1.0f, 1.0f);
 	}
 
-	Bitmap bmp; Bitmap_AllocatePow2(&bmp, size.Width, size.Height);
+	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
 	Drawer2D_DrawText(args, 0, 0);
+
 	Drawer2D_End();
-	return Drawer2D_Make2DTexture(&bmp, size, windowX, windowY);
+	Texture tex = Drawer2D_Make2DTexture(&bmp, size, windowX, windowY);
+	Platform_MemFree(&bmp.Scan0);
+	return tex;
 }
 
 Texture Drawer2D_Make2DTexture(Bitmap* bmp, Size2D used, Int32 windowX, Int32 windowY) {
@@ -272,7 +275,7 @@ void Drawer2D_DrawPart(DrawTextArgs* args, Int32 x, Int32 y, bool shadowCol) {
 			}
 			i++; continue; /* Skip over the colour code */
 		}
-		Int32 coords = Convert_UnicodeToCP437(c);
+		Int32 coords = c;
 
 		/* First character in the string, begin run counting */
 		if (lastY == -1) {
@@ -318,7 +321,7 @@ void Drawer2D_DrawUnderline(Int32 x, Int32 yOffset, DrawTextArgs* args, bool sha
 			}
 			if (shadowCol) { col = PackedCol_ARGB(0, 0, 0, 255); }
 
-			Int32 coords = Convert_UnicodeToCP437(c);
+			Int32 coords = c;
 			Int32 width = Drawer2D_PaddedWidth(point, Drawer2D_Widths[coords]);
 			for (xx = 0; xx < width; xx++) { dstRow[x + xx] = col; }
 			x += width;
@@ -353,7 +356,7 @@ Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
 			i++; continue; /* Skip over the colour code */
 		}
 
-		Int32 coords = Convert_UnicodeToCP437(c);
+		Int32 coords = c;
 		total.Width += Drawer2D_PaddedWidth(point, Drawer2D_Widths[coords]);
 	}
 

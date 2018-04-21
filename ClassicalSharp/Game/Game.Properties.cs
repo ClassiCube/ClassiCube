@@ -142,7 +142,7 @@ namespace ClassicalSharp {
 		
 		/// <summary> Field of view for the current camera in degrees. </summary>
 		public int Fov = 70;
-		internal int DefaultFov, ZoomFov = 0;
+		internal int DefaultFov, ZoomFov;
 		
 		/// <summary> Strategy used to limit how many frames should be displayed at most each second. </summary>
 		public FpsLimitMethod FpsLimit;
@@ -176,18 +176,18 @@ namespace ClassicalSharp {
 		
 		public bool SmoothLighting;
 		
-		public bool ChatLogging = true;
+		public bool ChatLogging;
 		
 		public bool AutoRotate = true;
 		
-		public bool SmoothCamera = false;
+		public bool SmoothCamera;
 		
 		public string FontName = "Arial";
 		
 		public int MaxChunkUpdates = 30;
 		
 		public int ChatLines = 12;
-		public bool ClickableChat = false, HideGui = false, ShowFPS = true;
+		public bool ClickableChat, HideGui, ShowFPS;
 		internal float HotbarScale = 1, ChatScale = 1, InventoryScale = 1;
 		public bool ViewBobbing, ShowBlockInHand;
 		public bool ModifiableLiquids;

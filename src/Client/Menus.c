@@ -437,7 +437,11 @@ void ListScreen_OnResize(GuiElement* elem) {
 ListScreen* ListScreen_MakeInstance(void) {
 	ListScreen* screen = &ListScreen_Instance;
 	Platform_MemSet(screen, 0, sizeof(ListScreen) - sizeof(StringsBuffer));
-	StringsBuffer_UNSAFE_Reset(&screen->Entries);
+	if (screen->Entries.TextBuffer != NULL) {
+		StringsBuffer_Free(&screen->Entries);
+	}
+	StringsBuffer_Init(&screen->Entries);
+
 	screen->VTABLE = &ListScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
 	
@@ -524,7 +528,7 @@ void MenuScreen_Render(GuiElement* elem, Real64 delta) {
 
 void MenuScreen_Free(GuiElement* elem) {
 	MenuScreen* screen = (MenuScreen*)elem;
-	MenuScreen_ContextLost(screen);
+	screen->ContextLost(screen);
 
 	if (screen->TitleFont.Handle != NULL) {
 		Platform_FreeFont(&screen->TitleFont);
@@ -1668,11 +1672,12 @@ Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 ar
 	screen->Left.Disabled = screen->LeftPage == NULL;
 	widgets[i++] = (Widget*)(&screen->Left);
 
-	String rArrow = String_FromConst("<");
+	String rArrow = String_FromConst(">");
 	ButtonWidget_Create(&screen->Right, 40, &rArrow, &screen->TitleFont, screen->RightPage);
 	Widget_SetLocation((Widget*)(&screen->Right), ANCHOR_CENTRE, ANCHOR_CENTRE, btnWidth + 35, arrowsY);
 	screen->Right.Disabled = screen->RightPage == NULL;
 	widgets[i++] = (Widget*)(&screen->Right);
+
 	return i;
 }
 
@@ -1863,7 +1868,7 @@ Screen* MouseKeyBindingsScreen_MakeInstance(void) {
 	static ButtonWidget buttons[3];
 	static Widget* widgets[3 + 4 + 1];
 
-	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, OtherKeyBindingsScreen_ContextRecreated);
+	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, MouseKeyBindingsScreen_ContextRecreated);
 	screen->LeftPage = Menu_SwitchKeysOther;
 	screen->WidgetsCount++; /* Extra text widget for 'right click' message */
 	return (Screen*)screen;
@@ -2677,7 +2682,7 @@ void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
 }
 
 void HacksSettingsScreen_ContextLost(void* obj) {
-	MenuScreen_ContextLost(obj);
+	MenuOptionsScreen_ContextLost(obj);
 	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, obj, HacksSettingsScreen_CheckHacksAllowed);
 }
 
