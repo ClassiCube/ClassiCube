@@ -33,7 +33,7 @@ void ErrorHandler_Fail(const UInt8* raw_msg) {
 	ErrorHandler_WriteLogEnd();
 
 	ErrorHandler_ShowDialog("We're sorry", logMsg.buffer);
-	ExitProcess(1);
+	Platform_Exit(1);
 }
 
 void ErrorHandler_FailWithCode(ReturnCode code, const UInt8* raw_msg) {
@@ -45,7 +45,7 @@ void ErrorHandler_FailWithCode(ReturnCode code, const UInt8* raw_msg) {
 	ErrorHandler_WriteLogEnd();
 
 	ErrorHandler_ShowDialog("We're sorry", logMsg.buffer);
-	ExitProcess(code);
+	Platform_Exit(code);
 }
 
 void ErrorHandler_ShowDialog(const UInt8* title, const UInt8* msg) {

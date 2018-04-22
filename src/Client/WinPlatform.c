@@ -9,10 +9,9 @@
 #define NOMCX
 #define NOIME
 #include <Windows.h>
-//#include <stdlib.h>
+#include <stdlib.h>
 
 HDC hdc;
-HBITMAP hbmp;
 HANDLE heap;
 bool stopwatch_highResolution;
 LARGE_INTEGER stopwatch_freq;
@@ -64,20 +63,24 @@ void Platform_Free(void) {
 	DeleteDC(hdc);
 }
 
+void Platform_Exit(ReturnCode code) {
+	ExitProcess(code);
+}
+
 void* Platform_MemAlloc(UInt32 numBytes) {
-	//return malloc(numBytes);
-	return HeapAlloc(heap, 0, numBytes);
+	return malloc(numBytes);
+	//return HeapAlloc(heap, 0, numBytes);
 }
 
 void* Platform_MemRealloc(void* mem, UInt32 numBytes) {
-	//return realloc(mem, numBytes);
-	return HeapReAlloc(heap, 0, mem, numBytes);
+	return realloc(mem, numBytes);
+	//return HeapReAlloc(heap, 0, mem, numBytes);
 }
 
 void Platform_MemFree(void** mem) {
 	if (mem == NULL || *mem == NULL) return;
-	//free(*mem);
-	HeapFree(heap, 0, *mem);
+	free(*mem);
+	//HeapFree(heap, 0, *mem);
 	*mem = NULL;
 }
 
@@ -323,13 +326,45 @@ void Platform_FreeFont(FontDesc* desc) {
 	desc->Handle = NULL;
 }
 
+bool bmpAssociated;
+HBITMAP hbmp;
+Bitmap* bmp;
+
+void Platform_AssociateBitmap(void) {
+	if (bmpAssociated) return;
+	bmpAssociated = true;
+	/* TODO: Should we be using CreateDIBitmap here? */
+	hbmp = CreateBitmap(bmp->Width, bmp->Height, 1, 32, bmp->Scan0);
+
+	if (hbmp == NULL) ErrorHandler_Fail("Creating bitmap handle failed");
+	if (!SelectObject(hdc, hbmp)) ErrorHandler_Fail("Selecting bitmap handle");
+}
+
+void Platform_SetBitmap(Bitmap* bmpNew) {
+	/* Defer creating bitmap until necessary */
+	bmp = bmpNew;
+}
+
+void Platform_ReleaseBitmap(void) {
+	if (bmpAssociated) {
+		if (!DeleteObject(hbmp)) ErrorHandler_Fail("Deleting bitmap handle failed");
+		hbmp = NULL;
+	}
+
+	bmpAssociated = false;
+	bmp = NULL;
+}
+
 /* TODO: Associate Font with device */
 /* TODO: Add shadow offset for drawing */
 Size2D Platform_MeasureText(DrawTextArgs* args) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };
+
+	HGDIOBJ oldFont = SelectObject(hDC, args->Font.Handle);
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
 		&r, DT_CALCRECT | DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
+	SelectObject(hDC, oldFont);
 
 	return Size2D_Make(r.right, r.bottom);
 }
@@ -338,19 +373,8 @@ void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };
 
+	HGDIOBJ oldFont = SelectObject(hDC, args->Font.Handle);
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
 		&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
-}
-
-void Platform_SetBitmap(Bitmap* bmp) {
-	hbmp = CreateBitmap(bmp->Width, bmp->Height, 1, 32, bmp->Scan0);
-	if (hbmp == NULL) ErrorHandler_Fail("Creating bitmap handle failed");
-	/* TODO: Should we be using CreateDIBitmap here? */
-
-	if (!SelectObject(hdc, hbmp)) ErrorHandler_Fail("Selecting bitmap handle");
-}
-
-void Platform_ReleaseBitmap(void) {
-	if (!DeleteObject(hbmp)) ErrorHandler_Fail("Deleting bitmap handle failed");
-	hbmp = NULL;
+	SelectObject(hDC, oldFont);
 }

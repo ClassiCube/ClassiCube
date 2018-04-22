@@ -80,7 +80,10 @@ int main(int argc, char* argv[]) {
 		String_Set(&Game_IPAddress, &ipRaw);
 		Game_Port = portTmp;
 	}
+
 	Game_Run(width, height, &title, &device);
+	Platform_Exit(0);
+	return 0;
 }
 
 //#include <Windows.h>

@@ -15,6 +15,7 @@ extern ReturnCode ReturnCode_FileNotFound;
 
 void Platform_Init(void);
 void Platform_Free(void);
+void Platform_Exit(ReturnCode code);
 
 void* Platform_MemAlloc(UInt32 numBytes);
 void* Platform_MemRealloc(void* mem, UInt32 numBytes);
@@ -56,8 +57,8 @@ Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer);
 
 void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Platform_FreeFont(FontDesc* desc);
-Size2D Platform_MeasureText(DrawTextArgs* args);
-void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
 void Platform_SetBitmap(Bitmap* bmp);
 void Platform_ReleaseBitmap(void);
+Size2D Platform_MeasureText(DrawTextArgs* args);
+void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
 #endif

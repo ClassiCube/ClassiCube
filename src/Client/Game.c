@@ -763,7 +763,7 @@ void ASyncRequest_Free(AsyncRequest* request) { }
 IGameComponent AsyncDownloader_MakeComponent(void) { return IGameComponent_MakeEmpty(); }
 void AsyncDownloader_Init(STRING_PURE String* skinServer) { }
 void AsyncDownloader_DownloadSkin(STRING_PURE String* identifier, STRING_PURE String* skinName) { }
-void AsyncDownloader_Download(STRING_PURE  String* url, bool priority, UInt8 type, STRING_PURE String* identifier) { }
+void AsyncDownloader_Download(STRING_PURE String* url, bool priority, UInt8 type, STRING_PURE String* identifier) { }
 void AsyncDownloader_Download2(STRING_PURE String* url, bool priority, UInt8 type, STRING_PURE String* identifier, DateTime* lastModified, STRING_PURE String* etag) { }
 void AsyncDownloader_Free(void) { }
 bool AsyncDownloader_Get(STRING_PURE String* identifier, AsyncRequest* item) { return false; }
@@ -783,4 +783,4 @@ Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
 Screen* TexIdsOverlay_MakeInstance(void) { return NULL; }
 Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
 /* TODO: Real function is already in Gui.c - this is just stubbed until Overlays are implemented */
-void Gui_ShowOverlay(Screen* overlay, bool atFront) {
+void Gui_ShowOverlay(Screen* overlay, bool atFront) { }

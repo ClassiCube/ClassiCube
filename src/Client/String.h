@@ -89,6 +89,7 @@ void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, const voi
 
 UInt16 Convert_CP437ToUnicode(UInt8 c);
 UInt8 Convert_UnicodeToCP437(UInt16 c);
+bool Convert_TryUnicodeToCP437(UInt16 c, UInt8* value);
 bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value);
 bool Convert_TryParseInt16(STRING_PURE String* str, Int16* value);
 bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);

@@ -264,8 +264,9 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 
 
 	case WM_CHAR:
-		keyChar = Convert_UnicodeToCP437((UInt16)wParam);
-		Event_RaiseInt32(&KeyEvents_Press, keyChar);
+		if (Convert_TryUnicodeToCP437((UInt16)wParam, &keyChar)) {
+			Event_RaiseInt32(&KeyEvents_Press, keyChar);
+		}
 		break;
 
 	case WM_MOUSEMOVE:
@@ -476,16 +477,16 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 		if (hGlobal == NULL) { CloseClipboard(); return; }
 		LPVOID src = GlobalLock(hGlobal);
 
-		/* TODO: Trim space / tabs from start and end of clipboard text */
+		UInt8 c;
 		if (isUnicode) {
 			UInt16* text = (UInt16*)src;
-			while (*text != NULL) {
-				String_Append(value, Convert_UnicodeToCP437(*text)); text++;
+			for (; *text != NULL; text++) {
+				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
 		} else {
 			UInt8* text = (UInt8*)src;
-			while (*text != NULL) {
-				String_Append(value, *text); text++;
+			for (; *text != NULL; text++) {
+				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
 		}
 

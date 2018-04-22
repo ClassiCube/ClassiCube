@@ -129,7 +129,7 @@ namespace ClassicalSharp.Network {
 			CheckAsyncResources();
 			wom.Tick();
 			
-			if (receivedFirstPosition) {				
+			if (receivedFirstPosition) {
 				LocalPlayer player = game.LocalPlayer;
 				classic.WritePosition(player.Position, player.HeadY, player.HeadX);
 			}

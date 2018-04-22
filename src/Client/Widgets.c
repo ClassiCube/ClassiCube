@@ -1193,6 +1193,9 @@ bool InputWidget_OtherKey(InputWidget* widget, Key key) {
 		String text = String_InitAndClearArray(textBuffer);
 		Window_GetClipboardText(&text);
 
+		String_TrimStart(&text);
+		String_TrimEnd(&text);
+
 		if (text.length == 0) return true;
 		InputWidget_AppendString(widget, &text);
 		return true;

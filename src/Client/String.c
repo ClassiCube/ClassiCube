@@ -442,16 +442,21 @@ UInt16 Convert_CP437ToUnicode(UInt8 c) {
 }
 
 UInt8 Convert_UnicodeToCP437(UInt16 c) {
-	if (c >= 0x20 && c < 0x7F) return (UInt8)c;
+	UInt8 value; Convert_TryUnicodeToCP437(c, &value); return value;
+}
+
+bool Convert_TryUnicodeToCP437(UInt16 c, UInt8* value) {
+	if (c >= 0x20 && c < 0x7F) { *value = (UInt8)c; return true; }
 	UInt32 i;
 
 	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
-		if (Convert_ControlChars[i] == c) return (UInt8)i;
+		if (Convert_ControlChars[i] == c) { *value = (UInt8)i; return true; }
 	}
 	for (i = 0; i < Array_Elems(Convert_ExtendedChars); i++) {
-		if (Convert_ExtendedChars[i] == c) return (UInt8)(i + 0x7F);
+		if (Convert_ExtendedChars[i] == c) { *value = (UInt8)(i + 0x7F); return true; }
 	}
-	return (UInt8)'?';
+
+	*value = '?'; return false;
 }
 
 bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value) {
