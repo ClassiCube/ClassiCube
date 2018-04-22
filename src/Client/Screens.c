@@ -79,8 +79,8 @@ typedef struct ChatScreen_ {
 	TextGroupWidget Status, BottomRight, Chat, ClientStatus;
 	SpecialInputWidget AltText;
 
+	/* needed for lost contexts, to restore chat typed in */
 	UInt8 ChatInInputBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
-	String ChatInInput; /* needed for lost contexts, to restore chat typed in */
 
 	Texture Status_Textures[CHATSCREEN_MAX_STATUS];
 	Texture BottomRight_Textures[CHATSCREEN_MAX_GROUP];
@@ -765,9 +765,10 @@ void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 		ChatScreen_Set(&screen->ClientStatus, i, Chat_ClientStatus[i]);
 	}
 
-	if (screen->ChatInInput.length > 0) {
-		ChatScreen_OpenInput(screen, &screen->ChatInInput);
-		String_Clear(&screen->ChatInInput);
+	String chatInInput = String_FromRawArray(screen->ChatInInputBuffer);
+	if (chatInInput.length > 0) {
+		ChatScreen_OpenInput(screen, &chatInInput);
+		String_Clear(&chatInInput);
 	}
 }
 
@@ -1022,9 +1023,10 @@ void ChatScreen_ChatReceived(void* obj, String* msg, UInt8 type) {
 
 void ChatScreen_ContextLost(void* obj) {
 	ChatScreen* screen = (ChatScreen*)obj;
-	String_Clear(&screen->ChatInInput);
+	String chatInInput = String_InitAndClearArray(screen->ChatInInputBuffer);
+
 	if (screen->HandlesAllInput) {
-		String_AppendString(&screen->ChatInInput, &screen->Input.Base.Text);
+		String_AppendString(&chatInInput, &screen->Input.Base.Text);
 		Game_SetCursorVisible(false);
 	}
 

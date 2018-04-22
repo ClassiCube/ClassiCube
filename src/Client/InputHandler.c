@@ -87,9 +87,9 @@ void InputHandler_Toggle(Key key, bool* target, const UInt8* enableMsg, const UI
 	String msg = String_InitAndClearArray(msgBuffer);
 
 	if (*target) {
-		String_Format2(&msg, "%c. &ePress &a %c&eto disable.",   enableMsg,  Key_Names[key]);
+		String_Format2(&msg, "%c. &ePress &a%c &eto disable.",   enableMsg,  Key_Names[key]);
 	} else {
-		String_Format2(&msg, "%c. &ePress &a %c&eto re-enable.", disableMsg, Key_Names[key]);
+		String_Format2(&msg, "%c. &ePress &a%c &eto re-enable.", disableMsg, Key_Names[key]);
 	}
 	Chat_Add(&msg);
 }

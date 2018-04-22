@@ -9,9 +9,11 @@
 #include "TreeGen.h"
 #include "Vectors.h"
 
-Int32 Gen_MaxX, Gen_MaxY, Gen_MaxZ;
+Int32 Gen_MaxX, Gen_MaxY, Gen_MaxZ, Gen_Volume;
 void Gen_Init(void) {
 	Gen_MaxX = Gen_Width - 1; Gen_MaxY = Gen_Height - 1; Gen_MaxZ = Gen_Length - 1;
+	Gen_Volume = Gen_Width * Gen_Length * Gen_Height;
+
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState = "";
 
@@ -24,12 +26,13 @@ void Gen_Init(void) {
 
 void FlatgrassGen_MapSet(Int32 yStart, Int32 yEnd, BlockID block) {
 	yStart = max(yStart, 0); yEnd = max(yEnd, 0);
-	Int32 y, oneY = Gen_Width * Gen_Length, yHeight = (yEnd - yStart) + 1;
+	Int32 y, yHeight = (yEnd - yStart) + 1;
 	BlockID* ptr = Gen_Blocks;
+	UInt32 oneY = (UInt32)Gen_Width * (UInt32)Gen_Length;
 
 	Gen_CurrentProgress = 0.0f;
 	for (y = yStart; y <= yEnd; y++) {
-		Platform_MemSet(ptr + y * oneY, block, oneY);
+		Platform_MemSet(ptr + y * oneY, block, oneY * (UInt32)sizeof(BlockID));
 		Gen_CurrentProgress = (Real32)(y - yStart) / yHeight;
 	}
 }
@@ -50,7 +53,7 @@ void FlatgrassGen_Generate(void) {
 }
 
 
-Int32 waterLevel, oneY, volume, minHeight;
+Int32 waterLevel, oneY, minHeight;
 Int16* Heightmap;
 Random rnd;
 
@@ -82,8 +85,7 @@ void NotchyGen_FillOblateSpheroid(Int32 x, Int32 y, Int32 z, Real32 radius, Bloc
 }
 
 #define Stack_Push(index)\
-stack[stack_size] = index;\
-stack_size++;\
+stack[stack_size++] = index;\
 if (stack_size == 32768) {\
 	ErrorHandler_Fail("NotchyGen_FloodFail - stack limit hit");\
 }
@@ -146,38 +148,41 @@ void NotchyGen_CreateHeightmap(void) {
 }
 
 Int32 NotchyGen_CreateStrataFast(void) {
-	/* Make lava layer at bottom */
-	Int32 mapIndex = 0;
+	UInt32 oneY = (UInt32)Gen_Width * (UInt32)Gen_Length;
 	Int32 x, y, z;
+	Gen_CurrentProgress = 0.0f;
+	Gen_CurrentState = "Filling map";
 
-	for (z = 0; z < Gen_Length; z++) {
-		for (x = 0; x < Gen_Width; x++) {
-			Gen_Blocks[mapIndex++] = BLOCK_LAVA;
-		}
-	}
+	/* Make lava layer at bottom */
+	Platform_MemSet(Gen_Blocks, BLOCK_LAVA, oneY * (UInt32)sizeof(BlockID));
 
 	/* Invariant: the lowest value dirtThickness can possible be is -14 */
 	Int32 stoneHeight = minHeight - 14;
-	if (stoneHeight <= 0) return 1; /* no layer is fully stone */
-
-									/* We can quickly fill in bottom solid layers */
+	/* We can quickly fill in bottom solid layers */
 	for (y = 1; y <= stoneHeight; y++) {
-		for (z = 0; z < Gen_Length; z++) {
-			for (x = 0; x < Gen_Width; x++) {
-				Gen_Blocks[mapIndex++] = BLOCK_STONE;
-			}
-		}
+		Platform_MemSet(Gen_Blocks + y * oneY, BLOCK_STONE, oneY * (UInt32)sizeof(BlockID));
+		Gen_CurrentProgress = (Real32)y / Gen_Height;
 	}
-	return stoneHeight;
+
+	/* Fill in rest of map wih air */
+	Int32 airHeight = max(0, stoneHeight) + 1;
+	for (y = airHeight; y < Gen_Height; y++) {
+		Platform_MemSet(Gen_Blocks + y * oneY, BLOCK_AIR, oneY * (UInt32)sizeof(BlockID));
+		Gen_CurrentProgress = (Real32)y / Gen_Height;
+	}
+
+	/* if stoneHeight is <= 0, then no layer is fully stone */
+	return max(stoneHeight, 1);
 }
 
 void NotchyGen_CreateStrata(void) {
+	/* Try to bulk fill bottom of the map if possible */
+	Int32 minStoneY = NotchyGen_CreateStrataFast();
+
 	OctaveNoise n;
 	OctaveNoise_Init(&n, &rnd, 8);
 	Gen_CurrentState = "Creating strata";
-	Int32 hMapIndex = 0, maxY = Gen_Height - 1, mapIndex = 0;
-	/* Try to bulk fill bottom of the map if possible */
-	Int32 minSTONEY = NotchyGen_CreateStrataFast();
+	Int32 hMapIndex = 0, maxY = Gen_MaxY, mapIndex = 0;
 
 	Int32 x, y, z;
 	for (z = 0; z < Gen_Length; z++) {
@@ -188,10 +193,10 @@ void NotchyGen_CreateStrata(void) {
 			Int32 stoneHeight = dirtHeight + dirtThickness;
 
 			stoneHeight = min(stoneHeight, maxY);
-			dirtHeight = min(dirtHeight, maxY);
+			dirtHeight  = min(dirtHeight,  maxY);
 
-			mapIndex = Gen_Pack(x, minSTONEY, z);
-			for (y = minSTONEY; y <= stoneHeight; y++) {
+			mapIndex = Gen_Pack(x, minStoneY, z);
+			for (y = minStoneY; y <= stoneHeight; y++) {
 				Gen_Blocks[mapIndex] = BLOCK_STONE; mapIndex += oneY;
 			}
 
@@ -205,7 +210,7 @@ void NotchyGen_CreateStrata(void) {
 }
 
 void NotchyGen_CarveCaves(void) {
-	Int32 cavesCount = volume / 8192;
+	Int32 cavesCount = Gen_Volume / 8192;
 	Gen_CurrentState = "Carving caves";
 
 	Int32 i, j;
@@ -244,7 +249,7 @@ void NotchyGen_CarveCaves(void) {
 }
 
 void NotchyGen_CarveOreVeins(Real32 abundance, const UInt8* state, BlockID block) {
-	Int32 numVeins = (Int32)(volume * abundance / 16384);
+	Int32 numVeins = (Int32)(Gen_Volume * abundance / 16384);
 	Gen_CurrentState = state;
 
 	Int32 i, j;
@@ -383,7 +388,7 @@ void NotchyGen_PlantFlowers(void) {
 }
 
 void NotchyGen_PlantMushrooms(void) {
-	Int32 numPatches = volume / 2000;
+	Int32 numPatches = Gen_Volume / 2000;
 	Gen_CurrentState = "Planting mushrooms";
 
 	Int32 i, j, k;
@@ -466,7 +471,6 @@ void NotchyGen_Generate(void) {
 	}
 
 	Random_Init(&rnd, Gen_Seed);
-	volume = Gen_Width * Gen_Length * Gen_Height;
 	oneY = Gen_Width * Gen_Length;	
 	waterLevel = Gen_Height / 2;	
 	minHeight = Gen_Height;

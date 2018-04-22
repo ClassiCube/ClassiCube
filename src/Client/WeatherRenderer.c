@@ -177,7 +177,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(weather_vb, vertices, vCount);
 
 	Gfx_SetAlphaArgBlend(false);
-	Gfx_SetDepthWrite(false);
+	Gfx_SetDepthWrite(true);
 	Gfx_SetAlphaTest(false);
 }
 

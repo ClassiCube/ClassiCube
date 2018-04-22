@@ -2211,12 +2211,12 @@ Int32 TextGroupWidget_CalcY(TextGroupWidget* widget, Int32 index, Int32 newHeigh
 		for (i = 0; i < index; i++) {
 			y += textures[i].Height;
 		}
-		for (i = index + 1; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		for (i = index + 1; i < widget->LinesCount; i++) {
 			textures[i].Y += deltaY;
 		}
 	} else {
 		y = Game_Height - widget->YOffset;
-		for (i = index + 1; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+		for (i = index + 1; i < widget->LinesCount; i++) {
 			y -= textures[i].Height;
 		}
 
@@ -2241,10 +2241,10 @@ Int32 TextGroupWidget_UsedHeight(TextGroupWidget* widget) {
 	Int32 height = 0, i;
 	Texture* textures = widget->Textures;
 
-	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+	for (i = 0; i < widget->LinesCount; i++) {
 		if (textures[i].ID != NULL) break;
 	}
-	for (; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+	for (; i < widget->LinesCount; i++) {
 		height += textures[i].Height;
 	}
 	return height;
@@ -2259,7 +2259,7 @@ void TextGroupWidget_Reposition(GuiElement* elem) {
 	Widget_DoReposition(elem);
 	if (widget->LinesCount == 0) return;
 
-	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+	for (i = 0; i < widget->LinesCount; i++) {
 		textures[i].X = Gui_CalcPos(widget->HorAnchor, widget->XOffset, textures[i].Width, Game_Width);
 		textures[i].Y += widget->Y - oldY;
 	}
@@ -2269,7 +2269,7 @@ void TextGroupWidget_UpdateDimensions(TextGroupWidget* widget) {
 	Int32 i, width = 0, height = 0;
 	Texture* textures = widget->Textures;
 
-	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+	for (i = 0; i < widget->LinesCount; i++) {
 		width = max(width, textures[i].Width);
 		height += textures[i].Height;
 	}
@@ -2287,7 +2287,7 @@ String TextGroupWidget_UNSAFE_Get(TextGroupWidget* widget, Int32 i) {
 
 void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 x, Int32 y) {
 	Int32 i;
-	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+	for (i = 0; i < widget->LinesCount; i++) {
 		if (widget->Textures[i].ID == NULL) continue;
 		Texture tex = widget->Textures[i];
 		/* TODO: Add support for URLS */
@@ -2348,7 +2348,7 @@ void TextGroupWidget_Render(GuiElement* elem, Real64 delta) {
 	UInt32 i;
 	Texture* textures = widget->Textures;
 
-	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+	for (i = 0; i < widget->LinesCount; i++) {
 		if (textures[i].ID == NULL) continue;
 		Texture_Render(&textures[i]);
 	}
@@ -2358,7 +2358,7 @@ void TextGroupWidget_Free(GuiElement* elem) {
 	TextGroupWidget* widget = (TextGroupWidget*)elem;
 	UInt32 i;
 
-	for (i = 0; i < TEXTGROUPWIDGET_MAX_LINES; i++) {
+	for (i = 0; i < widget->LinesCount; i++) {
 		widget->LineLengths[i] = 0;
 		Gfx_DeleteTexture(&widget->Textures[i].ID);
 	}
