@@ -35,5 +35,5 @@ typedef struct ScheduledTask_ {
 } ScheduledTask;
 
 typedef void (*ScheduledTaskCallback)(ScheduledTask* task);
-ScheduledTask ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback);
+Int32 ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback);
 #endif

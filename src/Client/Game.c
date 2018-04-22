@@ -42,7 +42,7 @@
 IGameComponent Game_Components[26];
 Int32 Game_ComponentsCount;
 ScheduledTask Game_Tasks[6];
-Int32 Game_TasksCount;
+Int32 Game_TasksCount, entTaskI;
 
 UInt8 Game_UsernameBuffer[String_BufferSize(STRING_SIZE)];
 extern String Game_Username = String_FromEmptyArray(Game_UsernameBuffer);
@@ -61,13 +61,13 @@ void Game_AddComponent(IGameComponent* comp) {
 	Game_Components[Game_ComponentsCount++] = *comp;
 }
 
-ScheduledTask ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback) {
+Int32 ScheduledTask_Add(Real64 interval, ScheduledTaskCallback callback) {
 	ScheduledTask task = { 0.0, interval, callback };
 	if (Game_TasksCount == Array_Elems(Game_Tasks)) {
 		ErrorHandler_Fail("ScheduledTask_Add - hit max count");
 	}
 	Game_Tasks[Game_TasksCount++] = task;
-	return task;
+	return Game_TasksCount - 1;
 }
 
 
@@ -390,14 +390,13 @@ void Game_LoadGuiOptions(void) {
 	/* TODO: Handle Arial font not working */
 }
 
-ScheduledTask entTask;
 void Game_InitScheduledTasks(void) {
 	#define GAME_DEF_TICKS (1.0 / 20)
 	#define GAME_NET_TICKS (1.0 / 60)
 
 	ScheduledTask_Add(30, AsyncDownloader_PurgeOldEntriesTask);
 	ScheduledTask_Add(GAME_NET_TICKS, ServerConnection_Tick);
-	entTask = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
+	entTaskI = ScheduledTask_Add(GAME_DEF_TICKS, Entities_Tick);
 
 	ScheduledTask_Add(GAME_DEF_TICKS, Particles_Tick);
 	ScheduledTask_Add(GAME_DEF_TICKS, Animations_Tick);
@@ -672,6 +671,7 @@ void Game_RenderFrame(Real64 delta) {
 	}
 
 	Game_DoScheduledTasks(delta);
+	ScheduledTask entTask = Game_Tasks[entTaskI];
 	Real32 t = (Real32)(entTask.Accumulator / entTask.Interval);
 	LocalPlayer_SetInterpPosition(t);
 

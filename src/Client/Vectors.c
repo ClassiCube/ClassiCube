@@ -257,6 +257,7 @@ void Matrix_PerspectiveFieldOfView(Matrix* result, Real32 fovy, Real32 aspect, R
 void Matrix_PerspectiveOffCenter(Matrix* result, Real32 left, Real32 right, Real32 bottom, Real32 top, Real32 zNear, Real32 zFar) {
 	/* Transposed, source https://msdn.microsoft.com/en-us/library/dd373537(v=vs.85).aspx */
 	*result = Matrix_Identity;
+	result->Row3.W = 0.0f;
 
 	result->Row0.X = (2.0f * zNear) / (right - left);
 	result->Row1.Y = (2.0f * zNear) / (top - bottom);

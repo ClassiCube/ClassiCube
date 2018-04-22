@@ -293,7 +293,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 		break;
 
 	case WM_MOUSEWHEEL:
-		wheel_delta = HIWORD(wParam) / (Real32)WHEEL_DELTA;
+		wheel_delta = ((short)HIWORD(wParam)) / (Real32)WHEEL_DELTA;
 		Mouse_SetWheel(Mouse_Wheel + wheel_delta);
 		return 0;
 

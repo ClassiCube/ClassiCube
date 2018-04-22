@@ -228,5 +228,10 @@ namespace OpenTK {
 			return Row0 == other.Row0 && Row1 == other.Row1 &&
 				Row2 == other.Row2 && Row3 == other.Row3;
 		}
+		
+		public override string ToString() {
+			return string.Format("Row0={0},\r\n Row1={1},\r\n Row2={2},\r\n Row3={3}]", Row0, Row1, Row2, Row3);
+		}
+
 	}
 }

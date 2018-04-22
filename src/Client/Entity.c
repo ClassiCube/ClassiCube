@@ -26,6 +26,7 @@ const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Cir
 *-----------------------------------------------------LocationUpdate------------------------------------------------------*
 *#########################################################################################################################*/
 Real32 LocationUpdate_Clamp(Real32 degrees) {
+	if (degrees == MATH_POS_INF) return MATH_POS_INF;
 	degrees = Math_ModF(degrees, 360.0f);
 	if (degrees < 0) degrees += 360.0f;
 	return degrees;
