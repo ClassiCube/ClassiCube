@@ -25,7 +25,7 @@ namespace ClassicalSharp {
 			RenderMinBB[block] = min; RenderMaxBB[block] = max;
 		}
 		
-		internal static byte CalcLightOffset(BlockID block) {
+		internal static void CalcLightOffset(BlockID block) {
 			int flags = 0xFF;
 			Vector3 min = MinBB[block], max = MaxBB[block];
 			
@@ -38,7 +38,7 @@ namespace ClassicalSharp {
 				flags &= ~(1 << Side.Top);
 				flags &= ~(1 << Side.Bottom);
 			}
-			return (byte)flags;
+			LightOffset[block] = (byte)flags;
 		}
 		
 		internal static void RecalculateSpriteBB() {

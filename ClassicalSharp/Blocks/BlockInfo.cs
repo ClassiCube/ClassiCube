@@ -150,6 +150,10 @@ namespace ClassicalSharp {
 			}
 		}
 		
+		public static void CalcIsTinted(BlockID block) {
+			Tinted[block] = FogColour[block] != FastColour.Black && Name[block].IndexOf('#') >= 0;
+		}
+		
 		static void RecalcIsLiquid(BlockID block) {
 			byte collide = ExtendedCollide[block];
 			IsLiquid[block] =
@@ -207,7 +211,7 @@ namespace ClassicalSharp {
 			
 			SetBlockDraw(block, Draw[block]);
 			CalcRenderBounds(block);
-			LightOffset[block] = CalcLightOffset(block);
+			CalcLightOffset(block);
 			
 			if (block >= Block.CpeCount) {
 				SetTex(0, Side.Top, block);

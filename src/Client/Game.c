@@ -766,7 +766,6 @@ bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDig
 void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }
 void AdvLightingBuilder_SetActive(void) { }
 void Cw_Save(Stream* stream) { }
-void Cw_Load(Stream* stream) { }
 void Dat_Load(Stream* stream) { }
 void Schematic_Save(Stream* stream) { }
 void Gfx_MakeApiInfo(void) { }

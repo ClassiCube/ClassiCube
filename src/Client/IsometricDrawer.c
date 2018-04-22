@@ -165,7 +165,7 @@ void IsometricDrawer_DrawBatch(BlockID block, Real32 size, Real32 x, Real32 y) {
 		Drawer_Z2 = iso_scale * (1.0f - max.Z * 2.0f) + iso_pos.Z;
 
 		Drawer_Tinted = Block_Tinted[block];
-		Drawer_TintColour = Block_FogColour[block];
+		Drawer_TintColour = Block_FogCol[block];
 
 		Drawer_XMax(1, bright ? iso_colNormal : iso_colXSide, 
 			IsometricDrawer_GetTexLoc(block, FACE_XMAX), &iso_vertices);

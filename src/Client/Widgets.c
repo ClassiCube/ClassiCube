@@ -555,7 +555,8 @@ void TableWidget_MoveCursorToSelected(TableWidget* widget) {
 
 void TableWidget_MakeBlockDesc(STRING_TRANSIENT String* desc, BlockID block) {
 	if (Game_PureClassic) { String_AppendConst(desc, "Select block"); return; }
-	String_AppendString(desc, &Block_Name[block]);
+	String name = Block_UNSAFE_GetName(block);
+	String_AppendString(desc, &name);
 	if (Game_ClassicMode) return;
 
 	const UInt8* place = Block_CanPlace[block] ? "&aYes" : "&cNo";

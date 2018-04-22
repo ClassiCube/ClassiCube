@@ -153,7 +153,7 @@ void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b** vert
 	}
 
 	if (Block_Tinted[p->Block]) {
-		PackedCol tintCol = Block_FogColour[p->Block];
+		PackedCol tintCol = Block_FogCol[p->Block];
 		col.R = (UInt8)(col.R * tintCol.R / 255);
 		col.G = (UInt8)(col.G * tintCol.G / 255);
 		col.B = (UInt8)(col.B * tintCol.B / 255);

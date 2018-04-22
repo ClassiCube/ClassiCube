@@ -38,7 +38,7 @@ void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 
 	if (AABB_ContainsPoint(&blockBB, &pos) && Block_FogDensity[block] != 0.0f) {
 		*fogDensity = Block_FogDensity[block];
-		*fogCol = Block_FogColour[block];
+		*fogCol = Block_FogCol[block];
 	} else {
 		*fogDensity = 0.0f;
 		/* Blend fog and sky together */

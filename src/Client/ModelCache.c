@@ -1169,7 +1169,7 @@ TextureLoc BlockModel_GetTex(Face face) {
 
 #define Block_Tint(col, block)\
 if (Block_Tinted[block]) {\
-	PackedCol tintCol = Block_FogColour[block];\
+	PackedCol tintCol = Block_FogCol[block];\
 	col.R = (UInt8)(col.R * tintCol.R / 255);\
 	col.G = (UInt8)(col.G * tintCol.G / 255);\
 	col.B = (UInt8)(col.B * tintCol.B / 255);\
@@ -1250,7 +1250,7 @@ void BlockModel_DrawParts(bool sprite) {
 		Drawer_X2 = max.X - 0.5f; Drawer_Y2 = max.Y; Drawer_Z2 = max.Z - 0.5f;
 
 		Drawer_Tinted = Block_Tinted[BlockModel_block];
-		Drawer_TintColour = Block_FogColour[BlockModel_block];
+		Drawer_TintColour = Block_FogCol[BlockModel_block];
 
 		VertexP3fT2fC4b* ptr = &ModelCache_Vertices[BlockModel.index];
 		Drawer_YMin(1, IModel_Cols[1], BlockModel_GetTex(FACE_YMIN), &ptr);

@@ -42,8 +42,7 @@
 bool Block_IsLiquid[BLOCK_COUNT];
 bool Block_BlocksLight[BLOCK_COUNT];
 bool Block_FullBright[BLOCK_COUNT];
-String Block_Name[BLOCK_COUNT];
-PackedCol Block_FogColour[BLOCK_COUNT];
+PackedCol Block_FogCol[BLOCK_COUNT];
 Real32 Block_FogDensity[BLOCK_COUNT];
 UInt8 Block_Collide[BLOCK_COUNT];
 UInt8 Block_ExtendedCollide[BLOCK_COUNT];
@@ -60,7 +59,7 @@ UInt8 Block_SpriteOffset[BLOCK_COUNT];
 
 #define Block_Tint(col, block)\
 if (Block_Tinted[block]) {\
-	PackedCol tintCol = Block_FogColour[block];\
+	PackedCol tintCol = Block_FogCol[block];\
 	col.R = (UInt8)(col.R * tintCol.R / 255);\
 	col.G = (UInt8)(col.G * tintCol.G / 255);\
 	col.B = (UInt8)(col.B * tintCol.B / 255);\
@@ -86,14 +85,17 @@ void Block_SetDefaultPerms(void);
 bool Block_IsCustomDefined(BlockID block);
 void Block_SetCustomDefined(BlockID block, bool defined);
 
+void Block_CalcIsTinted(BlockID block);
 void Block_SetCollide(BlockID block, UInt8 collide);
 void Block_SetDrawType(BlockID block, UInt8 draw);
 void Block_ResetProps(BlockID block);
 
+STRING_REF String Block_UNSAFE_GetName(BlockID block);
+void Block_SetName(BlockID block, STRING_PURE String* name);
 Int32 Block_FindID(STRING_PURE String* name);
 
 void Block_CalcRenderBounds(BlockID block);
-UInt8 Block_CalcLightOffset(BlockID block);
+void Block_CalcLightOffset(BlockID block);
 void Block_RecalculateSpriteBB(void);
 void Block_RecalculateBB(BlockID block);
 

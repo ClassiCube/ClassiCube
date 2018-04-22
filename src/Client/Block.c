@@ -77,6 +77,12 @@ void Block_RecalcIsLiquid(BlockID b) {
 		(collide == COLLIDE_LIQUID_LAVA  && Block_Draw[b] == DRAW_TRANSPARENT);
 }
 
+void Block_CalcIsTinted(BlockID block) {
+	PackedCol black = PACKEDCOL_BLACK;
+	String name = Block_UNSAFE_GetName(block);
+	Block_Tinted[block] = !PackedCol_Equals(Block_FogCol[block], black) && String_IndexOf(&name, '#', 0) >= 0;
+}
+
 void Block_SetCollide(BlockID block, UInt8 collide) {
 	/* necessary for cases where servers redefined core blocks before extended types were introduced. */
 	collide = DefaultSet_MapOldCollide(block, collide);
@@ -130,23 +136,20 @@ String Block_DefaultName(BlockID block) {
 	Int32 end = String_IndexOf(&blockNames, '_', start);
 	if (end == -1) end = blockNames.length;
 
-	String buffer = String_InitAndClear(Block_NamePtr(block), STRING_SIZE);
-	for (i = start; i < end; i++) {
-		String_Append(&buffer, blockNames.buffer[i]);
-	}
-	return buffer;
+	return String_UNSAFE_Substring(&blockNames, start, (end - start));
 }
 
 void Block_ResetProps(BlockID block) {
 	Block_BlocksLight[block] = DefaultSet_BlocksLight(block);
 	Block_FullBright[block] = DefaultSet_FullBright(block);
-	Block_FogColour[block] = DefaultSet_FogColour(block);
+	Block_FogCol[block] = DefaultSet_FogColour(block);
 	Block_FogDensity[block] = DefaultSet_FogDensity(block);
 	Block_SetCollide(block, DefaultSet_Collide(block));
 	Block_DigSounds[block] = DefaultSet_DigSound(block);
 	Block_StepSounds[block] = DefaultSet_StepSound(block);
 	Block_SpeedMultiplier[block] = 1.0f;
-	Block_Name[block] = Block_DefaultName(block);
+	String name = Block_DefaultName(block);
+	Block_SetName(block, &name);
 	Block_Tinted[block] = false;
 	Block_SpriteOffset[block] = 0;
 
@@ -162,7 +165,7 @@ void Block_ResetProps(BlockID block) {
 
 	Block_SetDrawType(block, Block_Draw[block]);
 	Block_CalcRenderBounds(block);
-	Block_LightOffset[block] = Block_CalcLightOffset(block);
+	Block_CalcLightOffset(block);
 
 	if (block >= BLOCK_CPE_COUNT) {
 		Block_SetTex(0, FACE_YMAX, block);
@@ -175,10 +178,20 @@ void Block_ResetProps(BlockID block) {
 	}
 }
 
+STRING_REF String Block_UNSAFE_GetName(BlockID block) {
+	return String_FromRaw(Block_NamePtr(block), STRING_SIZE);
+}
+
+void Block_SetName(BlockID block, STRING_PURE String* name) {
+	String buffer = String_InitAndClear(Block_NamePtr(block), STRING_SIZE);
+	String_AppendString(&buffer, name);
+}
+
 Int32 Block_FindID(STRING_PURE String* name) {
 	Int32 block;
 	for (block = BLOCK_AIR; block < BLOCK_COUNT; block++) {
-		if (String_CaselessEquals(&Block_Name[block], name)) return block;
+		String blockName = Block_UNSAFE_GetName(block);
+		if (String_CaselessEquals(&blockName, name)) return block;
 	}
 	return -1;
 }
@@ -214,7 +227,7 @@ void Block_CalcRenderBounds(BlockID block) {
 	Block_RenderMinBB[block] = min; Block_RenderMaxBB[block] = max;
 }
 
-UInt8 Block_CalcLightOffset(BlockID block) {
+void Block_CalcLightOffset(BlockID block) {
 	Int32 flags = 0xFF;
 	Vector3 min = Block_MinBB[block], max = Block_MaxBB[block];
 
@@ -227,7 +240,7 @@ UInt8 Block_CalcLightOffset(BlockID block) {
 		flags &= ~(1 << FACE_YMAX);
 		flags &= ~(1 << FACE_YMIN);
 	}
-	return (UInt8)flags;
+	Block_LightOffset[block] = (UInt8)flags;
 }
 
 void Block_RecalculateSpriteBB(void) {
@@ -478,7 +491,7 @@ BlockID AutoRotate_RotateDirection(BlockID block, String* name, Vector3 offset) 
 }
 
 BlockID AutoRotate_RotateBlock(BlockID block) {
-	String name = Block_Name[block];
+	String name = Block_UNSAFE_GetName(block);
 	Int32 dirIndex = String_LastIndexOf(&name, '-');
 	if (dirIndex == -1) return block; /* not a directional block */
 

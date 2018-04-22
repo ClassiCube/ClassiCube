@@ -578,7 +578,7 @@ void NormalBuilder_RenderBlock(Int32 index) {
 	Drawer_X2 = Builder_X + max.X; Drawer_Y2 = Builder_Y + max.Y; Drawer_Z2 = Builder_Z + max.Z;
 
 	Drawer_Tinted = Block_Tinted[Builder_Block];
-	Drawer_TintColour = Block_FogColour[Builder_Block];
+	Drawer_TintColour = Block_FogCol[Builder_Block];
 	PackedCol white = PACKEDCOL_WHITE;
 
 	if (count_XMin) {

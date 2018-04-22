@@ -104,10 +104,10 @@ namespace ClassicalSharp.Network.Protocols {
 			OnBlockUpdated(block, didBlockLight);
 			
 			byte sound = reader.ReadUInt8();
-			if (sound < breakSnds.Length) {
-				BlockInfo.StepSounds[block] = stepSnds[sound];
-				BlockInfo.DigSounds[block] = breakSnds[sound];
-			}
+			BlockInfo.StepSounds[block] = sound;
+			BlockInfo.DigSounds[block]  = sound;			
+			if (sound == SoundType.Glass) BlockInfo.StepSounds[block] = SoundType.Stone;
+			
 			BlockInfo.FullBright[block] = reader.ReadUInt8() != 0;
 			return block;
 		}
@@ -118,17 +118,17 @@ namespace ClassicalSharp.Network.Protocols {
 				BlockInfo.SpriteOffset[block] = blockDraw;
 				blockDraw = DrawType.Sprite;
 			}
-			BlockInfo.LightOffset[block] = BlockInfo.CalcLightOffset(block);
 			
 			byte fogDensity = reader.ReadUInt8();
 			BlockInfo.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
-			BlockInfo.FogColour[block] = new FastColour(
-				reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
-			BlockInfo.Tinted[block] = BlockInfo.FogColour[block] != FastColour.Black && BlockInfo.Name[block].IndexOf('#') >= 0;
+			BlockInfo.FogColour[block] = new FastColour(reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
 			
 			BlockInfo.SetBlockDraw(block, blockDraw);
 			BlockInfo.CalcRenderBounds(block);
 			BlockInfo.UpdateCulling(block);
+			
+			BlockInfo.CalcIsTinted(block);
+			BlockInfo.CalcLightOffset(block);
 			
 			game.Inventory.AddDefault(block);
 			BlockInfo.SetCustomDefined(block, true);
@@ -164,19 +164,5 @@ namespace ClassicalSharp.Network.Protocols {
 			reader.Skip(total - (reader.index - start));
 		}
 		#endif
-		
-		internal static byte[] stepSnds = new byte[10] {
-			SoundType.None, SoundType.Wood, SoundType.Gravel,
-			SoundType.Grass, SoundType.Stone, SoundType.Metal,
-			SoundType.Stone, SoundType.Cloth, SoundType.Sand,
-			SoundType.Snow,
-		};
-		
-		internal static byte[] breakSnds = new byte[10] {
-			SoundType.None, SoundType.Wood, SoundType.Gravel,
-			SoundType.Grass, SoundType.Stone, SoundType.Metal,
-			SoundType.Glass, SoundType.Cloth, SoundType.Sand,
-			SoundType.Snow,
-		};
 	}
 }

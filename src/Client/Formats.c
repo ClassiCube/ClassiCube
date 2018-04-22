@@ -6,6 +6,10 @@
 #include "Platform.h"
 #include "ExtMath.h"
 #include "ErrorHandler.h"
+#include "Game.h"
+#include "ServerConnection.h"
+#include "Inventory.h"
+#include "Event.h"
 
 void Map_ReadBlocks(Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
@@ -17,6 +21,9 @@ void Map_ReadBlocks(Stream* stream) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------LvlFormat--------------------------------------------------------*
+*#########################################################################################################################*/
 #define LVL_VERSION 1874
 #define LVL_CUSTOMTILE ((BlockID)163)
 #define LVL_CHUNKSIZE 16
@@ -123,6 +130,9 @@ void Lvl_Load(Stream* stream) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------------FcmFormat--------------------------------------------------------*
+*#########################################################################################################################*/
 #define FCM_IDENTIFIER 0x0FC2AF40UL
 #define FCM_REVISION 13
 void Fcm_ReadString(Stream* stream) {
@@ -171,6 +181,9 @@ void Fcm_Load(Stream* stream) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------NBTFile---------------------------------------------------------*
+*#########################################################################################################################*/
 #define NBT_TAG_END         0
 #define NBT_TAG_INT8        1
 #define NBT_TAG_INT16       2
@@ -262,7 +275,9 @@ UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
 	return i;
 }
 
-void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent) {
+const UInt8* tagTypes[20] = { "END","INT8","INT16","INT32","INT64","REAL32","REAL64","INT8_ARRAY","STRING","LIST","COMPOUND","INT32_ARRAY" };
+typedef bool (*Nbt_Callback)(NbtTag* tag);
+void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent, Nbt_Callback callback) {
 	if (typeId == NBT_TAG_END) return;
 
 	NbtTag tag;
@@ -270,7 +285,22 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent)
 	tag.Parent = parent;
 	tag.NameSize = readTagName ? Nbt_ReadString(stream, tag.NameBuffer) : 0;
 	tag.DataSize = 0;
-	
+
+	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String msg = String_InitAndClearArray(msgBuffer);
+
+	while (parent != NULL) {
+		parent = parent->Parent;
+		String_AppendConst(&msg, "   ");
+	}
+
+	String name = { tag.NameBuffer, tag.NameSize, tag.NameSize };
+	String_AppendString(&msg, &name);
+	String_AppendConst(&msg, " (TAG_");
+	String_AppendConst(&msg, tagTypes[typeId]);
+	String_AppendConst(&msg, ")\r\n");
+	Platform_Log(&msg);
+
 	UInt8 childTagId;
 	UInt32 i, count;
 
@@ -311,13 +341,13 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent)
 		childTagId = Stream_ReadUInt8(stream);
 		count = Stream_ReadUInt32_BE(stream);
 		for (i = 0; i < count; i++) {
-			Nbt_ReadTag(childTagId, false, stream, &tag);
+			Nbt_ReadTag(childTagId, false, stream, &tag, callback);
 		}
 		break;
 
 	case NBT_TAG_COMPOUND:
 		while ((childTagId = Stream_ReadUInt8(stream)) != NBT_TAG_END) {
-			Nbt_ReadTag(childTagId, true, stream, &tag);
+			Nbt_ReadTag(childTagId, true, stream, &tag, callback);
 		} 
 		break;
 
@@ -328,4 +358,259 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent)
 	default:
 		ErrorHandler_Fail("Unrecognised NBT tag");
 	}
+
+	bool processed = callback(&tag);
+	/* don't leak memory for unprocessed tags */
+	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Platform_MemFree(&tag.DataBig);
+
+	String_Clear(&msg);
+	parent = tag.Parent;
+	while (parent != NULL) {
+		parent = parent->Parent;
+		String_AppendConst(&msg, "   ");
+	}
+	String_AppendConst(&msg, " -- processed: ");
+	String_AppendBool(&msg, processed);
+	String_AppendConst(&msg, ")\r\n");
+	Platform_Log(&msg);
+}
+
+bool IsTag(NbtTag* tag, const UInt8* tagName) {
+	String name = { tag->NameBuffer, tag->NameSize, tag->NameSize };
+	return String_CaselessEqualsConst(&name, tagName);
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------CwFormat---------------------------------------------------------*
+*#########################################################################################################################*/
+bool Cw_Callback_1(NbtTag* tag) {
+	if (IsTag(tag, "X")) { World_Width  = (UInt16)NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "Y")) { World_Height = (UInt16)NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "Z")) { World_Length = (UInt16)NbtTag_I16(tag); return true; }
+
+	if (IsTag(tag, "UUID")) {
+		if (tag->DataSize != sizeof(World_Uuid)) ErrorHandler_Fail("Map UUID must be 16 bytes");
+		Platform_MemCpy(World_Uuid, tag->DataSmall, sizeof(World_Uuid));
+		return true;
+	}
+	if (IsTag(tag, "BlockArray")) {
+		World_BlocksSize = tag->DataSize;
+		if (tag->DataSize < NBT_SMALL_SIZE) {
+			World_Blocks = Platform_MemAlloc(World_BlocksSize);
+			if (World_Blocks == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
+			Platform_MemCpy(World_Blocks, tag->DataSmall, tag->DataSize);
+		} else {
+			World_Blocks = tag->DataBig;
+		}
+		return true;
+	}
+	return false;
+}
+
+bool Cw_Callback_2(NbtTag* tag) {
+	if (!IsTag(tag->Parent, "Spawn")) return false;
+
+	LocalPlayer*p = &LocalPlayer_Instance;
+	if (IsTag(tag, "X")) { p->Spawn.X = NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "Y")) { p->Spawn.Y = NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "Z")) { p->Spawn.Z = NbtTag_I16(tag); return true; }
+	if (IsTag(tag, "H")) { p->SpawnRotY  = Math_Deg2Packed(NbtTag_U8(tag)); return true; }
+	if (IsTag(tag, "P")) { p->SpawnHeadX = Math_Deg2Packed(NbtTag_U8(tag)); return true; }
+
+	return false;
+}
+
+BlockID cw_curID;
+Int16 cw_colR, cw_colG, cw_colB;
+PackedCol Cw_ParseCol(PackedCol defValue) {
+	Int16 r = cw_colR, g = cw_colG, b = cw_colB;	
+	if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+		return defValue;
+	} else {
+		PackedCol col = PACKEDCOL_CONST((UInt8)r, (UInt8)g, (UInt8)b, 255);
+		return col;		
+	}
+}
+
+bool Cw_Callback_4(NbtTag* tag) {
+	if (!IsTag(tag->Parent->Parent, "CPE")) return false;
+	if (!IsTag(tag->Parent->Parent->Parent, "Metadata")) return false;
+	LocalPlayer*p = &LocalPlayer_Instance;
+
+	if (IsTag(tag->Parent, "ClickDistance")) {
+		if (IsTag(tag, "Distance")) { p->ReachDistance = NbtTag_I16(tag) / 32.0f; return true; }
+	}
+	if (IsTag(tag->Parent, "EnvWeatherType")) {
+		if (IsTag(tag, "WeatherType")) { WorldEnv_SetWeather(NbtTag_U8(tag)); return true; }
+	}
+
+	if (IsTag(tag->Parent, "EnvMapAppearance")) {
+		if (IsTag(tag, "SideBlock")) { WorldEnv_SetSidesBlock(NbtTag_U8(tag));  return true; }
+		if (IsTag(tag, "EdgeBlock")) { WorldEnv_SetEdgeBlock(NbtTag_U8(tag));   return true; }
+		if (IsTag(tag, "SideLevel")) { WorldEnv_SetEdgeHeight(NbtTag_I16(tag)); return true; }
+
+		if (IsTag(tag, "TextureURL")) {
+			String url = { tag->DataSmall, tag->DataSize, tag->DataSize };
+			if (Game_AllowServerTextures && url.length > 0) {
+				ServerConnection_RetrieveTexturePack(&url);
+			}
+			return true;
+		}
+	}
+
+	/* Callback for compound tag is called after all its children have been processed */
+	if (IsTag(tag->Parent, "EnvColors")) {
+		if (IsTag(tag, "Sky")) {
+			WorldEnv_SetSkyCol(Cw_ParseCol(WorldEnv_DefaultSkyCol)); return true;
+		} else if (IsTag(tag, "Cloud")) {
+			WorldEnv_SetCloudsCol(Cw_ParseCol(WorldEnv_DefaultCloudsCol)); return true;
+		} else if (IsTag(tag, "Fog")) {
+			WorldEnv_SetFogCol(Cw_ParseCol(WorldEnv_DefaultFogCol)); return true;
+		} else if (IsTag(tag, "Sunlight")) {
+			WorldEnv_SetSunCol(Cw_ParseCol(WorldEnv_DefaultSunCol)); return true;
+		} else if (IsTag(tag, "Ambient")) {
+			WorldEnv_SetShadowCol(Cw_ParseCol(WorldEnv_DefaultShadowCol)); return true;
+		}
+	}
+
+	if (IsTag(tag->Parent, "BlockDefinitions")) {
+		String tagName = { tag->NameBuffer, tag->NameSize, tag->NameSize };
+		String blockStr = String_FromConst("Block");
+		if (!String_CaselessStarts(&tagName, &blockStr)) return false;
+		BlockID id = cw_curID;
+
+		/* hack for sprite draw (can't rely on order of tags when reading) */
+		if (Block_SpriteOffset[id] == 0) {
+			Block_SpriteOffset[id] = Block_Draw[id];
+			Block_Draw[id] = DRAW_SPRITE;
+		} else {
+			Block_SpriteOffset[id] = 0;
+		}
+
+		Block_SetDrawType(id, Block_Draw[id]);
+		Block_CalcRenderBounds(id);
+		Block_UpdateCulling(id);
+
+		Block_CalcLightOffset(id);
+		Block_CalcIsTinted(id);
+
+		Inventory_AddDefault(id);
+		Block_SetCustomDefined(id, true);
+		Event_RaiseVoid(&BlockEvents_BlockDefChanged);	
+
+		Block_CanPlace[id]  = true;
+		Block_CanDelete[id] = true;
+		Event_RaiseVoid(&BlockEvents_PermissionsChanged);
+
+		cw_curID = 0;
+		return true;
+	}
+	return false;
+}
+
+bool Cw_Callback_5(NbtTag* tag) {
+	if (!IsTag(tag->Parent->Parent->Parent, "CPE")) return false;
+	if (!IsTag(tag->Parent->Parent->Parent->Parent, "Metadata")) return false;
+	LocalPlayer*p = &LocalPlayer_Instance;
+
+	if (IsTag(tag->Parent->Parent, "EnvColors")) {
+		if (IsTag(tag, "R")) { cw_colR = NbtTag_I16(tag); return true; }
+		if (IsTag(tag, "G")) { cw_colG = NbtTag_I16(tag); return true; }
+		if (IsTag(tag, "B")) { cw_colB = NbtTag_I16(tag); return true; }
+	}
+
+	if (IsTag(tag->Parent->Parent, "BlockDefinitions") && Game_AllowCustomBlocks) {
+		BlockID id = cw_curID;
+		if (IsTag(tag, "ID"))             { cw_curID = NbtTag_U8(tag); return true; }
+		if (IsTag(tag, "CollideType"))    { Block_SetCollide(id, NbtTag_U8(tag)); return true; }
+		if (IsTag(tag, "Speed"))          { Block_SpeedMultiplier[id] = NbtTag_R32(tag); return true; }
+		if (IsTag(tag, "TransmitsLight")) { Block_BlocksLight[id] = NbtTag_U8(tag) == 0; return true; }
+		if (IsTag(tag, "FullBright"))     { Block_FullBright[id] = NbtTag_U8(tag) != 0; return true; }
+		if (IsTag(tag, "BlockDraw"))      { Block_Draw[id] = NbtTag_U8(tag); return true; }
+		if (IsTag(tag, "Shape"))          { Block_SpriteOffset[id] = NbtTag_U8(tag); return true; }
+
+		if (IsTag(tag, "Name")) {
+			String name = { tag->DataSmall, tag->DataSize, tag->DataSize };
+			Block_SetName(id, &name);
+			return true;
+		}
+
+		if (IsTag(tag, "Textures")) {
+			Block_SetTex(NbtTag_U8_At(tag, 0), FACE_YMAX, id);
+			Block_SetTex(NbtTag_U8_At(tag, 1), FACE_YMIN, id);
+			Block_SetTex(NbtTag_U8_At(tag, 2), FACE_XMIN, id);
+			Block_SetTex(NbtTag_U8_At(tag, 3), FACE_XMAX, id);
+			Block_SetTex(NbtTag_U8_At(tag, 4), FACE_ZMIN, id);
+			Block_SetTex(NbtTag_U8_At(tag, 5), FACE_ZMAX, id);
+			return true;
+		}
+		
+		if (IsTag(tag, "WalkSound")) {
+			UInt8 sound = NbtTag_U8(tag);
+			Block_DigSounds[id]  = sound;
+			Block_StepSounds[id] = sound;
+			if (sound == SOUND_GLASS) Block_StepSounds[id] = SOUND_STONE;
+			return true;
+		}
+
+		if (IsTag(tag, "Fog")) {
+			Block_FogDensity[id] = (NbtTag_U8_At(tag, 0) + 1) / 128.0f;
+			/* Fix for older ClassicalSharp versions which saved wrong fog density value */
+			if (NbtTag_U8_At(tag, 0) == 0xFF) Block_FogDensity[id] = 0.0f;
+ 
+			Block_FogCol[id].R = NbtTag_U8_At(tag, 1);
+			Block_FogCol[id].G = NbtTag_U8_At(tag, 2);
+			Block_FogCol[id].B = NbtTag_U8_At(tag, 3);
+			Block_FogCol[id].A = 255;
+			return true;
+		}
+
+		if (IsTag(tag, "Coords")) {
+			Block_MinBB[id].X = NbtTag_U8_At(tag, 0) / 16.0f; Block_MaxBB[id].X = NbtTag_U8_At(tag, 3) / 16.0f;
+			Block_MinBB[id].Y = NbtTag_U8_At(tag, 1) / 16.0f; Block_MaxBB[id].Y = NbtTag_U8_At(tag, 4) / 16.0f;
+			Block_MinBB[id].Z = NbtTag_U8_At(tag, 2) / 16.0f; Block_MaxBB[id].Z = NbtTag_U8_At(tag, 5) / 16.0f;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool Cw_Callback(NbtTag* tag) {
+	UInt32 depth = 0;
+	NbtTag* tmp = tag->Parent;
+	while (tmp != NULL) { depth++; tmp = tmp->Parent; }
+
+	switch (depth) {
+	case 1: return Cw_Callback_1(tag);
+	case 2: return Cw_Callback_2(tag);
+	case 4: return Cw_Callback_4(tag);
+	case 5: return Cw_Callback_5(tag);
+	}
+	return false;
+
+	/* ClassicWorld -> Metadata -> CPE -> ExtName -> [values]
+	        0             1         2        3          4   */
+}
+
+void Cw_Load(Stream* stream) {
+	GZipHeader gzipHeader;
+	GZipHeader_Init(&gzipHeader);
+	while (!gzipHeader.Done) {
+		GZipHeader_Read(stream, &gzipHeader);
+	}
+
+	Stream compStream;
+	DeflateState state;
+	Deflate_MakeStream(&compStream, &state, stream);
+
+	if (Stream_ReadUInt8(&compStream) != NBT_TAG_COMPOUND) {
+		ErrorHandler_Fail("NBT file most start with Compound Tag");
+	}
+	Nbt_ReadTag(NBT_TAG_COMPOUND, true, &compStream, NULL, Cw_Callback);
+
+	/* Older versions incorrectly multiplied spawn coords by * 32, so we check for that */
+	Vector3* spawn = &LocalPlayer_Instance.Spawn;
+	Vector3I P; Vector3I_Floor(&P, spawn);
+	if (!World_IsValidPos_3I(P)) { spawn->X /= 32.0f; spawn->Y /= 32.0f; spawn->Z /= 32.0f; }
 }
