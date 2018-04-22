@@ -93,7 +93,7 @@ namespace ClassicalSharp {
 		
 		public void Disconnect(string title, string reason) {
 			World.Reset();
-			WorldEvents.RaiseOnNewMap();		
+			WorldEvents.RaiseOnNewMap();
 			Gui.SetNewScreen(new DisconnectScreen(this, title, reason));
 			
 			IDrawer2D.InitCols();
@@ -102,7 +102,7 @@ namespace ClassicalSharp {
 
 			for (int i = 0; i < Components.Count; i++) {
 				Components[i].Reset(this);
-			}		
+			}
 			GC.Collect();
 		}
 		
@@ -383,9 +383,12 @@ namespace ClassicalSharp {
 			string file = "screenshot_" + timestamp + ".png";
 			string path = PathIO.Combine("screenshots", file);
 			
-			Graphics.TakeScreenshot(path, Width, Height);
+			using (Stream fs = Platform.FileCreate(path)) {
+				Graphics.TakeScreenshot(fs, Width, Height);
+			}
+			
 			screenshotRequested = false;
-			Chat.Add("&eTaken screenshot as: " + file);			
+			Chat.Add("&eTaken screenshot as: " + file);
 		}
 		
 		public void Dispose() {

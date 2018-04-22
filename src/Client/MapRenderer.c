@@ -169,7 +169,7 @@ void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMinCount, offset);
 			Game_Vertices += part.XMinCount;
 		} else if (drawXMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMaxCount, offset);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMaxCount, offset + part.XMinCount);
 			Game_Vertices += part.XMaxCount;
 		}
 		offset += part.XMinCount + part.XMaxCount;

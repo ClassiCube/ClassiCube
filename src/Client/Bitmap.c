@@ -8,7 +8,7 @@
 
 void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
 	bmp->Width = width; bmp->Height = height;
-	bmp->Stride = width * Bitmap_PixelBytesSize;
+	bmp->Stride = width * BITMAP_SIZEOF_PIXEL;
 	bmp->Scan0 = scan0;
 }
 void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 size) {
@@ -22,18 +22,9 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* sr
 	}
 }
 
-void Bitmap_CopyRow(Int32 srcY, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 width) {
-	UInt32* srcRow = Bitmap_GetRow(src, srcY);
-	UInt32* dstRow = Bitmap_GetRow(dst, dstY);
-	Int32 x;
-	for (x = 0; x < width; x++) {
-		dstRow[x] = srcRow[x];
-	}
-}
-
 void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
-	bmp->Stride = width * Bitmap_PixelBytesSize;
+	bmp->Stride = width * BITMAP_SIZEOF_PIXEL;
 	bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(width, height));
 	
 	if (bmp->Scan0 == NULL) {
@@ -291,11 +282,9 @@ void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
 	}
 }
 
-/* TODO: Test a lot of .png files and ensure output is right */
-#define PNG_MAX_DIMS 0x8000L
 /* Most bits per sample is 16. Most samples per pixel is 4. Add 1 for filter byte. */
 #define PNG_BUFFER_SIZE ((PNG_MAX_DIMS * 2 * 4 + 1) * 2)
-
+/* TODO: Test a lot of .png files and ensure output is right */
 void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 	Png_CheckHeader(stream);
 	Bitmap_Create(bmp, 0, 0, NULL);
@@ -309,8 +298,8 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 		palette[i] = PackedCol_ARGB(0, 0, 0, 255);
 	}
 
-	bool gotHeader = false, readingChunks = true, initDeflate = false;
-	DeflateState deflate;
+	bool gotHeader = false, readingChunks = true, initInflate = false;
+	InflateState inflate;
 	Stream compStream;
 	ZLibHeader zlibHeader;
 	ZLibHeader_Init(&zlibHeader);
@@ -334,7 +323,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too wide");
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too tall");
 
-			bmp->Stride = bmp->Width * Bitmap_PixelBytesSize;
+			bmp->Stride = bmp->Width * BITMAP_SIZEOF_PIXEL;
 			bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(bmp->Width, bmp->Height));
 			if (bmp->Scan0 == NULL) ErrorHandler_Fail("Failed to allocate memory for PNG bitmap");
 
@@ -409,11 +398,11 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 		case PNG_FOURCC('I', 'D', 'A', 'T'): {
 			Stream datStream;
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
-			if (!initDeflate) {
-				Deflate_MakeStream(&compStream, &deflate, &datStream);
-				initDeflate = true;
+			if (!initInflate) {
+				Inflate_MakeStream(&compStream, &inflate, &datStream);
+				initInflate = true;
 			} else {
-				deflate.Source = &datStream;
+				inflate.Source = &datStream;
 			}
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */

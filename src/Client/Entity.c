@@ -655,8 +655,11 @@ void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 	}
 
 	Int32 y;
+	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 	for (y = 0; y < bmp->Height; y++) {
-		Bitmap_CopyRow(y, y, bmp, &scaled, bmp->Width);
+		UInt32* src = Bitmap_GetRow(bmp, y);
+		UInt32* dst = Bitmap_GetRow(&scaled, y);
+		Platform_MemCpy(dst, src, stride);
 	}
 
 	Entity* entity = &player->Base;

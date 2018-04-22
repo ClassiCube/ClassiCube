@@ -59,9 +59,9 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 		Stream_ReadonlyPortion(&portion, stream, uncompressedSize);
 		state->ProcessEntry(&filename, &portion, entry);
 	} else if (compressionMethod == 8) {
-		DeflateState deflate;
+		InflateState inflate;
 		Stream_ReadonlyPortion(&portion, stream, compressedSize);
-		Deflate_MakeStream(&compStream, &deflate, &portion);
+		Inflate_MakeStream(&compStream, &inflate, &portion);
 		state->ProcessEntry(&filename, &compStream, entry);
 	} else {
 		String warnMsg = String_FromConst("Unsupported .zip entry compression method");

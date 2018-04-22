@@ -15,6 +15,7 @@ void World_Reset(void) {
 	World_Width = 0; World_Height = 0; World_Length = 0;
 	World_MaxX = 0;  World_MaxY = 0;   World_MaxZ = 0;
 	World_BlocksSize = 0;
+	WorldEnv_Reset();
 
 	Random rnd;
 	Random_InitFromCurrentTime(&rnd);

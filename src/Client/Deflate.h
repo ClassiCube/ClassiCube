@@ -24,25 +24,25 @@ void ZLibHeader_Init(ZLibHeader* header);
 void ZLibHeader_Read(Stream* s, ZLibHeader* header);
 
 
-#define DEFLATE_MAX_INPUT 8192
-#define DEFLATE_MAX_CODELENS 19
-#define DEFLATE_MAX_LITS 288
-#define DEFLATE_MAX_DISTS 32
-#define DEFLATE_MAX_LITS_DISTS (DEFLATE_MAX_LITS + DEFLATE_MAX_DISTS)
-#define DEFLATE_MAX_BITS 16
-#define DEFLATE_ZFAST_BITS 9
-#define DEFLATE_WINDOW_SIZE 0x8000UL
-#define DEFLATE_WINDOW_MASK 0x7FFFUL
+#define INFLATE_MAX_INPUT 8192
+#define INFLATE_MAX_CODELENS 19
+#define INFLATE_MAX_LITS 288
+#define INFLATE_MAX_DISTS 32
+#define INFLATE_MAX_LITS_DISTS (INFLATE_MAX_LITS + INFLATE_MAX_DISTS)
+#define INFLATE_MAX_BITS 16
+#define INFLATE_FAST_BITS 9
+#define INFLATE_WINDOW_SIZE 0x8000UL
+#define INFLATE_WINDOW_MASK 0x7FFFUL
 
 typedef struct HuffmanTable_ {
-	UInt16 FirstCodewords[DEFLATE_MAX_BITS]; /* Starting codeword for each bit length */
-	UInt16 EndCodewords[DEFLATE_MAX_BITS];    /* (Last codeword + 1) for each bit length. 0 is ignored. */
-	UInt16 FirstOffsets[DEFLATE_MAX_BITS];   /* Base offset into Values for codewords of each bit length. */
-	UInt16 Values[DEFLATE_MAX_LITS];         /* Values/Symbols list */
-	Int16 Fast[1 << DEFLATE_ZFAST_BITS];     /* Fast lookup table for huffman codes */
+	UInt16 FirstCodewords[INFLATE_MAX_BITS]; /* Starting codeword for each bit length */
+	UInt16 EndCodewords[INFLATE_MAX_BITS];   /* (Last codeword + 1) for each bit length. 0 is ignored. */
+	UInt16 FirstOffsets[INFLATE_MAX_BITS];   /* Base offset into Values for codewords of each bit length. */
+	UInt16 Values[INFLATE_MAX_LITS];         /* Values/Symbols list */
+	Int16 Fast[1 << INFLATE_FAST_BITS];      /* Fast lookup table for huffman codes */
 } HuffmanTable;
 
-typedef struct DeflateState_ {
+typedef struct InflateState_ {
 	UInt8 State;
 	Stream* Source;
 	bool LastBlock; /* Whether the last DEFLATE block has been encounted in the stream */
@@ -59,15 +59,15 @@ typedef struct DeflateState_ {
 	UInt32 NumCodeLens, NumLits, NumDists; /* Temp counters */
 	UInt32 TmpCodeLens, TmpLit, TmpDist;   /* Temp huffman codes */
 
-	UInt8 Input[DEFLATE_MAX_INPUT];       /* Buffer for input to DEFLATE */
-	UInt8 Buffer[DEFLATE_MAX_LITS_DISTS]; /* General purpose array */
+	UInt8 Input[INFLATE_MAX_INPUT];       /* Buffer for input to DEFLATE */
+	UInt8 Buffer[INFLATE_MAX_LITS_DISTS]; /* General purpose array */
 	HuffmanTable CodeLensTable;           /* Values represent codeword lengths of lits/dists codewords */
 	HuffmanTable LitsTable;               /* Values represent literal or lengths */
 	HuffmanTable DistsTable;              /* Values represent distances back */
-	UInt8 Window[DEFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
-} DeflateState;
+	UInt8 Window[INFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
+} InflateState;
 
-void Deflate_Init(DeflateState* state, Stream* source);
-void Deflate_Process(DeflateState* state);
-void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying);
+void Inflate_Init(InflateState* state, Stream* source);
+void Inflate_Process(InflateState* state);
+void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying);
 #endif

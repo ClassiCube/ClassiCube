@@ -24,8 +24,8 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
 
 void Platform_Log(STRING_PURE String* message);
 void Platform_LogConst(const UInt8* message);
-DateTime Platform_CurrentUTCTime(void);
-DateTime Platform_CurrentLocalTime(void);
+void Platform_CurrentUTCTime(DateTime* time);
+void Platform_CurrentLocalTime(DateTime* time);
 
 bool Platform_DirectoryExists(STRING_PURE String* path);
 ReturnCode Platform_DirectoryCreate(STRING_PURE String* path);

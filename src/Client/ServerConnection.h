@@ -82,6 +82,7 @@ bool ServerConnection_SupportsPartialMessages;
 bool ServerConnection_SupportsFullCP437;
 
 void ServerConnection_RetrieveTexturePack(STRING_PURE String* url);
+void ServerConnection_DownloadTexturePack(STRING_PURE String* url);
 void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, Int32 seed, bool vanilla);
 void ServerConnection_EndGeneration(void);
 void ServerConnection_InitSingleplayer(void);

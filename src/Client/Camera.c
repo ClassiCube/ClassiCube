@@ -267,5 +267,6 @@ void Camera_CycleActive(void) {
 	if (!player->Hacks.CanUseThirdPersonCamera || !player->Hacks.Enabled) { i = 0; }
 
 	Camera_Active = &Camera_Cameras[i];
+	Camera_ActiveIndex = i;
 	Game_UpdateProjection();
 }

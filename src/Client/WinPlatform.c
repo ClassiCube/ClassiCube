@@ -9,6 +9,7 @@
 #define NOMCX
 #define NOIME
 #include <Windows.h>
+//#include <stdlib.h>
 
 HDC hdc;
 HBITMAP hbmp;
@@ -64,15 +65,18 @@ void Platform_Free(void) {
 }
 
 void* Platform_MemAlloc(UInt32 numBytes) {
+	//return malloc(numBytes);
 	return HeapAlloc(heap, 0, numBytes);
 }
 
 void* Platform_MemRealloc(void* mem, UInt32 numBytes) {
+	//return realloc(mem, numBytes);
 	return HeapReAlloc(heap, 0, mem, numBytes);
 }
 
 void Platform_MemFree(void** mem) {
 	if (mem == NULL || *mem == NULL) return;
+	//free(*mem);
 	HeapFree(heap, 0, *mem);
 	*mem = NULL;
 }
@@ -88,34 +92,35 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
 
 void Platform_Log(STRING_PURE String* message) {
 	/* TODO: log to console */
+	OutputDebugStringA(message->buffer);
 }
 
 void Platform_LogConst(const UInt8* message) {
 	/* TODO: log to console */
+	OutputDebugStringA(message);
 }
 
-/* Not worth making this an actual function, just use an inline macro. */
-#define Platform_ReturnDateTime(sysTime)\
-DateTime time;\
-time.Year = sysTime.wYear;\
-time.Month = (UInt8)sysTime.wMonth;\
-time.Day = (UInt8)sysTime.wDay;\
-time.Hour = (UInt8)sysTime.wHour;\
-time.Minute = (UInt8)sysTime.wMinute;\
-time.Second = (UInt8)sysTime.wSecond;\
-time.Milli = sysTime.wMilliseconds;\
-return time;\
+void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
+	time->Year   = sysTime->wYear;
+	time->Month  = (UInt8)sysTime->wMonth;
+	time->Day    = (UInt8)sysTime->wDay;
+	time->Hour   = (UInt8)sysTime->wHour;
+	time->Minute = (UInt8)sysTime->wMinute;
+	time->Second = (UInt8)sysTime->wSecond;
+	time->Milli  = sysTime->wMilliseconds;
+	return time;
+}
 
-DateTime Platform_CurrentUTCTime(void) {
+void Platform_CurrentUTCTime(DateTime* time) {
 	SYSTEMTIME utcTime;
 	GetSystemTime(&utcTime);
-	Platform_ReturnDateTime(utcTime);
+	Platform_FromSysTime(time, &utcTime);
 }
 
-DateTime Platform_CurrentLocalTime(void) {
+void Platform_CurrentLocalTime(DateTime* time) {
 	SYSTEMTIME localTime;
 	GetLocalTime(&localTime);
-	Platform_ReturnDateTime(localTime);
+	Platform_FromSysTime(time, &localTime);
 }
 
 
@@ -162,6 +167,25 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 	ReturnCode code = GetLastError();
 	FindClose(find);
 	return code == ERROR_NO_MORE_FILES ? 0 : code;
+}
+
+ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time) {
+	void* file;
+	ReturnCode result = Platform_FileOpen(&file, path);
+	if (result != 0) return result;
+
+	FILETIME writeTime;
+	if (GetFileTime(file, NULL, NULL, &writeTime)) {
+		SYSTEMTIME sysTime;
+		FileTimeToSystemTime(&writeTime, &sysTime);
+		Platform_FromSysTime(time, &sysTime);
+	} else {
+		Platform_MemSet(time, 0, sizeof(DateTime));
+		result = GetLastError();
+	}
+
+	Platform_FileClose(file);
+	return result;
 }
 
 
@@ -278,7 +302,6 @@ Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer) {
 	}
 }
 
-
 void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
 	desc->Size    = size; 
 	desc->Style   = style;
@@ -307,12 +330,14 @@ Size2D Platform_MeasureText(DrawTextArgs* args) {
 	RECT r = { 0 };
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
 		&r, DT_CALCRECT | DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
+
 	return Size2D_Make(r.right, r.bottom);
 }
 
 void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
 	HDC hDC = GetDC(NULL);
 	RECT r = { 0 };
+
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
 		&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
 }

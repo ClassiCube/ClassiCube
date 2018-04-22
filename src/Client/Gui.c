@@ -156,7 +156,7 @@ void Gui_SetScreen(Screen* screen, bool freeOld) {
 void Gui_SetNewScreen(Screen* screen) { Gui_SetScreen(screen, true); }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
-void Gui_ShowOverlay(Screen* overlay, bool atFront) {
+void Gui_ShowOverlay_Impl(Screen* overlay, bool atFront) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
 		ErrorHandler_Fail("Cannot have more than 40 overlays");
 	}

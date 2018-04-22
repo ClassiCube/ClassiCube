@@ -489,7 +489,7 @@ void Physics_Explode(Int32 x, Int32 y, Int32 z, Int32 power) {
 void Physics_HandleTnt(Int32 index, BlockID block) {
 	Int32 x, y, z;
 	World_Unpack(index, x, y, z);
-	Physics_Explode(z, y, z, 4);
+	Physics_Explode(x, y, z, 4);
 }
 
 void Physics_Init(void) {

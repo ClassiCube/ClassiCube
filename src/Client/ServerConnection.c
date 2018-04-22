@@ -15,6 +15,7 @@
 #include "World.h"
 #include "Camera.h"
 #include "TexturePack.h"
+#include "Menus.h"
 
 UInt8 ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerName = String_FromEmptyArray(ServerConnection_ServerNameBuffer);
@@ -30,6 +31,37 @@ void ServerConnection_ResetState(void) {
 	ServerConnection_SupportsPlayerClick = false;
 	ServerConnection_SupportsPartialMessages = false;
 	ServerConnection_SupportsFullCP437 = false;
+}
+
+void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) {
+	if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
+		Screen* warning = TexPackOverlay_MakeInstance(url);
+		Gui_ShowOverlay(warning, false);
+	} else {
+		ServerConnection_DownloadTexturePack(url);
+	}
+}
+
+void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
+	if (TextureCache_HasDenied(url)) return;
+	UInt8 etagBuffer[String_BufferSize(STRING_SIZE)];
+	String etag = String_InitAndClearArray(etagBuffer);
+	DateTime lastModified = { 0 };
+
+	if (TextureCache_HasUrl(url)) {
+		TextureCache_GetLastModified(url, &lastModified);
+		TextureCache_GetETag(url, &etag);
+	}
+	TexturePack_ExtractCurrent(url);
+
+	String zip = String_FromConst(".zip");
+	if (String_ContainsString(url, &zip)) {
+		String texPack = String_FromConst("texturePack");
+		AsyncDownloader_Download2(url, true, REQUEST_TYPE_DATA, &texPack, &lastModified, &etag);
+	} else {
+		String terrain = String_FromConst("terrain");
+		AsyncDownloader_Download2(url, true, REQUEST_TYPE_BITMAP, &terrain, &lastModified, &etag);
+	}
 }
 
 void ServerConnection_CheckAsyncResources(void) {
@@ -94,7 +126,7 @@ typedef struct PingEntry_ {
 PingEntry PingList_Entries[10];
 
 UInt16 PingList_Set(Int32 i, UInt16 prev) {
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	PingList_Entries[i].Data = (UInt16)(prev + 1);
 	PingList_Entries[i].TimeSent = DateTime_TotalMs(&now);
 	PingList_Entries[i].TimeReceived = 0;
@@ -122,7 +154,7 @@ void PingList_Update(UInt16 data) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(PingList_Entries); i++) {
 		if (PingList_Entries[i].Data != data) continue;
-		DateTime now = Platform_CurrentUTCTime();
+		DateTime now; Platform_CurrentUTCTime(&now);
 		PingList_Entries[i].TimeReceived = DateTime_TotalMs(&now);
 		return;
 	}

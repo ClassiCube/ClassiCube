@@ -1093,7 +1093,7 @@ void ChatScreen_Render(GuiElement* elem, Real64 delta) {
 		Texture_Render(&tex);
 	}
 
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	if (screen->HandlesAllInput) {
 		Elem_Render(&screen->Chat, delta);
 	} else {
@@ -1394,7 +1394,7 @@ DisconnectScreen DisconnectScreen_Instance;
 #define DISCONNECT_DELAY_MS 5000
 void DisconnectScreen_ReconnectMessage(DisconnectScreen* screen, STRING_TRANSIENT String* msg) {
 	if (screen->CanReconnect) {
-		DateTime now = Platform_CurrentUTCTime();
+		DateTime now; Platform_CurrentUTCTime(&now);
 		Int32 elapsedMS = (Int32)(DateTime_TotalMs(&now) - screen->InitTime);
 		Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
 
@@ -1420,7 +1420,7 @@ void DisconnectScreen_Redraw(DisconnectScreen* screen, Real64 delta) {
 }
 
 void DisconnectScreen_UpdateDelayLeft(DisconnectScreen* screen, Real64 delta) {
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	Int32 elapsedMS = (Int32)(DateTime_TotalMs(&now) - screen->InitTime);
 	Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
 	if (secsLeft < 0) secsLeft = 0;
@@ -1448,7 +1448,7 @@ void DisconnectScreen_ContextLost(void* obj) {
 void DisconnectScreen_ContextRecreated(void* obj) {
 	DisconnectScreen* screen = (DisconnectScreen*)obj;
 	if (Gfx_LostContext) return;
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	screen->ClearTime = DateTime_TotalMs(&now) + 500;
 
 	String title = String_FromRawArray(screen->TitleBuffer);
@@ -1475,7 +1475,7 @@ void DisconnectScreen_Init(GuiElement* elem) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
 
 	DisconnectScreen_ContextRecreated(screen);
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	screen->InitTime = DateTime_TotalMs(&now);
 	screen->LastSecsLeft = DISCONNECT_DELAY_MS / DATETIME_MILLISECS_PER_SECOND;
 }
@@ -1488,7 +1488,7 @@ void DisconnectScreen_Render(GuiElement* elem, Real64 delta) {
 
 	/* NOTE: We need to make sure that both the front and back buffers have
 	definitely been drawn over, so we redraw the background multiple times. */
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	if (DateTime_TotalMs(&now) < screen->ClearTime) {
 		DisconnectScreen_Redraw(screen, delta);
 	}
@@ -1510,7 +1510,7 @@ void DisconnectScreen_OnResize(GuiElement* elem) {
 	Widget_Reposition(&screen->Title);
 	Widget_Reposition(&screen->Message);
 	Widget_Reposition(&screen->Reconnect);
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	screen->ClearTime = DateTime_TotalMs(&now) + 500;
 }
 

@@ -103,8 +103,8 @@ void Lvl_Load(Stream* stream) {
 	}
 	
 	Stream compStream;
-	DeflateState state;
-	Deflate_MakeStream(&compStream, &state, stream);
+	InflateState state;
+	Inflate_MakeStream(&compStream, &state, stream);
 
 	UInt16 header = Stream_ReadUInt16_LE(&compStream);
 	World_Width   = header == LVL_VERSION ? Stream_ReadUInt16_LE(&compStream) : header;
@@ -168,8 +168,8 @@ void Fcm_Load(Stream* stream) {
 	Int32 metaSize = Stream_ReadUInt32_LE(stream);
 
 	Stream compStream;
-	DeflateState state;
-	Deflate_MakeStream(&compStream, &state, stream);
+	InflateState state;
+	Inflate_MakeStream(&compStream, &state, stream);
 
 	Int32 i;
 	for (i = 0; i < metaSize; i++) {
@@ -601,8 +601,8 @@ void Cw_Load(Stream* stream) {
 	}
 
 	Stream compStream;
-	DeflateState state;
-	Deflate_MakeStream(&compStream, &state, stream);
+	InflateState state;
+	Inflate_MakeStream(&compStream, &state, stream);
 
 	if (Stream_ReadUInt8(&compStream) != NBT_TAG_COMPOUND) {
 		ErrorHandler_Fail("NBT file most start with Compound Tag");

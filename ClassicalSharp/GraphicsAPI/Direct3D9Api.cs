@@ -547,7 +547,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			};
 		}
 
-		public override void TakeScreenshot(string output, int width, int height) {
+		public override void TakeScreenshot(Stream output, int width, int height) {
 			using (Surface backbuffer = device.GetBackBuffer(0, 0, BackBufferType.Mono),
 			       tempSurface = device.CreateOffscreenPlainSurface(width, height, Format.X8R8G8B8, Pool.SystemMemory)) {
 				// For DX 8 use IDirect3DDevice8::CreateImageSurface
@@ -555,9 +555,7 @@ namespace ClassicalSharp.GraphicsAPI {
 				LockedRectangle rect = tempSurface.LockRectangle(LockFlags.ReadOnly | LockFlags.NoDirtyUpdate);
 				
 				using (Bitmap bmp = new Bitmap(width, height, width * sizeof(int), PixelFormat.Format32bppRgb, rect.DataPointer)) {
-					using (Stream fs = Platform.FileCreate(output)) {
-						Platform.WriteBmp(bmp, fs);
-					}
+					Platform.WriteBmp(bmp, output);
 				}
 				tempSurface.UnlockRectangle();
 			}

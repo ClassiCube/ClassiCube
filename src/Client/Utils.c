@@ -71,7 +71,7 @@ UInt8 Utils_GetSkinType(Bitmap* bmp) {
 
 	/* Minecraft alex skins have this particular pixel with alpha of 0 */
 	Int32 scale = bmp->Width / 64;
-	UInt32 pixel = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
+	UInt32 pixel = Bitmap_GetRow(bmp, 54 * scale, 20 * scale);
 	UInt8 alpha = (UInt8)(pixel >> 24);
 	return alpha >= 127 ? SKIN_TYPE_64x64 : SKIN_TYPE_64x64_SLIM;
 }

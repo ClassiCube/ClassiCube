@@ -630,24 +630,31 @@ void Game_TakeScreenshot(void) {
 		ErrorHandler_CheckOrFail(result, "Creating screenshots directory");
 	}
 
-	DateTime now = Platform_CurrentLocalTime();
+	DateTime now; Platform_CurrentLocalTime(&now);
 	Int32 year = now.Year, month = now.Month, day = now.Minute;
 	Int32 hour = now.Hour, min = now.Minute, sec = now.Second;
 
 	UInt8 fileBuffer[String_BufferSize(STRING_SIZE)];
-	String file = String_InitAndClearArray(fileBuffer);
-	String_Format3(&file, "screenshot_%p2-%p2-%p4", &day, &month, &year);
-	String_Format3(&file, "-%p2-%p2-%p2.png", &hour, &min, &sec);
+	String filename = String_InitAndClearArray(fileBuffer);
+	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &day, &month, &year);
+	String_Format3(&filename, "-%p2-%p2-%p2.png", &hour, &min, &sec);
 
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
-	String_Format2(&path, "screenshots%r%s", &Platform_DirectorySeparator, &file);
+	String_Format2(&path, "screenshots%r%s", &Platform_DirectorySeparator, &filename);
 
-	Gfx_TakeScreenshot(&path, Game_Width, Game_Height);
+	void* file;
+	ReturnCode result = Platform_FileCreate(&file, &path);
+	ErrorHandler_CheckOrFail(result, "Taking screenshot - opening file");
+
+	Stream stream; Stream_FromFile(&stream, file, &path);
+	Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
+	result = stream.Close(&stream);
+	ErrorHandler_CheckOrFail(result, "Taking screenshot - closing file");
+
 	Game_ScreenshotRequested = false;
-
 	String_Clear(&path);
-	String_Format1(&path, "&eTaken screenshot as: %s", &file);
+	String_Format1(&path, "&eTaken screenshot as: %s", &filename);
 	Chat_Add(&path);
 }
 
@@ -770,10 +777,10 @@ void Dat_Load(Stream* stream) { }
 void Schematic_Save(Stream* stream) { }
 void Gfx_MakeApiInfo(void) { }
 void ServerConnection_InitMultiplayer(void) { }
-void Gfx_TakeScreenshot(STRING_PURE String* output, Int32 width, Int32 height) { }
-void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) { }
 bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value) { return true; }
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
-ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time) { return 0; }
 Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
 Screen* TexIdsOverlay_MakeInstance(void) { return NULL; }
+Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
+/* TODO: Real function is already in Gui.c - this is just stubbed until Overlays are implemented */
+void Gui_ShowOverlay(Screen* overlay, bool atFront) {

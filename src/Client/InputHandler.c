@@ -59,7 +59,7 @@ void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 
 void InputHandler_ScreenChanged(Screen* oldScreen, Screen* newScreen) {
 	if (oldScreen != NULL && oldScreen->HandlesAllInput) {
-		input_lastClick = Platform_CurrentUTCTime();
+		Platform_CurrentUTCTime(&input_lastClick);
 	}
 
 	if (ServerConnection_SupportsPlayerClick) {
@@ -279,7 +279,7 @@ bool InputHandler_CheckIsFree(BlockID block) {
 }
 
 void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) {
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	Int64 delta = DateTime_MsBetween(&input_lastClick, &now);
 	if (cooldown && delta < 250) return; /* 4 times per second */
 
@@ -350,7 +350,7 @@ void InputHandler_MouseDown(void* obj, Int32 button) {
 		bool right  = button == MouseButton_Right;
 		InputHandler_PickBlocks(false, left, middle, right);
 	} else {
-		input_lastClick = Platform_CurrentUTCTime();
+		Platform_CurrentUTCTime(&input_lastClick);
 	}
 }
 

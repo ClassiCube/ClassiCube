@@ -27,7 +27,7 @@ void Chat_GetLogTime(UInt32 index, Int64* timeMs) {
 }
 
 void Chat_AppendLogTime(void) {
-	DateTime now = Platform_CurrentUTCTime();	
+	DateTime now; Platform_CurrentUTCTime(&now);
 	UInt32 count = Chat_LogTimesUsed;
 
 	if (count == Chat_LogTimesCount) {
@@ -40,7 +40,7 @@ void Chat_AppendLogTime(void) {
 void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 	String dst = String_InitAndClearArray(line->Buffer);
 	String_AppendString(&dst, text);
-	line->Received = Platform_CurrentUTCTime();
+	Platform_CurrentUTCTime(&line->Received);
 }
 
 UInt8 Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
@@ -112,7 +112,7 @@ void Chat_OpenLog(DateTime* now) {
 
 void Chat_AppendLog(STRING_PURE String* text) {
 	if (Chat_LogName.length == 0 || !Game_ChatLogging) return;
-	DateTime now = Platform_CurrentLocalTime();
+	DateTime now; Platform_CurrentLocalTime(&now);
 
 	if (now.Day != ChatLog_LastLogDate.Day || now.Month != ChatLog_LastLogDate.Month || now.Year != ChatLog_LastLogDate.Year) {
 		Chat_CloseLog();

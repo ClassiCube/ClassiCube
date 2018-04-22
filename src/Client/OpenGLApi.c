@@ -187,7 +187,7 @@ void Gfx_SetFogColour(PackedCol col) {
 Real32 gl_lastFogEnd = -1, gl_lastFogDensity = -1;
 void Gfx_SetFogDensity(Real32 value) {
 	if (value == gl_lastFogDensity) return;
-	glFogf(GL_FOG_DENSITY, gl_lastFogDensity);
+	glFogf(GL_FOG_DENSITY, value);
 	gl_lastFogDensity = value;
 }
 
@@ -197,7 +197,7 @@ void Gfx_SetFogStart(Real32 value) {
 
 void Gfx_SetFogEnd(Real32 value) {
 	if (value == gl_lastFogEnd) return;
-	glFogf(GL_FOG_END, gl_lastFogEnd);
+	glFogf(GL_FOG_END, value);
 	gl_lastFogEnd = value;
 }
 
@@ -500,6 +500,30 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
+
+void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height) {
+	Bitmap bmp; Bitmap_Allocate(&bmp, width, height);
+	glReadPixels(0, 0, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, bmp.Scan0);
+	UInt8 tmp[PNG_MAX_DIMS * BITMAP_SIZEOF_PIXEL];
+
+	/* flip vertically around y */
+	Int32 x, y;
+	UInt32 stride = (UInt32)(bmp.Width) * BITMAP_SIZEOF_PIXEL;
+	for (y = 0; y < height / 2; y++) {
+		UInt32* src = Bitmap_GetRow(&bmp, y);
+		UInt32* dst = Bitmap_GetRow(&bmp, y);
+
+		Platform_MemCpy(tmp, src, stride);
+		Platform_MemCpy(src, dst, stride);
+		Platform_MemCpy(dst, tmp, stride);
+		/*for (x = 0; x < bmp.Width; x++) {
+			UInt32 temp = dst[x]; dst[x] = src[x]; src[x] = temp;
+		}*/
+	}
+
+	Bitmap_EncodePng(&bmp, output);
+	Platform_MemFree(&bmp.Scan0);
+}
 
 bool Gfx_WarnIfNecessary(void) {
 	if (gl_lists) {

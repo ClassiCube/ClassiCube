@@ -33,4 +33,5 @@ Screen* NostalgiaScreen_MakeInstance(void);
 
 Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url);
 Screen* TexIdsOverlay_MakeInstance(void);
+Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url);
 #endif

@@ -6,7 +6,7 @@
 
 void Random_Init(Random* seed, Int32 seedInit) { Random_SetSeed(seed, seedInit); }
 void Random_InitFromCurrentTime(Random* rnd) {
-	DateTime now = Platform_CurrentUTCTime();
+	DateTime now; Platform_CurrentUTCTime(&now);
 	Int64 totalMs = DateTime_TotalMs(&now);
 	Random_Init(rnd, (Int32)totalMs);
 }

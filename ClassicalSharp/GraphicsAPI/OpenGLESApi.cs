@@ -330,7 +330,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		// Based on http://www.opentk.com/doc/graphics/save-opengl-rendering-to-disk
-		public override void TakeScreenshot(string output, int width, int height) {
+		public override void TakeScreenshot(Stream output, int width, int height) {
 			using (Bitmap bmp = Bitmap.CreateBitmap(width, height, Bitmap.Config.Argb8888)) { // ignore alpha component
 				using (FastBitmap fastBmp = new FastBitmap(bmp, true)) {
 					GL.ReadPixels(0, 0, width, height, All.BgraExt, All.UnsignedByte, fastBmp.Scan0);
@@ -343,9 +343,7 @@ namespace ClassicalSharp.GraphicsAPI {
 						}
 					}
 				}
-				using (Stream fs = Platform.FileCreate(output)) {
-					Platform.WriteBmp(bmp, fs);
-				}
+				Platform.WriteBmp(bmp, output);
 			}
 		}
 		

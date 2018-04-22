@@ -190,10 +190,11 @@ void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitma
 	UInt8* src = (UInt8*)bmp->Scan0;
 	UInt8* dst = (UInt8*)rect.pBits;
 	Int32 yy;
+	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 
 	for (yy = 0; yy < bmp->Height; yy++) {
-		Platform_MemCpy(src, dst, bmp->Width * Bitmap_PixelBytesSize);
-		src += bmp->Width * Bitmap_PixelBytesSize;
+		Platform_MemCpy(src, dst, stride);
+		src += stride; 
 		dst += rect.Pitch;
 	}
 
@@ -581,6 +582,32 @@ void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 z
 	Matrix_PerspectiveFieldOfView(matrix, fov, aspect, zNear, zFar);
 }
 
+
+void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height) {
+	IDirect3DSurface9* backbuffer;
+	IDirect3DSurface9* temp;
+	ReturnCode hresult;
+
+	hresult = IDirect3DDevice9_GetBackBuffer(device, 0, 0, D3DBACKBUFFER_TYPE_MONO, &backbuffer);
+	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Get back buffer");
+	hresult = IDirect3DDevice9_CreateOffscreenPlainSurface(device, width, height, D3DFMT_X8R8G8B8, D3DPOOL_SYSTEMMEM, &temp, NULL);
+	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Create temp surface");
+	/* For DX 8 use IDirect3DDevice8::CreateImageSurface */
+
+	hresult = IDirect3DDevice9_GetRenderTargetData(device, backbuffer, temp);
+	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Copying back buffer");
+	D3DLOCKED_RECT rect;
+	hresult = IDirect3DSurface9_LockRect(temp, &rect, NULL, D3DLOCK_READONLY | D3DLOCK_NO_DIRTY_UPDATE);
+	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Lock temp surface");
+
+	Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
+	Bitmap_EncodePng(&bmp, output);
+	hresult = IDirect3DSurface9_UnlockRect(temp);
+	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Unlock temp surface");
+
+	D3D9_FreeResource(&backbuffer);
+	D3D9_FreeResource(&temp);
+}
 
 bool Gfx_WarnIfNecessary(void) { return false; }
 

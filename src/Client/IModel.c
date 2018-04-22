@@ -262,12 +262,12 @@ ModelPart BoxDesc_BuildBox(IModel* m, BoxDesc* desc) {
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
 	Int32 x = desc->TexX, y = desc->TexY;
 
-	BoxDesc_YQuad(m, x + sidesW, y, bodyW, sidesW, x2, x1, z2, z1, y2, false); /* top */
+	BoxDesc_YQuad(m, x + sidesW, y, bodyW, sidesW, x1, x2, z2, z1, y2, true); /* top */
 	BoxDesc_YQuad(m, x + sidesW + bodyW, y, bodyW, sidesW, x2, x1, z2, z1, y1, false); /* bottom */
-	BoxDesc_ZQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z1, false); /* front */
-	BoxDesc_ZQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z2, false); /* back */
-	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x2, false); /* left */
-	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x1, false); /* right */
+	BoxDesc_ZQuad(m, x + sidesW, y + sidesW, bodyW, bodyH, x1, x2, y1, y2, z1, true); /* front */
+	BoxDesc_ZQuad(m, x + sidesW + bodyW + sidesW, y + sidesW, bodyW, bodyH, x2, x1, y1, y2, z2, true); /* back */
+	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x2, true); /* left */
+	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true); /* right */
 
 	ModelPart part;
 	ModelPart_Init(&part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,

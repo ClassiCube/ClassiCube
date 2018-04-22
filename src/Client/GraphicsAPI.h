@@ -8,6 +8,8 @@
 /* Abstracts a 3D graphics rendering API.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
+typedef struct Stream_ Stream;
+
 #define ICOUNT(verticesCount) (((verticesCount) >> 2) * 6)
 #define VERTEX_FORMAT_P3FC4B 0
 #define VERTEX_FORMAT_P3FT2FC4B 1
@@ -105,8 +107,8 @@ void Gfx_LoadIdentityMatrix(void);
 void Gfx_CalcOrthoMatrix(Real32 width, Real32 height, Matrix* matrix);
 void Gfx_CalcPerspectiveMatrix(Real32 fov, Real32 aspect, Real32 zNear, Real32 zFar, Matrix* matrix);
 
-/* Outputs a .png screenshot of the backbuffer to the specified file. */
-void Gfx_TakeScreenshot(STRING_PURE String* output, Int32 width, Int32 height);
+/* Outputs a .png screenshot of the backbuffer */
+void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height);
 /* Adds a warning to game's chat if this graphics API has problems with the current user's GPU. 
 Returns boolean of whether legacy rendering mode is needed. */
 bool Gfx_WarnIfNecessary(void);

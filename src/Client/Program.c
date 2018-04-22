@@ -152,8 +152,8 @@ int main_test(int argc, char* argv[]) {
 	while (!gzip.Done) { GZipHeader_Read(&fileStream, &gzip); }
 	UInt32 pos = Platform_FilePosition(file);
 
-	DeflateState deflate;
-	Deflate_Init(&deflate, &fileStream);
+	InflateState deflate;
+	Inflate_Init(&deflate, &fileStream);
 	UInt32 read;
 	fileStream.Read(&fileStream, deflate.Input, 8192, &read);
 	deflate.AvailIn = read;
@@ -162,7 +162,7 @@ int main_test(int argc, char* argv[]) {
 	deflate.Output = out;
 	deflate.AvailOut = 56000;
 	//puff(out, &deflate.AvailOut, deflate.Input, &deflate.AvailIn);
-	Deflate_Process(&deflate);
+	Inflate_Process(&deflate);
 
 	String path2 = String_FromConstant("H:\\PortableApps\\GitPortable\\App\\Git\\ClassicalSharp\\src\\x64\\Debug\\ffff.c");
 	openCode = Platform_FileCreate(&file, &path2);
