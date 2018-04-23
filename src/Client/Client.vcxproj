@@ -250,7 +250,6 @@
     <ClInclude Include="VertexStructs.h" />
     <ClInclude Include="Widgets.h" />
     <ClInclude Include="Window.h" />
-    <ClInclude Include="WordWrap.h" />
     <ClInclude Include="World.h" />
   </ItemGroup>
   <ItemGroup>
@@ -319,7 +318,6 @@
     <ClCompile Include="WinErrorHandler.c" />
     <ClCompile Include="WinPlatform.c" />
     <ClCompile Include="WinWindow.c" />
-    <ClCompile Include="WordWrap.c" />
     <ClCompile Include="World.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

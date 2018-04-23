@@ -48,9 +48,11 @@ namespace ClassicalSharp.Gui.Widgets {
 
 		
 		public override void EnterInput() {
-			if (!Text.Empty) {
-				// Don't want trailing spaces in output message
-				string text = new String(Text.value, 0, Text.TextLength);
+			// Don't want trailing spaces in output message
+			int length = Text.Length;
+			while (length > 0 && Text.value[length - 1] == ' ') { length--; }			
+			if (length > 0) {
+				string text = new String(Text.value, 0, length);
 				game.Chat.Send(text);
 			}
 			

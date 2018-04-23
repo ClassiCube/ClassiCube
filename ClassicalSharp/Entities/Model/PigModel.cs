@@ -10,7 +10,6 @@ namespace ClassicalSharp.Model {
 		
 		public PigModel(Game window) : base(window) { SurivalScore = 10; }
 
-		/// <inheritdoc/>		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head = BuildBox(MakeBoxBounds(-4, 8, -14, 4, 16, -6)

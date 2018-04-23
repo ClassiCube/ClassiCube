@@ -4,6 +4,7 @@
 /* Implements operations for a string.
    Also implements conversions betweens strings and numbers.
    Also implements converting code page 437 indices to/from unicode.
+   Also implements wrapping a single line of text into multiple lines.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
 
@@ -120,4 +121,9 @@ void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 
 void StringsBuffer_Add(StringsBuffer* buffer, STRING_PURE String* text);
 void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index);
 Int32 StringsBuffer_Compare(StringsBuffer* buffer, UInt32 idxA, UInt32 idxB);
+
+void WordWrap_Do(STRING_REF String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 lineLen);
+void WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY);
+Int32 WordWrap_GetBackLength(STRING_PURE String* text, Int32 index);
+Int32 WordWrap_GetForwardLength(STRING_PURE String* text, Int32 index);
 #endif

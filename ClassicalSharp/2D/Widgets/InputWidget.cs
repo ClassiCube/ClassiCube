@@ -10,7 +10,7 @@ namespace ClassicalSharp.Gui.Widgets {
 	public abstract class InputWidget : Widget {
 		
 		public InputWidget(Game game, Font font, string prefix, int maxLines) : base(game) {
-			Text = new WrappableStringBuffer(Utils.StringLength * maxLines);
+			Text = new StringBuffer(Utils.StringLength * maxLines);
 			lines = new string[maxLines];
 			lineSizes = new Size[maxLines];
 			this.font = font;
@@ -43,7 +43,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		/// <summary> The raw text entered. </summary>
 		/// <remarks> You should Append() to add more text, as that also updates the caret position and texture. </remarks>
-		public WrappableStringBuffer Text;
+		public StringBuffer Text;
 		
 		/// <summary> The maximum number of lines that may be entered. </summary>
 		public abstract int UsedLines { get; }

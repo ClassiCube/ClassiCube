@@ -62,7 +62,6 @@ namespace ClassicalSharp.Map {
 			if (Env.CloudHeight == -1) Env.CloudHeight = height + 2;
 		}
 		
-		/// <summary> Sets the block at the given world coordinates without bounds checking. </summary>
 		public void SetBlock(int x, int y, int z, BlockID blockId) {
 			int i = (y * Length + z) * Width + x;
 			blocks[i] = (BlockRaw)blockId;
@@ -76,7 +75,6 @@ namespace ClassicalSharp.Map {
 			blocks2[i] = (BlockRaw)(blockId >> 8);
 		}
 		
-		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public BlockID GetBlock(int x, int y, int z) {
 			int i = (y * Length + z) * Width + x;
 			#if !ONLY_8BIT
@@ -86,7 +84,6 @@ namespace ClassicalSharp.Map {
 			#endif
 		}
 		
-		/// <summary> Returns the block at the given world coordinates without bounds checking. </summary>
 		public BlockID GetBlock(Vector3I p) {
 			int i = (p.Y * Length + p.Z) * Width + p.X;
 			#if !ONLY_8BIT
@@ -96,21 +93,15 @@ namespace ClassicalSharp.Map {
 			#endif
 		}
 		
-		/// <summary> Returns the block at the given world coordinates with bounds checking,
-		/// returning 0 is the coordinates were outside the map. </summary>
 		public BlockID SafeGetBlock(Vector3I p) {
 			return IsValidPos(p.X, p.Y, p.Z) ? GetBlock(p) : Block.Air;
 		}
-		
-		/// <summary> Returns whether the given world coordinates are contained
-		/// within the dimensions of the map. </summary>
+
 		public bool IsValidPos(int x, int y, int z) {
 			return x >= 0 && y >= 0 && z >= 0 &&
 				x < Width && y < Height && z < Length;
 		}
-		
-		/// <summary> Returns whether the given world coordinates are contained
-		/// within the dimensions of the map. </summary>
+
 		public bool IsValidPos(Vector3I p) {
 			return p.X >= 0 && p.Y >= 0 && p.Z >= 0 &&
 				p.X < Width && p.Y < Height && p.Z < Length;

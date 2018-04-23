@@ -685,3 +685,98 @@ Int32 StringsBuffer_Compare(StringsBuffer* buffer, UInt32 idxA, UInt32 idxB) {
 	String strB = StringsBuffer_UNSAFE_Get(buffer, idxB);
 	return String_Compare(&strA, &strB);
 }
+
+
+bool WordWrap_IsWrapper(UInt8 c) {
+	return c == NULL || c == ' ' || c == '-' || c == '>' || c == '<' || c == '/' || c == '\\';
+}
+
+void WordWrap_Do(STRING_REF String* text, STRING_TRANSIENT String* lines, Int32 numLines, Int32 lineLen) {
+	Int32 i;
+	for (i = 0; i < numLines; i++) { lines[i] = String_MakeNull(); }
+
+	Int32 lineStart = 0, lineEnd;
+	for (i = 0; i < numLines; i++) {
+		Int32 nextLineStart = lineStart + lineLen;
+		/* No more text to wrap */
+		if (nextLineStart >= text->length) {
+			lines[i] = String_UNSAFE_SubstringAt(text, lineStart); return;
+		}
+
+		/* Find beginning of last word on current line */
+		for (lineEnd = nextLineStart; lineEnd >= lineStart; lineEnd--) {
+			if (WordWrap_IsWrapper(text->buffer[lineEnd])) break;
+		}
+		lineEnd++; /* move after wrapper char (i.e. beginning of last word)*/
+
+		if (lineEnd <= lineStart || lineEnd >= nextLineStart) {
+			/* Three special cases handled by this: */
+			/* - Entire line is filled with a single word */
+			/* - Last character(s) on current line are wrapper characters */
+			/* - First character on next line is a wrapper character (last word ends at current line end) */
+			lines[i] = String_UNSAFE_Substring(text, lineStart, lineLen);
+			lineStart += lineLen;
+		} else {
+			/* Last word in current line does not end in current line (extends onto next line) */
+			/* Trim current line to end at beginning of last word */
+			/* Set next line to start at beginning of last word */
+			lines[i] = String_UNSAFE_Substring(text, lineStart, lineEnd - lineStart);
+			lineStart = lineEnd;
+		}
+	}
+}
+
+/* Calculates where the given raw index is located in the wrapped lines. */
+void WordWrap_GetCoords(Int32 index, STRING_PURE String* lines, Int32 numLines, Int32* coordX, Int32* coordY) {
+	if (index == -1) index = Int32_MaxValue;
+	Int32 offset = 0; *coordX = -1; *coordY = 0;
+
+	Int32 y;
+	for (y = 0; y < numLines; y++) {
+		Int32 lineLength = lines[y].length;
+		if (lineLength == 0) break;
+
+		*coordY = y;
+		if (index < offset + lineLength) {
+			*coordX = index - offset; break;
+		}
+		offset += lineLength;
+	}
+	if (*coordX == -1) *coordX = lines[*coordY].length;
+}
+
+Int32 WordWrap_GetBackLength(STRING_PURE String* text, Int32 index) {
+	if (index <= 0) return 0;
+	if (index >= text->length) {
+		ErrorHandler_Fail("WordWrap_GetBackLength - index past end of string");
+	}
+
+	Int32 start = index;
+	bool lookingSpace = text->buffer[index] == ' ';
+	/* go back to the end of the previous word */
+	if (lookingSpace) {
+		while (index > 0 && text->buffer[index] == ' ') { index--; }
+	}
+
+	/* go back to the start of the current word */
+	while (index > 0 && text->buffer[index] != ' ') { index--; }
+	return start - index;
+}
+
+Int32 WordWrap_GetForwardLength(STRING_PURE String* text, Int32 index) {
+	if (index == -1) return 0;
+	if (index >= text->length) {
+		ErrorHandler_Fail("WordWrap_GetForwardLength - index past end of string");
+	}
+
+	Int32 start = index, length = text->length;
+	bool lookingLetter = text->buffer[index] != ' ';
+	/* go forward to the end of the current word */
+	if (lookingLetter) {
+		while (index < length && text->buffer[index] != ' ') { index++; }
+	}
+
+	/* go forward to the start of the next word */
+	while (index < length && text->buffer[index] == ' ') { index++; }
+	return index - start;
+}

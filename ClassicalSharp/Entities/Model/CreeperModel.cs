@@ -32,24 +32,19 @@ namespace ClassicalSharp.Model {
 			                        .TexOrigin(0, 16)
 			                        .RotOrigin(0, 6, 2));
 		}
-		
-		/// <inheritdoc/>		
+			
 		public override float NameYOffset { get { return 1.7f; } }
-
-		/// <inheritdoc/>		
+	
 		public override float GetEyeY(Entity entity) { return 22/16f; }
-
-		/// <inheritdoc/>		
+		
 		public override Vector3 CollisionSize {
 			get { return new Vector3(8/16f, 26/16f, 8/16f); }
 		}
 
-		/// <inheritdoc/>		
 		public override AABB PickingBounds {
 			get { return new AABB(-4/16f, 0, -6/16f, 4/16f, 26/16f, 6/16f); }
 		}
 
-		/// <inheritdoc/>		
 		public override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);

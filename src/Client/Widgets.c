@@ -11,7 +11,6 @@
 #include "ModelCache.h"
 #include "Screens.h"
 #include "Platform.h"
-#include "WordWrap.h"
 #include "ServerConnection.h"
 #include "Event.h"
 #include "Chat.h"
@@ -1211,7 +1210,6 @@ void InputWidget_Init(GuiElement* elem) {
 	InputWidget* widget = (InputWidget*)elem;
 	Int32 lines = widget->GetMaxLines();
 	if (lines > 1) {
-		/* TODO: Actually make this work */
 		WordWrap_Do(&widget->Text, widget->Lines, lines, INPUTWIDGET_LEN);
 	} else {
 		widget->Lines[0] = widget->Text;
