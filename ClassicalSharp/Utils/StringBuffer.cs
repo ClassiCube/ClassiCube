@@ -84,6 +84,7 @@ namespace ClassicalSharp {
 		
 		public StringBuffer Set(string s) {
 			for (int i = 0; i < s.Length; i++) value[i] = s[i];
+			Length = s.Length;
 			return this;
 		}
 		
