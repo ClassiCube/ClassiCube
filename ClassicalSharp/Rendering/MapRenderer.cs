@@ -10,6 +10,11 @@ using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Renderers {
 	
+	public struct ChunkPartInfo {
+		public int VbId, VerticesCount, SpriteCount;
+		public ushort LeftCount, RightCount, FrontCount, BackCount, BottomCount, TopCount;
+	}
+	
 	public class ChunkInfo {
 		
 		public ushort CentreX, CentreY, CentreZ;

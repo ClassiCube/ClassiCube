@@ -499,7 +499,6 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 void Window_SetClipboardText(STRING_PURE String* value) {
 	/* retry up to 10 times*/
 	Int32 i;
-	value->length = 0;
 	for (i = 0; i < 10; i++) {
 		if (!OpenClipboard(win_Handle)) {
 			Platform_ThreadSleep(100);

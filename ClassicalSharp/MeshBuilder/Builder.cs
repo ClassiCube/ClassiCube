@@ -336,9 +336,4 @@ namespace ClassicalSharp {
 			edgeLevel = Math.Max(0, game.World.Env.EdgeHeight);
 		}
 	}
-	
-	public struct ChunkPartInfo {
-		public int VbId, VerticesCount, SpriteCount;
-		public ushort LeftCount, RightCount, FrontCount, BackCount, BottomCount, TopCount;
-	}
 }
