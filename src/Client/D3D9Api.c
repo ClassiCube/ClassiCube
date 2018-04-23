@@ -193,7 +193,7 @@ void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitma
 	UInt32 stride = (UInt32)(bmp->Width) * BITMAP_SIZEOF_PIXEL;
 
 	for (yy = 0; yy < bmp->Height; yy++) {
-		Platform_MemCpy(src, dst, stride);
+		Platform_MemCpy(dst, src, stride);
 		src += stride; 
 		dst += rect.Pitch;
 	}

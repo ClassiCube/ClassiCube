@@ -315,12 +315,12 @@ void Block_RecalculateBB(BlockID block) {
 	Real32 leftX   = Block_GetSpriteBB_LeftX(elemSize,   texX, texY, bmp);
 	Real32 rightX  = Block_GetSpriteBB_RightX(elemSize,  texX, texY, bmp);
 
-	Vector3 centre = Vector3_Create3(0.5f, 0, 0.5f);
+	Vector3 centre = VECTOR3_CONST(0.5f, 0.0f, 0.5f);
 	Vector3 minRaw = Vector3_RotateY3(leftX  - 0.5f, bottomY, 0, 45.0f * MATH_DEG2RAD);
 	Vector3 maxRaw = Vector3_RotateY3(rightX - 0.5f, topY,    0, 45.0f * MATH_DEG2RAD);
 
-	Vector3_Add(&minRaw, &centre, &Block_MinBB[block]);
-	Vector3_Add(&maxRaw, &centre, &Block_MaxBB[block]);
+	Vector3_Add(&Block_MinBB[block], &minRaw, &centre);
+	Vector3_Add(&Block_MaxBB[block], &maxRaw, &centre);
 	Block_CalcRenderBounds(block);
 }
 

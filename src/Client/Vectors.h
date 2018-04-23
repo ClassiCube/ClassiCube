@@ -70,7 +70,6 @@ Vector3 Vector3_GetDirVector(Real32 yawRad, Real32 pitchRad);
 NOTE: This is not an identity function. Returned pitch is always within [-90, 90] degrees.*/
 void Vector3_GetHeading(Vector3 dir, Real32* yawRad, Real32* pitchRad);
 
-
 void Matrix_RotateX(Matrix* result, Real32 angle);
 void Matrix_RotateY(Matrix* result, Real32 angle);
 void Matrix_RotateZ(Matrix* result, Real32 angle);

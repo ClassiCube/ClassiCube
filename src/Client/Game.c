@@ -283,6 +283,8 @@ Int32 Game_CalcRenderType(STRING_PURE String* type) {
 void Game_OnResize(void* obj) {
 	Size2D size = Window_GetClientSize();
 	Game_Width = size.Width; Game_Height = size.Height;
+	if (Game_Width == 0)  Game_Width = 1;
+	if (Game_Height == 0) Game_Height = 1;
 
 	Gfx_OnWindowResize();
 	Game_UpdateProjection();

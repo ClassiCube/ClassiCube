@@ -271,15 +271,18 @@ bool Stream_ReadUtf8Char(Stream* stream, UInt16* codepoint) {
 
 bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
 	String_Clear(text);
+	bool readAny = false;
 	for (;;) {
 		UInt16 codepoint;
-		if (!Stream_ReadUtf8Char(stream, &codepoint)) return false;
+		if (!Stream_ReadUtf8Char(stream, &codepoint)) break;
+		readAny = true;
 
 		/* Handle \r\n or \n line endings */
 		if (codepoint == '\r') continue;
 		if (codepoint == '\n') return true;
 		String_Append(text, Convert_UnicodeToCP437(codepoint));
 	}
+	return readAny;
 }
 
 void Stream_WriteLine(Stream* stream, STRING_TRANSIENT String* text) {
