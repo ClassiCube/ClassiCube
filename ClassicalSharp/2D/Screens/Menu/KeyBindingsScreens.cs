@@ -111,14 +111,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			binds = new KeyBind[11];
+			binds = new KeyBind[12];
 			binds[0] = KeyBind.ExtInput; binds[1] = KeyBind.HideFps; binds[2] = KeyBind.HideGui;
 			binds[3] = KeyBind.HotbarSwitching; binds[4] = KeyBind.DropBlock;
 			binds[5] = KeyBind.Screenshot; binds[6] = KeyBind.Fullscreen; binds[7] = KeyBind.AxisLines;
 			binds[8] = KeyBind.Autorotate; binds[9] = KeyBind.SmoothCamera; binds[10] = KeyBind.IDOverlay;
+			binds[11] = KeyBind.BreakableLiquids;
 			
 			desc = new string[] { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block",
-				"Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay" };
+				"Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 			
 			leftPage = SwitchHacks;
 			rightPage = SwitchMouse;

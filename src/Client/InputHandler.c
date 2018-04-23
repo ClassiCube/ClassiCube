@@ -181,6 +181,10 @@ bool InputHandler_HandleCoreKey(Key key) {
 		if (Gui_OverlaysCount > 0) return true;
 		Screen* overlay = TexIdsOverlay_MakeInstance();
 		Gui_ShowOverlay(overlay, false);
+	} else if (key == KeyBind_Get(KeyBind_BreakableLiquids)) {
+		InputHandler_Toggle(key, &Game_BreakableLiquids,
+			"  &eBreakable liquids is &aenabled",
+			"  &eBreakable liquids is &cdisabled");
 	} else {
 		return false;
 	}

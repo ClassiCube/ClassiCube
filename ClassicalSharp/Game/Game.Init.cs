@@ -191,7 +191,7 @@ namespace ClassicalSharp {
 			DefaultFov = Options.GetInt(OptionsKey.FieldOfView, 1, 150, 70);
 			Fov = DefaultFov;
 			ZoomFov = DefaultFov;
-			ModifiableLiquids = !ClassicMode && Options.GetBool(OptionsKey.ModifiableLiquids, false);
+			BreakableLiquids = !ClassicMode && Options.GetBool(OptionsKey.ModifiableLiquids, false);
 			CameraClipping = Options.GetBool(OptionsKey.CameraClipping, true);
 			MaxChunkUpdates = Options.GetInt(OptionsKey.MaxChunkUpdates, 4, 1024, 30);
 			

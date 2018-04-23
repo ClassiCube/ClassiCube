@@ -103,7 +103,7 @@ typedef struct KeyBindingsScreen_ {
 	MenuScreen_Layout
 	Int32 CurI, BindsCount;
 	const UInt8** Descs;
-	KeyBind* Binds;
+	UInt8* Binds;
 	Widget_LeftClick LeftPage, RightPage;
 	ButtonWidget* Buttons;
 	TextWidget Title;
@@ -902,13 +902,13 @@ void EditHotkeyScreen_LeaveOpen(GuiElement* elem, GuiElement* widget) {
 void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	HotkeyData hotkey = screen->OrigHotkey;
-	if (hotkey.BaseKey != Key_Unknown) {
+	if (hotkey.BaseKey != Key_None) {
 		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
 	}
 
 	hotkey = screen->CurHotkey;
-	if (hotkey.BaseKey != Key_Unknown) {
+	if (hotkey.BaseKey != Key_None) {
 		String text = screen->Input.Base.Text;
 		Hotkeys_Add(hotkey.BaseKey, hotkey.Flags, &text, hotkey.StaysOpen);
 		Hotkeys_UserAddedHotkey(hotkey.BaseKey, hotkey.Flags, hotkey.StaysOpen, &text);
@@ -919,7 +919,7 @@ void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
 void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	HotkeyData hotkey = screen->OrigHotkey;
-	if (hotkey.BaseKey != Key_Unknown) {
+	if (hotkey.BaseKey != Key_None) {
 		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
 	}
@@ -989,7 +989,7 @@ void EditHotkeyScreen_ContextRecreated(void* obj) {
 	MenuInputValidator validator = MenuInputValidator_String();
 	String text = String_MakeNull();
 
-	bool existed = screen->OrigHotkey.BaseKey != Key_Unknown;
+	bool existed = screen->OrigHotkey.BaseKey != Key_None;
 	if (existed) {
 		text = StringsBuffer_UNSAFE_Get(&HotkeysText, screen->OrigHotkey.TextIndex);
 	}
@@ -1495,7 +1495,7 @@ void HotkeyListScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	if (String_ContainsString(&value, &shift)) flags |= HOTKEYS_FLAG_SHIFT;
 	if (String_ContainsString(&value, &alt))   flags |= HOTKEYS_FLAG_ALT;
 
-	Key baseKey = Utils_ParseEnum(&key, Key_Unknown, Key_Names, Key_Count);
+	Key baseKey = Utils_ParseEnum(&key, Key_None, Key_Names, Key_Count);
 	Int32 i;
 	for (i = 0; i < HotkeysText.Count; i++) {
 		HotkeyData h = HotkeysList[i];
@@ -1690,7 +1690,10 @@ void KeyBindingsScreen_Init(GuiElement* elem) {
 bool KeyBindingsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
 	if (screen->CurI == -1) return MenuScreen_HandlesKeyDown(elem, key);
-	KeyBind_Set(screen->Binds[screen->CurI], key);
+
+	KeyBind bind = screen->Binds[screen->CurI];
+	if (key == Key_Escape) key = KeyBind_GetDefault(bind);
+	KeyBind_Set(bind, key);
 
 	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
@@ -1719,7 +1722,7 @@ bool KeyBindingsScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mous
 	return true;
 }
 
-KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, KeyBind* binds, const UInt8** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextFunc contextRecreated) {
+KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const UInt8** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextFunc contextRecreated) {
 	KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, bindsCount + 4, contextRecreated);
 	KeyBindingsScreen_VTABLE = *screen->VTABLE;
@@ -1755,7 +1758,7 @@ void ClassicKeyBindingsScreen_ContextRecreated(void* obj) {
 }
 
 Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
-	static KeyBind binds[10] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn };
+	static UInt8 binds[10] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn };
 	static const UInt8* descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
 	static ButtonWidget buttons[10];
 	static Widget* widgets[10 + 4];
@@ -1775,7 +1778,7 @@ void ClassicHacksKeyBindingsScreen_ContextRecreated(void* obj) {
 }
 
 Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
-	static KeyBind binds[6] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown };
+	static UInt8 binds[6] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown };
 	static const UInt8* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 	static ButtonWidget buttons[6];
 	static Widget* widgets[6 + 4];
@@ -1795,7 +1798,7 @@ void NormalKeyBindingsScreen_ContextRecreated(void* obj) {
 }
 
 Screen* NormalKeyBindingsScreen_MakeInstance(void) {
-	static KeyBind binds[12] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_PlayerList, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn, KeyBind_SendChat };
+	static UInt8 binds[12] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_PlayerList, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn, KeyBind_SendChat };
 	static const UInt8* descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	static ButtonWidget buttons[12];
 	static Widget* widgets[12 + 4];
@@ -1815,7 +1818,7 @@ void HacksKeyBindingsScreen_ContextRecreated(void* obj) {
 }
 
 Screen* HacksKeyBindingsScreen_MakeInstance(void) {
-	static KeyBind binds[8] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_ZoomScrolling, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown, KeyBind_ThirdPerson };
+	static UInt8 binds[8] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_ZoomScrolling, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown, KeyBind_ThirdPerson };
 	static const UInt8* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 	static ButtonWidget buttons[8];
 	static Widget* widgets[8 + 4];
@@ -1836,10 +1839,10 @@ void OtherKeyBindingsScreen_ContextRecreated(void* obj) {
 }
 
 Screen* OtherKeyBindingsScreen_MakeInstance(void) {
-	static KeyBind binds[11] = { KeyBind_ExtInput, KeyBind_HideFps, KeyBind_HideGui, KeyBind_HotbarSwitching, KeyBind_DropBlock,KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_AxisLines, KeyBind_Autorotate, KeyBind_SmoothCamera, KeyBind_IDOverlay };
-	static const UInt8* descs[11] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay" };
-	static ButtonWidget buttons[11];
-	static Widget* widgets[11 + 4];
+	static UInt8 binds[12] = { KeyBind_ExtInput, KeyBind_HideFps, KeyBind_HideGui, KeyBind_HotbarSwitching, KeyBind_DropBlock,KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_AxisLines, KeyBind_Autorotate, KeyBind_SmoothCamera, KeyBind_IDOverlay, KeyBind_BreakableLiquids };
+	static const UInt8* descs[12] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
+	static ButtonWidget buttons[12];
+	static Widget* widgets[12 + 4];
 
 	KeyBindingsScreen* screen = KeyBindingsScreen_Make(Array_Elems(binds), binds, descs, buttons, widgets, OtherKeyBindingsScreen_ContextRecreated);
 	screen->LeftPage  = Menu_SwitchKeysHacks;
@@ -1863,7 +1866,7 @@ void MouseKeyBindingsScreen_ContextRecreated(void* obj) {
 }
 
 Screen* MouseKeyBindingsScreen_MakeInstance(void) {
-	static KeyBind binds[3] = { KeyBind_MouseLeft, KeyBind_MouseMiddle, KeyBind_MouseRight };
+	static UInt8 binds[3] = { KeyBind_MouseLeft, KeyBind_MouseMiddle, KeyBind_MouseRight };
 	static const UInt8* descs[3] = { "Left", "Middle", "Right" };
 	static ButtonWidget buttons[3];
 	static Widget* widgets[3 + 4 + 1];
@@ -2646,9 +2649,9 @@ void HacksSettingsScreen_SetPushback(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.PushbackPlacing = Menu_SetBool(v, OPT_PUSHBACK_PLACING);
 }
 
-void HacksSettingsScreen_GetLiquids(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ModifiableLiquids); }
+void HacksSettingsScreen_GetLiquids(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_BreakableLiquids); }
 void HacksSettingsScreen_SetLiquids(STRING_PURE String* v) {
-	Game_ModifiableLiquids = Menu_SetBool(v, OPT_MODIFIABLE_LIQUIDS);
+	Game_BreakableLiquids = Menu_SetBool(v, OPT_MODIFIABLE_LIQUIDS);
 }
 
 void HacksSettingsScreen_GetSlide(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.NoclipSlide); }
@@ -2706,7 +2709,7 @@ void HacksSettingsScreen_ContextRecreated(void* obj) {
 
 	MenuOptionsScreen_Make(screen, 5, 1, -150, "Full block stepping", MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetFullStep, HacksSettingsScreen_SetFullStep);
-	MenuOptionsScreen_Make(screen, 6, 1, -100, "Modifiable liquids",  MenuOptionsScreen_Bool,
+	MenuOptionsScreen_Make(screen, 6, 1, -100, "Breakable liquids",   MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetLiquids,  HacksSettingsScreen_SetLiquids);
 	MenuOptionsScreen_Make(screen, 7, 1,  -50, "Pushback placing",    MenuOptionsScreen_Bool,
 		HacksSettingsScreen_GetPushback, HacksSettingsScreen_SetPushback);
@@ -2741,7 +2744,6 @@ Screen* HacksSettingsScreen_MakeInstance(void) {
 	static const UInt8* descs[Array_Elems(buttons)];
 	descs[2] = "&eIf &fON&e, then the third person cameras will limit%"   "&etheir zoom distance if they hit a solid block.";
 	descs[3] = "&eSets how many blocks high you can jump up.%"   "&eNote: You jump much higher when holding down the Speed key binding.";
-	descs[6] = "&eIf &fON&e, then water/lava can be placed and%"   "&edeleted the same way as any other block.";
 	descs[7] = \
 		"&eIf &fON&e, placing blocks that intersect your own position cause%" \
 		"&ethe block to be placed, and you to be moved out of the way.%" \

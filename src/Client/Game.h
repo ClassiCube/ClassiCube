@@ -64,7 +64,7 @@ bool Game_ViewBobbing;
 bool Game_ShowBlockInHand;
 Int32 Game_SoundsVolume;
 Int32 Game_MusicVolume;
-bool Game_ModifiableLiquids;
+bool Game_BreakableLiquids;
 Int32 Game_MaxChunkUpdates;
 
 Vector3 Game_CurrentCameraPos;

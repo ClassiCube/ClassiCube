@@ -27,6 +27,7 @@ bld/
 [sS]rc/Client/maps
 [sS]rc/Client/texturecache
 [sS]rc/Client/logs
+[sS]rc/Client/options.txt
 
 # Roslyn cache directories
 *.ide/

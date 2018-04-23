@@ -240,6 +240,10 @@ namespace ClassicalSharp {
 			} else if (key == Keys[KeyBind.IDOverlay]) {
 				if (game.Gui.overlays.Count > 0) return true;
 				game.Gui.ShowOverlay(new TexIdsOverlay(game), false);
+			} else if (key == Keys[KeyBind.BreakableLiquids]) {
+				Toggle(key, ref game.BreakableLiquids,
+				       "  &eBreakable liquids is &aenabled",
+				       "  &eBreakable liquids is &cdisabled");
 			} else {
 				return false;
 			}

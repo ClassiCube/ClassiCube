@@ -145,7 +145,7 @@ namespace ClassicalSharp {
 			if (BlockInfo.Draw[block] == DrawType.Sprite) return true;
 			
 			if (BlockInfo.Collide[block] != CollideType.Liquid) return true;
-			return ModifiableLiquids && BlockInfo.CanPlace[block] && BlockInfo.CanDelete[block];
+			return BreakableLiquids && BlockInfo.CanPlace[block] && BlockInfo.CanDelete[block];
 		}
 		
 		

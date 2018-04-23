@@ -101,7 +101,7 @@ namespace ClassicalSharp.Network.Protocols {
 			#if !ANDROID
 			if (keyCode < 0 || keyCode > 255) return;
 			Key key = LwjglToKey.Map[keyCode];
-			if (key == Key.Unknown) return;
+			if (key == Key.None) return;
 			
 			Utils.LogDebug("CPE Hotkey added: " + key + "," + keyMods + " : " + action);
 			if (action == "") {

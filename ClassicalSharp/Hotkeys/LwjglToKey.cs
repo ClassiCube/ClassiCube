@@ -25,7 +25,7 @@ namespace ClassicalSharp.Hotkeys {
 		}
 		
 		static LwjglToKey() {
-			Add(Key.Unknown); Add(Key.Escape);
+			Add(Key.None); Add(Key.Escape);
 			for (int i = 0; i < 9; i++)
 				Add((Key)(i + Key.Number1));
 			Add(Key.Number0); Add(Key.Minus);

@@ -106,9 +106,9 @@ namespace ClassicalSharp.Gui.Screens {
 			g.LocalPlayer.Hacks.PushbackPlacing = SetBool(v, OptionsKey.PushbackPlacing); 
 		}
 		
-		static string GetLiquids(Game g) { return GetBool(g.ModifiableLiquids); }
+		static string GetLiquids(Game g) { return GetBool(g.BreakableLiquids); }
 		static void SetLiquids(Game g, string v) { 
-			g.ModifiableLiquids = SetBool(v, OptionsKey.ModifiableLiquids); 
+			g.BreakableLiquids = SetBool(v, OptionsKey.ModifiableLiquids); 
 		}
 		
 		static string GetSlide(Game g) { return GetBool(g.LocalPlayer.Hacks.NoclipSlide); }

@@ -175,7 +175,7 @@ Key Window_MapKey(WPARAM key) {
 	case VK_LEFT: return Key_Left;
 	case VK_RIGHT: return Key_Right;
 	}
-	return Key_Unknown;
+	return Key_None;
 }
 
 LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
@@ -378,7 +378,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 
 		default:
 			mappedKey = Window_MapKey(wParam);
-			if (mappedKey != Key_Unknown) {
+			if (mappedKey != Key_None) {
 				Key_SetPressed(mappedKey, pressed);
 			}
 			return 0;

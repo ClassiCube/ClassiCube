@@ -672,8 +672,15 @@ void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index) {
 	for (i = start; i < end; i++) { 
 		buffer->TextBuffer[i - len] = buffer->TextBuffer[i]; 
 	}
+
+	/* adjust text offset of elements after this element */
+	/* Elements may not be in order so most account for that */
+	UInt32 flagsLen = len << STRINGSBUFFER_LEN_SHIFT;
 	for (i = index; i < buffer->Count; i++) {
 		buffer->FlagsBuffer[i] = buffer->FlagsBuffer[i + 1];
+		if (buffer->FlagsBuffer[i] >= flags) {
+			buffer->FlagsBuffer[i] -= flagsLen;
+		}
 	}
 
 	buffer->Count--;

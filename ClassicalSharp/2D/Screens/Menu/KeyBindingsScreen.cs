@@ -74,8 +74,11 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesKeyDown(Key key) {
 			if (curI == -1) return base.HandlesKeyDown(key);
+			KeyBind bind = binds[curI];
 			
-			game.Input.Keys[binds[curI]] = key;
+			if (key == Key.Escape) key = game.Input.Keys.GetDefault(bind);
+			game.Input.Keys[bind] = key;
+			
 			ButtonWidget curButton = (ButtonWidget)widgets[curI];
 			curButton.SetText(ButtonText(curI));
 			curI = -1;

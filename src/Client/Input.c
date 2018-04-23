@@ -16,7 +16,7 @@
 "U", "V", "W", "X", "Y", "Z"
 
 const UInt8* Key_Names[Key_Count] = {
-	"Unknown",
+	"None",
 	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
 	"AltLeft", "AltRight", "WinLeft", "WinRight", "Menu",
 	Key_Function_Names,
@@ -116,9 +116,9 @@ Key KeyBind_Defaults[KeyBind_Count] = {
 	Key_Tab, Key_ShiftLeft, Key_X, Key_Z,
 	Key_Q, Key_E, Key_AltLeft, Key_F3,
 	Key_F12, Key_F11, Key_F5, Key_F1,
-	Key_F7, Key_C, Key_ControlLeft, Key_Unknown,
-	Key_Unknown, Key_Unknown, Key_F6, Key_AltLeft, 
-	Key_F8, Key_G, Key_F10,
+	Key_F7, Key_C, Key_ControlLeft, Key_None,
+	Key_None, Key_None, Key_F6, Key_AltLeft, 
+	Key_F8, Key_G, Key_F10, Key_None,
 };
 const UInt8* KeyBind_Names[KeyBind_Count] = {
 	"Forward", "Back", "Left", "Right",
@@ -129,7 +129,7 @@ const UInt8* KeyBind_Names[KeyBind_Count] = {
 	"Screenshot", "Fullscreen", "ThirdPerson", "HideGUI",
 	"AxisLines", "ZoomScrolling", "HalfSpeed", "MouseLeft",
 	"MouseMiddle", "MouseRight", "AutoRotate", "HotbarSwitching",
-	"SmoothCamera", "DropBlock", "IDOverlay",
+	"SmoothCamera", "DropBlock", "IDOverlay", "BreakableLiquids",
 };
 
 Key KeyBind_Get(KeyBind binding) { return KeyBind_Keys[binding]; }
@@ -145,9 +145,10 @@ void KeyBind_Load(void) {
 
 	for (i = 0; i < KeyBind_Count; i++) {
 		KeyBind_MakeName(name);
-		Key mapping = Options_GetEnum(name.buffer, KeyBind_Keys[i], Key_Names, Key_Count);
+		Key mapping = Options_GetEnum(name.buffer, KeyBind_Defaults[i], Key_Names, Key_Count);
 		if (mapping != Key_Escape) KeyBind_Keys[i] = mapping;
 	}
+	KeyBind_Keys[KeyBind_PauseOrExit] = Key_Escape;
 }
 
 void KeyBind_Save(void) {
@@ -157,7 +158,7 @@ void KeyBind_Save(void) {
 
 	for (i = 0; i < KeyBind_Count; i++) {
 		KeyBind_MakeName(name);
-		String value = String_FromReadonly(Key_Names[i]);
+		String value = String_FromReadonly(Key_Names[KeyBind_Keys[i]]);
 		Options_Set(name.buffer, &value);
 	}
 }
@@ -302,9 +303,9 @@ void Hotkeys_Init(void) {
 		String strText      = String_UNSAFE_SubstringAt(&value, valueSplit + 1);
 
 		/* Then try to parse the key and value */
-		Key hotkey = Utils_ParseEnum(&strKey, Key_Unknown, Key_Names, Array_Elems(Key_Names));
+		Key hotkey = Utils_ParseEnum(&strKey, Key_None, Key_Names, Array_Elems(Key_Names));
 		UInt8 flags; bool moreInput;
-		if (hotkey == Key_Unknown || strText.length == 0 || !Convert_TryParseUInt8(&strFlags, &flags) 
+		if (hotkey == Key_None || strText.length == 0 || !Convert_TryParseUInt8(&strFlags, &flags) 
 			|| !Convert_TryParseBool(&strMoreInput, &moreInput)) { continue; }
 
 		Hotkeys_Add(hotkey, flags, &strText, moreInput);

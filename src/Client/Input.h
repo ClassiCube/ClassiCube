@@ -31,7 +31,7 @@
 */
 
 typedef enum Key_ {	
-	Key_Unknown, /* Key outside the known keys */
+	Key_None, /* Key outside the known keys */
 
 	Key_ShiftLeft, Key_ShiftRight, Key_ControlLeft, Key_ControlRight,
 	Key_AltLeft, Key_AltRight, Key_WinLeft, Key_WinRight, Key_Menu,
@@ -104,7 +104,7 @@ typedef enum KeyBind_ {
 	KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_ThirdPerson, KeyBind_HideGui, 
 	KeyBind_AxisLines, KeyBind_ZoomScrolling, KeyBind_HalfSpeed, KeyBind_MouseLeft, 
 	KeyBind_MouseMiddle, KeyBind_MouseRight, KeyBind_Autorotate, KeyBind_HotbarSwitching, 
-	KeyBind_SmoothCamera, KeyBind_DropBlock, KeyBind_IDOverlay,
+	KeyBind_SmoothCamera, KeyBind_DropBlock, KeyBind_IDOverlay, KeyBind_BreakableLiquids,
 	KeyBind_Count
 } KeyBind;
 

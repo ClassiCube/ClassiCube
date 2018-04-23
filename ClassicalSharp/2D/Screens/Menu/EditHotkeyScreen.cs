@@ -55,7 +55,7 @@ namespace ClassicalSharp.Gui.Screens {
 			string flags = HotkeyListScreen.MakeFlagsString(curHotkey.Flags);
 			if (curHotkey.Text == null) curHotkey.Text = "";
 			string staysOpen = curHotkey.StaysOpen ? "ON" : "OFF";
-			bool existed = origHotkey.BaseKey != Key.Unknown;
+			bool existed = origHotkey.BaseKey != Key.None;
 			
 			InputWidget input;
 			input = MenuInputWidget.Create(game, 500, 30, curHotkey.Text, textFont, new StringValidator())
@@ -94,13 +94,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void SaveChangesClick(Game game, Widget widget) {
-			if (origHotkey.BaseKey != Key.Unknown) {
+			if (origHotkey.BaseKey != Key.None) {
 				HotkeyList.Remove(origHotkey.BaseKey, origHotkey.Flags);
 				HotkeyList.UserRemovedHotkey(origHotkey.BaseKey, origHotkey.Flags);
 			}
 			MenuInputWidget input = (MenuInputWidget)widgets[actionI];
 			
-			if (curHotkey.BaseKey != Key.Unknown) {
+			if (curHotkey.BaseKey != Key.None) {
 				HotkeyList.Add(curHotkey.BaseKey, curHotkey.Flags,
 				                  input.Text.ToString(), curHotkey.StaysOpen);
 				HotkeyList.UserAddedHotkey(curHotkey.BaseKey, curHotkey.Flags,
@@ -110,7 +110,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void RemoveHotkeyClick(Game game, Widget widget) {
-			if (origHotkey.BaseKey != Key.Unknown) {
+			if (origHotkey.BaseKey != Key.None) {
 				HotkeyList.Remove(origHotkey.BaseKey, origHotkey.Flags);
 				HotkeyList.UserRemovedHotkey(origHotkey.BaseKey, origHotkey.Flags);
 			}

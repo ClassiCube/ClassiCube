@@ -206,7 +206,7 @@ bool Game_CanPick(BlockID block) {
 	if (Block_Draw[block] == DRAW_SPRITE) return true;
 
 	if (Block_Collide[block] != COLLIDE_LIQUID) return true;
-	return Game_ModifiableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
+	return Game_BreakableLiquids && Block_CanPlace[block] && Block_CanDelete[block];
 }
 
 void Game_SetDefaultSkinType(Bitmap* bmp) {
@@ -353,7 +353,7 @@ void Game_LoadOptions(void) {
 	Game_DefaultFov = Options_GetInt(OPT_FIELD_OF_VIEW, 1, 150, 70);
 	Game_Fov        = Game_DefaultFov;
 	Game_ZoomFov    = Game_DefaultFov;
-	Game_ModifiableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
+	Game_BreakableLiquids = !Game_ClassicMode && Options_GetBool(OPT_MODIFIABLE_LIQUIDS, false);
 	Game_CameraClipping    = Options_GetBool(OPT_CAMERA_CLIPPING, true);
 	Game_MaxChunkUpdates   = Options_GetInt(OPT_MAX_CHUNK_UPDATES, 4, 1024, 30);
 

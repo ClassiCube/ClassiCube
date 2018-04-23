@@ -29,7 +29,7 @@ namespace OpenTK.Input {
     /// <summary> The available keyboard keys. </summary>
     public enum Key : int {
         // Key outside the known keys
-        Unknown = 0,
+        None = 0,
     
         // Modifiers
         ShiftLeft, ShiftRight, ControlLeft, ControlRight,
