@@ -819,7 +819,7 @@ void Collisions_CollideWithReachableBlocks(CollisionsComp* comp, Int32 count, AA
 		v.X *= tx; v.Y *= ty; v.Z *= tz;
 		AABB finalBB; /* Inlined ABBB_Offset */
 		Vector3_Add(&finalBB.Min, &entityBB->Min, &v);
-		Vector3_Add(&finalBB.Min, &entityBB->Max, &v);
+		Vector3_Add(&finalBB.Max, &entityBB->Max, &v);
 
 		/* if we have hit the bottom of a block, we need to change the axis we test first */
 		if (!comp->HitYMin) {

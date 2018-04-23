@@ -564,7 +564,7 @@ void Game_UpdateViewMatrix(void) {
 }
 
 void Game_Render3D(Real64 delta, Real32 t) {
-	if (SkyboxRenderer_ShouldRender) {
+	if (SkyboxRenderer_ShouldRender()) {
 		SkyboxRenderer_Render(delta);
 	}
 	AxisLinesRenderer_Render(delta);
