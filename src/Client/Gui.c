@@ -143,10 +143,10 @@ void Gui_SetScreen(Screen* screen, bool freeOld) {
 	if (Gui_Active != NULL && freeOld) { Elem_TryFree(Gui_Active); }
 
 	if (screen == NULL) {
-		Window_SetCursorVisible(false);
+		Game_SetCursorVisible(false);
 		if (Window_GetFocused()) { Camera_Active->RegrabMouse(); }
 	} else if (Gui_Active == NULL) {
-		Window_SetCursorVisible(true);
+		Game_SetCursorVisible(true);
 	}
 
 	if (screen != NULL) { Elem_Init(screen); }

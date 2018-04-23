@@ -649,7 +649,6 @@ void Inflate_Process(InflateState* state) {
 
 ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	InflateState* state = (InflateState*)stream->Data;
-	InflateState copy = *state;
 	if (state->AvailIn == 0) {
 		/* Fully used up input buffer. Cycle back to start. */
 		if (state->NextIn == INFLATE_MAX_INPUT) state->NextIn = 0;

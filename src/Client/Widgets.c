@@ -973,7 +973,7 @@ void InputWidget_RenderCaret(InputWidget* widget, Real64 delta) {
 	widget->CaretAccumulator += delta;
 	Real64 second = widget->CaretAccumulator - (Real64)Math_Floor((Real32)widget->CaretAccumulator);
 	if (second < 0.5) {
-		GfxCommon_Draw2DTexture(&widget->CaretTex, widget->CaretCol);
+		Texture_RenderShaded(&widget->CaretTex, widget->CaretCol);
 	}
 }
 
@@ -2336,7 +2336,7 @@ void TextGroupWidget_Init(GuiElement* elem) {
 	widget->DefaultHeight = height;
 
 	UInt32 i;
-	for (i = 0; i < Array_Elems(widget->Textures); i++) {
+	for (i = 0; i < widget->LinesCount; i++) {
 		widget->Textures[i].Height = (UInt16)height;
 		widget->PlaceholderHeight[i] = true;
 	}

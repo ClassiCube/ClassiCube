@@ -1966,8 +1966,8 @@ void MenuOptionsScreen_EnterInput(MenuOptionsScreen* screen) {
 	}
 
 	MenuOptionsScreen_SelectExtHelp(screen, screen->ActiveI);
-	screen->ActiveI = -1;
 	MenuOptionsScreen_FreeInput(screen);
+	screen->ActiveI = -1;
 }
 
 void MenuOptionsScreen_Init(GuiElement* elem) {

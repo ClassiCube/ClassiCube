@@ -809,14 +809,12 @@ void ChatScreen_CheckOtherStatuses(ChatScreen* screen) {
 }
 
 void ChatScreen_RenderBackground(ChatScreen* screen) {
-	Int32 minIndex = min(0, Chat_Log.Count - Game_ChatLines);
-	Int32 height = screen->ChatIndex == minIndex ? TextGroupWidget_UsedHeight(&screen->Chat) : screen->Chat.Height;
-
-	Int32 y = screen->Chat.Y + screen->Chat.Height - height - 5;
+	Int32 usedHeight = TextGroupWidget_UsedHeight(&screen->Chat);
+	Int32 y = screen->Chat.Y + screen->Chat.Height - usedHeight - 5;
 	Int32 x = screen->Chat.X - 5;
 	Int32 width = max(screen->ClientStatus.Width, screen->Chat.Width) + 10;
 
-	Int32 boxHeight = height + TextGroupWidget_UsedHeight(&screen->ClientStatus);
+	Int32 boxHeight = usedHeight + TextGroupWidget_UsedHeight(&screen->ClientStatus);
 	if (boxHeight > 0) {
 		PackedCol backCol = PACKEDCOL_CONST(0, 0, 0, 127);
 		GfxCommon_Draw2DFlat(x, y, width, boxHeight + 10, backCol);

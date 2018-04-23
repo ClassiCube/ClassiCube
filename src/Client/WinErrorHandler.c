@@ -10,14 +10,13 @@
 #define ErrorHandler_WriteLogBody(raw_msg)\
 UInt8 logMsgBuffer[String_BufferSize(2047)];\
 String logMsg = String_InitAndClearArray(logMsgBuffer);\
-String_AppendConst(&logMsg, "ClassicalSharp crashed.\r\n");\
+String_AppendConst(&logMsg, "ClassiCube crashed.\r\n");\
 String_AppendConst(&logMsg, "Message: ");\
 String_AppendConst(&logMsg, raw_msg);\
 String_AppendConst(&logMsg, "\r\n");
 
 #define ErrorHandler_WriteLogEnd()\
 String_AppendConst(&logMsg, "\r\nPlease report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
-
 
 void ErrorHandler_Init(const UInt8* logFile) {
 	/* TODO: Open log file */
