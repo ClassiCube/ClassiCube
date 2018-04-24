@@ -282,6 +282,7 @@
     <ClCompile Include="Deflate.c" />
     <ClCompile Include="IModel.c" />
     <ClCompile Include="Menus.c" />
+    <ClCompile Include="PacketHandlers.c" />
     <ClCompile Include="Physics.c" />
     <ClCompile Include="IsometricDrawer.c" />
     <ClCompile Include="Input.c" />

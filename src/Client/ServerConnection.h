@@ -16,7 +16,7 @@
 #define OPCODE_SET_BLOCK                      6
 #define OPCODE_ADD_ENTITY                     7
 #define OPCODE_ENTITY_TELEPORT                8
-#define OPCODE_RELPOSANDORIENTATION_UPDATE    9
+#define OPCODE_RELPOS_AND_ORIENTATION_UPDATE  9
 #define OPCODE_RELPOS_UPDATE                  10
 #define OPCODE_ORIENTATION_UPDATE             11
 #define OPCODE_REMOVE_ENTITY                  12

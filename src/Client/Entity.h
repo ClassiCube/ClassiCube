@@ -33,20 +33,21 @@ extern const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT];
 #define ENTITY_TYPE_NONE 0
 #define ENTITY_TYPE_PLAYER 1
 
+#define LOCATIONUPDATE_FLAG_POS   0x01
+#define LOCATIONUPDATE_FLAG_HEADX 0x02
+#define LOCATIONUPDATE_FLAG_HEADY 0x04
+#define LOCATIONUPDATE_FLAG_ROTX  0x08
+#define LOCATIONUPDATE_FLAG_ROTZ  0x10
 /* Represents a location update for an entity. Can be a relative position, full position, and/or an orientation update. */
 typedef struct LocationUpdate_ {
-	/* Position of the update (if included). */
 	Vector3 Pos;
-	/* Orientation of the update (if included). If not, has the value of MATH_POS_INF. */
-	Real32 RotX, RotY, RotZ, HeadX;
-	bool IncludesPosition, RelativePosition;
+	Real32 HeadX, HeadY, RotX, RotZ;
+	UInt8 Flags;
+	bool RelativePos;
 } LocationUpdate;
 
 /* Clamps the given angle so it lies between [0, 360). */
 Real32 LocationUpdate_Clamp(Real32 degrees);
-
-void LocationUpdate_Construct(LocationUpdate* update, Real32 x, Real32 y, Real32 z,
-	Real32 rotX, Real32 rotY, Real32 rotZ, Real32 headX, bool incPos, bool relPos);
 void LocationUpdate_Empty(LocationUpdate* update);
 void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX);
 void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel);

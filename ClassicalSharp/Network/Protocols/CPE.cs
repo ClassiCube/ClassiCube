@@ -370,10 +370,13 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			switch (type) {
 				case 0:
+					update.Flags |= LocationUpdateFlag.RotX;
 					update.RotX = LocationUpdate.Clamp(value); break;
 				case 1:
-					update.RotY = LocationUpdate.Clamp(value); break;
+					update.Flags |= LocationUpdateFlag.HeadY;
+					update.HeadY = LocationUpdate.Clamp(value); break;
 				case 2:
+					update.Flags |= LocationUpdateFlag.RotZ;
 					update.RotZ = LocationUpdate.Clamp(value); break;
 					
 				case 3:

@@ -26,38 +26,37 @@ const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Cir
 *-----------------------------------------------------LocationUpdate------------------------------------------------------*
 *#########################################################################################################################*/
 Real32 LocationUpdate_Clamp(Real32 degrees) {
-	if (degrees == MATH_POS_INF) return MATH_POS_INF;
 	degrees = Math_ModF(degrees, 360.0f);
 	if (degrees < 0) degrees += 360.0f;
 	return degrees;
 }
 
-void LocationUpdate_Construct(LocationUpdate* update, Real32 x, Real32 y, Real32 z,
-	Real32 rotX, Real32 rotY, Real32 rotZ, Real32 headX, bool incPos, bool relPos) {
-	update->Pos = Vector3_Create3(x, y, z);
-	update->RotX = LocationUpdate_Clamp(rotX);
-	update->RotY = LocationUpdate_Clamp(rotY);
-	update->RotZ = LocationUpdate_Clamp(rotZ);
-	update->HeadX = LocationUpdate_Clamp(headX);
-	update->IncludesPosition = incPos;
-	update->RelativePosition = relPos;
-}
-
-#define exc MATH_POS_INF
+LocationUpdate loc_empty;
 void LocationUpdate_Empty(LocationUpdate* update) {
-	LocationUpdate_Construct(update, 0.0f, 0.0f, 0.0f, exc, exc, exc, exc, false, false);
+	*update = loc_empty;
 }
 
 void LocationUpdate_MakeOri(LocationUpdate* update, Real32 rotY, Real32 headX) {
-	LocationUpdate_Construct(update, 0.0f, 0.0f, 0.0f, exc, rotY, exc, headX, false, false);
+	*update = loc_empty;
+	update->Flags = LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
+	update->HeadX = LocationUpdate_Clamp(headX);
+	update->HeadY = LocationUpdate_Clamp(rotY);
 }
 
 void LocationUpdate_MakePos(LocationUpdate* update, Vector3 pos, bool rel) {
-	LocationUpdate_Construct(update, pos.X, pos.Y, pos.Z, exc, exc, exc, exc, true, rel);
+	*update = loc_empty;
+	update->Flags = LOCATIONUPDATE_FLAG_POS;
+	update->Pos   = pos;
+	update->RelativePos = rel;
 }
 
 void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 rotY, Real32 headX, bool rel) {
-	LocationUpdate_Construct(update, pos.X, pos.Y, pos.Z, exc, rotY, exc, headX, true, rel);
+	*update = loc_empty;
+	update->Flags = LOCATIONUPDATE_FLAG_POS | LOCATIONUPDATE_FLAG_HEADX | LOCATIONUPDATE_FLAG_HEADY;
+	update->HeadX = LocationUpdate_Clamp(headX);
+	update->HeadY = LocationUpdate_Clamp(rotY);
+	update->Pos   = pos;
+	update->RelativePos = rel;
 }
 
 

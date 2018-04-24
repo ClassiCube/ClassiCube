@@ -566,5 +566,8 @@
     <ClCompile Include="TexturePack.c">
       <Filter>Source Files\TexturePack</Filter>
     </ClCompile>
+    <ClCompile Include="PacketHandlers.c">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

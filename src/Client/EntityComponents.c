@@ -322,16 +322,17 @@ void InterpComp_AdvanceRotY(InterpComp* interp) {
 void InterpComp_LerpAngles(InterpComp* interp, Entity* entity, Real32 t) {
 	InterpState* prev = &interp->Prev;
 	InterpState* next = &interp->Next;
+
 	entity->HeadX = Math_LerpAngle(prev->HeadX, next->HeadX, t);
 	entity->HeadY = Math_LerpAngle(prev->HeadY, next->HeadY, t);
-	entity->RotX = Math_LerpAngle(prev->RotX, next->RotX, t);
-	entity->RotY = Math_LerpAngle(interp->PrevRotY, interp->NextRotY, t);
-	entity->RotZ = Math_LerpAngle(prev->RotZ, next->RotZ, t);
+	entity->RotX  = Math_LerpAngle(prev->RotX,  next->RotX, t);
+	entity->RotY  = Math_LerpAngle(interp->PrevRotY, interp->NextRotY, t);
+	entity->RotZ  = Math_LerpAngle(prev->RotZ,  next->RotZ, t);
 }
 
 void InterpComp_SetPos(InterpState* state, LocationUpdate* update) {
-	if (update->RelativePosition) {
-		Vector3_Add(&state->Pos, &state->Pos, &update->Pos);
+	if (update->RelativePos) {
+		Vector3_AddBy(&state->Pos, &update->Pos);
 	} else {
 		state->Pos = update->Pos;
 	}
@@ -341,11 +342,6 @@ void InterpComp_SetPos(InterpState* state, LocationUpdate* update) {
 /*########################################################################################################################*
 *----------------------------------------------NetworkInterpolationComponent----------------------------------------------*
 *#########################################################################################################################*/
-Real32 NetInterpComp_Next(Real32 next, Real32 cur) {
-	if (next == MATH_POS_INF) return cur;
-	return next;
-}
-
 void NetInterpComp_RemoveOldestState(NetInterpComp* interp) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(interp->States); i++) {
@@ -364,14 +360,13 @@ void NetInterpComp_AddState(NetInterpComp* interp, InterpState state) {
 void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bool interpolate) {
 	InterpState last = interp->Cur;
 	InterpState* cur = &interp->Cur;
-	if (update->IncludesPosition) {
-		InterpComp_SetPos(cur, update);
-	}
+	UInt8 flags = update->Flags;
 
-	cur->RotX = NetInterpComp_Next(update->RotX, cur->RotX);
-	cur->RotZ = NetInterpComp_Next(update->RotZ, cur->RotZ);
-	cur->HeadX = NetInterpComp_Next(update->HeadX, cur->HeadX);
-	cur->HeadY = NetInterpComp_Next(update->RotY, cur->HeadY);
+	if (flags & LOCATIONUPDATE_FLAG_POS)   InterpComp_SetPos(cur, update);
+	if (flags & LOCATIONUPDATE_FLAG_ROTX)  cur->RotX  = update->RotX;
+	if (flags & LOCATIONUPDATE_FLAG_ROTZ)  cur->RotZ  = update->RotZ;
+	if (flags & LOCATIONUPDATE_FLAG_HEADX) cur->HeadX = update->HeadX;
+	if (flags & LOCATIONUPDATE_FLAG_HEADY) cur->HeadY = update->HeadY;
 
 	if (!interpolate) {
 		interp->Prev = *cur; interp->PrevRotY = cur->HeadY;
@@ -381,8 +376,8 @@ void NetInterpComp_SetLocation(NetInterpComp* interp, LocationUpdate* update, bo
 		/* Smoother interpolation by also adding midpoint. */
 		InterpState mid;
 		Vector3_Lerp(&mid.Pos, &last.Pos, &cur->Pos, 0.5f);
-		mid.RotX = Math_LerpAngle(last.RotX, cur->RotX, 0.5f);
-		mid.RotZ = Math_LerpAngle(last.RotZ, cur->RotZ, 0.5f);
+		mid.RotX  = Math_LerpAngle(last.RotX,  cur->RotX,  0.5f);
+		mid.RotZ  = Math_LerpAngle(last.RotZ,  cur->RotZ,  0.5f);
 		mid.HeadX = Math_LerpAngle(last.HeadX, cur->HeadX, 0.5f);
 		mid.HeadY = Math_LerpAngle(last.HeadY, cur->HeadY, 0.5f);
 		NetInterpComp_AddState(interp, mid);
@@ -408,38 +403,42 @@ void NetInterpComp_AdvanceState(NetInterpComp* interp) {
 /*########################################################################################################################*
 *-----------------------------------------------LocalInterpolationComponent-----------------------------------------------*
 *#########################################################################################################################*/
-Real32 LocalInterpComp_Next(Real32 next, Real32 cur, Real32* last, bool interpolate) {
-	if (next == MATH_POS_INF) return cur;
-	if (!interpolate) *last = next;
-	return next;
+void LocalInterpComp_Angle(Real32* prev, Real32* next, Real32 value, bool interpolate) {
+	*next = value;
+	if (!interpolate) *prev = value;
 }
 
 void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, bool interpolate) {
 	Entity* entity = &LocalPlayer_Instance.Base;
 	InterpState* prev = &interp->Prev;
 	InterpState* next = &interp->Next;
+	UInt8 flags = update->Flags;
 
-	if (update->IncludesPosition) {
-		InterpComp_SetPos(next, update);
-		Real32 blockOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
-		if (blockOffset < ENTITY_ADJUSTMENT) {
-			next->Pos.Y += ENTITY_ADJUSTMENT;
-		}
-		if (!interpolate) {
-			prev->Pos = next->Pos;
-			entity->Position = next->Pos;
-		}
+	if (flags & LOCATIONUPDATE_FLAG_POS) {
+		InterpComp_SetPos(interp, update);
+		/* If server sets Y position exactly on ground, push up a tiny bit */
+		Real32 yOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
+		if (yOffset < ENTITY_ADJUSTMENT) { next->Pos.Y += ENTITY_ADJUSTMENT; }
+		if (!interpolate) { prev->Pos = next->Pos; entity->Position = next->Pos; }
 	}
 
-	next->RotX = LocalInterpComp_Next(update->RotX, next->RotX, &prev->RotX, interpolate);
-	next->RotZ = LocalInterpComp_Next(update->RotZ, next->RotZ, &prev->RotZ, interpolate);
-	next->HeadX = LocalInterpComp_Next(update->HeadX, next->HeadX, &prev->HeadX, interpolate);
-	next->HeadY = LocalInterpComp_Next(update->RotY, next->HeadY, &prev->HeadY, interpolate);
+	if (flags & LOCATIONUPDATE_FLAG_HEADX) {
+		LocalInterpComp_Angle(&prev->HeadX, &next->HeadX, update->HeadX, interpolate);
+	}
+	if (flags & LOCATIONUPDATE_FLAG_HEADY) {
+		LocalInterpComp_Angle(&prev->HeadY, &next->HeadY, update->HeadY, interpolate);
+	}
+	if (flags & LOCATIONUPDATE_FLAG_ROTX) {
+		LocalInterpComp_Angle(&prev->RotX, &next->RotX, update->RotX, interpolate);
+	}
+	if (flags & LOCATIONUPDATE_FLAG_ROTZ) {
+		LocalInterpComp_Angle(&prev->RotZ, &next->RotZ, update->RotZ, interpolate);
+	}
 
-	if (update->RotY != MATH_POS_INF) {
+	if (flags & LOCATIONUPDATE_FLAG_HEADY) {
 		if (!interpolate) {
-			interp->NextRotY = update->RotY;
-			entity->RotY = update->RotY;
+			interp->NextRotY = update->HeadY;
+			entity->RotY     = update->HeadY;
 			interp->RotYCount = 0;
 		} else {
 			/* Body Y rotation lags slightly behind */
@@ -450,7 +449,6 @@ void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, boo
 			interp->NextRotY = interp->RotYStates[0];
 		}
 	}
-
 	InterpComp_LerpAngles(interp, entity, 0.0f);
 }
 

@@ -70,14 +70,16 @@ namespace ClassicalSharp.Entities {
 		internal State cur;
 
 		public override void SetLocation(LocationUpdate update, bool interpolate) {
-			State last = cur;			
-			if (update.IncludesPosition) {
-				cur.Pos = update.RelativePosition ? cur.Pos + update.Pos : update.Pos;
+			State last = cur;
+			byte flags = update.Flags;
+			if ((flags & LocationUpdateFlag.Pos) != 0) {
+				cur.Pos = update.RelativePos ? cur.Pos + update.Pos : update.Pos;
 			}
-			cur.RotX =  Next(update.RotX,  cur.RotX);
-			cur.RotZ =  Next(update.RotZ,  cur.RotZ);
-			cur.HeadX = Next(update.HeadX, cur.HeadX);
-			cur.HeadY = Next(update.RotY,  cur.HeadY);
+
+			if ((flags & LocationUpdateFlag.HeadX) != 0) cur.HeadX = update.HeadX;
+			if ((flags & LocationUpdateFlag.HeadY) != 0) cur.HeadY = update.HeadY;
+			if ((flags & LocationUpdateFlag.RotX) != 0)  cur.RotX  = update.RotX;
+			if ((flags & LocationUpdateFlag.RotZ) != 0)  cur.RotZ  = update.RotZ;
 			
 			if (!interpolate) {
 				stateCount = 0;
@@ -101,7 +103,7 @@ namespace ClassicalSharp.Entities {
 		}
 
 		public override void AdvanceState() {
-			prev = next;			
+			prev = next;
 			if (stateCount > 0) {
 				next = states[0];
 				RemoveOldest(states, ref stateCount);
@@ -111,11 +113,6 @@ namespace ClassicalSharp.Entities {
 		
 		State[] states = new State[10];
 		int stateCount;
-		
-		static float Next(float next, float cur) {
-			if (float.IsNaN(next)) return cur;
-			return next;
-		}
 		
 		void AddState(State state) {
 			if (stateCount == states.Length)
@@ -132,27 +129,38 @@ namespace ClassicalSharp.Entities {
 			this.entity = entity;
 		}
 		
+		void Angle(ref float prev, ref float next, float value, bool interpolate) {
+			next = value;
+			if (!interpolate) prev = value;
+		}
+		
 		public override void SetLocation(LocationUpdate update, bool interpolate) {
-			if (update.IncludesPosition) {
-				next.Pos = update.RelativePosition ? next.Pos + update.Pos : update.Pos;
-				float blockOffset = next.Pos.Y - Utils.Floor(next.Pos.Y);
-				if (blockOffset < Entity.Adjustment)
-					next.Pos.Y += Entity.Adjustment;
-				
-				if (!interpolate) {
-					prev.Pos = entity.Position = next.Pos;
-				}
+			byte flags = update.Flags;
+			if ((flags & LocationUpdateFlag.Pos) != 0) {
+				next.Pos = update.RelativePos ? next.Pos + update.Pos : update.Pos;
+				// If server sets Y position exactly on ground, push up a tiny bit
+				float yOffset = next.Pos.Y - Utils.Floor(next.Pos.Y);
+				if (yOffset < Entity.Adjustment) { next.Pos.Y += Entity.Adjustment; }
+				if (!interpolate) { prev.Pos = next.Pos; entity.Position = next.Pos; }
+			}
+
+			if ((flags & LocationUpdateFlag.HeadX) != 0) {
+				Angle(ref prev.HeadX, ref next.HeadX, update.HeadX, interpolate);
+			}
+			if ((flags & LocationUpdateFlag.HeadY) != 0) {
+				Angle(ref prev.HeadY, ref next.HeadY, update.HeadY, interpolate);
+			}
+			if ((flags & LocationUpdateFlag.RotX) != 0) {
+				Angle(ref prev.RotX, ref next.RotX, update.RotX, interpolate);
+			}
+			if ((flags & LocationUpdateFlag.RotZ) != 0) {
+				Angle(ref prev.RotZ, ref next.RotZ, update.RotZ, interpolate);
 			}
 			
-			next.RotX =  Next(update.RotX,  next.RotX,  ref prev.RotX,  interpolate);
-			next.RotZ =  Next(update.RotZ,  next.RotZ,  ref prev.RotZ,  interpolate);
-			next.HeadX = Next(update.HeadX, next.HeadX, ref prev.HeadX, interpolate);
-			next.HeadY = Next(update.RotY,  next.HeadY, ref prev.HeadY, interpolate);
-			
-			if (!float.IsNaN(update.RotY)) {
+			if ((flags & LocationUpdateFlag.HeadY) != 0) {
 				// Body Y rotation lags slightly behind
 				if (!interpolate) {
-					nextRotY = update.RotY; entity.RotY = update.RotY;
+					nextRotY = update.HeadY; entity.RotY = update.HeadY;
 					rotYStateCount = 0;
 				} else {
 					for (int i = 0; i < 3; i++)
@@ -160,19 +168,13 @@ namespace ClassicalSharp.Entities {
 					nextRotY = rotYStates[0];
 				}
 			}
+			
 			LerpAngles(0);
 		}
 		
 		public override void AdvanceState() {
 			prev = next; entity.Position = next.Pos;
 			base.AdvanceState();
-		}
-		
-		static float Next(float next, float cur, ref float last, bool interpolate) {
-			if (float.IsNaN(next)) return cur;
-			
-			if (!interpolate) last = next;
-			return next;
 		}
 	}
 }
