@@ -149,7 +149,7 @@ void NotchyGen_CreateHeightmap(void) {
 
 Int32 NotchyGen_CreateStrataFast(void) {
 	UInt32 oneY = (UInt32)Gen_Width * (UInt32)Gen_Length;
-	Int32 x, y, z;
+	Int32 y;
 	Gen_CurrentProgress = 0.0f;
 	Gen_CurrentState = "Filling map";
 

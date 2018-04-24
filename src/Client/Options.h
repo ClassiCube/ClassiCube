@@ -30,7 +30,7 @@ extern const UInt8* FpsLimit_Names[FpsLimit_Count];
 #define OPT_RENDER_TYPE "normal"
 #define OPT_SMOOTH_LIGHTING "gfx-smoothlighting"
 #define OPT_MIPMAPS "gfx-mipmaps"
-#define OPT_SURVIVAL_MODE "game-survivalmode"
+#define OPT_SURVIVAL_MODE "game-survival"
 #define OPT_CHAT_LOGGING "chat-logging"
 #define OPT_WINDOW_WIDTH "window-width"
 #define OPT_WINDOW_HEIGHT "window-height"

@@ -73,7 +73,7 @@ void Block_SetCustomDefined(BlockID block, bool defined) {
 }
 
 void Block_DefineCustom(BlockID block) {
-	Block_SetBlockDraw(block, Block_Draw[block]);
+	Block_SetDrawType(block, Block_Draw[block]);
 	Block_CalcRenderBounds(block);
 	Block_UpdateCulling(block);
 

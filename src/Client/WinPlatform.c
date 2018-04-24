@@ -111,7 +111,6 @@ void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
 	time->Minute = (UInt8)sysTime->wMinute;
 	time->Second = (UInt8)sysTime->wSecond;
 	time->Milli  = sysTime->wMilliseconds;
-	return time;
 }
 
 void Platform_CurrentUTCTime(DateTime* time) {

@@ -250,7 +250,7 @@ void Matrix_OrthographicOffCenter(Matrix* result, Real32 left, Real32 right, Rea
 }
 
 void Matrix_PerspectiveFieldOfView(Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar) {
-	Real32 c = zNear * Math_TanF(0.5 * fovy);
+	Real32 c = (Real32)(zNear * Math_TanF(0.5 * fovy));
 	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
 }
 

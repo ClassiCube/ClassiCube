@@ -664,7 +664,8 @@ void D3D9_RestoreRenderStates(void) {
 	D3D9_SetRenderState2(D3DRS_DESTBLEND, d3d9_dstBlendFunc, "D3D9_AlphaDstBlend");
 	D3D9_SetRenderState2(D3DRS_FOGENABLE, d3d9_fogEnable, "D3D9_Fog");
 	D3D9_SetRenderState2(D3DRS_FOGCOLOR, d3d9_fogCol, "D3D9_FogColor");
-	D3D9_SetRenderState2(D3DRS_FOGDENSITY, d3d9_fogDensity, "D3D9_FogDensity");
+	raw = *(UInt32*)&d3d9_fogDensity;
+	D3D9_SetRenderState2(D3DRS_FOGDENSITY, raw, "D3D9_FogDensity");
 	raw = *(UInt32*)&d3d9_fogStart;
 	D3D9_SetRenderState2(D3DRS_FOGSTART, raw, "D3D9_FogStart");
 	raw = *(UInt32*)&d3d9_fogEnd;

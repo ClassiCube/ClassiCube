@@ -30,7 +30,7 @@ namespace ClassicalSharp {
 		public const string RenderType = "normal";
 		public const string SmoothLighting = "gfx-smoothlighting";
 		public const string Mipmaps = "gfx-mipmaps";
-		public const string SurvivalMode = "game-survivalmode";
+		public const string SurvivalMode = "game-survival";
 		public const string ChatLogging = "chat-logging";
 		public const string WindowWidth = "window-width";
 		public const string WindowHeight = "window-height";
