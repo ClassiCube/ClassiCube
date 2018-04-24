@@ -34,9 +34,7 @@ namespace ClassicalSharp.Network {
 		internal WoMProtocol wom;
 
 		internal CPESupport cpeData;
-		internal bool receivedFirstPosition;
 		internal byte[] needRemoveNames = new byte[256 >> 3];
-		int pingTicks;
 		
 		public override void Connect(IPAddress address, int port) {
 			socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -54,16 +52,12 @@ namespace ClassicalSharp.Network {
 			writer = new NetWriter(socket);
 			
 			classic = new ClassicProtocol(game);
-			classic.Init();
 			cpe = new CPEProtocol(game);
-			cpe.Init();
 			cpeBlockDefs = new CPEProtocolBlockDefs(game);
-			cpeBlockDefs.Init();
 			wom = new WoMProtocol(game);
-			wom.Init();
+			ResetProtocols();
 			
 			Disconnected = false;
-			receivedFirstPosition = false;
 			lastPacket = DateTime.UtcNow;
 			game.WorldEvents.OnNewMap += OnNewMap;
 			game.UserEvents.BlockChanged += BlockChanged;
@@ -128,18 +122,8 @@ namespace ClassicalSharp.Network {
 		void CoreTick() {
 			CheckAsyncResources();
 			wom.Tick();
-			
-			if (receivedFirstPosition) {
-				LocalPlayer player = game.LocalPlayer;
-				classic.WritePosition(player.Position, player.HeadY, player.HeadX);
-			}
-			
-			pingTicks++;		
-			if (pingTicks >= 20 && cpeData.twoWayPing) {
-				cpe.WriteTwoWayPing(false, PingList.NextTwoWayPingData());
-				pingTicks = 0;
-			}
-			
+			classic.Tick();
+			cpe.Tick();
 			if (writer.index > 0) SendPacket();
 		}
 		
@@ -190,15 +174,19 @@ namespace ClassicalSharp.Network {
 				handlers[i] = null;
 				packetSizes[i] = 0;
 			}
-			if (classic == null) return; // null if no successful connection ever made before
-			
-			classic.Reset();
-			cpe.Reset();
-			cpeBlockDefs.Reset();
+			ResetProtocols();
 			
 			reader.ExtendedPositions = false; reader.ExtendedBlocks = false;
 			writer.ExtendedPositions = false; writer.ExtendedBlocks = false;
 			BlockInfo.SetMaxUsed(255);
+		}
+		
+		void ResetProtocols() {
+			if (classic == null) return; // null if no successful connection ever made before		
+			classic.Reset();
+			cpe.Reset();
+			cpeBlockDefs.Reset();
+			wom.Reset();
 		}
 		
 		internal Action[] handlers = new Action[256];

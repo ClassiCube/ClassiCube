@@ -84,8 +84,8 @@ void Block_Init(void);
 void Block_SetDefaultPerms(void);
 bool Block_IsCustomDefined(BlockID block);
 void Block_SetCustomDefined(BlockID block, bool defined);
+void Block_DefineCustom(BlockID block);
 
-void Block_CalcIsTinted(BlockID block);
 void Block_SetCollide(BlockID block, UInt8 collide);
 void Block_SetDrawType(BlockID block, UInt8 draw);
 void Block_ResetProps(BlockID block);

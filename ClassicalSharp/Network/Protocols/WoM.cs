@@ -11,9 +11,15 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		public WoMProtocol(Game game) : base(game) { }
 		
-		string womEnvIdentifier = "womenv_0";
-		int womCounter = 0;
-		internal bool sendWomId = false, sentWomId = false;
+		string womEnvIdentifier;
+		int womCounter;
+		bool sendWomId, sentWomId;
+		
+		public override void Reset() {
+			womEnvIdentifier = "womenv_0";
+			womCounter = 0;
+			sendWomId = false; sentWomId = false;
+		}
 
 		public override void Tick() {
 			Request item;

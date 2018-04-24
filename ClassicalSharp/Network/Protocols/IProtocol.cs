@@ -15,15 +15,8 @@ namespace ClassicalSharp.Network.Protocols {
 			reader = net.reader;
 			writer = net.writer;
 		}
-		
-		/// <summary> Initalises variables for this protocol. </summary>
-		/// <remarks> Typically used to hook the packet handlers. </remarks>
-		public virtual void Init() { }
-		
-		/// <summary> Resets the state of the variables for this protocol. </summary>
-		public virtual void Reset() { }
-		
-		/// <summary> Performs a tick (if required) for this protocol. </summary>
-		public virtual void Tick() { }
+
+		public abstract void Reset();
+		public abstract void Tick();
 	}
 }

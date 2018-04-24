@@ -10,14 +10,13 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		public CPEProtocolBlockDefs(Game game) : base(game) { }
 		
-		public override void Init() { Reset(); }
-		
 		public override void Reset() {
 			if (!game.UseCPE || !game.AllowCustomBlocks) return;
 			net.Set(Opcode.CpeDefineBlock, HandleDefineBlock, 80);
 			net.Set(Opcode.CpeUndefineBlock, HandleRemoveBlockDefinition, 2);
 			net.Set(Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85);
-		}
+		}		
+		public override void Tick() { }
 		
 		internal void HandleDefineBlock() {
 			BlockID block = HandleDefineBlockCommonStart(reader, false);
@@ -118,21 +117,13 @@ namespace ClassicalSharp.Network.Protocols {
 				BlockInfo.SpriteOffset[block] = blockDraw;
 				blockDraw = DrawType.Sprite;
 			}
+			BlockInfo.Draw[block] = blockDraw;
 			
 			byte fogDensity = reader.ReadUInt8();
 			BlockInfo.FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128f;
 			BlockInfo.FogColour[block] = new FastColour(reader.ReadUInt8(), reader.ReadUInt8(), reader.ReadUInt8());
 			
-			BlockInfo.SetBlockDraw(block, blockDraw);
-			BlockInfo.CalcRenderBounds(block);
-			BlockInfo.UpdateCulling(block);
-			
-			BlockInfo.CalcIsTinted(block);
-			BlockInfo.CalcLightOffset(block);
-			
-			game.Inventory.AddDefault(block);
-			BlockInfo.SetCustomDefined(block, true);
-			game.Events.RaiseBlockDefinitionChanged();
+			BlockInfo.DefineCustom(game, block);
 		}
 		
 		#if FALSE

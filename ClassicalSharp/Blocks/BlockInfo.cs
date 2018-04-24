@@ -150,8 +150,17 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		public static void CalcIsTinted(BlockID block) {
+		public static void DefineCustom(Game game, BlockID block) {
+			SetBlockDraw(block, Draw[block]);
+			CalcRenderBounds(block);
+			UpdateCulling(block);
+			
 			Tinted[block] = FogColour[block] != FastColour.Black && Name[block].IndexOf('#') >= 0;
+			CalcLightOffset(block);
+			
+			game.Inventory.AddDefault(block);
+			SetCustomDefined(block, true);
+			game.Events.RaiseBlockDefinitionChanged();
 		}
 		
 		static void RecalcIsLiquid(BlockID block) {

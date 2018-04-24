@@ -158,6 +158,7 @@ namespace ClassicalSharp.Map {
 				BlockInfo.SpriteOffset[id] = blockDraw;
 				blockDraw = DrawType.Sprite;
 			}
+			BlockInfo.Draw[id] = blockDraw;
 			
 			data = (byte[])compound["Fog"].Value;
 			BlockInfo.FogDensity[id] = (data[0] + 1) / 128f;
@@ -169,17 +170,7 @@ namespace ClassicalSharp.Map {
 			BlockInfo.MinBB[id] = new Vector3(data[0] / 16f, data[1] / 16f, data[2] / 16f);
 			BlockInfo.MaxBB[id] = new Vector3(data[3] / 16f, data[4] / 16f, data[5] / 16f);
 			
-			BlockInfo.SetBlockDraw(id, blockDraw);
-			BlockInfo.CalcRenderBounds(id);
-			BlockInfo.UpdateCulling(id);
-			
-			BlockInfo.CalcIsTinted(id);
-			BlockInfo.CalcLightOffset(id);
-			
-			game.Inventory.AddDefault(id);
-			BlockInfo.SetCustomDefined(id, true);
-			game.Events.RaiseBlockDefinitionChanged();
-			
+			BlockInfo.DefineCustom(game, id);
 			BlockInfo.CanPlace[id] = true;
 			BlockInfo.CanDelete[id] = true;
 			game.Events.RaiseBlockPermissionsChanged();

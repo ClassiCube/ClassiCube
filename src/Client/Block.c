@@ -4,6 +4,8 @@
 #include "TerrainAtlas.h"
 #include "Game.h"
 #include "Entity.h"
+#include "Inventory.h"
+#include "Event.h"
 
 UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
 UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
@@ -70,17 +72,26 @@ void Block_SetCustomDefined(BlockID block, bool defined) {
 	}
 }
 
+void Block_DefineCustom(BlockID block) {
+	Block_SetBlockDraw(block, Block_Draw[block]);
+	Block_CalcRenderBounds(block);
+	Block_UpdateCulling(block);
+
+	PackedCol black = PACKEDCOL_BLACK;
+	String name = Block_UNSAFE_GetName(block);
+	Block_Tinted[block] = !PackedCol_Equals(Block_FogCol[block], black) && String_IndexOf(&name, '#', 0) >= 0;
+	Block_CalcLightOffset(block);
+
+	Inventory_AddDefault(block);
+	Block_SetCustomDefined(block, true);
+	Event_RaiseVoid(&BlockEvents_BlockDefChanged);
+}
+
 void Block_RecalcIsLiquid(BlockID b) {
 	UInt8 collide = Block_ExtendedCollide[b];
 	Block_IsLiquid[b] =
 		(collide == COLLIDE_LIQUID_WATER && Block_Draw[b] == DRAW_TRANSLUCENT) ||
 		(collide == COLLIDE_LIQUID_LAVA  && Block_Draw[b] == DRAW_TRANSPARENT);
-}
-
-void Block_CalcIsTinted(BlockID block) {
-	PackedCol black = PACKEDCOL_BLACK;
-	String name = Block_UNSAFE_GetName(block);
-	Block_Tinted[block] = !PackedCol_Equals(Block_FogCol[block], black) && String_IndexOf(&name, '#', 0) >= 0;
 }
 
 void Block_SetCollide(BlockID block, UInt8 collide) {

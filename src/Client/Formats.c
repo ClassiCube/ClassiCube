@@ -8,7 +8,6 @@
 #include "ErrorHandler.h"
 #include "Game.h"
 #include "ServerConnection.h"
-#include "Inventory.h"
 #include "Event.h"
 
 void Map_ReadBlocks(Stream* stream) {
@@ -488,17 +487,7 @@ bool Cw_Callback_4(NbtTag* tag) {
 			Block_SpriteOffset[id] = 0;
 		}
 
-		Block_SetDrawType(id, Block_Draw[id]);
-		Block_CalcRenderBounds(id);
-		Block_UpdateCulling(id);
-
-		Block_CalcLightOffset(id);
-		Block_CalcIsTinted(id);
-
-		Inventory_AddDefault(id);
-		Block_SetCustomDefined(id, true);
-		Event_RaiseVoid(&BlockEvents_BlockDefChanged);	
-
+		Block_DefineCustom(id);
 		Block_CanPlace[id]  = true;
 		Block_CanDelete[id] = true;
 		Event_RaiseVoid(&BlockEvents_PermissionsChanged);

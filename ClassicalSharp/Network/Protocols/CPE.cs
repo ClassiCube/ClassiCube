@@ -13,11 +13,12 @@ namespace ClassicalSharp.Network.Protocols {
 	public sealed class CPEProtocol : IProtocol {
 		
 		public CPEProtocol(Game game) : base(game) { }
-		
-		public override void Init() { Reset(); }
-		
+		int pingTicks;
+
 		public override void Reset() {
+			pingTicks = 0;
 			if (!game.UseCPE) return;
+			
 			net.Set(Opcode.CpeExtInfo, HandleExtInfo, 67);
 			net.Set(Opcode.CpeExtEntry, HandleExtEntry, 69);
 			net.Set(Opcode.CpeSetClickDistance, HandleSetClickDistance, 3);
@@ -46,6 +47,14 @@ namespace ClassicalSharp.Network.Protocols {
 			net.Set(Opcode.CpeSetEntityProperty, HandleSetEntityProperty, 7);
 			net.Set(Opcode.CpeTwoWayPing, HandleTwoWayPing, 4);
 			net.Set(Opcode.CpeSetInventoryOrder, HandleSetInventoryOrder, 3);
+		}
+		
+		public override void Tick() {
+			pingTicks++;
+			if (pingTicks >= 20 && net.cpeData.twoWayPing) {
+				WriteTwoWayPing(false, PingList.NextTwoWayPingData());
+				pingTicks = 0;
+			}
 		}
 		
 		#region Read
@@ -173,11 +182,11 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleEnvColours() {
 			byte variable = reader.ReadUInt8();
-			short red = reader.ReadInt16();
-			short green = reader.ReadInt16();
-			short blue = reader.ReadInt16();
-			bool invalid = red < 0 || red > 255 || green < 0 || green > 255 || blue < 0 || blue > 255;
-			FastColour col = new FastColour(red, green, blue);
+			short r = reader.ReadInt16();
+			short g = reader.ReadInt16();
+			short b = reader.ReadInt16();
+			bool invalid = r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255;
+			FastColour col = new FastColour(r, g, b);
 
 			if (variable == 0) {
 				game.World.Env.SetSkyColour(invalid ? WorldEnv.DefaultSkyCol : col);
