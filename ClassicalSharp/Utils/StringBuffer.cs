@@ -110,7 +110,7 @@ namespace ClassicalSharp {
 			for (int i = 0; i < len; i++) {
 				tmp[i] = value[offset + i];
 				if (tmp[i] != '%' || (i + 1) >= len) continue;			
-				if (IDrawer2D.ValidColCode(tmp[i + 1])) tmp[i] = '&';
+				if (IDrawer2D.ValidColCode(value[offset + i + 1])) tmp[i] = '&';
 			}
 			return new String(tmp, 0, len);
 		}
