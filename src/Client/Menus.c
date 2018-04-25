@@ -2626,7 +2626,8 @@ void HacksSettingsScreen_SetClipping(STRING_PURE String* v) {
 void HacksSettingsScreen_GetJump(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_JumpHeight(), 3); }
 void HacksSettingsScreen_SetJump(STRING_PURE String* v) {
 	PhysicsComp* physics = &LocalPlayer_Instance.Physics;
-	PhysicsComp_CalculateJumpVelocity(physics, true, Menu_Real32(v));
+	PhysicsComp_CalculateJumpVelocity(physics, Menu_Real32(v));
+	physics->UserJumpVel = physics->JumpVel;
 
 	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
 	String str = String_InitAndClearArray(strBuffer);

@@ -1142,7 +1142,7 @@ Real64 PhysicsComp_GetMaxHeight(Real32 u) {
 
 /* Calculates the jump velocity required such that when a client presses
 the jump binding they will be able to jump up to the given height. */
-void PhysicsComp_CalculateJumpVelocity(PhysicsComp* comp, bool userVel, Real32 jumpHeight) {
+void PhysicsComp_CalculateJumpVelocity(PhysicsComp* comp, Real32 jumpHeight) {
 	comp->JumpVel = 0.0f;
 	if (jumpHeight == 0.0f) return;
 
@@ -1151,7 +1151,6 @@ void PhysicsComp_CalculateJumpVelocity(PhysicsComp* comp, bool userVel, Real32 j
 	if (jumpHeight >= 768.0f) comp->JumpVel = 22.5f;
 
 	while (PhysicsComp_GetMaxHeight(comp->JumpVel) <= jumpHeight) { comp->JumpVel += 0.001f; }
-	if (userVel) comp->UserJumpVel = comp->JumpVel;
 }
 
 void PhysicsComp_DoEntityPush(Entity* entity) {

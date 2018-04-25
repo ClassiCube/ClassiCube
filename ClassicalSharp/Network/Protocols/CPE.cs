@@ -64,8 +64,8 @@ namespace ClassicalSharp.Network.Protocols {
 			if (Utils.CaselessStarts(appName, "D3 server"))
 				net.cpeData.needD3Fix = true;
 			
-			// Workaround for MCGalaxy that send ExtEntry sync but ExtInfoAsync. This means
-			// ExtEntry may sometimes arrive before ExtInfo, and thus we have to use += instead of =
+			// Workaround for old MCGalaxy that send ExtEntry sync but ExtInfo async. This means
+			// ExtEntry may sometimes arrive before ExtInfo, thus have to use += instead of =
 			net.cpeData.ServerExtensionsCount += reader.ReadInt16();
 			SendCpeExtInfoReply();
 		}
@@ -246,7 +246,7 @@ namespace ClassicalSharp.Network.Protocols {
 			if (jumpHeight == ushort.MaxValue) { // special value of -1 to reset default
 				p.physics.jumpVel = p.Hacks.CanJumpHigher ? p.physics.userJumpVel : 0.42f;
 			} else {
-				p.physics.CalculateJumpVelocity(false, jumpHeight / 32f);
+				p.physics.CalculateJumpVelocity(jumpHeight / 32f);
 			}
 			
 			p.physics.serverJumpVel = p.physics.jumpVel;

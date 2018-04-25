@@ -32,7 +32,6 @@ GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc) {
 		Platform_MemFree(&element.Scan0);
 		return texId;
 	} else {
-		// TODO: does this even work??
 		UInt8 scan0[Bitmap_DataSize(64, 64)];
 		Bitmap_Create(&element, size, size, scan0);
 		return Atlas2D_LoadTextureElement_Raw(texLoc, &element);

@@ -129,7 +129,7 @@ void PhysicsComp_Init(PhysicsComp* comp, Entity* entity);
 void PhysicsComp_UpdateVelocityState(PhysicsComp* comp);
 void PhysicsComp_DoNormalJump(PhysicsComp* comp);
 void PhysicsComp_PhysicsTick(PhysicsComp* comp, Vector3 vel);
-void PhysicsComp_CalculateJumpVelocity(PhysicsComp* comp, bool userVel, Real32 jumpHeight);
+void PhysicsComp_CalculateJumpVelocity(PhysicsComp* comp, Real32 jumpHeight);
 Real64 PhysicsComp_GetMaxHeight(Real32 u);
 void PhysicsComp_DoEntityPush(Entity* entity);
 

@@ -253,7 +253,7 @@ namespace ClassicalSharp.Entities {
 		
 		/// <summary> Calculates the jump velocity required such that when a client presses
 		/// the jump binding they will be able to jump up to the given height. </summary>
-		internal void CalculateJumpVelocity(bool userVel, float jumpHeight) {
+		internal void CalculateJumpVelocity(float jumpHeight) {
 			jumpVel = 0;
 			if (jumpHeight == 0) return;
 			
@@ -262,7 +262,6 @@ namespace ClassicalSharp.Entities {
 			if (jumpHeight >= 768) jumpVel = 22.5f;
 			
 			while (GetMaxHeight(jumpVel) <= jumpHeight) { jumpVel += 0.001f; }
-			if (userVel) userJumpVel = jumpVel;
 		}
 		
 		public static double GetMaxHeight(float u) {

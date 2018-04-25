@@ -11,46 +11,6 @@
 #include "Game.h"
 
 int main(int argc, char* argv[]) {
-	String text1 = String_FromConst("abcd");
-	String lines1[3] = { 0 };
-	WordWrap_Do(&text1, lines1, 3, 4);
-
-	String text2 = String_FromConst("abcde/fgh");
-	String lines2[3] = { 0 };
-	WordWrap_Do(&text2, lines2, 3, 4);
-
-	String text3 = String_FromConst("abc/defg");
-	String lines3[3] = { 0 };
-	WordWrap_Do(&text3, lines3, 3, 4);
-
-	String text4 = String_FromConst("ab/cdef");
-	String lines4[3] = { 0 };
-	WordWrap_Do(&text4, lines4, 3, 4);
-
-	String text5 = String_FromConst("abcd/efg");
-	String lines5[3] = { 0 };
-	WordWrap_Do(&text5, lines5, 3, 4);
-
-	String text6 = String_FromConst("abc/efg/hij/");
-	String lines6[3] = { 0 };
-	WordWrap_Do(&text6, lines6, 3, 4);
-
-	String text7 = String_FromConst("ab cde fgh");
-	String lines7[3] = { 0 };
-	WordWrap_Do(&text7, lines7, 3, 4);
-
-	String text8 = String_FromConst("ab//cd");
-	String lines8[3] = { 0 };
-	WordWrap_Do(&text8, lines8, 3, 4);
-
-	String text9 = String_FromConst("a///b");
-	String lines9[3] = { 0 };
-	WordWrap_Do(&text9, lines9, 3, 4);
-
-	String text10 = String_FromConst("/aaab");
-	String lines10[3] = { 0 };
-	WordWrap_Do(&text10, lines10, 3, 4);
-
 	ErrorHandler_Init("client.log");
 	Platform_Init();
 
@@ -125,6 +85,48 @@ int main(int argc, char* argv[]) {
 	Platform_Exit(0);
 	return 0;
 }
+
+/*
+String text1 = String_FromConst("abcd");
+String lines1[3] = { 0 };
+WordWrap_Do(&text1, lines1, 3, 4);
+
+String text2 = String_FromConst("abcde/fgh");
+String lines2[3] = { 0 };
+WordWrap_Do(&text2, lines2, 3, 4);
+
+String text3 = String_FromConst("abc/defg");
+String lines3[3] = { 0 };
+WordWrap_Do(&text3, lines3, 3, 4);
+
+String text4 = String_FromConst("ab/cdef");
+String lines4[3] = { 0 };
+WordWrap_Do(&text4, lines4, 3, 4);
+
+String text5 = String_FromConst("abcd/efg");
+String lines5[3] = { 0 };
+WordWrap_Do(&text5, lines5, 3, 4);
+
+String text6 = String_FromConst("abc/efg/hij/");
+String lines6[3] = { 0 };
+WordWrap_Do(&text6, lines6, 3, 4);
+
+String text7 = String_FromConst("ab cde fgh");
+String lines7[3] = { 0 };
+WordWrap_Do(&text7, lines7, 3, 4);
+
+String text8 = String_FromConst("ab//cd");
+String lines8[3] = { 0 };
+WordWrap_Do(&text8, lines8, 3, 4);
+
+String text9 = String_FromConst("a///b");
+String lines9[3] = { 0 };
+WordWrap_Do(&text9, lines9, 3, 4);
+
+String text10 = String_FromConst("/aaab");
+String lines10[3] = { 0 };
+WordWrap_Do(&text10, lines10, 3, 4);
+*/
 
 //#include <Windows.h>
 int main_test(int argc, char* argv[]) {

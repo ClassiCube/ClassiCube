@@ -2,7 +2,6 @@
 #define CC_SERVERCONNECTION_H
 #include "Input.h"
 #include "GameStructs.h"
-#include "Picking.h"
 /* Represents a connection to either a singleplayer or multiplayer server.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -41,7 +40,7 @@
 #define OPCODE_CPE_ENV_SET_MAP_APPERANCE      30
 #define OPCODE_CPE_ENV_SET_WEATHER            31
 #define OPCODE_CPE_HACK_CONTROL               32
-#define OPCODE_CPE_EXT_ADD_ENTITY_2           33
+#define OPCODE_CPE_EXT_ADD_ENTITY2            33
 #define OPCODE_CPE_PLAYER_CLICK               34
 #define OPCODE_CPE_DEFINE_BLOCK               35
 #define OPCODE_CPE_UNDEFINE_BLOCK             36
@@ -52,7 +51,10 @@
 #define OPCODE_CPE_ENV_SET_MAP_PROPERTY       41
 #define OPCODE_CPE_SET_ENTITY_PROPERTY        42
 #define OPCODE_CPE_TWO_WAY_PING               43
-#define Opcode_CPE_SET_INVENTORY_ORDER        44
+#define OPCODE_CPE_SET_INVENTORY_ORDER        44
+
+typedef struct PickedPos_ PickedPos;
+typedef struct Stream_ Stream;
 
 UInt16 PingList_NextPingData(void);
 void PingList_Update(UInt16 data);
