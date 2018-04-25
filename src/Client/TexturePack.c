@@ -50,8 +50,8 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	ReturnCode code = Stream_Skip(stream, extraFieldLen);
 	ErrorHandler_CheckOrFail(code, "Zip - skipping local header extra");
 	if (versionNeeded > 20) {
-		String warnMsg = String_FromConst("May not be able to properly extract a .zip enty with a version later than 2.0");
-		Platform_LogConst(&warnMsg);
+		Int32 version = versionNeeded;
+		Platform_Log1("May not be able to properly extract a .zip enty with version %i", &version);
 	}
 
 	Stream portion, compStream;
@@ -64,8 +64,8 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 		Inflate_MakeStream(&compStream, &inflate, &portion);
 		state->ProcessEntry(&filename, &compStream, entry);
 	} else {
-		String warnMsg = String_FromConst("Unsupported .zip entry compression method");
-		Platform_Log(&warnMsg);
+		Int32 method = compressionMethod;
+		Platform_Log1("Unsupported.zip entry compression method: %i", &method);
 	}
 }
 

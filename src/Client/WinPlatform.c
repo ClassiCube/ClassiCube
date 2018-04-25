@@ -103,6 +103,13 @@ void Platform_LogConst(const UInt8* message) {
 	OutputDebugStringA(message);
 }
 
+void Platform_Log4(const UInt8* format, const void* a1, const void* a2, const void* a3, const void* a4) {
+	UInt8 msgBuffer[String_BufferSize(512)];
+	String msg = String_InitAndClearArray(msgBuffer);
+	String_Format4(&msg, format, a1, a2, a3, a4);
+	Platform_Log(&msg);
+}
+
 void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
 	time->Year   = sysTime->wYear;
 	time->Month  = (UInt8)sysTime->wMonth;

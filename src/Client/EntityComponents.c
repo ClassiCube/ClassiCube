@@ -808,8 +808,7 @@ void Collisions_CollideWithReachableBlocks(CollisionsComp* comp, Int32 count, AA
 		Real32 tx, ty, tz;
 		Searcher_CalcTime(&entity->Velocity, entityBB, &blockBB, &tx, &ty, &tz);
 		if (tx > 1.0f || ty > 1.0f || tz > 1.0f) {
-			String warn = String_FromConst("t > 1 in physics calculation.. this shouldn't have happened.");
-			Platform_Log(&warn);
+			Platform_LogConst("t > 1 in physics calculation.. this shouldn't have happened.");
 		}
 
 		/* Calculate the location of the entity when it collides with this block */

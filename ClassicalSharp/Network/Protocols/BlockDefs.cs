@@ -61,9 +61,6 @@ namespace ClassicalSharp.Network.Protocols {
 		}
 		
 		void HandleDefineBlockExt() {
-			if (!game.AllowCustomBlocks) {
-				net.SkipPacketData(Opcode.CpeDefineBlockExt); return;
-			}
 			BlockID block = HandleDefineBlockCommonStart(reader, net.cpeData.blockDefsExtVer >= 2);
 			Vector3 min, max;
 			

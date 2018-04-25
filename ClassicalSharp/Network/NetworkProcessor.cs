@@ -159,10 +159,6 @@ namespace ClassicalSharp.Network {
 			handler();
 		}
 		
-		internal void SkipPacketData(byte opcode) {
-			reader.Skip(packetSizes[opcode] - 1);
-		}
-		
 		internal void Reset() {
 			UsingExtPlayerList = false;
 			UsingPlayerClick = false;

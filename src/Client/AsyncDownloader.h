@@ -3,6 +3,7 @@
 #include "Constants.h"
 #include "Utils.h"
 #include "GameStructs.h"
+#include "Bitmap.h"
 /* Downloads images, texture packs, skins, etc in async manner.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

@@ -77,11 +77,7 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 
 void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	Atlas1D_Count = atlasesCount;
-	UInt8 logBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String log = String_InitAndClearArray(logBuffer);
-
-	String_Format2(&log, "Loaded new atlas: %i bmps, %i per bmp", &atlasesCount, &Atlas1D_ElementsPerBitmap);
-	Platform_Log(&log);
+	Platform_Log2("Loaded new atlas: %i bmps, %i per bmp", &atlasesCount, &Atlas1D_ElementsPerBitmap);
 
 	Int32 index = 0, i;
 	for (i = 0; i < atlasesCount; i++) {

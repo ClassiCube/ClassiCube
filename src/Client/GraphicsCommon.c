@@ -24,9 +24,7 @@ void GfxCommon_Free(void) {
 
 void GfxCommon_LoseContext(const UInt8* reason) {
 	Gfx_LostContext = true;
-	String logMsg = String_FromConst("Lost graphics context:");
-	Platform_Log(&logMsg);
-	Platform_LogConst(reason);
+	Platform_Log1("Lost graphics context: %c", reason);
 
 	Event_RaiseVoid(&GfxEvents_ContextLost);
 	GfxCommon_Free();
@@ -34,8 +32,7 @@ void GfxCommon_LoseContext(const UInt8* reason) {
 
 void GfxCommon_RecreateContext(void) {
 	Gfx_LostContext = false;
-	String logMsg = String_FromConst("Recreating graphics context");
-	Platform_Log(&logMsg);
+	Platform_LogConst("Recreating graphics context");
 
 	Event_RaiseVoid(&GfxEvents_ContextRecreated);
 	GfxCommon_Init();

@@ -73,7 +73,7 @@ namespace ClassicalSharp {
 		}
 		
 		public StringBuffer InsertAt(int index, char c) {
-			for (int i = Length - 1; i > index; i--) {
+			for (int i = Length; i > index; i--) {
 				value[i] = value[i - 1];
 			}
 			

@@ -263,27 +263,20 @@ GuiElementVTABLE StatusScreen_VTABLE;
 StatusScreen StatusScreen_Instance;
 void StatusScreen_MakeText(StatusScreen* screen, STRING_TRANSIENT String* status) {
 	screen->FPS = (Int32)(screen->Frames / screen->Accumulator);
-	String_AppendInt32(status, screen->FPS);
-	String_AppendConst(status, " fps, ");
+	String_Format1(status, "%i fps, ", &screen->FPS);
 
 	if (Game_ClassicMode) {
-		String_AppendInt32(status, Game_ChunkUpdates);
-		String_AppendConst(status, " chunk updates");
+		String_Format1(status, "%i chunk updates", &Game_ChunkUpdates);
 	} else {
 		if (Game_ChunkUpdates > 0) {
-			String_AppendInt32(status, Game_ChunkUpdates);
-			String_AppendConst(status, " chunks/s, ");
+			String_Format1(status, "%i chunks/s, ", &Game_ChunkUpdates);
 		}
-
 		Int32 indices = ICOUNT(Game_Vertices);
-		String_AppendInt32(status, indices);
-		String_AppendConst(status, " vertices");
+		String_Format1(status, "%i vertices", &indices);
 
 		Int32 ping = PingList_AveragePingMs();
 		if (ping) {
-			String_AppendConst(status, ", ping ");
-			String_AppendInt32(status, ping);
-			String_AppendConst(status, " ms");
+			String_Format1(status, ", ping %i ms", &ping);
 		}
 	}
 }

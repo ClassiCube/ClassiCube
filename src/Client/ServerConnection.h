@@ -2,6 +2,7 @@
 #define CC_SERVERCONNECTION_H
 #include "Input.h"
 #include "GameStructs.h"
+#include "Vectors.h"
 /* Represents a connection to either a singleplayer or multiplayer server.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */

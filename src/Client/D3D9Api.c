@@ -35,12 +35,6 @@ ErrorHandler_CheckOrFail(hresult, name)
 hresult = IDirect3DDevice9_SetRenderState(device, state, value); \
 ErrorHandler_CheckOrFail(hresult, name)
 
-#define D3D9_LogLeakedResource(msg, i) \
-String_Clear(&logMsg);\
-String_AppendConst(&logMsg, msg);\
-String_AppendInt32(&logMsg, i);\
-Platform_Log(&logMsg);
-
 
 /* Forward declarations for these two functions. */
 static void D3D9_SetDefaultRenderStates(void);
