@@ -71,6 +71,9 @@ void (*ServerConnection_SendPosition)(Vector3 pos, Real32 rotY, Real32 headX);
 void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, PickedPos* pos);
 void (*ServerConnection_Tick)(ScheduledTask* task);
 void (*ServerConnection_Free)(void);
+Stream* (*ServerConnection_ReadStream)(void);
+Stream* (*ServerConnection_WriteStream)(void);
+void (*ServerConnection_SendPacket)(void);
 
 /* Whether the network processor is currently disconnected from the server. */
 bool ServerConnection_Disconnected;

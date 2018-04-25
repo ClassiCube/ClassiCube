@@ -1561,6 +1561,7 @@ Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE Str
 	UInt8 reasonBuffer[String_BufferSize(STRING_SIZE)];
 	String reason = String_InitAndClearArray(reasonBuffer);
 	String_AppendColorless(&reason, message);
+
 	String kick = String_FromConst("Kicked ");
 	String ban  = String_FromConst("Banned ");
 	screen->CanReconnect = String_StartsWith(&reason, &kick) || String_StartsWith(&reason, &ban);

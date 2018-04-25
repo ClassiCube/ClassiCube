@@ -310,16 +310,16 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 	UInt32 scanlineIndices[2];
 
 	while (readingChunks) {
-		UInt32 dataSize = Stream_ReadUInt32_BE(stream);
-		UInt32 fourCC = Stream_ReadUInt32_BE(stream);
+		UInt32 dataSize = Stream_ReadU32_BE(stream);
+		UInt32 fourCC = Stream_ReadU32_BE(stream);
 
 		switch (fourCC) {
 		case PNG_FOURCC('I', 'H', 'D', 'R'): {
 			if (dataSize != 13) ErrorHandler_Fail("PNG header chunk has invalid size");
 			gotHeader = true;
 
-			bmp->Width = Stream_ReadInt32_BE(stream);
-			bmp->Height = Stream_ReadInt32_BE(stream);
+			bmp->Width = Stream_ReadI32_BE(stream);
+			bmp->Height = Stream_ReadI32_BE(stream);
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too wide");
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too tall");
 
@@ -327,16 +327,16 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(bmp->Width, bmp->Height));
 			if (bmp->Scan0 == NULL) ErrorHandler_Fail("Failed to allocate memory for PNG bitmap");
 
-			bitsPerSample = Stream_ReadUInt8(stream);
+			bitsPerSample = Stream_ReadU8(stream);
 			if (bitsPerSample > 16 || !Math_IsPowOf2(bitsPerSample)) ErrorHandler_Fail("PNG has invalid bits per pixel");
-			col = Stream_ReadUInt8(stream);
+			col = Stream_ReadU8(stream);
 			if (col == 1 || col == 5 || col > 6) ErrorHandler_Fail("PNG has invalid colour type");
 			if (bitsPerSample < 8 && (col >= PNG_COL_RGB && col != PNG_COL_INDEXED)) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
 			if (bitsPerSample == 16 && col == PNG_COL_INDEXED) ErrorHandler_Fail("PNG has invalid bpp for this colour type");
 
-			if (Stream_ReadUInt8(stream) != 0) ErrorHandler_Fail("PNG compression method must be DEFLATE");
-			if (Stream_ReadUInt8(stream) != 0) ErrorHandler_Fail("PNG filter method must be ADAPTIVE");
-			if (Stream_ReadUInt8(stream) != 0) ErrorHandler_Fail("PNG interlacing not supported");
+			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG compression method must be DEFLATE");
+			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG filter method must be ADAPTIVE");
+			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG interlacing not supported");
 
 			UInt32 samplesPerPixel[7] = { 1,0,3,1,2,0,4 };
 			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
@@ -373,7 +373,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 		case PNG_FOURCC('t', 'R', 'N', 'S'): {
 			if (col == PNG_COL_GRAYSCALE) {
 				if (dataSize != 2) ErrorHandler_Fail("PNG only allows one explicit transparency colour");
-				UInt8 palRGB = (UInt8)Stream_ReadUInt16_BE(stream);
+				UInt8 palRGB = (UInt8)Stream_ReadU16_BE(stream);
 				transparentCol = PackedCol_ARGB(palRGB, palRGB, palRGB, 0);
 			} else if (col == PNG_COL_INDEXED) {
 				if (dataSize > PNG_PALETTE) ErrorHandler_Fail("PNG transparency palette has too many entries");
@@ -386,9 +386,9 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 				}
 			} else if (col == PNG_COL_RGB) {
 				if (dataSize != 6) ErrorHandler_Fail("PNG only allows one explicit transparency colour");
-				UInt8 palR = (UInt8)Stream_ReadUInt16_BE(stream);
-				UInt8 palG = (UInt8)Stream_ReadUInt16_BE(stream);
-				UInt8 palB = (UInt8)Stream_ReadUInt16_BE(stream);
+				UInt8 palR = (UInt8)Stream_ReadU16_BE(stream);
+				UInt8 palG = (UInt8)Stream_ReadU16_BE(stream);
+				UInt8 palB = (UInt8)Stream_ReadU16_BE(stream);
 				transparentCol = PackedCol_ARGB(palR, palG, palB, 0);
 			} else {
 				ErrorHandler_Fail("PNG cannot have explicit transparency colour for this colour type");
@@ -454,7 +454,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 		} break;
 		}
 
-		Stream_ReadUInt32_BE(stream); /* Skip CRC32 */
+		Stream_ReadU32_BE(stream); /* Skip CRC32 */
 	}
 
 	if (transparentCol <= PNG_RGB_MASK) {

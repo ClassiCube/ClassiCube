@@ -284,19 +284,21 @@ void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset) {
 	str->length--;
 }
 
-void String_TrimStart(STRING_TRANSIENT String* str) {
+void String_UNSAFE_TrimStart(STRING_TRANSIENT String* str) {
 	Int32 i;
 	for (i = 0; i < str->length; i++) {
 		if (str->buffer[i] != ' ') break;
-		String_DeleteAt(str, i);
+			
+		str->buffer++;
+		str->length--; i--;
 	}
 }
 
-void String_TrimEnd(STRING_TRANSIENT String* str) {
+void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str) {
 	Int32 i;
 	for (i = str->length - 1; i >= 0; i--) {
 		if (str->buffer[i] != ' ') break;
-		String_DeleteAt(str, i);
+		str->length--;
 	}
 }
 

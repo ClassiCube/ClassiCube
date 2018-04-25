@@ -210,11 +210,11 @@ void SPConnection_AddPortion(STRING_PURE String* text) {
 	for (i = 0; i < tmp.length; i++) {
 		if (tmp.buffer[i] == '%') tmp.buffer[i] = '&';
 	}
-	String_TrimEnd(&tmp);
+	String_UNSAFE_TrimEnd(&tmp);
 
-	UInt8 col = Drawer2D_LastCol(text, text->length);
+	UInt8 col = Drawer2D_LastCol(&tmp, tmp.length);
 	if (col != NULL) SPConnection_LastCol = col;
-	Chat_Add(text);
+	Chat_Add(&tmp);
 }
 
 void SPConnection_SendChat(STRING_PURE String* text) {
@@ -257,4 +257,8 @@ void ServerConnection_InitSingleplayer(void) {
 	ServerConnection_SendPlayerClick = SPConnection_SendPlayerClick;
 	ServerConnection_Tick = SPConnection_Tick;
 	ServerConnection_Free = SPConnection_Free;
+
+	ServerConnection_ReadStream  = NULL;
+	ServerConnection_WriteStream = NULL;
+	ServerConnection_SendPacket  = NULL;
 }

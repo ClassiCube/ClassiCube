@@ -105,20 +105,20 @@ void Lvl_Load(Stream* stream) {
 	InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	UInt16 header = Stream_ReadUInt16_LE(&compStream);
-	World_Width   = header == LVL_VERSION ? Stream_ReadUInt16_LE(&compStream) : header;
-	World_Length  = Stream_ReadUInt16_LE(&compStream);
-	World_Height  = Stream_ReadUInt16_LE(&compStream);
+	UInt16 header = Stream_ReadU16_LE(&compStream);
+	World_Width   = header == LVL_VERSION ? Stream_ReadU16_LE(&compStream) : header;
+	World_Length  = Stream_ReadU16_LE(&compStream);
+	World_Height  = Stream_ReadU16_LE(&compStream);
 
 	LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = (Real32)Stream_ReadUInt16_LE(&compStream);
-	p->Spawn.Z = (Real32)Stream_ReadUInt16_LE(&compStream);
-	p->Spawn.Y = (Real32)Stream_ReadUInt16_LE(&compStream);
-	p->SpawnRotY  = Math_Packed2Deg(Stream_ReadUInt8(&compStream));
-	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadUInt8(&compStream));
+	p->Spawn.X = (Real32)Stream_ReadU16_LE(&compStream);
+	p->Spawn.Z = (Real32)Stream_ReadU16_LE(&compStream);
+	p->Spawn.Y = (Real32)Stream_ReadU16_LE(&compStream);
+	p->SpawnRotY  = Math_Packed2Deg(Stream_ReadU8(&compStream));
+	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadU8(&compStream));
 
 	if (header == LVL_VERSION) {
-		Stream_ReadUInt16_LE(&compStream); /* pervisit and perbuild perms */
+		Stream_ReadU16_LE(&compStream); /* pervisit and perbuild perms */
 	}
 	Map_ReadBlocks(&compStream);
 
@@ -135,36 +135,36 @@ void Lvl_Load(Stream* stream) {
 #define FCM_IDENTIFIER 0x0FC2AF40UL
 #define FCM_REVISION 13
 void Fcm_ReadString(Stream* stream) {
-	UInt16 length = Stream_ReadUInt16_LE(stream);
+	UInt16 length = Stream_ReadU16_LE(stream);
 	UInt8 buffer[UInt16_MaxValue];
 	Stream_Read(stream, buffer, length);
 }
 
 void Fcm_Load(Stream* stream) {
-	if (Stream_ReadUInt32_LE(stream) != FCM_IDENTIFIER) {
+	if (Stream_ReadU32_LE(stream) != FCM_IDENTIFIER) {
 		ErrorHandler_Fail("Invalid identifier in .fcm file");
 	}
-	if (Stream_ReadUInt8(stream) != FCM_REVISION) {
+	if (Stream_ReadU8(stream) != FCM_REVISION) {
 		ErrorHandler_Fail("Invalid revision in .fcm file");
 	}
 
-	World_Width  = Stream_ReadUInt16_LE(stream);
-	World_Length = Stream_ReadUInt16_LE(stream);
-	World_Height = Stream_ReadUInt16_LE(stream);
+	World_Width  = Stream_ReadU16_LE(stream);
+	World_Length = Stream_ReadU16_LE(stream);
+	World_Height = Stream_ReadU16_LE(stream);
 
 	LocalPlayer* p = &LocalPlayer_Instance;
-	p->Spawn.X = Stream_ReadInt32_LE(stream) / 32.0f;
-	p->Spawn.Y = Stream_ReadInt32_LE(stream) / 32.0f;
-	p->Spawn.Z = Stream_ReadInt16_LE(stream) / 32.0f;
-	p->SpawnRotY = Math_Packed2Deg(Stream_ReadUInt8(stream));
-	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadUInt8(stream));
+	p->Spawn.X = Stream_ReadI32_LE(stream) / 32.0f;
+	p->Spawn.Y = Stream_ReadI32_LE(stream) / 32.0f;
+	p->Spawn.Z = Stream_ReadI16_LE(stream) / 32.0f;
+	p->SpawnRotY = Math_Packed2Deg(Stream_ReadU8(stream));
+	p->SpawnHeadX = Math_Packed2Deg(Stream_ReadU8(stream));
 
 	UInt8 tmp[26];
 	Stream_Read(stream, tmp, 4); /* date modified */
 	Stream_Read(stream, tmp, 4); /* date created */
 	Stream_Read(stream, World_Uuid, sizeof(World_Uuid));
 	Stream_Read(stream, tmp, 26); /* layer index */
-	Int32 metaSize = Stream_ReadUInt32_LE(stream);
+	Int32 metaSize = Stream_ReadU32_LE(stream);
 
 	Stream compStream;
 	InflateState state;
@@ -256,7 +256,7 @@ UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
 }
 
 UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
-	UInt16 nameLen = Stream_ReadUInt16_BE(stream);
+	UInt16 nameLen = Stream_ReadU16_BE(stream);
 	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
 	UInt8 nameBuffer[NBT_SMALL_SIZE * 4];
 	Stream_Read(stream, nameBuffer, nameLen);
@@ -305,22 +305,22 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent,
 
 	switch (typeId) {
 	case NBT_TAG_INT8:
-		tag.Value_U8 = Stream_ReadUInt8(stream); break;
+		tag.Value_U8 = Stream_ReadU8(stream); break;
 	case NBT_TAG_INT16:
-		tag.Value_I16 = Stream_ReadInt16_BE(stream); break;
+		tag.Value_I16 = Stream_ReadI16_BE(stream); break;
 	case NBT_TAG_INT32:
-		tag.Value_I32 = Stream_ReadInt32_BE(stream); break;
+		tag.Value_I32 = Stream_ReadI32_BE(stream); break;
 	case NBT_TAG_INT64:
-		tag.Value_I64 = Stream_ReadInt64_BE(stream); break;
+		tag.Value_I64 = Stream_ReadI64_BE(stream); break;
 	case NBT_TAG_REAL32:
 		/* TODO: Is this union abuse even legal */
-		tag.Value_I32 = Stream_ReadInt32_BE(stream); break;
+		tag.Value_I32 = Stream_ReadI32_BE(stream); break;
 	case NBT_TAG_REAL64:
 		/* TODO: Is this union abuse even legal */
-		tag.Value_I64 = Stream_ReadInt64_BE(stream); break;
+		tag.Value_I64 = Stream_ReadI64_BE(stream); break;
 
 	case NBT_TAG_INT8_ARRAY:
-		count = Stream_ReadUInt32_BE(stream); 
+		count = Stream_ReadU32_BE(stream); 
 		tag.DataSize = count;
 
 		if (count < NBT_SMALL_SIZE) {
@@ -337,15 +337,15 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent,
 		break;
 
 	case NBT_TAG_LIST:
-		childTagId = Stream_ReadUInt8(stream);
-		count = Stream_ReadUInt32_BE(stream);
+		childTagId = Stream_ReadU8(stream);
+		count = Stream_ReadU32_BE(stream);
 		for (i = 0; i < count; i++) {
 			Nbt_ReadTag(childTagId, false, stream, &tag, callback);
 		}
 		break;
 
 	case NBT_TAG_COMPOUND:
-		while ((childTagId = Stream_ReadUInt8(stream)) != NBT_TAG_END) {
+		while ((childTagId = Stream_ReadU8(stream)) != NBT_TAG_END) {
 			Nbt_ReadTag(childTagId, true, stream, &tag, callback);
 		} 
 		break;
@@ -593,7 +593,7 @@ void Cw_Load(Stream* stream) {
 	InflateState state;
 	Inflate_MakeStream(&compStream, &state, stream);
 
-	if (Stream_ReadUInt8(&compStream) != NBT_TAG_COMPOUND) {
+	if (Stream_ReadU8(&compStream) != NBT_TAG_COMPOUND) {
 		ErrorHandler_Fail("NBT file most start with Compound Tag");
 	}
 	Nbt_ReadTag(NBT_TAG_COMPOUND, true, &compStream, NULL, Cw_Callback);

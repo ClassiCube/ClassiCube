@@ -415,7 +415,7 @@ void LocalInterpComp_SetLocation(InterpComp* interp, LocationUpdate* update, boo
 	UInt8 flags = update->Flags;
 
 	if (flags & LOCATIONUPDATE_FLAG_POS) {
-		InterpComp_SetPos(interp, update);
+		InterpComp_SetPos(next, update);
 		/* If server sets Y position exactly on ground, push up a tiny bit */
 		Real32 yOffset = next->Pos.Y - Math_Floor(next->Pos.Y);
 		if (yOffset < ENTITY_ADJUSTMENT) { next->Pos.Y += ENTITY_ADJUSTMENT; }

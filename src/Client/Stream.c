@@ -159,7 +159,7 @@ void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE S
 /*########################################################################################################################*
 *-------------------------------------------------Read/Write primitives---------------------------------------------------*
 *#########################################################################################################################*/
-UInt8 Stream_ReadUInt8(Stream* stream) {
+UInt8 Stream_ReadU8(Stream* stream) {
 	UInt8 buffer;
 	UInt32 read;
 	/* Inline 8 bit reading, because it is very frequently used. */
@@ -167,19 +167,19 @@ UInt8 Stream_ReadUInt8(Stream* stream) {
 	return buffer;
 }
 
-UInt16 Stream_ReadUInt16_LE(Stream* stream) {
+UInt16 Stream_ReadU16_LE(Stream* stream) {
 	UInt8 buffer[sizeof(UInt16)];
 	Stream_Read(stream, buffer, sizeof(UInt16));
 	return (UInt16)(buffer[0] | (buffer[1] << 8));
 }
 
-UInt16 Stream_ReadUInt16_BE(Stream* stream) {
+UInt16 Stream_ReadU16_BE(Stream* stream) {
 	UInt8 buffer[sizeof(UInt16)];
 	Stream_Read(stream, buffer, sizeof(UInt16));
 	return (UInt16)((buffer[0] << 8) | buffer[1]);
 }
 
-UInt32 Stream_ReadUInt32_LE(Stream* stream) {
+UInt32 Stream_ReadU32_LE(Stream* stream) {
 	UInt8 buffer[sizeof(UInt32)];
 	Stream_Read(stream, buffer, sizeof(UInt32));
 	return (UInt32)(
@@ -187,7 +187,7 @@ UInt32 Stream_ReadUInt32_LE(Stream* stream) {
 		((UInt32)buffer[2] << 16) | ((UInt32)buffer[3] << 24));
 }
 
-UInt32 Stream_ReadUInt32_BE(Stream* stream) {
+UInt32 Stream_ReadU32_BE(Stream* stream) {
 	UInt8 buffer[sizeof(UInt32)];
 	Stream_Read(stream, buffer, sizeof(UInt32));
 	return (UInt32)(
@@ -195,39 +195,39 @@ UInt32 Stream_ReadUInt32_BE(Stream* stream) {
 		((UInt32)buffer[2] << 8)  | (UInt32)buffer[3]);
 }
 
-UInt64 Stream_ReadUInt64_BE(Stream* stream) {
+UInt64 Stream_ReadU64_BE(Stream* stream) {
 	/* infrequently called, so not bothering to optimise this. */
-	UInt32 hi = Stream_ReadUInt32_BE(stream);
-	UInt32 lo = Stream_ReadUInt32_LE(stream);
+	UInt32 hi = Stream_ReadU32_BE(stream);
+	UInt32 lo = Stream_ReadU32_LE(stream);
 	return (UInt64)(((UInt64)hi) << 32) | ((UInt64)lo);
 }
 
-void Stream_WriteUInt8(Stream* stream, UInt8 value) {
+void Stream_WriteU8(Stream* stream, UInt8 value) {
 	UInt32 write;
 	/* Inline 8 bit writing, because it is very frequently used. */
 	Stream_SafeWriteBlock(stream, &value, sizeof(UInt8), write);
 }
 
-void Stream_WriteUInt16_LE(Stream* stream, UInt16 value) {
+void Stream_WriteU16_LE(Stream* stream, UInt16 value) {
 	UInt8 buffer[sizeof(UInt16)];
 	buffer[0] = (UInt8)(value      ); buffer[1] = (UInt8)(value >> 8 );
 	Stream_Write(stream, buffer, sizeof(UInt16));
 }
 
-void Stream_WriteUInt16_BE(Stream* stream, UInt16 value) {
+void Stream_WriteU16_BE(Stream* stream, UInt16 value) {
 	UInt8 buffer[sizeof(UInt16)];
 	buffer[0] = (UInt8)(value >> 8 ); buffer[1] = (UInt8)(value      );
 	Stream_Write(stream, buffer, sizeof(UInt16));
 }
 
-void Stream_WriteUInt32_LE(Stream* stream, UInt32 value) {
+void Stream_WriteU32_LE(Stream* stream, UInt32 value) {
 	UInt8 buffer[sizeof(UInt32)];
 	buffer[0] = (UInt8)(value      ); buffer[1] = (UInt8)(value >> 8 );
 	buffer[2] = (UInt8)(value >> 16); buffer[3] = (UInt8)(value >> 24);
 	Stream_Write(stream, buffer, sizeof(UInt32));
 }
 
-void Stream_WriteUInt32_BE(Stream* stream, UInt32 value) {
+void Stream_WriteU32_BE(Stream* stream, UInt32 value) {
 	UInt8 buffer[sizeof(UInt32)];
 	buffer[0] = (UInt8)(value >> 24); buffer[1] = (UInt8)(value >> 16);
 	buffer[2] = (UInt8)(value >> 8 ); buffer[3] = (UInt8)(value);
@@ -264,7 +264,7 @@ bool Stream_ReadUtf8Char(Stream* stream, UInt16* codepoint) {
 	for (i = 0; i < byteCount - 1; i++) {
 		*codepoint <<= 6;
 		/* Top two bits of each are always 10 */
-		*codepoint |= (UInt16)(Stream_ReadUInt8(stream) & 0x3F);
+		*codepoint |= (UInt16)(Stream_ReadU8(stream) & 0x3F);
 	}
 	return true;
 }

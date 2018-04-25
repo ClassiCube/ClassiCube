@@ -30,19 +30,19 @@ String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
 
 void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	Stream* stream = state->Input;
-	UInt16 versionNeeded = Stream_ReadUInt16_LE(stream);
-	UInt16 flags = Stream_ReadUInt16_LE(stream);
-	UInt16 compressionMethod = Stream_ReadUInt16_LE(stream);
-	Stream_ReadUInt32_LE(stream); /* last modified */
-	Stream_ReadUInt32_LE(stream); /* CRC32 */
+	UInt16 versionNeeded = Stream_ReadU16_LE(stream);
+	UInt16 flags = Stream_ReadU16_LE(stream);
+	UInt16 compressionMethod = Stream_ReadU16_LE(stream);
+	Stream_ReadU32_LE(stream); /* last modified */
+	Stream_ReadU32_LE(stream); /* CRC32 */
 
-	Int32 compressedSize = Stream_ReadInt32_LE(stream);
+	Int32 compressedSize = Stream_ReadI32_LE(stream);
 	if (compressedSize == 0) compressedSize = entry->CompressedDataSize;
-	Int32 uncompressedSize = Stream_ReadInt32_LE(stream);
+	Int32 uncompressedSize = Stream_ReadI32_LE(stream);
 	if (uncompressedSize == 0) uncompressedSize = entry->UncompressedDataSize;
 
-	UInt16 fileNameLen = Stream_ReadUInt16_LE(stream);
-	UInt16 extraFieldLen = Stream_ReadUInt16_LE(stream);
+	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
+	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
 	UInt8 filenameBuffer[String_BufferSize(UInt16_MaxValue)];
 	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
 	if (!state->SelectEntry(&filename)) return;
@@ -51,7 +51,7 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	ErrorHandler_CheckOrFail(code, "Zip - skipping local header extra");
 	if (versionNeeded > 20) {
 		String warnMsg = String_FromConst("May not be able to properly extract a .zip enty with a version later than 2.0");
-		Platform_Log(&warnMsg);
+		Platform_LogConst(&warnMsg);
 	}
 
 	Stream portion, compStream;
@@ -71,22 +71,22 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 
 void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
 	Stream* stream = state->Input;
-	Stream_ReadUInt16_LE(stream); /* OS */
-	UInt16 versionNeeded = Stream_ReadUInt16_LE(stream);
-	UInt16 flags = Stream_ReadUInt16_LE(stream);
-	UInt16 compressionMethod = Stream_ReadUInt16_LE(stream);
-	Stream_ReadUInt32_LE(stream); /* last modified */
-	entry->Crc32 = Stream_ReadUInt32_LE(stream);
-	entry->CompressedDataSize = Stream_ReadInt32_LE(stream);
-	entry->UncompressedDataSize = Stream_ReadInt32_LE(stream);
+	Stream_ReadU16_LE(stream); /* OS */
+	UInt16 versionNeeded = Stream_ReadU16_LE(stream);
+	UInt16 flags = Stream_ReadU16_LE(stream);
+	UInt16 compressionMethod = Stream_ReadU16_LE(stream);
+	Stream_ReadU32_LE(stream); /* last modified */
+	entry->Crc32 = Stream_ReadU32_LE(stream);
+	entry->CompressedDataSize = Stream_ReadI32_LE(stream);
+	entry->UncompressedDataSize = Stream_ReadI32_LE(stream);
 
-	UInt16 fileNameLen = Stream_ReadUInt16_LE(stream);
-	UInt16 extraFieldLen = Stream_ReadUInt16_LE(stream);
-	UInt16 fileCommentLen = Stream_ReadUInt16_LE(stream);
-	UInt16 diskNum = Stream_ReadUInt16_LE(stream);
-	UInt16 internalAttributes = Stream_ReadUInt16_LE(stream);
-	UInt32 externalAttributes = Stream_ReadUInt32_LE(stream);
-	entry->LocalHeaderOffset = Stream_ReadInt32_LE(stream);
+	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
+	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
+	UInt16 fileCommentLen = Stream_ReadU16_LE(stream);
+	UInt16 diskNum = Stream_ReadU16_LE(stream);
+	UInt16 internalAttributes = Stream_ReadU16_LE(stream);
+	UInt32 externalAttributes = Stream_ReadU32_LE(stream);
+	entry->LocalHeaderOffset = Stream_ReadI32_LE(stream);
 
 	UInt32 extraDataLen = fileNameLen + extraFieldLen + fileCommentLen;
 	ReturnCode code = Stream_Skip(stream, extraDataLen);
@@ -95,13 +95,13 @@ void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
 
 void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirectoryOffset) {
 	Stream* stream = state->Input;
-	UInt16 diskNum = Stream_ReadUInt16_LE(stream);
-	UInt16 diskNumStart = Stream_ReadUInt16_LE(stream);
-	UInt16 diskEntries = Stream_ReadUInt16_LE(stream);
-	state->EntriesCount = Stream_ReadUInt16_LE(stream);
-	Int32 centralDirectorySize = Stream_ReadInt32_LE(stream);
-	*centralDirectoryOffset = Stream_ReadInt32_LE(stream);
-	UInt16 commentLength = Stream_ReadUInt16_LE(stream);
+	UInt16 diskNum = Stream_ReadU16_LE(stream);
+	UInt16 diskNumStart = Stream_ReadU16_LE(stream);
+	UInt16 diskEntries = Stream_ReadU16_LE(stream);
+	state->EntriesCount = Stream_ReadU16_LE(stream);
+	Int32 centralDirectorySize = Stream_ReadI32_LE(stream);
+	*centralDirectoryOffset = Stream_ReadI32_LE(stream);
+	UInt16 commentLength = Stream_ReadU16_LE(stream);
 }
 
 #define ZIP_ENDOFCENTRALDIR 0x06054b50UL
@@ -123,7 +123,7 @@ void Zip_Extract(ZipState* state) {
 	ReturnCode result = stream->Seek(stream, -22, STREAM_SEEKFROM_END);
 	ErrorHandler_CheckOrFail(result, "ZIP - Seek to end of central directory");
 
-	UInt32 sig = Stream_ReadUInt32_LE(stream);
+	UInt32 sig = Stream_ReadU32_LE(stream);
 	if (sig != ZIP_ENDOFCENTRALDIR) {
 		ErrorHandler_Fail("ZIP - Comment in .zip file not supported");
 		return;
@@ -140,7 +140,7 @@ void Zip_Extract(ZipState* state) {
 	/* Read all the central directory entries */
 	Int32 count = 0;
 	while (count < state->EntriesCount) {
-		sig = Stream_ReadUInt32_LE(stream);
+		sig = Stream_ReadU32_LE(stream);
 		if (sig == ZIP_CENTRALDIR) {
 			Zip_ReadCentralDirectory(state, &state->Entries[count]);
 			count++;
@@ -160,7 +160,7 @@ void Zip_Extract(ZipState* state) {
 		result = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);
 		ErrorHandler_CheckOrFail(result, "ZIP - Seek to local file header");
 
-		sig = Stream_ReadUInt32_LE(stream);
+		sig = Stream_ReadU32_LE(stream);
 		if (sig != ZIP_LOCALFILEHEADER) {
 			String sigMsg = String_FromConst("ZIP - Invalid entry found, skipping");
 			ErrorHandler_Log(&sigMsg);
@@ -195,8 +195,8 @@ void EntryList_Load(EntryList* list) {
 
 	Stream stream; Stream_FromFile(&stream, file, &path);
 	while (Stream_ReadLine(&stream, &path)) {
-		String_TrimStart(&path);
-		String_TrimEnd(&path);
+		String_UNSAFE_TrimStart(&path);
+		String_UNSAFE_TrimEnd(&path);
 
 		if (path.length == 0) continue;
 		StringsBuffer_Add(&list->Entries, &path);

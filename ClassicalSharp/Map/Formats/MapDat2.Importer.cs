@@ -26,7 +26,6 @@ namespace ClassicalSharp.Map {
 		const byte TC_ENDBLOCKDATA = 0x78;
 		const byte TC_RESET = 0x79;
 		const byte TC_BLOCKDATALONG = 0x7A;
-		const byte TC_EXCEPTION = 0x7B;
 		const byte TC_LONGSTRING = 0x7C;
 		const byte TC_PROXYCLASSDESC = 0x7D;
 		const byte TC_ENUM = 0x7E;
@@ -107,29 +106,15 @@ namespace ClassicalSharp.Map {
 		object ReadObject() { return ReadObject(ReadUInt8()); }
 		object ReadObject(byte typeCode) {
 			switch (typeCode) {
-				case TC_STRING:
-					return NewString();
-				case TC_LONGSTRING:
-					return NewLongString();
-				case TC_RESET:
-					handles.Clear();
-					return null;
-				case TC_NULL:
-					return null;
-				case TC_REFERENCE:
-					return PrevObject();
-				case TC_CLASS:
-					return NewClass();
-				case TC_ENUM:
-					return NewEnum();
-				case TC_OBJECT:
-					return NewObject();
-				case TC_ARRAY:
-					return NewArray();
-				case TC_CLASSDESC:
-					return NewClassDesc();
-				case TC_EXCEPTION:
-					return NewException();
+				case TC_STRING:    return NewString();
+				case TC_RESET: handles.Clear(); return null;
+				case TC_NULL:      return null;
+				case TC_REFERENCE: return PrevObject();
+				case TC_CLASS:     return NewClass();
+				case TC_ENUM:      return NewEnum();
+				case TC_OBJECT:    return NewObject();
+				case TC_ARRAY:     return NewArray();
+				case TC_CLASSDESC: return NewClassDesc();
 			}
 			throw new InvalidDataException("Invalid typecode: " + typeCode);
 		}
@@ -140,24 +125,10 @@ namespace ClassicalSharp.Map {
 			return value;
 		}
 		
-		string NewLongString() {
-			long len = ReadInt16();
-			string value = Encoding.UTF8.GetString(reader.ReadBytes((int)len));
-			handles.Add(value);
-			return value;
-		}
-		
 		object PrevObject() {
 			int handle = ReadInt32() - baseWireHandle;
 			if (handle >= 0 && handle < handles.Count) return handles[handle];
 			throw new InvalidDataException("Invalid stream handle: " + handle);
-		}
-		
-		object NewException() {
-			handles.Clear();
-			object exception = ReadObject();
-			handles.Clear();
-			return exception;
 		}
 		
 		JClassDesc NewClass() {

@@ -38,9 +38,8 @@ namespace ClassicalSharp.Network.Protocols {
 			string url = "http://" + host;
 			url = url.Replace("$U", game.Username);
 			
-			// NOTE: this (should, I did test this) ensure that if the user quickly changes to a
-			// different world, the environment settings from the last world are not loaded in the
-			// new world if the async 'get request' didn't complete before the new world was loaded.
+			// Ensure that if the user quickly changes to a different world, env settings from old world aren't
+			// applied in the new world if the async 'get env request' didn't complete before the old world was unloaded
 			womCounter++;
 			womEnvIdentifier = "womenv_" + womCounter;
 			game.Downloader.AsyncGetString(url, true, womEnvIdentifier);
