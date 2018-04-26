@@ -295,7 +295,6 @@ namespace ClassicalSharp.Network.Protocols {
 		void HandleKick() {
 			string reason = reader.ReadString();
 			game.Disconnect("&eLost connection to the server", reason);
-			net.Dispose();
 		}
 		
 		void HandleSetPermission() {

@@ -1750,9 +1750,7 @@ void ChatInputWidget_TabKey(GuiElement* elem) {
 	} else if (matchesCount > 1) {
 		UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
 		String str = String_InitAndClearArray(strBuffer);
-		String_AppendConst(&str, "&e");
-		String_AppendInt32(&str, matchesCount);
-		String_AppendConst(&str, " matching names: ");
+		String_Format1(&str, "&e%i matching names: ", &matchesCount);
 
 		for (i = 0; i < matchesCount; i++) {
 			String match = TabList_UNSAFE_GetPlayer(matches[i]);

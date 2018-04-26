@@ -64,12 +64,12 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockID block = HandleDefineBlockCommonStart(reader, net.cpeData.blockDefsExtVer >= 2);
 			Vector3 min, max;
 			
-			min.X = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.X, 0, 15/16f);
-			min.Y = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.Y, 0, 15/16f);
-			min.Z = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.Z, 0, 15/16f);
-			max.X = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.X, 1/16f, 1);
-			max.Y = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.Y, 1/16f, 1);
-			max.Z = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.Z, 1/16f, 1);
+			min.X = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.X, 0, 1);
+			min.Y = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.Y, 0, 1);
+			min.Z = reader.ReadUInt8() / 16f; Utils.Clamp(ref min.Z, 0, 1);
+			max.X = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.X, 0, 1);
+			max.Y = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.Y, 0, 1);
+			max.Z = reader.ReadUInt8() / 16f; Utils.Clamp(ref max.Z, 0, 1);
 			
 			BlockInfo.MinBB[block] = min;
 			BlockInfo.MaxBB[block] = max;

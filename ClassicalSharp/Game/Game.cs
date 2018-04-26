@@ -103,6 +103,7 @@ namespace ClassicalSharp {
 			for (int i = 0; i < Components.Count; i++) {
 				Components[i].Reset(this);
 			}
+			Server.Dispose();
 			GC.Collect();
 		}
 		

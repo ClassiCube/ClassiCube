@@ -104,7 +104,7 @@ namespace ClassicalSharp.Network {
 		}
 		
 		static char[] characters = new char[Utils.StringLength];
-		const string womDetail = "^detail.user=";		
+		const string womDetail = "^detail.user=";
 		static bool IsWomDetailString() {
 			for (int i = 0; i < womDetail.Length; i++) {
 				if (characters[i] != womDetail[i])

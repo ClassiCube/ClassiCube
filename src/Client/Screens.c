@@ -322,9 +322,7 @@ void StatusScreen_UpdateHackState(StatusScreen* screen) {
 	String status = String_InitAndClearArray(statusBuffer);
 
 	if (Game_Fov != Game_DefaultFov) {
-		String_AppendConst(&status, "Zoom fov ");
-		String_AppendInt32(&status, Game_Fov);
-		String_AppendConst(&status, "  ");
+		String_Format1(&status, "Zoom fov %i  ", &Game_Fov);
 	}
 	if (hacks->Flying) String_AppendConst(&status, "Fly ON   ");
 
@@ -1392,8 +1390,7 @@ void DisconnectScreen_ReconnectMessage(DisconnectScreen* screen, STRING_TRANSIEN
 		Int32 secsLeft = (DISCONNECT_DELAY_MS - elapsedMS) / DATETIME_MILLISECS_PER_SECOND;
 
 		if (secsLeft > 0) {
-			String_AppendConst(msg, "Reconnect in ");
-			String_AppendInt32(msg, secsLeft);
+			String_Format1(msg, "Reconnect in %i", &secsLeft);
 			return;
 		}
 	}

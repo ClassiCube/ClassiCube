@@ -9,6 +9,7 @@ namespace ClassicalSharp.Network {
 	public partial class NetworkProcessor : IServerConnection {
 		
 		internal bool addEntityHack = true;
+		internal byte[] needRemoveNames = new byte[256 >> 3];
 		
 		public override void SendChat(string text) {
 			if (String.IsNullOrEmpty(text)) return;

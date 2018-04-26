@@ -32,12 +32,14 @@ namespace ClassicalSharp.Network {
 		internal CPEProtocol cpe;
 		internal CPEProtocolBlockDefs cpeBlockDefs;
 		internal WoMProtocol wom;
-
 		internal CPESupport cpeData;
-		internal byte[] needRemoveNames = new byte[256 >> 3];
 		
 		public override void Connect(IPAddress address, int port) {
 			socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+			game.WorldEvents.OnNewMap += OnNewMap;
+			game.UserEvents.BlockChanged += BlockChanged;
+			Disconnected = false;
+			
 			try {
 				socket.Connect(address, port);
 			} catch (SocketException ex) {
@@ -57,17 +59,13 @@ namespace ClassicalSharp.Network {
 			wom = new WoMProtocol(game);
 			ResetProtocols();
 			
-			Disconnected = false;
-			lastPacket = DateTime.UtcNow;
-			game.WorldEvents.OnNewMap += OnNewMap;
-			game.UserEvents.BlockChanged += BlockChanged;
-
 			classic.WriteLogin(game.Username, game.Mppass);
 			SendPacket();
 			lastPacket = DateTime.UtcNow;
 		}
 		
 		public override void Dispose() {
+			if (Disconnected) return;
 			game.WorldEvents.OnNewMap -= OnNewMap;
 			game.UserEvents.BlockChanged -= BlockChanged;
 			socket.Close();
@@ -86,7 +84,6 @@ namespace ClassicalSharp.Network {
 			} catch (SocketException ex) {
 				ErrorHandler.LogError("reading packets", ex);
 				game.Disconnect("&eLost connection to the server", "I/O error when reading packets");
-				Dispose();
 				return;
 			}
 			
@@ -215,7 +212,6 @@ namespace ClassicalSharp.Network {
 			
 			if (!socket.Connected || (socket.Poll(1000, SelectMode.SelectRead) && socket.Available == 0)) {
 				game.Disconnect("Disconnected!", "You've lost connection to the server");
-				Dispose();
 			}
 		}
 	}
