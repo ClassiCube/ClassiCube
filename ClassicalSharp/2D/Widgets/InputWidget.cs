@@ -333,7 +333,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				
 				if (caret >= Text.Length) caret = -1;
 				if (caret == -1 &&  Text.Length > 0) {
-					Text.value[Text.Length] = ' ';
+					Text.InsertAt(Text.Length, ' ');
 				} else if (caret >= 0 && Text.value[caret] != ' ') {
 					Text.InsertAt(caret, ' ');
 				}
