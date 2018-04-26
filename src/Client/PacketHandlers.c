@@ -179,8 +179,6 @@ void Handlers_Reset(void) {
 	CPE_Reset();
 	BlockDefs_Reset();
 	WoM_Reset();
-	NetworkProcessor net = (NetworkProcessor)game.Server;
-	net.Reset();
 }
 
 void Handlers_Tick(void) {
@@ -273,16 +271,23 @@ void Classic_LevelDataChunk(Stream* stream) {
 	if (!gzHeader.Done) { GZipHeader_Read(&mapPartStream, &gzHeader); }
 	if (gzHeader.Done) {
 		if (mapSizeIndex < 4) {
-			mapSizeIndex += gzipStream.Read(mapSize, mapSizeIndex, 4 - mapSizeIndex);
+			UInt8* src = mapSize + mapSizeIndex;
+			UInt32 count = 4 - mapSizeIndex, modified = 0;
+			mapInflateStream.Read(&mapInflateStream, src, count, &modified);
+			mapSizeIndex += modified;
 		}
 
 		if (mapSizeIndex == 4) {
 			if (map == NULL) {
-				mapVolume = mapSize[0] << 24 | mapSize[1] << 16 | mapSize[2] << 8 | mapSize[3];
+				mapVolume = (mapSize[0] << 24) | (mapSize[1] << 16) | (mapSize[2] << 8) | mapSize[3];
 				map = Platform_MemAlloc(mapVolume);
 				if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
 			}
-			mapIndex += gzipStream.Read(map, mapIndex, mapVolume - mapIndex);
+
+			UInt8* src = map + mapIndex;
+			UInt32 count = mapVolume - mapIndex, modified = 0;
+			mapInflateStream.Read(&mapInflateStream, src, count, &modified);
+			mapIndex += modified;
 		}
 	}
 

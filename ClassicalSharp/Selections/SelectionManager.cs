@@ -12,16 +12,16 @@ namespace ClassicalSharp.Selections {
 		VertexP3fC4b[] vertices, lineVertices;
 		int vb, lineVb;
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 
-		public void Ready(Game game) { }
-		public void Reset(Game game) { selections.Clear(); }
-		public void OnNewMap(Game game) { selections.Clear(); }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { selections.Clear(); }
+		void IGameComponent.OnNewMap(Game game) { selections.Clear(); }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		List<SelectionBox> selections = new List<SelectionBox>(256);
 		public void AddSelection(byte id, Vector3I p1, Vector3I p2, FastColour col) {
@@ -77,7 +77,7 @@ namespace ClassicalSharp.Selections {
 			gfx.AlphaBlending = false;
 		}
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			ContextLost();
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;

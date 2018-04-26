@@ -144,7 +144,7 @@ namespace ClassicalSharp.Mode {
 		}
 
 		
-		public void OnNewMapLoaded(Game game) {
+		void IGameComponent.OnNewMapLoaded(Game game) {
 			UpdateScore();
 			wasOnGround = true;
 			showedDeathScreen = false;
@@ -162,7 +162,7 @@ namespace ClassicalSharp.Mode {
 			}
 		}
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			ResetInventory();
 			game.Server.AppName += " (survival)";
@@ -180,10 +180,10 @@ namespace ClassicalSharp.Mode {
 		}
 		
 		
-		public void Ready(Game game) { }
-		public void Reset(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void Dispose() { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IDisposable.Dispose() { }
 		
 		public void BeginFrame(double delta) { }
 		

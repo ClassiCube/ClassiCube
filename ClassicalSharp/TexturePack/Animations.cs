@@ -20,16 +20,16 @@ namespace ClassicalSharp.Textures {
 		List<AnimationData> animations = new List<AnimationData>();
 		bool validated = false, useLavaAnim = false, useWaterAnim = false;
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			game.Events.TexturePackChanged += TexturePackChanged;
 			game.Events.TextureChanged += TextureChanged;
 		}
 
-		public void Ready(Game game) { }
-		public void Reset(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		void TexturePackChanged(object sender, EventArgs e) {
 			Clear();
@@ -190,7 +190,7 @@ namespace ClassicalSharp.Textures {
 			validated = false;
 		}
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			Clear();
 			game.Events.TextureChanged -= TextureChanged;
 			game.Events.TexturePackChanged -= TexturePackChanged;

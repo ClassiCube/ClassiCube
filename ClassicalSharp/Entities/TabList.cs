@@ -5,13 +5,13 @@ namespace ClassicalSharp.Entities {
 	public sealed class TabList : IGameComponent {
 		public static TabListEntry[] Entries = new TabListEntry[256];
 		
-		public void Init(Game game) { }		
-		public void Ready(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
-		public void Dispose() { }
-		public void OnNewMap(Game game) { }
+		void IGameComponent.Init(Game game) { }		
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
+		void IDisposable.Dispose() { }
+		void IGameComponent.OnNewMap(Game game) { }
 		
-		public void Reset(Game game) {
+		void IGameComponent.Reset(Game game) {
 			for (int i = 0; i < Entries.Length; i++)
 				Entries[i] = null;
 		}

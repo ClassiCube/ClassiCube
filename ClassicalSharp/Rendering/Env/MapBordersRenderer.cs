@@ -26,7 +26,7 @@ namespace ClassicalSharp.Renderers {
 			ResetSidesAndEdges(null, null);
 		}
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			map = game.World;
 			
@@ -80,7 +80,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.Texturing = false;
 		}
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			ContextLost();
 			
 			game.WorldEvents.EnvVariableChanged -= EnvVariableChanged;
@@ -90,8 +90,8 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 
-		public void Ready(Game game) { }
-		public void Reset(Game game) { OnNewMap(game); }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { OnNewMap(game); }
 		
 		public void OnNewMap(Game game) {
 			game.Graphics.DeleteVb(ref sidesVb);
@@ -100,7 +100,7 @@ namespace ClassicalSharp.Renderers {
 			MakeTexture(ref sideTexId, ref lastSideTexLoc, map.Env.SidesBlock);
 		}
 		
-		public void OnNewMapLoaded(Game game) { ResetSidesAndEdges(null, null); }
+		void IGameComponent.OnNewMapLoaded(Game game) { ResetSidesAndEdges(null, null); }
 		
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (e.Var == EnvVar.EdgeBlock) {

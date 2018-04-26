@@ -17,7 +17,7 @@ namespace ClassicalSharp.Renderers {
 			get { return tex > 0 && !game.EnvRenderer.minimal; }
 		}
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			game.Events.TextureChanged += TextureChanged;
 			game.Events.TexturePackChanged += TexturePackChanged;
@@ -27,12 +27,12 @@ namespace ClassicalSharp.Renderers {
 			ContextRecreated();
 		}
 		
-		public void Reset(Game game) { game.Graphics.DeleteTexture(ref tex); }
-		public void Ready(Game game) { }
-		public void OnNewMap(Game game) { MakeVb(); }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.Reset(Game game) { game.Graphics.DeleteTexture(ref tex); }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { MakeVb(); }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref tex);
 			ContextLost();
 			

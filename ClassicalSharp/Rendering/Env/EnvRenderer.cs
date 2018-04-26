@@ -85,7 +85,7 @@ namespace ClassicalSharp.Renderers {
 			}
 		}
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			map = game.World;
 			ResetAllEnv(null, null);
@@ -98,14 +98,14 @@ namespace ClassicalSharp.Renderers {
 			game.SetViewDistance(game.UserViewDistance, false);
 		}
 		
-		public void Ready(Game game) { }
-		public void Reset(Game game) { OnNewMap(game); }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { OnNewMap(game); }
 		public void OnNewMap(Game game) {
 			game.Graphics.Fog = false;
 			ContextLost();
 		}
 		
-		public void OnNewMapLoaded(Game game) {
+		void IGameComponent.OnNewMapLoaded(Game game) {
 			game.Graphics.Fog = !minimal;
 			ResetAllEnv(null, null);
 		}
@@ -121,7 +121,7 @@ namespace ClassicalSharp.Renderers {
 			ContextRecreated();
 		}
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref cloudsTex);
 			ContextLost();
 			

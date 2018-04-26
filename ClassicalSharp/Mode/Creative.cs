@@ -79,9 +79,9 @@ namespace ClassicalSharp.Mode {
 
 		public Widget MakeHotbar() { return new HotbarWidget(game); }		
 		
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			Inventory inv = game.Inventory;
 			inv[0] = Block.Stone;  inv[1] = Block.Cobblestone; inv[2] = Block.Brick;
@@ -90,10 +90,10 @@ namespace ClassicalSharp.Mode {
 		}
 		
 		
-		public void Ready(Game game) { }
-		public void Reset(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void Dispose() { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IDisposable.Dispose() { }
 		
 		public void BeginFrame(double delta) { }
 		public void EndFrame(double delta) { }

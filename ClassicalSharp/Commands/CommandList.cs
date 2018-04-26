@@ -27,7 +27,7 @@ namespace ClassicalSharp.Commands {
 		
 		protected Game game;
 		public List<Command> RegisteredCommands = new List<Command>();
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			Register(new GpuInfoCommand());
 			Register(new HelpCommand());
@@ -38,10 +38,10 @@ namespace ClassicalSharp.Commands {
 			Register(new TeleportCommand());
 		}
 
-		public void Ready(Game game) { }
-		public void Reset(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		public void Register(Command command) {
 			command.game = game;
@@ -115,7 +115,7 @@ namespace ClassicalSharp.Commands {
 				game.Chat.Add(sb.ToString());
 		}
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			RegisteredCommands.Clear();
 		}
 	}

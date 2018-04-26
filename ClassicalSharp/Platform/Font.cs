@@ -26,7 +26,7 @@ namespace ClassicalSharp {
 			Style = FontStyle.Regular;
 		}
 
-		public void Dispose() {
+		void IDisposable.Dispose() {
 		}
 	}
 

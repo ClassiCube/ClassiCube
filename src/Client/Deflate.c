@@ -12,18 +12,19 @@ bool Header_ReadByte(Stream* s, UInt8* state, Int32* value) {
 	return true;
 }
 
-
-#define GZIP_STATE_HEADER1           0
-#define GZIP_STATE_HEADER2           1
-#define GZIP_STATE_COMPRESSIONMETHOD 2
-#define GZIP_STATE_FLAGS             3
-#define GZIP_STATE_LASTMODIFIEDTIME  4
-#define GZIP_STATE_COMPRESSIONFLAGS  5
-#define GZIP_STATE_OPERATINGSYSTEM   6
-#define GZIP_STATE_HEADERCHECKSUM    7
-#define GZIP_STATE_FILENAME          8
-#define GZIP_STATE_COMMENT           9
-#define GZIP_STATE_DONE              10
+enum GZIP_STATE_ {
+	GZIP_STATE_HEADER1,
+	GZIP_STATE_HEADER2,
+	GZIP_STATE_COMPRESSIONMETHOD,
+	GZIP_STATE_FLAGS,
+	GZIP_STATE_LASTMODIFIEDTIME,
+	GZIP_STATE_COMPRESSIONFLAGS,
+	GZIP_STATE_OPERATINGSYSTEM,
+	GZIP_STATE_HEADERCHECKSUM,
+	GZIP_STATE_FILENAME,
+	GZIP_STATE_COMMENT,
+	GZIP_STATE_DONE,
+};
 
 void GZipHeader_Init(GZipHeader* header) {
 	header->State = GZIP_STATE_HEADER1;
@@ -101,9 +102,11 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 }
 
 
-#define ZLIB_STATE_COMPRESSIONMETHOD 0
-#define ZLIB_STATE_FLAGS             1
-#define ZLIB_STATE_DONE              2
+enum ZLIB_STATE_ {
+	ZLIB_STATE_COMPRESSIONMETHOD,
+	ZLIB_STATE_FLAGS,
+	ZLIB_STATE_DONE,
+};
 
 void ZLibHeader_Init(ZLibHeader* header) {
 	header->State = ZLIB_STATE_COMPRESSIONMETHOD;
@@ -137,20 +140,22 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 }
 
 
-#define DEFLATE_STATE_HEADER 0
-#define DEFLATE_STATE_UNCOMPRESSED_HEADER 1
-#define DEFLATE_STATE_UNCOMPRESSED_DATA 2
-#define DEFLATE_STATE_DYNAMIC_HEADER 3
-#define DEFLATE_STATE_DYNAMIC_CODELENS 4
-#define DEFLATE_STATE_DYNAMIC_LITSDISTS 5
-#define DEFLATE_STATE_DYNAMIC_LITSDISTSREPEAT 6
-#define DEFLATE_STATE_COMPRESSED_LIT 7
-#define DEFLATE_STATE_COMPRESSED_LITREPEAT 8
-#define DEFLATE_STATE_COMPRESSED_DIST 9
-#define DEFLATE_STATE_COMPRESSED_DISTREPEAT 10
-#define DEFLATE_STATE_COMPRESSED_DATA 11
-#define DEFLATE_STATE_FASTCOMPRESSED 12
-#define DEFLATE_STATE_DONE 13
+enum INFLATE_STATE_ {
+INFLATE_STATE_HEADER,
+INFLATE_STATE_UNCOMPRESSED_HEADER,
+INFLATE_STATE_UNCOMPRESSED_DATA,
+INFLATE_STATE_DYNAMIC_HEADER,
+INFLATE_STATE_DYNAMIC_CODELENS,
+INFLATE_STATE_DYNAMIC_LITSDISTS,
+INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT,
+INFLATE_STATE_COMPRESSED_LIT,
+INFLATE_STATE_COMPRESSED_LITREPEAT,
+INFLATE_STATE_COMPRESSED_DIST,
+INFLATE_STATE_COMPRESSED_DISTREPEAT,
+INFLATE_STATE_COMPRESSED_DATA,
+INFLATE_STATE_FASTCOMPRESSED,
+INFLATE_STATE_DONE,
+};
 
 /* Insert this byte into the bit buffer */
 #define Inflate_GetByte(state) state->AvailIn--; state->Bits |= (UInt32)(state->Input[state->NextIn]) << state->NumBits; state->NextIn++; state->NumBits += 8;
@@ -168,13 +173,13 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 #define Inflate_ReadBits(state, bitsCount) Inflate_PeekBits(state, bitsCount); Inflate_ConsumeBits(state, bitsCount);
 
 /* Goes to the next state, after having read data of a block. */
-#define Inflate_NextBlockState(state) (state->LastBlock ? DEFLATE_STATE_DONE : DEFLATE_STATE_HEADER)
+#define Inflate_NextBlockState(state) (state->LastBlock ? INFLATE_STATE_DONE : INFLATE_STATE_HEADER)
 /* Goes to the next state, after having finished reading a compressed entry. */
 /* The maximum amount of bytes that can be output is 258. */
 /* The most input bytes required for huffman codes and extra data is 16 + 5 + 16 + 13 bits. Add 3 extra bytes to account for putting data into the bit buffer. */
 #define INFLATE_FASTINF_OUT 258
 #define INFLATE_FASTINF_IN 10
-#define Inflate_NextCompressState(state) ((state->AvailIn >= INFLATE_FASTINF_IN && state->AvailOut >= INFLATE_FASTINF_OUT) ? DEFLATE_STATE_FASTCOMPRESSED : DEFLATE_STATE_COMPRESSED_LIT)
+#define Inflate_NextCompressState(state) ((state->AvailIn >= INFLATE_FASTINF_IN && state->AvailOut >= INFLATE_FASTINF_OUT) ? INFLATE_STATE_FASTCOMPRESSED : INFLATE_STATE_COMPRESSED_LIT)
 
 UInt32 Huffman_ReverseBits(UInt32 n, UInt8 bits) {
 	n = ((n & 0xAAAA) >> 1) | ((n & 0x5555) << 1);
@@ -311,7 +316,7 @@ Int32 Huffman_Unsafe_Decode(InflateState* state, HuffmanTable* table) {
 }
 
 void Inflate_Init(InflateState* state, Stream* source) {
-	state->State = DEFLATE_STATE_HEADER;
+	state->State = INFLATE_STATE_HEADER;
 	state->Source = source;
 	state->Bits = 0;
 	state->NumBits = 0;
@@ -416,7 +421,7 @@ void Deflate_InflateFast(InflateState* state) {
 void Inflate_Process(InflateState* state) {
 	for (;;) {
 		switch (state->State) {
-		case DEFLATE_STATE_HEADER: {
+		case INFLATE_STATE_HEADER: {
 			Inflate_EnsureBits(state, 3);
 			UInt32 blockHeader = Inflate_ReadBits(state, 3);
 			state->LastBlock = blockHeader & 1;
@@ -424,7 +429,7 @@ void Inflate_Process(InflateState* state) {
 			switch (blockHeader >> 1) {
 			case 0: { /* Uncompressed block */
 				Inflate_AlignBits(state);
-				state->State = DEFLATE_STATE_UNCOMPRESSED_HEADER;
+				state->State = INFLATE_STATE_UNCOMPRESSED_HEADER;
 			} break;
 
 			case 1: { /* Fixed/static huffman compressed */
@@ -434,7 +439,7 @@ void Inflate_Process(InflateState* state) {
 			} break;
 
 			case 2: { /* Dynamic huffman compressed */
-				state->State = DEFLATE_STATE_DYNAMIC_HEADER;
+				state->State = INFLATE_STATE_DYNAMIC_HEADER;
 			} break;
 
 			case 3: {
@@ -445,7 +450,7 @@ void Inflate_Process(InflateState* state) {
 			break;
 		}
 
-		case DEFLATE_STATE_UNCOMPRESSED_HEADER: {
+		case INFLATE_STATE_UNCOMPRESSED_HEADER: {
 			Inflate_EnsureBits(state, 32);
 			UInt32 len = Inflate_ReadBits(state, 16);
 			UInt32 nlen = Inflate_ReadBits(state, 16);
@@ -454,10 +459,10 @@ void Inflate_Process(InflateState* state) {
 				ErrorHandler_Fail("DEFLATE - Uncompressed block LEN check failed");
 			}
 			state->Index = len; /* Reuse for 'uncompressed length' */
-			state->State = DEFLATE_STATE_UNCOMPRESSED_DATA;
+			state->State = INFLATE_STATE_UNCOMPRESSED_DATA;
 		}
 
-		case DEFLATE_STATE_UNCOMPRESSED_DATA: {
+		case INFLATE_STATE_UNCOMPRESSED_DATA: {
 			while (state->NumBits > 0 && state->AvailOut > 0 && state->Index > 0) {
 				*state->Output = Inflate_ReadBits(state, 8);
 				state->AvailOut--;
@@ -481,16 +486,16 @@ void Inflate_Process(InflateState* state) {
 			break;
 		}
 
-		case DEFLATE_STATE_DYNAMIC_HEADER: {
+		case INFLATE_STATE_DYNAMIC_HEADER: {
 			Inflate_EnsureBits(state, 14);
 			state->NumLits = 257 + Inflate_ReadBits(state, 5);
 			state->NumDists = 1 + Inflate_ReadBits(state, 5);
 			state->NumCodeLens = 4 + Inflate_ReadBits(state, 4);
 			state->Index = 0;
-			state->State = DEFLATE_STATE_DYNAMIC_CODELENS;
+			state->State = INFLATE_STATE_DYNAMIC_CODELENS;
 		}
 
-		case DEFLATE_STATE_DYNAMIC_CODELENS: {
+		case INFLATE_STATE_DYNAMIC_CODELENS: {
 			Int32 i;
 			while (state->Index < state->NumCodeLens) {
 				Inflate_EnsureBits(state, 3);
@@ -503,11 +508,11 @@ void Inflate_Process(InflateState* state) {
 			}
 
 			state->Index = 0;
-			state->State = DEFLATE_STATE_DYNAMIC_LITSDISTS;
+			state->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
 			Huffman_Build(&state->CodeLensTable, state->Buffer, INFLATE_MAX_CODELENS);
 		}
 
-		case DEFLATE_STATE_DYNAMIC_LITSDISTS: {
+		case INFLATE_STATE_DYNAMIC_LITSDISTS: {
 			UInt32 count = state->NumLits + state->NumDists;
 			while (state->Index < count) {
 				Int32 bits = Huffman_Decode(state, &state->CodeLensTable);
@@ -517,7 +522,7 @@ void Inflate_Process(InflateState* state) {
 					state->Index++;
 				} else {
 					state->TmpCodeLens = bits;
-					state->State = DEFLATE_STATE_DYNAMIC_LITSDISTSREPEAT;
+					state->State = INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT;
 					break;
 				}
 			}
@@ -531,7 +536,7 @@ void Inflate_Process(InflateState* state) {
 			break;
 		}
 
-		case DEFLATE_STATE_DYNAMIC_LITSDISTSREPEAT: {
+		case INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT: {
 			UInt32 repeatCount;
 			UInt8 repeatValue;
 
@@ -565,11 +570,11 @@ void Inflate_Process(InflateState* state) {
 
 			Platform_MemSet(&state->Buffer[state->Index], repeatValue, repeatCount);
 			state->Index += repeatCount;
-			state->State = DEFLATE_STATE_DYNAMIC_LITSDISTS;
+			state->State = INFLATE_STATE_DYNAMIC_LITSDISTS;
 			break;
 		}
 
-		case DEFLATE_STATE_COMPRESSED_LIT: {
+		case INFLATE_STATE_COMPRESSED_LIT: {
 			if (state->AvailOut == 0) return;
 
 			Int32 lit = Huffman_Decode(state, &state->LitsTable);
@@ -585,33 +590,33 @@ void Inflate_Process(InflateState* state) {
 				break;
 			} else {
 				state->TmpLit = lit - 257;
-				state->State = DEFLATE_STATE_COMPRESSED_LITREPEAT;
+				state->State = INFLATE_STATE_COMPRESSED_LITREPEAT;
 			}
 		}
 
-		case DEFLATE_STATE_COMPRESSED_LITREPEAT: {
+		case INFLATE_STATE_COMPRESSED_LITREPEAT: {
 			UInt32 lenIdx = (UInt32)state->TmpLit;
 			UInt32 bits = len_bits[lenIdx];
 			Inflate_EnsureBits(state, bits);
 			state->TmpLit = len_base[lenIdx] + Inflate_ReadBits(state, bits);
-			state->State = DEFLATE_STATE_COMPRESSED_DIST;
+			state->State = INFLATE_STATE_COMPRESSED_DIST;
 		}
 
-		case DEFLATE_STATE_COMPRESSED_DIST: {
+		case INFLATE_STATE_COMPRESSED_DIST: {
 			state->TmpDist = Huffman_Decode(state, &state->DistsTable);
 			if (state->TmpDist == -1) return;
-			state->State = DEFLATE_STATE_COMPRESSED_DISTREPEAT;
+			state->State = INFLATE_STATE_COMPRESSED_DISTREPEAT;
 		}
 
-		case DEFLATE_STATE_COMPRESSED_DISTREPEAT: {
+		case INFLATE_STATE_COMPRESSED_DISTREPEAT: {
 			UInt32 distIdx = (UInt32)state->TmpDist;
 			UInt32 bits = dist_bits[distIdx];
 			Inflate_EnsureBits(state, bits);
 			state->TmpDist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
-			state->State = DEFLATE_STATE_COMPRESSED_DATA;
+			state->State = INFLATE_STATE_COMPRESSED_DATA;
 		}
 
-		case DEFLATE_STATE_COMPRESSED_DATA: {
+		case INFLATE_STATE_COMPRESSED_DATA: {
 			if (state->AvailOut == 0) return;
 			UInt32 len = (UInt32)state->TmpLit, dist = (UInt32)state->TmpDist;
 			len = min(len, state->AvailOut);
@@ -633,15 +638,15 @@ void Inflate_Process(InflateState* state) {
 			break;
 		}
 
-		case DEFLATE_STATE_FASTCOMPRESSED: {
+		case INFLATE_STATE_FASTCOMPRESSED: {
 			Deflate_InflateFast(state);
-			if (state->State == DEFLATE_STATE_FASTCOMPRESSED) {
+			if (state->State == INFLATE_STATE_FASTCOMPRESSED) {
 				state->State = Inflate_NextCompressState(state);
 			}
 			break;
 		}
 
-		case DEFLATE_STATE_DONE:
+		case INFLATE_STATE_DONE:
 			return;
 		}
 	}

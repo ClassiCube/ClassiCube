@@ -21,7 +21,7 @@ namespace ClassicalSharp.Particles {
 		int vb;
 		const int maxParticles = 600;
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 			game.UserEvents.BlockChanged += BreakBlockEffect;
@@ -32,10 +32,10 @@ namespace ClassicalSharp.Particles {
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
-		public void Ready(Game game) { }
-		public void Reset(Game game) { rainCount = 0; terrainCount = 0; }
-		public void OnNewMap(Game game) { rainCount = 0; terrainCount = 0; }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { rainCount = 0; terrainCount = 0; }
+		void IGameComponent.OnNewMap(Game game) { rainCount = 0; terrainCount = 0; }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 
 		void TerrainAtlasChanged(object sender, EventArgs e) {
 			terrain1DCount = new int[TerrainAtlas1D.TexIds.Length];
@@ -264,7 +264,7 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref ParticlesTexId);
 			game.UserEvents.BlockChanged -= BreakBlockEffect;
 			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;

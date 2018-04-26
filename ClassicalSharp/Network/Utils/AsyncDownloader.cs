@@ -37,16 +37,16 @@ namespace ClassicalSharp.Network {
 		public AsyncDownloader(IDrawer2D drawer) { this.drawer = drawer; }
 		
 #if !LAUNCHER
-		public void Init(Game game) { Init(game.skinServer); }
-		public void Ready(Game game) { }
-		public void Reset(Game game) {
+		void IGameComponent.Init(Game game) { Init(game.skinServer); }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) {
 			lock (pendingLocker)
 				pending.Clear();
 			handle.Set();
 		}
 		
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 #endif
 
 		public void Init(string skinServer) {

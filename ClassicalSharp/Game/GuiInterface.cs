@@ -36,11 +36,11 @@ namespace ClassicalSharp {
 			get { return activeScreen == null ? hudScreen : activeScreen; }
 		}
 		
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
-		public void Ready(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
+		void IGameComponent.Ready(Game game) { }
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			game.Events.TextureChanged += TextureChanged;
 		}
@@ -52,7 +52,7 @@ namespace ClassicalSharp {
 			overlays.Clear();
 		}
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			game.Events.TextureChanged -= TextureChanged;
 			SetNewScreen(null);
 			statusScreen.Dispose();

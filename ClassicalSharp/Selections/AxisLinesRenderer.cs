@@ -12,22 +12,22 @@ namespace ClassicalSharp.Selections {
 		Game game;
 		const float size = 1/32f;
 		
-		public void Init(Game game) { 
+		void IGameComponent.Init(Game game) { 
 			this.game = game;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
 		
-		public void Dispose() { 
+		void IDisposable.Dispose() { 
 			ContextLost();
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
-		public void Ready(Game game) { }			
-		public void Reset(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }				
+		void IGameComponent.Ready(Game game) { }			
+		void IGameComponent.Reset(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }				
 		
 		public void Render(double delta) {
 			if (!game.ShowAxisLines || game.Graphics.LostContext) return;

@@ -15,11 +15,11 @@ namespace ClassicalSharp.Gui.Screens {
 		PlayerListWidget playerList;
 		Font playerFont;
 		
-		public void Init(Game game) { }
+		void IGameComponent.Init(Game game) { }
 		public void Ready(Game game) { Init(); }
-		public void Reset(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.Reset(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		internal int BottomOffset { get { return hotbar.Height; } }
 		

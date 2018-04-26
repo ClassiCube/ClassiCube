@@ -133,7 +133,7 @@ namespace ClassicalSharp.Entities {
 		}
 
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			Hacks.Enabled = !game.PureClassic && Options.GetBool(OptionsKey.HacksOn, true);
 			Health = 20;
 			if (game.ClassicMode) return;
@@ -147,12 +147,12 @@ namespace ClassicalSharp.Entities {
 			physics.jumpVel = physics.userJumpVel;			
 		}
 		
-		public void Ready(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
-		public void Dispose() { }
-		public void OnNewMap(Game game) { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
+		void IDisposable.Dispose() { }
+		void IGameComponent.OnNewMap(Game game) { }
 		
-		public void Reset(Game game) {
+		void IGameComponent.Reset(Game game) {
 			ReachDistance = 5;
 			Velocity = Vector3.Zero;
 			physics.jumpVel = 0.42f;

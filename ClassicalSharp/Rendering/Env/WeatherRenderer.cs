@@ -22,7 +22,7 @@ namespace ClassicalSharp.Renderers {
 		double rainAcc;
 		Vector3I lastPos = new Vector3I(Int32.MinValue);
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			map = game.World;
 			game.Events.TextureChanged += TextureChanged;
@@ -110,15 +110,15 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		int length, width, maxY, oneY;
-		public void Ready(Game game) { }
-		public void Reset(Game game) { OnNewMap(game); }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { OnNewMap(game); }
 		
 		public void OnNewMap(Game game) {
 			heightmap = null;
 			lastPos = new Vector3I(Int32.MaxValue);
 		}
 		
-		public void OnNewMapLoaded(Game game) {
+		void IGameComponent.OnNewMapLoaded(Game game) {
 			length = map.Length;
 			width = map.Width;
 			maxY = map.Height - 1;
@@ -132,7 +132,7 @@ namespace ClassicalSharp.Renderers {
 				game.UpdateTexture(ref rainTexId, e.Name, e.Data, false);
 		}
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref rainTexId);
 			game.Graphics.DeleteTexture(ref snowTexId);
 			ContextLost();

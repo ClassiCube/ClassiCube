@@ -15,7 +15,7 @@ namespace ClassicalSharp.Audio {
 		Thread musicThread;
 		Game game;
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			if (Platform.DirectoryExists("audio")) {
 				files = Platform.DirectoryFiles("audio");
@@ -39,10 +39,10 @@ namespace ClassicalSharp.Audio {
 			return volume;
 		}
 
-		public void Ready(Game game) { }
-		public void Reset(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		public void SetMusic(int volume) {
 			if (volume > 0) InitMusic();
@@ -110,7 +110,7 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		bool disposingMusic;
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			DisposeMusic();
 			DisposeSound();
 			musicHandle.Close();

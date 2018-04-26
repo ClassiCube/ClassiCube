@@ -16,7 +16,7 @@ namespace ClassicalSharp.Renderers {
 		Entity held;
 		Matrix4 heldBlockProj;
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			held = new FakeHeldEntity(game);
 			lastBlock = game.Inventory.Selected;
@@ -26,12 +26,12 @@ namespace ClassicalSharp.Renderers {
 			game.UserEvents.BlockChanged += BlockChanged;
 		}
 
-		public void Ready(Game game) { }
-		public void Reset(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.Reset(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
-		public void Dispose() {
+		void IDisposable.Dispose() {
 			game.Events.ProjectionChanged -= ProjectionChanged;
 			game.Events.HeldBlockChanged -= DoSwitchBlockAnim;
 			game.UserEvents.BlockChanged -= BlockChanged;

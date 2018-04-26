@@ -7,7 +7,7 @@ namespace ClassicalSharp {
 	/// <summary> Manages the hotbar and inventory of blocks. </summary>
 	public sealed class Inventory : IGameComponent {
 		
-		public void Init(Game game) {
+		void IGameComponent.Init(Game game) {
 			this.game = game;
 			Reset(game);
 		}
@@ -18,10 +18,10 @@ namespace ClassicalSharp {
 			CanPick = true; 
 		}
 
-		public void Ready(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
-		public void Dispose() { }
+		void IGameComponent.Ready(Game game) { }
+		void IGameComponent.OnNewMap(Game game) { }
+		void IGameComponent.OnNewMapLoaded(Game game) { }
+		void IDisposable.Dispose() { }
 		
 		int selectedI, offset;
 		Game game;
