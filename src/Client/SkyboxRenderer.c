@@ -123,7 +123,7 @@ void SkyboxRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
 void SkyboxRenderer_Init(void) {
 	Event_RegisterStream(&TextureEvents_FileChanged, NULL, SkyboxRenderer_FileChanged);
 	Event_RegisterVoid(&TextureEvents_PackChanged,   NULL, SkyboxRenderer_TexturePackChanged);
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged,  NULL, SkyboxRenderer_EnvVariableChanged);
+	Event_RegisterInt(&WorldEvents_EnvVarChanged,  NULL, SkyboxRenderer_EnvVariableChanged);
 	Event_RegisterVoid(&GfxEvents_ContextLost,       NULL, SkyboxRenderer_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, SkyboxRenderer_ContextRecreated);
 }
@@ -136,7 +136,7 @@ void SkyboxRenderer_Free(void) {
 
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, SkyboxRenderer_FileChanged);
 	Event_UnregisterVoid(&TextureEvents_PackChanged,   NULL, SkyboxRenderer_TexturePackChanged);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged,  NULL, SkyboxRenderer_EnvVariableChanged);
+	Event_UnregisterInt(&WorldEvents_EnvVarChanged,  NULL, SkyboxRenderer_EnvVariableChanged);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,       NULL, SkyboxRenderer_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, SkyboxRenderer_ContextRecreated);
 }

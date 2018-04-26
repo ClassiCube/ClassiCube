@@ -424,13 +424,13 @@ void InputHandler_KeyPress(void* obj, Int32 keyChar) {
 }
 
 void InputHandler_Init(void) {
-	Event_RegisterReal32(&MouseEvents_Wheel,    NULL, InputHandler_MouseWheel);
+	Event_RegisterReal(&MouseEvents_Wheel,    NULL, InputHandler_MouseWheel);
 	Event_RegisterMouseMove(&MouseEvents_Moved, NULL, InputHandler_MouseMove);
-	Event_RegisterInt32(&MouseEvents_Down,      NULL, InputHandler_MouseDown);
-	Event_RegisterInt32(&MouseEvents_Up,        NULL, InputHandler_MouseUp);
-	Event_RegisterInt32(&KeyEvents_Down,        NULL, InputHandler_KeyDown);
-	Event_RegisterInt32(&KeyEvents_Up,          NULL, InputHandler_KeyUp);
-	Event_RegisterInt32(&KeyEvents_Press,       NULL, InputHandler_KeyPress);
+	Event_RegisterInt(&MouseEvents_Down,      NULL, InputHandler_MouseDown);
+	Event_RegisterInt(&MouseEvents_Up,        NULL, InputHandler_MouseUp);
+	Event_RegisterInt(&KeyEvents_Down,        NULL, InputHandler_KeyDown);
+	Event_RegisterInt(&KeyEvents_Up,          NULL, InputHandler_KeyUp);
+	Event_RegisterInt(&KeyEvents_Press,       NULL, InputHandler_KeyPress);
 
 	KeyBind_Init();
 	Hotkeys_Init();

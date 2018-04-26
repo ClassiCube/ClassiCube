@@ -43,6 +43,7 @@ String String_FromReadonly(STRING_REF const UInt8* buffer);
 #define String_FromRawArray(buffer) String_FromRaw(buffer, (UInt16)(sizeof(buffer) - 1))
 
 void String_MakeLowercase(STRING_TRANSIENT String* str);
+void String_StripCols(STRING_TRANSIENT String* str);
 void String_Clear(STRING_TRANSIENT String* str);
 void String_Set(STRING_TRANSIENT String* str, STRING_PURE String* value);
 /* Returns a string that points directly to a substring of the given string.

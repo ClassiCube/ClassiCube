@@ -318,7 +318,7 @@ void EnvRenderer_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ResetAllEnv);
 	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged,    NULL, EnvRenderer_EnvVariableChanged);
+	Event_RegisterInt(&WorldEvents_EnvVarChanged,    NULL, EnvRenderer_EnvVariableChanged);
 	Game_SetViewDistance(Game_UserViewDistance, false);
 }
 
@@ -340,7 +340,7 @@ void EnvRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, EnvRenderer_ResetAllEnv);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,         NULL, EnvRenderer_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, EnvRenderer_ContextRecreated);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged,    NULL, EnvRenderer_EnvVariableChanged);
+	Event_UnregisterInt(&WorldEvents_EnvVarChanged,    NULL, EnvRenderer_EnvVariableChanged);
 }
 
 IGameComponent EnvRenderer_MakeComponent(void) {

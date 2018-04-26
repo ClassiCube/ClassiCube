@@ -315,7 +315,7 @@ void Lighting_LightHint(Int32 startX, Int32 startZ) {
 
 
 void Lighting_Init(void) {
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
+	Event_RegisterInt(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
 	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
 }
@@ -340,7 +340,7 @@ void Lighting_OnNewMapLoaded(void) {
 }
 
 void Lighting_Free(void) {
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
+	Event_UnregisterInt(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
 	Lighting_Reset();
 }
 

@@ -262,3 +262,10 @@ void ServerConnection_InitSingleplayer(void) {
 	ServerConnection_WriteStream = NULL;
 	ServerConnection_SendPacket  = NULL;
 }
+
+
+void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 size) {
+	Net_Handlers[opcode]    = handler;
+	Net_PacketSizes[opcode] = size;
+	maxHandledPacket = Math.Max(opcode, maxHandledPacket);
+}

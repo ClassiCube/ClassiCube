@@ -16,23 +16,17 @@ typedef struct Event_Void_ {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 } Event_Void;
 
-typedef void (*Event_Int32_Callback)(void* obj, Int32 argument);
-typedef struct Event_Int32_ {
-	Event_Int32_Callback Handlers[EVENT_MAX_CALLBACKS];
+typedef void (*Event_Int_Callback)(void* obj, Int32 argument);
+typedef struct Event_Int_ {
+	Event_Int_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
-} Event_Int32;
+} Event_Int;
 
-typedef void (*Event_Real32_Callback)(void* obj, Real32 argument);
-typedef struct Event_Real32_ {
-	Event_Real32_Callback Handlers[EVENT_MAX_CALLBACKS];
+typedef void (*Event_Real_Callback)(void* obj, Real32 argument);
+typedef struct Event_Real_ {
+	Event_Real_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
-} Event_Real32;
-
-typedef void (*Event_EntityID_Callback)(void* obj, EntityID argument);
-typedef struct Event_EntityID_ {
-	Event_EntityID_Callback Handlers[EVENT_MAX_CALLBACKS];
-	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
-} Event_EntityID;
+} Event_Real;
 
 typedef void (*Event_Stream_Callback)(void* obj, Stream* stream);
 typedef struct Event_Stream_ {
@@ -62,17 +56,13 @@ void Event_RaiseVoid(Event_Void* handlers);
 void Event_RegisterVoid(Event_Void* handlers, void* obj, Event_Void_Callback handler);
 void Event_UnregisterVoid(Event_Void* handlers, void* obj, Event_Void_Callback handler);
 
-void Event_RaiseInt32(Event_Int32* handlers, Int32 arg);
-void Event_RegisterInt32(Event_Int32* handlers, void* obj, Event_Int32_Callback handler);
-void Event_UnregisterInt32(Event_Int32* handlers, void* obj, Event_Int32_Callback handler);
+void Event_RaiseInt(Event_Int* handlers, Int32 arg);
+void Event_RegisterInt(Event_Int* handlers, void* obj, Event_Int_Callback handler);
+void Event_UnregisterInt(Event_Int* handlers, void* obj, Event_Int_Callback handler);
 
-void Event_RaiseReal32(Event_Real32* handlers, Real32 arg);
-void Event_RegisterReal32(Event_Real32* handlers, void* obj, Event_Real32_Callback handler);
-void Event_UnregisterReal32(Event_Real32* handlers, void* obj, Event_Real32_Callback handler);
-
-void Event_RaiseEntityID(Event_EntityID* handlers, EntityID arg);
-void Event_RegisterEntityID(Event_EntityID* handlers, void* obj, Event_EntityID_Callback handler);
-void Event_UnregisterEntityID(Event_EntityID* handlers, void* obj, Event_EntityID_Callback handler);
+void Event_RaiseReal(Event_Real* handlers, Real32 arg);
+void Event_RegisterReal(Event_Real* handlers, void* obj, Event_Real_Callback handler);
+void Event_UnregisterReal(Event_Real* handlers, void* obj, Event_Real_Callback handler);
 
 void Event_RaiseStream(Event_Stream* handlers, Stream* stream);
 void Event_RegisterStream(Event_Stream* handlers, void* obj, Event_Stream_Callback handler);
@@ -91,12 +81,11 @@ void Event_RegisterChat(Event_Chat* handlers, void* obj, Event_Chat_Callback han
 void Event_UnregisterChat(Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
 
 
-Event_EntityID EntityEvents_Added;   /* Entity is spawned in the current world. */
-Event_EntityID EntityEvents_Removed; /* Entity is despawned from the current world. */
-
-Event_EntityID TabListEvents_Added;   /* Tab list entry is created. */
-Event_EntityID TabListEvents_Changed; /* Tab list entry is modified. */
-Event_EntityID TabListEvents_Removed; /* Tab list entry is removed. */
+Event_Int EntityEvents_Added;    /* Entity is spawned in the current world. */
+Event_Int EntityEvents_Removed;  /* Entity is despawned from the current world. */
+Event_Int TabListEvents_Added;   /* Tab list entry is created. */
+Event_Int TabListEvents_Changed; /* Tab list entry is modified. */
+Event_Int TabListEvents_Removed; /* Tab list entry is removed. */
 
 Event_Void TextureEvents_AtlasChanged;  /* Terrain atlas (terrain.png) is changed. */
 Event_Void TextureEvents_PackChanged;   /* Texture pack is changed. */
@@ -115,13 +104,13 @@ Event_Void BlockEvents_PermissionsChanged; /* Block permissions (can place/delet
 Event_Void BlockEvents_BlockDefChanged;    /* Block definition is changed or removed. */
 
 Event_Void WorldEvents_NewMap;         /* Player begins loading a new world. */
-Event_Real32 WorldEvents_MapLoading;   /* Portion of world is decompressed/generated. (Arg is progress from 0-1) */
+Event_Real WorldEvents_MapLoading;   /* Portion of world is decompressed/generated. (Arg is progress from 0-1) */
 Event_Void WorldEvents_MapLoaded;      /* New world has finished loading, player can now interact with it. */
-Event_Int32 WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config. */
+Event_Int WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config. */
 
 Event_Void ChatEvents_FontChanged;     /* User changes whether system chat font used, and when the bitmapped font texture changes. */
 Event_Chat ChatEvents_ChatReceived;    /* Raised when the server or a client-side command sends a message */
-Event_Int32 ChatEvents_ColCodeChanged; /* Raised when a colour code changes */
+Event_Int ChatEvents_ColCodeChanged; /* Raised when a colour code changes */
 
 Event_Void WindowEvents_Moved;              /* Window is moved. */
 Event_Void WindowEvents_Resized;            /* Window is resized. */
@@ -133,12 +122,12 @@ Event_Void WindowEvents_WindowStateChanged; /* WindowState of the window changes
 Event_Void WindowEvents_MouseLeave;         /* Mouse cursor leaves window bounds. */
 Event_Void WindowEvents_MouseEnter;         /* Mouse cursor re-enters window bounds. */
 
-Event_Int32 KeyEvents_Press; /* Raised when a character is typed. Arg is a character. */
-Event_Int32 KeyEvents_Down;  /* Raised when a key is pressed. Arg is a member of Key enumeration. */
-Event_Int32 KeyEvents_Up;    /* Raised when a key is released. Arg is a member of Key enumeration. */
+Event_Int KeyEvents_Press; /* Raised when a character is typed. Arg is a character. */
+Event_Int KeyEvents_Down;  /* Raised when a key is pressed. Arg is a member of Key enumeration. */
+Event_Int KeyEvents_Up;    /* Raised when a key is released. Arg is a member of Key enumeration. */
 
 Event_MouseMove MouseEvents_Moved; /* Mouse position is changed. (Arg is delta from last position) */
-Event_Int32 MouseEvents_Down;      /* Mouse button is pressed. (Arg is MouseButton member) */
-Event_Int32 MouseEvents_Up;        /* Mouse button is released. (Arg is MouseButton member) */
-Event_Real32 MouseEvents_Wheel;    /* Mouse wheel is moved/scrolled. (Arg is wheel delta) */
+Event_Int MouseEvents_Down;      /* Mouse button is pressed. (Arg is MouseButton member) */
+Event_Int MouseEvents_Up;        /* Mouse button is released. (Arg is MouseButton member) */
+Event_Real MouseEvents_Wheel;    /* Mouse wheel is moved/scrolled. (Arg is wheel delta) */
 #endif

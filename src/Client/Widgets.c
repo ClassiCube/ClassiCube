@@ -2066,13 +2066,13 @@ void PlayerListWidget_SortAndReposition(PlayerListWidget* widget) {
 	PlayerListWidget_Reposition((GuiElement*)widget);
 }
 
-void PlayerListWidget_TabEntryAdded(void* obj, EntityID id) {
+void PlayerListWidget_TabEntryAdded(void* obj, Int32 id) {
 	PlayerListWidget* widget = (PlayerListWidget*)obj;
 	PlayerListWidget_AddName(widget, id, -1);
 	PlayerListWidget_SortAndReposition(widget);
 }
 
-void PlayerListWidget_TabEntryChanged(void* obj, EntityID id) {
+void PlayerListWidget_TabEntryChanged(void* obj, Int32 id) {
 	PlayerListWidget* widget = (PlayerListWidget*)obj;
 	Int32 i;
 	for (i = 0; i < widget->NamesCount; i++) {
@@ -2086,7 +2086,7 @@ void PlayerListWidget_TabEntryChanged(void* obj, EntityID id) {
 	}
 }
 
-void PlayerListWidget_TabEntryRemoved(void* obj, EntityID id) {
+void PlayerListWidget_TabEntryRemoved(void* obj, Int32 id) {
 	PlayerListWidget* widget = (PlayerListWidget*)obj;
 	Int32 i;
 	for (i = 0; i < widget->NamesCount; i++) {
@@ -2110,9 +2110,9 @@ void PlayerListWidget_Init(GuiElement* elem) {
 	TextWidget_Create(&widget->Overview, &msg, &widget->Font);
 	Widget_SetLocation((Widget*)(&widget->Overview), ANCHOR_CENTRE, ANCHOR_MIN, 0, 0);
 
-	Event_RegisterEntityID(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
-	Event_RegisterEntityID(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
-	Event_RegisterEntityID(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
+	Event_RegisterInt(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
+	Event_RegisterInt(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
+	Event_RegisterInt(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
 }
 
 void PlayerListWidget_Render(GuiElement* elem, Real64 delta) {
@@ -2149,9 +2149,9 @@ void PlayerListWidget_Free(GuiElement* elem) {
 	}
 	Elem_TryFree(&widget->Overview);
 
-	Event_UnregisterEntityID(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
-	Event_UnregisterEntityID(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
-	Event_UnregisterEntityID(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
+	Event_UnregisterInt(&TabListEvents_Added,   widget, PlayerListWidget_TabEntryAdded);
+	Event_UnregisterInt(&TabListEvents_Changed, widget, PlayerListWidget_TabEntryChanged);
+	Event_UnregisterInt(&TabListEvents_Removed, widget, PlayerListWidget_TabEntryRemoved);
 }
 
 GuiElementVTABLE PlayerListWidgetVTABLE;

@@ -549,7 +549,7 @@ void LoadingScreen_Init(GuiElement* elem) {
 	Gfx_SetFog(false);
 	LoadingScreen_ContextRecreated(screen);
 
-	Event_RegisterReal32(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
+	Event_RegisterReal(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, LoadingScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
 }
@@ -580,7 +580,7 @@ void LoadingScreen_Free(GuiElement* elem) {
 	Platform_FreeFont(&screen->Font);
 	LoadingScreen_ContextLost(screen);
 
-	Event_UnregisterReal32(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
+	Event_UnregisterReal(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, LoadingScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
 }
@@ -1063,7 +1063,7 @@ void ChatScreen_Init(GuiElement* elem) {
 
 	Event_RegisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
 	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
-	Event_RegisterInt32(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
+	Event_RegisterInt(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }
@@ -1123,7 +1123,7 @@ void ChatScreen_Free(GuiElement* elem) {
 
 	Event_UnregisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
-	Event_UnregisterInt32(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
+	Event_UnregisterInt(&ChatEvents_ColCodeChanged, screen, ChatScreen_ColCodeChanged);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ChatScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ChatScreen_ContextRecreated);
 }

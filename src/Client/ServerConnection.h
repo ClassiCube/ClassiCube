@@ -7,52 +7,52 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-#define OPCODE_HANDSHAKE                      0
-#define OPCODE_PING                           1
-#define OPCODE_LEVEL_INIT                     2
-#define OPCODE_LEVEL_DATA_CHUNK               3
-#define OPCODE_LEVEL_FINALISE                 4
-#define OPCODE_SET_BLOCK_CLIENT               5
-#define OPCODE_SET_BLOCK                      6
-#define OPCODE_ADD_ENTITY                     7
-#define OPCODE_ENTITY_TELEPORT                8
-#define OPCODE_RELPOS_AND_ORIENTATION_UPDATE  9
-#define OPCODE_RELPOS_UPDATE                  10
-#define OPCODE_ORIENTATION_UPDATE             11
-#define OPCODE_REMOVE_ENTITY                  12
-#define OPCODE_MESSAGE                        13
-#define OPCODE_KICK                           14
-#define OPCODE_SET_PERMISSION                 15
+#define OPCODE_HANDSHAKE                     0
+#define OPCODE_PING                          1
+#define OPCODE_LEVEL_INIT                    2
+#define OPCODE_LEVEL_DATA_CHUNK              3
+#define OPCODE_LEVEL_FINALISE                4
+#define OPCODE_SET_BLOCK_CLIENT              5
+#define OPCODE_SET_BLOCK                     6
+#define OPCODE_ADD_ENTITY                    7
+#define OPCODE_ENTITY_TELEPORT               8
+#define OPCODE_RELPOS_AND_ORIENTATION_UPDATE 9
+#define OPCODE_RELPOS_UPDATE                 10
+#define OPCODE_ORIENTATION_UPDATE            11
+#define OPCODE_REMOVE_ENTITY                 12
+#define OPCODE_MESSAGE                       13
+#define OPCODE_KICK                          14
+#define OPCODE_SET_PERMISSION                15
 
-#define OPCODE_CPE_EXT_INFO                   16
-#define OPCODE_CPE_EXT_ENTRY                  17
-#define OPCODE_CPE_SET_CLICK_DISTANCE         18
-#define OPCODE_CPE_CUSTOM_BLOCK_SUPPORT_LEVEL 19
-#define OPCODE_CPE_HOLD_THIS                  20
-#define OPCODE_CPE_SET_TEXT_HOTKEY            21
-#define OPCODE_CPE_EXT_ADD_PLAYER_NAME        22
-#define OPCODE_CPE_EXT_ADD_ENTITY             23
-#define OPCODE_CPE_EXT_REMOVE_PLAYER_NAME     24
-#define OPCODE_CPE_ENV_SET_COLOR              25
-#define OPCODE_CPE_MAKE_SELECTION             26
-#define OPCODE_CPE_REMOVE_SELECTION           27
-#define OPCODE_CPE_SET_BLOCK_PERMISSION       28
-#define OPCODE_CPE_SET_MODEL                  29
-#define OPCODE_CPE_ENV_SET_MAP_APPERANCE      30
-#define OPCODE_CPE_ENV_SET_WEATHER            31
-#define OPCODE_CPE_HACK_CONTROL               32
-#define OPCODE_CPE_EXT_ADD_ENTITY2            33
-#define OPCODE_CPE_PLAYER_CLICK               34
-#define OPCODE_CPE_DEFINE_BLOCK               35
-#define OPCODE_CPE_UNDEFINE_BLOCK             36
-#define OPCODE_CPE_DEFINE_BLOCK_EXT           37
-#define OPCODE_CPE_BULK_BLOCK_UPDATE          38
-#define OPCODE_CPE_SET_TEXT_COLOR             39
-#define OPCODE_CPE_ENV_SET_MAP_URL            40
-#define OPCODE_CPE_ENV_SET_MAP_PROPERTY       41
-#define OPCODE_CPE_SET_ENTITY_PROPERTY        42
-#define OPCODE_CPE_TWO_WAY_PING               43
-#define OPCODE_CPE_SET_INVENTORY_ORDER        44
+#define OPCODE_CPE_EXT_INFO                  16
+#define OPCODE_CPE_EXT_ENTRY                 17
+#define OPCODE_CPE_SET_CLICK_DISTANCE        18
+#define OPCODE_CPE_CUSTOM_BLOCK_LEVEL        19
+#define OPCODE_CPE_HOLD_THIS                 20
+#define OPCODE_CPE_SET_TEXT_HOTKEY           21
+#define OPCODE_CPE_EXT_ADD_PLAYER_NAME       22
+#define OPCODE_CPE_EXT_ADD_ENTITY            23
+#define OPCODE_CPE_EXT_REMOVE_PLAYER_NAME    24
+#define OPCODE_CPE_ENV_SET_COLOR             25
+#define OPCODE_CPE_MAKE_SELECTION            26
+#define OPCODE_CPE_REMOVE_SELECTION          27
+#define OPCODE_CPE_SET_BLOCK_PERMISSION      28
+#define OPCODE_CPE_SET_MODEL                 29
+#define OPCODE_CPE_ENV_SET_MAP_APPEARANCE    30
+#define OPCODE_CPE_ENV_SET_WEATHER           31
+#define OPCODE_CPE_HACK_CONTROL              32
+#define OPCODE_CPE_EXT_ADD_ENTITY2           33
+#define OPCODE_CPE_PLAYER_CLICK              34
+#define OPCODE_CPE_DEFINE_BLOCK              35
+#define OPCODE_CPE_UNDEFINE_BLOCK            36
+#define OPCODE_CPE_DEFINE_BLOCK_EXT          37
+#define OPCODE_CPE_BULK_BLOCK_UPDATE         38
+#define OPCODE_CPE_SET_TEXT_COLOR            39
+#define OPCODE_CPE_ENV_SET_MAP_URL           40
+#define OPCODE_CPE_ENV_SET_MAP_PROPERTY      41
+#define OPCODE_CPE_SET_ENTITY_PROPERTY       42
+#define OPCODE_CPE_TWO_WAY_PING              43
+#define OPCODE_CPE_SET_INVENTORY_ORDER       44
 
 typedef struct PickedPos_ PickedPos;
 typedef struct Stream_ Stream;
@@ -93,4 +93,11 @@ void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, I
 void ServerConnection_EndGeneration(void);
 void ServerConnection_InitSingleplayer(void);
 void ServerConnection_InitMultiplayer(void);
+
+typedef void (*Net_Handler)(Stream* stream);
+#define OPCODE_COUNT 256
+UInt16 Net_PacketSizes[OPCODE_COUNT];
+Net_Handler Net_Handlers[OPCODE_COUNT];
+void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 size);
+
 #endif

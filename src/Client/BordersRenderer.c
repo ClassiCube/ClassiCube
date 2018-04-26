@@ -299,7 +299,7 @@ void BordersRenderer_UseLegacyMode(bool legacy) {
 }
 
 void BordersRenderer_Init(void) {
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged,    NULL, BordersRenderer_EnvVariableChanged);
+	Event_RegisterInt(&WorldEvents_EnvVarChanged,    NULL, BordersRenderer_EnvVariableChanged);
 	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, BordersRenderer_ResetSidesAndEdges_Handler);
 	Event_RegisterVoid(&TextureEvents_AtlasChanged,    NULL, BordersRenderer_ResetTextures);
 	Event_RegisterVoid(&GfxEvents_ContextLost,         NULL, BordersRenderer_ContextLost);
@@ -308,7 +308,7 @@ void BordersRenderer_Init(void) {
 
 void BordersRenderer_Free(void) {
 	BordersRenderer_ContextLost(NULL);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged,    NULL, BordersRenderer_EnvVariableChanged);
+	Event_UnregisterInt(&WorldEvents_EnvVarChanged,    NULL, BordersRenderer_EnvVariableChanged);
 	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, BordersRenderer_ResetSidesAndEdges_Handler);
 	Event_UnregisterVoid(&TextureEvents_AtlasChanged,    NULL, BordersRenderer_ResetTextures);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,         NULL, BordersRenderer_ContextLost);

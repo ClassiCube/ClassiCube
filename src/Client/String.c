@@ -50,6 +50,15 @@ void String_MakeLowercase(STRING_TRANSIENT String* str) {
 	}
 }
 
+void String_StripCols(STRING_TRANSIENT String* str) {
+	Int32 i;
+	for (i = str->length - 1; i >= 0; i--) {
+		if (str->buffer[i] != '&') continue;
+		/* Remove the & and the colour code following it */
+		String_DeleteAt(str, i); String_DeleteAt(str, i);
+	}
+}
+
 void String_Clear(STRING_TRANSIENT String* str) {
 	Int32 i;
 	for (i = 0; i < str->length; i++) { 

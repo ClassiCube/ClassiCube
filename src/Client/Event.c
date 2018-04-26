@@ -50,43 +50,30 @@ void Event_UnregisterVoid(Event_Void* handlers, void* obj, Event_Void_Callback h
 	Event_UnregisterImpl(handlers, obj, handler);
 }
 
-void Event_RaiseInt32(Event_Int32* handlers, Int32 arg) {
+void Event_RaiseInt(Event_Int* handlers, Int32 arg) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], arg);
 	}
 }
-void Event_RegisterInt32(Event_Int32* handlers, void* obj, Event_Int32_Callback handler) {
+void Event_RegisterInt(Event_Int* handlers, void* obj, Event_Int_Callback handler) {
 	Event_RegisterImpl((Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
-void Event_UnregisterInt32(Event_Int32* handlers, void* obj, Event_Int32_Callback handler) {
+void Event_UnregisterInt(Event_Int* handlers, void* obj, Event_Int_Callback handler) {
 	Event_UnregisterImpl((Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseReal32(Event_Real32* handlers, Real32 arg) {
+void Event_RaiseReal(Event_Real* handlers, Real32 arg) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], arg);
 	}
 }
-void Event_RegisterReal32(Event_Real32* handlers, void* obj, Event_Real32_Callback handler) {
+void Event_RegisterReal(Event_Real* handlers, void* obj, Event_Real_Callback handler) {
 	Event_RegisterImpl((Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_UnregisterReal32(Event_Real32* handlers, void* obj, Event_Real32_Callback handler) {
-	Event_UnregisterImpl((Event_Void*)handlers, obj, (Event_Void_Callback)handler);
-}
-
-void Event_RaiseEntityID(Event_EntityID* handlers, EntityID arg) {
-	UInt32 i;
-	for (i = 0; i < handlers->Count; i++) {
-		handlers->Handlers[i](handlers->Objs[i], arg);
-	}
-}
-void Event_RegisterEntityID(Event_EntityID* handlers, void* obj, Event_EntityID_Callback handler) {
-	Event_RegisterImpl((Event_Void*)handlers, obj, (Event_Void_Callback)handler);
-}
-void Event_UnregisterEntityID(Event_EntityID* handlers, void* obj, Event_EntityID_Callback handler) {
+void Event_UnregisterReal(Event_Real* handlers, void* obj, Event_Real_Callback handler) {
 	Event_UnregisterImpl((Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 

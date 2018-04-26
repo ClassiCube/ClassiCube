@@ -265,7 +265,7 @@ LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPAR
 
 	case WM_CHAR:
 		if (Convert_TryUnicodeToCP437((UInt16)wParam, &keyChar)) {
-			Event_RaiseInt32(&KeyEvents_Press, keyChar);
+			Event_RaiseInt(&KeyEvents_Press, keyChar);
 		}
 		break;
 

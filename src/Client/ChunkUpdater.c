@@ -442,7 +442,7 @@ void ChunkUpdater_Init(void) {
 	Event_RegisterVoid(&TextureEvents_AtlasChanged,    NULL, ChunkUpdater_TerrainAtlasChanged);
 	Event_RegisterVoid(&WorldEvents_NewMap,            NULL, ChunkUpdater_OnNewMap);
 	Event_RegisterVoid(&WorldEvents_MapLoaded,         NULL, ChunkUpdater_OnNewMapLoaded);
-	Event_RegisterInt32(&WorldEvents_EnvVarChanged,    NULL, ChunkUpdater_EnvVariableChanged);
+	Event_RegisterInt(&WorldEvents_EnvVarChanged,    NULL, ChunkUpdater_EnvVariableChanged);
 
 	Event_RegisterVoid(&BlockEvents_BlockDefChanged,   NULL, ChunkUpdater_BlockDefinitionChanged);
 	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, ChunkUpdater_ViewDistanceChanged);
@@ -458,7 +458,7 @@ void ChunkUpdater_Free(void) {
 	Event_UnregisterVoid(&TextureEvents_AtlasChanged,    NULL, ChunkUpdater_TerrainAtlasChanged);
 	Event_UnregisterVoid(&WorldEvents_NewMap,            NULL, ChunkUpdater_OnNewMap);
 	Event_UnregisterVoid(&WorldEvents_MapLoaded,         NULL, ChunkUpdater_OnNewMapLoaded);
-	Event_UnregisterInt32(&WorldEvents_EnvVarChanged,    NULL, ChunkUpdater_EnvVariableChanged);
+	Event_UnregisterInt(&WorldEvents_EnvVarChanged,    NULL, ChunkUpdater_EnvVariableChanged);
 
 	Event_UnregisterVoid(&BlockEvents_BlockDefChanged,   NULL, ChunkUpdater_BlockDefinitionChanged);
 	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, ChunkUpdater_ViewDistanceChanged);

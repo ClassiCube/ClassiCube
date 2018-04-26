@@ -136,7 +136,10 @@ namespace ClassicalSharp.Model {
 		public void SetupState(Entity p) {
 			index = 0;
 			int col = p.Colour();
-			uScale = 1 / 64f; vScale = 1 / 32f;
+
+			bool _64x64 = p.SkinType != SkinType.Type64x32;
+			uScale = p.uScale * 0.015625f;
+			vScale = p.vScale * (_64x64 ? 0.015625f : 0.03125f);
 			
 			cols[0] = col;
 			if (!p.NoShade) {

@@ -351,7 +351,7 @@ void Entities_Free(void) {
 }
 
 void Entities_Remove(EntityID id) {
-	Event_RaiseEntityID(&EntityEvents_Removed, id);
+	Event_RaiseInt(&EntityEvents_Removed, id);
 	Entities_List[id]->VTABLE->Despawn(Entities_List[id]);
 	Entities_List[id] = NULL;
 }
@@ -424,11 +424,12 @@ void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* li
 	UInt8 playerNameBuffer[String_BufferSize(STRING_SIZE)];
 	String playerName = String_InitAndClearArray(playerNameBuffer);
 	String_AppendColorless(&playerName, player);
+	TabList_Remove(id);
 
 	TabList_PlayerNames[id] = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, &playerName);
-	TabList_ListNames[id] = TabList_Buffer.Count;   StringsBuffer_Add(&TabList_Buffer, list);
-	TabList_GroupNames[id] = TabList_Buffer.Count;  StringsBuffer_Add(&TabList_Buffer, group);
-	TabList_GroupRanks[id] = rank;
+	TabList_ListNames[id]   = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, list);
+	TabList_GroupNames[id]  = TabList_Buffer.Count; StringsBuffer_Add(&TabList_Buffer, group);
+	TabList_GroupRanks[id]  = rank;
 }
 
 void TabList_Init(void) { StringsBuffer_Init(&TabList_Buffer); }

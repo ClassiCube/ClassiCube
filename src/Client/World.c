@@ -77,10 +77,10 @@ bool World_IsValidPos_3I(Vector3I p) {
 
 
 #define WorldEnv_Set(src, dst, var) \
-if (src != dst) { dst = src; Event_RaiseInt32(&WorldEvents_EnvVarChanged, var); }
+if (src != dst) { dst = src; Event_RaiseInt(&WorldEvents_EnvVarChanged, var); }
 
 #define WorldEnv_SetCol(src, dst, var)\
-if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt32(&WorldEvents_EnvVarChanged, var); }
+if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt(&WorldEvents_EnvVarChanged, var); }
 
 const UInt8* Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 
@@ -197,7 +197,7 @@ void WorldEnv_SetSunCol(PackedCol col) {
 	WorldEnv_SunCol = col;
 	PackedCol_GetShaded(col, &WorldEnv_SunXSide, 
 		&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
-	Event_RaiseInt32(&WorldEvents_EnvVarChanged, ENV_VAR_SUN_COL);
+	Event_RaiseInt(&WorldEvents_EnvVarChanged, ENV_VAR_SUN_COL);
 }
 
 void WorldEnv_SetShadowCol(PackedCol col) {
@@ -206,7 +206,7 @@ void WorldEnv_SetShadowCol(PackedCol col) {
 	WorldEnv_ShadowCol = col;
 	PackedCol_GetShaded(col, &WorldEnv_ShadowXSide,
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
-	Event_RaiseInt32(&WorldEvents_EnvVarChanged, ENV_VAR_SHADOW_COL);
+	Event_RaiseInt(&WorldEvents_EnvVarChanged, ENV_VAR_SHADOW_COL);
 }
 
 Real32 Respawn_HighestFreeY(AABB* bb) {
