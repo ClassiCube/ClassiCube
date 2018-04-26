@@ -11,10 +11,12 @@ using ClassicalSharp.Network;
 using ClassicalSharp.Textures;
 using ClassicalSharp.Network.Protocols;
 using BlockID = System.UInt16;
+using OpenTK;
+using OpenTK.Input;
 
 namespace ClassicalSharp.Network {
 
-	public partial class NetworkProcessor : IServerConnection {
+	public sealed class NetworkProcessor : IServerConnection {
 		
 		public NetworkProcessor(Game window) {
 			game = window;
@@ -62,6 +64,28 @@ namespace ClassicalSharp.Network {
 			classic.WriteLogin(game.Username, game.Mppass);
 			SendPacket();
 			lastPacket = DateTime.UtcNow;
+		}
+		
+		public override void SendChat(string text) {
+			if (String.IsNullOrEmpty(text)) return;
+			
+			while (text.Length > Utils.StringLength) {
+				classic.WriteChat(text.Substring(0, Utils.StringLength), true);
+				SendPacket();
+				text = text.Substring(Utils.StringLength);
+			}
+			classic.WriteChat(text, false);
+			SendPacket();
+		}
+		
+		public override void SendPosition(Vector3 pos, float rotY, float headX) {
+			classic.WritePosition(pos, rotY, headX);
+			SendPacket();
+		}
+		
+		public override void SendPlayerClick(MouseButton button, bool buttonDown, byte targetId, PickedPos pos) {
+			cpe.WritePlayerClick(button, buttonDown, targetId, pos);
+			SendPacket();
 		}
 		
 		public override void Dispose() {
@@ -159,7 +183,7 @@ namespace ClassicalSharp.Network {
 			UsingPlayerClick = false;
 			SupportsPartialMessages = false;
 			SupportsFullCP437 = false;
-			addEntityHack = true;
+			IProtocol.addEntityHack = true;
 			
 			for (int i = 0; i < handlers.Length; i++) {
 				handlers[i] = null;
@@ -201,8 +225,9 @@ namespace ClassicalSharp.Network {
 		
 		public override void OnNewMap(Game game) {
 			// wipe all existing entity states
-			for (int i = 0; i < EntityList.MaxCount; i++)
-				RemoveEntity((byte)i);
+			for (int i = 0; i < EntityList.MaxCount; i++) {
+				classic.RemoveEntity((byte)i);
+			}
 		}
 		
 		double testAcc = 0;

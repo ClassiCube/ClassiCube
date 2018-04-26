@@ -135,21 +135,21 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			// Some server software will declare they support ExtPlayerList, but send AddEntity then AddPlayerName
 			// we need to workaround this case by removing all the tab names we added for the AddEntity packets
-			net.DisableAddEntityHack();
-			net.AddTablistEntry((byte)id, playerName, listName, groupName, groupRank);
+			DisableAddEntityHack();
+			AddTablistEntry((byte)id, playerName, listName, groupName, groupRank);
 		}
 		
 		void HandleExtAddEntity() {
 			byte id = reader.ReadUInt8();
 			string displayName = reader.ReadString();
 			string skinName = reader.ReadString();
-			net.CheckName(id, ref displayName, ref skinName);
-			net.AddEntity(id, displayName, skinName, false);
+			CheckName(id, ref displayName, ref skinName);
+			AddEntity(id, displayName, skinName, false);
 		}
 		
 		void HandleExtRemovePlayerName() {
 			int id = reader.ReadInt16() & 0xFF;
-			net.RemoveTablistEntry((byte)id);
+			RemoveTablistEntry((byte)id);
 		}
 		
 		void HandleMakeSelection() {
@@ -257,8 +257,8 @@ namespace ClassicalSharp.Network.Protocols {
 			byte id = reader.ReadUInt8();
 			string displayName = reader.ReadString();
 			string skinName = reader.ReadString();
-			net.CheckName(id, ref displayName, ref skinName);
-			net.AddEntity(id, displayName, skinName, true);
+			CheckName(id, ref displayName, ref skinName);
+			AddEntity(id, displayName, skinName, true);
 		}
 		
 		const int bulkCount = 256;
@@ -428,7 +428,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		#region Write
 		
-		internal void WritePlayerClick(MouseButton button, bool buttonDown,
+		internal void WritePlayerClick(MouseButton button, bool buttonDown, 
 		                               byte targetId, PickedPos pos) {
 			Player p = game.LocalPlayer;
 			writer.WriteUInt8((byte)Opcode.CpePlayerClick);
@@ -444,24 +444,24 @@ namespace ClassicalSharp.Network.Protocols {
 			writer.WriteUInt8((byte)pos.Face);
 		}
 		
-		internal void WriteExtInfo(string appName, int extensionsCount) {
+		void WriteExtInfo(string appName, int extensionsCount) {
 			writer.WriteUInt8((byte)Opcode.CpeExtInfo);
 			writer.WriteString(appName);
 			writer.WriteInt16((short)extensionsCount);
 		}
 		
-		internal void WriteExtEntry(string extensionName, int extensionVersion) {
+		void WriteExtEntry(string extensionName, int extensionVersion) {
 			writer.WriteUInt8((byte)Opcode.CpeExtEntry);
 			writer.WriteString(extensionName);
 			writer.WriteInt32(extensionVersion);
 		}
 		
-		internal void WriteCustomBlockSupportLevel(byte version) {
+		void WriteCustomBlockSupportLevel(byte version) {
 			writer.WriteUInt8((byte)Opcode.CpeCustomBlockSupportLevel);
 			writer.WriteUInt8(version);
 		}
 		
-		internal void WriteTwoWayPing(bool serverToClient, ushort data) {
+		void WriteTwoWayPing(bool serverToClient, ushort data) {
 			writer.WriteUInt8((byte)Opcode.CpeTwoWayPing);
 			writer.WriteUInt8((byte)(serverToClient ? 1 : 0));
 			writer.WriteInt16((short)data);

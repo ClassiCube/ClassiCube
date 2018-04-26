@@ -10,6 +10,8 @@
 #define NOIME
 #include <Windows.h>
 #include <stdlib.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
 
 HDC hdc;
 HANDLE heap;
@@ -27,6 +29,10 @@ void Platform_Init(void) {
 	if (hdc == NULL) ErrorHandler_Fail("Failed to get screen DC");
 
 	stopwatch_highResolution = QueryPerformanceFrequency(&stopwatch_freq);
+
+	WSADATA wsaData;
+	ReturnCode wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+	ErrorHandler_CheckOrFail(wsaResult, "WSAStartup failed");
 
 	UInt32 deviceNum = 0;
 	/* Get available video adapters and enumerate all monitors */
@@ -61,6 +67,7 @@ void Platform_Init(void) {
 void Platform_Free(void) {
 	HeapDestroy(heap);
 	DeleteDC(hdc);
+	WSACleanup();
 }
 
 void Platform_Exit(ReturnCode code) {
@@ -383,4 +390,54 @@ void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
 	DrawTextA(hDC, args->Text.buffer, args->Text.length,
 		&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
 	SelectObject(hDC, oldFont);
+}
+
+
+void Platform_SocketCreate(void** socketResult) {
+	*socketResult = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (*socketResult == INVALID_SOCKET) {
+		ErrorHandler_FailWithCode(WSAGetLastError(), "Failed to create socket");
+	}
+}
+
+ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port) {
+	struct sockaddr_in addr;
+	addr.sin_family = AF_INET;
+	addr.sin_addr.s_addr = inet_addr(ip->buffer);
+	addr.sin_port = htons((UInt16)port);
+
+	ReturnCode result = connect(socket, (SOCKADDR*)(&addr), sizeof(addr));
+	return result == SOCKET_ERROR ? WSAGetLastError() : 0;
+}
+
+ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32* modified) {
+	Int32 recvCount = recv(socket, buffer, count, 0);
+	if (recvCount == SOCKET_ERROR) {
+		*modified = 0; return WSAGetLastError();
+	} else {
+		*modified = recvCount; return 0;
+	}
+}
+
+ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified) {
+	Int32 sentCount = send(socket, buffer, count, 0);
+	if (sentCount == SOCKET_ERROR) {
+		*modified = 0; return WSAGetLastError();
+	} else {
+		*modified = sentCount; return 0;
+	}
+}
+
+ReturnCode Platform_SocketClose(void* socket) {
+	ReturnCode result = 0;
+	ReturnCode result1 = shutdown(socket, SD_BOTH);
+	if (result1 == SOCKET_ERROR) result = WSAGetLastError();
+
+	ReturnCode result2 = closesocket(socket);
+	if (result2 == SOCKET_ERROR) result = WSAGetLastError();
+	return result;
+}
+
+ReturnCode Platform_SocketAvailable(void* socket, UInt32* available) {
+	return ioctlsocket(socket, FIONBIO, available);
 }

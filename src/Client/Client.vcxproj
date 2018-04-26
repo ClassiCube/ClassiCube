@@ -209,6 +209,7 @@
     <ClInclude Include="Input.h" />
     <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Menus.h" />
+    <ClInclude Include="PacketHandlers.h" />
     <ClInclude Include="Physics.h" />
     <ClInclude Include="Inventory.h" />
     <ClInclude Include="IsometricDrawer.h" />

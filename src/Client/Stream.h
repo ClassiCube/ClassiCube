@@ -39,6 +39,8 @@ void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name);
 /* Readonly Stream wrapping another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
 void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len);
 void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
+void Stream_WriteonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
+
 
 UInt8 Stream_ReadU8(Stream* stream);
 #define Stream_ReadI8(stream) ((Int8)Stream_ReadU8(stream))

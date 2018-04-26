@@ -366,6 +366,9 @@
     <ClInclude Include="Audio.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
+    <ClInclude Include="PacketHandlers.h">
+      <Filter>Header Files\Network</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Noise.c">

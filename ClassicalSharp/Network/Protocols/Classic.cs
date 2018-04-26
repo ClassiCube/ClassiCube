@@ -225,14 +225,14 @@ namespace ClassicalSharp.Network.Protocols {
 			byte id = reader.ReadUInt8();
 			string name = reader.ReadString();
 			string skin = name;
-			net.CheckName(id, ref name, ref skin);
-			net.AddEntity(id, name, skin, true);
+			CheckName(id, ref name, ref skin);
+			AddEntity(id, name, skin, true);
 			
-			if (!net.addEntityHack) return;
+			if (!addEntityHack) return;
 			// Workaround for some servers that declare they support ExtPlayerList,
 			// but doesn't send ExtAddPlayerName packets.
-			net.AddTablistEntry(id, name, name, "Players", 0);
-			net.needRemoveNames[id >> 3] |= (byte)(1 << (id & 0x7));
+			AddTablistEntry(id, name, name, "Players", 0);
+			needRemoveNames[id >> 3] |= (byte)(1 << (id & 0x7));
 		}
 		
 		void HandleEntityTeleport() {
@@ -250,7 +250,7 @@ namespace ClassicalSharp.Network.Protocols {
 			float rotY =  (float)Utils.PackedToDegrees(reader.ReadUInt8());
 			float headX = (float)Utils.PackedToDegrees(reader.ReadUInt8());
 			LocationUpdate update = LocationUpdate.MakePosAndOri(v, rotY, headX, true);
-			net.UpdateLocation(id, update, true);
+			UpdateLocation(id, update, true);
 		}
 		
 		void HandleRelPositionUpdate() {
@@ -261,7 +261,7 @@ namespace ClassicalSharp.Network.Protocols {
 			v.Z = reader.ReadInt8() / 32f;
 			
 			LocationUpdate update = LocationUpdate.MakePos(v, true);
-			net.UpdateLocation(id, update, true);
+			UpdateLocation(id, update, true);
 		}
 		
 		void HandleOrientationUpdate() {
@@ -270,12 +270,12 @@ namespace ClassicalSharp.Network.Protocols {
 			float headX = (float)Utils.PackedToDegrees(reader.ReadUInt8());
 			
 			LocationUpdate update = LocationUpdate.MakeOri(rotY, headX);
-			net.UpdateLocation(id, update, true);
+			UpdateLocation(id, update, true);
 		}
 		
 		void HandleRemoveEntity() {
 			byte id = reader.ReadUInt8();
-			net.RemoveEntity(id);
+			RemoveEntity(id);
 		}
 		
 		void HandleMessage() {
@@ -309,7 +309,7 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			if (id == EntityList.SelfID) receivedFirstPosition = true;
 			LocationUpdate update = LocationUpdate.MakePosAndOri(P, rotY, headX, false);
-			net.UpdateLocation(id, update, interpolate);
+			UpdateLocation(id, update, interpolate);
 		}
 		#endregion
 		

@@ -72,6 +72,10 @@ ReturnCode Stream_Skip(Stream* stream, UInt32 count) {
 	return count > 0;
 }
 
+ReturnCode Stream_UnsupportedIO(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	*modified = 0; return 1;
+}
+
 
 /*########################################################################################################################*
 *-------------------------------------------------------FileStream--------------------------------------------------------*
@@ -112,9 +116,6 @@ ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	stream->Meta_Portion_Count -= *modified;
 	return code;
 }
-ReturnCode Stream_PortionWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	*modified = 0; return 1;
-}
 ReturnCode Stream_PortionClose(Stream* stream) { return 0; }
 ReturnCode Stream_PortionSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
 
@@ -124,7 +125,7 @@ void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 	stream->Meta_Portion_Count = len;
 
 	stream->Read  = Stream_PortionRead;
-	stream->Write = Stream_PortionWrite;
+	stream->Write = Stream_UnsupportedIO;
 	stream->Close = Stream_PortionClose;
 	stream->Seek  = Stream_PortionSeek;
 }
@@ -143,15 +144,31 @@ ReturnCode Stream_MemoryRead(Stream* stream, UInt8* data, UInt32 count, UInt32* 
 	return 0;
 }
 
+ReturnCode Stream_MemoryWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	count = min(count, stream->Meta_Mem_Count);
+	if (count > 0) { Platform_MemCpy(stream->Meta_Mem_Buffer, data, count); }
+
+	stream->Meta_Mem_Buffer += count;
+	stream->Meta_Mem_Count -= count;
+	*modified = count;
+	return 0;
+}
+
 void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
 	Stream_SetName(stream, name);
 	stream->Meta_Mem_Buffer = data;
 	stream->Meta_Mem_Count  = len;
 
 	stream->Read  = Stream_MemoryRead;
-	stream->Write = Stream_PortionWrite;
+	stream->Write = Stream_UnsupportedIO;
 	stream->Close = Stream_PortionClose;
 	stream->Seek  = Stream_PortionSeek;
+}
+
+void Stream_WriteonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
+	Stream_ReadonlyMemory(stream, data, len, name);
+	stream->Read  = Stream_UnsupportedIO;
+	stream->Write = Stream_MemoryWrite;
 }
 
 

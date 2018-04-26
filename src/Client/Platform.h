@@ -65,4 +65,11 @@ void Platform_SetBitmap(Bitmap* bmp);
 void Platform_ReleaseBitmap(void);
 Size2D Platform_MeasureText(DrawTextArgs* args);
 void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
+
+void Platform_SocketCreate(void** socket);
+ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port);
+ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
+ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
+ReturnCode Platform_SocketClose(void* socket);
+ReturnCode Platform_SocketAvailable(void* socket, UInt32* available);
 #endif

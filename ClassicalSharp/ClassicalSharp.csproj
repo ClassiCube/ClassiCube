@@ -243,7 +243,6 @@
     <Compile Include="Network\Enums.cs" />
     <Compile Include="Network\IServerConnection.cs" />
     <Compile Include="Network\NetworkProcessor.cs" />
-    <Compile Include="Network\NetworkProcessor.Helpers.cs" />
     <Compile Include="Network\Utils\AsyncDownloader.cs" />
     <Compile Include="Network\Utils\NetReader.cs" />
     <Compile Include="Network\Utils\FixedBufferStream.cs" />

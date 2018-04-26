@@ -1,3 +1,4 @@
+#include "PacketHandlers.h"
 #include "Deflate.h"
 #include "Utils.h"
 #include "ServerConnection.h"
@@ -617,7 +618,7 @@ void CPE_CustomBlockLevel(Stream* stream) {
 	UInt8 supportLevel = Stream_ReadU8(stream);
 	stream = ServerConnection_WriteStream();
 	CPE_WriteCustomBlockLevel(stream, 1);
-	ServerConnection_SendPacket();
+	Net_SendPacket();
 	Game_UseCPEBlocks = true;
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 }
@@ -951,7 +952,7 @@ void CPE_TwoWayPing(Stream* stream) {
 
 	stream = ServerConnection_WriteStream();
 	CPE_WriteTwoWayPing(stream, true, data); /* server to client reply */
-	ServerConnection_SendPacket();
+	Net_SendPacket();
 }
 
 void CPE_SetInventoryOrder(Stream* stream) {
@@ -965,7 +966,7 @@ void CPE_SetInventoryOrder(Stream* stream) {
 }
 
 #define Ext_Deg2Packed(x) ((Int16)((x) * 65536.0f / 360.0f))
-void CPE_WritePlayerClick(Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, PickedPos pos) {
+void CPE_WritePlayerClick(Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, PickedPos* pos) {
 	Entity* p = &LocalPlayer_Instance.Base;
 	Stream_WriteU8(stream, OPCODE_CPE_PLAYER_CLICK);
 	Stream_WriteU8(stream, button);
@@ -974,13 +975,13 @@ void CPE_WritePlayerClick(Stream* stream, MouseButton button, bool buttonDown, U
 	Stream_WriteI16_BE(stream, Ext_Deg2Packed(p->HeadX));
 
 	Stream_WriteU8(stream, targetId);
-	Stream_WriteI16_BE(stream, pos.BlockPos.X);
-	Stream_WriteI16_BE(stream, pos.BlockPos.Y);
-	Stream_WriteI16_BE(stream, pos.BlockPos.Z);
+	Stream_WriteI16_BE(stream, pos->BlockPos.X);
+	Stream_WriteI16_BE(stream, pos->BlockPos.Y);
+	Stream_WriteI16_BE(stream, pos->BlockPos.Z);
 
 	UInt8 face = 255;
 	/* Our own face values differ from CPE block face */
-	switch (pos.ClosestFace) {
+	switch (pos->ClosestFace) {
 	case FACE_XMAX: face = 0; break;
 	case FACE_XMIN: face = 1; break;
 	case FACE_YMAX: face = 2; break;
@@ -1021,7 +1022,7 @@ void CPE_SendCpeExtInfoReply(void) {
 	Stream* stream = ServerConnection_WriteStream();
 
 	CPE_WriteExtInfo(stream, &ServerConnection_AppName, count);
-	ServerConnection_SendPacket();
+	Net_SendPacket();
 	Int32 i, ver;
 
 	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
@@ -1037,7 +1038,7 @@ void CPE_SendCpeExtInfoReply(void) {
 		}
 
 		CPE_WriteExtEntry(stream, &name, ver);
-		ServerConnection_SendPacket();
+		Net_SendPacket();
 	}
 }
 
