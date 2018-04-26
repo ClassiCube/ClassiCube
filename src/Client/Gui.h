@@ -77,8 +77,11 @@ Screen* Gui_GetActiveScreen(void);
 /* Gets the non-overlay screen that the user is currently interacting with.
 This means if an overlay is active, it will return the screen under it. */
 Screen* Gui_GetUnderlyingScreen(void);
-void Gui_SetScreen(Screen* screen, bool freeOld);
-void Gui_SetNewScreen(Screen* screen);
+
+void Gui_ReplaceActive(Screen* screen);
+void Gui_FreeActive(void);
+/* This doesn't free old active screen - you probably want Gui_ReplaceActive */
+void Gui_SetActive(Screen* screen);
 void Gui_RefreshHud(void);
 void Gui_ShowOverlay(Screen* overlay, bool atFront);
 void Gui_RenderGui(Real64 delta);

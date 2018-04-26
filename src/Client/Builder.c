@@ -63,7 +63,7 @@ void Builder1DPart_Prepare(Builder1DPart* part) {
 	if (vCount > part->verticesBufferCount) {
 		Platform_MemFree(&part->vertices);
 
-		part->vertices = Platform_MemAlloc((vCount + 2) * sizeof(VertexP3fT2fC4b));
+		part->vertices = Platform_MemAlloc(vCount + 2, sizeof(VertexP3fT2fC4b));
 		part->verticesBufferCount = vCount;
 		if (part->vertices == NULL) {
 			ErrorHandler_Fail("Builder1DPart_Prepare - failed to allocate memory");

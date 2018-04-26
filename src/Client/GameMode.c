@@ -23,8 +23,8 @@ IGameComponent GameMode_MakeComponent(void) {
 bool GameMode_HandlesKeyDown(Key key) {
 	Screen* activeScreen = Gui_GetActiveScreen();
 	if (key == KeyBind_Get(KeyBind_Inventory) && activeScreen == Gui_HUD) {
-		Screen* screen = InventoryScreen_MakeInstance();
-		Gui_SetNewScreen(screen);
+		Gui_FreeActive();
+		Gui_SetActive(InventoryScreen_MakeInstance());
 		return true;
 	} else if (key == KeyBind_Get(KeyBind_DropBlock) && !Game_ClassicMode) {
 		if (Inventory_CanChangeSelected() && Inventory_SelectedBlock != BLOCK_AIR) {

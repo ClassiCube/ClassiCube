@@ -173,7 +173,8 @@ void Game_UpdateProjection(void) {
 void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
-	Gui_SetNewScreen(DisconnectScreen_MakeInstance(title, reason));
+	Gui_FreeActive();
+	Gui_SetActive(DisconnectScreen_MakeInstance(title, reason));
 
 	Drawer2D_Init();
 	Block_Reset();
@@ -530,7 +531,8 @@ void Game_Load(void) {
 	String_Format2(&loadTitle, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 	String loadMsg = String_MakeNull();
 
-	Gui_SetNewScreen(LoadingScreen_MakeInstance(&loadTitle, &loadMsg));
+	Gui_FreeActive();
+	Gui_SetActive(LoadingScreen_MakeInstance(&loadTitle, &loadMsg));
 	ServerConnection_Connect(&Game_IPAddress, Game_Port);
 }
 
@@ -672,7 +674,8 @@ void Game_RenderFrame(Real64 delta) {
 
 	Camera_Active->UpdateMouse();
 	if (!Window_GetFocused() && !Gui_GetActiveScreen()->HandlesAllInput) {
-		Gui_SetNewScreen(PauseScreen_MakeInstance());
+		Gui_FreeActive();
+		Gui_SetActive(PauseScreen_MakeInstance());
 	}
 
 	bool allowZoom = Gui_Active == NULL && !Gui_HUD->HandlesAllInput;
@@ -779,7 +782,6 @@ void Cw_Save(Stream* stream) { }
 void Dat_Load(Stream* stream) { }
 void Schematic_Save(Stream* stream) { }
 void Gfx_MakeApiInfo(void) { }
-void ServerConnection_InitMultiplayer(void) { }
 bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value) { return true; }
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
 Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }

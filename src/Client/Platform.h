@@ -17,8 +17,8 @@ void Platform_Init(void);
 void Platform_Free(void);
 void Platform_Exit(ReturnCode code);
 
-void* Platform_MemAlloc(UInt32 numBytes);
-void* Platform_MemRealloc(void* mem, UInt32 numBytes);
+void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize);
+void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize);
 void Platform_MemFree(void** mem);
 void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes);
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
@@ -72,4 +72,5 @@ ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32
 ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
 ReturnCode Platform_SocketClose(void* socket);
 ReturnCode Platform_SocketAvailable(void* socket, UInt32* available);
+ReturnCode Platform_SocketSelectRead(void* socket, Int32 microseconds, bool* success);
 #endif

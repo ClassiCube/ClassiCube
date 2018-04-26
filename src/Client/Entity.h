@@ -142,6 +142,7 @@ typedef struct NetPlayer_ {
 	bool ShouldRender;
 } NetPlayer;
 void NetPlayer_Init(NetPlayer* player, STRING_PURE String* displayName, STRING_PURE String* skinName);
+NetPlayer NetPlayers_List[ENTITIES_SELF_ID];
 
 /* Represents the user/player's own entity. */
 typedef struct LocalPlayer_ {

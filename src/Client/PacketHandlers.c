@@ -20,6 +20,7 @@
 #include "AsyncDownloader.h"
 #include "Drawer2D.h"
 #include "ErrorHandler.h"
+#include "TexturePack.h"
 
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
@@ -68,73 +69,6 @@ void Handlers_RemoveEndPlus(STRING_TRANSIENT String* value) {
 	String_DeleteAt(value, value->length - 1);
 }
 
-void Handlers_CheckName(EntityID id, STRING_TRANSIENT String* displayName, STRING_TRANSIENT String* skinName) {
-	String_StripCols(&skinName);
-	Handlers_RemoveEndPlus(displayName);
-	Handlers_RemoveEndPlus(skinName);	
-	/* Server is only allowed to change our own name colours. */
-	if (id != ENTITIES_SELF_ID) return;
-
-	UInt8 nameNoColsBuffer[String_BufferSize(STRING_SIZE)];
-	String nameNoCols = String_InitAndClearArray(nameNoColsBuffer);
-	String_AppendColorless(&nameNoCols, displayName);
-
-	if (!String_Equals(&nameNoCols, &Game_Username)) { String_Set(displayName, &Game_Username); }
-	if (skinName->length == 0) { String_Set(skinName, &Game_Username); }
-}
-
-void Handlers_AddEntity(EntityID id, STRING_TRANSIENT String* displayName, STRING_TRANSIENT String* skinName, bool readPosition) {
-	LocalPlayer* p = &LocalPlayer_Instance;
-	if (id != ENTITIES_SELF_ID) {
-		Entity* oldEntity = Entities_List[id];
-		if (oldEntity != NULL) Entities_Remove(id);
-
-		game.Entities.List[id] = new NetPlayer(displayName, skinName, game);
-		Event_RaiseInt(&EntityEvents_Added, id);
-	} else {
-		p->Base.VTABLE->Despawn(&p->Base);
-		/* Always reset the texture here, in case other network players are using the same skin as us */
-		/* In that case, we don't want the fetching of new skin for us to delete the texture used by them */
-		Player_ResetSkin((Player*)p);
-		p->FetchedSkin = false;
-
-		String player_name = String_InitAndClearArray(p->DisplayNameRaw); 
-		String_Set(&player_name, displayName);
-		String player_skin = String_InitAndClearArray(p->SkinNameRaw);
-		String_Set(&player_skin, skinName);
-		Player_UpdateName((Player*)p);
-	}
-
-	if (!readPosition) return;
-	Stream* stream = ServerConnection_ReadStream();
-	Classic_ReadAbsoluteLocation(stream, id, false);
-	if (id != ENTITIES_SELF_ID) return;
-
-	p->Spawn      = p->Base.Position;
-	p->SpawnRotY  = p->Base.HeadY;
-	p->SpawnHeadX = p->Base.HeadX;
-}
-
-void Handlers_RemoveEntity(EntityID id) {
-	Entity* entity = Entities_List[id];
-	if (entity == NULL) return;
-	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
-
-	/* See comment about some servers in Classic_AddEntity */
-	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
-	if (!addEntityHack || (needRemoveNames[mask] & bit) == 0) return;
-
-	Handlers_RemoveTablistEntry(id);
-	needRemoveNames[mask] &= (UInt8)~bit;
-}
-
-void Handlers_UpdateLocation(EntityID playerId, LocationUpdate* update, bool interpolate) {
-	Entity* entity = Entities_List[playerId];
-	if (entity != NULL) {
-		entity->VTABLE->SetLocation(entity, update, interpolate);
-	}
-}
-
 void Handlers_AddTablistEntry(EntityID id, STRING_PURE String* playerName, STRING_PURE String* listName, STRING_PURE String* groupName, UInt8 groupRank) {
 	/* Only redraw the tab list if something changed. */
 	if (TabList_Valid(id)) {
@@ -160,6 +94,76 @@ void Handlers_RemoveTablistEntry(EntityID id) {
 	TabList_Remove(id);
 }
 
+void Handlers_CheckName(EntityID id, STRING_TRANSIENT String* displayName, STRING_TRANSIENT String* skinName) {
+	String_StripCols(skinName);
+	Handlers_RemoveEndPlus(displayName);
+	Handlers_RemoveEndPlus(skinName);
+	/* Server is only allowed to change our own name colours. */
+	if (id != ENTITIES_SELF_ID) return;
+
+	UInt8 nameNoColsBuffer[String_BufferSize(STRING_SIZE)];
+	String nameNoCols = String_InitAndClearArray(nameNoColsBuffer);
+	String_AppendColorless(&nameNoCols, displayName);
+
+	if (!String_Equals(&nameNoCols, &Game_Username)) { String_Set(displayName, &Game_Username); }
+	if (skinName->length == 0) { String_Set(skinName, &Game_Username); }
+}
+
+void Classic_ReadAbsoluteLocation(Stream* stream, EntityID id, bool interpolate);
+void Handlers_AddEntity(EntityID id, STRING_TRANSIENT String* displayName, STRING_TRANSIENT String* skinName, bool readPosition) {
+	LocalPlayer* p = &LocalPlayer_Instance;
+	if (id != ENTITIES_SELF_ID) {
+		Entity* oldEntity = Entities_List[id];
+		if (oldEntity != NULL) Entities_Remove(id);
+
+		NetPlayer* player = &NetPlayers_List[id];
+		NetPlayer_Init(player, displayName, skinName);
+		Entities_List[id] = &player->Base;
+		Event_RaiseInt(&EntityEvents_Added, id);
+	} else {
+		p->Base.VTABLE->Despawn(&p->Base);
+		/* Always reset the texture here, in case other network players are using the same skin as us */
+		/* In that case, we don't want the fetching of new skin for us to delete the texture used by them */
+		Player_ResetSkin((Player*)p);
+		p->FetchedSkin = false;
+
+		String player_name = String_InitAndClearArray(p->DisplayNameRaw);
+		String_Set(&player_name, displayName);
+		String player_skin = String_InitAndClearArray(p->SkinNameRaw);
+		String_Set(&player_skin, skinName);
+		Player_UpdateName((Player*)p);
+	}
+
+	if (!readPosition) return;
+	Stream* stream = ServerConnection_ReadStream();
+	Classic_ReadAbsoluteLocation(stream, id, false);
+	if (id != ENTITIES_SELF_ID) return;
+
+	p->Spawn = p->Base.Position;
+	p->SpawnRotY = p->Base.HeadY;
+	p->SpawnHeadX = p->Base.HeadX;
+}
+
+void Handlers_RemoveEntity(EntityID id) {
+	Entity* entity = Entities_List[id];
+	if (entity == NULL) return;
+	if (id != ENTITIES_SELF_ID) Entities_Remove(id);
+
+	/* See comment about some servers in Classic_AddEntity */
+	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
+	if (!addEntityHack || (needRemoveNames[mask] & bit) == 0) return;
+
+	Handlers_RemoveTablistEntry(id);
+	needRemoveNames[mask] &= (UInt8)~bit;
+}
+
+void Handlers_UpdateLocation(EntityID playerId, LocationUpdate* update, bool interpolate) {
+	Entity* entity = Entities_List[playerId];
+	if (entity != NULL) {
+		entity->VTABLE->SetLocation(entity, update, interpolate);
+	}
+}
+
 void Handlers_DisableAddEntityHack(void) {
 	if (!addEntityHack) return;
 	addEntityHack = false;
@@ -169,30 +173,146 @@ void Handlers_DisableAddEntityHack(void) {
 		Int32 mask = id >> 3, bit = 1 << (id & 0x7);
 		if (!(needRemoveNames[mask] & bit)) continue;
 
-		RemoveTablistEntry((EntityID)id);
+		Handlers_RemoveTablistEntry((EntityID)id);
 		needRemoveNames[mask] &= (UInt8)~bit;
 	}
 }
 
-void Handlers_Reset(void) {
-	addEntityHack = true;
-	Classic_Reset();
-	CPE_Reset();
-	BlockDefs_Reset();
-	WoM_Reset();
+
+/*########################################################################################################################*
+*------------------------------------------------------WoM protocol-------------------------------------------------------*
+*#########################################################################################################################*/
+/* Partially based on information from http://files.worldofminecraft.com/texturing/ */
+/* NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015 */
+
+UInt8 wom_identifierBuffer[String_BufferSize(STRING_SIZE)];
+String wom_identifier = String_FromEmptyArray(wom_identifierBuffer);
+Int32 wom_counter;
+bool wom_sendId, wom_sentId;
+
+void WoM_UpdateIdentifier(void) {
+	String_Clear(&wom_identifier);
+	String_Format1(&wom_identifier, "womenv_%i", &wom_counter);
 }
 
-void Handlers_Tick(void) {
-	Classic_Tick();
-	CPE_Tick();
-	WoM_Tick();
+void WoM_CheckMotd(void) {
+	String motd = ServerConnection_ServerMOTD;
+	if (motd.length == 0) return;
+
+	String cfg = String_FromConst("cfg=");
+	Int32 index = String_IndexOfString(&motd, &cfg);
+	if (Game_PureClassic || index == -1) return;
+
+	UInt8 urlBuffer[String_BufferSize(STRING_SIZE)];
+	String url = String_InitAndClearArray(urlBuffer);
+	String host = String_UNSAFE_SubstringAt(&motd, index + cfg.length);
+	String_Format1(&url, "http://%s", &host);
+	/* TODO: Replace $U with username */
+	/*url = url.Replace("$U", game.Username); */
+
+	/* Ensure that if the user quickly changes to a different world, env settings from old world aren't
+	applied in the new world if the async 'get env request' didn't complete before the old world was unloaded */
+	wom_counter++;
+	WoM_UpdateIdentifier();
+	AsyncDownloader_Download(&url, true, REQUEST_TYPE_STRING, &wom_identifier);
+	wom_sendId = true;
+}
+
+void WoM_CheckSendWomID(void) {
+	if (wom_sendId && !wom_sentId) {
+		String msg = String_FromConst("/womid WoMClient-2.0.7")
+			ServerConnection_SendChat(&msg);
+		wom_sentId = true;
+	}
+}
+
+PackedCol WoM_ParseCol(STRING_PURE String* value, PackedCol defaultCol) {
+	Int32 argb;
+	if (!Convert_TryParseInt32(value, &argb)) return defaultCol;
+
+	PackedCol col; col.A = 255;
+	col.R = (UInt8)(argb >> 16);
+	col.G = (UInt8)(argb >> 8);
+	col.B = (UInt8)argb;
+	return col;
+}
+
+bool WoM_ReadLine(STRING_REF String* page, Int32* start, STRING_TRANSIENT String* line) {
+	Int32 i, offset = *start;
+	if (offset == -1) return false;
+
+	for (i = offset; i < page->length; i++) {
+		UInt8 c = page->buffer[i];
+		if (c != '\r' && c != '\n') continue;
+
+		*line = String_UNSAFE_Substring(page, offset, i - offset);
+		offset = i + 1;
+		if (c == '\r' && offset < page->length && page->buffer[offset] == '\n') {
+			offset++; /* we stop at the \r, so make sure to skip following \n */
+		}
+
+		*start = offset; return true;
+	}
+
+	*line = String_UNSAFE_SubstringAt(page, offset);
+
+	*start = -1;
+	return true;
+}
+
+void Wom_ParseConfig(STRING_PURE String* page) {
+	String line;
+	Int32 start = 0;
+
+	while (WoM_ReadLine(page, &start, &line)) {
+		Platform_Log(&line);
+		Int32 sepIndex = String_IndexOf(&line, '=', 0);
+		if (sepIndex == -1) continue;
+
+		String key = String_UNSAFE_Substring(&line, 0, sepIndex);
+		String_UNSAFE_TrimEnd(&key);
+		String value = String_UNSAFE_SubstringAt(&line, sepIndex + 1);
+		String_UNSAFE_TrimStart(&value);
+
+		if (String_CaselessEqualsConst(&key, "environment.cloud")) {
+			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultCloudsCol);
+			WorldEnv_SetCloudsCol(col);
+		} else if (String_CaselessEqualsConst(&key, "environment.sky")) {
+			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultSkyCol);
+			WorldEnv_SetSkyCol(col);
+		} else if (String_CaselessEqualsConst(&key, "environment.fog")) {
+			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultFogCol);
+			WorldEnv_SetFogCol(col);
+		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
+			Int32 waterLevel;
+			if (Convert_TryParseInt32(&value, &waterLevel)) {
+				WorldEnv_SetEdgeHeight(waterLevel);
+			}
+		} else if (String_CaselessEqualsConst(&key, "user.detail") && !cpe_useMessageTypes) {
+			Chat_AddOf(&value, MSG_TYPE_STATUS_2);
+		}
+	}
+}
+
+void WoM_Reset(void) {
+	wom_counter = 0;
+	WoM_UpdateIdentifier();
+	wom_sendId = false; wom_sentId = false;
+}
+
+void WoM_Tick(void) {
+	AsyncRequest item;
+	bool success = AsyncDownloader_Get(&wom_identifier, &item);
+	if (success && item.ResultString.length > 0) {
+		Wom_ParseConfig(&item.ResultString);
+		Platform_MemFree(&item.ResultString.buffer);
+	}
 }
 
 
 /*########################################################################################################################*
 *----------------------------------------------------Classic protocol-----------------------------------------------------*
 *#########################################################################################################################*/
-bool receivedFirstPosition;
 DateTime mapReceiveStart;
 InflateState mapInflateState;
 Stream mapInflateStream;
@@ -205,10 +325,54 @@ Stream mapPartStream;
 Screen* prevScreen;
 bool prevCursorVisible, receivedFirstPosition;
 
+void Classic_WriteChat(Stream* stream, STRING_PURE String* text, bool partial) {
+	Int32 payload = !ServerConnection_SupportsPartialMessages ? ENTITIES_SELF_ID : (partial ? 1 : 0);
+	Stream_WriteU8(stream, OPCODE_MESSAGE);
+	Stream_WriteU8(stream, (UInt8)payload);
+	Handlers_WriteString(stream, text);
+}
+
+void Classic_WritePosition(Stream* stream, Vector3 pos, Real32 rotY, Real32 headX) {
+	Int32 payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
+	Stream_WriteU8(stream, OPCODE_ENTITY_TELEPORT);
+	Handlers_WriteBlock(stream, (BlockID)payload); /* held block when using HeldBlock, otherwise just 255 */
+
+	if (cpe_extEntityPos) {
+		Stream_WriteI32_BE(stream, (Int32)(pos.X * 32));
+		Stream_WriteI32_BE(stream, (Int32)((Int32)(pos.Y * 32) + 51));
+		Stream_WriteI32_BE(stream, (Int32)(pos.Z * 32));
+	} else {
+		Stream_WriteI16_BE(stream, (Int16)(pos.X * 32));
+		Stream_WriteI16_BE(stream, (Int16)((Int32)(pos.Y * 32) + 51));
+		Stream_WriteI16_BE(stream, (Int16)(pos.Z * 32));
+	}
+	Stream_WriteU8(stream, Math_Deg2Packed(rotY));
+	Stream_WriteU8(stream, Math_Deg2Packed(headX));
+}
+
+void Classic_WriteSetBlock(Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
+	Stream_WriteU8(stream, OPCODE_SET_BLOCK_CLIENT);
+	Stream_WriteI16_BE(stream, x);
+	Stream_WriteI16_BE(stream, y);
+	Stream_WriteI16_BE(stream, z);
+	Stream_WriteU8(stream, place ? 1 : 0);
+	Handlers_WriteBlock(stream, block);
+}
+
+void Classic_WriteLogin(Stream* stream, STRING_PURE String* username, STRING_PURE String* verKey) {
+	UInt8 payload = Game_UseCPE ? 0x42 : 0x00;
+	Stream_WriteU8(stream, OPCODE_HANDSHAKE);
+
+	Stream_WriteU8(stream, 7); /* protocol version */
+	Handlers_WriteString(stream, username);
+	Handlers_WriteString(stream, verKey);
+	Stream_WriteU8(stream, payload);
+}
+
 void Classic_Handshake(Stream* stream) {
 	UInt8 protocolVer = Stream_ReadU8(stream);
-	ReadString(stream, &ServerConnection_ServerName);
-	ReadString(stream, &ServerConnection_ServerMOTD);
+	Handlers_ReadString(stream, ServerConnection_ServerName.buffer);
+	Handlers_ReadString(stream, ServerConnection_ServerMOTD.buffer);
 	Chat_SetLogName(&ServerConnection_ServerName);
 
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
@@ -221,31 +385,20 @@ void Classic_Handshake(Stream* stream) {
 
 void Classic_Ping(Stream* stream) { }
 
-void Classic_LevelInit(Stream* stream) {
-	if (!mapInflateInited) Classic_StartLoading(stream);
-
-	/* Fast map puts volume in header, doesn't bother with gzip */
-	if (cpe_fastMap) {
-		mapVolume = Stream_ReadI32_BE(stream);
-		gzHeader.Done = true;
-		mapSizeIndex = 4;
-		map = Platform_MemAlloc(mapVolume);
-		if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
-	}
-}
-
 void Classic_StartLoading(Stream* stream) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 	mapPartStream = *stream;
 
 	prevScreen = Gui_Active;
-	if (prevScreen is LoadingMapScreen) {
+	if (prevScreen == LoadingScreen_UNSAFE_RawPointer) {
+		/* otherwise replacing LoadingScreen with LoadingScreen will cause issues */
+		Gui_FreeActive();
 		prevScreen = NULL;
 	}
 	prevCursorVisible = Game_GetCursorVisible();
 
-	Gui_SetNewScreen(new LoadingMapScreen(game, net.ServerName, net.ServerMotd), false);
+	Gui_SetActive(LoadingScreen_MakeInstance(&ServerConnection_ServerName, &ServerConnection_ServerMOTD));
 	WoM_CheckMotd();
 	receivedFirstPosition = false;
 	GZipHeader_Init(&gzHeader);
@@ -256,6 +409,19 @@ void Classic_StartLoading(Stream* stream) {
 	mapSizeIndex = 0;
 	mapIndex = 0;
 	Platform_CurrentUTCTime(&mapReceiveStart);
+}
+
+void Classic_LevelInit(Stream* stream) {
+	if (!mapInflateInited) Classic_StartLoading(stream);
+
+	/* Fast map puts volume in header, doesn't bother with gzip */
+	if (cpe_fastMap) {
+		mapVolume = Stream_ReadI32_BE(stream);
+		gzHeader.Done = true;
+		mapSizeIndex = 4;
+		map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
+		if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
+	}
 }
 
 void Classic_LevelDataChunk(Stream* stream) {
@@ -281,7 +447,7 @@ void Classic_LevelDataChunk(Stream* stream) {
 		if (mapSizeIndex == 4) {
 			if (map == NULL) {
 				mapVolume = (mapSize[0] << 24) | (mapSize[1] << 16) | (mapSize[2] << 8) | mapSize[3];
-				map = Platform_MemAlloc(mapVolume);
+				map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
 				if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
 			}
 
@@ -297,7 +463,7 @@ void Classic_LevelDataChunk(Stream* stream) {
 }
 
 void Classic_LevelFinalise(Stream* stream) {
-	Gui_SetNewScreen(NULL);
+	Gui_ReplaceActive(NULL);
 	Gui_Active = prevScreen;
 	if (prevScreen != NULL && prevCursorVisible != Game_GetCursorVisible()) {
 		Game_SetCursorVisible(prevCursorVisible);
@@ -314,7 +480,7 @@ void Classic_LevelFinalise(Stream* stream) {
 
 	World_SetNewMap(map, mapVolume, mapWidth, mapHeight, mapLength);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
-	Wom_CheckSendWomID();
+	WoM_CheckSendWomID();
 
 	map = NULL;
 	mapInflateInited = false;
@@ -430,7 +596,7 @@ void Classic_Kick(Stream* stream) {
 void Classic_SetPermission(Stream* stream) {
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	HacksComp_SetUserType(hacks, Stream_ReadU8(stream), !cpe_blockPerms);
-	HacksComp_UpdateHacksState(hacks);
+	HacksComp_UpdateState(hacks);
 }
 
 void Classic_ReadAbsoluteLocation(Stream* stream, EntityID id, bool interpolate) {
@@ -451,50 +617,6 @@ void Classic_ReadAbsoluteLocation(Stream* stream, EntityID id, bool interpolate)
 	if (id == ENTITIES_SELF_ID) receivedFirstPosition = true;
 	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, pos, rotY, headX, false);
 	Handlers_UpdateLocation(id, &update, interpolate);
-}
-
-void Classic_WriteChat(Stream* stream, STRING_PURE String* text, bool partial) {
-	Int32 payload = !ServerConnection_SupportsPartialMessages ? ENTITIES_SELF_ID : (partial ? 1 : 0);
-	Stream_WriteU8(stream, OPCODE_MESSAGE);
-	Stream_WriteU8(stream, (UInt8)payload);
-	Handlers_WriteString(stream, text);
-}
-
-void Classic_WritePosition(Stream* stream, Vector3 pos, Real32 rotY, Real32 headX) {
-	Int32 payload = cpe_sendHeldBlock ? Inventory_SelectedBlock : ENTITIES_SELF_ID;
-	Stream_WriteU8(stream, OPCODE_ENTITY_TELEPORT);
-	Handlers_WriteBlock(stream, (BlockID)payload); /* held block when using HeldBlock, otherwise just 255 */
-
-	if (cpe_extEntityPos) {
-		Stream_WriteI32_BE(stream, (Int32)(pos.X * 32));
-		Stream_WriteI32_BE(stream, (Int32)((Int32)(pos.Y * 32) + 51));
-		Stream_WriteI32_BE(stream, (Int32)(pos.Z * 32));
-	} else {
-		Stream_WriteI16_BE(stream, (Int16)(pos.X * 32));
-		Stream_WriteI16_BE(stream, (Int16)((Int32)(pos.Y * 32) + 51));
-		Stream_WriteI16_BE(stream, (Int16)(pos.Z * 32));
-	}
-	Stream_WriteU8(stream, Math_Deg2Packed(rotY));
-	Stream_WriteU8(stream, Math_Deg2Packed(headX));
-}
-
-void Classic_WriteSetBlock(Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block) {
-	Stream_WriteU8(stream, OPCODE_SET_BLOCK_CLIENT);
-	Stream_WriteI16_BE(stream, x);
-	Stream_WriteI16_BE(stream, y);
-	Stream_WriteI16_BE(stream, z);
-	Stream_WriteU8(stream, place ? 1 : 0);
-	Handlers_WriteBlock(stream, block);
-}
-
-void Classic_WriteLogin(Stream* stream, STRING_PURE String* username, STRING_PURE String* verKey) {
-	UInt8 payload = Game_UseCPE ? 0x42 : 0x00;
-	Stream_WriteU8(stream, OPCODE_HANDSHAKE);
-
-	Stream_WriteU8(stream, 7); /* protocol version */
-	Handlers_WriteString(stream, username);
-	Handlers_WriteString(stream, verKey);
-	Stream_WriteU8(stream, payload);
 }
 
 void Classic_Reset(void) {
@@ -533,17 +655,94 @@ void Classic_Tick(void) {
 *#########################################################################################################################*/
 
 Int32 cpe_serverExtensionsCount, cpe_pingTicks;
-bool cpe_sendHeldBlock, cpe_useMessageTypes;
 Int32 cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
-bool cpe_needD3Fix, cpe_extEntityPos, cpe_twoWayPing, cpe_blockPerms, cpe_fastMap;
+bool cpe_twoWayPing;
 
-const UInt8** cpe_clientExtensions[28] = {
+const UInt8* cpe_clientExtensions[28] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
 	"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect",
 	"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap",
 };
+void CPE_SetMapEnvUrl(Stream* stream);
+
+#define Ext_Deg2Packed(x) ((Int16)((x) * 65536.0f / 360.0f))
+void CPE_WritePlayerClick(Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, PickedPos* pos) {
+	Entity* p = &LocalPlayer_Instance.Base;
+	Stream_WriteU8(stream, OPCODE_CPE_PLAYER_CLICK);
+	Stream_WriteU8(stream, button);
+	Stream_WriteU8(stream, buttonDown ? 0 : 1);
+	Stream_WriteI16_BE(stream, Ext_Deg2Packed(p->HeadY));
+	Stream_WriteI16_BE(stream, Ext_Deg2Packed(p->HeadX));
+
+	Stream_WriteU8(stream, targetId);
+	Stream_WriteI16_BE(stream, pos->BlockPos.X);
+	Stream_WriteI16_BE(stream, pos->BlockPos.Y);
+	Stream_WriteI16_BE(stream, pos->BlockPos.Z);
+
+	UInt8 face = 255;
+	/* Our own face values differ from CPE block face */
+	switch (pos->ClosestFace) {
+	case FACE_XMAX: face = 0; break;
+	case FACE_XMIN: face = 1; break;
+	case FACE_YMAX: face = 2; break;
+	case FACE_YMIN: face = 3; break;
+	case FACE_ZMAX: face = 4; break;
+	case FACE_ZMIN: face = 5; break;
+	}
+	Stream_WriteU8(stream, face);
+}
+
+void CPE_WriteExtInfo(Stream* stream, STRING_PURE String* appName, Int32 extensionsCount) {
+	Stream_WriteU8(stream, OPCODE_CPE_EXT_INFO);
+	Handlers_WriteString(stream, appName);
+	Stream_WriteU16_BE(stream, extensionsCount);
+}
+
+void CPE_WriteExtEntry(Stream* stream, STRING_PURE String* extensionName, Int32 extensionVersion) {
+	Stream_WriteU8(stream, OPCODE_CPE_EXT_ENTRY);
+	Handlers_WriteString(stream, extensionName);
+	Stream_WriteI32_BE(stream, extensionVersion);
+}
+
+void CPE_WriteCustomBlockLevel(Stream* stream, UInt8 version) {
+	Stream_WriteU8(stream, OPCODE_CPE_CUSTOM_BLOCK_LEVEL);
+	Stream_WriteU8(stream, version);
+}
+
+void CPE_WriteTwoWayPing(Stream* stream, bool serverToClient, UInt16 data) {
+	Stream_WriteU8(stream, OPCODE_CPE_TWO_WAY_PING);
+	Stream_WriteU8(stream, serverToClient ? 1 : 0);
+	Stream_WriteU16_BE(stream, data);
+}
+
+void CPE_SendCpeExtInfoReply(void) {
+	if (cpe_serverExtensionsCount != 0) return;
+	Int32 count = Array_Elems(cpe_clientExtensions);
+	if (!Game_AllowCustomBlocks) count -= 2;
+	Stream* stream = ServerConnection_WriteStream();
+
+	CPE_WriteExtInfo(stream, &ServerConnection_AppName, count);
+	Net_SendPacket();
+	Int32 i, ver;
+
+	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
+		String name = String_FromReadonly(cpe_clientExtensions[i]);
+		ver = 1;
+		if (String_CaselessEqualsConst(&name, "ExtPlayerList"))       ver = 2;
+		if (String_CaselessEqualsConst(&name, "EnvMapAppearance"))    ver = cpe_envMapVer;
+		if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) ver = cpe_blockDefsExtVer;
+
+		if (!Game_AllowCustomBlocks) {
+			if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) continue;
+			if (String_CaselessEqualsConst(&name, "BlockDefinitions"))    continue;
+		}
+
+		CPE_WriteExtEntry(stream, &name, ver);
+		Net_SendPacket();
+	}
+}
 
 void CPE_ExtInfo(Stream* stream) {
 	UInt8 appNameBuffer[String_BufferSize(STRING_SIZE)];
@@ -669,8 +868,8 @@ void CPE_ExtAddPlayerName(Stream* stream) {
 	UInt8 groupRank = Stream_ReadU8(stream);
 
 	String_StripCols(&playerName);
-	Handler_RemoveEndPlus(&playerName);
-	Handler_RemoveEndPlus(&listName);
+	Handlers_RemoveEndPlus(&playerName);
+	Handlers_RemoveEndPlus(&listName);
 
 	/* Some server software will declare they support ExtPlayerList, but send AddEntity then AddPlayerName */
 	/* We need to workaround this case by removing all the tab names we added for the AddEntity packets */
@@ -755,7 +954,7 @@ void CPE_SetBlockPermission(Stream* stream) {
 void CPE_ChangeModel(Stream* stream) {
 	UInt8 modelNameBuffer[String_BufferSize(STRING_SIZE)];
 	UInt8 id = Stream_ReadU8(stream);
-	String modelName = Handlers_ReadString(stream, &modelNameBuffer);
+	String modelName = Handlers_ReadString(stream, modelNameBuffer);
 
 	String_MakeLowercase(&modelName);
 	Entity* entity = Entities_List[id];
@@ -920,13 +1119,13 @@ void CPE_SetEntityProperty(Stream* stream) {
 	Real32 scale;
 	switch (type) {
 		update.Flags |= LOCATIONUPDATE_FLAG_ROTX;
-		update.RotX = LocationUpdate_Clamp(value); break;
+		update.RotX = LocationUpdate_Clamp((Real32)value); break;
 	case 1:
 		update.Flags |= LOCATIONUPDATE_FLAG_HEADY;
-		update.HeadY = LocationUpdate_Clamp(value); break;
+		update.HeadY = LocationUpdate_Clamp((Real32)value); break;
 	case 2:
 		update.Flags |= LOCATIONUPDATE_FLAG_ROTZ;
-		update.RotZ = LocationUpdate_Clamp(value); break;
+		update.RotZ = LocationUpdate_Clamp((Real32)value); break;
 
 	case 3:
 	case 4:
@@ -962,83 +1161,6 @@ void CPE_SetInventoryOrder(Stream* stream) {
 	Inventory_Remove(block);
 	if (order != 255 && order != 0) {
 		Inventory_Map[order - 1] = block;
-	}
-}
-
-#define Ext_Deg2Packed(x) ((Int16)((x) * 65536.0f / 360.0f))
-void CPE_WritePlayerClick(Stream* stream, MouseButton button, bool buttonDown, UInt8 targetId, PickedPos* pos) {
-	Entity* p = &LocalPlayer_Instance.Base;
-	Stream_WriteU8(stream, OPCODE_CPE_PLAYER_CLICK);
-	Stream_WriteU8(stream, button);
-	Stream_WriteU8(stream, buttonDown ? 0 : 1);
-	Stream_WriteI16_BE(stream, Ext_Deg2Packed(p->HeadY));
-	Stream_WriteI16_BE(stream, Ext_Deg2Packed(p->HeadX));
-
-	Stream_WriteU8(stream, targetId);
-	Stream_WriteI16_BE(stream, pos->BlockPos.X);
-	Stream_WriteI16_BE(stream, pos->BlockPos.Y);
-	Stream_WriteI16_BE(stream, pos->BlockPos.Z);
-
-	UInt8 face = 255;
-	/* Our own face values differ from CPE block face */
-	switch (pos->ClosestFace) {
-	case FACE_XMAX: face = 0; break;
-	case FACE_XMIN: face = 1; break;
-	case FACE_YMAX: face = 2; break;
-	case FACE_YMIN: face = 3; break;
-	case FACE_ZMAX: face = 4; break;
-	case FACE_ZMIN: face = 5; break;
-	}
-	Stream_WriteU8(stream, face);
-}
-
-void CPE_WriteExtInfo(Stream* stream, STRING_PURE String* appName, Int32 extensionsCount) {
-	Stream_WriteU8(stream, OPCODE_CPE_EXT_INFO);
-	Handlers_WriteString(stream, appName);
-	Stream_WriteU16_BE(stream, extensionsCount);
-}
-
-void CPE_WriteExtEntry(Stream* stream, STRING_PURE String* extensionName, Int32 extensionVersion) {
-	Stream_WriteU8(stream, OPCODE_CPE_EXT_ENTRY);
-	Handlers_WriteString(stream, extensionName);
-	Stream_WriteI32_BE(stream, extensionVersion);
-}
-
-void CPE_WriteCustomBlockLevel(Stream* stream, UInt8 version) {
-	Stream_WriteU8(stream, OPCODE_CPE_CUSTOM_BLOCK_LEVEL);
-	Stream_WriteU8(stream, version);
-}
-
-void CPE_WriteTwoWayPing(Stream* stream, bool serverToClient, UInt16 data) {
-	Stream_WriteU8(stream, OPCODE_CPE_TWO_WAY_PING);
-	Stream_WriteU8(stream, serverToClient ? 1 : 0);
-	Stream_WriteU16_BE(stream, data);
-}
-
-void CPE_SendCpeExtInfoReply(void) {
-	if (cpe_serverExtensionsCount != 0) return;
-	Int32 count = Array_Elems(cpe_clientExtensions);
-	if (!Game_AllowCustomBlocks) count -= 2;
-	Stream* stream = ServerConnection_WriteStream();
-
-	CPE_WriteExtInfo(stream, &ServerConnection_AppName, count);
-	Net_SendPacket();
-	Int32 i, ver;
-
-	for (i = 0; i < Array_Elems(cpe_clientExtensions); i++) {
-		String name = String_FromReadonly(cpe_clientExtensions[i]);
-		ver = 1;
-		if (String_CaselessEqualsConst(&name, "ExtPlayerList"))       ver = 2;
-		if (String_CaselessEqualsConst(&name, "EnvMapAppearance"))    ver = cpe_envMapVer;
-		if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) ver = cpe_blockDefsExtVer;
-
-		if (!Game_AllowCustomBlocks) {
-			if (String_CaselessEqualsConst(&name, "BlockDefinitionsExt")) continue;
-			if (String_CaselessEqualsConst(&name, "BlockDefinitions"))    continue;
-		}
-
-		CPE_WriteExtEntry(stream, &name, ver);
-		Net_SendPacket();
 	}
 }
 
@@ -1084,7 +1206,7 @@ void CPE_Tick(void) {
 	cpe_pingTicks++;
 	if (cpe_pingTicks >= 20 && cpe_twoWayPing) {
 		Stream* stream = ServerConnection_WriteStream();
-		CPE_WriteTwoWayPing(stream, false, PingList_NextTwoWayPingData());
+		CPE_WriteTwoWayPing(stream, false, PingList_NextPingData());
 		cpe_pingTicks = 0;
 	}
 }
@@ -1093,65 +1215,16 @@ void CPE_Tick(void) {
 /*########################################################################################################################*
 *------------------------------------------------------Custom blocks------------------------------------------------------*
 *#########################################################################################################################*/
-void BlockDefs_DefineBlock(Stream* stream) {
-	BlockID block = BlockDefs_DefineBlockCommonStart(stream, false);
-
-	UInt8 shape = Stream_ReadU8(stream);
-	if (shape > 0 && shape <= 16) {
-		Block_MaxBB[block].Y = shape / 16.0f;
-	}
-
-	BlockDefs_DefineBlockCommonEnd(stream, shape, block);
-	/* Update sprite BoundingBox if necessary */
-	if (Block_Draw[block] == DRAW_SPRITE) {
-		Block_RecalculateBB(block);
-	}
-}
-
-void BlockDefs_UndefineBlock(Stream* stream) {
-	BlockID block = Handlers_ReadBlock(stream);
-	bool didBlockLight = Block_BlocksLight[block];
-
-	Bloc_ResetBlockProps(block);
-	OnBlockUpdated(block, didBlockLight);
-	Block_UpdateCulling(block);
-
-	Inventory_Remove(block);
-	if (block < BLOCK_CPE_COUNT) { Inventory_AddDefault(block); }
-
-	Block_SetCustomDefined(block, false);
-	Event_RaiseVoid(&BlockEvents_BlockDefChanged);
-}
-
 void OnBlockUpdated(BlockID block, bool didBlockLight) {
 	if (World_Blocks == NULL) return;
 	/* Need to refresh lighting when a block's light blocking state changes */
 	if (Block_BlocksLight[block] != didBlockLight) { Lighting_Refresh(); }
 }
 
-#define BlockDefs_ReadCoord(x) x = Stream_ReadU8(stream) / 16.0f; if (x > 1.0f) x = 1.0f;
-void BlockDefs_DefineBlockExt(Stream* stream) {
-	BlockID block = BlockDefs_DefineBlockCommonStart(stream, cpe_blockDefsExtVer >= 2);
-
-	Vector3 minBB;
-	BlockDefs_ReadCoord(minBB.X); 
-	BlockDefs_ReadCoord(minBB.Y); 
-	BlockDefs_ReadCoord(minBB.Z);
-
-	Vector3 maxBB;
-	BlockDefs_ReadCoord(maxBB.X); 
-	BlockDefs_ReadCoord(maxBB.Y); 
-	BlockDefs_ReadCoord(maxBB.Z);
-
-	Block_MinBB[block] = minBB;
-	Block_MaxBB[block] = maxBB;
-	BlockDefs_DefineBlockCommonEnd(stream, 1, block);
-}
-
 BlockID BlockDefs_DefineBlockCommonStart(Stream* stream, bool uniqueSideTexs) {
 	BlockID block = Handlers_ReadBlock(stream);
 	bool didBlockLight = Block_BlocksLight[block];
-	Block_ResetBlockProps(block);
+	Block_ResetProps(block);
 
 	UInt8 nameBuffer[String_BufferSize(STRING_SIZE)];
 	String name = Handlers_ReadString(stream, nameBuffer);
@@ -1202,6 +1275,55 @@ void BlockDefs_DefineBlockCommonEnd(Stream* stream, UInt8 shape, BlockID block) 
 	Block_DefineCustom(block);
 }
 
+void BlockDefs_DefineBlock(Stream* stream) {
+	BlockID block = BlockDefs_DefineBlockCommonStart(stream, false);
+
+	UInt8 shape = Stream_ReadU8(stream);
+	if (shape > 0 && shape <= 16) {
+		Block_MaxBB[block].Y = shape / 16.0f;
+	}
+
+	BlockDefs_DefineBlockCommonEnd(stream, shape, block);
+	/* Update sprite BoundingBox if necessary */
+	if (Block_Draw[block] == DRAW_SPRITE) {
+		Block_RecalculateBB(block);
+	}
+}
+
+void BlockDefs_UndefineBlock(Stream* stream) {
+	BlockID block = Handlers_ReadBlock(stream);
+	bool didBlockLight = Block_BlocksLight[block];
+
+	Block_ResetProps(block);
+	OnBlockUpdated(block, didBlockLight);
+	Block_UpdateCulling(block);
+
+	Inventory_Remove(block);
+	if (block < BLOCK_CPE_COUNT) { Inventory_AddDefault(block); }
+
+	Block_SetCustomDefined(block, false);
+	Event_RaiseVoid(&BlockEvents_BlockDefChanged);
+}
+
+#define BlockDefs_ReadCoord(x) x = Stream_ReadU8(stream) / 16.0f; if (x > 1.0f) x = 1.0f;
+void BlockDefs_DefineBlockExt(Stream* stream) {
+	BlockID block = BlockDefs_DefineBlockCommonStart(stream, cpe_blockDefsExtVer >= 2);
+
+	Vector3 minBB;
+	BlockDefs_ReadCoord(minBB.X);
+	BlockDefs_ReadCoord(minBB.Y);
+	BlockDefs_ReadCoord(minBB.Z);
+
+	Vector3 maxBB;
+	BlockDefs_ReadCoord(maxBB.X);
+	BlockDefs_ReadCoord(maxBB.Y);
+	BlockDefs_ReadCoord(maxBB.Z);
+
+	Block_MinBB[block] = minBB;
+	Block_MaxBB[block] = maxBB;
+	BlockDefs_DefineBlockCommonEnd(stream, 1, block);
+}
+
 #if FALSE
 void HandleDefineModel(void) {
 	int start = reader.index - 1;
@@ -1240,130 +1362,18 @@ void BlockDefs_Reset(void) {
 
 
 /*########################################################################################################################*
-*------------------------------------------------------WoM protocol-------------------------------------------------------*
+*-----------------------------------------------------Public handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-/* Partially based on information from http://files.worldofminecraft.com/texturing/ */
-/* NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015 */
-
-UInt8 wom_identifierBuffer[String_BufferSize(STRING_SIZE)];
-String wom_identifier = String_FromEmptyArray(wom_identifierBuffer);
-Int32 wom_counter;
-bool wom_sendId, wom_sentId;
-
-void WoM_UpdateIdentifier(void) {
-	String_Clear(&wom_identifier);
-	String_Format1(&wom_identifier, "womenv_%i", &wom_counter);
+void Handlers_Reset(void) {
+	addEntityHack = true;
+	Classic_Reset();
+	CPE_Reset();
+	BlockDefs_Reset();
+	WoM_Reset();
 }
 
-void WoM_CheckMotd(void) {
-	String motd = ServerConnection_ServerMOTD;
-	if (motd.length == 0) return;
-
-	String cfg = String_FromConst("cfg=");
-	Int32 index = String_IndexOfString(&motd, &cfg);
-	if (Game_PureClassic || index == -1) return;
-
-	UInt8 urlBuffer[String_BufferSize(STRING_SIZE)];
-	String url = String_InitAndClearArray(urlBuffer);
-	String host = String_UNSAFE_SubstringAt(&motd, index + cfg.length);
-	String_Format1(&url, "http://%s", &host);
-	/* TODO: Replace $U with username */
-	/*url = url.Replace("$U", game.Username); */
-
-	/* Ensure that if the user quickly changes to a different world, env settings from old world aren't 
-	applied in the new world if the async 'get env request' didn't complete before the old world was unloaded */
-	wom_counter++;
-	WoM_UpdateIdentifier();
-	AsyncDownloader_Download(&url, true, REQUEST_TYPE_STRING, &wom_identifier);
-	wom_sendId = true;
-}
-
-void WoM_CheckSendWomID(void) {
-	if (wom_sendId && !wom_sentId) {
-		String msg = String_FromConst("/womid WoMClient-2.0.7")
-		ServerConnection_SendChat(&msg);
-		wom_sentId = true;
-	}
-}
-
-PackedCol WoM_ParseCol(STRING_PURE String* value, PackedCol defaultCol) {
-	Int32 argb;
-	if (!Convert_TryParseInt32(value, &argb)) return defaultCol;
-
-	PackedCol col; col.A = 255;
-	col.R = (UInt8)(argb >> 16);
-	col.G = (UInt8)(argb >> 8);
-	col.B = (UInt8)argb;
-	return col;
-}
-
-bool WoM_ReadLine(STRING_REF String* page, Int32* start, STRING_TRANSIENT String* line) {
-	Int32 i, offset = *start;
-	if (offset == -1) return false;
-
-	for (i = offset; i < page->length; i++) {
-		UInt8 c = page->buffer[i];
-		if (c != '\r' && c != '\n') continue;
-
-		*line = String_UNSAFE_Substring(page, offset, i - offset);
-		offset = i + 1;
-		if (c == '\r' && offset < page->length && page->buffer[offset] == '\n') {
-			offset++; /* we stop at the \r, so make sure to skip following \n */
-		}
-
-		start = offset; return true;
-	}
-
-	*line = String_UNSAFE_SubstringAt(page, offset);
-	start = -1;
-	return true;
-}
-
-void Wom_ParseConfig(STRING_PURE String* page) {
-	String line;
-	Int32 start = 0;
-
-	while (WoM_ReadLine(page, &start, &line)) {
-		Platform_Log(&line);
-		Int32 sepIndex = String_IndexOf(&line, '=', 0);
-		if (sepIndex == -1) continue;
-
-		String key = String_UNSAFE_Substring(&line, 0, sepIndex);
-		String_UNSAFE_TrimEnd(&key);
-		String value = String_UNSAFE_SubstringAt(&line, sepIndex + 1);
-		String_UNSAFE_TrimStart(&value);
-
-		if (String_CaselessEqualsConst(&key, "environment.cloud")) {
-			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultCloudsCol);
-			WorldEnv_SetCloudsCol(col);
-		} else if (String_CaselessEqualsConst(&key, "environment.sky")) {
-			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultSkyCol);
-			WorldEnv_SetSkyCol(col);
-		} else if (String_CaselessEqualsConst(&key, "environment.fog")) {
-			PackedCol col = WoM_ParseCol(&value, WorldEnv_DefaultFogCol);
-			WorldEnv_SetFogCol(col);
-		} else if (String_CaselessEqualsConst(&key, "environment.level")) {
-			Int32 waterLevel;
-			if (Convert_TryParseInt32(&value, &waterLevel)) {
-				WorldEnv_SetEdgeHeight(waterLevel);
-			}
-		} else if (String_CaselessEqualsConst(&key, "user.detail") && !cpe_useMessageTypes) {
-			Chat_AddOf(&value, MSG_TYPE_STATUS_2);
-		}
-	}
-}
-
-void WoM_Reset(void) {
-	wom_counter = 0;
-	WoM_UpdateIdentifier();
-	wom_sendId = false; wom_sentId = false;
-}
-
-void WoM_Tick(void) {
-	AsyncRequest item;
-	bool success = AsyncDownloader_Get(&wom_identifier, &item);
-	if (success && item.ResultString.length > 0) {
-		ParseWomConfig(&item.ResultString);
-		Platform_MemFree(&item.ResultString.buffer);
-	}
+void Handlers_Tick(void) {
+	Classic_Tick();
+	CPE_Tick();
+	WoM_Tick();
 }

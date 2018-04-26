@@ -195,7 +195,7 @@ void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
 	UInt8* ptr = buffer;
 	if (size > ANIMS_FAST_SIZE) {
 		/* cannot allocate memory on the stack for very big animation.png frames */
-		ptr = Platform_MemAlloc(Bitmap_DataSize(size, size));
+		ptr = Platform_MemAlloc(size * size, BITMAP_SIZEOF_PIXEL);
 		if (ptr == NULL) ErrorHandler_Fail("Failed to allocate memory for anim frame");
 	}
 

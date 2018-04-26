@@ -25,7 +25,7 @@ void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* sr
 void Bitmap_Allocate(Bitmap* bmp, Int32 width, Int32 height) {
 	bmp->Width = width; bmp->Height = height;
 	bmp->Stride = width * BITMAP_SIZEOF_PIXEL;
-	bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(width, height));
+	bmp->Scan0 = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL);
 	
 	if (bmp->Scan0 == NULL) {
 		ErrorHandler_Fail("Bitmap - failed to allocate memory");
@@ -324,7 +324,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too tall");
 
 			bmp->Stride = bmp->Width * BITMAP_SIZEOF_PIXEL;
-			bmp->Scan0 = Platform_MemAlloc(Bitmap_DataSize(bmp->Width, bmp->Height));
+			bmp->Scan0 = Platform_MemAlloc(bmp->Width * bmp->Height, BITMAP_SIZEOF_PIXEL);
 			if (bmp->Scan0 == NULL) ErrorHandler_Fail("Failed to allocate memory for PNG bitmap");
 
 			bitsPerSample = Stream_ReadU8(stream);

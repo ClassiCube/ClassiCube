@@ -112,7 +112,7 @@ void Gui_Reset(void) {
 
 void Gui_Free(void) {
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
-	Gui_SetNewScreen(NULL);
+	Gui_ReplaceActive(NULL);
 	Elem_TryFree(Gui_Status);
 
 	if (Gui_Active != NULL) { Elem_TryFree(Gui_Active); }
@@ -138,9 +138,16 @@ Screen* Gui_GetUnderlyingScreen(void) {
 	return Gui_Active == NULL ? Gui_HUD : Gui_Active;
 }
 
-void Gui_SetScreen(Screen* screen, bool freeOld) {
+void Gui_ReplaceActive(Screen* screen) { 
+	Gui_FreeActive();
+	Gui_SetActive(screen);
+}
+void Gui_FreeActive(void) {
+	if (Gui_Active != NULL) { Elem_TryFree(Gui_Active); }
+}
+
+void Gui_SetActive(Screen* screen) {
 	InputHandler_ScreenChanged(Gui_Active, screen);
-	if (Gui_Active != NULL && freeOld) { Elem_TryFree(Gui_Active); }
 
 	if (screen == NULL) {
 		Game_SetCursorVisible(false);
@@ -152,8 +159,6 @@ void Gui_SetScreen(Screen* screen, bool freeOld) {
 	if (screen != NULL) { Elem_Init(screen); }
 	Gui_Active = screen;
 }
-
-void Gui_SetNewScreen(Screen* screen) { Gui_SetScreen(screen, true); }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
 void Gui_ShowOverlay_Impl(Screen* overlay, bool atFront) {

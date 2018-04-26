@@ -9,10 +9,12 @@
 
 typedef struct PickedPos_ PickedPos;
 typedef struct Stream_ Stream;
+void Handlers_RemoveEntity(EntityID id);
 void Handlers_Reset(void);
 void Handlers_Tick(void);
-
 void Handlers_RemoveEntity(EntityID id);
+
+bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_needD3Fix, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
 void Classic_WriteChat(Stream* stream, STRING_PURE String* text, bool partial);
 void Classic_WritePosition(Stream* stream, Vector3 pos, Real32 rotY, Real32 headX);
 void Classic_WriteSetBlock(Stream* stream, Int32 x, Int32 y, Int32 z, bool place, BlockID block);

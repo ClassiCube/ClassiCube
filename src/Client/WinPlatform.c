@@ -13,6 +13,7 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
+#pragma comment(lib, "ws2_32.lib")
 HDC hdc;
 HANDLE heap;
 bool stopwatch_highResolution;
@@ -74,12 +75,14 @@ void Platform_Exit(ReturnCode code) {
 	ExitProcess(code);
 }
 
-void* Platform_MemAlloc(UInt32 numBytes) {
+void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize) {
+	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	return malloc(numBytes);
 	//return HeapAlloc(heap, 0, numBytes);
 }
 
-void* Platform_MemRealloc(void* mem, UInt32 numBytes) {
+void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize) {
+	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	return realloc(mem, numBytes);
 	//return HeapReAlloc(heap, 0, mem, numBytes);
 }
@@ -439,5 +442,22 @@ ReturnCode Platform_SocketClose(void* socket) {
 }
 
 ReturnCode Platform_SocketAvailable(void* socket, UInt32* available) {
-	return ioctlsocket(socket, FIONBIO, available);
+	return ioctlsocket(socket, FIONREAD, available);
+}
+
+ReturnCode Platform_SocketSelectRead(void* socket, Int32 microseconds, bool* success) {
+	void* args[2];
+	args[0] = (void*)1;
+	args[1] = socket;
+
+	TIMEVAL time;
+	time.tv_usec = microseconds % (1000 * 1000);
+	time.tv_sec  = microseconds / (1000 * 1000);
+
+	Int32 selectCount = select(1, &args, NULL, NULL, &time);
+	if (selectCount == SOCKET_ERROR) {
+		*success = false; return WSAGetLastError();
+	} else {
+		*success = args[0] != 0; return 0;
+	}
 }

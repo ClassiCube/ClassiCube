@@ -107,9 +107,8 @@ void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, Bitmap* bmp, bool parti
 		x /= 2; y /= 2;
 		if (width > 1) width /= 2;
 		if (height > 1) height /= 2;
-		UInt32 size = Bitmap_DataSize(width, height);
 
-		UInt8* cur = Platform_MemAlloc(size);
+		UInt8* cur = Platform_MemAlloc(width * height, BITMAP_SIZEOF_PIXEL);
 		if (cur == NULL) ErrorHandler_Fail("Allocating memory for mipmaps");
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 

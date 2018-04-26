@@ -46,7 +46,7 @@ void TickQueue_Resize(TickQueue* queue) {
 	UInt32 capacity = queue->BufferSize * 2;
 	if (capacity < 32) capacity = 32;
 
-	UInt32* newBuffer = Platform_MemAlloc(capacity * sizeof(UInt32));
+	UInt32* newBuffer = Platform_MemAlloc(capacity, sizeof(UInt32));
 	if (newBuffer == NULL) {
 		ErrorHandler_Fail("TickQueue - failed to allocate memory");
 	}

@@ -12,7 +12,7 @@
 
 void Map_ReadBlocks(Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
-	World_Blocks = Platform_MemAlloc(World_BlocksSize);
+	World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(BlockID));
 	if (World_Blocks == NULL) {
 		ErrorHandler_Fail("Failed to allocate memory for reading blocks array from file");
 	}
@@ -326,7 +326,7 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent,
 		if (count < NBT_SMALL_SIZE) {
 			Stream_Read(stream, tag.DataSmall, count);
 		} else {
-			tag.DataBig = Platform_MemAlloc(count);
+			tag.DataBig = Platform_MemAlloc(count, sizeof(UInt8));
 			if (tag.DataBig == NULL) ErrorHandler_Fail("Nbt_ReadTag - allocating memory");
 			Stream_Read(stream, tag.DataBig, count);
 		}
@@ -396,7 +396,7 @@ bool Cw_Callback_1(NbtTag* tag) {
 	if (IsTag(tag, "BlockArray")) {
 		World_BlocksSize = tag->DataSize;
 		if (tag->DataSize < NBT_SMALL_SIZE) {
-			World_Blocks = Platform_MemAlloc(World_BlocksSize);
+			World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(UInt8));
 			if (World_Blocks == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
 			Platform_MemCpy(World_Blocks, tag->DataSmall, tag->DataSize);
 		} else {

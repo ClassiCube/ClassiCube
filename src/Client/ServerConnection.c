@@ -89,7 +89,8 @@ void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, I
 	Event_RaiseVoid(&WorldEvents_NewMap);
 	Gen_Done = false;
 
-	Gui_SetNewScreen(GeneratingScreen_MakeInstance());
+	Gui_FreeActive();
+	Gui_SetActive(GeneratingScreen_MakeInstance());
 	Gen_Width = width; Gen_Height = height; Gen_Length = length; Gen_Seed = seed;
 
 	void* threadHandle;
@@ -103,7 +104,7 @@ void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, I
 }
 
 void ServerConnection_EndGeneration(void) {
-	Gui_SetNewScreen(NULL);
+	Gui_ReplaceActive(NULL);
 	Gen_Done = false;
 
 	if (Gen_Blocks == NULL) {
@@ -285,7 +286,20 @@ UInt8 net_writeBuffer[131];
 Int32 net_maxHandledPacket;
 bool net_writeFailed;
 Int32 net_ticks;
+Real64 net_discAccumulator;
 
+void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+	Vector3I p = coords;
+	if (block == BLOCK_AIR) {
+		block = Inventory_SelectedBlock;
+		Classic_WriteSetBlock(&net_writeStream, p.X, p.Y, p.Z, false, block);
+	} else {
+		Classic_WriteSetBlock(&net_writeStream, p.X, p.Y, p.Z, true, block);
+	}
+	Net_SendPacket();
+}
+
+void ServerConnection_Free(void);
 void MPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 	Platform_SocketCreate(&net_socket);
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
@@ -293,9 +307,16 @@ void MPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 
 	ReturnCode result = Platform_SocketConnect(net_socket, &Game_IPAddress, Game_Port);
 	if (result != 0) {
-		ErrorHandler.LogError("connecting to server", ex);
-		game.Disconnect("Failed to connect to " + address + ":" + port,
-			"You failed to connect to the server. It's probably down!");
+		UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+		String msg = String_InitAndClearArray(msgBuffer);
+		String_Format3(&msg, "Error connecting to %s:%i: %i", ip, &port, &result);
+		ErrorHandler_Log(&msg);
+
+		String_Clear(&msg);
+		String_Format2(&msg, "Failed to connect to %s:%i", ip, &port);
+		String reason = String_FromConst("You failed to connect to the server. It's probably down!");
+		Game_Disconnect(&msg, &reason);
+
 		ServerConnection_Free();
 		return;
 	}
@@ -303,6 +324,7 @@ void MPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 	String streamName = String_FromConst("network socket");
 	Stream_ReadonlyMemory(&net_readStream, net_readBuffer, sizeof(net_readBuffer), &streamName);
 	Stream_WriteonlyMemory(&net_writeStream, net_writeBuffer, sizeof(net_writeBuffer), &streamName);
+	net_readStream.Meta_Mem_Count = 0; /* initally no memory to read */
 
 	Handlers_Reset();
 	Classic_WriteLogin(&net_writeStream, &Game_Username, &Game_Mppass);
@@ -335,13 +357,16 @@ void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, EntityID 
 	Net_SendPacket();
 }
 
-double testAcc = 0;
-void CheckDisconnection(double delta) {
-	testAcc += delta;
-	if (testAcc < 1) return;
-	testAcc = 0;
+void MPConnection_CheckDisconnection(Real64 delta) {
+	net_discAccumulator += delta;
+	if (net_discAccumulator < 1.0) return;
+	net_discAccumulator = 0.0;
 
-	if (net_writeFailed || (socket.Poll(1000, SelectMode.SelectRead) && socket.Available == 0)) {
+	UInt32 available = 0; bool selected = false;
+	ReturnCode availResult  = Platform_SocketAvailable(net_socket, &available);
+	ReturnCode selectResult = Platform_SocketSelectRead(net_socket, 1000, &selected);
+
+	if (net_writeFailed || availResult != 0 || selectResult != 0 || (selected && available == 0)) {
 		String title  = String_FromConst("Disconnected!");
 		String reason = String_FromConst("You've lost connection to the server");
 		Game_Disconnect(&title, &reason);
@@ -351,9 +376,8 @@ void CheckDisconnection(double delta) {
 void MPConnection_Tick(ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 	DateTime now; Platform_CurrentUTCTime(&now);
-
 	if (DateTime_MsBetween(&net_lastPacket, &now) >= 30 * 1000) {
-		CheckDisconnection(task.Interval);
+		MPConnection_CheckDisconnection(task->Interval);
 	}
 	if (ServerConnection_Disconnected) return;
 
@@ -365,16 +389,23 @@ void MPConnection_Tick(ScheduledTask* task) {
 		recvResult = Platform_SocketRead(net_socket, src, 4096 * 4, &modified);
 		net_readStream.Meta_Mem_Count += modified;
 	}
+
 	if (recvResult != 0) {
-		ErrorHandler.LogError("reading packets", ex);
-		game.Disconnect("&eLost connection to the server", "I/O error when reading packets");
+		UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+		String msg = String_InitAndClearArray(msgBuffer);
+		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &recvResult);
+		ErrorHandler_Log(&msg);
+
+		String title  = String_FromConst("&eLost connection to the server");
+		String reason = String_FromConst("I/O error when reading packets");
+		Game_Disconnect(&title, &reason);
 		return;
 	}
 
 	while (net_readStream.Meta_Mem_Count > 0) {
 		UInt8 opcode = net_readStream.Meta_Mem_Buffer[0];
 		/* Workaround for older D3 servers which wrote one byte too many for HackControl packets */
-		if (cpeData.needD3Fix && net_lastOpcode == OPCODE_CPE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
+		if (cpe_needD3Fix && net_lastOpcode == OPCODE_CPE_HACK_CONTROL && (opcode == 0x00 || opcode == 0xFF)) {
 			Platform_LogConst("Skipping invalid HackControl byte from D3 server");
 			Stream_Skip(&net_readStream, 1);
 
@@ -384,9 +415,7 @@ void MPConnection_Tick(ScheduledTask* task) {
 			continue;
 		}
 
-		if (opcode > net_maxHandledPacket) {
-			throw new InvalidOperationException("Invalid opcode: " + opcode);
-		}
+		if (opcode > net_maxHandledPacket) { ErrorHandler_Fail("Invalid opcode"); }
 		if (net_readStream.Meta_Mem_Count < Net_PacketSizes[opcode]) break;
 
 		Stream_Skip(&net_readStream, 1); /* remove opcode */
@@ -394,13 +423,16 @@ void MPConnection_Tick(ScheduledTask* task) {
 		Net_Handler handler = Net_Handlers[opcode];
 		Platform_CurrentUTCTime(&net_lastPacket);
 
-		if (handler == NULL) {
-			throw new InvalidOperationException("Unsupported opcode: " + opcode);
-		}
+		if (handler == NULL) { ErrorHandler_Fail("Unsupported opcode"); }
 		handler(&net_readStream);
 	}
 
-	reader.RemoveProcessed();
+	/* Keep last few unprocessed bytes, don't care about rest since they'll be overwritten on socket read */
+	Int32 i;
+	for (i = 0; i < net_readStream.Meta_Mem_Count; i++) {
+		net_readBuffer[i] = net_readStream.Meta_Mem_Buffer[i];
+	}
+	net_readStream.Meta_Mem_Buffer = net_readBuffer;
 
 	/* Network is ticked 60 times a second. We only send position updates 20 times a second */
 	if ((net_ticks % 3) == 0) {
@@ -434,17 +466,6 @@ void Net_SendPacket(void) {
 	net_writeStream.Meta_Mem_Count  = sizeof(net_writeBuffer);
 }
 
-void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
-	Vector3I p = coords;
-	if (block == BLOCK_AIR) {
-		block = Inventory_SelectedBlock;
-		Classic_WriteSetBlock(&net_writeStream, p.X, p.Y, p.Z, false, block);
-	} else {
-		Classic_WriteSetBlock(&net_writeStream, p.X, p.Y, p.Z, true, block);
-	}
-	Net_SendPacket();
-}
-
 Stream* MPConnection_ReadStream(void)  { return &net_readStream; }
 Stream* MPConnection_WriteStream(void) { return &net_writeStream; }
 void ServerConnection_InitMultiplayer(void) {
@@ -467,7 +488,7 @@ void MPConnection_OnNewMap(void) {
 	/* wipe all existing entity states */
 	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		classic.RemoveEntity((byte)i);
+		Handlers_RemoveEntity((EntityID)i);
 	}
 }
 

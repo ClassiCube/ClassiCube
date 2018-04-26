@@ -625,14 +625,14 @@ void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 
 	/* We use a statically allocated buffer initally, so can't realloc first time */
 	void* dst;
 	void* cur = *buffer;
+	UInt32 curElems = *elems;
 
-	UInt32 curElems = *elems, newSize = (curElems + expandElems) * elemSize;
 	if (curElems <= defElems) {
-		dst = Platform_MemAlloc(newSize);
+		dst = Platform_MemAlloc(curElems + expandElems, elemSize);
 		if (dst == NULL) ErrorHandler_Fail("Failed allocating memory for StringsBuffer");
 		Platform_MemCpy(dst, cur, curElems * elemSize);
 	} else {
-		dst = Platform_MemRealloc(cur, newSize);
+		dst = Platform_MemRealloc(cur, curElems + expandElems, elemSize);
 		if (dst == NULL) ErrorHandler_Fail("Failed allocating memory for resizing StringsBuffer");
 	}
 

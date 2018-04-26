@@ -26,7 +26,7 @@ Real64 weather_accumulator;
 Vector3I weather_lastPos;
 
 void WeatherRenderer_InitHeightmap(void) {
-	Weather_Heightmap = Platform_MemAlloc(World_Width * World_Length * sizeof(Int16));
+	Weather_Heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16));
 	if (Weather_Heightmap == NULL) {
 		ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
 	}

@@ -138,7 +138,7 @@ void EnvRenderer_UpdateFog(void) {
 		Gfx_SetFogDensity((Real32)density);
 	} else {
 		Gfx_SetFogMode(FOG_LINEAR);
-		Gfx_SetFogEnd(Game_ViewDistance);
+		Gfx_SetFogEnd((Real32)Game_ViewDistance);
 	}
 	Gfx_ClearColour(fogCol);
 	Gfx_SetFogColour(fogCol);
@@ -214,7 +214,7 @@ void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
 	VertexP3fT2fC4b v[4096];
 	VertexP3fT2fC4b* ptr = v;
 	if (env_cloudVertices > 4096) {
-		ptr = Platform_MemAlloc(env_cloudVertices * sizeof(VertexP3fT2fC4b));
+		ptr = Platform_MemAlloc(env_cloudVertices, sizeof(VertexP3fT2fC4b));
 		if (ptr == NULL) ErrorHandler_Fail("EnvRenderer_Clouds - failed to allocate memory");
 	}
 
@@ -233,7 +233,7 @@ void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
 	VertexP3fC4b v[4096];
 	VertexP3fC4b* ptr = v;
 	if (env_skyVertices > 4096) {
-		ptr = Platform_MemAlloc(env_skyVertices * sizeof(VertexP3fC4b));
+		ptr = Platform_MemAlloc(env_skyVertices, sizeof(VertexP3fC4b));
 		if (ptr == NULL) ErrorHandler_Fail("EnvRenderer_Sky - failed to allocate memory");
 	}
 

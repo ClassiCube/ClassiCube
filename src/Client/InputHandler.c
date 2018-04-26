@@ -174,8 +174,8 @@ bool InputHandler_HandleCoreKey(Key key) {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
 	} else if ((key == KeyBind_Get(KeyBind_PauseOrExit) || key == Key_Pause) && World_Blocks != NULL) {
-		Screen* screen = PauseScreen_MakeInstance();
-		Gui_SetNewScreen(screen);
+		Gui_FreeActive();
+		Gui_SetActive(PauseScreen_MakeInstance());
 	} else if (GameMode_HandlesKeyDown(key)) {
 	} else if (key == KeyBind_Get(KeyBind_IDOverlay)) {
 		if (Gui_OverlaysCount > 0) return true;

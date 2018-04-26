@@ -125,23 +125,23 @@ void ChunkUpdater_FreeAllocations(void) {
 }
 
 void ChunkUpdater_PerformAllocations(void) {
-	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo));
+	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo));
 	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
 
-	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo*));
+	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo*));
 	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate sorted chunk info");
 
-	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(ChunkInfo*));
+	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo*));
 	if (MapRenderer_RenderChunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate render chunk info");
 
-	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount * sizeof(Int32));
+	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(Int32));
 	if (ChunkUpdater_Distances == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
 
 	UInt32 partsCount = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
-	UInt32 partsSize = (partsCount * (UInt32)sizeof(ChunkPartInfo)) * 2;
-	MapRenderer_PartsBuffer_Raw = Platform_MemAlloc(partsSize);
+	MapRenderer_PartsBuffer_Raw = Platform_MemAlloc(partsCount * 2, sizeof(ChunkPartInfo));
 	if (MapRenderer_PartsBuffer_Raw == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
 
+	UInt32 partsSize = partsCount * 2 * (UInt32)sizeof(ChunkPartInfo);
 	Platform_MemSet(MapRenderer_PartsBuffer_Raw, 0, partsSize);
 	MapRenderer_PartsNormal      = MapRenderer_PartsBuffer_Raw;
 	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + partsCount;

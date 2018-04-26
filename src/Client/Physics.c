@@ -169,7 +169,7 @@ Int32 Searcher_FindReachableBlocks(Entity* entity, AABB* entityBB, AABB* entityE
 		}
 		Searcher_StatesCount = elements;
 
-		Searcher_States = Platform_MemAlloc(elements * sizeof(SearcherState));
+		Searcher_States = Platform_MemAlloc(elements, sizeof(SearcherState));
 		if (Searcher_States == NULL) {
 			ErrorHandler_Fail("Failed to allocate memory for Searcher_FindReachableBlocks");
 		}

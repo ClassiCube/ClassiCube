@@ -174,12 +174,12 @@ bool InventoryScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	TableWidget* table = &screen->Table;
 
 	if (key == KeyBind_Get(KeyBind_PauseOrExit)) {
-		Gui_SetNewScreen(NULL);
+		Gui_ReplaceActive(NULL);
 	} else if (key == KeyBind_Get(KeyBind_Inventory) && screen->ReleasedInv) {
-		Gui_SetNewScreen(NULL);
+		Gui_ReplaceActive(NULL);
 	} else if (key == Key_Enter && table->SelectedIndex != -1) {
 		Inventory_SetSelectedBlock(table->Elements[table->SelectedIndex]);
-		Gui_SetNewScreen(NULL);
+		Gui_ReplaceActive(NULL);
 	} else if (Elem_HandlesKeyDown(table, key)) {
 	} else {
 		HUDScreen* hud = (HUDScreen*)Gui_HUD;
@@ -207,7 +207,7 @@ bool InventoryScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseB
 	bool handled = Elem_HandlesMouseDown(table, x, y, btn);
 	if ((!handled || table->PendingClose) && btn == MouseButton_Left) {
 		bool hotbar = Key_IsControlPressed() || Key_IsShiftPressed();
-		if (!hotbar) Gui_SetNewScreen(NULL);
+		if (!hotbar) Gui_ReplaceActive(NULL);
 	}
 	return true;
 }
@@ -618,6 +618,7 @@ Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String
 	LoadingScreen_Make(screen, &LoadingScreen_VTABLE, title, message);
 	return (Screen*)screen;
 }
+extern Screen* LoadingScreen_UNSAFE_RawPointer = (Screen*)&LoadingScreen_Instance;
 
 
 /*########################################################################################################################*
@@ -1519,8 +1520,7 @@ bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mouse
 		String empty = String_MakeNull();
 		String_Format2(&connect, "Connecting to %s: %i..", &Game_IPAddress, &Game_Port);
 
-		Screen* loadScreen = LoadingScreen_MakeInstance(&connect, &empty);
-		Gui_SetNewScreen(loadScreen);
+		Gui_ReplaceActive(LoadingScreen_MakeInstance(&connect, &empty));
 		ServerConnection_Connect(&Game_IPAddress, Game_Port);
 	}
 	return true;

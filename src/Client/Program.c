@@ -47,8 +47,11 @@ int main(int argc, char* argv[]) {
 	}
 
 	String title = String_FromConst(PROGRAM_APP_NAME);
-	// if (argc == 1 || arc == 2) {
-	if (true) {
+	argc = 5;
+	char* default_argv[5] = { "path", "UnknownShadow200", "mppass", "127.0.0.1", "25566" };
+	argv = default_argv;
+
+	if (argc == 1 || argc == 2) {
 		//String_AppendConst(&Game_Username, argc > 1 ? argv[1] : "Singleplayer");
 		String_AppendConst(&Game_Username, "Singleplayer");
 	} else if (argc < 5) {

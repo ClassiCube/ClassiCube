@@ -242,30 +242,30 @@ Int32 Menu_Int32(STRING_PURE String* v) { Int32 value; Convert_TryParseInt32(v, 
 Real32 Menu_Real32(STRING_PURE String* v) { Real32 value; Convert_TryParseReal32(v, &value); return value; }
 PackedCol Menu_HexCol(STRING_PURE String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
 
-void Menu_SwitchOptions(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(OptionsGroupScreen_MakeInstance()); }
-void Menu_SwitchPause(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(PauseScreen_MakeInstance()); }
-void Menu_SwitchClassicOptions(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(ClassicOptionsScreen_MakeInstance()); }
+void Menu_SwitchOptions(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
+void Menu_SwitchPause(GuiElement* a, GuiElement* b)          { Gui_ReplaceActive(PauseScreen_MakeInstance()); }
+void Menu_SwitchClassicOptions(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
 
-void Menu_SwitchKeysClassic(GuiElement* a, GuiElement* b)      { Gui_SetNewScreen(ClassicKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysClassicHacks(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(ClassicHacksKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysNormal(GuiElement* a, GuiElement* b)       { Gui_SetNewScreen(NormalKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysHacks(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(HacksKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysOther(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(OtherKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysMouse(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(MouseKeyBindingsScreen_MakeInstance()); }
+void Menu_SwitchKeysClassic(GuiElement* a, GuiElement* b)      { Gui_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
+void Menu_SwitchKeysClassicHacks(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(ClassicHacksKeyBindingsScreen_MakeInstance()); }
+void Menu_SwitchKeysNormal(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(NormalKeyBindingsScreen_MakeInstance()); }
+void Menu_SwitchKeysHacks(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(HacksKeyBindingsScreen_MakeInstance()); }
+void Menu_SwitchKeysOther(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(OtherKeyBindingsScreen_MakeInstance()); }
+void Menu_SwitchKeysMouse(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(MouseKeyBindingsScreen_MakeInstance()); }
 
-void Menu_SwitchMisc(GuiElement* a, GuiElement* b)      { Gui_SetNewScreen(MiscOptionsScreen_MakeInstance()); }
-void Menu_SwitchGui(GuiElement* a, GuiElement* b)       { Gui_SetNewScreen(GuiOptionsScreen_MakeInstance()); }
-void Menu_SwitchGfx(GuiElement* a, GuiElement* b)       { Gui_SetNewScreen(GraphicsOptionsScreen_MakeInstance()); }
-void Menu_SwitchHacks(GuiElement* a, GuiElement* b)     { Gui_SetNewScreen(HacksSettingsScreen_MakeInstance()); }
-void Menu_SwitchEnv(GuiElement* a, GuiElement* b)       { Gui_SetNewScreen(EnvSettingsScreen_MakeInstance()); }
-void Menu_SwitchNostalgia(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(NostalgiaScreen_MakeInstance()); }
+void Menu_SwitchMisc(GuiElement* a, GuiElement* b)      { Gui_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
+void Menu_SwitchGui(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
+void Menu_SwitchGfx(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(GraphicsOptionsScreen_MakeInstance()); }
+void Menu_SwitchHacks(GuiElement* a, GuiElement* b)     { Gui_ReplaceActive(HacksSettingsScreen_MakeInstance()); }
+void Menu_SwitchEnv(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
+void Menu_SwitchNostalgia(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(NostalgiaScreen_MakeInstance()); }
 
-void Menu_SwitchGenLevel(GuiElement* a, GuiElement* b)         { Gui_SetNewScreen(GenLevelScreen_MakeInstance()); }
-void Menu_SwitchClassicGenLevel(GuiElement* a, GuiElement* b)  { Gui_SetNewScreen(ClassicGenScreen_MakeInstance()); }
-void Menu_SwitchLoadLevel(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(LoadLevelScreen_MakeInstance()); }
-void Menu_SwitchSaveLevel(GuiElement* a, GuiElement* b)        { Gui_SetNewScreen(SaveLevelScreen_MakeInstance()); }
-void Menu_SwitchTexPacks(GuiElement* a, GuiElement* b)         { Gui_SetNewScreen(TexturePackScreen_MakeInstance()); }
-void Menu_SwitchHotkeys(GuiElement* a, GuiElement* b)          { Gui_SetNewScreen(HotkeyListScreen_MakeInstance()); }
+void Menu_SwitchGenLevel(GuiElement* a, GuiElement* b)         { Gui_ReplaceActive(GenLevelScreen_MakeInstance()); }
+void Menu_SwitchClassicGenLevel(GuiElement* a, GuiElement* b)  { Gui_ReplaceActive(ClassicGenScreen_MakeInstance()); }
+void Menu_SwitchLoadLevel(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(LoadLevelScreen_MakeInstance()); }
+void Menu_SwitchSaveLevel(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(SaveLevelScreen_MakeInstance()); }
+void Menu_SwitchTexPacks(GuiElement* a, GuiElement* b)         { Gui_ReplaceActive(TexturePackScreen_MakeInstance()); }
+void Menu_SwitchHotkeys(GuiElement* a, GuiElement* b)          { Gui_ReplaceActive(HotkeyListScreen_MakeInstance()); }
 
 
 /*########################################################################################################################*
@@ -408,7 +408,7 @@ void ListScreen_Free(GuiElement* elem) {
 bool ListScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	ListScreen* screen = (ListScreen*)elem;
 	if (key == Key_Escape) {
-		Gui_SetNewScreen(NULL);
+		Gui_ReplaceActive(NULL);
 	} else if (key == Key_Left) {
 		ListScreen_PageClick(screen, false);
 	} else if (key == Key_Right) {
@@ -485,7 +485,7 @@ bool MenuScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton b
 bool MenuScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
 
 bool MenuScreen_HandlesKeyDown(GuiElement* elem, Key key) {
-	if (key == Key_Escape) { Gui_SetNewScreen(NULL); }
+	if (key == Key_Escape) { Gui_ReplaceActive(NULL); }
 	return key < Key_F1 || key > Key_F35;
 }
 bool MenuScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) { return true; }
@@ -596,7 +596,7 @@ void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8*
 }
 
 void PauseScreen_Quit(GuiElement* a, GuiElement* b) { Window_Close(); }
-void PauseScreen_Game(GuiElement* a, GuiElement* b) { Gui_SetNewScreen(NULL); }
+void PauseScreen_Game(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(NULL); }
 
 void PauseScreen_CheckHacksAllowed(void* obj) {
 	if (Game_UseClassicOptions) return;
@@ -913,7 +913,7 @@ void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
 		Hotkeys_Add(hotkey.BaseKey, hotkey.Flags, &text, hotkey.StaysOpen);
 		Hotkeys_UserAddedHotkey(hotkey.BaseKey, hotkey.Flags, hotkey.StaysOpen, &text);
 	}
-	Gui_SetNewScreen(HotkeyListScreen_MakeInstance());
+	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
 }
 
 void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
@@ -923,7 +923,7 @@ void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
 		Hotkeys_Remove(hotkey.BaseKey, hotkey.Flags);
 		Hotkeys_UserRemovedHotkey(hotkey.BaseKey, hotkey.Flags);
 	}
-	Gui_SetNewScreen(HotkeyListScreen_MakeInstance());
+	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
 }
 
 void EditHotkeyScreen_Init(GuiElement* elem) {
@@ -1351,7 +1351,7 @@ void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
 	String_Format1(&msg, "&eSaved map to: %s", &path);
 	Chat_Add(&msg);
 
-	Gui_SetNewScreen(PauseScreen_MakeInstance());
+	Gui_ReplaceActive(PauseScreen_MakeInstance());
 	String_Clear(&path);
 }
 
@@ -1479,7 +1479,7 @@ void HotkeyListScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	HotkeyData original = { 0 };
 
 	if (String_CaselessEqualsConst(&text, LIST_SCREEN_EMPTY)) {
-		Gui_SetNewScreen(EditHotkeyScreen_MakeInstance(original)); return;
+		Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original)); return;
 	}
 
 	Int32 sepIndex = String_IndexOf(&text, '|', 0);
@@ -1501,7 +1501,7 @@ void HotkeyListScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 		HotkeyData h = HotkeysList[i];
 		if (h.BaseKey == baseKey && h.Flags == flags) { original = h; break; }
 	}
-	Gui_SetNewScreen(EditHotkeyScreen_MakeInstance(original));
+	Gui_ReplaceActive(EditHotkeyScreen_MakeInstance(original));
 }
 
 Screen* HotkeyListScreen_MakeInstance(void) {

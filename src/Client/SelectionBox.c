@@ -127,7 +127,7 @@ UInt32 selections_count;
 SelectionBox selections_list[SELECTIONS_MAX];
 UInt8 selections_ids[SELECTIONS_MAX];
 GfxResourceID selections_VB, selections_LineVB;
-bool selections_allocated;
+bool selections_used;
 
 void Selections_Add(UInt8 id, Vector3I p1, Vector3I p2, PackedCol col) {	
 	SelectionBox sel;
@@ -163,7 +163,7 @@ void Selections_ContextLost(void* obj) {
 }
 
 void Selections_ContextRecreated(void* obj) {
-	if (!selections_allocated) return;
+	if (!selections_used) return;
 	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
 	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
 }
@@ -197,9 +197,9 @@ void Selections_Render(Real64 delta) {
 	}
 	Selections_QuickSort(0, selections_count - 1);
 
-	if (!selections_allocated) { /* lazy init as most servers don't use this */
+	if (selections_VB == NULL) { /* lazy init as most servers don't use this */
+		selections_used = true;
 		Selections_ContextRecreated(NULL);
-		selections_allocated = true;
 	}
 
 	VertexP3fC4b vertices[SELECTIONS_MAX_VERTICES]; VertexP3fC4b* ptr = vertices;
