@@ -4,28 +4,20 @@ using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Network {
 
-	public sealed class CPESupport : IGameComponent {
-		
-		public void Init(Game game) { this.game = game; }
-		public void Ready(Game game) { }
-		public void OnNewMap(Game game) { }
-		public void OnNewMapLoaded(Game game) { }
-		public void Dispose() { }
+	public sealed class CPESupport {
 
 		internal int ServerExtensionsCount;
 		internal bool sendHeldBlock, useMessageTypes;
 		internal int envMapVer = 2, blockDefsExtVer = 2;
 		internal bool needD3Fix, extEntityPos, twoWayPing, blockPerms, fastMap;
-		Game game;
+		public Game game;
 		
-		public void Reset(Game game) {
+		public void Reset() {
 			ServerExtensionsCount = 0;
 			sendHeldBlock = false; useMessageTypes = false;
 			envMapVer = 2; blockDefsExtVer = 2;
 			needD3Fix = false; extEntityPos = false; twoWayPing = false; fastMap = false;
 			game.SupportsCPEBlocks = false;
-			NetworkProcessor net = (NetworkProcessor)game.Server;
-			net.Reset();
 		}
 		
 		/// <summary> Sets fields / updates network handles based on the server 

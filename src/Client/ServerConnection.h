@@ -71,7 +71,6 @@ void (*ServerConnection_SendChat)(STRING_PURE String* text);
 void (*ServerConnection_SendPosition)(Vector3 pos, Real32 rotY, Real32 headX);
 void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, PickedPos* pos);
 void (*ServerConnection_Tick)(ScheduledTask* task);
-void (*ServerConnection_Free)(void);
 Stream* (*ServerConnection_ReadStream)(void);
 Stream* (*ServerConnection_WriteStream)(void);
 void (*ServerConnection_SendPacket)(void);
@@ -93,11 +92,11 @@ void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, I
 void ServerConnection_EndGeneration(void);
 void ServerConnection_InitSingleplayer(void);
 void ServerConnection_InitMultiplayer(void);
+IGameComponent ServerConnection_MakeComponent(void);
 
 typedef void (*Net_Handler)(Stream* stream);
-#define OPCODE_COUNT 256
+#define OPCODE_COUNT 45
 UInt16 Net_PacketSizes[OPCODE_COUNT];
 Net_Handler Net_Handlers[OPCODE_COUNT];
 void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 size);
-
 #endif

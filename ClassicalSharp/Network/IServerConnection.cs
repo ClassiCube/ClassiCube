@@ -17,7 +17,7 @@ using Android.Graphics;
 namespace ClassicalSharp {
 	
 	/// <summary> Represents a connection to either a multiplayer server, or an internal single player server. </summary>
-	public abstract class IServerConnection {
+	public abstract class IServerConnection : IGameComponent {
 		
 		public bool IsSinglePlayer;
 		
@@ -35,6 +35,12 @@ namespace ClassicalSharp {
 		
 		public abstract void Tick(ScheduledTask task);
 		
+		public virtual void Init(Game game) { }
+		public virtual void Ready(Game game) { }		
+		public virtual void OnNewMapLoaded(Game game) { }
+		
+		public abstract void Reset(Game game);
+		public abstract void OnNewMap(Game game);
 		public abstract void Dispose();
 		
 		public string ServerName;

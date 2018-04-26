@@ -183,7 +183,6 @@ void Game_Disconnect(STRING_PURE String* title, STRING_PURE String* reason) {
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].Reset();
 	}
-	ServerConnection_Free();
 }
 
 void Game_UpdateBlock(Int32 x, Int32 y, Int32 z, BlockID block) {
@@ -477,6 +476,7 @@ void Game_Load(void) {
 	} else {
 		ServerConnection_InitMultiplayer();
 	}
+	comp = ServerConnection_MakeComponent(); Game_AddComponent(&comp);
 
 	Gfx_LostContextFunction = ServerConnection_Tick;
 	Camera_Init();

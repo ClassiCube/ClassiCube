@@ -202,7 +202,7 @@ GZipHeader gzHeader;
 Int32 mapSizeIndex, mapIndex, mapVolume;
 UInt8 mapSize[4];
 UInt8* map;
-FixedBufferStream mapPartStream;
+Stream mapPartStream;
 Screen* prevScreen;
 bool prevCursorVisible, receivedFirstPosition;
 
@@ -223,7 +223,7 @@ void Classic_Handshake(Stream* stream) {
 void Classic_Ping(Stream* stream) { }
 
 void Classic_LevelInit(Stream* stream) {
-	if (!mapInflateInited) StartLoadingState();
+	if (!mapInflateInited) Classic_StartLoading(stream);
 
 	/* Fast map puts volume in header, doesn't bother with gzip */
 	if (cpe_fastMap) {
@@ -235,9 +235,10 @@ void Classic_LevelInit(Stream* stream) {
 	}
 }
 
-void StartLoadingState(void) {
+void Classic_StartLoading(Stream* stream) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
+	mapPartStream = *stream;
 
 	prevScreen = Gui_Active;
 	if (prevScreen is LoadingMapScreen) {
@@ -250,7 +251,7 @@ void StartLoadingState(void) {
 	receivedFirstPosition = false;
 	GZipHeader_Init(&gzHeader);
 
-	Inflate_MakeStream(&mapInflateStream, &mapInflateState, mapPartStream);
+	Inflate_MakeStream(&mapInflateStream, &mapInflateState, &mapPartStream);
 	mapInflateInited = true;
 
 	mapSizeIndex = 0;
@@ -260,17 +261,16 @@ void StartLoadingState(void) {
 
 void Classic_LevelDataChunk(Stream* stream) {
 	/* Workaround for some servers that send LevelDataChunk before LevelInit due to their async sending behaviour */
-	if (!mapInflateInited) StartLoadingState();
+	if (!mapInflateInited) Classic_StartLoading(stream);
 
 	Int32 usedLength = Stream_ReadU16_BE(stream);
-	mapPartStream.pos = 0;
-	mapPartStream.bufferPos = reader.index;
-	mapPartStream.len = usedLength;
+	mapPartStream.Meta_Mem_Buffer = stream->Meta_Mem_Buffer;
+	mapPartStream.Meta_Mem_Count  = stream->Meta_Mem_Count;
 
-	reader.Skip(1024);
+	Stream_Skip(stream, 1024);
 	UInt8 value = Stream_ReadU8(stream); /* progress in original classic, but we ignore it */
 
-	if (!gzHeader.Done) { GZipHeader_Read(mapPartStream, &gzHeader); }
+	if (!gzHeader.Done) { GZipHeader_Read(&mapPartStream, &gzHeader); }
 	if (gzHeader.Done) {
 		if (mapSizeIndex < 4) {
 			mapSizeIndex += gzipStream.Read(mapSize, mapSizeIndex, 4 - mapSizeIndex);
@@ -282,7 +282,7 @@ void Classic_LevelDataChunk(Stream* stream) {
 				map = Platform_MemAlloc(mapVolume);
 				if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
 			}
-			mapIndex += gzipStream.Read(map, mapIndex, map.Length - mapIndex);
+			mapIndex += gzipStream.Read(map, mapIndex, mapVolume - mapIndex);
 		}
 	}
 
@@ -387,13 +387,17 @@ void Classic_RemoveEntity(Stream* stream) {
 }
 
 void Classic_Message(Stream* stream) {
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	UInt8 textBuffer[String_BufferSize(STRING_SIZE) + 2];
 	UInt8 type = Stream_ReadU8(stream);
 	String text = Handlers_ReadString(stream, textBuffer);
 
-	/* Original vanilla server uses player ids in message types, 255 for server messages. */
+	/* Original vanilla server uses player ids for type, 255 for server messages (&e prefix) */
 	bool prepend = !cpe_useMessageTypes && type == 0xFF;
-	if (prepend) text = "&e" + text;
+	if (prepend) {
+		text.capacity += 2;
+		String_InsertAt(&text, 0, 'e');
+		String_InsertAt(&text, 0, '&');
+	}
 	if (!cpe_useMessageTypes) type = MSG_TYPE_NORMAL;
 
 	/* WoM detail messages (used e.g. for fCraft server compass) */
@@ -488,7 +492,6 @@ void Classic_WriteLogin(Stream* stream, STRING_PURE String* username, STRING_PUR
 }
 
 void Classic_Reset(void) {
-	mapPartStream = new FixedBufferStream(net.reader.buffer);
 	mapInflateInited = false;
 	receivedFirstPosition = false;
 
@@ -814,10 +817,9 @@ void CPE_BulkBlockUpdate(Stream* stream) {
 	Stream_Skip(stream, (BULK_MAX_BLOCKS - count) * (UInt32)sizeof(Int32));
 
 	BlockID blocks[BULK_MAX_BLOCKS];
-	for (i = 0; i < count; i++) {
-		blocks[i] = reader.buffer[reader.index + i];
-	}
-	reader.Skip(bulkCount);
+	UInt8* recvBuffer = stream->Meta_Mem_Buffer;
+	for (i = 0; i < count; i++) { blocks[i] = recvBuffer[i]; }
+	Stream_Skip(stream, BULK_MAX_BLOCKS);
 
 	Int32 x, y, z;
 	for (i = 0; i < count; i++) {

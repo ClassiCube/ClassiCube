@@ -18,7 +18,8 @@ namespace ClassicalSharp.Network {
 		
 		public NetworkProcessor(Game window) {
 			game = window;
-			cpeData = new CPESupport(); game.Components.Add(cpeData);
+			cpeData = new CPESupport();
+			cpeData.game = window;
 			IsSinglePlayer = false;
 		}
 		
@@ -36,7 +37,6 @@ namespace ClassicalSharp.Network {
 		
 		public override void Connect(IPAddress address, int port) {
 			socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-			game.WorldEvents.OnNewMap += OnNewMap;
 			game.UserEvents.BlockChanged += BlockChanged;
 			Disconnected = false;
 			
@@ -66,7 +66,6 @@ namespace ClassicalSharp.Network {
 		
 		public override void Dispose() {
 			if (Disconnected) return;
-			game.WorldEvents.OnNewMap -= OnNewMap;
 			game.UserEvents.BlockChanged -= BlockChanged;
 			socket.Close();
 			Disconnected = true;
@@ -101,9 +100,7 @@ namespace ClassicalSharp.Network {
 				}
 				
 				if (opcode > maxHandledPacket) {
-					ErrorHandler.LogError("NetworkProcessor.Tick", "received invalid opcode: " + opcode);
-					reader.Skip(1);
-					continue;
+					throw new InvalidOperationException("Invalid opcode: " + opcode);
 				}
 				
 				if ((reader.size - reader.index) < packetSizes[opcode]) break;
@@ -151,12 +148,13 @@ namespace ClassicalSharp.Network {
 			Action handler = handlers[opcode];
 			lastPacket = DateTime.UtcNow;
 			
-			if (handler == null)
-				throw new NotImplementedException("Unsupported packet:" + opcode);
+			if (handler == null) {
+				throw new InvalidOperationException("Unsupported opcode: " + opcode);
+			}
 			handler();
 		}
 		
-		internal void Reset() {
+		public override void Reset(Game game) {
 			UsingExtPlayerList = false;
 			UsingPlayerClick = false;
 			SupportsPartialMessages = false;
@@ -167,11 +165,14 @@ namespace ClassicalSharp.Network {
 				handlers[i] = null;
 				packetSizes[i] = 0;
 			}
-			ResetProtocols();
-			
+						
 			reader.ExtendedPositions = false; reader.ExtendedBlocks = false;
 			writer.ExtendedPositions = false; writer.ExtendedBlocks = false;
 			BlockInfo.SetMaxUsed(255);
+			
+			ResetProtocols();
+			cpeData.Reset();
+			Dispose();
 		}
 		
 		void ResetProtocols() {
@@ -198,7 +199,7 @@ namespace ClassicalSharp.Network {
 			SendPacket();
 		}
 		
-		void OnNewMap(object sender, EventArgs e) {
+		public override void OnNewMap(Game game) {
 			// wipe all existing entity states
 			for (int i = 0; i < EntityList.MaxCount; i++)
 				RemoveEntity((byte)i);

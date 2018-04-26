@@ -65,6 +65,8 @@ namespace ClassicalSharp.Singleplayer {
 		public override void SendPlayerClick(MouseButton button, bool buttonDown, byte targetId, PickedPos pos) {
 		}
 		
+		public override void OnNewMap(Game game) { }
+		public override void Reset(Game game) { }
 		public override void Dispose() {
 			physics.Dispose();
 		}

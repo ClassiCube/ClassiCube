@@ -77,24 +77,23 @@ ReturnCode Stream_Skip(Stream* stream, UInt32 count) {
 *-------------------------------------------------------FileStream--------------------------------------------------------*
 *#########################################################################################################################*/
 ReturnCode Stream_FileRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	return Platform_FileRead(stream->Data, data, count, modified);
+	return Platform_FileRead(stream->Meta_File, data, count, modified);
 }
 ReturnCode Stream_FileWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	return Platform_FileWrite(stream->Data, data, count, modified);
+	return Platform_FileWrite(stream->Meta_File, data, count, modified);
 }
 ReturnCode Stream_FileClose(Stream* stream) {
-	ReturnCode code = Platform_FileClose(stream->Data);
-	stream->Data = NULL;
+	ReturnCode code = Platform_FileClose(stream->Meta_File);
+	stream->Meta_File = NULL;
 	return code;
 }
 ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
-	return Platform_FileSeek(stream->Data, offset, seekType);
+	return Platform_FileSeek(stream->Meta_File, offset, seekType);
 }
 
 void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 	Stream_SetName(stream, name);
-	stream->Data  = file;
-	stream->Data2 = 0;
+	stream->Meta_File = file;
 
 	stream->Read  = Stream_FileRead;
 	stream->Write = Stream_FileWrite;
@@ -107,10 +106,10 @@ void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 *-----------------------------------------------------PortionStream-------------------------------------------------------*
 *#########################################################################################################################*/
 ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Data2);
-	Stream* underlying = (Stream*)stream->Data;
+	count = min(count, stream->Meta_Portion_Count);
+	Stream* underlying = stream->Meta_Portion_Underlying;
 	ReturnCode code = underlying->Read(underlying, data, count, modified);
-	stream->Data2 -= *modified;
+	stream->Meta_Portion_Count -= *modified;
 	return code;
 }
 ReturnCode Stream_PortionWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
@@ -121,8 +120,8 @@ ReturnCode Stream_PortionSeek(Stream* stream, Int32 offset, Int32 seekType) { re
 
 void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 	Stream_SetName(stream, &underlying->Name);
-	stream->Data  = underlying;
-	stream->Data2 = len;
+	stream->Meta_Portion_Underlying = underlying;
+	stream->Meta_Portion_Count = len;
 
 	stream->Read  = Stream_PortionRead;
 	stream->Write = Stream_PortionWrite;
@@ -135,19 +134,19 @@ void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 *-----------------------------------------------------MemoryStream--------------------------------------------------------*
 *#########################################################################################################################*/
 ReturnCode Stream_MemoryRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Data2);
-	if (count > 0) { Platform_MemCpy(data, stream->Data, count); }
+	count = min(count, stream->Meta_Mem_Count);
+	if (count > 0) { Platform_MemCpy(data, stream->Meta_Mem_Buffer, count); }
 	
-	stream->Data = (UInt8*)stream->Data + count;
-	stream->Data2 -= count;
+	stream->Meta_Mem_Buffer += count;
+	stream->Meta_Mem_Count -= count;
 	*modified = count;
 	return 0;
 }
 
 void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
 	Stream_SetName(stream, name);
-	stream->Data = data;
-	stream->Data2 = len;
+	stream->Meta_Mem_Buffer = data;
+	stream->Meta_Mem_Count  = len;
 
 	stream->Read  = Stream_MemoryRead;
 	stream->Write = Stream_PortionWrite;

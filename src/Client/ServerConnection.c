@@ -242,8 +242,6 @@ void SPConnection_Tick(ScheduledTask* task) {
 	ServerConnection_Ticks++;
 }
 
-void SPConnection_Free(void) { Physics_Free(); }
-
 void ServerConnection_InitSingleplayer(void) {
 	ServerConnection_ResetState();
 	Physics_Init();
@@ -256,7 +254,6 @@ void ServerConnection_InitSingleplayer(void) {
 	ServerConnection_SendPosition = SPConnection_SendPosition;
 	ServerConnection_SendPlayerClick = SPConnection_SendPlayerClick;
 	ServerConnection_Tick = SPConnection_Tick;
-	ServerConnection_Free = SPConnection_Free;
 
 	ServerConnection_ReadStream  = NULL;
 	ServerConnection_WriteStream = NULL;
@@ -268,4 +265,19 @@ void Net_Set(UInt8 opcode, Net_Handler handler, UInt16 size) {
 	Net_Handlers[opcode]    = handler;
 	Net_PacketSizes[opcode] = size;
 	maxHandledPacket = Math.Max(opcode, maxHandledPacket);
+}
+
+
+void ServerConnection_Free(void) {
+	if (ServerConnection_IsSinglePlayer) {
+		Physics_Free();
+	} else {
+
+	}
+}
+
+IGameComponent ServerConnection_MakeComponent(void) {
+	IGameComponent comp = IGameComponent_MakeEmpty();
+	comp.Free = ServerConnection_Free;
+	return comp;
 }

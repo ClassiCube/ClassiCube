@@ -648,7 +648,7 @@ void Inflate_Process(InflateState* state) {
 }
 
 ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	InflateState* state = (InflateState*)stream->Data;
+	InflateState* state = (InflateState*)stream->Meta_Inflate;
 	if (state->AvailIn == 0) {
 		/* Fully used up input buffer. Cycle back to start. */
 		if (state->NextIn == INFLATE_MAX_INPUT) state->NextIn = 0;
@@ -676,8 +676,7 @@ ReturnCode Inflate_StreamSeek(Stream* stream, Int32 offset, Int32 seekType) { re
 void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying) {
 	Inflate_Init(state, underlying);
 	Stream_SetName(stream, &underlying->Name);
-	stream->Data = state;
-	stream->Data2 = 0;
+	stream->Meta_Inflate = state;
 
 	stream->Read  = Inflate_StreamRead;
 	stream->Write = Inflate_StreamWrite;

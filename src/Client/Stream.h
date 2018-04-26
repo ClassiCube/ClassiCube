@@ -11,13 +11,20 @@
 #define STREAM_SEEKFROM_CURRENT 1
 #define STREAM_SEEKFROM_END 2
 
+typedef struct Stream_ Stream;
 /* Represents a stream that can be written to and/or read from. */
 typedef struct Stream_ {
-	ReturnCode (*Read)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
-	ReturnCode (*Write)(struct Stream_* stream, UInt8* data, UInt32 count, UInt32* modified);
-	ReturnCode (*Close)(struct Stream_* stream);
-	ReturnCode (*Seek)(struct Stream_* stream, Int32 offset, Int32 seekType);
-	void* Data; UInt32 Data2;
+	ReturnCode (*Read)(Stream* stream, UInt8* data, UInt32 count, UInt32* modified);
+	ReturnCode (*Write)(Stream* stream, UInt8* data, UInt32 count, UInt32* modified);
+	ReturnCode (*Close)(Stream* stream);
+	ReturnCode (*Seek)(Stream* stream, Int32 offset, Int32 seekType);
+	
+	union {
+		void* Meta_File;
+		void* Meta_Inflate;
+		struct { UInt8* Meta_Mem_Buffer; UInt32 Meta_Mem_Count; };
+		struct { Stream* Meta_Portion_Underlying; UInt32 Meta_Portion_Count; };
+	};
 	UInt8 NameBuffer[String_BufferSize(FILENAME_SIZE)];
 	String Name;
 } Stream;

@@ -109,6 +109,7 @@ namespace ClassicalSharp {
 			} else {
 				Server = new Network.NetworkProcessor(this);
 			}
+			Components.Add(Server);
 			Graphics.LostContextFunction = Server.Tick;
 			
 			Cameras.Add(new FirstPersonCamera(this));
