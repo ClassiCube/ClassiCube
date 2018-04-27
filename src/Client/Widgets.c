@@ -970,7 +970,7 @@ void InputWidget_RenderCaret(InputWidget* widget, Real64 delta) {
 	if (!widget->ShowCaret) return;
 
 	widget->CaretAccumulator += delta;
-	Real32 second = Math_ModF((Real32)widget->CaretAccumulator, 1.0);
+	Real32 second = Math_ModF((Real32)widget->CaretAccumulator, 1.0f);
 	if (second < 0.5f) {
 		Texture_RenderShaded(&widget->CaretTex, widget->CaretCol);
 	}

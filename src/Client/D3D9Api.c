@@ -95,8 +95,7 @@ void D3D9_FindCompatibleFormat(void) {
 	}
 }
 
-void D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
-	Platform_MemSet(args, 0, sizeof(D3DPRESENT_PARAMETERS));
+void D3D9_FillPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
 	args->AutoDepthStencilFormat = d3d9_depthFormat;
 	args->BackBufferWidth = width;
 	args->BackBufferHeight = height;
@@ -109,8 +108,8 @@ void D3D9_GetPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args)
 }
 
 void D3D9_RecreateDevice(void) {
-	D3DPRESENT_PARAMETERS args;
-	D3D9_GetPresentArgs(Game_Width, Game_Height, &args);
+	D3DPRESENT_PARAMETERS args = { 0 };
+	D3D9_FillPresentArgs(Game_Width, Game_Height, &args);
 
 	while (IDirect3DDevice9_Reset(device, &args) == D3DERR_DEVICELOST) {
 		D3D9_LoopUntilRetrieved();
@@ -128,8 +127,8 @@ void Gfx_Init(void) {
 	d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
 	D3D9_FindCompatibleFormat();
-	D3DPRESENT_PARAMETERS args;
-	D3D9_GetPresentArgs(640, 480, &args);
+	D3DPRESENT_PARAMETERS args = { 0 };
+	D3D9_FillPresentArgs(640, 480, &args);
 	ReturnCode res;
 
 	/* Try to create a device with as much hardware usage as possible. */
@@ -536,7 +535,7 @@ void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
 void Gfx_SetMatrixMode(Int32 matrixType) {
 	if (matrixType == MATRIX_TYPE_PROJECTION) {
 		curMatrix = D3DTS_PROJECTION;
-	} else if (matrixType == MATRIX_TYPE_MODELVIEW) {
+	} else if (matrixType == MATRIX_TYPE_VIEW) {
 		curMatrix = D3DTS_VIEW;
 	} else if (matrixType == MATRIX_TYPE_TEXTURE) {
 		curMatrix = D3DTS_TEXTURE0;

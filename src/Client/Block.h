@@ -9,35 +9,33 @@
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 */
 
-/* Sound types for blocks. */
-#define SOUND_NONE   0
-#define SOUND_WOOD   1
-#define SOUND_GRAVEL 2
-#define SOUND_GRASS  3
-#define SOUND_STONE  4
-#define SOUND_METAL  5
-#define SOUND_GLASS  6
-#define SOUND_CLOTH  7
-#define SOUND_SAND   8
-#define SOUND_SNOW   9
+enum SOUND {
+	SOUND_NONE,  SOUND_WOOD,  SOUND_GRAVEL, SOUND_GRASS, 
+	SOUND_STONE, SOUND_METAL, SOUND_GLASS,  SOUND_CLOTH, 
+	SOUND_SAND,  SOUND_SNOW,
+};
 
 /* Describes how a block is rendered in the world. */
-#define DRAW_OPAQUE            0 /* Completely covers blocks behind (e.g. dirt). */
-#define DRAW_TRANSPARENT       1 /* Blocks behind show (e.g. glass). Pixels either fully visible or invisible. */
-#define DRAW_TRANSPARENT_THICK 2 /* Same as Transparent, but all neighbour faces show. (e.g. leaves) */
-#define DRAW_TRANSLUCENT       3 /* Blocks behind show (e.g. water). Pixels blend with other blocks behind. */
-#define DRAW_GAS               4 /* Does not show (e.g. air). Can still be collided with. */
-#define DRAW_SPRITE            5 /* Block renders as an X (e.g. sapling). Pixels either fully visible or invisible. */
+enum DRAWTYPE {
+	DRAW_OPAQUE,            /* Completely covers blocks behind (e.g. dirt). */
+	DRAW_TRANSPARENT,       /* Blocks behind show (e.g. glass). Pixels either fully visible or invisible. */
+	DRAW_TRANSPARENT_THICK, /* Same as Transparent, but all neighbour faces show. (e.g. leaves) */
+	DRAW_TRANSLUCENT,       /* Blocks behind show (e.g. water). Pixels blend with other blocks behind. */
+	DRAW_GAS,               /* Does not show (e.g. air). Can still be collided with. */
+	DRAW_SPRITE,            /* Block renders as an X (e.g. sapling). Pixels either fully visible or invisible. */
+};
 
 /* Describes the interaction a block has with a player when they collide with it. */
-#define COLLIDE_GAS          0 /* No interaction when player collides. */
-#define COLLIDE_LIQUID       1 /* 'swimming'/'bobbing' interaction when player collides. */
-#define COLLIDE_SOLID        2 /* Block completely stops the player when they are moving. */
-#define COLLIDE_ICE          3 /* Block is solid and partially slidable on. */
-#define COLLIDE_SLIPPERY_ICE 4 /* Block is solid and fully slidable on. */
-#define COLLIDE_LIQUID_WATER 5 /* Water style 'swimming'/'bobbing' interaction when player collides. */
-#define COLLIDE_LIQUID_LAVA  6 /* Lava style 'swimming'/'bobbing' interaction when player collides. */
-#define COLLIDE_CLIMB_ROPE   7 /* Rope/Ladder style climbing interaction when player collides */
+enum COLLIDETYPE {
+	COLLIDE_GAS,          /* No interaction when player collides. */
+	COLLIDE_LIQUID,       /* 'swimming'/'bobbing' interaction when player collides. */
+	COLLIDE_SOLID,        /* Block completely stops the player when they are moving. */
+	COLLIDE_ICE,          /* Block is solid and partially slidable on. */
+	COLLIDE_SLIPPERY_ICE, /* Block is solid and fully slidable on. */
+	COLLIDE_LIQUID_WATER, /* Water style 'swimming'/'bobbing' interaction when player collides. */
+	COLLIDE_LIQUID_LAVA,  /* Lava style 'swimming'/'bobbing' interaction when player collides. */
+	COLLIDE_CLIMB_ROPE,   /* Rope/Ladder style climbing interaction when player collides */
+};
 
 bool Block_IsLiquid[BLOCK_COUNT];
 bool Block_BlocksLight[BLOCK_COUNT];

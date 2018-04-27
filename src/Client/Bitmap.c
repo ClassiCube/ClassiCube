@@ -43,7 +43,7 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
 #define PNG_HEADER 8
 #define PNG_RGB_MASK 0xFFFFFFUL
 #define PNG_PALETTE 256
-#define PNG_FOURCC(a, b, c, d) ((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d
+#define PNG_FourCC(a, b, c, d) ((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d
 
 #define PNG_COL_GRAYSCALE 0
 #define PNG_COL_RGB 2
@@ -119,119 +119,119 @@ void Png_Filter(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt
 void Png_Expand_GRAYSCALE(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j, mask;
 	UInt8 cur, rgb1, rgb2, rgb3, rgb4;
-#define PNG_DO_GRAYSCALE(tmp, dstI, srcI, scale) tmp = src[srcI] * scale; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
-#define PNG_DO_GRAYSCALE_X(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
+#define PNG_Do_Grayscale(tmp, dstI, srcI, scale) tmp = src[srcI] * scale; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
+#define PNG_Do_Grayscale_X(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
 
 	switch (bitsPerSample) {
 	case 1:
 		for (i = 0, j = 0; i < (width & ~0x7); i += 8, j++) {
 			cur = src[j];
-			PNG_DO_GRAYSCALE(rgb1, i    , (cur >> 7)    , 255); PNG_DO_GRAYSCALE(rgb2, i + 1, (cur >> 6) & 1, 255);
-			PNG_DO_GRAYSCALE(rgb3, i + 2, (cur >> 5) & 1, 255); PNG_DO_GRAYSCALE(rgb4, i + 3, (cur >> 4) & 1, 255);
-			PNG_DO_GRAYSCALE(rgb1, i + 4, (cur >> 3) & 1, 255); PNG_DO_GRAYSCALE(rgb2, i + 5, (cur >> 2) & 1, 255);
-			PNG_DO_GRAYSCALE(rgb3, i + 6, (cur >> 1) & 1, 255); PNG_DO_GRAYSCALE(rgb4, i + 7, (cur     ) & 1, 255);
+			PNG_Do_Grayscale(rgb1, i    , (cur >> 7)    , 255); PNG_Do_Grayscale(rgb2, i + 1, (cur >> 6) & 1, 255);
+			PNG_Do_Grayscale(rgb3, i + 2, (cur >> 5) & 1, 255); PNG_Do_Grayscale(rgb4, i + 3, (cur >> 4) & 1, 255);
+			PNG_Do_Grayscale(rgb1, i + 4, (cur >> 3) & 1, 255); PNG_Do_Grayscale(rgb2, i + 5, (cur >> 2) & 1, 255);
+			PNG_Do_Grayscale(rgb3, i + 6, (cur >> 1) & 1, 255); PNG_Do_Grayscale(rgb4, i + 7, (cur     ) & 1, 255);
 		}
 		for (; i < width; i++) {
 			mask = (7 - (i & 7));
-			PNG_DO_GRAYSCALE(rgb1, i, (src[j] >> mask) & 1, 255);
+			PNG_Do_Grayscale(rgb1, i, (src[j] >> mask) & 1, 255);
 		}
 		return;
 	case 2:
 		for (i = 0, j = 0; i < (width & ~0x3); i += 4, j++) {
 			cur = src[j];
-			PNG_DO_GRAYSCALE(rgb1, i    , (cur >> 6)    , 85); PNG_DO_GRAYSCALE(rgb2, i + 1, (cur >> 4) & 3, 85);
-			PNG_DO_GRAYSCALE(rgb3, i + 2, (cur >> 2) & 3, 85); PNG_DO_GRAYSCALE(rgb4, i + 3, (cur     ) & 3, 85);
+			PNG_Do_Grayscale(rgb1, i    , (cur >> 6)    , 85); PNG_Do_Grayscale(rgb2, i + 1, (cur >> 4) & 3, 85);
+			PNG_Do_Grayscale(rgb3, i + 2, (cur >> 2) & 3, 85); PNG_Do_Grayscale(rgb4, i + 3, (cur     ) & 3, 85);
 		}
 		for (; i < width; i++) {
 			mask = (3 - (i & 3)) * 2;
-			PNG_DO_GRAYSCALE(rgb1, i, (src[j] >> mask) & 3, 85);
+			PNG_Do_Grayscale(rgb1, i, (src[j] >> mask) & 3, 85);
 		}
 		return;
 	case 4:
 		for (i = 0, j = 0; i < (width & ~0x1); i += 2, j++) {
 			cur = src[j];
-			PNG_DO_GRAYSCALE(rgb1, i, cur >> 4, 17); PNG_DO_GRAYSCALE(rgb1, i + 1, cur & 0x0F, 17);
+			PNG_Do_Grayscale(rgb1, i, cur >> 4, 17); PNG_Do_Grayscale(rgb1, i + 1, cur & 0x0F, 17);
 		}
 		for (; i < width; i++) {
 			mask = (1 - (i & 1)) * 4;
-			PNG_DO_GRAYSCALE(rgb1, i, (src[j] >> mask) & 15, 17);
+			PNG_Do_Grayscale(rgb1, i, (src[j] >> mask) & 15, 17);
 		}
 		return;
 	case 8:
 		for (i = 0; i < (width & ~0x3); i += 4) {
-			PNG_DO_GRAYSCALE_X(rgb1, i    , i    ); PNG_DO_GRAYSCALE_X(rgb2, i + 1, i + 1);
-			PNG_DO_GRAYSCALE_X(rgb3, i + 2, i + 2); PNG_DO_GRAYSCALE_X(rgb4, i + 3, i + 3);
+			PNG_Do_Grayscale_X(rgb1, i    , i    ); PNG_Do_Grayscale_X(rgb2, i + 1, i + 1);
+			PNG_Do_Grayscale_X(rgb3, i + 2, i + 2); PNG_Do_Grayscale_X(rgb4, i + 3, i + 3);
 		}
-		for (; i < width; i++) { PNG_DO_GRAYSCALE_X(rgb1, i, i); }
+		for (; i < width; i++) { PNG_Do_Grayscale_X(rgb1, i, i); }
 		return;
 	case 16:
-		for (i = 0; i < width; i++) { PNG_DO_GRAYSCALE_X(rgb1, i, i << 1); }
+		for (i = 0; i < width; i++) { PNG_Do_Grayscale_X(rgb1, i, i << 1); }
 		return;
 	}
 }
 
 void Png_Expand_RGB(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
-#define PNG_DO_RGB__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], 255);
-#define PNG_DO_RGB_16(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 3], src[srcI + 5], 255);
+#define PNG_Do_RGB__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], 255);
+#define PNG_Do_RGB_16(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 3], src[srcI + 5], 255);
 
 	if (bitsPerSample == 8) {
 		for (i = 0, j = 0; i < (width & ~0x03); i += 4, j += 12) {
-			PNG_DO_RGB__8(i    , j    ); PNG_DO_RGB__8(i + 1, j + 3);
-			PNG_DO_RGB__8(i + 2, j + 6); PNG_DO_RGB__8(i + 3, j + 9);
+			PNG_Do_RGB__8(i    , j    ); PNG_Do_RGB__8(i + 1, j + 3);
+			PNG_Do_RGB__8(i + 2, j + 6); PNG_Do_RGB__8(i + 3, j + 9);
 		}
-		for (; i < width; i++, j += 3) { PNG_DO_RGB__8(i, j); }
+		for (; i < width; i++, j += 3) { PNG_Do_RGB__8(i, j); }
 	} else {
-		for (i = 0, j = 0; i < width; i++, j += 6) { PNG_DO_RGB_16(i, j); }
+		for (i = 0, j = 0; i < width; i++, j += 6) { PNG_Do_RGB_16(i, j); }
 	}
 }
 
 void Png_Expand_INDEXED(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j, mask;
 	UInt8 cur;
-#define PNG_DO_INDEXED(dstI, srcI) dst[dstI] = palette[srcI];
+#define PNG_Do_Indexed(dstI, srcI) dst[dstI] = palette[srcI];
 
 	switch (bitsPerSample) {
 	case 1:
 		for (i = 0, j = 0; i < (width & ~0x7); i += 8, j++) {
 			cur = src[j];
-			PNG_DO_INDEXED(i    , (cur >> 7)    ); PNG_DO_INDEXED(i + 1, (cur >> 6) & 1);
-			PNG_DO_INDEXED(i + 2, (cur >> 5) & 1); PNG_DO_INDEXED(i + 3, (cur >> 4) & 1);
-			PNG_DO_INDEXED(i + 4, (cur >> 3) & 1); PNG_DO_INDEXED(i + 5, (cur >> 2) & 1);
-			PNG_DO_INDEXED(i + 6, (cur >> 1) & 1); PNG_DO_INDEXED(i + 7, (cur     ) & 1);
+			PNG_Do_Indexed(i    , (cur >> 7)    ); PNG_Do_Indexed(i + 1, (cur >> 6) & 1);
+			PNG_Do_Indexed(i + 2, (cur >> 5) & 1); PNG_Do_Indexed(i + 3, (cur >> 4) & 1);
+			PNG_Do_Indexed(i + 4, (cur >> 3) & 1); PNG_Do_Indexed(i + 5, (cur >> 2) & 1);
+			PNG_Do_Indexed(i + 6, (cur >> 1) & 1); PNG_Do_Indexed(i + 7, (cur     ) & 1);
 		}
 		for (; i < width; i++) {
 			mask = (7 - (i & 7));
-			PNG_DO_INDEXED(i, (src[j] >> mask) & 1);
+			PNG_Do_Indexed(i, (src[j] >> mask) & 1);
 		}
 		return;
 	case 2:
 		for (i = 0, j = 0; i < (width & ~0x3); i += 4, j++) {
 			cur = src[j];
-			PNG_DO_INDEXED(i    , (cur >> 6)    ); PNG_DO_INDEXED(i + 1, (cur >> 4) & 3);
-			PNG_DO_INDEXED(i + 2, (cur >> 2) & 3); PNG_DO_INDEXED(i + 3, (cur     ) & 3);
+			PNG_Do_Indexed(i    , (cur >> 6)    ); PNG_Do_Indexed(i + 1, (cur >> 4) & 3);
+			PNG_Do_Indexed(i + 2, (cur >> 2) & 3); PNG_Do_Indexed(i + 3, (cur     ) & 3);
 		}
 		for (; i < width; i++) {
 			mask = (3 - (i & 3)) * 2;
-			PNG_DO_INDEXED(i, (src[j] >> mask) & 3);
+			PNG_Do_Indexed(i, (src[j] >> mask) & 3);
 		}
 		return;
 	case 4:
 		for (i = 0, j = 0; i < (width & ~0x1); i += 2, j++) {
 			cur = src[j];
-			PNG_DO_INDEXED(i, cur >> 4); PNG_DO_INDEXED(i + 1, cur & 0x0F);
+			PNG_Do_Indexed(i, cur >> 4); PNG_Do_Indexed(i + 1, cur & 0x0F);
 		}
 		for (; i < width; i++) {
 			mask = (1 - (i & 1)) * 4;
-			PNG_DO_INDEXED(i, (src[j] >> mask) & 15);
+			PNG_Do_Indexed(i, (src[j] >> mask) & 15);
 		}
 		return;
 	case 8:
 		for (i = 0; i < (width & ~0x3); i += 4) {
-			PNG_DO_INDEXED(i    , src[i]    ); PNG_DO_INDEXED(i + 1, src[i + 1]);
-			PNG_DO_INDEXED(i + 2, src[i + 2]); PNG_DO_INDEXED(i + 3, src[i + 3]);
+			PNG_Do_Indexed(i    , src[i]    ); PNG_Do_Indexed(i + 1, src[i + 1]);
+			PNG_Do_Indexed(i + 2, src[i + 2]); PNG_Do_Indexed(i + 3, src[i + 3]);
 		}
-		for (; i < width; i++) { PNG_DO_INDEXED(i, src[i]); }
+		for (; i < width; i++) { PNG_Do_Indexed(i, src[i]); }
 		return;
 	}
 }
@@ -239,33 +239,33 @@ void Png_Expand_INDEXED(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8
 void Png_Expand_GRAYSCALE_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 	UInt8 rgb1, rgb2, rgb3, rgb4;
-#define PNG_DO_GRAYSCALE_A__8(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 1]);
-#define PNG_DO_GRAYSCALE_A_16(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 2]);
+#define PNG_Do_Grayscale_A__8(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 1]);
+#define PNG_Do_Grayscale_A_16(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 2]);
 
 	if (bitsPerSample == 8) {
 		for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 8) {
-			PNG_DO_GRAYSCALE_A__8(rgb1, i    , j    ); PNG_DO_GRAYSCALE_A__8(rgb2, i + 1, j + 2);
-			PNG_DO_GRAYSCALE_A__8(rgb3, i + 2, j + 4); PNG_DO_GRAYSCALE_A__8(rgb4, i + 3, j + 5);
+			PNG_Do_Grayscale_A__8(rgb1, i    , j    ); PNG_Do_Grayscale_A__8(rgb2, i + 1, j + 2);
+			PNG_Do_Grayscale_A__8(rgb3, i + 2, j + 4); PNG_Do_Grayscale_A__8(rgb4, i + 3, j + 5);
 		}
-		for (; i < width; i++, j += 2) { PNG_DO_GRAYSCALE_A__8(rgb1, i, j); }
+		for (; i < width; i++, j += 2) { PNG_Do_Grayscale_A__8(rgb1, i, j); }
 	} else {
-		for (i = 0, j = 0; i < width; i++, j += 4) { PNG_DO_GRAYSCALE_A_16(rgb1, i, j); }
+		for (i = 0, j = 0; i < width; i++, j += 4) { PNG_Do_Grayscale_A_16(rgb1, i, j); }
 	}
 }
 
 void Png_Expand_RGB_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
-#define PNG_DO_RGB_A__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
-#define PNG_DO_RGB_A_16(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 3], src[srcI + 5], src[srcI + 7]);
+#define PNG_Do_RGB_A__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
+#define PNG_Do_RGB_A_16(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 3], src[srcI + 5], src[srcI + 7]);
 
 	if (bitsPerSample == 8) {
 		for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 16) {
-			PNG_DO_RGB_A__8(i    , j    ); PNG_DO_RGB_A__8(i + 1, j + 4 );
-			PNG_DO_RGB_A__8(i + 2, j + 8); PNG_DO_RGB_A__8(i + 3, j + 12);
+			PNG_Do_RGB_A__8(i    , j    ); PNG_Do_RGB_A__8(i + 1, j + 4 );
+			PNG_Do_RGB_A__8(i + 2, j + 8); PNG_Do_RGB_A__8(i + 3, j + 12);
 		}
-		for (; i < width; i++, j += 4) { PNG_DO_RGB_A__8(i, j); }
+		for (; i < width; i++, j += 4) { PNG_Do_RGB_A__8(i, j); }
 	} else {
-		for (i = 0, j = 0; i < width; i++, j += 8) { PNG_DO_RGB_A_16(i, j); }
+		for (i = 0, j = 0; i < width; i++, j += 8) { PNG_Do_RGB_A_16(i, j); }
 	}
 }
 
@@ -314,7 +314,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 		UInt32 fourCC = Stream_ReadU32_BE(stream);
 
 		switch (fourCC) {
-		case PNG_FOURCC('I', 'H', 'D', 'R'): {
+		case PNG_FourCC('I', 'H', 'D', 'R'): {
 			if (dataSize != 13) ErrorHandler_Fail("PNG header chunk has invalid size");
 			gotHeader = true;
 
@@ -359,7 +359,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			}
 		} break;
 
-		case PNG_FOURCC('P', 'L', 'T', 'E'): {
+		case PNG_FourCC('P', 'L', 'T', 'E'): {
 			if (dataSize > PNG_PALETTE * 3) ErrorHandler_Fail("PNG palette has too many entries");
 			if ((dataSize % 3) != 0) ErrorHandler_Fail("PNG palette chunk has invalid size");
 
@@ -370,7 +370,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			}
 		} break;
 
-		case PNG_FOURCC('t', 'R', 'N', 'S'): {
+		case PNG_FourCC('t', 'R', 'N', 'S'): {
 			if (col == PNG_COL_GRAYSCALE) {
 				if (dataSize != 2) ErrorHandler_Fail("PNG only allows one explicit transparency colour");
 				UInt8 palRGB = (UInt8)Stream_ReadU16_BE(stream);
@@ -395,7 +395,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			}
 		} break;
 
-		case PNG_FOURCC('I', 'D', 'A', 'T'): {
+		case PNG_FourCC('I', 'D', 'A', 'T'): {
 			Stream datStream;
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
 			if (!initInflate) {
@@ -443,7 +443,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			}
 		} break;
 
-		case PNG_FOURCC('I', 'E', 'N', 'D'): {
+		case PNG_FourCC('I', 'E', 'N', 'D'): {
 			readingChunks = false;
 			if (dataSize != 0) ErrorHandler_Fail("PNG end chunk must be empty");
 		} break;

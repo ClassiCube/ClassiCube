@@ -31,6 +31,14 @@ BlockID World_SafeGetBlock_3I(Vector3I p);
 bool World_IsValidPos(Int32 x, Int32 y, Int32 z);
 bool World_IsValidPos_3I(Vector3I p);
 
+enum ENV_VAR {
+	ENV_VAR_EDGE_BLOCK, ENV_VAR_SIDES_BLOCK, ENV_VAR_EDGE_HEIGHT, ENV_VAR_SIDES_OFFSET,
+	ENV_VAR_CLOUDS_HEIGHT, ENV_VAR_CLOUDS_SPEED, ENV_VAR_WEATHER_SPEED, ENV_VAR_WEATHER_FADE,
+	ENV_VAR_WEATHER, ENV_VAR_EXP_FOG, ENV_VAR_SKYBOX_HOR_SPEED, ENV_VAR_SKYBOX_VER_SPEED,
+	ENV_VAR_SKY_COL, ENV_VAR_CLOUDS_COL, ENV_VAR_FOG_COL, ENV_VAR_SUN_COL,
+	ENV_VAR_SHADOW_COL,
+};
+
 BlockID WorldEnv_EdgeBlock;
 BlockID WorldEnv_SidesBlock;
 Int32 WorldEnv_EdgeHeight;
@@ -39,11 +47,11 @@ Int32 WorldEnv_SidesOffset;
 Int32 WorldEnv_CloudsHeight;
 Real32 WorldEnv_CloudsSpeed;
 
-typedef enum Weather_ { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY } Weather;
+enum WEATHER { WEATHER_SUNNY, WEATHER_RAINY, WEATHER_SNOWY };
 extern const UInt8* Weather_Names[3];
 Real32 WorldEnv_WeatherSpeed;
 Real32 WorldEnv_WeatherFade;
-Weather WorldEnv_Weather;
+Int32 WorldEnv_Weather;
 bool WorldEnv_ExpFog;
 Real32 WorldEnv_SkyboxHorSpeed;
 Real32 WorldEnv_SkyboxVerSpeed;

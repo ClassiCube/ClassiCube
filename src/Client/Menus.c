@@ -2309,7 +2309,7 @@ void EnvSettingsScreen_SetShadowCol(STRING_PURE String* v) { WorldEnv_SetShadowC
 void EnvSettingsScreen_GetWeather(STRING_TRANSIENT String* v) { String_AppendConst(v, Weather_Names[WorldEnv_Weather]); }
 void EnvSettingsScreen_SetWeather(STRING_PURE String* v) {
 	UInt32 raw = Utils_ParseEnum(v, 0, Weather_Names, Array_Elems(Weather_Names));
-	WorldEnv_SetWeather((Weather)raw); 
+	WorldEnv_SetWeather(raw); 
 }
 
 void EnvSettingsScreen_GetWeatherSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, WorldEnv_WeatherSpeed, 2); }

@@ -183,18 +183,20 @@ void Fcm_Load(Stream* stream) {
 /*########################################################################################################################*
 *---------------------------------------------------------NBTFile---------------------------------------------------------*
 *#########################################################################################################################*/
-#define NBT_TAG_END         0
-#define NBT_TAG_INT8        1
-#define NBT_TAG_INT16       2
-#define NBT_TAG_INT32       3
-#define NBT_TAG_INT64       4
-#define NBT_TAG_REAL32      5
-#define NBT_TAG_REAL64      6
-#define NBT_TAG_INT8_ARRAY  7
-#define NBT_TAG_STRING      8
-#define NBT_TAG_LIST        9
-#define NBT_TAG_COMPOUND    10
-#define NBT_TAG_INT32_ARRAY 11
+enum NBT_TAG {
+	NBT_TAG_END,
+	NBT_TAG_INT8,
+	NBT_TAG_INT16,
+	NBT_TAG_INT32,
+	NBT_TAG_INT64,
+	NBT_TAG_REAL32,
+	NBT_TAG_REAL64,
+	NBT_TAG_INT8_ARRAY,
+	NBT_TAG_STRING,
+	NBT_TAG_LIST,
+	NBT_TAG_COMPOUND,
+	NBT_TAG_INT32_ARRAY,
+};
 
 #define NBT_SMALL_SIZE STRING_SIZE
 struct NbtTag_;

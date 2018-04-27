@@ -108,7 +108,7 @@ void GfxCommon_Mode2D(Int32 width, Int32 height) {
 	Matrix ortho;
 	Gfx_CalcOrthoMatrix((Real32)width, (Real32)height, &ortho);
 	Gfx_LoadMatrix(&ortho);
-	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Gfx_LoadIdentityMatrix();
 
 	Gfx_SetDepthTest(false);
@@ -120,7 +120,7 @@ void GfxCommon_Mode2D(Int32 width, Int32 height) {
 void GfxCommon_Mode3D(void) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&Gfx_Projection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Gfx_LoadMatrix(&Gfx_View);
 
 	Gfx_SetDepthTest(true);

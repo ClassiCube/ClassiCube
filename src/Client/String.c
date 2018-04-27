@@ -488,48 +488,87 @@ bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value) {
 	*value = (UInt16)tmp; return true;
 }
 
-bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value) {
-	Int32 sum = 0, i = 0;
-	*value = 0;
+Int32 Convert_CompareDigits(const UInt8* digits, const UInt8* magnitude) {
+	Int32 i;
+	for (i = 0; ; i++) {
+		if (magnitude[i] == NULL)     return  0;
+		if (digits[i] > magnitude[i]) return  1;
+		if (digits[i] < magnitude[i]) return -1;
+	}
+	return 0;
+}
+
+bool Convert_TryParseDigits(STRING_PURE String* str, bool* negative, UInt8* digits, Int32 maxDigits) {
+	*negative = false;
+	if (str->length == 0) return false;
+	UInt8* start = digits; digits += (maxDigits - 1);
 
 	/* Handle number signs */
-	bool negate = false;
-	if (str->length == 0) return false;
-	if (str->buffer[0] == '-') { negate = true; i++; }
-	if (str->buffer[0] == '+') { i++; }
+	Int32 offset = 0, i = 0;
+	if (str->buffer[0] == '-') { *negative = true; offset = 1; }
+	if (str->buffer[0] == '+') { offset = 1; }
 
-	/* TODO: CHECK THIS WORKS!!! */
-	for (; i < str->length; i++) {
+	/* add digits, starting at last digit */
+	for (i = str->length - 1; i >= offset; i--) {
 		UInt8 c = str->buffer[i];
-		if (c < '0' || c > '9') return false;
-		Int32 digit = c - '0';
-
-		/* Magnitude of largest negative integer cannot be expressed
-		as a positive integer, so this case must be specially handled. */
-		if (sum == (Int32)214748364 && digit == 8 && negate) {
-			*value = Int32_MinValue;
-			return true;
-		}
-
-		/* Overflow handling */
-		if (sum >= (Int32)214748364) {
-			Int32 diff = sum - (Int32)214748364;
-			diff *= 10; diff += digit;
-
-			/* Handle magnitude of max negative value specially,
-			as it cannot be represented as a positive integer */
-			if (diff == 8 && negate) {
-				*value = Int32_MinValue;
-				return true;
-			}
-
-			/* Overflows max positive value */
-			if (diff > 7) return false;
-		}
-		sum *= 10; sum += digit;
+		if (c < '0' || c > '9' || digits < start) return false;
+		*digits-- = c;
 	}
 
-	if (negate) sum = -sum;
+	for (; digits >= start; ) { *digits-- = '0'; }
+	return true;
+}
+
+bool Convert_TryParseInt32(STRING_PURE String* str, Int32* value) {
+	*value = 0;
+	#define INT32_DIGITS 10
+	bool negative;	
+	UInt8 digits[INT32_DIGITS];
+	if (!Convert_TryParseDigits(str, &negative, digits, INT32_DIGITS)) return false;
+
+	Int32 i, compare;
+	if (negative) {
+		compare = Convert_CompareDigits(digits, "2147483648");
+		/* Special case, since |largest min value| is > |largest max value| */
+		if (compare == 0) { *value = Int32_MinValue; return true; }
+	} else {
+		compare = Convert_CompareDigits(digits, "2147483647");
+	}
+
+	if (compare > 0) return false;	
+	Int32 sum = 0;
+	for (i = 0; i < INT32_DIGITS; i++) {
+		sum *= 10; sum += digits[i] - '0';
+	}
+
+	if (negative) sum = -sum;
+	*value = sum;
+	return true;
+}
+
+bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value) {
+	*value = 0;
+	#define INT64_DIGITS 19
+	bool negative;
+	UInt8 digits[INT64_DIGITS];
+	if (!Convert_TryParseDigits(str, &negative, digits, INT64_DIGITS)) return false;
+
+	Int32 i, compare;
+	if (negative) {
+		compare = Convert_CompareDigits(digits, "9223372036854775808");
+		/* Special case, since |largest min value| is > |largest max value| */
+		if (compare == 0) { *value = -9223372036854775807LL - 1LL; return true; }
+	} else {
+		compare = Convert_CompareDigits(digits, "9223372036854775807");
+	}
+
+	if (compare > 0) return false;
+	Int64 sum = 0;
+	for (i = 0; i < INT64_DIGITS; i++) {
+		sum *= 10; sum += digits[i] - '0';
+	}
+
+	if (negative) sum = -sum;
 	*value = sum;
 	return true;
 }

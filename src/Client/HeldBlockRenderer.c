@@ -201,7 +201,7 @@ void HeldBlockRenderer_Render(Real64 delta) {
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&held_blockProjection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Matrix view = Gfx_View;
 	HeldBlockRenderer_SetMatrix();
 
@@ -213,7 +213,7 @@ void HeldBlockRenderer_Render(Real64 delta) {
 	Gfx_View = view;
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&Gfx_Projection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 }
 
 void HeldBlockRenderer_Init(void) {

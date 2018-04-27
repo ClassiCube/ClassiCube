@@ -78,7 +78,7 @@ void EnvRenderer_RenderClouds(Real64 deltaTime) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_TEXTURE);
 	Matrix matrix = Matrix_Identity; matrix.Row3.X = offset; /* translate X axis */
 	Gfx_LoadMatrix(&matrix);
-	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 
 	Gfx_SetAlphaTest(true);
 	Gfx_SetTexturing(true);
@@ -91,7 +91,7 @@ void EnvRenderer_RenderClouds(Real64 deltaTime) {
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_TEXTURE);
 	Gfx_LoadIdentityMatrix();
-	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 }
 
 void EnvRenderer_RenderSky(Real64 deltaTime) {

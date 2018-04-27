@@ -166,7 +166,7 @@ void Game_UpdateProjection(void) {
 
 	Gfx_SetMatrixMode(MATRIX_TYPE_PROJECTION);
 	Gfx_LoadMatrix(&Gfx_Projection);
-	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Event_RaiseVoid(&GfxEvents_ProjectionChanged);
 }
 
@@ -561,7 +561,7 @@ void Game_LimitFPS(void) {
 }
 
 void Game_UpdateViewMatrix(void) {
-	Gfx_SetMatrixMode(MATRIX_TYPE_MODELVIEW);
+	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Camera_Active->GetView(&Gfx_View);
 	Gfx_LoadMatrix(&Gfx_View);
 	FrustumCulling_CalcFrustumEquations(&Gfx_Projection, &Gfx_View);
@@ -783,7 +783,6 @@ void Cw_Save(Stream* stream) { }
 void Dat_Load(Stream* stream) { }
 void Schematic_Save(Stream* stream) { }
 void Gfx_MakeApiInfo(void) { }
-bool Convert_TryParseInt64(STRING_PURE String* str, Int64* value) { return true; }
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
 Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
 Screen* TexIdsOverlay_MakeInstance(void) { return NULL; }

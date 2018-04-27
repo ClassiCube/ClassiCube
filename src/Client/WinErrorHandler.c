@@ -20,7 +20,13 @@ String_AppendConst(&logMsg, "\r\n");
 #define ErrorHandler_WriteLogEnd()\
 String_AppendConst(&logMsg, "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
 
+LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
+	//pInfo->ExceptionRecord->
+	return EXCEPTION_EXECUTE_HANDLER;
+}
+
 void ErrorHandler_Init(const UInt8* logFile) {
+	SetUnhandledExceptionFilter(ErrorHandler_UnhandledFilter);
 	/* TODO: Open log file */
 }
 
@@ -89,7 +95,7 @@ void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 		ErrorHandler_Hex(addr, hex);
 
 		if (SymFromAddr(process, addr, NULL, &sym.Symbol)) {
-			String_Format3(str, "%i) %c - 0x%c\r\n", &number, sym.Symbol.Name, hex);
+			String_Format3(str, "%i) 0x%c - %c\r\n", &number, hex, sym.Symbol.Name);
 		} else {
 			String_Format2(str, "%i) 0x%c\r\n", &number, hex);
 		}

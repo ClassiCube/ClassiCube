@@ -195,8 +195,7 @@ void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	table->FirstOffsets[0] = 0;
 	table->EndCodewords[0] = -1;
 
-	Int32 bl_count[INFLATE_MAX_BITS];
-	Platform_MemSet(bl_count, 0, sizeof(bl_count));
+	Int32 bl_count[INFLATE_MAX_BITS] = { 0 };
 	for (i = 0; i < count; i++) {
 		bl_count[bitLens[i]]++;
 	}

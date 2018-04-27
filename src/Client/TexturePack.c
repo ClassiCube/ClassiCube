@@ -304,10 +304,7 @@ bool TextureCache_GetStream(STRING_PURE String* url, Stream* stream) {
 
 	void* file;
 	ReturnCode result = Platform_FileOpen(&file, &path);
-	if (result == ReturnCode_FileNotFound) {
-		Platform_MemSet(stream, 0, sizeof(Stream));
-		return false;
-	}
+	if (result == ReturnCode_FileNotFound) return false;
 
 	ErrorHandler_CheckOrFail(result, "TextureCache - GetStream");
 	Stream_FromFile(stream, file, &path);
