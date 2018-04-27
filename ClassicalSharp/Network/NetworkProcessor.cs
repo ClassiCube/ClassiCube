@@ -59,7 +59,7 @@ namespace ClassicalSharp.Network {
 			cpe = new CPEProtocol(game);
 			cpeBlockDefs = new CPEProtocolBlockDefs(game);
 			wom = new WoMProtocol(game);
-			ResetProtocols();
+			ResetState();
 			
 			classic.WriteLogin(game.Username, game.Mppass);
 			SendPacket();
@@ -190,21 +190,22 @@ namespace ClassicalSharp.Network {
 				packetSizes[i] = 0;
 			}
 						
-			reader.ExtendedPositions = false; reader.ExtendedBlocks = false;
-			writer.ExtendedPositions = false; writer.ExtendedBlocks = false;
-			BlockInfo.SetMaxUsed(255);
-			
-			ResetProtocols();
-			cpeData.Reset();
+			BlockInfo.SetMaxUsed(255);			
+			ResetState();			
 			Dispose();
 		}
 		
-		void ResetProtocols() {
+		void ResetState() {
 			if (classic == null) return; // null if no successful connection ever made before		
+			
+			cpeData.Reset();
 			classic.Reset();
 			cpe.Reset();
 			cpeBlockDefs.Reset();
 			wom.Reset();
+			
+			reader.ExtendedPositions = false; reader.ExtendedBlocks = false;
+			writer.ExtendedPositions = false; writer.ExtendedBlocks = false;
 		}
 		
 		internal Action[] handlers = new Action[256];
@@ -225,6 +226,7 @@ namespace ClassicalSharp.Network {
 		
 		public override void OnNewMap(Game game) {
 			// wipe all existing entity states
+			if (classic == null) return;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
 				classic.RemoveEntity((byte)i);
 			}

@@ -21,7 +21,7 @@ String_AppendConst(&logMsg, "\r\n");
 String_AppendConst(&logMsg, "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
 
 LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
-	//pInfo->ExceptionRecord->
+	pInfo->ExceptionRecord->
 	return EXCEPTION_EXECUTE_HANDLER;
 }
 
