@@ -138,6 +138,9 @@ namespace ClassicalSharp.Model {
 			int col = p.Colour();
 
 			bool _64x64 = p.SkinType != SkinType.Type64x32;
+			// only apply when using humanoid skins
+			_64x64 &= UsesHumanSkin || p.MobTextureId > 0;
+			
 			uScale = p.uScale * 0.015625f;
 			vScale = p.vScale * (_64x64 ? 0.015625f : 0.03125f);
 			

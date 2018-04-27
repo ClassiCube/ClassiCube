@@ -103,8 +103,13 @@ void IModel_Render(IModel* model, Entity* entity) {
 void IModel_SetupState(IModel* model, Entity* entity) {
 	model->index = 0;
 	PackedCol col = entity->VTABLE->GetCol(entity);
-	IModel_uScale = 1.0f / 64.0f; 
-	IModel_vScale = 1.0f / 32.0f;
+
+	bool _64x64 = entity->SkinType != SKIN_TYPE_64x32;
+	/* only apply when using humanoid skins */
+	_64x64 &= model->UsesHumanSkin || entity->MobTextureId != NULL;
+
+	IModel_uScale = entity->uScale * 0.015625f;
+	IModel_vScale = entity->vScale * (_64x64 ? 0.015625f : 0.03125f);
 
 	IModel_Cols[0] = col;
 	if (!entity->NoShade) {
@@ -132,7 +137,7 @@ void IModel_UpdateVB(void) {
 GfxResourceID IModel_GetTexture(Entity* entity) {
 	IModel* model = IModel_ActiveModel;
 	GfxResourceID pTex = model->UsesHumanSkin ? entity->TextureId : entity->MobTextureId;
-	return pTex > 0 ? pTex : ModelCache_Textures[model->defaultTexIndex].TexID;
+	return pTex != NULL ? pTex : ModelCache_Textures[model->defaultTexIndex].TexID;
 }
 
 void IModel_DrawPart(ModelPart part) {

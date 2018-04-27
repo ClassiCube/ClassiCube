@@ -774,10 +774,6 @@ void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet*
 void HumanModel_SetupState(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	Gfx_SetAlphaTest(false);
-
-	bool _64x64 = entity->SkinType != SKIN_TYPE_64x32;
-	IModel_uScale = entity->uScale / 64.0f;
-	IModel_vScale = entity->vScale / (_64x64 ? 64.0f : 32.0f);
 }
 
 void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
