@@ -481,7 +481,7 @@ void Player_MakeNameTexture(Player* player) {
 		Drawer2D_Begin(&bmp);
 
 		Drawer2D_Cols[0xFF] = PackedCol_Create3(80, 80, 80);
-		String_Append(&shadowName, 0xFF);
+		String_AppendConst(&shadowName, "&\xFF");
 		String_AppendColorless(&shadowName, &displayName);
 		args.Text = shadowName;
 		Drawer2D_DrawText(&args, 3, 3);

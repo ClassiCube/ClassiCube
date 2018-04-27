@@ -274,7 +274,6 @@ UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
 	return i;
 }
 
-const UInt8* tagTypes[20] = { "END","INT8","INT16","INT32","INT64","REAL32","REAL64","INT8_ARRAY","STRING","LIST","COMPOUND","INT32_ARRAY" };
 typedef bool (*Nbt_Callback)(NbtTag* tag);
 void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent, Nbt_Callback callback) {
 	if (typeId == NBT_TAG_END) return;
@@ -284,21 +283,6 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent,
 	tag.Parent = parent;
 	tag.NameSize = readTagName ? Nbt_ReadString(stream, tag.NameBuffer) : 0;
 	tag.DataSize = 0;
-
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String msg = String_InitAndClearArray(msgBuffer);
-
-	while (parent != NULL) {
-		parent = parent->Parent;
-		String_AppendConst(&msg, "   ");
-	}
-
-	String name = { tag.NameBuffer, tag.NameSize, tag.NameSize };
-	String_AppendString(&msg, &name);
-	String_AppendConst(&msg, " (TAG_");
-	String_AppendConst(&msg, tagTypes[typeId]);
-	String_AppendConst(&msg, ")\r\n");
-	Platform_Log(&msg);
 
 	UInt8 childTagId;
 	UInt32 i, count;
@@ -361,17 +345,6 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent,
 	bool processed = callback(&tag);
 	/* don't leak memory for unprocessed tags */
 	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Platform_MemFree(&tag.DataBig);
-
-	String_Clear(&msg);
-	parent = tag.Parent;
-	while (parent != NULL) {
-		parent = parent->Parent;
-		String_AppendConst(&msg, "   ");
-	}
-	String_AppendConst(&msg, " -- processed: ");
-	String_AppendBool(&msg, processed);
-	String_AppendConst(&msg, ")\r\n");
-	Platform_Log(&msg);
 }
 
 bool IsTag(NbtTag* tag, const UInt8* tagName) {

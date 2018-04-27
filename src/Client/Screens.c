@@ -1473,7 +1473,7 @@ void DisconnectScreen_Init(GuiElement* elem) {
 
 void DisconnectScreen_Render(GuiElement* elem, Real64 delta) {
 	DisconnectScreen* screen = (DisconnectScreen*)elem;
-	if (!screen->CanReconnect) {
+	if (screen->CanReconnect) {
 		DisconnectScreen_UpdateDelayLeft(screen, delta);
 	}
 
@@ -1554,7 +1554,7 @@ Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE Str
 
 	String kick = String_FromConst("Kicked ");
 	String ban  = String_FromConst("Banned ");
-	screen->CanReconnect = String_StartsWith(&reason, &kick) || String_StartsWith(&reason, &ban);
+	screen->CanReconnect = !(String_StartsWith(&reason, &kick) || String_StartsWith(&reason, &ban));
 
 	Platform_MakeFont(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
 	Platform_MakeFont(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);

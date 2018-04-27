@@ -970,8 +970,8 @@ void InputWidget_RenderCaret(InputWidget* widget, Real64 delta) {
 	if (!widget->ShowCaret) return;
 
 	widget->CaretAccumulator += delta;
-	Real64 second = widget->CaretAccumulator - (Real64)Math_Floor((Real32)widget->CaretAccumulator);
-	if (second < 0.5) {
+	Real32 second = Math_ModF((Real32)widget->CaretAccumulator, 1.0);
+	if (second < 0.5f) {
 		Texture_RenderShaded(&widget->CaretTex, widget->CaretCol);
 	}
 }
@@ -2278,7 +2278,7 @@ void TextGroupWidget_UpdateDimensions(TextGroupWidget* widget) {
 String TextGroupWidget_UNSAFE_Get(TextGroupWidget* widget, Int32 i) {
 	UInt8* buffer = widget->Buffer + i * TEXTGROUPWIDGET_LEN;
 	UInt16 length = widget->LineLengths[i];
-	return String_Init(widget->Buffer, length, length);
+	return String_Init(buffer, length, length);
 }
 
 void TextGroupWidget_GetSelected(TextGroupWidget* widget, STRING_TRANSIENT String* text, Int32 x, Int32 y) {

@@ -654,21 +654,33 @@ void Inflate_Process(InflateState* state) {
 
 ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	InflateState* state = (InflateState*)stream->Meta_Inflate;
-	if (state->AvailIn == 0) {
-		/* Fully used up input buffer. Cycle back to start. */
-		if (state->NextIn == INFLATE_MAX_INPUT) state->NextIn = 0;
-
-		UInt8* ptr = &state->Input[state->NextIn];
-		UInt32 read, remaining = INFLATE_MAX_INPUT - state->NextIn;
-		ReturnCode code = state->Source->Read(state->Source, ptr, remaining, &read);
-		if (code != 0) { *modified = 0; return code; }
-		state->AvailIn += read;
-	}
-
+	*modified = 0;
 	state->Output = data;
 	state->AvailOut = count;
-	Inflate_Process(state);
-	*modified = count - state->AvailOut;
+
+	while (state->AvailOut > 0) {
+		if (state->State == INFLATE_STATE_DONE) break;
+		if (state->AvailIn == 0) {
+			/* Fully used up input buffer. Cycle back to start. */
+			if (state->NextIn == INFLATE_MAX_INPUT) state->NextIn = 0;
+
+			UInt8* ptr = &state->Input[state->NextIn];
+			UInt32 read, remaining = INFLATE_MAX_INPUT - state->NextIn;
+			ReturnCode code = state->Source->Read(state->Source, ptr, remaining, &read);
+
+			/* Did we fail to read in more input data? */
+			/* If there's a few bits of data in the bit buffer it doesn't matter since Inflate_Process
+			/* would have already processed as much as it possibly could already */
+			/* TODO: Is this assumption about bit buffer right */
+			if (code != 0 || read == 0) return code;
+			state->AvailIn += read;
+		}
+		
+		/* Reading data reduces available out */
+		UInt32 preAvailOut = state->AvailOut;
+		Inflate_Process(state);
+		*modified += (preAvailOut - state->AvailOut);
+	}
 	return 0;
 }
 

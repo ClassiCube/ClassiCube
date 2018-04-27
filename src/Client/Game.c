@@ -478,6 +478,7 @@ void Game_Load(void) {
 		ServerConnection_InitMultiplayer();
 	}
 	comp = ServerConnection_MakeComponent(); Game_AddComponent(&comp);
+	String_AppendConst(&ServerConnection_AppName, PROGRAM_APP_NAME);
 
 	Gfx_LostContextFunction = ServerConnection_Tick;
 	Camera_Init();
