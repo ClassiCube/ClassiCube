@@ -371,8 +371,8 @@ void Classic_WriteLogin(Stream* stream, STRING_PURE String* username, STRING_PUR
 
 void Classic_Handshake(Stream* stream) {
 	UInt8 protocolVer = Stream_ReadU8(stream);
-	Handlers_ReadString(stream, ServerConnection_ServerName.buffer);
-	Handlers_ReadString(stream, ServerConnection_ServerMOTD.buffer);
+	ServerConnection_ServerName = Handlers_ReadString(stream, ServerConnection_ServerName.buffer);
+	ServerConnection_ServerMOTD = Handlers_ReadString(stream, ServerConnection_ServerMOTD.buffer);
 	Chat_SetLogName(&ServerConnection_ServerName);
 
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;

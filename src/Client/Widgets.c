@@ -2158,11 +2158,12 @@ GuiElementVTABLE PlayerListWidgetVTABLE;
 void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool classic) {
 	widget->VTABLE = &PlayerListWidgetVTABLE;
 	Widget_Init((Widget*)widget);
-	widget->VTABLE->Init = PlayerListWidget_Init;
-	widget->VTABLE->Free = PlayerListWidget_Free;
-	widget->Reposition   = PlayerListWidget_Reposition;
-	widget->HorAnchor    = ANCHOR_CENTRE;
-	widget->VerAnchor    = ANCHOR_CENTRE;
+	widget->VTABLE->Init   = PlayerListWidget_Init;
+	widget->VTABLE->Render = PlayerListWidget_Render;
+	widget->VTABLE->Free   = PlayerListWidget_Free;
+	widget->Reposition = PlayerListWidget_Reposition;
+	widget->HorAnchor  = ANCHOR_CENTRE;
+	widget->VerAnchor  = ANCHOR_CENTRE;
 
 	widget->NamesCount = 0;
 	widget->Font = *font;

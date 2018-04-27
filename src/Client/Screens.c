@@ -1172,9 +1172,7 @@ void HUDScreen_DrawCrosshairs(void) {
 
 void HUDScreen_FreePlayerList(HUDScreen* screen) {
 	screen->WasShowingList = screen->ShowingList;
-	if (screen->ShowingList) {
-		Elem_TryFree(&screen->PlayerList);
-	}
+	if (screen->ShowingList) { Elem_TryFree(&screen->PlayerList); }
 	screen->ShowingList = false;
 }
 
@@ -1192,6 +1190,7 @@ void HUDScreen_ContextRecreated(void* obj) {
 	if (!screen->WasShowingList) return;
 	bool extended = ServerConnection_SupportsExtPlayerList && !Game_UseClassicTabList;
 	PlayerListWidget_Create(&screen->PlayerList, &screen->PlayerFont, !extended);
+	screen->ShowingList = true;
 
 	Elem_Init(&screen->PlayerList);
 	Widget_Reposition(&screen->PlayerList);

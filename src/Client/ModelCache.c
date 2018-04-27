@@ -863,7 +863,7 @@ IModel* HumanoidModel_GetInstance(void) {
 	IModel_SetPointers(HumanoidModel);
 	HumanoidModel.vertices = HumanoidModel_Vertices;
 	HumanoidModel.CalcHumanAnims = true;
-	HumanoidModel.UsesHumanSkin = true;
+	HumanoidModel.UsesHumanSkin  = true;
 	HumanoidModel.NameYOffset = 32.5f / 16.0f;
 	return &HumanoidModel;
 }
@@ -917,8 +917,8 @@ IModel* ChibiModel_GetInstance(void) {
 	IModel_SetPointers(ChibiModel);
 	ChibiModel.vertices = ChibiModel_Vertices;
 	ChibiModel.CalcHumanAnims = true;
-	ChibiModel.UsesHumanSkin = true;
-	ChibiModel.MaxScale = 3.0f;
+	ChibiModel.UsesHumanSkin  = true;
+	ChibiModel.MaxScale    = 3.0f;
 	ChibiModel.ShadowScale = 0.5f;
 	ChibiModel.NameYOffset = 20.2f / 16.0f;
 	return &ChibiModel;
@@ -956,10 +956,10 @@ IModel* SittingModel_GetInstance(void) {
 	IModel_SetPointers(SittingModel);
 	SittingModel.vertices = HumanoidModel_Vertices;
 	SittingModel.CalcHumanAnims = true;
-	SittingModel.UsesHumanSkin = true;
-	SittingModel.ShadowScale = 0.5f;
+	SittingModel.UsesHumanSkin  = true;
+	SittingModel.ShadowScale  = 0.5f;
 	SittingModel.GetTransform = SittingModel_GetTransform;
-	SittingModel.NameYOffset = 32.5f / 16.0f;
+	SittingModel.NameYOffset  = 32.5f / 16.0f;
 	return &SittingModel;
 }
 
@@ -1021,10 +1021,10 @@ IModel* HeadModel_GetInstance(void) {
 	IModel_SetPointers(HeadModel);
 	HeadModel.vertices = HumanoidModel_Vertices;
 	HeadModel.CalcHumanAnims = true;
-	HeadModel.UsesHumanSkin = true;
-	HeadModel.Pushes = false;
+	HeadModel.UsesHumanSkin  = true;
+	HeadModel.Pushes         = false;
 	HeadModel.GetTransform = HeadModel_GetTransform;
-	HeadModel.NameYOffset = 32.5f / 16.0f;
+	HeadModel.NameYOffset  = 32.5f / 16.0f;
 	return &HeadModel;
 }
 
@@ -1097,8 +1097,8 @@ IModel* ArmModel_GetInstance(void) {
 	IModel_SetPointers(ArmModel);
 	ArmModel.vertices = HumanoidModel_Vertices;
 	ArmModel.CalcHumanAnims = true;
-	ArmModel.UsesHumanSkin = true;
-	ArmModel.Pushes = false;
+	ArmModel.UsesHumanSkin  = true;
+	ArmModel.Pushes         = false;
 	ArmModel.NameYOffset = 0.5f;
 	return &ArmModel;
 }
@@ -1290,9 +1290,9 @@ void BlockModel_DrawModel(Entity* p) {
 IModel* BlockModel_GetInstance(void) {
 	IModel_Init(&BlockModel);
 	IModel_SetPointers(BlockModel);
-	BlockModel.Bobbing = true;
-	BlockModel.UsesSkin = true;
-	BlockModel.Pushes = false;
+	BlockModel.Bobbing  = false;
+	BlockModel.UsesSkin = false;
+	BlockModel.Pushes   = false;
 	BlockModel.RecalcProperties = BlockModel_RecalcProperties;
 	return &BlockModel;
 }

@@ -135,8 +135,8 @@ void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 		name  = *model;
 		scale = String_MakeNull();	
 	} else {
-		name  = String_UNSAFE_SubstringAt(model, sep + 1);
-		scale = String_UNSAFE_Substring(model, 0, sep);
+		name  = String_UNSAFE_Substring(model, 0, sep);
+		scale = String_UNSAFE_SubstringAt(model, sep + 1);
 	}
 
 	/* 'giant' model kept for backwards compatibility */
@@ -410,12 +410,27 @@ bool TabList_Valid(EntityID id) {
 	return TabList_PlayerNames[id] > 0 || TabList_ListNames[id] > 0 || TabList_GroupNames[id] > 0;
 }
 
+void TabList_RemoveAt(UInt32 index) {
+	UInt32 i;
+	StringsBuffer_Remove(&TabList_Buffer, index);
+	for (i = 0; i < TABLIST_MAX_NAMES; i++) {
+		if (TabList_PlayerNames[i] == index) { TabList_PlayerNames[i] = 0; }
+		if (TabList_PlayerNames[i] > index)  { TabList_PlayerNames[i]--; }
+
+		if (TabList_ListNames[i] == index) { TabList_ListNames[i] = 0; }
+		if (TabList_ListNames[i] > index)  { TabList_ListNames[i]--; }
+
+		if (TabList_GroupNames[i] == index) { TabList_GroupNames[i] = 0; }
+		if (TabList_GroupNames[i] > index)  { TabList_GroupNames[i]--; }
+	}
+}
+
 bool TabList_Remove(EntityID id) {
 	if (!TabList_Valid(id)) return false;
 
-	StringsBuffer_Remove(&TabList_Buffer, TabList_PlayerNames[id]); TabList_PlayerNames[id] = 0;
-	StringsBuffer_Remove(&TabList_Buffer, TabList_ListNames[id]);   TabList_ListNames[id]   = 0; 
-	StringsBuffer_Remove(&TabList_Buffer, TabList_GroupNames[id]);  TabList_GroupNames[id]  = 0;
+	TabList_RemoveAt(TabList_PlayerNames[id]);
+	TabList_RemoveAt(TabList_ListNames[id]);
+	TabList_RemoveAt(TabList_GroupNames[id]);
 	TabList_GroupRanks[id] = 0;
 	return true;
 }
@@ -711,7 +726,6 @@ void Player_Despawn(Entity* entity) {
 	Player* first = Player_FirstOtherWithSameSkin(player);
 	if (first == NULL) {
 		Gfx_DeleteTexture(&entity->TextureId);
-		player->NameTex = Texture_MakeInvalid();
 		Player_ResetSkin(player);
 	}
 	entity->VTABLE->ContextLost(entity);
