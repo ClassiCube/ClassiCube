@@ -18,7 +18,7 @@ String_AppendConst(&logMsg, raw_msg);\
 String_AppendConst(&logMsg, "\r\n");
 
 #define ErrorHandler_WriteLogEnd()\
-String_AppendConst(&logMsg, "\r\nPlease report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
+String_AppendConst(&logMsg, "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
 
 void ErrorHandler_Init(const UInt8* logFile) {
 	/* TODO: Open log file */
@@ -42,7 +42,7 @@ void ErrorHandler_FailWithCode(ReturnCode code, const UInt8* raw_msg) {
 	/* TODO: write to log file */
 	ErrorHandler_WriteLogBody(raw_msg);
 	String_AppendConst(&logMsg, "Return code: ");
-	String_AppendInt32(&logMsg, (Int32)code);
+	String_AppendUInt32(&logMsg, code);
 	String_AppendConst(&logMsg, "\r\n");
 	ErrorHandler_Backtrace(&logMsg);
 	ErrorHandler_WriteLogEnd();
@@ -56,12 +56,24 @@ void ErrorHandler_ShowDialog(const UInt8* title, const UInt8* msg) {
 	MessageBoxA(win, msg, title, 0);
 }
 
+void ErrorHandler_Hex(UInt64 addr, UInt8* hex) {
+	Int32 i;
+	for (i = 0; i < 16; i++) {
+		Int32 value = (Int32)(addr & 0x0F);
+		/* 48 = index of 0, 55 = index of (A - 10) */
+		hex[15 - i] = value < 10 ? (UInt8)(value + 48) : (UInt8)(value + 55);
+		addr >>= 4;
+	}
+	hex[16] = NULL; /* Null terminate hex characters */
+}
+
+
 struct SymbolAndName { SYMBOL_INFO Symbol; UInt8 Name[256]; };
 void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 	HANDLE process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
-	void* stack[50];
-	UInt16 frames = CaptureStackBackTrace(0, 50, stack, NULL);
+	void* stack[56];
+	UInt16 frames = CaptureStackBackTrace(0, 56, stack, NULL);
 
 	struct SymbolAndName sym = { 0 };
 	sym.Symbol.MaxNameLen = 255;
@@ -69,14 +81,17 @@ void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 
 	UInt32 i;
 	String_AppendConst(str, "Backtrace: \r\n");
+	UInt8 hex[17];
+
 	for (i = 0; i < frames; i++) {
 		Int32 number = frames - i - 1;
-		Int32 addr = (Int32)stack[i];
+		UInt64 addr = (UInt64)stack[i];
+		ErrorHandler_Hex(addr, hex);
 
-		if (SymFromAddr(process, (DWORD64)stfack[i], NULL, &sym.Symbol)) {
-			String_Format3(str, "%i) %c - 0x%i\r\n", &number, sym.Symbol.Name, &addr);
+		if (SymFromAddr(process, addr, NULL, &sym.Symbol)) {
+			String_Format3(str, "%i) %c - 0x%c\r\n", &number, sym.Symbol.Name, hex);
 		} else {
-			String_Format2(str, "%i) 0x%i\r\n", &number, &addr);
+			String_Format2(str, "%i) 0x%c\r\n", &number, hex);
 		}
 	}
 	String_AppendConst(str, "\r\n");

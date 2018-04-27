@@ -106,11 +106,13 @@ void Platform_MemCpy(void* dst, void* src, UInt32 numBytes) {
 void Platform_Log(STRING_PURE String* message) {
 	/* TODO: log to console */
 	OutputDebugStringA(message->buffer);
+	OutputDebugStringA("\n");
 }
 
 void Platform_LogConst(const UInt8* message) {
 	/* TODO: log to console */
 	OutputDebugStringA(message);
+	OutputDebugStringA("\n");
 }
 
 void Platform_Log4(const UInt8* format, const void* a1, const void* a2, const void* a3, const void* a4) {
