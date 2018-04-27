@@ -256,7 +256,7 @@ void BoxDesc_RotatedBox(BoxDesc* desc, Int32 x1, Int32 y1, Int32 z1, Int32 x2, I
 }
 
 
-ModelPart BoxDesc_BuildBox(IModel* m, BoxDesc* desc) {
+void BoxDesc_BuildBox(ModelPart* part, IModel* m, BoxDesc* desc) {
 	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
@@ -269,13 +269,11 @@ ModelPart BoxDesc_BuildBox(IModel* m, BoxDesc* desc) {
 	BoxDesc_XQuad(m, x, y + sidesW, sidesW, bodyH, z1, z2, y1, y2, x2, true); /* left */
 	BoxDesc_XQuad(m, x + sidesW + bodyW, y + sidesW, sidesW, bodyH, z2, z1, y1, y2, x1, true); /* right */
 
-	ModelPart part;
-	ModelPart_Init(&part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
+	ModelPart_Init(part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
 		desc->RotX, desc->RotY, desc->RotZ);
-	return part;
 }
 
-ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
+void BoxDesc_BuildRotatedBox(ModelPart* part, IModel* m, BoxDesc* desc) {
 	Int32 sidesW = desc->SidesW, bodyW = desc->BodyW, bodyH = desc->BodyH;
 	Real32 x1 = desc->X1, y1 = desc->Y1, z1 = desc->Z1;
 	Real32 x2 = desc->X2, y2 = desc->Y2, z2 = desc->Z2;
@@ -296,8 +294,7 @@ ModelPart BoxDesc_BuildRotatedBox(IModel* m, BoxDesc* desc) {
 		m->vertices[i] = vertex;
 	}
 
-	ModelPart part;
-	ModelPart_Init(&part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
+	ModelPart_Init(part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
 		desc->RotX, desc->RotY, desc->RotZ);
 	return part;
 }

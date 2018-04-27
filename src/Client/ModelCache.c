@@ -93,7 +93,7 @@ ModelPart Chicken_LeftLeg, Chicken_RightLeg, Chicken_LeftWing, Chicken_RightWing
 ModelVertex ChickenModel_Vertices[IMODEL_BOX_VERTICES * 6 + (IMODEL_QUAD_VERTICES * 2) * 2];
 IModel ChickenModel;
 
-ModelPart ChickenModel_MakeLeg(Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
+void ChickenModel_MakeLeg(ModelPart* part, Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
 #define ch_y1 (1.0f  / 64.0f)
 #define ch_y2 (5.0f  / 16.0f)
 #define ch_z2 (1.0f  / 16.0f)
@@ -105,10 +105,8 @@ ModelPart ChickenModel_MakeLeg(Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
 	BoxDesc_ZQuad(m, 36, 3, 1, 5,
 		legX1 / 16.0f, legX2 / 16.0f, ch_y1, ch_y2, ch_z2, false); /* vertical part of leg */
 
-	ModelPart part;
-	ModelPart_Init(&part, m->index - IMODEL_QUAD_VERTICES * 2, IMODEL_QUAD_VERTICES * 2,
+	ModelPart_Init(part, m->index - IMODEL_QUAD_VERTICES * 2, IMODEL_QUAD_VERTICES * 2,
 		0.0f / 16.0f, 5.0f / 16.0f, 1.0f / 16.0f);
-	return part;
 }
 
 void ChickenModel_CreateParts(void) {
@@ -117,34 +115,34 @@ void ChickenModel_CreateParts(void) {
 	BoxDesc_Box(&desc, -2, 9, -6, 2, 15, -3);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 9, -4);
-	Chicken_Head = BoxDesc_BuildBox(&ChickenModel, &desc);
+	BoxDesc_BuildBox(&Chicken_Head, &ChickenModel, &desc);
 
 	BoxDesc_Box(&desc, -1, 9, -7, 1, 11, -5);
 	BoxDesc_TexOrigin(&desc, 14, 4); /* TODO: Find a more appropriate name. */
 	BoxDesc_RotOrigin(&desc, 0, 9, -4);
-	Chicken_Head2 = BoxDesc_BuildBox(&ChickenModel, &desc);
+	BoxDesc_BuildBox(&Chicken_Head2, &ChickenModel, &desc);
 
 	BoxDesc_Box(&desc, -2, 11, -8, 2, 13, -6);
 	BoxDesc_TexOrigin(&desc, 14, 0);
 	BoxDesc_RotOrigin(&desc, 0, 9, -4);
-	Chicken_Head3 = BoxDesc_BuildBox(&ChickenModel, &desc);
+	BoxDesc_BuildBox(&Chicken_Head3, &ChickenModel, &desc);
 
 	BoxDesc_RotatedBox(&desc, -3, 5, -4, 3, 11, 3);
 	BoxDesc_TexOrigin(&desc, 0, 9);
-	Chicken_Torso = BoxDesc_BuildRotatedBox(&ChickenModel, &desc);
+	BoxDesc_BuildRotatedBox(&Chicken_Torso, &ChickenModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 7, -3, -3, 11, 3);
 	BoxDesc_TexOrigin(&desc, 24, 13);
 	BoxDesc_RotOrigin(&desc, -3, 11, 0);
-	Chicken_LeftWing = BoxDesc_BuildBox(&ChickenModel, &desc);
+	BoxDesc_BuildBox(&Chicken_LeftWing, &ChickenModel, &desc);
 
 	BoxDesc_Box(&desc, 3, 7, -3, 4, 11, 3);
 	BoxDesc_TexOrigin(&desc, 24, 13);
 	BoxDesc_RotOrigin(&desc, 3, 11, 0);
-	Chicken_RightWing = BoxDesc_BuildBox(&ChickenModel, &desc);
+	BoxDesc_BuildBox(&Chicken_RightWing, &ChickenModel, &desc);
 
-	Chicken_LeftLeg = ChickenModel_MakeLeg(-3, 0, -2, -1);
-	Chicken_RightLeg = ChickenModel_MakeLeg(0, 3, 1, 2);
+	ChickenModel_MakeLeg(&Chicken_LeftLeg, -3, 0, -2, -1);
+	ChickenModel_MakeLeg(&Chicken_RightLeg, 0, 3, 1, 2);
 }
 
 Real32 ChickenModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
@@ -198,31 +196,31 @@ void CreeperModel_CreateParts(void) {
 	BoxDesc_Box(&desc, -4, 18, -4, 4, 26, 4);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 18, 0);
-	Creeper_Head = BoxDesc_BuildBox(&CreeperModel, &desc);
+	BoxDesc_BuildBox(&Creeper_Head, &CreeperModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 6, -2, 4, 18, 2);
 	BoxDesc_TexOrigin(&desc, 16, 16);
-	Creeper_Torso = BoxDesc_BuildBox(&CreeperModel, &desc);
+	BoxDesc_BuildBox(&Creeper_Torso, &CreeperModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 0, -6, 0, 6, -2);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, -2);
-	Creeper_LeftLegFront = BoxDesc_BuildBox(&CreeperModel, &desc);
+	BoxDesc_BuildBox(&Creeper_LeftLegFront, &CreeperModel, &desc);
 
 	BoxDesc_Box(&desc, 0, 0, -6, 4, 6, -2);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, -2);
-	Creeper_RightLegFront = BoxDesc_BuildBox(&CreeperModel, &desc);
+	BoxDesc_BuildBox(&Creeper_RightLegFront, &CreeperModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 0, 2, 0, 6, 6);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, 2);
-	Creeper_LeftLegBack = BoxDesc_BuildBox(&CreeperModel, &desc);
+	BoxDesc_BuildBox(&Creeper_LeftLegBack, &CreeperModel, &desc);
 
 	BoxDesc_Box(&desc, 0, 0, 2, 4, 6, 6);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, 2);
-	Creeper_RightLegBack = BoxDesc_BuildBox(&CreeperModel, &desc);
+	BoxDesc_BuildBox(&Creeper_RightLegBack, &CreeperModel, &desc);
 }
 
 Real32 CreeperModel_GetEyeY(Entity* entity) { return 22.0f / 16.0f; }
@@ -268,31 +266,31 @@ void PigModel_CreateParts(void) {
 	BoxDesc_Box(&desc, -4, 8, -14, 4, 16, -6);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 12, -6);
-	Pig_Head = BoxDesc_BuildBox(&PigModel, &desc);
+	BoxDesc_BuildBox(&Pig_Head, &PigModel, &desc);
 
 	BoxDesc_RotatedBox(&desc, -5, 6, -8, 5, 14, 8);
 	BoxDesc_TexOrigin(&desc, 28, 8);
-	Pig_Torso = BoxDesc_BuildRotatedBox(&PigModel, &desc);
+	BoxDesc_BuildRotatedBox(&Pig_Torso, &PigModel, &desc);
 
 	BoxDesc_Box(&desc, -5, 0, -7, -1, 6, -3);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, -5);
-	Pig_LeftLegFront = BoxDesc_BuildBox(&PigModel, &desc);
+	BoxDesc_BuildBox(&Pig_LeftLegFront, &PigModel, &desc);
 
 	BoxDesc_Box(&desc, 1, 0, -7, 5, 6, -3);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, -5);
-	Pig_RightLegFront = BoxDesc_BuildBox(&PigModel, &desc);
+	BoxDesc_BuildBox(&Pig_RightLegFront, &PigModel, &desc);
 
 	BoxDesc_Box(&desc, -5, 0, 5, -1, 6, 9);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, 7);
-	Pig_LeftLegBack = BoxDesc_BuildBox(&PigModel, &desc);
+	BoxDesc_BuildBox(&Pig_LeftLegBack, &PigModel, &desc);
 
 	BoxDesc_Box(&desc, 1, 0, 5, 5, 6, 9);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 6, 7);
-	Pig_RightLegBack = BoxDesc_BuildBox(&PigModel, &desc);
+	BoxDesc_BuildBox(&Pig_RightLegBack, &PigModel, &desc);
 }
 
 Real32 PigModel_GetEyeY(Entity* entity) { return 12.0f / 16.0f; }
@@ -342,43 +340,43 @@ void SheepModel_CreateParts(void) {
 	BoxDesc_Box(&desc, -3, 16, -14, 3, 22, -6);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 18, -8);
-	Sheep_Head = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Sheep_Head, &SheepModel, &desc);
 
 	BoxDesc_RotatedBox(&desc, -4, 12, -8, 4, 18, 8);
 	BoxDesc_TexOrigin(&desc, 28, 8);
-	Sheep_Torso = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildRotatedBox(&Sheep_Torso, &SheepModel, &desc);
 
 	BoxDesc_Box(&desc, -5, 0, -7, -1, 12, -3);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, -5);
-	Sheep_LeftLegFront = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Sheep_LeftLegFront, &SheepModel, &desc);
 
 	BoxDesc_Box(&desc, 1, 0, -7, 5, 12, -3);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, -5);
-	Sheep_RightLegFront = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Sheep_RightLegFront, &SheepModel, &desc);
 
 	BoxDesc_Box(&desc, -5, 0, 5, -1, 12, 9);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, 7);
-	Sheep_LeftLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Sheep_LeftLegBack, &SheepModel, &desc);
 
 	BoxDesc_Box(&desc, 1, 0, 5, 5, 12, 9);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, 7);
-	Sheep_RightLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Sheep_RightLegBack, &SheepModel, &desc);
 
 
 	BoxDesc_Box(&desc, -3, -3, -3, 3, 3, 3);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_SetBounds(&desc, -3.5f, 15.5f, -12.5f, 3.5f, 22.5f, -5.5f);
 	BoxDesc_RotOrigin(&desc, 0, 18, -8);
-	Fur_Head = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Fur_Head, &SheepModel, &desc);
 
 	BoxDesc_RotatedBox(&desc, -4, 12, -8, 4, 18, 8);
 	BoxDesc_TexOrigin(&desc, 28, 8);
 	BoxDesc_SetBounds(&desc, -6.0f, 10.5f, -10.0f, 6.0f, 19.5f, 10.0f);
-	Fur_Torso = BoxDesc_BuildRotatedBox(&SheepModel, &desc);
+	BoxDesc_BuildRotatedBox(&Fur_Torso, &SheepModel, &desc);
 
 
 	BoxDesc_Box(&desc, -2, -3, -2, 2, 3, 2);
@@ -386,19 +384,19 @@ void SheepModel_CreateParts(void) {
 
 	BoxDesc_SetBounds(&desc, -5.5f, 5.5f, -7.5f, -0.5f, 12.5f, -2.5f);
 	BoxDesc_RotOrigin(&desc, 0, 12, -5);
-	Fur_LeftLegFront = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Fur_LeftLegFront, &SheepModel, &desc);
 
 	BoxDesc_SetBounds(&desc, 0.5f, 5.5f, -7.5f, 5.5f, 12.5f, -2.5f);
 	BoxDesc_RotOrigin(&desc, 0, 12, -5);
-	Fur_RightLegFront = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Fur_RightLegFront, &SheepModel, &desc);
 
 	BoxDesc_SetBounds(&desc, -5.5f, 5.5f, 4.5f, -0.5f, 12.5f, 9.5f);
 	BoxDesc_RotOrigin(&desc, 0, 12, 7);
-	Fur_LeftLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Fur_LeftLegBack, &SheepModel, &desc);
 
 	BoxDesc_SetBounds(&desc, 0.5f, 5.5f, 4.5f, 5.5f, 12.5f, 9.5f);
 	BoxDesc_RotOrigin(&desc, 0, 12, 7);
-	Fur_RightLegBack = BoxDesc_BuildBox(&SheepModel, &desc);
+	BoxDesc_BuildBox(&Fur_RightLegBack, &SheepModel, &desc);
 }
 
 Real32 SheepModel_GetEyeY(Entity* entity) { return 20.0f / 16.0f; }
@@ -460,31 +458,31 @@ void SkeletonModel_CreateParts(void) {
 	BoxDesc_Box(&desc, -4, 24, -4, 4, 32, 4);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 24, 0);
-	Skeleton_Head = BoxDesc_BuildBox(&SkeletonModel, &desc);
+	BoxDesc_BuildBox(&Skeleton_Head, &SkeletonModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 12, -2, 4, 24, 2);
 	BoxDesc_TexOrigin(&desc, 16, 16);
-	Skeleton_Torso = BoxDesc_BuildBox(&SkeletonModel, &desc);
+	BoxDesc_BuildBox(&Skeleton_Torso, &SkeletonModel, &desc);
 
 	BoxDesc_Box(&desc, -1, 0, -1, -3, 12, 1);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, 0);
-	Skeleton_LeftLeg = BoxDesc_BuildBox(&SkeletonModel, &desc);
+	BoxDesc_BuildBox(&Skeleton_LeftLeg, &SkeletonModel, &desc);
 
 	BoxDesc_Box(&desc, 1, 0, -1, 3, 12, 1);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, 0);
-	Skeleton_RightLeg = BoxDesc_BuildBox(&SkeletonModel, &desc);
+	BoxDesc_BuildBox(&Skeleton_RightLeg, &SkeletonModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 12, -1, -6, 24, 1);
 	BoxDesc_TexOrigin(&desc, 40, 16);
 	BoxDesc_RotOrigin(&desc, -5, 23, 0);
-	Skeleton_LeftArm = BoxDesc_BuildBox(&SkeletonModel, &desc);
+	BoxDesc_BuildBox(&Skeleton_LeftArm, &SkeletonModel, &desc);
 
 	BoxDesc_Box(&desc, 4, 12, -1, 6, 24, 1);
 	BoxDesc_TexOrigin(&desc, 40, 16);
 	BoxDesc_RotOrigin(&desc, 5, 23, 0);
-	Skeleton_RightArm = BoxDesc_BuildBox(&SkeletonModel, &desc);
+	BoxDesc_BuildBox(&Skeleton_RightArm, &SkeletonModel, &desc);
 }
 
 Real32 SkeletonModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
@@ -531,25 +529,25 @@ void SpiderModel_CreateParts(void) {
 	BoxDesc_Box(&desc, -4, 4, -11, 4, 12, -3);
 	BoxDesc_TexOrigin(&desc, 32, 4);
 	BoxDesc_RotOrigin(&desc, 0, 8, -3);
-	Spider_Head = BoxDesc_BuildBox(&SpiderModel, &desc);
+	BoxDesc_BuildBox(&Spider_Head, &SpiderModel, &desc);
 
 	BoxDesc_Box(&desc, -3, 5, 3, 3, 11, -3);
 	BoxDesc_TexOrigin(&desc, 0, 0);
-	Spider_Link = BoxDesc_BuildBox(&SpiderModel, &desc);
+	BoxDesc_BuildBox(&Spider_Link, &SpiderModel, &desc);
 
 	BoxDesc_Box(&desc, -5, 4, 3, 5, 12, 15);
 	BoxDesc_TexOrigin(&desc, 0, 12);
-	Spider_End = BoxDesc_BuildBox(&SpiderModel, &desc);
+	BoxDesc_BuildBox(&Spider_End, &SpiderModel, &desc);
 
 	BoxDesc_Box(&desc, -19, 7, -1, -3, 9, 1);
 	BoxDesc_TexOrigin(&desc, 18, 0);
 	BoxDesc_RotOrigin(&desc, -3, 8, 0);
-	Spider_LeftLeg = BoxDesc_BuildBox(&SpiderModel, &desc);
+	BoxDesc_BuildBox(&Spider_LeftLeg, &SpiderModel, &desc);
 
 	BoxDesc_Box(&desc, 3, 7, -1, 19, 9, 1);
 	BoxDesc_TexOrigin(&desc, 18, 0);
 	BoxDesc_RotOrigin(&desc, 3, 8, 0);
-	Spider_RightLeg = BoxDesc_BuildBox(&SpiderModel, &desc);
+	BoxDesc_BuildBox(&Spider_RightLeg, &SpiderModel, &desc);
 }
 
 Real32 SpiderModel_GetEyeY(Entity* entity) { return 8.0f / 16.0f; }
@@ -612,37 +610,37 @@ void ZombieModel_CreateParts(void) {
 	BoxDesc_Box(&desc, -4, 24, -4, 4, 32, 4);
 	BoxDesc_TexOrigin(&desc, 0, 0);
 	BoxDesc_RotOrigin(&desc, 0, 24, 0);
-	Zombie_Head = BoxDesc_BuildBox(&ZombieModel, &desc);
+	BoxDesc_BuildBox(&Zombie_Head, &ZombieModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 24, -4, 4, 32, 4);
 	BoxDesc_TexOrigin(&desc, 32, 0);
 	BoxDesc_RotOrigin(&desc, 0, 24, 0);
 	BoxDesc_Expand(&desc, 0.5f);
-	Zombie_Hat = BoxDesc_BuildBox(&ZombieModel, &desc);
+	BoxDesc_BuildBox(&Zombie_Hat, &ZombieModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 12, -2, 4, 24, 2);
 	BoxDesc_TexOrigin(&desc, 16, 16);
-	Zombie_Torso = BoxDesc_BuildBox(&ZombieModel, &desc);
+	BoxDesc_BuildBox(&Zombie_Torso, &ZombieModel, &desc);
 
 	BoxDesc_Box(&desc, 0, 0, -2, -4, 12, 2);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, 0);
-	Zombie_LeftLeg = BoxDesc_BuildBox(&ZombieModel, &desc);
+	BoxDesc_BuildBox(&Zombie_LeftLeg, &ZombieModel, &desc);
 
 	BoxDesc_Box(&desc, 0, 0, -2, 4, 12, 2);
 	BoxDesc_TexOrigin(&desc, 0, 16);
 	BoxDesc_RotOrigin(&desc, 0, 12, 0);
-	Zombie_RightLeg = BoxDesc_BuildBox(&ZombieModel, &desc);
+	BoxDesc_BuildBox(&Zombie_RightLeg, &ZombieModel, &desc);
 
 	BoxDesc_Box(&desc, -4, 12, -2, -8, 24, 2);
 	BoxDesc_TexOrigin(&desc, 40, 16);
 	BoxDesc_RotOrigin(&desc, -6, 22, 0);
-	Zombie_LeftArm = BoxDesc_BuildBox(&ZombieModel, &desc);
+	BoxDesc_BuildBox(&Zombie_LeftArm, &ZombieModel, &desc);
 
 	BoxDesc_Box(&desc, 4, 12, -2, 8, 24, 2);
 	BoxDesc_TexOrigin(&desc, 40, 16);
 	BoxDesc_RotOrigin(&desc, 6, 22, 0);
-	Zombie_RightArm = BoxDesc_BuildBox(&ZombieModel, &desc);
+	BoxDesc_BuildBox(&Zombie_RightArm, &ZombieModel, &desc);
 }
 
 Real32 ZombieModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
@@ -689,28 +687,28 @@ BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 Real32 offset;
 void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet* setSlim) {
 	BoxDesc_TexOrigin(&head, 0, 0);
-	set->Head = BoxDesc_BuildBox(m, &head);
+	BoxDesc_BuildBox(&set->Head, m, &head);
 
 	BoxDesc_TexOrigin(&torso, 16, 16);
-	set->Torso = BoxDesc_BuildBox(m, &torso);
+	BoxDesc_BuildBox(&set->Torso, m, &torso);
 
 	BoxDesc_TexOrigin(&head, 32, 0);
 	BoxDesc_Expand(&head, offset);
-	set->Hat = BoxDesc_BuildBox(m, &head);
+	BoxDesc_BuildBox(&set->Hat, m, &head);
 
 	BoxDesc_TexOrigin(&lLeg, 0, 16);
 	BoxDesc_MirrorX(&lLeg);
-	set->LeftLeg = BoxDesc_BuildBox(m, &lLeg);
+	BoxDesc_BuildBox(&set->LeftLeg, m, &lLeg);
 
 	BoxDesc_TexOrigin(&rLeg, 0, 16);
-	set->RightLeg = BoxDesc_BuildBox(m, &rLeg);
+	BoxDesc_BuildBox(&set->RightLeg, m, &rLeg);
 
 	BoxDesc_TexOrigin(&lArm, 40, 16);
 	BoxDesc_MirrorX(&lArm);
-	set->LeftArm = BoxDesc_BuildBox(m, &lArm);
+	BoxDesc_BuildBox(&set->LeftArm, m, &lArm);
 
 	BoxDesc_TexOrigin(&rArm, 40, 16);
-	set->RightArm = BoxDesc_BuildBox(m, &rArm);
+	BoxDesc_BuildBox(&set->RightArm, m, &rArm);
 
 	set64->Head = set->Head;
 	set64->Torso = set->Torso;
@@ -718,33 +716,33 @@ void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet*
 
 	BoxDesc_MirrorX(&lLeg);
 	BoxDesc_TexOrigin(&lLeg, 16, 48);
-	set64->LeftLeg = BoxDesc_BuildBox(m, &lLeg);
+	BoxDesc_BuildBox(&set64->LeftLeg, m, &lLeg);
 	set64->RightLeg = set->RightLeg;
 
 	BoxDesc_MirrorX(&lArm);
 	BoxDesc_TexOrigin(&lArm, 32, 48);
-	set64->LeftArm = BoxDesc_BuildBox(m, &lArm);
+	BoxDesc_BuildBox(&set64->LeftArm, m, &lArm);
 	set64->RightArm = set->RightArm;
 
 	BoxDesc_TexOrigin(&torso, 16, 32);
 	BoxDesc_Expand(&torso, offset);
-	set64->TorsoLayer = BoxDesc_BuildBox(m, &torso);
+	BoxDesc_BuildBox(&set64->TorsoLayer, m, &torso);
 
 	BoxDesc_TexOrigin(&lLeg, 0, 48);
 	BoxDesc_Expand(&lLeg, offset);
-	set64->LeftLegLayer = BoxDesc_BuildBox(m, &lLeg);
+	BoxDesc_BuildBox(&set64->LeftLegLayer, m, &lLeg);
 
 	BoxDesc_TexOrigin(&rLeg, 0, 32);
 	BoxDesc_Expand(&rLeg, offset);
-	set64->RightLegLayer = BoxDesc_BuildBox(m, &rLeg);
+	BoxDesc_BuildBox(&set64->RightLegLayer, m, &rLeg);
 
 	BoxDesc_TexOrigin(&lArm, 48, 48);
 	BoxDesc_Expand(&lArm, offset);
-	set64->LeftArmLayer = BoxDesc_BuildBox(m, &lArm);
+	BoxDesc_BuildBox(&set64->LeftArmLayer, m, &lArm);
 
 	BoxDesc_TexOrigin(&rArm, 40, 32);
 	BoxDesc_Expand(&rArm, offset);
-	set64->RightArmLayer = BoxDesc_BuildBox(m, &rArm);
+	BoxDesc_BuildBox(&set64->RightArmLayer, m, &rArm);
 
 	setSlim->Head     = set64->Head;
 	setSlim->Torso    = set64->Torso;
@@ -754,11 +752,11 @@ void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet*
 
 	lArm.BodyW -= 1; lArm.X1 += (offset * 2.0f) / 16.0f;
 	BoxDesc_TexOrigin(&lArm, 32, 48);
-	setSlim->LeftArm = BoxDesc_BuildBox(m, &lArm);
+	BoxDesc_BuildBox(&setSlim->LeftArm, m, &lArm);
 
 	rArm.BodyW -= 1; rArm.X2 -= (offset * 2.0f) / 16.0f;
 	BoxDesc_TexOrigin(&rArm, 40, 16);
-	setSlim->RightArm = BoxDesc_BuildBox(m, &rArm);
+	BoxDesc_BuildBox(&setSlim->RightArm, m, &rArm);
 
 	setSlim->TorsoLayer    = set64->TorsoLayer;
 	setSlim->LeftLegLayer  = set64->LeftLegLayer;
@@ -766,11 +764,11 @@ void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet*
 
 	BoxDesc_TexOrigin(&lArm, 48, 48);
 	BoxDesc_Expand(&lArm, offset);
-	setSlim->LeftArmLayer = BoxDesc_BuildBox(m, &lArm);
+	BoxDesc_BuildBox(&setSlim->LeftArmLayer, m, &lArm);
 
 	BoxDesc_TexOrigin(&rArm, 40, 32);
 	BoxDesc_Expand(&rArm, offset);
-	setSlim->RightArmLayer = BoxDesc_BuildBox(m, &rArm);
+	BoxDesc_BuildBox(&setSlim->RightArmLayer, m, &rArm);
 }
 
 void HumanModel_SetupState(Entity* entity) {
