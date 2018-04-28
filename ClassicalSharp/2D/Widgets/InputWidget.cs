@@ -65,7 +65,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		protected string[] lines; // raw text of each line
 		protected Size[] lineSizes; // size of each line in pixels
 		protected int caretX, caretY; // coordinates of caret in lines
-		protected double caretAccumulator;
+		protected internal double caretAccumulator;
 		
 		public override void Init() {
 			int numLines = UsedLines;

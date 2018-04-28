@@ -212,7 +212,12 @@ namespace ClassicalSharp.Gui.Screens {
 			altText.UpdateColours();
 			Recreate(normalChat, e.Code); Recreate(status, e.Code);
 			Recreate(bottomRight, e.Code); Recreate(clientStatus, e.Code);
+			
+			// Some servers have plugins that redefine colours constantly
+			// Preserve caret accumulator so caret blinking stays consistent
+			double caretAcc = input.caretAccumulator;
 			input.Recreate();
+			input.caretAccumulator = caretAcc;
 		}
 		
 		void Recreate(TextGroupWidget group, char code) {

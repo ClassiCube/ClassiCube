@@ -985,7 +985,12 @@ void ChatScreen_ColCodeChanged(void* obj, Int32 code) {
 	ChatElem_Recreate(&screen->Status, code);
 	ChatElem_Recreate(&screen->BottomRight, code);
 	ChatElem_Recreate(&screen->ClientStatus, code);
+
+	/* Some servers have plugins that redefine colours constantly */
+	/* Preserve caret accumulator so caret blinking stays consistent */
+	Real64 caretAcc = screen->Input.Base.CaretAccumulator;
 	Elem_Recreate(&screen->Input.Base);
+	screen->Input.Base.CaretAccumulator = caretAcc;
 }
 
 void ChatScreen_ChatReceived(void* obj, String* msg, UInt8 type) {
