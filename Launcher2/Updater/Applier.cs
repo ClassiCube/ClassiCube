@@ -12,16 +12,6 @@ namespace Launcher.Updater {
 	public static class Applier {
 		
 		public static DateTime PatchTime;
-		public const string UpdatesUri = "http://cs.classicube.net/";
-		
-		public static void FetchUpdate(string dir) {
-			WebRequest.DefaultWebProxy = null;
-			// TODO: Rewrite to be async
-			using (WebClient client = new WebClient()) {
-				byte[] zipData = client.DownloadData(UpdatesUri + dir);
-				MakeUpdatesFolder(zipData);
-			}
-		}
 
 		public static void ApplyUpdate() {
 			ProcessStartInfo info = new ProcessStartInfo();
@@ -54,7 +44,7 @@ namespace Launcher.Updater {
 		[DllImport("libc", SetLastError = true)]
 		internal static extern int chmod(string path, int mode);
 		
-		static void MakeUpdatesFolder(byte[] zipData) {
+		public static void ExtractUpdate(byte[] zipData) {
 			Platform.DirectoryCreate("CS_Update");
 			using (MemoryStream stream = new MemoryStream(zipData)) {
 				ZipReader reader = new ZipReader();				

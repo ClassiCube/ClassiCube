@@ -14,9 +14,8 @@ namespace Launcher.Web {
 		public LauncherWindow Game;
 		public bool Completed = false, Success = false;
 		public WebException WebEx;
-		
+		public string identifier, uri;
 		DateTime start;
-		protected string identifier, uri, section;
 		
 		public void RunAsync(LauncherWindow game) {
 			Game = game;
@@ -218,6 +217,23 @@ namespace Launcher.Web {
 			if (obj.ContainsKey("version"))
 				build.Version = (string)obj["version"];
 			return build;
+		}
+	}
+	
+	public sealed class UpdateDownloadTask : WebTask {
+		public UpdateDownloadTask(string dir) {
+			identifier = "CC update download";
+			uri = "http://cs.classicube.net/" + dir;
+		}		
+
+		public byte[] ZipFile;
+		
+		protected override void Begin() {
+			Game.Downloader.AsyncGetData(uri, true, identifier);
+		}
+		
+		protected override void Handle(Request req) {
+			ZipFile = (byte[])req.Data;
 		}
 	}
 	
