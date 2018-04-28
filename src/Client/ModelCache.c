@@ -942,7 +942,7 @@ void SittingModel_DrawModel(Entity* entity) {
 	entity->Anim.LeftLegX = 1.5f;  entity->Anim.RightLegX = 1.5f;
 	entity->Anim.LeftLegZ = -0.1f; entity->Anim.RightLegZ = 0.1f;
 	IModel_SetupState(&HumanoidModel, entity);
-	IModel_Render(&HumanoidModel, entity);
+	HumanoidModel.DrawModel(entity);
 }
 
 IModel* SittingModel_GetInstance(void) {
@@ -967,7 +967,7 @@ void CorpseModel_DrawModel(Entity* entity) {
 	entity->Anim.LeftArmZ = -0.20f; entity->Anim.RightArmZ =  0.20f;
 
 	IModel_SetupState(&HumanoidModel, entity);
-	IModel_Render(&HumanoidModel, entity);
+	HumanoidModel.DrawModel(entity);
 }
 
 IModel* CorpseModel_GetInstance(void) {

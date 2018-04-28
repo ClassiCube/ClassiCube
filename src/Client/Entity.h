@@ -13,7 +13,7 @@ typedef struct IModel_ IModel;
 /* Offset used to avoid floating point roundoff errors. */
 #define ENTITY_ADJUSTMENT 0.001f
 /* Maxmimum number of characters in a model name. */
-#define ENTITY_MAX_MODEL_LENGTH 10
+#define ENTITY_MAX_MODEL_LENGTH 11
 
 #define ENTITIES_MAX_COUNT 256
 #define ENTITIES_SELF_ID 255
