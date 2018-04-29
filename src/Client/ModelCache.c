@@ -1156,7 +1156,7 @@ void BlockModel_Flush(void) {
 #define BlockModel_FlushIfNotSame if (BlockModel_lastTexIndex != BlockModel_texIndex) { BlockModel_Flush(); }
 TextureLoc BlockModel_GetTex(Face face) {
 	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, face);
-	BlockModel_texIndex = texLoc / Atlas1D_ElementsPerAtlas;
+	BlockModel_texIndex = Atlas1D_Index(texLoc);
 	BlockModel_FlushIfNotSame;
 	return texLoc;
 }

@@ -361,8 +361,8 @@ void Deflate_InflateFast(InflateState* state) {
 	UInt8* window = state->Window;
 	UInt32 curIdx = state->WindowIndex;
 
-#define DEFLATE_FAST_COPY_MAX (INFLATE_WINDOW_SIZE - INFLATE_FASTINF_OUT)
-	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < DEFLATE_FAST_COPY_MAX) {
+#define INFLATE_FAST_COPY_MAX (INFLATE_WINDOW_SIZE - INFLATE_FASTINF_OUT)
+	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
 		UInt32 lit = Huffman_Unsafe_Decode(state, &state->LitsTable);
 		if (lit <= 256) {
 			if (lit < 256) {
