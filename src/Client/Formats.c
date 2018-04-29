@@ -136,8 +136,8 @@ void Lvl_Load(Stream* stream) {
 #define FCM_REVISION 13
 void Fcm_ReadString(Stream* stream) {
 	UInt16 length = Stream_ReadU16_LE(stream);
-	UInt8 buffer[UInt16_MaxValue];
-	Stream_Read(stream, buffer, length);
+	ReturnCode code = Stream_Skip(stream, length);
+	ErrorHandler_CheckOrFail(code, "FCM import - skipping string");
 }
 
 void Fcm_Load(Stream* stream) {

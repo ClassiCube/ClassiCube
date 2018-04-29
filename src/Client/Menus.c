@@ -1346,7 +1346,7 @@ void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
 		Schematic_Save(&stream);
 	}
 
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 128)];
+	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	String_Format1(&msg, "&eSaved map to: %s", &path);
 	Chat_Add(&msg);

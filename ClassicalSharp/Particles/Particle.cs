@@ -11,9 +11,9 @@ namespace ClassicalSharp.Particles {
 	public abstract class Particle {		
 		public Vector3 Velocity;
 		public float Lifetime;
-		protected Vector3 lastPos, nextPos;
-		protected bool hitTerrain = false;
 		public byte Size;
+		protected Vector3 lastPos, nextPos;
+		protected static bool hitTerrain;
 		
 		// http://www.opengl-tutorial.org/intermediate-tutorials/billboards-particles/billboards/
 		public static void DoRender(ref Matrix4 view, ref Vector2 size, ref Vector3 pos, ref TextureRec rec,
@@ -43,11 +43,9 @@ namespace ClassicalSharp.Particles {
 			lastPos = nextPos = pos;
 			Velocity = velocity;
 			Lifetime = (float)lifetime;
-			hitTerrain = false;
 		}
 
 		protected bool Tick(Game game, float gravity, bool throughLiquids, double delta) {
-			hitTerrain = false;
 			lastPos = nextPos;
 			BlockID curBlock = GetBlock(game, (int)nextPos.X, (int)nextPos.Y, (int)nextPos.Z);
 			float minY = Utils.Floor(nextPos.Y) + BlockInfo.MinBB[curBlock].Y;
@@ -127,8 +125,8 @@ namespace ClassicalSharp.Particles {
 		static TextureRec rec = new TextureRec(2/128f, 14/128f, 3/128f, 2/128f);
 		
 		public bool Tick(Game game, double delta) {
-			bool dies = Tick(game, 3.5f, false, delta);
-			return hitTerrain ? true : dies;
+			hitTerrain = false;
+			return Tick(game, 3.5f, false, delta) || hitTerrain;
 		}
 		
 		public void Render(Game game, float t, VertexP3fT2fC4b[] vertices, ref int index) {

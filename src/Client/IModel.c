@@ -301,7 +301,6 @@ void BoxDesc_BuildRotatedBox(ModelPart* part, IModel* m, BoxDesc* desc) {
 
 	ModelPart_Init(part, m->index - IMODEL_BOX_VERTICES, IMODEL_BOX_VERTICES,
 		desc->RotX, desc->RotY, desc->RotZ);
-	return part;
 }
 
 

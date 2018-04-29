@@ -545,13 +545,13 @@ void Player_DrawName(Player* player) {
 		size.X *= tempW * 0.2f; size.Y *= tempW * 0.2f;
 	}
 
-	VertexP3fT2fC4b vertices[4]; VertexP3fT2fC4b* ptr = vertices;
+	VertexP3fT2fC4b vertices[4];
 	TextureRec rec = { 0.0f, 0.0f, player->NameTex.U2, player->NameTex.V2 };
 	PackedCol col = PACKEDCOL_WHITE;
-	Particle_DoRender(&size, &pos, &rec, col, &ptr);
+	Particle_DoRender(&size, &pos, &rec, col, vertices);
 
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
-	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, ptr, 4);
+	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, vertices, 4);
 }
 
 Player* Player_FirstOtherWithSameSkin(Player* player) {

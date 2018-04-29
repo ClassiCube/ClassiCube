@@ -12,10 +12,18 @@
 #include "Game.h"
 #include "Event.h"
 
-void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b** vertices) {
+
+/*########################################################################################################################*
+*------------------------------------------------------Particle base------------------------------------------------------*
+*#########################################################################################################################*/
+GfxResourceID Particles_TexId, Particles_VB;
+#define PARTICLES_MAX 600
+Random rnd;
+bool particle_hitTerrain;
+
+void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol col, VertexP3fT2fC4b* vertices) {
 	Real32 sX = size->X * 0.5f, sY = size->Y * 0.5f;
 	Vector3 centre = *pos; centre.Y += sY;
-	VertexP3fT2fC4b* ptr = *vertices;
 
 	Matrix* view = &Gfx_View;
 	Real32 aX, aY, aZ, bX, bY, bZ;
@@ -24,23 +32,22 @@ void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol c
 	VertexP3fT2fC4b v; v.Col = col;
 
 	v.X = centre.X - aX - bX; v.Y = centre.Y - aY - bY; v.Z = centre.Z - aZ - bZ;
-	v.U = rec->U1; v.V = rec->V2; ptr[0] = v;
+	v.U = rec->U1; v.V = rec->V2; vertices[0] = v;
 
 	v.X = centre.X - aX + bX; v.Y = centre.Y - aY + bY; v.Z = centre.Z - aZ + bZ;
-				   v.V = rec->V1; ptr[1] = v;
+				   v.V = rec->V1; vertices[1] = v;
 
 	v.X = centre.X + aX + bX; v.Y = centre.Y + aY + bY; v.Z = centre.Z + aZ + bZ;
-	v.U = rec->U2;                ptr[2] = v;
+	v.U = rec->U2;                vertices[2] = v;
 
 	v.X = centre.X + aX - bX; v.Y = centre.Y + aY - bY; v.Z = centre.Z + aZ - bZ;
-				   v.V = rec->V2; ptr[3] = v;
+				   v.V = rec->V2; vertices[3] = v;
 }
 
 void Particle_Reset(Particle* p, Vector3 pos, Vector3 velocity, Real32 lifetime) {
 	p->LastPos = pos; p->NextPos = pos;
 	p->Velocity = velocity;
 	p->Lifetime = lifetime;
-	p->HitTerrain = false;
 }
 
 bool Particle_CanPass(BlockID block, bool throughLiquids) {
@@ -68,7 +75,7 @@ bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiquids) {
 	if (y < 0) {
 		p->NextPos.Y = ENTITY_ADJUSTMENT; p->LastPos.Y = ENTITY_ADJUSTMENT;
 		Vector3 zero = Vector3_Zero; p->Velocity = zero;
-		p->HitTerrain = true;
+		particle_hitTerrain = true;
 		return false;
 	}
 
@@ -84,14 +91,13 @@ bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiquids) {
 		p->LastPos.Y = collideY + adjust;
 		p->NextPos.Y = p->LastPos.Y;
 		Vector3 zero = Vector3_Zero; p->Velocity = zero;
-		p->HitTerrain = true;
+		particle_hitTerrain = true;
 		return false;
 	}
 	return true;
 }
 
 bool Particle_PhysicsTick(Particle* p, Real32 gravity, bool throughLiquids, Real64 delta) {
-	p->HitTerrain = false;
 	p->LastPos = p->NextPos;
 
 	BlockID cur = Particle_GetBlock((Int32)p->NextPos.X, (Int32)p->NextPos.Y, (Int32)p->NextPos.Z);
@@ -121,13 +127,22 @@ bool Particle_PhysicsTick(Particle* p, Real32 gravity, bool throughLiquids, Real
 	return p->Lifetime < 0.0f;
 }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------Rain particle-----------------------------------------------------*
+*#########################################################################################################################*/
+typedef struct RainParticle_ { Particle Base; } RainParticle;
+
+RainParticle Rain_Particles[PARTICLES_MAX];
+Int32 Rain_Count;
+
 bool RainParticle_Tick(RainParticle* p, Real64 delta) {
-	bool dies = Particle_PhysicsTick(&p->Base, 3.5f, false, delta);
-	return p->Base.HitTerrain || dies;
+	particle_hitTerrain = false;
+	return Particle_PhysicsTick(&p->Base, 3.5f, false, delta) || particle_hitTerrain;
 }
 
-TextureRec Rain_Rec = { 2.0f / 128.0f, 14.0f / 128.0f, 3.0f / 128.0f, 2.0f / 128.0f };
-void RainParticle_Render(RainParticle* p, Real32 t, VertexP3fT2fC4b** vertices) {
+TextureRec Rain_Rec = { 2.0f / 128.0f, 14.0f / 128.0f, 5.0f / 128.0f, 16.0f / 128.0f };
+void RainParticle_Render(RainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
 	Vector3 pos;
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
 	Vector2 size; size.X = (Real32)p->Base.Size * 0.015625f; size.Y = size.X;
@@ -137,11 +152,60 @@ void RainParticle_Render(RainParticle* p, Real32 t, VertexP3fT2fC4b** vertices) 
 	Particle_DoRender(&size, &pos, &Rain_Rec, col, vertices);
 }
 
+void Rain_Render(Real32 t) {
+	if (Rain_Count == 0) return;
+	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
+	Int32 i;
+	VertexP3fT2fC4b* ptr = vertices;
+	for (i = 0; i < Rain_Count; i++) {
+		RainParticle_Render(&Rain_Particles[i], t, ptr);
+		ptr += 4;
+	}
+
+	Gfx_BindTexture(Particles_TexId);
+	GfxCommon_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, Rain_Count * 4);
+}
+
+void Rain_RemoveAt(Int32 index) {
+	RainParticle removed = Rain_Particles[index];
+	Int32 i;
+	for (i = index; i < Rain_Count - 1; i++) {
+		Rain_Particles[i] = Rain_Particles[i + 1];
+	}
+	Rain_Particles[Rain_Count - 1] = removed;
+	Rain_Count--;
+}
+
+void Rain_Tick(Real64 delta) {
+	Int32 i;
+	for (i = 0; i < Rain_Count; i++) {
+		if (RainParticle_Tick(&Rain_Particles[i], delta)) {
+			Rain_RemoveAt(i); i--;
+		}
+	}
+}
+
+
+/*########################################################################################################################*
+*------------------------------------------------------Terrain particle---------------------------------------------------*
+*#########################################################################################################################*/
+typedef struct TerrainParticle_ {
+	Particle Base;
+	TextureRec Rec;
+	TextureLoc TexLoc;
+	BlockID Block;
+} TerrainParticle;
+
+TerrainParticle Terrain_Particles[PARTICLES_MAX];
+Int32 Terrain_Count;
+UInt16 Terrain_1DCount[ATLAS1D_MAX_ATLASES_COUNT];
+UInt16 Terrain_1DIndices[ATLAS1D_MAX_ATLASES_COUNT];
+
 bool TerrainParticle_Tick(TerrainParticle* p, Real64 delta) {
 	return Particle_PhysicsTick(&p->Base, 5.4f, true, delta);
 }
 
-void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b** vertices) {
+void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
 	Vector3 pos;
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
 	Vector2 size; size.X = (Real32)p->Base.Size * 0.015625f; size.Y = size.X;
@@ -161,16 +225,68 @@ void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b** vert
 	Particle_DoRender(&size, &pos, &p->Rec, col, vertices);
 }
 
+void Terrain_Update1DCounts(void) {
+	Int32 i;
+	for (i = 0; i < Atlas1D_Count; i++) {
+		Terrain_1DCount[i] = 0;
+		Terrain_1DIndices[i] = 0;
+	}
+	for (i = 0; i < Terrain_Count; i++) {
+		Int32 index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
+		Terrain_1DCount[index] += 4;
+	}
+	for (i = 1; i < Atlas1D_Count; i++) {
+		Terrain_1DIndices[i] = Terrain_1DIndices[i - 1] + Terrain_1DCount[i - 1];
+	}
+}
 
-GfxResourceID Particles_TexId, Particles_VB;
-#define PARTICLES_MAX 600
-TerrainParticle Terrain_Particles[PARTICLES_MAX];
-RainParticle Rain_Particles[PARTICLES_MAX];
-Int32 Terrain_Count, Rain_Count;
-UInt16 Terrain_1DCount[ATLAS1D_MAX_ATLASES_COUNT];
-UInt16 Terrain_1DIndices[ATLAS1D_MAX_ATLASES_COUNT];
-Random rnd;
+void Terrain_Render(Real32 t) {
+	if (Terrain_Count == 0) return;
+	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
+	Terrain_Update1DCounts();
+	Int32 i;
+	for (i = 0; i < Terrain_Count; i++) {
+		Int32 index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
+		VertexP3fT2fC4b* ptr = &vertices[Terrain_1DIndices[index]];
+		TerrainParticle_Render(&Terrain_Particles[i], t, ptr);
+		Terrain_1DIndices[index] += 4;
+	}
 
+	Gfx_SetDynamicVbData(Particles_VB, vertices, Terrain_Count * 4);
+	Int32 offset = 0;
+	for (i = 0; i < Atlas1D_Count; i++) {
+		UInt16 partCount = Terrain_1DCount[i];
+		if (partCount == 0) continue;
+
+		Gfx_BindTexture(Atlas1D_TexIds[i]);
+		Gfx_DrawVb_IndexedTris_Range(partCount, offset);
+		offset += partCount;
+	}
+}
+
+void Terrain_RemoveAt(Int32 index) {
+	TerrainParticle removed = Terrain_Particles[index];
+	Int32 i;
+	for (i = index; i < Terrain_Count - 1; i++) {
+		Terrain_Particles[i] = Terrain_Particles[i + 1];
+	}
+	Terrain_Particles[Terrain_Count - 1] = removed;
+	Terrain_Count--;
+}
+
+void Terrain_Tick(Real64 delta) {
+	Int32 i;
+	for (i = 0; i < Terrain_Count; i++) {
+		if (TerrainParticle_Tick(&Terrain_Particles[i], delta)) {
+			Terrain_RemoveAt(i); i--;
+		}
+	}
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------------Particles--------------------------------------------------------*
+*#########################################################################################################################*/
 void Particles_FileChanged(void* obj, Stream* stream) {
 	if (String_CaselessEqualsConst(&stream->Name, "particles.png")) {
 		Game_UpdateTexture(&Particles_TexId, stream, false);
@@ -210,66 +326,13 @@ void Particles_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,  NULL, Particles_ContextRecreated);
 }
 
-
 IGameComponent Particles_MakeComponent(void) {
 	IGameComponent comp = IGameComponent_MakeEmpty();
-	comp.Init = Particles_Init;
-	comp.Reset = Particles_Reset;
+	comp.Init     = Particles_Init;
+	comp.Reset    = Particles_Reset;
 	comp.OnNewMap = Particles_Reset;
-	comp.Free = Particles_Free;
+	comp.Free     = Particles_Free;
 	return comp;
-}
-
-void Terrain_Update1DCounts(void) {
-	Int32 i;
-	for (i = 0; i < Atlas1D_Count; i++) {
-		Terrain_1DCount[i] = 0;
-		Terrain_1DIndices[i] = 0;
-	}
-	for (i = 0; i < Terrain_Count; i++) {
-		Int32 index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
-		Terrain_1DCount[index] += 4;
-	}
-	for (i = 1; i < Atlas1D_Count; i++) {
-		Terrain_1DIndices[i] = Terrain_1DIndices[i - 1] + Terrain_1DCount[i - 1];
-	}
-}
-
-void Terrain_Render(Real32 t) {
-	if (Terrain_Count == 0) return;
-	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
-	Terrain_Update1DCounts();
-	Int32 i;
-	for (i = 0; i < Terrain_Count; i++) {
-		Int32 index = Atlas1D_Index(Terrain_Particles[i].TexLoc);
-		VertexP3fT2fC4b* ptr = &vertices[Terrain_1DIndices[index]];
-		TerrainParticle_Render(&Terrain_Particles[i], t, &ptr);
-		Terrain_1DIndices[index] += 4;
-	}
-
-	Gfx_SetDynamicVbData(Particles_VB, vertices, Terrain_Count * 4);
-	Int32 offset = 0;
-	for (i = 0; i < Atlas1D_Count; i++) {
-		UInt16 partCount = Terrain_1DCount[i];
-		if (partCount == 0) continue;
-
-		Gfx_BindTexture(Atlas1D_TexIds[i]);
-		Gfx_DrawVb_IndexedTris_Range(partCount, offset);
-		offset += partCount;
-	}
-}
-
-void Rain_Render(Real32 t) {
-	if (Rain_Count == 0) return;
-	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
-	Int32 i;
-	VertexP3fT2fC4b* ptr = vertices;
-	for (i = 0; i < Rain_Count; i++) {
-		RainParticle_Render(&Rain_Particles[i], t, &ptr);
-	}
-
-	Gfx_BindTexture(Particles_TexId);
-	GfxCommon_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, Rain_Count * 4);
 }
 
 void Particles_Render(Real64 delta, Real32 t) {
@@ -285,44 +348,6 @@ void Particles_Render(Real64 delta, Real32 t) {
 
 	Gfx_SetAlphaTest(false);
 	Gfx_SetTexturing(false);
-}
-
-void Terrain_RemoveAt(Int32 index) {
-	TerrainParticle removed = Terrain_Particles[index];
-	Int32 i;
-	for (i = index; i < Terrain_Count - 1; i++) {
-		Terrain_Particles[i] = Terrain_Particles[i + 1];
-	}
-	Terrain_Particles[Terrain_Count - 1] = removed;
-	Terrain_Count--;
-}
-
-void Terrain_Tick(Real64 delta) {
-	Int32 i;
-	for (i = 0; i < Terrain_Count; i++) {
-		if (TerrainParticle_Tick(&Terrain_Particles[i], delta)) {
-			Terrain_RemoveAt(i); i--;
-		}
-	}
-}
-
-void Rain_RemoveAt(Int32 index) {
-	RainParticle removed = Rain_Particles[index];
-	Int32 i;
-	for (i = index; i < Rain_Count - 1; i++) {
-		Rain_Particles[i] = Rain_Particles[i + 1];
-	}
-	Rain_Particles[Rain_Count - 1] = removed;
-	Rain_Count--;
-}
-
-void Rain_Tick(Real64 delta) {
-	Int32 i;
-	for (i = 0; i < Rain_Count; i++) {
-		if (RainParticle_Tick(&Rain_Particles[i], delta)) {
-			Rain_RemoveAt(i); i--;
-		}
-	}
 }
 
 void Particles_Tick(ScheduledTask* task) {
@@ -360,8 +385,8 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block
 	Int32 x, y, z;
 	Real32 maxU2 = baseRec.U1 + maxU * uScale;
 	Real32 maxV2 = baseRec.V1 + maxV * vScale;
-	for (x = 0; x < GRID_SIZE; x++)
-		for (y = 0; y < GRID_SIZE; y++)
+	for (x = 0; x < GRID_SIZE; x++) {
+		for (y = 0; y < GRID_SIZE; y++) {
 			for (z = 0; z < GRID_SIZE; z++) {
 				Real32 cellX = (Real32)x / GRID_SIZE, cellY = (Real32)y / GRID_SIZE, cellZ = (Real32)z / GRID_SIZE;
 				Vector3 cell = Vector3_Create3(CELL_CENTRE + cellX, CELL_CENTRE / 2 + cellY, CELL_CENTRE + cellZ);
@@ -369,14 +394,14 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block
 					|| cell.Y > maxBB.Y || cell.Z < minBB.Z || cell.Z > maxBB.Z) continue;
 
 				Vector3 velocity; /* centre random offset around [-0.2, 0.2] */
-				velocity.X = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f); 
+				velocity.X = CELL_CENTRE + (cellX - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 				velocity.Y = CELL_CENTRE + (cellY - 0.0f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 				velocity.Z = CELL_CENTRE + (cellZ - 0.5f) + (Random_Float(&rnd) * 0.4f - 0.2f);
 
 				TextureRec rec = baseRec;
 				rec.U1 = baseRec.U1 + Random_Range(&rnd, minU, maxUsedU) * uScale;
 				rec.V1 = baseRec.V1 + Random_Range(&rnd, minV, maxUsedV) * vScale;
-				rec.U2 = rec.U1 + 4 * uScale; 
+				rec.U2 = rec.U1 + 4 * uScale;
 				rec.V2 = rec.V1 + 4 * vScale;
 				rec.U2 = min(rec.U2, maxU2) - 0.01f * uScale;
 				rec.V2 = min(rec.V2, maxV2) - 0.01f * vScale;
@@ -394,6 +419,8 @@ void Particles_BreakBlockEffect(Vector3I coords, BlockID oldBlock, BlockID block
 				Int32 type = Random_Range(&rnd, 0, 30);
 				p->Base.Size = (UInt8)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
 			}
+		}
+	}
 }
 
 void Particles_RainSnowEffect(Vector3 pos) {

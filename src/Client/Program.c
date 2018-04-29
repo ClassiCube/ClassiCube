@@ -54,8 +54,8 @@ int main(int argc, char* argv[]) {
 	argv = default_argv;
 
 	if (argc == 1 || argc == 2) {
-		//String_AppendConst(&Game_Username, argc > 1 ? argv[1] : "Singleplayer");
-		String_AppendConst(&Game_Username, "Singleplayer");
+		String_AppendConst(&Game_Username, argc > 1 ? argv[1] : "Singleplayer");
+		//String_AppendConst(&Game_Username, "Singleplayer");
 	} else if (argc < 5) {
 		Platform_LogConst("ClassicalSharp.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
 		return;
