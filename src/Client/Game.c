@@ -766,6 +766,7 @@ void Audio_SetMusic(Int32 volume) { }
 void Audio_SetSounds(Int32 volume) { }
 void Audio_PlayDigSound(UInt8 type) { }
 void Audio_PlayStepSound(UInt8 type) { }
+
 void ASyncRequest_Free(AsyncRequest* request) { }
 IGameComponent AsyncDownloader_MakeComponent(void) { return IGameComponent_MakeEmpty(); }
 void AsyncDownloader_Init(STRING_PURE String* skinServer) { }
@@ -776,14 +777,16 @@ void AsyncDownloader_Free(void) { }
 bool AsyncDownloader_Get(STRING_PURE String* identifier, AsyncRequest* item) { return false; }
 bool AsyncDownloader_GetInProgress(AsyncRequest* request, Int32* progress) { return false; }
 void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) { }
-bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits) { return true; }
-void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }
-void AdvLightingBuilder_SetActive(void) { }
-void Cw_Save(Stream* stream) { }
-void Dat_Load(Stream* stream) { }
-void Schematic_Save(Stream* stream) { }
-void Gfx_MakeApiInfo(void) { }
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
+
+void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }
+void Cw_Save(Stream* stream) { }
+void Schematic_Save(Stream* stream) { }
+
+void Dat_Load(Stream* stream) { }
+void Gfx_MakeApiInfo(void) { }
+void AdvLightingBuilder_SetActive(void) { }
+
 Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
 Screen* TexIdsOverlay_MakeInstance(void) { return NULL; }
 Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }

@@ -151,6 +151,9 @@ void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 }
 
 
+/*########################################################################################################################*
+*---------------------------------------------------------Commands--------------------------------------------------------*
+*#########################################################################################################################*/
 typedef struct ChatCommand_ {
 	const UInt8* Name;
 	const UInt8* Help[5];
@@ -269,6 +272,9 @@ void Commands_Execute(STRING_PURE String* input) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------Help command------------------------------------------------------*
+*#########################################################################################################################*/
 void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp1, "&eList of client commands:");
@@ -294,6 +300,10 @@ void HelpCommand_Make(ChatCommand* cmd) {
 	cmd->Execute = HelpCommand_Execute;
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------GpuInfo command----------------------------------------------------*
+*#########################################################################################################################*/
 void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
@@ -314,6 +324,10 @@ void GpuInfoCommand_Make(ChatCommand* cmd) {
 	cmd->Execute = GpuInfoCommand_Execute;
 }
 
+
+/*########################################################################################################################*
+*----------------------------------------------------RenderType command---------------------------------------------------*
+*#########################################################################################################################*/
 void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify a new render type."); return;
@@ -386,9 +400,13 @@ void ModelCommand_Make(ChatCommand* cmd) {
 	cmd->Execute = ModelCommand_Execute;
 }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------CuboidCommand-----------------------------------------------------*
+*#########################################################################################################################*/
 Int32 cuboid_block = -1;
 Vector3I cuboid_mark1, cuboid_mark2;
-bool cuboid_persist = false;
+bool cuboid_persist, cuboid_hooked;
 
 bool CuboidCommand_ParseBlock(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) return true;
@@ -443,24 +461,29 @@ void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, Bl
 		String msg = String_InitAndClearArray(msgBuffer);
 
 		String_Format3(&msg, "&eCuboid: &fMark 1 placed at (%i, %i, %i), place mark 2.", &coords.X, &coords.Y, &coords.Z);
-		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_3);
+		Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
 	} else {
 		cuboid_mark2 = coords;
 		CuboidCommand_DoCuboid();
-		String empty = String_MakeNull(); Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_3);
 
 		if (!cuboid_persist) {
 			Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+			cuboid_hooked = false;
+			String empty = String_MakeNull(); Chat_AddOf(&empty, MSG_TYPE_CLIENTSTATUS_1);
 		} else {
 			cuboid_mark1 = Vector3I_MaxValue();
 			String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-			Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_3);
+			Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
 		}
 	}
 }
 
 void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
-	Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+	if (cuboid_hooked) {
+		Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+		cuboid_hooked = false;
+	}
+
 	cuboid_block = -1;
 	cuboid_mark1 = Vector3I_MaxValue();
 	cuboid_mark2 = Vector3I_MaxValue();
@@ -472,8 +495,9 @@ void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 
 	String msg = String_FromConst("&eCuboid: &fPlace or delete a block.");
-	Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_3);
+	Chat_AddOf(&msg, MSG_TYPE_CLIENTSTATUS_1);
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
+	cuboid_hooked = true;
 }
 
 void CuboidCommand_Make(ChatCommand* cmd) {
@@ -487,6 +511,10 @@ void CuboidCommand_Make(ChatCommand* cmd) {
 	cmd->Execute = CuboidCommand_Execute;
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------TeleportCommand----------------------------------------------------*
+*#########################################################################################################################*/
 void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount != 4) {
 		Chat_AddRaw(tmp, "&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
@@ -513,6 +541,9 @@ void TeleportCommand_Make(ChatCommand* cmd) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------Generic chat------------------------------------------------------*
+*#########################################################################################################################*/
 void Chat_Send(STRING_PURE String* text) {
 	if (text->length == 0) return;
 	StringsBuffer_Add(&Chat_InputLog, text);

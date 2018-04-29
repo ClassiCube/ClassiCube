@@ -2,6 +2,7 @@
 #include "Funcs.h"
 #include "ErrorHandler.h"
 #include "Platform.h"
+#include "ExtMath.h"
 
 #define Char_MakeLower(ch) if ((ch) >= 'A' && (ch) <= 'Z') { (ch) += ' '; }
 UInt8 Char_ToLower(UInt8 c) {
@@ -214,6 +215,23 @@ bool String_AppendInt64(STRING_TRANSIENT String* str, Int64 num) {
 	return true;
 }
 
+bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits) {
+	Int32 wholePortion = (Int32)num;
+	if (!String_AppendInt32(str, wholePortion)) return false;
+
+	Real64 frac = (Real64)num - (Real64)wholePortion;
+	if (frac == 0.0) return true;
+	if (!String_Append(str, '.')) return false;
+
+	Int32 i;
+	/* TODO: negative numbers here */
+	for (i = 0; i < fracDigits; i++) {
+		frac *= 10;
+		Int32 digit = Math_AbsI((Int32)frac) % 10;
+		if (!String_Append(str, '0' + digit)) return false;
+	}
+	return true;
+}
 
 bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend) {
 	UInt8 cur = 0;

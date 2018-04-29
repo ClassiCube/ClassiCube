@@ -46,7 +46,7 @@ typedef struct Event_MouseMove_ {
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
 } Event_MouseMove;
 
-typedef void (*Event_Chat_Callback)(void* obj, String* msg, UInt8 msgType);
+typedef void (*Event_Chat_Callback)(void* obj, String* msg, Int32 msgType);
 typedef struct Event_Chat_ {
 	Event_Chat_Callback Handlers[EVENT_MAX_CALLBACKS];
 	void* Objs[EVENT_MAX_CALLBACKS]; UInt32 Count;
@@ -76,7 +76,7 @@ void Event_RaiseMouseMove(Event_MouseMove* handlers, Int32 xDelta, Int32 yDelta)
 void Event_RegisterMouseMove(Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
 void Event_UnregisterMouseMove(Event_MouseMove* handlers, void* obj, Event_MouseMove_Callback handler);
 
-void Event_RaiseChat(Event_Chat* handlers, String* msg, UInt8 msgType);
+void Event_RaiseChat(Event_Chat* handlers, String* msg, Int32 msgType);
 void Event_RegisterChat(Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
 void Event_UnregisterChat(Event_Chat* handlers, void* obj, Event_Chat_Callback handler);
 

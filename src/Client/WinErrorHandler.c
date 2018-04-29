@@ -94,6 +94,7 @@ void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 		UInt64 addr = (UInt64)stack[i];
 		ErrorHandler_Hex(addr, hex);
 
+		/* TODO: SymGetLineFromAddr64 as well? */
 		if (SymFromAddr(process, addr, NULL, &sym.Symbol)) {
 			String_Format3(str, "%i) 0x%c - %c\r\n", &number, hex, sym.Symbol.Name);
 		} else {

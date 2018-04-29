@@ -116,7 +116,7 @@ void Event_UnregisterMouseMove(Event_MouseMove* handlers, void* obj, Event_Mouse
 	Event_UnregisterImpl((Event_Void*)handlers, obj, (Event_Void_Callback)handler);
 }
 
-void Event_RaiseChat(Event_Chat* handlers, String* msg, UInt8 msgType) {
+void Event_RaiseChat(Event_Chat* handlers, String* msg, Int32 msgType) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		handlers->Handlers[i](handlers->Objs[i], msg, msgType);

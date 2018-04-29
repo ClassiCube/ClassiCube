@@ -993,7 +993,7 @@ void ChatScreen_ColCodeChanged(void* obj, Int32 code) {
 	screen->Input.Base.CaretAccumulator = caretAcc;
 }
 
-void ChatScreen_ChatReceived(void* obj, String* msg, UInt8 type) {
+void ChatScreen_ChatReceived(void* obj, String* msg, Int32 type) {
 	if (Gfx_LostContext) return;
 	ChatScreen* screen = (ChatScreen*)obj;
 
@@ -1002,8 +1002,8 @@ void ChatScreen_ChatReceived(void* obj, String* msg, UInt8 type) {
 		if (Game_ChatLines == 0) return;
 
 		Int32 index = screen->ChatIndex + (Game_ChatLines - 1);
-		String msg = StringsBuffer_UNSAFE_Get(&Chat_Log, index);
-		TextGroupWidget_PushUpAndReplaceLast(&screen->Chat, &msg);
+		String chatMsg = StringsBuffer_UNSAFE_Get(&Chat_Log, index);
+		TextGroupWidget_PushUpAndReplaceLast(&screen->Chat, &chatMsg);
 	} else if (type >= MSG_TYPE_STATUS_1 && type <= MSG_TYPE_STATUS_3) {
 		TextGroupWidget_SetText(&screen->Status, 2 + (type - MSG_TYPE_STATUS_1), msg);
 	} else if (type >= MSG_TYPE_BOTTOMRIGHT_1 && type <= MSG_TYPE_BOTTOMRIGHT_3) {
