@@ -9,6 +9,7 @@
 #include "Game.h"
 #include "ServerConnection.h"
 #include "Event.h"
+#include "Funcs.h"
 
 void Map_ReadBlocks(Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
@@ -21,7 +22,7 @@ void Map_ReadBlocks(Stream* stream) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------LvlFormat--------------------------------------------------------*
+*--------------------------------------------------MCSharp level Format---------------------------------------------------*
 *#########################################################################################################################*/
 #define LVL_VERSION 1874
 #define LVL_CUSTOMTILE ((BlockID)163)
@@ -95,11 +96,9 @@ void Lvl_ConvertPhysicsBlocks(void) {
 }
 
 void Lvl_Load(Stream* stream) {
-	GZipHeader gzipHeader;
-	GZipHeader_Init(&gzipHeader);
-	while (!gzipHeader.Done) {
-		GZipHeader_Read(stream, &gzipHeader);
-	}
+	GZipHeader gzHeader;
+	GZipHeader_Init(&gzHeader);
+	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
 	
 	Stream compStream;
 	InflateState state;
@@ -130,7 +129,7 @@ void Lvl_Load(Stream* stream) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------FcmFormat--------------------------------------------------------*
+*----------------------------------------------------fCraft map format----------------------------------------------------*
 *#########################################################################################################################*/
 #define FCM_IDENTIFIER 0x0FC2AF40UL
 #define FCM_REVISION 13
@@ -202,19 +201,19 @@ enum NBT_TAG {
 struct NbtTag_;
 typedef struct NbtTag_ {
 	struct NbtTag_* Parent;
-	UInt8 TagID;
-	UInt8 NameBuffer[String_BufferSize(NBT_SMALL_SIZE)];
+	UInt8  TagID;
+	UInt8  NameBuffer[String_BufferSize(NBT_SMALL_SIZE)];
 	UInt32 NameSize;
-
 	UInt32 DataSize; /* size of data for arrays */
+
 	union {
-		UInt8 Value_U8;
-		Int16 Value_I16;
-		Int32 Value_I32;
-		Int64 Value_I64;
+		UInt8  Value_U8;
+		Int16  Value_I16;
+		Int32  Value_I32;
+		Int64  Value_I64;
 		Real32 Value_R32;
 		Real64 Value_R64;
-		UInt8 DataSmall[String_BufferSize(NBT_SMALL_SIZE)];
+		UInt8  DataSmall[String_BufferSize(NBT_SMALL_SIZE)];
 		UInt8* DataBig; /* malloc for big byte arrays */
 	};
 } NbtTag;
@@ -356,7 +355,7 @@ bool IsTag(NbtTag* tag, const UInt8* tagName) {
 
 
 /*########################################################################################################################*
-*--------------------------------------------------------CwFormat---------------------------------------------------------*
+*--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
 bool Cw_Callback_1(NbtTag* tag) {
 	if (IsTag(tag, "X")) { World_Width  = (UInt16)NbtTag_I16(tag); return true; }
@@ -558,11 +557,9 @@ bool Cw_Callback(NbtTag* tag) {
 }
 
 void Cw_Load(Stream* stream) {
-	GZipHeader gzipHeader;
-	GZipHeader_Init(&gzipHeader);
-	while (!gzipHeader.Done) {
-		GZipHeader_Read(stream, &gzipHeader);
-	}
+	GZipHeader gzHeader;
+	GZipHeader_Init(&gzHeader);
+	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
 
 	Stream compStream;
 	InflateState state;
@@ -577,4 +574,195 @@ void Cw_Load(Stream* stream) {
 	Vector3* spawn = &LocalPlayer_Instance.Spawn;
 	Vector3I P; Vector3I_Floor(&P, spawn);
 	if (!World_IsValidPos_3I(P)) { spawn->X /= 32.0f; spawn->Y /= 32.0f; spawn->Z /= 32.0f; }
+}
+
+
+/*########################################################################################################################*
+*-------------------------------------------------Minecraft .dat format---------------------------------------------------*
+*#########################################################################################################################*/
+enum JTypeCode {
+	TC_NULL = 0x70, TC_REFERENCE = 0x71, TC_CLASSDESC = 0x72, TC_OBJECT = 0x73, 
+	TC_STRING = 0x74, TC_ARRAY = 0x75, TC_ENDBLOCKDATA = 0x78,
+};
+
+enum JFieldType {
+	JFIELD_INT8 = 'B', JFIELD_REAL32 = 'F', JFIELD_INT32 = 'I', JFIELD_INT64 = 'J',
+	JFIELD_BOOL = 'Z', JFIELD_ARRAY = '[', JFIELD_OBJECT = 'L',
+};
+
+#define JNAME_SIZE 48
+typedef struct JFieldDesc_ {
+	UInt8 Type;
+	UInt8 FieldName[String_BufferSize(JNAME_SIZE)];
+	union {
+		Int8   Value_I8;
+		Int32  Value_I32;
+		Int64  Value_I64;
+		Real32 Value_R32;
+		struct { UInt8* Value_Ptr; UInt32 Value_Size; };
+	};
+} JFieldDesc;
+
+typedef struct JClassDesc_ {
+	UInt8 ClassName[String_BufferSize(JNAME_SIZE)];
+	UInt16 FieldsCount;
+	JFieldDesc Fields[22];
+} JClassDesc;
+
+void Dat_ReadString(Stream* stream, UInt8* buffer) {
+	Platform_MemSet(buffer, 0, JNAME_SIZE);
+	UInt16 len = Stream_ReadU16_BE(stream);
+
+	if (len > JNAME_SIZE) ErrorHandler_Fail("Dat string too long");
+	Stream_Read(stream, buffer, len);
+}
+
+void Dat_ReadFieldDesc(Stream* stream, JFieldDesc* desc) {
+	desc->Type = Stream_ReadU8(stream);
+	Dat_ReadString(stream, desc->FieldName);
+
+	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {
+		UInt8 typeCode = Stream_ReadU8(stream);
+		if (typeCode == TC_STRING) {
+			UInt8 className1[String_BufferSize(JNAME_SIZE)];
+			Dat_ReadString(stream, className1);
+		} else if (typeCode == TC_REFERENCE) {
+			Stream_ReadI32_BE(stream); /* handle */
+		} else {
+			ErrorHandler_Fail("Unsupported type code in FieldDesc class name");
+		}
+	}
+}
+
+void Dat_ReadClassDesc(Stream* stream, JClassDesc* desc) {
+	UInt8 typeCode = Stream_ReadU8(stream);
+	if (typeCode == TC_NULL) { desc->ClassName[0] = NULL; desc->FieldsCount = 0; return; }
+	if (typeCode != TC_CLASSDESC) ErrorHandler_Fail("Unsupported type code in ClassDesc header");
+
+	Dat_ReadString(stream, desc->ClassName);
+	Stream_ReadU64_BE(stream); /* serial version UID */
+	Stream_ReadU8(stream);     /* flags */
+
+	desc->FieldsCount = Stream_ReadU16_BE(stream);
+	if (desc->FieldsCount > Array_Elems(desc->Fields)) ErrorHandler_Fail("ClassDesc has too many fields");
+	Int32 i;
+	for (i = 0; i < desc->FieldsCount; i++) {
+		Dat_ReadFieldDesc(stream, &desc->Fields[i]);
+	}
+
+	typeCode = Stream_ReadU8(stream);
+	if (typeCode != TC_ENDBLOCKDATA) ErrorHandler_Fail("Unsupported type code in ClassDesc footer");
+	JClassDesc superClassDesc;
+	Dat_ReadClassDesc(stream, &superClassDesc);
+}
+
+void Dat_ReadFieldData(Stream* stream, JFieldDesc* field) {
+	switch (field->Type) {
+	case JFIELD_INT8:
+		field->Value_I8  = Stream_ReadI8(stream); break;
+	case JFIELD_REAL32:
+		/* TODO: Is this union abuse even legal */
+		field->Value_I32 = Stream_ReadI32_BE(stream); break;
+	case JFIELD_INT32:
+		field->Value_I32 = Stream_ReadI32_BE(stream); break;
+	case JFIELD_INT64:
+		field->Value_I64 = Stream_ReadI64_BE(stream); break;
+	case JFIELD_BOOL:
+		field->Value_I32 = Stream_ReadU8(stream) != 0; break;
+
+	case JFIELD_OBJECT: {
+		/* Luckily for us, we only have to account for blockMap object */
+		/* The player object is stored after the fields we actually care about, so can be ignored */
+		String fieldName = String_FromRawArray(field->FieldName);
+		if (!String_CaselessEqualsConst(&fieldName, "blockMap")) break;
+
+		UInt8 typeCode = Stream_ReadU8(stream);
+		/* Skip all blockMap data with awful hacks */
+		/* These offsets were based on server_level.dat map from original minecraft classic server */
+		if (typeCode == TC_OBJECT) {
+			Stream_Skip(stream, 315);
+			UInt32 count = Stream_ReadU32_BE(stream);
+			Stream_Skip(stream, 17 * count);
+			Stream_Skip(stream, 152);
+		} else if (typeCode != TC_NULL) {
+			/* WoM maps have this field as null, which makes things easier for us */
+			ErrorHandler_Fail("Unsupported type code in Object field");
+		}
+	} break;
+
+	case JFIELD_ARRAY: {
+		UInt8 typeCode = Stream_ReadU8(stream);
+		if (typeCode == TC_NULL) break;
+		if (typeCode != TC_ARRAY) ErrorHandler_Fail("Unsupported type code in Array field");
+
+		JClassDesc arrayClassDesc;
+		Dat_ReadClassDesc(stream, &arrayClassDesc);
+		if (arrayClassDesc.ClassName[1] != JFIELD_INT8) ErrorHandler_Fail("Only byte array fields supported");
+
+		UInt32 size = Stream_ReadU32_BE(stream);
+		field->Value_Ptr = Platform_MemAlloc(size, sizeof(UInt8));
+		if (field->Value_Ptr == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
+
+		Stream_Read(stream, field->Value_Ptr, size);
+		field->Value_Size = size;
+	} break;
+	}
+}
+
+Int32 Dat_I32(JFieldDesc* field) {
+	if (field->Type != JFIELD_INT32) ErrorHandler_Fail("Field type must be Int32");
+	return field->Value_I32;
+}
+
+void Dat_Load(Stream* stream) {
+	GZipHeader gzHeader;
+	GZipHeader_Init(&gzHeader);
+	while (!gzHeader.Done) { GZipHeader_Read(stream, &gzHeader); }
+
+	Stream compStream;
+	InflateState state;
+	Inflate_MakeStream(&compStream, &state, stream);
+
+	/* .dat header */
+	if (Stream_ReadI32_BE(&compStream) != 0x271BB788 || Stream_ReadU8(&compStream) != 0x02) {
+		ErrorHandler_Fail("Unexpected constant in .dat file");
+	}
+
+	/* Java seralisation headers */
+	if (Stream_ReadU16_BE(&compStream) != 0xACED || Stream_ReadU16_BE(&compStream) != 0x0005) {
+		ErrorHandler_Fail("Unexpected java serialisation constant(s)");
+	}
+
+	UInt8 typeCode = Stream_ReadU8(&compStream);
+	if (typeCode != TC_OBJECT) ErrorHandler_Fail("Unexpected type code for root class");
+	JClassDesc obj; Dat_ReadClassDesc(&compStream, &obj);
+
+	Int32 i;
+	for (i = 0; i < obj.FieldsCount; i++) {
+		Dat_ReadFieldData(&compStream, &obj.Fields[i]);
+	}
+
+	Vector3* spawn = &LocalPlayer_Instance.Spawn;
+	for (i = 0; i < obj.FieldsCount; i++) {
+		JFieldDesc* field = &obj.Fields[i];
+		String fieldName = String_FromRawArray(field->FieldName);
+
+		if (String_CaselessEqualsConst(&fieldName, "width")) {
+			World_Width = Dat_I32(field);
+		} else if (String_CaselessEqualsConst(&fieldName, "height")) {
+			World_Length = Dat_I32(field);
+		} else if (String_CaselessEqualsConst(&fieldName, "depth")) {
+			World_Height = Dat_I32(field);
+		} else if (String_CaselessEqualsConst(&fieldName, "blocks")) {
+			if (field->Type != JFIELD_ARRAY) ErrorHandler_Fail("Blocks field must be Array");
+			World_Blocks = field->Value_Ptr;
+			World_BlocksSize = field->Value_Size;
+		} else if (String_CaselessEqualsConst(&fieldName, "xSpawn")) {
+			spawn->X = (Real32)Dat_I32(field);
+		} else if (String_CaselessEqualsConst(&fieldName, "ySpawn")) {
+			spawn->Y = (Real32)Dat_I32(field);
+		} else if (String_CaselessEqualsConst(&fieldName, "zSpawn")) {
+			spawn->Z = (Real32)Dat_I32(field);
+		}
+	}
 }

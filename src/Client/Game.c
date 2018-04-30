@@ -783,7 +783,6 @@ void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }
 void Cw_Save(Stream* stream) { }
 void Schematic_Save(Stream* stream) { }
 
-void Dat_Load(Stream* stream) { }
 void Gfx_MakeApiInfo(void) { }
 void AdvLightingBuilder_SetActive(void) { }
 
