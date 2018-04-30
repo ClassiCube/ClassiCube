@@ -641,7 +641,8 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value) {
 #define STRINGSBUFFER_LEN_SHIFT 9
 #define STRINGSBUFFER_LEN_MASK  0x1FFUL
 void StringsBuffer_Init(StringsBuffer* buffer) {
-	StringsBuffer_UNSAFE_Reset(buffer);
+	buffer->Count     = 0;
+	buffer->UsedElems = 0;
 	buffer->TextBuffer  = buffer->DefaultBuffer;
 	buffer->FlagsBuffer = buffer->DefaultFlags;
 	buffer->TextBufferElems  = STRINGSBUFFER_BUFFER_DEF_SIZE;
@@ -655,12 +656,7 @@ void StringsBuffer_Free(StringsBuffer* buffer) {
 	if (buffer->FlagsBuffer != buffer->DefaultFlags) {
 		Platform_MemFree(&buffer->FlagsBuffer);
 	}
-	StringsBuffer_UNSAFE_Reset(buffer);
-}
-
-void StringsBuffer_UNSAFE_Reset(StringsBuffer* buffer) {
-	buffer->Count     = 0;
-	buffer->UsedElems = 0;
+	StringsBuffer_Init(buffer);
 }
 
 void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text) {

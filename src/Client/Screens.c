@@ -767,7 +767,7 @@ void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 void ChatScreen_CheckOtherStatuses(ChatScreen* screen) {
 	AsyncRequest request;
 	Int32 progress;
-	bool hasRequest = AsyncDownloader_GetInProgress(&request, &progress);
+	bool hasRequest = AsyncDownloader_GetCurrent(&request, &progress);
 
 	String id = String_FromRawArray(request.ID);
 	String terrain = String_FromConst("terrain");

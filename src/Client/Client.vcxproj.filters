@@ -572,5 +572,8 @@
     <ClCompile Include="PacketHandlers.c">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
+    <ClCompile Include="AsyncDownloader.c">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

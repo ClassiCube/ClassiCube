@@ -63,10 +63,10 @@ void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
 	String zip = String_FromConst(".zip");
 	if (String_ContainsString(url, &zip)) {
 		String texPack = String_FromConst("texturePack");
-		AsyncDownloader_Download2(url, true, REQUEST_TYPE_DATA, &texPack, &lastModified, &etag);
+		AsyncDownloader_GetDataEx(url, true, &texPack, &lastModified, &etag);
 	} else {
 		String terrain = String_FromConst("terrain");
-		AsyncDownloader_Download2(url, true, REQUEST_TYPE_BITMAP, &terrain, &lastModified, &etag);
+		AsyncDownloader_GetImageEx(url, true, &terrain, &lastModified, &etag);
 	}
 }
 

@@ -4,6 +4,7 @@
 #include "ExtMath.h"
 #include "ErrorHandler.h"
 #include "Drawer2D.h"
+#include "Funcs.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -297,10 +298,61 @@ void* Platform_ThreadStart(Platform_ThreadFunc* func) {
 	return handle;
 }
 
+void Platform_ThreadJoin(void* handle) {
+	WaitForSingleObject((HANDLE)handle, INFINITE);
+}
+
 void Platform_ThreadFreeHandle(void* handle) {
 	if (!CloseHandle((HANDLE)handle)) {
 		ErrorHandler_FailWithCode(GetLastError(), "Freeing thread handle");
 	}
+}
+
+CRITICAL_SECTION mutexList[3];
+Int32 mutexIndex;
+void* Platform_MutexCreate(void) {
+	if (mutexIndex == Array_Elems(mutexList)) { 
+		ErrorHandler_Fail("Cannot allocate another mutex");
+		return NULL;
+	} else {
+		CRITICAL_SECTION* ptr = &mutexList[mutexIndex];
+		InitializeCriticalSection(ptr); mutexIndex++;
+		return ptr;
+	}
+}
+
+void Platform_MutexFree(void* handle) {
+	DeleteCriticalSection((CRITICAL_SECTION*)handle);
+}
+
+void Platform_MutexLock(void* handle) {
+	EnterCriticalSection((CRITICAL_SECTION*)handle);
+}
+
+void Platform_MutexUnlock(void* handle) {
+	LeaveCriticalSection((CRITICAL_SECTION*)handle);
+}
+
+void* Platform_EventCreate(void) {
+	void* handle = CreateEventA(NULL, false, false, NULL);
+	if (handle == NULL) {
+		ErrorHandler_FailWithCode(GetLastError(), "Creating event");
+	}
+	return handle;
+}
+
+void Platform_EventFree(void* handle) {
+	if (!CloseHandle((HANDLE)handle)) {
+		ErrorHandler_FailWithCode(GetLastError(), "Freeing event");
+	}
+}
+
+void Platform_EventSet(void* handle) {
+	SetEvent((HANDLE)handle);
+}
+
+void Platform_EventWait(void* handle) {
+	WaitForSingleObject((HANDLE)handle, INFINITE);
 }
 
 void Stopwatch_Start(Stopwatch* timer) {

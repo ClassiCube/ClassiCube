@@ -115,7 +115,6 @@ typedef struct StringsBuffer_ {
 
 void StringsBuffer_Init(StringsBuffer* buffer);
 void StringsBuffer_Free(StringsBuffer* buffer);
-void StringsBuffer_UNSAFE_Reset(StringsBuffer* buffer);
 void StringsBuffer_Get(StringsBuffer* buffer, UInt32 index, STRING_TRANSIENT String* text);
 STRING_REF String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index);
 void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems);

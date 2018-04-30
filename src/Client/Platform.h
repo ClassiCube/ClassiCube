@@ -52,8 +52,19 @@ UInt32 Platform_FileLength(void* file);
 void Platform_ThreadSleep(UInt32 milliseconds);
 typedef void Platform_ThreadFunc(void);
 void* Platform_ThreadStart(Platform_ThreadFunc* func);
+void Platform_ThreadJoin(void* handle);
 /* Frees handle to thread - NOT THE THREAD ITSELF */
 void Platform_ThreadFreeHandle(void* handle);
+
+void* Platform_MutexCreate(void);
+void Platform_MutexFree(void* handle);
+void Platform_MutexLock(void* handle);
+void Platform_MutexUnlock(void* handle);
+
+void* Platform_EventCreate(void);
+void Platform_EventFree(void* handle);
+void Platform_EventSet(void* handle);
+void Platform_EventWait(void* handle);
 
 typedef Int64 Stopwatch;
 void Stopwatch_Start(Stopwatch* timer);

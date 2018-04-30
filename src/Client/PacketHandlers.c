@@ -214,14 +214,14 @@ void WoM_CheckMotd(void) {
 	applied in the new world if the async 'get env request' didn't complete before the old world was unloaded */
 	wom_counter++;
 	WoM_UpdateIdentifier();
-	AsyncDownloader_Download(&url, true, REQUEST_TYPE_STRING, &wom_identifier);
+	AsyncDownloader_GetString(&url, true, &wom_identifier);
 	wom_sendId = true;
 }
 
 void WoM_CheckSendWomID(void) {
 	if (wom_sendId && !wom_sentId) {
-		String msg = String_FromConst("/womid WoMClient-2.0.7")
-			ServerConnection_SendChat(&msg);
+		String msg = String_FromConst("/womid WoMClient-2.0.7");
+		ServerConnection_SendChat(&msg);
 		wom_sentId = true;
 	}
 }

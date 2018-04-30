@@ -454,8 +454,7 @@ void TabList_Reset(void) {
 	Platform_MemSet(TabList_ListNames,   0, sizeof(TabList_ListNames));
 	Platform_MemSet(TabList_GroupNames,  0, sizeof(TabList_GroupNames));
 	Platform_MemSet(TabList_GroupRanks,  0, sizeof(TabList_GroupRanks));
-	/* TODO: Should we be trying to free the buffer here? */
-	StringsBuffer_UNSAFE_Reset(&TabList_Buffer);
+	StringsBuffer_Free(&TabList_Buffer);
 }
 
 IGameComponent TabList_MakeComponent(void) {
@@ -692,7 +691,7 @@ void Player_CheckSkin(Player* player) {
 	if (!player->FetchedSkin && entity->Model->UsesSkin) {
 		Player* first = Player_FirstOtherWithSameSkinAndFetchedSkin(player);
 		if (first == NULL) {
-			AsyncDownloader_DownloadSkin(&skin, &skin);
+			AsyncDownloader_GetSkin(&skin, &skin);
 		} else {
 			Player_ApplySkin(player, first);
 		}

@@ -767,16 +767,7 @@ void Audio_SetSounds(Int32 volume) { }
 void Audio_PlayDigSound(UInt8 type) { }
 void Audio_PlayStepSound(UInt8 type) { }
 
-void ASyncRequest_Free(AsyncRequest* request) { }
-IGameComponent AsyncDownloader_MakeComponent(void) { return IGameComponent_MakeEmpty(); }
-void AsyncDownloader_Init(STRING_PURE String* skinServer) { }
-void AsyncDownloader_DownloadSkin(STRING_PURE String* identifier, STRING_PURE String* skinName) { }
-void AsyncDownloader_Download(STRING_PURE String* url, bool priority, UInt8 type, STRING_PURE String* identifier) { }
-void AsyncDownloader_Download2(STRING_PURE String* url, bool priority, UInt8 type, STRING_PURE String* identifier, DateTime* lastModified, STRING_PURE String* etag) { }
-void AsyncDownloader_Free(void) { }
-bool AsyncDownloader_Get(STRING_PURE String* identifier, AsyncRequest* item) { return false; }
-bool AsyncDownloader_GetInProgress(AsyncRequest* request, Int32* progress) { return false; }
-void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) { }
+/* TODO: needed for async downloading */
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
 
 void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }

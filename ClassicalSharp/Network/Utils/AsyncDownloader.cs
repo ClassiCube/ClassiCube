@@ -39,11 +39,7 @@ namespace ClassicalSharp.Network {
 #if !LAUNCHER
 		void IGameComponent.Init(Game game) { Init(game.skinServer); }
 		void IGameComponent.Ready(Game game) { }
-		void IGameComponent.Reset(Game game) {
-			lock (pendingLocker)
-				pending.Clear();
-			handle.Set();
-		}
+		void IGameComponent.Reset(Game game) { Clear(); }
 		
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
