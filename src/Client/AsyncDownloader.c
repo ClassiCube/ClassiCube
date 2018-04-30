@@ -21,7 +21,7 @@ typedef struct AsyncRequestList_ {
 	AsyncRequest DefaultRequests[10];
 } AsyncRequestList;
 
-void AsyncRequestList_Append(AsyncRequestList* list, AsyncRequest* item);
+/*void AsyncRequestList_Append(AsyncRequestList* list, AsyncRequest* item);
 void AsyncRequestList_Prepend(AsyncRequestList* list, AsyncRequest* item);
 void AsyncRequestList_RemoveAt(AsyncRequestList* list, UInt32 i);
 
@@ -268,8 +268,8 @@ void AsyncDownloader_Init(void) {
 		 Int32 index = FindRequest(&id, &older);
 
 		 if (index >= 0) {
-			 /* very rare case - priority item was inserted, then inserted again (so put before first item), */
-			 /* and both items got downloaded before an external function removed them from the queue */
+			 // very rare case - priority item was inserted, then inserted again (so put before first item),
+			 // and both items got downloaded before an external function removed them from the queue
 			 if (older.TimeAdded > request.TimeAdded) {
 				 AsyncRequest tmp = older; older = *request; *request = tmp;
 			 }
@@ -282,7 +282,6 @@ void AsyncDownloader_Init(void) {
 	 }
 	 Platform_MutexUnlock(async_processedMutex);
  }
- /*
  object DownloadContent(Request request, HttpWebResponse response) {
 	 if (request.Type == RequestType.Bitmap) {
 		 MemoryStream data = DownloadBytes(response);

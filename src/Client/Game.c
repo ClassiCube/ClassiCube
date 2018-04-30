@@ -768,6 +768,19 @@ void Audio_PlayDigSound(UInt8 type) { }
 void Audio_PlayStepSound(UInt8 type) { }
 
 /* TODO: needed for async downloading */
+IGameComponent AsyncDownloader_MakeComponent(void) { return IGameComponent_MakeEmpty(); }
+void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName) { }
+void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE String* id) { }
+void AsyncDownloader_GetImage(STRING_PURE String* url, bool priority, STRING_PURE String* id) { }
+void AsyncDownloader_GetString(STRING_PURE String* url, bool priority, STRING_PURE String* id) { }
+void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, STRING_PURE String* id) { }
+void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents) { }
+void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag) { }
+void AsyncDownloader_GetImageEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag) { }
+
+bool AsyncDownloader_Get(STRING_PURE String* id, AsyncRequest* item) { return false; }
+bool AsyncDownloader_GetCurrent(AsyncRequest* request, Int32* progress) { return false; }
+void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) { }
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
 
 void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }

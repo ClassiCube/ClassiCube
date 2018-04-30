@@ -18,7 +18,7 @@ bool Drawer2D_UseBitmappedChat;
 /* Whether the shadows behind text (that uses shadows) is fully black. */
 bool Drawer2D_BlackTextShadows;
 PackedCol Drawer2D_Cols[DRAWER2D_MAX_COLS];
-#define DRAWER2D_OFFSET 1.3f
+#define DRAWER2D_OFFSET 1
 
 void Drawer2D_Init(void);
 void Drawer2D_Free(void);

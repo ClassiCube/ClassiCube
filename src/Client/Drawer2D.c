@@ -129,7 +129,7 @@ Int32 Drawer2D_FontHeight(FontDesc* font, bool useShadow) {
 
 Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 windowY) {
 	Size2D size = Drawer2D_MeasureText(args);
-	if (size.Width == 0.0f && size.Height == 0.0f) {
+	if (size.Width == 0 && size.Height == 0) {
 		return Texture_FromOrigin(NULL, windowX, windowY, 0, 0, 1.0f, 1.0f);
 	}
 
@@ -343,7 +343,6 @@ void Drawer2D_DrawBitmapText(DrawTextArgs* args, Int32 x, Int32 y) {
 }
 
 Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
-	if (Drawer2D_IsEmptyText(&args->Text)) return Size2D_Empty;
 	Int32 textHeight = Drawer2D_AdjTextSize(args->Font.Size);
 	Size2D total = { 0, Drawer2D_CellSize(textHeight) };
 	Int32 point = Math_Floor(args->Font.Size);
@@ -367,18 +366,65 @@ Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
 	return total;
 }
 
-void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
-	if (Drawer2D_UseBitmappedChat) {
-		Drawer2D_DrawBitmapText(args, x, y);
-	} else {
-		Platform_DrawText(args, x, y);
+Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIENT String* part, UInt8* nextCol) {
+	Int32 length = 0, start = i;
+	for (; i < value->length; i++) {
+		if (value->buffer[i] == '&' && Drawer2D_ValidColCodeAt(value, i + 1)) break;
+		length++;
 	}
+
+	*part = String_UNSAFE_Substring(value, start, length);
+	i += 2; /* skip over colour code */
+
+	if (i <= value->length) *nextCol = value->buffer[i - 1];
+	return i;
+}
+
+void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
+	if (Drawer2D_IsEmptyText(&args->Text)) return;
+	if (Drawer2D_UseBitmappedChat) { Drawer2D_DrawBitmapText(args, x, y); return; }
+	
+	String value = args->Text;
+	UInt8 nextCol = 'f';
+	Int32 i = 0;
+
+	while (i < value.length) {
+		UInt8 colCode = nextCol;
+		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
+		PackedCol col = Drawer2D_Cols[colCode];
+
+		if (args->UseShadow) {
+			PackedCol black = PACKEDCOL_BLACK;
+			PackedCol backCol = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
+			Platform_DrawText(args, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
+		}
+
+		Platform_DrawText(args, x, y, col);
+		x += Platform_MeasureText(args).Width;
+	}
+	args->Text = value;
 }
 
 Size2D Drawer2D_MeasureText(DrawTextArgs* args) {
-	if (Drawer2D_UseBitmappedChat) {
-		return Drawer2D_MeasureBitmapText(args);
-	} else {
-		return Platform_MeasureText(args);
+	if (Drawer2D_IsEmptyText(&args->Text)) return Size2D_Empty;
+	if (Drawer2D_UseBitmappedChat) return Drawer2D_MeasureBitmapText(args);
+
+	String value = args->Text;
+	UInt8 nextCol = 'f';
+	Int32 i = 0;
+	Size2D size = { 0, 0 };
+
+	while (i < value.length) {
+		UInt8 col = nextCol;
+		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
+
+		Size2D partSize = Platform_MeasureText(args);
+		size.Width += partSize.Width;
+		size.Height = max(size.Height, partSize.Height);
 	}
+
+	/* TODO: Is this font shadow offet right? */
+	if (args->UseShadow) { size.Width += DRAWER2D_OFFSET; size.Height += DRAWER2D_OFFSET; }
+	args->Text = value;
+	return size;
 }

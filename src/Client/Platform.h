@@ -2,6 +2,7 @@
 #define CC_PLATFORM_H
 #include "Utils.h"
 #include "2DStructs.h"
+#include "PackedCol.h"
 /* Abstracts platform specific memory management, I/O, etc.
    Copyright 2017 ClassicalSharp | Licensed under BSD-3
 */
@@ -75,7 +76,7 @@ void Platform_FreeFont(FontDesc* desc);
 void Platform_SetBitmap(Bitmap* bmp);
 void Platform_ReleaseBitmap(void);
 Size2D Platform_MeasureText(DrawTextArgs* args);
-void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y);
+void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 
 void Platform_SocketCreate(void** socket);
 ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port);
