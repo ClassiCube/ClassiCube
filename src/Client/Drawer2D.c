@@ -392,6 +392,7 @@ void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
 		UInt8 colCode = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
 		PackedCol col = Drawer2D_Cols[colCode];
+		if (args->Text.length == 0) continue;
 
 		if (args->UseShadow) {
 			PackedCol black = PACKEDCOL_BLACK;
@@ -417,6 +418,7 @@ Size2D Drawer2D_MeasureText(DrawTextArgs* args) {
 	while (i < value.length) {
 		UInt8 col = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
+		if (args->Text.length == 0) continue;
 
 		Size2D partSize = Platform_MeasureText(args);
 		size.Width += partSize.Width;

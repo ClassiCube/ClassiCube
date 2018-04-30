@@ -387,7 +387,7 @@ void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size
 	font.lfHeight    = -Math_Ceil(size * GetDeviceCaps(hdc, LOGPIXELSY) / 72.0f);
 	font.lfUnderline = style == FONT_STYLE_UNDERLINE;
 	font.lfWeight    = style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
-	font.lfQuality   = ANTIALIASED_QUALITY;
+	font.lfQuality   = ANTIALIASED_QUALITY; /* TODO: CLEARTYPE_QUALITY looks slightly better */
 
 	String dstName = String_Init(font.lfFaceName, 0, LF_FACESIZE);
 	String_AppendString(&dstName, fontName);
@@ -452,27 +452,24 @@ void Platform_ReleaseBitmap(void) {
 
 /* TODO: not ssociate font with device so much */
 Size2D Platform_MeasureText(DrawTextArgs* args) {
-	RECT r = { 0 };
-
+	String* text = &args->Text;
 	HGDIOBJ oldFont = SelectObject(hdc, args->Font.Handle);
-	DrawTextA(hdc, args->Text.buffer, args->Text.length,
-		&r, DT_CALCRECT | DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
-	SelectObject(hdc, oldFont);
+	SIZE area; GetTextExtentPointA(hdc, text->buffer, text->length, &area);
 
-	return Size2D_Make(r.right, r.bottom);
+	SelectObject(hdc, oldFont);
+	return Size2D_Make(area.cx, area.cy);
 }
 
 /* TODO: not allocate so much */
 /* TODO: check return codes and stuff */
 /* TODO: make text prettier.. somehow? */
 /* TODO: Do we need to / 255 instead of >> 8 ? */
-/* TODO: Don't use DrawTextA, bit slow */
+/* TODO: GetTextExtentPoint32 instead? */
 /* TODO: Code page 437 - so probably need to use W variants of functions */
 void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
 	String* text = &args->Text;
 	HGDIOBJ oldFont = (HFONT)SelectObject(hdc, (HFONT)args->Font.Handle);
-	RECT area = { 0 };
-	DrawTextA(hdc, text->buffer, text->length, &area, DT_CALCRECT);
+	SIZE area; GetTextExtentPointA(hdc, text->buffer, text->length, &area);
 
 	void* bits = NULL;
 	BITMAPINFO bmi = { 0 };
@@ -484,20 +481,21 @@ void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
 	bmi.bmiHeader.biCompression = BI_RGB;
 
 	HBITMAP dib = CreateDIBSection(hdc, &bmi, 0, &bits, NULL, 0);
-	HGDIOBJ oldBmp = (HBITMAP)SelectObject(hdc, dib);
-	DrawTextA(hdc, text->buffer, text->length, &area, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
+	HGDIOBJ oldBmp = SelectObject(hdc, dib);
+	TextOutA(hdc, 0, 0, text->buffer, text->length);
 
 	Int32 xx, yy;
-	for (yy = 0; yy < area.bottom; yy++) {
+	for (yy = 0; yy < area.cy; yy++) {
 		UInt8* src = (UInt8*)bits + yy * (bmp->Width * 4);
 		UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy); dst += x * BITMAP_SIZEOF_PIXEL;
 
-		for (xx = 0; xx < area.right; xx++) {
+		for (xx = 0; xx < area.cx; xx++) {
 			UInt8 intensity = *src, invIntensity = UInt8_MaxValue - intensity;
 			dst[0] = ((col.B * intensity) >> 8) + ((dst[0] * invIntensity) >> 8);
 			dst[1] = ((col.G * intensity) >> 8) + ((dst[1] * invIntensity) >> 8);
 			dst[2] = ((col.R * intensity) >> 8) + ((dst[2] * invIntensity) >> 8);
-			dst[3] = intensity + ((dst[3] * invIntensity) >> 8);
+			//dst[3] = ((col.A * intensity) >> 8) + ((dst[3] * invIntensity) >> 8);
+			dst[3] = intensity                  + ((dst[3] * invIntensity) >> 8);
 			src += BITMAP_SIZEOF_PIXEL; dst += BITMAP_SIZEOF_PIXEL;
 		}
 	}
