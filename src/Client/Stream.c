@@ -301,28 +301,35 @@ bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
 	return readAny;
 }
 
+Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
+	if (codepoint <= 0x7F) {
+		buffer[0] = (UInt8)codepoint;
+		return 1;
+	} else if (codepoint >= 0x80 && codepoint <= 0x7FF) {
+		buffer[0] = (UInt8)(0xC0 | (codepoint >> 6) & 0x1F);
+		buffer[1] = (UInt8)(0x80 | (codepoint)      & 0x3F);
+		return 2;
+	} else {
+		buffer[0] = (UInt8)(0xE0 | (codepoint >> 12) & 0x0F);
+		buffer[1] = (UInt8)(0x80 | (codepoint >> 6)  & 0x3F);
+		buffer[2] = (UInt8)(0x80 | (codepoint)       & 0x3F);
+		return 3;
+	}
+}
+
 void Stream_WriteLine(Stream* stream, STRING_TRANSIENT String* text) {
-	UInt8 buffer[3584];
+	UInt8 buffer[2048 + 10];
 	UInt32 i, j = 0;
 
 	for (i = 0; i < text->length; i++) {
-		/* Just in case, handle extremely large strings */
-		if (j >= 3032) {
-			Stream_Write(stream, buffer, j);
-			j = 0;
+		/* For extremely large strings */
+		if (j >= 2048) {
+			Stream_Write(stream, buffer, j); j = 0;
 		}
 
+		UInt8* cur = buffer + j;
 		UInt16 codepoint = Convert_CP437ToUnicode(text->buffer[i]);
-		if (codepoint <= 0x7F) {
-			buffer[j++] = (UInt8)codepoint;
-		} else if (codepoint >= 0x80 && codepoint <= 0x7FF) {
-			buffer[j++] = (UInt8)(0xC0 | (codepoint >> 6) & 0x1F);
-			buffer[j++] = (UInt8)(0x80 | (codepoint) & 0x3F);
-		} else {
-			buffer[j++] = (UInt8)(0xE0 | (codepoint >> 12) & 0x0F);
-			buffer[j++] = (UInt8)(0x80 | (codepoint >> 6) & 0x3F);
-			buffer[j++] = (UInt8)(0x80 | (codepoint) & 0x3F);
-		}
+		j += Stream_WriteUtf8(cur, codepoint);
 	}
 	
 	UInt8* ptr = Platform_NewLine;

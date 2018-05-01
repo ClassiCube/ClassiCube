@@ -70,6 +70,8 @@ void Stream_WriteU32_BE(Stream* stream, UInt32 value);
 bool Stream_ReadUtf8Char(Stream* stream, UInt16* codepoint);
 /* Reads a line of UTF8 encoding text from the given stream. Returns false if end of stream. */
 bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text);
+/* Writes a UTF8 encoded character to the given buffer. (max bytes written is 3) */
+Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint);
 /* Writes a line of UTF8 encoded text to the given stream. */
 void Stream_WriteLine(Stream* stream, STRING_TRANSIENT String* text);
 #endif

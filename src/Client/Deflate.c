@@ -12,18 +12,16 @@ bool Header_ReadByte(Stream* s, UInt8* state, Int32* value) {
 	return true;
 }
 
+
+/*########################################################################################################################*
+*-------------------------------------------------------GZip header-------------------------------------------------------*
+*#########################################################################################################################*/
 enum GZIP_STATE_ {
-	GZIP_STATE_HEADER1,
-	GZIP_STATE_HEADER2,
-	GZIP_STATE_COMPRESSIONMETHOD,
-	GZIP_STATE_FLAGS,
-	GZIP_STATE_LASTMODIFIEDTIME,
-	GZIP_STATE_COMPRESSIONFLAGS,
-	GZIP_STATE_OPERATINGSYSTEM,
-	GZIP_STATE_HEADERCHECKSUM,
-	GZIP_STATE_FILENAME,
-	GZIP_STATE_COMMENT,
-	GZIP_STATE_DONE,
+	GZIP_STATE_HEADER1, GZIP_STATE_HEADER2,
+	GZIP_STATE_COMPRESSIONMETHOD, GZIP_STATE_FLAGS,
+	GZIP_STATE_LASTMODIFIEDTIME, GZIP_STATE_COMPRESSIONFLAGS,
+	GZIP_STATE_OPERATINGSYSTEM, GZIP_STATE_HEADERCHECKSUM,
+	GZIP_STATE_FILENAME, GZIP_STATE_COMMENT, GZIP_STATE_DONE,
 };
 
 void GZipHeader_Init(GZipHeader* header) {
@@ -102,10 +100,11 @@ void GZipHeader_Read(Stream* s, GZipHeader* header) {
 }
 
 
+/*########################################################################################################################*
+*-------------------------------------------------------ZLib header-------------------------------------------------------*
+*#########################################################################################################################*/
 enum ZLIB_STATE_ {
-	ZLIB_STATE_COMPRESSIONMETHOD,
-	ZLIB_STATE_FLAGS,
-	ZLIB_STATE_DONE,
+	ZLIB_STATE_COMPRESSIONMETHOD, ZLIB_STATE_FLAGS, ZLIB_STATE_DONE,
 };
 
 void ZLibHeader_Init(ZLibHeader* header) {
@@ -140,21 +139,17 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header) {
 }
 
 
+/*########################################################################################################################*
+*--------------------------------------------------Inflate (decompress)---------------------------------------------------*
+*#########################################################################################################################*/
 enum INFLATE_STATE_ {
-INFLATE_STATE_HEADER,
-INFLATE_STATE_UNCOMPRESSED_HEADER,
-INFLATE_STATE_UNCOMPRESSED_DATA,
-INFLATE_STATE_DYNAMIC_HEADER,
-INFLATE_STATE_DYNAMIC_CODELENS,
-INFLATE_STATE_DYNAMIC_LITSDISTS,
-INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT,
-INFLATE_STATE_COMPRESSED_LIT,
-INFLATE_STATE_COMPRESSED_LITREPEAT,
-INFLATE_STATE_COMPRESSED_DIST,
-INFLATE_STATE_COMPRESSED_DISTREPEAT,
-INFLATE_STATE_COMPRESSED_DATA,
-INFLATE_STATE_FASTCOMPRESSED,
-INFLATE_STATE_DONE,
+	INFLATE_STATE_HEADER, INFLATE_STATE_UNCOMPRESSED_HEADER,
+	INFLATE_STATE_UNCOMPRESSED_DATA, INFLATE_STATE_DYNAMIC_HEADER,
+	INFLATE_STATE_DYNAMIC_CODELENS, INFLATE_STATE_DYNAMIC_LITSDISTS,
+	INFLATE_STATE_DYNAMIC_LITSDISTSREPEAT, INFLATE_STATE_COMPRESSED_LIT,
+	INFLATE_STATE_COMPRESSED_LITREPEAT, INFLATE_STATE_COMPRESSED_DIST,
+	INFLATE_STATE_COMPRESSED_DISTREPEAT, INFLATE_STATE_COMPRESSED_DATA,
+	INFLATE_STATE_FASTCOMPRESSED, INFLATE_STATE_DONE,
 };
 
 /* Insert this byte into the bit buffer */
@@ -698,4 +693,152 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 	stream->Write = Inflate_StreamWrite;
 	stream->Close = Inflate_StreamClose;
 	stream->Seek  = Inflate_StreamSeek;
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Deflate (compress)----------------------------------------------------*
+*#########################################################################################################################*/
+ReturnCode Deflate_Flush(DeflateState* state, UInt32 size) {
+	/* TODO: actually compress here */
+	Stream_WriteU16_BE(state->Source, size);
+	Stream_WriteU16_BE(state->Source, size ^ 0xFFFFFUL);
+	Stream_Write(state->Source, state->InputBuffer, size);
+	return 0; /* TODO: need to return error code instead of killing process */
+}
+
+ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	DeflateState* state = stream->Meta_Inflate;
+	*modified = 0;
+	while (count > 0) {
+		UInt8* dst = &state->InputBuffer[state->InputPosition];
+		UInt32 toWrite = count;
+		if (state->InputPosition + toWrite >= DEFLATE_BUFFER_SIZE) {
+			toWrite = DEFLATE_BUFFER_SIZE - state->InputPosition;
+		}
+
+		Platform_MemCpy(dst, data, toWrite);
+		count -= toWrite;
+		state->InputPosition += toWrite;
+		*modified += toWrite;
+		data += toWrite;
+
+		if (state->InputPosition == DEFLATE_BUFFER_SIZE) {
+			ReturnCode result = Deflate_Flush(state, DEFLATE_BUFFER_SIZE);
+			if (result != 0) return result;
+		}
+	}
+	return 0;
+}
+
+ReturnCode Deflate_StreamClose(Stream* stream) {
+	DeflateState* state = stream->Meta_Inflate;
+	if (state->InputPosition > 0) { 
+		return Deflate_Flush(state, DEFLATE_BUFFER_SIZE - state->InputPosition);
+	}
+	return 0;
+}
+
+void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying) {
+	state->InputPosition = 0;
+	state->Source = underlying;
+	Stream_SetName(stream, &underlying->Name);
+	stream->Meta_Inflate = state;
+
+	stream->Read  = Inflate_StreamWrite;
+	stream->Write = Deflate_StreamWrite;
+	stream->Seek  = Inflate_StreamSeek;
+	stream->Close = Deflate_StreamClose;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------GZip (compress)-----------------------------------------------------*
+*#########################################################################################################################*/
+ReturnCode GZip_StreamClose(Stream* stream) {
+	ReturnCode result = Deflate_StreamClose(stream);
+	if (result != 0) return result;
+
+	GZipState* state = stream->Meta_Inflate;
+	Stream_WriteU32_LE(stream, state->Crc32);
+	Stream_WriteU32_LE(stream, state->Size);
+	return 0;
+}
+
+ReturnCode GZip_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	ReturnCode result = Deflate_StreamWrite(stream, data, count, modified);
+	if (result != 0) return result;
+
+	GZipState* state = stream->Meta_Inflate;
+	state->Size += count;
+	UInt32 i, crc32 = state->Crc32 ^ 0xFFFFFFFFUL; /* TODO: should we move this to initalisation and finalisation */
+
+	/* TODO: Optimise this calculation */
+	for (i = 0; i < count; i++) {
+		crc32 = Utils_Crc32Table[(crc32 ^ data[i]) & 0xFF] ^ (crc32 >> 8);
+	}
+
+	state->Crc32 = crc32 ^ 0xFFFFFFFFUL;
+	return 0;
+}
+
+ReturnCode GZip_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	static UInt8 gz_header[10] = { 0x1F, 0x8B, 0x08 };
+	Stream_Write(stream, gz_header, sizeof(gz_header));
+	stream->Write = GZip_StreamWrite;
+	return GZip_StreamWrite(stream, data, count, modified);
+}
+
+void GZip_MakeStream(Stream* stream, GZipState* state, Stream* underlying) {
+	Deflate_MakeStream(stream, &state->Base, underlying);
+	state->Crc32 = 0;
+	state->Size = 0;
+	stream->Write = GZip_StreamWriteFirst;
+	stream->Close = GZip_StreamClose;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------ZLib (compress)-----------------------------------------------------*
+*#########################################################################################################################*/
+ReturnCode ZLib_StreamClose(Stream* stream) {
+	ReturnCode result = Deflate_StreamClose(stream);
+	if (result != 0) return result;
+
+	ZLibState* state = stream->Meta_Inflate;
+	Stream_WriteU32_BE(stream, state->Adler32);
+	return 0;
+}
+
+ReturnCode ZLib_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	ReturnCode result = Deflate_StreamWrite(stream, data, count, modified);
+	if (result != 0) return result;
+
+	ZLibState* state = stream->Meta_Inflate;
+	UInt32 i, adler32 = state->Adler32;
+	UInt32 s1 = adler32 & 0xFFFF, s2 = (adler32 >> 16) & 0xFFFF;
+
+	/* TODO: Optimise this calculation */
+	for (i = 0; i < count; i++) {
+		#define ADLER32_BASE 65521
+		s1 = (s1 + data[i]) % ADLER32_BASE;
+		s2 = (s2 + s1)      % ADLER32_BASE;
+	}
+
+	state->Adler32 = (s2 << 16) | s1;
+	return 0;
+}
+
+ReturnCode ZLib_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	static UInt8 zl_header[2] = { 0x78, 0x01 }; /* TODO: verify this is correct */
+	Stream_Write(stream, zl_header, sizeof(zl_header));
+	stream->Write = ZLib_StreamWrite;
+	return ZLib_StreamWrite(stream, data, count, modified);
+}
+
+void ZLib_MakeStream(Stream* stream, ZLibState* state, Stream* underlying) {
+	Deflate_MakeStream(stream, &state->Base, underlying);
+	state->Adler32 = 1;
+	stream->Write = ZLib_StreamWriteFirst;
+	stream->Close = ZLib_StreamClose;
 }

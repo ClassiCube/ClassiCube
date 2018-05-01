@@ -70,4 +70,18 @@ typedef struct InflateState_ {
 void Inflate_Init(InflateState* state, Stream* source);
 void Inflate_Process(InflateState* state);
 void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying);
+
+
+#define DEFLATE_BUFFER_SIZE 16384
+typedef struct DeflateState_ {
+	UInt32 InputPosition;
+	Stream* Source;
+	UInt8 InputBuffer[DEFLATE_BUFFER_SIZE]
+} DeflateState;
+void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying);
+
+typedef struct GZipState_ { DeflateState Base; UInt32 Crc32, Size; } GZipState;
+void GZip_MakeStream(Stream* stream, GZipState* state, Stream* underlying);
+typedef struct ZLibState_ { DeflateState Base; UInt32 Adler32; } ZLibState;
+void ZLib_MakeStream(Stream* stream, ZLibState* state, Stream* underlying);
 #endif

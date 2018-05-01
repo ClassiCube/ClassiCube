@@ -354,6 +354,32 @@ bool IsTag(NbtTag* tag, const UInt8* tagName) {
 }
 
 
+#define Nbt_WriteU8(stream, value)  Stream_WriteU8(stream, value)
+#define Nbt_WriteI16(stream, value) Stream_WriteI16_BE(stream, value)
+#define Nbt_WriteI32(stream, value) Stream_WriteI32_BE(stream, value)
+
+void Nbt_WriteString(Stream* stream, STRING_PURE String* text) {
+	if (text->length > NBT_SMALL_SIZE) ErrorHandler_Fail("NBT String too long");
+	UInt8 buffer[NBT_SMALL_SIZE * 3];
+	Int32 i, len = 0;
+
+	for (i = 0; i < text->length; i++) {
+		UInt8* cur = buffer + len;
+		UInt16 codepoint = Convert_CP437ToUnicode(text->buffer[i]);
+		len += Stream_WriteUtf8(cur, codepoint);
+	}
+
+	Nbt_WriteI16(stream, len);
+	Stream_Write(stream, buffer, len);
+}
+
+void Nbt_WriteTag(Stream* stream, UInt8 tagType, const UInt8* tagName) { 
+	Nbt_WriteU8(stream, tagType);
+	String str = String_FromReadonly(tagName);
+	Nbt_WriteString(stream, &str);
+}
+
+
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
@@ -765,4 +791,228 @@ void Dat_Load(Stream* stream) {
 			spawn->Z = (Real32)Dat_I32(field);
 		}
 	}
+}
+
+
+/*########################################################################################################################*
+*--------------------------------------------------ClassicWorld export----------------------------------------------------*
+*#########################################################################################################################*/
+void Cw_WriteCpeExtCompound(Stream* stream, const UInt8* tagName, Int32 version) {
+	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
+	Nbt_WriteTag(stream, NBT_TAG_INT32, "ExtensionVersion");
+	Nbt_WriteI32(stream, version);
+}
+
+void Cw_WriteSpawnCompound(Stream* stream) {
+	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Spawn");
+	LocalPlayer* p = &LocalPlayer_Instance;
+	Vector3 spawn = p->Spawn; /* TODO: Maybe keep real spawn too? */
+
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "X");
+	Nbt_WriteI16(stream, spawn.X);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "Y");
+	Nbt_WriteI16(stream, spawn.Y);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "Z");
+	Nbt_WriteI16(stream, spawn.Z);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "H");
+	Nbt_WriteU8(stream, Math_Deg2Packed(p->SpawnRotY));
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "P");
+	Nbt_WriteU8(stream, Math_Deg2Packed(p->SpawnHeadX));
+
+	Nbt_WriteU8(stream, NBT_TAG_END);
+}
+
+void Cw_WriteColCompound(Stream* stream, const UInt8* tagName, PackedCol col) {
+	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "R");
+	Nbt_WriteI16(stream, col.R);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "G");
+	Nbt_WriteI16(stream, col.G);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "B");
+	Nbt_WriteI16(stream, col.B);
+
+	Nbt_WriteU8(stream, NBT_TAG_END);
+}
+
+void Cw_WriteBlockDefinitionCompound(Stream* stream, BlockID id) {
+	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Block" + id);
+	bool sprite = Block_Draw[id] == DRAW_SPRITE;
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "ID");
+	Nbt_WriteU8(stream, id);
+	Nbt_WriteTag(stream, NBT_TAG_STRING, "Name");
+	String name = Block_UNSAFE_GetName(id);
+	Nbt_WriteString(stream, &name);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "CollideType");
+	Nbt_WriteU8(stream, Block_Collide[id]);
+	IntAndFloat speed; speed.fVal = Block_SpeedMultiplier[id];
+	Nbt_WriteTag(stream, NBT_TAG_REAL32, "Speed");
+	Nbt_WriteI32(stream, speed.iVal);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Textures");
+	Nbt_WriteI32(stream, 6);
+	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_YMAX));
+	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_YMIN));
+	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_XMIN));
+	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_XMAX));
+	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_ZMIN));
+	Nbt_WriteU8(stream, Block_GetTexLoc(id, FACE_ZMAX));
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "TransmitsLight");
+	Nbt_WriteU8(stream, Block_BlocksLight[id] ? 0 : 1);
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "WalkSound");
+	Nbt_WriteU8(stream, Block_DigSounds[id]);
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "FullBright");
+	Nbt_WriteU8(stream, Block_FullBright[id] ? 1 : 0);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "Shape");
+	UInt8 shape = sprite ? 0 : (UInt8)(Block_MaxBB[id].Y * 16);
+	Nbt_WriteU8(stream, shape);
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "BlockDraw");
+	UInt8 draw = sprite ? Block_SpriteOffset[id] : Block_Draw[id];
+	Nbt_WriteU8(stream, draw);
+
+	PackedCol col = Block_FogCol[id];
+	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Fog");
+	Nbt_WriteI32(stream, 4);
+	UInt8 fog = (UInt8)(128 * Block_FogDensity[id] - 1);
+	Nbt_WriteU8(stream, Block_FogDensity[id] == 0 ? 0 : fog);
+	Nbt_WriteU8(stream, col.R); Nbt_WriteU8(stream, col.G); Nbt_WriteU8(stream, col.B);
+
+	Vector3 minBB = Block_MinBB[id], maxBB = Block_MaxBB[id];
+	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Coords");
+	Nbt_WriteI32(stream, 6);
+	Nbt_WriteU8(stream, minBB.X * 16); Nbt_WriteU8(stream, minBB.Y * 16);
+	Nbt_WriteU8(stream, minBB.Z * 16); Nbt_WriteU8(stream, maxBB.X * 16);
+	Nbt_WriteU8(stream, maxBB.Y * 16); Nbt_WriteU8(stream, maxBB.Z * 16);
+
+	Nbt_WriteU8(stream, NBT_TAG_END);
+}
+
+void Cw_WriteMetadataCompound(Stream* stream) {
+	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Metadata");
+	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "CPE");
+
+	Cw_WriteCpeExtCompound(stream, "ClickDistance", 1);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "Distance");
+	Nbt_WriteI16(stream, LocalPlayer_Instance.ReachDistance * 32);
+	Nbt_WriteU8(stream, NBT_TAG_END);
+
+	Cw_WriteCpeExtCompound(stream, "EnvWeatherType", 1);
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "WeatherType");
+	Nbt_WriteU8(stream, WorldEnv_Weather);
+	Nbt_WriteU8(stream, NBT_TAG_END);
+
+	Cw_WriteCpeExtCompound(stream, "EnvMapAppearance", 1);
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "SideBlock");
+	Nbt_WriteU8(stream, WorldEnv_SidesBlock);
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "EdgeBlock");
+	Nbt_WriteU8(stream, WorldEnv_EdgeBlock);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "SideLevel");
+	Nbt_WriteI16(stream, WorldEnv_EdgeHeight);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "TextureURL");
+	Nbt_WriteString(stream, &World_TextureUrl);
+	Nbt_WriteU8(stream, NBT_TAG_END);
+
+	Cw_WriteCpeExtCompound(stream, "EnvColors", 1);
+	Cw_WriteColCompound(stream, "Sky", WorldEnv_SkyCol);
+	Cw_WriteColCompound(stream, "Cloud", WorldEnv_CloudsCol);
+	Cw_WriteColCompound(stream, "Fog", WorldEnv_FogCol);
+	Cw_WriteColCompound(stream, "Ambient", WorldEnv_ShadowCol);
+	Cw_WriteColCompound(stream, "Sunlight", WorldEnv_SunCol);
+	Nbt_WriteU8(stream, NBT_TAG_END);
+
+	Cw_WriteCpeExtCompound(stream, "BlockDefinitions", 1);
+	Int32 block;
+	for ( block = 1; block < 256; block++) {
+		if (Block_IsCustomDefined((BlockID)block)) {
+			WriteBlockDefinitionCompound((BlockID)block);
+		}
+	}
+	Nbt_WriteU8(stream, NBT_TAG_END);
+
+	Nbt_WriteU8(stream, NBT_TAG_END);
+	Nbt_WriteU8(stream, NBT_TAG_END);
+}
+
+void Cw_Save(Stream* stream) {
+	GZipState state;
+	Stream compStream;
+	GZip_MakeStream(&compStream, &state, stream);
+	stream = &compStream;
+
+	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "ClassicWorld");
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8, "FormatVersion");
+	Nbt_WriteU8(stream, 1);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "UUID");
+	Nbt_WriteI32(stream, sizeof(World_Uuid));
+	Stream_Write(stream, World_Uuid, sizeof(World_Uuid));
+
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "X");
+	Nbt_WriteI16(stream, World_Width);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "Y");
+	Nbt_WriteI16(stream, World_Height);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "Z");
+	Nbt_WriteI16(stream, World_Length);
+
+	Cw_WriteSpawnCompound(stream);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "BlockArray");
+	Nbt_WriteI32(stream, World_BlocksSize);
+	Stream_Write(stream, World_Blocks, World_BlocksSize);
+
+	Cw_WriteMetadataCompound(stream);
+
+	Nbt_WriteU8(stream, NBT_TAG_END);
+	stream->Close(stream);
+}
+
+
+/*########################################################################################################################*
+*---------------------------------------------------Schematic export------------------------------------------------------*
+*#########################################################################################################################*/
+void Schematic_Save(Stream* stream) {
+	GZipState state;
+	Stream compStream;
+	GZip_MakeStream(&compStream, &state, stream);
+	stream = &compStream;
+
+	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Schematic");
+
+	Nbt_WriteTag(stream, NBT_TAG_STRING, "Materials");
+	String classic = String_FromConst("Classic");
+	Nbt_WriteString(stream, &classic);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "Width");
+	Nbt_WriteI16(stream, World_Width);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "Height");
+	Nbt_WriteI16(stream, World_Height);
+	Nbt_WriteTag(stream, NBT_TAG_INT16, "Length");
+	Nbt_WriteI16(stream, World_Length);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Blocks");
+	Nbt_WriteI32(stream, World_BlocksSize);
+	Stream_Write(stream, World_Blocks, World_BlocksSize);
+
+	Nbt_WriteTag(stream, NBT_TAG_INT8_ARRAY, "Data");
+	Nbt_WriteI32(stream, World_BlocksSize);
+	UInt8 chunk[8192] = { 0 };
+	Int32 i;
+	for (i = 0; i < World_BlocksSize; i += sizeof(chunk)) {
+		Int32 count = min(sizeof(chunk), World_BlocksSize - i);
+		Stream_Write(stream, chunk, count);
+	}
+
+	Nbt_WriteTag(stream, NBT_TAG_LIST, "Entities");
+	Nbt_WriteU8(stream, NBT_TAG_COMPOUND); Nbt_WriteI32(stream, 0);
+	Nbt_WriteTag(stream, NBT_TAG_LIST, "TileEntities");
+	Nbt_WriteU8(stream, NBT_TAG_COMPOUND); Nbt_WriteI32(stream, 0);
+
+	Nbt_WriteU8(stream, NBT_TAG_END);
+	stream->Close(stream);
 }
