@@ -55,9 +55,8 @@ namespace ClassicalSharp.Map {
 		public void WriteBytes(byte[] v, int index, int count) { writer.Write(v, index, count); }
 		
 		public void Write(string value) {
-			ushort len = (ushort)value.Length;
 			byte[] data = Encoding.UTF8.GetBytes(value);
-			WriteInt16((short)len);
+			WriteInt16((short)data.Length);
 			writer.Write(data);
 		}
 		
