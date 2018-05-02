@@ -652,9 +652,10 @@ void Game_TakeScreenshot(void) {
 	void* file;
 	ReturnCode result = Platform_FileCreate(&file, &path);
 	ErrorHandler_CheckOrFail(result, "Taking screenshot - opening file");
-
 	Stream stream; Stream_FromFile(&stream, file, &path);
-	Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
+	{
+		Gfx_TakeScreenshot(&stream, Game_Width, Game_Height);
+	}
 	result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "Taking screenshot - closing file");
 
@@ -784,8 +785,6 @@ void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) { }
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
 
 void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }
-void Cw_Save(Stream* stream) { }
-void Schematic_Save(Stream* stream) { }
 
 void Gfx_MakeApiInfo(void) { }
 void AdvLightingBuilder_SetActive(void) { }

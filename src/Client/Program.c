@@ -47,10 +47,10 @@ int main(int argc, char* argv[]) {
 	}
 
 	String title = String_FromConst(PROGRAM_APP_NAME);
-	argc = 5;
-	char* default_argv[5] = { "path", "UnknownShadow200", "fff", "127.0.0.1", "25566" };
-	//argc = 2;
-	//char* default_argv[2] = { "path", "UnknownShadow200" };
+	//argc = 5;
+	//char* default_argv[5] = { "path", "UnknownShadow200", "fff", "127.0.0.1", "25566" };
+	argc = 2;
+	char* default_argv[2] = { "path", "UnknownShadow200" };
 	argv = default_argv;
 
 	if (argc == 1 || argc == 2) {

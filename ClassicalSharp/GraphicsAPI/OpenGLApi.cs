@@ -566,12 +566,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		void InitFields() {
 			// See comment in KeyMap() constructor for why this is necessary.
 			blendFuncs = new BlendingFactor[6];
-			blendFuncs[0] = BlendingFactor.Zero; blendFuncs[1] = BlendingFactor.One;
+			blendFuncs[0] = BlendingFactor.Zero;     blendFuncs[1] = BlendingFactor.One;
 			blendFuncs[2] = BlendingFactor.SrcAlpha; blendFuncs[3] = BlendingFactor.OneMinusSrcAlpha;
 			blendFuncs[4] = BlendingFactor.DstAlpha; blendFuncs[5] = BlendingFactor.OneMinusDstAlpha;
 			compareFuncs = new Compare[8];
 			compareFuncs[0] = Compare.Always; compareFuncs[1] = Compare.Notequal;
-			compareFuncs[2] = Compare.Never; compareFuncs[3] = Compare.Less;
+			compareFuncs[2] = Compare.Never;  compareFuncs[3] = Compare.Less;
 			compareFuncs[4] = Compare.Lequal; compareFuncs[5] = Compare.Equal;
 			compareFuncs[6] = Compare.Gequal; compareFuncs[7] = Compare.Greater;
 

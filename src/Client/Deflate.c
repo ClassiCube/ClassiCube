@@ -153,7 +153,7 @@ enum INFLATE_STATE_ {
 };
 
 /* Insert this byte into the bit buffer */
-#define Inflate_GetByte(state) state->AvailIn--; state->Bits |= (UInt32)(state->Input[state->NextIn]) << state->NumBits; state->NextIn++; state->NumBits += 8;
+#define Inflate_GetByte(state) state->AvailIn--; state->Bits |= (UInt32)(*state->NextIn) << state->NumBits; state->NextIn++; state->NumBits += 8;
 /* Retrieves bits from the bit buffer */
 #define Inflate_PeekBits(state, bits) (state->Bits & ((1UL << (bits)) - 1UL))
 /* Consumes/eats up bits from the bit buffer */
@@ -315,7 +315,7 @@ void Inflate_Init(InflateState* state, Stream* source) {
 	state->Bits = 0;
 	state->NumBits = 0;
 	state->AvailIn = 0;
-	state->NextIn = 0;
+	state->NextIn = state->Input;
 	state->LastBlock = false;
 	state->AvailOut = 0;
 	state->Output = NULL;
@@ -467,9 +467,10 @@ void Inflate_Process(InflateState* state) {
 			UInt32 copyLen = min(state->AvailIn, state->AvailOut);
 			copyLen = min(copyLen, state->Index);
 			if (copyLen > 0) {
-				Platform_MemCpy(state->Output, state->Input, copyLen);
+				Platform_MemCpy(state->Output, state->NextIn, copyLen);
 				/* TODO: Copy output to window!!! */
 				state->Output += copyLen; state->AvailOut -= copyLen;
+				state->NextIn += copyLen;
 				state->AvailIn -= copyLen;
 				state->Index -= copyLen;
 			}
@@ -482,8 +483,8 @@ void Inflate_Process(InflateState* state) {
 
 		case INFLATE_STATE_DYNAMIC_HEADER: {
 			Inflate_EnsureBits(state, 14);
-			state->NumLits = 257 + Inflate_ReadBits(state, 5);
-			state->NumDists = 1 + Inflate_ReadBits(state, 5);
+			state->NumLits   = 257 + Inflate_ReadBits(state, 5);
+			state->NumDists    = 1 + Inflate_ReadBits(state, 5);
 			state->NumCodeLens = 4 + Inflate_ReadBits(state, 4);
 			state->Index = 0;
 			state->State = INFLATE_STATE_DYNAMIC_CODELENS;
@@ -656,11 +657,12 @@ ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 		if (state->State == INFLATE_STATE_DONE) break;
 		if (state->AvailIn == 0) {
 			/* Fully used up input buffer. Cycle back to start. */
-			if (state->NextIn == INFLATE_MAX_INPUT) state->NextIn = 0;
+			UInt8* inputEnd = state->Input + INFLATE_MAX_INPUT;
+			if (state->NextIn == inputEnd) state->NextIn = state->Input;
 
-			UInt8* ptr = &state->Input[state->NextIn];
-			UInt32 read, remaining = INFLATE_MAX_INPUT - state->NextIn;
-			ReturnCode code = state->Source->Read(state->Source, ptr, remaining, &read);
+			UInt8* cur = state->NextIn;
+			UInt32 read, remaining = (UInt32)(inputEnd - state->NextIn);
+			ReturnCode code = state->Source->Read(state->Source, cur, remaining, &read);
 
 			/* Did we fail to read in more input data? */
 			/* If there's a few bits of data in the bit buffer it doesn't matter since Inflate_Process
@@ -699,8 +701,9 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 /*########################################################################################################################*
 *---------------------------------------------------Deflate (compress)----------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Deflate_Flush(DeflateState* state, UInt32 size) {
+ReturnCode Deflate_Flush(DeflateState* state, UInt32 size, bool lastBlock) {
 	/* TODO: actually compress here */
+	Stream_WriteU8(state->Source, lastBlock);
 	Stream_WriteU16_BE(state->Source, size);
 	Stream_WriteU16_BE(state->Source, size ^ 0xFFFFFUL);
 	Stream_Write(state->Source, state->InputBuffer, size);
@@ -724,7 +727,7 @@ ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32
 		data += toWrite;
 
 		if (state->InputPosition == DEFLATE_BUFFER_SIZE) {
-			ReturnCode result = Deflate_Flush(state, DEFLATE_BUFFER_SIZE);
+			ReturnCode result = Deflate_Flush(state, DEFLATE_BUFFER_SIZE, false);
 			if (result != 0) return result;
 		}
 	}
@@ -733,10 +736,7 @@ ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32
 
 ReturnCode Deflate_StreamClose(Stream* stream) {
 	DeflateState* state = stream->Meta_Inflate;
-	if (state->InputPosition > 0) { 
-		return Deflate_Flush(state, DEFLATE_BUFFER_SIZE - state->InputPosition);
-	}
-	return 0;
+	return Deflate_Flush(state, DEFLATE_BUFFER_SIZE - state->InputPosition, true);
 }
 
 void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying) {
@@ -760,8 +760,9 @@ ReturnCode GZip_StreamClose(Stream* stream) {
 	if (result != 0) return result;
 
 	GZipState* state = stream->Meta_Inflate;
-	Stream_WriteU32_LE(stream, state->Crc32);
-	Stream_WriteU32_LE(stream, state->Size);
+	UInt32 crc32 = state->Crc32 ^ 0xFFFFFFFFUL;
+	Stream_WriteU32_LE(state->Base.Source, crc32);
+	Stream_WriteU32_LE(state->Base.Source, state->Size);
 	return 0;
 }
 
@@ -771,28 +772,31 @@ ReturnCode GZip_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* m
 
 	GZipState* state = stream->Meta_Inflate;
 	state->Size += count;
-	UInt32 i, crc32 = state->Crc32 ^ 0xFFFFFFFFUL; /* TODO: should we move this to initalisation and finalisation */
+	UInt32 i, crc32 = state->Crc32;
 
+	/* TODO: WinRAR says this crc32 is invalid */
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
 		crc32 = Utils_Crc32Table[(crc32 ^ data[i]) & 0xFF] ^ (crc32 >> 8);
 	}
 
-	state->Crc32 = crc32 ^ 0xFFFFFFFFUL;
+	state->Crc32 = crc32;
 	return 0;
 }
 
 ReturnCode GZip_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	static UInt8 gz_header[10] = { 0x1F, 0x8B, 0x08 };
-	Stream_Write(stream, gz_header, sizeof(gz_header));
+	GZipState* state = stream->Meta_Inflate;
+	Stream_Write(state->Base.Source, gz_header, sizeof(gz_header));
+
 	stream->Write = GZip_StreamWrite;
 	return GZip_StreamWrite(stream, data, count, modified);
 }
 
 void GZip_MakeStream(Stream* stream, GZipState* state, Stream* underlying) {
 	Deflate_MakeStream(stream, &state->Base, underlying);
-	state->Crc32 = 0;
-	state->Size = 0;
+	state->Crc32 = 0xFFFFFFFFUL;
+	state->Size  = 0;
 	stream->Write = GZip_StreamWriteFirst;
 	stream->Close = GZip_StreamClose;
 }
@@ -806,7 +810,7 @@ ReturnCode ZLib_StreamClose(Stream* stream) {
 	if (result != 0) return result;
 
 	ZLibState* state = stream->Meta_Inflate;
-	Stream_WriteU32_BE(stream, state->Adler32);
+	Stream_WriteU32_BE(state->Base.Source, state->Adler32);
 	return 0;
 }
 
@@ -830,8 +834,10 @@ ReturnCode ZLib_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* m
 }
 
 ReturnCode ZLib_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	static UInt8 zl_header[2] = { 0x78, 0x01 }; /* TODO: verify this is correct */
-	Stream_Write(stream, zl_header, sizeof(zl_header));
+	static UInt8 zl_header[2] = { 0x78, 0x9C };
+	ZLibState* state = stream->Meta_Inflate;
+	Stream_Write(state->Base.Source, zl_header, sizeof(zl_header));
+
 	stream->Write = ZLib_StreamWrite;
 	return ZLib_StreamWrite(stream, data, count, modified);
 }

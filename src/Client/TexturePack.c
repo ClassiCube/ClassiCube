@@ -192,16 +192,16 @@ void EntryList_Load(EntryList* list) {
 	if (result == ReturnCode_FileNotFound) return;
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "EntryList_Load - open file");
-
 	Stream stream; Stream_FromFile(&stream, file, &path);
-	while (Stream_ReadLine(&stream, &path)) {
-		String_UNSAFE_TrimStart(&path);
-		String_UNSAFE_TrimEnd(&path);
+	{
+		while (Stream_ReadLine(&stream, &path)) {
+			String_UNSAFE_TrimStart(&path);
+			String_UNSAFE_TrimEnd(&path);
 
-		if (path.length == 0) continue;
-		StringsBuffer_Add(&list->Entries, &path);
+			if (path.length == 0) continue;
+			StringsBuffer_Add(&list->Entries, &path);
+		}
 	}
-
 	result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "EntryList_Load - close file");
 }
@@ -222,14 +222,14 @@ void EntryList_Save(EntryList* list) {
 	ReturnCode result = Platform_FileCreate(&file, &path);
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "EntryList_Save - open file");
-
 	Stream stream; Stream_FromFile(&stream, file, &path);
-	Int32 i;
-	for (i = 0; i < list->Entries.Count; i++) {
-		String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
-		Stream_WriteLine(&stream, &entry);
+	{
+		Int32 i;
+		for (i = 0; i < list->Entries.Count; i++) {
+			String entry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
+			Stream_WriteLine(&stream, &entry);
+		}
 	}
-
 	result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "EntryList_Save - close file");
 }
@@ -363,8 +363,9 @@ void TextureCache_AddImage(STRING_PURE String* url, Bitmap* bmp) {
 	String path; TexCache_InitAndMakePath(url);
 	void* file = TextureCache_CreateFile(&path);
 	Stream stream; Stream_FromFile(&stream, file, &path);
-
-	Bitmap_EncodePng(bmp, &stream);
+	{
+		Bitmap_EncodePng(bmp, &stream);
+	}
 	ReturnCode result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "TextureCache_AddImage - close file");
 }
@@ -373,8 +374,9 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 	String path; TexCache_InitAndMakePath(url);
 	void* file = TextureCache_CreateFile(&path);
 	Stream stream; Stream_FromFile(&stream, file, &path);
-
-	Stream_Write(&stream, data, length);
+	{
+		Stream_Write(&stream, data, length);
+	}
 	ReturnCode result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "TextureCache_AddData - close file");
 }
@@ -448,11 +450,10 @@ void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
 	void* file;
 	ReturnCode result = Platform_FileOpen(&file, &path);
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - opening file");
-
-	Stream stream; 
-	Stream_FromFile(&stream, file, &path);
-	TexturePack_ExtractZip(&stream);
-
+	Stream stream; Stream_FromFile(&stream, file, &path);
+	{
+		TexturePack_ExtractZip(&stream);
+	}
 	result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "TexturePack_Extract - closing file");
 }

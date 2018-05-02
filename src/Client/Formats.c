@@ -698,7 +698,7 @@ void Dat_ReadFieldData(Stream* stream, JFieldDesc* field) {
 
 	case JFIELD_OBJECT: {
 		/* Luckily for us, we only have to account for blockMap object */
-		/* The player object is stored after the fields we actually care about, so can be ignored */
+		/* Other objects (e.g. player) are stored after the fields we actually care about, so ignore them */
 		String fieldName = String_FromRawArray(field->FieldName);
 		if (!String_CaselessEqualsConst(&fieldName, "blockMap")) break;
 
@@ -927,9 +927,9 @@ void Cw_WriteMetadataCompound(Stream* stream) {
 
 	Cw_WriteCpeExtCompound(stream, "BlockDefinitions", 1);
 	Int32 block;
-	for ( block = 1; block < 256; block++) {
+	for (block = 1; block < 256; block++) {
 		if (Block_IsCustomDefined((BlockID)block)) {
-			WriteBlockDefinitionCompound((BlockID)block);
+			Cw_WriteBlockDefinitionCompound(stream, (BlockID)block);
 		}
 	}
 	Nbt_WriteU8(stream, NBT_TAG_END);

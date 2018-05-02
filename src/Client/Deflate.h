@@ -44,12 +44,12 @@ typedef struct HuffmanTable_ {
 
 typedef struct InflateState_ {
 	UInt8 State;
-	Stream* Source;
 	bool LastBlock; /* Whether the last DEFLATE block has been encounted in the stream */
+	Stream* Source;	
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
 	
-	UInt32 NextIn;   /* Index within Input of byte being read */
+	UInt8* NextIn;   /* Pointer within Input of byte being read */
 	UInt32 AvailIn;  /* Number of bytes that can be read from Input */
 	UInt8* Output;   /* Pointer for output data */
 	UInt32 AvailOut; /* Max number of bytes to output */
@@ -76,7 +76,7 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 typedef struct DeflateState_ {
 	UInt32 InputPosition;
 	Stream* Source;
-	UInt8 InputBuffer[DEFLATE_BUFFER_SIZE]
+	UInt8 InputBuffer[DEFLATE_BUFFER_SIZE];
 } DeflateState;
 void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying);
 

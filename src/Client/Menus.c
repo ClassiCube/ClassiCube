@@ -1319,6 +1319,7 @@ void SaveLevelScreen_Schematic(GuiElement* screenElem, GuiElement* widget) {
 
 void SaveLevelScreen_Init(GuiElement* elem) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
+	screen->TextPath = String_InitAndClearArray(screen->TextPathBuffer);
 	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
 	screen->ContextRecreated(elem);
@@ -1335,16 +1336,19 @@ void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
 	String path = screen->TextPath;
 
 	void* file;
-	ReturnCode code = Platform_FileCreate(&file, &path);
-	ErrorHandler_CheckOrFail(code, "Saving map");
+	ReturnCode result = Platform_FileCreate(&file, &path);
+	ErrorHandler_CheckOrFail(result, "Saving map - opening file");
 	Stream stream; Stream_FromFile(&stream, file, &path);
-
-	String cw = String_FromConst(".cw");
-	if (String_CaselessEnds(&path, &cw)) {
-		Cw_Save(&stream);
-	} else {
-		Schematic_Save(&stream);
+	{
+		String cw = String_FromConst(".cw");
+		if (String_CaselessEnds(&path, &cw)) {
+			Cw_Save(&stream);
+		} else {
+			Schematic_Save(&stream);
+		}
 	}
+	result = stream.Close(&stream);
+	ErrorHandler_CheckOrFail(result, "Saving map - closing file");
 
 	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
@@ -1554,11 +1558,6 @@ void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	String_Format2(&path, "maps%r%s", &Platform_DirectorySeparator, &filename);
 	if (!Platform_FileExists(&path)) return;
 
-	void* file;
-	ReturnCode code = Platform_FileOpen(&file, &path);
-	ErrorHandler_CheckOrFail(code, "Failed to open map file");
-	Stream stream; Stream_FromFile(&stream, file, &path);
-
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 
@@ -1569,19 +1568,27 @@ void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
 	Block_Reset();
 	Inventory_SetDefaultMapping();
 
-	String cw  = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
-	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
-	if (String_CaselessEnds(&path, &dat)) {
-		Dat_Load(&stream);
-	} else if (String_CaselessEnds(&path, &fcm)) {
-		Fcm_Load(&stream);
-	} else if (String_CaselessEnds(&path, &cw)) {
-		Cw_Load(&stream);
-	} else if (String_CaselessEnds(&path, &lvl)) {
-		Lvl_Load(&stream);
+	void* file;
+	ReturnCode result = Platform_FileOpen(&file, &path);
+	ErrorHandler_CheckOrFail(result, "Loading map - open file");
+	Stream stream; Stream_FromFile(&stream, file, &path);
+	{
+		String cw = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
+		String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
+		if (String_CaselessEnds(&path, &dat)) {
+			Dat_Load(&stream);
+		} else if (String_CaselessEnds(&path, &fcm)) {
+			Fcm_Load(&stream);
+		} else if (String_CaselessEnds(&path, &cw)) {
+			Cw_Load(&stream);
+		} else if (String_CaselessEnds(&path, &lvl)) {
+			Lvl_Load(&stream);
+		}
 	}
-	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
+	result = stream.Close(&stream);
+	ErrorHandler_CheckOrFail(result, "Loading map - close file");
 
+	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
 	if (Game_AllowServerTextures && World_TextureUrl.length > 0) {
 		ServerConnection_RetrieveTexturePack(&World_TextureUrl);
