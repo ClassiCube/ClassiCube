@@ -233,6 +233,32 @@ bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDig
 	return true;
 }
 
+bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value) {
+	UInt8 hex[9]; hex[8] = NULL;
+	Int32 i;
+
+	for (i = 0; i < 8; i++) {
+		UInt32 nibble = value & 0x0F;
+		/* 48 = index of 0, 55 = index of (A - 10) */
+		hex[7 - i] = nibble < 10 ? (nibble + 48) : (nibble + 55);
+		value >>= 4;
+	}
+	return String_AppendConst(str, hex);
+}
+
+bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value) {
+	UInt8 hex[17]; hex[16] = NULL;
+	Int32 i;
+
+	for (i = 0; i < 16; i++) {
+		UInt32 nibble = (UInt32)(value & 0x0F);
+		/* 48 = index of 0, 55 = index of (A - 10) */
+		hex[15 - i] = nibble < 10 ? (nibble + 48) : (nibble + 55);
+		value >>= 4;
+	}
+	return String_AppendConst(str, hex);
+}
+
 bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend) {
 	UInt8 cur = 0;
 
@@ -431,6 +457,10 @@ void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, const voi
 			String_AppendString(str, (String*)arg);  break;
 		case 'r':
 			String_Append(str, *((UInt8*)arg)); break;
+		case 'x':
+			String_Hex64(str, *((UInt64*)arg)); break;
+		case 'y':
+			String_Hex32(str, *((UInt32*)arg)); break;
 		default: 
 			ErrorHandler_Fail("Invalid type for string format");
 		}

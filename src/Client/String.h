@@ -65,6 +65,8 @@ bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num);
 bool String_AppendInt64(STRING_TRANSIENT String* str, Int64 num);
 bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
+bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value);
+bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value);
 bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend);
 bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
 bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);

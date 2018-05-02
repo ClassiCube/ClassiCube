@@ -47,11 +47,8 @@ void D3D9_FreeResource(GfxResourceID* resource) {
 	*resource = NULL;
 	if (refCount <= 0) return;
 
-	UInt8 logMsgBuffer[String_BufferSize(STRING_SIZE * 2)];
-	String logMsg = String_InitAndClearArray(logMsgBuffer);
-	String_AppendConst(&logMsg, "D3D9 Resource has outstanding references! ID: ");
-	String_AppendInt64(&logMsg, (Int64)(*resource));
-	Platform_Log(&logMsg);
+	UInt64 addr = (UInt64)(*resource);
+	Platform_Log1("D3D9 resource has outstanding references! ID 0x%x", &addr);
 }
 
 void D3D9_LoopUntilRetrieved(void) {
