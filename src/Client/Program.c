@@ -9,8 +9,9 @@
 #include "Bitmap.h"
 #include "Constants.h"
 #include "Game.h"
+#include "Funcs.h"
 
-int main(int argc, char* argv[]) {
+int main(void) {
 	ErrorHandler_Init("client.log");
 	Platform_Init();
 
@@ -46,28 +47,29 @@ int main(int argc, char* argv[]) {
 		if (device.Bounds.Width < 854) width = 640;
 	}
 
-	String title = String_FromConst(PROGRAM_APP_NAME);
-	//argc = 5;
-	//char* default_argv[5] = { "path", "UnknownShadow200", "fff", "127.0.0.1", "25566" };
-	argc = 2;
-	char* default_argv[2] = { "path", "UnknownShadow200" };
-	argv = default_argv;
+	String title   = String_FromConst(PROGRAM_APP_NAME);
+	String rawArgs = Platform_GetCommandLineArgs();
+	//rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25566");
+	//rawArgs = String_FromReadonly("UnknownShadow200");
 
-	if (argc == 1 || argc == 2) {
-		String_AppendConst(&Game_Username, argc > 1 ? argv[1] : "Singleplayer");
-		//String_AppendConst(&Game_Username, "Singleplayer");
-	} else if (argc < 5) {
+	String args[5]; UInt32 argsCount = Array_Elems(args);
+	String_UNSAFE_Split(&rawArgs, ' ', args, &argsCount);
+
+	if (argsCount == 1) {
+		String name = args[0];
+		if (name.length == 0) name = String_FromReadonly("Singleplayer");
+		String_Set(&Game_Username, &name);
+	} else if (argsCount < 4) {
 		Platform_LogConst("ClassicalSharp.exe is only the raw client. You must either use the launcher or provide command line arguments to start the client.");
 		return;
 	} else {
-		String_AppendConst(&Game_Username, argv[1]);
-		String_AppendConst(&Game_Mppass,   argv[2]);
-		String ipRaw   = String_FromReadonly(argv[3]);
-		String portRaw = String_FromReadonly(argv[4]);
+		String_Set(&Game_Username,  &args[0]);
+		String_Set(&Game_Mppass, &args[1]);
+		String_Set(&Game_IPAddress, &args[2]);
 
-		String bits[4]; UInt32 bitsCount = 4;
-		String_UNSAFE_Split(&ipRaw, '.', bits, &bitsCount);
-		if (bitsCount != 4) {
+		String bits[4]; UInt32 bitsCount = Array_Elems(bits);
+		String_UNSAFE_Split(&args[2], '.', bits, &bitsCount);
+		if (bitsCount != Array_Elems(bits)) {
 			Platform_LogConst("Invalid IP"); return;
 		}
 
@@ -78,11 +80,9 @@ int main(int argc, char* argv[]) {
 		}
 		
 		UInt16 portTmp;
-		if (!Convert_TryParseUInt16(&portRaw, &portTmp)) {
+		if (!Convert_TryParseUInt16(&args[3], &portTmp)) {
 			Platform_LogConst("Invalid port"); return;
 		}
-
-		String_Set(&Game_IPAddress, &ipRaw);
 		Game_Port = portTmp;
 	}
 

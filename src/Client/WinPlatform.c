@@ -80,6 +80,27 @@ void Platform_Exit(ReturnCode code) {
 	ExitProcess(code);
 }
 
+STRING_PURE String Platform_GetCommandLineArgs(void) {
+	String args = String_FromReadonly(GetCommandLineA());
+
+	Int32 argsStart;
+	if (args.buffer[0] == '"') {
+		/* Handle path argument in full "path" form, which can include spaces */
+		argsStart = String_IndexOf(&args, '"', 1) + 1;
+	} else {
+		argsStart = String_IndexOf(&args, ' ', 0) + 1;
+	}
+
+	if (argsStart == 0) argsStart = args.length;
+	args = String_UNSAFE_SubstringAt(&args, argsStart);
+
+	/* get rid of duplicate leading spaces before first arg */
+	while (args.length > 0 && args.buffer[0] == ' ') {
+		args = String_UNSAFE_SubstringAt(&args, 1);
+	}
+	return args;
+}
+
 void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
 	return malloc(numBytes);

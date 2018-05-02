@@ -17,6 +17,7 @@ extern ReturnCode ReturnCode_FileNotFound;
 void Platform_Init(void);
 void Platform_Free(void);
 void Platform_Exit(ReturnCode code);
+STRING_PURE String Platform_GetCommandLineArgs(void);
 
 void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize);
 void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize);

@@ -784,8 +784,6 @@ bool AsyncDownloader_GetCurrent(AsyncRequest* request, Int32* progress) { return
 void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) { }
 DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
 
-void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) { }
-
 void Gfx_MakeApiInfo(void) { }
 void AdvLightingBuilder_SetActive(void) { }
 

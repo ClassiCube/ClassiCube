@@ -11,6 +11,7 @@ void Bitmap_Create(Bitmap* bmp, Int32 width, Int32 height, UInt8* scan0) {
 	bmp->Stride = width * BITMAP_SIZEOF_PIXEL;
 	bmp->Scan0 = scan0;
 }
+
 void Bitmap_CopyBlock(Int32 srcX, Int32 srcY, Int32 dstX, Int32 dstY, Bitmap* src, Bitmap* dst, Int32 size) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
@@ -40,7 +41,7 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
 }
 
 
-#define PNG_HEADER 8
+#define PNG_SIG_SIZE 8
 #define PNG_RGB_MASK 0xFFFFFFUL
 #define PNG_PALETTE 256
 #define PNG_FourCC(a, b, c, d) ((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d
@@ -58,15 +59,14 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
 #define PNG_FILTER_PAETH 4
 
 typedef void(*Png_RowExpander)(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst);
+UInt8 png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 void Png_CheckHeader(Stream* stream) {
-	UInt8 header[PNG_HEADER];
-	static UInt8 sig[PNG_HEADER] = { 137, 80, 78, 71, 13, 10, 26, 10 };
-	Stream_Read(stream, header, PNG_HEADER);
-
+	UInt8 header[PNG_SIG_SIZE];
+	Stream_Read(stream, header, PNG_SIG_SIZE);
 	Int32 i;
-	for (i = 0; i < PNG_HEADER; i++) {
-		if (header[i] != sig[i]) ErrorHandler_Fail("Invalid PNG header");
+	for (i = 0; i < PNG_SIG_SIZE; i++) {
+		if (header[i] != png_sig[i]) ErrorHandler_Fail("Invalid PNG header");
 	}
 }
 
@@ -311,14 +311,14 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 
 	while (readingChunks) {
 		UInt32 dataSize = Stream_ReadU32_BE(stream);
-		UInt32 fourCC = Stream_ReadU32_BE(stream);
+		UInt32 fourCC   = Stream_ReadU32_BE(stream);
 
 		switch (fourCC) {
 		case PNG_FourCC('I', 'H', 'D', 'R'): {
 			if (dataSize != 13) ErrorHandler_Fail("PNG header chunk has invalid size");
 			gotHeader = true;
 
-			bmp->Width = Stream_ReadI32_BE(stream);
+			bmp->Width  = Stream_ReadI32_BE(stream);
 			bmp->Height = Stream_ReadI32_BE(stream);
 			if (bmp->Width  < 0 || bmp->Width  > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too wide");
 			if (bmp->Height < 0 || bmp->Height > PNG_MAX_DIMS) ErrorHandler_Fail("PNG image too tall");
@@ -461,4 +461,26 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 		Png_ComputeTransparency(bmp, transparentCol);
 	}
 	if (bmp->Scan0 == NULL) ErrorHandler_Fail("Invalid PNG image");
+}
+
+void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
+	Stream_Write(stream, png_sig, PNG_SIG_SIZE);
+
+	/* Write header chunk */
+	Stream_WriteU32_BE(stream, 13);
+	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'H', 'D', 'R'));
+	Stream_WriteU32_BE(stream, bmp->Width);
+	Stream_WriteU32_BE(stream, bmp->Height);
+	Stream_WriteU8(stream, 8); /* bits per sample */
+	Stream_WriteU8(stream, PNG_COL_RGB); /* TODO: RGBA but mask all alpha to 255? */
+	Stream_WriteU8(stream, 0); /* DEFLATE compression method */
+	Stream_WriteU8(stream, 0); /* ADAPTIVE filter method */
+	Stream_WriteU8(stream, 0); /* Not using interlacing */
+
+	/* Write PNG body */
+	// do stuff here ????
+
+	/* Write end chunk */
+	Stream_WriteU32_BE(stream, 0);
+	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'E', 'N', 'D'));
 }
