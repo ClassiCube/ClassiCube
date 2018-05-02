@@ -351,7 +351,7 @@ UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
 9,9,10,10,11,11,12,12,13,13,0,0 };
 UInt8 codelens_order[INFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 };
 
-void Deflate_InflateFast(InflateState* state) {
+void Inflate_InflateFast(InflateState* state) {
 	UInt32 copyStart = state->WindowIndex, copyLen = 0;
 	UInt8* window = state->Window;
 	UInt32 curIdx = state->WindowIndex;
@@ -446,7 +446,7 @@ void Inflate_Process(InflateState* state) {
 
 		case INFLATE_STATE_UNCOMPRESSED_HEADER: {
 			Inflate_EnsureBits(state, 32);
-			UInt32 len = Inflate_ReadBits(state, 16);
+			UInt32 len  = Inflate_ReadBits(state, 16);
 			UInt32 nlen = Inflate_ReadBits(state, 16);
 
 			if (len != (nlen ^ 0xFFFFUL)) {
@@ -634,7 +634,7 @@ void Inflate_Process(InflateState* state) {
 		}
 
 		case INFLATE_STATE_FASTCOMPRESSED: {
-			Deflate_InflateFast(state);
+			Inflate_InflateFast(state);
 			if (state->State == INFLATE_STATE_FASTCOMPRESSED) {
 				state->State = Inflate_NextCompressState(state);
 			}
@@ -704,8 +704,8 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 ReturnCode Deflate_Flush(DeflateState* state, UInt32 size, bool lastBlock) {
 	/* TODO: actually compress here */
 	Stream_WriteU8(state->Source, lastBlock);
-	Stream_WriteU16_BE(state->Source, size);
-	Stream_WriteU16_BE(state->Source, size ^ 0xFFFFFUL);
+	Stream_WriteU16_LE(state->Source, size);
+	Stream_WriteU16_LE(state->Source, size ^ 0xFFFFFUL);
 	Stream_Write(state->Source, state->InputBuffer, size);
 	return 0; /* TODO: need to return error code instead of killing process */
 }
@@ -736,7 +736,7 @@ ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32
 
 ReturnCode Deflate_StreamClose(Stream* stream) {
 	DeflateState* state = stream->Meta_Inflate;
-	return Deflate_Flush(state, DEFLATE_BUFFER_SIZE - state->InputPosition, true);
+	return Deflate_Flush(state, state->InputPosition, true);
 }
 
 void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying) {
