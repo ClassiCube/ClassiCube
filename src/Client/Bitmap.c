@@ -41,6 +41,9 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
 }
 
 
+/*########################################################################################################################*
+*------------------------------------------------------PNG decoder--------------------------------------------------------*
+*#########################################################################################################################*/
 #define PNG_SIG_SIZE 8
 #define PNG_RGB_MASK 0xFFFFFFUL
 #define PNG_PALETTE 256
@@ -106,7 +109,9 @@ void Png_Filter(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt
 			Int32 pb = Math_AbsI(p - b);
 			Int32 pc = Math_AbsI(p - c);
 
-			if (pa <= pb && pa <= pc) { line[i] = (UInt8)(line[i] + a); } else if (pb <= pc) { line[i] = (UInt8)(line[i] + b); } else { line[i] = (UInt8)(line[i] + c); }
+			if (pa <= pb && pa <= pc) { line[i] = (UInt8)(line[i] + a); } 
+			else if (pb <= pc) {        line[i] = (UInt8)(line[i] + b); } 
+			else {                      line[i] = (UInt8)(line[i] + c); }
 		}
 		return;
 
@@ -297,10 +302,11 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 	for (i = 0; i < PNG_PALETTE; i++) {
 		palette[i] = PackedCol_ARGB(0, 0, 0, 255);
 	}
+	bool gotHeader = false, readingChunks = true;
 
-	bool gotHeader = false, readingChunks = true, initInflate = false;
 	InflateState inflate;
 	Stream compStream;
+	Inflate_MakeStream(&compStream, &inflate, stream);
 	ZLibHeader zlibHeader;
 	ZLibHeader_Init(&zlibHeader);
 
@@ -338,7 +344,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG filter method must be ADAPTIVE");
 			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG interlacing not supported");
 
-			UInt32 samplesPerPixel[7] = { 1,0,3,1,2,0,4 };
+			static UInt32 samplesPerPixel[7] = { 1,0,3,1,2,0,4 };
 			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1;
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
@@ -398,12 +404,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 		case PNG_FourCC('I', 'D', 'A', 'T'): {
 			Stream datStream;
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
-			if (!initInflate) {
-				Inflate_MakeStream(&compStream, &inflate, &datStream);
-				initInflate = true;
-			} else {
-				inflate.Source = &datStream;
-			}
+			inflate.Source = &datStream;
 
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
 			while (!zlibHeader.Done) { ZLibHeader_Read(&datStream, &zlibHeader); }
@@ -463,24 +464,102 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 	if (bmp->Scan0 == NULL) ErrorHandler_Fail("Invalid PNG image");
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------PNG encoder--------------------------------------------------------*
+*#########################################################################################################################*/
+ReturnCode Bitmap_Crc32StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	UInt32 i, crc32 = stream->Meta_CRC32;
+	/* TODO: Optimise this calculation */
+	for (i = 0; i < count; i++) {
+		crc32 = Utils_Crc32Table[(crc32 ^ data[i]) & 0xFF] ^ (crc32 >> 8);
+	}
+	stream->Meta_CRC32 = crc32;
+
+	Stream* underlying = stream->Meta_CRC32_Underlying;
+	return underlying->Write(underlying, data, count, modified);
+}
+
+void Bitmap_Crc32Stream(Stream* stream, Stream* underlying) {
+	Stream_SetName(stream, &underlying->Name);
+	stream->Meta_CRC32_Underlying = underlying;
+	stream->Meta_CRC32 = 0xFFFFFFFFUL;
+
+	stream->Read  = Stream_UnsupportedIO;
+	stream->Write = Bitmap_Crc32StreamWrite;
+	stream->Seek  = Stream_UnsupportedSeek;
+	stream->Close = Stream_UnsupportedClose;
+}
+
+void Bitmap_EncodePngRow(UInt8* src, UInt8* cur, UInt8* prev, UInt8* best, Int32 width) {
+	UInt8* dst = best + 1;
+	Int32 x;
+	for (x = 0; x < width; x++) {
+		dst[0] = src[2]; dst[1] = src[1]; dst[2] = src[0];
+		src += 4; dst += 3;
+	}
+	dst[0] = 0; /* filter type 0 */
+}
+
 void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
 	Stream_Write(stream, png_sig, PNG_SIG_SIZE);
+	Stream* underlying = stream;
+	Stream crc32Stream;
 
 	/* Write header chunk */
 	Stream_WriteU32_BE(stream, 13);
+	Bitmap_Crc32Stream(&crc32Stream, underlying);
+	stream = &crc32Stream;
 	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'H', 'D', 'R'));
-	Stream_WriteU32_BE(stream, bmp->Width);
-	Stream_WriteU32_BE(stream, bmp->Height);
-	Stream_WriteU8(stream, 8); /* bits per sample */
-	Stream_WriteU8(stream, PNG_COL_RGB); /* TODO: RGBA but mask all alpha to 255? */
-	Stream_WriteU8(stream, 0); /* DEFLATE compression method */
-	Stream_WriteU8(stream, 0); /* ADAPTIVE filter method */
-	Stream_WriteU8(stream, 0); /* Not using interlacing */
+	{
+		Stream_WriteU32_BE(stream, bmp->Width);
+		Stream_WriteU32_BE(stream, bmp->Height);
+		Stream_WriteU8(stream, 8); /* bits per sample */
+		Stream_WriteU8(stream, PNG_COL_RGB); /* TODO: RGBA but mask all alpha to 255? */
+		Stream_WriteU8(stream, 0); /* DEFLATE compression method */
+		Stream_WriteU8(stream, 0); /* ADAPTIVE filter method */
+		Stream_WriteU8(stream, 0); /* Not using interlacing */
+	}
+	stream = underlying;
+	Stream_WriteU32_BE(stream, crc32Stream.Meta_CRC32 ^ 0xFFFFFFFFUL);
 
 	/* Write PNG body */
-	// do stuff here ????
+	UInt8 prevLine[PNG_MAX_DIMS * 3];
+	UInt8 curLine[PNG_MAX_DIMS * 3];
+	UInt8 bestLine[PNG_MAX_DIMS * 3 + 1];
+	Platform_MemSet(prevLine, 0, bmp->Width * 3);
+
+	Stream_WriteU32_BE(stream, 0);
+	stream = &crc32Stream;
+	Bitmap_Crc32Stream(&crc32Stream, underlying);
+	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'D', 'A', 'T'));
+	UInt32 start = Platform_FilePosition(underlying->Meta_File);
+	{
+		Int32 y, lineSize = bmp->Width * 3 + 1;
+		ZLibState zlState;
+		Stream zlStream;
+		ZLib_MakeStream(&zlStream, &zlState, stream);
+
+		for (y = 0; y < bmp->Height; y++) {
+			UInt8* src  = (UInt8*)Bitmap_GetRow(bmp, y);
+			UInt8* prev = (y & 1) == 0 ? prevLine : curLine;
+			UInt8* cur  = (y & 1) == 0 ? curLine : prevLine;
+			Bitmap_EncodePngRow(src, cur, prev, bestLine, bmp->Width);
+			Stream_Write(&zlStream, bestLine, lineSize);
+		}
+		zlStream.Close(&zlStream);
+	}
+	UInt32 end = Platform_FilePosition(underlying->Meta_File);
+	stream = underlying;
+	Stream_WriteU32_BE(stream, crc32Stream.Meta_CRC32 ^ 0xFFFFFFFFUL);
 
 	/* Write end chunk */
 	Stream_WriteU32_BE(stream, 0);
 	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'E', 'N', 'D'));
+	Stream_WriteU32_BE(stream, 0xAE426082UL); /* crc32 of iend */
+
+	/* Come back to write size of data chunk */
+	ReturnCode result = stream->Seek(stream, 25, STREAM_SEEKFROM_BEGIN);
+	ErrorHandler_CheckOrFail(result, "PNG - seeking to write data size");
+	Stream_WriteU32_BE(stream, end - start);
 }

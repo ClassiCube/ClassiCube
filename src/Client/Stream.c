@@ -75,6 +75,8 @@ ReturnCode Stream_Skip(Stream* stream, UInt32 count) {
 ReturnCode Stream_UnsupportedIO(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	*modified = 0; return 1;
 }
+ReturnCode Stream_UnsupportedClose(Stream* stream) { return 0; }
+ReturnCode Stream_UnsupportedSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
 
 
 /*########################################################################################################################*
@@ -116,8 +118,6 @@ ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	stream->Meta_Portion_Count -= *modified;
 	return code;
 }
-ReturnCode Stream_PortionClose(Stream* stream) { return 0; }
-ReturnCode Stream_PortionSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
 
 void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 	Stream_SetName(stream, &underlying->Name);
@@ -126,8 +126,8 @@ void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 
 	stream->Read  = Stream_PortionRead;
 	stream->Write = Stream_UnsupportedIO;
-	stream->Close = Stream_PortionClose;
-	stream->Seek  = Stream_PortionSeek;
+	stream->Close = Stream_UnsupportedClose;
+	stream->Seek  = Stream_UnsupportedSeek;
 }
 
 
@@ -161,8 +161,8 @@ void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE S
 
 	stream->Read  = Stream_MemoryRead;
 	stream->Write = Stream_UnsupportedIO;
-	stream->Close = Stream_PortionClose;
-	stream->Seek  = Stream_PortionSeek;
+	stream->Close = Stream_UnsupportedClose;
+	stream->Seek  = Stream_UnsupportedSeek;
 }
 
 void Stream_WriteonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {

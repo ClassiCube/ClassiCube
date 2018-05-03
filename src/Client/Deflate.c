@@ -311,14 +311,14 @@ Int32 Huffman_Unsafe_Decode(InflateState* state, HuffmanTable* table) {
 
 void Inflate_Init(InflateState* state, Stream* source) {
 	state->State = INFLATE_STATE_HEADER;
-	state->Source = source;
+	state->LastBlock = false;
 	state->Bits = 0;
 	state->NumBits = 0;
-	state->AvailIn = 0;
 	state->NextIn = state->Input;
-	state->LastBlock = false;
-	state->AvailOut = 0;
+	state->AvailIn = 0;
 	state->Output = NULL;
+	state->AvailOut = 0;
+	state->Source = source;
 	state->WindowIndex = 0;
 }
 
@@ -680,21 +680,15 @@ ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	return 0;
 }
 
-ReturnCode Inflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	*modified = 0; return 1;
-}
-ReturnCode Inflate_StreamClose(Stream* stream) { return 0; }
-ReturnCode Inflate_StreamSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
-
 void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying) {
 	Inflate_Init(state, underlying);
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Inflate = state;
 
 	stream->Read  = Inflate_StreamRead;
-	stream->Write = Inflate_StreamWrite;
-	stream->Close = Inflate_StreamClose;
-	stream->Seek  = Inflate_StreamSeek;
+	stream->Write = Stream_UnsupportedIO;
+	stream->Close = Stream_UnsupportedClose;
+	stream->Seek  = Stream_UnsupportedSeek;
 }
 
 
@@ -707,6 +701,7 @@ ReturnCode Deflate_Flush(DeflateState* state, UInt32 size, bool lastBlock) {
 	Stream_WriteU16_LE(state->Source, size);
 	Stream_WriteU16_LE(state->Source, size ^ 0xFFFFFUL);
 	Stream_Write(state->Source, state->InputBuffer, size);
+	state->InputPosition = 0;
 	return 0; /* TODO: need to return error code instead of killing process */
 }
 
@@ -745,9 +740,9 @@ void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying)
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Inflate = state;
 
-	stream->Read  = Inflate_StreamWrite;
+	stream->Read  = Stream_UnsupportedIO;
 	stream->Write = Deflate_StreamWrite;
-	stream->Seek  = Inflate_StreamSeek;
+	stream->Seek  = Stream_UnsupportedSeek;
 	stream->Close = Deflate_StreamClose;
 }
 
@@ -767,21 +762,17 @@ ReturnCode GZip_StreamClose(Stream* stream) {
 }
 
 ReturnCode GZip_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	ReturnCode result = Deflate_StreamWrite(stream, data, count, modified);
-	if (result != 0) return result;
-
 	GZipState* state = stream->Meta_Inflate;
 	state->Size += count;
 	UInt32 i, crc32 = state->Crc32;
 
-	/* TODO: WinRAR says this crc32 is invalid */
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
 		crc32 = Utils_Crc32Table[(crc32 ^ data[i]) & 0xFF] ^ (crc32 >> 8);
 	}
 
 	state->Crc32 = crc32;
-	return 0;
+	return Deflate_StreamWrite(stream, data, count, modified);
 }
 
 ReturnCode GZip_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
@@ -815,9 +806,6 @@ ReturnCode ZLib_StreamClose(Stream* stream) {
 }
 
 ReturnCode ZLib_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	ReturnCode result = Deflate_StreamWrite(stream, data, count, modified);
-	if (result != 0) return result;
-
 	ZLibState* state = stream->Meta_Inflate;
 	UInt32 i, adler32 = state->Adler32;
 	UInt32 s1 = adler32 & 0xFFFF, s2 = (adler32 >> 16) & 0xFFFF;
@@ -830,7 +818,7 @@ ReturnCode ZLib_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* m
 	}
 
 	state->Adler32 = (s2 << 16) | s1;
-	return 0;
+	return Deflate_StreamWrite(stream, data, count, modified);
 }
 
 ReturnCode ZLib_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {

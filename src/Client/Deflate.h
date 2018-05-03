@@ -45,7 +45,6 @@ typedef struct HuffmanTable_ {
 typedef struct InflateState_ {
 	UInt8 State;
 	bool LastBlock; /* Whether the last DEFLATE block has been encounted in the stream */
-	Stream* Source;	
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
 	
@@ -53,6 +52,7 @@ typedef struct InflateState_ {
 	UInt32 AvailIn;  /* Number of bytes that can be read from Input */
 	UInt8* Output;   /* Pointer for output data */
 	UInt32 AvailOut; /* Max number of bytes to output */
+	Stream* Source;
 
 	UInt32 Index;                          /* General purpose index / counter */
 	UInt32 WindowIndex;                    /* Current index within window circular buffer */

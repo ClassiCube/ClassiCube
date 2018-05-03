@@ -637,7 +637,7 @@ void Game_TakeScreenshot(void) {
 	}
 
 	DateTime now; Platform_CurrentLocalTime(&now);
-	Int32 year = now.Year, month = now.Month, day = now.Minute;
+	Int32 year = now.Year, month = now.Month, day = now.Day;
 	Int32 hour = now.Hour, min = now.Minute, sec = now.Second;
 
 	UInt8 fileBuffer[String_BufferSize(STRING_SIZE)];
