@@ -49,17 +49,15 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
 #define PNG_PALETTE 256
 #define PNG_FourCC(a, b, c, d) ((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d
 
-#define PNG_COL_GRAYSCALE 0
-#define PNG_COL_RGB 2
-#define PNG_COL_INDEXED 3
-#define PNG_COL_GRAYSCALE_A 4
-#define PNG_COL_RGB_A 6
+enum PNG_COL {
+	PNG_COL_GRAYSCALE = 0, PNG_COL_RGB = 2, PNG_COL_INDEXED = 3,
+	PNG_COL_GRAYSCALE_A = 4, PNG_COL_RGB_A = 6,
+};
 
-#define PNG_FILTER_NONE 0
-#define PNG_FILTER_SUB 1
-#define PNG_FILTER_UP 2
-#define PNG_FILTER_AVERAGE 3
-#define PNG_FILTER_PAETH 4
+enum PNG_FILTER {
+	PNG_FILTER_NONE, PNG_FILTER_SUB, PNG_FILTER_UP,
+	PNG_FILTER_AVERAGE, PNG_FILTER_PAETH
+};
 
 typedef void(*Png_RowExpander)(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst);
 UInt8 png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
@@ -73,7 +71,7 @@ void Png_CheckHeader(Stream* stream) {
 	}
 }
 
-void Png_Filter(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt32 lineLen) {
+void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt32 lineLen) {
 	UInt32 i, j;
 	switch (type) {
 	case PNG_FILTER_NONE:
@@ -81,22 +79,22 @@ void Png_Filter(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt
 
 	case PNG_FILTER_SUB:
 		for (i = bytesPerPixel, j = 0; i < lineLen; i++, j++) {
-			line[i] = (UInt8)(line[i] + line[j]);
+			line[i] += line[j];
 		}
 		return;
 
 	case PNG_FILTER_UP:
 		for (i = 0; i < lineLen; i++) {
-			line[i] = (UInt8)(line[i] + prior[i]);
+			line[i] += prior[i];
 		}
 		return;
 
 	case PNG_FILTER_AVERAGE:
 		for (i = 0; i < bytesPerPixel; i++) {
-			line[i] = (UInt8)(line[i] + (prior[i] >> 1));
+			line[i] += (prior[i] >> 1);
 		}
 		for (j = 0; i < lineLen; i++, j++) {
-			line[i] = (UInt8)(line[i] + ((prior[i] + line[j]) >> 1));
+			line[i] += ((prior[i] + line[j]) >> 1);
 		}
 		return;
 
@@ -109,9 +107,9 @@ void Png_Filter(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt
 			Int32 pb = Math_AbsI(p - b);
 			Int32 pc = Math_AbsI(p - c);
 
-			if (pa <= pb && pa <= pc) { line[i] = (UInt8)(line[i] + a); } 
-			else if (pb <= pc) {        line[i] = (UInt8)(line[i] + b); } 
-			else {                      line[i] = (UInt8)(line[i] + c); }
+			if (pa <= pb && pa <= pc) { line[i] += a; } 
+			else if (pb <= pc) {        line[i] += b; } 
+			else {                      line[i] += c; }
 		}
 		return;
 
@@ -430,7 +428,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 					UInt8* prior    = &buffer[scanlineIndices[0]];
 					UInt8* scanline = &buffer[scanlineIndices[1]];
 
-					Png_Filter(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
+					Png_Reconstruct(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
 					rowExpander(bitsPerSample, bmp->Width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
 					curY++;
 
@@ -491,14 +489,91 @@ void Bitmap_Crc32Stream(Stream* stream, Stream* underlying) {
 	stream->Close = Stream_UnsupportedClose;
 }
 
-void Bitmap_EncodePngRow(UInt8* src, UInt8* cur, UInt8* prev, UInt8* best, Int32 width) {
-	UInt8* dst = best + 1;
+void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
+	/* 3 bytes per pixel constant */
+	Int32 i;
+	switch (filter) {
+	case PNG_FILTER_NONE:
+		Platform_MemCpy(best, cur, lineLen);
+		break;
+
+	case PNG_FILTER_SUB:
+		best[0] = cur[0]; best[1] = cur[1]; best[2] = cur[2];
+
+		for (i = 3; i < lineLen; i++) {
+			best[i] = cur[i] - cur[i - 3];
+		}
+		break;
+
+	case PNG_FILTER_UP:
+		for (i = 0; i < lineLen; i++) {
+			best[i] = cur[i] - prior[i];
+		}
+		break;
+
+	case PNG_FILTER_AVERAGE:
+		best[0] = cur[0] - (prior[0] >> 1);
+		best[1] = cur[1] - (prior[1] >> 1);
+		best[2] = cur[2] - (prior[2] >> 1);
+
+		for (i = 3; i < lineLen; i++) {
+			best[i] = cur[i] - ((prior[i] + cur[i - 3]) >> 1);
+		}
+		break;
+
+	case PNG_FILTER_PAETH:
+		best[0] = cur[0] - prior[0]; 
+		best[1] = cur[1] - prior[1];
+		best[2] = cur[2] - prior[2];
+
+		for (i = 3; i < lineLen; i++) {
+			UInt8 a = cur[i - 3], b = prior[i], c = prior[i - 3];
+			Int32 p = a + b - c;
+			Int32 pa = Math_AbsI(p - a);
+			Int32 pb = Math_AbsI(p - b);
+			Int32 pc = Math_AbsI(p - c);
+
+			if (pa <= pb && pa <= pc) { best[i] = cur[i] - a; }
+			else if (pb <= pc)        { best[i] = cur[i] - b; }
+			else                      { best[i] = cur[i] - c; }
+		}
+		break;
+	}
+}
+
+static int counter;
+void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
+	UInt8* dst = cur;
 	Int32 x;
-	for (x = 0; x < width; x++) {
+	for (x = 0; x < lineLen; x += 3) {
 		dst[0] = src[2]; dst[1] = src[1]; dst[2] = src[0];
 		src += 4; dst += 3;
 	}
-	dst[0] = 0; /* filter type 0 */
+
+	/* Waste of time checking the PNG_NONE filter */
+	Int32 filter, bestFilter = PNG_FILTER_SUB, bestEstimate = Int32_MaxValue;
+	dst = best + 1;
+
+	for (filter = PNG_FILTER_SUB; filter <= PNG_FILTER_PAETH; filter++) {
+		Png_Filter(filter, cur, prior, dst, lineLen);
+
+		/* Estimate how well this filtered line will compress */
+		/* Uses simple sum of magnitude of each byte in the line */
+		Int32 estimate = 0;
+		for (x = 0; x < lineLen; x++) {
+			estimate += Math_AbsI((Int8)dst[x]);
+		}
+
+		if (estimate > bestEstimate) continue;
+		bestEstimate = estimate;
+		bestFilter   = filter;
+	}
+
+	/* Since this filter is last checked, can avoid running it twice */
+	if (bestFilter != PNG_FILTER_PAETH) {
+		Png_Filter(bestFilter, cur, prior, dst, lineLen);
+	}
+	best[0] = bestFilter;
 }
 
 void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
@@ -533,9 +608,8 @@ void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
 	stream = &crc32Stream;
 	Bitmap_Crc32Stream(&crc32Stream, underlying);
 	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'D', 'A', 'T'));
-	UInt32 start = Platform_FilePosition(underlying->Meta_File);
 	{
-		Int32 y, lineSize = bmp->Width * 3 + 1;
+		Int32 y, lineSize = bmp->Width * 3;
 		ZLibState zlState;
 		Stream zlStream;
 		ZLib_MakeStream(&zlStream, &zlState, stream);
@@ -544,12 +618,12 @@ void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
 			UInt8* src  = (UInt8*)Bitmap_GetRow(bmp, y);
 			UInt8* prev = (y & 1) == 0 ? prevLine : curLine;
 			UInt8* cur  = (y & 1) == 0 ? curLine : prevLine;
-			Bitmap_EncodePngRow(src, cur, prev, bestLine, bmp->Width);
-			Stream_Write(&zlStream, bestLine, lineSize);
+			Png_EncodeRow(src, cur, prev, bestLine, lineSize);
+			Stream_Write(&zlStream, bestLine, lineSize + 1); /* +1 for filter byte */
 		}
 		zlStream.Close(&zlStream);
 	}
-	UInt32 end = Platform_FilePosition(underlying->Meta_File);
+	UInt32 dataEnd = Platform_FilePosition(underlying->Meta_File);
 	stream = underlying;
 	Stream_WriteU32_BE(stream, crc32Stream.Meta_CRC32 ^ 0xFFFFFFFFUL);
 
@@ -559,7 +633,7 @@ void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
 	Stream_WriteU32_BE(stream, 0xAE426082UL); /* crc32 of iend */
 
 	/* Come back to write size of data chunk */
-	ReturnCode result = stream->Seek(stream, 25, STREAM_SEEKFROM_BEGIN);
+	ReturnCode result = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN);
 	ErrorHandler_CheckOrFail(result, "PNG - seeking to write data size");
-	Stream_WriteU32_BE(stream, end - start);
+	Stream_WriteU32_BE(stream, dataEnd - 41);
 }
