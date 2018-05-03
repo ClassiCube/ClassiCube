@@ -18,6 +18,8 @@ typedef struct Stream_ {
 	ReturnCode (*Write)(Stream* stream, UInt8* data, UInt32 count, UInt32* modified);
 	ReturnCode (*Close)(Stream* stream);
 	ReturnCode (*Seek)(Stream* stream, Int32 offset, Int32 seekType);
+	ReturnCode (*Position)(Stream* stream, UInt32* pos);
+	ReturnCode (*Length)(Stream* stream, UInt32* length);
 	
 	union {
 		void* Meta_File;
@@ -34,11 +36,8 @@ void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
 Int32 Stream_TryReadByte(Stream* stream);
 void Stream_SetName(Stream* stream, STRING_PURE String* name);
-ReturnCode Stream_Skip(Stream* stream, UInt32 count);
-
-ReturnCode Stream_UnsupportedIO(Stream* stream, UInt8* data, UInt32 count, UInt32* modified); 
-ReturnCode Stream_UnsupportedClose(Stream* stream);
-ReturnCode Stream_UnsupportedSeek(Stream* stream, Int32 offset, Int32 seekType);
+ReturnCode Stream_Skip(Stream* stream, UInt32 count); 
+void Stream_SetDefaultOps(Stream* stream);
 
 void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name);
 /* Readonly Stream wrapping another Stream, only allows reading up to 'len' bytes from the wrapped stream. */

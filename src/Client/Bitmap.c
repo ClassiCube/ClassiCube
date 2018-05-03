@@ -483,10 +483,8 @@ void Bitmap_Crc32Stream(Stream* stream, Stream* underlying) {
 	stream->Meta_CRC32_Underlying = underlying;
 	stream->Meta_CRC32 = 0xFFFFFFFFUL;
 
-	stream->Read  = Stream_UnsupportedIO;
+	Stream_SetDefaultOps(stream);
 	stream->Write = Bitmap_Crc32StreamWrite;
-	stream->Seek  = Stream_UnsupportedSeek;
-	stream->Close = Stream_UnsupportedClose;
 }
 
 void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
@@ -623,7 +621,8 @@ void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
 		}
 		zlStream.Close(&zlStream);
 	}
-	UInt32 dataEnd = Platform_FilePosition(underlying->Meta_File);
+	UInt32 dataEnd; ReturnCode result = underlying->Position(underlying, &dataEnd);
+	ErrorHandler_CheckOrFail(result, "PNG - getting position of data end");
 	stream = underlying;
 	Stream_WriteU32_BE(stream, crc32Stream.Meta_CRC32 ^ 0xFFFFFFFFUL);
 
@@ -633,7 +632,7 @@ void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
 	Stream_WriteU32_BE(stream, 0xAE426082UL); /* crc32 of iend */
 
 	/* Come back to write size of data chunk */
-	ReturnCode result = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN);
+	result = stream->Seek(stream, 33, STREAM_SEEKFROM_BEGIN);
 	ErrorHandler_CheckOrFail(result, "PNG - seeking to write data size");
 	Stream_WriteU32_BE(stream, dataEnd - 41);
 }

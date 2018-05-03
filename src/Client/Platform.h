@@ -48,8 +48,8 @@ ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* by
 ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten);
 ReturnCode Platform_FileClose(void* file);
 ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType);
-UInt32 Platform_FilePosition(void* file);
-UInt32 Platform_FileLength(void* file);
+ReturnCode Platform_FilePosition(void* file, UInt32* position);
+ReturnCode Platform_FileLength(void* file, UInt32* length);
 
 void Platform_ThreadSleep(UInt32 milliseconds);
 typedef void Platform_ThreadFunc(void);

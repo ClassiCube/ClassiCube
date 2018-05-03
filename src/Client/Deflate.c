@@ -685,10 +685,8 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Inflate = state;
 
+	Stream_SetDefaultOps(stream);
 	stream->Read  = Inflate_StreamRead;
-	stream->Write = Stream_UnsupportedIO;
-	stream->Close = Stream_UnsupportedClose;
-	stream->Seek  = Stream_UnsupportedSeek;
 }
 
 
@@ -740,9 +738,8 @@ void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying)
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Inflate = state;
 
-	stream->Read  = Stream_UnsupportedIO;
+	Stream_SetDefaultOps(stream);
 	stream->Write = Deflate_StreamWrite;
-	stream->Seek  = Stream_UnsupportedSeek;
 	stream->Close = Deflate_StreamClose;
 }
 

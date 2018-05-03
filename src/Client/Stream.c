@@ -72,11 +72,21 @@ ReturnCode Stream_Skip(Stream* stream, UInt32 count) {
 	return count > 0;
 }
 
-ReturnCode Stream_UnsupportedIO(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+ReturnCode Stream_DefaultIO(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	*modified = 0; return 1;
 }
-ReturnCode Stream_UnsupportedClose(Stream* stream) { return 0; }
-ReturnCode Stream_UnsupportedSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
+ReturnCode Stream_DefaultClose(Stream* stream) { return 0; }
+ReturnCode Stream_DefaultSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
+ReturnCode Stream_DefaultGet(Stream* stream, UInt32* value) { *value = 0; return 1; }
+
+void Stream_SetDefaultOps(Stream* stream) {
+	stream->Read  = Stream_DefaultIO;
+	stream->Write = Stream_DefaultIO;
+	stream->Close = Stream_DefaultClose;
+	stream->Seek  = Stream_DefaultSeek;
+	stream->Position = Stream_DefaultGet;
+	stream->Length   = Stream_DefaultGet;
+}
 
 
 /*########################################################################################################################*
@@ -96,6 +106,12 @@ ReturnCode Stream_FileClose(Stream* stream) {
 ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
 	return Platform_FileSeek(stream->Meta_File, offset, seekType);
 }
+ReturnCode Stream_FilePosition(Stream* stream, UInt32* position) {
+	return Platform_FilePosition(stream->Meta_File, position);
+}
+ReturnCode Stream_FileLength(Stream* stream, UInt32* length) {
+	return Platform_FileLength(stream->Meta_File, length);
+}
 
 void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 	Stream_SetName(stream, name);
@@ -105,6 +121,8 @@ void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 	stream->Write = Stream_FileWrite;
 	stream->Close = Stream_FileClose;
 	stream->Seek  = Stream_FileSeek;
+	stream->Position = Stream_FilePosition;
+	stream->Length   = Stream_FileLength;
 }
 
 
@@ -124,10 +142,8 @@ void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 	stream->Meta_Portion_Underlying = underlying;
 	stream->Meta_Portion_Count = len;
 
+	Stream_SetDefaultOps(stream);
 	stream->Read  = Stream_PortionRead;
-	stream->Write = Stream_UnsupportedIO;
-	stream->Close = Stream_UnsupportedClose;
-	stream->Seek  = Stream_UnsupportedSeek;
 }
 
 
@@ -159,15 +175,13 @@ void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE S
 	stream->Meta_Mem_Buffer = data;
 	stream->Meta_Mem_Count  = len;
 
+	Stream_SetDefaultOps(stream);
 	stream->Read  = Stream_MemoryRead;
-	stream->Write = Stream_UnsupportedIO;
-	stream->Close = Stream_UnsupportedClose;
-	stream->Seek  = Stream_UnsupportedSeek;
 }
 
 void Stream_WriteonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
 	Stream_ReadonlyMemory(stream, data, len, name);
-	stream->Read  = Stream_UnsupportedIO;
+	stream->Read  = Stream_DefaultIO;
 	stream->Write = Stream_MemoryWrite;
 }
 

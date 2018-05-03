@@ -288,20 +288,14 @@ ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
 	return pos == INVALID_SET_FILE_POINTER ? GetLastError() : 0;
 }
 
-UInt32 Platform_FilePosition(void* file) {
-	DWORD pos = SetFilePointer(file, 0, NULL, 1); /* SEEK_CUR */
-	if (pos == INVALID_SET_FILE_POINTER) {
-		ErrorHandler_FailWithCode(GetLastError(), "Getting file position");
-	}
-	return pos;
+ReturnCode Platform_FilePosition(void* file, UInt32* position) {
+	*position = SetFilePointer(file, 0, NULL, 1); /* SEEK_CUR */
+	return *position == INVALID_SET_FILE_POINTER ? GetLastError() : 0;
 }
 
-UInt32 Platform_FileLength(void* file) {
-	DWORD pos = GetFileSize(file, NULL);
-	if (pos == INVALID_FILE_SIZE) {
-		ErrorHandler_FailWithCode(GetLastError(), "Getting file length");
-	}
-	return pos;
+ReturnCode Platform_FileLength(void* file, UInt32* length) {
+	*length = GetFileSize(file, NULL);
+	return *length == INVALID_FILE_SIZE ? GetLastError() : 0;
 }
 
 
@@ -405,7 +399,7 @@ void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size
 	desc->Style   = style;
 	LOGFONTA font = { 0 };
 
-	font.lfHeight    = -Math_Ceil(size * GetDeviceCaps(hdc, LOGPIXELSY) / 72.0f);
+	font.lfHeight    = -Math_CeilDiv(size * GetDeviceCaps(hdc, LOGPIXELSY), 72);
 	font.lfUnderline = style == FONT_STYLE_UNDERLINE;
 	font.lfWeight    = style == FONT_STYLE_BOLD ? FW_BOLD : FW_NORMAL;
 	font.lfQuality   = ANTIALIASED_QUALITY; /* TODO: CLEARTYPE_QUALITY looks slightly better */
