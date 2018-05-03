@@ -40,7 +40,7 @@ void IsometricDrawer_InitCache(void) {
 	PackedCol_GetShaded(iso_colNormal, &iso_colXSide, &iso_colZSide, &iso_colYBottom);
 
 	Matrix rotY, rotX;
-	Matrix_RotateY(&rotY, 45.0f * MATH_DEG2RAD);
+	Matrix_RotateY(&rotY,  45.0f * MATH_DEG2RAD);
 	Matrix_RotateX(&rotX, -30.0f * MATH_DEG2RAD);
 	Matrix_Mul(&iso_transform, &rotY, &rotX);
 

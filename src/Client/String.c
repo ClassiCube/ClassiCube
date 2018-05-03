@@ -412,12 +412,12 @@ Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 
 	for (i = 0; i < minLen; i++) {
 		if (a->buffer[i] == b->buffer[i]) continue;
-		return a->buffer[i] < b->buffer[i] ? 1 : -1;
+		return a->buffer[i] > b->buffer[i] ? 1 : -1;
 	}
 
 	/* all chars are equal here - same string, or a substring */
 	if (a->length == b->length) return 0;
-	return a->length < b->length ? 1 : -1;
+	return a->length > b->length ? 1 : -1;
 }
 
 void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, const void* a1) {

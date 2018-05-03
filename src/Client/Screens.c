@@ -592,7 +592,7 @@ void LoadingScreen_Make(LoadingScreen* screen, GuiElementVTABLE* vtable, STRING_
 	screen->HandlesAllInput = true;
 
 	screen->VTABLE->HandlesKeyDown     = LoadingScreen_HandlesKeyDown;
-	screen->VTABLE->HandlesKeyDown     = LoadingScreen_HandlesKeyPress;
+	screen->VTABLE->HandlesKeyPress    = LoadingScreen_HandlesKeyPress;
 	screen->VTABLE->HandlesKeyUp       = LoadingScreen_HandlesKeyUp;
 	screen->VTABLE->HandlesMouseDown   = LoadingScreen_HandlesMouseDown;
 	screen->VTABLE->HandlesMouseUp     = LoadingScreen_HandlesMouseUp;

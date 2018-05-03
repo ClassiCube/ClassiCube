@@ -2124,7 +2124,7 @@ void PlayerListWidget_Render(GuiElement* elem, Real64 delta) {
 	Gfx_SetTexturing(false);
 	Int32 offset = overview->Height + 10;
 	Int32 height = max(300, widget->Height + overview->Height);
-	GfxCommon_Draw2DGradient(widget->X, widget->Y - offset, widget->Width, widget->Height, topCol, bottomCol);
+	GfxCommon_Draw2DGradient(widget->X, widget->Y - offset, widget->Width, height, topCol, bottomCol);
 
 	Gfx_SetTexturing(true);
 	overview->YOffset = widget->Y - offset + 5;
