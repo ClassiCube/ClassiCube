@@ -49,7 +49,7 @@ int main(void) {
 
 	String title   = String_FromConst(PROGRAM_APP_NAME);
 	String rawArgs = Platform_GetCommandLineArgs();
-	rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25566");
+	// rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25566");
 	//rawArgs = String_FromReadonly("UnknownShadow200");
 
 	String args[5]; UInt32 argsCount = Array_Elems(args);

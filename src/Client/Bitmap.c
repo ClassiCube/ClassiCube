@@ -45,6 +45,7 @@ void Bitmap_AllocateClearedPow2(Bitmap* bmp, Int32 width, Int32 height) {
 *------------------------------------------------------PNG decoder--------------------------------------------------------*
 *#########################################################################################################################*/
 #define PNG_SIG_SIZE 8
+#define PNG_IHDR_SIZE 13
 #define PNG_RGB_MASK 0xFFFFFFUL
 #define PNG_PALETTE 256
 #define PNG_FourCC(a, b, c, d) ((UInt32)a << 24) | ((UInt32)b << 16) | ((UInt32)c << 8) | (UInt32)d
@@ -248,7 +249,7 @@ void Png_Expand_GRAYSCALE_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, U
 	if (bitsPerSample == 8) {
 		for (i = 0, j = 0; i < (width & ~0x3); i += 4, j += 8) {
 			PNG_Do_Grayscale_A__8(rgb1, i    , j    ); PNG_Do_Grayscale_A__8(rgb2, i + 1, j + 2);
-			PNG_Do_Grayscale_A__8(rgb3, i + 2, j + 4); PNG_Do_Grayscale_A__8(rgb4, i + 3, j + 5);
+			PNG_Do_Grayscale_A__8(rgb3, i + 2, j + 4); PNG_Do_Grayscale_A__8(rgb4, i + 3, j + 6);
 		}
 		for (; i < width; i++, j += 2) { PNG_Do_Grayscale_A__8(rgb1, i, j); }
 	} else {
@@ -319,7 +320,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 
 		switch (fourCC) {
 		case PNG_FourCC('I', 'H', 'D', 'R'): {
-			if (dataSize != 13) ErrorHandler_Fail("PNG header chunk has invalid size");
+			if (dataSize != PNG_IHDR_SIZE) ErrorHandler_Fail("PNG header chunk has invalid size");
 			gotHeader = true;
 
 			bmp->Width  = Stream_ReadI32_BE(stream);
@@ -555,8 +556,9 @@ void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int32 line
 	for (filter = PNG_FILTER_SUB; filter <= PNG_FILTER_PAETH; filter++) {
 		Png_Filter(filter, cur, prior, dst, lineLen);
 
-		/* Estimate how well this filtered line will compress */
-		/* Uses simple sum of magnitude of each byte in the line */
+		/* Estimate how well this filtered line will compress, based on */
+		/* smallest sum of magnitude of each byte (signed) in the line */
+		/* (see note in PNG specification, 12.8 "Filter selection" ) */
 		Int32 estimate = 0;
 		for (x = 0; x < lineLen; x++) {
 			estimate += Math_AbsI((Int8)dst[x]);
@@ -580,7 +582,7 @@ void Bitmap_EncodePng(Bitmap* bmp, Stream* stream) {
 	Stream crc32Stream;
 
 	/* Write header chunk */
-	Stream_WriteU32_BE(stream, 13);
+	Stream_WriteU32_BE(stream, PNG_IHDR_SIZE);
 	Bitmap_Crc32Stream(&crc32Stream, underlying);
 	stream = &crc32Stream;
 	Stream_WriteU32_BE(stream, PNG_FourCC('I', 'H', 'D', 'R'));

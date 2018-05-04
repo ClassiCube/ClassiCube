@@ -431,6 +431,7 @@ void Classic_LevelDataChunk(Stream* stream) {
 	Int32 usedLength = Stream_ReadU16_BE(stream);
 	mapPartStream.Meta_Mem_Buffer = stream->Meta_Mem_Buffer;
 	mapPartStream.Meta_Mem_Count  = usedLength;
+	mapPartStream.Meta_Mem_Length = usedLength;
 
 	Stream_Skip(stream, 1024);
 	UInt8 value = Stream_ReadU8(stream); /* progress in original classic, but we ignore it */

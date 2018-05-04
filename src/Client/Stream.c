@@ -137,13 +137,23 @@ ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	return code;
 }
 
+ReturnCode Stream_PortionPosition(Stream* stream, UInt32* position) {
+	*position = stream->Meta_Portion_Length - stream->Meta_Portion_Count; return 0;
+}
+ReturnCode Stream_PortionLength(Stream* stream, UInt32* length) {
+	*length = stream->Meta_Portion_Length; return 0;
+}
+
 void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Portion_Underlying = underlying;
-	stream->Meta_Portion_Count = len;
+	stream->Meta_Portion_Count  = len;
+	stream->Meta_Portion_Length = len;
 
 	Stream_SetDefaultOps(stream);
-	stream->Read  = Stream_PortionRead;
+	stream->Read     = Stream_PortionRead;
+	stream->Position = Stream_PortionPosition;
+	stream->Length   = Stream_PortionLength;
 }
 
 
@@ -174,9 +184,13 @@ void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE S
 	Stream_SetName(stream, name);
 	stream->Meta_Mem_Buffer = data;
 	stream->Meta_Mem_Count  = len;
+	stream->Meta_Mem_Length = len;
 
 	Stream_SetDefaultOps(stream);
-	stream->Read  = Stream_MemoryRead;
+	stream->Read     = Stream_MemoryRead;
+	/* TODO: Should we use separate Stream_MemoryPosition functions? */
+	stream->Position = Stream_PortionPosition;
+	stream->Length   = Stream_PortionLength;
 }
 
 void Stream_WriteonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
