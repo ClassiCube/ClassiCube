@@ -50,9 +50,9 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 
 	/* Rotate around camera */
 	Vector2 rotation = Camera_Active->GetCameraOrientation();
-	Matrix_RotateY(&rotY, rotation.Y); /* Camera yaw */
+	Matrix_RotateY(&rotY, rotation.X); /* Camera yaw */
 	Matrix_MulBy(&m, &rotY);
-	Matrix_RotateX(&rotX, rotation.X); /* Camera pitch */
+	Matrix_RotateX(&rotX, rotation.Y); /* Camera pitch */
 	Matrix_MulBy(&m, &rotX);
 	/* Tilt skybox too. */
 	Matrix_MulBy(&m, &Camera_TiltM);
