@@ -228,15 +228,6 @@ bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType) {
 	Bitmap bmp; Bitmap_DecodePng(&bmp, src);
 	bool success = Game_ValidateBitmap(&src->Name, &bmp);
 
-	if (String_CaselessEqualsConst(&src->Name, "cloud.png") || String_CaselessEqualsConst(&src->Name, "clouds.png")) {
-		Stream abcd;
-		String abcdF = String_FromConst("screenshots/cloud_dump2.png");
-		void* abcdFile; Platform_FileCreate(&abcdFile, &abcdF);
-		Stream_FromFile(&abcd, abcdFile, &abcdF);
-		Bitmap_EncodePng(&bmp, &abcd);
-		abcd.Close(&abcd);
-	}
-
 	if (success) {
 		Gfx_DeleteTexture(texId);
 		if (setSkinType) Game_SetDefaultSkinType(&bmp);

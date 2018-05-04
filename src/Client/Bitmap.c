@@ -101,7 +101,10 @@ void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior,
 
 	case PNG_FILTER_PAETH:
 		/* TODO: verify this is right */
-		for (i = bytesPerPixel, j = 0; i < lineLen; i++, j++) {
+		for (i = 0; i < bytesPerPixel; i++) {
+			line[i] += prior[i];
+		}
+		for (j = 0; i < lineLen; i++, j++) {
 			UInt8 a = line[j], b = prior[i], c = prior[j];
 			Int32 p = a + b - c;
 			Int32 pa = Math_AbsI(p - a);
@@ -311,8 +314,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 
 	UInt32 scanlineSize, scanlineBytes, curY = 0;
 	UInt8 buffer[PNG_BUFFER_SIZE];
-	UInt32 bufferIdx, bufferLen, bufferCur;
-	UInt32 scanlineIndices[2];
+	UInt32 bufferIdx, bufferRows;
 
 	while (readingChunks) {
 		UInt32 dataSize = Stream_ReadU32_BE(stream);
@@ -344,16 +346,13 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG interlacing not supported");
 
 			static UInt32 samplesPerPixel[7] = { 1,0,3,1,2,0,4 };
-			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
-			scanlineBytes = scanlineSize + 1;
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
-			bufferLen = (PNG_BUFFER_SIZE / scanlineBytes) * scanlineBytes;
+			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
+			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */			
 
-			scanlineIndices[0] = 0;
-			scanlineIndices[1] = scanlineBytes;
 			Platform_MemSet(buffer, 0, scanlineBytes); /* Prior row should be 0 per PNG spec */
 			bufferIdx = scanlineBytes;
-			bufferCur = scanlineBytes;
+			bufferRows = PNG_BUFFER_SIZE / scanlineBytes;
 
 			switch (col) {
 			case PNG_COL_GRAYSCALE: rowExpander = Png_Expand_GRAYSCALE; break;
@@ -404,42 +403,41 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			Stream datStream;
 			Stream_ReadonlyPortion(&datStream, stream, dataSize);
 			inflate.Source = &datStream;
-
 			/* TODO: This assumes zlib header will be in 1 IDAT chunk */
 			while (!zlibHeader.Done) { ZLibHeader_Read(&datStream, &zlibHeader); }
 
-			UInt32 scanlineBytes = (scanlineSize + 1); /* Add 1 byte for filter byte of each scanline*/
+			UInt32 bufferLen = bufferRows * scanlineBytes, bufferMax = bufferLen - scanlineBytes;
 			while (curY < bmp->Height) {
-				UInt32 bufferRemaining = bufferLen - bufferIdx, read;
-				ReturnCode code = compStream.Read(&compStream, &buffer[bufferIdx], bufferRemaining, &read);
+				/* Need to leave one row in buffer untouched for storing prior scanline. Illustrated example of process:
+				*          |=====|        #-----|        |-----|        #-----|        |-----|
+				* initial  #-----| read 3 |-----| read 3 |-----| read 1 |-----| read 3 |-----| etc
+				*  state   |-----| -----> |-----| -----> |=====| -----> |-----| -----> |=====|
+				*          |-----|        |=====|        #-----|        |=====|        #-----|
+				*
+				* (==== is prior scanline, # is current index in buffer)
+				* Having initial state this way allows doing two 'read 3' first time (assuming large idat chunks)
+				*/
+				UInt32 bufferLeft = bufferLen - bufferIdx, read;
+				if (bufferLeft > bufferMax) bufferLeft = bufferMax;
+
+				ReturnCode code = compStream.Read(&compStream, &buffer[bufferIdx], bufferLeft, &read);
 				ErrorHandler_CheckOrFail(code, "PNG - reading image bulk data");
 				if (read == 0) break;			
 
-				/* buffer is arranged like this */
-				/* scanline 0 | A
-				            1 | B  <-- bufferCur
-				            2 | X
-				            3 | X  <-- bufferIdx (for example)
-				            4 | X
-				*/
-				/* When reading, we need to handle the case of when the buffer cycles over back to start */
-
+				UInt32 startY = bufferIdx / scanlineBytes, rowY;
 				bufferIdx += read;
-				while (bufferIdx >= bufferCur + scanlineBytes && curY < bmp->Height) {					
-					UInt8* prior    = &buffer[scanlineIndices[0]];
-					UInt8* scanline = &buffer[scanlineIndices[1]];
+				UInt32 endY = bufferIdx / scanlineBytes;
+				/* reached end of buffer, cycle back to start */
+				if (bufferIdx == bufferLen) bufferIdx = 0;
+
+				for (rowY = startY; rowY < endY; rowY++, curY++) {
+					UInt32 priorY = rowY == 0 ? bufferRows : rowY;
+					UInt8* prior    = &buffer[(priorY - 1) * scanlineBytes];
+					UInt8* scanline = &buffer[rowY         * scanlineBytes];
 
 					Png_Reconstruct(scanline[0], bytesPerPixel, &scanline[1], &prior[1], scanlineSize);
 					rowExpander(bitsPerSample, bmp->Width, palette, &scanline[1], Bitmap_GetRow(bmp, curY));
-					curY++;
-
-					/* Advance scanlines, with wraparound behaviour */
-					scanlineIndices[0] = (scanlineIndices[0] + scanlineBytes) % bufferLen;
-					scanlineIndices[1] = (scanlineIndices[1] + scanlineBytes) % bufferLen;
-					bufferCur += scanlineBytes;
-					if (bufferCur == bufferLen) { bufferCur = 0; break; }
-				}
-				if (bufferIdx == bufferLen) bufferIdx = 0;
+				}			
 			}
 		} break;
 

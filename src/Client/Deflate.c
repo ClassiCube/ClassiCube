@@ -459,8 +459,10 @@ void Inflate_Process(InflateState* state) {
 		case INFLATE_STATE_UNCOMPRESSED_DATA: {
 			while (state->NumBits > 0 && state->AvailOut > 0 && state->Index > 0) {
 				*state->Output = Inflate_ReadBits(state, 8);
-				state->AvailOut--;
-				state->Index--;
+				state->Window[state->WindowIndex] = *state->Output;
+
+				state->WindowIndex = (state->WindowIndex + 1) & INFLATE_WINDOW_MASK;
+				state->Output++; state->AvailOut--;	state->Index--;
 			}
 			if (state->AvailIn == 0 || state->AvailOut == 0) return;
 
@@ -468,11 +470,18 @@ void Inflate_Process(InflateState* state) {
 			copyLen = min(copyLen, state->Index);
 			if (copyLen > 0) {
 				Platform_MemCpy(state->Output, state->NextIn, copyLen);
-				/* TODO: Copy output to window!!! */
-				state->Output += copyLen; state->AvailOut -= copyLen;
-				state->NextIn += copyLen;
-				state->AvailIn -= copyLen;
-				state->Index -= copyLen;
+				UInt32 windowCopyLen = INFLATE_WINDOW_SIZE - state->WindowIndex;
+				windowCopyLen = min(windowCopyLen, copyLen);
+
+				Platform_MemCpy(&state->Window[state->WindowIndex], state->Output, windowCopyLen);
+				/* Wrap around remainder of copy to start from beginning of window */
+				if (windowCopyLen < copyLen) {
+					Platform_MemCpy(state->Window, &state->Output[windowCopyLen], copyLen - windowCopyLen);
+				}
+
+				state->WindowIndex = (state->WindowIndex + copyLen) & INFLATE_WINDOW_MASK;
+				state->Output += copyLen; state->AvailOut -= copyLen; state->Index -= copyLen;
+				state->NextIn += copyLen; state->AvailIn -= copyLen;		
 			}
 
 			if (state->Index == 0) {

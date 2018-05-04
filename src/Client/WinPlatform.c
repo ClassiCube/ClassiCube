@@ -49,7 +49,7 @@ void Platform_Init(void) {
 		deviceNum++;
 		if ((device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) == 0) continue;
 		bool devPrimary = false;
-		DisplayResolution resolution = DisplayResolution_Make(0, 0, 0, 0.0f);
+		DisplayResolution resolution = { 0 };
 		DEVMODEA mode = { 0 };
 		mode.dmSize = sizeof(DEVMODEA);
 
