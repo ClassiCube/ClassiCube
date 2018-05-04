@@ -37,7 +37,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal static char[] numBuffer = new char[20];
-		internal static int MakeNum(int num) {
+		internal static int MakeNum(uint num) {
 			int len = 0;
 			do {
 				numBuffer[len] = (char)('0' + (num % 10));
@@ -47,7 +47,8 @@ namespace ClassicalSharp {
 		}
 		
 		public StringBuffer AppendNum(int num) {
-			int numLen = MakeNum(num);
+			if (num < 0) { Append('-'); num = -num; }
+			int numLen = MakeNum((uint)num);
 			for (int i = numLen - 1; i >= 0; i--)
 				value[Length++] = numBuffer[i];
 			return this;
@@ -56,7 +57,7 @@ namespace ClassicalSharp {
 		public StringBuffer AppendPaddedNum(int minDigits, int num) {
 			for (int i = 0; i < minDigits; i++)
 				numBuffer[i] = '0';
-			int numLen = Math.Max(minDigits, MakeNum(num));
+			int numLen = Math.Max(minDigits, MakeNum((uint)num));
 			for (int i = numLen - 1; i >= 0; i--)
 				value[Length++] = numBuffer[i];
 			return this;

@@ -67,7 +67,7 @@ namespace ClassicalSharp {
 			}
 
 			char[] digits = StringBuffer.numBuffer;
-			int count = StringBuffer.MakeNum(value);
+			int count = StringBuffer.MakeNum((uint)value);
 			for (int i = count - 1; i >= 0; i--) {
 				Add(digits[i] - '0', vertices, ref index);
 			}
