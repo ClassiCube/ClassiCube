@@ -54,7 +54,7 @@ namespace ClassicalSharp.Gui {
 
 		public bool HandlesAllInput, BlocksWorld, HidesHud, RenderHudOver;
 
-		public abstract void OnResize(int width, int height);
+		public abstract void OnResize();
 		
 		protected abstract void ContextLost();
 		

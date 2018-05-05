@@ -119,7 +119,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		void ChatFontChanged(object sender, EventArgs e) { Recreate(); }
 		
-		public override void OnResize(int width, int height) { }
+		public override void OnResize() { }
 		
 		void DrawPosition() {
 			int index = 0;

@@ -56,7 +56,7 @@ namespace ClassicalSharp.Gui.Screens {
 			messageFont.Dispose();
 		}
 		
-		public override void OnResize(int width, int height) {
+		public override void OnResize() {
 			titleWidget.Reposition();
 			messageWidget.Reposition();
 			reconnect.Reposition();

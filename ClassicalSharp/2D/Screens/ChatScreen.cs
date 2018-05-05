@@ -297,7 +297,7 @@ namespace ClassicalSharp.Gui.Screens {
 			UpdateChatYOffset(true);
 		}
 		
-		public override void OnResize(int width, int height) {
+		public override void OnResize() {
 			bool active = altText != null && altText.Active;
 			Recreate();
 			altText.SetActive(active);

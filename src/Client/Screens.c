@@ -450,7 +450,7 @@ void LoadingScreen_SetTitle(LoadingScreen* screen) {
 	Elem_TryFree(&screen->Title);
 
 	TextWidget_Create(&screen->Title, &title, &screen->Font);
-	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -80);
+	Widget_SetLocation((Widget*)(&screen->Title), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -31);
 }
 
 void LoadingScreen_SetMessage(LoadingScreen* screen) {
@@ -458,7 +458,7 @@ void LoadingScreen_SetMessage(LoadingScreen* screen) {
 	Elem_TryFree(&screen->Message);
 
 	TextWidget_Create(&screen->Message, &message, &screen->Font);
-	Widget_SetLocation((Widget*)(&screen->Message), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -30);
+	Widget_SetLocation((Widget*)(&screen->Message), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 17);
 }
 
 void LoadingScreen_MapLoading(void* obj, Real32 progress) {
@@ -554,19 +554,18 @@ void LoadingScreen_Init(GuiElement* elem) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
 }
 
-#define PROG_BAR_WIDTH 220
-#define PROG_BAR_HEIGHT 10
+#define PROG_BAR_WIDTH 200
+#define PROG_BAR_HEIGHT 4
 void LoadingScreen_Render(GuiElement* elem, Real64 delta) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
 	Gfx_SetTexturing(true);
 	LoadingScreen_DrawBackground();
 	Elem_Render(&screen->Title, delta);
 	Elem_Render(&screen->Message, delta);
-
 	Gfx_SetTexturing(false);
 
-	Int32 x = Game_Width  / 2 - PROG_BAR_WIDTH  / 2;
-	Int32 y = Game_Height / 2 - PROG_BAR_HEIGHT / 2;
+	Int32 x = Gui_CalcPos(ANCHOR_CENTRE,  0, PROG_BAR_WIDTH,  Game_Width);
+	Int32 y = Gui_CalcPos(ANCHOR_CENTRE, 34, PROG_BAR_HEIGHT, Game_Height);
 	Int32 progWidth = (Int32)(PROG_BAR_WIDTH * screen->Progress);
 
 	PackedCol backCol = PACKEDCOL_CONST(128, 128, 128, 255);

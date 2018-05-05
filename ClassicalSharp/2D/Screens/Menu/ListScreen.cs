@@ -124,7 +124,7 @@ namespace ClassicalSharp.Gui.Screens {
 			return HandleMouseDown(widgets, mouseX, mouseY, button) >= 0;
 		}
 		
-		public override void OnResize(int width, int height) {
+		public override void OnResize() {
 			RepositionWidgets(widgets);
 		}
 	}

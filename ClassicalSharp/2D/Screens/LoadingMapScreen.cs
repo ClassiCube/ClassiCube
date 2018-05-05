@@ -25,7 +25,7 @@ namespace ClassicalSharp.Gui.Screens {
 		string title, message;
 		float progress;
 		TextWidget titleWidget, messageWidget;
-		const int progWidth = 220, progHeight = 10;
+		const int progWidth = 200, progHeight = 4;
 		readonly FastColour backCol = new FastColour(128, 128, 128);
 		readonly FastColour progressCol = new FastColour(128, 255, 128);
 
@@ -44,7 +44,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (titleWidget != null) titleWidget.Dispose();
 			
 			titleWidget = TextWidget.Create(game, title, font)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -80);
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -31);
 		}
 		
 		public void SetMessage(string message) {
@@ -52,7 +52,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (messageWidget != null) messageWidget.Dispose();
 			
 			messageWidget = TextWidget.Create(game, message, font)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -30);
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, 17);
 		}
 		
 		public void SetProgress(float progress) {
@@ -72,7 +72,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
-		public override void OnResize(int width, int height) {
+		public override void OnResize() {
 			messageWidget.Reposition();
 			titleWidget.Reposition();
 		}
@@ -121,10 +121,11 @@ namespace ClassicalSharp.Gui.Screens {
 			messageWidget.Render(delta);
 			gfx.Texturing = false;
 			
-			int progX = game.Width / 2 - progWidth / 2;
-			int progY = game.Height / 2 - progHeight / 2;
-			gfx.Draw2DQuad(progX, progY, progWidth, progHeight, backCol);
-			gfx.Draw2DQuad(progX, progY, (int)(progWidth * progress), progHeight, progressCol);
+			int x = CalcPos(Anchor.Centre,  0, progWidth,  game.Width);
+			int y = CalcPos(Anchor.Centre, 34, progHeight, game.Height);
+
+			gfx.Draw2DQuad(x, y, progWidth,                   progHeight, backCol);
+			gfx.Draw2DQuad(x, y, (int)(progWidth * progress), progHeight, progressCol);
 		}
 		
 		void DrawBackground() {
@@ -134,7 +135,7 @@ namespace ClassicalSharp.Gui.Screens {
 			int col = new FastColour(64, 64, 64).Pack();
 			
 			int texLoc = BlockInfo.GetTextureLoc(Block.Dirt, Side.Top);
-			Texture tex = new Texture(0, 0, 0, game.Width, 64, 
+			Texture tex = new Texture(0, 0, 0, game.Width, 64,
 			                          TerrainAtlas1D.GetTexRec(texLoc, 1, out atlasIndex));
 			tex.U2 = (float)game.Width / 64;
 			bool bound = false;
@@ -155,7 +156,7 @@ namespace ClassicalSharp.Gui.Screens {
 				bound = true;
 				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[atlasIndex]);
 			}
-					
+			
 			ModelCache cache = game.ModelCache;
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			game.Graphics.UpdateDynamicVb_IndexedTris(cache.vb, cache.vertices, index);

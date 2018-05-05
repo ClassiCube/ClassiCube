@@ -40,7 +40,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void ContextLost() { DisposeWidgets(widgets); }
 
-		public override void OnResize(int width, int height) {
+		public override void OnResize() {
 			RepositionWidgets(widgets);
 		}
 		

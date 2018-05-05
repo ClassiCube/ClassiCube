@@ -106,8 +106,8 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
 		
-		public override void OnResize(int width, int height) {
-			chat.OnResize(width, height);
+		public override void OnResize() {
+			chat.OnResize();
 			hotbar.Reposition();
 			
 			if (playerList != null) {

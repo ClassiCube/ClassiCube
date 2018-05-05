@@ -131,12 +131,11 @@ namespace ClassicalSharp {
 		}
 		
 		internal void OnResize() {
-			if (activeScreen != null)
-				activeScreen.OnResize(game.Width, game.Height);
-			hudScreen.OnResize(game.Width, game.Height);
+			if (activeScreen != null) activeScreen.OnResize();
+			hudScreen.OnResize();
 			
 			for (int i = 0; i < overlays.Count; i++) {
-				overlays[i].OnResize(game.Width, game.Height);
+				overlays[i].OnResize();
 			}
 		}
 	}

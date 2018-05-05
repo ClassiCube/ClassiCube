@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render(double delta) { table.Render(delta); }
 		
-		public override void OnResize(int width, int height) { table.Reposition(); }
+		public override void OnResize() { table.Reposition(); }
 		
 		public override void Dispose() {
 			font.Dispose();

@@ -41,8 +41,8 @@ namespace ClassicalSharp.Gui.Screens {
 			base.Dispose();
 		}
 		
-		public override void OnResize(int width, int height) {
-			base.OnResize(width, height);
+		public override void OnResize() {
+			base.OnResize();
 			if (extHelp == null) return;
 			RepositionExtendedHelp();
 		}
