@@ -20,8 +20,7 @@ namespace ClassicalSharp.Network.Protocols {
 		public abstract void Reset();
 		public abstract void Tick();
 		
-		protected internal static bool addEntityHack = true;
-		protected static byte[] needRemoveNames = new byte[256 >> 3];
+		protected static byte[] classicTabList = new byte[256 >> 3];
 		
 		protected void CheckName(byte id, ref string displayName, ref string skinName) {
 			displayName = Utils.RemoveEndPlus(displayName);
@@ -72,10 +71,10 @@ namespace ClassicalSharp.Network.Protocols {
 			
 			// See comment about some servers in HandleAddEntity
 			int mask = id >> 3, bit = 1 << (id & 0x7);
-			if (!addEntityHack || (needRemoveNames[mask] & bit) == 0) return;
+			if ((classicTabList[mask] & bit) == 0) return;
 			
 			RemoveTablistEntry(id);
-			needRemoveNames[mask] &= (byte)~bit;
+			classicTabList[mask] &= (byte)~bit;
 		}
 		
 		protected void UpdateLocation(byte playerId, LocationUpdate update, bool interpolate) {
@@ -106,19 +105,6 @@ namespace ClassicalSharp.Network.Protocols {
 		protected void RemoveTablistEntry(byte id) {
 			game.EntityEvents.RaiseTabEntryRemoved(id);
 			TabList.Entries[id] = null;
-		}
-		
-		protected void DisableAddEntityHack() {
-			if (!addEntityHack) return;
-			addEntityHack = false;
-			
-			for (int id = 0; id < EntityList.MaxCount; id++) {
-				int mask = id >> 3, bit = 1 << (id & 0x7);
-				if ((needRemoveNames[mask] & bit) == 0) continue;
-				
-				RemoveTablistEntry((byte)id);
-				needRemoveNames[mask] &= (byte)~bit;
-			}
 		}
 	}
 }

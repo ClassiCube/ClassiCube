@@ -25,8 +25,7 @@
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-bool addEntityHack = true;
-UInt8 needRemoveNames[256 >> 3];
+UInt8 classicTabList[256 >> 3];
 
 #define Handlers_ReadBlock(stream) Stream_ReadU8(stream)
 #define Handlers_WriteBlock(stream, value) Stream_WriteU8(stream, value)
@@ -151,30 +150,16 @@ void Handlers_RemoveEntity(EntityID id) {
 
 	/* See comment about some servers in Classic_AddEntity */
 	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
-	if (!addEntityHack || (needRemoveNames[mask] & bit) == 0) return;
+	if (!(classicTabList[mask] & bit)) return;
 
 	Handlers_RemoveTablistEntry(id);
-	needRemoveNames[mask] &= (UInt8)~bit;
+	classicTabList[mask] &= (UInt8)~bit;
 }
 
 void Handlers_UpdateLocation(EntityID playerId, LocationUpdate* update, bool interpolate) {
 	Entity* entity = Entities_List[playerId];
 	if (entity != NULL) {
 		entity->VTABLE->SetLocation(entity, update, interpolate);
-	}
-}
-
-void Handlers_DisableAddEntityHack(void) {
-	if (!addEntityHack) return;
-	addEntityHack = false;
-
-	Int32 id;
-	for (id = 0; id < ENTITIES_MAX_COUNT; id++) {
-		Int32 mask = id >> 3, bit = 1 << (id & 0x7);
-		if (!(needRemoveNames[mask] & bit)) continue;
-
-		Handlers_RemoveTablistEntry((EntityID)id);
-		needRemoveNames[mask] &= (UInt8)~bit;
 	}
 }
 
@@ -508,12 +493,11 @@ void Classic_AddEntity(Stream* stream) {
 
 	Handlers_CheckName(id, &name, &skin);
 	Handlers_AddEntity(id, &name, &skin, true);
-	if (!addEntityHack) return;
 
 	/* Workaround for some servers that declare support for ExtPlayerList but don't send ExtAddPlayerName */
 	String group = String_FromConst("Players");
 	Handlers_AddTablistEntry(id, &name, &name, &group, 0);
-	needRemoveNames[id >> 3] |= (UInt8)(1 << (id & 0x7));
+	classicTabList[id >> 3] |= (UInt8)(1 << (id & 0x7));
 }
 
 void Classic_EntityTeleport(Stream* stream) {
@@ -872,9 +856,9 @@ void CPE_ExtAddPlayerName(Stream* stream) {
 	Handlers_RemoveEndPlus(&playerName);
 	Handlers_RemoveEndPlus(&listName);
 
-	/* Some server software will declare they support ExtPlayerList, but send AddEntity then AddPlayerName */
-	/* We need to workaround this case by removing all the tab names we added for the AddEntity packets */
-	Handlers_DisableAddEntityHack();
+	/* Workarond for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName */
+	Int32 mask = id >> 3, bit = 1 << (id & 0x7);
+	classicTabList[mask] &= (UInt8)~bit;
 	Handlers_AddTablistEntry((EntityID)id, &playerName, &listName, &groupName, groupRank);
 }
 
@@ -1366,7 +1350,6 @@ void BlockDefs_Reset(void) {
 *-----------------------------------------------------Public handlers-----------------------------------------------------*
 *#########################################################################################################################*/
 void Handlers_Reset(void) {
-	addEntityHack = true;
 	Classic_Reset();
 	CPE_Reset();
 	BlockDefs_Reset();

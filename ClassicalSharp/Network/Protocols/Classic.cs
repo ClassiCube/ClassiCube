@@ -228,11 +228,10 @@ namespace ClassicalSharp.Network.Protocols {
 			CheckName(id, ref name, ref skin);
 			AddEntity(id, name, skin, true);
 			
-			if (!addEntityHack) return;
 			// Workaround for some servers that declare they support ExtPlayerList,
 			// but doesn't send ExtAddPlayerName packets.
 			AddTablistEntry(id, name, name, "Players", 0);
-			needRemoveNames[id >> 3] |= (byte)(1 << (id & 0x7));
+			classicTabList[id >> 3] |= (byte)(1 << (id & 0x7));
 		}
 		
 		void HandleEntityTeleport() {

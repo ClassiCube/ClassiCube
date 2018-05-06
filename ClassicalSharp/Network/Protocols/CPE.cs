@@ -133,9 +133,9 @@ namespace ClassicalSharp.Network.Protocols {
 			string groupName = reader.ReadString();
 			byte groupRank = reader.ReadUInt8();
 			
-			// Some server software will declare they support ExtPlayerList, but send AddEntity then AddPlayerName
-			// we need to workaround this case by removing all the tab names we added for the AddEntity packets
-			DisableAddEntityHack();
+			// Workaround for server software that declares support for ExtPlayerList, but sends AddEntity then AddPlayerName
+			int mask = id >> 3, bit = 1 << (id & 0x7);
+			classicTabList[mask] &= (byte)~bit;
 			AddTablistEntry((byte)id, playerName, listName, groupName, groupRank);
 		}
 		
@@ -143,6 +143,7 @@ namespace ClassicalSharp.Network.Protocols {
 			byte id = reader.ReadUInt8();
 			string displayName = reader.ReadString();
 			string skinName = reader.ReadString();
+			
 			CheckName(id, ref displayName, ref skinName);
 			AddEntity(id, displayName, skinName, false);
 		}
@@ -257,6 +258,7 @@ namespace ClassicalSharp.Network.Protocols {
 			byte id = reader.ReadUInt8();
 			string displayName = reader.ReadString();
 			string skinName = reader.ReadString();
+			
 			CheckName(id, ref displayName, ref skinName);
 			AddEntity(id, displayName, skinName, true);
 		}

@@ -12,7 +12,6 @@ typedef struct Stream_ Stream;
 void Handlers_RemoveEntity(EntityID id);
 void Handlers_Reset(void);
 void Handlers_Tick(void);
-void Handlers_RemoveEntity(EntityID id);
 
 bool cpe_sendHeldBlock, cpe_useMessageTypes, cpe_needD3Fix, cpe_extEntityPos, cpe_blockPerms, cpe_fastMap;
 void Classic_WriteChat(Stream* stream, STRING_PURE String* text, bool partial);

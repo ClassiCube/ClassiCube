@@ -183,7 +183,6 @@ namespace ClassicalSharp.Network {
 			UsingPlayerClick = false;
 			SupportsPartialMessages = false;
 			SupportsFullCP437 = false;
-			IProtocol.addEntityHack = true;
 			
 			for (int i = 0; i < handlers.Length; i++) {
 				handlers[i] = null;
