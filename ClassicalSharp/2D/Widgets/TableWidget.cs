@@ -155,6 +155,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			for (int i = 0; i < Elements.Length; i++) {
 				if (Elements[i] == block) SelectedIndex = i;
 			}
+			// When holding air, inventory should open at middle
+			if (block == Block.Air) SelectedIndex = -1;
 			
 			scroll.ScrollY = (SelectedIndex / ElementsPerRow) - (MaxRowsDisplayed - 1);
 			scroll.ClampScrollY();

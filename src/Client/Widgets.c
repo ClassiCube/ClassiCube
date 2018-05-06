@@ -867,6 +867,8 @@ void TableWidget_SetBlockTo(TableWidget* widget, BlockID block) {
 	for (i = 0; i < widget->ElementsCount; i++) {
 		if (widget->Elements[i] == block) widget->SelectedIndex = i;
 	}
+	/* When holding air, inventory should open at middle */
+	if (block == BLOCK_AIR) widget->SelectedIndex = -1;
 
 	widget->Scroll.ScrollY = widget->SelectedIndex / widget->ElementsPerRow;
 	widget->Scroll.ScrollY -= (TABLE_MAX_ROWS_DISPLAYED - 1);

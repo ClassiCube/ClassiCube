@@ -18,7 +18,7 @@ typedef struct AsyncRequest_ {
 
 	DateTime TimeAdded;
 	DateTime TimeDownloaded;
-	UInt8 RequestType;
+	UInt16 ResponseCode;
 
 	union {
 		struct { void* Ptr; UInt32 Size; } ResultData;
@@ -29,6 +29,7 @@ typedef struct AsyncRequest_ {
 
 	DateTime LastModified;   /* Time item cached at (if at all) */
 	UInt8 Etag[String_BufferSize(STRING_SIZE)]; /* ETag of cached item (if any) */
+	UInt8 RequestType;
 } AsyncRequest;
 
 void ASyncRequest_Free(AsyncRequest* request);
