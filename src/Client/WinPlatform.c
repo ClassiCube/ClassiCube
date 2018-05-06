@@ -5,6 +5,7 @@
 #include "ErrorHandler.h"
 #include "Drawer2D.h"
 #include "Funcs.h"
+#include "AsyncDownloader.h"
 #define WIN32_LEAN_AND_MEAN
 #define NOSERVICE
 #define NOMCX
@@ -13,8 +14,10 @@
 #include <stdlib.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <WinInet.h>
 
 #pragma comment(lib, "ws2_32.lib")
+#pragma comment (lib, "Wininet.lib")
 HDC hdc;
 HANDLE heap;
 bool stopwatch_highResolution;
@@ -269,8 +272,7 @@ ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* b
 }
 
 ReturnCode Platform_FileClose(void* file) {
-	BOOL success = CloseHandle((HANDLE)file);
-	return success ? 0 : GetLastError();
+	return CloseHandle((HANDLE)file) ? 0 : GetLastError();
 }
 
 ReturnCode Platform_FileSeek(void* file, Int32 offset, Int32 seekType) {
@@ -593,4 +595,30 @@ ReturnCode Platform_SocketSelectRead(void* socket, Int32 microseconds, bool* suc
 	} else {
 		*success = args[0] != 0; return 0;
 	}
+}
+
+HINTERNET hInternet;
+void Platform_HttpInit(void) {
+	/* TODO: Should we use INTERNET_OPEN_TYPE_PRECONFIG instead? */
+	hInternet = InternetOpenA(PROGRAM_APP_NAME, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+	if (hInternet == NULL) ErrorHandler_FailWithCode(GetLastError(), "Failed to init WinINet");
+}
+
+ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle) {
+	String url = String_FromRawArray(request->URL);
+	*handle = InternetOpenUrlA(hInternet, url.buffer, NULL, 0, 
+		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, NULL);
+	return *handle == NULL ? GetLastError() : 0;
+}
+
+ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle) {
+
+}
+
+ReturnCode Platform_HttpFreeRequest(void* handle) {
+	return InternetCloseHandle(handle) ? 0 : GetLastError();
+}
+
+ReturnCode Platform_HttpFree(void) {
+	return InternetCloseHandle(hInternet) ? 0 : GetLastError();
 }

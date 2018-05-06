@@ -10,10 +10,20 @@
 #include "Constants.h"
 #include "Game.h"
 #include "Funcs.h"
+#include "AsyncDownloader.h"
 
 int main(void) {
 	ErrorHandler_Init("client.log");
 	Platform_Init();
+
+	/*Platform_HttpInit();
+	AsyncRequest req = { 0 };
+	String url = String_FromEmptyArray(req.URL);
+	String_AppendConst(&url, "http://static.classicube.net/skins/UnknownShadow200.png");
+	void* reqHandle = NULL;
+	ReturnCode ret = Platform_HttpMakeRequest(&req, &reqHandle);
+	ReturnCode ret2 = Platform_HttpFreeRequest(reqHandle);
+	ReturnCode ret3 = Platform_HttpFree();*/
 
 	String maps = String_FromConst("maps");
 	if (!Platform_DirectoryExists(&maps)) {
@@ -49,7 +59,7 @@ int main(void) {
 
 	String title   = String_FromConst(PROGRAM_APP_NAME);
 	String rawArgs = Platform_GetCommandLineArgs();
-	// rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25566");
+	rawArgs = String_FromReadonly("UnknownShadow200 fff 127.0.0.1 25566");
 	//rawArgs = String_FromReadonly("UnknownShadow200");
 
 	String args[5]; UInt32 argsCount = Array_Elems(args);

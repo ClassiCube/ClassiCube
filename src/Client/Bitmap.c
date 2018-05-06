@@ -345,7 +345,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG filter method must be ADAPTIVE");
 			if (Stream_ReadU8(stream) != 0) ErrorHandler_Fail("PNG interlacing not supported");
 
-			static UInt32 samplesPerPixel[7] = { 1,0,3,1,2,0,4 };
+			static UInt32 samplesPerPixel[7] = { 1, 0, 3, 1, 2, 0, 4 };
 			bytesPerPixel = ((samplesPerPixel[col] * bitsPerSample) + 7) >> 3;
 			scanlineSize = ((samplesPerPixel[col] * bitsPerSample * bmp->Width) + 7) >> 3;
 			scanlineBytes = scanlineSize + 1; /* Add 1 byte for filter byte of each scanline */			

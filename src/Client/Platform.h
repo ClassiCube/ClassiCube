@@ -8,6 +8,7 @@
 */
 typedef struct DrawTextArgs_ DrawTextArgs;
 typedef struct Bitmap_ Bitmap;
+typedef struct AsyncRequest_ AsyncRequest;
 
 extern UInt8* Platform_NewLine; /* Newline for text */
 extern UInt8 Platform_DirectorySeparator;
@@ -86,4 +87,10 @@ ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt3
 ReturnCode Platform_SocketClose(void* socket);
 ReturnCode Platform_SocketAvailable(void* socket, UInt32* available);
 ReturnCode Platform_SocketSelectRead(void* socket, Int32 microseconds, bool* success);
+
+void Platform_HttpInit(void);
+ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle);
+ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle);
+ReturnCode Platform_HttpFreeRequest(void* handle);
+ReturnCode Platform_HttpFree(void);
 #endif
