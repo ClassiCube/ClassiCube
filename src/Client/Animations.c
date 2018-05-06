@@ -34,15 +34,15 @@ void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 			Int32 yy = y + (Int32)(1.2f * Math_SinF(x * 22.5f * MATH_DEG2RAD));
 			Real32 lSoupHeat =
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx - 1) & mask)] +
-				L_soupHeat[((yy - 1) & mask) << shift | (xx & mask)] +
+				L_soupHeat[((yy - 1) & mask) << shift | (xx       & mask)] +
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx + 1) & mask)] +
 
 				L_soupHeat[(yy & mask) << shift | ((xx - 1) & mask)] +
-				L_soupHeat[(yy & mask) << shift | (xx & mask)] +
+				L_soupHeat[(yy & mask) << shift | (xx       & mask)] +
 				L_soupHeat[(yy & mask) << shift | ((xx + 1) & mask)] +
 
 				L_soupHeat[((yy + 1) & mask) << shift | ((xx - 1) & mask)] +
-				L_soupHeat[((yy + 1) & mask) << shift | (xx & mask)] +
+				L_soupHeat[((yy + 1) & mask) << shift | (xx       & mask)] +
 				L_soupHeat[((yy + 1) & mask) << shift | ((xx + 1) & mask)];
 
 			Real32 lPotHeat =
@@ -95,7 +95,7 @@ void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 			/* Calculate the colour at this coordinate in the heatmap */
 			Real32 lSoupHeat =
 				W_soupHeat[y << shift | ((x - 1) & mask)] +
-				W_soupHeat[y << shift | x] +
+				W_soupHeat[y << shift | x               ] +
 				W_soupHeat[y << shift | ((x + 1) & mask)];
 
 			W_soupHeat[i] = lSoupHeat / 3.3f + W_potHeat[i] * 0.8f;

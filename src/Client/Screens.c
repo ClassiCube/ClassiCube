@@ -757,8 +757,8 @@ void ChatScreen_SetInitialMessages(ChatScreen* screen) {
 		ChatScreen_Set(&screen->ClientStatus, i, Chat_ClientStatus[i]);
 	}
 
-	String chatInInput = String_FromRawArray(screen->ChatInInputBuffer);
-	if (chatInInput.length > 0) {
+	if (screen->HandlesAllInput) {
+		String chatInInput = String_FromRawArray(screen->ChatInInputBuffer);
 		ChatScreen_OpenInput(screen, &chatInInput);
 		String_Clear(&chatInInput);
 	}

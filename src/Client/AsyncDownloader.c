@@ -80,8 +80,10 @@ AsyncRequestList async_processed;
 String async_skinServer = String_FromConst("http://static.classicube.net/skins/");
 AsyncRequest async_curRequest;
 volatile Int32 async_curRequestProgress = -3;
+/* TODO: Implement these */
 bool ManageCookies;
 bool KeepAlive;
+/* TODO: Connection pooling */
 
 void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 type, DateTime* lastModified, String* etag, String* data) {
 	Platform_MutexLock(async_pendingMutex);

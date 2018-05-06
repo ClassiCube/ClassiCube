@@ -26,7 +26,7 @@ Int32 Builder_ChunkIndex;
 bool Builder_FullBright;
 bool Builder_Tinted;
 Int32 Builder_ChunkEndX, Builder_ChunkEndZ;
-Int32 Builder_Offsets[6];
+Int32 Builder_Offsets[FACE_COUNT];
 
 Int32 (*Builder_StretchXLiquid)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block);
 Int32 (*Builder_StretchX)(Int32 countIndex, Int32 x, Int32 y, Int32 z, Int32 chunkIndex, BlockID block, Face face);

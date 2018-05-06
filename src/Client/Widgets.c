@@ -976,56 +976,6 @@ void InputWidget_RenderCaret(InputWidget* widget, Real64 delta) {
 	}
 }
 
-void InputWidget_RemakeTexture(GuiElement* elem) {
-	InputWidget* widget = (InputWidget*)elem;
-	Int32 totalHeight = 0, maxWidth = 0, i;
-	for (i = 0; i < widget->GetMaxLines(); i++) {
-		totalHeight += widget->LineSizes[i].Height;
-		maxWidth = max(maxWidth, widget->LineSizes[i].Width);
-	}
-	Size2D size = { maxWidth, totalHeight };
-	widget->CaretAccumulator = 0;
-
-	Int32 realHeight = 0;
-	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
-	Drawer2D_Begin(&bmp);
-
-	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
-	if (widget->Prefix.length > 0) {
-		args.Text = widget->Prefix;
-		Drawer2D_DrawText(&args, 0, 0);
-	}
-
-	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE + 2)];
-	for (i = 0; i < Array_Elems(widget->Lines); i++) {
-		if (widget->Lines[i].length == 0) break;
-		args.Text = widget->Lines[i];
-		UInt8 lastCol = InputWidget_GetLastCol(widget, 0, i);
-
-		/* Colour code goes to next line */
-		if (!Drawer2D_IsWhiteCol(lastCol)) {
-			String tmp = String_InitAndClearArray(tmpBuffer);
-			String_Append(&tmp, '&'); String_Append(&tmp, lastCol);
-			String_AppendString(&tmp, &args.Text);
-			args.Text = tmp;
-		}
-
-		Int32 offset = i == 0 ? widget->PrefixWidth : 0;
-		Drawer2D_DrawText(&args, offset, realHeight);
-		realHeight += widget->LineSizes[i].Height;
-	}
-
-	Drawer2D_End();
-	widget->InputTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
-	Platform_MemFree(&bmp.Scan0);
-
-	widget->Width = size.Width;
-	widget->Height = realHeight == 0 ? widget->PrefixHeight : realHeight;
-	Widget_Reposition(widget);
-	widget->InputTex.X = widget->X + widget->Padding;
-	widget->InputTex.Y = widget->Y;
-}
-
 void InputWidget_OnPressedEnter(GuiElement* elem) {
 	InputWidget* widget = (InputWidget*)elem;
 	InputWidget_Clear(widget);
@@ -1312,7 +1262,6 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	widget->Font            = *font;
 	widget->Prefix          = *prefix;
 	widget->CaretPos        = -1;
-	widget->RemakeTexture   = InputWidget_RemakeTexture;
 	widget->OnPressedEnter  = InputWidget_OnPressedEnter;
 	widget->AllowedChar     = InputWidget_AllowedChar;	
 
@@ -1600,6 +1549,65 @@ void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, 
 /*########################################################################################################################*
 *-----------------------------------------------------ChatInputWidget-----------------------------------------------------*
 *#########################################################################################################################*/
+void ChatInputWidget_RemakeTexture(GuiElement* elem) {
+	InputWidget* widget = (InputWidget*)elem;
+	Int32 totalHeight = 0, maxWidth = 0, i;
+	for (i = 0; i < widget->GetMaxLines(); i++) {
+		totalHeight += widget->LineSizes[i].Height;
+		maxWidth = max(maxWidth, widget->LineSizes[i].Width);
+	}
+	Size2D size = { maxWidth, totalHeight };
+	widget->CaretAccumulator = 0;
+
+	Int32 realHeight = 0;
+	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
+	Drawer2D_Begin(&bmp);
+
+	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
+	if (widget->Prefix.length > 0) {
+		args.Text = widget->Prefix;
+		Drawer2D_DrawText(&args, 0, 0);
+	}
+
+	UInt8 lineBuffer[String_BufferSize(STRING_SIZE + 2)];
+	String line = String_InitAndClearArray(lineBuffer);	
+
+	for (i = 0; i < Array_Elems(widget->Lines); i++) {
+		if (widget->Lines[i].length == 0) break;
+		String_Clear(&line);
+
+		/* Colour code goes to next line */
+		UInt8 lastCol = InputWidget_GetLastCol(widget, 0, i);
+		if (!Drawer2D_IsWhiteCol(lastCol)) {			
+			String_Append(&line, '&'); String_Append(&line, lastCol);
+		}
+		String_AppendString(&line, &widget->Lines[i]);
+
+		/* Convert % to & for colour codes */
+		Int32 j;
+		for (j = 0; j < line.length - 1; j++) {
+			if (line.buffer[j] != '%') continue;
+			if (!Drawer2D_ValidColCode(line.buffer[j + 1])) continue;
+			line.buffer[j] = '&';
+		}
+		args.Text = line;
+
+		Int32 offset = i == 0 ? widget->PrefixWidth : 0;
+		Drawer2D_DrawText(&args, offset, realHeight);
+		realHeight += widget->LineSizes[i].Height;
+	}
+
+	Drawer2D_End();
+	widget->InputTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
+	Platform_MemFree(&bmp.Scan0);
+
+	widget->Width = size.Width;
+	widget->Height = realHeight == 0 ? widget->PrefixHeight : realHeight;
+	Widget_Reposition(widget);
+	widget->InputTex.X = widget->X + widget->Padding;
+	widget->InputTex.Y = widget->Y;
+}
+
 void ChatInputWidget_Render(GuiElement* elem, Real64 delta) {
 	ChatInputWidget* widget = (ChatInputWidget*)elem;
 	InputWidget* input = (InputWidget*)elem;
@@ -1783,6 +1791,7 @@ void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 	widget->Base.ShowCaret      = true;
 	widget->Base.Padding        = 5;
 	widget->Base.GetMaxLines    = ChatInputWidget_GetMaxLines;
+	widget->Base.RemakeTexture  = ChatInputWidget_RemakeTexture;
 	widget->Base.OnPressedEnter = ChatInputWidget_OnPressedEnter;
 	widget->Base.Text = String_InitAndClearArray(widget->TextBuffer);
 
