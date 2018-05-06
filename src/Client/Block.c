@@ -268,7 +268,7 @@ Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp)
 	for (y = 0; y < size; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
-			if ((UInt8)(row[x] >> 24) != 0) {
+			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return 1 - (Real32)y / size;
 			}
 		}
@@ -281,7 +281,7 @@ Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* b
 	for (y = size - 1; y >= 0; y--) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 		for (x = 0; x < size; x++) {
-			if ((UInt8)(row[x] >> 24) != 0) {
+			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return 1 - (Real32)(y + 1) / size;
 			}
 		}
@@ -294,7 +294,7 @@ Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-			if ((UInt8)(row[x] >> 24) != 0) {
+			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return (Real32)x / size;
 			}
 		}
@@ -307,7 +307,7 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
 			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-			if ((UInt8)(row[x] >> 24) != 0) {
+			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return (Real32)(x + 1) / size;
 			}
 		}

@@ -24,9 +24,9 @@ typedef struct Stream_ {
 	union {
 		void* Meta_File;
 		void* Meta_Inflate;
-		struct { UInt8* Meta_Mem_Buffer;          UInt32 Meta_Mem_Count,     Meta_Mem_Length; };
-		struct { Stream* Meta_Portion_Underlying; UInt32 Meta_Portion_Count, Meta_Portion_Length; };
-		struct { Stream* Meta_CRC32_Underlying;   UInt32 Meta_CRC32; };
+		struct { UInt8* Meta_Mem_Cur, *Meta_Mem_Base; UInt32 Meta_Mem_Left, Meta_Mem_Length; };
+		struct { Stream* Meta_Portion_Underlying;     UInt32 Meta_Portion_Count, Meta_Portion_Length; };
+		struct { Stream* Meta_CRC32_Underlying;       UInt32 Meta_CRC32; };
 	};
 	UInt8 NameBuffer[String_BufferSize(FILENAME_SIZE)];
 	String Name;

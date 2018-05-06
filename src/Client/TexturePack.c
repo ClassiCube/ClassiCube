@@ -18,11 +18,7 @@
 *--------------------------------------------------------ZipEntry---------------------------------------------------------*
 *#########################################################################################################################*/
 String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
-	String fileName;
-	fileName.buffer = buffer;
-	fileName.length = length;
-	fileName.capacity = length;
-
+	String fileName = String_Init(buffer, length, length);
 	Stream_Read(stream, buffer, length);
 	buffer[length] = NULL; /* Ensure null terminated */
 	return fileName;
@@ -510,9 +506,7 @@ void TexturePack_ExtractTerrainPng_Req(AsyncRequest* item) {
 	TextureCache_AddLastModified(&url, &item->LastModified);
 
 	Event_RaiseVoid(&TextureEvents_PackChanged);
-	if (!Game_ChangeTerrainAtlas(&bmp)) {
-		Platform_MemFree(&bmp.Scan0);
-	}
+	if (!Game_ChangeTerrainAtlas(&bmp)) ASyncRequest_Free(item);
 }
 
 void TexturePack_ExtractTexturePack_Req(AsyncRequest* item) {
@@ -530,5 +524,5 @@ void TexturePack_ExtractTexturePack_Req(AsyncRequest* item) {
 	String id = String_FromRawArray(item->ID);
 	Stream stream; Stream_ReadonlyMemory(&stream, data, len, &id);
 	TexturePack_ExtractZip(&stream);
-	stream.Close(&stream);
+	ASyncRequest_Free(item);
 }

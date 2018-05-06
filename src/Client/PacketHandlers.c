@@ -290,7 +290,7 @@ void WoM_Tick(void) {
 	bool success = AsyncDownloader_Get(&wom_identifier, &item);
 	if (success && item.ResultString.length > 0) {
 		Wom_ParseConfig(&item.ResultString);
-		Platform_MemFree(&item.ResultString.buffer);
+		ASyncRequest_Free(&item);
 	}
 }
 
@@ -414,8 +414,9 @@ void Classic_LevelDataChunk(Stream* stream) {
 	if (!mapInflateInited) Classic_StartLoading(stream);
 
 	Int32 usedLength = Stream_ReadU16_BE(stream);
-	mapPartStream.Meta_Mem_Buffer = stream->Meta_Mem_Buffer;
-	mapPartStream.Meta_Mem_Count  = usedLength;
+	mapPartStream.Meta_Mem_Cur    = stream->Meta_Mem_Cur;
+	mapPartStream.Meta_Mem_Base   = stream->Meta_Mem_Cur;
+	mapPartStream.Meta_Mem_Left   = usedLength;
 	mapPartStream.Meta_Mem_Length = usedLength;
 
 	Stream_Skip(stream, 1024);
@@ -1007,7 +1008,7 @@ void CPE_BulkBlockUpdate(Stream* stream) {
 	Stream_Skip(stream, (BULK_MAX_BLOCKS - count) * (UInt32)sizeof(Int32));
 
 	BlockID blocks[BULK_MAX_BLOCKS];
-	UInt8* recvBuffer = stream->Meta_Mem_Buffer;
+	UInt8* recvBuffer = stream->Meta_Mem_Cur;
 	for (i = 0; i < count; i++) { blocks[i] = recvBuffer[i]; }
 	Stream_Skip(stream, BULK_MAX_BLOCKS);
 
@@ -1249,6 +1250,7 @@ void BlockDefs_DefineBlockCommonEnd(Stream* stream, UInt8 shape, BlockID block) 
 		Block_SpriteOffset[block] = blockDraw;
 		blockDraw = DRAW_SPRITE;
 	}
+	Block_Draw[block] = blockDraw;
 	UInt8 fogDensity = Stream_ReadU8(stream);
 	Block_FogDensity[block] = fogDensity == 0 ? 0 : (fogDensity + 1) / 128.0f;
 

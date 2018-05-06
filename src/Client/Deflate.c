@@ -662,7 +662,8 @@ ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	state->Output = data;
 	state->AvailOut = count;
 
-	while (state->AvailOut > 0) {
+	bool hasInput = true;
+	while (state->AvailOut > 0 && hasInput) {
 		if (state->State == INFLATE_STATE_DONE) break;
 		if (state->AvailIn == 0) {
 			/* Fully used up input buffer. Cycle back to start. */
@@ -672,12 +673,11 @@ ReturnCode Inflate_StreamRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 			UInt8* cur = state->NextIn;
 			UInt32 read, remaining = (UInt32)(inputEnd - state->NextIn);
 			ReturnCode code = state->Source->Read(state->Source, cur, remaining, &read);
+			if (code != 0) return code;
 
-			/* Did we fail to read in more input data? */
-			/* If there's a few bits of data in the bit buffer it doesn't matter since Inflate_Process
-			/* would have already processed as much as it possibly could already */
-			/* TODO: Is this assumption about bit buffer right */
-			if (code != 0 || read == 0) return code;
+			/* Did we fail to read in more input data? Can't immediately return here, 
+			/* because there might be a few bits of data left in the bit buffer */
+			hasInput = read > 0;
 			state->AvailIn += read;
 		}
 		

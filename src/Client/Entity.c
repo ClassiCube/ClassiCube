@@ -640,7 +640,7 @@ void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
 		UInt32* row = Bitmap_GetRow(&bmp, y);
 		row += sizeX;
 		for (x = 0; x < sizeX; x++) {
-			UInt8 alpha = (UInt8)(row[x] >> 24);
+			UInt8 alpha = PackedCol_ARGB_A(row[x]);
 			if (alpha != 255) return;
 		}
 	}

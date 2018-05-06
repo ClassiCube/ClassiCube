@@ -27,6 +27,7 @@ PackedCol PackedCol_Create4(UInt8 r, UInt8 g, UInt8 b, UInt8 a);
 PackedCol PackedCol_Create3(UInt8 r, UInt8 g, UInt8 b);
 #define PackedCol_Equals(a, b) ((a).Packed == (b).Packed)
 #define PackedCol_ARGB(r, g, b, a) (((UInt32)(r) << 16) | ((UInt32)(g) << 8) | ((UInt32)(b)) | ((UInt32)(a) << 24))
+#define PackedCol_ARGB_A(col) ((UInt8)((col) >> 24))
 UInt32 PackedCol_ToARGB(PackedCol col);
 PackedCol PackedCol_Scale(PackedCol value, Real32 t);
 PackedCol PackedCol_Lerp(PackedCol a, PackedCol b, Real32 t);

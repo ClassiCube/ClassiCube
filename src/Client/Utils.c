@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include "Constants.h"
 #include "Bitmap.h"
+#include "PackedCol.h"
 
 bool DateTime_IsLeapYear(Int32 year) {
 	if (year % 4) return false;
@@ -72,7 +73,7 @@ UInt8 Utils_GetSkinType(Bitmap* bmp) {
 	/* Minecraft alex skins have this particular pixel with alpha of 0 */
 	Int32 scale = bmp->Width / 64;
 	UInt32 pixel = Bitmap_GetPixel(bmp, 54 * scale, 20 * scale);
-	UInt8 alpha = (UInt8)(pixel >> 24);
+	UInt8 alpha = PackedCol_ARGB_A(pixel);
 	return alpha >= 127 ? SKIN_TYPE_64x64 : SKIN_TYPE_64x64_SLIM;
 }
 

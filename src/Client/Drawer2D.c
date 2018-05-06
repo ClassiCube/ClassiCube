@@ -41,7 +41,7 @@ void Drawer2D_CalculateTextWidths(void) {
 			/* Iterate through each pixel of the given character, on the current scanline */
 			for (xx = Drawer2D_BoxSize - 1; xx >= 0; xx--) {
 				UInt32 pixel = row[x + xx];
-				UInt8 a = (UInt8)(pixel >> 24);
+				UInt8 a = PackedCol_ARGB_A(pixel);
 				if (a < 127) continue;
 
 				/* Check if this is the pixel furthest to the right, for the current character */
@@ -236,7 +236,7 @@ void Drawer2D_DrawRun(Int32 x, Int32 y, Int32 runCount, UInt8* coords, Int32 poi
 			for (xx = 0; xx < dstWidth; xx++) {
 				Int32 fontX = srcX + xx * srcWidth / dstWidth;
 				UInt32 src = fontRow[fontX];
-				if ((UInt8)(src >> 24) == 0) continue;
+				if (PackedCol_ARGB_A(src) == 0) continue;
 				Int32 dstX = x + xx;
 				if (dstX >= Drawer2D_Cur->Width) break;
 

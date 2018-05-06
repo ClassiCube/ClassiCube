@@ -90,7 +90,7 @@ ReturnCode Platform_SocketSelectRead(void* socket, Int32 microseconds, bool* suc
 
 void Platform_HttpInit(void);
 ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle);
-ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle);
+ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void** data, UInt32* size);
 ReturnCode Platform_HttpFreeRequest(void* handle);
 ReturnCode Platform_HttpFree(void);
 #endif

@@ -97,9 +97,9 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
+      <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,7 +119,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -145,7 +145,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
+      <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <EntryPointSymbol>main</EntryPointSymbol>
       <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;libvcruntimed.lib;msvcurtd.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>

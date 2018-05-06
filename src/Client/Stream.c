@@ -161,33 +161,55 @@ void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
 *-----------------------------------------------------MemoryStream--------------------------------------------------------*
 *#########################################################################################################################*/
 ReturnCode Stream_MemoryRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Meta_Mem_Count);
-	if (count > 0) { Platform_MemCpy(data, stream->Meta_Mem_Buffer, count); }
+	count = min(count, stream->Meta_Mem_Left);
+	if (count > 0) { Platform_MemCpy(data, stream->Meta_Mem_Cur, count); }
 	
-	stream->Meta_Mem_Buffer += count;
-	stream->Meta_Mem_Count -= count;
+	stream->Meta_Mem_Cur  += count;
+	stream->Meta_Mem_Left -= count;
 	*modified = count;
 	return 0;
 }
 
 ReturnCode Stream_MemoryWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Meta_Mem_Count);
-	if (count > 0) { Platform_MemCpy(stream->Meta_Mem_Buffer, data, count); }
+	count = min(count, stream->Meta_Mem_Left);
+	if (count > 0) { Platform_MemCpy(stream->Meta_Mem_Cur, data, count); }
 
-	stream->Meta_Mem_Buffer += count;
-	stream->Meta_Mem_Count -= count;
+	stream->Meta_Mem_Cur   += count;
+	stream->Meta_Mem_Left -= count;
 	*modified = count;
+	return 0;
+}
+
+ReturnCode Stream_MemorySeek(Stream* stream, Int32 offset, Int32 seekType) {
+	Int32 pos;
+	UInt32 curOffset = (UInt32)(stream->Meta_Mem_Cur - stream->Meta_Mem_Base);
+
+	switch (seekType) {
+	case STREAM_SEEKFROM_BEGIN:
+		pos = offset; break;
+	case STREAM_SEEKFROM_CURRENT:
+		pos = (Int32)curOffset + offset; break;
+	case STREAM_SEEKFROM_END:
+		pos = (Int32)stream->Meta_Mem_Length + offset; break;
+	default: return 2;
+	}
+
+	if (pos < 0 || pos >= stream->Meta_Mem_Length) return 1;
+	stream->Meta_Mem_Cur  = stream->Meta_Mem_Base   + pos;
+	stream->Meta_Mem_Left = stream->Meta_Mem_Length - pos;
 	return 0;
 }
 
 void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
 	Stream_SetName(stream, name);
-	stream->Meta_Mem_Buffer = data;
-	stream->Meta_Mem_Count  = len;
+	stream->Meta_Mem_Cur    = data;
+	stream->Meta_Mem_Base   = data;
+	stream->Meta_Mem_Left   = len;
 	stream->Meta_Mem_Length = len;
 
 	Stream_SetDefaultOps(stream);
 	stream->Read     = Stream_MemoryRead;
+	stream->Seek     = Stream_MemorySeek;
 	/* TODO: Should we use separate Stream_MemoryPosition functions? */
 	stream->Position = Stream_PortionPosition;
 	stream->Length   = Stream_PortionLength;

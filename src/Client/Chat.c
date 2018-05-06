@@ -19,22 +19,20 @@
 #define CHAT_LOGTIMES_EXPAND_ELEMS 512
 Int64 Chat_DefaultLogTimes[CHAT_LOGTIMES_DEF_ELEMS];
 Int64* Chat_LogTimes = Chat_DefaultLogTimes;
-UInt32 Chat_LogTimesCount = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesUsed;
+UInt32 Chat_LogTimesMax = CHAT_LOGTIMES_DEF_ELEMS, Chat_LogTimesCount;
 
 void Chat_GetLogTime(UInt32 index, Int64* timeMs) {
-	if (index >= Chat_LogTimesUsed) ErrorHandler_Fail("Tries to get time past LogTime end");
+	if (index >= Chat_LogTimesCount) ErrorHandler_Fail("Tries to get time past LogTime end");
 	*timeMs = Chat_LogTimes[index];
 }
 
 void Chat_AppendLogTime(void) {
 	DateTime now; Platform_CurrentUTCTime(&now);
-	UInt32 count = Chat_LogTimesUsed;
-
-	if (count == Chat_LogTimesCount) {
-		StringsBuffer_Resize(&Chat_LogTimes, &Chat_LogTimesCount, sizeof(Int64),
+	if (Chat_LogTimesCount == Chat_LogTimesMax) {
+		StringsBuffer_Resize(&Chat_LogTimes, &Chat_LogTimesMax, sizeof(Int64),
 			CHAT_LOGTIMES_DEF_ELEMS, CHAT_LOGTIMES_EXPAND_ELEMS);
 	}
-	Chat_LogTimes[Chat_LogTimesUsed++] = DateTime_TotalMs(&now);
+	Chat_LogTimes[Chat_LogTimesCount++] = DateTime_TotalMs(&now);
 }
 
 void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {

@@ -24,7 +24,7 @@ typedef struct AsyncRequest_ {
 		struct { void* Ptr; UInt32 Size; } ResultData;
 		Bitmap ResultBitmap;
 		String ResultString;
-		UInt64 ResultContentLength;
+		UInt32 ResultContentLength;
 	};
 
 	DateTime LastModified;   /* Time item cached at (if at all) */
@@ -34,15 +34,13 @@ typedef struct AsyncRequest_ {
 void ASyncRequest_Free(AsyncRequest* request);
 
 IGameComponent AsyncDownloader_MakeComponent(void);
-void AsyncDownloader_Init(void);
-void AsyncDownloader_Free(void);
-
 void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName);
 void AsyncDownloader_GetData(STRING_PURE String* url, bool priority, STRING_PURE String* id);
 void AsyncDownloader_GetImage(STRING_PURE String* url, bool priority, STRING_PURE String* id);
 void AsyncDownloader_GetString(STRING_PURE String* url, bool priority, STRING_PURE String* id); 
 void AsyncDownloader_GetContentLength(STRING_PURE String* url, bool priority, STRING_PURE String* id);
-void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents);
+/* TODO: Implement post */
+//void AsyncDownloader_PostString(STRING_PURE String* url, bool priority, STRING_PURE String* id, STRING_PURE String* contents);
 void AsyncDownloader_GetDataEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag);
 void AsyncDownloader_GetImageEx(STRING_PURE String* url, bool priority, STRING_PURE String* id, DateTime* lastModified, STRING_PURE String* etag);
 

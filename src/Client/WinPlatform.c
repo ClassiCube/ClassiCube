@@ -609,8 +609,25 @@ ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle) {
 	return *handle == NULL ? GetLastError() : 0;
 }
 
-ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle) {
+ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void** data, UInt32* size) {
+	DWORD bufferLen = sizeof(DWORD);
+	BOOL success = HttpQueryInfoA(handle, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, size, &bufferLen, 0);
+	if (!success) return GetLastError();
+	if (*size == 0) return 1;
 
+	*data = Platform_MemAlloc(*size, 1);
+	if (*data == NULL) ErrorHandler_Fail("Failed to allocate memory for http get data");
+	UInt8* buffer = *data;
+	UInt32 left = *size, read;
+
+	while (left > 0) {
+		success = InternetReadFile(handle, buffer, left, &read);
+		if (!success) { Platform_MemFree(data); return GetLastError(); }
+
+		if (read == 0) break;
+		buffer += read; left -= read;
+	}
+	return 0;
 }
 
 ReturnCode Platform_HttpFreeRequest(void* handle) {
