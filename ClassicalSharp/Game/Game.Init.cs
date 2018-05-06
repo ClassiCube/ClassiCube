@@ -49,11 +49,15 @@ namespace ClassicalSharp {
 			Entities = new EntityList(this);
 			TextureCache.Init();
 			
+			#if SURVIVAL_TEST
 			if (Options.GetBool(OptionsKey.SurvivalMode, false)) {
 				Mode = new SurvivalGameMode();
 			} else {
 				Mode = new CreativeGameMode();
 			}
+			#else
+			Mode = new CreativeGameMode();
+			#endif
 			Components.Add(Mode);
 			
 			Input = new InputHandler(this);

@@ -1,4 +1,5 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
+#if SURVIVAL_TEST
 using System;
 using System.Drawing;
 using ClassicalSharp.GraphicsAPI;
@@ -88,3 +89,4 @@ namespace ClassicalSharp.Gui.Widgets {
 		static TextureRec halfRec = new TextureRec(62 / 256f, 1 / 256f, 7 / 256f, 7 / 256f);
 	}
 }
+#endif
