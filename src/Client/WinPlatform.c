@@ -16,8 +16,6 @@
 #include <ws2tcpip.h>
 #include <WinInet.h>
 
-#pragma comment(lib, "ws2_32.lib")
-#pragma comment (lib, "Wininet.lib")
 HDC hdc;
 HANDLE heap;
 bool stopwatch_highResolution;

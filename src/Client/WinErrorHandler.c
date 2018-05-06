@@ -6,7 +6,6 @@
 #define NOIME
 #include <Windows.h>
 #include <Dbghelp.h>
-#pragma comment(lib, "dbghelp.lib")
 
 /* TODO: These might be better off as a function. */
 #define ErrorHandler_WriteLogBody(raw_msg)\
@@ -58,7 +57,7 @@ void ErrorHandler_FailWithCode(ReturnCode code, const UInt8* raw_msg) {
 	/* TODO: write to log file */
 	ErrorHandler_WriteLogBody(raw_msg);
 	String_AppendConst(&logMsg, "Return code: ");
-	String_AppendUInt32(&logMsg, code);
+	String_Hex32(&logMsg, code);
 	String_AppendConst(&logMsg, "\r\n");
 	ErrorHandler_Backtrace(&logMsg);
 	ErrorHandler_WriteLogEnd();

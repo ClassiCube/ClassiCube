@@ -2249,7 +2249,7 @@ Int32 TextGroupWidget_UsedHeight(TextGroupWidget* widget) {
 
 void TextGroupWidget_Reposition(GuiElement* elem) {
 	TextGroupWidget* widget = (TextGroupWidget*)elem;
-	UInt32 i;
+	Int32 i;
 	Texture* textures = widget->Textures;
 
 	Int32 oldY = widget->Y;
@@ -2332,7 +2332,7 @@ void TextGroupWidget_Init(GuiElement* elem) {
 	Drawer2D_ReducePadding_Height(&height, widget->Font.Size, 3);
 	widget->DefaultHeight = height;
 
-	UInt32 i;
+	Int32 i;
 	for (i = 0; i < widget->LinesCount; i++) {
 		widget->Textures[i].Height = (UInt16)height;
 		widget->PlaceholderHeight[i] = true;
@@ -2342,7 +2342,7 @@ void TextGroupWidget_Init(GuiElement* elem) {
 
 void TextGroupWidget_Render(GuiElement* elem, Real64 delta) {
 	TextGroupWidget* widget = (TextGroupWidget*)elem;
-	UInt32 i;
+	Int32 i;
 	Texture* textures = widget->Textures;
 
 	for (i = 0; i < widget->LinesCount; i++) {
@@ -2353,7 +2353,7 @@ void TextGroupWidget_Render(GuiElement* elem, Real64 delta) {
 
 void TextGroupWidget_Free(GuiElement* elem) {
 	TextGroupWidget* widget = (TextGroupWidget*)elem;
-	UInt32 i;
+	Int32 i;
 
 	for (i = 0; i < widget->LinesCount; i++) {
 		widget->LineLengths[i] = 0;
