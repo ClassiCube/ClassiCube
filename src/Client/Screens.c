@@ -1520,7 +1520,7 @@ bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mouse
 
 	if (!widget->Disabled && Widget_Contains((Widget*)widget, x, y)) {
 		UInt8 connectBuffer[String_BufferSize(STRING_SIZE)];
-		String connect = String_FromConst(connectBuffer);
+		String connect = String_InitAndClearArray(connectBuffer);
 		String empty = String_MakeNull();
 		String_Format2(&connect, "Connecting to %s: %i..", &Game_IPAddress, &Game_Port);
 

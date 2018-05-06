@@ -492,7 +492,7 @@ void ServerConnection_InitMultiplayer(void) {
 
 
 void MPConnection_OnNewMap(void) {
-	if (!ServerConnection_IsSinglePlayer) return;
+	if (ServerConnection_IsSinglePlayer) return;
 	/* wipe all existing entity states */
 	Int32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
@@ -501,7 +501,7 @@ void MPConnection_OnNewMap(void) {
 }
 
 void MPConnection_Reset(void) {
-	if (!ServerConnection_IsSinglePlayer) return;
+	if (ServerConnection_IsSinglePlayer) return;
 	Int32 i;
 	for (i = 0; i < OPCODE_COUNT; i++) {
 		Net_Handlers[i] = NULL;
