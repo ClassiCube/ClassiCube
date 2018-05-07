@@ -211,17 +211,22 @@ bool AsyncDownloader_GetCurrent(AsyncRequest* request, Int32* progress) {
 void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
+	Stopwatch stopwatch; UInt32 elapsedMS;
 
 	void* handle;
 	ReturnCode result;
+	Stopwatch_Start(&stopwatch);
 	result = Platform_HttpMakeRequest(request, &handle);
-	Platform_Log1("HTTP get request %i", &result);
+	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
+	Platform_Log2("HTTP get request %i in %i ms", &result, &elapsedMS);
 	if (!ErrorHandler_Check(result)) return;
 
 	void* data = NULL;
 	UInt32 size = 0;
+	Stopwatch_Start(&stopwatch);
 	result = Platform_HttpGetRequestData(request, handle, &data, &size);
-	Platform_Log1("HTTP get data %i", &result);
+	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
+	Platform_Log2("HTTP get data %i in %i ms", &result, &elapsedMS);
 
 	Platform_HttpFreeRequest(handle);
 	if (!ErrorHandler_Check(result)) return;
