@@ -73,8 +73,8 @@ typedef struct Entity_ {
 	Vector3 Velocity, OldVelocity;
 
 	IModel* Model;
-	UInt8 ModelNameRaw[String_BufferSize(ENTITY_MAX_MODEL_LENGTH)];
 	BlockID ModelBlock; /* BlockID, if model name was originally a vaid block id. */
+	bool ModelIsSheepNoFur; /* Hacky, but only sheep model relies on model name. So use just 1 byte. */
 	AABB ModelAABB;
 	Vector3 ModelScale, Size;
 	Real32 StepSize;

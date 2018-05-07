@@ -127,7 +127,6 @@ void Entity_ParseScale(Entity* entity, String scale) {
 void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 	entity->ModelScale = Vector3_Create1(1.0f);
 	entity->ModelBlock = BLOCK_AIR;
-	String entModel = String_InitAndClearArray(entity->ModelNameRaw);
 
 	Int32 sep = String_IndexOf(model, '|', 0);
 	String name, scale;
@@ -141,20 +140,19 @@ void Entity_SetModel(Entity* entity, STRING_PURE String* model) {
 
 	/* 'giant' model kept for backwards compatibility */
 	if (String_CaselessEqualsConst(model, "giant")) {
-		String_AppendConst(&entModel, "humanoid");
+		name = String_FromReadonly("humanoid");
 		entity->ModelScale = Vector3_Create1(2.0f);
 	} else if (Convert_TryParseUInt8(model, &entity->ModelBlock)) {
-		String_AppendConst(&entModel, "block");
-	} else {
-		String_AppendString(&entModel, &name);
+		name = String_FromReadonly("block");
 	}
 
-	entity->Model = ModelCache_Get(&entModel);
+	entity->Model = ModelCache_Get(&name);
 	Entity_ParseScale(entity, scale);
 	entity->MobTextureId = NULL;
 
 	entity->Model->RecalcProperties(entity);
 	Entity_UpdateModelBounds(entity);
+	entity->ModelIsSheepNoFur = String_CaselessEqualsConst(&name, "sheep_nofur");
 }
 
 void Entity_UpdateModelBounds(Entity* entity) {

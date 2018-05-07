@@ -356,10 +356,10 @@ namespace ClassicalSharp.Gui.Screens {
 					input.EnterInput();
 					altText.SetActive(false);
 					
-					// Do we need to move all chat down?
-					int resetIndex = game.Chat.Log.Count - chatLines;
-					if (chatIndex != resetIndex) {
-						chatIndex = ClampIndex(resetIndex);
+					// Reset chat when user has scrolled up in chat history
+					int defaultIndex = game.Chat.Log.Count - chatLines;
+					if (chatIndex != defaultIndex) {
+						chatIndex = ClampIndex(defaultIndex);
 						ResetChat();
 					}
 				} else if (key == Key.PageUp) {

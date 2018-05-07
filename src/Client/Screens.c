@@ -876,10 +876,10 @@ bool ChatScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 			screen->Input.Base.OnPressedEnter(elem);
 			SpecialInputWidget_SetActive(&screen->AltText, false);
 
-			/* Do we need to move all chat down? */
-			Int32 resetIndex = Chat_Log.Count - Game_ChatLines;
-			if (screen->ChatIndex != resetIndex) {
-				screen->ChatIndex = ChatScreen_ClampIndex(resetIndex);
+			/* Reset chat when user has scrolled up in chat history */
+			Int32 defaultIndex = Chat_Log.Count - Game_ChatLines;
+			if (screen->ChatIndex != defaultIndex) {
+				screen->ChatIndex = ChatScreen_ClampIndex(defaultIndex);
 				ChatScreen_ResetChat(screen);
 			}
 		} else if (key == Key_PageUp) {
