@@ -170,11 +170,11 @@ enum INFLATE_STATE_ {
 /* Goes to the next state, after having read data of a block. */
 #define Inflate_NextBlockState(state) (state->LastBlock ? INFLATE_STATE_DONE : INFLATE_STATE_HEADER)
 /* Goes to the next state, after having finished reading a compressed entry. */
-/* The maximum amount of bytes that can be output is 258. */
-/* The most input bytes required for huffman codes and extra data is 16 + 5 + 16 + 13 bits. Add 3 extra bytes to account for putting data into the bit buffer. */
-#define INFLATE_FASTINF_OUT 258
-#define INFLATE_FASTINF_IN 10
 #define Inflate_NextCompressState(state) ((state->AvailIn >= INFLATE_FASTINF_IN && state->AvailOut >= INFLATE_FASTINF_OUT) ? INFLATE_STATE_FASTCOMPRESSED : INFLATE_STATE_COMPRESSED_LIT)
+/* The maximum amount of bytes that can be output is 258. */
+#define INFLATE_FASTINF_OUT 258
+/* The most input bytes required for huffman codes and extra data is 16 + 5 + 16 + 13 bits. Add 3 extra bytes to account for putting data into the bit buffer. */
+#define INFLATE_FASTINF_IN 10
 
 UInt32 Huffman_ReverseBits(UInt32 n, UInt8 bits) {
 	n = ((n & 0xAAAA) >> 1) | ((n & 0x5555) << 1);

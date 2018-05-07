@@ -218,21 +218,22 @@ void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	Stopwatch_Start(&stopwatch);
 	result = Platform_HttpMakeRequest(request, &handle);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-	Platform_Log2("HTTP get request %i in %i ms", &result, &elapsedMS);
-	if (!ErrorHandler_Check(result)) return;
+	Platform_Log2("HTTP get request: ret code %i, in %i ms", &result, &elapsedMS);
+	if (!ErrorHandler_Check(result)) return;	
 
 	void* data = NULL;
 	UInt32 size = 0;
 	Stopwatch_Start(&stopwatch);
 	result = Platform_HttpGetRequestData(request, handle, &data, &size);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-	Platform_Log2("HTTP get data %i in %i ms", &result, &elapsedMS);
+	UInt32 status = request->StatusCode;
+	Platform_Log3("HTTP get data: ret code %i (http %i), in %i ms", &result, &status, &elapsedMS);
 
 	Platform_HttpFreeRequest(handle);
-	if (!ErrorHandler_Check(result)) return;
+	if (!ErrorHandler_Check(result) || request->StatusCode != 200) return;
 
 	UInt64 addr = (UInt64)data;
-	Platform_Log2("OK I got the DATA! %x of %i", &addr, &size);
+	Platform_Log2("OK I got the DATA! %i bytes at %x", &size, &addr);
 
 	Stream memStream;
 	switch (request->RequestType) {

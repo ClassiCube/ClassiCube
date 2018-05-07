@@ -18,7 +18,7 @@ typedef struct AsyncRequest_ {
 
 	DateTime TimeAdded;
 	DateTime TimeDownloaded;
-	UInt16 ResponseCode;
+	UInt16 StatusCode;
 
 	union {
 		struct { void* Ptr; UInt32 Size; } ResultData;

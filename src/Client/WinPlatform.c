@@ -609,19 +609,39 @@ ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle) {
 	return *handle == NULL ? GetLastError() : 0;
 }
 
+/* TODO: May need to rethink this API design a bit - probably want to split parse headers function out */
+/* TODO: Test last modified and etag even work */
+#define Http_Query(flags, result) HttpQueryInfoA(handle, flags, result, &bufferLen, NULL)
 ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void** data, UInt32* size) {
-	DWORD bufferLen = sizeof(DWORD);
-	BOOL success = HttpQueryInfoA(handle, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, size, &bufferLen, 0);
-	if (!success) return GetLastError();
-	if (*size == 0) return 1;
+	DWORD bufferLen;
 
+	UInt32 status; 
+	bufferLen = sizeof(DWORD);
+	if (!Http_Query(HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &status)) return GetLastError();
+	request->StatusCode = status;
+	
+	bufferLen = sizeof(DWORD);
+	if (!Http_Query(HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER, size)) return GetLastError();
+
+	SYSTEMTIME lastModified; 
+	bufferLen = sizeof(SYSTEMTIME);
+	if (Http_Query(HTTP_QUERY_LAST_MODIFIED | HTTP_QUERY_FLAG_SYSTEMTIME, &lastModified)) {
+		Platform_FromSysTime(&request->LastModified, &lastModified);
+	}
+
+	String etag = String_InitAndClearArray(request->Etag);
+	bufferLen = etag.capacity;
+	Http_Query(HTTP_QUERY_ETAG, etag.buffer, &bufferLen);
+
+	if (*size == 0) return 1;
 	*data = Platform_MemAlloc(*size, 1);
 	if (*data == NULL) ErrorHandler_Fail("Failed to allocate memory for http get data");
+
 	UInt8* buffer = *data;
 	UInt32 left = *size, read;
 
 	while (left > 0) {
-		success = InternetReadFile(handle, buffer, left, &read);
+		bool success = InternetReadFile(handle, buffer, left, &read);
 		if (!success) { Platform_MemFree(data); return GetLastError(); }
 
 		if (read == 0) break;
