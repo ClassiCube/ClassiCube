@@ -116,12 +116,18 @@ void Zip_Init(ZipState* state, Stream* input) {
 void Zip_Extract(ZipState* state) {
 	state->EntriesCount = 0;
 	Stream* stream = state->Input;
-	ReturnCode result = stream->Seek(stream, -22, STREAM_SEEKFROM_END);
-	ErrorHandler_CheckOrFail(result, "ZIP - Seek to end of central directory");
+	UInt32 sig = 0;
+	Int32 i;
 
-	UInt32 sig = Stream_ReadU32_LE(stream);
+	/* At -22 for nearly all zips, but try a bit further back in case of comment */
+	for (i = -22; i >= -256; i--) {
+		ReturnCode result = stream->Seek(stream, i, STREAM_SEEKFROM_END);
+		ErrorHandler_CheckOrFail(result, "ZIP - Seek to end of central directory");
+		sig = Stream_ReadU32_LE(stream);
+		if (sig == ZIP_ENDOFCENTRALDIR) break;
+	}
 	if (sig != ZIP_ENDOFCENTRALDIR) {
-		ErrorHandler_Fail("ZIP - Comment in .zip file not supported");
+		ErrorHandler_Fail("ZIP - Failed to find end of central directory");
 		return;
 	}
 

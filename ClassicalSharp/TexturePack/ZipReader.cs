@@ -29,14 +29,20 @@ namespace ClassicalSharp.Textures {
 		
 		static Encoding enc = Encoding.ASCII;
 		public void Extract(Stream stream) {
-			
 			BinaryReader reader = new BinaryReader(stream);
-			reader.BaseStream.Seek(-22, SeekOrigin.End);
-			uint sig = reader.ReadUInt32();
+			uint sig = 0;
+			
+			// At -22 for nearly all zips, but try a bit further back in case of comment
+			for (int i = -22; i >= -256; i--) {
+				reader.BaseStream.Seek(i, SeekOrigin.End);
+				sig = reader.ReadUInt32();
+				if (sig == 0x06054b50) break;
+			}			
 			if (sig != 0x06054b50) {
-				Utils.LogDebug("Comment in .zip file must be empty");
+				Utils.LogDebug("Failed to find end of central directory header");
 				return;
 			}
+			
 			int entriesCount, centralDirectoryOffset;
 			ReadEndOfCentralDirectory(reader, out entriesCount, out centralDirectoryOffset);
 			entries = new ZipEntry[entriesCount];
@@ -118,7 +124,7 @@ namespace ClassicalSharp.Textures {
 			string fileName = enc.GetString(reader.ReadBytes(fileNameLen));
 			reader.ReadBytes(extraFieldLen);
 			reader.ReadBytes(fileCommentLen);
-						
+			
 			entry.CompressedDataSize = compressedSize;
 			entry.UncompressedDataSize = uncompressedSize;
 			entry.LocalHeaderOffset = localHeaderOffset;

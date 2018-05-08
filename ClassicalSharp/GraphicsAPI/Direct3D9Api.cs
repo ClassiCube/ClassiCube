@@ -19,7 +19,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		Device device;
 		Direct3D d3d;
 		Capabilities caps;
-		const int texBufferSize = 512, iBufferSize = 32, vBufferSize = 2048;
+		const int texBufferSize = 512, iBufferSize = 4, vBufferSize = 2048;
 		
 		D3D.Texture[] textures = new D3D.Texture[texBufferSize];
 		DataBuffer[] vBuffers = new DataBuffer[vBufferSize];
