@@ -87,15 +87,15 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = 0;
 			idAtlas.tex.Y = (short)(yOffset + (tileSize - idAtlas.tex.Height));
 			
-			for (int y = 1; y <= TerrainAtlas2D.RowsCount; y++) {
+			for (int y = 0; y < TerrainAtlas2D.RowsCount; y++) {
 				for (int x = 0; x < TerrainAtlas2D.TilesPerRow; x++) {
 					idAtlas.curX = xOffset + tileSize * x + textOffset;
-					int id = x + ((y - 1) * TerrainAtlas2D.TilesPerRow);
+					int id = x + y * TerrainAtlas2D.TilesPerRow;
 					idAtlas.AddInt(id, vertices, ref index);
 				}
 				idAtlas.tex.Y += (short)tileSize;
 				
-				if ((y % 4) != 0) continue;				
+				if ((y % 4) != 3) continue;				
 				game.Graphics.BindTexture(idAtlas.tex.ID);
 				game.Graphics.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
 				index = 0;

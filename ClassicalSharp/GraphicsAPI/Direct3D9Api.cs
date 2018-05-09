@@ -112,34 +112,41 @@ namespace ClassicalSharp.GraphicsAPI {
 		bool fogEnable;
 		public override bool Fog {
 			get { return fogEnable; }
-			set { if (value == fogEnable) return;
-				fogEnable = value; device.SetRenderState(RenderState.FogEnable, value);
+			set { 
+				if (value == fogEnable) return;
+				fogEnable = value;
+				if (LostContext) return;
+				device.SetRenderState(RenderState.FogEnable, value);
 			}
 		}
 
 		int fogCol, lastFogCol = FastColour.BlackPacked;
 		public override void SetFogColour(FastColour col) {
 			fogCol = col.Pack();
-			if (fogCol == lastFogCol) return;
-			
-			device.SetRenderState(RenderState.FogColor, fogCol);
+			if (fogCol == lastFogCol) return;		
 			lastFogCol = fogCol;
+			if (LostContext) return;
+			device.SetRenderState(RenderState.FogColor, fogCol);
 		}
 
 		float fogDensity = -1, fogStart = -1, fogEnd = -1;
 		public override void SetFogDensity(float value) {
-			if (value == fogDensity) return;
+			if (value == fogDensity) return;			
 			fogDensity = value;
+			if (LostContext) return;
 			device.SetRenderState(RenderState.FogDensity, value);
 		}
 		
 		public override void SetFogStart(float value) {
+			fogStart = value;
+			if (LostContext) return;
 			device.SetRenderState(RenderState.FogStart, value);
 		}
 
 		public override void SetFogEnd(float value) {
 			if (value == fogEnd) return;
 			fogEnd = value;
+			if (LostContext) return;
 			device.SetRenderState(RenderState.FogEnd, value);
 		}
 
@@ -149,6 +156,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			FogMode newMode = modes[(int)fogMode];
 			if (newMode == fogTableMode) return;
 			fogTableMode = newMode;
+			if (LostContext) return;
 			device.SetRenderState(RenderState.FogTableMode, (int)fogTableMode);
 		}
 		

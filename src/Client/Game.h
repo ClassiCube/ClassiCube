@@ -1,6 +1,5 @@
 #ifndef CC_GAME_H
 #define CC_GAME_H
-#include "String.h"
 #include "Picking.h"
 #include "Options.h"
 /* Represents the game.

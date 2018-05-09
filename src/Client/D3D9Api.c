@@ -289,24 +289,24 @@ bool d3d9_fogEnable = false;
 bool Gfx_GetFog(void) { return d3d9_fogEnable; }
 void Gfx_SetFog(bool enabled) {
 	if (d3d9_fogEnable == enabled) return;
-
 	d3d9_fogEnable = enabled;
+	if (Gfx_LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGENABLE, (UInt32)enabled, "D3D9_SetFog");
 }
 
 UInt32 d3d9_fogCol = 0xFF000000; /* black */
 void Gfx_SetFogColour(PackedCol col) {
 	if (col.Packed == d3d9_fogCol) return;
-
 	d3d9_fogCol = col.Packed;
+	if (Gfx_LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGCOLOR, col.Packed, "D3D9_SetFogColour");
 }
 
 Real32 d3d9_fogDensity = -1.0f;
 void Gfx_SetFogDensity(Real32 value) {
 	if (value == d3d9_fogDensity) return;
-
 	d3d9_fogDensity = value;
+	if (Gfx_LostContext) return;
 	IntAndFloat raw; raw.fVal = value;
 	D3D9_SetRenderState(D3DRS_FOGDENSITY, raw.uVal, "D3D9_SetFogDensity");
 }
@@ -314,6 +314,7 @@ void Gfx_SetFogDensity(Real32 value) {
 Real32 d3d9_fogStart = -1.0f;
 void Gfx_SetFogStart(Real32 value) {
 	d3d9_fogStart = value;
+	if (Gfx_LostContext) return;
 	IntAndFloat raw; raw.fVal = value;
 	D3D9_SetRenderState(D3DRS_FOGSTART, raw.uVal, "D3D9_SetFogStart");
 }
@@ -321,8 +322,8 @@ void Gfx_SetFogStart(Real32 value) {
 Real32 d3d9_fogEnd = -1.0f;
 void Gfx_SetFogEnd(Real32 value) {
 	if (value == d3d9_fogEnd) return;
-
 	d3d9_fogEnd = value;
+	if (Gfx_LostContext) return;
 	IntAndFloat raw; raw.fVal = value;
 	D3D9_SetRenderState(D3DRS_FOGEND, raw.uVal, "D3D9_SetFogEnd");
 }
@@ -331,8 +332,8 @@ D3DFOGMODE d3d9_fogTableMode = D3DFOG_NONE;
 void Gfx_SetFogMode(Int32 fogMode) {
 	D3DFOGMODE mode = d3d9_modes[fogMode];
 	if (mode == d3d9_fogTableMode) return;
-
 	d3d9_fogTableMode = mode;
+	if (Gfx_LostContext) return;
 	D3D9_SetRenderState(D3DRS_FOGTABLEMODE, mode, "D3D9_SetFogMode");
 }
 
