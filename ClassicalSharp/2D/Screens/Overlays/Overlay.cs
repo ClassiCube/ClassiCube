@@ -7,22 +7,14 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	
 	public abstract class Overlay : MenuScreen {
-		
-		public Action<Overlay> OnRenderFrame;
 		public string[] lines = new string[4];
-		public string Metadata;
-		
+		public string Metadata;	
 		public Overlay(Game game) : base(game) { }
 		
 		public override void Init() {
 			base.Init();		
 			if (game.Graphics.LostContext) return;
 			ContextRecreated();
-		}
-
-		public override void Render(double delta) {
-			base.Render(delta);
-			if (OnRenderFrame != null) OnRenderFrame(this);
 		}
 		
 		public override bool HandlesKeyDown(Key key) { return true; }

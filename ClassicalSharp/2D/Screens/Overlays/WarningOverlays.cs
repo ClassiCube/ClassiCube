@@ -131,7 +131,6 @@ namespace ClassicalSharp.Gui.Screens {
 			if (url.StartsWith("https://")) address = url.Substring(8);
 			if (url.StartsWith("http://"))  address = url.Substring(7);
 			Metadata = "CL_" + url;
-			OnRenderFrame = TexPackTick;
 			game.Downloader.AsyncGetContentLength(url, true, Metadata);
 			
 			widgets = new Widget[8];
@@ -160,17 +159,17 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Gui.ShowOverlay(overlay, true);
 		}
 		
-		void TexPackTick(Overlay warning) {
-			string identifier = warning.Metadata;
+		public override void Render(double delta) {
+			base.Render(delta);
 			Request item;
-			if (!game.Downloader.TryGetItem(identifier, out item) || item.Data == null) return;
+			if (!game.Downloader.TryGetItem(Metadata, out item) || item.Data == null) return;
 			
 			long contentLength = (long)item.Data;
 			if (contentLength <= 0) return;
-			string url = identifier.Substring(3);
+			string url = Metadata.Substring(3);
 			
 			float contentLengthMB = (contentLength / 1024f / 1024f);
-			warning.lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";			
+			lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";			
 			ContextLost();
 			ContextRecreated();
 		}
