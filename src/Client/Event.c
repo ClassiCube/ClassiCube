@@ -29,9 +29,9 @@ void Event_UnregisterImpl(Event_Void* handlers, void* obj, Event_Void_Callback h
 			handlers->Objs[j]     = handlers->Objs[j + 1];
 		}
 		
-		handlers->Handlers[handlers->Count - 1] = NULL;
-		handlers->Objs[handlers->Count - 1]     = NULL;
 		handlers->Count--;
+		handlers->Handlers[handlers->Count] = NULL;
+		handlers->Objs[handlers->Count]     = NULL;
 		return;
 	}
 	ErrorHandler_Fail("Attempt to unregister event handler that was not registered to begin with");

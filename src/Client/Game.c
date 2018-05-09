@@ -115,6 +115,7 @@ void Game_SetDefaultTexturePack(STRING_PURE String* texPack) {
 
 bool game_CursorVisible = true, game_realCursorVisible = true;
 bool Game_GetCursorVisible(void) { return game_CursorVisible; }
+bool Game_GetRealCursorVisible(void) { return game_realCursorVisible; }
 void Game_SetCursorVisible(bool visible) {
 	/* Defer mouse visibility changes */
 	game_realCursorVisible = visible;
@@ -778,4 +779,4 @@ Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
 Screen* TexIdsOverlay_MakeInstance(void) { return NULL; }
 Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
 /* TODO: Real function is already in Gui.c - this is just stubbed until Overlays are implemented */
-void Gui_ShowOverlay(Screen* overlay, bool atFront) { }
+/* remember to fix it in ServerConnection.c*/

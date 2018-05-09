@@ -8,11 +8,10 @@ namespace ClassicalSharp.Gui.Screens {
 	
 	public abstract class Overlay : MenuScreen {
 		public string[] lines = new string[4];
-		public string Metadata;	
 		public Overlay(Game game) : base(game) { }
 		
 		public override void Init() {
-			base.Init();		
+			base.Init();
 			if (game.Graphics.LostContext) return;
 			ContextRecreated();
 		}

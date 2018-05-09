@@ -157,7 +157,6 @@ void Zip_Extract(ZipState* state) {
 	}
 
 	/* Now read the local file header entries */
-	Int32 i;
 	for (i = 0; i < count; i++) {
 		ZipEntry* entry = &state->Entries[i];
 		result = stream->Seek(stream, entry->LocalHeaderOffset, STREAM_SEEKFROM_BEGIN);

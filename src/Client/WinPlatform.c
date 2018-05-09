@@ -631,7 +631,7 @@ ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void
 
 	String etag = String_InitAndClearArray(request->Etag);
 	bufferLen = etag.capacity;
-	Http_Query(HTTP_QUERY_ETAG, etag.buffer, &bufferLen);
+	Http_Query(HTTP_QUERY_ETAG, etag.buffer);
 
 	if (*size == 0) return 1;
 	*data = Platform_MemAlloc(*size, 1);

@@ -75,7 +75,7 @@ int main(void) {
 		return;
 	} else {
 		String_Set(&Game_Username,  &args[0]);
-		String_Set(&Game_Mppass, &args[1]);
+		String_Set(&Game_Mppass,    &args[1]);
 		String_Set(&Game_IPAddress, &args[2]);
 
 		String bits[4]; UInt32 bitsCount = Array_Elems(bits);

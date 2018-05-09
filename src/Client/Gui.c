@@ -161,9 +161,9 @@ void Gui_SetActive(Screen* screen) {
 }
 void Gui_RefreshHud(void) { Elem_Recreate(Gui_HUD); }
 
-void Gui_ShowOverlay_Impl(Screen* overlay, bool atFront) {
+void Gui_ShowOverlay(Screen* overlay, bool atFront) {
 	if (Gui_OverlaysCount == GUI_MAX_OVERLAYS) {
-		ErrorHandler_Fail("Cannot have more than 40 overlays");
+		ErrorHandler_Fail("Cannot have more than 6 overlays");
 	}
 	bool visible = Game_GetCursorVisible();
 	if (Gui_OverlaysCount == 0) Game_SetCursorVisible(true);
@@ -182,6 +182,21 @@ void Gui_ShowOverlay_Impl(Screen* overlay, bool atFront) {
 
 	if (Gui_OverlaysCount == 1) Game_SetCursorVisible(visible); /* Save cursor visibility state */
 	Elem_Init(overlay);
+}
+
+void Gui_FreeOverlay(Screen* overlay) {
+	Int32 i;
+	for (i = 0; i < Gui_OverlaysCount; i++) {
+		if (Gui_Overlays[i] != overlay) continue;
+		for (; i < Gui_OverlaysCount - 1; i++) {
+			Gui_Overlays[i] = Gui_Overlays[i + 1];
+		}
+
+		Gui_OverlaysCount--;
+		Gui_Overlays[Gui_OverlaysCount] = NULL;
+		break;
+	}
+	Elem_Free(overlay);
 }
 
 void Gui_RenderGui(Real64 delta) {

@@ -64,7 +64,7 @@ bool Widget_Contains(Widget* widget, Int32 x, Int32 y);
 GfxResourceID Gui_GuiTex, Gui_GuiClassicTex, Gui_IconsTex;
 Screen* Gui_HUD;
 Screen* Gui_Active;
-#define GUI_MAX_OVERLAYS 40
+#define GUI_MAX_OVERLAYS 6
 Screen* Gui_Overlays[GUI_MAX_OVERLAYS];
 Int32 Gui_OverlaysCount;
 
@@ -84,6 +84,7 @@ void Gui_FreeActive(void);
 void Gui_SetActive(Screen* screen);
 void Gui_RefreshHud(void);
 void Gui_ShowOverlay(Screen* overlay, bool atFront);
+void Gui_FreeOverlay(Screen* overlay);
 void Gui_RenderGui(Real64 delta);
 void Gui_OnResize(void);
 

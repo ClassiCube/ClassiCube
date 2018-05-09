@@ -9,10 +9,11 @@ using OpenTK.Input;
 namespace ClassicalSharp.Gui.Screens {
 	
 	public sealed class UrlWarningOverlay : Overlay {
+		public string Url;
 		
 		public UrlWarningOverlay(Game game, string url) : base(game) {
 			widgets = new Widget[6];
-			Metadata = url;
+			Url = url;
 			lines[0] = "&eAre you sure you want to open this link?";
 			lines[1] = url;
 			lines[2] = "Be careful - links from strangers may be websites that";
@@ -28,18 +29,18 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void OpenUrl(Game g, Widget w) {
-			CloseOverlay();			
+			CloseOverlay();
 			try {
-				Process.Start(Metadata);
+				Process.Start(Url);
 			} catch (Exception ex) {
 				ErrorHandler.LogError("UrlWarningOverlay.OpenUrl", ex);
 			}
 		}
 		
 		void AppendUrl(Game g, Widget w) {
-			CloseOverlay();			
+			CloseOverlay();
 			if (game.ClickableChat) {
-				game.Gui.hudScreen.AppendInput(Metadata);
+				game.Gui.hudScreen.AppendInput(Url);
 			}
 		}
 	}
@@ -66,9 +67,10 @@ namespace ClassicalSharp.Gui.Screens {
 	}
 	
 	public sealed class PluginOverlay : WarningOverlay {
+		public string Plugin;
 
 		public PluginOverlay(Game game, string plugin) : base(game) {
-			Metadata = plugin;
+			Plugin = plugin;
 			widgets = new Widget[8];
 			lines[0] = "&eAre you sure you want to load plugin " + plugin + " ?";
 			lines[1] = "Be careful - plugins from strangers may have viruses";
@@ -76,20 +78,21 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void OnYesClick(Game g, Widget w) {
-			CloseOverlay();			
+			CloseOverlay();
 			EntryList accepted = PluginLoader.Accepted;
-			if (IsAlways(w) && !accepted.Has(Metadata)) accepted.Add(Metadata);
-			PluginLoader.Load(Metadata, true);
+			if (IsAlways(w) && !accepted.Has(Plugin)) accepted.Add(Plugin);
+			PluginLoader.Load(Plugin, true);
 		}
 		
 		protected override void OnNoClick(Game g, Widget w) {
-			CloseOverlay();			
+			CloseOverlay();
 			EntryList denied = PluginLoader.Denied;
-			if (IsAlways(w) && !denied.Has(Metadata)) denied.Add(Metadata);
+			if (IsAlways(w) && !denied.Has(Plugin)) denied.Add(Plugin);
 		}
 	}
 	
 	public sealed class ConfirmDenyOverlay : Overlay {
+		public string Identifier;
 		bool alwaysDeny;
 		
 		public ConfirmDenyOverlay(Game game, bool always) : base(game) {
@@ -110,28 +113,29 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void ConfirmNoClick(Game g, Widget w) {
-			CloseOverlay();			
-			string url = Metadata.Substring(3);
-			if (alwaysDeny && !TextureCache.HasDenied(url)) { 
-				TextureCache.Deny(url); 
+			CloseOverlay();
+			string url = Identifier.Substring(3);
+			if (alwaysDeny && !TextureCache.HasDenied(url)) {
+				TextureCache.Deny(url);
 			}
 		}
 		
 		void GoBackClick(Game g, Widget w) {
-			CloseOverlay();			
-			Overlay overlay = new TexPackOverlay(game, Metadata.Substring(3));
+			CloseOverlay();
+			Overlay overlay = new TexPackOverlay(game, Identifier.Substring(3));
 			game.Gui.ShowOverlay(overlay, true);
 		}
 	}
 	
 	public sealed class TexPackOverlay : WarningOverlay {
+		public string Identifier;
 
 		public TexPackOverlay(Game game, string url) : base(game) {
 			string address = url;
 			if (url.StartsWith("https://")) address = url.Substring(8);
 			if (url.StartsWith("http://"))  address = url.Substring(7);
-			Metadata = "CL_" + url;
-			game.Downloader.AsyncGetContentLength(url, true, Metadata);
+			Identifier = "CL_" + url;
+			game.Downloader.AsyncGetContentLength(url, true, Identifier);
 			
 			widgets = new Widget[8];
 			lines[0] = "Do you want to download the server's texture pack?";
@@ -142,34 +146,34 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void OnYesClick(Game g, Widget w) {
 			CloseOverlay();
-			string url = Metadata.Substring(3);
+			string url = Identifier.Substring(3);
 			
 			game.Server.DownloadTexturePack(url);
-			if (IsAlways(w) && !TextureCache.HasAccepted(url)) { 
-				TextureCache.Accept(url); 
+			if (IsAlways(w) && !TextureCache.HasAccepted(url)) {
+				TextureCache.Accept(url);
 			}
 		}
 		
 		protected override void OnNoClick(Game g, Widget w) {
 			CloseOverlay();
-			string url = Metadata.Substring(3);
+			string url = Identifier.Substring(3);
 			
 			ConfirmDenyOverlay overlay = new ConfirmDenyOverlay(game, IsAlways(w));
-			overlay.Metadata = Metadata;
+			overlay.Identifier = Identifier;
 			game.Gui.ShowOverlay(overlay, true);
 		}
 		
 		public override void Render(double delta) {
 			base.Render(delta);
 			Request item;
-			if (!game.Downloader.TryGetItem(Metadata, out item) || item.Data == null) return;
+			if (!game.Downloader.TryGetItem(Identifier, out item) || item.Data == null) return;
 			
 			long contentLength = (long)item.Data;
 			if (contentLength <= 0) return;
-			string url = Metadata.Substring(3);
+			string url = Identifier.Substring(3);
 			
 			float contentLengthMB = (contentLength / 1024f / 1024f);
-			lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";			
+			lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";
 			ContextLost();
 			ContextRecreated();
 		}
