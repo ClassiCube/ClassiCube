@@ -213,7 +213,7 @@ namespace ClassicalSharp {
 		}
 		
 		void LoadGuiOptions() {
-			ChatLines = Options.GetInt(OptionsKey.ChatLines, 1, 30, 12);
+			ChatLines = Options.GetInt(OptionsKey.ChatLines, 0, 30, 12);
 			ClickableChat = Options.GetBool(OptionsKey.ClickableChat, false);
 			InventoryScale = Options.GetFloat(OptionsKey.InventoryScale, 0.25f, 5f, 1f);
 			HotbarScale = Options.GetFloat(OptionsKey.HotbarScale, 0.25f, 5f, 1f);

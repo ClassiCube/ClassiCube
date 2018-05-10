@@ -373,7 +373,7 @@ void Game_LoadOptions(void) {
 }
 
 void Game_LoadGuiOptions(void) {
-	Game_ChatLines         = Options_GetInt(OPT_CHATLINES, 1, 30, 12);
+	Game_ChatLines         = Options_GetInt(OPT_CHATLINES, 0, 30, 12);
 	Game_ClickableChat     = Options_GetBool(OPT_CLICKABLE_CHAT, false);
 	Game_RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
 	Game_RawHotbarScale    = Options_GetFloat(OPT_HOTBAR_SCALE,    0.25f, 5.0f, 1.0f);
