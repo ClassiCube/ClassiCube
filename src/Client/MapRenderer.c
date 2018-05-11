@@ -39,12 +39,12 @@ void MapRenderer_CheckWeather(Real64 deltaTime) {
 }
 
 void MapRenderer_RenderNormalBatch(UInt32 batch) {
-	UInt32 i;
+	UInt32 i, offset = MapRenderer_ChunksCount * batch;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (info->NormalParts == NULL) continue;
 
-		ChunkPartInfo part = info->NormalParts[batch];
+		ChunkPartInfo part = *(info->NormalParts + offset);
 		if (!part.HasVertices) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
@@ -144,12 +144,12 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 }
 
 void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
-	UInt32 i;
+	UInt32 i, offset = MapRenderer_ChunksCount * batch;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];
 		if (info->TranslucentParts == NULL) continue;
 
-		ChunkPartInfo part = info->TranslucentParts[batch];
+		ChunkPartInfo part = *(info->TranslucentParts + offset);
 		if (!part.HasVertices) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 

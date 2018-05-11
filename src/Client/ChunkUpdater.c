@@ -59,9 +59,9 @@ void ChunkUpdater_TerrainAtlasChanged(void* obj) {
 }
 
 void ChunkUpdater_BlockDefinitionChanged(void* obj) {
+	ChunkUpdater_Refresh();
 	MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
 	ChunkUpdater_ResetPartFlags();
-	ChunkUpdater_Refresh();
 }
 
 void ChunkUpdater_ProjectionChanged(void* obj) {
@@ -72,11 +72,62 @@ void ChunkUpdater_ViewDistanceChanged(void* obj) {
 	cu_lastCamPos = Vector3_BigPos();
 }
 
+
+void ChunkUpdater_FreePartsAllocations(void) {
+	Platform_MemFree(&MapRenderer_PartsBuffer_Raw);
+	MapRenderer_PartsNormal = NULL;
+	MapRenderer_PartsTranslucent = NULL;
+}
+
+void ChunkUpdater_FreeAllocations(void) {
+	if (MapRenderer_Chunks == NULL) return;
+	Platform_MemFree(&MapRenderer_Chunks);
+	Platform_MemFree(&MapRenderer_SortedChunks);
+	Platform_MemFree(&MapRenderer_RenderChunks);
+	Platform_MemFree(&ChunkUpdater_Distances);
+	ChunkUpdater_FreePartsAllocations();
+}
+
+void ChunkUpdater_PerformPartsAllocations(void) {
+	UInt32 partsCount = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
+	MapRenderer_PartsBuffer_Raw = Platform_MemAlloc(partsCount * 2, sizeof(ChunkPartInfo));
+	if (MapRenderer_PartsBuffer_Raw == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
+
+	UInt32 partsSize = partsCount * 2 * (UInt32)sizeof(ChunkPartInfo);
+	Platform_MemSet(MapRenderer_PartsBuffer_Raw, 0, partsSize);
+	MapRenderer_PartsNormal = MapRenderer_PartsBuffer_Raw;
+	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + partsCount;
+}
+
+void ChunkUpdater_PerformAllocations(void) {
+	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo));
+	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
+
+	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo*));
+	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate sorted chunk info");
+
+	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo*));
+	if (MapRenderer_RenderChunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate render chunk info");
+
+	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(Int32));
+	if (ChunkUpdater_Distances == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
+
+	ChunkUpdater_PerformPartsAllocations();
+}
+
 void ChunkUpdater_Refresh(void) {
 	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
 	if (MapRenderer_Chunks != NULL && World_Blocks != NULL) {
 		ChunkUpdater_ClearChunkCache();
 		ChunkUpdater_ResetChunkCache();
+
+		Int32 old_atlasesCount = MapRenderer_1DUsedCount;
+		MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
+		/* Need to reallocate parts array in this case */
+		if (MapRenderer_1DUsedCount != old_atlasesCount) {
+			ChunkUpdater_FreePartsAllocations();
+			ChunkUpdater_PerformPartsAllocations();
+		}
 	}
 	ChunkUpdater_ResetPartCounts();
 }
@@ -102,6 +153,7 @@ void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
 	}
 }
 
+
 void ChunkUpdater_ApplyMeshBuilder(void) {
 	if (Game_SmoothLighting) {
 		 /* TODO: Implement advanced lighting builder.*/
@@ -109,42 +161,6 @@ void ChunkUpdater_ApplyMeshBuilder(void) {
 	} else {
 		NormalBuilder_SetActive();
 	}
-}
-
-
-void ChunkUpdater_FreeAllocations(void) {
-	if (MapRenderer_Chunks == NULL) return;
-	Platform_MemFree(&MapRenderer_Chunks);
-	Platform_MemFree(&MapRenderer_SortedChunks);
-	Platform_MemFree(&MapRenderer_RenderChunks);
-	Platform_MemFree(&ChunkUpdater_Distances);
-	Platform_MemFree(&MapRenderer_PartsBuffer_Raw);
-
-	MapRenderer_PartsNormal = NULL;
-	MapRenderer_PartsTranslucent = NULL;
-}
-
-void ChunkUpdater_PerformAllocations(void) {
-	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo));
-	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
-
-	MapRenderer_SortedChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo*));
-	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate sorted chunk info");
-
-	MapRenderer_RenderChunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo*));
-	if (MapRenderer_RenderChunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate render chunk info");
-
-	ChunkUpdater_Distances = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(Int32));
-	if (ChunkUpdater_Distances == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk distances");
-
-	UInt32 partsCount = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
-	MapRenderer_PartsBuffer_Raw = Platform_MemAlloc(partsCount * 2, sizeof(ChunkPartInfo));
-	if (MapRenderer_PartsBuffer_Raw == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
-
-	UInt32 partsSize = partsCount * 2 * (UInt32)sizeof(ChunkPartInfo);
-	Platform_MemSet(MapRenderer_PartsBuffer_Raw, 0, partsSize);
-	MapRenderer_PartsNormal      = MapRenderer_PartsBuffer_Raw;
-	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + partsCount;
 }
 
 void ChunkUpdater_OnNewMap(void* obj) {
@@ -156,7 +172,7 @@ void ChunkUpdater_OnNewMap(void* obj) {
 }
 
 void ChunkUpdater_OnNewMapLoaded(void* obj) {
-	MapRenderer_ChunksX = (World_Width + CHUNK_MAX) >> CHUNK_SHIFT;
+	MapRenderer_ChunksX = (World_Width + CHUNK_MAX)  >> CHUNK_SHIFT;
 	MapRenderer_ChunksY = (World_Height + CHUNK_MAX) >> CHUNK_SHIFT;
 	MapRenderer_ChunksZ = (World_Length + CHUNK_MAX) >> CHUNK_SHIFT;
 

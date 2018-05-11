@@ -77,7 +77,7 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 
 void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	Atlas1D_Count = atlasesCount;
-	Platform_Log2("Loaded new atlas: %i bmps, %i per bmp", &atlasesCount, &Atlas1D_ElementsPerBitmap);
+	Platform_Log2("Loaded new atlas: %i bmps, %i per bmp", &atlasesCount, &Atlas1D_ElementsPerAtlas);
 
 	Int32 index = 0, i;
 	for (i = 0; i < atlasesCount; i++) {
