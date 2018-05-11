@@ -775,8 +775,9 @@ DateTime DateTime_FromTotalMs(Int64 ms) { DateTime time; return time; }
 void Gfx_MakeApiInfo(void) { }
 void AdvLightingBuilder_SetActive(void) { }
 
-Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
-Screen* TexIdsOverlay_MakeInstance(void) { return NULL; }
-Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
 /* TODO: Real function is already in Gui.c - this is just stubbed until Overlays are implemented */
 /* remember to fix it in ServerConnection.c*/
+Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) { return NULL; }
+/* TODO: Initalise Shell, see https://msdn.microsoft.com/en-us/library/windows/desktop/bb762153(v=vs.85).aspx 
+https://stackoverflow.com/questions/24590059/c-opening-a-url-in-default-browser-on-windows-without-admin-privileges */
+ReturnCode Platform_StartShell(STRING_PURE String* args) { return 0; }

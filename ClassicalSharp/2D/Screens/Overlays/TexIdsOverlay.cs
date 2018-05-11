@@ -15,6 +15,7 @@ namespace ClassicalSharp.Gui.Screens {
 		const int verticesCount = TerrainAtlas2D.TilesPerRow * TerrainAtlas2D.RowsCount * 4;
 		static VertexP3fT2fC4b[] vertices;
 		int dynamicVb;
+		int xOffset, yOffset, tileSize;
 		
 		public override void Init() {
 			textFont = new Font(game.FontName, 8);
@@ -22,15 +23,6 @@ namespace ClassicalSharp.Gui.Screens {
 			if (vertices == null) {
 				vertices = new VertexP3fT2fC4b[verticesCount];
 			}
-		}
-		
-		const int textOffset = 3;
-		int xOffset, yOffset, tileSize;
-		
-		void UpdateTileSize() {
-			tileSize = game.window.Height / TerrainAtlas2D.RowsCount;
-			tileSize = (tileSize / 8) * 8;
-			Utils.Clamp(ref tileSize, 8, 40);
 		}
 		
 		public override void Render(double delta) {
@@ -54,9 +46,12 @@ namespace ClassicalSharp.Gui.Screens {
 			idAtlas = new TextAtlas(game, 16);
 			idAtlas.Pack("0123456789", textFont, "f");
 			
-			UpdateTileSize();
-			xOffset = (game.Width / 2)  - (tileSize * TerrainAtlas2D.TilesPerRow) / 2;
-			yOffset = (game.Height / 2) - (tileSize * TerrainAtlas2D.RowsCount)   / 2;
+			tileSize = game.Height / TerrainAtlas2D.RowsCount;
+			tileSize = (tileSize / 8) * 8;
+			Utils.Clamp(ref tileSize, 8, 40);
+			
+			xOffset = CalcPos(Anchor.Centre, 0, tileSize * TerrainAtlas2D.TilesPerRow, game.Width);
+			yOffset = CalcPos(Anchor.Centre, 0, tileSize * TerrainAtlas2D.RowsCount,   game.Height);
 
 			widgets[0] = TextWidget.Create(game, "Texture ID reference sheet", titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Min, 0, yOffset - 30);
@@ -83,6 +78,7 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 		}
 		
+		const int textOffset = 3;
 		void RenderTextOverlay() {
 			int index = 0;
 			idAtlas.tex.Y = (short)(yOffset + (tileSize - idAtlas.tex.Height));

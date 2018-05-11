@@ -72,6 +72,7 @@ void Platform_EventWait(void* handle);
 typedef Int64 Stopwatch;
 void Stopwatch_Start(Stopwatch* timer);
 Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer);
+ReturnCode Platform_StartShell(STRING_PURE String* args);
 
 void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
 void Platform_FreeFont(FontDesc* desc);

@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 				args.Text = prefix;
 				Size size = game.Drawer2D.MeasureSize(ref args);
 				offset = size.Width;
-				size.Width += 16 * chars.Length;
+				size.Width += fontSize * chars.Length;
 				
 				using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size)) {
 					drawer.SetBitmap(bmp);

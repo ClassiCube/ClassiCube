@@ -26,6 +26,7 @@
 #include "MapRenderer.h"
 #include "TexturePack.h"
 #include "Audio.h"
+#include "Screens.h"
 
 #define LIST_SCREEN_ITEMS 5
 #define LIST_SCREEN_BUTTONS (LIST_SCREEN_ITEMS + 3)
@@ -127,6 +128,21 @@ typedef struct MenuOptionsScreen_ {
 	Texture ExtHelp_Textures[MENUOPTIONS_MAX_DESC];
 	UInt8 ExtHelp_Buffer[String_BufferSize(MENUOPTIONS_MAX_DESC * TEXTGROUPWIDGET_LEN)];
 } MenuOptionsScreen;
+
+typedef struct TexIdsOverlay_ {
+	MenuScreen_Layout
+	GfxResourceID DynamicVb;
+	Int32 XOffset, YOffset, TileSize;
+	TextAtlas IdAtlas;
+	TextWidget Title;
+} TexIdsOverlay;
+
+typedef struct UrlWarningOverlay_ {
+	MenuScreen_Layout
+	TextWidget Labels[4];
+	ButtonWidget Buttons[2];
+	UInt8 UrlBuffer[String_BufferSize(STRING_SIZE * 4)];
+} UrlWarningOverlay;
 
 
 /*########################################################################################################################*
@@ -2939,7 +2955,8 @@ Screen* NostalgiaScreen_MakeInstance(void) {
 void Overlay_Init(GuiElement* elem) {
 	MenuScreen_Init(elem);
 	if (Gfx_LostContext) return;
-	ContextRecreated();
+	MenuScreen* screen = (MenuScreen*)elem;
+	screen->ContextRecreated(elem);
 }
 
 bool Overlay_HandlesKeyDown(Key key) { return true; }
@@ -2967,3 +2984,198 @@ void Overlay_MakeLabels(MenuScreen* screen, TextWidget* labels, STRING_PURE Stri
 	}
 }
 
+
+/*########################################################################################################################*
+*------------------------------------------------------TexIdsOverlay------------------------------------------------------*
+*#########################################################################################################################*/
+#define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_ELEMENTS_PER_ROW * ATLAS2D_ROWS_COUNT * 4)
+GuiElementVTABLE TexIdsOverlay_VTABLE;
+TexIdsOverlay TexIdsOverlay_Instance;
+void TexIdsOverlay_ContextLost(void* obj) {
+	TexIdsOverlay* screen = (TexIdsOverlay*)obj;
+	MenuScreen_ContextLost(obj);
+	Gfx_DeleteVb(&screen->DynamicVb);
+	TextAtlas_Free(&screen->IdAtlas);
+}
+
+void TexIdsOverlay_ContextRecreated(void* obj) {
+	TexIdsOverlay* screen = (TexIdsOverlay*)obj;
+	screen->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
+
+	String chars = String_FromConst("0123456789");
+	String prefix = String_FromConst("f");
+	TextAtlas_Make(&screen->IdAtlas, &chars, &screen->TextFont, &prefix);
+
+	Int32 size = Game_Height / ATLAS2D_ROWS_COUNT;
+	size = (size / 8) * 8;
+	Math_Clamp(size, 8, 40);
+
+	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_ELEMENTS_PER_ROW, Game_Width);
+	screen->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_ROWS_COUNT,       Game_Height);
+	screen->TileSize = size;
+
+	String title = String_FromConst("Texture ID reference sheet");
+	TextWidget_Create(&screen->Title, &title, &screen->TitleFont);
+	screen->Widgets[0] = (Widget*)(&screen->Title);
+	Widget_SetLocation(screen->Widgets[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, screen->YOffset - 30);
+}
+
+void TexIdsOverlay_RenderTerrain(TexIdsOverlay* screen) {
+	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
+	Int32 elemsPerAtlas = Atlas1D_ElementsPerAtlas, i;
+	for (i = 0; i < ATLAS2D_ELEMENTS_PER_ROW * ATLAS2D_ROWS_COUNT;) {
+		VertexP3fT2fC4b* ptr = vertices;
+		Int32 j, ignored, size = screen->TileSize;
+
+		for (j = 0; j < elemsPerAtlas; j++) {
+			TextureRec rec = Atlas1D_TexRec(i + j, 1, &ignored);
+			Int32 x = (i + j) % ATLAS2D_ELEMENTS_PER_ROW;
+			Int32 y = (i + j) / ATLAS2D_ELEMENTS_PER_ROW;
+
+			Texture tex = Texture_FromRec(NULL, screen->XOffset + x * size, 
+				screen->YOffset + y * size, size, size, rec);
+			PackedCol col = PACKEDCOL_WHITE;
+			GfxCommon_Make2DQuad(&tex, col, &ptr);
+		}
+
+		Gfx_BindTexture(Atlas1D_TexIds[i / elemsPerAtlas]);
+		i += elemsPerAtlas;
+		Int32 count = (Int32)(ptr - vertices);
+		GfxCommon_UpdateDynamicVb_IndexedTris(screen->DynamicVb, vertices, count);
+	}
+}
+
+void TexIdsOverlay_RenderTextOverlay(TexIdsOverlay* screen) {
+	Int32 x, y, size = screen->TileSize;
+	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
+	VertexP3fT2fC4b* ptr = vertices;
+
+	TextAtlas* idAtlas = &screen->IdAtlas;
+	idAtlas->Tex.Y = (screen->YOffset + (size - idAtlas->Tex.Height));
+	for (y = 0; y < ATLAS2D_ROWS_COUNT; y++) {
+		for (x = 0; x < ATLAS2D_ELEMENTS_PER_ROW; x++) {
+			idAtlas->CurX = screen->XOffset + size * x + 3; /* offset text by 3 pixels */
+			Int32 id = x + y * ATLAS2D_ELEMENTS_PER_ROW;
+			TextAtlas_AddInt(idAtlas, id, &ptr);
+		}
+		idAtlas->Tex.Y += size;
+
+		if ((y % 4) != 3) continue;
+		Gfx_BindTexture(idAtlas->Tex.ID);
+		Int32 count = (Int32)(ptr - vertices);
+		GfxCommon_UpdateDynamicVb_IndexedTris(screen->DynamicVb, vertices, count);
+		ptr = vertices;
+	}
+}
+
+void TexIdsOverlay_Init(GuiElement* elem) {
+	MenuScreen* screen = (MenuScreen*)elem;
+	Platform_MakeFont(&screen->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
+	Overlay_Init(elem);
+}
+
+void TexIdsOverlay_Render(GuiElement* elem, Real64 delta) {
+	TexIdsOverlay* screen = (TexIdsOverlay*)elem;
+	Menu_RenderBounds();
+	Gfx_SetTexturing(true);
+	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
+	Menu_RenderWidgets(screen->Widgets, screen->WidgetsCount, delta);
+	TexIdsOverlay_RenderTerrain(screen);
+	TexIdsOverlay_RenderTextOverlay(screen);
+	Gfx_SetTexturing(false);
+}
+
+bool TexIdsOverlay_HandlesKeyDown(GuiElement* elem, Key key) {
+	if (key == KeyBind_Get(KeyBind_IDOverlay) || key == KeyBind_Get(KeyBind_PauseOrExit)) {
+		Overlay_Close(elem);
+		return true;
+	}
+	Screen* screen = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyDown(screen, key);
+}
+
+bool TexIdsOverlay_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+	Screen* screen = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyPress(screen, key);
+}
+
+bool TexIdsOverlay_HandlesKeyUp(GuiElement* elem, Key key) {
+	Screen* screen = Gui_GetUnderlyingScreen();
+	return Elem_HandlesKeyUp(screen, key);
+}
+
+Screen* TexIdsOverlay_MakeInstance(void) {
+	static Widget* widgets[1];
+	TexIdsOverlay* screen = &TexIdsOverlay_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, widgets,
+		Array_Elems(widgets), TexIdsOverlay_ContextRecreated);
+	screen->ContextLost = TexIdsOverlay_ContextLost;
+
+	TexIdsOverlay_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &TexIdsOverlay_VTABLE;
+
+	screen->VTABLE->Init   = TexIdsOverlay_Init;
+	screen->VTABLE->Render = TexIdsOverlay_Render;
+	screen->VTABLE->HandlesKeyDown  = TexIdsOverlay_HandlesKeyDown;
+	screen->VTABLE->HandlesKeyPress = TexIdsOverlay_HandlesKeyPress;
+	screen->VTABLE->HandlesKeyUp    = TexIdsOverlay_HandlesKeyUp;
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
+*#########################################################################################################################*/
+GuiElementVTABLE UrlWarningOverlay_VTABLE;
+UrlWarningOverlay UrlWarningOverlay_Instance;
+void UrlWarningOverlay_OpenUrl(GuiElement* screenElem, GuiElement* widget) {
+	Overlay_Close(screenElem);
+	UrlWarningOverlay* screen = (UrlWarningOverlay*)screenElem;
+	String url = String_FromRawArray(screen->UrlBuffer);
+	Platform_StartShell(&url);
+}
+
+void UrlWarningOverlay_AppendUrl(GuiElement* screenElem, GuiElement* widget) {
+	Overlay_Close(screenElem);
+	if (Game_ClickableChat) {
+		UrlWarningOverlay* screen = (UrlWarningOverlay*)screenElem;
+		String url = String_FromRawArray(screen->UrlBuffer);
+		HUDScreen_AppendInput(Gui_HUD, &url);
+	}
+}
+
+void UrlWarningOverlay_ContextRecreated(void* obj) {
+	UrlWarningOverlay* screen = (UrlWarningOverlay*)obj;
+	String lines[4];
+	lines[0] = String_FromReadonly("&eAre you sure you want to open this link?");
+	lines[1] = String_FromRawArray(screen->UrlBuffer);
+	lines[2] = String_FromReadonly("Be careful - links from strangers may be websites that");
+	lines[3] = String_FromReadonly(" have viruses, or things you may not want to open/see.");
+	Overlay_MakeLabels((MenuScreen*)screen, screen->Labels, lines);
+
+	String yes = String_FromConst("Yes");
+	ButtonWidget_Create(&screen->Buttons[0], 160, &yes, &screen->TitleFont, UrlWarningOverlay_OpenUrl);
+	screen->Widgets[4] = (Widget*)(&screen->Buttons[0]);
+	Widget_SetLocation(screen->Widgets[4], ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
+
+	String no = String_FromConst("No");
+	ButtonWidget_Create(&screen->Buttons[1], 160, &no, &screen->TitleFont, UrlWarningOverlay_AppendUrl);
+	screen->Widgets[5] = (Widget*)(&screen->Buttons[1]);
+	Widget_SetLocation(screen->Widgets[5], ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 30);
+}
+
+Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
+	static Widget* widgets[6];
+	UrlWarningOverlay* screen = &UrlWarningOverlay_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, widgets,
+		Array_Elems(widgets), UrlWarningOverlay_ContextRecreated);
+
+	String dstUrl = String_InitAndClearArray(screen->UrlBuffer);
+	String_Set(&dstUrl, url);
+	UrlWarningOverlay_VTABLE = *screen->VTABLE;
+	screen->VTABLE = &UrlWarningOverlay_VTABLE;
+
+	screen->VTABLE->Init = Overlay_Init;
+	screen->VTABLE->HandlesKeyDown = Overlay_HandlesKeyDown;
+	return (Screen*)screen;
+}
