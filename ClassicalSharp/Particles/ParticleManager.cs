@@ -170,7 +170,7 @@ namespace ClassicalSharp.Particles {
 			Vector3 worldPos = new Vector3(position.X, position.Y, position.Z);
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Left), texIndex = 0;
 			TextureRec baseRec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
-			float uScale = (1/16f), vScale = (1/16f) * TerrainAtlas1D.invElementSize;
+			float uScale = (1/16f), vScale = (1/16f) * TerrainAtlas1D.invTileSize;
 			
 			Vector3 minBB = BlockInfo.MinBB[block];
 			Vector3 maxBB = BlockInfo.MaxBB[block];

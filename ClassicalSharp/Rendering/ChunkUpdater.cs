@@ -119,12 +119,12 @@ namespace ClassicalSharp.Renderers {
 				renderer.normalPartsCount = new int[TerrainAtlas1D.TexIds.Length];
 				renderer.translucentPartsCount = new int[TerrainAtlas1D.TexIds.Length];
 			} else {
-				bool refreshRequired = elementsPerBitmap != TerrainAtlas1D.elementsPerBitmap;
+				bool refreshRequired = elementsPerBitmap != TerrainAtlas1D.TilesPerAtlas;
 				if (refreshRequired) Refresh();
 			}
 			
 			renderer._1DUsed = TerrainAtlas1D.UsedAtlasesCount();
-			elementsPerBitmap = TerrainAtlas1D.elementsPerBitmap;
+			elementsPerBitmap = TerrainAtlas1D.TilesPerAtlas;
 			ResetUsedFlags();
 		}
 		

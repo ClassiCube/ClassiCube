@@ -55,11 +55,11 @@ namespace ClassicalSharp.Textures {
 		/// <summary> Runs through all animations and if necessary updates the terrain atlas. </summary>
 		public void Tick(ScheduledTask task) {
 			if (useLavaAnim) {
-				int size = Math.Min(TerrainAtlas2D.ElemSize, 64);
+				int size = Math.Min(TerrainAtlas2D.TileSize, 64);
 				DrawAnimation(null, 30, size);
 			}			
 			if (useWaterAnim) {
-				int size = Math.Min(TerrainAtlas2D.ElemSize, 64);
+				int size = Math.Min(TerrainAtlas2D.TileSize, 64);
 				DrawAnimation(null, 14, size);
 			}
 			
@@ -169,7 +169,7 @@ namespace ClassicalSharp.Textures {
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size);
 			}
 			
-			int y = rowNum * TerrainAtlas2D.ElemSize;
+			int y = rowNum * TerrainAtlas2D.TileSize;
 			game.Graphics.UpdateTexturePart(TerrainAtlas1D.TexIds[index], 0, y, animPart, game.Graphics.Mipmaps);
 		}
 		
@@ -209,7 +209,7 @@ namespace ClassicalSharp.Textures {
 		const string terrainFormat = "&cAnimation frames for tile ({0}, {1}) are bigger than the size of a tile in terrain.png";
 		void ValidateAnimations() {
 			validated = true;
-			int elemSize = TerrainAtlas2D.ElemSize;
+			int elemSize = TerrainAtlas2D.TileSize;
 			for (int i = animations.Count - 1; i >= 0; i--) {
 				AnimationData a = animations[i];
 				if (a.FrameSize > elemSize) {

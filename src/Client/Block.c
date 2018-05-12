@@ -317,7 +317,7 @@ Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bm
 
 void Block_RecalculateBB(BlockID block) {
 	Bitmap* bmp = &Atlas2D_Bitmap;
-	Int32 elemSize = Atlas2D_ElementSize;
+	Int32 elemSize = Atlas2D_TileSize;
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
 	Int32 texX = texLoc & 0x0F, texY = texLoc >> 4;
 

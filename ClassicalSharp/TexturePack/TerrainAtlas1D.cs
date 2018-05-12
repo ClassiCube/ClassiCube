@@ -10,45 +10,42 @@ namespace ClassicalSharp.Textures {
 	
 	/// <summary> Represents a 2D packed texture atlas that has been converted into an array of 1D atlases. </summary>
 	public static class TerrainAtlas1D {
-		
-		public static int elementsPerAtlas1D;
-		public static int elementsPerBitmap;
-		public static float invElementSize;
+		public static int TilesPerAtlas;
+		public static float invTileSize;
 		public static int[] TexIds;
 		internal static Game game;
 		
 		public static TextureRec GetTexRec(int texLoc, int uCount, out int index) {
-			index = texLoc / elementsPerAtlas1D;
-			int y = texLoc % elementsPerAtlas1D;
+			index = texLoc / TilesPerAtlas;
+			int y = texLoc % TilesPerAtlas;
 			// Adjust coords to be slightly inside - fixes issues with AMD/ATI cards.
-			return new TextureRec(0, y * invElementSize, (uCount - 1) + 15.99f/16f, (15.99f/16f) * invElementSize);
+			return new TextureRec(0, y * invTileSize, (uCount - 1) + 15.99f/16f, (15.99f/16f) * invTileSize);
 		}
 		
 		/// <summary> Returns the index of the 1D texture within the array of 1D textures
 		/// containing the given texture id. </summary>
-		public static int Get1DIndex(int texLoc) { return texLoc / elementsPerAtlas1D; }
+		public static int Get1DIndex(int texLoc) { return texLoc / TilesPerAtlas; }
 		
 		/// <summary> Returns the index of the given texture id within a 1D texture. </summary>
-		public static int Get1DRowId(int texLoc) { return texLoc % elementsPerAtlas1D; }
+		public static int Get1DRowId(int texLoc) { return texLoc % TilesPerAtlas; }
 		
 		public static void UpdateState() {
-			int elemSize = TerrainAtlas2D.ElemSize;
-			int maxVerticalSize = Math.Min(4096, game.Graphics.MaxTextureDimensions);
-			int elementsPerFullAtlas = maxVerticalSize / elemSize;
-			const int totalElements = TerrainAtlas2D.RowsCount * TerrainAtlas2D.TilesPerRow;
+			int tileSize = TerrainAtlas2D.TileSize;
+			int maxAtlasHeight = Math.Min(4096, game.Graphics.MaxTextureDimensions);
+			int maxTilesPerAtlas = maxAtlasHeight / tileSize;
+			const int maxTiles = TerrainAtlas2D.RowsCount * TerrainAtlas2D.TilesPerRow;
 			
-			int atlasesCount = Utils.CeilDiv(totalElements, elementsPerFullAtlas);
-			elementsPerAtlas1D = Math.Min(elementsPerFullAtlas, totalElements);
-			int atlas1DHeight = Utils.NextPowerOf2(elementsPerAtlas1D * elemSize);
+			TilesPerAtlas = Math.Min(maxTilesPerAtlas, maxTiles);
+			int atlasesCount = Utils.CeilDiv(maxTiles, TilesPerAtlas);
+			int atlasHeight = TilesPerAtlas * tileSize;
 			
-			Convert2DTo1D(atlasesCount, atlas1DHeight);
-			elementsPerBitmap = atlas1DHeight / elemSize;
-			invElementSize = 1f / elementsPerBitmap;
+			invTileSize = 1f / TilesPerAtlas;
+			Convert2DTo1D(atlasesCount, atlasHeight);
 		}
 		
 		static void Convert2DTo1D(int atlasesCount, int atlas1DHeight) {
 			TexIds = new int[atlasesCount];
-			Utils.LogDebug("Loaded new atlas: {0} bmps, {1} per bmp", atlasesCount, elementsPerAtlas1D);
+			Utils.LogDebug("Loaded new atlas: {0} bmps, {1} per bmp", atlasesCount, TilesPerAtlas);
 			int index = 0;
 			
 			using (FastBitmap atlas = new FastBitmap(TerrainAtlas2D.Atlas, true, true)) {
@@ -58,13 +55,16 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		static void Make1DTexture(int i, FastBitmap atlas, int atlas1DHeight, ref int index) {
-			int elemSize = TerrainAtlas2D.ElemSize;
-			using (Bitmap atlas1d = Platform.CreateBmp(elemSize, atlas1DHeight))
+			int tileSize = TerrainAtlas2D.TileSize;
+			using (Bitmap atlas1d = Platform.CreateBmp(tileSize, atlas1DHeight))
 				using (FastBitmap dst = new FastBitmap(atlas1d, true, false))
 			{
-				for (int index1D = 0; index1D < elementsPerAtlas1D; index1D++) {
-					FastBitmap.MovePortion((index & 0x0F) * elemSize, (index >> 4) * elemSize,
-					                       0, index1D * elemSize, atlas, dst, elemSize);
+				for (int index1D = 0; index1D < TilesPerAtlas; index1D++) {
+					int atlasX = (index % TerrainAtlas2D.TilesPerRow) * tileSize;
+					int atlasY = (index / TerrainAtlas2D.TilesPerRow) * tileSize;
+					
+					FastBitmap.MovePortion(atlasX, atlasY,
+					                       0, index1D * tileSize, atlas, dst, tileSize);
 					index++;
 				}
 				TexIds[i] = game.Graphics.CreateTexture(dst, true, game.Graphics.Mipmaps);

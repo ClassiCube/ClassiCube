@@ -13,19 +13,19 @@ namespace ClassicalSharp {
 		
 		public const int TilesPerRow = 16, RowsCount = 16;
 		public static Bitmap Atlas;
-		public static int ElemSize;
+		public static int TileSize;
 		internal static Game game;
 		
 		/// <summary> Updates the underlying atlas bitmap, fields, and texture. </summary>
 		public static void UpdateState(Bitmap bmp) {
 			Atlas = bmp;
-			ElemSize = bmp.Width / TilesPerRow;
+			TileSize = bmp.Width / TilesPerRow;
 			BlockInfo.RecalculateSpriteBB();
 		}
 
 		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>
 		public static int LoadTextureElement(int index) {
-			int size = ElemSize;
+			int size = TileSize;
 			using (FastBitmap atlas = new FastBitmap(Atlas, true, true))
 				using (Bitmap bmp = Platform.CreateBmp(size, size))
 					using (FastBitmap dst = new FastBitmap(bmp, true, false))

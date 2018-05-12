@@ -2988,7 +2988,7 @@ void Overlay_MakeLabels(MenuScreen* screen, TextWidget* labels, STRING_PURE Stri
 /*########################################################################################################################*
 *------------------------------------------------------TexIdsOverlay------------------------------------------------------*
 *#########################################################################################################################*/
-#define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_ELEMENTS_PER_ROW * ATLAS2D_ROWS_COUNT * 4)
+#define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_ROWS_COUNT * 4)
 GuiElementVTABLE TexIdsOverlay_VTABLE;
 TexIdsOverlay TexIdsOverlay_Instance;
 void TexIdsOverlay_ContextLost(void* obj) {
@@ -3010,7 +3010,7 @@ void TexIdsOverlay_ContextRecreated(void* obj) {
 	size = (size / 8) * 8;
 	Math_Clamp(size, 8, 40);
 
-	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_ELEMENTS_PER_ROW, Game_Width);
+	screen->XOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_TILES_PER_ROW, Game_Width);
 	screen->YOffset = Gui_CalcPos(ANCHOR_CENTRE, 0, size * ATLAS2D_ROWS_COUNT,       Game_Height);
 	screen->TileSize = size;
 
@@ -3022,15 +3022,15 @@ void TexIdsOverlay_ContextRecreated(void* obj) {
 
 void TexIdsOverlay_RenderTerrain(TexIdsOverlay* screen) {
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
-	Int32 elemsPerAtlas = Atlas1D_ElementsPerAtlas, i;
-	for (i = 0; i < ATLAS2D_ELEMENTS_PER_ROW * ATLAS2D_ROWS_COUNT;) {
+	Int32 elemsPerAtlas = Atlas1D_TilesPerAtlas, i;
+	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_ROWS_COUNT;) {
 		VertexP3fT2fC4b* ptr = vertices;
 		Int32 j, ignored, size = screen->TileSize;
 
 		for (j = 0; j < elemsPerAtlas; j++) {
 			TextureRec rec = Atlas1D_TexRec(i + j, 1, &ignored);
-			Int32 x = (i + j) % ATLAS2D_ELEMENTS_PER_ROW;
-			Int32 y = (i + j) / ATLAS2D_ELEMENTS_PER_ROW;
+			Int32 x = (i + j) % ATLAS2D_TILES_PER_ROW;
+			Int32 y = (i + j) / ATLAS2D_TILES_PER_ROW;
 
 			Texture tex = Texture_FromRec(NULL, screen->XOffset + x * size, 
 				screen->YOffset + y * size, size, size, rec);
@@ -3053,9 +3053,9 @@ void TexIdsOverlay_RenderTextOverlay(TexIdsOverlay* screen) {
 	TextAtlas* idAtlas = &screen->IdAtlas;
 	idAtlas->Tex.Y = (screen->YOffset + (size - idAtlas->Tex.Height));
 	for (y = 0; y < ATLAS2D_ROWS_COUNT; y++) {
-		for (x = 0; x < ATLAS2D_ELEMENTS_PER_ROW; x++) {
+		for (x = 0; x < ATLAS2D_TILES_PER_ROW; x++) {
 			idAtlas->CurX = screen->XOffset + size * x + 3; /* offset text by 3 pixels */
-			Int32 id = x + y * ATLAS2D_ELEMENTS_PER_ROW;
+			Int32 id = x + y * ATLAS2D_TILES_PER_ROW;
 			TextAtlas_AddInt(idAtlas, id, &ptr);
 		}
 		idAtlas->Tex.Y += size;

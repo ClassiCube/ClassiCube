@@ -13,8 +13,8 @@ namespace ClassicalSharp {
 		protected DrawInfo[] normalParts, translucentParts;
 		protected int arraysCount = 0;
 		protected bool fullBright, tinted;
-		protected float invVerElementSize;
-		protected int elementsPerAtlas1D;
+		protected float invVerTileSize;
+		protected int tilesPerAtlas1D;
 		
 		void TerrainAtlasChanged(object sender, EventArgs e) {
 			int newArraysCount = TerrainAtlas1D.TexIds.Length;
@@ -73,8 +73,8 @@ namespace ClassicalSharp {
 		protected abstract void RenderTile(int index);
 		
 		protected virtual void PreStretchTiles(int x1, int y1, int z1) {
-			invVerElementSize  = TerrainAtlas1D.invElementSize;
-			elementsPerAtlas1D = TerrainAtlas1D.elementsPerAtlas1D;
+			invVerTileSize  = TerrainAtlas1D.invTileSize;
+			tilesPerAtlas1D = TerrainAtlas1D.TilesPerAtlas;
 			arraysCount = TerrainAtlas1D.TexIds.Length;
 			
 			if (normalParts == null) {
@@ -114,13 +114,13 @@ namespace ClassicalSharp {
 		static JavaRandom spriteRng = new JavaRandom(0);
 		protected virtual void DrawSprite(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
-			int i = texId / elementsPerAtlas1D;
-			float vOrigin = (texId % elementsPerAtlas1D) * invVerElementSize;
+			int i = texId / tilesPerAtlas1D;
+			float vOrigin = (texId % tilesPerAtlas1D) * invVerTileSize;
 			
 			float x1 = X + 2.50f/16, y1 = Y,     z1 = Z + 2.50f/16;
 			float x2 = X + 13.5f/16, y2 = Y + 1, z2 = Z + 13.5f/16;
 			const float u1 = 0, u2 = 15.99f/16f;
-			float v1 = vOrigin, v2 = vOrigin + invVerElementSize * 15.99f/16f;
+			float v1 = vOrigin, v2 = vOrigin + invVerTileSize * 15.99f/16f;
 			
 			byte offsetType = BlockInfo.SpriteOffset[curBlock];
 			if (offsetType >= 6 && offsetType <= 7) {

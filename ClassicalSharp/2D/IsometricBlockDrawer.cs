@@ -45,8 +45,8 @@ namespace ClassicalSharp {
 		}
 		
 		public void DrawBatch(BlockID block, float size, float x, float y) {
-			drawer.elementsPerAtlas1D = TerrainAtlas1D.elementsPerAtlas1D;
-			drawer.invVerElementSize  = TerrainAtlas1D.invElementSize;
+			drawer.tilesPerAtlas1D = TerrainAtlas1D.TilesPerAtlas;
+			drawer.invVerTileSize  = TerrainAtlas1D.invTileSize;
 			
 			bool bright = BlockInfo.FullBright[block];
 			if (BlockInfo.Draw[block] == DrawType.Gas) return;
@@ -94,7 +94,7 @@ namespace ClassicalSharp {
 		
 		int GetTex(BlockID block, int side) {
 			int texLoc = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texLoc / TerrainAtlas1D.elementsPerAtlas1D;
+			texIndex = texLoc / TerrainAtlas1D.TilesPerAtlas;
 			
 			if (lastTexIndex != texIndex) Flush();
 			return texLoc;

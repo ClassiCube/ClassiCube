@@ -68,7 +68,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			if (LostContext) throw new InvalidOperationException("Cannot create texture when context lost");
 			
-			if (!bmp.IsLocked) bmp.LockBits();		
+			if (!bmp.IsLocked) bmp.LockBits();
 			int texId = CreateTexture(bmp.Width, bmp.Height, bmp.Scan0, managedPool, mipmaps);
 			bmp.UnlockBits();
 			return texId;

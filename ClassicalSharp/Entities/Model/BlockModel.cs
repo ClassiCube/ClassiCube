@@ -103,8 +103,8 @@ namespace ClassicalSharp.Model {
 				SpriteXQuad(true, false);
 				SpriteXQuad(true, true);
 			} else {
-				drawer.elementsPerAtlas1D = TerrainAtlas1D.elementsPerAtlas1D;
-				drawer.invVerElementSize  = TerrainAtlas1D.invElementSize;
+				drawer.tilesPerAtlas1D = TerrainAtlas1D.TilesPerAtlas;
+				drawer.invVerTileSize  = TerrainAtlas1D.invTileSize;
 				
 				drawer.minBB = BlockInfo.MinBB[block]; drawer.minBB.Y = 1 - drawer.minBB.Y;
 				drawer.maxBB = BlockInfo.MaxBB[block]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
@@ -128,7 +128,7 @@ namespace ClassicalSharp.Model {
 		
 		int GetTex(int side) {
 			int texLoc = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texLoc / TerrainAtlas1D.elementsPerAtlas1D;
+			texIndex = texLoc / TerrainAtlas1D.TilesPerAtlas;
 			
 			if (lastTexIndex != texIndex) Flush();
 			return texLoc;

@@ -58,7 +58,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void RenderTerrain() {
-			int elementsPerAtlas = TerrainAtlas1D.elementsPerAtlas1D;
+			int elementsPerAtlas = TerrainAtlas1D.TilesPerAtlas;
 			for (int i = 0; i < TerrainAtlas2D.TilesPerRow * TerrainAtlas2D.RowsCount;) {
 				int index = 0, texIdx = i / elementsPerAtlas, ignored;
 				
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 				idAtlas.tex.Y += (short)tileSize;
 				
-				if ((y % 4) != 3) continue;				
+				if ((y % 4) != 3) continue;
 				game.Graphics.BindTexture(idAtlas.tex.ID);
 				game.Graphics.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
 				index = 0;

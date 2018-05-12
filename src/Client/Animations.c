@@ -214,7 +214,7 @@ void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
 		Bitmap_CopyBlock(x, data->FrameY, 0, 0, &anims_bmp, &animPart, size);
 	}
 
-	Int32 y = rowNum * Atlas2D_ElementSize;
+	Int32 y = rowNum * Atlas2D_TileSize;
 	Gfx_UpdateTexturePart(Atlas1D_TexIds[index], 0, y, &animPart, Gfx_Mipmaps);
 	if (size > ANIMS_FAST_SIZE) Platform_MemFree(&ptr);
 }
@@ -259,7 +259,7 @@ void Animations_Validate(void) {
 		Int32 maxX = data.FrameX + data.FrameSize * data.StatesCount;
 		String_Clear(&msg);
 
-		if (data.FrameSize > Atlas2D_ElementSize) {
+		if (data.FrameSize > Atlas2D_TileSize) {
 			String_Format2(&msg, "&cAnimation frames for tile (%b, %b) are bigger than the size of a tile in terrain.png", &data.TileX, &data.TileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
 			String_Format2(&msg, "&cSome of the animation frames for tile (%b, %b) are at coordinates outside animations.png", &data.TileX, &data.TileY);
@@ -279,11 +279,11 @@ void Animations_Validate(void) {
 
 void Animations_Tick(ScheduledTask* task) {
 	if (anims_useLavaAnim) {
-		Int32 size = min(Atlas2D_ElementSize, 64);
+		Int32 size = min(Atlas2D_TileSize, 64);
 		Animations_Draw(NULL, 30, size);
 	}
 	if (anims_useWaterAnim) {
-		Int32 size = min(Atlas2D_ElementSize, 64);
+		Int32 size = min(Atlas2D_TileSize, 64);
 		Animations_Draw(NULL, 14, size);
 	}
 	if (anims_count == 0) return;

@@ -380,14 +380,14 @@ Random spriteRng;
 void Builder_DrawSprite(Int32 count) {
 	TextureLoc texLoc = Block_GetTexLoc(Builder_Block, FACE_XMAX);
 	Int32 i = Atlas1D_Index(texLoc);
-	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvElementSize;
+	Real32 vOrigin = Atlas1D_RowId(texLoc) * Atlas1D_InvTileSize;
 	Real32 X = (Real32)Builder_X, Y = (Real32)Builder_Y, Z = (Real32)Builder_Z;
 
 #define u1 0.0f
 #define u2 UV2_Scale
 	Real32 x1 = (Real32)X + 2.50f / 16.0f, y1 = (Real32)Y,        z1 = (Real32)Z + 2.50f / 16.0f;
 	Real32 x2 = (Real32)X + 13.5f / 16.0f, y2 = (Real32)Y + 1.0f, z2 = (Real32)Z + 13.5f / 16.0f;
-	Real32 v1 = vOrigin, v2 = vOrigin + Atlas1D_InvElementSize * UV2_Scale;
+	Real32 v1 = vOrigin, v2 = vOrigin + Atlas1D_InvTileSize * UV2_Scale;
 
 	UInt8 offsetType = Block_SpriteOffset[Builder_Block];
 	if (offsetType >= 6 && offsetType <= 7) {
