@@ -788,9 +788,9 @@ void ChatScreen_CheckOtherStatuses(ChatScreen* screen) {
 	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
 	String str = String_InitAndClearArray(strBuffer);
 
-	if (progress == -2) {
+	if (progress == ASYNC_PROGRESS_MAKING_REQUEST) {
 		String_AppendConst(&str, "&eRetrieving texture pack..");
-	} else if (progress == -1) {
+	} else if (progress == ASYNC_PROGRESS_FETCHING_DATA) {
 		String_AppendConst(&str, "&eDownloading texture pack");
 	} else if (progress >= 0 && progress <= 100) {
 		String_AppendConst(&str, "&eDownloading texture pack (&7");

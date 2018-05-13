@@ -79,7 +79,7 @@ AsyncRequestList async_pending;
 AsyncRequestList async_processed;
 String async_skinServer = String_FromConst("http://static.classicube.net/skins/");
 AsyncRequest async_curRequest;
-volatile Int32 async_curRequestProgress = -3;
+volatile Int32 async_curProgress = ASYNC_PROGRESS_NOTHING;
 /* TODO: Implement these */
 bool ManageCookies;
 bool KeepAlive;
@@ -202,7 +202,7 @@ bool AsyncDownloader_GetCurrent(AsyncRequest* request, Int32* progress) {
 	Platform_MutexLock(async_curRequestMutex);
 	{
 		*request   = async_curRequest;
-		*progress = async_curRequestProgress;
+		*progress = async_curProgress;
 	}
 	Platform_MutexUnlock(async_curRequestMutex);
 	return request->ID[0] != NULL;
@@ -221,6 +221,7 @@ void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	Platform_Log2("HTTP make request: ret code %i, in %i ms", &result, &elapsedMS);
 	if (!ErrorHandler_Check(result)) return;
 
+	async_curProgress = ASYNC_PROGRESS_FETCHING_DATA;
 	UInt32 size = 0;
 	Stopwatch_Start(&stopwatch);
 	result = Platform_HttpGetRequestHeaders(request, handle, &size);
@@ -228,15 +229,15 @@ void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	UInt32 status = request->StatusCode;
 	Platform_Log3("HTTP get headers: ret code %i (http %i), in %i ms", &result, &status, &elapsedMS);
 
-	if (!ErrorHandler_Check(result) || request->StatusCode != 200) {
+	if (!ErrorHandler_Check(result) || request->StatusCode != 200 || request->RequestType == REQUEST_TYPE_CONTENT_LENGTH) {
 		Platform_HttpFreeRequest(handle); return;
 	}
 
 	void* data = NULL;
 	Stopwatch_Start(&stopwatch);
-	result = Platform_HttpGetRequestData(request, handle, &data, size);
+	result = Platform_HttpGetRequestData(request, handle, &data, size, &async_curProgress);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-	Platform_Log2("HTTP get data: ret code %i, in %i ms", &result, &elapsedMS);
+	Platform_Log3("HTTP get data: ret code %i (size %i), in %i ms", &result, &size, &elapsedMS);
 
 	Platform_HttpFreeRequest(handle);
 	if (!ErrorHandler_Check(result)) return;
@@ -265,8 +266,6 @@ void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 		break;
 	}
 
-	/* TODO: Http response codes */
-	/* TODO: Progress of download */
 	Platform_CurrentUTCTime(&request->TimeDownloaded);
 	Platform_MutexLock(async_processedMutex);
 	{
@@ -311,7 +310,7 @@ void AsyncDownloader_WorkerFunc(void) {
 			Platform_MutexLock(async_curRequestMutex);
 			{
 				async_curRequest = request;
-				async_curRequestProgress = -2;
+				async_curProgress = ASYNC_PROGRESS_MAKING_REQUEST;
 			}
 			Platform_MutexUnlock(async_curRequestMutex);
 
@@ -321,7 +320,7 @@ void AsyncDownloader_WorkerFunc(void) {
 			Platform_MutexLock(async_curRequestMutex);
 			{
 				async_curRequest.ID[0] = NULL;
-				async_curRequestProgress = -3;
+				async_curProgress = ASYNC_PROGRESS_NOTHING;
 			}
 			Platform_MutexUnlock(async_curRequestMutex);
 		} else {

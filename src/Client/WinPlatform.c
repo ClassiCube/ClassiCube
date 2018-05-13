@@ -604,7 +604,27 @@ void Platform_HttpInit(void) {
 
 ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle) {
 	String url = String_FromRawArray(request->URL);
-	*handle = InternetOpenUrlA(hInternet, url.buffer, NULL, 0, 
+	UInt8 headersBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String headers = String_MakeNull();
+	
+	if (request->Etag[0] != NULL || request->LastModified.Year > 0) {
+		headers = String_InitAndClearArray(headersBuffer);
+		if (request->LastModified.Year > 0) {
+			String_AppendConst(&headers, "If-Modified-Since: ");
+			DateTime_HttpDate(&request->LastModified, &headers);
+			String_AppendConst(&headers, "\r\n");
+		}
+
+		if (request->Etag[0] != NULL) {
+			String etag = String_FromRawArray(request->Etag);
+			String_AppendConst(&headers, "If-None-Match: ");
+			String_AppendString(&headers, &etag);
+			String_AppendConst(&headers, "\r\n");
+		}
+		String_AppendConst(&headers, "\r\n\r\n");
+	}
+
+	*handle = InternetOpenUrlA(hInternet, url.buffer, headers.buffer, headers.length,
 		INTERNET_FLAG_NO_CACHE_WRITE | INTERNET_FLAG_NO_UI | INTERNET_FLAG_RELOAD, NULL);
 	return *handle == NULL ? GetLastError() : 0;
 }
@@ -635,21 +655,25 @@ ReturnCode Platform_HttpGetRequestHeaders(AsyncRequest* request, void* handle, U
 	return 0;
 }
 
-ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void** data, UInt32 size) {
+ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
 	if (size == 0) return 1;
 	*data = Platform_MemAlloc(size, 1);
 	if (*data == NULL) ErrorHandler_Fail("Failed to allocate memory for http get data");
 
+	*progress = 0;
 	UInt8* buffer = *data;
-	UInt32 left = size, read;
+	UInt32 left = size, read, totalRead = 0;
 
 	while (left > 0) {
 		bool success = InternetReadFile(handle, buffer, left, &read);
 		if (!success) { Platform_MemFree(data); return GetLastError(); }
 
 		if (read == 0) break;
-		buffer += read; left -= read;
+		buffer += read; totalRead += read; left -= read;
+		*progress = (Int32)(100.0f * totalRead / size);
 	}
+
+	*progress = 100;
 	return 0;
 }
 

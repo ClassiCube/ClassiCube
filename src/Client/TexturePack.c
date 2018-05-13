@@ -298,7 +298,7 @@ void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* ur
 
 bool TextureCache_HasUrl(STRING_PURE String* url) {
 	String path; TexCache_InitAndMakePath(url);
-	return Platform_FileExists(url);
+	return Platform_FileExists(&path);
 }
 
 bool TextureCache_GetStream(STRING_PURE String* url, Stream* stream) {
