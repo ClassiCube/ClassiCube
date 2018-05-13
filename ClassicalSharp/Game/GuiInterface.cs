@@ -112,6 +112,15 @@ namespace ClassicalSharp {
 			overlay.Init();
 		}
 		
+		public void DisposeOverlay(Overlay overlay) {
+			overlay.Dispose();		
+			overlays.Remove(overlay);
+			
+			if (overlays.Count == 0)
+				game.CursorVisible = game.realVisible;
+			game.Camera.RegrabMouse();
+		}
+		
 		
 		public void Render(double delta) {
 			game.Graphics.Mode2D(game.Width, game.Height);

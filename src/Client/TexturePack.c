@@ -335,7 +335,7 @@ void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
 
 	Int64 ticks;
 	if (entry.length > 0 && Convert_TryParseInt64(&entry, &ticks)) {
-		*time = DateTime_FromTotalMs(ticks / TEXCACHE_TICKS_PER_MS);
+		DateTime_FromTotalMs(time, ticks / TEXCACHE_TICKS_PER_MS);
 	} else {
 		String path; TexCache_InitAndMakePath(url);
 		ReturnCode result = Platform_FileGetWriteTime(&path, time);

@@ -18,13 +18,10 @@ typedef struct DateTime_ {
 typedef struct Bitmap_ Bitmap;
 
 #define DATETIME_MILLISECS_PER_SECOND 1000
-#define DATETIME_SECONDS_PER_MINUTE 60
-#define DATETIME_SECONDS_PER_HOUR (60 * 60)
-#define DATETIME_SECONDS_PER_DAY (60 * 60 * 24)
-
-DateTime DateTime_FromTotalMs(Int64 ms);
 Int64 DateTime_TotalMs(DateTime* time);
 Int64 DateTime_MsBetween(DateTime* start, DateTime* end);
+void DateTime_FromTotalMs(DateTime* time, Int64 ms);
+void DateTime_HttpDate(DateTime* value, STRING_TRANSIENT String* str);
 
 UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount);
 bool Utils_IsValidInputChar(UInt8 c, bool supportsCP437);

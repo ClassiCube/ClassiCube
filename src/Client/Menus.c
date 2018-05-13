@@ -144,6 +144,22 @@ typedef struct UrlWarningOverlay_ {
 	UInt8 UrlBuffer[String_BufferSize(STRING_SIZE * 4)];
 } UrlWarningOverlay;
 
+typedef struct ConfirmDenyOverlay_ {
+	MenuScreen_Layout
+	TextWidget Labels[4];
+	ButtonWidget Buttons[2];
+	bool AlwaysDeny;
+	UInt8 UrlBuffer[String_BufferSize(STRING_SIZE)];
+} ConfirmDenyOverlay;
+
+typedef struct TexPackOverlay_ {
+	MenuScreen_Layout
+	TextWidget Labels[4];
+	ButtonWidget Buttons[4];
+	UInt32 ContentLength;
+	UInt8 IdentifierBuffer[String_BufferSize(STRING_SIZE + 4)];
+} TexPackOverlay;
+
 
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
@@ -333,13 +349,13 @@ void ListScreen_PageClick(ListScreen* screen, bool forward) {
 	ListScreen_SetCurrentIndex(screen, screen->CurrentIndex + delta);
 }
 
-void ListScreen_MoveBackwards(GuiElement* screenElem, GuiElement* widget) {
-	ListScreen* screen = (ListScreen*)screenElem;
+void ListScreen_MoveBackwards(GuiElement* elem, GuiElement* widget) {
+	ListScreen* screen = (ListScreen*)elem;
 	ListScreen_PageClick(screen, false);
 }
 
-void ListScreen_MoveForwards(GuiElement* screenElem, GuiElement* widget) {
-	ListScreen* screen = (ListScreen*)screenElem;
+void ListScreen_MoveForwards(GuiElement* elem, GuiElement* widget) {
+	ListScreen* screen = (ListScreen*)elem;
 	ListScreen_PageClick(screen, true);
 }
 
@@ -1296,8 +1312,8 @@ void SaveLevelScreen_MakeDesc(SaveLevelScreen* screen, STRING_PURE String* text)
 	screen->Widgets[5] = (Widget*)(&screen->Desc);
 }
 
-void SaveLevelScreen_DoSave(GuiElement* screenElem, GuiElement* widget, const UInt8* ext) {
-	SaveLevelScreen* screen = (SaveLevelScreen*)screenElem;
+void SaveLevelScreen_DoSave(GuiElement* elem, GuiElement* widget, const UInt8* ext) {
+	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	String file = screen->Input.Base.Text;
 	if (file.length == 0) {
 		String msg = String_FromConst("&ePlease enter a filename")
@@ -1324,12 +1340,12 @@ void SaveLevelScreen_DoSave(GuiElement* screenElem, GuiElement* widget, const UI
 	}
 }
 
-void SaveLevelScreen_Classic(GuiElement* screenElem, GuiElement* widget) {
-	SaveLevelScreen_DoSave(screenElem, widget, ".cw");
+void SaveLevelScreen_Classic(GuiElement* elem, GuiElement* widget) {
+	SaveLevelScreen_DoSave(elem, widget, ".cw");
 }
 
-void SaveLevelScreen_Schematic(GuiElement* screenElem, GuiElement* widget) {
-	SaveLevelScreen_DoSave(screenElem, widget, ".schematic");
+void SaveLevelScreen_Schematic(GuiElement* elem, GuiElement* widget) {
+	SaveLevelScreen_DoSave(elem, widget, ".schematic");
 }
 
 void SaveLevelScreen_Init(GuiElement* elem) {
@@ -1452,8 +1468,8 @@ Screen* SaveLevelScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------TexturePackScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-void TexturePackScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
-	ListScreen* screen = (ListScreen*)screenElem;
+void TexturePackScreen_EntryClick(GuiElement* elem, GuiElement* w) {
+	ListScreen* screen = (ListScreen*)elem;
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 
@@ -1494,8 +1510,8 @@ Screen* TexturePackScreen_MakeInstance(void) {
 *---------------------------------------------------HotkeyListScreen------------------------------------------------------*
 *#########################################################################################################################*/
 /* TODO: Hotkey added event for CPE */
-void HotkeyListScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
-	ListScreen* screen = (ListScreen*)screenElem;
+void HotkeyListScreen_EntryClick(GuiElement* elem, GuiElement* w) {
+	ListScreen* screen = (ListScreen*)elem;
 	String text = ListScreen_UNSAFE_GetCur(screen, w);
 	HotkeyData original = { 0 };
 
@@ -1566,8 +1582,8 @@ void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
 	StringsBuffer_Add(entries, filename);
 }
 
-void LoadLevelScreen_EntryClick(GuiElement* screenElem, GuiElement* w) {
-	ListScreen* screen = (ListScreen*)screenElem;
+void LoadLevelScreen_EntryClick(GuiElement* elem, GuiElement* w) {
+	ListScreen* screen = (ListScreen*)elem;
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 	
@@ -1640,8 +1656,8 @@ void KeyBindingsScreen_ButtonText(KeyBindingsScreen* screen, Int32 i, STRING_TRA
 	String_Format2(text, "%c: %c", screen->Descs[i], Key_Names[key]);
 }
 
-void KeyBindingsScreen_OnBindingClick(GuiElement* screenElem, GuiElement* widget) {
-	KeyBindingsScreen* screen = (KeyBindingsScreen*)screenElem;
+void KeyBindingsScreen_OnBindingClick(GuiElement* elem, GuiElement* widget) {
+	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
 	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
@@ -2090,20 +2106,20 @@ void MenuOptionsScreen_Make(MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32
 	btn->SetValue = setter;
 }
 
-void MenuOptionsScreen_OK(GuiElement* screenElem, GuiElement* widget) {
-	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem; 
+void MenuOptionsScreen_OK(GuiElement* elem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem; 
 	MenuOptionsScreen_EnterInput(screen);
 }
 
-void MenuOptionsScreen_Default(GuiElement* screenElem, GuiElement* widget) {
-	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem;
+void MenuOptionsScreen_Default(GuiElement* elem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	String text = String_FromReadonly(screen->DefaultValues[screen->ActiveI]);
 	InputWidget_Clear(&screen->Input.Base);
 	InputWidget_AppendString(&screen->Input.Base, &text);
 }
 
-void MenuOptionsScreen_Bool(GuiElement* screenElem, GuiElement* widget) {
-	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem;
+void MenuOptionsScreen_Bool(GuiElement* elem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	ButtonWidget* button = (ButtonWidget*)widget;
 	Int32 index = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
 	MenuOptionsScreen_SelectExtHelp(screen, index);
@@ -2117,8 +2133,8 @@ void MenuOptionsScreen_Bool(GuiElement* screenElem, GuiElement* widget) {
 	MenuOptionsScreen_Set(screen, index, &newValue);
 }
 
-void MenuOptionsScreen_Enum(GuiElement* screenElem, GuiElement* widget) {
-	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem;
+void MenuOptionsScreen_Enum(GuiElement* elem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	ButtonWidget* button = (ButtonWidget*)widget;
 	Int32 index = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
 	MenuOptionsScreen_SelectExtHelp(screen, index);
@@ -2136,8 +2152,8 @@ void MenuOptionsScreen_Enum(GuiElement* screenElem, GuiElement* widget) {
 	MenuOptionsScreen_Set(screen, index, &newValue);
 }
 
-void MenuOptionsScreen_Input(GuiElement* screenElem, GuiElement* widget) {
-	MenuOptionsScreen* screen = (MenuOptionsScreen*)screenElem;
+void MenuOptionsScreen_Input(GuiElement* elem, GuiElement* widget) {
+	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	ButtonWidget* button = (ButtonWidget*)widget;
 	screen->ActiveI = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
 	MenuOptionsScreen_FreeExtHelp(screen);
@@ -2959,13 +2975,7 @@ void Overlay_Init(GuiElement* elem) {
 	screen->ContextRecreated(elem);
 }
 
-bool Overlay_HandlesKeyDown(Key key) { return true; }
-
-void Overlay_Close(GuiElement* elem) {
-	Gui_FreeOverlay((Screen*)elem);
-	if (Gui_OverlaysCount == 0) { Game_SetCursorVisible(Game_GetRealCursorVisible()); }
-	Camera_Active->RegrabMouse();
-}
+bool Overlay_HandlesKeyDown(GuiElement* elem, Key key) { return true; }
 
 void Overlay_MakeLabels(MenuScreen* screen, TextWidget* labels, STRING_PURE String* lines) {
 	TextWidget_Create(&labels[0], &lines[0], &screen->TitleFont);
@@ -2982,6 +2992,14 @@ void Overlay_MakeLabels(MenuScreen* screen, TextWidget* labels, STRING_PURE Stri
 		screen->Widgets[i] = (Widget*)(&labels[i]);
 		Widget_SetLocation(screen->Widgets[i], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -70 + 20 * i);
 	}
+}
+
+void Overlay_UseVTABLE(MenuScreen* screen, GuiElementVTABLE* vtable) {
+	*vtable = *screen->VTABLE;
+	screen->VTABLE = vtable;
+
+	screen->VTABLE->Init = Overlay_Init;
+	screen->VTABLE->HandlesKeyDown = Overlay_HandlesKeyDown;
 }
 
 
@@ -3087,7 +3105,7 @@ void TexIdsOverlay_Render(GuiElement* elem, Real64 delta) {
 
 bool TexIdsOverlay_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key == KeyBind_Get(KeyBind_IDOverlay) || key == KeyBind_Get(KeyBind_PauseOrExit)) {
-		Overlay_Close(elem);
+		Gui_FreeOverlay(elem);
 		return true;
 	}
 	Screen* screen = Gui_GetUnderlyingScreen();
@@ -3124,21 +3142,55 @@ Screen* TexIdsOverlay_MakeInstance(void) {
 
 
 /*########################################################################################################################*
+*-----------------------------------------------------WarningOverlay------------------------------------------------------*
+*#########################################################################################################################*/
+#define WarningOverlay_MakeLeft(buttonI, widgetI, titleText, yPos) \
+	ButtonWidget_Create(&buttons[buttonI], 160, titleText, &screen->TitleFont, yesClick);\
+	screen->Widgets[widgetI] = (Widget*)(&buttons[buttonI]);\
+	Widget_SetLocation(screen->Widgets[widgetI], ANCHOR_CENTRE, ANCHOR_CENTRE, -110, yPos);
+
+#define WarningOverlay_MakeRight(buttonI, widgetI, titleText, yPos) \
+	ButtonWidget_Create(&buttons[buttonI], 160, titleText, &screen->TitleFont, noClick);\
+	screen->Widgets[widgetI] = (Widget*)(&buttons[buttonI]);\
+	Widget_SetLocation(screen->Widgets[widgetI], ANCHOR_CENTRE, ANCHOR_CENTRE, 110, yPos);
+
+void WarningOverlay_MakeButtons(MenuScreen* screen, ButtonWidget* buttons, bool always, 
+	Widget_LeftClick yesClick, Widget_LeftClick noClick) {
+
+	String yes = String_FromConst("Yes"); 
+	WarningOverlay_MakeLeft(0, 4, &yes, 30);
+	String no = String_FromConst("No"); 
+	WarningOverlay_MakeRight(1, 5, &no, 30);
+
+	if (!always) return;
+
+	String alwaysYes = String_FromConst("Always yes"); 
+	WarningOverlay_MakeLeft(2, 6, &alwaysYes, 85);
+	String alwaysNo = String_FromConst("Always no");  
+	WarningOverlay_MakeRight(3, 7, &alwaysNo, 85);
+}
+
+bool WarningOverlay_IsAlways(GuiElement* screen, Widget* w) {
+	return MenuScreen_Index((MenuScreen*)screen, w) >= 6;
+}
+GuiElementVTABLE WarningOverlay_VTABLE;
+
+
+/*########################################################################################################################*
 *----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
 *#########################################################################################################################*/
-GuiElementVTABLE UrlWarningOverlay_VTABLE;
 UrlWarningOverlay UrlWarningOverlay_Instance;
-void UrlWarningOverlay_OpenUrl(GuiElement* screenElem, GuiElement* widget) {
-	Overlay_Close(screenElem);
-	UrlWarningOverlay* screen = (UrlWarningOverlay*)screenElem;
+void UrlWarningOverlay_OpenUrl(GuiElement* elem, GuiElement* widget) {
+	Gui_FreeOverlay(elem);
+	UrlWarningOverlay* screen = (UrlWarningOverlay*)elem;
 	String url = String_FromRawArray(screen->UrlBuffer);
 	Platform_StartShell(&url);
 }
 
-void UrlWarningOverlay_AppendUrl(GuiElement* screenElem, GuiElement* widget) {
-	Overlay_Close(screenElem);
+void UrlWarningOverlay_AppendUrl(GuiElement* elem, GuiElement* widget) {
+	Gui_FreeOverlay(elem);
 	if (Game_ClickableChat) {
-		UrlWarningOverlay* screen = (UrlWarningOverlay*)screenElem;
+		UrlWarningOverlay* screen = (UrlWarningOverlay*)elem;
 		String url = String_FromRawArray(screen->UrlBuffer);
 		HUDScreen_AppendInput(Gui_HUD, &url);
 	}
@@ -3153,15 +3205,8 @@ void UrlWarningOverlay_ContextRecreated(void* obj) {
 	lines[3] = String_FromReadonly(" have viruses, or things you may not want to open/see.");
 	Overlay_MakeLabels((MenuScreen*)screen, screen->Labels, lines);
 
-	String yes = String_FromConst("Yes");
-	ButtonWidget_Create(&screen->Buttons[0], 160, &yes, &screen->TitleFont, UrlWarningOverlay_OpenUrl);
-	screen->Widgets[4] = (Widget*)(&screen->Buttons[0]);
-	Widget_SetLocation(screen->Widgets[4], ANCHOR_CENTRE, ANCHOR_CENTRE, -110, 30);
-
-	String no = String_FromConst("No");
-	ButtonWidget_Create(&screen->Buttons[1], 160, &no, &screen->TitleFont, UrlWarningOverlay_AppendUrl);
-	screen->Widgets[5] = (Widget*)(&screen->Buttons[1]);
-	Widget_SetLocation(screen->Widgets[5], ANCHOR_CENTRE, ANCHOR_CENTRE, 110, 30);
+	WarningOverlay_MakeButtons((MenuScreen*)screen, screen->Buttons, false,
+		UrlWarningOverlay_OpenUrl, UrlWarningOverlay_AppendUrl);
 }
 
 Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
@@ -3172,10 +3217,168 @@ Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
 
 	String dstUrl = String_InitAndClearArray(screen->UrlBuffer);
 	String_Set(&dstUrl, url);
-	UrlWarningOverlay_VTABLE = *screen->VTABLE;
-	screen->VTABLE = &UrlWarningOverlay_VTABLE;
 
-	screen->VTABLE->Init = Overlay_Init;
-	screen->VTABLE->HandlesKeyDown = Overlay_HandlesKeyDown;
+	Overlay_UseVTABLE((MenuScreen*)screen, &WarningOverlay_VTABLE);
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------ConfirmDenyOverlay---------------------------------------------------*
+*#########################################################################################################################*/
+ConfirmDenyOverlay ConfirmDenyOverlay_Instance;
+void ConfirmDenyOverlay_ConfirmNoClick(GuiElement* elem, GuiElement* widget) {
+	Gui_FreeOverlay((Screen*)elem);
+	ConfirmDenyOverlay* screen = (ConfirmDenyOverlay*)elem;
+	String url = String_FromRawArray(screen->UrlBuffer);
+
+	if (screen->AlwaysDeny && !TextureCache_HasDenied(&url)) {
+		TextureCache_Deny(&url);
+	}
+}
+
+void ConfirmDenyOverlay_GoBackClick(GuiElement* elem, GuiElement* widget) {
+	Gui_FreeOverlay((Screen*)elem);
+	ConfirmDenyOverlay* screen = (ConfirmDenyOverlay*)elem;
+	String url = String_FromRawArray(screen->UrlBuffer);
+
+	Screen* overlay = TexPackOverlay_MakeInstance(&url);
+	Gui_ShowOverlay(overlay, true);
+}
+
+void ConfirmDenyOverlay_ContextRecreated(void* obj) {
+	ConfirmDenyOverlay* screen = (ConfirmDenyOverlay*)obj;
+	String lines[4];
+	lines[0] = String_FromReadonly("&eYou might be missing out.");
+	lines[1] = String_FromReadonly("Texture packs can play a vital role in the look and feel of maps.");
+	lines[2] = String_MakeNull();
+	lines[3] = String_FromReadonly("Sure you don't want to download the texture pack?");
+
+	Overlay_MakeLabels((MenuScreen*)screen, screen->Labels, lines);
+	ButtonWidget* buttons = screen->Buttons;
+	Widget_LeftClick yesClick = ConfirmDenyOverlay_ConfirmNoClick;
+	Widget_LeftClick noClick  = ConfirmDenyOverlay_GoBackClick;
+
+	String imSure = String_FromConst("I'm sure");
+	WarningOverlay_MakeLeft(0, 4, &imSure, 30);
+	String goBack = String_FromConst("Go back");
+	WarningOverlay_MakeRight(1, 5, &goBack, 30);
+}
+
+Screen* ConfirmDenyOverlay_MakeInstance(STRING_PURE String* url, bool alwaysDeny) {
+	static Widget* widgets[6];
+	ConfirmDenyOverlay* screen = &ConfirmDenyOverlay_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, widgets,
+		Array_Elems(widgets), ConfirmDenyOverlay_ContextRecreated);
+
+	String dstUrl = String_InitAndClearArray(screen->UrlBuffer);
+	String_Set(&dstUrl, url);
+	screen->AlwaysDeny = alwaysDeny;
+
+	Overlay_UseVTABLE((MenuScreen*)screen, &WarningOverlay_VTABLE);
+	return (Screen*)screen;
+}
+
+
+/*########################################################################################################################*
+*-----------------------------------------------------TexPackOverlay------------------------------------------------------*
+*#########################################################################################################################*/
+TexPackOverlay TexPackOverlay_Instance;
+GuiElementVTABLE TexPackOverlay_VTABLE;
+void TexPackOverlay_YesClick(GuiElement* elem, GuiElement* widget) {
+	Gui_FreeOverlay((Screen*)elem);
+	TexPackOverlay* screen = (TexPackOverlay*)elem;
+	String url = String_FromRawArray(screen->IdentifierBuffer);
+	url = String_UNSAFE_SubstringAt(&url, 3);
+
+	ServerConnection_DownloadTexturePack(&url);
+	bool isAlways = WarningOverlay_IsAlways(elem, (Widget*)widget);
+	if (isAlways && !TextureCache_HasAccepted(&url)) {
+		TextureCache_Accept(&url);
+	}
+}
+
+void TexPackOverlay_NoClick(GuiElement* elem, GuiElement* widget) {
+	Gui_FreeOverlay((Screen*)elem);
+	TexPackOverlay* screen = (TexPackOverlay*)elem;
+	String url = String_FromRawArray(screen->IdentifierBuffer);
+	url = String_UNSAFE_SubstringAt(&url, 3);
+
+	bool isAlways = WarningOverlay_IsAlways(elem, (Widget*)widget);
+	Screen* overlay = ConfirmDenyOverlay_MakeInstance(&url, isAlways);
+	Gui_ShowOverlay(overlay, true);
+}
+
+void TexPackOverlay_Render(GuiElement* elem, Real64 delta) {
+	TexPackOverlay* screen = (TexPackOverlay*)elem;
+	String identifier = String_FromRawArray(screen->IdentifierBuffer);
+
+	MenuScreen_Render(elem, delta);
+	AsyncRequest item;
+	if (!AsyncDownloader_Get(&identifier, &item)) return;
+
+	screen->ContentLength = item.ResultContentLength;
+	if (screen->ContentLength == 0) return;
+
+	screen->ContextLost(elem);
+	screen->ContextRecreated(elem);
+}
+
+void TexPackOverlay_ContextRecreated(void* obj) {
+	TexPackOverlay* screen = (TexPackOverlay*)obj;
+	String url = String_FromRawArray(screen->IdentifierBuffer);
+	url = String_UNSAFE_SubstringAt(&url, 3);
+
+	String https = String_FromConst("https://");
+	if (String_CaselessStarts(&url, &https)) {
+		url = String_UNSAFE_SubstringAt(&url, https.length);
+	}
+
+	String http = String_FromConst("http://");
+	if (String_CaselessStarts(&url, &http)) {
+		url = String_UNSAFE_SubstringAt(&url, http.length);
+	}
+
+	String lines[4];
+	lines[0] = String_FromReadonly("Do you want to download the server's texture pack?");
+	lines[1] = String_FromReadonly("Texture pack url:");
+	lines[2] = url;
+
+	if (screen->ContentLength == 0) {
+		lines[3] = String_FromReadonly("Download size: Determining...");
+	} else {
+		UInt8 contentsBuffer[String_BufferSize(STRING_SIZE)];
+		lines[3] = String_InitAndClearArray(contentsBuffer);
+		Real32 contentLengthMB = screen->ContentLength / (1024.0f * 1024.0f);
+		String_Format1(&lines[3], "Download size: %f3 MB", &contentLengthMB);
+	}
+
+	Overlay_MakeLabels((MenuScreen*)screen, screen->Labels, lines);
+	WarningOverlay_MakeButtons((MenuScreen*)screen, screen->Buttons, true,
+		TexPackOverlay_YesClick, TexPackOverlay_NoClick);
+}
+
+Screen* TexPackOverlay_MakeInstance(STRING_PURE String* url) {
+	/* If we are showing a texture pack overlay, completely free that overlay */
+	/* - it doesn't matter anymore, because the new texture pack URL will always */
+	/* replace/override the old texture pack URL associated with that overlay */
+	Screen* elem = (Screen*)(&TexPackOverlay_Instance);
+	if (Gui_IndexOverlay(elem) >= 0) { Gui_FreeOverlay(elem); }
+	elem = (Screen*)(&ConfirmDenyOverlay_Instance);
+	if (Gui_IndexOverlay(elem) >= 0) { Gui_FreeOverlay(elem); }
+
+	static Widget* widgets[8];
+	TexPackOverlay* screen = &TexPackOverlay_Instance;
+	MenuScreen_MakeInstance((MenuScreen*)screen, widgets,
+		Array_Elems(widgets), TexPackOverlay_ContextRecreated);
+
+	String identifier = String_InitAndClearArray(screen->IdentifierBuffer);
+	String_AppendConst(&identifier, "CL_");
+	String_AppendString(&identifier, url);
+	screen->ContentLength = 0;
+
+	AsyncDownloader_GetContentLength(url, true, &identifier);
+	Overlay_UseVTABLE((MenuScreen*)screen, &TexPackOverlay_VTABLE);
+	screen->VTABLE->Render = TexPackOverlay_Render;
 	return (Screen*)screen;
 }

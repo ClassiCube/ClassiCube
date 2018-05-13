@@ -18,18 +18,9 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override bool HandlesKeyDown(Key key) { return true; }
 		
-		protected void CloseOverlay() {
-			Dispose();
-			
-			game.Gui.overlays.Remove(this);
-			if (game.Gui.overlays.Count == 0)
-				game.CursorVisible = game.realVisible;
-			game.Camera.RegrabMouse();
-		}
-		
 		public void MakeLabels() {
 			widgets[0] = TextWidget.Create(game, lines[0], titleFont)
-				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -120);			
+				.SetLocation(Anchor.Centre, Anchor.Centre, 0, -120);
 			for (int i = 1; i < 4; i++) {
 				if (lines[i] == null) continue;
 				

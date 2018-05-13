@@ -20,7 +20,7 @@ GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element)
 	return Gfx_CreateTexture(element, false, Gfx_Mipmaps);
 }
 
-GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc) {
+GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc) {
 	Int32 size = Atlas2D_TileSize;
 	Bitmap tile;
 

@@ -218,19 +218,28 @@ void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	Stopwatch_Start(&stopwatch);
 	result = Platform_HttpMakeRequest(request, &handle);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-	Platform_Log2("HTTP get request: ret code %i, in %i ms", &result, &elapsedMS);
-	if (!ErrorHandler_Check(result)) return;	
+	Platform_Log2("HTTP make request: ret code %i, in %i ms", &result, &elapsedMS);
+	if (!ErrorHandler_Check(result)) return;
 
-	void* data = NULL;
 	UInt32 size = 0;
 	Stopwatch_Start(&stopwatch);
-	result = Platform_HttpGetRequestData(request, handle, &data, &size);
+	result = Platform_HttpGetRequestHeaders(request, handle, &size);
 	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
 	UInt32 status = request->StatusCode;
-	Platform_Log3("HTTP get data: ret code %i (http %i), in %i ms", &result, &status, &elapsedMS);
+	Platform_Log3("HTTP get headers: ret code %i (http %i), in %i ms", &result, &status, &elapsedMS);
+
+	if (!ErrorHandler_Check(result) || request->StatusCode != 200) {
+		Platform_HttpFreeRequest(handle); return;
+	}
+
+	void* data = NULL;
+	Stopwatch_Start(&stopwatch);
+	result = Platform_HttpGetRequestData(request, handle, &data, size);
+	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
+	Platform_Log2("HTTP get data: ret code %i, in %i ms", &result, &elapsedMS);
 
 	Platform_HttpFreeRequest(handle);
-	if (!ErrorHandler_Check(result) || request->StatusCode != 200) return;
+	if (!ErrorHandler_Check(result)) return;
 
 	UInt64 addr = (UInt64)data;
 	Platform_Log2("OK I got the DATA! %i bytes at %x", &size, &addr);

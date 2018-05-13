@@ -24,7 +24,7 @@ namespace ClassicalSharp {
 		}
 
 		/// <summary> Creates a new texture that contains the tile at the specified index. </summary>
-		public static int LoadTextureElement(int index) {
+		public static int LoadTile(int index) {
 			int size = TileSize;
 			using (FastBitmap atlas = new FastBitmap(Atlas, true, true))
 				using (Bitmap bmp = Platform.CreateBmp(size, size))

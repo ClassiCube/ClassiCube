@@ -3,27 +3,39 @@
 #include "Bitmap.h"
 #include "PackedCol.h"
 
+#define DATETIME_SECONDS_PER_MINUTE 60
+#define DATETIME_SECONDS_PER_HOUR (60 * 60)
+#define DATETIME_SECONDS_PER_DAY (60 * 60 * 24)
+#define DATETIME_MINUTES_PER_HOUR 60
+#define DATETIME_HOURS_PER_DAY 24
+#define DATETIME_MILLISECS_PER_DAY (1000 * 60 * 60 * 24)
+
 bool DateTime_IsLeapYear(Int32 year) {
-	if (year % 4) return false;
-	if (year % 100) return true;
+	if ((year % 4)   != 0) return false;
+	if ((year % 100) != 0) return true;
 	return (year % 400) == 0;
 }
 
-UInt16 DateTime_TotalDays[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-Int64 DateTime_TotalMs(DateTime* time) {
+Int32 DateTime_TotalDays(DateTime* time) {
 	/* Days from before this year */
-	Int32 days = 365 * (time->Year - 1), i;
-	/* Only need to check leap years for whether days need adding */
-	for (i = 4; i < time->Year; i += 4) {
-		if (DateTime_IsLeapYear(i)) days++;
-	}
+	Int32 y = time->Year - 1, days = 365 * y;
+	/* A year is a leap year when the year is: */
+	/* Divisible by 4, EXCEPT when divisible by 100, UNLESS divisible by 400 */
+	days += (y / 4) - (y / 100) + (y / 400);
 
-	/* Add days in this year */
-	days += DateTime_TotalDays[time->Month - 1];
+	/* Add days of prior months in this year */
+	static UInt16 totalDays[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+	days += totalDays[time->Month - 1];
 	/* Add Feb 29, if this is a leap year, and day of point in time is after Feb 28 */
 	if (DateTime_IsLeapYear(time->Year) && time->Month > 2) days++;
+	/* Add days in this month */
 	days += (time->Day - 1);
 
+	return days;
+}
+
+Int64 DateTime_TotalMs(DateTime* time) {
+	Int32 days = DateTime_TotalDays(time);
 	Int64 seconds =
 		((Int64)days) * DATETIME_SECONDS_PER_DAY +
 		time->Hour    * DATETIME_SECONDS_PER_HOUR +
@@ -36,6 +48,40 @@ Int64 DateTime_MsBetween(DateTime* start, DateTime* end) {
 	Int64 msStart = DateTime_TotalMs(start);
 	Int64 msEnd   = DateTime_TotalMs(end);
 	return msEnd - msStart;
+}
+
+void DateTime_FromTotalMs(DateTime* time, Int64 ms) {
+	/* Work out time component for just this day */
+	Int32 dayMS = ms % (Int64)DATETIME_MILLISECS_PER_DAY;
+	time->Milli  = dayMS % DATETIME_MILLISECS_PER_SECOND; dayMS /= DATETIME_MILLISECS_PER_SECOND;
+	time->Second = dayMS % DATETIME_SECONDS_PER_MINUTE;   dayMS /= DATETIME_SECONDS_PER_MINUTE;
+	time->Minute = dayMS % DATETIME_MINUTES_PER_HOUR;     dayMS /= DATETIME_MINUTES_PER_HOUR;
+	time->Hour   = dayMS % DATETIME_HOURS_PER_DAY;        dayMS /= DATETIME_HOURS_PER_DAY;
+
+	/* Then work out day/month/year component (inverse TotalDays operation) */
+	Int32 days = ms / (Int64)DATETIME_MILLISECS_PER_DAY;
+	time->Year = 1 + days * 400 / 146097;
+	// nope, this is wrong!
+
+	/* Days in just this year */
+	time->Month = 1; time->Day = 1;
+	days -= DateTime_TotalDays(time);
+	/* TOOD: black magic here */
+	sddssdfds
+}
+
+void DateTime_HttpDate(DateTime* value, STRING_TRANSIENT String* str) {
+	static UInt8* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+	static UInt8* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	Int32 dow = DateTime_TotalDays(value) % 7;
+
+	UInt8* dayOfWeek = days_of_weeks[dow];
+	Int32 day = value->Day, year = value->Year;
+	UInt8* month = month_names[value->Month];
+	Int32 hour = value->Hour, min = value->Minute, sec = value->Second;
+
+	String_Format4(str, "%c, %p2 %c %p4", dayOfWeek, &day, month, &year);
+	String_Format3(str, " %p2:%p2:%p2 GMT", &hour, &min, &sec);
 }
 
 UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount) {
@@ -51,7 +97,7 @@ bool Utils_IsValidInputChar(UInt8 c, bool supportsCP437) {
 }
 
 bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index) {
-	String http = String_FromConst("http://");
+	String http  = String_FromConst("http://");
 	String https = String_FromConst("https://");
 	return String_IndexOfString(value, &http) == index
 		|| String_IndexOfString(value, &https) == index;

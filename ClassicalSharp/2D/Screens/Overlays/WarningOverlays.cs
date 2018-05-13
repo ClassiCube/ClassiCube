@@ -29,7 +29,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void OpenUrl(Game g, Widget w) {
-			CloseOverlay();
+			game.Gui.DisposeOverlay(this);
 			try {
 				Process.Start(Url);
 			} catch (Exception ex) {
@@ -38,7 +38,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void AppendUrl(Game g, Widget w) {
-			CloseOverlay();
+			game.Gui.DisposeOverlay(this);
 			if (game.ClickableChat) {
 				game.Gui.hudScreen.AppendInput(Url);
 			}
@@ -78,21 +78,21 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void OnYesClick(Game g, Widget w) {
-			CloseOverlay();
+			game.Gui.DisposeOverlay(this);
 			EntryList accepted = PluginLoader.Accepted;
 			if (IsAlways(w) && !accepted.Has(Plugin)) accepted.Add(Plugin);
 			PluginLoader.Load(Plugin, true);
 		}
 		
 		protected override void OnNoClick(Game g, Widget w) {
-			CloseOverlay();
+			game.Gui.DisposeOverlay(this);
 			EntryList denied = PluginLoader.Denied;
 			if (IsAlways(w) && !denied.Has(Plugin)) denied.Add(Plugin);
 		}
 	}
 	
 	public sealed class ConfirmDenyOverlay : Overlay {
-		public string Identifier;
+		public string Url;
 		bool alwaysDeny;
 		
 		public ConfirmDenyOverlay(Game game, bool always) : base(game) {
@@ -113,16 +113,15 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		void ConfirmNoClick(Game g, Widget w) {
-			CloseOverlay();
-			string url = Identifier.Substring(3);
-			if (alwaysDeny && !TextureCache.HasDenied(url)) {
-				TextureCache.Deny(url);
+			game.Gui.DisposeOverlay(this);
+			if (alwaysDeny && !TextureCache.HasDenied(Url)) {
+				TextureCache.Deny(Url);
 			}
 		}
 		
 		void GoBackClick(Game g, Widget w) {
-			CloseOverlay();
-			Overlay overlay = new TexPackOverlay(game, Identifier.Substring(3));
+			game.Gui.DisposeOverlay(this);
+			Overlay overlay = new TexPackOverlay(game, Url);
 			game.Gui.ShowOverlay(overlay, true);
 		}
 	}
@@ -145,7 +144,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void OnYesClick(Game g, Widget w) {
-			CloseOverlay();
+			game.Gui.DisposeOverlay(this);
 			string url = Identifier.Substring(3);
 			
 			game.Server.DownloadTexturePack(url);
@@ -155,11 +154,11 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		protected override void OnNoClick(Game g, Widget w) {
-			CloseOverlay();
+			game.Gui.DisposeOverlay(this);
 			string url = Identifier.Substring(3);
 			
 			ConfirmDenyOverlay overlay = new ConfirmDenyOverlay(game, IsAlways(w));
-			overlay.Identifier = Identifier;
+			overlay.Url = Identifier;
 			game.Gui.ShowOverlay(overlay, true);
 		}
 		

@@ -40,14 +40,12 @@ void ServerConnection_ResetState(void) {
 }
 
 void ServerConnection_RetrieveTexturePack(STRING_PURE String* url) {
-	ServerConnection_DownloadTexturePack(url);
-	/* TODO: Fix overlays */
-	/*if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
+	if (!TextureCache_HasAccepted(url) && !TextureCache_HasDenied(url)) {
 		Screen* warning = TexPackOverlay_MakeInstance(url);
 		Gui_ShowOverlay(warning, false);
 	} else {
 		ServerConnection_DownloadTexturePack(url);
-	}*/
+	}
 }
 
 void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {

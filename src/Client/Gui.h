@@ -84,6 +84,7 @@ void Gui_FreeActive(void);
 void Gui_SetActive(Screen* screen);
 void Gui_RefreshHud(void);
 void Gui_ShowOverlay(Screen* overlay, bool atFront);
+Int32 Gui_IndexOverlay(Screen* overlay);
 void Gui_FreeOverlay(Screen* overlay);
 void Gui_RenderGui(Real64 delta);
 void Gui_OnResize(void);

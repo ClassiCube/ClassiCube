@@ -67,7 +67,7 @@ void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, B
 	*lastTexLoc = texLoc;
 
 	Gfx_DeleteTexture(texId);
-	*texId = Atlas2D_LoadTextureElement(texLoc);
+	*texId = Atlas2D_LoadTile(texLoc);
 }
 
 void BordersRenderer_CalculateRects(Int32 extent) {

@@ -184,19 +184,28 @@ void Gui_ShowOverlay(Screen* overlay, bool atFront) {
 	Elem_Init(overlay);
 }
 
-void Gui_FreeOverlay(Screen* overlay) {
+Int32 Gui_IndexOverlay(Screen* overlay) {
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
-		if (Gui_Overlays[i] != overlay) continue;
-		for (; i < Gui_OverlaysCount - 1; i++) {
-			Gui_Overlays[i] = Gui_Overlays[i + 1];
-		}
-
-		Gui_OverlaysCount--;
-		Gui_Overlays[Gui_OverlaysCount] = NULL;
-		break;
+		if (Gui_Overlays[i] == overlay) return i;
 	}
+	return -1;
+}
+
+void Gui_FreeOverlay(Screen* overlay) {
+	Int32 i = Gui_IndexOverlay(overlay);
 	Elem_Free(overlay);
+	if (i == -1) return;
+
+	for (; i < Gui_OverlaysCount - 1; i++) {
+		Gui_Overlays[i] = Gui_Overlays[i + 1];
+	}
+
+	Gui_OverlaysCount--;
+	Gui_Overlays[Gui_OverlaysCount] = NULL;
+
+	if (Gui_OverlaysCount == 0) { Game_SetCursorVisible(Game_GetRealCursorVisible()); }
+	Camera_Active->RegrabMouse();
 }
 
 void Gui_RenderGui(Real64 delta) {

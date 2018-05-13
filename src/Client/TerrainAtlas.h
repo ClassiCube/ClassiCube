@@ -13,7 +13,7 @@ Bitmap Atlas2D_Bitmap;
 Int32 Atlas2D_TileSize;
 void Atlas2D_UpdateState(Bitmap* bmp);
 /* Creates a native texture that contains the tile at the specified index. */
-GfxResourceID Atlas2D_LoadTextureElement(TextureLoc texLoc);
+GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc);
 void Atlas2D_Free(void);
 
 /* The theoretical largest number of 1D atlases that a 2D atlas can be broken down into. */
