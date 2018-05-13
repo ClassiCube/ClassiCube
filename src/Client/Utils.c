@@ -10,6 +10,10 @@
 #define DATETIME_HOURS_PER_DAY 24
 #define DATETIME_MILLISECS_PER_DAY (1000 * 60 * 60 * 24)
 
+#define DAYS_IN_400_YEARS 146097   /* (400*365) + 97 */
+UInt16 DateTime_DaysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
+UInt16 DateTime_DaysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
+
 bool DateTime_IsLeapYear(Int32 year) {
 	if ((year % 4)   != 0) return false;
 	if ((year % 100) != 0) return true;
@@ -24,8 +28,7 @@ Int32 DateTime_TotalDays(DateTime* time) {
 	days += (y / 4) - (y / 100) + (y / 400);
 
 	/* Add days of prior months in this year */
-	static UInt16 totalDays[13] = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
-	days += totalDays[time->Month - 1];
+	days += DateTime_DaysTotal[time->Month - 1];
 	/* Add Feb 29, if this is a leap year, and day of point in time is after Feb 28 */
 	if (DateTime_IsLeapYear(time->Year) && time->Month > 2) days++;
 	/* Add days in this month */
@@ -59,15 +62,28 @@ void DateTime_FromTotalMs(DateTime* time, Int64 ms) {
 	time->Hour   = dayMS % DATETIME_HOURS_PER_DAY;        dayMS /= DATETIME_HOURS_PER_DAY;
 
 	/* Then work out day/month/year component (inverse TotalDays operation) */
+	/* Probably not the most efficient way of doing this. But it passes my tests at */
+	/* https://gist.github.com/UnknownShadow200/30993c66464bb03ead01577f3ab2a653 */
 	Int32 days = ms / (Int64)DATETIME_MILLISECS_PER_DAY;
-	time->Year = 1 + days * 400 / 146097;
-	// nope, this is wrong!
+	Int32 year = 1 + ((days / DAYS_IN_400_YEARS) * 400); days %= DAYS_IN_400_YEARS;
+	bool leap;
 
-	/* Days in just this year */
-	time->Month = 1; time->Day = 1;
-	days -= DateTime_TotalDays(time);
-	/* TOOD: black magic here */
-	sddssdfds
+	for (; ; year++) {
+		leap = DateTime_IsLeapYear(year);
+		Int32 daysInYear = leap ? 366 : 365;
+		if (days < daysInYear) break;
+		days -= daysInYear;
+	}
+	time->Year = year;
+
+	UInt16* totalDays = leap ? DateTime_DaysTotalLeap : DateTime_DaysTotal;
+	Int32 i;
+	for (i = 1; i <= 12; i++) {
+		if (days >= totalDays[i]) continue;
+		time->Month = i;
+		time->Day = 1 + (days - totalDays[i - 1]);
+		return;
+	}
 }
 
 void DateTime_HttpDate(DateTime* value, STRING_TRANSIENT String* str) {
