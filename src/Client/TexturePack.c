@@ -17,7 +17,9 @@
 /*########################################################################################################################*
 *--------------------------------------------------------ZipEntry---------------------------------------------------------*
 *#########################################################################################################################*/
+#define ZIP_MAXNAMELEN 512
 String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
+	if (length > ZIP_MAXNAMELEN) ErrorHandler_Fail("Zip string too long");
 	String fileName = String_Init(buffer, length, length);
 	Stream_Read(stream, buffer, length);
 	buffer[length] = NULL; /* Ensure null terminated */
@@ -39,7 +41,7 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 
 	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
 	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
-	UInt8 filenameBuffer[String_BufferSize(UInt16_MaxValue)];
+	UInt8 filenameBuffer[String_BufferSize(ZIP_MAXNAMELEN)];
 	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
 	if (!state->SelectEntry(&filename)) return;
 

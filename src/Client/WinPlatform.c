@@ -665,6 +665,9 @@ ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void
 	UInt32 left = size, read, totalRead = 0;
 
 	while (left > 0) {
+		//UInt32 toRead = min(4096, left);
+		//UInt32 avail = 0;
+		//InternetQueryDataAvailable(handle, &avail, 0, NULL);
 		bool success = InternetReadFile(handle, buffer, left, &read);
 		if (!success) { Platform_MemFree(data); return GetLastError(); }
 

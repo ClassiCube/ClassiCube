@@ -43,6 +43,16 @@ int main(void) {
 		ErrorHandler_CheckOrFail(result, "Program - creating texturecache directory");
 	}
 
+	UInt8 defPathBuffer[String_BufferSize(STRING_SIZE)];
+	String defPath = String_InitAndClearArray(defPathBuffer);
+	String_Format1(&defPath, "texpacks%rdefault.zip", &Platform_DirectorySeparator);
+
+	if (!Platform_FileExists(&defPath)) {
+		ErrorHandler_ShowDialog("Missing file", "default.zip missing, try running launcher first");
+		Platform_Exit(1);
+		return 1;
+	}
+
 	Platform_LogConst("Starting " PROGRAM_APP_NAME " ..");
 	Options_Init();
 	Options_Load();
