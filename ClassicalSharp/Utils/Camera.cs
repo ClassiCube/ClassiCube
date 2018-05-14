@@ -139,8 +139,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override void UpdateMouse() {
-			if (game.Gui.ActiveScreen.HandlesAllInput) return;
-			CentreMousePosition();
+			if (game.Gui.ActiveScreen.HandlesAllInput) {
+				delta = Point.Empty;
+			} else {
+				CentreMousePosition();
+			}
 			UpdateMouseRotation();
 		}
 		

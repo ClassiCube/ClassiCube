@@ -100,8 +100,11 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 
 void PerspectiveCamera_UpdateMouse(void) {
 	Screen* screen = Gui_GetActiveScreen();
-	if (screen->HandlesAllInput) return;
-	PerspectiveCamera_CentreMousePosition();
+	if (screen->HandlesAllInput) {
+		delta = Point2D_Empty;
+	} else {
+		PerspectiveCamera_CentreMousePosition();
+	}
 	PerspectiveCamera_UpdateMouseRotation();
 }
 
