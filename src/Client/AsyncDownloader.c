@@ -229,15 +229,17 @@ void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	UInt32 status = request->StatusCode;
 	Platform_Log3("HTTP get headers: ret code %i (http %i), in %i ms", &result, &status, &elapsedMS);
 
-	if (!ErrorHandler_Check(result) || request->StatusCode != 200 || request->RequestType == REQUEST_TYPE_CONTENT_LENGTH) {
+	if (!ErrorHandler_Check(result) || request->StatusCode != 200) {
 		Platform_HttpFreeRequest(handle); return;
 	}
 
 	void* data = NULL;
-	Stopwatch_Start(&stopwatch);
-	result = Platform_HttpGetRequestData(request, handle, &data, size, &async_curProgress);
-	elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
-	Platform_Log3("HTTP get data: ret code %i (size %i), in %i ms", &result, &size, &elapsedMS);
+	if (request->RequestType != REQUEST_TYPE_CONTENT_LENGTH) {
+		Stopwatch_Start(&stopwatch);
+		result = Platform_HttpGetRequestData(request, handle, &data, size, &async_curProgress);
+		elapsedMS = Stopwatch_ElapsedMicroseconds(&stopwatch) / 1000;
+		Platform_Log3("HTTP get data: ret code %i (size %i), in %i ms", &result, &size, &elapsedMS);
+	}
 
 	Platform_HttpFreeRequest(handle);
 	if (!ErrorHandler_Check(result)) return;

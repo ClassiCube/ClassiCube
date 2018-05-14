@@ -24,9 +24,11 @@ typedef struct Stream_ {
 	union {
 		void* Meta_File;
 		void* Meta_Inflate;
-		struct { UInt8* Meta_Mem_Cur, *Meta_Mem_Base; UInt32 Meta_Mem_Left, Meta_Mem_Length; };
-		struct { Stream* Meta_Portion_Underlying;     UInt32 Meta_Portion_Count, Meta_Portion_Length; };
-		struct { Stream* Meta_CRC32_Underlying;       UInt32 Meta_CRC32; };
+		/* NOTE: These structs rely on overlapping Meta_Mem fields being the same! Don't change them */
+		struct { UInt8* Meta_Mem_Cur;         UInt32 Meta_Mem_Left, Meta_Mem_Length; UInt8* Meta_Mem_Base; };
+		struct { Stream* Meta_Portion_Source; UInt32 Meta_MeM_Left, Meta_MeM_Length; };
+		struct { UInt8* Meta_Buffered_Cur;    UInt32 Meta_MEM_Left, Meta_MEM_Length; UInt8* Meta_Buffered_Base; Stream* Meta_Buffered_Source; };
+		struct { Stream* Meta_CRC32_Source;   UInt32 Meta_CRC32; };
 	};
 	UInt8 NameBuffer[String_BufferSize(FILENAME_SIZE)];
 	String Name;
@@ -41,9 +43,10 @@ void Stream_SetDefaultOps(Stream* stream);
 
 void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name);
 /* Readonly Stream wrapping another Stream, only allows reading up to 'len' bytes from the wrapped stream. */
-void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len);
+void Stream_ReadonlyPortion(Stream* stream, Stream* source, UInt32 len);
 void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
 void Stream_WriteonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name);
+void Stream_ReadonlyBuffered(Stream* stream, Stream* source, void* data, UInt32 size);
 
 
 UInt8 Stream_ReadU8(Stream* stream);

@@ -64,8 +64,8 @@ Real32 OctaveNoise_Calc(OctaveNoise* n, Real32 x, Real32 y) {
 
 	for (i = 0; i < n->octaves; i++) {
 		sum += ImprovedNoise_Calc(n->p[i], x * freq, y * freq) * amplitude;
-		amplitude *= 2.0;
-		freq *= 0.5;
+		amplitude *= 2.0f;
+		freq *= 0.5f;
 	}
 	return sum;
 }

@@ -473,13 +473,13 @@ ReturnCode Bitmap_Crc32StreamWrite(Stream* stream, UInt8* data, UInt32 count, UI
 	}
 	stream->Meta_CRC32 = crc32;
 
-	Stream* underlying = stream->Meta_CRC32_Underlying;
+	Stream* underlying = stream->Meta_CRC32_Source;
 	return underlying->Write(underlying, data, count, modified);
 }
 
 void Bitmap_Crc32Stream(Stream* stream, Stream* underlying) {
 	Stream_SetName(stream, &underlying->Name);
-	stream->Meta_CRC32_Underlying = underlying;
+	stream->Meta_CRC32_Source = underlying;
 	stream->Meta_CRC32 = 0xFFFFFFFFUL;
 
 	Stream_SetDefaultOps(stream);

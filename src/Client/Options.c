@@ -177,7 +177,11 @@ void Options_Load(void) {
 		Options_Remove(i - 1);
 	}
 
-	while (Stream_ReadLine(&stream, &line)) {
+	/* ReadLine reads single byte at a time */
+	UInt8 buffer[2048]; Stream buffered;
+	Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
+
+	while (Stream_ReadLine(&buffered, &line)) {
 		if (line.length == 0 || line.buffer[0] == '#') continue;
 
 		Int32 sepIndex = String_IndexOf(&line, '=', 0);

@@ -198,7 +198,11 @@ void EntryList_Load(EntryList* list) {
 	ErrorHandler_CheckOrFail(result, "EntryList_Load - open file");
 	Stream stream; Stream_FromFile(&stream, file, &path);
 	{
-		while (Stream_ReadLine(&stream, &path)) {
+		/* ReadLine reads single byte at a time */
+		UInt8 buffer[2048]; Stream buffered;
+		Stream_ReadonlyBuffered(&buffered, &stream, buffer, sizeof(buffer));
+
+		while (Stream_ReadLine(&buffered, &path)) {
 			String_UNSAFE_TrimStart(&path);
 			String_UNSAFE_TrimEnd(&path);
 

@@ -130,25 +130,25 @@ void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 *-----------------------------------------------------PortionStream-------------------------------------------------------*
 *#########################################################################################################################*/
 ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	count = min(count, stream->Meta_Portion_Count);
-	Stream* underlying = stream->Meta_Portion_Underlying;
+	count = min(count, stream->Meta_Mem_Left);
+	Stream* underlying = stream->Meta_Portion_Source;
 	ReturnCode code = underlying->Read(underlying, data, count, modified);
-	stream->Meta_Portion_Count -= *modified;
+	stream->Meta_Mem_Left -= *modified;
 	return code;
 }
 
 ReturnCode Stream_PortionPosition(Stream* stream, UInt32* position) {
-	*position = stream->Meta_Portion_Length - stream->Meta_Portion_Count; return 0;
+	*position = stream->Meta_Mem_Length - stream->Meta_Mem_Left; return 0;
 }
 ReturnCode Stream_PortionLength(Stream* stream, UInt32* length) {
-	*length = stream->Meta_Portion_Length; return 0;
+	*length = stream->Meta_Mem_Length; return 0;
 }
 
-void Stream_ReadonlyPortion(Stream* stream, Stream* underlying, UInt32 len) {
-	Stream_SetName(stream, &underlying->Name);
-	stream->Meta_Portion_Underlying = underlying;
-	stream->Meta_Portion_Count  = len;
-	stream->Meta_Portion_Length = len;
+void Stream_ReadonlyPortion(Stream* stream, Stream* source, UInt32 len) {
+	Stream_SetName(stream, &source->Name);
+	stream->Meta_Portion_Source = source;
+	stream->Meta_Mem_Left   = len;
+	stream->Meta_Mem_Length = len;
 
 	Stream_SetDefaultOps(stream);
 	stream->Read     = Stream_PortionRead;
@@ -203,9 +203,9 @@ ReturnCode Stream_MemorySeek(Stream* stream, Int32 offset, Int32 seekType) {
 void Stream_ReadonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE String* name) {
 	Stream_SetName(stream, name);
 	stream->Meta_Mem_Cur    = data;
-	stream->Meta_Mem_Base   = data;
 	stream->Meta_Mem_Left   = len;
 	stream->Meta_Mem_Length = len;
+	stream->Meta_Mem_Base   = data;
 
 	Stream_SetDefaultOps(stream);
 	stream->Read     = Stream_MemoryRead;
@@ -219,6 +219,35 @@ void Stream_WriteonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE 
 	Stream_ReadonlyMemory(stream, data, len, name);
 	stream->Read  = Stream_DefaultIO;
 	stream->Write = Stream_MemoryWrite;
+}
+
+
+/*########################################################################################################################*
+*----------------------------------------------------BufferedStream-------------------------------------------------------*
+*#########################################################################################################################*/
+ReturnCode Stream_BufferedRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+	if (stream->Meta_Mem_Left == 0) {
+		Stream* source = stream->Meta_Buffered_Source; 
+		stream->Meta_Buffered_Cur = stream->Meta_Buffered_Base;
+		UInt32 read = 0;
+
+		ReturnCode result = source->Read(source, stream->Meta_Buffered_Cur, stream->Meta_Mem_Length, &read);
+		if (result != 0) return result;
+		stream->Meta_Mem_Left = read;
+	}
+	return Stream_MemoryRead(stream, data, count, modified);
+}
+
+void Stream_ReadonlyBuffered(Stream* stream, Stream* source, void* data, UInt32 size) {
+	Stream_SetName(stream, &source->Name);
+	stream->Meta_Buffered_Cur    = data;
+	stream->Meta_Mem_Left        = 0;
+	stream->Meta_Mem_Length      = size;
+	stream->Meta_Buffered_Base   = data;
+	stream->Meta_Buffered_Source = source;
+
+	Stream_SetDefaultOps(stream);
+	stream->Read = Stream_BufferedRead;
 }
 
 

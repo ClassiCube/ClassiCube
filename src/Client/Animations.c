@@ -112,8 +112,8 @@ void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 			col = col > 1 ? 1 : col;
 			col = col * col;
 
-			Real32 r = 32.0f + col * 32.0f;
-			Real32 g = 50.0f + col * 64.0f;
+			Real32 r = 32.0f  + col * 32.0f;
+			Real32 g = 50.0f  + col * 64.0f;
 			Real32 a = 146.0f + col * 50.0f;
 
 			*ptr = ((UInt8)a << 24) | ((UInt8)r << 16) | ((UInt8)g << 8) | 0xFFUL;
@@ -150,7 +150,11 @@ void Animations_ReadDescription(Stream* stream) {
 	String line = String_InitAndClearArray(lineBuffer);
 	String parts[7];
 
-	while (Stream_ReadLine(stream, &line)) {
+	/* ReadLine reads single byte at a time */
+	UInt8 buffer[2048]; Stream buffered;
+	Stream_ReadonlyBuffered(&buffered, stream, buffer, sizeof(buffer));
+
+	while (Stream_ReadLine(&buffered, &line)) {
 		if (line.length == 0 || line.buffer[0] == '#') continue;
 		AnimationData data;
 		UInt32 partsCount = Array_Elems(parts);	
