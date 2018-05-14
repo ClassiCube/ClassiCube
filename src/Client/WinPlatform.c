@@ -72,9 +72,9 @@ void Platform_Init(void) {
 }
 
 void Platform_Free(void) {
-	HeapDestroy(heap);
 	DeleteDC(hdc);
 	WSACleanup();
+	HeapDestroy(heap);
 }
 
 void Platform_Exit(ReturnCode code) {
@@ -394,7 +394,7 @@ Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer) {
 	}
 }
 
-void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
+void Platform_FontMake(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style) {
 	desc->Size    = size; 
 	desc->Style   = style;
 	LOGFONTA font = { 0 };
@@ -410,63 +410,13 @@ void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size
 	if (desc->Handle == NULL) ErrorHandler_Fail("Creating font handle failed");
 }
 
-void Platform_FreeFont(FontDesc* desc) {
+void Platform_FontFree(FontDesc* desc) {
 	if (!DeleteObject(desc->Handle)) ErrorHandler_Fail("Deleting font handle failed");
 	desc->Handle = NULL;
 }
 
-bool bmpAssociated;
-HBITMAP hbmp;
-Bitmap* bmp;
-void* hbmp_bits;
-
-void Platform_AssociateBitmap(void) {
-	if (bmpAssociated) return;
-	bmpAssociated = true;
-
-	BITMAPINFO bmi;
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = bmp->Width;
-	bmi.bmiHeader.biHeight = bmp->Height;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = 32;
-	bmi.bmiHeader.biCompression = BI_RGB;
-	bmi.bmiHeader.biSizeImage = Bitmap_DataSize(bmp->Width, bmp->Height);
-
-	hbmp = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &hbmp_bits, NULL, 0x0);
-	if (hbmp == NULL) ErrorHandler_Fail("Creating bitmap handle failed");
-	if (!SelectObject(hdc, hbmp)) ErrorHandler_Fail("Selecting bitmap handle");
-
-	String font = String_FromConst("Arial");
-	FontDesc desc; Platform_MakeFont(&desc, &font, 12, FONT_STYLE_NORMAL);
-	String text = String_FromConst("TEST");
-}
-
-void Platform_SetBitmap(Bitmap* bmpNew) {
-	/* Defer creating bitmap until necessary */
-	bmp = bmpNew;
-}
-
-void Platform_DrawBufferedText(void) {
-	/* draw text and stuff */
-	//Platform_MemCpy(bmp->Scan0, hbmp_bits, Bitmap_DataSize(bmp->Width, bmp->Height));
-	//BITMAP bmp = { 0 };
-	//./ReturnCode result = GetObjectA(hbmp, sizeof(BITMAP), &bmp);
-}
-
-void Platform_ReleaseBitmap(void) {
-	if (bmpAssociated) {
-		Platform_DrawBufferedText();
-		if (!DeleteObject(hbmp)) ErrorHandler_Fail("Deleting bitmap handle failed");
-		hbmp = NULL;
-	}
-
-	bmpAssociated = false;
-	bmp = NULL;
-}
-
-/* TODO: not ssociate font with device so much */
-Size2D Platform_MeasureText(DrawTextArgs* args) {
+/* TODO: not associate font with device so much */
+Size2D Platform_TextMeasure(DrawTextArgs* args) {
 	String* text = &args->Text;
 	HGDIOBJ oldFont = SelectObject(hdc, args->Font.Handle);
 	SIZE area; GetTextExtentPointA(hdc, text->buffer, text->length, &area);
@@ -475,33 +425,43 @@ Size2D Platform_MeasureText(DrawTextArgs* args) {
 	return Size2D_Make(area.cx, area.cy);
 }
 
-/* TODO: not allocate so much */
+HBITMAP platform_dib;
+HBITMAP platform_oldBmp;
+Bitmap* platform_bmp;
+void* platform_bits;
+
+void Platform_SetBitmap(Bitmap* bmp) {
+	platform_bmp = bmp;
+	platform_bits = NULL;
+
+	BITMAPINFO bmi = { 0 };
+	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi.bmiHeader.biWidth = bmp->Width;
+	bmi.bmiHeader.biHeight = -bmp->Height;
+	bmi.bmiHeader.biPlanes = 1;
+	bmi.bmiHeader.biBitCount = 32;
+	bmi.bmiHeader.biCompression = BI_RGB;
+
+	/* TODO: Check return values */
+	platform_dib = CreateDIBSection(hdc, &bmi, 0, &platform_bits, NULL, 0);
+	platform_oldBmp = SelectObject(hdc, platform_dib);
+}
+
 /* TODO: check return codes and stuff */
 /* TODO: make text prettier.. somehow? */
 /* TODO: Do we need to / 255 instead of >> 8 ? */
 /* TODO: GetTextExtentPoint32 instead? */
 /* TODO: Code page 437 - so probably need to use W variants of functions */
-void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
+Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
 	String* text = &args->Text;
 	HGDIOBJ oldFont = (HFONT)SelectObject(hdc, (HFONT)args->Font.Handle);
 	SIZE area; GetTextExtentPointA(hdc, text->buffer, text->length, &area);
-
-	void* bits = NULL;
-	BITMAPINFO bmi = { 0 };
-	bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth       = bmp->Width;
-	bmi.bmiHeader.biHeight      = -bmp->Height;
-	bmi.bmiHeader.biPlanes      = 1;
-	bmi.bmiHeader.biBitCount    = 32;
-	bmi.bmiHeader.biCompression = BI_RGB;
-
-	HBITMAP dib = CreateDIBSection(hdc, &bmi, 0, &bits, NULL, 0);
-	HGDIOBJ oldBmp = SelectObject(hdc, dib);
 	TextOutA(hdc, 0, 0, text->buffer, text->length);
 
 	Int32 xx, yy;
+	Bitmap* bmp = platform_bmp;
 	for (yy = 0; yy < area.cy; yy++) {
-		UInt8* src = (UInt8*)bits + yy * (bmp->Width * 4);
+		UInt8* src = (UInt8*)platform_bits + (yy * bmp->Stride);
 		UInt8* dst = (UInt8*)Bitmap_GetRow(bmp, y + yy); dst += x * BITMAP_SIZEOF_PIXEL;
 
 		for (xx = 0; xx < area.cx; xx++) {
@@ -515,17 +475,20 @@ void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
 		}
 	}
 
-	SelectObject(hdc, oldBmp);
 	SelectObject(hdc, oldFont);
-	DeleteObject(dib);
-
-	//RECT r = { 0 };
-	//Platform_AssociateBitmap();
-
-	//HGDIOBJ oldFont = SelectObject(hdc, args->Font.Handle);
 	//DrawTextA(hdc, args->Text.buffer, args->Text.length,
 	//	&r, DT_NOPREFIX | DT_SINGLELINE | DT_NOCLIP);
-	//SelectObject(hdc, oldFont);
+	return Size2D_Make(area.cx, area.cy);
+}
+
+void Platform_ReleaseBitmap(void) {
+	/* TODO: Check return values */
+	SelectObject(hdc, platform_oldBmp);
+	DeleteObject(platform_dib);
+
+	platform_oldBmp = NULL;
+	platform_dib = NULL;
+	platform_bmp = NULL;
 }
 
 

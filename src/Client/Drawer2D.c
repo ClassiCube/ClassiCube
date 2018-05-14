@@ -95,12 +95,12 @@ void Drawer2D_Free(void) {
 }
 
 void Drawer2D_Begin(Bitmap* bmp) {
-	Platform_SetBitmap(bmp);
+	if (!Drawer2D_UseBitmappedChat) Platform_SetBitmap(bmp);
 	Drawer2D_Cur = bmp;
 }
 
 void Drawer2D_End(void) {	
-	Platform_ReleaseBitmap();
+	if (!Drawer2D_UseBitmappedChat) Platform_ReleaseBitmap();
 	Drawer2D_Cur = NULL;
 }
 
@@ -135,8 +135,9 @@ Texture Drawer2D_MakeTextTexture(DrawTextArgs* args, Int32 windowX, Int32 window
 
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
-	Drawer2D_DrawText(args, 0, 0);
-
+	{
+		Drawer2D_DrawText(args, 0, 0);
+	}
 	Drawer2D_End();
 	Texture tex = Drawer2D_Make2DTexture(&bmp, size, windowX, windowY);
 	Platform_MemFree(&bmp.Scan0);
@@ -397,11 +398,11 @@ void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
 		if (args->UseShadow) {
 			PackedCol black = PACKEDCOL_BLACK;
 			PackedCol backCol = Drawer2D_BlackTextShadows ? black : PackedCol_Scale(col, 0.25f);
-			Platform_DrawText(args, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
+			Platform_TextDraw(args, x + DRAWER2D_OFFSET, y + DRAWER2D_OFFSET, backCol);
 		}
 
-		Platform_DrawText(args, x, y, col);
-		x += Platform_MeasureText(args).Width;
+		Size2D partSize = Platform_TextDraw(args, x, y, col);
+		x += partSize.Width;
 	}
 	args->Text = value;
 }
@@ -420,7 +421,7 @@ Size2D Drawer2D_MeasureText(DrawTextArgs* args) {
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
 		if (args->Text.length == 0) continue;
 
-		Size2D partSize = Platform_MeasureText(args);
+		Size2D partSize = Platform_TextMeasure(args);
 		size.Width += partSize.Width;
 		size.Height = max(size.Height, partSize.Height);
 	}

@@ -470,7 +470,7 @@ IGameComponent TabList_MakeComponent(void) {
 #define PLAYER_NAME_EMPTY_TEX -30000
 void Player_MakeNameTexture(Player* player) {
 	FontDesc font; 
-	Platform_MakeFont(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
+	Platform_FontMake(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
 
 	String displayName = String_FromRawArray(player->DisplayNameRaw);
 	DrawTextArgs args; 
@@ -491,17 +491,17 @@ void Player_MakeNameTexture(Player* player) {
 		size.Width += 3; size.Height += 3;
 		Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 		Drawer2D_Begin(&bmp);
+		{
+			Drawer2D_Cols[0xFF] = PackedCol_Create3(80, 80, 80);
+			String_AppendConst(&shadowName, "&\xFF");
+			String_AppendColorless(&shadowName, &displayName);
+			args.Text = shadowName;
+			Drawer2D_DrawText(&args, 3, 3);
 
-		Drawer2D_Cols[0xFF] = PackedCol_Create3(80, 80, 80);
-		String_AppendConst(&shadowName, "&\xFF");
-		String_AppendColorless(&shadowName, &displayName);
-		args.Text = shadowName;
-		Drawer2D_DrawText(&args, 3, 3);
-
-		Drawer2D_Cols[0xFF] = PackedCol_Create4(0, 0, 0, 0);
-		args.Text = displayName;
-		Drawer2D_DrawText(&args, 0, 0);
-
+			Drawer2D_Cols[0xFF] = PackedCol_Create4(0, 0, 0, 0);
+			args.Text = displayName;
+			Drawer2D_DrawText(&args, 0, 0);
+		}
 		Drawer2D_End();
 		player->NameTex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
 		Platform_MemFree(&bmp.Scan0);

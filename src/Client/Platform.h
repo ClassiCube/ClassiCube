@@ -74,12 +74,12 @@ void Stopwatch_Start(Stopwatch* timer);
 Int32 Stopwatch_ElapsedMicroseconds(Stopwatch* timer);
 ReturnCode Platform_StartShell(STRING_PURE String* args);
 
-void Platform_MakeFont(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
-void Platform_FreeFont(FontDesc* desc);
+void Platform_FontMake(FontDesc* desc, STRING_PURE String* fontName, UInt16 size, UInt16 style);
+void Platform_FontFree(FontDesc* desc);
+Size2D Platform_TextMeasure(DrawTextArgs* args);
 void Platform_SetBitmap(Bitmap* bmp);
+Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 void Platform_ReleaseBitmap(void);
-Size2D Platform_MeasureText(DrawTextArgs* args);
-void Platform_DrawText(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 
 void Platform_SocketCreate(void** socket);
 ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port);

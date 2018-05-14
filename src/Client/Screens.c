@@ -128,7 +128,7 @@ void InventoryScreen_ContextRecreated(void* obj) {
 
 void InventoryScreen_Init(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 
 	TableWidget_Create(&screen->Table);
 	screen->Table.Font = screen->Font;
@@ -159,7 +159,7 @@ void InventoryScreen_OnResize(GuiElement* elem) {
 
 void InventoryScreen_Free(GuiElement* elem) {
 	InventoryScreen* screen = (InventoryScreen*)elem;
-	Platform_FreeFont(&screen->Font);
+	Platform_FontFree(&screen->Font);
 	Elem_TryFree(&screen->Table);
 
 	Key_KeyRepeat = false;
@@ -385,7 +385,7 @@ void StatusScreen_ContextRecreated(void* obj) {
 
 void StatusScreen_Init(GuiElement* elem) {
 	StatusScreen* screen = (StatusScreen*)elem;
-	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	StatusScreen_ContextRecreated(screen);
 
 	Event_RegisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_FontChanged);
@@ -411,7 +411,7 @@ void StatusScreen_Render(GuiElement* elem, Real64 delta) {
 
 void StatusScreen_Free(GuiElement* elem) {
 	StatusScreen* screen = (StatusScreen*)elem;
-	Platform_FreeFont(&screen->Font);
+	Platform_FontFree(&screen->Font);
 	StatusScreen_ContextLost(screen);
 
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, StatusScreen_FontChanged);
@@ -576,7 +576,7 @@ void LoadingScreen_Render(GuiElement* elem, Real64 delta) {
 
 void LoadingScreen_Free(GuiElement* elem) {
 	LoadingScreen* screen = (LoadingScreen*)elem;
-	Platform_FreeFont(&screen->Font);
+	Platform_FontFree(&screen->Font);
 	LoadingScreen_ContextLost(screen);
 
 	Event_UnregisterReal(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
@@ -608,7 +608,7 @@ void LoadingScreen_Make(LoadingScreen* screen, GuiElementVTABLE* vtable, STRING_
 	String messageScreen = String_InitAndClearArray(screen->MessageBuffer);
 	String_AppendString(&messageScreen, message);
 
-	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	screen->BlocksWorld     = true;
 	screen->RenderHUDOver   = true;
 }
@@ -1059,12 +1059,12 @@ void ChatScreen_Init(GuiElement* elem) {
 
 	Int32 fontSize = (Int32)(8 * Game_GetChatScale());
 	Math_Clamp(fontSize, 8, 60);
-	Platform_MakeFont(&screen->ChatFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
-	Platform_MakeFont(&screen->ChatUrlFont, &Game_FontName, fontSize, FONT_STYLE_UNDERLINE);
+	Platform_FontMake(&screen->ChatFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->ChatUrlFont, &Game_FontName, fontSize, FONT_STYLE_UNDERLINE);
 
 	fontSize = (Int32)(16 * Game_GetChatScale());
 	Math_Clamp(fontSize, 8, 60);
-	Platform_MakeFont(&screen->AnnouncementFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->AnnouncementFont, &Game_FontName, fontSize, FONT_STYLE_NORMAL);
 	ChatScreen_ContextRecreated(elem);
 
 	Event_RegisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
@@ -1123,9 +1123,9 @@ void ChatScreen_Render(GuiElement* elem, Real64 delta) {
 void ChatScreen_Free(GuiElement* elem) {
 	ChatScreen* screen = (ChatScreen*)elem;
 	ChatScreen_ContextLost(elem);
-	Platform_FreeFont(&screen->ChatFont);
-	Platform_FreeFont(&screen->ChatUrlFont);
-	Platform_FreeFont(&screen->AnnouncementFont);
+	Platform_FontFree(&screen->ChatFont);
+	Platform_FontFree(&screen->ChatUrlFont);
+	Platform_FontFree(&screen->AnnouncementFont);
 
 	Event_UnregisterChat(&ChatEvents_ChatReceived,    screen, ChatScreen_ChatReceived);
 	Event_UnregisterVoid(&ChatEvents_FontChanged,     screen, ChatScreen_FontChanged);
@@ -1278,7 +1278,7 @@ bool HUDScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton 
 void HUDScreen_Init(GuiElement* elem) {
 	HUDScreen* screen = (HUDScreen*)elem;
 	UInt16 size = Drawer2D_UseBitmappedChat ? 16 : 11;
-	Platform_MakeFont(&screen->PlayerFont, &Game_FontName, size, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->PlayerFont, &Game_FontName, size, FONT_STYLE_NORMAL);
 
 	HotbarWidget_Create(&screen->Hotbar);
 	Elem_Init(&screen->Hotbar);
@@ -1330,7 +1330,7 @@ void HUDScreen_Render(GuiElement* elem, Real64 delta) {
 
 void HUDScreen_Free(GuiElement* elem) {
 	HUDScreen* screen = (HUDScreen*)elem;
-	Platform_FreeFont(&screen->PlayerFont);
+	Platform_FontFree(&screen->PlayerFont);
 	Elem_TryFree(screen->Chat);
 	HUDScreen_ContextLost(screen);
 
@@ -1496,8 +1496,8 @@ void DisconnectScreen_Free(GuiElement* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, DisconnectScreen_ContextRecreated);
 
 	DisconnectScreen_ContextLost(screen);
-	Platform_FreeFont(&screen->TitleFont);
-	Platform_FreeFont(&screen->MessageFont);
+	Platform_FontFree(&screen->TitleFont);
+	Platform_FontFree(&screen->MessageFont);
 }
 
 void DisconnectScreen_OnResize(GuiElement* elem) {
@@ -1560,8 +1560,8 @@ Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE Str
 	String ban  = String_FromConst("Banned ");
 	screen->CanReconnect = !(String_StartsWith(&reason, &kick) || String_StartsWith(&reason, &ban));
 
-	Platform_MakeFont(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
-	Platform_MakeFont(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->TitleFont,   &Game_FontName, 16, FONT_STYLE_BOLD);
+	Platform_FontMake(&screen->MessageFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	screen->BlocksWorld     = true;
 	screen->HidesHUD        = true;
 

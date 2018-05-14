@@ -408,7 +408,7 @@ String ListScreen_UNSAFE_GetCur(ListScreen* screen, GuiElement* w) {
 
 void ListScreen_Init(GuiElement* elem) {
 	ListScreen* screen = (ListScreen*)elem;
-	Platform_MakeFont(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
+	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
 	ListScreen_ContextRecreated(screen);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, ListScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ListScreen_ContextRecreated);
@@ -424,7 +424,7 @@ void ListScreen_Render(GuiElement* elem, Real64 delta) {
 
 void ListScreen_Free(GuiElement* elem) {
 	ListScreen* screen = (ListScreen*)elem;
-	Platform_FreeFont(&screen->Font);
+	Platform_FontFree(&screen->Font);
 	ListScreen_ContextLost(screen);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, ListScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ListScreen_ContextRecreated);
@@ -533,10 +533,10 @@ void MenuScreen_Init(GuiElement* elem) {
 	MenuScreen* screen = (MenuScreen*)elem;
 
 	if (screen->TitleFont.Handle == NULL) {
-		Platform_MakeFont(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
+		Platform_FontMake(&screen->TitleFont, &Game_FontName, 16, FONT_STYLE_BOLD);
 	}
 	if (screen->TextFont.Handle == NULL) {
-		Platform_MakeFont(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
+		Platform_FontMake(&screen->TextFont, &Game_FontName, 16, FONT_STYLE_NORMAL);
 	}
 
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost_Callback);
@@ -556,10 +556,10 @@ void MenuScreen_Free(GuiElement* elem) {
 	screen->ContextLost(screen);
 
 	if (screen->TitleFont.Handle != NULL) {
-		Platform_FreeFont(&screen->TitleFont);
+		Platform_FontFree(&screen->TitleFont);
 	}
 	if (screen->TextFont.Handle != NULL) {
-		Platform_FreeFont(&screen->TextFont);
+		Platform_FontFree(&screen->TextFont);
 	}
 
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, MenuScreen_ContextLost_Callback);
@@ -803,7 +803,7 @@ GuiElementVTABLE DeathScreen_VTABLE;
 DeathScreen DeathScreen_Instance;
 void DeathScreen_Init(GuiElement* elem) {
 	DeathScreen* screen = (DeathScreen*)elem;
-	Platform_MakeFont(&screen->TextFont, &Game_FontName, 40, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->TextFont, &Game_FontName, 40, FONT_STYLE_NORMAL);
 	MenuScreen_Init(elem);
 	screen->ContextRecreated(elem);
 }
@@ -3088,7 +3088,7 @@ void TexIdsOverlay_RenderTextOverlay(TexIdsOverlay* screen) {
 
 void TexIdsOverlay_Init(GuiElement* elem) {
 	MenuScreen* screen = (MenuScreen*)elem;
-	Platform_MakeFont(&screen->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
+	Platform_FontMake(&screen->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
 	Overlay_Init(elem);
 }
 

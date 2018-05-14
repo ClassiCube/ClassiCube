@@ -1487,15 +1487,16 @@ void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, adjSize.Width, adjSize.Height);
 	Drawer2D_Begin(&bmp);
-	Drawer2D_DrawText(&args, widget->Base.Padding, 0);
+	{
+		Drawer2D_DrawText(&args, widget->Base.Padding, 0);
 
-	args.Text = range;
-	Size2D hintSize = Drawer2D_MeasureText(&args);
-	Int32 hintX = adjSize.Width - hintSize.Width;
-	if (size.Width + 3 < hintX) {
-		Drawer2D_DrawText(&args, hintX, 0);
+		args.Text = range;
+		Size2D hintSize = Drawer2D_MeasureText(&args);
+		Int32 hintX = adjSize.Width - hintSize.Width;
+		if (size.Width + 3 < hintX) {
+			Drawer2D_DrawText(&args, hintX, 0);
+		}
 	}
-
 	Drawer2D_End();
 	Texture* tex = &widget->Base.InputTex;
 	*tex = Drawer2D_Make2DTexture(&bmp, adjSize, 0, 0);
@@ -2562,12 +2563,12 @@ void SpecialInputWidget_Make(SpecialInputWidget* widget, SpecialInputTab* e) {
 
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
-
-	SpecialInputWidget_DrawTitles(widget, &bmp);
-	PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
-	Drawer2D_Clear(&bmp, col, 0, titleHeight, size.Width, bodySize.Height);
-	SpecialInputWidget_DrawContent(widget, e, titleHeight);
-	
+	{
+		SpecialInputWidget_DrawTitles(widget, &bmp);
+		PackedCol col = PACKEDCOL_CONST(30, 30, 30, 200);
+		Drawer2D_Clear(&bmp, col, 0, titleHeight, size.Width, bodySize.Height);
+		SpecialInputWidget_DrawContent(widget, e, titleHeight);
+	}
 	Drawer2D_End();
 	widget->Tex = Drawer2D_Make2DTexture(&bmp, size, widget->X, widget->Y);
 	Platform_MemFree(&bmp.Scan0);

@@ -253,15 +253,15 @@ void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font,
 	Platform_MemSet(atlas->Widths, 0, sizeof(atlas->Widths));
 	Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 	Drawer2D_Begin(&bmp);
-		
-	Drawer2D_DrawText(&args, 0, 0);
-	Int32 i;
-	for (i = 0; i < chars->length; i++) {
-		args.Text = String_UNSAFE_Substring(chars, i, 1);
-		atlas->Widths[i] = Drawer2D_MeasureText(&args).Width;
-		Drawer2D_DrawText(&args, atlas->Offset + font->Size * i, 0);
+	{
+		Drawer2D_DrawText(&args, 0, 0);
+		Int32 i;
+		for (i = 0; i < chars->length; i++) {
+			args.Text = String_UNSAFE_Substring(chars, i, 1);
+			atlas->Widths[i] = Drawer2D_MeasureText(&args).Width;
+			Drawer2D_DrawText(&args, atlas->Offset + font->Size * i, 0);
+		}
 	}
-
 	Drawer2D_End();
 	atlas->Tex = Drawer2D_Make2DTexture(&bmp, size, 0, 0);
 	Platform_MemFree(&bmp.Scan0);
