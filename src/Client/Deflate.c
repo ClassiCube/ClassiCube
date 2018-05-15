@@ -234,7 +234,7 @@ void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 		*   - set fast value to specify a 'value' value, and to skip 'len' bits
 		*/
 		if (len <= INFLATE_FAST_BITS) {
-			Int16 packed = (Int16)((len << 9) | value), j;
+			Int16 packed = (Int16)((len << INFLATE_FAST_BITS) | value), j;
 			Int32 codeword = table->FirstCodewords[len] + (bl_offsets[len] - table->FirstOffsets[len]);
 			codeword <<= (INFLATE_FAST_BITS - len);
 
@@ -255,10 +255,10 @@ Int32 Huffman_Decode(InflateState* state, HuffmanTable* table) {
 	}
 
 	/* Try fast accelerated table lookup */
-	if (state->NumBits >= 9) {
+	if (state->NumBits >= INFLATE_FAST_BITS) {
 		Int32 packed = table->Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];
 		if (packed >= 0) {
-			Int32 bits = packed >> 9;
+			Int32 bits = packed >> INFLATE_FAST_BITS;
 			Inflate_ConsumeBits(state, bits);
 			return packed & 0x1FF;
 		}
@@ -287,7 +287,7 @@ Int32 Huffman_Unsafe_Decode(InflateState* state, HuffmanTable* table) {
 	UInt32 codeword = Inflate_PeekBits(state, INFLATE_FAST_BITS);
 	Int32 packed = table->Fast[codeword];
 	if (packed >= 0) {
-		Int32 bits = packed >> 9;
+		Int32 bits = packed >> INFLATE_FAST_BITS;
 		Inflate_ConsumeBits(state, bits);
 		return packed & 0x1FF;
 	}

@@ -1,6 +1,6 @@
 #include "DisplayDevice.h"
 
-DisplayResolution DisplayResolution_Make(Int32 width, Int32 height, Int32 bitsPerPixel, Real32 refreshRate) {
+DisplayResolution DisplayResolution_Make(Int32 width, Int32 height, Int32 bitsPerPixel, Int32 refreshRate) {
 	DisplayResolution res;
 	res.Width = width; res.Height = height;
 	res.BitsPerPixel = bitsPerPixel; res.RefreshRate = refreshRate;
@@ -74,8 +74,8 @@ ColorFormat ColorFormat_FromRGBA(UInt8 r, UInt8 g, UInt8 b, UInt8 a) {
 GraphicsMode GraphicsMode_Make(ColorFormat color, UInt8 depth, UInt8 stencil, UInt8 buffers) {
 	GraphicsMode mode;
 	mode.Format = color;
-	mode.Depth = depth;
-	mode.Stencil = stencil;
+	mode.DepthBits = depth;
+	mode.StencilBits = stencil;
 	mode.Buffers = buffers;
 	return mode;
 }

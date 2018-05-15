@@ -59,7 +59,7 @@ void Platform_Init(void) {
 			EnumDisplaySettingsA(device.DeviceName, ENUM_REGISTRY_SETTINGS, &mode)) {
 			if (mode.dmBitsPerPel > 0) {
 				resolution = DisplayResolution_Make(mode.dmPelsWidth, mode.dmPelsHeight,
-					mode.dmBitsPerPel, (Real32)mode.dmDisplayFrequency);
+					mode.dmBitsPerPel, mode.dmDisplayFrequency);
 				devPrimary = (device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
 			}
 		}
@@ -442,8 +442,8 @@ void Platform_SetBitmap(Bitmap* bmp) {
 	bmi.bmiHeader.biBitCount = 32;
 	bmi.bmiHeader.biCompression = BI_RGB;
 
-	/* TODO: Check return values */
 	platform_dib = CreateDIBSection(hdc, &bmi, 0, &platform_bits, NULL, 0);
+	if (platform_dib == NULL) ErrorHandler_Fail("Failed to allocate DIB for text");
 	platform_oldBmp = SelectObject(hdc, platform_dib);
 }
 

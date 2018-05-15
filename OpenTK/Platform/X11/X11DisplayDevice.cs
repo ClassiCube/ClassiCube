@@ -87,7 +87,7 @@ namespace OpenTK.Platform.X11 {
 				
 				ushort curRotation;
 				int curSizesIndex = API.XRRConfigCurrentConfiguration(screenConfig, out curRotation);
-				float curRefreshRate = API.XRRConfigCurrentRate(screenConfig);
+				int curRefreshRate = API.XRRConfigCurrentRate(screenConfig);
 				int curDepth = API.XDefaultDepth(API.DefaultDisplay, screen);
 				API.XRRFreeScreenConfigInfo(screenConfig);
 				

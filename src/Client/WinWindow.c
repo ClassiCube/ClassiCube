@@ -711,15 +711,15 @@ void GLContext_SelectGraphicsMode(GraphicsMode mode) {
 	pfd.cColorBits = (UInt8)(color.R + color.G + color.B);
 
 	pfd.iPixelType = color.IsIndexed ? PFD_TYPE_COLORINDEX : PFD_TYPE_RGBA;
-	pfd.cRedBits = (UInt8)color.R;
-	pfd.cGreenBits = (UInt8)color.G;
-	pfd.cBlueBits = (UInt8)color.B;
-	pfd.cAlphaBits = (UInt8)color.A;
+	pfd.cRedBits   = color.R;
+	pfd.cGreenBits = color.G;
+	pfd.cBlueBits  = color.B;
+	pfd.cAlphaBits = color.A;
 
-	pfd.cDepthBits = (UInt8)mode.Depth;
-	pfd.cStencilBits = (UInt8)mode.Stencil;
-	if (mode.Depth <= 0) pfd.dwFlags |= PFD_DEPTH_DONTCARE;
-	if (mode.Buffers > 1) pfd.dwFlags |= PFD_DOUBLEBUFFER;
+	pfd.cDepthBits   = mode.DepthBits;
+	pfd.cStencilBits = mode.StencilBits;
+	if (mode.DepthBits <= 0) pfd.dwFlags |= PFD_DEPTH_DONTCARE;
+	if (mode.Buffers > 1)    pfd.dwFlags |= PFD_DOUBLEBUFFER;
 
 	Int32 modeIndex = ChoosePixelFormat(win_DC, &pfd);
 	if (modeIndex == 0) {

@@ -16,7 +16,7 @@ namespace OpenTK {
 		internal DisplayResolution() { }
 		
 		// Creates a new DisplayResolution object for the primary DisplayDevice.
-		internal DisplayResolution(int width, int height, int bitsPerPixel, float refreshRate)  {
+		internal DisplayResolution(int width, int height, int bitsPerPixel, int refreshRate)  {
 			Width = width; Height = height; 
 			BitsPerPixel = bitsPerPixel; RefreshRate = refreshRate;
 		}
@@ -31,7 +31,7 @@ namespace OpenTK {
 		public int BitsPerPixel;
 		
 		/// <summary> The vertical refresh rate of this display. </summary>
-		public float RefreshRate;
+		public int RefreshRate;
 	}
 	
 	/// <summary> Defines a display device on the underlying system. </summary>
@@ -80,7 +80,7 @@ namespace OpenTK {
 		}
 
 		/// <summary> Returns vertical refresh rate of this display. </summary>
-		public float RefreshRate {
+		public int RefreshRate {
 			get { return curResolution.RefreshRate; }
 			internal set { curResolution.RefreshRate = value; }
 		}

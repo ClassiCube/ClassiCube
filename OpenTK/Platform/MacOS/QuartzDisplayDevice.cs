@@ -53,11 +53,11 @@ namespace OpenTK.Platform.MacOS
 					int width = (int) dict.GetNumberValue("Width");
 					int height = (int) dict.GetNumberValue("Height");
 					int bpp = (int) dict.GetNumberValue("BitsPerPixel");
-					double freq = dict.GetNumberValue("RefreshRate");
+					int freq = (int) dict.GetNumberValue("RefreshRate");
 					bool current = currentMode.DictRef == dict.DictRef;
 
 					if (current) {
-						opentk_dev_current_res = new DisplayResolution(width, height, bpp, (float)freq);
+						opentk_dev_current_res = new DisplayResolution(width, height, bpp, freq);
 					}
 				}
 
