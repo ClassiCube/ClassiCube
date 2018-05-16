@@ -388,12 +388,12 @@ void ListScreen_QuickSort(Int32 left, Int32 right) {
 	UInt32* keys = buffer->FlagsBuffer; UInt32 key;
 	while (left < right) {
 		Int32 i = left, j = right;
-		Int32 pivot = (i + j) / 2;
+		String strI, strJ, pivot = StringsBuffer_UNSAFE_Get(buffer, (i + j) / 2);
 
 		/* partition the list */
 		while (i <= j) {
-			while (StringsBuffer_Compare(buffer, pivot, i) > 0) i++;
-			while (StringsBuffer_Compare(buffer, pivot, j) < 0) j--;
+			while ((strI = StringsBuffer_UNSAFE_Get(buffer, i), String_Compare(&pivot, &strI)) > 0) i++;
+			while ((strJ = StringsBuffer_UNSAFE_Get(buffer, j), String_Compare(&pivot, &strJ)) < 0) j--;
 			QuickSort_Swap_Maybe();
 		}
 		/* recurse into the smaller subset */

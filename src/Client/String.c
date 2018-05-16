@@ -411,13 +411,15 @@ Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b) {
 	Int32 i;
 
 	for (i = 0; i < minLen; i++) {
-		if (a->buffer[i] == b->buffer[i]) continue;
-		return a->buffer[i] > b->buffer[i] ? 1 : -1;
+		UInt8 aCur = a->buffer[i]; Char_MakeLower(aCur);
+		UInt8 bCur = b->buffer[i]; Char_MakeLower(bCur);
+
+		if (aCur == bCur) continue;
+		return (Int32)aCur - (Int32)bCur;
 	}
 
 	/* all chars are equal here - same string, or a substring */
-	if (a->length == b->length) return 0;
-	return a->length > b->length ? 1 : -1;
+	return a->length - b->length;
 }
 
 void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, const void* a1) {
@@ -779,12 +781,6 @@ void StringsBuffer_Remove(StringsBuffer* buffer, UInt32 index) {
 
 	buffer->Count--;
 	buffer->UsedElems -= len;
-}
-
-Int32 StringsBuffer_Compare(StringsBuffer* buffer, UInt32 idxA, UInt32 idxB) {
-	String strA = StringsBuffer_UNSAFE_Get(buffer, idxA);
-	String strB = StringsBuffer_UNSAFE_Get(buffer, idxB);
-	return String_Compare(&strA, &strB);
 }
 
 
