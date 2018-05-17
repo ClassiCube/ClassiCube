@@ -712,6 +712,43 @@ ReturnCode Deflate_Flush(DeflateState* state, UInt32 size, bool lastBlock) {
 	return 0; /* TODO: need to return error code instead of killing process */
 }
 
+Int32 Deflate_MatchLen(UInt8* a, UInt8* b, Int32 maxLen);
+UInt32 Deflate_Hash(UInt8* src);
+
+void DeflateCompresss(UInt8* src, Int32 len) {
+	/* Based off descriptions from http://www.gzip.org/algorithm.txt and
+	https://github.com/nothings/stb/blob/master/stb_image_write.h */
+
+	Int32 i = 0;
+	UInt8* cur = src;
+	UInt8* starts[4096];
+	UInt16 prev[4096];
+	UInt32 hashesCount = 0;
+
+	while (i < len - 3) {		
+		/* CALC HASH AND STUFF HERE */
+		UInt32 hash = 0;// Deflate_Hash(cur);
+		Int32 bestLen = 3;
+		UInt8* bestPos = NULL;
+
+		while (starts[hash] != NULL) {
+			hash = prev[hash];
+		}
+
+		/* Insert into hash chain */
+
+		/* Lazy evaluation: Find longest match starting at next byte. */
+		/* If that's longer than the longest match at current byte, */
+		/* just throwaway this match */
+	}
+
+	/* literals for last few bytes */
+	while (len > 0) {
+		/* WRITE LITERAL */
+		len--;
+	}
+}
+
 ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	DeflateState* state = stream->Meta_Inflate;
 	*modified = 0;

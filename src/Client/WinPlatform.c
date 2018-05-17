@@ -43,20 +43,20 @@ void Platform_Init(void) {
 
 	UInt32 deviceNum = 0;
 	/* Get available video adapters and enumerate all monitors */
-	DISPLAY_DEVICEA device = { 0 };
-	device.cb = sizeof(DISPLAY_DEVICEA);
+	DISPLAY_DEVICEW device = { 0 };
+	device.cb = sizeof(DISPLAY_DEVICEW);
 
-	while (EnumDisplayDevicesA(NULL, deviceNum, &device, 0)) {
+	while (EnumDisplayDevicesW(NULL, deviceNum, &device, 0)) {
 		deviceNum++;
 		if ((device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) == 0) continue;
 		bool devPrimary = false;
 		DisplayResolution resolution = { 0 };
-		DEVMODEA mode = { 0 };
-		mode.dmSize = sizeof(DEVMODEA);
+		DEVMODEW mode = { 0 };
+		mode.dmSize = sizeof(DEVMODEW);
 
 		/* The second function should only be executed when the first one fails (e.g. when the monitor is disabled) */
-		if (EnumDisplaySettingsA(device.DeviceName, ENUM_CURRENT_SETTINGS, &mode) ||
-			EnumDisplaySettingsA(device.DeviceName, ENUM_REGISTRY_SETTINGS, &mode)) {
+		if (EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS, &mode) ||
+			EnumDisplaySettingsW(device.DeviceName, ENUM_REGISTRY_SETTINGS, &mode)) {
 			if (mode.dmBitsPerPel > 0) {
 				resolution = DisplayResolution_Make(mode.dmPelsWidth, mode.dmPelsHeight,
 					mode.dmBitsPerPel, mode.dmDisplayFrequency);
@@ -79,6 +79,16 @@ void Platform_Free(void) {
 
 void Platform_Exit(ReturnCode code) {
 	ExitProcess(code);
+}
+
+void Platform_UnicodeExpand(WCHAR* dst, STRING_PURE String* src) {
+	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
+
+	Int32 i;
+	for (i = 0; i < src->length; i++) {
+		dst[i] = Convert_CP437ToUnicode(src->buffer[i]);
+	}
+	dst[i] = NULL;
 }
 
 STRING_PURE String Platform_GetCommandLineArgs(void) {
@@ -173,17 +183,26 @@ void Platform_CurrentLocalTime(DateTime* time) {
 
 
 bool Platform_FileExists(STRING_PURE String* path) {
-	UInt32 attribs = GetFileAttributesA(path->buffer);
+	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(pathUnicode, path);
+
+	UInt32 attribs = GetFileAttributesW(pathUnicode);
 	return attribs != INVALID_FILE_ATTRIBUTES && !(attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 bool Platform_DirectoryExists(STRING_PURE String* path) {
-	UInt32 attribs = GetFileAttributesA(path->buffer);
+	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(pathUnicode, path);
+
+	UInt32 attribs = GetFileAttributesW(pathUnicode);
 	return attribs != INVALID_FILE_ATTRIBUTES && (attribs & FILE_ATTRIBUTE_DIRECTORY);
 }
 
 ReturnCode Platform_DirectoryCreate(STRING_PURE String* path) {
-	BOOL success = CreateDirectoryA(path->buffer, NULL);
+	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(pathUnicode, path);
+
+	BOOL success = CreateDirectoryW(pathUnicode, NULL);
 	return success ? 0 : GetLastError();
 }
 
@@ -191,25 +210,34 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 	/* Need to do directory\* to search for files in directory */
 	UInt8 searchPatternBuffer[FILENAME_SIZE + 10];
 	String searchPattern = String_InitAndClearArray(searchPatternBuffer);
-	String_AppendString(&searchPattern, path);
-	String_AppendConst(&searchPattern, "\\*");
+	String_Format1(&searchPattern, "%s\\*", path);
 
-	WIN32_FIND_DATAA data;
-	HANDLE find = FindFirstFileA(searchPattern.buffer, &data);
+	WCHAR searchUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(searchUnicode, &searchPattern);
+
+	WIN32_FIND_DATAW data;
+	HANDLE find = FindFirstFileW(searchUnicode, &data);
 	if (find == INVALID_HANDLE_VALUE) return GetLastError();
 
 	do {
-		String path = String_FromRawArray(data.cFileName);
-		if (!(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-			/* folder1/folder2/entry.zip --> entry.zip */
-			Int32 lastDir = String_LastIndexOf(&path, Platform_DirectorySeparator);
-			String filename = path;
-			if (lastDir >= 0) {
-				filename = String_UNSAFE_SubstringAt(&filename, lastDir + 1);
-			}
-			callback(&filename, obj);
+		if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
+		String path = String_Init((UInt8*)data.cFileName, 0, MAX_PATH);
+		Int32 i;
+
+		/* unicode to code page 437*/
+		for (i = 0; i < MAX_PATH && data.cFileName[i] != NULL; i++) {
+			path.buffer[i] = Convert_UnicodeToCP437(data.cFileName[i]);
 		}
-	} while (FindNextFileA(find, &data));
+		path.length = i;
+
+		/* folder1/folder2/entry.zip --> entry.zip */
+		Int32 lastDir = String_LastIndexOf(&path, Platform_DirectorySeparator);
+		String filename = path;
+		if (lastDir >= 0) {
+			filename = String_UNSAFE_SubstringAt(&filename, lastDir + 1);
+		}
+		callback(&filename, obj);
+	}  while (FindNextFileW(find, &data));
 
 	/* get return code from FindNextFile before closing find handle */
 	ReturnCode code = GetLastError();
@@ -238,23 +266,29 @@ ReturnCode Platform_FileGetWriteTime(STRING_PURE String* path, DateTime* time) {
 
 
 ReturnCode Platform_FileOpen(void** file, STRING_PURE String* path) {
-	HANDLE handle = CreateFileA(path->buffer, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	*file = (void*)handle;
+	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(pathUnicode, path);
 
+	HANDLE handle = CreateFileW(pathUnicode, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	*file = (void*)handle;
 	return handle != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
 ReturnCode Platform_FileCreate(void** file, STRING_PURE String* path) {
-	HANDLE handle = CreateFileA(path->buffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	*file = (void*)handle;
+	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(pathUnicode, path);
 
+	HANDLE handle = CreateFileW(pathUnicode, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	*file = (void*)handle;
 	return handle != INVALID_HANDLE_VALUE ? 0 : GetLastError();
 }
 
 ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path) {
-	HANDLE handle = CreateFileA(path->buffer, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	*file = (void*)handle;
+	WCHAR pathUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(pathUnicode, path);
 
+	HANDLE handle = CreateFileW(pathUnicode, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+	*file = (void*)handle;
 	if (handle == INVALID_HANDLE_VALUE) return GetLastError();
 	return Platform_FileSeek(*file, 0, STREAM_SEEKFROM_END);
 }
@@ -353,7 +387,7 @@ void Platform_MutexUnlock(void* handle) {
 }
 
 void* Platform_EventCreate(void) {
-	void* handle = CreateEventA(NULL, false, false, NULL);
+	void* handle = CreateEventW(NULL, false, false, NULL);
 	if (handle == NULL) {
 		ErrorHandler_FailWithCode(GetLastError(), "Creating event");
 	}
@@ -417,9 +451,11 @@ void Platform_FontFree(FontDesc* desc) {
 
 /* TODO: not associate font with device so much */
 Size2D Platform_TextMeasure(DrawTextArgs* args) {
-	String* text = &args->Text;
+	WCHAR strUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(strUnicode, &args->Text);
+
 	HGDIOBJ oldFont = SelectObject(hdc, args->Font.Handle);
-	SIZE area; GetTextExtentPointA(hdc, text->buffer, text->length, &area);
+	SIZE area; GetTextExtentPointW(hdc, strUnicode, args->Text.length, &area);
 
 	SelectObject(hdc, oldFont);
 	return Size2D_Make(area.cx, area.cy);
@@ -450,13 +486,13 @@ void Platform_SetBitmap(Bitmap* bmp) {
 /* TODO: check return codes and stuff */
 /* TODO: make text prettier.. somehow? */
 /* TODO: Do we need to / 255 instead of >> 8 ? */
-/* TODO: GetTextExtentPoint32 instead? */
-/* TODO: Code page 437 - so probably need to use W variants of functions */
 Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col) {
-	String* text = &args->Text;
+	WCHAR strUnicode[String_BufferSize(FILENAME_SIZE)];
+	Platform_UnicodeExpand(strUnicode, &args->Text);
+
 	HGDIOBJ oldFont = (HFONT)SelectObject(hdc, (HFONT)args->Font.Handle);
-	SIZE area; GetTextExtentPointA(hdc, text->buffer, text->length, &area);
-	TextOutA(hdc, 0, 0, text->buffer, text->length);
+	SIZE area; GetTextExtentPointW(hdc, strUnicode, args->Text.length, &area);
+	TextOutW(hdc, 0, 0, strUnicode, args->Text.length);
 
 	Int32 xx, yy;
 	Bitmap* bmp = platform_bmp;
@@ -570,6 +606,7 @@ ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle) {
 	UInt8 headersBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String headers = String_MakeNull();
 	
+	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */
 	if (request->Etag[0] != NULL || request->LastModified.Year > 0) {
 		headers = String_InitAndClearArray(headersBuffer);
 		if (request->LastModified.Year > 0) {
