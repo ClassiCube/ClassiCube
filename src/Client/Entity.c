@@ -611,7 +611,7 @@ static void Player_SetSkinAll(Player* player, bool reset) {
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
-		if (Entities_List[i] == NULL || Entities_List[i] == entity) continue;
+		if (Entities_List[i] == NULL) continue;
 		if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 
 		Player* p = (Player*)Entities_List[i];
