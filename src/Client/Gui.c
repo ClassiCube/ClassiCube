@@ -267,9 +267,9 @@ void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font,
 	Platform_MemFree(&bmp.Scan0);
 
 	Drawer2D_ReducePadding_Tex(&atlas->Tex, Math_Floor(font->Size), 4);
-	atlas->Tex.U2 = (Real32)atlas->Offset / (Real32)bmp.Width;
-	atlas->Tex.Width = (UInt16)atlas->Offset;
-	atlas->TotalWidth = bmp.Width;
+	atlas->uScale = 1.0f / (Real32)bmp.Width;
+	atlas->Tex.U2 = atlas->Offset * atlas->uScale;
+	atlas->Tex.Width = atlas->Offset;	
 }
 
 void TextAtlas_Free(TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->Tex.ID); }
@@ -277,9 +277,10 @@ void TextAtlas_Free(TextAtlas* atlas) { Gfx_DeleteTexture(&atlas->Tex.ID); }
 void TextAtlas_Add(TextAtlas* atlas, Int32 charI, VertexP3fT2fC4b** vertices) {
 	Int32 width = atlas->Widths[charI];
 	Texture part = atlas->Tex;
-	part.X = (UInt16)atlas->CurX; part.Width = (UInt16)width;
-	part.U1 = (atlas->Offset + charI * atlas->FontSize) / (Real32)atlas->TotalWidth;
-	part.U2 = part.U1 + width / (Real32)atlas->TotalWidth;
+
+	part.X = atlas->CurX; part.Width = width;
+	part.U1 = (atlas->Offset + charI * atlas->FontSize) * atlas->uScale;
+	part.U2 = part.U1 + width * atlas->uScale;
 
 	atlas->CurX += width;
 	PackedCol white = PACKEDCOL_WHITE;

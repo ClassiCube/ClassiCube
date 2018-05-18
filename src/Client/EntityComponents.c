@@ -463,26 +463,24 @@ void LocalInterpComp_AdvanceState(InterpComp* interp) {
 /*########################################################################################################################*
 *-----------------------------------------------------ShadowComponent-----------------------------------------------------*
 *#########################################################################################################################*/
-Real32 ShadowComponent_radius = 7.0f;
+Real32 ShadowComponent_radius, shadowComponent_uvScale;
 typedef struct ShadowData_ { Real32 Y; BlockID Block; UInt8 A; } ShadowData;
 
 bool lequal(Real32 a, Real32 b) { return a < b || Math_AbsF(a - b) < 0.001f; }
 static void ShadowComponent_DrawCoords(VertexP3fT2fC4b** vertices, Entity* entity, ShadowData* data, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
 	Vector3 cen = entity->Position;
 	if (lequal(x2, x1) || lequal(z2, z1)) return;
-	Real32 radius = ShadowComponent_radius;
 
-	Real32 u1 = (x1 - cen.X) * 16.0f / (radius * 2) + 0.5f;
-	Real32 v1 = (z1 - cen.Z) * 16.0f / (radius * 2) + 0.5f;
-	Real32 u2 = (x2 - cen.X) * 16.0f / (radius * 2) + 0.5f;
-	Real32 v2 = (z2 - cen.Z) * 16.0f / (radius * 2) + 0.5f;
+	Real32 u1 = (x1 - cen.X) * shadowComponent_uvScale + 0.5f;
+	Real32 v1 = (z1 - cen.Z) * shadowComponent_uvScale + 0.5f;
+	Real32 u2 = (x2 - cen.X) * shadowComponent_uvScale + 0.5f;
+	Real32 v2 = (z2 - cen.Z) * shadowComponent_uvScale + 0.5f;
 	if (u2 <= 0.0f || v2 <= 0.0f || u1 >= 1.0f || v1 >= 1.0f) return;
 
-	radius /= 16.0f;
-	x1 = max(x1, cen.X - radius); u1 = u1 >= 0.0f ? u1 : 0.0f;
-	z1 = max(z1, cen.Z - radius); v1 = v1 >= 0.0f ? v1 : 0.0f;
-	x2 = min(x2, cen.X + radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
-	z2 = min(z2, cen.Z + radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
+	x1 = max(x1, cen.X - ShadowComponent_radius); u1 = u1 >= 0.0f ? u1 : 0.0f;
+	z1 = max(z1, cen.Z - ShadowComponent_radius); v1 = v1 >= 0.0f ? v1 : 0.0f;
+	x2 = min(x2, cen.X + ShadowComponent_radius); u2 = u2 <= 1.0f ? u2 : 1.0f;
+	z2 = min(z2, cen.Z + ShadowComponent_radius); v2 = v2 <= 1.0f ? v2 : 1.0f;
 
 	PackedCol col = PACKEDCOL_CONST(255, 255, 255, data->A);
 	VertexP3fT2fC4b* ptr = *vertices;
@@ -616,7 +614,10 @@ void ShadowComponent_Draw(Entity* entity) {
 	Real32 posX = Position.X, posZ = Position.Z;
 	Int32 posY = min((Int32)Position.Y, World_MaxY);
 	GfxResourceID vb;
-	ShadowComponent_radius = 7.0f * min(entity->ModelScale.Y, 1.0f) * entity->Model->ShadowScale;
+
+	Real32 radius = 7.0f * min(entity->ModelScale.Y, 1.0f) * entity->Model->ShadowScale;
+	ShadowComponent_radius = radius / 16.0f;
+	shadowComponent_uvScale = 16.0f / (radius * 2.0f);
 
 	VertexP3fT2fC4b vertices[128];
 	ShadowData data[4];
@@ -631,9 +632,8 @@ void ShadowComponent_Draw(Entity* entity) {
 		ShadowComponent_DrawSquareShadow(&ptr, data[0].Y, x1, z1);
 	} else {
 		vb = ModelCache_Vb;
-		Real32 radius = ShadowComponent_radius / 16.0f;
-		Int32 x1 = Math_Floor(posX - radius), z1 = Math_Floor(posZ - radius);
-		Int32 x2 = Math_Floor(posX + radius), z2 = Math_Floor(posZ + radius);
+		Int32 x1 = Math_Floor(posX - ShadowComponent_radius), z1 = Math_Floor(posZ - ShadowComponent_radius);
+		Int32 x2 = Math_Floor(posX + ShadowComponent_radius), z2 = Math_Floor(posZ + ShadowComponent_radius);
 
 		if (ShadowComponent_GetBlocks(entity, x1, posY, z1, data) && data[0].A > 0) {
 			ShadowComponent_DrawCircle(&ptr, entity, data, (Real32)x1, (Real32)z1);
@@ -659,7 +659,7 @@ void ShadowComponent_Draw(Entity* entity) {
 		ShadowComponent_BoundShadowTex = true;
 	}
 
-	UInt32 vCount = (UInt32)(ptr - vertices) / (UInt32)sizeof(VertexP3fT2fC4b);
+	UInt32 vCount = (UInt32)(ptr - vertices);
 	GfxCommon_UpdateDynamicVb_IndexedTris(vb, vertices, vCount);
 }
 

@@ -7,9 +7,10 @@ namespace ClassicalSharp {
 	public sealed class TextAtlas : IDisposable {
 		
 		public Texture tex;
+		internal int offset, curX, fontSize;		
+		float uScale;
+		int[] widths;		
 		Game game;
-		int[] widths;
-		internal int offset, curX, totalWidth, fontSize;
 		
 		public TextAtlas(Game game, int fontSize) {
 			this.game = game;
@@ -39,9 +40,9 @@ namespace ClassicalSharp {
 					tex = drawer.Make2DTexture(bmp, size, 0, 0);
 					drawer.ReducePadding(ref tex, Utils.Floor(font.Size), 4);
 					
-					tex.U2 = (float)offset / bmp.Width;
+					uScale = 1.0f / bmp.Width;
+					tex.U2 = offset * uScale;
 					tex.Width = (ushort)offset;
-					totalWidth = bmp.Width;
 				}
 			}
 		}
@@ -53,8 +54,8 @@ namespace ClassicalSharp {
 			int width = widths[charIndex];
 			Texture part = tex;
 			part.X1 = curX; part.Width = (ushort)width;
-			part.U1 = (offset + charIndex * fontSize) / (float)totalWidth;
-			part.U2 = part.U1 + width / (float)totalWidth;
+			part.U1 = (offset + charIndex * fontSize) * uScale;
+			part.U2 = part.U1 + width * uScale;
 			
 			curX += width;
 			IGraphicsApi.Make2DQuad(ref part, FastColour.WhitePacked, 

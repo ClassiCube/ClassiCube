@@ -386,7 +386,7 @@ void Entities_DrawShadows(void) {
 	ShadowComponent_Draw(Entities_List[ENTITIES_SELF_ID]);
 	if (Entities_ShadowMode == SHADOW_MODE_CIRCLE_ALL) {
 		UInt32 i;
-		for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
+		for (i = 0; i < ENTITIES_SELF_ID; i++) {
 			if (Entities_List[i] == NULL) continue;
 			if (Entities_List[i]->EntityType != ENTITY_TYPE_PLAYER) continue;
 			ShadowComponent_Draw(Entities_List[i]);

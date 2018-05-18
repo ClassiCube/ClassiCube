@@ -44,7 +44,6 @@ typedef UInt8 BlockID;
 #endif
 typedef UInt8 EntityID;
 typedef UInt8 TextureLoc;
-/* Sides of a block. TODO: Map this to CPE PlayerClicked blockface enums. */
 typedef UInt8 Face;
 typedef UInt32 ReturnCode;
 

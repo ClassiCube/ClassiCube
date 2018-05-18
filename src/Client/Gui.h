@@ -93,8 +93,9 @@ void Gui_OnResize(void);
 #define TEXTATLAS_MAX_WIDTHS 16
 typedef struct TextAtlas_ {
 	Texture Tex;
+	Int32 Offset, CurX, FontSize;
+	Real32 uScale;
 	Int32 Widths[TEXTATLAS_MAX_WIDTHS];
-	Int32 Offset, CurX, TotalWidth, FontSize;
 } TextAtlas;
 void TextAtlas_Make(TextAtlas* atlas, STRING_PURE String* chars, FontDesc* font, STRING_PURE String* prefix);
 void TextAtlas_Free(TextAtlas* atlas);
