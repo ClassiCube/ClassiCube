@@ -205,8 +205,8 @@ void Hotkeys_QuickSort(Int32 left, Int32 right) {
 
 		/* partition the list */
 		while (i <= j) {
-			while (pivot > keys[i].Flags) i++;
-			while (pivot < keys[j].Flags) j--;
+			while (pivot < keys[i].Flags) i++;
+			while (pivot > keys[j].Flags) j--;
 			QuickSort_Swap_Maybe();
 		}
 		/* recurse into the smaller subset */
