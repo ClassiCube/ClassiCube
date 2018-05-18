@@ -156,7 +156,7 @@ static void Animations_ReadDescription(Stream* stream) {
 
 	while (Stream_ReadLine(&buffered, &line)) {
 		if (line.length == 0 || line.buffer[0] == '#') continue;
-		AnimationData data;
+		AnimationData data = { 0 };
 		UInt32 partsCount = Array_Elems(parts);	
 		String_UNSAFE_Split(&line, ' ', parts, &partsCount);
 
