@@ -18,7 +18,7 @@ Real32 L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random L_rnd;
 bool L_rndInitalised;
 
-void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
+static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 	if (!L_rndInitalised) {
 		Random_InitFromCurrentTime(&L_rnd);
 		L_rndInitalised = true;
@@ -81,7 +81,7 @@ Real32 W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random W_rnd;
 bool W_rndInitalised;
 
-void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
+static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 	if (!W_rndInitalised) {
 		Random_InitFromCurrentTime(&W_rnd);
 		W_rndInitalised = true;
@@ -138,14 +138,14 @@ AnimationData anims_list[ATLAS1D_MAX_ATLASES_COUNT];
 UInt32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
-void Animations_LogFail(STRING_TRANSIENT String* line, const UInt8* raw) {
+static void Animations_LogFail(STRING_TRANSIENT String* line, const UInt8* raw) {
 	UInt8 msgBuffer[String_BufferSize(128)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	String_Format2(&msg, "&c%c: %s", raw, line);
 	Chat_Add(&msg);
 }
 
-void Animations_ReadDescription(Stream* stream) {
+static void Animations_ReadDescription(Stream* stream) {
 	UInt8 lineBuffer[String_BufferSize(128)];
 	String line = String_InitAndClearArray(lineBuffer);
 	String parts[7];
@@ -194,7 +194,7 @@ void Animations_ReadDescription(Stream* stream) {
 
 /* TODO: should we use 128 size here? */
 #define ANIMS_FAST_SIZE 64
-void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
+static void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
 	UInt8 buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
 	UInt8* ptr = buffer;
 	if (size > ANIMS_FAST_SIZE) {
@@ -223,7 +223,7 @@ void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
 	if (size > ANIMS_FAST_SIZE) Platform_MemFree(&ptr);
 }
 
-void Animations_Apply(AnimationData* data) {
+static void Animations_Apply(AnimationData* data) {
 	data->Tick--;
 	if (data->Tick >= 0) return;
 	data->State++;
@@ -236,7 +236,7 @@ void Animations_Apply(AnimationData* data) {
 	Animations_Draw(data, texId, data->FrameSize);
 }
 
-bool Animations_IsDefaultZip(void) {
+static bool Animations_IsDefaultZip(void) {
 	if (World_TextureUrl.length > 0) return false;
 	UInt8 texPackBuffer[String_BufferSize(STRING_SIZE)];
 	String texPack = String_InitAndClearArray(texPackBuffer);
@@ -245,13 +245,13 @@ bool Animations_IsDefaultZip(void) {
 	return String_CaselessEqualsConst(&texPack, "default.zip");
 }
 
-void Animations_Clear(void) {
+static void Animations_Clear(void) {
 	anims_count = 0;
 	Platform_MemFree(&anims_bmp.Scan0);
 	anims_validated = false;
 }
 
-void Animations_Validate(void) {
+static void Animations_Validate(void) {
 	anims_validated = true;
 	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
@@ -307,13 +307,13 @@ void Animations_Tick(ScheduledTask* task) {
 	}
 }
 
-void Animations_PackChanged(void* obj) {
+static void Animations_PackChanged(void* obj) {
 	Animations_Clear();
 	anims_useLavaAnim = Animations_IsDefaultZip();
 	anims_useWaterAnim = anims_useLavaAnim;
 }
 
-void Animations_FileChanged(void* obj, Stream* stream) {
+static void Animations_FileChanged(void* obj, Stream* stream) {
 	String* name = &stream->Name;
 	if (String_CaselessEqualsConst(name, "animation.png") || String_CaselessEqualsConst(name, "animations.png")) {
 		Bitmap_DecodePng(&anims_bmp, stream);
@@ -326,12 +326,12 @@ void Animations_FileChanged(void* obj, Stream* stream) {
 	}
 }
 
-void Animations_Init(void) {
+static void Animations_Init(void) {
 	Event_RegisterVoid(&TextureEvents_PackChanged,   NULL, Animations_PackChanged);
 	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Animations_FileChanged);
 }
 
-void Animations_Free(void) {
+static void Animations_Free(void) {
 	Animations_Clear();
 	Event_UnregisterVoid(&TextureEvents_PackChanged,   NULL, Animations_PackChanged);
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Animations_FileChanged);

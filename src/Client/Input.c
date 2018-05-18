@@ -196,7 +196,7 @@ UInt8 Hotkeys_LWJGL[256] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-void Hotkeys_QuickSort(Int32 left, Int32 right) {
+static void Hotkeys_QuickSort(Int32 left, Int32 right) {
 	HotkeyData* keys = HotkeysList; HotkeyData key;
 
 	while (left < right) {

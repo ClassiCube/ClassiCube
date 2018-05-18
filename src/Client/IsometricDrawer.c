@@ -14,25 +14,28 @@ GfxResourceID iso_vb;
 
 bool iso_cacheInitalisesd;
 PackedCol iso_colNormal, iso_colXSide, iso_colZSide, iso_colYBottom;
-Real32 iso_cosX, iso_sinX, iso_cosY, iso_sinY;
-Matrix iso_transform;
+#define iso_cosX  (0.86602540378443864f) /* Math_CosF(30.0f  * MATH_DEG2RAD); */
+#define iso_sinX  (0.50000000000000000f) /* Math_SinF(30.0f  * MATH_DEG2RAD); */
+#define iso_cosY  (0.70710678118654752f) /* Math_CosF(-45.0f * MATH_DEG2RAD); */
+#define iso_sinY (-0.70710678118654752f) /* Math_SinF(-45.0f * MATH_DEG2RAD); */
 
+Matrix iso_transform;
 Vector3 iso_pos;
 Int32 iso_lastTexIndex, iso_texIndex;
 
-void IsometricDrawer_RotateX(Real32 cosA, Real32 sinA) {
+static void IsometricDrawer_RotateX(Real32 cosA, Real32 sinA) {
 	Real32 y  = cosA  * iso_pos.Y + sinA * iso_pos.Z;
 	iso_pos.Z = -sinA * iso_pos.Y + cosA * iso_pos.Z;
 	iso_pos.Y = y;
 }
 
-void IsometricDrawer_RotateY(Real32 cosA, Real32 sinA) {
+static void IsometricDrawer_RotateY(Real32 cosA, Real32 sinA) {
 	Real32 x  = cosA * iso_pos.X - sinA * iso_pos.Z;
 	iso_pos.Z = sinA * iso_pos.X + cosA * iso_pos.Z;
 	iso_pos.X = x;
 }
 
-void IsometricDrawer_InitCache(void) {
+static void IsometricDrawer_InitCache(void) {
 	if (iso_cacheInitalisesd) return;
 	iso_cacheInitalisesd = true;
 	PackedCol white = PACKEDCOL_WHITE;
@@ -43,14 +46,9 @@ void IsometricDrawer_InitCache(void) {
 	Matrix_RotateY(&rotY,  45.0f * MATH_DEG2RAD);
 	Matrix_RotateX(&rotX, -30.0f * MATH_DEG2RAD);
 	Matrix_Mul(&iso_transform, &rotY, &rotX);
-
-	iso_cosX = Math_CosF(30.0f * MATH_DEG2RAD);
-	iso_sinX = Math_SinF(30.0f * MATH_DEG2RAD);
-	iso_cosY = Math_CosF(-45.0f * MATH_DEG2RAD);
-	iso_sinY = Math_SinF(-45.0f * MATH_DEG2RAD);
 }
 
-void IsometricDrawer_Flush(void) {
+static void IsometricDrawer_Flush(void) {
 	if (iso_lastTexIndex != -1) {
 		Gfx_BindTexture(Atlas1D_TexIds[iso_lastTexIndex]);
 		Int32 count = (Int32)(iso_vertices - iso_base_vertices);
@@ -61,7 +59,7 @@ void IsometricDrawer_Flush(void) {
 	iso_vertices = iso_base_vertices;
 }
 
-TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
+static TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 	TextureLoc texLoc = Block_GetTexLoc(block, face);
 	iso_texIndex = Atlas1D_Index(texLoc);
 
@@ -70,7 +68,7 @@ TextureLoc IsometricDrawer_GetTexLoc(BlockID block, Face face) {
 }
 
 #define AddVertex *iso_vertices = v; iso_vertices++;
-void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
+static void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &iso_texIndex);
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();
@@ -95,7 +93,7 @@ void IsometricDrawer_SpriteZQuad(BlockID block, bool firstPart) {
 	            v.Y = minY;               v.V = rec.V2; AddVertex;
 }
 
-void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
+static void IsometricDrawer_SpriteXQuad(BlockID block, bool firstPart) {
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &iso_texIndex);
 	if (iso_lastTexIndex != iso_texIndex) IsometricDrawer_Flush();

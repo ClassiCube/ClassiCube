@@ -10,7 +10,7 @@
 #include "ErrorHandler.h"
 
 Real32 PickedPos_dist;
-void PickedPos_TestAxis(PickedPos* pos, Real32 dAxis, Face fAxis) {
+static void PickedPos_TestAxis(PickedPos* pos, Real32 dAxis, Face fAxis) {
 	dAxis = Math_AbsF(dAxis);
 	if (dAxis >= PickedPos_dist) return;
 
@@ -54,7 +54,7 @@ void PickedPos_SetAsInvalid(PickedPos* pos) {
 	pos->TranslatedPos = blockPos;
 }
 
-Real32 RayTracer_Div(Real32 a, Real32 b) {
+static Real32 RayTracer_Div(Real32 a, Real32 b) {
 	if (Math_AbsF(b) < 0.000001f) return MATH_LARGENUM;
 	return a / b;
 }
@@ -111,7 +111,7 @@ RayTracer tracer;
 #define PICKING_BORDER BLOCK_BEDROCK
 typedef bool(*IntersectTest)(PickedPos* pos);
 
-BlockID Picking_InsideGetBlock(Int32 x, Int32 y, Int32 z) {
+static BlockID Picking_InsideGetBlock(Int32 x, Int32 y, Int32 z) {
 	if (x >= 0 && z >= 0 && x < World_Width && z < World_Length) {
 		if (y >= World_Height) return BLOCK_AIR;
 		if (y >= 0) return World_GetBlock(x, y, z);
@@ -123,7 +123,7 @@ BlockID Picking_InsideGetBlock(Int32 x, Int32 y, Int32 z) {
 	return sides && y < height ? PICKING_BORDER : BLOCK_AIR;
 }
 
-BlockID Picking_OutsideGetBlock(Int32 x, Int32 y, Int32 z, Vector3I origin) {
+static BlockID Picking_OutsideGetBlock(Int32 x, Int32 y, Int32 z, Vector3I origin) {
 	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) return BLOCK_AIR;
 	bool sides = WorldEnv_SidesBlock != BLOCK_AIR;
 	/* handling of blocks inside the map, above, and on borders */
@@ -141,7 +141,7 @@ BlockID Picking_OutsideGetBlock(Int32 x, Int32 y, Int32 z, Vector3I origin) {
 	return BLOCK_AIR;
 }
 
-bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos, IntersectTest intersect) {
+static bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos, IntersectTest intersect) {
 	RayTracer_SetVectors(&tracer, origin, dir);
 	Real32 reachSq = reach * reach;
 	Vector3I pOrigin; Vector3I_Floor(&pOrigin, &origin);
@@ -174,7 +174,7 @@ bool Picking_RayTrace(Vector3 origin, Vector3 dir, Real32 reach, PickedPos* pos,
 	return false;
 }
 
-bool Picking_ClipBlock(PickedPos* pos) {
+static bool Picking_ClipBlock(PickedPos* pos) {
 	if (!Game_CanPick(tracer.Block)) return false;
 
 	/* This cell falls on the path of the ray. Now perform an additional AABB test,
@@ -199,7 +199,7 @@ bool Picking_ClipBlock(PickedPos* pos) {
 	return true;
 }
 
-bool Picking_ClipCamera(PickedPos* pos) {
+static bool Picking_ClipCamera(PickedPos* pos) {
 	if (Block_Draw[tracer.Block] == DRAW_GAS || Block_Collide[tracer.Block] != COLLIDE_SOLID) {
 		return false;
 	}

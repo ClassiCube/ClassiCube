@@ -19,7 +19,7 @@ String_AppendConst(&logMsg, "\r\n");
 #define ErrorHandler_WriteLogEnd()\
 String_AppendConst(&logMsg, "Please report the crash to github.com/UnknownShadow200/ClassicalSharp/issues so we can fix it.");
 
-LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
+static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInfo) {
 	/* TODO: Write processor state to file*/
 	/* TODO: Get address that caused the issue */
 	/* TODO: Don't Backtrace here, because it's not the actual useful stack */

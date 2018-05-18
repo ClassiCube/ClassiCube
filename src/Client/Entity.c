@@ -64,12 +64,12 @@ void LocationUpdate_MakePosAndOri(LocationUpdate* update, Vector3 pos, Real32 ro
 *---------------------------------------------------------Entity----------------------------------------------------------*
 *#########################################################################################################################*/
 EntityVTABLE entity_VTABLE;
-PackedCol Entity_DefaultGetCol(Entity* entity) {
+static PackedCol Entity_DefaultGetCol(Entity* entity) {
 	Vector3 eyePos = Entity_GetEyePosition(entity);
 	Vector3I P; Vector3I_Floor(&P, &eyePos);
 	return World_IsValidPos_3I(P) ? Lighting_Col(P.X, P.Y, P.Z) : Lighting_Outside;
 }
-void Entity_NullFunc(Entity* entity) {}
+static void Entity_NullFunc(Entity* entity) {}
 
 void Entity_Init(Entity* entity) {
 	entity->ModelScale = Vector3_Create1(1.0f);
@@ -114,7 +114,7 @@ void Entity_GetBounds(Entity* entity, AABB* bb) {
 	AABB_Make(bb, &entity->Position, &entity->Size);
 }
 
-void Entity_ParseScale(Entity* entity, String scale) {
+static void Entity_ParseScale(Entity* entity, String scale) {
 	if (scale.buffer == NULL) return;
 	Real32 value;
 	if (!Convert_TryParseReal32(&scale, &value)) return;
@@ -193,7 +193,7 @@ bool Entity_TouchesAny(AABB* bounds, bool (*touches_condition)(BlockID block__))
 	return false;
 }
 
-bool Entity_IsRope(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
+static bool Entity_IsRope(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_CLIMB_ROPE; }
 bool Entity_TouchesAnyRope(Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	bounds.Max.Y += 0.5f / 16.0f;
@@ -201,15 +201,14 @@ bool Entity_TouchesAnyRope(Entity* entity) {
 }
 
 Vector3 entity_liqExpand = { 0.25f / 16.0f, 0.0f / 16.0f, 0.25f / 16.0f };
-
-bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
+static bool Entity_IsLava(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_LAVA; }
 bool Entity_TouchesAnyLava(Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
 	return Entity_TouchesAny(&bounds, Entity_IsLava);
 }
 
-bool Entity_IsWater(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
+static bool Entity_IsWater(BlockID b) { return Block_ExtendedCollide[b] == COLLIDE_LIQUID_WATER; }
 bool Entity_TouchesAnyWater(Entity* entity) {
 	AABB bounds; Entity_GetBounds(entity, &bounds);
 	AABB_Offset(&bounds, &bounds, &entity_liqExpand);
@@ -292,7 +291,7 @@ void Entities_RenderHoveredNames(Real64 delta) {
 	if (hadFog) Gfx_SetFog(true);
 }
 
-void Entities_ContextLost(void* obj) {
+static void Entities_ContextLost(void* obj) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
@@ -301,7 +300,7 @@ void Entities_ContextLost(void* obj) {
 	Gfx_DeleteTexture(&ShadowComponent_ShadowTex);
 }
 
-void Entities_ContextRecreated(void* obj) {
+static void Entities_ContextRecreated(void* obj) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
@@ -309,7 +308,7 @@ void Entities_ContextRecreated(void* obj) {
 	}
 }
 
-void Entities_ChatFontChanged(void* obj) {
+static void Entities_ChatFontChanged(void* obj) {
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {
 		if (Entities_List[i] == NULL) continue;
@@ -445,9 +444,9 @@ void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* li
 	TabList_GroupRanks[id]  = rank;
 }
 
-void TabList_Init(void) { StringsBuffer_Init(&TabList_Buffer); }
-void TabList_Free(void) { StringsBuffer_Free(&TabList_Buffer); }
-void TabList_Reset(void) {
+static void TabList_Init(void) { StringsBuffer_Init(&TabList_Buffer); }
+static void TabList_Free(void) { StringsBuffer_Free(&TabList_Buffer); }
+static void TabList_Reset(void) {
 	Platform_MemSet(TabList_PlayerNames, 0, sizeof(TabList_PlayerNames));
 	Platform_MemSet(TabList_ListNames,   0, sizeof(TabList_ListNames));
 	Platform_MemSet(TabList_GroupNames,  0, sizeof(TabList_GroupNames));
@@ -468,7 +467,7 @@ IGameComponent TabList_MakeComponent(void) {
 *---------------------------------------------------------Player----------------------------------------------------------*
 *#########################################################################################################################*/
 #define PLAYER_NAME_EMPTY_TEX -30000
-void Player_MakeNameTexture(Player* player) {
+static void Player_MakeNameTexture(Player* player) {
 	FontDesc font; 
 	Platform_FontMake(&font, &Game_FontName, 24, FONT_STYLE_NORMAL);
 
@@ -518,7 +517,7 @@ void Player_UpdateName(Player* player) {
 	Player_MakeNameTexture(player);
 }
 
-void Player_DrawName(Player* player) {
+static void Player_DrawName(Player* player) {
 	Entity* entity = &player->Base;
 	IModel* model = entity->Model;
 
@@ -551,7 +550,7 @@ void Player_DrawName(Player* player) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(GfxCommon_texVb, vertices, 4);
 }
 
-Player* Player_FirstOtherWithSameSkin(Player* player) {
+static Player* Player_FirstOtherWithSameSkin(Player* player) {
 	Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
@@ -566,7 +565,7 @@ Player* Player_FirstOtherWithSameSkin(Player* player) {
 	return NULL;
 }
 
-Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
+static Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
 	Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
@@ -581,7 +580,7 @@ Player* Player_FirstOtherWithSameSkinAndFetchedSkin(Player* player) {
 	return NULL;
 }
 
-void Player_ApplySkin(Player* player, Player* from) {
+static void Player_ApplySkin(Player* player, Player* from) {
 	Entity* dst = &player->Base;
 	Entity* src = &from->Base;
 
@@ -607,7 +606,7 @@ void Player_ResetSkin(Player* player) {
 }
 
 /* Apply or reset skin, for all players with same skin */
-void Player_SetSkinAll(Player* player, bool reset) {
+static void Player_SetSkinAll(Player* player, bool reset) {
 	Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
@@ -627,7 +626,7 @@ void Player_SetSkinAll(Player* player, bool reset) {
 	}
 }
 
-void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
+static void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
 	Int32 sizeX = (bmp.Width / 64) * 32;
 	Int32 yScale = skinType == SKIN_TYPE_64x32 ? 32 : 64;
 	Int32 sizeY = (bmp.Height / yScale) * 16;
@@ -656,7 +655,7 @@ void Player_ClearHat(Bitmap bmp, UInt8 skinType) {
 	}
 }
 
-void Player_EnsurePow2(Player* player, Bitmap* bmp) {
+static void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 	Int32 width  = Math_NextPowOf2(bmp->Width);
 	Int32 height = Math_NextPowOf2(bmp->Height);
 	if (width == bmp->Width && height == bmp->Height) return;
@@ -682,7 +681,7 @@ void Player_EnsurePow2(Player* player, Bitmap* bmp) {
 	*bmp = scaled;
 }
 
-void Player_CheckSkin(Player* player) {
+static void Player_CheckSkin(Player* player) {
 	Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 
@@ -718,7 +717,7 @@ void Player_CheckSkin(Player* player) {
 	Platform_MemFree(&bmp.Scan0);
 }
 
-void Player_Despawn(Entity* entity) {
+static void Player_Despawn(Entity* entity) {
 	Player* player = (Player*)entity;
 	Player* first = Player_FirstOtherWithSameSkin(player);
 	if (first == NULL) {
@@ -728,18 +727,18 @@ void Player_Despawn(Entity* entity) {
 	entity->VTABLE->ContextLost(entity);
 }
 
-void Player_ContextLost(Entity* entity) {
+static void Player_ContextLost(Entity* entity) {
 	Player* player = (Player*)entity;
 	Gfx_DeleteTexture(&player->NameTex.ID);
 	player->NameTex = Texture_MakeInvalid();
 }
 
-void Player_ContextRecreated(Entity* entity) {
+static void Player_ContextRecreated(Entity* entity) {
 	Player* player = (Player*)entity;
 	Player_UpdateName(player);
 }
 
-void Player_SetName(Player* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
+static void Player_SetName(Player* player, STRING_PURE String* displayName, STRING_PURE String* skinName) {
 	String dstDisplayName = String_FromEmptyArray(player->DisplayNameRaw);
 	String_AppendString(&dstDisplayName, displayName);
 	String dstSkinName = String_FromEmptyArray(player->SkinNameRaw);
@@ -787,7 +786,7 @@ void LocalPlayer_SetInterpPosition(Real32 t) {
 	InterpComp_LerpAngles((InterpComp*)(&p->Interp), &p->Base, t);
 }
 
-void LocalPlayer_HandleInput(Real32* xMoving, Real32* zMoving) {
+static void LocalPlayer_HandleInput(Real32* xMoving, Real32* zMoving) {
 	LocalPlayer* p = &LocalPlayer_Instance;
 	HacksComp* hacks = &p->Hacks;
 
@@ -813,7 +812,7 @@ void LocalPlayer_HandleInput(Real32* xMoving, Real32* zMoving) {
 	}
 }
 
-void LocalPlayer_SetLocation(Entity* entity, LocationUpdate* update, bool interpolate) {
+static void LocalPlayer_SetLocation(Entity* entity, LocationUpdate* update, bool interpolate) {
 	LocalPlayer* p = (LocalPlayer*)entity;
 	LocalInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
@@ -850,7 +849,7 @@ void LocalPlayer_Tick(Entity* entity, Real64 delta) {
 	SoundComp_Tick(wasOnGround);
 }
 
-void LocalPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
+static void LocalPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
 	LocalPlayer* p = (LocalPlayer*)entity;
 	AnimatedComp_GetCurrent(entity, t);
 	TiltComp_GetCurrent(&p->Tilt, t);
@@ -859,12 +858,12 @@ void LocalPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
 	IModel_Render(entity->Model, entity);
 }
 
-void LocalPlayer_RenderName(Entity* entity) {
+static void LocalPlayer_RenderName(Entity* entity) {
 	if (!Camera_Active->IsThirdPerson) return;
 	Player_DrawName((Player*)entity);
 }
 
-void LocalPlayer_Init_(void) {
+static void LocalPlayer_Init_(void) {
 	LocalPlayer* p = &LocalPlayer_Instance;
 	HacksComp* hacks = &p->Hacks;
 
@@ -881,7 +880,7 @@ void LocalPlayer_Init_(void) {
 	p->Physics.JumpVel     = p->Physics.UserJumpVel;
 }
 
-void LocalPlayer_Reset(void) {
+static void LocalPlayer_Reset(void) {
 	LocalPlayer* p = &LocalPlayer_Instance;
 	p->ReachDistance = 5.0f;
 	Vector3 zero = Vector3_Zero; p->Base.Velocity = zero;
@@ -923,8 +922,8 @@ void LocalPlayer_Init(void) {
 	entity->VTABLE->RenderName  = LocalPlayer_RenderName;
 }
 
-bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
-void LocalPlayer_DoRespawn(void) {
+static bool LocalPlayer_IsSolidCollide(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
+static void LocalPlayer_DoRespawn(void) {
 	if (World_Blocks == NULL) return;
 	LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 spawn = p->Spawn;
@@ -995,7 +994,7 @@ bool LocalPlayer_HandlesKey(Int32 key) {
 /*########################################################################################################################*
 *-------------------------------------------------------NetPlayer---------------------------------------------------------*
 *#########################################################################################################################*/
-void NetPlayer_SetLocation(Entity* entity, LocationUpdate* update, bool interpolate) {
+static void NetPlayer_SetLocation(Entity* entity, LocationUpdate* update, bool interpolate) {
 	NetPlayer* p = (NetPlayer*)entity;
 	NetInterpComp_SetLocation(&p->Interp, update, interpolate);
 }
@@ -1007,7 +1006,7 @@ void NetPlayer_Tick(Entity* entity, Real64 delta) {
 	AnimatedComp_Update(entity, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 }
 
-void NetPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
+static void NetPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
 	NetPlayer* p = (NetPlayer*)entity;
 	Vector3_Lerp(&entity->Position, &p->Interp.Prev.Pos, &p->Interp.Next.Pos, t);
 	InterpComp_LerpAngles((InterpComp*)(&p->Interp), entity, t);
@@ -1017,7 +1016,7 @@ void NetPlayer_RenderModel(Entity* entity, Real64 deltaTime, Real32 t) {
 	if (p->ShouldRender) IModel_Render(entity->Model, entity);
 }
 
-void NetPlayer_RenderName(Entity* entity) {
+static void NetPlayer_RenderName(Entity* entity) {
 	NetPlayer* p = (NetPlayer*)entity;
 	if (!p->ShouldRender) return;
 

@@ -48,7 +48,7 @@ GL_SetupVBFunc gl_setupVBFunc;
 GL_SetupVBRangeFunc gl_setupVBRangeFunc;
 Int32 gl_batchStride, gl_batchFormat = -1;
 
-void GL_CheckVboSupport(void) {
+static void GL_CheckVboSupport(void) {
 	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
 	String version = String_FromReadonly(glGetString(GL_VERSION));
 	Int32 major = (Int32)(version.buffer[0] - '0'); /* x.y. (and so forth) */
@@ -98,7 +98,7 @@ void Gfx_Free(void) {
 
 #define gl_Toggle(cap) if (enabled) { glEnable(cap); } else { glDisable(cap); }
 
-void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, Bitmap* bmp, bool partial) {
+static void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, Bitmap* bmp, bool partial) {
 	UInt8* prev = bmp->Scan0;
 	Int32 lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	Int32 lvl, width = bmp->Width, height = bmp->Height;
@@ -387,18 +387,18 @@ void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
 	glBufferSubData(GL_ARRAY_BUFFER, NULL, (void*)sizeInBytes, vertices);
 }
 
-void GL_V16(VertexP3fC4b v) {
+static void GL_V16(VertexP3fC4b v) {
 	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
 	glVertex3f(v.X, v.Y, v.Z);
 }
 
-void GL_V24(VertexP3fT2fC4b v) {
+static void GL_V24(VertexP3fT2fC4b v) {
 	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
 	glTexCoord2f(v.U, v.V);
 	glVertex3f(v.X, v.Y, v.Z);
 }
 
-void GL_DrawDynamicLines(Int32 verticesCount) {
+static void GL_DrawDynamicLines(Int32 verticesCount) {
 	glBegin(GL_LINES);
 	Int32 i;
 	if (gl_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
@@ -415,7 +415,7 @@ void GL_DrawDynamicLines(Int32 verticesCount) {
 	glEnd();
 }
 
-void GL_DrawDynamicTriangles(Int32 verticesCount, Int32 startVertex) {
+static void GL_DrawDynamicTriangles(Int32 verticesCount, Int32 startVertex) {
 	glBegin(GL_TRIANGLES);
 	Int32 i;
 	if (gl_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {

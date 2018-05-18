@@ -82,7 +82,7 @@ bool Gui_Contains(Int32 recX, Int32 recY, Int32 width, Int32 height, Int32 x, In
 	return x >= recX && y >= recY && x < recX + width && y < recY + height;
 }
 
-void Gui_FileChanged(void* obj, Stream* stream) {
+static void Gui_FileChanged(void* obj, Stream* stream) {
 	if (String_CaselessEqualsConst(&stream->Name, "gui.png")) {
 		Game_UpdateTexture(&Gui_GuiTex, stream, false);
 	} else if (String_CaselessEqualsConst(&stream->Name, "gui_classic.png")) {
@@ -92,7 +92,7 @@ void Gui_FileChanged(void* obj, Stream* stream) {
 	}
 }
 
-void Gui_Init(void) {
+static void Gui_Init(void) {
 	Event_RegisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_Status = StatusScreen_MakeInstance();
 	Gui_HUD = HUDScreen_MakeInstance();
@@ -102,7 +102,7 @@ void Gui_Init(void) {
 	comp = HUDScreen_MakeComponent();    Game_AddComponent(&comp);
 }
 
-void Gui_Reset(void) {
+static void Gui_Reset(void) {
 	Int32 i;
 	for (i = 0; i < Gui_OverlaysCount; i++) {
 		Elem_TryFree(Gui_Overlays[i]);
@@ -110,7 +110,7 @@ void Gui_Reset(void) {
 	Gui_OverlaysCount = 0;
 }
 
-void Gui_Free(void) {
+static void Gui_Free(void) {
 	Event_UnregisterStream(&TextureEvents_FileChanged, NULL, Gui_FileChanged);
 	Gui_ReplaceActive(NULL);
 	Elem_TryFree(Gui_Status);

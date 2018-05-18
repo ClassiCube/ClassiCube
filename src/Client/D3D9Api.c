@@ -40,7 +40,7 @@ ErrorHandler_CheckOrFail(hresult, name)
 static void D3D9_SetDefaultRenderStates(void);
 static void D3D9_RestoreRenderStates(void);
 
-void D3D9_FreeResource(GfxResourceID* resource) {
+static void D3D9_FreeResource(GfxResourceID* resource) {
 	if (resource == NULL || *resource == NULL) return;
 	IUnknown* unk = (IUnknown*)(*resource);
 	UInt32 refCount = unk->lpVtbl->Release(unk);
@@ -51,7 +51,7 @@ void D3D9_FreeResource(GfxResourceID* resource) {
 	Platform_Log2("D3D9 resource has %i outstanding references! ID 0x%x", &refCount, &addr);
 }
 
-void D3D9_LoopUntilRetrieved(void) {
+static void D3D9_LoopUntilRetrieved(void) {
 	ScheduledTask task;
 	task.Interval = 1.0f / 60.0f;
 	task.Callback = Gfx_LostContextFunction;
@@ -65,7 +65,7 @@ void D3D9_LoopUntilRetrieved(void) {
 	}
 }
 
-void D3D9_FindCompatibleFormat(void) {
+static void D3D9_FindCompatibleFormat(void) {
 	Int32 count = Array_Elems(d3d9_viewFormats);
 	Int32 i;
 	ReturnCode res;
@@ -92,7 +92,7 @@ void D3D9_FindCompatibleFormat(void) {
 	}
 }
 
-void D3D9_FillPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
+static void D3D9_FillPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args) {
 	args->AutoDepthStencilFormat = d3d9_depthFormat;
 	args->BackBufferWidth = width;
 	args->BackBufferHeight = height;
@@ -104,7 +104,7 @@ void D3D9_FillPresentArgs(Int32 width, Int32 height, D3DPRESENT_PARAMETERS* args
 	args->Windowed = true;
 }
 
-void D3D9_RecreateDevice(void) {
+static void D3D9_RecreateDevice(void) {
 	D3DPRESENT_PARAMETERS args = { 0 };
 	D3D9_FillPresentArgs(Game_Width, Game_Height, &args);
 
@@ -155,7 +155,7 @@ void Gfx_Free(void) {
 	D3D9_FreeResource(&d3d);
 }
 
-void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 lvl) {
+static void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 lvl) {
 	D3DLOCKED_RECT rect;
 	ReturnCode hresult = IDirect3DTexture9_LockRect(texture, lvl, &rect, NULL, 0);
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Lock");
@@ -167,7 +167,7 @@ void D3D9_SetTextureData(IDirect3DTexture9* texture, Bitmap* bmp, Int32 lvl) {
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTextureData - Unlock");
 }
 
-void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, Int32 lvl) {
+static void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, Int32 lvl) {
 	RECT part;
 	part.left = x; part.right = x + bmp->Width;
 	part.top = y; part.bottom = y + bmp->Height;
@@ -192,7 +192,7 @@ void D3D9_SetTexturePartData(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitma
 	ErrorHandler_CheckOrFail(hresult, "D3D9_SetTexturePartData - Unlock");
 }
 
-void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, bool partial) {
+static void D3D9_DoMipmaps(IDirect3DTexture9* texture, Int32 x, Int32 y, Bitmap* bmp, bool partial) {
 	UInt8* prev = bmp->Scan0;
 	Int32 lvls = GfxCommon_MipmapsLevels(bmp->Width, bmp->Height);
 	Int32 lvl, width = bmp->Width, height = bmp->Height;
@@ -429,7 +429,7 @@ GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 	return vbuffer;
 }
 
-void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg, Int32 lockFlags) {
+static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg, Int32 lockFlags) {
 	void* dst = NULL;
 	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
 	ErrorHandler_CheckOrFail(hresult, lockMsg);
@@ -450,7 +450,7 @@ GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
 	return vbuffer;
 }
 
-void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg) {
+static void D3D9_SetIbData(IDirect3DIndexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg) {
 	void* dst = NULL;
 	ReturnCode hresult = IDirect3DIndexBuffer9_Lock(buffer, 0, size, &dst, 0);
 	ErrorHandler_CheckOrFail(hresult, lockMsg);
@@ -634,7 +634,7 @@ void Gfx_OnWindowResize(void) {
 }
 
 
-void D3D9_SetDefaultRenderStates(void) {
+static void D3D9_SetDefaultRenderStates(void) {
 	Gfx_SetFaceCulling(false);
 	d3d9_batchFormat = -1;
 	D3D9_SetRenderState(D3DRS_COLORVERTEX, false, "D3D9_ColorVertex");
@@ -644,7 +644,7 @@ void D3D9_SetDefaultRenderStates(void) {
 	D3D9_SetRenderState2(D3DRS_DEBUGMONITORTOKEN, false, "D3D9_DebugMonitor");
 }
 
-void D3D9_RestoreRenderStates(void) {
+static void D3D9_RestoreRenderStates(void) {
 	IntAndFloat raw;
 	D3D9_SetRenderState(D3DRS_ALPHATESTENABLE, d3d9_alphaTest, "D3D9_AlphaTest");
 	D3D9_SetRenderState2(D3DRS_ALPHABLENDENABLE, d3d9_alphaBlend, "D3D9_AlphaBlend");

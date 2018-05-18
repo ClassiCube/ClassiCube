@@ -63,7 +63,7 @@ enum PNG_FILTER {
 typedef void(*Png_RowExpander)(UInt8 bpp, Int32 width, UInt32* palette, UInt8* src, UInt32* dst);
 UInt8 png_sig[PNG_SIG_SIZE] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
-void Png_CheckHeader(Stream* stream) {
+static void Png_CheckHeader(Stream* stream) {
 	UInt8 header[PNG_SIG_SIZE];
 	Stream_Read(stream, header, PNG_SIG_SIZE);
 	Int32 i;
@@ -72,7 +72,7 @@ void Png_CheckHeader(Stream* stream) {
 	}
 }
 
-void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt32 lineLen) {
+static void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior, UInt32 lineLen) {
 	UInt32 i, j;
 	switch (type) {
 	case PNG_FILTER_NONE:
@@ -123,7 +123,7 @@ void Png_Reconstruct(UInt8 type, UInt8 bytesPerPixel, UInt8* line, UInt8* prior,
 	}
 }
 
-void Png_Expand_GRAYSCALE(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+static void Png_Expand_GRAYSCALE(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j, mask;
 	UInt8 cur, rgb1, rgb2, rgb3, rgb4;
 #define PNG_Do_Grayscale(tmp, dstI, srcI, scale) tmp = src[srcI] * scale; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, 255);
@@ -177,7 +177,7 @@ void Png_Expand_GRAYSCALE(UInt8 bitsPerSample, Int32 width, UInt32* palette, UIn
 	}
 }
 
-void Png_Expand_RGB(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+static void Png_Expand_RGB(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 #define PNG_Do_RGB__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], 255);
 #define PNG_Do_RGB_16(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 3], src[srcI + 5], 255);
@@ -193,7 +193,7 @@ void Png_Expand_RGB(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* sr
 	}
 }
 
-void Png_Expand_INDEXED(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+static void Png_Expand_INDEXED(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j, mask;
 	UInt8 cur;
 #define PNG_Do_Indexed(dstI, srcI) dst[dstI] = palette[srcI];
@@ -243,7 +243,7 @@ void Png_Expand_INDEXED(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8
 	}
 }
 
-void Png_Expand_GRAYSCALE_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+static void Png_Expand_GRAYSCALE_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 	UInt8 rgb1, rgb2, rgb3, rgb4;
 #define PNG_Do_Grayscale_A__8(tmp, dstI, srcI) tmp = src[srcI]; dst[dstI] = PackedCol_ARGB(tmp, tmp, tmp, src[srcI + 1]);
@@ -260,7 +260,7 @@ void Png_Expand_GRAYSCALE_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, U
 	}
 }
 
-void Png_Expand_RGB_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
+static void Png_Expand_RGB_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* src, UInt32* dst) {
 	Int32 i, j;
 #define PNG_Do_RGB_A__8(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 1], src[srcI + 2], src[srcI + 3]);
 #define PNG_Do_RGB_A_16(dstI, srcI) dst[dstI] = PackedCol_ARGB(src[srcI], src[srcI + 3], src[srcI + 5], src[srcI + 7]);
@@ -276,7 +276,7 @@ void Png_Expand_RGB_A(UInt8 bitsPerSample, Int32 width, UInt32* palette, UInt8* 
 	}
 }
 
-void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
+static void Png_ComputeTransparency(Bitmap* bmp, UInt32 transparentCol) {
 	UInt32 trnsRGB = transparentCol & PNG_RGB_MASK;
 	Int32 x, y, width = bmp->Width, height = bmp->Height;
 
@@ -465,7 +465,7 @@ void Bitmap_DecodePng(Bitmap* bmp, Stream* stream) {
 /*########################################################################################################################*
 *------------------------------------------------------PNG encoder--------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Bitmap_Crc32StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Bitmap_Crc32StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	UInt32 i, crc32 = stream->Meta_CRC32;
 	/* TODO: Optimise this calculation */
 	for (i = 0; i < count; i++) {
@@ -477,7 +477,7 @@ ReturnCode Bitmap_Crc32StreamWrite(Stream* stream, UInt8* data, UInt32 count, UI
 	return underlying->Write(underlying, data, count, modified);
 }
 
-void Bitmap_Crc32Stream(Stream* stream, Stream* underlying) {
+static void Bitmap_Crc32Stream(Stream* stream, Stream* underlying) {
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_CRC32_Source = underlying;
 	stream->Meta_CRC32 = 0xFFFFFFFFUL;
@@ -486,7 +486,7 @@ void Bitmap_Crc32Stream(Stream* stream, Stream* underlying) {
 	stream->Write = Bitmap_Crc32StreamWrite;
 }
 
-void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
+static void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
 	/* 3 bytes per pixel constant */
 	Int32 i;
 	switch (filter) {
@@ -538,8 +538,7 @@ void Png_Filter(UInt8 filter, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineL
 	}
 }
 
-static int counter;
-void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
+static void Png_EncodeRow(UInt8* src, UInt8* cur, UInt8* prior, UInt8* best, Int32 lineLen) {
 	UInt8* dst = cur;
 	Int32 x;
 	for (x = 0; x < lineLen; x += 3) {

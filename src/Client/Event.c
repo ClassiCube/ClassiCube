@@ -1,7 +1,7 @@
 #include "Event.h"
 #include "ErrorHandler.h"
 
-void Event_RegisterImpl(Event_Void* handlers, void* obj, Event_Void_Callback handler) {
+static void Event_RegisterImpl(Event_Void* handlers, void* obj, Event_Void_Callback handler) {
 	UInt32 i;
 	for (i = 0; i < handlers->Count; i++) {
 		if (handlers->Handlers[i] == handler && handlers->Objs[i] == obj) {
@@ -18,7 +18,7 @@ void Event_RegisterImpl(Event_Void* handlers, void* obj, Event_Void_Callback han
 	}
 }
 
-void Event_UnregisterImpl(Event_Void* handlers, void* obj, Event_Void_Callback handler) {
+static void Event_UnregisterImpl(Event_Void* handlers, void* obj, Event_Void_Callback handler) {
 	UInt32 i, j;
 	for (i = 0; i < handlers->Count; i++) {
 		if (handlers->Handlers[i] != handler || handlers->Objs[i] != obj) continue;

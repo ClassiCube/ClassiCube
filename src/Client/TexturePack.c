@@ -18,7 +18,7 @@
 *--------------------------------------------------------ZipEntry---------------------------------------------------------*
 *#########################################################################################################################*/
 #define ZIP_MAXNAMELEN 512
-String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
+static String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
 	if (length > ZIP_MAXNAMELEN) ErrorHandler_Fail("Zip string too long");
 	String fileName = String_Init(buffer, length, length);
 	Stream_Read(stream, buffer, length);
@@ -26,7 +26,7 @@ String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
 	return fileName;
 }
 
-void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
+static void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	Stream* stream = state->Input;
 	UInt16 versionNeeded = Stream_ReadU16_LE(stream);
 	UInt16 flags = Stream_ReadU16_LE(stream);
@@ -67,7 +67,7 @@ void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 	}
 }
 
-void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
+static void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
 	Stream* stream = state->Input;
 	Stream_ReadU16_LE(stream); /* OS */
 	UInt16 versionNeeded = Stream_ReadU16_LE(stream);
@@ -91,7 +91,7 @@ void Zip_ReadCentralDirectory(ZipState* state, ZipEntry* entry) {
 	ErrorHandler_CheckOrFail(code, "Zip - skipping central header extra");
 }
 
-void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirectoryOffset) {
+static void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirectoryOffset) {
 	Stream* stream = state->Input;
 	UInt16 diskNum = Stream_ReadU16_LE(stream);
 	UInt16 diskNumStart = Stream_ReadU16_LE(stream);
@@ -106,8 +106,8 @@ void Zip_ReadEndOfCentralDirectory(ZipState* state, Int32* centralDirectoryOffse
 #define ZIP_CENTRALDIR      0x02014b50UL
 #define ZIP_LOCALFILEHEADER 0x04034b50UL
 
-void Zip_DefaultProcessor(STRING_TRANSIENT String* path, Stream* data, ZipEntry* entry) { }
-bool Zip_DefaultSelector(STRING_TRANSIENT String* path) { return true; }
+static void Zip_DefaultProcessor(STRING_TRANSIENT String* path, Stream* data, ZipEntry* entry) { }
+static bool Zip_DefaultSelector(STRING_TRANSIENT String* path) { return true; }
 void Zip_Init(ZipState* state, Stream* input) {
 	state->Input = input;
 	state->EntriesCount = 0;
@@ -184,7 +184,7 @@ typedef struct EntryList_ {
 	StringsBuffer Entries;
 } EntryList;
 
-void EntryList_Load(EntryList* list) {
+static void EntryList_Load(EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
@@ -214,7 +214,7 @@ void EntryList_Load(EntryList* list) {
 	ErrorHandler_CheckOrFail(result, "EntryList_Load - close file");
 }
 
-void EntryList_Save(EntryList* list) {
+static void EntryList_Save(EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
@@ -242,12 +242,12 @@ void EntryList_Save(EntryList* list) {
 	ErrorHandler_CheckOrFail(result, "EntryList_Save - close file");
 }
 
-void EntryList_Add(EntryList* list, STRING_PURE String* entry) {
+static void EntryList_Add(EntryList* list, STRING_PURE String* entry) {
 	StringsBuffer_Add(&list->Entries, entry);
 	EntryList_Save(list);
 }
 
-bool EntryList_Has(EntryList* list, STRING_PURE String* entry) {
+static bool EntryList_Has(EntryList* list, STRING_PURE String* entry) {
 	Int32 i;
 	for (i = 0; i < list->Entries.Count; i++) {
 		String curEntry = StringsBuffer_UNSAFE_Get(&list->Entries, i);
@@ -256,7 +256,7 @@ bool EntryList_Has(EntryList* list, STRING_PURE String* entry) {
 	return false;
 }
 
-void EntryList_Make(EntryList* list, STRING_PURE const UInt8* folder, STRING_PURE const UInt8* file) {
+static void EntryList_Make(EntryList* list, STRING_PURE const UInt8* folder, STRING_PURE const UInt8* file) {
 	String dstFolder = String_InitAndClearArray(list->FolderBuffer);
 	String_AppendConst(&dstFolder, folder);
 	String dstFile = String_InitAndClearArray(list->FileBuffer);
@@ -297,7 +297,7 @@ bool TextureCache_HasDenied(STRING_PURE String* url)   { return EntryList_Has(&c
 void TextureCache_Accept(STRING_PURE String* url) { EntryList_Add(&cache_accepted, url); }
 void TextureCache_Deny(STRING_PURE String* url)   { EntryList_Add(&cache_denied,   url); }
 
-void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
+static void TextureCache_MakePath(STRING_TRANSIENT String* path, STRING_PURE String* url) {
 	String crc32; TexCache_Crc32(url);
 	String_Format2(path, TEXCACHE_FOLDER "%r%s", &Platform_DirectorySeparator, &crc32);
 }
@@ -353,7 +353,7 @@ void TextureCache_GetETag(STRING_PURE String* url, STRING_PURE String* etag) {
 	TexturePack_GetFromTags(url, etag, &cache_eTags);
 }
 
-void* TextureCache_CreateFile(STRING_PURE String* path) {
+static void* TextureCache_CreateFile(STRING_PURE String* path) {
 	String folder = String_FromConst(TEXCACHE_FOLDER);
 	if (!Platform_DirectoryExists(&folder)) {
 		ReturnCode dirResult = Platform_DirectoryCreate(&folder);
@@ -425,7 +425,7 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 /*########################################################################################################################*
 *-------------------------------------------------------TexturePack-------------------------------------------------------*
 *#########################################################################################################################*/
-void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, Stream* stream, ZipEntry* entry) {
+static void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, Stream* stream, ZipEntry* entry) {
 	/* Ignore directories: convert x/name to name and x\name to name. */
 	String_MakeLowercase(path);
 	String name = *path;
@@ -440,7 +440,7 @@ void TexturePack_ProcessZipEntry(STRING_TRANSIENT String* path, Stream* stream, 
 	Event_RaiseStream(&TextureEvents_FileChanged, stream);
 }
 
-void TexturePack_ExtractZip(Stream* stream) {
+static void TexturePack_ExtractZip(Stream* stream) {
 	Event_RaiseVoid(&TextureEvents_PackChanged);
 	if (Gfx_LostContext) return;
 

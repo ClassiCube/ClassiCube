@@ -12,21 +12,21 @@ PackedCol pickedPos_col = PACKEDCOL_CONST(0, 0, 0, 102);
 VertexP3fC4b pickedPos_vertices[pickedPos_numVertices];
 VertexP3fC4b* pickedPos_ptr;
 
-void PickedPosRenderer_ContextLost(void* obj) {
+static void PickedPosRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&pickedPos_vb);
 }
 
-void PickedPosRenderer_ContextRecreated(void* obj) {
+static void PickedPosRenderer_ContextRecreated(void* obj) {
 	pickedPos_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, pickedPos_numVertices);
 }
 
-void PickedPosRenderer_Init(void) {
+static void PickedPosRenderer_Init(void) {
 	PickedPosRenderer_ContextRecreated(NULL);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
 }
 
-void PickedPosRenderer_Free(void) {
+static void PickedPosRenderer_Free(void) {
 	PickedPosRenderer_ContextLost(NULL);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, PickedPosRenderer_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, PickedPosRenderer_ContextRecreated);
@@ -44,7 +44,7 @@ void PickedPosRenderer_Render(Real64 delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
-void PickedPosRenderer_XQuad(Real32 x, Real32 z1, Real32 y1, Real32 z2, Real32 y2) {
+static void PickedPosRenderer_XQuad(Real32 x, Real32 z1, Real32 y1, Real32 z2, Real32 y2) {
 	VertexP3fC4b v; v.X = x; v.Col = pickedPos_col;
 	v.Y = y1; v.Z = z1; *pickedPos_ptr++ = v;
 	v.Y = y2;           *pickedPos_ptr++ = v;
@@ -52,7 +52,7 @@ void PickedPosRenderer_XQuad(Real32 x, Real32 z1, Real32 y1, Real32 z2, Real32 y
 	v.Y = y1;           *pickedPos_ptr++ = v;
 }
 
-void PickedPosRenderer_YQuad(Real32 y, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
+static void PickedPosRenderer_YQuad(Real32 y, Real32 x1, Real32 z1, Real32 x2, Real32 z2) {
 	VertexP3fC4b v; v.Y = y; v.Col = pickedPos_col;
 	v.X = x1; v.Z = z1; *pickedPos_ptr++ = v;
 	          v.Z = z2; *pickedPos_ptr++ = v;
@@ -60,7 +60,7 @@ void PickedPosRenderer_YQuad(Real32 y, Real32 x1, Real32 z1, Real32 x2, Real32 z
 	          v.Z = z1; *pickedPos_ptr++ = v;
 }
 
-void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y2) {
+static void PickedPosRenderer_ZQuad(Real32 z, Real32 x1, Real32 y1, Real32 x2, Real32 y2) {
 	VertexP3fC4b v; v.Z = z; v.Col = pickedPos_col;
 	v.X = x1; v.Y = y1; *pickedPos_ptr++ = v;
 	          v.Y = y2; *pickedPos_ptr++ = v;

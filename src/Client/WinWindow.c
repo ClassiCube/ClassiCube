@@ -29,7 +29,7 @@ Rectangle2D win_Bounds;
 Rectangle2D win_ClientRect;
 Rectangle2D previous_bounds; // Used to restore previous size when leaving fullscreen mode.
 
-Rectangle2D Window_FromRect(RECT rect) {
+static Rectangle2D Window_FromRect(RECT rect) {
 	Rectangle2D r;
 	r.X = rect.left; r.Y = rect.top;
 	r.Width = RECT_WIDTH(rect);
@@ -45,7 +45,7 @@ void Window_Destroy(void) {
 	win_Exists = false;
 }
 
-void Window_ResetWindowState(void) {
+static void Window_ResetWindowState(void) {
 	suppress_resize++;
 	Window_SetWindowState(WINDOW_STATE_NORMAL);
 	Window_ProcessEvents();
@@ -53,7 +53,7 @@ void Window_ResetWindowState(void) {
 }
 
 bool win_hiddenBorder;
-void Window_DoSetHiddenBorder(bool value) {
+static void Window_DoSetHiddenBorder(bool value) {
 	if (win_hiddenBorder == value) return;
 
 	/* We wish to avoid making an invisible window visible just to change the border.
@@ -90,14 +90,14 @@ void Window_DoSetHiddenBorder(bool value) {
 	Window_SetWindowState(state);
 }
 
-void Window_SetHiddenBorder(bool hidden) {
+static void Window_SetHiddenBorder(bool hidden) {
 	suppress_resize++;
 	Window_DoSetHiddenBorder(hidden);
 	Window_ProcessEvents();
 	suppress_resize--;
 }
 
-void Window_EnableMouseTracking(void) {
+static void Window_EnableMouseTracking(void) {
 	TRACKMOUSEEVENT me = { 0 };
 	me.cbSize = sizeof(TRACKMOUSEEVENT);
 	me.hwndTrack = win_Handle;
@@ -108,7 +108,7 @@ void Window_EnableMouseTracking(void) {
 	}
 }
 
-Key Window_MapKey(WPARAM key) {
+static Key Window_MapKey(WPARAM key) {
 	if (key >= VK_F1 && key <= VK_F24) {
 		return Key_F1 + (key - VK_F1);
 	}
@@ -178,7 +178,7 @@ Key Window_MapKey(WPARAM key) {
 	return Key_None;
 }
 
-LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
+static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
 	bool new_focused_state;
 	Real32 wheel_delta;
 	WORD mouse_x, mouse_y;

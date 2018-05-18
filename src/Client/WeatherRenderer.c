@@ -25,7 +25,7 @@ GfxResourceID weather_vb;
 Real64 weather_accumulator;
 Vector3I weather_lastPos;
 
-void WeatherRenderer_InitHeightmap(void) {
+static void WeatherRenderer_InitHeightmap(void) {
 	Weather_Heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16));
 	if (Weather_Heightmap == NULL) {
 		ErrorHandler_Fail("WeatherRenderer - Failed to allocate heightmap");
@@ -37,7 +37,7 @@ void WeatherRenderer_InitHeightmap(void) {
 	}
 }
 
-Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
+static Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	Int32 i = World_Pack(x, maxY, z), y;
 
 	for (y = maxY; y >= 0; y--, i -= World_OneY) {
@@ -51,7 +51,7 @@ Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	return -1;
 }
 
-Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
+static Real32 WeatherRenderer_RainHeight(Int32 x, Int32 z) {
 	if (x < 0 || z < 0 || x >= World_Width || z >= World_Length) {
 		return (Real32)WorldEnv_EdgeHeight;
 	}
@@ -84,15 +84,15 @@ void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 	}
 }
 
-void WeatherRenderer_ContextLost(void* obj) {
+static void WeatherRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&weather_vb);
 }
 
-void WeatherRenderer_ContextRecreated(void* obj) {
+static void WeatherRenderer_ContextRecreated(void* obj) {
 	weather_vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, WEATHER_VERTS_COUNT);
 }
 
-Real32 WeatherRenderer_AlphaAt(Real32 x) {
+static Real32 WeatherRenderer_AlphaAt(Real32 x) {
 	/* Wolfram Alpha: fit {0,178},{1,169},{4,147},{9,114},{16,59},{25,9} */
 	Real32 falloff = 0.05f * x * x - 7 * x;
 	return 178 + falloff * WorldEnv_WeatherFade;
@@ -181,7 +181,7 @@ void WeatherRenderer_Render(Real64 deltaTime) {
 	Gfx_SetAlphaTest(false);
 }
 
-void WeatherRenderer_FileChanged(void* obj, Stream* stream) {
+static void WeatherRenderer_FileChanged(void* obj, Stream* stream) {
 	if (String_CaselessEqualsConst(&stream->Name, "snow.png")) {
 		Game_UpdateTexture(&weather_snowTex, stream, false);
 	} else if (String_CaselessEqualsConst(&stream->Name, "rain.png")) {
@@ -189,7 +189,7 @@ void WeatherRenderer_FileChanged(void* obj, Stream* stream) {
 	}
 }
 
-void WeatherRenderer_Init(void) {
+static void WeatherRenderer_Init(void) {
 	weather_lastPos = Vector3I_MaxValue();
 	WeatherRenderer_ContextRecreated(NULL);
 
@@ -198,12 +198,12 @@ void WeatherRenderer_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, WeatherRenderer_ContextRecreated);
 }
 
-void WeatherRenderer_Reset(void) {
+static void WeatherRenderer_Reset(void) {
 	Platform_MemFree(&Weather_Heightmap);
 	weather_lastPos = Vector3I_MaxValue();
 }
 
-void WeatherRenderer_Free(void) {
+static void WeatherRenderer_Free(void) {
 	Gfx_DeleteTexture(&weather_rainTex);
 	Gfx_DeleteTexture(&weather_snowTex);
 	WeatherRenderer_ContextLost(NULL);

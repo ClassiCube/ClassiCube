@@ -26,7 +26,7 @@ void Chat_GetLogTime(UInt32 index, Int64* timeMs) {
 	*timeMs = Chat_LogTimes[index];
 }
 
-void Chat_AppendLogTime(void) {
+static void Chat_AppendLogTime(void) {
 	DateTime now; Platform_CurrentUTCTime(&now);
 	if (Chat_LogTimesCount == Chat_LogTimesMax) {
 		StringsBuffer_Resize(&Chat_LogTimes, &Chat_LogTimesMax, sizeof(Int64),
@@ -35,7 +35,7 @@ void Chat_AppendLogTime(void) {
 	Chat_LogTimes[Chat_LogTimesCount++] = DateTime_TotalMs(&now);
 }
 
-void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
+static void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 	String dst = String_InitAndClearArray(line->Buffer);
 	String_AppendString(&dst, text);
 	Platform_CurrentUTCTime(&line->Received);
@@ -46,13 +46,13 @@ String Chat_LogName = String_FromEmptyArray(Chat_LogNameBuffer);
 Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
 
-void Chat_CloseLog(void) {
+static void Chat_CloseLog(void) {
 	if (Chat_LogStream.Meta_File == NULL) return;
 	ReturnCode code = Chat_LogStream.Close(&Chat_LogStream);
 	ErrorHandler_CheckOrFail(code, "Chat - closing log file");
 }
 
-bool Chat_AllowedLogChar(UInt8 c) {
+static bool Chat_AllowedLogChar(UInt8 c) {
 	return
 		c == '{' || c == '}' || c == '[' || c == ']' || c == '(' || c == ')' ||
 		(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -74,7 +74,7 @@ void Chat_SetLogName(STRING_PURE String* name) {
 	}
 }
 
-void Chat_OpenLog(DateTime* now) {
+static void Chat_OpenLog(DateTime* now) {
 	String logsDir = String_FromConst("logs");
 	if (!Platform_DirectoryExists(&logsDir)) {
 		Platform_DirectoryCreate(&logsDir);
@@ -108,7 +108,7 @@ void Chat_OpenLog(DateTime* now) {
 	ErrorHandler_Log(&failedMsg);
 }
 
-void Chat_AppendLog(STRING_PURE String* text) {
+static void Chat_AppendLog(STRING_PURE String* text) {
 	if (Chat_LogName.length == 0 || !Game_ChatLogging) return;
 	DateTime now; Platform_CurrentLocalTime(&now);
 
@@ -165,7 +165,7 @@ typedef void (*ChatCommandConstructor)(ChatCommand* cmd);
 ChatCommand commands_list[8];
 Int32 commands_count;
 
-bool Commands_IsCommandPrefix(STRING_PURE String* input) {
+static bool Commands_IsCommandPrefix(STRING_PURE String* input) {
 	if (input->length == 0) return false;
 	if (ServerConnection_IsSinglePlayer && input->buffer[0] == '/')
 		return true;
@@ -176,7 +176,7 @@ bool Commands_IsCommandPrefix(STRING_PURE String* input) {
 		|| String_CaselessEquals(input, &prefix);
 }
 
-void Commands_Register(ChatCommandConstructor constructor) {
+static void Commands_Register(ChatCommandConstructor constructor) {
 	if (commands_count == Array_Elems(commands_list)) {
 		ErrorHandler_Fail("Commands_Register - hit max client commands");
 	}
@@ -186,14 +186,14 @@ void Commands_Register(ChatCommandConstructor constructor) {
 	commands_list[commands_count++] = command;
 }
 
-void Commands_Log(const UInt8* format, void* a1) {
+static void Commands_Log(const UInt8* format, void* a1) {
 	UInt8 strBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String str = String_InitAndClearArray(strBuffer);
 	String_Format1(&str, format, a1);
 	Chat_Add(&str);
 }
 
-ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
+static ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 	ChatCommand* match = NULL;
 	Int32 i;
 	for (i = 0; i < commands_count; i++) {
@@ -220,7 +220,7 @@ ChatCommand* Commands_GetMatch(STRING_PURE String* cmdName) {
 	return match;
 }
 
-void Commands_PrintDefined(void) {
+static void Commands_PrintDefined(void) {
 	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
 	String str = String_InitAndClearArray(strBuffer);
 	Int32 i;
@@ -240,7 +240,7 @@ void Commands_PrintDefined(void) {
 	if (str.length > 0) { Chat_Add(&str); }
 }
 
-void Commands_Execute(STRING_PURE String* input) {
+static void Commands_Execute(STRING_PURE String* input) {
 	String text        = *input;
 	String prefixSpace = String_FromConst(COMMANDS_PREFIX_SPACE);
 	String prefix      = String_FromConst(COMMANDS_PREFIX);
@@ -273,7 +273,7 @@ void Commands_Execute(STRING_PURE String* input) {
 /*########################################################################################################################*
 *-------------------------------------------------------Help command------------------------------------------------------*
 *#########################################################################################################################*/
-void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp1, "&eList of client commands:");
 		Commands_PrintDefined();
@@ -291,7 +291,7 @@ void HelpCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-void HelpCommand_Make(ChatCommand* cmd) {
+static void HelpCommand_Make(ChatCommand* cmd) {
 	cmd->Name    = "Help";
 	cmd->Help[0] = "&a/client help [command name]";
 	cmd->Help[1] = "&eDisplays the help for the given command.";
@@ -302,7 +302,7 @@ void HelpCommand_Make(ChatCommand* cmd) {
 /*########################################################################################################################*
 *------------------------------------------------------GpuInfo command----------------------------------------------------*
 *#########################################################################################################################*/
-void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	Int32 i;
 	for (i = 0; i < Array_Elems(Gfx_ApiInfo); i++) {
 		if (Gfx_ApiInfo[i].length == 0) continue;
@@ -315,7 +315,7 @@ void GpuInfoCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-void GpuInfoCommand_Make(ChatCommand* cmd) {
+static void GpuInfoCommand_Make(ChatCommand* cmd) {
 	cmd->Name    = "GpuInfo";
 	cmd->Help[0] = "&a/client gpuinfo";
 	cmd->Help[1] = "&eDisplays information about your GPU.";
@@ -326,7 +326,7 @@ void GpuInfoCommand_Make(ChatCommand* cmd) {
 /*########################################################################################################################*
 *----------------------------------------------------RenderType command---------------------------------------------------*
 *#########################################################################################################################*/
-void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify a new render type."); return;
 	}
@@ -344,7 +344,7 @@ void RenderTypeCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-void RenderTypeCommand_Make(ChatCommand* cmd) {
+static void RenderTypeCommand_Make(ChatCommand* cmd) {
 	cmd->Name    = "RenderType";
 	cmd->Help[0] = "&a/client rendertype [normal/legacy/legacyfast]";
 	cmd->Help[1] = "&bnormal: &eDefault renderer, with all environmental effects enabled.";
@@ -354,7 +354,7 @@ void RenderTypeCommand_Make(ChatCommand* cmd) {
 	cmd->Execute = RenderTypeCommand_Execute;
 }
 
-void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	Int32 width, height;
 	if (argsCount < 3) {
 		Chat_AddRaw(tmp, "&e/client: &cYou didn't specify width and height");
@@ -370,14 +370,14 @@ void ResolutionCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-void ResolutionCommand_Make(ChatCommand* cmd) {
+static void ResolutionCommand_Make(ChatCommand* cmd) {
 	cmd->Name    = "Resolution";
 	cmd->Help[0] = "&a/client resolution [width] [height]";
 	cmd->Help[1] = "&ePrecisely sets the size of the rendered window.";
 	cmd->Execute = ResolutionCommand_Execute;
 }
 
-void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp, "&e/client model: &cYou didn't specify a model name.");
 	} else {
@@ -389,7 +389,7 @@ void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-void ModelCommand_Make(ChatCommand* cmd) {
+static void ModelCommand_Make(ChatCommand* cmd) {
 	cmd->Name    = "Model";
 	cmd->Help[0] = "&a/client model [name]";
 	cmd->Help[1] = "&bnames: &echibi, chicken, creeper, human, pig, sheep";
@@ -406,7 +406,7 @@ Int32 cuboid_block = -1;
 Vector3I cuboid_mark1, cuboid_mark2;
 bool cuboid_persist, cuboid_hooked;
 
-bool CuboidCommand_ParseBlock(STRING_PURE String* args, UInt32 argsCount) {
+static bool CuboidCommand_ParseBlock(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) return true;
 	if (String_CaselessEqualsConst(&args[1], "yes")) { cuboid_persist = true; return true; }
 
@@ -433,7 +433,7 @@ bool CuboidCommand_ParseBlock(STRING_PURE String* args, UInt32 argsCount) {
 	return true;
 }
 
-void CuboidCommand_DoCuboid(void) {
+static void CuboidCommand_DoCuboid(void) {
 	Vector3I min, max;
 	Vector3I_Min(&min, &cuboid_mark1, &cuboid_mark2);
 	Vector3I_Max(&max, &cuboid_mark1, &cuboid_mark2);
@@ -451,7 +451,7 @@ void CuboidCommand_DoCuboid(void) {
 	}
 }
 
-void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
 	if (cuboid_mark1.X == Int32_MaxValue) {
 		cuboid_mark1 = coords;
 		Game_UpdateBlock(coords.X, coords.Y, coords.Z, oldBlock);
@@ -476,7 +476,7 @@ void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, Bl
 	}
 }
 
-void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (cuboid_hooked) {
 		Event_UnregisterBlock(&UserEvents_BlockChanged, NULL, CuboidCommand_BlockChanged);
 		cuboid_hooked = false;
@@ -498,7 +498,7 @@ void CuboidCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	cuboid_hooked = true;
 }
 
-void CuboidCommand_Make(ChatCommand* cmd) {
+static void CuboidCommand_Make(ChatCommand* cmd) {
 	cmd->Name    = "Cuboid";
 	cmd->Help[0] = "&a/client cuboid [block] [persist]";
 	cmd->Help[1] = "&eFills the 3D rectangle between two points with [block].";
@@ -513,7 +513,7 @@ void CuboidCommand_Make(ChatCommand* cmd) {
 /*########################################################################################################################*
 *------------------------------------------------------TeleportCommand----------------------------------------------------*
 *#########################################################################################################################*/
-void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
+static void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount != 4) {
 		Chat_AddRaw(tmp, "&e/client teleport: &cYou didn't specify X, Y and Z coordinates.");
 	} else {
@@ -530,7 +530,7 @@ void TeleportCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	}
 }
 
-void TeleportCommand_Make(ChatCommand* cmd) {
+static void TeleportCommand_Make(ChatCommand* cmd) {
 	cmd->Name    = "TP";
 	cmd->Help[0] = "&a/client tp [x y z]";
 	cmd->Help[1] = "&eMoves you to the given coordinates.";
@@ -553,7 +553,7 @@ void Chat_Send(STRING_PURE String* text) {
 	}
 }
 
-void Chat_Init(void) {
+static void Chat_Init(void) {
 	Commands_Register(GpuInfoCommand_Make);
 	Commands_Register(HelpCommand_Make);
 	Commands_Register(RenderTypeCommand_Make);
@@ -566,12 +566,13 @@ void Chat_Init(void) {
 	StringsBuffer_Init(&Chat_InputLog);
 }
 
-void Chat_Reset(void) {
+static void Chat_Reset(void) {
 	Chat_CloseLog();
 	String_Clear(&Chat_LogName);
 }
 
-void Chat_Free(void) {
+static void Chat_Free(void) {
+	Chat_CloseLog();
 	commands_count = 0;
 	if (Chat_LogTimes != Chat_DefaultLogTimes) Platform_MemFree(&Chat_LogTimes);
 

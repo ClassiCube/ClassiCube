@@ -22,7 +22,7 @@ void MapRenderer_RefreshChunk(Int32 cx, Int32 cy, Int32 cz) {
 	info->PendingDelete = true;
 }
 
-void MapRenderer_CheckWeather(Real64 deltaTime) {
+static void MapRenderer_CheckWeather(Real64 deltaTime) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;
 	Vector3I_Floor(&coords, &pos);
@@ -38,7 +38,7 @@ void MapRenderer_CheckWeather(Real64 deltaTime) {
 	Gfx_SetAlphaBlending(false);
 }
 
-void MapRenderer_RenderNormalBatch(UInt32 batch) {
+static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 	UInt32 i, offset = MapRenderer_ChunksCount * batch;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];
@@ -143,7 +143,7 @@ void MapRenderer_RenderNormal(Real64 deltaTime) {
 #endif
 }
 
-void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
+static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 	UInt32 i, offset = MapRenderer_ChunksCount * batch;
 	for (i = 0; i < MapRenderer_RenderChunksCount; i++) {
 		ChunkInfo* info = MapRenderer_RenderChunks[i];

@@ -34,7 +34,7 @@ Vector3 cu_lastCamPos;
 Real32 cu_lastHeadY, cu_lastHeadX;
 Int32 cu_elementsPerBitmap;
 
-void ChunkUpdater_EnvVariableChanged(void* obj, Int32 envVar) {
+static void ChunkUpdater_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (envVar == ENV_VAR_SUN_COL || envVar == ENV_VAR_SHADOW_COL) {
 		ChunkUpdater_Refresh();
 	} else if (envVar == ENV_VAR_EDGE_HEIGHT || envVar == ENV_VAR_SIDES_OFFSET) {
@@ -47,7 +47,7 @@ void ChunkUpdater_EnvVariableChanged(void* obj, Int32 envVar) {
 	}
 }
 
-void ChunkUpdater_TerrainAtlasChanged(void* obj) {
+static void ChunkUpdater_TerrainAtlasChanged(void* obj) {
 	if (MapRenderer_1DUsedCount) {
 		bool refreshRequired = cu_elementsPerBitmap != Atlas1D_TilesPerAtlas;
 		if (refreshRequired) ChunkUpdater_Refresh();
@@ -58,28 +58,28 @@ void ChunkUpdater_TerrainAtlasChanged(void* obj) {
 	ChunkUpdater_ResetPartFlags();
 }
 
-void ChunkUpdater_BlockDefinitionChanged(void* obj) {
+static void ChunkUpdater_BlockDefinitionChanged(void* obj) {
 	ChunkUpdater_Refresh();
 	MapRenderer_1DUsedCount = Atlas1D_UsedAtlasesCount();
 	ChunkUpdater_ResetPartFlags();
 }
 
-void ChunkUpdater_ProjectionChanged(void* obj) {
+static void ChunkUpdater_ProjectionChanged(void* obj) {
 	cu_lastCamPos = Vector3_BigPos();
 }
 
-void ChunkUpdater_ViewDistanceChanged(void* obj) {
+static void ChunkUpdater_ViewDistanceChanged(void* obj) {
 	cu_lastCamPos = Vector3_BigPos();
 }
 
 
-void ChunkUpdater_FreePartsAllocations(void) {
+static void ChunkUpdater_FreePartsAllocations(void) {
 	Platform_MemFree(&MapRenderer_PartsBuffer_Raw);
 	MapRenderer_PartsNormal = NULL;
 	MapRenderer_PartsTranslucent = NULL;
 }
 
-void ChunkUpdater_FreeAllocations(void) {
+static void ChunkUpdater_FreeAllocations(void) {
 	if (MapRenderer_Chunks == NULL) return;
 	Platform_MemFree(&MapRenderer_Chunks);
 	Platform_MemFree(&MapRenderer_SortedChunks);
@@ -88,7 +88,7 @@ void ChunkUpdater_FreeAllocations(void) {
 	ChunkUpdater_FreePartsAllocations();
 }
 
-void ChunkUpdater_PerformPartsAllocations(void) {
+static void ChunkUpdater_PerformPartsAllocations(void) {
 	UInt32 partsCount = MapRenderer_ChunksCount * MapRenderer_1DUsedCount;
 	MapRenderer_PartsBuffer_Raw = Platform_MemAlloc(partsCount * 2, sizeof(ChunkPartInfo));
 	if (MapRenderer_PartsBuffer_Raw == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk parts buffer");
@@ -99,7 +99,7 @@ void ChunkUpdater_PerformPartsAllocations(void) {
 	MapRenderer_PartsTranslucent = MapRenderer_PartsBuffer_Raw + partsCount;
 }
 
-void ChunkUpdater_PerformAllocations(void) {
+static void ChunkUpdater_PerformAllocations(void) {
 	MapRenderer_Chunks = Platform_MemAlloc(MapRenderer_ChunksCount, sizeof(ChunkInfo));
 	if (MapRenderer_Chunks == NULL) ErrorHandler_Fail("ChunkUpdater - failed to allocate chunk info");
 
@@ -131,7 +131,7 @@ void ChunkUpdater_Refresh(void) {
 	}
 	ChunkUpdater_ResetPartCounts();
 }
-void ChunkUpdater_Refresh_Handler(void* obj) {
+static void ChunkUpdater_Refresh_Handler(void* obj) {
 	ChunkUpdater_Refresh();
 }
 
@@ -163,7 +163,7 @@ void ChunkUpdater_ApplyMeshBuilder(void) {
 	}
 }
 
-void ChunkUpdater_OnNewMap(void* obj) {
+static void ChunkUpdater_OnNewMap(void* obj) {
 	Game_ChunkUpdates = 0;
 	ChunkUpdater_ClearChunkCache();
 	ChunkUpdater_ResetPartCounts();
@@ -171,7 +171,7 @@ void ChunkUpdater_OnNewMap(void* obj) {
 	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
 }
 
-void ChunkUpdater_OnNewMapLoaded(void* obj) {
+static void ChunkUpdater_OnNewMapLoaded(void* obj) {
 	MapRenderer_ChunksX = (World_Width + CHUNK_MAX)  >> CHUNK_SHIFT;
 	MapRenderer_ChunksY = (World_Height + CHUNK_MAX) >> CHUNK_SHIFT;
 	MapRenderer_ChunksZ = (World_Length + CHUNK_MAX) >> CHUNK_SHIFT;
@@ -190,13 +190,13 @@ void ChunkUpdater_OnNewMapLoaded(void* obj) {
 }
 
 
-Int32 ChunkUpdater_AdjustViewDist(Int32 dist) {
+static Int32 ChunkUpdater_AdjustViewDist(Int32 dist) {
 	if (dist < CHUNK_SIZE) dist = CHUNK_SIZE;
 	Int32 viewDist = Utils_AdjViewDist(dist);
 	return (viewDist + 24) * (viewDist + 24);
 }
 
-Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
+static Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
 	Int32 i, j = 0;
 	Int32 viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
 	Int32 userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
@@ -225,7 +225,7 @@ Int32 ChunkUpdater_UpdateChunksAndVisibility(Int32* chunkUpdates) {
 	return j;
 }
 
-Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates) {
+static Int32 ChunkUpdater_UpdateChunksStill(Int32* chunkUpdates) {
 	Int32 i, j = 0;
 	Int32 viewDistSqr = ChunkUpdater_AdjustViewDist(Game_ViewDistance);
 	Int32 userDistSqr = ChunkUpdater_AdjustViewDist(Game_UserViewDistance);
@@ -335,7 +335,7 @@ void ChunkUpdater_ClearChunkCache(void) {
 	}
 	ChunkUpdater_ResetPartCounts();
 }
-void ChunkUpdater_ClearChunkCache_Handler(void* obj) {
+static void ChunkUpdater_ClearChunkCache_Handler(void* obj) {
 	ChunkUpdater_ClearChunkCache();
 }
 
@@ -388,7 +388,7 @@ void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
 	ChunkUpdater_AddParts(info->TranslucentParts, MapRenderer_TranslucentPartsCount);
 }
 
-void ChunkUpdater_QuickSort(Int32 left, Int32 right) {
+static void ChunkUpdater_QuickSort(Int32 left, Int32 right) {
 	ChunkInfo** values = MapRenderer_SortedChunks; ChunkInfo* value;
 	Int32* keys = ChunkUpdater_Distances;          Int32 key;
 	while (left < right) {
@@ -406,7 +406,7 @@ void ChunkUpdater_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-void ChunkUpdater_UpdateSortOrder(void) {
+static void ChunkUpdater_UpdateSortOrder(void) {
 	Vector3 cameraPos = Game_CurrentCameraPos;
 	Vector3I newChunkPos;
 	Vector3I_Floor(&newChunkPos, &cameraPos);

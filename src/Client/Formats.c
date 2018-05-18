@@ -11,7 +11,7 @@
 #include "Event.h"
 #include "Funcs.h"
 
-void Map_ReadBlocks(Stream* stream) {
+static void Map_ReadBlocks(Stream* stream) {
 	World_BlocksSize = World_Width * World_Length * World_Height;
 	World_Blocks = Platform_MemAlloc(World_BlocksSize, sizeof(BlockID));
 	if (World_Blocks == NULL) {
@@ -38,7 +38,7 @@ UInt8 Lvl_table[256 - BLOCK_CPE_COUNT] = { 0, 0, 0, 0, 39, 36, 36, 10, 46, 21, 2
 47, 0, 0, 0, 0, 0, 27, 46, 48, 24, 22, 36, 34, 8, 10, 21, 29, 22, 10, 22, 22,
 41, 19, 35, 21, 29, 49, 34, 16, 41, 0, 22 };
 
-void Lvl_ReadCustomBlocks(Stream* stream) {
+static void Lvl_ReadCustomBlocks(Stream* stream) {
 	Int32 x, y, z, i;
 	UInt8 chunk[LVL_CHUNKSIZE * LVL_CHUNKSIZE * LVL_CHUNKSIZE];
 	/* skip bounds checks when we know chunk is entirely inside map */
@@ -73,7 +73,7 @@ void Lvl_ReadCustomBlocks(Stream* stream) {
 	}
 }
 
-void Lvl_ConvertPhysicsBlocks(void) {
+static void Lvl_ConvertPhysicsBlocks(void) {
 	UInt8 conv[256];
 	Int32 i;
 	for (i = 0; i < BLOCK_CPE_COUNT; i++)
@@ -133,7 +133,7 @@ void Lvl_Load(Stream* stream) {
 *#########################################################################################################################*/
 #define FCM_IDENTIFIER 0x0FC2AF40UL
 #define FCM_REVISION 13
-void Fcm_ReadString(Stream* stream) {
+static void Fcm_ReadString(Stream* stream) {
 	UInt16 length = Stream_ReadU16_LE(stream);
 	ReturnCode code = Stream_Skip(stream, length);
 	ErrorHandler_CheckOrFail(code, "FCM import - skipping string");
@@ -218,37 +218,37 @@ typedef struct NbtTag_ {
 	};
 } NbtTag;
 
-UInt8 NbtTag_U8(NbtTag* tag) {
+static UInt8 NbtTag_U8(NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_INT8) { ErrorHandler_Fail("Expected I8 NBT tag"); }
 	return tag->Value_U8;
 }
 
-Int16 NbtTag_I16(NbtTag* tag) {
+static Int16 NbtTag_I16(NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_INT16) { ErrorHandler_Fail("Expected I16 NBT tag"); }
 	return tag->Value_I16;
 }
 
-Int32 NbtTag_I32(NbtTag* tag) {
+static Int32 NbtTag_I32(NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_INT32) { ErrorHandler_Fail("Expected I32 NBT tag"); }
 	return tag->Value_I32;
 }
 
-Int64 NbtTag_I64(NbtTag* tag) {
+static Int64 NbtTag_I64(NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_INT64) { ErrorHandler_Fail("Expected I64 NBT tag"); }
 	return tag->Value_I64;
 }
 
-Real32 NbtTag_R32(NbtTag* tag) {
+static Real32 NbtTag_R32(NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_REAL32) { ErrorHandler_Fail("Expected R32 NBT tag"); }
 	return tag->Value_R32;
 }
 
-Real64 NbtTag_R64(NbtTag* tag) {
+static Real64 NbtTag_R64(NbtTag* tag) {
 	if (tag->TagID != NBT_TAG_REAL64) { ErrorHandler_Fail("Expected R64 NBT tag"); }
 	return tag->Value_R64;
 }
 
-UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
+static UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
 	if (tag->TagID != NBT_TAG_INT8_ARRAY) { ErrorHandler_Fail("Expected I8_Array NBT tag"); }
 	if (i >= tag->DataSize) { ErrorHandler_Fail("Tried to access past bounds of I8_Array tag"); }
 
@@ -256,7 +256,7 @@ UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
 	return tag->DataBig[i];
 }
 
-UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
+static UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
 	UInt16 nameLen = Stream_ReadU16_BE(stream);
 	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
 	UInt8 nameBuffer[NBT_SMALL_SIZE * 4];
@@ -276,7 +276,7 @@ UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
 }
 
 typedef bool (*Nbt_Callback)(NbtTag* tag);
-void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent, Nbt_Callback callback) {
+static void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent, Nbt_Callback callback) {
 	if (typeId == NBT_TAG_END) return;
 
 	NbtTag tag;
@@ -348,7 +348,7 @@ void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* parent,
 	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Platform_MemFree(&tag.DataBig);
 }
 
-bool IsTag(NbtTag* tag, const UInt8* tagName) {
+static bool IsTag(NbtTag* tag, const UInt8* tagName) {
 	String name = { tag->NameBuffer, tag->NameSize, tag->NameSize };
 	return String_CaselessEqualsConst(&name, tagName);
 }
@@ -358,7 +358,7 @@ bool IsTag(NbtTag* tag, const UInt8* tagName) {
 #define Nbt_WriteI16(stream, value) Stream_WriteI16_BE(stream, value)
 #define Nbt_WriteI32(stream, value) Stream_WriteI32_BE(stream, value)
 
-void Nbt_WriteString(Stream* stream, STRING_PURE String* text) {
+static void Nbt_WriteString(Stream* stream, STRING_PURE String* text) {
 	if (text->length > NBT_SMALL_SIZE) ErrorHandler_Fail("NBT String too long");
 	UInt8 buffer[NBT_SMALL_SIZE * 3];
 	Int32 i, len = 0;
@@ -373,7 +373,7 @@ void Nbt_WriteString(Stream* stream, STRING_PURE String* text) {
 	Stream_Write(stream, buffer, len);
 }
 
-void Nbt_WriteTag(Stream* stream, UInt8 tagType, const UInt8* tagName) { 
+static void Nbt_WriteTag(Stream* stream, UInt8 tagType, const UInt8* tagName) {
 	Nbt_WriteU8(stream, tagType);
 	String str = String_FromReadonly(tagName);
 	Nbt_WriteString(stream, &str);
@@ -383,7 +383,7 @@ void Nbt_WriteTag(Stream* stream, UInt8 tagType, const UInt8* tagName) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld format----------------------------------------------------*
 *#########################################################################################################################*/
-bool Cw_Callback_1(NbtTag* tag) {
+static bool Cw_Callback_1(NbtTag* tag) {
 	if (IsTag(tag, "X")) { World_Width  = (UInt16)NbtTag_I16(tag); return true; }
 	if (IsTag(tag, "Y")) { World_Height = (UInt16)NbtTag_I16(tag); return true; }
 	if (IsTag(tag, "Z")) { World_Length = (UInt16)NbtTag_I16(tag); return true; }
@@ -407,7 +407,7 @@ bool Cw_Callback_1(NbtTag* tag) {
 	return false;
 }
 
-bool Cw_Callback_2(NbtTag* tag) {
+static bool Cw_Callback_2(NbtTag* tag) {
 	if (!IsTag(tag->Parent, "Spawn")) return false;
 
 	LocalPlayer*p = &LocalPlayer_Instance;
@@ -422,7 +422,7 @@ bool Cw_Callback_2(NbtTag* tag) {
 
 BlockID cw_curID;
 Int16 cw_colR, cw_colG, cw_colB;
-PackedCol Cw_ParseCol(PackedCol defValue) {
+static PackedCol Cw_ParseCol(PackedCol defValue) {
 	Int16 r = cw_colR, g = cw_colG, b = cw_colB;	
 	if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
 		return defValue;
@@ -432,7 +432,7 @@ PackedCol Cw_ParseCol(PackedCol defValue) {
 	}
 }
 
-bool Cw_Callback_4(NbtTag* tag) {
+static bool Cw_Callback_4(NbtTag* tag) {
 	if (!IsTag(tag->Parent->Parent, "CPE")) return false;
 	if (!IsTag(tag->Parent->Parent->Parent, "Metadata")) return false;
 	LocalPlayer*p = &LocalPlayer_Instance;
@@ -498,7 +498,7 @@ bool Cw_Callback_4(NbtTag* tag) {
 	return false;
 }
 
-bool Cw_Callback_5(NbtTag* tag) {
+static bool Cw_Callback_5(NbtTag* tag) {
 	if (!IsTag(tag->Parent->Parent->Parent, "CPE")) return false;
 	if (!IsTag(tag->Parent->Parent->Parent->Parent, "Metadata")) return false;
 	LocalPlayer*p = &LocalPlayer_Instance;
@@ -565,7 +565,7 @@ bool Cw_Callback_5(NbtTag* tag) {
 	return false;
 }
 
-bool Cw_Callback(NbtTag* tag) {
+static bool Cw_Callback(NbtTag* tag) {
 	UInt32 depth = 0;
 	NbtTag* tmp = tag->Parent;
 	while (tmp != NULL) { depth++; tmp = tmp->Parent; }
@@ -635,7 +635,7 @@ typedef struct JClassDesc_ {
 	JFieldDesc Fields[22];
 } JClassDesc;
 
-void Dat_ReadString(Stream* stream, UInt8* buffer) {
+static void Dat_ReadString(Stream* stream, UInt8* buffer) {
 	Platform_MemSet(buffer, 0, JNAME_SIZE);
 	UInt16 len = Stream_ReadU16_BE(stream);
 
@@ -643,7 +643,7 @@ void Dat_ReadString(Stream* stream, UInt8* buffer) {
 	Stream_Read(stream, buffer, len);
 }
 
-void Dat_ReadFieldDesc(Stream* stream, JFieldDesc* desc) {
+static void Dat_ReadFieldDesc(Stream* stream, JFieldDesc* desc) {
 	desc->Type = Stream_ReadU8(stream);
 	Dat_ReadString(stream, desc->FieldName);
 
@@ -660,7 +660,7 @@ void Dat_ReadFieldDesc(Stream* stream, JFieldDesc* desc) {
 	}
 }
 
-void Dat_ReadClassDesc(Stream* stream, JClassDesc* desc) {
+static void Dat_ReadClassDesc(Stream* stream, JClassDesc* desc) {
 	UInt8 typeCode = Stream_ReadU8(stream);
 	if (typeCode == TC_NULL) { desc->ClassName[0] = NULL; desc->FieldsCount = 0; return; }
 	if (typeCode != TC_CLASSDESC) ErrorHandler_Fail("Unsupported type code in ClassDesc header");
@@ -682,7 +682,7 @@ void Dat_ReadClassDesc(Stream* stream, JClassDesc* desc) {
 	Dat_ReadClassDesc(stream, &superClassDesc);
 }
 
-void Dat_ReadFieldData(Stream* stream, JFieldDesc* field) {
+static void Dat_ReadFieldData(Stream* stream, JFieldDesc* field) {
 	switch (field->Type) {
 	case JFIELD_INT8:
 		field->Value_I8  = Stream_ReadI8(stream); break;
@@ -735,7 +735,7 @@ void Dat_ReadFieldData(Stream* stream, JFieldDesc* field) {
 	}
 }
 
-Int32 Dat_I32(JFieldDesc* field) {
+static Int32 Dat_I32(JFieldDesc* field) {
 	if (field->Type != JFIELD_INT32) ErrorHandler_Fail("Field type must be Int32");
 	return field->Value_I32;
 }
@@ -797,13 +797,13 @@ void Dat_Load(Stream* stream) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld export----------------------------------------------------*
 *#########################################################################################################################*/
-void Cw_WriteCpeExtCompound(Stream* stream, const UInt8* tagName, Int32 version) {
+static void Cw_WriteCpeExtCompound(Stream* stream, const UInt8* tagName, Int32 version) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
 	Nbt_WriteTag(stream, NBT_TAG_INT32, "ExtensionVersion");
 	Nbt_WriteI32(stream, version);
 }
 
-void Cw_WriteSpawnCompound(Stream* stream) {
+static void Cw_WriteSpawnCompound(Stream* stream) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Spawn");
 	LocalPlayer* p = &LocalPlayer_Instance;
 	Vector3 spawn = p->Spawn; /* TODO: Maybe keep real spawn too? */
@@ -823,7 +823,7 @@ void Cw_WriteSpawnCompound(Stream* stream) {
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }
 
-void Cw_WriteColCompound(Stream* stream, const UInt8* tagName, PackedCol col) {
+static void Cw_WriteColCompound(Stream* stream, const UInt8* tagName, PackedCol col) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
 
 	Nbt_WriteTag(stream, NBT_TAG_INT16, "R");
@@ -836,7 +836,7 @@ void Cw_WriteColCompound(Stream* stream, const UInt8* tagName, PackedCol col) {
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }
 
-void Cw_WriteBlockDefinitionCompound(Stream* stream, BlockID id) {
+static void Cw_WriteBlockDefinitionCompound(Stream* stream, BlockID id) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Block" + id);
 	bool sprite = Block_Draw[id] == DRAW_SPRITE;
 
@@ -892,7 +892,7 @@ void Cw_WriteBlockDefinitionCompound(Stream* stream, BlockID id) {
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }
 
-void Cw_WriteMetadataCompound(Stream* stream) {
+static void Cw_WriteMetadataCompound(Stream* stream) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "Metadata");
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, "CPE");
 

@@ -61,7 +61,7 @@ void BordersRenderer_RenderEdges(Real64 delta) {
 }
 
 
-void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, BlockID block) {
+static void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, BlockID block) {
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_YMAX);
 	if (texLoc == *lastTexLoc || Gfx_LostContext) return;
 	*lastTexLoc = texLoc;
@@ -70,7 +70,7 @@ void BordersRenderer_MakeTexture(GfxResourceID* texId, TextureLoc* lastTexLoc, B
 	*texId = Atlas2D_LoadTile(texLoc);
 }
 
-void BordersRenderer_CalculateRects(Int32 extent) {
+static void BordersRenderer_CalculateRects(Int32 extent) {
 	extent = Utils_AdjViewDist(extent);
 	borders_rects[0] = Rectangle2D_Make(-extent, -extent, extent + World_Width + extent, extent);
 	borders_rects[1] = Rectangle2D_Make(-extent, World_Length, extent + World_Width + extent, extent);
@@ -79,7 +79,7 @@ void BordersRenderer_CalculateRects(Int32 extent) {
 	borders_rects[3] = Rectangle2D_Make(World_Width, 0, extent, World_Length);
 }
 
-void BordersRenderer_ResetTextures(void* obj) {
+static void BordersRenderer_ResetTextures(void* obj) {
 	borders_lastEdgeTexLoc = UInt8_MaxValue;
 	borders_lastSideTexLoc = UInt8_MaxValue;
 	BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);
@@ -91,7 +91,7 @@ void BordersRenderer_ResetTextures(void* obj) {
 #define borders_HorOffset(block) (Block_RenderMinBB[block].X - Block_MinBB[block].X)
 #define borders_YOffset(block) (Block_RenderMinBB[block].Y - Block_MinBB[block].Y)
 
-void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** vertices) {
+static void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** vertices) {
 	Int32 endZ = z2, endY = y2, startY = y1;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
@@ -115,7 +115,7 @@ void BordersRenderer_DrawX(Int32 x, Int32 z1, Int32 z2, Int32 y1, Int32 y2, Int3
 	*vertices = ptr;
 }
 
-void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** vertices) {
+static void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int32 axisSize, PackedCol col, VertexP3fT2fC4b** vertices) {
 	Int32 endX = x2, endY = y2, startY = y1;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
@@ -139,7 +139,7 @@ void BordersRenderer_DrawZ(Int32 z, Int32 x1, Int32 x2, Int32 y1, Int32 y2, Int3
 	*vertices = ptr;
 }
 
-void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int32 axisSize, PackedCol col, Real32 offset, Real32 yOffset, VertexP3fT2fC4b** vertices) {
+static void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int32 axisSize, PackedCol col, Real32 offset, Real32 yOffset, VertexP3fT2fC4b** vertices) {
 	Int32 endX = x2, endZ = z2, startZ = z1;
 	VertexP3fT2fC4b* ptr = *vertices;
 	VertexP3fT2fC4b v;
@@ -163,7 +163,7 @@ void BordersRenderer_DrawY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Real32 y, Int
 	*vertices = ptr;
 }
 
-void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
+static void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	BlockID block = WorldEnv_SidesBlock;
 	borders_sidesVertices = 0;
 	if (Block_Draw[block] == DRAW_GAS) return;
@@ -209,7 +209,7 @@ void BordersRenderer_RebuildSides(Int32 y, Int32 axisSize) {
 	if (borders_sidesVertices > 4096) Platform_MemFree(&ptr);
 }
 
-void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
+static void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 	BlockID block = WorldEnv_EdgeBlock;
 	borders_edgesVertices = 0;
 	if (Block_Draw[block] == DRAW_GAS) return;
@@ -244,40 +244,40 @@ void BordersRenderer_RebuildEdges(Int32 y, Int32 axisSize) {
 }
 
 
-void BordersRenderer_ResetSides(void) {
+static void BordersRenderer_ResetSides(void) {
 	if (World_Blocks == NULL || Gfx_LostContext) return;
 	Gfx_DeleteVb(&borders_sidesVb);
 	BordersRenderer_RebuildSides(WorldEnv_SidesHeight, BordersRenderer_Legacy ? 128 : 65536);
 }
 
-void BordersRenderer_ResetEdges(void) {
+static void BordersRenderer_ResetEdges(void) {
 	if (World_Blocks == NULL || Gfx_LostContext) return;
 	Gfx_DeleteVb(&borders_edgesVb);
 	BordersRenderer_RebuildEdges(WorldEnv_EdgeHeight, BordersRenderer_Legacy ? 128 : 65536);
 }
 
-void BordersRenderer_ContextLost(void* obj) {
+static void BordersRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&borders_sidesVb);
 	Gfx_DeleteVb(&borders_edgesVb);
 	Gfx_DeleteTexture(&borders_edgeTexId);
 	Gfx_DeleteTexture(&borders_sideTexId);
 }
 
-void BordersRenderer_ContextRecreated(void* obj) {
+static void BordersRenderer_ContextRecreated(void* obj) {
 	BordersRenderer_ResetSides();
 	BordersRenderer_ResetEdges();
 	BordersRenderer_ResetTextures(NULL);
 }
 
-void BordersRenderer_ResetSidesAndEdges(void) {
+static void BordersRenderer_ResetSidesAndEdges(void) {
 	BordersRenderer_CalculateRects(Game_ViewDistance);
 	BordersRenderer_ContextRecreated(NULL);
 }
-void BordersRenderer_ResetSidesAndEdges_Handler(void* obj) {
+static void BordersRenderer_ResetSidesAndEdges_Handler(void* obj) {
 	BordersRenderer_ResetSidesAndEdges();
 }
 
-void BordersRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
+static void BordersRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (envVar == ENV_VAR_EDGE_BLOCK) {
 		BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);
 		BordersRenderer_ResetEdges();
@@ -298,7 +298,7 @@ void BordersRenderer_UseLegacyMode(bool legacy) {
 	BordersRenderer_ResetSidesAndEdges();
 }
 
-void BordersRenderer_Init(void) {
+static void BordersRenderer_Init(void) {
 	Event_RegisterInt(&WorldEvents_EnvVarChanged,    NULL, BordersRenderer_EnvVariableChanged);
 	Event_RegisterVoid(&GfxEvents_ViewDistanceChanged, NULL, BordersRenderer_ResetSidesAndEdges_Handler);
 	Event_RegisterVoid(&TextureEvents_AtlasChanged,    NULL, BordersRenderer_ResetTextures);
@@ -306,7 +306,7 @@ void BordersRenderer_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,    NULL, BordersRenderer_ContextRecreated);
 }
 
-void BordersRenderer_Free(void) {
+static void BordersRenderer_Free(void) {
 	BordersRenderer_ContextLost(NULL);
 	Event_UnregisterInt(&WorldEvents_EnvVarChanged,    NULL, BordersRenderer_EnvVariableChanged);
 	Event_UnregisterVoid(&GfxEvents_ViewDistanceChanged, NULL, BordersRenderer_ResetSidesAndEdges_Handler);
@@ -315,7 +315,7 @@ void BordersRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated,    NULL, BordersRenderer_ContextRecreated);
 }
 
-void BordersRenderer_Reset(void) {
+static void BordersRenderer_Reset(void) {
 	Gfx_DeleteVb(&borders_sidesVb);
 	Gfx_DeleteVb(&borders_edgesVb);
 	BordersRenderer_MakeTexture(&borders_edgeTexId, &borders_lastEdgeTexLoc, WorldEnv_EdgeBlock);

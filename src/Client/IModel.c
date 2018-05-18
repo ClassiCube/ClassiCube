@@ -24,11 +24,11 @@ void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Rea
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
 
-void IModel_GetTransform(Entity* entity, Vector3 pos) {
+static void IModel_GetTransform(Entity* entity, Vector3 pos) {
 	Entity_GetTransform(entity, pos, entity->ModelScale);
 }
 
-void IModel_RecalcProperties(Entity* entity) { }
+static void IModel_RecalcProperties(Entity* entity) { }
 
 void IModel_Init(IModel* model) {
 	model->Bobbing = true;
@@ -65,7 +65,7 @@ bool IModel_ShouldRender(Entity* entity) {
 	return FrustumCulling_SphereInFrustum(pos.X, pos.Y, pos.Z, maxXYZ);
 }
 
-Real32 IModel_MinDist(Real32 dist, Real32 extent) {
+static Real32 IModel_MinDist(Real32 dist, Real32 extent) {
 	/* Compare min coord, centre coord, and max coord */
 	Real32 dMin = Math_AbsF(dist - extent), dMax = Math_AbsF(dist + extent);
 	Real32 dMinMax = min(dMin, dMax);

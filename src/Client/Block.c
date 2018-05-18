@@ -87,7 +87,7 @@ void Block_DefineCustom(BlockID block) {
 	Event_RaiseVoid(&BlockEvents_BlockDefChanged);
 }
 
-void Block_RecalcIsLiquid(BlockID b) {
+static void Block_RecalcIsLiquid(BlockID b) {
 	UInt8 collide = Block_ExtendedCollide[b];
 	Block_IsLiquid[b] =
 		(collide == COLLIDE_LIQUID_WATER && Block_Draw[b] == DRAW_TRANSLUCENT) ||
@@ -129,7 +129,7 @@ void Block_SetDrawType(BlockID block, UInt8 draw) {
 "_Iron_Double slab_Slab_Brick_TNT_Bookshelf_Mossy rocks_Obsidian_Cobblestone slab_Rope_Sandstone_Snow_Fire_Light pink"\
 "_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick"
 
-String Block_DefaultName(BlockID block) {
+static String Block_DefaultName(BlockID block) {
 #if USE16_BIT
 	if (block >= 256) return "ID " + block;
 #endif
@@ -263,7 +263,7 @@ void Block_RecalculateSpriteBB(void) {
 	}
 }
 
-Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
@@ -276,7 +276,7 @@ Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp)
 	return 0;
 }
 
-Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = size - 1; y >= 0; y--) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
@@ -289,7 +289,7 @@ Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* b
 	return 1;
 }
 
-Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
@@ -302,7 +302,7 @@ Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp
 	return 1;
 }
 
-Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
@@ -336,7 +336,7 @@ void Block_RecalculateBB(BlockID block) {
 }
 
 
-void Block_CalcStretch(BlockID block) {
+static void Block_CalcStretch(BlockID block) {
 	/* faces which can be stretched on X axis */
 	if (Block_MinBB[block].X == 0.0f && Block_MaxBB[block].X == 1.0f) {
 		Block_CanStretch[block] |= 0x3C;
@@ -352,7 +352,7 @@ void Block_CalcStretch(BlockID block) {
 	}
 }
 
-bool Block_IsHidden(BlockID block, BlockID other) {
+static bool Block_IsHidden(BlockID block, BlockID other) {
 	/* Sprite blocks can never hide faces. */
 	if (Block_Draw[block] == DRAW_SPRITE) return false;
 
@@ -374,7 +374,7 @@ bool Block_IsHidden(BlockID block, BlockID other) {
 	return canSkip;
 }
 
-void Block_CalcCulling(BlockID block, BlockID other) {
+static void Block_CalcCulling(BlockID block, BlockID other) {
 	if (!Block_IsHidden(block, other)) {
 		/* Block is not hidden at all, so we can just entirely skip per-face check */
 		Block_Hidden[(block * BLOCK_COUNT) + other] = 0;
@@ -430,7 +430,7 @@ void Block_UpdateCulling(BlockID block) {
 #define AR_EQ1(s, x) (s.length >= 1 && Char_ToLower(s.buffer[0]) == x)
 #define AR_EQ2(s, x, y) (s.length >= 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
 
-BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix) {
+static BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix) {
 	UInt8 buffer[String_BufferSize(STRING_SIZE * 2)];
 	String temp = String_InitAndClearArray(buffer);
 	String_AppendString(&temp, name);
@@ -441,7 +441,7 @@ BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix) {
 	return block;
 }
 
-BlockID AutoRotate_RotateCorner(BlockID block, String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateCorner(BlockID block, String* name, Vector3 offset) {
 	if (offset.X < 0.5f && offset.Z < 0.5f) {
 		return AutoRotate_Find(block, name, "-NW");
 	} else if (offset.X >= 0.5f && offset.Z < 0.5f) {
@@ -454,7 +454,7 @@ BlockID AutoRotate_RotateCorner(BlockID block, String* name, Vector3 offset) {
 	return block;
 }
 
-BlockID AutoRotate_RotateVertical(BlockID block, String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateVertical(BlockID block, String* name, Vector3 offset) {
 	if (offset.Y >= 0.5f) {
 		return AutoRotate_Find(block, name, "-U");
 	} else {
@@ -462,7 +462,7 @@ BlockID AutoRotate_RotateVertical(BlockID block, String* name, Vector3 offset) {
 	}
 }
 
-BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
 	/* Fence type blocks */
 	if (AutoRotate_Find(BLOCK_AIR, name, "-UD") == BLOCK_AIR) {
 		Real32 headY = LocalPlayer_Instance.Base.HeadY;
@@ -486,7 +486,7 @@ BlockID AutoRotate_RotateOther(BlockID block, String* name, Vector3 offset) {
 	return block;
 }
 
-BlockID AutoRotate_RotateDirection(BlockID block, String* name, Vector3 offset) {
+static BlockID AutoRotate_RotateDirection(BlockID block, String* name, Vector3 offset) {
 	Real32 headY = LocalPlayer_Instance.Base.HeadY;
 	headY = LocationUpdate_Clamp(headY);
 

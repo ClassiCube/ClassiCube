@@ -11,19 +11,19 @@ Int16* Lighting_heightmap;
 PackedCol shadow, shadowZSide, shadowXSide, shadowYBottom;
 #define Lighting_Pack(x, z) ((x) + World_Width * (z))
 
-void Lighting_SetSun(PackedCol col) {
+static void Lighting_SetSun(PackedCol col) {
 	Lighting_Outside = col;
 	PackedCol_GetShaded(col, &Lighting_OutsideXSide,
 		&Lighting_OutsideZSide, &Lighting_OutsideYBottom);
 }
 
-void Lighting_SetShadow(PackedCol col) {
+static void Lighting_SetShadow(PackedCol col) {
 	shadow = col;
 	PackedCol_GetShaded(col, &shadowXSide,
 		&shadowZSide, &shadowYBottom);
 }
 
-void Lighting_EnvVariableChanged(void* obj, Int32 envVar) {
+static void Lighting_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (envVar == ENV_VAR_SUN_COL) {
 		Lighting_SetSun(WorldEnv_SunCol);
 	} else if (envVar == ENV_VAR_SHADOW_COL) {
@@ -31,7 +31,7 @@ void Lighting_EnvVariableChanged(void* obj, Int32 envVar) {
 	}
 }
 
-Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
+static Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	Int32 y, i = World_Pack(x, maxY, z);
 
 	for (y = maxY; y >= 0; y--, i -= World_OneY) {
@@ -46,7 +46,7 @@ Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 	return -10;
 }
 
-Int32 Lighting_GetLightHeight(Int32 x, Int32 z) {
+static Int32 Lighting_GetLightHeight(Int32 x, Int32 z) {
 	Int32 index = (z * World_Width) + x;
 	Int32 lightH = Lighting_heightmap[index];
 	return lightH == Int16_MaxValue ? Lighting_CalcHeightAt(x, World_Height - 1, z, index) : lightH;
@@ -93,7 +93,7 @@ void Lighting_Refresh(void) {
 }
 
 
-void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock, Int32 index, Int32 lightH) {
+static void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockID newBlock, Int32 index, Int32 lightH) {
 	bool didBlock = Block_BlocksLight[oldBlock];
 	bool nowBlocks = Block_BlocksLight[newBlock];
 	Int32 oldOffset = (Block_LightOffset[oldBlock] >> FACE_YMAX) & 1;
@@ -128,11 +128,11 @@ void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockI
 }
 
 
-bool Lighting_Needs(BlockID block, BlockID other) {
+static bool Lighting_Needs(BlockID block, BlockID other) {
 	return Block_Draw[block] != DRAW_OPAQUE || Block_Draw[other] != DRAW_GAS;
 }
 
-bool Lighting_NeedsNeighour(BlockID block, Int32 index, Int32 minY, Int32 y, Int32 nY) {
+static bool Lighting_NeedsNeighour(BlockID block, Int32 index, Int32 minY, Int32 y, Int32 nY) {
 	/* Update if any blocks in the chunk are affected by light change. */
 	for (; y >= minY; y--, index -= World_OneY) {
 		BlockID other = World_Blocks[index];
@@ -142,7 +142,7 @@ bool Lighting_NeedsNeighour(BlockID block, Int32 index, Int32 minY, Int32 y, Int
 	return false;
 }
 
-void Lighting_ResetNeighbour(Int32 x, Int32 y, Int32 z, BlockID block,
+static void Lighting_ResetNeighbour(Int32 x, Int32 y, Int32 z, BlockID block,
 	Int32 cx, Int32 cy, Int32 cz, Int32 minCy, Int32 maxCy) {
 	if (minCy == maxCy) {
 		Int32 minY = cy << 4;
@@ -162,7 +162,7 @@ void Lighting_ResetNeighbour(Int32 x, Int32 y, Int32 z, BlockID block,
 	}
 }
 
-void Lighting_ResetColumn(Int32 cx, Int32 cy, Int32 cz, Int32 minCy, Int32 maxCy) {
+static void Lighting_ResetColumn(Int32 cx, Int32 cy, Int32 cz, Int32 minCy, Int32 maxCy) {
 	if (minCy == maxCy) {
 		MapRenderer_RefreshChunk(cx, cy, cz);
 	} else {
@@ -172,7 +172,7 @@ void Lighting_ResetColumn(Int32 cx, Int32 cy, Int32 cz, Int32 minCy, Int32 maxCy
 	}
 }
 
-void Lighting_RefreshAffected(Int32 x, Int32 y, Int32 z, BlockID block, Int32 oldHeight, Int32 newHeight) {
+static void Lighting_RefreshAffected(Int32 x, Int32 y, Int32 z, BlockID block, Int32 oldHeight, Int32 newHeight) {
 	Int32 cx = x >> 4, cy = y >> 4, cz = z >> 4;
 
 	/* NOTE: much faster to only update the chunks that are affected by the change in shadows, rather than the entire column. */
@@ -216,7 +216,7 @@ void Lighting_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock, BlockI
 }
 
 
-Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount, Int32* skip) {
+static Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount, Int32* skip) {
 	Int32 elemsLeft = 0, index = 0, curRunCount = 0;
 	Int32 x, z;
 
@@ -239,7 +239,7 @@ Int32 Lighting_InitialHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 
 	return elemsLeft;
 }
 
-bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount, Int32 elemsLeft, Int32* skip) {
+static bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount, Int32 elemsLeft, Int32* skip) {
 	Int32 prevRunCount = 0;
 	Int32 x, y, z;
 
@@ -286,7 +286,7 @@ bool Lighting_CalculateHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32
 	return false;
 }
 
-void Lighting_FinishHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount) {
+static void Lighting_FinishHeightmapCoverage(Int32 x1, Int32 z1, Int32 xCount, Int32 zCount) {
 	Int32 x, z;
 
 	for (z = 0; z < zCount; z++) {
@@ -314,23 +314,23 @@ void Lighting_LightHint(Int32 startX, Int32 startZ) {
 }
 
 
-void Lighting_Init(void) {
+static void Lighting_Init(void) {
 	Event_RegisterInt(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
 	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
 }
 
-void Lighting_Reset(void) {
+static void Lighting_Reset(void) {
 	Platform_MemFree(&Lighting_heightmap);
 }
 
-void Lighting_OnNewMap(void) {
+static void Lighting_OnNewMap(void) {
 	Lighting_SetSun(WorldEnv_DefaultSunCol);
 	Lighting_SetShadow(WorldEnv_DefaultShadowCol);
 	Lighting_Reset();
 }
 
-void Lighting_OnNewMapLoaded(void) {
+static void Lighting_OnNewMapLoaded(void) {
 	Lighting_heightmap = Platform_MemAlloc(World_Width * World_Length, sizeof(Int16));
 	if (Lighting_heightmap == NULL) {
 		ErrorHandler_Fail("WorldLighting - failed to allocate heightmap");
@@ -338,7 +338,7 @@ void Lighting_OnNewMapLoaded(void) {
 	Lighting_Refresh();
 }
 
-void Lighting_Free(void) {
+static void Lighting_Free(void) {
 	Event_UnregisterInt(&WorldEvents_EnvVarChanged, NULL, &Lighting_EnvVariableChanged);
 	Lighting_Reset();
 }

@@ -44,18 +44,18 @@ void Particle_DoRender(Vector2* size, Vector3* pos, TextureRec* rec, PackedCol c
 				   v.V = rec->V2; vertices[3] = v;
 }
 
-void Particle_Reset(Particle* p, Vector3 pos, Vector3 velocity, Real32 lifetime) {
+static void Particle_Reset(Particle* p, Vector3 pos, Vector3 velocity, Real32 lifetime) {
 	p->LastPos = pos; p->NextPos = pos;
 	p->Velocity = velocity;
 	p->Lifetime = lifetime;
 }
 
-bool Particle_CanPass(BlockID block, bool throughLiquids) {
+static bool Particle_CanPass(BlockID block, bool throughLiquids) {
 	UInt8 draw = Block_Draw[block];
 	return draw == DRAW_GAS || draw == DRAW_SPRITE || (throughLiquids && Block_IsLiquid[block]);
 }
 
-bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
+static bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
 	Vector3 horPos = Vector3_Create3((Real32)Math_Floor(nextPos->X), 0.0f, (Real32)Math_Floor(nextPos->Z));
 	Vector3 min, max;
 	Vector3_Add(&min, &Block_MinBB[block], &horPos);
@@ -63,7 +63,7 @@ bool Particle_CollideHor(Vector3* nextPos, BlockID block) {
 	return nextPos->X >= min.X && nextPos->Z >= min.Z && nextPos->X < max.X && nextPos->Z < max.Z;
 }
 
-BlockID Particle_GetBlock(Int32 x, Int32 y, Int32 z) {
+static BlockID Particle_GetBlock(Int32 x, Int32 y, Int32 z) {
 	if (World_IsValidPos(x, y, z)) { return World_GetBlock(x, y, z); }
 
 	if (y >= WorldEnv_EdgeHeight) return BLOCK_AIR;
@@ -71,7 +71,7 @@ BlockID Particle_GetBlock(Int32 x, Int32 y, Int32 z) {
 	return WorldEnv_SidesBlock;
 }
 
-bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiquids) {
+static bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiquids) {
 	if (y < 0) {
 		p->NextPos.Y = ENTITY_ADJUSTMENT; p->LastPos.Y = ENTITY_ADJUSTMENT;
 		Vector3 zero = Vector3_Zero; p->Velocity = zero;
@@ -97,7 +97,7 @@ bool Particle_TestY(Particle* p, Int32 y, bool topFace, bool throughLiquids) {
 	return true;
 }
 
-bool Particle_PhysicsTick(Particle* p, Real32 gravity, bool throughLiquids, Real64 delta) {
+static bool Particle_PhysicsTick(Particle* p, Real32 gravity, bool throughLiquids, Real64 delta) {
 	p->LastPos = p->NextPos;
 
 	BlockID cur = Particle_GetBlock((Int32)p->NextPos.X, (Int32)p->NextPos.Y, (Int32)p->NextPos.Z);
@@ -136,13 +136,13 @@ typedef struct RainParticle_ { Particle Base; } RainParticle;
 RainParticle Rain_Particles[PARTICLES_MAX];
 Int32 Rain_Count;
 
-bool RainParticle_Tick(RainParticle* p, Real64 delta) {
+static bool RainParticle_Tick(RainParticle* p, Real64 delta) {
 	particle_hitTerrain = false;
 	return Particle_PhysicsTick(&p->Base, 3.5f, false, delta) || particle_hitTerrain;
 }
 
 TextureRec Rain_Rec = { 2.0f / 128.0f, 14.0f / 128.0f, 5.0f / 128.0f, 16.0f / 128.0f };
-void RainParticle_Render(RainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
+static void RainParticle_Render(RainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
 	Vector3 pos;
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
 	Vector2 size; size.X = (Real32)p->Base.Size * 0.015625f; size.Y = size.X;
@@ -152,7 +152,7 @@ void RainParticle_Render(RainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
 	Particle_DoRender(&size, &pos, &Rain_Rec, col, vertices);
 }
 
-void Rain_Render(Real32 t) {
+static void Rain_Render(Real32 t) {
 	if (Rain_Count == 0) return;
 	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
 	Int32 i;
@@ -166,7 +166,7 @@ void Rain_Render(Real32 t) {
 	GfxCommon_UpdateDynamicVb_IndexedTris(Particles_VB, vertices, Rain_Count * 4);
 }
 
-void Rain_RemoveAt(Int32 index) {
+static void Rain_RemoveAt(Int32 index) {
 	RainParticle removed = Rain_Particles[index];
 	Int32 i;
 	for (i = index; i < Rain_Count - 1; i++) {
@@ -176,7 +176,7 @@ void Rain_RemoveAt(Int32 index) {
 	Rain_Count--;
 }
 
-void Rain_Tick(Real64 delta) {
+static void Rain_Tick(Real64 delta) {
 	Int32 i;
 	for (i = 0; i < Rain_Count; i++) {
 		if (RainParticle_Tick(&Rain_Particles[i], delta)) {
@@ -201,11 +201,11 @@ Int32 Terrain_Count;
 UInt16 Terrain_1DCount[ATLAS1D_MAX_ATLASES_COUNT];
 UInt16 Terrain_1DIndices[ATLAS1D_MAX_ATLASES_COUNT];
 
-bool TerrainParticle_Tick(TerrainParticle* p, Real64 delta) {
+static bool TerrainParticle_Tick(TerrainParticle* p, Real64 delta) {
 	return Particle_PhysicsTick(&p->Base, 5.4f, true, delta);
 }
 
-void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
+static void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b* vertices) {
 	Vector3 pos;
 	Vector3_Lerp(&pos, &p->Base.LastPos, &p->Base.NextPos, t);
 	Vector2 size; size.X = (Real32)p->Base.Size * 0.015625f; size.Y = size.X;
@@ -225,7 +225,7 @@ void TerrainParticle_Render(TerrainParticle* p, Real32 t, VertexP3fT2fC4b* verti
 	Particle_DoRender(&size, &pos, &p->Rec, col, vertices);
 }
 
-void Terrain_Update1DCounts(void) {
+static void Terrain_Update1DCounts(void) {
 	Int32 i;
 	for (i = 0; i < Atlas1D_Count; i++) {
 		Terrain_1DCount[i] = 0;
@@ -240,7 +240,7 @@ void Terrain_Update1DCounts(void) {
 	}
 }
 
-void Terrain_Render(Real32 t) {
+static void Terrain_Render(Real32 t) {
 	if (Terrain_Count == 0) return;
 	VertexP3fT2fC4b vertices[PARTICLES_MAX * 4];
 	Terrain_Update1DCounts();
@@ -264,7 +264,7 @@ void Terrain_Render(Real32 t) {
 	}
 }
 
-void Terrain_RemoveAt(Int32 index) {
+static void Terrain_RemoveAt(Int32 index) {
 	TerrainParticle removed = Terrain_Particles[index];
 	Int32 i;
 	for (i = index; i < Terrain_Count - 1; i++) {
@@ -274,7 +274,7 @@ void Terrain_RemoveAt(Int32 index) {
 	Terrain_Count--;
 }
 
-void Terrain_Tick(Real64 delta) {
+static void Terrain_Tick(Real64 delta) {
 	Int32 i;
 	for (i = 0; i < Terrain_Count; i++) {
 		if (TerrainParticle_Tick(&Terrain_Particles[i], delta)) {
@@ -287,24 +287,24 @@ void Terrain_Tick(Real64 delta) {
 /*########################################################################################################################*
 *--------------------------------------------------------Particles--------------------------------------------------------*
 *#########################################################################################################################*/
-void Particles_FileChanged(void* obj, Stream* stream) {
+static void Particles_FileChanged(void* obj, Stream* stream) {
 	if (String_CaselessEqualsConst(&stream->Name, "particles.png")) {
 		Game_UpdateTexture(&Particles_TexId, stream, false);
 	}
 }
 
-void Particles_ContextLost(void* obj) { 
+static void Particles_ContextLost(void* obj) {
 	Gfx_DeleteVb(&Particles_VB); 
 }
-void Particles_ContextRecreated(void* obj) {
+static void Particles_ContextRecreated(void* obj) {
 	Particles_VB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, PARTICLES_MAX * 4);
 }
 
-void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+static void Particles_BreakBlockEffect_Handler(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
 	Particles_BreakBlockEffect(coords, oldBlock, block);
 }
 
-void Particles_Init(void) {
+static void Particles_Init(void) {
 	Random_InitFromCurrentTime(&rnd);
 	Particles_ContextRecreated(NULL);
 
@@ -314,9 +314,9 @@ void Particles_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, Particles_ContextRecreated);
 }
 
-void Particles_Reset(void) { Rain_Count = 0; Terrain_Count = 0; }
+static void Particles_Reset(void) { Rain_Count = 0; Terrain_Count = 0; }
 
-void Particles_Free(void) {
+static void Particles_Free(void) {
 	Gfx_DeleteTexture(&Particles_TexId);
 	Particles_ContextLost(NULL);
 

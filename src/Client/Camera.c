@@ -15,20 +15,20 @@ Real32 Camera_AdjustHeadX(Real32 value) {
 	return value * MATH_DEG2RAD;
 }
 
-Vector3 PerspectiveCamera_GetDirVector(void) {
+static Vector3 PerspectiveCamera_GetDirVector(void) {
 	Entity* p = &LocalPlayer_Instance.Base;
 	Real32 yaw = p->HeadY * MATH_DEG2RAD;
 	Real32 pitch = Camera_AdjustHeadX(p->HeadX);
 	return Vector3_GetDirVector(yaw, pitch);
 }
 
-void PerspectiveCamera_GetProjection(Matrix* proj) {
+static void PerspectiveCamera_GetProjection(Matrix* proj) {
 	Real32 fovy = Game_Fov * MATH_DEG2RAD;
 	Real32 aspectRatio = (Real32)Game_Width / (Real32)Game_Height;
 	Matrix_PerspectiveFieldOfView(proj, fovy, aspectRatio, Gfx_MinZNear, (Real32)Game_ViewDistance);
 }
 
-void PerspectiveCamera_GetPickedBlock(PickedPos* pos) {
+static void PerspectiveCamera_GetPickedBlock(PickedPos* pos) {
 	Entity* p = &LocalPlayer_Instance.Base;
 	Vector3 dir = PerspectiveCamera_GetDirVector();
 	Vector3 eyePos = Entity_GetEyePosition(p);
@@ -37,7 +37,7 @@ void PerspectiveCamera_GetPickedBlock(PickedPos* pos) {
 }
 
 Point2D cam_prev, cam_delta;
-void PerspectiveCamera_CentreMousePosition(void) {
+static void PerspectiveCamera_CentreMousePosition(void) {
 	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
 	Int32 cenX = topLeft.X + Game_Width / 2;
 	Int32 cenY = topLeft.Y + Game_Height / 2;
@@ -47,7 +47,7 @@ void PerspectiveCamera_CentreMousePosition(void) {
 	cam_prev = Window_GetDesktopCursorPos();
 }
 
-void PerspectiveCamera_RegrabMouse(void) {
+static void PerspectiveCamera_RegrabMouse(void) {
 	if (!Window_GetExists()) return;
 	cam_delta = Point2D_Empty;
 	PerspectiveCamera_CentreMousePosition();
@@ -58,7 +58,7 @@ void PerspectiveCamera_RegrabMouse(void) {
 #define CAMERA_ADJUST 0.025f
 
 Real32 speedX = 0.0f, speedY = 0.0f;
-void PerspectiveCamera_UpdateMouseRotation(void) {
+static void PerspectiveCamera_UpdateMouseRotation(void) {
 	Real32 sensitivity = CAMERA_SENSI_FACTOR * Game_MouseSensitivity;
 
 	if (Game_SmoothCamera) {
@@ -87,7 +87,7 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 	e->VTABLE->SetLocation(e, &update, false);
 }
 
-void PerspectiveCamera_UpdateMouse(void) {
+static void PerspectiveCamera_UpdateMouse(void) {
 	Screen* screen = Gui_GetActiveScreen();
 	if (screen->HandlesAllInput) {
 		cam_delta = Point2D_Empty;
@@ -99,7 +99,7 @@ void PerspectiveCamera_UpdateMouse(void) {
 	PerspectiveCamera_UpdateMouseRotation();
 }
 
-void PerspectiveCamera_CalcViewBobbing(Real32 t, Real32 velTiltScale) {
+static void PerspectiveCamera_CalcViewBobbing(Real32 t, Real32 velTiltScale) {
 	if (!Game_ViewBobbing) { Camera_TiltM = Matrix_Identity; return; }
 	LocalPlayer* p = &LocalPlayer_Instance;
 	Entity* e = &p->Base;
@@ -117,7 +117,7 @@ void PerspectiveCamera_CalcViewBobbing(Real32 t, Real32 velTiltScale) {
 	Matrix_MulBy(&Camera_TiltM, &Camera_velX);
 }
 
-void PerspectiveCamera_Init(Camera* cam) {
+static void PerspectiveCamera_Init(Camera* cam) {
 	cam->GetProjection = PerspectiveCamera_GetProjection;
 	cam->UpdateMouse = PerspectiveCamera_UpdateMouse;
 	cam->RegrabMouse = PerspectiveCamera_RegrabMouse;
@@ -125,7 +125,7 @@ void PerspectiveCamera_Init(Camera* cam) {
 }
 
 
-void FirstPersonCamera_GetView(Matrix* mat) {
+static void FirstPersonCamera_GetView(Matrix* mat) {
 	Vector3 camPos = Game_CurrentCameraPos;
 	Vector3 dir = PerspectiveCamera_GetDirVector();
 	Vector3 targetPos; Vector3_Add(&targetPos, &camPos, &dir);
@@ -135,7 +135,7 @@ void FirstPersonCamera_GetView(Matrix* mat) {
 	Matrix_MulBy(mat, &Camera_TiltM);
 }
 
-Vector3 FirstPersonCamera_GetCameraPos(Real32 t) {
+static Vector3 FirstPersonCamera_GetCameraPos(Real32 t) {
 	PerspectiveCamera_CalcViewBobbing(t, 1);
 	Entity* p = &LocalPlayer_Instance.Base;
 	Vector3 camPos = Entity_GetEyePosition(p);
@@ -147,15 +147,15 @@ Vector3 FirstPersonCamera_GetCameraPos(Real32 t) {
 	return camPos;
 }
 
-Vector2 FirstPersonCamera_GetCameraOrientation(void) {
+static Vector2 FirstPersonCamera_GetCameraOrientation(void) {
 	Entity* p = &LocalPlayer_Instance.Base;
 	Vector2 ori = { p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD };
 	return ori;
 }
 
-bool FirstPersonCamera_Zoom(Real32 amount) { return false; }
+static bool FirstPersonCamera_Zoom(Real32 amount) { return false; }
 
-void FirstPersonCamera_Init(Camera* cam) {
+static void FirstPersonCamera_Init(Camera* cam) {
 	PerspectiveCamera_Init(cam);
 	cam->IsThirdPerson = false;
 	cam->GetView = FirstPersonCamera_GetView;
@@ -166,7 +166,7 @@ void FirstPersonCamera_Init(Camera* cam) {
 
 
 Real32 dist_third = 3.0f, dist_forward = 3.0f;
-void ThirdPersonCamera_GetView(Matrix* mat) {
+static void ThirdPersonCamera_GetView(Matrix* mat) {
 	Vector3 cameraPos = Game_CurrentCameraPos;
 	Entity* p = &LocalPlayer_Instance.Base;
 	Vector3 targetPos = Entity_GetEyePosition(p);
@@ -177,7 +177,7 @@ void ThirdPersonCamera_GetView(Matrix* mat) {
 	Matrix_MulBy(mat, &Camera_TiltM);
 }
 
-Vector3 ThirdPersonCamera_GetCameraPosShared(Real32 t, Real32 dist, bool forward) {
+static Vector3 ThirdPersonCamera_GetCameraPosShared(Real32 t, Real32 dist, bool forward) {
 	PerspectiveCamera_CalcViewBobbing(t, dist);
 	Entity* p = &LocalPlayer_Instance.Base;
 	Vector3 eyePos = Entity_GetEyePosition(p);
@@ -190,41 +190,41 @@ Vector3 ThirdPersonCamera_GetCameraPosShared(Real32 t, Real32 dist, bool forward
 	return Game_CameraClipPos.Intersect;
 }
 
-Vector3 ThirdPersonCamera_GetCameraPos(Real32 t) {
+static Vector3 ThirdPersonCamera_GetCameraPos(Real32 t) {
 	return ThirdPersonCamera_GetCameraPosShared(t, dist_third, false);
 }
 
-Vector3 ForwardThirdPersonCamera_GetCameraPos(Real32 t) {
+static Vector3 ForwardThirdPersonCamera_GetCameraPos(Real32 t) {
 	return ThirdPersonCamera_GetCameraPosShared(t, dist_forward, true);
 }
 
 
-Vector2 ThirdPersonCamera_GetCameraOrientation(void) {
+static Vector2 ThirdPersonCamera_GetCameraOrientation(void) {
 	Entity* p = &LocalPlayer_Instance.Base;
 	Vector2 ori = { p->HeadY * MATH_DEG2RAD, p->HeadX * MATH_DEG2RAD };
 	return ori;
 }
 
-Vector2 ForwardThirdPersonCamera_GetCameraOrientation(void) {
+static Vector2 ForwardThirdPersonCamera_GetCameraOrientation(void) {
 	Entity* p = &LocalPlayer_Instance.Base;
 	Vector2 ori = { p->HeadY * MATH_DEG2RAD + MATH_PI, -p->HeadX * MATH_DEG2RAD };
 	return ori;
 }
 
-bool ThirdPersonCamera_Zoom(Real32 amount) {
+static bool ThirdPersonCamera_Zoom(Real32 amount) {
 	dist_third -= amount;
 	if (dist_third < 2.0f) dist_third = 2.0f;
 	return true;
 }
 
 
-bool ForwardThirdPersonCamera_Zoom(Real32 amount) {
+static bool ForwardThirdPersonCamera_Zoom(Real32 amount) {
 	dist_forward -= amount;
 	if (dist_forward < 2.0f) dist_forward = 2.0f;
 	return true;
 }
 
-void ThirdPersonCamera_Init(Camera* cam) {
+static void ThirdPersonCamera_Init(Camera* cam) {
 	PerspectiveCamera_Init(cam);
 	cam->IsThirdPerson = true;
 	cam->GetView = ThirdPersonCamera_GetView;
@@ -233,7 +233,7 @@ void ThirdPersonCamera_Init(Camera* cam) {
 	cam->Zoom = ThirdPersonCamera_Zoom;
 }
 
-void ForwardThirdPersonCamera_Init(Camera* cam) {
+static void ForwardThirdPersonCamera_Init(Camera* cam) {
 	ThirdPersonCamera_Init(cam);
 	cam->GetCameraPos = ForwardThirdPersonCamera_GetCameraPos;
 	cam->GetCameraOrientation = ForwardThirdPersonCamera_GetCameraOrientation;

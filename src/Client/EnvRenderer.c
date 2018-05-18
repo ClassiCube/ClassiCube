@@ -17,7 +17,7 @@
 GfxResourceID env_cloudsVb, env_skyVb, env_cloudsTex;
 Int32 env_cloudVertices, env_skyVertices;
 
-Real32 EnvRenderer_BlendFactor(Real32 x) {
+static Real32 EnvRenderer_BlendFactor(Real32 x) {
 	/* return -0.05 + 0.22 * (Math_Log(x) * 0.25f); */
 	Real64 blend = -0.13 + 0.28 * (Math_Log(x) * 0.25);
 	if (blend < 0.0) blend = 0.0;
@@ -25,7 +25,7 @@ Real32 EnvRenderer_BlendFactor(Real32 x) {
 	return (Real32)blend;
 }
 
-void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
+static void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Vector3I coords;
 	Vector3I_Floor(&coords, &pos);     /* coords = floor(pos); */
@@ -48,7 +48,7 @@ void EnvRenderer_BlockOn(Real32* fogDensity, PackedCol* fogCol) {
 }
 
 
-void EnvRenderer_RenderMinimal(Real64 deltaTime) {
+static void EnvRenderer_RenderMinimal(Real64 deltaTime) {
 	if (World_Blocks == NULL) return;
 
 	PackedCol fogCol = PACKEDCOL_WHITE;
@@ -70,7 +70,7 @@ void EnvRenderer_RenderMinimal(Real64 deltaTime) {
 	}
 }
 
-void EnvRenderer_RenderClouds(Real64 deltaTime) {
+static void EnvRenderer_RenderClouds(Real64 deltaTime) {
 	if (WorldEnv_CloudsHeight < -2000) return;
 	Real64 time = Game_Accumulator;
 	Real32 offset = (Real32)(time / 2048.0f * 0.6f * WorldEnv_CloudsSpeed);
@@ -94,7 +94,7 @@ void EnvRenderer_RenderClouds(Real64 deltaTime) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 }
 
-void EnvRenderer_RenderSky(Real64 deltaTime) {
+static void EnvRenderer_RenderSky(Real64 deltaTime) {
 	Vector3 pos = Game_CurrentCameraPos;
 	Real32 normalY = (Real32)World_Height + 8.0f;
 	Real32 skyY = max(pos.Y + 8.0f, normalY);
@@ -115,7 +115,7 @@ void EnvRenderer_RenderSky(Real64 deltaTime) {
 	}
 }
 
-void EnvRenderer_UpdateFog(void) {
+static void EnvRenderer_UpdateFog(void) {
 	if (World_Blocks == NULL || EnvRenderer_Minimal) return;
 	PackedCol fogCol = PACKEDCOL_WHITE;
 	Real32 fogDensity = 0.0f;
@@ -159,7 +159,7 @@ void EnvRenderer_Render(Real64 deltaTime) {
 	}
 }
 
-void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fC4b* vertices) {
+static void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fC4b* vertices) {
 	Int32 endX = x2, endZ = z2, startZ = z1;
 	VertexP3fC4b v;
 	v.Y = (Real32)y; v.Col = col;
@@ -180,7 +180,7 @@ void EnvRenderer_DrawSkyY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32
 	}
 }
 
-void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fT2fC4b* vertices) {
+static void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, Int32 axisSize, PackedCol col, VertexP3fT2fC4b* vertices) {
 	Int32 endX = x2, endZ = z2, startZ = z1;
 	/* adjust range so that largest negative uv coordinate is shifted to 0 or above. */
 	Real32 offset = (Real32)Math_CeilDiv(-x1, 2048);
@@ -205,7 +205,7 @@ void EnvRenderer_DrawCloudsY(Int32 x1, Int32 z1, Int32 x2, Int32 z2, Int32 y, In
 	}
 }
 
-void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
+static void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
 	extent = Utils_AdjViewDist(extent);
 	Int32 x1 = -extent, x2 = World_Width + extent;
 	Int32 z1 = -extent, z2 = World_Length + extent;
@@ -224,7 +224,7 @@ void EnvRenderer_RebuildClouds(Int32 extent, Int32 axisSize) {
 	if (env_cloudVertices > 4096) Platform_MemFree(&ptr);
 }
 
-void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
+static void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
 	extent = Utils_AdjViewDist(extent);
 	Int32 x1 = -extent, x2 = World_Width + extent;
 	Int32 z1 = -extent, z2 = World_Length + extent;
@@ -244,24 +244,24 @@ void EnvRenderer_RebuildSky(Int32 extent, Int32 axisSize) {
 	if (env_skyVertices > 4096) Platform_MemFree(&ptr);
 }
 
-void EnvRenderer_ResetClouds(void) {
+static void EnvRenderer_ResetClouds(void) {
 	if (World_Blocks == NULL || Gfx_LostContext) return;
 	Gfx_DeleteVb(&env_cloudsVb);
 	EnvRenderer_RebuildClouds(Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
 }
 
-void EnvRenderer_ResetSky(void) {
+static void EnvRenderer_ResetSky(void) {
 	if (World_Blocks == NULL || Gfx_LostContext) return;
 	Gfx_DeleteVb(&env_skyVb);
 	EnvRenderer_RebuildSky(Game_ViewDistance, EnvRenderer_Legacy ? 128 : 65536);
 }
 
-void EnvRenderer_ContextLost(void* obj) {
+static void EnvRenderer_ContextLost(void* obj) {
 	Gfx_DeleteVb(&env_skyVb);
 	Gfx_DeleteVb(&env_cloudsVb);
 }
 
-void EnvRenderer_ContextRecreated(void* obj) {
+static void EnvRenderer_ContextRecreated(void* obj) {
 	EnvRenderer_ContextLost(NULL);
 	Gfx_SetFog(!EnvRenderer_Minimal);
 
@@ -274,18 +274,18 @@ void EnvRenderer_ContextRecreated(void* obj) {
 	}
 }
 
-void EnvRenderer_ResetAllEnv(void* obj) {
+static void EnvRenderer_ResetAllEnv(void* obj) {
 	EnvRenderer_UpdateFog();
 	EnvRenderer_ContextRecreated(NULL);
 }
 
-void EnvRenderer_FileChanged(void* obj, Stream* src) {
+static void EnvRenderer_FileChanged(void* obj, Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "cloud.png") || String_CaselessEqualsConst(&src->Name, "clouds.png")) {
 		Game_UpdateTexture(&env_cloudsTex, src, false);
 	}
 }
 
-void EnvRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
+static void EnvRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (EnvRenderer_Minimal) return;
 
 	if (envVar == ENV_VAR_SKY_COL) {
@@ -311,7 +311,7 @@ void EnvRenderer_UseMinimalMode(bool minimal) {
 	EnvRenderer_ContextRecreated(NULL);
 }
 
-void EnvRenderer_Init(void) {
+static void EnvRenderer_Init(void) {
 	EnvRenderer_ResetAllEnv(NULL);
 
 	Event_RegisterStream(&TextureEvents_FileChanged,   NULL, EnvRenderer_FileChanged);
@@ -322,17 +322,17 @@ void EnvRenderer_Init(void) {
 	Game_SetViewDistance(Game_UserViewDistance, false);
 }
 
-void EnvRenderer_OnNewMap(void) {
+static void EnvRenderer_OnNewMap(void) {
 	Gfx_SetFog(false);
 	EnvRenderer_ContextLost(NULL);
 }
 
-void EnvRenderer_OnNewMapLoaded(void) {
+static void EnvRenderer_OnNewMapLoaded(void) {
 	Gfx_SetFog(!EnvRenderer_Minimal);
 	EnvRenderer_ResetAllEnv(NULL);
 }
 
-void EnvRenderer_Free(void) {
+static void EnvRenderer_Free(void) {
 	Gfx_DeleteTexture(&env_cloudsTex);
 	EnvRenderer_ContextLost(NULL);
 

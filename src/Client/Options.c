@@ -35,7 +35,7 @@ bool Options_HasChanged(STRING_PURE String* key) {
 	return false;
 }
 
-UInt32 Options_Find(STRING_PURE String* key) {
+static UInt32 Options_Find(STRING_PURE String* key) {
 	UInt32 i;
 	for (i = 0; i < Options_Keys.Count; i++) {
 		String curKey = StringsBuffer_UNSAFE_Get(&Options_Keys, i);
@@ -44,7 +44,7 @@ UInt32 Options_Find(STRING_PURE String* key) {
 	return OPT_NOT_FOUND;
 }
 
-bool Options_TryGetValue(const UInt8* keyRaw, STRING_TRANSIENT String* value) {
+static bool Options_TryGetValue(const UInt8* keyRaw, STRING_TRANSIENT String* value) {
 	String key = String_FromReadonly(keyRaw);
 	*value = String_MakeNull();
 
@@ -113,12 +113,12 @@ UInt32 Options_GetEnum(const UInt8* key, UInt32 defValue, const UInt8** names, U
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
 }
 
-void Options_Remove(UInt32 i) {
+static void Options_Remove(UInt32 i) {
 	StringsBuffer_Remove(&Options_Keys, i);
 	StringsBuffer_Remove(&Options_Values, i);
 }
 
-Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) {
+static Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) {
 	UInt32 i = Options_Find(key);
 	if (i != OPT_NOT_FOUND) Options_Remove(i);
 

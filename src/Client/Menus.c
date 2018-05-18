@@ -164,12 +164,12 @@ typedef struct TexPackOverlay_ {
 /*########################################################################################################################*
 *--------------------------------------------------------Menu base--------------------------------------------------------*
 *#########################################################################################################################*/
-void Menu_MakeBack(ButtonWidget* widget, Int32 width, STRING_PURE String* text, Int32 y, FontDesc* font, Widget_LeftClick onClick) {
+static void Menu_MakeBack(ButtonWidget* widget, Int32 width, STRING_PURE String* text, Int32 y, FontDesc* font, Widget_LeftClick onClick) {
 	ButtonWidget_Create(widget, width, text, font, onClick);
 	Widget_SetLocation((Widget*)widget, ANCHOR_CENTRE, ANCHOR_MAX, 0, y);
 }
 
-void Menu_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Widget_LeftClick onClick) {
+static void Menu_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Widget_LeftClick onClick) {
 	Int32 width = Game_UseClassicOptions ? 400 : 200;
 	if (toGame) {
 		String msg = String_FromConst("Back to game");
@@ -180,7 +180,7 @@ void Menu_MakeDefaultBack(ButtonWidget* widget, bool toGame, FontDesc* font, Wid
 	}
 }
 
-void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
+static void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
 	if (widgets == NULL) return;
 	Int32 i;
 	for (i = 0; i < widgetsCount; i++) {
@@ -189,7 +189,7 @@ void Menu_FreeWidgets(Widget** widgets, Int32 widgetsCount) {
 	}
 }
 
-void Menu_RepositionWidgets(Widget** widgets, Int32 widgetsCount) {
+static void Menu_RepositionWidgets(Widget** widgets, Int32 widgetsCount) {
 	if (widgets == NULL) return;
 	Int32 i;
 	for (i = 0; i < widgetsCount; i++) {
@@ -198,7 +198,7 @@ void Menu_RepositionWidgets(Widget** widgets, Int32 widgetsCount) {
 	}
 }
 
-void Menu_RenderWidgets(Widget** widgets, Int32 widgetsCount, Real64 delta) {
+static void Menu_RenderWidgets(Widget** widgets, Int32 widgetsCount, Real64 delta) {
 	if (widgets == NULL) return;
 
 	Int32 i;
@@ -208,7 +208,7 @@ void Menu_RenderWidgets(Widget** widgets, Int32 widgetsCount, Real64 delta) {
 	}
 }
 
-void Menu_RenderBounds(void) {
+static void Menu_RenderBounds(void) {
 	/* These were sourced by taking a screenshot of vanilla
 	Then using paint to extract the colour components
 	Then using wolfram alpha to solve the glblendfunc equation */
@@ -217,7 +217,7 @@ void Menu_RenderBounds(void) {
 	GfxCommon_Draw2DGradient(0, 0, Game_Width, Game_Height, topCol, bottomCol);
 }
 
-Int32 Menu_HandleMouseDown(GuiElement* screen, Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
+static Int32 Menu_HandleMouseDown(GuiElement* screen, Widget** widgets, Int32 count, Int32 x, Int32 y, MouseButton btn) {
 	Int32 i;
 	/* iterate backwards (because last elements rendered are shown over others) */
 	for (i = count - 1; i >= 0; i--) {
@@ -235,7 +235,7 @@ Int32 Menu_HandleMouseDown(GuiElement* screen, Widget** widgets, Int32 count, In
 	return -1;
 }
 
-Int32 Menu_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
+static Int32 Menu_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
 	Int32 i;
 	for (i = 0; i < count; i++) {
 		Widget* widget = widgets[i];
@@ -256,41 +256,41 @@ Int32 Menu_HandleMouseMove(Widget** widgets, Int32 count, Int32 x, Int32 y) {
 /*########################################################################################################################*
 *------------------------------------------------------Menu utilities-----------------------------------------------------*
 *#########################################################################################################################*/
-Int32 Menu_Index(Widget** widgets, Int32 widgetsCount, Widget* w) {
+static Int32 Menu_Index(Widget** widgets, Int32 widgetsCount, Widget* w) {
 	Int32 i;
 	for (i = 0; i < widgetsCount; i++) {
 		if (widgets[i] == w) return i;
 	}
 	return -1;
 }
-Int32 Menu_Int32(STRING_PURE String* v) { Int32 value; Convert_TryParseInt32(v, &value); return value; }
-Real32 Menu_Real32(STRING_PURE String* v) { Real32 value; Convert_TryParseReal32(v, &value); return value; }
-PackedCol Menu_HexCol(STRING_PURE String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
+static Int32 Menu_Int32(STRING_PURE String* v) { Int32 value; Convert_TryParseInt32(v, &value); return value; }
+static Real32 Menu_Real32(STRING_PURE String* v) { Real32 value; Convert_TryParseReal32(v, &value); return value; }
+static PackedCol Menu_HexCol(STRING_PURE String* v) { PackedCol value; PackedCol_TryParseHex(v, &value); return value; }
 
-void Menu_SwitchOptions(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
-void Menu_SwitchPause(GuiElement* a, GuiElement* b)          { Gui_ReplaceActive(PauseScreen_MakeInstance()); }
-void Menu_SwitchClassicOptions(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
+static void Menu_SwitchOptions(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(OptionsGroupScreen_MakeInstance()); }
+static void Menu_SwitchPause(GuiElement* a, GuiElement* b)          { Gui_ReplaceActive(PauseScreen_MakeInstance()); }
+static void Menu_SwitchClassicOptions(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(ClassicOptionsScreen_MakeInstance()); }
 
-void Menu_SwitchKeysClassic(GuiElement* a, GuiElement* b)      { Gui_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysClassicHacks(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(ClassicHacksKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysNormal(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(NormalKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysHacks(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(HacksKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysOther(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(OtherKeyBindingsScreen_MakeInstance()); }
-void Menu_SwitchKeysMouse(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(MouseKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysClassic(GuiElement* a, GuiElement* b)      { Gui_ReplaceActive(ClassicKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysClassicHacks(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(ClassicHacksKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysNormal(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(NormalKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysHacks(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(HacksKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysOther(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(OtherKeyBindingsScreen_MakeInstance()); }
+static void Menu_SwitchKeysMouse(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(MouseKeyBindingsScreen_MakeInstance()); }
 
-void Menu_SwitchMisc(GuiElement* a, GuiElement* b)      { Gui_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
-void Menu_SwitchGui(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
-void Menu_SwitchGfx(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(GraphicsOptionsScreen_MakeInstance()); }
-void Menu_SwitchHacks(GuiElement* a, GuiElement* b)     { Gui_ReplaceActive(HacksSettingsScreen_MakeInstance()); }
-void Menu_SwitchEnv(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
-void Menu_SwitchNostalgia(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(NostalgiaScreen_MakeInstance()); }
+static void Menu_SwitchMisc(GuiElement* a, GuiElement* b)      { Gui_ReplaceActive(MiscOptionsScreen_MakeInstance()); }
+static void Menu_SwitchGui(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(GuiOptionsScreen_MakeInstance()); }
+static void Menu_SwitchGfx(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(GraphicsOptionsScreen_MakeInstance()); }
+static void Menu_SwitchHacks(GuiElement* a, GuiElement* b)     { Gui_ReplaceActive(HacksSettingsScreen_MakeInstance()); }
+static void Menu_SwitchEnv(GuiElement* a, GuiElement* b)       { Gui_ReplaceActive(EnvSettingsScreen_MakeInstance()); }
+static void Menu_SwitchNostalgia(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(NostalgiaScreen_MakeInstance()); }
 
-void Menu_SwitchGenLevel(GuiElement* a, GuiElement* b)         { Gui_ReplaceActive(GenLevelScreen_MakeInstance()); }
-void Menu_SwitchClassicGenLevel(GuiElement* a, GuiElement* b)  { Gui_ReplaceActive(ClassicGenScreen_MakeInstance()); }
-void Menu_SwitchLoadLevel(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(LoadLevelScreen_MakeInstance()); }
-void Menu_SwitchSaveLevel(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(SaveLevelScreen_MakeInstance()); }
-void Menu_SwitchTexPacks(GuiElement* a, GuiElement* b)         { Gui_ReplaceActive(TexturePackScreen_MakeInstance()); }
-void Menu_SwitchHotkeys(GuiElement* a, GuiElement* b)          { Gui_ReplaceActive(HotkeyListScreen_MakeInstance()); }
+static void Menu_SwitchGenLevel(GuiElement* a, GuiElement* b)         { Gui_ReplaceActive(GenLevelScreen_MakeInstance()); }
+static void Menu_SwitchClassicGenLevel(GuiElement* a, GuiElement* b)  { Gui_ReplaceActive(ClassicGenScreen_MakeInstance()); }
+static void Menu_SwitchLoadLevel(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(LoadLevelScreen_MakeInstance()); }
+static void Menu_SwitchSaveLevel(GuiElement* a, GuiElement* b)        { Gui_ReplaceActive(SaveLevelScreen_MakeInstance()); }
+static void Menu_SwitchTexPacks(GuiElement* a, GuiElement* b)         { Gui_ReplaceActive(TexturePackScreen_MakeInstance()); }
+static void Menu_SwitchHotkeys(GuiElement* a, GuiElement* b)          { Gui_ReplaceActive(HotkeyListScreen_MakeInstance()); }
 
 
 /*########################################################################################################################*
@@ -307,7 +307,7 @@ STRING_REF String ListScreen_UNSAFE_Get(ListScreen* screen, UInt32 index) {
 	}
 }
 
-void ListScreen_MakeText(ListScreen* screen, Int32 i) {
+static void ListScreen_MakeText(ListScreen* screen, Int32 i) {
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -316,7 +316,7 @@ void ListScreen_MakeText(ListScreen* screen, Int32 i) {
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, (i - 2) * 50);
 }
 
-void ListScreen_Make(ListScreen* screen, Int32 i, Int32 x, STRING_PURE String* text, Widget_LeftClick onClick) {
+static void ListScreen_Make(ListScreen* screen, Int32 i, Int32 x, STRING_PURE String* text, Widget_LeftClick onClick) {
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -324,13 +324,13 @@ void ListScreen_Make(ListScreen* screen, Int32 i, Int32 x, STRING_PURE String* t
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, x, 0);
 }
 
-void ListScreen_UpdateArrows(ListScreen* screen) {
+static void ListScreen_UpdateArrows(ListScreen* screen) {
 	Int32 start = LIST_SCREEN_ITEMS, end = screen->Entries.Count - LIST_SCREEN_ITEMS;
 	screen->Buttons[5].Disabled = screen->CurrentIndex < start;
 	screen->Buttons[6].Disabled = screen->CurrentIndex >= end;
 }
 
-void ListScreen_SetCurrentIndex(ListScreen* screen, Int32 index) {
+static void ListScreen_SetCurrentIndex(ListScreen* screen, Int32 index) {
 	if (index >= screen->Entries.Count) index -= LIST_SCREEN_ITEMS;
 	if (index < 0) index = 0;
 
@@ -344,27 +344,27 @@ void ListScreen_SetCurrentIndex(ListScreen* screen, Int32 index) {
 	ListScreen_UpdateArrows(screen);
 }
 
-void ListScreen_PageClick(ListScreen* screen, bool forward) {
+static void ListScreen_PageClick(ListScreen* screen, bool forward) {
 	Int32 delta = forward ? LIST_SCREEN_ITEMS : -LIST_SCREEN_ITEMS;
 	ListScreen_SetCurrentIndex(screen, screen->CurrentIndex + delta);
 }
 
-void ListScreen_MoveBackwards(GuiElement* elem, GuiElement* widget) {
+static void ListScreen_MoveBackwards(GuiElement* elem, GuiElement* widget) {
 	ListScreen* screen = (ListScreen*)elem;
 	ListScreen_PageClick(screen, false);
 }
 
-void ListScreen_MoveForwards(GuiElement* elem, GuiElement* widget) {
+static void ListScreen_MoveForwards(GuiElement* elem, GuiElement* widget) {
 	ListScreen* screen = (ListScreen*)elem;
 	ListScreen_PageClick(screen, true);
 }
 
-void ListScreen_ContextLost(void* obj) {
+static void ListScreen_ContextLost(void* obj) {
 	ListScreen* screen = (ListScreen*)obj;
 	Menu_FreeWidgets(screen->Widgets, Array_Elems(screen->Widgets));
 }
 
-void ListScreen_ContextRecreated(void* obj) {
+static void ListScreen_ContextRecreated(void* obj) {
 	ListScreen* screen = (ListScreen*)obj;
 	Int32 i;
 	for (i = 0; i < LIST_SCREEN_ITEMS; i++) { ListScreen_MakeText(screen, i); }
@@ -383,7 +383,7 @@ void ListScreen_ContextRecreated(void* obj) {
 	screen->Widgets[8] = (Widget*)(&screen->Title);
 }
 
-void ListScreen_QuickSort(Int32 left, Int32 right) {
+static void ListScreen_QuickSort(Int32 left, Int32 right) {
 	StringsBuffer* buffer = &ListScreen_Instance.Entries; 
 	UInt32* keys = buffer->FlagsBuffer; UInt32 key;
 	while (left < right) {
@@ -401,12 +401,12 @@ void ListScreen_QuickSort(Int32 left, Int32 right) {
 	}
 }
 
-String ListScreen_UNSAFE_GetCur(ListScreen* screen, GuiElement* w) {
+static String ListScreen_UNSAFE_GetCur(ListScreen* screen, GuiElement* w) {
 	Int32 idx = Menu_Index(screen->Widgets, Array_Elems(screen->Widgets), (Widget*)w);
 	return ListScreen_UNSAFE_Get(screen, screen->CurrentIndex + idx);
 }
 
-void ListScreen_Init(GuiElement* elem) {
+static void ListScreen_Init(GuiElement* elem) {
 	ListScreen* screen = (ListScreen*)elem;
 	Platform_FontMake(&screen->Font, &Game_FontName, 16, FONT_STYLE_BOLD);
 	ListScreen_ContextRecreated(screen);
@@ -414,7 +414,7 @@ void ListScreen_Init(GuiElement* elem) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, ListScreen_ContextRecreated);
 }
 
-void ListScreen_Render(GuiElement* elem, Real64 delta) {
+static void ListScreen_Render(GuiElement* elem, Real64 delta) {
 	ListScreen* screen = (ListScreen*)elem;
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
@@ -422,7 +422,7 @@ void ListScreen_Render(GuiElement* elem, Real64 delta) {
 	Gfx_SetTexturing(false);
 }
 
-void ListScreen_Free(GuiElement* elem) {
+static void ListScreen_Free(GuiElement* elem) {
 	ListScreen* screen = (ListScreen*)elem;
 	Platform_FontFree(&screen->Font);
 	ListScreen_ContextLost(screen);
@@ -430,7 +430,7 @@ void ListScreen_Free(GuiElement* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, ListScreen_ContextRecreated);
 }
 
-bool ListScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool ListScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	ListScreen* screen = (ListScreen*)elem;
 	if (key == Key_Escape) {
 		Gui_ReplaceActive(NULL);
@@ -444,17 +444,17 @@ bool ListScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	return true;
 }
 
-bool ListScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+static bool ListScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	ListScreen* screen = (ListScreen*)elem;
 	return Menu_HandleMouseMove(screen->Widgets, Array_Elems(screen->Widgets), x, y) >= 0;
 }
 
-bool ListScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool ListScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	ListScreen* screen = (ListScreen*)elem;
 	return Menu_HandleMouseDown(elem, screen->Widgets, Array_Elems(screen->Widgets), x, y, btn) >= 0;
 }
 
-void ListScreen_OnResize(GuiElement* elem) {
+static void ListScreen_OnResize(GuiElement* elem) {
 	ListScreen* screen = (ListScreen*)elem;
 	Menu_RepositionWidgets(screen->Widgets, Array_Elems(screen->Widgets));
 }
@@ -487,49 +487,49 @@ ListScreen* ListScreen_MakeInstance(void) {
 *--------------------------------------------------------MenuScreen-------------------------------------------------------*
 *#########################################################################################################################*/
 GuiElementVTABLE MenuScreen_VTABLE;
-Int32 MenuScreen_Index(MenuScreen* screen, Widget* w) {
+static Int32 MenuScreen_Index(MenuScreen* screen, Widget* w) {
 	return Menu_Index(screen->Widgets, screen->WidgetsCount, w);
 }
 
-void MenuScreen_Remove(MenuScreen* screen, Int32 i) {
+static void MenuScreen_Remove(MenuScreen* screen, Int32 i) {
 	Widget** widgets = screen->Widgets;
 	if (widgets[i] != NULL) { Elem_TryFree(widgets[i]); }
 	widgets[i] = NULL;
 }
 
-bool MenuScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool MenuScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	return Menu_HandleMouseDown(elem, screen->Widgets, screen->WidgetsCount, x, y, btn) >= 0;
 }
 
-bool MenuScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+static bool MenuScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	return Menu_HandleMouseMove(screen->Widgets, screen->WidgetsCount, x, y) >= 0;
 }
-bool MenuScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
-bool MenuScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
+static bool MenuScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+static bool MenuScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
 
-bool MenuScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool MenuScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key == Key_Escape) { Gui_ReplaceActive(NULL); }
 	return key < Key_F1 || key > Key_F35;
 }
-bool MenuScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) { return true; }
-bool MenuScreen_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
+static bool MenuScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) { return true; }
+static bool MenuScreen_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
 
-void MenuScreen_ContextLost(void* obj) {
+static void MenuScreen_ContextLost(void* obj) {
 	MenuScreen* screen = (MenuScreen*)obj;
 	Menu_FreeWidgets(screen->Widgets, screen->WidgetsCount);
 }
 
-void MenuScreen_ContextLost_Callback(void* obj) {
+static void MenuScreen_ContextLost_Callback(void* obj) {
 	((MenuScreen*)obj)->ContextLost(obj);
 }
 
-void MenuScreen_ContextRecreated_Callback(void* obj) {
+static void MenuScreen_ContextRecreated_Callback(void* obj) {
 	((MenuScreen*)obj)->ContextRecreated(obj);
 }
 
-void MenuScreen_Init(GuiElement* elem) {
+static void MenuScreen_Init(GuiElement* elem) {
 	MenuScreen* screen = (MenuScreen*)elem;
 
 	if (screen->TitleFont.Handle == NULL) {
@@ -543,7 +543,7 @@ void MenuScreen_Init(GuiElement* elem) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated_Callback);
 }
 
-void MenuScreen_Render(GuiElement* elem, Real64 delta) {
+static void MenuScreen_Render(GuiElement* elem, Real64 delta) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
@@ -551,7 +551,7 @@ void MenuScreen_Render(GuiElement* elem, Real64 delta) {
 	Gfx_SetTexturing(false);
 }
 
-void MenuScreen_Free(GuiElement* elem) {
+static void MenuScreen_Free(GuiElement* elem) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	screen->ContextLost(screen);
 
@@ -566,12 +566,12 @@ void MenuScreen_Free(GuiElement* elem) {
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, MenuScreen_ContextRecreated_Callback);
 }
 
-void MenuScreen_OnResize(GuiElement* elem) {
+static void MenuScreen_OnResize(GuiElement* elem) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	Menu_RepositionWidgets(screen->Widgets, screen->WidgetsCount);
 }
 
-void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, Menu_ContextFunc contextRecreated) {
+static void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, Menu_ContextFunc contextRecreated) {
 	Platform_MemSet(screen, 0, sizeof(MenuScreen));
 	screen->VTABLE = &MenuScreen_VTABLE;
 	Screen_Reset((Screen*)screen);
@@ -602,7 +602,7 @@ void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 count, 
 *#########################################################################################################################*/
 GuiElementVTABLE PauseScreen_VTABLE;
 PauseScreen PauseScreen_Instance;
-void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
+static void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -611,7 +611,7 @@ void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UI
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
-void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
+static void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -620,16 +620,16 @@ void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8*
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
-void PauseScreen_Quit(GuiElement* a, GuiElement* b) { Window_Close(); }
-void PauseScreen_Game(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(NULL); }
+static void PauseScreen_Quit(GuiElement* a, GuiElement* b) { Window_Close(); }
+static void PauseScreen_Game(GuiElement* a, GuiElement* b) { Gui_ReplaceActive(NULL); }
 
-void PauseScreen_CheckHacksAllowed(void* obj) {
+static void PauseScreen_CheckHacksAllowed(void* obj) {
 	if (Game_UseClassicOptions) return;
 	PauseScreen* screen = (PauseScreen*)obj;
 	screen->Buttons[4].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* select texture pack */
 }
 
-void PauseScreen_ContextRecreated(void* obj) {
+static void PauseScreen_ContextRecreated(void* obj) {
 	PauseScreen* screen = (PauseScreen*)obj;
 	FontDesc* font = &screen->TitleFont;
 
@@ -672,14 +672,14 @@ void PauseScreen_ContextRecreated(void* obj) {
 	PauseScreen_CheckHacksAllowed(obj);
 }
 
-void PauseScreen_Init(GuiElement* elem) {
+static void PauseScreen_Init(GuiElement* elem) {
 	PauseScreen* screen = (PauseScreen*)elem;
 	MenuScreen_Init(elem);
 	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
 	screen->ContextRecreated(elem);
 }
 
-void PauseScreen_Free(GuiElement* elem) {
+static void PauseScreen_Free(GuiElement* elem) {
 	PauseScreen* screen = (PauseScreen*)elem;
 	MenuScreen_Free(elem);
 	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, screen, PauseScreen_CheckHacksAllowed);
@@ -714,12 +714,12 @@ const UInt8* optsGroup_descs[7] = {
 	"&eSettings for resembling the original classic",
 };
 
-void OptionsGroupScreen_CheckHacksAllowed(void* obj) {
+static void OptionsGroupScreen_CheckHacksAllowed(void* obj) {
 	OptionsGroupScreen* screen = (OptionsGroupScreen*)obj;
 	screen->Buttons[5].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
 }
 
-void OptionsGroupScreen_Make(OptionsGroupScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
+static void OptionsGroupScreen_Make(OptionsGroupScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -728,14 +728,14 @@ void OptionsGroupScreen_Make(OptionsGroupScreen* screen, Int32 i, Int32 dir, Int
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
-void OptionsGroupScreen_MakeDesc(OptionsGroupScreen* screen) {
+static void OptionsGroupScreen_MakeDesc(OptionsGroupScreen* screen) {
 	screen->Widgets[8] = (Widget*)(&screen->Desc);
 	String text = String_FromReadonly(optsGroup_descs[screen->SelectedI]);
 	TextWidget_Create(&screen->Desc, &text, &screen->TextFont);
 	Widget_SetLocation((Widget*)(&screen->Desc), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 100);
 }
 
-void OptionsGroupScreen_ContextRecreated(void* obj) {
+static void OptionsGroupScreen_ContextRecreated(void* obj) {
 	OptionsGroupScreen* screen = (OptionsGroupScreen*)obj;
 
 	OptionsGroupScreen_Make(screen, 0, -1, -100, "Misc options...",      Menu_SwitchMisc);
@@ -754,20 +754,20 @@ void OptionsGroupScreen_ContextRecreated(void* obj) {
 	OptionsGroupScreen_CheckHacksAllowed(obj);
 }
 
-void OptionsGroupScreen_Init(GuiElement* elem) {
+static void OptionsGroupScreen_Init(GuiElement* elem) {
 	OptionsGroupScreen* screen = (OptionsGroupScreen*)elem;
 	MenuScreen_Init(elem);
 	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, screen, OptionsGroupScreen_CheckHacksAllowed);
 	screen->ContextRecreated(elem);
 }
 
-void OptionsGroupScreen_Free(GuiElement* elem) {
+static void OptionsGroupScreen_Free(GuiElement* elem) {
 	OptionsGroupScreen* screen = (OptionsGroupScreen*)elem;
 	MenuScreen_Free(elem);
 	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, screen, OptionsGroupScreen_CheckHacksAllowed);
 }
 
-bool OptionsGroupScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+static bool OptionsGroupScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	OptionsGroupScreen* screen = (OptionsGroupScreen*)elem;
 	Int32 i = Menu_HandleMouseMove(screen->Widgets, screen->WidgetsCount, x, y);
 	if (i == -1 || i == screen->SelectedI) return true;
@@ -801,16 +801,16 @@ Screen* OptionsGroupScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 GuiElementVTABLE DeathScreen_VTABLE;
 DeathScreen DeathScreen_Instance;
-void DeathScreen_Init(GuiElement* elem) {
+static void DeathScreen_Init(GuiElement* elem) {
 	DeathScreen* screen = (DeathScreen*)elem;
 	Platform_FontMake(&screen->TextFont, &Game_FontName, 40, FONT_STYLE_NORMAL);
 	MenuScreen_Init(elem);
 	screen->ContextRecreated(elem);
 }
 
-bool DeathScreen_HandlesKeyDown(GuiElement* elem, Key key) { return true; }
+static bool DeathScreen_HandlesKeyDown(GuiElement* elem, Key key) { return true; }
 
-void DeathScreen_ContextRecreated(void* obj) {
+static void DeathScreen_ContextRecreated(void* obj) {
 	DeathScreen* screen = (DeathScreen*)obj;
 
 	String title = String_FromConst("Game over!");
@@ -853,7 +853,7 @@ Screen* DeathScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 GuiElementVTABLE EditHotkeyScreen_VTABLE;
 EditHotkeyScreen EditHotkeyScreen_Instance;
-void EditHotkeyScreen_Make(EditHotkeyScreen* screen, Int32 i, Int32 x, Int32 y, STRING_PURE String* text, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_Make(EditHotkeyScreen* screen, Int32 i, Int32 x, Int32 y, STRING_PURE String* text, Widget_LeftClick onClick) {
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -861,14 +861,14 @@ void EditHotkeyScreen_Make(EditHotkeyScreen* screen, Int32 i, Int32 x, Int32 y, 
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, x, y);
 }
 
-void EditHotkeyScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str) {
+static void EditHotkeyScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str) {
 	if (flags == 0) String_AppendConst(str, " None");
 	if (flags & HOTKEYS_FLAG_CTRL)  String_AppendConst(str, " Ctrl");
 	if (flags & HOTKEYS_FLAG_SHIFT) String_AppendConst(str, " Shift");
 	if (flags & HOTKEYS_FLAG_ALT)   String_AppendConst(str, " Alt");
 }
 
-void EditHotkeyScreen_MakeBaseKey(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_MakeBaseKey(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
 	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
@@ -877,7 +877,7 @@ void EditHotkeyScreen_MakeBaseKey(EditHotkeyScreen* screen, Widget_LeftClick onC
 	EditHotkeyScreen_Make(screen, 0, 0, -150, &text, onClick);
 }
 
-void EditHotkeyScreen_MakeModifiers(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_MakeModifiers(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
 	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
@@ -886,7 +886,7 @@ void EditHotkeyScreen_MakeModifiers(EditHotkeyScreen* screen, Widget_LeftClick o
 	EditHotkeyScreen_Make(screen, 1, 0, -100, &text, onClick);
 }
 
-void EditHotkeyScreen_MakeLeaveOpen(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
+static void EditHotkeyScreen_MakeLeaveOpen(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
 	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
@@ -895,7 +895,7 @@ void EditHotkeyScreen_MakeLeaveOpen(EditHotkeyScreen* screen, Widget_LeftClick o
 	EditHotkeyScreen_Make(screen, 2, -100, 10, &text, onClick);
 }
 
-void EditHotkeyScreen_BaseKey(GuiElement* elem, GuiElement* widget) {
+static void EditHotkeyScreen_BaseKey(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	screen->SelectedI = 0;
 	screen->SupressNextPress = true;
@@ -903,7 +903,7 @@ void EditHotkeyScreen_BaseKey(GuiElement* elem, GuiElement* widget) {
 	ButtonWidget_SetText(&screen->Buttons[0], &msg);
 }
 
-void EditHotkeyScreen_Modifiers(GuiElement* elem, GuiElement* widget) {
+static void EditHotkeyScreen_Modifiers(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	screen->SelectedI = 1;
 	screen->SupressNextPress = true;
@@ -911,7 +911,7 @@ void EditHotkeyScreen_Modifiers(GuiElement* elem, GuiElement* widget) {
 	ButtonWidget_SetText(&screen->Buttons[1], &msg);
 }
 
-void EditHotkeyScreen_LeaveOpen(GuiElement* elem, GuiElement* widget) {
+static void EditHotkeyScreen_LeaveOpen(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	/* Reset 'waiting for key..' state of two other buttons */
 	if (screen->SelectedI == 0) {
@@ -927,7 +927,7 @@ void EditHotkeyScreen_LeaveOpen(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen_MakeLeaveOpen(screen, EditHotkeyScreen_LeaveOpen);
 }
 
-void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
+static void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	HotkeyData hotkey = screen->OrigHotkey;
 	if (hotkey.BaseKey != Key_None) {
@@ -944,7 +944,7 @@ void EditHotkeyScreen_SaveChanges(GuiElement* elem, GuiElement* widget) {
 	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
 }
 
-void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
+static void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	HotkeyData hotkey = screen->OrigHotkey;
 	if (hotkey.BaseKey != Key_None) {
@@ -954,14 +954,14 @@ void EditHotkeyScreen_RemoveHotkey(GuiElement* elem, GuiElement* widget) {
 	Gui_ReplaceActive(HotkeyListScreen_MakeInstance());
 }
 
-void EditHotkeyScreen_Init(GuiElement* elem) {
+static void EditHotkeyScreen_Init(GuiElement* elem) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
 	screen->ContextRecreated(elem);
 }
 
-void EditHotkeyScreen_Render(GuiElement* elem, Real64 delta) {
+static void EditHotkeyScreen_Render(GuiElement* elem, Real64 delta) {
 	MenuScreen_Render(elem, delta);
 	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
 	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
@@ -969,14 +969,14 @@ void EditHotkeyScreen_Render(GuiElement* elem, Real64 delta) {
 	GfxCommon_Draw2DFlat(cX - 250, cY + 45, 500, 2, grey);
 }
 
-void EditHotkeyScreen_Free(GuiElement* elem) {
+static void EditHotkeyScreen_Free(GuiElement* elem) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	Key_KeyRepeat = false;
 	screen->SelectedI = -1;
 	MenuScreen_Free(elem);
 }
 
-bool EditHotkeyScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool EditHotkeyScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	if (screen->SupressNextPress) {
 		screen->SupressNextPress = false;
@@ -985,7 +985,7 @@ bool EditHotkeyScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 	return Elem_HandlesKeyPress(&screen->Input.Base, key);
 }
 
-bool EditHotkeyScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool EditHotkeyScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	if (screen->SelectedI >= 0) {
 		if (screen->SelectedI == 0) {
@@ -1007,12 +1007,12 @@ bool EditHotkeyScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	return Elem_HandlesKeyDown(&screen->Input.Base, key) || MenuScreen_HandlesKeyDown(elem, key);
 }
 
-bool EditHotkeyScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+static bool EditHotkeyScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	return Elem_HandlesKeyUp(&screen->Input.Base, key);
 }
 
-void EditHotkeyScreen_ContextRecreated(void* obj) {
+static void EditHotkeyScreen_ContextRecreated(void* obj) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)obj;
 	MenuInputValidator validator = MenuInputValidator_String();
 	String text = String_MakeNull();
@@ -1088,7 +1088,7 @@ Int32 GenLevelScreen_GetSeedInt(GenLevelScreen* screen, Int32 index) {
 	Int32 value; Convert_TryParseInt32(&text, &value); return value;
 }
 
-void GenLevelScreen_Gen(GenLevelScreen* screen, bool vanilla) {
+static void GenLevelScreen_Gen(GenLevelScreen* screen, bool vanilla) {
 	Int32 width  = GenLevelScreen_GetInt(screen, 0);
 	Int32 height = GenLevelScreen_GetInt(screen, 1);
 	Int32 length = GenLevelScreen_GetInt(screen, 2);
@@ -1106,17 +1106,17 @@ void GenLevelScreen_Gen(GenLevelScreen* screen, bool vanilla) {
 	}
 }
 
-void GenLevelScreen_Flatgrass(GuiElement* elem, GuiElement* widget) {
+static void GenLevelScreen_Flatgrass(GuiElement* elem, GuiElement* widget) {
 	GenLevelScreen* screen = (GenLevelScreen*)elem;
 	GenLevelScreen_Gen(screen, false);
 }
 
-void GenLevelScreen_Notchy(GuiElement* elem, GuiElement* widget) {
+static void GenLevelScreen_Notchy(GuiElement* elem, GuiElement* widget) {
 	GenLevelScreen* screen = (GenLevelScreen*)elem;
 	GenLevelScreen_Gen(screen, true);
 }
 
-void GenLevelScreen_InputClick(GuiElement* elem, GuiElement* widget) {
+static void GenLevelScreen_InputClick(GuiElement* elem, GuiElement* widget) {
 	GenLevelScreen* screen = (GenLevelScreen*)elem;
 	if (screen->Selected != NULL) screen->Selected->Base.ShowCaret = false;
 
@@ -1125,7 +1125,7 @@ void GenLevelScreen_InputClick(GuiElement* elem, GuiElement* widget) {
 	screen->Selected->Base.ShowCaret = true;
 }
 
-void GenLevelScreen_Input(GenLevelScreen* screen, Int32 i, Int32 y, bool seed, STRING_TRANSIENT String* value) {
+static void GenLevelScreen_Input(GenLevelScreen* screen, Int32 i, Int32 y, bool seed, STRING_TRANSIENT String* value) {
 	MenuInputWidget* input = &screen->Inputs[i];
 	screen->Widgets[i] = (Widget*)input;
 
@@ -1137,7 +1137,7 @@ void GenLevelScreen_Input(GenLevelScreen* screen, Int32 i, Int32 y, bool seed, S
 	String_Clear(value);
 }
 
-void GenLevelScreen_Label(GenLevelScreen* screen, Int32 i, Int32 x, Int32 y, const UInt8* title) {	
+static void GenLevelScreen_Label(GenLevelScreen* screen, Int32 i, Int32 x, Int32 y, const UInt8* title) {	
 	TextWidget* label = &screen->Labels[i];	
 	screen->Widgets[i + 4] = (Widget*)label;
 
@@ -1150,35 +1150,35 @@ void GenLevelScreen_Label(GenLevelScreen* screen, Int32 i, Int32 x, Int32 y, con
 	PackedCol col = PACKEDCOL_CONST(224, 224, 224, 255); label->Col = col;
 }
 
-void GenLevelScreen_Init(GuiElement* elem) {
+static void GenLevelScreen_Init(GuiElement* elem) {
 	GenLevelScreen* screen = (GenLevelScreen*)elem;
 	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
 	screen->ContextRecreated(elem);
 }
 
-void GenLevelScreen_Free(GuiElement* elem) {
+static void GenLevelScreen_Free(GuiElement* elem) {
 	Key_KeyRepeat = false;
 	MenuScreen_Free(elem);
 }
 
-bool GenLevelScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool GenLevelScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	GenLevelScreen* screen = (GenLevelScreen*)elem;
 	if (screen->Selected != NULL && Elem_HandlesKeyDown(&screen->Selected->Base, key)) return true;
 	return MenuScreen_HandlesKeyDown(elem, key);
 }
 
-bool GenLevelScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+static bool GenLevelScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 	GenLevelScreen* screen = (GenLevelScreen*)elem;
 	return screen->Selected == NULL || Elem_HandlesKeyUp(&screen->Selected->Base, key);
 }
 
-bool GenLevelScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool GenLevelScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 	GenLevelScreen* screen = (GenLevelScreen*)elem;
 	return screen->Selected == NULL || Elem_HandlesKeyPress(&screen->Selected->Base, key);
 }
 
-void GenLevelScreen_ContextRecreated(void* obj) {
+static void GenLevelScreen_ContextRecreated(void* obj) {
 	GenLevelScreen* screen = (GenLevelScreen*)obj;
 	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
@@ -1237,17 +1237,17 @@ Screen* GenLevelScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 GuiElementVTABLE ClassicGenScreen_VTABLE;
 ClassicGenScreen ClassicGenScreen_Instance;
-void ClassicGenScreen_Gen(Int32 size) {
+static void ClassicGenScreen_Gen(Int32 size) {
 	Random rnd; Random_InitFromCurrentTime(&rnd);
 	Int32 seed = Random_Next(&rnd, Int32_MaxValue);
 	ServerConnection_BeginGeneration(size, 64, size, seed, true);
 }
 
-void ClassicGenScreen_Small(GuiElement* a, GuiElement* b)  { ClassicGenScreen_Gen(128); }
-void ClassicGenScreen_Medium(GuiElement* a, GuiElement* b) { ClassicGenScreen_Gen(256); }
-void ClassicGenScreen_Huge(GuiElement* a, GuiElement* b)   { ClassicGenScreen_Gen(512); }
+static void ClassicGenScreen_Small(GuiElement* a, GuiElement* b)  { ClassicGenScreen_Gen(128); }
+static void ClassicGenScreen_Medium(GuiElement* a, GuiElement* b) { ClassicGenScreen_Gen(256); }
+static void ClassicGenScreen_Huge(GuiElement* a, GuiElement* b)   { ClassicGenScreen_Gen(512); }
 
-void ClassicGenScreen_Make(ClassicGenScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
+static void ClassicGenScreen_Make(ClassicGenScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -1256,13 +1256,13 @@ void ClassicGenScreen_Make(ClassicGenScreen* screen, Int32 i, Int32 y, const UIn
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, 0, y);
 }
 
-void ClassicGenScreen_Init(GuiElement* elem) {
+static void ClassicGenScreen_Init(GuiElement* elem) {
 	ClassicGenScreen* screen = (ClassicGenScreen*)elem;
 	MenuScreen_Init(elem);
 	screen->ContextRecreated(elem);
 }
 
-void ClassicGenScreen_ContextRecreated(void* obj) {
+static void ClassicGenScreen_ContextRecreated(void* obj) {
 	ClassicGenScreen* screen = (ClassicGenScreen*)obj;
 	ClassicGenScreen_Make(screen, 0, -100, "Small",  ClassicGenScreen_Small);
 	ClassicGenScreen_Make(screen, 1,  -50, "Normal", ClassicGenScreen_Medium);
@@ -1290,7 +1290,7 @@ Screen* ClassicGenScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 SaveLevelScreen SaveLevelScreen_Instance;
 GuiElementVTABLE SaveLevelScreen_VTABLE;
-void SaveLevelScreen_RemoveOverwrites(SaveLevelScreen* screen) {
+static void SaveLevelScreen_RemoveOverwrites(SaveLevelScreen* screen) {
 	ButtonWidget* btn = &screen->Buttons[0];
 	if (btn->OptName != NULL) {
 		btn->OptName = NULL; String save = String_FromConst("Save"); 
@@ -1304,7 +1304,7 @@ void SaveLevelScreen_RemoveOverwrites(SaveLevelScreen* screen) {
 	}
 }
 
-void SaveLevelScreen_MakeDesc(SaveLevelScreen* screen, STRING_PURE String* text) {
+static void SaveLevelScreen_MakeDesc(SaveLevelScreen* screen, STRING_PURE String* text) {
 	if (screen->Widgets[5] != NULL) { Elem_TryFree(screen->Widgets[5]); }
 
 	TextWidget_Create(&screen->Desc, text, &screen->TextFont);
@@ -1312,7 +1312,7 @@ void SaveLevelScreen_MakeDesc(SaveLevelScreen* screen, STRING_PURE String* text)
 	screen->Widgets[5] = (Widget*)(&screen->Desc);
 }
 
-void SaveLevelScreen_DoSave(GuiElement* elem, GuiElement* widget, const UInt8* ext) {
+static void SaveLevelScreen_DoSave(GuiElement* elem, GuiElement* widget, const UInt8* ext) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	String file = screen->Input.Base.Text;
 	if (file.length == 0) {
@@ -1340,15 +1340,15 @@ void SaveLevelScreen_DoSave(GuiElement* elem, GuiElement* widget, const UInt8* e
 	}
 }
 
-void SaveLevelScreen_Classic(GuiElement* elem, GuiElement* widget) {
+static void SaveLevelScreen_Classic(GuiElement* elem, GuiElement* widget) {
 	SaveLevelScreen_DoSave(elem, widget, ".cw");
 }
 
-void SaveLevelScreen_Schematic(GuiElement* elem, GuiElement* widget) {
+static void SaveLevelScreen_Schematic(GuiElement* elem, GuiElement* widget) {
 	SaveLevelScreen_DoSave(elem, widget, ".schematic");
 }
 
-void SaveLevelScreen_Init(GuiElement* elem) {
+static void SaveLevelScreen_Init(GuiElement* elem) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	screen->TextPath = String_InitAndClearArray(screen->TextPathBuffer);
 	MenuScreen_Init(elem);
@@ -1356,7 +1356,7 @@ void SaveLevelScreen_Init(GuiElement* elem) {
 	screen->ContextRecreated(elem);
 }
 
-void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
+static void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
 	MenuScreen_Render(elem, delta);
 	Int32 cX = Game_Width / 2, cY = Game_Height / 2;
 	PackedCol grey = PACKEDCOL_CONST(150, 150, 150, 255);
@@ -1390,19 +1390,19 @@ void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
 	String_Clear(&path);
 }
 
-void SaveLevelScreen_Free(GuiElement* elem) {
+static void SaveLevelScreen_Free(GuiElement* elem) {
 	Key_KeyRepeat = false;
 	MenuScreen_Free(elem);
 }
 
-bool SaveLevelScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool SaveLevelScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	SaveLevelScreen_RemoveOverwrites(screen);
 
 	return Elem_HandlesKeyPress(&screen->Input.Base, key);
 }
 
-bool SaveLevelScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool SaveLevelScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	SaveLevelScreen_RemoveOverwrites(screen);
 
@@ -1410,12 +1410,12 @@ bool SaveLevelScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	return MenuScreen_HandlesKeyDown(elem, key);
 }
 
-bool SaveLevelScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+static bool SaveLevelScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	return Elem_HandlesKeyUp(&screen->Input.Base, key);
 }
 
-void SaveLevelScreen_ContextRecreated(void* obj) {
+static void SaveLevelScreen_ContextRecreated(void* obj) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)obj;
 
 	String save = String_FromConst("Save");
@@ -1468,7 +1468,7 @@ Screen* SaveLevelScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------TexturePackScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-void TexturePackScreen_EntryClick(GuiElement* elem, GuiElement* w) {
+static void TexturePackScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)elem;
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
@@ -1484,7 +1484,7 @@ void TexturePackScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	ListScreen_SetCurrentIndex(screen, curPage);
 }
 
-void TexturePackScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
+static void TexturePackScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
 	String zip = String_FromConst(".zip");
 	if (!String_CaselessEnds(filename, &zip)) return;
 
@@ -1510,7 +1510,7 @@ Screen* TexturePackScreen_MakeInstance(void) {
 *---------------------------------------------------HotkeyListScreen------------------------------------------------------*
 *#########################################################################################################################*/
 /* TODO: Hotkey added event for CPE */
-void HotkeyListScreen_EntryClick(GuiElement* elem, GuiElement* w) {
+static void HotkeyListScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)elem;
 	String text = ListScreen_UNSAFE_GetCur(screen, w);
 	HotkeyData original = { 0 };
@@ -1571,7 +1571,7 @@ Screen* HotkeyListScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------LoadLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
-void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
+static void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
 	String cw  = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
 	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
@@ -1582,7 +1582,7 @@ void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
 	StringsBuffer_Add(entries, filename);
 }
 
-void LoadLevelScreen_EntryClick(GuiElement* elem, GuiElement* w) {
+static void LoadLevelScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)elem;
 	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
@@ -1651,12 +1651,12 @@ Screen* LoadLevelScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 KeyBindingsScreen KeyBindingsScreen_Instance;
 GuiElementVTABLE KeyBindingsScreen_VTABLE;
-void KeyBindingsScreen_ButtonText(KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
+static void KeyBindingsScreen_ButtonText(KeyBindingsScreen* screen, Int32 i, STRING_TRANSIENT String* text) {
 	Key key = KeyBind_Get(screen->Binds[i]);
 	String_Format2(text, "%c: %c", screen->Descs[i], Key_Names[key]);
 }
 
-void KeyBindingsScreen_OnBindingClick(GuiElement* elem, GuiElement* widget) {
+static void KeyBindingsScreen_OnBindingClick(GuiElement* elem, GuiElement* widget) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
 	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
@@ -1675,7 +1675,7 @@ void KeyBindingsScreen_OnBindingClick(GuiElement* elem, GuiElement* widget) {
 	ButtonWidget_SetText((ButtonWidget*)widget, &text);
 }
 
-Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const UInt8* title, Int32 btnWidth) {
+static Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const UInt8* title, Int32 btnWidth) {
 	Int32 i, origin = y, xOffset = btnWidth / 2 + 5;
 	screen->CurI = -1;
 
@@ -1721,13 +1721,13 @@ Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 ar
 	return i;
 }
 
-void KeyBindingsScreen_Init(GuiElement* elem) {
+static void KeyBindingsScreen_Init(GuiElement* elem) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
 	MenuScreen_Init(elem);
 	screen->ContextRecreated(elem);
 }
 
-bool KeyBindingsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool KeyBindingsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
 	if (screen->CurI == -1) return MenuScreen_HandlesKeyDown(elem, key);
 
@@ -1745,7 +1745,7 @@ bool KeyBindingsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	return true;
 }
 
-bool KeyBindingsScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+static bool KeyBindingsScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
 	if (btn != MouseButton_Right) {
 		return MenuScreen_HandlesMouseDown(elem, x, y, btn);
 	}
@@ -1762,7 +1762,7 @@ bool KeyBindingsScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mous
 	return true;
 }
 
-KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const UInt8** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextFunc contextRecreated) {
+static KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const UInt8** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextFunc contextRecreated) {
 	KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, bindsCount + 4, contextRecreated);
 	KeyBindingsScreen_VTABLE = *screen->VTABLE;
@@ -1788,7 +1788,7 @@ KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const 
 /*########################################################################################################################*
 *-----------------------------------------------ClassicKeyBindingsScreen--------------------------------------------------*
 *#########################################################################################################################*/
-void ClassicKeyBindingsScreen_ContextRecreated(void* obj) {
+static void ClassicKeyBindingsScreen_ContextRecreated(void* obj) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
 	if (Game_ClassicHacks) {
 		KeyBindingsScreen_MakeWidgets(screen, -140, -40, 5, "Normal controls", 260);
@@ -1812,7 +1812,7 @@ Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------ClassicHacksKeyBindingsScreen------------------------------------------------*
 *#########################################################################################################################*/
-void ClassicHacksKeyBindingsScreen_ContextRecreated(void* obj) {
+static void ClassicHacksKeyBindingsScreen_ContextRecreated(void* obj) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
 	KeyBindingsScreen_MakeWidgets(screen, -90, -40, 3, "Hacks controls", 260);
 }
@@ -1832,7 +1832,7 @@ Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *-----------------------------------------------NormalKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-void NormalKeyBindingsScreen_ContextRecreated(void* obj) {
+static void NormalKeyBindingsScreen_ContextRecreated(void* obj) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
 	KeyBindingsScreen_MakeWidgets(screen, -140, 10, 6, "Normal controls", 260);
 }
@@ -1852,7 +1852,7 @@ Screen* NormalKeyBindingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *------------------------------------------------HacksKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-void HacksKeyBindingsScreen_ContextRecreated(void* obj) {
+static void HacksKeyBindingsScreen_ContextRecreated(void* obj) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
 	KeyBindingsScreen_MakeWidgets(screen, -40, 10, 4, "Hacks controls", 260);
 }
@@ -1873,7 +1873,7 @@ Screen* HacksKeyBindingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *------------------------------------------------OtherKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-void OtherKeyBindingsScreen_ContextRecreated(void* obj) {
+static void OtherKeyBindingsScreen_ContextRecreated(void* obj) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
 	KeyBindingsScreen_MakeWidgets(screen, -140, 10, 6, "Other controls", 260);
 }
@@ -1894,7 +1894,7 @@ Screen* OtherKeyBindingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *------------------------------------------------MouseKeyBindingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-void MouseKeyBindingsScreen_ContextRecreated(void* obj) {
+static void MouseKeyBindingsScreen_ContextRecreated(void* obj) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)obj;
 	Int32 i = KeyBindingsScreen_MakeWidgets(screen, -40, 10, -1, "Mouse key bindings", 260);
 
@@ -1923,19 +1923,19 @@ Screen* MouseKeyBindingsScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 MenuOptionsScreen MenuOptionsScreen_Instance;
 GuiElementVTABLE MenuOptionsScreen_VTABLE;
-void Menu_GetBool(STRING_TRANSIENT String* raw, bool v) {
+static void Menu_GetBool(STRING_TRANSIENT String* raw, bool v) {
 	String_AppendConst(raw, v ? "ON" : "OFF");
 }
 
-bool Menu_SetBool(STRING_PURE String* raw, const UInt8* key) {
+static bool Menu_SetBool(STRING_PURE String* raw, const UInt8* key) {
 	bool isOn = String_CaselessEqualsConst(raw, "ON");
 	Options_SetBool(key, isOn); return isOn;
 }
 
-void MenuOptionsScreen_GetFPS(STRING_TRANSIENT String* raw) {
+static void MenuOptionsScreen_GetFPS(STRING_TRANSIENT String* raw) {
 	String_AppendConst(raw, FpsLimit_Names[Game_FpsLimit]);
 }
-void MenuOptionsScreen_SetFPS(STRING_PURE String* raw) {
+static void MenuOptionsScreen_SetFPS(STRING_PURE String* raw) {
 	UInt32 method = Utils_ParseEnum(raw, FpsLimit_VSync, FpsLimit_Names, Array_Elems(FpsLimit_Names));
 	Game_SetFpsLimitMethod(method);
 
@@ -1943,7 +1943,7 @@ void MenuOptionsScreen_SetFPS(STRING_PURE String* raw) {
 	Options_Set(OPT_FPS_LIMIT, &value);
 }
 
-void MenuOptionsScreen_Set(MenuOptionsScreen* screen, Int32 i, STRING_PURE String* text) {
+static void MenuOptionsScreen_Set(MenuOptionsScreen* screen, Int32 i, STRING_PURE String* text) {
 	screen->Buttons[i].SetValue(text);
 	/* need to get btn again here (e.g. changing FPS invalidates all widgets) */
 
@@ -1955,19 +1955,19 @@ void MenuOptionsScreen_Set(MenuOptionsScreen* screen, Int32 i, STRING_PURE Strin
 	ButtonWidget_SetText(&screen->Buttons[i], &title);
 }
 
-void MenuOptionsScreen_FreeExtHelp(MenuOptionsScreen* screen) {
+static void MenuOptionsScreen_FreeExtHelp(MenuOptionsScreen* screen) {
 	if (screen->ExtHelp.LinesCount == 0) return;
 	Elem_TryFree(&screen->ExtHelp);
 	screen->ExtHelp.LinesCount = 0;
 }
 
-void MenuOptionsScreen_RepositionExtHelp(MenuOptionsScreen* screen) {
+static void MenuOptionsScreen_RepositionExtHelp(MenuOptionsScreen* screen) {
 	screen->ExtHelp.XOffset = Game_Width / 2 - screen->ExtHelp.Width / 2;
 	screen->ExtHelp.YOffset = Game_Height / 2 + 100;
 	Widget_Reposition(&screen->ExtHelp);
 }
 
-void MenuOptionsScreen_SelectExtHelp(MenuOptionsScreen* screen, Int32 idx) {
+static void MenuOptionsScreen_SelectExtHelp(MenuOptionsScreen* screen, Int32 idx) {
 	MenuOptionsScreen_FreeExtHelp(screen);
 	if (screen->Descriptions == NULL || screen->ActiveI >= 0) return;
 	const UInt8* desc = screen->Descriptions[idx];
@@ -1989,7 +1989,7 @@ void MenuOptionsScreen_SelectExtHelp(MenuOptionsScreen* screen, Int32 idx) {
 	MenuOptionsScreen_RepositionExtHelp(screen);
 }
 
-void MenuOptionsScreen_FreeInput(MenuOptionsScreen* screen) {
+static void MenuOptionsScreen_FreeInput(MenuOptionsScreen* screen) {
 	if (screen->ActiveI == -1) return;
 
 	Int32 i;
@@ -2000,7 +2000,7 @@ void MenuOptionsScreen_FreeInput(MenuOptionsScreen* screen) {
 	}
 }
 
-void MenuOptionsScreen_EnterInput(MenuOptionsScreen* screen) {
+static void MenuOptionsScreen_EnterInput(MenuOptionsScreen* screen) {
 	String text = screen->Input.Base.Text;
 	MenuInputValidator* validator = &screen->Input.Validator;
 
@@ -2013,14 +2013,14 @@ void MenuOptionsScreen_EnterInput(MenuOptionsScreen* screen) {
 	screen->ActiveI = -1;
 }
 
-void MenuOptionsScreen_Init(GuiElement* elem) {
+static void MenuOptionsScreen_Init(GuiElement* elem) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	MenuScreen_Init(elem);
 	Key_KeyRepeat = true;
 	screen->ContextRecreated(elem);
 }
 	
-void MenuOptionsScreen_Render(GuiElement* elem, Real64 delta) {
+static void MenuOptionsScreen_Render(GuiElement* elem, Real64 delta) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	MenuScreen_Render(elem, delta);
 	if (screen->ExtHelp.LinesCount == 0) return;
@@ -2036,32 +2036,32 @@ void MenuOptionsScreen_Render(GuiElement* elem, Real64 delta) {
 	Gfx_SetTexturing(false);
 }
 
-void MenuOptionsScreen_Free(GuiElement* elem) {
+static void MenuOptionsScreen_Free(GuiElement* elem) {
 	MenuScreen_Free(elem);
 	Key_KeyRepeat = false;
 }
 
-void MenuOptionsScreen_OnResize(GuiElement* elem) {
+static void MenuOptionsScreen_OnResize(GuiElement* elem) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	MenuScreen_OnResize(elem);
 	if (screen->ExtHelp.LinesCount == 0) return;
 	MenuOptionsScreen_RepositionExtHelp(screen);
 }
 
-void MenuOptionsScreen_ContextLost(void* obj) {
+static void MenuOptionsScreen_ContextLost(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	MenuScreen_ContextLost(obj);
 	screen->ActiveI = -1;
 	MenuOptionsScreen_FreeExtHelp(screen);
 }
 
-bool MenuOptionsScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool MenuOptionsScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	if (screen->ActiveI == -1) return true;
 	return Elem_HandlesKeyPress(&screen->Input.Base, key);
 }
 
-bool MenuOptionsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool MenuOptionsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	if (screen->ActiveI >= 0) {
 		if (Elem_HandlesKeyDown(&screen->Input.Base, key)) return true;
@@ -2072,13 +2072,13 @@ bool MenuOptionsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	return MenuScreen_HandlesKeyDown(elem, key);
 }
 
-bool MenuOptionsScreen_HandlesKeyUp(GuiElement* elem, Key key) {
+static bool MenuOptionsScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	if (screen->ActiveI == -1) return true;
 	return Elem_HandlesKeyUp(&screen->Input.Base, key);
 }
 
-bool MenuOptionsScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
+static bool MenuOptionsScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	Int32 i = Menu_HandleMouseMove(screen->Widgets, screen->WidgetsCount, x, y);
 	if (i == -1 || i == screen->SelectedI) return true;
@@ -2089,7 +2089,7 @@ bool MenuOptionsScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) {
 	return true;
 }
 
-void MenuOptionsScreen_Make(MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* optName, Widget_LeftClick onClick, ButtonWidget_Get getter, ButtonWidget_Set setter) {
+static void MenuOptionsScreen_Make(MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* optName, Widget_LeftClick onClick, ButtonWidget_Get getter, ButtonWidget_Set setter) {
 	UInt8 titleBuffer[String_BufferSize(STRING_SIZE)];
 	String title = String_InitAndClearArray(titleBuffer);
 	String_AppendConst(&title, optName);
@@ -2106,19 +2106,19 @@ void MenuOptionsScreen_Make(MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32
 	btn->SetValue = setter;
 }
 
-void MenuOptionsScreen_OK(GuiElement* elem, GuiElement* widget) {
+static void MenuOptionsScreen_OK(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem; 
 	MenuOptionsScreen_EnterInput(screen);
 }
 
-void MenuOptionsScreen_Default(GuiElement* elem, GuiElement* widget) {
+static void MenuOptionsScreen_Default(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	String text = String_FromReadonly(screen->DefaultValues[screen->ActiveI]);
 	InputWidget_Clear(&screen->Input.Base);
 	InputWidget_AppendString(&screen->Input.Base, &text);
 }
 
-void MenuOptionsScreen_Bool(GuiElement* elem, GuiElement* widget) {
+static void MenuOptionsScreen_Bool(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	ButtonWidget* button = (ButtonWidget*)widget;
 	Int32 index = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
@@ -2133,7 +2133,7 @@ void MenuOptionsScreen_Bool(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen_Set(screen, index, &newValue);
 }
 
-void MenuOptionsScreen_Enum(GuiElement* elem, GuiElement* widget) {
+static void MenuOptionsScreen_Enum(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	ButtonWidget* button = (ButtonWidget*)widget;
 	Int32 index = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
@@ -2152,7 +2152,7 @@ void MenuOptionsScreen_Enum(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen_Set(screen, index, &newValue);
 }
 
-void MenuOptionsScreen_Input(GuiElement* elem, GuiElement* widget) {
+static void MenuOptionsScreen_Input(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	ButtonWidget* button = (ButtonWidget*)widget;
 	screen->ActiveI = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
@@ -2220,17 +2220,17 @@ typedef enum ViewDist_ {
 } ViewDist;
 const UInt8* ViewDist_Names[ViewDist_Count] = { "TINY", "SHORT", "NORMAL", "FAR" };
 
-void ClassicOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_MusicVolume > 0); }
-void ClassicOptionsScreen_SetMusic(STRING_PURE String* v) {
+static void ClassicOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_MusicVolume > 0); }
+static void ClassicOptionsScreen_SetMusic(STRING_PURE String* v) {
 	Game_MusicVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
 	Audio_SetMusic(Game_MusicVolume);
 	Options_SetInt32(OPT_MUSIC_VOLUME, Game_MusicVolume);
 }
 
-void ClassicOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_InvertMouse); }
-void ClassicOptionsScreen_SetInvert(STRING_PURE String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
+static void ClassicOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_InvertMouse); }
+static void ClassicOptionsScreen_SetInvert(STRING_PURE String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
-void ClassicOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) {
+static void ClassicOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) {
 	if (Game_ViewDistance >= 512) {
 		String_AppendConst(v, ViewDist_Names[ViewDist_Far]);
 	} else if (Game_ViewDistance >= 128) {
@@ -2241,37 +2241,37 @@ void ClassicOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) {
 		String_AppendConst(v, ViewDist_Names[ViewDist_Tiny]);
 	}
 }
-void ClassicOptionsScreen_SetViewDist(STRING_PURE String* v) {
+static void ClassicOptionsScreen_SetViewDist(STRING_PURE String* v) {
 	UInt32 raw = Utils_ParseEnum(v, 0, ViewDist_Names, ViewDist_Count);
 	Int32 dist = raw == ViewDist_Far ? 512 : (raw == ViewDist_Normal ? 128 : (raw == ViewDist_Short ? 32 : 8));
 	Game_SetViewDistance(dist, true);
 }
 
-void ClassicOptionsScreen_GetPhysics(STRING_TRANSIENT String* v) { Menu_GetBool(v, Physics_Enabled); }
-void ClassicOptionsScreen_SetPhysics(STRING_PURE String* v) {
+static void ClassicOptionsScreen_GetPhysics(STRING_TRANSIENT String* v) { Menu_GetBool(v, Physics_Enabled); }
+static void ClassicOptionsScreen_SetPhysics(STRING_PURE String* v) {
 	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
 }
 
-void ClassicOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_SoundsVolume > 0); }
-void ClassicOptionsScreen_SetSounds(STRING_PURE String* v) {
+static void ClassicOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_SoundsVolume > 0); }
+static void ClassicOptionsScreen_SetSounds(STRING_PURE String* v) {
 	Game_SoundsVolume = String_CaselessEqualsConst(v, "ON") ? 100 : 0;
 	Audio_SetSounds(Game_SoundsVolume);
 	Options_SetInt32(OPT_SOUND_VOLUME, Game_SoundsVolume);
 }
 
-void ClassicOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
-void ClassicOptionsScreen_SetShowFPS(STRING_PURE String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
+static void ClassicOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
+static void ClassicOptionsScreen_SetShowFPS(STRING_PURE String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-void ClassicOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ViewBobbing); }
-void ClassicOptionsScreen_SetViewBob(STRING_PURE String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
+static void ClassicOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ViewBobbing); }
+static void ClassicOptionsScreen_SetViewBob(STRING_PURE String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
 
-void ClassicOptionsScreen_GetHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
-void ClassicOptionsScreen_SetHacks(STRING_PURE String* v) {
+static void ClassicOptionsScreen_GetHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
+static void ClassicOptionsScreen_SetHacks(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.Enabled = Menu_SetBool(v, OPT_HACKS_ENABLED);
 	LocalPlayer_CheckHacksConsistency();
 }
 
-void ClassicOptionsScreen_ContextRecreated(void* obj) {
+static void ClassicOptionsScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->Widgets;
 
@@ -2325,40 +2325,40 @@ Screen* ClassicOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------EnvSettingsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-void EnvSettingsScreen_GetCloudsCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_CloudsCol); }
-void EnvSettingsScreen_SetCloudsCol(STRING_PURE String* v) { WorldEnv_SetCloudsCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetCloudsCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_CloudsCol); }
+static void EnvSettingsScreen_SetCloudsCol(STRING_PURE String* v) { WorldEnv_SetCloudsCol(Menu_HexCol(v)); }
 
-void EnvSettingsScreen_GetSkyCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_SkyCol); }
-void EnvSettingsScreen_SetSkyCol(STRING_PURE String* v) { WorldEnv_SetSkyCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetSkyCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_SkyCol); }
+static void EnvSettingsScreen_SetSkyCol(STRING_PURE String* v) { WorldEnv_SetSkyCol(Menu_HexCol(v)); }
 
-void EnvSettingsScreen_GetFogCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_FogCol); }
-void EnvSettingsScreen_SetFogCol(STRING_PURE String* v) { WorldEnv_SetFogCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetFogCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_FogCol); }
+static void EnvSettingsScreen_SetFogCol(STRING_PURE String* v) { WorldEnv_SetFogCol(Menu_HexCol(v)); }
 
-void EnvSettingsScreen_GetCloudsSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, WorldEnv_CloudsSpeed, 2); }
-void EnvSettingsScreen_SetCloudsSpeed(STRING_PURE String* v) { WorldEnv_SetCloudsSpeed(Menu_Real32(v)); }
+static void EnvSettingsScreen_GetCloudsSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, WorldEnv_CloudsSpeed, 2); }
+static void EnvSettingsScreen_SetCloudsSpeed(STRING_PURE String* v) { WorldEnv_SetCloudsSpeed(Menu_Real32(v)); }
 
-void EnvSettingsScreen_GetCloudsHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, WorldEnv_CloudsHeight); }
-void EnvSettingsScreen_SetCloudsHeight(STRING_PURE String* v) { WorldEnv_SetCloudsHeight(Menu_Int32(v)); }
+static void EnvSettingsScreen_GetCloudsHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, WorldEnv_CloudsHeight); }
+static void EnvSettingsScreen_SetCloudsHeight(STRING_PURE String* v) { WorldEnv_SetCloudsHeight(Menu_Int32(v)); }
 
-void EnvSettingsScreen_GetSunCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_SunCol); }
-void EnvSettingsScreen_SetSunCol(STRING_PURE String* v) { WorldEnv_SetSunCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetSunCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_SunCol); }
+static void EnvSettingsScreen_SetSunCol(STRING_PURE String* v) { WorldEnv_SetSunCol(Menu_HexCol(v)); }
 
-void EnvSettingsScreen_GetShadowCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_ShadowCol); }
-void EnvSettingsScreen_SetShadowCol(STRING_PURE String* v) { WorldEnv_SetShadowCol(Menu_HexCol(v)); }
+static void EnvSettingsScreen_GetShadowCol(STRING_TRANSIENT String* v) { PackedCol_ToHex(v, WorldEnv_ShadowCol); }
+static void EnvSettingsScreen_SetShadowCol(STRING_PURE String* v) { WorldEnv_SetShadowCol(Menu_HexCol(v)); }
 
-void EnvSettingsScreen_GetWeather(STRING_TRANSIENT String* v) { String_AppendConst(v, Weather_Names[WorldEnv_Weather]); }
-void EnvSettingsScreen_SetWeather(STRING_PURE String* v) {
+static void EnvSettingsScreen_GetWeather(STRING_TRANSIENT String* v) { String_AppendConst(v, Weather_Names[WorldEnv_Weather]); }
+static void EnvSettingsScreen_SetWeather(STRING_PURE String* v) {
 	UInt32 raw = Utils_ParseEnum(v, 0, Weather_Names, Array_Elems(Weather_Names));
 	WorldEnv_SetWeather(raw); 
 }
 
-void EnvSettingsScreen_GetWeatherSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, WorldEnv_WeatherSpeed, 2); }
-void EnvSettingsScreen_SetWeatherSpeed(STRING_PURE String* v) { WorldEnv_SetWeatherSpeed(Menu_Real32(v)); }
+static void EnvSettingsScreen_GetWeatherSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, WorldEnv_WeatherSpeed, 2); }
+static void EnvSettingsScreen_SetWeatherSpeed(STRING_PURE String* v) { WorldEnv_SetWeatherSpeed(Menu_Real32(v)); }
 
-void EnvSettingsScreen_GetEdgeHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, WorldEnv_EdgeHeight); }
-void EnvSettingsScreen_SetEdgeHeight(STRING_PURE String* v) { WorldEnv_SetEdgeHeight(Menu_Int32(v)); }
+static void EnvSettingsScreen_GetEdgeHeight(STRING_TRANSIENT String* v) { String_AppendInt32(v, WorldEnv_EdgeHeight); }
+static void EnvSettingsScreen_SetEdgeHeight(STRING_PURE String* v) { WorldEnv_SetEdgeHeight(Menu_Int32(v)); }
 
-void EnvSettingsScreen_ContextRecreated(void* obj) {
+static void EnvSettingsScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->Widgets;
 
@@ -2432,30 +2432,30 @@ Screen* EnvSettingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *--------------------------------------------------GraphicsOptionsScreen--------------------------------------------------*
 *#########################################################################################################################*/
-void GraphicsOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_ViewDistance); }
-void GraphicsOptionsScreen_SetViewDist(STRING_PURE String* v) { Game_SetViewDistance(Menu_Int32(v), true); }
+static void GraphicsOptionsScreen_GetViewDist(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_ViewDistance); }
+static void GraphicsOptionsScreen_SetViewDist(STRING_PURE String* v) { Game_SetViewDistance(Menu_Int32(v), true); }
 
-void GraphicsOptionsScreen_GetSmooth(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_SmoothLighting); }
-void GraphicsOptionsScreen_SetSmooth(STRING_PURE String* v) {
+static void GraphicsOptionsScreen_GetSmooth(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_SmoothLighting); }
+static void GraphicsOptionsScreen_SetSmooth(STRING_PURE String* v) {
 	Game_SmoothLighting = Menu_SetBool(v, OPT_SMOOTH_LIGHTING);
 	ChunkUpdater_ApplyMeshBuilder();
 	ChunkUpdater_Refresh();
 }
 
-void GraphicsOptionsScreen_GetNames(STRING_TRANSIENT String* v) { String_AppendConst(v, NameMode_Names[Entities_NameMode]); }
-void GraphicsOptionsScreen_SetNames(STRING_PURE String* v) {
+static void GraphicsOptionsScreen_GetNames(STRING_TRANSIENT String* v) { String_AppendConst(v, NameMode_Names[Entities_NameMode]); }
+static void GraphicsOptionsScreen_SetNames(STRING_PURE String* v) {
 	Entities_NameMode = Utils_ParseEnum(v, 0, NameMode_Names, NAME_MODE_COUNT);
 	Options_Set(OPT_NAMES_MODE, v);
 }
 
-void GraphicsOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { String_AppendConst(v, ShadowMode_Names[Entities_ShadowMode]); }
-void GraphicsOptionsScreen_SetShadows(STRING_PURE String* v) {
+static void GraphicsOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { String_AppendConst(v, ShadowMode_Names[Entities_ShadowMode]); }
+static void GraphicsOptionsScreen_SetShadows(STRING_PURE String* v) {
 	Entities_ShadowMode = Utils_ParseEnum(v, 0, ShadowMode_Names, SHADOW_MODE_COUNT);
 	Options_Set(OPT_ENTITY_SHADOW, v);
 }
 
-void GraphicsOptionsScreen_GetMipmaps(STRING_TRANSIENT String* v) { Menu_GetBool(v, Gfx_Mipmaps); }
-void GraphicsOptionsScreen_SetMipmaps(STRING_PURE String* v) {
+static void GraphicsOptionsScreen_GetMipmaps(STRING_TRANSIENT String* v) { Menu_GetBool(v, Gfx_Mipmaps); }
+static void GraphicsOptionsScreen_SetMipmaps(STRING_PURE String* v) {
 	Gfx_Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
 	UInt8 urlBuffer[String_BufferSize(STRING_SIZE)];
 	String url = String_InitAndClearArray(urlBuffer);
@@ -2469,7 +2469,7 @@ void GraphicsOptionsScreen_SetMipmaps(STRING_PURE String* v) {
 	String_Set(&World_TextureUrl, &url);
 }
 
-void GraphicsOptionsScreen_ContextRecreated(void* obj) {
+static void GraphicsOptionsScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->Widgets;
 
@@ -2531,7 +2531,7 @@ Screen* GraphicsOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------GuiOptionsScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-void GuiOptionsScreen_HandleFontChange(void) {
+static void GuiOptionsScreen_HandleFontChange(void) {
 	MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
 	Event_RaiseVoid(&ChatEvents_FontChanged);
 	Elem_Recreate(screen);
@@ -2540,57 +2540,57 @@ void GuiOptionsScreen_HandleFontChange(void) {
 	Elem_HandlesMouseMove(screen, Mouse_X, Mouse_Y);
 }
 
-void GuiOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
-void GuiOptionsScreen_SetShadows(STRING_PURE String* v) {
+static void GuiOptionsScreen_GetShadows(STRING_TRANSIENT String* v) { Menu_GetBool(v, Drawer2D_BlackTextShadows); }
+static void GuiOptionsScreen_SetShadows(STRING_PURE String* v) {
 	Drawer2D_BlackTextShadows = Menu_SetBool(v, OPT_BLACK_TEXT);
 	GuiOptionsScreen_HandleFontChange();
 }
 
-void GuiOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
-void GuiOptionsScreen_SetShowFPS(STRING_PURE String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
+static void GuiOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
+static void GuiOptionsScreen_SetShowFPS(STRING_PURE String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-void GuiOptionsScreen_SetScale(STRING_PURE String* v, Real32* target, const UInt8* optKey) {
+static void GuiOptionsScreen_SetScale(STRING_PURE String* v, Real32* target, const UInt8* optKey) {
 	*target = Menu_Real32(v);
 	Options_Set(optKey, v);
 	Gui_RefreshHud();
 }
 
-void GuiOptionsScreen_GetHotbar(STRING_TRANSIENT String* v) { String_AppendReal32(v, Game_RawHotbarScale, 1); }
-void GuiOptionsScreen_SetHotbar(STRING_PURE String* v) { GuiOptionsScreen_SetScale(v, &Game_RawHotbarScale, OPT_HOTBAR_SCALE); }
+static void GuiOptionsScreen_GetHotbar(STRING_TRANSIENT String* v) { String_AppendReal32(v, Game_RawHotbarScale, 1); }
+static void GuiOptionsScreen_SetHotbar(STRING_PURE String* v) { GuiOptionsScreen_SetScale(v, &Game_RawHotbarScale, OPT_HOTBAR_SCALE); }
 
-void GuiOptionsScreen_GetInventory(STRING_TRANSIENT String* v) { String_AppendReal32(v, Game_RawInventoryScale, 1); }
-void GuiOptionsScreen_SetInventory(STRING_PURE String* v) { GuiOptionsScreen_SetScale(v, &Game_RawInventoryScale, OPT_INVENTORY_SCALE); }
+static void GuiOptionsScreen_GetInventory(STRING_TRANSIENT String* v) { String_AppendReal32(v, Game_RawInventoryScale, 1); }
+static void GuiOptionsScreen_SetInventory(STRING_PURE String* v) { GuiOptionsScreen_SetScale(v, &Game_RawInventoryScale, OPT_INVENTORY_SCALE); }
 
-void GuiOptionsScreen_GetTabAuto(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_TabAutocomplete); }
-void GuiOptionsScreen_SetTabAuto(STRING_PURE String* v) { Game_TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
+static void GuiOptionsScreen_GetTabAuto(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_TabAutocomplete); }
+static void GuiOptionsScreen_SetTabAuto(STRING_PURE String* v) { Game_TabAutocomplete = Menu_SetBool(v, OPT_TAB_AUTOCOMPLETE); }
 
-void GuiOptionsScreen_GetClickable(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ClickableChat); }
-void GuiOptionsScreen_SetClickable(STRING_PURE String* v) { Game_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
+static void GuiOptionsScreen_GetClickable(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ClickableChat); }
+static void GuiOptionsScreen_SetClickable(STRING_PURE String* v) { Game_ClickableChat = Menu_SetBool(v, OPT_CLICKABLE_CHAT); }
 
-void GuiOptionsScreen_GetChatScale(STRING_TRANSIENT String* v) { String_AppendReal32(v, Game_RawChatScale, 1); }
-void GuiOptionsScreen_SetChatScale(STRING_PURE String* v) { GuiOptionsScreen_SetScale(v, &Game_RawChatScale, OPT_CHAT_SCALE); }
+static void GuiOptionsScreen_GetChatScale(STRING_TRANSIENT String* v) { String_AppendReal32(v, Game_RawChatScale, 1); }
+static void GuiOptionsScreen_SetChatScale(STRING_PURE String* v) { GuiOptionsScreen_SetScale(v, &Game_RawChatScale, OPT_CHAT_SCALE); }
 
-void GuiOptionsScreen_GetChatlines(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_ChatLines); }
-void GuiOptionsScreen_SetChatlines(STRING_PURE String* v) {
+static void GuiOptionsScreen_GetChatlines(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_ChatLines); }
+static void GuiOptionsScreen_SetChatlines(STRING_PURE String* v) {
 	Game_ChatLines = Menu_Int32(v);
 	Options_Set(OPT_CHATLINES, v);
 	Gui_RefreshHud();
 }
 
-void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Drawer2D_UseBitmappedChat); }
-void GuiOptionsScreen_SetUseFont(STRING_PURE String* v) {
+static void GuiOptionsScreen_GetUseFont(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Drawer2D_UseBitmappedChat); }
+static void GuiOptionsScreen_SetUseFont(STRING_PURE String* v) {
 	Drawer2D_UseBitmappedChat = !Menu_SetBool(v, OPT_USE_CHAT_FONT);
 	GuiOptionsScreen_HandleFontChange();
 }
 
-void GuiOptionsScreen_GetFont(STRING_TRANSIENT String* v) { String_AppendString(v, &Game_FontName); }
-void GuiOptionsScreen_SetFont(STRING_PURE String* v) {
+static void GuiOptionsScreen_GetFont(STRING_TRANSIENT String* v) { String_AppendString(v, &Game_FontName); }
+static void GuiOptionsScreen_SetFont(STRING_PURE String* v) {
 	String_Set(&Game_FontName, v);
 	Options_Set(OPT_FONT_NAME, v);
 	GuiOptionsScreen_HandleFontChange();
 }
 
-void GuiOptionsScreen_ContextRecreated(void* obj) {
+static void GuiOptionsScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->Widgets;
 
@@ -2646,25 +2646,25 @@ Screen* GuiOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------HacksSettingsScreen---------------------------------------------------*
 *#########################################################################################################################*/
-void HacksSettingsScreen_GetHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
-void HacksSettingsScreen_SetHacks(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.Enabled); }
+static void HacksSettingsScreen_SetHacks(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.Enabled = Menu_SetBool(v,OPT_HACKS_ENABLED);
 	LocalPlayer_CheckHacksConsistency();
 }
 
-void HacksSettingsScreen_GetSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_Instance.Hacks.SpeedMultiplier, 2); }
-void HacksSettingsScreen_SetSpeed(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetSpeed(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_Instance.Hacks.SpeedMultiplier, 2); }
+static void HacksSettingsScreen_SetSpeed(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.SpeedMultiplier = Menu_Real32(v);
 	Options_Set(OPT_SPEED_FACTOR, v);
 }
 
-void HacksSettingsScreen_GetClipping(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_CameraClipping); }
-void HacksSettingsScreen_SetClipping(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetClipping(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_CameraClipping); }
+static void HacksSettingsScreen_SetClipping(STRING_PURE String* v) {
 	Game_CameraClipping = Menu_SetBool(v, OPT_CAMERA_CLIPPING);
 }
 
-void HacksSettingsScreen_GetJump(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_JumpHeight(), 3); }
-void HacksSettingsScreen_SetJump(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetJump(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_JumpHeight(), 3); }
+static void HacksSettingsScreen_SetJump(STRING_PURE String* v) {
 	PhysicsComp* physics = &LocalPlayer_Instance.Physics;
 	PhysicsComp_CalculateJumpVelocity(physics, Menu_Real32(v));
 	physics->UserJumpVel = physics->JumpVel;
@@ -2675,33 +2675,33 @@ void HacksSettingsScreen_SetJump(STRING_PURE String* v) {
 	Options_Set(OPT_JUMP_VELOCITY, &str);
 }
 
-void HacksSettingsScreen_GetWOMHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.WOMStyleHacks); }
-void HacksSettingsScreen_SetWOMHacks(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetWOMHacks(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.WOMStyleHacks); }
+static void HacksSettingsScreen_SetWOMHacks(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.WOMStyleHacks = Menu_SetBool(v, OPT_WOM_STYLE_HACKS);
 }
 
-void HacksSettingsScreen_GetFullStep(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.FullBlockStep); }
-void HacksSettingsScreen_SetFullStep(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetFullStep(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.FullBlockStep); }
+static void HacksSettingsScreen_SetFullStep(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.FullBlockStep = Menu_SetBool(v, OPT_FULL_BLOCK_STEP);
 }
 
-void HacksSettingsScreen_GetPushback(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.PushbackPlacing); }
-void HacksSettingsScreen_SetPushback(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetPushback(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.PushbackPlacing); }
+static void HacksSettingsScreen_SetPushback(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.PushbackPlacing = Menu_SetBool(v, OPT_PUSHBACK_PLACING);
 }
 
-void HacksSettingsScreen_GetLiquids(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_BreakableLiquids); }
-void HacksSettingsScreen_SetLiquids(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetLiquids(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_BreakableLiquids); }
+static void HacksSettingsScreen_SetLiquids(STRING_PURE String* v) {
 	Game_BreakableLiquids = Menu_SetBool(v, OPT_MODIFIABLE_LIQUIDS);
 }
 
-void HacksSettingsScreen_GetSlide(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.NoclipSlide); }
-void HacksSettingsScreen_SetSlide(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetSlide(STRING_TRANSIENT String* v) { Menu_GetBool(v, LocalPlayer_Instance.Hacks.NoclipSlide); }
+static void HacksSettingsScreen_SetSlide(STRING_PURE String* v) {
 	LocalPlayer_Instance.Hacks.NoclipSlide = Menu_SetBool(v, OPT_NOCLIP_SLIDE);
 }
 
-void HacksSettingsScreen_GetFOV(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_Fov); }
-void HacksSettingsScreen_SetFOV(STRING_PURE String* v) {
+static void HacksSettingsScreen_GetFOV(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_Fov); }
+static void HacksSettingsScreen_SetFOV(STRING_PURE String* v) {
 	Game_Fov = Menu_Int32(v);
 	if (Game_ZoomFov > Game_Fov) Game_ZoomFov = Game_Fov;
 
@@ -2709,7 +2709,7 @@ void HacksSettingsScreen_SetFOV(STRING_PURE String* v) {
 	Game_UpdateProjection();
 }
 
-void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
+static void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->Widgets;
 	Int32 i;
@@ -2727,12 +2727,12 @@ void HacksSettingsScreen_CheckHacksAllowed(void* obj) {
 	widgets[7]->Disabled = noGlobalHacks || !p->Hacks.CanPushbackBlocks;
 }
 
-void HacksSettingsScreen_ContextLost(void* obj) {
+static void HacksSettingsScreen_ContextLost(void* obj) {
 	MenuOptionsScreen_ContextLost(obj);
 	Event_UnregisterVoid(&UserEvents_HackPermissionsChanged, obj, HacksSettingsScreen_CheckHacksAllowed);
 }
 
-void HacksSettingsScreen_ContextRecreated(void* obj) {
+static void HacksSettingsScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->Widgets;
 	Event_RegisterVoid(&UserEvents_HackPermissionsChanged, obj, HacksSettingsScreen_CheckHacksAllowed);
@@ -2801,44 +2801,44 @@ Screen* HacksSettingsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *----------------------------------------------------MiscOptionsScreen----------------------------------------------------*
 *#########################################################################################################################*/
-void MiscOptionsScreen_GetReach(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_Instance.ReachDistance, 2); }
-void MiscOptionsScreen_SetReach(STRING_PURE String* v) { LocalPlayer_Instance.ReachDistance = Menu_Real32(v); }
+static void MiscOptionsScreen_GetReach(STRING_TRANSIENT String* v) { String_AppendReal32(v, LocalPlayer_Instance.ReachDistance, 2); }
+static void MiscOptionsScreen_SetReach(STRING_PURE String* v) { LocalPlayer_Instance.ReachDistance = Menu_Real32(v); }
 
-void MiscOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_MusicVolume); }
-void MiscOptionsScreen_SetMusic(STRING_PURE String* v) {
+static void MiscOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_MusicVolume); }
+static void MiscOptionsScreen_SetMusic(STRING_PURE String* v) {
 	Game_MusicVolume = Menu_Int32(v);
 	Options_Set(OPT_MUSIC_VOLUME, v);
 	Audio_SetMusic(Game_MusicVolume);
 }
 
-void MiscOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_SoundsVolume); }
-void MiscOptionsScreen_SetSounds(STRING_PURE String* v) {
+static void MiscOptionsScreen_GetSounds(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_SoundsVolume); }
+static void MiscOptionsScreen_SetSounds(STRING_PURE String* v) {
 	Game_SoundsVolume = Menu_Int32(v);
 	Options_Set(OPT_SOUND_VOLUME, v);
 	Audio_SetSounds(Game_SoundsVolume);
 }
 
-void MiscOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ViewBobbing); }
-void MiscOptionsScreen_SetViewBob(STRING_PURE String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
+static void MiscOptionsScreen_GetViewBob(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ViewBobbing); }
+static void MiscOptionsScreen_SetViewBob(STRING_PURE String* v) { Game_ViewBobbing = Menu_SetBool(v, OPT_VIEW_BOBBING); }
 
-void MiscOptionsScreen_GetPhysics(STRING_TRANSIENT String* v) { Menu_GetBool(v, Physics_Enabled); }
-void MiscOptionsScreen_SetPhysics(STRING_PURE String* v) {
+static void MiscOptionsScreen_GetPhysics(STRING_TRANSIENT String* v) { Menu_GetBool(v, Physics_Enabled); }
+static void MiscOptionsScreen_SetPhysics(STRING_PURE String* v) {
 	Physics_SetEnabled(Menu_SetBool(v, OPT_BLOCK_PHYSICS));
 }
 
-void MiscOptionsScreen_GetAutoClose(STRING_TRANSIENT String* v) { Menu_GetBool(v, Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false)); }
-void MiscOptionsScreen_SetAutoClose(STRING_PURE String* v) { Menu_SetBool(v, OPT_AUTO_CLOSE_LAUNCHER); }
+static void MiscOptionsScreen_GetAutoClose(STRING_TRANSIENT String* v) { Menu_GetBool(v, Options_GetBool(OPT_AUTO_CLOSE_LAUNCHER, false)); }
+static void MiscOptionsScreen_SetAutoClose(STRING_PURE String* v) { Menu_SetBool(v, OPT_AUTO_CLOSE_LAUNCHER); }
 
-void MiscOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_InvertMouse); }
-void MiscOptionsScreen_SetInvert(STRING_PURE String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
+static void MiscOptionsScreen_GetInvert(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_InvertMouse); }
+static void MiscOptionsScreen_SetInvert(STRING_PURE String* v) { Game_InvertMouse = Menu_SetBool(v, OPT_INVERT_MOUSE); }
 
-void MiscOptionsScreen_GetSensitivity(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_MouseSensitivity); }
-void MiscOptionsScreen_SetSensitivity(STRING_PURE String* v) {
+static void MiscOptionsScreen_GetSensitivity(STRING_TRANSIENT String* v) { String_AppendInt32(v, Game_MouseSensitivity); }
+static void MiscOptionsScreen_SetSensitivity(STRING_PURE String* v) {
 	Game_MouseSensitivity = Menu_Int32(v);
 	Options_Set(OPT_SENSITIVITY, v);
 }
 
-void MiscOptionsScreen_ContextRecreated(void* obj) {
+static void MiscOptionsScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->Widgets;
 
@@ -2892,38 +2892,38 @@ Screen* MiscOptionsScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *-----------------------------------------------------NostalgiaScreen-----------------------------------------------------*
 *#########################################################################################################################*/
-void NostalgiaScreen_GetHand(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ClassicArmModel); }
-void NostalgiaScreen_SetHand(STRING_PURE String* v) { Game_ClassicArmModel = Menu_SetBool(v, OPT_CLASSIC_ARM_MODEL); }
+static void NostalgiaScreen_GetHand(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ClassicArmModel); }
+static void NostalgiaScreen_SetHand(STRING_PURE String* v) { Game_ClassicArmModel = Menu_SetBool(v, OPT_CLASSIC_ARM_MODEL); }
 
-void NostalgiaScreen_GetAnim(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Game_SimpleArmsAnim); }
-void NostalgiaScreen_SetAnim(STRING_PURE String* v) {
+static void NostalgiaScreen_GetAnim(STRING_TRANSIENT String* v) { Menu_GetBool(v, !Game_SimpleArmsAnim); }
+static void NostalgiaScreen_SetAnim(STRING_PURE String* v) {
 	Game_SimpleArmsAnim = String_CaselessEqualsConst(v, "OFF");
 	Options_SetBool(OPT_SIMPLE_ARMS_ANIM, Game_SimpleArmsAnim);
 }
 
-void NostalgiaScreen_GetGui(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicGui); }
-void NostalgiaScreen_SetGui(STRING_PURE String* v) { Game_UseClassicGui = Menu_SetBool(v, OPT_USE_CLASSIC_GUI); }
+static void NostalgiaScreen_GetGui(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicGui); }
+static void NostalgiaScreen_SetGui(STRING_PURE String* v) { Game_UseClassicGui = Menu_SetBool(v, OPT_USE_CLASSIC_GUI); }
 
-void NostalgiaScreen_GetList(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicTabList); }
-void NostalgiaScreen_SetList(STRING_PURE String* v) { Game_UseClassicTabList = Menu_SetBool(v, OPT_USE_CLASSIC_TABLIST); }
+static void NostalgiaScreen_GetList(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicTabList); }
+static void NostalgiaScreen_SetList(STRING_PURE String* v) { Game_UseClassicTabList = Menu_SetBool(v, OPT_USE_CLASSIC_TABLIST); }
 
-void NostalgiaScreen_GetOpts(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicOptions); }
-void NostalgiaScreen_SetOpts(STRING_PURE String* v) { Game_UseClassicOptions = Menu_SetBool(v, OPT_USE_CLASSIC_OPTIONS); }
+static void NostalgiaScreen_GetOpts(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseClassicOptions); }
+static void NostalgiaScreen_SetOpts(STRING_PURE String* v) { Game_UseClassicOptions = Menu_SetBool(v, OPT_USE_CLASSIC_OPTIONS); }
 
-void NostalgiaScreen_GetCustom(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
-void NostalgiaScreen_SetCustom(STRING_PURE String* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_USE_CUSTOM_BLOCKS); }
+static void NostalgiaScreen_GetCustom(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowCustomBlocks); }
+static void NostalgiaScreen_SetCustom(STRING_PURE String* v) { Game_AllowCustomBlocks = Menu_SetBool(v, OPT_USE_CUSTOM_BLOCKS); }
 
-void NostalgiaScreen_GetCPE(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseCPE); }
-void NostalgiaScreen_SetCPE(STRING_PURE String* v) { Game_UseCPE = Menu_SetBool(v, OPT_USE_CPE); }
+static void NostalgiaScreen_GetCPE(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_UseCPE); }
+static void NostalgiaScreen_SetCPE(STRING_PURE String* v) { Game_UseCPE = Menu_SetBool(v, OPT_USE_CPE); }
 
-void NostalgiaScreen_GetTexs(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowServerTextures); }
-void NostalgiaScreen_SetTexs(STRING_PURE String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_USE_SERVER_TEXTURES); }
+static void NostalgiaScreen_GetTexs(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_AllowServerTextures); }
+static void NostalgiaScreen_SetTexs(STRING_PURE String* v) { Game_AllowServerTextures = Menu_SetBool(v, OPT_USE_SERVER_TEXTURES); }
 
-void NostalgiaScreen_SwitchBack(GuiElement* a, GuiElement* b) {
+static void NostalgiaScreen_SwitchBack(GuiElement* a, GuiElement* b) {
 	if (Game_UseClassicOptions) { Menu_SwitchPause(a, b); } else { Menu_SwitchOptions(a, b); }
 }
 
-void NostalgiaScreen_ContextRecreated(void* obj) {
+static void NostalgiaScreen_ContextRecreated(void* obj) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)obj;
 	Widget** widgets = screen->Widgets;
 	static TextWidget desc;
@@ -2968,16 +2968,16 @@ Screen* NostalgiaScreen_MakeInstance(void) {
 /*########################################################################################################################*
 *---------------------------------------------------------Overlay---------------------------------------------------------*
 *#########################################################################################################################*/
-void Overlay_Init(GuiElement* elem) {
+static void Overlay_Init(GuiElement* elem) {
 	MenuScreen_Init(elem);
 	if (Gfx_LostContext) return;
 	MenuScreen* screen = (MenuScreen*)elem;
 	screen->ContextRecreated(elem);
 }
 
-bool Overlay_HandlesKeyDown(GuiElement* elem, Key key) { return true; }
+static bool Overlay_HandlesKeyDown(GuiElement* elem, Key key) { return true; }
 
-void Overlay_MakeLabels(MenuScreen* screen, TextWidget* labels, STRING_PURE String* lines) {
+static void Overlay_MakeLabels(MenuScreen* screen, TextWidget* labels, STRING_PURE String* lines) {
 	TextWidget_Create(&labels[0], &lines[0], &screen->TitleFont);
 	screen->Widgets[0] = (Widget*)(&labels[0]);
 	Widget_SetLocation(screen->Widgets[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, -120);
@@ -2994,7 +2994,7 @@ void Overlay_MakeLabels(MenuScreen* screen, TextWidget* labels, STRING_PURE Stri
 	}
 }
 
-void Overlay_UseVTABLE(MenuScreen* screen, GuiElementVTABLE* vtable) {
+static void Overlay_UseVTABLE(MenuScreen* screen, GuiElementVTABLE* vtable) {
 	*vtable = *screen->VTABLE;
 	screen->VTABLE = vtable;
 
@@ -3009,14 +3009,14 @@ void Overlay_UseVTABLE(MenuScreen* screen, GuiElementVTABLE* vtable) {
 #define TEXID_OVERLAY_VERTICES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_ROWS_COUNT * 4)
 GuiElementVTABLE TexIdsOverlay_VTABLE;
 TexIdsOverlay TexIdsOverlay_Instance;
-void TexIdsOverlay_ContextLost(void* obj) {
+static void TexIdsOverlay_ContextLost(void* obj) {
 	TexIdsOverlay* screen = (TexIdsOverlay*)obj;
 	MenuScreen_ContextLost(obj);
 	Gfx_DeleteVb(&screen->DynamicVb);
 	TextAtlas_Free(&screen->IdAtlas);
 }
 
-void TexIdsOverlay_ContextRecreated(void* obj) {
+static void TexIdsOverlay_ContextRecreated(void* obj) {
 	TexIdsOverlay* screen = (TexIdsOverlay*)obj;
 	screen->DynamicVb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, TEXID_OVERLAY_VERTICES_COUNT);
 
@@ -3038,7 +3038,7 @@ void TexIdsOverlay_ContextRecreated(void* obj) {
 	Widget_SetLocation(screen->Widgets[0], ANCHOR_CENTRE, ANCHOR_CENTRE, 0, screen->YOffset - 30);
 }
 
-void TexIdsOverlay_RenderTerrain(TexIdsOverlay* screen) {
+static void TexIdsOverlay_RenderTerrain(TexIdsOverlay* screen) {
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
 	Int32 elemsPerAtlas = Atlas1D_TilesPerAtlas, i;
 	for (i = 0; i < ATLAS2D_TILES_PER_ROW * ATLAS2D_ROWS_COUNT;) {
@@ -3063,7 +3063,7 @@ void TexIdsOverlay_RenderTerrain(TexIdsOverlay* screen) {
 	}
 }
 
-void TexIdsOverlay_RenderTextOverlay(TexIdsOverlay* screen) {
+static void TexIdsOverlay_RenderTextOverlay(TexIdsOverlay* screen) {
 	Int32 x, y, size = screen->TileSize;
 	VertexP3fT2fC4b vertices[TEXID_OVERLAY_VERTICES_COUNT];
 	VertexP3fT2fC4b* ptr = vertices;
@@ -3086,13 +3086,13 @@ void TexIdsOverlay_RenderTextOverlay(TexIdsOverlay* screen) {
 	}
 }
 
-void TexIdsOverlay_Init(GuiElement* elem) {
+static void TexIdsOverlay_Init(GuiElement* elem) {
 	MenuScreen* screen = (MenuScreen*)elem;
 	Platform_FontMake(&screen->TextFont, &Game_FontName, 8, FONT_STYLE_NORMAL);
 	Overlay_Init(elem);
 }
 
-void TexIdsOverlay_Render(GuiElement* elem, Real64 delta) {
+static void TexIdsOverlay_Render(GuiElement* elem, Real64 delta) {
 	TexIdsOverlay* screen = (TexIdsOverlay*)elem;
 	Menu_RenderBounds();
 	Gfx_SetTexturing(true);
@@ -3103,7 +3103,7 @@ void TexIdsOverlay_Render(GuiElement* elem, Real64 delta) {
 	Gfx_SetTexturing(false);
 }
 
-bool TexIdsOverlay_HandlesKeyDown(GuiElement* elem, Key key) {
+static bool TexIdsOverlay_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key == KeyBind_Get(KeyBind_IDOverlay) || key == KeyBind_Get(KeyBind_PauseOrExit)) {
 		Gui_FreeOverlay(elem);
 		return true;
@@ -3112,12 +3112,12 @@ bool TexIdsOverlay_HandlesKeyDown(GuiElement* elem, Key key) {
 	return Elem_HandlesKeyDown(screen, key);
 }
 
-bool TexIdsOverlay_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool TexIdsOverlay_HandlesKeyPress(GuiElement* elem, UInt8 key) {
 	Screen* screen = Gui_GetUnderlyingScreen();
 	return Elem_HandlesKeyPress(screen, key);
 }
 
-bool TexIdsOverlay_HandlesKeyUp(GuiElement* elem, Key key) {
+static bool TexIdsOverlay_HandlesKeyUp(GuiElement* elem, Key key) {
 	Screen* screen = Gui_GetUnderlyingScreen();
 	return Elem_HandlesKeyUp(screen, key);
 }
@@ -3154,7 +3154,7 @@ Screen* TexIdsOverlay_MakeInstance(void) {
 	screen->Widgets[widgetI] = (Widget*)(&buttons[buttonI]);\
 	Widget_SetLocation(screen->Widgets[widgetI], ANCHOR_CENTRE, ANCHOR_CENTRE, 110, yPos);
 
-void WarningOverlay_MakeButtons(MenuScreen* screen, ButtonWidget* buttons, bool always, 
+static void WarningOverlay_MakeButtons(MenuScreen* screen, ButtonWidget* buttons, bool always, 
 	Widget_LeftClick yesClick, Widget_LeftClick noClick) {
 
 	String yes = String_FromConst("Yes"); 
@@ -3180,14 +3180,14 @@ GuiElementVTABLE WarningOverlay_VTABLE;
 *----------------------------------------------------UrlWarningOverlay----------------------------------------------------*
 *#########################################################################################################################*/
 UrlWarningOverlay UrlWarningOverlay_Instance;
-void UrlWarningOverlay_OpenUrl(GuiElement* elem, GuiElement* widget) {
+static void UrlWarningOverlay_OpenUrl(GuiElement* elem, GuiElement* widget) {
 	Gui_FreeOverlay(elem);
 	UrlWarningOverlay* screen = (UrlWarningOverlay*)elem;
 	String url = String_FromRawArray(screen->UrlBuffer);
 	Platform_StartShell(&url);
 }
 
-void UrlWarningOverlay_AppendUrl(GuiElement* elem, GuiElement* widget) {
+static void UrlWarningOverlay_AppendUrl(GuiElement* elem, GuiElement* widget) {
 	Gui_FreeOverlay(elem);
 	if (Game_ClickableChat) {
 		UrlWarningOverlay* screen = (UrlWarningOverlay*)elem;
@@ -3196,7 +3196,7 @@ void UrlWarningOverlay_AppendUrl(GuiElement* elem, GuiElement* widget) {
 	}
 }
 
-void UrlWarningOverlay_ContextRecreated(void* obj) {
+static void UrlWarningOverlay_ContextRecreated(void* obj) {
 	UrlWarningOverlay* screen = (UrlWarningOverlay*)obj;
 	String lines[4];
 	lines[0] = String_FromReadonly("&eAre you sure you want to open this link?");
@@ -3227,7 +3227,7 @@ Screen* UrlWarningOverlay_MakeInstance(STRING_PURE String* url) {
 *----------------------------------------------------ConfirmDenyOverlay---------------------------------------------------*
 *#########################################################################################################################*/
 ConfirmDenyOverlay ConfirmDenyOverlay_Instance;
-void ConfirmDenyOverlay_ConfirmNoClick(GuiElement* elem, GuiElement* widget) {
+static void ConfirmDenyOverlay_ConfirmNoClick(GuiElement* elem, GuiElement* widget) {
 	Gui_FreeOverlay((Screen*)elem);
 	ConfirmDenyOverlay* screen = (ConfirmDenyOverlay*)elem;
 	String url = String_FromRawArray(screen->UrlBuffer);
@@ -3237,7 +3237,7 @@ void ConfirmDenyOverlay_ConfirmNoClick(GuiElement* elem, GuiElement* widget) {
 	}
 }
 
-void ConfirmDenyOverlay_GoBackClick(GuiElement* elem, GuiElement* widget) {
+static void ConfirmDenyOverlay_GoBackClick(GuiElement* elem, GuiElement* widget) {
 	Gui_FreeOverlay((Screen*)elem);
 	ConfirmDenyOverlay* screen = (ConfirmDenyOverlay*)elem;
 	String url = String_FromRawArray(screen->UrlBuffer);
@@ -3246,7 +3246,7 @@ void ConfirmDenyOverlay_GoBackClick(GuiElement* elem, GuiElement* widget) {
 	Gui_ShowOverlay(overlay, true);
 }
 
-void ConfirmDenyOverlay_ContextRecreated(void* obj) {
+static void ConfirmDenyOverlay_ContextRecreated(void* obj) {
 	ConfirmDenyOverlay* screen = (ConfirmDenyOverlay*)obj;
 	String lines[4];
 	lines[0] = String_FromReadonly("&eYou might be missing out.");
@@ -3285,7 +3285,7 @@ Screen* ConfirmDenyOverlay_MakeInstance(STRING_PURE String* url, bool alwaysDeny
 *#########################################################################################################################*/
 TexPackOverlay TexPackOverlay_Instance;
 GuiElementVTABLE TexPackOverlay_VTABLE;
-void TexPackOverlay_YesClick(GuiElement* elem, GuiElement* widget) {
+static void TexPackOverlay_YesClick(GuiElement* elem, GuiElement* widget) {
 	Gui_FreeOverlay((Screen*)elem);
 	TexPackOverlay* screen = (TexPackOverlay*)elem;
 	String url = String_FromRawArray(screen->IdentifierBuffer);
@@ -3298,7 +3298,7 @@ void TexPackOverlay_YesClick(GuiElement* elem, GuiElement* widget) {
 	}
 }
 
-void TexPackOverlay_NoClick(GuiElement* elem, GuiElement* widget) {
+static void TexPackOverlay_NoClick(GuiElement* elem, GuiElement* widget) {
 	Gui_FreeOverlay((Screen*)elem);
 	TexPackOverlay* screen = (TexPackOverlay*)elem;
 	String url = String_FromRawArray(screen->IdentifierBuffer);
@@ -3309,7 +3309,7 @@ void TexPackOverlay_NoClick(GuiElement* elem, GuiElement* widget) {
 	Gui_ShowOverlay(overlay, true);
 }
 
-void TexPackOverlay_Render(GuiElement* elem, Real64 delta) {
+static void TexPackOverlay_Render(GuiElement* elem, Real64 delta) {
 	TexPackOverlay* screen = (TexPackOverlay*)elem;
 	String identifier = String_FromRawArray(screen->IdentifierBuffer);
 
@@ -3324,7 +3324,7 @@ void TexPackOverlay_Render(GuiElement* elem, Real64 delta) {
 	screen->ContextRecreated(elem);
 }
 
-void TexPackOverlay_ContextRecreated(void* obj) {
+static void TexPackOverlay_ContextRecreated(void* obj) {
 	TexPackOverlay* screen = (TexPackOverlay*)obj;
 	String url = String_FromRawArray(screen->IdentifierBuffer);
 	url = String_UNSAFE_SubstringAt(&url, 3);

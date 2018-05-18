@@ -25,7 +25,7 @@ Key input_lastKey;
 DateTime input_lastClick;
 Real32 input_fovIndex = -1.0f;
 
-bool InputHandler_IsMousePressed(MouseButton button) {
+static bool InputHandler_IsMousePressed(MouseButton button) {
 	if (Mouse_IsPressed(button)) return true;
 
 	/* Key --> mouse mappings */
@@ -35,7 +35,7 @@ bool InputHandler_IsMousePressed(MouseButton button) {
 	return false;
 }
 
-void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
+static void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
 	/* defer getting the targeted entity as it's a costly operation */
 	if (input_pickingId == -1) {
 		Entity* p = &LocalPlayer_Instance.Base;
@@ -47,7 +47,7 @@ void InputHandler_ButtonStateUpdate(MouseButton button, bool pressed) {
 	input_buttonsDown[button] = pressed;
 }
 
-void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
+static void InputHandler_ButtonStateChanged(MouseButton button, bool pressed) {
 	if (pressed) {
 		/* Can send multiple Pressed events */
 		InputHandler_ButtonStateUpdate(button, true);
@@ -70,7 +70,7 @@ void InputHandler_ScreenChanged(Screen* oldScreen, Screen* newScreen) {
 	}
 }
 
-bool InputHandler_IsShutdown(Key key, Key last) {
+static bool InputHandler_IsShutdown(Key key, Key last) {
 	if (key == Key_F4 && (last == Key_AltLeft || last == Key_AltRight)) return true;
 
 	/* On OSX, Cmd+Q should also terminate the process. */
@@ -81,7 +81,7 @@ bool InputHandler_IsShutdown(Key key, Key last) {
 #endif
 }
 
-void InputHandler_Toggle(Key key, bool* target, const UInt8* enableMsg, const UInt8* disableMsg) {
+static void InputHandler_Toggle(Key key, bool* target, const UInt8* enableMsg, const UInt8* disableMsg) {
 	*target = !(*target);
 	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
@@ -94,7 +94,7 @@ void InputHandler_Toggle(Key key, bool* target, const UInt8* enableMsg, const UI
 	Chat_Add(&msg);
 }
 
-void InputHandler_CycleDistanceForwards(Int32* viewDists, Int32 count) {
+static void InputHandler_CycleDistanceForwards(Int32* viewDists, Int32 count) {
 	Int32 i;
 	for (i = 0; i < count; i++) {
 		Int32 dist = viewDists[i];
@@ -105,7 +105,7 @@ void InputHandler_CycleDistanceForwards(Int32* viewDists, Int32 count) {
 	Game_SetViewDistance(viewDists[0], true);
 }
 
-void InputHandler_CycleDistanceBackwards(Int32* viewDists, Int32 count) {
+static void InputHandler_CycleDistanceBackwards(Int32* viewDists, Int32 count) {
 	Int32 i;
 	for (i = count - 1; i >= 0; i--) {
 		Int32 dist = viewDists[i];
@@ -127,7 +127,7 @@ bool InputHandler_SetFOV(Int32 fov, bool setZoom) {
 	return true;
 }
 
-bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
+static bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
 	if (!KeyBind_IsPressed(KeyBind_ZoomScrolling)) return false;
 	HacksComp* h = &LocalPlayer_Instance.Hacks;
 	if (!h->Enabled || !h->CanAnyHacks || !h->CanUseThirdPersonCamera) return false;
@@ -139,7 +139,7 @@ bool InputHandler_DoFovZoom(Real32 deltaPrecise) {
 	return InputHandler_SetFOV((Int32)input_fovIndex, true);
 }
 
-bool InputHandler_HandleCoreKey(Key key) {
+static bool InputHandler_HandleCoreKey(Key key) {
 	if (key == KeyBind_Get(KeyBind_HideGui)) {
 		Game_HideGui = !Game_HideGui;
 	} else if (key == KeyBind_Get(KeyBind_HideFps)) {
@@ -191,8 +191,8 @@ bool InputHandler_HandleCoreKey(Key key) {
 	return true;
 }
 
-bool InputHandler_TouchesSolid(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
-bool InputHandler_PushbackPlace(AABB* blockBB) {
+static bool InputHandler_TouchesSolid(BlockID b) { return Block_Collide[b] == COLLIDE_SOLID; }
+static bool InputHandler_PushbackPlace(AABB* blockBB) {
 	Entity* p = &LocalPlayer_Instance.Base;
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
 	Vector3 curPos = p->Position, adjPos = p->Position;
@@ -232,7 +232,7 @@ bool InputHandler_PushbackPlace(AABB* blockBB) {
 	return true;
 }
 
-bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
+static bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 	AABB blockBB;
 	Vector3_Add(&blockBB.Min, &pos, &Block_MinBB[block]);
 	Vector3_Add(&blockBB.Max, &pos, &Block_MaxBB[block]);
@@ -249,7 +249,7 @@ bool InputHandler_IntersectsOthers(Vector3 pos, BlockID block) {
 	return false;
 }
 
-bool InputHandler_CheckIsFree(BlockID block) {
+static bool InputHandler_CheckIsFree(BlockID block) {
 	Vector3 pos; Vector3I_ToVector3(&pos, &Game_SelectedPos.TranslatedPos);
 	Entity* p = &LocalPlayer_Instance.Base;
 	HacksComp* hacks = &LocalPlayer_Instance.Hacks;
@@ -329,7 +329,7 @@ void InputHandler_PickBlocks(bool cooldown, bool left, bool middle, bool right) 
 	}
 }
 
-void InputHandler_MouseWheel(void* obj, Real32 delta) {
+static void InputHandler_MouseWheel(void* obj, Real32 delta) {
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 	if (active->VTABLE->HandlesMouseScroll(active, delta)) return;
 
@@ -341,12 +341,12 @@ void InputHandler_MouseWheel(void* obj, Real32 delta) {
 	Elem_HandlesMouseScroll(hotbarW, delta);
 }
 
-void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {
+static void InputHandler_MouseMove(void* obj, Int32 xDelta, Int32 yDelta) {
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 	active->VTABLE->HandlesMouseMove(active, Mouse_X, Mouse_Y);
 }
 
-void InputHandler_MouseDown(void* obj, Int32 button) {
+static void InputHandler_MouseDown(void* obj, Int32 button) {
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 	if (!active->VTABLE->HandlesMouseDown(active, Mouse_X, Mouse_Y, button)) {
 		bool left   = button == MouseButton_Left;
@@ -358,7 +358,7 @@ void InputHandler_MouseDown(void* obj, Int32 button) {
 	}
 }
 
-void InputHandler_MouseUp(void* obj, Int32 button) {
+static void InputHandler_MouseUp(void* obj, Int32 button) {
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 	if (!active->VTABLE->HandlesMouseUp(active, Mouse_X, Mouse_Y, button)) {
 		if (ServerConnection_SupportsPlayerClick && button <= MouseButton_Middle) {
@@ -368,7 +368,7 @@ void InputHandler_MouseUp(void* obj, Int32 button) {
 	}
 }
 
-bool InputHandler_SimulateMouse(Key key, bool pressed) {
+static bool InputHandler_SimulateMouse(Key key, bool pressed) {
 	Key left   = KeyBind_Get(KeyBind_MouseLeft);
 	Key middle = KeyBind_Get(KeyBind_MouseMiddle);
 	Key right  = KeyBind_Get(KeyBind_MouseRight);
@@ -380,7 +380,7 @@ bool InputHandler_SimulateMouse(Key key, bool pressed) {
 	return true;
 }
 
-void InputHandler_KeyDown(void* obj, Int32 key) {
+static void InputHandler_KeyDown(void* obj, Int32 key) {
 	if (InputHandler_SimulateMouse(key, true)) return;
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 
@@ -407,7 +407,7 @@ void InputHandler_KeyDown(void* obj, Int32 key) {
 	}
 }
 
-void InputHandler_KeyUp(void* obj, Int32 key) {
+static void InputHandler_KeyUp(void* obj, Int32 key) {
 	if (InputHandler_SimulateMouse(key, false)) return;
 
 	if (key == KeyBind_Get(KeyBind_ZoomScrolling)) {
@@ -418,7 +418,7 @@ void InputHandler_KeyUp(void* obj, Int32 key) {
 	active->VTABLE->HandlesKeyUp(active, key);
 }
 
-void InputHandler_KeyPress(void* obj, Int32 keyChar) {
+static void InputHandler_KeyPress(void* obj, Int32 keyChar) {
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 	active->VTABLE->HandlesKeyPress(active, (UInt8)keyChar);
 }

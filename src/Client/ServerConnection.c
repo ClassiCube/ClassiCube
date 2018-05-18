@@ -31,7 +31,7 @@ UInt8 ServerConnection_AppNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_AppName = String_FromEmptyArray(ServerConnection_AppNameBuffer);
 Int32 ServerConnection_Ticks;
 
-void ServerConnection_ResetState(void) {
+static void ServerConnection_ResetState(void) {
 	ServerConnection_Disconnected = false;
 	ServerConnection_SupportsExtPlayerList = false;
 	ServerConnection_SupportsPlayerClick = false;
@@ -189,7 +189,7 @@ Int32 PingList_AveragePingMs(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
+static void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 	String logName = String_FromConst("Singleplayer");
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
@@ -208,7 +208,7 @@ void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 }
 
 UInt8 SPConnection_LastCol = NULL;
-void SPConnection_AddPortion(STRING_PURE String* text) {
+static void SPConnection_AddPortion(STRING_PURE String* text) {
 	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
 	/* Prepend colour codes for subsequent lines of multi-line chat */
@@ -230,7 +230,7 @@ void SPConnection_AddPortion(STRING_PURE String* text) {
 	Chat_Add(&tmp);
 }
 
-void SPConnection_SendChat(STRING_PURE String* text) {
+static void SPConnection_SendChat(STRING_PURE String* text) {
 	if (text->length == 0) return;
 	SPConnection_LastCol = NULL;
 
@@ -243,10 +243,10 @@ void SPConnection_SendChat(STRING_PURE String* text) {
 	SPConnection_AddPortion(&part);
 }
 
-void SPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) { }
-void SPConnection_SendPlayerClick(MouseButton button, bool isDown, EntityID targetId, PickedPos* pos) { }
+static void SPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) { }
+static void SPConnection_SendPlayerClick(MouseButton button, bool isDown, EntityID targetId, PickedPos* pos) { }
 
-void SPConnection_Tick(ScheduledTask* task) {
+static void SPConnection_Tick(ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 	if ((ServerConnection_Ticks % 3) == 0) {
 		Physics_Tick();
@@ -288,7 +288,7 @@ bool net_writeFailed;
 Int32 net_ticks;
 Real64 net_discAccumulator;
 
-void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+static void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
 	Vector3I p = coords;
 	if (block == BLOCK_AIR) {
 		block = Inventory_SelectedBlock;
@@ -299,8 +299,8 @@ void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, Blo
 	Net_SendPacket();
 }
 
-void ServerConnection_Free(void);
-void MPConnection_Connect(STRING_PURE String* ip, Int32 port) {
+static void ServerConnection_Free(void);
+static void MPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 	Platform_SocketCreate(&net_socket);
 	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
 	ServerConnection_Disconnected = false;
@@ -334,7 +334,7 @@ void MPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 	Platform_CurrentUTCTime(&net_lastPacket);
 }
 
-void MPConnection_SendChat(STRING_PURE String* text) {
+static void MPConnection_SendChat(STRING_PURE String* text) {
 	if (text->length == 0) return;
 	String remaining = *text;
 
@@ -349,17 +349,17 @@ void MPConnection_SendChat(STRING_PURE String* text) {
 	Net_SendPacket();
 }
 
-void MPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) {
+static void MPConnection_SendPosition(Vector3 pos, Real32 rotY, Real32 headX) {
 	Classic_WritePosition(&net_writeStream, pos, rotY, headX);
 	Net_SendPacket();
 }
 
-void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, EntityID targetId, PickedPos* pos) {
+static void MPConnection_SendPlayerClick(MouseButton button, bool buttonDown, EntityID targetId, PickedPos* pos) {
 	CPE_WritePlayerClick(&net_writeStream, button, buttonDown, targetId, pos);
 	Net_SendPacket();
 }
 
-void MPConnection_CheckDisconnection(Real64 delta) {
+static void MPConnection_CheckDisconnection(Real64 delta) {
 	net_discAccumulator += delta;
 	if (net_discAccumulator < 1.0) return;
 	net_discAccumulator = 0.0;
@@ -375,7 +375,7 @@ void MPConnection_CheckDisconnection(Real64 delta) {
 	}
 }
 
-void MPConnection_Tick(ScheduledTask* task) {
+static void MPConnection_Tick(ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
 	DateTime now; Platform_CurrentUTCTime(&now);
 	if (DateTime_MsBetween(&net_lastPacket, &now) >= 30 * 1000) {
@@ -472,8 +472,8 @@ void Net_SendPacket(void) {
 	net_writeStream.Meta_Mem_Left = net_writeStream.Meta_Mem_Length;
 }
 
-Stream* MPConnection_ReadStream(void)  { return &net_readStream; }
-Stream* MPConnection_WriteStream(void) { return &net_writeStream; }
+static Stream* MPConnection_ReadStream(void)  { return &net_readStream; }
+static Stream* MPConnection_WriteStream(void) { return &net_writeStream; }
 void ServerConnection_InitMultiplayer(void) {
 	ServerConnection_ResetState();
 	ServerConnection_IsSinglePlayer = false;
@@ -489,7 +489,7 @@ void ServerConnection_InitMultiplayer(void) {
 }
 
 
-void MPConnection_OnNewMap(void) {
+static void MPConnection_OnNewMap(void) {
 	if (ServerConnection_IsSinglePlayer) return;
 	/* wipe all existing entity states */
 	Int32 i;
@@ -498,7 +498,7 @@ void MPConnection_OnNewMap(void) {
 	}
 }
 
-void MPConnection_Reset(void) {
+static void MPConnection_Reset(void) {
 	if (ServerConnection_IsSinglePlayer) return;
 	Int32 i;
 	for (i = 0; i < OPCODE_COUNT; i++) {
@@ -512,7 +512,7 @@ void MPConnection_Reset(void) {
 	ServerConnection_Free();
 }
 
-void ServerConnection_Free(void) {
+static void ServerConnection_Free(void) {
 	if (ServerConnection_IsSinglePlayer) {
 		Physics_Free();
 	} else {

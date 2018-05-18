@@ -15,11 +15,11 @@
 
 UInt32 ModelCache_texCount, ModelCache_modelCount;
 
-void ModelCache_ContextLost(void* obj) {
+static void ModelCache_ContextLost(void* obj) {
 	Gfx_DeleteVb(&ModelCache_Vb);
 }
 
-void ModelCache_ContextRecreated(void* obj) {
+static void ModelCache_ContextRecreated(void* obj) {
 	ModelCache_Vb = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FT2FC4B, MODELCACHE_MAX_VERTICES);
 }
 
@@ -74,7 +74,7 @@ void ModelCache_RegisterTexture(STRING_REF const UInt8* texName) {
 	}
 }
 
-void ModelCache_TextureChanged(void* obj, Stream* stream) {
+static void ModelCache_TextureChanged(void* obj, Stream* stream) {
 	UInt32 i;
 	String charPng = String_FromConst("char.png");
 	for (i = 0; i < ModelCache_texCount; i++) {
@@ -93,7 +93,7 @@ ModelPart Chicken_LeftLeg, Chicken_RightLeg, Chicken_LeftWing, Chicken_RightWing
 ModelVertex ChickenModel_Vertices[IMODEL_BOX_VERTICES * 6 + (IMODEL_QUAD_VERTICES * 2) * 2];
 IModel ChickenModel;
 
-void ChickenModel_MakeLeg(ModelPart* part, Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
+static void ChickenModel_MakeLeg(ModelPart* part, Int32 x1, Int32 x2, Int32 legX1, Int32 legX2) {
 #define ch_y1 (1.0f  / 64.0f)
 #define ch_y2 (5.0f  / 16.0f)
 #define ch_z2 (1.0f  / 16.0f)
@@ -109,7 +109,7 @@ void ChickenModel_MakeLeg(ModelPart* part, Int32 x1, Int32 x2, Int32 legX1, Int3
 		0.0f / 16.0f, 5.0f / 16.0f, 1.0f / 16.0f);
 }
 
-void ChickenModel_CreateParts(void) {
+static void ChickenModel_CreateParts(void) {
 	BoxDesc desc;
 
 	BoxDesc_Box(&desc, -2, 9, -6, 2, 15, -3);
@@ -145,17 +145,17 @@ void ChickenModel_CreateParts(void) {
 	ChickenModel_MakeLeg(&Chicken_RightLeg, 0, 3, 1, 2);
 }
 
-Real32 ChickenModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
-Vector3 ChickenModel_GetCollisionSize(void) {
+static Real32 ChickenModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
+static Vector3 ChickenModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 12.0f / 16.0f, 8.0f / 16.0f);
 }
-void ChickenModel_GetPickingBounds(AABB* bb) {
+static void ChickenModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -8.0f / 16.0f,
 		4.0f / 16.0f, 15.0f / 16.0f, 4.0f / 16.0f);
 }
 
-void ChickenModel_DrawModel(Entity* entity) {
+static void ChickenModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head,  true);
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Chicken_Head2, true);
@@ -176,7 +176,7 @@ void ChickenModel_DrawModel(Entity* entity) {
 	IModel_UpdateVB();
 }
 
-IModel* ChickenModel_GetInstance(void) {
+static IModel* ChickenModel_GetInstance(void) {
 	IModel_Init(&ChickenModel);
 	IModel_SetPointers(ChickenModel);
 	ChickenModel.NameYOffset = 1.0125f;
@@ -190,7 +190,7 @@ ModelPart Creeper_RightLegFront, Creeper_LeftLegBack, Creeper_RightLegBack;
 ModelVertex CreeperModel_Vertices[IMODEL_BOX_VERTICES * 6];
 IModel CreeperModel;
 
-void CreeperModel_CreateParts(void) {
+static void CreeperModel_CreateParts(void) {
 	BoxDesc desc;
 
 	BoxDesc_Box(&desc, -4, 18, -4, 4, 26, 4);
@@ -223,17 +223,17 @@ void CreeperModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Creeper_RightLegBack, &CreeperModel, &desc);
 }
 
-Real32 CreeperModel_GetEyeY(Entity* entity) { return 22.0f / 16.0f; }
-Vector3 CreeperModel_GetCollisionSize(void) {
+static Real32 CreeperModel_GetEyeY(Entity* entity) { return 22.0f / 16.0f; }
+static Vector3 CreeperModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 26.0f / 16.0f, 8.0f / 16.0f);
 }
-void CreeperModel_GetPickingBounds(AABB* bb) {
+static void CreeperModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -6.0f / 16.0f,
 		4.0f / 16.0f, 26.0f / 16.0f, 6.0f / 16.0f);
 }
 
-void CreeperModel_DrawModel(Entity* entity) {
+static void CreeperModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Creeper_Head, true);
 
@@ -245,7 +245,7 @@ void CreeperModel_DrawModel(Entity* entity) {
 	IModel_UpdateVB();
 }
 
-IModel* CreeperModel_GetInstance(void) {
+static IModel* CreeperModel_GetInstance(void) {
 	IModel_Init(&CreeperModel);
 	IModel_SetPointers(CreeperModel);
 	CreeperModel.vertices = CreeperModel_Vertices;
@@ -260,7 +260,7 @@ ModelPart Pig_LeftLegBack, Pig_RightLegBack;
 ModelVertex PigModel_Vertices[IMODEL_BOX_VERTICES * 6];
 IModel PigModel;
 
-void PigModel_CreateParts(void) {
+static void PigModel_CreateParts(void) {
 	BoxDesc desc;
 
 	BoxDesc_Box(&desc, -4, 8, -14, 4, 16, -6);
@@ -293,18 +293,18 @@ void PigModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Pig_RightLegBack, &PigModel, &desc);
 }
 
-Real32 PigModel_GetEyeY(Entity* entity) { return 12.0f / 16.0f; }
-Vector3 PigModel_GetCollisionSize(void) {
+static Real32 PigModel_GetEyeY(Entity* entity) { return 12.0f / 16.0f; }
+static Vector3 PigModel_GetCollisionSize(void) {
 	return Vector3_Create3(14.0f / 16.0f, 14.0f / 16.0f, 14.0f / 16.0f);
 }
 
-void PigModel_GetPickingBounds(AABB* bb) {
+static void PigModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-5.0f / 16.0f, 0.0f, -14.0f / 16.0f,
 		5.0f / 16.0f, 16.0f / 16.0f, 9.0f / 16.0f);
 }
 
-void PigModel_DrawModel(Entity* entity) {
+static void PigModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Pig_Head, true);
 
@@ -316,7 +316,7 @@ void PigModel_DrawModel(Entity* entity) {
 	IModel_UpdateVB();
 }
 
-IModel* PigModel_GetInstance(void) {
+static IModel* PigModel_GetInstance(void) {
 	IModel_Init(&PigModel);
 	IModel_SetPointers(PigModel);
 	PigModel.vertices = PigModel_Vertices;
@@ -334,7 +334,7 @@ ModelVertex SheepModel_Vertices[IMODEL_BOX_VERTICES * 6 * 2];
 IModel SheepModel;
 Int32 fur_Index;
 
-void SheepModel_CreateParts(void) {
+static void SheepModel_CreateParts(void) {
 	BoxDesc desc;
 
 	BoxDesc_Box(&desc, -3, 16, -14, 3, 22, -6);
@@ -399,17 +399,17 @@ void SheepModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Fur_RightLegBack, &SheepModel, &desc);
 }
 
-Real32 SheepModel_GetEyeY(Entity* entity) { return 20.0f / 16.0f; }
-Vector3 SheepModel_GetCollisionSize(void) {
+static Real32 SheepModel_GetEyeY(Entity* entity) { return 20.0f / 16.0f; }
+static Vector3 SheepModel_GetCollisionSize(void) {
 	return Vector3_Create3(10.0f / 16.0f, 20.0f / 16.0f, 10.0f / 16.0f);
 }
-void SheepModel_GetPickingBounds(AABB* bb) {
+static void SheepModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-6.0f / 16.0f, 0.0f, -13.0f / 16.0f,
 		6.0f / 16.0f, 23.0f / 16.0f, 10.0f / 16.0f);
 }
 
-void SheepModel_DrawModel(Entity* entity) {
+static void SheepModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Sheep_Head, true);
 
@@ -432,7 +432,7 @@ void SheepModel_DrawModel(Entity* entity) {
 	IModel_UpdateVB();
 }
 
-IModel* SheepModel_GetInstance(void) {
+static IModel* SheepModel_GetInstance(void) {
 	IModel_Init(&SheepModel);
 	IModel_SetPointers(SheepModel);
 	SheepModel.vertices = SheepModel_Vertices;
@@ -450,7 +450,7 @@ ModelPart Skeleton_RightLeg, Skeleton_LeftArm, Skeleton_RightArm;
 ModelVertex SkeletonModel_Vertices[IMODEL_BOX_VERTICES * 6];
 IModel SkeletonModel;
 
-void SkeletonModel_CreateParts(void) {
+static void SkeletonModel_CreateParts(void) {
 	BoxDesc desc;
 
 	BoxDesc_Box(&desc, -4, 24, -4, 4, 32, 4);
@@ -483,18 +483,18 @@ void SkeletonModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Skeleton_RightArm, &SkeletonModel, &desc);
 }
 
-Real32 SkeletonModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
-Vector3 SkeletonModel_GetCollisionSize(void) {
+static Real32 SkeletonModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
+static Vector3 SkeletonModel_GetCollisionSize(void) {
 	return Vector3_Create3(8.0f / 16.0f, 28.1f / 16.0f, 8.0f / 16.0f);
 }
 
-void SkeletonModel_GetPickingBounds(AABB* bb) {
+static void SkeletonModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
 		4.0f / 16.0f, 32.0f / 16.0f, 4.0f / 16.0f);
 }
 
-void SkeletonModel_DrawModel(Entity* entity) {
+static void SkeletonModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Skeleton_Head, true);
 
@@ -506,7 +506,7 @@ void SkeletonModel_DrawModel(Entity* entity) {
 	IModel_UpdateVB();
 }
 
-IModel* SkeletonModel_GetInstance(void) {
+static IModel* SkeletonModel_GetInstance(void) {
 	IModel_Init(&SkeletonModel);
 	IModel_SetPointers(SkeletonModel);
 	SkeletonModel.vertices = SkeletonModel_Vertices;
@@ -521,7 +521,7 @@ ModelPart Spider_LeftLeg, Spider_RightLeg;
 ModelVertex SpiderModel_Vertices[IMODEL_BOX_VERTICES * 5];
 IModel SpiderModel;
 
-void SpiderModel_CreateParts(void) {
+static void SpiderModel_CreateParts(void) {
 	BoxDesc desc;
 
 	BoxDesc_Box(&desc, -4, 4, -11, 4, 12, -3);
@@ -548,12 +548,12 @@ void SpiderModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Spider_RightLeg, &SpiderModel, &desc);
 }
 
-Real32 SpiderModel_GetEyeY(Entity* entity) { return 8.0f / 16.0f; }
-Vector3 SpiderModel_GetCollisionSize(void) {
+static Real32 SpiderModel_GetEyeY(Entity* entity) { return 8.0f / 16.0f; }
+static Vector3 SpiderModel_GetCollisionSize(void) {
 	return Vector3_Create3(15.0f / 16.0f, 12.0f / 16.0f, 15.0f / 16.0f);
 }
 
-void SpiderModel_GetPickingBounds(AABB* bb) {
+static void SpiderModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-5.0f / 16.0f, 0.0f, -11.0f / 16.0f,
 		5.0f / 16.0f, 12.0f / 16.0f, 15.0f / 16.0f);
@@ -562,7 +562,7 @@ void SpiderModel_GetPickingBounds(AABB* bb) {
 #define quarterPi (MATH_PI / 4.0f)
 #define eighthPi  (MATH_PI / 8.0f)
 
-void SpiderModel_DrawModel(Entity* entity) {
+static void SpiderModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, Spider_Head, true);
 	IModel_DrawPart(Spider_Link);
@@ -587,7 +587,7 @@ void SpiderModel_DrawModel(Entity* entity) {
 	IModel_UpdateVB();
 }
 
-IModel* SpiderModel_GetInstance(void) {
+static IModel* SpiderModel_GetInstance(void) {
 	IModel_Init(&SpiderModel);
 	IModel_SetPointers(SpiderModel);
 	SpiderModel.vertices = SpiderModel_Vertices;
@@ -602,7 +602,7 @@ ModelPart Zombie_RightLeg, Zombie_LeftArm, Zombie_RightArm;
 ModelVertex ZombieModel_Vertices[IMODEL_BOX_VERTICES * 7];
 IModel ZombieModel;
 
-void ZombieModel_CreateParts(void) {
+static void ZombieModel_CreateParts(void) {
 	BoxDesc desc;
 
 	BoxDesc_Box(&desc, -4, 24, -4, 4, 32, 4);
@@ -641,18 +641,18 @@ void ZombieModel_CreateParts(void) {
 	BoxDesc_BuildBox(&Zombie_RightArm, &ZombieModel, &desc);
 }
 
-Real32 ZombieModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
-Vector3 ZombieModel_GetCollisionSize(void) {
+static Real32 ZombieModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
+static Vector3 ZombieModel_GetCollisionSize(void) {
 	return Vector3_Create3((8.0f + 0.6f) / 16.0f, 28.1f / 16.0f, (8.0f + 0.6f) / 16.0f);
 }
 
-void ZombieModel_GetPickingBounds(AABB* bb) {
+static void ZombieModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
 		4.0f / 16.0f, 32.0f / 16.0f, 4.0f / 16.0f);
 }
 
-void ZombieModel_DrawModel(Entity* entity) {
+static void ZombieModel_DrawModel(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0.0f, 0.0f, Zombie_Head, true);
 
@@ -666,7 +666,7 @@ void ZombieModel_DrawModel(Entity* entity) {
 	IModel_UpdateVB();
 }
 
-IModel* ZombieModel_GetInstance(void) {
+static IModel* ZombieModel_GetInstance(void) {
 	IModel_Init(&ZombieModel);
 	IModel_SetPointers(ZombieModel);
 	ZombieModel.vertices = ZombieModel_Vertices;
@@ -683,7 +683,7 @@ typedef struct ModelSet_ {
 
 BoxDesc head, torso, lLeg, rLeg, lArm, rArm;
 Real32 offset;
-void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet* setSlim) {
+static void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet* setSlim) {
 	BoxDesc_TexOrigin(&head, 0, 0);
 	BoxDesc_BuildBox(&set->Head, m, &head);
 
@@ -769,12 +769,12 @@ void HumanModel_CreateParts(IModel* m, ModelSet* set, ModelSet* set64, ModelSet*
 	BoxDesc_BuildBox(&setSlim->RightArmLayer, m, &rArm);
 }
 
-void HumanModel_SetupState(Entity* entity) {
+static void HumanModel_SetupState(Entity* entity) {
 	Gfx_BindTexture(IModel_GetTexture(entity));
 	Gfx_SetAlphaTest(false);
 }
 
-void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
+static void HumanModel_DrawModel(Entity* entity, ModelSet* model) {
 	UInt8 skinType = entity->SkinType;
 	IModel_DrawRotate(-entity->HeadX * MATH_DEG2RAD, 0, 0, model->Head, true);
 	IModel_DrawPart(model->Torso);
@@ -808,7 +808,7 @@ ModelSet Humanoid_Set, Humanoid_Set64, Humanoid_SetSlim;
 ModelVertex HumanoidModel_Vertices[IMODEL_BOX_VERTICES * (7 + 7 + 4)];
 IModel HumanoidModel;
 
-void HumanoidModel_MakeBoxDescs(void) {
+static void HumanoidModel_MakeBoxDescs(void) {
 	BoxDesc_Box(&head, -4, 24, -4, 4, 32, 4);
 	BoxDesc_RotOrigin(&head, 0, 24, 0);
 	BoxDesc_Box(&torso, -4, 12, -2, 4, 24, 2);
@@ -824,24 +824,24 @@ void HumanoidModel_MakeBoxDescs(void) {
 	BoxDesc_RotOrigin(&rArm, 5, 22, 0);
 }
 
-void HumanoidModel_CreateParts(void) {
+static void HumanoidModel_CreateParts(void) {
 	HumanoidModel_MakeBoxDescs();
 	offset = 0.5f;
 	HumanModel_CreateParts(&HumanoidModel, &Humanoid_Set,
 		&Humanoid_Set64, &Humanoid_SetSlim);
 }
 
-Real32 HumanoidModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
-Vector3 HumanoidModel_GetCollisionSize(void) {
+static Real32 HumanoidModel_GetEyeY(Entity* entity) { return 26.0f / 16.0f; }
+static Vector3 HumanoidModel_GetCollisionSize(void) {
 	return Vector3_Create3((8.0f + 0.6f) / 16.0f, 28.1f / 16.0f, (8.0f + 0.6f) / 16.0f);
 }
-void HumanoidModel_GetPickingBounds(AABB* bb) {
+static void HumanoidModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-8.0f / 16.0f, 0.0f, -4.0f / 16.0f,
 		8.0f / 16.0f, 32.0f / 16.0f, 4.0f / 16.0f);
 }
 
-void HumanoidModel_DrawModel(Entity* entity) {
+static void HumanoidModel_DrawModel(Entity* entity) {
 	HumanModel_SetupState(entity);
 	UInt8 skinType = entity->SkinType;
 	ModelSet* model =
@@ -850,7 +850,7 @@ void HumanoidModel_DrawModel(Entity* entity) {
 	HumanModel_DrawModel(entity, model);
 }
 
-IModel* HumanoidModel_GetInstance(void) {
+static IModel* HumanoidModel_GetInstance(void) {
 	IModel_Init(&HumanoidModel);
 	IModel_SetPointers(HumanoidModel);
 	HumanoidModel.vertices = HumanoidModel_Vertices;
@@ -866,7 +866,7 @@ ModelVertex ChibiModel_Vertices[IMODEL_BOX_VERTICES * (7 + 7 + 4)];
 IModel ChibiModel;
 #define CHIBI_SIZE 0.5f
 
-void ChibiModel_MakeBoxDescs(void) {
+static void ChibiModel_MakeBoxDescs(void) {
 	HumanoidModel_MakeBoxDescs();
 	BoxDesc_Box(&head, -4, 12, -4, 4, 20, 4);
 	BoxDesc_RotOrigin(&head, 0, 13, 0);
@@ -878,24 +878,24 @@ void ChibiModel_MakeBoxDescs(void) {
 	BoxDesc_Scale(&rArm, CHIBI_SIZE);
 }
 
-void ChibiModel_CreateParts(void) {
+static void ChibiModel_CreateParts(void) {
 	ChibiModel_MakeBoxDescs();
 	offset = 0.5f * CHIBI_SIZE;
 	HumanModel_CreateParts(&ChibiModel, &Chibi_Set,
 		&Chibi_Set64, &Chibi_SetSlim);
 }
 
-Real32 ChibiModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
-Vector3 ChibiModel_GetCollisionSize(void) {
+static Real32 ChibiModel_GetEyeY(Entity* entity) { return 14.0f / 16.0f; }
+static Vector3 ChibiModel_GetCollisionSize(void) {
 	return Vector3_Create3((4.0f + 0.6f) / 16.0f, 20.1f / 16.0f, (4.0f + 0.6f) / 16.0f);
 }
-void ChibiModel_GetPickingBounds(AABB* bb) {
+static void ChibiModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
 		4.0f / 16.0f, 16.0f / 16.0f, 4.0f / 16.0f);
 }
 
-void ChibiModel_DrawModel(Entity* entity) {
+static void ChibiModel_DrawModel(Entity* entity) {
 	HumanModel_SetupState(entity);
 	UInt8 skinType = entity->SkinType;
 	ModelSet* model =
@@ -904,7 +904,7 @@ void ChibiModel_DrawModel(Entity* entity) {
 	HumanModel_DrawModel(entity, model);
 }
 
-IModel* ChibiModel_GetInstance(void) {
+static IModel* ChibiModel_GetInstance(void) {
 	IModel_Init(&ChibiModel);
 	IModel_SetPointers(ChibiModel);
 	ChibiModel.vertices = ChibiModel_Vertices;
@@ -919,31 +919,31 @@ IModel* ChibiModel_GetInstance(void) {
 
 IModel SittingModel;
 #define SIT_OFFSET 10.0f
-void SittingModel_CreateParts(void) { }
+static void SittingModel_CreateParts(void) { }
 
-Real32 SittingModel_GetEyeY(Entity* entity) { return (26.0f - SIT_OFFSET) / 16.0f; }
-Vector3 SittingModel_GetCollisionSize(void) {
+static Real32 SittingModel_GetEyeY(Entity* entity) { return (26.0f - SIT_OFFSET) / 16.0f; }
+static Vector3 SittingModel_GetCollisionSize(void) {
 	return Vector3_Create3((8.0f + 0.6f) / 16.0f, (28.1f - SIT_OFFSET) / 16.0f, (8.0f + 0.6f) / 16.0f);
 }
-void SittingModel_GetPickingBounds(AABB* bb) {
+static void SittingModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-8.0f / 16.0f, 0.0f, -4.0f / 16.0f,
 		8.0f / 16.0f, (32.0f - SIT_OFFSET) / 16.0f, 4.0f / 16.0f);
 }
 
-void SittingModel_GetTransform(Entity* entity, Vector3 pos) {
+static void SittingModel_GetTransform(Entity* entity, Vector3 pos) {
 	pos.Y -= (SIT_OFFSET / 16.0f) * entity->ModelScale.Y;
 	Entity_GetTransform(entity, pos, entity->ModelScale);
 }
 
-void SittingModel_DrawModel(Entity* entity) {
+static void SittingModel_DrawModel(Entity* entity) {
 	entity->Anim.LeftLegX = 1.5f;  entity->Anim.RightLegX = 1.5f;
 	entity->Anim.LeftLegZ = -0.1f; entity->Anim.RightLegZ = 0.1f;
 	IModel_SetupState(&HumanoidModel, entity);
 	HumanoidModel.DrawModel(entity);
 }
 
-IModel* SittingModel_GetInstance(void) {
+static IModel* SittingModel_GetInstance(void) {
 	IModel_Init(&SittingModel);
 	IModel_SetPointers(SittingModel);
 	SittingModel.vertices = HumanoidModel_Vertices;
@@ -957,8 +957,8 @@ IModel* SittingModel_GetInstance(void) {
 
 
 IModel CorpseModel;
-void CorpseModel_CreateParts(void) { }
-void CorpseModel_DrawModel(Entity* entity) {
+static void CorpseModel_CreateParts(void) { }
+static void CorpseModel_DrawModel(Entity* entity) {
 	entity->Anim.LeftLegX = 0.025f; entity->Anim.RightLegX = 0.025f;
 	entity->Anim.LeftArmX = 0.025f; entity->Anim.RightArmX = 0.025f;
 	entity->Anim.LeftLegZ = -0.15f; entity->Anim.RightLegZ =  0.15f;
@@ -968,7 +968,7 @@ void CorpseModel_DrawModel(Entity* entity) {
 	HumanoidModel.DrawModel(entity);
 }
 
-IModel* CorpseModel_GetInstance(void) {
+static IModel* CorpseModel_GetInstance(void) {
 	CorpseModel = HumanoidModel;
 	CorpseModel.CreateParts = CorpseModel_CreateParts;
 	CorpseModel.DrawModel   = CorpseModel_DrawModel;
@@ -977,24 +977,24 @@ IModel* CorpseModel_GetInstance(void) {
 
 
 IModel HeadModel;
-void HeadModel_CreateParts(void) { }
+static void HeadModel_CreateParts(void) { }
 
-Real32 HeadModel_GetEyeY(Entity* entity) { return 6.0f / 16.0f; }
-Vector3 HeadModel_GetCollisionSize(void) {
+static Real32 HeadModel_GetEyeY(Entity* entity) { return 6.0f / 16.0f; }
+static Vector3 HeadModel_GetCollisionSize(void) {
 	return Vector3_Create3(7.9f / 16.0f, 7.9f / 16.0f, 7.9f / 16.0f);
 }
-void HeadModel_GetPickingBounds(AABB* bb) {
+static void HeadModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords6(bb,
 		-4.0f / 16.0f, 0.0f, -4.0f / 16.0f,
 		4.0f / 16.0f, 8.0f / 16.0f, 4.0f / 16.0f);
 }
 
-void HeadModel_GetTransform(Entity* entity, Vector3 pos) {
+static void HeadModel_GetTransform(Entity* entity, Vector3 pos) {
 	pos.Y -= (24.0f / 16.0f) * entity->ModelScale.Y;
 	Entity_GetTransform(entity, pos, entity->ModelScale);
 }
 
-void HeadModel_DrawModel(Entity* entity) {
+static void HeadModel_DrawModel(Entity* entity) {
 	HumanModel_SetupState(entity);
 
 	ModelPart part = Humanoid_Set.Head; part.RotY += 4.0f / 16.0f;
@@ -1008,7 +1008,7 @@ void HeadModel_DrawModel(Entity* entity) {
 	IModel_UpdateVB();
 }
 
-IModel* HeadModel_GetInstance(void) {
+static IModel* HeadModel_GetInstance(void) {
 	IModel_Init(&HeadModel);
 	IModel_SetPointers(HeadModel);
 	HeadModel.vertices = HumanoidModel_Vertices;
@@ -1025,7 +1025,7 @@ IModel ArmModel;
 bool arm_classic;
 Matrix arm_translate;
 
-void ArmModel_SetTranslationMatrix(void) {
+static void ArmModel_SetTranslationMatrix(void) {
 	if (Game_ClassicArmModel) {
 		/* TODO: Position's not quite right.
 		Matrix_Translate(&arm_translate, -6.0f / 16.0f + 0.2f, -12.0f / 16.0f - 0.20f, 0.0f);
@@ -1036,16 +1036,16 @@ void ArmModel_SetTranslationMatrix(void) {
 	}
 }
 
-void ArmModel_CreateParts(void) {
+static void ArmModel_CreateParts(void) {
 	arm_classic = Game_ClassicArmModel;
 	ArmModel_SetTranslationMatrix();
 }
 
-Real32 ArmModel_GetEyeY(Entity* entity) { return 0.5f; }
-Vector3 ArmModel_GetCollisionSize(void) { return Vector3_Create3(1.0f, 1.0f, 1.0f); }
-void ArmModel_GetPickingBounds(AABB* bb) { AABB_FromCoords6(bb, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f); }
+static Real32 ArmModel_GetEyeY(Entity* entity) { return 0.5f; }
+static Vector3 ArmModel_GetCollisionSize(void) { return Vector3_Create3(1.0f, 1.0f, 1.0f); }
+static void ArmModel_GetPickingBounds(AABB* bb) { AABB_FromCoords6(bb, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, 0.5f); }
 
-void ArmModel_DrawPart(ModelPart part) {
+static void ArmModel_DrawPart(ModelPart part) {
 	part.RotX += 1.0f / 16.0f; part.RotY -= 4.0f / 16.0f;
 	if (Game_ClassicArmModel) {
 		IModel_DrawRotate(0, -90 * MATH_DEG2RAD, 120 * MATH_DEG2RAD, part, false);
@@ -1054,7 +1054,7 @@ void ArmModel_DrawPart(ModelPart part) {
 	}
 }
 
-void ArmModel_DrawModel(Entity* entity) {
+static void ArmModel_DrawModel(Entity* entity) {
 	HumanModel_SetupState(entity);
 	/* If user changes option while game is running */
 	if (arm_classic != Game_ClassicArmModel) { ArmModel_CreateParts(); }
@@ -1084,7 +1084,7 @@ void ArmModel_DrawModel(Entity* entity) {
 	IModel_Rotation = ROTATE_ORDER_ZYX;
 }
 
-IModel* ArmModel_GetInstance(void) {
+static IModel* ArmModel_GetInstance(void) {
 	IModel_Init(&ArmModel);
 	IModel_SetPointers(ArmModel);
 	ArmModel.vertices = HumanoidModel_Vertices;
@@ -1101,16 +1101,16 @@ BlockID BlockModel_block = BLOCK_AIR;
 Vector3 BlockModel_minBB, BlockModel_maxBB;
 Int32 BlockModel_lastTexIndex = -1, BlockModel_texIndex;
 
-void BlockModel_CreateParts(void) { }
+static void BlockModel_CreateParts(void) { }
 
-Real32 BlockModel_GetEyeY(Entity* entity) {
+static Real32 BlockModel_GetEyeY(Entity* entity) {
 	BlockID block = entity->ModelBlock;
 	Real32 minY = Block_MinBB[block].Y;
 	Real32 maxY = Block_MaxBB[block].Y;
 	return block == BLOCK_AIR ? 1 : (minY + maxY) / 2.0f;
 }
 
-Vector3 BlockModel_GetCollisionSize(void) {
+static Vector3 BlockModel_GetCollisionSize(void) {
 	Vector3 size;
 	Vector3_Sub(&size, &BlockModel_maxBB, &BlockModel_minBB);
 	/* to fit slightly inside */
@@ -1119,13 +1119,13 @@ Vector3 BlockModel_GetCollisionSize(void) {
 	return size;
 }
 
-void BlockModel_GetPickingBounds(AABB* bb) {
+static void BlockModel_GetPickingBounds(AABB* bb) {
 	AABB_FromCoords(bb, &BlockModel_minBB, &BlockModel_maxBB);
 	Vector3 offset = { -0.5f, 0.0f, -0.5f };
 	AABB_Offset(bb, bb, &offset);
 }
 
-void BlockModel_RecalcProperties(Entity* p) {
+static void BlockModel_RecalcProperties(Entity* p) {
 	BlockID block = p->ModelBlock;
 	Real32 height;
 
@@ -1141,7 +1141,7 @@ void BlockModel_RecalcProperties(Entity* p) {
 	BlockModel.NameYOffset = height + 0.075f;
 }
 
-void BlockModel_Flush(void) {
+static void BlockModel_Flush(void) {
 	if (BlockModel_lastTexIndex != -1) {
 		Gfx_BindTexture(Atlas1D_TexIds[BlockModel_lastTexIndex]);
 		IModel_UpdateVB();
@@ -1152,7 +1152,7 @@ void BlockModel_Flush(void) {
 }
 
 #define BlockModel_FlushIfNotSame if (BlockModel_lastTexIndex != BlockModel_texIndex) { BlockModel_Flush(); }
-TextureLoc BlockModel_GetTex(Face face) {
+static TextureLoc BlockModel_GetTex(Face face) {
 	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, face);
 	BlockModel_texIndex = Atlas1D_Index(texLoc);
 	BlockModel_FlushIfNotSame;
@@ -1167,7 +1167,7 @@ if (Block_Tinted[block]) {\
 	col.B = (UInt8)(col.B * tintCol.B / 255);\
 }
 
-void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
+static void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, FACE_ZMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
@@ -1194,7 +1194,7 @@ void BlockModel_SpriteZQuad(bool firstPart, bool mirror) {
 	BlockModel.index += 4;
 }
 
-void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
+static void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	TextureLoc texLoc = Block_GetTexLoc(BlockModel_block, FACE_XMAX);
 	TextureRec rec = Atlas1D_TexRec(texLoc, 1, &BlockModel_texIndex);
 	BlockModel_FlushIfNotSame;
@@ -1221,7 +1221,7 @@ void BlockModel_SpriteXQuad(bool firstPart, bool mirror) {
 	BlockModel.index += 4;
 }
 
-void BlockModel_DrawParts(bool sprite) {
+static void BlockModel_DrawParts(bool sprite) {
 	if (sprite) {
 		BlockModel_SpriteXQuad(false, false);
 		BlockModel_SpriteXQuad(false, true);
@@ -1255,7 +1255,7 @@ void BlockModel_DrawParts(bool sprite) {
 	}
 }
 
-void BlockModel_DrawModel(Entity* p) {
+static void BlockModel_DrawModel(Entity* p) {
 	BlockModel_block = p->ModelBlock;
 	BlockModel_RecalcProperties(p);
 	if (Block_Draw[BlockModel_block] == DRAW_GAS) return;
@@ -1279,7 +1279,7 @@ void BlockModel_DrawModel(Entity* p) {
 	if (sprite) Gfx_SetFaceCulling(false);
 }
 
-IModel* BlockModel_GetInstance(void) {
+static IModel* BlockModel_GetInstance(void) {
 	IModel_Init(&BlockModel);
 	IModel_SetPointers(BlockModel);
 	BlockModel.Bobbing  = false;

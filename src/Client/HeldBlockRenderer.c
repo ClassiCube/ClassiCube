@@ -21,7 +21,7 @@ Real32 held_swingY;
 Real64 held_time, held_period = 0.25;
 BlockID held_lastBlock;
 
-void HeldBlockRenderer_RenderModel(void) {
+static void HeldBlockRenderer_RenderModel(void) {
 	Gfx_SetFaceCulling(true);
 	Gfx_SetTexturing(true);
 	GfxCommon_SetupAlphaState(Block_Draw[held_block]);
@@ -43,7 +43,7 @@ void HeldBlockRenderer_RenderModel(void) {
 	Gfx_SetFaceCulling(false);
 }
 
-void HeldBlockRenderer_SetMatrix(void) {
+static void HeldBlockRenderer_SetMatrix(void) {
 	Entity* player = &LocalPlayer_Instance.Base;	
 	Vector3 eyePos = Entity_GetEyePosition(player);
 	Vector3 up = Vector3_UnitY;
@@ -55,7 +55,7 @@ void HeldBlockRenderer_SetMatrix(void) {
 	Gfx_View = m;
 }
 
-void HeldBlockRenderer_ResetHeldState(void) {
+static void HeldBlockRenderer_ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
 	Entity* player = &LocalPlayer_Instance.Base;
 	held_entity.Position = Entity_GetEyePosition(player);
@@ -73,7 +73,7 @@ void HeldBlockRenderer_ResetHeldState(void) {
 	held_entity.vScale     = player->vScale;
 }
 
-void HeldBlockRenderer_SetBaseOffset(void) {
+static void HeldBlockRenderer_SetBaseOffset(void) {
 	bool sprite = Block_Draw[held_block] == DRAW_SPRITE;
 	Vector3 normalOffset = { 0.56f, -0.72f, -0.72f };
 	Vector3 spriteOffset = { 0.46f, -0.52f, -0.72f };
@@ -86,7 +86,7 @@ void HeldBlockRenderer_SetBaseOffset(void) {
 	}
 }
 
-void HeldBlockRenderer_ProjectionChanged(void* obj) {
+static void HeldBlockRenderer_ProjectionChanged(void* obj) {
 	Real32 fov = 70.0f * MATH_DEG2RAD;
 	Real32 aspectRatio = (Real32)Game_Width / (Real32)Game_Height;
 	Real32 zNear = Gfx_MinZNear;
@@ -101,7 +101,7 @@ void HeldBlockRenderer_ProjectionChanged(void* obj) {
 
 	https://github.com/UnknownShadow200/ClassicalSharp/wiki/Dig-animation-details
 */
-void HeldBlockRenderer_DigAnimation(void) {
+static void HeldBlockRenderer_DigAnimation(void) {
 	Real32 t = held_time / held_period;
 	Real32 sinHalfCircle = Math_SinF(t * MATH_PI);
 	Real32 sqrtLerpPI = Math_SqrtF(t) * MATH_PI;
@@ -116,14 +116,14 @@ void HeldBlockRenderer_DigAnimation(void) {
 	held_entity.RotX += sinHalfCircleWeird    * 20.0f;
 }
 
-void HeldBlockRenderer_ResetAnim(bool setLastHeld, Real64 period) {
+static void HeldBlockRenderer_ResetAnim(bool setLastHeld, Real64 period) {
 	held_time = 0.0f; held_swingY = 0.0f;
 	held_animating = false; held_swinging = false;
 	held_period = period;
 	if (setLastHeld) { held_lastBlock = Inventory_SelectedBlock; }
 }
 
-PackedCol HeldBlockRenderer_GetCol(Entity* entity) {
+static PackedCol HeldBlockRenderer_GetCol(Entity* entity) {
 	Entity* player = &LocalPlayer_Instance.Base;
 	PackedCol col = player->VTABLE->GetCol(player);
 
@@ -147,7 +147,7 @@ void HeldBlockRenderer_ClickAnim(bool digging) {
 	if (!digging) held_time = held_period / 2;
 }
 
-void HeldBlockRenderer_DoSwitchBlockAnim(void* obj) {
+static void HeldBlockRenderer_DoSwitchBlockAnim(void* obj) {
 	if (held_swinging) {
 		/* Like graph -sin(x) : x=0.5 and x=2.5 have same y values,
 		   but increasing x causes y to change in opposite directions */
@@ -162,12 +162,12 @@ void HeldBlockRenderer_DoSwitchBlockAnim(void* obj) {
 	}
 }
 
-void HeldBlockRenderer_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
+static void HeldBlockRenderer_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
 	if (block == BLOCK_AIR) return;
 	HeldBlockRenderer_ClickAnim(false);
 }
 
-void HeldBlockRenderer_DoAnimation(Real64 delta, Real32 lastSwingY) {
+static void HeldBlockRenderer_DoAnimation(Real64 delta, Real32 lastSwingY) {
 	if (!held_animating) return;
 
 	if (held_swinging || !held_breaking) {
@@ -216,7 +216,7 @@ void HeldBlockRenderer_Render(Real64 delta) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 }
 
-void HeldBlockRenderer_Init(void) {
+static void HeldBlockRenderer_Init(void) {
 	Entity_Init(&held_entity);
 	held_entityVTABLE = *held_entity.VTABLE;
 	held_entityVTABLE.GetCol = HeldBlockRenderer_GetCol;
@@ -228,7 +228,7 @@ void HeldBlockRenderer_Init(void) {
 	Event_RegisterBlock(&UserEvents_BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);
 }
 
-void HeldBlockRenderer_Free(void) {
+static void HeldBlockRenderer_Free(void) {
 	Event_UnregisterVoid(&GfxEvents_ProjectionChanged, NULL, HeldBlockRenderer_ProjectionChanged);
 	Event_UnregisterVoid(&UserEvents_HeldBlockChanged, NULL, HeldBlockRenderer_DoSwitchBlockAnim);
 	Event_UnregisterBlock(&UserEvents_BlockChanged,    NULL, HeldBlockRenderer_BlockChanged);

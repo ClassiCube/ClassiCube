@@ -90,6 +90,7 @@ namespace ClassicalSharp {
 			Point topLeft = game.PointToScreen(Point.Empty);
 			int cenX = topLeft.X + game.Width / 2;
 			int cenY = topLeft.Y + game.Height / 2;
+			
 			game.DesktopCursorPos = new Point(cenX, cenY);
 			// Fixes issues with large DPI displays on Windows >= 8.0.
 			previous = game.DesktopCursorPos;

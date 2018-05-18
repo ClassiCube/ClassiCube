@@ -81,7 +81,7 @@ void Platform_Exit(ReturnCode code) {
 	ExitProcess(code);
 }
 
-void Platform_UnicodeExpand(WCHAR* dst, STRING_PURE String* src) {
+static void Platform_UnicodeExpand(WCHAR* dst, STRING_PURE String* src) {
 	if (src->length > FILENAME_SIZE) ErrorHandler_Fail("String too long to expand");
 
 	Int32 i;

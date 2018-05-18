@@ -282,7 +282,7 @@ Int32 Game_CalcRenderType(STRING_PURE String* type) {
 	return -1;
 }
 
-void Game_OnResize(void* obj) {
+static void Game_OnResize(void* obj) {
 	Size2D size = Window_GetClientSize();
 	Game_Width = size.Width; Game_Height = size.Height;
 	if (Game_Width == 0)  Game_Width = 1;
@@ -293,21 +293,21 @@ void Game_OnResize(void* obj) {
 	Gui_OnResize();
 }
 
-void Game_OnNewMapCore(void* obj) {
+static void Game_OnNewMapCore(void* obj) {
 	Int32 i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].OnNewMap();
 	}
 }
 
-void Game_OnNewMapLoadedCore(void* obj) {
+static void Game_OnNewMapLoadedCore(void* obj) {
 	Int32 i;
 	for (i = 0; i < Game_ComponentsCount; i++) {
 		Game_Components[i].OnNewMapLoaded();
 	}
 }
 
-void Game_TextureChangedCore(void* obj, Stream* src) {
+static void Game_TextureChangedCore(void* obj, Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "terrain.png")) {
 		Bitmap atlas; Bitmap_DecodePng(&atlas, src);
 		if (Game_ChangeTerrainAtlas(&atlas)) return;
@@ -319,7 +319,7 @@ void Game_TextureChangedCore(void* obj, Stream* src) {
 	}
 }
 
-void Game_ExtractInitialTexturePack(void) {
+static void Game_ExtractInitialTexturePack(void) {
 	UInt8 texPackBuffer[String_BufferSize(STRING_SIZE)];
 	String texPack = String_InitAndClearArray(texPackBuffer);
 	Options_Get(OPT_DEFAULT_TEX_PACK, &game_defTexPack, "default.zip");
@@ -335,7 +335,7 @@ void Game_ExtractInitialTexturePack(void) {
 	}
 }
 
-void Game_LoadOptions(void) {
+static void Game_LoadOptions(void) {
 	Game_ClassicMode       = Options_GetBool("mode-classic", false);
 	Game_ClassicHacks      = Options_GetBool(OPT_ALLOW_CLASSIC_HACKS, false);
 	Game_AllowCustomBlocks = Options_GetBool(OPT_USE_CUSTOM_BLOCKS, true);
@@ -372,7 +372,7 @@ void Game_LoadOptions(void) {
 	}*/
 }
 
-void Game_LoadGuiOptions(void) {
+static void Game_LoadGuiOptions(void) {
 	Game_ChatLines         = Options_GetInt(OPT_CHATLINES, 0, 30, 12);
 	Game_ClickableChat     = Options_GetBool(OPT_CLICKABLE_CHAT, false);
 	Game_RawInventoryScale = Options_GetFloat(OPT_INVENTORY_SCALE, 0.25f, 5.0f, 1.0f);
@@ -394,7 +394,7 @@ void Game_LoadGuiOptions(void) {
 	/* TODO: Handle Arial font not working */
 }
 
-void Game_InitScheduledTasks(void) {
+static void Game_InitScheduledTasks(void) {
 	#define GAME_DEF_TICKS (1.0 / 20)
 	#define GAME_NET_TICKS (1.0 / 60)
 
@@ -550,7 +550,7 @@ void Game_SetFpsLimitMethod(FpsLimit method) {
 	if (method == FpsLimit_30FPS)  game_limitMs = 1000.0f / 30.0f;
 }
 
-void Game_LimitFPS(void) {
+static void Game_LimitFPS(void) {
 	if (Game_FpsLimit == FpsLimit_VSync) return;
 	Int32 elapsedMs = Stopwatch_ElapsedMicroseconds(&game_frameTimer) / 1000;
 	Real32 leftOver = game_limitMs - elapsedMs;
@@ -561,14 +561,14 @@ void Game_LimitFPS(void) {
 	}
 }
 
-void Game_UpdateViewMatrix(void) {
+static void Game_UpdateViewMatrix(void) {
 	Gfx_SetMatrixMode(MATRIX_TYPE_VIEW);
 	Camera_Active->GetView(&Gfx_View);
 	Gfx_LoadMatrix(&Gfx_View);
 	FrustumCulling_CalcFrustumEquations(&Gfx_Projection, &Gfx_View);
 }
 
-void Game_Render3D(Real64 delta, Real32 t) {
+static void Game_Render3D(Real64 delta, Real32 t) {
 	if (SkyboxRenderer_ShouldRender()) {
 		SkyboxRenderer_Render(delta);
 	}
@@ -616,7 +616,7 @@ void Game_Render3D(Real64 delta, Real32 t) {
 	if (!Game_HideGui) HeldBlockRenderer_Render(delta);
 }
 
-void Game_DoScheduledTasks(Real64 time) {
+static void Game_DoScheduledTasks(Real64 time) {
 	Int32 i;
 	for (i = 0; i < Game_TasksCount; i++) {
 		ScheduledTask task = Game_Tasks[i];
@@ -666,7 +666,7 @@ void Game_TakeScreenshot(void) {
 	Chat_Add(&path);
 }
 
-void Game_RenderFrame(Real64 delta) {
+static void Game_RenderFrame(Real64 delta) {
 	Stopwatch_Start(&game_frameTimer);
 
 	Gfx_BeginFrame();

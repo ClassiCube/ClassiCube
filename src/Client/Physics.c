@@ -128,7 +128,7 @@ SearcherState Searcher_StatesInitial[SEARCHER_STATES_MIN];
 extern SearcherState* Searcher_States = Searcher_StatesInitial;
 UInt32 Searcher_StatesCount = SEARCHER_STATES_MIN;
 
-void Searcher_QuickSort(Int32 left, Int32 right) {
+static void Searcher_QuickSort(Int32 left, Int32 right) {
 	SearcherState* keys = Searcher_States; SearcherState key;
 	while (left < right) {
 		Int32 i = left, j = right;

@@ -18,12 +18,12 @@ bool SkyboxRenderer_ShouldRender(void) {
 	return skybox_tex != NULL && !EnvRenderer_Minimal;
 }
 
-void SkyboxRenderer_TexturePackChanged(void* obj) {
+static void SkyboxRenderer_TexturePackChanged(void* obj) {
 	Gfx_DeleteTexture(&skybox_tex);
 	WorldEnv_SkyboxClouds = false;
 }
 
-void SkyboxRenderer_FileChanged(void* obj, Stream* src) {
+static void SkyboxRenderer_FileChanged(void* obj, Stream* src) {
 	if (String_CaselessEqualsConst(&src->Name, "skybox.png")) {
 		Game_UpdateTexture(&skybox_tex, src, false);
 	} else if (String_CaselessEqualsConst(&src->Name, "useclouds")) {
@@ -66,7 +66,7 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_SetDepthWrite(true);
 }
 
-void SkyboxRenderer_MakeVb(void) {
+static void SkyboxRenderer_MakeVb(void) {
 	if (Gfx_LostContext) return;
 	Gfx_DeleteVb(&skybox_vb);
 	VertexP3fT2fC4b vertices[SKYBOX_COUNT];
@@ -112,15 +112,15 @@ void SkyboxRenderer_MakeVb(void) {
 	skybox_vb = Gfx_CreateVb(vertices, VERTEX_FORMAT_P3FT2FC4B, SKYBOX_COUNT);
 }
 
-void SkyboxRenderer_ContextLost(void* obj) { Gfx_DeleteVb(&skybox_vb); }
-void SkyboxRenderer_ContextRecreated(void* obj) { SkyboxRenderer_MakeVb(); }
+static void SkyboxRenderer_ContextLost(void* obj) { Gfx_DeleteVb(&skybox_vb); }
+static void SkyboxRenderer_ContextRecreated(void* obj) { SkyboxRenderer_MakeVb(); }
 
-void SkyboxRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
+static void SkyboxRenderer_EnvVariableChanged(void* obj, Int32 envVar) {
 	if (envVar != ENV_VAR_CLOUDS_COL) return;
 	SkyboxRenderer_MakeVb();
 }
 
-void SkyboxRenderer_Init(void) {
+static void SkyboxRenderer_Init(void) {
 	Event_RegisterStream(&TextureEvents_FileChanged, NULL, SkyboxRenderer_FileChanged);
 	Event_RegisterVoid(&TextureEvents_PackChanged,   NULL, SkyboxRenderer_TexturePackChanged);
 	Event_RegisterInt(&WorldEvents_EnvVarChanged,  NULL, SkyboxRenderer_EnvVariableChanged);
@@ -128,9 +128,9 @@ void SkyboxRenderer_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextRecreated,  NULL, SkyboxRenderer_ContextRecreated);
 }
 
-void SkyboxRenderer_Reset(void) { Gfx_DeleteTexture(&skybox_tex); }
+static void SkyboxRenderer_Reset(void) { Gfx_DeleteTexture(&skybox_tex); }
 
-void SkyboxRenderer_Free(void) {
+static void SkyboxRenderer_Free(void) {
 	Gfx_DeleteTexture(&skybox_tex);
 	SkyboxRenderer_ContextLost(NULL);
 

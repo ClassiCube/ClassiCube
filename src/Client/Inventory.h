@@ -29,7 +29,5 @@ void Inventory_SetSelectedBlock(BlockID block);
 void Inventory_SetDefaultMapping(void);
 
 void Inventory_AddDefault(BlockID block);
-void Inventory_Reset(BlockID block);
 void Inventory_Remove(BlockID block);
-void Inventory_Insert(Int32 i, BlockID block);
 #endif

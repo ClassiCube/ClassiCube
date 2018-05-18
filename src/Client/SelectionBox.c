@@ -80,7 +80,7 @@ void SelectionBox_Line(VertexP3fC4b** vertices, PackedCol col,
 }
 
 
-Int32 SelectionBox_Compare(SelectionBox* a, SelectionBox* b) {	
+static Int32 SelectionBox_Compare(SelectionBox* a, SelectionBox* b) {
 	Real32 aDist, bDist;
 	if (a->MinDist == b->MinDist) {
 		aDist = a->MaxDist; bDist = b->MaxDist;
@@ -94,7 +94,7 @@ Int32 SelectionBox_Compare(SelectionBox* a, SelectionBox* b) {
 	return 0;
 }
 
-void SelectionBox_UpdateDist(Vector3 p, Real32 x2, Real32 y2, Real32 z2, Real32* closest, Real32* furthest) {
+static void SelectionBox_UpdateDist(Vector3 p, Real32 x2, Real32 y2, Real32 z2, Real32* closest, Real32* furthest) {
 	Real32 dx = x2 - p.X, dy = y2 - p.Y, dz = z2 - p.Z;
 	Real32 dist = dx * dx + dy * dy + dz * dz;
 
@@ -102,7 +102,7 @@ void SelectionBox_UpdateDist(Vector3 p, Real32 x2, Real32 y2, Real32 z2, Real32*
 	if (dist > *furthest) *furthest = dist;
 }
 
-void SelectionBox_Intersect(SelectionBox* box, Vector3 origin) {
+static void SelectionBox_Intersect(SelectionBox* box, Vector3 origin) {
 	Vector3 min = box->Min, max = box->Max;
 	Real32 closest = MATH_POS_INF, furthest = -MATH_POS_INF;
 	/* Bottom corners */
@@ -157,18 +157,18 @@ void Selections_Remove(UInt8 id) {
 	}
 }
 
-void Selections_ContextLost(void* obj) {
+static void Selections_ContextLost(void* obj) {
 	Gfx_DeleteVb(&selections_VB);
 	Gfx_DeleteVb(&selections_LineVB);
 }
 
-void Selections_ContextRecreated(void* obj) {
+static void Selections_ContextRecreated(void* obj) {
 	if (!selections_used) return;
 	selections_VB     = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
 	selections_LineVB = Gfx_CreateDynamicVb(VERTEX_FORMAT_P3FC4B, SELECTIONS_MAX_VERTICES);
 }
 
-void Selections_QuickSort(Int32 left, Int32 right) {
+static void Selections_QuickSort(Int32 left, Int32 right) {
 	UInt8* values = selections_ids;       UInt8 value;
 	SelectionBox* keys = selections_list; SelectionBox key;
 	while (left < right) {
@@ -220,16 +220,16 @@ void Selections_Render(Real64 delta) {
 	Gfx_SetAlphaBlending(false);
 }
 
-void Selections_Init(void) {
+static void Selections_Init(void) {
 	Event_RegisterVoid(&GfxEvents_ContextLost,      NULL, Selections_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, NULL, Selections_ContextRecreated);
 }
 
-void Selections_Reset(void) {
+static void Selections_Reset(void) {
 	selections_count = 0;
 }
 
-void Selections_Free(void) {
+static void Selections_Free(void) {
 	Selections_ContextLost(NULL);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      NULL, Selections_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, NULL, Selections_ContextRecreated);

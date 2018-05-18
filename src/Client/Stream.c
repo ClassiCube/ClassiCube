@@ -72,12 +72,12 @@ ReturnCode Stream_Skip(Stream* stream, UInt32 count) {
 	return count > 0;
 }
 
-ReturnCode Stream_DefaultIO(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_DefaultIO(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	*modified = 0; return 1;
 }
-ReturnCode Stream_DefaultClose(Stream* stream) { return 0; }
-ReturnCode Stream_DefaultSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
-ReturnCode Stream_DefaultGet(Stream* stream, UInt32* value) { *value = 0; return 1; }
+static ReturnCode Stream_DefaultClose(Stream* stream) { return 0; }
+static ReturnCode Stream_DefaultSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
+static ReturnCode Stream_DefaultGet(Stream* stream, UInt32* value) { *value = 0; return 1; }
 
 void Stream_SetDefaultOps(Stream* stream) {
 	stream->Read  = Stream_DefaultIO;
@@ -92,24 +92,24 @@ void Stream_SetDefaultOps(Stream* stream) {
 /*########################################################################################################################*
 *-------------------------------------------------------FileStream--------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_FileRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_FileRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	return Platform_FileRead(stream->Meta_File, data, count, modified);
 }
-ReturnCode Stream_FileWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_FileWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	return Platform_FileWrite(stream->Meta_File, data, count, modified);
 }
-ReturnCode Stream_FileClose(Stream* stream) {
+static ReturnCode Stream_FileClose(Stream* stream) {
 	ReturnCode code = Platform_FileClose(stream->Meta_File);
 	stream->Meta_File = NULL;
 	return code;
 }
-ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
+static ReturnCode Stream_FileSeek(Stream* stream, Int32 offset, Int32 seekType) {
 	return Platform_FileSeek(stream->Meta_File, offset, seekType);
 }
-ReturnCode Stream_FilePosition(Stream* stream, UInt32* position) {
+static ReturnCode Stream_FilePosition(Stream* stream, UInt32* position) {
 	return Platform_FilePosition(stream->Meta_File, position);
 }
-ReturnCode Stream_FileLength(Stream* stream, UInt32* length) {
+static ReturnCode Stream_FileLength(Stream* stream, UInt32* length) {
 	return Platform_FileLength(stream->Meta_File, length);
 }
 
@@ -129,7 +129,7 @@ void Stream_FromFile(Stream* stream, void* file, STRING_PURE String* name) {
 /*########################################################################################################################*
 *-----------------------------------------------------PortionStream-------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Meta_Mem_Left);
 	Stream* underlying = stream->Meta_Portion_Source;
 	ReturnCode code = underlying->Read(underlying, data, count, modified);
@@ -137,10 +137,10 @@ ReturnCode Stream_PortionRead(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	return code;
 }
 
-ReturnCode Stream_PortionPosition(Stream* stream, UInt32* position) {
+static ReturnCode Stream_PortionPosition(Stream* stream, UInt32* position) {
 	*position = stream->Meta_Mem_Length - stream->Meta_Mem_Left; return 0;
 }
-ReturnCode Stream_PortionLength(Stream* stream, UInt32* length) {
+static ReturnCode Stream_PortionLength(Stream* stream, UInt32* length) {
 	*length = stream->Meta_Mem_Length; return 0;
 }
 
@@ -160,7 +160,7 @@ void Stream_ReadonlyPortion(Stream* stream, Stream* source, UInt32 len) {
 /*########################################################################################################################*
 *-----------------------------------------------------MemoryStream--------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_MemoryRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_MemoryRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Meta_Mem_Left);
 	if (count > 0) { Platform_MemCpy(data, stream->Meta_Mem_Cur, count); }
 	
@@ -170,7 +170,7 @@ ReturnCode Stream_MemoryRead(Stream* stream, UInt8* data, UInt32 count, UInt32* 
 	return 0;
 }
 
-ReturnCode Stream_MemoryWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_MemoryWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	count = min(count, stream->Meta_Mem_Left);
 	if (count > 0) { Platform_MemCpy(stream->Meta_Mem_Cur, data, count); }
 
@@ -180,7 +180,7 @@ ReturnCode Stream_MemoryWrite(Stream* stream, UInt8* data, UInt32 count, UInt32*
 	return 0;
 }
 
-ReturnCode Stream_MemorySeek(Stream* stream, Int32 offset, Int32 seekType) {
+static ReturnCode Stream_MemorySeek(Stream* stream, Int32 offset, Int32 seekType) {
 	Int32 pos;
 	UInt32 curOffset = (UInt32)(stream->Meta_Mem_Cur - stream->Meta_Mem_Base);
 
@@ -225,7 +225,7 @@ void Stream_WriteonlyMemory(Stream* stream, void* data, UInt32 len, STRING_PURE 
 /*########################################################################################################################*
 *----------------------------------------------------BufferedStream-------------------------------------------------------*
 *#########################################################################################################################*/
-ReturnCode Stream_BufferedRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
+static ReturnCode Stream_BufferedRead(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	if (stream->Meta_Mem_Left == 0) {
 		Stream* source = stream->Meta_Buffered_Source; 
 		stream->Meta_Buffered_Cur = stream->Meta_Buffered_Base;

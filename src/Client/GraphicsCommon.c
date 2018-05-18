@@ -163,7 +163,7 @@ void GfxCommon_RestoreAlphaState(UInt8 draw) {
 /* Quoted from http://www.realtimerendering.com/blog/gpus-prefer-premultiplication/
    The short version: if you want your renderer to properly handle textures with alphas when using
    bilinear interpolation or mipmapping, you need to premultiply your PNG color data by their (unassociated) alphas. */
-UInt32 GfxCommon_Average(UInt32 p1, UInt32 p2) {
+static UInt32 GfxCommon_Average(UInt32 p1, UInt32 p2) {
 	UInt32 a1 = ((p1 & alphaMask) >> 24) & 0xFF;
 	UInt32 a2 = ((p2 & alphaMask) >> 24) & 0xFF;
 	UInt32 aSum = (a1 + a2);

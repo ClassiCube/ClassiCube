@@ -56,7 +56,7 @@ BlockID inv_classicHacksTable[] = {
 	BLOCK_COAL_ORE, BLOCK_IRON_ORE, BLOCK_GOLD_ORE, BLOCK_DOUBLE_SLAB, BLOCK_IRON, BLOCK_GOLD, BLOCK_BOOKSHELF, BLOCK_TNT, BLOCK_OBSIDIAN,
 };
 
-BlockID Inventory_DefaultMapping(int slot) {
+static BlockID Inventory_DefaultMapping(int slot) {
 	if (Game_PureClassic) {
 		if (slot < 9 * 4 + 6)  return inv_classicTable[slot];
 	} else if (Game_ClassicMode) {
@@ -94,7 +94,7 @@ void Inventory_Remove(BlockID block) {
 	}
 }
 
-void Inventory_ResetState(void) {
+static void Inventory_ResetState(void) {
 	Inventory_SetDefaultMapping();
 	Inventory_CanChangeHeldBlock = true;
 	Inventory_CanPick = true;

@@ -25,18 +25,18 @@ typedef struct AsyncRequestList_ {
 	AsyncRequest DefaultRequests[ASYNCREQUESTLIST_DEFELEMS];
 } AsyncRequestList;
 
-void AsyncRequestList_EnsureSpace(AsyncRequestList* list) {
+static void AsyncRequestList_EnsureSpace(AsyncRequestList* list) {
 	if (list->Count < list->MaxElems) return;
 	StringsBuffer_Resize(&list->Requests, &list->MaxElems, sizeof(AsyncRequest),
 		ASYNCREQUESTLIST_DEFELEMS, 10);
 }
 
-void AsyncRequestList_Append(AsyncRequestList* list, AsyncRequest* item) {
+static void AsyncRequestList_Append(AsyncRequestList* list, AsyncRequest* item) {
 	AsyncRequestList_EnsureSpace(list);
 	list->Requests[list->Count++] = *item;
 }
 
-void AsyncRequestList_Prepend(AsyncRequestList* list, AsyncRequest* item) {
+static void AsyncRequestList_Prepend(AsyncRequestList* list, AsyncRequest* item) {
 	AsyncRequestList_EnsureSpace(list);
 	UInt32 i;
 	for (i = list->Count; i > 0; i--) {
@@ -46,7 +46,7 @@ void AsyncRequestList_Prepend(AsyncRequestList* list, AsyncRequest* item) {
 	list->Count++;
 }
 
-void AsyncRequestList_RemoveAt(AsyncRequestList* list, UInt32 i) {
+static void AsyncRequestList_RemoveAt(AsyncRequestList* list, UInt32 i) {
 	if (i >= list->Count) ErrorHandler_Fail("Tried to remove element at list end");
 
 	for (; i < list->Count - 1; i++) {
@@ -55,13 +55,13 @@ void AsyncRequestList_RemoveAt(AsyncRequestList* list, UInt32 i) {
 	list->Count--;
 }
 
-void AsyncRequestList_Init(AsyncRequestList* list) {
+static void AsyncRequestList_Init(AsyncRequestList* list) {
 	list->MaxElems = ASYNCREQUESTLIST_DEFELEMS;
 	list->Count = 0;
 	list->Requests = list->DefaultRequests;
 }
 
-void AsyncRequestList_Free(AsyncRequestList* list) {
+static void AsyncRequestList_Free(AsyncRequestList* list) {
 	if (list->Requests != list->DefaultRequests) {
 		Platform_MemFree(&list->Requests);
 	}
@@ -85,7 +85,7 @@ bool ManageCookies;
 bool KeepAlive;
 /* TODO: Connection pooling */
 
-void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 type, DateTime* lastModified, String* etag, String* data) {
+static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 type, DateTime* lastModified, String* etag, String* data) {
 	Platform_MutexLock(async_pendingMutex);
 	{
 		AsyncRequest req = { 0 };
@@ -173,7 +173,7 @@ void AsyncDownloader_PurgeOldEntriesTask(ScheduledTask* task) {
 	Platform_MutexUnlock(async_processedMutex);
 }
 
-Int32 AsyncRequestList_Find(STRING_PURE String* id, AsyncRequest* item) {
+static Int32 AsyncRequestList_Find(STRING_PURE String* id, AsyncRequest* item) {
 	Int32 i;
 	for (i = 0; i < async_processed.Count; i++) {
 		String reqID = String_FromRawArray(async_processed.Requests[i].ID);
@@ -208,7 +208,7 @@ bool AsyncDownloader_GetCurrent(AsyncRequest* request, Int32* progress) {
 	return request->ID[0] != NULL;
 }
 
-void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
+static void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	String url = String_FromRawArray(request->URL);
 	Platform_Log2("Downloading from %s (type %b)", &url, &request->RequestType);
 	Stopwatch stopwatch; UInt32 elapsedMS;
@@ -291,7 +291,7 @@ void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 	Platform_MutexUnlock(async_processedMutex);
 }
 
-void AsyncDownloader_WorkerFunc(void) {
+static void AsyncDownloader_WorkerFunc(void) {
 	while (true) {
 		AsyncRequest request;
 		bool hasRequest = false;
@@ -333,7 +333,7 @@ void AsyncDownloader_WorkerFunc(void) {
 }
 
 
-void AsyncDownloader_Init(void) {
+static void AsyncDownloader_Init(void) {
 	AsyncRequestList_Init(&async_pending);
 	AsyncRequestList_Init(&async_processed);
 	Platform_HttpInit();
@@ -345,7 +345,7 @@ void AsyncDownloader_Init(void) {
 	async_workerThread = Platform_ThreadStart(AsyncDownloader_WorkerFunc);
 }
 
-void AsyncDownloader_Reset(void) {
+static void AsyncDownloader_Reset(void) {
 	Platform_MutexLock(async_pendingMutex);
 	{
 		AsyncRequestList_Free(&async_pending);
@@ -354,7 +354,7 @@ void AsyncDownloader_Reset(void) {
 	Platform_EventSet(async_eventHandle);
 }
 
-void AsyncDownloader_Free(void) {
+static void AsyncDownloader_Free(void) {
 	async_terminate = true;
 	AsyncDownloader_Reset();
 	Platform_ThreadJoin(async_workerThread);

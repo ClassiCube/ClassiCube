@@ -14,7 +14,7 @@
 UInt16 DateTime_DaysTotal[13]     = { 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365 };
 UInt16 DateTime_DaysTotalLeap[13] = { 0, 31, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335, 366 };
 
-bool DateTime_IsLeapYear(Int32 year) {
+static bool DateTime_IsLeapYear(Int32 year) {
 	if ((year % 4)   != 0) return false;
 	if ((year % 100) != 0) return true;
 	return (year % 400) == 0;

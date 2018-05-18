@@ -24,7 +24,7 @@ Int32 Drawer2D_BoxSize;
 #define DRAWER2D_LOG2_CHARS_PER_ROW 4
 Int32 Drawer2D_Widths[256];
 
-void Drawer2D_CalculateTextWidths(void) {
+static void Drawer2D_CalculateTextWidths(void) {
 	Int32 width = Drawer2D_FontBitmap.Width, height = Drawer2D_FontBitmap.Height;
 	Int32 i;
 	for (i = 0; i < Array_Elems(Drawer2D_Widths); i++) {
@@ -54,7 +54,7 @@ void Drawer2D_CalculateTextWidths(void) {
 	Drawer2D_Widths[' '] = Drawer2D_BoxSize / 4;
 }
 
-void Drawer2D_FreeFontBitmap(void) {
+static void Drawer2D_FreeFontBitmap(void) {
 	Platform_MemFree(&Drawer2D_FontBitmap.Scan0);
 }
 
@@ -181,15 +181,15 @@ UInt8 Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 }
 bool Drawer2D_IsWhiteCol(UInt8 c) { return c == NULL || c == 'f' || c == 'F'; }
 
-Int32 Drawer2D_ShadowOffset(Int32 fontSize) { return fontSize / 8; }
-Int32 Drawer2D_Width(Int32 point, Int32 value) { return Math_CeilDiv(value * point, Drawer2D_BoxSize); }
-Int32 Drawer2D_PaddedWidth(Int32 point, Int32 value) {
+static Int32 Drawer2D_ShadowOffset(Int32 fontSize) { return fontSize / 8; }
+static Int32 Drawer2D_Width(Int32 point, Int32 value) { return Math_CeilDiv(value * point, Drawer2D_BoxSize); }
+static Int32 Drawer2D_PaddedWidth(Int32 point, Int32 value) {
 	return Math_CeilDiv(value * point, Drawer2D_BoxSize) + Math_CeilDiv(point, 8);
 }
 /* Rounds font size up to the nearest whole multiple of the size of a character in default.png. */
-Int32 Drawer2D_AdjTextSize(Int32 point) { return point; } /* Math_CeilDiv(point, Drawer2D_BoxSize) * Drawer2D_BoxSize; */
+static Int32 Drawer2D_AdjTextSize(Int32 point) { return point; } /* Math_CeilDiv(point, Drawer2D_BoxSize) * Drawer2D_BoxSize; */
 /* Returns the height of the bounding box that contains the font size, in addition to padding. */
-Int32 Drawer2D_CellSize(Int32 point) { return Math_CeilDiv(point * 3, 2); }
+static Int32 Drawer2D_CellSize(Int32 point) { return Math_CeilDiv(point * 3, 2); }
 
 void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale) {
 	if (!Drawer2D_UseBitmappedChat) return;
@@ -209,7 +209,7 @@ void Drawer2D_ReducePadding_Height(Int32* height, Int32 point, Int32 scale) {
 	*height -= padding * 2;
 }
 
-void Drawer2D_DrawRun(Int32 x, Int32 y, Int32 runCount, UInt8* coords, Int32 point, PackedCol col) {
+static void Drawer2D_DrawRun(Int32 x, Int32 y, Int32 runCount, UInt8* coords, Int32 point, PackedCol col) {
 	if (runCount == 0) return;
 	Int32 srcY = (coords[0] >> 4) * Drawer2D_BoxSize;
 	Int32 textHeight = Drawer2D_AdjTextSize(point), cellHeight = Drawer2D_CellSize(textHeight);
@@ -253,7 +253,7 @@ void Drawer2D_DrawRun(Int32 x, Int32 y, Int32 runCount, UInt8* coords, Int32 poi
 	}
 }
 
-void Drawer2D_DrawPart(DrawTextArgs* args, Int32 x, Int32 y, bool shadowCol) {
+static void Drawer2D_DrawPart(DrawTextArgs* args, Int32 x, Int32 y, bool shadowCol) {
 	PackedCol col = Drawer2D_Cols['f'];
 	PackedCol black = PACKEDCOL_BLACK;
 	if (shadowCol) {
@@ -299,7 +299,7 @@ void Drawer2D_DrawPart(DrawTextArgs* args, Int32 x, Int32 y, bool shadowCol) {
 	Drawer2D_DrawRun(x, y, runCount, coordsPtr, point, lastCol);
 }
 
-void Drawer2D_DrawUnderline(Int32 x, Int32 yOffset, DrawTextArgs* args, bool shadowCol) {
+static void Drawer2D_DrawUnderline(Int32 x, Int32 yOffset, DrawTextArgs* args, bool shadowCol) {
 	Int32 point = args->Font.Size;
 	Int32 padding = Drawer2D_CellSize(point) - Drawer2D_AdjTextSize(point);
 	Int32 height = Drawer2D_AdjTextSize(point) + Math_CeilDiv(padding, 2);
@@ -367,7 +367,7 @@ Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
 	return total;
 }
 
-Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIENT String* part, UInt8* nextCol) {
+static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIENT String* part, UInt8* nextCol) {
 	Int32 length = 0, start = i;
 	for (; i < value->length; i++) {
 		if (value->buffer[i] == '&' && Drawer2D_ValidColCodeAt(value, i + 1)) break;

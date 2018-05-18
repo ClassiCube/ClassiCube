@@ -12,7 +12,7 @@ void Atlas2D_UpdateState(Bitmap* bmp) {
 	Block_RecalculateSpriteBB();
 }
 
-GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
+static GfxResourceID Atlas2D_LoadTextureElement_Raw(TextureLoc texLoc, Bitmap* element) {
 	Int32 size = Atlas2D_TileSize;
 	Int32 x = texLoc % ATLAS2D_TILES_PER_ROW, y = texLoc / ATLAS2D_TILES_PER_ROW;
 	Bitmap_CopyBlock(x * size, y * size, 0, 0, &Atlas2D_Bitmap, element, size);
@@ -55,7 +55,7 @@ TextureRec Atlas1D_TexRec(TextureLoc texLoc, Int32 uCount, Int32* index) {
 	return rec;
 }
 
-void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
+static void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Int32 tileSize = Atlas2D_TileSize;
 	Bitmap atlas1D;
 	Bitmap_Allocate(&atlas1D, tileSize, atlas1DHeight);
@@ -74,7 +74,7 @@ void Atlas1D_Make1DTexture(Int32 i, Int32 atlas1DHeight, Int32* index) {
 	Platform_MemFree(&atlas1D.Scan0);
 }
 
-void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
+static void Atlas1D_Convert2DTo1D(Int32 atlasesCount, Int32 atlas1DHeight) {
 	Atlas1D_Count = atlasesCount;
 	Platform_Log2("Loaded new atlas: %i bmps, %i per bmp", &atlasesCount, &Atlas1D_TilesPerAtlas);
 
