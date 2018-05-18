@@ -36,32 +36,21 @@ void PerspectiveCamera_GetPickedBlock(PickedPos* pos) {
 	Picking_CalculatePickedBlock(eyePos, dir, reach, pos);
 }
 
-Point2D previous, delta;
+Point2D cam_prev, cam_delta;
 void PerspectiveCamera_CentreMousePosition(void) {
-	if (!Window_GetFocused()) return;
-	Point2D current = Window_GetDesktopCursorPos();
-	delta = Point2D_Make(current.X - previous.X, current.Y - previous.Y);
-
 	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
-	Int32 cenX = topLeft.X + Game_Width  / 2;
+	Int32 cenX = topLeft.X + Game_Width / 2;
 	Int32 cenY = topLeft.Y + Game_Height / 2;
 
 	Window_SetDesktopCursorPos(Point2D_Make(cenX, cenY));
 	/* Fixes issues with large DPI displays on Windows >= 8.0. */
-	previous = Window_GetDesktopCursorPos();
+	cam_prev = Window_GetDesktopCursorPos();
 }
 
 void PerspectiveCamera_RegrabMouse(void) {
 	if (!Window_GetExists()) return;
-
-	Point2D topLeft = Window_PointToScreen(Point2D_Empty);
-	Int32 cenX = topLeft.X + Game_Width  / 2;
-	Int32 cenY = topLeft.Y + Game_Height / 2;
-
-	Point2D point = { cenX, cenY };
-	Window_SetDesktopCursorPos(point);
-	previous = point;
-	delta = Point2D_Empty;
+	cam_delta = Point2D_Empty;
+	PerspectiveCamera_CentreMousePosition();
 }
 
 #define CAMERA_SENSI_FACTOR (0.0002f / 3.0f * MATH_RAD2DEG)
@@ -73,13 +62,13 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 	Real32 sensitivity = CAMERA_SENSI_FACTOR * Game_MouseSensitivity;
 
 	if (Game_SmoothCamera) {
-		speedX += delta.X * CAMERA_ADJUST;
+		speedX += cam_delta.X * CAMERA_ADJUST;
 		speedX *= CAMERA_SLIPPERY;
-		speedY += delta.Y * CAMERA_ADJUST;
+		speedY += cam_delta.Y * CAMERA_ADJUST;
 		speedY *= CAMERA_SLIPPERY;
 	} else {
-		speedX = (Real32)delta.X;
-		speedY = (Real32)delta.Y;
+		speedX = (Real32)cam_delta.X;
+		speedY = (Real32)cam_delta.Y;
 	}
 
 	LocalPlayer* player = &LocalPlayer_Instance;
@@ -101,8 +90,10 @@ void PerspectiveCamera_UpdateMouseRotation(void) {
 void PerspectiveCamera_UpdateMouse(void) {
 	Screen* screen = Gui_GetActiveScreen();
 	if (screen->HandlesAllInput) {
-		delta = Point2D_Empty;
-	} else {
+		cam_delta = Point2D_Empty;
+	} else if (Window_GetFocused()) {
+		Point2D pos = Window_GetDesktopCursorPos();
+		cam_delta = Point2D_Make(pos.X - cam_prev.X, pos.Y - cam_prev.Y);
 		PerspectiveCamera_CentreMousePosition();
 	}
 	PerspectiveCamera_UpdateMouseRotation();

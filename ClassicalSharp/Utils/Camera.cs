@@ -87,9 +87,6 @@ namespace ClassicalSharp {
 		
 		protected static Point previous, delta;
 		void CentreMousePosition() {
-			if (!game.Focused) return;
-			Point current = game.DesktopCursorPos;
-			delta = new Point(current.X - previous.X, current.Y - previous.Y);
 			Point topLeft = game.PointToScreen(Point.Empty);
 			int cenX = topLeft.X + game.Width / 2;
 			int cenY = topLeft.Y + game.Height / 2;
@@ -100,12 +97,8 @@ namespace ClassicalSharp {
 		
 		public override void RegrabMouse() {
 			if (!game.Exists) return;
-			Point topLeft = game.PointToScreen(Point.Empty);
-			int cenX = topLeft.X + game.Width / 2;
-			int cenY = topLeft.Y + game.Height / 2;
-			game.DesktopCursorPos = new Point(cenX, cenY);
-			previous = new Point(cenX, cenY);
 			delta = Point.Empty;
+			CentreMousePosition();
 		}
 		
 		static readonly float sensiFactor = 0.0002f / 3 * Utils.Rad2Deg;
@@ -141,7 +134,9 @@ namespace ClassicalSharp {
 		public override void UpdateMouse() {
 			if (game.Gui.ActiveScreen.HandlesAllInput) {
 				delta = Point.Empty;
-			} else {
+			} else if (game.Focused) {
+				Point pos = game.DesktopCursorPos;
+				delta = new Point(pos.X - previous.X, pos.Y - previous.Y);
 				CentreMousePosition();
 			}
 			UpdateMouseRotation();

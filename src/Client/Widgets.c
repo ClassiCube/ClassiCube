@@ -194,7 +194,7 @@ void ButtonWidget_SetText(ButtonWidget* widget, STRING_PURE String* text) {
 		widget->Height = max(widget->Texture.Height, widget->MinHeight);
 
 		Widget_Reposition(widget);
-		widget->Texture.X = widget->X + (widget->Width  / 2  - widget->Texture.Width / 2);
+		widget->Texture.X = widget->X + (widget->Width  / 2 - widget->Texture.Width  / 2);
 		widget->Texture.Y = widget->Y + (widget->Height / 2 - widget->Texture.Height / 2);
 	}
 }

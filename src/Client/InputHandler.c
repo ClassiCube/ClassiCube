@@ -19,8 +19,8 @@
 
 bool input_buttonsDown[3];
 Int32 input_pickingId = -1;
-Int32 input_normViewDists[] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
-Int32 input_classicViewDists[] = { 8, 32, 128, 512 };
+Int32 input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
+Int32 input_classicViewDists[4] = { 8, 32, 128, 512 };
 Key input_lastKey;
 DateTime input_lastClick;
 Real32 input_fovIndex = -1.0f;
