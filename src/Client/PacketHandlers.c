@@ -403,7 +403,7 @@ static void Classic_LevelInit(Stream* stream) {
 	if (cpe_fastMap) {
 		mapVolume = Stream_ReadI32_BE(stream);
 		gzHeader.Done = true;
-		mapSizeIndex = 4;
+		mapSizeIndex = sizeof(UInt32);
 		map = Platform_MemAlloc(mapVolume, sizeof(BlockID));
 		if (map == NULL) ErrorHandler_Fail("Failed to allocate memory for map");
 	}
@@ -424,14 +424,14 @@ static void Classic_LevelDataChunk(Stream* stream) {
 
 	if (!gzHeader.Done) { GZipHeader_Read(&mapPartStream, &gzHeader); }
 	if (gzHeader.Done) {
-		if (mapSizeIndex < 4) {
+		if (mapSizeIndex < sizeof(UInt32)) {
 			UInt8* src = mapSize + mapSizeIndex;
-			UInt32 count = 4 - mapSizeIndex, modified = 0;
+			UInt32 count = sizeof(UInt32) - mapSizeIndex, modified = 0;
 			mapInflateStream.Read(&mapInflateStream, src, count, &modified);
 			mapSizeIndex += modified;
 		}
 
-		if (mapSizeIndex == 4) {
+		if (mapSizeIndex == sizeof(UInt32)) {
 			if (map == NULL) {
 				mapVolume = (mapSize[0] << 24) | (mapSize[1] << 16) | (mapSize[2] << 8) | mapSize[3];
 				map = Platform_MemAlloc(mapVolume, sizeof(BlockID));

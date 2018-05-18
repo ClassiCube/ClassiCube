@@ -416,6 +416,7 @@ void Game_Load(void) {
 
 	IGameComponent comp;
 	Gfx_Init();
+	Gfx_SetVSync(true);
 	Gfx_MakeApiInfo();
 	Drawer2D_Init();
 
