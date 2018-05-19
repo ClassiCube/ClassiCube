@@ -784,6 +784,9 @@ void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying)
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Inflate = state;
 
+	Platform_MemSet(state->Head, 0, sizeof(state->Head));
+	Platform_MemSet(state->Prev, 0, sizeof(state->Prev));
+
 	Stream_SetDefaultOps(stream);
 	stream->Write = Deflate_StreamWrite;
 	stream->Close = Deflate_StreamClose;

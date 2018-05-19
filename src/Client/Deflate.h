@@ -73,10 +73,14 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 
 
 #define DEFLATE_BUFFER_SIZE 16384
+#define DEFLATE_HASH_SIZE 0x1000UL
+#define DEFLATE_HASH_MASK 0x0FFFUL
 typedef struct DeflateState_ {
 	UInt32 InputPosition;
 	Stream* Source;
 	UInt8 InputBuffer[DEFLATE_BUFFER_SIZE];
+	UInt16 Head[DEFLATE_HASH_SIZE];
+	UInt16 Prev[DEFLATE_BUFFER_SIZE];
 } DeflateState;
 void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying);
 
