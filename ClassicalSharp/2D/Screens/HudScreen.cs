@@ -16,12 +16,26 @@ namespace ClassicalSharp.Gui.Screens {
 		Font playerFont;
 		
 		void IGameComponent.Init(Game game) { }
-		public void Ready(Game game) { Init(); }
+		void IGameComponent.Ready(Game game) { Init(); }
 		void IGameComponent.Reset(Game game) { }
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
 		internal int BottomOffset { get { return hotbar.Height; } }
+		public void OpenInput(string text) { chat.OpenInput(text); }	
+		public void AppendInput(string text) { chat.input.Append(text); }
+		
+		public override void Init() {
+			int size = game.Drawer2D.UseBitmappedChat ? 16 : 11;
+			playerFont = new Font(game.FontName, size);
+			hotbar = game.Mode.MakeHotbar();
+			hotbar.Init();
+			chat = new ChatScreen(game, this);
+			chat.Init();
+			
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
+		}
 		
 		public override void Render(double delta) {
 			IGraphicsApi gfx = game.Graphics;
@@ -71,37 +85,11 @@ namespace ClassicalSharp.Gui.Screens {
 			chTex.Render(game.Graphics);
 		}
 		
-		bool hadPlayerList;
-		protected override void ContextLost() {
-			DisposePlayerList();
-			hotbar.Dispose();
-		}
-		
-		void DisposePlayerList() {
-			hadPlayerList = playerList != null;
-			if (playerList != null)
-				playerList.Dispose();
-			playerList = null;
-		}
-		
-		protected override void ContextRecreated() {
-			hotbar.Dispose();
-			hotbar.Init();
-			
-			if (!hadPlayerList) return;		
-			bool extended = game.Server.UsingExtPlayerList && !game.UseClassicTabList;
-			playerList = new PlayerListWidget(game, playerFont, !extended);
-
-			playerList.Init();
-			playerList.Reposition();
-		}
-		
 		public override void Dispose() {
 			playerFont.Dispose();
 			chat.Dispose();
 			ContextLost();
-			
-			game.WorldEvents.OnNewMap -= OnNewMap;
+
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
@@ -114,24 +102,7 @@ namespace ClassicalSharp.Gui.Screens {
 				playerList.Reposition();
 			}
 		}
-		
-		public override void Init() {
-			int size = game.Drawer2D.UseBitmappedChat ? 16 : 11;
-			playerFont = new Font(game.FontName, size);
-			hotbar = game.Mode.MakeHotbar();
-			hotbar.Init();
-			chat = new ChatScreen(game, this);
-			chat.Init();
-			
-			game.WorldEvents.OnNewMap += OnNewMap;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
-		}
 
-		void OnNewMap(object sender, EventArgs e) { DisposePlayerList(); }
-
-		public override bool HandlesKeyPress(char key) { return chat.HandlesKeyPress(key); }
-		
 		public override bool HandlesKeyDown(Key key) {
 			Key playerListKey = game.Mapping(KeyBind.PlayerList);
 			bool handles = playerListKey != Key.Tab || !game.TabAutocomplete || !chat.HandlesAllInput;
@@ -146,6 +117,8 @@ namespace ClassicalSharp.Gui.Screens {
 			return chat.HandlesKeyDown(key) || hotbar.HandlesKeyDown(key);
 		}
 		
+		public override bool HandlesKeyPress(char key) { return chat.HandlesKeyPress(key); }
+		
 		public override bool HandlesKeyUp(Key key) {
 			if (key == game.Mapping(KeyBind.PlayerList)) {
 				if (playerList != null) {
@@ -158,15 +131,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			return chat.HandlesKeyUp(key) || hotbar.HandlesKeyUp(key);
 		}
-		
-		public void OpenInput(string text) { chat.OpenInput(text); }
-		
-		public void AppendInput(string text) { chat.input.Append(text); }
-		
-		public override bool HandlesMouseScroll(float delta) {
-			return chat.HandlesMouseScroll(delta);
-		}
-		
+
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
 			if (button != MouseButton.Left || !HandlesAllInput) return false;
 			
@@ -175,6 +140,32 @@ namespace ClassicalSharp.Gui.Screens {
 				return chat.HandlesMouseDown(mouseX, mouseY, button);
 			chat.AppendTextToInput(name + " ");
 			return true;
+		}
+		
+		public override bool HandlesMouseScroll(float delta) {
+			return chat.HandlesMouseScroll(delta);
+		}
+				
+		bool hadPlayerList;
+		protected override void ContextLost() {
+			hadPlayerList = playerList != null;
+			hotbar.Dispose();
+			
+			if (playerList != null)
+				playerList.Dispose();
+			playerList = null;		
+		}
+		
+		protected override void ContextRecreated() {
+			hotbar.Dispose();
+			hotbar.Init();
+			
+			if (!hadPlayerList) return;		
+			bool extended = game.Server.UsingExtPlayerList && !game.UseClassicTabList;
+			playerList = new PlayerListWidget(game, playerFont, !extended);
+
+			playerList.Init();
+			playerList.Reposition();
 		}
 	}
 }

@@ -58,10 +58,6 @@ namespace ClassicalSharp.Gui.Screens {
 		public void SetProgress(float progress) {
 			this.progress = progress;
 		}
-
-		void MapLoading(object sender, MapLoadingEventArgs e) {
-			progress = e.Progress;
-		}
 		
 		public override void Dispose() {
 			font.Dispose();
@@ -75,6 +71,10 @@ namespace ClassicalSharp.Gui.Screens {
 		public override void OnResize() {
 			messageWidget.Reposition();
 			titleWidget.Reposition();
+		}
+		
+		void MapLoading(object sender, MapLoadingEventArgs e) {
+			progress = e.Progress;
 		}
 		
 		protected override void ContextLost() {
@@ -105,14 +105,10 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) { return true; }
-		
-		public override bool HandlesMouseMove(int mouseX, int mouseY) { return true; }
-		
+		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return true; }		
+		public override bool HandlesMouseMove(int mouseX, int mouseY) { return true; }		
 		public override bool HandlesMouseScroll(float delta)  { return true; }
-		
-		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return true; }
-		
-		
+
 		public override void Render(double delta) {
 			IGraphicsApi gfx = game.Graphics;
 			gfx.Texturing = true;

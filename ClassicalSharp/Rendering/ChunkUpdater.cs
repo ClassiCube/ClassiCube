@@ -175,7 +175,7 @@ namespace ClassicalSharp.Renderers {
 				
 		int chunksX, chunksY, chunksZ;
 		void OnNewMapLoaded(object sender, EventArgs e) {
-			chunksX = Utils.CeilDiv(game.World.Width, 16); renderer.chunksX = chunksX;
+			chunksX = Utils.CeilDiv(game.World.Width,  16); renderer.chunksX = chunksX;
 			chunksY = Utils.CeilDiv(game.World.Height, 16); renderer.chunksY = chunksY;
 			chunksZ = Utils.CeilDiv(game.World.Length, 16); renderer.chunksZ = chunksZ;
 			

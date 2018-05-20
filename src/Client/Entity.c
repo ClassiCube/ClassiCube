@@ -607,7 +607,6 @@ void Player_ResetSkin(Player* player) {
 
 /* Apply or reset skin, for all players with same skin */
 static void Player_SetSkinAll(Player* player, bool reset) {
-	Entity* entity = &player->Base;
 	String skin = String_FromRawArray(player->SkinNameRaw);
 	UInt32 i;
 	for (i = 0; i < ENTITIES_MAX_COUNT; i++) {

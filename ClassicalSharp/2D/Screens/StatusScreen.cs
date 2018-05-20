@@ -13,20 +13,29 @@ namespace ClassicalSharp.Gui.Screens {
 	public class StatusScreen : Screen, IGameComponent {
 		
 		Font font;
-		StringBuffer statusBuffer;
+		StringBuffer statusBuffer;		
+		TextWidget status, hackStates;
+		TextAtlas posAtlas;
 		
 		public StatusScreen(Game game) : base(game) {
 			statusBuffer = new StringBuffer(128);
 		}
 
 		void IGameComponent.Init(Game game) { }
-		public void Ready(Game game) { Init(); }
+		void IGameComponent.Ready(Game game) { Init(); }
 		void IGameComponent.Reset(Game game) { }
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
+				
+		public override void Init() {
+			font = new Font(game.FontName, 16);
+			ContextRecreated();
+			
+			game.Events.ChatFontChanged += ChatFontChanged;
+			game.Graphics.ContextLost += ContextLost;
+			game.Graphics.ContextRecreated += ContextRecreated;
+		}
 		
-		TextWidget status, hackStates;
-		TextAtlas posAtlas;
 		public override void Render(double delta) {
 			UpdateStatus(delta);
 			if (game.HideGui || !game.ShowFPS) return;
@@ -40,6 +49,16 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			game.Graphics.Texturing = false;
 		}
+		
+		public override void Dispose() {
+			font.Dispose();
+			ContextLost();
+			
+			game.Events.ChatFontChanged -= ChatFontChanged;
+			game.Graphics.ContextLost -= ContextLost;
+			game.Graphics.ContextRecreated -= ContextRecreated;
+		}
+		public override void OnResize() { }
 		
 		double accumulator;
 		int frames;
@@ -73,15 +92,6 @@ namespace ClassicalSharp.Gui.Screens {
 			game.ChunkUpdates = 0;
 		}
 		
-		public override void Init() {
-			font = new Font(game.FontName, 16);
-			ContextRecreated();
-			
-			game.Events.ChatFontChanged += ChatFontChanged;
-			game.Graphics.ContextLost += ContextLost;
-			game.Graphics.ContextRecreated += ContextRecreated;
-		}
-		
 		protected override void ContextLost() {
 			status.Dispose();
 			posAtlas.Dispose();
@@ -108,18 +118,7 @@ namespace ClassicalSharp.Gui.Screens {
 			UpdateHackState();
 		}
 		
-		public override void Dispose() {
-			font.Dispose();
-			ContextLost();
-			
-			game.Events.ChatFontChanged -= ChatFontChanged;
-			game.Graphics.ContextLost -= ContextLost;
-			game.Graphics.ContextRecreated -= ContextRecreated;
-		}
-		
 		void ChatFontChanged(object sender, EventArgs e) { Recreate(); }
-		
-		public override void OnResize() { }
 		
 		void DrawPosition() {
 			int index = 0;

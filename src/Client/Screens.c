@@ -1175,16 +1175,13 @@ static void HUDScreen_DrawCrosshairs(void) {
 	Texture_Render(&chTex);
 }
 
-static void HUDScreen_FreePlayerList(HUDScreen* screen) {
+static void HUDScreen_ContextLost(void* obj) {
+	HUDScreen* screen = (HUDScreen*)obj;
+	Elem_TryFree(&screen->Hotbar);
+
 	screen->WasShowingList = screen->ShowingList;
 	if (screen->ShowingList) { Elem_TryFree(&screen->PlayerList); }
 	screen->ShowingList = false;
-}
-
-static void HUDScreen_ContextLost(void* obj) {
-	HUDScreen* screen = (HUDScreen*)obj;
-	HUDScreen_FreePlayerList(screen);
-	Elem_TryFree(&screen->Hotbar);
 }
 
 static void HUDScreen_ContextRecreated(void* obj) {
@@ -1210,11 +1207,6 @@ static void HUDScreen_OnResize(GuiElement* elem) {
 	if (screen->ShowingList) {
 		Widget_Reposition(&screen->PlayerList);
 	}
-}
-
-static void HUDScreen_OnNewMap(void* obj) {
-	HUDScreen* screen = (HUDScreen*)obj;
-	HUDScreen_FreePlayerList(screen);
 }
 
 static bool HUDScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
@@ -1287,7 +1279,6 @@ static void HUDScreen_Init(GuiElement* elem) {
 	screen->Chat = (Screen*)&ChatScreen_Instance;
 	Elem_Init(screen->Chat);
 
-	Event_RegisterVoid(&WorldEvents_NewMap,         screen, HUDScreen_OnNewMap);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, HUDScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, HUDScreen_ContextRecreated);
 }
@@ -1334,7 +1325,6 @@ static void HUDScreen_Free(GuiElement* elem) {
 	Elem_TryFree(screen->Chat);
 	HUDScreen_ContextLost(screen);
 
-	Event_UnregisterVoid(&WorldEvents_NewMap,         screen, HUDScreen_OnNewMap);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, HUDScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, HUDScreen_ContextRecreated);
 }

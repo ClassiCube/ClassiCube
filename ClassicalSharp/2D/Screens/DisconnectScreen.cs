@@ -28,14 +28,6 @@ namespace ClassicalSharp.Gui.Screens {
 			HandlesAllInput = true;
 		}
 		
-		public override void Render(double delta) {
-			if (canReconnect) UpdateDelayLeft(delta);
-			
-			// NOTE: We need to make sure that both the front and back buffers have
-			// definitely been drawn over, so we redraw the background multiple times.
-			if (DateTime.UtcNow < clearTime) Redraw(delta);
-		}
-		
 		public override void Init() {
 			game.SkipClear = true;
 			game.Graphics.ContextLost += ContextLost;
@@ -45,7 +37,15 @@ namespace ClassicalSharp.Gui.Screens {
 			initTime = DateTime.UtcNow;
 			lastSecsLeft = delay;
 		}
-
+		
+		public override void Render(double delta) {
+			if (canReconnect) UpdateDelayLeft(delta);
+			
+			// NOTE: We need to make sure that both the front and back buffers have
+			// definitely been drawn over, so we redraw the background multiple times.
+			if (DateTime.UtcNow < clearTime) Redraw(delta);
+		}
+		
 		public override void Dispose() {
 			game.SkipClear = false;
 			game.Graphics.ContextLost -= ContextLost;
@@ -80,14 +80,15 @@ namespace ClassicalSharp.Gui.Screens {
 			return true;
 		}
 		
+		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return true; }		
+		
 		public override bool HandlesMouseMove(int mouseX, int mouseY) {
 			reconnect.Active = !reconnect.Disabled && reconnect.Contains(mouseX, mouseY);
 			return true;
 		}
 		
 		public override bool HandlesMouseScroll(float delta) { return true; }
-		
-		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) { return true; }		
+
 		
 		int lastSecsLeft;
 		const int delay = 5;

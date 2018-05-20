@@ -34,8 +34,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Render(double delta) { table.Render(delta); }
 		
-		public override void OnResize() { table.Reposition(); }
-		
 		public override void Dispose() {
 			font.Dispose();
 			table.Dispose();
@@ -45,40 +43,11 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
-
+		
+		public override void OnResize() { table.Reposition(); }
+		
 		void OnBlockChanged(object sender, EventArgs e) {
 			table.OnInventoryChanged();
-		}
-		
-		protected override void ContextLost() { table.Dispose(); }
-		
-		protected override void ContextRecreated() { table.Recreate(); }
-		
-		
-		public override bool HandlesMouseMove(int mouseX, int mouseY) {
-			return table.HandlesMouseMove(mouseX, mouseY);
-		}
-		
-		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
-			if (table.scroll.draggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseDown(mouseX, mouseY, button))
-				return true;
-			
-			bool handled = table.HandlesMouseDown(mouseX, mouseY, button);
-			if ((!handled || table.PendingClose) && button == MouseButton.Left) {
-				bool hotbar = game.Input.ControlDown || game.Input.ShiftDown;
-				if (!hotbar) game.Gui.SetNewScreen(null);
-			}
-			return true;
-		}
-		
-		public override bool HandlesMouseScroll(float delta) {
-			bool hotbar = game.Input.AltDown || game.Input.ControlDown || game.Input.ShiftDown;
-			if (hotbar) return false;
-			return table.HandlesMouseScroll(delta);
-		}
-		
-		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) {
-			return table.HandlesMouseUp(mouseX, mouseY, button);
 		}
 
 		// We want the user to be able to press B to exit the inventory menu
@@ -107,5 +76,35 @@ namespace ClassicalSharp.Gui.Screens {
 			}
 			return game.Gui.hudScreen.hotbar.HandlesKeyUp(key);
 		}
+		
+		public override bool HandlesMouseDown(int mouseX, int mouseY, MouseButton button) {
+			if (table.scroll.draggingMouse || game.Gui.hudScreen.hotbar.HandlesMouseDown(mouseX, mouseY, button))
+				return true;
+			
+			bool handled = table.HandlesMouseDown(mouseX, mouseY, button);
+			if ((!handled || table.PendingClose) && button == MouseButton.Left) {
+				bool hotbar = game.Input.ControlDown || game.Input.ShiftDown;
+				if (!hotbar) game.Gui.SetNewScreen(null);
+			}
+			return true;
+		}
+		
+		public override bool HandlesMouseUp(int mouseX, int mouseY, MouseButton button) {
+			return table.HandlesMouseUp(mouseX, mouseY, button);
+		}	
+		
+		public override bool HandlesMouseMove(int mouseX, int mouseY) {
+			return table.HandlesMouseMove(mouseX, mouseY);
+		}
+		
+		public override bool HandlesMouseScroll(float delta) {
+			bool hotbar = game.Input.AltDown || game.Input.ControlDown || game.Input.ShiftDown;
+			if (hotbar) return false;
+			return table.HandlesMouseScroll(delta);
+		}		
+				
+		protected override void ContextLost() { table.Dispose(); }
+		
+		protected override void ContextRecreated() { table.Recreate(); }
 	}
 }
