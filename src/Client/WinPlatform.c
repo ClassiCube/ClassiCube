@@ -11,7 +11,6 @@
 #define NOMCX
 #define NOIME
 #include <Windows.h>
-#include <stdlib.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <WinInet.h>
@@ -114,20 +113,17 @@ STRING_PURE String Platform_GetCommandLineArgs(void) {
 
 void* Platform_MemAlloc(UInt32 numElems, UInt32 elemsSize) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	return malloc(numBytes);
-	//return HeapAlloc(heap, 0, numBytes);
+	return HeapAlloc(heap, 0, numBytes);
 }
 
 void* Platform_MemRealloc(void* mem, UInt32 numElems, UInt32 elemsSize) {
 	UInt32 numBytes = numElems * elemsSize; /* TODO: avoid overflow here */
-	return realloc(mem, numBytes);
-	//return HeapReAlloc(heap, 0, mem, numBytes);
+	return HeapReAlloc(heap, 0, mem, numBytes);
 }
 
 void Platform_MemFree(void** mem) {
 	if (mem == NULL || *mem == NULL) return;
-	free(*mem);
-	//HeapFree(heap, 0, *mem);
+	HeapFree(heap, 0, *mem);
 	*mem = NULL;
 }
 

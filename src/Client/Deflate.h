@@ -47,7 +47,7 @@ typedef struct InflateState_ {
 	bool LastBlock; /* Whether the last DEFLATE block has been encounted in the stream */
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
-	
+
 	UInt8* NextIn;   /* Pointer within Input of byte being read */
 	UInt32 AvailIn;  /* Number of bytes that can be read from Input */
 	UInt8* Output;   /* Pointer for output data */
@@ -61,8 +61,10 @@ typedef struct InflateState_ {
 
 	UInt8 Input[INFLATE_MAX_INPUT];       /* Buffer for input to DEFLATE */
 	UInt8 Buffer[INFLATE_MAX_LITS_DISTS]; /* General purpose array */
-	HuffmanTable CodeLensTable;           /* Values represent codeword lengths of lits/dists codewords */
-	HuffmanTable LitsTable;               /* Values represent literal or lengths */
+	union {
+		HuffmanTable CodeLensTable;       /* Values represent codeword lengths of lits/dists codewords */
+		HuffmanTable LitsTable;          /* Values represent literal or lengths */
+	};
 	HuffmanTable DistsTable;              /* Values represent distances back */
 	UInt8 Window[INFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
 } InflateState;

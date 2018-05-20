@@ -427,7 +427,7 @@ static void Inflate_Process(InflateState* state) {
 			} break;
 
 			case 1: { /* Fixed/static huffman compressed */
-				Huffman_Build(&state->LitsTable, fixed_lits, INFLATE_MAX_LITS);
+				Huffman_Build(&state->LitsTable,  fixed_lits,  INFLATE_MAX_LITS);
 				Huffman_Build(&state->DistsTable, fixed_dists, INFLATE_MAX_DISTS);
 				state->State = Inflate_NextCompressState(state);
 			} break;
@@ -702,51 +702,119 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 /*########################################################################################################################*
 *---------------------------------------------------Deflate (compress)----------------------------------------------------*
 *#########################################################################################################################*/
-static ReturnCode Deflate_Flush(DeflateState* state, UInt32 size, bool lastBlock) {
-	/* TODO: actually compress here */
-	Stream_WriteU8(state->Source, lastBlock);
-	Stream_WriteU16_LE(state->Source, size);
-	Stream_WriteU16_LE(state->Source, size ^ 0xFFFFFUL);
-	Stream_Write(state->Source, state->InputBuffer, size);
-	state->InputPosition = 0;
-	return 0; /* TODO: need to return error code instead of killing process */
+#define DEFLATE_MAX_MATCH_LEN 258
+static Int32 Deflate_MatchLen(UInt8* a, UInt8* b, Int32 maxLen) {
+	Int32 i = 0;
+	while (i < maxLen && *a == *b) { i++; a++; b++; }
+	return i;
 }
 
-Int32 Deflate_MatchLen(UInt8* a, UInt8* b, Int32 maxLen);
-UInt32 Deflate_Hash(UInt8* src);
+static UInt32 Deflate_Hash(UInt8* src) {
+	return (UInt32)((src[0] << 8) ^ (src[1] << 4) ^ (src[2])) & DEFLATE_HASH_MASK;
+}
 
-static void DeflateCompresss(UInt8* src, Int32 len) {
+void Deflate_Lit(DeflateState* state, Int32 lit) {
+}
+
+void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
+	Int32 j;
+	for (j = 0; len > len_base[j + 1]; j++); /* NEED TO FIX 0 AT END*/
+	// write len_base codeword here
+	// write len_bits
+
+	for (j = 0; dist > dist_base[j + 1]; j++); /* NEED TO FIX 0 AT END */
+	// write dist_base codeword here
+	// write dist_bits
+
+	/*
+	UInt16 len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
+		15,17,19,23,27,31,35,43,51,59,
+		67,83,99,115,131,163,195,227,258,0,0 };
+	UInt8 len_bits[31] = { 0,0,0,0,0,0,0,0,1,1,
+		1,1,2,2,2,2,3,3,3,3,
+		4,4,4,4,5,5,5,5,0,0,0 };
+	UInt16 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
+		33,49,65,97,129,193,257,385,513,769,
+		1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 };
+	UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
+		4,4,5,5,6,6,7,7,8,8,
+		9,9,10,10,11,11,12,12,13,13,0,0 };
+	UInt8 codelens_order[INFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 }; */
+}
+
+static void Deflate_Compress(DeflateState* state, Int32 len) {
 	/* Based off descriptions from http://www.gzip.org/algorithm.txt and
 	https://github.com/nothings/stb/blob/master/stb_image_write.h */
 
-	Int32 i = 0;
+	HuffmanTable tableLits;
+	Huffman_Build(&tableLits, fixed_lits, INFLATE_MAX_LITS);
+	UInt8 LLITS[288];
+	Platform_MemCpy(LLITS, fixed_lits, sizeof(fixed_lits));
+
+	HuffmanTable tableDists;
+	Huffman_Build(&tableDists, fixed_dists, INFLATE_MAX_DISTS);
+
+	UInt8* src = state->InputBuffer;
 	UInt8* cur = src;
-	UInt8* starts[4096];
-	UInt16 prev[4096];
-	UInt32 hashesCount = 0;
+	while (len > 3) {
+		UInt32 hash = Deflate_Hash(cur);
+		Int32 maxLen = min(len, DEFLATE_MAX_MATCH_LEN);
 
-	while (i < len - 3) {		
-		/* CALC HASH AND STUFF HERE */
-		UInt32 hash = 0;// Deflate_Hash(cur);
-		Int32 bestLen = 3;
-		UInt8* bestPos = NULL;
+		Int32 bestLen = 3; /* Match must be at least 3 bytes */
+		Int32 bestPos = 0;
 
-		while (starts[hash] != NULL) {
-			hash = prev[hash];
+		Int32 pos = state->Head[hash];
+		while (pos != 0) {
+			Int32 matchLen = Deflate_MatchLen(&src[pos], cur, maxLen);
+			if (matchLen >= bestLen) { bestLen = matchLen; bestPos = pos; }
+			pos = state->Prev[pos];
 		}
 
-		/* Insert into hash chain */
+		/* Insert this entry into the hash chain */
+		pos = (Int32)(cur - src);
+		UInt16 oldHead = state->Head[hash];
+		state->Head[hash] = pos;
+		state->Prev[pos] = oldHead;
 
-		/* Lazy evaluation: Find longest match starting at next byte. */
-		/* If that's longer than the longest match at current byte, */
-		/* just throwaway this match */
+		/* Lazy evaluation: Find longest match starting at next byte */
+		/* If that's longer than the longest match at current byte, throwaway this match */
+		if (bestPos && len > 2) {
+			UInt32 nextHash = Deflate_Hash(cur + 1);
+			Int32 nextPos = state->Head[nextHash];
+			maxLen = min(len - 1, DEFLATE_MAX_MATCH_LEN);
+
+			while (nextPos != 0) {
+				Int32 matchLen = Deflate_MatchLen(&src[nextPos], cur, maxLen);
+				if (matchLen > bestLen) { bestPos = 0; break; }
+				nextPos = state->Prev[nextPos];
+			}
+		}
+
+		if (bestPos) {
+			Deflate_LenDist(state, bestLen, pos - bestPos);
+			len -= bestLen; cur += bestLen;
+		} else {
+			Deflate_Lit(state, *cur);
+			len--; cur++;
+		}
 	}
 
 	/* literals for last few bytes */
 	while (len > 0) {
-		/* WRITE LITERAL */
-		len--;
+		Deflate_Lit(state, *cur);
+		cur++;  len--;
 	}
+}
+
+static ReturnCode Deflate_Flush(DeflateState* state, UInt32 size, bool lastBlock) {
+	/* TODO: actually compress here */
+	Deflate_Compress(state, size);
+	/*Stream_WriteU8(state->Source, lastBlock);
+	Stream_WriteU16_LE(state->Source, size);
+	Stream_WriteU16_LE(state->Source, size ^ 0xFFFFFUL);
+	Stream_Write(state->Source, state->InputBuffer, size);*/
+	state->InputPosition = 0;
+	return 0; /* TODO: need to return error code instead of killing process */
 }
 
 static ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
