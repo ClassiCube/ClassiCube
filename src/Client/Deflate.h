@@ -35,11 +35,11 @@ void ZLibHeader_Read(Stream* s, ZLibHeader* header);
 #define INFLATE_WINDOW_MASK 0x7FFFUL
 
 typedef struct HuffmanTable_ {
+	Int16 Fast[1 << INFLATE_FAST_BITS];      /* Fast lookup table for huffman codes */
 	UInt16 FirstCodewords[INFLATE_MAX_BITS]; /* Starting codeword for each bit length */
 	UInt16 EndCodewords[INFLATE_MAX_BITS];   /* (Last codeword + 1) for each bit length. 0 is ignored. */
 	UInt16 FirstOffsets[INFLATE_MAX_BITS];   /* Base offset into Values for codewords of each bit length. */
 	UInt16 Values[INFLATE_MAX_LITS];         /* Values/Symbols list */
-	Int16 Fast[1 << INFLATE_FAST_BITS];      /* Fast lookup table for huffman codes */
 } HuffmanTable;
 
 typedef struct InflateState_ {

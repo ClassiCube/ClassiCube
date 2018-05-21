@@ -158,7 +158,7 @@ enum INFLATE_STATE_ {
 #define Inflate_PeekBits(state, bits) (state->Bits & ((1UL << (bits)) - 1UL))
 /* Consumes/eats up bits from the bit buffer */
 #define Inflate_ConsumeBits(state, bits) state->Bits >>= (bits); state->NumBits -= (bits);
-/* Aligns bit buffer to be on a byte boundary*/
+/* Aligns bit buffer to be on a byte boundary */
 #define Inflate_AlignBits(state) UInt32 alignSkip = state->NumBits & 7; Inflate_ConsumeBits(state, alignSkip);
 /* Ensures there are 'bitsCount' bits, or returns if not */
 #define Inflate_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { if (state->AvailIn == 0) return; Inflate_GetByte(state); }
@@ -732,22 +732,6 @@ static void Deflate_Lit(DeflateState* state, Int32 lit) {
 	Deflate_FlushBits(state);
 
 	//Platform_Log1("lit %i", &lit);
-}
-
-Int32 DecodeHack(HuffmanTable* table, Int32 value, Int32* bits) {
-	UInt32 codeword = 0;
-	UInt32 i, j;
-
-	for (i = 1, j = 0; i < INFLATE_MAX_BITS; i++, j++) {
-		codeword = (codeword << 1) | ((value >> j) & 1);
-
-		if (codeword < table->EndCodewords[i]) {
-			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
-			*bits = i;
-			return table->Values[offset];
-		}
-	}
-	return -1;
 }
 
 static void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
