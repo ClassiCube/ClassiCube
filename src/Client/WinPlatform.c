@@ -340,7 +340,8 @@ DWORD WINAPI Platform_ThreadStartCallback(LPVOID lpParam) {
 }
 
 void* Platform_ThreadStart(Platform_ThreadFunc* func) {
-	void* handle = CreateThread(NULL, 0, Platform_ThreadStartCallback, func, 0, NULL);
+	DWORD threadID;
+	void* handle = CreateThread(NULL, 0, Platform_ThreadStartCallback, func, 0, &threadID);
 	if (handle == NULL) {
 		ErrorHandler_FailWithCode(GetLastError(), "Creating thread");
 	}
