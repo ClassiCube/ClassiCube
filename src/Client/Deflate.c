@@ -160,18 +160,18 @@ enum INFLATE_STATE_ {
 #define Inflate_ConsumeBits(state, bits) state->Bits >>= (bits); state->NumBits -= (bits);
 /* Aligns bit buffer to be on a byte boundary*/
 #define Inflate_AlignBits(state) UInt32 alignSkip = state->NumBits & 7; Inflate_ConsumeBits(state, alignSkip);
-/* Ensures there are 'bitsCount' bits, or returns false if not.  */
+/* Ensures there are 'bitsCount' bits, or returns if not */
 #define Inflate_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { if (state->AvailIn == 0) return; Inflate_GetByte(state); }
-/* Ensures there are 'bitsCount' bits.  */
+/* Ensures there are 'bitsCount' bits */
 #define Inflate_UNSAFE_EnsureBits(state, bitsCount) while (state->NumBits < bitsCount) { Inflate_GetByte(state); }
-/* Peeks then consumes given bits. */
+/* Peeks then consumes given bits */
 #define Inflate_ReadBits(state, bitsCount) Inflate_PeekBits(state, bitsCount); Inflate_ConsumeBits(state, bitsCount);
 
-/* Goes to the next state, after having read data of a block. */
+/* Goes to the next state, after having read data of a block */
 #define Inflate_NextBlockState(state) (state->LastBlock ? INFLATE_STATE_DONE : INFLATE_STATE_HEADER)
-/* Goes to the next state, after having finished reading a compressed entry. */
+/* Goes to the next state, after having finished reading a compressed entry */
 #define Inflate_NextCompressState(state) ((state->AvailIn >= INFLATE_FASTINF_IN && state->AvailOut >= INFLATE_FASTINF_OUT) ? INFLATE_STATE_FASTCOMPRESSED : INFLATE_STATE_COMPRESSED_LIT)
-/* The maximum amount of bytes that can be output is 258. */
+/* The maximum amount of bytes that can be output is 258 */
 #define INFLATE_FASTINF_OUT 258
 /* The most input bytes required for huffman codes and extra data is 16 + 5 + 16 + 13 bits. Add 3 extra bytes to account for putting data into the bit buffer. */
 #define INFLATE_FASTINF_IN 10
@@ -360,6 +360,7 @@ static void Inflate_InflateFast(InflateState* state) {
 	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
 		UInt32 lit = Huffman_Unsafe_Decode(state, &state->LitsTable);
 		if (lit <= 256) {
+			//Platform_Log1("lit %i", &lit);
 			if (lit < 256) {
 				window[curIdx] = (UInt8)lit;
 				state->AvailOut--; copyLen++;
@@ -378,6 +379,8 @@ static void Inflate_InflateFast(InflateState* state) {
 			bits = dist_bits[distIdx];
 			Inflate_UNSAFE_EnsureBits(state, bits);
 			UInt32 dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
+
+			//Platform_Log2("len %i, dist %i", &len, &dist);
 
 			UInt32 startIdx = (curIdx - dist) & INFLATE_WINDOW_MASK;
 			UInt32 i;
@@ -584,6 +587,7 @@ static void Inflate_Process(InflateState* state) {
 			Int32 lit = Huffman_Decode(state, &state->LitsTable);
 			if (lit < 256) {
 				if (lit == -1) return;
+				//Platform_Log1("lit %i", &lit);
 				*state->Output = (UInt8)lit;
 				state->Window[state->WindowIndex] = (UInt8)lit;
 				state->Output++; state->AvailOut--;
@@ -599,7 +603,7 @@ static void Inflate_Process(InflateState* state) {
 		}
 
 		case INFLATE_STATE_COMPRESSED_LITREPEAT: {
-			UInt32 lenIdx = (UInt32)state->TmpLit;
+			UInt32 lenIdx = state->TmpLit;
 			UInt32 bits = len_bits[lenIdx];
 			Inflate_EnsureBits(state, bits);
 			state->TmpLit = len_base[lenIdx] + Inflate_ReadBits(state, bits);
@@ -613,16 +617,18 @@ static void Inflate_Process(InflateState* state) {
 		}
 
 		case INFLATE_STATE_COMPRESSED_DISTREPEAT: {
-			UInt32 distIdx = (UInt32)state->TmpDist;
+			UInt32 distIdx = state->TmpDist;
 			UInt32 bits = dist_bits[distIdx];
 			Inflate_EnsureBits(state, bits);
 			state->TmpDist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
 			state->State = INFLATE_STATE_COMPRESSED_DATA;
+
+			//Platform_Log2("len %i, dist %i", &state->TmpLit, &state->TmpDist);
 		}
 
 		case INFLATE_STATE_COMPRESSED_DATA: {
 			if (state->AvailOut == 0) return;
-			UInt32 len = (UInt32)state->TmpLit, dist = (UInt32)state->TmpDist;
+			UInt32 len = state->TmpLit, dist = state->TmpDist;
 			len = min(len, state->AvailOut);
 
 			/* TODO: Should we test outside of the loop, whether a masking will be required or not? */
@@ -702,6 +708,13 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 /*########################################################################################################################*
 *---------------------------------------------------Deflate (compress)----------------------------------------------------*
 *#########################################################################################################################*/
+/* Pushes given bits, but does not write them */
+#define Deflate_PushBits(state, value, bits) state->Bits |= (value) << state->NumBits; state->NumBits += (bits);
+/* Pushes given bits (reversing for huffman code), but does not write them */
+#define Deflate_PushHuff(state, value, bits) Deflate_PushBits(state, Huffman_ReverseBits(value, bits), bits)
+/* Flushes given bits to output. EXTREMELY INEFFICIENT. */
+#define Deflate_FlushBits(state) while (state->NumBits >= 8) { Stream_WriteU8(state->Dest, state->Bits); state->Bits >>= 8; state->NumBits -= 8; }
+
 #define DEFLATE_MAX_MATCH_LEN 258
 static Int32 Deflate_MatchLen(UInt8* a, UInt8* b, Int32 maxLen) {
 	Int32 i = 0;
@@ -713,60 +726,80 @@ static UInt32 Deflate_Hash(UInt8* src) {
 	return (UInt32)((src[0] << 8) ^ (src[1] << 4) ^ (src[2])) & DEFLATE_HASH_MASK;
 }
 
-void Deflate_Lit(DeflateState* state, Int32 lit) {
+static void Deflate_Lit(DeflateState* state, Int32 lit) {
+	if (lit <= 143) { Deflate_PushHuff(state, lit + 48, 8); } 
+	else { Deflate_PushHuff(state, lit + 256, 9); }
+	Deflate_FlushBits(state);
+
+	//Platform_Log1("lit %i", &lit);
 }
 
-void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
+Int32 DecodeHack(HuffmanTable* table, Int32 value, Int32* bits) {
+	UInt32 codeword = 0;
+	UInt32 i, j;
+
+	for (i = 1, j = 0; i < INFLATE_MAX_BITS; i++, j++) {
+		codeword = (codeword << 1) | ((value >> j) & 1);
+
+		if (codeword < table->EndCodewords[i]) {
+			Int32 offset = table->FirstOffsets[i] + (codeword - table->FirstCodewords[i]);
+			*bits = i;
+			return table->Values[offset];
+		}
+	}
+	return -1;
+}
+
+static void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
 	Int32 j;
-	for (j = 0; len > len_base[j + 1]; j++); /* NEED TO FIX 0 AT END*/
-	// write len_base codeword here
-	// write len_bits
+	len_base[29]  = UInt16_MaxValue;
+	dist_base[30] = UInt16_MaxValue;
+	/* TODO: Remove this hack out into Deflate_FlushBlock */
+	/* TODO: Do we actually need the if (len_bits[j]) ????????? does writing 0 bits matter??? */
 
-	for (j = 0; dist > dist_base[j + 1]; j++); /* NEED TO FIX 0 AT END */
-	// write dist_base codeword here
-	// write dist_bits
+	for (j = 0; len >= len_base[j + 1]; j++);
+	if (j <= 22) { Deflate_PushHuff(state, j + 1, 7); }
+	else { Deflate_PushHuff(state, j + 169, 9); }
+	if (len_bits[j]) { Deflate_PushBits(state, len - len_base[j], len_bits[j]); }
+	Deflate_FlushBits(state);
 
-	/*
-	UInt16 len_base[31] = { 3,4,5,6,7,8,9,10,11,13,
-		15,17,19,23,27,31,35,43,51,59,
-		67,83,99,115,131,163,195,227,258,0,0 };
-	UInt8 len_bits[31] = { 0,0,0,0,0,0,0,0,1,1,
-		1,1,2,2,2,2,3,3,3,3,
-		4,4,4,4,5,5,5,5,0,0,0 };
-	UInt16 dist_base[32] = { 1,2,3,4,5,7,9,13,17,25,
-		33,49,65,97,129,193,257,385,513,769,
-		1025,1537,2049,3073,4097,6145,8193,12289,16385,24577,0,0 };
-	UInt8 dist_bits[32] = { 0,0,0,0,1,1,2,2,3,3,
-		4,4,5,5,6,6,7,7,8,8,
-		9,9,10,10,11,11,12,12,13,13,0,0 };
-	UInt8 codelens_order[INFLATE_MAX_CODELENS] = { 16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15 }; */
+	for (j = 0; dist >= dist_base[j + 1]; j++);
+	Deflate_PushHuff(state, j, 5);
+	if (dist_bits[j]) { Deflate_PushBits(state, dist - dist_base[j], dist_bits[j]); }
+	Deflate_FlushBits(state);
+
+	//Platform_Log2("len %i, dist %i", &len, &dist);
+
+	len_base[29]  = 0;
+	dist_base[30] = 0;
 }
 
-static void Deflate_Compress(DeflateState* state, Int32 len) {
+static ReturnCode Deflate_FlushBlock(DeflateState* state, Int32 len) {
+	if (!state->WroteHeader) {
+		state->WroteHeader = true;
+		Deflate_PushBits(state, 2, 3); /* final block TRUE, block type FIXED */
+	}
+
+	/* TODO: Hash chains should persist past one block flush */
+	Platform_MemSet(state->Head, 0, sizeof(state->Head));
+	Platform_MemSet(state->Prev, 0, sizeof(state->Prev));
+
 	/* Based off descriptions from http://www.gzip.org/algorithm.txt and
 	https://github.com/nothings/stb/blob/master/stb_image_write.h */
-
-	HuffmanTable tableLits;
-	Huffman_Build(&tableLits, fixed_lits, INFLATE_MAX_LITS);
-	UInt8 LLITS[288];
-	Platform_MemCpy(LLITS, fixed_lits, sizeof(fixed_lits));
-
-	HuffmanTable tableDists;
-	Huffman_Build(&tableDists, fixed_dists, INFLATE_MAX_DISTS);
-
 	UInt8* src = state->InputBuffer;
 	UInt8* cur = src;
+
 	while (len > 3) {
 		UInt32 hash = Deflate_Hash(cur);
 		Int32 maxLen = min(len, DEFLATE_MAX_MATCH_LEN);
 
-		Int32 bestLen = 3; /* Match must be at least 3 bytes */
+		Int32 bestLen = 3 - 1; /* Match must be at least 3 bytes */
 		Int32 bestPos = 0;
 
 		Int32 pos = state->Head[hash];
-		while (pos != 0) {
+		while (pos != 0) { /* TODO: Need to limit chain length here */
 			Int32 matchLen = Deflate_MatchLen(&src[pos], cur, maxLen);
-			if (matchLen >= bestLen) { bestLen = matchLen; bestPos = pos; }
+			if (matchLen > bestLen) { bestLen = matchLen; bestPos = pos; }
 			pos = state->Prev[pos];
 		}
 
@@ -783,7 +816,7 @@ static void Deflate_Compress(DeflateState* state, Int32 len) {
 			Int32 nextPos = state->Head[nextHash];
 			maxLen = min(len - 1, DEFLATE_MAX_MATCH_LEN);
 
-			while (nextPos != 0) {
+			while (nextPos != 0) { /* TODO: Need to limit chain length here */
 				Int32 matchLen = Deflate_MatchLen(&src[nextPos], cur, maxLen);
 				if (matchLen > bestLen) { bestPos = 0; break; }
 				nextPos = state->Prev[nextPos];
@@ -802,17 +835,9 @@ static void Deflate_Compress(DeflateState* state, Int32 len) {
 	/* literals for last few bytes */
 	while (len > 0) {
 		Deflate_Lit(state, *cur);
-		cur++;  len--;
+		cur++; len--;
 	}
-}
 
-static ReturnCode Deflate_Flush(DeflateState* state, UInt32 size, bool lastBlock) {
-	/* TODO: actually compress here */
-	Deflate_Compress(state, size);
-	/*Stream_WriteU8(state->Source, lastBlock);
-	Stream_WriteU16_LE(state->Source, size);
-	Stream_WriteU16_LE(state->Source, size ^ 0xFFFFFUL);
-	Stream_Write(state->Source, state->InputBuffer, size);*/
 	state->InputPosition = 0;
 	return 0; /* TODO: need to return error code instead of killing process */
 }
@@ -834,7 +859,7 @@ static ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count,
 		data += toWrite;
 
 		if (state->InputPosition == DEFLATE_BUFFER_SIZE) {
-			ReturnCode result = Deflate_Flush(state, DEFLATE_BUFFER_SIZE, false);
+			ReturnCode result = Deflate_FlushBlock(state, DEFLATE_BUFFER_SIZE);
 			if (result != 0) return result;
 		}
 	}
@@ -843,14 +868,29 @@ static ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count,
 
 static ReturnCode Deflate_StreamClose(Stream* stream) {
 	DeflateState* state = stream->Meta_Inflate;
-	return Deflate_Flush(state, state->InputPosition, true);
+	ReturnCode result = Deflate_FlushBlock(state, state->InputPosition);
+	if (result != 0) return result;
+
+	/* Write huffman encoded "literal 256" to terminate symbols */
+	Deflate_PushBits(state, 512, 7); 
+	Deflate_FlushBits(state);
+
+	/* In case last byte still has a few extra bits */
+	if (!state->NumBits) return 0;
+	while (state->NumBits < 8) { Deflate_PushBits(state, 0, 1); }
+	Deflate_FlushBits(state);
+	return 0;
 }
 
 void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying) {
-	state->InputPosition = 0;
-	state->Source = underlying;
 	Stream_SetName(stream, &underlying->Name);
 	stream->Meta_Inflate = state;
+
+	state->InputPosition = 0;
+	state->Dest    = underlying;
+	state->Bits    = 0;
+	state->NumBits = 0;
+	state->WroteHeader = false;
 
 	Platform_MemSet(state->Head, 0, sizeof(state->Head));
 	Platform_MemSet(state->Prev, 0, sizeof(state->Prev));
@@ -870,8 +910,8 @@ static ReturnCode GZip_StreamClose(Stream* stream) {
 
 	GZipState* state = stream->Meta_Inflate;
 	UInt32 crc32 = state->Crc32 ^ 0xFFFFFFFFUL;
-	Stream_WriteU32_LE(state->Base.Source, crc32);
-	Stream_WriteU32_LE(state->Base.Source, state->Size);
+	Stream_WriteU32_LE(state->Base.Dest, crc32);
+	Stream_WriteU32_LE(state->Base.Dest, state->Size);
 	return 0;
 }
 
@@ -892,7 +932,7 @@ static ReturnCode GZip_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UI
 static ReturnCode GZip_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	static UInt8 gz_header[10] = { 0x1F, 0x8B, 0x08 };
 	GZipState* state = stream->Meta_Inflate;
-	Stream_Write(state->Base.Source, gz_header, sizeof(gz_header));
+	Stream_Write(state->Base.Dest, gz_header, sizeof(gz_header));
 
 	stream->Write = GZip_StreamWrite;
 	return GZip_StreamWrite(stream, data, count, modified);
@@ -915,7 +955,7 @@ static ReturnCode ZLib_StreamClose(Stream* stream) {
 	if (result != 0) return result;
 
 	ZLibState* state = stream->Meta_Inflate;
-	Stream_WriteU32_BE(state->Base.Source, state->Adler32);
+	Stream_WriteU32_BE(state->Base.Dest, state->Adler32);
 	return 0;
 }
 
@@ -938,7 +978,7 @@ static ReturnCode ZLib_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UI
 static ReturnCode ZLib_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	static UInt8 zl_header[2] = { 0x78, 0x9C };
 	ZLibState* state = stream->Meta_Inflate;
-	Stream_Write(state->Base.Source, zl_header, sizeof(zl_header));
+	Stream_Write(state->Base.Dest, zl_header, sizeof(zl_header));
 
 	stream->Write = ZLib_StreamWrite;
 	return ZLib_StreamWrite(stream, data, count, modified);
