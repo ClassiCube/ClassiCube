@@ -19,7 +19,7 @@ Real32 Math_SinF(Real32 x);
 Real32 Math_CosF(Real32 x);
 Real32 Math_TanF(Real32 x);
 Real32 Math_SqrtF(Real32 x);
-Real32 Math_ModF(Real32 x, Real32 y);
+Real32 Math_Mod1(Real32 x);
 
 Real64 Math_Log(Real64 x);
 Real64 Math_Exp(Real64 x);

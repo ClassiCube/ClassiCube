@@ -911,7 +911,7 @@ void PhysicsComp_UpdateVelocityState(PhysicsComp* comp) {
 		bounds.Max.Y = max(bodyY, headY);
 		bool liquidRest = Entity_TouchesAny(&bounds, PhysicsComp_TouchesLiquid);
 
-		bool pastJumpPoint = liquidFeet && !liquidRest && (Math_ModF(entity->Position.Y, 1.0f) >= 0.4f);
+		bool pastJumpPoint = liquidFeet && !liquidRest && (Math_Mod1(entity->Position.Y) >= 0.4f);
 		if (!pastJumpPoint) {
 			comp->CanLiquidJump = true;
 			entity->Velocity.Y += 0.04f;

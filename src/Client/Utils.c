@@ -115,7 +115,7 @@ bool Utils_IsValidInputChar(UInt8 c, bool supportsCP437) {
 bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index) {
 	String http  = String_FromConst("http://");
 	String https = String_FromConst("https://");
-	return String_IndexOfString(value, &http) == index
+	return String_IndexOfString(value, &http)  == index
 		|| String_IndexOfString(value, &https) == index;
 }
 
