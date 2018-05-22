@@ -913,7 +913,7 @@ static void Cw_WriteMetadataCompound(Stream* stream) {
 	Nbt_WriteU8(stream, WorldEnv_EdgeBlock);
 	Nbt_WriteTag(stream, NBT_TAG_INT16, "SideLevel");
 	Nbt_WriteI16(stream, WorldEnv_EdgeHeight);
-	Nbt_WriteTag(stream, NBT_TAG_INT16, "TextureURL");
+	Nbt_WriteTag(stream, NBT_TAG_STRING, "TextureURL");
 	Nbt_WriteString(stream, &World_TextureUrl);
 	Nbt_WriteU8(stream, NBT_TAG_END);
 
