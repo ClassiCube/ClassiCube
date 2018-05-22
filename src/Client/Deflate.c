@@ -743,7 +743,7 @@ static void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
 
 	for (j = 0; len >= len_base[j + 1]; j++);
 	if (j <= 22) { Deflate_PushHuff(state, j + 1, 7); }
-	else { Deflate_PushHuff(state, j + 169, 9); }
+	else { Deflate_PushHuff(state, j + 169, 8); }
 	if (len_bits[j]) { Deflate_PushBits(state, len - len_base[j], len_bits[j]); }
 	Deflate_FlushBits(state);
 

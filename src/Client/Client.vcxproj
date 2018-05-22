@@ -99,7 +99,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -119,7 +119,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EntryPointSymbol>main</EntryPointSymbol>
-      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;opengl32.lib;ucrtd.lib;vcruntimed.lib;msvcrtd.lib;dbghelp.lib;ws2_32.lib;Wininet.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
