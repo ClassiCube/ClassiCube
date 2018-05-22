@@ -510,7 +510,7 @@ void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height) {
 	UInt32 stride = (UInt32)(bmp.Width) * BITMAP_SIZEOF_PIXEL;
 	for (y = 0; y < height / 2; y++) {
 		UInt32* src = Bitmap_GetRow(&bmp, y);
-		UInt32* dst = Bitmap_GetRow(&bmp, y);
+		UInt32* dst = Bitmap_GetRow(&bmp, (height - 1) - y);
 
 		Platform_MemCpy(tmp, src, stride);
 		Platform_MemCpy(src, dst, stride);

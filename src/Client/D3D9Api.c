@@ -592,9 +592,10 @@ void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height) {
 
 	Bitmap bmp; Bitmap_Create(&bmp, width, height, rect.pBits);
 	Bitmap_EncodePng(&bmp, output);
+	Platform_MemFree(&bmp.Scan0);
+
 	hresult = IDirect3DSurface9_UnlockRect(temp);
 	ErrorHandler_CheckOrFail(hresult, "Gfx_TakeScreenshot - Unlock temp surface");
-
 	D3D9_FreeResource(&backbuffer);
 	D3D9_FreeResource(&temp);
 }

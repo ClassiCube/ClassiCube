@@ -801,7 +801,7 @@ static ReturnCode Deflate_FlushBlock(DeflateState* state, Int32 len) {
 			maxLen = min(len - 1, DEFLATE_MAX_MATCH_LEN);
 
 			while (nextPos != 0) { /* TODO: Need to limit chain length here */
-				Int32 matchLen = Deflate_MatchLen(&src[nextPos], cur, maxLen);
+				Int32 matchLen = Deflate_MatchLen(&src[nextPos], cur + 1, maxLen);
 				if (matchLen > bestLen) { bestPos = 0; break; }
 				nextPos = state->Prev[nextPos];
 			}
