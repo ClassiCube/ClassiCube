@@ -30,7 +30,7 @@ void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count) {
 	while (count > 0) {
 		Stream_SafeReadBlock(stream, buffer, count, read);
 		buffer += read;
-		count -= read;
+		count  -= read;
 	}
 }
 
@@ -39,8 +39,21 @@ void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count) {
 	while (count > 0) {
 		Stream_SafeWriteBlock(stream, buffer, count, write);
 		buffer += write;
-		count -= write;
+		count  -= write;
 	}
+}
+
+ReturnCode Stream_TryWrite(Stream* stream, UInt8* buffer, UInt32 count) {
+	UInt32 write;
+	while (count > 0) {
+		ReturnCode result = stream->Write(stream, buffer, count, &write);
+		if (result != 0) return result;
+		if (write == 0)  return 1;
+
+		buffer += write;
+		count  -= write;
+	}
+	return 0;
 }
 
 Int32 Stream_TryReadByte(Stream* stream) {

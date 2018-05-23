@@ -256,6 +256,11 @@ static UInt8 NbtTag_U8_At(NbtTag* tag, Int32 i) {
 	return tag->DataBig[i];
 }
 
+static String NbtTag_String(NbtTag* tag) {
+	if (tag->TagID != NBT_TAG_STRING) { ErrorHandler_Fail("Expected String NBT tag"); }
+	return String_Init(tag->DataSmall, tag->DataSize, tag->DataSize);
+}
+
 static UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
 	UInt16 nameLen = Stream_ReadU16_BE(stream);
 	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
@@ -450,7 +455,7 @@ static bool Cw_Callback_4(NbtTag* tag) {
 		if (IsTag(tag, "SideLevel")) { WorldEnv_SetEdgeHeight(NbtTag_I16(tag)); return true; }
 
 		if (IsTag(tag, "TextureURL")) {
-			String url = { tag->DataSmall, tag->DataSize, tag->DataSize };
+			String url = NbtTag_String(tag);
 			if (Game_AllowServerTextures && url.length > 0) {
 				ServerConnection_RetrieveTexturePack(&url);
 			}
@@ -520,7 +525,7 @@ static bool Cw_Callback_5(NbtTag* tag) {
 		if (IsTag(tag, "Shape"))          { Block_SpriteOffset[id] = NbtTag_U8(tag); return true; }
 
 		if (IsTag(tag, "Name")) {
-			String name = { tag->DataSmall, tag->DataSize, tag->DataSize };
+			String name = NbtTag_String(tag);
 			Block_SetName(id, &name);
 			return true;
 		}

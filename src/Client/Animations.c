@@ -108,8 +108,8 @@ static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 
 			/* Output the pixel */
 			Real32 col = W_soupHeat[i];
-			col = col < 0 ? 0 : col;
-			col = col > 1 ? 1 : col;
+			col = col < 0.0f ? 0.0f : col;
+			col = col > 1.0f ? 1.0f : col;
 			col = col * col;
 
 			Real32 r = 32.0f  + col * 32.0f;

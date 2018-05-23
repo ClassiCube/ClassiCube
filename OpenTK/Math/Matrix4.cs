@@ -81,8 +81,8 @@ namespace OpenTK {
 		}
 
 		public static void RotateZ(out Matrix4 result, float angle) {
-			float cos = (float)System.Math.Cos(angle);
-			float sin = (float)System.Math.Sin(angle);
+			float cos = (float)Math.Cos(angle);
+			float sin = (float)Math.Sin(angle);
 
 			result.Row0 = new Vector4(cos, sin, 0.0f, 0.0f);
 			result.Row1 = new Vector4(-sin, cos, 0.0f, 0.0f);

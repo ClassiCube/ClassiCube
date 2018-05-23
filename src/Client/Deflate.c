@@ -712,8 +712,10 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 #define Deflate_PushBits(state, value, bits) state->Bits |= (value) << state->NumBits; state->NumBits += (bits);
 /* Pushes given bits (reversing for huffman code), but does not write them */
 #define Deflate_PushHuff(state, value, bits) Deflate_PushBits(state, Huffman_ReverseBits(value, bits), bits)
-/* Flushes given bits to output. EXTREMELY INEFFICIENT. */
-#define Deflate_FlushBits(state) while (state->NumBits >= 8) { Stream_WriteU8(state->Dest, state->Bits); state->Bits >>= 8; state->NumBits -= 8; }
+/* Writes given byte to output */
+#define Deflate_WriteByte(state) *state->NextOut++ = state->Bits; state->AvailOut--; state->Bits >>= 8; state->NumBits -= 8;
+/* Flushes bits in buffer to output buffer */
+#define Deflate_FlushBits(state) while (state->NumBits >= 8) { Deflate_WriteByte(state); }
 
 #define DEFLATE_MAX_MATCH_LEN 258
 static Int32 Deflate_MatchLen(UInt8* a, UInt8* b, Int32 maxLen) {
@@ -739,6 +741,7 @@ static void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
 	len_base[29]  = UInt16_MaxValue;
 	dist_base[30] = UInt16_MaxValue;
 	/* TODO: Remove this hack out into Deflate_FlushBlock */
+	/* TODO: is that hack even thread-safe */
 	/* TODO: Do we actually need the if (len_bits[j]) ????????? does writing 0 bits matter??? */
 
 	for (j = 0; len >= len_base[j + 1]; j++);
@@ -770,7 +773,7 @@ static ReturnCode Deflate_FlushBlock(DeflateState* state, Int32 len) {
 
 	/* Based off descriptions from http://www.gzip.org/algorithm.txt and
 	https://github.com/nothings/stb/blob/master/stb_image_write.h */
-	UInt8* src = state->InputBuffer;
+	UInt8* src = state->Input;
 	UInt8* cur = src;
 
 	while (len > 3) {
@@ -814,6 +817,13 @@ static ReturnCode Deflate_FlushBlock(DeflateState* state, Int32 len) {
 			Deflate_Lit(state, *cur);
 			len--; cur++;
 		}
+
+		/* leave room for a few bytes and literals at end */
+		if (state->AvailOut >= 20) continue;
+		ReturnCode result = Stream_TryWrite(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
+		state->NextOut = state->Output;
+		state->AvailOut = DEFLATE_OUT_SIZE;
+		if (result != 0) return result;
 	}
 
 	/* literals for last few bytes */
@@ -823,14 +833,17 @@ static ReturnCode Deflate_FlushBlock(DeflateState* state, Int32 len) {
 	}
 
 	state->InputPosition = 0;
-	return 0; /* TODO: need to return error code instead of killing process */
+	ReturnCode resultFinal = Stream_TryWrite(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
+	state->NextOut = state->Output;
+	state->AvailOut = DEFLATE_OUT_SIZE;
+	return resultFinal;
 }
 
 static ReturnCode Deflate_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	DeflateState* state = stream->Meta_Inflate;
 	*modified = 0;
 	while (count > 0) {
-		UInt8* dst = &state->InputBuffer[state->InputPosition];
+		UInt8* dst = &state->Input[state->InputPosition];
 		UInt32 toWrite = count;
 		if (state->InputPosition + toWrite >= DEFLATE_BUFFER_SIZE) {
 			toWrite = DEFLATE_BUFFER_SIZE - state->InputPosition;
@@ -860,10 +873,12 @@ static ReturnCode Deflate_StreamClose(Stream* stream) {
 	Deflate_FlushBits(state);
 
 	/* In case last byte still has a few extra bits */
-	if (!state->NumBits) return 0;
-	while (state->NumBits < 8) { Deflate_PushBits(state, 0, 1); }
-	Deflate_FlushBits(state);
-	return 0;
+	if (state->NumBits) {
+		while (state->NumBits < 8) { Deflate_PushBits(state, 0, 1); }
+		Deflate_FlushBits(state);
+	}
+
+	return Stream_TryWrite(state->Dest, state->Output, DEFLATE_OUT_SIZE - state->AvailOut);
 }
 
 void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying) {
@@ -871,9 +886,12 @@ void Deflate_MakeStream(Stream* stream, DeflateState* state, Stream* underlying)
 	stream->Meta_Inflate = state;
 
 	state->InputPosition = 0;
-	state->Dest    = underlying;
 	state->Bits    = 0;
 	state->NumBits = 0;
+
+	state->NextOut  = state->Output;
+	state->AvailOut = DEFLATE_OUT_SIZE;
+	state->Dest     = underlying;
 	state->WroteHeader = false;
 
 	Platform_MemSet(state->Head, 0, sizeof(state->Head));
@@ -916,7 +934,9 @@ static ReturnCode GZip_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UI
 static ReturnCode GZip_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	static UInt8 gz_header[10] = { 0x1F, 0x8B, 0x08 };
 	GZipState* state = stream->Meta_Inflate;
-	Stream_Write(state->Base.Dest, gz_header, sizeof(gz_header));
+
+	ReturnCode result = Stream_TryWrite(state->Base.Dest, gz_header, sizeof(gz_header));
+	if (result != 0) return result;
 
 	stream->Write = GZip_StreamWrite;
 	return GZip_StreamWrite(stream, data, count, modified);
@@ -962,7 +982,9 @@ static ReturnCode ZLib_StreamWrite(Stream* stream, UInt8* data, UInt32 count, UI
 static ReturnCode ZLib_StreamWriteFirst(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
 	static UInt8 zl_header[2] = { 0x78, 0x9C };
 	ZLibState* state = stream->Meta_Inflate;
-	Stream_Write(state->Base.Dest, zl_header, sizeof(zl_header));
+
+	ReturnCode result = Stream_TryWrite(state->Base.Dest, zl_header, sizeof(zl_header));
+	if (result != 0) return result;
 
 	stream->Write = ZLib_StreamWrite;
 	return ZLib_StreamWrite(stream, data, count, modified);

@@ -48,11 +48,11 @@ typedef struct InflateState_ {
 	UInt32 Bits;    /* Holds bits across byte boundaries*/
 	UInt32 NumBits; /* Number of bits in Bits buffer*/
 
-	UInt8* NextIn;   /* Pointer within Input of byte being read */
-	UInt32 AvailIn;  /* Number of bytes that can be read from Input */
+	UInt8* NextIn;   /* Pointer within Input buffer to next byte that can be read */
+	UInt32 AvailIn;  /* Max number of bytes that can be read from Input buffer */
 	UInt8* Output;   /* Pointer for output data */
-	UInt32 AvailOut; /* Max number of bytes to output */
-	Stream* Source;
+	UInt32 AvailOut; /* Max number of bytes that can be written to Output buffer */
+	Stream* Source;  /* Source for filling Input buffer */
 
 	UInt32 Index;                          /* General purpose index / counter */
 	UInt32 WindowIndex;                    /* Current index within window circular buffer */
@@ -60,10 +60,10 @@ typedef struct InflateState_ {
 	UInt32 TmpCodeLens, TmpLit, TmpDist;   /* Temp huffman codes */
 
 	UInt8 Input[INFLATE_MAX_INPUT];       /* Buffer for input to DEFLATE */
-	UInt8 Buffer[INFLATE_MAX_LITS_DISTS]; /* General purpose array */
+	UInt8 Buffer[INFLATE_MAX_LITS_DISTS]; /* General purpose temp array */
 	union {
 		HuffmanTable CodeLensTable;       /* Values represent codeword lengths of lits/dists codewords */
-		HuffmanTable LitsTable;          /* Values represent literal or lengths */
+		HuffmanTable LitsTable;           /* Values represent literal or lengths */
 	};
 	HuffmanTable DistsTable;              /* Values represent distances back */
 	UInt8 Window[INFLATE_WINDOW_SIZE];    /* Holds circular buffer of recent output data, used for LZ77 */
@@ -75,14 +75,20 @@ void Inflate_MakeStream(Stream* stream, InflateState* state, Stream* underlying)
 
 
 #define DEFLATE_BUFFER_SIZE 16384
+#define DEFLATE_OUT_SIZE 8192
 #define DEFLATE_HASH_SIZE 0x1000UL
 #define DEFLATE_HASH_MASK 0x0FFFUL
 typedef struct DeflateState_ {
 	UInt32 Bits;         /* Holds bits across byte boundaries*/
 	UInt32 NumBits;      /* Number of bits in Bits buffer*/
 	UInt32 InputPosition;
-	Stream* Dest;
-	UInt8 InputBuffer[DEFLATE_BUFFER_SIZE];
+
+	UInt8* NextOut;  /* Pointer within Output buffer to next byte that can be written */
+	UInt32 AvailOut; /* Max number of bytes that can be written to Output buffer */
+	Stream* Dest;    /* Destination that Output buffer is written to */  
+	
+	UInt8 Input[DEFLATE_BUFFER_SIZE];
+	UInt8 Output[DEFLATE_OUT_SIZE];
 	UInt16 Head[DEFLATE_HASH_SIZE];
 	UInt16 Prev[DEFLATE_BUFFER_SIZE];
 	bool WroteHeader;

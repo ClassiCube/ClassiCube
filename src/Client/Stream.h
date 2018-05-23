@@ -36,6 +36,7 @@ typedef struct Stream_ {
 
 void Stream_Read(Stream* stream, UInt8* buffer, UInt32 count);
 void Stream_Write(Stream* stream, UInt8* buffer, UInt32 count);
+ReturnCode Stream_TryWrite(Stream* stream, UInt8* buffer, UInt32 count);
 Int32 Stream_TryReadByte(Stream* stream);
 void Stream_SetName(Stream* stream, STRING_PURE String* name);
 ReturnCode Stream_Skip(Stream* stream, UInt32 count); 

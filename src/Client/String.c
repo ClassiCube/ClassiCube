@@ -11,11 +11,7 @@ UInt8 Char_ToLower(UInt8 c) {
 }
 
 String String_Init(STRING_REF UInt8* buffer, UInt16 length, UInt16 capacity) {
-	String str;
-	str.buffer = buffer;
-	str.length = length;
-	str.capacity = capacity;
-	return str;
+	String str = { buffer, length, capacity }; return str;
 }
 
 String String_InitAndClear(STRING_REF UInt8* buffer, UInt16 capacity) {
