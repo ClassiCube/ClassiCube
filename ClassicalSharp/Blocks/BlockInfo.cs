@@ -12,9 +12,10 @@ namespace ClassicalSharp {
 		public const byte Gravel = 2; public const byte Grass = 3;
 		public const byte Stone = 4;  public const byte Metal = 5;
 		public const byte Glass = 6;  public const byte Cloth = 7;
-		public const byte Sand = 8;   public const byte Snow = 9;
+		public const byte Sand = 8;   public const byte Snow = 9;	
 		
-		public static string[] Names = new string[10] {
+		public const byte Count = 10;	
+		public static string[] Names = new string[Count] {
 			"none", "wood", "gravel", "grass", "stone",
 			"metal", "glass", "cloth", "sand", "snow",
 		};

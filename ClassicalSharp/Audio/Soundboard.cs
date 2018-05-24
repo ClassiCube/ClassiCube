@@ -55,7 +55,7 @@ namespace ClassicalSharp.Audio {
 		}
 		
 		public Sound PickRandomSound(byte type) {
-			if (type == SoundType.None)  return null;
+			if (type == SoundType.None || type >= SoundType.Count)  return null;
 			if (type == SoundType.Metal) type = SoundType.Stone;
 			string name = SoundType.Names[type];
 			
