@@ -187,13 +187,10 @@ namespace ClassicalSharp.Gui.Widgets {
 			buffer.Append(BlockInfo.Name[block]);
 			if (game.ClassicMode) return;
 			
-			buffer.Append(" (ID ");
-			buffer.AppendNum(block);
-			buffer.Append("&f, place ");
-			buffer.Append(BlockInfo.CanPlace[block] ? "&aYes" : "&cNo");
-			buffer.Append("&f, delete ");
-			buffer.Append(BlockInfo.CanDelete[block] ? "&aYes" : "&cNo");
-			buffer.Append("&f)");
+			buffer.Append(" (ID ").AppendNum(block).Append("&f");
+			if (!BlockInfo.CanPlace[block])  { buffer.Append( ", place &cNo&f"); }
+			if (!BlockInfo.CanDelete[block]) { buffer.Append(", delete &cNo&f"); }
+			buffer.Append(')');
 		}
 		
 		int lastCreatedIndex = -1000;

@@ -558,9 +558,10 @@ static void TableWidget_MakeBlockDesc(STRING_TRANSIENT String* desc, BlockID blo
 	String_AppendString(desc, &name);
 	if (Game_ClassicMode) return;
 
-	const UInt8* place = Block_CanPlace[block] ? "&aYes" : "&cNo";
-	const UInt8* del = Block_CanDelete[block] ? "&aYes" : "&cNo";
-	String_Format3(desc, " (ID %b&f, place %c&f, delete %c&f)", &block, place, del);
+	String_Format1(desc, " (ID %b&f", &block);
+	if (!Block_CanPlace[block])  { String_AppendConst(desc,  ", place &cNo&f"); }
+	if (!Block_CanDelete[block]) { String_AppendConst(desc, ", delete &cNo&f"); }
+	String_Append(desc, ')');
 }
 
 static void TableWidget_UpdateDescTexPos(TableWidget* widget) {
