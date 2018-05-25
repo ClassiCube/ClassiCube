@@ -55,12 +55,12 @@ namespace ClassicalSharp {
 					potHeat[((y + 1) & mask) << shift | ((x + 1) & mask)];// x + 1, y + 1
 				
 				soupHeat[i] = lSoupHeat * 0.1f + lPotHeat * 0.2f;
+				
 				potHeat[i] += flameHeat[i];
 				if (potHeat[i] < 0) potHeat[i] = 0;
-				flameHeat[i] -= 0.06f * 0.01f;
 				
-				if (rnd.NextFloat() <= 0.005f)
-					flameHeat[i] = 1.5f * 0.01f;
+				flameHeat[i] -= 0.06f * 0.01f;
+				if (rnd.NextFloat() <= 0.005f) flameHeat[i] = 1.5f * 0.01f;
 				
 				// Output the pixel
 				float col = 2 * soupHeat[i];
@@ -96,12 +96,12 @@ namespace ClassicalSharp {
 					soupHeat[y << shift | ((x + 1) & mask)];
 
 				soupHeat[i] = lSoupHeat / 3.3f + potHeat[i] * 0.8f;
-				potHeat[i] += flameHeat[i] * 0.05f;
-				if (potHeat[i] < 0) potHeat[i] = 0;
-				flameHeat[i] -= 0.1f;
 				
-				if (rnd.NextFloat() <= 0.05f)
-					flameHeat[i] = 0.5f;
+				potHeat[i] += flameHeat[i];
+				if (potHeat[i] < 0) potHeat[i] = 0;
+				
+				flameHeat[i] -= 0.1f * 0.05f;
+				if (rnd.NextFloat() <= 0.05f) flameHeat[i] = 0.5f * 0.05f;
 				
 				// Output the pixel
 				float col = soupHeat[i];

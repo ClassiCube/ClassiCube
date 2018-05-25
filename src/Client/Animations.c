@@ -12,8 +12,8 @@
 #include "ErrorHandler.h"
 #define LIQUID_ANIM_MAX 64
 
-Real32 L_soupHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
-Real32 L_potHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+Real32 L_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
+Real32 L_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 Real32 L_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random L_rnd;
 bool L_rndInitalised;
@@ -30,8 +30,12 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
-			Int32 xx = x + (Int32)(1.2f * Math_SinF(y * 22.5f * MATH_DEG2RAD));
-			Int32 yy = y + (Int32)(1.2f * Math_SinF(x * 22.5f * MATH_DEG2RAD));
+
+			/* Lookup table for (Int32)(1.2f * Math_SinF([ANGLE] * 22.5f * MATH_DEG2RAD)); */
+			/* [ANGLE] is integer x/y, so repeats every 16 intervals */
+			static Int8 sin_adj_table[16] = { 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, -1, -1, -1, 0, 0 };
+			Int32 xx = x + sin_adj_table[y & 0xF], yy = y + sin_adj_table[x & 0xF];
+
 			Real32 lSoupHeat =
 				L_soupHeat[((yy - 1) & mask) << shift | ((xx - 1) & mask)] +
 				L_soupHeat[((yy - 1) & mask) << shift | (xx       & mask)] +
@@ -52,22 +56,21 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 				L_potHeat[((y + 1) & mask) << shift | ((x + 1) & mask)];/* x + 1, y + 1 */
 
 			L_soupHeat[i] = lSoupHeat * 0.1f + lPotHeat * 0.2f;
+
 			L_potHeat[i] += L_flameHeat[i];
 			if (L_potHeat[i] < 0.0f) L_potHeat[i] = 0.0f;
-			L_flameHeat[i] -= 0.06f * 0.01f;
 
-			if (Random_Float(&L_rnd) <= 0.005f)
-				L_flameHeat[i] = 1.5f * 0.01f;
+			L_flameHeat[i] -= 0.06f * 0.01f;
+			if (Random_Float(&L_rnd) <= 0.005f) L_flameHeat[i] = 1.5f * 0.01f;
 
 			/* Output the pixel */
 			Real32 col = 2.0f * L_soupHeat[i];
-			col = col < 0.0f ? 0.0f : col;
-			col = col > 1.0f ? 1.0f : col;
+			Math_Clamp(col, 0.0f, 1.0f);
 
-			Real32 r = col * 100.0f + 155.0f;
-			Real32 g = col * col * 255.0f;
-			Real32 b = col * col * col * col * 128.0f;
-			*ptr = 0xFF000000UL | ((UInt8)r << 16) | ((UInt8)g << 8) | (UInt8)b;
+			UInt8 r = (UInt8)(col * 100.0f + 155.0f);
+			UInt8 g = (UInt8)(col * col * 255.0f);
+			UInt8 b = (UInt8)(col * col * col * col * 128.0f);
+			*ptr = PackedCol_ARGB(r, g, b, 255);
 
 			ptr++; i++;
 		}
@@ -75,8 +78,8 @@ static void LavaAnimation_Tick(UInt32* ptr, Int32 size) {
 }
 
 
-Real32 W_soupHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
-Real32 W_potHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
+Real32 W_soupHeat[LIQUID_ANIM_MAX  * LIQUID_ANIM_MAX];
+Real32 W_potHeat[LIQUID_ANIM_MAX   * LIQUID_ANIM_MAX];
 Real32 W_flameHeat[LIQUID_ANIM_MAX * LIQUID_ANIM_MAX];
 Random W_rnd;
 bool W_rndInitalised;
@@ -93,30 +96,28 @@ static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 	for (y = 0; y < size; y++) {
 		for (x = 0; x < size; x++) {
 			/* Calculate the colour at this coordinate in the heatmap */
-			Real32 lSoupHeat =
+			Real32 wSoupHeat =
 				W_soupHeat[y << shift | ((x - 1) & mask)] +
 				W_soupHeat[y << shift | x               ] +
 				W_soupHeat[y << shift | ((x + 1) & mask)];
 
-			W_soupHeat[i] = lSoupHeat / 3.3f + W_potHeat[i] * 0.8f;
-			W_potHeat[i] += W_flameHeat[i] * 0.05f;
-			if (W_potHeat[i] < 0.0f) W_potHeat[i] = 0.0f;
-			W_flameHeat[i] -= 0.1f;
+			W_soupHeat[i] = wSoupHeat / 3.3f + W_potHeat[i] * 0.8f;
 
-			if (Random_Float(&W_rnd) <= 0.05f)
-				W_flameHeat[i] = 0.5f;
+			W_potHeat[i] += W_flameHeat[i];
+			if (W_potHeat[i] < 0.0f) W_potHeat[i] = 0.0f;
+
+			W_flameHeat[i] -= 0.1f * 0.05f;
+			if (Random_Float(&W_rnd) <= 0.05f) W_flameHeat[i] = 0.5f * 0.05f;
 
 			/* Output the pixel */
 			Real32 col = W_soupHeat[i];
-			col = col < 0.0f ? 0.0f : col;
-			col = col > 1.0f ? 1.0f : col;
+			Math_Clamp(col, 0.0f, 1.0f);
 			col = col * col;
 
-			Real32 r = 32.0f  + col * 32.0f;
-			Real32 g = 50.0f  + col * 64.0f;
-			Real32 a = 146.0f + col * 50.0f;
-
-			*ptr = ((UInt8)a << 24) | ((UInt8)r << 16) | ((UInt8)g << 8) | 0xFFUL;
+			UInt8 r = (UInt8)(32.0f  + col * 32.0f);
+			UInt8 g = (UInt8)(50.0f  + col * 64.0f);
+			UInt8 a = (UInt8)(146.0f + col * 50.0f);
+			*ptr = PackedCol_ARGB(r, g, 255, a);
 
 			ptr++; i++;
 		}
