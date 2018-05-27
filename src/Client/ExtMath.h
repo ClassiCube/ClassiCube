@@ -15,18 +15,19 @@
 #define Math_Packed2Deg(x) ((x) * 360.0f / 256.0f)
 
 Real32 Math_AbsF(Real32 x);
-Real32 Math_SinF(Real32 x);
-Real32 Math_CosF(Real32 x);
-Real32 Math_TanF(Real32 x);
 Real32 Math_SqrtF(Real32 x);
 Real32 Math_Mod1(Real32 x);
+Int32 Math_AbsI(Int32 x);
+
+Real64 Math_Sin(Real64 x);
+Real64 Math_Cos(Real64 x);
+Real32 Math_SinF(Real32 x);
+Real32 Math_CosF(Real32 x);
 
 Real64 Math_Log(Real64 x);
 Real64 Math_Exp(Real64 x);
-Real64 Math_Asin(Real64 x);
-Real64 Math_Atan2(Real64 y, Real64 x);
+Real64 Math_FastTan(Real64 x);
 
-Int32 Math_AbsI(Int32 x);
 Int32 Math_Floor(Real32 value);
 Int32 Math_Ceil(Real32 value);
 Int32 Math_Log2(Int32 value);

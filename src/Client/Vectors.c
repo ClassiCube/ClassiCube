@@ -152,10 +152,10 @@ Vector3 Vector3_GetDirVector(Real32 yawRad, Real32 pitchRad) {
 	return Vector3_Create3(x, y, z);
 }
 
-void Vector3_GetHeading(Vector3 dir, Real32* yaw, Real32* pitch) {
+/*void Vector3_GetHeading(Vector3 dir, Real32* yaw, Real32* pitch) {
 	*pitch = (Real32)Math_Asin(-dir.Y);
 	*yaw =   (Real32)Math_Atan2(dir.X, -dir.Z);
-}
+}*/
 
 
 Matrix Matrix_Identity = {
@@ -250,7 +250,7 @@ void Matrix_OrthographicOffCenter(Matrix* result, Real32 left, Real32 right, Rea
 }
 
 void Matrix_PerspectiveFieldOfView(Matrix* result, Real32 fovy, Real32 aspect, Real32 zNear, Real32 zFar) {
-	Real32 c = zNear * Math_TanF(0.5f * fovy);
+	Real32 c = zNear * (Real32)Math_FastTan(0.5f * fovy);
 	Matrix_PerspectiveOffCenter(result, -c * aspect, c * aspect, -c, c, zNear, zFar);
 }
 

@@ -68,7 +68,7 @@ void Vector3I_Max(Vector3I* result, Vector3I* a, Vector3I* b);
 Vector3 Vector3_GetDirVector(Real32 yawRad, Real32 pitchRad);
 /* Returns the yaw and pitch of the given direction vector.
 NOTE: This is not an identity function. Returned pitch is always within [-90, 90] degrees.*/
-void Vector3_GetHeading(Vector3 dir, Real32* yawRad, Real32* pitchRad);
+/*void Vector3_GetHeading(Vector3 dir, Real32* yawRad, Real32* pitchRad);*/
 
 void Matrix_RotateX(Matrix* result, Real32 angle);
 void Matrix_RotateY(Matrix* result, Real32 angle);

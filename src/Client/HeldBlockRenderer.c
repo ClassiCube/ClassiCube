@@ -108,12 +108,12 @@ static void HeldBlockRenderer_DigAnimation(void) {
 
 	held_entity.Position.X -= Math_SinF(sqrtLerpPI)       * 0.4f;
 	held_entity.Position.Y += Math_SinF((sqrtLerpPI * 2)) * 0.2f;
-	held_entity.Position.Z -= sinHalfCircle              * 0.2f;
+	held_entity.Position.Z -= sinHalfCircle               * 0.2f;
 
 	Real32 sinHalfCircleWeird = Math_SinF(t * t * MATH_PI);
-	held_entity.RotY -= Math_SinF(sqrtLerpPI)  * 80.0f;
+	held_entity.RotY  -= Math_SinF(sqrtLerpPI) * 80.0f;
 	held_entity.HeadY -= Math_SinF(sqrtLerpPI) * 80.0f;
-	held_entity.RotX += sinHalfCircleWeird    * 20.0f;
+	held_entity.RotX  += sinHalfCircleWeird    * 20.0f;
 }
 
 static void HeldBlockRenderer_ResetAnim(bool setLastHeld, Real64 period) {

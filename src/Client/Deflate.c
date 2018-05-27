@@ -205,15 +205,15 @@ static void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	UInt16 bl_offsets[INFLATE_MAX_BITS];
 	for (i = 1; i < INFLATE_MAX_BITS; i++) {
 		code = (code + bl_count[i - 1]) << 1;
-		bl_offsets[i] = (UInt16)offset;
-		table->FirstCodewords[i] = (UInt16)code;
-		table->FirstOffsets[i] = (UInt16)offset;
-
+		bl_offsets[i]            = offset;
+		table->FirstCodewords[i] = code;
+		table->FirstOffsets[i]   = offset;
 		offset += bl_count[i];
+
 		/* Last codeword is actually: code + (bl_count[i] - 1) */
 		/* When decoding we peform < against this value though, so we need to add 1 here */
 		if (bl_count[i]) {
-			table->EndCodewords[i] = (UInt16)(code + bl_count[i]); 
+			table->EndCodewords[i] = code + bl_count[i];
 		} else {
 			table->EndCodewords[i] = 0;
 		}
@@ -224,7 +224,7 @@ static void Huffman_Build(HuffmanTable* table, UInt8* bitLens, Int32 count) {
 	for (i = 0; i < count; i++, value++) {
 		Int32 len = bitLens[i];
 		if (len == 0) continue;
-		table->Values[bl_offsets[len]] = (UInt16)value;
+		table->Values[bl_offsets[len]] = value;
 
 		/* Computes the accelerated lookup table values for this codeword
 		* For example, assume len = 4 and codeword = 0100
