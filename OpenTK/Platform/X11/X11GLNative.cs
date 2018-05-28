@@ -350,6 +350,9 @@ namespace OpenTK.Platform.X11 {
 						EventHandler<KeyPressEventArgs> key_press = KeyPress;
 						if (key_press != null) {
 							for (int i = 0; i < status; i++) {
+								// ignore NULL char after non-ASCII input char, like ä or å on Finnish keyboard layout
+								if (chars[i] == '\0') continue;
+								
 								KPEventArgs.KeyChar = chars[i];
 								key_press(this, KPEventArgs);
 							}

@@ -829,7 +829,7 @@ static ReturnCode Deflate_FlushBlock(DeflateState* state, Int32 len) {
 	/* literals for last few bytes */
 	while (len > 0) {
 		Deflate_Lit(state, *cur);
-		cur++; len--;
+		len--; cur++;
 	}
 
 	state->InputPosition = 0;

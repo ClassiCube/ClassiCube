@@ -24,6 +24,7 @@ UInt8* Platform_NewLine = "\r\n";
 UInt8 Platform_DirectorySeparator = '\\';
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
+ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
 
 void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
@@ -653,7 +654,7 @@ ReturnCode Platform_HttpGetRequestHeaders(AsyncRequest* request, void* handle, U
 }
 
 ReturnCode Platform_HttpGetRequestData(AsyncRequest* request, void* handle, void** data, UInt32 size, volatile Int32* progress) {
-	if (size == 0) return 1;
+	if (size == 0) return ERROR_NOT_SUPPORTED;
 	*data = Platform_MemAlloc(size, 1);
 	if (*data == NULL) ErrorHandler_Fail("Failed to allocate memory for http get data");
 

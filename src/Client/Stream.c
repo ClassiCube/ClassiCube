@@ -86,11 +86,15 @@ ReturnCode Stream_Skip(Stream* stream, UInt32 count) {
 }
 
 static ReturnCode Stream_DefaultIO(Stream* stream, UInt8* data, UInt32 count, UInt32* modified) {
-	*modified = 0; return 1;
+	*modified = 0; return ReturnCode_NotSupported;
 }
 static ReturnCode Stream_DefaultClose(Stream* stream) { return 0; }
-static ReturnCode Stream_DefaultSeek(Stream* stream, Int32 offset, Int32 seekType) { return 1; }
-static ReturnCode Stream_DefaultGet(Stream* stream, UInt32* value) { *value = 0; return 1; }
+static ReturnCode Stream_DefaultSeek(Stream* stream, Int32 offset, Int32 seekType) { 
+	return ReturnCode_NotSupported; 
+}
+static ReturnCode Stream_DefaultGet(Stream* stream, UInt32* value) { 
+	*value = 0; return ReturnCode_NotSupported; 
+}
 
 void Stream_SetDefaultOps(Stream* stream) {
 	stream->Read  = Stream_DefaultIO;
