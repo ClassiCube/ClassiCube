@@ -484,20 +484,21 @@ static void Player_MakeNameTexture(Player* player) {
 		player->NameTex = Texture_MakeInvalid();
 		player->NameTex.X = PLAYER_NAME_EMPTY_TEX;
 	} else {
-		UInt8 buffer[String_BufferSize(STRING_SIZE * 2)];
+		UInt8 buffer[String_BufferSize(STRING_SIZE)];
 		String shadowName = String_InitAndClearArray(buffer);
 
 		size.Width += 3; size.Height += 3;
 		Bitmap bmp; Bitmap_AllocateClearedPow2(&bmp, size.Width, size.Height);
 		Drawer2D_Begin(&bmp);
 		{
-			Drawer2D_Cols[0xFF] = PackedCol_Create3(80, 80, 80);
-			String_AppendConst(&shadowName, "&\xFF");
+			PackedCol origWhiteCol = Drawer2D_Cols['f'];
+
+			Drawer2D_Cols['f'] = PackedCol_Create3(80, 80, 80);
 			String_AppendColorless(&shadowName, &displayName);
 			args.Text = shadowName;
 			Drawer2D_DrawText(&args, 3, 3);
 
-			Drawer2D_Cols[0xFF] = PackedCol_Create4(0, 0, 0, 0);
+			Drawer2D_Cols['f'] = origWhiteCol;
 			args.Text = displayName;
 			Drawer2D_DrawText(&args, 0, 0);
 		}

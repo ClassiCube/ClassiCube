@@ -61,13 +61,16 @@ namespace ClassicalSharp.Entities {
 				using (Bitmap bmp = IDrawer2D.CreatePow2Bitmap(size))
 			{
 				drawer.SetBitmap(bmp);
-				args.Text = "&\0" + Utils.StripColours(args.Text);
-				IDrawer2D.Cols[0] = new FastColour(80, 80, 80);
-				game.Drawer2D.DrawText(ref args, 3, 3);
-				IDrawer2D.Cols[0] = default(FastColour);
+				FastColour origWhiteCol = IDrawer2D.Cols['f'];
 				
+				IDrawer2D.Cols['f'] = new FastColour(80, 80, 80);			
+				args.Text = Utils.StripColours(args.Text);
+				game.Drawer2D.DrawText(ref args, 3, 3);
+				
+				IDrawer2D.Cols['f'] = origWhiteCol;
 				args.Text = DisplayName;
 				game.Drawer2D.DrawText(ref args, 0, 0);
+				
 				return game.Drawer2D.Make2DTexture(bmp, size, 0, 0);
 			}
 		}
