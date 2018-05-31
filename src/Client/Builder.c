@@ -40,51 +40,39 @@ typedef struct Builder1DPart_ {
 	VertexP3fT2fC4b* fVertices[FACE_COUNT];
 	Int32 fCount[FACE_COUNT];
 	Int32 sCount, sOffset, sAdvance;
-	VertexP3fT2fC4b* vertices;
-	Int32 verticesBufferCount;
 } Builder1DPart;
+
 /* Part builder data, for both normal and translucent parts.
 The first ATLAS1D_MAX_ATLASES_COUNT parts are for normal parts, remainder are for translucent parts. */
 Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES_COUNT * 2];
+VertexP3fT2fC4b* Builder_Vertices;
+Int32 Builder_VerticesElems;
 
 static Int32 Builder1DPart_VerticesCount(Builder1DPart* part) {
-	Int32 count = part->sCount;
-	Int32 i;
+	Int32 i, count = part->sCount;
 	for (i = 0; i < FACE_COUNT; i++) { count += part->fCount[i]; }
 	return count;
 }
 
-static void Builder1DPart_Prepare(Builder1DPart* part) {
-	part->sOffset = 0;
-	part->sAdvance = (part->sCount / 4);
+static void Builder1DPart_CalcOffsets(Builder1DPart* part, Int32* offset) {
+	Int32 pos = *offset, i;
+	part->sOffset = pos;
+	part->sAdvance = part->sCount >> 2;
 
-	/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
-	Int32 vCount = Builder1DPart_VerticesCount(part);
-	if (vCount > part->verticesBufferCount) {
-		Platform_MemFree(&part->vertices);
-
-		part->vertices = Platform_MemAlloc(vCount + 2, sizeof(VertexP3fT2fC4b));
-		part->verticesBufferCount = vCount;
-		if (part->vertices == NULL) {
-			ErrorHandler_Fail("Builder1DPart_Prepare - failed to allocate memory");
-		}
-	}
-
-	Int32 offset = part->sCount, i;
+	pos += part->sCount;
 	for (i = 0; i < FACE_COUNT; i++) {
-		part->fVertices[i] = &part->vertices[offset];
-		offset += part->fCount[i];
+		part->fVertices[i] = &Builder_Vertices[pos];
+		pos += part->fCount[i];
 	}
+	*offset = pos;
 }
 
-static void Builder1DPart_Reset(Builder1DPart* part) {
-	part->sCount = 0; part->sOffset = 0; part->sAdvance = 0;
-
-	Int32 i;
-	for (i = 0; i < FACE_COUNT; i++) {
-		part->fVertices[i] = NULL;
-		part->fCount[i] = 0;
+static Int32 Builder_TotalVerticesCount(void) {
+	Int32 i, count = 0;
+	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT * 2; i++) {
+		count += Builder1DPart_VerticesCount(&Builder_Parts[i]);
 	}
+	return count;
 }
 
 
@@ -101,22 +89,22 @@ static void Builder_AddVertices(BlockID block, Face face) {
 	part->fCount[face] += 4;
 }
 
-static void Builder_SetPartInfo(Builder1DPart* part, ChunkPartInfo* info, bool* hasParts) {
+static void Builder_SetPartInfo(Builder1DPart* part, Int32* offset, ChunkPartInfo* info, bool* hasParts) {
 	Int32 vCount = Builder1DPart_VerticesCount(part);
+	info->Offset = -1;
 	if (vCount == 0) return;
 
-	/* add an extra element to fix crashing on some GPUs */
-	info->VbId = Gfx_CreateVb(part->vertices, VERTEX_FORMAT_P3FT2FC4B, vCount + 1);
-	info->HasVertices = true;
+	info->Offset = *offset;
+	*offset += vCount;
 	*hasParts = true;
 
-	info->XMinCount = (UInt16)part->fCount[FACE_XMIN];
-	info->XMaxCount = (UInt16)part->fCount[FACE_XMAX];
-	info->ZMinCount = (UInt16)part->fCount[FACE_ZMIN];
-	info->ZMaxCount = (UInt16)part->fCount[FACE_ZMAX];
-	info->YMinCount = (UInt16)part->fCount[FACE_YMIN];
-	info->YMaxCount = (UInt16)part->fCount[FACE_YMAX];
-	info->SpriteCountDiv4 = part->sCount >> 2;
+	info->Counts[FACE_XMIN] = part->fCount[FACE_XMIN];
+	info->Counts[FACE_XMAX] = part->fCount[FACE_XMAX];
+	info->Counts[FACE_ZMIN] = part->fCount[FACE_ZMIN];
+	info->Counts[FACE_ZMAX] = part->fCount[FACE_ZMAX];
+	info->Counts[FACE_YMIN] = part->fCount[FACE_YMIN];
+	info->Counts[FACE_YMAX] = part->fCount[FACE_YMAX];
+	info->SpriteCount       = part->sCount;
 }
 
 
@@ -326,15 +314,20 @@ void Builder_MakeChunk(ChunkInfo* info) {
 	info->AllAir = allAir;
 	if (!hasMesh) return;
 
-	Int32 i, partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
+	Int32 totalVerts = Builder_TotalVerticesCount();
+	if (totalVerts == 0) return;
+	/* add an extra element to fix crashing on some GPUs */
+	info->VbId = Gfx_CreateVb(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+
+	Int32 i, offset = 0, partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
 	bool hasNormal = false, hasTranslucent = false;
 
-	for (i = 0; i < Atlas1D_Count; i++) {
+	for (i = 0; i < MapRenderer_1DUsedCount; i++) {
 		Int32 j = i + ATLAS1D_MAX_ATLASES_COUNT;
 		Int32 curIdx = partsIndex + i * MapRenderer_ChunksCount;
 
-		Builder_SetPartInfo(&Builder_Parts[i], &MapRenderer_PartsNormal[curIdx], &hasNormal);
-		Builder_SetPartInfo(&Builder_Parts[j], &MapRenderer_PartsTranslucent[curIdx], &hasTranslucent);
+		Builder_SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNormal);
+		Builder_SetPartInfo(&Builder_Parts[j], &offset, &MapRenderer_PartsTranslucent[curIdx], &hasTranslucent);
 	}
 
 	if (hasNormal) {
@@ -361,18 +354,27 @@ static bool Builder_OccludedLiquid(Int32 chunkIndex) {
 }
 
 static void Builder_DefaultPreStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
-	Int32 i;
-	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT * 2; i++) {
-		Builder1DPart_Reset(&Builder_Parts[i]);
-	}
+	Platform_MemSet(Builder_Parts, 0, sizeof(Builder_Parts));
 }
 
 static void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
-	Int32 i;
-	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT * 2; i++) {
-		Int32 vCount = Builder1DPart_VerticesCount(&Builder_Parts[i]);
-		if (vCount == 0) continue;
-		Builder1DPart_Prepare(&Builder_Parts[i]);
+	Int32 i, vertsCount = Builder_TotalVerticesCount();
+	if (vertsCount > Builder_VerticesElems) {
+		Platform_MemFree(&Builder_Vertices);
+		/* ensure buffer can be accessed with 64 bytes alignment by putting 2 extra vertices at end. */
+		Builder_Vertices = Platform_MemAlloc(vertsCount + 2, sizeof(VertexP3fT2fC4b));
+		Builder_VerticesElems = vertsCount;
+
+		if (Builder_Vertices == NULL) {
+			ErrorHandler_Fail("Builder1DPart_Prepare - failed to allocate memory");
+		}
+	}
+
+	vertsCount = 0;
+	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT; i++) {
+		Int32 j = i + ATLAS1D_MAX_ATLASES_COUNT;
+		Builder1DPart_CalcOffsets(&Builder_Parts[i], &vertsCount);
+		Builder1DPart_CalcOffsets(&Builder_Parts[j], &vertsCount);
 	}
 }
 
@@ -410,31 +412,31 @@ static void Builder_DrawSprite(Int32 count) {
 
 	/* Draw Z axis */
 	Int32 index = part->sOffset;
-	v.X = x1; v.Y = y1; v.Z = z1; v.U = u2; v.V = v2; part->vertices[index + 0] = v;
-	          v.Y = y2;                     v.V = v1; part->vertices[index + 1] = v;
-	v.X = x2;           v.Z = z2; v.U = u1;           part->vertices[index + 2] = v;
-	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
+	v.X = x1; v.Y = y1; v.Z = z1; v.U = u2; v.V = v2; Builder_Vertices[index + 0] = v;
+	          v.Y = y2;                     v.V = v1; Builder_Vertices[index + 1] = v;
+	v.X = x2;           v.Z = z2; v.U = u1;           Builder_Vertices[index + 2] = v;
+	          v.Y = y1;                     v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw Z axis mirrored */
 	index += part->sAdvance;
-	v.X = x2; v.Y = y1; v.Z = z2; v.U = u2;           part->vertices[index + 0] = v;
-	          v.Y = y2;                     v.V = v1; part->vertices[index + 1] = v;
-	v.X = x1;           v.Z = z1; v.U = u1;           part->vertices[index + 2] = v;
-	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
+	v.X = x2; v.Y = y1; v.Z = z2; v.U = u2;           Builder_Vertices[index + 0] = v;
+	          v.Y = y2;                     v.V = v1; Builder_Vertices[index + 1] = v;
+	v.X = x1;           v.Z = z1; v.U = u1;           Builder_Vertices[index + 2] = v;
+	          v.Y = y1;                     v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw X axis */
 	index += part->sAdvance;
-	v.X = x1; v.Y = y1; v.Z = z2; v.U = u2;           part->vertices[index + 0] = v;
-	          v.Y = y2;                     v.V = v1; part->vertices[index + 1] = v;
-	v.X = x2;           v.Z = z1; v.U = u1;           part->vertices[index + 2] = v;
-	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
+	v.X = x1; v.Y = y1; v.Z = z2; v.U = u2;           Builder_Vertices[index + 0] = v;
+	          v.Y = y2;                     v.V = v1; Builder_Vertices[index + 1] = v;
+	v.X = x2;           v.Z = z1; v.U = u1;           Builder_Vertices[index + 2] = v;
+	          v.Y = y1;                     v.V = v2; Builder_Vertices[index + 3] = v;
 
 	/* Draw X axis mirrored */
 	index += part->sAdvance;
-	v.X = x2; v.Y = y1; v.Z = z1; v.U = u2;           part->vertices[index + 0] = v;
-	          v.Y = y2;                     v.V = v1; part->vertices[index + 1] = v;
-	v.X = x1;           v.Z = z2; v.U = u1;           part->vertices[index + 2] = v;
-	          v.Y = y1;                     v.V = v2; part->vertices[index + 3] = v;
+	v.X = x2; v.Y = y1; v.Z = z1; v.U = u2;           Builder_Vertices[index + 0] = v;
+	          v.Y = y2;                     v.V = v1; Builder_Vertices[index + 1] = v;
+	v.X = x1;           v.Z = z2; v.U = u1;           Builder_Vertices[index + 2] = v;
+	          v.Y = y1;                     v.V = v2; Builder_Vertices[index + 3] = v;
 
 	part->sOffset += 4;
 }
@@ -643,7 +645,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 void NormalBuilder_SetActive(void) {
 	Builder_SetDefault();
 	Builder_StretchXLiquid = NormalBuilder_StretchXLiquid;
-	Builder_StretchX = NormalBuilder_StretchX;
-	Builder_StretchZ = NormalBuilder_StretchZ;
-	Builder_RenderBlock = NormalBuilder_RenderBlock;
+	Builder_StretchX       = NormalBuilder_StretchX;
+	Builder_StretchZ       = NormalBuilder_StretchZ;
+	Builder_RenderBlock    = NormalBuilder_RenderBlock;
 }

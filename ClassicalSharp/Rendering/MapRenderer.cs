@@ -11,7 +11,7 @@ using BlockID = System.UInt16;
 namespace ClassicalSharp.Renderers {
 	
 	public struct ChunkPartInfo {
-		public int VbId, VerticesCount, SpriteCount;
+		public int Offset, SpriteCount;
 		public ushort LeftCount, RightCount, FrontCount, BackCount, BottomCount, TopCount;
 	}
 	
@@ -25,6 +25,7 @@ namespace ClassicalSharp.Renderers {
 		public bool Visited = false, Occluded = false;
 		public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 		#endif
+		public int VbId;
 		
 		public ChunkPartInfo[] NormalParts;
 		public ChunkPartInfo[] TranslucentParts;
@@ -42,7 +43,7 @@ namespace ClassicalSharp.Renderers {
 		}
 	}
 	
-	public partial class MapRenderer {	
+	public partial class MapRenderer {
 		Game game;
 		
 		internal int _1DUsed = -1, chunksX, chunksY, chunksZ;
@@ -177,10 +178,10 @@ namespace ClassicalSharp.Renderers {
 				if (info.NormalParts == null) continue;
 
 				ChunkPartInfo part = info.NormalParts[batch];
-				if (part.VerticesCount == 0) continue;
+				if (part.Offset < 0) continue;
 				usedNormal[batch] = true;
 				
-				gfx.BindVb(part.VbId);
+				gfx.BindVb(info.VbId);
 				bool drawLeft = info.DrawLeft && part.LeftCount > 0;
 				bool drawRight = info.DrawRight && part.RightCount > 0;
 				bool drawBottom = info.DrawBottom && part.BottomCount > 0;
@@ -188,7 +189,7 @@ namespace ClassicalSharp.Renderers {
 				bool drawFront = info.DrawFront && part.FrontCount > 0;
 				bool drawBack = info.DrawBack && part.BackCount > 0;
 				
-				int offset = part.SpriteCount;
+				int offset = part.Offset + part.SpriteCount;
 				if (drawLeft && drawRight) {
 					gfx.FaceCulling = true;
 					gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, offset);
@@ -231,20 +232,25 @@ namespace ClassicalSharp.Renderers {
 				}
 				
 				if (part.SpriteCount == 0) continue;
+				offset = part.Offset;
 				int count = part.SpriteCount / 4; // 4 per sprite
+				
 				gfx.FaceCulling = true;
 				if (info.DrawRight || info.DrawFront) {
-					gfx.DrawIndexedVb_TrisT2fC4b(count, 0); game.Vertices += count;
-				}
+					gfx.DrawIndexedVb_TrisT2fC4b(count, offset); game.Vertices += count;
+				} offset += count;
+				
 				if (info.DrawLeft || info.DrawBack) {
-					gfx.DrawIndexedVb_TrisT2fC4b(count, count); game.Vertices += count;
-				}
+					gfx.DrawIndexedVb_TrisT2fC4b(count, offset); game.Vertices += count;
+				} offset += count;
+				
 				if (info.DrawLeft || info.DrawFront) {
-					gfx.DrawIndexedVb_TrisT2fC4b(count, count * 2); game.Vertices += count;
-				}
+					gfx.DrawIndexedVb_TrisT2fC4b(count, offset); game.Vertices += count;
+				} offset += count;
+				
 				if (info.DrawRight || info.DrawBack) {
-					gfx.DrawIndexedVb_TrisT2fC4b(count, count * 3); game.Vertices += count;
-				}
+					gfx.DrawIndexedVb_TrisT2fC4b(count, offset); game.Vertices += count;
+				} offset += count;
 				gfx.FaceCulling = false;
 			}
 		}
@@ -256,10 +262,10 @@ namespace ClassicalSharp.Renderers {
 				if (info.TranslucentParts == null) continue;
 				
 				ChunkPartInfo part = info.TranslucentParts[batch];
-				if (part.VerticesCount == 0) continue;
+				if (part.Offset < 0) continue;
 				usedTranslucent[batch] = true;
 				
-				gfx.BindVb(part.VbId);
+				gfx.BindVb(info.VbId);
 				bool drawLeft = (inTranslucent || info.DrawLeft) && part.LeftCount > 0;
 				bool drawRight = (inTranslucent || info.DrawRight) && part.RightCount > 0;
 				bool drawBottom = (inTranslucent || info.DrawBottom) && part.BottomCount > 0;
@@ -267,7 +273,7 @@ namespace ClassicalSharp.Renderers {
 				bool drawFront = (inTranslucent || info.DrawFront) && part.FrontCount > 0;
 				bool drawBack = (inTranslucent || info.DrawBack) && part.BackCount > 0;
 				
-				int offset = 0;
+				int offset = part.Offset;
 				if (drawLeft && drawRight) {
 					gfx.DrawIndexedVb_TrisT2fC4b(part.LeftCount + part.RightCount, offset);
 					game.Vertices += (part.LeftCount + part.RightCount);

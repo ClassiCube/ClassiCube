@@ -1,6 +1,7 @@
 #ifndef CC_CHUNKUPDATER_H
 #define CC_CHUNKUPDATER_H
-#include "Vectors.h"
+#include "Typedefs.h"
+#include "Constants.h"
 /* Manages the process of building/deleting chunk meshes.
    Also sorts chunks so nearest chunks are ordered first, and calculates chunk visibility.
    Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
@@ -8,10 +9,9 @@
 
 /* Describes a portion of the data needed for rendering a chunk. */
 typedef struct ChunkPartInfo_ {
-	GfxResourceID VbId;
-	UInt16 HasVertices;     /* Does this chunk have any vertices at all? */
-	UInt16 SpriteCountDiv4; /* Sprite vertices count, divided by 4 */
-	UInt16 XMinCount, XMaxCount, ZMinCount, ZMaxCount, YMinCount, YMaxCount; /* Counts per face */
+	Int32 Offset;              /* -1 if no vertices at all */
+	Int32 SpriteCount;         /* Sprite vertices count */
+	UInt16 Counts[FACE_COUNT]; /* Counts per face */
 } ChunkPartInfo;
 
 /* Describes data necessary for rendering a chunk. */
@@ -35,13 +35,12 @@ typedef struct ChunkInfo_ {
 	public bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 #endif
+	GfxResourceID VbId;
 	ChunkPartInfo* NormalParts;
 	ChunkPartInfo* TranslucentParts;
 } ChunkInfo;
 
 void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z);
-Vector3I ChunkUpdater_ChunkPos;
-UInt32* ChunkUpdater_Distances;
 
 void ChunkUpdater_Init(void);
 void ChunkUpdater_Free(void);

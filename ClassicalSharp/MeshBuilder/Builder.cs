@@ -36,6 +36,7 @@ namespace ClassicalSharp {
 		protected byte* counts;
 		protected int* bitFlags;
 		protected bool useBitFlags;
+		protected VertexP3fT2fC4b[] vertices;
 
 		bool BuildChunk(int x1, int y1, int z1, ref bool allAir) {
 			light = game.Lighting;
@@ -162,9 +163,17 @@ namespace ClassicalSharp {
 			int x = info.CentreX - 8, y = info.CentreY - 8, z = info.CentreZ - 8;
 			if (!BuildChunk(x, y, z, ref info.AllAir)) return;
 			
+			int totalVerts = TotalVerticesCount();
+			if (totalVerts == 0) return;
+			fixed (VertexP3fT2fC4b* ptr = vertices) {
+				// add an extra element to fix crashing on some GPUs
+				info.VbId = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, totalVerts + 1);
+			}
+			
+			int offset = 0;
 			for (int i = 0; i < arraysCount; i++) {
-				SetPartInfo(normalParts[i], i, ref info.NormalParts);
-				SetPartInfo(translucentParts[i], i, ref info.TranslucentParts);
+				SetPartInfo(normalParts[i], ref offset,      i, ref info.NormalParts);
+				SetPartInfo(translucentParts[i], ref offset, i, ref info.TranslucentParts);
 			}
 			
 			#if OCCLUSION
@@ -173,16 +182,13 @@ namespace ClassicalSharp {
 			#endif
 		}
 		
-		void SetPartInfo(DrawInfo part, int i, ref ChunkPartInfo[] parts) {
+		void SetPartInfo(DrawInfo part, ref int offset, int i, ref ChunkPartInfo[] parts) {
 			int vertCount = part.VerticesCount();
 			if (vertCount == 0) return;
 			
 			ChunkPartInfo info;
-			fixed (VertexP3fT2fC4b* ptr = part.vertices) {
-				// add an extra element to fix crashing on some GPUs
-				info.VbId = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, vertCount + 1);
-			}
-			info.VerticesCount = vertCount;
+			info.Offset = offset;
+			offset += vertCount;
 			
 			info.LeftCount =   (ushort)part.vCount[Side.Left];
 			info.RightCount =  (ushort)part.vCount[Side.Right];
@@ -193,8 +199,10 @@ namespace ClassicalSharp {
 			info.SpriteCount = part.spriteCount;
 			
 			// Lazy initalize part arrays so we can save time in MapRenderer for chunks that only contain 1 or 2 part types.
-			if (parts == null)
+			if (parts == null) {
 				parts = new ChunkPartInfo[arraysCount];
+				for (int j = 0; j < parts.Length; j++) { parts[j].Offset = -1; }
+			}
 			parts[i] = info;
 		}
 		

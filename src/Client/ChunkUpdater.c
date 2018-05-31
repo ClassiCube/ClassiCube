@@ -13,11 +13,16 @@
 #include "Builder.h"
 #include "Utils.h"
 #include "ErrorHandler.h"
+#include "Vectors.h"
+
+Vector3I ChunkUpdater_ChunkPos;
+UInt32* ChunkUpdater_Distances;
 
 void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 	chunk->CentreX = (UInt16)(x + 8);
 	chunk->CentreY = (UInt16)(y + 8);
 	chunk->CentreZ = (UInt16)(z + 8);
+	chunk->VbId = NULL;
 
 	chunk->Visible = true; chunk->Empty = false;
 	chunk->PendingDelete = false; chunk->AllAir = false;
@@ -340,36 +345,30 @@ static void ChunkUpdater_ClearChunkCache_Handler(void* obj) {
 }
 
 
-#define ChunkUpdater_DeleteParts(parts, partsCount)\
-if (parts != NULL) {\
-	ChunkPartInfo* ptr = parts;\
-	for (i = 0; i < MapRenderer_1DUsedCount; i++) {\
-		Gfx_DeleteVb(&ptr->VbId);\
-		if (ptr->HasVertices) { partsCount[i]--; }\
-		ptr += MapRenderer_ChunksCount;\
-	}\
-	parts = NULL;\
-}
-
 void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
 	info->Empty = false; info->AllAir = false;
 #if OCCLUSION
 	info.OcclusionFlags = 0;
 	info.OccludedFlags = 0;
 #endif
-
+	Gfx_DeleteVb(&info->VbId);
 	Int32 i;
-	ChunkUpdater_DeleteParts(info->NormalParts, MapRenderer_NormalPartsCount);
-	ChunkUpdater_DeleteParts(info->TranslucentParts, MapRenderer_TranslucentPartsCount);
-}
 
-#define ChunkUpdater_AddParts(parts, partsCount)\
-if (parts != NULL) {\
-	ChunkPartInfo* ptr = parts;\
-	for (i = 0; i < MapRenderer_1DUsedCount; i++) {\
-		if (ptr->HasVertices) { partsCount[i]++; }\
-		ptr += MapRenderer_ChunksCount;\
-	}\
+	if (info->NormalParts != NULL) {
+		ChunkPartInfo* ptr = info->NormalParts;
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+			if (ptr->Offset >= 0) { MapRenderer_NormalPartsCount[i]--; }
+		}
+		info->NormalParts = NULL;
+	}
+
+	if (info->TranslucentParts != NULL) {
+		ChunkPartInfo* ptr = info->TranslucentParts;
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+			if (ptr->Offset >= 0) { MapRenderer_TranslucentPartsCount[i]--; }
+		}
+		info->TranslucentParts = NULL;
+	}
 }
 
 void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
@@ -382,10 +381,21 @@ void ChunkUpdater_BuildChunk(ChunkInfo* info, Int32* chunkUpdates) {
 		info->Empty = true;
 		return;
 	}
-
 	Int32 i;
-	ChunkUpdater_AddParts(info->NormalParts, MapRenderer_NormalPartsCount);
-	ChunkUpdater_AddParts(info->TranslucentParts, MapRenderer_TranslucentPartsCount);
+
+	if (info->NormalParts != NULL) {
+		ChunkPartInfo* ptr = info->NormalParts;
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+			if (ptr->Offset >= 0) { MapRenderer_NormalPartsCount[i]++; }
+		}
+	}
+
+	if (info->TranslucentParts != NULL) {
+		ChunkPartInfo* ptr = info->TranslucentParts;
+		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
+			if (ptr->Offset >= 0) { MapRenderer_TranslucentPartsCount[i]++; }
+		}
+	}
 }
 
 static void ChunkUpdater_QuickSort(Int32 left, Int32 right) {

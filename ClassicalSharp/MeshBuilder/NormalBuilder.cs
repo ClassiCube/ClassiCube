@@ -132,7 +132,7 @@ namespace ClassicalSharp {
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
 					X >= offset ? light.LightCol_XSide_Fast(X - offset, Y, Z) : light.OutsideXSide;
-				drawer.Left(leftCount, col, texLoc, part.vertices, ref part.vIndex[Side.Left]);
+				drawer.Left(leftCount, col, texLoc, vertices, ref part.vIndex[Side.Left]);
 			}
 			
 			if (rightCount != 0) {
@@ -143,7 +143,7 @@ namespace ClassicalSharp {
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
 					X <= (maxX - offset) ? light.LightCol_XSide_Fast(X + offset, Y, Z) : light.OutsideXSide;
-				drawer.Right(rightCount, col, texLoc, part.vertices, ref part.vIndex[Side.Right]);
+				drawer.Right(rightCount, col, texLoc, vertices, ref part.vIndex[Side.Right]);
 			}
 			
 			if (frontCount != 0) {
@@ -154,7 +154,7 @@ namespace ClassicalSharp {
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
 					Z >= offset ? light.LightCol_ZSide_Fast(X, Y, Z - offset) : light.OutsideZSide;
-				drawer.Front(frontCount, col, texLoc, part.vertices, ref part.vIndex[Side.Front]);
+				drawer.Front(frontCount, col, texLoc, vertices, ref part.vIndex[Side.Front]);
 			}
 			
 			if (backCount != 0) {
@@ -165,7 +165,7 @@ namespace ClassicalSharp {
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked :
 					Z <= (maxZ - offset) ? light.LightCol_ZSide_Fast(X, Y, Z + offset) : light.OutsideZSide;
-				drawer.Back(backCount, col, texLoc, part.vertices, ref part.vIndex[Side.Back]);
+				drawer.Back(backCount, col, texLoc, vertices, ref part.vIndex[Side.Back]);
 			}
 			
 			if (bottomCount != 0) {
@@ -175,7 +175,7 @@ namespace ClassicalSharp {
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked : light.LightCol_YBottom_Fast(X, Y - offset, Z);
-				drawer.Bottom(bottomCount, col, texLoc, part.vertices, ref part.vIndex[Side.Bottom]);
+				drawer.Bottom(bottomCount, col, texLoc, vertices, ref part.vIndex[Side.Bottom]);
 			}
 			
 			if (topCount != 0) {
@@ -185,7 +185,7 @@ namespace ClassicalSharp {
 
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 				int col = fullBright ? FastColour.WhitePacked : light.LightCol_YTop_Fast(X, (Y + 1) - offset, Z);
-				drawer.Top(topCount, col, texLoc, part.vertices, ref part.vIndex[Side.Top]);
+				drawer.Top(topCount, col, texLoc, vertices, ref part.vIndex[Side.Top]);
 			}
 		}
 	}

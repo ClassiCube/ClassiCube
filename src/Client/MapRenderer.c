@@ -45,73 +45,78 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 		if (info->NormalParts == NULL) continue;
 
 		ChunkPartInfo part = *(info->NormalParts + offset);
-		if (!part.HasVertices) continue;
+		if (part.Offset < 0) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
-		Gfx_BindVb(part.VbId);
-		bool drawXMin = info->DrawXMin && part.XMinCount > 0;
-		bool drawXMax = info->DrawXMax && part.XMaxCount > 0;
-		bool drawYMin = info->DrawYMin && part.YMinCount > 0;
-		bool drawYMax = info->DrawYMax && part.YMaxCount > 0;
-		bool drawZMin = info->DrawZMin && part.ZMinCount > 0;
-		bool drawZMax = info->DrawZMax && part.ZMaxCount > 0;
+		Gfx_BindVb(info->VbId);
+		bool drawXMin = info->DrawXMin && part.Counts[FACE_XMIN];
+		bool drawXMax = info->DrawXMax && part.Counts[FACE_XMAX];
+		bool drawYMin = info->DrawYMin && part.Counts[FACE_YMIN];
+		bool drawYMax = info->DrawYMax && part.Counts[FACE_YMAX];
+		bool drawZMin = info->DrawZMin && part.Counts[FACE_ZMIN];
+		bool drawZMax = info->DrawZMax && part.Counts[FACE_ZMAX];
 
-		UInt32 offset = part.SpriteCountDiv4 << 2;
+		Int32 offset = part.Offset + part.SpriteCount;
 		if (drawXMin && drawXMax) {
 			Gfx_SetFaceCulling(true);
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMinCount + part.XMaxCount, offset);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX], offset);
 			Gfx_SetFaceCulling(false);
-			Game_Vertices += part.XMinCount + part.XMaxCount;
+			Game_Vertices += part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX];
 		} else if (drawXMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMinCount, offset);
-			Game_Vertices += part.XMinCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMIN], offset);
+			Game_Vertices += part.Counts[FACE_XMIN];
 		} else if (drawXMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMaxCount, offset + part.XMinCount);
-			Game_Vertices += part.XMaxCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMAX], offset + part.Counts[FACE_XMIN]);
+			Game_Vertices += part.Counts[FACE_XMAX];
 		}
-		offset += part.XMinCount + part.XMaxCount;
+		offset += part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX];
 
 		if (drawZMin && drawZMax) {
 			Gfx_SetFaceCulling(true);
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.ZMinCount + part.ZMaxCount, offset);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX], offset);
 			Gfx_SetFaceCulling(false);
-			Game_Vertices += part.ZMinCount + part.ZMaxCount;
+			Game_Vertices += part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX];
 		} else if (drawZMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.ZMinCount, offset);
-			Game_Vertices += part.ZMinCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_ZMIN], offset);
+			Game_Vertices += part.Counts[FACE_ZMIN];
 		} else if (drawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.ZMaxCount, offset + part.ZMinCount);
-			Game_Vertices += part.ZMaxCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_ZMAX], offset + part.Counts[FACE_ZMIN]);
+			Game_Vertices += part.Counts[FACE_ZMAX];
 		}
-		offset += part.ZMinCount + part.ZMaxCount;
+		offset += part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX];
 
 		if (drawYMin && drawYMax) {
 			Gfx_SetFaceCulling(true);
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount + part.YMaxCount, offset);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_YMIN] + part.Counts[FACE_YMAX], offset);
 			Gfx_SetFaceCulling(false);
-			Game_Vertices += part.YMaxCount + part.YMinCount;
+			Game_Vertices += part.Counts[FACE_YMAX] + part.Counts[FACE_YMIN];
 		} else if (drawYMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount, offset);
-			Game_Vertices += part.YMinCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_YMIN], offset);
+			Game_Vertices += part.Counts[FACE_YMIN];
 		} else if (drawYMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMaxCount, offset + part.YMinCount);
-			Game_Vertices += part.YMaxCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_YMAX], offset + part.Counts[FACE_YMIN]);
+			Game_Vertices += part.Counts[FACE_YMAX];
 		}
 
-		if (part.SpriteCountDiv4 == 0) continue;
-		UInt32 count = part.SpriteCountDiv4; /* 4 per sprite */
+		if (part.SpriteCount == 0) continue;
+		offset = part.Offset;
+		Int32 count = part.SpriteCount >> 2; /* 4 per sprite */
+
 		Gfx_SetFaceCulling(true);
 		if (info->DrawXMax || info->DrawZMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(count, 0); Game_Vertices += count;
-		}
+			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
+		} offset += count;
+
 		if (info->DrawXMin || info->DrawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(count, count); Game_Vertices += count;
-		}
+			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
+		} offset += count;
+
 		if (info->DrawXMin || info->DrawZMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(count, count * 2); Game_Vertices += count;
-		}
+			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
+		} offset += count;
+
 		if (info->DrawXMax || info->DrawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(count, count * 3); Game_Vertices += count;
+			Gfx_DrawIndexedVb_TrisT2fC4b(count, offset); Game_Vertices += count;
 		}
 		Gfx_SetFaceCulling(false);
 	}
@@ -150,51 +155,51 @@ static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 		if (info->TranslucentParts == NULL) continue;
 
 		ChunkPartInfo part = *(info->TranslucentParts + offset);
-		if (!part.HasVertices) continue;
+		if (part.Offset < 0) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 
-		Gfx_BindVb(part.VbId);
-		bool drawXMin = (inTranslucent || info->DrawXMin) && part.XMinCount > 0;
-		bool drawXMax = (inTranslucent || info->DrawXMax) && part.XMaxCount > 0;
-		bool drawYMin = (inTranslucent || info->DrawYMin) && part.YMinCount > 0;
-		bool drawYMax = (inTranslucent || info->DrawYMax) && part.YMaxCount > 0;
-		bool drawZMin = (inTranslucent || info->DrawZMin) && part.ZMinCount > 0;
-		bool drawZMax = (inTranslucent || info->DrawZMax) && part.ZMaxCount > 0;
+		Gfx_BindVb(info->VbId);
+		bool drawXMin = (inTranslucent || info->DrawXMin) && part.Counts[FACE_XMIN];
+		bool drawXMax = (inTranslucent || info->DrawXMax) && part.Counts[FACE_XMAX];
+		bool drawYMin = (inTranslucent || info->DrawYMin) && part.Counts[FACE_YMIN];
+		bool drawYMax = (inTranslucent || info->DrawYMax) && part.Counts[FACE_YMAX];
+		bool drawZMin = (inTranslucent || info->DrawZMin) && part.Counts[FACE_ZMIN];
+		bool drawZMax = (inTranslucent || info->DrawZMax) && part.Counts[FACE_ZMAX];
 
-		UInt32 offset = 0;
+		Int32 offset = part.Offset;
 		if (drawXMin && drawXMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMinCount + part.XMaxCount, offset);
-			Game_Vertices += (part.XMinCount + part.XMaxCount);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX], offset);
+			Game_Vertices += (part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX]);
 		} else if (drawXMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMinCount, offset);
-			Game_Vertices += part.XMinCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMIN], offset);
+			Game_Vertices += part.Counts[FACE_XMIN];
 		} else if (drawXMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.XMaxCount, offset + part.XMinCount);
-			Game_Vertices += part.XMaxCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_XMAX], offset + part.Counts[FACE_XMIN]);
+			Game_Vertices += part.Counts[FACE_XMAX];
 		}
-		offset += part.XMinCount + part.XMaxCount;
+		offset += part.Counts[FACE_XMIN] + part.Counts[FACE_XMAX];
 
 		if (drawZMin && drawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.ZMinCount + part.ZMaxCount, offset);
-			Game_Vertices += (part.ZMinCount + part.ZMaxCount);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX], offset);
+			Game_Vertices += (part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX]);
 		} else if (drawZMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.ZMinCount, offset);
-			Game_Vertices += part.ZMinCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_ZMIN], offset);
+			Game_Vertices += part.Counts[FACE_ZMIN];
 		} else if (drawZMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.ZMaxCount, offset + part.ZMinCount);
-			Game_Vertices += part.ZMaxCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_ZMAX], offset + part.Counts[FACE_ZMIN]);
+			Game_Vertices += part.Counts[FACE_ZMAX];
 		}
-		offset += part.ZMinCount + part.ZMaxCount;
+		offset += part.Counts[FACE_ZMIN] + part.Counts[FACE_ZMAX];
 
 		if (drawYMin && drawYMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount + part.YMaxCount, offset);
-			Game_Vertices += (part.YMinCount + part.YMaxCount);
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_YMIN] + part.Counts[FACE_YMAX], offset);
+			Game_Vertices += (part.Counts[FACE_YMIN] + part.Counts[FACE_YMAX]);
 		} else if (drawYMin) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMinCount, offset);
-			Game_Vertices += part.YMinCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_YMIN], offset);
+			Game_Vertices += part.Counts[FACE_YMIN];
 		} else if (drawYMax) {
-			Gfx_DrawIndexedVb_TrisT2fC4b(part.YMaxCount, offset + part.YMinCount);
-			Game_Vertices += part.YMaxCount;
+			Gfx_DrawIndexedVb_TrisT2fC4b(part.Counts[FACE_YMAX], offset + part.Counts[FACE_YMIN]);
+			Game_Vertices += part.Counts[FACE_YMAX];
 		}
 	}
 }

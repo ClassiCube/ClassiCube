@@ -35,7 +35,6 @@ namespace ClassicalSharp {
 		}
 		
 		protected class DrawInfo {
-			public VertexP3fT2fC4b[] vertices;
 			public int[] vIndex = new int[6], vCount = new int[6];
 			public int spriteCount, sIndex, sAdvance;
 			
@@ -45,21 +44,18 @@ namespace ClassicalSharp {
 				return count;
 			}
 			
-			public void ExpandToCapacity() {
-				int vertsCount = VerticesCount();
-				if (vertices == null || (vertsCount + 2) > vertices.Length) {
-					vertices = new VertexP3fT2fC4b[vertsCount + 2];
-					// ensure buffer is up to 64 bits aligned for last element
-				}
-				sIndex = 0;
+			public void CalcOffsets(ref int offset) {
+				sIndex   = offset;
 				sAdvance = spriteCount / 4;
 				
-				vIndex[Side.Left]   = spriteCount;
+				vIndex[Side.Left]   = spriteCount + offset;
 				vIndex[Side.Right]  = vIndex[Side.Left]   + vCount[Side.Left];
 				vIndex[Side.Front]  = vIndex[Side.Right]  + vCount[Side.Right];
 				vIndex[Side.Back]   = vIndex[Side.Front]  + vCount[Side.Front];
 				vIndex[Side.Bottom] = vIndex[Side.Back]   + vCount[Side.Back];
 				vIndex[Side.Top]    = vIndex[Side.Bottom] + vCount[Side.Bottom];
+				
+				offset += VerticesCount();
 			}
 			
 			public void ResetState() {
@@ -92,10 +88,27 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		protected virtual void PostStretchTiles(int x1, int y1, int z1) {
+		int TotalVerticesCount() {
+			int vertsCount = 0;
 			for (int i = 0; i < normalParts.Length; i++) {
-				normalParts[i].ExpandToCapacity();
-				translucentParts[i].ExpandToCapacity();
+				vertsCount += normalParts[i].VerticesCount();
+				vertsCount += translucentParts[i].VerticesCount();
+			}
+			return vertsCount;
+		}
+		
+		protected virtual void PostStretchTiles(int x1, int y1, int z1) {
+			int vertsCount = TotalVerticesCount();
+			if (vertices == null || (vertsCount + 2) > vertices.Length) {
+				vertices = new VertexP3fT2fC4b[vertsCount + 2];
+				// ensure buffer is up to 64 bits aligned for last element
+			}
+			
+			// organised as: all N_0, all T_0, all N_1, all T1, etc
+			vertsCount = 0;
+			for (int i = 0; i < normalParts.Length; i++) {
+				normalParts[i].CalcOffsets(ref vertsCount);		
+				translucentParts[i].CalcOffsets(ref vertsCount);
 			}
 		}
 		
@@ -142,31 +155,31 @@ namespace ClassicalSharp {
 			
 			// Draw Z axis
 			int index = part.sIndex;
-			v.X = x1; v.Y = y1; v.Z = z1; v.U = u2; v.V = v2; part.vertices[index + 0] = v;
-			          v.Y = y2;                     v.V = v1; part.vertices[index + 1] = v;
-			v.X = x2;           v.Z = z2; v.U = u1;           part.vertices[index + 2] = v;
-			          v.Y = y1;                     v.V = v2; part.vertices[index + 3] = v;
+			v.X = x1; v.Y = y1; v.Z = z1; v.U = u2; v.V = v2; vertices[index + 0] = v;
+			v.Y = y2;                     v.V = v1; vertices[index + 1] = v;
+			v.X = x2;           v.Z = z2; v.U = u1;           vertices[index + 2] = v;
+			v.Y = y1;                     v.V = v2; vertices[index + 3] = v;
 			
 			// Draw Z axis mirrored
 			index += part.sAdvance;
-			v.X = x2; v.Y = y1; v.Z = z2; v.U = u2;           part.vertices[index + 0] = v;
-			          v.Y = y2;                     v.V = v1; part.vertices[index + 1] = v;
-			v.X = x1;           v.Z = z1; v.U = u1;           part.vertices[index + 2] = v;
-			          v.Y = y1;                     v.V = v2; part.vertices[index + 3] = v;
+			v.X = x2; v.Y = y1; v.Z = z2; v.U = u2;           vertices[index + 0] = v;
+			v.Y = y2;                     v.V = v1; vertices[index + 1] = v;
+			v.X = x1;           v.Z = z1; v.U = u1;           vertices[index + 2] = v;
+			v.Y = y1;                     v.V = v2; vertices[index + 3] = v;
 
 			// Draw X axis
 			index += part.sAdvance;
-			v.X = x1; v.Y = y1; v.Z = z2; v.U = u2;           part.vertices[index + 0] = v;
-			          v.Y = y2;                     v.V = v1; part.vertices[index + 1] = v;
-			v.X = x2;           v.Z = z1; v.U = u1;           part.vertices[index + 2] = v;
-			          v.Y = y1;                     v.V = v2; part.vertices[index + 3] = v;
+			v.X = x1; v.Y = y1; v.Z = z2; v.U = u2;           vertices[index + 0] = v;
+			v.Y = y2;                     v.V = v1; vertices[index + 1] = v;
+			v.X = x2;           v.Z = z1; v.U = u1;           vertices[index + 2] = v;
+			v.Y = y1;                     v.V = v2; vertices[index + 3] = v;
 			
 			// Draw X axis mirrored
 			index += part.sAdvance;
-			v.X = x2; v.Y = y1; v.Z = z1; v.U = u2;           part.vertices[index + 0] = v;
-			          v.Y = y2;                     v.V = v1; part.vertices[index + 1] = v;
-			v.X = x1;           v.Z = z2; v.U = u1;           part.vertices[index + 2] = v;
-			          v.Y = y1;                     v.V = v2; part.vertices[index + 3] = v;
+			v.X = x2; v.Y = y1; v.Z = z1; v.U = u2;           vertices[index + 0] = v;
+			v.Y = y2;                     v.V = v1; vertices[index + 1] = v;
+			v.X = x1;           v.Z = z2; v.U = u1;           vertices[index + 2] = v;
+			v.Y = y1;                     v.V = v2; vertices[index + 3] = v;
 			
 			part.sIndex += 4;
 		}
