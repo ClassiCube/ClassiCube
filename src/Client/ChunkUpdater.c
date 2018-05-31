@@ -22,7 +22,9 @@ void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
 	chunk->CentreX = (UInt16)(x + 8);
 	chunk->CentreY = (UInt16)(y + 8);
 	chunk->CentreZ = (UInt16)(z + 8);
-	chunk->VbId = NULL;
+#if !CC_BUILD_GL11
+	chunk->Vb = NULL;
+#endif
 
 	chunk->Visible = true; chunk->Empty = false;
 	chunk->PendingDelete = false; chunk->AllAir = false;
@@ -351,13 +353,19 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
 	info.OcclusionFlags = 0;
 	info.OccludedFlags = 0;
 #endif
-	Gfx_DeleteVb(&info->VbId);
+#if !CC_BUILD_GL11
+	Gfx_DeleteVb(&info->Vb);
+#endif
 	Int32 i;
 
 	if (info->NormalParts != NULL) {
 		ChunkPartInfo* ptr = info->NormalParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
-			if (ptr->Offset >= 0) { MapRenderer_NormalPartsCount[i]--; }
+			if (ptr->Offset < 0) continue; 
+			MapRenderer_NormalPartsCount[i]--;
+#if CC_BUILD_GL11
+			Gfx_DeleteVb(&ptr->Vb);
+#endif
 		}
 		info->NormalParts = NULL;
 	}
@@ -365,7 +373,11 @@ void ChunkUpdater_DeleteChunk(ChunkInfo* info) {
 	if (info->TranslucentParts != NULL) {
 		ChunkPartInfo* ptr = info->TranslucentParts;
 		for (i = 0; i < MapRenderer_1DUsedCount; i++, ptr += MapRenderer_ChunksCount) {
-			if (ptr->Offset >= 0) { MapRenderer_TranslucentPartsCount[i]--; }
+			if (ptr->Offset < 0) continue;
+			MapRenderer_TranslucentPartsCount[i]--;
+#if CC_BUILD_GL11
+			Gfx_DeleteVb(&ptr->Vb);
+#endif
 		}
 		info->TranslucentParts = NULL;
 	}

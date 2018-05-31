@@ -165,10 +165,12 @@ namespace ClassicalSharp {
 			
 			int totalVerts = TotalVerticesCount();
 			if (totalVerts == 0) return;
+			#if !GL11
 			fixed (VertexP3fT2fC4b* ptr = vertices) {
 				// add an extra element to fix crashing on some GPUs
-				info.VbId = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, totalVerts + 1);
+				info.Vb = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, totalVerts + 1);
 			}
+			#endif
 			
 			int offset = 0;
 			for (int i = 0; i < arraysCount; i++) {
@@ -189,6 +191,13 @@ namespace ClassicalSharp {
 			ChunkPartInfo info;
 			info.Offset = offset;
 			offset += vertCount;
+			
+			#if GL11
+			fixed (VertexP3fT2fC4b* ptr = vertices) {
+				VertexP3fT2fC4b* ptr2 = ptr + info.Offset;
+				info.Vb = game.Graphics.CreateVb((IntPtr)ptr, VertexFormat.P3fT2fC4b, vertCount);
+			}
+			#endif
 			
 			info.LeftCount =   (ushort)part.vCount[Side.Left];
 			info.RightCount =  (ushort)part.vCount[Side.Right];

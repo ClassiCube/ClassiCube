@@ -11,6 +11,9 @@ using BlockID = System.UInt16;
 namespace ClassicalSharp.Renderers {
 	
 	public struct ChunkPartInfo {
+		#if GL11
+		public int Vb;
+		#endif
 		public int Offset, SpriteCount;
 		public ushort LeftCount, RightCount, FrontCount, BackCount, BottomCount, TopCount;
 	}
@@ -25,7 +28,9 @@ namespace ClassicalSharp.Renderers {
 		public bool Visited = false, Occluded = false;
 		public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 		#endif
-		public int VbId;
+		#if !GL11
+		public int Vb;
+		#endif
 		
 		public ChunkPartInfo[] NormalParts;
 		public ChunkPartInfo[] TranslucentParts;
@@ -181,13 +186,17 @@ namespace ClassicalSharp.Renderers {
 				if (part.Offset < 0) continue;
 				usedNormal[batch] = true;
 				
-				gfx.BindVb(info.VbId);
-				bool drawLeft = info.DrawLeft && part.LeftCount > 0;
-				bool drawRight = info.DrawRight && part.RightCount > 0;
+				#if !GL11
+				gfx.BindVb(info.Vb);
+				#else
+				gfx.BindVb(part.Vb);
+				#endif
+				bool drawLeft   = info.DrawLeft   && part.LeftCount   > 0;
+				bool drawRight  = info.DrawRight  && part.RightCount  > 0;
 				bool drawBottom = info.DrawBottom && part.BottomCount > 0;
-				bool drawTop = info.DrawTop && part.TopCount > 0;
-				bool drawFront = info.DrawFront && part.FrontCount > 0;
-				bool drawBack = info.DrawBack && part.BackCount > 0;
+				bool drawTop    = info.DrawTop    && part.TopCount    > 0;
+				bool drawFront  = info.DrawFront  && part.FrontCount  > 0;
+				bool drawBack   = info.DrawBack   && part.BackCount   > 0;
 				
 				int offset = part.Offset + part.SpriteCount;
 				if (drawLeft && drawRight) {
@@ -265,13 +274,17 @@ namespace ClassicalSharp.Renderers {
 				if (part.Offset < 0) continue;
 				usedTranslucent[batch] = true;
 				
-				gfx.BindVb(info.VbId);
-				bool drawLeft = (inTranslucent || info.DrawLeft) && part.LeftCount > 0;
-				bool drawRight = (inTranslucent || info.DrawRight) && part.RightCount > 0;
+				#if !GL11
+				gfx.BindVb(info.Vb);
+				#else
+				gfx.BindVb(part.Vb);
+				#endif
+				bool drawLeft   = (inTranslucent || info.DrawLeft)   && part.LeftCount   > 0;
+				bool drawRight  = (inTranslucent || info.DrawRight)  && part.RightCount  > 0;
 				bool drawBottom = (inTranslucent || info.DrawBottom) && part.BottomCount > 0;
-				bool drawTop = (inTranslucent || info.DrawTop) && part.TopCount > 0;
-				bool drawFront = (inTranslucent || info.DrawFront) && part.FrontCount > 0;
-				bool drawBack = (inTranslucent || info.DrawBack) && part.BackCount > 0;
+				bool drawTop    = (inTranslucent || info.DrawTop)    && part.TopCount    > 0;
+				bool drawFront  = (inTranslucent || info.DrawFront)  && part.FrontCount  > 0;
+				bool drawBack   = (inTranslucent || info.DrawBack)   && part.BackCount   > 0;
 				
 				int offset = part.Offset;
 				if (drawLeft && drawRight) {

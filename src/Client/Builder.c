@@ -98,6 +98,10 @@ static void Builder_SetPartInfo(Builder1DPart* part, Int32* offset, ChunkPartInf
 	*offset += vCount;
 	*hasParts = true;
 
+#if CC_BUILD_GL11
+	info->Vb = Gfx_CreateVb(&Builder_Vertices[info->Offset], VERTEX_FORMAT_P3FT2FC4B, vCount);
+#endif
+
 	info->Counts[FACE_XMIN] = part->fCount[FACE_XMIN];
 	info->Counts[FACE_XMAX] = part->fCount[FACE_XMAX];
 	info->Counts[FACE_ZMIN] = part->fCount[FACE_ZMIN];
@@ -316,8 +320,10 @@ void Builder_MakeChunk(ChunkInfo* info) {
 
 	Int32 totalVerts = Builder_TotalVerticesCount();
 	if (totalVerts == 0) return;
+#if !CC_BUILD_GL11
 	/* add an extra element to fix crashing on some GPUs */
-	info->VbId = Gfx_CreateVb(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+	info->Vb = Gfx_CreateVb(Builder_Vertices, VERTEX_FORMAT_P3FT2FC4B, totalVerts + 1);
+#endif
 
 	Int32 i, offset = 0, partsIndex = MapRenderer_Pack(x >> CHUNK_SHIFT, y >> CHUNK_SHIFT, z >> CHUNK_SHIFT);
 	bool hasNormal = false, hasTranslucent = false;

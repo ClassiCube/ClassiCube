@@ -48,7 +48,11 @@ static void MapRenderer_RenderNormalBatch(UInt32 batch) {
 		if (part.Offset < 0) continue;
 		MapRenderer_HasNormalParts[batch] = true;
 
-		Gfx_BindVb(info->VbId);
+#if !CC_BUILD_GL11
+		Gfx_BindVb(info->Vb);
+#else
+		Gfx_BindVb(part.Vb);
+#endif
 		bool drawXMin = info->DrawXMin && part.Counts[FACE_XMIN];
 		bool drawXMax = info->DrawXMax && part.Counts[FACE_XMAX];
 		bool drawYMin = info->DrawYMin && part.Counts[FACE_YMIN];
@@ -158,7 +162,11 @@ static void MapRenderer_RenderTranslucentBatch(UInt32 batch) {
 		if (part.Offset < 0) continue;
 		MapRenderer_HasTranslucentParts[batch] = true;
 
-		Gfx_BindVb(info->VbId);
+#if !CC_BUILD_GL11
+		Gfx_BindVb(info->Vb);
+#else
+		Gfx_BindVb(part.Vb);
+#endif
 		bool drawXMin = (inTranslucent || info->DrawXMin) && part.Counts[FACE_XMIN];
 		bool drawXMax = (inTranslucent || info->DrawXMax) && part.Counts[FACE_XMAX];
 		bool drawYMin = (inTranslucent || info->DrawYMin) && part.Counts[FACE_YMIN];

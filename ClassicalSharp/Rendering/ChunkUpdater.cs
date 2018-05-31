@@ -231,13 +231,18 @@ namespace ClassicalSharp.Renderers {
 			info.OcclusionFlags = 0;
 			info.OccludedFlags = 0;
 			#endif
-			game.Graphics.DeleteVb(ref info.VbId);
+			#if !GL11
+			game.Graphics.DeleteVb(ref info.Vb);
+			#endif
 			
 			if (info.NormalParts != null) {
 				ChunkPartInfo[] parts = info.NormalParts;
 				for (int i = 0; i < parts.Length; i++) {
 					if (parts[i].Offset < 0) continue;
 					renderer.normalPartsCount[i]--;
+					#if GL11
+					game.Graphics.DeleteVb(ref parts[i].Vb);
+					#endif
 				}
 				info.NormalParts = null;
 			}
@@ -247,6 +252,9 @@ namespace ClassicalSharp.Renderers {
 				for (int i = 0; i < parts.Length; i++) {
 					if (parts[i].Offset < 0) continue;
 					renderer.translucentPartsCount[i]--;
+					#if GL11
+					game.Graphics.DeleteVb(ref parts[i].Vb);
+					#endif
 				}
 				info.TranslucentParts = null;
 			}

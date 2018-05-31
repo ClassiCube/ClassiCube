@@ -60,7 +60,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			} else {
 				throw new InvalidOperationException(
 					"Only OpenGL 1.1 supported\r\n\r\n" +
-					"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
+					"Compile the game with GL11, or ask on the classicube forums for it");
 			}
 		}
 
@@ -269,7 +269,6 @@ namespace ClassicalSharp.GraphicsAPI {
 			SetBatchFormat(format);
 			int list = GL.GenLists(1);
 			GL.NewList(list, 0x1300);
-			count &= ~0x01; // Need to get rid of the 1 extra element, see comment in chunk mesh builder for why
 			
 			const int maxIndices = 65536 / 4 * 6;
 			ushort* indicesPtr = stackalloc ushort[maxIndices];

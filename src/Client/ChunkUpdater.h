@@ -9,6 +9,9 @@
 
 /* Describes a portion of the data needed for rendering a chunk. */
 typedef struct ChunkPartInfo_ {
+#if CC_BUILD_GL11
+	GfxResourceID Vb;
+#endif
 	Int32 Offset;              /* -1 if no vertices at all */
 	Int32 SpriteCount;         /* Sprite vertices count */
 	UInt16 Counts[FACE_COUNT]; /* Counts per face */
@@ -35,7 +38,9 @@ typedef struct ChunkInfo_ {
 	public bool Visited = false, Occluded = false;
 	public byte OcclusionFlags, OccludedFlags, DistanceFlags;
 #endif
-	GfxResourceID VbId;
+#if !CC_BUILD_GL11
+	GfxResourceID Vb;
+#endif
 	ChunkPartInfo* NormalParts;
 	ChunkPartInfo* TranslucentParts;
 } ChunkInfo;
