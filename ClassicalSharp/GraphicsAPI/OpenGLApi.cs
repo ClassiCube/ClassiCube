@@ -16,10 +16,11 @@ namespace ClassicalSharp.GraphicsAPI {
 	/// or 1.2 with the GL_ARB_vertex_buffer_object extension. </summary>
 	public unsafe class OpenGLApi : IGraphicsApi {
 		
-		bool glLists = false;
+		#if GL11
 		int activeList = -1;
 		const int dynamicListId = 1234567891;
 		IntPtr dynamicListData;
+		#endif
 		
 		public OpenGLApi() {
 			MinZNear = 0.1f;
@@ -28,9 +29,12 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.GetIntegerv(GetPName.MaxTextureSize, &texDims);
 			texDimensions = texDims;
 			
-			glLists = Options.GetBool(OptionsKey.ForceOldOpenGL, false);
-			CustomMipmapsLevels = !glLists;
+			#if !GL11
+			CustomMipmapsLevels = true;
 			CheckVboSupport();
+			#else
+			CustomMipmapsLevels = false;
+			#endif
 			base.InitCommon();
 			
 			setupBatchFuncCol4b = SetupVbPos3fCol4b;
@@ -48,14 +52,15 @@ namespace ClassicalSharp.GraphicsAPI {
 			int major = (int)(version[0] - '0'); // x.y. (and so forth)
 			int minor = (int)(version[2] - '0');
 			
-			if ((major > 1) || (major == 1 && minor >= 5)) return; // Supported in core since 1.5
-			
-			Utils.LogDebug("Using ARB vertex buffer objects");
-			if (extensions.Contains("GL_ARB_vertex_buffer_object")) {
+			if ((major > 1) || (major == 1 && minor >= 5)) {
+				// Supported in core since 1.5
+			} else if (extensions.Contains("GL_ARB_vertex_buffer_object")) {
+				Utils.LogDebug("Using ARB vertex buffer objects");
 				GL.UseArbVboAddresses();
 			} else {
-				glLists = true;
-				CustomMipmapsLevels = false;
+				throw new InvalidOperationException(
+					"Only OpenGL 1.1 supported\r\n\r\n" +
+					"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
 			}
 		}
 
@@ -242,51 +247,57 @@ namespace ClassicalSharp.GraphicsAPI {
 		Action<int> setupBatchFunc_Range, setupBatchFuncCol4b_Range, setupBatchFuncTex2fCol4b_Range;
 		
 		public override int CreateDynamicVb(VertexFormat format, int maxVertices) {
-			if (glLists) return dynamicListId;
+			#if !GL11
 			int id = GenAndBind(BufferTarget.ArrayBuffer);
 			int sizeInBytes = maxVertices * strideSizes[(int)format];
 			GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(sizeInBytes), IntPtr.Zero, BufferUsage.DynamicDraw);
 			return id;
+			#else
+			return dynamicListId;
+			#endif
 		}
 		
 		public override int CreateVb(IntPtr vertices, VertexFormat format, int count) {
-			if (glLists) {
-				// We need to setup client state properly when building the list
-				VertexFormat curFormat = batchFormat;
-				SetBatchFormat(format);
-				int list = GL.GenLists(1);
-				GL.NewList(list, 0x1300);
-				count &= ~0x01; // Need to get rid of the 1 extra element, see comment in chunk mesh builder for why
-				
-				const int maxIndices = 65536 / 4 * 6;
-				ushort* indicesPtr = stackalloc ushort[maxIndices];
-				MakeIndices(indicesPtr, maxIndices);
-				
-				int stride = format == VertexFormat.P3fT2fC4b ? VertexP3fT2fC4b.Size : VertexP3fC4b.Size;
-				GL.VertexPointer(3, PointerType.Float, stride, vertices);
-				GL.ColorPointer(4, PointerType.UnsignedByte, stride, (IntPtr)((byte*)vertices + 12));
-				if (format == VertexFormat.P3fT2fC4b) {
-					GL.TexCoordPointer(2, PointerType.Float, stride, (IntPtr)((byte*)vertices + 16));
-				}
-				
-				GL.DrawElements(BeginMode.Triangles, (count >> 2) * 6, DrawElementsType.UnsignedShort, (IntPtr)indicesPtr);
-				GL.EndList();
-				SetBatchFormat(curFormat);
-				return list;
-			}
-			
+			#if !GL11
 			int id = GenAndBind(BufferTarget.ArrayBuffer);
 			int sizeInBytes = count * strideSizes[(int)format];
 			GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(sizeInBytes), vertices, BufferUsage.StaticDraw);
 			return id;
+			#else
+			// We need to setup client state properly when building the list
+			VertexFormat curFormat = batchFormat;
+			SetBatchFormat(format);
+			int list = GL.GenLists(1);
+			GL.NewList(list, 0x1300);
+			count &= ~0x01; // Need to get rid of the 1 extra element, see comment in chunk mesh builder for why
+			
+			const int maxIndices = 65536 / 4 * 6;
+			ushort* indicesPtr = stackalloc ushort[maxIndices];
+			MakeIndices(indicesPtr, maxIndices);
+			
+			int stride = format == VertexFormat.P3fT2fC4b ? VertexP3fT2fC4b.Size : VertexP3fC4b.Size;
+			GL.VertexPointer(3, PointerType.Float, stride, vertices);
+			GL.ColorPointer(4, PointerType.UnsignedByte, stride, (IntPtr)((byte*)vertices + 12));
+			if (format == VertexFormat.P3fT2fC4b) {
+				GL.TexCoordPointer(2, PointerType.Float, stride, (IntPtr)((byte*)vertices + 16));
+			}
+			
+			GL.DrawElements(BeginMode.Triangles, (count >> 2) * 6, DrawElementsType.UnsignedShort, (IntPtr)indicesPtr);
+			GL.EndList();
+			SetBatchFormat(curFormat);
+			return list;
+			#endif
 		}
 		
 		public override int CreateIb(IntPtr indices, int indicesCount) {
-			if (glLists) return 0;
+			#if !GL11
 			int id = GenAndBind(BufferTarget.ElementArrayBuffer);
 			int sizeInBytes = indicesCount * sizeof(ushort);
 			GL.BufferData(BufferTarget.ElementArrayBuffer, new IntPtr(sizeInBytes), indices, BufferUsage.StaticDraw);
 			return id;
+			#else
+			return 0;
+			#endif
 		}
 		
 		static int GenAndBind(BufferTarget target) {
@@ -298,17 +309,17 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		int batchStride;
 		public override void SetDynamicVbData(int id, IntPtr vertices, int count) {
-			if (glLists) {
-				activeList = dynamicListId;
-				dynamicListData = vertices;
-				return;
-			}
-			
+			#if !GL11
 			GL.BindBuffer(BufferTarget.ArrayBuffer, id);
 			GL.BufferSubData(BufferTarget.ArrayBuffer, IntPtr.Zero,
 			                 new IntPtr(count * batchStride), vertices);
+			#else
+			activeList = dynamicListId;
+			dynamicListData = vertices;
+			#endif
 		}
 		
+		#if GL11
 		static void V(VertexP3fC4b v) {
 			FastColour AAA = FastColour.Unpack(v.Colour);
 			GL.Color4ub(AAA.R, AAA.G, AAA.B, AAA.A);
@@ -321,19 +332,26 @@ namespace ClassicalSharp.GraphicsAPI {
 			GL.TexCoord2f(v.U, v.V);
 			GL.Vertex3f(v.X, v.Y, v.Z);
 		}
+		#endif
 		
 		public override void DeleteVb(ref int vb) {
 			if (vb <= 0) return;
 			int id = vb; vb = -1;
-			
-			if (glLists) { if (id != dynamicListId) GL.DeleteLists(id, 1); }
-			else { GL.DeleteBuffers(1, &id); }
+			#if !GL11
+			GL.DeleteBuffers(1, &id);
+			#else
+			if (id != dynamicListId) GL.DeleteLists(id, 1);
+			#endif
 		}
 		
 		public override void DeleteIb(ref int ib) {
-			if (glLists || ib <= 0) return;
+			#if !GL11
+			if (ib <= 0) return;
 			int id = ib; ib = -1;
 			GL.DeleteBuffers(1, &id);
+			#else
+			return;
+			#endif
 		}
 		
 		VertexFormat batchFormat = (VertexFormat)999;
@@ -358,45 +376,52 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void BindVb(int vb) {
-			if (glLists) { activeList = vb; }
-			else { GL.BindBuffer(BufferTarget.ArrayBuffer, vb); }
+			#if !GL11
+			GL.BindBuffer(BufferTarget.ArrayBuffer, vb);
+			#else
+			activeList = vb;
+			#endif
 		}
 		
 		public override void BindIb(int ib) {
-			if (glLists) return;
+			#if !GL11
 			GL.BindBuffer(BufferTarget.ElementArrayBuffer, ib);
+			#else
+			return;
+			#endif
 		}
 		
 		const DrawElementsType indexType = DrawElementsType.UnsignedShort;
 		public override void DrawVb_Lines(int verticesCount) {
-			if (glLists) { DrawDynamicLines(verticesCount); return; }
-			
+			#if !GL11
 			setupBatchFunc();
 			GL.DrawArrays(BeginMode.Lines, 0, verticesCount);
+			#else
+			DrawDynamicLines(verticesCount);
+			#endif
 		}
 		
 		public override void DrawVb_IndexedTris(int verticesCount, int startVertex) {
-			if (glLists) {
-				if (activeList != dynamicListId) { GL.CallList(activeList); }
-				else { DrawDynamicTriangles(verticesCount, startVertex); }
-				return;
-			}
-			
+			#if !GL11
 			setupBatchFunc_Range(startVertex);
 			GL.DrawElements(BeginMode.Triangles, (verticesCount >> 2) * 6, indexType, IntPtr.Zero);
+			#else
+			if (activeList != dynamicListId) { GL.CallList(activeList); }
+			else { DrawDynamicTriangles(verticesCount, startVertex); }
+			#endif
 		}
 		
 		public override void DrawVb_IndexedTris(int verticesCount) {
-			if (glLists) {
-				if (activeList != dynamicListId) { GL.CallList(activeList); }
-				else { DrawDynamicTriangles(verticesCount, 0); }
-				return;
-			}
-			
+			#if !GL11
 			setupBatchFunc();
 			GL.DrawElements(BeginMode.Triangles, (verticesCount >> 2) * 6, indexType, IntPtr.Zero);
+			#else
+			if (activeList != dynamicListId) { GL.CallList(activeList); }
+			else { DrawDynamicTriangles(verticesCount, 0); }
+			#endif
 		}
 		
+		#if GL11
 		unsafe void DrawDynamicLines(int verticesCount) {
 			GL.Begin(BeginMode.Lines);
 			if (batchFormat == VertexFormat.P3fT2fC4b) {
@@ -430,22 +455,22 @@ namespace ClassicalSharp.GraphicsAPI {
 			}
 			GL.End();
 		}
+		#endif
 		
 		int lastPartialList = -1;
 		internal override void DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-			// TODO: This renders the whole map, bad performance!! FIX FIX
-			if (glLists) {
-				if (activeList != lastPartialList) {
-					GL.CallList(activeList); lastPartialList = activeList;
-				}
-				return;
-			}
-			
+			#if !GL11
 			int offset = startVertex * VertexP3fT2fC4b.Size;
 			GL.VertexPointer(3, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset));
 			GL.ColorPointer(4, PointerType.UnsignedByte, VertexP3fT2fC4b.Size, new IntPtr(offset + 12));
 			GL.TexCoordPointer(2, PointerType.Float, VertexP3fT2fC4b.Size, new IntPtr(offset + 16));
 			GL.DrawElements(BeginMode.Triangles, (verticesCount >> 2) * 6, indexType, IntPtr.Zero);
+			#else
+			// TODO: This renders the whole map, bad performance!! FIX FIX
+			if (activeList != lastPartialList) {
+				GL.CallList(activeList); lastPartialList = activeList;
+			}
+			#endif
 		}
 		
 		IntPtr zero = new IntPtr(0), twelve = new IntPtr(12), sixteen = new IntPtr(16);
@@ -506,7 +531,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void EndFrame(Game game) {
 			game.window.SwapBuffers();
+			#if GL11
 			activeList = -1;
+			#endif
 		}
 		
 		public override void SetVSync(Game game, bool value) {
@@ -533,11 +560,11 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override bool WarnIfNecessary(Chat chat) {
-			if (glLists) {
-				chat.Add("&cYou are using the very outdated OpenGL backend.");
-				chat.Add("&cAs such you may experience poor performance.");
-				chat.Add("&cIt is likely you need to install video card drivers.");
-			}
+			#if GL11
+			chat.Add("&cYou are using the very outdated OpenGL backend.");
+			chat.Add("&cAs such you may experience poor performance.");
+			chat.Add("&cIt is likely you need to install video card drivers.");
+			#endif
 			
 			if (!isIntelRenderer) return false;
 			

@@ -74,7 +74,7 @@ void Window_SetDesktopCursorPos(Point2D point);
 bool Window_GetCursorVisible(void);
 void Window_SetCursorVisible(bool visible);
 
-#if !USE_DX
+#if !CC_BUILD_D3D9
 void GLContext_Init(GraphicsMode mode);
 void GLContext_Update(void);
 void GLContext_Free(void);

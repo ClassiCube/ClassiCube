@@ -86,7 +86,7 @@ void GfxCommon_Draw2DTexture(Texture* tex, PackedCol col) {
 void GfxCommon_Make2DQuad(Texture* tex, PackedCol col, VertexP3fT2fC4b** vertices) {
 	Real32 x1 = (Real32)tex->X, x2 = (Real32)(tex->X + tex->Width);
 	Real32 y1 = (Real32)tex->Y, y2 = (Real32)(tex->Y + tex->Height);
-#if USE_DX
+#if CC_BUILD_D3D9
 	/* NOTE: see "https://msdn.microsoft.com/en-us/library/windows/desktop/bb219690(v=vs.85).aspx", */
 	/* i.e. the msdn article called "Directly Mapping Texels to Pixels (Direct3D 9)" for why we have to do this. */
 	x1 -= 0.5f; x2 -= 0.5f;

@@ -57,9 +57,10 @@ typedef struct FontDesc_ { void* Handle; UInt16 Size, Style; } FontDesc;
 #define Int32_MaxValue  ((Int32)2147483647L)
 #define UInt32_MaxValue ((UInt32)4294967295UL)
 
-#define USE_DX true
+#define CC_BUILD_GL11 false
+#define CC_BUILD_D3D9 false
 
-#if USE_DX
+#if CC_BUILD_D3D9
 typedef void* GfxResourceID;
 #else
 typedef UInt32 GfxResourceID;

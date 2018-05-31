@@ -13,29 +13,33 @@
 #include <Windows.h>
 #include <GL/gl.h>
 
-#if !USE_DX
+#if !CC_BUILD_D3D9
 /* Extensions from later than OpenGL 1.1 */
-#define GL_TEXTURE_MAX_LEVEL          0x813D
-#define GL_ARRAY_BUFFER               0x8892
-#define GL_ELEMENT_ARRAY_BUFFER       0x8893
-#define GL_STATIC_DRAW                0x88E4
-#define GL_DYNAMIC_DRAW               0x88E8
-typedef void (APIENTRY *FN_GLBINDBUFFER) (GLenum target, GLuint buffer);
-typedef void (APIENTRY *FN_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
-typedef void (APIENTRY *FN_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
-typedef void (APIENTRY *FN_GLBUFFERDATA) (GLenum target, const void* size, const void *data, GLenum usage);
-typedef void (APIENTRY *FN_GLBUFFERSUBDATA) (GLenum target, const void* offset, const void* size, const void *data);
-FN_GLBINDBUFFER glBindBuffer;
-FN_GLDELETEBUFFERS glDeleteBuffers;
-FN_GLGENBUFFERS glGenBuffers;
-FN_GLBUFFERDATA glBufferData;
-FN_GLBUFFERSUBDATA glBufferSubData;
+#define GL_TEXTURE_MAX_LEVEL    0x813D
+#define GL_ARRAY_BUFFER         0x8892
+#define GL_ELEMENT_ARRAY_BUFFER 0x8893
+#define GL_STATIC_DRAW          0x88E4
+#define GL_DYNAMIC_DRAW         0x88E8
 
-Int32 Gfx_strideSizes[2] = GFX_STRIDE_SIZES;
-Int32 gl_activeList = -1;
+#if CC_BUILD_GL11
+GfxResourceID gl_activeList;
 #define gl_DYNAMICLISTID 1234567891
 void* gl_dynamicListData;
-bool gl_lists, gl_vsync;
+#else
+typedef void (APIENTRY *FUNC_GLBINDBUFFER) (GLenum target, GLuint buffer);
+typedef void (APIENTRY *FUNC_GLDELETEBUFFERS) (GLsizei n, const GLuint *buffers);
+typedef void (APIENTRY *FUNC_GLGENBUFFERS) (GLsizei n, GLuint *buffers);
+typedef void (APIENTRY *FUNC_GLBUFFERDATA) (GLenum target, const void* size, const void *data, GLenum usage);
+typedef void (APIENTRY *FUNC_GLBUFFERSUBDATA) (GLenum target, const void* offset, const void* size, const void *data);
+FUNC_GLBINDBUFFER    glBindBuffer;
+FUNC_GLDELETEBUFFERS glDeleteBuffers;
+FUNC_GLGENBUFFERS    glGenBuffers;
+FUNC_GLBUFFERDATA    glBufferData;
+FUNC_GLBUFFERSUBDATA glBufferSubData;
+#endif
+
+Int32 Gfx_strideSizes[2] = GFX_STRIDE_SIZES;
+bool gl_vsync;
 
 Int32 gl_blend[6] = { GL_ZERO, GL_ONE, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_DST_ALPHA, GL_ONE_MINUS_DST_ALPHA };
 Int32 gl_compare[8] = { GL_ALWAYS, GL_NOTEQUAL, GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_GEQUAL, GL_GREATER };
@@ -48,44 +52,49 @@ GL_SetupVBFunc gl_setupVBFunc;
 GL_SetupVBRangeFunc gl_setupVBRangeFunc;
 Int32 gl_batchStride, gl_batchFormat = -1;
 
+#if !CC_BUILD_GL11
 static void GL_CheckVboSupport(void) {
 	String extensions = String_FromReadonly(glGetString(GL_EXTENSIONS));
 	String version = String_FromReadonly(glGetString(GL_VERSION));
+	String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
+
 	Int32 major = (Int32)(version.buffer[0] - '0'); /* x.y. (and so forth) */
 	Int32 minor = (Int32)(version.buffer[2] - '0');
 
 	/* Supported in core since 1.5 */
 	if ((major > 1) || (major == 1 && minor >= 5)) {
-		glBindBuffer    = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
-		glDeleteBuffers = (FN_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
-		glGenBuffers    = (FN_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
-		glBufferData    = (FN_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
-		glBufferSubData = (FN_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
+		glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBuffer");
+		glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffers");
+		glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffers");
+		glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferData");
+		glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubData");
 		return;
-	}
-
-	String vboExt = String_FromConst("GL_ARB_vertex_buffer_object");
-	if (String_ContainsString(&extensions, &vboExt)) {
-		glBindBuffer    = (FN_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
-		glDeleteBuffers = (FN_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
-		glGenBuffers    = (FN_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
-		glBufferData    = (FN_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
-		glBufferSubData = (FN_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
+	} else if (String_ContainsString(&extensions, &vboExt)) {
+		glBindBuffer    = (FUNC_GLBINDBUFFER)GLContext_GetAddress("glBindBufferARB");
+		glDeleteBuffers = (FUNC_GLDELETEBUFFERS)GLContext_GetAddress("glDeleteBuffersARB");
+		glGenBuffers    = (FUNC_GLGENBUFFERS)GLContext_GetAddress("glGenBuffersARB");
+		glBufferData    = (FUNC_GLBUFFERDATA)GLContext_GetAddress("glBufferDataARB");
+		glBufferSubData = (FUNC_GLBUFFERSUBDATA)GLContext_GetAddress("glBufferSubDataARB");
 	} else {
-		gl_lists = true;
-		Gfx_CustomMipmapsLevels = false;
+		ErrorHandler_Fail("Only OpenGL 1.1 supported.\r\n\r\n" \
+			"Compile the game with CC_BUILD_GL11, or ask on the classicube forums for it");
 	}
 }
+#endif
 
 void Gfx_Init(void) {
 	Gfx_MinZNear = 0.1f;
 	GraphicsMode mode = GraphicsMode_MakeDefault();
 	GLContext_Init(mode);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &Gfx_MaxTextureDimensions);
-	gl_lists = Options_GetBool(OPT_FORCE_OLD_OPENGL, false);
-	Gfx_CustomMipmapsLevels = !gl_lists;
 
+#if !CC_BUILD_GL11
+	Gfx_CustomMipmapsLevels = true;
 	GL_CheckVboSupport();
+#else
+	Gfx_CustomMipmapsLevels = false;
+#endif
+	
 	GfxCommon_Init();
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -113,8 +122,7 @@ static void GL_DoMipmaps(GfxResourceID texId, Int32 x, Int32 y, Bitmap* bmp, boo
 		GfxCommon_GenMipmaps(width, height, cur, prev);
 
 		if (partial) {
-			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height,
-				GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
+			glTexSubImage2D(GL_TEXTURE_2D, lvl, x, y, width, height, GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
 		} else {
 			glTexImage2D(GL_TEXTURE_2D, lvl, GL_RGBA, width, height, 0, GL_BGRA_EXT, GL_UNSIGNED_BYTE, cur);
 		}
@@ -246,89 +254,103 @@ void Gfx_SetDepthTestFunc(Int32 compareFunc) {
 }
 
 
+#if !CC_BUILD_GL11
 GfxResourceID GL_GenAndBind(GLenum target) {
-	Int32 id;
+	GfxResourceID id;
 	glGenBuffers(1, &id);
 	glBindBuffer(target, id);
 	return id;
 }
+#endif
 
 GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
-	if (gl_lists) return gl_DYNAMICLISTID;
-	Int32 id = GL_GenAndBind(GL_ARRAY_BUFFER);
+#if !CC_BUILD_GL11
+	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
 	UInt32 sizeInBytes = maxVertices * Gfx_strideSizes[vertexFormat];
 	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, NULL, GL_DYNAMIC_DRAW);
 	return id;
+#else
+	return gl_DYNAMICLISTID;
+#endif
 }
 
 #define gl_MAXINDICES ICOUNT(65536)
 GfxResourceID Gfx_CreateVb(void* vertices, Int32 vertexFormat, Int32 count) {
-	if (gl_lists) {
-		/* We need to setup client state properly when building the list */
-		Int32 curFormat = gl_batchFormat;
-		Gfx_SetBatchFormat(vertexFormat);
-		Int32 list = glGenLists(1);
-		glNewList(list, GL_COMPILE);
-		count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
-
-		UInt16 indices[GFX_MAX_INDICES];
-		GfxCommon_MakeIndices(indices, ICOUNT(count));
-
-		Int32 stride = vertexFormat == VERTEX_FORMAT_P3FT2FC4B ? (Int32)sizeof(VertexP3fT2fC4b) : (Int32)sizeof(VertexP3fC4b);
-		glVertexPointer(3, GL_FLOAT, stride, vertices);
-		glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((UInt8*)vertices + 12));
-		if (vertexFormat == VERTEX_FORMAT_P3FT2FC4B) {
-			glTexCoordPointer(2, GL_FLOAT, stride, (void*)((UInt8*)vertices + 16));
-		}
-
-		glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, indices);
-		glEndList();
-		Gfx_SetBatchFormat(curFormat);
-		return list;
-	}
-
-	Int32 id = GL_GenAndBind(GL_ARRAY_BUFFER);
+#if !CC_BUILD_GL11
+	GfxResourceID id = GL_GenAndBind(GL_ARRAY_BUFFER);
 	UInt32 sizeInBytes = count * Gfx_strideSizes[vertexFormat];
 	glBufferData(GL_ARRAY_BUFFER, (void*)sizeInBytes, vertices, GL_STATIC_DRAW);
 	return id;
+#else
+	/* We need to setup client state properly when building the list */
+	Int32 curFormat = gl_batchFormat;
+	Gfx_SetBatchFormat(vertexFormat);
+	GfxResourceID list = glGenLists(1);
+	glNewList(list, GL_COMPILE);
+	count &= ~0x01; /* Need to get rid of the 1 extra element, see comment in chunk mesh builder for why */
+
+	UInt16 indices[GFX_MAX_INDICES];
+	GfxCommon_MakeIndices(indices, ICOUNT(count));
+
+	Int32 stride = vertexFormat == VERTEX_FORMAT_P3FT2FC4B ? (Int32)sizeof(VertexP3fT2fC4b) : (Int32)sizeof(VertexP3fC4b);
+	glVertexPointer(3, GL_FLOAT, stride, vertices);
+	glColorPointer(4, GL_UNSIGNED_BYTE, stride, (void*)((UInt8*)vertices + 12));
+	if (vertexFormat == VERTEX_FORMAT_P3FT2FC4B) {
+		glTexCoordPointer(2, GL_FLOAT, stride, (void*)((UInt8*)vertices + 16));
+	}
+
+	glDrawElements(GL_TRIANGLES, ICOUNT(count), GL_UNSIGNED_SHORT, indices);
+	glEndList();
+	Gfx_SetBatchFormat(curFormat);
+	return list;
+#endif
 }
 
 GfxResourceID Gfx_CreateIb(void* indices, Int32 indicesCount) {
-	if (gl_lists) return 0;
-	Int32 id = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
+#if !CC_BUILD_GL11
+	GfxResourceID id = GL_GenAndBind(GL_ELEMENT_ARRAY_BUFFER);
 	UInt32 sizeInBytes = indicesCount * sizeof(UInt16);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, (void*)sizeInBytes, indices, GL_STATIC_DRAW);
 	return id;
+#else
+	return NULL;
+#endif
 }
 
 void Gfx_BindVb(GfxResourceID vb) {
-	if (gl_lists) { 
-		gl_activeList = vb; 
-	} else { 
-		glBindBuffer(GL_ARRAY_BUFFER, vb);
-	}
+#if !CC_BUILD_GL11
+	glBindBuffer(GL_ARRAY_BUFFER, vb);
+#else
+	gl_activeList = vb;
+#endif
 }
 
 void Gfx_BindIb(GfxResourceID ib) {
-	if (gl_lists) return;
+#if !CC_BUILD_GL11
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ib);
+#else
+	return;
+#endif
 }
 
 void Gfx_DeleteVb(GfxResourceID* vb) {
 	if (vb == NULL || *vb == NULL) return;
-
-	if (gl_lists) { 
-		if (*vb != gl_DYNAMICLISTID) glDeleteLists(*vb, 1); 
-	} else { 
-		glDeleteBuffers(1, vb); 
-	}
+#if !CC_BUILD_GL11
+	glDeleteBuffers(1, vb);
+#else
+	if (*vb != gl_DYNAMICLISTID) glDeleteLists(*vb, 1);
+#endif
 	*vb = NULL;
 }
 
 void Gfx_DeleteIb(GfxResourceID* ib) {
-	if (gl_lists || ib == NULL || *ib == NULL) return;
+#if !CC_BUILD_GL11
+	if (ib == NULL || *ib == NULL) return;
 	glDeleteBuffers(1, ib);
 	*ib = NULL;
+#else
+	return;
+#endif
 }
 
 
@@ -376,17 +398,17 @@ void Gfx_SetBatchFormat(Int32 vertexFormat) {
 }
 
 void Gfx_SetDynamicVbData(GfxResourceID vb, void* vertices, Int32 vCount) {
-	if (gl_lists) {
-		gl_activeList = gl_DYNAMICLISTID;
-		gl_dynamicListData = vertices;
-		return;
-	}
-
+#if !CC_BUILD_GL11
 	glBindBuffer(GL_ARRAY_BUFFER, vb);
 	UInt32 sizeInBytes = vCount * gl_batchStride;
 	glBufferSubData(GL_ARRAY_BUFFER, NULL, (void*)sizeInBytes, vertices);
+#else
+	gl_activeList = gl_DYNAMICLISTID;
+	gl_dynamicListData = vertices;
+#endif	
 }
 
+#if CC_BUILD_GL11
 static void GL_V16(VertexP3fC4b v) {
 	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
 	glVertex3f(v.X, v.Y, v.Z);
@@ -396,23 +418,6 @@ static void GL_V24(VertexP3fT2fC4b v) {
 	glColor4ub(v.Col.R, v.Col.G, v.Col.B, v.Col.A);
 	glTexCoord2f(v.U, v.V);
 	glVertex3f(v.X, v.Y, v.Z);
-}
-
-static void GL_DrawDynamicLines(Int32 verticesCount) {
-	glBegin(GL_LINES);
-	Int32 i;
-	if (gl_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
-		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
-		for (i = 0; i < verticesCount; i += 2) {
-			GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]);
-		}
-	} else {
-		VertexP3fC4b* ptr = (VertexP3fC4b*)gl_dynamicListData;
-		for (i = 0; i < verticesCount; i += 2) {
-			GL_V16(ptr[i + 0]); GL_V16(ptr[i + 1]);
-		}
-	}
-	glEnd();
 }
 
 static void GL_DrawDynamicTriangles(Int32 verticesCount, Int32 startVertex) {
@@ -433,56 +438,66 @@ static void GL_DrawDynamicTriangles(Int32 verticesCount, Int32 startVertex) {
 	}
 	glEnd();
 }
+#endif
 
 void Gfx_DrawVb_Lines(Int32 verticesCount) {
-	if (gl_lists) { GL_DrawDynamicLines(verticesCount); return; }
-
+#if !CC_BUILD_GL11
 	gl_setupVBFunc();
 	glDrawArrays(GL_LINES, 0, verticesCount);
+#else
+	glBegin(GL_LINES);
+	Int32 i;
+	if (gl_batchFormat == VERTEX_FORMAT_P3FT2FC4B) {
+		VertexP3fT2fC4b* ptr = (VertexP3fT2fC4b*)gl_dynamicListData;
+		for (i = 0; i < verticesCount; i += 2) { GL_V24(ptr[i + 0]); GL_V24(ptr[i + 1]); }
+	} else {
+		VertexP3fC4b* ptr = (VertexP3fC4b*)gl_dynamicListData;
+		for (i = 0; i < verticesCount; i += 2) { GL_V16(ptr[i + 0]); GL_V16(ptr[i + 1]); }
+	}
+	glEnd();
+#endif
 }
 
 void Gfx_DrawVb_IndexedTris_Range(Int32 verticesCount, Int32 startVertex) {
-	if (gl_lists) {
-		if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); }
-		else { GL_DrawDynamicTriangles(verticesCount, startVertex); }
-		return;
-	}
-
+#if !CC_BUILD_GL11
 	gl_setupVBRangeFunc(startVertex);
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+#else
+	if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); }
+	else { GL_DrawDynamicTriangles(verticesCount, startVertex); }
+#endif
 }
 
 void Gfx_DrawVb_IndexedTris(Int32 verticesCount) {
-	if (gl_lists) {
-		if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); }
-		else { GL_DrawDynamicTriangles(verticesCount, 0); }
-		return;
-	}
-
+#if !CC_BUILD_GL11
 	gl_setupVBFunc();
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+#else
+	if (gl_activeList != gl_DYNAMICLISTID) { glCallList(gl_activeList); }
+	else { GL_DrawDynamicTriangles(verticesCount, 0); }
+#endif
 }
 
-Int32 gl_lastPartialList = -1;
+GfxResourceID gl_lastPartialList;
 void Gfx_DrawIndexedVb_TrisT2fC4b(Int32 verticesCount, Int32 startVertex) {
-	/* TODO: This renders the whole map, bad performance!! FIX FIX */
-	if (gl_lists) {
-		if (gl_activeList != gl_lastPartialList) {
-			glCallList(gl_activeList); 
-			gl_lastPartialList = gl_activeList;
-		}
-		return;
-	}
-
+	
+#if !CC_BUILD_GL11
 	UInt32 offset = startVertex * (UInt32)sizeof(VertexP3fT2fC4b);
 	glVertexPointer(3, GL_FLOAT,          sizeof(VertexP3fT2fC4b), (void*)(offset));
 	glColorPointer(4, GL_UNSIGNED_BYTE,   sizeof(VertexP3fT2fC4b), (void*)(offset + 12));
 	glTexCoordPointer(2, GL_FLOAT,        sizeof(VertexP3fT2fC4b), (void*)(offset + 16));
 	glDrawElements(GL_TRIANGLES, ICOUNT(verticesCount), GL_UNSIGNED_SHORT, NULL);
+#else
+	/* TODO: This renders the whole map, bad performance!! FIX FIX */
+	if (gl_activeList != gl_lastPartialList) {
+		glCallList(gl_activeList);
+		gl_lastPartialList = gl_activeList;
+	}
+#endif
 }
 
 
-Int32 gl_lastMatrixType = 0;
+Int32 gl_lastMatrixType;
 void Gfx_SetMatrixMode(Int32 matrixType) {
 	if (matrixType == gl_lastMatrixType) return;
 	glMatrixMode(gl_matrixModes[matrixType]);
@@ -525,11 +540,11 @@ void Gfx_TakeScreenshot(Stream* output, Int32 width, Int32 height) {
 }
 
 bool Gfx_WarnIfNecessary(void) {
-	if (gl_lists) {
-		Chat_AddRaw(tmp1, "&cYou are using the very outdated OpenGL backend.");
-		Chat_AddRaw(tmp2, "&cAs such you may experience poor performance.");
-		Chat_AddRaw(tmp3, "&cIt is likely you need to install video card drivers.");
-	}
+#if CC_BUILD_GL11
+	Chat_AddRaw(tmp1, "&cYou are using the very outdated OpenGL backend.");
+	Chat_AddRaw(tmp2, "&cAs such you may experience poor performance.");
+	Chat_AddRaw(tmp3, "&cIt is likely you need to install video card drivers.");
+#endif
 
 	String renderer = String_FromReadonly(glGetString(GL_RENDERER));
 	String intel = String_FromConst("Intel");
@@ -551,7 +566,9 @@ void Gfx_SetVSync(bool value) {
 void Gfx_BeginFrame(void) { }
 void Gfx_EndFrame(void) {
 	GLContext_SwapBuffers();
-	gl_activeList = -1;
+#if CC_BUILD_GL11
+	gl_activeList = NULL;
+#endif
 }
 
 void Gfx_OnWindowResize(void) {

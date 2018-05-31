@@ -31,7 +31,7 @@ void DisplayDevice_SetBounds(DisplayDevice* device, Rectangle2D* bounds);
 /* The primary / default / main display device. */
 DisplayDevice DisplayDevice_Default;
 
-#if !USE_DX
+#if !CC_BUILD_D3D9
 typedef struct ColorFormat_ {
 	UInt8 R, G, B, A;
 	bool IsIndexed;

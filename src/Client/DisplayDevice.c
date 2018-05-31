@@ -21,7 +21,7 @@ void DisplayDevice_SetBounds(DisplayDevice* device, Rectangle2D* bounds) {
 	device->CurResolution.Height = bounds->Height;
 }
 
-#if !USE_DX
+#if !CC_BUILD_D3D9
 
 ColorFormat ColorFormat_FromBPP(Int32 bpp) {
 	ColorFormat format;

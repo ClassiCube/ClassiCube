@@ -6,7 +6,7 @@
 #include "Funcs.h"
 #include "Game.h"
 
-#if USE_DX
+#if CC_BUILD_D3D9
 //#define D3D_DISABLE_9EX causes compile errors
 #include <d3d9.h>
 #include <d3d9caps.h>

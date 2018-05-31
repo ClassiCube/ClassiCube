@@ -15,7 +15,6 @@ Real64 Math_Exp(Real64 x) { return exp(x); }
 
 Real32 Math_SinF(Real32 x) { return (Real32)Math_Sin(x); }
 Real32 Math_CosF(Real32 x) { return (Real32)Math_Cos(x); }
-Real32 Math_TanF(Real32 x) { return tanf(x); }
 
 Int32 Math_Floor(Real32 value) {
 	Int32 valueI = (Int32)value;

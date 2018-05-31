@@ -3105,7 +3105,7 @@ static void TexIdsOverlay_Render(GuiElement* elem, Real64 delta) {
 
 static bool TexIdsOverlay_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key == KeyBind_Get(KeyBind_IDOverlay) || key == KeyBind_Get(KeyBind_PauseOrExit)) {
-		Gui_FreeOverlay(elem);
+		Gui_FreeOverlay((Screen*)elem);
 		return true;
 	}
 	Screen* screen = Gui_GetUnderlyingScreen();
@@ -3181,14 +3181,14 @@ GuiElementVTABLE WarningOverlay_VTABLE;
 *#########################################################################################################################*/
 UrlWarningOverlay UrlWarningOverlay_Instance;
 static void UrlWarningOverlay_OpenUrl(GuiElement* elem, GuiElement* widget) {
-	Gui_FreeOverlay(elem);
+	Gui_FreeOverlay((Screen*)elem);
 	UrlWarningOverlay* screen = (UrlWarningOverlay*)elem;
 	String url = String_FromRawArray(screen->UrlBuffer);
 	Platform_StartShell(&url);
 }
 
 static void UrlWarningOverlay_AppendUrl(GuiElement* elem, GuiElement* widget) {
-	Gui_FreeOverlay(elem);
+	Gui_FreeOverlay((Screen*)elem);
 	if (Game_ClickableChat) {
 		UrlWarningOverlay* screen = (UrlWarningOverlay*)elem;
 		String url = String_FromRawArray(screen->UrlBuffer);

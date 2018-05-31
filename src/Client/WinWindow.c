@@ -698,7 +698,7 @@ void Window_SetCursorVisible(bool visible) {
 	ShowCursor(visible ? 1 : 0);
 }
 
-#if !USE_DX
+#if !CC_BUILD_D3D9
 
 void GLContext_SelectGraphicsMode(GraphicsMode mode) {
 	ColorFormat color = mode.Format;
