@@ -45,7 +45,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public void SetUsePlaceHolder(int index, bool placeHolder) {
 			PlaceholderHeight[index] = placeHolder;
-			if (Textures[index].ID > 0) return;
+			if (Textures[index].ID != 0) return;
 			
 			int newHeight = placeHolder ? defaultHeight : 0;
 			Textures[index].Y1 = CalcY(index, newHeight);

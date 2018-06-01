@@ -146,8 +146,9 @@ namespace ClassicalSharp.Entities {
 			game.Graphics.ContextRecreated -= ContextRecreated;
 			game.Events.ChatFontChanged -= ChatFontChanged;
 			
-			if (ShadowComponent.shadowTex > 0)
+			if (ShadowComponent.shadowTex != 0) {
 				game.Graphics.DeleteTexture(ref ShadowComponent.shadowTex);
+			}
 		}
 		
 		public byte GetClosetPlayer(Player src) {
