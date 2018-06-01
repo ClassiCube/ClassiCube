@@ -5,6 +5,7 @@ using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
 using OpenTK;
 using BlockID = System.UInt16;
+using TexLoc = System.UInt16;
 
 namespace ClassicalSharp.Particles {
 
@@ -141,7 +142,7 @@ namespace ClassicalSharp.Particles {
 	
 	public sealed class TerrainParticle : Particle {
 		internal TextureRec rec;
-		internal byte texLoc;
+		internal TexLoc texLoc;
 		internal BlockID block;		
 		
 		public bool Tick(Game game, double delta) {

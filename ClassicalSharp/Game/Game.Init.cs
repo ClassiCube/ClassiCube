@@ -83,8 +83,8 @@ namespace ClassicalSharp {
 			Drawer2D.BlackTextShadows = Options.GetBool(OptionsKey.BlackText, false);
 			Graphics.Mipmaps = Options.GetBool(OptionsKey.Mipmaps, false);
 			
-			TerrainAtlas1D.game = this;
-			TerrainAtlas2D.game = this;
+			Atlas1D.game = this;
+			Atlas2D.game = this;
 			Animations = new Animations(); Components.Add(Animations);
 			Inventory = new Inventory(); Components.Add(Inventory);
 			Inventory.Map = new BlockID[BlockInfo.Count];

@@ -187,9 +187,9 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		internal static bool boundShadowTex = false;
-		internal static int shadowTex = -1;
+		internal static int shadowTex = 0;
 		static void CheckShadowTexture(IGraphicsApi gfx) {
-			if (shadowTex != -1) return;
+			if (shadowTex != 0) return;
 			const int size = 128, half = size / 2;
 			using (Bitmap bmp = Platform.CreateBmp(size, size))
 				using (FastBitmap fastBmp = new FastBitmap(bmp, true, false))

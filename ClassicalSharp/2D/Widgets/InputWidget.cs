@@ -70,7 +70,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override void Init() {
 			int numLines = UsedLines;
 			if (numLines > 1) {
-				Text.WordWrap(game.Drawer2D, lines, numLines, MaxCharsPerLine);
+				Text.WordWrap(lines, numLines, MaxCharsPerLine);
 			} else {
 				lines[0] = Text.ToString();
 			}

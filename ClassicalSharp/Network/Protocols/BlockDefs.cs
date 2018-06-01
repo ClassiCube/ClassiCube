@@ -1,7 +1,9 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
+using ClassicalSharp.Textures;
 using OpenTK;
 using BlockID = System.UInt16;
+using TexLoc = System.UInt16;
 
 namespace ClassicalSharp.Network.Protocols {
 
@@ -15,7 +17,7 @@ namespace ClassicalSharp.Network.Protocols {
 			net.Set(Opcode.CpeDefineBlock, HandleDefineBlock, 80);
 			net.Set(Opcode.CpeUndefineBlock, HandleRemoveBlockDefinition, 2);
 			net.Set(Opcode.CpeDefineBlockExt, HandleDefineBlockExt, 85);
-		}		
+		}
 		public override void Tick() { }
 		
 		internal void HandleDefineBlock() {
@@ -29,7 +31,7 @@ namespace ClassicalSharp.Network.Protocols {
 			HandleDefineBlockCommonEnd(reader, shape, block);
 			// Update sprite BoundingBox if necessary
 			if (BlockInfo.Draw[block] == DrawType.Sprite) {
-				using (FastBitmap dst = new FastBitmap(TerrainAtlas2D.Atlas, true, true))
+				using (FastBitmap dst = new FastBitmap(Atlas2D.Atlas, true, true))
 					BlockInfo.RecalculateBB(block, dst);
 			}
 		}
@@ -76,6 +78,13 @@ namespace ClassicalSharp.Network.Protocols {
 			HandleDefineBlockCommonEnd(reader, 1, block);
 		}
 		
+		TexLoc ReadTex(NetReader reader) {
+			if (!net.cpeData.extTexs) return reader.ReadUInt8();
+
+			const int maxTexCount = Atlas2D.TilesPerRow * Atlas2D.MaxRowsCount;
+			return (TexLoc)(reader.ReadUInt16() % maxTexCount);
+		}
+		
 		BlockID HandleDefineBlockCommonStart(NetReader reader, bool uniqueSideTexs) {
 			BlockID block = reader.ReadBlock();
 			bool didBlockLight = BlockInfo.BlocksLight[block];
@@ -85,23 +94,23 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockInfo.SetCollide(block, reader.ReadUInt8());
 			
 			BlockInfo.SpeedMultiplier[block] = (float)Math.Pow(2, (reader.ReadUInt8() - 128) / 64f);
-			BlockInfo.SetTex(reader.ReadUInt8(), Side.Top, block);
+			BlockInfo.SetTex(ReadTex(reader), Side.Top, block);
 			if (uniqueSideTexs) {
-				BlockInfo.SetTex(reader.ReadUInt8(), Side.Left, block);
-				BlockInfo.SetTex(reader.ReadUInt8(), Side.Right, block);
-				BlockInfo.SetTex(reader.ReadUInt8(), Side.Front, block);
-				BlockInfo.SetTex(reader.ReadUInt8(), Side.Back, block);
+				BlockInfo.SetTex(ReadTex(reader), Side.Left, block);
+				BlockInfo.SetTex(ReadTex(reader), Side.Right, block);
+				BlockInfo.SetTex(ReadTex(reader), Side.Front, block);
+				BlockInfo.SetTex(ReadTex(reader), Side.Back, block);
 			} else {
-				BlockInfo.SetSide(reader.ReadUInt8(), block);
+				BlockInfo.SetSide(ReadTex(reader), block);
 			}
-			BlockInfo.SetTex(reader.ReadUInt8(), Side.Bottom, block);
+			BlockInfo.SetTex(ReadTex(reader), Side.Bottom, block);
 			
 			BlockInfo.BlocksLight[block] = reader.ReadUInt8() == 0;
 			OnBlockUpdated(block, didBlockLight);
 			
 			byte sound = reader.ReadUInt8();
 			BlockInfo.StepSounds[block] = sound;
-			BlockInfo.DigSounds[block]  = sound;			
+			BlockInfo.DigSounds[block]  = sound;
 			if (sound == SoundType.Glass) BlockInfo.StepSounds[block] = SoundType.Stone;
 			
 			BlockInfo.FullBright[block] = reader.ReadUInt8() != 0;

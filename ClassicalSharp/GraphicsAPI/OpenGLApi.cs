@@ -232,9 +232,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void DeleteTexture(ref int texId) {
-			if (texId <= 0) return;
+			if (texId == 0) return;
 			int id = texId; GL.DeleteTextures(1, &id);
-			texId = -1;
+			texId = 0;
 		}
 		
 		public override void EnableMipmaps() { }
@@ -334,8 +334,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		#endif
 		
 		public override void DeleteVb(ref int vb) {
-			if (vb <= 0) return;
-			int id = vb; vb = -1;
+			if (vb == 0) return;
+			int id = vb; vb = 0;
 			#if !GL11
 			GL.DeleteBuffers(1, &id);
 			#else
@@ -345,8 +345,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void DeleteIb(ref int ib) {
 			#if !GL11
-			if (ib <= 0) return;
-			int id = ib; ib = -1;
+			if (ib == 0) return;
+			int id = ib; ib = 0;
 			GL.DeleteBuffers(1, &id);
 			#else
 			return;

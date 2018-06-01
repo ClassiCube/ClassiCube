@@ -116,7 +116,7 @@ namespace ClassicalSharp {
 			return new String(tmp, 0, len);
 		}
 		
-		public void WordWrap(IDrawer2D drawer, string[] lines, int numLines, int lineLen) {
+		public void WordWrap(string[] lines, int numLines, int lineLen) {
 			for (int i = 0; i < numLines; i++) { lines[i] = null; }
 
 			int lineStart = 0, lineEnd;

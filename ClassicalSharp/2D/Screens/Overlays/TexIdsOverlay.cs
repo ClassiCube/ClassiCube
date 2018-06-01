@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		TextAtlas idAtlas;
 		public TexIdsOverlay(Game game) : base(game) { widgets = new Widget[1]; }
-		const int verticesCount = TerrainAtlas2D.TilesPerRow * TerrainAtlas2D.RowsCount * 4;
+		const int verticesCount = Atlas2D.TilesPerRow * Atlas2D.MaxRowsCount * 4;
 		static VertexP3fT2fC4b[] vertices;
 		int dynamicVb;
 		int xOffset, yOffset, tileSize;
@@ -46,26 +46,26 @@ namespace ClassicalSharp.Gui.Screens {
 			idAtlas = new TextAtlas(game, 16);
 			idAtlas.Pack("0123456789", textFont, "f");
 			
-			tileSize = game.Height / TerrainAtlas2D.RowsCount;
+			tileSize = game.Height / Atlas2D.RowsCount;
 			tileSize = (tileSize / 8) * 8;
 			Utils.Clamp(ref tileSize, 8, 40);
 			
-			xOffset = CalcPos(Anchor.Centre, 0, tileSize * TerrainAtlas2D.TilesPerRow, game.Width);
-			yOffset = CalcPos(Anchor.Centre, 0, tileSize * TerrainAtlas2D.RowsCount,   game.Height);
+			xOffset = CalcPos(Anchor.Centre, 0, tileSize * Atlas2D.TilesPerRow, game.Width);
+			yOffset = CalcPos(Anchor.Centre, 0, tileSize * Atlas2D.RowsCount,   game.Height);
 
 			widgets[0] = TextWidget.Create(game, "Texture ID reference sheet", titleFont)
 				.SetLocation(Anchor.Centre, Anchor.Min, 0, yOffset - 30);
 		}
 		
 		void RenderTerrain() {
-			int elementsPerAtlas = TerrainAtlas1D.TilesPerAtlas;
-			for (int i = 0; i < TerrainAtlas2D.TilesPerRow * TerrainAtlas2D.RowsCount;) {
+			int elementsPerAtlas = Atlas1D.TilesPerAtlas;
+			for (int i = 0; i < Atlas2D.TilesPerRow * Atlas2D.RowsCount;) {
 				int index = 0, texIdx = i / elementsPerAtlas, ignored;
 				
 				for (int j = 0; j < elementsPerAtlas; j++) {
-					TextureRec rec = TerrainAtlas1D.GetTexRec(i + j, 1, out ignored);
-					int x = (i + j) % TerrainAtlas2D.TilesPerRow;
-					int y = (i + j) / TerrainAtlas2D.TilesPerRow;
+					TextureRec rec = Atlas1D.GetTexRec(i + j, 1, out ignored);
+					int x = (i + j) % Atlas2D.TilesPerRow;
+					int y = (i + j) / Atlas2D.TilesPerRow;
 					
 					Texture tex = new Texture(0, xOffset + x * tileSize, yOffset + y * tileSize,
 					                          tileSize, tileSize, rec);
@@ -73,7 +73,7 @@ namespace ClassicalSharp.Gui.Screens {
 				}
 				i += elementsPerAtlas;
 				
-				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[texIdx]);
+				game.Graphics.BindTexture(Atlas1D.TexIds[texIdx]);
 				game.Graphics.UpdateDynamicVb_IndexedTris(dynamicVb, vertices, index);
 			}
 		}
@@ -83,10 +83,10 @@ namespace ClassicalSharp.Gui.Screens {
 			int index = 0;
 			idAtlas.tex.Y = (short)(yOffset + (tileSize - idAtlas.tex.Height));
 			
-			for (int y = 0; y < TerrainAtlas2D.RowsCount; y++) {
-				for (int x = 0; x < TerrainAtlas2D.TilesPerRow; x++) {
+			for (int y = 0; y < Atlas2D.RowsCount; y++) {
+				for (int x = 0; x < Atlas2D.TilesPerRow; x++) {
 					idAtlas.curX = xOffset + tileSize * x + textOffset;
-					int id = x + y * TerrainAtlas2D.TilesPerRow;
+					int id = x + y * Atlas2D.TilesPerRow;
 					idAtlas.AddInt(id, vertices, ref index);
 				}
 				idAtlas.tex.Y += (short)tileSize;

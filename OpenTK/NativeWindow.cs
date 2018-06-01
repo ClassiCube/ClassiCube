@@ -50,8 +50,8 @@ namespace OpenTK {
 		/// <exception cref="System.ArgumentOutOfRangeException">If width or height is less than 1.</exception>
 		/// <exception cref="System.ArgumentNullException">If mode or device is null.</exception>
 		public NativeWindow(int width, int height, string title, GraphicsMode mode, DisplayDevice device)
-			: this(device.Bounds.Left + (device.Bounds.Width - width) / 2,
-			       device.Bounds.Top + (device.Bounds.Height - height) / 2,
+			: this(device.Bounds.Left + (device.Bounds.Width  - width)  / 2,
+			       device.Bounds.Top  + (device.Bounds.Height - height) / 2,
 			       width, height, title, mode, device) { }
 		
 		public NativeWindow(int width, int height, string title, GameWindowFlags flags, GraphicsMode mode, DisplayDevice device) : this(width, height, title, mode, device) {}

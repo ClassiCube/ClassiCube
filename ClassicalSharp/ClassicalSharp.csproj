@@ -47,7 +47,7 @@
     <StartAction>Project</StartAction>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug_D3D' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
+    <PlatformTarget>x86</PlatformTarget>
     <OutputPath>..\output\debug\</OutputPath>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>Full</DebugType>
@@ -56,6 +56,7 @@
     <DefineConstants>DEBUG;TRACE;USE_DX;</DefineConstants>
     <StartAction>Project</StartAction>
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
+    <StartArguments>unk aa 127.0.0.1 25566</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release_D3D' ">
     <OutputPath>..\output\release\</OutputPath>
@@ -282,8 +283,7 @@
     <Compile Include="TexturePack\LiquidAnimations.cs" />
     <Compile Include="TexturePack\Side.cs" />
     <Compile Include="TexturePack\TextureCache.cs" />
-    <Compile Include="TexturePack\TerrainAtlas1D.cs" />
-    <Compile Include="TexturePack\TerrainAtlas2D.cs" />
+    <Compile Include="TexturePack\TerrainAtlas.cs" />
     <Compile Include="TexturePack\TexturePack.cs" />
     <Compile Include="TexturePack\ZipReader.cs" />
     <Compile Include="Utils\Camera.cs" />

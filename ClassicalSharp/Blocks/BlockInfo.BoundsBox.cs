@@ -2,6 +2,7 @@
 using System;
 using OpenTK;
 using ClassicalSharp;
+using ClassicalSharp.Textures;
 using BlockID = System.UInt16;
 
 namespace ClassicalSharp {
@@ -42,7 +43,7 @@ namespace ClassicalSharp {
 		}
 		
 		internal static void RecalculateSpriteBB() {
-			using (FastBitmap fastBmp = new FastBitmap(TerrainAtlas2D.Atlas, true, true)) {
+			using (FastBitmap fastBmp = new FastBitmap(Atlas2D.Atlas, true, true)) {
 				for (int i = 0; i < Count; i++) {
 					if (Draw[i] != DrawType.Sprite) continue;
 					RecalculateBB((BlockID)i, fastBmp);

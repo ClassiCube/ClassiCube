@@ -82,7 +82,7 @@ namespace ClassicalSharp.Model {
 		
 		void Flush() {
 			if (lastTexIndex != -1) {
-				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[lastTexIndex]);
+				game.Graphics.BindTexture(Atlas1D.TexIds[lastTexIndex]);
 				UpdateVB();
 			}
 			
@@ -103,9 +103,6 @@ namespace ClassicalSharp.Model {
 				SpriteXQuad(true, false);
 				SpriteXQuad(true, true);
 			} else {
-				drawer.tilesPerAtlas1D = TerrainAtlas1D.TilesPerAtlas;
-				drawer.invVerTileSize  = TerrainAtlas1D.invTileSize;
-				
 				drawer.minBB = BlockInfo.MinBB[block]; drawer.minBB.Y = 1 - drawer.minBB.Y;
 				drawer.maxBB = BlockInfo.MaxBB[block]; drawer.maxBB.Y = 1 - drawer.maxBB.Y;
 				
@@ -128,7 +125,7 @@ namespace ClassicalSharp.Model {
 		
 		int GetTex(int side) {
 			int texLoc = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texLoc / TerrainAtlas1D.TilesPerAtlas;
+			texIndex = texLoc / Atlas1D.TilesPerAtlas;
 			
 			if (lastTexIndex != texIndex) Flush();
 			return texLoc;
@@ -136,7 +133,7 @@ namespace ClassicalSharp.Model {
 		
 		void SpriteZQuad(bool firstPart, bool mirror) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Back);
-			TextureRec rec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
+			TextureRec rec = Atlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 			
 			int col = cols[0];
@@ -161,7 +158,7 @@ namespace ClassicalSharp.Model {
 
 		void SpriteXQuad(bool firstPart, bool mirror) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Right);
-			TextureRec rec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
+			TextureRec rec = Atlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 
 			int col = cols[0];

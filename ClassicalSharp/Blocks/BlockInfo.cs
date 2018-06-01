@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using ClassicalSharp.Blocks;
 using OpenTK;
 using BlockID = System.UInt16;
+using TexLoc = System.UInt16;
 
 namespace ClassicalSharp {
 
@@ -63,11 +64,12 @@ namespace ClassicalSharp {
 		
 		public static bool[] IsLiquid, BlocksLight, FullBright;
 		public static bool[] CanPlace, CanDelete, Tinted, FullOpaque;
-		public static byte[] Collide, ExtendedCollide, textures, hidden;
+		public static byte[] Collide, ExtendedCollide, hidden;
 		public static byte[] LightOffset, Draw, SpriteOffset, CanStretch;
 		public static byte[] DigSounds, StepSounds;
 		public static string[] Name;
 		public static float[] FogDensity, SpeedMultiplier;
+		public static TexLoc[] textures;
 		public static FastColour[] FogColour;
 		public static Vector3[] MinBB, MaxBB, RenderMinBB, RenderMaxBB;
 		static uint[] DefinedCustomBlocks;
@@ -83,7 +85,7 @@ namespace ClassicalSharp {
 			FullOpaque = new bool[count];
 			Collide = new byte[count];
 			ExtendedCollide = new byte[count];
-			textures = new byte[count * Side.Sides];
+			textures = new TexLoc[count * Side.Sides];
 			hidden = new byte[count * count];
 			LightOffset = new byte[count];
 			Draw = new byte[count];
@@ -267,15 +269,15 @@ namespace ClassicalSharp {
 		}
 		
 		
-		internal static void SetSide(byte textureId, BlockID blockId) {
-			textures[blockId * Side.Sides + Side.Left]  = textureId;
-			textures[blockId * Side.Sides + Side.Right] = textureId;
-			textures[blockId * Side.Sides + Side.Front] = textureId;
-			textures[blockId * Side.Sides + Side.Back]  = textureId;
+		internal static void SetSide(TexLoc texLoc, BlockID blockId) {
+			textures[blockId * Side.Sides + Side.Left]  = texLoc;
+			textures[blockId * Side.Sides + Side.Right] = texLoc;
+			textures[blockId * Side.Sides + Side.Front] = texLoc;
+			textures[blockId * Side.Sides + Side.Back]  = texLoc;
 		}
 		
-		internal static void SetTex(byte textureId, int face, BlockID blockId) {
-			textures[blockId * Side.Sides + face] = textureId;
+		internal static void SetTex(TexLoc texLoc, int face, BlockID blockId) {
+			textures[blockId * Side.Sides + face] = texLoc;
 		}
 
 		public static int GetTextureLoc(BlockID block, int face) {

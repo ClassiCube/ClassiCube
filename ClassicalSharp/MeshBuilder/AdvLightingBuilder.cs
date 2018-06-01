@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
+using ClassicalSharp.Textures;
 using OpenTK;
 using BlockID = System.UInt16;
 
@@ -124,13 +125,13 @@ namespace ClassicalSharp {
 		
 		void DrawLeftFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Left];
-			int i = texId / tilesPerAtlas1D;
-			float vOrigin = (texId % tilesPerAtlas1D) * invVerTileSize;
+			int i = texId / Atlas1D.TilesPerAtlas;
+			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Left) & 1;
 			
 			float u1 = minBB.Z, u2 = (count - 1) + maxBB.Z * 15.99f/16f;
-			float v1 = vOrigin + maxBB.Y * invVerTileSize;
-			float v2 = vOrigin + minBB.Y * invVerTileSize * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * Atlas1D.invTileSize;
+			float v2 = vOrigin + minBB.Y * Atlas1D.invTileSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
 			int F = bitFlags[cIndex];
@@ -166,13 +167,13 @@ namespace ClassicalSharp {
 
 		void DrawRightFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
-			int i = texId / tilesPerAtlas1D;
-			float vOrigin = (texId % tilesPerAtlas1D) * invVerTileSize;
+			int i = texId / Atlas1D.TilesPerAtlas;
+			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Right) & 1;
 			
 			float u1 = (count - minBB.Z), u2 = (1 - maxBB.Z) * 15.99f/16f;
-			float v1 = vOrigin + maxBB.Y * invVerTileSize;
-			float v2 = vOrigin + minBB.Y * invVerTileSize * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * Atlas1D.invTileSize;
+			float v2 = vOrigin + minBB.Y * Atlas1D.invTileSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
 			int F = bitFlags[cIndex];
@@ -208,13 +209,13 @@ namespace ClassicalSharp {
 
 		void DrawFrontFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Front];
-			int i = texId / tilesPerAtlas1D;
-			float vOrigin = (texId % tilesPerAtlas1D) * invVerTileSize;
+			int i = texId / Atlas1D.TilesPerAtlas;
+			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Front) & 1;
 			
 			float u1 = (count - minBB.X), u2 = (1 - maxBB.X) * 15.99f/16f;
-			float v1 = vOrigin + maxBB.Y * invVerTileSize;
-			float v2 = vOrigin + minBB.Y * invVerTileSize * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * Atlas1D.invTileSize;
+			float v2 = vOrigin + minBB.Y * Atlas1D.invTileSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
 			int F = bitFlags[cIndex];
@@ -250,13 +251,13 @@ namespace ClassicalSharp {
 		
 		void DrawBackFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Back];
-			int i = texId / tilesPerAtlas1D;
-			float vOrigin = (texId % tilesPerAtlas1D) * invVerTileSize;
+			int i = texId / Atlas1D.TilesPerAtlas;
+			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Back) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
-			float v1 = vOrigin + maxBB.Y * invVerTileSize;
-			float v2 = vOrigin + minBB.Y * invVerTileSize * 15.99f/16f;
+			float v1 = vOrigin + maxBB.Y * Atlas1D.invTileSize;
+			float v2 = vOrigin + minBB.Y * Atlas1D.invTileSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
 			int F = bitFlags[cIndex];
@@ -292,13 +293,13 @@ namespace ClassicalSharp {
 		
 		void DrawBottomFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Bottom];
-			int i = texId / tilesPerAtlas1D;
-			float vOrigin = (texId % tilesPerAtlas1D) * invVerTileSize;
+			int i = texId / Atlas1D.TilesPerAtlas;
+			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Bottom) & 1;
 			
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
-			float v1 = vOrigin + minBB.Z * invVerTileSize;
-			float v2 = vOrigin + maxBB.Z * invVerTileSize * 15.99f/16f;
+			float v1 = vOrigin + minBB.Z * Atlas1D.invTileSize;
+			float v2 = vOrigin + maxBB.Z * Atlas1D.invTileSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
 			int F = bitFlags[cIndex];
@@ -334,13 +335,13 @@ namespace ClassicalSharp {
 
 		void DrawTopFace(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Top];
-			int i = texId / tilesPerAtlas1D;
-			float vOrigin = (texId % tilesPerAtlas1D) * invVerTileSize;
+			int i = texId / Atlas1D.TilesPerAtlas;
+			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
 			int offset = (lightFlags >> Side.Top) & 1;
 
 			float u1 = minBB.X, u2 = (count - 1) + maxBB.X * 15.99f/16f;
-			float v1 = vOrigin + minBB.Z * invVerTileSize;
-			float v2 = vOrigin + maxBB.Z * invVerTileSize * 15.99f/16f;
+			float v1 = vOrigin + minBB.Z * Atlas1D.invTileSize;
+			float v2 = vOrigin + maxBB.Z * Atlas1D.invTileSize * 15.99f/16f;
 			DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
 			
 			int F = bitFlags[cIndex];

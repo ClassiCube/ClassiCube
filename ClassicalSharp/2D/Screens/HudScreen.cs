@@ -76,7 +76,7 @@ namespace ClassicalSharp.Gui.Screens {
 		const int chExtent = 16, chWeight = 2;
 		static TextureRec chRec = new TextureRec(0, 0, 15/256f, 15/256f);
 		void DrawCrosshairs() {			
-			if (game.Gui.IconsTex <= 0) return;
+			if (game.Gui.IconsTex == 0) return;
 			
 			int cenX = game.Width / 2, cenY = game.Height / 2;
 			int extent = (int)(chExtent * game.Scale(game.Height / 480f));

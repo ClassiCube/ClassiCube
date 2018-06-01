@@ -5,6 +5,7 @@ using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Textures;
 using OpenTK;
 using BlockID = System.UInt16;
+using TexLoc = System.UInt16;
 
 namespace ClassicalSharp.Particles {
 	
@@ -14,7 +15,8 @@ namespace ClassicalSharp.Particles {
 		TerrainParticle[] terrainParticles = new TerrainParticle[maxParticles];
 		RainParticle[] rainParticles = new RainParticle[maxParticles];
 		int terrainCount, rainCount;
-		int[] terrain1DCount, terrain1DIndices;
+		int[] terrain1DCount   = new int[Atlas1D.MaxAtlases];
+		int[] terrain1DIndices = new int[Atlas1D.MaxAtlases];
 		
 		Game game;
 		Random rnd = new Random();
@@ -23,7 +25,6 @@ namespace ClassicalSharp.Particles {
 		
 		void IGameComponent.Init(Game game) {
 			this.game = game;
-			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
 			game.UserEvents.BlockChanged += BreakBlockEffect;
 			game.Events.TextureChanged += TextureChanged;
 			
@@ -36,11 +37,6 @@ namespace ClassicalSharp.Particles {
 		void IGameComponent.Reset(Game game) { rainCount = 0; terrainCount = 0; }
 		void IGameComponent.OnNewMap(Game game) { rainCount = 0; terrainCount = 0; }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
-
-		void TerrainAtlasChanged(object sender, EventArgs e) {
-			terrain1DCount = new int[TerrainAtlas1D.TexIds.Length];
-			terrain1DIndices = new int[TerrainAtlas1D.TexIds.Length];
-		}
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name == "particles.png")
@@ -72,7 +68,7 @@ namespace ClassicalSharp.Particles {
 
 			Update1DCounts(particles, elems);
 			for (int i = 0; i < elems; i++) {
-				int index = TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
+				int index = Atlas1D.Get1DIndex(particles[i].texLoc);
 				particles[i].Render(game, t, vertices, ref terrain1DIndices[index]);
 			}
 			int drawCount = Math.Min(count, maxParticles * 4);
@@ -81,11 +77,11 @@ namespace ClassicalSharp.Particles {
 			fixed (VertexP3fT2fC4b* ptr = vertices) {
 				gfx.SetDynamicVbData(vb, (IntPtr)ptr, drawCount);
 				int offset = 0;
-				for (int i = 0; i < terrain1DCount.Length; i++) {
+				for (int i = 0; i < Atlas1D.AtlasesCount; i++) {
 					int partCount = terrain1DCount[i];
 					if (partCount == 0) continue;
 					
-					gfx.BindTexture(TerrainAtlas1D.TexIds[i]);
+					gfx.BindTexture(Atlas1D.TexIds[i]);
 					gfx.DrawVb_IndexedTris(partCount, offset);
 					offset += partCount;
 				}
@@ -93,15 +89,15 @@ namespace ClassicalSharp.Particles {
 		}
 		
 		void Update1DCounts(TerrainParticle[] particles, int elems) {
-			for (int i = 0; i < terrain1DCount.Length; i++) {
+			for (int i = 0; i < Atlas1D.MaxAtlases; i++) {
 				terrain1DCount[i] = 0;
 				terrain1DIndices[i] = 0;
 			}
 			for (int i = 0; i < elems; i++) {
-				int index = TerrainAtlas1D.Get1DIndex(particles[i].texLoc);
+				int index = Atlas1D.Get1DIndex(particles[i].texLoc);
 				terrain1DCount[index] += 4;
 			}
-			for (int i = 1; i < terrain1DCount.Length; i++) {
+			for (int i = 1; i < Atlas1D.AtlasesCount; i++) {
 				terrain1DIndices[i] = terrain1DIndices[i - 1] + terrain1DCount[i - 1];
 			}
 		}
@@ -169,8 +165,8 @@ namespace ClassicalSharp.Particles {
 			
 			Vector3 worldPos = new Vector3(position.X, position.Y, position.Z);
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Left), texIndex = 0;
-			TextureRec baseRec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
-			float uScale = (1/16f), vScale = (1/16f) * TerrainAtlas1D.invTileSize;
+			TextureRec baseRec = Atlas1D.GetTexRec(texLoc, 1, out texIndex);
+			float uScale = (1/16f), vScale = (1/16f) * Atlas1D.invTileSize;
 			
 			Vector3 minBB = BlockInfo.MinBB[block];
 			Vector3 maxBB = BlockInfo.MaxBB[block];
@@ -211,7 +207,7 @@ namespace ClassicalSharp.Particles {
 				p.ResetState(worldPos + cell, velocity, life);
 				p.rec = rec;
 				
-				p.texLoc = (byte)texLoc;
+				p.texLoc = (TexLoc)texLoc;
 				p.block = block;
 				int type = rnd.Next(0, 30);
 				p.Size = (byte)(type >= 28 ? 12 : (type >= 25 ? 10 : 8));
@@ -267,7 +263,6 @@ namespace ClassicalSharp.Particles {
 		void IDisposable.Dispose() {
 			game.Graphics.DeleteTexture(ref ParticlesTexId);
 			game.UserEvents.BlockChanged -= BreakBlockEffect;
-			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
 			game.Events.TextureChanged -= TextureChanged;
 			
 			ContextLost();

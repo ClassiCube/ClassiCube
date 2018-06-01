@@ -2,6 +2,7 @@
 using System;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
+using ClassicalSharp.Textures;
 using OpenTK;
 using BlockID = System.UInt16;
 
@@ -88,13 +89,7 @@ namespace ClassicalSharp {
 			}
 			return 0;
 		}
-		
-		protected override void PreStretchTiles(int x1, int y1, int z1) {
-			base.PreStretchTiles(x1, y1, z1);
-			drawer.invVerTileSize  = invVerTileSize;
-			drawer.tilesPerAtlas1D = tilesPerAtlas1D;
-		}
-		
+
 		protected override void RenderTile(int index) {
 			if (BlockInfo.Draw[curBlock] == DrawType.Sprite) {
 				this.fullBright = BlockInfo.FullBright[curBlock];
@@ -126,7 +121,7 @@ namespace ClassicalSharp {
 			
 			if (leftCount != 0) {
 				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Left];
-				int i = texLoc / tilesPerAtlas1D;
+				int i = texLoc / Atlas1D.TilesPerAtlas;
 				int offset = (lightFlags >> Side.Left) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
@@ -137,7 +132,7 @@ namespace ClassicalSharp {
 			
 			if (rightCount != 0) {
 				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
-				int i = texLoc / tilesPerAtlas1D;
+				int i = texLoc / Atlas1D.TilesPerAtlas;
 				int offset = (lightFlags >> Side.Right) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
@@ -148,7 +143,7 @@ namespace ClassicalSharp {
 			
 			if (frontCount != 0) {
 				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Front];
-				int i = texLoc / tilesPerAtlas1D;
+				int i = texLoc / Atlas1D.TilesPerAtlas;
 				int offset = (lightFlags >> Side.Front) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
@@ -159,7 +154,7 @@ namespace ClassicalSharp {
 			
 			if (backCount != 0) {
 				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Back];
-				int i = texLoc / tilesPerAtlas1D;
+				int i = texLoc / Atlas1D.TilesPerAtlas;
 				int offset = (lightFlags >> Side.Back) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
@@ -170,7 +165,7 @@ namespace ClassicalSharp {
 			
 			if (bottomCount != 0) {
 				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Bottom];
-				int i = texLoc / tilesPerAtlas1D;
+				int i = texLoc / Atlas1D.TilesPerAtlas;
 				int offset = (lightFlags >> Side.Bottom) & 1;
 				
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];
@@ -180,7 +175,7 @@ namespace ClassicalSharp {
 			
 			if (topCount != 0) {
 				int texLoc = BlockInfo.textures[curBlock * Side.Sides + Side.Top];
-				int i = texLoc / tilesPerAtlas1D;
+				int i = texLoc / Atlas1D.TilesPerAtlas;
 				int offset = (lightFlags >> Side.Top) & 1;
 
 				DrawInfo part = isTranslucent ? translucentParts[i] : normalParts[i];

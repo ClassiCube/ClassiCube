@@ -13,26 +13,6 @@ namespace ClassicalSharp {
 		protected DrawInfo[] normalParts, translucentParts;
 		protected int arraysCount = 0;
 		protected bool fullBright, tinted;
-		protected float invVerTileSize;
-		protected int tilesPerAtlas1D;
-		
-		void TerrainAtlasChanged(object sender, EventArgs e) {
-			int newArraysCount = TerrainAtlas1D.TexIds.Length;
-			if (arraysCount == newArraysCount) return;
-			arraysCount = newArraysCount;
-			Array.Resize(ref normalParts, arraysCount);
-			Array.Resize(ref translucentParts, arraysCount);
-			
-			for (int i = 0; i < normalParts.Length; i++) {
-				if (normalParts[i] != null) continue;
-				normalParts[i] = new DrawInfo();
-				translucentParts[i] = new DrawInfo();
-			}
-		}
-		
-		public void Dispose() {
-			game.Events.TerrainAtlasChanged -= TerrainAtlasChanged;
-		}
 		
 		protected class DrawInfo {
 			public int[] vIndex = new int[6], vCount = new int[6];
@@ -69,13 +49,12 @@ namespace ClassicalSharp {
 		protected abstract void RenderTile(int index);
 		
 		protected virtual void PreStretchTiles(int x1, int y1, int z1) {
-			invVerTileSize  = TerrainAtlas1D.invTileSize;
-			tilesPerAtlas1D = TerrainAtlas1D.TilesPerAtlas;
-			arraysCount = TerrainAtlas1D.TexIds.Length;
+			arraysCount = Math.Max(Atlas1D.AtlasesCount, game.MapRenderer._1DUsed); // TODO: hacky workaround fix
 			
-			if (normalParts == null) {
+			if (normalParts == null || normalParts.Length < arraysCount) {
 				normalParts = new DrawInfo[arraysCount];
 				translucentParts = new DrawInfo[arraysCount];
+				
 				for (int i = 0; i < normalParts.Length; i++) {
 					normalParts[i] = new DrawInfo();
 					translucentParts[i] = new DrawInfo();
@@ -113,13 +92,13 @@ namespace ClassicalSharp {
 		}
 		
 		void AddSpriteVertices(BlockID block) {
-			int i = TerrainAtlas1D.Get1DIndex(BlockInfo.GetTextureLoc(block, Side.Left));
+			int i = Atlas1D.Get1DIndex(BlockInfo.GetTextureLoc(block, Side.Left));
 			DrawInfo part = normalParts[i];
 			part.spriteCount += 4 * 4;
 		}
 		
 		void AddVertices(BlockID block, int face) {
-			int i = TerrainAtlas1D.Get1DIndex(BlockInfo.GetTextureLoc(block, face));
+			int i = Atlas1D.Get1DIndex(BlockInfo.GetTextureLoc(block, face));
 			DrawInfo part = BlockInfo.Draw[block] == DrawType.Translucent ? translucentParts[i] : normalParts[i];
 			part.vCount[face] += 4;
 		}
@@ -127,13 +106,13 @@ namespace ClassicalSharp {
 		static JavaRandom spriteRng = new JavaRandom(0);
 		protected virtual void DrawSprite(int count) {
 			int texId = BlockInfo.textures[curBlock * Side.Sides + Side.Right];
-			int i = texId / tilesPerAtlas1D;
-			float vOrigin = (texId % tilesPerAtlas1D) * invVerTileSize;
+			int i = texId / Atlas1D.TilesPerAtlas;
+			float vOrigin = (texId % Atlas1D.TilesPerAtlas) * Atlas1D.invTileSize;
 			
 			float x1 = X + 2.50f/16, y1 = Y,     z1 = Z + 2.50f/16;
 			float x2 = X + 13.5f/16, y2 = Y + 1, z2 = Z + 13.5f/16;
 			const float u1 = 0, u2 = 15.99f/16f;
-			float v1 = vOrigin, v2 = vOrigin + invVerTileSize * 15.99f/16f;
+			float v1 = vOrigin, v2 = vOrigin + Atlas1D.invTileSize * 15.99f/16f;
 			
 			byte offsetType = BlockInfo.SpriteOffset[curBlock];
 			if (offsetType >= 6 && offsetType <= 7) {

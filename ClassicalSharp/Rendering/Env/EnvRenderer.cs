@@ -11,7 +11,7 @@ namespace ClassicalSharp.Renderers {
 
 	public unsafe sealed class EnvRenderer : IGameComponent {
 		
-		int cloudsVb = -1, cloudVertices, skyVb = -1, skyVertices, cloudsTex;
+		int cloudsVb, cloudVertices, skyVb, skyVertices, cloudsTex;
 		World map;
 		Game game;
 		internal bool legacy, minimal;
@@ -59,7 +59,7 @@ namespace ClassicalSharp.Renderers {
 		
 		public void Render(double deltaTime) {
 			if (minimal) { RenderMinimal(deltaTime); return; }
-			if (skyVb == -1 || cloudsVb == -1) return;
+			if (skyVb == 0 || cloudsVb == 0) return;
 			
 			if (!game.SkyboxRenderer.ShouldRender) {
 				RenderSky(deltaTime);

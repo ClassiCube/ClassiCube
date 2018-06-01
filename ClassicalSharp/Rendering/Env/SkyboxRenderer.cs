@@ -9,7 +9,7 @@ namespace ClassicalSharp.Renderers {
 
 	public sealed class SkyboxRenderer : IGameComponent {
 		
-		int tex, vb = -1;
+		int tex, vb;
 		Game game;
 		const int count = 6 * 4;
 		
@@ -62,7 +62,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void Render(double deltaTime) {
-			if (vb == -1) return;
+			if (vb == 0) return;
 			game.Graphics.DepthWrite = false;
 			game.Graphics.Texturing = true;
 			game.Graphics.BindTexture(tex);

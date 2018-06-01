@@ -184,7 +184,7 @@ namespace ClassicalSharp.Gui.Widgets {
 				tex = MakeTexture(index, text);
 				lines[index] = text;
 			} else {
-				tex = new Texture(-1, 0, 0, 0, 0, 0, 0);
+				tex = default(Texture);
 				tex.Height = (ushort)(PlaceholderHeight[index] ? defaultHeight : 0);
 				lines[index] = null;
 			}

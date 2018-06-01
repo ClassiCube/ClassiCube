@@ -132,7 +132,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			int texLoc = BlockInfo.GetTextureLoc(Block.Dirt, Side.Top);
 			Texture tex = new Texture(0, 0, 0, game.Width, 64,
-			                          TerrainAtlas1D.GetTexRec(texLoc, 1, out atlasIndex));
+			                          Atlas1D.GetTexRec(texLoc, 1, out atlasIndex));
 			tex.U2 = (float)game.Width / 64;
 			bool bound = false;
 			
@@ -150,7 +150,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (index == 0) return;
 			if (!bound) {
 				bound = true;
-				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[atlasIndex]);
+				game.Graphics.BindTexture(Atlas1D.TexIds[atlasIndex]);
 			}
 			
 			ModelCache cache = game.ModelCache;

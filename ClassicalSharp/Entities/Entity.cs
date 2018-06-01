@@ -33,7 +33,7 @@ namespace ClassicalSharp.Entities {
 		/// <summary> Returns the size of the model that is used for collision detection. </summary>
 		public Vector3 Size;
 
-		public int TextureId = -1, MobTextureId = -1;
+		public int TextureId, MobTextureId;
 		public short Health = 10;
 		
 		public Vector3 Position;
@@ -130,7 +130,7 @@ namespace ClassicalSharp.Entities {
 			
 			Model = game.ModelCache.Get(ModelName);
 			ParseScale(scale);
-			MobTextureId = -1;
+			MobTextureId = 0;
 			
 			Model.RecalcProperties(this);
 			UpdateModelBounds();

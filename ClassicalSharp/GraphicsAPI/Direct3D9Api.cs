@@ -524,14 +524,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		static void Delete<T>(T[] array, ref int id) where T : class, IDisposable {
-			if (id <= 0 || id >= array.Length) return;
+			if (id == 0 || id >= array.Length) return;
 			
 			T value = array[id];
 			if (value != null) {
 				value.Dispose();
 			}
 			array[id] = null;
-			id = -1;
+			id = 0;
 		}
 
 		public override void Dispose() {

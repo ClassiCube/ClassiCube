@@ -9,7 +9,7 @@ namespace ClassicalSharp.Network {
 		internal int ServerExtensionsCount;
 		internal bool sendHeldBlock, useMessageTypes;
 		internal int envMapVer = 2, blockDefsExtVer = 2;
-		internal bool needD3Fix, extEntityPos, twoWayPing, blockPerms, fastMap;
+		internal bool needD3Fix, extEntityPos, twoWayPing, blockPerms, fastMap, extTexs;
 		public Game game;
 		
 		public void Reset() {
@@ -17,6 +17,7 @@ namespace ClassicalSharp.Network {
 			sendHeldBlock = false; useMessageTypes = false;
 			envMapVer = 2; blockDefsExtVer = 2;
 			needD3Fix = false; extEntityPos = false; twoWayPing = false; fastMap = false;
+			extTexs = false;
 			game.SupportsCPEBlocks = false;
 		}
 		
@@ -60,6 +61,10 @@ namespace ClassicalSharp.Network {
 			} else if (ext == "FastMap") {
 				net.packetSizes[Opcode.LevelInit] += 4;
 				fastMap = true;
+			} else if (ext == "ExtendedTextures") {
+				net.packetSizes[Opcode.CpeDefineBlock] += 3;
+				net.packetSizes[Opcode.CpeDefineBlockExt] += 6;
+				extTexs = true;
 			}
 			#if !ONLY_8BIT
 			else if (ext == "ExtendedBlocks") {
@@ -91,6 +96,7 @@ namespace ClassicalSharp.Network {
 			"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages", 
 			"BlockDefinitions", "BlockDefinitionsExt", "BulkBlockUpdate", "TextColors", "EnvMapAspect", 
 			"EntityProperty", "ExtEntityPositions", "TwoWayPing", "InventoryOrder", "InstantMOTD", "FastMap",
+			"ExtendedTextures",
 			#if !ONLY_8BIT
 			"ExtendedBlocks",
 			#endif

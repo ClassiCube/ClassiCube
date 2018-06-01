@@ -83,8 +83,7 @@ namespace ClassicalSharp.Renderers {
 				ResetChunkCache();
 			}
 			
-			renderer.normalPartsCount = new int[TerrainAtlas1D.TexIds.Length];
-			renderer.translucentPartsCount = new int[TerrainAtlas1D.TexIds.Length];
+			ResetPartsCounts();
 		}
 		
 		void RefreshBorders(int clipLevel) {
@@ -115,21 +114,18 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void TerrainAtlasChanged(object sender, EventArgs e) {
-			if (renderer._1DUsed == -1) {
-				renderer.normalPartsCount = new int[TerrainAtlas1D.TexIds.Length];
-				renderer.translucentPartsCount = new int[TerrainAtlas1D.TexIds.Length];
-			} else {
-				bool refreshRequired = elementsPerBitmap != TerrainAtlas1D.TilesPerAtlas;
+			if (renderer._1DUsed != -1) {
+				bool refreshRequired = elementsPerBitmap != Atlas1D.TilesPerAtlas;
 				if (refreshRequired) Refresh();
 			}
 			
-			renderer._1DUsed = TerrainAtlas1D.UsedAtlasesCount();
-			elementsPerBitmap = TerrainAtlas1D.TilesPerAtlas;
+			renderer._1DUsed = Atlas1D.UsedAtlasesCount();
+			elementsPerBitmap = Atlas1D.TilesPerAtlas;
 			ResetUsedFlags();
 		}
 		
 		void BlockDefinitionChanged(object sender, EventArgs e) {
-			renderer._1DUsed = TerrainAtlas1D.UsedAtlasesCount();
+			renderer._1DUsed = Atlas1D.UsedAtlasesCount();
 			ResetUsedFlags();
 			Refresh();
 		}
@@ -143,30 +139,25 @@ namespace ClassicalSharp.Renderers {
 		}
 
 		void ResetUsedFlags() {
-			int count = renderer._1DUsed;
-			bool[] used = renderer.usedTranslucent;
-			if (used == null || count > used.Length) {
-				renderer.usedTranslucent = new bool[count];
-				renderer.usedNormal = new bool[count];
-				renderer.pendingTranslucent = new bool[count];
-				renderer.pendingNormal = new bool[count];
-			}
-			
-			for (int i = 0; i < count; i++) {
+			for (int i = 0; i < Atlas1D.MaxAtlases; i++) {
 				renderer.pendingTranslucent[i] = true;
-				renderer.usedTranslucent[i] = false;
-				renderer.pendingNormal[i] = true;
-				renderer.usedNormal[i] = false;
+				renderer.usedTranslucent[i]    = false;
+				renderer.pendingNormal[i]      = true;
+				renderer.usedNormal[i]         = false;
+			}
+		}
+		
+		void ResetPartsCounts() {
+			for (int i = 0; i < Atlas1D.MaxAtlases; i++) {
+				renderer.normalPartsCount[i]      = 0;
+				renderer.translucentPartsCount[i] = 0;
 			}
 		}
 		
 		void OnNewMap(object sender, EventArgs e) {
 			game.ChunkUpdates = 0;
 			ClearChunkCache();
-			for (int i = 0; i < renderer.normalPartsCount.Length; i++) {
-				renderer.normalPartsCount[i] = 0;
-				renderer.translucentPartsCount[i] = 0;
-			}
+			ResetPartsCounts();
 			
 			renderer.chunks = null;
 			renderer.unsortedChunks = null;
@@ -218,11 +209,11 @@ namespace ClassicalSharp.Renderers {
 		
 		void ClearChunkCache() {
 			if (renderer.chunks == null) return;
-			for (int i = 0; i < renderer.chunks.Length; i++)
+			for (int i = 0; i < renderer.chunks.Length; i++) {
 				DeleteChunk(renderer.chunks[i]);
+			}
 			
-			renderer.normalPartsCount = new int[TerrainAtlas1D.TexIds.Length];
-			renderer.translucentPartsCount = new int[TerrainAtlas1D.TexIds.Length];
+			ResetPartsCounts();
 		}
 		
 		void DeleteChunk(ChunkInfo info) {

@@ -24,10 +24,8 @@ namespace ClassicalSharp {
 		protected const int chunkSize2 = 16 * 16, extChunkSize2 = 18 * 18;
 		protected const int chunkSize3 = 16 * 16 * 16, extChunkSize3 = 18 * 18 * 18;
 		
-		public void Init(Game game) {
-			this.game = game;
-			game.Events.TerrainAtlasChanged += TerrainAtlasChanged;
-		}
+		public void Init(Game game) { this.game = game; }
+		public void Dispose() { }
 		
 		protected internal int width, length, height, sidesLevel, edgeLevel;
 		protected int maxX, maxY, maxZ, chunkEndX, chunkEndZ;

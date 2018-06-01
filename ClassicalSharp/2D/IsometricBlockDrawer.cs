@@ -45,9 +45,6 @@ namespace ClassicalSharp {
 		}
 		
 		public void DrawBatch(BlockID block, float size, float x, float y) {
-			drawer.tilesPerAtlas1D = TerrainAtlas1D.TilesPerAtlas;
-			drawer.invVerTileSize  = TerrainAtlas1D.invTileSize;
-			
 			bool bright = BlockInfo.FullBright[block];
 			if (BlockInfo.Draw[block] == DrawType.Gas) return;
 			
@@ -94,7 +91,7 @@ namespace ClassicalSharp {
 		
 		int GetTex(BlockID block, int side) {
 			int texLoc = BlockInfo.GetTextureLoc(block, side);
-			texIndex = texLoc / TerrainAtlas1D.TilesPerAtlas;
+			texIndex = texLoc / Atlas1D.TilesPerAtlas;
 			
 			if (lastTexIndex != texIndex) Flush();
 			return texLoc;
@@ -103,7 +100,7 @@ namespace ClassicalSharp {
 		static Vector3 pos = Vector3.Zero;
 		void SpriteZQuad(BlockID block, bool firstPart) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Right);
-			TextureRec rec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
+			TextureRec rec = Atlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
@@ -127,7 +124,7 @@ namespace ClassicalSharp {
 
 		void SpriteXQuad(BlockID block, bool firstPart) {
 			int texLoc = BlockInfo.GetTextureLoc(block, Side.Right);
-			TextureRec rec = TerrainAtlas1D.GetTexRec(texLoc, 1, out texIndex);
+			TextureRec rec = Atlas1D.GetTexRec(texLoc, 1, out texIndex);
 			if (lastTexIndex != texIndex) Flush();
 			
 			VertexP3fT2fC4b v = default(VertexP3fT2fC4b);
@@ -152,7 +149,7 @@ namespace ClassicalSharp {
 		int lastTexIndex, texIndex;
 		void Flush() {
 			if (lastTexIndex != -1) {
-				game.Graphics.BindTexture(TerrainAtlas1D.TexIds[lastTexIndex]);
+				game.Graphics.BindTexture(Atlas1D.TexIds[lastTexIndex]);
 				game.Graphics.UpdateDynamicVb_IndexedTris(vb, vertices, index);
 			}
 			

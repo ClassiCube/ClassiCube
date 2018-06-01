@@ -5,6 +5,7 @@ using System.Drawing;
 using ClassicalSharp.Events;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Map;
+using ClassicalSharp.Textures;
 using OpenTK;
 using BlockID = System.UInt16;
 
@@ -15,7 +16,7 @@ namespace ClassicalSharp.Renderers {
 		World map;
 		Game game;
 		
-		int sidesVb = -1, edgesVb = -1;
+		int sidesVb, edgesVb;
 		int edgeTexId, sideTexId;
 		int sidesVertices, edgesVertices;
 		internal bool legacy;
@@ -38,7 +39,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void RenderSides(double delta) {
-			if (sidesVb == -1) return;
+			if (sidesVb == 0) return;
 			BlockID block = game.World.Env.SidesBlock;
 			IGraphicsApi gfx = game.Graphics;
 			
@@ -57,7 +58,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		public void RenderEdges(double delta) {
-			if (edgesVb == -1) return;
+			if (edgesVb == 0) return;
 			BlockID block = game.World.Env.EdgeBlock;
 			IGraphicsApi gfx = game.Graphics;
 			
@@ -319,7 +320,7 @@ namespace ClassicalSharp.Renderers {
 			lastTexLoc = texLoc;
 			
 			game.Graphics.DeleteTexture(ref id);
-			id = TerrainAtlas2D.LoadTile(texLoc);
+			id = Atlas2D.LoadTile(texLoc);
 		}
 	}
 }

@@ -54,10 +54,14 @@ namespace ClassicalSharp.Renderers {
 		internal int _1DUsed = -1, chunksX, chunksY, chunksZ;
 		internal int renderCount = 0;
 		internal ChunkInfo[] chunks, renderChunks, unsortedChunks;
-		internal bool[] usedTranslucent, usedNormal;
-		internal bool[] pendingTranslucent, pendingNormal;
-		internal int[] normalPartsCount, translucentPartsCount;
 		bool inTranslucent = false;
+		
+		internal bool[] usedTranslucent    = new bool[Atlas1D.MaxAtlases];
+		internal bool[] usedNormal         = new bool[Atlas1D.MaxAtlases];
+		internal bool[] pendingTranslucent = new bool[Atlas1D.MaxAtlases];
+		internal bool[] pendingNormal      = new bool[Atlas1D.MaxAtlases];
+		internal int[] normalPartsCount      = new int[Atlas1D.MaxAtlases];
+		internal int[] translucentPartsCount = new int[Atlas1D.MaxAtlases];
 		
 		public MapRenderer(Game game) {
 			this.game = game;
@@ -86,7 +90,7 @@ namespace ClassicalSharp.Renderers {
 			if (chunks == null) return;
 			IGraphicsApi gfx = game.Graphics;
 			
-			int[] texIds = TerrainAtlas1D.TexIds;
+			int[] texIds = Atlas1D.TexIds;
 			gfx.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
@@ -137,7 +141,7 @@ namespace ClassicalSharp.Renderers {
 			gfx.ColourWriteMask(true, true, true, true);
 			gfx.DepthWrite = false; // we already calculated depth values in depth pass
 			
-			int[] texIds = TerrainAtlas1D.TexIds;
+			int[] texIds = Atlas1D.TexIds;
 			gfx.EnableMipmaps();
 			for (int batch = 0; batch < _1DUsed; batch++) {
 				if (translucentPartsCount[batch] <= 0) continue;

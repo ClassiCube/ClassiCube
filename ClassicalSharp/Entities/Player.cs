@@ -33,6 +33,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public override void ContextLost() {
+			if (nameTex.ID < 0) return;
 			game.Graphics.DeleteTexture(ref nameTex.ID);
 		}
 		
@@ -178,7 +179,7 @@ namespace ClassicalSharp.Entities {
 		
 		void ApplySkin(Player src) {
 			TextureId = src.TextureId;
-			MobTextureId = -1;
+			MobTextureId = 0;
 			SkinType = src.SkinType;
 			uScale = src.uScale; vScale = src.vScale;
 			
@@ -188,8 +189,8 @@ namespace ClassicalSharp.Entities {
 		
 		internal void ResetSkin() {
 			uScale = 1; vScale = 1;
-			MobTextureId = -1;
-			TextureId = -1;
+			MobTextureId = 0;
+			TextureId = 0;
 			SkinType = game.DefaultPlayerSkinType;
 		}
 		

@@ -40,17 +40,17 @@ namespace ClassicalSharp {
 		
 		public bool ChangeTerrainAtlas(Bitmap atlas) {
 			if (!ValidateBitmap("terrain.png", atlas)) return false;
-			if (atlas.Width != atlas.Height) {
+			if (atlas.Width != atlas.Height && (atlas.Width * 2 != atlas.Height)) {
 				Chat.Add("&cUnable to use terrain.png from the texture pack.");
 				Chat.Add("&c Its width is not the same as its height.");
 				return false;
 			}
 			if (Graphics.LostContext) return false;
 			
-			TerrainAtlas1D.Dispose();
-			TerrainAtlas2D.Dispose();
-			TerrainAtlas2D.UpdateState(atlas);
-			TerrainAtlas1D.UpdateState();
+			Atlas1D.Dispose();
+			Atlas2D.Dispose();
+			Atlas2D.UpdateState(atlas);
+			Atlas1D.UpdateState();
 			
 			Events.RaiseTerrainAtlasChanged();
 			return true;
@@ -170,7 +170,7 @@ namespace ClassicalSharp {
 			
 			Entity[] entities = Entities.List;
 			for (int i = 0; i < EntityList.MaxCount; i++) {
-				if (entities[i] == null || entities[i].TextureId != -1) continue;
+				if (entities[i] == null || entities[i].TextureId != 0) continue;
 				entities[i].SkinType = DefaultPlayerSkinType;
 			}
 		}
@@ -393,8 +393,8 @@ namespace ClassicalSharp {
 		
 		public void Dispose() {
 			ChunkUpdater.Dispose();
-			TerrainAtlas2D.Dispose();
-			TerrainAtlas1D.Dispose();
+			Atlas2D.Dispose();
+			Atlas1D.Dispose();
 			ModelCache.Dispose();
 			Entities.Dispose();
 			WorldEvents.OnNewMap -= OnNewMapCore;
