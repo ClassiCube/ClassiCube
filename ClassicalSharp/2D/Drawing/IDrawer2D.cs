@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 		public Texture MakeTextTexture(ref DrawTextArgs args, int windowX, int windowY) {
 			Size size = MeasureSize(ref args);
 			if (size == Size.Empty)
-				return new Texture(-1, windowX, windowY, 0, 0, 1, 1);
+				return new Texture(0, windowX, windowY, 0, 0, 1, 1);
 			
 			using (Bitmap bmp = CreatePow2Bitmap(size)) {
 				SetBitmap(bmp);

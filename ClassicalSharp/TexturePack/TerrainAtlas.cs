@@ -23,14 +23,13 @@ namespace ClassicalSharp.Textures {
 		}
 
 		public static int LoadTile(int texLoc) {
-			int size = TileSize;
+			int size = TileSize, x = texLoc % TilesPerRow, y = texLoc / TilesPerRow;
+			if (y >= RowsCount) return 0;
+			
 			using (FastBitmap atlas = new FastBitmap(Atlas, true, true))
 				using (Bitmap bmp = Platform.CreateBmp(size, size))
 					using (FastBitmap dst = new FastBitmap(bmp, true, false))
 			{
-				int x = texLoc % TilesPerRow, y = texLoc / TilesPerRow;
-				y %= RowsCount;
-				
 				FastBitmap.MovePortion(x * size, y * size, 0, 0, atlas, dst, size);
 				return game.Graphics.CreateTexture(dst, false, game.Graphics.Mipmaps);
 			}
