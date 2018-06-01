@@ -18,7 +18,7 @@ namespace ClassicalSharp.Textures {
 		public static void UpdateState(Bitmap bmp) {
 			Atlas = bmp;
 			TileSize = bmp.Width / TilesPerRow;
-			RowsCount = bmp.Height / TilesPerRow;
+			RowsCount = bmp.Height / TileSize;
 			BlockInfo.RecalculateSpriteBB();
 		}
 
