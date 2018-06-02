@@ -9,7 +9,7 @@ using TexLoc = System.UInt16;
 
 namespace ClassicalSharp.Particles {
 
-	public abstract class Particle {		
+	public abstract class Particle {
 		public Vector3 Velocity;
 		public float Lifetime;
 		public byte Size;

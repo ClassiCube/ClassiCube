@@ -92,7 +92,7 @@ namespace ClassicalSharp.Textures {
 				
 				byte tileX, tileY;
 				if (!Byte.TryParse(parts[0], out tileX) || !Byte.TryParse(parts[1], out tileY)
-				   || tileX >= 16 || tileY >= 16) {
+				   || tileX >= Atlas2D.TilesPerRow || tileY >= Atlas2D.MaxRowsCount) {
 					game.Chat.Add("&cInvalid animation tile coords: " + line); continue;
 				}
 				
@@ -116,7 +116,7 @@ namespace ClassicalSharp.Textures {
 		/// that are applied to the terrain atlas. </summary>
 		void DefineAnimation(int tileX, int tileY, int frameX, int frameY, int frameSize, int statesNum, int tickDelay) {
 			AnimationData data = new AnimationData();
-			data.TileX = tileX; data.TileY = tileY;
+			data.TexLoc = tileY * Atlas2D.TilesPerRow + tileX;
 			data.FrameX = frameX; data.FrameY = frameY;
 			data.FrameSize = frameSize; data.StatesCount = statesNum;
 			
@@ -134,34 +134,34 @@ namespace ClassicalSharp.Textures {
 			data.State %= data.StatesCount;
 			data.Tick = data.TickDelay;
 			
-			int texId = (data.TileY << 4) | data.TileX;
-			if (texId == 30 && useLavaAnim) return;
-			if (texId == 14 && useWaterAnim) return;
-			DrawAnimation(data, texId, data.FrameSize);
+			int texLoc = data.TexLoc;
+			if (texLoc == 30 && useLavaAnim)  return;
+			if (texLoc == 14 && useWaterAnim) return;
+			DrawAnimation(data, texLoc, data.FrameSize);
 		}
 		
-		unsafe void DrawAnimation(AnimationData data, int texId, int size) {
+		unsafe void DrawAnimation(AnimationData data, int texLoc, int size) {
 			if (size <= 128) {
 				byte* temp = stackalloc byte[size * size * 4];
-				DrawAnimationCore(data, texId, size, temp);
+				DrawAnimationCore(data, texLoc, size, temp);
 			} else {
 				// cannot allocate memory on the stack for very big animation.png frames
 				byte[] temp = new byte[size * size * 4];
 				fixed (byte* ptr = temp) {
-					DrawAnimationCore(data, texId, size, ptr);
+					DrawAnimationCore(data, texLoc, size, ptr);
 				}
 			}
 		}
 		
-		unsafe void DrawAnimationCore(AnimationData data, int texId, int size, byte* temp) {
-			int index  = Atlas1D.Get1DIndex(texId);
-			int rowNum = Atlas1D.Get1DRowId(texId);
+		unsafe void DrawAnimationCore(AnimationData data, int texLoc, int size, byte* temp) {
+			int index_1D = Atlas1D.Get1DIndex(texLoc);
+			int rowId_1D = Atlas1D.Get1DRowId(texLoc);
 			animPart.SetData(size, size, size * 4, (IntPtr)temp, false);
 			
 			if (data == null) {
-				if (texId == 30) {
+				if (texLoc == 30) {
 					lavaAnim.Tick((int*)temp, size);
-				} else if (texId == 14) {
+				} else if (texLoc == 14) {
 					waterAnim.Tick((int*)temp, size);
 				}
 			} else {
@@ -169,8 +169,8 @@ namespace ClassicalSharp.Textures {
 				                       data.FrameY, 0, 0, animsBuffer, animPart, size);
 			}
 			
-			int y = rowNum * Atlas2D.TileSize;
-			game.Graphics.UpdateTexturePart(Atlas1D.TexIds[index], 0, y, animPart, game.Graphics.Mipmaps);
+			int dstY = rowId_1D * Atlas2D.TileSize;
+			game.Graphics.UpdateTexturePart(Atlas1D.TexIds[index_1D], 0, dstY, animPart, game.Graphics.Mipmaps);
 		}
 		
 		bool IsDefaultZip() {
@@ -197,7 +197,7 @@ namespace ClassicalSharp.Textures {
 		}
 		
 		class AnimationData {
-			public int TileX, TileY; // Tile (not pixel) coordinates in terrain.png
+			public int TexLoc;     // Tile (not pixel) coordinates in terrain.png
 			public int FrameX, FrameY; // Top left pixel coordinates of start frame in animatons.png
 			public int FrameSize; // Size of each frame in pixel coordinates
 			public int State; // Current animation frame index
@@ -209,11 +209,12 @@ namespace ClassicalSharp.Textures {
 		const string terrainFormat = "&cAnimation frames for tile ({0}, {1}) are bigger than the size of a tile in terrain.png";
 		void ValidateAnimations() {
 			validated = true;
-			int elemSize = Atlas2D.TileSize;
 			for (int i = animations.Count - 1; i >= 0; i--) {
 				AnimationData a = animations[i];
-				if (a.FrameSize > elemSize) {
-					game.Chat.Add(String.Format(terrainFormat, a.TileX, a.TileY));
+				int tileX = a.TexLoc % Atlas2D.TilesPerRow, tileY = a.TexLoc / Atlas2D.TilesPerRow;
+				
+				if (a.FrameSize > Atlas2D.TileSize || tileY >= Atlas2D.RowsCount) {
+					game.Chat.Add(String.Format(terrainFormat, tileX, tileY));
 					animations.RemoveAt(i);
 					continue;
 				}
@@ -222,7 +223,7 @@ namespace ClassicalSharp.Textures {
 				int maxX = a.FrameX + a.FrameSize * a.StatesCount;
 				if (maxX <= animsBuffer.Width && maxY <= animsBuffer.Height) continue;
 				
-				game.Chat.Add(String.Format(format, a.TileX, a.TileY));
+				game.Chat.Add(String.Format(format, tileX, tileY));
 				animations.RemoveAt(i);
 			}
 		}

@@ -126,11 +126,11 @@ static void WaterAnimation_Tick(UInt32* ptr, Int32 size) {
 
 
 typedef struct AnimationData_ {
-	TextureLoc TileX, TileY; /* Tile (not pixel) coordinates in terrain.png */
-	UInt16 FrameX, FrameY;   /* Top left pixel coordinates of start frame in animatons.png */
-	UInt16 FrameSize;        /* Size of each frame in pixel coordinates */
-	UInt16 State;            /* Current animation frame index */
-	UInt16 StatesCount;      /* Total number of animation frames */
+	TextureLoc TexLoc;     /* Tile (not pixel) coordinates in terrain.png */
+	UInt16 FrameX, FrameY; /* Top left pixel coordinates of start frame in animatons.png */
+	UInt16 FrameSize;      /* Size of each frame in pixel coordinates */
+	UInt16 State;          /* Current animation frame index */
+	UInt16 StatesCount;    /* Total number of animation frames */
 	Int16 Tick, TickDelay;
 } AnimationData;
 
@@ -158,16 +158,18 @@ static void Animations_ReadDescription(Stream* stream) {
 	while (Stream_ReadLine(&buffered, &line)) {
 		if (line.length == 0 || line.buffer[0] == '#') continue;
 		AnimationData data = { 0 };
+		UInt8 tileX, tileY;
+
 		UInt32 partsCount = Array_Elems(parts);	
 		String_UNSAFE_Split(&line, ' ', parts, &partsCount);
 
 		if (partsCount < 7) {
 			Animations_LogFail(&line, "Not enough arguments for anim"); continue;
 		}		
-		if (!Convert_TryParseUInt8(&parts[0], &data.TileX) || data.TileX >= 16) {
+		if (!Convert_TryParseUInt8(&parts[0], &tileX) || tileX >= ATLAS2D_TILES_PER_ROW) {
 			Animations_LogFail(&line, "Invalid anim tile X coord"); continue;
 		}
-		if (!Convert_TryParseUInt8(&parts[1], &data.TileY) || data.TileY >= 16) {
+		if (!Convert_TryParseUInt8(&parts[1], &tileY) || tileY >= ATLAS2D_ROWS_COUNT) {
 			Animations_LogFail(&line, "Invalid anim tile Y coord"); continue;
 		}
 		if (!Convert_TryParseUInt16(&parts[2], &data.FrameX)) {
@@ -189,13 +191,14 @@ static void Animations_ReadDescription(Stream* stream) {
 		if (anims_count == Array_Elems(anims_list)) {
 			ErrorHandler_Fail("Too many animations in animations.txt");
 		}
+		data.TexLoc = tileX + (tileY * ATLAS2D_TILES_PER_ROW);
 		anims_list[anims_count++] = data;
 	}
 }
 
 /* TODO: should we use 128 size here? */
 #define ANIMS_FAST_SIZE 64
-static void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
+static void Animations_Draw(AnimationData* data, TextureLoc texLoc, Int32 size) {
 	UInt8 buffer[Bitmap_DataSize(ANIMS_FAST_SIZE, ANIMS_FAST_SIZE)];
 	UInt8* ptr = buffer;
 	if (size > ANIMS_FAST_SIZE) {
@@ -204,14 +207,14 @@ static void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
 		if (ptr == NULL) ErrorHandler_Fail("Failed to allocate memory for anim frame");
 	}
 
-	Int32 index = Atlas1D_Index(texId);
-	Int32 rowNum = Atlas1D_RowId(texId);
+	Int32 index_1D = Atlas1D_Index(texLoc);
+	Int32 rowId_1D = Atlas1D_RowId(texLoc);
 	Bitmap animPart; Bitmap_Create(&animPart, size, size, buffer);
 
 	if (data == NULL) {
-		if (texId == 30) {
+		if (texLoc == 30) {
 			LavaAnimation_Tick((UInt32*)animPart.Scan0, size);
-		} else if (texId == 14) {
+		} else if (texLoc == 14) {
 			WaterAnimation_Tick((UInt32*)animPart.Scan0, size);
 		}
 	} else {
@@ -219,8 +222,8 @@ static void Animations_Draw(AnimationData* data, Int32 texId, Int32 size) {
 		Bitmap_CopyBlock(x, data->FrameY, 0, 0, &anims_bmp, &animPart, size);
 	}
 
-	Int32 y = rowNum * Atlas2D_TileSize;
-	Gfx_UpdateTexturePart(Atlas1D_TexIds[index], 0, y, &animPart, Gfx_Mipmaps);
+	Int32 dstY = rowId_1D * Atlas2D_TileSize;
+	Gfx_UpdateTexturePart(Atlas1D_TexIds[index_1D], 0, dstY, &animPart, Gfx_Mipmaps);
 	if (size > ANIMS_FAST_SIZE) Platform_MemFree(&ptr);
 }
 
@@ -231,10 +234,10 @@ static void Animations_Apply(AnimationData* data) {
 	data->State %= data->StatesCount;
 	data->Tick = data->TickDelay;
 
-	Int32 texId = (data->TileY << 4) | data->TileX;
-	if (texId == 30 && anims_useLavaAnim) return;
-	if (texId == 14 && anims_useWaterAnim) return;
-	Animations_Draw(data, texId, data->FrameSize);
+	TextureLoc texLoc = data->TexLoc;
+	if (texLoc == 30 && anims_useLavaAnim) return;
+	if (texLoc == 14 && anims_useWaterAnim) return;
+	Animations_Draw(data, texLoc, data->FrameSize);
 }
 
 static bool Animations_IsDefaultZip(void) {
@@ -264,10 +267,11 @@ static void Animations_Validate(void) {
 		Int32 maxX = data.FrameX + data.FrameSize * data.StatesCount;
 		String_Clear(&msg);
 
+		Int32 tileX = data.TexLoc % ATLAS2D_TILES_PER_ROW, tileY = data.TexLoc / ATLAS2D_TILES_PER_ROW;
 		if (data.FrameSize > Atlas2D_TileSize) {
-			String_Format2(&msg, "&cAnimation frames for tile (%b, %b) are bigger than the size of a tile in terrain.png", &data.TileX, &data.TileY);
+			String_Format2(&msg, "&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {
-			String_Format2(&msg, "&cSome of the animation frames for tile (%b, %b) are at coordinates outside animations.png", &data.TileX, &data.TileY);
+			String_Format2(&msg, "&cSome of the animation frames for tile (%i, %i) are at coordinates outside animations.png", &tileX, &tileY);
 		} else {
 			continue;
 		}
