@@ -62,7 +62,7 @@ namespace ClassicalSharp {
 			                        vertices, ref index);
 		}
 		
-		public unsafe void AddInt(int value, VertexP3fT2fC4b[] vertices, ref int index) {
+		public void AddInt(int value, VertexP3fT2fC4b[] vertices, ref int index) {
 			if (value < 0) {
 				Add(10, vertices, ref index); value = -value; // - sign
 			}

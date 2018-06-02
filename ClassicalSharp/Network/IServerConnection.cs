@@ -122,7 +122,7 @@ namespace ClassicalSharp {
 			
 			if (ex.Response != null) {
 				int status = (int)((HttpWebResponse)ex.Response).StatusCode;
-				if (status == 304); // Not an error if no data when "Not modified" status
+				if (status == 304) return; // Not an error if no data when "Not modified" status
 				game.Chat.Add("&c" + status + " error when trying to download texture pack");
 			} else {
 				game.Chat.Add("&c" + ex.Status + " when trying to download texture pack");

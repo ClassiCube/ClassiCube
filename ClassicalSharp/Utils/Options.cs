@@ -221,7 +221,7 @@ namespace ClassicalSharp {
 				
 				int sepIndex = line.IndexOf('=');
 				if (sepIndex <= 0) continue;
-				string key = Utils.ToLower(line.Substring(0, sepIndex));
+				string key = line.Substring(0, sepIndex);
 				
 				sepIndex++;
 				if (sepIndex == line.Length) continue;
