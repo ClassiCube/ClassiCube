@@ -70,17 +70,35 @@ void ServerConnection_DownloadTexturePack(STRING_PURE String* url) {
 	}
 }
 
+void ServerConnection_LogResourceFail(AsyncRequest* item) {
+	Int32 status = item->StatusCode;
+	if (status == 0 || status == 304) return;
+
+	UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+	String msg = String_InitAndClearArray(msgBuffer);
+	String_Format1(&msg, "&c%i error when trying to download texture pack", &status);
+	Chat_Add(&msg);
+}
+
 void ServerConnection_CheckAsyncResources(void) {
 	AsyncRequest item;
-
 	String terrain = String_FromConst("terrain");
+	String texPack = String_FromConst("texturePack");
+
 	if (AsyncDownloader_Get(&terrain, &item)) {
-		TexturePack_ExtractTerrainPng_Req(&item);
+		if (item.ResultBitmap.Scan0 != NULL) {
+			TexturePack_ExtractTerrainPng_Req(&item);
+		} else {
+			ServerConnection_LogResourceFail(&item);
+		}
 	}
 
-	String texPack = String_FromConst("texturePack");
 	if (AsyncDownloader_Get(&texPack, &item)) {
-		TexturePack_ExtractTexturePack_Req(&item);
+		if (item.ResultData.Ptr != NULL) {
+			TexturePack_ExtractTexturePack_Req(&item);
+		} else {
+			ServerConnection_LogResourceFail(&item);
+		}
 	}
 }
 

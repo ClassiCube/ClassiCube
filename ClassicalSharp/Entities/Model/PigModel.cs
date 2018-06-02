@@ -31,23 +31,18 @@ namespace ClassicalSharp.Model {
 			                        .RotOrigin(0, 6, 7));
 		}
 		
-		/// <inheritdoc/>
 		public override float NameYOffset { get { return 1.075f; } }
 
-		/// <inheritdoc/>
 		public override float GetEyeY(Entity entity) { return 12/16f; }
 
-		/// <inheritdoc/>
 		public override Vector3 CollisionSize {
 			get { return new Vector3(14/16f, 14/16f, 14/16f); }
 		}
 
-		/// <inheritdoc/>
 		public override AABB PickingBounds {
 			get { return new AABB(-5/16f, 0, -14/16f, 5/16f, 16/16f, 9/16f); }
 		}
-
-		/// <inheritdoc/>
+		
 		public override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);

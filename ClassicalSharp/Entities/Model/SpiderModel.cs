@@ -10,7 +10,6 @@ namespace ClassicalSharp.Model {
 		
 		public SpiderModel(Game window) : base(window) { SurivalScore = 105; }
 
-		/// <inheritdoc/>		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 5];
 			Head = BuildBox(MakeBoxBounds(-4, 4, -11, 4, 12, -3)
@@ -43,7 +42,6 @@ namespace ClassicalSharp.Model {
 		const float quarterPi = (float)(Math.PI / 4);
 		const float eighthPi = (float)(Math.PI / 8);
 		
-		/// <inheritdoc/>
 		public override void DrawModel(Entity p) {
 			game.Graphics.BindTexture(GetTexture(p));
 			DrawRotate(-p.HeadXRadians, 0, 0, Head, true);

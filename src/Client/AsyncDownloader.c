@@ -90,7 +90,7 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 	{
 		AsyncRequest req = { 0 };
 		String reqUrl = String_FromEmptyArray(req.URL); String_Set(&reqUrl, url);
-		String reqID = String_FromEmptyArray(req.ID);  String_Set(&reqID, id);
+		String reqID  = String_FromEmptyArray(req.ID);  String_Set(&reqID, id);
 		req.RequestType = type;
 
 		Platform_Log2("Adding %s (type %b)", &reqUrl, &type);
@@ -267,7 +267,9 @@ static void AsyncDownloader_ProcessRequest(AsyncRequest* request) {
 		request->ResultContentLength = size;
 		break;
 	}
+}
 
+static void AsyncDownloader_CompleteResult(AsyncRequest* request) {
 	Platform_CurrentUTCTime(&request->TimeDownloaded);
 	Platform_MutexLock(async_processedMutex);
 	{
@@ -318,6 +320,7 @@ static void AsyncDownloader_WorkerFunc(void) {
 
 			Platform_LogConst("Doing it");
 			AsyncDownloader_ProcessRequest(&request);
+			AsyncDownloader_CompleteResult(&request);
 
 			Platform_MutexLock(async_curRequestMutex);
 			{

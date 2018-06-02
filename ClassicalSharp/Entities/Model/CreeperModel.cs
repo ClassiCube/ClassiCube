@@ -10,7 +10,6 @@ namespace ClassicalSharp.Model {
 		
 		public CreeperModel(Game window) : base(window) { SurivalScore = 200; }
 
-		/// <inheritdoc/>		
 		public override void CreateParts() {
 			vertices = new ModelVertex[boxVertices * 6];
 			Head =  BuildBox(MakeBoxBounds(-4, 18, -4, 4, 26, 4)

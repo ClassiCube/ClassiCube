@@ -58,25 +58,21 @@ namespace ClassicalSharp {
 		}
 		
 		
-		/// <summary> Rotates the given 3D coordinates around the x axis. </summary>
 		public static Vector3 RotateX(Vector3 v, float angle) {
 			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
 			return new Vector3(v.X, cosA * v.Y + sinA * v.Z, -sinA * v.Y + cosA * v.Z);
 		}
 		
-		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY(Vector3 v, float angle) {
 			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
 			return new Vector3(cosA * v.X - sinA * v.Z, v.Y, sinA * v.X + cosA * v.Z);
 		}
 		
-		/// <summary> Rotates the given 3D coordinates around the y axis. </summary>
 		public static Vector3 RotateY(float x, float y, float z, float angle) {
 			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
 			return new Vector3(cosA * x - sinA * z, y, sinA * x + cosA * z);
 		}
 		
-		/// <summary> Rotates the given 3D coordinates around the z axis. </summary>
 		public static Vector3 RotateZ(Vector3 v, float angle) {
 			float cosA = (float)Math.Cos(angle), sinA = (float)Math.Sin(angle);
 			return new Vector3(cosA * v.X + sinA * v.Y, -sinA * v.X + cosA * v.Y, v.Z);

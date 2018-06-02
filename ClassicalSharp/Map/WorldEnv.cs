@@ -87,7 +87,6 @@ namespace ClassicalSharp.Map {
 			ResetLight();
 		}
 
-		/// <summary> Resets all of the environment properties to their defaults. </summary>
 		public void Reset() {
 			EdgeHeight = -1; SidesOffset = -2; CloudHeight = -1;
 			EdgeBlock = Block.StillWater; SidesBlock = Block.Bedrock;
@@ -113,9 +112,7 @@ namespace ClassicalSharp.Map {
 			FastColour.GetShaded(Sunlight, out SunXSide,
 			                     out SunZSide, out SunYBottom);
 		}
-		
-		/// <summary> Sets sides block to the given block, and raises
-		/// EnvVariableChanged event with variable 'SidesBlock'. </summary>
+
 		public void SetSidesBlock(BlockID block) {
 			if (block == 255 && !BlockInfo.IsCustomDefined(255)) block = Block.Bedrock; // some server software wrongly uses this value
 			if (block == SidesBlock) return;
@@ -123,74 +120,37 @@ namespace ClassicalSharp.Map {
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.SidesBlock);
 		}
 		
-		/// <summary> Sets edge block to the given block, and raises
-		/// EnvVariableChanged event with variable 'EdgeBlock'. </summary>
 		public void SetEdgeBlock(BlockID block) {
 			if (block == 255 && !BlockInfo.IsCustomDefined(255)) block = Block.StillWater; // some server software wrongly uses this value
 			if (block == EdgeBlock) return;
 			EdgeBlock = block;
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.EdgeBlock);
 		}
-		
-		/// <summary> Sets clouds height in world space, and raises
-		/// EnvVariableChanged event with variable 'CloudsLevel'. </summary>
+
 		public void SetCloudsLevel(int level) { Set(level, ref CloudHeight, EnvVar.CloudsLevel); }
-		
-		/// <summary> Sets clouds speed, and raises EnvVariableChanged
-		/// event with variable 'CloudsSpeed'. </summary>
 		public void SetCloudsSpeed(float speed) { Set(speed, ref CloudsSpeed, EnvVar.CloudsSpeed); }
-		
-		/// <summary> Sets weather speed, and raises EnvVariableChanged
-		/// event with variable 'WeatherSpeed'. </summary>
+
 		public void SetWeatherSpeed(float speed) { Set(speed, ref WeatherSpeed, EnvVar.WeatherSpeed); }
-		
-		/// <summary> Sets weather fade rate, and raises EnvVariableChanged
-		/// event with variable 'WeatherFade'. </summary>
 		public void SetWeatherFade(float rate) { Set(rate, ref WeatherFade, EnvVar.WeatherFade); }
-		
-		/// <summary> Sets height of the map edges in world space, and raises
-		/// EnvVariableChanged event with variable 'EdgeLevel'. </summary>
+
 		public void SetEdgeLevel(int level) { Set(level, ref EdgeHeight, EnvVar.EdgeLevel); }
-		
-		/// <summary> Sets offset of the height of the map sides from map edges in world space, and raises
-		/// EnvVariableChanged event with variable 'SidesLevel'. </summary>
 		public void SetSidesOffset(int level) { Set(level, ref SidesOffset, EnvVar.SidesOffset); }
 		
-		/// <summary> Sets whether exponential fog is used, and raises
-		/// EnvVariableChanged event with variable 'ExpFog'. </summary>
 		public void SetExpFog(bool expFog) { Set(expFog, ref ExpFog, EnvVar.ExpFog); }
 		
-		/// <summary> Sets horizontal speed of skybox rotation, and raises
-		/// EnvVariableChanged event with variable 'SkyboxHorSpeed'. </summary>
 		public void SetSkyboxHorSpeed(float speed) { Set(speed, ref SkyboxHorSpeed, EnvVar.SkyboxHorSpeed); }
-		
-		/// <summary> Sets vertical speed of skybox rotation, and raises
-		/// EnvVariableChanged event with variable 'SkyboxVerSpeed'. </summary>
 		public void SetSkyboxVerSpeed(float speed) { Set(speed, ref SkyboxVerSpeed, EnvVar.SkyboxVerSpeed); }
 
-		/// <summary> Sets weather, and raises
-		/// EnvVariableChanged event with variable 'Weather'. </summary>
 		public void SetWeather(Weather weather) {
 			if (weather == Weather) return;
 			Weather = weather;
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.Weather);
 		}
 		
-		
-		/// <summary> Sets tsky colour, and raises
-		/// EnvVariableChanged event with variable 'SkyColour'. </summary>
 		public void SetSkyColour(FastColour col) { Set(col, ref SkyCol, EnvVar.SkyColour); }
-		
-		/// <summary> Sets fog colour, and raises
-		/// EnvVariableChanged event with variable 'FogColour'. </summary>
 		public void SetFogColour(FastColour col) { Set(col, ref FogCol, EnvVar.FogColour); }
-		
-		/// <summary> Sets clouds colour, and raises
-		/// EnvVariableChanged event with variable 'CloudsColour'. </summary>
 		public void SetCloudsColour(FastColour col) { Set(col, ref CloudsCol, EnvVar.CloudsColour); }
-		
-		/// <summary> Sets sunlight colour, and raises
-		/// EnvVariableChanged event with variable 'SunlightColour'. </summary>
+
 		public void SetSunlight(FastColour col) {
 			if (col == Sunlight) return;
 			
@@ -200,9 +160,7 @@ namespace ClassicalSharp.Map {
 			Sun = Sunlight.Pack();
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.SunlightColour);
 		}
-		
-		/// <summary> Sets current shadowlight colour, and raises
-		/// EnvVariableChanged event with variable 'ShadowlightColour'. </summary>
+
 		public void SetShadowlight(FastColour col) {
 			if (col == Shadowlight) return;
 			

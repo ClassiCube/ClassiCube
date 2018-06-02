@@ -135,7 +135,7 @@ typedef struct AnimationData_ {
 } AnimationData;
 
 Bitmap anims_bmp;
-AnimationData anims_list[ATLAS1D_MAX_ATLASES_COUNT];
+AnimationData anims_list[ATLAS1D_MAX_ATLASES];
 UInt32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 

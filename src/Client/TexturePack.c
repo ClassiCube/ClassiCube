@@ -507,7 +507,6 @@ void TexturePack_ExtractCurrent(STRING_PURE String* url) {
 }
 
 void TexturePack_ExtractTerrainPng_Req(AsyncRequest* item) {
-	if (item->ResultBitmap.Scan0 == NULL) return;
 	String url = String_FromRawArray(item->URL);
 	String_Set(&World_TextureUrl, &url);
 	Bitmap bmp = item->ResultBitmap;
@@ -522,7 +521,6 @@ void TexturePack_ExtractTerrainPng_Req(AsyncRequest* item) {
 }
 
 void TexturePack_ExtractTexturePack_Req(AsyncRequest* item) {
-	if (item->ResultData.Ptr == NULL) return;
 	String url = String_FromRawArray(item->URL);
 	String_Set(&World_TextureUrl, &url);
 	void* data = item->ResultData.Ptr;

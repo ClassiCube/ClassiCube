@@ -50,41 +50,24 @@ namespace ClassicalSharp {
 	
 	public partial class Game {
 		
-		/// <summary> Abstracts the underlying 3D graphics rendering API. </summary>
 		public IGraphicsApi Graphics;
-		
-		/// <summary> Handles game mode specific functionality. </summary>
 		public IGameMode Mode;
-		
-		/// <summary> Contains the block data and metadata/properties for the player's current world. </summary>
-		public World World;
-		
-		/// <summary> Represents a connection to a multiplayer or a singleplayer server. </summary>
+		public World World;		
 		public IServerConnection Server;
 		
-		/// <summary> List of all entities in the current map, including the player. </summary>
 		public EntityList Entities;
-		
-		/// <summary> Entity representing the player. </summary>
 		public LocalPlayer LocalPlayer;
-		
-		/// <summary> Contains information for each player in the current world 
-		/// (or for whole server if supported). </summary>
 		public TabList TabList;
-		
-		/// <summary> Current camera the player is using to view the world. </summary>
+
 		public Camera Camera;
-		/// <summary> List of all cameras the user can use to view the world. </summary>
 		public List<Camera> Cameras = new List<Camera>();
 		
 		/// <summary> Total rendering time(in seconds) elapsed since the client was started. </summary>
 		public double accumulator;
 		public SkinType DefaultPlayerSkinType;
 		
-		/// <summary> Accumulator for the number of chunk updates performed. Reset every second. </summary>
 		public int ChunkUpdates;
 		
-		/// <summary> Whether the third person camera should have their camera position clipped so as to not intersect blocks. </summary>
 		public bool CameraClipping = true;
 		
 		public bool SkipClear = false;
@@ -124,39 +107,29 @@ namespace ClassicalSharp {
 		/// <summary> Whether x to stone brick tiles should be used. </summary>
 		public bool SupportsCPEBlocks = false;
 		
-		/// <summary> Account username of the player. </summary>
 		public string Username;
-		
-		/// <summary> Verification key used for multiplayer, unique for the username and individual server. </summary>
 		public string Mppass;
-		
-		/// <summary> IP address of multiplayer server connected to, null if singleplayer. </summary>
+
 		public IPAddress IPAddress;
-		
-		/// <summary> Port of multiplayer server connected to, 0 if singleplayer. </summary>
 		public int Port;
 		
 		/// <summary> Radius of the sphere the player can see around the position of the current camera. </summary>
 		public int ViewDistance = 512;
 		internal int MaxViewDistance = 32768, UserViewDistance = 512;
 		
-		/// <summary> Field of view for the current camera in degrees. </summary>
 		public int Fov = 70;
 		internal int DefaultFov, ZoomFov;
 		
-		/// <summary> Strategy used to limit how many frames should be displayed at most each second. </summary>
 		public FpsLimitMethod FpsLimit;
 		
-		/// <summary> Whether lines should be rendered for each axis. </summary>
 		public bool ShowAxisLines;
-		
+	
 		/// <summary> Whether players should animate using simple swinging parallel to their bodies. </summary>
 		public bool SimpleArmsAnim;
 
 		/// <summary> Whether the arm model should use the classic position. </summary>
 		public bool ClassicArmModel;
-		
-		/// <summary> Whether mouse rotation on the y axis should be inverted. </summary>
+
 		public bool InvertMouse;
 		
 		public int Vertices;

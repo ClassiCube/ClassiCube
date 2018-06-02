@@ -59,7 +59,6 @@ namespace ClassicalSharp.Network {
 #if !LAUNCHER
 		/// <summary> Asynchronously downloads a skin. If 'skinName' points to the url then the skin is
 		/// downloaded from that url, otherwise it is downloaded from the url 'defaultSkinServer'/'skinName'.png </summary>
-		/// <remarks> Identifier is skin_'skinName'.</remarks>
 		public void AsyncGetSkin(string identifier, string skinName) {
 			string url = Utils.IsUrlPrefix(skinName, 0) ? skinName 
 				: skinServer + Utils.StripColours(skinName) + ".png";

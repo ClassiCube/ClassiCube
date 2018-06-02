@@ -10,23 +10,17 @@ namespace ClassicalSharp.Generator {
 	public abstract class IMapGenerator {
 		
 		public abstract string GeneratorName { get; }
-		
-		/// <summary> Generates the raw blocks within the map, using the given seed. </summary>
+
 		public abstract BlockRaw[] Generate();
-		
-		/// <summary> Applies environment settings (if required) to the newly generated world. </summary>
+
 		public virtual void ApplyEnv(World world) { }
-		
-		/// <summary> The current operation being performed  (current stage). </summary>
+
 		public string CurrentState;
-		
-		/// <summary> Progress towards completion of the current operation. (raises from 0 to 1) </summary>
+
 		public float CurrentProgress;
-		
-		/// <summary> Whether the generation has completed all operations. </summary>
+
 		public bool Done = false;
-		
-		/// <summary> Blocks of the map generated. </summary>
+
 		public volatile BlockRaw[] Blocks;
 		
 		public int Width, Height, Length, Seed;

@@ -43,8 +43,8 @@ typedef struct Builder1DPart_ {
 } Builder1DPart;
 
 /* Part builder data, for both normal and translucent parts.
-The first ATLAS1D_MAX_ATLASES_COUNT parts are for normal parts, remainder are for translucent parts. */
-Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES_COUNT * 2];
+The first ATLAS1D_MAX_ATLASES parts are for normal parts, remainder are for translucent parts. */
+Builder1DPart Builder_Parts[ATLAS1D_MAX_ATLASES * 2];
 VertexP3fT2fC4b* Builder_Vertices;
 Int32 Builder_VerticesElems;
 
@@ -69,7 +69,7 @@ static void Builder1DPart_CalcOffsets(Builder1DPart* part, Int32* offset) {
 
 static Int32 Builder_TotalVerticesCount(void) {
 	Int32 i, count = 0;
-	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT * 2; i++) {
+	for (i = 0; i < ATLAS1D_MAX_ATLASES * 2; i++) {
 		count += Builder1DPart_VerticesCount(&Builder_Parts[i]);
 	}
 	return count;
@@ -83,7 +83,7 @@ static void Builder_AddSpriteVertices(BlockID block) {
 }
 
 static void Builder_AddVertices(BlockID block, Face face) {
-	Int32 baseOffset = (Block_Draw[block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES_COUNT;
+	Int32 baseOffset = (Block_Draw[block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	Int32 i = Atlas1D_Index(Block_GetTexLoc(block, face));
 	Builder1DPart* part = &Builder_Parts[baseOffset + i];
 	part->fCount[face] += 4;
@@ -329,7 +329,7 @@ void Builder_MakeChunk(ChunkInfo* info) {
 	bool hasNormal = false, hasTranslucent = false;
 
 	for (i = 0; i < MapRenderer_1DUsedCount; i++) {
-		Int32 j = i + ATLAS1D_MAX_ATLASES_COUNT;
+		Int32 j = i + ATLAS1D_MAX_ATLASES;
 		Int32 curIdx = partsIndex + i * MapRenderer_ChunksCount;
 
 		Builder_SetPartInfo(&Builder_Parts[i], &offset, &MapRenderer_PartsNormal[curIdx],      &hasNormal);
@@ -377,8 +377,8 @@ static void Builder_DefaultPostStretchTiles(Int32 x1, Int32 y1, Int32 z1) {
 	}
 
 	vertsCount = 0;
-	for (i = 0; i < ATLAS1D_MAX_ATLASES_COUNT; i++) {
-		Int32 j = i + ATLAS1D_MAX_ATLASES_COUNT;
+	for (i = 0; i < ATLAS1D_MAX_ATLASES; i++) {
+		Int32 j = i + ATLAS1D_MAX_ATLASES;
 		Builder1DPart_CalcOffsets(&Builder_Parts[i], &vertsCount);
 		Builder1DPart_CalcOffsets(&Builder_Parts[j], &vertsCount);
 	}
@@ -575,7 +575,7 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 
 
 	bool fullBright = Block_FullBright[Builder_Block];
-	Int32 partOffset = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES_COUNT;
+	Int32 partOffset = (Block_Draw[Builder_Block] == DRAW_TRANSLUCENT) * ATLAS1D_MAX_ATLASES;
 	Int32 lightFlags = Block_LightOffset[Builder_Block];
 
 	Drawer_MinBB = Block_MinBB[Builder_Block]; Drawer_MinBB.Y = 1.0f - Drawer_MinBB.Y;
