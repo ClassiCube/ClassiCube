@@ -34,7 +34,7 @@ static void SkyboxRenderer_FileChanged(void* obj, Stream* src) {
 void SkyboxRenderer_Render(Real64 deltaTime) {
 	if (skybox_vb == 0) return;
 	Gfx_SetDepthWrite(false);
-	Gfx_SetTexturing(false);
+	Gfx_SetTexturing(true);
 	Gfx_BindTexture(skybox_tex);
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
