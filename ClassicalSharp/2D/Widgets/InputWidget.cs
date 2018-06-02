@@ -446,25 +446,26 @@ namespace ClassicalSharp.Gui.Widgets {
 			mouseX -= inputTex.X1; mouseY -= inputTex.Y1;
 			DrawTextArgs args = new DrawTextArgs(null, font, true);
 			IDrawer2D drawer = game.Drawer2D;
-			int offset = 0, elemHeight = caretTex.Height;
+			int offset = 0, charHeight = caretTex.Height;
 			string oneChar = new String('A', 1);
 			
 			for (int y = 0; y < lines.Length; y++) {
 				string line = lines[y];
-				int xOffset = y == 0 ? prefixWidth : 0;
 				if (line == null) continue;
 				
 				for (int x = 0; x < line.Length; x++) {
 					args.Text = line.Substring(0, x);
-					int trimmedWidth = drawer.MeasureSize(ref args).Width + xOffset;
+					int charOffset = drawer.MeasureSize(ref args).Width;
+					if (y == 0) charOffset += prefixWidth;
+						
 					// avoid allocating an unnecessary string
 					fixed(char* ptr = oneChar)
 						ptr[0] = line[x];
 					
 					args.Text = oneChar;
-					int elemWidth = drawer.MeasureSize(ref args).Width;
+					int charWidth = drawer.MeasureSize(ref args).Width;
 					
-					if (GuiElement.Contains(trimmedWidth, y * elemHeight, elemWidth, elemHeight, mouseX, mouseY)) {
+					if (GuiElement.Contains(charOffset, y * charHeight, charWidth, charHeight, mouseX, mouseY)) {
 						caret = offset + x;
 						UpdateCaret(); return;
 					}

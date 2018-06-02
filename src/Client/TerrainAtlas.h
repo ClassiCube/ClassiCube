@@ -18,9 +18,9 @@ void Atlas2D_Free(void);
 
 /* The theoretical largest number of 1D atlases that a 2D atlas can be broken down into. */
 #define ATLAS1D_MAX_ATLASES_COUNT (ATLAS2D_TILES_PER_ROW * ATLAS2D_ROWS_COUNT)
-/* The number of elements each 1D atlas contains. */
+/* The number of tiles each 1D atlas contains. */
 Int32 Atlas1D_TilesPerAtlas;
-/* Size of a texture coord V for an element in a 1D atlas. */
+/* Size of a texture V coord V for an tile in a 1D atlas. */
 Real32 Atlas1D_InvTileSize;
 /* Native texture ID for each 1D atlas. */
 GfxResourceID Atlas1D_TexIds[ATLAS1D_MAX_ATLASES_COUNT];

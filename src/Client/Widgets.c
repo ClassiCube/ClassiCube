@@ -902,6 +902,17 @@ static bool InputWidget_ControlDown(void) {
 #endif
 }
 
+static void InputWidget_FormatLine(InputWidget* widget, Int32 i, STRING_TRANSIENT String* line) {
+	if (!widget->ConvertPercents) { String_AppendString(line, &widget->Lines[i]); return; }
+	String src = widget->Lines[i];
+
+	for (i = 0; i < src.length; i++) {
+		UInt8 c = src.buffer[i];
+		if (c == '%' && Drawer2D_ValidColCodeAt(&src, i + 1)) { c = '&'; }
+		String_Append(line, c);
+	}
+}
+
 static void InputWidget_CalculateLineSizes(InputWidget* widget) {
 	Int32 y;
 	for (y = 0; y < INPUTWIDGET_MAX_LINES; y++) {
@@ -910,8 +921,14 @@ static void InputWidget_CalculateLineSizes(InputWidget* widget) {
 	widget->LineSizes[0].Width = widget->PrefixWidth;
 
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
+	UInt8 lineBuffer[String_BufferSize(STRING_SIZE)];
+	String line = String_InitAndClearArray(lineBuffer);
+
 	for (y = 0; y < widget->GetMaxLines(); y++) {
-		args.Text = widget->Lines[y];
+		String_Clear(&line);
+		InputWidget_FormatLine(widget, y, &line);
+		args.Text = line;
+
 		Size2D textSize = Drawer2D_MeasureText(&args);
 		widget->LineSizes[y].Width += textSize.Width;
 		widget->LineSizes[y].Height = textSize.Height;
@@ -924,8 +941,14 @@ static void InputWidget_CalculateLineSizes(InputWidget* widget) {
 
 static UInt8 InputWidget_GetLastCol(InputWidget* widget, Int32 indexX, Int32 indexY) {
 	Int32 x = indexX, y;
+	UInt8 lineBuffer[String_BufferSize(STRING_SIZE)];
+	String line = String_InitAndClearArray(lineBuffer);
+
 	for (y = indexY; y >= 0; y--) {
-		UInt8 code = Drawer2D_LastCol(&widget->Lines[y], x);
+		String_Clear(&line);
+		InputWidget_FormatLine(widget, y, &line);
+
+		UInt8 code = Drawer2D_LastCol(&line, x);
 		if (code != NULL) return code;
 		if (y > 0) { x = widget->Lines[y - 1].length; }
 	}
@@ -945,8 +968,11 @@ static void InputWidget_UpdateCaret(InputWidget* widget) {
 		PackedCol yellow = PACKEDCOL_YELLOW; widget->CaretCol = yellow;
 		widget->CaretTex.Width = widget->CaretWidth;
 	} else {
-		String* line = &widget->Lines[widget->CaretY];
-		args.Text = String_UNSAFE_Substring(line, 0, widget->CaretX);
+		UInt8 lineBuffer[String_BufferSize(STRING_SIZE)];
+		String line = String_InitAndClearArray(lineBuffer);
+		InputWidget_FormatLine(widget, widget->CaretY, &line);
+
+		args.Text = String_UNSAFE_Substring(&line, 0, widget->CaretX);
 		Size2D trimmedSize = Drawer2D_MeasureText(&args);
 		if (widget->CaretY == 0) { trimmedSize.Width += widget->PrefixWidth; }
 
@@ -954,8 +980,8 @@ static void InputWidget_UpdateCaret(InputWidget* widget) {
 		PackedCol white = PACKEDCOL_WHITE;
 		widget->CaretCol = PackedCol_Scale(white, 0.8f);
 
-		if (widget->CaretX < line->length) {
-			args.Text = String_UNSAFE_Substring(line, widget->CaretX, 1);
+		if (widget->CaretX < line.length) {
+			args.Text = String_UNSAFE_Substring(&line, widget->CaretX, 1);
 			args.UseShadow = true;
 			widget->CaretTex.Width = (UInt16)Drawer2D_MeasureText(&args).Width;
 		} else {
@@ -989,7 +1015,7 @@ void InputWidget_Clear(InputWidget* widget) {
 	String_Clear(&widget->Text);
 	Int32 i;
 	for (i = 0; i < Array_Elems(widget->Lines); i++) {
-		String_Clear(&widget->Lines[i]);
+		widget->Lines[i] = String_MakeNull();
 	}
 
 	widget->CaretPos = -1;
@@ -1231,26 +1257,30 @@ static bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mou
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
 	Int32 offset = 0, charHeight = widget->CaretTex.Height;
 
-	Int32 charX, i;
-	for (i = 0; i < widget->GetMaxLines(); i++) {
-		String* line = &widget->Lines[i];
-		Int32 xOffset = i == 0 ? widget->PrefixWidth : 0;
-		if (line->length == 0) continue;
+	UInt8 lineBuffer[String_BufferSize(STRING_SIZE)];
+	String line = String_InitAndClearArray(lineBuffer);
+	Int32 charX, charY;
 
-		for (charX = 0; charX < line->length; charX++) {
-			args.Text = String_UNSAFE_Substring(line, 0, charX);
-			Int32 charOffset = Drawer2D_MeasureText(&args).Width + xOffset;
+	for (charY = 0; charY < widget->GetMaxLines(); charY++) {
+		String_Clear(&line);
+		InputWidget_FormatLine(widget, charY, &line);
+		if (line.length == 0) continue;
 
-			args.Text = String_UNSAFE_Substring(line, charX, 1);
+		for (charX = 0; charX < line.length; charX++) {
+			args.Text = String_UNSAFE_Substring(&line, 0, charX);
+			Int32 charOffset = Drawer2D_MeasureText(&args).Width;
+			if (charY == 0) charOffset += widget->PrefixWidth;
+
+			args.Text = String_UNSAFE_Substring(&line, charX, 1);
 			Int32 charWidth = Drawer2D_MeasureText(&args).Width;
 
-			if (Gui_Contains(charOffset, i * charHeight, charWidth, charHeight, x, y)) {
+			if (Gui_Contains(charOffset, charY * charHeight, charWidth, charHeight, x, y)) {
 				widget->CaretPos = offset + charX;
 				InputWidget_UpdateCaret(widget);
 				return true;
 			}
 		}
-		offset += line->length;
+		offset += line.length;
 	}
 
 	widget->CaretPos = -1;
@@ -1536,6 +1566,7 @@ void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, 
 	widget->MinHeight = height;
 	widget->Validator = *validator;
 
+	widget->Base.ConvertPercents = false;
 	widget->Base.Padding = 3;
 	widget->Base.Text    = String_InitAndClearArray(widget->TextBuffer);
 	widget->Base.GetMaxLines   = MenuInputWidget_GetMaxLines;
@@ -1585,17 +1616,10 @@ static void ChatInputWidget_RemakeTexture(GuiElement* elem) {
 		if (!Drawer2D_IsWhiteCol(lastCol)) {			
 			String_Append(&line, '&'); String_Append(&line, lastCol);
 		}
-		String_AppendString(&line, &widget->Lines[i]);
-
 		/* Convert % to & for colour codes */
-		Int32 j;
-		for (j = 0; j < line.length - 1; j++) {
-			if (line.buffer[j] != '%') continue;
-			if (!Drawer2D_ValidColCode(line.buffer[j + 1])) continue;
-			line.buffer[j] = '&';
-		}
-		args.Text = line;
+		InputWidget_FormatLine(widget, i, &line);
 
+		args.Text = line;
 		Int32 offset = i == 0 ? widget->PrefixWidth : 0;
 		Drawer2D_DrawText(&args, offset, realHeight);
 		realHeight += widget->LineSizes[i].Height;
@@ -1792,8 +1816,9 @@ void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 	InputWidget_Create(&widget->Base, font, &prefix);
 	widget->TypingLogPos = Chat_InputLog.Count; /* Index of newest entry + 1. */
 
-	widget->Base.ShowCaret      = true;
-	widget->Base.Padding        = 5;
+	widget->Base.ConvertPercents = true;
+	widget->Base.ShowCaret       = true;
+	widget->Base.Padding         = 5;
 	widget->Base.GetMaxLines    = ChatInputWidget_GetMaxLines;
 	widget->Base.RemakeTexture  = ChatInputWidget_RemakeTexture;
 	widget->Base.OnPressedEnter = ChatInputWidget_OnPressedEnter;

@@ -105,7 +105,8 @@ typedef struct InputWidget_ {
 	Texture InputTex;
 	String Prefix;
 	UInt16 PrefixWidth, PrefixHeight;
-	
+	bool ConvertPercents;
+
 	UInt8 Padding;
 	bool ShowCaret;
 	UInt16 CaretWidth;
