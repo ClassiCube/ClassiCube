@@ -535,9 +535,18 @@ void Platform_SocketCreate(void** socketResult) {
 	}
 }
 
+ReturnCode Platform_SocketAvailable(void* socket, UInt32* available) {
+	return ioctlsocket(socket, FIONREAD, available);
+}
+
 ReturnCode Platform_SocketSetBlocking(void* socket, bool blocking) {
 	Int32 blocking_raw = blocking ? 0 : -1;
 	return ioctlsocket(socket, FIONBIO, &blocking_raw);
+}
+
+ReturnCode Platform_SocketGetError(void* socket, ReturnCode* result) {
+	Int32 resultSize = sizeof(ReturnCode);
+	return getsockopt(socket, SOL_SOCKET, SO_ERROR, result, &resultSize);
 }
 
 ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port) {
@@ -578,19 +587,19 @@ ReturnCode Platform_SocketClose(void* socket) {
 	return result;
 }
 
-ReturnCode Platform_SocketAvailable(void* socket, UInt32* available) {
-	return ioctlsocket(socket, FIONREAD, available);
-}
-
-ReturnCode Platform_SocketSelect(void* socket, bool selectRead, bool* success) {
+ReturnCode Platform_SocketSelect(void* socket, Int32 selectMode, bool* success) {
 	void* args[2]; args[0] = (void*)1; args[1] = socket;
 	TIMEVAL time = { 0 };
 	Int32 selectCount;
 
-	if (selectRead) {
+	if (selectMode == SOCKET_SELECT_READ) {
 		selectCount = select(1, &args, NULL, NULL, &time);
-	} else {
+	} else if (selectMode == SOCKET_SELECT_WRITE) {
 		selectCount = select(1, NULL, &args, NULL, &time);
+	} else if (selectMode == SOCKET_SELECT_ERROR) {
+		selectCount = select(1, NULL, NULL, &args, &time);
+	} else {
+		selectCount = SOCKET_ERROR;
 	}
 
 	if (selectCount == SOCKET_ERROR) {

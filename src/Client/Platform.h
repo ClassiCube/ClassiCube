@@ -10,6 +10,10 @@ typedef struct DrawTextArgs_ DrawTextArgs;
 typedef struct Bitmap_ Bitmap;
 typedef struct AsyncRequest_ AsyncRequest;
 
+enum SOCKET_SELECT {
+	SOCKET_SELECT_READ, SOCKET_SELECT_WRITE, SOCKET_SELECT_ERROR,
+};
+
 extern UInt8* Platform_NewLine; /* Newline for text */
 extern UInt8 Platform_DirectorySeparator;
 extern ReturnCode ReturnCode_FileShareViolation;
@@ -85,13 +89,15 @@ Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 void Platform_ReleaseBitmap(void);
 
 void Platform_SocketCreate(void** socket);
+ReturnCode Platform_SocketAvailable(void* socket, UInt32* available);
 ReturnCode Platform_SocketSetBlocking(void* socket, bool blocking);
+ReturnCode Platform_SocketGetError(void* socket, ReturnCode* result);
+
 ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port);
 ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
 ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
 ReturnCode Platform_SocketClose(void* socket);
-ReturnCode Platform_SocketAvailable(void* socket, UInt32* available);
-ReturnCode Platform_SocketSelect(void* socket, bool selectRead, bool* success);
+ReturnCode Platform_SocketSelect(void* socket, Int32 selectMode, bool* success);
 
 void Platform_HttpInit(void);
 ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle);

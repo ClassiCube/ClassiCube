@@ -55,19 +55,23 @@ namespace ClassicalSharp.Network {
 			} catch (SocketException ex) {
 				SocketError err = ex.SocketErrorCode;
 				if (err == SocketError.InProgress || err == SocketError.WouldBlock) return;
-				
-				ErrorHandler.LogError("connecting to server", ex);
-				FailConnect();
+				FailConnect(ex);
 			}
 		}
 		
 		void TickConnect() {
+			if (socket.Poll(0, SelectMode.SelectError)) {
+				int err = (int)socket.GetSocketOption(SocketOptionLevel.Socket, SocketOptionName.Error);
+				FailConnect(new SocketException(err));
+				return;
+			}
+			
 			DateTime now = DateTime.UtcNow;
 			if (socket.Connected) {
 				socket.Blocking = true;
 				FinishConnect();
 			} else if (now > connectTimeout) {
-				FailConnect();
+				FailConnect(null);
 			} else {
 				double leftSecs = (connectTimeout - now).TotalSeconds;
 				game.WorldEvents.RaiseLoading((float)leftSecs / timeoutSecs);
@@ -91,8 +95,12 @@ namespace ClassicalSharp.Network {
 			lastPacket = DateTime.UtcNow;
 		}
 		
-		void FailConnect() {
+		void FailConnect(SocketException ex) {
 			connecting = false;
+			if (ex != null) {
+				ErrorHandler.LogError("connecting to server", ex);
+			}
+			
 			game.Disconnect("Failed to connect to " + game.IPAddress + ":" + game.Port,
 			                "You failed to connect to the server. It's probably down!");
 			Dispose();

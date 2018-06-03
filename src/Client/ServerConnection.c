@@ -359,15 +359,21 @@ static void MPConnection_FailConnect(ReturnCode result) {
 }
 
 static void MPConnection_TickConnect(void) {
+	bool poll_error = false;
+	Platform_SocketSelect(net_socket, SOCKET_SELECT_ERROR, &poll_error);
+	if (poll_error) {
+		ReturnCode err = 0; Platform_SocketGetError(net_socket, &err);
+		MPConnection_FailConnect(err);
+		return;
+	}
+
 	DateTime now; Platform_CurrentUTCTime(&now);
 	Int64 nowMS = DateTime_TotalMs(&now);
 
-	bool poll_success = false;
-	ReturnCode result = Platform_SocketSelect(net_socket, false, &poll_success);
+	bool poll_write = false;
+	Platform_SocketSelect(net_socket, SOCKET_SELECT_WRITE, &poll_write);
 
-	if (result != 0) {
-		MPConnection_FailConnect(result); 
-	} else if (poll_success) {
+	if (poll_write) {
 		Platform_SocketSetBlocking(net_socket, true);
 		MPConnection_FinishConnect();
 	} else if (nowMS > net_connectTimeout) {
@@ -427,7 +433,7 @@ static void MPConnection_CheckDisconnection(Real64 delta) {
 
 	UInt32 available = 0; bool poll_success = false;
 	ReturnCode availResult  = Platform_SocketAvailable(net_socket, &available);
-	ReturnCode selectResult = Platform_SocketSelect(net_socket, true, &poll_success);
+	ReturnCode selectResult = Platform_SocketSelect(net_socket, SOCKET_SELECT_READ, &poll_success);
 
 	if (net_writeFailed || availResult != 0 || selectResult != 0 || (available == 0 && poll_success)) {
 		String title  = String_FromConst("Disconnected!");
