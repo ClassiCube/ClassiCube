@@ -31,27 +31,52 @@ namespace ClassicalSharp.Network {
 		public NetReader reader;
 		public NetWriter writer;
 		
+		bool connecting = false;
+		DateTime connectTimeout;
+		const int timeoutSecs = 15;
+		
 		internal ClassicProtocol classic;
 		internal CPEProtocol cpe;
 		internal CPEProtocolBlockDefs cpeBlockDefs;
 		internal WoMProtocol wom;
 		internal CPESupport cpeData;
 		
-		public override void Connect(IPAddress address, int port) {
-			socket = new Socket(address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+		public override void BeginConnect() {
+			socket = new Socket(game.IPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 			game.UserEvents.BlockChanged += BlockChanged;
 			Disconnected = false;
 			
-			try {
-				socket.Connect(address, port);
-			} catch (SocketException ex) {
-				ErrorHandler.LogError("connecting to server", ex);
-				game.Disconnect("Failed to connect to " + address + ":" + port,
-				                "You failed to connect to the server. It's probably down!");
-				Dispose();
-				return;
-			}
+			socket.Blocking = false;
+			connecting = true;
+			connectTimeout = DateTime.UtcNow.AddSeconds(timeoutSecs);
 			
+			try {
+				socket.Connect(game.IPAddress, game.Port);
+			} catch (SocketException ex) {
+				SocketError err = ex.SocketErrorCode;
+				if (err == SocketError.InProgress || err == SocketError.WouldBlock) return;
+				
+				ErrorHandler.LogError("connecting to server", ex);
+				FailConnect();
+			}
+		}
+		
+		void TickConnect() {
+			DateTime now = DateTime.UtcNow;
+			if (socket.Connected) {
+				socket.Blocking = true;
+				FinishConnect();
+			} else if (now > connectTimeout) {
+				FailConnect();
+			} else {
+				double leftSecs = (connectTimeout - now).TotalSeconds;
+				game.WorldEvents.RaiseLoading((float)leftSecs / timeoutSecs);
+			}
+		}
+		
+		void FinishConnect() {
+			connecting = false;
+			game.WorldEvents.RaiseLoading(0);
 			reader = new NetReader(socket);
 			writer = new NetWriter(socket);
 			
@@ -66,8 +91,15 @@ namespace ClassicalSharp.Network {
 			lastPacket = DateTime.UtcNow;
 		}
 		
+		void FailConnect() {
+			connecting = false;
+			game.Disconnect("Failed to connect to " + game.IPAddress + ":" + game.Port,
+			                "You failed to connect to the server. It's probably down!");
+			Dispose();
+		}
+		
 		public override void SendChat(string text) {
-			if (String.IsNullOrEmpty(text)) return;
+			if (String.IsNullOrEmpty(text) || connecting) return;
 			
 			while (text.Length > Utils.StringLength) {
 				classic.WriteChat(text.Substring(0, Utils.StringLength), true);
@@ -97,6 +129,8 @@ namespace ClassicalSharp.Network {
 		
 		public override void Tick(ScheduledTask task) {
 			if (Disconnected) return;
+			if (connecting) { TickConnect(); return; }
+			
 			if ((DateTime.UtcNow - lastPacket).TotalSeconds >= 30) {
 				CheckDisconnection(task.Interval);
 			}
@@ -188,14 +222,14 @@ namespace ClassicalSharp.Network {
 				handlers[i] = null;
 				packetSizes[i] = 0;
 			}
-						
-			BlockInfo.SetMaxUsed(255);			
-			ResetState();			
+			
+			BlockInfo.SetMaxUsed(255);
+			ResetState();
 			Dispose();
 		}
 		
 		void ResetState() {
-			if (classic == null) return; // null if no successful connection ever made before		
+			if (classic == null) return; // null if no successful connection ever made before
 			
 			cpeData.Reset();
 			classic.Reset();
@@ -237,7 +271,7 @@ namespace ClassicalSharp.Network {
 			if (testAcc < 1) return;
 			testAcc = 0;
 			
-			if (!socket.Connected || (socket.Poll(1000, SelectMode.SelectRead) && socket.Available == 0)) {
+			if (!socket.Connected || (socket.Available == 0 && socket.Poll(0, SelectMode.SelectRead))) {
 				game.Disconnect("Disconnected!", "You've lost connection to the server");
 			}
 		}

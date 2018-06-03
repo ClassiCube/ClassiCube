@@ -162,8 +162,8 @@ namespace ClassicalSharp {
 				MapBordersRenderer.UseLegacyMode(true);
 				EnvRenderer.UseLegacyMode(true);
 			}
-			Gui.SetNewScreen(new LoadingMapScreen(this, connectString, ""));
-			Server.Connect(IPAddress, Port);
+			Gui.SetNewScreen(new LoadingScreen(this, connectString, ""));
+			Server.BeginConnect();
 		}
 		
 		void ExtractInitialTexturePack() {

@@ -10,8 +10,8 @@ namespace ClassicalSharp.Events {
 		public void RaiseOnNewMap() { Raise(OnNewMap); }
 		
 		/// <summary> Raised when a portion of the world is read and decompressed, or generated. </summary>
-		public event EventHandler<MapLoadingEventArgs> MapLoading;
-		public void RaiseMapLoading(float progress) { loadingArgs.Progress = progress; Raise(MapLoading, loadingArgs); }
+		public event EventHandler<LoadingEventArgs> Loading;
+		public void RaiseLoading(float progress) { loadingArgs.Progress = progress; Raise(Loading, loadingArgs); }
 		
 		/// <summary> Raised when new world has finished loading and the player can now interact with it. </summary>
 		public event EventHandler OnNewMapLoaded;
@@ -21,11 +21,11 @@ namespace ClassicalSharp.Events {
 		public event EventHandler<EnvVarEventArgs> EnvVariableChanged;
 		public void RaiseEnvVariableChanged(EnvVar envVar) { envArgs.Var = envVar; Raise(EnvVariableChanged, envArgs); }
 	
-		MapLoadingEventArgs loadingArgs = new MapLoadingEventArgs();
+		LoadingEventArgs loadingArgs = new LoadingEventArgs();
 		EnvVarEventArgs envArgs = new EnvVarEventArgs();
 	}
 	
-	public sealed class MapLoadingEventArgs : EventArgs {
+	public sealed class LoadingEventArgs : EventArgs {
 		
 		/// <summary> Percentage of the map that has been fully decompressed, or generated. </summary>
 		public float Progress;

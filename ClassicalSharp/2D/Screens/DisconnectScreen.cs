@@ -74,8 +74,8 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			if (!reconnect.Disabled && reconnect.Contains(mouseX, mouseY)) {
 				string connect = "Connecting to " + game.IPAddress + ":" + game.Port +  "..";
-				game.Gui.SetNewScreen(new LoadingMapScreen(game, connect, ""));
-				game.Server.Connect(game.IPAddress, game.Port);
+				game.Gui.SetNewScreen(new LoadingScreen(game, connect, ""));
+				game.Server.BeginConnect();
 			}
 			return true;
 		}

@@ -25,6 +25,8 @@ UInt8 Platform_DirectorySeparator = '\\';
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
 ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
+ReturnCode ReturnCode_SocketInProgess = WSAEINPROGRESS;
+ReturnCode ReturnCode_SocketWouldBlock = WSAEWOULDBLOCK;
 
 void Platform_Init(void) {
 	heap = GetProcessHeap(); /* TODO: HeapCreate instead? probably not */
@@ -533,6 +535,11 @@ void Platform_SocketCreate(void** socketResult) {
 	}
 }
 
+ReturnCode Platform_SocketSetBlocking(void* socket, bool blocking) {
+	Int32 blocking_raw = blocking ? 0 : -1;
+	return ioctlsocket(socket, FIONBIO, &blocking_raw);
+}
+
 ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port) {
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
@@ -575,16 +582,17 @@ ReturnCode Platform_SocketAvailable(void* socket, UInt32* available) {
 	return ioctlsocket(socket, FIONREAD, available);
 }
 
-ReturnCode Platform_SocketSelectRead(void* socket, Int32 microseconds, bool* success) {
-	void* args[2];
-	args[0] = (void*)1;
-	args[1] = socket;
+ReturnCode Platform_SocketSelect(void* socket, bool selectRead, bool* success) {
+	void* args[2]; args[0] = (void*)1; args[1] = socket;
+	TIMEVAL time = { 0 };
+	Int32 selectCount;
 
-	TIMEVAL time;
-	time.tv_usec = microseconds % (1000 * 1000);
-	time.tv_sec  = microseconds / (1000 * 1000);
+	if (selectRead) {
+		selectCount = select(1, &args, NULL, NULL, &time);
+	} else {
+		selectCount = select(1, NULL, &args, NULL, &time);
+	}
 
-	Int32 selectCount = select(1, &args, NULL, NULL, &time);
 	if (selectCount == SOCKET_ERROR) {
 		*success = false; return WSAGetLastError();
 	} else {

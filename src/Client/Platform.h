@@ -15,6 +15,8 @@ extern UInt8 Platform_DirectorySeparator;
 extern ReturnCode ReturnCode_FileShareViolation;
 extern ReturnCode ReturnCode_FileNotFound;
 extern ReturnCode ReturnCode_NotSupported;
+extern ReturnCode ReturnCode_SocketInProgess;
+extern ReturnCode ReturnCode_SocketWouldBlock;
 
 void Platform_Init(void);
 void Platform_Free(void);
@@ -83,12 +85,13 @@ Size2D Platform_TextDraw(DrawTextArgs* args, Int32 x, Int32 y, PackedCol col);
 void Platform_ReleaseBitmap(void);
 
 void Platform_SocketCreate(void** socket);
+ReturnCode Platform_SocketSetBlocking(void* socket, bool blocking);
 ReturnCode Platform_SocketConnect(void* socket, STRING_PURE String* ip, Int32 port);
 ReturnCode Platform_SocketRead(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
 ReturnCode Platform_SocketWrite(void* socket, UInt8* buffer, UInt32 count, UInt32* modified);
 ReturnCode Platform_SocketClose(void* socket);
 ReturnCode Platform_SocketAvailable(void* socket, UInt32* available);
-ReturnCode Platform_SocketSelectRead(void* socket, Int32 microseconds, bool* success);
+ReturnCode Platform_SocketSelect(void* socket, bool selectRead, bool* success);
 
 void Platform_HttpInit(void);
 ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle);

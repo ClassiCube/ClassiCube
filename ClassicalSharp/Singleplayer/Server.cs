@@ -23,7 +23,7 @@ namespace ClassicalSharp.Singleplayer {
 			IsSinglePlayer = true;
 		}
 		
-		public override void Connect(IPAddress address, int port) {
+		public override void BeginConnect() {
 			game.Chat.SetLogName("Singleplayer");
 			game.SupportsCPEBlocks = game.UseCPE;
 			int max = game.SupportsCPEBlocks ? Block.MaxCpeBlock : Block.MaxOriginalBlock;

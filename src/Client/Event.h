@@ -104,7 +104,7 @@ Event_Void BlockEvents_PermissionsChanged; /* Block permissions (can place/delet
 Event_Void BlockEvents_BlockDefChanged;    /* Block definition is changed or removed. */
 
 Event_Void WorldEvents_NewMap;         /* Player begins loading a new world. */
-Event_Real WorldEvents_MapLoading;   /* Portion of world is decompressed/generated. (Arg is progress from 0-1) */
+Event_Real WorldEvents_Loading;   /* Portion of world is decompressed/generated. (Arg is progress from 0-1) */
 Event_Void WorldEvents_MapLoaded;      /* New world has finished loading, player can now interact with it. */
 Event_Int WorldEvents_EnvVarChanged; /* World environment variable changed by player/CPE/WoM config. */
 

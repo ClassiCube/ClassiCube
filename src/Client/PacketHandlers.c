@@ -446,7 +446,7 @@ static void Classic_LevelDataChunk(Stream* stream) {
 	}
 
 	Real32 progress = map == NULL ? 0.0f : (Real32)mapIndex / mapVolume;
-	Event_RaiseReal(&WorldEvents_MapLoading, progress);
+	Event_RaiseReal(&WorldEvents_Loading, progress);
 }
 
 static void Classic_LevelFinalise(Stream* stream) {

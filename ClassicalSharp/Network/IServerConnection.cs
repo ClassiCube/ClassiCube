@@ -21,8 +21,8 @@ namespace ClassicalSharp {
 		
 		public bool IsSinglePlayer;
 		
-		/// <summary> Opens a connection to the given IP address and port, and prepares the initial state of the client. </summary>
-		public abstract void Connect(IPAddress address, int port);
+		/// <summary> Opens a connection to the server, and prepares the initial state of the client. </summary>
+		public abstract void BeginConnect();
 		
 		public abstract void SendChat(string text);
 		

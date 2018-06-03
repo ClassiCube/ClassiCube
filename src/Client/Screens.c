@@ -549,7 +549,7 @@ static void LoadingScreen_Init(GuiElement* elem) {
 	Gfx_SetFog(false);
 	LoadingScreen_ContextRecreated(screen);
 
-	Event_RegisterReal(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
+	Event_RegisterReal(&WorldEvents_Loading,        screen, LoadingScreen_MapLoading);
 	Event_RegisterVoid(&GfxEvents_ContextLost,      screen, LoadingScreen_ContextLost);
 	Event_RegisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
 }
@@ -579,7 +579,7 @@ static void LoadingScreen_Free(GuiElement* elem) {
 	Platform_FontFree(&screen->Font);
 	LoadingScreen_ContextLost(screen);
 
-	Event_UnregisterReal(&WorldEvents_MapLoading,   screen, LoadingScreen_MapLoading);
+	Event_UnregisterReal(&WorldEvents_Loading,        screen, LoadingScreen_MapLoading);
 	Event_UnregisterVoid(&GfxEvents_ContextLost,      screen, LoadingScreen_ContextLost);
 	Event_UnregisterVoid(&GfxEvents_ContextRecreated, screen, LoadingScreen_ContextRecreated);
 }
@@ -865,7 +865,8 @@ static bool ChatScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (screen->HandlesAllInput) { /* text input bar */
 		if (key == KeyBind_Get(KeyBind_SendChat) || key == Key_KeypadEnter || key == KeyBind_Get(KeyBind_PauseOrExit)) {
 			ChatScreen_SetHandlesAllInput(screen, false);
-			Game_SetCursorVisible(false);
+			/* when underlying screen is HUD, user is interacting with the world normally */
+			Game_SetCursorVisible(Gui_GetUnderlyingScreen() != Gui_HUD);
 			Camera_Active->RegrabMouse();
 			Key_KeyRepeat = false;
 
@@ -1512,10 +1513,10 @@ static bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y
 		UInt8 connectBuffer[String_BufferSize(STRING_SIZE)];
 		String connect = String_InitAndClearArray(connectBuffer);
 		String empty = String_MakeNull();
-		String_Format2(&connect, "Connecting to %s: %i..", &Game_IPAddress, &Game_Port);
+		String_Format2(&connect, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 
 		Gui_ReplaceActive(LoadingScreen_MakeInstance(&connect, &empty));
-		ServerConnection_Connect(&Game_IPAddress, Game_Port);
+		ServerConnection_BeginConnect();
 	}
 	return true;
 }

@@ -347,7 +347,8 @@ namespace ClassicalSharp.Gui.Screens {
 			if (HandlesAllInput) { // text input bar
 				if (key == game.Mapping(KeyBind.SendChat) || key == Key.KeypadEnter || key == game.Mapping(KeyBind.PauseOrExit)) {
 					SetHandlesAllInput(false);
-					game.CursorVisible = false;
+					// when underlying screen is HUD, user is interacting with the world normally
+					game.CursorVisible = game.Gui.UnderlyingScreen != game.Gui.hudScreen;
 					game.Camera.RegrabMouse();
 					game.Keyboard.KeyRepeat = false;
 					

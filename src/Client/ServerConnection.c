@@ -207,7 +207,7 @@ Int32 PingList_AveragePingMs(void) {
 /*########################################################################################################################*
 *-------------------------------------------------Singleplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
-static void SPConnection_Connect(STRING_PURE String* ip, Int32 port) {
+static void SPConnection_BeginConnect(void) {
 	String logName = String_FromConst("Singleplayer");
 	Chat_SetLogName(&logName);
 	Game_UseCPEBlocks = Game_UseCPE;
@@ -280,7 +280,7 @@ void ServerConnection_InitSingleplayer(void) {
 	ServerConnection_SupportsPartialMessages = true;
 	ServerConnection_IsSinglePlayer = true;
 
-	ServerConnection_Connect = SPConnection_Connect;
+	ServerConnection_BeginConnect = SPConnection_BeginConnect;
 	ServerConnection_SendChat = SPConnection_SendChat;
 	ServerConnection_SendPosition = SPConnection_SendPosition;
 	ServerConnection_SendPlayerClick = SPConnection_SendPlayerClick;
@@ -295,16 +295,21 @@ void ServerConnection_InitSingleplayer(void) {
 *--------------------------------------------------Multiplayer connection-------------------------------------------------*
 *#########################################################################################################################*/
 void* net_socket;
-DateTime net_lastPacket;
-UInt8 net_lastOpcode;
 Stream net_readStream;
 Stream net_writeStream;
 UInt8 net_readBuffer[4096 * 5];
 UInt8 net_writeBuffer[131];
+
 Int32 net_maxHandledPacket;
 bool net_writeFailed;
 Int32 net_ticks;
+DateTime net_lastPacket;
+UInt8 net_lastOpcode;
 Real64 net_discAccumulator;
+
+bool net_connecting;
+Int64 net_connectTimeout;
+#define NET_TIMEOUT_MS (15 * 1000)
 
 static void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlock, BlockID block) {
 	Vector3I p = coords;
@@ -318,26 +323,9 @@ static void MPConnection_BlockChanged(void* obj, Vector3I coords, BlockID oldBlo
 }
 
 static void ServerConnection_Free(void);
-static void MPConnection_Connect(STRING_PURE String* ip, Int32 port) {
-	Platform_SocketCreate(&net_socket);
-	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
-	ServerConnection_Disconnected = false;
-
-	ReturnCode result = Platform_SocketConnect(net_socket, &Game_IPAddress, Game_Port);
-	if (result != 0) {
-		UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
-		String msg = String_InitAndClearArray(msgBuffer);
-		String_Format3(&msg, "Error connecting to %s:%i: %i", ip, &port, &result);
-		ErrorHandler_Log(&msg);
-
-		String_Clear(&msg);
-		String_Format2(&msg, "Failed to connect to %s:%i", ip, &port);
-		String reason = String_FromConst("You failed to connect to the server. It's probably down!");
-		Game_Disconnect(&msg, &reason);
-
-		ServerConnection_Free();
-		return;
-	}
+static void MPConnection_FinishConnect(void) {
+	net_connecting = false;
+	Event_RaiseReal(&WorldEvents_Loading, 0.0f);
 
 	String streamName = String_FromConst("network socket");
 	Stream_ReadonlyMemory(&net_readStream, net_readBuffer, sizeof(net_readBuffer), &streamName);
@@ -352,8 +340,63 @@ static void MPConnection_Connect(STRING_PURE String* ip, Int32 port) {
 	Platform_CurrentUTCTime(&net_lastPacket);
 }
 
+static void MPConnection_FailConnect(ReturnCode result) {
+	net_connecting = false;
+	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+	String msg = String_InitAndClearArray(msgBuffer);
+
+	if (result != 0) {
+		String_Format3(&msg, "Error connecting to %s:%i: %i", &Game_IPAddress, &Game_Port, &result);
+		ErrorHandler_Log(&msg);
+		String_Clear(&msg);
+	}
+
+	String_Format2(&msg, "Failed to connect to %s:%i", &Game_IPAddress, &Game_Port);
+	String reason = String_FromConst("You failed to connect to the server. It's probably down!");
+	Game_Disconnect(&msg, &reason);
+
+	ServerConnection_Free();
+}
+
+static void MPConnection_TickConnect(void) {
+	DateTime now; Platform_CurrentUTCTime(&now);
+	Int64 nowMS = DateTime_TotalMs(&now);
+
+	bool poll_success = false;
+	ReturnCode result = Platform_SocketSelect(net_socket, false, &poll_success);
+
+	if (result != 0) {
+		MPConnection_FailConnect(result); 
+	} else if (poll_success) {
+		Platform_SocketSetBlocking(net_socket, true);
+		MPConnection_FinishConnect();
+	} else if (nowMS > net_connectTimeout) {
+		MPConnection_FailConnect(0);
+	} else {
+		Int64 leftMS = net_connectTimeout - nowMS;
+		Event_RaiseReal(&WorldEvents_Loading, (Real32)leftMS / NET_TIMEOUT_MS);
+	}
+}
+
+static void MPConnection_BeginConnect(void) {
+	Platform_SocketCreate(&net_socket);
+	Event_RegisterBlock(&UserEvents_BlockChanged, NULL, MPConnection_BlockChanged);
+	ServerConnection_Disconnected = false;
+
+	Platform_SocketSetBlocking(net_socket, false);
+	net_connecting = true;
+	DateTime now; Platform_CurrentUTCTime(&now);
+	net_connectTimeout = DateTime_TotalMs(&now) + NET_TIMEOUT_MS;
+
+	ReturnCode result = Platform_SocketConnect(net_socket, &Game_IPAddress, Game_Port);
+	if (result == 0) return;
+	if (result != ReturnCode_SocketInProgess && result != ReturnCode_SocketWouldBlock) {
+		MPConnection_FailConnect(result);
+	}
+}
+
 static void MPConnection_SendChat(STRING_PURE String* text) {
-	if (text->length == 0) return;
+	if (text->length == 0 || net_connecting) return;
 	String remaining = *text;
 
 	while (remaining.length > STRING_SIZE) {
@@ -382,11 +425,11 @@ static void MPConnection_CheckDisconnection(Real64 delta) {
 	if (net_discAccumulator < 1.0) return;
 	net_discAccumulator = 0.0;
 
-	UInt32 available = 0; bool selected = false;
+	UInt32 available = 0; bool poll_success = false;
 	ReturnCode availResult  = Platform_SocketAvailable(net_socket, &available);
-	ReturnCode selectResult = Platform_SocketSelectRead(net_socket, 1000, &selected);
+	ReturnCode selectResult = Platform_SocketSelect(net_socket, true, &poll_success);
 
-	if (net_writeFailed || availResult != 0 || selectResult != 0 || (selected && available == 0)) {
+	if (net_writeFailed || availResult != 0 || selectResult != 0 || (available == 0 && poll_success)) {
 		String title  = String_FromConst("Disconnected!");
 		String reason = String_FromConst("You've lost connection to the server");
 		Game_Disconnect(&title, &reason);
@@ -395,6 +438,8 @@ static void MPConnection_CheckDisconnection(Real64 delta) {
 
 static void MPConnection_Tick(ScheduledTask* task) {
 	if (ServerConnection_Disconnected) return;
+	if (net_connecting) { MPConnection_TickConnect(); return; }
+
 	DateTime now; Platform_CurrentUTCTime(&now);
 	if (DateTime_MsBetween(&net_lastPacket, &now) >= 30 * 1000) {
 		MPConnection_CheckDisconnection(task->Interval);
@@ -496,7 +541,7 @@ void ServerConnection_InitMultiplayer(void) {
 	ServerConnection_ResetState();
 	ServerConnection_IsSinglePlayer = false;
 
-	ServerConnection_Connect = MPConnection_Connect;
+	ServerConnection_BeginConnect = MPConnection_BeginConnect;
 	ServerConnection_SendChat = MPConnection_SendChat;
 	ServerConnection_SendPosition = MPConnection_SendPosition;
 	ServerConnection_SendPlayerClick = MPConnection_SendPlayerClick;

@@ -68,7 +68,7 @@ extern String ServerConnection_ServerName;
 extern String ServerConnection_ServerMOTD;
 extern String ServerConnection_AppName;
 
-void (*ServerConnection_Connect)(STRING_PURE String* ip, Int32 port);
+void (*ServerConnection_BeginConnect)(void);
 void (*ServerConnection_SendChat)(STRING_PURE String* text);
 void (*ServerConnection_SendPosition)(Vector3 pos, Real32 rotY, Real32 headX);
 void (*ServerConnection_SendPlayerClick)(MouseButton button, bool isDown, EntityID targetId, PickedPos* pos);

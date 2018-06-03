@@ -95,11 +95,11 @@ namespace ClassicalSharp.Network.Protocols {
 			game.WorldEvents.RaiseOnNewMap();
 			
 			prevScreen = game.Gui.activeScreen;
-			if (prevScreen is LoadingMapScreen)
+			if (prevScreen is LoadingScreen)
 				prevScreen = null;
 			prevCursorVisible = game.CursorVisible;
 			
-			game.Gui.SetNewScreen(new LoadingMapScreen(game, net.ServerName, net.ServerMotd), false);
+			game.Gui.SetNewScreen(new LoadingScreen(game, net.ServerName, net.ServerMotd), false);
 			net.wom.CheckMotd();
 			receivedFirstPosition = false;
 			gzipHeader = new GZipHeaderReader();
@@ -171,7 +171,7 @@ namespace ClassicalSharp.Network.Protocols {
 			}
 			
 			float progress = map == null ? 0 : (float)mapIndex / map.Length;
-			game.WorldEvents.RaiseMapLoading(progress);
+			game.WorldEvents.RaiseLoading(progress);
 		}
 		
 		void HandleLevelFinalise() {

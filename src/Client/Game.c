@@ -536,7 +536,7 @@ void Game_Load(void) {
 
 	Gui_FreeActive();
 	Gui_SetActive(LoadingScreen_MakeInstance(&loadTitle, &loadMsg));
-	ServerConnection_Connect(&Game_IPAddress, Game_Port);
+	ServerConnection_BeginConnect();
 }
 
 Stopwatch game_frameTimer;

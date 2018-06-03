@@ -10,10 +10,10 @@ using ClassicalSharp.Textures;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public class LoadingMapScreen : Screen {
+	public class LoadingScreen : Screen {
 		
 		readonly Font font;
-		public LoadingMapScreen(Game game, string title, string message) : base(game) {
+		public LoadingScreen(Game game, string title, string message) : base(game) {
 			this.title = title;
 			this.message = message;
 			font = new Font(game.FontName, 16);
@@ -34,7 +34,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.Graphics.Fog = false;
 			ContextRecreated();
 			
-			game.WorldEvents.MapLoading += MapLoading;
+			game.WorldEvents.Loading += Loading;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -63,7 +63,7 @@ namespace ClassicalSharp.Gui.Screens {
 			font.Dispose();
 			ContextLost();
 			
-			game.WorldEvents.MapLoading -= MapLoading;
+			game.WorldEvents.Loading -= Loading;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}
@@ -73,7 +73,7 @@ namespace ClassicalSharp.Gui.Screens {
 			titleWidget.Reposition();
 		}
 		
-		void MapLoading(object sender, MapLoadingEventArgs e) {
+		void Loading(object sender, LoadingEventArgs e) {
 			progress = e.Progress;
 		}
 		
@@ -160,7 +160,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public class GeneratingMapScreen : LoadingMapScreen {
+	public class GeneratingMapScreen : LoadingScreen {
 		
 		string lastState;
 		IMapGenerator gen;
