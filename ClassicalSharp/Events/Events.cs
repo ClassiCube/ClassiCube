@@ -86,11 +86,7 @@ namespace ClassicalSharp.Events {
 		public string Text;
 	}
 	
-	public sealed class ColourCodeEventArgs : EventArgs {
-		
-		/// <summary> ASCII colour code that was changed. </summary>
-		public char Code;
-	}
+	public sealed class ColourCodeEventArgs : EventArgs { public char Code; }
 	
 	public sealed class TextureEventArgs : EventArgs {
 		

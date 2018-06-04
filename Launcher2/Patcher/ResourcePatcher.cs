@@ -50,7 +50,7 @@ namespace Launcher.Patcher {
 				ExtractClassic();
 				ExtractModern();
 				if (pngGuiPatch != null) {
-					using (Bitmap gui = Platform.ReadBmp32Bpp(drawer, pngGuiPatch))
+					using (Bitmap gui = Platform.ReadBmp(drawer, pngGuiPatch))
 						writer.WriteNewImage(gui, "gui.png");
 				}
 				if (patchedTerrain) {
@@ -103,8 +103,8 @@ namespace Launcher.Patcher {
 				if (!existing.Contains(entry.Filename))
 					writer.WriteZipEntry(entry, data);
 			} else if (!existing.Contains("terrain.png")){
-				terrainBmp = Platform.ReadBmp32Bpp(drawer, data);
-				using (Bitmap mask = Platform.ReadBmp32Bpp(drawer, pngTerrainPatch)) {
+				terrainBmp = Platform.ReadBmp(drawer, data);
+				using (Bitmap mask = Platform.ReadBmp(drawer, pngTerrainPatch)) {
 					CopyTile( 0,  0,  3 * 16, 3 * 16, mask, terrainBmp);
 					CopyTile(16,  0,  6 * 16, 3 * 16, mask, terrainBmp);
 					CopyTile(32,  0,  6 * 16, 2 * 16, mask, terrainBmp);
@@ -228,14 +228,14 @@ namespace Launcher.Patcher {
 6 2 0 0 16 32 0";
 		
 		void PatchBlock(byte[] data, int x, int y) {
-			using (Bitmap bmp = Platform.ReadBmp32Bpp(drawer, data)) {
+			using (Bitmap bmp = Platform.ReadBmp(drawer, data)) {
 				CopyTile(0, 0, x * 16, y * 16, bmp, terrainBmp);
 			}
 			patchedTerrain = true;
 		}
 		
 		void PatchAnim(byte[] data) {
-			using (Bitmap bmp = Platform.ReadBmp32Bpp(drawer, data)) {
+			using (Bitmap bmp = Platform.ReadBmp(drawer, data)) {
 				for (int i = 0; i < bmp.Height; i += 16) {
 					CopyTile(0, i, i, 0, bmp, animsBmp);
 				}

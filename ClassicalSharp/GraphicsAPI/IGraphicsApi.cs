@@ -47,13 +47,8 @@ namespace ClassicalSharp.GraphicsAPI {
 		/// <summary> Creates a new native texture with the specified dimensions and using the
 		/// image data encapsulated by the Bitmap instance. </summary>
 		/// <remarks> Note that should make every effort you can to ensure that the dimensions of the bitmap
-		/// are powers of two, because otherwise they will not display properly on certain graphics cards.	<br/>
-		/// This method returns -1 if the input image is not a 32bpp format. </remarks>
+		/// are powers of two, because otherwise they will not display properly on certain graphics cards. </remarks>
 		public int CreateTexture(Bitmap bmp, bool managedPool, bool mipmaps) {
-			if (!Platform.Is32Bpp(bmp)) {
-				throw new ArgumentOutOfRangeException("Bitmap must be 32bpp");
-			}
-			
 			bmpBuffer.SetData(bmp, true, true);
 			return CreateTexture(bmpBuffer, managedPool, mipmaps);
 		}

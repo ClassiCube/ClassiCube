@@ -12,28 +12,19 @@ namespace ClassicalSharp {
 
 	/// <summary> Abstracts away platform specific operations. </summary>
 	public static class Platform {
-	
 		public static string AppDirectory;
 		
-		public static bool ValidBitmap(Bitmap bmp) {
-			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
-			// We can detect this as property access raises an ArgumentException.
-			try {
-				int height = bmp.Height;
-				PixelFormat format = bmp.PixelFormat;
-				// make sure these are not optimised out
-				return height != -1 && format != PixelFormat.Undefined;
-			} catch (ArgumentException) {
-				return false;
-			}
-		}
-		
-		public static Bitmap ReadBmp32Bpp(IDrawer2D drawer, byte[] data) {
-			return ReadBmp32Bpp(drawer, new MemoryStream(data));
+		public static Bitmap ReadBmp(IDrawer2D drawer, byte[] data) {
+			return ReadBmp(drawer, new MemoryStream(data));
 		}
 
-		public static Bitmap ReadBmp32Bpp(IDrawer2D drawer, Stream src) {
-			Bitmap bmp = ReadBmp(src);
+		public static Bitmap ReadBmp(IDrawer2D drawer, Stream src) {
+			#if !ANDROID
+			Bitmap bmp = new Bitmap(src);
+			#else
+			Bitmap bmp = BitmapFactory.DecodeStream(src);
+			#endif
+			
 			if (!ValidBitmap(bmp)) return null;
 			if (!Is32Bpp(bmp)) drawer.ConvertTo32Bpp(ref bmp);
 			return bmp;
@@ -46,14 +37,6 @@ namespace ClassicalSharp {
 			return Bitmap.CreateBitmap(width, height, Bitmap.Config.Argb8888);
 			#endif
 		}
-	
-		public static Bitmap ReadBmp(Stream src) {
-			#if !ANDROID
-			return new Bitmap(src);
-			#else
-			return BitmapFactory.DecodeStream(src);
-			#endif
-		}
 
 		public static void WriteBmp(Bitmap bmp, Stream dst) {
 			#if !ANDROID
@@ -62,7 +45,20 @@ namespace ClassicalSharp {
 			bmp.Compress(Bitmap.CompressFormat.Png, 100, dst);
 			#endif
 		}
-
+				
+		static bool ValidBitmap(Bitmap bmp) {
+			// Mono seems to be returning a bitmap with a native pointer of zero in some weird cases.
+			// We can detect this as property access raises an ArgumentException.
+			try {
+				int height = bmp.Height;
+				PixelFormat format = bmp.PixelFormat;
+				// make sure these are not optimised out
+				return height != -1 && format != PixelFormat.Undefined;
+			} catch (ArgumentException) {
+				return false;
+			}
+		}
+		
 		public static bool Is32Bpp(Bitmap bmp) {
 			#if !ANDROID
 			PixelFormat format = bmp.PixelFormat;
@@ -72,6 +68,7 @@ namespace ClassicalSharp {
 			return config != null && config == Bitmap.Config.Argb8888;
 			#endif
 		}
+		
 		
 		static string FullPath(string relPath) { return Path.Combine(AppDirectory, relPath); }
 		

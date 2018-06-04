@@ -109,7 +109,7 @@ namespace ClassicalSharp.Textures {
 
 		static Bitmap GetBitmap(IDrawer2D drawer, Stream src) {
 			try {
-				return Platform.ReadBmp32Bpp(drawer, src);
+				return Platform.ReadBmp(drawer, src);
 			} catch (ArgumentException ex) {
 				ErrorHandler.LogError("Cache.GetBitmap", ex);
 				return null;

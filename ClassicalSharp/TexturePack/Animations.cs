@@ -39,7 +39,7 @@ namespace ClassicalSharp.Textures {
 		
 		void TextureChanged(object sender, TextureEventArgs e) {
 			if (e.Name == "animations.png" || e.Name == "animation.png") {
-				animBmp = Platform.ReadBmp32Bpp(game.Drawer2D, e.Data);
+				animBmp = Platform.ReadBmp(game.Drawer2D, e.Data);
 				animsBuffer = new FastBitmap(animBmp, true, true);
 			} else if (e.Name == "animations.txt" || e.Name == "animation.txt") {
 				MemoryStream stream = new MemoryStream(e.Data);

@@ -57,14 +57,14 @@ namespace Launcher {
 			if (filename == "default.png") {
 				if (fontPng) return;
 				
-				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer, data);
+				Bitmap bmp = Platform.ReadBmp(Drawer, data);
 				Drawer.SetFontBitmap(bmp);
 				useBitmappedFont = !Options.GetBool(OptionsKey.UseChatFont, false);
 				fontPng = true;
 			} else if (filename == "terrain.png") {
 				if (terrainPng) return;
 				
-				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer, data);
+				Bitmap bmp = Platform.ReadBmp(Drawer, data);
 				MakeClassicTextures(bmp);
 				bmp.Dispose();
 				terrainPng = true;

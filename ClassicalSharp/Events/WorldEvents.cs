@@ -25,17 +25,8 @@ namespace ClassicalSharp.Events {
 		EnvVarEventArgs envArgs = new EnvVarEventArgs();
 	}
 	
-	public sealed class LoadingEventArgs : EventArgs {
-		
-		/// <summary> Percentage of the map that has been fully decompressed, or generated. </summary>
-		public float Progress;
-	}
-	
-	public sealed class EnvVarEventArgs : EventArgs {
-		
-		/// <summary> Map environment variable that was changed. </summary>
-		public EnvVar Var;
-	}
+	public sealed class LoadingEventArgs : EventArgs { public float Progress; }
+	public sealed class EnvVarEventArgs : EventArgs { public EnvVar Var; }
 	
 	public enum EnvVar {
 		SidesBlock,

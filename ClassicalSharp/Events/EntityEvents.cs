@@ -30,8 +30,5 @@ namespace ClassicalSharp.Events {
 		public void RaiseTabEntryRemoved(byte id) { idArgs.Id = id; Raise(TabListEntryRemoved, idArgs); }
 	}
 	
-	public sealed class IdEventArgs : EventArgs {
-		
-		public byte Id;
-	}
+	public sealed class IdEventArgs : EventArgs { public byte Id; }
 }

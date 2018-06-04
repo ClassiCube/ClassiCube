@@ -268,7 +268,7 @@ namespace ClassicalSharp.Network {
 		object DownloadContent(Request request, HttpWebResponse response) {
 			if (request.Type == RequestType.Bitmap) {
 				MemoryStream data = DownloadBytes(response);
-				Bitmap bmp = Platform.ReadBmp32Bpp(drawer, data);
+				Bitmap bmp = Platform.ReadBmp(drawer, data);
 				
 				if (bmp == null) {
 					Utils.LogDebug("Failed to download from: " + request.Url);

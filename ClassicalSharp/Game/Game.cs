@@ -152,7 +152,7 @@ namespace ClassicalSharp {
 		/// <summary> Reads a bitmap from the stream (converting it to 32 bits per pixel if necessary),
 		/// and updates the native texture for it. </summary>
 		public bool UpdateTexture(ref int texId, string file, byte[] data, bool setSkinType) {
-			using (Bitmap bmp = Platform.ReadBmp32Bpp(Drawer2D, data)) {
+			using (Bitmap bmp = Platform.ReadBmp(Drawer2D, data)) {
 				if (!ValidateBitmap(file, bmp)) return false;
 				
 				Graphics.DeleteTexture(ref texId);
@@ -230,11 +230,11 @@ namespace ClassicalSharp {
 		
 		void TextureChangedCore(object sender, TextureEventArgs e) {
 			if (e.Name == "terrain.png") {
-				Bitmap atlas = Platform.ReadBmp32Bpp(Drawer2D, e.Data);
+				Bitmap atlas = Platform.ReadBmp(Drawer2D, e.Data);
 				if (ChangeTerrainAtlas(atlas)) return;
 				atlas.Dispose();
 			} else if (e.Name == "default.png") {
-				Bitmap bmp = Platform.ReadBmp32Bpp(Drawer2D, e.Data);
+				Bitmap bmp = Platform.ReadBmp(Drawer2D, e.Data);
 				Drawer2D.SetFontBitmap(bmp);
 				Events.RaiseChatFontChanged();
 			}
