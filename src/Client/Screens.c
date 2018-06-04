@@ -19,7 +19,7 @@
 #include "AsyncDownloader.h"
 #include "Block.h"
 #include "Menus.h"
-
+#include "World.h"
 
 typedef struct InventoryScreen_ {
 	Screen_Layout
@@ -58,10 +58,10 @@ typedef struct LoadingScreen_ {
 	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
 } LoadingScreen;
 
-typedef struct GeneratingMapScreen_ {
+typedef struct GeneratingScreen_ {
 	LoadingScreen Base;
 	const UInt8* LastState;
-} GeneratingMapScreen;
+} GeneratingScreen;
 
 #define CHATSCREEN_MAX_STATUS 5
 #define CHATSCREEN_MAX_GROUP 3
@@ -624,12 +624,51 @@ extern Screen* LoadingScreen_UNSAFE_RawPointer = (Screen*)&LoadingScreen_Instanc
 /*########################################################################################################################*
 *--------------------------------------------------GeneratingMapScreen----------------------------------------------------*
 *#########################################################################################################################*/
-GuiElementVTABLE GeneratingMapScreen_VTABLE;
-GeneratingMapScreen GeneratingMapScreen_Instance;
+GuiElementVTABLE GeneratingScreen_VTABLE;
+GeneratingScreen GeneratingScreen_Instance;
+static void GeneratingScreen_Init(GuiElement* elem) {
+	World_Reset();
+	Event_RaiseVoid(&WorldEvents_NewMap);
+	Gen_Done = false;
+	LoadingScreen_Init(elem);
+
+	void* threadHandle;
+	if (Gen_Vanilla) {
+		threadHandle = Platform_ThreadStart(&NotchyGen_Generate);
+	} else {
+		threadHandle = Platform_ThreadStart(&FlatgrassGen_Generate);
+	}
+	/* don't leak thread handle here */
+	Platform_ThreadFreeHandle(threadHandle);
+}
+
+static void GeneratingScreen_EndGeneration(void) {
+	Gui_ReplaceActive(NULL);
+	Gen_Done = false;
+
+	if (Gen_Blocks == NULL) {
+		Chat_AddRaw(tmpStr, "&cFailed to generate the map.");
+		return;
+	}
+
+	World_BlocksSize = Gen_Width * Gen_Height * Gen_Length;
+	World_SetNewMap(Gen_Blocks, World_BlocksSize, Gen_Width, Gen_Height, Gen_Length);
+	Gen_Blocks = NULL;
+
+	LocalPlayer* p = &LocalPlayer_Instance;
+	Real32 x = (World_Width / 2) + 0.5f, z = (World_Length / 2) + 0.5f;
+	p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
+
+	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
+	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+	Game_CurrentCameraPos = Camera_Active->GetCameraPos(0.0f);
+	Event_RaiseVoid(&WorldEvents_MapLoaded);
+}
+
 static void GeneratingScreen_Render(GuiElement* elem, Real64 delta) {
-	GeneratingMapScreen* screen = (GeneratingMapScreen*)elem;
+	GeneratingScreen* screen = (GeneratingScreen*)elem;
 	LoadingScreen_Render(elem, delta);
-	if (Gen_Done) { ServerConnection_EndGeneration(); return; }
+	if (Gen_Done) { GeneratingScreen_EndGeneration(); return; }
 
 	const volatile UInt8* state = Gen_CurrentState;
 	screen->Base.Progress = Gen_CurrentProgress;
@@ -641,11 +680,12 @@ static void GeneratingScreen_Render(GuiElement* elem, Real64 delta) {
 }
 
 Screen* GeneratingScreen_MakeInstance(void) {
-	GeneratingMapScreen* screen = &GeneratingMapScreen_Instance;
+	GeneratingScreen* screen = &GeneratingScreen_Instance;
 	String title   = String_FromConst("Generating level");
 	String message = String_FromConst("Generating..");
-	LoadingScreen_Make(&screen->Base, &GeneratingMapScreen_VTABLE, &title, &message);
+	LoadingScreen_Make(&screen->Base, &GeneratingScreen_VTABLE, &title, &message);
 
+	screen->Base.VTABLE->Init   = GeneratingScreen_Init;
 	screen->Base.VTABLE->Render = GeneratingScreen_Render;
 	screen->LastState = NULL;
 	return (Screen*)screen;

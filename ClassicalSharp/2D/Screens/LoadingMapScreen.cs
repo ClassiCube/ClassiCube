@@ -1,12 +1,14 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Drawing;
+using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
 using ClassicalSharp.Generator;
 using ClassicalSharp.GraphicsAPI;
 using ClassicalSharp.Gui.Widgets;
 using ClassicalSharp.Model;
 using ClassicalSharp.Textures;
+using OpenTK;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
@@ -168,9 +170,18 @@ namespace ClassicalSharp.Gui.Screens {
 			this.gen = gen;
 		}
 		
+		public override void Init() {
+			game.World.Reset();
+			game.WorldEvents.RaiseOnNewMap();
+			GC.Collect();
+			
+			base.Init();
+			gen.GenerateAsync(game);
+		}
+		
 		public override void Render(double delta) {
 			base.Render(delta);
-			if (gen.Done) { game.Server.EndGeneration(); return; }
+			if (gen.Done) { EndGeneration(); return; }
 			
 			string state = gen.CurrentState;
 			SetProgress(gen.CurrentProgress);
@@ -178,6 +189,34 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			lastState = state;
 			SetMessage(state);
+		}
+		
+		void EndGeneration() {
+			game.Gui.SetNewScreen(null);
+			if (gen.Blocks == null) {
+				game.Chat.Add("&cFailed to generate the map.");
+			} else {
+				game.World.SetNewMap(gen.Blocks, gen.Width, gen.Height, gen.Length);
+				gen.Blocks = null;
+				ResetPlayerPosition();
+				
+				game.WorldEvents.RaiseOnNewMapLoaded();
+				gen.ApplyEnv(game.World);
+			}
+			
+			gen = null;
+			GC.Collect();
+		}
+		
+		void ResetPlayerPosition() {
+			float x = (game.World.Width  / 2) + 0.5f;
+			float z = (game.World.Length / 2) + 0.5f;
+			Vector3 spawn = Respawn.FindSpawnPosition(game, x, z, game.LocalPlayer.Size);
+			
+			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, 0, 0, false);
+			game.LocalPlayer.SetLocation(update, false);
+			game.LocalPlayer.Spawn = spawn;
+			game.CurrentCameraPos = game.Camera.GetCameraPos(0);
 		}
 	}
 }

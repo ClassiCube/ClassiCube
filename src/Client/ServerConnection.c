@@ -102,47 +102,6 @@ void ServerConnection_CheckAsyncResources(void) {
 	}
 }
 
-void ServerConnection_BeginGeneration(Int32 width, Int32 height, Int32 length, Int32 seed, bool vanilla) {
-	World_Reset();
-	Event_RaiseVoid(&WorldEvents_NewMap);
-	Gen_Done = false;
-
-	Gui_FreeActive();
-	Gui_SetActive(GeneratingScreen_MakeInstance());
-	Gen_Width = width; Gen_Height = height; Gen_Length = length; Gen_Seed = seed;
-
-	void* threadHandle;
-	if (vanilla) {
-		threadHandle = Platform_ThreadStart(&NotchyGen_Generate);
-	} else {
-		threadHandle = Platform_ThreadStart(&FlatgrassGen_Generate);
-	}
-	/* don't leak thread handle here */
-	Platform_ThreadFreeHandle(threadHandle);
-}
-
-void ServerConnection_EndGeneration(void) {
-	Gui_ReplaceActive(NULL);
-	Gen_Done = false;
-
-	if (Gen_Blocks == NULL) {
-		String m = String_FromConst("&cFailed to generate the map."); Chat_Add(&m);
-	} else {
-		World_BlocksSize = Gen_Width * Gen_Height * Gen_Length;
-		World_SetNewMap(Gen_Blocks, World_BlocksSize, Gen_Width, Gen_Height, Gen_Length);
-		Gen_Blocks = NULL;
-
-		LocalPlayer* p = &LocalPlayer_Instance;
-		Real32 x = (World_Width / 2) + 0.5f, z = (World_Length / 2) + 0.5f;
-		p->Spawn = Respawn_FindSpawnPosition(x, z, p->Base.Size);
-
-		LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, 0.0f, 0.0f, false);
-		p->Base.VTABLE->SetLocation(&p->Base, &update, false);
-		Game_CurrentCameraPos = Camera_Active->GetCameraPos(0.0f);
-		Event_RaiseVoid(&WorldEvents_MapLoaded);
-	}
-}
-
 
 /*########################################################################################################################*
 *--------------------------------------------------------PingList---------------------------------------------------------*
@@ -217,12 +176,12 @@ static void SPConnection_BeginConnect(void) {
 		Block_CanPlace[i]  = true;
 		Block_CanDelete[i] = true;
 	}
-
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
-	
+
 	Random rnd; Random_InitFromCurrentTime(&rnd);
-	Int32 seed = Random_Next(&rnd, Int32_MaxValue);
-	ServerConnection_BeginGeneration(128, 64, 128, seed, true);
+	Get_SetDimensions(128, 64, 128); Gen_Vanilla = true;
+	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
+	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 }
 
 UInt8 SPConnection_LastCol = NULL;

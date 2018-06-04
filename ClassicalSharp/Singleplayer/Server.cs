@@ -30,11 +30,14 @@ namespace ClassicalSharp.Singleplayer {
 			for (int i = 1; i <= max; i++) {
 				BlockInfo.CanPlace[i] = true;
 				BlockInfo.CanDelete[i] = true;
-			}
-			
+			}	
 			game.Events.RaiseBlockPermissionsChanged();
-			int seed = new Random().Next();
-			BeginGeneration(128, 64, 128, seed, new NotchyGenerator());
+			
+			NotchyGenerator gen = new NotchyGenerator();
+			gen.Width = 128; gen.Height = 64; gen.Length = 128;
+			gen.Seed = new Random().Next();
+			
+			game.Gui.SetNewScreen(new GeneratingMapScreen(game, gen));
 		}
 		
 		char lastCol = '\0';

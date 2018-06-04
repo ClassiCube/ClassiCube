@@ -61,14 +61,12 @@ namespace ClassicalSharp {
 		
 		/// <summary> Whether the server supports receiving all code page 437 characters from this client. </summary>
 		public bool SupportsFullCP437;
-		
-		
-		#region Texture pack / terrain.png
+
 
 		protected Game game;
 		protected int netTicks;
 		
-		protected internal void RetrieveTexturePack(string url) {
+		internal void RetrieveTexturePack(string url) {
 			if (TextureCache.HasDenied(url)) {
 				// nothing to do here
 			} else if (!TextureCache.HasAccepted(url)) {
@@ -127,47 +125,6 @@ namespace ClassicalSharp {
 			} else {
 				game.Chat.Add("&c" + ex.Status + " when trying to download texture pack");
 			}
-		}
-		#endregion
-		
-		IMapGenerator gen;
-		internal void BeginGeneration(int width, int height, int length, int seed, IMapGenerator gen) {
-			game.World.Reset();
-			game.WorldEvents.RaiseOnNewMap();
-			
-			GC.Collect();
-			this.gen = gen;
-			game.Gui.SetNewScreen(new GeneratingMapScreen(game, gen));
-			gen.Width = width; gen.Height = height; gen.Length = length; gen.Seed = seed;
-			gen.GenerateAsync(game);
-		}
-		
-		internal void EndGeneration() {
-			game.Gui.SetNewScreen(null);
-			if (gen.Blocks == null) {
-				game.Chat.Add("&cFailed to generate the map.");
-			} else {
-				game.World.SetNewMap(gen.Blocks, gen.Width, gen.Height, gen.Length);
-				gen.Blocks = null;
-				ResetPlayerPosition();
-				
-				game.WorldEvents.RaiseOnNewMapLoaded();
-				gen.ApplyEnv(game.World);
-			}
-			
-			gen = null;
-			GC.Collect();
-		}
-
-		void ResetPlayerPosition() {
-			float x = (game.World.Width  / 2) + 0.5f;
-			float z = (game.World.Length / 2) + 0.5f;
-			Vector3 spawn = Respawn.FindSpawnPosition(game, x, z, game.LocalPlayer.Size);
-			
-			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, 0, 0, false);
-			game.LocalPlayer.SetLocation(update, false);
-			game.LocalPlayer.Spawn = spawn;
-			game.CurrentCameraPos = game.Camera.GetCameraPos(0);
 		}
 	}
 }

@@ -1102,7 +1102,9 @@ static void GenLevelScreen_Gen(GenLevelScreen* screen, bool vanilla) {
 		String msg = String_FromConst("&cOne of the map dimensions is invalid.");
 		Chat_Add(&msg);
 	} else {
-		ServerConnection_BeginGeneration(width, height, length, seed, vanilla);
+		Get_SetDimensions(width, height, length); 
+		Gen_Vanilla = vanilla; Gen_Seed = seed;
+		Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 	}
 }
 
@@ -1239,8 +1241,9 @@ GuiElementVTABLE ClassicGenScreen_VTABLE;
 ClassicGenScreen ClassicGenScreen_Instance;
 static void ClassicGenScreen_Gen(Int32 size) {
 	Random rnd; Random_InitFromCurrentTime(&rnd);
-	Int32 seed = Random_Next(&rnd, Int32_MaxValue);
-	ServerConnection_BeginGeneration(size, 64, size, seed, true);
+	Get_SetDimensions(size, 64, size); Gen_Vanilla = true;
+	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);
+	Gui_ReplaceActive(GeneratingScreen_MakeInstance());
 }
 
 static void ClassicGenScreen_Small(GuiElement* a, GuiElement* b)  { ClassicGenScreen_Gen(128); }
@@ -1572,25 +1575,17 @@ Screen* HotkeyListScreen_MakeInstance(void) {
 *----------------------------------------------------LoadLevelScreen------------------------------------------------------*
 *#########################################################################################################################*/
 static void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj) {
-	String cw  = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
+	String cw = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
 	String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
 
-	if (!(String_CaselessEnds(filename, &cw) || String_CaselessEnds(filename, &lvl) 
+	if (!(String_CaselessEnds(filename, &cw) || String_CaselessEnds(filename, &lvl)
 		|| String_CaselessEnds(filename, &fcm) || String_CaselessEnds(filename, &dat))) return;
 
 	StringsBuffer* entries = (StringsBuffer*)obj;
 	StringsBuffer_Add(entries, filename);
 }
 
-static void LoadLevelScreen_EntryClick(GuiElement* elem, GuiElement* w) {
-	ListScreen* screen = (ListScreen*)elem;
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
-	String path = String_InitAndClearArray(pathBuffer);
-	
-	String filename = ListScreen_UNSAFE_GetCur(screen, w);
-	String_Format2(&path, "maps%r%s", &Platform_DirectorySeparator, &filename);
-	if (!Platform_FileExists(&path)) return;
-
+static void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 
@@ -1598,23 +1593,24 @@ static void LoadLevelScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 		TexturePack_ExtractDefault();
 		String_Clear(&World_TextureUrl);
 	}
+
 	Block_Reset();
 	Inventory_SetDefaultMapping();
 
 	void* file;
-	ReturnCode result = Platform_FileOpen(&file, &path);
+	ReturnCode result = Platform_FileOpen(&file, path);
 	ErrorHandler_CheckOrFail(result, "Loading map - open file");
-	Stream stream; Stream_FromFile(&stream, file, &path);
+	Stream stream; Stream_FromFile(&stream, file, path);
 	{
-		String cw = String_FromConst(".cw");  String lvl = String_FromConst(".lvl");
+		String cw = String_FromConst(".cw");   String lvl = String_FromConst(".lvl");
 		String fcm = String_FromConst(".fcm"); String dat = String_FromConst(".dat");
-		if (String_CaselessEnds(&path, &dat)) {
+		if (String_CaselessEnds(path, &dat)) {
 			Dat_Load(&stream);
-		} else if (String_CaselessEnds(&path, &fcm)) {
+		} else if (String_CaselessEnds(path, &fcm)) {
 			Fcm_Load(&stream);
-		} else if (String_CaselessEnds(&path, &cw)) {
+		} else if (String_CaselessEnds(path, &cw)) {
 			Cw_Load(&stream);
-		} else if (String_CaselessEnds(&path, &lvl)) {
+		} else if (String_CaselessEnds(path, &lvl)) {
 			Lvl_Load(&stream);
 		}
 	}
@@ -1630,6 +1626,17 @@ static void LoadLevelScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	LocalPlayer* p = &LocalPlayer_Instance;
 	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);
 	p->Base.VTABLE->SetLocation(&p->Base, &update, false);
+}
+
+static void LoadLevelScreen_EntryClick(GuiElement* elem, GuiElement* w) {
+	ListScreen* screen = (ListScreen*)elem;
+	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	String path = String_InitAndClearArray(pathBuffer);
+
+	String filename = ListScreen_UNSAFE_GetCur(screen, w);
+	String_Format2(&path, "maps%r%s", &Platform_DirectorySeparator, &filename);
+	if (!Platform_FileExists(&path)) return;
+	LoadLevelScreen_LoadMap(&path);
 }
 
 Screen* LoadLevelScreen_MakeInstance(void) {

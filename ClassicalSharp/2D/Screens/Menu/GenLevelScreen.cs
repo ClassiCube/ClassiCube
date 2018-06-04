@@ -8,7 +8,7 @@ using ClassicalSharp.Singleplayer;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public sealed class GenLevelScreen : MenuScreen {		
+	public sealed class GenLevelScreen : MenuScreen {
 		public GenLevelScreen(Game game) : base(game) { }
 
 		MenuInputWidget selected;
@@ -39,9 +39,9 @@ namespace ClassicalSharp.Gui.Screens {
 				MakeInput(0, false, game.World.Length.ToString()),
 				MakeInput(40, true, ""),
 				
-				MakeLabel(-150, -80, "Width:"), 
+				MakeLabel(-150, -80, "Width:"),
 				MakeLabel(-150, -40, "Height:"),
-				MakeLabel(-150, 0, "Length:"), 
+				MakeLabel(-150, 0, "Length:"),
 				MakeLabel(-140, 40, "Seed:"),
 				TextWidget.Create(game, "Generate new level", textFont)
 					.SetLocation(Anchor.Centre, Anchor.Centre, 0, -130),
@@ -104,7 +104,8 @@ namespace ClassicalSharp.Gui.Screens {
 			} else if (width == 0 || height == 0 || length == 0) {
 				game.Chat.Add("&cOne of the map dimensions is invalid.");
 			} else {
-				game.Server.BeginGeneration(width, height, length, seed, gen);
+				gen.Width = width; gen.Height = height; gen.Length = length; gen.Seed = seed;
+				game.Gui.SetNewScreen(new GeneratingMapScreen(game, gen));
 			}
 		}
 		
@@ -126,7 +127,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class ClassicGenLevelScreen : MenuScreen {	
+	public sealed class ClassicGenLevelScreen : MenuScreen {
 		public ClassicGenLevelScreen(Game game) : base(game) { }
 		
 		public override void Init() {
@@ -148,14 +149,16 @@ namespace ClassicalSharp.Gui.Screens {
 				.SetLocation(Anchor.Centre, Anchor.Centre, 0, y);
 		}
 		
-		void GenSmallClick(Game game, Widget widget) { DoGen(128); }		
+		void GenSmallClick(Game game, Widget widget) { DoGen(128); }
 		void GenMediumClick(Game game, Widget widget) { DoGen(256); }
 		void GenHugeClick(Game game, Widget widget) { DoGen(512); }
 		
 		void DoGen(int size) {
-			int seed = new Random().Next();
 			IMapGenerator gen = new NotchyGenerator();
-			game.Server.BeginGeneration(size, 64, size, seed, gen);
+			gen.Width = size; gen.Height = 64; gen.Length = size;
+			gen.Seed = new Random().Next();
+			
+			game.Gui.SetNewScreen(new GeneratingMapScreen(game, gen));
 		}
 	}
 }
