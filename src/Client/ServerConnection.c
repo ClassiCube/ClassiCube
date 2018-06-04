@@ -178,6 +178,14 @@ static void SPConnection_BeginConnect(void) {
 	}
 	Event_RaiseVoid(&BlockEvents_PermissionsChanged);
 
+	/* For when user drops a map file onto ClassicalSharp.exe */
+	String path = Game_Username;
+	if (String_IndexOf(&path, Platform_DirectorySeparator, 0) >= 0 && Platform_FileExists(&path)) {
+		LoadLevelScreen_LoadMap(&path);
+		Gui_ReplaceActive(NULL);
+		return;
+	}
+
 	Random rnd; Random_InitFromCurrentTime(&rnd);
 	Get_SetDimensions(128, 64, 128); Gen_Vanilla = true;
 	Gen_Seed = Random_Next(&rnd, Int32_MaxValue);

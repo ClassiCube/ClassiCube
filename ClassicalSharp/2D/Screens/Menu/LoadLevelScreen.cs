@@ -37,10 +37,10 @@ namespace ClassicalSharp.Gui.Screens {
 		protected override void TextButtonClick(Game game, Widget widget) {
 			string path = Path.Combine("maps", GetCur(widget));			
 			if (!Platform.FileExists(path)) return;
-			LoadMap(path);
+			LoadMap(game, path);
 		}
 		
-		void LoadMap(string path) {	
+		internal static void LoadMap(Game game, string path) {	
 			game.World.Reset();
 			game.WorldEvents.RaiseOnNewMap();
 			
@@ -66,7 +66,6 @@ namespace ClassicalSharp.Gui.Screens {
 					} else if (path.EndsWith(".lvl")) {
 						importer = new MapLvlImporter();
 					}
-					
 					blocks = importer.Load(fs, game, out width, out height, out length);
 				}
 			} catch (Exception ex) {
@@ -77,9 +76,6 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			game.World.SetNewMap(blocks, width, height, length);
 			game.WorldEvents.RaiseOnNewMapLoaded();
-			if (game.AllowServerTextures && game.World.TextureUrl != null) {
-				game.Server.RetrieveTexturePack(game.World.TextureUrl);
-			}
 			
 			LocalPlayer p = game.LocalPlayer;
 			LocationUpdate update = LocationUpdate.MakePosAndOri(p.Spawn, p.SpawnRotY, p.SpawnHeadX, false);

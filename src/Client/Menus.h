@@ -19,6 +19,7 @@ Screen* MouseKeyBindingsScreen_MakeInstance(void);
 
 Screen* GenLevelScreen_MakeInstance(void);
 Screen* ClassicGenScreen_MakeInstance(void);
+void LoadLevelScreen_LoadMap(STRING_PURE String* path);
 Screen* LoadLevelScreen_MakeInstance(void);
 Screen* SaveLevelScreen_MakeInstance(void);
 Screen* TexturePackScreen_MakeInstance(void);

@@ -1585,7 +1585,7 @@ static void LoadLevelScreen_SelectEntry(STRING_PURE String* filename, void* obj)
 	StringsBuffer_Add(entries, filename);
 }
 
-static void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
+void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 	World_Reset();
 	Event_RaiseVoid(&WorldEvents_NewMap);
 
@@ -1619,9 +1619,6 @@ static void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 
 	World_SetNewMap(World_Blocks, World_BlocksSize, World_Width, World_Height, World_Length);
 	Event_RaiseVoid(&WorldEvents_MapLoaded);
-	if (Game_AllowServerTextures && World_TextureUrl.length > 0) {
-		ServerConnection_RetrieveTexturePack(&World_TextureUrl);
-	}
 
 	LocalPlayer* p = &LocalPlayer_Instance;
 	LocationUpdate update; LocationUpdate_MakePosAndOri(&update, p->Spawn, p->SpawnRotY, p->SpawnHeadX, false);

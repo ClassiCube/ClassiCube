@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 //#define TEST_VANILLA
 using System;
+using System.IO;
 using System.Net;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Generator;
@@ -30,8 +31,16 @@ namespace ClassicalSharp.Singleplayer {
 			for (int i = 1; i <= max; i++) {
 				BlockInfo.CanPlace[i] = true;
 				BlockInfo.CanDelete[i] = true;
-			}	
+			}
 			game.Events.RaiseBlockPermissionsChanged();
+			
+			// For when user drops a map file onto ClassicalSharp.exe
+			string path = game.Username;
+			if (path.IndexOf(Path.DirectorySeparatorChar) >= 0 && File.Exists(path)) {
+				LoadLevelScreen.LoadMap(game, path);
+				game.Gui.SetNewScreen(null);
+				return;
+			}
 			
 			NotchyGenerator gen = new NotchyGenerator();
 			gen.Width = 128; gen.Height = 64; gen.Length = 128;
@@ -81,7 +90,7 @@ namespace ClassicalSharp.Singleplayer {
 				physics.Tick();
 				CheckAsyncResources();
 			}
-			netTicks++;			
+			netTicks++;
 		}
 	}
 }
