@@ -21,7 +21,6 @@ HWND win_Handle;
 HDC win_DC;
 UInt8 win_State = WINDOW_STATE_NORMAL;
 bool win_Exists, win_Focused;
-bool mouse_outside_window = true;
 bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
 Int32 suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
 
@@ -95,17 +94,6 @@ static void Window_SetHiddenBorder(bool hidden) {
 	Window_DoSetHiddenBorder(hidden);
 	Window_ProcessEvents();
 	suppress_resize--;
-}
-
-static void Window_EnableMouseTracking(void) {
-	TRACKMOUSEEVENT me = { 0 };
-	me.cbSize = sizeof(TRACKMOUSEEVENT);
-	me.hwndTrack = win_Handle;
-	me.dwFlags = TME_LEAVE;
-
-	if (!TrackMouseEvent(&me)) {
-		ErrorHandler_FailWithCode(GetLastError(), "Enabling mouse tracking");
-	}
 }
 
 static Key Window_MapKey(WPARAM key) {
@@ -270,27 +258,15 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 		break;
 
 	case WM_MOUSEMOVE:
+		/* set before position change, in case mouse buttons changed when outside window */
+		Mouse_SetPressed(MouseButton_Left,   wParam & 0x01);
+		Mouse_SetPressed(MouseButton_Right,  wParam & 0x02);
+		Mouse_SetPressed(MouseButton_Middle, wParam & 0x10);
+		/* TODO: do we need to set XBUTTON1 / XBUTTON 2 here */
+
 		mouse_x = LOWORD(lParam);
 		mouse_y = HIWORD(lParam);
 		Mouse_SetPosition(mouse_x, mouse_y);
-
-		if (mouse_outside_window) {
-			/* Once we receive a mouse move event, it means that the mouse has re-entered the window. */
-			mouse_outside_window = false;
-			Window_EnableMouseTracking();
-			Event_RaiseVoid(&WindowEvents_MouseEnter);
-		}
-		break;
-
-	case WM_MOUSELEAVE:
-		mouse_outside_window = true;
-		/* Mouse tracking is disabled automatically by the OS */
-		Event_RaiseVoid(&WindowEvents_MouseLeave);
-
-		/* Set all mouse buttons to off when user leaves window, prevents them being stuck down. */
-		for (btn = 0; btn < MouseButton_Count; btn++) {
-			Mouse_SetPressed(btn, false);
-		}
 		break;
 
 	case WM_MOUSEWHEEL:

@@ -396,16 +396,6 @@ namespace OpenTK.Platform.X11 {
 								FocusedChanged(this, EventArgs.Empty);
 						} break;
 
-					case XEventName.LeaveNotify:
-						if (MouseLeave != null)
-							MouseLeave(this, EventArgs.Empty);
-						break;
-
-					case XEventName.EnterNotify:
-						if (MouseEnter != null)
-							MouseEnter(this, EventArgs.Empty);
-						break;
-
 					case XEventName.MappingNotify:
 						// 0 == MappingModifier, 1 == MappingKeyboard
 						if (e.MappingEvent.request == 0 || e.MappingEvent.request == 1) {

@@ -152,9 +152,6 @@ namespace OpenTK.Platform.Windows {
 
 		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
 		public static extern IntPtr LoadCursor(IntPtr hInstance, IntPtr lpCursorName);
-		
-		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		public static extern bool TrackMouseEvent(ref TrackMouseEventStructure lpEventTrack);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal static extern bool GetCursorPos(ref POINT point);
@@ -415,15 +412,6 @@ namespace OpenTK.Platform.Windows {
 			rect.bottom = value.Height;
 			return rect;
 		}
-	}
-	
-	struct TrackMouseEventStructure {
-		public int Size;
-		public TrackMouseEventFlags Flags;
-		public IntPtr TrackWindowHandle;
-		public uint HoverTime;
-
-		public static readonly int SizeInBytes = Marshal.SizeOf(typeof(TrackMouseEventStructure));
 	}
 	
 	enum GWL {
@@ -720,15 +708,6 @@ namespace OpenTK.Platform.Windows {
 		VirtualKeyToCharacter = 2,
 		ScanCodeToVirtualKeyExtended = 3,
 		VirtualKeyToScanCodeExtended = 4,
-	}
-	
-	[Flags]
-	enum TrackMouseEventFlags : uint {
-		HOVER = 0x00000001,
-		LEAVE = 0x00000002,
-		NONCLIENT = 0x00000010,
-		QUERY = 0x40000000,
-		CANCEL = 0x80000000,
 	}
 
 	internal delegate IntPtr WindowProcedure(IntPtr handle, WindowMessage message, IntPtr wParam, IntPtr lParam);

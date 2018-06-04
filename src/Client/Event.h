@@ -119,8 +119,6 @@ Event_Void WindowEvents_Closed;             /* Window has closed. */
 Event_Void WindowEvents_VisibilityChanged;  /* Visibility of the window changes. */
 Event_Void WindowEvents_FocusChanged;       /* Focus of the window changes. */
 Event_Void WindowEvents_WindowStateChanged; /* WindowState of the window changes. */
-Event_Void WindowEvents_MouseLeave;         /* Mouse cursor leaves window bounds. */
-Event_Void WindowEvents_MouseEnter;         /* Mouse cursor re-enters window bounds. */
 
 Event_Int KeyEvents_Press; /* Raised when a character is typed. Arg is a character. */
 Event_Int KeyEvents_Down;  /* Raised when a key is pressed. Arg is a member of Key enumeration. */

@@ -49,7 +49,6 @@ namespace OpenTK.Platform.Windows
 		WinWindowInfo window;
 		WindowState windowState = WindowState.Normal;
 		bool focused;
-		bool mouse_outside_window = true;
 		bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
 		int suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
 
@@ -170,31 +169,18 @@ namespace OpenTK.Platform.Windows
 					break;
 
 				case WindowMessage.MOUSEMOVE:
+					// set before position change, in case mouse buttons changed when outside window
+					uint mouse_flags = (uint)wParam.ToInt64();
+					mouse[MouseButton.Left]   = (mouse_flags & 0x01) != 0;
+					mouse[MouseButton.Right]  = (mouse_flags & 0x02) != 0;
+					mouse[MouseButton.Middle] = (mouse_flags & 0x10) != 0;
+					// TODO: do we need to set XBUTTON1 / XBUTTON 2 here
+					
+					uint mouse_xy = (uint)lParam.ToInt32();
 					Point point = new Point(
-						(short)((uint)lParam.ToInt32() & 0x0000FFFF),
-						(short)(((uint)lParam.ToInt32() & 0xFFFF0000) >> 16));
-					mouse.Position = point;
-
-					if (mouse_outside_window) {
-						// Once we receive a mouse move event, it means that the mouse has
-						// re-entered the window.
-						mouse_outside_window = false;
-						EnableMouseTracking();
-
-						if (MouseEnter != null)
-							MouseEnter(this, EventArgs.Empty);
-					}
-					break;
-
-				case WindowMessage.MOUSELEAVE:
-					mouse_outside_window = true;
-					// Mouse tracking is disabled automatically by the OS
-
-					if (MouseLeave != null)
-						MouseLeave(this, EventArgs.Empty);
-					// Set all mouse buttons to off when user leaves window, prevents them being stuck down.
-					for( MouseButton btn = 0; btn < MouseButton.LastButton; btn++ )
-						mouse[btn] = false;
+						(short)(mouse_xy  & 0x0000FFFF),
+						(short)((mouse_xy & 0xFFFF0000) >> 16));
+					mouse.Position = point;					
 					break;
 
 				case WindowMessage.MOUSEWHEEL:
@@ -353,17 +339,6 @@ namespace OpenTK.Platform.Windows
 					#endregion
 			}
 			return API.DefWindowProc(handle, message, wParam, lParam);
-		}
-
-		private void EnableMouseTracking() {
-			TrackMouseEventStructure me = new TrackMouseEventStructure();
-			me.Size = TrackMouseEventStructure.SizeInBytes;
-			me.TrackWindowHandle = window.handle;
-			me.Flags = TrackMouseEventFlags.LEAVE;
-
-			if (!API.TrackMouseEvent(ref me))
-				Debug.Print("[Warning] Failed to enable mouse tracking, error: {0}.",
-				            Marshal.GetLastWin32Error());
 		}
 
 		IntPtr CreateWindow(int x, int y, int width, int height, string title, DisplayDevice device) {
