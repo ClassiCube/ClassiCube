@@ -48,8 +48,7 @@ namespace ClassicalSharp {
 			if (!Platform.FileExists(launcherFile)) return;
 			
 			try {
-				string launcherPath = Path.Combine(Platform.AppDirectory, launcherFile);
-				Icon = Icon.ExtractAssociatedIcon(launcherPath);
+				Icon = Icon.ExtractAssociatedIcon(launcherFile);
 			} catch (Exception ex) {
 				ErrorHandler.LogError("DesktopWindow.LoadIcon()", ex);
 			}

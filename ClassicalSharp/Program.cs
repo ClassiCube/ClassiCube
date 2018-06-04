@@ -14,7 +14,7 @@ namespace ClassicalSharp {
 		#if !LAUNCHER
 		[STAThread]
 		static void Main(string[] args) {
-			Platform.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
 			CleanupMainDirectory();
 			
 			string defPath = Path.Combine("texpacks", "default.zip");

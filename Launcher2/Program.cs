@@ -14,7 +14,7 @@ namespace Launcher {
 		
 		[STAThread]
 		static void Main(string[] args) {
-			Platform.AppDirectory = AppDomain.CurrentDomain.BaseDirectory;
+			Environment.CurrentDirectory = AppDomain.CurrentDomain.BaseDirectory;
 
 			if (!Platform.FileExists("ClassicalSharp.exe")) { 
 				ErrorHandler.ShowDialog("Missing file", "ClassicalSharp.exe needs to be in the same folder as the launcher."); 

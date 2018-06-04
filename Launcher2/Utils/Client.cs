@@ -44,7 +44,7 @@ namespace Launcher {
 		}
 		
 		static void StartProcess(string args) {
-			string path = Path.Combine(Platform.AppDirectory, "ClassicalSharp.exe");
+			string path = Path.Combine(Environment.CurrentDirectory, "ClassicalSharp.exe");
 			if (Configuration.RunningOnMono) {
 				// We also need to handle the case of running Mono through wine
 				if (Configuration.RunningOnWindows) {

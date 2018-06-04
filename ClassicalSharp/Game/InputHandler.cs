@@ -234,7 +234,7 @@ namespace ClassicalSharp {
 				} else {
 					CycleDistanceForwards(viewDists);
 				}
-			} else if ((key == Keys[KeyBind.PauseOrExit] || key == Key.Pause) && game.World.HasBlocks) {
+			} else if ((key == Keys[KeyBind.PauseOrExit] || key == Key.Pause) && !game.Gui.ActiveScreen.HandlesAllInput) {
 				game.Gui.SetNewScreen(new PauseScreen(game));
 			} else if (game.Mode.HandlesKeyDown(key)) {
 			} else if (key == Keys[KeyBind.IDOverlay]) {

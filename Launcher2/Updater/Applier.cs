@@ -16,14 +16,14 @@ namespace Launcher.Updater {
 			ProcessStartInfo info = new ProcessStartInfo();
 			info.CreateNoWindow = false;
 			info.UseShellExecute = true;
-			info.WorkingDirectory = Platform.AppDirectory;
+			info.WorkingDirectory = Environment.CurrentDirectory;
 			
 			if (OpenTK.Configuration.RunningOnWindows) {
 				Platform.WriteAllText("update.bat", Scripts.BatchFile);
 				info.FileName = "cmd"; info.Arguments = "/C start cmd /C update.bat";
 				Process.Start(info);
  			} else {
-				string path = Path.Combine(Platform.AppDirectory, "update.sh");
+				string path = Path.Combine(Environment.CurrentDirectory, "update.sh");
 				Platform.WriteAllText("update.sh", Scripts.BashFile.Replace("\r\n", "\n"));
 				
 				const int flags = 0x7;// read | write | executable

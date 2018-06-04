@@ -173,7 +173,7 @@ static bool InputHandler_HandleCoreKey(Key key) {
 		} else {
 			InputHandler_CycleDistanceForwards(viewDists, count);
 		}
-	} else if ((key == KeyBind_Get(KeyBind_PauseOrExit) || key == Key_Pause) && World_Blocks != NULL) {
+	} else if ((key == KeyBind_Get(KeyBind_PauseOrExit) || key == Key_Pause) && !Gui_GetActiveScreen()->HandlesAllInput) {
 		Gui_FreeActive();
 		Gui_SetActive(PauseScreen_MakeInstance());
 	} else if (GameMode_HandlesKeyDown(key)) {

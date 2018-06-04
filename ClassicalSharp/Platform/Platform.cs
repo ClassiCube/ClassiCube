@@ -12,8 +12,7 @@ namespace ClassicalSharp {
 
 	/// <summary> Abstracts away platform specific operations. </summary>
 	public static class Platform {
-		public static string AppDirectory;
-		
+
 		public static Bitmap ReadBmp(IDrawer2D drawer, byte[] data) {
 			return ReadBmp(drawer, new MemoryStream(data));
 		}
@@ -69,63 +68,61 @@ namespace ClassicalSharp {
 			#endif
 		}
 		
-		
-		static string FullPath(string relPath) { return Path.Combine(AppDirectory, relPath); }
-		
-		public static FileStream FileOpen(string relPath) {
-			return new FileStream(FullPath(relPath), FileMode.Open, FileAccess.Read, FileShare.Read);
+
+		public static Stream FileOpen(string path) {
+			return new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 		}
 		
-		public static FileStream FileCreate(string relPath) {
-			return new FileStream(FullPath(relPath), FileMode.Create, FileAccess.Write, FileShare.Read);
+		public static Stream FileCreate(string path) {
+			return new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read);
 		}
 		
-		public static FileStream FileAppend(string relPath) {
-			return new FileStream(FullPath(relPath), FileMode.Append, FileAccess.Write, FileShare.Read);
+		public static Stream FileAppend(string path) {
+			return new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.Read);
 		}
 		
-		public static bool FileExists(string relPath) {
-			return File.Exists(FullPath(relPath));
+		public static bool FileExists(string path) {
+			return File.Exists(path);
 		}
 		
-		public static DateTime FileGetWriteTime(string relPath) {
-			return File.GetLastWriteTimeUtc(FullPath(relPath));
+		public static DateTime FileGetWriteTime(string path) {
+			return File.GetLastWriteTimeUtc(path);
 		}
 		
-		public static void FileSetWriteTime(string relPath, DateTime time) {
-			File.SetLastWriteTimeUtc(FullPath(relPath), time);
+		public static void FileSetWriteTime(string path, DateTime time) {
+			File.SetLastWriteTimeUtc(path, time);
 		}
 		
-		public static bool DirectoryExists(string relPath) {
-			return Directory.Exists(FullPath(relPath));
+		public static bool DirectoryExists(string path) {
+			return Directory.Exists(path);
 		}
 		
-		public static void DirectoryCreate(string relPath) {
-			Directory.CreateDirectory(FullPath(relPath));
+		public static void DirectoryCreate(string path) {
+			Directory.CreateDirectory(path);
 		}
 		
-		public static string[] DirectoryFiles(string relPath) {
-			string[] files = Directory.GetFiles(FullPath(relPath));		
+		public static string[] DirectoryFiles(string path) {
+			string[] files = Directory.GetFiles(path);		
 			for (int i = 0; i < files.Length; i++) {
 				files[i] = Path.GetFileName(files[i]);
 			}
 			return files;
 		}
 		
-		public static string[] DirectoryFiles(string relPath, string filter) {
-			string[] files = Directory.GetFiles(FullPath(relPath), filter);			
+		public static string[] DirectoryFiles(string path, string filter) {
+			string[] files = Directory.GetFiles(path, filter);			
 			for (int i = 0; i < files.Length; i++) {
 				files[i] = Path.GetFileName(files[i]);
 			}
 			return files;
 		}
 		
-		public static void WriteAllText(string relPath, string text) {
-			File.WriteAllText(FullPath(relPath), text);
+		public static void WriteAllText(string path, string text) {
+			File.WriteAllText(path, text);
 		}
 		
-		public static void WriteAllBytes(string relPath, byte[] data) {
-			File.WriteAllBytes(FullPath(relPath), data);
+		public static void WriteAllBytes(string path, byte[] data) {
+			File.WriteAllBytes(path, data);
 		}
 	}
 }

@@ -36,7 +36,7 @@ namespace ClassicalSharp.Singleplayer {
 			
 			// For when user drops a map file onto ClassicalSharp.exe
 			string path = game.Username;
-			if (path.IndexOf(Path.DirectorySeparatorChar) >= 0 && File.Exists(path)) {
+			if (path.IndexOf(Path.DirectorySeparatorChar) >= 0 && Platform.FileExists(path)) {
 				LoadLevelScreen.LoadMap(game, path);
 				game.Gui.SetNewScreen(null);
 				return;

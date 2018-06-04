@@ -59,11 +59,11 @@ namespace Launcher.Patcher {
 		void DecodeSound(string name, byte[] rawData) {
 			string path = Path.Combine("audio", prefix + name + ".wav");
 			
-			using (FileStream dst = Platform.FileCreate(path))
+			using (Stream dst = Platform.FileCreate(path))
 				using (MemoryStream src = new MemoryStream(rawData)) 
 			{
 				dst.SetLength(44);
-				RawOut output = new RawOut(dst, true);
+				RawOut output = new RawOut((FileStream)dst, true);
 				OggContainer container = new OggContainer(src);
 				output.PlayStreaming(container);
 				
