@@ -67,7 +67,8 @@ namespace ClassicalSharp.Network {
 			}
 			
 			DateTime now = DateTime.UtcNow;
-			if (socket.Connected) {
+			// socket.Connected doesn't work here on some mono versions (e.g. 5.0.1.1)
+			if (socket.Poll(0, SelectMode.SelectWrite)) {
 				socket.Blocking = true;
 				FinishConnect();
 			} else if (now > connectTimeout) {
