@@ -631,8 +631,6 @@ namespace OpenTK.Platform.X11 {
 		public event EventHandler FocusedChanged;
 		public event EventHandler WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
-		public event EventHandler MouseEnter;
-		public event EventHandler MouseLeave;
 		
 		public KeyboardDevice Keyboard {
 			get { return keyboard; }

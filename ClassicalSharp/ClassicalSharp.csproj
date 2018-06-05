@@ -253,7 +253,6 @@
     <Compile Include="Math\Picking.cs" />
     <Compile Include="Platform\DesktopWindow.cs" />
     <Compile Include="Platform\Font.cs" />
-    <Compile Include="Platform\IPlatformWindow.cs" />
     <Compile Include="Platform\Platform.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

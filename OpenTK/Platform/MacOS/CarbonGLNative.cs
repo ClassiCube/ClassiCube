@@ -55,7 +55,6 @@ namespace OpenTK.Platform.MacOS
 		WindowState windowState = WindowState.Normal;
 		internal static Dictionary<IntPtr, WeakReference> WindowRefs = new Dictionary<IntPtr, WeakReference>();
 		KeyPressEventArgs mKeyPressArgs = new KeyPressEventArgs();
-		bool mMouseIn = false;
 		bool mIsActive = false;
 		Icon mIcon;
 
@@ -367,11 +366,6 @@ namespace OpenTK.Platform.MacOS
 			{
 				mousePosInClient.Y -= mTitlebarHeight;
 			}
-
-			// check for enter/leave events
-			IntPtr thisEventWindow;
-			API.GetEventWindowRef(inEvent, out thisEventWindow);
-			CheckEnterLeaveEvents(thisEventWindow, mousePosInClient);
 			
 			switch ((MouseEventKind)evt.EventKind)
 			{
@@ -441,27 +435,6 @@ namespace OpenTK.Platform.MacOS
 				default:
 					Debug.Print("{0}", evt);
 					return OSStatus.EventNotHandled;
-			}
-		}
-
-		private void CheckEnterLeaveEvents(IntPtr eventWindowRef, Point pt)
-		{
-			if (window == null)
-				return;
-
-			bool thisIn = eventWindowRef == window.WindowRef;
-
-			if (pt.Y < 0)
-				thisIn = false;
-
-			if (thisIn != mMouseIn)
-			{
-				mMouseIn = thisIn;
-
-				if (mMouseIn)
-					OnMouseEnter();
-				else
-					OnMouseLeave();
 			}
 		}
 
@@ -877,18 +850,6 @@ namespace OpenTK.Platform.MacOS
 		}
 
 
-		private void OnMouseLeave()
-		{
-			if (MouseLeave != null)
-				MouseLeave(this, EventArgs.Empty);
-		}
-
-		private void OnMouseEnter()
-		{
-			if (MouseEnter != null)
-				MouseEnter(this, EventArgs.Empty);
-		}
-
 		private void OnActivate()
 		{
 			mIsActive = true;
@@ -916,8 +877,6 @@ namespace OpenTK.Platform.MacOS
 		public event EventHandler FocusedChanged;
 		public event EventHandler WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
-		public event EventHandler MouseEnter;
-		public event EventHandler MouseLeave;
 
 		#endregion
 		

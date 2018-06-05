@@ -676,8 +676,6 @@ namespace OpenTK.Platform.Windows
 		public event EventHandler FocusedChanged;
 		public event EventHandler WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
-		public event EventHandler MouseEnter;
-		public event EventHandler MouseLeave;
 
 		MSG msg;
 		public void ProcessEvents() {

@@ -1,7 +1,5 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
-using System.IO;
-using System.Windows.Forms;
 using ClassicalSharp;
 
 namespace Launcher {

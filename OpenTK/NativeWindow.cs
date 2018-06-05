@@ -229,12 +229,6 @@ namespace OpenTK {
 		/// <summary> Occurs whenever the window is moved. </summary>
 		public event EventHandler Move;
 
-		/// <summary> Occurs whenever the mouse cursor enters the window <see cref="Bounds"/>. </summary>
-		public event EventHandler MouseEnter;
-		
-		/// <summary> Occurs whenever the mouse cursor leaves the window <see cref="Bounds"/>. </summary>
-		public event EventHandler MouseLeave;
-
 		/// <summary> Occurs whenever the window is resized. </summary>
 		public event EventHandler Resize;
 
@@ -298,16 +292,6 @@ namespace OpenTK {
 		protected virtual void OnMove(object sender, EventArgs e) {
 			if (Move != null) Move(this, e);
 		}
-
-		/// <summary> Called whenever the mouse cursor reenters the window <see cref="Bounds"/>. </summary>
-		protected virtual void OnMouseEnter(object sender, EventArgs e) {
-			if (MouseEnter != null) MouseEnter(this, e);
-		}
-
-		/// <summary> Called whenever the mouse cursor leaves the window <see cref="Bounds"/>. </summary>
-		protected virtual void OnMouseLeave(object sender, EventArgs e) {
-			if (MouseLeave != null) MouseLeave(this, e);
-		}
 		
 		/// <summary> Called when the NativeWindow is resized. </summary>
 		/// <param name="e">Not used.</param>
@@ -349,8 +333,6 @@ namespace OpenTK {
 					implementation.Disposed += OnDisposed;
 					implementation.FocusedChanged += OnFocusedChanged;
 					implementation.KeyPress += OnKeyPress;
-					implementation.MouseEnter += OnMouseEnter;
-					implementation.MouseLeave += OnMouseLeave;
 					implementation.Move += OnMove;
 					implementation.Resize += OnResize;
 					implementation.VisibleChanged += OnVisibleChanged;
@@ -362,8 +344,6 @@ namespace OpenTK {
 					implementation.Disposed -= OnDisposed;
 					implementation.FocusedChanged -= OnFocusedChanged;
 					implementation.KeyPress -= OnKeyPress;
-					implementation.MouseEnter -= OnMouseEnter;
-					implementation.MouseLeave -= OnMouseLeave;
 					implementation.Move -= OnMove;
 					implementation.Resize -= OnResize;
 					implementation.VisibleChanged -= OnVisibleChanged;

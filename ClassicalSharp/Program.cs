@@ -2,7 +2,6 @@
 using System;
 using System.IO;
 using System.Net;
-using System.Windows.Forms;
 using OpenTK;
 
 namespace ClassicalSharp {

@@ -9,7 +9,7 @@ using Clipboard = System.Windows.Forms.Clipboard;
 namespace ClassicalSharp {
 	
 	/// <summary> Implementation of a native window and native input handling mechanism on Windows, OSX, and Linux. </summary>
-	public sealed class DesktopWindow : GameWindow, IPlatformWindow {
+	public sealed class DesktopWindow : GameWindow {
 		
 		public int Width { get { return ClientSize.Width; } }
 		public int Height { get { return ClientSize.Height; } }

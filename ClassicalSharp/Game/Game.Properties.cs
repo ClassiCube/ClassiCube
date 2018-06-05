@@ -207,7 +207,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		internal IPlatformWindow window;
+		internal DesktopWindow window;
 		public MouseDevice Mouse;
 		public KeyboardDevice Keyboard;
 		
