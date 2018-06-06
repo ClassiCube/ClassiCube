@@ -12,18 +12,17 @@ namespace ClassicalSharp {
 	/// <remarks> Uses GDI+ on Windows, uses Cairo on Mono. </remarks>
 	unsafe partial class IDrawer2D {
 		
-		public Bitmap FontBitmap;
-		
 		/// <summary> Sets the bitmap that contains the bitmapped font characters as an atlas. </summary>
 		public void SetFontBitmap(Bitmap bmp) {
-			DisposeBitmappedText();
+			DisposeFontBitmap();
 			
-			FontBitmap = bmp;
-			boxSize = FontBitmap.Width / 16;
-			fontPixels = new FastBitmap(FontBitmap, true, true);
+			fontBitmap = bmp;
+			boxSize = fontBitmap.Width / 16;
+			fontPixels = new FastBitmap(fontBitmap, true, true);
 			CalculateTextWidths();
 		}
 		
+		protected Bitmap fontBitmap;
 		protected FastBitmap fontPixels;
 		protected int boxSize;
 		protected int[] widths = new int[256];
@@ -238,10 +237,10 @@ namespace ClassicalSharp {
 			return Utils.CeilDiv(point * 3, 2);
 		}
 		
-		protected void DisposeBitmappedText() {
-			if (FontBitmap == null) return;
+		protected void DisposeFontBitmap() {
+			if (fontBitmap == null) return;
 			fontPixels.Dispose();
-			FontBitmap.Dispose();
+			fontBitmap.Dispose();
 		}
 	}
 }

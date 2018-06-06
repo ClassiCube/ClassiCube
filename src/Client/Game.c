@@ -314,7 +314,7 @@ static void Game_TextureChangedCore(void* obj, Stream* src) {
 		Platform_MemFree(&atlas.Scan0);
 	} else if (String_CaselessEqualsConst(&src->Name, "default.png")) {
 		Bitmap bmp; Bitmap_DecodePng(&bmp, src);
-		Drawer2D_SetFontBitmap(bmp);
+		Drawer2D_SetFontBitmap(&bmp);
 		Event_RaiseVoid(&ChatEvents_FontChanged);
 	}
 }

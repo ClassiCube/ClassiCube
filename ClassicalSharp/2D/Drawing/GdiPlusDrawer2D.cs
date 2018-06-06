@@ -86,7 +86,7 @@ namespace ClassicalSharp {
 			}
 			
 			DisposeText();
-			DisposeBitmappedText();
+			DisposeFontBitmap();
 		}
 		
 		SolidBrush GetOrCreateBrush(FastColour col) {

@@ -68,7 +68,7 @@ namespace ClassicalSharp {
 				pair.Value.Dispose();
 			
 			DisposeText();
-			DisposeBitmappedText();
+			DisposeFontBitmap();
 		}
 		
 		Paint GetOrCreateBrush(Color color) {

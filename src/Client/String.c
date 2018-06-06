@@ -503,14 +503,14 @@ UInt8 Convert_UnicodeToCP437(UInt16 c) {
 }
 
 bool Convert_TryUnicodeToCP437(UInt16 c, UInt8* value) {
-	if (c >= 0x20 && c < 0x7F) { *value = (UInt8)c; return true; }
+	if (c >= 0x20 && c < 0x7F) { *value = c; return true; }
 	UInt32 i;
 
 	for (i = 0; i < Array_Elems(Convert_ControlChars); i++) {
-		if (Convert_ControlChars[i] == c) { *value = (UInt8)i; return true; }
+		if (Convert_ControlChars[i] == c) { *value = i; return true; }
 	}
 	for (i = 0; i < Array_Elems(Convert_ExtendedChars); i++) {
-		if (Convert_ExtendedChars[i] == c) { *value = (UInt8)(i + 0x7F); return true; }
+		if (Convert_ExtendedChars[i] == c) { *value = i + 0x7F; return true; }
 	}
 
 	*value = '?'; return false;

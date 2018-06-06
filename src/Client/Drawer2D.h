@@ -1,7 +1,5 @@
 #ifndef CC_DRAWER2D_H
 #define CC_DRAWER2D_H
-#include "Platform.h"
-#include "Bitmap.h"
 #include "Texture.h"
 #include "Constants.h"
 /*  Responsible for performing drawing operations on bitmaps, and for converting bitmaps into textures.
@@ -9,6 +7,7 @@
 */
 
 typedef struct DrawTextArgs_ { String Text; FontDesc Font; bool UseShadow; } DrawTextArgs;
+typedef struct Bitmap_ Bitmap;
 void DrawTextArgs_Make(DrawTextArgs* args, STRING_REF String* text, FontDesc* font, bool useShadow);
 void DrawTextArgs_MakeEmpty(DrawTextArgs* args, FontDesc* font, bool useShadow);
 
@@ -48,6 +47,5 @@ bool Drawer2D_IsWhiteCol(UInt8 c);
 
 void Drawer2D_ReducePadding_Tex(Texture* tex, Int32 point, Int32 scale);
 void Drawer2D_ReducePadding_Height(Int32* height, Int32 point, Int32 scale);
-Bitmap Drawer2D_FontBitmap;
-void Drawer2D_SetFontBitmap(Bitmap bmp);
+void Drawer2D_SetFontBitmap(Bitmap* bmp);
 #endif

@@ -399,16 +399,16 @@ bool Stream_ReadLine(Stream* stream, STRING_TRANSIENT String* text) {
 
 Int32 Stream_WriteUtf8(UInt8* buffer, UInt16 codepoint) {
 	if (codepoint <= 0x7F) {
-		buffer[0] = (UInt8)codepoint;
+		buffer[0] = codepoint;
 		return 1;
 	} else if (codepoint >= 0x80 && codepoint <= 0x7FF) {
-		buffer[0] = (UInt8)(0xC0 | (codepoint >> 6) & 0x1F);
-		buffer[1] = (UInt8)(0x80 | (codepoint)      & 0x3F);
+		buffer[0] = 0xC0 | ((codepoint >> 6) & 0x1F);
+		buffer[1] = 0x80 | ((codepoint)      & 0x3F);
 		return 2;
 	} else {
-		buffer[0] = (UInt8)(0xE0 | (codepoint >> 12) & 0x0F);
-		buffer[1] = (UInt8)(0x80 | (codepoint >> 6)  & 0x3F);
-		buffer[2] = (UInt8)(0x80 | (codepoint)       & 0x3F);
+		buffer[0] = 0xE0 | ((codepoint >> 12) & 0x0F);
+		buffer[1] = 0x80 | ((codepoint >> 6)  & 0x3F);
+		buffer[2] = 0x80 | ((codepoint)       & 0x3F);
 		return 3;
 	}
 }

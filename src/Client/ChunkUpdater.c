@@ -19,9 +19,7 @@ Vector3I ChunkUpdater_ChunkPos;
 UInt32* ChunkUpdater_Distances;
 
 void ChunkInfo_Reset(ChunkInfo* chunk, Int32 x, Int32 y, Int32 z) {
-	chunk->CentreX = (UInt16)(x + 8);
-	chunk->CentreY = (UInt16)(y + 8);
-	chunk->CentreZ = (UInt16)(z + 8);
+	chunk->CentreX = x + 8; chunk->CentreY = y + 8; chunk->CentreZ = z + 8;
 #if !CC_BUILD_GL11
 	chunk->Vb = NULL;
 #endif

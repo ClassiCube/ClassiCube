@@ -27,7 +27,7 @@ void SelectionBox_Render(SelectionBox* box, VertexP3fC4b** vertices, VertexP3fC4
 	SelectionBox_VerQuad(vertices, col, p1.X, p1.Y, p1.Z, p1.X, p2.Y, p2.Z);
 	SelectionBox_VerQuad(vertices, col, p2.X, p1.Y, p1.Z, p2.X, p2.Y, p2.Z);
 
-	col.R = (UInt8)~col.R; col.G = (UInt8)~col.G; col.B = (UInt8)~col.B;
+	col.R = ~col.R; col.G = ~col.G; col.B = ~col.B;
 	/* bottom face */
 	SelectionBox_Line(lineVertices, col, p1.X, p1.Y, p1.Z, p2.X, p1.Y, p1.Z);
 	SelectionBox_Line(lineVertices, col, p2.X, p1.Y, p1.Z, p2.X, p1.Y, p2.Z);

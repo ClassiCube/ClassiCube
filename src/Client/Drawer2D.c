@@ -58,10 +58,10 @@ static void Drawer2D_FreeFontBitmap(void) {
 	Platform_MemFree(&Drawer2D_FontBitmap.Scan0);
 }
 
-void Drawer2D_SetFontBitmap(Bitmap bmp) {
+void Drawer2D_SetFontBitmap(Bitmap* bmp) {
 	Drawer2D_FreeFontBitmap();
-	Drawer2D_FontBitmap = bmp;
-	Drawer2D_BoxSize = bmp.Width >> DRAWER2D_LOG2_CHARS_PER_ROW;
+	Drawer2D_FontBitmap = *bmp;
+	Drawer2D_BoxSize = bmp->Width >> DRAWER2D_LOG2_CHARS_PER_ROW;
 	Drawer2D_CalculateTextWidths();
 }
 
