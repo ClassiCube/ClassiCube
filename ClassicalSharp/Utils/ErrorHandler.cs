@@ -2,6 +2,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using OpenTK;
 
@@ -27,7 +28,11 @@ namespace ClassicalSharp {
 		
 		static string Format(Exception ex) {
 			try {
-				return ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
+				string msg = ex.GetType().FullName + ": " + ex.Message + Environment.NewLine + ex.StackTrace;
+				ExternalException nativeEx = ex as ExternalException;
+				
+				if (nativeEx == null) return msg;			
+				return msg + Environment.NewLine + "HRESULT: " + nativeEx.ErrorCode;
 			} catch (Exception) {
 				return "";
 			}
