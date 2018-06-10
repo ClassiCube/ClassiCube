@@ -15,6 +15,8 @@ void Atlas2D_UpdateState(Bitmap* bmp);
 /* Creates a native texture that contains the tile at the specified index. */
 GfxResourceID Atlas2D_LoadTile(TextureLoc texLoc);
 void Atlas2D_Free(void);
+#define Atlas2D_TileX(texLoc) ((texLoc) % ATLAS2D_TILES_PER_ROW)
+#define Atlas2D_TileY(texLoc) ((texLoc) / ATLAS2D_TILES_PER_ROW)
 
 /* The theoretical largest number of 1D atlases that a 2D atlas can be broken down into. */
 #define ATLAS1D_MAX_ATLASES (ATLAS2D_TILES_PER_ROW * ATLAS2D_ROWS_COUNT)

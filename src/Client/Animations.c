@@ -267,7 +267,7 @@ static void Animations_Validate(void) {
 		Int32 maxX = data.FrameX + data.FrameSize * data.StatesCount;
 		String_Clear(&msg);
 
-		Int32 tileX = data.TexLoc % ATLAS2D_TILES_PER_ROW, tileY = data.TexLoc / ATLAS2D_TILES_PER_ROW;
+		Int32 tileX = Atlas2D_TileX(data.TexLoc), tileY = Atlas2D_TileY(data.TexLoc);
 		if (data.FrameSize > Atlas2D_TileSize) {
 			String_Format2(&msg, "&cAnimation frames for tile (%i, %i) are bigger than the size of a tile in terrain.png", &tileX, &tileY);
 		} else if (maxX > anims_bmp.Width || maxY > anims_bmp.Height) {

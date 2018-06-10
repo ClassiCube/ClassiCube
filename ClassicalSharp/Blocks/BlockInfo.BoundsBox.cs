@@ -54,43 +54,24 @@ namespace ClassicalSharp {
 		const float angle = 45f * Utils.Deg2Rad;
 		static readonly Vector3 centre = new Vector3(0.5f, 0, 0.5f);
 		internal static void RecalculateBB(BlockID block, FastBitmap fastBmp) {
-			int elemSize = fastBmp.Width / 16;
-			int texId = GetTextureLoc(block, Side.Right);
-			int texX = texId & 0x0F, texY = texId >> 4;
+			int tileSize = Atlas2D.TileSize;
+			int texLoc = GetTextureLoc(block, Side.Right);
+			int x = texLoc % Atlas2D.TilesPerRow, y = texLoc / Atlas2D.TilesPerRow;
 			
-			float topY = GetSpriteBB_TopY(elemSize, texX, texY, fastBmp);
-			float bottomY = GetSpriteBB_BottomY(elemSize, texX, texY, fastBmp);
-			float leftX = GetSpriteBB_LeftX(elemSize, texX, texY, fastBmp);
-			float rightX = GetSpriteBB_RightX(elemSize, texX, texY, fastBmp);
+			float minX = 0, minY = 0, maxX = 1, maxY = 1;
+			if (y < Atlas2D.RowsCount) {
+				minX = GetSpriteBB_MinX(tileSize, x, y, fastBmp);
+				minY = GetSpriteBB_MinY(tileSize, x, y, fastBmp);
+				maxX = GetSpriteBB_MaxX(tileSize, x, y, fastBmp);
+				maxY = GetSpriteBB_MaxY(tileSize, x, y, fastBmp);
+			}
 			
-			MinBB[block] = Utils.RotateY(leftX - 0.5f, bottomY, 0, angle) + centre;
-			MaxBB[block] = Utils.RotateY(rightX - 0.5f, topY, 0, angle) + centre;
+			MinBB[block] = Utils.RotateY(minX - 0.5f, minY, 0, angle) + centre;
+			MaxBB[block] = Utils.RotateY(maxX - 0.5f, maxY, 0, angle) + centre;
 			CalcRenderBounds(block);
 		}
 		
-		unsafe static float GetSpriteBB_TopY(int size, int tileX, int tileY, FastBitmap fastBmp) {
-			for (int y = 0; y < size; y++) {
-				int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
-				for (int x = 0; x < size; x++) {
-					if ((byte)(row[x] >> 24) != 0)
-						return 1 - (float)y / size;
-				}
-			}
-			return 0;
-		}
-		
-		unsafe static float GetSpriteBB_BottomY(int size, int tileX, int tileY, FastBitmap fastBmp) {
-			for (int y = size - 1; y >= 0; y--) {
-				int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
-				for (int x = 0; x < size; x++) {
-					if ((byte)(row[x] >> 24) != 0)
-						return 1 - (float)(y + 1) / size;
-				}
-			}
-			return 1;
-		}
-		
-		unsafe static float GetSpriteBB_LeftX(int size, int tileX, int tileY, FastBitmap fastBmp) {
+		unsafe static float GetSpriteBB_MinX(int size, int tileX, int tileY, FastBitmap fastBmp) {
 			for (int x = 0; x < size; x++) {
 				for (int y = 0; y < size; y++) {
 					int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
@@ -101,12 +82,34 @@ namespace ClassicalSharp {
 			return 1;
 		}
 		
-		unsafe static float GetSpriteBB_RightX(int size, int tileX, int tileY, FastBitmap fastBmp) {
+		unsafe static float GetSpriteBB_MinY(int size, int tileX, int tileY, FastBitmap fastBmp) {
+			for (int y = size - 1; y >= 0; y--) {
+				int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
+				for (int x = 0; x < size; x++) {
+					if ((byte)(row[x] >> 24) != 0)
+						return 1 - (float)(y + 1) / size;
+				}
+			}
+			return 1;
+		}
+		
+		unsafe static float GetSpriteBB_MaxX(int size, int tileX, int tileY, FastBitmap fastBmp) {
 			for (int x = size - 1; x >= 0; x--) {
 				for (int y = 0; y < size; y++) {
 					int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
 					if ((byte)(row[x] >> 24) != 0)
 						return (float)(x + 1) / size;
+				}
+			}
+			return 0;
+		}		
+				
+		unsafe static float GetSpriteBB_MaxY(int size, int tileX, int tileY, FastBitmap fastBmp) {
+			for (int y = 0; y < size; y++) {
+				int* row = fastBmp.GetRowPtr(tileY * size + y) + (tileX * size);
+				for (int x = 0; x < size; x++) {
+					if ((byte)(row[x] >> 24) != 0)
+						return 1 - (float)y / size;
 				}
 			}
 			return 0;

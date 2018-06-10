@@ -263,7 +263,7 @@ void Block_RecalculateSpriteBB(void) {
 	}
 }
 
-static Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = 0; y < size; y++) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
@@ -276,7 +276,7 @@ static Real32 Block_GetSpriteBB_TopY(Int32 size, Int32 tileX, Int32 tileY, Bitma
 	return 0;
 }
 
-static Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (y = size - 1; y >= 0; y--) {
 		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
@@ -289,7 +289,7 @@ static Real32 Block_GetSpriteBB_BottomY(Int32 size, Int32 tileX, Int32 tileY, Bi
 	return 1;
 }
 
-static Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (x = 0; x < size; x++) {
 		for (y = 0; y < size; y++) {
@@ -302,7 +302,7 @@ static Real32 Block_GetSpriteBB_LeftX(Int32 size, Int32 tileX, Int32 tileY, Bitm
 	return 1;
 }
 
-static Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
 	for (x = size - 1; x >= 0; x--) {
 		for (y = 0; y < size; y++) {
@@ -317,18 +317,18 @@ static Real32 Block_GetSpriteBB_RightX(Int32 size, Int32 tileX, Int32 tileY, Bit
 
 void Block_RecalculateBB(BlockID block) {
 	Bitmap* bmp = &Atlas2D_Bitmap;
-	Int32 elemSize = Atlas2D_TileSize;
+	Int32 tileSize = Atlas2D_TileSize;
 	TextureLoc texLoc = Block_GetTexLoc(block, FACE_XMAX);
-	Int32 texX = texLoc & 0x0F, texY = texLoc >> 4;
+	Int32 x = Atlas2D_TileX(texLoc), y = Atlas2D_TileY(texLoc);
 
-	Real32 topY    = Block_GetSpriteBB_TopY(elemSize,    texX, texY, bmp);
-	Real32 bottomY = Block_GetSpriteBB_BottomY(elemSize, texX, texY, bmp);
-	Real32 leftX   = Block_GetSpriteBB_LeftX(elemSize,   texX, texY, bmp);
-	Real32 rightX  = Block_GetSpriteBB_RightX(elemSize,  texX, texY, bmp);
+	Real32 minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
+	Real32 minY = Block_GetSpriteBB_MinY(tileSize, x, y, bmp);
+	Real32 maxX = Block_GetSpriteBB_RaxX(tileSize, x, y, bmp);
+	Real32 maxY = Block_GetSpriteBB_MaxY(tileSize, x, y, bmp);
 
 	Vector3 centre = VECTOR3_CONST(0.5f, 0.0f, 0.5f);
-	Vector3 minRaw = Vector3_RotateY3(leftX  - 0.5f, bottomY, 0, 45.0f * MATH_DEG2RAD);
-	Vector3 maxRaw = Vector3_RotateY3(rightX - 0.5f, topY,    0, 45.0f * MATH_DEG2RAD);
+	Vector3 minRaw = Vector3_RotateY3(minX - 0.5f, minY, 0.0f, 45.0f * MATH_DEG2RAD);
+	Vector3 maxRaw = Vector3_RotateY3(maxX - 0.5f, maxY, 0.0f, 45.0f * MATH_DEG2RAD);
 
 	Vector3_Add(&Block_MinBB[block], &minRaw, &centre);
 	Vector3_Add(&Block_MaxBB[block], &maxRaw, &centre);

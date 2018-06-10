@@ -160,11 +160,11 @@ void Platform_Log4(const UInt8* format, const void* a1, const void* a2, const vo
 
 void Platform_FromSysTime(DateTime* time, SYSTEMTIME* sysTime) {
 	time->Year   = sysTime->wYear;
-	time->Month  = (UInt8)sysTime->wMonth;
-	time->Day    = (UInt8)sysTime->wDay;
-	time->Hour   = (UInt8)sysTime->wHour;
-	time->Minute = (UInt8)sysTime->wMinute;
-	time->Second = (UInt8)sysTime->wSecond;
+	time->Month  = sysTime->wMonth;
+	time->Day    = sysTime->wDay;
+	time->Hour   = sysTime->wHour;
+	time->Minute = sysTime->wMinute;
+	time->Second = sysTime->wSecond;
 	time->Milli  = sysTime->wMilliseconds;
 }
 

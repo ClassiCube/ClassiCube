@@ -165,7 +165,7 @@ void Options_Load(void) {
 	/* TODO: Should we just log failure to open? */
 	ErrorHandler_CheckOrFail(result, "Options - Loading");
 
-	UInt8 lineBuffer[String_BufferSize(2048)];
+	UInt8 lineBuffer[String_BufferSize(768)];
 	String line = String_InitAndClearArray(lineBuffer);
 	Stream stream; Stream_FromFile(&stream, file, &path);
 
@@ -209,7 +209,7 @@ void Options_Save(void) {
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "Options - Saving");
 
-	UInt8 lineBuffer[String_BufferSize(2048)];
+	UInt8 lineBuffer[String_BufferSize(1024)];
 	String line = String_InitAndClearArray(lineBuffer);
 	Stream stream; Stream_FromFile(&stream, file, &path);
 	UInt32 i;
