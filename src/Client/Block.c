@@ -263,17 +263,17 @@ void Block_RecalculateSpriteBB(void) {
 	}
 }
 
-static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+static Real32 Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
 	Int32 x, y;
-	for (y = 0; y < size; y++) {
-		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-		for (x = 0; x < size; x++) {
+	for (x = 0; x < size; x++) {
+		for (y = 0; y < size; y++) {
+			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
 			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return 1 - (Real32)y / size;
+				return (Real32)x / size;
 			}
 		}
 	}
-	return 0;
+	return 1;
 }
 
 static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
@@ -283,19 +283,6 @@ static Real32 Block_GetSpriteBB_MinY(Int32 size, Int32 tileX, Int32 tileY, Bitma
 		for (x = 0; x < size; x++) {
 			if (PackedCol_ARGB_A(row[x]) != 0) {
 				return 1 - (Real32)(y + 1) / size;
-			}
-		}
-	}
-	return 1;
-}
-
-static Real32 Block_GetSpriteBB_MinX(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
-	Int32 x, y;
-	for (x = 0; x < size; x++) {
-		for (y = 0; y < size; y++) {
-			UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
-			if (PackedCol_ARGB_A(row[x]) != 0) {
-				return (Real32)x / size;
 			}
 		}
 	}
@@ -315,6 +302,19 @@ static Real32 Block_GetSpriteBB_MaxX(Int32 size, Int32 tileX, Int32 tileY, Bitma
 	return 0;
 }
 
+static Real32 Block_GetSpriteBB_MaxY(Int32 size, Int32 tileX, Int32 tileY, Bitmap* bmp) {
+	Int32 x, y;
+	for (y = 0; y < size; y++) {
+		UInt32* row = Bitmap_GetRow(bmp, tileY * size + y) + (tileX * size);
+		for (x = 0; x < size; x++) {
+			if (PackedCol_ARGB_A(row[x]) != 0) {
+				return 1 - (Real32)y / size;
+			}
+		}
+	}
+	return 0;
+}
+
 void Block_RecalculateBB(BlockID block) {
 	Bitmap* bmp = &Atlas2D_Bitmap;
 	Int32 tileSize = Atlas2D_TileSize;
@@ -323,7 +323,7 @@ void Block_RecalculateBB(BlockID block) {
 
 	Real32 minX = Block_GetSpriteBB_MinX(tileSize, x, y, bmp);
 	Real32 minY = Block_GetSpriteBB_MinY(tileSize, x, y, bmp);
-	Real32 maxX = Block_GetSpriteBB_RaxX(tileSize, x, y, bmp);
+	Real32 maxX = Block_GetSpriteBB_MaxX(tileSize, x, y, bmp);
 	Real32 maxY = Block_GetSpriteBB_MaxY(tileSize, x, y, bmp);
 
 	Vector3 centre = VECTOR3_CONST(0.5f, 0.0f, 0.5f);
