@@ -417,7 +417,7 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 
 	UInt8 dataBuffer[String_BufferSize(STRING_SIZE)];
 	String data = String_InitAndClearArray(dataBuffer);
-	String_AppendInt64(&data, ticks);
+	String_AppendUInt64(&data, ticks);
 	TextureCache_AddToTags(url, &data, &cache_lastModified);
 }
 

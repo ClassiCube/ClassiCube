@@ -196,12 +196,7 @@ Int32 String_MakeUInt64(UInt64 num, UInt8* numBuffer) {
 	return len;
 }
 
-bool String_AppendInt64(STRING_TRANSIENT String* str, Int64 num) {
-	if (num < 0) {
-		num = -num;
-		if (!String_Append(str, '-')) return false;
-	}
-
+bool String_AppendUInt64(STRING_TRANSIENT String* str, UInt64 num) {
 	UInt8 numBuffer[STRING_INT_CHARS];
 	Int32 i, numLen = String_MakeUInt64(num, numBuffer);
 

@@ -63,7 +63,7 @@ bool String_Append(STRING_TRANSIENT String* str, UInt8 c);
 bool String_AppendBool(STRING_TRANSIENT String* str, bool value);
 bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num);
-bool String_AppendInt64(STRING_TRANSIENT String* str, Int64 num);
+bool String_AppendUInt64(STRING_TRANSIENT String* str, UInt64 num);
 bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
 bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value);
 bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value);
