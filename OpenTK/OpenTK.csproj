@@ -146,7 +146,7 @@
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <!-- This actually rewrites the calli and fixed code.-->
   <Target Name="AfterBuild">
-    <Exec Command="$(OutputPath)InteropPatcher.exe $(OutDir)OpenTK.dll" />
+    <Exec Command="mono $(OutputPath)InteropPatcher.exe $(OutDir)OpenTK.dll" />
     <!--Copy back *.dll from bin/Debug|Release to obj/Debug/Release directory-->
     <Copy SourceFiles="@(MainAssembly)" DestinationFolder="$(IntermediateOutputPath)" SkipUnchangedFiles="true" />
     <!-- Copy back *.pdb from bin/Debug|Release to obj/Debug/Release directory-->
