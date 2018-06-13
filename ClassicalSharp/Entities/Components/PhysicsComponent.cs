@@ -110,7 +110,7 @@ namespace ClassicalSharp.Entities {
 			// it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same
 			
 			// TODO: this is a temp fix to avoid crashing for high horizontal speed
-			if (horSpeed > 75.0f) horSpeed = 75.0f;
+			Utils.Clamp(ref horSpeed, -75.0f, 75.0f);
 			
 			bool womSpeedBoost = hacks.CanDoubleJump && hacks.WOMStyleHacks;
 			if (!hacks.Floating && womSpeedBoost) {

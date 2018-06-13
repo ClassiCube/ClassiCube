@@ -1074,7 +1074,8 @@ void PhysicsComp_PhysicsTick(PhysicsComp* comp, Vector3 vel) {
 	/* it's now multiplied by 0.1, so need to divide by 5 so user speed modifier comes out same */
 
 	/* TODO: this is a temp fix to avoid crashing for high horizontal speed */
-	if (horSpeed > 75.0f) horSpeed = 75.0f;
+	Math_Clamp(horSpeed, -75.0f, 75.0f);
+
 	/* vertical speed never goes below: base speed * 1.0 */
 	if (verSpeed < baseSpeed) verSpeed = baseSpeed;
 
