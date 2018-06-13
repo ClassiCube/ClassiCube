@@ -85,7 +85,7 @@ namespace ClassicalSharp.Entities {
 		}
 		
 		public void DoNormalJump() {
-			if (jumpVel == 0 || hacks.MaxJumps == 0) return;
+			if (jumpVel == 0 || hacks.MaxJumps <= 0) return;
 			
 			entity.Velocity.Y = jumpVel;
 			if (hacks.Speeding     && hacks.CanSpeed) entity.Velocity.Y += jumpVel;

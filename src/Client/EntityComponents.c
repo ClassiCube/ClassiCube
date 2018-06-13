@@ -187,22 +187,22 @@ static String HacksComp_UNSAFE_FlagValue(const UInt8* flagRaw, HacksComp* hacks)
 	return String_UNSAFE_Substring(joined, start, end - start);
 }
 
-static void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
-	String speedStr = HacksComp_UNSAFE_FlagValue("horspeed=", hacks);
-	if (speedStr.length == 0) return;
+static Real32 HacksComp_ParseFlagReal(const UInt8* flagRaw, HacksComp* hacks) {
+	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
+	if (raw.length == 0 || Game_ClassicMode) return 1.0f;
 
-	Real32 speed = 0.0f;
-	if (!Convert_TryParseReal32(&speedStr, &speed) || speed == 0.0f) return;
-	hacks->BaseHorSpeed = speed;
+	Real32 value = 0.0f;
+	if (!Convert_TryParseReal32(&raw, &value)) return 1.0f;
+	return value;
 }
 
-static void HacksComp_ParseMultiSpeed(HacksComp* hacks) {
-	String jumpsStr = HacksComp_UNSAFE_FlagValue("jumps=", hacks);
-	if (jumpsStr.length == 0 || Game_ClassicMode) return;
+static Int32 HacksComp_ParseFlagInt(const UInt8* flagRaw, HacksComp* hacks) {
+	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
+	if (raw.length == 0 || Game_ClassicMode) return 1;
 
-	Int32 jumps = 0;
-	if (!Convert_TryParseInt32(&jumpsStr, &jumps) || jumps < 0) return;
-	hacks->MaxJumps = jumps;
+	Int32 value = 0;
+	if (!Convert_TryParseInt32(&raw, &value)) return 1;
+	return value;
 }
 
 static void HacksComp_ParseFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag, bool* target) {
@@ -265,9 +265,6 @@ void HacksComp_CheckConsistency(HacksComp* hacks) {
 void HacksComp_UpdateState(HacksComp* hacks) {
 	HacksComp_SetAll(hacks, true);
 	if (hacks->HacksFlags.length == 0) return;
-
-	hacks->BaseHorSpeed = 1;
-	hacks->MaxJumps = 1;
 	hacks->CanBePushed = true;
 
 	/* By default (this is also the case with WoM), we can use hacks. */
@@ -285,8 +282,9 @@ void HacksComp_UpdateState(HacksComp* hacks) {
 	if (hacks->UserType == 0x64) {
 		HacksComp_ParseAllFlag(hacks, "+ophax", "-ophax");
 	}
-	HacksComp_ParseHorizontalSpeed(hacks);
-	HacksComp_ParseMultiSpeed(hacks);
+
+	hacks->BaseHorSpeed  = HacksComp_ParseFlagReal("horspeed=", hacks);
+	hacks->MaxJumps = HacksComp_ParseFlagInt("jumps=", hacks);
 
 	HacksComp_CheckConsistency(hacks);
 	Event_RaiseVoid(&UserEvents_HackPermissionsChanged);
@@ -942,7 +940,7 @@ void PhysicsComp_UpdateVelocityState(PhysicsComp* comp) {
 void PhysicsComp_DoNormalJump(PhysicsComp* comp) {
 	Entity* entity = comp->Entity;
 	HacksComp* hacks = comp->Hacks;
-	if (comp->JumpVel == 0.0f || hacks->MaxJumps == 0) return;
+	if (comp->JumpVel == 0.0f || hacks->MaxJumps <= 0) return;
 
 	entity->Velocity.Y = comp->JumpVel;
 	if (hacks->Speeding     && hacks->CanSpeed) entity->Velocity.Y += comp->JumpVel;

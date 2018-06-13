@@ -49,7 +49,6 @@ typedef struct HacksComponent_ {
 	bool CanAnyHacks, CanUseThirdPersonCamera, CanSpeed, CanFly;
 	bool CanRespawn, CanNoclip, CanPushbackBlocks,CanSeeAllNames;
 	bool CanDoubleJump, CanBePushed;
-	/* Maximum speed the entity can move at horizontally when CanSpeed is false */
 	Real32 BaseHorSpeed;
 	/* Max amount of jumps the player can perform */
 	Int32 MaxJumps;

@@ -38,7 +38,7 @@ namespace ClassicalSharp.Entities {
 		public bool CanSeeAllNames = true;
 		public bool CanDoubleJump = true;
 		public bool CanBePushed = true;
-		/// <summary> Base speed multiplier entity moves at horizontally. </summary>
+		
 		public float BaseHorSpeed = 1;
 		/// <summary> Amount of jumps the player can perform. </summary>
 		public int MaxJumps = 1;
@@ -64,22 +64,22 @@ namespace ClassicalSharp.Entities {
 			return HacksFlags.Substring(start, end - start);
 		}
 		
-		void ParseHorizontalSpeed() {
-			string num = GetFlagValue("horspeed=");
-			if (num == null) return;
+		float ParseFlagReal(string flag) {
+			string num = GetFlagValue(flag);
+			if (num == null || game.ClassicMode) return 1f;
 			
 			float value = 0;
-			if (!Utils.TryParseDecimal(num, out value) || value == 0) return;
-			BaseHorSpeed = value;
+			if (!Utils.TryParseDecimal(num, out value)) return 1f;
+			return value;
 		}
 		
-		void ParseMultiJumps() {
-			string num = GetFlagValue("jumps=");
-			if (num == null || game.ClassicMode) return;
+		int ParseFlagInt(string flags) {
+			string num = GetFlagValue(flags);
+			if (num == null || game.ClassicMode) return 1;
 			
 			int value = 0;
-			if (!int.TryParse(num, out value) || value < 0) return;
-			MaxJumps = value;
+			if (!int.TryParse(num, out value)) return 1;
+			return value;
 		}
 		
 		void SetAllHacks(bool allowed) {
@@ -138,9 +138,6 @@ namespace ClassicalSharp.Entities {
 		public void UpdateHacksState() {
 			SetAllHacks(true);
 			if (HacksFlags == null) return;
-			
-			BaseHorSpeed = 1;
-			MaxJumps = 1;
 			CanBePushed = true;
 			
 			// By default (this is also the case with WoM), we can use hacks.
@@ -153,8 +150,8 @@ namespace ClassicalSharp.Entities {
 			ParseFlag(ref CanBePushed, "push");
 
 			if (UserType == 0x64) ParseAllFlag("ophax");
-			ParseHorizontalSpeed();
-			ParseMultiJumps();
+			BaseHorSpeed = ParseFlagReal("horspeed=");
+			MaxJumps = ParseFlagInt("jumps=");
 			
 			CheckHacksConsistency();
 			game.Events.RaiseHackPermissionsChanged();
