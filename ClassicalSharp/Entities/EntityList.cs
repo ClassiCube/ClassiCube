@@ -37,7 +37,6 @@ namespace ClassicalSharp.Entities {
 			if (game.ClassicMode) ShadowMode = EntityShadow.None;
 		}
 		
-		/// <summary> Performs a tick call for all player entities contained in this list. </summary>
 		public void Tick(ScheduledTask task) {
 			for (int i = 0; i < List.Length; i++) {
 				if (List[i] == null) continue;
@@ -45,7 +44,6 @@ namespace ClassicalSharp.Entities {
 			}
 		}
 		
-		/// <summary> Renders the models of all player entities contained in this list. </summary>
 		public void RenderModels(IGraphicsApi gfx, double delta, float t) {
 			gfx.Texturing = true;
 			gfx.AlphaTest = true;
@@ -58,9 +56,6 @@ namespace ClassicalSharp.Entities {
 		}
 		bool hadFog;
 		
-		/// <summary> Renders the names of all player entities contained in this list.<br/>
-		/// If ShowHoveredNames is false, this method only renders names of entities that are
-		/// not currently being looked at by the user. </summary>
 		public void RenderNames(IGraphicsApi gfx, double delta) {
 			if (NamesMode == NameMode.None) return;
 			closestId = GetClosetPlayer(game.LocalPlayer);
@@ -135,7 +130,6 @@ namespace ClassicalSharp.Entities {
 			List[id] = null;
 		}
 		
-		/// <summary> Disposes of all player entities contained in this list. </summary>
 		public void Dispose() {
 			for (int i = 0; i < List.Length; i++) {
 				if (List[i] == null) continue;

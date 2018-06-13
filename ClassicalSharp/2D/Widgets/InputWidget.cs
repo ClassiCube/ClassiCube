@@ -220,9 +220,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			Height = prefixHeight;
 		}
 		
-		
-		/// <summary> Clears all the characters from the text buffer </summary>
-		/// <remarks> Deletes the native texture. </remarks>
+
 		public void Clear() {
 			Text.Clear();
 			for (int i = 0; i < lines.Length; i++)
@@ -232,8 +230,6 @@ namespace ClassicalSharp.Gui.Widgets {
 			game.Graphics.DeleteTexture(ref inputTex);
 		}
 
-		/// <summary> Appends a sequence of characters to current text buffer. </summary>
-		/// <remarks> Potentially recreates the native texture. </remarks>
 		public void Append(string text) {
 			int appended = 0;
 			for (int i = 0; i < text.Length; i++) {
@@ -243,9 +239,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (appended == 0) return;
 			Recreate();
 		}
-		
-		/// <summary> Appends a single character to current text buffer. </summary>
-		/// <remarks> Potentially recreates the native texture. </remarks>
+
 		public void Append(char c) {
 			if (!TryAppendChar(c)) return;
 			Recreate();

@@ -11,9 +11,7 @@ namespace ClassicalSharp.Entities {
 	
 	public class LocalPlayer : Player, IGameComponent {
 		
-		/// <summary> Position the player's position is set to when the 'respawn' key binding is pressed. </summary>
 		public Vector3 Spawn;
-
 		public float SpawnRotY, SpawnHeadX;
 		
 		/// <summary> The distance (in blocks) that players are allowed to

@@ -421,9 +421,9 @@ namespace ClassicalSharp.Network.Protocols {
 			BlockID order = reader.ReadBlock();
 			
 			game.Inventory.Remove(block);
-			if (order != 255 && order != 0) {
-				game.Inventory.Map[order - 1] = block;
-			}
+			// TODO: kinda hacky, get rid of 255 completely when servers updated
+			bool hidden = order == 0 || (order == 255 && !net.cpeData.extTexs);
+			if (!hidden) { game.Inventory.Map[order - 1] = block; }
 		}
 		
 		#endregion
