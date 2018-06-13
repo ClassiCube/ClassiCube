@@ -69,7 +69,7 @@ namespace ClassicalSharp.Entities {
 			if (num == null) return;
 			
 			float value = 0;
-			if (!Utils.TryParseDecimal(num, out value) || value <= 0) return;
+			if (!Utils.TryParseDecimal(num, out value) || value == 0) return;
 			BaseHorSpeed = value;
 		}
 		

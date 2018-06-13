@@ -192,7 +192,7 @@ static void HacksComp_ParseHorizontalSpeed(HacksComp* hacks) {
 	if (speedStr.length == 0) return;
 
 	Real32 speed = 0.0f;
-	if (!Convert_TryParseReal32(&speedStr, &speed) || speed <= 0.0f) return;
+	if (!Convert_TryParseReal32(&speedStr, &speed) || speed == 0.0f) return;
 	hacks->BaseHorSpeed = speed;
 }
 
