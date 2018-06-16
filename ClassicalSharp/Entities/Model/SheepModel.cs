@@ -89,7 +89,7 @@ namespace ClassicalSharp.Model {
 			DrawRotate(p.anim.leftLegX, 0, 0, RightLegBack, false);
 			UpdateVB();
 			
-			if (Utils.CaselessEquals(p.ModelName, "sheep_nofur")) return;
+			if (Utils.CaselessEq(p.ModelName, "sheep_nofur")) return;
 			ModelCache cache = game.ModelCache;
 			gfx.BindTexture(cache.Textures[furIndex].TexID);
 			DrawRotate(-p.HeadXRadians, 0, 0, FurHead, true);

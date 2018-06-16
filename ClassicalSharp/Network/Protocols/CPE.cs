@@ -211,7 +211,7 @@ namespace ClassicalSharp.Network.Protocols {
 		
 		void HandleChangeModel() {
 			byte id = reader.ReadUInt8();
-			string modelName = Utils.ToLower(reader.ReadString());
+			string modelName = reader.ReadString();
 			Entity entity = game.Entities.List[id];
 			if (entity != null) entity.SetModel(modelName);
 		}

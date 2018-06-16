@@ -199,13 +199,13 @@ namespace ClassicalSharp {
 		}
 		
 		public int CalcRenderType(string type) {
-			if (Utils.CaselessEquals(type, "legacyfast")) {
+			if (Utils.CaselessEq(type, "legacyfast")) {
 				return 0x03;
-			} else if (Utils.CaselessEquals(type, "legacy")) {
+			} else if (Utils.CaselessEq(type, "legacy")) {
 				return 0x01;
-			} else if (Utils.CaselessEquals(type, "normal")) {
+			} else if (Utils.CaselessEq(type, "normal")) {
 				return 0x00;
-			} else if (Utils.CaselessEquals(type, "normalfast")) {
+			} else if (Utils.CaselessEq(type, "normalfast")) {
 				return 0x02;
 			}
 			return -1;

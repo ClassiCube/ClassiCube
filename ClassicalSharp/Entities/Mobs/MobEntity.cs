@@ -25,7 +25,7 @@ namespace ClassicalSharp.Entities.Mobs {
 			physics.hacks = hacks;
 			physics.collisions = collisions;
 			
-			if (Utils.CaselessEquals(model, "pig") || Utils.CaselessEquals(model, "sheep")) {
+			if (Utils.CaselessEq(model, "pig") || Utils.CaselessEq(model, "sheep")) {
 				ai = new FleeAI(game, this);
 			} else {
 				ai = new HostileAI(game, this);

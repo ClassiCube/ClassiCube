@@ -18,16 +18,16 @@ namespace ClassicalSharp {
 			name = name.Substring(0, dirIndex);
 			Vector3 offset = game.SelectedPos.Intersect - (Vector3)game.SelectedPos.TranslatedPos;
 			
-			if (Utils.CaselessEquals(dir, "nw") || Utils.CaselessEquals(dir, "ne") ||
-			    Utils.CaselessEquals(dir, "sw") || Utils.CaselessEquals(dir, "se")) {
+			if (Utils.CaselessEq(dir, "nw") || Utils.CaselessEq(dir, "ne") ||
+			    Utils.CaselessEq(dir, "sw") || Utils.CaselessEq(dir, "se")) {
 				return RotateCorner(game, block, name, offset);
-			} else if (Utils.CaselessEquals(dir, "u") || Utils.CaselessEquals(dir, "d")) {
+			} else if (Utils.CaselessEq(dir, "u") || Utils.CaselessEq(dir, "d")) {
 				return RotateVertical(game, block, name, offset);
-			} else if (Utils.CaselessEquals(dir, "n") || Utils.CaselessEquals(dir, "w") ||
-			           Utils.CaselessEquals(dir, "s") || Utils.CaselessEquals(dir, "e")) {
+			} else if (Utils.CaselessEq(dir, "n") || Utils.CaselessEq(dir, "w") ||
+			           Utils.CaselessEq(dir, "s") || Utils.CaselessEq(dir, "e")) {
 				return RotateDirection(game, block, name, offset);
-			} else if (Utils.CaselessEquals(dir, "UD") || Utils.CaselessEquals(dir, "WE") ||
-			           Utils.CaselessEquals(dir, "NS")) {
+			} else if (Utils.CaselessEq(dir, "UD") || Utils.CaselessEq(dir, "WE") ||
+			           Utils.CaselessEq(dir, "NS")) {
 				return RotateOther(game, block, name, offset);
 			}
 			return block;

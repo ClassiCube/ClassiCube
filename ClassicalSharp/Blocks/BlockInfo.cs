@@ -238,7 +238,7 @@ namespace ClassicalSharp {
 
 		public static int FindID(string name) {
 			for (int b = 0; b < Count; b++) {
-				if (Utils.CaselessEquals(Name[b], name)) return b;
+				if (Utils.CaselessEq(Name[b], name)) return b;
 			}
 			return -1;
 		}

@@ -436,12 +436,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		
-		protected unsafe void SetCaretToCursor(int mouseX, int mouseY) {
+		protected void SetCaretToCursor(int mouseX, int mouseY) {
 			mouseX -= inputTex.X1; mouseY -= inputTex.Y1;
 			DrawTextArgs args = new DrawTextArgs(null, font, true);
 			IDrawer2D drawer = game.Drawer2D;
 			int offset = 0, charHeight = caretTex.Height;
-			string oneChar = new String('A', 1);
 			
 			for (int y = 0; y < lines.Length; y++) {
 				string line = lines[y];
@@ -452,11 +451,7 @@ namespace ClassicalSharp.Gui.Widgets {
 					int charOffset = drawer.MeasureSize(ref args).Width;
 					if (y == 0) charOffset += prefixWidth;
 						
-					// avoid allocating an unnecessary string
-					fixed(char* ptr = oneChar)
-						ptr[0] = line[x];
-					
-					args.Text = oneChar;
+					args.Text = new string(line[x], 1);
 					int charWidth = drawer.MeasureSize(ref args).Width;
 					
 					if (GuiElement.Contains(charOffset, y * charHeight, charWidth, charHeight, mouseX, mouseY)) {

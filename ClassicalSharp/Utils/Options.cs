@@ -88,7 +88,7 @@ namespace ClassicalSharp {
 		
 		static bool IsChangedOption(string key) {
 			for (int i = 0; i < OptionsChanged.Count; i++) {
-				if (Utils.CaselessEquals(key, OptionsChanged[i])) return true;
+				if (Utils.CaselessEq(key, OptionsChanged[i])) return true;
 			}
 			return false;
 		}
@@ -155,7 +155,7 @@ namespace ClassicalSharp {
 		
 		static int FindOption(string key) {
 			for (int i = 0; i < OptionsKeys.Count; i++) {
-				if (Utils.CaselessEquals(OptionsKeys[i], key)) return i;
+				if (Utils.CaselessEq(OptionsKeys[i], key)) return i;
 			}
 			return -1;
 		}

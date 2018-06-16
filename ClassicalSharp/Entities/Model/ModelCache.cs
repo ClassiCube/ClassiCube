@@ -49,7 +49,7 @@ namespace ClassicalSharp.Model {
 		
 		public int GetTextureIndex(string texName) {
 			for (int i = 0; i < Textures.Count; i++) {
-				if (Textures[i].Name == texName) return i;
+				if (Utils.CaselessEq(Textures[i].Name, texName)) return i;
 			}
 			return -1;
 		}
@@ -58,7 +58,8 @@ namespace ClassicalSharp.Model {
 		public IModel Get(string modelName) {
 			for (int i = 0; i < Models.Count; i++) {
 				CachedModel m = Models[i];
-				if (m.Name != modelName) continue;
+				if (!Utils.CaselessEq(m.Name, modelName)) continue;
+				
 				if (!m.Instance.initalised) InitModel(m);
 				return m.Instance;
 			}

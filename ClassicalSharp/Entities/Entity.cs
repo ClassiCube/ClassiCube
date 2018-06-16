@@ -116,7 +116,7 @@ namespace ClassicalSharp.Entities {
 			string scale = sep == -1 ? null : model.Substring(sep + 1);
 			ModelName = sep == -1 ? model : model.Substring(0, sep);
 			
-			if (Utils.CaselessEquals(model, "giant")) {
+			if (Utils.CaselessEq(model, "giant")) {
 				ModelName = "humanoid";
 				ModelScale *= 2;
 			}

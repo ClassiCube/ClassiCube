@@ -164,15 +164,11 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		
 		unsafe void MeasureContentSizes(SpecialInputTab e, Font font, Size* sizes) {
-			string s = new String('\0', e.CharsPerItem);
-			DrawTextArgs args = new DrawTextArgs(s, font, false);
-			// avoid allocating temporary strings here
-			fixed(char* ptr = s) {
-				for (int i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
-					for (int j = 0; j < e.CharsPerItem; j++)
-						ptr[j] = e.Contents[i + j];
-					sizes[i / e.CharsPerItem] = game.Drawer2D.MeasureSize(ref args);
-				}
+			DrawTextArgs args = new DrawTextArgs(null, font, false);
+
+			for (int i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
+				args.Text = e.Contents.Substring(i, e.CharsPerItem);
+				sizes[i / e.CharsPerItem] = game.Drawer2D.MeasureSize(ref args);
 			}
 		}
 		
@@ -215,21 +211,17 @@ namespace ClassicalSharp.Gui.Widgets {
 			}
 		}
 		
-		unsafe void DrawContent(IDrawer2D drawer, Font font, SpecialInputTab e, int yOffset) {
-			string s = new String('\0', e.CharsPerItem);
+		void DrawContent(IDrawer2D drawer, Font font, SpecialInputTab e, int yOffset) {
 			int wrap = e.ItemsPerRow;
-			DrawTextArgs args = new DrawTextArgs(s, font, false);
+			DrawTextArgs args = new DrawTextArgs(null, font, false);
 			
-			fixed(char* ptr = s) {
-				for (int i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
-					for (int j = 0; j < e.CharsPerItem; j++)
-						ptr[j] = e.Contents[i + j];
-					int item = i / e.CharsPerItem;
-					
-					int x = (item % wrap) * elementSize.Width, y = (item / wrap) * elementSize.Height;
-					y += yOffset;
-					drawer.DrawText(ref args, x, y);
-				}
+			for (int i = 0; i < e.Contents.Length; i += e.CharsPerItem) {
+				args.Text = e.Contents.Substring(i, e.CharsPerItem);
+				int item = i / e.CharsPerItem;
+				
+				int x = (item % wrap) * elementSize.Width, y = (item / wrap) * elementSize.Height;
+				y += yOffset;
+				drawer.DrawText(ref args, x, y);
 			}
 		}
 	}

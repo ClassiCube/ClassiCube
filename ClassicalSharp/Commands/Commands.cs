@@ -131,7 +131,7 @@ namespace ClassicalSharp.Commands {
 			if (args.Length == 1) {
 				game.Chat.Add("&e/client model: &cYou didn't specify a model name.");
 			} else {
-				game.LocalPlayer.SetModel(Utils.ToLower(args[1]));
+				game.LocalPlayer.SetModel(args[1]);
 			}
 		}
 	}
@@ -161,7 +161,7 @@ namespace ClassicalSharp.Commands {
 			persist = false;
 			
 			if (!ParseBlock(args)) return;
-			if (args.Length > 2 && Utils.CaselessEquals(args[2], "yes"))
+			if (args.Length > 2 && Utils.CaselessEq(args[2], "yes"))
 				persist = true;
 			
 			game.Chat.Add("&eCuboid: &fPlace or delete a block.", MessageType.ClientStatus1);
@@ -170,7 +170,7 @@ namespace ClassicalSharp.Commands {
 		
 		bool ParseBlock(string[] args) {
 			if (args.Length == 1) return true;
-			if (Utils.CaselessEquals(args[1], "yes")) { persist = true; return true; }
+			if (Utils.CaselessEq(args[1], "yes")) { persist = true; return true; }
 			
 			int temp = BlockInfo.FindID(args[1]);
 			BlockID block = 0;

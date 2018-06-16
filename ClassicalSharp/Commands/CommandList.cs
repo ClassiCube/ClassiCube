@@ -22,7 +22,7 @@ namespace ClassicalSharp.Commands {
 				return true;
 			
 			return Utils.CaselessStarts(input, prefixSpace)
-				|| Utils.CaselessEquals(input, prefix);
+				|| Utils.CaselessEq(input, prefix);
 		}
 		
 		protected Game game;

@@ -19,7 +19,7 @@ namespace ClassicalSharp {
 	public delegate void Action();
 	// ################################################################
 	
-	public enum Anchor { 
+	public enum Anchor {
 		Min,    // left or top
 		Centre, // middle
 		Max,    // right or bottom
@@ -46,7 +46,7 @@ namespace ClassicalSharp {
 			return new String(output, 0, usedChars);
 		}
 
-#if !LAUNCHER		
+		#if !LAUNCHER
 		public static string RemoveEndPlus(string value) {
 			// Workaround for MCDzienny (and others) use a '+' at the end to distinguish classicube.net accounts
 			// from minecraft.net accounts. Unfortunately they also send this ending + to the client.
@@ -55,13 +55,14 @@ namespace ClassicalSharp {
 			return value[value.Length - 1] == '+' ?
 				value.Substring(0, value.Length - 1) : value;
 		}
-#endif
+		#endif
 		
 		const StringComparison comp = StringComparison.OrdinalIgnoreCase;
+		public static bool CaselessEq(string a, string b) { return a.Equals(b, comp); }
 		public static bool CaselessEquals(string a, string b) { return a.Equals(b, comp); }
 		public static bool CaselessStarts(string a, string b) { return a.StartsWith(b, comp); }
-		public static bool CaselessEnds(string a, string b) { return a.EndsWith(b, comp); }		
-				
+		public static bool CaselessEnds(string a, string b) { return a.EndsWith(b, comp); }
+		
 		public static void LogDebug(string text) {
 			try { Console.WriteLine(text); } catch { }
 		}
@@ -79,7 +80,7 @@ namespace ClassicalSharp {
 			return steps;
 		}
 
-#if !LAUNCHER
+		#if !LAUNCHER
 		/// <summary> Attempts to caselessly parse the given string as a Key enum member,
 		/// returning defValue if there was an error parsing. </summary>
 		public static bool TryParseEnum<T>(string value, T defValue, out T result) {
@@ -93,7 +94,7 @@ namespace ClassicalSharp {
 			result = mapping;
 			return true;
 		}
-	
+		
 		public static int AdjViewDist(float value) {
 			return (int)(1.4142135 * value);
 		}
@@ -108,7 +109,7 @@ namespace ClassicalSharp {
 			adjCol *= tint;
 			return adjCol.Pack();
 		}
-	
+		
 		/// <summary> Determines the skin type of the specified bitmap. </summary>
 		public static SkinType GetSkinType(Bitmap bmp) {
 			if (bmp.Width == bmp.Height * 2) {
@@ -133,7 +134,7 @@ namespace ClassicalSharp {
 			int https = value.IndexOf("https://", index);
 			return http == index || https == index;
 		}
-#endif
+		#endif
 
 		/// <summary> Conversion for code page 437 characters from index 0 to 31 to unicode. </summary>
 		const string ControlCharReplacements = "\0☺☻♥♦♣♠•◘○◙♂♀♪♫☼►◄↕‼¶§▬↨↑↓→←∟↔▲▼";
@@ -167,15 +168,22 @@ namespace ClassicalSharp {
 			return ExtendedCharReplacements[c - 0x7F];
 		}
 		
-		public unsafe static string ToLower(string value) {
-			fixed(char* ptr = value) {
-				for (int i = 0; i < value.Length; i++) {
-					char c = ptr[i];
-					if (c < 'A' || c > 'Z') continue;
-					c += ' '; ptr[i] = c;
-				}
+		public static string ToLower(string src) {
+			bool hasUpper = false;
+			for (int i = 0; i < src.Length; i++) {
+				char c = src[i];
+				if (c >= 'A' && c <= 'Z') { hasUpper = true; break; }
 			}
-			return value;
+			
+			if (!hasUpper) return src;			
+			char[] dst = new char[src.Length];
+			
+			for (int i = 0; i < src.Length; i++) {
+				char c = src[i];
+				if (c >= 'A' && c <= 'Z') { c += ' '; }
+				dst[i] = c;
+			}
+			return new string(dst);
 		}
 		
 		public static uint CRC32(byte[] data, int length) {
@@ -188,14 +196,14 @@ namespace ClassicalSharp {
 			return crc ^ 0xffffffffU;
 		}
 
-#if !LAUNCHER
+		#if !LAUNCHER
 		// Not all languages use . as their decimal point separator
 		public static bool TryParseDecimal(string s, out float result) {
-			if (s.IndexOf(',') >= 0) 
+			if (s.IndexOf(',') >= 0)
 				s = s.Replace(',', '.');
 			float temp;
 			
-			result = 0;			
+			result = 0;
 			if (!Single.TryParse(s, style, NumberFormatInfo.InvariantInfo, out temp)) return false;
 			if (Single.IsInfinity(temp) || Single.IsNaN(temp)) return false;
 			result = temp;
@@ -203,7 +211,7 @@ namespace ClassicalSharp {
 		}
 		
 		public static float ParseDecimal(string s) {
-			if (s.IndexOf(',') >= 0) 
+			if (s.IndexOf(',') >= 0)
 				s = s.Replace(',', '.');
 			return Single.Parse(s, style, NumberFormatInfo.InvariantInfo);
 		}
@@ -211,6 +219,6 @@ namespace ClassicalSharp {
 		const NumberStyles style = NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite
 			| NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
 		
-#endif
+		#endif
 	}
 }

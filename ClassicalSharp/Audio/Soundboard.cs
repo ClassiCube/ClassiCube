@@ -27,7 +27,7 @@ namespace ClassicalSharp.Audio {
 				if (!Utils.CaselessStarts(name, sndGroup)) continue;
 				
 				// Convert dig_grass1.wav to grass
-				name = Utils.ToLower(name.Substring(sndGroup.Length));
+				name = name.Substring(sndGroup.Length);
 				name = name.Substring(0, name.Length - 1);
 				
 				SoundGroup group = Find(name);
@@ -49,7 +49,7 @@ namespace ClassicalSharp.Audio {
 		
 		SoundGroup Find(string name) {
 			for (int i = 0; i < groups.Count; i++) {
-				if (groups[i].Name == name) return groups[i];
+				if (Utils.CaselessEq(groups[i].Name, name)) return groups[i];
 			}
 			return null;
 		}
