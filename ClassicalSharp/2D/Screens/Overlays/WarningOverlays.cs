@@ -155,7 +155,6 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		protected override void OnNoClick(Game g, Widget w) {
 			game.Gui.DisposeOverlay(this);
-			string url = Identifier.Substring(3);
 			
 			ConfirmDenyOverlay overlay = new ConfirmDenyOverlay(game, IsAlways(w));
 			overlay.Url = Identifier;
@@ -169,7 +168,6 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			long contentLength = (long)item.Data;
 			if (contentLength <= 0) return;
-			string url = Identifier.Substring(3);
 			
 			float contentLengthMB = (contentLength / 1024f / 1024f);
 			lines[3] = "Download size: " + contentLengthMB.ToString("F3") + " MB";

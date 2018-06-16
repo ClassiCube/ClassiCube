@@ -20,7 +20,7 @@ namespace Launcher.Patcher {
 		}
 		
 		const string jarClassicUri = "http://launcher.mojang.com/mc/game/c0.30_01c/client/54622801f5ef1bcc1549a842c5b04cb5d5583005/client.jar";
-		const string jar162Uri = "https://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar";
+		const string jar162Uri = "http://launcher.mojang.com/mc/game/1.6.2/client/b6cb68afde1d9cf4a20cbf27fa90d0828bf440a4/client.jar";
 		const string pngTerrainPatchUri = "http://static.classicube.net/terrain-patch2.png";
 		const string pngGuiPatchUri = "http://static.classicube.net/gui.png";
 		public const string assetsUri = "http://resources.download.minecraft.net/";
