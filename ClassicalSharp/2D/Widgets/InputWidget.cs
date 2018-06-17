@@ -410,7 +410,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			if (key == Key.V && Text.Length < maxChars) {
 				string text = null;
 				try {
-					text = game.window.ClipboardText.Trim(trimChars);
+					text = game.window.GetClipboardText().Trim(trimChars);
 				} catch (Exception ex) {
 					ErrorHandler.LogError("Paste from clipboard", ex);
 					const string warning = "&cError while trying to paste from clipboard.";
@@ -424,7 +424,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			} else if (key == Key.C) {
 				if (Text.Empty) return true;
 				try {
-					game.window.ClipboardText = Text.ToString();
+					game.window.SetClipboardText(Text.ToString());
 				} catch (Exception ex) {
 					ErrorHandler.LogError("Copy to clipboard", ex);
 					const string warning = "&cError while trying to copy to clipboard.";

@@ -30,6 +30,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using OpenTK.Graphics;
 using OpenTK.Input;
 
@@ -56,6 +57,9 @@ namespace OpenTK.Platform.X11 {
 
 		IntPtr net_wm_icon;
 		IntPtr net_frame_extents;
+
+		IntPtr clipboard, xa_targets, xa_utf8_string, xa_atom, data_sel;
+		string clipboard_paste_text, clipboard_copy_text;
 
 		static readonly IntPtr xa_cardinal = (IntPtr)6;
 		static readonly IntPtr _remove = (IntPtr)0;
@@ -188,6 +192,12 @@ namespace OpenTK.Platform.X11 {
 			net_wm_state_maximized_vertical = API.XInternAtom(window.Display, "_NET_WM_STATE_MAXIMIZED_VERT", false);
 			net_wm_icon = API.XInternAtom(window.Display, "_NEW_WM_ICON", false);
 			net_frame_extents = API.XInternAtom(window.Display, "_NET_FRAME_EXTENTS", false);
+
+			clipboard = API.XInternAtom(window.Display, "CLIPBOARD", false);
+			xa_targets = API.XInternAtom(window.Display, "TARGETS", false);
+			xa_utf8_string = API.XInternAtom(window.Display, "UTF8_STRING", false);
+			xa_atom = API.XInternAtom(window.Display, "ATOM", false);
+			data_sel = API.XInternAtom(window.Display, "CS_SEL_DATA", false);
 		}
 
 		void SetWindowMinMax(short min_width, short min_height, short max_width, short max_height) {
@@ -292,13 +302,18 @@ namespace OpenTK.Platform.X11 {
 				}
 			}
 		}
+
+		bool GetPendingEvent() {
+			return API.XCheckWindowEvent(window.Display, window.WindowHandle, window.EventMask, ref e) ||
+				API.XCheckTypedWindowEvent(window.Display, window.WindowHandle, XEventName.ClientMessage, ref e) ||
+				API.XCheckTypedWindowEvent(window.Display, window.WindowHandle, XEventName.SelectionNotify, ref e) ||
+				API.XCheckTypedWindowEvent(window.Display, window.WindowHandle, XEventName.SelectionRequest, ref e);
+		}
 		
-		public void ProcessEvents() {
+		public unsafe void ProcessEvents() {
 			// Process all pending events
 			while (Exists && window != null) {
-				if (!API.XCheckWindowEvent(window.Display, window.WindowHandle, window.EventMask, ref e) &&
-				    !API.XCheckTypedWindowEvent(window.Display, window.WindowHandle, XEventName.ClientMessage, ref e))
-					break;
+				if (!GetPendingEvent ()) break;
 				
 				// Respond to the event e
 				switch (e.type) {
@@ -407,12 +422,66 @@ namespace OpenTK.Platform.X11 {
 					case XEventName.PropertyNotify:
 						if (e.PropertyEvent.atom == net_wm_state) {
 							if (WindowStateChanged != null)
-								WindowStateChanged(this, EventArgs.Empty);
+								WindowStateChanged (this, EventArgs.Empty);
 						}
 
 						//if (e.PropertyEvent.atom == net_frame_extents) {
 						//    RefreshWindowBorders();
 						//}
+						break;
+
+					case XEventName.SelectionNotify:
+						clipboard_paste_text = "";
+
+						if (e.SelectionEvent.selection == clipboard && e.SelectionEvent.target == xa_utf8_string && e.SelectionEvent.property == data_sel) {
+							IntPtr prop_type, num_items, bytes_after, data = IntPtr.Zero;
+							int prop_format;
+
+							API.XGetWindowProperty (window.Display, window.WinHandle, data_sel, IntPtr.Zero, new IntPtr (1024), false, IntPtr.Zero,
+							                        out prop_type, out prop_format, out num_items, out bytes_after, ref data);
+
+							API.XDeleteProperty (window.Display, window.WinHandle, data_sel);
+							if (num_items == IntPtr.Zero) break;
+
+							if (prop_type == xa_utf8_string) {
+								byte[] dst = new byte[(int)num_items];
+								byte* src = (byte*)data;
+								for (int i = 0; i < dst.Length; i++) { dst[i] = src[i]; }
+
+								clipboard_paste_text = Encoding.UTF8.GetString(dst);
+							}
+							API.XFree (data);
+						}
+						break;
+
+					case XEventName.SelectionRequest:
+						XEvent reply = default(XEvent);
+						reply.SelectionEvent.type = XEventName.SelectionNotify;
+						reply.SelectionEvent.send_event = true;
+						reply.SelectionEvent.display = window.Display;
+						reply.SelectionEvent.requestor = e.SelectionRequestEvent.requestor;
+						reply.SelectionEvent.selection = e.SelectionRequestEvent.selection;
+						reply.SelectionEvent.target = e.SelectionRequestEvent.target;
+						reply.SelectionEvent.property = IntPtr.Zero;
+						reply.SelectionEvent.time = e.SelectionRequestEvent.time;
+
+						if (e.SelectionRequestEvent.selection == clipboard && e.SelectionRequestEvent.target == xa_utf8_string && clipboard_copy_text != null) {
+							reply.SelectionEvent.property = GetSelectionProperty(ref e);
+
+							byte[] utf8_data = Encoding.UTF8.GetBytes (clipboard_copy_text);
+							fixed (byte* utf8_ptr = utf8_data) {
+								API.XChangeProperty(window.Display, reply.SelectionEvent.requestor, reply.SelectionEvent.property, xa_utf8_string, 8,
+								                    PropertyMode.Replace, (IntPtr)utf8_ptr, utf8_data.Length);
+							}
+						} else if (e.SelectionRequestEvent.selection == clipboard && e.SelectionRequestEvent.target == xa_targets) {
+							reply.SelectionEvent.property = GetSelectionProperty(ref e);
+
+							IntPtr[] data = new IntPtr[] { xa_utf8_string, xa_targets };
+							API.XChangeProperty(window.Display, reply.SelectionEvent.requestor, reply.SelectionEvent.property, xa_atom, 32,
+							                    PropertyMode.Replace, data, data.Length);
+						}
+						
+						API.XSendEvent(window.Display, e.SelectionRequestEvent.requestor, true, EventMask.NoEventMask, ref reply);
 						break;
 						
 					default:
@@ -421,10 +490,38 @@ namespace OpenTK.Platform.X11 {
 				}
 			}
 		}
+
+		IntPtr GetSelectionProperty(ref XEvent e) {
+			IntPtr property  = e.SelectionRequestEvent.property;
+			if (property != IntPtr.Zero) return property;
+
+			/* For obsolete clients. See ICCCM spec, selections chapter for reasoning. */
+			return e.SelectionRequestEvent.target;
+		}
 		
-		public string GetClipboardText() { return ""; }
+		public string GetClipboardText() {
+			IntPtr owner = API.XGetSelectionOwner(window.Display, clipboard);
+			if (owner == IntPtr.Zero) return ""; // no window owner
+
+			Console.WriteLine (window.WinHandle + ", " + window.WindowHandle);
+			int result = API.XConvertSelection (window.Display, clipboard, xa_utf8_string, data_sel, window.WinHandle, IntPtr.Zero);
+			Console.WriteLine (owner.ToInt64 () + ", " + result);
+
+			clipboard_paste_text = null;
+
+			// wait up to 1 second for SelectionNotify event to arrive
+			for (int i = 0; i < 10; i++) {
+				ProcessEvents ();
+				if (clipboard_paste_text != null) return clipboard_paste_text;
+				Thread.Sleep(100);
+			}
+			return ""; 
+		}
 		
-		public void SetClipboardText( string value ) {	}	
+		public void SetClipboardText(string value) {
+			clipboard_copy_text = value;
+			API.XSetSelectionOwner(window.Display, clipboard, window.WinHandle, IntPtr.Zero);
+		}	
 		
 		public Rectangle Bounds {
 			get { return bounds; }

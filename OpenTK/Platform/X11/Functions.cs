@@ -74,10 +74,10 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-        public extern static bool XQueryPointer(IntPtr display, IntPtr window, out IntPtr root, out IntPtr child, out int root_x, out int root_y, out int win_x, out int win_y, out int keys_buttons);
-        
-        [DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-        public extern static uint XWarpPointer(IntPtr display, IntPtr src_w, IntPtr dest_w, int src_x, int src_y, uint src_width, uint src_height, int dest_x, int dest_y);
+		public extern static bool XQueryPointer(IntPtr display, IntPtr window, out IntPtr root, out IntPtr child, out int root_x, out int root_y, out int win_x, out int win_y, out int keys_buttons);
+		
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static uint XWarpPointer(IntPtr display, IntPtr src_w, IntPtr dest_w, int src_x, int src_y, uint src_width, uint src_height, int dest_x, int dest_y);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XFree(IntPtr data);
@@ -108,16 +108,19 @@ namespace OpenTK.Platform.X11 {
 		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, IntPtr[] data, int nelements);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, PropertyMode mode, IntPtr data, int nelements);
+		
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static int XDeleteProperty(IntPtr display, IntPtr window, IntPtr property);
 		
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-        public extern static int XDefineCursor(IntPtr display, IntPtr window, IntPtr cursor);
+		public extern static int XDefineCursor(IntPtr display, IntPtr window, IntPtr cursor);
 
-        [DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-        public extern static int XUndefineCursor(IntPtr display, IntPtr window);
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static int XUndefineCursor(IntPtr display, IntPtr window);
 
-        [DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-        public extern static int XFreeCursor(IntPtr display, IntPtr cursor);
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static int XFreeCursor(IntPtr display, IntPtr cursor);
 
 		// Drawing
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
@@ -139,7 +142,7 @@ namespace OpenTK.Platform.X11 {
 		public extern static IntPtr XCreatePixmap(IntPtr display, IntPtr d, int width, int height, int depth);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
-        public extern static IntPtr XCreatePixmapCursor(IntPtr display, IntPtr source, IntPtr mask, ref XColor foregroundCol, ref XColor backgroundCol, int x_hot, int y_hot);
+		public extern static IntPtr XCreatePixmapCursor(IntPtr display, IntPtr source, IntPtr mask, ref XColor foregroundCol, ref XColor backgroundCol, int x_hot, int y_hot);
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public extern static IntPtr XFreePixmap(IntPtr display, IntPtr pixmap);
@@ -192,6 +195,15 @@ namespace OpenTK.Platform.X11 {
 
 		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
 		public static extern int XRefreshKeyboardMapping(ref XMappingEvent event_map);
+		
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static IntPtr XGetSelectionOwner(IntPtr display, IntPtr selection);
+
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static int XConvertSelection(IntPtr display, IntPtr selection, IntPtr target, IntPtr property, IntPtr requestor, IntPtr time);
+
+		[DllImport("libX11"), SuppressUnmanagedCodeSecurity]
+		public extern static int XSetSelectionOwner(IntPtr display, IntPtr selection, IntPtr owner, IntPtr time);
 
 		static readonly IntPtr CopyFromParent = IntPtr.Zero;
 
@@ -207,7 +219,7 @@ namespace OpenTK.Platform.X11 {
 			xev.ClientMessageEvent.ptr2 = l1;
 			xev.ClientMessageEvent.ptr3 = l2;
 
-			XSendEvent(window.Display, window.RootWindow, false, 
+			XSendEvent(window.Display, window.RootWindow, false,
 			           EventMask.SubstructureRedirectMask | EventMask.SubstructureNotifyMask, ref xev);
 		}
 
