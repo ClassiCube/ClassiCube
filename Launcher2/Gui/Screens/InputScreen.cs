@@ -72,9 +72,11 @@ namespace Launcher.Gui.Screens {
 				RedrawLastInput();
 				OnRemovedChar();
 			} else if (e.Key == Key.C && ControlDown) {
-				curInput.Chars.CopyToClipboard();
+				if (String.IsNullOrEmpty(curInput.Text)) return;				
+				game.Window.SetClipboardText(curInput.Text);
 			} else if (e.Key == Key.V && ControlDown) {
-				if (curInput.Chars.CopyFromClipboard()) RedrawLastInput();
+				string text = game.Window.GetClipboardText();
+				if (curInput.Chars.CopyFromClipboard(text)) RedrawLastInput();
 			} else if (e.Key == Key.Escape) {
 				if (curInput.Chars.Clear()) RedrawLastInput();
 			} else if (e.Key == Key.Left) {

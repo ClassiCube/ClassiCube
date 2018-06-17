@@ -58,7 +58,7 @@ namespace OpenTK.Platform.X11 {
 		IntPtr net_wm_icon;
 		IntPtr net_frame_extents;
 
-		IntPtr clipboard, xa_targets, xa_utf8_string, xa_atom, data_sel;
+		IntPtr xa_clipboard, xa_targets, xa_utf8_string, xa_atom, xa_data_sel;
 		string clipboard_paste_text, clipboard_copy_text;
 
 		static readonly IntPtr xa_cardinal = (IntPtr)6;
@@ -193,11 +193,11 @@ namespace OpenTK.Platform.X11 {
 			net_wm_icon = API.XInternAtom(window.Display, "_NEW_WM_ICON", false);
 			net_frame_extents = API.XInternAtom(window.Display, "_NET_FRAME_EXTENTS", false);
 
-			clipboard = API.XInternAtom(window.Display, "CLIPBOARD", false);
+			xa_clipboard = API.XInternAtom(window.Display, "CLIPBOARD", false);
 			xa_targets = API.XInternAtom(window.Display, "TARGETS", false);
 			xa_utf8_string = API.XInternAtom(window.Display, "UTF8_STRING", false);
 			xa_atom = API.XInternAtom(window.Display, "ATOM", false);
-			data_sel = API.XInternAtom(window.Display, "CS_SEL_DATA", false);
+			xa_data_sel = API.XInternAtom(window.Display, "CS_SEL_DATA", false);
 		}
 
 		void SetWindowMinMax(short min_width, short min_height, short max_width, short max_height) {
@@ -433,14 +433,14 @@ namespace OpenTK.Platform.X11 {
 					case XEventName.SelectionNotify:
 						clipboard_paste_text = "";
 
-						if (e.SelectionEvent.selection == clipboard && e.SelectionEvent.target == xa_utf8_string && e.SelectionEvent.property == data_sel) {
+						if (e.SelectionEvent.selection == xa_clipboard && e.SelectionEvent.target == xa_utf8_string && e.SelectionEvent.property == xa_data_sel) {
 							IntPtr prop_type, num_items, bytes_after, data = IntPtr.Zero;
 							int prop_format;
 
-							API.XGetWindowProperty (window.Display, window.WinHandle, data_sel, IntPtr.Zero, new IntPtr (1024), false, IntPtr.Zero,
+							API.XGetWindowProperty (window.Display, window.WinHandle, xa_data_sel, IntPtr.Zero, new IntPtr (1024), false, IntPtr.Zero,
 							                        out prop_type, out prop_format, out num_items, out bytes_after, ref data);
 
-							API.XDeleteProperty (window.Display, window.WinHandle, data_sel);
+							API.XDeleteProperty (window.Display, window.WinHandle, xa_data_sel);
 							if (num_items == IntPtr.Zero) break;
 
 							if (prop_type == xa_utf8_string) {
@@ -465,7 +465,7 @@ namespace OpenTK.Platform.X11 {
 						reply.SelectionEvent.property = IntPtr.Zero;
 						reply.SelectionEvent.time = e.SelectionRequestEvent.time;
 
-						if (e.SelectionRequestEvent.selection == clipboard && e.SelectionRequestEvent.target == xa_utf8_string && clipboard_copy_text != null) {
+						if (e.SelectionRequestEvent.selection == xa_clipboard && e.SelectionRequestEvent.target == xa_utf8_string && clipboard_copy_text != null) {
 							reply.SelectionEvent.property = GetSelectionProperty(ref e);
 
 							byte[] utf8_data = Encoding.UTF8.GetBytes (clipboard_copy_text);
@@ -473,7 +473,7 @@ namespace OpenTK.Platform.X11 {
 								API.XChangeProperty(window.Display, reply.SelectionEvent.requestor, reply.SelectionEvent.property, xa_utf8_string, 8,
 								                    PropertyMode.Replace, (IntPtr)utf8_ptr, utf8_data.Length);
 							}
-						} else if (e.SelectionRequestEvent.selection == clipboard && e.SelectionRequestEvent.target == xa_targets) {
+						} else if (e.SelectionRequestEvent.selection == xa_clipboard && e.SelectionRequestEvent.target == xa_targets) {
 							reply.SelectionEvent.property = GetSelectionProperty(ref e);
 
 							IntPtr[] data = new IntPtr[] { xa_utf8_string, xa_targets };
@@ -500,13 +500,10 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		public string GetClipboardText() {
-			IntPtr owner = API.XGetSelectionOwner(window.Display, clipboard);
+			IntPtr owner = API.XGetSelectionOwner(window.Display, xa_clipboard);
 			if (owner == IntPtr.Zero) return ""; // no window owner
 
-			Console.WriteLine (window.WinHandle + ", " + window.WindowHandle);
-			int result = API.XConvertSelection (window.Display, clipboard, xa_utf8_string, data_sel, window.WinHandle, IntPtr.Zero);
-			Console.WriteLine (owner.ToInt64 () + ", " + result);
-
+			API.XConvertSelection(window.Display, xa_clipboard, xa_utf8_string, xa_data_sel, window.WinHandle, IntPtr.Zero);
 			clipboard_paste_text = null;
 
 			// wait up to 1 second for SelectionNotify event to arrive
@@ -520,7 +517,7 @@ namespace OpenTK.Platform.X11 {
 		
 		public void SetClipboardText(string value) {
 			clipboard_copy_text = value;
-			API.XSetSelectionOwner(window.Display, clipboard, window.WinHandle, IntPtr.Zero);
+			API.XSetSelectionOwner(window.Display, xa_clipboard, window.WinHandle, IntPtr.Zero);
 		}	
 		
 		public Rectangle Bounds {

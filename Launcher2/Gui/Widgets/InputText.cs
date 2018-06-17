@@ -1,7 +1,6 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Drawing;
-using System.Windows.Forms;
 using ClassicalSharp;
 
 namespace Launcher.Gui.Widgets {
@@ -100,17 +99,12 @@ namespace Launcher.Gui.Widgets {
 			return true;
 		}
 		
-		/// <summary> Copies the contents of the currently entered text to the system clipboard. </summary>
-		public void CopyToClipboard() {
-			if (String.IsNullOrEmpty(input.Text)) return;
-			Clipboard.SetText(input.Text);
-		}
 		static char[] trimChars = new char[] {'\r', '\n', '\v', '\f', ' ', '\t', '\0'};
 		
 		/// <summary> Sets the currently entered text to the contents of the system clipboard. </summary>
 		/// <returns> true if a redraw is necessary, false otherwise. </returns>
-		public bool CopyFromClipboard() {
-			string text = Clipboard.GetText().Trim(trimChars);
+		public bool CopyFromClipboard(string text) {
+			text = text.Trim(trimChars);
 			if (String.IsNullOrEmpty(text)) return false;
 			if (input.Text.Length >= MaxChars) return false;
 			
