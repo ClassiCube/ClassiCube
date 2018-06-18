@@ -214,6 +214,12 @@ PackedCol Scroll_HoverCol = PACKEDCOL_CONST(122, 122, 122, 220);
 static void ScrollbarWidget_Init(GuiElement* elem) { }
 static void ScrollbarWidget_Free(GuiElement* elem) { }
 
+static void ScrollbarWidget_ClampScrollY(ScrollbarWidget* widget) {
+	Int32 maxRows = widget->TotalRows - TABLE_MAX_ROWS_DISPLAYED;
+	if (widget->ScrollY >= maxRows) widget->ScrollY = maxRows;
+	if (widget->ScrollY < 0) widget->ScrollY = 0;
+}
+
 static Real32 ScrollbarWidget_GetScale(ScrollbarWidget* widget) {
 	Real32 rows = (Real32)widget->TotalRows;
 	return (widget->Height - SCROLL_BORDER * 2) / rows;
@@ -317,12 +323,6 @@ void ScrollbarWidget_Create(ScrollbarWidget* widget) {
 	widget->ScrollingAcc = 0.0f;
 	widget->DraggingMouse = false;
 	widget->MouseOffset = 0;
-}
-
-static void ScrollbarWidget_ClampScrollY(ScrollbarWidget* widget) {
-	Int32 maxRows = widget->TotalRows - TABLE_MAX_ROWS_DISPLAYED;
-	if (widget->ScrollY >= maxRows) widget->ScrollY = maxRows;
-	if (widget->ScrollY < 0) widget->ScrollY = 0;
 }
 
 
@@ -1055,7 +1055,7 @@ void InputWidget_AppendString(InputWidget* widget, STRING_PURE String* text) {
 	Elem_Recreate(widget);
 }
 
-static void InputWidget_Append(InputWidget* widget, UInt8 c) {
+void InputWidget_Append(InputWidget* widget, UInt8 c) {
 	if (!InputWidget_TryAppendChar(widget, c)) return;
 	Elem_Recreate(widget);
 }

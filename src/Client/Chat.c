@@ -442,9 +442,10 @@ static void CuboidCommand_DoCuboid(void) {
 	BlockID toPlace = (BlockID)cuboid_block;
 	if (cuboid_block == -1) toPlace = Inventory_SelectedBlock;
 
-	for (Int32 y = min.Y; y <= max.Y; y++) {
-		for (Int32 z = min.Z; z <= max.Z; z++) {
-			for (Int32 x = min.X; x <= max.X; x++) {
+	Int32 x, y, z;
+	for (y = min.Y; y <= max.Y; y++) {
+		for (z = min.Z; z <= max.Z; z++) {
+			for (x = min.X; x <= max.X; x++) {
 				Game_UpdateBlock(x, y, z, toPlace);
 			}
 		}

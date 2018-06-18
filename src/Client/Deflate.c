@@ -415,7 +415,7 @@ static void Inflate_InflateFast(InflateState* state) {
 	}
 }
 
-static void Inflate_Process(InflateState* state) {
+void Inflate_Process(InflateState* state) {
 	for (;;) {
 		switch (state->State) {
 		case INFLATE_STATE_HEADER: {

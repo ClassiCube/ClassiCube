@@ -456,17 +456,6 @@ void Builder_Init(void) {
 	Builder_Offsets[FACE_YMAX] = EXTCHUNK_SIZE_2;
 }
 
-static void Builder_SetDefault(void) {
-	Builder_StretchXLiquid = NULL;
-	Builder_StretchX       = NULL;
-	Builder_StretchZ       = NULL;
-	Builder_RenderBlock    = NULL;
-
-	Builder_UseBitFlags = false;
-	Builder_PreStretchTiles  = Builder_DefaultPreStretchTiles;
-	Builder_PostStretchTiles = Builder_DefaultPostStretchTiles;
-}
-
 void Builder_OnNewMapLoaded(void) {
 	Builder_SidesLevel = max(0, WorldEnv_SidesHeight);
 	Builder_EdgeLevel  = max(0, WorldEnv_EdgeHeight);
@@ -646,6 +635,17 @@ static void NormalBuilder_RenderBlock(Int32 index) {
 		PackedCol col = fullBright ? white : Lighting_Col_YTop_Fast(Builder_X, (Builder_Y + 1) - offset, Builder_Z);
 		Drawer_YMax(count_YMax, col, texLoc, &part->fVertices[FACE_YMAX]);
 	}
+}
+
+static void Builder_SetDefault(void) {
+	Builder_StretchXLiquid = NULL;
+	Builder_StretchX       = NULL;
+	Builder_StretchZ       = NULL;
+	Builder_RenderBlock    = NULL;
+
+	Builder_UseBitFlags      = false;
+	Builder_PreStretchTiles  = Builder_DefaultPreStretchTiles;
+	Builder_PostStretchTiles = Builder_DefaultPostStretchTiles;
 }
 
 void NormalBuilder_SetActive(void) {

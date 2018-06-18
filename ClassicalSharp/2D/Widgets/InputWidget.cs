@@ -101,7 +101,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		
 		/// <summary> Calculates the sizes of each line in the text buffer. </summary>
-		public void CalculateLineSizes() {
+		void CalculateLineSizes() {
 			for (int y = 0; y < lineSizes.Length; y++)
 				lineSizes[y] = Size.Empty;
 			lineSizes[0].Width = prefixWidth;
@@ -115,7 +115,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		}
 		
 		/// <summary> Calculates the location and size of the caret character </summary>
-		public void UpdateCaret() {
+		protected void UpdateCaret() {
 			int maxChars = UsedLines * MaxCharsPerLine;
 			if (caret >= maxChars) caret = -1;
 			Text.GetCoords(caret, lines, out caretX, out caretY);

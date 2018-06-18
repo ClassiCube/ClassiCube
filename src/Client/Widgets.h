@@ -52,7 +52,6 @@ typedef struct ScrollbarWidget_ {
 } ScrollbarWidget;
 
 void ScrollbarWidget_Create(ScrollbarWidget* widget);
-void ScrollbarWidget_ClampScrollY(ScrollbarWidget* widget);
 
 
 typedef struct HotbarWidget_ {
@@ -118,10 +117,6 @@ typedef struct InputWidget_ {
 } InputWidget;
 
 void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* prefix);
-/* Calculates the sizes of each line in the text buffer. */
-void InputWidget_CalculateLineSizes(InputWidget* widget);
-/* Calculates the location and size of the caret character. */
-void InputWidget_UpdateCaret(InputWidget* widget);
 /* Clears all the characters from the text buffer. Deletes the native texture. */
 void InputWidget_Clear(InputWidget* widget);
 /* Appends a sequence of characters to current text buffer. May recreate the native texture. */
@@ -213,8 +208,6 @@ typedef struct SpecialInputTab_ {
 	Size2D TitleSize;
 	String Title, Contents;	
 } SpecialInputTab;
-void SpecialInputTab_Init(SpecialInputTab* tab, STRING_REF String* title, 
-	Int32 itemsPerRow, Int32 charsPerItem, STRING_REF String* contents);
 
 typedef struct SpecialInputWidget_ {
 	Widget_Layout

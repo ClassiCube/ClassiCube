@@ -10,6 +10,7 @@
 #include "Camera.h"
 #include "InputHandler.h"
 #include "ErrorHandler.h"
+#include "Platform.h"
 
 Screen* Gui_Status;
 void GuiElement_Recreate(GuiElement* elem) {

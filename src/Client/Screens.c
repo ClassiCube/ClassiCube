@@ -253,7 +253,7 @@ Screen* InventoryScreen_MakeInstance(void) {
 	screen->VTABLE->Free   = InventoryScreen_Free;
 	return (Screen*)screen;
 }
-extern Screen* InventoryScreen_UNSAFE_RawPointer = (Screen*)&InventoryScreen_Instance;
+Screen* InventoryScreen_UNSAFE_RawPointer = (Screen*)&InventoryScreen_Instance;
 
 
 /*########################################################################################################################*
@@ -618,7 +618,7 @@ Screen* LoadingScreen_MakeInstance(STRING_PURE String* title, STRING_PURE String
 	LoadingScreen_Make(screen, &LoadingScreen_VTABLE, title, message);
 	return (Screen*)screen;
 }
-extern Screen* LoadingScreen_UNSAFE_RawPointer = (Screen*)&LoadingScreen_Instance;
+Screen* LoadingScreen_UNSAFE_RawPointer = (Screen*)&LoadingScreen_Instance;
 
 
 /*########################################################################################################################*

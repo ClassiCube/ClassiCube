@@ -13,7 +13,6 @@ typedef struct ChunkInfo_ ChunkInfo;
 Int32 Builder_SidesLevel, Builder_EdgeLevel;
 
 void Builder_Init(void);
-void Builder_SetDefault(void);
 void Builder_OnNewMapLoaded(void);
 void Builder_MakeChunk(ChunkInfo* info);
 

@@ -170,7 +170,6 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	bool new_focused_state;
 	Real32 wheel_delta;
 	WORD mouse_x, mouse_y;
-	MouseButton btn;
 	WINDOWPOS* pos;
 	UInt8 new_state;
 	UInt8 keyChar;

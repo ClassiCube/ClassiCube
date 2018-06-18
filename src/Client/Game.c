@@ -45,14 +45,14 @@ ScheduledTask Game_Tasks[6];
 Int32 Game_TasksCount, entTaskI;
 
 UInt8 Game_UsernameBuffer[String_BufferSize(STRING_SIZE)];
-extern String Game_Username = String_FromEmptyArray(Game_UsernameBuffer);
+String Game_Username = String_FromEmptyArray(Game_UsernameBuffer);
 UInt8 Game_MppassBuffer[String_BufferSize(STRING_SIZE)];
-extern String Game_Mppass = String_FromEmptyArray(Game_MppassBuffer);
+String Game_Mppass = String_FromEmptyArray(Game_MppassBuffer);
 
 UInt8 Game_IPAddressBuffer[String_BufferSize(STRING_SIZE)];
-extern String Game_IPAddress = String_FromEmptyArray(Game_IPAddressBuffer);
+String Game_IPAddress = String_FromEmptyArray(Game_IPAddressBuffer);
 UInt8 Game_FontNameBuffer[String_BufferSize(STRING_SIZE)];
-extern String Game_FontName = String_FromEmptyArray(Game_FontNameBuffer);
+String Game_FontName = String_FromEmptyArray(Game_FontNameBuffer);
 
 void Game_AddComponent(IGameComponent* comp) {
 	if (Game_ComponentsCount == Array_Elems(Game_Components)) {
