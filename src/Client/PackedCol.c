@@ -57,7 +57,7 @@ void PackedCol_ToHex(STRING_TRANSIENT String* str, PackedCol value) {
 	Int32 i;
 
 	for (i = 0; i < 3; i++) {
-		Int32 value = input[i], hi = value >> 4, lo = value & 0x0F;
+		Int32 cur = input[i], hi = cur >> 4, lo = cur & 0x0F;
 		/* 48 = index of 0, 55 = index of (A - 10) */
 		hex[i * 2 + 0] = hi < 10 ? (hi + 48) : (hi + 55);
 		hex[i * 2 + 1] = lo < 10 ? (lo + 48) : (lo + 55);
