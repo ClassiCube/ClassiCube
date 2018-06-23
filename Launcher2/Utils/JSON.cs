@@ -101,16 +101,17 @@ namespace Launcher {
 			}
 		}
 		
+		static StringBuilder s = new StringBuilder(96);
 		static string ParseString(JsonContext ctx) {
-			StringBuilder s = new StringBuilder(400); // TODO: 128
+			s.Length = 0;
 			
 			for (; ctx.Idx < ctx.Val.Length;) {
 				char c = ctx.Cur; ctx.Idx++;
 				if (c == '"') return s.ToString();
 				if (c != '\\') { s.Append(c); continue; }
 				
-				if (ctx.Idx >= ctx.Val.Length) break;				
-				c = ctx.Cur; ctx.Idx++;				
+				if (ctx.Idx >= ctx.Val.Length) break;
+				c = ctx.Cur; ctx.Idx++;
 				if (c == '/' || c == '\\' || c == '"') { s.Append(c); continue; }
 				
 				if (c != 'u') break;
