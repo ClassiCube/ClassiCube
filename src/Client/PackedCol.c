@@ -40,11 +40,11 @@ void PackedCol_GetShaded(PackedCol normal, PackedCol* xSide, PackedCol* zSide, P
 bool PackedCol_Unhex(UInt8 hex, Int32* value) {
 	*value = 0;
 	if (hex >= '0' && hex <= '9') {
-		*value = (Int32)(hex - '0');
+		*value = (hex - '0');
 	} else if (hex >= 'a' && hex <= 'f') {
-		*value = (Int32)(hex - 'a') + 10;
+		*value = (hex - 'a') + 10;
 	} else if (hex >= 'A' && hex <= 'F') {
-		*value = (Int32)(hex - 'A') + 10;
+		*value = (hex - 'A') + 10;
 	} else {
 		return false;
 	}
@@ -81,9 +81,6 @@ bool PackedCol_TryParseHex(STRING_PURE String* str, PackedCol* value) {
 	if (!PackedCol_Unhex(buffer[2], &gH) || !PackedCol_Unhex(buffer[3], &gL)) return false;
 	if (!PackedCol_Unhex(buffer[4], &bH) || !PackedCol_Unhex(buffer[5], &bL)) return false;
 
-	value->R = ((rH << 4) | rL);
-	value->G = ((gH << 4) | gL);
-	value->B = ((bH << 4) | bL);
-	value->A = UInt8_MaxValue;
+	*value = PackedCol_Create3((rH << 4) | rL, (gH << 4) | gL, (bH << 4) | bL);
 	return true;
 }

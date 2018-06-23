@@ -45,6 +45,12 @@ namespace Launcher.Web {
 		}
 		
 		protected abstract void Handle(Request req);
+		
+		protected static JsonObject ParseJson(Request req) {
+			JsonContext ctx = new JsonContext();
+			ctx.Val = (string)req.Data;
+			return (JsonObject)Json.ParseStream(ctx);
+		}
 	}
 	
 	public sealed class GetCSRFTokenTask : WebTask {	
@@ -55,8 +61,8 @@ namespace Launcher.Web {
 		public string Token;
 		
 		protected override void Handle(Request req) {
-			int index = 0; bool success = true;
-			JsonObject data = (JsonObject)Json.ParseValue((string)req.Data, ref index, ref success);
+			JsonContext ctx = new JsonContext(); ctx.Val = (string)req.Data;
+			JsonObject data = (JsonObject)Json.ParseStream(ctx);
 			Token = (string)data["token"];
 		}
 	}
@@ -79,9 +85,7 @@ namespace Launcher.Web {
 		}
 		
 		protected override void Handle(Request req) {
-			int index = 0; bool success = true;
-			JsonObject data = (JsonObject)Json.ParseValue((string)req.Data, ref index, ref success);
-			
+			JsonObject data = ParseJson(req);
 			Error = GetLoginError(data);
 			Username = (string)data["username"];
 		}
@@ -136,8 +140,7 @@ namespace Launcher.Web {
 		public ClientStartData Info;
 		
 		protected override void Handle(Request req) {
-			int index = 0; bool success = true;
-			JsonObject root = (JsonObject)Json.ParseValue((string)req.Data, ref index, ref success);
+			JsonObject root = ParseJson(req);
 			List<object> list = (List<object>)root["servers"];
 			
 			JsonObject obj = (JsonObject)list[0];
@@ -159,8 +162,7 @@ namespace Launcher.Web {
 		}
 		
 		protected override void Handle(Request req) {
-			int index = 0; bool success = true;
-			JsonObject root = (JsonObject)Json.ParseValue((string)req.Data, ref index, ref success);
+			JsonObject root = ParseJson(req);
 			List<object> list = (List<object>)root["servers"];
 			
 			for (int i = 0; i < list.Count; i++) {
@@ -188,12 +190,13 @@ namespace Launcher.Web {
 		public Build LatestDev, LatestStable;
 		
 		protected override void Handle(Request req) {
-			int index = 0; bool success = true;
-			JsonObject data = (JsonObject)Json.ParseValue((string)req.Data, ref index, ref success);
-			JsonObject latest = (JsonObject)data["latest"], releases = (JsonObject)data["releases"];
-			LatestDev = MakeBuild(latest, false);
+			JsonObject data = ParseJson(req);		
+			JsonObject latest = (JsonObject)data["latest"];
 			
-			DateTime releaseTime = DateTime.MinValue;
+			LatestDev = MakeBuild(latest, false);			
+			JsonObject releases = (JsonObject)data["releases"];
+			
+			DateTime releaseTime = DateTime.MinValue;			
 			foreach (KeyValuePair<string, object> pair in releases) {
 				Build build = MakeBuild((JsonObject)pair.Value, true);
 				if (build.TimeBuilt < releaseTime) continue;

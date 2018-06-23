@@ -1,223 +1,145 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
-//-----------------------------------------------------------------------
-// <copyright file="SimpleJson.cs" company="The Outercurve Foundation">
-//    Copyright (c) 2011, The Outercurve Foundation.
-//
-//    Licensed under the MIT License (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
-//      http://www.opensource.org/licenses/mit-license.php
-//
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
-// </copyright>
-// <author>Nathan Totten (ntotten.com), Jim Zimmerman (jimzimmerman.com) and Prabir Shrestha (prabir.me)</author>
-// <website>https://github.com/facebook-csharp-sdk/simple-json</website>
-//-----------------------------------------------------------------------
-// original json parsing code from http://techblog.procurios.nl/k/618/news/view/14605/14863/How-do-I-write-my-own-parser-for-JSON.html
-// This is a significantly cutdown version of the original simple-json repository.
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
+using ClassicalSharp;
+using JsonObject = System.Collections.Generic.Dictionary<string, object>;
+using JsonArray = System.Collections.Generic.List<object>;
 
 namespace Launcher {
+
+	public class JsonContext {
+		public string Val; public int Idx; public bool Success = true;
+		public char Cur { get { return Val[Idx]; } }
+	}
 	
 	public static class Json {
-		const int TOKEN_NONE = 0, TOKEN_CURLY_OPEN = 1, TOKEN_CURLY_CLOSE = 2;
-		const int TOKEN_SQUARED_OPEN = 3, TOKEN_SQUARED_CLOSE = 4, TOKEN_COLON = 5;
-		const int TOKEN_COMMA = 6, TOKEN_STRING = 7, TOKEN_NUMBER = 8; 
-		const int TOKEN_TRUE = 9, TOKEN_FALSE = 10, TOKEN_NULL = 11;
-
-		static Dictionary<string, object> ParseObject(string json, ref int index, ref bool success) {
-			Dictionary<string, object> table = new Dictionary<string, object>();
-			NextToken(json, ref index); // skip {
-			
-			while (true) {
-				int token = LookAhead(json, index);
-				if (token == TOKEN_NONE) {
-					success = false; return null;
-				} else if (token == TOKEN_COMMA) {
-					NextToken(json, ref index);
-				} else if (token == TOKEN_CURLY_CLOSE) {
-					NextToken(json, ref index);
-					return table;
-				} else {
-					string name = ParseString(json, ref index, ref success);
-					if (!success) {
-						success = false; return null;
-					}			
-					token = NextToken(json, ref index);
-					if (token != TOKEN_COLON) {
-						success = false; return null;
-					}					
-					object value = ParseValue(json, ref index, ref success);
-					if (!success) {
-						success = false; return null;
-					}
-					table[name] = value;
-				}
-			}
-		}
-
-		static List<object> ParseArray(string json, ref int index, ref bool success) {
-			List<object> array = new List<object>();
-			NextToken(json, ref index); // eat the [
-
-			while (true) {
-				int token = LookAhead(json, index);
-				if (token == TOKEN_NONE) {
-					success = false; return null;
-				} else if (token == TOKEN_COMMA) {
-					NextToken(json, ref index);
-				} else if (token == TOKEN_SQUARED_CLOSE) {
-					NextToken(json, ref index);
-					return array;
-				} else {
-					object value = ParseValue(json, ref index, ref success);
-					if (!success) return null;
-					array.Add(value);
-				}
-			}
-		}
-
-		public static object ParseValue(string json, ref int index, ref bool success) {
-			switch (LookAhead(json, index)) {
-				case TOKEN_STRING:
-					return ParseString(json, ref index, ref success);
-				case TOKEN_NUMBER:
-					return ParseNumber(json, ref index, ref success);
-				case TOKEN_CURLY_OPEN:
-					return ParseObject(json, ref index, ref success);
-				case TOKEN_SQUARED_OPEN:
-					return ParseArray(json, ref index, ref success);
-				case TOKEN_TRUE:
-					NextToken(json, ref index);
-					return true;
-				case TOKEN_FALSE:
-					NextToken(json, ref index);
-					return false;
-				case TOKEN_NULL:
-					NextToken(json, ref index);
-					return null;
-				case TOKEN_NONE:
-					break;
-			}
-			success = false; return null;
-		}
-
-		static string ParseString(string json, ref int index, ref bool success) {
-			StringBuilder s = new StringBuilder(400);
-			EatWhitespace(json, ref index);
-			char c = json[index++]; // "
-			
-			while (true) {
-				if (index == json.Length) break;
-
-				c = json[index++];
-				if (c == '"') {
-					return s.ToString();
-				} else if (c == '\\') {
-					if (index == json.Length) break;
-					if (!ParseEscaped(json, ref index, s)) break;
-				} else {
-					s.Append(c);
-				}
-			}
-			success = false; return null;
+		const int T_NONE = 0, T_NUM = 1, T_TRUE = 2, T_FALSE = 3, T_NULL = 4;
+		
+		static bool IsWhitespace(char c) {
+			return c == '\r' || c == '\n' || c == '\t' || c == ' ';
 		}
 		
-		static bool ParseEscaped(string json, ref int index, StringBuilder s) {
-			char c = json[index++];
-			if (c == '/' || c == '\\' || c == '"') { s.Append(c); return true; }
-			if (c != 'u') { s.Append('?'); return true; }
-			
-			int remaining = json.Length - index;
-			if (remaining < 4) return false;
-			
-			// parse the 32 bit hex into an integer codepoint
-			uint codePoint;
-			string str = json.Substring(index, 4);
-			if (!UInt32.TryParse(str, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out codePoint))
-				return false;
-			
-			// don't want control characters in names/software
-			if (codePoint >= 32) s.Append((char)codePoint);
-			index += 4; // skip 4 chars
-			return true;
-		}
-
-		const StringComparison caseless = StringComparison.OrdinalIgnoreCase;
-		static object ParseNumber(string json, ref int index, ref bool success) {
-			EatWhitespace(json, ref index);
-			int lastIndex = GetLastIndexOfNumber(json, index);
-			int charLength = (lastIndex - index) + 1;
-			string str = json.Substring(index, charLength);
-			index = lastIndex + 1;
-			return str;
-		}
-
-		static int GetLastIndexOfNumber(string json, int index) {
-			int lastIndex = index;
-			for (; lastIndex < json.Length; lastIndex++) {
-				if ("0123456789+-.".IndexOf(json[lastIndex]) == -1) 
-					break;
-			}
-			return lastIndex - 1;
-		}
-
-		static void EatWhitespace(string json, ref int index) {
-			for (; index < json.Length; index++) {
-				if (" \t\n\r\b\f".IndexOf(json[index]) == -1) 
-					break;
-			}
-		}
-
-		static int LookAhead(string json, int index) {
-			int saveIndex = index;
-			return NextToken(json, ref saveIndex);
-		}
-
-		static int NextToken(string json, ref int index) {
-			EatWhitespace(json, ref index);
-			if (index == json.Length)
-				return TOKEN_NONE;
-			char c = json[index];
-			index++;
-			
-			if (c == '{') return TOKEN_CURLY_OPEN;
-			if (c == '}') return TOKEN_CURLY_CLOSE;
-			if (c == '[') return TOKEN_SQUARED_OPEN;
-			if (c == ']') return TOKEN_SQUARED_CLOSE;
-			
-			if (c == ',') return TOKEN_COMMA;
-			if (c == '"') return TOKEN_STRING;
-			if (c == ':') return TOKEN_COLON;
-			if (c == '-' || ('0' <= c && c <= '9'))
-			   return TOKEN_NUMBER;
-			
-			index--;
-			if (CompareConstant(json, ref index, "false"))
-				return TOKEN_FALSE;
-			if (CompareConstant(json, ref index, "true"))
-				return TOKEN_TRUE;
-			if (CompareConstant(json, ref index, "null"))
-				return TOKEN_NULL;
-			return TOKEN_NONE;
-		}
-		
-		static bool CompareConstant(string json, ref int index, string value) {
-			int remaining = json.Length - index;
-			if (remaining < value.Length) return false;
+		static bool NextConstant(JsonContext ctx, string value) {
+			if (ctx.Idx + value.Length > ctx.Val.Length) return false;
 			
 			for (int i = 0; i < value.Length; i++) {
-				if (json[index + i] != value[i]) return false;
+				if (ctx.Val[ctx.Idx + i] != value[i]) return false;
 			}
-			index += value.Length;
-			return true;
+			
+			ctx.Idx += value.Length; return true;
+		}
+		
+		static int NextToken(JsonContext ctx) {
+			for (; ctx.Idx < ctx.Val.Length && IsWhitespace(ctx.Cur); ctx.Idx++);
+			if (ctx.Idx >= ctx.Val.Length) return T_NONE;
+			
+			char c = ctx.Cur; ctx.Idx++;
+			if (c == '{' || c == '}') return c;
+			if (c == '[' || c == ']') return c;
+			if (c == ',' || c == '"' || c == ':') return c;
+			
+			if (IsNumber(c)) return T_NUM;			
+			ctx.Idx--;
+			
+			if (NextConstant(ctx, "true"))  return T_TRUE;
+			if (NextConstant(ctx, "false")) return T_FALSE;
+			if (NextConstant(ctx, "null"))  return T_NULL;
+			
+			// invalid token
+			ctx.Idx++; return T_NONE;
+		}
+		
+		public static object ParseStream(JsonContext ctx) {
+			return ParseValue(NextToken(ctx), ctx);
+		}
+		
+		static object ParseValue(int token, JsonContext ctx) {
+			switch (token) {
+				case '{': return ParseObject(ctx);
+				case '[': return ParseArray(ctx);
+				case '"': return ParseString(ctx);
+					
+				case T_NUM:   return ParseNumber(ctx);
+				case T_TRUE:  return true;
+				case T_FALSE: return false;
+				case T_NULL:  return null;
+					
+				default: return null;
+			}
+		}
+		
+		static JsonObject ParseObject(JsonContext ctx) {
+			JsonObject members = new JsonObject();
+			while (true) {
+				int token = NextToken(ctx);
+				if (token == ',') continue;
+				if (token == '}') return members;
+				
+				if (token != '"') { ctx.Success = false; return null; }
+				string key = ParseString(ctx);
+				
+				token = NextToken(ctx);
+				if (token != ':') { ctx.Success = false; return null; }
+				
+				token = NextToken(ctx);
+				if (token == T_NONE) { ctx.Success = false; return null; }
+				
+				members[key] = ParseValue(token, ctx);
+			}
+		}
+		
+		static JsonArray ParseArray(JsonContext ctx) {
+			JsonArray elements = new JsonArray();
+			while (true) {
+				int token = NextToken(ctx);
+				if (token == ',') continue;
+				if (token == ']') return elements;
+				
+				if (token == T_NONE) { ctx.Success = false; return null; }
+				elements.Add(ParseValue(token, ctx));
+			}
+		}
+		
+		static string ParseString(JsonContext ctx) {
+			StringBuilder s = new StringBuilder(400); // TODO: 128
+			
+			for (; ctx.Idx < ctx.Val.Length;) {
+				char c = ctx.Cur; ctx.Idx++;
+				if (c == '"') return s.ToString();
+				if (c != '\\') { s.Append(c); continue; }
+				
+				if (ctx.Idx >= ctx.Val.Length) break;				
+				c = ctx.Cur; ctx.Idx++;				
+				if (c == '/' || c == '\\' || c == '"') { s.Append(c); continue; }
+				
+				if (c != 'u') break;
+				if (ctx.Idx + 4 > ctx.Val.Length) break;
+				
+				// form of \uYYYY
+				int aH, aL, bH, bL;
+				if (!FastColour.UnHex(ctx.Val[ctx.Idx + 0], out aH)) break;
+				if (!FastColour.UnHex(ctx.Val[ctx.Idx + 1], out aL)) break;
+				if (!FastColour.UnHex(ctx.Val[ctx.Idx + 2], out bH)) break;
+				if (!FastColour.UnHex(ctx.Val[ctx.Idx + 3], out bL)) break;
+								
+				int codePoint = (aH << 12) | (aL << 8) | (bH << 4) | bL;
+				// don't want control characters in names/software
+				if (codePoint >= 32) s.Append((char)codePoint);
+				ctx.Idx += 4;
+			}
+			
+			ctx.Success = false; return null;
+		}
+		
+		static bool IsNumber(char c) {
+			return c == '-' || c == '.' || (c >= '0' && c <= '9');
+		}
+		
+		static string ParseNumber(JsonContext ctx) {
+			int start = ctx.Idx - 1;
+			for (; ctx.Idx < ctx.Val.Length && IsNumber(ctx.Cur); ctx.Idx++);
+			return ctx.Val.Substring(start, ctx.Idx - start);
 		}
 	}
 }

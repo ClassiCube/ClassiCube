@@ -189,36 +189,37 @@ namespace ClassicalSharp {
 		public static bool TryParse(string input, out FastColour value) {
 			value = default(FastColour);
 			if (input == null || input.Length < 6) return false;
+			if (input.Length > 6 && (input[0] != '#' || input.Length > 7)) return false;
 			
-			try {
-				if (input.Length > 6 && (input[0] != '#' || input.Length > 7)) return false;
-				value = Parse(input);
-				return true;
-			} catch (FormatException) {
-				value = default(FastColour);
-				return false;
-			}
+			int rH, rL, gH, gL, bH, bL;
+			int i = input[0] == '#' ? 1 : 0;
+			
+			if (!UnHex(input[i + 0], out rH) || !UnHex(input[i + 1], out rL)) return false;
+			if (!UnHex(input[i + 2], out gH) || !UnHex(input[i + 3], out gL)) return false;
+			if (!UnHex(input[i + 4], out bH) || !UnHex(input[i + 5], out bL)) return false;
+			
+			value = new FastColour((rH << 4) | rL, (gH << 4) | gL, (bH << 4) | bL);
+			return true;
 		}
 		
 		public static FastColour Parse(string input) {
-			int i = input.Length > 6 ? 1 : 0;
-			
-			int r = ParseHex(input[i + 0]) * 16 + ParseHex(input[i + 1]);
-			int g = ParseHex(input[i + 2]) * 16 + ParseHex(input[i + 3]);
-			int b = ParseHex(input[i + 4]) * 16 + ParseHex(input[i + 5]);
-			return new FastColour(r, g, b);
+			FastColour value;
+			if (!TryParse(input, out value)) throw new FormatException();
+			return value;
 		}
 		
-		static int ParseHex(char value) {
-			if (value >= '0' && value <= '9') {
-				return (value - '0');
-			} else if (value >= 'a' && value <= 'f') {
-				return (value - 'a') + 10;
-			} else if (value >= 'A' && value <= 'F') {
-				return (value - 'A') + 10;
+		public static bool UnHex(char hex, out int value) {
+			value = 0;
+			if (hex >= '0' && hex <= '9') {
+				value = (hex - '0');
+			} else if (hex >= 'a' && hex <= 'f') {
+				value = (hex - 'a') + 10;
+			} else if (hex >= 'A' && hex <= 'F') {
+				value = (hex - 'A') + 10;
 			} else {
-				throw new FormatException("Invalid hex code given: " + value);
+				return false;
 			}
+			return true;
 		}
 	}
 }
