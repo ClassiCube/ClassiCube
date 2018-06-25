@@ -10,76 +10,44 @@ namespace ClassicalSharp.Map {
 	/// <summary> Contains the environment metadata for a world. </summary>
 	public sealed class WorldEnv {
 		
-		/// <summary> Colour of the sky located behind/above clouds. </summary>
 		public FastColour SkyCol = DefaultSkyCol;
 		public static readonly FastColour DefaultSkyCol = new FastColour(0x99, 0xCC, 0xFF);
 		public const string DefaultSkyColHex = "99CCFF";
-		
-		/// <summary> Colour applied to the fog/horizon looking out horizontally.
-		/// Note the true horizon colour is a blend of this and sky colour. </summary>
+
 		public FastColour FogCol = DefaultFogCol;
 		public static readonly FastColour DefaultFogCol = new FastColour(0xFF, 0xFF, 0xFF);
 		public const string DefaultFogColHex = "FFFFFF";
 		
-		/// <summary> Colour applied to the clouds. </summary>
 		public FastColour CloudsCol = DefaultCloudsCol;
 		public static readonly FastColour DefaultCloudsCol = new FastColour(0xFF, 0xFF, 0xFF);
 		public const string DefaultCloudsColHex = "FFFFFF";
 		
-		/// <summary> Height of the clouds in world space. </summary>
 		public int CloudHeight;
-		
-		/// <summary> Modifier of how fast clouds travel across the world, defaults to 1. </summary>
 		public float CloudsSpeed = 1;
 		
-		/// <summary> Modifier of how fast rain/snow falls, defaults to 1. </summary>
 		public float WeatherSpeed = 1;
-		
-		/// <summary> Modifier of how fast rain/snow fades, defaults to 1. </summary>
 		public float WeatherFade = 1;
 		
-		/// <summary> Colour applied to blocks located in direct sunlight. </summary>
 		public FastColour Sunlight;
 		public int Sun, SunXSide, SunZSide, SunYBottom;
 		public static readonly FastColour DefaultSunlight = new FastColour(0xFF, 0xFF, 0xFF);
 		public const string DefaultSunlightHex = "FFFFFF";
 		
-		/// <summary> Colour applied to blocks located in shadow / hidden from direct sunlight. </summary>
 		public FastColour Shadowlight;
 		public int Shadow, ShadowXSide, ShadowZSide, ShadowYBottom;
 		public static readonly FastColour DefaultShadowlight = new FastColour(0x9B, 0x9B, 0x9B);
 		public const string DefaultShadowlightHex = "9B9B9B";
 		
-		/// <summary> Current weather for this particular map. </summary>
 		public Weather Weather = Weather.Sunny;
-		
-		/// <summary> Block that surrounds map the map horizontally (default water) </summary>
 		public BlockID EdgeBlock = Block.StillWater;
-		
-		/// <summary> Height of the map edge in world space. </summary>
 		public int EdgeHeight;
 		
-		/// <summary> Block that surrounds the map that fills the bottom of the map horizontally,
-		/// fills part of the vertical sides of the map, and also surrounds map the map horizontally. (default bedrock) </summary>
 		public BlockID SidesBlock = Block.Bedrock;
-		
-		/// <summary> Maximum height of the various parts of the map sides, in world space. </summary>
 		public int SidesHeight { get { return EdgeHeight + SidesOffset; } }
-		
-		/// <summary> Offset of height of map sides from height of map edge. </summary>
 		public int SidesOffset = -2;
 		
-		/// <summary> Whether exponential fog mode is used by default. </summary>
-		public bool ExpFog;
-		
-		/// <summary> Horizontal skybox rotation speed. </summary>
-		public float SkyboxHorSpeed;
-		
-		/// <summary> Vertical skybox rotation speed. </summary>
-		public float SkyboxVerSpeed;
-		
-		/// <summary> Whether clouds still render, even with skybox. </summary>
-		public bool SkyboxClouds;
+		public float SkyboxHorSpeed, SkyboxVerSpeed;
+		public bool ExpFog, SkyboxClouds;
 		
 		Game game;
 		public WorldEnv(Game game) {

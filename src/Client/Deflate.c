@@ -282,18 +282,24 @@ static Int32 Huffman_Decode(InflateState* state, HuffmanTable* table) {
 	return -1;
 }
 
-static Int32 Huffman_Unsafe_Decode(InflateState* state, HuffmanTable* table) {
-	Inflate_UNSAFE_EnsureBits(state, INFLATE_MAX_BITS);
-	UInt32 codeword = Inflate_PeekBits(state, INFLATE_FAST_BITS);
-	Int32 packed = table->Fast[codeword];
-	if (packed >= 0) {
-		Int32 bits = packed >> INFLATE_FAST_BITS;
-		Inflate_ConsumeBits(state, bits);
-		return packed & 0x1FF;
-	}
+#define Huffman_Unsafe_Decode(state, table, result) \
+{\
+	Inflate_UNSAFE_EnsureBits(state, INFLATE_MAX_BITS);\
+	Int32 packed = table.Fast[Inflate_PeekBits(state, INFLATE_FAST_BITS)];\
+	if (packed >= 0) {\
+		Int32 consumedBits = packed >> INFLATE_FAST_BITS;\
+		Inflate_ConsumeBits(state, consumedBits);\
+		result = packed & 0x1FF;\
+	} else {\
+		result = Huffman_Unsafe_Decode_Slow(state, &table);\
+	}\
+}
 
+static Int32 Huffman_Unsafe_Decode_Slow(InflateState* state, HuffmanTable* table) {
+	UInt32 codeword = Inflate_PeekBits(state, INFLATE_FAST_BITS);
 	/* Slow, bit by bit lookup. Need to reverse order for huffman. */
 	codeword = Huffman_ReverseBits(codeword, INFLATE_FAST_BITS);
+
 	UInt32 i, j;
 	for (i = INFLATE_FAST_BITS + 1, j = INFLATE_FAST_BITS; i < INFLATE_MAX_BITS; i++, j++) {
 		codeword = (codeword << 1) | ((state->Bits >> j) & 1);
@@ -358,9 +364,8 @@ static void Inflate_InflateFast(InflateState* state) {
 
 #define INFLATE_FAST_COPY_MAX (INFLATE_WINDOW_SIZE - INFLATE_FASTINF_OUT)
 	while (state->AvailOut >= INFLATE_FASTINF_OUT && state->AvailIn >= INFLATE_FASTINF_IN && copyLen < INFLATE_FAST_COPY_MAX) {
-		UInt32 lit = Huffman_Unsafe_Decode(state, &state->LitsTable);
+		UInt32 lit; Huffman_Unsafe_Decode(state, state->LitsTable, lit);
 		if (lit <= 256) {
-			//Platform_Log1("lit %i", &lit);
 			if (lit < 256) {
 				window[curIdx] = (UInt8)lit;
 				state->AvailOut--; copyLen++;
@@ -375,12 +380,10 @@ static void Inflate_InflateFast(InflateState* state) {
 			Inflate_UNSAFE_EnsureBits(state, bits);
 			UInt32 len = len_base[lenIdx] + Inflate_ReadBits(state, bits);
 
-			UInt32 distIdx = Huffman_Unsafe_Decode(state, &state->DistsTable);
+			UInt32 distIdx; Huffman_Unsafe_Decode(state, state->DistsTable, distIdx);
 			bits = dist_bits[distIdx];
 			Inflate_UNSAFE_EnsureBits(state, bits);
 			UInt32 dist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
-
-			//Platform_Log2("len %i, dist %i", &len, &dist);
 
 			UInt32 startIdx = (curIdx - dist) & INFLATE_WINDOW_MASK;
 			UInt32 i;
@@ -587,7 +590,6 @@ void Inflate_Process(InflateState* state) {
 			Int32 lit = Huffman_Decode(state, &state->LitsTable);
 			if (lit < 256) {
 				if (lit == -1) return;
-				//Platform_Log1("lit %i", &lit);
 				*state->Output = (UInt8)lit;
 				state->Window[state->WindowIndex] = (UInt8)lit;
 				state->Output++; state->AvailOut--;
@@ -622,8 +624,6 @@ void Inflate_Process(InflateState* state) {
 			Inflate_EnsureBits(state, bits);
 			state->TmpDist = dist_base[distIdx] + Inflate_ReadBits(state, bits);
 			state->State = INFLATE_STATE_COMPRESSED_DATA;
-
-			//Platform_Log2("len %i, dist %i", &state->TmpLit, &state->TmpDist);
 		}
 
 		case INFLATE_STATE_COMPRESSED_DATA: {
@@ -732,8 +732,6 @@ static void Deflate_Lit(DeflateState* state, Int32 lit) {
 	if (lit <= 143) { Deflate_PushHuff(state, lit + 48, 8); } 
 	else { Deflate_PushHuff(state, lit + 256, 9); }
 	Deflate_FlushBits(state);
-
-	//Platform_Log1("lit %i", &lit);
 }
 
 static void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
@@ -754,8 +752,6 @@ static void Deflate_LenDist(DeflateState* state, Int32 len, Int32 dist) {
 	Deflate_PushHuff(state, j, 5);
 	if (dist_bits[j]) { Deflate_PushBits(state, dist - dist_base[j], dist_bits[j]); }
 	Deflate_FlushBits(state);
-
-	//Platform_Log2("len %i, dist %i", &len, &dist);
 
 	len_base[29]  = 0;
 	dist_base[30] = 0;

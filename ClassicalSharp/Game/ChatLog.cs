@@ -23,11 +23,7 @@ namespace ClassicalSharp {
 		void IGameComponent.OnNewMap(Game game) { }
 		void IGameComponent.OnNewMapLoaded(Game game) { }
 		
-		/// <summary> List of chat messages received from the server and added by client commands. </summary>
-		/// <remarks> index 0 is the oldest chat message, last index is newest. </remarks>
 		public List<ChatLine> Log = new List<ChatLine>();
-		
-		/// <summary> List of chat messages sent by the user to the server. </summary>
 		public List<string> InputLog = new List<string>();
 		
 		public void Send(string text) {

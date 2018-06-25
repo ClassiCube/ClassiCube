@@ -189,12 +189,10 @@ namespace ClassicalSharp {
 			}
 		}
 	
-		/// <summary> Returns whenever the given character is a valid colour code. </summary>
 		public static bool ValidColCode(string text, int i) {
 			return i < text.Length && ValidColCode(text[i]);
 		}
 		
-		/// <summary> Returns whenever the given character is a valid colour code. </summary>
 		public static bool ValidColCode(char c) {
 			if (c >= '~' && c <= '~') return Cols[c].A > 0;
 			return Cols[Utils.UnicodeToCP437(c)].A > 0;
@@ -212,8 +210,6 @@ namespace ClassicalSharp {
 		}
 
 #if !LAUNCHER		
-		/// <summary> Returns the last valid colour code in the given input, 
-		/// or \0 if no valid colour code was found. </summary>
 		public static char LastCol(string text, int start) {
 			if (start >= text.Length)
 				start = text.Length - 1;

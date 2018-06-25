@@ -175,7 +175,7 @@ namespace ClassicalSharp {
 				if (c >= 'A' && c <= 'Z') { hasUpper = true; break; }
 			}
 			
-			if (!hasUpper) return src;			
+			if (!hasUpper) return src;
 			char[] dst = new char[src.Length];
 			
 			for (int i = 0; i < src.Length; i++) {

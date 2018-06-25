@@ -437,10 +437,10 @@ namespace OpenTK.Platform.X11 {
 							IntPtr prop_type, num_items, bytes_after, data = IntPtr.Zero;
 							int prop_format;
 
-							API.XGetWindowProperty (window.Display, window.WinHandle, xa_data_sel, IntPtr.Zero, new IntPtr (1024), false, IntPtr.Zero,
-							                        out prop_type, out prop_format, out num_items, out bytes_after, ref data);
+							API.XGetWindowProperty(window.Display, window.WinHandle, xa_data_sel, IntPtr.Zero, new IntPtr (1024), false, IntPtr.Zero,
+							                       out prop_type, out prop_format, out num_items, out bytes_after, ref data);
 
-							API.XDeleteProperty (window.Display, window.WinHandle, xa_data_sel);
+							API.XDeleteProperty(window.Display, window.WinHandle, xa_data_sel);
 							if (num_items == IntPtr.Zero) break;
 
 							if (prop_type == xa_utf8_string) {
@@ -468,7 +468,7 @@ namespace OpenTK.Platform.X11 {
 						if (e.SelectionRequestEvent.selection == xa_clipboard && e.SelectionRequestEvent.target == xa_utf8_string && clipboard_copy_text != null) {
 							reply.SelectionEvent.property = GetSelectionProperty(ref e);
 
-							byte[] utf8_data = Encoding.UTF8.GetBytes (clipboard_copy_text);
+							byte[] utf8_data = Encoding.UTF8.GetBytes(clipboard_copy_text);
 							fixed (byte* utf8_ptr = utf8_data) {
 								API.XChangeProperty(window.Display, reply.SelectionEvent.requestor, reply.SelectionEvent.property, xa_utf8_string, 8,
 								                    PropertyMode.Replace, (IntPtr)utf8_ptr, utf8_data.Length);

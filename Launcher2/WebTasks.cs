@@ -61,8 +61,7 @@ namespace Launcher.Web {
 		public string Token;
 		
 		protected override void Handle(Request req) {
-			JsonContext ctx = new JsonContext(); ctx.Val = (string)req.Data;
-			JsonObject data = (JsonObject)Json.ParseStream(ctx);
+			JsonObject data = ParseJson(req);
 			Token = (string)data["token"];
 		}
 	}

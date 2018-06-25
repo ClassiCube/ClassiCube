@@ -16,20 +16,14 @@ namespace ClassicalSharp.Map {
 		public int Width, Height, Length, MaxX, MaxY, MaxZ, OneY;
 		public bool HasBlocks;
 		
-		/// <summary> Contains the environment metadata for this world. </summary>
 		public WorldEnv Env;
-		
-		/// <summary> Unique uuid/guid of this particular world. </summary>
 		public Guid Uuid;
-		
-		/// <summary> Current terrain.png or texture pack url of this map. </summary>
 		public string TextureUrl = null;
 		
 		public World(Game game) {
 			Env = new WorldEnv(game);
 		}
 
-		/// <summary> Resets all of the properties to their defaults and raises the 'OnNewMap' event. </summary>
 		public void Reset() {
 			Env.Reset();
 			Width = 0; Height = 0; Length = 0;
@@ -42,7 +36,6 @@ namespace ClassicalSharp.Map {
 			HasBlocks = false;
 		}
 		
-		/// <summary> Updates the underlying block array, and dimensions of this map. </summary>
 		public void SetNewMap(BlockRaw[] blocksRaw, int width, int height, int length) {
 			Width  = width;  MaxX = width  - 1;
 			Height = height; MaxY = height - 1;
