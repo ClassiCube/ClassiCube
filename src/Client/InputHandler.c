@@ -420,7 +420,7 @@ static void InputHandler_KeyUp(void* obj, Int32 key) {
 
 static void InputHandler_KeyPress(void* obj, Int32 keyChar) {
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
-	active->VTABLE->HandlesKeyPress(active, (UInt8)keyChar);
+	active->VTABLE->HandlesKeyPress(active, keyChar);
 }
 
 void InputHandler_Init(void) {

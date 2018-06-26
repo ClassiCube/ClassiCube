@@ -79,7 +79,7 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 	if (offset + length > str->length) {
 		ErrorHandler_Fail("Result substring is out of range");
 	}
-	return String_Init(str->buffer + offset, (UInt16)length, (UInt16)length);
+	return String_Init(str->buffer + offset, length, length);
 }
 
 void String_UNSAFE_Split(STRING_REF String* str, UInt8 c, STRING_TRANSIENT String* subs, UInt32* subsCount) {
@@ -694,7 +694,7 @@ String StringsBuffer_UNSAFE_Get(StringsBuffer* buffer, UInt32 index) {
 	UInt32 flags  = buffer->FlagsBuffer[index];
 	UInt32 offset = flags >> STRINGSBUFFER_LEN_SHIFT;
 	UInt32 len    = flags  & STRINGSBUFFER_LEN_MASK;
-	return String_Init(&buffer->TextBuffer[offset], (UInt16)len, (UInt16)len);
+	return String_Init(&buffer->TextBuffer[offset], len, len);
 }
 
 void StringsBuffer_Resize(void** buffer, UInt32* elems, UInt32 elemSize, UInt32 defElems, UInt32 expandElems) {

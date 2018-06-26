@@ -14,10 +14,9 @@ Texture Texture_FromRec(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 h
 
 Texture Texture_From(GfxResourceID id, Int32 x, Int32 y, Int32 width, Int32 height,
 	Real32 u1, Real32 u2, Real32 v1, Real32 v2) {
-	Texture tex;
-	tex.ID = id;
-	tex.X = (Int16)x; tex.Y = (Int16)y;
-	tex.Width = (Int16)width; tex.Height = (Int16)height;
+	Texture tex; tex.ID = id;
+	tex.X = x; tex.Y = y; 
+	tex.Width = width; tex.Height = height;
 
 	tex.U1 = u1; tex.V1 = v1;
 	tex.U2 = u2; tex.V2 = v2;

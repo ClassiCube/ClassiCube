@@ -3,9 +3,7 @@
 void ImprovedNoise_Init(UInt8* p, Random* rnd) {
 	/* shuffle randomly using fisher-yates */
 	Int32 i;
-	for (i = 0; i < 256; i++) {
-		p[i] = (UInt8)i;
-	}
+	for (i = 0; i < 256; i++) { p[i] = i; }
 
 	for (i = 0; i < 256; i++) {
 		Int32 j = Random_Range(rnd, i, 256);

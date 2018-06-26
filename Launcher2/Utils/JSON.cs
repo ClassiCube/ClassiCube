@@ -11,6 +11,7 @@ namespace Launcher {
 	public class JsonContext {
 		public string Val; public int Idx; public bool Success = true;
 		public char Cur { get { return Val[Idx]; } }
+		internal StringBuilder strBuffer = new StringBuilder(96);
 	}
 	
 	public static class Json {
@@ -101,9 +102,8 @@ namespace Launcher {
 			}
 		}
 		
-		static StringBuilder s = new StringBuilder(96);
 		static string ParseString(JsonContext ctx) {
-			s.Length = 0;
+			StringBuilder s = ctx.strBuffer; s.Length = 0;
 			
 			for (; ctx.Idx < ctx.Val.Length;) {
 				char c = ctx.Cur; ctx.Idx++;

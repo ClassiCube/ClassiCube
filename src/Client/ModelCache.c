@@ -56,7 +56,7 @@ void ModelCache_Register(STRING_REF const UInt8* name, STRING_PURE const UInt8* 
 
 		if (defaultTexName != NULL) {
 			String defaultTex = String_FromReadonly(defaultTexName);
-			instance->defaultTexIndex = (Int8)ModelCache_GetTextureIndex(&defaultTex);
+			instance->defaultTexIndex = ModelCache_GetTextureIndex(&defaultTex);
 		}		
 	} else {
 		ErrorHandler_Fail("ModelCache_RegisterModel - hit max models");

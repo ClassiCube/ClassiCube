@@ -135,8 +135,8 @@ static void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 	if (widget->Disabled) back = Button_DisabledTex;
 
 	back.ID = Game_UseClassicGui ? Gui_GuiClassicTex : Gui_GuiTex;
-	back.X = (Int16)widget->X; back.Width  = (UInt16)widget->Width;
-	back.Y = (Int16)widget->Y; back.Height = (UInt16)widget->Height;
+	back.X = widget->X; back.Width  = widget->Width;
+	back.Y = widget->Y; back.Height = widget->Height;
 
 	if (widget->Width == 400) {
 		/* Button can be drawn normally */
@@ -148,11 +148,11 @@ static void ButtonWidget_Render(GuiElement* elem, Real64 delta) {
 		Gfx_BindTexture(back.ID); /* avoid bind twice */
 		PackedCol white = PACKEDCOL_WHITE;
 
-		back.Width = (UInt16)(widget->Width / 2);
+		back.Width = (widget->Width / 2);
 		back.U1 = 0.0f; back.U2 = BUTTON_uWIDTH * scale;
 		GfxCommon_Draw2DTexture(&back, white);
 
-		back.X += (Int16)(widget->Width / 2);
+		back.X += (widget->Width / 2);
 		back.U1 = BUTTON_uWIDTH * (1.0f - scale); back.U2 = BUTTON_uWIDTH;
 		GfxCommon_Draw2DTexture(&back, white);
 	}
@@ -983,7 +983,7 @@ static void InputWidget_UpdateCaret(InputWidget* widget) {
 		if (widget->CaretX < line.length) {
 			args.Text = String_UNSAFE_Substring(&line, widget->CaretX, 1);
 			args.UseShadow = true;
-			widget->CaretTex.Width = (UInt16)Drawer2D_MeasureText(&args).Width;
+			widget->CaretTex.Width = Drawer2D_MeasureText(&args).Width;
 		} else {
 			widget->CaretTex.Width = widget->CaretWidth;
 		}
@@ -1317,8 +1317,8 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 	if (prefix->length == 0) return;
 	DrawTextArgs_Make(&args, prefix, font, true);
 	Size2D size = Drawer2D_MeasureText(&args);
-	widget->PrefixWidth  = (UInt16)size.Width;  widget->Width  = size.Width;
-	widget->PrefixHeight = (UInt16)size.Height; widget->Height = size.Height;
+	widget->PrefixWidth  = size.Width;  widget->Width  = size.Width;
+	widget->PrefixHeight = size.Height; widget->Height = size.Height;
 }
 
 
@@ -1912,12 +1912,12 @@ static void PlayerListWidget_SetColumnPos(PlayerListWidget* widget, Int32 column
 
 	for (; i < maxIndex; i++) {
 		Texture tex = widget->Textures[i];
-		tex.X = (Int16)x; tex.Y = (Int16)(y - 10);
+		tex.X = x; tex.Y = y - 10;
 
 		y += tex.Height + 1;
 		/* offset player names a bit, compared to group name */
 		if (!widget->Classic && widget->IDs[i] != GROUP_NAME_ID) {
-			tex.X += (Int16)widget->ElementOffset;
+			tex.X += widget->ElementOffset;
 		}
 		widget->Textures[i] = tex;
 	}
@@ -2354,7 +2354,7 @@ void TextGroupWidget_SetText(TextGroupWidget* widget, Int32 index, STRING_PURE S
 		Drawer2D_ReducePadding_Tex(&tex, widget->Font.Size, 3);
 	} else {
 		tex = Texture_MakeInvalid();
-		tex.Height = (UInt16)(widget->PlaceholderHeight[index] ? widget->DefaultHeight : 0);
+		tex.Height = widget->PlaceholderHeight[index] ? widget->DefaultHeight : 0;
 	}
 
 	tex.X = Gui_CalcPos(widget->HorAnchor, widget->XOffset, tex.Width, Game_Width);
@@ -2372,7 +2372,7 @@ static void TextGroupWidget_Init(GuiElement* elem) {
 
 	Int32 i;
 	for (i = 0; i < widget->LinesCount; i++) {
-		widget->Textures[i].Height = (UInt16)height;
+		widget->Textures[i].Height = height;
 		widget->PlaceholderHeight[i] = true;
 	}
 	TextGroupWidget_UpdateDimensions(widget);

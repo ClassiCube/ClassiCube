@@ -251,7 +251,7 @@ void Block_CalcLightOffset(BlockID block) {
 		flags &= ~(1 << FACE_YMAX);
 		flags &= ~(1 << FACE_YMIN);
 	}
-	Block_LightOffset[block] = (UInt8)flags;
+	Block_LightOffset[block] = flags;
 }
 
 void Block_RecalculateSpriteBB(void) {
@@ -399,7 +399,7 @@ static void Block_CalcCulling(BlockID block, BlockID other) {
 		f |= occludedZ && oMin.Z == 0.0f && bMax.Z == 1.0f ? (1 << FACE_ZMAX) : 0;
 		f |= occludedY && (bothLiquid || (oMax.Y == 1.0f && bMin.Y == 0.0f)) ? (1 << FACE_YMIN) : 0;
 		f |= occludedY && (bothLiquid || (oMin.Y == 0.0f && bMax.Y == 1.0f)) ? (1 << FACE_YMAX) : 0;
-		Block_Hidden[(block * BLOCK_COUNT) + other] = (UInt8)f;
+		Block_Hidden[(block * BLOCK_COUNT) + other] = f;
 	}
 }
 

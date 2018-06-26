@@ -67,9 +67,9 @@ namespace ClassicalSharp.Generator {
 					height *= 0.5;
 					if (height < 0) height *= 0.8f;
 					
-					short adjHeight = (short)(height + waterLevel);
+					int adjHeight = (int)(height + waterLevel);
 					minHeight = adjHeight < minHeight ? adjHeight : minHeight;
-					hMap[index++] = adjHeight;
+					hMap[index++] = (short)adjHeight;
 				}
 			}
 			heightmap = hMap;

@@ -21,7 +21,7 @@ void World_Reset(void) {
 	Random_InitFromCurrentTime(&rnd);
 	Int32 i;
 	for (i = 0; i < 16; i++) {
-		World_Uuid[i] = (UInt8)Random_Next(&rnd, 256);
+		World_Uuid[i] = Random_Next(&rnd, 256);
 	}
 
 	/* Set version and variant bits */

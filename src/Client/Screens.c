@@ -286,7 +286,7 @@ static void StatusScreen_DrawPosition(StatusScreen* screen) {
 	VertexP3fT2fC4b vertices[4 * 64];
 	VertexP3fT2fC4b* ptr = vertices;
 
-	Texture tex = atlas->Tex; tex.X = 2; tex.Width = (UInt16)atlas->Offset;
+	Texture tex = atlas->Tex; tex.X = 2; tex.Width = atlas->Offset;
 	PackedCol col = PACKEDCOL_WHITE;
 	GfxCommon_Make2DQuad(&tex, col, &ptr);
 
@@ -373,7 +373,7 @@ static void StatusScreen_ContextRecreated(void* obj) {
 	String chars = String_FromConst("0123456789-, ()");
 	String prefix = String_FromConst("Position: ");
 	TextAtlas_Make(&screen->PosAtlas, &chars, &screen->Font, &prefix);
-	screen->PosAtlas.Tex.Y = (Int16)(status->Height + 2);
+	screen->PosAtlas.Tex.Y = status->Height + 2;
 
 	Int32 yOffset = status->Height + screen->PosAtlas.Tex.Height + 2;
 	TextWidget* hacks = &screen->HackStates; TextWidget_Make(hacks, &screen->Font);
@@ -529,7 +529,7 @@ static void LoadingScreen_DrawBackground(void) {
 
 	bool bound = false;
 	while (y < Game_Height) {
-		tex.Y = (Int16)y;
+		tex.Y = y;
 		y += LOADING_TILE_SIZE;		
 		GfxCommon_Make2DQuad(&tex, col, &ptr);
 		count += 4;

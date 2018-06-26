@@ -38,11 +38,11 @@ static Int32 Lighting_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 index) {
 		BlockID block = World_Blocks[i];
 		if (Block_BlocksLight[block]) {
 			Int32 offset = (Block_LightOffset[block] >> FACE_YMAX) & 1;
-			Lighting_heightmap[index] = (Int16)(y - offset);
+			Lighting_heightmap[index] = y - offset;
 			return y - offset;
 		}
 	}
-	Lighting_heightmap[index] = (Int16)-10;
+	Lighting_heightmap[index] = -10;
 	return -10;
 }
 
@@ -107,7 +107,7 @@ static void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 
 	if ((y - newOffset) >= lightH) {
 		if (nowBlocks) {
-			Lighting_heightmap[index] = (Int16)(y - newOffset);
+			Lighting_heightmap[index] = y - newOffset;
 		} else {
 			/* Part of the column is now visible to light, we don't know how exactly how high it should be though. */
 			/* However, we know that if the old block was above or equal to light height, then the new light height must be <= old block.y */
@@ -120,7 +120,7 @@ static void Lighting_UpdateLighting(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 		if (Block_BlocksLight[above]) return;
 
 		if (nowBlocks) {
-			Lighting_heightmap[index] = (Int16)(y - newOffset);
+			Lighting_heightmap[index] = y - newOffset;
 		} else {
 			Lighting_CalcHeightAt(x, y - 1, z, index);
 		}

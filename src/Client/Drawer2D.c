@@ -220,7 +220,7 @@ static void Drawer2D_DrawRun(Int32 x, Int32 y, Int32 runCount, UInt8* coords, In
 	UInt16 dstWidths[1280];
 	Int32 i, xx, yy;
 	for (i = 0; i < runCount; i++) {
-		dstWidths[i] = (UInt16)Drawer2D_Width(point, Drawer2D_Widths[coords[i]]);
+		dstWidths[i] = Drawer2D_Width(point, Drawer2D_Widths[coords[i]]);
 	}
 
 	for (yy = 0; yy < textHeight; yy++) {

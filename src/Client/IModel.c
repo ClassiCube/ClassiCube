@@ -20,7 +20,7 @@ void ModelVertex_Init(ModelVertex* vertex, Real32 x, Real32 y, Real32 z, Int32 u
 }
 
 void ModelPart_Init(ModelPart* part, Int32 offset, Int32 count, Real32 rotX, Real32 rotY, Real32 rotZ) {
-	part->Offset = (UInt16)offset; part->Count = (UInt16)count;
+	part->Offset = offset; part->Count = count;
 	part->RotX = rotX; part->RotY = rotY; part->RotZ = rotZ;
 }
 

@@ -43,7 +43,7 @@ static Int32 WeatherRenderer_CalcHeightAt(Int32 x, Int32 maxY, Int32 z, Int32 in
 	for (y = maxY; y >= 0; y--, i -= World_OneY) {
 		UInt8 draw = Block_Draw[World_Blocks[i]];
 		if (!(draw == DRAW_GAS || draw == DRAW_SPRITE)) {
-			Weather_Heightmap[index] = (Int16)y;
+			Weather_Heightmap[index] = y;
 			return y;
 		}
 	}
@@ -76,7 +76,7 @@ void WeatherRenderer_OnBlockChanged(Int32 x, Int32 y, Int32 z, BlockID oldBlock,
 
 	if (nowBlock) {
 		/* Simple case: Rest of column below is now not visible to rain. */
-		Weather_Heightmap[index] = (Int16)y;
+		Weather_Heightmap[index] = y;
 	} else {
 		/* Part of the column is now visible to rain, we don't know how exactly how high it should be though. */
 		/* However, we know that if the old block was above or equal to rain height, then the new rain height must be <= old block.y */

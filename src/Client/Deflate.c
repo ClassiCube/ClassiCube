@@ -282,6 +282,7 @@ static Int32 Huffman_Decode(InflateState* state, HuffmanTable* table) {
 	return -1;
 }
 
+/* Inline the common <= 9 bits case */
 #define Huffman_Unsafe_Decode(state, table, result) \
 {\
 	Inflate_UNSAFE_EnsureBits(state, INFLATE_MAX_BITS);\

@@ -101,6 +101,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 		tymin = (max.Y - origin.Y) * invDirY;
 		tymax = (min.Y - origin.Y) * invDirY;
 	}
+
 	if (tmin > tymax || tymin > tmax) return false;
 	if (tymin > tmin) tmin = tymin;
 	if (tymax < tmax) tmax = tymax;

@@ -140,7 +140,7 @@ static void NotchyGen_CreateHeightmap(void) {
 			height *= 0.5f;
 			if (height < 0) height *= 0.8f;
 
-			Int16 adjHeight = (Int16)(height + waterLevel);
+			Int32 adjHeight = (Int32)(height + waterLevel);
 			minHeight = adjHeight < minHeight ? adjHeight : minHeight;
 			Heightmap[index++] = adjHeight;
 		}
