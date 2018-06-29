@@ -7,7 +7,7 @@ using Android.Graphics;
 #endif
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed class SpecialInputWidget : Widget {
+	public class SpecialInputWidget : Widget {
 
 		public SpecialInputWidget(Game game, Font font, InputWidget input) : base(game) {
 			HorizontalAnchor = Anchor.Min;

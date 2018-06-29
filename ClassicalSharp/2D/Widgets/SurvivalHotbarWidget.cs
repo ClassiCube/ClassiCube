@@ -9,7 +9,7 @@ using Android.Graphics;
 #endif
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed class SurvivalHotbarWidget : HotbarWidget {
+	public class SurvivalHotbarWidget : HotbarWidget {
 		
 		TextAtlas posAtlas;
 		Font font;

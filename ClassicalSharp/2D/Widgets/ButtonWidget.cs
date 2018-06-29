@@ -12,7 +12,7 @@ namespace ClassicalSharp.Gui.Widgets {
 	public delegate void ButtonValueSetter(Game game, string raw);	
 	public delegate string ButtonValueGetter(Game game);	
 	
-	public sealed class ButtonWidget : Widget {
+	public class ButtonWidget : Widget {
 		public string OptName;		
 		public ButtonValueGetter GetValue;
 		public ButtonValueSetter SetValue;

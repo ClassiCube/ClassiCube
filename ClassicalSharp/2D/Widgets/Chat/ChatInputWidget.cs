@@ -9,7 +9,7 @@ using Android.Graphics;
 #endif
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed class ChatInputWidget : InputWidget {
+	public class ChatInputWidget : InputWidget {
 
 		public ChatInputWidget(Game game, Font font) : base(game, font, "> ", 3) {
 			typingLogPos = game.Chat.InputLog.Count; // Index of newest entry + 1.

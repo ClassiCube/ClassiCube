@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Gui.Widgets;
 
 namespace ClassicalSharp.Gui.Screens {
-	public sealed class NostalgiaScreen : MenuOptionsScreen {
+	public class NostalgiaScreen : MenuOptionsScreen {
 		
 		public NostalgiaScreen(Game game) : base(game) {
 		}

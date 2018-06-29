@@ -9,7 +9,7 @@ using OpenTK.Input;
 using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Gui.Screens {
-	public sealed class LoadLevelScreen : ListScreen {
+	public class LoadLevelScreen : ListScreen {
 		
 		public LoadLevelScreen(Game game) : base(game) {
 			titleText = "Select a level";

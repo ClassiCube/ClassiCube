@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed class TextGroupWidget : Widget {
+	public class TextGroupWidget : Widget {
 		
 		public TextGroupWidget(Game game, int elementsCount, Font font, Font underlineFont) : base(game) {
 			ElementsCount = elementsCount;

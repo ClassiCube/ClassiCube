@@ -7,7 +7,7 @@ using ClassicalSharp.Map;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public sealed class SaveLevelScreen : MenuScreen {
+	public class SaveLevelScreen : MenuScreen {
 		
 		public SaveLevelScreen(Game game) : base(game) {
 		}

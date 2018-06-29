@@ -6,7 +6,7 @@ using ClassicalSharp.Hotkeys;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public sealed class EditHotkeyScreen : MenuScreen {
+	public class EditHotkeyScreen : MenuScreen {
 		
 		const int keyI = 0, modifyI = 1, actionI = 2;
 		Hotkey curHotkey, origHotkey;

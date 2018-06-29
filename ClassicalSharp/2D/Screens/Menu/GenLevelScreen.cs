@@ -8,7 +8,7 @@ using ClassicalSharp.Singleplayer;
 using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
-	public sealed class GenLevelScreen : MenuScreen {
+	public class GenLevelScreen : MenuScreen {
 		public GenLevelScreen(Game game) : base(game) { }
 
 		MenuInputWidget selected;
@@ -127,7 +127,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class ClassicGenLevelScreen : MenuScreen {
+	public class ClassicGenLevelScreen : MenuScreen {
 		public ClassicGenLevelScreen(Game game) : base(game) { }
 		
 		public override void Init() {

@@ -4,7 +4,7 @@ using OpenTK.Input;
 using ClassicalSharp.GraphicsAPI;
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed class ScrollbarWidget : Widget {
+	public class ScrollbarWidget : Widget {
 		
 		public ScrollbarWidget(Game game) : base(game) {
 			Width = scrollWidth;

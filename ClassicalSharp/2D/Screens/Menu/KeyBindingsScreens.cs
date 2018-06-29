@@ -3,7 +3,7 @@ using System;
 using ClassicalSharp.Gui.Widgets;
 
 namespace ClassicalSharp.Gui.Screens {
-	public sealed class ClassicKeyBindingsScreen : KeyBindingsScreen {
+	public class ClassicKeyBindingsScreen : KeyBindingsScreen {
 		
 		public ClassicKeyBindingsScreen(Game game) : base(game) { }
 		
@@ -33,7 +33,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class ClassicHacksKeyBindingsScreen : KeyBindingsScreen {
+	public class ClassicHacksKeyBindingsScreen : KeyBindingsScreen {
 		
 		public ClassicHacksKeyBindingsScreen(Game game) : base(game) { }
 		
@@ -56,7 +56,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class NormalKeyBindingsScreen : KeyBindingsScreen {
+	public class NormalKeyBindingsScreen : KeyBindingsScreen {
 		
 		public NormalKeyBindingsScreen(Game game) : base(game) { }
 		
@@ -81,7 +81,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class HacksKeyBindingsScreen : KeyBindingsScreen {
+	public class HacksKeyBindingsScreen : KeyBindingsScreen {
 		
 		public HacksKeyBindingsScreen(Game game) : base(game) { }
 		
@@ -105,7 +105,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class OtherKeyBindingsScreen : KeyBindingsScreen {
+	public class OtherKeyBindingsScreen : KeyBindingsScreen {
 		
 		public OtherKeyBindingsScreen(Game game) : base(game) { }
 		
@@ -132,7 +132,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class MouseKeyBindingsScreen : KeyBindingsScreen {
+	public class MouseKeyBindingsScreen : KeyBindingsScreen {
 		
 		public MouseKeyBindingsScreen(Game game) : base(game) { }
 		

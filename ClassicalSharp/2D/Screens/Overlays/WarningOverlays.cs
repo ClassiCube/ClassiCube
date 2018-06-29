@@ -8,7 +8,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
 	
-	public sealed class UrlWarningOverlay : Overlay {
+	public class UrlWarningOverlay : Overlay {
 		public string Url;
 		
 		public UrlWarningOverlay(Game game, string url) : base(game) {
@@ -66,7 +66,7 @@ namespace ClassicalSharp.Gui.Screens {
 		protected abstract void OnNoClick(Game g, Widget w);
 	}
 	
-	public sealed class PluginOverlay : WarningOverlay {
+	public class PluginOverlay : WarningOverlay {
 		public string Plugin;
 
 		public PluginOverlay(Game game, string plugin) : base(game) {
@@ -91,7 +91,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class ConfirmDenyOverlay : Overlay {
+	public class ConfirmDenyOverlay : Overlay {
 		public string Url;
 		bool alwaysDeny;
 		
@@ -126,7 +126,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 	}
 	
-	public sealed class TexPackOverlay : WarningOverlay {
+	public class TexPackOverlay : WarningOverlay {
 		public string Identifier;
 
 		public TexPackOverlay(Game game, string url) : base(game) {

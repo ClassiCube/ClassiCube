@@ -7,7 +7,7 @@ using Android.Graphics;
 #endif
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed class MenuInputWidget : InputWidget {
+	public class MenuInputWidget : InputWidget {
 		
 		public MenuInputWidget(Game game, Font font) : base(game, font, null, 1) { }
 		

@@ -6,7 +6,7 @@ using OpenTK.Input;
 using BlockID = System.UInt16;
 
 namespace ClassicalSharp.Gui.Widgets {
-	public sealed class TableWidget : Widget {
+	public class TableWidget : Widget {
 		
 		public TableWidget(Game game) : base(game) { }
 		

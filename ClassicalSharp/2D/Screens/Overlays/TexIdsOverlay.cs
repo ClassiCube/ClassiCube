@@ -8,7 +8,7 @@ using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
 	
-	public sealed class TexIdsOverlay : Overlay {
+	public class TexIdsOverlay : Overlay {
 		
 		TextAtlas idAtlas;
 		public TexIdsOverlay(Game game) : base(game) { widgets = new Widget[1]; }
