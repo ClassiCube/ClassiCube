@@ -216,7 +216,7 @@ namespace ClassicalSharp.Gui.Screens {
 			LocationUpdate update = LocationUpdate.MakePosAndOri(spawn, 0, 0, false);
 			game.LocalPlayer.SetLocation(update, false);
 			game.LocalPlayer.Spawn = spawn;
-			game.CurrentCameraPos = game.Camera.GetCameraPos(0);
+			game.CurrentCameraPos = game.Camera.GetPosition(0);
 		}
 	}
 }

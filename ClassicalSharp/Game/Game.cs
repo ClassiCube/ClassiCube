@@ -289,7 +289,7 @@ namespace ClassicalSharp {
 			LocalPlayer.SetInterpPosition(t);
 			
 			if (!SkipClear) Graphics.Clear();
-			CurrentCameraPos = Camera.GetCameraPos(t);
+			CurrentCameraPos = Camera.GetPosition(t);
 			UpdateViewMatrix();
 			
 			bool visible = Gui.activeScreen == null || !Gui.activeScreen.BlocksWorld;

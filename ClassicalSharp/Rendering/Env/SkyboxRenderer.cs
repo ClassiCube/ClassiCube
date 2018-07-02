@@ -79,12 +79,12 @@ namespace ClassicalSharp.Renderers {
 			Matrix4.Mult(out m, ref m, ref rotX);
 			
 			// Rotate around camera
-			Vector2 rotation = game.Camera.GetCameraOrientation();
+			Vector2 rotation = game.Camera.GetOrientation();
 			Matrix4.RotateY(out rotY, rotation.X); // Camera yaw
 			Matrix4.Mult(out m, ref m, ref rotY);
 			Matrix4.RotateX(out rotX, rotation.Y); // Cammera pitch
 			Matrix4.Mult(out m, ref m, ref rotX);
-			Matrix4.Mult(out m, ref m, ref game.Camera.tiltM);
+			Matrix4.Mult(out m, ref m, ref Camera.tiltM);
 			
 			game.Graphics.LoadMatrix(ref m);
 			game.Graphics.BindVb(vb);

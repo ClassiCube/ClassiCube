@@ -49,7 +49,7 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Matrix_MulBy(&m, &rotX);
 
 	/* Rotate around camera */
-	Vector2 rotation = Camera_Active->GetCameraOrientation();
+	Vector2 rotation = Camera_Active->GetOrientation();
 	Matrix_RotateY(&rotY, rotation.X); /* Camera yaw */
 	Matrix_MulBy(&m, &rotY);
 	Matrix_RotateX(&rotX, rotation.Y); /* Camera pitch */

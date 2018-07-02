@@ -693,7 +693,7 @@ static void Game_RenderFrame(Real64 delta) {
 	LocalPlayer_SetInterpPosition(t);
 
 	if (!Game_SkipClear) Gfx_Clear();
-	Game_CurrentCameraPos = Camera_Active->GetCameraPos(t);
+	Game_CurrentCameraPos = Camera_Active->GetPosition(t);
 	Game_UpdateViewMatrix();
 
 	bool visible = Gui_Active == NULL || !Gui_Active->BlocksWorld;

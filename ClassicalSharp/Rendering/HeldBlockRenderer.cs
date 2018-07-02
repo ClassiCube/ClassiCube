@@ -90,7 +90,7 @@ namespace ClassicalSharp.Renderers {
 			
 			Matrix4 m, lookAt;
 			Matrix4.LookAt(eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY, out lookAt);
-			Matrix4.Mult(out m, ref lookAt, ref game.Camera.tiltM);
+			Matrix4.Mult(out m, ref lookAt, ref Camera.tiltM);
 			game.Graphics.View = m;
 		}
 		
@@ -100,9 +100,9 @@ namespace ClassicalSharp.Renderers {
 			Vector3 eyePos = Vector3.Zero; eyePos.Y = p.EyeHeight;
 			held.Position = eyePos;
 			
-			held.Position.X -= game.Camera.bobbingHor;
-			held.Position.Y -= game.Camera.bobbingVer;
-			held.Position.Z -= game.Camera.bobbingHor;
+			held.Position.X -= Camera.bobbingHor;
+			held.Position.Y -= Camera.bobbingVer;
+			held.Position.Z -= Camera.bobbingHor;
 			
 			held.HeadY = -45; held.RotY = -45;
 			held.HeadX = 0; held.RotX = 0;

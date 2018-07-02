@@ -1,6 +1,7 @@
 ﻿// ClassicalSharp copyright 2014-2016 UnknownShadow200 | Licensed under MIT
 using System;
 using System.Collections.Generic;
+using ClassicalSharp;
 
 namespace Launcher.Patcher {
 	
@@ -105,7 +106,7 @@ namespace Launcher.Patcher {
 		
 		public static string GetFile(string path) {
 			// Ignore directories: convert x/name to name and x\name to name.
-			string name = path.ToLower();
+			string name = Utils.ToLower(path);
 			int i = name.LastIndexOf('\\');
 			if (i >= 0) name = name.Substring(i + 1, name.Length - 1 - i);
 			i = name.LastIndexOf('/');

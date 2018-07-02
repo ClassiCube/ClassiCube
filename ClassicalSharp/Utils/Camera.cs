@@ -9,52 +9,23 @@ namespace ClassicalSharp {
 	
 	public abstract class Camera {
 		protected Game game;
-		protected internal Matrix4 tiltM;
-		internal float bobbingVer, bobbingHor;
+		internal static Matrix4 tiltM;
+		internal static float bobbingVer, bobbingHor;
 		
-		/// <summary> Calculates the projection matrix for this camera. </summary>
 		public abstract void GetProjection(out Matrix4 m);
-		
-		/// <summary> Calculates the world/view matrix for this camera. </summary>
 		public abstract void GetView(out Matrix4 m);
 		
-		/// <summary> Calculates the location of the camera's position in the world. </summary>
-		public abstract Vector3 GetCameraPos(float t);
+		public abstract Vector2 GetOrientation();
+		public abstract Vector3 GetPosition(float t);
+		public abstract Vector3 GetTarget();
 		
-		/// <summary> Calculates the yaw and pitch of the camera in radians. </summary>
-		public abstract Vector2 GetCameraOrientation();
-		
-		/// <summary> Whether this camera is using a third person perspective. </summary>
-		/// <remarks> Causes the player's own entity model to be renderered if true. </remarks>
 		public abstract bool IsThirdPerson { get; }
-		
-		/// <summary> Attempts to zoom the camera's position closer to or further from its origin point. </summary>
-		/// <returns> true if this camera handled zooming </returns>
-		/// <example> Third person cameras override this method to zoom in or out, and hence return true.
-		/// The first person camera does not perform zomming, so returns false. </example>
 		public virtual bool Zoom(float amount) { return false; }
 		
-		/// <summary> Called every frame for the camera to update its state. </summary>
-		/// <example> The perspective cameras gets delta between mouse cursor's current position and the centre of the window,
-		/// then uses this to adjust the player's horizontal and vertical rotation.	</example>
 		public abstract void UpdateMouse();
-		
-		/// <summary> Called after the camera has regrabbed the mouse from 2D input handling. </summary>
-		/// <example> The perspective cameras set the mouse cursor to the centre of the window. </example>
 		public abstract void RegrabMouse();
 		
-		/// <summary> Calculates the picked block based on the camera's current state. </summary>
-		public virtual void GetPickedBlock(PickedPos pos) { }
-		
-		/// <summary> Adjusts the head X rotation of the player to avoid looking straight up or down. </summary>
-		/// <remarks> Looking straight up or down (parallel to camera up vector) can otherwise cause rendering issues. </remarks>
-		protected float AdjustHeadX(float value) {
-			if (value >= 90.0f && value <= 90.1f) return 90.1f * Utils.Deg2Rad;
-			if (value >= 89.9f && value <= 90.0f) return 89.9f * Utils.Deg2Rad;
-			if (value >= 270.0f && value <= 270.1f) return 270.1f * Utils.Deg2Rad;
-			if (value >= 269.9f && value <= 270.0f) return 269.9f * Utils.Deg2Rad;
-			return value * Utils.Deg2Rad;
-		}
+		public abstract void GetPickedBlock(PickedPos pos);
 	}
 	
 	public abstract class PerspectiveCamera : Camera {
@@ -67,7 +38,15 @@ namespace ClassicalSharp {
 		}
 		
 		protected Vector3 GetDirVector() {
-			return Utils.GetDirVector(player.HeadYRadians, AdjustHeadX(player.HeadX));
+			Vector2 rot = GetOrientation();
+			Vector3 dir = Utils.GetDirVector(rot.X, rot.Y);
+			
+			// Adjusts pitch of the player to avoid looking straight up or down,
+			// as pitch parallel to camera up vector causes rendering issues	
+			if (dir.Y > +0.999998f) dir.Y = +0.999998f;
+			if (dir.Y < -0.999998f) dir.Y = -0.999998f;
+			
+			return dir;
 		}
 		
 		public override void GetProjection(out Matrix4 m) {
@@ -75,6 +54,12 @@ namespace ClassicalSharp {
 			float aspectRatio = (float)game.Width / game.Height;
 			float zNear = game.Graphics.MinZNear;
 			game.Graphics.CalcPerspectiveMatrix(fov, aspectRatio, zNear, game.ViewDistance, out m);
+		}
+		
+		public override void GetView(out Matrix4 m) {
+			Vector3 pos = game.CurrentCameraPos, target = GetTarget();
+			Matrix4.LookAt(pos, target, Vector3.UnitY, out m);
+			Matrix4.Mult(out m, ref m, ref tiltM);
 		}
 		
 		public override void GetPickedBlock(PickedPos pos) {
@@ -172,31 +157,28 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		public override void GetView(out Matrix4 m) {
-			Vector3 camPos = game.CurrentCameraPos;
-			Vector3 eyePos = player.EyePosition;
-			eyePos.Y += bobbingVer;
-			
-			Matrix4 lookAt;
-			Matrix4.LookAt(camPos, eyePos, Vector3.UnitY, out lookAt);
-			Matrix4.Mult(out m, ref lookAt, ref tiltM);
-		}
-		
-		public override Vector2 GetCameraOrientation() {
-			if (!forward)
+		public override Vector2 GetOrientation() {
+			if (!forward) {
 				return new Vector2(player.HeadYRadians, player.HeadXRadians);
-			return new Vector2(player.HeadYRadians + (float)Math.PI, -player.HeadXRadians);
+			} else {
+				return new Vector2(player.HeadYRadians + (float)Math.PI, -player.HeadXRadians);
+			}
 		}
 		
-		public override Vector3 GetCameraPos(float t) {
+		public override Vector3 GetPosition(float t) {
 			CalcViewBobbing(t, dist);
 			Vector3 eyePos = player.EyePosition;
 			eyePos.Y += bobbingVer;
 			
-			Vector3 dir = GetDirVector();
-			if (!forward) dir = -dir;
+			Vector3 dir = -GetDirVector();
 			Picking.ClipCameraPos(game, eyePos, dir, dist, game.CameraClipPos);
 			return game.CameraClipPos.Intersect;
+		}
+		
+		public override Vector3 GetTarget() {
+			Vector3 eyePos = player.EyePosition;
+			eyePos.Y += bobbingVer;
+			return eyePos;
 		}
 	}
 	
@@ -204,20 +186,11 @@ namespace ClassicalSharp {
 		public FirstPersonCamera(Game window) : base(window) { }
 		public override bool IsThirdPerson { get { return false; } }
 		
-		public override void GetView(out Matrix4 m) {
-			Vector3 camPos = game.CurrentCameraPos;
-			Vector3 dir = GetDirVector();
-			
-			Matrix4 lookAt;
-			Matrix4.LookAt(camPos, camPos + dir, Vector3.UnitY, out lookAt);
-			Matrix4.Mult(out m, ref lookAt, ref tiltM);
-		}
-		
-		public override Vector2 GetCameraOrientation() {
+		public override Vector2 GetOrientation() {
 			return new Vector2(player.HeadYRadians, player.HeadXRadians);
 		}
 		
-		public override Vector3 GetCameraPos(float t) {
+		public override Vector3 GetPosition(float t) {
 			CalcViewBobbing(t, 1);
 			Vector3 camPos = player.EyePosition;
 			camPos.Y += bobbingVer;
@@ -226,6 +199,12 @@ namespace ClassicalSharp {
 			camPos.X += bobbingHor * (float)Math.Cos(headY);
 			camPos.Z += bobbingHor * (float)Math.Sin(headY);
 			return camPos;
+		}
+		
+		public override Vector3 GetTarget() {
+			Vector3 camPos = game.CurrentCameraPos;
+			Vector3 dir = GetDirVector();
+			return camPos + dir;
 		}
 	}
 }

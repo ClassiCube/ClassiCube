@@ -214,6 +214,17 @@ namespace ClassicalSharp.Network {
 			return -1;
 		}
 		
+		static DateTime GetLastModified(HttpWebResponse response) {
+			// System.NotSupportedException: Can't get timezone name.
+			// gets thrown on some platforms with DateTime.Now
+			try {
+				if (response.Headers.Get("Last-Modified") != null)
+					return response.LastModified;
+			} catch (NotSupportedException) {			
+			}
+			return DateTime.MinValue;
+		}
+		
 		void ProcessRequest(Request request) {
 			string url = request.Url;
 			Utils.LogDebug("Downloading {0} from: {1}", request.Type, url);
@@ -223,9 +234,7 @@ namespace ClassicalSharp.Network {
 				HttpWebRequest req = MakeRequest(request);
 				using (HttpWebResponse response = (HttpWebResponse)req.GetResponse()) {
 					request.ETag = response.Headers.Get("ETag");
-					if (response.Headers.Get("Last-Modified") != null) {
-						request.LastModified = response.LastModified;					
-					}
+					request.LastModified = GetLastModified(response);
 					request.Data = DownloadContent(request, response);
 				}
 			} catch (Exception ex) {
