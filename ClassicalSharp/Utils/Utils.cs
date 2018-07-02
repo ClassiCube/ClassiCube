@@ -29,7 +29,6 @@ namespace ClassicalSharp {
 		
 		public const int StringLength = 64;
 		
-		/// <summary> Returns a string with all the colour codes stripped from it. </summary>
 		public static string StripColours(string value) {
 			if (value.IndexOf('&') == -1) return value;
 			char[] output = new char[value.Length];
@@ -81,8 +80,6 @@ namespace ClassicalSharp {
 		}
 
 		#if !LAUNCHER
-		/// <summary> Attempts to caselessly parse the given string as a Key enum member,
-		/// returning defValue if there was an error parsing. </summary>
 		public static bool TryParseEnum<T>(string value, T defValue, out T result) {
 			T mapping;
 			try {
@@ -128,7 +125,6 @@ namespace ClassicalSharp {
 			return SkinType.Invalid;
 		}
 		
-		/// <summary> Returns whether the specified string starts with http:// or https:// </summary>
 		public static bool IsUrlPrefix(string value, int index) {
 			int http = value.IndexOf("http://", index);
 			int https = value.IndexOf("https://", index);

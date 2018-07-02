@@ -83,9 +83,11 @@ void Entity_Init(Entity* entity) {
 }
 
 Vector3 Entity_GetEyePosition(Entity* entity) {
-	Vector3 pos = entity->Position;
-	pos.Y += entity->Model->GetEyeY(entity) * entity->ModelScale.Y;
-	return pos;
+	Vector3 pos = entity->Position; pos.Y += Entity_GetEyeHeight(entity); return pos;
+}
+
+Real32 Entity_GetEyeHeight(Entity* entity) {
+	return entity->Model->GetEyeY(entity) * entity->ModelScale.Y;
 }
 
 void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale) {

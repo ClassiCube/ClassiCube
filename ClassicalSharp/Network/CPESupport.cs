@@ -21,8 +21,6 @@ namespace ClassicalSharp.Network {
 			game.SupportsCPEBlocks = false;
 		}
 		
-		/// <summary> Sets fields / updates network handles based on the server 
-		/// indicating it supports the given CPE extension. </summary>
 		public void HandleEntry(string ext, int version, NetworkProcessor net) {
 			ServerExtensionsCount--;
 			

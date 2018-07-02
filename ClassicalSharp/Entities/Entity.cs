@@ -73,15 +73,12 @@ namespace ClassicalSharp.Entities {
 		public abstract void RenderName();
 		
 		public virtual void ContextLost() { }
+		public virtual void ContextRecreated() { }		
 		
-		public virtual void ContextRecreated() { }
-		
-		
-		/// <summary> Gets the position of the player's eye in the world. </summary>
 		public Vector3 EyePosition {
-			get { return new Vector3(Position.X,
-			                         Position.Y + Model.GetEyeY(this) * ModelScale.Y, Position.Z); }
+			get { return new Vector3(Position.X, Position.Y + EyeHeight, Position.Z); }
 		}
+		public float EyeHeight { get { return Model.GetEyeY(this) * ModelScale.Y; } }
 		
 		public Matrix4 TransformMatrix(Vector3 scale, Vector3 pos) {
 			Matrix4 m = Matrix4.Identity, tmp;

@@ -90,6 +90,7 @@ typedef struct Entity_ {
 
 void Entity_Init(Entity* entity);
 Vector3 Entity_GetEyePosition(Entity* entity);
+Real32 Entity_GetEyeHeight(Entity* entity);
 void Entity_GetTransform(Entity* entity, Vector3 pos, Vector3 scale);
 void Entity_GetPickingBounds(Entity* entity, AABB* bb);
 void Entity_GetBounds(Entity* entity, AABB* bb);

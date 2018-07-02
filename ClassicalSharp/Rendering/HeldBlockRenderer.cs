@@ -86,7 +86,7 @@ namespace ClassicalSharp.Renderers {
 		static Vector3 sOffset = new Vector3(0.46f, -0.52f, -0.72f);
 		void SetMatrix() {
 			Player p = game.LocalPlayer;
-			Vector3 eyePos = p.EyePosition;
+			Vector3 eyePos = Vector3.Zero; eyePos.Y = p.EyeHeight;
 			
 			Matrix4 m, lookAt;
 			Matrix4.LookAt(eyePos, eyePos - Vector3.UnitZ, Vector3.UnitY, out lookAt);
@@ -97,7 +97,8 @@ namespace ClassicalSharp.Renderers {
 		void ResetHeldState() {
 			// Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!)
 			Player p = game.LocalPlayer;
-			held.Position = p.EyePosition;
+			Vector3 eyePos = Vector3.Zero; eyePos.Y = p.EyeHeight;
+			held.Position = eyePos;
 			
 			held.Position.X -= game.Camera.bobbingHor;
 			held.Position.Y -= game.Camera.bobbingVer;

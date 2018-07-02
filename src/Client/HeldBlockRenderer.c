@@ -44,8 +44,8 @@ static void HeldBlockRenderer_RenderModel(void) {
 }
 
 static void HeldBlockRenderer_SetMatrix(void) {
-	Entity* player = &LocalPlayer_Instance.Base;	
-	Vector3 eyePos = Entity_GetEyePosition(player);
+	Entity* player = &LocalPlayer_Instance.Base;
+	Vector3 eyePos = VECTOR3_CONST(0.0f, Entity_GetEyeHeight(player), 0.0f);
 	Vector3 up = Vector3_UnitY;
 	Vector3 target = eyePos; target.Z -= 1.0f; /* Look straight down*/	
 
@@ -58,7 +58,8 @@ static void HeldBlockRenderer_SetMatrix(void) {
 static void HeldBlockRenderer_ResetHeldState(void) {
 	/* Based off details from http://pastebin.com/KFV0HkmD (Thanks goodlyay!) */
 	Entity* player = &LocalPlayer_Instance.Base;
-	held_entity.Position = Entity_GetEyePosition(player);
+	Vector3 eyePos = VECTOR3_CONST(0.0f, Entity_GetEyeHeight(player), 0.0f);
+	held_entity.Position = eyePos;
 
 	held_entity.Position.X -= Camera_BobbingHor;
 	held_entity.Position.Y -= Camera_BobbingVer;
