@@ -379,7 +379,7 @@ namespace ClassicalSharp {
 				Platform.DirectoryCreate("screenshots");
 			}
 			
-			string timestamp = DateTime.Now.ToString("dd-MM-yyyy-HH-mm-ss");
+			string timestamp = Utils.LocalNow().ToString("dd-MM-yyyy-HH-mm-ss");
 			string file = "screenshot_" + timestamp + ".png";
 			string path = PathIO.Combine("screenshots", file);
 			

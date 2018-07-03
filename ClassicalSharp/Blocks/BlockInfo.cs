@@ -250,7 +250,6 @@ namespace ClassicalSharp {
 			"_Gold_Iron_Double slab_Slab_Brick_TNT_Bookshelf_Mossy rocks_Obsidian_Cobblestone slab_Rope_Sandstone" +
 			"_Snow_Fire_Light pink_Forest green_Brown_Deep blue_Turquoise_Ice_Ceramic tile_Magma_Pillar_Crate_Stone brick";	
 		
-		static StringBuffer buffer = new StringBuffer(64);
 		static string DefaultName(BlockID block) {
 			if (block >= Block.CpeCount) return "Invalid";
 			
@@ -258,14 +257,11 @@ namespace ClassicalSharp {
 			int start = 0;
 			for (int i = 0; i < block; i++)
 				start = RawNames.IndexOf('_', start) + 1;
+			
 			int end = RawNames.IndexOf('_', start);
 			if (end == -1) end = RawNames.Length;
 			
-			buffer.Clear();
-			for (int i = start; i < end; i++) {
-				buffer.Append(RawNames[i]);
-			}
-			return buffer.ToString();
+			return RawNames.Substring(start, end - start);
 		}
 		
 		

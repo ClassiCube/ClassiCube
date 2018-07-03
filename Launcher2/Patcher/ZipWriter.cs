@@ -18,7 +18,7 @@ namespace Launcher.Patcher {
 		public ZipWriter(Stream stream) {
 			this.stream = stream;
 			writer = new BinaryWriter(stream);
-			now = DateTime.Now;
+			now = Utils.LocalNow();
 		}
 		
 		internal ZipEntry[] entries;

@@ -216,7 +216,7 @@ namespace ClassicalSharp.Network {
 		
 		static DateTime GetLastModified(HttpWebResponse response) {
 			// System.NotSupportedException: Can't get timezone name.
-			// gets thrown on some platforms with DateTime.Now
+			// Gets thrown on some platforms with DateTime.Now
 			try {
 				if (response.Headers.Get("Last-Modified") != null)
 					return response.LastModified;

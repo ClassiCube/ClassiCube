@@ -47,7 +47,7 @@ namespace ClassicalSharp {
 					using (StreamWriter w = new StreamWriter(fs))
 				{
 					w.WriteLine("=== crash occurred ===");
-					w.WriteLine("Time: " + DateTime.Now);
+					w.WriteLine("Time: " + Utils.LocalNow());
 					
 					string platform = Configuration.RunningOnMono ? "Mono " : ".NET ";
 					platform += Environment.Version;

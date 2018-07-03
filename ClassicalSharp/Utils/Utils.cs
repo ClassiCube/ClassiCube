@@ -2,6 +2,8 @@
 using System;
 using System.Drawing;
 using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Security;
 #if !LAUNCHER
 using ClassicalSharp.Model;
 #endif
@@ -28,6 +30,32 @@ namespace ClassicalSharp {
 	public static partial class Utils {
 		
 		public const int StringLength = 64;
+		
+		[StructLayout(LayoutKind.Sequential, Pack=2)]
+		internal struct SYSTEMTIME {
+			public ushort Year, Month, DayOfWeek, Day;
+			public ushort Hour, Minute, Second, Millis;
+		}
+		
+		[DllImport("kernel32.dll"), SuppressUnmanagedCodeSecurity]
+		static extern void GetLocalTime(out SYSTEMTIME st);	
+		
+		static DateTime LocalNow_Windows() {
+			SYSTEMTIME st; GetLocalTime(out st);
+			return new DateTime(st.Year, st.Month, st.Day, st.Hour, st.Minute, 
+			                    st.Second, st.Millis, DateTimeKind.Local);
+		}
+		
+		public static DateTime LocalNow() {
+			// System.NotSupportedException: Can't get timezone name.
+			// Gets thrown on some platforms with DateTime.Now
+			try {
+				// avoid pinvoke-ing GetLocalTime function on non-windows OS
+				if (OpenTK.Configuration.RunningOnWindows) return LocalNow_Windows();
+			} catch { }
+			return DateTime.Now;
+		}
+
 		
 		public static string StripColours(string value) {
 			if (value.IndexOf('&') == -1) return value;

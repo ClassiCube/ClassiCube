@@ -96,7 +96,7 @@ namespace ClassicalSharp {
 		StreamWriter writer = null;
 		void LogChatToFile(string text) {
 			if (logName == null || !game.ChatLogging) return;
-			DateTime now = DateTime.Now;
+			DateTime now = Utils.LocalNow();
 			
 			if (now.Day != last.Day || now.Month != last.Month || now.Year != last.Year) {
 				Dispose();
