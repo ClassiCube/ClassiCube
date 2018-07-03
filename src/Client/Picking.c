@@ -236,7 +236,7 @@ void Picking_ClipCameraPos(Vector3 origin, Vector3 dir, Real32 reach, PickedPos*
 	bool noClip = !Game_CameraClipping || LocalPlayer_Instance.Hacks.Noclip;
 	if (noClip || !Picking_RayTrace(origin, dir, reach, pos, Picking_ClipCamera)) {
 		PickedPos_SetAsInvalid(pos);
-		Vector3_Mul1(&pos->Intersect, &tracer.Dir, reach);        /* intersect = dir * reach */
-		Vector3_Add(&pos->Intersect, &tracer.Origin, &pos->Intersect); /* intersect = origin + dir * reach */
+		Vector3_Mul1(&pos->Intersect, &dir, reach);        /* intersect = dir * reach */
+		Vector3_Add(&pos->Intersect, &origin, &pos->Intersect); /* intersect = origin + dir * reach */
 	}
 }

@@ -30,6 +30,7 @@ namespace ClassicalSharp {
 	
 	public abstract class PerspectiveCamera : Camera {
 		
+		protected static Vector2 offset;
 		protected LocalPlayer player;
 		public PerspectiveCamera(Game game) {
 			this.game = game;
@@ -42,7 +43,7 @@ namespace ClassicalSharp {
 			Vector3 dir = Utils.GetDirVector(rot.X, rot.Y);
 			
 			// Adjusts pitch of the player to avoid looking straight up or down,
-			// as pitch parallel to camera up vector causes rendering issues	
+			// as pitch parallel to camera up vector causes rendering issues
 			if (dir.Y > +0.999998f) dir.Y = +0.999998f;
 			if (dir.Y < -0.999998f) dir.Y = -0.999998f;
 			
@@ -63,8 +64,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override void GetPickedBlock(PickedPos pos) {
-			Vector3 dir = GetDirVector();
 			Vector3 eyePos = player.EyePosition;
+			//Vector3 dir = GetDirVector();
+			Vector3 dir = Utils.GetDirVector(player.HeadYRadians, player.HeadXRadians);
 			float reach = game.LocalPlayer.ReachDistance;
 			
 			Picking.CalculatePickedBlock(game, eyePos, dir, reach, pos);
@@ -92,7 +94,7 @@ namespace ClassicalSharp {
 		const float adjust = 0.025f;
 		
 		static float speedX = 0, speedY = 0;
-		void UpdateMouseRotation() {
+		protected Vector2 CalcMouseDelta() {
 			float sensitivity = sensiFactor * game.MouseSensitivity;
 
 			if (game.SmoothCamera) {
@@ -105,10 +107,21 @@ namespace ClassicalSharp {
 				speedY = delta.Y;
 			}
 			
-			float rotY =  player.interp.next.HeadY + speedX * sensitivity;
-			float yAdj =  game.InvertMouse ? -speedY * sensitivity : speedY * sensitivity;
-			float headX = player.interp.next.HeadX + yAdj;
-			LocationUpdate update = LocationUpdate.MakeOri(rotY, headX);
+			float dx = speedX * sensitivity, dy = speedY * sensitivity;
+			if (game.InvertMouse) dy = -dy;
+			return new Vector2(dx, dy);
+		}
+		
+		void UpdateMouseRotation() {
+			Vector2 rot = CalcMouseDelta();
+			if (game.Input.AltDown && IsThirdPerson) {
+				offset.X += rot.X; offset.Y += rot.Y;
+				return;
+			}
+			
+			float headY = player.interp.next.HeadY + rot.X;
+			float headX = player.interp.next.HeadX + rot.Y;
+			LocationUpdate update = LocationUpdate.MakeOri(headY, headX);
 			
 			// Need to make sure we don't cross the vertical axes, because that gets weird.
 			if (update.HeadX >= 90 && update.HeadX <= 270) {
@@ -158,11 +171,11 @@ namespace ClassicalSharp {
 		}
 		
 		public override Vector2 GetOrientation() {
-			if (!forward) {
-				return new Vector2(player.HeadYRadians, player.HeadXRadians);
-			} else {
-				return new Vector2(player.HeadYRadians + (float)Math.PI, -player.HeadXRadians);
-			}
+			Vector2 v = new Vector2(player.HeadYRadians, player.HeadXRadians);
+			if (forward) { v.X += (float)Math.PI; v.Y = -v.Y; }
+			
+			v.X += offset.X * Utils.Deg2Rad; v.Y += offset.Y * Utils.Deg2Rad;
+			return v;
 		}
 		
 		public override Vector3 GetPosition(float t) {
