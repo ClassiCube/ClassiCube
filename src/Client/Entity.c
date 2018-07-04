@@ -843,6 +843,9 @@ void LocalPlayer_Tick(Entity* entity, Real64 delta) {
 	Vector3 headingVelocity = Vector3_RotateY3(xMoving, 0, zMoving, entity->HeadY * MATH_DEG2RAD);
 	PhysicsComp_PhysicsTick(&p->Physics, headingVelocity);
 
+	/* Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key */
+	if (p->Hacks.Floating) entity->Velocity.Y = 0.0f;
+
 	p->Interp.Next.Pos = entity->Position; entity->Position = p->Interp.Prev.Pos;
 	AnimatedComp_Update(entity, p->Interp.Prev.Pos, p->Interp.Next.Pos, delta);
 	TiltComp_Update(&p->Tilt, delta);

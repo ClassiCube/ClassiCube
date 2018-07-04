@@ -70,6 +70,9 @@ namespace ClassicalSharp.Entities {
 			Vector3 headingVelocity = Utils.RotateY(xMoving, 0, zMoving, HeadYRadians);
 			physics.PhysicsTick(headingVelocity);
 			
+			// Fixes high jump, when holding down a movement key, jump, fly, then let go of fly key
+			if (Hacks.Floating) Velocity.Y = 0.0f;
+			
 			interp.next.Pos = Position; Position = interp.prev.Pos;
 			anim.UpdateAnimState(interp.prev.Pos, interp.next.Pos, delta);
 			tilt.UpdateAnimState(delta);
