@@ -32,6 +32,7 @@ namespace ClassicalSharp {
 			game.Mouse.ButtonUp += MouseButtonUp;
 		}
 		
+		public bool WinDown { get { return IsKeyDown(Key.WinLeft) || IsKeyDown(Key.WinRight); } }
 		public bool AltDown { get { return IsKeyDown(Key.AltLeft) || IsKeyDown(Key.AltRight); } }
 		public bool ControlDown { get { return IsKeyDown(Key.ControlLeft) || IsKeyDown(Key.ControlRight); } }
 		public bool ShiftDown { get { return IsKeyDown(Key.ShiftLeft) || IsKeyDown(Key.ShiftRight); } }
@@ -150,7 +151,6 @@ namespace ClassicalSharp {
 
 		static int[] normViewDists = new int[] { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 		static int[] classicViewDists = new int[] { 8, 32, 128, 512 };
-		Key lastKey;
 		void KeyDownHandler(object sender, KeyboardKeyEventArgs e) {
 			Key key = e.Key;
 			if (SimulateMouse(key, true)) return;
@@ -163,15 +163,13 @@ namespace ClassicalSharp {
 				if (!HandleBuiltinKey(key) && !game.LocalPlayer.HandlesKey(key))
 					HandleHotkey(key);
 			}
-			lastKey = key;
 		}
 		
 		bool IsShutdown(Key key) {
-			if (key == Key.F4 && (lastKey == Key.AltLeft || lastKey == Key.AltRight))
-				return true;
+			if (key == Key.F4 && AltDown) return true;
 			// On OSX, Cmd+Q should also terminate the process.
 			if (!OpenTK.Configuration.RunningOnMacOS) return false;
-			return key == Key.Q && (lastKey == Key.WinLeft || lastKey == Key.WinRight);
+			return key == Key.Q && WinDown;
 		}
 		
 		void HandleHotkey(Key key) {

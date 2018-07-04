@@ -71,10 +71,11 @@ are generated for the same key when it is held down for a period of time. Should
 bool Key_KeyRepeat;
 extern const UInt8* Key_Names[Key_Count];
 
+#define Key_IsWinPressed()     (Key_IsPressed(Key_WinLeft)     || Key_IsPressed(Key_WinRight))
 #define Key_IsAltPressed()     (Key_IsPressed(Key_AltLeft)     || Key_IsPressed(Key_AltRight))
 #define Key_IsControlPressed() (Key_IsPressed(Key_ControlLeft) || Key_IsPressed(Key_ControlRight))
 #define Key_IsShiftPressed()   (Key_IsPressed(Key_ShiftLeft)   || Key_IsPressed(Key_ShiftRight))
-#define Key_IsWinPressed()     (Key_IsPressed(Key_WinLeft)     || Key_IsPressed(Key_WinRight))
+
 bool Key_IsPressed(Key key);
 void Key_SetPressed(Key key, bool pressed);
 void Key_Clear(void);

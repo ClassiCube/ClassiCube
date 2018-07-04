@@ -90,8 +90,8 @@ namespace Launcher.Gui.Screens {
 		
 		bool ControlDown {
 			get {
-				KeyboardDevice keyboard = game.Window.Keyboard;
-				return keyboard[Key.ControlLeft] || keyboard[Key.ControlRight];
+				return game.IsKeyDown(Key.ControlLeft)
+					|| game.IsKeyDown(Key.ControlRight);
 			}
 		}
 

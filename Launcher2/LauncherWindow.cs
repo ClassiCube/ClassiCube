@@ -63,6 +63,8 @@ namespace Launcher {
 			get { return Window.WindowState == WindowState.Minimized || (Width == 1 && Height == 1); }
 		}
 		
+		public bool IsKeyDown(Key key) { return Window.Keyboard[key]; }
+		
 		internal ResourceFetcher fetcher;
 		internal UpdateCheckTask checkTask;
 		bool fullRedraw;
@@ -233,11 +235,8 @@ namespace Launcher {
 			fullRedraw = false;
 		}
 		
-		Key lastKey;
 		void KeyDown(object sender, KeyboardKeyEventArgs e) {
-			if (IsShutdown(e.Key))
-				ShouldExit = true;
-			lastKey = e.Key;
+			if (IsShutdown(e.Key)) ShouldExit = true;
 		}
 		
 		public void Dispose() {
@@ -254,13 +253,15 @@ namespace Launcher {
 			logoFont.Dispose();
 		}
 		
+		bool WinDown { get { return IsKeyDown(Key.WinLeft) || IsKeyDown(Key.WinRight); } }
+		bool AltDown { get { return IsKeyDown(Key.AltLeft) || IsKeyDown(Key.AltRight); } }
+		
 		bool IsShutdown(Key key) {
-			if (key == Key.F4 && (lastKey == Key.AltLeft || lastKey == Key.AltRight))
-				return true;
+			if (key == Key.F4 && AltDown) return true;
 			
 			// On OSX, Cmd+Q should also terminate the process.
 			if (!OpenTK.Configuration.RunningOnMacOS) return false;
-			return key == Key.Q && (lastKey == Key.WinLeft || lastKey == Key.WinRight);
+			return key == Key.Q && WinDown;
 		}
 		
 		public FastBitmap LockBits() {

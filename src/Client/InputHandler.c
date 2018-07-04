@@ -21,7 +21,6 @@ bool input_buttonsDown[3];
 Int32 input_pickingId = -1;
 Int32 input_normViewDists[10] = { 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096 };
 Int32 input_classicViewDists[4] = { 8, 32, 128, 512 };
-Key input_lastKey;
 DateTime input_lastClick;
 Real32 input_fovIndex = -1.0f;
 
@@ -70,12 +69,12 @@ void InputHandler_ScreenChanged(Screen* oldScreen, Screen* newScreen) {
 	}
 }
 
-static bool InputHandler_IsShutdown(Key key, Key last) {
-	if (key == Key_F4 && (last == Key_AltLeft || last == Key_AltRight)) return true;
+static bool InputHandler_IsShutdown(Key key) {
+	if (key == Key_F4 && Key_IsAltPressed()) return true;
 
 	/* On OSX, Cmd+Q should also terminate the process. */
 #if CC_BUILD_OSX
-	return key == Key_Q && (last == Key_WinLeft || last == Key_WinRight);
+	return key == Key_Q && Key_IsWinPressed();
 #else
 	return false;
 #endif
@@ -384,8 +383,7 @@ static void InputHandler_KeyDown(void* obj, Int32 key) {
 	if (InputHandler_SimulateMouse(key, true)) return;
 	GuiElement* active = (GuiElement*)Gui_GetActiveScreen();
 
-	Key last = input_lastKey; input_lastKey = key;
-	if (InputHandler_IsShutdown(key, last)) {
+	if (InputHandler_IsShutdown(key)) {
 		/* TODO: Do we need a separate exit function in Game class? */
 		Window_Close();
 	} else if (key == KeyBind_Get(KeyBind_Screenshot)) {

@@ -162,8 +162,8 @@ namespace Launcher.Gui.Screens {
 		protected void HandleTab() {
 			if (tabDown) return;
 			tabDown = true;
-			bool shiftDown = game.Window.Keyboard[Key.ShiftLeft]
-				|| game.Window.Keyboard[Key.ShiftRight];
+			bool shiftDown = game.IsKeyDown(Key.ShiftLeft)
+				|| game.IsKeyDown(Key.ShiftRight);
 			
 			int dir = shiftDown ? -1 : 1;
 			int index = 0;
