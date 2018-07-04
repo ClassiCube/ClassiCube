@@ -459,7 +459,7 @@ void Window_GetClipboardText(STRING_TRANSIENT String* value) {
 				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
 		} else {
-			UInt8* text = (UInt8*)src;
+			UChar* text = (UChar*)src;
 			for (; *text != NULL; text++) {
 				if (Convert_TryUnicodeToCP437(*text, &c)) String_Append(value, c);
 			}
@@ -747,7 +747,7 @@ void GLContext_Free(void) {
 	GLContext_Handle = NULL;
 }
 
-void* GLContext_GetAddress(const UInt8* function) {
+void* GLContext_GetAddress(const UChar* function) {
 	void* address = wglGetProcAddress(function);
 	return GLContext_IsInvalidAddress(address) ? NULL : address;
 }

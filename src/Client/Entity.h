@@ -22,13 +22,13 @@ typedef enum NameMode_ {
 	NAME_MODE_NONE, NAME_MODE_HOVERED, NAME_MODE_ALL, NAME_MODE_ALL_HOVERED, NAME_MODE_ALL_UNSCALED, NAME_MODE_COUNT
 } NameMode;
 NameMode Entities_NameMode;
-extern const UInt8* NameMode_Names[NAME_MODE_COUNT];
+extern const UChar* NameMode_Names[NAME_MODE_COUNT];
 
 typedef enum ShadowMode_ {
 	SHADOW_MODE_NONE, SHADOW_MODE_SNAP_TO_BLOCK, SHADOW_MODE_CIRCLE, SHADOW_MODE_CIRCLE_ALL, SHADOW_MODE_COUNT
 } ShadowMode;
 ShadowMode Entities_ShadowMode;
-extern const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT];
+extern const UChar* ShadowMode_Names[SHADOW_MODE_COUNT];
 
 #define ENTITY_TYPE_NONE 0
 #define ENTITY_TYPE_PLAYER 1
@@ -129,7 +129,7 @@ IGameComponent TabList_MakeComponent(void);
 
 
 #define Player_Layout Entity Base; UInt8 DisplayNameRaw[String_BufferSize(STRING_SIZE)]; \
-UInt8 SkinNameRaw[String_BufferSize(STRING_SIZE)]; bool FetchedSkin; Texture NameTex;
+UChar SkinNameRaw[String_BufferSize(STRING_SIZE)]; bool FetchedSkin; Texture NameTex;
 
 /* Represents a player entity. */
 typedef struct Player_ { Player_Layout } Player;

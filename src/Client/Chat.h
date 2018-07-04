@@ -21,7 +21,7 @@ enum MSG_TYPE {
 	MSG_TYPE_CLIENTSTATUS_3 = 258, /* Tab list matching names*/
 };
 
-typedef struct ChatLine_ { UInt8 Buffer[String_BufferSize(STRING_SIZE)]; DateTime Received; } ChatLine;
+typedef struct ChatLine_ { UChar Buffer[String_BufferSize(STRING_SIZE)]; DateTime Received; } ChatLine;
 ChatLine Chat_Status[3], Chat_BottomRight[3], Chat_ClientStatus[3], Chat_Announcement;
 StringsBuffer Chat_Log, Chat_InputLog;
 void Chat_GetLogTime(UInt32 index, Int64* timeMS);

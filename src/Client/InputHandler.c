@@ -80,9 +80,9 @@ static bool InputHandler_IsShutdown(Key key) {
 #endif
 }
 
-static void InputHandler_Toggle(Key key, bool* target, const UInt8* enableMsg, const UInt8* disableMsg) {
+static void InputHandler_Toggle(Key key, bool* target, const UChar* enableMsg, const UChar* disableMsg) {
 	*target = !(*target);
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 
 	if (*target) {
@@ -392,7 +392,7 @@ static void InputHandler_KeyDown(void* obj, Int32 key) {
 	} else if (InputHandler_HandleCoreKey(key)) {
 	} else if (LocalPlayer_HandlesKey(key)) {
 	} else {
-		UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+		UChar textBuffer[String_BufferSize(STRING_SIZE)];
 		String text = String_InitAndClearArray(textBuffer);
 		bool more;
 		if (!Hotkeys_IsHotkey(key, &text, &more)) return;

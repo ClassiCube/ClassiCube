@@ -30,13 +30,13 @@ UInt8 classicTabList[256 >> 3];
 #define Handlers_ReadBlock(stream) Stream_ReadU8(stream)
 #define Handlers_WriteBlock(stream, value) Stream_WriteU8(stream, value)
 
-static String Handlers_ReadString(Stream* stream, STRING_REF UInt8* strBuffer) {
-	UInt8 buffer[STRING_SIZE];
+static String Handlers_ReadString(Stream* stream, STRING_REF UChar* strBuffer) {
+	UChar buffer[STRING_SIZE];
 	Stream_Read(stream, buffer, sizeof(buffer));
 	Int32 i, length = 0;
 
 	for (i = STRING_SIZE - 1; i >= 0; i--) {
-		UInt8 code = buffer[i];
+		UChar code = buffer[i];
 		if (code == NULL || code == ' ') continue;
 		length = i + 1; break;
 	}
@@ -47,11 +47,11 @@ static String Handlers_ReadString(Stream* stream, STRING_REF UInt8* strBuffer) {
 }
 
 static void Handlers_WriteString(Stream* stream, STRING_PURE String* value) {
-	UInt8 buffer[STRING_SIZE];
+	UChar buffer[STRING_SIZE];
 
 	Int32 i, count = min(value->length, STRING_SIZE);
 	for (i = 0; i < count; i++) {
-		UInt8 c = value->buffer[i];
+		UChar c = value->buffer[i];
 		if (c == '&') c = '%'; /* escape colour codes */
 		buffer[i] = c;
 	}
@@ -100,7 +100,7 @@ static void Handlers_CheckName(EntityID id, STRING_TRANSIENT String* displayName
 	/* Server is only allowed to change our own name colours. */
 	if (id != ENTITIES_SELF_ID) return;
 
-	UInt8 nameNoColsBuffer[String_BufferSize(STRING_SIZE)];
+	UChar nameNoColsBuffer[String_BufferSize(STRING_SIZE)];
 	String nameNoCols = String_InitAndClearArray(nameNoColsBuffer);
 	String_AppendColorless(&nameNoCols, displayName);
 
@@ -170,7 +170,7 @@ static void Handlers_UpdateLocation(EntityID playerId, LocationUpdate* update, b
 /* Partially based on information from http://files.worldofminecraft.com/texturing/ */
 /* NOTE: http://files.worldofminecraft.com/ has been down for quite a while, so support was removed on Oct 10, 2015 */
 
-UInt8 wom_identifierBuffer[String_BufferSize(STRING_SIZE)];
+UChar wom_identifierBuffer[String_BufferSize(STRING_SIZE)];
 String wom_identifier = String_FromEmptyArray(wom_identifierBuffer);
 Int32 wom_counter;
 bool wom_sendId, wom_sentId;
@@ -188,7 +188,7 @@ static void WoM_CheckMotd(void) {
 	Int32 index = String_IndexOfString(&motd, &cfg);
 	if (Game_PureClassic || index == -1) return;
 
-	UInt8 urlBuffer[String_BufferSize(STRING_SIZE)];
+	UChar urlBuffer[String_BufferSize(STRING_SIZE)];
 	String url = String_InitAndClearArray(urlBuffer);
 	String host = String_UNSAFE_SubstringAt(&motd, index + cfg.length);
 	String_Format1(&url, "http://%s", &host);
@@ -227,7 +227,7 @@ static bool WoM_ReadLine(STRING_REF String* page, Int32* start, STRING_TRANSIENT
 	if (offset == -1) return false;
 
 	for (i = offset; i < page->length; i++) {
-		UInt8 c = page->buffer[i];
+		UChar c = page->buffer[i];
 		if (c != '\r' && c != '\n') continue;
 
 		*line = String_UNSAFE_Substring(page, offset, i - offset);
@@ -485,8 +485,8 @@ static void Classic_SetBlock(Stream* stream) {
 }
 
 static void Classic_AddEntity(Stream* stream) {
-	UInt8 nameBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 skinBuffer[String_BufferSize(STRING_SIZE)];
+	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar skinBuffer[String_BufferSize(STRING_SIZE)];
 
 	EntityID id = Stream_ReadU8(stream);
 	String name = Handlers_ReadString(stream, nameBuffer);
@@ -545,7 +545,7 @@ static void Classic_RemoveEntity(Stream* stream) {
 }
 
 static void Classic_Message(Stream* stream) {
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE) + 2];
+	UChar textBuffer[String_BufferSize(STRING_SIZE) + 2];
 	UInt8 type = Stream_ReadU8(stream);
 	String text = Handlers_ReadString(stream, textBuffer);
 
@@ -573,7 +573,7 @@ static void Classic_Message(Stream* stream) {
 }
 
 static void Classic_Kick(Stream* stream) {
-	UInt8 reasonBuffer[String_BufferSize(STRING_SIZE)];
+	UChar reasonBuffer[String_BufferSize(STRING_SIZE)];
 	String reason = Handlers_ReadString(stream, reasonBuffer);
 	String title = String_FromConst("&eLost connection to the server");
 	Game_Disconnect(&title, &reason);
@@ -644,7 +644,7 @@ Int32 cpe_serverExtensionsCount, cpe_pingTicks;
 Int32 cpe_envMapVer = 2, cpe_blockDefsExtVer = 2;
 bool cpe_twoWayPing;
 
-const UInt8* cpe_clientExtensions[28] = {
+const UChar* cpe_clientExtensions[28] = {
 	"ClickDistance", "CustomBlocks", "HeldBlock", "EmoteFix", "TextHotKey", "ExtPlayerList",
 	"EnvColors", "SelectionCuboid", "BlockPermissions", "ChangeModel", "EnvMapAppearance",
 	"EnvWeatherType", "MessageTypes", "HackControl", "PlayerClick", "FullCP437", "LongerMessages",
@@ -731,10 +731,10 @@ static void CPE_SendCpeExtInfoReply(void) {
 }
 
 static void CPE_ExtInfo(Stream* stream) {
-	UInt8 appNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar appNameBuffer[String_BufferSize(STRING_SIZE)];
 	String appName = Handlers_ReadString(stream, appNameBuffer);
 
-	UInt8 logMsgBuffer[String_BufferSize(STRING_SIZE)];
+	UChar logMsgBuffer[String_BufferSize(STRING_SIZE)];
 	String logMsg = String_InitAndClearArray(logMsgBuffer);
 	String_Format1(&logMsg, "Server software: %s", &appName);
 	Chat_Add(&logMsg);
@@ -751,7 +751,7 @@ static void CPE_ExtInfo(Stream* stream) {
 }
 
 static void CPE_ExtEntry(Stream* stream) {
-	UInt8 extNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar extNameBuffer[String_BufferSize(STRING_SIZE)];
 	String ext = Handlers_ReadString(stream, extNameBuffer);
 	Int32 extVersion = Stream_ReadI32_BE(stream);
 	Platform_Log2("cpe ext: %s, %i", &ext, &extVersion);
@@ -819,8 +819,8 @@ static void CPE_HoldThis(Stream* stream) {
 }
 
 static void CPE_SetTextHotkey(Stream* stream) {
-	UInt8 labelBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 actionBuffer[String_BufferSize(STRING_SIZE)];
+	UChar labelBuffer[String_BufferSize(STRING_SIZE)];
+	UChar actionBuffer[String_BufferSize(STRING_SIZE)];
 	String label  = Handlers_ReadString(stream, labelBuffer);
 	String action = Handlers_ReadString(stream, actionBuffer);
 
@@ -843,9 +843,9 @@ static void CPE_SetTextHotkey(Stream* stream) {
 }
 
 static void CPE_ExtAddPlayerName(Stream* stream) {
-	UInt8 playerNameBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 listNameBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 groupNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar playerNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar listNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar groupNameBuffer[String_BufferSize(STRING_SIZE)];
 
 	Int32 id = Stream_ReadI16_BE(stream) & 0xFF;
 	String playerName = Handlers_ReadString(stream, playerNameBuffer);
@@ -864,8 +864,8 @@ static void CPE_ExtAddPlayerName(Stream* stream) {
 }
 
 static void CPE_ExtAddEntity(Stream* stream) {
-	UInt8 displayNameBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 skinNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar displayNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar skinNameBuffer[String_BufferSize(STRING_SIZE)];
 
 	UInt8 id = Stream_ReadU8(stream);	
 	String displayName = Handlers_ReadString(stream, displayNameBuffer);	
@@ -881,7 +881,7 @@ static void CPE_ExtRemovePlayerName(Stream* stream) {
 }
 
 static void CPE_MakeSelection(Stream* stream) {
-	UInt8 labelBuffer[String_BufferSize(STRING_SIZE)];
+	UChar labelBuffer[String_BufferSize(STRING_SIZE)];
 	UInt8 selectionId = Stream_ReadU8(stream);
 	String label = Handlers_ReadString(stream, labelBuffer);
 
@@ -938,7 +938,7 @@ static void CPE_SetBlockPermission(Stream* stream) {
 }
 
 static void CPE_ChangeModel(Stream* stream) {
-	UInt8 modelNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar modelNameBuffer[String_BufferSize(STRING_SIZE)];
 	UInt8 id = Stream_ReadU8(stream);
 	String modelName = Handlers_ReadString(stream, modelNameBuffer);
 
@@ -987,8 +987,8 @@ static void CPE_HackControl(Stream* stream) {
 }
 
 static void CPE_ExtAddEntity2(Stream* stream) {
-	UInt8 displayNameBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 skinNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar displayNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar skinNameBuffer[String_BufferSize(STRING_SIZE)];
 	UInt8 id = Stream_ReadU8(stream);
 	String displayName = Handlers_ReadString(stream, displayNameBuffer);
 	String skinName    = Handlers_ReadString(stream, skinNameBuffer);
@@ -1041,7 +1041,7 @@ static void CPE_SetTextColor(Stream* stream) {
 }
 
 static void CPE_SetMapEnvUrl(Stream* stream) {
-	UInt8 urlBuffer[String_BufferSize(STRING_SIZE)];
+	UChar urlBuffer[String_BufferSize(STRING_SIZE)];
 	String url = Handlers_ReadString(stream, urlBuffer);
 	if (!Game_AllowServerTextures) return;
 
@@ -1212,7 +1212,7 @@ static BlockID BlockDefs_DefineBlockCommonStart(Stream* stream, bool uniqueSideT
 	bool didBlockLight = Block_BlocksLight[block];
 	Block_ResetProps(block);
 
-	UInt8 nameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
 	String name = Handlers_ReadString(stream, nameBuffer);
 	Block_SetName(block, &name);
 	Block_SetCollide(block, Stream_ReadU8(stream));

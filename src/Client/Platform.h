@@ -14,8 +14,8 @@ enum SOCKET_SELECT {
 	SOCKET_SELECT_READ, SOCKET_SELECT_WRITE, SOCKET_SELECT_ERROR,
 };
 
-extern UInt8* Platform_NewLine; /* Newline for text */
-extern UInt8 Platform_DirectorySeparator;
+extern UChar* Platform_NewLine; /* Newline for text */
+extern UChar Platform_DirectorySeparator;
 extern ReturnCode ReturnCode_FileShareViolation;
 extern ReturnCode ReturnCode_FileNotFound;
 extern ReturnCode ReturnCode_NotSupported;
@@ -34,11 +34,11 @@ void Platform_MemSet(void* dst, UInt8 value, UInt32 numBytes);
 void Platform_MemCpy(void* dst, void* src, UInt32 numBytes);
 
 void Platform_Log(STRING_PURE String* message);
-void Platform_LogConst(const UInt8* message);
+void Platform_LogConst(const UChar* message);
 #define Platform_Log1(format, a1) Platform_Log4(format, a1, NULL, NULL, NULL)
 #define Platform_Log2(format, a1, a2) Platform_Log4(format, a1, a2, NULL, NULL)
 #define Platform_Log3(format, a1, a2, a3) Platform_Log4(format, a1, a2, a3, NULL)
-void Platform_Log4(const UInt8* format, const void* a1, const void* a2, const void* a3, const void* a4);
+void Platform_Log4(const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4);
 void Platform_CurrentUTCTime(DateTime* time);
 void Platform_CurrentLocalTime(DateTime* time);
 

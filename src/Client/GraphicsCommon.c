@@ -22,7 +22,7 @@ void GfxCommon_Free(void) {
 	Gfx_DeleteIb(&GfxCommon_defaultIb);
 }
 
-void GfxCommon_LoseContext(const UInt8* reason) {
+void GfxCommon_LoseContext(const UChar* reason) {
 	Gfx_LostContext = true;
 	Platform_Log1("Lost graphics context: %c", reason);
 

@@ -87,20 +87,20 @@ void DateTime_FromTotalMs(DateTime* time, Int64 ms) {
 }
 
 void DateTime_HttpDate(DateTime* value, STRING_TRANSIENT String* str) {
-	static UInt8* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
-	static UInt8* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+	static UChar* days_of_weeks[7] = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+	static UChar* month_names[13] = { NULL, "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 	Int32 dow = DateTime_TotalDays(value) % 7;
 
-	UInt8* dayOfWeek = days_of_weeks[dow];
+	UChar* dayOfWeek = days_of_weeks[dow];
 	Int32 day = value->Day, year = value->Year;
-	UInt8* month = month_names[value->Month];
+	UChar* month = month_names[value->Month];
 	Int32 hour = value->Hour, min = value->Minute, sec = value->Second;
 
 	String_Format4(str, "%c, %p2 %c %p4", dayOfWeek, &day, month, &year);
 	String_Format3(str, " %p2:%p2:%p2 GMT", &hour, &min, &sec);
 }
 
-UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount) {
+UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UChar** names, UInt32 namesCount) {
 	UInt32 i;
 	for (i = 0; i < namesCount; i++) {
 		if (String_CaselessEqualsConst(text, names[i])) return i;
@@ -108,7 +108,7 @@ UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** 
 	return defValue;
 }
 
-bool Utils_IsValidInputChar(UInt8 c, bool supportsCP437) {
+bool Utils_IsValidInputChar(UChar c, bool supportsCP437) {
 	return supportsCP437 || (Convert_CP437ToUnicode(c) == c);
 }
 

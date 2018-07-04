@@ -97,7 +97,7 @@ typedef struct ClassicGenScreen_ {
 typedef struct KeyBindingsScreen_ {
 	MenuScreen_Layout
 	Int32 CurI, BindsCount;
-	const UInt8** Descs;
+	const UChar** Descs;
 	UInt8* Binds;
 	Widget_LeftClick LeftPage, RightPage;
 	ButtonWidget* Buttons;
@@ -111,22 +111,22 @@ typedef struct SaveLevelScreen_ {
 	ButtonWidget Buttons[3];
 	TextWidget MCEdit, Desc;
 	String TextPath;
-	UInt8 TextPathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar TextPathBuffer[String_BufferSize(FILENAME_SIZE)];
 } SaveLevelScreen;
 
 #define MENUOPTIONS_MAX_DESC 5
 typedef struct MenuOptionsScreen_ {
 	MenuScreen_Layout
 	MenuInputValidator* Validators;
-	const UInt8** Descriptions;
-	const UInt8** DefaultValues;
+	const UChar** Descriptions;
+	const UChar** DefaultValues;
 	ButtonWidget* Buttons;
 	Int32 ActiveI, SelectedI, DescriptionsCount;
 	ButtonWidget OK, Default;
 	MenuInputWidget Input;
 	TextGroupWidget ExtHelp;
 	Texture ExtHelp_Textures[MENUOPTIONS_MAX_DESC];
-	UInt8 ExtHelp_Buffer[String_BufferSize(MENUOPTIONS_MAX_DESC * TEXTGROUPWIDGET_LEN)];
+	UChar ExtHelp_Buffer[String_BufferSize(MENUOPTIONS_MAX_DESC * TEXTGROUPWIDGET_LEN)];
 } MenuOptionsScreen;
 
 typedef struct TexIdsOverlay_ {
@@ -141,7 +141,7 @@ typedef struct UrlWarningOverlay_ {
 	MenuScreen_Layout
 	TextWidget Labels[4];
 	ButtonWidget Buttons[2];
-	UInt8 UrlBuffer[String_BufferSize(STRING_SIZE * 4)];
+	UChar UrlBuffer[String_BufferSize(STRING_SIZE * 4)];
 } UrlWarningOverlay;
 
 typedef struct ConfirmDenyOverlay_ {
@@ -149,7 +149,7 @@ typedef struct ConfirmDenyOverlay_ {
 	TextWidget Labels[4];
 	ButtonWidget Buttons[2];
 	bool AlwaysDeny;
-	UInt8 UrlBuffer[String_BufferSize(STRING_SIZE)];
+	UChar UrlBuffer[String_BufferSize(STRING_SIZE)];
 } ConfirmDenyOverlay;
 
 typedef struct TexPackOverlay_ {
@@ -157,7 +157,7 @@ typedef struct TexPackOverlay_ {
 	TextWidget Labels[4];
 	ButtonWidget Buttons[4];
 	UInt32 ContentLength;
-	UInt8 IdentifierBuffer[String_BufferSize(STRING_SIZE + 4)];
+	UChar IdentifierBuffer[String_BufferSize(STRING_SIZE + 4)];
 } TexPackOverlay;
 
 
@@ -513,7 +513,7 @@ static bool MenuScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key == Key_Escape) { Gui_ReplaceActive(NULL); }
 	return key < Key_F1 || key > Key_F35;
 }
-static bool MenuScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) { return true; }
+static bool MenuScreen_HandlesKeyPress(GuiElement* elem, UChar key) { return true; }
 static bool MenuScreen_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
 
 static void MenuScreen_ContextLost(void* obj) {
@@ -602,7 +602,7 @@ static void MenuScreen_MakeInstance(MenuScreen* screen, Widget** widgets, Int32 
 *#########################################################################################################################*/
 GuiElementVTABLE PauseScreen_VTABLE;
 PauseScreen PauseScreen_Instance;
-static void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
+static void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, const UChar* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -611,7 +611,7 @@ static void PauseScreen_Make(PauseScreen* screen, Int32 i, Int32 dir, Int32 y, c
 	Widget_SetLocation((Widget*)btn, ANCHOR_CENTRE, ANCHOR_CENTRE, dir * 160, y);
 }
 
-static void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
+static void PauseScreen_MakeClassic(PauseScreen* screen, Int32 i, Int32 y, const UChar* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -704,7 +704,7 @@ Screen* PauseScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 GuiElementVTABLE OptionsGroupScreen_VTABLE;
 OptionsGroupScreen OptionsGroupScreen_Instance;
-const UInt8* optsGroup_descs[7] = {
+const UChar* optsGroup_descs[7] = {
 	"&eMusic/Sound, view bobbing, and more",
 	"&eChat options, gui scale, font settings, and more",
 	"&eFPS limit, view distance, entity names/shadows",
@@ -719,7 +719,7 @@ static void OptionsGroupScreen_CheckHacksAllowed(void* obj) {
 	screen->Buttons[5].Disabled = !LocalPlayer_Instance.Hacks.CanAnyHacks; /* env settings */
 }
 
-static void OptionsGroupScreen_Make(OptionsGroupScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* title, Widget_LeftClick onClick) {	
+static void OptionsGroupScreen_Make(OptionsGroupScreen* screen, Int32 i, Int32 dir, Int32 y, const UChar* title, Widget_LeftClick onClick) {	
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -869,7 +869,7 @@ static void EditHotkeyScreen_MakeFlags(UInt8 flags, STRING_TRANSIENT String* str
 }
 
 static void EditHotkeyScreen_MakeBaseKey(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	UChar textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
 	String_AppendConst(&text, "Key: ");
@@ -878,7 +878,7 @@ static void EditHotkeyScreen_MakeBaseKey(EditHotkeyScreen* screen, Widget_LeftCl
 }
 
 static void EditHotkeyScreen_MakeModifiers(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	UChar textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
 	String_AppendConst(&text, "Modifiers:");
@@ -887,7 +887,7 @@ static void EditHotkeyScreen_MakeModifiers(EditHotkeyScreen* screen, Widget_Left
 }
 
 static void EditHotkeyScreen_MakeLeaveOpen(EditHotkeyScreen* screen, Widget_LeftClick onClick) {
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	UChar textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
 	String_AppendConst(&text, "Input stays open: ");
@@ -976,7 +976,7 @@ static void EditHotkeyScreen_Free(GuiElement* elem) {
 	MenuScreen_Free(elem);
 }
 
-static bool EditHotkeyScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool EditHotkeyScreen_HandlesKeyPress(GuiElement* elem, UChar key) {
 	EditHotkeyScreen* screen = (EditHotkeyScreen*)elem;
 	if (screen->SupressNextPress) {
 		screen->SupressNextPress = false;
@@ -1139,7 +1139,7 @@ static void GenLevelScreen_Input(GenLevelScreen* screen, Int32 i, Int32 y, bool 
 	String_Clear(value);
 }
 
-static void GenLevelScreen_Label(GenLevelScreen* screen, Int32 i, Int32 x, Int32 y, const UInt8* title) {	
+static void GenLevelScreen_Label(GenLevelScreen* screen, Int32 i, Int32 x, Int32 y, const UChar* title) {	
 	TextWidget* label = &screen->Labels[i];	
 	screen->Widgets[i + 4] = (Widget*)label;
 
@@ -1175,14 +1175,14 @@ static bool GenLevelScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 	return screen->Selected == NULL || Elem_HandlesKeyUp(&screen->Selected->Base, key);
 }
 
-static bool GenLevelScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool GenLevelScreen_HandlesKeyPress(GuiElement* elem, UChar key) {
 	GenLevelScreen* screen = (GenLevelScreen*)elem;
 	return screen->Selected == NULL || Elem_HandlesKeyPress(&screen->Selected->Base, key);
 }
 
 static void GenLevelScreen_ContextRecreated(void* obj) {
 	GenLevelScreen* screen = (GenLevelScreen*)obj;
-	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE)];
+	UChar tmpBuffer[String_BufferSize(STRING_SIZE)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
 
 	String_AppendInt32(&tmp, World_Width);
@@ -1250,7 +1250,7 @@ static void ClassicGenScreen_Small(GuiElement* a, GuiElement* b)  { ClassicGenSc
 static void ClassicGenScreen_Medium(GuiElement* a, GuiElement* b) { ClassicGenScreen_Gen(256); }
 static void ClassicGenScreen_Huge(GuiElement* a, GuiElement* b)   { ClassicGenScreen_Gen(512); }
 
-static void ClassicGenScreen_Make(ClassicGenScreen* screen, Int32 i, Int32 y, const UInt8* title, Widget_LeftClick onClick) {
+static void ClassicGenScreen_Make(ClassicGenScreen* screen, Int32 i, Int32 y, const UChar* title, Widget_LeftClick onClick) {
 	ButtonWidget* btn = &screen->Buttons[i];
 	screen->Widgets[i] = (Widget*)btn;
 
@@ -1315,7 +1315,7 @@ static void SaveLevelScreen_MakeDesc(SaveLevelScreen* screen, STRING_PURE String
 	screen->Widgets[5] = (Widget*)(&screen->Desc);
 }
 
-static void SaveLevelScreen_DoSave(GuiElement* elem, GuiElement* widget, const UInt8* ext) {
+static void SaveLevelScreen_DoSave(GuiElement* elem, GuiElement* widget, const UChar* ext) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	String file = screen->Input.Base.Text;
 	if (file.length == 0) {
@@ -1323,7 +1323,7 @@ static void SaveLevelScreen_DoSave(GuiElement* elem, GuiElement* widget, const U
 		SaveLevelScreen_MakeDesc(screen, &msg); return;
 	}
 
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "maps/%s%c", &file, ext);
 
@@ -1384,7 +1384,7 @@ static void SaveLevelScreen_Render(GuiElement* elem, Real64 delta) {
 	result = stream.Close(&stream);
 	ErrorHandler_CheckOrFail(result, "Saving map - closing file");
 
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	String_Format1(&msg, "&eSaved map to: %s", &path);
 	Chat_Add(&msg);
@@ -1398,7 +1398,7 @@ static void SaveLevelScreen_Free(GuiElement* elem) {
 	MenuScreen_Free(elem);
 }
 
-static bool SaveLevelScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool SaveLevelScreen_HandlesKeyPress(GuiElement* elem, UChar key) {
 	SaveLevelScreen* screen = (SaveLevelScreen*)elem;
 	SaveLevelScreen_RemoveOverwrites(screen);
 
@@ -1473,7 +1473,7 @@ Screen* SaveLevelScreen_MakeInstance(void) {
 *#########################################################################################################################*/
 static void TexturePackScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)elem;
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 
 	String filename = ListScreen_UNSAFE_GetCur(screen, w);
@@ -1549,7 +1549,7 @@ Screen* HotkeyListScreen_MakeInstance(void) {
 	String title = String_FromConst("Modify hotkeys"); screen->TitleText = title;
 	screen->EntryClick = HotkeyListScreen_EntryClick;
 
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	UChar textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 	Int32 i;
 
@@ -1627,7 +1627,7 @@ void LoadLevelScreen_LoadMap(STRING_PURE String* path) {
 
 static void LoadLevelScreen_EntryClick(GuiElement* elem, GuiElement* w) {
 	ListScreen* screen = (ListScreen*)elem;
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 
 	String filename = ListScreen_UNSAFE_GetCur(screen, w);
@@ -1662,7 +1662,7 @@ static void KeyBindingsScreen_ButtonText(KeyBindingsScreen* screen, Int32 i, STR
 
 static void KeyBindingsScreen_OnBindingClick(GuiElement* elem, GuiElement* widget) {
 	KeyBindingsScreen* screen = (KeyBindingsScreen*)elem;
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	UChar textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
 	if (screen->CurI >= 0) {
@@ -1679,12 +1679,12 @@ static void KeyBindingsScreen_OnBindingClick(GuiElement* elem, GuiElement* widge
 	ButtonWidget_SetText((ButtonWidget*)widget, &text);
 }
 
-static Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const UInt8* title, Int32 btnWidth) {
+static Int32 KeyBindingsScreen_MakeWidgets(KeyBindingsScreen* screen, Int32 y, Int32 arrowsY, Int32 leftLength, STRING_PURE const UChar* title, Int32 btnWidth) {
 	Int32 i, origin = y, xOffset = btnWidth / 2 + 5;
 	screen->CurI = -1;
 
 	Widget** widgets = screen->Widgets;
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	UChar textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 
 	for (i = 0; i < screen->BindsCount; i++) {
@@ -1739,7 +1739,7 @@ static bool KeyBindingsScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	if (key == Key_Escape) key = KeyBind_GetDefault(bind);
 	KeyBind_Set(bind, key);
 
-	UInt8 textBuffer[String_BufferSize(STRING_SIZE)];
+	UChar textBuffer[String_BufferSize(STRING_SIZE)];
 	String text = String_InitAndClearArray(textBuffer);
 	KeyBindingsScreen_ButtonText(screen, screen->CurI, &text);
 
@@ -1766,7 +1766,7 @@ static bool KeyBindingsScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 
 	return true;
 }
 
-static KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const UInt8** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextFunc contextRecreated) {
+static KeyBindingsScreen* KeyBindingsScreen_Make(Int32 bindsCount, UInt8* binds, const UChar** descs, ButtonWidget* buttons, Widget** widgets, Menu_ContextFunc contextRecreated) {
 	KeyBindingsScreen* screen = &KeyBindingsScreen_Instance;
 	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, bindsCount + 4, contextRecreated);
 	KeyBindingsScreen_VTABLE = *screen->VTABLE;
@@ -1803,7 +1803,7 @@ static void ClassicKeyBindingsScreen_ContextRecreated(void* obj) {
 
 Screen* ClassicKeyBindingsScreen_MakeInstance(void) {
 	static UInt8 binds[10] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn };
-	static const UInt8* descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
+	static const UChar* descs[10] = { "Forward", "Back", "Jump", "Chat", "Save loc", "Left", "Right", "Build", "Toggle fog", "Load loc" };
 	static ButtonWidget buttons[10];
 	static Widget* widgets[10 + 4];
 
@@ -1823,7 +1823,7 @@ static void ClassicHacksKeyBindingsScreen_ContextRecreated(void* obj) {
 
 Screen* ClassicHacksKeyBindingsScreen_MakeInstance(void) {
 	static UInt8 binds[6] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown };
-	static const UInt8* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
+	static const UChar* descs[6] = { "Speed", "Noclip", "Half speed", "Fly", "Fly up", "Fly down" };
 	static ButtonWidget buttons[6];
 	static Widget* widgets[6 + 4];
 
@@ -1843,7 +1843,7 @@ static void NormalKeyBindingsScreen_ContextRecreated(void* obj) {
 
 Screen* NormalKeyBindingsScreen_MakeInstance(void) {
 	static UInt8 binds[12] = { KeyBind_Forward, KeyBind_Back, KeyBind_Jump, KeyBind_Chat, KeyBind_SetSpawn, KeyBind_PlayerList, KeyBind_Left, KeyBind_Right, KeyBind_Inventory, KeyBind_ToggleFog, KeyBind_Respawn, KeyBind_SendChat };
-	static const UInt8* descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
+	static const UChar* descs[12] = { "Forward", "Back", "Jump", "Chat", "Set spawn", "Player list", "Left", "Right", "Inventory", "Toggle fog", "Respawn", "Send chat" };
 	static ButtonWidget buttons[12];
 	static Widget* widgets[12 + 4];
 
@@ -1863,7 +1863,7 @@ static void HacksKeyBindingsScreen_ContextRecreated(void* obj) {
 
 Screen* HacksKeyBindingsScreen_MakeInstance(void) {
 	static UInt8 binds[8] = { KeyBind_Speed, KeyBind_NoClip, KeyBind_HalfSpeed, KeyBind_ZoomScrolling, KeyBind_Fly, KeyBind_FlyUp, KeyBind_FlyDown, KeyBind_ThirdPerson };
-	static const UInt8* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
+	static const UChar* descs[8] = { "Speed", "Noclip", "Half speed", "Scroll zoom", "Fly", "Fly up", "Fly down", "Third person" };
 	static ButtonWidget buttons[8];
 	static Widget* widgets[8 + 4];
 
@@ -1884,7 +1884,7 @@ static void OtherKeyBindingsScreen_ContextRecreated(void* obj) {
 
 Screen* OtherKeyBindingsScreen_MakeInstance(void) {
 	static UInt8 binds[12] = { KeyBind_ExtInput, KeyBind_HideFps, KeyBind_HideGui, KeyBind_HotbarSwitching, KeyBind_DropBlock,KeyBind_Screenshot, KeyBind_Fullscreen, KeyBind_AxisLines, KeyBind_Autorotate, KeyBind_SmoothCamera, KeyBind_IDOverlay, KeyBind_BreakableLiquids };
-	static const UInt8* descs[12] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
+	static const UChar* descs[12] = { "Show ext input", "Hide FPS", "Hide gui", "Hotbar switching", "Drop block", "Screenshot", "Fullscreen", "Show axis lines", "Auto-rotate", "Smooth camera", "ID overlay", "Breakable liquids" };
 	static ButtonWidget buttons[12];
 	static Widget* widgets[12 + 4];
 
@@ -1911,7 +1911,7 @@ static void MouseKeyBindingsScreen_ContextRecreated(void* obj) {
 
 Screen* MouseKeyBindingsScreen_MakeInstance(void) {
 	static UInt8 binds[3] = { KeyBind_MouseLeft, KeyBind_MouseMiddle, KeyBind_MouseRight };
-	static const UInt8* descs[3] = { "Left", "Middle", "Right" };
+	static const UChar* descs[3] = { "Left", "Middle", "Right" };
 	static ButtonWidget buttons[3];
 	static Widget* widgets[3 + 4 + 1];
 
@@ -1931,7 +1931,7 @@ static void Menu_GetBool(STRING_TRANSIENT String* raw, bool v) {
 	String_AppendConst(raw, v ? "ON" : "OFF");
 }
 
-static bool Menu_SetBool(STRING_PURE String* raw, const UInt8* key) {
+static bool Menu_SetBool(STRING_PURE String* raw, const UChar* key) {
 	bool isOn = String_CaselessEqualsConst(raw, "ON");
 	Options_SetBool(key, isOn); return isOn;
 }
@@ -1951,7 +1951,7 @@ static void MenuOptionsScreen_Set(MenuOptionsScreen* screen, Int32 i, STRING_PUR
 	screen->Buttons[i].SetValue(text);
 	/* need to get btn again here (e.g. changing FPS invalidates all widgets) */
 
-	UInt8 titleBuffer[String_BufferSize(STRING_SIZE)];
+	UChar titleBuffer[String_BufferSize(STRING_SIZE)];
 	String title = String_InitAndClearArray(titleBuffer);
 	String_AppendConst(&title, screen->Buttons[i].OptName);
 	String_AppendConst(&title, ": ");
@@ -1974,7 +1974,7 @@ static void MenuOptionsScreen_RepositionExtHelp(MenuOptionsScreen* screen) {
 static void MenuOptionsScreen_SelectExtHelp(MenuOptionsScreen* screen, Int32 idx) {
 	MenuOptionsScreen_FreeExtHelp(screen);
 	if (screen->Descriptions == NULL || screen->ActiveI >= 0) return;
-	const UInt8* desc = screen->Descriptions[idx];
+	const UChar* desc = screen->Descriptions[idx];
 	if (desc == NULL) return;
 
 	String descRaw = String_FromReadonly(desc);
@@ -2059,7 +2059,7 @@ static void MenuOptionsScreen_ContextLost(void* obj) {
 	MenuOptionsScreen_FreeExtHelp(screen);
 }
 
-static bool MenuOptionsScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool MenuOptionsScreen_HandlesKeyPress(GuiElement* elem, UChar key) {
 	MenuOptionsScreen* screen = (MenuOptionsScreen*)elem;
 	if (screen->ActiveI == -1) return true;
 	return Elem_HandlesKeyPress(&screen->Input.Base, key);
@@ -2093,8 +2093,8 @@ static bool MenuOptionsScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 
 	return true;
 }
 
-static void MenuOptionsScreen_Make(MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const UInt8* optName, Widget_LeftClick onClick, ButtonWidget_Get getter, ButtonWidget_Set setter) {
-	UInt8 titleBuffer[String_BufferSize(STRING_SIZE)];
+static void MenuOptionsScreen_Make(MenuOptionsScreen* screen, Int32 i, Int32 dir, Int32 y, const UChar* optName, Widget_LeftClick onClick, ButtonWidget_Get getter, ButtonWidget_Set setter) {
+	UChar titleBuffer[String_BufferSize(STRING_SIZE)];
 	String title = String_InitAndClearArray(titleBuffer);
 	String_AppendConst(&title, optName);
 	String_AppendConst(&title, ": ");
@@ -2128,7 +2128,7 @@ static void MenuOptionsScreen_Bool(GuiElement* elem, GuiElement* widget) {
 	Int32 index = MenuScreen_Index((MenuScreen*)screen, (Widget*)widget);
 	MenuOptionsScreen_SelectExtHelp(screen, index);
 
-	UInt8 valueBuffer[String_BufferSize(STRING_SIZE)];
+	UChar valueBuffer[String_BufferSize(STRING_SIZE)];
 	String value = String_InitAndClearArray(valueBuffer);
 	button->GetValue(&value);
 
@@ -2144,10 +2144,10 @@ static void MenuOptionsScreen_Enum(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen_SelectExtHelp(screen, index);
 
 	MenuInputValidator* validator = &screen->Validators[index];
-	const UInt8** names = (const UInt8**)validator->Meta_Ptr[0];
+	const UChar** names = (const UChar**)validator->Meta_Ptr[0];
 	UInt32 count = (UInt32)validator->Meta_Ptr[1];
 
-	UInt8 valueBuffer[String_BufferSize(STRING_SIZE)];
+	UChar valueBuffer[String_BufferSize(STRING_SIZE)];
 	String value = String_InitAndClearArray(valueBuffer);
 	button->GetValue(&value);
 
@@ -2163,7 +2163,7 @@ static void MenuOptionsScreen_Input(GuiElement* elem, GuiElement* widget) {
 	MenuOptionsScreen_FreeExtHelp(screen);
 
 	MenuOptionsScreen_FreeInput(screen);
-	UInt8 valueBuffer[String_BufferSize(STRING_SIZE)];
+	UChar valueBuffer[String_BufferSize(STRING_SIZE)];
 	String value = String_InitAndClearArray(valueBuffer);
 	button->GetValue(&value);
 
@@ -2187,7 +2187,7 @@ static void MenuOptionsScreen_Input(GuiElement* elem, GuiElement* widget) {
 }
 
 Screen* MenuOptionsScreen_MakeInstance(Widget** widgets, Int32 count, ButtonWidget* buttons, Menu_ContextFunc contextRecreated,
-	MenuInputValidator* validators, const UInt8** defaultValues, const UInt8** descriptions, Int32 descsCount) {
+	MenuInputValidator* validators, const UChar** defaultValues, const UChar** descriptions, Int32 descsCount) {
 	MenuOptionsScreen* screen = &MenuOptionsScreen_Instance;
 	Platform_MemSet(screen, 0, sizeof(MenuOptionsScreen));
 	MenuScreen_MakeInstance((MenuScreen*)screen, widgets, count, contextRecreated);
@@ -2222,7 +2222,7 @@ Screen* MenuOptionsScreen_MakeInstance(Widget** widgets, Int32 count, ButtonWidg
 typedef enum ViewDist_ {
 	ViewDist_Tiny, ViewDist_Short, ViewDist_Normal, ViewDist_Far, ViewDist_Count,
 } ViewDist;
-const UInt8* ViewDist_Names[ViewDist_Count] = { "TINY", "SHORT", "NORMAL", "FAR" };
+const UChar* ViewDist_Names[ViewDist_Count] = { "TINY", "SHORT", "NORMAL", "FAR" };
 
 static void ClassicOptionsScreen_GetMusic(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_MusicVolume > 0); }
 static void ClassicOptionsScreen_SetMusic(STRING_PURE String* v) {
@@ -2396,14 +2396,14 @@ static void EnvSettingsScreen_ContextRecreated(void* obj) {
 Screen* EnvSettingsScreen_MakeInstance(void) {
 	static ButtonWidget buttons[11];
 	static MenuInputValidator validators[Array_Elems(buttons)];
-	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static const UChar* defaultValues[Array_Elems(buttons)];
 	static Widget* widgets[Array_Elems(buttons) + 3];
 
-	static UInt8 cloudHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
+	static UChar cloudHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
 	String cloudHeight = String_InitAndClearArray(cloudHeightBuffer);
 	String_AppendInt32(&cloudHeight, World_Height + 2);
 
-	static UInt8 edgeHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
+	static UChar edgeHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
 	String edgeHeight = String_InitAndClearArray(edgeHeightBuffer);
 	String_AppendInt32(&edgeHeight, World_Height / 2);
 
@@ -2461,7 +2461,7 @@ static void GraphicsOptionsScreen_SetShadows(STRING_PURE String* v) {
 static void GraphicsOptionsScreen_GetMipmaps(STRING_TRANSIENT String* v) { Menu_GetBool(v, Gfx_Mipmaps); }
 static void GraphicsOptionsScreen_SetMipmaps(STRING_PURE String* v) {
 	Gfx_Mipmaps = Menu_SetBool(v, OPT_MIPMAPS);
-	UInt8 urlBuffer[String_BufferSize(STRING_SIZE)];
+	UChar urlBuffer[String_BufferSize(STRING_SIZE)];
 	String url = String_InitAndClearArray(urlBuffer);
 	String_Set(&url, &World_TextureUrl);
 
@@ -2499,7 +2499,7 @@ static void GraphicsOptionsScreen_ContextRecreated(void* obj) {
 Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	static ButtonWidget buttons[7];
 	static MenuInputValidator validators[Array_Elems(buttons)];
-	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static const UChar* defaultValues[Array_Elems(buttons)];
 	static Widget* widgets[Array_Elems(buttons) + 3];
 
 	validators[0]    = MenuInputValidator_Enum(FpsLimit_Names, FpsLimit_Count);
@@ -2508,7 +2508,7 @@ Screen* GraphicsOptionsScreen_MakeInstance(void) {
 	validators[3]    = MenuInputValidator_Enum(NameMode_Names,   NAME_MODE_COUNT);
 	validators[4]    = MenuInputValidator_Enum(ShadowMode_Names, SHADOW_MODE_COUNT);
 	
-	static const UInt8* descs[Array_Elems(buttons)];
+	static const UChar* descs[Array_Elems(buttons)];
 	descs[0] = \
 		"&eVSync: &fNumber of frames rendered is at most the monitor's refresh rate.%" \
 		"&e30/60/120 FPS: &f30/60/120 frames rendered at most each second.%" \
@@ -2553,7 +2553,7 @@ static void GuiOptionsScreen_SetShadows(STRING_PURE String* v) {
 static void GuiOptionsScreen_GetShowFPS(STRING_TRANSIENT String* v) { Menu_GetBool(v, Game_ShowFPS); }
 static void GuiOptionsScreen_SetShowFPS(STRING_PURE String* v) { Game_ShowFPS = Menu_SetBool(v, OPT_SHOW_FPS); }
 
-static void GuiOptionsScreen_SetScale(STRING_PURE String* v, Real32* target, const UInt8* optKey) {
+static void GuiOptionsScreen_SetScale(STRING_PURE String* v, Real32* target, const UChar* optKey) {
 	*target = Menu_Real32(v);
 	Options_Set(optKey, v);
 	Gui_RefreshHud();
@@ -2628,7 +2628,7 @@ static void GuiOptionsScreen_ContextRecreated(void* obj) {
 Screen* GuiOptionsScreen_MakeInstance(void) {
 	static ButtonWidget buttons[11];
 	static MenuInputValidator validators[Array_Elems(buttons)];
-	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static const UChar* defaultValues[Array_Elems(buttons)];
 	static Widget* widgets[Array_Elems(buttons) + 3];
 
 	validators[2]    = MenuInputValidator_Real(0.25f, 4.00f);
@@ -2673,7 +2673,7 @@ static void HacksSettingsScreen_SetJump(STRING_PURE String* v) {
 	PhysicsComp_CalculateJumpVelocity(physics, Menu_Real32(v));
 	physics->UserJumpVel = physics->JumpVel;
 
-	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
+	UChar strBuffer[String_BufferSize(STRING_SIZE)];
 	String str = String_InitAndClearArray(strBuffer);
 	String_AppendReal32(&str, physics->JumpVel, 8);
 	Options_Set(OPT_JUMP_VELOCITY, &str);
@@ -2771,11 +2771,11 @@ static void HacksSettingsScreen_ContextRecreated(void* obj) {
 Screen* HacksSettingsScreen_MakeInstance(void) {
 	static ButtonWidget buttons[11];
 	static MenuInputValidator validators[Array_Elems(buttons)];
-	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static const UChar* defaultValues[Array_Elems(buttons)];
 	static Widget* widgets[Array_Elems(buttons) + 3];
 
 	/* TODO: Is this needed because user may not always use . for decimal point? */
-	static UInt8 jumpHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
+	static UChar jumpHeightBuffer[String_BufferSize(STRING_INT_CHARS)];
 	String jumpHeight = String_InitAndClearArray(jumpHeightBuffer);
 	String_AppendReal32(&jumpHeight, 1.233f, 3);
 
@@ -2786,7 +2786,7 @@ Screen* HacksSettingsScreen_MakeInstance(void) {
 	validators[9]    = MenuInputValidator_Integer(1, 150);
 	defaultValues[9] = "70";
 
-	static const UInt8* descs[Array_Elems(buttons)];
+	static const UChar* descs[Array_Elems(buttons)];
 	descs[2] = "&eIf &fON&e, then the third person cameras will limit%"   "&etheir zoom distance if they hit a solid block.";
 	descs[3] = "&eSets how many blocks high you can jump up.%"   "&eNote: You jump much higher when holding down the Speed key binding.";
 	descs[7] = \
@@ -2876,7 +2876,7 @@ static void MiscOptionsScreen_ContextRecreated(void* obj) {
 Screen* MiscOptionsScreen_MakeInstance(void) {
 	static ButtonWidget buttons[9];
 	static MenuInputValidator validators[Array_Elems(buttons)];
-	static const UInt8* defaultValues[Array_Elems(buttons)];
+	static const UChar* defaultValues[Array_Elems(buttons)];
 	static Widget* widgets[Array_Elems(buttons) + 3];
 
 	validators[0]    = MenuInputValidator_Real(1.00f, 1024.00f);
@@ -3116,7 +3116,7 @@ static bool TexIdsOverlay_HandlesKeyDown(GuiElement* elem, Key key) {
 	return Elem_HandlesKeyDown(screen, key);
 }
 
-static bool TexIdsOverlay_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool TexIdsOverlay_HandlesKeyPress(GuiElement* elem, UChar key) {
 	Screen* screen = Gui_GetUnderlyingScreen();
 	return Elem_HandlesKeyPress(screen, key);
 }
@@ -3351,7 +3351,7 @@ static void TexPackOverlay_ContextRecreated(void* obj) {
 	if (screen->ContentLength == 0) {
 		lines[3] = String_FromReadonly("Download size: Determining...");
 	} else {
-		UInt8 contentsBuffer[String_BufferSize(STRING_SIZE)];
+		UChar contentsBuffer[String_BufferSize(STRING_SIZE)];
 		lines[3] = String_InitAndClearArray(contentsBuffer);
 		Real32 contentLengthMB = screen->ContentLength / (1024.0f * 1024.0f);
 		String_Format1(&lines[3], "Download size: %f3 MB", &contentLengthMB);

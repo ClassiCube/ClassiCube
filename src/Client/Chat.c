@@ -41,7 +41,7 @@ static void ChatLine_Make(ChatLine* line, STRING_TRANSIENT String* text) {
 	Platform_CurrentUTCTime(&line->Received);
 }
 
-UInt8 Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
+UChar Chat_LogNameBuffer[String_BufferSize(STRING_SIZE)];
 String Chat_LogName = String_FromEmptyArray(Chat_LogNameBuffer);
 Stream Chat_LogStream;
 DateTime ChatLog_LastLogDate;
@@ -52,7 +52,7 @@ static void Chat_CloseLog(void) {
 	ErrorHandler_CheckOrFail(code, "Chat - closing log file");
 }
 
-static bool Chat_AllowedLogChar(UInt8 c) {
+static bool Chat_AllowedLogChar(UChar c) {
 	return
 		c == '{' || c == '}' || c == '[' || c == ']' || c == '(' || c == ')' ||
 		(c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
@@ -62,7 +62,7 @@ void Chat_SetLogName(STRING_PURE String* name) {
 	if (Chat_LogName.length > 0) return;
 	String_Clear(&Chat_LogName);
 
-	UInt8 noColsBuffer[String_BufferSize(STRING_SIZE)];
+	UChar noColsBuffer[String_BufferSize(STRING_SIZE)];
 	String noColsName = String_InitAndClearArray(noColsBuffer);
 	String_AppendColorless(&noColsName, name);
 
@@ -83,7 +83,7 @@ static void Chat_OpenLog(DateTime* now) {
 	/* Ensure multiple instances do not end up overwriting each other's log entries. */
 	Int32 i, year = now->Year, month = now->Month, day = now->Day;
 	for (i = 0; i < 20; i++) {
-		UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+		UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 		String path = String_InitAndClearArray(pathBuffer);
 		String_Format4(&path, "logs%r%p4-%p2-%p2", &Platform_DirectorySeparator, &year, &month, &day);
 
@@ -119,7 +119,7 @@ static void Chat_AppendLog(STRING_PURE String* text) {
 
 	ChatLog_LastLogDate = now;
 	if (Chat_LogStream.Meta_File == NULL) return;
-	UInt8 logBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar logBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String str = String_InitAndClearArray(logBuffer);
 
 	/* [HH:mm:ss] text */
@@ -153,8 +153,8 @@ void Chat_AddOf(STRING_PURE String* text, Int32 msgType) {
 *---------------------------------------------------------Commands--------------------------------------------------------*
 *#########################################################################################################################*/
 typedef struct ChatCommand_ {
-	const UInt8* Name;
-	const UInt8* Help[5];
+	const UChar* Name;
+	const UChar* Help[5];
 	void (*Execute)(STRING_PURE String* args, UInt32 argsCount);
 	bool SingleplayerOnly;
 } ChatCommand;
@@ -186,8 +186,8 @@ static void Commands_Register(ChatCommandConstructor constructor) {
 	commands_list[commands_count++] = command;
 }
 
-static void Commands_Log(const UInt8* format, void* a1) {
-	UInt8 strBuffer[String_BufferSize(STRING_SIZE * 2)];
+static void Commands_Log(const UChar* format, void* a1) {
+	UChar strBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String str = String_InitAndClearArray(strBuffer);
 	String_Format1(&str, format, a1);
 	Chat_Add(&str);
@@ -381,7 +381,7 @@ static void ModelCommand_Execute(STRING_PURE String* args, UInt32 argsCount) {
 	if (argsCount == 1) {
 		Chat_AddRaw(tmp, "&e/client model: &cYou didn't specify a model name.");
 	} else {
-		UInt8 modelBuffer[String_BufferSize(STRING_SIZE)];
+		UChar modelBuffer[String_BufferSize(STRING_SIZE)];
 		String model = String_InitAndClearArray(modelBuffer);
 		String_AppendString(&model, &args[1]);
 		String_MakeLowercase(&model);
@@ -456,7 +456,7 @@ static void CuboidCommand_BlockChanged(void* obj, Vector3I coords, BlockID oldBl
 	if (cuboid_mark1.X == Int32_MaxValue) {
 		cuboid_mark1 = coords;
 		Game_UpdateBlock(coords.X, coords.Y, coords.Z, oldBlock);
-		UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+		UChar msgBuffer[String_BufferSize(STRING_SIZE)];
 		String msg = String_InitAndClearArray(msgBuffer);
 
 		String_Format3(&msg, "&eCuboid: &fMark 1 placed at (%i, %i, %i), place mark 2.", &coords.X, &coords.Y, &coords.Z);

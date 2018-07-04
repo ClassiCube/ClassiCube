@@ -18,8 +18,8 @@ if (write == 0 || !ErrorHandler_Check(result)) {\
 	Stream_Fail(stream, result, "writing to");\
 }
 
-void Stream_Fail(Stream* stream, ReturnCode result, const UInt8* operation) {
-	UInt8 tmpBuffer[String_BufferSize(400)];
+void Stream_Fail(Stream* stream, ReturnCode result, const UChar* operation) {
+	UChar tmpBuffer[String_BufferSize(400)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
 	String_Format2(&tmp, "Failed %c %s", operation, &stream->Name);
 	ErrorHandler_FailWithCode(result, tmpBuffer);

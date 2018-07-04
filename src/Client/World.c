@@ -82,14 +82,14 @@ if (src != dst) { dst = src; Event_RaiseInt(&WorldEvents_EnvVarChanged, var); }
 #define WorldEnv_SetCol(src, dst, var)\
 if (!PackedCol_Equals(src, dst)) { dst = src; Event_RaiseInt(&WorldEvents_EnvVarChanged, var); }
 
-const UInt8* Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
+const UChar* Weather_Names[3] = { "Sunny", "Rainy", "Snowy" };
 
 PackedCol WorldEnv_DefaultSkyCol    = PACKEDCOL_CONST(0x99, 0xCC, 0xFF, 0xFF);
 PackedCol WorldEnv_DefaultFogCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol WorldEnv_DefaultCloudsCol = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol WorldEnv_DefaultSunCol    = PACKEDCOL_CONST(0xFF, 0xFF, 0xFF, 0xFF);
 PackedCol WorldEnv_DefaultShadowCol = PACKEDCOL_CONST(0x9B, 0x9B, 0x9B, 0xFF);
-UInt8 World_TextureUrlBuffer[String_BufferSize(STRING_SIZE)];
+UChar World_TextureUrlBuffer[String_BufferSize(STRING_SIZE)];
 String World_TextureUrl = String_FromEmptyArray(World_TextureUrlBuffer);
 
 void WorldEnv_Reset(void) {

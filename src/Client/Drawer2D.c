@@ -154,7 +154,7 @@ bool Drawer2D_ValidColCodeAt(STRING_PURE String* text, Int32 i) {
 	if (i >= text->length) return false;
 	return Drawer2D_Cols[text->buffer[i]].A > 0;
 }
-bool Drawer2D_ValidColCode(UInt8 c) { return Drawer2D_Cols[c].A > 0; }
+bool Drawer2D_ValidColCode(UChar c) { return Drawer2D_Cols[c].A > 0; }
 
 bool Drawer2D_IsEmptyText(STRING_PURE String* text) {
 	if (text->length == 0) return true;
@@ -168,7 +168,7 @@ bool Drawer2D_IsEmptyText(STRING_PURE String* text) {
 	return true;
 }
 
-UInt8 Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
+UChar Drawer2D_LastCol(STRING_PURE String* text, Int32 start) {
 	if (start >= text->length) start = text->length - 1;
 	Int32 i;
 	for (i = start; i >= 0; i--) {
@@ -268,7 +268,7 @@ static void Drawer2D_DrawPart(DrawTextArgs* args, Int32 x, Int32 y, bool shadowC
 
 	Int32 i, j;
 	for (i = 0; i < text.length; i++) {
-		UInt8 c = text.buffer[i];
+		UChar c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			col = Drawer2D_Cols[text.buffer[i + 1]];
 			if (shadowCol) {
@@ -315,7 +315,7 @@ static void Drawer2D_DrawUnderline(Int32 x, Int32 yOffset, DrawTextArgs* args, b
 		UInt32 col = PackedCol_ARGB(255, 255, 255, 255);
 
 		for (i = 0; i < text.length; i++) {
-			UInt8 c = text.buffer[i];
+			UChar c = text.buffer[i];
 			if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 				col = PackedCol_ToARGB(Drawer2D_Cols[text.buffer[i + 1]]);
 				i++; continue; // Skip over the colour code.
@@ -351,7 +351,7 @@ Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
 	String text = args->Text;
 	Int32 i;
 	for (i = 0; i < text.length; i++) {
-		UInt8 c = text.buffer[i];
+		UChar c = text.buffer[i];
 		if (c == '&' && Drawer2D_ValidColCodeAt(&text, i + 1)) {
 			i++; continue; /* Skip over the colour code */
 		}
@@ -367,7 +367,7 @@ Size2D Drawer2D_MeasureBitmapText(DrawTextArgs* args) {
 	return total;
 }
 
-static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIENT String* part, UInt8* nextCol) {
+static Int32 Drawer2D_NextPart(Int32 i, STRING_REF String* value, STRING_TRANSIENT String* part, UChar* nextCol) {
 	Int32 length = 0, start = i;
 	for (; i < value->length; i++) {
 		if (value->buffer[i] == '&' && Drawer2D_ValidColCodeAt(value, i + 1)) break;
@@ -386,11 +386,11 @@ void Drawer2D_DrawText(DrawTextArgs* args, Int32 x, Int32 y) {
 	if (Drawer2D_UseBitmappedChat) { Drawer2D_DrawBitmapText(args, x, y); return; }
 	
 	String value = args->Text;
-	UInt8 nextCol = 'f';
+	UChar nextCol = 'f';
 	Int32 i = 0;
 
 	while (i < value.length) {
-		UInt8 colCode = nextCol;
+		UChar colCode = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
 		PackedCol col = Drawer2D_Cols[colCode];
 		if (args->Text.length == 0) continue;
@@ -412,12 +412,12 @@ Size2D Drawer2D_MeasureText(DrawTextArgs* args) {
 	if (Drawer2D_UseBitmappedChat) return Drawer2D_MeasureBitmapText(args);
 
 	String value = args->Text;
-	UInt8 nextCol = 'f';
+	UChar nextCol = 'f';
 	Int32 i = 0;
 	Size2D size = { 0, 0 };
 
 	while (i < value.length) {
-		UInt8 col = nextCol;
+		UChar col = nextCol;
 		i = Drawer2D_NextPart(i, &value, &args->Text, &nextCol);
 		if (args->Text.length == 0) continue;
 

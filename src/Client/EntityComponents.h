@@ -60,7 +60,7 @@ typedef struct HacksComponent_ {
 
 	bool Noclip, Flying, FlyingUp, FlyingDown, Speeding, HalfSpeeding;
 	bool Floating; /* true if NoClip or Flying */
-	UInt8 HacksFlagsBuffer[String_BufferSize(128)];
+	UChar HacksFlagsBuffer[String_BufferSize(128)];
 	String HacksFlags;
 } HacksComp;
 

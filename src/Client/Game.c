@@ -44,14 +44,14 @@ Int32 Game_ComponentsCount;
 ScheduledTask Game_Tasks[6];
 Int32 Game_TasksCount, entTaskI;
 
-UInt8 Game_UsernameBuffer[String_BufferSize(STRING_SIZE)];
+UChar Game_UsernameBuffer[String_BufferSize(STRING_SIZE)];
 String Game_Username = String_FromEmptyArray(Game_UsernameBuffer);
-UInt8 Game_MppassBuffer[String_BufferSize(STRING_SIZE)];
+UChar Game_MppassBuffer[String_BufferSize(STRING_SIZE)];
 String Game_Mppass = String_FromEmptyArray(Game_MppassBuffer);
 
-UInt8 Game_IPAddressBuffer[String_BufferSize(STRING_SIZE)];
+UChar Game_IPAddressBuffer[String_BufferSize(STRING_SIZE)];
 String Game_IPAddress = String_FromEmptyArray(Game_IPAddressBuffer);
-UInt8 Game_FontNameBuffer[String_BufferSize(STRING_SIZE)];
+UChar Game_FontNameBuffer[String_BufferSize(STRING_SIZE)];
 String Game_FontName = String_FromEmptyArray(Game_FontNameBuffer);
 
 void Game_AddComponent(IGameComponent* comp) {
@@ -92,11 +92,11 @@ Real32 Game_GetChatScale(void) {
 	return Game_Scale(Game_GetWindowScale() * Game_RawChatScale);
 }
 
-UInt8 game_defTexPackBuffer[String_BufferSize(STRING_SIZE)];
+UChar game_defTexPackBuffer[String_BufferSize(STRING_SIZE)];
 String game_defTexPack = String_FromEmptyArray(game_defTexPackBuffer);
 
 void Game_GetDefaultTexturePack(STRING_TRANSIENT String* texPack) {
-	UInt8 texPathBuffer[String_BufferSize(STRING_SIZE)];
+	UChar texPathBuffer[String_BufferSize(STRING_SIZE)];
 	String texPath = String_InitAndClearArray(texPathBuffer);
 	String_Format2(&texPath, "texpacks%r%s", &Platform_DirectorySeparator, &game_defTexPack);
 
@@ -240,7 +240,7 @@ bool Game_UpdateTexture(GfxResourceID* texId, Stream* src, bool setSkinType) {
 }
 
 bool Game_ValidateBitmap(STRING_PURE String* file, Bitmap* bmp) {
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 
 	if (bmp->Scan0 == NULL) {
@@ -320,7 +320,7 @@ static void Game_TextureChangedCore(void* obj, Stream* src) {
 }
 
 static void Game_ExtractInitialTexturePack(void) {
-	UInt8 texPackBuffer[String_BufferSize(STRING_SIZE)];
+	UChar texPackBuffer[String_BufferSize(STRING_SIZE)];
 	String texPack = String_InitAndClearArray(texPackBuffer);
 	Options_Get(OPT_DEFAULT_TEX_PACK, &game_defTexPack, "default.zip");
 
@@ -464,7 +464,7 @@ void Game_Load(void) {
 	comp = EnvRenderer_MakeComponent();     Game_AddComponent(&comp);
 	comp = BordersRenderer_MakeComponent(); Game_AddComponent(&comp);
 
-	UInt8 renderTypeBuffer[String_BufferSize(STRING_SIZE)];
+	UChar renderTypeBuffer[String_BufferSize(STRING_SIZE)];
 	String renderType = String_InitAndClearArray(renderTypeBuffer);
 	Options_Get(OPT_RENDER_TYPE, &renderType, "normal");
 	Int32 flags = Game_CalcRenderType(&renderType);
@@ -529,7 +529,7 @@ void Game_Load(void) {
 		EnvRenderer_UseLegacyMode(true);
 	}
 
-	UInt8 loadTitleBuffer[String_BufferSize(STRING_SIZE)];
+	UChar loadTitleBuffer[String_BufferSize(STRING_SIZE)];
 	String loadTitle = String_InitAndClearArray(loadTitleBuffer);
 	String_Format2(&loadTitle, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
 	String loadMsg = String_MakeNull();
@@ -642,12 +642,12 @@ void Game_TakeScreenshot(void) {
 	Int32 year = now.Year, month = now.Month, day = now.Day;
 	Int32 hour = now.Hour, min = now.Minute, sec = now.Second;
 
-	UInt8 fileBuffer[String_BufferSize(STRING_SIZE)];
+	UChar fileBuffer[String_BufferSize(STRING_SIZE)];
 	String filename = String_InitAndClearArray(fileBuffer);
 	String_Format3(&filename, "screenshot_%p2-%p2-%p4", &day, &month, &year);
 	String_Format3(&filename, "-%p2-%p2-%p2.png", &hour, &min, &sec);
 
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "screenshots%r%s", &Platform_DirectorySeparator, &filename);
 

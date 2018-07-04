@@ -8,7 +8,7 @@
 #include "Event.h"
 
 UInt32 Block_DefinedCustomBlocks[BLOCK_COUNT >> 5];
-UInt8 Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
+UChar Block_NamesBuffer[String_BufferSize(STRING_SIZE) * BLOCK_COUNT];
 #define Block_NamePtr(i) &Block_NamesBuffer[String_BufferSize(STRING_SIZE) * i]
 
 TextureLoc Block_TopTex[BLOCK_CPE_COUNT] = { 0,  1,  0,  2, 16,  4, 15, 17, 14, 14,
@@ -430,8 +430,8 @@ void Block_UpdateCulling(BlockID block) {
 #define AR_EQ1(s, x) (s.length >= 1 && Char_ToLower(s.buffer[0]) == x)
 #define AR_EQ2(s, x, y) (s.length >= 2 && Char_ToLower(s.buffer[0]) == x && Char_ToLower(s.buffer[1]) == y)
 
-static BlockID AutoRotate_Find(BlockID block, String* name, const UInt8* suffix) {
-	UInt8 buffer[String_BufferSize(STRING_SIZE * 2)];
+static BlockID AutoRotate_Find(BlockID block, String* name, const UChar* suffix) {
+	UChar buffer[String_BufferSize(STRING_SIZE * 2)];
 	String temp = String_InitAndClearArray(buffer);
 	String_AppendString(&temp, name);
 	String_AppendConst(&temp, suffix);

@@ -15,7 +15,7 @@
 "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",\
 "U", "V", "W", "X", "Y", "Z"
 
-const UInt8* Key_Names[Key_Count] = {
+const UChar* Key_Names[Key_Count] = {
 	"None",
 	"ShiftLeft", "ShiftRight", "ControlLeft", "ControlRight",
 	"AltLeft", "AltRight", "WinLeft", "WinRight", "Menu",
@@ -37,7 +37,7 @@ const UInt8* Key_Names[Key_Count] = {
 };
 
 /* TODO: Should this only be shown in GUI? not saved to disc? */
-/*const UInt8* Key_Names[Key_Count] = {
+/*const UChar* Key_Names[Key_Count] = {
 	"NONE",
 	"LSHIFT", "RSHIFT", "LCONTROL", "RCONTROL",
 	"LMENU", "RMENU", "LWIN", "RWIN", "MENU",
@@ -120,7 +120,7 @@ Key KeyBind_Defaults[KeyBind_Count] = {
 	Key_None, Key_None, Key_F6, Key_AltLeft, 
 	Key_F8, Key_G, Key_F10, Key_None,
 };
-const UInt8* KeyBind_Names[KeyBind_Count] = {
+const UChar* KeyBind_Names[KeyBind_Count] = {
 	"Forward", "Back", "Left", "Right",
 	"Jump", "Respawn", "SetSpawn", "Chat",
 	"Inventory", "ToggleFog", "SendChat", "PauseOrExit",
@@ -140,7 +140,7 @@ bool KeyBind_IsPressed(KeyBind binding) { return Key_States[KeyBind_Keys[binding
 
 void KeyBind_Load(void) {
 	UInt32 i;
-	UInt8 nameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
 	String name = String_InitAndClearArray(nameBuffer);
 
 	for (i = 0; i < KeyBind_Count; i++) {
@@ -153,7 +153,7 @@ void KeyBind_Load(void) {
 
 void KeyBind_Save(void) {
 	UInt32 i;
-	UInt8 nameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar nameBuffer[String_BufferSize(STRING_SIZE)];
 	String name = String_InitAndClearArray(nameBuffer);
 
 	for (i = 0; i < KeyBind_Count; i++) {
@@ -313,7 +313,7 @@ void Hotkeys_Init(void) {
 }
 
 void Hotkeys_UserRemovedHotkey(Key baseKey, UInt8 flags) {
-	UInt8 keyBuffer[String_BufferSize(STRING_SIZE)];
+	UChar keyBuffer[String_BufferSize(STRING_SIZE)];
 	String key = String_InitAndClearArray(keyBuffer);
 
 	String_Format2(&key, "hotkey-%c&%b", Key_Names[baseKey], &flags);
@@ -321,9 +321,9 @@ void Hotkeys_UserRemovedHotkey(Key baseKey, UInt8 flags) {
 }
 
 void Hotkeys_UserAddedHotkey(Key baseKey, UInt8 flags, bool moreInput, STRING_PURE String* text) {
-	UInt8 keyBuffer[String_BufferSize(STRING_SIZE)];
+	UChar keyBuffer[String_BufferSize(STRING_SIZE)];
 	String key = String_InitAndClearArray(keyBuffer);
-	UInt8 valueBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar valueBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String value = String_InitAndClearArray(valueBuffer);
 
 	String_Format2(&key, "hotkey-%c&%b", Key_Names[baseKey], &flags);

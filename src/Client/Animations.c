@@ -140,14 +140,14 @@ UInt32 anims_count;
 bool anims_validated, anims_useLavaAnim, anims_useWaterAnim;
 
 static void Animations_LogFail(STRING_TRANSIENT String* line, const UInt8* raw) {
-	UInt8 msgBuffer[String_BufferSize(128)];
+	UChar msgBuffer[String_BufferSize(128)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	String_Format2(&msg, "&c%c: %s", raw, line);
 	Chat_Add(&msg);
 }
 
 static void Animations_ReadDescription(Stream* stream) {
-	UInt8 lineBuffer[String_BufferSize(128)];
+	UChar lineBuffer[String_BufferSize(128)];
 	String line = String_InitAndClearArray(lineBuffer);
 	String parts[7];
 
@@ -242,7 +242,7 @@ static void Animations_Apply(AnimationData* data) {
 
 static bool Animations_IsDefaultZip(void) {
 	if (World_TextureUrl.length > 0) return false;
-	UInt8 texPackBuffer[String_BufferSize(STRING_SIZE)];
+	UChar texPackBuffer[String_BufferSize(STRING_SIZE)];
 	String texPack = String_InitAndClearArray(texPackBuffer);
 
 	Options_Get(OPT_DEFAULT_TEX_PACK, &texPack, "default.zip");
@@ -257,7 +257,7 @@ static void Animations_Clear(void) {
 
 static void Animations_Validate(void) {
 	anims_validated = true;
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	UInt32 i, j;
 

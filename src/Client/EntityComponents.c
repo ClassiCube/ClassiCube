@@ -173,7 +173,7 @@ bool HacksComp_Floating(HacksComp* hacks) {
 	return hacks->Noclip || hacks->Flying;
 }
 
-static String HacksComp_UNSAFE_FlagValue(const UInt8* flagRaw, HacksComp* hacks) {
+static String HacksComp_UNSAFE_FlagValue(const UChar* flagRaw, HacksComp* hacks) {
 	String* joined = &hacks->HacksFlags;
 	String flag = String_FromReadonly(flagRaw);
 
@@ -187,7 +187,7 @@ static String HacksComp_UNSAFE_FlagValue(const UInt8* flagRaw, HacksComp* hacks)
 	return String_UNSAFE_Substring(joined, start, end - start);
 }
 
-static Real32 HacksComp_ParseFlagReal(const UInt8* flagRaw, HacksComp* hacks) {
+static Real32 HacksComp_ParseFlagReal(const UChar* flagRaw, HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	if (raw.length == 0 || Game_ClassicMode) return 1.0f;
 
@@ -196,7 +196,7 @@ static Real32 HacksComp_ParseFlagReal(const UInt8* flagRaw, HacksComp* hacks) {
 	return value;
 }
 
-static Int32 HacksComp_ParseFlagInt(const UInt8* flagRaw, HacksComp* hacks) {
+static Int32 HacksComp_ParseFlagInt(const UChar* flagRaw, HacksComp* hacks) {
 	String raw = HacksComp_UNSAFE_FlagValue(flagRaw, hacks);
 	if (raw.length == 0 || Game_ClassicMode) return 1;
 
@@ -205,7 +205,7 @@ static Int32 HacksComp_ParseFlagInt(const UInt8* flagRaw, HacksComp* hacks) {
 	return value;
 }
 
-static void HacksComp_ParseFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag, bool* target) {
+static void HacksComp_ParseFlag(HacksComp* hacks, const UChar* incFlag, const UChar* excFlag, bool* target) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;
@@ -217,7 +217,7 @@ static void HacksComp_ParseFlag(HacksComp* hacks, const UInt8* incFlag, const UI
 	}
 }
 
-static void HacksComp_ParseAllFlag(HacksComp* hacks, const UInt8* incFlag, const UInt8* excFlag) {
+static void HacksComp_ParseAllFlag(HacksComp* hacks, const UChar* incFlag, const UChar* excFlag) {
 	String include = String_FromReadonly(incFlag);
 	String exclude = String_FromReadonly(excFlag);
 	String* joined = &hacks->HacksFlags;

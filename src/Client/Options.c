@@ -6,7 +6,7 @@
 #include "Platform.h"
 #include "Stream.h"
 
-const UInt8* FpsLimit_Names[FpsLimit_Count] = {
+const UChar* FpsLimit_Names[FpsLimit_Count] = {
 	"LimitVSync", "Limit30FPS", "Limit60FPS", "Limit120FPS", "LimitNone",
 };
 #define OPT_NOT_FOUND UInt32_MaxValue
@@ -44,7 +44,7 @@ static UInt32 Options_Find(STRING_PURE String* key) {
 	return OPT_NOT_FOUND;
 }
 
-static bool Options_TryGetValue(const UInt8* keyRaw, STRING_TRANSIENT String* value) {
+static bool Options_TryGetValue(const UChar* keyRaw, STRING_TRANSIENT String* value) {
 	String key = String_FromReadonly(keyRaw);
 	*value = String_MakeNull();
 
@@ -66,7 +66,7 @@ static bool Options_TryGetValue(const UInt8* keyRaw, STRING_TRANSIENT String* va
 	return false;
 }
 
-void Options_Get(const UInt8* key, STRING_TRANSIENT String* value, const UInt8* defValue) {
+void Options_Get(const UChar* key, STRING_TRANSIENT String* value, const UChar* defValue) {
 	String str;
 	Options_TryGetValue(key, &str);
 	String_Clear(value);
@@ -78,7 +78,7 @@ void Options_Get(const UInt8* key, STRING_TRANSIENT String* value, const UInt8* 
 	}
 }
 
-Int32 Options_GetInt(const UInt8* key, Int32 min, Int32 max, Int32 defValue) {
+Int32 Options_GetInt(const UChar* key, Int32 min, Int32 max, Int32 defValue) {
 	String str;
 	Int32 value;
 	if (!Options_TryGetValue(key, &str))      return defValue;
@@ -88,7 +88,7 @@ Int32 Options_GetInt(const UInt8* key, Int32 min, Int32 max, Int32 defValue) {
 	return value;
 }
 
-bool Options_GetBool(const UInt8* key, bool defValue) {
+bool Options_GetBool(const UChar* key, bool defValue) {
 	String str;
 	bool value;
 	if (!Options_TryGetValue(key, &str))     return defValue;
@@ -97,7 +97,7 @@ bool Options_GetBool(const UInt8* key, bool defValue) {
 	return value;
 }
 
-Real32 Options_GetFloat(const UInt8* key, Real32 min, Real32 max, Real32 defValue) {
+Real32 Options_GetFloat(const UChar* key, Real32 min, Real32 max, Real32 defValue) {
 	String str;
 	Real32 value;
 	if (!Options_TryGetValue(key, &str))      return defValue;
@@ -107,7 +107,7 @@ Real32 Options_GetFloat(const UInt8* key, Real32 min, Real32 max, Real32 defValu
 	return value;
 }
 
-UInt32 Options_GetEnum(const UInt8* key, UInt32 defValue, const UInt8** names, UInt32 namesCount) {
+UInt32 Options_GetEnum(const UChar* key, UInt32 defValue, const UChar** names, UInt32 namesCount) {
 	String str;
 	if (!Options_TryGetValue(key, &str)) return defValue;
 	return Utils_ParseEnum(&str, defValue, names, namesCount);
@@ -127,7 +127,7 @@ static Int32 Options_Insert(STRING_PURE String* key, STRING_PURE String* value) 
 	return Options_Keys.Count;
 }
 
-void Options_SetBool(const UInt8* keyRaw, bool value) {
+void Options_SetBool(const UChar* keyRaw, bool value) {
 	if (value) {
 		String str = String_FromConst("True");  Options_Set(keyRaw, &str);
 	} else {
@@ -135,14 +135,14 @@ void Options_SetBool(const UInt8* keyRaw, bool value) {
 	}
 }
 
-void Options_SetInt32(const UInt8* keyRaw, Int32 value) {
-	UInt8 numBuffer[String_BufferSize(STRING_INT_CHARS)];
+void Options_SetInt32(const UChar* keyRaw, Int32 value) {
+	UChar numBuffer[String_BufferSize(STRING_INT_CHARS)];
 	String numStr = String_InitAndClearArray(numBuffer);
 	String_AppendInt32(&numStr, value);
 	Options_Set(keyRaw, &numStr);
 }
 
-void Options_Set(const UInt8* keyRaw, STRING_PURE String* value) {
+void Options_Set(const UChar* keyRaw, STRING_PURE String* value) {
 	String key = String_FromReadonly(keyRaw);
 	UInt32 i;
 	if (value == NULL || value->buffer == NULL) {
@@ -165,7 +165,7 @@ void Options_Load(void) {
 	/* TODO: Should we just log failure to open? */
 	ErrorHandler_CheckOrFail(result, "Options - Loading");
 
-	UInt8 lineBuffer[String_BufferSize(768)];
+	UChar lineBuffer[String_BufferSize(768)];
 	String line = String_InitAndClearArray(lineBuffer);
 	Stream stream; Stream_FromFile(&stream, file, &path);
 
@@ -209,7 +209,7 @@ void Options_Save(void) {
 	/* TODO: Should we just log failure to save? */
 	ErrorHandler_CheckOrFail(result, "Options - Saving");
 
-	UInt8 lineBuffer[String_BufferSize(1024)];
+	UChar lineBuffer[String_BufferSize(1024)];
 	String line = String_InitAndClearArray(lineBuffer);
 	Stream stream; Stream_FromFile(&stream, file, &path);
 	UInt32 i;

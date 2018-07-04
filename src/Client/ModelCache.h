@@ -33,6 +33,6 @@ void ModelCache_Init(void);
 void ModelCache_Free(void);
 IModel* ModelCache_Get(STRING_PURE String* name);
 Int32 ModelCache_GetTextureIndex(STRING_PURE String* texName);
-void ModelCache_Register(STRING_REF const UInt8* name, STRING_PURE const UInt8* defaultTexName, IModel* instance);
-void ModelCache_RegisterTexture(STRING_REF const UInt8* texName);
+void ModelCache_Register(STRING_REF const UChar* name, STRING_PURE const UChar* defaultTexName, IModel* instance);
+void ModelCache_RegisterTexture(STRING_REF const UChar* texName);
 #endif

@@ -115,7 +115,7 @@ static void AsyncDownloader_Add(String* url, bool priority, String* id, UInt8 ty
 }
 
 void AsyncDownloader_GetSkin(STRING_PURE String* id, STRING_PURE String* skinName) {
-	UInt8 urlBuffer[String_BufferSize(STRING_SIZE)];
+	UChar urlBuffer[String_BufferSize(STRING_SIZE)];
 	String url = String_InitAndClearArray(urlBuffer);
 
 	if (Utils_IsUrlPrefix(skinName, 0)) {

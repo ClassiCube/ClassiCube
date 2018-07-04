@@ -202,7 +202,7 @@ struct NbtTag_;
 typedef struct NbtTag_ {
 	struct NbtTag_* Parent;
 	UInt8  TagID;
-	UInt8  NameBuffer[String_BufferSize(NBT_SMALL_SIZE)];
+	UChar  NameBuffer[String_BufferSize(NBT_SMALL_SIZE)];
 	UInt32 NameSize;
 	UInt32 DataSize; /* size of data for arrays */
 
@@ -261,10 +261,10 @@ static String NbtTag_String(NbtTag* tag) {
 	return String_Init(tag->DataSmall, tag->DataSize, tag->DataSize);
 }
 
-static UInt32 Nbt_ReadString(Stream* stream, UInt8* strBuffer) {
+static UInt32 Nbt_ReadString(Stream* stream, UChar* strBuffer) {
 	UInt16 nameLen = Stream_ReadU16_BE(stream);
 	if (nameLen > NBT_SMALL_SIZE * 4) ErrorHandler_Fail("NBT String too long");
-	UInt8 nameBuffer[NBT_SMALL_SIZE * 4];
+	UChar nameBuffer[NBT_SMALL_SIZE * 4];
 	Stream_Read(stream, nameBuffer, nameLen);
 
 	/* TODO: Check how slow reading strings this way is */
@@ -353,7 +353,7 @@ static void Nbt_ReadTag(UInt8 typeId, bool readTagName, Stream* stream, NbtTag* 
 	if (!processed && tag.DataSize >= NBT_SMALL_SIZE) Platform_MemFree(&tag.DataBig);
 }
 
-static bool IsTag(NbtTag* tag, const UInt8* tagName) {
+static bool IsTag(NbtTag* tag, const UChar* tagName) {
 	String name = { tag->NameBuffer, tag->NameSize, tag->NameSize };
 	return String_CaselessEqualsConst(&name, tagName);
 }
@@ -624,7 +624,7 @@ enum JFieldType {
 #define JNAME_SIZE 48
 typedef struct JFieldDesc_ {
 	UInt8 Type;
-	UInt8 FieldName[String_BufferSize(JNAME_SIZE)];
+	UChar FieldName[String_BufferSize(JNAME_SIZE)];
 	union {
 		Int8   Value_I8;
 		Int32  Value_I32;
@@ -635,7 +635,7 @@ typedef struct JFieldDesc_ {
 } JFieldDesc;
 
 typedef struct JClassDesc_ {
-	UInt8 ClassName[String_BufferSize(JNAME_SIZE)];
+	UChar ClassName[String_BufferSize(JNAME_SIZE)];
 	UInt16 FieldsCount;
 	JFieldDesc Fields[22];
 } JClassDesc;
@@ -655,7 +655,7 @@ static void Dat_ReadFieldDesc(Stream* stream, JFieldDesc* desc) {
 	if (desc->Type == JFIELD_ARRAY || desc->Type == JFIELD_OBJECT) {
 		UInt8 typeCode = Stream_ReadU8(stream);
 		if (typeCode == TC_STRING) {
-			UInt8 className1[String_BufferSize(JNAME_SIZE)];
+			UChar className1[String_BufferSize(JNAME_SIZE)];
 			Dat_ReadString(stream, className1);
 		} else if (typeCode == TC_REFERENCE) {
 			Stream_ReadI32_BE(stream); /* handle */
@@ -802,7 +802,7 @@ void Dat_Load(Stream* stream) {
 /*########################################################################################################################*
 *--------------------------------------------------ClassicWorld export----------------------------------------------------*
 *#########################################################################################################################*/
-static void Cw_WriteCpeExtCompound(Stream* stream, const UInt8* tagName, Int32 version) {
+static void Cw_WriteCpeExtCompound(Stream* stream, const UChar* tagName, Int32 version) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
 	Nbt_WriteTag(stream, NBT_TAG_INT32, "ExtensionVersion");
 	Nbt_WriteI32(stream, version);
@@ -828,7 +828,7 @@ static void Cw_WriteSpawnCompound(Stream* stream) {
 	Nbt_WriteU8(stream, NBT_TAG_END);
 }
 
-static void Cw_WriteColCompound(Stream* stream, const UInt8* tagName, PackedCol col) {
+static void Cw_WriteColCompound(Stream* stream, const UChar* tagName, PackedCol col) {
 	Nbt_WriteTag(stream, NBT_TAG_COMPOUND, tagName);
 
 	Nbt_WriteTag(stream, NBT_TAG_INT16, "R");

@@ -429,7 +429,7 @@ GfxResourceID Gfx_CreateDynamicVb(Int32 vertexFormat, Int32 maxVertices) {
 	return vbuffer;
 }
 
-static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UInt8* lockMsg, const UInt8* unlockMsg, Int32 lockFlags) {
+static void D3D9_SetVbData(IDirect3DVertexBuffer9* buffer, void* data, Int32 size, const UChar* lockMsg, const UChar* unlockMsg, Int32 lockFlags) {
 	void* dst = NULL;
 	ReturnCode hresult = IDirect3DVertexBuffer9_Lock(buffer, 0, size, &dst, lockFlags);
 	ErrorHandler_CheckOrFail(hresult, lockMsg);

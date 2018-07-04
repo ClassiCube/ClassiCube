@@ -18,7 +18,7 @@
 *--------------------------------------------------------ZipEntry---------------------------------------------------------*
 *#########################################################################################################################*/
 #define ZIP_MAXNAMELEN 512
-static String Zip_ReadFixedString(Stream* stream, UInt8* buffer, UInt16 length) {
+static String Zip_ReadFixedString(Stream* stream, UChar* buffer, UInt16 length) {
 	if (length > ZIP_MAXNAMELEN) ErrorHandler_Fail("Zip string too long");
 	String fileName = String_Init(buffer, length, length);
 	Stream_Read(stream, buffer, length);
@@ -41,7 +41,7 @@ static void Zip_ReadLocalFileHeader(ZipState* state, ZipEntry* entry) {
 
 	UInt16 fileNameLen = Stream_ReadU16_LE(stream);
 	UInt16 extraFieldLen = Stream_ReadU16_LE(stream);
-	UInt8 filenameBuffer[String_BufferSize(ZIP_MAXNAMELEN)];
+	UChar filenameBuffer[String_BufferSize(ZIP_MAXNAMELEN)];
 	String filename = Zip_ReadFixedString(stream, filenameBuffer, fileNameLen);
 	if (!state->SelectEntry(&filename)) return;
 
@@ -179,15 +179,15 @@ void Zip_Extract(ZipState* state) {
 *--------------------------------------------------------EntryList--------------------------------------------------------*
 *#########################################################################################################################*/
 typedef struct EntryList_ {
-	UInt8 FolderBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 FileBuffer[String_BufferSize(STRING_SIZE)];
+	UChar FolderBuffer[String_BufferSize(STRING_SIZE)];
+	UChar FileBuffer[String_BufferSize(STRING_SIZE)];
 	StringsBuffer Entries;
 } EntryList;
 
 static void EntryList_Load(EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format3(&path, "%s%r%s", &folder, &Platform_DirectorySeparator, &filename);
 
@@ -217,7 +217,7 @@ static void EntryList_Load(EntryList* list) {
 static void EntryList_Save(EntryList* list) {
 	String folder = String_FromRawArray(list->FolderBuffer);
 	String filename = String_FromRawArray(list->FileBuffer);
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format3(&path, "%s%r%s", &folder, &Platform_DirectorySeparator, &filename);
 
@@ -256,7 +256,7 @@ static bool EntryList_Has(EntryList* list, STRING_PURE String* entry) {
 	return false;
 }
 
-static void EntryList_Make(EntryList* list, STRING_PURE const UInt8* folder, STRING_PURE const UInt8* file) {
+static void EntryList_Make(EntryList* list, STRING_PURE const UChar* folder, STRING_PURE const UChar* file) {
 	String dstFolder = String_InitAndClearArray(list->FolderBuffer);
 	String_AppendConst(&dstFolder, folder);
 	String dstFile = String_InitAndClearArray(list->FileBuffer);
@@ -276,12 +276,12 @@ static void EntryList_Make(EntryList* list, STRING_PURE const UInt8* folder, STR
 EntryList cache_accepted, cache_denied, cache_eTags, cache_lastModified;
 
 #define TexCache_InitAndMakePath(url) \
-UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)]; \
+UChar pathBuffer[String_BufferSize(FILENAME_SIZE)]; \
 path = String_InitAndClearArray(pathBuffer); \
 TextureCache_MakePath(&path, url);
 
 #define TexCache_Crc32(url) \
-UInt8 crc32Buffer[STRING_INT_CHARS];\
+UChar crc32Buffer[STRING_INT_CHARS];\
 crc32 = String_InitAndClearArray(crc32Buffer);\
 String_AppendUInt32(&crc32, Utils_CRC32(url->buffer, url->length));
 
@@ -335,7 +335,7 @@ void TexturePack_GetFromTags(STRING_PURE String* url, STRING_TRANSIENT String* r
 }
 
 void TextureCache_GetLastModified(STRING_PURE String* url, DateTime* time) {
-	UInt8 entryBuffer[String_BufferSize(STRING_SIZE)];
+	UChar entryBuffer[String_BufferSize(STRING_SIZE)];
 	String entry = String_InitAndClearArray(entryBuffer);
 	TexturePack_GetFromTags(url, &entry, &cache_lastModified);
 
@@ -391,7 +391,7 @@ void TextureCache_AddData(STRING_PURE String* url, UInt8* data, UInt32 length) {
 
 void TextureCache_AddToTags(STRING_PURE String* url, STRING_PURE String* data, EntryList* list) {
 	String crc32; TexCache_Crc32(url);
-	UInt8 entryBuffer[String_BufferSize(2048)];
+	UChar entryBuffer[String_BufferSize(2048)];
 	String entry = String_InitAndClearArray(entryBuffer);
 	String_Format2(&entry, "%s %s", &crc32, data);
 
@@ -415,7 +415,7 @@ void TextureCache_AddLastModified(STRING_PURE String* url, DateTime* lastModifie
 	if (lastModified->Year == 0 && lastModified->Month == 0) return;
 	Int64 ticks = DateTime_TotalMs(lastModified) * TEXCACHE_TICKS_PER_MS;
 
-	UInt8 dataBuffer[String_BufferSize(STRING_SIZE)];
+	UChar dataBuffer[String_BufferSize(STRING_SIZE)];
 	String data = String_InitAndClearArray(dataBuffer);
 	String_AppendUInt64(&data, ticks);
 	TextureCache_AddToTags(url, &data, &cache_lastModified);
@@ -451,7 +451,7 @@ static void TexturePack_ExtractZip(Stream* stream) {
 }
 
 void TexturePack_ExtractZip_File(STRING_PURE String* filename) {
-	UInt8 pathBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar pathBuffer[String_BufferSize(FILENAME_SIZE)];
 	String path = String_InitAndClearArray(pathBuffer);
 	String_Format2(&path, "texpacks%r%s", &Platform_DirectorySeparator, filename);
 
@@ -475,7 +475,7 @@ void TexturePack_ExtractTerrainPng(Stream* stream) {
 }
 
 void TexturePack_ExtractDefault(void) {
-	UInt8 texPackBuffer[String_BufferSize(STRING_SIZE)];
+	UChar texPackBuffer[String_BufferSize(STRING_SIZE)];
 	String texPack = String_InitAndClearArray(texPackBuffer);
 	Game_GetDefaultTexturePack(&texPack);
 

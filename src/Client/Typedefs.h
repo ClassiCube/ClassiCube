@@ -29,6 +29,7 @@ typedef int64_t Int64;
 #error "I didn't add typedefs for this compiler. You'll need to define them in Typedefs.h!"
 #endif
 
+typedef unsigned char UChar;
 typedef float  Real32;
 typedef double Real64;
 

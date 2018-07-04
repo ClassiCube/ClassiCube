@@ -33,7 +33,7 @@ typedef struct ButtonWidget_ {
 	Int32 DefaultHeight;
 	FontDesc Font;
 
-	const UInt8* OptName;
+	const UChar* OptName;
 	ButtonWidget_Get GetValue;
 	ButtonWidget_Set SetValue;
 	Int32 MinWidth, MinHeight;
@@ -96,7 +96,7 @@ typedef struct InputWidget_ {
 	Int32 (*GetMaxLines)(void);
 	void (*RemakeTexture)(GuiElement* elem);  /* Remakes the raw texture containing all the chat lines. Also updates dimensions. */
 	void (*OnPressedEnter)(GuiElement* elem); /* Invoked when the user presses enter. */
-	bool (*AllowedChar)(GuiElement* elem, UInt8 c);
+	bool (*AllowedChar)(GuiElement* elem, UChar c);
 
 	String Text;
 	String Lines[INPUTWIDGET_MAX_LINES];     /* raw text of each line */
@@ -122,12 +122,12 @@ void InputWidget_Clear(InputWidget* widget);
 /* Appends a sequence of characters to current text buffer. May recreate the native texture. */
 void InputWidget_AppendString(InputWidget* widget, STRING_PURE String* text);
 /* Appends a single character to current text buffer. May recreate the native texture. */
-void InputWidget_Append(InputWidget* widget, UInt8 c);
+void InputWidget_Append(InputWidget* widget, UChar c);
 
 
 typedef struct MenuInputValidator_ {
 	void (*GetRange)(struct MenuInputValidator_* validator, STRING_TRANSIENT String* range);
-	bool (*IsValidChar)(struct MenuInputValidator_* validator, UInt8 c);
+	bool (*IsValidChar)(struct MenuInputValidator_* validator, UChar c);
 	bool (*IsValidString)(struct MenuInputValidator_* validator, STRING_PURE String* s);
 	bool (*IsValidValue)(struct MenuInputValidator_* validator, STRING_PURE String* s);
 
@@ -143,14 +143,14 @@ MenuInputValidator MenuInputValidator_Integer(Int32 min, Int32 max);
 MenuInputValidator MenuInputValidator_Seed(void);
 MenuInputValidator MenuInputValidator_Real(Real32 min, Real32 max);
 MenuInputValidator MenuInputValidator_Path(void);
-MenuInputValidator MenuInputValidator_Enum(const UInt8** names, UInt32 namesCount);
+MenuInputValidator MenuInputValidator_Enum(const UChar** names, UInt32 namesCount);
 MenuInputValidator MenuInputValidator_String(void);
 
 typedef struct MenuInputWidget_ {
 	InputWidget Base;
 	Int32 MinWidth, MinHeight;
 	MenuInputValidator Validator;
-	UInt8 TextBuffer[String_BufferSize(INPUTWIDGET_LEN)];
+	UChar TextBuffer[String_BufferSize(INPUTWIDGET_LEN)];
 } MenuInputWidget;
 
 void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, STRING_PURE String* text, FontDesc* font, MenuInputValidator* validator);
@@ -159,8 +159,8 @@ void MenuInputWidget_Create(MenuInputWidget* widget, Int32 width, Int32 height, 
 typedef struct ChatInputWidget_ {
 	InputWidget Base;
 	Int32 TypingLogPos;
-	UInt8 TextBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
-	UInt8 OrigBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
+	UChar TextBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
+	UChar OrigBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
 } ChatInputWidget;
 
 void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font);
@@ -175,10 +175,10 @@ typedef struct TextGroupWidget_ {
 	bool PlaceholderHeight[TEXTGROUPWIDGET_MAX_LINES];
 	UInt8 LineLengths[TEXTGROUPWIDGET_MAX_LINES];
 	Texture* Textures;
-	UInt8* Buffer;
+	UChar* Buffer;
 } TextGroupWidget;
 
-void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF Texture* textures, STRING_REF UInt8* buffer);
+void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF Texture* textures, STRING_REF UChar* buffer);
 void TextGroupWidget_SetUsePlaceHolder(TextGroupWidget* widget, Int32 index, bool placeHolder);
 void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE String* text);
 Int32 TextGroupWidget_UsedHeight(TextGroupWidget* widget);
@@ -202,7 +202,7 @@ void PlayerListWidget_Create(PlayerListWidget* widget, FontDesc* font, bool clas
 void PlayerListWidget_GetNameUnder(PlayerListWidget* widget, Int32 mouseX, Int32 mouseY, STRING_TRANSIENT String* name);
 
 
-typedef void (*SpecialInputAppendFunc)(void* userData, UInt8 c);
+typedef void (*SpecialInputAppendFunc)(void* userData, UChar c);
 typedef struct SpecialInputTab_ {
 	Int32 ItemsPerRow, CharsPerItem;
 	Size2D TitleSize;
@@ -218,7 +218,7 @@ typedef struct SpecialInputWidget_ {
 	FontDesc Font;
 	SpecialInputTab Tabs[5];
 	String ColString;
-	UInt8 ColBuffer[String_BufferSize(DRAWER2D_MAX_COLS * 4)];
+	UChar ColBuffer[String_BufferSize(DRAWER2D_MAX_COLS * 4)];
 } SpecialInputWidget;
 
 void SpecialInputWidget_Create(SpecialInputWidget* widget, FontDesc* font, InputWidget* appendObj);

@@ -23,8 +23,8 @@ Int64 DateTime_MsBetween(DateTime* start, DateTime* end);
 void DateTime_FromTotalMs(DateTime* time, Int64 ms);
 void DateTime_HttpDate(DateTime* value, STRING_TRANSIENT String* str);
 
-UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UInt8** names, UInt32 namesCount);
-bool Utils_IsValidInputChar(UInt8 c, bool supportsCP437);
+UInt32 Utils_ParseEnum(STRING_PURE String* text, UInt32 defValue, const UChar** names, UInt32 namesCount);
+bool Utils_IsValidInputChar(UChar c, bool supportsCP437);
 bool Utils_IsUrlPrefix(STRING_PURE String* value, Int32 index);
 
 Int32 Utils_AccumulateWheelDelta(Real32* accmulator, Real32 delta);

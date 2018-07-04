@@ -593,7 +593,7 @@ void TableWidget_MakeDescTex(TableWidget* widget, BlockID block) {
 	Gfx_DeleteTexture(&widget->DescTex.ID);
 	if (block == BLOCK_AIR) return;
 
-	UInt8 descBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar descBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String desc = String_InitAndClearArray(descBuffer);
 	TableWidget_MakeBlockDesc(&desc, block);
 
@@ -907,7 +907,7 @@ static void InputWidget_FormatLine(InputWidget* widget, Int32 i, STRING_TRANSIEN
 	String src = widget->Lines[i];
 
 	for (i = 0; i < src.length; i++) {
-		UInt8 c = src.buffer[i];
+		UChar c = src.buffer[i];
 		if (c == '%' && Drawer2D_ValidColCodeAt(&src, i + 1)) { c = '&'; }
 		String_Append(line, c);
 	}
@@ -921,7 +921,7 @@ static void InputWidget_CalculateLineSizes(InputWidget* widget) {
 	widget->LineSizes[0].Width = widget->PrefixWidth;
 
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
-	UInt8 lineBuffer[String_BufferSize(STRING_SIZE)];
+	UChar lineBuffer[String_BufferSize(STRING_SIZE)];
 	String line = String_InitAndClearArray(lineBuffer);
 
 	for (y = 0; y < widget->GetMaxLines(); y++) {
@@ -939,16 +939,16 @@ static void InputWidget_CalculateLineSizes(InputWidget* widget) {
 	}
 }
 
-static UInt8 InputWidget_GetLastCol(InputWidget* widget, Int32 indexX, Int32 indexY) {
+static UChar InputWidget_GetLastCol(InputWidget* widget, Int32 indexX, Int32 indexY) {
 	Int32 x = indexX, y;
-	UInt8 lineBuffer[String_BufferSize(STRING_SIZE)];
+	UChar lineBuffer[String_BufferSize(STRING_SIZE)];
 	String line = String_InitAndClearArray(lineBuffer);
 
 	for (y = indexY; y >= 0; y--) {
 		String_Clear(&line);
 		InputWidget_FormatLine(widget, y, &line);
 
-		UInt8 code = Drawer2D_LastCol(&line, x);
+		UChar code = Drawer2D_LastCol(&line, x);
 		if (code != NULL) return code;
 		if (y > 0) { x = widget->Lines[y - 1].length; }
 	}
@@ -968,7 +968,7 @@ static void InputWidget_UpdateCaret(InputWidget* widget) {
 		PackedCol yellow = PACKEDCOL_YELLOW; widget->CaretCol = yellow;
 		widget->CaretTex.Width = widget->CaretWidth;
 	} else {
-		UInt8 lineBuffer[String_BufferSize(STRING_SIZE)];
+		UChar lineBuffer[String_BufferSize(STRING_SIZE)];
 		String line = String_InitAndClearArray(lineBuffer);
 		InputWidget_FormatLine(widget, widget->CaretY, &line);
 
@@ -991,7 +991,7 @@ static void InputWidget_UpdateCaret(InputWidget* widget) {
 	widget->CaretTex.Y = widget->LineSizes[0].Height * widget->CaretY + widget->InputTex.Y + 2;
 
 	/* Update the colour of the widget->CaretPos */
-	UInt8 code = InputWidget_GetLastCol(widget, widget->CaretX, widget->CaretY);
+	UChar code = InputWidget_GetLastCol(widget, widget->CaretX, widget->CaretY);
 	if (code != NULL) widget->CaretCol = Drawer2D_Cols[code];
 }
 
@@ -1022,11 +1022,11 @@ void InputWidget_Clear(InputWidget* widget) {
 	Gfx_DeleteTexture(&widget->InputTex.ID);
 }
 
-static bool InputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
+static bool InputWidget_AllowedChar(GuiElement* elem, UChar c) {
 	return Utils_IsValidInputChar(c, ServerConnection_SupportsFullCP437);
 }
 
-static void InputWidget_AppendChar(InputWidget* widget, UInt8 c) {
+static void InputWidget_AppendChar(InputWidget* widget, UChar c) {
 	if (widget->CaretPos == -1) {
 		String_InsertAt(&widget->Text, widget->Text.length, c);
 	} else {
@@ -1036,7 +1036,7 @@ static void InputWidget_AppendChar(InputWidget* widget, UInt8 c) {
 	}
 }
 
-static bool InputWidget_TryAppendChar(InputWidget* widget, UInt8 c) {
+static bool InputWidget_TryAppendChar(InputWidget* widget, UChar c) {
 	Int32 maxChars = widget->GetMaxLines() * INPUTWIDGET_LEN;
 	if (widget->Text.length >= maxChars) return false;
 	if (!widget->AllowedChar((GuiElement*)widget, c)) return false;
@@ -1055,7 +1055,7 @@ void InputWidget_AppendString(InputWidget* widget, STRING_PURE String* text) {
 	Elem_Recreate(widget);
 }
 
-void InputWidget_Append(InputWidget* widget, UInt8 c) {
+void InputWidget_Append(InputWidget* widget, UChar c) {
 	if (!InputWidget_TryAppendChar(widget, c)) return;
 	Elem_Recreate(widget);
 }
@@ -1073,8 +1073,8 @@ static void InputWidget_DeleteChar(InputWidget* widget) {
 
 static bool InputWidget_CheckCol(InputWidget* widget, Int32 index) {
 	if (index < 0) return false;
-	UInt8 code = widget->Text.buffer[index];
-	UInt8 col = widget->Text.buffer[index + 1];
+	UChar code = widget->Text.buffer[index];
+	UChar col = widget->Text.buffer[index + 1];
 	return (code == '%' || code == '&') && Drawer2D_ValidColCode(col);
 }
 
@@ -1167,7 +1167,7 @@ static bool InputWidget_OtherKey(InputWidget* widget, Key key) {
 	if (!InputWidget_ControlDown()) return false;
 
 	if (key == Key_V && widget->Text.length < maxChars) {
-		UInt8 textBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
+		UChar textBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * STRING_SIZE)];
 		String text = String_InitAndClearArray(textBuffer);
 		Window_GetClipboardText(&text);
 
@@ -1243,7 +1243,7 @@ static bool InputWidget_HandlesKeyDown(GuiElement* elem, Key key) {
 
 static bool InputWidget_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
 
-static bool InputWidget_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool InputWidget_HandlesKeyPress(GuiElement* elem, UChar key) {
 	InputWidget* widget = (InputWidget*)elem;
 	InputWidget_Append(widget, key);
 	return true;
@@ -1257,7 +1257,7 @@ static bool InputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mou
 	DrawTextArgs args; DrawTextArgs_MakeEmpty(&args, &widget->Font, true);
 	Int32 offset = 0, charHeight = widget->CaretTex.Height;
 
-	UInt8 lineBuffer[String_BufferSize(STRING_SIZE)];
+	UChar lineBuffer[String_BufferSize(STRING_SIZE)];
 	String line = String_InitAndClearArray(lineBuffer);
 	Int32 charX, charY;
 
@@ -1325,14 +1325,14 @@ void InputWidget_Create(InputWidget* widget, FontDesc* font, STRING_REF String* 
 /*########################################################################################################################*
 *---------------------------------------------------MenuInputValidator----------------------------------------------------*
 *#########################################################################################################################*/
-static bool MenuInputValidator_AlwaysValidChar(MenuInputValidator* validator, UInt8 c) { return true; }
+static bool MenuInputValidator_AlwaysValidChar(MenuInputValidator* validator, UChar c) { return true; }
 static bool MenuInputValidator_AlwaysValidString(MenuInputValidator* validator, STRING_PURE String* s) { return true; }
 
 static void HexColValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIENT String* range) {
 	String_AppendConst(range, "&7(#000000 - #FFFFFF)");
 }
 
-static bool HexColValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+static bool HexColValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
 	return (c >= '0' && c <= '9') || (c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f');
 }
 
@@ -1358,7 +1358,7 @@ static void IntegerValidator_GetRange(MenuInputValidator* validator, STRING_TRAN
 	String_Format2(range, "&7(%i - %i)", &validator->Meta_Int[0], &validator->Meta_Int[1]);
 }
 
-static bool IntegerValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+static bool IntegerValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
 	return (c >= '0' && c <= '9') || c == '-';
 }
 
@@ -1402,7 +1402,7 @@ static void RealValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIE
 	String_Format2(range, "&7(%f2 - %f2)", &validator->Meta_Real[0], &validator->Meta_Real[1]);
 }
 
-static bool RealValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+static bool RealValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
 	return (c >= '0' && c <= '9') || c == '-' || c == '.' || c == ',';
 }
 
@@ -1434,7 +1434,7 @@ static void PathValidator_GetRange(MenuInputValidator* validator, STRING_TRANSIE
 	String_AppendConst(range, "&7(Enter name)");
 }
 
-static bool PathValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+static bool PathValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
 	return !(c == '/' || c == '\\' || c == '?' || c == '*' || c == ':'
 		|| c == '<' || c == '>' || c == '|' || c == '"' || c == '.');
 }
@@ -1448,7 +1448,7 @@ MenuInputValidator MenuInputValidator_Path(void) {
 	return validator;
 }
 
-MenuInputValidator MenuInputValidator_Enum(const UInt8** names, UInt32 namesCount) {
+MenuInputValidator MenuInputValidator_Enum(const UChar** names, UInt32 namesCount) {
 	MenuInputValidator validator = { 0 };
 	validator.Meta_Ptr[0] = names;
 	validator.Meta_Ptr[1] = (void*)namesCount; /* TODO: Need to handle void* size < 32 bits?? */
@@ -1459,7 +1459,7 @@ static void StringValidator_GetRange(MenuInputValidator* validator, STRING_TRANS
 	String_AppendConst(range, "&7(Enter text)");
 }
 
-static bool StringValidator_IsValidChar(MenuInputValidator* validator, UInt8 c) {
+static bool StringValidator_IsValidChar(MenuInputValidator* validator, UChar c) {
 	return c != '&' && Utils_IsValidInputChar(c, true);
 }
 
@@ -1500,7 +1500,7 @@ static void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 	Size2D size = Drawer2D_MeasureText(&args);
 	widget->Base.CaretAccumulator = 0.0;
 
-	UInt8 rangeBuffer[String_BufferSize(STRING_SIZE)];
+	UChar rangeBuffer[String_BufferSize(STRING_SIZE)];
 	String range = String_InitAndClearArray(rangeBuffer);
 	MenuInputValidator* validator = &widget->Validator;
 	validator->GetRange(validator, &range);
@@ -1540,7 +1540,7 @@ static void MenuInputWidget_RemakeTexture(GuiElement* elem) {
 	}
 }
 
-static bool MenuInputWidget_AllowedChar(GuiElement* elem, UInt8 c) {
+static bool MenuInputWidget_AllowedChar(GuiElement* elem, UChar c) {
 	if (c == '&' || !Utils_IsValidInputChar(c, true)) return false;
 	MenuInputWidget* widget = (MenuInputWidget*)elem;
 	InputWidget* elemW = (InputWidget*)elem;
@@ -1604,7 +1604,7 @@ static void ChatInputWidget_RemakeTexture(GuiElement* elem) {
 		Drawer2D_DrawText(&args, 0, 0);
 	}
 
-	UInt8 lineBuffer[String_BufferSize(STRING_SIZE + 2)];
+	UChar lineBuffer[String_BufferSize(STRING_SIZE + 2)];
 	String line = String_InitAndClearArray(lineBuffer);	
 
 	for (i = 0; i < Array_Elems(widget->Lines); i++) {
@@ -1612,7 +1612,7 @@ static void ChatInputWidget_RemakeTexture(GuiElement* elem) {
 		String_Clear(&line);
 
 		/* Colour code goes to next line */
-		UInt8 lastCol = InputWidget_GetLastCol(widget, 0, i);
+		UChar lastCol = InputWidget_GetLastCol(widget, 0, i);
 		if (!Drawer2D_IsWhiteCol(lastCol)) {			
 			String_Append(&line, '&'); String_Append(&line, lastCol);
 		}
@@ -1751,7 +1751,7 @@ static void ChatInputWidget_TabKey(GuiElement* elem) {
 
 	Int32 end = input->CaretPos == -1 ? input->Text.length - 1 : input->CaretPos;
 	Int32 start = end;
-	UInt8* buffer = input->Text.buffer;
+	UChar* buffer = input->Text.buffer;
 
 	while (start >= 0 && ChatInputWidget_IsNameChar(buffer[start])) { start--; }
 	start++;
@@ -1784,7 +1784,7 @@ static void ChatInputWidget_TabKey(GuiElement* elem) {
 		String match = TabList_UNSAFE_GetPlayer(matches[0]);
 		InputWidget_AppendString(input, &match);
 	} else if (matchesCount > 1) {
-		UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
+		UChar strBuffer[String_BufferSize(STRING_SIZE)];
 		String str = String_InitAndClearArray(strBuffer);
 		String_Format1(&str, "&e%i matching names: ", &matchesCount);
 
@@ -1840,7 +1840,7 @@ void ChatInputWidget_Create(ChatInputWidget* widget, FontDesc* font) {
 #define LIST_NAMES_PER_COLUMN 16
 
 static Texture PlayerListWidget_DrawName(PlayerListWidget* widget, STRING_PURE String* name) {
-	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE)];
+	UChar tmpBuffer[String_BufferSize(STRING_SIZE)];
 	String tmp;
 	if (Game_PureClassic) {
 		tmp = String_InitAndClearArray(tmpBuffer);
@@ -2020,12 +2020,12 @@ static Int32 PlayerListWidget_PlayerCompare(UInt16 x, UInt16 y) {
 	UInt8 yRank = TabList_GroupRanks[y];
 	if (xRank != yRank) return (xRank < yRank ? -1 : 1);
 
-	UInt8 xNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar xNameBuffer[String_BufferSize(STRING_SIZE)];
 	String xName    = String_InitAndClearArray(xNameBuffer);
 	String xNameRaw = TabList_UNSAFE_GetList(x);
 	String_AppendColorless(&xName, &xNameRaw);
 
-	UInt8 yNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar yNameBuffer[String_BufferSize(STRING_SIZE)];
 	String yName    = String_InitAndClearArray(yNameBuffer);
 	String yNameRaw = TabList_UNSAFE_GetList(y);
 	String_AppendColorless(&yName, &yNameRaw);
@@ -2034,12 +2034,12 @@ static Int32 PlayerListWidget_PlayerCompare(UInt16 x, UInt16 y) {
 }
 
 static Int32 PlayerListWidget_GroupCompare(UInt16 x, UInt16 y) {
-	UInt8 xGroupBuffer[String_BufferSize(STRING_SIZE)];
+	UChar xGroupBuffer[String_BufferSize(STRING_SIZE)];
 	String xGroup    = String_InitAndClearArray(xGroupBuffer);
 	String xGroupRaw = TabList_UNSAFE_GetGroup(x);
 	String_AppendColorless(&xGroup, &xGroupRaw);
 
-	UInt8 yGroupBuffer[String_BufferSize(STRING_SIZE)];
+	UChar yGroupBuffer[String_BufferSize(STRING_SIZE)];
 	String yGroup    = String_InitAndClearArray(yGroupBuffer);
 	String yGroupRaw = TabList_UNSAFE_GetGroup(y);
 	String_AppendColorless(&yGroup, &yGroupRaw);
@@ -2220,8 +2220,8 @@ void TextGroupWidget_PushUpAndReplaceLast(TextGroupWidget* widget, STRING_PURE S
 
 	/* Move contents of X line to X - 1 line */
 	for (i = 0; i < max_index; i++) {
-		UInt8* dst = widget->Buffer + i       * TEXTGROUPWIDGET_LEN;
-		UInt8* src = widget->Buffer + (i + 1) * TEXTGROUPWIDGET_LEN;
+		UChar* dst = widget->Buffer + i       * TEXTGROUPWIDGET_LEN;
+		UChar* src = widget->Buffer + (i + 1) * TEXTGROUPWIDGET_LEN;
 		UInt8 lineLen = widget->LineLengths[i + 1];
 
 		if (lineLen > 0) Platform_MemCpy(dst, src, lineLen);
@@ -2315,7 +2315,7 @@ static void TextGroupWidget_UpdateDimensions(TextGroupWidget* widget) {
 }
 
 String TextGroupWidget_UNSAFE_Get(TextGroupWidget* widget, Int32 i) {
-	UInt8* buffer = widget->Buffer + i * TEXTGROUPWIDGET_LEN;
+	UChar* buffer = widget->Buffer + i * TEXTGROUPWIDGET_LEN;
 	UInt16 length = widget->LineLengths[i];
 	return String_Init(buffer, length, length);
 }
@@ -2400,7 +2400,7 @@ static void TextGroupWidget_Free(GuiElement* elem) {
 }
 
 GuiElementVTABLE TextGroupWidget_VTABLE;
-void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF Texture* textures, STRING_REF UInt8* buffer) {
+void TextGroupWidget_Create(TextGroupWidget* widget, Int32 linesCount, FontDesc* font, FontDesc* underlineFont, STRING_REF Texture* textures, STRING_REF UChar* buffer) {
 	widget->VTABLE = &TextGroupWidget_VTABLE;
 	Widget_Init((Widget*)widget);
 	widget->VTABLE->Init   = TextGroupWidget_Init;
@@ -2545,7 +2545,7 @@ static Size2D SpecialInputWidget_CalculateContentSize(SpecialInputTab* e, Size2D
 }
 
 static void SpecialInputWidget_MeasureContentSizes(SpecialInputWidget* widget, SpecialInputTab* e, Size2D* sizes) {
-	UInt8 buffer[String_BufferSize(STRING_SIZE)];
+	UChar buffer[String_BufferSize(STRING_SIZE)];
 	String s = String_InitAndClear(buffer, e->CharsPerItem);
 	s.length = e->CharsPerItem;
 	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);
@@ -2560,7 +2560,7 @@ static void SpecialInputWidget_MeasureContentSizes(SpecialInputWidget* widget, S
 }
 
 static void SpecialInputWidget_DrawContent(SpecialInputWidget* widget, SpecialInputTab* e, Int32 yOffset) {
-	UInt8 buffer[String_BufferSize(STRING_SIZE)];
+	UChar buffer[String_BufferSize(STRING_SIZE)];
 	String s = String_InitAndClear(buffer, e->CharsPerItem);
 	s.length = e->CharsPerItem;
 	DrawTextArgs args; DrawTextArgs_Make(&args, &s, &widget->Font, false);

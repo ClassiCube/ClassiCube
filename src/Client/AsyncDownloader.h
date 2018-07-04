@@ -17,8 +17,8 @@ enum REQUEST_TYPE {
 #define ASYNC_PROGRESS_FETCHING_DATA -1
 
 typedef struct AsyncRequest_ {
-	UInt8 URL[String_BufferSize(STRING_SIZE)];
-	UInt8 ID[String_BufferSize(STRING_SIZE)];
+	UChar URL[String_BufferSize(STRING_SIZE)];
+	UChar ID[String_BufferSize(STRING_SIZE)];
 
 	DateTime TimeAdded;
 	DateTime TimeDownloaded;

@@ -20,8 +20,8 @@ HANDLE heap;
 bool stopwatch_highResolution;
 LARGE_INTEGER stopwatch_freq;
 
-UInt8* Platform_NewLine = "\r\n";
-UInt8 Platform_DirectorySeparator = '\\';
+UChar* Platform_NewLine = "\r\n";
+UChar Platform_DirectorySeparator = '\\';
 ReturnCode ReturnCode_FileShareViolation = ERROR_SHARING_VIOLATION;
 ReturnCode ReturnCode_FileNotFound = ERROR_FILE_NOT_FOUND;
 ReturnCode ReturnCode_NotSupported = ERROR_NOT_SUPPORTED;
@@ -152,7 +152,7 @@ void Platform_LogConst(const UInt8* message) {
 }
 
 void Platform_Log4(const UInt8* format, const void* a1, const void* a2, const void* a3, const void* a4) {
-	UInt8 msgBuffer[String_BufferSize(512)];
+	UChar msgBuffer[String_BufferSize(512)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	String_Format4(&msg, format, a1, a2, a3, a4);
 	Platform_Log(&msg);
@@ -207,7 +207,7 @@ ReturnCode Platform_DirectoryCreate(STRING_PURE String* path) {
 
 ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_EnumFilesCallback callback) {
 	/* Need to do directory\* to search for files in directory */
-	UInt8 searchPatternBuffer[FILENAME_SIZE + 10];
+	UChar searchPatternBuffer[FILENAME_SIZE + 10];
 	String searchPattern = String_InitAndClearArray(searchPatternBuffer);
 	String_Format1(&searchPattern, "%s\\*", path);
 
@@ -220,7 +220,7 @@ ReturnCode Platform_EnumFiles(STRING_PURE String* path, void* obj, Platform_Enum
 
 	do {
 		if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) continue;
-		String path = String_Init((UInt8*)data.cFileName, 0, MAX_PATH);
+		String path = String_Init((UChar*)data.cFileName, 0, MAX_PATH);
 		Int32 i;
 
 		/* unicode to code page 437*/
@@ -292,12 +292,12 @@ ReturnCode Platform_FileAppend(void** file, STRING_PURE String* path) {
 	return Platform_FileSeek(*file, 0, STREAM_SEEKFROM_END);
 }
 
-ReturnCode Platform_FileRead(void* file, UInt8* buffer, UInt32 count, UInt32* bytesRead) {
+ReturnCode Platform_FileRead(void* file, UChar* buffer, UInt32 count, UInt32* bytesRead) {
 	BOOL success = ReadFile((HANDLE)file, buffer, count, bytesRead, NULL);
 	return success ? 0 : GetLastError();
 }
 
-ReturnCode Platform_FileWrite(void* file, UInt8* buffer, UInt32 count, UInt32* bytesWritten) {
+ReturnCode Platform_FileWrite(void* file, UChar* buffer, UInt32 count, UInt32* bytesWritten) {
 	BOOL success = WriteFile((HANDLE)file, buffer, count, bytesWritten, NULL);
 	return success ? 0 : GetLastError();
 }
@@ -618,7 +618,7 @@ void Platform_HttpInit(void) {
 
 ReturnCode Platform_HttpMakeRequest(AsyncRequest* request, void** handle) {
 	String url = String_FromRawArray(request->URL);
-	UInt8 headersBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar headersBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String headers = String_MakeNull();
 	
 	/* https://stackoverflow.com/questions/25308488/c-wininet-custom-http-headers */

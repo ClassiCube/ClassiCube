@@ -54,13 +54,13 @@ typedef struct LoadingScreen_ {
 	Real32 Progress;
 	
 	TextWidget Title, Message;
-	UInt8 TitleBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
+	UChar TitleBuffer[String_BufferSize(STRING_SIZE)];
+	UChar MessageBuffer[String_BufferSize(STRING_SIZE)];
 } LoadingScreen;
 
 typedef struct GeneratingScreen_ {
 	LoadingScreen Base;
-	const UInt8* LastState;
+	const UChar* LastState;
 } GeneratingScreen;
 
 #define CHATSCREEN_MAX_STATUS 5
@@ -80,16 +80,16 @@ typedef struct ChatScreen_ {
 	SpecialInputWidget AltText;
 
 	/* needed for lost contexts, to restore chat typed in */
-	UInt8 ChatInInputBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
+	UChar ChatInInputBuffer[String_BufferSize(INPUTWIDGET_MAX_LINES * INPUTWIDGET_LEN)];
 
 	Texture Status_Textures[CHATSCREEN_MAX_STATUS];
 	Texture BottomRight_Textures[CHATSCREEN_MAX_GROUP];
 	Texture ClientStatus_Textures[CHATSCREEN_MAX_GROUP];
 	Texture Chat_Textures[TEXTGROUPWIDGET_MAX_LINES];
-	UInt8 Status_Buffer[String_BufferSize(CHATSCREEN_MAX_STATUS * TEXTGROUPWIDGET_LEN)];
-	UInt8 BottomRight_Buffer[String_BufferSize(CHATSCREEN_MAX_GROUP * TEXTGROUPWIDGET_LEN)];
-	UInt8 ClientStatus_Buffer[String_BufferSize(CHATSCREEN_MAX_GROUP * TEXTGROUPWIDGET_LEN)];
-	UInt8 Chat_Buffer[String_BufferSize(TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN)];
+	UChar Status_Buffer[String_BufferSize(CHATSCREEN_MAX_STATUS * TEXTGROUPWIDGET_LEN)];
+	UChar BottomRight_Buffer[String_BufferSize(CHATSCREEN_MAX_GROUP * TEXTGROUPWIDGET_LEN)];
+	UChar ClientStatus_Buffer[String_BufferSize(CHATSCREEN_MAX_GROUP * TEXTGROUPWIDGET_LEN)];
+	UChar Chat_Buffer[String_BufferSize(TEXTGROUPWIDGET_MAX_LINES * TEXTGROUPWIDGET_LEN)];
 } ChatScreen;
 
 typedef struct DisconnectScreen_ {
@@ -101,8 +101,8 @@ typedef struct DisconnectScreen_ {
 
 	FontDesc TitleFont, MessageFont;
 	TextWidget Title, Message;
-	UInt8 TitleBuffer[String_BufferSize(STRING_SIZE)];
-	UInt8 MessageBuffer[String_BufferSize(STRING_SIZE)];
+	UChar TitleBuffer[String_BufferSize(STRING_SIZE)];
+	UChar MessageBuffer[String_BufferSize(STRING_SIZE)];
 } DisconnectScreen;
 
 
@@ -318,7 +318,7 @@ static void StatusScreen_UpdateHackState(StatusScreen* screen) {
 	screen->Speed = hacks->Speeding; screen->HalfSpeed = hacks->HalfSpeeding; screen->Fly = hacks->Flying;
 	screen->Noclip = hacks->Noclip; screen->LastFov = Game_Fov; screen->CanSpeed = hacks->CanSpeed;
 
-	UInt8 statusBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar statusBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String status = String_InitAndClearArray(statusBuffer);
 
 	if (Game_Fov != Game_DefaultFov) {
@@ -338,7 +338,7 @@ static void StatusScreen_Update(StatusScreen* screen, Real64 delta) {
 	screen->Accumulator += delta;
 	if (screen->Accumulator < 1.0) return;
 
-	UInt8 statusBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar statusBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String status = String_InitAndClearArray(statusBuffer);
 	StatusScreen_MakeText(screen, &status);
 
@@ -490,7 +490,7 @@ static bool LoadingScreen_HandlesKeyDown(GuiElement* elem, Key key) {
 	return Elem_HandlesKeyDown(Gui_HUD, key);
 }
 
-static bool LoadingScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool LoadingScreen_HandlesKeyPress(GuiElement* elem, UChar key) {
 	return Elem_HandlesKeyPress(Gui_HUD, key);
 }
 
@@ -670,7 +670,7 @@ static void GeneratingScreen_Render(GuiElement* elem, Real64 delta) {
 	LoadingScreen_Render(elem, delta);
 	if (Gen_Done) { GeneratingScreen_EndGeneration(); return; }
 
-	const volatile UInt8* state = Gen_CurrentState;
+	const volatile UChar* state = Gen_CurrentState;
 	screen->Base.Progress = Gen_CurrentProgress;
 	if (state == screen->LastState) return;
 
@@ -825,7 +825,7 @@ static void ChatScreen_CheckOtherStatuses(ChatScreen* screen) {
 
 	if (progress == screen->LastDownloadStatus) return;
 	screen->LastDownloadStatus = progress;
-	UInt8 strBuffer[String_BufferSize(STRING_SIZE)];
+	UChar strBuffer[String_BufferSize(STRING_SIZE)];
 	String str = String_InitAndClearArray(strBuffer);
 
 	if (progress == ASYNC_PROGRESS_MAKING_REQUEST) {
@@ -866,9 +866,9 @@ static void ChatScreen_UpdateChatYOffset(ChatScreen* screen, bool force) {
 	}
 }
 
-static void ChatElem_Recreate(TextGroupWidget* group, UInt8 code) {
+static void ChatElem_Recreate(TextGroupWidget* group, UChar code) {
 	Int32 i, j;
-	UInt8 lineBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
+	UChar lineBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
 	String line = String_InitAndClearArray(lineBuffer);
 
 	for (i = 0; i < group->LinesCount; i++) {
@@ -959,7 +959,7 @@ static bool ChatScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 	return true;
 }
 
-static bool ChatScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool ChatScreen_HandlesKeyPress(GuiElement* elem, UChar key) {
 	ChatScreen* screen = (ChatScreen*)elem;
 	if (!screen->HandlesAllInput) return false;
 	if (screen->SuppressNextPress) {
@@ -999,12 +999,12 @@ static bool ChatScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mous
 	Int32 chatY = screen->Chat.Y + screen->Chat.Height - height;
 	if (!Gui_Contains(screen->Chat.X, chatY, screen->Chat.Width, height, x, y)) return false;
 
-	UInt8 textBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
+	UChar textBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
 	String text = String_InitAndClearArray(textBuffer);
 	TextGroupWidget_GetSelected(&screen->Chat, &text, x, y);
 	if (text.length == 0) return false;
 
-	UInt8 urlBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
+	UChar urlBuffer[String_BufferSize(TEXTGROUPWIDGET_LEN)];
 	String url = String_InitAndClearArray(urlBuffer);
 	String_AppendColorless(&url, &text);
 
@@ -1250,7 +1250,7 @@ static void HUDScreen_OnResize(GuiElement* elem) {
 	}
 }
 
-static bool HUDScreen_HandlesKeyPress(GuiElement* elem, UInt8 key) {
+static bool HUDScreen_HandlesKeyPress(GuiElement* elem, UChar key) {
 	HUDScreen* screen = (HUDScreen*)elem;
 	return Elem_HandlesKeyPress(screen->Chat, key); 
 }
@@ -1297,7 +1297,7 @@ static bool HUDScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, Mouse
 	elem = (GuiElement*)screen->Chat;
 	if (!screen->ShowingList) { return elem->VTABLE->HandlesMouseDown(elem, x, y, btn); }
 
-	UInt8 nameBuffer[String_BufferSize(STRING_SIZE + 1)];
+	UChar nameBuffer[String_BufferSize(STRING_SIZE + 1)];
 	String name = String_InitAndClearArray(nameBuffer);
 	PlayerListWidget_GetNameUnder(&screen->PlayerList, x, y, &name);
 	if (name.length == 0) { return elem->VTABLE->HandlesMouseDown(elem, x, y, btn); }
@@ -1452,7 +1452,7 @@ static void DisconnectScreen_UpdateDelayLeft(DisconnectScreen* screen, Real64 de
 	if (secsLeft < 0) secsLeft = 0;
 	if (screen->LastSecsLeft == secsLeft && screen->Reconnect.Active == screen->LastActive) return;
 
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+	UChar msgBuffer[String_BufferSize(STRING_SIZE)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	DisconnectScreen_ReconnectMessage(screen, &msg);
 	ButtonWidget_SetText(&screen->Reconnect, &msg);
@@ -1485,7 +1485,7 @@ static void DisconnectScreen_ContextRecreated(void* obj) {
 	TextWidget_Create(&screen->Message, &message, &screen->MessageFont);
 	Widget_SetLocation((Widget*)(&screen->Message), ANCHOR_CENTRE, ANCHOR_CENTRE, 0, 10);
 
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+	UChar msgBuffer[String_BufferSize(STRING_SIZE)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	DisconnectScreen_ReconnectMessage(screen, &msg);
 
@@ -1541,7 +1541,7 @@ static void DisconnectScreen_OnResize(GuiElement* elem) {
 }
 
 static bool DisconnectScreen_HandlesKeyDown(GuiElement* elem, Key key) { return key < Key_F1 || key > Key_F35; }
-static bool DisconnectScreen_HandlesKeyPress(GuiElement* elem, UInt8 keyChar) { return true; }
+static bool DisconnectScreen_HandlesKeyPress(GuiElement* elem, UChar keyChar) { return true; }
 static bool DisconnectScreen_HandlesKeyUp(GuiElement* elem, Key key) { return true; }
 
 static bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
@@ -1550,7 +1550,7 @@ static bool DisconnectScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y
 	if (btn != MouseButton_Left) return true;
 
 	if (!widget->Disabled && Widget_Contains((Widget*)widget, x, y)) {
-		UInt8 connectBuffer[String_BufferSize(STRING_SIZE)];
+		UChar connectBuffer[String_BufferSize(STRING_SIZE)];
 		String connect = String_InitAndClearArray(connectBuffer);
 		String empty = String_MakeNull();
 		String_Format2(&connect, "Connecting to %s:%i..", &Game_IPAddress, &Game_Port);
@@ -1583,7 +1583,7 @@ Screen* DisconnectScreen_MakeInstance(STRING_PURE String* title, STRING_PURE Str
 	String messageScreen = String_InitAndClearArray(screen->MessageBuffer);
 	String_AppendString(&messageScreen, message);
 
-	UInt8 reasonBuffer[String_BufferSize(STRING_SIZE)];
+	UChar reasonBuffer[String_BufferSize(STRING_SIZE)];
 	String reason = String_InitAndClearArray(reasonBuffer);
 	String_AppendColorless(&reason, message);
 

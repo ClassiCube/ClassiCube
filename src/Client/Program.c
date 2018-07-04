@@ -43,7 +43,7 @@ int main(void) {
 		ErrorHandler_CheckOrFail(result, "Program - creating texturecache directory");
 	}
 
-	UInt8 defPathBuffer[String_BufferSize(STRING_SIZE)];
+	UChar defPathBuffer[String_BufferSize(STRING_SIZE)];
 	String defPath = String_InitAndClearArray(defPathBuffer);
 	String_Format1(&defPath, "texpacks%rdefault.zip", &Platform_DirectorySeparator);
 

@@ -19,22 +19,22 @@
 Thus it is **NOT SAFE** to allocate a string on the stack. */
 #define STRING_REF
 
-UInt8 Char_ToLower(UInt8 c);
+UChar Char_ToLower(UChar c);
 
 typedef struct String_ {	
-	UInt8* buffer;   /* Pointer to raw characters. Size is capacity + 1, as buffer is null terminated. */	
+	UChar* buffer;   /* Pointer to raw characters. Size is capacity + 1, as buffer is null terminated. */	
 	UInt16 length;   /* Number of characters used. */
 	UInt16 capacity; /* Max number of characters that can be in buffer. */
 } String;
 
 String String_MakeNull(void);
-String String_Init(STRING_REF UInt8* buffer, UInt16 length, UInt16 capacity);
-String String_InitAndClear(STRING_REF UInt8* buffer, UInt16 capacity);
+String String_Init(STRING_REF UChar* buffer, UInt16 length, UInt16 capacity);
+String String_InitAndClear(STRING_REF UChar* buffer, UInt16 capacity);
 #define String_InitAndClearArray(buffer) String_InitAndClear(buffer, (UInt16)(sizeof(buffer) - 1))
 /* Constructs a new string from a (maybe null terminated) buffer. */
-String String_FromRaw(STRING_REF UInt8* buffer, UInt16 capacity);
+String String_FromRaw(STRING_REF UChar* buffer, UInt16 capacity);
 /* Constructs a new string from a constant readonly buffer. */
-String String_FromReadonly(STRING_REF const UInt8* buffer);
+String String_FromReadonly(STRING_REF const UChar* buffer);
 /* Constructs a new string from a compile time string constant. */
 #define String_FromConst(text) { text, (UInt16)(sizeof(text) - 1), (UInt16)(sizeof(text) - 1)};
 /* Constructs a new string from a compile time empty string buffer. */
@@ -52,14 +52,14 @@ String String_UNSAFE_Substring(STRING_REF String* str, Int32 offset, Int32 lengt
 #define String_UNSAFE_SubstringAt(str, offset) (String_UNSAFE_Substring(str, offset, (str)->length - (offset)))
 /* Splits a string into a sequence of substrings
 NOTE: THIS IS UNSAFE - IT MAINTAINS A REFERENCE TO THE ORIGINAL BUFFER, AND THE SUBSTRING IS NOT NULL TERMINATED */
-void String_UNSAFE_Split(STRING_REF String* str, UInt8 c, STRING_TRANSIENT String* subs, UInt32* subsCount);
+void String_UNSAFE_Split(STRING_REF String* str, UChar c, STRING_TRANSIENT String* subs, UInt32* subsCount);
 
 bool String_Equals(STRING_PURE String* a, STRING_PURE String* b);
 bool String_CaselessEquals(STRING_PURE String* a, STRING_PURE String* b);
-bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const UInt8* b);
-Int32 String_MakeUInt32(UInt32 num, UInt8* numBuffer);
+bool String_CaselessEqualsConst(STRING_PURE String* a, STRING_PURE const UChar* b);
+Int32 String_MakeUInt32(UInt32 num, UChar* numBuffer);
 
-bool String_Append(STRING_TRANSIENT String* str, UInt8 c);
+bool String_Append(STRING_TRANSIENT String* str, UChar c);
 bool String_AppendBool(STRING_TRANSIENT String* str, bool value);
 bool String_AppendInt32(STRING_TRANSIENT String* str, Int32 num);
 bool String_AppendUInt32(STRING_TRANSIENT String* str, UInt32 num);
@@ -67,13 +67,13 @@ bool String_AppendUInt64(STRING_TRANSIENT String* str, UInt64 num);
 bool String_AppendReal32(STRING_TRANSIENT String* str, Real32 num, Int32 fracDigits); /* TODO: Need to account for , or . for decimal */
 bool String_Hex32(STRING_TRANSIENT String* str, UInt32 value);
 bool String_Hex64(STRING_TRANSIENT String* str, UInt64 value);
-bool String_AppendConst(STRING_TRANSIENT String* str, const UInt8* toAppend);
+bool String_AppendConst(STRING_TRANSIENT String* str, const UChar* toAppend);
 bool String_AppendString(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
 bool String_AppendColorless(STRING_TRANSIENT String* str, STRING_PURE String* toAppend);
 
-Int32 String_IndexOf(STRING_PURE String* str, UInt8 c, Int32 offset);
-Int32 String_LastIndexOf(STRING_PURE String* str, UInt8 c);
-void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UInt8 c);
+Int32 String_IndexOf(STRING_PURE String* str, UChar c, Int32 offset);
+Int32 String_LastIndexOf(STRING_PURE String* str, UChar c);
+void String_InsertAt(STRING_TRANSIENT String* str, Int32 offset, UChar c);
 void String_DeleteAt(STRING_TRANSIENT String* str, Int32 offset);
 void String_UNSAFE_TrimStart(STRING_TRANSIENT String* str);
 void String_UNSAFE_TrimEnd(STRING_TRANSIENT String* str);
@@ -86,14 +86,14 @@ bool String_CaselessStarts(STRING_PURE String* str, STRING_PURE String* sub);
 bool String_CaselessEnds(STRING_PURE String* str, STRING_PURE String* sub);
 Int32 String_Compare(STRING_PURE String* a, STRING_PURE String* b);
 
-void String_Format1(STRING_TRANSIENT String* str, const UInt8* format, const void* a1);
-void String_Format2(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2);
-void String_Format3(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2, const void* a3);
-void String_Format4(STRING_TRANSIENT String* str, const UInt8* format, const void* a1, const void* a2, const void* a3, const void* a4);
+void String_Format1(STRING_TRANSIENT String* str, const UChar* format, const void* a1);
+void String_Format2(STRING_TRANSIENT String* str, const UChar* format, const void* a1, const void* a2);
+void String_Format3(STRING_TRANSIENT String* str, const UChar* format, const void* a1, const void* a2, const void* a3);
+void String_Format4(STRING_TRANSIENT String* str, const UChar* format, const void* a1, const void* a2, const void* a3, const void* a4);
 
-UInt16 Convert_CP437ToUnicode(UInt8 c);
-UInt8 Convert_UnicodeToCP437(UInt16 c);
-bool Convert_TryUnicodeToCP437(UInt16 c, UInt8* value);
+UInt16 Convert_CP437ToUnicode(UChar c);
+UChar Convert_UnicodeToCP437(UInt16 c);
+bool Convert_TryUnicodeToCP437(UInt16 c, UChar* value);
 bool Convert_TryParseUInt8(STRING_PURE String* str, UInt8* value);
 bool Convert_TryParseInt16(STRING_PURE String* str, Int16* value);
 bool Convert_TryParseUInt16(STRING_PURE String* str, UInt16* value);
@@ -107,11 +107,11 @@ bool Convert_TryParseBool(STRING_PURE String* str, bool* value);
 #define STRINGSBUFFER_FLAGS_DEF_ELEMS 256
 #define STRINGSBUFFER_FLAGS_EXPAND_ELEMS 512
 typedef struct StringsBuffer_ {
-	UInt8* TextBuffer; 
+	UChar* TextBuffer; 
 	UInt32* FlagsBuffer;
 	UInt32 TextBufferElems, FlagsBufferElems;
 	UInt32 Count, UsedElems;
-	UInt8 DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
+	UChar DefaultBuffer[STRINGSBUFFER_BUFFER_DEF_SIZE];
 	UInt32 DefaultFlags[STRINGSBUFFER_FLAGS_DEF_ELEMS];
 } StringsBuffer;
 

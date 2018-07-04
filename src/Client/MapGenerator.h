@@ -8,7 +8,7 @@
 */
 
 volatile Real32 Gen_CurrentProgress;
-volatile const UInt8* Gen_CurrentState;
+volatile const UChar* Gen_CurrentState;
 volatile bool Gen_Done;
 Int32 Gen_Width, Gen_Height, Gen_Length;
 Int32 Gen_Seed;

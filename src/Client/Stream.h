@@ -30,7 +30,7 @@ typedef struct Stream_ {
 		struct { UInt8* Meta_Buffered_Cur;    UInt32 Meta_MEM_Left, Meta_MEM_Length; UInt8* Meta_Buffered_Base; Stream* Meta_Buffered_Source; };
 		struct { Stream* Meta_CRC32_Source;   UInt32 Meta_CRC32; };
 	};
-	UInt8 NameBuffer[String_BufferSize(FILENAME_SIZE)];
+	UChar NameBuffer[String_BufferSize(FILENAME_SIZE)];
 	String Name;
 } Stream;
 

@@ -24,11 +24,11 @@
 /*########################################################################################################################*
 *-----------------------------------------------------Common handlers-----------------------------------------------------*
 *#########################################################################################################################*/
-UInt8 ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
+UChar ServerConnection_ServerNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerName = String_FromEmptyArray(ServerConnection_ServerNameBuffer);
-UInt8 ServerConnection_ServerMOTDBuffer[String_BufferSize(STRING_SIZE)];
+UChar ServerConnection_ServerMOTDBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_ServerMOTD = String_FromEmptyArray(ServerConnection_ServerMOTDBuffer);
-UInt8 ServerConnection_AppNameBuffer[String_BufferSize(STRING_SIZE)];
+UChar ServerConnection_AppNameBuffer[String_BufferSize(STRING_SIZE)];
 String ServerConnection_AppName = String_FromEmptyArray(ServerConnection_AppNameBuffer);
 Int32 ServerConnection_Ticks;
 
@@ -75,7 +75,7 @@ void ServerConnection_LogResourceFail(AsyncRequest* item) {
 	Int32 status = item->StatusCode;
 	if (status == 0 || status == 304) return;
 
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE)];
+	UChar msgBuffer[String_BufferSize(STRING_SIZE)];
 	String msg = String_InitAndClearArray(msgBuffer);
 	String_Format1(&msg, "&c%i error when trying to download texture pack", &status);
 	Chat_Add(&msg);
@@ -195,7 +195,7 @@ static void SPConnection_BeginConnect(void) {
 
 UInt8 SPConnection_LastCol = NULL;
 static void SPConnection_AddPortion(STRING_PURE String* text) {
-	UInt8 tmpBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar tmpBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String tmp = String_InitAndClearArray(tmpBuffer);
 	/* Prepend colour codes for subsequent lines of multi-line chat */
 	if (!Drawer2D_IsWhiteCol(SPConnection_LastCol)) {
@@ -310,7 +310,7 @@ static void MPConnection_FinishConnect(void) {
 
 static void MPConnection_FailConnect(ReturnCode result) {
 	net_connecting = false;
-	UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+	UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 	String msg = String_InitAndClearArray(msgBuffer);
 
 	if (result != 0) {
@@ -431,7 +431,7 @@ static void MPConnection_Tick(ScheduledTask* task) {
 	}
 
 	if (recvResult != 0) {
-		UInt8 msgBuffer[String_BufferSize(STRING_SIZE * 2)];
+		UChar msgBuffer[String_BufferSize(STRING_SIZE * 2)];
 		String msg = String_InitAndClearArray(msgBuffer);
 		String_Format3(&msg, "Error reading from %s:%i: %i", &Game_IPAddress, &Game_Port, &recvResult);
 		ErrorHandler_Log(&msg);

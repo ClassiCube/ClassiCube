@@ -19,8 +19,8 @@
 #include "Input.h"
 #include "Gui.h"
 
-const UInt8* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
-const UInt8* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
+const UChar* NameMode_Names[NAME_MODE_COUNT]   = { "None", "Hovered", "All", "AllHovered", "AllUnscaled" };
+const UChar* ShadowMode_Names[SHADOW_MODE_COUNT] = { "None", "SnapToBlock", "Circle", "CircleAll" };
 
 /*########################################################################################################################*
 *-----------------------------------------------------LocationUpdate------------------------------------------------------*
@@ -435,7 +435,7 @@ bool TabList_Remove(EntityID id) {
 }
 
 void TabList_Set(EntityID id, STRING_PURE String* player, STRING_PURE String* list, STRING_PURE String* group, UInt8 rank) {
-	UInt8 playerNameBuffer[String_BufferSize(STRING_SIZE)];
+	UChar playerNameBuffer[String_BufferSize(STRING_SIZE)];
 	String playerName = String_InitAndClearArray(playerNameBuffer);
 	String_AppendColorless(&playerName, player);
 	TabList_Remove(id);
@@ -486,7 +486,7 @@ static void Player_MakeNameTexture(Player* player) {
 		player->NameTex = Texture_MakeInvalid();
 		player->NameTex.X = PLAYER_NAME_EMPTY_TEX;
 	} else {
-		UInt8 buffer[String_BufferSize(STRING_SIZE)];
+		UChar buffer[String_BufferSize(STRING_SIZE)];
 		String shadowName = String_InitAndClearArray(buffer);
 
 		size.Width += 3; size.Height += 3;

@@ -9,7 +9,7 @@
 
 /* TODO: These might be better off as a function. */
 #define ErrorHandler_WriteLogBody(raw_msg)\
-UInt8 logMsgBuffer[String_BufferSize(3071)];\
+UChar logMsgBuffer[String_BufferSize(3071)];\
 String logMsg = String_InitAndClearArray(logMsgBuffer);\
 String_AppendConst(&logMsg, "ClassiCube crashed.\r\n");\
 String_AppendConst(&logMsg, "Message: ");\
@@ -23,7 +23,7 @@ static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInf
 	/* TODO: Write processor state to file*/
 	/* TODO: Get address that caused the issue */
 	/* TODO: Don't Backtrace here, because it's not the actual useful stack */
-	UInt8 msgBuffer[String_BufferSize(128)];
+	UChar msgBuffer[String_BufferSize(128)];
 	String msg = String_InitAndClearArray(msgBuffer);
 
 	UInt32 code = (UInt32)pInfo->ExceptionRecord->ExceptionCode;
@@ -34,7 +34,7 @@ static LONG WINAPI ErrorHandler_UnhandledFilter(struct _EXCEPTION_POINTERS* pInf
 	return EXCEPTION_EXECUTE_HANDLER; /* TODO: different flag */
 }
 
-void ErrorHandler_Init(const UInt8* logFile) {
+void ErrorHandler_Init(const UChar* logFile) {
 	SetUnhandledExceptionFilter(ErrorHandler_UnhandledFilter);
 	/* TODO: Open log file */
 }
@@ -43,7 +43,7 @@ void ErrorHandler_Log(STRING_PURE String* msg) {
 	/* TODO: write to log file */
 }
 
-void ErrorHandler_Fail(const UInt8* raw_msg) {
+void ErrorHandler_Fail(const UChar* raw_msg) {
 	/* TODO: write to log file */
 	ErrorHandler_WriteLogBody(raw_msg);
 	ErrorHandler_Backtrace(&logMsg);
@@ -53,7 +53,7 @@ void ErrorHandler_Fail(const UInt8* raw_msg) {
 	Platform_Exit(1);
 }
 
-void ErrorHandler_FailWithCode(ReturnCode code, const UInt8* raw_msg) {
+void ErrorHandler_FailWithCode(ReturnCode code, const UChar* raw_msg) {
 	/* TODO: write to log file */
 	ErrorHandler_WriteLogBody(raw_msg);
 	String_AppendConst(&logMsg, "Return code: ");
@@ -66,13 +66,13 @@ void ErrorHandler_FailWithCode(ReturnCode code, const UInt8* raw_msg) {
 	Platform_Exit(code);
 }
 
-void ErrorHandler_ShowDialog(const UInt8* title, const UInt8* msg) {
+void ErrorHandler_ShowDialog(const UChar* title, const UChar* msg) {
 	HWND win = GetActiveWindow(); /* TODO: It's probably wrong to use GetActiveWindow() here */
 	MessageBoxA(win, msg, title, 0);
 }
 
 
-struct SymbolAndName { SYMBOL_INFO Symbol; UInt8 Name[256]; };
+struct SymbolAndName { SYMBOL_INFO Symbol; UChar Name[256]; };
 void ErrorHandler_Backtrace(STRING_TRANSIENT String* str) {
 	HANDLE process = GetCurrentProcess();
 	SymInitialize(process, NULL, TRUE);
