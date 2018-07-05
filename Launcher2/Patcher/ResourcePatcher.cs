@@ -212,15 +212,16 @@ namespace Launcher.Patcher {
 		
 		const string animationsTxt = @"# This file defines the animations used in a texture pack for ClassicalSharp and other supporting applications.
 # Each line is in the format: <TileX> <TileY> <FrameX> <FrameY> <Frame size> <Frames count> <Tick delay>
-# - TileX and TileY indicate the coordinates of the tile in terrain.png that
-#     will be replaced by the animation frames. These range from 0 to 15. (inclusive of 15)
-# - FrameX and FrameY indicates the pixel coordinates of the first animation frame in animations.png.
-# - Frame Size indicates the size in pixels of an animation frame.
-# - Frames count indicates the number of used frames.  The first frame is located at
+# - TileX and TileY are the coordinates of the tile in terrain.png that will be replaced by the animation frames.
+#     Essentially, TileX and TileY are the remainder and quotient of an ID in F10 menu divided by 16
+#     For instance, obsidian texture (37) has TileX of 5, and TileY of 2
+# - FrameX and FrameY are the pixel coordinates of the first animation frame in animations.png.
+# - Frame Size is the size in pixels of an animation frame.
+# - Frames count is the number of used frames.  The first frame is located at
 #     (FrameX, FrameY), the second one at (FrameX + FrameSize, FrameY) and so on.
-# - Tick delay is the number of ticks a frame doesn't change. For instance, a value of 0
-#     means that the frame would be changed every tick, while a value of 2 would mean
-#    'replace with frame 1, don't change frame, don't change frame, replace with frame 2'.
+# - Tick delay is the number of ticks a frame doesn't change. For instance, delay of 0
+#     means that the tile would be replaced every tick, while delay of 2 means
+#     'replace with frame 1, don't change frame, don't change frame, replace with frame 2'.
 # NOTE: If a file called 'uselavaanim' is in the texture pack,  ClassicalSharp 0.99.2 onwards uses its built-in dynamic generation for the lava texture animation.
 # NOTE: If a file called 'usewateranim' is in the texture pack, ClassicalSharp 0.99.5 onwards uses its built-in dynamic generation for the water texture animation.
 
