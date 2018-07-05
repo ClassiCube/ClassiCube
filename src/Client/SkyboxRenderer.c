@@ -39,7 +39,7 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Gfx_SetBatchFormat(VERTEX_FORMAT_P3FT2FC4B);
 
 	Matrix m = Matrix_Identity;
-	Matrix rotX, rotY;
+	Matrix rotX, rotY, view;
 
 	/* Base skybox rotation */
 	Real32 rotTime = (Real32)(Game_Accumulator * 2 * MATH_PI); /* So speed of 1 rotates whole skybox every second */
@@ -49,13 +49,11 @@ void SkyboxRenderer_Render(Real64 deltaTime) {
 	Matrix_MulBy(&m, &rotX);
 
 	/* Rotate around camera */
-	Vector2 rotation = Camera_Active->GetOrientation();
-	Matrix_RotateY(&rotY, rotation.X); /* Camera yaw */
-	Matrix_MulBy(&m, &rotY);
-	Matrix_RotateX(&rotX, rotation.Y); /* Camera pitch */
-	Matrix_MulBy(&m, &rotX);
-	/* Tilt skybox too. */
-	Matrix_MulBy(&m, &Camera_TiltM);
+	Vector3 pos = Game_CurrentCameraPos, zero = Vector3_Zero;
+	Game_CurrentCameraPos = zero;
+	Camera_Active->GetView(&view);
+	Matrix_MulBy(&m, &view);
+	Game_CurrentCameraPos = pos;
 
 	Gfx_LoadMatrix(&m);
 	Gfx_BindVb(skybox_vb);

@@ -68,7 +68,7 @@ namespace ClassicalSharp.Renderers {
 			game.Graphics.BindTexture(tex);
 			game.Graphics.SetBatchFormat(VertexFormat.P3fT2fC4b);
 			
-			Matrix4 m = Matrix4.Identity, rotY, rotX;
+			Matrix4 m = Matrix4.Identity, rotY, rotX, view;
 			
 			// Base skybox rotation
 			float rotTime = (float)(game.accumulator * 2 * Math.PI); // So speed of 1 rotates whole skybox every second
@@ -79,12 +79,11 @@ namespace ClassicalSharp.Renderers {
 			Matrix4.Mult(out m, ref m, ref rotX);
 			
 			// Rotate around camera
-			Vector2 rotation = game.Camera.GetOrientation();
-			Matrix4.RotateY(out rotY, rotation.X); // Camera yaw
-			Matrix4.Mult(out m, ref m, ref rotY);
-			Matrix4.RotateX(out rotX, rotation.Y); // Cammera pitch
-			Matrix4.Mult(out m, ref m, ref rotX);
-			Matrix4.Mult(out m, ref m, ref Camera.tiltM);
+			Vector3 pos = game.CurrentCameraPos;
+			game.CurrentCameraPos = Vector3.Zero;
+			game.Camera.GetView(out view);
+			Matrix4.Mult(out m, ref m, ref view);
+			game.CurrentCameraPos = pos;
 			
 			game.Graphics.LoadMatrix(ref m);
 			game.Graphics.BindVb(vb);

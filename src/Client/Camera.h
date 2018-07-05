@@ -16,7 +16,6 @@ typedef struct Camera_ {
 
 	Vector2 (*GetOrientation)(void);
 	Vector3 (*GetPosition)(Real32 t);
-	Vector3 (*GetTarget)(void);
 
 	void (*UpdateMouse)(void);
 	void (*RegrabMouse)(void);

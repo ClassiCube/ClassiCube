@@ -17,7 +17,6 @@ namespace ClassicalSharp {
 		
 		public abstract Vector2 GetOrientation();
 		public abstract Vector3 GetPosition(float t);
-		public abstract Vector3 GetTarget();
 		
 		public abstract bool IsThirdPerson { get; }
 		public virtual bool Zoom(float amount) { return false; }
@@ -30,8 +29,10 @@ namespace ClassicalSharp {
 	
 	public abstract class PerspectiveCamera : Camera {
 		
-		protected static Vector2 offset;
+		protected static Vector2 rotOffset;
+		protected static Vector3 targetOffset;
 		protected LocalPlayer player;
+		
 		public PerspectiveCamera(Game game) {
 			this.game = game;
 			player = game.LocalPlayer;
@@ -58,7 +59,9 @@ namespace ClassicalSharp {
 		}
 		
 		public override void GetView(out Matrix4 m) {
-			Vector3 pos = game.CurrentCameraPos, target = GetTarget();
+			Vector3 pos = game.CurrentCameraPos;
+			Vector3 target = pos + targetOffset;
+			
 			Matrix4.LookAt(pos, target, Vector3.UnitY, out m);
 			Matrix4.Mult(out m, ref m, ref tiltM);
 		}
@@ -115,7 +118,7 @@ namespace ClassicalSharp {
 		void UpdateMouseRotation() {
 			Vector2 rot = CalcMouseDelta();
 			if (game.Input.AltDown && IsThirdPerson) {
-				offset.X += rot.X; offset.Y += rot.Y;
+				rotOffset.X += rot.X; rotOffset.Y += rot.Y;
 				return;
 			}
 			
@@ -174,24 +177,22 @@ namespace ClassicalSharp {
 			Vector2 v = new Vector2(player.HeadYRadians, player.HeadXRadians);
 			if (forward) { v.X += (float)Math.PI; v.Y = -v.Y; }
 			
-			v.X += offset.X * Utils.Deg2Rad; v.Y += offset.Y * Utils.Deg2Rad;
+			v.X += rotOffset.X * Utils.Deg2Rad; 
+			v.Y += rotOffset.Y * Utils.Deg2Rad;
 			return v;
 		}
 		
 		public override Vector3 GetPosition(float t) {
 			CalcViewBobbing(t, dist);
-			Vector3 eyePos = player.EyePosition;
-			eyePos.Y += bobbingVer;
+			Vector3 target = player.EyePosition;
+			target.Y += bobbingVer;
 			
 			Vector3 dir = -GetDirVector();
-			Picking.ClipCameraPos(game, eyePos, dir, dist, game.CameraClipPos);
-			return game.CameraClipPos.Intersect;
-		}
-		
-		public override Vector3 GetTarget() {
-			Vector3 eyePos = player.EyePosition;
-			eyePos.Y += bobbingVer;
-			return eyePos;
+			Picking.ClipCameraPos(game, target, dir, dist, game.CameraClipPos);
+			Vector3 camPos = game.CameraClipPos.Intersect;
+			
+			targetOffset = target - camPos;
+			return camPos;
 		}
 	}
 	
@@ -211,13 +212,9 @@ namespace ClassicalSharp {
 			double headY = player.HeadYRadians;
 			camPos.X += bobbingHor * (float)Math.Cos(headY);
 			camPos.Z += bobbingHor * (float)Math.Sin(headY);
+			
+			targetOffset = GetDirVector();
 			return camPos;
-		}
-		
-		public override Vector3 GetTarget() {
-			Vector3 camPos = game.CurrentCameraPos;
-			Vector3 dir = GetDirVector();
-			return camPos + dir;
 		}
 	}
 }
