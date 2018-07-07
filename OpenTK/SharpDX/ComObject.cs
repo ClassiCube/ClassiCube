@@ -27,8 +27,8 @@ namespace SharpDX {
 		public ComObject(IntPtr pointer) { comPointer = pointer; }
 		public ComObject() { }
 
-		public void Dispose() { 
-			Dispose(true); 
+		public void Dispose() {
+			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 		
@@ -37,21 +37,21 @@ namespace SharpDX {
 		public bool IsDisposed;
 		unsafe void Dispose( bool disposing ) {
 			if( IsDisposed ) return;
+			if( comPointer == IntPtr.Zero ) return;
 			
-			if( comPointer == IntPtr.Zero ) {
-				if( !disposing ) {
-					string text = String.Format( "Warning: Live ComObject [0x{0:X}], potential memory leak: {1}", 
-					                            comPointer.ToInt64(), GetType().Name );
-					Console.WriteLine( text );
-				}
-				
-				int refCount = Marshal.Release( comPointer );
-				if( refCount > 0 ) {
-					string text = String.Format( "Warning: ComObject [0x{0:X}] still has some references, potential memory leak: {1} ({2})", 
-					                            comPointer.ToInt64(), GetType().Name, refCount );
-				}
-				comPointer = IntPtr.Zero;
+			if( !disposing ) {
+				string text = String.Format( "Warning: Live ComObject [0x{0:X}], potential memory leak: {1}",
+				                            comPointer.ToInt64(), GetType().Name );
+				Console.WriteLine( text );
 			}
+			
+			int refCount = Marshal.Release( comPointer );
+			if( refCount > 0 ) {
+				string text = String.Format( "Warning: ComObject [0x{0:X}] still has some references, potential memory leak: {1} ({2})",
+				                            comPointer.ToInt64(), GetType().Name, refCount );
+			}
+			
+			comPointer = IntPtr.Zero;
 			IsDisposed = true;
 		}
 	}
