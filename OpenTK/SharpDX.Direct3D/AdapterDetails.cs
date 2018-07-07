@@ -23,18 +23,7 @@ using System.Runtime.InteropServices;
 
 namespace SharpDX.Direct3D9 {	
 	public class AdapterInformation {
-		readonly Direct3D d3d;
-
-		internal AdapterInformation(Direct3D direct3D, int adapter) {
-			d3d = direct3D;
-			Adapter = adapter;
-			Details = direct3D.GetAdapterIdentifier(adapter);
-		}
-
-		/// <summary> Gets the adapter ordinal. </summary>
 		public int Adapter;
-
-		/// <summary> Gets the details. </summary>
 		public AdapterDetails Details;
 	}
 	

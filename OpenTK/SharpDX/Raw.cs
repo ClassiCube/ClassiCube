@@ -44,7 +44,7 @@ namespace SharpDX {
 	public struct LockedRectangle {
     	
     	/// <summary> Gets the number of bytes per row. </summary>
-		public int Pitch;
+		public int Pitch;	
 		
 		/// <summary> Pointer to the data. </summary>
 		public IntPtr DataPointer;

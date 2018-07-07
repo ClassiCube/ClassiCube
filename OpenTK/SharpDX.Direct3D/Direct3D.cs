@@ -27,12 +27,15 @@ namespace SharpDX.Direct3D9 {
 	public unsafe class Direct3D : ComObject {
 		
 		public Direct3D() {
-			comPointer = Direct3DCreate9( SdkVersion );
-			
+			comPointer = Direct3DCreate9(SdkVersion);			
 			int count = GetAdapterCount();
 			Adapters = new AdapterInformation[count];
-			for( int i = 0; i < count; i++ ) {
-				Adapters[i] = new AdapterInformation( this, i );
+			
+			for (int i = 0; i < count; i++) {
+				AdapterInformation info = new AdapterInformation();
+				info.Adapter = i;
+				info.Details = GetAdapterIdentifier(i);
+				Adapters[i] = info;
 			}
 		}
 
@@ -40,7 +43,7 @@ namespace SharpDX.Direct3D9 {
 		
 		const int SdkVersion = 32;
 		[DllImport( "d3d9.dll" )]
-		static extern IntPtr Direct3DCreate9( int sdkVersion );
+		static extern IntPtr Direct3DCreate9(int sdkVersion);
 		
 		public int GetAdapterCount() {
 			return Interop.Calli(comPointer,(*(IntPtr**)comPointer)[4]);
@@ -52,7 +55,7 @@ namespace SharpDX.Direct3D9 {
 			if( res < 0 ) { throw new SharpDXException( res ); }
 			
 			AdapterDetails identifier = new AdapterDetails();
-			identifier.MarshalFrom(ref identifierNative);			
+			identifier.MarshalFrom(ref identifierNative);
 			return identifier;
 		}
 		

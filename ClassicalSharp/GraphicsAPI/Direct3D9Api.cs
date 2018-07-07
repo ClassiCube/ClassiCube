@@ -35,7 +35,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			MinZNear = 0.05f;
 			IntPtr windowHandle = game.window.WindowInfo.WinHandle;
 			d3d = new Direct3D();
-			int adapter = d3d.Adapters[0].Adapter;
+			const int adapter = 0; // default adapter
 			InitFields();
 			FindCompatibleFormat(adapter);
 			

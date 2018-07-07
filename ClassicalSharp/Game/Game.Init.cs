@@ -93,7 +93,9 @@ namespace ClassicalSharp {
 			World = new World(this);
 			LocalPlayer = new LocalPlayer(this); Components.Add(LocalPlayer);
 			Entities.List[EntityList.SelfID] = LocalPlayer;
-			Width = window.Width; Height = window.Height;
+			
+			Size size = window.ClientSize;
+			Width = size.Width; Height = size.Height;
 			
 			MapRenderer = new MapRenderer(this);
 			ChunkUpdater = new ChunkUpdater(this);

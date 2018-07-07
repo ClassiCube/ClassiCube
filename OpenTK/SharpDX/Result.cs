@@ -36,8 +36,7 @@ namespace SharpDX {
 		WasStillDrawing = 540 | 0x88760000u,
 	}
 	
-	public class SharpDXException : Exception {
-		
+	public class SharpDXException : Exception {		
         public int Code;
 
         public SharpDXException(int result) : base(Format(result)) {

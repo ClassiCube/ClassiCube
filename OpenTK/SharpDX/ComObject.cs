@@ -20,33 +20,25 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace SharpDX
-{
-	public class ComObject : IDisposable
-	{
+namespace SharpDX {
+	public class ComObject : IDisposable {
 		public IntPtr comPointer;
 		
-		public ComObject(IntPtr pointer) {
-			comPointer = pointer;
-		}
+		public ComObject(IntPtr pointer) { comPointer = pointer; }
+		public ComObject() { }
 
-		protected ComObject() {
-		}
-
-		public bool IsDisposed;
-
-		public void Dispose() {
-			CheckAndDispose( true );
+		public void Dispose() { 
+			Dispose(true); 
+			GC.SuppressFinalize(this);
 		}
 		
-		~ComObject() {
-			CheckAndDispose( false );
-		}
+		~ComObject() { Dispose(false); }
 
-		unsafe void CheckAndDispose( bool disposing ) {
+		public bool IsDisposed;
+		unsafe void Dispose( bool disposing ) {
 			if( IsDisposed ) return;
 			
-			if( comPointer != IntPtr.Zero ) {
+			if( comPointer == IntPtr.Zero ) {
 				if( !disposing ) {
 					string text = String.Format( "Warning: Live ComObject [0x{0:X}], potential memory leak: {1}", 
 					                            comPointer.ToInt64(), GetType().Name );
@@ -60,7 +52,6 @@ namespace SharpDX
 				}
 				comPointer = IntPtr.Zero;
 			}
-			GC.SuppressFinalize( this );
 			IsDisposed = true;
 		}
 	}

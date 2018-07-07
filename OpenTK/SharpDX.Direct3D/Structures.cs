@@ -22,7 +22,25 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace SharpDX.Direct3D9 {
-
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct PresentParameters {		
+		public int BackBufferWidth;
+		public int BackBufferHeight;
+		public Format BackBufferFormat;
+		public int BackBufferCount;
+		public int MultiSampleType;
+		public int MultiSampleQuality;
+		public SwapEffect SwapEffect;
+		public IntPtr DeviceWindowHandle;
+		public RawBool Windowed;
+		public RawBool EnableAutoDepthStencil;
+		public Format AutoDepthStencilFormat;
+		public PresentFlags PresentFlags;
+		public int FullScreenRefreshRateInHz;
+		public PresentInterval PresentationInterval;
+	}
+	
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Capabilities {
 		public DeviceType DeviceType;

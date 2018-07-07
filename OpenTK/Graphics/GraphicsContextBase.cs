@@ -62,14 +62,12 @@ namespace OpenTK.Graphics {
         public abstract IntPtr GetAddress(string function);
 
         public void Dispose() {
-        	Dispose( true );
+        	Dispose(true);
         	GC.SuppressFinalize( this );
         }
         
-        protected abstract void Dispose( bool calledManually );
+        protected abstract void Dispose(bool calledManually);
         
-        ~GraphicsContextBase() {
-			Dispose(false);
-		}
+        ~GraphicsContextBase() { Dispose(false); }
     }
 }

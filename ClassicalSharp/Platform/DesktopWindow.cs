@@ -1,18 +1,13 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using System.Drawing;
-using System.IO;
 using OpenTK;
 using OpenTK.Graphics;
-using Clipboard = System.Windows.Forms.Clipboard;
 
 namespace ClassicalSharp {
 	
 	/// <summary> Implementation of a native window and native input handling mechanism on Windows, OSX, and Linux. </summary>
 	public sealed class DesktopWindow : GameWindow {
-		
-		public int Width { get { return ClientSize.Width; } }
-		public int Height { get { return ClientSize.Height; } }
 		
 		Game game;
 		public DesktopWindow(Game game, string username, bool nullContext, int width, int height) :
