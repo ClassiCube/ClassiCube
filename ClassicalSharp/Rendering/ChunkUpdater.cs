@@ -90,15 +90,14 @@ namespace ClassicalSharp.Renderers {
 			chunkPos = new Vector3I(int.MaxValue);
 			if (renderer.chunks == null || !game.World.HasBlocks) return;
 			
-			int index = 0;
-			for (int z = 0; z < chunksZ; z++)
-				for (int y = 0; y < chunksY; y++)
-					for (int x = 0; x < chunksX; x++)
+			for (int cz = 0; cz < chunksZ; cz++)
+				for (int cy = 0; cy < chunksY; cy++)
+					for (int cx = 0; cx < chunksX; cx++)
 			{
-				bool isBorder = x == 0 || z == 0 || x == (chunksX - 1) || z == (chunksZ - 1);
-				if (isBorder && (y * 16) < clipLevel)
-					DeleteChunk(renderer.unsortedChunks[index]);
-				index++;
+				bool isBorder = cx == 0 || cz == 0 || cx == (chunksX - 1) || cz == (chunksZ - 1);
+				if (isBorder && (cy * 16) < clipLevel) {
+					renderer.RefreshChunk(cx, cy, cz);
+				}
 			}
 		}
 		

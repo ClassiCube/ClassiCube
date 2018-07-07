@@ -144,15 +144,14 @@ void ChunkUpdater_RefreshBorders(Int32 clipLevel) {
 	ChunkUpdater_ChunkPos = Vector3I_MaxValue();
 	if (MapRenderer_Chunks == NULL || World_Blocks == NULL) return;
 
-	Int32 x, y, z, index = 0;
-	for (z = 0; z < MapRenderer_ChunksZ; z++) {
-		for (y = 0; y < MapRenderer_ChunksY; y++) {
-			for (x = 0; x < MapRenderer_ChunksX; x++) {
-				bool isBorder = x == 0 || z == 0 || x == (MapRenderer_ChunksX - 1) || z == (MapRenderer_ChunksZ - 1);
-				if (isBorder && (y * CHUNK_SIZE) < clipLevel) {
-					ChunkUpdater_DeleteChunk(&MapRenderer_Chunks[index]);
+	Int32 cx, cy, cz;
+	for (cz = 0; cz < MapRenderer_ChunksZ; cz++) {
+		for (cy = 0; cy < MapRenderer_ChunksY; cy++) {
+			for (cx = 0; cx < MapRenderer_ChunksX; cx++) {
+				bool isBorder = cx == 0 || cz == 0 || cx == (MapRenderer_ChunksX - 1) || cz == (MapRenderer_ChunksZ - 1);
+				if (isBorder && (cy * CHUNK_SIZE) < clipLevel) {
+					MapRenderer_RefreshChunk(cx, cy, cz);
 				}
-				index++;
 			}
 		}
 	}

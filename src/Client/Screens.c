@@ -499,7 +499,11 @@ static bool LoadingScreen_HandlesKeyUp(GuiElement* elem, Key key) {
 	return Elem_HandlesKeyUp(Gui_HUD, key);
 }
 
-static bool LoadingScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
+static bool LoadingScreen_HandlesMouseDown(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) {
+	if (Gui_HUD->HandlesAllInput) { Elem_HandlesMouseDown(Gui_HUD, x, y, btn); }
+	return true;
+}
+
 static bool LoadingScreen_HandlesMouseUp(GuiElement* elem, Int32 x, Int32 y, MouseButton btn) { return true; }
 static bool LoadingScreen_HandlesMouseMove(GuiElement* elem, Int32 x, Int32 y) { return true; }
 static bool LoadingScreen_HandlesMouseScroll(GuiElement* elem, Real32 delta) { return true; }
