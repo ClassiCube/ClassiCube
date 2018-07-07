@@ -12,13 +12,12 @@ using Android.Graphics;
 
 namespace ClassicalSharp.Network {
 
-#if !LAUNCHER	
+#if LAUNCHER
+public interface IGameComponent { }
+#endif
+
 	/// <summary> Specialised producer and consumer queue for downloading data asynchronously. </summary>
 	public class AsyncDownloader : IGameComponent {
-#else
-	/// <summary> Specialised producer and consumer queue for downloading data asynchronously. </summary>
-	public class AsyncDownloader {
-#endif
 		
 		EventWaitHandle handle = new EventWaitHandle(false, EventResetMode.AutoReset);
 		Thread worker;
@@ -146,7 +145,7 @@ namespace ClassicalSharp.Network {
 			
 			handle.Set();
 			worker.Join();
-			((IDisposable)handle).Dispose();
+			handle.Close();
 		}
 		
 		#if !LAUNCHER		
