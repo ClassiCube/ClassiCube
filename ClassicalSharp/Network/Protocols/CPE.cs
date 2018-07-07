@@ -190,15 +190,15 @@ namespace ClassicalSharp.Network.Protocols {
 			FastColour col = new FastColour(r, g, b);
 
 			if (variable == 0) {
-				game.World.Env.SetSkyColour(invalid ? WorldEnv.DefaultSkyCol : col);
+				game.World.Env.SetSkyCol(invalid ? WorldEnv.DefaultSkyCol : col);
 			} else if (variable == 1) {
-				game.World.Env.SetCloudsColour(invalid ? WorldEnv.DefaultCloudsCol : col);
+				game.World.Env.SetCloudsCol(invalid ? WorldEnv.DefaultCloudsCol : col);
 			} else if (variable == 2) {
-				game.World.Env.SetFogColour(invalid ? WorldEnv.DefaultFogCol : col);
+				game.World.Env.SetFogCol(invalid ? WorldEnv.DefaultFogCol : col);
 			} else if (variable == 3) {
-				game.World.Env.SetShadowlight(invalid ? WorldEnv.DefaultShadowlight : col);
+				game.World.Env.SetShadowCol(invalid ? WorldEnv.DefaultShadowlight : col);
 			} else if (variable == 4) {
-				game.World.Env.SetSunlight(invalid ? WorldEnv.DefaultSunlight : col);
+				game.World.Env.SetSunCol(invalid ? WorldEnv.DefaultSunlight : col);
 			}
 		}
 		

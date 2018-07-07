@@ -115,28 +115,22 @@ namespace ClassicalSharp.Map {
 			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.Weather);
 		}
 		
-		public void SetSkyColour(FastColour col) { Set(col, ref SkyCol, EnvVar.SkyColour); }
-		public void SetFogColour(FastColour col) { Set(col, ref FogCol, EnvVar.FogColour); }
-		public void SetCloudsColour(FastColour col) { Set(col, ref CloudsCol, EnvVar.CloudsColour); }
+		public void SetSkyCol(FastColour col) { Set(col, ref SkyCol, EnvVar.SkyCol); }
+		public void SetFogCol(FastColour col) { Set(col, ref FogCol, EnvVar.FogCol); }
+		public void SetCloudsCol(FastColour col) { Set(col, ref CloudsCol, EnvVar.CloudsCol); }
 
-		public void SetSunlight(FastColour col) {
-			if (col == Sunlight) return;
-			
-			Sunlight = col;
+		public void SetSunCol(FastColour col) {
 			FastColour.GetShaded(col, out SunXSide,
 			                     out SunZSide, out SunYBottom);
-			Sun = Sunlight.Pack();
-			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.SunlightColour);
+			Sun = col.Pack();
+			Set(col, ref Sunlight, EnvVar.SunCol);
 		}
 
-		public void SetShadowlight(FastColour col) {
-			if (col == Shadowlight) return;
-			
-			Shadowlight = col;
+		public void SetShadowCol(FastColour col) {
 			FastColour.GetShaded(col, out ShadowXSide,
 			                     out ShadowZSide, out ShadowYBottom);
-			Shadow = Shadowlight.Pack();
-			game.WorldEvents.RaiseEnvVariableChanged(EnvVar.ShadowlightColour);
+			Shadow = col.Pack();
+			Set(col, ref Shadowlight, EnvVar.ShadowCol);
 		}
 		
 		bool Set<T>(T value, ref T target, EnvVar var) where T : IEquatable<T> {

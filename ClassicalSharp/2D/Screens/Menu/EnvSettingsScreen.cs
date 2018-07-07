@@ -60,13 +60,13 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		static string GetCloudsCol(Game g) { return  g.World.Env.CloudsCol.ToHex(); }
-		static void SetCloudsCol(Game g, string v) { g.World.Env.SetCloudsColour(FastColour.Parse(v)); }
+		static void SetCloudsCol(Game g, string v) { g.World.Env.SetCloudsCol(FastColour.Parse(v)); }
 		
 		static string GetSkyCol(Game g) { return  g.World.Env.SkyCol.ToHex(); }
-		static void SetSkyCol(Game g, string v) { g.World.Env.SetSkyColour(FastColour.Parse(v)); }
+		static void SetSkyCol(Game g, string v) { g.World.Env.SetSkyCol(FastColour.Parse(v)); }
 		
 		static string GetFogCol(Game g) { return  g.World.Env.FogCol.ToHex(); }
-		static void SetFogCol(Game g, string v) { g.World.Env.SetFogColour(FastColour.Parse(v)); }
+		static void SetFogCol(Game g, string v) { g.World.Env.SetFogCol(FastColour.Parse(v)); }
 		
 		static string GetCloudsSpeed(Game g) { return  g.World.Env.CloudsSpeed.ToString("F2"); }
 		static void SetCloudsSpeed(Game g, string v) { g.World.Env.SetCloudsSpeed(Utils.ParseDecimal(v)); }
@@ -75,10 +75,10 @@ namespace ClassicalSharp.Gui.Screens {
 		static void SetCloudsHeight(Game g, string v) { g.World.Env.SetCloudsLevel(Int32.Parse(v)); }
 		
 		static string GetSunCol(Game g) { return  g.World.Env.Sunlight.ToHex(); }
-		static void SetSunCol(Game g, string v) { g.World.Env.SetSunlight(FastColour.Parse(v)); }
+		static void SetSunCol(Game g, string v) { g.World.Env.SetSunCol(FastColour.Parse(v)); }
 
 		static string GetShadowCol(Game g) { return  g.World.Env.Shadowlight.ToHex(); }
-		static void SetShadowCol(Game g, string v) { g.World.Env.SetShadowlight(FastColour.Parse(v)); }
+		static void SetShadowCol(Game g, string v) { g.World.Env.SetShadowCol(FastColour.Parse(v)); }
 
 		static string GetWeather(Game g) { return  g.World.Env.Weather.ToString(); }
 		static void SetWeather(Game g, string v) { g.World.Env.SetWeather((Weather)Enum.Parse(typeof(Weather), v)); }

@@ -70,11 +70,11 @@ namespace ClassicalSharp.Map {
 				p.ReachDistance = (short)curCpeExt["Distance"].Value / 32f;
 			}
 			if (CheckKey("EnvColors", 1, metadata)) {
-				map.Env.SetSkyColour(GetColour("Sky", WorldEnv.DefaultSkyCol));
-				map.Env.SetCloudsColour(GetColour("Cloud", WorldEnv.DefaultCloudsCol));
-				map.Env.SetFogColour(GetColour("Fog", WorldEnv.DefaultFogCol));
-				map.Env.SetSunlight(GetColour("Sunlight", WorldEnv.DefaultSunlight));
-				map.Env.SetShadowlight(GetColour("Ambient", WorldEnv.DefaultShadowlight));
+				map.Env.SetSkyCol(GetColour("Sky", WorldEnv.DefaultSkyCol));
+				map.Env.SetCloudsCol(GetColour("Cloud", WorldEnv.DefaultCloudsCol));
+				map.Env.SetFogCol(GetColour("Fog", WorldEnv.DefaultFogCol));
+				map.Env.SetSunCol(GetColour("Sunlight", WorldEnv.DefaultSunlight));
+				map.Env.SetShadowCol(GetColour("Ambient", WorldEnv.DefaultShadowlight));
 			}
 			if (CheckKey("EnvMapAppearance", 1, metadata)) {
 				string url = null;

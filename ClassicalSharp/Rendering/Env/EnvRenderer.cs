@@ -73,11 +73,11 @@ namespace ClassicalSharp.Renderers {
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
 			if (minimal) return;
 			
-			if (e.Var == EnvVar.SkyColour) {
+			if (e.Var == EnvVar.SkyCol) {
 				ResetSky();
-			} else if (e.Var == EnvVar.FogColour) {
+			} else if (e.Var == EnvVar.FogCol) {
 				UpdateFog();
-			} else if (e.Var == EnvVar.CloudsColour) {
+			} else if (e.Var == EnvVar.CloudsCol) {
 				ResetClouds();
 			} else if (e.Var == EnvVar.CloudsLevel) {
 				ResetSky();

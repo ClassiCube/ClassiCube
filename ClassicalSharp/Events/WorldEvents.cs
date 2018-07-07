@@ -36,11 +36,11 @@ namespace ClassicalSharp.Events {
 		CloudsSpeed,
 		Weather,
 
-		SkyColour,
-		CloudsColour,
-		FogColour,
-		SunlightColour,
-		ShadowlightColour,
+		SkyCol,
+		CloudsCol,
+		FogCol,
+		SunCol,
+		ShadowCol,
 		
 		WeatherSpeed,
 		WeatherFade,

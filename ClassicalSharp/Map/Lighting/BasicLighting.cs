@@ -45,9 +45,9 @@ namespace ClassicalSharp.Map {
 		}
 
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
-			if (e.Var == EnvVar.SunlightColour) {
+			if (e.Var == EnvVar.SunCol) {
 				SetSun(game.World.Env.Sunlight);
-			} else if (e.Var == EnvVar.ShadowlightColour) {
+			} else if (e.Var == EnvVar.ShadowCol) {
 				SetShadow(game.World.Env.Shadowlight);
 			}
 		}

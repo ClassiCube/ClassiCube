@@ -103,7 +103,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
-			if (e.Var == EnvVar.SunlightColour || e.Var == EnvVar.ShadowlightColour) {
+			if (e.Var == EnvVar.SunCol || e.Var == EnvVar.ShadowCol) {
 				Refresh();
 			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
 				int oldClip = builder.edgeLevel;

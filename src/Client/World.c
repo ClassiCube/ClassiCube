@@ -192,21 +192,15 @@ void WorldEnv_SetCloudsCol(PackedCol col) {
 }
 
 void WorldEnv_SetSunCol(PackedCol col) {
-	if (PackedCol_Equals(col, WorldEnv_SunCol)) return;
-
-	WorldEnv_SunCol = col;
-	PackedCol_GetShaded(col, &WorldEnv_SunXSide, 
+	PackedCol_GetShaded(col, &WorldEnv_SunXSide,
 		&WorldEnv_SunZSide, &WorldEnv_SunYBottom);
-	Event_RaiseInt(&WorldEvents_EnvVarChanged, ENV_VAR_SUN_COL);
+	WorldEnv_SetCol(col, WorldEnv_SunCol, ENV_VAR_SUN_COL);
 }
 
 void WorldEnv_SetShadowCol(PackedCol col) {
-	if (PackedCol_Equals(col, WorldEnv_ShadowCol)) return;
-
-	WorldEnv_ShadowCol = col;
 	PackedCol_GetShaded(col, &WorldEnv_ShadowXSide,
 		&WorldEnv_ShadowZSide, &WorldEnv_ShadowYBottom);
-	Event_RaiseInt(&WorldEvents_EnvVarChanged, ENV_VAR_SHADOW_COL);
+	WorldEnv_SetCol(col, WorldEnv_ShadowCol, ENV_VAR_SHADOW_COL);
 }
 
 Real32 Respawn_HighestFreeY(AABB* bb) {

@@ -112,9 +112,9 @@ namespace ClassicalSharp.Renderers {
 				ResetSides();
 			} else if (e.Var == EnvVar.EdgeLevel || e.Var == EnvVar.SidesOffset) {
 				ResetSidesAndEdges(null, null);
-			} else if (e.Var == EnvVar.SunlightColour) {
+			} else if (e.Var == EnvVar.SunCol) {
 				ResetEdges();
-			} else if (e.Var == EnvVar.ShadowlightColour) {
+			} else if (e.Var == EnvVar.ShadowCol) {
 				ResetSides();
 			}
 		}

@@ -44,7 +44,7 @@ namespace ClassicalSharp.Renderers {
 		}
 		
 		void EnvVariableChanged(object sender, EnvVarEventArgs e) {
-			if (e.Var != EnvVar.CloudsColour) return;
+			if (e.Var != EnvVar.CloudsCol) return;
 			MakeVb();
 		}
 		
