@@ -72,7 +72,7 @@ namespace ClassicalSharp.Physics {
 			
 			t0 = tmin;
 			t1 = tmax;
-			return t0 >= 0;
+			return tmin >= 0;
 		}
 	}
 }

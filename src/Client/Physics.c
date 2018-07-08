@@ -120,7 +120,7 @@ bool Intersection_RayIntersectsBox(Vector3 origin, Vector3 dir, Vector3 min, Vec
 	if (tzmax < tmax) tmax = tzmax;
 
 	*t0 = tmin; *t1 = tmax;
-	return *t0 >= 0;
+	return tmin >= 0.0f;
 }
 
 

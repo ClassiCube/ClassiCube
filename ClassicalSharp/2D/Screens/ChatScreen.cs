@@ -182,14 +182,15 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		static FastColour backColour = new FastColour(0, 0, 0, 127);
 		public void RenderBackground() {
-			int usedHeight = normalChat.GetUsedHeight();
-			int y = normalChat.Y + normalChat.Height - usedHeight - 5;
-			int x = normalChat.X - 5;
-			int width = Math.Max(clientStatus.Width, normalChat.Width) + 10;
+			int chatHeight = normalChat.GetUsedHeight();
+			int x = normalChat.X;
+			int y = normalChat.Y + normalChat.Height - chatHeight;
 			
-			int boxHeight = usedHeight + clientStatus.GetUsedHeight();
-			if (boxHeight > 0) {
-				game.Graphics.Draw2DQuad(x, y, width, boxHeight + 10, backColour);
+			int width = Math.Max(clientStatus.Width, normalChat.Width) + 10;			
+			int height = chatHeight + clientStatus.GetUsedHeight();
+			
+			if (height > 0) {
+				game.Graphics.Draw2DQuad(x - 5, y - 5, width + 10, height + 10, backColour);
 			}
 		}
 		
