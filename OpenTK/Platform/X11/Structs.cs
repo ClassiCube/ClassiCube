@@ -635,34 +635,6 @@ namespace OpenTK.Platform.X11
 		public IntPtr cursor;
 	}
 
-	[StructLayout(LayoutKind.Sequential)]
-	public struct XWindowAttributes
-	{
-		public int x;
-		public int y;
-		public int width;
-		public int height;
-		public int border_width;
-		public int depth;
-		public IntPtr visual;
-		public IntPtr root;
-		public int c_class;
-		public Gravity bit_gravity;
-		public Gravity win_gravity;
-		public int backing_store;
-		public IntPtr backing_planes;
-		public IntPtr backing_pixel;
-		public bool save_under;
-		public IntPtr colormap;
-		public bool map_installed;
-		public MapState map_state;
-		public IntPtr all_event_masks;
-		public IntPtr your_event_mask;
-		public IntPtr do_not_propagate_mask;
-		public bool override_direct;
-		public IntPtr screen;
-	}
-
 	public enum XEventName
 	{
 		KeyPress = 2,
@@ -1105,101 +1077,6 @@ namespace OpenTK.Platform.X11
 		IsViewable = 2
 	}
 
-	public enum CursorFontShape
-	{
-		XC_X_cursor = 0,
-		XC_arrow = 2,
-		XC_based_arrow_down = 4,
-		XC_based_arrow_up = 6,
-		XC_boat = 8,
-		XC_bogosity = 10,
-		XC_bottom_left_corner = 12,
-		XC_bottom_right_corner = 14,
-		XC_bottom_side = 16,
-		XC_bottom_tee = 18,
-		XC_box_spiral = 20,
-		XC_center_ptr = 22,
-
-		XC_circle = 24,
-		XC_clock = 26,
-		XC_coffee_mug = 28,
-		XC_cross = 30,
-		XC_cross_reverse = 32,
-		XC_crosshair = 34,
-		XC_diamond_cross = 36,
-		XC_dot = 38,
-		XC_dotbox = 40,
-		XC_double_arrow = 42,
-		XC_draft_large = 44,
-		XC_draft_small = 46,
-
-		XC_draped_box = 48,
-		XC_exchange = 50,
-		XC_fleur = 52,
-		XC_gobbler = 54,
-		XC_gumby = 56,
-		XC_hand1 = 58,
-		XC_hand2 = 60,
-		XC_heart = 62,
-		XC_icon = 64,
-		XC_iron_cross = 66,
-		XC_left_ptr = 68,
-		XC_left_side = 70,
-
-		XC_left_tee = 72,
-		XC_left_button = 74,
-		XC_ll_angle = 76,
-		XC_lr_angle = 78,
-		XC_man = 80,
-		XC_middlebutton = 82,
-		XC_mouse = 84,
-		XC_pencil = 86,
-		XC_pirate = 88,
-		XC_plus = 90,
-		XC_question_arrow = 92,
-		XC_right_ptr = 94,
-
-		XC_right_side = 96,
-		XC_right_tee = 98,
-		XC_rightbutton = 100,
-		XC_rtl_logo = 102,
-		XC_sailboat = 104,
-		XC_sb_down_arrow = 106,
-		XC_sb_h_double_arrow = 108,
-		XC_sb_left_arrow = 110,
-		XC_sb_right_arrow = 112,
-		XC_sb_up_arrow = 114,
-		XC_sb_v_double_arrow = 116,
-		XC_sb_shuttle = 118,
-
-		XC_sizing = 120,
-		XC_spider = 122,
-		XC_spraycan = 124,
-		XC_star = 126,
-		XC_target = 128,
-		XC_tcross = 130,
-		XC_top_left_arrow = 132,
-		XC_top_left_corner = 134,
-		XC_top_right_corner = 136,
-		XC_top_side = 138,
-		XC_top_tee = 140,
-		XC_trek = 142,
-
-		XC_ul_angle = 144,
-		XC_umbrella = 146,
-		XC_ur_angle = 148,
-		XC_watch = 150,
-		XC_xterm = 152,
-		XC_num_glyphs = 154
-	}
-
-	public enum SystrayRequest
-	{
-		SYSTEM_TRAY_REQUEST_DOCK = 0,
-		SYSTEM_TRAY_BEGIN_MESSAGE = 1,
-		SYSTEM_TRAY_CANCEL_MESSAGE = 2
-	}
-
 	[Flags]
 	public enum XSizeHintsFlags
 	{
@@ -1411,43 +1288,11 @@ namespace OpenTK.Platform.X11
 	}
 
 	[Flags]
-	public enum XIMProperties
-	{
-		XIMPreeditArea = 0x0001,
-		XIMPreeditCallbacks = 0x0002,
-		XIMPreeditPosition = 0x0004,
-		XIMPreeditNothing = 0x0008,
-		XIMPreeditNone = 0x0010,
-		XIMStatusArea = 0x0100,
-		XIMStatusCallbacks = 0x0200,
-		XIMStatusNothing = 0x0400,
-		XIMStatusNone = 0x0800,
-	}
-
-	[Flags]
 	public enum WindowType
 	{
 		Client = 1,
 		Whole = 2,
 		Both = 3
-	}
-
-	public enum XEmbedMessage
-	{
-		EmbeddedNotify = 0,
-		WindowActivate = 1,
-		WindowDeactivate = 2,
-		RequestFocus = 3,
-		FocusIn = 4,
-		FocusOut = 5,
-		FocusNext = 6,
-		FocusPrev = 7,
-		/* 8-9 were used for XEMBED_GRAB_KEY/XEMBED_UNGRAB_KEY */
-		ModalityOn = 10,
-		ModalityOff = 11,
-		RegisterAccelerator = 12,
-		UnregisterAccelerator = 13,
-		ActivateAccelerator = 14
 	}
 
 	public enum ImageFormat

@@ -13,6 +13,7 @@
 #include "Platform.h"
 #include "Deflate.h"
 #include "Stream.h"
+#include "Funcs.h"
 
 /*########################################################################################################################*
 *--------------------------------------------------------ZipEntry---------------------------------------------------------*
@@ -118,13 +119,13 @@ void Zip_Init(ZipState* state, Stream* input) {
 void Zip_Extract(ZipState* state) {
 	state->EntriesCount = 0;
 	Stream* stream = state->Input;
-	ReturnCode result;
-	UInt32 sig = 0;
+	UInt32 sig = 0, stream_len = 0;
+	ReturnCode result = stream->Length(stream, &stream_len);
 
 	/* At -22 for nearly all zips, but try a bit further back in case of comment */
-	Int32 i;
-	for (i = -22; i >= -256; i--) {
-		result = stream->Seek(stream, i, STREAM_SEEKFROM_END);
+	Int32 i, len = min(257, stream_len);
+	for (i = 22; i < len; i++) {
+		result = stream->Seek(stream, -i, STREAM_SEEKFROM_END);
 		ErrorHandler_CheckOrFail(result, "ZIP - Seek to end of central directory");
 		sig = Stream_ReadU32_LE(stream);
 		if (sig == ZIP_ENDOFCENTRALDIR) break;

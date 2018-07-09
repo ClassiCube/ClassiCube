@@ -57,7 +57,7 @@ namespace ClassicalSharp.Textures {
 			if (useLavaAnim) {
 				int size = Math.Min(Atlas2D.TileSize, 64);
 				DrawAnimation(null, 30, size);
-			}			
+			}
 			if (useWaterAnim) {
 				int size = Math.Min(Atlas2D.TileSize, 64);
 				DrawAnimation(null, 14, size);

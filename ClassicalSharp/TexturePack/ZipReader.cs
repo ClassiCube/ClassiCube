@@ -33,8 +33,9 @@ namespace ClassicalSharp.Textures {
 			uint sig = 0;
 			
 			// At -22 for nearly all zips, but try a bit further back in case of comment
-			for (int i = -22; i >= -256; i--) {
-				reader.BaseStream.Seek(i, SeekOrigin.End);
+			int len = Math.Min(257, (int)stream.Length);
+			for (int i = 22; i < len; i++) {
+				stream.Seek(-i, SeekOrigin.End);
 				sig = reader.ReadUInt32();
 				if (sig == 0x06054b50) break;
 			}			

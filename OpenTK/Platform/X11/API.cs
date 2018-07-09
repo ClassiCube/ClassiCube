@@ -125,14 +125,6 @@ namespace OpenTK.Platform.X11 {
 		KP_Divide                   = 0xffaf,
 
 		KP_0                        = 0xffb0,
-		KP_1                        = 0xffb1,
-		KP_2                        = 0xffb2,
-		KP_3                        = 0xffb3,
-		KP_4                        = 0xffb4,
-		KP_5                        = 0xffb5,
-		KP_6                        = 0xffb6,
-		KP_7                        = 0xffb7,
-		KP_8                        = 0xffb8,
 		KP_9                        = 0xffb9,
 
 		/*
