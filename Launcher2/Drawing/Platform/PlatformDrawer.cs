@@ -5,10 +5,8 @@ using ClassicalSharp;
 
 namespace Launcher.Drawing {	
 	/// <summary> Per-platform class used to transfer a framebuffer directly to the native window. </summary>
-	public abstract class PlatformDrawer {
-		
-		/// <summary> Data describing the native window. </summary>
-		internal OpenTK.Platform.IWindowInfo info;
+	public abstract class PlatformDrawer {	
+		internal OpenTK.IWindowInfo info;
 		
 		/// <summary> Initialises the variables for this platform drawer. </summary>
 		public abstract void Init();

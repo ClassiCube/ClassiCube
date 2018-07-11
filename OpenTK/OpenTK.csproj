@@ -52,8 +52,6 @@
     <Compile Include="BindingsBase.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="DisplayDevice.cs" />
-    <Compile Include="FrameEventArgs.cs" />
-    <Compile Include="GameWindow.cs" />
     <Compile Include="Graphics\OpenGL\GL.cs" />
     <Compile Include="INativeWindow.cs" />
     <Compile Include="Interop.cs" />
@@ -74,7 +72,6 @@
     <Compile Include="Math\Vector4.cs" />
     <Compile Include="Platform\Configuration.cs" />
     <Compile Include="Platform\IPlatformFactory.cs" />
-    <Compile Include="Platform\IWindowInfo.cs" />
     <Compile Include="Platform\MacOS\AglContext.cs" />
     <Compile Include="Platform\MacOS\Application.cs" />
     <Compile Include="Platform\MacOS\CarbonBindings\Agl.cs" />

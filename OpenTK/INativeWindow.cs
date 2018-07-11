@@ -31,7 +31,9 @@ using System.Drawing;
 using OpenTK.Input;
 using OpenTK.Platform;
 
-namespace OpenTK {
+namespace OpenTK {	
+	/// <summary> Descibes an OS window. </summary>
+	public interface IWindowInfo : IDisposable { IntPtr WinHandle { get; } }
 	
 	/// <summary> Defines the interface for a native window.  </summary>
 	public abstract class INativeWindow : IDisposable {
@@ -117,6 +119,11 @@ namespace OpenTK {
 		public event EventHandler Resize;
 		protected void RaiseResize() {
 			if (Resize != null) Resize(this, EventArgs.Empty);
+		}
+		
+		public event EventHandler Redraw;
+		protected void RaiseRedraw() {
+			if (Redraw != null) Redraw(this, EventArgs.Empty);
 		}
 
 		/// <summary> Occurs when the window is about to close. </summary>

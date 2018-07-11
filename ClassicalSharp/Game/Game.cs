@@ -59,7 +59,6 @@ namespace ClassicalSharp {
 		}
 		
 		Stopwatch render_watch = new Stopwatch();
-		FrameEventArgs render_args = new FrameEventArgs();
 		public void Run() {
 			window.Visible = true;
 			window.Closed += OnClosed;

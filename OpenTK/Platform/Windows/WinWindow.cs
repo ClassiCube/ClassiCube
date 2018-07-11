@@ -95,6 +95,7 @@ namespace OpenTK.Platform.Windows
 					break;
 
 				case WindowMessage.ERASEBKGND:
+					RaiseRedraw();
 					return new IntPtr(1);
 
 				case WindowMessage.WINDOWPOSCHANGED:

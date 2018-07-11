@@ -74,8 +74,9 @@ namespace Launcher {
 		PlatformDrawer platformDrawer;
 		public void Init() {
 			Window.Resize += Resize;
-			Window.FocusedChanged += FocusedChanged;
+			Window.FocusedChanged += ForceRedraw;
 			Window.WindowStateChanged += Resize;
+			Window.Redraw += ForceRedraw;
 			Keyboard.KeyDown += KeyDown;
 			
 			ClassicalSharp.Program.CleanupMainDirectory();
@@ -115,15 +116,14 @@ namespace Launcher {
 			}
 		}
 
-		void FocusedChanged(object sender, EventArgs e) {
-			if (Program.ShowingErrorDialog) return;
-			RedrawBackground();
-			if (Screen != null) Screen.Resize();
-		}
-
 		void Resize(object sender, EventArgs e) {
 			platformDrawer.Resize();
-			RedrawBackground();
+			ForceRedraw(sender, e);
+		}
+		
+		void ForceRedraw(object sender, EventArgs e) {
+			if (Program.ShowingErrorDialog) return;
+			RedrawBackground();			
 			if (Screen != null) Screen.Resize();
 			fullRedraw = true;
 		}
@@ -242,8 +242,9 @@ namespace Launcher {
 		
 		public void Dispose() {
 			Window.Resize -= Resize;
-			Window.FocusedChanged -= FocusedChanged;
+			Window.FocusedChanged -= ForceRedraw;
 			Window.WindowStateChanged -= Resize;
+			Window.Redraw -= ForceRedraw;
 			Keyboard.KeyDown -= KeyDown;
 			
 			List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
