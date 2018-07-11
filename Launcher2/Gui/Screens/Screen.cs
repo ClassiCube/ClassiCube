@@ -20,10 +20,10 @@ namespace Launcher.Gui.Screens {
 		
 		/// <summary> Function called to setup the widgets and other data for this screen. </summary>
 		public virtual void Init() {
-			game.Window.Mouse.Move += MouseMove;
-			game.Window.Mouse.ButtonDown += MouseButtonDown;
-			game.Window.Keyboard.KeyDown += KeyDown;
-			game.Window.Keyboard.KeyUp += KeyUp;
+			Mouse.Move += MouseMove;
+			Mouse.ButtonDown += MouseButtonDown;
+			Keyboard.KeyDown += KeyDown;
+			Keyboard.KeyUp += KeyUp;
 		}
 		
 		/// <summary> Function that is repeatedly called multiple times every second. </summary>
@@ -34,10 +34,10 @@ namespace Launcher.Gui.Screens {
 		
 		/// <summary> Cleans up all native resources held by this screen. </summary>
 		public virtual void Dispose() {
-			game.Window.Mouse.Move -= MouseMove;
-			game.Window.Mouse.ButtonDown -= MouseButtonDown;
-			game.Window.Keyboard.KeyDown -= KeyDown;
-			game.Window.Keyboard.KeyUp -= KeyUp;
+			Mouse.Move -= MouseMove;
+			Mouse.ButtonDown -= MouseButtonDown;
+			Keyboard.KeyDown -= KeyDown;
+			Keyboard.KeyUp -= KeyUp;
 		}
 		
 		/// <summary> Function called when the pixels from the framebuffer
@@ -88,11 +88,13 @@ namespace Launcher.Gui.Screens {
 		
 		protected Widget lastClicked;
 		void MouseButtonDown(object sender, MouseButtonEventArgs e) {
-			MouseButtonDown(e.X, e.Y, e.Button);
+			int x = Mouse.X, y = Mouse.Y;
+			MouseButtonDown(x, y, e.Button);
 		}
 		
 		void MouseMove(object sender, MouseMoveEventArgs e) { 
-			MouseMove(e.X, e.Y, e.XDelta, e.YDelta); 
+			int x = Mouse.X, y = Mouse.Y;
+			MouseMove(x, y, e.XDelta, e.YDelta); 
 		}
 		
 		protected virtual void MouseButtonDown(int x, int y, MouseButton button) {

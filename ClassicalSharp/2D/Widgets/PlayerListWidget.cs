@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using ClassicalSharp.Entities;
 using ClassicalSharp.Events;
+using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Widgets {
 	public class PlayerListWidget : Widget {
@@ -58,7 +59,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			overview.Reposition();
 			overview.Render(delta);
 			
-			int highlightedI = HighlightedName(game.Mouse.X, game.Mouse.Y);			
+			int highlightedI = HighlightedName(Mouse.X, Mouse.Y);			
 			for (int i = 0; i < namesCount; i++) {
 				if (!textures[i].IsValid) continue;
 				

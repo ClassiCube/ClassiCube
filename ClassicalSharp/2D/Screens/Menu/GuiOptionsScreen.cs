@@ -1,6 +1,7 @@
 ﻿// Copyright 2014-2017 ClassicalSharp | Licensed under BSD-3
 using System;
 using ClassicalSharp.Gui.Widgets;
+using OpenTK.Input;
 
 namespace ClassicalSharp.Gui.Screens {
 	public class GuiOptionsScreen : MenuOptionsScreen {
@@ -102,7 +103,7 @@ namespace ClassicalSharp.Gui.Screens {
 			Recreate();
 			game.Gui.RefreshHud();
 			selectedI = -1;
-			HandlesMouseMove(game.Mouse.X, game.Mouse.Y);
+			HandlesMouseMove(Mouse.X, Mouse.Y);
 		}
 	}
 }

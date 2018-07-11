@@ -93,12 +93,6 @@ namespace OpenTK {
 		/// <returns> The point transformed to screen coordinates. </returns>
 		Point PointToScreen(Point point);
 		
-		/// <summary> Gets the available KeyboardDevice. </summary>
-		KeyboardDevice Keyboard { get; }
-		
-		/// <summary> Gets the available MouseDevice. </summary>
-		MouseDevice Mouse { get; }
-		
 		/// <summary> Gets or sets the cursor position in screen coordinates. </summary>
 		Point DesktopCursorPos { get; set; }
 		

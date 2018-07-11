@@ -39,14 +39,13 @@ namespace OpenTK.Platform.X11 {
 	/// \internal
 	/// <summary> Drives GameWindow on X11.
 	/// This class supports OpenTK, and is not intended for use by OpenTK programs. </summary>
-	internal sealed class X11GLNative : INativeWindow, IDisposable {
+	internal sealed class X11Window : INativeWindow, IDisposable {
 		// TODO: Disable screensaver.
 		// TODO: What happens if we can't disable decorations through motif?
 		// TODO: Mouse/keyboard grabbing/wrapping.
 		
 		const int _min_width = 30, _min_height = 30;
 		X11WindowInfo window = new X11WindowInfo();
-		// The Atom class from Mono might be useful to avoid calling XInternAtom by hand (somewhat error prone).
 		IntPtr wm_destroy;
 		
 		IntPtr net_wm_state;
@@ -54,9 +53,8 @@ namespace OpenTK.Platform.X11 {
 		IntPtr net_wm_state_fullscreen;
 		IntPtr net_wm_state_maximized_horizontal;
 		IntPtr net_wm_state_maximized_vertical;
-
-		IntPtr net_wm_icon;
-		IntPtr net_frame_extents;
+		
+		IntPtr net_wm_icon, net_frame_extents;
 
 		IntPtr xa_clipboard, xa_targets, xa_utf8_string, xa_atom, xa_data_sel;
 		string clipboard_paste_text, clipboard_copy_text;
@@ -69,8 +67,8 @@ namespace OpenTK.Platform.X11 {
 		Rectangle bounds, client_rectangle;
 		int borderLeft, borderRight, borderTop, borderBottom;
 		Icon icon;
-		bool has_focus;
-		bool visible;
+		bool has_focus, visible;
+		EventMask eventMask;
 
 		// Used for event loop.
 		XEvent e = new XEvent();
@@ -80,21 +78,13 @@ namespace OpenTK.Platform.X11 {
 		readonly byte[] ascii = new byte[16];
 		readonly char[] chars = new char[16];
 		readonly KeyPressEventArgs KPEventArgs = new KeyPressEventArgs();
-		
-		KeyboardDevice keyboard = new KeyboardDevice();
-		MouseDevice mouse = new MouseDevice();
 
 		X11KeyMap keymap = new X11KeyMap();
 		int firstKeyCode, lastKeyCode; // The smallest and largest KeyCode supported by the X server.
 		int keysyms_per_keycode;    // The number of KeySyms for each KeyCode.
 		IntPtr[] keysyms;
 		
-		public X11GLNative(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
-			if (width <= 0)
-				throw new ArgumentOutOfRangeException("width", "Must be higher than zero.");
-			if (height <= 0)
-				throw new ArgumentOutOfRangeException("height", "Must be higher than zero.");
-
+		public X11Window(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
 			Debug.Print("Creating X11GLNative window.");
 			// Open a display connection to the X server, and obtain the screen and root window.
 			window.Display = API.DefaultDisplay;
@@ -113,13 +103,14 @@ namespace OpenTK.Platform.X11 {
 			attributes.background_pixel = IntPtr.Zero;
 			attributes.border_pixel = IntPtr.Zero;
 			attributes.colormap = API.XCreateColormap(window.Display, window.RootWindow, window.VisualInfo.Visual, 0/*AllocNone*/);
-			window.EventMask = EventMask.StructureNotifyMask /*| EventMask.SubstructureNotifyMask*/ | EventMask.ExposureMask |
+			
+			eventMask = EventMask.StructureNotifyMask /*| EventMask.SubstructureNotifyMask*/ | EventMask.ExposureMask |
 				EventMask.KeyReleaseMask | EventMask.KeyPressMask | EventMask.KeymapStateMask |
 				EventMask.PointerMotionMask | EventMask.FocusChangeMask |
 				EventMask.ButtonPressMask | EventMask.ButtonReleaseMask |
 				EventMask.EnterWindowMask | EventMask.LeaveWindowMask |
 				EventMask.PropertyChangeMask;
-			attributes.event_mask = (IntPtr)window.EventMask;
+			attributes.event_mask = (IntPtr)eventMask;
 
 			uint mask = (uint)SetWindowValuemask.ColorMap | (uint)SetWindowValuemask.EventMask |
 				(uint)SetWindowValuemask.BackPixel | (uint)SetWindowValuemask.BorderPixel;
@@ -227,15 +218,19 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		void ToggleKey( ref XKeyEvent keyEvent, bool pressed ) {
-			IntPtr keysym = API.XLookupKeysym(ref keyEvent, 0);
-			IntPtr keysym2 = API.XLookupKeysym(ref keyEvent, 1);
-			if (keymap.ContainsKey((XKey)keysym))
-				keyboard[keymap[(XKey)keysym]] = pressed;
-			else if (keymap.ContainsKey((XKey)keysym2))
-				keyboard[keymap[(XKey)keysym2]] = pressed;
-			else
-				Debug.Print("KeyCode {0} (Keysym: {1}, {2}) not mapped.", e.KeyEvent.keycode, (XKey)keysym, (XKey)keysym2);
+		void ToggleKey(ref XKeyEvent keyEvent, bool pressed) {
+			int keysym  = (int)API.XLookupKeysym(ref keyEvent, 0);
+			int keysym2 = (int)API.XLookupKeysym(ref keyEvent, 1);
+			Key tkKey;
+			
+			if (keymap.TryGetValue(keysym, out tkKey)) {
+				Keyboard.Set(tkKey, pressed);
+			} else if (keymap.TryGetValue(keysym2, out tkKey)) {
+				Keyboard.Set(tkKey, pressed);
+			} else {
+				Debug.Print("KeyCode {0} (Keysym: {1}, {2}) not mapped.", 
+				            e.KeyEvent.keycode, keysym, keysym2);
+			}
 		}
 		
 		static void DeleteIconPixmaps(IntPtr display, IntPtr window) {
@@ -265,7 +260,7 @@ namespace OpenTK.Platform.X11 {
 			int format;
 			API.XGetWindowProperty(window.Display, window.WindowHandle,
 			                       net_frame_extents, IntPtr.Zero, new IntPtr(16), false,
-			                       (IntPtr)Atom.XA_CARDINAL, out atom, out format, out nitems, out bytes_after, ref prop);
+			                       xa_cardinal, out atom, out format, out nitems, out bytes_after, ref prop);
 
 			if (prop != IntPtr.Zero) {
 				if ((long)nitems == 4) {
@@ -304,7 +299,7 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		bool GetPendingEvent() {
-			return API.XCheckWindowEvent(window.Display, window.WindowHandle, window.EventMask, ref e) ||
+			return API.XCheckWindowEvent(window.Display, window.WindowHandle, eventMask, ref e) ||
 				API.XCheckTypedWindowEvent(window.Display, window.WindowHandle, XEventName.ClientMessage, ref e) ||
 				API.XCheckTypedWindowEvent(window.Display, window.WindowHandle, XEventName.SelectionNotify, ref e) ||
 				API.XCheckTypedWindowEvent(window.Display, window.WindowHandle, XEventName.SelectionRequest, ref e);
@@ -381,25 +376,25 @@ namespace OpenTK.Platform.X11 {
 						break;
 						
 					case XEventName.ButtonPress:
-						if      (e.ButtonEvent.button == 1) mouse[MouseButton.Left] = true;
-						else if (e.ButtonEvent.button == 2) mouse[MouseButton.Middle] = true;
-						else if (e.ButtonEvent.button == 3) mouse[MouseButton.Right] = true;
-						else if (e.ButtonEvent.button == 4) mouse.Wheel++;
-						else if (e.ButtonEvent.button == 5) mouse.Wheel--;
-						else if (e.ButtonEvent.button == 6) keyboard[Key.XButton1] = true;
-						else if (e.ButtonEvent.button == 7) keyboard[Key.XButton2] = true;
+						if      (e.ButtonEvent.button == 1) Mouse.Set(MouseButton.Left, true);
+						else if (e.ButtonEvent.button == 2) Mouse.Set(MouseButton.Middle, true);
+						else if (e.ButtonEvent.button == 3) Mouse.Set(MouseButton.Right, true);
+						else if (e.ButtonEvent.button == 4) Mouse.SetWheel(Mouse.Wheel + 1);
+						else if (e.ButtonEvent.button == 5) Mouse.SetWheel(Mouse.Wheel - 1);
+						else if (e.ButtonEvent.button == 6) Keyboard.Set(Key.XButton1, true);
+						else if (e.ButtonEvent.button == 7) Keyboard.Set(Key.XButton2, true);
 						break;
 
 					case XEventName.ButtonRelease:
-						if      (e.ButtonEvent.button == 1) mouse[MouseButton.Left] = false;
-						else if (e.ButtonEvent.button == 2) mouse[MouseButton.Middle] = false;
-						else if (e.ButtonEvent.button == 3) mouse[MouseButton.Right] = false;
-						else if (e.ButtonEvent.button == 6) keyboard[Key.XButton1] = false;
-						else if (e.ButtonEvent.button == 7) keyboard[Key.XButton2] = false;
+						if      (e.ButtonEvent.button == 1) Mouse.Set(MouseButton.Left, false);
+						else if (e.ButtonEvent.button == 2) Mouse.Set(MouseButton.Middle, false);
+						else if (e.ButtonEvent.button == 3) Mouse.Set(MouseButton.Right, false);
+						else if (e.ButtonEvent.button == 6) Keyboard.Set(Key.XButton1, false);
+						else if (e.ButtonEvent.button == 7) Keyboard.Set(Key.XButton2, false);
 						break;
 
 					case XEventName.MotionNotify:
-						mouse.Position = new Point(e.MotionEvent.x, e.MotionEvent.y);
+						Mouse.SetPos(e.MotionEvent.x, e.MotionEvent.y);
 						break;
 
 					case XEventName.FocusIn:
@@ -726,14 +721,6 @@ namespace OpenTK.Platform.X11 {
 		public event EventHandler WindowStateChanged;
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 		
-		public KeyboardDevice Keyboard {
-			get { return keyboard; }
-		}
-
-		public MouseDevice Mouse {
-			get { return mouse; }
-		}
-		
 		public Point DesktopCursorPos {
 			get {
 				IntPtr root, child;
@@ -849,7 +836,7 @@ namespace OpenTK.Platform.X11 {
 			disposed = true;
 		}
 
-		~X11GLNative() {
+		~X11Window() {
 			this.Dispose(false);
 		}
 	}

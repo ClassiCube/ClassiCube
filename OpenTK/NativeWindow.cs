@@ -189,16 +189,6 @@ namespace OpenTK {
 			set { implementation.WindowState = value; }
 		}
 		
-		/// <summary> Gets the primary Keyboard device, or null if no Keyboard exists. </summary>
-		public KeyboardDevice Keyboard {
-			get { return implementation.Keyboard; }
-		}
-
-		/// <summary> Gets the primary Mouse device, or null if no Mouse exists. </summary>
-		public MouseDevice Mouse {
-			get { return implementation.Mouse; }
-		}
-		
 		/// <summary> Sets whether the cursor is visible in the window. </summary>
 		public bool CursorVisible {
 			get { return implementation.CursorVisible; }

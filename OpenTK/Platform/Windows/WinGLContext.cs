@@ -36,10 +36,10 @@ namespace OpenTK.Platform.Windows {
 		public WinGLContext(GraphicsMode format, WinWindowInfo window) {
 			if (window == null)
 				throw new ArgumentNullException("window", "Must point to a valid window.");
-			if (window.handle == IntPtr.Zero)
+			if (window.winHandle == IntPtr.Zero)
 				throw new ArgumentException("window", "Must be a valid window.");
 
-			Debug.Print( "OpenGL will be bound to handle: {0}", window.handle );
+			Debug.Print( "OpenGL will be bound to handle: {0}", window.winHandle );
 			SelectGraphicsModePFD(format, (WinWindowInfo)window);
 			Debug.Print( "Setting pixel format... " );
 			SetGraphicsModePFD(format, (WinWindowInfo)window);
@@ -64,7 +64,7 @@ namespace OpenTK.Platform.Windows {
 			bool success;
 
 			if (window != null) {
-				if (((WinWindowInfo)window).handle == IntPtr.Zero)
+				if (((WinWindowInfo)window).winHandle == IntPtr.Zero)
 					throw new ArgumentException("window", "Must point to a valid window.");
 
 				success = Wgl.wglMakeCurrent(((WinWindowInfo)window).DeviceContext, ContextHandle);

@@ -28,7 +28,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			game.Keyboard.KeyRepeat = true;
+			Keyboard.KeyRepeat = true;
 			ContextRecreated();
 		}
 		
@@ -74,7 +74,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Dispose() {
-			game.Keyboard.KeyRepeat = false;
+			Keyboard.KeyRepeat = false;
 			base.Dispose();
 		}
 		
@@ -82,7 +82,7 @@ namespace ClassicalSharp.Gui.Screens {
 			if (selected != null) selected.ShowCaret = false;
 			
 			selected = (MenuInputWidget)widget;
-			selected.HandlesMouseDown(game.Mouse.X, game.Mouse.Y, MouseButton.Left);
+			selected.HandlesMouseDown(Mouse.X, Mouse.Y, MouseButton.Left);
 			selected.ShowCaret = true;
 		}
 		

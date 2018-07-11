@@ -54,7 +54,7 @@ namespace OpenTK.Platform.MacOS {
 	class MacOSFactory : IPlatformFactory {
 		
 		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
-			return new CarbonGLNative(x, y, width, height, title, device);
+			return new CarbonWindow(x, y, width, height, title, device);
 		}
 
 		public void InitDisplayDeviceDriver() {
@@ -71,7 +71,7 @@ namespace OpenTK.Platform.Windows {
 	class WinFactory : IPlatformFactory {
 		
 		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
-			return new WinGLNative(x, y, width, height, title, device);
+			return new WinWindow(x, y, width, height, title, device);
 		}
 
 		public void InitDisplayDeviceDriver() {
@@ -88,7 +88,7 @@ namespace OpenTK.Platform.X11 {
 	class X11Factory : IPlatformFactory {
 
 		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
-			return new X11GLNative(x, y, width, height, title, mode, device);
+			return new X11Window(x, y, width, height, title, mode, device);
 		}
 
 		public void InitDisplayDeviceDriver() {

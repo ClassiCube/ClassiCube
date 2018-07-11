@@ -27,7 +27,7 @@ namespace ClassicalSharp.Gui.Screens {
 			
 			game.Events.BlockPermissionsChanged += OnBlockChanged;
 			game.Events.BlockDefinitionChanged += OnBlockChanged;
-			game.Keyboard.KeyRepeat = true;
+			Keyboard.KeyRepeat = true;
 			game.Graphics.ContextLost += ContextLost;
 			game.Graphics.ContextRecreated += ContextRecreated;
 		}
@@ -39,7 +39,7 @@ namespace ClassicalSharp.Gui.Screens {
 			table.Dispose();
 			game.Events.BlockPermissionsChanged -= OnBlockChanged;
 			game.Events.BlockDefinitionChanged -= OnBlockChanged;
-			game.Keyboard.KeyRepeat = false;
+			Keyboard.KeyRepeat = false;
 			game.Graphics.ContextLost -= ContextLost;
 			game.Graphics.ContextRecreated -= ContextRecreated;
 		}

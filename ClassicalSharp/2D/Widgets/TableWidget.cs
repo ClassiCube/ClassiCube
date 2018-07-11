@@ -101,7 +101,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		int lastX, lastY;
 		public override void Init() {
-			lastX = game.Mouse.X; lastY = game.Mouse.Y;
+			lastX = Mouse.X; lastY = Mouse.Y;
 			
 			scroll = new ScrollbarWidget(game);
 			RecreateElements();
@@ -333,7 +333,7 @@ namespace ClassicalSharp.Gui.Widgets {
 		public override bool HandlesMouseScroll(float delta) {
 			int startScrollY = scroll.ScrollY;
 			bool bounds = Contains(TableX - scroll.Width, TableY, TableWidth + scroll.Width,
-			                       TableHeight, game.Mouse.X, game.Mouse.Y);
+			                       TableHeight, Mouse.X, Mouse.Y);
 			if (!bounds) return false;
 			
 			scroll.HandlesMouseScroll(delta);

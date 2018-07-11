@@ -18,7 +18,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 	{
 		static bool mInitialized = false;
 		static IntPtr uppHandler;
-		static CarbonGLNative eventHandler;
+		static CarbonWindow eventHandler;
 		static int osMajor, osMinor, osBugfix;
 
 		static Application()
@@ -54,7 +54,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			API.SetFrontProcess(ref psn);
 		}
 
-		internal static CarbonGLNative WindowEventHandler
+		internal static CarbonWindow WindowEventHandler
 		{
 			get { return eventHandler; }
 			set { eventHandler = value; }

@@ -9,12 +9,12 @@ namespace Launcher.Drawing {
 		
 		IntPtr gc;
 		public override void Init() {
-			gc = API.XCreateGC(API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null);
+			gc = API.XCreateGC(API.DefaultDisplay, info.WinHandle, IntPtr.Zero, IntPtr.Zero);
 		}
 		
 		public override void Resize() {
 			if (gc != IntPtr.Zero) API.XFreeGC(API.DefaultDisplay, gc);
-			gc = API.XCreateGC(API.DefaultDisplay, info.WinHandle, IntPtr.Zero, null);
+			gc = API.XCreateGC(API.DefaultDisplay, info.WinHandle, IntPtr.Zero, IntPtr.Zero);
 		}
 		
 		public override void Redraw(Bitmap framebuffer, Rectangle r) {

@@ -59,7 +59,7 @@ namespace ClassicalSharp.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			game.Keyboard.KeyRepeat = true;
+			Keyboard.KeyRepeat = true;
 			ContextRecreated();
 		}
 		
@@ -82,7 +82,7 @@ namespace ClassicalSharp.Gui.Screens {
 		}
 		
 		public override void Dispose() {
-			game.Keyboard.KeyRepeat = false;
+			Keyboard.KeyRepeat = false;
 			base.Dispose();
 		}
 		

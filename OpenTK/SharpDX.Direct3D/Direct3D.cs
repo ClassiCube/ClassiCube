@@ -29,17 +29,14 @@ namespace SharpDX.Direct3D9 {
 		public Direct3D() {
 			comPointer = Direct3DCreate9(SdkVersion);			
 			int count = GetAdapterCount();
-			Adapters = new AdapterInformation[count];
+			Adapters = new AdapterDetails[count];
 			
 			for (int i = 0; i < count; i++) {
-				AdapterInformation info = new AdapterInformation();
-				info.Adapter = i;
-				info.Details = GetAdapterIdentifier(i);
-				Adapters[i] = info;
+				Adapters[i] = GetAdapterIdentifier(i);
 			}
 		}
 
-		public AdapterInformation[] Adapters;
+		public AdapterDetails[] Adapters;
 		
 		const int SdkVersion = 32;
 		[DllImport( "d3d9.dll" )]

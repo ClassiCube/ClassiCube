@@ -8,11 +8,9 @@
 
 using System;
 
-namespace OpenTK.Platform
-{
-	/// <summary>Descibes an OS window.</summary>
-	public interface IWindowInfo : IDisposable
-	{
+namespace OpenTK.Platform {
+	/// <summary> Descibes an OS window. </summary>
+	public interface IWindowInfo : IDisposable {
 		IntPtr WinHandle { get; }
 	}
 }

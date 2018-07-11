@@ -14,9 +14,9 @@ namespace Launcher.Gui.Screens {
 		
 		public override void Init() {
 			base.Init();
-			game.Window.Mouse.WheelChanged += MouseWheelChanged;
+			Mouse.WheelChanged += MouseWheelChanged;
 			game.Window.KeyPress += KeyPress;
-			game.Window.Keyboard.KeyRepeat = true;
+			Keyboard.KeyRepeat = true;
 			last = DateTime.UtcNow;
 		}
 		
@@ -169,9 +169,9 @@ namespace Launcher.Gui.Screens {
 		
 		public override void Dispose() {
 			base.Dispose();
-			game.Window.Mouse.WheelChanged -= MouseWheelChanged;			
+			Mouse.WheelChanged -= MouseWheelChanged;			
 			game.Window.KeyPress -= KeyPress;
-			game.Window.Keyboard.KeyRepeat = false;
+			Keyboard.KeyRepeat = false;
 		}
 	}
 }

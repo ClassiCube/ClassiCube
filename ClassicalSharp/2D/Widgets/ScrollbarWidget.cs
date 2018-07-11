@@ -36,8 +36,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			GetScrollbarCoords(out y, out height);
 			x += scrollBorder; width -= scrollBorder * 2; y += Y;
 			
-			bool hovered = game.Mouse.Y >= y && game.Mouse.Y < (y + height) &&
-				game.Mouse.X >= x && game.Mouse.X < (x + width);
+			bool hovered = Mouse.Y >= y && Mouse.Y < (y + height) &&
+				Mouse.X >= x && Mouse.X < (x + width);
 			FastColour barCol = hovered ? scrollHoverCol : scrollBarCol;
 			gfx.Draw2DQuad(x, y, width, height, barCol);
 			

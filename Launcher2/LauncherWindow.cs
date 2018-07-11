@@ -63,7 +63,7 @@ namespace Launcher {
 			get { return Window.WindowState == WindowState.Minimized || (Width == 1 && Height == 1); }
 		}
 		
-		public bool IsKeyDown(Key key) { return Window.Keyboard[key]; }
+		public bool IsKeyDown(Key key) { return Keyboard.Get(key); }
 		
 		internal ResourceFetcher fetcher;
 		internal UpdateCheckTask checkTask;
@@ -75,7 +75,7 @@ namespace Launcher {
 			Window.Resize += Resize;
 			Window.FocusedChanged += FocusedChanged;
 			Window.WindowStateChanged += Resize;
-			Window.Keyboard.KeyDown += KeyDown;
+			Keyboard.KeyDown += KeyDown;
 			
 			ClassicalSharp.Program.CleanupMainDirectory();
 			LoadFont();
@@ -243,7 +243,7 @@ namespace Launcher {
 			Window.Resize -= Resize;
 			Window.FocusedChanged -= FocusedChanged;
 			Window.WindowStateChanged -= Resize;
-			Window.Keyboard.KeyDown -= KeyDown;
+			Keyboard.KeyDown -= KeyDown;
 			
 			List<FastBitmap> bitmaps = FetchFlagsTask.Bitmaps;
 			for (int i = 0; i < bitmaps.Count; i++) {

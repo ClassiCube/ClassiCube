@@ -37,7 +37,7 @@ using OpenTK.Input;
 
 namespace OpenTK.Platform.MacOS
 {
-	class CarbonGLNative : INativeWindow
+	class CarbonWindow : INativeWindow
 	{
 		CarbonWindowInfo window;
 		static MacOSKeyMap Keymap = new MacOSKeyMap();
@@ -58,11 +58,11 @@ namespace OpenTK.Platform.MacOS
 		bool mIsActive = false;
 		Icon mIcon;
 
-		static CarbonGLNative() {
+		static CarbonWindow() {
 			Application.Initialize();
 		}
 		
-		public CarbonGLNative(int x, int y, int width, int height, string title, DisplayDevice device)
+		public CarbonWindow(int x, int y, int width, int height, string title, DisplayDevice device)
 		{
 			this.title = title;
 			CreateNativeWindow(WindowClass.Document,
@@ -97,7 +97,7 @@ namespace OpenTK.Platform.MacOS
 			DisposeUPP();
 		}
 
-		~CarbonGLNative() {
+		~CarbonWindow() {
 			Dispose(false);
 		}
 
@@ -238,7 +238,7 @@ namespace OpenTK.Platform.MacOS
 				return OSStatus.EventNotHandled;
 			}
 
-			CarbonGLNative window = (CarbonGLNative)reference.Target;
+			CarbonWindow window = (CarbonWindow)reference.Target;
 			//Debug.Print("Processing {0} event for {1}.", evt, window.window);
 			if (window == null) {
 				Debug.Print("Window for event not found.");
@@ -264,7 +264,8 @@ namespace OpenTK.Platform.MacOS
 					break;
 			}
 			
-			if( !Keymap.ContainsKey( code ) ) {
+			Key tkKey;
+			if( !Keymap.TryGetValue( code, out tkKey ) ) {
 				Debug.Print( "{0} not mapped, ignoring press.", code );
 				return OSStatus.NoError;
 			}
@@ -272,16 +273,16 @@ namespace OpenTK.Platform.MacOS
 			switch ((KeyboardEventKind)evt.EventKind)
 			{
 				case KeyboardEventKind.RawKeyRepeat:
-					keyboard.KeyRepeat = true;
+					Keyboard.KeyRepeat = true;
 					goto case KeyboardEventKind.RawKeyDown;
 
-				case KeyboardEventKind.RawKeyDown:				
-					keyboard[Keymap[code]] = true;
+				case KeyboardEventKind.RawKeyDown:
+					Keyboard.Set(tkKey, true);
 					OnKeyPress(mKeyPressArgs);
 					return OSStatus.NoError;
 
 				case KeyboardEventKind.RawKeyUp:
-					keyboard[Keymap[code]] = false;
+					Keyboard.Set(tkKey, false);
 					return OSStatus.NoError;
 
 				case KeyboardEventKind.RawKeyModifiersChanged:
@@ -375,15 +376,15 @@ namespace OpenTK.Platform.MacOS
 					switch (button)
 					{
 						case MacOSMouseButton.Primary:
-							mouse[MouseButton.Left] = true;
+							Mouse.Set(MouseButton.Left, true);
 							break;
 
 						case MacOSMouseButton.Secondary:
-							mouse[MouseButton.Right] = true;
+							Mouse.Set(MouseButton.Right, true);
 							break;
 
 						case MacOSMouseButton.Tertiary:
-							mouse[MouseButton.Middle] = true;
+							Mouse.Set(MouseButton.Middle, true);
 							break;
 					}
 					return OSStatus.NoError;
@@ -394,22 +395,22 @@ namespace OpenTK.Platform.MacOS
 					switch (button)
 					{
 						case MacOSMouseButton.Primary:
-							mouse[MouseButton.Left] = false;
+							Mouse.Set(MouseButton.Left, false);
 							break;
 
 						case MacOSMouseButton.Secondary:
-							mouse[MouseButton.Right] = false;
+							Mouse.Set(MouseButton.Right, false);
 							break;
 
 						case MacOSMouseButton.Tertiary:
-							mouse[MouseButton.Middle] = false;
+							Mouse.Set(MouseButton.Middle, false);
 							break;
 					}
 					button = API.GetEventMouseButton(inEvent);
 					return OSStatus.NoError;
 
 				case MouseEventKind.WheelMoved:
-					mouse.Wheel += API.GetEventMouseWheelDelta(inEvent);
+					Mouse.SetWheel(Mouse.Wheel + API.GetEventMouseWheelDelta(inEvent));
 					return OSStatus.NoError;
 
 				case MouseEventKind.MouseMoved:
@@ -418,16 +419,16 @@ namespace OpenTK.Platform.MacOS
 					//Debug.Print("Mouse Location: {0}, {1}", pt.X, pt.Y);
 
 					if (windowState == WindowState.Fullscreen) {
-						if (mousePosInClient.X != mouse.X || mousePosInClient.Y != mouse.Y) {
-							mouse.Position = mousePosInClient;
+						if (mousePosInClient.X != Mouse.X || mousePosInClient.Y != Mouse.Y) {
+							Mouse.SetPos(mousePosInClient.X, mousePosInClient.Y);
 						}
 					} else {
 						// ignore clicks in the title bar
 						if (pt.Y < 0)
 							return OSStatus.EventNotHandled;
 
-						if (mousePosInClient.X != mouse.X || mousePosInClient.Y != mouse.Y) {
-							mouse.Position = mousePosInClient;
+						if (mousePosInClient.X != Mouse.X || mousePosInClient.Y != Mouse.Y) {
+							Mouse.SetPos(mousePosInClient.X, mousePosInClient.Y);
 						}
 					}
 					return OSStatus.EventNotHandled;
@@ -455,22 +456,16 @@ namespace OpenTK.Platform.MacOS
 			bool shift = (modifiers & MacOSKeyModifiers.Shift) != 0;
 
 			Debug.Print("Modifiers Changed: {0}", modifiers);
+			// TODO: Is this even needed
+			bool repeat = Keyboard.KeyRepeat; Keyboard.KeyRepeat = false;
 
-			if (keyboard[Key.AltLeft] ^ option)
-				keyboard[Key.AltLeft] = option;
-
-			if (keyboard[Key.ShiftLeft] ^ shift)
-				keyboard[Key.ShiftLeft] = shift;
-
-			if (keyboard[Key.WinLeft] ^ command)
-				keyboard[Key.WinLeft] = command;
-
-			if (keyboard[Key.ControlLeft] ^ control)
-				keyboard[Key.ControlLeft] = control;
-
-			if (keyboard[Key.CapsLock] ^ caps)
-				keyboard[Key.CapsLock] = caps;
-
+			Keyboard.Set(Key.AltLeft, option);
+			Keyboard.Set(Key.ShiftLeft, shift);
+			Keyboard.Set(Key.WinLeft, command);
+			Keyboard.Set(Key.ControlLeft, control);
+			Keyboard.Set(Key.CapsLock, caps);
+			
+			Keyboard.KeyRepeat = repeat;
 		}
 
 		Rect GetRegion() {
@@ -881,17 +876,6 @@ namespace OpenTK.Platform.MacOS
 		#endregion
 		
 		#region IInputDriver Members
-		
-		KeyboardDevice keyboard = new KeyboardDevice();
-		MouseDevice mouse = new MouseDevice();
-		
-		public KeyboardDevice Keyboard {
-			get { return keyboard; }
-		}
-
-		public MouseDevice Mouse {
-			get { return mouse; }
-		}
 		
 		public Point DesktopCursorPos {
 			get {

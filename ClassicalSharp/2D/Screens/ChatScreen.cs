@@ -331,7 +331,7 @@ namespace ClassicalSharp.Gui.Screens {
 			game.CursorVisible = true;
 			suppressNextPress = true;
 			SetHandlesAllInput(true);
-			game.Keyboard.KeyRepeat = true;
+			Keyboard.KeyRepeat = true;
 			
 			input.Text.Clear();
 			input.Text.Set(initialText);
@@ -351,7 +351,7 @@ namespace ClassicalSharp.Gui.Screens {
 					// when underlying screen is HUD, user is interacting with the world normally
 					game.CursorVisible = game.Gui.UnderlyingScreen != game.Gui.hudScreen;
 					game.Camera.RegrabMouse();
-					game.Keyboard.KeyRepeat = false;
+					Keyboard.KeyRepeat = false;
 					
 					if (key == game.Mapping(KeyBind.PauseOrExit))
 						input.Clear();

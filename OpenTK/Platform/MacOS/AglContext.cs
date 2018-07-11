@@ -114,14 +114,14 @@ namespace OpenTK.Platform.MacOS {
 		{
 			IntPtr windowRef = carbonWindow.WindowRef;
 
-			if (!CarbonGLNative.WindowRefs.ContainsKey(windowRef))
+			if (!CarbonWindow.WindowRefs.ContainsKey(windowRef))
 				return IntPtr.Zero;
 
-			WeakReference nativeRef = CarbonGLNative.WindowRefs[windowRef];
+			WeakReference nativeRef = CarbonWindow.WindowRefs[windowRef];
 			if (!nativeRef.IsAlive)
 				return IntPtr.Zero;
 
-			CarbonGLNative window = nativeRef.Target as CarbonGLNative;
+			CarbonWindow window = nativeRef.Target as CarbonWindow;
 
 			if (window == null)
 				return IntPtr.Zero;
@@ -145,7 +145,7 @@ namespace OpenTK.Platform.MacOS {
 			if (carbonWindow.goFullScreenHack)
 			{
 				carbonWindow.goFullScreenHack = false;
-				CarbonGLNative wind = GetCarbonWindow(carbonWindow);
+				CarbonWindow wind = GetCarbonWindow(carbonWindow);
 
 				if (wind != null)
 					wind.SetFullscreen(this);
@@ -157,7 +157,7 @@ namespace OpenTK.Platform.MacOS {
 			else if (carbonWindow.goWindowedHack)
 			{
 				carbonWindow.goWindowedHack = false;
-				CarbonGLNative wind = GetCarbonWindow(carbonWindow);
+				CarbonWindow wind = GetCarbonWindow(carbonWindow);
 
 				if (wind != null)
 					wind.UnsetFullscreen(this);
@@ -174,16 +174,16 @@ namespace OpenTK.Platform.MacOS {
 			Agl.aglUpdateContext(ContextHandle);
 		}
 
-		private CarbonGLNative GetCarbonWindow(CarbonWindowInfo carbonWindow)
+		private CarbonWindow GetCarbonWindow(CarbonWindowInfo carbonWindow)
 		{
-			WeakReference r = CarbonGLNative.WindowRefs[carbonWindow.WindowRef];
-			return r.IsAlive ? (CarbonGLNative)r.Target : null;
+			WeakReference r = CarbonWindow.WindowRefs[carbonWindow.WindowRef];
+			return r.IsAlive ? (CarbonWindow)r.Target : null;
 		}
 
 		bool firstFullScreen = false;
 		internal void SetFullScreen(CarbonWindowInfo info, out int width, out int height)
 		{
-			CarbonGLNative wind = GetCarbonWindow(info);
+			CarbonWindow wind = GetCarbonWindow(info);
 
 			Debug.Print("Switching to full screen {0}x{1} on context {2}",
 			            wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, ContextHandle);

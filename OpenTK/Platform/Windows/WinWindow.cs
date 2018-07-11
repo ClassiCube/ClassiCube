@@ -38,10 +38,10 @@ namespace OpenTK.Platform.Windows
 	/// Drives GameWindow on Windows.
 	/// This class supports OpenTK, and is not intended for use by OpenTK programs.
 	/// </summary>
-	internal sealed class WinGLNative : INativeWindow
+	internal sealed class WinWindow : INativeWindow
 	{
 		const ExtendedWindowStyle ParentStyleEx = ExtendedWindowStyle.WindowEdge | ExtendedWindowStyle.ApplicationWindow;
-		readonly IntPtr Instance = Marshal.GetHINSTANCE(typeof(WinGLNative).Module);
+		readonly IntPtr Instance = Marshal.GetHINSTANCE(typeof(WinWindow).Module);
 		readonly IntPtr ClassName = Marshal.StringToHGlobalAuto("CS_WindowClass");
 		readonly WindowProcedure WindowProcedureDelegate;
 
@@ -55,14 +55,12 @@ namespace OpenTK.Platform.Windows
 		Rectangle bounds = new Rectangle(), client_rectangle = new Rectangle(),
 		previous_bounds = new Rectangle(); // Used to restore previous size when leaving fullscreen mode.
 		Icon icon;
-
-		KeyboardDevice keyboard = new KeyboardDevice();
-		MouseDevice mouse = new MouseDevice();
+		
 		static readonly WinKeyMap KeyMap = new WinKeyMap();
 		const long ExtendedBit = 1 << 24;           // Used to distinguish left and right control, alt and enter keys.
 		KeyPressEventArgs key_press = new KeyPressEventArgs();
 
-		public WinGLNative(int x, int y, int width, int height, string title, DisplayDevice device) {
+		public WinWindow(int x, int y, int width, int height, string title, DisplayDevice device) {
 			WindowProcedureDelegate = WindowProcedure;
 			UngroupFromTaskbar();
 			window = new WinWindowInfo(CreateWindow(x, y, width, height, title, device));
@@ -102,7 +100,7 @@ namespace OpenTK.Platform.Windows
 
 				case WindowMessage.WINDOWPOSCHANGED:
 					WindowPosition* pos = (WindowPosition*)lParam;
-					if (window != null && pos->hwnd == window.handle) {
+					if (window != null && pos->hwnd == window.winHandle) {
 						Point new_location = new Point(pos->x, pos->y);
 						if (Location != new_location) {
 							bounds.Location = new_location;
@@ -119,7 +117,7 @@ namespace OpenTK.Platform.Windows
 							API.GetClientRect(handle, out rect);
 							client_rectangle = rect.ToRectangle();
 
-							API.SetWindowPos(window.handle, IntPtr.Zero,
+							API.SetWindowPos(window.winHandle, IntPtr.Zero,
 							                 bounds.X, bounds.Y, bounds.Width, bounds.Height,
 							                 SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
 							                 SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
@@ -171,54 +169,52 @@ namespace OpenTK.Platform.Windows
 				case WindowMessage.MOUSEMOVE:
 					// set before position change, in case mouse buttons changed when outside window
 					uint mouse_flags = (uint)wParam.ToInt64();
-					mouse[MouseButton.Left]   = (mouse_flags & 0x01) != 0;
-					mouse[MouseButton.Right]  = (mouse_flags & 0x02) != 0;
-					mouse[MouseButton.Middle] = (mouse_flags & 0x10) != 0;
+					Mouse.Set(MouseButton.Left,   (mouse_flags & 0x01) != 0);
+					Mouse.Set(MouseButton.Right,  (mouse_flags & 0x02) != 0);
+					Mouse.Set(MouseButton.Middle, (mouse_flags & 0x10) != 0);
 					// TODO: do we need to set XBUTTON1 / XBUTTON 2 here
 					
 					uint mouse_xy = (uint)lParam.ToInt32();
-					Point point = new Point(
-						(short)(mouse_xy  & 0x0000FFFF),
-						(short)((mouse_xy & 0xFFFF0000) >> 16));
-					mouse.Position = point;					
+					Mouse.SetPos((short)(mouse_xy  & 0x0000FFFF),
+					             (short)((mouse_xy & 0xFFFF0000) >> 16));
 					break;
 
 				case WindowMessage.MOUSEWHEEL:
 					// This is due to inconsistent behavior of the WParam value on 64bit arch, whese
 					// wparam = 0xffffffffff880000 or wparam = 0x00000000ff100000
-					mouse.Wheel += ((long)wParam << 32 >> 48) / 120.0f;
+					Mouse.SetWheel(Mouse.Wheel + (((long)wParam << 32 >> 48) / 120.0f));
 					return IntPtr.Zero;
 
 				case WindowMessage.LBUTTONDOWN:
-					mouse[MouseButton.Left] = true;
+					Mouse.Set(MouseButton.Left, true);
 					break;
 
 				case WindowMessage.MBUTTONDOWN:
-					mouse[MouseButton.Middle] = true;
+					Mouse.Set(MouseButton.Middle, true);
 					break;
 
 				case WindowMessage.RBUTTONDOWN:
-					mouse[MouseButton.Right] = true;
+					Mouse.Set(MouseButton.Right, true);
 					break;
 
 				case WindowMessage.XBUTTONDOWN:
-					keyboard[(((ulong)wParam.ToInt64() >> 16) & 0xFFFF) == 1 ? Key.XButton1 : Key.XButton2] = true;
+					Keyboard.Set((((ulong)wParam.ToInt64() >> 16) & 0xFFFF) == 1 ? Key.XButton1 : Key.XButton2, true);
 					break;
 
 				case WindowMessage.LBUTTONUP:
-					mouse[MouseButton.Left] = false;
+					Mouse.Set(MouseButton.Left, false);
 					break;
 
 				case WindowMessage.MBUTTONUP:
-					mouse[MouseButton.Middle] = false;
+					Mouse.Set(MouseButton.Middle, false);
 					break;
 
 				case WindowMessage.RBUTTONUP:
-					mouse[MouseButton.Right] = false;
+					Mouse.Set(MouseButton.Right, false);
 					break;
 
 				case WindowMessage.XBUTTONUP:
-					keyboard[(((ulong)wParam.ToInt64() >> 16) & 0xFFFF) == 1 ? Key.XButton1 : Key.XButton2] = false;
+					Keyboard.Set((((ulong)wParam.ToInt64() >> 16) & 0xFFFF) == 1 ? Key.XButton1 : Key.XButton2, false);
 					break;
 
 					// Keyboard events:
@@ -236,7 +232,7 @@ namespace OpenTK.Platform.Windows
 					// In this case, both keys will be reported as pressed.
 
 					bool extended = (lParam.ToInt64() & ExtendedBit) != 0;
-					switch ((VirtualKeys)wParam)
+					switch ((int)wParam)
 					{
 						case VirtualKeys.SHIFT:
 							// The behavior of this key is very strange. Unlike Control and Alt, there is no extended bit
@@ -246,39 +242,39 @@ namespace OpenTK.Platform.Windows
 							bool rShiftDown = (API.GetKeyState( (int)VirtualKeys.RSHIFT ) >> 15) == 1;
 							
 							if( !pressed || lShiftDown != rShiftDown ) {
-								Keyboard[Input.Key.ShiftLeft] = lShiftDown;
-								Keyboard[Input.Key.ShiftRight] = rShiftDown;
+								Keyboard.Set(Key.ShiftLeft, lShiftDown);
+								Keyboard.Set(Key.ShiftRight, rShiftDown);
 							}
 							return IntPtr.Zero;
 
 						case VirtualKeys.CONTROL:
 							if (extended)
-								keyboard[Input.Key.ControlRight] = pressed;
+								Keyboard.Set(Key.ControlRight, pressed);
 							else
-								keyboard[Input.Key.ControlLeft] = pressed;
+								Keyboard.Set(Key.ControlLeft, pressed);
 							return IntPtr.Zero;
 
 						case VirtualKeys.MENU:
 							if (extended)
-								keyboard[Input.Key.AltRight] = pressed;
+								Keyboard.Set(Key.AltRight, pressed);
 							else
-								keyboard[Input.Key.AltLeft] = pressed;
+								Keyboard.Set(Key.AltLeft, pressed);
 							return IntPtr.Zero;
 
 						case VirtualKeys.RETURN:
 							if (extended)
-								keyboard[Key.KeypadEnter] = pressed;
+								Keyboard.Set(Key.KeypadEnter, pressed);
 							else
-								keyboard[Key.Enter] = pressed;
+								Keyboard.Set(Key.Enter, pressed);
 							return IntPtr.Zero;
 
 						default:
 							Key tkKey;
-							if (!KeyMap.TryGetMappedKey((VirtualKeys)wParam, out tkKey)) {
-								Debug.Print("Virtual key {0} ({1}) not mapped.", (VirtualKeys)wParam, lParam.ToInt64());
+							if (!KeyMap.TryGetValue((int)wParam, out tkKey)) {
+								Debug.Print("Virtual key {0} ({1}) not mapped.", wParam, lParam.ToInt64());
 								break;
 							} else{
-								keyboard[tkKey] = pressed;
+								Keyboard.Set(tkKey, pressed);
 							}
 							return IntPtr.Zero;
 					}
@@ -288,7 +284,7 @@ namespace OpenTK.Platform.Windows
 					return IntPtr.Zero;
 
 				case WindowMessage.KILLFOCUS:
-					keyboard.ClearKeys();
+					Keyboard.ClearKeys();
 					break;
 
 					#endregion
@@ -391,8 +387,8 @@ namespace OpenTK.Platform.Windows
 		/// <summary> Starts the teardown sequence for the current window. </summary>
 		void DestroyWindow() {
 			if (exists) {
-				Debug.Print("Destroying window: {0}", window.handle);
-				API.DestroyWindow(window.handle);
+				Debug.Print("Destroying window: {0}", window.winHandle);
+				API.DestroyWindow(window.winHandle);
 				exists = false;
 			}
 		}
@@ -416,7 +412,7 @@ namespace OpenTK.Platform.Windows
 		public unsafe string GetClipboardText() {
 			// retry up to 10 times
 			for (int i = 0; i < 10; i++) {
-				if (!API.OpenClipboard(window.handle)) {
+				if (!API.OpenClipboard(window.winHandle)) {
 					Thread.Sleep(100);
 					continue;
 				}
@@ -443,7 +439,7 @@ namespace OpenTK.Platform.Windows
 			UIntPtr dstSize = (UIntPtr)((value.Length + 1) * Marshal.SystemDefaultCharSize);
 			// retry up to 10 times
 			for (int i = 0; i < 10; i++) {
-				if (!API.OpenClipboard(window.handle)) {
+				if (!API.OpenClipboard(window.winHandle)) {
 					Thread.Sleep(100);
 					continue;
 				}
@@ -474,7 +470,7 @@ namespace OpenTK.Platform.Windows
 			get { return bounds; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
-				API.SetWindowPos(window.handle, IntPtr.Zero, value.X, value.Y, value.Width, value.Height, 0);
+				API.SetWindowPos(window.winHandle, IntPtr.Zero, value.X, value.Y, value.Width, value.Height, 0);
 			}
 		}
 
@@ -482,7 +478,7 @@ namespace OpenTK.Platform.Windows
 			get { return Bounds.Location; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
-				API.SetWindowPos(window.handle, IntPtr.Zero, value.X, value.Y, 0, 0, SetWindowPosFlags.NOSIZE);
+				API.SetWindowPos(window.winHandle, IntPtr.Zero, value.X, value.Y, 0, 0, SetWindowPosFlags.NOSIZE);
 			}
 		}
 
@@ -490,7 +486,7 @@ namespace OpenTK.Platform.Windows
 			get { return Bounds.Size; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
-				API.SetWindowPos(window.handle, IntPtr.Zero, 0, 0, value.Width, value.Height, SetWindowPosFlags.NOMOVE);
+				API.SetWindowPos(window.winHandle, IntPtr.Zero, 0, 0, value.Width, value.Height, SetWindowPosFlags.NOMOVE);
 			}
 		}
 
@@ -509,7 +505,7 @@ namespace OpenTK.Platform.Windows
 		public Size ClientSize {
 			get { return ClientRectangle.Size; }
 			set {
-				WindowStyle style = (WindowStyle)API.GetWindowLong(window.handle, GetWindowLongOffsets.STYLE);
+				WindowStyle style = (WindowStyle)API.GetWindowLong(window.winHandle, GetWindowLongOffsets.STYLE);
 				Win32Rectangle rect = Win32Rectangle.From(value);
 				API.AdjustWindowRect(ref rect, style, false);
 				Size = new Size(rect.Width, rect.Height);
@@ -520,12 +516,12 @@ namespace OpenTK.Platform.Windows
 			get { return icon; }
 			set {
 				icon = value;
-				if (window.handle != IntPtr.Zero)
+				if (window.winHandle != IntPtr.Zero)
 				{
 					//Icon small = new Icon( value, 16, 16 );
 					//GC.KeepAlive( small );
-					API.SendMessage(window.handle, WindowMessage.SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
-					API.SendMessage(window.handle, WindowMessage.SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
+					API.SendMessage(window.winHandle, WindowMessage.SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
+					API.SendMessage(window.winHandle, WindowMessage.SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
 				}
 			}
 		}
@@ -535,16 +531,16 @@ namespace OpenTK.Platform.Windows
 		}
 
 		public bool Visible {
-			get { return API.IsWindowVisible(window.handle); }
+			get { return API.IsWindowVisible(window.winHandle); }
 			set {
 				if (value) {
-					API.ShowWindow(window.handle, ShowWindowCommand.SHOW);
+					API.ShowWindow(window.winHandle, ShowWindowCommand.SHOW);
 					if (invisible_since_creation) {
-						API.BringWindowToTop(window.handle);
-						API.SetForegroundWindow(window.handle);
+						API.BringWindowToTop(window.winHandle);
+						API.SetForegroundWindow(window.winHandle);
 					}
 				} else {
-					API.ShowWindow(window.handle, ShowWindowCommand.HIDE);
+					API.ShowWindow(window.winHandle, ShowWindowCommand.HIDE);
 				}
 			}
 		}
@@ -552,7 +548,7 @@ namespace OpenTK.Platform.Windows
 		public bool Exists { get { return exists; } }
 
 		public void Close() {
-			API.PostMessage(window.handle, WindowMessage.CLOSE, IntPtr.Zero, IntPtr.Zero);
+			API.PostMessage(window.winHandle, WindowMessage.CLOSE, IntPtr.Zero, IntPtr.Zero);
 		}
 
 		public WindowState WindowState {
@@ -594,12 +590,12 @@ namespace OpenTK.Platform.Windows
 						SetHiddenBorder( true );
 						
 						command = ShowWindowCommand.MAXIMIZE;
-						API.SetForegroundWindow(window.handle);
+						API.SetForegroundWindow(window.winHandle);
 						break;
 				}
 
 				if( command != 0 )
-					API.ShowWindow(window.handle, command);
+					API.ShowWindow(window.winHandle, command);
 
 				// Restore previous window border or apply pending border change when leaving fullscreen mode.
 				if( exiting_fullscreen )
@@ -638,8 +634,8 @@ namespace OpenTK.Platform.Windows
 				if( was_visible )
 					Visible = false;
 
-				API.SetWindowLong(window.handle, GetWindowLongOffsets.STYLE, (int)style);
-				API.SetWindowPos(window.handle, IntPtr.Zero, 0, 0, rect.Width, rect.Height,
+				API.SetWindowLong(window.winHandle, GetWindowLongOffsets.STYLE, (int)style);
+				API.SetWindowPos(window.winHandle, IntPtr.Zero, 0, 0, rect.Width, rect.Height,
 				                 SetWindowPosFlags.NOMOVE | SetWindowPosFlags.NOZORDER |
 				                 SetWindowPosFlags.FRAMECHANGED);
 
@@ -653,7 +649,7 @@ namespace OpenTK.Platform.Windows
 		}
 
 		public Point PointToClient(Point point) {
-			if (!API.ScreenToClient(window.handle, ref point))
+			if (!API.ScreenToClient(window.winHandle, ref point))
 				throw new InvalidOperationException(String.Format(
 					"Could not convert point {0} from client to screen coordinates. Windows error: {1}",
 					point.ToString(), Marshal.GetLastWin32Error()));
@@ -685,19 +681,11 @@ namespace OpenTK.Platform.Windows
 			}
 			IntPtr foreground = API.GetForegroundWindow();
 			if( foreground != IntPtr.Zero )
-				focused = foreground == window.handle;
+				focused = foreground == window.winHandle;
 		}
 
 		public IWindowInfo WindowInfo {
 			get { return window; }
-		}
-		
-		public KeyboardDevice Keyboard {
-			get { return keyboard; }
-		}
-		
-		public MouseDevice Mouse {
-			get { return mouse; }
 		}
 
 		public Point DesktopCursorPos {
@@ -737,7 +725,7 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		~WinGLNative() {
+		~WinWindow() {
 			Dispose(false);
 		}
 	}

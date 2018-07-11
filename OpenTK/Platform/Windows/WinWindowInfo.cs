@@ -33,45 +33,34 @@ namespace OpenTK.Platform.Windows {
 	/// \internal
 	/// <summary>Describes a win32 window.</summary>
 	public sealed class WinWindowInfo : IWindowInfo {
-		internal IntPtr dc, handle;
+		internal IntPtr dc, winHandle;
 		bool disposed;
+		
+		public WinWindowInfo(IntPtr windowHandle) { winHandle = windowHandle; }
 
-		/// <summary> Constructs a new instance with the specified window handle and parent. </summary>
-		/// <param name="handle">The window handle for this instance.</param>
-		public WinWindowInfo(IntPtr windowHandle) {
-			handle = windowHandle;
-		}
-
-		/// <summary> Gets the handle of the window. </summary>
-		public IntPtr WindowHandle { get { return handle; } }
-
-		/// <summary> Gets the device context for this window instance. </summary>
+		public IntPtr WinHandle { get { return winHandle; } }
 		public IntPtr DeviceContext {
 			get {
-				if (dc == IntPtr.Zero) dc = API.GetDC(this.handle);
-				//dc = Functions.GetWindowDC(this.WindowHandle);
+				if (dc == IntPtr.Zero) dc = API.GetDC(winHandle);
+				//dc = Functions.GetWindowDC(winHandle);
 				return dc;
 			}
 		}
 
-		/// <summary>Releases the unmanaged resources consumed by this instance.</summary>
 		public void Dispose() {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
+		~WinWindowInfo() { Dispose(false); }
 
 		void Dispose(bool manual) {
-			if (!disposed) {
-				if (dc != IntPtr.Zero && !API.ReleaseDC(handle, dc)) {
-					Debug.Print("[Warning] Failed to release device context {0}. Windows error: {1}.", this.dc, Marshal.GetLastWin32Error());
-				}
-
-				disposed = true;
+			if (disposed) return;
+			
+			if (dc != IntPtr.Zero && !API.ReleaseDC(winHandle, dc)) {
+				Debug.Print("[Warning] Failed to release device context {0}. Windows error: {1}.", 
+				            dc, Marshal.GetLastWin32Error());
 			}
+			disposed = true;
 		}
-
-		~WinWindowInfo() { Dispose(false); }
-		
-		public IntPtr WinHandle { get { return handle; } }
 	}
 }

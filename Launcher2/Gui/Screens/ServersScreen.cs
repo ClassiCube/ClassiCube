@@ -42,7 +42,7 @@ namespace Launcher.Gui.Screens {
 			flagsTask.Tick();
 			
 			TableWidget table = (TableWidget)widgets[view.tableIndex];
-			if (!game.Window.Mouse[MouseButton.Left]) {
+			if (!Mouse.Get(MouseButton.Left)) {
 				table.DraggingColumn = -1;
 				table.DraggingScrollbar = false;
 				table.mouseOffset = 0;
@@ -108,7 +108,7 @@ namespace Launcher.Gui.Screens {
 
 		public override void Init() {
 			base.Init();
-			game.Window.Mouse.ButtonUp += MouseButtonUp;
+			Mouse.ButtonUp += MouseButtonUp;
 			view.Init();
 			SetupWidgetHandlers();
 			

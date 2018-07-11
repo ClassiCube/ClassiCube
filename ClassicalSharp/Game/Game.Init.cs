@@ -27,9 +27,6 @@ namespace ClassicalSharp {
 	public partial class Game : IDisposable {
 		
 		internal void OnLoad() {
-			Mouse = window.Mouse;
-			Keyboard = window.Keyboard;
-			
 			#if ANDROID
 			Graphics = new OpenGLESApi();
 			#elif !USE_DX

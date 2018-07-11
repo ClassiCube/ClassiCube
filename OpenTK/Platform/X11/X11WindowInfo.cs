@@ -47,9 +47,6 @@ namespace OpenTK.Platform.X11 {
 		
 		/// <summary>Gets or sets the X11 VisualInfo.</summary>
 		public XVisualInfo VisualInfo;
-		
-		/// <summary>Gets or sets the X11 EventMask.</summary>
-		public EventMask EventMask;
 
 		/// <summary> Disposes of this X11WindowInfo instance. </summary>
 		public void Dispose() {

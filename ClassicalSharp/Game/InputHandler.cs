@@ -23,13 +23,13 @@ namespace ClassicalSharp {
 		}
 		
 		void RegisterInputHandlers() {
-			game.Keyboard.KeyDown += KeyDownHandler;
-			game.Keyboard.KeyUp += KeyUpHandler;
+			Keyboard.KeyDown += KeyDownHandler;
+			Keyboard.KeyUp += KeyUpHandler;
 			game.window.KeyPress += KeyPressHandler;
-			game.Mouse.WheelChanged += MouseWheelChanged;
-			game.Mouse.Move += MouseMove;
-			game.Mouse.ButtonDown += MouseButtonDown;
-			game.Mouse.ButtonUp += MouseButtonUp;
+			Mouse.WheelChanged += MouseWheelChanged;
+			Mouse.Move += MouseMove;
+			Mouse.ButtonDown += MouseButtonDown;
+			Mouse.ButtonUp += MouseButtonUp;
 		}
 		
 		public bool WinDown { get { return IsKeyDown(Key.WinLeft) || IsKeyDown(Key.WinRight); } }
@@ -39,17 +39,16 @@ namespace ClassicalSharp {
 		
 		public KeyMap Keys;
 		public bool IsKeyDown(Key key) {
-			return game.Keyboard[key];
+			return Keyboard.Get(key);
 		}
 		
 		/// <summary> Returns whether the key associated with the given key binding is currently held down. </summary>
 		public bool IsKeyDown(KeyBind binding) {
-			Key key = Keys[binding];
-			return game.Keyboard[key];
+			return Keyboard.Get(Keys[binding]);
 		}
 		
 		public bool IsMousePressed(MouseButton button) {
-			bool down = game.Mouse[button];
+			bool down = Mouse.Get(button);
 			if (down) return true;
 			
 			// Key --> mouse mappings
@@ -100,7 +99,8 @@ namespace ClassicalSharp {
 		#region Event handlers
 		
 		void MouseButtonUp(object sender, MouseButtonEventArgs e) {
-			if (!game.Gui.ActiveScreen.HandlesMouseUp(e.X, e.Y, e.Button)) {
+			int x = Mouse.X, y = Mouse.Y;
+			if (!game.Gui.ActiveScreen.HandlesMouseUp(x, y, e.Button)) {
 				if (game.Server.UsingPlayerClick && e.Button <= MouseButton.Middle) {
 					pickingId = -1;
 					ButtonStateChanged(e.Button, false);
@@ -109,7 +109,8 @@ namespace ClassicalSharp {
 		}
 
 		void MouseButtonDown(object sender, MouseButtonEventArgs e) {
-			if (!game.Gui.ActiveScreen.HandlesMouseDown(e.X, e.Y, e.Button)) {
+			int x = Mouse.X, y = Mouse.Y;
+			if (!game.Gui.ActiveScreen.HandlesMouseDown(x, y, e.Button)) {
 				bool left   = e.Button == MouseButton.Left;
 				bool middle = e.Button == MouseButton.Middle;
 				bool right  = e.Button == MouseButton.Right;
@@ -120,7 +121,8 @@ namespace ClassicalSharp {
 		}
 
 		void MouseMove(object sender, MouseMoveEventArgs e) {
-			game.Gui.ActiveScreen.HandlesMouseMove(e.X, e.Y);
+			int x = Mouse.X, y = Mouse.Y;
+			game.Gui.ActiveScreen.HandlesMouseMove(x, y);
 		}
 
 		void MouseWheelChanged(object sender, MouseWheelEventArgs e) {
@@ -189,11 +191,8 @@ namespace ClassicalSharp {
 			Key left = Keys[KeyBind.MouseLeft], middle = Keys[KeyBind.MouseMiddle],
 			right = Keys[KeyBind.MouseRight];
 			
-			if (!(key == left || key == middle || key == right))
-				return false;
+			if (!(key == left || key == middle || key == right)) return false;
 			simArgs.Button = key == left ? MouseButton.Left : key == middle ? MouseButton.Middle : MouseButton.Right;
-			simArgs.X = game.Mouse.X;
-			simArgs.Y = game.Mouse.Y;
 			
 			if (pressed) MouseButtonDown(null, simArgs);
 			else MouseButtonUp(null, simArgs);

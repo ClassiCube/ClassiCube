@@ -208,8 +208,6 @@ namespace ClassicalSharp {
 		}
 		
 		internal DesktopWindow window;
-		public MouseDevice Mouse;
-		public KeyboardDevice Keyboard;
 		
 		public int Width, Height;
 		

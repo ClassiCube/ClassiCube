@@ -166,7 +166,7 @@ namespace OpenTK.Platform.Windows {
 		internal static extern ushort GetKeyState( int code );
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
-		internal static extern uint MapVirtualKey(VirtualKeys vkey, MapVirtualKeyType uMapType);
+		internal static extern uint MapVirtualKey(short vkey, MapVirtualKeyType uMapType);
 	}
 
 	internal struct Constants {
@@ -541,93 +541,7 @@ namespace OpenTK.Platform.Windows {
 
 		// #if(_WIN32_WINNT >= 0x0501)
 		DropShadow = 0x00020000
-			// #endif /* _WIN32_WINNT >= 0x0501 */
-	}
-	
-	internal enum VirtualKeys : short {
-		// Virtual Key, Standard Set
-		BACK         = 0x08,
-		TAB          = 0x09,
-
-		CLEAR        = 0x0C,
-		RETURN       = 0x0D,
-
-		SHIFT        = 0x10,
-		CONTROL      = 0x11,
-		MENU         = 0x12,
-		PAUSE        = 0x13,
-		CAPITAL      = 0x14,
-
-		ESCAPE       = 0x1B,
-		
-		SPACE        = 0x20,
-		PRIOR        = 0x21,
-		NEXT         = 0x22,
-		END          = 0x23,
-		HOME         = 0x24,
-		LEFT         = 0x25,
-		UP           = 0x26,
-		RIGHT        = 0x27,
-		DOWN         = 0x28,
-		PRINT        = 0x2A,
-		SNAPSHOT     = 0x2C,
-		INSERT       = 0x2D,
-		DELETE       = 0x2E,
-		HELP         = 0x2F,
-		
-		// 0 - 9 are the same as ASCII '0' - '9' (0x30 - 0x39)
-		// A - Z are the same as ASCII 'A' - 'Z' (0x41 - 0x5A)
-
-		LWIN         = 0x5B,
-		RWIN         = 0x5C,
-		APPS         = 0x5D,
-		SLEEP        = 0x5F,
-		NUMPAD0      = 0x60,
-		NUMPAD9      = 0x69,
-		MULTIPLY     = 0x6A,
-		ADD          = 0x6B,
-		SEPARATOR    = 0x6C,
-		SUBTRACT     = 0x6D,
-		DECIMAL      = 0x6E,
-		DIVIDE       = 0x6F,
-		F1           = 0x70,
-		F24          = 0x87,
-
-		NUMLOCK      = 0x90,
-		SCROLL       = 0x91,
-
-		/* L* & R* - left and right Alt, Ctrl and Shift virtual keys.
-		 * Used only as parameters to GetAsyncKeyState() and GetKeyState().
-		 * No other API or message will distinguish left and right keys in this way. */
-		LSHIFT       = 0xA0,
-		RSHIFT       = 0xA1,
-		LCONTROL     = 0xA2,
-		RCONTROL     = 0xA3,
-		LMENU        = 0xA4,
-		RMENU        = 0xA5,
-
-		OEM_1        = 0xBA,   // ';:' for US
-		OEM_PLUS     = 0xBB,   // '+' any country
-		OEM_COMMA    = 0xBC,   // ',' any country
-		OEM_MINUS    = 0xBD,   // '-' any country
-		OEM_PERIOD   = 0xBE,   // '.' any country
-		OEM_2        = 0xBF,   // '/?' for US
-		OEM_3        = 0xC0,   // '`~' for US
-
-		OEM_4        = 0xDB,  //  '[{' for US
-		OEM_5        = 0xDC,  //  '\|' for US
-		OEM_6        = 0xDD,  //  ']}' for US
-		OEM_7        = 0xDE,  //  ''"' for US
-		OEM_8        = 0xDF,
-	}
-
-	enum MouseKeys {
-		None = 0x00, //No mouse button was pressed.
-		Left = 0x01, // The left mouse button was pressed.
-		Right = 0x02, // The right mouse button was pressed.
-		Middle = 0x10, // The middle mouse button was pressed.
-		XButton1 = 0x20, // The first XButton was pressed.
-		XButton2 = 0x40, // The second XButton was pressed.
+		// #endif /* _WIN32_WINNT >= 0x0501 */
 	}
 	
 	internal enum WindowMessage : uint {

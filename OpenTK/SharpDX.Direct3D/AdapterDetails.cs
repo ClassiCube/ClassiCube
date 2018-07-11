@@ -22,11 +22,6 @@ using System;
 using System.Runtime.InteropServices;
 
 namespace SharpDX.Direct3D9 {	
-	public class AdapterInformation {
-		public int Adapter;
-		public AdapterDetails Details;
-	}
-	
 	public unsafe class AdapterDetails {
 		public Version DriverVersion {
 			get {
@@ -45,7 +40,7 @@ namespace SharpDX.Direct3D9 {
 		public int SubsystemId;	
 		public int Revision;
 		
-		public Guid DeviceIdentifier;		
+		public Guid DeviceIdentifier;
 		public int WhqlLevel;
 
 		[StructLayout(LayoutKind.Sequential)]
