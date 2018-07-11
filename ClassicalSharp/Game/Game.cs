@@ -252,9 +252,7 @@ namespace ClassicalSharp {
 			Gui.OnResize();
 		}
 		
-		void OnClosed(object sender, EventArgs e) {
-			Dispose();
-		}
+		void OnClosed(object sender, EventArgs e) { isExiting = true; }
 		
 		void OnNewMapCore(object sender, EventArgs e) {
 			for (int i = 0; i < Components.Count; i++)

@@ -594,7 +594,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void OnWindowResize(Game game) {
 			GL.Viewport(0, 0, game.Width, game.Height);
-			glContext.Update(game.window);
+			glContext.Update(game.window.WindowInfo);
 		}
 		
 		public override void Dispose() {
