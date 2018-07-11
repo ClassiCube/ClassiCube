@@ -34,96 +34,136 @@ using OpenTK.Platform;
 namespace OpenTK {
 	
 	/// <summary> Defines the interface for a native window.  </summary>
-	public interface INativeWindow : IDisposable {
+	public abstract class INativeWindow : IDisposable {
 		
 		/// <summary> Gets the current contents of the clipboard. </summary>
-		string GetClipboardText();
+		public abstract string GetClipboardText();
 		
 		/// <summary> Sets the current contents of the clipboard. </summary>
-		void SetClipboardText( string value );
+		public abstract void SetClipboardText(string value);
 		
 		/// <summary> Gets or sets the <see cref="System.Drawing.Icon"/> of the window. </summary>
-		Icon Icon { get; set; }
+		public abstract Icon Icon { get; set; }
 		
 		/// <summary> Gets a System.Boolean that indicates whether this window has input focus. </summary>
-		bool Focused { get; }
+		public abstract bool Focused { get; }
 		
 		/// <summary> Gets or sets a System.Boolean that indicates whether the window is visible. </summary>
-		bool Visible { get; set; }
+		public abstract bool Visible { get; set; }
 		
 		/// <summary> Gets a System.Boolean that indicates whether the window has been created and has not been destroyed. </summary>
-		bool Exists { get; }
+		public abstract bool Exists { get; }
 		
 		/// <summary> Gets the <see cref="OpenTK.Platform.IWindowInfo"/> for this window. </summary>
-		IWindowInfo WindowInfo { get; }
+		public abstract IWindowInfo WindowInfo { get; }
 		
 		/// <summary> Gets or sets the <see cref="OpenTK.WindowState"/> for this window. </summary>
-		WindowState WindowState { get; set; }
+		public abstract WindowState WindowState { get; set; }
 
 		/// <summary> Gets or sets a <see cref="System.Drawing.Rectangle"/> structure the contains the external bounds of this window, in screen coordinates.
 		/// External bounds include the title bar, borders and drawing area of the window. </summary>
-		Rectangle Bounds { get; set; }
+		public abstract Rectangle Bounds { get; set; }
 		
 		/// <summary> Gets or sets a <see cref="System.Drawing.Point"/> structure that contains the location of this window on the desktop. </summary>
-		Point Location { get; set; }
+		public abstract Point Location { get; set; }
 		
 		/// <summary> Gets or sets a <see cref="System.Drawing.Size"/> structure that contains the external size of this window. </summary>
-		Size Size { get; set; }
+		public abstract Size Size { get; set; }
 		
 		/// <summary> Gets or sets a <see cref="System.Drawing.Rectangle"/> structure that contains the internal bounds of this window, in client coordinates.
 		/// The internal bounds include the drawing area of the window, but exclude the titlebar and window borders. </summary>
-		Rectangle ClientRectangle { get; set; }
+		public abstract Rectangle ClientRectangle { get; set; }
 		
 		/// <summary> Gets or sets a <see cref="System.Drawing.Size"/> structure that contains the internal size this window. </summary>
-		Size ClientSize { get; set; }
+		public abstract Size ClientSize { get; set; }
 
 		/// <summary> Closes this window. </summary>
-		void Close();
+		public abstract void Close();
 		
 		/// <summary> Processes pending window events. </summary>
-		void ProcessEvents();
+		public abstract void ProcessEvents();
 		
 		/// <summary> Transforms the specified point from screen to client coordinates.  </summary>
 		/// <param name="point"> A <see cref="System.Drawing.Point"/> to transform. </param>
 		/// <returns> The point transformed to client coordinates. </returns>
-		Point PointToClient(Point point);
+		public abstract Point PointToClient(Point point);
 		
 		/// <summary> Transforms the specified point from client to screen coordinates. </summary>
 		/// <param name="point"> A <see cref="System.Drawing.Point"/> to transform. </param>
 		/// <returns> The point transformed to screen coordinates. </returns>
-		Point PointToScreen(Point point);
+		public abstract Point PointToScreen(Point point);
+		/*public virtual Point PointToScreen(Point point) {
+			// Here we use the fact that PointToClient just translates the point, and PointToScreen
+			// should perform the inverse operation.
+			Point trans = PointToClient(Point.Empty);
+			point.X -= trans.X;
+			point.Y -= trans.Y;
+			return point;
+		}*/
 		
 		/// <summary> Gets or sets the cursor position in screen coordinates. </summary>
-		Point DesktopCursorPos { get; set; }
+		public abstract Point DesktopCursorPos { get; set; }
 		
 		/// <summary> Gets or sets whether the cursor is visible in the window. </summary>
-		bool CursorVisible { get; set; }
+		public abstract bool CursorVisible { get; set; }
 
 		/// <summary> Occurs whenever the window is moved. </summary>
-		event EventHandler Move;
+		public event EventHandler Move;
+		protected void RaiseMove() {
+			if (Move != null) Move(this, EventArgs.Empty);
+		}
 
 		/// <summary> Occurs whenever the window is resized. </summary>
-		event EventHandler Resize;
+		public event EventHandler Resize;
+		protected void RaiseResize() {
+			if (Resize != null) Resize(this, EventArgs.Empty);
+		}
 
 		/// <summary> Occurs when the window is about to close. </summary>
-		event EventHandler<CancelEventArgs> Closing;
+		public event EventHandler Closing;
+		protected void RaiseClosing() {
+			if (Closing != null) Closing(this, EventArgs.Empty);
+		}
 
 		/// <summary> Occurs after the window has closed. </summary>
-		event EventHandler Closed;
-
-		/// <summary> Occurs when the window is disposed. </summary>
-		event EventHandler Disposed;
+		public event EventHandler Closed;
+		protected void RaiseClosed() {
+			if (Closed != null) Closed(this, EventArgs.Empty);
+		}
 
 		/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
-		event EventHandler VisibleChanged;
+		public event EventHandler VisibleChanged;
+		protected void RaiseVisibleChanged() {
+			if (VisibleChanged != null) VisibleChanged(this, EventArgs.Empty);
+		}
 
 		/// <summary> Occurs when the <see cref="Focused"/> property of the window changes. </summary>
-		event EventHandler FocusedChanged;
+		public event EventHandler FocusedChanged;
+		protected void RaiseFocusedChanged() {
+			if (FocusedChanged != null) FocusedChanged(this, EventArgs.Empty);
+		}
 
 		/// <summary> Occurs when the <see cref="WindowState"/> property of the window changes. </summary>
-		event EventHandler WindowStateChanged;
+		public event EventHandler WindowStateChanged;
+		protected void RaiseWindowStateChanged() {
+			if (WindowStateChanged != null) WindowStateChanged(this, EventArgs.Empty);
+		}
 
 		/// <summary> Occurs whenever a character is typed. </summary>
-		event EventHandler<KeyPressEventArgs> KeyPress;
+		public event EventHandler<KeyPressEventArgs> KeyPress;
+		KeyPressEventArgs pressArgs = new KeyPressEventArgs();
+		protected void RaiseKeyPress(char key) {
+			pressArgs.KeyChar = key;
+			if (KeyPress != null) KeyPress(this, pressArgs);
+		}
+		
+		public void Dispose() {
+        	Dispose(true);
+        	GC.SuppressFinalize( this );
+        }
+        
+        protected abstract void Dispose(bool calledManually);
+        
+        ~INativeWindow() { Dispose(false); }
 	}
 }

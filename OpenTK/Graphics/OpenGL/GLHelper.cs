@@ -15,12 +15,12 @@ namespace OpenTK.Graphics.OpenGL {
 		
 		static GL() { }
 		
-		GraphicsContextBase context;
+		IGraphicsContext context;
 		protected override IntPtr GetAddress( string funcname ) {
 			return context.GetAddress( funcname );
 		}
 		
-		internal void LoadEntryPoints( GraphicsContextBase context ) {
+		internal void LoadEntryPoints( IGraphicsContext context ) {
 			this.context = context;
 			Debug.Print("Loading OpenGL function pointers... ");
 			AlphaFuncAddress = GetAddress( "glAlphaFunc" );

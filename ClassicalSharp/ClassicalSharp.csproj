@@ -251,7 +251,6 @@
     <Compile Include="Network\Utils\NetWriter.cs" />
     <Compile Include="Math\PickedPos.cs" />
     <Compile Include="Math\Picking.cs" />
-    <Compile Include="Platform\DesktopWindow.cs" />
     <Compile Include="Platform\Font.cs" />
     <Compile Include="Platform\Platform.cs" />
     <Compile Include="Program.cs" />

@@ -38,11 +38,6 @@ namespace ClassicalSharp {
 			OpenTK.Configuration.SkipPerfCountersHack();
 			Utils.LogDebug("Starting " + AppName + "..");
 			
-			bool nullContext = true;
-			#if !USE_DX
-			nullContext = false;
-			#endif
-			
 			Options.Load();
 			DisplayDevice device = DisplayDevice.Primary;
 			int width  = Options.GetInt(OptionsKey.WindowWidth,  0, device.Width,  0);
@@ -57,17 +52,17 @@ namespace ClassicalSharp {
 			if (args.Length == 0 || args.Length == 1) {
 				const string skinServer = "http://static.classicube.net/skins/";
 				string user = args.Length > 0 ? args[0] : "Singleplayer";
-				using (Game game = new Game(user, null, skinServer, nullContext, width, height))
+				using (Game game = new Game(user, null, skinServer, width, height))
 					game.Run();
 			} else if (args.Length < 4) {
 				Utils.LogDebug("ClassicalSharp.exe is only the raw client. You must either use the launcher or"
 				               + " provide command line arguments to start the client.");
 			} else {
-				RunMultiplayer(args, nullContext, width, height);
+				RunMultiplayer(args, width, height);
 			}
 		}
 		
-		static void RunMultiplayer(string[] args, bool nullContext, int width, int height) {
+		static void RunMultiplayer(string[] args, int width, int height) {
 			IPAddress ip = null;
 			if (!IPAddress.TryParse(args[2], out ip)) {
 				Utils.LogDebug("Invalid IP \"" + args[2] + '"'); return;
@@ -83,7 +78,7 @@ namespace ClassicalSharp {
 			}
 
 			string skinServer = args.Length >= 5 ? args[4] : "http://static.classicube.net/skins/";
-			using (Game game = new Game(args[0], args[1], skinServer, nullContext, width, height)) {
+			using (Game game = new Game(args[0], args[1], skinServer, width, height)) {
 				game.IPAddress = ip;
 				game.Port = port;
 				game.Run();

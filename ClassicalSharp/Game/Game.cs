@@ -19,7 +19,9 @@ using ClassicalSharp.Renderers;
 using ClassicalSharp.Selections;
 using ClassicalSharp.Textures;
 using OpenTK;
+using OpenTK.Graphics;
 using OpenTK.Input;
+using OpenTK.Platform;
 #if ANDROID
 using Android.Graphics;
 #endif
@@ -30,9 +32,9 @@ namespace ClassicalSharp {
 
 	public partial class Game : IDisposable {
 		
-		public Game(string username, string mppass, string skinServer,
-		            bool nullContext, int width, int height) {
-			window = new DesktopWindow(this, username, nullContext, width, height);
+		public Game(string username, string mppass, string skinServer, int width, int height) {
+			string title = Program.AppName + " (" + username + ")";
+			window = Factory.CreateWindow(width, height, title, GraphicsMode.Default, DisplayDevice.Primary);
 			Username = username;
 			Mppass = mppass;
 			this.skinServer = skinServer;
@@ -56,9 +58,39 @@ namespace ClassicalSharp {
 			return true;
 		}
 		
-		public void Run() { window.Run(); }
+		Stopwatch render_watch = new Stopwatch();
+		FrameEventArgs render_args = new FrameEventArgs();
+		public void Run() {
+			window.Visible = true;
+			window.Closed += OnClosed;
+			window.Resize += OnResize;
+			
+			OnLoad();
+			OnResize(null, null);
+			Utils.LogDebug("Entering main loop.");
+			render_watch.Start();
+			
+			while (true) {
+				window.ProcessEvents();
+				if (window.Exists && !isExiting) {
+					// Cap the maximum time drift to 1 second (e.g. when the process is suspended).
+					double time = render_watch.Elapsed.TotalSeconds;
+					if (time > 1.0) time = 1.0;
+					if (time <= 0) continue;
+					
+					render_watch.Reset();
+					render_watch.Start();
+					RenderFrame(time);
+				} else { return; }
+			}
+		}
 		
-		public void Exit() { window.Exit(); }
+		bool isExiting;
+		public void Exit() { 
+			isExiting = true;
+			// TODO: is isExiting right
+			window.Close(); 
+		}
 		
 		public void SetViewDistance(int distance, bool userDist) {
 			if (userDist) {
@@ -211,13 +243,17 @@ namespace ClassicalSharp {
 			return -1;
 		}
 		
-		internal void OnResize() {
+		void OnResize(object sender, EventArgs e) {
 			Size size = window.ClientSize;
 			Width = size.Width; Height = size.Height;
 			
 			Graphics.OnWindowResize(this);
 			UpdateProjection();
 			Gui.OnResize();
+		}
+		
+		void OnClosed(object sender, EventArgs e) {
+			Dispose();
 		}
 		
 		void OnNewMapCore(object sender, EventArgs e) {
@@ -408,6 +444,8 @@ namespace ClassicalSharp {
 			
 			Drawer2D.DisposeInstance();
 			Graphics.Dispose();
+			// TODO: is this needed
+			//window.Dispose();
 			
 			if (!Options.HasChanged()) return;
 			Options.Load();

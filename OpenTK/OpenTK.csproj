@@ -55,17 +55,12 @@
     <Compile Include="FrameEventArgs.cs" />
     <Compile Include="GameWindow.cs" />
     <Compile Include="Graphics\OpenGL\GL.cs" />
-    <Compile Include="IGameWindow.cs" />
     <Compile Include="INativeWindow.cs" />
     <Compile Include="Interop.cs" />
     <Compile Include="KeyPressEventArgs.cs" />
     <Compile Include="MemUtils.cs" />
-    <Compile Include="NativeWindow.cs" />
     <Compile Include="Graphics\ColorFormat.cs" />
-    <Compile Include="Graphics\GraphicsContextBase.cs" />
-    <Compile Include="Graphics\GraphicsContextException.cs" />
     <Compile Include="Graphics\GraphicsMode.cs" />
-    <Compile Include="Graphics\GraphicsModeException.cs" />
     <Compile Include="Graphics\IGraphicsContext.cs" />
     <Compile Include="Graphics\OpenGL\GLEnums.cs" />
     <Compile Include="Graphics\OpenGL\GLHelper.cs" />
@@ -100,7 +95,6 @@
     <Compile Include="Platform\Windows\WinWindow.cs" />
     <Compile Include="Platform\Windows\WinKeyMap.cs" />
     <Compile Include="Platform\Windows\WinWindowInfo.cs" />
-    <Compile Include="Platform\NullContext.cs" />
     <Compile Include="Platform\X11\API.cs" />
     <Compile Include="Platform\X11\Glx.cs" />
     <Compile Include="Platform\X11\Structs.cs" />
@@ -117,7 +111,6 @@
     <Compile Include="SharpDX.Direct3D\Resources.cs" />
     <Compile Include="SharpDX.Direct3D\Structures.cs" />
     <Compile Include="SharpDX\ComObject.cs" />
-    <Compile Include="SharpDX\Raw.cs" />
     <Compile Include="SharpDX\Result.cs" />
     <Compile Include="WindowState.cs" />
   </ItemGroup>

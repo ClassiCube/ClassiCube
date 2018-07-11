@@ -55,4 +55,9 @@ namespace OpenTK.Graphics {
             }
         }
     }
+
+    public class GraphicsModeException : Exception {
+        public GraphicsModeException() : base() { }
+        public GraphicsModeException(string message) : base(message) { }
+    }
 }

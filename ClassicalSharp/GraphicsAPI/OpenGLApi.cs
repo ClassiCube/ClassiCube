@@ -6,7 +6,9 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Runtime.InteropServices;
 using OpenTK;
+using OpenTK.Graphics;
 using OpenTK.Graphics.OpenGL;
+using OpenTK.Platform;
 using BmpPixelFormat = System.Drawing.Imaging.PixelFormat;
 using GlPixelFormat = OpenTK.Graphics.OpenGL.PixelFormat;
 
@@ -21,8 +23,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		const int dynamicListId = 1234567891;
 		IntPtr dynamicListData;
 		#endif
+		IGraphicsContext glContext;
 		
-		public OpenGLApi() {
+		public OpenGLApi(IWindowInfo window) {
+			glContext = Factory.Default.CreateGLContext(GraphicsMode.Default, window);
+			glContext.MakeCurrent(window);
+			glContext.LoadAll();
+			
 			MinZNear = 0.1f;
 			InitFields();
 			int texDims;
@@ -529,14 +536,14 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void EndFrame(Game game) {
-			game.window.SwapBuffers();
+			glContext.SwapBuffers();
 			#if GL11
 			activeList = -1;
 			#endif
 		}
 		
 		public override void SetVSync(Game game, bool value) {
-			game.VSync = value;
+			glContext.VSync = value;
 		}
 		
 		bool isIntelRenderer;
@@ -587,6 +594,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void OnWindowResize(Game game) {
 			GL.Viewport(0, 0, game.Width, game.Height);
+			glContext.Update(game.window);
+		}
+		
+		public override void Dispose() {
+			base.Dispose();
+			glContext.Dispose();
 		}
 		
 		void InitFields() {

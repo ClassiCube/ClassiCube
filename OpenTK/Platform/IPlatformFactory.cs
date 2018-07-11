@@ -30,16 +30,22 @@ using OpenTK.Graphics;
 
 namespace OpenTK.Platform {
 	
-	interface IPlatformFactory {
-		INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device);
+	public interface IPlatformFactory {
+		INativeWindow CreateWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device);
 
 		void InitDisplayDeviceDriver();
 
 		IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window);
 	}
 	
-	internal static class Factory {
+	public static class Factory {
 		public static readonly IPlatformFactory Default;
+		
+		public static INativeWindow CreateWindow(int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
+			int x = device.Bounds.Left + (device.Bounds.Width  - width)  / 2;
+			int y = device.Bounds.Top  + (device.Bounds.Height - height) / 2;
+			return Default.CreateWindow(x, y, width, height, title, mode, device);
+		}
 
 		static Factory() {
 			if (Configuration.RunningOnWindows) Default = new Windows.WinFactory();
@@ -53,7 +59,7 @@ namespace OpenTK.Platform {
 namespace OpenTK.Platform.MacOS {
 	class MacOSFactory : IPlatformFactory {
 		
-		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
+		public INativeWindow CreateWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
 			return new CarbonWindow(x, y, width, height, title, device);
 		}
 
@@ -70,7 +76,7 @@ namespace OpenTK.Platform.MacOS {
 namespace OpenTK.Platform.Windows {
 	class WinFactory : IPlatformFactory {
 		
-		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
+		public INativeWindow CreateWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
 			return new WinWindow(x, y, width, height, title, device);
 		}
 
@@ -87,7 +93,7 @@ namespace OpenTK.Platform.Windows {
 namespace OpenTK.Platform.X11 {
 	class X11Factory : IPlatformFactory {
 
-		public INativeWindow CreateNativeWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
+		public INativeWindow CreateWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
 			return new X11Window(x, y, width, height, title, mode, device);
 		}
 

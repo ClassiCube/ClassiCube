@@ -58,7 +58,6 @@ namespace OpenTK.Platform.Windows
 		
 		static readonly WinKeyMap KeyMap = new WinKeyMap();
 		const long ExtendedBit = 1 << 24;           // Used to distinguish left and right control, alt and enter keys.
-		KeyPressEventArgs key_press = new KeyPressEventArgs();
 
 		public WinWindow(int x, int y, int width, int height, string title, DisplayDevice device) {
 			WindowProcedureDelegate = WindowProcedure;
@@ -85,8 +84,8 @@ namespace OpenTK.Platform.Windows
 					bool new_focused_state = Focused;
 					focused = (wParam.ToInt64() & 0xFFFF) != 0;
 
-					if (new_focused_state != Focused && FocusedChanged != null)
-						FocusedChanged(this, EventArgs.Empty);
+					if (new_focused_state != Focused)
+						RaiseFocusedChanged();
 					break;
 
 				case WindowMessage.ENTERMENULOOP:
@@ -104,8 +103,7 @@ namespace OpenTK.Platform.Windows
 						Point new_location = new Point(pos->x, pos->y);
 						if (Location != new_location) {
 							bounds.Location = new_location;
-							if (Move != null)
-								Move(this, EventArgs.Empty);
+							RaiseMove();
 						}
 
 						Size new_size = new Size(pos->cx, pos->cy);
@@ -121,8 +119,8 @@ namespace OpenTK.Platform.Windows
 							                 bounds.X, bounds.Y, bounds.Width, bounds.Height,
 							                 SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
 							                 SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
-							if (suppress_resize <= 0 && Resize != null)
-								Resize(this, EventArgs.Empty);
+							
+							if (suppress_resize <= 0) RaiseResize();
 						}
 					}
 					break;
@@ -150,8 +148,7 @@ namespace OpenTK.Platform.Windows
 
 					if (new_state != windowState) {
 						windowState = new_state;
-						if (WindowStateChanged != null)
-							WindowStateChanged(this, EventArgs.Empty);
+						RaiseWindowStateChanged();
 					}
 					break;
 
@@ -160,10 +157,7 @@ namespace OpenTK.Platform.Windows
 					#region Input events
 
 				case WindowMessage.CHAR:
-					key_press.KeyChar = (char)wParam.ToInt64();
-
-					if (KeyPress != null)
-						KeyPress(this, key_press);
+					RaiseKeyPress((char)wParam.ToInt64());
 					break;
 
 				case WindowMessage.MOUSEMOVE:
@@ -309,27 +303,16 @@ namespace OpenTK.Platform.Windows
 					break;
 
 				case WindowMessage.CLOSE:
-					System.ComponentModel.CancelEventArgs e = new System.ComponentModel.CancelEventArgs();
-
-					if (Closing != null)
-						Closing(this, e);
-
-					if (!e.Cancel) {
-						DestroyWindow();
-						break;
-					}
-
-					return IntPtr.Zero;
+					RaiseClosing();
+					DestroyWindow();
+					break;
 
 				case WindowMessage.DESTROY:
 					exists = false;
 
 					API.UnregisterClass(ClassName, Instance);
 					window.Dispose();
-
-					if (Closed != null)
-						Closed(this, EventArgs.Empty);
-
+					RaiseClosed();
 					break;
 
 					#endregion
@@ -409,7 +392,7 @@ namespace OpenTK.Platform.Windows
 		
 		const uint GMEM_MOVEABLE = 2;
 		const uint CF_UNICODETEXT = 13, CF_TEXT = 1;
-		public unsafe string GetClipboardText() {
+		public override unsafe string GetClipboardText() {
 			// retry up to 10 times
 			for (int i = 0; i < 10; i++) {
 				if (!API.OpenClipboard(window.winHandle)) {
@@ -435,7 +418,7 @@ namespace OpenTK.Platform.Windows
 			return "";
 		}
 		
-		public unsafe void SetClipboardText( string value ) {
+		public override unsafe void SetClipboardText( string value ) {
 			UIntPtr dstSize = (UIntPtr)((value.Length + 1) * Marshal.SystemDefaultCharSize);
 			// retry up to 10 times
 			for (int i = 0; i < 10; i++) {
@@ -466,7 +449,7 @@ namespace OpenTK.Platform.Windows
 			dst2[numChars] = '\0';
 		}
 
-		public Rectangle Bounds {
+		public override Rectangle Bounds {
 			get { return bounds; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
@@ -474,7 +457,7 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public Point Location {
+		public override Point Location {
 			get { return Bounds.Location; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
@@ -482,7 +465,7 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public Size Size {
+		public override Size Size {
 			get { return Bounds.Size; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
@@ -490,7 +473,7 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public Rectangle ClientRectangle {
+		public override Rectangle ClientRectangle {
 			get {
 				if (client_rectangle.Width == 0)
 					client_rectangle.Width = 1;
@@ -502,7 +485,7 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public Size ClientSize {
+		public override Size ClientSize {
 			get { return ClientRectangle.Size; }
 			set {
 				WindowStyle style = (WindowStyle)API.GetWindowLong(window.winHandle, GetWindowLongOffsets.STYLE);
@@ -512,7 +495,7 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public Icon Icon {
+		public override Icon Icon {
 			get { return icon; }
 			set {
 				icon = value;
@@ -526,11 +509,11 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public bool Focused {
+		public override bool Focused {
 			get { return focused; }
 		}
 
-		public bool Visible {
+		public override bool Visible {
 			get { return API.IsWindowVisible(window.winHandle); }
 			set {
 				if (value) {
@@ -545,13 +528,13 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public bool Exists { get { return exists; } }
+		public override bool Exists { get { return exists; } }
 
-		public void Close() {
+		public override void Close() {
 			API.PostMessage(window.winHandle, WindowMessage.CLOSE, IntPtr.Zero, IntPtr.Zero);
 		}
 
-		public WindowState WindowState {
+		public override WindowState WindowState {
 			get { return windowState; }
 			set {
 				if (WindowState == value)
@@ -648,7 +631,7 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public Point PointToClient(Point point) {
+		public override Point PointToClient(Point point) {
 			if (!API.ScreenToClient(window.winHandle, ref point))
 				throw new InvalidOperationException(String.Format(
 					"Could not convert point {0} from client to screen coordinates. Windows error: {1}",
@@ -656,25 +639,18 @@ namespace OpenTK.Platform.Windows
 
 			return point;
 		}
+		
+		public override Point PointToScreen(Point point) {
+			if (!API.ClientToScreen(window.winHandle, ref point))
+				throw new InvalidOperationException(String.Format(
+					"Could not convert point {0} from client to screen coordinates. Windows error: {1}",
+					point.ToString(), Marshal.GetLastWin32Error()));
 
-		public Point PointToScreen(Point p) {
-			throw new NotImplementedException();
+			return point;
 		}
 
-		public event EventHandler Move;
-		public event EventHandler Resize;
-		public event EventHandler<System.ComponentModel.CancelEventArgs> Closing;
-		public event EventHandler Closed;
-		public event EventHandler Disposed;
-		public event EventHandler IconChanged;
-		public event EventHandler ClientSizeChanged;
-		public event EventHandler VisibleChanged;
-		public event EventHandler FocusedChanged;
-		public event EventHandler WindowStateChanged;
-		public event EventHandler<KeyPressEventArgs> KeyPress;
-
 		MSG msg;
-		public void ProcessEvents() {
+		public override void ProcessEvents() {
 			while( API.PeekMessage(ref msg, IntPtr.Zero, 0, 0, 1) ) {
 				API.TranslateMessage(ref msg);
 				API.DispatchMessage(ref msg);
@@ -684,11 +660,11 @@ namespace OpenTK.Platform.Windows
 				focused = foreground == window.winHandle;
 		}
 
-		public IWindowInfo WindowInfo {
+		public override IWindowInfo WindowInfo {
 			get { return window; }
 		}
 
-		public Point DesktopCursorPos {
+		public override Point DesktopCursorPos {
 			get {
 				POINT pos = default( POINT );
 				API.GetCursorPos( ref pos );
@@ -698,7 +674,7 @@ namespace OpenTK.Platform.Windows
 		}
 		
 		bool cursorVisible = true;
-		public bool CursorVisible {
+		public override bool CursorVisible {
 			get { return cursorVisible; }
 			set {
 				cursorVisible = value;
@@ -706,27 +682,17 @@ namespace OpenTK.Platform.Windows
 			}
 		}
 
-		public void Dispose() {
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		void Dispose(bool calledManually) {
-			if (!disposed) {
-				if (calledManually) {
-					// Safe to clean managed resources
-					DestroyWindow();
-					if (Icon != null)
-						Icon.Dispose();
-				} else {
-					Debug.Print("[Warning] INativeWindow leaked ({0}). Did you forget to call INativeWindow.Dispose()?", this);
-				}
-				disposed = true;
+		protected override void Dispose(bool calledManually) {
+			if (disposed) return;
+			
+			if (calledManually) {
+				// Safe to clean managed resources
+				DestroyWindow();
+				if (Icon != null) Icon.Dispose();
+			} else {
+				Debug.Print("=== [Warning] INativeWindow leaked ===");
 			}
-		}
-
-		~WinWindow() {
-			Dispose(false);
+			disposed = true;
 		}
 	}
 }

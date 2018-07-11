@@ -100,6 +100,10 @@ namespace OpenTK.Platform.Windows {
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		//internal static extern bool ScreenToClient(IntPtr hWnd, ref POINT point);
 		internal static extern bool ScreenToClient(IntPtr hWnd, ref Point point);
+		
+		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
+		//internal static extern bool ClientToScreen(IntPtr hWnd, ref POINT point);
+		internal static extern bool ClientToScreen(IntPtr hWnd, ref Point point);
 
 		[DllImport("user32.dll", SetLastError = true), SuppressUnmanagedCodeSecurity]
 		internal extern static bool GetClientRect(IntPtr windowHandle, out Win32Rectangle clientRectangle);

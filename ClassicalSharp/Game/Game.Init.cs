@@ -155,7 +155,7 @@ namespace ClassicalSharp {
 				}
 			}
 			
-			window.LoadIcon();
+			LoadIcon();
 			string connectString = "Connecting to " + IPAddress + ":" + Port +  "..";
 			if (Graphics.WarnIfNecessary(Chat)) {
 				MapBordersRenderer.UseLegacyMode(true);
@@ -246,6 +246,20 @@ namespace ClassicalSharp {
 			
 			AddScheduledTask(defTicks, ParticleManager.Tick);
 			AddScheduledTask(defTicks, Animations.Tick);
+		}
+		
+		void LoadIcon() {
+			string launcherFile = "Launcher2.exe";
+			if (!Platform.FileExists(launcherFile)) {
+				launcherFile = "Launcher.exe";
+			}
+			if (!Platform.FileExists(launcherFile)) return;
+			
+			try {
+				window.Icon = Icon.ExtractAssociatedIcon(launcherFile);
+			} catch (Exception ex) {
+				ErrorHandler.LogError("Game.LoadIcon()", ex);
+			}
 		}
 	}
 }

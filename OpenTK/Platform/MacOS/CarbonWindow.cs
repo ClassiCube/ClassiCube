@@ -54,7 +54,6 @@ namespace OpenTK.Platform.MacOS
 		int mTitlebarHeight;
 		WindowState windowState = WindowState.Normal;
 		internal static Dictionary<IntPtr, WeakReference> WindowRefs = new Dictionary<IntPtr, WeakReference>();
-		KeyPressEventArgs mKeyPressArgs = new KeyPressEventArgs();
 		bool mIsActive = false;
 		Icon mIcon;
 
@@ -73,17 +72,8 @@ namespace OpenTK.Platform.MacOS
 			TargetDisplayDevice = device;
 		}
 
-		#region IDisposable
-
-		public void Dispose()
-		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool disposing) {
-			if (mIsDisposed)
-				return;
+		protected override void Dispose(bool disposing) {
+			if (mIsDisposed) return;
 
 			Debug.Print("Disposing of CarbonGLNative window.");
 			API.DisposeWindow(window.WindowRef);
@@ -96,12 +86,6 @@ namespace OpenTK.Platform.MacOS
 			}
 			DisposeUPP();
 		}
-
-		~CarbonWindow() {
-			Dispose(false);
-		}
-
-		#endregion
 
 		#region Private Members
 
@@ -260,7 +244,6 @@ namespace OpenTK.Platform.MacOS
 				case KeyboardEventKind.RawKeyRepeat:
 				case KeyboardEventKind.RawKeyUp:
 					GetCharCodes(inEvent, out code, out charCode);
-					mKeyPressArgs.KeyChar = charCode;
 					break;
 			}
 			
@@ -278,7 +261,7 @@ namespace OpenTK.Platform.MacOS
 
 				case KeyboardEventKind.RawKeyDown:
 					Keyboard.Set(tkKey, true);
-					OnKeyPress(mKeyPressArgs);
+					RaiseKeyPress(charCode);
 					return OSStatus.NoError;
 
 				case KeyboardEventKind.RawKeyUp:
@@ -298,24 +281,17 @@ namespace OpenTK.Platform.MacOS
 			switch ((WindowEventKind)evt.EventKind)
 			{
 				case WindowEventKind.WindowClose:
-					CancelEventArgs cancel = new CancelEventArgs();
-					OnClosing(cancel);
-
-					if (cancel.Cancel)
-						return OSStatus.NoError;
-					else
-						return OSStatus.EventNotHandled;
+					RaiseClosing();
+					return OSStatus.EventNotHandled;
 
 				case WindowEventKind.WindowClosed:
 					mExists = false;
-					OnClosed();
-
+					RaiseClosed();
 					return OSStatus.NoError;
 
 				case WindowEventKind.WindowBoundsChanged:
 					int thisWidth = ClientRectangle.Width;
 					int thisHeight = ClientRectangle.Height;
-
 					LoadSize();
 
 					if (thisWidth != ClientRectangle.Width || thisHeight != ClientRectangle.Height)
@@ -501,9 +477,7 @@ namespace OpenTK.Platform.MacOS
 		
 		protected void OnResize() {
 			LoadSize();
-			if (Resize != null) {
-				Resize(this, EventArgs.Empty);
-			}
+			RaiseResize();
 		}
 
 		private void LoadSize() {
@@ -522,7 +496,7 @@ namespace OpenTK.Platform.MacOS
 		#region INativeWindow Members
 		
 		IntPtr pbStr, utf16, utf8;
-		public string GetClipboardText() {
+		public override  string GetClipboardText() {
 			IntPtr pbRef = GetPasteboard();
 			API.PasteboardSynchronize( pbRef );
 
@@ -564,7 +538,7 @@ namespace OpenTK.Platform.MacOS
 			return Encoding.UTF8.GetString( text );
 		}
 		
-		public void SetClipboardText( string value ) {
+		public override void SetClipboardText( string value ) {
 			IntPtr pbRef = GetPasteboard();
 			OSStatus err = API.PasteboardClear( pbRef );
 			if( err != OSStatus.NoError )
@@ -595,31 +569,31 @@ namespace OpenTK.Platform.MacOS
 			return pbRef;
 		}
 
-		public void ProcessEvents() {
+		public override void ProcessEvents() {
 			API.ProcessEvents();
 		}
 
-		public Point PointToClient(Point point) {
+		public override Point PointToClient(Point point) {
 			IntPtr handle = window.WindowRef;
 			Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
 			return new Point(point.X - r.X, point.Y - r.Y);
 		}
 		
-		public Point PointToScreen(Point point) {
+		public override Point PointToScreen(Point point) {
 			IntPtr handle = window.WindowRef;
 			Rect r = Carbon.API.GetWindowBounds(window.WindowRef, WindowRegionCode.ContentRegion);
 			return new Point(point.X + r.X, point.Y + r.Y);
 		}
 
-		public bool Exists {
+		public override bool Exists {
 			get { return mExists; }
 		}
 
-		public IWindowInfo WindowInfo {
+		public override IWindowInfo WindowInfo {
 			get { return window; }
 		}
 
-		public Icon Icon {
+		public override Icon Icon {
 			get { return mIcon; }
 			set { SetIcon(value); }
 		}
@@ -677,7 +651,7 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-		public bool Visible {
+		public override bool Visible {
 			get { return API.IsWindowVisible(window.WindowRef); }
 			set {
 				if (value && Visible == false)
@@ -687,11 +661,11 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-		public bool Focused {
+		public override bool Focused {
 			get { return this.mIsActive; }
 		}
 
-		public Rectangle Bounds {
+		public override Rectangle Bounds {
 			get { return bounds; }
 			set {
 				Location = value.Location;
@@ -699,17 +673,17 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-		public Point Location {
+		public override Point Location {
 			get { return Bounds.Location; }
 			set { SetLocation((short)value.X, (short)value.Y); }
 		}
 
-		public Size Size {
+		public override Size Size {
 			get { return bounds.Size; }
 			set { SetSize((short)value.Width, (short)value.Height); }
 		}
 
-		public Rectangle ClientRectangle {
+		public override Rectangle ClientRectangle {
 			get { return clientRectangle; }
 			set {
 				// just set the size, and ignore the location value.
@@ -718,7 +692,7 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-		public Size ClientSize {
+		public override Size ClientSize {
 			get { return clientRectangle.Size; }
 			set {
 				API.SizeWindow(window.WindowRef, (short)value.Width, (short)value.Height, true);
@@ -726,36 +700,28 @@ namespace OpenTK.Platform.MacOS
 			}
 		}
 
-		public void Close() {
-			CancelEventArgs e = new CancelEventArgs();
-			OnClosing(e);
-			if (e.Cancel) return;
-
-			OnClosed();
+		public override void Close() {
+			RaiseClosed();
 			Dispose();
 		}
 
-		public WindowState WindowState {
-			get
-			{
+		public override WindowState WindowState {
+			get {
 				if (windowState == WindowState.Fullscreen)
 					return WindowState.Fullscreen;
 
 				if (Carbon.API.IsWindowCollapsed(window.WindowRef))
 					return WindowState.Minimized;
 
-				if (Carbon.API.IsWindowInStandardState(window.WindowRef))
-				{
+				if (Carbon.API.IsWindowInStandardState(window.WindowRef)) {
 					return WindowState.Maximized;
 				}
 
 				return WindowState.Normal;
 			}
-			set
-			{
-				if (value == WindowState)
-					return;
-
+			
+			set {
+				if (value == WindowState) return;
 				Debug.Print("Switching window state from {0} to {1}", WindowState, value);
 				WindowState oldState = WindowState;
 
@@ -813,71 +779,29 @@ namespace OpenTK.Platform.MacOS
 					break;
 			}
 
-			OnWindowStateChanged();
+			RaiseWindowStateChanged();
 			OnResize();
 		}
 
 		#region --- Event wrappers ---
 
-		private void OnKeyPress(KeyPressEventArgs keyPressArgs)
-		{
-			if (KeyPress != null)
-				KeyPress(this, keyPressArgs);
-		}
-
-
-		private void OnWindowStateChanged()
-		{
-			if (WindowStateChanged != null)
-				WindowStateChanged(this, EventArgs.Empty);
-		}
-
-		protected virtual void OnClosing(CancelEventArgs e)
-		{
-			if (Closing != null)
-				Closing(this, e);
-		}
-
-		protected virtual void OnClosed()
-		{
-			if (Closed != null)
-				Closed(this, EventArgs.Empty);
-		}
-
-
-		private void OnActivate()
-		{
+		private void OnActivate() {
 			mIsActive = true;
-			if (FocusedChanged != null)
-				FocusedChanged(this, EventArgs.Empty);
+			RaiseFocusedChanged();
 		}
-		private void OnDeactivate()
-		{
+		
+		private void OnDeactivate() {
 			mIsActive = false;
-			if (FocusedChanged != null)
-				FocusedChanged(this, EventArgs.Empty);
+			RaiseFocusedChanged();
 		}
 
 		#endregion
-
-		public event EventHandler Load;
-		public event EventHandler Unload;
-		public event EventHandler Move;
-		public event EventHandler Resize;
-		public event EventHandler<CancelEventArgs> Closing;
-		public event EventHandler Closed;
-		public event EventHandler Disposed;
-		public event EventHandler ClientSizeChanged;
-		public event EventHandler VisibleChanged;
-		public event EventHandler FocusedChanged;
-		public event EventHandler WindowStateChanged;
-		public event EventHandler<KeyPressEventArgs> KeyPress;
 
 		#endregion
 		
 		#region IInputDriver Members
 		
-		public Point DesktopCursorPos {
+		public override Point DesktopCursorPos {
 			get {
 				HIPoint point = default( HIPoint );
 				// NOTE: HIGetMousePosition is only available on OSX 10.5 or later
@@ -894,7 +818,7 @@ namespace OpenTK.Platform.MacOS
 		}
 		
 		bool visible = true;
-		public bool CursorVisible {
+		public override bool CursorVisible {
 			get { return visible; }
 			set {
 				visible = value;

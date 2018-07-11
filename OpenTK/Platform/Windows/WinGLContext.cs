@@ -16,7 +16,7 @@ namespace OpenTK.Platform.Windows {
 	/// Provides methods to create and control an opengl context on the Windows platform.
 	/// This class supports OpenTK, and is not intended for use by OpenTK programs.
 	/// </summary>
-	internal sealed class WinGLContext : GraphicsContextBase
+	internal sealed class WinGLContext : IGraphicsContext
 	{
 		static IntPtr opengl32Handle;
 		const string opengl32Name = "OPENGL32.DLL";
@@ -162,28 +162,13 @@ namespace OpenTK.Platform.Windows {
 		}
 
 		protected override void Dispose(bool calledManually) {
-			if (IsDisposed) return;
-			
-			if (calledManually) {
-				DestroyContext();
-			} else {
-				Debug.Print("[Warning] OpenGL context {0} leaked. Did you forget to call IGraphicsContext.Dispose()?",  ContextHandle);
-			}
-			IsDisposed = true;
-		}
-
-		private void DestroyContext() {
 			if (ContextHandle == IntPtr.Zero) return;
 			
-			try {
+			if (calledManually) {
 				// This will fail if the user calls Dispose() on thread X when the context is current on thread Y.
-				if (!Wgl.wglDeleteContext(ContextHandle))
-					Debug.Print("Failed to destroy OpenGL context {0}. Error: {1}",
-					            ContextHandle.ToString(), Marshal.GetLastWin32Error());
-			} catch (AccessViolationException e) {
-				Debug.Print("An access violation occured while destroying the OpenGL context. Please report at http://www.opentk.com.");
-				Debug.Print("Marshal.GetLastWin32Error(): {0}", Marshal.GetLastWin32Error().ToString());
-				Debug.Print(e.ToString());
+				Wgl.wglDeleteContext(ContextHandle);
+			} else {
+				Debug.Print("=== [Warning] OpenGL context leaked ===");
 			}
 			ContextHandle = IntPtr.Zero;
 		}

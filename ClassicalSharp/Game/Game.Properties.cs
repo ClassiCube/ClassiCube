@@ -207,7 +207,7 @@ namespace ClassicalSharp {
 			}
 		}
 		
-		internal DesktopWindow window;
+		internal INativeWindow window;
 		
 		public int Width, Height;
 		
@@ -217,11 +217,6 @@ namespace ClassicalSharp {
 		
 		public Point PointToScreen(Point coords) {
 			return window.PointToScreen(coords);
-		}
-		
-		public bool VSync {
-			get { return window.VSync; }
-			set { window.VSync = value; }
 		}
 		
 		bool visible = true;

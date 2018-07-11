@@ -24,7 +24,21 @@ using System.Runtime.InteropServices;
 namespace SharpDX.Direct3D9 {
 	
 	[StructLayout(LayoutKind.Sequential)]
-	public struct PresentParameters {		
+	public struct LockedRectangle { 	
+		public int Pitch;
+		public IntPtr DataPointer;
+	}
+    
+    [StructLayout(LayoutKind.Sequential)]
+    public struct D3DRect {
+    	public int Left;
+    	public int Top;
+    	public int Right;
+    	public int Bottom;
+    }
+	
+	[StructLayout(LayoutKind.Sequential)]
+	public struct PresentParameters {
 		public int BackBufferWidth;
 		public int BackBufferHeight;
 		public Format BackBufferFormat;
@@ -33,8 +47,8 @@ namespace SharpDX.Direct3D9 {
 		public int MultiSampleQuality;
 		public SwapEffect SwapEffect;
 		public IntPtr DeviceWindowHandle;
-		public RawBool Windowed;
-		public RawBool EnableAutoDepthStencil;
+		public int Windowed;
+		public int EnableAutoDepthStencil;
 		public Format AutoDepthStencilFormat;
 		public PresentFlags PresentFlags;
 		public int FullScreenRefreshRateInHz;

@@ -15,13 +15,14 @@ using Launcher.Web;
 using OpenTK;
 using OpenTK.Graphics;
 using OpenTK.Input;
+using OpenTK.Platform;
 
 namespace Launcher {
 
 	public sealed partial class LauncherWindow {
 		
 		/// <summary> Underlying native window instance. </summary>
-		public NativeWindow Window;
+		public INativeWindow Window;
 		
 		/// <summary> Platform specific class used to draw 2D elements,
 		/// such as text, rounded rectangles and lines. </summary>
@@ -169,8 +170,8 @@ namespace Launcher {
 		}
 		
 		public void Run() {
-			Window = new NativeWindow(640, 400, Program.AppName,
-			                          GraphicsMode.Default, DisplayDevice.Primary);
+			Window = Factory.CreateWindow(640, 400, Program.AppName,
+			                              GraphicsMode.Default, DisplayDevice.Primary);
 			Window.Visible = true;
 			Drawer = new GdiPlusDrawer2D();
 			Init();

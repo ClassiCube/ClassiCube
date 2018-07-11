@@ -10,7 +10,7 @@ using AGLPixelFormat = System.IntPtr;
 
 namespace OpenTK.Platform.MacOS {
 
-	class AglContext : GraphicsContextBase {
+	class AglContext : IGraphicsContext {
 		
 		bool mVSync = false;
 		// Todo: keep track of which display adapter was specified when the context was created.
@@ -253,10 +253,9 @@ namespace OpenTK.Platform.MacOS {
 
 		#region IDisposable Members
 
-		protected override void Dispose(bool disposing)
-		{
-			if (IsDisposed || ContextHandle == IntPtr.Zero)
-				return;
+		bool IsDisposed;
+		protected override void Dispose(bool disposing) {
+			if (IsDisposed || ContextHandle == IntPtr.Zero) return;
 
 			Debug.Print("Disposing of AGL context.");
 			Agl.aglSetCurrentContext(IntPtr.Zero);

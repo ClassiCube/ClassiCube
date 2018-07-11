@@ -13,7 +13,7 @@ namespace OpenTK.Platform.X11 {
 	/// \internal
 	/// <summary> Provides methods to create and control an opengl context on the X11 platform.
 	/// This class supports OpenTK, and is not intended for use by OpenTK programs. </summary>
-	internal sealed class X11GLContext : GraphicsContextBase {
+	internal sealed class X11GLContext : IGraphicsContext {
 		
 		IntPtr Display;
 		X11WindowInfo currentWindow;
@@ -28,7 +28,7 @@ namespace OpenTK.Platform.X11 {
 
 			Debug.Print( "Creating X11GLContext context: " );
 			currentWindow = (X11WindowInfo)window;
-			Display = API.DefaultDisplay;			
+			Display = API.DefaultDisplay;
 			XVisualInfo info = currentWindow.VisualInfo;
 			Mode = GetGraphicsMode( info );
 			// Cannot pass a Property by reference.
@@ -105,19 +105,18 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		protected override void Dispose(bool manuallyCalled) {
-			if (!IsDisposed) {
-				if (manuallyCalled) {
-					IntPtr display = Display;
-
-					if (IsCurrent) {
-						Glx.glXMakeCurrent(display, IntPtr.Zero, IntPtr.Zero);
-					}
-					Glx.glXDestroyContext(display, ContextHandle);
+			if (ContextHandle == IntPtr.Zero) return;
+			
+			if (manuallyCalled) {
+				IntPtr display = Display;
+				if (IsCurrent) {
+					Glx.glXMakeCurrent(display, IntPtr.Zero, IntPtr.Zero);
 				}
+				Glx.glXDestroyContext(display, ContextHandle);
 			} else {
-				Debug.Print("[Warning] {0} leaked.", this.GetType().Name);
+				Debug.Print("=== [Warning] OpenGL context leaked ===");
 			}
-			IsDisposed = true;
+			ContextHandle = IntPtr.Zero;
 		}
 		
 		internal static GraphicsMode SelectGraphicsMode( GraphicsMode template, out XVisualInfo info ) {
@@ -153,7 +152,7 @@ namespace OpenTK.Platform.X11 {
 		static unsafe IntPtr SelectVisual( int[] visualAttribs ) {
 			int major = 0, minor = 0;
 			if( !Glx.glXQueryVersion( API.DefaultDisplay, ref major, ref minor ) )
-				throw new InvalidOperationException( "glXQueryVersion failed, potentially corrupt OpenGL driver" );		
+				throw new InvalidOperationException( "glXQueryVersion failed, potentially corrupt OpenGL driver" );
 			int screen = API.XDefaultScreen( API.DefaultDisplay );
 			
 			if( major >= 1 && minor >= 3 ) {

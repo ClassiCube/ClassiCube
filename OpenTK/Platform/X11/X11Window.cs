@@ -77,7 +77,6 @@ namespace OpenTK.Platform.X11 {
 		// Keyboard input
 		readonly byte[] ascii = new byte[16];
 		readonly char[] chars = new char[16];
-		readonly KeyPressEventArgs KPEventArgs = new KeyPressEventArgs();
 
 		X11KeyMap keymap = new X11KeyMap();
 		int firstKeyCode, lastKeyCode; // The smallest and largest KeyCode supported by the X server.
@@ -145,7 +144,7 @@ namespace OpenTK.Platform.X11 {
 			e.ConfigureEvent.height = height;
 			RefreshWindowBounds(ref e);
 
-			Debug.Print("X11GLNative window created successfully (id: {0}).", Handle);
+			Debug.Print("X11GLNative window created successfully (id: {0}).", window.WindowHandle);
 			SetupInput();
 			exists = true;
 		}
@@ -279,8 +278,7 @@ namespace OpenTK.Platform.X11 {
 			Point newLoc = new Point(e.ConfigureEvent.x - borderLeft, e.ConfigureEvent.y - borderTop);
 			if (Location != newLoc) {
 				bounds.Location = newLoc;
-				if (Move != null)
-					Move(this, EventArgs.Empty);
+				RaiseMove();
 			}
 
 			// Note: width and height denote the internal (client) size.
@@ -288,13 +286,11 @@ namespace OpenTK.Platform.X11 {
 			Size newSize = new Size(
 				e.ConfigureEvent.width + borderLeft + borderRight,
 				e.ConfigureEvent.height + borderTop + borderBottom);
+			
 			if (bounds.Size != newSize) {
 				bounds.Size = newSize;
 				client_rectangle.Size = new Size(e.ConfigureEvent.width, e.ConfigureEvent.height);
-
-				if (this.Resize != null) {
-					Resize(this, EventArgs.Empty);
-				}
+				RaiseResize();
 			}
 		}
 
@@ -305,7 +301,7 @@ namespace OpenTK.Platform.X11 {
 				API.XCheckTypedWindowEvent(window.Display, window.WindowHandle, XEventName.SelectionRequest, ref e);
 		}
 		
-		public unsafe void ProcessEvents() {
+		public override unsafe void ProcessEvents() {
 			// Process all pending events
 			while (Exists && window != null) {
 				if (!GetPendingEvent ()) break;
@@ -318,8 +314,7 @@ namespace OpenTK.Platform.X11 {
 							bool previous_visible = visible;
 							visible = e.type == XEventName.MapNotify;
 							if (visible != previous_visible)
-								if (VisibleChanged != null)
-									VisibleChanged(this, EventArgs.Empty);
+								RaiseVisibleChanged();
 						} break;
 
 					case XEventName.CreateNotify:
@@ -329,17 +324,11 @@ namespace OpenTK.Platform.X11 {
 					case XEventName.ClientMessage:
 						if (!isExiting && e.ClientMessageEvent.ptr1 == wm_destroy) {
 							Debug.Print("Exit message received.");
-							CancelEventArgs ce = new CancelEventArgs();
-							if (Closing != null)
-								Closing(this, ce);
-
-							if (!ce.Cancel) {
-								isExiting = true;
-
-								DestroyWindow();
-								if (Closed != null)
-									Closed(this, EventArgs.Empty);
-							}
+							RaiseClosing();
+							
+							isExiting = true;
+							DestroyWindow();
+							RaiseClosed();
 						} break;
 
 					case XEventName.DestroyNotify:
@@ -357,15 +346,10 @@ namespace OpenTK.Platform.X11 {
 						int status = API.XLookupString(ref e.KeyEvent, ascii, ascii.Length, null, IntPtr.Zero);
 						Encoding.Default.GetChars(ascii, 0, status, chars, 0);
 
-						EventHandler<KeyPressEventArgs> key_press = KeyPress;
-						if (key_press != null) {
-							for (int i = 0; i < status; i++) {
-								// ignore NULL char after non-ASCII input char, like ä or å on Finnish keyboard layout
-								if (chars[i] == '\0') continue;
-								
-								KPEventArgs.KeyChar = chars[i];
-								key_press(this, KPEventArgs);
-							}
+						for (int i = 0; i < status; i++) {
+							// ignore NULL char after non-ASCII input char, like ä or å on Finnish keyboard layout
+							if (chars[i] == '\0') continue;
+							RaiseKeyPress(chars[i]);
 						}
 						break;
 						
@@ -402,8 +386,8 @@ namespace OpenTK.Platform.X11 {
 						{
 							bool previous_focus = has_focus;
 							has_focus = e.type == XEventName.FocusIn;
-							if (has_focus != previous_focus && FocusedChanged != null)
-								FocusedChanged(this, EventArgs.Empty);
+							if (has_focus != previous_focus)
+								RaiseFocusedChanged();
 						} break;
 
 					case XEventName.MappingNotify:
@@ -416,8 +400,7 @@ namespace OpenTK.Platform.X11 {
 
 					case XEventName.PropertyNotify:
 						if (e.PropertyEvent.atom == net_wm_state) {
-							if (WindowStateChanged != null)
-								WindowStateChanged (this, EventArgs.Empty);
+							RaiseWindowStateChanged();
 						}
 
 						//if (e.PropertyEvent.atom == net_frame_extents) {
@@ -494,7 +477,7 @@ namespace OpenTK.Platform.X11 {
 			return e.SelectionRequestEvent.target;
 		}
 		
-		public string GetClipboardText() {
+		public override string GetClipboardText() {
 			IntPtr owner = API.XGetSelectionOwner(window.Display, xa_clipboard);
 			if (owner == IntPtr.Zero) return ""; // no window owner
 
@@ -510,12 +493,12 @@ namespace OpenTK.Platform.X11 {
 			return ""; 
 		}
 		
-		public void SetClipboardText(string value) {
+		public override void SetClipboardText(string value) {
 			clipboard_copy_text = value;
 			API.XSetSelectionOwner(window.Display, xa_clipboard, window.WinHandle, IntPtr.Zero);
 		}	
 		
-		public Rectangle Bounds {
+		public override Rectangle Bounds {
 			get { return bounds; }
 			set {
 				API.XMoveResizeWindow(
@@ -525,7 +508,7 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		public Point Location {
+		public override Point Location {
 			get { return Bounds.Location; }
 			set {
 				API.XMoveWindow(window.Display, window.WindowHandle, value.X, value.Y);
@@ -533,7 +516,7 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		public Size Size {
+		public override Size Size {
 			get { return Bounds.Size; }
 			set {
 				int width = value.Width - borderLeft - borderRight;
@@ -545,7 +528,7 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		public Rectangle ClientRectangle {
+		public override Rectangle ClientRectangle {
 			get {
 				if (client_rectangle.Width == 0)
 					client_rectangle.Width = 1;
@@ -559,12 +542,12 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		public Size ClientSize {
+		public override Size ClientSize {
 			get { return ClientRectangle.Size; }
 			set { ClientRectangle = new Rectangle(Point.Empty, value); }
 		}
 		
-		public Icon Icon {
+		public override Icon Icon {
 			get { return icon; }
 			set {
 				if (value == icon)
@@ -615,11 +598,11 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		public bool Focused {
+		public override bool Focused {
 			get { return has_focus; }
 		}
 		
-		public WindowState WindowState {
+		public override WindowState WindowState {
 			get {
 				IntPtr actual_atom, nitems, bytes_after, prop = IntPtr.Zero;
 				int actual_format;
@@ -709,19 +692,7 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 
-		public event EventHandler Load;
-		public event EventHandler Unload;
-		public event EventHandler Move;
-		public event EventHandler Resize;
-		public event EventHandler<CancelEventArgs> Closing;
-		public event EventHandler Closed;
-		public event EventHandler Disposed;
-		public event EventHandler VisibleChanged;
-		public event EventHandler FocusedChanged;
-		public event EventHandler WindowStateChanged;
-		public event EventHandler<KeyPressEventArgs> KeyPress;
-		
-		public Point DesktopCursorPos {
+		public override Point DesktopCursorPos {
 			get {
 				IntPtr root, child;
 				int rootX, rootY, childX, childY, mask;
@@ -735,7 +706,7 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		bool cursorVisible = true;
-		public bool CursorVisible {
+		public override bool CursorVisible {
 			get { return cursorVisible; }
 			set {
 				cursorVisible = value;
@@ -758,16 +729,11 @@ namespace OpenTK.Platform.X11 {
 		}
 		
 		/// <summary> Returns true if a render window/context exists. </summary>
-		public bool Exists {
+		public override bool Exists {
 			get { return exists; }
 		}
 		
-		/// <summary> Gets the current window handle. </summary>
-		public IntPtr Handle {
-			get { return window.WindowHandle; }
-		}
-		
-		public bool Visible {
+		public override bool Visible {
 			get { return visible; }
 			set {
 				if (value && !visible) {
@@ -778,11 +744,11 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		public IWindowInfo WindowInfo {
+		public override IWindowInfo WindowInfo {
 			get { return window; }
 		}
 
-		public void Close() {
+		public override void Close() {
 			XEvent ev = new XEvent();
 			ev.type = XEventName.ClientMessage;
 			ev.ClientMessageEvent.format = 32;
@@ -794,33 +760,28 @@ namespace OpenTK.Platform.X11 {
 			API.XFlush(window.Display);
 		}
 
-		public void DestroyWindow() {
+		void DestroyWindow() {
 			Debug.Print("X11GLNative shutdown sequence initiated.");
 			API.XSync(window.Display, true);
 			API.XDestroyWindow(window.Display, window.WindowHandle);
 			exists = false;
 		}
 
-		public Point PointToClient(Point point) {
+		public override Point PointToClient(Point point) {
 			int ox, oy;
 			IntPtr child;
 			API.XTranslateCoordinates(window.Display, window.RootWindow, window.WindowHandle, point.X, point.Y, out ox, out oy, out child);
 			return new Point( ox, oy );
 		}
 
-		public Point PointToScreen(Point point) {
+		public override Point PointToScreen(Point point) {
 			int ox, oy;
 			IntPtr child;
 			API.XTranslateCoordinates(window.Display, window.WindowHandle, window.RootWindow, point.X, point.Y, out ox, out oy, out child);
 			return new Point( ox, oy );
 		}
 
-		public void Dispose() {
-			this.Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		private void Dispose(bool manuallyCalled) {
+		protected override void Dispose(bool manuallyCalled) {
 			if (disposed) return;
 			if (manuallyCalled) {
 				if (window != null && window.WindowHandle != IntPtr.Zero) {
@@ -831,13 +792,9 @@ namespace OpenTK.Platform.X11 {
 					window = null;
 				}
 			} else {
-				Debug.Print("[Warning] {0} leaked.", this.GetType().Name);
+				Debug.Print("=== [Warning] INativeWindow leaked ===");
 			}
 			disposed = true;
-		}
-
-		~X11Window() {
-			this.Dispose(false);
 		}
 	}
 }

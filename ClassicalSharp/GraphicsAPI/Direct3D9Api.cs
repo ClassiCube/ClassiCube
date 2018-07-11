@@ -441,7 +441,6 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		bool vsync = false;
 		public override void SetVSync(Game game, bool value) {
-			game.VSync = value;
 			if (vsync == value) return;
 			vsync = value;
 			
@@ -500,10 +499,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			args.BackBufferHeight = height;
 			args.BackBufferFormat = viewFormat;
 			args.BackBufferCount = 1;
-			args.EnableAutoDepthStencil = true;
+			args.EnableAutoDepthStencil = 1;
 			args.PresentationInterval = vsync ? PresentInterval.One : PresentInterval.Immediate;
 			args.SwapEffect = SwapEffect.Discard;
-			args.Windowed = true;
+			args.Windowed = 1;
 			return args;
 		}
 
