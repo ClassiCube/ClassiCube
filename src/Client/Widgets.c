@@ -2639,8 +2639,8 @@ static bool SpecialInputWidget_HandlesMouseDown(GuiElement* elem, Int32 x, Int32
 void SpecialInputWidget_UpdateCols(SpecialInputWidget* widget) {
 	SpecialInputWidget_UpdateColString(widget);
 	widget->Tabs[0].Contents = widget->ColString;
+	if (!widget->Active || widget->SelectedIndex != 0) return;
 	SpecialInputWidget_Redraw(widget);
-	SpecialInputWidget_SetActive(widget, widget->Active);
 }
 
 void SpecialInputWidget_SetActive(SpecialInputWidget* widget, bool active) {

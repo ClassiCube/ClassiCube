@@ -19,8 +19,8 @@ namespace ClassicalSharp.Gui.Widgets {
 		
 		public void UpdateColours() {
 			elements[0].Contents = GetColourString();
+			if (!Active || selectedIndex != 0) return;
 			Redraw();
-			SetActive(Active);
 		}
 		
 		public Texture texture;
@@ -63,7 +63,7 @@ namespace ClassicalSharp.Gui.Widgets {
 			{
 				drawer.SetBitmap(bmp);
 				DrawTitles(drawer, font);
-				drawer.Clear(new FastColour(30, 30, 30, 200), 0, titleHeight,
+				drawer.Clear(new PackedCol(30, 30, 30, 200), 0, titleHeight,
 				             size.Width, bodySize.Height);
 				
 				DrawContent(drawer, font, e, titleHeight);
@@ -201,8 +201,8 @@ namespace ClassicalSharp.Gui.Widgets {
 			DrawTextArgs args = new DrawTextArgs(null, font, false);
 			for (int i = 0; i < elements.Length; i++) {
 				args.Text = elements[i].Title;
-				FastColour col = i == selectedIndex ? new FastColour(30, 30, 30, 200) :
-					new FastColour(0, 0, 0, 127);;
+				PackedCol col = i == selectedIndex ? new PackedCol(30, 30, 30, 200) :
+					new PackedCol(0, 0, 0, 127);;
 				Size size = elements[i].TitleSize;
 				
 				drawer.Clear(col, x, 0, size.Width, size.Height);
