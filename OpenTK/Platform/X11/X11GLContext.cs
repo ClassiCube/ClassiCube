@@ -98,18 +98,7 @@ namespace OpenTK.Platform.X11 {
 			}
 			ContextHandle = IntPtr.Zero;
 		}
-#endif		
-		internal static GraphicsMode SelectGraphicsMode(GraphicsMode template, out XVisualInfo info) {
-			int[] attribs = GetVisualAttribs(template.ColorFormat, template.Depth, template.Stencil, template.Buffers);
-			IntPtr visual = SelectVisual(attribs);
-			if (visual == IntPtr.Zero)
-				throw new GraphicsModeException("Requested GraphicsMode not available.");
-			
-			info = (XVisualInfo)Marshal.PtrToStructure(visual, typeof(XVisualInfo));
-			API.XFree(visual);
-			return GetGraphicsMode(info);
-		}
-		
+				
 		internal static GraphicsMode GetGraphicsMode(XVisualInfo info) {
 			// See what we *really* got:
 			int r, g, b, a, depth, stencil, buffers;
@@ -124,6 +113,17 @@ namespace OpenTK.Platform.X11 {
 			++buffers;
 			// the above lines returns 0 - false and 1 - true.
 			return new GraphicsMode(new ColorFormat(r, g, b, a), depth, stencil, buffers);
+		}		
+#endif		
+		internal static XVisualInfo SelectGraphicsMode(GraphicsMode template) {
+			int[] attribs = GetVisualAttribs(template.ColorFormat, template.Depth, template.Stencil, template.Buffers);
+			IntPtr visual = SelectVisual(attribs);
+			if (visual == IntPtr.Zero)
+				throw new GraphicsModeException("Requested GraphicsMode not available.");
+			
+			XVisualInfo info = (XVisualInfo)Marshal.PtrToStructure(visual, typeof(XVisualInfo));
+			API.XFree(visual);
+			return info;
 		}
 
 		// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig

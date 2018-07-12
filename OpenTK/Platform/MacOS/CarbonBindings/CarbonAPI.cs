@@ -337,38 +337,15 @@ namespace OpenTK.Platform.MacOS {
 		StandardFloating     = (CloseBox | CollapseBox)
 	}
 
-	public enum WindowPositionMethod : uint
-	{
+	public enum WindowPositionMethod : uint {
 		CenterOnMainScreen = 1,
-		CenterOnParentWindow = 2,
-		CenterOnParentWindowScreen = 3,
-		CascadeOnMainScreen = 4,
-		CascadeOnParentWindow = 5,
-		CascadeOnParentWindowScreen = 6,
-		CascadeStartAtParentWindowScreen = 10,
-		AlertPositionOnMainScreen = 7,
-		AlertPositionOnParentWindow = 8,
-		AlertPositionOnParentWindowScreen = 9
 	}
 
 	public delegate OSStatus MacOSEventHandler(IntPtr inCaller, IntPtr inEvent, IntPtr userData);
 
-	public enum WindowPartCode : short
-	{
-		inDesk = 0,
-		inNoWindow = 0,
-		inMenuBar = 1,
-		inSysWindow = 2,
-		inContent = 3,
-		inDrag = 4,
-		inGrow = 5,
-		inGoAway = 6,
+	public enum WindowPartCode : short {
 		inZoomIn = 7,
 		inZoomOut = 8,
-		inCollapseBox = 11,
-		inProxyIcon = 12,
-		inToolbarButton = 13,
-		inStructure = 15,
 	}
 
 	#endregion

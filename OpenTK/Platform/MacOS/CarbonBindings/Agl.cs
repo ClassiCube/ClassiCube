@@ -3,15 +3,11 @@
 
 using System;
 using System.Runtime.InteropServices;
-using AGLContext = System.IntPtr;
-using AGLDevice = System.IntPtr;
-using AGLDrawable = System.IntPtr;
-using AGLPixelFormat = System.IntPtr;
 
 namespace OpenTK.Platform.MacOS {
 	
 	public unsafe static class Agl {
-		const string agl = "/System/Library/Frameworks/AGL.framework/Versions/Current/AGL";
+		const string lib = "/System/Library/Frameworks/AGL.framework/Versions/Current/AGL";
 		
 		// Attribute names for aglChoosePixelFormat and aglDescribePixelFormat.
 		internal enum PixelFormatAttribute {
@@ -30,38 +26,38 @@ namespace OpenTK.Platform.MacOS {
 		internal const int AGL_SWAP_INTERVAL = 222; /* 0 -> Don't sync, n -> Sync every n retrace */
 		internal const int AGL_BAD_PIXEL_FORMAT = 0002; /* invalid pixel format */
 		
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern IntPtr aglChoosePixelFormat(ref IntPtr gdevs, int ndev, int[] attribs);
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern IntPtr aglChoosePixelFormat(IntPtr gdevs, int ndev, int[] attribs);
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern void aglDestroyPixelFormat(IntPtr pix);
 		
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern IntPtr aglCreateContext(IntPtr pix, IntPtr share);
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern byte aglDestroyContext(IntPtr ctx);
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern byte aglUpdateContext(IntPtr ctx);
 
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern byte aglSetCurrentContext(IntPtr ctx);
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern IntPtr aglGetCurrentContext();
 		
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern byte aglSetDrawable(IntPtr ctx, IntPtr draw);
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern byte aglSetFullScreen(IntPtr ctx, int width, int height, int freq, int device);
 		
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern void aglSwapBuffers(IntPtr ctx);	
-		[DllImport(agl)]
+		[DllImport(lib)]
 		internal static extern byte aglSetInteger(IntPtr ctx, int pname, ref int @params);
 
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		internal static extern int aglGetError();
-		[DllImport(agl)] 
+		[DllImport(lib)] 
 		static extern IntPtr aglErrorString(int code);
 		
 		internal static void CheckReturnValue(byte code, string function) {

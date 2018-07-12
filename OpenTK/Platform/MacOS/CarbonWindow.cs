@@ -38,7 +38,8 @@ namespace OpenTK.Platform.MacOS {
 		internal bool goFullScreenHack, goWindowedHack;
 
 		string title = "OpenTK Window";
-		Rectangle bounds, clientRectangle;
+		Rectangle bounds;
+		Size clientSize;
 		Rectangle windowedBounds;
 		bool mIsDisposed = false;
 		bool mExists = true;
@@ -141,9 +142,9 @@ namespace OpenTK.Platform.MacOS {
 			int width, height;
 			context.SetFullScreen(this, out width, out height);
 
-			Debug.Print("Prev Size: {0}, {1}", ClientRectangle.Width, ClientRectangle.Height);
-			clientRectangle.Size = new Size(width, height);
-			Debug.Print("New Size: {0}, {1}", ClientRectangle.Width, ClientRectangle.Height);
+			Debug.Print("Prev Size: {0}, {1}", clientSize.Width, clientSize.Height);
+			clientSize = new Size(width, height);
+			Debug.Print("New Size: {0}, {1}", clientSize.Width, clientSize.Height);
 
 			// TODO: if we go full screen we need to make this use the device specified.
 			bounds = Display.Bounds;
@@ -230,11 +231,11 @@ namespace OpenTK.Platform.MacOS {
 					return OSStatus.NoError;
 
 				case WindowEventKind.WindowBoundsChanged:
-					int curWidth = ClientRectangle.Width;
-					int curHeight = ClientRectangle.Height;
+					int curWidth = clientSize.Width;
+					int curHeight = clientSize.Height;
 					LoadSize();
 
-					if (curWidth != ClientRectangle.Width || curHeight != ClientRectangle.Height)
+					if (curWidth != clientSize.Width || curHeight != clientSize.Height)
 						OnResize();
 					return OSStatus.EventNotHandled;
 
@@ -362,8 +363,8 @@ namespace OpenTK.Platform.MacOS {
 			// The bounds of the window should be the size specified, but
 			// API.SizeWindow sets the content region size.  So
 			// we reduce the size to get the correct bounds.
-			width -= (short)(bounds.Width - clientRectangle.Width);
-			height -= (short)(bounds.Height - clientRectangle.Height);
+			width -= (short)(bounds.Width - clientSize.Width);
+			height -= (short)(bounds.Height - clientSize.Height);
 			
 			API.SizeWindow(WinHandle, width, height, true);
 		}
@@ -385,7 +386,7 @@ namespace OpenTK.Platform.MacOS {
 			bounds = new Rectangle(r.X, r.Y, r.Width, r.Height);
 
 			r = API.GetWindowBounds(WinHandle, WindowRegionCode.GlobalPortRegion);
-			clientRectangle = new Rectangle(0, 0, r.Width, r.Height);
+			clientSize = new Size(r.Width, r.Height);
 		}
 
 		IntPtr pbStr, utf16, utf8;
@@ -589,17 +590,8 @@ namespace OpenTK.Platform.MacOS {
 			set { SetSize((short)value.Width, (short)value.Height); }
 		}
 
-		public override Rectangle ClientRectangle {
-			get { return clientRectangle; }
-			set {
-				// just set the size, and ignore the location value.
-				// this is the behavior of the Windows WinGLNative.
-				ClientSize = value.Size;
-			}
-		}
-
 		public override Size ClientSize {
-			get { return clientRectangle.Size; }
+			get { return clientSize; }
 			set {
 				API.SizeWindow(WinHandle, (short)value.Width, (short)value.Height, true);
 				OnResize();

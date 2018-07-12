@@ -24,7 +24,7 @@ bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by V
 Int32 suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
 
 Rectangle2D win_Bounds;
-Rectangle2D win_ClientRect;
+Size2D win_ClientSize;
 Rectangle2D previous_bounds; // Used to restore previous size when leaving fullscreen mode.
 
 static Rectangle2D Window_FromRect(RECT rect) {
@@ -165,6 +165,13 @@ static Key Window_MapKey(WPARAM key) {
 	return Key_None;
 }
 
+static void Window_UpdateClientSize(HWND handle) {
+	RECT rect;
+	GetClientRect(handle, &rect);
+	win_ClientSize.Width  = RECT_WIDTH(rect);
+	win_ClientSize.Height = RECT_HEIGHT(rect);
+}
+
 static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wParam, LPARAM lParam) {
 	bool new_focused_state;
 	Real32 wheel_delta;
@@ -207,10 +214,7 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 			Size2D size = Window_GetSize();
 			if (size.Width != pos->cx || size.Height != pos->cy) {
 				win_Bounds.Width = pos->cx; win_Bounds.Height = pos->cy;
-
-				RECT rect;
-				GetClientRect(handle, &rect);
-				win_ClientRect = Window_FromRect(rect);
+				Window_UpdateClientSize(handle);
 
 				SetWindowPos(win_Handle, NULL,
 					win_Bounds.X, win_Bounds.Y, win_Bounds.Width, win_Bounds.Height,
@@ -370,12 +374,9 @@ static LRESULT CALLBACK Window_Procedure(HWND handle, UINT message, WPARAM wPara
 	case WM_CREATE:
 		cs = (CREATESTRUCT*)lParam;
 		if (cs->hwndParent == NULL) {
-			win_Bounds.X = cs->x; win_Bounds.Y = cs->y;
+			win_Bounds.X = cs->x;      win_Bounds.Y = cs->y;
 			win_Bounds.Width = cs->cx; win_Bounds.Height = cs->cy;
-
-			RECT rect;
-			GetClientRect(handle, &rect);
-			win_ClientRect = Window_FromRect(rect);
+			Window_UpdateClientSize(handle);
 			invisible_since_creation = true;
 		}
 		break;
@@ -401,7 +402,8 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 	/* TODO: UngroupFromTaskbar(); */
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
-	RECT rect; rect.left = x; rect.top = y; rect.right = x + width; rect.bottom = y + height;
+	RECT rect; rect.left = x; rect.top = y; 
+	rect.right = x + width; rect.bottom = y + height;
 	AdjustWindowRect(&rect, win_Style, false);
 
 	WNDCLASSEXA wc = { 0 };
@@ -518,19 +520,10 @@ void Window_SetSize(Size2D size) {
 	SetWindowPos(win_Handle, NULL, 0, 0, size.Width, size.Height, SWP_NOMOVE);
 }
 
-Rectangle2D Window_GetClientRectangle(void) { return win_ClientRect; }
-void Window_SetClientRectangle(Rectangle2D rect) {
-	Size2D size = { rect.Width, rect.Height };
-	Window_SetClientSize(size);
-}
-
-Size2D Window_GetClientSize(void) {
-	Size2D size = { win_ClientRect.Width, win_ClientRect.Height }; return size;
-}
+Size2D Window_GetClientSize(void) { return win_ClientSize; }
 void Window_SetClientSize(Size2D size) {
 	DWORD style = GetWindowLongA(win_Handle, GWL_STYLE);
-	RECT rect;
-	rect.left = 0; rect.top = 0;
+	RECT rect; rect.left = 0; rect.top = 0;
 	rect.right = size.Width; rect.bottom = size.Height;
 
 	AdjustWindowRect(&rect, style, false);

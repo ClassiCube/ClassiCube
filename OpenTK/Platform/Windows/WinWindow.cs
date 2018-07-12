@@ -43,8 +43,8 @@ namespace OpenTK.Platform.Windows {
 		bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
 		int suppress_resize; // Used in WindowBorder and WindowState in order to avoid rapid, consecutive resize events.
 
-		Rectangle bounds = new Rectangle(), client_rectangle = new Rectangle(),
-		previous_bounds = new Rectangle(); // Used to restore previous size when leaving fullscreen mode.
+		Rectangle bounds, previous_bounds; // Used to restore previous size when leaving fullscreen mode.
+		Size clientSize;
 		Icon icon;
 		
 		static readonly WinKeyMap KeyMap = new WinKeyMap();
@@ -71,6 +71,13 @@ namespace OpenTK.Platform.Windows {
 			if ((version.Major > 6) || (version.Major == 6 && version.Minor >= 1)) {
 				API.SetCurrentProcessExplicitAppUserModelID("ClassicalSharp_" + new Random().Next());
 			}
+		}
+		
+		void UpdateClientSize(IntPtr handle) {
+			Win32Rectangle rect;
+			API.GetClientRect(handle, out rect);
+			clientSize.Width  = rect.Width;
+			clientSize.Height = rect.Height;
 		}
 
 		unsafe IntPtr WindowProcedure(IntPtr handle, WindowMessage message, IntPtr wParam, IntPtr lParam) {
@@ -111,10 +118,7 @@ namespace OpenTK.Platform.Windows {
 						if (Size != new_size) {
 							bounds.Width = pos->cx;
 							bounds.Height = pos->cy;
-
-							Win32Rectangle rect;
-							API.GetClientRect(handle, out rect);
-							client_rectangle = rect.ToRectangle();
+							UpdateClientSize(handle);
 
 							API.SetWindowPos(WinHandle, IntPtr.Zero,
 							                 bounds.X, bounds.Y, bounds.Width, bounds.Height,
@@ -288,17 +292,12 @@ namespace OpenTK.Platform.Windows {
 
 				case WindowMessage.CREATE:
 					CreateStruct cs = (CreateStruct)Marshal.PtrToStructure(lParam, typeof(CreateStruct));
-					if (cs.hwndParent == IntPtr.Zero)
-					{
+					if (cs.hwndParent == IntPtr.Zero) {
 						bounds.X = cs.x;
 						bounds.Y = cs.y;
 						bounds.Width = cs.cx;
 						bounds.Height = cs.cy;
-
-						Win32Rectangle rect;
-						API.GetClientRect(handle, out rect);
-						client_rectangle = rect.ToRectangle();
-
+						UpdateClientSize(handle);
 						invisible_since_creation = true;
 					}
 					break;
@@ -473,20 +472,12 @@ namespace OpenTK.Platform.Windows {
 			}
 		}
 
-		public override Rectangle ClientRectangle {
-			get {
-				if (client_rectangle.Width == 0)
-					client_rectangle.Width = 1;
-				if (client_rectangle.Height == 0)
-					client_rectangle.Height = 1;
-				return client_rectangle;
-			} set {
-				ClientSize = value.Size;
-			}
-		}
-
 		public override Size ClientSize {
-			get { return ClientRectangle.Size; }
+			get {
+				if (clientSize.Width == 0)  clientSize.Width = 1;
+				if (clientSize.Height == 0) clientSize.Height = 1;
+				return clientSize;
+			}
 			set {
 				WindowStyle style = (WindowStyle)API.GetWindowLong(WinHandle, GetWindowLongOffsets.STYLE);
 				Win32Rectangle rect = Win32Rectangle.From(value);

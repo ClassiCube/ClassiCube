@@ -57,8 +57,6 @@ Point2D Window_GetLocation(void);
 void Window_SetLocation(Point2D point);
 Size2D Window_GetSize(void);
 void Window_SetSize(Size2D size);
-Rectangle2D Window_GetClientRectangle(void);
-void Window_SetClientRectangle(Rectangle2D rect);
 Size2D Window_GetClientSize(void);
 void Window_SetClientSize(Size2D size);
 

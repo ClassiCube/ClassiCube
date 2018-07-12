@@ -26,7 +26,6 @@
 #endregion
 
 using System;
-using System.Drawing;
 
 namespace OpenTK.Input {
 	

@@ -58,7 +58,8 @@ namespace OpenTK.Platform.X11 {
 		static readonly IntPtr _add = (IntPtr)1;
 		static readonly IntPtr _toggle = (IntPtr)2;
 		
-		Rectangle bounds, client_rectangle;
+		Rectangle bounds;
+		Size clientSize;
 		int borderLeft, borderRight, borderTop, borderBottom;
 		Icon icon;
 		bool has_focus, visible;
@@ -85,9 +86,7 @@ namespace OpenTK.Platform.X11 {
 			            API.DefaultDisplay, API.DefaultScreen, API.RootWindow);
 			
 			RegisterAtoms();
-			XVisualInfo info = new XVisualInfo();
-			mode = X11GLContext.SelectGraphicsMode(mode, out info);
-			VisualInfo = info;
+			VisualInfo = X11GLContext.SelectGraphicsMode(mode);
 			// Create a window on this display using the visual above
 			Debug.Print("Opening render window... ");
 
@@ -282,7 +281,7 @@ namespace OpenTK.Platform.X11 {
 			
 			if (bounds.Size != newSize) {
 				bounds.Size = newSize;
-				client_rectangle.Size = new Size(e.ConfigureEvent.width, e.ConfigureEvent.height);
+				clientSize = new Size(e.ConfigureEvent.width, e.ConfigureEvent.height);
 				RaiseResize();
 			}
 		}
@@ -520,14 +519,12 @@ namespace OpenTK.Platform.X11 {
 				ProcessEvents();
 			}
 		}
-		
-		public override Rectangle ClientRectangle {
+
+		public override Size ClientSize {
 			get {
-				if (client_rectangle.Width == 0)
-					client_rectangle.Width = 1;
-				if (client_rectangle.Height == 0)
-					client_rectangle.Height = 1;
-				return client_rectangle;
+				if (clientSize.Width == 0)  clientSize.Width = 1;
+				if (clientSize.Height == 0) clientSize.Height = 1;
+				return clientSize;
 			}
 			set {
 				API.XResizeWindow(API.DefaultDisplay, WinHandle, value.Width, value.Height);
@@ -535,16 +532,10 @@ namespace OpenTK.Platform.X11 {
 			}
 		}
 		
-		public override Size ClientSize {
-			get { return ClientRectangle.Size; }
-			set { ClientRectangle = new Rectangle(Point.Empty, value); }
-		}
-		
 		public override Icon Icon {
 			get { return icon; }
 			set {
-				if (value == icon)
-					return;
+				if (value == icon) return;
 
 				// Note: it seems that Gnome/Metacity does not respect the _NET_WM_ICON hint.
 				// For this reason, we'll also set the icon using XSetWMHints.
