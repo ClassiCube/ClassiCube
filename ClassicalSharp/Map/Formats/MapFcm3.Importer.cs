@@ -3,7 +3,6 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 using ClassicalSharp.Entities;
 
 namespace ClassicalSharp.Map {
@@ -19,7 +18,7 @@ namespace ClassicalSharp.Map {
 			if (r.ReadInt32() != Identifier || r.ReadByte() != Revision)
 				throw new InvalidDataException("Unexpected constant in .fcm file");
 
-			width = r.ReadInt16();
+			width  = r.ReadInt16();
 			height = r.ReadInt16();
 			length = r.ReadInt16();
 
@@ -39,9 +38,9 @@ namespace ClassicalSharp.Map {
 			using (DeflateStream ds = new DeflateStream(stream, CompressionMode.Decompress)) {
 				r = new BinaryReader(ds);
 				for (int i = 0; i < metaSize; i++) {
-					string group = ReadString(r);
-					string key = ReadString(r);
-					string value = ReadString(r);
+					SkipString(r); // group
+					SkipString(r); // key
+					SkipString(r); // value
 				}
 				
 				byte[] blocks = new byte[width * height * length];
@@ -50,10 +49,8 @@ namespace ClassicalSharp.Map {
 			}
 		}
 		
-		static string ReadString(BinaryReader reader) {
-			int length = reader.ReadUInt16();
-			byte[] data = reader.ReadBytes(length);
-			return Encoding.ASCII.GetString(data);
+		static void SkipString(BinaryReader reader) {
+			reader.ReadBytes(reader.ReadUInt16());
 		}
 	}
 }

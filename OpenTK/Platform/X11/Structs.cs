@@ -99,48 +99,6 @@ namespace OpenTK.Platform.X11
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct XKeymapEvent
-	{
-		public XEventName type;
-		public IntPtr serial;
-		public bool send_event;
-		public IntPtr display;
-		public IntPtr window;
-		public byte key_vector0;
-		public byte key_vector1;
-		public byte key_vector2;
-		public byte key_vector3;
-		public byte key_vector4;
-		public byte key_vector5;
-		public byte key_vector6;
-		public byte key_vector7;
-		public byte key_vector8;
-		public byte key_vector9;
-		public byte key_vector10;
-		public byte key_vector11;
-		public byte key_vector12;
-		public byte key_vector13;
-		public byte key_vector14;
-		public byte key_vector15;
-		public byte key_vector16;
-		public byte key_vector17;
-		public byte key_vector18;
-		public byte key_vector19;
-		public byte key_vector20;
-		public byte key_vector21;
-		public byte key_vector22;
-		public byte key_vector23;
-		public byte key_vector24;
-		public byte key_vector25;
-		public byte key_vector26;
-		public byte key_vector27;
-		public byte key_vector28;
-		public byte key_vector29;
-		public byte key_vector30;
-		public byte key_vector31;
-	}
-
-	[StructLayout(LayoutKind.Sequential)]
 	public struct XConfigureEvent
 	{
 		public XEventName type;
@@ -282,8 +240,6 @@ namespace OpenTK.Platform.X11
 		public XClientMessageEvent ClientMessageEvent;
 		[FieldOffset(0)]
 		public XMappingEvent MappingEvent;
-		[FieldOffset(0)]
-		public XKeymapEvent KeymapEvent;
 
 		//[MarshalAs(System.Runtime.InteropServices.UnmanagedType.ByValArray, SizeConst=24)]
 		//[ FieldOffset(0) ] public int[] pad;

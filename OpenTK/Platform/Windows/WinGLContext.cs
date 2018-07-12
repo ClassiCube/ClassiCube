@@ -1,4 +1,5 @@
-﻿#region --- License ---
+﻿#if !USE_DX
+#region --- License ---
 /* Copyright (c) 2006, 2007 Stefanos Apostolopoulos
  * Contributions from Erik Ylvisaker
  * See license.txt for license info
@@ -13,16 +14,15 @@ namespace OpenTK.Platform.Windows {
 	
 	internal sealed class WinGLContext : IGraphicsContext {
 		static IntPtr opengl32Handle;
-		const string opengl32Name = "OPENGL32.DLL";
 		bool vsync_supported;
 
 		static WinGLContext() {
 			// Dynamically load the OpenGL32.dll in order to use the extension loading capabilities of Wgl.
 			if (opengl32Handle == IntPtr.Zero) {
-				opengl32Handle = API.LoadLibrary(opengl32Name);
+				opengl32Handle = API.LoadLibrary("OPENGL32.DLL");
 				if (opengl32Handle == IntPtr.Zero)
-					throw new ApplicationException(String.Format("LoadLibrary(\"{0}\") call failed with code {1}",
-					                                             opengl32Name, Marshal.GetLastWin32Error()));
+					throw new ApplicationException(String.Format("LoadLibrary call failed with code {0}",
+					                                             Marshal.GetLastWin32Error()));
 				Debug.Print("Loaded opengl32.dll: {0}", opengl32Handle);
 			}
 		}
@@ -149,3 +149,4 @@ namespace OpenTK.Platform.Windows {
 		}
 	}
 }
+#endif

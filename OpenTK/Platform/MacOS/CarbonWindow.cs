@@ -26,13 +26,9 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
-using OpenTK.Graphics;
-using OpenTK.Platform.MacOS.Carbon;
 using OpenTK.Input;
 
 namespace OpenTK.Platform.MacOS {
@@ -139,6 +135,7 @@ namespace OpenTK.Platform.MacOS {
 			Application.WindowEventHandler = this;
 		}
 
+		#if !USE_DX
 		internal void SetFullscreen(AglContext context) {
 			windowedBounds = bounds;
 			int width, height;
@@ -160,6 +157,7 @@ namespace OpenTK.Platform.MacOS {
 			SetCarbonWindowState();
 			SetSize((short)windowedBounds.Width, (short)windowedBounds.Height);
 		}
+		#endif
 
 		internal OSStatus DispatchEvent(IntPtr inCaller, IntPtr inEvent, EventInfo evt, IntPtr userData) {
 			switch (evt.EventClass) {

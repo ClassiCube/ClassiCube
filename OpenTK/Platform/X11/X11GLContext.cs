@@ -10,7 +10,12 @@ using OpenTK.Graphics;
 
 namespace OpenTK.Platform.X11 {
 	
+	#if USE_DX
+	public class IGraphicsContext { }
+	#endif
+	
 	internal sealed class X11GLContext : IGraphicsContext {
+#if !USE_DX		
 		X11Window cur;
 		bool vsync_supported;
 		int vsync_interval;
@@ -93,7 +98,7 @@ namespace OpenTK.Platform.X11 {
 			}
 			ContextHandle = IntPtr.Zero;
 		}
-		
+#endif		
 		internal static GraphicsMode SelectGraphicsMode(GraphicsMode template, out XVisualInfo info) {
 			int[] attribs = GetVisualAttribs(template.ColorFormat, template.Depth, template.Stencil, template.Buffers);
 			IntPtr visual = SelectVisual(attribs);

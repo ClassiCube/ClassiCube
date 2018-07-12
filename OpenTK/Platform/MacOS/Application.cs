@@ -8,11 +8,8 @@
 //
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
 
-namespace OpenTK.Platform.MacOS.Carbon {
+namespace OpenTK.Platform.MacOS {
 	static class Application {
 		static bool mInitialized;
 		static IntPtr uppHandler;

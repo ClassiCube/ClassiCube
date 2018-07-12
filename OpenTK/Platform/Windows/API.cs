@@ -9,8 +9,6 @@ using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Security;
-using System.Text;
-using RECT = OpenTK.Platform.Windows.Win32Rectangle;
 
 namespace OpenTK.Platform.Windows {
 	
@@ -135,20 +133,6 @@ namespace OpenTK.Platform.Windows {
 		internal static extern ushort GetKeyState(int code);
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern uint MapVirtualKey(short vkey, MapVirtualKeyType uMapType);
-	}
-
-	internal struct Constants {
-		// Device mode types (found in wingdi.h)
-		internal const int DM_BITSPERPEL = 0x00040000;
-		internal const int DM_PELSWIDTH = 0x00080000;
-		internal const int DM_PELSHEIGHT = 0x00100000;
-		internal const int DM_DISPLAYFLAGS = 0x00200000;
-		internal const int DM_DISPLAYFREQUENCY = 0x00400000;
-
-		// ChangeDisplaySettings results (found in winuser.h)
-		internal const int DISP_CHANGE_SUCCESSFUL = 0;
-		internal const int DISP_CHANGE_RESTART = 1;
-		internal const int DISP_CHANGE_FAILED = -1;
 	}
 	
 	#pragma warning disable 0649
@@ -351,10 +335,7 @@ namespace OpenTK.Platform.Windows {
 			bottom = height;
 		}
 
-		internal int left;
-		internal int top;
-		internal int right;
-		internal int bottom;
+		internal int left, top, right, bottom;
 
 		internal int Width { get { return right - left; } }
 		internal int Height { get { return bottom - top; } }
@@ -374,23 +355,13 @@ namespace OpenTK.Platform.Windows {
 
 		internal static Win32Rectangle From(Size value) {
 			Win32Rectangle rect = new Win32Rectangle();
-			rect.left = 0;
 			rect.right = value.Width;
-			rect.top = 0;
 			rect.bottom = value.Height;
 			return rect;
 		}
 	}
 	
-	enum GWL {
-		WNDPROC = (-4),
-		IntPtr = (-6),
-		HWNDPARENT = (-8),
-		STYLE = (-16),
-		EXSTYLE = (-20),
-		USERDATA = (-21),
-		ID = (-12),
-	}
+	enum GWL { STYLE = (-16), }
 
 	internal enum SizeMessage {
 		MAXHIDE = 4,
@@ -407,63 +378,26 @@ namespace OpenTK.Platform.Windows {
 
 	[Flags]
 	internal enum DisplayDeviceStateFlags {
-		None              = 0x00000000,
 		AttachedToDesktop = 0x00000001,
-		MultiDriver       = 0x00000002,
 		PrimaryDevice     = 0x00000004,
-		MirroringDriver   = 0x00000008,
-		VgaCompatible     = 0x00000010,
-		Removable         = 0x00000020,
-		ModesPruned       = 0x08000000,
-		Remote            = 0x04000000,
-		Disconnect        = 0x02000000,
-
-		// Child device state
-		Active            = 0x00000001,
-		Attached          = 0x00000002,
-	}
-	
-	[Flags]
-	internal enum ChangeDisplaySettingsEnum {
-		// ChangeDisplaySettings types (found in winuser.h)
-		UpdateRegistry = 0x00000001,
-		Test = 0x00000002,
-		Fullscreen = 0x00000004,
 	}
 
 	[Flags]
 	internal enum WindowStyle : uint {
 		Overlapped = 0x00000000,
 		Popup = 0x80000000,
-		Child = 0x40000000,
-		Minimize = 0x20000000,
-		Visible = 0x10000000,
-		Disabled = 0x08000000,
 		ClipSiblings = 0x04000000,
 		ClipChildren = 0x02000000,
 		Maximize = 0x01000000,
 		Caption = 0x00C00000,    // Border | DialogFrame
-		Border = 0x00800000,
-		DialogFrame = 0x00400000,
-		VScroll = 0x00200000,
-		HScreen = 0x00100000,
 		SystemMenu = 0x00080000,
 		ThickFrame = 0x00040000,
-		Group = 0x00020000,
-		TabStop = 0x00010000,
 
 		MinimizeBox = 0x00020000,
 		MaximizeBox = 0x00010000,
 
-		Tiled = Overlapped,
-		Iconic = Minimize,
-		SizeBox = ThickFrame,
-		TiledWindow = OverlappedWindow,
-
 		// Common window styles:
 		OverlappedWindow = Overlapped | Caption | SystemMenu | ThickFrame | MinimizeBox | MaximizeBox,
-		PopupWindow = Popup | Border | SystemMenu,
-		ChildWindow = Child
 	}
 	
 	internal enum GetWindowLongOffsets : int {
@@ -484,27 +418,7 @@ namespace OpenTK.Platform.Windows {
 	}
 	
 	[Flags]
-	internal enum ClassStyle
-	{
-		//None            = 0x0000,
-		VRedraw = 0x0001,
-		HRedraw = 0x0002,
-		DoubleClicks = 0x0008,
-		OwnDC = 0x0020,
-		ClassDC = 0x0040,
-		ParentDC = 0x0080,
-		NoClose = 0x0200,
-		SaveBits = 0x0800,
-		ByteAlignClient = 0x1000,
-		ByteAlignWindow = 0x2000,
-		GlobalClass = 0x4000,
-
-		Ime = 0x00010000,
-
-		// #if(_WIN32_WINNT >= 0x0501)
-		DropShadow = 0x00020000
-		// #endif /* _WIN32_WINNT >= 0x0501 */
-	}
+	internal enum ClassStyle { OwnDC = 0x0020, }
 	
 	internal enum WindowMessage : uint {
 		NULL = 0x0000,

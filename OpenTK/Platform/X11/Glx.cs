@@ -6,12 +6,8 @@
 #endregion
 
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Runtime.InteropServices;
 using System.Security;
-
-#pragma warning disable 1591
 
 namespace OpenTK.Platform.X11 {
 	enum GLXAttribute : int {
@@ -79,5 +75,3 @@ namespace OpenTK.Platform.X11 {
 		public static SwapIntervalSGI glXSwapIntervalSGI;
 	}
 }
-
-#pragma warning restore 1591

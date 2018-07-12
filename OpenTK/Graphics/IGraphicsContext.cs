@@ -1,4 +1,5 @@
-﻿#region --- License ---
+﻿#if !USE_DX
+#region --- License ---
 /* Licensed under the MIT/X11 license.
  * Copyright (c) 2006-2008 the OpenTK Team.
  * This notice may not be removed from any source distribution.
@@ -46,3 +47,4 @@ namespace OpenTK.Graphics {
         public GraphicsContextException(string message) : base(message) { }
     }
 }
+#endif

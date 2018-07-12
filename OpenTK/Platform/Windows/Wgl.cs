@@ -1,3 +1,4 @@
+#if !USE_DX
 using System;
 using System.Runtime.InteropServices;
 using System.Security;
@@ -56,3 +57,4 @@ namespace OpenTK.Platform.Windows {
 		internal extern static IntPtr wglGetProcAddress(String lpszProc);
 	}
 }
+#endif

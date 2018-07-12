@@ -1,3 +1,4 @@
+#if !USE_DX
 //  Created by Erik Ylvisaker on 3/17/08.
 //  Copyright 2008. All rights reserved.
 
@@ -234,3 +235,4 @@ namespace OpenTK.Platform.MacOS {
 		public override void LoadAll() { }
 	}
 }
+#endif
