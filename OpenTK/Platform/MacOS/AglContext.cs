@@ -307,7 +307,6 @@ namespace OpenTK.Platform.MacOS {
 		}
 		
 		public override void LoadAll() {
-			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints( this );
 		}
 
 		#endregion

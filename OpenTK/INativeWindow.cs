@@ -35,16 +35,13 @@ namespace OpenTK {
 	/// <summary> Descibes an OS window. </summary>
 	public interface IWindowInfo : IDisposable { IntPtr WinHandle { get; } }
 	
+	public class KeyPressEventArgs : EventArgs { public char KeyChar; }
+	
 	/// <summary> Defines the interface for a native window.  </summary>
 	public abstract class INativeWindow : IDisposable {
 		
-		/// <summary> Gets the current contents of the clipboard. </summary>
 		public abstract string GetClipboardText();
-		
-		/// <summary> Sets the current contents of the clipboard. </summary>
 		public abstract void SetClipboardText(string value);
-		
-		/// <summary> Gets or sets the <see cref="System.Drawing.Icon"/> of the window. </summary>
 		public abstract Icon Icon { get; set; }
 		
 		/// <summary> Gets a System.Boolean that indicates whether this window has input focus. </summary>
@@ -56,10 +53,7 @@ namespace OpenTK {
 		/// <summary> Gets a System.Boolean that indicates whether the window has been created and has not been destroyed. </summary>
 		public abstract bool Exists { get; }
 		
-		/// <summary> Gets the <see cref="OpenTK.Platform.IWindowInfo"/> for this window. </summary>
 		public abstract IWindowInfo WindowInfo { get; }
-		
-		/// <summary> Gets or sets the <see cref="OpenTK.WindowState"/> for this window. </summary>
 		public abstract WindowState WindowState { get; set; }
 
 		/// <summary> Gets or sets a <see cref="System.Drawing.Rectangle"/> structure the contains the external bounds of this window, in screen coordinates.
@@ -109,64 +103,46 @@ namespace OpenTK {
 		/// <summary> Gets or sets whether the cursor is visible in the window. </summary>
 		public abstract bool CursorVisible { get; set; }
 
-		/// <summary> Occurs whenever the window is moved. </summary>
 		public event EventHandler Move;
-		protected void RaiseMove() {
-			if (Move != null) Move(this, EventArgs.Empty);
-		}
+		protected void RaiseMove() { Raise(Move); }
 
-		/// <summary> Occurs whenever the window is resized. </summary>
 		public event EventHandler Resize;
-		protected void RaiseResize() {
-			if (Resize != null) Resize(this, EventArgs.Empty);
-		}
+		protected void RaiseResize() { Raise(Resize); }
 		
 		public event EventHandler Redraw;
-		protected void RaiseRedraw() {
-			if (Redraw != null) Redraw(this, EventArgs.Empty);
-		}
+		protected void RaiseRedraw() { Raise(Redraw); }
 
-		/// <summary> Occurs when the window is about to close. </summary>
 		public event EventHandler Closing;
-		protected void RaiseClosing() {
-			if (Closing != null) Closing(this, EventArgs.Empty);
-		}
+		protected void RaiseClosing() { Raise(Closing); }
 
-		/// <summary> Occurs after the window has closed. </summary>
 		public event EventHandler Closed;
-		protected void RaiseClosed() {
-			if (Closed != null) Closed(this, EventArgs.Empty);
-		}
+		protected void RaiseClosed() { Raise(Closed); }
 
-		/// <summary> Occurs when the <see cref="Visible"/> property of the window changes. </summary>
 		public event EventHandler VisibleChanged;
-		protected void RaiseVisibleChanged() {
-			if (VisibleChanged != null) VisibleChanged(this, EventArgs.Empty);
-		}
+		protected void RaiseVisibleChanged() { Raise(VisibleChanged); }
 
-		/// <summary> Occurs when the <see cref="Focused"/> property of the window changes. </summary>
 		public event EventHandler FocusedChanged;
-		protected void RaiseFocusedChanged() {
-			if (FocusedChanged != null) FocusedChanged(this, EventArgs.Empty);
-		}
+		protected void RaiseFocusedChanged() { Raise(FocusedChanged); }
 
-		/// <summary> Occurs when the <see cref="WindowState"/> property of the window changes. </summary>
 		public event EventHandler WindowStateChanged;
-		protected void RaiseWindowStateChanged() {
-			if (WindowStateChanged != null) WindowStateChanged(this, EventArgs.Empty);
-		}
+		protected void RaiseWindowStateChanged() { Raise(WindowStateChanged); }
 
 		/// <summary> Occurs whenever a character is typed. </summary>
 		public event EventHandler<KeyPressEventArgs> KeyPress;
 		KeyPressEventArgs pressArgs = new KeyPressEventArgs();
+		
 		protected void RaiseKeyPress(char key) {
 			pressArgs.KeyChar = key;
 			if (KeyPress != null) KeyPress(this, pressArgs);
 		}
 		
+		protected void Raise(EventHandler handler) {
+			if (handler != null) handler(this, EventArgs.Empty);
+		}
+		
 		public void Dispose() {
         	Dispose(true);
-        	GC.SuppressFinalize( this );
+        	GC.SuppressFinalize(this);
         }
         
         protected abstract void Dispose(bool calledManually);

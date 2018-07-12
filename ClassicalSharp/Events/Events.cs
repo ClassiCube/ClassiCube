@@ -6,13 +6,11 @@ namespace ClassicalSharp.Events {
 	public abstract class EventsBase {
 
 		protected void Raise(EventHandler handler) {
-			if (handler == null) return;
-			handler(this, EventArgs.Empty);
+			if (handler != null) handler(this, EventArgs.Empty);
 		}
 		
 		protected void Raise<T>(EventHandler<T> handler, T args) where T : EventArgs {
-			if (handler == null) return;
-			handler(this, args);
+			if (handler != null) handler(this, args);
 		}
 	}
 	

@@ -101,7 +101,6 @@ namespace OpenTK.Platform.X11 {
 			new Glx().LoadEntryPoints();
 			vsync_supported = Glx.glXSwapIntervalSGI != null;
 			Debug.Print("Context supports vsync: {0}.", vsync_supported);
-			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints( this );
 		}
 
 		protected override void Dispose(bool manuallyCalled) {

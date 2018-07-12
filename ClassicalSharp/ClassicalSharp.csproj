@@ -170,7 +170,10 @@
     <Compile Include="Generator\Noise.cs" />
     <Compile Include="Generator\NotchyGenerator.cs" />
     <Compile Include="Generator\NotchyGenerator.Utils.cs" />
+    <Compile Include="GraphicsAPI\D3D9.cs" />
+    <Compile Include="GraphicsAPI\GL.cs" />
     <Compile Include="GraphicsAPI\IGraphicsAPI.Core.cs" />
+    <Compile Include="GraphicsAPI\Interop.cs" />
     <Compile Include="GraphicsAPI\OpenGLESApi.cs" />
     <Compile Include="Map\Formats\MapDat2.Importer.cs" />
     <Compile Include="Map\Formats\MapSchematic.Exporter.cs" />
@@ -348,5 +351,16 @@
       <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
       <Name>OpenTK</Name>
     </ProjectReference>
+    <ProjectReference Include="..\InteropPatcher\InteropPatcher.csproj">
+      <Project>{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}</Project>
+      <Name>InteropPatcher</Name>
+    </ProjectReference>
   </ItemGroup>
+  <Target Name="AfterBuild">
+    <Exec Command="$(OutputPath)InteropPatcher.exe $(OutDir)ClassicalSharp.exe" />
+    <!--Copy back *.dll from bin/Debug|Release to obj/Debug/Release directory-->
+    <Copy SourceFiles="@(MainAssembly)" DestinationFolder="$(IntermediateOutputPath)" SkipUnchangedFiles="true" />
+    <!-- Copy back *.pdb from bin/Debug|Release to obj/Debug/Release directory-->
+    <Copy SourceFiles="@(_DebugSymbolsOutputPath)" DestinationFiles="@(_DebugSymbolsIntermediatePath)" SkipUnchangedFiles="true" Condition="'$(_DebugSymbolsProduced)'=='true' and '$(SkipCopyingSymbolsToOutputDirectory)' != 'true'" />
+  </Target>
 </Project>

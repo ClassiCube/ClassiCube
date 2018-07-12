@@ -29,6 +29,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			glContext = Factory.Default.CreateGLContext(GraphicsMode.Default, window);
 			glContext.MakeCurrent(window);
 			glContext.LoadAll();
+			GL.LoadEntryPoints(glContext);
 			
 			MinZNear = 0.1f;
 			InitFields();

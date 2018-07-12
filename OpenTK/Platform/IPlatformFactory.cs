@@ -29,6 +29,10 @@ using System;
 using OpenTK.Graphics;
 
 namespace OpenTK.Platform {
+
+	public class PlatformException : Exception {
+		public PlatformException(string s) : base(s) { }
+	}
 	
 	public interface IPlatformFactory {
 		INativeWindow CreateWindow(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device);

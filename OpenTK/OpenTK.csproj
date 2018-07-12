@@ -44,6 +44,7 @@
     <BaseIntermediateOutputPath>obj\</BaseIntermediateOutputPath>
     <StartAction>Project</StartAction>
   </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Drawing" />
@@ -52,16 +53,11 @@
     <Compile Include="BindingsBase.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="DisplayDevice.cs" />
-    <Compile Include="Graphics\OpenGL\GL.cs" />
     <Compile Include="INativeWindow.cs" />
-    <Compile Include="Interop.cs" />
-    <Compile Include="KeyPressEventArgs.cs" />
     <Compile Include="MemUtils.cs" />
     <Compile Include="Graphics\ColorFormat.cs" />
     <Compile Include="Graphics\GraphicsMode.cs" />
     <Compile Include="Graphics\IGraphicsContext.cs" />
-    <Compile Include="Graphics\OpenGL\GLEnums.cs" />
-    <Compile Include="Graphics\OpenGL\GLHelper.cs" />
     <Compile Include="Input\Key.cs" />
     <Compile Include="Input\Keyboard.cs" />
     <Compile Include="Input\MouseButton.cs" />
@@ -84,7 +80,6 @@
     <Compile Include="Platform\MacOS\MacOSException.cs" />
     <Compile Include="Platform\MacOS\MacOSKeyMap.cs" />
     <Compile Include="Platform\MacOS\QuartzDisplayDevice.cs" />
-    <Compile Include="Platform\PlatformException.cs" />
     <Compile Include="Platform\Windows\API.cs" />
     <Compile Include="Platform\Windows\Wgl.cs" />
     <Compile Include="Platform\Windows\WinDisplayDevice.cs" />
@@ -101,19 +96,10 @@
     <Compile Include="Platform\X11\X11KeyMap.cs" />
     <Compile Include="Platform\X11\X11WindowInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SharpDX.Direct3D\AdapterDetails.cs" />
-    <Compile Include="SharpDX.Direct3D\Device.cs" />
-    <Compile Include="SharpDX.Direct3D\Direct3D.cs" />
-    <Compile Include="SharpDX.Direct3D\Enumerations.cs" />
-    <Compile Include="SharpDX.Direct3D\Resources.cs" />
-    <Compile Include="SharpDX.Direct3D\Structures.cs" />
-    <Compile Include="SharpDX\ComObject.cs" />
-    <Compile Include="SharpDX\Result.cs" />
     <Compile Include="WindowState.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Graphics" />
-    <Folder Include="Graphics\OpenGL" />
     <Folder Include="Input" />
     <Folder Include="Math" />
     <Folder Include="Platform" />
@@ -122,22 +108,5 @@
     <Folder Include="Platform\Windows" />
     <Folder Include="Platform\X11" />
     <Folder Include="Properties" />
-    <Folder Include="SharpDX" />
-    <Folder Include="SharpDX.Direct3D" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\InteropPatcher\InteropPatcher.csproj">
-      <Project>{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}</Project>
-      <Name>InteropPatcher</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
-  <!-- This actually rewrites the calli and fixed code.-->
-  <Target Name="AfterBuild">
-    <Exec Command="$(OutputPath)InteropPatcher.exe $(OutDir)OpenTK.dll" />
-    <!--Copy back *.dll from bin/Debug|Release to obj/Debug/Release directory-->
-    <Copy SourceFiles="@(MainAssembly)" DestinationFolder="$(IntermediateOutputPath)" SkipUnchangedFiles="true" />
-    <!-- Copy back *.pdb from bin/Debug|Release to obj/Debug/Release directory-->
-    <Copy SourceFiles="@(_DebugSymbolsOutputPath)" DestinationFiles="@(_DebugSymbolsIntermediatePath)" SkipUnchangedFiles="true" Condition="'$(_DebugSymbolsProduced)'=='true' and '$(SkipCopyingSymbolsToOutputDirectory)' != 'true'" />
-  </Target>
 </Project>

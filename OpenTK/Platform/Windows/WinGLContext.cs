@@ -95,7 +95,6 @@ namespace OpenTK.Platform.Windows {
 			new Wgl().LoadEntryPoints();
 			vsync_supported = Wgl.wglGetSwapIntervalEXT != null
 				&& Wgl.wglSwapIntervalEXT != null;
-			new OpenTK.Graphics.OpenGL.GL().LoadEntryPoints( this );
 		}
 
 		public override IntPtr GetAddress(string funcName) {
