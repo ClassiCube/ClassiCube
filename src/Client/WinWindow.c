@@ -11,7 +11,6 @@
 #include <Windows.h>
 
 #define win_Style WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN
-#define win_StyleEx WS_EX_WINDOWEDGE | WS_EX_APPWINDOW
 #define win_ClassName "ClassiCube_Window"
 #define RECT_WIDTH(rect) (rect.right - rect.left)
 #define RECT_HEIGHT(rect) (rect.bottom - rect.top)
@@ -72,7 +71,7 @@ static void Window_DoSetHiddenBorder(bool value) {
 	rect.left = win_Bounds.X; rect.top = win_Bounds.Y;
 	rect.right = rect.left + win_Bounds.Width;
 	rect.bottom = rect.top + win_Bounds.Height;
-	AdjustWindowRectEx(&rect, style, false, win_StyleEx);
+	AdjustWindowRect(&rect, style, false);
 
 	/* This avoids leaving garbage on the background window. */
 	if (was_visible) Window_SetVisible(false);
@@ -403,7 +402,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 
 	/* Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc). */
 	RECT rect; rect.left = x; rect.top = y; rect.right = x + width; rect.bottom = y + height;
-	AdjustWindowRectEx(&rect, win_Style, false, win_StyleEx);
+	AdjustWindowRect(&rect, win_Style, false);
 
 	WNDCLASSEXA wc = { 0 };
 	wc.cbSize = sizeof(WNDCLASSEXA);
@@ -419,7 +418,7 @@ void Window_Create(Int32 x, Int32 y, Int32 width, Int32 height, STRING_REF Strin
 		ErrorHandler_FailWithCode(GetLastError(), "Failed to register window class");
 	}
 	win_Handle = CreateWindowExA(
-		win_StyleEx, atom, title->buffer, win_Style,
+		0, atom, title->buffer, win_Style,
 		rect.left, rect.top, RECT_WIDTH(rect), RECT_HEIGHT(rect),
 		NULL, NULL, win_Instance, NULL);
 

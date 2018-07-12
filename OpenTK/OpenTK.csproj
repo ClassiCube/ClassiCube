@@ -62,9 +62,6 @@
     <Compile Include="Input\Keyboard.cs" />
     <Compile Include="Input\MouseButton.cs" />
     <Compile Include="Input\Mouse.cs" />
-    <Compile Include="Math\Matrix4.cs" />
-    <Compile Include="Math\Vector3.cs" />
-    <Compile Include="Math\Vector4.cs" />
     <Compile Include="Platform\Configuration.cs" />
     <Compile Include="Platform\IPlatformFactory.cs" />
     <Compile Include="Platform\MacOS\AglContext.cs" />
@@ -96,7 +93,6 @@
   <ItemGroup>
     <Folder Include="Graphics" />
     <Folder Include="Input" />
-    <Folder Include="Math" />
     <Folder Include="Platform" />
     <Folder Include="Platform\MacOS" />
     <Folder Include="Platform\MacOS\CarbonBindings" />

@@ -45,9 +45,7 @@ void Vector3_Cross(Vector3* result, Vector3* a, Vector3* b);
 void Vector3_Normalize(Vector3* result, Vector3* a);
 
 void Vector3_Transform(Vector3* result, Vector3* a, Matrix* mat);
-void Vector3_TransformX(Vector3* result, Real32 x, Matrix* mat);
 void Vector3_TransformY(Vector3* result, Real32 y, Matrix* mat);
-void Vector3_TransformZ(Vector3* result, Real32 z, Matrix* mat);
 
 Vector3 Vector3_RotateX(Vector3 v, Real32 angle);
 Vector3 Vector3_RotateY(Vector3 v, Real32 angle);

@@ -24,11 +24,9 @@ namespace OpenTK.Platform.Windows {
 		internal static extern bool SetWindowPos(IntPtr handle, IntPtr insertAfter, int x, int y, int cx, int cy, SetWindowPosFlags flags);	
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool AdjustWindowRect([In, Out] ref Win32Rectangle lpRect, WindowStyle dwStyle, bool bMenu);
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AdjustWindowRectEx(ref Win32Rectangle lpRect, WindowStyle dwStyle, bool bMenu, ExtendedWindowStyle dwExStyle);
-
+		
 		[DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-		internal static extern IntPtr CreateWindowEx(ExtendedWindowStyle ExStyle, IntPtr ClassAtom, IntPtr WindowName, WindowStyle Style,
+		internal static extern IntPtr CreateWindowEx(int exStyle, IntPtr ClassAtom, IntPtr WindowName, WindowStyle Style,
 		                                             int X, int Y, int Width, int Height, IntPtr HandleToParentWindow, IntPtr Menu, IntPtr Instance, IntPtr Param);	
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool DestroyWindow(IntPtr windowHandle);
@@ -201,7 +199,7 @@ namespace OpenTK.Platform.Windows {
 		internal byte StencilBits;
 		internal byte AuxBuffers;
 		internal byte LayerType;
-		private byte Reserved;
+		byte Reserved;
 		internal int LayerMask;
 		internal int VisibleMask;
 		internal int DamageMask;
@@ -220,7 +218,7 @@ namespace OpenTK.Platform.Windows {
 		internal string DeviceName;
 		internal short SpecVersion;
 		internal short DriverVersion;
-		private short Size;
+		short Size;
 		internal short DriverExtra;
 		internal int Fields;
 
@@ -466,12 +464,6 @@ namespace OpenTK.Platform.Windows {
 		OverlappedWindow = Overlapped | Caption | SystemMenu | ThickFrame | MinimizeBox | MaximizeBox,
 		PopupWindow = Popup | Border | SystemMenu,
 		ChildWindow = Child
-	}
-
-	[Flags]
-	internal enum ExtendedWindowStyle : uint {
-		WindowEdge = 0x00000100,
-		ApplicationWindow = 0x00040000,
 	}
 	
 	internal enum GetWindowLongOffsets : int {

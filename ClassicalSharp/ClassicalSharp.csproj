@@ -184,6 +184,7 @@
     <Compile Include="Map\Lighting\BasicLighting.cs" />
     <Compile Include="Map\Lighting\BasicLighting.Heightmap.cs" />
     <Compile Include="Map\WorldEnv.cs" />
+    <Compile Include="Math\Matrix4.cs" />
     <Compile Include="Math\Physics\AABB.cs" />
     <Compile Include="Math\Physics\IntersectionUtils.cs" />
     <Compile Include="Math\Physics\Searcher.cs" />
@@ -191,6 +192,8 @@
     <Compile Include="Entities\Model\CustomModel.cs" />
     <Compile Include="Entities\Model\HumanModels.cs" />
     <Compile Include="Entities\Model\ModelBuilder.cs" />
+    <Compile Include="Math\Vector3.cs" />
+    <Compile Include="Math\Vector4.cs" />
     <Compile Include="MeshBuilder\Builder.cs" />
     <Compile Include="MeshBuilder\FloodFill.cs" />
     <Compile Include="MeshBuilder\CuboidDrawer.cs" />

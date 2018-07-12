@@ -437,9 +437,7 @@ namespace SharpDX.Direct3D9 {
 		FogStart = 36,
 		FogEnd = 37,
 		FogDensity = 38,
-		Clipping = 136,
 		Lighting = 137,
-		Ambient = 139,
 		FogVertexMode = 140,
 		ColorVertex = 141,
 		LocalViewer = 142,
@@ -521,10 +519,10 @@ namespace SharpDX.Direct3D9 {
 	public unsafe static class DataBuffser { // Either 'VertexBuffer' or 'IndexBuffer
 		
 		public static IntPtr Lock(IntPtr ptr, int offsetToLock, int sizeToLock, LockFlags flags) {
-			IntPtr pOut;
-			int res = Interop.Calli(ptr, offsetToLock, sizeToLock, (IntPtr)(void*)&pOut, (int)flags, (*(IntPtr**)ptr)[11]);
+			IntPtr data;
+			int res = Interop.Calli(ptr, offsetToLock, sizeToLock, (IntPtr)(void*)&data, (int)flags, (*(IntPtr**)ptr)[11]);
 			if (res < 0) { throw new SharpDXException(res); }
-			return pOut;
+			return data;
 		}
 		
 		public static void SetData(IntPtr ptr, IntPtr data, int bytes, LockFlags flags) {

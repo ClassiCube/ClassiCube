@@ -34,7 +34,6 @@ using OpenTK.Input;
 
 namespace OpenTK.Platform.Windows {
 	public sealed class WinWindow : INativeWindow {
-		const ExtendedWindowStyle ParentStyleEx = ExtendedWindowStyle.WindowEdge | ExtendedWindowStyle.ApplicationWindow;
 		readonly IntPtr Instance = Marshal.GetHINSTANCE(typeof(WinWindow).Module);
 		readonly IntPtr ClassName = Marshal.StringToHGlobalAuto("CS_WindowClass");
 		readonly WindowProcedure WindowProcedureDelegate;
@@ -330,12 +329,11 @@ namespace OpenTK.Platform.Windows {
 			// The style of a parent window is different than that of a child window.
 			// Note: the child window should always be visible, even if the parent isn't.
 			WindowStyle style = WindowStyle.OverlappedWindow | WindowStyle.ClipChildren;
-			ExtendedWindowStyle ex_style = ParentStyleEx;
 
 			// Find out the final window rectangle, after the WM has added its chrome (titlebar, sidebars etc).
 			Win32Rectangle rect = new Win32Rectangle();
 			rect.left = x; rect.top = y; rect.right = x + width; rect.bottom = y + height;
-			API.AdjustWindowRectEx(ref rect, style, false, ex_style);
+			API.AdjustWindowRect(ref rect, style, false);
 
 			// Create the window class that we will use for this window.
 			// The current approach is to register a new class for each top-level WinGLWindow we create.
@@ -360,7 +358,7 @@ namespace OpenTK.Platform.Windows {
 
 			IntPtr window_name = Marshal.StringToHGlobalAuto(title);
 			IntPtr handle = API.CreateWindowEx(
-				ex_style, ClassName, window_name, style,
+				0, ClassName, window_name, style,
 				rect.left, rect.top, rect.Width, rect.Height,
 				IntPtr.Zero, IntPtr.Zero, Instance, IntPtr.Zero);
 
@@ -614,7 +612,7 @@ namespace OpenTK.Platform.Windows {
 
 				// Make sure client size doesn't change when changing the border style.
 				Win32Rectangle rect = Win32Rectangle.From(bounds);
-				API.AdjustWindowRectEx(ref rect, style, false, ParentStyleEx);
+				API.AdjustWindowRect(ref rect, style, false);
 
 				// This avoids leaving garbage on the background window.
 				if (was_visible)

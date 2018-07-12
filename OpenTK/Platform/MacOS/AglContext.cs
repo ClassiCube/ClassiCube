@@ -168,9 +168,6 @@ namespace OpenTK.Platform.MacOS {
 			mIsFullscreen = false;
 		}
 
-
-		#region IGraphicsContext Members
-
 		public override void SwapBuffers() {
 			Agl.aglSwapBuffers(ContextHandle);
 			Agl.CheckReturnValue(0, "aglSwapBuffers");
@@ -182,7 +179,7 @@ namespace OpenTK.Platform.MacOS {
 		}
 
 		public override bool IsCurrent {
-			get {  return ContextHandle == Agl.aglGetCurrentContext(); }
+			get { return ContextHandle == Agl.aglGetCurrentContext(); }
 		}
 
 		public override bool VSync {
@@ -193,10 +190,6 @@ namespace OpenTK.Platform.MacOS {
 				mVSync = value;
 			}
 		}
-
-		#endregion
-
-		#region IDisposable Members
 
 		bool IsDisposed;
 		protected override void Dispose(bool disposing) {
@@ -217,43 +210,31 @@ namespace OpenTK.Platform.MacOS {
 				Agl.CheckReturnValue(code, "aglDestroyContext");
 				ContextHandle = IntPtr.Zero;
 				Debug.Print("Context destruction completed successfully.");
-			} catch(MacOSException) {
+			} catch (MacOSException) {
 				Debug.Print("Failed to destroy context.");
-				if (disposing)
-					throw;
+				if (disposing) throw;
 			}
 			IsDisposed = true;
 		}
 
-		#endregion
+		const string lib = "libdl.dylib";
+		[DllImport(lib, EntryPoint = "NSIsSymbolNameDefined")]
+		static extern bool NSIsSymbolNameDefined(string s);
+		[DllImport(lib, EntryPoint = "NSLookupAndBindSymbol")]
+		static extern IntPtr NSLookupAndBindSymbol(string s);
+		[DllImport(lib, EntryPoint = "NSAddressOfSymbol")]
+		static extern IntPtr NSAddressOfSymbol(IntPtr symbol);
 
-		#region IGraphicsContextInternal Members
-
-		private const string Library = "libdl.dylib";
-
-		[DllImport(Library, EntryPoint = "NSIsSymbolNameDefined")]
-		private static extern bool NSIsSymbolNameDefined(string s);
-		[DllImport(Library, EntryPoint = "NSLookupAndBindSymbol")]
-		private static extern IntPtr NSLookupAndBindSymbol(string s);
-		[DllImport(Library, EntryPoint = "NSAddressOfSymbol")]
-		private static extern IntPtr NSAddressOfSymbol(IntPtr symbol);
-
-		public override IntPtr GetAddress(string function)
-		{
+		public override IntPtr GetAddress(string function) {
 			string fname = "_" + function;
-			if (!NSIsSymbolNameDefined(fname))
-				return IntPtr.Zero;
+			if (!NSIsSymbolNameDefined(fname)) return IntPtr.Zero;
 
 			IntPtr symbol = NSLookupAndBindSymbol(fname);
 			if (symbol != IntPtr.Zero)
 				symbol = NSAddressOfSymbol(symbol);
-
 			return symbol;
 		}
 		
-		public override void LoadAll() {
-		}
-
-		#endregion
+		public override void LoadAll() { }
 	}
 }
