@@ -7,21 +7,17 @@ namespace OpenTK.Platform.MacOS {
 	
 	// Core foundation services
 	internal class CF {
-		const string appServices = "/System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices";
+		const string lib = "/System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices";
 
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal static extern int CFArrayGetCount(IntPtr array);
-
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal static extern IntPtr CFArrayGetValueAtIndex(IntPtr array, int idx);
-
-		[DllImport(appServices)]
-		internal static extern IntPtr CFDictionaryGetValue(IntPtr dict, IntPtr key);
 
 		// this mirrors the definition in CFString.h.
 		// I don't know why, but __CFStringMakeConstantString is marked as "private and should not be used directly"
 		// even though the CFSTR macro just calls it.
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		static extern IntPtr __CFStringMakeConstantString(string cStr);
 		internal static IntPtr CFSTR(string cStr) {
 			return __CFStringMakeConstantString(cStr);
@@ -34,62 +30,51 @@ namespace OpenTK.Platform.MacOS {
 			CFNumberGetValue(cfnum, CFNumberType.kCFNumberDoubleType, &value);
 			return value;
 		}
+		[DllImport(lib)]
+		internal static extern IntPtr CFDictionaryGetValue(IntPtr dict, IntPtr key);
 
-		[DllImport(appServices)]
-		internal unsafe static extern bool CFNumberGetValue(IntPtr number, CFNumberType theType, void* valuePtr);
-
-		internal enum CFNumberType {
-			kCFNumberDoubleType = 13,
-		};
+		[DllImport(lib)]
+		internal unsafe static extern bool CFNumberGetValue(IntPtr number, CFNumberType type, void* valuePtr);
+		internal enum CFNumberType { kCFNumberDoubleType = 13 };
 	}
 	
 	internal static class CG {
-		const string appServices = "/System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices";
+		const string lib = "/System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices";
 
 		// CGPoint -> HIPoint
 		// CGSize -> HISize
 		// CGRect -> HIRect
 
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal unsafe static extern int CGGetActiveDisplayList(int maxDisplays, IntPtr* displays, out int count);
-
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal static extern IntPtr CGMainDisplayID();
 
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal unsafe static extern HIRect CGDisplayBounds(IntPtr display);
-
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal static extern int CGDisplayPixelsWide(IntPtr display);
-
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal static extern int CGDisplayPixelsHigh(IntPtr display);
 
-		[DllImport(appServices)]
-		internal static extern IntPtr CGDisplayCurrentMode(IntPtr display);
-
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal static extern int CGDisplayCapture(IntPtr display);
-
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal static extern int CGDisplayRelease(IntPtr display);
 
-		[DllImport(appServices)]
+		[DllImport(lib)]
 		internal static extern IntPtr CGDisplayAvailableModes(IntPtr display);
-
-		[DllImport(appServices)]
-		internal static extern IntPtr CGDisplaySwitchToMode(IntPtr display, IntPtr displayMode);
+		[DllImport(lib)]
+		internal static extern IntPtr CGDisplayCurrentMode(IntPtr display);
 		
-		[DllImport(appServices)]
-		internal static extern int CGDisplayHideCursor(IntPtr display);
-		
-		[DllImport(appServices)]
+		[DllImport(lib)]
+		internal static extern int CGDisplayHideCursor(IntPtr display);	
+		[DllImport(lib)]
 		internal static extern int CGDisplayShowCursor(IntPtr display);
 
-		[DllImport(appServices)]
-		internal static extern int CGDisplayMoveCursorToPoint(IntPtr display, HIPoint point);
-		
-		[DllImport(appServices)]
+		[DllImport(lib)]
+		internal static extern int CGDisplayMoveCursorToPoint(IntPtr display, HIPoint point);	
+		[DllImport(lib)]
 		internal static extern int CGAssociateMouseAndMouseCursorPosition(int value);
 	}
 }

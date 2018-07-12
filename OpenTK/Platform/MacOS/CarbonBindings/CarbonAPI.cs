@@ -10,8 +10,7 @@ namespace OpenTK.Platform.MacOS {
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct CarbonPoint {
-		public short V;
-		public short H;
+		public short V, H;
 
 		public CarbonPoint(int x, int y) {
 			V = (short)x;
@@ -21,10 +20,7 @@ namespace OpenTK.Platform.MacOS {
 
 	[StructLayout(LayoutKind.Sequential)]
 	public struct Rect {
-		short top;
-		short left;
-		short bottom;
-		short right;
+		short top, left, bottom, right;
 
 		public Rect(short _left, short _top, short _width, short _height) {
 			top = _top;
@@ -400,8 +396,6 @@ namespace OpenTK.Platform.MacOS {
 		View             = 4
 	};
 
-	#region --- Carbon API Methods ---
-
 	public static class API {
 		const string carbon = "/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon";
 		
@@ -452,8 +446,7 @@ namespace OpenTK.Platform.MacOS {
 		[DllImport(carbon)]
 		internal static extern void ReleaseEvent(IntPtr theEvent);
 
-		#region --- Processing apple event ---
-
+		
 		[StructLayout(LayoutKind.Sequential)]
 		struct EventRecord {
 			public ushort what;
@@ -474,25 +467,6 @@ namespace OpenTK.Platform.MacOS {
 			AEProcessAppleEvent(ref record);
 		}
 
-		#endregion
-
-		#endregion
-		#region --- Getting Event Parameters ---
-
-		[DllImport(carbon)]
-		static extern OSStatus CreateEvent(IntPtr inAllocator,
-		                                   EventClass inClassID, UInt32 kind, EventTime when,
-		                                   EventAttributes flags, out IntPtr outEvent);
-		
-		public static IntPtr CreateWindowEvent(WindowEventKind kind) {
-			IntPtr retval;
-			OSStatus stat = CreateEvent(IntPtr.Zero, EventClass.Window, (uint)kind,
-			                            0, EventAttributes.kEventAttributeNone, out retval);
-
-			if (stat != OSStatus.NoError)
-				throw new MacOSException(stat);
-			return retval;
-		}
 
 		[DllImport(carbon)]
 		static extern OSStatus GetEventParameter(
@@ -562,12 +536,11 @@ namespace OpenTK.Platform.MacOS {
 			return (MacOSKeyModifiers)code;
 		}
 
-		#endregion
 
 		public static void InstallWindowEventHandler(IntPtr windowRef, IntPtr uppHandlerProc,
 		                                             EventTypeSpec[] eventTypes, IntPtr userData, IntPtr handlerRef) {
 			IntPtr target = GetWindowEventTarget(windowRef);
-			OSStatus result = InstallEventHandler(target, uppHandlerProc, eventTypes.Length, 
+			OSStatus result = InstallEventHandler(target, uppHandlerProc, eventTypes.Length,
 			                                      eventTypes, userData, handlerRef);
 			CheckReturn(result);
 		}
@@ -575,7 +548,7 @@ namespace OpenTK.Platform.MacOS {
 		public static void InstallApplicationEventHandler(IntPtr uppHandlerProc,
 		                                                  EventTypeSpec[] eventTypes, IntPtr userData, IntPtr handlerRef) {
 			IntPtr target = GetApplicationEventTarget();
-			OSStatus result = InstallEventHandler(target, uppHandlerProc, eventTypes.Length, 
+			OSStatus result = InstallEventHandler(target, uppHandlerProc, eventTypes.Length,
 			                                      eventTypes, userData, handlerRef);
 			CheckReturn(result);
 		}

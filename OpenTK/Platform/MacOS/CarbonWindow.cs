@@ -46,7 +46,7 @@ namespace OpenTK.Platform.MacOS {
 		Rectangle windowedBounds;
 		bool mIsDisposed = false;
 		bool mExists = true;
-		internal DisplayDevice TargetDisplayDevice;
+		internal DisplayDevice Display;
 
 		WindowPositionMethod mPositionMethod = WindowPositionMethod.CenterOnMainScreen;
 		int mTitlebarHeight;
@@ -68,7 +68,7 @@ namespace OpenTK.Platform.MacOS {
 			                   WindowAttributes.InWindowMenu | WindowAttributes.LiveResize,
 			                   new Rect((short)x, (short)y, (short)width, (short)height));
 			
-			TargetDisplayDevice = device;
+			Display = device;
 		}
 
 		protected override void Dispose(bool disposing) {
@@ -149,7 +149,7 @@ namespace OpenTK.Platform.MacOS {
 			Debug.Print("New Size: {0}, {1}", ClientRectangle.Width, ClientRectangle.Height);
 
 			// TODO: if we go full screen we need to make this use the device specified.
-			bounds = TargetDisplayDevice.Bounds;
+			bounds = Display.Bounds;
 			windowState = WindowState.Fullscreen;
 		}
 

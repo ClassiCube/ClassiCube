@@ -5,8 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using OpenTK.Graphics;
-using OpenTK.Platform.MacOS.Carbon;
-using AGLPixelFormat = System.IntPtr;
 
 namespace OpenTK.Platform.MacOS {
 
@@ -53,7 +51,7 @@ namespace OpenTK.Platform.MacOS {
 				Debug.Print(attribs[i].ToString() + "  ");
 			Debug.Print("");
 
-			AGLPixelFormat aglPixelFormat;
+			IntPtr pixelFormat;
 
 			// Choose a pixel format with the attributes we specified.
 			if (fullscreen) {
@@ -68,10 +66,10 @@ namespace OpenTK.Platform.MacOS {
 				if (status != OSStatus.NoError)
 					throw new MacOSException(status, "DMGetGDeviceByDisplayID failed.");
 
-				aglPixelFormat = Agl.aglChoosePixelFormat(ref gdevice, 1, attribs.ToArray());
-				Agl.AglError err = Agl.aglGetError();
+				pixelFormat = Agl.aglChoosePixelFormat(ref gdevice, 1, attribs.ToArray());
+				int err = Agl.aglGetError();
 
-				if (err == Agl.AglError.BadPixelFormat) {
+				if (err == Agl.AGL_BAD_PIXEL_FORMAT) {
 					Debug.Print("Failed to create full screen pixel format.");
 					Debug.Print("Trying again to create a non-fullscreen pixel format.");
 
@@ -79,18 +77,18 @@ namespace OpenTK.Platform.MacOS {
 					return;
 				}
 			} else {
-				aglPixelFormat = Agl.aglChoosePixelFormat(IntPtr.Zero, 0, attribs.ToArray());
+				pixelFormat = Agl.aglChoosePixelFormat(IntPtr.Zero, 0, attribs.ToArray());
 				Agl.CheckReturnValue(0, "aglChoosePixelFormat");
 			}
 
 			Debug.Print("Creating AGL context.");
 
 			// create the context and share it with the share reference.
-			ContextHandle = Agl.aglCreateContext(aglPixelFormat, IntPtr.Zero);
+			ContextHandle = Agl.aglCreateContext(pixelFormat, IntPtr.Zero);
 			Agl.CheckReturnValue(0, "aglCreateContext");
 
 			// Free the pixel format from memory.
-			Agl.aglDestroyPixelFormat(aglPixelFormat);
+			Agl.aglDestroyPixelFormat(pixelFormat);
 			Agl.CheckReturnValue(0, "aglDestroyPixelFormat");
 			
 			SetDrawable(wind);
@@ -101,9 +99,7 @@ namespace OpenTK.Platform.MacOS {
 			Debug.Print("context: {0}", ContextHandle);
 		}
 
-		IntPtr GetQuartzDevice(CarbonWindow window) {
-			return QuartzDisplayDevice.HandleTo(window.TargetDisplayDevice);
-		}
+		IntPtr GetQuartzDevice(CarbonWindow window) { return window.Display.Metadata; }
 		
 		void SetDrawable(CarbonWindow window) {
 			IntPtr windowPort = API.GetWindowPort(window.WinHandle);
@@ -133,15 +129,15 @@ namespace OpenTK.Platform.MacOS {
 		bool firstFullScreen = false;
 		internal void SetFullScreen(CarbonWindow wind, out int width, out int height) {
 			Debug.Print("Switching to full screen {0}x{1} on context {2}",
-			            wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, ContextHandle);
+			            wind.Display.Width, wind.Display.Height, ContextHandle);
 
 			CG.CGDisplayCapture(GetQuartzDevice(wind));
-			byte code = Agl.aglSetFullScreen(ContextHandle, wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, 0, 0);
+			byte code = Agl.aglSetFullScreen(ContextHandle, wind.Display.Width, wind.Display.Height, 0, 0);
 			Agl.CheckReturnValue(code, "aglSetFullScreen");
 			MakeCurrent(wind);
 
-			width = wind.TargetDisplayDevice.Width;
-			height = wind.TargetDisplayDevice.Height;
+			width = wind.Display.Width;
+			height = wind.Display.Height;
 
 			// This is a weird hack to workaround a bug where the first time a context
 			// is made fullscreen, we just end up with a blank screen.  So we undo it as fullscreen
@@ -186,7 +182,7 @@ namespace OpenTK.Platform.MacOS {
 			get { return mVSync; }
 			set {
 				int intVal = value ? 1 : 0;
-				Agl.aglSetInteger(ContextHandle, Agl.ParameterNames.AGL_SWAP_INTERVAL, ref intVal);
+				Agl.aglSetInteger(ContextHandle, Agl.AGL_SWAP_INTERVAL, ref intVal);
 				mVSync = value;
 			}
 		}

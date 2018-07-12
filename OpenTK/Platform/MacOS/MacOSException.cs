@@ -1,38 +1,23 @@
 
 using System;
 
-namespace OpenTK.Platform.MacOS
-{
-	internal class MacOSException : Exception
-	{
+namespace OpenTK.Platform.MacOS {
+	internal class MacOSException : Exception {
 		OSStatus errorCode;
 
-		public MacOSException()
-		{}
+		public MacOSException() {}
 		public MacOSException(OSStatus errorCode)
-			: base("Error Code " + ((int)errorCode).ToString() + ": " + errorCode.ToString())
-		{
+			: base("Error Code " + ((int)errorCode).ToString() + ": " + errorCode.ToString()) {
 			this.errorCode = errorCode;
 		}
-		public MacOSException(OSStatus errorCode, string message)
-			: base(message)
-		{
+		public MacOSException(OSStatus errorCode, string message) : base(message) {
 			this.errorCode = errorCode;
-		}
-		internal MacOSException(Agl.AglError errorCode, string message)
-			: base(message)
-		{
-			this.errorCode = (OSStatus)errorCode;
 		}
 
-		public OSStatus ErrorCode
-		{
-			get { return errorCode; }
-		}
+		public OSStatus ErrorCode { get { return errorCode; } }
 	}
 
-	public enum OSStatus
-	{
+	public enum OSStatus {
 		NoError = 0,
 		
 		ParameterError               = -50,                          /*error in user parameter list*/

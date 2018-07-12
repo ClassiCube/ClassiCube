@@ -30,27 +30,20 @@ using System.Drawing;
 
 namespace OpenTK.Input {
 	
-	/// <summary> Represents a mouse device and provides methods to query its status. </summary>
+	public enum MouseButton {
+        Left, Right, Middle,
+        // Last available mouse button
+        LastButton
+    }
+	
 	public static class Mouse {
 		static readonly bool[] states = new bool[(int)MouseButton.LastButton];
 		static MouseMoveEventArgs move_args = new MouseMoveEventArgs();
 		static MouseButtonEventArgs button_args = new MouseButtonEventArgs();
 		static MouseWheelEventArgs wheel_args = new MouseWheelEventArgs();
 
-		/// <summary> Gets the absolute wheel position in floating-point units. </summary>
-		// /// <summary> Gets the precise value of the wheel in floating-point units. </summary>
 		public static float Wheel;
-		
-		internal static void SetWheel(float value) {
-			wheel_args.Delta = value - Wheel;
-			Wheel = value;
-			if (WheelChanged != null) WheelChanged(null, wheel_args);
-		}
-
-		/// <summary> Gets an integer representing the absolute x position of the pointer, in window pixel coordinates. </summary>
-		public static int X;
-		/// <summary> Gets an integer representing the absolute y position of the pointer, in window pixel coordinates. </summary>
-		public static int Y;
+		public static int X, Y;
 
 		public static bool Get(MouseButton btn) { return states[(int)btn]; }
 		internal static void Set(MouseButton btn, bool value) {
@@ -63,6 +56,12 @@ namespace OpenTK.Input {
 			} else if (!value && ButtonUp != null) {
 				ButtonUp(null, button_args);
 			}
+		}
+		
+		internal static void SetWheel(float value) {
+			wheel_args.Delta = value - Wheel;
+			Wheel = value;
+			if (WheelChanged != null) WheelChanged(null, wheel_args);
 		}
 
 		internal static void SetPos(int x, int y) {
@@ -79,20 +78,7 @@ namespace OpenTK.Input {
 		public static event EventHandler<MouseWheelEventArgs> WheelChanged;
 	}
 
-	public class MouseMoveEventArgs : EventArgs {
-		/// <summary> Gets the change in X position produced by this event. </summary>
-		public int XDelta;
-		/// <summary> Gets the change in Y position produced by this event. </summary>
-		public int YDelta;
-	}
-
-	public class MouseButtonEventArgs : EventArgs {
-		/// <summary> The mouse button for the event. </summary>
-		public MouseButton Button;
-	}
-
-	public class MouseWheelEventArgs : EventArgs {
-		/// <summary> Gets the precise change in value of the wheel for this event in floating-point units. </summary>
-		public float Delta;
-	}
+	public class MouseMoveEventArgs : EventArgs { public int XDelta, YDelta; }
+	public class MouseButtonEventArgs : EventArgs { public MouseButton Button; }
+	public class MouseWheelEventArgs : EventArgs { public float Delta; }
 }

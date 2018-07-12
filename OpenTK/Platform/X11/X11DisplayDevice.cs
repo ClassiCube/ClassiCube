@@ -29,8 +29,8 @@ namespace OpenTK.Platform.X11 {
 				// Note: this won't work correctly in the case of distinct X servers.
 				for (int i = 0; i < API.ScreenCount; i++) {
 					DisplayDevice dev = new DisplayDevice();
-					dev.IsPrimary = i == API.XDefaultScreen(API.DefaultDisplay);
-					dev.Metadata = i;
+					dev.IsPrimary = i == API.DefaultScreen;
+					dev.Metadata = (IntPtr)i;
 					devices.Add(dev);
 				}
 			}
@@ -69,7 +69,7 @@ namespace OpenTK.Platform.X11 {
 					
 					devices.Add(dev);
 					// It seems that all X screens are equal to 0 is Xinerama is enabled, at least on Nvidia (verify?)
-					dev.Metadata = 0; /*screen.ScreenNumber*/
+					dev.Metadata = (IntPtr)0; /*screen.ScreenNumber*/
 				}
 			}
 			return true;

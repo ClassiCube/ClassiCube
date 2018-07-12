@@ -25,7 +25,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		#endif
 		IGraphicsContext glContext;
 		
-		public OpenGLApi(IWindowInfo window) {
+		public OpenGLApi(INativeWindow window) {
 			glContext = Factory.Default.CreateGLContext(GraphicsMode.Default, window);
 			glContext.MakeCurrent(window);
 			glContext.LoadAll();
@@ -595,7 +595,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void OnWindowResize(Game game) {
 			GL.Viewport(0, 0, game.Width, game.Height);
-			glContext.Update(game.window.WindowInfo);
+			glContext.Update(game.window);
 		}
 		
 		public override void Dispose() {

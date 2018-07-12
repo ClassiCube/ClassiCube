@@ -27,71 +27,47 @@ namespace OpenTK.Platform.MacOS {
 			AGL_FULLSCREEN = 54,
 		}
 		
-		// Integer parameter names
-		internal enum ParameterNames {
-			AGL_SWAP_INTERVAL = 222,  /* 0 -> Don't sync, n -> Sync every n retrace    */
-		}
+		internal const int AGL_SWAP_INTERVAL = 222; /* 0 -> Don't sync, n -> Sync every n retrace */
+		internal const int AGL_BAD_PIXEL_FORMAT = 0002; /* invalid pixel format */
+		
+		[DllImport(agl)] 
+		internal static extern IntPtr aglChoosePixelFormat(ref IntPtr gdevs, int ndev, int[] attribs);
+		[DllImport(agl)] 
+		internal static extern IntPtr aglChoosePixelFormat(IntPtr gdevs, int ndev, int[] attribs);
+		[DllImport(agl)] 
+		internal static extern void aglDestroyPixelFormat(IntPtr pix);
+		
+		[DllImport(agl)] 
+		internal static extern IntPtr aglCreateContext(IntPtr pix, IntPtr share);
+		[DllImport(agl)] 
+		internal static extern byte aglDestroyContext(IntPtr ctx);
+		[DllImport(agl)] 
+		internal static extern byte aglUpdateContext(IntPtr ctx);
 
-		// Error return values from aglGetError.
-		internal enum AglError {
-			NoError =                 0, /* no error                        */
-			
-			BadAttribute =        10000, /* invalid pixel format attribute  */
-			BadProperty =         10001, /* invalid renderer property       */
-			BadPixelFormat =      10002, /* invalid pixel format            */
-			BadRendererInfo =     10003, /* invalid renderer info           */
-			BadContext =          10004, /* invalid context                 */
-			BadDrawable =         10005, /* invalid drawable                */
-			BadGraphicsDevice =   10006, /* invalid graphics device         */
-			BadState =            10007, /* invalid context state           */
-			BadValue =            10008, /* invalid numerical value         */
-			BadMatch =            10009, /* invalid share context           */
-			BadEnum =             10010, /* invalid enumerant               */
-			BadOffscreen =        10011, /* invalid offscreen drawable      */
-			BadFullscreen =       10012, /* invalid offscreen drawable      */
-			BadWindow =           10013, /* invalid window                  */
-			BadPointer =          10014, /* invalid pointer                 */
-			BadModule =           10015, /* invalid code module             */
-			BadAlloc =            10016, /* memory allocation failure       */
-			BadConnection =       10017, /* invalid CoreGraphics connection */
-		}
+		[DllImport(agl)] 
+		internal static extern byte aglSetCurrentContext(IntPtr ctx);
+		[DllImport(agl)] 
+		internal static extern IntPtr aglGetCurrentContext();
 		
-		// Pixel format functions
-		[DllImport(agl)] internal static extern AGLPixelFormat aglChoosePixelFormat(ref AGLDevice gdevs, int ndev, int[] attribs);
-		[DllImport(agl)] internal static extern AGLPixelFormat aglChoosePixelFormat(IntPtr gdevs, int ndev, int[] attribs);
-		[DllImport(agl)] internal static extern void aglDestroyPixelFormat(AGLPixelFormat pix);
+		[DllImport(agl)] 
+		internal static extern byte aglSetDrawable(IntPtr ctx, IntPtr draw);
+		[DllImport(agl)] 
+		internal static extern byte aglSetFullScreen(IntPtr ctx, int width, int height, int freq, int device);
 		
-		// Context functions
-		[DllImport(agl)] internal static extern AGLContext aglCreateContext(AGLPixelFormat pix, AGLContext share);
-		[DllImport(agl)] internal static extern byte aglDestroyContext(AGLContext ctx);
-		[DllImport(agl)] internal static extern byte aglUpdateContext(AGLContext ctx);
+		[DllImport(agl)] 
+		internal static extern void aglSwapBuffers(IntPtr ctx);	
+		[DllImport(agl)]
+		internal static extern byte aglSetInteger(IntPtr ctx, int pname, ref int @params);
 
-		// Current state functions
-		[DllImport(agl)] internal static extern byte aglSetCurrentContext(AGLContext ctx);
-		[DllImport(agl)] internal static extern AGLContext aglGetCurrentContext();
-		
-		// Drawable Functions
-		[DllImport(agl)] internal static extern byte aglSetDrawable(AGLContext ctx, AGLDrawable draw);
-		[DllImport(agl)] internal static extern byte aglSetFullScreen(AGLContext ctx, int width, int height, int freq, int device);
-		
-		// Virtual screen functions
-		[DllImport(agl)] static extern byte aglSetVirtualScreen(AGLContext ctx, int screen);
-		[DllImport(agl)] static extern int aglGetVirtualScreen(AGLContext ctx);
-		
-		// Swap functions
-		[DllImport(agl)] internal static extern void aglSwapBuffers(AGLContext ctx);
-		
-		// Per context options
-		[DllImport(agl)] internal static extern byte aglSetInteger(AGLContext ctx, ParameterNames pname, ref int @params);
-
-		// Error functions
-		[DllImport(agl)] internal static extern AglError aglGetError();
-		[DllImport(agl)] static extern IntPtr aglErrorString(AglError code);
+		[DllImport(agl)] 
+		internal static extern int aglGetError();
+		[DllImport(agl)] 
+		static extern IntPtr aglErrorString(int code);
 		
 		internal static void CheckReturnValue(byte code, string function) {
 			if (code != 0) return;
-			AglError errCode = aglGetError();
-			if (errCode == AglError.NoError) return;
+			int errCode = aglGetError();
+			if (errCode == 0) return;
 			
 			string error = new String((sbyte*)aglErrorString(errCode));
 			throw new MacOSException((OSStatus)errCode, String.Format(

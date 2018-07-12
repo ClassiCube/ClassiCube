@@ -57,18 +57,12 @@ namespace OpenTK.Platform.MacOS {
 				HIRect bounds = CG.CGDisplayBounds(curDisplay);
 				Rectangle newRect = new Rectangle(
 					(int)bounds.Origin.X, (int)bounds.Origin.Y, (int)bounds.Size.X, (int)bounds.Size.Y);
-
 				Debug.Print("Display {0} bounds: {1}", i, newRect);
 
 				DisplayDevice opentk_dev = new DisplayDevice(opentk_curRes, primary);
 				opentk_dev.Bounds = newRect;
 				opentk_dev.Metadata = curDisplay;
 			}
-		}
-
-		internal static IntPtr HandleTo(DisplayDevice device) {
-			if (device == null || device.Metadata == null) return IntPtr.Zero;
-			return (IntPtr)device.Metadata;
 		}
 	}
 }

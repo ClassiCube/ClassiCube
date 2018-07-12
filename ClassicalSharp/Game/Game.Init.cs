@@ -30,9 +30,9 @@ namespace ClassicalSharp {
 			#if ANDROID
 			Graphics = new OpenGLESApi();
 			#elif !USE_DX
-			Graphics = new OpenGLApi(window.WindowInfo);
+			Graphics = new OpenGLApi(window);
 			#else
-			Graphics = new Direct3D9Api(this);
+			Graphics = new Direct3D9Api(window);
 			#endif
 			Graphics.MakeApiInfo();
 			ErrorHandler.AdditionalInfo = Graphics.ApiInfo;

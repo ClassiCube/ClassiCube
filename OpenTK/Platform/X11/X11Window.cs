@@ -42,7 +42,7 @@ namespace OpenTK.Platform.X11 {
 		// TODO: Mouse/keyboard grabbing/wrapping.
 		
 		const int _min_width = 30, _min_height = 30;
-		IntPtr wm_destroy;	
+		IntPtr wm_destroy;
 		IntPtr net_wm_state;
 		IntPtr net_wm_state_minimized;
 		IntPtr net_wm_state_fullscreen;
@@ -82,11 +82,11 @@ namespace OpenTK.Platform.X11 {
 		public X11Window(int x, int y, int width, int height, string title, GraphicsMode mode, DisplayDevice device) {
 			Debug.Print("Creating X11GLNative window.");
 			// Open a display connection to the X server, and obtain the screen and root window.
-			Debug.Print("Display: {0}, Screen {1}, Root window: {2}", 
+			Debug.Print("Display: {0}, Screen {1}, Root window: {2}",
 			            API.DefaultDisplay, API.DefaultScreen, API.RootWindow);
 			
 			RegisterAtoms();
-			XVisualInfo info = new XVisualInfo();	
+			XVisualInfo info = new XVisualInfo();
 			mode = X11GLContext.SelectGraphicsMode(mode, out info);
 			VisualInfo = info;
 			// Create a window on this display using the visual above
@@ -105,13 +105,13 @@ namespace OpenTK.Platform.X11 {
 				EventMask.PropertyChangeMask;
 			attributes.event_mask = (IntPtr)eventMask;
 
-			uint mask = 
+			uint mask =
 				(uint)SetWindowValuemask.ColorMap  | (uint)SetWindowValuemask.EventMask |
 				(uint)SetWindowValuemask.BackPixel | (uint)SetWindowValuemask.BorderPixel;
 
 			WinHandle = API.XCreateWindow(API.DefaultDisplay, API.RootWindow,
-			                                        x, y, width, height, 0, VisualInfo.Depth/*(int)CreateWindowArgs.CopyFromParent*/,
-			                                        (int)CreateWindowArgs.InputOutput, VisualInfo.Visual, (IntPtr)mask, ref attributes);
+			                              x, y, width, height, 0, VisualInfo.Depth/*(int)CreateWindowArgs.CopyFromParent*/,
+			                              (int)CreateWindowArgs.InputOutput, VisualInfo.Visual, (IntPtr)mask, ref attributes);
 
 			if (WinHandle == IntPtr.Zero)
 				throw new ApplicationException("XCreateWindow call failed (returned 0).");
@@ -222,31 +222,30 @@ namespace OpenTK.Platform.X11 {
 			} else if (keymap.TryGetValue(keysym2, out tkKey)) {
 				Keyboard.Set(tkKey, pressed);
 			} else {
-				Debug.Print("KeyCode {0} (Keysym: {1}, {2}) not mapped.", 
+				Debug.Print("KeyCode {0} (Keysym: {1}, {2}) not mapped.",
 				            e.KeyEvent.keycode, keysym, keysym2);
 			}
 		}
 		
 		static void DeleteIconPixmaps(IntPtr display, IntPtr window) {
-			IntPtr wmHints_ptr = API.XGetWMHints(display, window);
+			IntPtr wmHints_ptr = API.XGetWMHints(display, window);			
+			if (wmHints_ptr == IntPtr.Zero) return;
 			
-			if (wmHints_ptr != IntPtr.Zero) {
-				XWMHints wmHints = (XWMHints)Marshal.PtrToStructure(wmHints_ptr, typeof(XWMHints));
-				XWMHintsFlags flags = (XWMHintsFlags)wmHints.flags.ToInt32();
-				
-				if ((flags & XWMHintsFlags.IconPixmapHint) != 0) {
-					wmHints.flags = new IntPtr((int)(flags & ~XWMHintsFlags.IconPixmapHint));
-					API.XFreePixmap(display, wmHints.icon_pixmap);
-				}
-				
-				if ((flags & XWMHintsFlags.IconMaskHint) != 0) {
-					wmHints.flags = new IntPtr((int)(flags & ~XWMHintsFlags.IconMaskHint));
-					API.XFreePixmap(display, wmHints.icon_mask);
-				}
-				
-				API.XSetWMHints(display, window, ref wmHints);
-				API.XFree(wmHints_ptr);
+			XWMHints wmHints = (XWMHints)Marshal.PtrToStructure(wmHints_ptr, typeof(XWMHints));
+			XWMHintsFlags flags = (XWMHintsFlags)wmHints.flags.ToInt32();
+			
+			if ((flags & XWMHintsFlags.IconPixmapHint) != 0) {
+				wmHints.flags = new IntPtr((int)(flags & ~XWMHintsFlags.IconPixmapHint));
+				API.XFreePixmap(display, wmHints.icon_pixmap);
+			}			
+			if ((flags & XWMHintsFlags.IconMaskHint) != 0) {
+				wmHints.flags = new IntPtr((int)(flags & ~XWMHintsFlags.IconMaskHint));
+				API.XFreePixmap(display, wmHints.icon_mask);
 			}
+			
+			API.XSetWMHints(display, window, ref wmHints);
+			API.XFree(wmHints_ptr);
+
 		}
 		
 		void RefreshWindowBorders() {
@@ -485,13 +484,13 @@ namespace OpenTK.Platform.X11 {
 				if (clipboard_paste_text != null) return clipboard_paste_text;
 				Thread.Sleep(100);
 			}
-			return ""; 
+			return "";
 		}
 		
 		public override void SetClipboardText(string value) {
 			clipboard_copy_text = value;
 			API.XSetSelectionOwner(API.DefaultDisplay, xa_clipboard, WinHandle, IntPtr.Zero);
-		}	
+		}
 		
 		public override Rectangle Bounds {
 			get { return bounds; }
@@ -719,7 +718,7 @@ namespace OpenTK.Platform.X11 {
 		void MakeBlankCursor() {
 			XColor color = default(XColor);
 			IntPtr pixmap = API.XCreatePixmap(API.DefaultDisplay, API.RootWindow, 1, 1, 1);
-			blankCursor = API.XCreatePixmapCursor(API.DefaultDisplay, pixmap, pixmap, ref color, ref color, 0, 0);		
+			blankCursor = API.XCreatePixmapCursor(API.DefaultDisplay, pixmap, pixmap, ref color, ref color, 0, 0);
 			API.XFreePixmap(API.DefaultDisplay, pixmap);
 		}
 		

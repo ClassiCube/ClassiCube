@@ -33,7 +33,7 @@ namespace OpenTK.Platform.X11 {
 			if (ContextHandle != IntPtr.Zero) {
 				Debug.Print("Context created (id: {0}).", ContextHandle);
 			} else {
-				throw new GraphicsContextException("Failed to create OpenGL context. Glx.CreateContext call returned 0.");
+				throw new GraphicsContextException("Context creation failed. Error: NULL returned");
 			}
 			
 			if (!Glx.glXIsDirect(display, ContextHandle))
@@ -41,32 +41,15 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		public override void SwapBuffers() {
-			if (cur.WinHandle == IntPtr.Zero) {
-				throw new InvalidOperationException(
-					String.Format("Window is invalid. Handle ({0}).", cur.WinHandle));
-			}
 			Glx.glXSwapBuffers(API.DefaultDisplay, cur.WinHandle);
 		}
 
 		public override void MakeCurrent(INativeWindow window) {
-			if (window == cur && IsCurrent) return;
-
-			if (window == null) {
-				Debug.Print("Releasing context {0}... ", ContextHandle);
-				if (!Glx.glXMakeCurrent(API.DefaultDisplay, IntPtr.Zero, IntPtr.Zero))
-					Debug.Print("failed to release context");
-			} else {
-				X11Window w = (X11Window)window;
-				Debug.Print("Making context {0} current (Screen: {1}, Window: {2})... ", 
-				            ContextHandle, API.DefaultScreen, w.WinHandle);
-
-				if (w.WinHandle == IntPtr.Zero || ContextHandle == IntPtr.Zero)
-					throw new InvalidOperationException("Invalid display, window or context.");
-
-				if (!Glx.glXMakeCurrent(API.DefaultDisplay, w.WinHandle, ContextHandle))
-					throw new GraphicsContextException("Failed to make context current.");
-
-			}
+			Debug.Print("Making context {0} current (Screen: {1}, Window: {2})... ",
+			            ContextHandle, API.DefaultScreen, window.WinHandle);
+			
+			if (!Glx.glXMakeCurrent(API.DefaultDisplay, window.WinHandle, ContextHandle))
+				throw new GraphicsContextException("Failed to make context current.");
 			cur = (X11Window)window;
 		}
 
@@ -78,20 +61,20 @@ namespace OpenTK.Platform.X11 {
 			get { return vsync_supported && vsync_interval != 0; }
 			set {
 				if (vsync_supported) {
-					GLXErrorCode error_code = Glx.glXSwapIntervalSGI(value ? 1 : 0);
-					if (error_code != X11.GLXErrorCode.NO_ERROR)
-						Debug.Print("VSync = {0} failed, error code: {1}.", value, error_code);
+					int result = Glx.glXSwapIntervalSGI(value ? 1 : 0);
+					if (result != 0)
+						Debug.Print("VSync = {0} failed, error code: {1}.", value, result);
 					vsync_interval = value ? 1 : 0;
 				}
 			}
 		}
 
 		public override IntPtr GetAddress(string function) {
-			return Glx.glXGetProcAddress(function);
+			return Glx.GetAddress(function);
 		}
 
 		public override void LoadAll() {
-			new Glx().LoadEntryPoints();
+			Glx.LoadEntryPoints();
 			vsync_supported = Glx.glXSwapIntervalSGI != null;
 			Debug.Print("Context supports vsync: {0}.", vsync_supported);
 		}
@@ -141,17 +124,16 @@ namespace OpenTK.Platform.X11 {
 		// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_61/com.ibm.aix.opengl/doc/openglrf/glXChooseFBConfig.htm%23glxchoosefbconfig
 		// See http://www-01.ibm.com/support/knowledgecenter/ssw_aix_71/com.ibm.aix.opengl/doc/openglrf/glXChooseVisual.htm%23b5c84be452rree
 		// for the attribute declarations. Note that the attributes are different than those used in Glx.ChooseVisual.
-		static unsafe IntPtr SelectVisual(int[] visualAttribs) {
+		static unsafe IntPtr SelectVisual(int[] attribs) {
 			int major = 0, minor = 0;
 			if (!Glx.glXQueryVersion(API.DefaultDisplay, ref major, ref minor))
 				throw new InvalidOperationException("glXQueryVersion failed, potentially corrupt OpenGL driver");
-			int screen = API.XDefaultScreen(API.DefaultDisplay);
 			
 			if (major >= 1 && minor >= 3) {
 				Debug.Print("Getting FB config.");
 				int fbcount;
 				// Note that ChooseFBConfig returns an array of GLXFBConfig opaque structures (i.e. mapped to IntPtrs).
-				IntPtr* fbconfigs = Glx.glXChooseFBConfig(API.DefaultDisplay, screen, visualAttribs, out fbcount);
+				IntPtr* fbconfigs = Glx.glXChooseFBConfig(API.DefaultDisplay, API.DefaultScreen, attribs, out fbcount);
 				if (fbcount > 0 && fbconfigs != null) {
 					// We want to use the first GLXFBConfig from the fbconfigs array (the first one is the best match).
 					IntPtr visual = Glx.glXGetVisualFromFBConfig(API.DefaultDisplay, *fbconfigs);
@@ -160,7 +142,7 @@ namespace OpenTK.Platform.X11 {
 				}
 			}
 			Debug.Print("Falling back to glXChooseVisual.");
-			return Glx.glXChooseVisual(API.DefaultDisplay, screen, visualAttribs);
+			return Glx.glXChooseVisual(API.DefaultDisplay, API.DefaultScreen, attribs);
 		}
 		
 		static int[] GetVisualAttribs(ColorFormat color, int depth, int stencil, int buffers) {

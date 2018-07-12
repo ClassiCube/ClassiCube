@@ -2,11 +2,21 @@
 
 namespace OpenTK {
 	
-	public static class MemUtils {
+	/// <summary> Placeholder for System.Diagnostics.Debug class because it crashes on some Mono version on Linux. </summary>
+	public static class Debug {
 		
-		static MemUtils() {
-			use64Bit = IntPtr.Size == 8;
+		public static void Print(string text) {
+			try { Console.WriteLine(text); } catch { } 
+			// raised by Mono sometimes when trying to write to console from the finalizer thread.
 		}
+		
+		public static void Print(string text, params object[] args) {
+			try { Console.WriteLine(text, args); } catch { }
+		}
+	}
+	
+	public static class MemUtils {
+		static MemUtils() { use64Bit = IntPtr.Size == 8; }
 		static bool use64Bit;
 		
 		public static unsafe void memcpy(IntPtr srcPtr, IntPtr dstPtr, int bytes) {

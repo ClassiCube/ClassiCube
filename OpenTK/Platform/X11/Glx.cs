@@ -13,12 +13,8 @@ using System.Security;
 
 #pragma warning disable 1591
 
-namespace OpenTK.Platform.X11
-{
-	#region Enums
-
-	enum GLXAttribute : int
-	{
+namespace OpenTK.Platform.X11 {
+	enum GLXAttribute : int {
 		USE_GL = 1,
 		RGBA = 4,
 		DOUBLEBUFFER = 5,
@@ -30,82 +26,56 @@ namespace OpenTK.Platform.X11
 		STENCIL_SIZE = 13,
 	}
 
-	enum GLXSyncType : int
-	{
-		SYNC_SWAP_SGIX = 0x00000001,
-		SYNC_FRAME_SGIX = 0x00000000,
-	}
-
-	enum GLXErrorCode : int
-	{
-		NO_ERROR       = 0,
-		BAD_SCREEN     = 1,   /* screen # is bad */
-		BAD_ATTRIBUTE  = 2,   /* attribute to get is bad */
-		NO_EXTENSION   = 3,   /* no glx extension on server */
-		BAD_VISUAL     = 4,   /* visual # not known by GLX */
-		BAD_CONTEXT    = 5,   /* returned only by import_context EXT? */
-		BAD_VALUE      = 6,   /* returned only by glXSwapIntervalSGI? */
-		BAD_ENUM       = 7,   /* unused? */
-	}
-
-	#endregion
-
 	[SuppressUnmanagedCodeSecurity]
-	class Glx : BindingsBase
-	{
-		const string Library = "libGL.so.1";
-
-		// Disable BeforeFieldInit optimization.
-		static Glx() { }
-
-		protected override IntPtr GetAddress(string funcname) {
+	internal static class Glx {
+		
+		internal static IntPtr GetAddress(string funcname) {
 			return glXGetProcAddress(funcname);
 		}
 		
-		internal void LoadEntryPoints() {
-			LoadDelegate("glXSwapIntervalSGI", out glXSwapIntervalSGI);
+		internal static void LoadEntryPoints() {
+			IntPtr address = GetAddress("glXSwapIntervalSGI");
+			if (address != IntPtr.Zero) {
+				glXSwapIntervalSGI = (SwapIntervalSGI)Marshal.GetDelegateForFunctionPointer(
+					address, typeof(SwapIntervalSGI));
+			}
 		}
 
-		[DllImport(Library)]
+		const string lib = "libGL.so.1";
+		[DllImport(lib)]
 		public static extern bool glXIsDirect(IntPtr dpy, IntPtr context);
+		[DllImport(lib)]
+		public extern static bool glXQueryVersion(IntPtr dpy, ref int major, ref int minor);
 
-		[DllImport(Library)]
-		public static extern IntPtr glXCreateContext(IntPtr dpy, ref XVisualInfo vis, IntPtr shareList, bool direct);
-		
-		[DllImport(Library)]
+		[DllImport(lib)]
+		public static extern IntPtr glXCreateContext(IntPtr dpy, ref XVisualInfo vis, IntPtr shareList, bool direct);	
+		[DllImport(lib)]
 		public static extern void glXDestroyContext(IntPtr dpy, IntPtr context);
 
-		[DllImport(Library)]
+		[DllImport(lib)]
 		public static extern IntPtr glXGetCurrentContext();
-
-		[DllImport(Library)]
+		[DllImport(lib)]
 		public static extern bool glXMakeCurrent(IntPtr display, IntPtr drawable, IntPtr context);
 
-		[DllImport(Library)]
+		[DllImport(lib)]
 		public static extern void glXSwapBuffers(IntPtr display, IntPtr drawable);
-
-		[DllImport(Library)]
+		[DllImport(lib)]
 		public static extern IntPtr glXGetProcAddress([MarshalAs(UnmanagedType.LPTStr)] string procName);
 
-		[DllImport(Library)]
+		[DllImport(lib)]
 		public static extern int glXGetConfig(IntPtr dpy, ref XVisualInfo vis, GLXAttribute attrib, out int value);
-
-		[DllImport(Library)]
+		[DllImport(lib)]
 		public static extern IntPtr glXChooseVisual(IntPtr dpy, int screen, int[] attriblist);
 
 		// Returns an array of GLXFBConfig structures.
-		[DllImport(Library)]
+		[DllImport(lib)]
 		public unsafe extern static IntPtr* glXChooseFBConfig(IntPtr dpy, int screen, int[] attriblist, out int fbount);
-
 		// Returns a pointer to an XVisualInfo structure.
-		[DllImport(Library)]
+		[DllImport(lib)]
 		public unsafe extern static IntPtr glXGetVisualFromFBConfig(IntPtr dpy, IntPtr fbconfig);
-		
-		[DllImport(Library)]
-		public extern static bool glXQueryVersion(IntPtr dpy, ref int major, ref int minor);
 
 		[SuppressUnmanagedCodeSecurity]
-		public delegate GLXErrorCode SwapIntervalSGI(int interval);
+		public delegate int SwapIntervalSGI(int interval);
 		public static SwapIntervalSGI glXSwapIntervalSGI;
 	}
 }

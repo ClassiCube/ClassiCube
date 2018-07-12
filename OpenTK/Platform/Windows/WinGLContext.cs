@@ -37,32 +37,22 @@ namespace OpenTK.Platform.Windows {
 			if (ContextHandle == IntPtr.Zero)
 				ContextHandle = Wgl.wglCreateContext(window.DeviceContext);
 			if (ContextHandle == IntPtr.Zero)
-				throw new GraphicsContextException("Context creation failed. Wgl.CreateContext() error: " + Marshal.GetLastWin32Error());
+				throw new GraphicsContextException("Context creation failed. Error: " + Marshal.GetLastWin32Error());
 			
-			Debug.Print("success! (id: {0})", ContextHandle);
+			Debug.Print("Context created! (id: {0})", ContextHandle);
 		}
 
 		public override void SwapBuffers() {
 			if (!API.SwapBuffers(dc))
 				throw new GraphicsContextException(String.Format(
-					"Failed to swap buffers for context {0} current. Error: {1}", this, Marshal.GetLastWin32Error()));
+					"Failed to swap buffers for context. Error: {0}", Marshal.GetLastWin32Error()));
 		}
 
 		IntPtr dc;
 		public override void MakeCurrent(INativeWindow window) {
-			bool success;
-
-			if (window != null) {
-				if (window.WinHandle == IntPtr.Zero)
-					throw new ArgumentException("window", "Must point to a valid window.");
-				success = Wgl.wglMakeCurrent(((WinWindow)window).DeviceContext, ContextHandle);
-			} else {
-				success = Wgl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
-			}
-
-			if (!success) {
+			if (!Wgl.wglMakeCurrent(((WinWindow)window).DeviceContext, ContextHandle)) {
 				throw new GraphicsContextException(String.Format(
-					"Failed to make context {0} current. Error: {1}", this, Marshal.GetLastWin32Error()));
+					"Failed to make context current. Error: {0}", Marshal.GetLastWin32Error()));
 			}
 			dc = Wgl.wglGetCurrentDC();
 		}
@@ -80,15 +70,13 @@ namespace OpenTK.Platform.Windows {
 		}
 
 		public override void LoadAll() {
-			new Wgl().LoadEntryPoints();
-			vsync_supported = Wgl.wglGetSwapIntervalEXT != null
-				&& Wgl.wglSwapIntervalEXT != null;
+			Wgl.LoadEntryPoints();
+			vsync_supported = Wgl.wglGetSwapIntervalEXT != null && Wgl.wglSwapIntervalEXT != null;
 		}
 
 		public override IntPtr GetAddress(string funcName) {
-			IntPtr dynAddress = Wgl.wglGetProcAddress(funcName);
-			if (!BindingsBase.IsInvalidAddress(dynAddress))
-				return dynAddress;
+			IntPtr address = Wgl.GetAddress(funcName);
+			if (address != IntPtr.Zero) return address;
 			return API.GetProcAddress(opengl32Handle, funcName);
 		}
 

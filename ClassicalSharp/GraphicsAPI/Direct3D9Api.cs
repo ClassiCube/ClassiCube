@@ -30,9 +30,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		Format depthFormat, viewFormat;
 		CreateFlags createFlags = CreateFlags.HardwareVertexProcessing;
 
-		public Direct3D9Api(Game game) {
+		public Direct3D9Api(INativeWindow window) {
 			MinZNear = 0.05f;
-			IntPtr winHandle = game.window.WinHandle;
+			IntPtr winHandle = window.WinHandle;
 			d3d = Direct3D.Direct3DCreate9(Direct3D.SdkVersion);
 			const int adapter = 0; // default adapter
 			InitFields();

@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 2010
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual Studio 2005
 # SharpDevelop 4.4
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClassicalSharp", "ClassicalSharp\ClassicalSharp.csproj", "{BEB1C785-5CAD-48FF-A886-876BF0A318D4}"
 EndProject

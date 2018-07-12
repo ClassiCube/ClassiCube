@@ -89,7 +89,7 @@ namespace OpenTK {
 		public bool IsPrimary { set { if (value) Primary = this; } }
 		
 		/// <summary> Data unique to this Display. </summary>
-		public object Metadata;
+		public IntPtr Metadata;
 
 		/// <summary>Gets the default (primary) display of this system.</summary>
 		public static DisplayDevice Primary;

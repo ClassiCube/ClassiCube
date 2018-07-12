@@ -50,18 +50,14 @@
     <Reference Include="System.Drawing" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BindingsBase.cs" />
-    <Compile Include="Debug.cs" />
     <Compile Include="DisplayDevice.cs" />
     <Compile Include="INativeWindow.cs" />
-    <Compile Include="MemUtils.cs" />
+    <Compile Include="Keyboard.cs" />
+    <Compile Include="Utils.cs" />
     <Compile Include="Graphics\ColorFormat.cs" />
     <Compile Include="Graphics\GraphicsMode.cs" />
     <Compile Include="Graphics\IGraphicsContext.cs" />
-    <Compile Include="Input\Key.cs" />
-    <Compile Include="Input\Keyboard.cs" />
-    <Compile Include="Input\MouseButton.cs" />
-    <Compile Include="Input\Mouse.cs" />
+    <Compile Include="Mouse.cs" />
     <Compile Include="Platform\Configuration.cs" />
     <Compile Include="Platform\IPlatformFactory.cs" />
     <Compile Include="Platform\MacOS\AglContext.cs" />
@@ -88,11 +84,9 @@
     <Compile Include="Platform\X11\X11Window.cs" />
     <Compile Include="Platform\X11\X11KeyMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WindowState.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Graphics" />
-    <Folder Include="Input" />
     <Folder Include="Platform" />
     <Folder Include="Platform\MacOS" />
     <Folder Include="Platform\MacOS\CarbonBindings" />
