@@ -57,19 +57,16 @@ namespace OpenTK.Platform.X11 {
 			if (NativeMethods.XineramaQueryExtension(API.DefaultDisplay, out event_base, out error_base) &&
 			    NativeMethods.XineramaIsActive(API.DefaultDisplay)) {
 				XineramaScreenInfo[] screens = NativeMethods.XineramaQueryScreens(API.DefaultDisplay);
-				bool first = true;
 				
 				for (int i = 0; i < screens.Length; i++) {
 					XineramaScreenInfo screen = screens[i];
 					DisplayDevice dev = new DisplayDevice();
 					dev.Bounds = new Rectangle(screen.X, screen.Y, screen.Width, screen.Height);
 					
-					if (first) {
-						// We consider the first device returned by Xinerama as the primary one.
-						// Makes sense conceptually, but is there a way to verify this?
-						dev.IsPrimary = true;
-						first = false;
-					}
+					// We consider the first device returned by Xinerama as the primary one.
+					// Makes sense conceptually, but is there a way to verify this?
+					dev.IsPrimary = i == 0;
+					
 					devices.Add(dev);
 					// It seems that all X screens are equal to 0 is Xinerama is enabled, at least on Nvidia (verify?)
 					dev.Metadata = 0; /*screen.ScreenNumber*/
@@ -82,7 +79,10 @@ namespace OpenTK.Platform.X11 {
 			// Get available resolutions. Then, for each resolution get all available rates.
 			foreach (DisplayDevice dev in devices) {
 				int screen = (int)dev.Metadata;
-				XRRScreenSize[] sizes = FindAvailableResolutions(screen);				
+				XRRScreenSize[] sizes = API.XRRSizes(API.DefaultDisplay, screen);
+				if (sizes == null)
+					throw new NotSupportedException("XRandR extensions not available.");
+				
 				IntPtr screenConfig = API.XRRGetScreenInfo(API.DefaultDisplay, API.XRootWindow(API.DefaultDisplay, screen));
 				
 				ushort curRotation;
@@ -101,13 +101,6 @@ namespace OpenTK.Platform.X11 {
 
 		static bool QueryXF86(List<DisplayDevice> devices) {
 			return false;
-		}
-		
-		static XRRScreenSize[] FindAvailableResolutions(int screen) {
-			XRRScreenSize[] resolutions = API.XRRSizes(API.DefaultDisplay, screen);
-			if (resolutions == null)
-				throw new NotSupportedException("XRandR extensions not available.");
-			return resolutions;
 		}
 		
 		static class NativeMethods {

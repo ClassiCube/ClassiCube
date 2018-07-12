@@ -780,7 +780,7 @@ namespace OpenTK.Platform.MacOS {
 				HIPoint point = default( HIPoint );
 				point.X = value.X; point.Y = value.Y;
 				CG.CGAssociateMouseAndMouseCursorPosition( 0 );
-				CG.CGDisplayMoveCursorToPoint( CG.CGMainDisplayID(), point );
+				CG.CGDisplayMoveCursorToPoint(CG.CGMainDisplayID(), point);
 				CG.CGAssociateMouseAndMouseCursorPosition( 1 );
 			}
 		}
@@ -790,7 +790,7 @@ namespace OpenTK.Platform.MacOS {
 			get { return visible; }
 			set {
 				visible = value;
-				if( visible )
+				if(visible)
 					CG.CGDisplayShowCursor(CG.CGMainDisplayID());
 				else
 					CG.CGDisplayHideCursor(CG.CGMainDisplayID());

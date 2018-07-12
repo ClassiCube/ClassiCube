@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using OpenTK.Platform.MacOS.Carbon;
 
-namespace OpenTK.Platform.MacOS
-{
-	static class QuartzDisplayDevice
-	{
-		static IntPtr mainDisplay;
-		internal static IntPtr MainDisplay { get { return mainDisplay; } }
+namespace OpenTK.Platform.MacOS {
+	static class QuartzDisplayDevice {
+		internal static IntPtr MainDisplay;
 
 		internal unsafe static void Init() {
 			// To minimize the need to add static methods to OpenTK.Graphics.DisplayDevice
@@ -20,7 +17,7 @@ namespace OpenTK.Platform.MacOS
 			const int maxDisplayCount = 20;
 			IntPtr[] displays = new IntPtr[maxDisplayCount];
 			int displayCount;
-			fixed(IntPtr* displayPtr = displays) {
+			fixed (IntPtr* displayPtr = displays) {
 				CG.CGGetActiveDisplayList(maxDisplayCount, displayPtr, out displayCount);
 			}
 
@@ -31,33 +28,29 @@ namespace OpenTK.Platform.MacOS
 
 				// according to docs, first element in the array is always the main display.
 				bool primary = (i == 0);
-				if (primary)
-					mainDisplay = curDisplay;
+				if (primary) MainDisplay = curDisplay;
 
 				// gets current settings
-				int currentWidth = CG.CGDisplayPixelsWide(curDisplay);
-				int currentHeight = CG.CGDisplayPixelsHigh(curDisplay);
-				Debug.Print("Display {0} is at  {1}x{2}", i, currentWidth, currentHeight);
+				int curWidth = CG.CGDisplayPixelsWide(curDisplay);
+				int curHeight = CG.CGDisplayPixelsHigh(curDisplay);
+				Debug.Print("Display {0} is at  {1}x{2}", i, curWidth, curHeight);
+				
+				IntPtr modes = CG.CGDisplayAvailableModes(curDisplay);
+				int modesCount = CF.CFArrayGetCount(modes);
+				Debug.Print("Supports {0} display modes.", modesCount);
 
-				IntPtr displayModesPtr = CG.CGDisplayAvailableModes(curDisplay);
-				CFArray displayModes = new CFArray(displayModesPtr);
-				Debug.Print("Supports {0} display modes.", displayModes.Count);
+				DisplayResolution opentk_curRes = null;
+				IntPtr curMode = CG.CGDisplayCurrentMode(curDisplay);
+				for (int j = 0; j < modesCount; j++) {
+					IntPtr mode = CF.CFArrayGetValueAtIndex(modes, j);
 
-				DisplayResolution opentk_dev_current_res = null;
-				IntPtr currentModePtr = CG.CGDisplayCurrentMode(curDisplay);
-				CFDictionary currentMode = new CFDictionary(currentModePtr);
+					int width  = (int)CF.DictGetNumber(mode, "Width");
+					int height = (int)CF.DictGetNumber(mode, "Height");
+					int bpp  = (int)CF.DictGetNumber(mode, "BitsPerPixel");
+					int freq = (int)CF.DictGetNumber(mode, "RefreshRate");
 
-				for (int j = 0; j < displayModes.Count; j++) {
-					CFDictionary dict = new CFDictionary(displayModes[j]);
-					
-					int width = (int) dict.GetNumberValue("Width");
-					int height = (int) dict.GetNumberValue("Height");
-					int bpp = (int) dict.GetNumberValue("BitsPerPixel");
-					int freq = (int) dict.GetNumberValue("RefreshRate");
-					bool current = currentMode.DictRef == dict.DictRef;
-
-					if (current) {
-						opentk_dev_current_res = new DisplayResolution(width, height, bpp, freq);
+					if (mode == curMode) {
+						opentk_curRes = new DisplayResolution(width, height, bpp, freq);
 					}
 				}
 
@@ -67,7 +60,7 @@ namespace OpenTK.Platform.MacOS
 
 				Debug.Print("Display {0} bounds: {1}", i, newRect);
 
-				DisplayDevice opentk_dev = new DisplayDevice(opentk_dev_current_res, primary);
+				DisplayDevice opentk_dev = new DisplayDevice(opentk_curRes, primary);
 				opentk_dev.Bounds = newRect;
 				opentk_dev.Metadata = curDisplay;
 			}

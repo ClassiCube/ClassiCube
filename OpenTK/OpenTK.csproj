@@ -71,9 +71,8 @@
     <Compile Include="Platform\MacOS\Application.cs" />
     <Compile Include="Platform\MacOS\CarbonBindings\Agl.cs" />
     <Compile Include="Platform\MacOS\CarbonBindings\CarbonAPI.cs" />
-    <Compile Include="Platform\MacOS\CarbonBindings\CoreFoundation.cs" />
+    <Compile Include="Platform\MacOS\CarbonBindings\API.cs" />
     <Compile Include="Platform\MacOS\CarbonBindings\MacOSKeys.cs" />
-    <Compile Include="Platform\MacOS\CarbonBindings\QuartzDisplayServicesAPI.cs" />
     <Compile Include="Platform\MacOS\CarbonWindow.cs" />
     <Compile Include="Platform\MacOS\MacOSException.cs" />
     <Compile Include="Platform\MacOS\MacOSKeyMap.cs" />

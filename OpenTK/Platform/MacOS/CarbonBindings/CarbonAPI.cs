@@ -787,7 +787,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport (carbon)]
 		public static extern IntPtr CFDataGetBytePtr(IntPtr data);
 		[DllImport (carbon)]
-		public static extern int PasteboardSynchronize(IntPtr pbref);		
+		public static extern int PasteboardSynchronize(IntPtr pbref);
 
 		[DllImport (carbon)]
 		public static extern OSStatus PasteboardClear(IntPtr pbref);
