@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace OpenTK.Platform.MacOS.Carbon {
+namespace OpenTK.Platform.MacOS {
+	
 	// Core foundation services
 	internal class CF {
 		const string appServices = "/System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices";

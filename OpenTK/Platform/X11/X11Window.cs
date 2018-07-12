@@ -87,7 +87,7 @@ namespace OpenTK.Platform.X11 {
 			
 			RegisterAtoms();
 			XVisualInfo info = new XVisualInfo();	
-			mode = X11GLContext.SelectGraphicsMode( mode, out info );
+			mode = X11GLContext.SelectGraphicsMode(mode, out info);
 			VisualInfo = info;
 			// Create a window on this display using the visual above
 			Debug.Print("Opening render window... ");
@@ -337,7 +337,7 @@ namespace OpenTK.Platform.X11 {
 						break;
 						
 					case XEventName.KeyPress:
-						ToggleKey( ref e.KeyEvent, true );
+						ToggleKey(ref e.KeyEvent, true);
 						int status = API.XLookupString(ref e.KeyEvent, ascii, ascii.Length, null, IntPtr.Zero);
 						Encoding.Default.GetChars(ascii, 0, status, chars, 0);
 
@@ -351,7 +351,7 @@ namespace OpenTK.Platform.X11 {
 					case XEventName.KeyRelease:
 						// Todo: raise KeyPress event. Use code from
 						// http://anonsvn.mono-project.com/viewvc/trunk/mcs/class/Managed.Windows.Forms/System.Windows.Forms/X11Keyboard.cs?view=markup
-						ToggleKey( ref e.KeyEvent, false );
+						ToggleKey(ref e.KeyEvent, false);
 						break;
 						
 					case XEventName.ButtonPress:
@@ -691,12 +691,12 @@ namespace OpenTK.Platform.X11 {
 			get {
 				IntPtr root, child;
 				int rootX, rootY, childX, childY, mask;
-				API.XQueryPointer( API.DefaultDisplay, API.RootWindow, out root, out child, out rootX, out rootY, out childX, out childY, out mask );
-				return new Point( rootX, rootY );
+				API.XQueryPointer(API.DefaultDisplay, API.RootWindow, out root, out child, out rootX, out rootY, out childX, out childY, out mask);
+				return new Point(rootX, rootY);
 			}
 			set {
-				API.XWarpPointer( API.DefaultDisplay, IntPtr.Zero, API.RootWindow, 0, 0, 0, 0, value.X, value.Y );
-				API.XFlush( API.DefaultDisplay ); // TODO: not sure if XFlush call is necessary
+				API.XWarpPointer(API.DefaultDisplay, IntPtr.Zero, API.RootWindow, 0, 0, 0, 0, value.X, value.Y);
+				API.XFlush(API.DefaultDisplay); // TODO: not sure if XFlush call is necessary
 			}
 		}
 		
@@ -705,22 +705,22 @@ namespace OpenTK.Platform.X11 {
 			get { return cursorVisible; }
 			set {
 				cursorVisible = value;
-				if( value ) {
-					API.XUndefineCursor( API.DefaultDisplay, WinHandle );
+				if (value) {
+					API.XUndefineCursor(API.DefaultDisplay, WinHandle);
 				} else {
-					if( blankCursor == IntPtr.Zero )
+					if (blankCursor == IntPtr.Zero)
 						MakeBlankCursor();
-					API.XDefineCursor( API.DefaultDisplay, WinHandle, blankCursor );
+					API.XDefineCursor(API.DefaultDisplay, WinHandle, blankCursor);
 				}
 			}
 		}
 		
 		IntPtr blankCursor;
 		void MakeBlankCursor() {
-			XColor color = default( XColor );
-			IntPtr pixmap = API.XCreatePixmap( API.DefaultDisplay, API.RootWindow, 1, 1, 1 );
-			blankCursor = API.XCreatePixmapCursor( API.DefaultDisplay, pixmap, pixmap, ref color, ref color, 0, 0 );		
-			API.XFreePixmap( API.DefaultDisplay, pixmap );
+			XColor color = default(XColor);
+			IntPtr pixmap = API.XCreatePixmap(API.DefaultDisplay, API.RootWindow, 1, 1, 1);
+			blankCursor = API.XCreatePixmapCursor(API.DefaultDisplay, pixmap, pixmap, ref color, ref color, 0, 0);		
+			API.XFreePixmap(API.DefaultDisplay, pixmap);
 		}
 		
 		/// <summary> Returns true if a render window/context exists. </summary>
@@ -762,14 +762,14 @@ namespace OpenTK.Platform.X11 {
 			int ox, oy;
 			IntPtr child;
 			API.XTranslateCoordinates(API.DefaultDisplay, API.RootWindow, WinHandle, point.X, point.Y, out ox, out oy, out child);
-			return new Point( ox, oy );
+			return new Point(ox, oy);
 		}
 
 		public override Point PointToScreen(Point point) {
 			int ox, oy;
 			IntPtr child;
 			API.XTranslateCoordinates(API.DefaultDisplay, WinHandle, API.RootWindow, point.X, point.Y, out ox, out oy, out child);
-			return new Point( ox, oy );
+			return new Point(ox, oy);
 		}
 
 		protected override void Dispose(bool manuallyCalled) {

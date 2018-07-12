@@ -50,7 +50,7 @@ namespace OpenTK {
 
 		public static readonly Vector4 One = new Vector4(1, 1, 1, 1);
 
-		public static readonly int SizeInBytes = 4 * sizeof( float );
+		public static readonly int SizeInBytes = 4 * sizeof(float);
 
 
 		public Vector4(float x, float y, float z, float w) {

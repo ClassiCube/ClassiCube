@@ -12,11 +12,6 @@ namespace Launcher.Drawing {
 			gc = API.XCreateGC(API.DefaultDisplay, window.WinHandle, IntPtr.Zero, IntPtr.Zero);
 		}
 		
-		public override void Resize() {
-			if (gc != IntPtr.Zero) API.XFreeGC(API.DefaultDisplay, gc);
-			gc = API.XCreateGC(API.DefaultDisplay, window.WinHandle, IntPtr.Zero, IntPtr.Zero);
-		}
-		
 		public override void Redraw(Bitmap framebuffer, Rectangle r) {
 			X11Window x11Win = (X11Window)window;
 			using (FastBitmap bmp = new FastBitmap(framebuffer, true, true)) {

@@ -80,18 +80,18 @@ namespace OpenTK.Platform.MacOS {
 				}
 			} else {
 				aglPixelFormat = Agl.aglChoosePixelFormat(IntPtr.Zero, 0, attribs.ToArray());
-				Agl.CheckReturnValue( 0, "aglChoosePixelFormat" );
+				Agl.CheckReturnValue(0, "aglChoosePixelFormat");
 			}
 
 			Debug.Print("Creating AGL context.");
 
 			// create the context and share it with the share reference.
 			ContextHandle = Agl.aglCreateContext(aglPixelFormat, IntPtr.Zero);
-			Agl.CheckReturnValue( 0, "aglCreateContext" );
+			Agl.CheckReturnValue(0, "aglCreateContext");
 
 			// Free the pixel format from memory.
 			Agl.aglDestroyPixelFormat(aglPixelFormat);
-			Agl.CheckReturnValue( 0, "aglDestroyPixelFormat" );
+			Agl.CheckReturnValue(0, "aglDestroyPixelFormat");
 			
 			SetDrawable(wind);
 			Update(wind);
@@ -110,7 +110,7 @@ namespace OpenTK.Platform.MacOS {
 			//Debug.Print("Setting drawable for context {0} to window port: {1}", Handle.Handle, windowPort);
 
 			byte code = Agl.aglSetDrawable(ContextHandle, windowPort);
-			Agl.CheckReturnValue( code, "aglSetDrawable" );
+			Agl.CheckReturnValue(code, "aglSetDrawable");
 		}
 		
 		public override void Update(INativeWindow window) {
@@ -157,9 +157,9 @@ namespace OpenTK.Platform.MacOS {
 		internal void UnsetFullScreen(CarbonWindow window) {
 			Debug.Print("Unsetting AGL fullscreen.");
 			byte code = Agl.aglSetDrawable(ContextHandle, IntPtr.Zero);
-			Agl.CheckReturnValue( code, "aglSetDrawable" );
+			Agl.CheckReturnValue(code, "aglSetDrawable");
 			code = Agl.aglUpdateContext(ContextHandle);
-			Agl.CheckReturnValue( code, "aglUpdateContext" );
+			Agl.CheckReturnValue(code, "aglUpdateContext");
 			
 			CG.CGDisplayRelease(GetQuartzDevice(window));
 			Debug.Print("Resetting drawable.");
@@ -173,12 +173,12 @@ namespace OpenTK.Platform.MacOS {
 
 		public override void SwapBuffers() {
 			Agl.aglSwapBuffers(ContextHandle);
-			Agl.CheckReturnValue( 0, "aglSwapBuffers" );
+			Agl.CheckReturnValue(0, "aglSwapBuffers");
 		}
 		
 		public override void MakeCurrent(INativeWindow window) {
 			byte code = Agl.aglSetCurrentContext(ContextHandle);
-			Agl.CheckReturnValue(code, "aglSetCurrentContext" );
+			Agl.CheckReturnValue(code, "aglSetCurrentContext");
 		}
 
 		public override bool IsCurrent {
@@ -214,12 +214,12 @@ namespace OpenTK.Platform.MacOS {
 			Debug.Print("Destroying context");
 			byte code = Agl.aglDestroyContext(ContextHandle);
 			try {
-				Agl.CheckReturnValue(code, "aglDestroyContext" );
+				Agl.CheckReturnValue(code, "aglDestroyContext");
 				ContextHandle = IntPtr.Zero;
 				Debug.Print("Context destruction completed successfully.");
-			} catch( MacOSException ) {
+			} catch(MacOSException) {
 				Debug.Print("Failed to destroy context.");
-				if( disposing )
+				if (disposing)
 					throw;
 			}
 			IsDisposed = true;

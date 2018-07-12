@@ -88,15 +88,15 @@ namespace OpenTK.Platform.MacOS {
 		[DllImport(agl)] internal static extern AglError aglGetError();
 		[DllImport(agl)] static extern IntPtr aglErrorString(AglError code);
 		
-		internal static void CheckReturnValue( byte code, string function ) {
-			if( code != 0 ) return;
+		internal static void CheckReturnValue(byte code, string function) {
+			if (code != 0) return;
 			AglError errCode = aglGetError();
-			if( errCode == AglError.NoError ) return;
+			if (errCode == AglError.NoError) return;
 			
-			string error = new String( (sbyte*)aglErrorString( errCode ) );
-			throw new MacOSException( (OSStatus)errCode, String.Format(
+			string error = new String((sbyte*)aglErrorString(errCode));
+			throw new MacOSException((OSStatus)errCode, String.Format(
 				"AGL Error from function {0}: {1}  {2}",
-				function, errCode, error) );
+				function, errCode, error));
 		}
 	}
 }

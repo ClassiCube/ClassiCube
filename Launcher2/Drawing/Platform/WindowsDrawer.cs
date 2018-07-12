@@ -3,33 +3,27 @@ using System;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Security;
+using OpenTK.Platform.Windows;
 
 namespace Launcher.Drawing {
+	[SuppressUnmanagedCodeSecurity]
 	public sealed class WinPlatformDrawer : PlatformDrawer {
 		
 		const uint SRCCOPY = 0xCC0020;
-		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
+		[DllImport("gdi32.dll")]
 		static extern int BitBlt(IntPtr dcDst, int dstX, int dstY, int width, int height,
 		                         IntPtr dcSrc, int srcX, int srcY, uint drawOp);
 		
-		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern IntPtr GetDC(IntPtr hwnd);
-		
-		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern IntPtr CreateCompatibleDC(IntPtr dc);
-		
-		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern IntPtr SelectObject(IntPtr dc, IntPtr handle);
-		
-		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern int DeleteObject(IntPtr handle);
-		
-		[DllImport("user32.dll"), SuppressUnmanagedCodeSecurity]
-		static extern int ReleaseDC(IntPtr dc, IntPtr hwnd);
-		
-		[DllImport("gdi32.dll"), SuppressUnmanagedCodeSecurity]
+		[DllImport("gdi32.dll")]
+		static extern IntPtr CreateCompatibleDC(IntPtr dc);		
+		[DllImport("gdi32.dll")]
 		static extern IntPtr CreateDIBSection(IntPtr hdc, [In] ref BITMAPINFO pbmi,
 		                                      uint pila, out IntPtr ppvBits, IntPtr hSection, uint dwOffset);
+		
+		[DllImport("gdi32.dll")]
+		static extern IntPtr SelectObject(IntPtr dc, IntPtr handle);	
+		[DllImport("gdi32.dll")]
+		static extern int DeleteObject(IntPtr handle);
 		
 		[StructLayout(LayoutKind.Sequential)]
 		public struct BITMAPINFO {
@@ -47,10 +41,10 @@ namespace Launcher.Drawing {
 			public uint bmiColors;
 		}
 		
-		IntPtr dc, srcDC, srcHB;
+		IntPtr winDc, srcDC, srcHB;
 		public override void Init() {
-			dc = GetDC(window.WinHandle);
-			srcDC = CreateCompatibleDC(dc);
+			winDc = ((WinWindow)window).DeviceContext;
+			srcDC = CreateCompatibleDC(winDc);
 		}
 		
 		public override Bitmap CreateFrameBuffer(int width, int height) {
@@ -70,18 +64,9 @@ namespace Launcher.Drawing {
 			                  System.Drawing.Imaging.PixelFormat.Format32bppArgb, pointer);
 		}
 		
-		public override void Resize() {
-			if (dc != IntPtr.Zero) {
-				ReleaseDC(window.WinHandle, dc);
-				DeleteObject(srcDC);
-			}
-			dc = GetDC(window.WinHandle);
-			srcDC = CreateCompatibleDC(dc);
-		}
-		
 		public override void Redraw(Bitmap framebuffer, Rectangle r) {
 			IntPtr oldSrc = SelectObject(srcDC, srcHB);
-			int success = BitBlt(dc, r.X, r.Y, r.Width, r.Height, srcDC, r.X, r.Y, SRCCOPY);
+			int success = BitBlt(winDc, r.X, r.Y, r.Width, r.Height, srcDC, r.X, r.Y, SRCCOPY);
 			SelectObject(srcDC, oldSrc);
 		}
 	}
@@ -94,8 +79,7 @@ namespace Launcher.Drawing {
 		}
 		
 		public override void Resize() {
-			if (g != null)
-				g.Dispose();
+			if (g != null) g.Dispose();
 			g = Graphics.FromHwnd(window.WinHandle);
 		}
 		

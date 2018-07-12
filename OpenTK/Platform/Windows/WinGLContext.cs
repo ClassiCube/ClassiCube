@@ -23,14 +23,14 @@ namespace OpenTK.Platform.Windows {
 				if (opengl32Handle == IntPtr.Zero)
 					throw new ApplicationException(String.Format("LoadLibrary(\"{0}\") call failed with code {1}",
 					                                             opengl32Name, Marshal.GetLastWin32Error()));
-				Debug.Print( "Loaded opengl32.dll: {0}", opengl32Handle );
+				Debug.Print("Loaded opengl32.dll: {0}", opengl32Handle);
 			}
 		}
 
 		public WinGLContext(GraphicsMode format, WinWindow window) {
 			Debug.Print("OpenGL will be bound to handle: {0}", window.WinHandle);
 			SelectGraphicsModePFD(format, window);
-			Debug.Print("Setting pixel format... " );
+			Debug.Print("Setting pixel format... ");
 			SetGraphicsModePFD(format, window);
 
 			ContextHandle = Wgl.wglCreateContext(window.DeviceContext);
@@ -39,7 +39,7 @@ namespace OpenTK.Platform.Windows {
 			if (ContextHandle == IntPtr.Zero)
 				throw new GraphicsContextException("Context creation failed. Wgl.CreateContext() error: " + Marshal.GetLastWin32Error());
 			
-			Debug.Print( "success! (id: {0})", ContextHandle );
+			Debug.Print("success! (id: {0})", ContextHandle);
 		}
 
 		public override void SwapBuffers() {
@@ -87,9 +87,9 @@ namespace OpenTK.Platform.Windows {
 
 		public override IntPtr GetAddress(string funcName) {
 			IntPtr dynAddress = Wgl.wglGetProcAddress(funcName);
-			if( !BindingsBase.IsInvalidAddress( dynAddress ) )
+			if (!BindingsBase.IsInvalidAddress(dynAddress))
 				return dynAddress;
-			return API.GetProcAddress( opengl32Handle, funcName );
+			return API.GetProcAddress(opengl32Handle, funcName);
 		}
 
 

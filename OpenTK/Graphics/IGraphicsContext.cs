@@ -52,7 +52,7 @@ namespace OpenTK.Graphics {
         
         public void Dispose() {
         	Dispose(true);
-        	GC.SuppressFinalize( this );
+        	GC.SuppressFinalize(this);
         }
         
         protected abstract void Dispose(bool calledManually);

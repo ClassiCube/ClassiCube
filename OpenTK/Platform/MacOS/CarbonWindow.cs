@@ -99,8 +99,8 @@ namespace OpenTK.Platform.MacOS {
 
 			IntPtr windowRef;
 			OSStatus err = API.CreateNewWindow(@class, attrib, ref r, out windowRef);
-			API.CheckReturn( err );
-			Debug.Print( "Created window " + windowRef.ToString() );
+			API.CheckReturn(err);
+			Debug.Print("Created window " + windowRef.ToString());
 			API.SetWindowTitle(windowRef, title);
 
 			SetLocation(r.X, r.Y);
@@ -141,20 +141,6 @@ namespace OpenTK.Platform.MacOS {
 			uppHandler = API.NewEventHandlerUPP(handler);
 			API.InstallWindowEventHandler(WinHandle, uppHandler, eventTypes, WinHandle, IntPtr.Zero);
 			Application.WindowEventHandler = this;
-		}
-
-		void Activate() {
-			API.SelectWindow(WinHandle);
-		}
-
-		void Show() {
-			API.ShowWindow(WinHandle);
-			API.RepositionWindow(WinHandle, IntPtr.Zero, mPositionMethod);
-			API.SelectWindow(WinHandle);
-		}
-
-		void Hide() {
-			API.HideWindow(WinHandle);
 		}
 
 		internal void SetFullscreen(AglContext context) {
@@ -219,8 +205,8 @@ namespace OpenTK.Platform.MacOS {
 			}
 			
 			Key tkKey;
-			if( !Keymap.TryGetValue( code, out tkKey ) ) {
-				Debug.Print( "{0} not mapped, ignoring press.", code );
+			if (!Keymap.TryGetValue(code, out tkKey)) {
+				Debug.Print("{0} not mapped, ignoring press.", code);
 				return OSStatus.NoError;
 			}
 
@@ -470,74 +456,74 @@ namespace OpenTK.Platform.MacOS {
 		IntPtr pbStr, utf16, utf8;
 		public override  string GetClipboardText() {
 			IntPtr pbRef = GetPasteboard();
-			API.PasteboardSynchronize( pbRef );
+			API.PasteboardSynchronize(pbRef);
 
 			uint itemCount;
-			OSStatus err = API.PasteboardGetItemCount( pbRef, out itemCount );
-			if( err != OSStatus.NoError )
-				throw new MacOSException( err, "Getting item count from Pasteboard." );
-			if( itemCount < 1 ) return "";
+			OSStatus err = API.PasteboardGetItemCount(pbRef, out itemCount);
+			if (err != OSStatus.NoError)
+				throw new MacOSException(err, "Getting item count from Pasteboard.");
+			if (itemCount < 1) return "";
 
 			uint itemID;
-			err = API.PasteboardGetItemIdentifier( pbRef, 1, out itemID );
-			if( err != OSStatus.NoError )
-				throw new MacOSException( err, "Getting item identifier from Pasteboard." );
+			err = API.PasteboardGetItemIdentifier(pbRef, 1, out itemID);
+			if (err != OSStatus.NoError)
+				throw new MacOSException(err, "Getting item identifier from Pasteboard.");
 			
 			IntPtr outData;
-			if ( (err = API.PasteboardCopyItemFlavorData( pbRef, itemID, utf16, out outData )) == OSStatus.NoError ) {
-				IntPtr ptr = API.CFDataGetBytePtr( outData );
-				if( ptr == IntPtr.Zero )
-					throw new InvalidOperationException( "CFDataGetBytePtr() returned null pointer." );
-				return Marshal.PtrToStringUni( ptr );
-			} else if ( (err = API.PasteboardCopyItemFlavorData( pbRef, itemID, utf8, out outData )) == OSStatus.NoError ) {
-				IntPtr ptr = API.CFDataGetBytePtr( outData );
-				if( ptr == IntPtr.Zero )
-					throw new InvalidOperationException( "CFDataGetBytePtr() returned null pointer." );			
-				return GetUTF8( ptr );
+			if ((err = API.PasteboardCopyItemFlavorData(pbRef, itemID, utf16, out outData)) == OSStatus.NoError) {
+				IntPtr ptr = API.CFDataGetBytePtr(outData);
+				if (ptr == IntPtr.Zero)
+					throw new InvalidOperationException("CFDataGetBytePtr() returned null pointer.");
+				return Marshal.PtrToStringUni(ptr);
+			} else if ((err = API.PasteboardCopyItemFlavorData(pbRef, itemID, utf8, out outData)) == OSStatus.NoError) {
+				IntPtr ptr = API.CFDataGetBytePtr(outData);
+				if (ptr == IntPtr.Zero)
+					throw new InvalidOperationException("CFDataGetBytePtr() returned null pointer.");
+				return GetUTF8(ptr);
 			}
 			return "";
 		}
 		
-		unsafe static string GetUTF8( IntPtr ptr ) {
+		unsafe static string GetUTF8(IntPtr ptr) {
 			byte* countPtr = (byte*)ptr, readPtr = (byte*)ptr;
 			int length = 0;
-			while( *countPtr != 0 ) { length++; countPtr++; }
+			while (*countPtr != 0) { length++; countPtr++; }
 			
 			byte[] text = new byte[length];
-			for( int i = 0; i < text.Length; i++ ) {
+			for(int i = 0; i < text.Length; i++) {
 				text[i] = *readPtr; readPtr++;
 			}
-			return Encoding.UTF8.GetString( text );
+			return Encoding.UTF8.GetString(text);
 		}
 		
-		public override void SetClipboardText( string value ) {
+		public override void SetClipboardText(string value) {
 			IntPtr pbRef = GetPasteboard();
-			OSStatus err = API.PasteboardClear( pbRef );
-			if( err != OSStatus.NoError )
-				throw new MacOSException( err, "Cleaing Pasteboard." );
-			API.PasteboardSynchronize( pbRef );
+			OSStatus err = API.PasteboardClear(pbRef);
+			if (err != OSStatus.NoError)
+				throw new MacOSException(err, "Cleaing Pasteboard.");
+			API.PasteboardSynchronize(pbRef);
 
-			IntPtr ptr = Marshal.StringToHGlobalUni( value );
-			IntPtr cfData = API.CFDataCreate( IntPtr.Zero, ptr, (value.Length + 1) * 2 );
-			if( cfData == IntPtr.Zero )
-			    throw new InvalidOperationException( "CFDataCreate() returned null pointer." );
+			IntPtr ptr = Marshal.StringToHGlobalUni(value);
+			IntPtr cfData = API.CFDataCreate(IntPtr.Zero, ptr, (value.Length + 1) * 2);
+			if (cfData == IntPtr.Zero)
+				throw new InvalidOperationException("CFDataCreate() returned null pointer.");
 			
-			API.PasteboardPutItemFlavor( pbRef, 1, utf16, cfData, 0 );
-			Marshal.FreeHGlobal( ptr );
+			API.PasteboardPutItemFlavor(pbRef, 1, utf16, cfData, 0);
+			Marshal.FreeHGlobal(ptr);
 		}
 		
 		IntPtr GetPasteboard() {
-			if( pbStr == IntPtr.Zero ) {
-				pbStr = CF.CFSTR( "com.apple.pasteboard.clipboard" );
-				utf16 = CF.CFSTR( "public.utf16-plain-text" );
-				utf8 = CF.CFSTR( "public.utf8-plain-text" );
+			if (pbStr == IntPtr.Zero) {
+				pbStr = CF.CFSTR("com.apple.pasteboard.clipboard");
+				utf16 = CF.CFSTR("public.utf16-plain-text");
+				utf8 = CF.CFSTR("public.utf8-plain-text");
 			}
 			
 			IntPtr pbRef;
-			OSStatus err = API.PasteboardCreate( pbStr, out pbRef );
-			if( err != OSStatus.NoError )
-				throw new MacOSException( err, "Creating Pasteboard reference." );
-			API.PasteboardSynchronize( pbRef );
+			OSStatus err = API.PasteboardCreate(pbStr, out pbRef);
+			if (err != OSStatus.NoError)
+				throw new MacOSException(err, "Creating Pasteboard reference.");
+			API.PasteboardSynchronize(pbRef);
 			return pbRef;
 		}
 
@@ -546,14 +532,12 @@ namespace OpenTK.Platform.MacOS {
 		}
 
 		public override Point PointToClient(Point point) {
-			IntPtr handle = WinHandle;
-			Rect r = Carbon.API.GetWindowBounds(WinHandle, WindowRegionCode.ContentRegion);
+			Rect r = API.GetWindowBounds(WinHandle, WindowRegionCode.ContentRegion);
 			return new Point(point.X - r.X, point.Y - r.Y);
 		}
 		
 		public override Point PointToScreen(Point point) {
-			IntPtr handle = WinHandle;
-			Rect r = Carbon.API.GetWindowBounds(WinHandle, WindowRegionCode.ContentRegion);
+			Rect r = API.GetWindowBounds(WinHandle, WindowRegionCode.ContentRegion);
 			return new Point(point.X + r.X, point.Y + r.Y);
 		}
 
@@ -602,7 +586,7 @@ namespace OpenTK.Platform.MacOS {
 							byte r = (byte)((pixel >> 16) & 0xFF);
 							byte g = (byte)((pixel >> 8) & 0xFF);
 							byte b = (byte)(pixel & 0xFF);
-							data[index++] = (IntPtr)(a + (r << 8) + (g << 16) + (b << 24));
+							data[index++] = (IntPtr)(a | (r << 8) | (g << 16) | (b << 24));
 						}
 						else
 						{
@@ -611,9 +595,11 @@ namespace OpenTK.Platform.MacOS {
 					}
 				}
 
-				fixed( IntPtr* ptr = data ) {
+				fixed (IntPtr* ptr = data) {
 					IntPtr provider = API.CGDataProviderCreateWithData(IntPtr.Zero, (IntPtr)(void*)ptr, size * 4, IntPtr.Zero);
-					IntPtr image = API.CGImageCreate(128, 128, 8, 32, 4 * 128, API.CGColorSpaceCreateDeviceRGB(), 4, provider, IntPtr.Zero, 0, 0);
+					IntPtr colorSpace = API.CGColorSpaceCreateDeviceRGB();
+					IntPtr image = API.CGImageCreate(128, 128, 8, 32, 4 * 128,
+					                                 colorSpace, 4, provider, IntPtr.Zero, 0, 0);
 					API.SetApplicationDockTileImage(image);
 				}
 			}
@@ -622,10 +608,13 @@ namespace OpenTK.Platform.MacOS {
 		public override bool Visible {
 			get { return API.IsWindowVisible(WinHandle); }
 			set {
-				if (value && Visible == false)
-					Show();
-				else
-					Hide();
+				if (value && Visible == false) {
+					API.ShowWindow(WinHandle);
+					API.RepositionWindow(WinHandle, IntPtr.Zero, mPositionMethod);
+					API.SelectWindow(WinHandle);
+				} else {
+					API.HideWindow(WinHandle);
+				}
 			}
 		}
 
@@ -678,13 +667,10 @@ namespace OpenTK.Platform.MacOS {
 				if (windowState == WindowState.Fullscreen)
 					return WindowState.Fullscreen;
 
-				if (Carbon.API.IsWindowCollapsed(WinHandle))
+				if (API.IsWindowCollapsed(WinHandle))
 					return WindowState.Minimized;
-
-				if (Carbon.API.IsWindowInStandardState(WinHandle)) {
+				if (API.IsWindowInStandardState(WinHandle))
 					return WindowState.Maximized;
-				}
-
 				return WindowState.Normal;
 			}
 			
@@ -695,10 +681,8 @@ namespace OpenTK.Platform.MacOS {
 
 				windowState = value;
 
-				if (oldState == WindowState.Fullscreen)
-				{
+				if (oldState == WindowState.Fullscreen) {
 					goWindowedHack = true;
-
 					// when returning from full screen, wait until the context is updated
 					// to actually do the work.
 					return;
@@ -706,7 +690,7 @@ namespace OpenTK.Platform.MacOS {
 
 				if (oldState == WindowState.Minimized) {
 					OSStatus err = API.CollapseWindow(WinHandle, false);
-					API.CheckReturn( err );
+					API.CheckReturn(err);
 				}
 
 				SetCarbonWindowState();
@@ -729,7 +713,7 @@ namespace OpenTK.Platform.MacOS {
 					// large ideal size.
 					idealSize = new CarbonPoint(9000, 9000);
 					err = API.ZoomWindowIdeal(WinHandle, (short)WindowPartCode.inZoomOut, ref idealSize);
-					API.CheckReturn( err );
+					API.CheckReturn(err);
 					break;
 
 				case WindowState.Normal:
@@ -737,13 +721,13 @@ namespace OpenTK.Platform.MacOS {
 					{
 						idealSize = new CarbonPoint();
 						err = API.ZoomWindowIdeal(WinHandle, (short)WindowPartCode.inZoomIn, ref idealSize);
-						API.CheckReturn( err );
+						API.CheckReturn(err);
 					}
 					break;
 
 				case WindowState.Minimized:
 					err = API.CollapseWindow(WinHandle, true);
-					API.CheckReturn( err );
+					API.CheckReturn(err);
 					break;
 			}
 
@@ -771,17 +755,17 @@ namespace OpenTK.Platform.MacOS {
 		
 		public override Point DesktopCursorPos {
 			get {
-				HIPoint point = default( HIPoint );
+				HIPoint point = default(HIPoint);
 				// NOTE: HIGetMousePosition is only available on OSX 10.5 or later
-				API.HIGetMousePosition( HICoordinateSpace.ScreenPixel, IntPtr.Zero, ref point );
-				return new Point( (int)point.X, (int)point.Y );
+				API.HIGetMousePosition(HICoordinateSpace.ScreenPixel, IntPtr.Zero, ref point);
+				return new Point((int)point.X, (int)point.Y);
 			}
 			set {
-				HIPoint point = default( HIPoint );
+				HIPoint point = default(HIPoint);
 				point.X = value.X; point.Y = value.Y;
-				CG.CGAssociateMouseAndMouseCursorPosition( 0 );
+				CG.CGAssociateMouseAndMouseCursorPosition(0);
 				CG.CGDisplayMoveCursorToPoint(CG.CGMainDisplayID(), point);
-				CG.CGAssociateMouseAndMouseCursorPosition( 1 );
+				CG.CGAssociateMouseAndMouseCursorPosition(1);
 			}
 		}
 		

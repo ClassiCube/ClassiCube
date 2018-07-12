@@ -55,7 +55,7 @@ namespace OpenTK.Platform {
 			if (Configuration.RunningOnWindows) Default = new Windows.WinFactory();
 			else if (Configuration.RunningOnMacOS) Default = new MacOS.MacOSFactory();
 			else if (Configuration.RunningOnX11) Default = new X11.X11Factory();
-			else throw new NotSupportedException( "Running on an unsupported platform, please refer to http://www.opentk.com for more information." );
+			else throw new NotSupportedException("Running on an unsupported platform, please refer to http://www.opentk.com for more information.");
 		}
 	}
 }

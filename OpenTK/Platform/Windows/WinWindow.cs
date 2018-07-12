@@ -33,7 +33,7 @@ using System.Threading;
 using OpenTK.Input;
 
 namespace OpenTK.Platform.Windows {
-	internal sealed class WinWindow : INativeWindow {
+	public sealed class WinWindow : INativeWindow {
 		const ExtendedWindowStyle ParentStyleEx = ExtendedWindowStyle.WindowEdge | ExtendedWindowStyle.ApplicationWindow;
 		readonly IntPtr Instance = Marshal.GetHINSTANCE(typeof(WinWindow).Module);
 		readonly IntPtr ClassName = Marshal.StringToHGlobalAuto("CS_WindowClass");
@@ -235,10 +235,10 @@ namespace OpenTK.Platform.Windows {
 							// The behavior of this key is very strange. Unlike Control and Alt, there is no extended bit
 							// to distinguish between left and right keys. Moreover, pressing both keys and releasing one
 							// may result in both keys being held down (but not always).
-							bool lShiftDown = (API.GetKeyState( (int)VirtualKeys.LSHIFT ) >> 15) == 1;
-							bool rShiftDown = (API.GetKeyState( (int)VirtualKeys.RSHIFT ) >> 15) == 1;
+							bool lShiftDown = (API.GetKeyState((int)VirtualKeys.LSHIFT) >> 15) == 1;
+							bool rShiftDown = (API.GetKeyState((int)VirtualKeys.RSHIFT) >> 15) == 1;
 							
-							if( !pressed || lShiftDown != rShiftDown ) {
+							if (!pressed || lShiftDown != rShiftDown) {
 								Keyboard.Set(Key.ShiftLeft, lShiftDown);
 								Keyboard.Set(Key.ShiftRight, rShiftDown);
 							}
@@ -379,7 +379,7 @@ namespace OpenTK.Platform.Windows {
 			}
 		}
 
-		void SetHiddenBorder( bool hidden ) {
+		void SetHiddenBorder(bool hidden) {
 			suppress_resize++;
 			HiddenBorder = hidden;
 			ProcessEvents();
@@ -421,7 +421,7 @@ namespace OpenTK.Platform.Windows {
 			return "";
 		}
 		
-		public override unsafe void SetClipboardText( string value ) {
+		public override unsafe void SetClipboardText(string value) {
 			UIntPtr dstSize = (UIntPtr)((value.Length + 1) * Marshal.SystemDefaultCharSize);
 			// retry up to 10 times
 			for (int i = 0; i < 10; i++) {
@@ -504,8 +504,8 @@ namespace OpenTK.Platform.Windows {
 				icon = value;
 				if (WinHandle != IntPtr.Zero)
 				{
-					//Icon small = new Icon( value, 16, 16 );
-					//GC.KeepAlive( small );
+					//Icon small = new Icon(value, 16, 16);
+					//GC.KeepAlive(small);
 					API.SendMessage(WinHandle, WindowMessage.SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
 					API.SendMessage(WinHandle, WindowMessage.SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
 				}
@@ -573,19 +573,19 @@ namespace OpenTK.Platform.Windows {
 						// Reset state to avoid strange side-effects from maximized/minimized windows.
 						ResetWindowState();
 						previous_bounds = Bounds;
-						SetHiddenBorder( true );
+						SetHiddenBorder(true);
 						
 						command = ShowWindowCommand.MAXIMIZE;
 						API.SetForegroundWindow(WinHandle);
 						break;
 				}
 
-				if( command != 0 )
+				if (command != 0)
 					API.ShowWindow(WinHandle, command);
 
 				// Restore previous window border or apply pending border change when leaving fullscreen mode.
-				if( exiting_fullscreen )
-					SetHiddenBorder( false );
+				if (exiting_fullscreen)
+					SetHiddenBorder(false);
 
 				// Restore previous window size/location if necessary
 				if (command == ShowWindowCommand.RESTORE && previous_bounds != Rectangle.Empty) {
@@ -598,7 +598,7 @@ namespace OpenTK.Platform.Windows {
 		bool hiddenBorder;
 		bool HiddenBorder {
 			set {
-				if( hiddenBorder == value ) return;
+				if (hiddenBorder == value) return;
 
 				// We wish to avoid making an invisible window visible just to change the border.
 				// However, it's a good idea to make a visible window invisible temporarily, to
@@ -613,11 +613,11 @@ namespace OpenTK.Platform.Windows {
 				style |= (value ? WindowStyle.Popup : WindowStyle.OverlappedWindow);
 
 				// Make sure client size doesn't change when changing the border style.
-				Win32Rectangle rect = Win32Rectangle.From( bounds );
-				API.AdjustWindowRectEx( ref rect, style, false, ParentStyleEx );
+				Win32Rectangle rect = Win32Rectangle.From(bounds);
+				API.AdjustWindowRectEx(ref rect, style, false, ParentStyleEx);
 
 				// This avoids leaving garbage on the background window.
-				if( was_visible )
+				if (was_visible)
 					Visible = false;
 
 				API.SetWindowLong(WinHandle, GetWindowLongOffsets.STYLE, (int)style);
@@ -628,7 +628,7 @@ namespace OpenTK.Platform.Windows {
 				// Force window to redraw update its borders, but only if it's
 				// already visible (invisible windows will change borders when
 				// they become visible, so no need to make them visiable prematurely).
-				if ( was_visible )
+				if (was_visible)
 					Visible = true;
 				WindowState = state;
 			}
@@ -654,22 +654,22 @@ namespace OpenTK.Platform.Windows {
 
 		MSG msg;
 		public override void ProcessEvents() {
-			while( API.PeekMessage(ref msg, IntPtr.Zero, 0, 0, 1) ) {
+			while (API.PeekMessage(ref msg, IntPtr.Zero, 0, 0, 1)) {
 				API.TranslateMessage(ref msg);
 				API.DispatchMessage(ref msg);
 			}
 			IntPtr foreground = API.GetForegroundWindow();
-			if( foreground != IntPtr.Zero )
+			if (foreground != IntPtr.Zero)
 				focused = foreground == WinHandle;
 		}
 
 		public override Point DesktopCursorPos {
 			get {
-				POINT pos = default( POINT );
-				API.GetCursorPos( ref pos );
-				return new Point( pos.X, pos.Y );
+				POINT pos = default(POINT);
+				API.GetCursorPos(ref pos);
+				return new Point(pos.X, pos.Y);
 			}
-			set { API.SetCursorPos( value.X, value.Y ); }
+			set { API.SetCursorPos(value.X, value.Y); }
 		}
 		
 		bool cursorVisible = true;
@@ -677,7 +677,7 @@ namespace OpenTK.Platform.Windows {
 			get { return cursorVisible; }
 			set {
 				cursorVisible = value;
-				API.ShowCursor( value ? 1 : 0 );
+				API.ShowCursor(value ? 1 : 0);
 			}
 		}
 

@@ -1,6 +1,6 @@
 using System;
 
-namespace OpenTK.Platform.MacOS.Carbon
+namespace OpenTK.Platform.MacOS
 {
 	public enum MacOSKeyCode
 	{
@@ -109,9 +109,9 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 
 	}
+	
 	[Flags]
-	public enum MacOSKeyModifiers
-	{
+	public enum MacOSKeyModifiers {
 		None     = 0,
 		Shift    = 0x0200,
 		CapsLock = 0x0400,

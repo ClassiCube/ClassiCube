@@ -75,24 +75,24 @@ namespace OpenTK.Platform.X11 {
 			return true;
 		}
 
-		static bool QueryXRandR(List<DisplayDevice> devices) {
+		unsafe static bool QueryXRandR(List<DisplayDevice> devices) {
 			// Get available resolutions. Then, for each resolution get all available rates.
 			foreach (DisplayDevice dev in devices) {
-				int screen = (int)dev.Metadata;
-				XRRScreenSize[] sizes = API.XRRSizes(API.DefaultDisplay, screen);
-				if (sizes == null)
+				int screen = (int)dev.Metadata, count = 0;
+				XRRScreenSize* sizes = API.XRRSizes(API.DefaultDisplay, screen, &count);
+				if (count == 0)
 					throw new NotSupportedException("XRandR extensions not available.");
 				
 				IntPtr screenConfig = API.XRRGetScreenInfo(API.DefaultDisplay, API.XRootWindow(API.DefaultDisplay, screen));
 				
 				ushort curRotation;
-				int curSizesIndex = API.XRRConfigCurrentConfiguration(screenConfig, out curRotation);
+				int idx = API.XRRConfigCurrentConfiguration(screenConfig, out curRotation);
 				int curRefreshRate = API.XRRConfigCurrentRate(screenConfig);
 				int curDepth = API.XDefaultDepth(API.DefaultDisplay, screen);
 				API.XRRFreeScreenConfigInfo(screenConfig);
 				
 				if (dev.Bounds == Rectangle.Empty)
-					dev.Bounds = new Rectangle(0, 0, sizes[curSizesIndex].Width, sizes[curSizesIndex].Height);
+					dev.Bounds = new Rectangle(0, 0, sizes[idx].Width, sizes[idx].Height);
 				dev.BitsPerPixel = curDepth;
 				dev.RefreshRate = curRefreshRate;
 			}
@@ -121,7 +121,7 @@ namespace OpenTK.Platform.X11 {
 				XineramaScreenInfo* ptr = (XineramaScreenInfo*)screen_ptr;
 				
 				XineramaScreenInfo[] screens = new XineramaScreenInfo[count];
-				for( int i = 0; i < screens.Length; i++ ) {
+				for(int i = 0; i < screens.Length; i++) {
 					screens[i] = *ptr++;
 				}
 				return screens;

@@ -17,7 +17,7 @@ namespace Launcher.Drawing {
 		}
 		
 		/// <summary> Updates the variables when the native window changes dimensions. </summary>
-		public abstract void Resize();
+		public virtual void Resize() { }
 		
 		/// <summary> Redraws a portion of the framebuffer to the window. </summary>
 		/// <remarks> r is only a hint, the entire framebuffer may still be

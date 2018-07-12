@@ -4,15 +4,16 @@ using System.Security;
 
 namespace OpenTK.Platform.Windows {
 
+	[SuppressUnmanagedCodeSecurity]
 	internal class Wgl : BindingsBase {
 
-		protected override IntPtr GetAddress( string funcname ) {
-			return Wgl.wglGetProcAddress( funcname );
+		protected override IntPtr GetAddress(string funcname) {
+			return Wgl.wglGetProcAddress(funcname);
 		}
 		
 		internal void LoadEntryPoints() {
-			LoadDelegate( "wglGetSwapIntervalEXT", out wglGetSwapIntervalEXT );
-			LoadDelegate( "wglSwapIntervalEXT", out wglSwapIntervalEXT );
+			LoadDelegate("wglGetSwapIntervalEXT", out wglGetSwapIntervalEXT);
+			LoadDelegate("wglSwapIntervalEXT", out wglSwapIntervalEXT);
 		}
 
 		[SuppressUnmanagedCodeSecurity]
@@ -23,22 +24,22 @@ namespace OpenTK.Platform.Windows {
 		internal delegate int GetSwapIntervalEXT();
 		internal static GetSwapIntervalEXT wglGetSwapIntervalEXT;
 		
-		[SuppressUnmanagedCodeSecurity,DllImport("OPENGL32.DLL", SetLastError = true)]
+		[DllImport("OPENGL32.DLL", SetLastError = true)]
 		internal extern static IntPtr wglCreateContext(IntPtr hDc);
 		
-		[SuppressUnmanagedCodeSecurity, DllImport("OPENGL32.DLL", SetLastError = true)]
+		[DllImport("OPENGL32.DLL", SetLastError = true)]
 		internal extern static Boolean wglDeleteContext(IntPtr oldContext);
 		
-		[SuppressUnmanagedCodeSecurity, DllImport("OPENGL32.DLL", SetLastError = true)]
+		[DllImport("OPENGL32.DLL", SetLastError = true)]
 		internal extern static IntPtr wglGetCurrentContext();
 		
-		[SuppressUnmanagedCodeSecurity, DllImport("OPENGL32.DLL", SetLastError = true)]
+		[DllImport("OPENGL32.DLL", SetLastError = true)]
 		internal extern static Boolean wglMakeCurrent(IntPtr hDc, IntPtr newContext);
 		
-		[SuppressUnmanagedCodeSecurity, DllImport("OPENGL32.DLL", SetLastError = true)]
+		[DllImport("OPENGL32.DLL", SetLastError = true)]
 		internal extern static IntPtr wglGetCurrentDC();
 		
-		[SuppressUnmanagedCodeSecurity, DllImport("OPENGL32.DLL", SetLastError = true)]
+		[DllImport("OPENGL32.DLL", SetLastError = true)]
 		internal extern static IntPtr wglGetProcAddress(String lpszProc);
 	}
 }

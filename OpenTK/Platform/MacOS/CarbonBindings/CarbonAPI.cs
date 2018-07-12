@@ -6,28 +6,21 @@ using System.Runtime.InteropServices;
 using System.Drawing;
 using EventTime = System.Double;
 
-
-namespace OpenTK.Platform.MacOS.Carbon
-{
-
-	#region --- Types defined in MacTypes.h ---
+namespace OpenTK.Platform.MacOS {
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct CarbonPoint
-	{
+	public struct CarbonPoint {
 		public short V;
 		public short H;
 
-		public CarbonPoint(int x, int y)
-		{
+		public CarbonPoint(int x, int y) {
 			V = (short)x;
 			H = (short)y;
 		}
 	}
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct Rect
-	{
+	public struct Rect {
 		short top;
 		short left;
 		short bottom;
@@ -40,21 +33,10 @@ namespace OpenTK.Platform.MacOS.Carbon
 			right = (short)(_left + _width);
 		}
 
-		public short X {
-			get { return left; }
-		}
-		
-		public short Y {
-			get { return top; }
-		}
-		
-		public short Width {
-			get { return (short)(right - left); }
-		}
-		
-		public short Height {
-			get { return (short)(bottom - top); }
-		}
+		public short X { get { return left; } }	
+		public short Y { get { return top; } }	
+		public short Width { get { return (short)(right - left); } }
+		public short Height { get { return (short)(bottom - top); } }
 
 		public override string ToString() {
 			return string.Format(
@@ -66,26 +48,23 @@ namespace OpenTK.Platform.MacOS.Carbon
 		}
 	}
 
-	#endregion
-	#region --- Types defined in HIGeometry.h ---
-
 	[StructLayout(LayoutKind.Sequential)]
 	public struct HIPoint {
 		public IntPtr xVal;
 		public IntPtr yVal;
 		
 		public float X {
-			get { return GetFloat( xVal ); }
-			set { SetFloat( ref xVal, value ); }
+			get { return GetFloat(xVal); }
+			set { SetFloat(ref xVal, value); }
 		}
 		
 		public float Y {
-			get { return GetFloat( yVal ); }
-			set { SetFloat( ref yVal, value ); }
+			get { return GetFloat(yVal); }
+			set { SetFloat(ref yVal, value); }
 		}
 		
-		static unsafe float GetFloat( IntPtr val ) {
-			if( IntPtr.Size == 8 ) {
+		static unsafe float GetFloat(IntPtr val) {
+			if (IntPtr.Size == 8) {
 				long raw = val.ToInt64();
 				return (float)(*((double*)&raw));
 			} else {
@@ -94,15 +73,15 @@ namespace OpenTK.Platform.MacOS.Carbon
 			}
 		}
 		
-		static unsafe void SetFloat( ref IntPtr val, float x ) {
-			if( IntPtr.Size == 8 ) {
+		static unsafe void SetFloat(ref IntPtr val, float x) {
+			if (IntPtr.Size == 8) {
 				long raw = 0;
 				*((double*)&raw) = x;
-				val = new IntPtr( raw );
+				val = new IntPtr(raw);
 			} else {
 				int raw = 0;
 				*((float*)&raw) = x;
-				val = new IntPtr( raw );
+				val = new IntPtr(raw);
 			}
 		}
 	}
@@ -118,10 +97,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 		}
 	}
 
-	#endregion
-
-	public struct EventInfo {
-		
+	public struct EventInfo {		
 		public EventInfo(IntPtr eventRef) {
 			EventClass = API.GetEventClass(eventRef);
 			EventKind = API.GetEventKind(eventRef);
@@ -129,10 +105,6 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 		public uint EventKind;
 		public EventClass EventClass;
-
-		public override string ToString() {
-			return "Event: " + EventClass + ",kind: " + EventKind;
-		}
 	}
 	
 	#region --- Types defined in CarbonEvents.h ---
@@ -404,35 +376,24 @@ namespace OpenTK.Platform.MacOS.Carbon
 	}
 
 	#endregion
-	#region --- Enums from gestalt.h ---
 
-	public enum GestaltSelector
-	{
+	public enum GestaltSelector {
 		SystemVersion       = 0x73797376,  // FOUR_CHAR_CODE("sysv"), /* system version*/
 		SystemVersionMajor  = 0x73797331,  // FOUR_CHAR_CODE("sys1"), /* The major system version number; in 10.4.17 this would be the decimal value 10 */
 		SystemVersionMinor  = 0x73797332,  // FOUR_CHAR_CODE("sys2"), /* The minor system version number; in 10.4.17 this would be the decimal value 4 */
 		SystemVersionBugFix = 0x73797333,  // FOUR_CHAR_CODE("sys3") /* The bug fix system version number; in 10.4.17 this would be the decimal value 17 */
 	};
 
-	#endregion
-	#region --- Process Manager ---
-
-	public enum ProcessApplicationTransformState : int
-	{
+	public enum ProcessApplicationTransformState : int {
 		kProcessTransformToForegroundApplication = 1,
 	}
 
-	public struct ProcessSerialNumber
-	{
+	public struct ProcessSerialNumber {
 		public ulong high;
 		public ulong low;
 	}
 
-	#endregion
-
-
-	public enum HICoordinateSpace
-	{
+	public enum HICoordinateSpace {
 		_72DPIGlobal      = 1,
 		ScreenPixel      = 2,
 		Window           = 3,
@@ -441,7 +402,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 	#region --- Carbon API Methods ---
 
-	public class API
+	public static class API
 	{
 		const string carbon = "/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon";
 		
@@ -450,16 +411,10 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		public static extern uint GetEventKind(IntPtr inEvent);
 
-		#region --- Window Construction ---
-
 		[DllImport(carbon)]
 		public static extern OSStatus CreateNewWindow(WindowClass @class, WindowAttributes attributes, ref Rect r, out IntPtr window);
-
 		[DllImport(carbon)]
 		public static extern void DisposeWindow(IntPtr window);
-
-		#endregion
-		#region --- Showing / Hiding Windows ---
 
 		[DllImport(carbon)]
 		public static extern void ShowWindow(IntPtr window);
@@ -470,9 +425,6 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		public static extern void SelectWindow(IntPtr window);
 
-		#endregion
-		#region --- Window Boundaries ---
-
 		[DllImport(carbon)]
 		public static extern OSStatus RepositionWindow(IntPtr window, IntPtr parentWindow, WindowPositionMethod method);
 		[DllImport(carbon)]
@@ -482,23 +434,15 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 		[DllImport(carbon)]
 		static extern OSStatus GetWindowBounds(IntPtr window, WindowRegionCode regionCode, out Rect globalBounds);
-		public static Rect GetWindowBounds(IntPtr window, WindowRegionCode regionCode)
-		{
+		public static Rect GetWindowBounds(IntPtr window, WindowRegionCode regionCode) {
 			Rect retval;
 			OSStatus error = GetWindowBounds(window, regionCode, out retval);
-			CheckReturn( error );
+			CheckReturn(error);
 			return retval;
 		}
 
-		//[DllImport(carbon)]
-		//public static extern void MoveWindow(IntPtr window, short hGlobal, short vGlobal, bool front);
-
-		#endregion
-		#region --- Processing Events ---
-
 		[DllImport(carbon)]
 		static extern IntPtr GetEventDispatcherTarget();
-
 		[DllImport(carbon,EntryPoint="ReceiveNextEvent")]
 		static extern OSStatus ReceiveNextEvent(uint inNumTypes,
 		                                        IntPtr inList,
@@ -589,7 +533,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 		#region --- Getting Event Parameters ---
 
 		[DllImport(carbon)]
-		static extern OSStatus CreateEvent( IntPtr inAllocator,
+		static extern OSStatus CreateEvent(IntPtr inAllocator,
 		                                   EventClass inClassID, UInt32 kind, EventTime when,
 		                                   EventAttributes flags, out IntPtr outEvent);
 		
@@ -697,7 +641,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 		#region --- Event Handlers ---
 
 		[DllImport(carbon)]
-		static extern OSStatus InstallEventHandler( IntPtr eventTargetRef, IntPtr handlerProc,
+		static extern OSStatus InstallEventHandler(IntPtr eventTargetRef, IntPtr handlerProc,
 		                                           int numtypes, EventTypeSpec[] typeList,
 		                                           IntPtr userData, IntPtr handlerRef);
 
@@ -708,7 +652,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus error = InstallEventHandler(windowTarget, uppHandlerProc,
 			                                      eventTypes.Length, eventTypes,
 			                                      userData, handlerRef);
-			CheckReturn( error );
+			CheckReturn(error);
 		}
 
 		public static void InstallApplicationEventHandler(IntPtr uppHandlerProc,
@@ -717,7 +661,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			OSStatus error = InstallEventHandler(GetApplicationEventTarget(), uppHandlerProc,
 			                                      eventTypes.Length, eventTypes,
 			                                      userData, handlerRef);
-			CheckReturn( error );
+			CheckReturn(error);
 		}
 
 		[DllImport(carbon)]
@@ -745,11 +689,11 @@ namespace OpenTK.Platform.MacOS.Carbon
 		#region --- Process Manager ---
 
 		[DllImport(carbon)]
-		public static extern int TransformProcessType(ref Carbon.ProcessSerialNumber psn, ProcessApplicationTransformState type);
+		public static extern int TransformProcessType(ref ProcessSerialNumber psn, ProcessApplicationTransformState type);
 		[DllImport(carbon)]
-		public static extern int GetCurrentProcess(ref Carbon.ProcessSerialNumber psn);
+		public static extern int GetCurrentProcess(ref ProcessSerialNumber psn);
 		[DllImport(carbon)]
-		public static extern int SetFrontProcess(ref Carbon.ProcessSerialNumber psn);
+		public static extern int SetFrontProcess(ref ProcessSerialNumber psn);
 
 		#endregion
 		#region --- Setting Dock Tile ---
@@ -772,13 +716,13 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		public extern static void CGColorSpaceRelease(IntPtr space);		
 		[DllImport(carbon)]
-		public extern static void CGContextDrawImage( IntPtr context, HIRect rect, IntPtr image );
+		public extern static void CGContextDrawImage(IntPtr context, HIRect rect, IntPtr image);
 		[DllImport(carbon)]
-		public extern static void CGContextSynchronize( IntPtr context );
+		public extern static void CGContextSynchronize(IntPtr context);
 		[DllImport(carbon)]
-		public extern static OSStatus QDBeginCGContext( IntPtr port, ref IntPtr context );
+		public extern static OSStatus QDBeginCGContext(IntPtr port, ref IntPtr context);
 		[DllImport(carbon)]
-		public extern static OSStatus QDEndCGContext( IntPtr port, ref IntPtr context );
+		public extern static OSStatus QDEndCGContext(IntPtr port, ref IntPtr context);
 		#endregion
 		#region --- Clipboard ---
 		
@@ -861,9 +805,9 @@ namespace OpenTK.Platform.MacOS.Carbon
 		[DllImport(carbon)]
 		public static extern OSStatus CollapseWindow(IntPtr windowRef, bool collapse);
 		
-		public static void CheckReturn(OSStatus error ) {
-			if( error != OSStatus.NoError )
-				throw new MacOSException( error );
+		public static void CheckReturn(OSStatus error) {
+			if (error != OSStatus.NoError)
+				throw new MacOSException(error);
 		}
 
 		[DllImport(carbon, EntryPoint="IsWindowInStandardState")]
@@ -882,7 +826,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 			IntPtr displayID, out IntPtr displayDevice, Boolean failToMain);
 		
 		[DllImport(carbon)]
-		public unsafe static extern IntPtr HIGetMousePosition( HICoordinateSpace space, IntPtr obj, ref HIPoint point );
+		public unsafe static extern IntPtr HIGetMousePosition(HICoordinateSpace space, IntPtr obj, ref HIPoint point);
 
 		#region Nonworking HIPointConvert routines
 
@@ -911,7 +855,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 		//[DllImport(carbon, EntryPoint = "HIViewConvertPoint")]
 		//extern static OSStatus _HIViewConvertPoint(ref HIPoint inPoint, IntPtr inSourceView, IntPtr inDestView);
 
-		//public static HIPoint HIViewConvertPoint( HIPoint point, IntPtr sourceHandle, IntPtr destHandle)
+		//public static HIPoint HIViewConvertPoint(HIPoint point, IntPtr sourceHandle, IntPtr destHandle)
 		//{
 		//    //Carbon.Rect window_bounds = new Carbon.Rect();
 		//    //Carbon.API.GetWindowBounds(handle, WindowRegionCode.StructureRegion /*32*/, out window_bounds);
@@ -932,12 +876,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 		#endregion
 
 		const string gestaltlib = "/System/Library/Frameworks/Carbon.framework/Versions/Current/Carbon";
-
-
 		[DllImport(gestaltlib)]
 		public static extern OSStatus Gestalt(GestaltSelector selector, out int response);
 	}
-
-	#endregion
-	
 }

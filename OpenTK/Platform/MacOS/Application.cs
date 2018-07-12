@@ -45,7 +45,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 		private static void TransformProcessToForeground()
 		{
-			Carbon.ProcessSerialNumber psn = new ProcessSerialNumber();
+			ProcessSerialNumber psn = new ProcessSerialNumber();
 
 			Debug.Print("Setting process to be foreground application.");
 

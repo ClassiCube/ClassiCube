@@ -50,6 +50,7 @@ namespace OpenTK.Platform.X11
 
 	#endregion
 
+	[SuppressUnmanagedCodeSecurity]
 	class Glx : BindingsBase
 	{
 		const string Library = "libGL.so.1";
@@ -62,45 +63,45 @@ namespace OpenTK.Platform.X11
 		}
 		
 		internal void LoadEntryPoints() {
-			LoadDelegate( "glXSwapIntervalSGI", out glXSwapIntervalSGI );
+			LoadDelegate("glXSwapIntervalSGI", out glXSwapIntervalSGI);
 		}
 
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern bool glXIsDirect(IntPtr dpy, IntPtr context);
 
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern IntPtr glXCreateContext(IntPtr dpy, ref XVisualInfo vis, IntPtr shareList, bool direct);
 		
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern void glXDestroyContext(IntPtr dpy, IntPtr context);
 
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern IntPtr glXGetCurrentContext();
 
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern bool glXMakeCurrent(IntPtr display, IntPtr drawable, IntPtr context);
 
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern void glXSwapBuffers(IntPtr display, IntPtr drawable);
 
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern IntPtr glXGetProcAddress([MarshalAs(UnmanagedType.LPTStr)] string procName);
 
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern int glXGetConfig(IntPtr dpy, ref XVisualInfo vis, GLXAttribute attrib, out int value);
 
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public static extern IntPtr glXChooseVisual(IntPtr dpy, int screen, int[] attriblist);
 
 		// Returns an array of GLXFBConfig structures.
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public unsafe extern static IntPtr* glXChooseFBConfig(IntPtr dpy, int screen, int[] attriblist, out int fbount);
 
 		// Returns a pointer to an XVisualInfo structure.
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public unsafe extern static IntPtr glXGetVisualFromFBConfig(IntPtr dpy, IntPtr fbconfig);
 		
-		[SuppressUnmanagedCodeSecurity, DllImport( Library )]
+		[DllImport(Library)]
 		public extern static bool glXQueryVersion(IntPtr dpy, ref int major, ref int minor);
 
 		[SuppressUnmanagedCodeSecurity]
