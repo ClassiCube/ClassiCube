@@ -16,14 +16,13 @@ namespace ClassicalSharp.GraphicsAPI {
 	/// <summary> Implements IGraphicsAPI using Direct3D 9. </summary>
 	public class Direct3D9Api : IGraphicsApi {
 
-		Device device;
-		Direct3D d3d;
+		IntPtr device, d3d;
 		Capabilities caps;
 		const int texBufferSize = 512, iBufferSize = 4, vBufferSize = 2048;
 		
-		D3D.Texture[] textures = new D3D.Texture[texBufferSize];
-		DataBuffer[] vBuffers = new DataBuffer[vBufferSize];
-		DataBuffer[] iBuffers = new DataBuffer[iBufferSize];
+		IntPtr[] textures = new IntPtr[texBufferSize];
+		IntPtr[] vBuffers = new IntPtr[vBufferSize];
+		IntPtr[] iBuffers = new IntPtr[iBufferSize];
 		
 		TransformState curMatrix;
 		PrimitiveType[] modeMappings;
@@ -34,26 +33,26 @@ namespace ClassicalSharp.GraphicsAPI {
 		public Direct3D9Api(Game game) {
 			MinZNear = 0.05f;
 			IntPtr winHandle = game.window.WinHandle;
-			d3d = new Direct3D();
+			d3d = Direct3D.Direct3DCreate9(Direct3D.SdkVersion);
 			const int adapter = 0; // default adapter
 			InitFields();
 			FindCompatibleFormat(adapter);
 			
 			PresentParameters args = GetPresentArgs(640, 480);
 			try {
-				device = d3d.CreateDevice(adapter, DeviceType.Hardware, winHandle, createFlags, args);
+				device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
 			} catch (SharpDXException) {
 				createFlags = CreateFlags.MixedVertexProcessing;
 				try {
-					device = d3d.CreateDevice(adapter, DeviceType.Hardware, winHandle, createFlags, args);
+					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
 				} catch (SharpDXException) {
 					createFlags = CreateFlags.SoftwareVertexProcessing;
-					device = d3d.CreateDevice(adapter, DeviceType.Hardware, winHandle, createFlags, args);
+					device = Direct3D.CreateDevice(d3d, adapter, DeviceType.Hardware, winHandle, createFlags, args);
 				}
 			}
 			
 			CustomMipmapsLevels = true;
-			caps = device.GetCapabilities();
+			caps = Device.GetCapabilities(device);
 			SetDefaultRenderStates();
 			InitCommon();
 		}
@@ -61,7 +60,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		void FindCompatibleFormat(int adapter) {
 			for (int i = 0; i < viewFormats.Length; i++) {
 				viewFormat = viewFormats[i];
-				if (d3d.CheckDeviceType(adapter, DeviceType.Hardware, viewFormat, viewFormat, true)) break;
+				if (Direct3D.CheckDeviceType(d3d, adapter, DeviceType.Hardware, viewFormat, viewFormat, true)) break;
 				
 				if (i == viewFormats.Length - 1)
 					throw new InvalidOperationException("Unable to create a back buffer with sufficient precision.");
@@ -69,7 +68,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			for (int i = 0; i < depthFormats.Length; i++) {
 				depthFormat = depthFormats[i];
-				if (d3d.CheckDepthStencilMatch(adapter, DeviceType.Hardware, viewFormat, viewFormat, depthFormat)) break;
+				if (Direct3D.CheckDepthStencilMatch(d3d, adapter, DeviceType.Hardware, viewFormat, viewFormat, depthFormat)) break;
 				
 				if (i == depthFormats.Length - 1)
 					throw new InvalidOperationException("Unable to create a depth buffer with sufficient precision.");
@@ -79,13 +78,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		bool alphaTest, alphaBlend;
 		public override bool AlphaTest {
 			set { if (value == alphaTest) return;
-				alphaTest = value; device.SetRenderState(RenderState.AlphaTestEnable, value);
+				alphaTest = value; Device.SetRenderState(device, RenderState.AlphaTestEnable, value);
 			}
 		}
 
 		public override bool AlphaBlending {
 			set { if (value == alphaBlend) return;
-				alphaBlend = value; device.SetRenderState(RenderState.AlphaBlendEnable, value);
+				alphaBlend = value; Device.SetRenderState(device, RenderState.AlphaBlendEnable, value);
 			}
 		}
 
@@ -94,9 +93,9 @@ namespace ClassicalSharp.GraphicsAPI {
 		int alphaTestRef;
 		public override void AlphaTestFunc(CompareFunc func, float value) {
 			alphaTestFunc = compareFuncs[(int)func];
-			device.SetRenderState(RenderState.AlphaFunc, (int)alphaTestFunc);
+			Device.SetRenderState(device, RenderState.AlphaFunc, (int)alphaTestFunc);
 			alphaTestRef = (int)(value * 255);
-			device.SetRenderState(RenderState.AlphaRef, alphaTestRef);
+			Device.SetRenderState(device, RenderState.AlphaRef, alphaTestRef);
 		}
 
 		Blend[] blendFuncs;
@@ -105,49 +104,49 @@ namespace ClassicalSharp.GraphicsAPI {
 		public override void AlphaBlendFunc(BlendFunc srcFunc, BlendFunc dstFunc) {
 			srcBlendFunc = blendFuncs[(int)srcFunc];
 			dstBlendFunc = blendFuncs[(int)dstFunc];
-			device.SetRenderState(RenderState.SourceBlend, (int)srcBlendFunc);
-			device.SetRenderState(RenderState.DestinationBlend, (int)dstBlendFunc);
+			Device.SetRenderState(device, RenderState.SourceBlend, (int)srcBlendFunc);
+			Device.SetRenderState(device, RenderState.DestinationBlend, (int)dstBlendFunc);
 		}
 
 		bool fogEnable;
 		public override bool Fog {
 			get { return fogEnable; }
-			set { 
+			set {
 				if (value == fogEnable) return;
 				fogEnable = value;
 				if (LostContext) return;
-				device.SetRenderState(RenderState.FogEnable, value);
+				Device.SetRenderState(device, RenderState.FogEnable, value);
 			}
 		}
 
 		int fogCol, lastFogCol = FastColour.BlackPacked;
 		public override void SetFogColour(FastColour col) {
 			fogCol = col.Pack();
-			if (fogCol == lastFogCol) return;		
+			if (fogCol == lastFogCol) return;
 			lastFogCol = fogCol;
 			if (LostContext) return;
-			device.SetRenderState(RenderState.FogColor, fogCol);
+			Device.SetRenderState(device, RenderState.FogColor, fogCol);
 		}
 
 		float fogDensity = -1, fogStart = -1, fogEnd = -1;
 		public override void SetFogDensity(float value) {
-			if (value == fogDensity) return;			
+			if (value == fogDensity) return;
 			fogDensity = value;
 			if (LostContext) return;
-			device.SetRenderState(RenderState.FogDensity, value);
+			Device.SetRenderState(device, RenderState.FogDensity, value);
 		}
 		
 		public override void SetFogStart(float value) {
 			fogStart = value;
 			if (LostContext) return;
-			device.SetRenderState(RenderState.FogStart, value);
+			Device.SetRenderState(device, RenderState.FogStart, value);
 		}
 
 		public override void SetFogEnd(float value) {
 			if (value == fogEnd) return;
 			fogEnd = value;
 			if (LostContext) return;
-			device.SetRenderState(RenderState.FogEnd, value);
+			Device.SetRenderState(device, RenderState.FogEnd, value);
 		}
 
 		FogMode[] modes;
@@ -157,13 +156,13 @@ namespace ClassicalSharp.GraphicsAPI {
 			if (newMode == fogTableMode) return;
 			fogTableMode = newMode;
 			if (LostContext) return;
-			device.SetRenderState(RenderState.FogTableMode, (int)fogTableMode);
+			Device.SetRenderState(device, RenderState.FogTableMode, (int)fogTableMode);
 		}
 		
 		public override bool FaceCulling {
 			set {
 				Cull mode = value ? Cull.Clockwise : Cull.None;
-				device.SetRenderState(RenderState.CullMode, (int)mode);
+				Device.SetRenderState(device, RenderState.CullMode, (int)mode);
 			}
 		}
 
@@ -172,30 +171,30 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override bool Texturing {
-			set { if (!value) device.SetTexture(0, null); }
+			set { if (!value) Device.SetTexture(device, 0, IntPtr.Zero); }
 		}
 
 		protected override int CreateTexture(int width, int height, IntPtr scan0, bool managedPool, bool mipmaps) {
-			D3D.Texture texture = null;
+			IntPtr tex = IntPtr.Zero;
 			int levels = 1 + (mipmaps ? MipmapsLevels(width, height) : 0);
 			
 			if (managedPool) {
-				texture = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Managed);
-				texture.SetData(0, LockFlags.None, scan0, width * height * 4);
-				if (mipmaps) DoMipmaps(texture, 0, 0, width, height, scan0, false);
+				tex = Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Managed);
+				D3D.Texture.SetData(tex, 0, LockFlags.None, scan0, width * height * 4);
+				if (mipmaps) DoMipmaps(tex, 0, 0, width, height, scan0, false);
 			} else {
-				D3D.Texture sys = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
-				sys.SetData(0, LockFlags.None, scan0, width * height * 4);
+				IntPtr sys = Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.SystemMemory);
+				D3D.Texture.SetData(sys, 0, LockFlags.None, scan0, width * height * 4);
 				if (mipmaps) DoMipmaps(sys, 0, 0, width, height, scan0, false);
 				
-				texture = device.CreateTexture(width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Default);
-				device.UpdateTexture(sys, texture);
-				sys.Dispose();
+				tex = Device.CreateTexture(device, width, height, levels, Usage.None, Format.A8R8G8B8, Pool.Default);
+				Device.UpdateTexture(device, sys, tex);
+				Delete(ref sys);
 			}
-			return GetOrExpand(ref textures, texture, texBufferSize);
+			return GetOrExpand(ref textures, tex, texBufferSize);
 		}
 		
-		unsafe void DoMipmaps(D3D.Texture texture, int x, int y, int width,
+		unsafe void DoMipmaps(IntPtr tex, int x, int y, int width,
 		                      int height, IntPtr scan0, bool partial) {
 			IntPtr prev = scan0;
 			int lvls = MipmapsLevels(width, height);
@@ -210,9 +209,9 @@ namespace ClassicalSharp.GraphicsAPI {
 				GenMipmaps(width, height, cur, prev);
 				
 				if (partial) {
-					texture.SetPartData(lvl, LockFlags.None, cur, x, y, width, height);
+					D3D.Texture.SetPartData(tex, lvl, LockFlags.None, cur, x, y, width, height);
 				} else {
-					texture.SetData(lvl, LockFlags.None, cur, size);
+					D3D.Texture.SetData(tex, lvl, LockFlags.None, cur, size);
 				}
 				
 				if (prev != scan0) Marshal.FreeHGlobal(prev);
@@ -222,13 +221,13 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 		
 		public override void UpdateTexturePart(int texId, int x, int y, FastBitmap part, bool mipmaps) {
-			D3D.Texture texture = textures[texId];
-			texture.SetPartData(0, LockFlags.None, part.Scan0, x, y, part.Width, part.Height);
-			if (Mipmaps) DoMipmaps(texture, x, y, part.Width, part.Height, part.Scan0, true);
+			IntPtr tex = textures[texId];
+			D3D.Texture.SetPartData(tex, 0, LockFlags.None, part.Scan0, x, y, part.Width, part.Height);
+			if (Mipmaps) DoMipmaps(tex, x, y, part.Width, part.Height, part.Scan0, true);
 		}
 
 		public override void BindTexture(int texId) {
-			device.SetTexture(0, textures[texId]);
+			Device.SetTexture(device, 0, textures[texId]);
 		}
 
 		public override void DeleteTexture(ref int texId) {
@@ -237,20 +236,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override void EnableMipmaps() {
 			if (Mipmaps) {
-				device.SetSamplerState(0, SamplerState.MipFilter, (int)TextureFilter.Linear);
+				Device.SetSamplerState(device, 0, SamplerState.MipFilter, (int)TextureFilter.Linear);
 			}
 		}
 		
 		public override void DisableMipmaps() {
 			if (Mipmaps) {
-				device.SetSamplerState(0, SamplerState.MipFilter, (int)TextureFilter.None);
+				Device.SetSamplerState(device, 0, SamplerState.MipFilter, (int)TextureFilter.None);
 			}
 		}
 		
 
 		int lastClearCol;
 		public override void Clear() {
-			device.Clear(ClearFlags.Target | ClearFlags.ZBuffer, lastClearCol, 1f, 0);
+			Device.Clear(device, ClearFlags.Target | ClearFlags.ZBuffer, lastClearCol, 1f, 0);
 		}
 
 		public override void ClearColour(FastColour col) {
@@ -259,28 +258,28 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public override void ColourWriteMask(bool r, bool g, bool b, bool a) {
 			int flags = (r ? 1 : 0) | (g ? 2 : 0) | (b ? 4 : 0) | (a ? 8 : 0);
-			device.SetRenderState(RenderState.ColorWriteEnable, flags);
+			Device.SetRenderState(device, RenderState.ColorWriteEnable, flags);
 		}
 
 		Compare depthTestFunc = Compare.LessEqual;
 		public override void DepthTestFunc(CompareFunc func) {
 			depthTestFunc = compareFuncs[(int)func];
-			device.SetRenderState(RenderState.ZFunc, (int)depthTestFunc);
+			Device.SetRenderState(device, RenderState.ZFunc, (int)depthTestFunc);
 		}
 
 		bool depthTest, depthWrite;
 		public override bool DepthTest {
-			set { depthTest = value; device.SetRenderState(RenderState.ZEnable, value); }
+			set { depthTest = value; Device.SetRenderState(device, RenderState.ZEnable, value); }
 		}
 
 		public override bool DepthWrite {
-			set { depthWrite = value; device.SetRenderState(RenderState.ZWriteEnable, value); }
+			set { depthWrite = value; Device.SetRenderState(device, RenderState.ZWriteEnable, value); }
 		}
 		
 		public override bool AlphaArgBlend {
 			set {
 				TextureOp op = value ? TextureOp.Modulate : TextureOp.SelectArg1;
-				device.SetTextureStageState(0, TextureStage.AlphaOperation, (int)op);
+				Device.SetTextureStageState(device, 0, TextureStage.AlphaOperation, (int)op);
 			}
 		}
 		
@@ -288,33 +287,33 @@ namespace ClassicalSharp.GraphicsAPI {
 		
 		public override int CreateDynamicVb(VertexFormat format, int maxVertices) {
 			int size = maxVertices * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.Dynamic | Usage.WriteOnly,
-			                                              formatMapping[(int)format], Pool.Default);
+			IntPtr buffer = Device.CreateVertexBuffer(device, size, Usage.Dynamic | Usage.WriteOnly,
+			                                          formatMapping[(int)format], Pool.Default);
 			return GetOrExpand(ref vBuffers, buffer, iBufferSize);
 		}
 		
 		public override void SetDynamicVbData(int vb, IntPtr vertices, int count) {
 			int size = count * batchStride;
-			DataBuffer buffer = vBuffers[vb];
-			buffer.SetData(vertices, size, LockFlags.Discard);
-			device.SetStreamSource(0, buffer, 0, batchStride);
+			IntPtr buffer = vBuffers[vb];
+			DataBuffser.SetData(buffer, vertices, size, LockFlags.Discard);
+			Device.SetStreamSource(device, 0, buffer, 0, batchStride);
 		}
 
 		D3D.VertexFormat[] formatMapping;
 		
 		public override int CreateVb(IntPtr vertices, VertexFormat format, int count) {
 			int size = count * strideSizes[(int)format];
-			DataBuffer buffer = device.CreateVertexBuffer(size, Usage.WriteOnly,
-			                                              formatMapping[(int)format], Pool.Default);
-			buffer.SetData(vertices, size, LockFlags.None);
+			IntPtr buffer = Device.CreateVertexBuffer(device, size, Usage.WriteOnly,
+			                                          formatMapping[(int)format], Pool.Default);
+			DataBuffser.SetData(buffer, vertices, size, LockFlags.None);
 			return GetOrExpand(ref vBuffers, buffer, vBufferSize);
 		}
 		
 		public override int CreateIb(IntPtr indices, int indicesCount) {
 			int size = indicesCount * sizeof(ushort);
-			DataBuffer buffer = device.CreateIndexBuffer(size, Usage.WriteOnly,
-			                                             Format.Index16, Pool.Default);
-			buffer.SetData(indices, size, LockFlags.None);
+			IntPtr buffer = Device.CreateIndexBuffer(device, size, Usage.WriteOnly,
+			                                         Format.Index16, Pool.Default);
+			DataBuffser.SetData(buffer, indices, size, LockFlags.None);
 			return GetOrExpand(ref iBuffers, buffer, iBufferSize);
 		}
 
@@ -332,34 +331,34 @@ namespace ClassicalSharp.GraphicsAPI {
 			if (format == batchFormat) return;
 			batchFormat = format;
 			
-			device.SetVertexFormat(formatMapping[(int)format]);
+			Device.SetVertexFormat(device, formatMapping[(int)format]);
 			batchStride = strideSizes[(int)format];
 		}
 		
 		public override void BindVb(int vb) {
-			device.SetStreamSource(0, vBuffers[vb], 0, batchStride);
+			Device.SetStreamSource(device, 0, vBuffers[vb], 0, batchStride);
 		}
 		
 		public override void BindIb(int ib) {
-			device.SetIndices(iBuffers[ib]);
+			Device.SetIndices(device, iBuffers[ib]);
 		}
 
 		public override void DrawVb_Lines(int verticesCount) {
-			device.DrawPrimitives(PrimitiveType.LineList, 0, verticesCount >> 1);
+			Device.DrawPrimitives(device, PrimitiveType.LineList, 0, verticesCount >> 1);
 		}
 
 		public override void DrawVb_IndexedTris(int verticesCount, int startVertex) {
-			device.DrawIndexedPrimitives(PrimitiveType.TriangleList, startVertex, 0,
+			Device.DrawIndexedPrimitives(device, PrimitiveType.TriangleList, startVertex, 0,
 			                             verticesCount, 0, verticesCount >> 1);
 		}
 
 		public override void DrawVb_IndexedTris(int verticesCount) {
-			device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0,
+			Device.DrawIndexedPrimitives(device, PrimitiveType.TriangleList, 0, 0,
 			                             verticesCount, 0, verticesCount >> 1);
 		}
 		
 		internal override void DrawIndexedVb_TrisT2fC4b(int verticesCount, int startVertex) {
-			device.DrawIndexedPrimitives(PrimitiveType.TriangleList, startVertex, 0,
+			Device.DrawIndexedPrimitives(device, PrimitiveType.TriangleList, startVertex, 0,
 			                             verticesCount, 0, verticesCount >> 1);
 		}
 		#endregion
@@ -380,20 +379,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		public unsafe override void LoadMatrix(ref Matrix4 matrix) {
 			if (curMatrix == TransformState.Texture0) {
 				matrix.Row2.X = matrix.Row3.X; // NOTE: this hack fixes the texture movements.
-				device.SetTextureStageState(0, TextureStage.TextureTransformFlags, (int)TextureTransform.Count2);
+				Device.SetTextureStageState(device, 0, TextureStage.TextureTransformFlags, (int)TextureTransform.Count2);
 			}
 			
 			if (LostContext) return;
-			device.SetTransform(curMatrix, ref matrix);
+			Device.SetTransform(device , curMatrix, ref matrix);
 		}
 
 		public override void LoadIdentityMatrix() {
 			if (curMatrix == TransformState.Texture0) {
-				device.SetTextureStageState(0, TextureStage.TextureTransformFlags, (int)TextureTransform.Disable);
+				Device.SetTextureStageState(device, 0, TextureStage.TextureTransformFlags, (int)TextureTransform.Disable);
 			}
 			
 			if (LostContext) return;
-			device.SetTransform(curMatrix, ref Matrix4.Identity);
+			Device.SetTransform(device, curMatrix, ref Matrix4.Identity);
 		}
 		
 		public override void CalcOrthoMatrix(float width, float height, out Matrix4 matrix) {
@@ -406,12 +405,12 @@ namespace ClassicalSharp.GraphicsAPI {
 		#endregion
 		
 		public override void BeginFrame(Game game) {
-			device.BeginScene();
+			Device.BeginScene(device);
 		}
 		
 		public override void EndFrame(Game game) {
-			device.EndScene();
-			int code = device.Present();
+			Device.EndScene(device);
+			int code = Device.Present(device);
 			if (code >= 0) return;
 			
 			if ((uint)code != (uint)Direct3DError.DeviceLost)
@@ -431,7 +430,7 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			while (true) {
 				Thread.Sleep(16);
-				uint code = (uint)device.TestCooperativeLevel();
+				uint code = (uint)Device.TestCooperativeLevel(device);
 				if ((uint)code == (uint)Direct3DError.DeviceNotReset) return;
 				
 				task.Callback(task);
@@ -456,7 +455,7 @@ namespace ClassicalSharp.GraphicsAPI {
 		void RecreateDevice(Game game) {
 			PresentParameters args = GetPresentArgs(game.Width, game.Height);
 			
-			while ((uint)device.Reset(args) == (uint)Direct3DError.DeviceLost)
+			while ((uint)Device.Reset(device, args) == (uint)Direct3DError.DeviceLost)
 				LoopUntilRetrieved();
 			
 			SetDefaultRenderStates();
@@ -467,29 +466,29 @@ namespace ClassicalSharp.GraphicsAPI {
 		void SetDefaultRenderStates() {
 			FaceCulling = false;
 			batchFormat = (VertexFormat)999;
-			device.SetRenderState(RenderState.ColorVertex, false);
-			device.SetRenderState(RenderState.Lighting, false);
-			device.SetRenderState(RenderState.SpecularEnable, false);
-			device.SetRenderState(RenderState.LocalViewer, false);
-			device.SetRenderState(RenderState.DebugMonitorToken, false);
+			Device.SetRenderState(device, RenderState.ColorVertex, false);
+			Device.SetRenderState(device, RenderState.Lighting, false);
+			Device.SetRenderState(device, RenderState.SpecularEnable, false);
+			Device.SetRenderState(device, RenderState.LocalViewer, false);
+			Device.SetRenderState(device, RenderState.DebugMonitorToken, false);
 		}
 		
 		void RestoreRenderStates() {
-			device.SetRenderState(RenderState.AlphaTestEnable, alphaTest);
-			device.SetRenderState(RenderState.AlphaBlendEnable, alphaBlend);
-			device.SetRenderState(RenderState.AlphaFunc, (int)alphaTestFunc);
-			device.SetRenderState(RenderState.AlphaRef, alphaTestRef);
-			device.SetRenderState(RenderState.SourceBlend, (int)srcBlendFunc);
-			device.SetRenderState(RenderState.DestinationBlend, (int)dstBlendFunc);
-			device.SetRenderState(RenderState.FogEnable, fogEnable);
-			device.SetRenderState(RenderState.FogColor, fogCol);
-			device.SetRenderState(RenderState.FogDensity, fogDensity);
-			device.SetRenderState(RenderState.FogStart, fogStart);
-			device.SetRenderState(RenderState.FogEnd, fogEnd);
-			device.SetRenderState(RenderState.FogTableMode, (int)fogTableMode);
-			device.SetRenderState(RenderState.ZFunc, (int)depthTestFunc);
-			device.SetRenderState(RenderState.ZEnable, depthTest);
-			device.SetRenderState(RenderState.ZWriteEnable, depthWrite);
+			Device.SetRenderState(device, RenderState.AlphaTestEnable, alphaTest);
+			Device.SetRenderState(device, RenderState.AlphaBlendEnable, alphaBlend);
+			Device.SetRenderState(device, RenderState.AlphaFunc, (int)alphaTestFunc);
+			Device.SetRenderState(device, RenderState.AlphaRef, alphaTestRef);
+			Device.SetRenderState(device, RenderState.SourceBlend, (int)srcBlendFunc);
+			Device.SetRenderState(device, RenderState.DestinationBlend, (int)dstBlendFunc);
+			Device.SetRenderState(device, RenderState.FogEnable, fogEnable);
+			Device.SetRenderState(device, RenderState.FogColor, fogCol);
+			Device.SetRenderState(device, RenderState.FogDensity, fogDensity);
+			Device.SetRenderState(device, RenderState.FogStart, fogStart);
+			Device.SetRenderState(device, RenderState.FogEnd, fogEnd);
+			Device.SetRenderState(device, RenderState.FogTableMode, (int)fogTableMode);
+			Device.SetRenderState(device, RenderState.ZFunc, (int)depthTestFunc);
+			Device.SetRenderState(device, RenderState.ZEnable, depthTest);
+			Device.SetRenderState(device, RenderState.ZWriteEnable, depthWrite);
 		}
 		
 		PresentParameters GetPresentArgs(int width, int height) {
@@ -506,10 +505,10 @@ namespace ClassicalSharp.GraphicsAPI {
 			return args;
 		}
 
-		static int GetOrExpand<T>(ref T[] array, T value, int expSize) {
+		static int GetOrExpand(ref IntPtr[] array, IntPtr value, int expSize) {
 			// Find first free slot
 			for (int i = 1; i < array.Length; i++) {
-				if (array[i] == null) {
+				if (array[i] == IntPtr.Zero) {
 					array[i] = value;
 					return i;
 				}
@@ -522,26 +521,34 @@ namespace ClassicalSharp.GraphicsAPI {
 			return oldLength;
 		}
 		
-		static void Delete<T>(T[] array, ref int id) where T : class, IDisposable {
+		static void Delete(ref IntPtr ptr) {
+			if (ptr == IntPtr.Zero) return;
+			
+			int refCount = Marshal.Release(ptr);
+			if (refCount > 0) {
+				string text = String.Format("Warning: ComObject [0x{0:X}] is still referenced, potential memory leak: ({1})",
+				                            ptr.ToInt64(), refCount);
+			}
+			ptr = IntPtr.Zero;
+		}
+		
+		static void Delete(IntPtr[] array, ref int id) {
 			if (id == 0 || id >= array.Length) return;
 			
-			T value = array[id];
-			if (value != null) {
-				value.Dispose();
-			}
-			array[id] = null;
+			Delete(ref array[id]);
 			id = 0;
 		}
 
 		public override void Dispose() {
 			base.Dispose();
-			device.Dispose();
-			d3d.Dispose();
+			Delete(ref device);
+			Delete(ref d3d);
 		}
 
 		internal override void MakeApiInfo() {
-			string adapter = d3d.Adapters[0].Description;
-			float texMem = device.AvailableTextureMemory / 1024f / 1024f;
+			AdapterDetails details = Direct3D.GetAdapterIdentifier(d3d, 0);
+			string adapter = details.Description;
+			float texMem = Device.GetAvailableTextureMemory(device) / 1024f / 1024f;
 			
 			ApiInfo = new string[] {
 				"-- Using Direct3D9 api --",
@@ -555,17 +562,20 @@ namespace ClassicalSharp.GraphicsAPI {
 		}
 
 		public override void TakeScreenshot(Stream output, int width, int height) {
-			using (Surface backbuffer = device.GetBackBuffer(0, 0, BackBufferType.Mono),
-			       tempSurface = device.CreateOffscreenPlainSurface(width, height, Format.X8R8G8B8, Pool.SystemMemory)) {
-				// For DX 8 use IDirect3DDevice8::CreateImageSurface
-				device.GetRenderTargetData(backbuffer, tempSurface);
-				LockedRectangle rect = tempSurface.LockRectangle(LockFlags.ReadOnly | LockFlags.NoDirtyUpdate);
-				
-				using (Bitmap bmp = new Bitmap(width, height, width * sizeof(int), PixelFormat.Format32bppRgb, rect.DataPointer)) {
-					Platform.WriteBmp(bmp, output);
-				}
-				tempSurface.UnlockRectangle();
+			IntPtr backbuffer = Device.GetBackBuffer(device, 0, 0, BackBufferType.Mono);
+			IntPtr temp = Device.CreateOffscreenPlainSurface(device, width, height, Format.X8R8G8B8, Pool.SystemMemory);
+			// For DX 8 use IDirect3DDevice8::CreateImageSurface
+			
+			Device.GetRenderTargetData(device, backbuffer, temp);
+			LockedRectangle rect = Surface.LockRectangle(temp, LockFlags.ReadOnly | LockFlags.NoDirtyUpdate);
+			
+			using (Bitmap bmp = new Bitmap(width, height, width * sizeof(int), PixelFormat.Format32bppRgb, rect.DataPointer)) {
+				Platform.WriteBmp(bmp, output);
 			}
+			Surface.UnlockRectangle(temp);
+			
+			Delete(ref backbuffer);
+			Delete(ref temp);
 		}
 		
 		void InitFields() {

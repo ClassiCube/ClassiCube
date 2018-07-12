@@ -3,12 +3,9 @@ using System.Collections.Generic;
 using OpenTK.Input;
 using OpenTK.Platform.MacOS.Carbon;
 
-namespace OpenTK.Platform.MacOS
-{
-	class MacOSKeyMap : Dictionary<MacOSKeyCode, Key>
-	{
-		public MacOSKeyMap()
-		{
+namespace OpenTK.Platform.MacOS {
+	internal class MacOSKeyMap : Dictionary<MacOSKeyCode, Key> {
+		public MacOSKeyMap() {
 			// comments indicate members of the Key enum that are missing
 
 			Add(MacOSKeyCode.A, Key.A);
