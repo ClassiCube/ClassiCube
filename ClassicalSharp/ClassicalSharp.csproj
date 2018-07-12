@@ -298,6 +298,105 @@
     <Compile Include="Utils\Utils.cs" />
     <Compile Include="Utils\Utils.Math.cs" />
     <Compile Include="Utils\Vector3I.cs" />
+    <Compile Include="..\OpenTK\DisplayDevice.cs">
+      <Link>OpenTK\DisplayDevice.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\INativeWindow.cs">
+      <Link>OpenTK\INativeWindow.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Keyboard.cs">
+      <Link>OpenTK\Keyboard.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Utils.cs">
+      <Link>OpenTK\Utils.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Graphics\ColorFormat.cs">
+      <Link>OpenTK\Graphics\ColorFormat.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Graphics\GraphicsMode.cs">
+      <Link>OpenTK\Graphics\GraphicsMode.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Graphics\IGraphicsContext.cs">
+      <Link>OpenTK\Graphics\IGraphicsContext.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Mouse.cs">
+      <Link>OpenTK\Mouse.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\Configuration.cs">
+      <Link>OpenTK\Platform\Configuration.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\IPlatformFactory.cs">
+      <Link>OpenTK\Platform\IPlatformFactory.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\AglContext.cs">
+      <Link>OpenTK\Platform\MacOS\AglContext.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\Application.cs">
+      <Link>OpenTK\Platform\MacOS\Application.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\CarbonBindings\Agl.cs">
+      <Link>OpenTK\Platform\MacOS\CarbonBindings\Agl.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\CarbonBindings\CarbonAPI.cs">
+      <Link>OpenTK\Platform\MacOS\CarbonBindings\CarbonAPI.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\CarbonBindings\API.cs">
+      <Link>OpenTK\Platform\MacOS\CarbonBindings\API.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\CarbonBindings\MacOSKeys.cs">
+      <Link>OpenTK\Platform\MacOS\CarbonBindings\MacOSKeys.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\CarbonWindow.cs">
+      <Link>OpenTK\Platform\MacOS\CarbonWindow.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\MacOSException.cs">
+      <Link>OpenTK\Platform\MacOS\MacOSException.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\MacOSKeyMap.cs">
+      <Link>OpenTK\Platform\MacOS\MacOSKeyMap.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\MacOS\QuartzDisplayDevice.cs">
+      <Link>OpenTK\Platform\MacOS\QuartzDisplayDevice.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\Windows\API.cs">
+      <Link>OpenTK\Platform\Windows\API.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\Windows\Wgl.cs">
+      <Link>OpenTK\Platform\Windows\Wgl.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\Windows\WinDisplayDevice.cs">
+      <Link>OpenTK\Platform\Windows\WinDisplayDevice.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\Windows\WinGLContext.cs">
+      <Link>OpenTK\Platform\Windows\WinGLContext.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\Windows\WinWindow.cs">
+      <Link>OpenTK\Platform\Windows\WinWindow.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\Windows\WinKeyMap.cs">
+      <Link>OpenTK\Platform\Windows\WinKeyMap.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\X11\API.cs">
+      <Link>OpenTK\Platform\X11\API.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\X11\Glx.cs">
+      <Link>OpenTK\Platform\X11\Glx.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\X11\Structs.cs">
+      <Link>OpenTK\Platform\X11\Structs.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\X11\X11DisplayDevice.cs">
+      <Link>OpenTK\Platform\X11\X11DisplayDevice.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\X11\X11GLContext.cs">
+      <Link>OpenTK\Platform\X11\X11GLContext.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\X11\X11Window.cs">
+      <Link>OpenTK\Platform\X11\X11Window.cs</Link>
+    </Compile>
+    <Compile Include="..\OpenTK\Platform\X11\X11KeyMap.cs">
+      <Link>OpenTK\Platform\X11\X11KeyMap.cs</Link>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\credits.txt">
@@ -350,10 +449,6 @@
     <Folder Include="Math" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\OpenTK\OpenTK.csproj">
-      <Project>{35FEE071-2DE6-48A1-9343-B5C1F202A12B}</Project>
-      <Name>OpenTK</Name>
-    </ProjectReference>
     <ProjectReference Include="..\InteropPatcher\InteropPatcher.csproj">
       <Project>{4A4110EE-21CA-4715-AF67-0C8B7CE0642F}</Project>
       <Name>InteropPatcher</Name>

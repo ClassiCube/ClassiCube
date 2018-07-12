@@ -18,11 +18,6 @@ namespace Launcher {
 				ErrorHandler.ShowDialog("Missing file", "ClassicalSharp.exe needs to be in the same folder as the launcher."); 
 				return;
 			}
-
-			if (!Platform.FileExists("OpenTK.dll")) { 
-				ErrorHandler.ShowDialog("Missing file", "OpenTK.dll needs to be in the same folder as the launcher."); 
-				return;
-			}
 			
 			// NOTE: we purposely put this in another method, as we need to ensure
 			// that we do not reference any OpenTK code directly in the main function

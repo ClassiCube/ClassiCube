@@ -22,11 +22,6 @@ namespace ClassicalSharp {
 				return;
 			}
 			
-			if (!Platform.FileExists("OpenTK.dll")) {
-				ErrorHandler.ShowDialog("Missing file", "OpenTK.dll needs to be in the same folder as the game");
-				return;
-			}
-			
 			// NOTE: we purposely put this in another method, as we need to ensure
 			// that we do not reference any OpenTK code directly in the main function
 			// (such as DisplayDevice), which otherwise causes native crash.
