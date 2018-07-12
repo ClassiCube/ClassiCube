@@ -24,6 +24,8 @@ namespace ClassicalSharp {
 		public abstract void UpdateMouse();
 		public abstract void RegrabMouse();
 		
+		public abstract void ResetRotOffset();
+		
 		public abstract void GetPickedBlock(PickedPos pos);
 	}
 	
@@ -90,6 +92,11 @@ namespace ClassicalSharp {
 			if (!game.Exists) return;
 			delta = Point.Empty;
 			CentreMousePosition();
+		}
+		
+		public override void ResetRotOffset() {
+            rotOffset.X = 0;
+            rotOffset.Y = 0;
 		}
 		
 		static readonly float sensiFactor = 0.0002f / 3 * Utils.Rad2Deg;

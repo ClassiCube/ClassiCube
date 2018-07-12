@@ -143,6 +143,8 @@ namespace ClassicalSharp {
 			int i = Cameras.IndexOf(Camera);
 			i = (i + 1) % Cameras.Count;
 			Camera = Cameras[i];
+			Camera.ResetRotOffset();
+			
 			if (!LocalPlayer.Hacks.CanUseThirdPersonCamera || !LocalPlayer.Hacks.Enabled)
 				Camera = Cameras[0];
 			UpdateProjection();
