@@ -31,9 +31,7 @@ using System.Drawing;
 using OpenTK.Input;
 using OpenTK.Platform;
 
-namespace OpenTK {	
-	/// <summary> Descibes an OS window. </summary>
-	public interface IWindowInfo : IDisposable { IntPtr WinHandle { get; } }
+namespace OpenTK {
 	
 	public class KeyPressEventArgs : EventArgs { public char KeyChar; }
 	
@@ -44,6 +42,9 @@ namespace OpenTK {
 		public abstract void SetClipboardText(string value);
 		public abstract Icon Icon { get; set; }
 		
+		/// <summary> Gets or sets the handle of the window. </summary>
+		public IntPtr WinHandle;
+		
 		/// <summary> Gets a System.Boolean that indicates whether this window has input focus. </summary>
 		public abstract bool Focused { get; }
 		
@@ -53,7 +54,6 @@ namespace OpenTK {
 		/// <summary> Gets a System.Boolean that indicates whether the window has been created and has not been destroyed. </summary>
 		public abstract bool Exists { get; }
 		
-		public abstract IWindowInfo WindowInfo { get; }
 		public abstract WindowState WindowState { get; set; }
 
 		/// <summary> Gets or sets a <see cref="System.Drawing.Rectangle"/> structure the contains the external bounds of this window, in screen coordinates.
@@ -141,12 +141,12 @@ namespace OpenTK {
 		}
 		
 		public void Dispose() {
-        	Dispose(true);
-        	GC.SuppressFinalize(this);
-        }
-        
-        protected abstract void Dispose(bool calledManually);
-        
-        ~INativeWindow() { Dispose(false); }
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+		
+		protected abstract void Dispose(bool calledManually);
+		
+		~INativeWindow() { Dispose(false); }
 	}
 }

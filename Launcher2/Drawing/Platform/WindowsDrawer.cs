@@ -49,7 +49,7 @@ namespace Launcher.Drawing {
 		
 		IntPtr dc, srcDC, srcHB;
 		public override void Init() {
-			dc = GetDC(info.WinHandle);
+			dc = GetDC(window.WinHandle);
 			srcDC = CreateCompatibleDC(dc);
 		}
 		
@@ -72,10 +72,10 @@ namespace Launcher.Drawing {
 		
 		public override void Resize() {
 			if (dc != IntPtr.Zero) {
-				ReleaseDC(info.WinHandle, dc);
+				ReleaseDC(window.WinHandle, dc);
 				DeleteObject(srcDC);
 			}
-			dc = GetDC(info.WinHandle);
+			dc = GetDC(window.WinHandle);
 			srcDC = CreateCompatibleDC(dc);
 		}
 		
@@ -90,13 +90,13 @@ namespace Launcher.Drawing {
 		
 		Graphics g;
 		public override void Init() {
-			g = Graphics.FromHwnd(info.WinHandle);
+			g = Graphics.FromHwnd(window.WinHandle);
 		}
 		
 		public override void Resize() {
 			if (g != null)
 				g.Dispose();
-			g = Graphics.FromHwnd(info.WinHandle);
+			g = Graphics.FromHwnd(window.WinHandle);
 		}
 		
 		public override void Redraw(Bitmap framebuffer, Rectangle r) {

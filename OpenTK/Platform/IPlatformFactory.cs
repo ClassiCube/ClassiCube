@@ -39,7 +39,7 @@ namespace OpenTK.Platform {
 
 		void InitDisplayDeviceDriver();
 
-		IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window);
+		IGraphicsContext CreateGLContext(GraphicsMode mode, INativeWindow window);
 	}
 	
 	public static class Factory {
@@ -71,8 +71,8 @@ namespace OpenTK.Platform.MacOS {
 			QuartzDisplayDevice.Init();
 		}
 
-		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
-			return new AglContext(mode, window);
+		public IGraphicsContext CreateGLContext(GraphicsMode mode, INativeWindow window) {
+			return new AglContext(mode, (CarbonWindow)window);
 		}
 	}
 }
@@ -88,8 +88,8 @@ namespace OpenTK.Platform.Windows {
 			WinDisplayDevice.Init();
 		}
 
-		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
-			return new WinGLContext(mode, (WinWindowInfo)window);
+		public IGraphicsContext CreateGLContext(GraphicsMode mode, INativeWindow window) {
+			return new WinGLContext(mode, (WinWindow)window);
 		}
 	}
 }
@@ -105,8 +105,8 @@ namespace OpenTK.Platform.X11 {
 			X11DisplayDevice.Init();
 		}
 
-		public IGraphicsContext CreateGLContext(GraphicsMode mode, IWindowInfo window) {
-			return new X11GLContext(mode, window);
+		public IGraphicsContext CreateGLContext(GraphicsMode mode, INativeWindow window) {
+			return new X11GLContext(mode, (X11Window)window);
 		}
 	}
 }

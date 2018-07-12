@@ -10,71 +10,64 @@ using OpenTK.Graphics;
 
 namespace OpenTK.Platform.X11 {
 	
-	/// \internal
-	/// <summary> Provides methods to create and control an opengl context on the X11 platform.
-	/// This class supports OpenTK, and is not intended for use by OpenTK programs. </summary>
 	internal sealed class X11GLContext : IGraphicsContext {
-		
-		IntPtr Display;
-		X11WindowInfo currentWindow;
+		X11Window cur;
 		bool vsync_supported;
 		int vsync_interval;
 
-		public X11GLContext(GraphicsMode mode, IWindowInfo window) {
-			if (mode == null)
-				throw new ArgumentNullException("mode");
-			if (window == null)
-				throw new ArgumentNullException("window");
-
+		public X11GLContext(GraphicsMode mode, X11Window window) {
 			Debug.Print( "Creating X11GLContext context: " );
-			currentWindow = (X11WindowInfo)window;
-			Display = API.DefaultDisplay;
-			XVisualInfo info = currentWindow.VisualInfo;
+			cur = window;
+			XVisualInfo info = cur.VisualInfo;
 			Mode = GetGraphicsMode( info );
+			
 			// Cannot pass a Property by reference.
-			ContextHandle = Glx.glXCreateContext(Display, ref info, IntPtr.Zero, true);
+			IntPtr display = API.DefaultDisplay;
+			ContextHandle = Glx.glXCreateContext(display, ref info, IntPtr.Zero, true);
 
 			if (ContextHandle == IntPtr.Zero) {
 				Debug.Print("failed. Trying indirect... ");
-				ContextHandle = Glx.glXCreateContext(Display, ref info, IntPtr.Zero, false);
+				ContextHandle = Glx.glXCreateContext(display, ref info, IntPtr.Zero, false);
 			}
 			
-			if (ContextHandle != IntPtr.Zero)
+			if (ContextHandle != IntPtr.Zero) {
 				Debug.Print("Context created (id: {0}).", ContextHandle);
-			else
+			} else {
 				throw new GraphicsContextException("Failed to create OpenGL context. Glx.CreateContext call returned 0.");
-
-			if (!Glx.glXIsDirect(Display, ContextHandle))
+			}
+			
+			if (!Glx.glXIsDirect(display, ContextHandle))
 				Debug.Print("Warning: Context is not direct.");
 		}
 
 		public override void SwapBuffers() {
-			if (Display == IntPtr.Zero || currentWindow.WindowHandle == IntPtr.Zero)
+			if (cur.WinHandle == IntPtr.Zero) {
 				throw new InvalidOperationException(
-					String.Format("Window is invalid. Display ({0}), Handle ({1}).", Display, currentWindow.WindowHandle));
-			Glx.glXSwapBuffers(Display, currentWindow.WindowHandle);
+					String.Format("Window is invalid. Handle ({0}).", cur.WinHandle));
+			}
+			Glx.glXSwapBuffers(API.DefaultDisplay, cur.WinHandle);
 		}
 
-		public override void MakeCurrent(IWindowInfo window) {
-			if (window == currentWindow && IsCurrent)
-				return;
+		public override void MakeCurrent(INativeWindow window) {
+			if (window == cur && IsCurrent) return;
 
 			if (window == null) {
-				Debug.Print("Releasing context {0} (Display: {1})... ", ContextHandle, Display);
-				if (!Glx.glXMakeCurrent(Display, IntPtr.Zero, IntPtr.Zero))
+				Debug.Print("Releasing context {0}... ", ContextHandle);
+				if (!Glx.glXMakeCurrent(API.DefaultDisplay, IntPtr.Zero, IntPtr.Zero))
 					Debug.Print("failed to release context");
 			} else {
-				X11WindowInfo w = (X11WindowInfo)window;
-				Debug.Print("Making context {0} current (Display: {1}, Screen: {2}, Window: {3})... ", ContextHandle, Display, w.Screen, w.WindowHandle);
+				X11Window w = (X11Window)window;
+				Debug.Print("Making context {0} current (Screen: {1}, Window: {2})... ", 
+				            ContextHandle, API.DefaultScreen, w.WinHandle);
 
-				if (Display == IntPtr.Zero || w.WindowHandle == IntPtr.Zero || ContextHandle == IntPtr.Zero)
+				if (w.WinHandle == IntPtr.Zero || ContextHandle == IntPtr.Zero)
 					throw new InvalidOperationException("Invalid display, window or context.");
 
-				if (!Glx.glXMakeCurrent(Display, w.WindowHandle, ContextHandle))
+				if (!Glx.glXMakeCurrent(API.DefaultDisplay, w.WinHandle, ContextHandle))
 					throw new GraphicsContextException("Failed to make context current.");
 
 			}
-			currentWindow = (X11WindowInfo)window;
+			cur = (X11Window)window;
 		}
 
 		public override bool IsCurrent {
@@ -107,7 +100,7 @@ namespace OpenTK.Platform.X11 {
 			if (ContextHandle == IntPtr.Zero) return;
 			
 			if (manuallyCalled) {
-				IntPtr display = Display;
+				IntPtr display = API.DefaultDisplay;
 				if (IsCurrent) {
 					Glx.glXMakeCurrent(display, IntPtr.Zero, IntPtr.Zero);
 				}

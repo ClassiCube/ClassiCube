@@ -15,28 +15,20 @@ namespace OpenTK.Platform.MacOS {
 		bool mVSync = false;
 		// Todo: keep track of which display adapter was specified when the context was created.
 		// IntPtr displayID;
-		
-		CarbonWindowInfo carbonWindow;
 		bool mIsFullscreen = false;
 
-		public AglContext(GraphicsMode mode, IWindowInfo window)
-		{
+		public AglContext(GraphicsMode mode, CarbonWindow window) {
 			Debug.Print("Window info: {0}", window);
-
 			Mode = mode;
-			this.carbonWindow = (CarbonWindowInfo)window;
-
-			CreateContext(mode, carbonWindow, true);
+			CreateContext(mode, window, true);
 		}
 
-		private void AddPixelAttrib(List<int> attribs, Agl.PixelFormatAttribute name, int value)
-		{
+		void AddPixelAttrib(List<int> attribs, Agl.PixelFormatAttribute name, int value) {
 			attribs.Add((int)name);
 			attribs.Add(value);
 		}
 		
-		void CreateContext(GraphicsMode mode, CarbonWindowInfo carbonWindow, bool fullscreen)
-		{
+		void CreateContext(GraphicsMode mode, CarbonWindow wind, bool fullscreen) {
 			List<int> attribs = new List<int>();
 
 			attribs.Add((int)Agl.PixelFormatAttribute.AGL_RGBA);
@@ -66,7 +58,7 @@ namespace OpenTK.Platform.MacOS {
 			// Choose a pixel format with the attributes we specified.
 			if (fullscreen) {
 				IntPtr gdevice;
-				IntPtr cgdevice = GetQuartzDevice(carbonWindow);
+				IntPtr cgdevice = GetQuartzDevice(wind);
 
 				if (cgdevice == IntPtr.Zero)
 					cgdevice = QuartzDisplayDevice.MainDisplay;
@@ -83,14 +75,13 @@ namespace OpenTK.Platform.MacOS {
 					Debug.Print("Failed to create full screen pixel format.");
 					Debug.Print("Trying again to create a non-fullscreen pixel format.");
 
-					CreateContext(mode, carbonWindow, false);
+					CreateContext(mode, wind, false);
 					return;
 				}
 			} else {
 				aglPixelFormat = Agl.aglChoosePixelFormat(IntPtr.Zero, 0, attribs.ToArray());
 				Agl.CheckReturnValue( 0, "aglChoosePixelFormat" );
 			}
-
 
 			Debug.Print("Creating AGL context.");
 
@@ -102,96 +93,52 @@ namespace OpenTK.Platform.MacOS {
 			Agl.aglDestroyPixelFormat(aglPixelFormat);
 			Agl.CheckReturnValue( 0, "aglDestroyPixelFormat" );
 			
-			SetDrawable(carbonWindow);
-			Update(carbonWindow);
+			SetDrawable(wind);
+			Update(wind);
 			
-			MakeCurrent(carbonWindow);
+			MakeCurrent(wind);
 
 			Debug.Print("context: {0}", ContextHandle);
 		}
 
-		private IntPtr GetQuartzDevice(CarbonWindowInfo carbonWindow)
-		{
-			IntPtr windowRef = carbonWindow.WindowRef;
-
-			if (!CarbonWindow.WindowRefs.ContainsKey(windowRef))
-				return IntPtr.Zero;
-
-			WeakReference nativeRef = CarbonWindow.WindowRefs[windowRef];
-			if (!nativeRef.IsAlive)
-				return IntPtr.Zero;
-
-			CarbonWindow window = nativeRef.Target as CarbonWindow;
-
-			if (window == null)
-				return IntPtr.Zero;
-
+		IntPtr GetQuartzDevice(CarbonWindow window) {
 			return QuartzDisplayDevice.HandleTo(window.TargetDisplayDevice);
 		}
 		
-		void SetDrawable(CarbonWindowInfo carbonWindow)
-		{
-			IntPtr windowPort = API.GetWindowPort(carbonWindow.WindowRef);
+		void SetDrawable(CarbonWindow window) {
+			IntPtr windowPort = API.GetWindowPort(window.WinHandle);
 			//Debug.Print("Setting drawable for context {0} to window port: {1}", Handle.Handle, windowPort);
 
 			byte code = Agl.aglSetDrawable(ContextHandle, windowPort);
 			Agl.CheckReturnValue( code, "aglSetDrawable" );
 		}
 		
-		public override void Update(IWindowInfo window)
-		{
-			CarbonWindowInfo carbonWindow = (CarbonWindowInfo)window;
+		public override void Update(INativeWindow window) {
+			CarbonWindow wind = (CarbonWindow)window;
 
-			if (carbonWindow.goFullScreenHack)
-			{
-				carbonWindow.goFullScreenHack = false;
-				CarbonWindow wind = GetCarbonWindow(carbonWindow);
-
-				if (wind != null)
-					wind.SetFullscreen(this);
-				else
-					Debug.Print("Could not find window!");
-
+			if (wind.goFullScreenHack) {
+				wind.goFullScreenHack = false;
+				wind.SetFullscreen(this);
 				return;
-			}
-			else if (carbonWindow.goWindowedHack)
-			{
-				carbonWindow.goWindowedHack = false;
-				CarbonWindow wind = GetCarbonWindow(carbonWindow);
-
-				if (wind != null)
-					wind.UnsetFullscreen(this);
-				else
-					Debug.Print("Could not find window!");
-
+			} else if (wind.goWindowedHack) {
+				wind.goWindowedHack = false;
+				wind.UnsetFullscreen(this);
 			}
 
-			if (mIsFullscreen)
-				return;
-			
-			SetDrawable(carbonWindow);
-
+			if (mIsFullscreen) return;
+			SetDrawable(wind);
 			Agl.aglUpdateContext(ContextHandle);
 		}
 
-		private CarbonWindow GetCarbonWindow(CarbonWindowInfo carbonWindow)
-		{
-			WeakReference r = CarbonWindow.WindowRefs[carbonWindow.WindowRef];
-			return r.IsAlive ? (CarbonWindow)r.Target : null;
-		}
-
 		bool firstFullScreen = false;
-		internal void SetFullScreen(CarbonWindowInfo info, out int width, out int height)
-		{
-			CarbonWindow wind = GetCarbonWindow(info);
-
+		internal void SetFullScreen(CarbonWindow wind, out int width, out int height) {
 			Debug.Print("Switching to full screen {0}x{1} on context {2}",
 			            wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, ContextHandle);
 
-			CG.CGDisplayCapture(GetQuartzDevice(info));
+			CG.CGDisplayCapture(GetQuartzDevice(wind));
 			byte code = Agl.aglSetFullScreen(ContextHandle, wind.TargetDisplayDevice.Width, wind.TargetDisplayDevice.Height, 0, 0);
 			Agl.CheckReturnValue(code, "aglSetFullScreen");
-			MakeCurrent(info);
+			MakeCurrent(wind);
 
 			width = wind.TargetDisplayDevice.Width;
 			height = wind.TargetDisplayDevice.Height;
@@ -201,24 +148,22 @@ namespace OpenTK.Platform.MacOS {
 			// and redo it as fullscreen.
 			if (!firstFullScreen) {
 				firstFullScreen = true;
-				UnsetFullScreen(info);
-				SetFullScreen(info, out width, out height);
+				UnsetFullScreen(wind);
+				SetFullScreen(wind, out width, out height);
 			}
-
 			mIsFullscreen = true;
 		}
 		
-		internal void UnsetFullScreen(CarbonWindowInfo windowInfo)
-		{
+		internal void UnsetFullScreen(CarbonWindow window) {
 			Debug.Print("Unsetting AGL fullscreen.");
 			byte code = Agl.aglSetDrawable(ContextHandle, IntPtr.Zero);
 			Agl.CheckReturnValue( code, "aglSetDrawable" );
 			code = Agl.aglUpdateContext(ContextHandle);
 			Agl.CheckReturnValue( code, "aglUpdateContext" );
 			
-			CG.CGDisplayRelease(GetQuartzDevice(windowInfo));
+			CG.CGDisplayRelease(GetQuartzDevice(window));
 			Debug.Print("Resetting drawable.");
-			SetDrawable(windowInfo);
+			SetDrawable(window);
 
 			mIsFullscreen = false;
 		}
@@ -231,8 +176,8 @@ namespace OpenTK.Platform.MacOS {
 			Agl.CheckReturnValue( 0, "aglSwapBuffers" );
 		}
 		
-		public override void MakeCurrent( IWindowInfo window ) {
-			byte code = Agl.aglSetCurrentContext( ContextHandle );
+		public override void MakeCurrent(INativeWindow window) {
+			byte code = Agl.aglSetCurrentContext(ContextHandle);
 			Agl.CheckReturnValue(code, "aglSetCurrentContext" );
 		}
 

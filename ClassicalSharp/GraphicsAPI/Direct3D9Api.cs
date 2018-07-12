@@ -33,7 +33,7 @@ namespace ClassicalSharp.GraphicsAPI {
 
 		public Direct3D9Api(Game game) {
 			MinZNear = 0.05f;
-			IntPtr windowHandle = game.window.WindowInfo.WinHandle;
+			IntPtr winHandle = game.window.WinHandle;
 			d3d = new Direct3D();
 			const int adapter = 0; // default adapter
 			InitFields();
@@ -41,19 +41,19 @@ namespace ClassicalSharp.GraphicsAPI {
 			
 			PresentParameters args = GetPresentArgs(640, 480);
 			try {
-				device = d3d.CreateDevice(adapter, DeviceType.Hardware, windowHandle, createFlags, args);
+				device = d3d.CreateDevice(adapter, DeviceType.Hardware, winHandle, createFlags, args);
 			} catch (SharpDXException) {
 				createFlags = CreateFlags.MixedVertexProcessing;
 				try {
-					device = d3d.CreateDevice(adapter, DeviceType.Hardware, windowHandle, createFlags, args);
+					device = d3d.CreateDevice(adapter, DeviceType.Hardware, winHandle, createFlags, args);
 				} catch (SharpDXException) {
 					createFlags = CreateFlags.SoftwareVertexProcessing;
-					device = d3d.CreateDevice(adapter, DeviceType.Hardware, windowHandle, createFlags, args);
+					device = d3d.CreateDevice(adapter, DeviceType.Hardware, winHandle, createFlags, args);
 				}
 			}
 			
 			CustomMipmapsLevels = true;
-			caps = device.Capabilities;
+			caps = device.GetCapabilities();
 			SetDefaultRenderStates();
 			InitCommon();
 		}

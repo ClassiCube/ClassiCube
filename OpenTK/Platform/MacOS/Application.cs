@@ -107,8 +107,7 @@ namespace OpenTK.Platform.MacOS.Carbon
 
 				case EventClass.Keyboard:
 				case EventClass.Mouse:
-					if (WindowEventHandler != null)
-					{
+					if (WindowEventHandler != null) {
 						return WindowEventHandler.DispatchEvent(inCaller, inEvent, evt, userData);
 					}
 					break;

@@ -120,17 +120,6 @@ namespace OpenTK {
 		}
 		
 		public static void CreatePerspectiveFieldOfView(float fovy, float aspect, float zNear, float zFar, out Matrix4 result) {
-			if (fovy <= 0 || fovy > Math.PI)
-				throw new ArgumentOutOfRangeException("fovy");
-			if (aspect <= 0)
-				throw new ArgumentOutOfRangeException("aspect");
-			if (zNear <= 0)
-				throw new ArgumentOutOfRangeException("zNear");
-			if (zFar <= 0)
-				throw new ArgumentOutOfRangeException("zFar");
-			if (zNear >= zFar)
-				throw new ArgumentOutOfRangeException("zNear");
-			
 			float yMax = zNear * (float)System.Math.Tan(0.5f * fovy);
 			float yMin = -yMax;
 			float xMin = yMin * aspect;
@@ -140,13 +129,6 @@ namespace OpenTK {
 		}
 		
 		public static void CreatePerspectiveOffCenter(float left, float right, float bottom, float top, float zNear, float zFar, out Matrix4 result) {
-			if (zNear <= 0)
-				throw new ArgumentOutOfRangeException("zNear");
-			if (zFar <= 0)
-				throw new ArgumentOutOfRangeException("zFar");
-			if (zNear >= zFar)
-				throw new ArgumentOutOfRangeException("zNear");
-			
 			float x = (2.0f * zNear) / (right - left);
 			float y = (2.0f * zNear) / (top - bottom);
 			float a = (right + left) / (right - left);

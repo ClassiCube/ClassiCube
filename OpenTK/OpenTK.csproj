@@ -63,7 +63,6 @@
     <Compile Include="Input\MouseButton.cs" />
     <Compile Include="Input\Mouse.cs" />
     <Compile Include="Math\Matrix4.cs" />
-    <Compile Include="Math\Vector2.cs" />
     <Compile Include="Math\Vector3.cs" />
     <Compile Include="Math\Vector4.cs" />
     <Compile Include="Platform\Configuration.cs" />
@@ -76,7 +75,6 @@
     <Compile Include="Platform\MacOS\CarbonBindings\MacOSKeys.cs" />
     <Compile Include="Platform\MacOS\CarbonBindings\QuartzDisplayServicesAPI.cs" />
     <Compile Include="Platform\MacOS\CarbonWindow.cs" />
-    <Compile Include="Platform\MacOS\CarbonWindowInfo.cs" />
     <Compile Include="Platform\MacOS\MacOSException.cs" />
     <Compile Include="Platform\MacOS\MacOSKeyMap.cs" />
     <Compile Include="Platform\MacOS\QuartzDisplayDevice.cs" />
@@ -86,7 +84,6 @@
     <Compile Include="Platform\Windows\WinGLContext.cs" />
     <Compile Include="Platform\Windows\WinWindow.cs" />
     <Compile Include="Platform\Windows\WinKeyMap.cs" />
-    <Compile Include="Platform\Windows\WinWindowInfo.cs" />
     <Compile Include="Platform\X11\API.cs" />
     <Compile Include="Platform\X11\Glx.cs" />
     <Compile Include="Platform\X11\Structs.cs" />
@@ -94,7 +91,6 @@
     <Compile Include="Platform\X11\X11GLContext.cs" />
     <Compile Include="Platform\X11\X11Window.cs" />
     <Compile Include="Platform\X11\X11KeyMap.cs" />
-    <Compile Include="Platform\X11\X11WindowInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WindowState.cs" />
   </ItemGroup>

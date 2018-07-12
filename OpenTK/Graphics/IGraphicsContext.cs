@@ -23,7 +23,7 @@ namespace OpenTK.Graphics {
         /// <para>OpenGL commands in one thread, affect the GraphicsContext which is current in that thread.</para>
         /// <para>It is an error to issue an OpenGL command in a thread without a current GraphicsContext.</para>
         /// </remarks>
-        public abstract void MakeCurrent(IWindowInfo window);
+        public abstract void MakeCurrent(INativeWindow window);
 
         /// <summary> Gets a <see cref="System.Boolean"/> indicating whether this instance is current in the calling thread. </summary>
         public abstract bool IsCurrent { get; }
@@ -33,7 +33,7 @@ namespace OpenTK.Graphics {
 
         /// <summary> Updates the graphics context.  This must be called when the region the graphics context
         /// is drawn to is resized. </summary>
-        public virtual void Update(IWindowInfo window) { }
+        public virtual void Update(INativeWindow window) { }
 
         /// <summary> Gets the GraphicsMode of this instance. </summary>
         public GraphicsMode Mode;

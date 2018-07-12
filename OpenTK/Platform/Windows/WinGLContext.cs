@@ -11,13 +11,7 @@ using OpenTK.Graphics;
 
 namespace OpenTK.Platform.Windows {
 	
-	/// \internal
-	/// <summary>
-	/// Provides methods to create and control an opengl context on the Windows platform.
-	/// This class supports OpenTK, and is not intended for use by OpenTK programs.
-	/// </summary>
-	internal sealed class WinGLContext : IGraphicsContext
-	{
+	internal sealed class WinGLContext : IGraphicsContext {
 		static IntPtr opengl32Handle;
 		const string opengl32Name = "OPENGL32.DLL";
 		bool vsync_supported;
@@ -33,16 +27,11 @@ namespace OpenTK.Platform.Windows {
 			}
 		}
 
-		public WinGLContext(GraphicsMode format, WinWindowInfo window) {
-			if (window == null)
-				throw new ArgumentNullException("window", "Must point to a valid window.");
-			if (window.winHandle == IntPtr.Zero)
-				throw new ArgumentException("window", "Must be a valid window.");
-
-			Debug.Print( "OpenGL will be bound to handle: {0}", window.winHandle );
-			SelectGraphicsModePFD(format, (WinWindowInfo)window);
-			Debug.Print( "Setting pixel format... " );
-			SetGraphicsModePFD(format, (WinWindowInfo)window);
+		public WinGLContext(GraphicsMode format, WinWindow window) {
+			Debug.Print("OpenGL will be bound to handle: {0}", window.WinHandle);
+			SelectGraphicsModePFD(format, window);
+			Debug.Print("Setting pixel format... " );
+			SetGraphicsModePFD(format, window);
 
 			ContextHandle = Wgl.wglCreateContext(window.DeviceContext);
 			if (ContextHandle == IntPtr.Zero)
@@ -60,21 +49,21 @@ namespace OpenTK.Platform.Windows {
 		}
 
 		IntPtr dc;
-		public override void MakeCurrent(IWindowInfo window) {
+		public override void MakeCurrent(INativeWindow window) {
 			bool success;
 
 			if (window != null) {
-				if (((WinWindowInfo)window).winHandle == IntPtr.Zero)
+				if (window.WinHandle == IntPtr.Zero)
 					throw new ArgumentException("window", "Must point to a valid window.");
-
-				success = Wgl.wglMakeCurrent(((WinWindowInfo)window).DeviceContext, ContextHandle);
+				success = Wgl.wglMakeCurrent(((WinWindow)window).DeviceContext, ContextHandle);
 			} else {
 				success = Wgl.wglMakeCurrent(IntPtr.Zero, IntPtr.Zero);
 			}
 
-			if (!success)
+			if (!success) {
 				throw new GraphicsContextException(String.Format(
 					"Failed to make context {0} current. Error: {1}", this, Marshal.GetLastWin32Error()));
+			}
 			dc = Wgl.wglGetCurrentDC();
 		}
 
@@ -82,7 +71,6 @@ namespace OpenTK.Platform.Windows {
 			get { return Wgl.wglGetCurrentContext() == ContextHandle; }
 		}
 
-		/// <summary> Gets or sets a System.Boolean indicating whether SwapBuffer calls are synced to the screen refresh rate. </summary>
 		public override bool VSync {
 			get { return vsync_supported && Wgl.wglGetSwapIntervalEXT() != 0; }
 			set {
@@ -106,7 +94,7 @@ namespace OpenTK.Platform.Windows {
 
 
 		int modeIndex;
-		void SetGraphicsModePFD(GraphicsMode mode, WinWindowInfo window) {
+		void SetGraphicsModePFD(GraphicsMode mode, WinWindow window) {
 			// Find out what we really got as a format:
 			IntPtr deviceContext = window.DeviceContext;
 			PixelFormatDescriptor pfd = new PixelFormatDescriptor();
@@ -125,7 +113,7 @@ namespace OpenTK.Platform.Windows {
 					"Requested GraphicsMode not available. SetPixelFormat error: {0}", Marshal.GetLastWin32Error()));
 		}
 
-		void SelectGraphicsModePFD(GraphicsMode format, WinWindowInfo window) {
+		void SelectGraphicsModePFD(GraphicsMode format, WinWindow window) {
 			IntPtr deviceContext = window.DeviceContext;
 			Debug.Print("Device context: {0}", deviceContext);
 			ColorFormat color = format.ColorFormat;

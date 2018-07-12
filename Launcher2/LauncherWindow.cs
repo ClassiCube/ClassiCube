@@ -176,7 +176,7 @@ namespace Launcher {
 			Drawer = new GdiPlusDrawer2D();
 			Init();
 			TryLoadTexturePack();
-			platformDrawer.info = Window.WindowInfo;
+			platformDrawer.window = Window;
 			platformDrawer.Init();
 			
 			Downloader = new AsyncDownloader(Drawer);

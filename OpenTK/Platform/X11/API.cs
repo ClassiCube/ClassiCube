@@ -208,23 +208,23 @@ namespace OpenTK.Platform.X11 {
 
 		static readonly IntPtr CopyFromParent = IntPtr.Zero;
 
-		public static void SendNetWMMessage(X11WindowInfo window, IntPtr message_type, IntPtr l0, IntPtr l1, IntPtr l2)
+		internal static void SendNetWMMessage(X11Window window, IntPtr message_type, IntPtr l0, IntPtr l1, IntPtr l2)
 		{
 			XEvent xev = new XEvent();
 			xev.ClientMessageEvent.type = XEventName.ClientMessage;
 			xev.ClientMessageEvent.send_event = true;
-			xev.ClientMessageEvent.window = window.WindowHandle;
+			xev.ClientMessageEvent.window = window.WinHandle;
 			xev.ClientMessageEvent.message_type = message_type;
 			xev.ClientMessageEvent.format = 32;
 			xev.ClientMessageEvent.ptr1 = l0;
 			xev.ClientMessageEvent.ptr2 = l1;
 			xev.ClientMessageEvent.ptr3 = l2;
 
-			XSendEvent(window.Display, window.RootWindow, false,
+			XSendEvent(API.DefaultDisplay, API.RootWindow, false,
 			           EventMask.SubstructureRedirectMask | EventMask.SubstructureNotifyMask, ref xev);
 		}
 
-		public static IntPtr CreatePixmapFromImage(Display display, System.Drawing.Bitmap image)
+		internal static IntPtr CreatePixmapFromImage(Display display, System.Drawing.Bitmap image)
 		{
 			int width = image.Width, height = image.Height;
 
@@ -345,7 +345,9 @@ namespace OpenTK.Platform.X11 {
 		}
 
 		public static Display DefaultDisplay;
-		internal static int ScreenCount;
+		public static int DefaultScreen;
+		public static IntPtr RootWindow;
+		public static int ScreenCount;
 
 		static API() {
 			DefaultDisplay = API.XOpenDisplay(IntPtr.Zero);
@@ -353,6 +355,8 @@ namespace OpenTK.Platform.X11 {
 				throw new PlatformException("Could not establish connection to the X-Server.");
 
 			ScreenCount = API.XScreenCount(DefaultDisplay);
+			DefaultScreen = API.XDefaultScreen(DefaultDisplay);
+			RootWindow = API.XRootWindow(DefaultDisplay, DefaultScreen);
 			Debug.Print("Display connection: {0}, Screen count: {1}", DefaultDisplay, ScreenCount);
 
 			//AppDomain.CurrentDomain.ProcessExit += new EventHandler(CurrentDomain_ProcessExit);

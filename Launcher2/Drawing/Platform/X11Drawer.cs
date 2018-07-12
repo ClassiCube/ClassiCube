@@ -9,32 +9,33 @@ namespace Launcher.Drawing {
 		
 		IntPtr gc;
 		public override void Init() {
-			gc = API.XCreateGC(API.DefaultDisplay, info.WinHandle, IntPtr.Zero, IntPtr.Zero);
+			gc = API.XCreateGC(API.DefaultDisplay, window.WinHandle, IntPtr.Zero, IntPtr.Zero);
 		}
 		
 		public override void Resize() {
 			if (gc != IntPtr.Zero) API.XFreeGC(API.DefaultDisplay, gc);
-			gc = API.XCreateGC(API.DefaultDisplay, info.WinHandle, IntPtr.Zero, IntPtr.Zero);
+			gc = API.XCreateGC(API.DefaultDisplay, window.WinHandle, IntPtr.Zero, IntPtr.Zero);
 		}
 		
 		public override void Redraw(Bitmap framebuffer, Rectangle r) {
-			X11WindowInfo x11Info = (X11WindowInfo)info;
+			X11Window x11Win = (X11Window)window;
 			using (FastBitmap bmp = new FastBitmap(framebuffer, true, true)) {
-				switch(x11Info.VisualInfo.Depth) {
-					case 32: DrawDirect(bmp, 32, x11Info, r); break;
-					case 24: DrawDirect(bmp, 24, x11Info, r); break;
+				switch (x11Win.VisualInfo.Depth) {
+					case 32: DrawDirect(bmp, 32, x11Win, r); break;
+					case 24: DrawDirect(bmp, 24, x11Win, r); break;
 					//case 16: Draw16Bits(fastBmp, x11Info); break;
 					//case 15: Draw15Bits(fastBmp, x11Info); break;
-					default: throw new NotSupportedException("Unsupported bits per pixel: " + x11Info.VisualInfo.Depth);
+					default: throw new NotSupportedException("Unsupported bits per pixel: "
+					                                         + x11Win.VisualInfo.Depth);
 				}
 			}
 		}
 		
-		void DrawDirect(FastBitmap bmp, uint bits, X11WindowInfo x11Info, Rectangle r) {
-			IntPtr image = API.XCreateImage(API.DefaultDisplay, x11Info.VisualInfo.Visual,
+		void DrawDirect(FastBitmap bmp, uint bits, X11Window win, Rectangle r) {
+			IntPtr image = API.XCreateImage(API.DefaultDisplay, win.VisualInfo.Visual,
 			                                bits, ImageFormat.ZPixmap, 0, bmp.Scan0,
 			                                bmp.Width, bmp.Height, 32, 0);
-			API.XPutImage(API.DefaultDisplay, x11Info.WindowHandle, gc, image,
+			API.XPutImage(API.DefaultDisplay, win.WinHandle, gc, image,
 			              r.X, r.Y, r.X, r.Y, r.Width, r.Height);
 			API.XFree(image);
 		}

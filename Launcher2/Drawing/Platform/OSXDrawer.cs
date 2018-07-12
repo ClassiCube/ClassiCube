@@ -10,11 +10,11 @@ namespace Launcher.Drawing {
 		
 		IntPtr windowPort;
 		public override void Init() {
-			windowPort = OSX.API.GetWindowPort(info.WinHandle);
+			windowPort = OSX.API.GetWindowPort(window.WinHandle);
 		}
 		
 		public override void Resize() {
-			windowPort = OSX.API.GetWindowPort(info.WinHandle);
+			windowPort = OSX.API.GetWindowPort(window.WinHandle);
 		}
 		
 		public override void Redraw(Bitmap framebuffer, Rectangle r) {			

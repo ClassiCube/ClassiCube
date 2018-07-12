@@ -4,8 +4,13 @@ using OpenTK;
 
 namespace ClassicalSharp {
 	
+	public struct Vector2 {
+		public float X, Y;
+		public Vector2(float x, float y) { X = x; Y = y; }
+	}
+	
 	/// <summary> Represents a 3D integer vector. </summary>
-	public struct Vector3I {
+	public struct Vector3I : IEquatable<Vector3I> {
 		public static Vector3I MinusOne = new Vector3I(-1, -1, -1);
 		
 		public int X, Y, Z;

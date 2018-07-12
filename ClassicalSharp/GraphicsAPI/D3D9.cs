@@ -111,12 +111,9 @@ namespace SharpDX.Direct3D9 {
 		}
 		
 		public AdapterDetails GetAdapterIdentifier( int adapter ) {
-			AdapterDetails.Native identifierNative = new AdapterDetails.Native();
-			int res = Interop.Calli(comPointer, adapter, 0, (IntPtr)(void*)&identifierNative,(*(IntPtr**)comPointer)[5]);
-			if( res < 0 ) { throw new SharpDXException( res ); }
-			
 			AdapterDetails identifier = new AdapterDetails();
-			identifier.MarshalFrom(ref identifierNative);
+			int res = Interop.Calli(comPointer, adapter, 0, (IntPtr)(void*)&identifier,(*(IntPtr**)comPointer)[5]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
 			return identifier;
 		}
 		
@@ -158,13 +155,11 @@ namespace SharpDX.Direct3D9 {
 			if( res < 0 ) { throw new SharpDXException( res ); }
 		}
 		
-		public Capabilities Capabilities {
-			get {
-				Capabilities caps = new Capabilities();
-				int res = Interop.Calli(comPointer, (IntPtr)(void*)&caps,(*(IntPtr**)comPointer)[7]);
-				if( res < 0 ) { throw new SharpDXException( res ); }
-				return caps;
-			}
+		public Capabilities GetCapabilities() {
+			Capabilities caps = new Capabilities();
+			int res = Interop.Calli(comPointer, (IntPtr)(void*)&caps,(*(IntPtr**)comPointer)[7]);
+			if( res < 0 ) { throw new SharpDXException( res ); }
+			return caps;
 		}
 		
 		public int Reset(PresentParameters presentParams) {
@@ -296,7 +291,19 @@ namespace SharpDX.Direct3D9 {
 		}
 	}
 
-	public unsafe class AdapterDetails {
+	[StructLayout(LayoutKind.Sequential)]
+	public unsafe struct AdapterDetails {
+		public fixed byte RawDriver[512];
+		public fixed byte RawDescription[512];
+		public fixed byte RawDeviceName[32];
+		public long RawDriverVersion;
+		public int VendorId;
+		public int DeviceId;
+		public int SubsystemId;
+		public int Revision;
+		public Guid DeviceIdentifier;
+		public int WhqlLevel;
+		
 		public Version DriverVersion {
 			get {
 				return new Version((int)(RawDriverVersion >> 48) & 0xFFFF, (int)(RawDriverVersion >> 32) & 0xFFFF,
@@ -304,48 +311,10 @@ namespace SharpDX.Direct3D9 {
 			}
 		}
 		
-		public string Driver;
-		public string Description;
-		public string DeviceName;
-		internal long RawDriverVersion;
-		
-		public int VendorId;
-		public int DeviceId;
-		public int SubsystemId;
-		public int Revision;
-		
-		public Guid DeviceIdentifier;
-		public int WhqlLevel;
-
-		[StructLayout(LayoutKind.Sequential)]
-		internal struct Native {
-			public fixed byte Driver[512];
-			public fixed byte Description[512];
-			public fixed byte DeviceName[32];
-			public long RawDriverVersion;
-			public int VendorId;
-			public int DeviceId;
-			public int SubsystemId;
-			public int Revision;
-			public Guid DeviceIdentifier;
-			public int WhqlLevel;
-		}
-		
-		internal void MarshalFrom(ref Native native) {
-			fixed (void* __ptr = native.Driver)
-				Driver = Marshal.PtrToStringAnsi((IntPtr)__ptr);
-			fixed (void* __ptr = native.Description)
-				Description = Marshal.PtrToStringAnsi((IntPtr)__ptr);
-			fixed (void* __ptr = native.DeviceName)
-				DeviceName = Marshal.PtrToStringAnsi((IntPtr)__ptr);
-			
-			RawDriverVersion = native.RawDriverVersion;
-			VendorId = native.VendorId;
-			DeviceId = native.DeviceId;
-			SubsystemId = native.SubsystemId;
-			Revision = native.Revision;
-			DeviceIdentifier = native.DeviceIdentifier;
-			WhqlLevel = native.WhqlLevel;
+		public string Description {
+			get {
+				fixed (byte* ptr = RawDescription) return new string((sbyte*)ptr);
+			}
 		}
 	}
 	

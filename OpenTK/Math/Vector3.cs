@@ -44,18 +44,6 @@ namespace OpenTK {
 			X = value; Y = value; Z = value;
 		}
 
-		public Vector3(Vector2 v) {
-			X = v.X; Y = v.Y; Z = 0.0f;
-		}
-
-		public Vector3(Vector3 v) {
-			X = v.X; Y = v.Y; Z = v.Z;
-		}
-
-		public Vector3(Vector4 v) {
-			X = v.X; Y = v.Y; Z = v.Z;
-		}
-
 		public float Length {
 			get { return (float)Math.Sqrt(X * X + Y * Y + Z * Z); }
 		}

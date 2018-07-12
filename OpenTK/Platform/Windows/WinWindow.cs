@@ -32,21 +32,14 @@ using System.Text;
 using System.Threading;
 using OpenTK.Input;
 
-namespace OpenTK.Platform.Windows
-{
-	/// <summary>
-	/// Drives GameWindow on Windows.
-	/// This class supports OpenTK, and is not intended for use by OpenTK programs.
-	/// </summary>
-	internal sealed class WinWindow : INativeWindow
-	{
+namespace OpenTK.Platform.Windows {
+	internal sealed class WinWindow : INativeWindow {
 		const ExtendedWindowStyle ParentStyleEx = ExtendedWindowStyle.WindowEdge | ExtendedWindowStyle.ApplicationWindow;
 		readonly IntPtr Instance = Marshal.GetHINSTANCE(typeof(WinWindow).Module);
 		readonly IntPtr ClassName = Marshal.StringToHGlobalAuto("CS_WindowClass");
 		readonly WindowProcedure WindowProcedureDelegate;
 
 		bool class_registered, disposed, exists;
-		WinWindowInfo window;
 		WindowState windowState = WindowState.Normal;
 		bool focused;
 		bool invisible_since_creation; // Set by WindowsMessage.CREATE and consumed by Visible = true (calls BringWindowToFront).
@@ -62,8 +55,17 @@ namespace OpenTK.Platform.Windows
 		public WinWindow(int x, int y, int width, int height, string title, DisplayDevice device) {
 			WindowProcedureDelegate = WindowProcedure;
 			UngroupFromTaskbar();
-			window = new WinWindowInfo(CreateWindow(x, y, width, height, title, device));
+			WinHandle = CreateWindow(x, y, width, height, title, device);
 			exists = true;
+		}
+		
+		IntPtr dc;
+		public IntPtr DeviceContext {
+			get {
+				if (dc == IntPtr.Zero) dc = API.GetDC(WinHandle);
+				//dc = Functions.GetWindowDC(winHandle);
+				return dc;
+			}
 		}
 		
 		void UngroupFromTaskbar() {
@@ -100,7 +102,7 @@ namespace OpenTK.Platform.Windows
 
 				case WindowMessage.WINDOWPOSCHANGED:
 					WindowPosition* pos = (WindowPosition*)lParam;
-					if (window != null && pos->hwnd == window.winHandle) {
+					if (pos->hwnd == WinHandle) {
 						Point new_location = new Point(pos->x, pos->y);
 						if (Location != new_location) {
 							bounds.Location = new_location;
@@ -116,7 +118,7 @@ namespace OpenTK.Platform.Windows
 							API.GetClientRect(handle, out rect);
 							client_rectangle = rect.ToRectangle();
 
-							API.SetWindowPos(window.winHandle, IntPtr.Zero,
+							API.SetWindowPos(WinHandle, IntPtr.Zero,
 							                 bounds.X, bounds.Y, bounds.Width, bounds.Height,
 							                 SetWindowPosFlags.NOZORDER | SetWindowPosFlags.NOOWNERZORDER |
 							                 SetWindowPosFlags.NOACTIVATE | SetWindowPosFlags.NOSENDCHANGING);
@@ -312,7 +314,7 @@ namespace OpenTK.Platform.Windows
 					exists = false;
 
 					API.UnregisterClass(ClassName, Instance);
-					window.Dispose();
+					Dispose();
 					RaiseClosed();
 					break;
 
@@ -371,8 +373,8 @@ namespace OpenTK.Platform.Windows
 		/// <summary> Starts the teardown sequence for the current window. </summary>
 		void DestroyWindow() {
 			if (exists) {
-				Debug.Print("Destroying window: {0}", window.winHandle);
-				API.DestroyWindow(window.winHandle);
+				Debug.Print("Destroying window: {0}", WinHandle);
+				API.DestroyWindow(WinHandle);
 				exists = false;
 			}
 		}
@@ -396,7 +398,7 @@ namespace OpenTK.Platform.Windows
 		public override unsafe string GetClipboardText() {
 			// retry up to 10 times
 			for (int i = 0; i < 10; i++) {
-				if (!API.OpenClipboard(window.winHandle)) {
+				if (!API.OpenClipboard(WinHandle)) {
 					Thread.Sleep(100);
 					continue;
 				}
@@ -423,7 +425,7 @@ namespace OpenTK.Platform.Windows
 			UIntPtr dstSize = (UIntPtr)((value.Length + 1) * Marshal.SystemDefaultCharSize);
 			// retry up to 10 times
 			for (int i = 0; i < 10; i++) {
-				if (!API.OpenClipboard(window.winHandle)) {
+				if (!API.OpenClipboard(WinHandle)) {
 					Thread.Sleep(100);
 					continue;
 				}
@@ -454,7 +456,7 @@ namespace OpenTK.Platform.Windows
 			get { return bounds; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
-				API.SetWindowPos(window.winHandle, IntPtr.Zero, value.X, value.Y, value.Width, value.Height, 0);
+				API.SetWindowPos(WinHandle, IntPtr.Zero, value.X, value.Y, value.Width, value.Height, 0);
 			}
 		}
 
@@ -462,7 +464,7 @@ namespace OpenTK.Platform.Windows
 			get { return Bounds.Location; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
-				API.SetWindowPos(window.winHandle, IntPtr.Zero, value.X, value.Y, 0, 0, SetWindowPosFlags.NOSIZE);
+				API.SetWindowPos(WinHandle, IntPtr.Zero, value.X, value.Y, 0, 0, SetWindowPosFlags.NOSIZE);
 			}
 		}
 
@@ -470,7 +472,7 @@ namespace OpenTK.Platform.Windows
 			get { return Bounds.Size; }
 			set {
 				// Note: the bounds variable is updated when the resize/move message arrives.
-				API.SetWindowPos(window.winHandle, IntPtr.Zero, 0, 0, value.Width, value.Height, SetWindowPosFlags.NOMOVE);
+				API.SetWindowPos(WinHandle, IntPtr.Zero, 0, 0, value.Width, value.Height, SetWindowPosFlags.NOMOVE);
 			}
 		}
 
@@ -489,7 +491,7 @@ namespace OpenTK.Platform.Windows
 		public override Size ClientSize {
 			get { return ClientRectangle.Size; }
 			set {
-				WindowStyle style = (WindowStyle)API.GetWindowLong(window.winHandle, GetWindowLongOffsets.STYLE);
+				WindowStyle style = (WindowStyle)API.GetWindowLong(WinHandle, GetWindowLongOffsets.STYLE);
 				Win32Rectangle rect = Win32Rectangle.From(value);
 				API.AdjustWindowRect(ref rect, style, false);
 				Size = new Size(rect.Width, rect.Height);
@@ -500,12 +502,12 @@ namespace OpenTK.Platform.Windows
 			get { return icon; }
 			set {
 				icon = value;
-				if (window.winHandle != IntPtr.Zero)
+				if (WinHandle != IntPtr.Zero)
 				{
 					//Icon small = new Icon( value, 16, 16 );
 					//GC.KeepAlive( small );
-					API.SendMessage(window.winHandle, WindowMessage.SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
-					API.SendMessage(window.winHandle, WindowMessage.SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
+					API.SendMessage(WinHandle, WindowMessage.SETICON, (IntPtr)0, icon == null ? IntPtr.Zero : value.Handle);
+					API.SendMessage(WinHandle, WindowMessage.SETICON, (IntPtr)1, icon == null ? IntPtr.Zero : value.Handle);
 				}
 			}
 		}
@@ -515,16 +517,16 @@ namespace OpenTK.Platform.Windows
 		}
 
 		public override bool Visible {
-			get { return API.IsWindowVisible(window.winHandle); }
+			get { return API.IsWindowVisible(WinHandle); }
 			set {
 				if (value) {
-					API.ShowWindow(window.winHandle, ShowWindowCommand.SHOW);
+					API.ShowWindow(WinHandle, ShowWindowCommand.SHOW);
 					if (invisible_since_creation) {
-						API.BringWindowToTop(window.winHandle);
-						API.SetForegroundWindow(window.winHandle);
+						API.BringWindowToTop(WinHandle);
+						API.SetForegroundWindow(WinHandle);
 					}
 				} else {
-					API.ShowWindow(window.winHandle, ShowWindowCommand.HIDE);
+					API.ShowWindow(WinHandle, ShowWindowCommand.HIDE);
 				}
 			}
 		}
@@ -532,7 +534,7 @@ namespace OpenTK.Platform.Windows
 		public override bool Exists { get { return exists; } }
 
 		public override void Close() {
-			API.PostMessage(window.winHandle, WindowMessage.CLOSE, IntPtr.Zero, IntPtr.Zero);
+			API.PostMessage(WinHandle, WindowMessage.CLOSE, IntPtr.Zero, IntPtr.Zero);
 		}
 
 		public override WindowState WindowState {
@@ -574,12 +576,12 @@ namespace OpenTK.Platform.Windows
 						SetHiddenBorder( true );
 						
 						command = ShowWindowCommand.MAXIMIZE;
-						API.SetForegroundWindow(window.winHandle);
+						API.SetForegroundWindow(WinHandle);
 						break;
 				}
 
 				if( command != 0 )
-					API.ShowWindow(window.winHandle, command);
+					API.ShowWindow(WinHandle, command);
 
 				// Restore previous window border or apply pending border change when leaving fullscreen mode.
 				if( exiting_fullscreen )
@@ -618,8 +620,8 @@ namespace OpenTK.Platform.Windows
 				if( was_visible )
 					Visible = false;
 
-				API.SetWindowLong(window.winHandle, GetWindowLongOffsets.STYLE, (int)style);
-				API.SetWindowPos(window.winHandle, IntPtr.Zero, 0, 0, rect.Width, rect.Height,
+				API.SetWindowLong(WinHandle, GetWindowLongOffsets.STYLE, (int)style);
+				API.SetWindowPos(WinHandle, IntPtr.Zero, 0, 0, rect.Width, rect.Height,
 				                 SetWindowPosFlags.NOMOVE | SetWindowPosFlags.NOZORDER |
 				                 SetWindowPosFlags.FRAMECHANGED);
 
@@ -633,7 +635,7 @@ namespace OpenTK.Platform.Windows
 		}
 
 		public override Point PointToClient(Point point) {
-			if (!API.ScreenToClient(window.winHandle, ref point))
+			if (!API.ScreenToClient(WinHandle, ref point))
 				throw new InvalidOperationException(String.Format(
 					"Could not convert point {0} from client to screen coordinates. Windows error: {1}",
 					point.ToString(), Marshal.GetLastWin32Error()));
@@ -642,7 +644,7 @@ namespace OpenTK.Platform.Windows
 		}
 		
 		public override Point PointToScreen(Point point) {
-			if (!API.ClientToScreen(window.winHandle, ref point))
+			if (!API.ClientToScreen(WinHandle, ref point))
 				throw new InvalidOperationException(String.Format(
 					"Could not convert point {0} from client to screen coordinates. Windows error: {1}",
 					point.ToString(), Marshal.GetLastWin32Error()));
@@ -658,11 +660,7 @@ namespace OpenTK.Platform.Windows
 			}
 			IntPtr foreground = API.GetForegroundWindow();
 			if( foreground != IntPtr.Zero )
-				focused = foreground == window.winHandle;
-		}
-
-		public override IWindowInfo WindowInfo {
-			get { return window; }
+				focused = foreground == WinHandle;
 		}
 
 		public override Point DesktopCursorPos {
@@ -690,6 +688,12 @@ namespace OpenTK.Platform.Windows
 				// Safe to clean managed resources
 				DestroyWindow();
 				if (Icon != null) Icon.Dispose();
+				
+				if (dc != IntPtr.Zero && !API.ReleaseDC(WinHandle, dc)) {
+					Debug.Print("[Warning] Failed to release device context {0}. Windows error: {1}.",
+					            dc, Marshal.GetLastWin32Error());
+				}
+				dc = IntPtr.Zero;
 			} else {
 				Debug.Print("=== [Warning] INativeWindow leaked ===");
 			}
