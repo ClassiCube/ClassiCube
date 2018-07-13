@@ -12,22 +12,13 @@
 * See license.txt for licensing detailed licensing details.
 */
 
-typedef struct DisplayResolution_ {
+typedef struct DisplayDevice_ {
 	Int32 Width, Height, BitsPerPixel;
 	/* The vertical refresh rate of this display. */
 	Int32 RefreshRate;
-} DisplayResolution;
-DisplayResolution DisplayResolution_Make(Int32 width, Int32 height, Int32 bitsPerPixel, Int32 refreshRate);
-
-
-typedef struct DisplayDevice_ {
-	DisplayResolution CurResolution;
 	Rectangle2D Bounds;
 	void* Metadata;
 } DisplayDevice;
-
-DisplayDevice DisplayDevice_Make(DisplayResolution* curResolution);
-void DisplayDevice_SetBounds(DisplayDevice* device, Rectangle2D* bounds);
 /* The primary / default / main display device. */
 DisplayDevice DisplayDevice_Default;
 

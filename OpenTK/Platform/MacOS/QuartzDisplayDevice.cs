@@ -7,12 +7,6 @@ namespace OpenTK.Platform.MacOS {
 		internal static IntPtr MainDisplay;
 
 		internal unsafe static void Init() {
-			// To minimize the need to add static methods to OpenTK.Graphics.DisplayDevice
-			// we only allow settings to be set through its constructor.
-			// Thus, we save all necessary parameters in temporary variables
-			// and construct the device when every needed detail is available.
-			// The main DisplayDevice constructor adds the newly constructed device
-			// to the list of available devices.
 			const int maxDisplayCount = 20;
 			IntPtr[] displays = new IntPtr[maxDisplayCount];
 			int displayCount;
@@ -38,29 +32,26 @@ namespace OpenTK.Platform.MacOS {
 				int modesCount = CF.CFArrayGetCount(modes);
 				Debug.Print("Supports {0} display modes.", modesCount);
 
-				DisplayResolution opentk_curRes = null;
+				DisplayDevice device = new DisplayDevice();
 				IntPtr curMode = CG.CGDisplayCurrentMode(curDisplay);
+				
 				for (int j = 0; j < modesCount; j++) {
 					IntPtr mode = CF.CFArrayGetValueAtIndex(modes, j);
-
-					int width  = (int)CF.DictGetNumber(mode, "Width");
-					int height = (int)CF.DictGetNumber(mode, "Height");
-					int bpp  = (int)CF.DictGetNumber(mode, "BitsPerPixel");
-					int freq = (int)CF.DictGetNumber(mode, "RefreshRate");
-
-					if (mode == curMode) {
-						opentk_curRes = new DisplayResolution(width, height, bpp, freq);
-					}
+					if (mode != curMode) continue;
+					
+					device.Bounds.Width  = (int)CF.DictGetNumber(mode, "Width");
+					device.Bounds.Height = (int)CF.DictGetNumber(mode, "Height");
+					device.BitsPerPixel  = (int)CF.DictGetNumber(mode, "BitsPerPixel");
+					device.RefreshRate   = (int)CF.DictGetNumber(mode, "RefreshRate");
 				}
 
 				HIRect bounds = CG.CGDisplayBounds(curDisplay);
-				Rectangle newRect = new Rectangle(
+				device.Bounds = new Rectangle(
 					(int)bounds.Origin.X, (int)bounds.Origin.Y, (int)bounds.Size.X, (int)bounds.Size.Y);
-				Debug.Print("Display {0} bounds: {1}", i, newRect);
-
-				DisplayDevice opentk_dev = new DisplayDevice(opentk_curRes, primary);
-				opentk_dev.Bounds = newRect;
-				opentk_dev.Metadata = curDisplay;
+				Debug.Print("Display {0} bounds: {1}", i, device.Bounds);
+				
+				device.Metadata = curDisplay;
+				device.IsPrimary = primary;
 			}
 		}
 	}

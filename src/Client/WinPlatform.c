@@ -43,33 +43,33 @@ void Platform_Init(void) {
 	ReturnCode wsaResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
 	ErrorHandler_CheckOrFail(wsaResult, "WSAStartup failed");
 
-	UInt32 deviceNum = 0;
 	/* Get available video adapters and enumerate all monitors */
-	DISPLAY_DEVICEW device = { 0 };
-	device.cb = sizeof(DISPLAY_DEVICEW);
+	UInt32 displayNum = 0;
+	DISPLAY_DEVICEW display = { 0 }; display.cb = sizeof(DISPLAY_DEVICEW);
 
-	while (EnumDisplayDevicesW(NULL, deviceNum, &device, 0)) {
-		deviceNum++;
-		if ((device.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) == 0) continue;
-		bool devPrimary = false;
-		DisplayResolution resolution = { 0 };
-		DEVMODEW mode = { 0 };
-		mode.dmSize = sizeof(DEVMODEW);
+	while (EnumDisplayDevicesW(NULL, displayNum, &display, 0)) {
+		displayNum++;
+		if ((display.StateFlags & DISPLAY_DEVICE_ATTACHED_TO_DESKTOP) == 0) continue;
+		DEVMODEW mode = { 0 }; mode.dmSize = sizeof(DEVMODEW);
 
 		/* The second function should only be executed when the first one fails (e.g. when the monitor is disabled) */
-		if (EnumDisplaySettingsW(device.DeviceName, ENUM_CURRENT_SETTINGS, &mode) ||
-			EnumDisplaySettingsW(device.DeviceName, ENUM_REGISTRY_SETTINGS, &mode)) {
-			if (mode.dmBitsPerPel > 0) {
-				resolution = DisplayResolution_Make(mode.dmPelsWidth, mode.dmPelsHeight,
-					mode.dmBitsPerPel, mode.dmDisplayFrequency);
-				devPrimary = (device.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
-			}
+		if (EnumDisplaySettingsW(display.DeviceName, ENUM_CURRENT_SETTINGS, &mode) ||
+			EnumDisplaySettingsW(display.DeviceName, ENUM_REGISTRY_SETTINGS, &mode)) {
+		} else {
+			mode.dmBitsPerPel = 0;
 		}
 
 		/* This device has no valid resolution, ignore it */
-		if (resolution.Width == 0 && resolution.Height == 0) continue;
-		if (!devPrimary) continue;
-		DisplayDevice_Default = DisplayDevice_Make(&resolution);
+		if (mode.dmBitsPerPel == 0) continue;
+		bool isPrimary = (display.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) != 0;
+		if (!isPrimary) continue;
+
+		DisplayDevice device = { 0 };
+		device.Bounds.Width  = mode.dmPelsWidth;
+		device.Bounds.Height = mode.dmPelsHeight;
+		device.BitsPerPixel  = mode.dmBitsPerPel;
+		device.RefreshRate   = mode.dmDisplayFrequency;
+		DisplayDevice_Default = device;
 	}
 }
 
